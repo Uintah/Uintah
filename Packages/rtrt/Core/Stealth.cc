@@ -2,6 +2,8 @@
 #include <Packages/rtrt/Core/Stealth.h>
 #include <stdio.h>
 #include <math.h>
+//#include <iostream.h>
+
 
 using namespace rtrt;
 using namespace SCIRun;
@@ -20,8 +22,9 @@ Stealth::Stealth( double translate_scale, double rotate_scale,
   pitch_speed_( 0 ), rotate_speed_( 0 ),
   accel_cnt_( 0 ), horizontal_accel_cnt_( 0 ),
   vertical_accel_cnt_( 0 ), pitch_accel_cnt_( 0 ), rotate_accel_cnt_( 0 ),
-  currentPath_( NULL ), currentLookAts_( NULL ), currentRouteName_( NULL ),
-  segment_percentage_( 0 ), gravity_on_(0), gravity_force_( gravity_force )
+  currentPath_( NULL ), currentLookAts_( NULL ),  
+  currentRouteName_( NULL ), segment_percentage_( 0 ), gravity_on_(0), 
+  gravity_force_( gravity_force )
 {
 }
 
@@ -250,13 +253,112 @@ Stealth::slowDown()
   }
 }
 
+
+
+
+// new code added .... 
+// the purpose of this code is to use the catmull-rom splines for the
+// path and not linear interpolation. this makes the camera path smooth.
+
+
+
+Point Stealth::using_catmull_rom(vector<Point> &points, int i,  float t)
+
+{
+
+      
+  //finding the tangent vectors;
+  
+  float d0_x, d0_y, d0_z;
+  float d1_x, d1_y, d1_z;
+  
+  //for the eye......
+  
+
+  if(i == 0)
+    {
+      d0_x = ((points[i+1]).x()-(points[i]).x())/1.0f;
+      d0_y = ((points[i+1]).y()-(points[i]).y())/1.0f;
+      d0_z = ((points[i+1]).z()-(points[i]).z())/1.0f;
+    }
+  
+  else{
+    
+    d0_x = ((points[i+1]).x()-(points[i-1]).x())/2.0f;
+    d0_y = ((points[i+1]).y()-(points[i-1]).y())/2.0f;
+    d0_z = ((points[i+1]).z()-(points[i-1]).z())/2.0f;
+  }
+  
+  
+  if(i == points.size()-2)
+    {
+      d1_x = ((points[i+1]).x()-(points[i]).x())/1.0f;
+      
+      d1_y = ((points[i+1]).y()-(points[i]).y())/1.0f;
+      d1_z = ((points[i+1]).z()-(points[i]).z())/1.0f;
+    }
+  
+  else
+    {
+      d1_x = ((points[i+2]).x()-(points[i]).x())/2.0f;
+      d1_y = ((points[i+2]).y()-(points[i]).y())/2.0f;
+      d1_z = ((points[i+2]).z()-(points[i]).z())/2.0f;
+    }
+  
+  
+  
+  //p0
+  float p0_x = (points[i]).x()+((1/3.0f)*d0_x);
+  float p0_y = (points[i]).y()+((1/3.0f)*d0_y);
+  float p0_z = (points[i]).z()+((1/3.0f)*d0_z);
+  
+  
+  //p1
+  float p1_x = (points[i+1]).x()-((1/3.0f)*d1_x);
+  float p1_y = (points[i+1]).y()-((1/3.0f)*d1_y);
+  float p1_z = (points[i+1]).z()-((1/3.0f)*d1_z);
+  
+  
+  
+  float q0_x = points[i].x();
+  float q0_y = points[i].y();
+  float q0_z = points[i].z();
+  
+  float q1_x = points[i+1].x();
+  float q1_y = points[i+1].y();
+  float q1_z = points[i+1].z();
+  
+  //calculation of points:
+  
+  float point_gen_eyex = (pow((1-t),3)*q0_x+3*(1.0f-t)*(1.0f-t)*t*(p0_x)+3*(1.0f-t)*t*t*(p1_x)+
+			  t*t*t*q1_x);
+  float point_gen_eyey = (pow((1-t),3)*q0_y+3*(1.0f-t)*(1.0f-t)*t*(p0_y)+3*(1.0f-t)*t*t*(p1_y)+
+			  t*t*t*q1_y);
+  
+  float point_gen_eyez = (pow((1-t),3)*q0_z+3*(1.0f-t)*(1.0f-t)*t*(p0_z)+3*(1.0f-t)*t*t*(p1_z)+
+			  t*t*t*q1_z);
+  
+  
+  Point new_eye(point_gen_eyex, point_gen_eyey, point_gen_eyez);
+  
+  
+  return (new_eye);
+  
+}
+
+
+
+
 void
 Stealth::getNextLocation( Point & point, Point & look_at )
 {
+  
   if( !currentPath_ || currentPath_->size() < 2 ) {
     cout << "Not enough path enformation!\n";
     return;
   }
+
+ 
 
   segment_percentage_ += accel_cnt_;
 
@@ -266,29 +368,30 @@ Stealth::getNextLocation( Point & point, Point & look_at )
       cout << "got to the beginning of the path... going to end\n";
       segment_percentage_ = (((int)(currentPath_->size())-1) * 100) - 1;
     }
-
   int begin_index = (int)( segment_percentage_ / 100.0 );
-  int end_index   = begin_index + 1;
-
+  int end_index = begin_index+1;
+  float t_catmull = ( segment_percentage_ / 100.0f )-begin_index;
+    
   if( end_index == (int)currentPath_->size() )
     {
       cout << "got to the end of the path... restarting\n";
       segment_percentage_ = 1;
       begin_index = 0; end_index = 1;
     }
-
+  //eye
   Point & begin = (*currentPath_)[ begin_index ];
-  Point & end   = (*currentPath_)[ end_index ];
+  Point end = using_catmull_rom(*currentPath_, begin_index, t_catmull);
+    
+  point = end;
 
-  double local_percent = segment_percentage_ - (100*begin_index);
-
-  point = begin + ((end - begin) * (local_percent / 100.0));
-
+  //lookat 
   Point & begin_at = (*currentLookAts_)[ begin_index ];
-  Point & end_at   = (*currentLookAts_)[ end_index ];
+  
+  Point end_at = using_catmull_rom(*currentLookAts_, begin_index, t_catmull);
+  look_at = end_at;
 
-  look_at = begin_at + ((end_at - begin_at) * (local_percent / 100.0));
 }
+
 
 
 void
@@ -594,3 +697,11 @@ Stealth::updateTranslateSensitivity( double scalar )
 {
   translate_scale_ = baseTranslateScale_ / scalar;
 }
+
+
+
+
+
+
+
+

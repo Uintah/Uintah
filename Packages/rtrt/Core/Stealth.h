@@ -110,6 +110,10 @@ public:
   // Moves the stealth to the next Marker in the path, point/lookat
   // are set to the correct locations.  Index of that pnt is returned.
   // Returns -1 if no route!
+
+  //void using_catmull_rom(vector<Point> &points, vector<Point> &f_points);
+  Point using_catmull_rom(vector<Point> &points, int i, float t);
+
   int  getNextMarker( Point & point, Point & look_at );
   int  getPrevMarker( Point & point, Point & look_at );
   int  goToBeginning( Point & point, Point & look_at );
@@ -182,9 +186,10 @@ private:
   vector< string >          routeNames_;
 
   vector<Point>    * currentPath_;
-  vector<Point>    * currentLookAts_;
-  string           * currentRouteName_;
 
+  vector<Point>    * currentLookAts_;
+
+  string           * currentRouteName_;
   double        segment_percentage_;
 
   bool          gravity_on_;

@@ -45,8 +45,11 @@ inline void Get11d(char *buf, double *s)
 
 inline void Get3d(char *buf, double *s)
 {
-  if (3 != sscanf(buf,"%lf %lf %lf",&(s[0]), &(s[1]), &(s[2]))) {
-    cerr << "Woah - bad data 3d!\n";
+  s[0] = s[1] = s[2] = -1.23; // Debugging... 
+  int num = sscanf(buf,"%lf %lf %lf",&(s[0]), &(s[1]), &(s[2]));
+  if( 3 != num ) {
+    cerr << "Woah - bad data in sscanf for 3 float read!\n";
+    cerr << "     - Read " << num << ": " << buf << "\n";
   }
 }
 
@@ -59,7 +62,7 @@ inline void Get2d(char *buf, double *s)
 
 inline void Get1d(char *buf, double *s)
 {
-  if (1 != sscanf(buf,"%lf",&(s[0]))) {
+  if (1 != sscanf(buf,"%lf",&(s[0]))) { 
     cerr << "Whoah - bad data 1d!\n";
   }
 }
@@ -178,7 +181,11 @@ void addObjMaterial(Array1<Material*> &matl,
     if (!im->valid()) {
       cerr << "Error - unable to load texture map >>"<<tmap_name<<"<<\n";
       has_tmap=0;
-    } else m=im;
+    } 
+    else 
+      {
+	m=im;
+      }
   }
   matl_has_tmap.add(has_tmap);
   matl_has_bmap.add(has_bmap);
@@ -325,31 +332,16 @@ rtrt::readObjFile(const string geom_fname, const string matl_fname,
 	   fclose(f);
 	 } else cerr << "Error - was unable to read texture map!\n";
        } 
-       /*
-	 else if (strncmp(&buf[0], "map_bump", strlen("map_bump")) == 0) {
-	 char *b = &(buf[9]);
-	 int last = strlen(b) - 1;
-	 while ((b[last] == '\r' || b[last] == '\n') && last>0) last--;
-	 b[last+1]='\0';
-	 string fname(b);
-	 cerr << "Looking for bump map: >>"<<fname<<"<<\n";
-	 FILE *f = fopen(fname.c_str(), "r");
-	 if (f) {
-	   has_bmap=1;
-	   bmap_name=fname;
-	   fclose(f);
-	 } else cerr << "Error - was unable to read bump map!\n";
-       } else if (strncmp(&buf[0], "scale_bump", strlen("scale_bump")) == 0) {
-	 Get1d(&buf[11], scratch);
-	 scale_bump=scratch[0];
-       }
-      */ 
+      
        
        else {
 	 cerr << "Ignoring matl line: "<<buf<<"\n";
        }
      }
 
+  
+
+     
      // add the last material
      if (matl_complete) {
        addObjMaterial(matl, Kd, Ks, opacity, Ns, name, names,
