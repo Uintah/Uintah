@@ -39,12 +39,17 @@ RigidBodyContact::RigidBodyContact(ProblemSpecP& ps,
   d_stop_time = 999999.99;  // default is to never stop
   ps->get("stop_time",d_stop_time);
 
+  /* Removing memory hog (bb - 1/3/03)
   try {
     ps->require("direction",d_direction);
   } catch (ParameterNotFound& e) {
     cerr << "Default contact direction is Z-direction (0,0,1)\n";
     d_direction.x(0); d_direction.y(0); d_direction.z(1);
   }
+  */
+  IntVector defaultDir(0,0,1);
+  ps->getWithDefault("direction",d_direction, defaultDir);
+
   d_direction.x(1^d_direction.x());  // Change 1 to 0, or 0 to 1
   d_direction.y(1^d_direction.y());  // Change 1 to 0, or 0 to 1
   d_direction.z(1^d_direction.z());  // Change 1 to 0, or 0 to 1
