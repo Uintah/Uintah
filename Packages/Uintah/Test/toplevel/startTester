@@ -16,6 +16,7 @@ PARALLELISM=0
 VERBOSE="no"
 WEEKLY="0"
 MONTHLYBACKUP="no"
+LD_LIBRARY_PATH=""
 
 # test OS, if Linux or IRIX, set appropriate compiler env. vars, else, abort
 if [ "$OS" == "IRIX64" -o "$OS" == "IRIX" ]; then
@@ -23,6 +24,7 @@ if [ "$OS" == "IRIX64" -o "$OS" == "IRIX" ]; then
     CXX=CC
     F77=f77
 elif [ "$OS" == "Linux" ]; then
+#    LD_LIBRARY_PATH="/usr/sci/local/gcc32/lib"
     CC="/usr/sci/local/bin/gcc"
     CXX="/usr/sci/local/bin/c++"
     F77="/usr/sci/local/bin/g77"
@@ -236,6 +238,9 @@ else
     cd ..
     rm -rf SCIRun
 
+# link directly from the build root to the Uintah code
+    ln -s src/Packages/Uintah Uintah
+
     cd "$BUILD_DIR"
 
     if [ $VERBOSE == "yes" ]; then
@@ -273,8 +278,8 @@ if [ "$OS" == "IRIX64" -o "$OS" == "IRIX" ]; then
 	DBG_CONFIGURE="'--enable-package=Uintah' '--enable-debug' '--enable-64bit' '--with-petsc=/usr/sci/projects/Uintah/Thirdparty/1.0.0/IRIX64/MIPSpro-7.3.1.3m-64bit/petsc-2.1.1' '--with-hypre=/usr/sci/projects/Uintah/Thirdparty/1.0.0/IRIX64/MIPSpro-7.3.1.3m-64bit/hypre-1.7.7b/src/hypre'"
 	OPT_CONFIGURE="'--enable-package=Uintah' '--enable-optimize=-Ofast -G0 -OPT:div_split=OFF' '--disable-sci-malloc' '--enable-assertion-level=0' '--enable-64bit' '--with-petsc=/usr/sci/projects/Uintah/Thirdparty/1.0.0/IRIX64/MIPSpro-7.3.1.3m-64bit/petsc-2.1.1' '--with-hypre=/usr/sci/projects/Uintah/Thirdparty/1.0.0/IRIX64/MIPSpro-7.3.1.3m-64bit/hypre-1.7.7b/src/hypre'"
 else
-	DBG_CONFIGURE="--enable-package='Uintah' --enable-debug --with-thirdparty=/usr/sci/projects/Uintah/Thirdparty/1.0.0/Linux/gcc-3.0.4-32bit --with-petsc=/usr/sci/projects/Uintah/Thirdparty/1.0.0/Linux/gcc-3.0.4-32bit/petsc-2.1.1 --with-hypre=/usr/sci/projects/Uintah/Thirdparty/1.0.0/Linux/gcc-3.0.4-32bit/hypre-1.7.7b/src/hypre"
-	OPT_CONFIGURE="--enable-package='Uintah' --enable-optimize --disable-sci-malloc --enable-assertion-level=0 --with-thirdparty=/usr/sci/projects/Uintah/Thirdparty/1.0.0/Linux/gcc-3.0.4-32bit --with-petsc=/usr/sci/projects/Uintah/Thirdparty/1.0.0/Linux/gcc-3.0.4-32bit/petsc-2.1.1 --with-hypre=/usr/sci/projects/Uintah/Thirdparty/1.0.0/Linux/gcc-3.0.4-32bit/hypre-1.7.7b/src/hypre"
+	DBG_CONFIGURE="--enable-package='Uintah' --enable-debug --with-thirdparty=/usr/sci/projects/SCIRun/Thirdparty/1.7/Linux/gcc-3.0.4-32bit --with-petsc=/usr/sci/projects/Uintah/Thirdparty/1.0.0/Linux/gcc-3.0.4-32bit/petsc-2.1.1 --with-hypre=/usr/sci/projects/Uintah/Thirdparty/1.0.0/Linux/gcc-3.0.4-32bit/hypre-1.7.7b/src/hypre"
+	OPT_CONFIGURE="--enable-package='Uintah' --enable-optimize --disable-sci-malloc --enable-assertion-level=0 --with-thirdparty=/usr/sci/projects/SCIRun/Thirdparty/1.7/Linux/gcc-3.0.4-32bit --with-petsc=/usr/sci/projects/Uintah/Thirdparty/1.0.0/Linux/gcc-3.0.4-32bit/petsc-2.1.1 --with-hypre=/usr/sci/projects/Uintah/Thirdparty/1.0.0/Linux/gcc-3.0.4-32bit/hypre-1.7.7b/src/hypre"
 fi
 
 # where the webpage will be, and init webpage
