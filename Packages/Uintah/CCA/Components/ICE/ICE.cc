@@ -1033,10 +1033,8 @@ void ICE::computeEquilibrationPressure(const ProcessorGroup*,
       new_dw->allocate(n_iters_equil_press, lb->scratchLabel, 0, patch);
     #if 0
       char description[50];
-            
       sprintf(description, "TOP_equilibration_patch_%d ", patch->getID());
       printData( patch, 1, description, "Press_CC_top", press);
-
      for (int m = 0; m < numMatls; m++)  {
        ICEMaterial* matl = d_sharedState->getICEMaterial( m );
        int indx = matl->getDWIndex(); 
@@ -1320,90 +1318,81 @@ void ICE::computeFaceCenteredVelocities(const ProcessorGroup*,
       wvel_FC.initialize(0.0, lowIndex,patch->getSFCZHighIndex());
 
       double term1, term2, term3, press_coeff, rho_micro_FC, rho_FC;
-
+      
       if(doMechOld < -1.5){
+      //__________________________________
+      //   B O T T O M   F A C E S 
+      int offset=1;
+      for(CellIterator iter=patch->getSFCYIterator(offset);!iter.done();iter++){
+	 IntVector curcell = *iter;
+	 IntVector adjcell(curcell.x(),curcell.y()-1,curcell.z()); 
 
-      for(CellIterator iter=patch->getExtraCellIterator();!iter.done();iter++){
-        IntVector curcell = *iter;
-        //__________________________________
-        //   B O T T O M   F A C E S 
-        //   Extend the computations into the left
-        //   and right ghost cells 
-        if (curcell.y() >= (patch->getInteriorCellLowIndex()).y()) {
-	  IntVector adjcell(curcell.x(),curcell.y()-1,curcell.z()); 
+	 rho_micro_FC = rho_micro_CC[adjcell] + rho_micro_CC[curcell];
+	 rho_FC       = rho_CC[adjcell]       + rho_CC[curcell];
+	 ASSERT(rho_FC > 0.0);
+	 //__________________________________
+	 // interpolation to the face
+	 term1 = (rho_CC[adjcell] * vel_CC[adjcell].y() +
+		  rho_CC[curcell] * vel_CC[curcell].y())/(rho_FC);            
+	 //__________________________________
+	 // pressure term
+	 press_coeff = 2.0/(rho_micro_FC);
+	 term2 =   delT * press_coeff *
+	   (press_CC[curcell] - press_CC[adjcell])/dx.y();                
+	 //__________________________________
+	 // gravity term
+	 term3 =  delT * gravity.y();
+	 vvel_FC[curcell] = term1- term2 + term3;
+      }
 
-	  rho_micro_FC = rho_micro_CC[adjcell] + rho_micro_CC[curcell];
-	  rho_FC       = rho_CC[adjcell]       + rho_CC[curcell];
-	  ASSERT(rho_FC > 0.0);
-	  //__________________________________
-	  // interpolation to the face
-	  term1 = (rho_CC[adjcell] * vel_CC[adjcell].y() +
-		   rho_CC[curcell] * vel_CC[curcell].y())/(rho_FC);            
-	  //__________________________________
-	  // pressure term
-	  press_coeff = 2.0/(rho_micro_FC);
-	  term2 =   delT * press_coeff *
-	    (press_CC[curcell] - press_CC[adjcell])/dx.y();                
-	  //__________________________________
-	  // gravity term
-	  term3 =  delT * gravity.y();
-	  vvel_FC[curcell] = term1- term2 + term3;
-        }
+      //__________________________________
+      //  L E F T   F A C E 
+      for(CellIterator iter=patch->getSFCXIterator(offset);!iter.done();iter++){
+	 IntVector curcell = *iter;
+	 IntVector adjcell(curcell.x()-1,curcell.y(),curcell.z()); 
 
-        //__________________________________
-        //  L E F T   F A C E 
-        // Extend the computations to the 
-        // top and bottom ghostcells 
+	 rho_micro_FC = rho_micro_CC[adjcell] + rho_micro_CC[curcell];
+	 rho_FC       = rho_CC[adjcell]       + rho_CC[curcell];
+	 ASSERT(rho_FC > 0.0);
+	 //__________________________________
+	 // interpolation to the face
+	 term1 = (rho_CC[adjcell] * vel_CC[adjcell].x() +
+		   rho_CC[curcell] * vel_CC[curcell].x())/(rho_FC);
+	 //__________________________________
+	 // pressure term
+	 press_coeff = 2.0/(rho_micro_FC);
 
-        if (curcell.x() >= (patch->getInteriorCellLowIndex()).x()) {
-	  // Now setting the left face because of ownership of faces by
-	  // multi-patches restriction of UCF.
-	  IntVector adjcell(curcell.x()-1,curcell.y(),curcell.z()); 
+	 term2 =   delT * press_coeff *
+	   (press_CC[curcell] - press_CC[adjcell])/dx.x();
+	 //__________________________________
+	 // gravity term
+	 term3 =  delT * gravity.x();
+	 uvel_FC[curcell] = term1- term2 + term3;
+      }
+      
+      //__________________________________
+      //  B A C K    F A C E
+      for(CellIterator iter=patch->getSFCZIterator(offset);!iter.done();iter++){
+	 IntVector curcell = *iter;
+	 IntVector adjcell(curcell.x(),curcell.y(),curcell.z()-1); 
 
-	  rho_micro_FC = rho_micro_CC[adjcell] + rho_micro_CC[curcell];
-	  rho_FC       = rho_CC[adjcell]       + rho_CC[curcell];
-	  ASSERT(rho_FC > 0.0);
-	  //__________________________________
-	  // interpolation to the face
-	  term1 = (rho_CC[adjcell] * vel_CC[adjcell].x() +
-		    rho_CC[curcell] * vel_CC[curcell].x())/(rho_FC);
-	  //__________________________________
-	  // pressure term
-	  press_coeff = 2.0/(rho_micro_FC);
+	 rho_micro_FC = rho_micro_CC[adjcell] + rho_micro_CC[curcell];
+	 rho_FC       = rho_CC[adjcell]       + rho_CC[curcell];
+	 ASSERT(rho_FC > 0.0);
+	 //__________________________________
+	 // interpolation to the face
+	 term1 = (rho_CC[adjcell] * vel_CC[adjcell].z() +
+		  rho_CC[curcell] * vel_CC[curcell].z())/(rho_FC);
+	 //__________________________________
+	 // pressure term
+	 press_coeff = 2.0/(rho_micro_FC);
 
-	  term2 =   delT * press_coeff *
-	    (press_CC[curcell] - press_CC[adjcell])/dx.x();
-	  //__________________________________
-	  // gravity term
-	  term3 =  delT * gravity.x();
-	  uvel_FC[curcell] = term1- term2 + term3;
-        }
-
-        //__________________________________
-        //  B A C K    F A C E
-        // Extend the computations to the front
-        // and back ghostcells
-        if (curcell.z() >= (patch->getInteriorCellLowIndex()).z())  {
-	  IntVector adjcell(curcell.x(),curcell.y(),curcell.z()-1); 
-
-	  rho_micro_FC = rho_micro_CC[adjcell] + rho_micro_CC[curcell];
-	  rho_FC       = rho_CC[adjcell]       + rho_CC[curcell];
-	  ASSERT(rho_FC > 0.0);
-	  //__________________________________
-	  // interpolation to the face
-	  term1 = (rho_CC[adjcell] * vel_CC[adjcell].z() +
-		   rho_CC[curcell] * vel_CC[curcell].z())/(rho_FC);
-	  //__________________________________
-	  // pressure term
-	  press_coeff = 2.0/(rho_micro_FC);
-
-	  term2 =   delT * press_coeff *
-	    (press_CC[curcell] - press_CC[adjcell])/dx.z();
-	  //__________________________________
-	  // gravity term
-	  term3 =  delT * gravity.z();
-	  wvel_FC[curcell] = term1- term2 + term3;
-        }
+	 term2 =   delT * press_coeff *
+	   (press_CC[curcell] - press_CC[adjcell])/dx.z();
+	 //__________________________________
+	 // gravity term
+	 term3 =  delT * gravity.z();
+	 wvel_FC[curcell] = term1- term2 + term3;
       }
       }  // if doMech
 
@@ -1527,136 +1516,136 @@ void ICE::addExchangeContributionToFCVel(const ProcessorGroup*,
       wvel_FCME[m].initialize(0.0, lowIndex,patch->getSFCZHighIndex());
     }
  
-    for(CellIterator iter=patch->getExtraCellIterator(); !iter.done(); iter++){
+    //__________________________________
+    //    B O T T O M  F A C E -- B  E  T  A      
+    //  Note this includes b[m][m]
+    //  You need to make sure that mom_exch_coeff[m][m] = 0
+    //   - form off diagonal terms of (a) 
+    int offset=1;
+    for(CellIterator iter=patch->getSFCYIterator(offset);!iter.done();iter++){
       IntVector curcell = *iter;
+      IntVector adjcell(curcell.x(),curcell.y()-1,curcell.z()); 
+      for(int m = 0; m < numMatls; m++) {
+	for(int n = 0; n < numMatls; n++) {
+	  tmp = (vol_frac_CC[n][adjcell] + vol_frac_CC[n][curcell]) * K[n][m];
+
+	  beta[m][n] = delT * tmp/
+	    (rho_micro_CC[m][curcell] + rho_micro_CC[m][adjcell]);
+
+	  a[m][n] = -beta[m][n];
+	}
+      }
       //__________________________________
-      //    B O T T O M  F A C E -- B  E  T  A      
-      //  Note this includes b[m][m]
-      //  You need to make sure that mom_exch_coeff[m][m] = 0
-      //   - form off diagonal terms of (a) 
-      if (curcell.y() >= (patch->getInteriorCellLowIndex()).y()) {
-        IntVector adjcell(curcell.x(),curcell.y()-1,curcell.z()); 
-        for(int m = 0; m < numMatls; m++) {
-	  for(int n = 0; n < numMatls; n++) {
-	    tmp = (vol_frac_CC[n][adjcell] + vol_frac_CC[n][curcell]) * K[n][m];
+      //  F  O  R  M     M  A  T  R  I  X   (a)
+      //  - Diagonal terms      
+      for(int m = 0; m < numMatls; m++) {
+	a[m][m] = 1.;
+	for(int n = 0; n < numMatls; n++) {
+	  a[m][m] +=  beta[m][n];
+	}
+      }
+      //__________________________________
+      //    F  O  R  M     R  H  S  (b)     
+      for(int m = 0; m < numMatls; m++) {
+	b[m] = 0.0;
+	for(int n = 0; n < numMatls; n++)  {
+	  b[m] += beta[m][n] * (vvel_FC[n][curcell] - vvel_FC[m][curcell]);
+	}
+      }
+      //__________________________________
+      //      S  O  L  V  E  
+      //   - backout velocities           
+      a.solve(b);
+      for(int m = 0; m < numMatls; m++)  {
+	vvel_FCME[m][curcell] = vvel_FC[m][curcell] + b[m];
+      }
+    }
 
-	    beta[m][n] = delT * tmp/
-	      (rho_micro_CC[m][curcell] + rho_micro_CC[m][adjcell]);
+    //__________________________________
+    //   L E F T  F A C E-- B  E  T  A      
+    //  Note this includes b[m][m]
+    //  You need to make sure that mom_exch_coeff[m][m] = 0
+    //   - form off diagonal terms of (a)
+    for(CellIterator iter=patch->getSFCXIterator(offset);!iter.done();iter++){
+      IntVector curcell = *iter;
+      IntVector adjcell(curcell.x()-1,curcell.y(),curcell.z()); 
 
-	    a[m][n] = -beta[m][n];
-	  }
-        }
-        //__________________________________
-        //  F  O  R  M     M  A  T  R  I  X   (a)
-        //  - Diagonal terms      
-        for(int m = 0; m < numMatls; m++) {
-	  a[m][m] = 1.;
-	  for(int n = 0; n < numMatls; n++) {
-	    a[m][m] +=  beta[m][n];
-	  }
-        }
-        //__________________________________
-        //    F  O  R  M     R  H  S  (b)     
-        for(int m = 0; m < numMatls; m++) {
-	  b[m] = 0.0;
-	  for(int n = 0; n < numMatls; n++)  {
-	    b[m] += beta[m][n] * (vvel_FC[n][curcell] - vvel_FC[m][curcell]);
-	  }
-        }
-        //__________________________________
-        //      S  O  L  V  E  
-        //   - backout velocities           
-        a.solve(b);
-        for(int m = 0; m < numMatls; m++)  {
-	  vvel_FCME[m][curcell] = vvel_FC[m][curcell] + b[m];
-        }
+      for(int m = 0; m < numMatls; m++)  {
+	for(int n = 0; n < numMatls; n++)  {
+	  tmp = (vol_frac_CC[n][adjcell] + vol_frac_CC[n][curcell]) * K[n][m];
+	  beta[m][n] = delT * tmp/
+	    (rho_micro_CC[m][curcell] + rho_micro_CC[m][adjcell]);
+
+	  a[m][n] = -beta[m][n];
+	}
+      }
+      //__________________________________
+      //  F  O  R  M     M  A  T  R  I  X   (a)
+      //  - Diagonal terms  
+      for(int m = 0; m < numMatls; m++) {
+	a[m][m] = 1.;
+	for(int n = 0; n < numMatls; n++) {
+	  a[m][m] +=  beta[m][n];
+	}
       }
 
       //__________________________________
-      //   L E F T  F A C E-- B  E  T  A      
-      //  Note this includes b[m][m]
-      //  You need to make sure that mom_exch_coeff[m][m] = 0
-      //   - form off diagonal terms of (a)
-      if (curcell.x() >= (patch->getInteriorCellLowIndex()).x())  {
-        IntVector adjcell(curcell.x()-1,curcell.y(),curcell.z()); 
-
-        for(int m = 0; m < numMatls; m++)  {
-	  for(int n = 0; n < numMatls; n++)  {
-	    tmp = (vol_frac_CC[n][adjcell] + vol_frac_CC[n][curcell]) * K[n][m];
-	    beta[m][n] = delT * tmp/
-	      (rho_micro_CC[m][curcell] + rho_micro_CC[m][adjcell]);
-
-	    a[m][n] = -beta[m][n];
-	  }
-        }
-        /*__________________________________
-         *  F  O  R  M     M  A  T  R  I  X   (a)
-         * - Diagonal terms
-         *___________________________________*/
-        for(int m = 0; m < numMatls; m++) {
-	  a[m][m] = 1.;
-	  for(int n = 0; n < numMatls; n++) {
-	    a[m][m] +=  beta[m][n];
-	  }
-        }
-
-        //__________________________________
-        //    F  O  R  M     R  H  S  (b) 
-        for(int m = 0; m < numMatls; m++)  {
-	  b[m] = 0.0;
-	  for(int n = 0; n < numMatls; n++)  {
-	    b[m] += beta[m][n] * (uvel_FC[n][curcell] - uvel_FC[m][curcell]);
-	  }
-        }
-        //__________________________________
-        //      S  O  L  V  E
-        //   - backout velocities
-        a.solve(b);
-
-        for(int m = 0; m < numMatls; m++) {
-	  uvel_FCME[m][curcell] = uvel_FC[m][curcell] + b[m];
-        }
+      //    F  O  R  M     R  H  S  (b) 
+      for(int m = 0; m < numMatls; m++)  {
+	b[m] = 0.0;
+	for(int n = 0; n < numMatls; n++)  {
+	  b[m] += beta[m][n] * (uvel_FC[n][curcell] - uvel_FC[m][curcell]);
+	}
       }
       //__________________________________
-      //  B A C K  F A C E -- B  E  T  A      
-      //  Note this includes b[m][m]
-      //  You need to make sure that mom_exch_coeff[m][m] = 0
-      //   - form off diagonal terms of (a)
-      if (curcell.z() >= (patch->getInteriorCellLowIndex()).z())  {
-        IntVector adjcell(curcell.x(),curcell.y(),curcell.z()-1); 
-        for(int m = 0; m < numMatls; m++)  {
-	  for(int n = 0; n < numMatls; n++) {
-	    tmp = (vol_frac_CC[n][adjcell] + vol_frac_CC[n][curcell]) * K[n][m];
-	    beta[m][n] = delT * tmp/
-	      (rho_micro_CC[m][curcell] + rho_micro_CC[m][adjcell]);
+      //      S  O  L  V  E
+      //   - backout velocities
+      a.solve(b);
 
-	    a[m][n] = -beta[m][n];
-	  }
-        }
-        //__________________________________
-        //  F  O  R  M     M  A  T  R  I  X   (a)
-        // - Diagonal terms
-        for(int m = 0; m < numMatls; m++) {
-	  a[m][m] = 1.;
-	  for(int n = 0; n < numMatls; n++) {
-	    a[m][m] +=  beta[m][n];
-	  }
-        }
-        //__________________________________
-        //    F  O  R  M     R  H  S  (b)
-        for(int m = 0; m < numMatls; m++) {
-	  b[m] = 0.0;
-	  for(int n = 0; n < numMatls; n++) {
-	    b[m] += beta[m][n] * (wvel_FC[n][curcell] - wvel_FC[m][curcell]);
-	  }
-        }
-        //__________________________________
-        //      S  O  L  V  E
-        //   - backout velocities 
-        a.solve(b);
-        for(int m = 0; m < numMatls; m++) {
-	  wvel_FCME[m][curcell] = wvel_FC[m][curcell] + b[m];
-        }
+      for(int m = 0; m < numMatls; m++) {
+	uvel_FCME[m][curcell] = uvel_FC[m][curcell] + b[m];
+      }
+    }
+    //__________________________________
+    //  B A C K  F A C E -- B  E  T  A      
+    //  Note this includes b[m][m]
+    //  You need to make sure that mom_exch_coeff[m][m] = 0
+    //   - form off diagonal terms of (a)
+    for(CellIterator iter=patch->getSFCZIterator(offset);!iter.done();iter++){
+      IntVector curcell = *iter;
+      IntVector adjcell(curcell.x(),curcell.y(),curcell.z()-1); 
+      for(int m = 0; m < numMatls; m++)  {
+	for(int n = 0; n < numMatls; n++) {
+	  tmp = (vol_frac_CC[n][adjcell] + vol_frac_CC[n][curcell]) * K[n][m];
+	  beta[m][n] = delT * tmp/
+	    (rho_micro_CC[m][curcell] + rho_micro_CC[m][adjcell]);
+
+	  a[m][n] = -beta[m][n];
+	}
+      }
+      //__________________________________
+      //  F  O  R  M     M  A  T  R  I  X   (a)
+      // - Diagonal terms
+      for(int m = 0; m < numMatls; m++) {
+	a[m][m] = 1.;
+	for(int n = 0; n < numMatls; n++) {
+	  a[m][m] +=  beta[m][n];
+	}
+      }
+      //__________________________________
+      //    F  O  R  M     R  H  S  (b)
+      for(int m = 0; m < numMatls; m++) {
+	b[m] = 0.0;
+	for(int n = 0; n < numMatls; n++) {
+	  b[m] += beta[m][n] * (wvel_FC[n][curcell] - wvel_FC[m][curcell]);
+	}
+      }
+      //__________________________________
+      //      S  O  L  V  E
+      //   - backout velocities 
+      a.solve(b);
+      for(int m = 0; m < numMatls; m++) {
+	wvel_FCME[m][curcell] = wvel_FC[m][curcell] + b[m];
       }
     }
 
@@ -1930,54 +1919,52 @@ void ICE::computePressFC(const ProcessorGroup*,
       new_dw->get(rho_CC[m],lb->rho_CCLabel,indx,patch,Ghost::AroundCells,1);
     }
 
-
-    for(CellIterator iter = patch->getExtraCellIterator();!iter.done();iter++){
+    //__________________________________
+    //  B O T T O M   F A C E
+    for(CellIterator iter=patch->getSFCYIterator();!iter.done();iter++){
       IntVector curcell = *iter;
-      //__________________________________
-      //  B O T T O M   F A C E
-      if (curcell.y() >= (patch->getInteriorCellLowIndex()).y()) {
-        IntVector adjcell(curcell.x(),curcell.y()-1,curcell.z());
-        sum_rho = 0.0;
-        sum_rho_adj = 0.0;
-        for(int m = 0; m < numMatls; m++) {
-	  sum_rho      += rho_CC[m][curcell];
-	  sum_rho_adj  += rho_CC[m][adjcell];
-        }
-
-        A =  (press_CC[curcell]/sum_rho) + (press_CC[adjcell]/sum_rho_adj);
-        pressY_FC[curcell] = A/((1/sum_rho)+(1.0/sum_rho_adj));
+      IntVector adjcell(curcell.x(),curcell.y()-1,curcell.z());
+      sum_rho     = 0.0;
+      sum_rho_adj = 0.0;
+      for(int m = 0; m < numMatls; m++) {
+	sum_rho      += rho_CC[m][curcell];
+	sum_rho_adj  += rho_CC[m][adjcell];
       }
 
-      //__________________________________
-      //  L E F T   F A C E
-      if (curcell.x() >= (patch->getInteriorCellLowIndex()).x())  {
-        IntVector adjcell(curcell.x()-1,curcell.y(),curcell.z());
-        sum_rho=0.0;
-        sum_rho_adj  = 0.0;
+      A =  (press_CC[curcell]/sum_rho) + (press_CC[adjcell]/sum_rho_adj);
+      pressY_FC[curcell] = A/((1/sum_rho)+(1.0/sum_rho_adj));
+    }
+    //__________________________________
+    //  L E F T   F A C E
+    for(CellIterator iter=patch->getSFCXIterator();!iter.done();iter++){
+      IntVector curcell = *iter;
+      IntVector adjcell(curcell.x()-1,curcell.y(),curcell.z());
+      sum_rho     = 0.0;
+      sum_rho_adj = 0.0;
 
-        for(int m = 0; m < numMatls; m++) {
-	  sum_rho      += rho_CC[m][curcell];
-	  sum_rho_adj  += rho_CC[m][adjcell];
-        }
-
-        A =  (press_CC[curcell]/sum_rho) + (press_CC[adjcell]/sum_rho_adj);
-        pressX_FC[curcell] = A/((1/sum_rho)+(1.0/sum_rho_adj));
+      for(int m = 0; m < numMatls; m++) {
+	sum_rho      += rho_CC[m][curcell];
+	sum_rho_adj  += rho_CC[m][adjcell];
       }
-      //__________________________________
-      //     B A C K   F A C E 
-      if (curcell.z() >= (patch->getInteriorCellLowIndex()).z()) {
-        IntVector adjcell(curcell.x(),curcell.y(),curcell.z()-1);
 
-        sum_rho=0.0;
-        sum_rho_adj  = 0.0;
-        for(int m = 0; m < numMatls; m++) {
-	  sum_rho      += rho_CC[m][curcell];
-	  sum_rho_adj  += rho_CC[m][adjcell];
-        }
-
-        A =  (press_CC[curcell]/sum_rho) + (press_CC[adjcell]/sum_rho_adj);
-        pressZ_FC[curcell]=A/((1/sum_rho)+(1.0/sum_rho_adj));
+      A =  (press_CC[curcell]/sum_rho) + (press_CC[adjcell]/sum_rho_adj);
+      pressX_FC[curcell] = A/((1/sum_rho)+(1.0/sum_rho_adj));
+    }
+    //__________________________________
+    //     B A C K   F A C E 
+    for(CellIterator iter=patch->getSFCZIterator();!iter.done();iter++){
+      IntVector curcell = *iter;
+      IntVector adjcell(curcell.x(),curcell.y(),curcell.z()-1);
+      sum_rho     = 0.0;
+      sum_rho_adj = 0.0;
+      
+      for(int m = 0; m < numMatls; m++) {
+	sum_rho      += rho_CC[m][curcell];
+	sum_rho_adj  += rho_CC[m][adjcell];
       }
+
+      A =  (press_CC[curcell]/sum_rho) + (press_CC[adjcell]/sum_rho_adj);
+      pressZ_FC[curcell]=A/((1/sum_rho)+(1.0/sum_rho_adj));
     }
 
     new_dw->put(pressX_FC,lb->pressX_FCLabel, 0, patch);
@@ -2957,7 +2944,7 @@ void ICE::advectAndAdvanceInTime(const ProcessorGroup*,
     }
   }  // patch loop
    // This belongs at the bottom of the timestep
-   d_dbgNextDumpTime = d_dbgOldTime + d_dbgOutputInterval; 
+  d_dbgNextDumpTime = d_dbgOldTime + d_dbgOutputInterval; 
 }
 
 
