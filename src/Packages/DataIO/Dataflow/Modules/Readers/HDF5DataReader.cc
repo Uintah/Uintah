@@ -54,6 +54,22 @@ DECLARE_MAKER(HDF5DataReader)
 
 HDF5DataReader::HDF5DataReader(GuiContext *context)
   : Module("HDF5DataReader", context, Source, "Readers", "DataIO"),
+    selectable_min_(ctx->subVar("selectable_min")),
+    selectable_max_(ctx->subVar("selectable_max")),
+    selectable_inc_(ctx->subVar("selectable_inc")),
+    range_min_(ctx->subVar("range_min")),
+    range_max_(ctx->subVar("range_max")),
+    playmode_(ctx->subVar("playmode")),
+    current_(ctx->subVar("current")),
+    execmode_(ctx->subVar("execmode")),
+    delay_(ctx->subVar("delay")),
+    inc_amount_(ctx->subVar("inc-amount")),
+    inc_(1),
+    stop_(false),
+    last_input_(-1),
+    last_output_(0),
+
+
     filename_(context->subVar("filename")),
     datasets_(context->subVar("datasets")),
     dumpname_(context->subVar("dumpname")),
@@ -65,12 +81,6 @@ HDF5DataReader::HDF5DataReader(GuiContext *context)
     assumeSVT_(context->subVar("assumeSVT")),
 
     animate_       (context->subVar("animate")),
-    animateStyle_  (context->subVar("animate-style")),
-    animateNframes_(context->subVar("animate-nframes")),
-    animateFrame_  (context->subVar("animate-frame")),
-
-    animatestyle_( 9999999 ),
-    animateframe_( 9999999 ),
 
     error_(false)
 {
@@ -128,16 +138,12 @@ void HDF5DataReader::execute() {
 #ifdef HAVE_HDF5
   bool updateAll   = false;
   bool updateFile  = false;
-  bool updateFrame = false;
 
   filename_.reset();
   datasets_.reset();
 
   string new_filename(filename_.get());
   string new_datasets(datasets_.get());
-
-  vector< string > paths;
-  vector< string > datasets;
 
   if( new_filename.length() == 0 || new_datasets.length() == 0 )
     return;
@@ -209,133 +215,40 @@ void HDF5DataReader::execute() {
     }
   }
 
-  animate_.reset();
-  animateStyle_.reset();
-  animateFrame_.reset();
+  vector< string > paths;
+  vector< string > datasets;
+  
+  parseDatasets( new_datasets, paths, datasets );
+  
+  if( animate_.get() ) {
 
-  unsigned int animate = animate_.get();
-  unsigned int animatestyle = animateStyle_.get();
-  unsigned int animateframe = animateFrame_.get();
-
-  if( animate ) {
-    if( animatestyle_ != animatestyle )
-      animatestyle_ = animatestyle;
-    if( animateframe_ != animateframe ) {
-      animateframe_ = animateframe;
-      updateFrame = true;
+    vector< vector<string> > frame_paths;
+    vector< vector<string> > frame_datasets;
+    
+    unsigned int nframes =
+      parseAnimateDatasets( paths, datasets, frame_paths, frame_datasets);
+    
+    if( nframes != selectable_max_.get() ) {
+      ostringstream str;
+      str << id << " update_animate_range 0 " << nframes-1;
+      gui->execute(str.str().c_str());
     }
-  }
 
+    animate_execute( new_filename, frame_paths, frame_datasets );
 
-  if( error_ ||
-      animate ||
-      updateFile ||
-      updateAll )
+  } else if( error_ ||
+	     updateFile ||
+	     updateAll )
   {
     error_ = false;
 
-    vector< string > paths;
-    vector< string > datasets;
-
-    parseDatasets( new_datasets, paths, datasets );
-
-    if( animate ) {
-
-      vector< vector<string> > frame_paths;
-      vector< vector<string> > frame_datasets;
- 
-      unsigned int nframes =
-	parseAnimateDatasets( paths, datasets, frame_paths, frame_datasets);
-
-      if( animatestyle_ == 0 ) { // Multiple frames
-
-	for( unsigned int frame=0; frame<nframes-1; frame++ ) {
-	  // Update the nframes in the GUI.
-	  ostringstream str;
-	  str << id << " set_nframes " << nframes << " " << frame;
-
-	  gui->execute(str.str().c_str());
-
-	  ReadandSendData( new_filename, frame_paths[frame],
-			   frame_datasets[frame], 0 );
-
-	  for( unsigned int ic=0; ic<MAX_PORTS; ic++ ) {
-	    // Get a handle to the output double port.
-	    if( nHandles_[ic].get_rep() ) {
-
-	      char portNumber[4];
-	      sprintf( portNumber, "%d", ic );
-
-	      string portName = string("Output ") +
-		string(portNumber) +
-		string( " Nrrd" );
-      
-	      NrrdOPort *ofield_port = 
-		(NrrdOPort *) get_oport(portName);
-    
-	      if (!ofield_port) {
-		error("Unable to initialize "+name+"'s " + portName + " oport\n");
-		return;
-	      }
-
-	      // Send the data downstream
-	      ofield_port->send_intermediate( nHandles_[ic] );
-	    }
-	  }
-	}
-
-	ostringstream str;
-	str << id << " set_nframes " << nframes << " " << nframes-1;
-
-	gui->execute(str.str().c_str());
-	
-	ReadandSendData( new_filename, frame_paths[nframes-1],
-			 frame_datasets[nframes-1], 0 );
-
-	animateframe_ = nframes-1;
-
-      } else if( animatestyle_ == 1 ) { // Single frame
-	if( updateFrame ) {
-	  if( 0 <= animateframe_ && animateframe_ < nframes ) {
-	    ReadandSendData( new_filename, frame_paths[animateframe_],
-			     frame_datasets[animateframe_], 0 );
-	  } else { 
-	    error( "Bad frame number." );
-	  }
-	}
-      }
-    } else {
-      ReadandSendData( new_filename, paths, datasets, 1 );
-    }
+    ReadandSendData( new_filename, paths, datasets, true, true );
 
   } else {
     remark( "Already read the file " +  new_filename );
   }
 
-  for( unsigned int ic=0; ic<MAX_PORTS; ic++ ) {
-    // Get a handle to the output double port.
-    if( nHandles_[ic].get_rep() ) {
 
-      char portNumber[4];
-      sprintf( portNumber, "%d", ic );
-
-      string portName = string("Output ") +
-	string(portNumber) +
-	string( " Nrrd" );
-
-      
-      NrrdOPort *ofield_port = 
-	(NrrdOPort *) get_oport(portName);
-    
-      if (!ofield_port) {
-	error("Unable to initialize "+name+"'s " + portName + " oport\n");
-	return;
-      }
-
-      // Send the data downstream
-      ofield_port->send( nHandles_[ic] );
-    }
-  }
 #else  
   error( "No HDF5 availible." );
   
@@ -343,9 +256,10 @@ void HDF5DataReader::execute() {
 }
 
 void HDF5DataReader::ReadandSendData( string& filename,
-				      vector< string >& paths,
-				      vector< string >& datasets,
-				      bool report ) {
+				       vector< string >& paths,
+				       vector< string >& datasets,
+				       bool last,
+				       bool cache ) {
 
   vector< vector<NrrdDataHandle> > nHandles;
   vector< vector<int> > ids;
@@ -402,7 +316,7 @@ void HDF5DataReader::ReadandSendData( string& filename,
       vector<NrrdDataHandle> &vec = *iter;
       ++iter;
 
-      if (mergedata_ == 2 || vec.size() > 1) {
+      if (mergedata_ == MERGE_TIME || vec.size() > 1) {
 	  
 	NrrdData* onrrd = new NrrdData(true);
 	string new_label("");
@@ -426,7 +340,7 @@ void HDF5DataReader::ReadandSendData( string& filename,
 
 	int axis,  incr;
 
-	if (mergedata_ == 1) {
+	if (mergedata_ == MERGE_LIKE) {
 	  axis = 0; // tuple
 	  incr = 0; // tuple case.
 	} else if (mergedata_ == 2) {
@@ -443,7 +357,7 @@ void HDF5DataReader::ReadandSendData( string& filename,
 	  return;
 	}
 
-	if (mergedata_ == 2) {
+	if (mergedata_ == MERGE_TIME) {
 	  onrrd->nrrd->axis[axis].label = "Time";
 	  // remove all numbers from name
 	  string s(join_me[0]->axis[0].label);
@@ -507,7 +421,7 @@ void HDF5DataReader::ReadandSendData( string& filename,
   for( unsigned int ic=0; ic<paths.size(); ic++ )
     sprintf( portStr, "%s %3d", portStr, ports[ic] );
       
-  if( report ) {
+  if( cache ) {
     // Update the ports in the GUI.
     ostringstream str;
     str << id << " updateSelection {" << portStr << "}";
@@ -520,6 +434,36 @@ void HDF5DataReader::ReadandSendData( string& filename,
 
   for( unsigned int ic=cc; ic<MAX_PORTS; ic++ )
     nHandles_[ic] = NULL;
+
+
+  for( unsigned int ic=0; ic<MAX_PORTS; ic++ ) {
+    // Get a handle to the output double port.
+    if( nHandles_[ic].get_rep() ) {
+
+      char portNumber[4];
+      sprintf( portNumber, "%d", ic );
+
+      string portName = string("Output ") +
+	string(portNumber) +
+	string( " Nrrd" );
+      
+      NrrdOPort *ofield_port = 
+	(NrrdOPort *) get_oport(portName);
+    
+      if (!ofield_port) {
+	error("Unable to initialize "+name+"'s " + portName + " oport\n");
+	return;
+      }
+
+      ofield_port->set_cache( cache );
+
+      // Send the data downstream
+      if( last )
+	ofield_port->send( nHandles_[ic] );
+      else
+	ofield_port->send_intermediate( nHandles_[ic] );
+    }
+  }
 }
 
 
@@ -1475,8 +1419,10 @@ void HDF5DataReader::tcl_command(GuiArgs& args, void* userdata)
     args.error("HDF5DataReader needs a minor command");
     return;
   }
+  if (args[1] == "stop") {
+    stop_ = true;
 
-  if (args[1] == "update_file") {
+  } else if (args[1] == "update_file") {
 #ifdef HAVE_HDF5
     filename_.reset();
     string new_filename(filename_.get());
@@ -1661,11 +1607,11 @@ void HDF5DataReader::tcl_command(GuiArgs& args, void* userdata)
       int nframes =
 	parseAnimateDatasets( paths, datasets, frame_paths, frame_datasets);
 
-      // Update the nframes in the GUI.
-      ostringstream str;
-      str << id << " set_nframes " << nframes << " 0";
-    
-      gui->execute(str.str().c_str());
+      if( nframes != selectable_max_.get() ) {
+	ostringstream str;
+	str << id << " update_animate_range 0 " << nframes-1;
+	gui->execute(str.str().c_str());
+      }
     }
 #else
     error( "No HDF5 availible." );
@@ -1675,4 +1621,140 @@ void HDF5DataReader::tcl_command(GuiArgs& args, void* userdata)
     Module::tcl_command(args, userdata);
   }
 }
+
+
+int
+HDF5DataReader::increment(int which, int lower, int upper)
+{
+  // Do nothing if no range.
+  if (upper == lower) {
+    if (playmode_.get() == "once")
+      stop_ = true;
+    return upper;
+  }
+
+  const int inc_amount = Max(1, Min(upper, inc_amount_.get()));
+  which += inc_ * inc_amount;
+
+  if (which > upper) {
+    if (playmode_.get() == "bounce1") {
+      inc_ *= -1;
+      return increment(upper, lower, upper);
+    } else if (playmode_.get() == "bounce2") {
+      inc_ *= -1;
+      return upper;
+    } else {
+      if (playmode_.get() == "once")
+	stop_ = true;
+      return lower;
+    }
+  }
+
+  if (which < lower) {
+    if (playmode_.get() == "bounce1") {
+      inc_ *= -1;
+      return increment(lower, lower, upper);
+    } else if (playmode_.get() == "bounce2") {
+      inc_ *= -1;
+      return lower;
+    } else {
+      if (playmode_.get() == "once")
+	stop_ = true;
+      return upper;
+    }
+  }
+  return which;
+}
+
+void
+HDF5DataReader::animate_execute( string new_filename,
+				 vector< vector<string> >& frame_paths,
+				 vector< vector<string> >& frame_datasets )
+{
+  update_state(NeedData);
+
+  reset_vars();
+
+  // Update the increment.
+  const int start = range_min_.get();
+  const int end = range_max_.get();
+  if (playmode_.get() == "once" || playmode_.get() == "loop")
+    inc_ = (start>end)?-1:1;
+
+  // If the current value is invalid, reset it to the start.
+  int lower = start;
+  int upper = end;
+  if (lower > upper) {int tmp = lower; lower = upper; upper = tmp; }
+  if (current_.get() < lower || current_.get() > upper) {
+    current_.set(start);
+    inc_ = (start>end)?-1:1;
+  }
+
+  // Cash execmode and reset it in case we bail out early.
+  const string execmode = execmode_.get();
+
+
+  // If updating, we're done for now.
+  if (execmode == "update")
+  {
+
+  } else if (execmode == "step") {
+
+    int which = current_.get();
+    which = increment(which, lower, upper);
+    current_.set(which);
+    current_.reset();
+
+    ReadandSendData( new_filename, frame_paths[which],
+		     frame_datasets[which], true, false );
+
+  } else if (execmode == "play") {
+    stop_ = false;
+    int which = current_.get();
+    if (which >= end && playmode_.get() == "once")
+      which = start;
+
+    const int delay = delay_.get();
+    int stop;
+    do {
+      int next;
+      if (playmode_.get() == "once")
+	next = increment(which, lower, upper);
+
+      stop = stop_;
+
+      current_.set(which);
+      current_.reset();
+      ReadandSendData( new_filename, frame_paths[which],
+		       frame_datasets[which], stop, false );
+
+      if (!stop && delay > 0) {
+	const unsigned int secs = delay / 1000;
+	const unsigned int msecs = delay % 1000;
+	if (secs)  { sleep(secs); }
+	if (msecs) { usleep(msecs * 1000); }
+      }
+
+      if (playmode_.get() == "once")
+	which = next;
+      else if (!stop)
+	which = increment(which, lower, upper);
+    } while (!stop);
+  }
+  else
+  {
+    int which = current_.get();
+
+    ReadandSendData( new_filename, frame_paths[which],
+		     frame_datasets[which], true, false );
+    
+    if (playmode_.get() == "inc_w_exec") {
+      which = increment(which, lower, upper);
+      current_.set(which);
+      current_.reset();
+    }
+  }
+  execmode_.set("init");
+}
+
 } // End namespace DataIO
