@@ -1303,10 +1303,10 @@ void CI::emit_proxy(EmitState& e)
     e.out << "  d_sched->setCallerRepresentation(distname,arrrep);\n";
     e.out << "  //Scatter to all callee objects\n";
     e.out << "  ::SSIDL::array2< int> _rep = arrrep->getArray();\n";
-    e.out << "  ::SCIRun::refList _refL;\n";
+    e.out << "  ::SCIRun::refList* _refL;\n";
     e.out << "  ::SCIRun::refList::iterator iter;\n";
-    e.out << "  _proxyGetReferenceList(_refL,false);\n";
-    e.out << "  ::SCIRun::Message** msgs = new ::SCIRun::Message*[_refL.size()];\n";
+    e.out << "  ::SCIRun::ReferenceMgr* _rm = _proxyGetReferenceMgr();\n";
+    e.out << "  ::SCIRun::Message** msgs = new ::SCIRun::Message*[_refL->size()];\n";
 #ifdef MxNDEBUG
     e.out << "  //Turn on debug to a file\n";
     e.out << "  std::ostringstream fname;\n";
@@ -1314,8 +1314,9 @@ void CI::emit_proxy(EmitState& e)
     e.out << "  d_sched->dbg.open(fname.str().c_str(), std::ios_base::app);\n";
 #endif
     e.out << "  \n";
-    e.out << "  iter = _refL.begin();\n";
-    e.out << "  for(unsigned int i=0; i < _refL.size(); i++, iter++) {\n";
+    e.out << "  _refL = _rm->getAllReferences();\n";
+    e.out << "  iter = _refL->begin();\n";
+    e.out << "  for(unsigned int i=0; i < _refL->size(); i++, iter++) {\n";
     e.out << "    msgs[i] = (*iter).chan->getMessage();\n";
     e.out << "    ::SCIRun::Message* message = msgs[i];\n";
     e.out << "    message->createMessage();\n";
@@ -1341,8 +1342,8 @@ void CI::emit_proxy(EmitState& e)
     e.out << "    message->sendMessage(_handler);\n";
     e.out << "  }\n";
     e.out << "  //Gather from all callee objects\n";
-    e.out << "  iter = _refL.begin();\n";
-    e.out << "  for(unsigned int i=0; i < _refL.size(); i++, iter++) {\n";
+    e.out << "  iter = _refL->begin();\n";
+    e.out << "  for(unsigned int i=0; i < _refL->size(); i++, iter++) {\n";
     e.out << "    ::SCIRun::Message* message = msgs[i];\n";
     e.out << "    message->waitReply();\n";
     e.out << "    int _x_flag;\n";
@@ -1357,7 +1358,7 @@ void CI::emit_proxy(EmitState& e)
     e.out << "    ::SSIDL::array2< int>::pointer _ret_uptr=const_cast< ::SSIDL::array2< int>::pointer>(&_ret[0][0]);\n";
     e.out << "    message->unmarshalInt(_ret_uptr, _ret_totalsize);\n";
     e.out << "    message->destroyMessage();\n";
-    e.out << "    ::SCIRun::MxNArrayRep* arep = new ::SCIRun::MxNArrayRep(_ret,&(*iter));\n";
+    e.out << "    ::SCIRun::MxNArrayRep* arep = new ::SCIRun::MxNArrayRep(_ret,(*iter));\n";
     e.out << "    d_sched->setCalleeRepresentation(distname,arep);\n";
     e.out << "  }\n";
     e.out << "  d_sched->print();\n";
@@ -2204,7 +2205,7 @@ void NamedType::emit_unmarshal(EmitState& e, const string& arg,
     e.out << leader2 << "if(" << arg << "_vtable_base == -1){\n";
     e.out << leader2 << "  " << arg << "=0;\n";
     e.out << leader2 << "} else {\n";
-    e.out << leader2 << "  ::SCIRun::Reference _ref(::SCIRun::PIDL::getSpChannel());\n";
+    e.out << leader2 << "  ::SCIRun::Reference _ref();\n";
     e.out << leader2 << "  _ref.d_vtable_base=" << arg << "_vtable_base;\n";
     e.out << leader2 << "  message->unmarshalSpChannel(_ref.chan);\n";
     e.out << leader2 << "  ::SCIRun::Message* spmsg = (_ref.chan)->getMessage();\n";
@@ -2503,7 +2504,7 @@ void NamedType::emit_marshal(EmitState& e, const string& arg,
     e.out << leader2 << "  const ::SCIRun::TypeInfo* _dt=" << arg << "->_virtual_getTypeInfo();\n";
     e.out << leader2 << "  const ::SCIRun::TypeInfo* _bt=" << name->cppfullname(0) << "::_static_getTypeInfo();\n";
     e.out << leader2 << "  int _vtable_offset=_dt->computeVtableOffset(_bt);\n";
-    e.out << leader2 << "  ::SCIRun::Reference " << arg << "_ref(::SCIRun::PIDL::getSpChannel());\n";
+    e.out << leader2 << "  ::SCIRun::Reference " << arg << "_ref();\n";
     e.out << leader2 << "  " << arg << "->_getReference(" << arg << "_ref, true);\n";
     e.out << leader2 << "  int _vtable_base=" << arg << "_ref.getVtableBase()+_vtable_offset;\n";
     e.out << leader2 << "  message->marshalInt(&_vtable_base);\n";
