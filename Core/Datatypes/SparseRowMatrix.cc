@@ -404,8 +404,8 @@ SparseRowMatrix::sparse_mult(const DenseMatrix& x, DenseMatrix& b) const
   ASSERT(b.nrows() == nnrows);
   ASSERT(x.ncols() == b.ncols());
   int i, j, k;
-  cout << "x size = " << x.nrows() << " " << x.ncols() << "\n";
-  cout << "b size = " << b.nrows() << " " << b.ncols() << "\n";
+  //  cout << "x size = " << x.nrows() << " " << x.ncols() << "\n";
+  //  cout << "b size = " << b.nrows() << " " << b.ncols() << "\n";
 
   for (j = 0; j < b.ncols(); j++)
   {
