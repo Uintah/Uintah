@@ -101,20 +101,19 @@ Time::initialize()
     orig_timer=0;
 
     if(timer_32bit){
-      //for(;;){
 	    unsigned high=0;
 	    unsigned low=*iotimer_addr32;
 	    orig_timer=((long long)(high&(~TOPBIT))<<32|(long long)low);
-	    //	}
     } else {
 #if _MIPS_ISA == _MIPS_ISA_MIPS1 || _MIPS_ISA ==  _MIPS_ISA_MIPS2
-      //	while (1) {
+       for(;;) {
 	    unsigned high = *iotimer_addr;
 	    unsigned low = *(iotimer_addr + 1);
 	    if (high == *iotimer_addr) {
 		orig_timer=((long long)high<<32|(long long)low);
+		break;
 	    }
-      //}
+       }
 #else
 	orig_timer=*iotimer_addr-orig_timer;
 #endif
@@ -156,7 +155,6 @@ Time::currentTicks()
     if(!initialized)
 	initialize();
     if(timer_32bit){
-	fprintf(stderr, "timer32bit\n");
 	for(;;){
 	    unsigned high=iotimer_high;
 	    unsigned ohigh=high;
@@ -173,8 +171,7 @@ Time::currentTicks()
 	}
     } else {
 #if _MIPS_ISA == _MIPS_ISA_MIPS1 || _MIPS_ISA ==  _MIPS_ISA_MIPS2
-	fprintf(stderr, "mips1\n");
-	while (1) {
+	for(;;) {
 	    unsigned high = *iotimer_addr;
 	    unsigned low = *(iotimer_addr + 1);
 	    if (high == *iotimer_addr) {
@@ -259,6 +256,9 @@ Time::waitFor(SysClock time)
 
 //
 // $Log$
+// Revision 1.6  2000/09/29 03:45:07  sparker
+// Another attempt at 32 bit timer fix
+//
 // Revision 1.5  2000/09/29 03:34:39  samsonov
 // Fixes 32-bit hardware cycle counter
 //
