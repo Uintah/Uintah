@@ -77,7 +77,8 @@ Properties::problemSetup(const ProblemSpecP& params)
   db->require("radiation",d_radiationCalc);
   if (d_radiationCalc) {
     db->getWithDefault("discrete_ordinates",d_DORadiationCalc,true);
-    db->getWithDefault("opl",d_opl,3.0);
+//    db->getWithDefault("opl",d_opl,3.0); too sensitive to have default
+    db->require("opl",d_opl);
   }
   // read type of mixing model
   string mixModel;
@@ -1622,7 +1623,7 @@ Properties::computeDrhodt(const ProcessorGroup* pc,
   if (timelabels->recursion) parent_old_dw = new_dw->getOtherDataWarehouse(Task::ParentOldDW);
   else parent_old_dw = old_dw;
 
-  int drhodt_1st_order = 1;
+  int drhodt_1st_order = 10000000;
   int current_step = d_lab->d_sharedState->getCurrentTopLevelTimeStep();
   if (d_MAlab) drhodt_1st_order = 2;
   delt_vartype delT, old_delT;
