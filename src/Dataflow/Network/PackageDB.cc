@@ -97,7 +97,10 @@ namespace SCIRun {
 using namespace SCIRun;
   
 PackageDB::PackageDB(GuiInterface* gui)
-  : db_(new Packages), packageList_(0), gui(gui), loading_app_(false)
+  : delayed_commands_(),
+    db_(new Packages), 
+    packageList_(0), 
+    gui_(gui)
 {
 }
 
@@ -167,15 +170,9 @@ bool PackageDB::findMaker(ModuleInfo* moduleInfo)
 
 
   if (!category_so && !package_so) {
-    string msg = "Unable to load all of package '" + moduleInfo->packageName +
-      "' (category '" + moduleInfo->categoryName + "' failed) :\n" + errstr;
-
-    if(gui){
-      gui->postMessage( msg );
-      gui->execute("update idletasks");
-    } else {
-      cerr << msg << "\n";
-    }
+    printMessage("Unable to load all of package '" + moduleInfo->packageName +
+		 "' (category '" + moduleInfo->categoryName + "' failed) :\n" 
+		 + errstr);
     return false;
   }
 
@@ -187,14 +184,8 @@ bool PackageDB::findMaker(ModuleInfo* moduleInfo)
     moduleInfo->maker = 
       (ModuleMaker)GetHandleSymbolAddress(package_so,makename.c_str());
   if (!moduleInfo->maker) {
-    errstr = "Unable to load module '" + moduleInfo->moduleName +
-      "' :\n - can't find symbol '" + makename + "'\n";
-    if(gui){
-      gui->postMessage(errstr);
-      gui->execute("update idletasks");
-    } else {
-      cerr << errstr;
-    }
+    printMessage("Unable to load module '" + moduleInfo->moduleName +
+		 "' :\n - can't find symbol '" + makename + "'\n");
     return false;
   }
   return true;
@@ -218,10 +209,7 @@ void PackageDB::loadPackage(bool resolve)
   string notset(NOT_SET);
   string packagePath;
 
-  if(gui)
-    gui->postMessage("Loading packages, please wait...", false);
-  else
-    cerr << "Loading packages...\n";
+  printMessage("Loading packages, please wait...");
 
   //#ifdef __APPLE__
   //  // A hack around a gcc (apple) init bug
@@ -281,37 +269,30 @@ void PackageDB::loadPackage(bool resolve)
     }
 
     if (tmpPath=="") {
-      if(gui){
-	gui->postMessage("Unable to load package " + packageElt +
-			 ":\n - Can't find " + packageElt + 
-			 " directory in package path");
-      } else {
-	cerr << "Unable to load package " << packageElt
-	     << ":\n - Can't find " << packageElt
-	     << " directory in package path\n";
-      }
+      printMessage("Unable to load package " + packageElt +
+		   ":\n - Can't find " + packageElt +
+		   " directory in package path");
       continue;
     }
 
-    do_command("lappend auto_path "+pathElt+"/"+packageElt+"/Dataflow/GUI");
+    gui_exec("lappend auto_path "+pathElt+"/"+packageElt+"/Dataflow/GUI");
 
     string xmldir;
     
     if(packageElt == "SCIRun") {
       xmldir = string(SCIRUN_SRCDIR) + "/Dataflow/XML";
-      do_command("lappend auto_path "+string(SCIRUN_SRCDIR)+"/Dataflow/GUI");
+      gui_exec("lappend auto_path "+string(SCIRUN_SRCDIR)+"/Dataflow/GUI");
     } else {
       xmldir = pathElt+"/"+packageElt+"/Dataflow/XML";
-      do_command(string("lappend auto_path ")+pathElt+"/"+packageElt+
+      gui_exec(string("lappend auto_path ")+pathElt+"/"+packageElt+
 		 "/Dataflow/GUI");
     }
     std::map<int,char*>* files;
     files = GetFilenamesEndingWith((char*)xmldir.c_str(),".xml");
 
     if (!files) {
-      if(gui)
-	gui->postMessage("Unable to load package " + packageElt +
-			 ":\n - Couldn't find *.xml in " + xmldir );
+      printMessage("Unable to load package " + packageElt +
+		   ":\n - Couldn't find *.xml in " + xmldir );
       continue;
     }
 
@@ -327,7 +308,7 @@ void PackageDB::loadPackage(bool resolve)
 	 i++) {
       if (node) DestroyComponentNode(node);
       node = CreateComponentNode(1);
-      ReadComponentNodeFromFile(node,(xmldir+"/"+(*i).second).c_str(), gui);
+      ReadComponentNodeFromFile(node,(xmldir+"/"+(*i).second).c_str(), gui_);
 
       if (notset==node->name||notset==node->category) continue;
 
@@ -381,11 +362,9 @@ void PackageDB::loadPackage(bool resolve)
       }
     }
   }
-  if (gui && !sci_getenv_p("SCI_NOSPLASH"))
-  {
-    gui->execute("showSplash ""[file join " + string(SCIRUN_SRCDIR) + 
-		 " " + splash_path_ + "]"" " + to_string(mod_count));
-  }
+
+  gui_exec("addProgressSteps " + to_string(mod_count));
+
   int index = 0;
   int numreg;
   
@@ -397,17 +376,8 @@ void PackageDB::loadPackage(bool resolve)
     
     string pname = (*pi).second->name;
 
-    if(gui){
-      gui->postMessage("Loading package '" + pname + "'", false);
-      if (!sci_getenv_p("SCI_NOSPLASH"))
-      {
-	gui->execute(".splash.fb configure -labeltext {Loading package: " +
-		     pname + " }");
-	gui->eval("update idletasks",result);
-      }
-    } else {
-      cerr << "Loading package '" << pname << "'\n";
-    }
+    printMessage("Loading package '" + pname + "'");
+    gui_exec("setProgressText {Loading package: " + pname + " }");
 
     for (ci = (*pi).second->categories.begin();
 	 ci!=(*pi).second->categories.end();
@@ -421,55 +391,26 @@ void PackageDB::loadPackage(bool resolve)
 	    numreg++;
 	  } else {
 	    string mname = (*mi).second->moduleName;
-	    if(gui){
-	      gui->postMessage("Unable to load module '" + mname +
-			       "' :\n - can't find symbol 'make_" + mname + "'\n");
-	      gui->execute("update idletasks");
-	    } else {
-	      cerr << "Unable to load module '" << mname
-		   << "' :\n - can't find symbol 'make_" << mname << "'\n";
-	    }
+	    printMessage("Unable to load module '" + mname +
+			 "' :\n - can't find symbol 'make_" + mname + "'\n");
 	  }
 	} else {
 	  numreg++;
 	  registerModule((*mi).second);
 	}
-	if (gui && !sci_getenv_p("SCI_NOSPLASH"))
-	{
-	  gui->execute("if [winfo exists .splash.fb] "
-		       "{.splash.fb step; update idletasks}");
-	}
+	gui_exec("incrProgress");
       }
     }
     
     if (numreg) {
-      if(gui)
-	gui->execute("createPackageMenu " + to_string(index++));
+	gui_exec("createPackageMenu " + to_string(index++));
     } else {
-      if(gui)
-	gui->postMessage("Unable to load package " + pname + ":\n"
-			 " - could not find any valid modules.");
-      else
-	cerr << "Unable to load package " << pname
-	     <<":\n - could not find any valid modules.\n";
+      printMessage("Unable to load package " + pname + ":\n"
+		   " - could not find any valid modules.");
     }
   }
 
-  if(gui){
-    gui->postMessage("\nFinished loading packages.",false);
-    if (!sci_getenv_p("SCI_NOSPLASH"))
-    {
-      if (!loading_app_) {
-	gui->execute("if [winfo exists .splash] {hideSplash \"true\"}");
-	gui->eval("update idletasks",result);
-      } else {
-	gui->execute(".splash.fb configure -labeltext {Loading PowerApp...}");
-	gui->eval("update idletasks",result);
-      }
-    }
-  } else {
-    cerr << "Finished loading packages\n";
-  }
+  printMessage("\nFinished loading packages.");
 }
   
 void PackageDB::registerModule(ModuleInfo* info) {
@@ -559,7 +500,8 @@ Module* PackageDB::instantiateModule(const string& packageName,
     }
   }
 
-  GuiContext* module_context = gui->createContext(instanceName);
+  ASSERT(gui_);
+  GuiContext* module_context = gui_->createContext(instanceName);
   Module *module = (moduleInfo->maker)(module_context);
   if(!module)
     return 0;
@@ -709,20 +651,22 @@ PackageDB::moduleNames(const string& packageName,
 
 void PackageDB::setGui(GuiInterface* gui)
 {
-  this->gui=gui;
-  for(vector<string>::iterator iter = delayed_commands.begin();
-      iter != delayed_commands.end(); ++iter){
-    gui->execute(*iter);
+  gui_ = gui;
+  if (gui_) {
+    for(vector<string>::iterator iter = delayed_commands_.begin();
+	iter != delayed_commands_.end(); ++iter){
+      gui_->execute(*iter);
+    }
+    delayed_commands_.clear();
   }
-  delayed_commands.clear();
 }
 
-void PackageDB::do_command(const string& command)
+void PackageDB::gui_exec(const string& command)
 {
-  if(gui)
-    gui->execute(command);
+  if(gui_)
+    gui_->execute(command);
   else
-    delayed_commands.push_back(command);
+    delayed_commands_.push_back(command);
 }
 
 ModuleInfo*
@@ -744,19 +688,16 @@ PackageDB::GetModuleInfo(const string& name,
   return 0;
 }
 
-void PackageDB::setSplashPath(const string &p) {
-  splash_path_ = p;
-}
 
-void PackageDB::setLoadingApp(bool b, const string & ses) {
-  loading_app_ = b;
-
-  if (ses != "") {
-    gui->execute("global PowerAppSession");
-    string command = "set PowerAppSession ";
-    command += ses;
-    gui->execute(command);
+void
+PackageDB::printMessage(const string &msg) 
+{
+  if(gui_){
+    gui_->postMessage(msg);
+    gui_->execute("update idletasks");
+  } else {
+    cerr << msg << "\n";
   }
 }
 
-
+  
