@@ -1410,7 +1410,7 @@ void ICE::actuallyComputeStableTimestep(const ProcessorGroup*,
     Ghost::GhostType  gac = Ghost::AroundCells;
 
     double dCFL = d_CFL;
-    static double TIME = 0.;
+    delt_CFL = 1000.0; 
 
     for (int m = 0; m < d_sharedState->getNumICEMatls(); m++) {
       Material* matl = d_sharedState->getICEMaterial(m);
@@ -1463,8 +1463,7 @@ void ICE::actuallyComputeStableTimestep(const ProcessorGroup*,
                                  dx.z() * fabs(grav.z()) ); 
                                    
         double dx_length   = dx.length();
-        
-        delt_CFL = 1000.0; 
+
         for(CellIterator iter=patch->getCellIterator(); !iter.done(); iter++){
           double sumSwept_Vol = 0.0;
           IntVector c = *iter;
@@ -1544,8 +1543,6 @@ void ICE::actuallyComputeStableTimestep(const ProcessorGroup*,
         delt *= grid->getLevel(i)->timeRefinementRatio();
       }
     
-    TIME += delt; //for AMR this may change ?
-
     //__________________________________
     //  Bullet proofing
     if(delt < 1e-20) {  
@@ -4717,10 +4714,7 @@ void ICE::advectAndAdvanceInTime(const ProcessorGroup* pg,
       //    vel_CC[c] = Vector(0.,0.,0.); 
       //  }
       //}
-      
 
-
-      
       //__________________________________
       // Advection of specific volume
       // Note sp_vol_L[m] is actually sp_vol[m] * mass
