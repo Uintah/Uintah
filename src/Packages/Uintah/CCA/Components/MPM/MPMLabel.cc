@@ -257,9 +257,6 @@ MPMLabel::MPMLabel()
   gVolumeLabel     = scinew VarLabel("g.volume",
 			NCVariable<double>::getTypeDescription());
 
-  gWeightLabel = scinew VarLabel("g.weight",
-			NCVariable<double>::getTypeDescription());
-
   gWeightLabel     = scinew VarLabel("g.weight",
 			NCVariable<double>::getTypeDescription());
 
