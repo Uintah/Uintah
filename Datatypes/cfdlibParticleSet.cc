@@ -37,25 +37,66 @@ void cfdlibParticleSet::add(cfdlibTimeStep* ts)
 {
     timesteps.add(ts);
 }
+void cfdlibParticleSet::addVectorVar(const clString& var)
+{
+  vectorvars.add(var);
+}
+
+void cfdlibParticleSet::addScalarVar(const clString& var)
+{
+  scalarvars.add(var);
+}
 
 int cfdlibParticleSet::position_vector()
 {
     return 0;
 }
 
-void cfdlibParticleSet::get(int timestep, int,
+void cfdlibParticleSet::get(int timestep, int index,
 			    Array1<Vector>& values, int start, int end)
 {
     cfdlibTimeStep* ts=timesteps[timestep];
     if(start==-1)
 	start=0;
     if(end==-1)
-	end=ts->positions.size();
+	end=ts->vectors[index].size();
+        // end=ts->positions.size();
     int n=end-start;
     values.resize(n);
     for(int i=0;i<n;i++)
-	values[i]=ts->positions[i+start];
+        // values[i]=ts->positions[i+start];
+      values[i] = (ts->vectors[index])[i + start];
 }
+
+void cfdlibParticleSet::get(int timestep, int index, Array1<double>& values,
+			    int start, int end)
+{
+  cfdlibTimeStep* ts=timesteps[timestep];
+  if(start==-1)
+    start=0;
+  if(end==-1)
+    //end=ts->positions.size();
+    end=ts->scalars[index].size();
+  int n=end-start;
+  values.resize(n);
+  for(int i=0;i<n;i++)
+    //value[i]=ts->scalars[i+start];
+    values[i] = (ts->scalars[index])[i + start];
+}
+
+Vector cfdlibParticleSet::getVector(int timestep, int vectorid, int index)
+{
+  cfdlibTimeStep* ts=timesteps[timestep];
+  return (ts->vectors[vectorid])[index];
+}
+double cfdlibParticleSet::getScalar(int timestep, int scalarid, int index)
+{
+  cfdlibTimeStep* ts=timesteps[timestep];
+  return (ts->scalars[scalarid])[index];
+}
+
+
+
 
 void cfdlibParticleSet:: list_natural_times(Array1<double>& times)
 {
@@ -73,12 +114,18 @@ void cfdlibParticleSet::io(Piostream& stream)
     int nsets=timesteps.size();
     Pio(stream, nsets);
     if(stream.reading())
-	timesteps.resize(nsets);
-    for(int i=0;i<nsets;i++){
-	if(stream.reading())
-	    timesteps[i]=new cfdlibTimeStep();
-	Pio(stream, timesteps[i]->time);
-	Pio(stream, timesteps[i]->positions);
+      timesteps.resize(nsets);
+//     for(int i=0;i<nsets;i++){
+// 	if(stream.reading())
+// 	    timesteps[i]=new cfdlibTimeStep();
+// 	Pio(stream, timesteps[i]->time);
+// 	Pio(stream, timesteps[i]->positions);
+//     }
+    for(int i = 0; i < nsets; i++){
+      if(stream.reading())
+	timesteps[i] = new cfdlibTimeStep();
+      Pio(stream, timesteps[i]->vectors);
+      Pio(stream, timesteps[i]->scalars);
     }
     stream.end_class();
 }
@@ -90,38 +137,37 @@ ParticleSet *cfdlibParticleSet::clone() const
   return scinew cfdlibParticleSet();
 }
 
-int cfdlibParticleSet::find_scalar(const clString&)
+int cfdlibParticleSet::find_scalar(const clString& var)
 {
-  return 0;
+  for(int i = 0; i < scalarvars.size(); i++){
+    if( var == scalarvars[i] )
+      return i;
+  }
+  return -1;
 }
 
-void cfdlibParticleSet::list_scalars(Array1<clString>&)
+void cfdlibParticleSet::list_scalars(Array1<clString>& svs)
 {
+  for(int i = 0; i < scalarvars.size(); i++)
+    svs.add( scalarvars[i] );
 }
 
-int cfdlibParticleSet::find_vector(const clString&)
+int cfdlibParticleSet::find_vector(const clString& var)
 {
-  return 0;
+  for(int i = 0; i < vectorvars.size(); i++){
+    if( var == vectorvars[i] )
+      return i;
+  }
+  return -1;
+
 }
 
-void cfdlibParticleSet::list_vectors(Array1<clString>&)
+void cfdlibParticleSet::list_vectors(Array1<clString>&  vvs)
 {
+  for(int i = 0; i < vectorvars.size(); i++)
+    vvs.add( vectorvars[i] );
 }
   
-void cfdlibParticleSet::get(int timestep, int, Array1<double>& value,
-			    int start, int end)
-{
-  cfdlibTimeStep* ts=timesteps[timestep];
-  if(start==-1)
-    start=0;
-  if(end==-1)
-    end=ts->positions.size();
-  int n=end-start;
-  value.resize(n);
-  for(int i=0;i<n;i++)
-    value[i]=ts->scalars[i+start];
-}
-
 void cfdlibParticleSet::interpolate(double, int, Vector&,
 				    int, int)
 {
@@ -135,11 +181,11 @@ void cfdlibParticleSet::interpolate(double, int, double&,
 void cfdlibParticleSet::print() {
   cout << "Particle Set.  t = " << timesteps[0]->time << endl;
   int i;
-  int n = timesteps[0]->positions.size();
+  int n = (timesteps[0]->vectors[0]).size();
   for(i=0;i<n;i++) {
-    cout << (timesteps[0]->positions[i]).x() << " " 
-	 << (timesteps[0]->positions[i]).y() << " "
-	 << (timesteps[0]->positions[i]).z() << ":\t"
-	 << timesteps[0]->scalars[i] << endl;
+    cout << ((timesteps[0]->vectors[0])[i]).x() << " " 
+	 << ((timesteps[0]->vectors[0])[i]).y() << " "
+	 << ((timesteps[0]->vectors[0])[i]).z() << ":\t"
+	 << (timesteps[0]->scalars[0])[i] << endl;
   }
 }

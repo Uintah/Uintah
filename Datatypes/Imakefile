@@ -27,8 +27,11 @@ OBJS = BasicSurfaces.o  Boolean.o BooleanPort.o ColorMap.o  ColorMapPort.o  \
 	VoidStar.o  VoidStarPort.o cMatrix.o cSMatrix.o cDMatrix.o \
 	cVector.o cVectorPort.o cMatrixPort.o \
 	ParticleSet.o ParticleSetPort.o \
-	cfdlibParticleSet.o \
-        TensorField.o TensorFieldBase.o TensorFieldPort.o
+	ParticleGridReader.o ParticleGridReaderPort.o \
+	TecplotReader.o MEFluid.o ParticleSetExtension.o \
+	ParticleSetExtensionPort.o \
+	cfdlibParticleSet.o 
+#        TensorField.o TensorFieldBase.o TensorFieldPort.o
 
 GENSRCS = ScalarFieldRGchar.cc  ScalarFieldRGint.cc ScalarFieldRGfloat.cc \
 	ScalarFieldRGdouble.cc  ScalarFieldRG.cc ScalarFieldRGshort.cc \
@@ -61,9 +64,12 @@ SRCS = $(GENSRCS) BasicSurfaces.cc  \
 	LockArray3.cc \
 	VectorFieldZone.cc \
 	ParticleSetPort.cc ParticleSet.cc \
+	ParticleGridReader.cc ParticleGridReaderPort.cc \
+	TecplotReader.cc MEFluid.cc ParticleSetExtension.cc \
+	ParticleSetExtensionPort.cc \
 	VoidStar.cc VoidStarPort.cc \
-	cfdlibParticleSet.cc SegFld.cc SegFldPort.cc \
-        TensorField.cc TensorFieldBase.cc TensorFieldPort.cc
+	cfdlibParticleSet.cc 
+#        TensorField.cc TensorFieldBase.cc TensorFieldPort.cc
 
 GENH = ScalarFieldRGchar.h  ScalarFieldRGint.h  ScalarFieldRGfloat.h \
 	ScalarFieldRGdouble.h ScalarFieldRG.h ScalarFieldRGshort.h \

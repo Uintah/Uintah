@@ -40,6 +40,10 @@ public:
 		     int start=-1, int end=-1)=0;
     virtual void get(int timestep, int scalarid, Array1<double>& value,
 		     int start=-1, int end=-1)=0;
+
+    virtual Vector getVector(int timestep, int vectorid, int index)=0;
+    virtual double getScalar(int timestep, int scalarid, int index)=0;
+
     virtual void interpolate(double time, int vectorid, Vector& value,
 			     int start=-1, int end=-1)=0;
     virtual void interpolate(double time, int scalarid, double& value,

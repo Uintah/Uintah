@@ -49,7 +49,7 @@ protected:
     enum Representation {
 	PhantomsType,
         PulsesType,
-	DRaytracerType,
+	//	DRaytracerType,
 	ImageXYZType,
 	ImageRMType,
         PhantomXYZType,
@@ -66,7 +66,7 @@ public:
     virtual VoidStar* clone()=0;
     Pulses* getPulses();
     Phantoms* getPhantoms();
-    DRaytracer* getDRaytracer();
+  //    DRaytracer* getDRaytracer();
     ImageXYZ* getImageXYZ();
     ImageRM* getImageRM();
     PhantomXYZ* getPhantomXYZ();  // i.e. current phantom position in some
@@ -239,7 +239,7 @@ public:
     static PersistentTypeID type_id;
 };
 
-#include <Modules/CS684/DRaytracer.h>
+//#include <Modules/CS684/DRaytracer.h>
 
 // Phantom Position class definition
 // based heavily on dweinste's VoidStar.cc in his own work/Datatypes dir

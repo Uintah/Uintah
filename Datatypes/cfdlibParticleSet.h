@@ -17,14 +17,22 @@
 #include <Datatypes/ParticleSet.h>
 #include <Classlib/LockingHandle.h>
 
+// struct cfdlibTimeStep {
+//     double time;
+//     Array1<Vector> positions;
+//     Array1<double> scalars;
+// };
+
 struct cfdlibTimeStep {
-    double time;
-    Array1<Vector> positions;
-    Array1<double> scalars;
+  double time;
+  Array1< Array1< Vector > > vectors;
+  Array1< Array1< double > > scalars;
 };
 
 class cfdlibParticleSet : public ParticleSet {
-    Array1<cfdlibTimeStep*> timesteps;
+  Array1<cfdlibTimeStep*> timesteps;
+  Array1<clString> vectorvars;
+  Array1<clString> scalarvars;
 public:
     cfdlibParticleSet();
     virtual ~cfdlibParticleSet();
@@ -42,15 +50,19 @@ public:
 		     int start=-1, int end=-1);
     virtual void get(int timestep, int scalarid, Array1<double>& value,
 		     int start=-1, int end=-1);
+
+    virtual Vector getVector(int timestep, int vectorid, int index);
+    virtual double getScalar(int timestep, int scalarid, int index);
+
     virtual void interpolate(double time, int vectorid, Vector& value,
 			     int start=-1, int end=-1);
     virtual void interpolate(double time, int scalarid, double& value,
-			     int start=-1, int end=-1);
-
+				     int start=-1, int end=-1);
     virtual int position_vector();
 
     void add(cfdlibTimeStep* ts);
-
+    void addVectorVar(const clString&);
+    void addScalarVar(const clString&);
     // Persistent representation...
     virtual void io(Piostream&);
     static PersistentTypeID type_id;

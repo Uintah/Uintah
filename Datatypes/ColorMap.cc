@@ -25,21 +25,24 @@ PersistentTypeID ColorMap::type_id("ColorMap", "Datatype", make_ColorMap);
 
 ColorMap::ColorMap()
 : min(-1), max(1), colors(50), non_diffuse_constant(0),type(0),
-  rawRed(0),rawGreen(0),rawBlue(0),rawAlpha(0),raw1d(0),pre_mult_alpha(0)
+  rawRed(0),rawGreen(0),rawBlue(0),rawAlpha(0),raw1d(0),pre_mult_alpha(0),
+  scaled(false)
 {
    build_default();
 }
 
 ColorMap::ColorMap(int nlevels, double min, double max, int /*shortrange */)
 : min(min), max(max), colors(nlevels), non_diffuse_constant(0),type(0),
-  rawRed(0),rawGreen(0),rawBlue(0),rawAlpha(0),raw1d(0),pre_mult_alpha(0)
+  rawRed(0),rawGreen(0),rawBlue(0),rawAlpha(0),raw1d(0),pre_mult_alpha(0),
+  scaled(false)
 {
 }
 
 ColorMap::ColorMap(const ColorMap& copy)
 : min(copy.min), max(copy.max), colors(copy.colors),
   non_diffuse_constant(copy.non_diffuse_constant),
-  rawRed(0),rawGreen(0),rawBlue(0),rawAlpha(0),raw1d(0),pre_mult_alpha(0)
+  rawRed(0),rawGreen(0),rawBlue(0),rawAlpha(0),raw1d(0),pre_mult_alpha(0),
+  scaled(false)
 {
 }
 
@@ -86,10 +89,10 @@ inline float FindAlpha(const Array1<float>& c,const Array1<float>& s,float t)
 
 ColorMap::ColorMap(const Array1<Color>& rgb, Array1<float>& rgbT,
 	     const Array1<float>& ialpha, const Array1<float>& alphaT,
-		   const int size):min(0),max(1),non_diffuse_constant(1),
+		   const int size):min(-1),max(1),non_diffuse_constant(1),
 		   type(1),rcolors(size),alphas(size),colors(size),
 		   rawRed(0),rawGreen(0),rawBlue(0),rawAlpha(0),raw1d(0),
-		   pre_mult_alpha(0)
+		   pre_mult_alpha(0), scaled(false)
 {
   SetRaw(rgb,rgbT,ialpha,alphaT,size);
   
@@ -101,6 +104,7 @@ ColorMap::ColorMap(const Array1<Color>& rgb, Array1<float>& rgbT,
 
   
 }
+
 
 void ColorMap::Build1d(const int size)
 {

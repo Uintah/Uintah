@@ -70,6 +70,12 @@ public:
 
     void Build1d(const int size=256);
 
+
+  bool IsScaled(){ return scaled;} // are the colors scaled to some data?
+  void Scale(double min, double max){
+    this->min = min; this->max = max; scaled = true;}
+  void ResetScale() { min = -1; max = 1; scaled = false; }
+
     MaterialHandle& lookup(double value);
     MaterialHandle& lookup2(double value);
 
@@ -80,6 +86,10 @@ public:
     // Persistent representation...
     virtual void io(Piostream&);
     static PersistentTypeID type_id;
+
+private:
+  bool scaled;
+   
 };
 
 #endif
