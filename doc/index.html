@@ -1,10 +1,10 @@
  <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2 Final//EN">
  <HTML>
    <HEAD>
-     <TITLE>A Guide to SCIRun Documention(04-Oct-2000)</TITLE>
-     <!-- Changed by: TjD, 04-Oct-2000 -->
+     <TITLE>A Guide to SCIRun Documention(08-Nov-2000)</TITLE>
+     <!-- Changed by: TjD, 08-Nov-2000 -->
      <link rel=stylesheet type="text/css"
-           href="http://www.sci.utah.edu/scirun_docs/doc/doc_styles.css">
+           href="doc_styles.css">
    </HEAD>  
 
    <BODY>
@@ -13,39 +13,32 @@
      <p class="head">Table of Contents</p>
 
      <ol class="toc">
-       <li> <A HREF="#GeneralInformation">General Information
-       Documents</A> describe SCIRun, the concept of a <em>Problem Solving
-       Environment</em> (PSE), and the types of
-       problems that the current set of SCIRun PSEs solve.
+       <li> <A HREF="#GeneralInformation">General Information Documents</A>
+	 describe SCIRun, the concept of a <em>Problem Solving Environment</em> (PSE),
+	 and the types of problems that the current set of SCIRun PSEs solve.
        </li>
 
-       <li> <A HREF="#Administrator">Administrator Documents</A> are
-       documents for those who will be downloading and building SCIRun.
+       <li> <A HREF="#Installation">Installation Documents</A> are
+	 for those who will be installing SCIRun.
        </li>
 
-       <li> <A HREF="#NetworkUser">Network User Documents</A> describe
-       the purpose and use of predefined PSE networks.
+       <li> <A HREF="#NetworkBuilder">Data-flow Network Builder Documents</A>
+	 are for those who construct dataflow networks.
        </li>
 
-       <li> <A HREF="#NetworkBuilder">Network Builder Documents</A>
-       are documents for those who construct networks for their own use and for
-       use by others.
-       </li>
-
-       <li> <A HREF="#Developer">Developer Documents</A> are documents
-	 for those who develop new modules, datatypes, converters, and other
-	 types of code.
+       <li> <A HREF="#Developer">Developer Documents</A> are 
+	 for those who develop new modules, datatypes, data converters, and
+	 other types of code.
 	 <ol class="subtoc">
-	   <LI> <a href="#Installation">Installation</a></LI>
-	   <LI> <a href="#Writing Code">Writing Code</a></LI>
-	   <LI> <a href="#C++ Info">C++ Info</a></LI>
-	   <LI> <a href="#Tck/Tk Info">Tck/Tk Info</a></LI>
-	   <LI> <a href="#Miscellaneous Info">Miscellaneous Info</a></LI>
+	   <li><a href="#Writing Code">Coding</a>
+	   <li><a href="#C++ Info">C++ Info</a>
+	   <li><a href="#Tck/Tk Info">Tck/Tk Info</a>
+	   <li><a href="#Miscellaneous Info">Miscellaneous Info</a>
 	 </ol>
        </li>
 
        <li> <A HREF="#DesignDocuments">Design Documents</A> describe
-       the design of various pieces of SCIRun.
+	 the design of various pieces of SCIRun.
        </li>
      </ol>
 
@@ -53,68 +46,18 @@
        <p class="head">General Information</p>
      
        <P class="firstpara">
-	 <A HREF="http://www.sci.utah.edu/scirun/">
-	   <CITE>
-	     SCIRun: A Scientific Programming Environment for
-	     Computational Steering
-	   </CITE>
-	 </A>
-	 (1995) describes the original PSE (SCIRun).
-       </P>
-
-       
-       <P class="firstpara">
-	 <A
-	   HREF="http://www.cs.utah.edu/sci/publications/scitools96/scitools96.html">
-	   <CITE>The SCIRun Computational Steering Software System</CITE>
-	 </A>
-	 discusses the design, implementation, and application of SCIRun.
-       </P>
-       
-       <P class="firstpara">
-	 The SCI group has published <A HREF="http://www.cs.utah.edu/sci/publications/">many other papers</A>.
+	 Visit the <A HREF="http://www.sci.utah.edu/pse/pse.html">PSE</A> web
+	 page for an overview of the current set of PSEs
+	 and the types of problems they are designed to solve.
        </P>
 
        <P class="firstpara">
-	 Existing <EM>Problem Solving Environments</EM> (PSEs):
-       </P>
-       
-       <UL class="list">
-	 <LI>
-	     <EM>SCIRun</EM> is a general purpose computational science
-	     problem solving environment developed by the
-	     <A HREF="http://www.cs.utah.edu/sci/">Scientific Computing and Imaging Institute</A>.
-	 </LI>
-
-	 <LI>
-	     <EM>BioPSE</EM> is a problem solving environment for bioelectric field
-	     problems.  It is developed by the
-	     <A HREF="http://www.sci.utah.edu/ncrr/">NIH Center for Bioelectric
-	       Field Modeling, Simulation, and Visualization</A>.  BioPSE
-	 </LI>
-	 
-	 <LI>
-	     <EM>Uintah</EM> is a problem solving environment for
-	     simulating fires involving a diverse range of accident
-	     scenarios including multiple high-energy devices, complex
-	     building/surroundings geometries and many fuel sources.  It
-	     is developed by the Center for the 
-	     <A HREF="http://www.csafe.utah.edu/">Simulation of Accidental
-	       Fires and Explosions</A> (C-SAFE).
-	 </LI>
-       </UL>
-       <P class="firstpara">
-	 All PSE's allow interaction between the modeling, computation,
-	 and visualization phases of a simulation.  All PSEs are extensible.
-       </P>
-
-       <P class="firstpara">
-	 An <A HREF="ReferenceGuide/faq.html">FAQ</A> list has been compiled from
+	 The <A HREF="ReferenceGuide/faq.html">FAQ</A> list has been compiled from
 	 the scirun-develop mailing list.
        </P>
        
        <P class="firstpara">
-	 Subscribe to one or both of the mailing lists
+	 Subscribe to one of the mailing lists:
 	 <EM>scirun-develop</EM> and
 	 <EM>scirun-interest</EM>. Do this by sending a message to
 	 <A HREF="mailto:Majordomo@cs.utah.edu">majordomo@cs.utah.edu</A>
@@ -122,12 +65,8 @@
 	 in the body of the message.
        </P>
        
-       <P class="firstpara">
-	 Reporting bugs.
-       </P>
-
-     <A NAME="Administrator"/>
-     <p class="head">Administrator</p>
+     <A NAME="Installation"/>
+     <p class="head">Installation</p>
 
      <P class="firstpara">
        Installation instructions for UUCS SGI machines can be found <A
@@ -138,18 +77,11 @@
        be found <A HREF="ReferenceGuide/pseInstall.html">here</A>.
      </P>
 
-     <A NAME="NetworkUser"/>
-     <p class="head">Network User</p>
-     <P class="firstpara">
-       <EM>Yet to be done</EM>
-     </P>
-
      <A NAME="NetworkBuilder"/>
-     <p class="head">Network Builder</p>
+     <p class="head">Data-flow Network Builder</p>
      <P class="firstpara">
-       A <EM>network builder</EM> works within the SCIRun environment to construct
-       networks for his own and other's use.  The following information
-       will be of interest to network builders.
+       A <EM>network builder</EM> works within the SCIRun environment to
+       construct data-flow data-flow
      </P>
 
      <P class="firstpara">
@@ -158,8 +90,6 @@
 
 
      <UL class="list">
-       <LI>SCIRun Overview</LI>
-       
        <LI>Starting SCIRun</LI>
        
        <LI>Creating and Editing a Network</LI>
@@ -178,84 +108,54 @@
 
        <LI>Sample Networks</LI>
 
-       <LI> Documenting a Network </LI>
-       <LI>
-	   Reporting bugs.
-       </LI>
      </UL>
 
      <A NAME="Developer"/>
      <p class="head">Developer</p>
 
-     <P class="firstpara">
-       A developer writes modules, data converters, or other code.  The
-       following information is needed by developers.
-     </P>
 
-     <A NAME="Installation"/>
-     <p class="subhead">Installation</p>
-
-     <P class="firstpara">
-       SCIRun Installation information can be found in the  <A HREF="#Administrator">administrator documents section</A>.
-     </p>
-     
      <A NAME="Writing Code"/>
-     <p class="subhead">Writing Code</p>
+     <p class="subhead">Coding</p>
 
      <P class="firstpara">
-       Module writers must follow a <A
-				      HREF="ReferenceGuide/specProcedure.html">specification procedure</A>
-       when writing new modules.  Modules which are not fully spec'ed
-       will not be incorporated into official SCIRun releases.
+       A developer writes modules, data converters, and other code.
+       Developers should read the following documents.
      </P>
+     <OL class="list">
 
+       <LI>
+	 <A HREF="http://www.csafe.utah.edu/development_environment/coding_standards/index.html">
+	   Coding Standards</A>.
+       </LI>
+
+       <LI>
+	 <A HREF="ReferenceGuide/specProcedure.html">Designing and implementing a component</A>.
+       </LI>
+
+       <li>Managing code with CVS</li>
+
+       <OL type="i">
+
+	 <LI>
+	   <A HREF="ReferenceGuide/cvs_info.html">Managing SCIRun code (a brief introduction)</A>.
+	 </LI>
+	 <LI>
+	   <A HREF="http://www.csafe.utah.edu/development_environment/cvs/index.html">Managing SCIRun code (a brief introduction prepared by the Uintah project)</A>.
+	 </LI>
+	 <LI>
+	   <A HREF="http://www.gnu.org/manual/cvs-1.9/html_chapter/cvs_toc.html">
+	     The complete CVS manual</A>.
+	 </LI>
+       </OL>
+     </OL>
      <P class="firstpara">
-       New modules are created with SCIRun's built in " <A
-						       HREF="ReferenceGuide/create_module.html">Module Maker </A>"
-       software.
+	You might want also to <A HREF="../keyweb.html">browse</A> SCIRun class and function interfaces.
      </P>
-
-     <P class="firstpara">
-       <A HREF="http://www.csafe.utah.edu/development_environment/coding_standards/index.html">
-	 Coding Standards</A> have been developed in order to provide a
-       basis for consistent, easily reviewable, and maintainable code.
-       Your source code must be commented (documented) according to the
-       <A HREF="ReferenceGuide/cocoon.html">SCIRun standard</A>.
-     </P>
-
-     <P class="firstpara">
-       SCIRun source code, documentation, and other files, are managed
-       by the
-       <A HREF="http://www.gnu.org/manual/cvs-1.9/html_chapter/cvs_toc.html">
-	 Concurrent Versions System
-       </A>
-       software.
-       Developers must be familiar with 
-       <A HREF="ReferenceGuide/cvs_info.html">its use</A>
-       in the SCIRun project.  Also
-       see the
-       <A HREF="http://www.csafe.utah.edu/development_environment/cvs/index.html">cvs information</A>
-       prepared by the <A HREF="http://www.csafe.utah.edu">Uintah</A>
-       project.
-     </P>
-
-     <P class="firstpara">
-       You may <A HREF="../keyweb.html">browse</A> SCIRun's ABI (compliments of cocoon).
-     </P>
-
-     <P class="firstpara">
-       <A HREF="ReferenceGuide/convertingForeignData.html">Data converters</A> are standalone programs that convert
-       "foreign" data to an existing SCIRun datatype object (SCIRun datatypes
-       are "persistent" - data objects can be saved to a
-       file and later recreated from the content of the file).  You may
-       need to write one some day.
-     </P>
-
      <A NAME="C++ Info"/>
      <p class="subhead">C++ Info</p>
 
      <P class="firstpara">
-       SCIRun is implemented using C++.  Here are a few C++ references:
+       SCIRun is implemented in C++.  Here are a few C++ references:
      </P>
      <UL class="list">
        <LI>
@@ -284,10 +184,9 @@
      <A NAME="Tck/Tk Info"/>
      <p class="subhead">Tck/Tk Info</p>
      <P class="firstpara">
-       SCIRun graphical user interfaces are composed with the scripting
+       SCIRun graphical user interfaces are composed with the
        language <A HREF="http://dev.scriptics.com/software/tcltk">Tcl</A> and its
-       extensions <A
-		    HREF="http://dev.scriptics.com/software/tcltk">Tk</A>,
+       extensions <A HREF="http://dev.scriptics.com/software/tcltk">Tk</A>,
        <A HREF="http://www.tcltk.com/itcl">iTcl, iTk</A>, and
        <A HREF="http://www.tcltk.com/blt">BLT</A>.  
      </P>
@@ -315,26 +214,17 @@
      <p class="subhead">Miscellaneous Info</p>
 
      <P class="firstpara">
-       Reporting bugs.
+       <EM>Yet to be done</EM>. Here is a list of potential topics:
      </P>
+     <UL class="list">
+       <li> Module Reference Guides </li>
 
-     <P class="firstpara">
-       Existing Data Sets
-     </P>
+       <li> Data Type Reference Guides </li>
 
-     <P class="firstpara">
-       Module Reference Guides - This section will eventually be a link
-       to a comprehensive list of modules and their documentation.
-       Currently, the only documented modules are the <A HREF="../src/Phil/Modules/Tbon/doc/index.html">TBON modules</A>.
-     </P>
+       <li>Reporting bugs. </li>
 
-     <P class="firstpara">
-       Data Type Reference Guides
-     </P>
-
-     <P class="firstpara">
-       Xml References
-     </P>
+       <li> Existing Data Sets </li>
+     </UL>
 
      <A NAME="DesignDocuments"/>
      <p class="head">Design Documents</p>
