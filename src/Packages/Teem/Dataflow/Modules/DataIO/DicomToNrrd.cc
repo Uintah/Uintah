@@ -94,8 +94,6 @@ private:
 
   //! GUI variables
   GuiString dir_;
-  GuiInt start_index_;
-  GuiInt end_index_;
   GuiString series_uid_;
   GuiString series_files_;
   GuiString messages_;
@@ -125,8 +123,6 @@ DECLARE_MAKER(DicomToNrrd)
 DicomToNrrd::DicomToNrrd(GuiContext* ctx)
   : Module("DicomToNrrd", ctx, Source, "DataIO", "Teem"),
     dir_(ctx->subVar("dir")),
-    start_index_(ctx->subVar("start-index")),
-    end_index_(ctx->subVar("end-index")),
     series_uid_(ctx->subVar("series-uid")),    
     series_files_(ctx->subVar("series-files")),    
     messages_(ctx->subVar("messages")),    
