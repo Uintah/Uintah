@@ -5,6 +5,9 @@
 #include <Packages/Uintah/Core/Exceptions/TypeMismatchException.h>
 #include <Core/Malloc/Allocator.h>
 
+#include <iostream>
+using namespace std;
+
 namespace Uintah {
   class TypeDescription;
 /**************************************
@@ -40,22 +43,30 @@ WARNING
 
    template<class T> class PerPatch : public PerPatchBase {
    public:
-      inline PerPatch() {}
-      inline PerPatch(T value) : value(value) {}
+      inline PerPatch() { data = new T; deleteData = true; }
+      inline PerPatch(const T& value) {
+        data = new T;
+        setData(value);
+        deleteData = true;
+      }
       virtual void copyPointer(const PerPatchBase&);
-      inline PerPatch(const PerPatch<T>& copy) : value(copy.value) {}
+      inline PerPatch(const PerPatch<T>& copy) {
+        // copy the pointer not the data
+        data = copy.data;
+      }
+
       virtual ~PerPatch();
       
       static const TypeDescription* getTypeDescription();
       
       inline operator T () const {
-	 return value;
+	 return *data;      
       }
       inline T& get() {
-	 return value;
+	 return *data;
       }
       inline const T& get() const {
-	 return value;
+	 return *data;
       }
       void setData(const T&);
       virtual PerPatchBase* clone() const;
@@ -64,10 +75,14 @@ WARNING
 			       void*& ptr) const {
 	elems="1";
 	totsize=sizeof(T);
-	ptr=(void*)&value;
+	ptr=(void*)data;
       }
    private:
-      T value;
+      T* data;
+
+      //! Try to remember if this PerPatch needs to delete the memory, since we copy the pointer
+      //! Don't use RefCounted, as simple and/or pre-existing types probably don't use refcounted.
+      mutable deleteData; 
       // this function only exists to satisfy the TypeDescription, it will return null.
       static Variable* maker();
    };
@@ -99,21 +114,27 @@ WARNING
    template<class T>
       PerPatch<T>::~PerPatch()
       {
+        if (data && deleteData) delete data;
       }
    
    template<class T>
       PerPatchBase*
       PerPatch<T>::clone() const
       {
-	 return scinew PerPatch<T>(*this);
+        // copy the pointer, not the data
+        PerPatch<T> *var  = scinew PerPatch<T>;
+        var->data = data;
+        deleteData = false;
+        return var;
       }
    
    template<class T>
       PerPatch<T>&
       PerPatch<T>::operator=(const PerPatch<T>& copy)
       {
-	 value = copy.value;
-	 return *this;
+        // copy the pointer, not the data.
+        data = copy.data;
+        return *this;
       }
 
    template<class T>
@@ -123,7 +144,8 @@ WARNING
          const PerPatch<T>* c = dynamic_cast<const PerPatch<T>* >(&copy);
          if(!c)
 	   SCI_THROW(TypeMismatchException("Type mismatch in PerPatch variable"));
-         *this = *c;
+         data = c->data;
+         deleteData = false;
       }
 
 
@@ -131,7 +153,7 @@ WARNING
       void
       PerPatch<T>::setData(const T& val)
       {
-	value = val;
+	*data = val;
       }
 } // End namespace Uintah
 
