@@ -26,12 +26,10 @@
     <authors>
       <author>Steven G. Parker</author>
     </authors>
-    <summary>RescaleColorMap resets the range of alpha to correspond
-    to your data values.</summary>
+    <summary>RescaleColorMap allows the user to manually or automatically set the range of alpha values for the ColorMap.  RescaleColorMap is an example of a module that has dynamic ports, because each time the user connects a Field module to the RescaleColorMap Field input port, another Field input port appears.</summary>
     <description>
-      <p>Auto Scale calculates a minimum and maximum for the
-      range of alpha.</p>
-      <p>Fixed Scale allows you to manually select a range.</p>
+      <p>In the GUI, the Auto Scale check box calculates a minimum and maximum for the
+      range of alpha values and the user cannot change those values. The Fixed Scale check box allows the user to manually select for the range of alpha values by adjusting the minimum and maximum values in the appropriate text fields. After rescaling the ColorMap according to Field input, a new ColorMap passes downstream to the connecting module.  </p>
     </description>
   </overview>
   <io>
