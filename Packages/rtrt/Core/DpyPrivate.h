@@ -36,6 +36,8 @@ namespace rtrt {
 
     int doing_frameless;
 
+    int show_frame_rate;
+
   };
 
 } // end namespace rtrt
