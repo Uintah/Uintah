@@ -1861,10 +1861,14 @@ void MPMICE::HEChemistry(const ProcessorGroup*,
 				   gradRhoY*gradRhoY +
 				   gradRhoZ*gradRhoZ );
 
+	  double Temperature = 0;
+	  if (gasVolumeFraction[*iter] < 1.e-5) 
+            Temperature = solidTemperature[*iter];
+          else Temperature = gasTemperature[*iter];
+
 	  bool doTheBurn = 1;
     
-	  if (gasVolumeFraction[*iter] < 1.e-5 ||
-	      absGradRho < 1.e-5) doTheBurn = 0;
+	  if (absGradRho < 1.e-5) doTheBurn = 0;
 
 	  if (doTheBurn) {
 
@@ -1884,7 +1888,7 @@ void MPMICE::HEChemistry(const ProcessorGroup*,
 
 	      surfArea = delX*delY*delZ / (TmpX+TmpY+TmpZ); 
 	      	  
-	      matl->getBurnModel()->computeBurn(gasTemperature[*iter],
+	      matl->getBurnModel()->computeBurn(Temperature,
 						gasPressure[*iter],
 						solidMass[*iter],
 						solidTemperature[*iter],
