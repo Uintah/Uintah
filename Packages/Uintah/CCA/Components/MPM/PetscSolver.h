@@ -1,7 +1,8 @@
 #ifndef MPM_PETSC_SOLVER_H
 #define MPM_PETSC_SOLVER_H
 
-#include <sci_defs/petsc_defs.h>
+#include <sci_defs/mpi_defs.h>
+#include <sci_defs/petsc_defs.h>  // Petsc uses mpi, so need to include mpi_defs.h
 
 #include <Packages/Uintah/Core/Grid/ComputeSet.h>
 #include <Packages/Uintah/Core/Grid/Array3.h>

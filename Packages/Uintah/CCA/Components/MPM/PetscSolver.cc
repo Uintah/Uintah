@@ -1,5 +1,6 @@
 #define PETSC_USE_LOG
 
+#include <sci_defs/mpi_defs.h>
 #include <sci_defs/petsc_defs.h>
 
 #include <Packages/Uintah/CCA/Components/MPM/PetscSolver.h>
