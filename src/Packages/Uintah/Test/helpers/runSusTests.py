@@ -139,7 +139,7 @@ def runSusTests(argv, TESTS, algo, callback = nullCallback):
   environ['SCI_SIGNALMODE'] = 'exit'
   environ['SCI_EXCEPTIONMODE'] = 'abort'
 
-  resultsdir = "%s/%s-results" % (outputpath, ALGO)
+  resultsdir = "%s/%s-results" % (startpath, ALGO)
 
   chdir(startpath)
   try:
@@ -264,13 +264,12 @@ def runSusTests(argv, TESTS, algo, callback = nullCallback):
   system("chgrp -R csafe %s" % resultsdir)
   system("chmod -R g+rwX %s" % resultsdir)
 
-  # if results saved on the web server, copy back to build root
-  # also copy back short messages
+  # copy results to web server.
   if outputpath != startpath:
-    system("cp -f %s-short* %s/ > /dev/null 2>&1" % (upper(algo),startpath))
-    system("cp -r %s %s/" % (resultsdir, startpath))
-    # remove xml and data files so they don't pile up after they're copied
-    system("find %s -name '*.uda*' | xargs rm -rf " % resultsdir)
+    #system("cp -f %s-short* %s/ > /dev/null 2>&1" % (upper(algo),outputpath))
+    system("cp -r %s %s/" % (resultsdir, outputpath))
+    # remove uda dirs from web server
+    system("find %s -name '*.uda*' | xargs rm -rf " % outputpath)
   if solotest != "" and solotest_found == 0:
     print "unknown test: %s" % solotest
     system("rm -rf %s" % (resultsdir))
