@@ -22,13 +22,19 @@ itcl_class PSECommon_Matrix_MatSelectVec {
         set_defaults
     }
     method set_defaults {} {	
-	global $this-columnTCL
-	global $this-columnMaxTCL
-	set $this-columnTCL 0
-	set $this-columnMaxTCL 100
-	set $this-tcl_sel 0
-        set $this-tcl_stop 0   
- }
+	global $this-colTCL
+	global $this-colMaxTCL
+	global $this-rowTCL
+	global $this-rowMaxTCL
+	global $this-rowOrColTCL;
+	global $this-animateTCL;
+	set $this-colTCL 0
+	set $this-colMaxTCL 100
+	set $this-rowTCL 0
+	set $this-rowMaxTCL 100
+	set $this-rowOrColTCL col
+        set $this-animateTCL 0
+    }
     method ui {} {
         set w .ui[modname]
         if {[winfo exists $w]} {
@@ -40,41 +46,43 @@ itcl_class PSECommon_Matrix_MatSelectVec {
         wm minsize $w 150 30
 	set n "$this-c needexecute "
 
-        
-     	global $this-columnTCL
-	global $this-columnMaxTCL
-	global $this-tcl_sel
-        global $this-tcl_stop
-
-
-	frame $w.ff -relief groove -borderwidth 1
-	radiobutton $w.ff.rb1 -text "Entire time series" -variable $this-tcl_sel -value 1  -anchor w
-        radiobutton $w.ff.rb2 -text "Pick one frame" -variable $this-tcl_sel -value 0  -anchor w
-	pack $w.ff.rb1 $w.ff.rb2   -fill x
-
-
+	global $this-colTCL
+	global $this-colMaxTCL
+	global $this-rowTCL
+	global $this-rowMaxTCL
+	global $this-rowOrColTCL
+	global $this-animateTCL
 
 	frame $w.f
-        scale $w.f.s -variable $this-columnTCL \
-                -from 0 -to [set $this-columnMaxTCL] \
-		-label "Frame #" \
+        scale $w.f.r -variable $this-rowTCL \
+                -from 0 -to [set $this-rowMaxTCL] \
+		-label "Row #" \
                 -showvalue true -orient horizontal
-	pack $w.f.s -side left -fill x -expand yes
-
-
-	button $w.go -text "Execute" -relief raised -command $n 
-
-        button $w.stop -text "Stop" -relief raised -command "$this-c stop" 
-      
-	pack $w.ff $w.f $w.go $w.stop -side top -fill x -expand yes
-
-#	trace variable $this-columnMaxTCL w "$this-update"
+        scale $w.f.c -variable $this-colTCL \
+                -from 0 -to [set $this-colMaxTCL] \
+		-label "Column #" \
+                -showvalue true -orient horizontal
+	frame $w.f.ff
+	radiobutton $w.f.ff.r -text "Row" -variable $this-rowOrColTCL -value row
+        radiobutton $w.f.ff.c -text "Column" -variable $this-rowOrColTCL -value col
+	pack $w.f.ff.r $w.f.ff.c -side left -fill x -expand 1
+	frame $w.f.b
+	button $w.f.b.go -text "Execute" -command $n 
+	checkbutton $w.f.b.a -text "Animate" -variable $this-animateTCL
+        button $w.f.b.stop -text "Stop" -command "$this-c stop" 
+	pack $w.f.b.go $w.f.b.a $w.f.b.stop -side left -fill x -expand 1
+	pack $w.f.r $w.f.c $w.f.ff $w.f.b -side top -fill x -expand yes
+	pack $w.f
     }
 
     method update {} {
-	global $this-columnMaxTCL
 	set w .ui[modname]
-	$w.f.s config -to [set $this-columnMaxTCL]
-	puts "updating!"
+        if {[winfo exists $w]} {
+	    global $this-colMaxTCL
+	    global $this-rowMaxTCL
+	    $w.f.r config -to [set $this-colMaxTCL]
+	    $w.f.c config -to [set $this-rowMaxTCL]
+	    puts "updating!"
+	}
     }
 }
