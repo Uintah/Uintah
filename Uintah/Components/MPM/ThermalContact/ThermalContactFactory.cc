@@ -9,7 +9,9 @@ using namespace Uintah::MPM;
 ThermalContact* ThermalContactFactory::create(const ProblemSpecP& ps,
   SimulationStateP& d_sS)
 {
-   for( ProblemSpecP child = ps->findBlock("thermal_contact"); child != 0;
+   ProblemSpecP mpm_ps = ps->findBlock("MaterialProperties")->findBlock("MPM");
+
+   for( ProblemSpecP child = mpm_ps->findBlock("thermal_contact"); child != 0;
         child = child->findNextBlock("thermal_contact"))
    {
      return( scinew ThermalContact(child,d_sS) );
@@ -18,6 +20,9 @@ ThermalContact* ThermalContactFactory::create(const ProblemSpecP& ps,
 }
 
 // $Log$
+// Revision 1.3  2000/06/23 00:21:31  tan
+// In input file, thermal_contact stuff is put inside <MaterialProperties><MPM>.
+//
 // Revision 1.2  2000/06/20 04:14:30  tan
 // WHen SerialMPM::d_thermalContactModel != NULL, heat conduction will be included
 // in MPM algorithm.  The d_thermalContactModel is set by ThermalContactFactory
