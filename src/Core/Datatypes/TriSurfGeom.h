@@ -27,6 +27,8 @@
 
 namespace SCIRun {
 
+class TriSurfGeom;
+typedef LockingHandle<TriSurfGeom> TriSurfGeomHandle;
 
 struct TriSurfVertex
 {

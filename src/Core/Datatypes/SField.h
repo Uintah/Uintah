@@ -20,9 +20,8 @@
 namespace SCIRun {
 
 
-  //class SField;
-  //typedef LockingHandle<SField> SFieldHandle;
-
+class SField;
+typedef LockingHandle<SField> SFieldHandle;
 
 class SCICORESHARE SField:public Field{
 public:
