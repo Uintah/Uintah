@@ -279,13 +279,14 @@ itcl_class Teem_DataIO_DicomNrrdReader {
 	global $this-dir
 	global $this-suid-sel
 
-      # Need to pass the c++ side the current directory, the selected series 
-      # uid, and the selected files in the series.  If no files are selected,
-      # all files are considered to be selected.
-    
-      set w .ui[modname]
+	# Need to pass the c++ side the current directory, the selected series 
+	# uid, and the selected files in the series.  If no files are selected,
+	# all files are considered to be selected.
+	
+	set w .ui[modname]
+	
+	if [ expr [winfo exists $w]] {
 
-	if [ expr [winfo exists $w] ] {
             set listing [$w.listing childsite]
             #set seriesuid $listing.seriesuid
             set files $listing.files
@@ -397,7 +398,6 @@ itcl_class Teem_DataIO_DicomNrrdReader {
 	if [ expr [winfo exists $w] ] {
             set sd [$w.sd childsite]
             set selected $sd.selected
-
 	    set list_files [split [set $this-entry-files$which] " "]
 
 	    set start_file [lindex $list_files 0]
