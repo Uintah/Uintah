@@ -1567,11 +1567,13 @@ proc moduleDestroy {modid} {
     $Subnet(Subnet$Subnet($modid)_canvas) delete $modid $modid-notes $modid-notes-shadow
     destroy $Subnet(Subnet$Subnet($modid)_canvas).module$modid
     $Subnet(Subnet$Subnet($modid)_minicanvas) delete $modid
-    
     # Remove references to module is various state arrays
     listFindAndRemove Subnet(Subnet$Subnet($modid)_Modules) $modid
     listFindAndRemove CurrentlySelectedModules $modid
-    array unset Subnet ${modid}*
+
+    # Must have the '_' on the unset, other wise modid 1* deletes 1_* and 1#_*, etc.
+    array unset Subnet ${modid}_*
+
     array unset Disabled $modid
     array unset Notes $modid*
 
