@@ -1,5 +1,7 @@
 #!/bin/sh
 
+# BUILDROOT, VERBOSE need to be set
+
 # remove old locks
 for BUILDROOT in SCIRun.*; do
   if [ -d "$BUILDROOT" ]; then
@@ -34,16 +36,19 @@ for BUILDROOT in SCIRun.*; do
 done
 
 # delete whatever can be deleted from the trash before adding to it
-rm -rf trash
+rm -rf trash > /dev/null 2>&1
 
 if [ ! -d "trash" ]; then
   exit 0 # cleanup was successful
 fi
 
-echo "These need to be removed by their owner"
-echo ""
 find trash \( ! -user `id -un` \) -prune > trash/need_removal
-cat trash/need_removal | xargs ls -ld
+
+if [ "$VERBOSE" == "yes" ]; then
+    echo "Folders need to be removed by their owner:"
+    echo ""
+    cat trash/need_removal | xargs ls -ld
+fi
 
 # I'm sure there is a better way to get at the user names, but I've spent
 # too much time trying to figure it out.
