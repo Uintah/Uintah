@@ -130,7 +130,7 @@ public:
     
   //////////
   //Re-size the Array
-  void newsize(int, int, int);
+  void resize(int, int, int);
 
   //////////
   //Initialize all elements to T
@@ -194,7 +194,7 @@ void Array3<T>::allocate()
 }
 
 template<class T>
-void Array3<T>::newsize(int d1, int d2, int d3)
+void Array3<T>::resize(int d1, int d2, int d3)
 {
   if(objs && dm1==d1 && dm2==d2 && dm3==d3)return;
   dm1=d1;
@@ -241,7 +241,7 @@ void Array3<T>::initialize(const T& t)
 template<class T>
 void Array3<T>::copy(const Array3<T> &copy)
 {
-  newsize( copy.dim1(), copy.dim2(), copy.dim3() );
+  resize( copy.dim1(), copy.dim2(), copy.dim3() );
   for(int i=0;i<dm1;i++)
     for(int j=0;j<dm2;j++)
       for(int k=0;k<dm3;k++)
@@ -291,7 +291,7 @@ void Pio(Piostream& stream, Array3<T>& data)
     Pio(stream, d1);
     Pio(stream, d2);
     Pio(stream, d3);
-    data.newsize(d1, d2, d3);
+    data.resize(d1, d2, d3);
   } else {
     Pio(stream, data.dm1);
     Pio(stream, data.dm2);
@@ -332,7 +332,7 @@ void Pio(Piostream& stream, Array3<T>& data,
     Pio(stream, d1);
     Pio(stream, d2);
     Pio(stream, d3);
-    data.newsize(d1, d2, d3);
+    data.resize(d1, d2, d3);
     data.input( filename );
   } else {
     Pio(stream, data.dm1);

@@ -121,7 +121,7 @@ public:
     
   //////////
   //Resize Array
-  void newsize(int, int);
+  void resize(int, int);
     
   //////////
   //Initialize all values in an array
@@ -168,7 +168,7 @@ void Array2<T>::allocate()
 }
 
 template<class T>
-void Array2<T>::newsize(int d1, int d2)
+void Array2<T>::resize(int d1, int d2)
 {
   if(objs && dm1==d1 && dm2==d2)return;
   dm1=d1;
@@ -217,7 +217,7 @@ void Array2<T>::initialize(const T& t)
 template<class T>
 void Array2<T>::copy(const Array2<T> &copy)
 {
-  newsize( copy.dim1(), copy.dim2() );
+  resize( copy.dim1(), copy.dim2() );
   for(int i=0;i<dm1;i++)
     for(int j=0;j<dm2;j++)
       objs[i][j] = copy.objs[i][j];
@@ -234,7 +234,7 @@ void Pio(Piostream& stream, Array2<T>& data)
     int d1, d2;
     Pio(stream, d1);
     Pio(stream, d2);
-    data.newsize(d1, d2);
+    data.resize(d1, d2);
   } else {
     Pio(stream, data.dm1);
     Pio(stream, data.dm2);

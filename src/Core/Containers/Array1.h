@@ -72,22 +72,23 @@ template<class T> void Pio(Piostream& stream, Array1<T>& array);
   WARNING
   
 ****************************************/
-template<class T> class Array1 {T* objs;
-  int dm1;
+template<class T> class Array1 {
+  T* objs;
+  int _size;
   int nalloc;
-  int default_growdm1;
-  void allocate();
+  int default_grow_size;
 public:
-  //////////
-  //Make a new array 1. <i>size</i> gives the initial size of the array,
-  //<i>default_growdm1</i> indicates the minimum number of objects that
-  //should be added to the array at a time.  <i>asize</i> tells how many
-  //objects should be allocated initially
-  Array1(int size=0, int default_growdm1=10, int asize=-1);
 
- //////////
+  //////////
   //Copy the array - this can be costly, so try to avoid it.
   Array1(const Array1&);
+
+  //////////
+  //Make a new array 1. <i>size</i> gives the initial size of the array,
+  //<i>default_grow_size</i> indicates the minimum number of objects that
+  //should be added to the array at a time.  <i>asize</i> tells how many
+  //objects should be allocated initially
+  Array1(int size=0, int default_grow_size=10, int asize=-1);
 
   //////////
   //Copy over the array - this can be costly, so try to avoid it.
@@ -100,25 +101,25 @@ public:
   //////////
   // Accesses the nth element of the array
   inline const T& operator[](int n) const {
-    CHECKARRAYBOUNDS(n, 0, dm1);
+    CHECKARRAYBOUNDS(n, 0, _size);
     return objs[n];
   }
 
   //////////
   // Accesses the nth element of the array
   inline T& operator[](int n) {
-    CHECKARRAYBOUNDS(n, 0, dm1);
+    CHECKARRAYBOUNDS(n, 0, _size);
     return objs[n];
   }
     
   //////////
   // Returns the size of the array
-  inline int size() const{ return dm1;}
+  inline int size() const{ return _size;}
 
 
   //////////
   // Make the array larger by count elements
-  void grow(int count, int growdm1=10);
+  void grow(int count, int grow_size=10);
 
   //////////
   // set allocated size 
@@ -146,12 +147,9 @@ public:
   // Remove all elements in the array.  The array is not freed,
   // and the number of allocated elements remains the same.
   void remove_all();
-   
+
+
   //////////
-  //Resize Array
-  void newsize(int);
-    
-   //////////
   // Change the size of the array.
   void resize(int newsize);
 
@@ -181,28 +179,27 @@ public:
 #endif
 };
 
-
 template<class T>
 Array1<T>::Array1(const Array1<T>& a)
 {
-  dm1=a.dm1;
-  nalloc=dm1;
-  objs=new T[dm1];
-  for(int i=0;i<dm1;i++)objs[i]=a.objs[i];
-  nalloc=dm1;
-  default_growdm1=a.default_growdm1;
+  _size=a._size;
+  nalloc=_size;
+  objs=new T[_size];
+  for(int i=0;i<_size;i++)objs[i]=a.objs[i];
+  nalloc=_size;
+  default_grow_size=a.default_grow_size;
 }
 
 template<class T>
 Array1<T>& Array1<T>::operator=(const Array1<T>& copy)
 {
   if (objs)delete [] objs;
-  dm1=copy.dm1;
-  nalloc=dm1;
-  objs=new T[dm1];
-  for(int i=0;i<dm1;i++)objs[i]=copy.objs[i];
-  nalloc=dm1;
-  default_growdm1=copy.default_growdm1;
+  _size=copy._size;
+  nalloc=_size;
+  objs=new T[_size];
+  for(int i=0;i<_size;i++)objs[i]=copy.objs[i];
+  nalloc=_size;
+  default_grow_size=copy.default_grow_size;
   return(*this);
 }
 
@@ -210,12 +207,12 @@ template<class T>
 Array1<T>::Array1(int size, int gs, int asize)
 {
   ASSERT(size >= 0);
-  default_growdm1=gs;
-  dm1=size;
+  default_grow_size=gs;
+  _size=size;
   if(size){
     if(asize <= size){
       objs=new T[size];
-      nalloc=dm1;
+      nalloc=_size;
     } else {
       objs=new T[asize];
       nalloc=asize;
@@ -238,29 +235,17 @@ Array1<T>::~Array1()
 }
 
 template<class T>
-void Array1<T>::allocate()
+void Array1<T>::grow(int count, int grow_size)
 {
-  if(dm1 == 0){
-    objs=0;
-    nalloc=0;
-  } else {
-    objs=new T[dm1];
-    nalloc=dm1;
- }
-}
-
-template<class T>
-void Array1<T>::grow(int count, int growdm1)
-{
-  int newsize=dm1+count;
+  int newsize=_size+count;
   if(newsize>nalloc){
     // Reallocate...
     int gs1=newsize>>2;
-    int gs=gs1>growdm1?gs1:growdm1;
+    int gs=gs1>grow_size?gs1:grow_size;
     int newalloc=newsize+gs;
     T* newobjs=new T[newalloc];
     if(objs){
-      for(int i=0;i<dm1;i++){
+      for(int i=0;i<_size;i++){
 	newobjs[i]=objs[i];
       }
       delete[] objs;
@@ -268,7 +253,7 @@ void Array1<T>::grow(int count, int growdm1)
     objs=newobjs;
     nalloc=newalloc;
   }
-  dm1=newsize;
+  _size=newsize;
 }
 
 template<class T>
@@ -278,7 +263,7 @@ void Array1<T>::reserve(int n)
     // Reallocate...
     T* newobjs=new T[n];
     if(objs){
-      for(int i=0;i<dm1;i++){
+      for(int i=0;i<_size;i++){
 	newobjs[i]=objs[i];
       }
       delete[] objs;
@@ -291,49 +276,38 @@ void Array1<T>::reserve(int n)
 template<class T>
 void Array1<T>::add(const T& obj)
 {
-  grow(1, default_growdm1);
-  objs[dm1-1]=obj;
+  grow(1, default_grow_size);
+  objs[_size-1]=obj;
 }
 
 template<class T>
 void Array1<T>::insert(int idx, const T& obj)
 {
-  grow(1, default_growdm1);
-  for(int i=dm1-1;i>idx;i--)objs[i]=objs[i-1];
+  grow(1, default_grow_size);
+  for(int i=_size-1;i>idx;i--)objs[i]=objs[i-1];
   objs[idx]=obj;
 }
 
 template<class T>
 void Array1<T>::remove(int idx)
 {
-  dm1--;
-  for(int i=idx;i<dm1;i++)objs[i]=objs[i+1];
+  _size--;
+  for(int i=idx;i<_size;i++)objs[i]=objs[i+1];
 }
 
 template<class T>
 void Array1<T>::remove_all()
 {
-  dm1=0;
-}
-
-template<class T>
-void Array1<T>::newsize(int d1)
-{
-  if(objs && dm1==d1)return;
-  dm1=d1;
-  if(objs){
-    delete[] objs;
-  }
-  allocate();
+  _size=0;
 }
 
 template<class T>
 void Array1<T>::resize(int newsize)
 {
-  if(newsize > dm1)
-    grow(newsize-dm1);
+  if(newsize > _size)
+    grow(newsize-_size);
   else
-    dm1=newsize;
+    _size=newsize;
 }
 
 template<class T>
@@ -342,7 +316,7 @@ void Array1<T>::setsize(int newsize)
   if(newsize > nalloc) { // have to reallocate...
     T* newobjs=new T[newsize];     // make it exact!
     if (objs) {
-      for(int i=0;i<dm1;i++){
+      for(int i=0;i<_size;i++){
 	newobjs[i]=objs[i];
       }
       delete[] objs;
@@ -351,14 +325,14 @@ void Array1<T>::setsize(int newsize)
     nalloc = newsize;
       
   }
-  dm1=newsize;
+  _size=newsize;
 }
 
 
 
 template<class T>
 void Array1<T>::initialize(const T& val) {
-  for (int i=0;i<dm1;i++)objs[i]=val;
+  for (int i=0;i<_size;i++)objs[i]=val;
 }
 
 template<class T>
@@ -373,7 +347,7 @@ template<class T>
 void Pio(Piostream& stream, Array1<T>& array)
 {
   /* int version= */stream.begin_class("Array1", ARRAY1_VERSION);
-  int size=array.dm1;
+  int size=array._size;
   Pio(stream, size);
   if(stream.reading()){
     array.remove_all();
