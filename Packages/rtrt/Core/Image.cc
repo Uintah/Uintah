@@ -9,6 +9,7 @@
 #include <sgi_stl_warnings_on.h>
 
 #include <stdio.h>
+#include <math.h>
 
 using namespace rtrt;
 using namespace std;
