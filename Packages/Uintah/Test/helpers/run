@@ -55,7 +55,7 @@ if [ "$USER" != "" ]; then
     cd ../..
 fi
 
-for test in *"$USER_FLAG"; do
+for test in *$USER_FLAG; do
 # match this test to being run in a daily or weekly context
 # also match to a user context - if no user is selected, USER is ""
     runThisTest=0;
