@@ -102,11 +102,12 @@ void PathTraceWorker::run() {
     int height=sphere->texture.dim2();
     double inv_width=1./width;
     double inv_height=1./height;
+
     for(int v=0;v<height;v++)
       for(int u=0;u<width;u++) {
 	int sgindex = (int)(rng()*(NUM_SAMPLE_GROUPS-1));
 	int sgindex2 = (int)(rng()*(NUM_SAMPLE_GROUPS-1));
-	
+
         for(int sample=0;sample<ptc->num_samples;sample++) {
           Point2D sample_point = sample_points[sgindex][sample];
 	  
@@ -114,11 +115,15 @@ void PathTraceWorker::run() {
 	  Point origin;
 	  Vector normal;
 	  {
-	    double phi=M_PI*inv_width*((u+sample_point.x()));
-	    double theta=M_PI*(1-2*inv_height*(v+sample_point.y()));
+	    // range of (u*sx)/w [0,1]
+	    // range of 2*M_PI * (u*sx)/w [0, 2*M_PI]
+	    double phi=2*M_PI*inv_width*((u+sample_point.x()));
+	    // range of (v*sy)/h [0,1]
+	    // range of M_PI * (v*sy)/h [0, M_PI]
+	    double theta=M_PI*inv_height*((v+sample_point.y()));
 	    double x=cos(phi)*sin(theta);
-	    double y=sin(phi)*sin(theta);
-	    double z=cos(theta);
+	    double z=sin(phi)*sin(theta);
+	    double y=cos(theta);
 	    
 	    origin=sphere->cen + sphere->radius*Vector(x,y,z);
 	    normal=Vector(x,y,z);
@@ -149,12 +154,10 @@ void PathTraceWorker::run() {
 	      break;
 	    
 	    // Pick a random direction on the hemisphere
-	    // We should really sample the entire hemisphere of directions
 	    Vector v0(Cross(normal, Vector(1,0,0)));
 	    if(v0.length2()==0)
 	      v0=Cross(normal, Vector(0,1,0));
 	    Vector v1=Cross(normal, v0);
-	    Vector v2=Cross(normal, v1);
 	    
 	    Vector v_out;
 	    {
@@ -166,7 +169,7 @@ void PathTraceWorker::run() {
 	      double z=sqrt(1.0-x*x-y*y);
 	      v_out=Vector(x,y,z);
 	    }
-	    Vector dir=v0*v_out.x()+v1*v_out.y()+v2*v_out.z();
+	    Vector dir=v0*v_out.x()+v1*v_out.y()+normal*v_out.z();
 	    
 	    Ray ray(origin, dir);
 #if 0          
@@ -206,6 +209,7 @@ void PathTraceWorker::run() {
         // Normalize result
 	sphere->texture(u,v)=inv_num_samples*sphere->texture(u,v);
       } // end texel
+    cout << "Finished sphere "<<sindex<<"\n";
   } // end sphere
   
   // Write out textures
