@@ -55,7 +55,7 @@ SUBDIRS := \
 	$(SRCDIR)/TkExtensions \
 	$(SRCDIR)/Util \
 	$(SRCDIR)/Util/Comm \
-	$(SRCDIR)/2d \
+#	$(SRCDIR)/2d \
 #	$(SRCDIR)/Parts \
 #	$(SRCDIR)/PartsGui
 
