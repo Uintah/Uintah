@@ -195,8 +195,8 @@ FileGeometryPiece::read_line(istream & is, Point & xmin, Point & xmax)
 
 void FileGeometryPiece::readPoints(int pid)
 {
-  if(d_points.size()>0) return; // have already read points
-  
+  if(d_file_format!=FFSplit && pid!=-1) return; // already read points
+
   ifstream source;
   
   Point minpt( 1e30, 1e30, 1e30);
