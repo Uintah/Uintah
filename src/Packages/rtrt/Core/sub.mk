@@ -138,7 +138,8 @@ SRCS += $(SRCDIR)/Worker.cc \
 	$(SRCDIR)/PerlinBumpMaterial.cc \
 	$(SRCDIR)/Instance.cc \
 	$(SRCDIR)/InstanceWrapperObject.cc \
-	$(SRCDIR)/PPMImage.cc
+	$(SRCDIR)/PPMImage.cc \
+	$(SRCDIR)/Satellite.cc 
 
 #	$(SRCDIR)/LumiDpy.cc \
 #	$(SRCDIR)/LumiCamera.cc \
