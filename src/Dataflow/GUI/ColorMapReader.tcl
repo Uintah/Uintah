@@ -40,6 +40,8 @@ itcl_class SCIRun_DataIO_ColorMapReader {
 	if { $initdir==""} {
 	    if {[info exists env(SCI_DATA)]} {
 		set initdir $env(SCI_DATA)
+	    } elseif {[info exists env(SCIRUN_DATA)]} {
+		set initdir $env(SCIRUN_DATA)
 	    }
 	}
 	
