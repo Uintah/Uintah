@@ -36,4 +36,3 @@ LIBS	:= $(XML_LIBRARY) $(MPI_LIBRARY)
 include $(SCIRUN_SCRIPTS)/smallso_epilogue.mk
 
 
-
