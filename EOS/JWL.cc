@@ -34,7 +34,13 @@ double JWL::computeRhoMicro(double press, double,
   //         B*exp(-R2*rho0/rhoM) + om*rhoM*cv*Temp) = 0
   // First guess comes from inverting the last term of this equation
 
-  double rhoM = min(10000.,press/(om*cv*Temp));
+  double rhoM;
+  if(B>0){
+    rhoM = min(10000.,press/(om*cv*Temp));
+  } else {
+    rhoM = rho0;
+  }
+
   double epsilon = 1.e-15;
   double delta = 1.;
   double f,df_drho,relfac=.9;
