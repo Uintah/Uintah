@@ -97,9 +97,9 @@ chmod -R g+w "$TEST_DATA"
 
 if [ "$SEND_MAIL_TO" != "" ]; then
     if [ $failed == "0" ]; then
-	subject="Successful regression tests on `hostname`"
+	subject="SUCCESS: Regression tests on `hostname`"
     else
-	subject="***Regression test failure on `hostname`***"
+	subject="FAILURE: Regression tests on `hostname`***"
     fi
 
     cat > "$BUILDROOT"/mail.msg <<EOF
