@@ -1836,9 +1836,10 @@ HDF5DataReader::animate_execute( string new_filename,
     if (playmode_.get() == "once" && which >= end)
       which = start;
 
-    const int delay = delay_.get();
     bool stop;
     do {
+      int delay = delay_.get();
+
       int next = increment(which, lower, upper);
       stop = (execmode_ == "stop");
 
