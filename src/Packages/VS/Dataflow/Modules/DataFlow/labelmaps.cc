@@ -11,6 +11,7 @@
  ******************************************************************************/
 
 #include <stdio.h>
+#include <string.h>
 #include <iostream>
 #include "labelmaps.h"
 
@@ -106,7 +107,13 @@ splitAtComma(char *srcStr, char **dst0, char **dst1)
     return(0);
   }
   while(*srcPtr != ',') { srcPtr++; count++; }
-  *dst0 = strdup(srcStr);
+#ifdef __APPLE__
+  *dst0 = (char *)malloc((count + 1) * sizeof(char));
+  bzero(*dst0, count + 1);
+  strncpy(*dst0, srcStr, count);
+#else
+  *dst0 = strndup(srcStr, count);
+#endif
   // srcPtr points to ','
   *dst1 = ++srcPtr;
   return(1);
@@ -146,9 +153,15 @@ VH_MasterAnatomy::readFile(char *infilename)
                    &anatomyname[num_names], &indexStr)) break;
       labelindex[num_names] = atoi(indexStr);
     } // end if(strlen(inLine) > 0)
+    // (else) blank line -- ignore
+    // clear input buffer line
+    strcpy(inLine, "");
     num_names++;
     cerr << ".";
   } // end while(read_line(inLine, &buffsize, infile) != 0)
+
+  delete [] inLine;
+  fclose(infile);
   cerr << "done" << endl;
 } // end VH_MasterAnatomy::readFile(char *infilename)
 
@@ -240,8 +253,9 @@ VH_AdjacencyMapping::readFile(char *infilename)
       }
       num_names++;
       cerr << ".";
-    } // (else) blank line -- ignore
-     // clear input buffer line
+    } if(strlen(inLine) > 0)
+    // (else) blank line -- ignore
+    // clear input buffer line
     strcpy(inLine, "");
   } // end while(read_line(inLine, &buffsize, infile) != 0)
   delete [] inLine;
