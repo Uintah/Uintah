@@ -164,8 +164,8 @@ AC_DEFUN(SCI_CHECK_LIB,
     _SCI_USING_CXX_="$5"
     _SCI_LIB_OPTIONAL_="$6"
 
-    if test "$_SCI_LIB_OPTIONAL_" != "not-optional" && 
-       test "$_SCI_LIB_OPTIONAL_" != "optional"; then
+    if test "$_SCI_LIB_OPTIONAL_" != "not-optional" -a \
+       "$_SCI_LIB_OPTIONAL_" != "optional"; then
        SCI_MSG_ERROR(SCI CHECK LIB macro (for $2) optional parameter must be set to 'optional' or 'not-optional')
     fi
 
@@ -238,9 +238,8 @@ AC_DEFUN(SCI_CHECK_LIB,
           echo "Checking in path: $_CHECK_PATH_"
        fi
 
-       if test "$_CHECK_PATH_" = "/usr/lib" || test "$_CHECK_PATH_" = "/lib" ||
-          test "$_CHECK_PATH_" = "/usr/lib/" ||
-          test "$_CHECK_PATH_" = "/lib/"; then
+       if test "$_CHECK_PATH_" = "/usr/lib" -o "$_CHECK_PATH_" = "/lib" -o \
+          "$_CHECK_PATH_" = "/usr/lib/" -o "$_CHECK_PATH_" = "/lib/"; then
             if test "$debugging" = "yes"; then
                AC_MSG_WARN(Skipping generic lib: SCI CHECK LIB)
             fi
@@ -393,8 +392,8 @@ AC_DEFUN(SCI_CHECK_HEADERS,
     _SCI_USING_CXX_="$4"
     _SCI_HEADER_OPTIONAL_="$5"
 
-    if test "$_SCI_HEADER_OPTIONAL_" != "not-optional" && 
-       test "$_SCI_HEADER_OPTIONAL_" != "optional"; then
+    if test "$_SCI_HEADER_OPTIONAL_" != "not-optional" -a \
+            "$_SCI_HEADER_OPTIONAL_" != "optional"; then
        SCI_MSG_ERROR(SCI CHECK HEADERS macro (for $2) optional parameter must be set to 'optional' or 'not-optional')
     fi
 
@@ -833,7 +832,7 @@ AC_DEFUN(SCI_ARG_WITH,
       SCI_ARG_WITH_LIST="$SCI_ARG_WITH_LIST --with-$1 --without-$1", 
       $4) 
 
-    if test -n "$$1" && test ! -e "$$1"; then
+    if test -n "$$1" -a ! -e "$$1"; then
       AC_MSG_ERROR(The file or directory parameter ($$1) specified for --with-$1 does not exist!  Please verify that the path and file are correct.)
     fi
 
@@ -867,7 +866,7 @@ BASENAME_IS=`which dirname`
 
 ## We use both of these in a number of spots, so I think this is fair:
 ## (Eventually we could write our own if necessary...
-if test -z "$DIRNAME_IS" || test -z "$BASENAME_IS"; then
+if test -z "$DIRNAME_IS" -o -z "$BASENAME_IS"; then
   AC_MSG_ERROR(dirname or basename not found.  Configure script won't work!)
 fi
 
@@ -1807,45 +1806,68 @@ AC_SUBST(FLIBS)
 
 case $host in
   *-irix*)
-    if test "$threads" = "unknown" ||
-       test "$threads" = "irix"; then
+    if test "$threads" = "unknown"; then
       threads=irix
-      SCI_CHECK_LIB(,fetchop,main,,,not-optional)
-      if test "$HAVE_LIBFETCHOP"; then
-         CFLAGS="$CFLAGS -DSTL_SGI_THREADS"
-         THREAD_LIBS=-lfetchop
-         THREAD_DEFINE=      
-      fi
-    elif test "$threads" = "unknown" ||
-       test "$threads" = "pthreads"; then
-      threads=pthreads
-      SCI_CHECK_LIB(,pthread,main,,,not-optional)
-      if test "$HAVE_LIBPTHREAD"; then
-        THREAD_LIBS=-lpthread
-        THREAD_DEFINE=yes
-      fi 
-    else
+    elif test "$threads" != "pthreads" -a "$threads" != "irix"; then
       SCI_MSG_ERROR(unknown thread type for host $host: $threads. exiting.)
     fi
     ;;
   *)
-    if test "$threads" = "unknown" ||
-       test "$threads" = "pthreads"; then
+    if test "$threads" = "unknown"; then
       threads=pthreads
-      SCI_CHECK_LIB(,pthread,main,,,not-optional)
-      if test "$HAVE_LIBPTHREAD"; then
-         THREAD_DEFINE=yes
-         THREAD_LIBS=-lpthread
-      fi 
-    else
+    elif test "$threads" != "pthreads"; then
       SCI_MSG_ERROR(unknown thread type for host $host: $threads. exiting.)
     fi
     ;;
 esac
 
-if test "$THREAD_DEFINE" = "yes"; then
-  THREAD_DEFINE="#define SCI_PTHREAD"
-fi
+case $threads in
+   irix)
+      SCI_CHECK_LIB(,fetchop,main,,,not-optional)
+      if test "$HAVE_LIBFETCHOP"; then
+         CFLAGS="$CFLAGS -DSTL_SGI_THREADS"
+         THREAD_LIBS=-lfetchop
+         THREAD_DEFINE=
+      fi
+      ;;
+   pthreads)
+      SCI_CHECK_LIB(,pthread,main,,,not-optional)
+      if test "$HAVE_LIBPTHREAD"; then
+        THREAD_LIBS=-lpthread
+        THREAD_DEFINE="#define SCI_PTHREAD"
+      fi
+      SCI_CHECK_HEADERS(,pthread.h semaphore.h,,,not-optional)
+      AC_MSG_CHECKING(for semaphore library)
+      old_LIBS=$LIBS
+      SEMAPHORE_LIB=unknown
+      for i in "" -lrt; do
+        LIBS="$old_LIBS $i"
+        AC_TRY_LINK([
+#include <semaphore.h>
+      ], [
+    sem_t sem;
+    sem_init(&sem, 0, 0);
+    sem_post(&sem);
+      ], [
+         SEMAPHORE_LIB=$i
+         break
+         ])
+      done
+      if test "$SEMPAPHORE_LIB" = unknown; then
+        AC_MSG_RESULT(not found)
+        AC_MSG_ERROR([semaphore library(sem_post, sem_wait, etc) needed for pthreads])
+      else
+        if test -z "$SEMAPHORE_LIB"; then
+          AC_MSG_RESULT(none required)
+        else
+          AC_MSG_RESULT($SEMAPHORE_LIB)
+        fi
+      fi
+      ;;
+   *)
+      SCI_MSG_ERROR(unknown thread type for host $host: $threads. exiting.)
+      ;;
+esac      
 
 THREAD_IMPL="Thread_$threads.cc"
 
@@ -1853,6 +1875,7 @@ AC_SUBST(THREAD_IMPL)
 AC_SUBST(THREAD_LIBS)
 AC_SUBST(THREAD_DEFINE)
 AC_SUBST(CFLAGS)
+AC_SUBST(SEMAPHORE_LIB)
 
 ##  --  search for OpenGL  -----------------------------------------------
 
@@ -2370,7 +2393,7 @@ fi
 if test "$have_uuid" = "yes"; then
   AC_MSG_CHECKING(for uuid library)
   old_LIBS=$LIBS
-  found_uuidlib=no
+  UUID_LIB=unknown
   for i in "" -luuid; do
     LIBS="$old_LIBS $i"
     AC_TRY_LINK([
@@ -2406,11 +2429,10 @@ extern "C" { // The linux uuid.h does not have this, so we need extern C here
 #endif
 	], [
   UUID_LIB=$i
-  found_uuidlib=yes
   break
 	])
   done
-  if test "$found_uuidlib" = yes; then
+  if test "$UUID_LIB" != unknown; then
     if test -z "$UUID_LIB"; then
       AC_MSG_RESULT(none required)
     else
