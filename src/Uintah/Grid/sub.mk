@@ -9,6 +9,8 @@ SRCDIR   := Uintah/Grid
 
 SRCS     += $(SRCDIR)/Array3Index.cc $(SRCDIR)/Box.cc \
 	$(SRCDIR)/CellIterator.cc $(SRCDIR)/CCVariableBase.cc \
+	$(SRCDIR)/SFCXVariableBase.cc $(SRCDIR)/SFCYVariableBase.cc \
+	$(SRCDIR)/SFCZVariableBase.cc \
 	$(SRCDIR)/FaceIterator.cc \
 	$(SRCDIR)/Grid.cc $(SRCDIR)/FCVariableBase.cc \
 	$(SRCDIR)/Level.cc $(SRCDIR)/Material.cc \
@@ -46,6 +48,10 @@ include $(SRCTOP)/scripts/smallso_epilogue.mk
 
 #
 # $Log$
+# Revision 1.21  2000/06/27 23:18:18  rawat
+# implemented Staggered cell variables. Modified Patch.cc to get ghostcell
+# and staggered cell indexes.
+#
 # Revision 1.20  2000/06/27 22:49:04  jas
 # Added grid boundary condition support.
 #

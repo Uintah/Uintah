@@ -134,12 +134,50 @@ WARNING
        return d_lowIndex;
      }
      IntVector getNodeHighIndex() const;
+
+     IntVector getSFCXLowIndex() const {
+       return d_lowIndex;
+     }
+     IntVector getSFCXHighIndex() const;
+
+     IntVector getSFCYLowIndex() const {
+       return d_lowIndex;
+     }
+     IntVector getSFCYHighIndex() const;
+
+     IntVector getSFCZLowIndex() const {
+       return d_lowIndex;
+     }
+     IntVector getSFCZHighIndex() const;
+
      IntVector getCellLowIndex() const {
        return d_lowIndex;
      }
      IntVector getCellHighIndex() const {
        return d_highIndex;
      }
+     // required for fortran interface
+     IntVector getSFCXFORTLowIndex() const;
+     IntVector getSFCXFORTHighIndex() const;
+
+     IntVector getSFCYFORTLowIndex() const;
+     IntVector getSFCYFORTHighIndex() const;
+
+     IntVector getSFCZFORTLowIndex() const;
+     IntVector getSFCZFORTHighIndex() const;
+
+     IntVector getCellFORTLowIndex() const;
+     IntVector getCellFORTHighIndex() const;
+
+     // returns ghost cell index
+     IntVector getGhostCellLowIndex(const int numGC) const;
+     IntVector getGhostCellHighIndex(const int numGC) const;
+     IntVector getGhostSFCXLowIndex(const int numGC) const;
+     IntVector getGhostSFCXHighIndex(const int numGC) const;
+     IntVector getGhostSFCYLowIndex(const int numGC) const;
+     IntVector getGhostSFCYHighIndex(const int numGC) const;
+     IntVector getGhostSFCZLowIndex(const int numGC) const;
+     IntVector getGhostSFCZHighIndex(const int numGC) const;
      
      inline Box getBox() const {
        return Box(d_level->getNodePosition(d_lowIndex),
@@ -239,6 +277,10 @@ std::ostream& operator<<(std::ostream& out, const Uintah::Patch* r);
 
 //
 // $Log$
+// Revision 1.13  2000/06/27 23:18:17  rawat
+// implemented Staggered cell variables. Modified Patch.cc to get ghostcell
+// and staggered cell indexes.
+//
 // Revision 1.12  2000/06/27 22:49:04  jas
 // Added grid boundary condition support.
 //

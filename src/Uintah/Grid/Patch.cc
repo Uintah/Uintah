@@ -289,8 +289,179 @@ IntVector Patch::getNodeHighIndex() const
    return h;
 }
 
+
+
+
+IntVector Patch::getSFCXHighIndex() const
+{
+   IntVector h(d_highIndex+
+	       IntVector(getBCType(xplus) == Neighbor?0:1, 0, 0));
+   return h;
+}
+
+IntVector Patch::getSFCYHighIndex() const
+{
+   IntVector h(d_highIndex+
+	       IntVector(0, getBCType(yplus) == Neighbor?0:1, 0));
+   return h;
+}
+
+IntVector Patch::getSFCZHighIndex() const
+{
+   IntVector h(d_highIndex+
+	       IntVector(0, 0, getBCType(zplus) == Neighbor?0:1));
+   return h;
+}
+// if next to a boundary then lowIndex = 2+celllowindex in the flow dir
+IntVector Patch::getSFCXFORTLowIndex() const
+{
+  IntVector h(d_lowIndex+
+	      IntVector(getBCType(xminus) == Neighbor?0:2, 
+			getBCType(yminus) == Neighbor?0:1,
+			getBCType(zminus) == Neighbor?0:1));
+  return h;
+}
+// if next to a boundary then highindex = cellhighindex - 1 - 1(coz of fortran)
+IntVector Patch::getSFCXFORTHighIndex() const
+{
+   IntVector h(d_highIndex - IntVector(1,1,1) - 
+	       IntVector(getBCType(xplus) == Neighbor?0:1,
+			 getBCType(yplus) == Neighbor?0:1,
+			 getBCType(zplus) == Neighbor?0:1));
+   return h;
+}
+
+// if next to a boundary then lowIndex = 2+celllowindex
+IntVector Patch::getSFCYFORTLowIndex() const
+{
+  IntVector h(d_lowIndex+
+	      IntVector(getBCType(xminus) == Neighbor?0:1, 
+			getBCType(yminus) == Neighbor?0:2,
+			getBCType(zminus) == Neighbor?0:1));
+  return h;
+}
+// if next to a boundary then highindex = cellhighindex - 1 - 1(coz of fortran)
+IntVector Patch::getSFCYFORTHighIndex() const
+{
+   IntVector h(d_highIndex - IntVector(1,1,1) - 
+	       IntVector(getBCType(xplus) == Neighbor?0:1,
+			 getBCType(yplus) == Neighbor?0:1,
+			 getBCType(zplus) == Neighbor?0:1));
+   return h;
+}
+
+// if next to a boundary then lowIndex = 2+celllowindex
+IntVector Patch::getSFCZFORTLowIndex() const
+{
+  IntVector h(d_lowIndex+
+	      IntVector(getBCType(xminus) == Neighbor?0:1, 
+			getBCType(yminus) == Neighbor?0:1,
+			getBCType(zminus) == Neighbor?0:2));
+  return h;
+}
+// if next to a boundary then highindex = cellhighindex - 1 - 1(coz of fortran)
+IntVector Patch::getSFCZFORTHighIndex() const
+{
+   IntVector h(d_highIndex - IntVector(1,1,1) - 
+	       IntVector(getBCType(xplus) == Neighbor?0:1,
+			 getBCType(yplus) == Neighbor?0:1,
+			 getBCType(zplus) == Neighbor?0:1));
+   return h;
+}
+  
+IntVector Patch::getCellFORTLowIndex() const
+{
+ IntVector h(d_lowIndex+
+	      IntVector(getBCType(xminus) == Neighbor?0:1, 
+			getBCType(yminus) == Neighbor?0:1,
+			getBCType(zminus) == Neighbor?0:1));
+  return h;
+  
+}
+IntVector Patch::getCellFORTHighIndex() const
+{
+   IntVector h(d_highIndex - IntVector(1,1,1) - 
+	       IntVector(getBCType(xplus) == Neighbor?0:1,
+			 getBCType(yplus) == Neighbor?0:1,
+			 getBCType(zplus) == Neighbor?0:1));
+   return h;
+
+}
+
+// numGC = number of ghost cells
+IntVector Patch::getGhostCellLowIndex(const int numGC) const
+{  IntVector h(d_lowIndex-
+	       IntVector(getBCType(xplus) == Neighbor?numGC:0,
+			 getBCType(yplus) == Neighbor?numGC:0,
+			 getBCType(zplus) == Neighbor?numGC:0));
+   return h;
+}
+
+IntVector Patch::getGhostCellHighIndex(const int numGC) const
+{  IntVector h(d_highIndex+
+	       IntVector(getBCType(xplus) == Neighbor?numGC:0,
+			 getBCType(yplus) == Neighbor?numGC:0,
+			 getBCType(zplus) == Neighbor?numGC:0));
+   return h;
+}
+
+// numGC = number of ghost cells
+IntVector Patch::getGhostSFCXLowIndex(const int numGC) const
+{  IntVector h(d_lowIndex-
+	       IntVector(getBCType(xplus) == Neighbor?numGC:0,
+			 getBCType(yplus) == Neighbor?numGC:0,
+			 getBCType(zplus) == Neighbor?numGC:0));
+   return h;
+}
+
+IntVector Patch::getGhostSFCXHighIndex(const int numGC) const
+{  IntVector h(d_highIndex+
+	       IntVector(getBCType(xplus) == Neighbor?numGC:1,
+			 getBCType(yplus) == Neighbor?numGC:0,
+			 getBCType(zplus) == Neighbor?numGC:0));
+   return h;
+}
+
+// numGC = number of ghost cells
+IntVector Patch::getGhostSFCYLowIndex(const int numGC) const
+{  IntVector h(d_lowIndex-
+	       IntVector(getBCType(xplus) == Neighbor?numGC:0,
+			 getBCType(yplus) == Neighbor?numGC:0,
+			 getBCType(zplus) == Neighbor?numGC:0));
+   return h;
+}
+
+IntVector Patch::getGhostSFCYHighIndex(const int numGC) const
+{  IntVector h(d_highIndex+
+	       IntVector(getBCType(xplus) == Neighbor?numGC:0,
+			 getBCType(yplus) == Neighbor?numGC:1,
+			 getBCType(zplus) == Neighbor?numGC:0));
+   return h;
+}
+
+// numGC = number of ghost cells
+IntVector Patch::getGhostSFCZLowIndex(const int numGC) const
+{  IntVector h(d_lowIndex-
+	       IntVector(getBCType(xplus) == Neighbor?numGC:0,
+			 getBCType(yplus) == Neighbor?numGC:0,
+			 getBCType(zplus) == Neighbor?numGC:0));
+   return h;
+}
+
+IntVector Patch::getGhostSFCZHighIndex(const int numGC) const
+{  IntVector h(d_highIndex+
+	       IntVector(getBCType(xplus) == Neighbor?numGC:0,
+			 getBCType(yplus) == Neighbor?numGC:0,
+			 getBCType(zplus) == Neighbor?numGC:1));
+   return h;
+}
+
 //
 // $Log$
+// Revision 1.15  2000/06/27 23:18:17  rawat
+// implemented Staggered cell variables. Modified Patch.cc to get ghostcell
+// and staggered cell indexes.
+//
 // Revision 1.14  2000/06/27 22:49:04  jas
 // Added grid boundary condition support.
 //

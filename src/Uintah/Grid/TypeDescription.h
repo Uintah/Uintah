@@ -40,6 +40,9 @@ namespace Uintah {
 	 CCVariable,
 	 NCVariable,
 	 FCVariable,
+	 SFCXVariable,
+	 SFCYVariable,
+	 SFCZVariable,
 	 ParticleVariable,
 	 Point,
 	 Vector,
@@ -93,6 +96,10 @@ namespace Uintah {
 
 //
 // $Log$
+// Revision 1.7  2000/06/27 23:18:18  rawat
+// implemented Staggered cell variables. Modified Patch.cc to get ghostcell
+// and staggered cell indexes.
+//
 // Revision 1.6  2000/06/14 23:27:34  jas
 // Added FCVariables to enum.
 //
