@@ -66,7 +66,7 @@ Tensor::Tensor(const Array1<double> &t) {
 }
 
 // compute the tensor from 7 diffusion channels
-Tensor::Tensor(const double *channels) {
+Tensor::Tensor(const double * /* channels */) {
 
   // TODO: compute mat
 
