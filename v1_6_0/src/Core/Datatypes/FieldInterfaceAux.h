@@ -39,6 +39,12 @@
 #include <Core/Geometry/Vector.h>
 #include <Core/Geometry/Tensor.h>
 #include <Core/Util/DynamicLoader.h>
+#ifdef _WIN32
+#include <float.h>
+#define MAXDOUBLE DBL_MAX
+#else
+#include <values.h>
+#endif
 
 namespace SCIRun {
 
@@ -146,6 +152,7 @@ SFInterface<F, L>::compute_min_max(double &minout, double &maxout) const
   bool result = false;
 
   typename F::mesh_handle_type mesh = fld_->get_typed_mesh();
+  mesh->synchronize(Mesh::ALL_ELEMENTS_E);
 
   typename L::iterator bi, ei;
   mesh->begin(bi);
@@ -171,11 +178,12 @@ template <class F, class L>
 double
 SFInterface<F, L>::find_closest(double &minout, const Point &p) const
 {
-  double mindist;
+  double mindist = MAXDOUBLE;
   typename F::mesh_handle_type mesh = fld_->get_typed_mesh();
+  mesh->synchronize(Mesh::ALL_ELEMENTS_E);
 
   typename L::index_type index;
-  typename L::iterator bi, ei;
+  typename L::iterator bi, ei, first;
   mesh->begin(bi); mesh->end(ei);
   while (bi != ei)
   {
@@ -302,6 +310,7 @@ VFInterface<F, L>::compute_min_max(Vector &minout, Vector &maxout) const
   bool result = false;
 
   typename F::mesh_handle_type mesh = fld_->get_typed_mesh();
+  mesh->synchronize(Mesh::ALL_ELEMENTS_E);
 
   typename L::iterator bi, ei;
   mesh->begin(bi);
@@ -332,8 +341,9 @@ template <class F, class L>
 double
 VFInterface<F, L>::find_closest(Vector &minout, const Point &p) const
 {
-  double mindist;
+  double mindist = MAXDOUBLE;
   typename F::mesh_handle_type mesh = fld_->get_typed_mesh();
+  mesh->synchronize(Mesh::ALL_ELEMENTS_E);
 
   typename L::index_type index;
   typename L::iterator bi, ei;
@@ -456,8 +466,9 @@ template <class F, class L>
 double
 TFInterface<F, L>::find_closest(Tensor &minout, const Point &p) const
 {
-  double mindist;
+  double mindist = MAXDOUBLE;
   typename F::mesh_handle_type mesh = fld_->get_typed_mesh();
+  mesh->synchronize(Mesh::ALL_ELEMENTS_E);
 
   typename L::index_type index;
   typename L::iterator bi, ei;
