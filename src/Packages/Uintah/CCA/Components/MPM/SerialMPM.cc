@@ -325,7 +325,7 @@ SerialMPM::scheduleTimeAdvance(const LevelP & level,
   scheduleSetGridBoundaryConditions(      sched, patches, matls);
   scheduleApplyExternalLoads(             sched, patches, matls);
   scheduleCalculateDampingRate(           sched, patches, matls);
-  scheduleAddNewParticles(           sched, patches, matls);
+  //scheduleAddNewParticles(           sched, patches, matls);
   scheduleInterpolateToParticlesAndUpdate(sched, patches, matls);
 
   sched->scheduleParticleRelocation(level, lb->pXLabel_preReloc,
