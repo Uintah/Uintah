@@ -417,17 +417,28 @@ void
       return;
     }
     
-    // make call
-    
-    delete bin;
-    delete min;
-    delete max;
-    
-    
+
+    for (int d=0; d < (int)nrrds.size(); ++d) {
+      nrrdRangeNix(range[d]);
+    }
+    free(range);
+
     NrrdData *nrrd = scinew NrrdData;
     nrrd->nrrd = nout;
     
     last_nrrdH_ = nrrd;
+
+    NrrdRange *nrrd0_minmax = nrrdRangeNewSet(nrrds[0], nrrdBlind8BitRangeFalse);
+    nrrdKeyValueAdd(last_nrrdH_->nrrd, "jhisto_nrrd0_min", to_string(nrrd0_minmax->min).c_str());
+    nrrdKeyValueAdd(last_nrrdH_->nrrd, "jhisto_nrrd0_max", to_string(nrrd0_minmax->max).c_str());
+    nrrdRangeNix(nrrd0_minmax);
+
+    nrrdKeyValueAdd(last_nrrdH_->nrrd, "jhisto_nrrd0_new_min", to_string(min[0]).c_str());
+    nrrdKeyValueAdd(last_nrrdH_->nrrd, "jhisto_nrrd0_new_max", to_string(max[0]).c_str());
+
+    delete bin;
+    delete min;
+    delete max;
     
   }
   onrrd_->send(last_nrrdH_);
