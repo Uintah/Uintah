@@ -35,6 +35,7 @@
 #include <Core/CCA/Component/PIDL/Object.h>
 #include <Core/CCA/Component/Comm/EpChannel.h>
 #include <Core/CCA/Component/PIDL/Reference.h>
+#include <Core/CCA/Component/PIDL/HandlerStorage.h>
 
 namespace SCIRun {
 /**************************************
@@ -94,6 +95,10 @@ DESCRIPTION
     // A MxN Distribution Scheduler in case this object needs
     // to redistribute an array
     MxNScheduler* d_sched;
+
+    /////////
+    // Storage for buffer data between two different handler invocations
+    HandlerStorage storage;
 
   };
 } // End namespace SCIRun

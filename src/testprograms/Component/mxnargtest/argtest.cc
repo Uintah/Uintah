@@ -54,15 +54,22 @@ void usage(char* progname)
 
 void init(CIA::array2<int>& a, int sta1, int fin1, int sta2, int fin2)
 {
-  a.resize(fin1-sta1,fin2-sta2);
+  a.resize(fin2-sta2,fin1-sta1);
+//  std::cerr << "SIZE1 = " << a.size1() << " : SIZE2 = " << a.size2() << "\n";
   for(int j=sta2;j<fin2;j++)
     for(int i=sta1;i<fin1;i++) {
       a[j-sta2][i-sta1]=(j*100)+i;
 //      std::cerr << "SLIDING IN a[" << j-sta2 << "][" << i-sta1 << "] = " << a[j-sta2][i-sta1] << "\n"; 
-//      std::cerr << "ARRAY sample arr[0][7] = " << a[0][7] << "\n";
     }
-//   std::cerr << "ARRAY sample arr[0][7] = " << a[0][7] << "\n";
 
+  /*
+  for(int j=sta2;j<=fin2;j++)
+    for(int i=sta1;i<=fin1;i++) {
+      std::cerr << "ARRAY sample arr[" << j-sta2 << "][" << i-sta1 << "] = " << a[j-sta2][i-sta1] << "\n";
+    }
+
+  std::cerr << "ARRAY sample arr[0][7] = " << a[0][7] << "\n";
+  */  
 }
 
 bool test(CIA::array2<int>& a)
@@ -110,7 +117,7 @@ void Server_impl::in_arr(const CIA::array2< int>& a)
 
 void Server_impl::out_arr(CIA::array2< int>& a)
 {
-  init(a,0,100,0,5); 
+  init(a,0,100,0,4); 
 }
 
 void Server_impl::inout_arr(CIA::array2< int>& a)
@@ -123,7 +130,6 @@ bool Server_impl::getSuccess()
 
 int main(int argc, char* argv[])
 {
-    CIA::array2<int> arr;
 
     int myrank = 0;
     int mysize = 0;
@@ -170,12 +176,13 @@ int main(int argc, char* argv[])
 	    usage(argv[0]);
 
 	if(server) {
+    	  CIA::array2<int> s_arr;
 	  Server_impl* serv=new Server_impl;
 
           //Set up server's requirement of the distribution array 
 	  Index** dr = new Index* [2]; 
 	  dr[0] = new Index(myrank,99,mysize);
-          dr[1] = new Index(myrank,5,mysize);
+          dr[1] = new Index(myrank,2,mysize);
 	  MxNArrayRep* arrr = new MxNArrayRep(2,dr);
 	  serv->setCalleeDistribution("D",arrr);
 
@@ -183,7 +190,7 @@ int main(int argc, char* argv[])
 	  cerr << serv->getURL().getString() << '\n';
 
 	} else {
-
+          CIA::array2<int> c_arr;
           //Creating a multiplexing proxy from all the URLs
 	  Object::pointer obj=PIDL::objectFrom(server_urls,mysize,myrank);
 	  Server::pointer serv=pidl_cast<Server::pointer>(obj);
@@ -197,8 +204,8 @@ int main(int argc, char* argv[])
           arrsize = 100 / mysize;
           sta1 = myrank * arrsize;
           fin1 = (myrank * arrsize) + arrsize - 1;
-          init(arr,sta1,fin1+1,0,2);
-	  std::cerr << "ARRAY sample arr[0][7] = " << arr[0][7] << "\n";
+          init(c_arr,sta1,fin1+1,0,2);
+
 	  //Inform everyone else of my distribution
           //(this sends a message to all the callee objects)
           Index** dr = new Index* [2];
@@ -207,9 +214,9 @@ int main(int argc, char* argv[])
           MxNArrayRep* arrr = new MxNArrayRep(2,dr);
 	  serv->setCallerDistribution("D",arrr); 
 
-          //serv->in_arr(arr);
-          serv->out_arr(arr);
-          //serv->inout_arr(arr);
+          //serv->in_arr(c_arr);
+          serv->out_arr(c_arr);
+          //serv->inout_arr(c_arr);
 
 	  double dt=Time::currentSeconds()-stime;
 	  cerr << reps << " reps in " << dt << " seconds\n";

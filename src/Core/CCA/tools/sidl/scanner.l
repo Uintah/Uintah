@@ -33,6 +33,7 @@ integer [0-9]+
 "bool"		return BOOL;
 "char"		return CHAR;
 "class"		return CLASS;
+"collective"    return COLLECTIVE;
 "copy"          return COPY;
 "dcomplex"	return DCOMPLEX;
 "distribution"  return DISTRIBUTION;

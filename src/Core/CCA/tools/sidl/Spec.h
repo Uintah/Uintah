@@ -47,6 +47,12 @@ enum ArgContext {
   ArrayTemplate
 };
 
+enum storageT {
+  noneStorage,
+  doStore,
+  doRetreive
+};
+
 class Definition {
 public:
   virtual ~Definition();
@@ -156,9 +162,9 @@ public:
   void emit_unmarshal(EmitState& e, const std::string& var,
 		      const std::string& qty, const int handler,
 		      ArgContext ctx, const bool specialRedis, bool declare) const;
-  void emit_marshal(EmitState& e, const std::string& var,
-		    const std::string& qty, const int handler, 
-		    bool top, ArgContext ctx, bool specialRedis) const;
+  void emit_marshal(EmitState& e, const std::string& var, const std::string& qty, 
+		    const int handler, bool top, ArgContext ctx, bool specialRedis, 
+		    storageT bufferStore = noneStorage) const;
   void emit_declaration(EmitState& e, const std::string& var) const;
   void emit_marshalsize(EmitState& e, const std::string& var,
 			const std::string& sizevar,
@@ -167,6 +173,8 @@ public:
   void emit_prototype_defin(SState&, const std::string&,
 			    SymbolTable* localScope) const;
   Mode getMode() const;
+  Type* getType() const;
+
 private:
   bool copy;
   Mode mode;
@@ -293,6 +301,7 @@ public:
 
   bool reply_required() const;
   std::string get_classname() const;
+  bool isCollective;
 protected:
   friend class CI;
   int handlerNum;
@@ -479,10 +488,9 @@ public:
   virtual void emit_unmarshal(EmitState& e, const std::string& arg,
 			      const std::string& qty, const int handler, ArgContext ctx,
 			      const bool specialRedis, bool declare) const=0;
-  virtual void emit_marshal(EmitState& e, const std::string& arg,
-			    const std::string& qty,
-			    const int handler, bool top, 
-			    ArgContext ctx, bool specialRedis) const=0;
+  virtual void emit_marshal(EmitState& e, const std::string& arg, const std::string& qty,
+			    const int handler, bool top, ArgContext ctx, bool specialRedis, 
+			    storageT bufferStore = noneStorage) const=0;
   virtual void emit_declaration(EmitState& e, const std::string& var) const=0;
   virtual void emit_marshalsize(EmitState& e, const std::string& arg,
 				const std::string& sizevar,
@@ -524,9 +532,9 @@ public:
   virtual void emit_unmarshal(EmitState& e, const std::string& arg,
 			      const std::string& qty, const int handler, ArgContext ctx,
 			      const bool specialRedis, bool declare) const;
-  virtual void emit_marshal(EmitState& e, const std::string& arg,
-			    const std::string& qty, const int handler, 
-			    bool top, ArgContext ctx, bool specialRedis) const;
+  virtual void emit_marshal(EmitState& e, const std::string& arg, const std::string& qty, 
+			    const int handler, bool top, ArgContext ctx, bool specialRedis, 
+			    storageT bufferStore = noneStorage) const;
   virtual void emit_declaration(EmitState& e, const std::string& var) const;
   virtual void emit_marshalsize(EmitState& e, const std::string& arg,
 				const std::string& sizevar,
@@ -558,9 +566,9 @@ public:
   virtual void emit_unmarshal(EmitState& e, const std::string& arg,
 			      const std::string& qty, const int handler, ArgContext ctx,
 			      const bool specialRedis, bool declare) const;
-  virtual void emit_marshal(EmitState& e, const std::string& arg,
-			    const std::string& qty, const int handler, 
-			    bool top, ArgContext ctx, bool specialRedis) const;
+  virtual void emit_marshal(EmitState& e, const std::string& arg, const std::string& qty, 
+			    const int handler, bool top, ArgContext ctx, bool specialRedis, 
+			    storageT bufferStore = noneStorage) const;
   virtual void emit_declaration(EmitState& e, const std::string& var) const;
   virtual void emit_marshalsize(EmitState& e, const std::string& arg,
 				const std::string& sizevar,
@@ -589,9 +597,9 @@ public:
   virtual void emit_unmarshal(EmitState& e, const std::string& arg,
 			      const std::string& qty, const int handler, ArgContext ctx,
 			      const bool specialRedis, bool declare) const;
-  virtual void emit_marshal(EmitState& e, const std::string& arg,
-			    const std::string& qty, const int handler, 
-			    bool top, ArgContext ctx, bool specialRedis) const;
+  virtual void emit_marshal(EmitState& e, const std::string& arg, const std::string& qty, 
+			    const int handler, bool top, ArgContext ctx, bool specialRedis, 
+			    storageT bufferStore = noneStorage) const;
   virtual void emit_declaration(EmitState& e, const std::string& var) const;
   virtual void emit_marshalsize(EmitState& e, const std::string& arg,
 				const std::string& sizevar,

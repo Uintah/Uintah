@@ -3,8 +3,8 @@ C       File:          whof77_UIPort_Impl.f
 C       Symbol:        whof77.UIPort-v1.0
 C       Symbol Type:   class
 C       Babel Version: 0.7.0
-C       SIDL Created:  20020801 15:44:38 MST
-C       Generated:     20020801 15:44:39 MST
+C       SIDL Created:  20020813 11:07:51 CDT
+C       Generated:     20020813 11:07:52 CDT
 C       Description:   Server-side implementation for whof77.UIPort
 C       
 C       WARNING: Automatically generated; only changes within splicers preserved

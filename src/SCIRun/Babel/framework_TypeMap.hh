@@ -3,8 +3,8 @@
 // Symbol:        framework.TypeMap-v1.0
 // Symbol Type:   class
 // Babel Version: 0.7.0
-// SIDL Created:  20020730 13:51:30 MST
-// Generated:     20020730 13:51:33 MST
+// SIDL Created:  20020813 11:07:11 CDT
+// Generated:     20020813 11:07:12 CDT
 // Description:   Client-side glue code for framework.TypeMap
 // 
 // WARNING: Automatically generated; changes will be lost

@@ -3,8 +3,8 @@ C       File:          whof77_Com_Impl.f
 C       Symbol:        whof77.Com-v1.0
 C       Symbol Type:   class
 C       Babel Version: 0.7.0
-C       SIDL Created:  20020801 15:44:38 MST
-C       Generated:     20020801 15:44:40 MST
+C       SIDL Created:  20020813 11:07:51 CDT
+C       Generated:     20020813 11:07:53 CDT
 C       Description:   Server-side implementation for whof77.Com
 C       
 C       WARNING: Automatically generated; only changes within splicers preserved
