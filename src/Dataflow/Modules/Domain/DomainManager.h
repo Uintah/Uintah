@@ -52,8 +52,8 @@ private:
   int outportnum;
   
   FieldWrapperHandle fwh;
-   DebugStream dbg;
-
+  DebugStream dbg;
+  
   void grab(const FieldWrapperHandle&);
   void update_lists();
   
