@@ -60,15 +60,15 @@ PHello::~PHello(){
 
 void PHello::setServices(const sci::cca::Services::pointer& svc){
   int mpi_size, mpi_rank;
-  MPI_Comm_size(MPI_COMM_WORLD,&mpi_size);
-  MPI_Comm_rank(MPI_COMM_WORLD,&mpi_rank);
+  MPI_Comm_size(MPI_COMM_COM,&mpi_size);
+  MPI_Comm_rank(MPI_COMM_COM,&mpi_rank);
   services=svc;
 
   //create common property for collective port
   sci::cca::TypeMap::pointer cprops= svc->createTypeMap();
   cprops->putInt("rank", mpi_rank);
   cprops->putInt("size", mpi_size);
-
+  cprops->setRankAndSize(mpi_rank, mpi_size);
 
   /*******************************************
   if we pass cprops to both addProvidesPorts(), it crashed sometimes.
@@ -79,6 +79,7 @@ void PHello::setServices(const sci::cca::Services::pointer& svc){
   cprops0->putInt("rank", mpi_rank);
   cprops0->putInt("size", mpi_size);
 
+  //  cprops0->setRankAndSize(mpi_rank, mpi_size);
 
   //add UI Port
   myUIPort::pointer uip=myUIPort::pointer(new myUIPort);
@@ -95,15 +96,20 @@ void PHello::setServices(const sci::cca::Services::pointer& svc){
     sci::cca::TypeMap::pointer props(0); 
     svc->registerUsesPort("stringport","sci.cca.ports.StringPort", props);
   }
-  MPI_Barrier(MPI_COMM_WORLD);
+  MPI_Barrier(MPI_COMM_COM);
+}
+
+void PHello::setCommunicator(int comm){
+  MPI_COMM_COM=*(MPI_Comm*)(comm);
 }
 
 int myUIPort::ui(){
-  int mpi_size, mpi_rank;
-  MPI_Comm_size(MPI_COMM_WORLD,&mpi_size);
-  MPI_Comm_rank(MPI_COMM_WORLD,&mpi_rank);
-  cout<<"UI button is clicked at rank="<<mpi_rank<<"!\n";
-  MPI_Barrier(MPI_COMM_WORLD);
+  //int mpi_size, mpi_rank;
+  //  MPI_Comm_size(MPI_COMM_COM,&mpi_size);
+  //  MPI_Comm_rank(MPI_COMM_COM,&mpi_rank);
+  //  cout<<"UI button is clicked at rank="<<mpi_rank<<"!\n";
+  cout<<"UI button is clicked "<<endl;
+  //MPI_Barrier(MPI_COMM_COM);
   return 0;
 }
 
