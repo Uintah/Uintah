@@ -13,9 +13,7 @@
 #ifndef Bon_h
 #define Bon_h
 
-#include <Core/Datatypes/ScalarFieldRGdouble.h>
-#include <Core/Datatypes/ScalarFieldRGfloat.h>
-#include <Core/Datatypes/ScalarFieldRGshort.h>
+#include <Core/Datatypes/ScalarFieldRG.h>
 
 namespace Yarden {
 

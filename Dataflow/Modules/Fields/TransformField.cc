@@ -15,12 +15,7 @@
 #include <Dataflow/Network/Module.h>
 #include <Core/Datatypes/DenseMatrix.h>
 #include <Dataflow/Ports/MatrixPort.h>
-#include <Core/Datatypes/ScalarFieldRGdouble.h>
-#include <Core/Datatypes/ScalarFieldRGfloat.h>
-#include <Core/Datatypes/ScalarFieldRGint.h>
-#include <Core/Datatypes/ScalarFieldRGshort.h>
-#include <Core/Datatypes/ScalarFieldRGuchar.h>
-#include <Core/Datatypes/ScalarFieldRGchar.h>
+#include <Core/Datatypes/ScalarFieldRG.h>
 #include <Dataflow/Ports/ScalarFieldPort.h>
 #include <Core/Geometry/Transform.h>
 #include <Core/Malloc/Allocator.h>

@@ -27,13 +27,7 @@
 
 #include <Packages/Yarden/Core/Datatypes/SpanSpace.h>
 #include <Core/Datatypes/ScalarField.h>
-#include <Core/Datatypes/ScalarFieldRGdouble.h> 
-#include <Core/Datatypes/ScalarFieldRGfloat.h> 
-#include <Core/Datatypes/ScalarFieldRGint.h> 
-#include <Core/Datatypes/ScalarFieldRGshort.h> 
-#include <Core/Datatypes/ScalarFieldRGushort.h> 
-#include <Core/Datatypes/ScalarFieldRGchar.h> 
-#include <Core/Datatypes/ScalarFieldRGuchar.h> 
+#include <Core/Datatypes/ScalarFieldRG.h> 
 
 #include <Dataflow/Ports/ScalarFieldPort.h>
 #include <Packages/Yarden/Dataflow/Ports/SpanPort.h>

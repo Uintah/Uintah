@@ -19,8 +19,8 @@ find . -name "*.ii" -print | xargs cat | sort | uniq -c | sort -nr | more
 #include <Core/Datatypes/BrickAttrib.h>
 #include <Core/Datatypes/IndexAttrib.h>
 #include <Core/Datatypes/AnalytAttrib.h>
-
 #include <Core/Datatypes/ScalarField.h>
+
 using namespace SCIRun;
 #ifdef __sgi
 #pragma set woff 1468

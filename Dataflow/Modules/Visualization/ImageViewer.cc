@@ -15,7 +15,7 @@
 #include <Dataflow/Network/Module.h>
 #include <Dataflow/Ports/GeometryPort.h>
 #include <Dataflow/Ports/ScalarFieldPort.h>
-#include <Core/Datatypes/ScalarFieldRGshort.h>
+#include <Core/Datatypes/ScalarFieldRG.h>
 #include <Core/Geom/tGrid.h>
 #include <Core/Geometry/Point.h>
 #include <Core/Math/MinMax.h>

@@ -11,7 +11,7 @@
 #include <Dataflow/Ports/ColorMapPort.h>
 #include <Dataflow/Ports/GeometryPort.h>
 #include <Dataflow/Ports/ScalarFieldPort.h>
-#include <Core/Datatypes/ScalarFieldRGuchar.h>
+#include <Core/Datatypes/ScalarFieldRG.h>
 
 #include <Core/Geom/GeomTriangles.h>
 

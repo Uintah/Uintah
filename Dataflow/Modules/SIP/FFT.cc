@@ -13,7 +13,6 @@
 #include <Dataflow/Ports/GeometryPort.h>
 #include <Dataflow/Ports/ScalarFieldPort.h>
 #include <Core/Datatypes/ScalarFieldRG.h>
-#include <Core/Datatypes/ScalarFieldRGfloat.h>
 #include <Dataflow/Ports/ColorMapPort.h>
 #include <Core/Geom/GeomGrid.h>
 #include <Core/Geom/GeomGroup.h>

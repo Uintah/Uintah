@@ -18,8 +18,7 @@
 #include <Dataflow/Ports/GeometryPort.h>
 #include <Core/Datatypes/Mesh.h>
 #include <Core/Datatypes/ScalarField.h>
-#include <Core/Datatypes/ScalarFieldRGdouble.h>
-#include <Core/Datatypes/ScalarFieldRGfloat.h>
+#include <Core/Datatypes/ScalarFieldRG.h>
 #include <Core/Datatypes/ScalarFieldUG.h>
 #include <Dataflow/Ports/ScalarFieldPort.h>
 #include <Core/Thread/Parallel.h>

@@ -14,7 +14,7 @@
 #include <Dataflow/Ports/ScalarFieldPort.h>
 #include <Core/Containers/Array3.h>
 #include <Core/Datatypes/ScalarField.h>
-#include <Core/Datatypes/ScalarFieldRGBase.h>
+#include <Core/Datatypes/ScalarFieldRG.h>
 #include <Core/Datatypes/ScalarFieldUG.h>
 #include <Core/Malloc/Allocator.h>
 #include <Core/TclInterface/TCLvar.h>

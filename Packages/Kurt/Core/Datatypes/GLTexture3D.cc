@@ -6,12 +6,7 @@
 #include <Core/Malloc/Allocator.h>
 #include <Core/Persistent/Persistent.h>
 #include <Core/Containers/String.h>
-#include <Core/Datatypes/ScalarFieldRGint.h>
-#include <Core/Datatypes/ScalarFieldRGshort.h>
-#include <Core/Datatypes/ScalarFieldRGfloat.h>
-#include <Core/Datatypes/ScalarFieldRGdouble.h>
-#include <Core/Datatypes/ScalarFieldRGuchar.h>
-#include <Core/Datatypes/ScalarFieldRGchar.h>
+#include <Core/Datatypes/ScalarFieldRG.h>
 #include <Core/Math/MinMax.h>
 #include <Core/Thread/Thread.h>
 #include <Core/Thread/Semaphore.h>

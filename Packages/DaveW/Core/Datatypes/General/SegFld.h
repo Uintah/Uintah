@@ -19,8 +19,7 @@
 #include <Core/Containers/Array3.h>
 #include <Core/Containers/String.h>
 #include <Core/Containers/Queue.h>
-#include <Core/Datatypes/ScalarFieldRGchar.h>
-#include <Core/Datatypes/ScalarFieldRGint.h>
+#include <Core/Datatypes/ScalarFieldRG.h>
 #include <Core/Persistent/Pstreams.h>
 
 namespace DaveW {

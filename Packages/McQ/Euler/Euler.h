@@ -5,7 +5,7 @@
 #include <Dataflow/Ports/GeometryPort.h>
 #include <Dataflow/Ports/ScalarFieldPort.h>
 #include <Core/Geom/GeomGroup.h>
-#include <Core/Datatypes/ScalarFieldRGdouble.h>
+#include <Core/Datatypes/ScalarFieldRG.h>
 #include <Core/Thread/Mutex.h>
 
 namespace McQ {

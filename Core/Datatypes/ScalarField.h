@@ -25,7 +25,8 @@ namespace SCIRun {
 
 
 class ScalarFieldRGBase;
-class ScalarFieldRG;
+template <class T> class ScalarFieldRGT;
+typedef class ScalarFieldRGT<double> ScalarFieldRG;
 class ScalarFieldUG;
 class ScalarFieldHUG;
 class ScalarField;

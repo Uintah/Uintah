@@ -20,7 +20,7 @@
 #include <Core/Containers/Array3.h>
 #include <Core/Containers/LockingHandle.h>
 #include <Core/Datatypes/Datatype.h>
-#include <Core/Datatypes/ScalarFieldRGdouble.h>
+#include <Core/Datatypes/ScalarFieldRG.h>
 #include <Core/Datatypes/VectorFieldRG.h>
 #include <Core/Geometry/Point.h>
 #include <Core/Geometry/Vector.h>

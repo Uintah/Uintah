@@ -21,7 +21,6 @@
 #include <Core/Geometry/Vector.h>
 #include <Core/Geometry/Point.h>
 
-class ScalarFieldRG;
 class ScalarFieldUG;
 class ScalarField;
 typedef LockingHandle<ScalarField> ScalarFieldHandle;
@@ -50,7 +49,6 @@ public:
     virtual ~ScalarField();
     virtual ScalarField* clone()=0;
 
-    ScalarFieldRG* getRG();
     ScalarFieldUG* getUG();
     void get_minmax(double&, double&);
     void get_bounds(Point&, Point&);

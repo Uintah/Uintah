@@ -16,9 +16,6 @@
 #include <Dataflow/Ports/GeometryPort.h>
 #include <Dataflow/Ports/ScalarFieldPort.h>
 #include <Core/Datatypes/ScalarFieldRG.h>
-#include <Core/Datatypes/ScalarFieldRGint.h>
-#include <Core/Datatypes/ScalarFieldRGshort.h>
-#include <Core/Datatypes/ScalarFieldRGfloat.h>
 #include <Core/Geometry/Point.h>
 #include <Core/Math/MinMax.h>
 #include <Core/Malloc/Allocator.h>

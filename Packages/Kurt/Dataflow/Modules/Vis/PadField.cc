@@ -7,7 +7,7 @@
 
 #include <Dataflow/Network/Module.h>
 #include <Dataflow/Ports/ScalarFieldPort.h>
-#include <Core/Datatypes/ScalarFieldRGdouble.h>
+#include <Core/Datatypes/ScalarFieldRG.h>
 #include <Core/Malloc/Allocator.h>
 #include <Core/TclInterface/TCLvar.h>
 #include <iostream>

@@ -17,9 +17,7 @@
 #include <Core/Thread/Time.h>
 #include <Core/Containers/String.h>
 
-#include <Core/Datatypes/ScalarFieldRGdouble.h>
-#include <Core/Datatypes/ScalarFieldRGfloat.h>
-#include <Core/Datatypes/ScalarFieldRGshort.h>
+#include <Core/Datatypes/ScalarFieldRG.h>
 
 #include <Core/Thread/Thread.h>
 

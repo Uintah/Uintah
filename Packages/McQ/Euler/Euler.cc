@@ -3,7 +3,7 @@
 #include <Core/Geom/GeomGroup.h>
 #include <Core/Geom/GeomSphere.h>
 #include <Core/Geom/GeomCylinder.h>
-#include <Core/Datatypes/ScalarFieldRGdouble.h>
+#include <Core/Datatypes/ScalarFieldRG.h>
 #include <Core/Thread/Thread.h>
 #include <Core/Thread/Runnable.h>
 #include "Euler.h"

@@ -17,7 +17,6 @@
  */
 
 #include <Core/Datatypes/ScalarFieldRGCC.h>
-//#include <Core/Containers/String.h>
 #include <Core/Malloc/Allocator.h>
 #include <iostream>
 
