@@ -1175,18 +1175,17 @@ rSASvJTGhnhcV3EJlo3kh53ltF5nAhQAOw==}]
     # Add any of the additional default directories
     # i.e. MY_SCIRUN_DATA, SCIRUN_DATA or pwd.
     # Do not add if all ready in 
-    global env
     set defaultdirs ""
 
     $data(dirMenu) add separator 
 
-    if {[info exists env(SCIRUN_DATA)]} {
-	lappend defaultdirs $env(SCIRUN_DATA)
+    if { [string length [netedit getenv SCIRUN_DATA]] } {
+	lappend defaultdirs [netedit getenv SCIRUN_DATA]
     }
 
     # MY_SCIRUN_DATA (might change)
-    if {[info exists env(SCIRUN_MYDATA_DIR)]} {
-	lappend defaultdirs $env(SCIRUN_MYDATA_DIR)
+    if { [string length [netedit getenv SCIRUN_MYDATA_DIR]] } {
+	lappend defaultdirs [netedit getenv SCIRUN_MYDATA_DIR]
     }
     
     # PWD

@@ -26,26 +26,15 @@ itcl_class Insight_DataIO_ImageReaderUChar2D {
     }
 
     method ui {} {
-	global env
-
         set w .ui[modname]
         if {[winfo exists $w]} {
 	    return
         }
         toplevel $w -class TkFDialog
 
-	set initdir ""
-	
 	# place to put preferred data directory
 	# it's used if $this-filename is empty
-	
-	if {[info exists env(SCIRUN_DATA)]} {
-	    set initdir $env(SCIRUN_DATA)
-	} elseif {[info exists env(SCI_DATA)]} {
-	    set initdir $env(SCI_DATA)
-	} elseif {[info exists env(PSE_DATA)]} {
-	    set initdir $env(PSE_DATA)
-	}
+	set initdir [netedit getenv SCIRUN_DATA]
 
 	set defext ".png"
 	set title "Open image file"

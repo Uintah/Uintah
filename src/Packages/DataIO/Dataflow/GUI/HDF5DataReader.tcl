@@ -126,7 +126,6 @@ itcl_class DataIO_Readers_HDF5DataReader {
     }
 
     method make_file_open_box {} {
-	global env
 	global $this-filename
 
 	set w [format "%s-filebox" .ui[modname]]
@@ -138,18 +137,10 @@ itcl_class DataIO_Readers_HDF5DataReader {
 	}
 
 	toplevel $w -class TkFDialog
-	set initdir ""
-	
+
 	# place to put preferred data directory
 	# it's used if $this-filename is empty
-	
-	if {[info exists env(SCIRUN_DATA)]} {
-	    set initdir $env(SCIRUN_DATA)
-	} elseif {[info exists env(SCI_DATA)]} {
-	    set initdir $env(SCI_DATA)
-	} elseif {[info exists env(PSE_DATA)]} {
-	    set initdir $env(PSE_DATA)
-	}
+	set initdir [netedit getenv SCIRUN_DATA]
 	
 	#######################################################
 	# to be modified for particular reader
@@ -199,7 +190,6 @@ itcl_class DataIO_Readers_HDF5DataReader {
 	global $this-ndims
 	global max_dims
 
-	global env
 	set w .ui[modname]
 
         set w .ui[modname]

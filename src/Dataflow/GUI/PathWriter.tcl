@@ -32,7 +32,7 @@ itcl_class SCIRun_DataIO_PathWriter {
 	global $this-filetype $this-confirm 
     	set $this-filetype Binary
 	set $this-confirm 1
-	if { ![boolToInt SCI_CONFIRM_OVERWRITE] } {
+	if { ![envBool SCIRUN_CONFIRM_OVERWRITE] } {
 	    set $this-confirm 0
 	}
 
@@ -58,19 +58,9 @@ itcl_class SCIRun_DataIO_PathWriter {
 	}
 	
 	toplevel $w -class TkFDialog
-	set initdir ""
-
 	# place to put preferred data directory
 	# it's used if $this-filename is empty
-	
-	global SCIRUN_DATA SCI_DATA PSE_DATA
-	if { $SCIRUN_DATA != "" } {
-	    set initdir $SCIRUN_DATA
-	} elseif { $SCI_DATA != "" } {
-	    set initdir $SCI_DATA
-	} elseif { $PSE_DATA != "" } {
-	    set initdir PSE_DATA
-	}
+	set initdir [netedit getenv SCIRUN_DATA]
 
 	#######################################################
 	# to be modified for particular reader
