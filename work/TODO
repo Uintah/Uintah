@@ -1,0 +1,26 @@
+
+DONE 1) Rework Geometry
+2) Fix Salmon
+3) Rewrite User Interfaces for all modules
+4) File browser box
+5) Fix portlights
+6) Fix backward connections in NetworkEditor
+7) Fix one to many connections
+8) RS/6000 Port
+9) Reality Engine bug fixes
+10) Optimize redraw loop
+11) Fix dialbox
+12) Optimizations for Unstructured Grids
+13) Finish fixing MeshView
+14) Remote modules
+15) Raytracer
+16) Postscript renderer
+17) X11 renderer
+18) DEC port
+19) Freedom board port
+20) Save/Load Networks
+21) Material Property editor
+22) Implement Quit button
+23) Fix graph on Salmon's widget
+24) Before reporting that a renderer is available, make sure
+    that it is supported (OpenGL)

@@ -7,17 +7,25 @@ SUBDIRS = Classlib Comm Constraints \
 
 SCISubdirs($(SUBDIRS))
 
+#ifdef SCI_COMPILER_CFRONT
+TMPLHACK_SRCS = tmpl_hack.cc
+TMPLHACK_OBJS = tmpl_hack.o
+#else
+TMPLHACK_SRCS =
+TMPLHACK_OBJS =
+#endif
+
 
 SR_TARGET = sr
-SR_SRCS = scirun.cc tmpl_hack.cc 
-SR_OBJS = scirun.o  tmpl_hack.o
+SR_SRCS = scirun.cc $(TMPLHACK_SRCS)
+SR_OBJS = scirun.o  $(TMPLHACK_OBJS)
 SR_LIBS = \
 	Modules/libModules.o \
 	Widgets/libWidgets.a \
 	Constraints/libConstraints.a \
 	TCL/libTCL.a \
 	Dataflow/libDataflow.a \
-	Datatypes/libDatatypes.a \
+	Datatypes/libDatatypes.o \
 	TCL/libTCL.a \
 	Geom/libGeom.a \
 	Devices/libDevices.a \
@@ -35,3 +43,16 @@ SCIProgramTarget($(SR_TARGET), $(SR_OBJS), $(SR_LIBS), $(SR_LDFLAGS))
 
 SRCS = $(SR_SRCS)
 SCIDependTarget($(SRCS))
+
+World:
+	make Makefile
+	make Makefiles
+	make depend
+	make
+
+update:
+	cvs update -d
+	make World
+
+clean::
+	rm -rf templates
