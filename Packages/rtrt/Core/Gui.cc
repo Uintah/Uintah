@@ -878,20 +878,6 @@ Gui::handleKeyPressCB( unsigned char key, int /*mouse_x*/, int /*mouse_y*/ )
     //doing_frameless = 1-doing_frameless; // just toggle...
     cerr << synch_frameless << " Synch?\n";
     break;
-  case '1':
-    cout << "NOTICE: Use 2 key to toggle Stereo\n";
-    cout << "      : 1 key is deprecated and may go away\n";
-    break;
-
-    FPS -= 1;
-    if (FPS <= 0.0) FPS = 1.0;
-    FrameRate = 1.0/FPS;
-    break;
-
-    FPS += 1.0;
-    FrameRate = 1.0/FPS;
-    cerr << FPS << endl;
-    break;
 #endif
   case 'W':
     cerr << "Saving raw image file\n";
@@ -900,6 +886,11 @@ Gui::handleKeyPressCB( unsigned char key, int /*mouse_x*/, int /*mouse_y*/ )
   case 'w':
     cerr << "Saving ppm image file\n";
     activeGui->dpy_->scene->get_image(showing_scene)->save_ppm("images/image");
+    break;
+  case 'd':
+    activeGui->dpy_->scene->display_depth = !activeGui->dpy_->scene->display_depth;
+    if (activeGui->dpy_->scene->display_depth)
+      activeGui->dpy_->scene->store_depth = 1;
     break;
   default:
     printf("unknown regular key %d\n", key);
@@ -2272,10 +2263,6 @@ Gui::createMenus( int winId, bool soundOn /* = false */,
   GLUI_Panel *display_panel = activeGui->mainWindow->
     add_panel_to_panel( main_panel, "Display Parameters" );
 
-  // FPS
-  activeGui->framesPerSecondTxt = activeGui->mainWindow->
-    add_edittext_to_panel( display_panel, "FPS:", GLUI_EDITTEXT_FLOAT );
-
   // Shadows
   GLUI_Panel * shadows = 
     activeGui->mainWindow->add_panel_to_panel( display_panel, "Shadows" );
@@ -2634,9 +2621,6 @@ Gui::update()
   char facing[8];
   sprintf( facing, "%s", getFacingString().c_str() );
   direct->set_text( facing );
-
-  // Round to first decimal spot (for display purposes.)
-  framesPerSecondTxt->set_float_val( ((int)(priv->FrameRate*10)) / 10.0 );
 
   if( priv->FrameRate < 4 && !beQuiet_ ){
     cerr << "dt=" << 1.0 / priv->FrameRate << '\n';
