@@ -2048,6 +2048,7 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
       new_dw->put(pvolumeNew,      lb->pVolumeLabel_preReloc);
       new_dw->put(pTemperatureNew, lb->pTemperatureLabel_preReloc);
       new_dw->deleteParticles(delete_particles);
+      delete delete_particles;
 
       constParticleVariable<long64> pids;
       ParticleVariable<long64> pids_new;
