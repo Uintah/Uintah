@@ -590,21 +590,31 @@ TextureRenderer::build_colormap1(Array2<float>& cmap_array,
     default:
       break;
     }
-    // update texture
-    if(cmap_tex == 0 || size_dirty) {
-      glDeleteTextures(1, &cmap_tex);
-      glGenTextures(1, &cmap_tex);
-      glBindTexture(GL_TEXTURE_1D, cmap_tex);
-      glTexParameteri(GL_TEXTURE_1D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-      glTexParameteri(GL_TEXTURE_1D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-      glTexParameteri(GL_TEXTURE_1D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-      glTexImage1D(GL_TEXTURE_1D, 0, GL_RGBA, cmap_array.dim1(), 0,
-                   GL_RGBA, GL_FLOAT, &cmap_array(0,0));
-    } else {
-      glBindTexture(GL_TEXTURE_1D, cmap_tex);
-      glTexSubImage1D(GL_TEXTURE_1D, 0, 0, cmap_array.dim1(),
-                      GL_RGBA, GL_FLOAT, &cmap_array(0,0));
+#ifdef GL_ARB_fragment_program
+    // This texture is not used if there is no shaders.
+    // glColorTable is used instead.
+    if (ShaderProgramARB::shaders_supported())
+    {
+      // Update 1D texture.
+      if (cmap_tex == 0 || size_dirty)
+      {
+	glDeleteTextures(1, &cmap_tex);
+	glGenTextures(1, &cmap_tex);
+	glBindTexture(GL_TEXTURE_1D, cmap_tex);
+	glTexParameteri(GL_TEXTURE_1D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+	glTexParameteri(GL_TEXTURE_1D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_1D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+	glTexImage1D(GL_TEXTURE_1D, 0, GL_RGBA16, cmap_array.dim1(), 0,
+		     GL_RGBA, GL_FLOAT, &cmap_array(0,0));
+      }
+      else
+      {
+	glBindTexture(GL_TEXTURE_1D, cmap_tex);
+	glTexSubImage1D(GL_TEXTURE_1D, 0, 0, cmap_array.dim1(),
+			GL_RGBA, GL_FLOAT, &cmap_array(0,0));
+      }
     }
+#endif
     cmap_dirty = false;
     alpha_dirty = false;
   }
