@@ -8,9 +8,9 @@
  #  Copyright (C) 1996 SCI Group
  ##
 
-catch {rename Packages/DaveW_SiRe_SiReInput ""}
+catch {rename DaveW_SiRe_SiReInput ""}
 
-itcl_class Packages/DaveW_SiRe_SiReInput {
+itcl_class DaveW_SiRe_SiReInput {
     inherit Module
     constructor {config} {
         set name SiReInput

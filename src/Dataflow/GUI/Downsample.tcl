@@ -1,7 +1,7 @@
 
 catch {rename Downsample ""}
 
-itcl_class Dataflow_Fields_Downsample {
+itcl_class SCIRun_Fields_Downsample {
     inherit Module
     constructor {config} {
 	set name Downsample

@@ -297,7 +297,7 @@ void fldToTree(SegFld &field, SurfTree &surf) {
     cerr << "\n";
     for (i=0; i<touches.size(); i++) {
 	if (touches[i].size() != 0) {
-	    cerr << "Core/CCA/Component "<<i<<" touches: ";
+	    cerr << "Component "<<i<<" touches: ";
 	    for (int j=0; j<touches[i].size(); j++)
 		cerr << touches[i][j]<<" ";
 	    cerr << "\n";

@@ -42,7 +42,7 @@
  *  Copyright (C) 1997 SCI Group
  */
 
-#include <Packages/DaveW/Core/ThirdParty/SparseLib/Leonid/Vector.h>
+#include <Packages/DaveW/ThirdParty/SparseLib/Leonid/Vector.h>
 #include <Dataflow/Network/Module.h>
 #include <Dataflow/Ports/MatrixPort.h>
 #include <Dataflow/Ports/MeshPort.h>
@@ -68,16 +68,16 @@
 //#include <malloc.h>
 //#include "string.h"
 
-#include <Packages/DaveW/Core/ThirdParty/OldLinAlg/matrix.h>
-#include <Packages/DaveW/Core/ThirdParty/OldLinAlg/vector.h>
-#include <Packages/DaveW/Core/ThirdParty/NumRec/dsvdcmp.h>
-#include <Packages/DaveW/Core/ThirdParty/NumRec/dsvbksb.h>
-#include <Packages/DaveW/Core/ThirdParty/NumRec/dpythag.h>
-#include <Packages/DaveW/Core/ThirdParty/OldLinAlg/cuthill.h>
-#include <Packages/DaveW/Core/ThirdParty/NumRec/bandec.h>
-#include <Packages/DaveW/Core/ThirdParty/NumRec/banbks.h>
-#include <Packages/DaveW/Core/ThirdParty/NumRec/banmul.h>
-#include <Packages/DaveW/Core/ThirdParty/NumRec/banmprv.h>
+#include <Packages/DaveW/ThirdParty/OldLinAlg/matrix.h>
+#include <Packages/DaveW/ThirdParty/OldLinAlg/vector.h>
+#include <Packages/DaveW/ThirdParty/NumRec/dsvdcmp.h>
+#include <Packages/DaveW/ThirdParty/NumRec/dsvbksb.h>
+#include <Packages/DaveW/ThirdParty/NumRec/dpythag.h>
+#include <Packages/DaveW/ThirdParty/OldLinAlg/cuthill.h>
+#include <Packages/DaveW/ThirdParty/NumRec/bandec.h>
+#include <Packages/DaveW/ThirdParty/NumRec/banbks.h>
+#include <Packages/DaveW/ThirdParty/NumRec/banmul.h>
+#include <Packages/DaveW/ThirdParty/NumRec/banmprv.h>
 
 //#include <nrutil.h>
 #define  COMPLEX std::complex<double>
@@ -114,7 +114,7 @@
 #include <ir.h>
 #include <gmres.h>
 
-#include <Packages/DaveW/Core/ThirdParty/RegTools/reg_tools.h>
+#include <Packages/DaveW/ThirdParty/RegTools/reg_tools.h>
 
 namespace DaveW {
 using namespace SCIRun;

@@ -1,7 +1,7 @@
 
 catch {rename ColorMapWriter ""}
 
-itcl_class Dataflow_Writers_ColorMapWriter {
+itcl_class SCIRun_Writers_ColorMapWriter {
     inherit Module
     constructor {config} {
 	set name ColorMapWriter

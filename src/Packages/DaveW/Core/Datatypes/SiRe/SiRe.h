@@ -14,10 +14,10 @@
 #define SCI_Packages_DaveW_Datatypes_SiRe_h 1
 
 #include <Core/Datatypes/VoidStar.h>
-#include <Packages/DaveW/Core/ThirdParty/SiRe/include/fftw.h>
-#include <Packages/DaveW/Core/ThirdParty/SiRe/include/sire_const.h>
-#include <Packages/DaveW/Core/ThirdParty/SiRe/include/sire_struct.h>
-#include <Packages/DaveW/Core/ThirdParty/SiRe/include/sire_version.h>
+#include <Packages/DaveW/ThirdParty/SiRe/include/fftw.h>
+#include <Packages/DaveW/ThirdParty/SiRe/include/sire_const.h>
+#include <Packages/DaveW/ThirdParty/SiRe/include/sire_struct.h>
+#include <Packages/DaveW/ThirdParty/SiRe/include/sire_version.h>
 #include <Core/Thread/Semaphore.h>
 
 // SiRe class definition

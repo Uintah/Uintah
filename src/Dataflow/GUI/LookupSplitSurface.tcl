@@ -9,7 +9,7 @@
  #  Log Information:
  ##
 
-itcl_class Dataflow_Surface_LookupSplitSurface {
+itcl_class SCIRun_Surface_LookupSplitSurface {
     inherit Module
     constructor {config} {
         set name LookupSplitSurface

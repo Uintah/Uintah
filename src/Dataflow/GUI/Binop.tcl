@@ -1,5 +1,5 @@
 
-itcl_class Dataflow_Image_Binop {
+itcl_class SCIRun_Image_Binop {
     inherit Module
     constructor {config} {
 	set name Binop

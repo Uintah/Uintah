@@ -1,7 +1,7 @@
 
 catch {rename TetraWriter ""}
 
-itcl_class Dataflow_Writers_TetraWriter {
+itcl_class SCIRun_Writers_TetraWriter {
     inherit Module
     constructor {config} {
 	set name TetraWriter

@@ -2,7 +2,7 @@
 # by Alexei Samsonov
 # June 2000
 
-itcl_class Dataflow_Fields_ScalarFieldProbe {
+itcl_class SCIRun_Fields_ScalarFieldProbe {
     inherit Module
     protected IsInit 0
     constructor {config} {

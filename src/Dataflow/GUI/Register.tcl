@@ -1,4 +1,4 @@
-itcl_class Dataflow_Domain_Register {
+itcl_class SCIRun_Domain_Register {
     inherit Module
 
     constructor {config} {

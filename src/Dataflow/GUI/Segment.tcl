@@ -1,5 +1,5 @@
 
-itcl_class Dataflow_Image_Segment {
+itcl_class SCIRun_Image_Segment {
     inherit Module
     constructor {config} {
 	set name Segment

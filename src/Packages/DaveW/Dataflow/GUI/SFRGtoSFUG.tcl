@@ -8,9 +8,9 @@
  #  Copyright (C) 2000 SCI Group
  ##
 
-catch {rename Packages/DaveW_EEG_SFRGtoSFUG ""}
+catch {rename DaveW_EEG_SFRGtoSFUG ""}
 
-itcl_class Packages/DaveW_EEG_SFRGtoSFUG {
+itcl_class DaveW_EEG_SFRGtoSFUG {
     inherit Module
     constructor {config} {
         set name SFRGtoSFUG

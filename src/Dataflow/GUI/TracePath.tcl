@@ -1,4 +1,4 @@
-itcl_class Dataflow_Fields_TracePath {
+itcl_class SCIRun_Fields_TracePath {
     inherit Module
     constructor {config} {
 	set name TracePath

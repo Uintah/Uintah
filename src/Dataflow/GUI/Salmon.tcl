@@ -1,6 +1,6 @@
 #catch {rename Salmon ""} 
 
-itcl_class Dataflow_Salmon_Salmon {
+itcl_class SCIRun_Salmon_Salmon {
     inherit Module
 
     # List of Roe children of this sammon

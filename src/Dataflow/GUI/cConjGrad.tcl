@@ -1,4 +1,4 @@
-itcl_class Dataflow_Matrix_cConjGrad {
+itcl_class SCIRun_Matrix_cConjGrad {
     inherit Module
     constructor {config} {
 	set name cConjGrad

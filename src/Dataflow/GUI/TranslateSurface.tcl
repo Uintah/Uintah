@@ -6,7 +6,7 @@
 #   July 1995
 #  Copyright (C) 1995 SCI Group
 
-itcl_class Dataflow_Surface_TranslateSurface {
+itcl_class SCIRun_Surface_TranslateSurface {
     inherit Module
     constructor {config} {
 	set name TranslateSurface

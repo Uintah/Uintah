@@ -172,7 +172,7 @@ int TensorField<DATA>::AddSlice(int in_slice, int in_tensor_component, FILE* in_
     for (int xx = 0; xx < m_width; xx++)
     if (fread(&(m_tensor_field[in_tensor_component](in_slice,yy,xx)), sizeof(DATA), 1, in_file) != 1) 
 	{	
-	printf("TensorCore/CCA/Component file wasn't big enough");
+	printf("TensorComponent file wasn't big enough");
 	return 0;
 	}*/
   return 1;

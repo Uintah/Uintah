@@ -1,5 +1,5 @@
 
-itcl_class Dataflow_Image_Edge {
+itcl_class SCIRun_Image_Edge {
     inherit Module
     constructor {config} {
 	set name Edge

@@ -1,6 +1,6 @@
-catch {rename Packages/DaveW_FEM_DipoleSourceRHS ""}
+catch {rename DaveW_FEM_DipoleSourceRHS ""}
 
-itcl_class Packages/DaveW_FEM_DipoleSourceRHS {
+itcl_class DaveW_FEM_DipoleSourceRHS {
     inherit Module
     constructor {config} {
 	set name DipoleSourceRHS

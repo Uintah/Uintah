@@ -1,6 +1,6 @@
-catch {rename Packages/DaveW_EEG_Taubin ""}
+catch {rename DaveW_EEG_Taubin ""}
 
-itcl_class Packages/DaveW_EEG_Taubin {
+itcl_class DaveW_EEG_Taubin {
     inherit Module
     constructor {config} {
 	set name Taubin

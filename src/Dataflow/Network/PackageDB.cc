@@ -124,6 +124,8 @@ void PackageDB::loadPackage(const clString& packPath)
       if(bname == "src") {
 	bname = "";
 	pname = "SCIRun";
+      } else {
+	bname = clString("Packages_")+bname+clString("_");
       }
 
       clString libname(clString("lib")+bname+"Dataflow_Modules_"+

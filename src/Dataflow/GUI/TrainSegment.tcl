@@ -7,7 +7,7 @@
 #   December 1995
 #  Copyright (C) 1995 SCI Group
 
-itcl_class Dataflow_Fields_TrainSegment {
+itcl_class SCIRun_Fields_TrainSegment {
     inherit Module
     constructor {config} {
 	set name TrainSegment

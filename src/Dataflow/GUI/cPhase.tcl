@@ -1,4 +1,4 @@
-itcl_class Dataflow_Matrix_cPhase {
+itcl_class SCIRun_Matrix_cPhase {
     inherit Module
     constructor {config} {
 	set name cPhase

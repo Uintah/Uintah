@@ -8,7 +8,7 @@
  #  Copyright (C) 1996 SCI Group
  ##
 
-itcl_class Dataflow_FEM_BuildFEMatrix {
+itcl_class SCIRun_FEM_BuildFEMatrix {
     inherit Module
     constructor {config} {
         set name BuildFEMatrix

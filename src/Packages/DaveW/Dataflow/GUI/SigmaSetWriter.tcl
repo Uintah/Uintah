@@ -1,6 +1,6 @@
-catch {rename Packages/DaveW_Writers_SigmaSetWriter ""}
+catch {rename DaveW_Writers_SigmaSetWriter ""}
 
-itcl_class Packages/DaveW_Writers_SigmaSetWriter {
+itcl_class DaveW_Writers_SigmaSetWriter {
     inherit Module
     constructor {config} {
 	set name SigmaSetWriter

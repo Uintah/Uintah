@@ -12,10 +12,10 @@
  *                                                              *
  ****************************************************************/
 
-#include <Packages/DaveW/Core/ThirdParty/OldLinAlg/matrix.h>
-#include <Packages/DaveW/Core/ThirdParty/OldLinAlg/vector.h>
-#include <Packages/DaveW/Core/ThirdParty/NumRec/dsvdcmp.h>
-#include <Packages/DaveW/Core/ThirdParty/NumRec/dsvbksb.h>
+#include <Packages/DaveW/ThirdParty/OldLinAlg/matrix.h>
+#include <Packages/DaveW/ThirdParty/OldLinAlg/vector.h>
+#include <Packages/DaveW/ThirdParty/NumRec/dsvdcmp.h>
+#include <Packages/DaveW/ThirdParty/NumRec/dsvbksb.h>
 
 #include <Dataflow/Network/Module.h>
 #include <Dataflow/Ports/MatrixPort.h>

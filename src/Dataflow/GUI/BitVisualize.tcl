@@ -1,5 +1,5 @@
 
-itcl_class Dataflow_Visualization_BitVisualize {
+itcl_class SCIRun_Visualization_BitVisualize {
     inherit Module
     constructor {config} {
 	set name BitVisualize

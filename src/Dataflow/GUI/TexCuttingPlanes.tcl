@@ -1,7 +1,7 @@
 
 catch {rename TexCuttingPlanes ""}
 
-itcl_class Dataflow_Visualization_TexCuttingPlanes {
+itcl_class SCIRun_Visualization_TexCuttingPlanes {
     inherit Module
 
     #protected inactivecolor "#010101"

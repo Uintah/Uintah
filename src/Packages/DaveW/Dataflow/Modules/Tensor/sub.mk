@@ -18,8 +18,8 @@ SRCS     += \
 	$(SRCDIR)/TensorAnisotropy.cc\
 #[INSERT NEW CODE FILE HERE]
 
-PSELIBS := DaveW/Datatypes/General Core/Datatypes Dataflow/Network \
-	Dataflow/Widgets Core/Persistent Core/Geometry \
+PSELIBS := Packages/DaveW/Core/Datatypes/General Dataflow/Ports \
+	Dataflow/Network Dataflow/Widgets Core/Persistent Core/Geometry \
 	Core/Math Core/Exceptions Core/Datatypes \
 	Core/Thread Core/Geom Core/Containers \
 	Core/TclInterface 

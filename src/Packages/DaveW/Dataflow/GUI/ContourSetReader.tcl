@@ -1,6 +1,6 @@
-catch {rename Packages/DaveW_Readers_ContourSetReader ""}
+catch {rename DaveW_Readers_ContourSetReader ""}
 
-itcl_class Packages/DaveW_Readers_ContourSetReader {
+itcl_class DaveW_Readers_ContourSetReader {
     inherit Module
     constructor {config} {
 	set name ContourSetReader

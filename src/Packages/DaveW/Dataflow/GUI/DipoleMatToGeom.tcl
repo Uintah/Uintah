@@ -9,9 +9,9 @@
  #  Log Information:
  ##
 
-catch {rename Packages/DaveW_FEM_DipoleMatToGeom ""}
+catch {rename DaveW_FEM_DipoleMatToGeom ""}
 
-itcl_class Packages/DaveW_FEM_DipoleMatToGeom {
+itcl_class DaveW_FEM_DipoleMatToGeom {
     inherit Module
     constructor {config} {
         set name DipoleMatToGeom

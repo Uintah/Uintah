@@ -16,7 +16,7 @@ SRCS     += \
 	$(SRCDIR)/DipoleInSphere.cc\
 #[INSERT NEW CODE FILE HERE]
 
-PSELIBS := Core/Datatypes Dataflow/Network Core/Containers \
+PSELIBS := Dataflow/Ports Dataflow/Network Core/Containers \
 	Core/Persistent Core/Exceptions Core/Thread \
 	Core/TclInterface Core/Datatypes
 LIBS := -lm

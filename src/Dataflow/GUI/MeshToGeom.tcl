@@ -10,7 +10,7 @@
 
 catch {rename MeshToGeom ""}
 
-itcl_class Dataflow_Mesh_MeshToGeom {
+itcl_class SCIRun_Mesh_MeshToGeom {
     inherit Module
     constructor {config} {
         set name MeshToGeom

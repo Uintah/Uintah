@@ -1,5 +1,5 @@
 
-itcl_class Dataflow_Image_Subsample {
+itcl_class SCIRun_Image_Subsample {
     inherit Module
     constructor {config} {
 	set name Subsample

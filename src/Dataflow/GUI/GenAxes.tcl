@@ -1,5 +1,5 @@
 
-itcl_class Dataflow_Visualization_GenAxes {
+itcl_class SCIRun_Visualization_GenAxes {
     inherit Module
     constructor {config} {
 	set name GenAxes

@@ -1,6 +1,6 @@
-catch {rename Packages/DaveW_EGI_DipoleInSphere ""}
+catch {rename DaveW_EGI_DipoleInSphere ""}
 
-itcl_class Packages/DaveW_EGI_DipoleInSphere {
+itcl_class DaveW_EGI_DipoleInSphere {
     inherit Module
     constructor {config} {
 	set name DipoleInSphere

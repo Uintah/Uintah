@@ -8,7 +8,7 @@
  #  Copyright (C) 1997 SCI Group
  ##
 
-itcl_class Dataflow_Visualization_VolRendTexSlices {
+itcl_class SCIRun_Visualization_VolRendTexSlices {
     inherit Module
     constructor {config} {
         set name VolRendTexSlices

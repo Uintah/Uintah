@@ -7,7 +7,7 @@
 #   Novemeber 1995
 #  Copyright (C) 1995 SCI Group
 
-itcl_class Dataflow_Matrix_EditMatrix {
+itcl_class SCIRun_Matrix_EditMatrix {
     inherit Module
     constructor {config} {
 	set name EditMatrix

@@ -6,7 +6,7 @@
 #   July 1995
 #  Copyright (C) 1995 SCI Group
 
-itcl_class Dataflow_Visualization_BoxClipSField {
+itcl_class SCIRun_Visualization_BoxClipSField {
     inherit Module
     constructor {config} {
 	set name BoxClipSField

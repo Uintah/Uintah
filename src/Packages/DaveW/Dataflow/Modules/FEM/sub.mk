@@ -24,8 +24,8 @@ SRCS     += \
 	$(SRCDIR)/VecSplit.cc\
 #[INSERT NEW CODE FILE HERE]
 
-PSELIBS := DaveW/Datatypes/General Dataflow/Widgets Dataflow/Ports \
-	Dataflow/Network Core/Persistent Core/Exceptions \
+PSELIBS := Packages/DaveW/Core/Datatypes/General Dataflow/Widgets \
+	Dataflow/Ports Dataflow/Network Core/Persistent Core/Exceptions \
 	Core/Datatypes Core/Thread Core/TclInterface \
 	Core/Geom Core/Containers Core/Geometry Core/Math
 LIBS := -lm

@@ -1,7 +1,7 @@
 
 catch {rename PointsReader ""}
 
-itcl_class Dataflow_Readers_PointsReader {
+itcl_class SCIRun_Readers_PointsReader {
     inherit Module
     constructor {config} {
 	set name PointsReader

@@ -12,7 +12,7 @@
  *  Copyright (C) 1994 SCI Group
  */
 
-#include <Packages/DaveW/Core/ThirdParty/NumRec/plgndr.h>
+#include <Packages/DaveW/ThirdParty/NumRec/plgndr.h>
 #include <Dataflow/Network/Module.h>
 #include <Dataflow/Ports/MatrixPort.h>
 #include <Dataflow/Ports/SurfacePort.h>

@@ -1,7 +1,7 @@
 
 catch {rename SurfaceReader ""}
 
-itcl_class Dataflow_Readers_SurfaceReader {
+itcl_class SCIRun_Readers_SurfaceReader {
     inherit Module
     constructor {config} {
 	set name SurfaceReader

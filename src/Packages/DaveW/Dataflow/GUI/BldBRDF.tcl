@@ -9,9 +9,9 @@
 
 #source $sci_root/TCL/MaterialEditor.tcl
 
-catch {rename Packages/DaveW_CS684_BldBRDF ""}
+catch {rename DaveW_CS684_BldBRDF ""}
 
-itcl_class Packages/DaveW_CS684_BldBRDF {
+itcl_class DaveW_CS684_BldBRDF {
     inherit Module
     constructor {config} {
 	set name BldBRDF

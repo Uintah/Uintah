@@ -1,7 +1,7 @@
 
 catch {rename SearchNoise ""}
 
-itcl_class Dataflow_Visualization_SearchNOISE {
+itcl_class SCIRun_Visualization_SearchNOISE {
     inherit Module
     constructor {config} {
 	set name SearchNOISE

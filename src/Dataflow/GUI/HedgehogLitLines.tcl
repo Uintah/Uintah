@@ -6,7 +6,7 @@
 #   May. 1995
 #  Copyright (C) 1995 SCI Group
 
-itcl_class Dataflow_Visualization_HedgehogLitLines {
+itcl_class SCIRun_Visualization_HedgehogLitLines {
     inherit Module
     protected l_s ""
     constructor {config} {

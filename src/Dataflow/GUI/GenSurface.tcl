@@ -7,7 +7,7 @@
 #   June 1995
 #  Copyright (C) 1995 SCI Group
 
-itcl_class Dataflow_Surface_GenSurface {
+itcl_class SCIRun_Surface_GenSurface {
     inherit Module
     constructor {config} {
 	set name GenSurface

@@ -1,7 +1,7 @@
 
 catch {rename Delaunay ""}
 
-itcl_class Dataflow_Mesh_Delaunay {
+itcl_class SCIRun_Mesh_Delaunay {
     inherit Module
     constructor {config} {
 	set name Delaunay

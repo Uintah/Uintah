@@ -10,7 +10,7 @@ SRCS     += $(SRCDIR)/amoeba.cc $(SRCDIR)/amotry.cc $(SRCDIR)/banbks.cc \
 	$(SRCDIR)/dpythag.cc $(SRCDIR)/dsvbksb.cc $(SRCDIR)/dsvdcmp.cc \
 	$(SRCDIR)/linbcg.cc $(SRCDIR)/nrutil.cc $(SRCDIR)/plgndr.cc
 
-PSELIBS := Packages/DaveW/Core/ThirdParty/OldLinAlg
+PSELIBS := Packages/DaveW/ThirdParty/OldLinAlg Core/Exceptions
 
 include $(SRCTOP)/scripts/smallso_epilogue.mk
 

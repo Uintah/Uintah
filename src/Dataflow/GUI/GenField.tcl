@@ -1,4 +1,4 @@
-itcl_class Fields_GenField {
+itcl_class SCIRun_Fields_GenField {
     inherit Module
     constructor {config} {
 	set name GenField

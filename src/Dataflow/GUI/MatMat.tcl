@@ -11,7 +11,7 @@
 
 catch {rename MatMat ""}
 
-itcl_class Dataflow_Matrix_MatMat {
+itcl_class SCIRun_Matrix_MatMat {
     inherit Module
     constructor {config} {
         set name MatMat

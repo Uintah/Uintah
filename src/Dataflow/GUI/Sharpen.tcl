@@ -1,5 +1,5 @@
 
-itcl_class Dataflow_Image_Sharpen {
+itcl_class SCIRun_Image_Sharpen {
     inherit Module
     constructor {config} {
 	set name Sharpen

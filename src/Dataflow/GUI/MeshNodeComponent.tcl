@@ -11,7 +11,7 @@
 
 catch {rename MeshNodeCore/CCA/Component ""}
 
-itcl_class Dataflow_Mesh_MeshNodeComponent {
+itcl_class SCIRun_Mesh_MeshNodeComponent {
     inherit Module
     constructor {config} {
         set name MeshNodeCore/CCA/Component

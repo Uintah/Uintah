@@ -1,4 +1,4 @@
-itcl_class Dataflow_Fields_SFRGfile {
+itcl_class SCIRun_Fields_SFRGfile {
     inherit Module
     constructor {config} {
 	set name SFRGfile

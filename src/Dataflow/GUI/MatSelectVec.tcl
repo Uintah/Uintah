@@ -11,7 +11,7 @@
 
 catch {rename MatSelectVec ""}
 
-itcl_class Dataflow_Matrix_MatSelectVec {
+itcl_class SCIRun_Matrix_MatSelectVec {
     inherit Module
     constructor {config} {
         set name MatSelectVec

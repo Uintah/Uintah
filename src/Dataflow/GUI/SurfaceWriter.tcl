@@ -1,7 +1,7 @@
 
 catch {rename SurfaceWriter ""}
 
-itcl_class Dataflow_Writers_SurfaceWriter {
+itcl_class SCIRun_Writers_SurfaceWriter {
     inherit Module
     constructor {config} {
 	set name SurfaceWriter

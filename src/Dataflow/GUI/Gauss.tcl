@@ -1,5 +1,5 @@
 
-itcl_class Dataflow_Image_Gauss {
+itcl_class SCIRun_Image_Gauss {
     inherit Module
     constructor {config} {
 	set name Gauss

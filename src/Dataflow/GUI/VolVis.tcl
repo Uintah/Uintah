@@ -11,7 +11,7 @@
 ################################################################
 
 
-itcl_class Dataflow_Visualization_VolVis {
+itcl_class SCIRun_Visualization_VolVis {
     
     inherit Module
 

@@ -24,8 +24,8 @@ SRCS     += \
 #[INSERT NEW MODULE HERE]
 
 
-PSELIBS := DaveW/Datatypes/General Dataflow/Network Core/Datatypes \
-	Core/Persistent Core/Exceptions Core/Thread \
+PSELIBS := Packages/DaveW/Core/Datatypes/General Dataflow/Network \
+	Dataflow/Ports Core/Persistent Core/Exceptions Core/Thread \
 	Core/Datatypes Core/TclInterface Core/Containers \
 	Core/Geom
 LIBS := 

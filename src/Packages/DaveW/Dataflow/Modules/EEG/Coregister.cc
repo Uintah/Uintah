@@ -16,8 +16,8 @@
 
 #include <Packages/DaveW/Core/Datatypes/General/ManhattanDist.h>
 #include <Packages/DaveW/Core/Datatypes/General/ScalarTriSurface.h>
-#include <Packages/DaveW/Core/ThirdParty/Quaternions/BallAux.h>
-#include <Packages/DaveW/Core/ThirdParty/NumRec/dsvdcmp.h>
+#include <Packages/DaveW/ThirdParty/Quaternions/BallAux.h>
+#include <Packages/DaveW/ThirdParty/NumRec/dsvdcmp.h>
 #include <Dataflow/Network/Module.h>
 #include <Dataflow/Ports/GeometryPort.h>
 #include <Dataflow/Ports/ScalarFieldPort.h>
