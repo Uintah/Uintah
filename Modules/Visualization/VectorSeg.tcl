@@ -58,41 +58,9 @@ itcl_class VectorSeg {
 			-showvalue true -tickinterval 51 -var_min \
 			$this-f${i}m${mat}min -var_max $this-f${i}m${mat}max \
 			-orient horizontal -length 250
-		$w.f.f$i.ranges.$name setMax $max
-		$w.f.f$i.ranges.$name setMin $min
+		$w.f.f$i.ranges.$name setMinMax $min $max
 		pack $w.f.f$i.ranges.$name -side top -fill x -expand 1
 	    }
-	}
-	frame $w.b
-	pack $w.b -side bottom
-	button $w.b.print_values -text "Print Values" -relief raised \
-		-command "$this print_values"
-	checkbutton $w.b.same -text "Same Inputs?" -variable $this-sameInput
-	$w.b.same select
-	button $w.b.go -text "Execute" -relief raised \
-		-command $n
-	pack $w.b.print_values $w.b.same $w.b.go -side top
-    }
-    method print_values {} {
-	set i 0
-	global $this-numFields
-	while {$i<[set $this-numFields]} {
-	    incr i
-	    puts -nonewline "Field "
-	    puts $i
-	    set mat 0
-	    while {$mat < 5} {
-		incr mat
-		global $this-f${i}m${mat}min
-		global $this-f${i}m${mat}max
-		set name $material($mat,name)
-		puts -nonewline $name
-		puts -nonewline ": min "
-		puts -nonewline [set $this-f${i}m${mat}min]
-		puts -nonewline " max "
-		puts [set $this-f${i}m${mat}max]
-	    }
-	puts " "
 	}
     }
     method do_field {i} {
