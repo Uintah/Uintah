@@ -11,8 +11,7 @@
 
 #include <Core/Containers/Array1.h>
 #include <Core/Containers/String.h>
-//#include <Core/Datatypes/ScalarFieldRGBase.h>
-#include <Core/Datatypes/ScalarField.h>
+#include <Core/Datatypes/Field.h>
 #include <Core/Malloc/Allocator.h>
 #include <Core/GuiInterface/GuiVar.h>
 #include <Core/GuiInterface/TCL.h>
@@ -46,9 +45,9 @@ GLTextureBuilder::GLTextureBuilder(const clString& id)
     tex(0) 
 {
   // Create the input ports
-  inscalarfield = scinew ScalarFieldIPort( this, "Scalar Field",
-					   ScalarFieldIPort::Atomic);
-  add_iport(inscalarfield);
+  infield = scinew FieldIPort( this, " Field",
+					   FieldIPort::Atomic);
+  add_iport(infield);
 
   // Create the output port
   otexture = scinew GLTexture3DOPort(this, "GL Texture", 
@@ -110,9 +109,9 @@ void GLTextureBuilder::execute(void)
   //  Display *dpy;
   // GLXContext cx;
   //static bool init = false;
-  ScalarFieldHandle sfield;
+  FieldHandle sfield;
   static int oldBrickSize = 0;
-  if (!inscalarfield->get(sfield)) {
+  if (!infield->get(sfield)) {
     return;
   }
   else if (!sfield.get_rep()) {
@@ -134,8 +133,8 @@ void GLTextureBuilder::execute(void)
       this->max.set( max );
     }
 
-  if( ScalarFieldRGBase *rg =
-      dynamic_cast<ScalarFieldRGBase *> (sfield.get_rep()) ){
+  if( FieldRGBase *rg =
+      dynamic_cast<FieldRGBase *> (sfield.get_rep()) ){
     
     if( sfield.get_rep() != sfrg.get_rep()  && !tex.get_rep() ){
       sfrg = sfield;

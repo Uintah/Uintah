@@ -1,13 +1,12 @@
 #ifndef SFRGFILE_H
 #define SFRGFILE_H
 
-#include <Core/Datatypes/ScalarField.h>
-//#include <Core/Datatypes/ScalarFieldRGBase.h>
+#include <Core/Datatypes/Field.h>
 #include <Core/Containers/Array2.h>
 #include <Core/GuiInterface/GuiVar.h>
 #include <Core/Geometry/Point.h>
 #include <Dataflow/Network/Module.h>
-#include <Dataflow/Ports/ScalarFieldPort.h>
+#include <Dataflow/Ports/FieldPort.h>
 
 namespace SCIRun {
 
@@ -26,8 +25,8 @@ class CastField : public Module {
 
 protected:
 
-  ScalarFieldIPort* iField;
-  ScalarFieldOPort* oField;
+  FieldIPort* iField;
+  FieldOPort* oField;
 
   VTYPE inVoxel;
   VTYPE outVoxel;
@@ -46,18 +45,18 @@ protected:
   bool PCGVHeader;
 
 #if 0
-  ScalarFieldRGdouble *ifd;
-  ScalarFieldRGfloat *iff;
-  ScalarFieldRGint *ifi;
-  ScalarFieldRGshort *ifs;
-  ScalarFieldRGushort *ifus;
-  ScalarFieldRGchar *ifc;
-  ScalarFieldRGuchar *ifuc;
+  FieldRGdouble *ifd;
+  FieldRGfloat *iff;
+  FieldRGint *ifi;
+  FieldRGshort *ifs;
+  FieldRGushort *ifus;
+  FieldRGchar *ifc;
+  FieldRGuchar *ifuc;
 #endif
     
-  ScalarFieldHandle ifh;
-  //  ScalarFieldRGBase *isf;
-  ScalarFieldHandle ofh;
+  FieldHandle ifh;
+  //  FieldRGBase *isf;
+  FieldHandle ofh;
 
   GuiInt haveMinMaxTCL;
   GuiInt haveOutVoxelTCL;

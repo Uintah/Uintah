@@ -12,22 +12,14 @@ find . -name "*.ii" -print | xargs cat | sort | uniq -c | sort -nr | more
  */
 
 #include <Dataflow/Ports/SimplePort.h>
-#include <Core/Datatypes/ScalarField.h>
 #include <Core/Datatypes/Matrix.h>
 #include <Core/Datatypes/ColorMap.h>
-#include <Core/Datatypes/VectorField.h>
 
 using namespace SCIRun;
-
-template class SimpleIPort<ScalarFieldHandle>;
-template class SimpleOPort<ScalarFieldHandle>;
 
 template class SimpleIPort<MatrixHandle>;
 template class SimpleOPort<MatrixHandle>;
 
 template class SimpleIPort<ColorMapHandle>;
 template class SimpleOPort<ColorMapHandle>;
-
-template class SimpleIPort<VectorFieldHandle>;
-template class SimpleOPort<VectorFieldHandle>;
 

@@ -12,14 +12,12 @@ find . -name "*.ii" -print | xargs cat | sort | uniq -c | sort -nr | more
  */
 
 #include <Core/Containers/LockingHandle.h>
-#include <Core/Datatypes/ScalarField.h>
 
 using namespace SCIRun;
 #ifdef __sgi
 #pragma set woff 1468
 #endif
 
-template class LockingHandle<ScalarField>;
 
 #include <Core/Datatypes/ColumnMatrix.h>
 template class LockingHandle<ColumnMatrix>;
