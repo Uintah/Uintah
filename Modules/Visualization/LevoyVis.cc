@@ -26,6 +26,7 @@ Vector EpsilonVector( 1.e-6, 1.e-6, 1.e-6 );
 
 double EpsilonContribution = 0.01;
 
+
 /**************************************************************************
  *
  * Constructor
@@ -80,147 +81,17 @@ Levoy::Levoy ( ScalarFieldRG * grid, ColormapIPort * c,
 
 
 
-
-
-
-
-void
-Levoy::SetUp ( const View& myview, const int& x, const int& y )
-{
-  // temporary storage for eye position
-
-  eye = myview.eyep();
-
-  // the original ray from the eye point to the lookat point
-
-  homeRay = myview.lookat() - eye;
-  homeRay.normalize();
-
-  cerr << "NORMALIZED is " << homeRay << endl;
-  homeRay *= cos( DtoR( myview.fov() / 2 ) );
-
-  cerr << "The home ray is: " << homeRay  <<endl;
-
-  // rayStep represents the length of vector.  in order to
-  // traverse the volume, a vector of this length in the direction
-  // of the ray is added to the current point in space
-
-  rayStep = DetermineRayStepSize ();
-
-  // the length of longest possible ray
-
-  dmax = DetermineFarthestDistance ( eye );
-
-  // create and initialize the array containing the image
-
-  this->x = x;
-  this->y = y;
-  
-  CharColor temp;
-
-  // deallocate the array
-  
-  Image->newsize( y, x );
-  Image->initialize( temp );
-
-  // calculate the increments to be added in the u,v directions
-
-  CalculateRayIncrements( myview, rayIncrementU, rayIncrementV, x, y );
-
-  // determine the function to use
-
-  if ( colormapFlag )
-    CastRay = &Levoy::Ten;
-  else if ( whiteFlag )
-    CastRay = &Levoy::Eight;
-  else // user defined SV-color map
-    CastRay = &Levoy::Nine;
-
-  CombineSalmonFlag = 0;
-}
-
-
-
-
-void
-Levoy::SetUp ( const View& myview, const int& x, const int& y,
-	       Array2<double>* db, Array2<Color>*  cb, double Cnear,
-	      double Cfar )
-{
-  // temporary storage for eye position
-
-  eye = myview.eyep();
-
-  // the original ray from the eye point to the lookat point
-
-  homeRay = myview.lookat() - eye;
-  homeRay.normalize();
-
-  cerr << "NORMALIZED is " << homeRay << endl;
-  homeRay *= cos( DtoR( myview.fov() / 2 ) );
-
-  cerr << "The home ray is: " << homeRay  <<endl;
-  
-
-  // the distance between the 2 clipping planes
-  
-  clipConst = ( Cfar - Cnear ) / homeRay.length();
-
-  // the ratio of near clipping plane to homeRaylength
-
-  nearTohome = Cnear / homeRay.length();
-  
-
-  // rayStep represents the length of vector.  in order to
-  // traverse the volume, a vector of this length in the direction
-  // of the ray is added to the current point in space
-
-  rayStep = DetermineRayStepSize ();
-
-  // the length of longest possible ray
-
-  dmax = DetermineFarthestDistance ( eye );
-
-  // create and initialize the array containing the image
-
-  this->x = x;
-  this->y = y;
-  
-  CharColor temp;
-
-  // keep the depth and color buffer information
-
-  this->DepthBuffer = db;
-  this->ColorBuffer = cb;
-
-  // deallocate and initialize the array
-  
-  Image->newsize( y, x );
-  Image->initialize( temp );
-
-  // calculate the increments to be added in the u,v directions
-
-  CalculateRayIncrements( myview, rayIncrementU, rayIncrementV, x, y );
-
-  // determine the function to use
-
-  if ( colormapFlag )
-    CastRay = &Levoy::Thirteen;
-  else if ( whiteFlag )
-    CastRay = &Levoy::Eleven;
-  else // user defined SV-color map
-    CastRay = &Levoy::Twelve;
-  
-  CombineSalmonFlag = 1;
-}
-
-
-
-
+/**************************************************************************
+ *
+ * destructor
+ *
+ **************************************************************************/
 
 Levoy::~Levoy()
 {
 }
+
+
 
 /**************************************************************************
  *
@@ -319,6 +190,145 @@ Levoy::DetermineFarthestDistance ( const Point& e )
     p.z( gmax.z() );
   
   return (p-e).length();
+}
+
+
+
+/**************************************************************************
+ *
+ *
+ *
+ **************************************************************************/
+
+void
+Levoy::SetUp ( const View& myview, const int& x, const int& y )
+{
+  // temporary storage for eye position
+
+  eye = myview.eyep();
+
+  // the original ray from the eye point to the lookat point
+
+  homeRay = myview.lookat() - eye;
+  homeRay.normalize();
+
+  cerr << "NORMALIZED is " << homeRay << endl;
+  homeRay *= cos( DtoR( myview.fov() / 2 ) );
+
+  cerr << "The home ray is: " << homeRay  <<endl;
+
+  // rayStep represents the length of vector.  in order to
+  // traverse the volume, a vector of this length in the direction
+  // of the ray is added to the current point in space
+
+  rayStep = DetermineRayStepSize ();
+
+  // the length of longest possible ray
+
+  dmax = DetermineFarthestDistance ( eye );
+
+  // create and initialize the array containing the image
+
+  this->x = x;
+  this->y = y;
+  
+  CharColor temp;
+
+  // deallocate old array and allocate enough space
+
+  Image->newsize( y, x );
+
+  // initialize to the default (black) color
+
+  Image->initialize( temp );
+
+  // calculate the increments to be added in the u,v directions
+
+  CalculateRayIncrements( myview, rayIncrementU, rayIncrementV, x, y );
+
+  // determine the function to use
+
+  if ( colormapFlag )
+    CastRay = &Levoy::Ten;
+  else if ( whiteFlag )
+    CastRay = &Levoy::Eight;
+  else // user defined SV-color map
+    CastRay = &Levoy::Nine;
+}
+
+
+/**************************************************************************
+ *
+ *
+ *
+ **************************************************************************/
+
+void
+Levoy::SetUp ( const View& myview, const int& x, const int& y,
+	       Array2<double>* db, Array2<Color>*  cb, double Cnear,
+	      double Cfar )
+{
+}
+
+
+/**************************************************************************
+ *
+ *
+ *
+ **************************************************************************/
+
+void
+Levoy::SetUp ( GeometryData * g )
+{
+}
+
+/**************************************************************************
+ *
+ * Associates a value for the particular scalar value
+ * given an array of scalar values and corresponding opacity/color values.
+ *
+ **************************************************************************/
+
+
+double
+Levoy::AssociateValue ( double scalarValue,
+		       const Array1<double>& SVA, const Array1<double>& OA )
+{
+  double opacity;
+  int i;
+  
+  // set to a bogus value in order to easily recognize
+  // the case of scalarValue between the next-to-last and
+  // last nodes.
+  
+  opacity = -1;
+
+  for ( i = 1; i < SVA.size()-1; i++ )
+    {
+      if ( scalarValue < SVA[i] )
+	{
+	  opacity = ( OA[i] - OA[i-1] ) /
+	    ( SVA[i] - SVA[i-1] )         *
+	      ( scalarValue - SVA[i-1] )      +
+		OA[i-1];
+	  break;
+	}
+    }
+
+  // if this is true, then the scalar value is between
+  // next-to-last and last nodes
+  
+  if ( opacity == -1 )
+    {
+      i = SVA.size() - 1;
+      opacity = ( OA[i] - OA[i-1] ) /
+	( SVA[i] - SVA[i-1] )         *
+	  ( scalarValue - SVA[i-1] )      +
+	    OA[i-1];
+    }
+
+  return opacity;
+
 }
 
 
@@ -630,8 +640,7 @@ Levoy::Seven ( const Point& eye, Vector& step,
 
 Color
 Levoy::Eight ( const Point& eye, Vector& step,
-	     const Point& beg, const Point& end, const int& px,
-	      const int& py )
+	     const Point& beg, const Point& end )
 {
   // as the ray passes through the volume, the voxel's
   // color contribution decreases
@@ -761,8 +770,7 @@ Levoy::Eight ( const Point& eye, Vector& step,
 
 Color
 Levoy::Nine ( const Point& eye, Vector& step,
-	     const Point& beg, const Point& end, const int& px,
-	      const int& py )
+	     const Point& beg, const Point& end )
 {
 
   // as the ray passes through the volume, the voxel's
@@ -895,8 +903,7 @@ Levoy::Nine ( const Point& eye, Vector& step,
 
 Color
 Levoy::Ten ( const Point& eye, Vector& step,
-	     const Point& beg, const Point& end, const int& px,
-	      const int& py )
+	     const Point& beg, const Point& end )
 {
 
   // as the ray passes through the volume, the voxel's
@@ -1014,6 +1021,267 @@ Levoy::Ten ( const Point& eye, Vector& step,
 
 
 
+
+/**************************************************************************
+ *
+ *
+ *
+ **************************************************************************/
+
+void
+Levoy::PerspectiveTrace( int from, int till )
+{
+  int loop, pool;
+  Vector rayToTrace;
+  Color pixelColor;
+  Point beg, end;
+
+  cerr <<"CALLED a fnc in LEVOY\n";
+  
+  for ( pool = from; pool < till; pool++ )
+    {
+      for ( loop = 0; loop < y; loop++ )
+	{
+	  // slightly alter the direction of ray
+	  
+	  rayToTrace = homeRay;
+	  rayToTrace += rayIncrementU * ( pool - x/2 );
+	  rayToTrace += rayIncrementV * ( loop - y/2 );
+
+	  if ( box.Intersect( eye, rayToTrace, beg, end ) )
+	    {
+	      // TEMP!!!  perhaps i still want to check what the
+	      // SV is at the point (it must be the corner)
+	      // i will need to REMOVE this later
+
+	      if ( ( eye - beg ).length() > ( eye - end ).length() )
+		{
+		  cerr << "swapping!!!!! ...\n";
+		  Point aaa;
+		  aaa = beg;
+		  beg = end;
+		  end = aaa;
+		}
+
+	      if ( beg.InInterval( end, 1.e-5 ) )
+		pixelColor = backgroundColor;
+	      else
+		pixelColor = (this->*CastRay)( eye, rayToTrace,
+					      beg, end );
+	    }
+	  else
+	    pixelColor = backgroundColor;
+
+	  /*
+	     i need to do it this way, unless i can write
+	     an operator overload fnc for ()=
+	     Image( loop, pool ) returns a value; it cannot
+	     be assigned.
+	     Image( loop, pool ) = pixelColor;
+	     */
+
+	  ((*Image)( loop, pool )).red =
+	    (char)(pixelColor.r()*255);
+	  ((*Image)( loop, pool )).green =
+	    (char)(pixelColor.g()*255);
+	  ((*Image)( loop, pool )).blue =
+	    (char)(pixelColor.b()*255);
+
+	}
+    }
+  
+}
+
+
+
+/**************************************************************************
+ *
+ * Constructor
+ *
+ **************************************************************************/
+
+LevoyS::LevoyS ( ScalarFieldRG * grid, ColormapIPort * c,
+	      Color& bg, Array1<double> * Xarr, Array1<double> * Yarr )
+: Levoy( grid, c, bg, Xarr, Yarr )
+{
+}
+
+
+/**************************************************************************
+ *
+ *
+ *
+ **************************************************************************/
+
+LevoyS::~LevoyS()
+{
+}
+
+
+
+/**************************************************************************
+ *
+ *
+ *
+ **************************************************************************/
+
+void
+LevoyS::SetUp ( const View& myview, const int& x, const int& y,
+	       Array2<double>* db, Array2<Color>*  cb, double Cnear,
+	      double Cfar )
+{
+  // temporary storage for eye position
+
+  eye = myview.eyep();
+
+  // the original ray from the eye point to the lookat point
+
+  homeRay = myview.lookat() - eye;
+  homeRay.normalize();
+
+  cerr << "NORMALIZED is " << homeRay << endl;
+  homeRay *= cos( DtoR( myview.fov() / 2 ) );
+
+  cerr << "The home ray is: " << homeRay  <<endl;
+  
+
+  // the distance between the 2 clipping planes
+  
+  clipConst = ( Cfar - Cnear ) / homeRay.length();
+
+  // the ratio of near clipping plane to homeRaylength
+
+  nearTohome = Cnear / homeRay.length();
+  
+
+  // rayStep represents the length of vector.  in order to
+  // traverse the volume, a vector of this length in the direction
+  // of the ray is added to the current point in space
+
+  rayStep = DetermineRayStepSize ();
+
+  // the length of longest possible ray
+
+  dmax = DetermineFarthestDistance ( eye );
+
+  // create and initialize the array containing the image
+
+  this->x = x;
+  this->y = y;
+  
+  CharColor temp;
+
+  // keep the depth and color buffer information
+
+  this->DepthBuffer = db;
+  this->BackgroundBuffer = cb;
+
+  // deallocate, allocate, and initialize the array
+  
+  Image->newsize( y, x );
+  
+  Image->initialize( temp );
+
+  // calculate the increments to be added in the u,v directions
+
+  CalculateRayIncrements( myview, rayIncrementU, rayIncrementV, x, y );
+
+  // determine the function to use
+
+  if ( colormapFlag )
+    CastRay = &LevoyS::Thirteen;
+  else if ( whiteFlag )
+    CastRay = &LevoyS::Eleven;
+  else // user defined SV-color map
+    CastRay = &LevoyS::Twelve;
+}
+
+
+/**************************************************************************
+ *
+ *
+ *
+ **************************************************************************/
+
+void
+LevoyS::SetUp ( GeometryData * g )
+{
+  g->Print();
+  
+  geom = g;
+  
+  // temporary storage for eye position
+
+  eye = g->view->eyep();
+
+  // the original ray from the eye point to the lookat point
+
+  homeRay = g->view->lookat() - eye;
+  homeRay.normalize();
+
+  cerr << "NORMALIZED is " << homeRay << endl;
+  homeRay *= cos( DtoR( g->view->fov() / 2 ) );
+
+  cerr << "The home ray is: " << homeRay  <<endl;
+  
+
+  // the distance between the 2 clipping planes
+  
+  clipConst = ( g->zfar - g->znear ) / homeRay.length();
+
+  // the ratio of near clipping plane to homeRaylength
+
+  nearTohome = g->znear / homeRay.length();
+  
+
+  // rayStep represents the length of vector.  in order to
+  // traverse the volume, a vector of this length in the direction
+  // of the ray is added to the current point in space
+
+  rayStep = DetermineRayStepSize ();
+
+  // the length of longest possible ray
+
+  dmax = DetermineFarthestDistance ( eye );
+
+  // create and initialize the array containing the image
+
+  this->x = g->xres;
+  this->y = g->yres;
+  
+  CharColor temp;
+
+  // keep the depth and color buffer information
+
+/*  
+  this->DepthBuffer = db;
+  this->BackgroundBuffer = cb;
+  */
+
+  // deallocate, allocate, and initialize the array
+  
+  Image->newsize( g->yres, g->xres );
+  
+  Image->initialize( temp );
+
+  // calculate the increments to be added in the u,v directions
+
+//  CalculateRayIncrements( myview, rayIncrementU, rayIncrementV, x, y );
+  CalculateRayIncrements( *(g->view), rayIncrementU, rayIncrementV,
+			 g->xres, g->yres );
+
+  // determine the function to use
+
+  if ( colormapFlag )
+    CastRay = &LevoyS::Thirteen;
+  else if ( whiteFlag )
+    CastRay = &LevoyS::Eleven;
+  else // user defined SV-color map
+    CastRay = &LevoyS::Twelve;
+}
+
+
+
 /**************************************************************************
  *
  * calculates the pixel color by casting a ray starting at the first
@@ -1031,7 +1299,7 @@ Levoy::Ten ( const Point& eye, Vector& step,
  **************************************************************************/
 
 Color
-Levoy::Eleven ( const Point& eye, Vector& step,
+LevoyS::Eleven ( const Point& eye, Vector& step,
 	       const Point& beg, const Point& end, const int& px,
 	      const int& py )
 {
@@ -1078,22 +1346,28 @@ Levoy::Eleven ( const Point& eye, Vector& step,
 
   accumulatedColor = BLACK;
 
-  /* DAVES
+  
+  
+  /* DAVES */
 
-     // calculate the length from the eye to the DepthBuffer based point
-     // in space
+  // calculate the length from the eye to the DepthBuffer based point
+  // in space
 
-     int templength = step.length() * ( clipConst * DepthBuffer(x,y) +
-     nearTohome );
+/*   int templength = step.length() * ( clipConst * DepthBuffer(x,y) +
+     nearTohome ); */
 
-     // compare the 2 lengths, pick the shorter one
+  int templength = step.length() * ( clipConst *
+		   geom->depthbuffer->get_depth(x,y) + nearTohome );
+
+  // compare the 2 lengths, pick the shorter one
 
   if ( templength < mylength )
     mylength = templength;
   else
     cerr << "T";
     
-    */
+  /* END DAVES */
+
 
   // find step vector
 
@@ -1163,7 +1437,13 @@ Levoy::Eleven ( const Point& eye, Vector& step,
 
     // DAVES
     //    accumulatedColor = BackgroundBuffer(px,py) * contribution + accumulatedColor;
-  
+
+  /* DAVES */
+
+  accumulatedColor = geom->colorbuffer->get_pixel(px,py) * contribution +
+    accumulatedColor;
+
+  /* END DAVES */
 
   return accumulatedColor;
 }
@@ -1187,7 +1467,7 @@ Levoy::Eleven ( const Point& eye, Vector& step,
 
 
 Color
-Levoy::Twelve ( const Point& eye, Vector& step,
+LevoyS::Twelve ( const Point& eye, Vector& step,
 	     const Point& beg, const Point& end, const int& px,
 	      const int& py )
 {
@@ -1343,7 +1623,7 @@ Levoy::Twelve ( const Point& eye, Vector& step,
 
 
 Color
-Levoy::Thirteen ( const Point& eye, Vector& step,
+LevoyS::Thirteen ( const Point& eye, Vector& step,
 		 const Point& beg, const Point& end, const int& px,
 	      const int& py )
 {
@@ -1485,172 +1765,9 @@ Levoy::Thirteen ( const Point& eye, Vector& step,
 
 /**************************************************************************
  *
- * Associates a value for the particular scalar value
- * given an array of scalar values and corresponding opacity/color values.
+ *
  *
  **************************************************************************/
-
-
-double
-Levoy::AssociateValue ( double scalarValue,
-		       const Array1<double>& SVA, const Array1<double>& OA )
-{
-  double opacity;
-  int i;
-  
-  // set to a bogus value in order to easily recognize
-  // the case of scalarValue between the next-to-last and
-  // last nodes.
-  
-  opacity = -1;
-
-  for ( i = 1; i < SVA.size()-1; i++ )
-    {
-      if ( scalarValue < SVA[i] )
-	{
-	  opacity = ( OA[i] - OA[i-1] ) /
-	    ( SVA[i] - SVA[i-1] )         *
-	      ( scalarValue - SVA[i-1] )      +
-		OA[i-1];
-	  break;
-	}
-    }
-
-  // if this is true, then the scalar value is between
-  // next-to-last and last nodes
-  
-  if ( opacity == -1 )
-    {
-      i = SVA.size() - 1;
-      opacity = ( OA[i] - OA[i-1] ) /
-	( SVA[i] - SVA[i-1] )         *
-	  ( scalarValue - SVA[i-1] )      +
-	    OA[i-1];
-    }
-
-  return opacity;
-
-}
-
-
-
-void
-Levoy::PerspectiveTrace( int from, int till )
-{
-  int loop, pool;
-  Vector rayToTrace;
-  Color pixelColor;
-  Point beg, end;
-  
-  for ( pool = from; pool < till; pool++ )
-    {
-      for ( loop = 0; loop < y; loop++ )
-	{
-	  // slightly alter the direction of ray
-	  
-	  rayToTrace = homeRay;
-	  rayToTrace += rayIncrementU * ( pool - x/2 );
-	  rayToTrace += rayIncrementV * ( loop - y/2 );
-
-	  if ( box.Intersect( eye, rayToTrace, beg, end ) )
-	    {
-	      // TEMP!!!  perhaps i still want to check what the
-	      // SV is at the point (it must be the corner)
-	      // i will need to REMOVE this later
-
-	      if ( ( eye - beg ).length() > ( eye - end ).length() )
-		{
-		  cerr << "swapping!!!!! ...\n";
-		  Point aaa;
-		  aaa = beg;
-		  beg = end;
-		  end = aaa;
-		}
-
-	      if ( beg.InInterval( end, 1.e-5 ) )
-		pixelColor = backgroundColor;
-	      else
-		pixelColor = (this->*CastRay)( eye, rayToTrace,
-					      beg, end, pool, loop );
-	    }
-	  else
-	    pixelColor = backgroundColor;
-
-	  /*
-	     i need to do it this way, unless i can write
-	     an operator overload fnc for ()=
-	     Image( loop, pool ) returns a value; it cannot
-	     be assigned.
-	     Image( loop, pool ) = pixelColor;
-	     */
-
-	  ((*Image)( loop, pool )).red = (char)(pixelColor.r()*255);
-	  ((*Image)( loop, pool )).green = (char)(pixelColor.g()*255);
-	  ((*Image)( loop, pool )).blue = (char)(pixelColor.b()*255);
-
-	}
-    }
-  
-}
-
-
-
-
-#if 0
-DAVES
-
-void
-Levoy::PerspectiveTrace( int from, int till )
-{
-  int loop, pool;
-  Vector rayToTrace;
-  Color pixelColor;
-  Point beg, end;
-
-  for ( pool = from; pool < till; pool++ )
-    {
-      for ( loop = 0; loop < y; loop++ )
-	{
-	  // slightly alter the direction of ray
-	  
-	  rayToTrace = homeRay;
-	  rayToTrace += rayIncrementU * ( pool - x/2 );
-	  rayToTrace += rayIncrementV * ( loop - y/2 );
-
-	  if ( box.Intersect( eye, rayToTrace, beg, end ) )
-	    {
-	      // TEMP!!!  perhaps i still want to check what the
-	      // SV is at the point (it must be the corner)
-	      // i will need to REMOVE this later
-
-	      if ( beg.InInterval( end, 1.e-5 ) )
-		pixelColor = ColorBuffer( pool, loop );
-	      else
-		pixelColor = (this->*CastRay)( eye, rayToTrace,
-					      beg, end, pool, loop );
-	    }
-	  else
-	    pixelColor = ColorBuffer( pool, loop );
-
-	  /*
-	     i need to do it this way, unless i can write
-	     an operator overload fnc for ()=
-	     Image( loop, pool ) returns a value; it cannot
-	     be assigned.
-	     Image( loop, pool ) = pixelColor;
-	     */
-
-	  ((*Image)( loop, pool )).red = (char)(pixelColor.r()*255);
-	  ((*Image)( loop, pool )).green = (char)(pixelColor.g()*255);
-	  ((*Image)( loop, pool )).blue = (char)(pixelColor.b()*255);
-
-	}
-    }
-  
-}
-#endif
-
-
 
 void
 Levoy::ParallelTrace( int from, int till )
@@ -1690,7 +1807,7 @@ Levoy::ParallelTrace( int from, int till )
 		pixelColor = backgroundColor;
 	      else
 		pixelColor = (this->*CastRay)( startAt, homeRay,
-					      beg, end, loop, pool );
+					      beg, end );
 	    }
 	  else
 	    pixelColor = backgroundColor;
@@ -1703,12 +1820,72 @@ Levoy::ParallelTrace( int from, int till )
 	     Image( loop, pool ) = pixelColor;
 	     */
 
-	  ((*Image)( loop, pool )).red = (char)(pixelColor.r()*255);
-	  ((*Image)( loop, pool )).green = (char)(pixelColor.g()*255);
-	  ((*Image)( loop, pool )).blue = (char)(pixelColor.b()*255);
+	  ((*Image)( loop, pool )).red =
+	    (char)(pixelColor.r()*255);
+	  ((*Image)( loop, pool )).green =
+	    (char)(pixelColor.g()*255);
+	  ((*Image)( loop, pool )).blue =
+	    (char)(pixelColor.b()*255);
 
 	}
     }
+}
+
+
+
+/**************************************************************************
+ *
+ *
+ *
+ **************************************************************************/
+
+void
+LevoyS::PerspectiveTrace( int from, int till )
+{
+  int loop, pool;
+  Vector rayToTrace;
+  Color pixelColor;
+  Point beg, end;
+
+  cerr <<"CALLED a fnc in levoyS\n";
+  
+  for ( pool = from; pool < till; pool++ )
+    {
+      for ( loop = 0; loop < y; loop++ )
+	{
+	  // slightly alter the direction of ray
+	  
+	  rayToTrace = homeRay;
+	  rayToTrace += rayIncrementU * ( pool - x/2 );
+	  rayToTrace += rayIncrementV * ( loop - y/2 );
+
+	  if ( box.Intersect( eye, rayToTrace, beg, end ) )
+	    {
+	      // TEMP!!!  perhaps i still want to check what the
+	      // SV is at the point (it must be the corner)
+	      // i will need to REMOVE this later
+
+	      if ( beg.InInterval( end, 1.e-5 ) )
+		pixelColor = (*BackgroundBuffer)( pool, loop );
+	      else
+		pixelColor = (this->*CastRay)( eye, rayToTrace,
+					      beg, end, pool, loop );
+	    }
+	  else
+	    pixelColor = (*BackgroundBuffer)( pool, loop );
+
+	  // assign color value to pixel
+
+	  ((*Image)( loop, pool )).red =
+	    (char)(pixelColor.r()*255);
+	  ((*Image)( loop, pool )).green =
+	    (char)(pixelColor.g()*255);
+	  ((*Image)( loop, pool )).blue =
+	    (char)(pixelColor.b()*255);
+
+	}
+    }
+  
 }
 
 

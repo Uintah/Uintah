@@ -21,6 +21,8 @@
 #include <Datatypes/ScalarFieldRG.h>
 #include <Datatypes/ScalarFieldPort.h>
 #include <Datatypes/ColormapPort.h>
+#include <Datatypes/Image.h>
+#include <Datatypes/GeometryPort.h>
 
 #include <Geom/Color.h>
 #include <Geom/View.h>
@@ -37,10 +39,14 @@
 #define CANVAS_WIDTH 200
 
 class Levoy;
+class LevoyS;
 
 // the type of fnc corresponding to the various cast ray fncs
 
 typedef Color (Levoy::*CRF) ( const Point&, Vector&,
+			     const Point&, const Point& );
+
+typedef Color (LevoyS::*CRFS) ( const Point&, Vector&,
 			     const Point&, const Point&, const int&,
 			     const int& );
 
@@ -50,7 +56,7 @@ typedef void (Levoy::*TR) ( int, int );
 
 class Levoy
 {
-private:
+protected:
   
   ScalarFieldRG *homeSFRGrid;
 
@@ -85,13 +91,6 @@ private:
 
   Vector homeRay;
 
-  // consts used in determination of the distance between
-  // 2 clipping planes
-
-  double clipConst;
-
-  double nearTohome;
-
   // pointer to the array of char colors
 
   CRF CastRay;
@@ -100,14 +99,29 @@ private:
 
   int x, y;
 
+  // flag for centering
 
-  // the depth and color buffers
+  int centerFlag;
 
-  Array2<double>* DepthBuffer;
-  Array2<Color>*  ColorBuffer;
+  // offsets from the center
+  
+  int centerOffsetU, centerOffsetV;
+  
 
-  int CombineSalmonFlag;
+  double DetermineRayStepSize ();
 
+  void CalculateRayIncrements ( View myview, Vector& rayIncrementU,
+			       Vector& rayIncrementV, const int& rasterX,
+			       const int& rasterY );
+  
+  double DetermineFarthestDistance ( const Point& e );
+
+  // associates an opacity or color value (0-1 range) given
+  // a scalar value
+
+  double AssociateValue( double scalarValue,
+			const Array1<double>& SVA, const Array1<double>& OA );
+  
 public:
 
   Array2<CharColor> * Image;
@@ -117,16 +131,27 @@ public:
   Levoy( ScalarFieldRG * grid, ColormapIPort * c,
 	Color& bg, Array1<double> * Xarr, Array1<double> * Yarr );
 
+  // destructor
+  
   ~Levoy();
 
-  void CalculateRayIncrements ( View myview, Vector& rayIncrementU,
-			       Vector& rayIncrementV, const int& rasterX,
-			       const int& rasterY );
-  
-  double DetermineRayStepSize ();
+  // no depth buffer or color buffer info; therefore, Salmon view
+  // is not applicable
 
-  double DetermineFarthestDistance ( const Point& e );
+  void SetUp ( const View& myview, const int& x, const int& y );
+
+  // virtual SetUp routine
+
+  virtual
+    void SetUp ( const View& myview, const int& x, const int& y,
+	      Array2<double>* db, Array2<Color>* cb, double Cnear,
+	      double Cfar );
+
+
+  virtual void SetUp ( GeometryData * g );
   
+  // initial, most brute force algorithm
+
   Color Five ( const Point& eye, Vector& step,
 	      const Point& beg , const Point& end );
 
@@ -137,22 +162,75 @@ public:
 	      const Point& beg , const Point& end );
 
   
-  // uses the new transfer map
+  // uses the new transfer map and ray-bbox intersections
 
   Color Eight ( const Point& eye, Vector& step,
-	      const Point& beg , const Point& end, const int& px,
-	       const int& py );
+	      const Point& beg , const Point& end );
 
   Color Nine ( const Point& eye, Vector& step,
-	      const Point& beg , const Point& end, const int& px,
-	       const int& py );
+	      const Point& beg , const Point& end );
 
   Color Ten ( const Point& eye, Vector& step,
-	      const Point& beg , const Point& end, const int& px,
-	       const int& py );
+	      const Point& beg , const Point& end );
 
+
+  // traces all the rays
   
-  // uses Salmon view stuff
+  Array2<CharColor>* TraceRays ( int projectionType );
+  
+
+  // Traces rays starting at x=from until x=till
+  
+  virtual void PerspectiveTrace( int from, int till );
+  
+  void ParallelTrace( int from, int till );
+  
+
+};
+
+class LevoyS : public Levoy
+{
+
+private:
+  
+  // consts used in determination of the distance between
+  // 2 clipping planes
+
+  double clipConst;
+
+  double nearTohome;
+
+  // the depth and color buffers
+
+  Array2<double>* DepthBuffer;
+  Array2<Color>*  BackgroundBuffer;
+
+  CRFS CastRay;
+
+  GeometryData *geom;
+
+public:
+
+  // constructor
+  
+  LevoyS( ScalarFieldRG * grid, ColormapIPort * c,
+	Color& bg, Array1<double> * Xarr, Array1<double> * Yarr );
+
+  // destructor
+
+  ~LevoyS();
+
+  // allows the Salmon image and my volvis stuff to be superimposed
+
+  virtual
+    void SetUp ( const View& myview, const int& x, const int& y,
+	      Array2<double>* db, Array2<Color>* cb, double Cnear,
+	      double Cfar );
+
+  virtual
+    void SetUp ( GeometryData * );
+
+  // uses Salmon view, and Depth and color buffer information
   
   Color Eleven ( const Point& eye, Vector& step,
 		const Point& beg , const Point& end, const int& px,
@@ -166,27 +244,10 @@ public:
 		  const Point& beg , const Point& end, const int& px,
 	       const int& py );
 
+  // performs a perspective trace in vertical slices
   
-  Array2<CharColor>* TraceRays ( int projectionType );
-  
-
-  // no depth buffer or color buffer info; therefore, Salmon view
-  // is not applicable
-
-  void SetUp ( const View& myview, const int& x, const int& y );
-
-  // allows the Salmon image and my volvis stuff to be superimposed
-
-  void SetUp ( const View& myview, const int& x, const int& y,
-	      Array2<double>* db, Array2<Color>* cb, double Cnear,
-	      double Cfar );
-
-  
-  void PerspectiveTrace( int from, int till );
-  void ParallelTrace( int from, int till );
-
-  double AssociateValue( double scalarValue,
-			const Array1<double>& SVA, const Array1<double>& OA );
+  virtual void PerspectiveTrace( int from, int till );
 };
 
+  
 #endif
