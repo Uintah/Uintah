@@ -123,10 +123,10 @@ for f in ${2}; do echo $$f | ruby ${treetop}/doc/Utilities/TeX/mkpkgmodtex.rb >>
 endef
 
 # Return list of eps files that correspond to the image files given by ${1}
-# found in doc directories of the package given by ${2} or the SCIRun
+# found in doc and TeX directories of the package given by ${2} or the SCIRun
 # pseudo package if ${2} is empty.
 define imageepsfiles
-${patsubst %.${1},%.${eps},${wildcard ${treetop}/src/${if ${2},Packages/${2}/}Dataflow/Modules/*/doc/*.${1}}}
+${patsubst %.${1},%.${eps},${wildcard ${treetop}/src/${if ${2},Packages/${2}/}Dataflow/Modules/*/doc/*.${1}} ${wildcard ${treetop}/src/${if ${2},Packages/${2}/}Dataflow/TeX/*/*.${1}}}
 endef
 
 # Convert $< to eps scaling them down if they are too large.
