@@ -29,19 +29,21 @@ itcl_class SCIRun_Visualization_Isosurface {
     }
 
     method set_defaults {} {
-	global $this-isoval-min $this-isoval-max 
+	global $this-isoval-min 
+	global $this-isoval-max 
 	global $this-continuous
 	global $this-extract-from-new-field
 	global $this-algorithm
+	global $this-type
+	global $this-gen
 	
 	set $this-isoval-min 0
 	set $this-isoval-max 4095
 	set $this-continuous 0
 	set $this-extract-from-new-field 0
 	set $this-algorithm 0
-
-	global $this-type ""
-	global $this-gen 0
+	set $this-type ""
+	set $this-gen 0
 
 	# SAGE vars
 	global $this-visibility $this-value $this-scan
