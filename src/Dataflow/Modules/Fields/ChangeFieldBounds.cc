@@ -97,7 +97,7 @@ public:
   void build_widget(FieldHandle, bool reset);
 
   virtual void execute();
-  virtual void widget_moved(bool);
+  virtual void widget_moved(bool, BaseWidget*);
 };
 
   DECLARE_MAKER(ChangeFieldBounds)
@@ -416,7 +416,7 @@ ChangeFieldBounds::execute()
 }
 
     
-void ChangeFieldBounds::widget_moved(bool last)
+void ChangeFieldBounds::widget_moved(bool last, BaseWidget*)
 {
   if (last) {
     Point center, right, down, in;

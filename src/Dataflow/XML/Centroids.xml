@@ -68,4 +68,15 @@
   </io>
   <testing>
   </testing>
+<nets>
+<net id="Centroids">
+<title>Centroids Regression Test</title>
+
+<p>Create a PointCloudField containing the center points of the faces
+from an ImageField.</p>
+
+<p>This network can be found at src/nets/Modules/FieldsCreate/Centroids.net.</p>
+
+</net>
+</nets>
 </component>

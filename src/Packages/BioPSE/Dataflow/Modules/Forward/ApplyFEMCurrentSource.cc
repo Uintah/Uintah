@@ -42,7 +42,7 @@
  *   Lorena Kreda, Northeastern University, November 2003
  */
 
-#include <Core/Containers/Array1.h>
+#include <Core/Containers/Array1.h>  
 #include <Dataflow/Network/Module.h>
 #include <Core/Datatypes/ColumnMatrix.h>
 #include <Core/Datatypes/DenseMatrix.h>
@@ -57,6 +57,7 @@
 #include <Core/Malloc/Allocator.h>
 #include <Core/Math/MinMax.h>
 #include <Core/Math/Trig.h>
+#include <Core/Math/MiscMath.h>
 #include <Core/GuiInterface/GuiVar.h>
 #include <iostream>
 #include <Packages/BioPSE/Core/Algorithms/NumApproximation/ReferenceElement.h>
@@ -109,8 +110,8 @@ public:
   GuiInt sourceNodeTCL_;
   GuiInt sinkNodeTCL_;
   GuiString modeTCL_; 
-  // modeTCL_ (above) can be either: "dipole", "electrode pair", or "electrode set" 
-  // The iportInter_ input is only used if mode is "electrode pair" or "electrode set". 
+  // modeTCL_ (above) can be either: "dipole", "sources and sinks", or "electrode set" 
+  // The iportInter_ input is only used if mode is "sources and sinks" or "electrode set". 
 
   //! Constructor/Destructor
   ApplyFEMCurrentSource(GuiContext *context);
@@ -368,8 +369,8 @@ void ApplyFEMCurrentSource::execute()
 	  for (int i=0; i<weights.size(); i++) (*w)[i]=weights[i];
 	  oportWeights_->send(MatrixHandle(w));
 	  oportRhs_->send(MatrixHandle(rhs)); 
-	} // TET + ELECTRODE PAIR 
-        else if(modeTCL_.get() == "electrode pair") {
+	} // TET + SOURCES AND SINKS 
+        else if(modeTCL_.get() == "sources and sinks") {
 	  FieldHandle hInterp;
 	  iportInterp_->get(hInterp);
 	  FieldHandle hSource;
@@ -546,8 +547,8 @@ void ApplyFEMCurrentSource::execute()
 	}
 	oportRhs_->send(MatrixHandle(rhs));
     }
-    // HEX + ELECTRODE PAIR (not implemented yet)
-    else if (modeTCL_.get() == "electrode pair") { 
+    // HEX + SOURCES AND SINKS (not implemented yet)
+    else if (modeTCL_.get() == "sources and sinks") { 
 	error("source/sink modelling is not yet available for HexFEM");
 	return;
     }
@@ -630,8 +631,8 @@ void ApplyFEMCurrentSource::execute()
         for (int i=0; i<weights.size(); i++) (*w)[i]=weights[i];
         oportWeights_->send(MatrixHandle(w));
     }
-    // TRI + ELECTRODE PAIR 
-    else if (modeTCL_.get() == "electrode pair") {
+    // TRI + SOURCES AND SINKS 
+    else if (modeTCL_.get() == "sources and sinks") {
 
         FieldHandle hInterp;
         iportInterp_->get(hInterp);
@@ -1112,7 +1113,7 @@ void ApplyFEMCurrentSource::ProcessTriElectrodeSet( ColumnMatrix* rhs, TriSurfMe
                   // (If the effective electrode length will be closer to the desired electrode length.)
 
 	          double testLength1 = cumulativeElectrodeLength + edgeLength[currEdgeIndex];
-                  double testError1 = abs(electrodeLen - testLength1);
+                  double testError1 = Abs(electrodeLen - testLength1);
 
                   // advance along boundary to test addition of the next node
                   int tempPrevNode = currNode;
@@ -1152,7 +1153,7 @@ void ApplyFEMCurrentSource::ProcessTriElectrodeSet( ColumnMatrix* rhs, TriSurfMe
 	          }
 
 	          double testLength2 = testLength1 + edgeLength[tempEdgeIndex];
-                  double testError2 = abs(electrodeLen - testLength2);
+                  double testError2 = Abs(electrodeLen - testLength2);
 
                   if (testError1 < testError2)
 		  {
@@ -1205,7 +1206,7 @@ void ApplyFEMCurrentSource::ProcessTriElectrodeSet( ColumnMatrix* rhs, TriSurfMe
 	  {
 	      cumulativeElectrodeSeparation += edgeLength[currEdgeIndex];
 
-              currError = abs(electrodeSeparation - cumulativeElectrodeSeparation);
+              currError = Abs(electrodeSeparation - cumulativeElectrodeSeparation);
 
               if (currError <= maxError)
 	      {

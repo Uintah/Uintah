@@ -81,9 +81,9 @@ UnuImap::UnuImap(GuiContext* ctx)
     length_(ctx->subVar("length")),
     rescale_(ctx->subVar("rescale")),
     min_(ctx->subVar("min")),
-    useinputmin_(ctx->subVar("min")),
+    useinputmin_(ctx->subVar("useinputmin")),
     max_(ctx->subVar("max")),
-    useinputmax_(ctx->subVar("max")),
+    useinputmax_(ctx->subVar("useinputmax")),
     type_(ctx->subVar("type")),
     usetype_(ctx->subVar("usetype"))
 {
@@ -135,7 +135,7 @@ void
   Nrrd *dmap = dmap_handle->nrrd;
   Nrrd *nout = nrrdNew();
   Nrrd *nacl = 0;
-  NrrdRange *range = 0;
+  NrrdRange *range = NULL;
 
   if (length_.get()) {
     nacl = nrrdNew();

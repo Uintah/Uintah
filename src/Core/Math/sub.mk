@@ -53,6 +53,7 @@ SRCS     += $(SRCDIR)/CubicPWI.cc              \
             $(SRCDIR)/LinAlg.c		       \
             $(SRCDIR)/LinearPWI.cc	       \
             $(SRCDIR)/Mat.c		       \
+            $(SRCDIR)/MiscMath.cc	       \
             $(SRCDIR)/MusilRNG.cc	       \
             $(SRCDIR)/PiecewiseInterp.cc       \
             $(SRCDIR)/TrigTable.cc	       \

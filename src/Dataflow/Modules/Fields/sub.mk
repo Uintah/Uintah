@@ -91,6 +91,7 @@ SRCS     += \
 	$(SRCDIR)/SelectField.cc\
 	$(SRCDIR)/SetProperty.cc\
 	$(SRCDIR)/TetVol2QuadraticTetVol.cc\
+	$(SRCDIR)/ToStructured.cc\
 	$(SRCDIR)/TransformField.cc\
 	$(SRCDIR)/TransformData.cc\
 	$(SRCDIR)/TransformData2.cc\

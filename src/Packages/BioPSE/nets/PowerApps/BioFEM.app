@@ -350,6 +350,9 @@ class BioFEMApp {
 	init_Vframe $detachedVFr.f 0
 	init_Vframe $attachedVFr.f 1
 
+	# call back to re-configure isosurface slider
+	global $mods(Isosurface)-isoval-max
+	trace variable $mods(Isosurface)-isoval-max w "$this set_minmax_callback"
 
 	### pack 3 frames
 	pack $win.viewer $attachedVFr -side left \
@@ -734,6 +737,12 @@ class BioFEMApp {
 	    puts $fileid "set app_version 1.0"
 
 	    save_module_variables $fileid
+	    # ShowDipoles uses the position of the input dipole
+	    # regardless of what was saved out. By setting 
+	    # num-dipoles to 0, instead of 1, the
+	    # module will disregard the position values that cause
+	    # a saved session to get degenerate cylinders and hang.
+	    puts $fileid "set \$mods(ShowDipole)-num-dipoles {0}"
 	    save_class_variables $fileid
 
 	    close $fileid
@@ -1028,7 +1037,7 @@ class BioFEMApp {
 
 	    bind $f.isoval.s <ButtonRelease> \
 		"$mods(Isosurface)-c needexecute"
-	    
+
 	    entry $f.isoval.val -width 5 -relief flat \
 		-textvariable $mods(Isosurface)-isoval
 
@@ -1043,12 +1052,31 @@ class BioFEMApp {
 
 	    pack $f.normals -side top -anchor w -padx 20
 	}
-    }	    
+    }	 
 
+    method set_minmax_callback {varname varele varop} {
+	global mods
+ 	global $mods(Isosurface)-isoval-min $mods(Isosurface)-isoval-max
+ 	set min [set $mods(Isosurface)-isoval-min]
+ 	set max [set $mods(Isosurface)-isoval-max]
+
+	set w $isosurface_tab1.isoval.s
+ 	if [ expr [winfo exists $w] ] {
+ 	    $w configure -from $min -to $max
+ 	    $w configure -resolution [expr ($max - $min)/10000.]
+ 	}
+
+	set w $isosurface_tab2.isoval.s
+ 	if [ expr [winfo exists $w] ] {
+ 	    $w configure -from $min -to $max
+ 	    $w configure -resolution [expr ($max - $min)/10000.]
+ 	}
+    }
+	
     method build_colormap_tab { f } {
 	global mods
 	if {![winfo exists $f.show]} {
-
+	    
 	    set isocolor $f
 	    frame $isocolor.select
 	    pack $isocolor.select -side top -anchor nw -padx 3 -pady 3

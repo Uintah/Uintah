@@ -700,7 +700,7 @@ class PowerAppBase {
     # the error state.  This should be done using the change_indicate_val
     # and change_indicator_labels methods.
     method indicate_error { which msg_state } {
-	puts "Define indicate_error for [appnaem] app"
+	puts "Define indicate_error for [appname] app"
     }
 
 

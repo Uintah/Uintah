@@ -121,4 +121,40 @@
       </step>
     </plan>
   </testing>
+<nets>
+<net id="FieldBoundary">
+<title>FieldBoundary Regression Test</title>
+
+<p>Use the FieldBoundary module to extract just the outside shell of the
+sphere module, then use <modref package="SCIRun"
+name="ApplyInterpolant"/> to put the values from the original field
+onto the boundary.</p>
+
+<p>This network can be found at src/nets/Modules/FieldsCreate/FieldBoundary.net.</p>
+
+</net>
+<net id="FieldBoundary-quadtest">
+<title>FieldBoundary-quadtest Regression Test</title>
+
+<p>Convert the sphere data set into a HexVol, then test FieldBoundary on
+that HexVol to make sure that a QuadSurf is created successfully.
+Then chop a chunk of that closed QuadSurf boundary out and test
+FieldBoundary on that to make sure that the edge of the cut is
+properly clipped out.  See also FieldBoundary-tritest.net</p>
+
+<p>This network can be found at src/nets/Modules/FieldsCreate/FieldBoundary-quadtest.net.</p>
+
+</net>
+<net id="FieldBoundary-tritest">
+<title>FieldBoundary-tritest Regression Test</title>
+
+<p>Test out the FieldBoundary module on a TetVolMesh, then clip out a
+chunk of that closed sphere and test FieldBoundary on the resulting
+TriSurfMesh to make sure that it is detected properly.  See also
+FieldBoundary-quadtest.net</p>
+
+<p>This network can be found at src/nets/Modules/FieldsCreate/FieldBoundary-tritest.net.</p>
+
+</net>
+</nets>
 </component>

@@ -41,6 +41,11 @@ itcl_class SCIRun_FieldsData_TransformData3 {
     method set_defaults {} {
 	set $this-function "result = v0 + v1 + v2;"
 	set $this-outputdatatype "input 0"
+
+	# trace variable for optionmenu so that it will display
+	# the correct value when opening a saved network
+	trace variable $this-outputdatatype w \
+	    "$this set_combobox .otype.c $this-outputdatatype"
     }
 
     method update_text {} {
@@ -101,10 +106,12 @@ itcl_class SCIRun_FieldsData_TransformData3 {
 	    $win.c insert end [set $var]
 	}
 
+	$win.c select [set $var]
+
 	label $win.l2 -text "" -width 20 -anchor w -just left
 
 	# hack to associate optionmenus with a textvariable
-	bind $win.c <Map> "$win.c select {[set $var]}"
+	# bind $win.c <Map> "$win.c select {[set $var]}"
 
 	pack $win.l1 $win.colon -side left
 	pack $win.c $win.l2 -side left	
@@ -116,6 +123,14 @@ itcl_class SCIRun_FieldsData_TransformData3 {
 	}
 	if { "$var"!="[$win get]" } {
 	    set $var [$win get]
+	}
+    }
+
+    method set_combobox { win var name1 name2 op } {
+	set w .ui[modname]
+	set menu $w.$win
+	if {[winfo exists $menu]} {
+	    $menu select $var
 	}
     }
 }

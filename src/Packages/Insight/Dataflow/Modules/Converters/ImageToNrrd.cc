@@ -43,6 +43,7 @@
 
 #include <Packages/Insight/Dataflow/Ports/ITKDatatypePort.h>
 #include "itkImageRegionIterator.h"
+#include <itkVector.h>
 
 #ifdef HAVE_TEEM
 #include <Packages/Teem/Dataflow/Ports/NrrdPort.h>
@@ -78,10 +79,14 @@ public:
   // refers to the last template type of the filter intstantiation.
   template< class InputImageType, unsigned nrrdtype> 
   bool run( itk::Object* );  // Scalar Images
+  template< class InputImageType, unsigned nrrdtype> 
+  bool run2( itk::Object* );  // Vector Images
 
 private:
   template<class InputImageType, unsigned nrrdtype>
   void create_nrrd(ITKDatatypeHandle &img);
+  template<class InputImageType, unsigned nrrdtype>
+  void create_nrrd2(ITKDatatypeHandle &img);
 };
 
 
@@ -114,23 +119,22 @@ void ImageToNrrd::create_nrrd(ITKDatatypeHandle &img) {
   // Set the labels and center
   switch(dim) {
   case 1:
-    nrrdAlloc(nr, nrrdtype, dim+1, 1, im->GetRequestedRegion().GetSize()[0]);
-    nrrdAxisInfoSet(nr, nrrdAxisInfoLabel, "unknown:Scalar", "x");
-    nrrdAxisInfoSet(nr, nrrdAxisInfoCenter, nrrdCenterUnknown, nrrdCenterNode);
+    nrrdAlloc(nr, nrrdtype, dim, im->GetRequestedRegion().GetSize()[0]);
+    nrrdAxisInfoSet(nr, nrrdAxisInfoLabel, "x");
+    nrrdAxisInfoSet(nr, nrrdAxisInfoCenter, nrrdCenterNode);
     break;
   case 2:
-    nrrdAlloc(nr, nrrdtype, dim+1, 1, im->GetRequestedRegion().GetSize()[0],
+    nrrdAlloc(nr, nrrdtype, dim, im->GetRequestedRegion().GetSize()[0],
 	      im->GetRequestedRegion().GetSize()[1]);
-    nrrdAxisInfoSet(nr, nrrdAxisInfoLabel, "unknown:Scalar", "x", "y");
-    nrrdAxisInfoSet(nr, nrrdAxisInfoCenter, nrrdCenterUnknown, nrrdCenterNode,
-		    nrrdCenterNode);
+    nrrdAxisInfoSet(nr, nrrdAxisInfoLabel, "x", "y");
+    nrrdAxisInfoSet(nr, nrrdAxisInfoCenter, nrrdCenterNode,  nrrdCenterNode);
     break;
   case 3:
-    nrrdAlloc(nr, nrrdtype, dim+1, 1, im->GetRequestedRegion().GetSize()[0],
+    nrrdAlloc(nr, nrrdtype, dim, im->GetRequestedRegion().GetSize()[0],
 	      im->GetRequestedRegion().GetSize()[1],
 	      im->GetRequestedRegion().GetSize()[2]);
-    nrrdAxisInfoSet(nr, nrrdAxisInfoLabel, "unknown:Scalar", "x", "y", "z");
-    nrrdAxisInfoSet(nr, nrrdAxisInfoCenter, nrrdCenterUnknown, nrrdCenterNode,
+    nrrdAxisInfoSet(nr, nrrdAxisInfoLabel, "x", "y", "z");
+    nrrdAxisInfoSet(nr, nrrdAxisInfoCenter, nrrdCenterNode,
 		    nrrdCenterNode, nrrdCenterNode);
     break;
   default:
@@ -143,11 +147,11 @@ void ImageToNrrd::create_nrrd(ITKDatatypeHandle &img) {
   // Set the spacing, and origin
   nr->axis[0].spacing = AIR_NAN;
   nr->axis[0].min = AIR_NAN;
-  for(int i=1; i<=dim; i++) {
-    nr->axis[i].spacing = im->GetSpacing()[i-1];
+  for(int i=0; i<dim; i++) {
+    nr->axis[i].spacing = im->GetSpacing()[i];
 
-    nr->axis[i].min = im->GetOrigin()[i-1];
-    nr->axis[i].max = ceil(im->GetOrigin()[i-1] + 
+    nr->axis[i].min = im->GetOrigin()[i];
+    nr->axis[i].max = ceil(im->GetOrigin()[i] + 
       ((nr->axis[i].size-1) * nr->axis[i].spacing));
     //nrrdAxisMinMaxSet(nr,i, nrrdCenterNode);
   }
@@ -156,11 +160,9 @@ void ImageToNrrd::create_nrrd(ITKDatatypeHandle &img) {
   IteratorType img_iter(im, im->GetRequestedRegion());
   void* p = nr->data;
 
-  // When iterating over the nrrd to copy it
-  // we need to skip the initial tuple axis.
+
   typedef typename InputImageType::PixelType PixelType;
   PixelType *&i = (PixelType*&)p;
-  ++i;
   
   img_iter.GoToBegin();
   while(!img_iter.IsAtEnd()) {
@@ -177,6 +179,92 @@ void ImageToNrrd::create_nrrd(ITKDatatypeHandle &img) {
   
 }
 
+template<class InputImageType, unsigned  nrrdtype>
+void ImageToNrrd::create_nrrd2(ITKDatatypeHandle &img) {
+  // check if Teem exists
+#ifdef HAVE_TEEM
+
+  InputImageType *im = dynamic_cast< InputImageType * >( img.get_rep()->data_.GetPointer() );
+  typedef typename itk::ImageRegionIterator<InputImageType> IteratorType;
+
+  int dim = im->GetImageDimension();
+
+  // create a NrrdData
+  NrrdData* nout = scinew NrrdData();
+  nout->nrrd = nrrdNew();
+  Nrrd* nr = nout->nrrd;
+
+  // Allocate the nrrd data and add an axis of size 1 for the tuple axis.
+  // Set the labels and center
+  switch(dim) {
+  case 1:
+    nrrdAlloc(nr, nrrdtype, dim+1, 3, im->GetRequestedRegion().GetSize()[0]);
+    nrrdAxisInfoSet(nr, nrrdAxisInfoLabel, "rgb", "x");
+    nrrdAxisInfoSet(nr, nrrdAxisInfoCenter, nrrdCenterUnknown, nrrdCenterNode);
+    break;
+  case 2:
+    nrrdAlloc(nr, nrrdtype, dim+1, 3, im->GetRequestedRegion().GetSize()[0],
+	      im->GetRequestedRegion().GetSize()[1]);
+    nrrdAxisInfoSet(nr, nrrdAxisInfoLabel, "rgb", "x", "y");
+    nrrdAxisInfoSet(nr, nrrdAxisInfoCenter, nrrdCenterUnknown, nrrdCenterNode,  
+		    nrrdCenterNode);
+    break;
+  case 3:
+    nrrdAlloc(nr, nrrdtype, dim+1, 3, im->GetRequestedRegion().GetSize()[0],
+	      im->GetRequestedRegion().GetSize()[1],
+	      im->GetRequestedRegion().GetSize()[2]);
+    nrrdAxisInfoSet(nr, nrrdAxisInfoLabel, "rgb", "x", "y", "z");
+    nrrdAxisInfoSet(nr, nrrdAxisInfoCenter, nrrdCenterUnknown, nrrdCenterNode,
+		    nrrdCenterNode, nrrdCenterNode);
+    break;
+  default:
+    error("Can only convert images of dimension < 4.");
+    break;
+  }
+
+
+  // set spacing, and min and max
+  // Set the spacing, and origin
+  nr->axis[0].spacing = AIR_NAN;
+  nr->axis[0].min = AIR_NAN;
+  nr->axis[0].kind = nrrdKind3Vector;
+
+  for(int i=0; i<dim; i++) {
+    nr->axis[i+1].spacing = im->GetSpacing()[i];
+
+    nr->axis[i+1].min = im->GetOrigin()[i];
+    nr->axis[i+1].max = ceil(im->GetOrigin()[i] + 
+      ((nr->axis[i+1].size-1) * nr->axis[i+1].spacing));
+    nr->axis[i+1].kind = nrrdKindDomain;
+  }
+
+  // iterate through the ITK requested region and copy the data
+  IteratorType img_iter(im, im->GetRequestedRegion());
+  void* p = nr->data;
+
+  typedef typename InputImageType::PixelType::ValueType ValueType;
+  ValueType *&i = (ValueType*&)p;
+
+  img_iter.GoToBegin();
+  int count = 0;
+  while(!img_iter.IsAtEnd()) {
+    ValueType *&i = (ValueType*&)p;
+    *i = img_iter.Get()[0];
+    ++i;
+    *i = img_iter.Get()[1];
+    ++i;
+    *i = img_iter.Get()[2];
+    ++i;
+    
+    // increment pointers
+    img_iter.operator++();
+  }
+
+  onrrd_handle_ = nout;
+#endif
+  
+}
+
 template<class InputImageType, unsigned nrrdtype>
 bool ImageToNrrd::run( itk::Object* obj1) 
 {
@@ -186,6 +274,25 @@ bool ImageToNrrd::run( itk::Object* obj1)
   }
   
   create_nrrd<InputImageType,nrrdtype>(inhandle1_);
+
+#ifdef HAVE_TEEM
+  if(onrrd_handle_.get_rep()) {
+    onrrd_->send(onrrd_handle_);
+  }
+#endif
+  return true;
+}
+
+template<class InputImageType, unsigned nrrdtype>
+bool ImageToNrrd::run2( itk::Object* obj1) 
+{
+  cerr << "run2\n";
+  InputImageType* n = dynamic_cast< InputImageType * >(obj1);
+  if( !n ) {
+    return false;
+  }
+  
+  create_nrrd2<InputImageType,nrrdtype>(inhandle1_);
 
 #ifdef HAVE_TEEM
   if(onrrd_handle_.get_rep()) {
@@ -233,6 +340,18 @@ void ImageToNrrd::execute() {
   else if(run< itk::Image<unsigned short, 3>, nrrdTypeUShort >(n)) { }
   else if(run< itk::Image<short, 2>, nrrdTypeShort >(n)) { }
   else if(run< itk::Image<short, 3>, nrrdTypeShort >(n)) { }
+  else if(run2< itk::Image<itk::Vector<float>, 2 >, nrrdTypeFloat >(n)) { }
+  else if(run2< itk::Image<itk::Vector<float>, 3 >, nrrdTypeFloat >(n)) { }
+  else if(run2< itk::Image<itk::Vector<double>, 2 >, nrrdTypeDouble >(n)) { }
+  else if(run2< itk::Image<itk::Vector<double>, 3 >, nrrdTypeDouble >(n)) { }
+  else if(run2< itk::Image<itk::Vector<char>, 2 >, nrrdTypeChar >(n)) { }
+  else if(run2< itk::Image<itk::Vector<char>, 3 >, nrrdTypeChar >(n)) { }
+  else if(run2< itk::Image<itk::Vector<unsigned char>, 2 >, nrrdTypeUChar >(n)) { }
+  else if(run2< itk::Image<itk::Vector<unsigned char>, 3 >, nrrdTypeUChar >(n)) { }
+  else if(run2< itk::Image<itk::Vector<short>, 2 >, nrrdTypeShort >(n)) { }
+  else if(run2< itk::Image<itk::Vector<short>, 3 >, nrrdTypeShort >(n)) { }
+  else if(run2< itk::Image<itk::Vector<unsigned short>, 2 >, nrrdTypeUShort >(n)) { }
+  else if(run2< itk::Image<itk::Vector<unsigned short>, 3 >, nrrdTypeUShort >(n)) { }
   else {
     // error
     error("Incorrect input type");

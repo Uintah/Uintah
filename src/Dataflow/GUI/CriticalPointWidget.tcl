@@ -52,7 +52,7 @@ itcl_class CriticalPointWidget {
 	    return;
 	}
 	toplevel $w
-	wm minsize $w 100 100
+	#wm minsize $w 100 100
 
 	Dialbox $w.dialbox "CriticalPointWidget - Translate"
 	$w.dialbox unbounded_dial 0 "Translate X" 0.0 1.0 \
@@ -64,8 +64,8 @@ itcl_class CriticalPointWidget {
 
 	frame $w.f
 	Base_ui $w.f
-	button $w.f.dials -text "Dialbox" -command "$w.dialbox connect"
-	pack $w.f.dials -pady 5
+	#button $w.f.dials -text "Dialbox" -command "$w.dialbox connect"
+	#pack $w.f.dials -pady 5
 	pack $w.f
     }
 }

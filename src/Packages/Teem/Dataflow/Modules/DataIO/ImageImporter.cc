@@ -64,7 +64,7 @@ public:
   virtual void execute();
 
 private:
-  GuiString       filename_;
+  GuiFilename     filename_;
   string          old_filename_;
   time_t          old_filemodification_;
   NrrdDataHandle  handle_;

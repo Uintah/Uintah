@@ -37,7 +37,7 @@ ifeq ($(LARGESOS),yes)
   PSELIBS := Dataflow Core
 else
   PSELIBS := Dataflow/Network Core/Containers Core/GuiInterface \
-	Core/Thread Core/Exceptions Core/Util Core/TkExtensions
+	Core/Thread Core/Exceptions Core/Util Core/TkExtensions Core/Comm
   ifeq ($(OS_NAME),Darwin)
     PSELIBS += Core/Datatypes Core/ImportExport
   endif
@@ -45,7 +45,7 @@ endif
 
 LIBS := 
 ifeq ($(NEED_SONAME),yes)
-  LIBS := $(LIBS) $(XML_LIBRARY) $(PLPLOT_LIBRARY) $(TK_LIBRARY) $(DL_LIBRARY) $(Z_LIBRARY)
+  LIBS := $(LIBS) $(XML_LIBRARY) $(PLPLOT_LIBRARY) $(TK_LIBRARY) $(DL_LIBRARY) $(Z_LIBRARY) $(SCISOCK_LIBRARY)
 endif
 
 PROGRAM := $(PROGRAM_PSE)

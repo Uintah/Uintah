@@ -206,13 +206,9 @@ Each of the above steps corresponds to a SCIRun module:
 <p>
 All modules should be connected as shown in <a href="#figure-5.2"><b>Figure 5.2</b></a>.
 <p>
-<b>WARNING: Do not execute the net until all UI settings have been
-   specified for each module, as described in the sections below, or
-   the solution will not converge.</b>
-<P>
 <center>
 <A NAME="figure-5.2">
-<p><img height="358" width="299" src="images/figures/5_2.gif"><br>
+<p><img src="images/figures/5_2.gif"><br>
 <b> Figure 5.2: Biolelctric Field Simulation Network</b></p>
 </center>
 
@@ -250,7 +246,7 @@ several methods as indicated in the UI.
 </ol>
 	
 <center>
-<p><img width="400" height="837" src="images/figures/5_5.gif"><br>
+<p><img src="images/figures/5_5.gif"><br>
 <b>Figure 5.5: SolveMatrix UI</b></p>
 </center>
 <p>
@@ -273,7 +269,8 @@ torso volume that functions as the bioelectric source.
 <H2><A name="section-4">Running The Simulation</A></H2>
 
 Execute the network, and as the simulation progresses, watch the
-residual plot in the SolveMatrix UI converge. A finite element
+residual plot in the SolveMatrix UI converge. To see the solution
+converge again, make sure the &quot;Use previous solution as initial guess&quot; is unchecked in the UI and re-execute the module. A finite element
 problem has just been solved. Save this net, it will be used
 in Chapter 6.
 

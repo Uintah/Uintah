@@ -39,10 +39,9 @@ if { $results == "failed" } {
 } else {
 
     set DATADIR [lindex $results 0]
-    set DATASET [lindex $results 1]
 }
 
-source $DATADIR/$DATASET/$DATASET.settings
+source $DATADIR/utahtorso/utahtorso.settings
 
 ::netedit dontschedule
 
@@ -111,7 +110,7 @@ addConnection $m17 0 $m7 1
 addConnection $m16 0 $m7 2
 addConnection $m17 0 $m14 0
 
-set $m0-filename $DATADIR/$DATASET/$DATASET-square-electrode.cfi.fld
+set $m0-filename $DATADIR/shared/square-electrode.cfi.fld
 
 set $m1-mapType {9}
 set $m1-minRes {19}
@@ -144,7 +143,7 @@ set $m4-ViewWindow_0-view-up-z ${view-up-z}
 set $m4-ViewWindow_0-view-fov ${view-fov}
 set $m4-ViewWindow_0-specular-scale {0.4}
 
-set $m5-filename $DATADIR/$DATASET/$DATASET-mesh.tvt.fld
+set $m5-filename $DATADIR/utahtorso-lowres/utahtorso-lowres-mesh.tvt.fld
 
 set $m6-positionList {{0 9} {398 9}}
 set $m6-nodeList {258 437}
@@ -176,7 +175,7 @@ set $m11-isFixed {1}
 set $m11-min {-1}
 set $m11-max {1}
 
-set $m12-filename $DATADIR/$DATASET/$DATASET-circle-electrode.cfi.fld
+set $m12-filename $DATADIR/shared/circle-electrode.cfi.fld
 
 set $m13-extract-from-new-field {1}
 set $m13-algorithm {0}

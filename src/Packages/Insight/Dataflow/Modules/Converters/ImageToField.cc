@@ -1,4 +1,4 @@
-/*
+/* 
    For more information, please see: http://software.sci.utah.edu
 
    The MIT License
@@ -330,12 +330,9 @@ FieldHandle ImageToField::create_image_vector_field1(ITKDatatypeHandle &img){
       
       pixel = n->GetPixel(pixelIndex);
       if (length == 3) {
-	fld->set_value(Vector(static_cast<unsigned char>(pixel[0]),
-			      static_cast<unsigned char>(pixel[1]),
-			      static_cast<unsigned char>(pixel[2])),
-		       *iter);
+	fld->set_value(Vector(pixel[0],pixel[1],pixel[2]), *iter);
       } else {
-	  error("ImageToField cannot convert vectors whose length is not equal to 3");
+	error("ImageToField cannot convert vectors whose length is not equal to 3");
       }
       ++iter;
     }
@@ -413,10 +410,7 @@ FieldHandle ImageToField::create_latvol_vector_field1(ITKDatatypeHandle &img){
 	
 	pixel = n->GetPixel(pixelIndex);
 	if (length == 3) {
-	  fld->set_value(Vector(static_cast<double>(pixel[0]),
-				static_cast<double>(pixel[1]),
-				static_cast<double>(pixel[2])), 
-			 *iter);
+	  fld->set_value(Vector(pixel[0], pixel[1], pixel[2]), *iter);
 	} else {
 	  error("ImageToField cannot convert vectors whose length is not equal to 3");
 	  return 0;
@@ -435,6 +429,7 @@ FieldHandle ImageToField::create_latvol_vector_field1(ITKDatatypeHandle &img){
 
 template<class Type>
 FieldHandle ImageToField::create_image_vector_field2(ITKDatatypeHandle &img){
+
   typedef ITKImageField< Vector > ITKImageFieldType;
   typedef ImageField< Vector > ImageFieldType;
   typedef itk::Image<itk::RGBPixel<Type>,2> InputImageType;
@@ -493,10 +488,8 @@ FieldHandle ImageToField::create_image_vector_field2(ITKDatatypeHandle &img){
       pixelIndex[1] = row;
       
       pixel = n->GetPixel(pixelIndex);
-      fld->set_value(Vector(static_cast<unsigned char>(pixel[0]),
-			    static_cast<unsigned char>(pixel[1]),
-			    static_cast<unsigned char>(pixel[2])),
-		     *iter);
+
+      fld->set_value(Vector(pixel[0], pixel[1], pixel[2]), *iter);
       ++iter;
     }
   }
@@ -572,10 +565,7 @@ FieldHandle ImageToField::create_latvol_vector_field2(ITKDatatypeHandle &img){
 	pixelIndex[2] = z;
 	
 	pixel = n->GetPixel(pixelIndex);
-	fld->set_value(Vector(static_cast<double>(pixel[0]),
-			      static_cast<double>(pixel[1]),
-			      static_cast<double>(pixel[2])), 
-		       *iter);
+	fld->set_value(Vector(pixel[0], pixel[1], pixel[2]), *iter);
 	++iter;
       }
     }

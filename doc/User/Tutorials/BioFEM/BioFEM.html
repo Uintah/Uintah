@@ -259,8 +259,8 @@
       <h3>2.1 Preparations</h3>
 
       <p>
-	Before starting BioFEM, the environment variables SCIRUN_DATA,
-	SCIRUN_DATASET, and SCIRUN_ON_THE_FLY_LIBS_DIR must be set.
+	Before starting BioFEM, the environment variables SCIRUN_DATA
+	and SCIRUN_DATASET must be set.
       </p>
       <p>
 	SCIRUN_DATA points to the sample data sets directory.
@@ -302,15 +302,6 @@
       <p>
 	This tutorial uses the low resolution data set.
       </p>
-
-      <p>
-	SCIRUN_ON_THE_FLY_LIBS_DIR points to an "on the fly libs"
-	directory.  It should be set as follows:
-      </p>
-      <pre>
-  mkdir ~/on-the-fly-libs
-  setenv SCIRUN_ON_THE_FLY_LIBS_DIR ~/on-the-fly-libs
-      </pre>
 
       <p>
 	When running BioFEM on Apple's OSX operating system, the limit on
@@ -466,11 +457,11 @@
 	A Progress Indicator and an Execute button are found at the
 	bottom of the Visualization Pane.  The Execute button starts
 	the current processing step.  The Execute button is pressed after
-	parameters for the current processing step have been set.  The
-	Progress Indicator shows how much of the current processing
-	step has been completed.  Text above the Progress Indicator
-	describes the current state of processing, and suggests the
-	next processing step.
+	parameters for the current processing step have been set.
+	The Progress Indicator and the text above show information
+	about the current state of processing, and suggest the next
+	processing step.  It can also indicate when modules are dynamically
+	compiling or when they are in an execution state.
       </p>
 
 
@@ -649,12 +640,12 @@
 	href="#figure_8">Figure 8</a> displays an iso-potential surface
 	of value 0.  Produce the visualization in <a href="#figure_8">Figure
 	8</a>  by selecting the checkbox labeled "Show
-	IsoSuface" (from the Vis Options tab), and typing the
-	value 0 in Isoval control's text box.
+	Isopotential Surface" (from the Vis Options tab), and 
+	moving the Electric Potential value slider to 0.
       </p>
 
       <p>
-	The checkbox labeled "Interpolate Smooth Normals" 
+	The checkbox labeled "Render Smooth Faces" 
 	turns surface smoothing on and off. Smoothing improves
 	iso-surface appearance, but hides iso-surface mesh details.
       </p>
@@ -700,7 +691,8 @@
       </p>
 
       <p>
-	The slide bar labeled Seeds in the Vis Options tab selects
+	The slide bar labeled Number of Field Lines in the Vis Options 
+	tab selects
 	the number of seed points along the rake widget.  Seed points
 	are evenly spaced along the rake.
       </p>
@@ -708,7 +700,8 @@
       <p>
 	Streamlines are computed using a fast or an adaptive
 	algorithm.  Select an algorithm using the radio buttons
-	labeled Fast or Adaptive.  The fast method walks a mesh
+	labeled Fast Tracking or Adaptive Tracking.  The fast 
+	method walks a mesh
 	directly.  The fast method's accuracy is determined by a
 	model's accuracy.  The adaptive (slower) method interpolates
 	between cells in a model. The adaptive method walks over
@@ -757,7 +750,7 @@
 	colormaps are available (<a href="#figure_7">Figure 7</a>).  A
 	colormap is selected from the Visualization pane's Vis Option
 	tab.  <a href="#figure_11">Figure 11</a> displays the
-	utahtorso-lowres model colored with the Red-to-Blue colormap
+	utahtorso-lowres model colored with the Blue-to-Red colormap
 	selected, rather than the default Inverse Rainbow coloring.
       </p>
       <br />
@@ -766,7 +759,7 @@
       <a name="figure_11" id="figure_11"/>
       <center>
 	<img border="1" src="figures/biofem-vis-colormap.jpg"
-	  alt="Red to Blue Colormap Visualization"/><br />
+	  alt="Blue to Red Colormap Visualization"/><br />
 	<b>Figure 11: Visualization with the Red-to-Blue
 	  colormap selected.</b>
       </center>
@@ -814,7 +807,7 @@
 	SCIRun networks.  The following sections discuss the
 	preparation of text file inputs and their conversion to
 	SCIRun's persistant file object format.  Reference will be made
-	to <a href="../../Guide/usersguide/srug5.html">Chapter 5 of
+	to <a href="../../Guide/usersguide/srug7.html">Chapter 7 of
 	the SCIRun User's Guide</a>, which is a complete reference to
 	text file formats and command line converter programs.
       </p>

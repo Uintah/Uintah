@@ -123,7 +123,7 @@ int
 main(int argc, char **argv) {
   if (argc < 3 || argc > 9) {
     printUsageInfo(argv[0]);
-    return 0;
+    return 2;
   }
 #if defined(__APPLE__)  
   macForceLoad(); // Attempting to force load (and thus instantiation of
@@ -135,10 +135,14 @@ main(int argc, char **argv) {
   char *fieldName = argv[2];
   if (!parseArgs(argc, argv)) {
     printUsageInfo(argv[0]);
-    return 0;
+    return 2;
   }
 
   ifstream ptsstream(ptsName);
+  if (ptsstream.fail()) {
+    cerr << "Error -- Could not open file " << ptsName << "\n";
+    return 2;
+  }
   if (header) ptsstream >> ni >> nj >> nk;
   cerr << "number of points = ("<<ni<<" "<<nj<<" "<<nk<<")\n";
   StructHexVolMesh *hvm = new StructHexVolMesh(ni, nj, nk);

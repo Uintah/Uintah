@@ -38,11 +38,15 @@ itcl_class Teem_UnuNtoZ_UnuUnquantize {
 
     method set_defaults {} {
 	global $this-min
+	global $this-useinputmin
 	global $this-max
+	global $this-useinputmax
 	global $this-double
 
-	set $this-min {-1}
-	set $this-max {-1}
+	set $this-min {0.0}
+	set $this-useinputmin 1
+	set $this-max {0.0}
+	set $this-useinputmax 1
 	set $this-double 0
     }
 
@@ -59,10 +63,31 @@ itcl_class Teem_UnuNtoZ_UnuUnquantize {
 	frame $w.f.options
 	pack $w.f.options -side top -expand yes
 
-        iwidgets::entryfield $w.f.options.min -labeltext "Min:" -textvariable $this-min
-        pack $w.f.options.min -side top -expand yes -fill x
-        iwidgets::entryfield $w.f.options.max -labeltext "Max:" -textvariable $this-max
-        pack $w.f.options.max -side top -expand yes -fill x
+	frame $w.f.options.min -relief groove -borderwidth 2
+	pack $w.f.options.min -side top -expand yes -fill x
+
+        iwidgets::entryfield $w.f.options.min.v -labeltext "Min:" \
+	    -textvariable $this-min
+        pack $w.f.options.min.v -side top -expand yes -fill x
+
+        checkbutton $w.f.options.min.useinputmin \
+	    -text "Use Input's Min" \
+	    -variable $this-useinputmin
+        pack $w.f.options.min.useinputmin -side top -anchor nw 
+
+	frame $w.f.options.max -relief groove -borderwidth 2
+	pack $w.f.options.max -side top -expand yes -fill x
+
+        iwidgets::entryfield $w.f.options.max.v -labeltext "Max:" \
+	    -textvariable $this-max
+        pack $w.f.options.max.v -side top -expand yes -fill x
+
+        checkbutton $w.f.options.max.useinputmax \
+	    -text "Use Input's Max" \
+	    -variable $this-useinputmax
+        pack $w.f.options.max.useinputmax -side top -anchor nw 
+
+
 	checkbutton $w.f.options.double -text "Use double for output type" \
 	    -variable $this-double
 	pack $w.f.options.double -side top -expand yes -fill x

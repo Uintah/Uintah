@@ -100,6 +100,7 @@ set $m3-isovalue {127.5}
 set $m3-smoothing_iterations {0}
 set $m3-smoothing_time_step {0.1}
 set $m3-smoothing_conductance {0.5}
+set $m3-update_OutputImage {1}
 set $m4-notes {}
 set $m4-copy {0}
 set $m5-notes {}

@@ -109,7 +109,7 @@ int
 main(int argc, char **argv) {
   if (argc < 3 || argc > 5) {
     printUsageInfo(argv[0]);
-    return 0;
+    return 2;
   }
 #if defined(__APPLE__)  
   macForceLoad(); // Attempting to force load (and thus instantiation of
@@ -121,30 +121,30 @@ main(int argc, char **argv) {
   char *textfileName = argv[2];
   if (!parseArgs(argc, argv)) {
     printUsageInfo(argv[0]);
-    return 0;
+    return 2;
   }
 
   MatrixHandle handle;
   Piostream* stream=auto_istream(matrixName);
   if (!stream) {
     cerr << "Couldn't open file "<<matrixName<<".  Exiting...\n";
-    exit(0);
+    return 2;
   }
   Pio(*stream, handle);
   if (!handle.get_rep()) {
     cerr << "Error reading matrix from file "<<matrixName<<".  Exiting...\n";
-    exit(0);
+    return 2;
   }
   SparseRowMatrix *srm = dynamic_cast<SparseRowMatrix *>(handle.get_rep());
   if (!srm) {
     cerr << "Error -- input field wasn't a SparseRowMatrix\n";
-    exit(0);
+    return 2;
   }
 
   FILE *fTxt = fopen(textfileName, "wt");
   if (!fTxt) {
     cerr << "Error -- couldn't open output file "<<textfileName<<"\n";
-    exit(0);
+    return 2;
   }
   int nr=srm->nrows();
   int nc=srm->ncols();

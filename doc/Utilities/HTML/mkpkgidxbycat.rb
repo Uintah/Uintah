@@ -65,28 +65,26 @@ end
 
 # An Entry for a module description.
 class ModuleEntry < Entry
-  attr_reader :fileName, :category, :orphaned
+  attr_reader :fileName, :category
+
   def initialize(fileName)
     @fileName = fileName
     fileNameCore = @fileName[0..@fileName.rindex('.')-1]
     moduleName = File.basename(fileNameCore)
     super(moduleName)
-    @orphaned = !File.exists?(fileNameCore + ".xml")
-    @category = nil
-    if !@orphaned
-      begin
-	@category = categoryP()
-      rescue
-	$stderr.print("#{$0}-Warning: #{@fileName}'s source can't be read\n")
-      end
-    end
+    raise "#{@fileName} is an orphan" if !File.exists?(fileNameCore + ".xml")
+    @category = categoryP()
   end
+
   def entry
     "<td><a href='#{@fileName}'>#{super()}</a></td>"
   end
+
   def categoryP
     File.open(@fileName.gsub(/\.html$/,".xml")) do |f|
-      /category=\"(.*)\">/.match(f.read())[1]
+      match = /category=\"(.*)\">/.match(f.read())
+      raise "#{@fileName} isn't from a module spec file" if match == nil
+      match[1]
     end
   end
 end
@@ -117,20 +115,31 @@ def insertTopBoilerPlate(file, packageName)
   # Insert boilerplate at top of file
   file.print <<BOILER_PLATE_TEXT
 <!--
-The contents of this file are subject to the University of Utah Public
-License (the "License"); you may not use this file except in compliance
-with the License.
+For more information, please see: http://software.sci.utah.edu
 
-Software distributed under the License is distributed on an "AS IS"
-basis, WITHOUT WARRANTY OF ANY KIND, either express or implied. See the
+The MIT License
+
+Copyright (c) 2004 Scientific Computing and Imaging Institute,
+University of Utah.
+
 License for the specific language governing rights and limitations under
-the License.
+Permission is hereby granted, free of charge, to any person obtaining a
+copy of this software and associated documentation files (the "Software"),
+to deal in the Software without restriction, including without limitation
+the rights to use, copy, modify, merge, publish, distribute, sublicense,
+and/or sell copies of the Software, and to permit persons to whom the
+Software is furnished to do so, subject to the following conditions:
 
-The Original Source Code is SCIRun, released March 12, 2001.
+The above copyright notice and this permission notice shall be included
+in all copies or substantial portions of the Software.
 
-The Original Source Code was developed by the University of Utah.
-Portions created by UNIVERSITY are Copyright (C) 2001, 1994 
-University of Utah. All Rights Reserved.
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
+OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL
+THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
+DEALINGS IN THE SOFTWARE.
 -->
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
 <head>
@@ -239,12 +248,14 @@ def main
     # Collect xml descriptions into categories
     categories = {}
     Dir["#{xmlDir}/*.html"].each do |f|
-      entry = ModuleEntry.new(f)
-      if !entry.orphaned()
+      begin
+	entry = ModuleEntry.new(f)
 	if not categories.has_key?(entry.category)
 	  categories[entry.category] = []
 	end
 	categories[entry.category] << entry
+      rescue => oops
+	$stderr.print("WARNING: ", oops.message, "\n")
       end
     end
     

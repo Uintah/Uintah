@@ -66,5 +66,18 @@
   </io>
   <testing>
   </testing>
+<nets>
+<net id="DirectInterpolate">
+<title>DirectInterpolate Regression Test</title>
+
+<p>SamplePlane is used to place a cutting plane through the utah torso
+model, and then the voltage values from the torso field are
+interpolated onto this cutting plane.  The field boundary is also
+displayed for reference.</p>
+
+<p>This network can be found at src/nets/Modules/FieldsData/DirectInterpolate.net.</p>
+
+</net>
+</nets>
 </component>
 

@@ -52,6 +52,7 @@ using namespace SCIRun;
 class ChooseNrrd : public Module {
 private:
   GuiInt port_index_;
+  GuiInt usefirstvalid_;
 public:
   ChooseNrrd(GuiContext* ctx);
   virtual ~ChooseNrrd();
@@ -61,7 +62,8 @@ public:
 DECLARE_MAKER(ChooseNrrd)
 ChooseNrrd::ChooseNrrd(GuiContext* ctx)
   : Module("ChooseNrrd", ctx, Filter, "NrrdData", "Teem"),
-    port_index_(ctx->subVar("port-index"))
+    port_index_(ctx->subVar("port-index")),
+    usefirstvalid_(ctx->subVar("usefirstvalid"))
 {
 }
 
@@ -83,21 +85,48 @@ ChooseNrrd::execute()
     return;
 
   port_map_type::iterator pi = range.first;
-  int idx=port_index_.get();
-  if (idx<0) { error("Can't choose a negative port"); return; }
-  while (pi != range.second && idx != 0) { ++pi ; idx--; }
-  int port_number=pi->second;
-  if (pi == range.second || ++pi == range.second) { 
-    error("Selected port index out of range"); return; 
+
+  int usefirstvalid = usefirstvalid_.get();
+
+  NrrdIPort *inrrd = 0;
+  NrrdDataHandle nrrd;
+  
+  if (usefirstvalid) {
+    // iterate over the connections and use the
+    // first valid nrrd
+    int idx = 0;
+    bool found_valid = false;
+    while (pi != range.second) {
+      inrrd = (NrrdIPort *)get_iport(idx);
+      if (inrrd->get(nrrd) && nrrd != 0) {
+	found_valid = true;
+	break;
+      }
+      ++idx;
+      ++pi;
+    }
+    if (!found_valid) {
+      error("Didn't find any valid nrrds\n");
+      return;
+    }
+  } else {
+    // use the index specified
+    int idx=port_index_.get();
+    if (idx<0) { error("Can't choose a negative port"); return; }
+    while (pi != range.second && idx != 0) { ++pi ; idx--; }
+    int port_number=pi->second;
+    if (pi == range.second || ++pi == range.second) { 
+      error("Selected port index out of range"); return; 
+    }
+
+    inrrd = (NrrdIPort *)get_iport(port_number);
+    if (!inrrd) {
+      error("Unable to initialize iport '" + to_string(port_number) + "'.");
+      return;
+    }
+    inrrd->get(nrrd);
   }
   
-  NrrdIPort *inrrd = (NrrdIPort *)get_iport(port_number);
-  if (!inrrd) {
-    error("Unable to initialize iport '" + to_string(port_number) + "'.");
-    return;
-  }
-  NrrdDataHandle nrrd;
-  inrrd->get(nrrd);
   onrrd->send(nrrd);
 }
 

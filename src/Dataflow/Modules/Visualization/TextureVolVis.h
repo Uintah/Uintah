@@ -59,7 +59,7 @@ public:
   TextureVolVis(GuiContext* ctx);
 
   virtual ~TextureVolVis();
-  virtual void widget_moved(bool last);    
+  virtual void widget_moved(bool last, BaseWidget*);
   virtual void execute();
   //  void tcl_command( TCLArgs&, void* );
 

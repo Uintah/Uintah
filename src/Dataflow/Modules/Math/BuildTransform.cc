@@ -88,7 +88,7 @@ class BuildTransform : public Module {
 public:
   BuildTransform(GuiContext* ctx);
   virtual ~BuildTransform();
-  virtual void widget_moved(bool last);
+  virtual void widget_moved(bool last, BaseWidget*);
   virtual void execute();
   void tcl_command( GuiArgs&, void * );
 };
@@ -264,7 +264,7 @@ void BuildTransform::execute()
   omatrix_->send(MatrixHandle(dm));
 }
 
-void BuildTransform::widget_moved(bool last)
+void BuildTransform::widget_moved(bool last, BaseWidget*)
 {
   // only re-execute if this was a widget-release event
   if (last) {

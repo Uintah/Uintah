@@ -43,18 +43,9 @@ Preparations must be made before starting \sr{} and its Power Apps.
 Commands below are typed in a terminal emulation application (\eg{}
 \command{xterm}).
 
-Create an ``on the fly libs'' directory and a \sr{}
-initialization file:
-
-\begin{alltt}
-  mkdir ~/on-the-fly-libs
-  echo "SCIRUN_ON_THE_FLY_LIBS_DIR=~/on-the-fly-libs" \latexhtml{\ra\ra}{\begin{rawhtml}&gt;&gt;\end{rawhtml}} .scirunrc
-\end{alltt}
-
-See \secref{Environment Variables}{sec:environ}, \secref{\sr{}'s
-Initialization File---\filename{.scirunrc}}{sec:scirunrc},  and \secref{Dynamic
-Compilation}{sec:dyncomp} for more information on \sr{}'s
-environment variables, initialization file, and ``on the fly libs.''
+See \secref{\sr{}'s
+Initialization File---\filename{.scirunrc}}{sec:scirunrc} and \secref{Dynamic
+Compilation}{sec:dyncomp} for additional information.
   
 Mac OSX users must increase the open files limit.
 Users of csh-type shells on Mac OSX must type:
@@ -69,15 +60,18 @@ and users of sh-type shells must type:
   ulimit -n unlimited
 \end{alltt}
 
+It is convenient to place the above  in a shell initialization
+file (\filename{.cshrc} or \filename{.bashrc}).
+
 %begin{latexonly}
-\newcommand{\srwindow}%
-{\centerline{\epsfig{file=Figures/srwindow-1.eps.gz, width=6in,
-      bbllx=0, bblly=0, bburx=400, bbury=410}}}
+\newcommand{\srwindow}{%
+  \centerline{\includegraphics[bb=0 0 391 402,width=4in]{Figures/srwindow-1.eps.gz}}
+}
 %end{latexonly}
 \begin{htmlonly}
   \newcommand{\srwindow}{%
-    \htmladdimg[align=top,alt="SCIRun Window"]
-    {../Figures/srwindow-1.gif}}
+    \htmladdimg[alt="SCIRun Window"]{../Figures/srwindow-1.gif}
+  }
 \end{htmlonly}
 
 Change your current working directory to \sr{}'s
@@ -97,18 +91,19 @@ or
 and type:
 
 \begin{alltt}
-  ./scirun \replaceable{network_file}
+  ./scirun [ [-e] \replaceable{network_file} ]
 \end{alltt}
 
-\note{Do not start \sr{} in the background, \ie do not type
+\note{Do not start \sr{} in the background, \ie do not type:
   \keyboard{scirun~\&}.}
 
-The \command{scirun} command may take 1 argument, the name of a
+The \command{scirun} command may take the name of a
 \dfn{\sr{} network file} (network files have a \filename{.net} extension)
-for \sr{} to load.  Network files are discussed in a later section.
+for \sr{} to load.  The \option{-e} tells \sr{} to execute the network
+after it is loaded.  Network files are discussed in a later section.
 
-If the name of a network file is not provided, \sr{} starts with a
-blank window as shown in Figure~\ref{fig:srwindow}.  \secref{Anatomy
+If the name of a network file is not provided, \sr{} starts with an empty
+  window as shown in Figure~\ref{fig:srwindow}.  \secref{Anatomy
   of the Main Window}{sec:windowanatomy} discusses the main features
 of Main Window window.
 
@@ -142,12 +137,6 @@ Figure~\ref{fig:srwindow}):
     \menudesc{File} The \menu{File} menu contains the following items:
 
     \begin{description}
-      \menuitemdesc{Save} Saves a network to a file (See \hyperref{this
-        section}{Section~}{}{sec:savenet}).
-
-      \menuitemdesc{Save As...} Saves a network to a new file (See
-      \hyperref{this section}{Section~}{}{sec:savenet}).
-      
       \menuitemdesc{Load} Loads a network from a file (See
       \hyperref{this section}{Section~}{}{sec:opennet}).
       
@@ -155,12 +144,22 @@ Figure~\ref{fig:srwindow}):
       without overlap (See \hyperref{this
         section}{Section~}{}{sec:insertnetwork}).
       
-      \menuitemdesc{Clear} Removes all modules and connections from
+      \menuitemdesc{Save} Saves a network to a file (See \hyperref{this
+        section}{Section~}{}{sec:savenet}).
+
+      \menuitemdesc{Save As...} Saves a network to a new file (See
+      \hyperref{this section}{Section~}{}{sec:savenet}).
+      
+      \menuitemdesc{Clear Network} Removes all modules and connections from
       the NetEdit frame (See \hyperref{this
         section}{Section~}{}{sec:clearnetwork}).
+
+      \menuitemdesc{Select All} Selects all modules.
+
+      \menuitemdesc{Execute All} Executes all modules.
       
       \menuitemdesc{New} Contains items of interest to
-      developers only.
+      developers only (e.g. creating new modules).
       
       \menuitemdesc{Add Info} Adds network specific
       notes to the current network.  Notes should be used to document
@@ -174,7 +173,7 @@ Figure~\ref{fig:srwindow}):
   
   \begin{description}
     \menudesc{SCIRun} The \menu{SCIRun} menu is used to create modules
-    (from the \sr{} package) for use in the net edit frame.
+    (from the \sr{} package) for use in the Net Edit frame.
 
     This menu is composed of sub-menus. Each sub-menu corresponds to
      a \dfn{category}
@@ -203,19 +202,22 @@ Figure~\ref{fig:srwindow}):
     have category sub-menus and module menu items.
   \end{description}
   
-  \descitem{Global View Frame} The Global View Frame is located in the
+  \descitem{Global View Frame} \index{global view frame}
+  The Global View Frame is located in the
   upper left corner of the main window (see
   Figure~\ref{fig:srwindow}). It is used to navigate complex networks
   \secref{Navigating a Network}{sec:navnetwork} describes the use of the Global View Frame.
   
-  \descitem{Message Frame} Messages during program startup are displayed
+  \descitem{Message Frame} \index{message frame}
+  Messages during program startup are displayed
   in the Message frame.  The Message frame is located in the upper right
   corner of the main window (see Figure~\ref{fig:srwindow}).  Errors on
   startup may mean \sr{} has been installed incorrectly or has
   been installed from a buggy distribution.  Please report these
   errors (\hyperref{report}{see Section~}{)}{sec:bugs}).
   
-  \descitem{NetEdit Frame} The NetEdit Frame occupies the bottom of
+  \descitem{NetEdit Frame} \index{netedit frame}
+  The NetEdit Frame occupies the bottom of
   the main window(see Figure~\ref{fig:srwindow}).  It is used to build
   and execute networks (\secref{Working with  Networks}{ch:workwithnets}
   discusses the use of the NetEdit frame).
@@ -243,36 +245,46 @@ prompt \screen{scirun\ra}.  This program is  a modified \dfna{Tool
   section}{Section~}{}{sec:termapp} describes use of the SCIRun shell.
 
 
-\section{Environment Variables}
-\label{sec:environ} 
-\index{Environment Variables}
+\section{\sr{}'s Initialization File---\filename{.scirunrc}}
+\label{sec:scirunrc}
+\index{environment variables}
+\index{scirunrc}
+
+\sr{} processes \filename{.scirunrc} file on startup.  File
+\filename{.scirunrc} contains assignments to environment variables
+that affect \sr{}'s behavior.  Lines beginning with '\#' are ignored.
+
+When started by a user the first time, \sr{} creates a default version of
+\filename{.scirunrc} in the user's home directory.  Users may modify
+their default \filename{.scirunrc} file.
+
+Users may also set \sr{} related environment variables in their
+shell.  Values of variables set in the shell override values set in
+\filename{.scirunrc}.
+
+See the content of \filename{.scirunrc} for a complete list of \sr{}
+related environment variables.  The following
+is a partial list of variables understood by \sr{}:
 
 \newcommand{\envitem}[1]{\item[\envvar{#1}]\latex{\mbox{}\\}}
-
-The following environment variables affect \sr{}'s behavior, or
-improve its performance via remote connections.  With the exception of
-\envvar{SCIRUN\_ON\_THE\_FLY\_LIBS\_DIR}, use of these variables is
-optional.
 
 \begin{description}
   \envitem{SCIRUN\_ON\_THE\_FLY\_LIBS\_DIR}
   \envvar{SCIRUN\_ON\_THE\_FLY\_LIBS\_DIR} specifies the location of
   dynamically generated code (see \secref{Dynamic
-  Compilation}{sec:dyncomp} for details on the meaning and use of
-  this variable).  Typically, a user should create directory
-  \directory{\ltilde{}/on\_the\_fly}, and then, in his login script or
-  \filename{.scirunrc} file set the value of 
-  \envvar{SCIRUN\_ON\_THE\_FLY\_LIBS\_DIR} to \directory{\ltilde{}/on\_the\_fly}.
+    Compilation}{sec:dyncomp} for details on the meaning and use of
+  this variable).  Users shouldn't need to change the default value
+  (\filename{\ltilde/on-the-fly-libs}) of this variable.
   
-  \envitem{SCI\_CONFIRM\_OVERWRITE} determines the default behavior of
-  file saving operations.  If set to 1, the user is always
-  asked to confirm a file save if an existing file would be
+  \envitem{SCIRUN\_CONFIRM\_OVERWRITE}
+  \envvar{SCIRUN\_CONFIRM\_OVERWRITE} determines the default behavior of
+  file saving operations.  If set to 1, the user is
+  asked to confirm a save operation if an existing file would be
   overwritten.  If set to 0 then the user is not asked for
-  confirmation.  If \envvar{SCI\_CONFIRM\_OVERWRITE} is undefined, a
-  value of 1 is assumed.
+  confirmation.  \envvar{SCIRUN\_CONFIRM\_OVERWRITE}'s default value is 1.
   
-  \descitem{\envvar{SCIRUN\_DATA},  \envvar{SCIRUN\_DATASET}} These
-  two variables specify the complete path to a \sr{} \dfn{data set}. A
+  \descitem{\envvar{SCIRUN\_DATA}, \envvar{SCIRUN\_DATASET}} These two
+  variables specify the complete path to a \sr{} \dfn{data set}. A
   data set is a collection of \sr{} type data fields, matrices, \etc{}
   that are stored in a directory and used in \sr{} networks.
 
@@ -288,121 +300,110 @@ optional.
   sample data were installed).  \envvar{SCIRUN\_DATASET} can then be
   set to \filename{utahtorso} to specify the Utah Torso data set.
   
-  \envitem{DISPLAY} If \sr{} is executed remotely, the value of
-  the \envvar{DISPLAY} variable (as set on the remote machine) must be
-  set correctly, and the remote machine must be allowed to talk to the
-  local X11 server.
+  \envitem{SCIRUN\_NET\_SUBSTITUTE\_DATADIR} When saving a network
+  containing a reader or writer module, \sr{} normally records (in the
+  network file) the absolute
+  pathname of a reader/writer module's chosen file.  If
+  \envvar{SCIRUN\_NET\_SUBSTITUTE\_DATADIR} is set to 1 and if a
+  reader/writer module is set to read/write from/to a file in
+  \icode{\$SCIRUN\_DATA/\$SCIRUN\_DATASET} then \sr{} will record a
+  filename whose path will be determined by future values of
+  \envvar{SCIRUN\_DATA} and \envvar{SCIRUN\_DATASET}.  The default
+  value of \envvar{SCIRUN\_NET\_SUBSTITUTE\_DATADIR} is 0.
+
+  \envitem{SCIRUN\_TMP\_DIR}
+  \envvar{SCIRUN\_TMP\_DIR} specifies the directory where \sr{} will
+  create temporary files.  It's default value is \filename{/tmp}.
+
+  \envitem{SCIRUN\_LOAD\_PACKAGE}
+  \envvar{SCIRUN\_LOAD\_PACKAGE} is a comma separated list of packages
+  \sr{} is to load upon startup.  Normally \sr{} loads all installed
+  packages.  To load, for example, only the \BIOPSE{} and Teem
+  packages: \envvar{SCIRUN\_LOAD\_PACKAGE=BioPSE,Teem}.
+
+  \envitem{SCIRUN\_NOSPLASH}
+  If \envvar{SCIRUN\_NOSPLASH} is set to 1, then \sr{} will not display
+  its splash screen at startup.  The default value is 0.
+
+  \envitem{SCIRUN\_HIDE\_PROGRESS}
+  If \envvar{SCIRUN\_HIDE\_PROGRESS} is set to 1, \sr{} will not display
+  progress bars during startup.  The default value is 0.
   
-  For telnet-like (unencrypted) connections to a remote machine,
- set \envvar{DISPLAY} as follows:
+  \envitem{SCIRUN\_STRAIGHT\_CONNECTIONS}
+  If \envvar{SCIRUN\_STRAIGHT\_CONNECTIONS} is set to 1, \sr{} will draw
+  straight connections between modules in the Network Editor.  The
+  default value of \envvar{SCIRUN\_STRAIGHT\_CONNECTIONS} is 0.
+
+  \envitem{SCIRUN\_FAST\_QUIT} If defined, disables the confirmation
+  dialog that is normally displayed when exiting \sr.
+  
+  \envitem{SCIRUN\_MPEG\_LICENSE\_ACCEPT} MPEG software is freely
+  distributed with \sr{} and may be used for any non-commercial
+  purpose.  However, patents are held by several companies on various
+  aspects of the MPEG video standard. Companies or individuals who
+  want to develop commercial products that include this code must
+  acquire licenses from these companies. For information on licensing,
+  see Appendix F in the standard. For more information, please see the
+  README file in the mpeg\_encode distribution. If you are allowed to
+  use the MPEG functionality based on the above license, you may
+  enable MPEG movie recording in SCIRun (accessible via the SCIRun
+  Viewer's "File->Record Movie" menu) by setting the value of
+  SCIRUN\_MPEG\_LICENSE\_ACCEPT to "true".
+\end{description}
+
+\section{Remote Display}
+\label{sec:remote-display}
+\index{remote display}
+
+Normally, \sr{}'s main window is displayed on a console that is part
+of the computer on which \sr{} runs.  It is possible, however, to
+display \sr{} on a \dfn{remote} console.  In the discussion that
+follows, the term \dfn{local} refers to the machine running \sr{} and
+the term \dfn{remote} refers to the machine displaying \sr{}.
+
+To display \sr{} remotely, the value of the \envvar{DISPLAY}
+environment variable must be set correctly on the local machine.
+Also, the local machine must be allowed to send display commands to
+the remote machine.
+  
+Normally, the remote machine makes a connection to the local machine
+via the \command{ssh} command.  In this case, \command{ssh} sets the value of
+\envvar{DISPLAY} in such a way that the local machine has permission to
+send display commands to the remote machine.  However, \command{ssh}
+connections result in poor display performance because of encryption
+activity on the connection.
+
+To increase performance, the value of \envvar{DISPLAY} is set as
+follows after establishing the \command{ssh} connection:
 
 for a sh-style shell
 
 \begin{verbatim}
-  export DISPLAY=local-ip-addres:0.0
+  export DISPLAY=remote-machine-name:0.0
 \end{verbatim}
   
 for a csh-style shell
 
 \begin{verbatim}
-  setenv DISPLAY local-ip-addres:0.0
+  setenv DISPLAY remote-machine-name:0.0
 \end{verbatim}
 
-  When connecting to a remote machine using ssh, \envvar{DISPLAY} is
-  usually set automatically (depending on how ssh has been
-  configured).  However, this results in poor display performance
-  because of encryption activity on the connection.  To increase
-  performance, override the value of \envvar{DISPLAY} provided
-  by ssh by setting  \envvar{DISPLAY} as
-  shown above.  Note that this technique defeats the encryption
-  protection on the X11 connection.
-  
-  The remote machine needs permission to display on a local machine if
-  the user is using a telnet-like connection, or overriding the value
-  of \envvar{DISPLAY} provided by ssh.  Use the \command{xhost}
-  command on the local machine to do this:
+Note that this technique defeats the encryption protection on the
+connection.
+
+After overriding the value of \envvar{DISPLAY} set by \command{ssh},
+the local machine will lack permission to send display commands to the
+remote machine.  Use the \command{xhost} command on the remote machine
+to give permission to the local machine:
 
 \begin{verbatim}
-  xhost +remote-machine-name
+  xhost +local-machine-name
 \end{verbatim}
   
-  \envitem{LOAD\_PACKAGE} A comma separated list of package names that
-  \sr{} loads.
-  
-  \sr{} loads these packages instead of packages specified at
-  configure time. Each package on the list must be previously
-  compiled.
-  
-  \envitem{PACKAGE\_SRC\_PATH} A colon separated list of paths to
-  package source trees.  The path
-  \directory{\ptext{build\_dir}/Packages} is implicitly part of this
-  list.  \ptext{build\_dir} is the directory where
-  \command{configure} and \command{make} were run.
-  
-  \sr{} searches this path list to find XML description files and
-  user interface code corresponding to packages
-  specified in \envvar{LOAD\_PACKAGE}.
-  
-  Its value defaults to \directory{\ptext{build\_dir}/Packages}.
-  
-  \envitem{PACKAGE\_LIB\_PATH} \envvar{PACKAGE\_LIB\_PATH} is a colon
-  separated list of paths to package libraries.
-  
-  \sr{} searches this path list to find package libraries
-  that correspond to the packages specified in
-  \envvar{LOAD\_PACKAGE}.
-  
-  Default value is \directory{\ptext{build\_dir}/lib}.
-
-  \envitem{SCIRUN\_NOSPLASH}  Disables \sr{}'s startup splash screen if defined.
-  
-  \envitem{SCIRUN\_FAST\_QUIT} If defined, disables the confirmation
-  dialog that is normally displayed when exiting \sr.
-  
-  \envitem{SCIRUN\_STRAIGHT\_CONNECTIONS} If defined, connections
-  between modules will be drawn as straight lines.
-  
-\end{description}
-
-\section{\sr{}'s Initialization File---\filename{.scirunrc}}
-\label{sec:scirunrc}
-
-When \sr{} starts up, it looks for and
-loads the content of the file \filename{.scirunrc}.  \sr{} searches for
-\filename{.scirunrc} in this order:
-
-\begin{enumerate}
-\item Current working directory
-\item Root of \sr's build directory
-\item Home directory
-\item Root of \sr's source code directory
-\end{enumerate}
-
-This file may contain assignment of values to variables and variable
-substitution.
-
-For example:
-
-\begin{verbatim}
-HOME=/home/sci/me
-SCIRUN_ON_THE_FLY_LIBS_DIR=$(HOME)/on-the-fly-libs
-\end{verbatim}
-
-The expansion of environment variables is not supported.  Only
-variables declared earlier in the file can be expanded.
-
-The following variables are understood by \sr{} and may be set in
-\filename{.scirunrc}: \envvar{SCIRUN\_ON\_THE\_FLY\_LIBS\_DIR},
-\envvar{LOAD\_PACKAGE}, \envvar{PACKAGE\_SRC\_PATH},
-\envvar{PACKAGE\_LIB\_PATH}
-
-\secref{Dynamic Compilation}{sec:dyncomp} explains the meaning and use
-of \envvar{SCIRUN\_ON\_THE\_FLY\_LIBS\_DIR}. (See \hyperref{the
-  previous section}{Section~}{}{sec:environ} for meanings of other
-variables).
 
 \section{Dynamic Compilation}
 \label{sec:dyncomp}
+\index{dynamic compilation}
 
 Before executing \sr{},  be aware of the
 \dfn{Dynamic Compilation} feature.
@@ -416,26 +417,25 @@ of benefits not discussed here (see the publication
     Compilation of C++ Template Code}}{http://www.sci.utah.edu/publications/mcole01/dyn.pdf}
 for details).
 
-By default, code generated by dynamic compilation is stored in the
-directory \directory{\ptext{build\_dir}/on-the-fly-libs} 
-(\ptext{build\_dir} is the directory in which \sr{} was built).  The
-location of dynamically generated code can be changed by setting the
-value of the environment variable
-\envvar{SCI\_ON\_THE\_FLY\_LIBS\_DIR} to the desired directory. 
+By default, code generated by dynamic compilation is stored in
+directory \directory{on-the-fly-libs} in the user's home directory.
+The location of dynamically generated code can be changed by setting
+the value of the environment variable
+\envvar{SCIRUN\_ON\_THE\_FLY\_LIBS\_DIR} to the desired directory.
 
 For example:
 
 for Bourne-like shells (sh, ksh, bash, etc,)
 
 \begin{verbatim}
-SCIRUN_ON_THE_FLY_LIBS_DIR=$HOME/on-the-fly-libs
+SCIRUN_ON_THE_FLY_LIBS_DIR=~/SCIRun/on-the-fly-libs
 export SCIRUN_ON_THE_FLY_LIBS_DIR
 \end{verbatim}
 
 for csh-like shells
 
 \begin{verbatim}
-setenv SCIRUN_ON_THE_FLY_LIBS_DIR $HOME/on-the-fly-libs
+setenv SCIRUN_ON_THE_FLY_LIBS_DIR ~/SCIRun/on-the-fly-libs
 \end{verbatim}
 
 SCIRUN\_ON\_THE\_FLY\_LIBS\_DIR can be set in the user's
@@ -449,10 +449,11 @@ Setting a unique value of SCIRUN\_ON\_THE\_FLY\_LIBS\_DIR for each
 \sr{} user has the following benefits:
 
 \begin{itemize}
-\item Allows multiple users to run the same instance of \sr{} without worry of  dynamic compilation conflicts.
-  For example, by specifying an \filename{on-the-fly-libs}
-  directory in their home directory, a user can run 
-  \sr{} installed in \directory{/usr/local} that another user
+\item Allows multiple users \index{multiple users} to run the same 
+  instance of \sr{} without
+  dynamic compilation conflicts.  For example, by specifying an
+  \filename{on-the-fly-libs} directory in their home directory, a user
+  can run \sr{} installed in \directory{/usr/local} that another user
   is already running.
 
 \item Allows a \directory{/usr/local} installation of \sr{}
@@ -473,7 +474,8 @@ compiled.
 \section{Exiting \sr{}}
 \label{sec:stopping}
 
-Exit \sr{} by selecting the \menuitem{Quit} item from the \menu{File} menu
+Exit \sr{} by selecting the \menuitem{Quit} item from the \menu{File}
+menu or by pressing \keyboard{control-q}.
 
 Do not press \keyboard{control-c} to exit \sr{}.  Doing this will drop
 \sr{} into a debugger.

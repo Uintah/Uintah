@@ -51,6 +51,8 @@
 
 #include <Core/Datatypes/ImageMesh.h>
 
+#include "itkVector.h"
+
 namespace Insight {
 
 using namespace SCIRun;
@@ -80,6 +82,8 @@ public:
   // refers to the last template type of the filter intstantiation.
   template< class data > 
   bool run( const FieldHandle &fh );
+
+  bool run_vector( const FieldHandle &fh );
 
 };
 
@@ -227,6 +231,206 @@ bool FieldToImage::run( const FieldHandle &fh)
   return true;
 }
 
+bool FieldToImage::run_vector( const FieldHandle &fh) 
+{
+  FieldType current_type;
+
+  if(dynamic_cast<LatVolField< Vector >*>(fh.get_rep())) {
+    current_type = LATVOLFIELD;
+  }
+  else if(dynamic_cast<ITKLatVolField< Vector >*>(fh.get_rep())) {
+    current_type = ITKLATVOLFIELD;
+  }
+  else if(dynamic_cast<ImageField< Vector >*>(fh.get_rep())) {
+    current_type = IMAGEFIELD;
+  }
+  else if(dynamic_cast<ITKImageField< Vector >*>(fh.get_rep())) {
+    current_type = ITKIMAGEFIELD;
+  }
+  else {
+    return false;
+  }
+
+  if(current_type == LATVOLFIELD) {
+    typedef LatVolField< Vector > LatVolFieldType;
+    typedef itk::Image<itk::Vector<double>, 3> ImageType;
+    typedef itk::ImageRegionIterator< ImageType > IteratorType;
+    LatVolFieldType* f = dynamic_cast< LatVolFieldType* >(fh.get_rep());
+
+    // create a new itk image
+    ImageType::Pointer img = ImageType::New(); 
+
+    // set size
+    ImageType::SizeType fixedSize = {{f->fdata().dim3(), f->fdata().dim2(), f->fdata().dim1()}};
+    img->SetRegions( fixedSize );
+
+    ImageType::RegionType region;
+    
+    ImageType::IndexType start;
+    
+    for(int i=0; i<3; i++)
+      start[i] = 0;
+
+    region.SetSize( fixedSize );
+    region.SetIndex( start );
+    
+    img->SetRegions( region );
+    img->Allocate();
+    
+    // set origin and spacing
+    const BBox bbox = f->mesh()->get_bounding_box();
+    Point mesh_center;
+    Vector mesh_size;
+    if(bbox.valid()) {
+      mesh_center = bbox.center();
+      mesh_size = bbox.diagonal();
+    }
+    else {
+      error("No bounding box to get center");
+      return false;
+    }
+    
+    double origin[ ImageType::ImageDimension ];
+    origin[0] = mesh_center.x();
+    origin[1] = mesh_center.y();
+    origin[2] = mesh_center.z();
+    
+    img->SetOrigin( origin );
+    
+    double spacing[ ImageType::ImageDimension ];
+    spacing[0] = mesh_size.x()/f->fdata().dim3();
+    spacing[1] = mesh_size.y()/f->fdata().dim2();
+    spacing[2] = mesh_size.z()/f->fdata().dim1();
+    
+    img->SetSpacing( spacing );
+
+    // copy the data
+    LatVolMesh::Node::iterator iter, end;
+    LatVolMeshHandle mh((LatVolMesh*)(f->mesh().get_rep()));
+    mh->begin(iter);
+    mh->end(end);
+
+    ImageType::IndexType pixelIndex;
+    typedef ImageType::PixelType PixelType;
+    PixelType pixel;
+    LatVolFieldType* fld = (LatVolFieldType* )fh.get_rep();
+
+    IteratorType img_iter(img, img->GetRequestedRegion());
+    img_iter.GoToBegin();
+
+    while(iter != end ) {
+      Vector val;
+      if (fld->value(val, *iter)) {	  
+	itk::Vector<double> new_val;
+	new_val[0] = val[0];
+	new_val[1] = val[1];
+	new_val[2] = val[2];
+	
+	img_iter.Set(new_val);
+      } 
+      ++iter;
+      img_iter.operator++();
+    }
+
+    // send the data downstream
+    img_->data_ = img;
+    outimage_handle_ = img_;
+
+  }
+  else if(current_type == ITKLATVOLFIELD) {
+    // unwrap it
+    img_->data_ = dynamic_cast<ITKLatVolField< Vector >*>(fh.get_rep())->get_image();
+  }
+  else if(current_type == IMAGEFIELD) {
+    typedef ImageField< Vector > ImageFieldType;
+    typedef itk::Image< itk::Vector<double>, 2> ImageType;
+    typedef itk::ImageRegionIterator< ImageType > IteratorType;
+    ImageFieldType* f = dynamic_cast< ImageFieldType* >(fh.get_rep());
+
+    // create a new itk image
+    ImageType::Pointer img = ImageType::New(); 
+
+    // set size
+    ImageType::SizeType fixedSize = {{f->fdata().dim2(), f->fdata().dim1()}};
+    img->SetRegions( fixedSize );
+
+    ImageType::RegionType region;
+    
+    ImageType::IndexType start;
+    
+    for(int i=0; i<3; i++)
+      start[i] = 0;
+
+    region.SetSize( fixedSize );
+    region.SetIndex( start );
+    
+    img->SetRegions( region );
+    img->Allocate();
+
+    // set origin and spacing
+    const BBox bbox = f->mesh()->get_bounding_box();
+    Point mesh_center;
+    Vector mesh_size;
+    if(bbox.valid()) {
+      mesh_center = bbox.center();
+      mesh_size = bbox.diagonal();
+    }
+    else {
+      error("No bounding box to get center");
+      return false;
+    }
+    
+    double origin[ ImageType::ImageDimension ];
+    origin[0] = mesh_center.x();
+    origin[1] = mesh_center.y();
+    
+    img->SetOrigin( origin );
+    
+    double spacing[ ImageType::ImageDimension ];
+    spacing[0] = mesh_size.x()/f->fdata().dim2();
+    spacing[1] = mesh_size.y()/f->fdata().dim1();
+    
+    img->SetSpacing( spacing );
+
+     // copy the data
+    ImageMesh::Node::iterator iter, end;
+    ImageMeshHandle mh((ImageMesh*)(f->mesh().get_rep()));
+    mh->begin(iter);
+    mh->end(end);
+
+    ImageType::IndexType pixelIndex;
+    typedef ImageType::PixelType PixelType;
+    PixelType pixel;
+    ImageFieldType* fld = (ImageFieldType* )fh.get_rep();
+
+    IteratorType img_iter(img, img->GetRequestedRegion());
+    img_iter.GoToBegin();
+
+    while(iter != end ) {
+      Vector val;
+      if (fld->value(val, *iter)) {	  
+	itk::Vector<double> new_val;
+	new_val[0] = val[0];
+	new_val[1] = val[1];
+	new_val[2] = val[2];
+	
+	img_iter.Set(new_val);
+      } 
+      ++iter;
+      img_iter.operator++();
+    }   
+    // send the data downstream
+    img_->data_ = img;
+    outimage_handle_ = img_;
+
+  }
+  else if(current_type == ITKIMAGEFIELD) {
+    // unwrap it
+    img_->data_ = dynamic_cast<ITKImageField< Vector >*>(fh.get_rep())->get_image();
+  }
+  return true;
+}
+
 void FieldToImage::execute(){
 
   infield_ = (FieldIPort *)get_iport("InputField");
@@ -254,6 +458,7 @@ void FieldToImage::execute(){
   else if(run<float>(infield_handle_)) {}
   else if(run<unsigned char>(infield_handle_)) {}
   else if(run<unsigned short>(infield_handle_)) {}
+  else if(run_vector(infield_handle_)) {}
   else {
     error("Unknown type");
     return;

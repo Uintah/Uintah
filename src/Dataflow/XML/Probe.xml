@@ -82,4 +82,15 @@
   </io>
   <testing>
   </testing>
+<nets>
+<net id="Probe">
+<title>Probe Regression Test</title>
+
+<p>Display the sphere voltage data set as translucent lines, and then use
+the Probe widget to examine parts of the data set.</p>
+
+<p>This network can be found at src/nets/Modules/FieldsCreate/Probe.net.</p>
+
+</net>
+</nets>
 </component>

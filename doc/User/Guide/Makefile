@@ -78,7 +78,7 @@ htmlfigs := Figures/*.gif Figures/*.jpg
 # User created/edited sources (generated sources come into play further
 # down). 
 srcs := ${macrosfile} ${mainfile} title.tex intro.tex concepts.tex \
-running.tex network.tex viewer.tex packages.tex converters.tex \
+running.tex network.tex viewer.tex packages.tex import_export.tex \
 itk_sr.tex ${stylefile1} ${stylefile2} ${stylefile3}
 
 # Latex2html options.  Change as needed.

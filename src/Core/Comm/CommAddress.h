@@ -1,5 +1,4 @@
-
-<!--
+/*
    For more information, please see: http://software.sci.utah.edu
 
    The MIT License
@@ -25,45 +24,39 @@
    LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
    FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
    DEALINGS IN THE SOFTWARE.
--->
+*/
 
 
-<table id="tbl.min_sys_rec">
-<title>Minimum System Recommendations</title>
-<tgroup cols="4">
-<thead>
-<row>
-<entry></entry>
-<entry>Processor(s)</entry>
-<entry>Main memory</entry>
-<entry>Other hardware/software</entry>
-</row>
-</thead>
-<tbody>
-<row>
-<entry>SGI</entry>
-<entry>250 MHz R10K</entry>
-<entry>256 MB</entry>
-<entry>Texture mapping hardware/memory</entry>
-</row>
-<row>
-<entry>Linux</entry>
-<entry>700 MHz Pentium III</entry>
-<entry>256 MB</entry>
-<entry>
-NVIDIA GeForce3 graphics card, XFree86 version 4.1.0,
-nvidia drivers version 1.0-1541
-</entry>
-</row>
-</tbody>
-</tgroup>
-</table>
+/*
+ *  DTAddress.h defines the unique address of each data transmitter
+ *
+ *  Written by:
+ *   Keming Zhang
+ *   Department of Computer Science
+ *   University of Utah
+ *   Jun 2003
+ *
+ *  Copyright (C) 1999 SCI Group
+ */
 
-<!-- Keep this comment at the end of the file
-Local variables:
-mode: xml
-sgml-default-dtd-file:"../../Utilities/XML/docbook.ced"
-sgml-omittag:nil
-sgml-shorttag:nil
-End:
--->
+#ifndef CORE_COMM_COMMADDRESS_H
+#define CORE_COMM_COMMADDRESS_H
+#include <iostream>
+namespace SCIRun {
+  class CommAddress{
+  public:
+    int port;
+    long ip;
+    bool operator<(const CommAddress &p) const{
+      return (ip<p.ip) || (ip==p.ip && port<p.port);
+    }
+
+    bool operator==(const CommAddress &p) const{
+      return ip==p.ip && port==p.port;
+    }
+  };
+
+
+}// namespace SCIRun
+
+#endif

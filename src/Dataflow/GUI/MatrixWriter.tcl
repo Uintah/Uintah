@@ -106,6 +106,7 @@ itcl_class SCIRun_DataIO_MatrixWriter {
 		-initialdir $initdir \
 		-defaultextension $defext \
 		-formatvar $this-filetype \
+	        -formats {None} \
 		-splitvar $this-split \
 	        -confirmvar $this-confirm \
 	        -selectedfiletype $this-exporttype

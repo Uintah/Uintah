@@ -27,8 +27,8 @@
 #
 
 %define defname SCIRun
-%define defver	1.20
-%define dotver  2
+%define defver	1.22
+%define dotver  0
 %define gccver  3.2
 %define plat	rh8.0
 %define distro  Red Hat 8.0
@@ -36,11 +36,12 @@
 %undefine	__check_files
 %define thirdpartydotver 0
 %define thirdpartyversion %{defver}.%{thirdpartydotver}
+%define insightver  1.6.0
 
 
 Name:		%{defname}
 Version:	%{defver}.%{dotver}
-Serial:		5
+Serial:		6
 Release:	%{plat}
 Summary:	Problem Solving Environment Software
 Copyright:	University of Utah Limited
@@ -72,7 +73,7 @@ ExclusiveOS:	linux
 source0:	Thirdparty_install.%{thirdpartyversion}.tar.gz
 source1:	%{name}.%{version}.tar.gz
 source2:	cmake-1.8.1-x86-linux-files.tar
-source3:	InsightToolkit-1.4.0.tar.gz
+source3:	InsightToolkit-%{insightver}.tar.gz
 source4:	SCIRun-otf-files.tar.gz
 source5:	BioTensor-otf-files.tar.gz
 source6:	BioPSE.PKG.%{version}.tar.gz
@@ -112,10 +113,10 @@ tar -xvzf %{SOURCE9}
 
 %build
 cd /usr/local
-rm -rf /usr/local/InsightToolkit-1.4.0-bin
-mkdir -p /usr/local/InsightToolkit-1.4.0-bin
-cd /usr/local/InsightToolkit-1.4.0-bin
-$RPM_BUILD_DIR/cmake/bin/cmake /usr/local/InsightToolkit-1.4.0 -DBUILD_EXAMPLES:BOOL=OFF -DBUILD_SHARED_LIBS:BOOL=ON -DBUILD_TESTING:BOOL=OFF -DCMAKE_BUILD_TYPE:STRING=Release -DCMAKE_VERBOSE_MAKEFILE:BOOL=TRUE -DITK_USE_SYSTEM_PNG:BOOL=ON
+rm -rf /usr/local/InsightToolkit-%{insightver}-bin
+mkdir -p /usr/local/InsightToolkit-%{insightver}-bin
+cd /usr/local/InsightToolkit-%{insightver}-bin
+$RPM_BUILD_DIR/cmake/bin/cmake /usr/local/InsightToolkit-%{insightver} -DBUILD_EXAMPLES:BOOL=OFF -DBUILD_SHARED_LIBS:BOOL=ON -DBUILD_TESTING:BOOL=OFF -DCMAKE_BUILD_TYPE:STRING=Release -DCMAKE_VERBOSE_MAKEFILE:BOOL=TRUE -DITK_USE_SYSTEM_PNG:BOOL=ON
 make
 make install
 
@@ -144,5 +145,7 @@ rm -rf $RPM_BUILD_DIR/Thirdparty_install.%{thirdpartyversion}
 %files
 /usr/local/SCIRun
 /usr/local/lib/InsightToolkit
+/usr/local/include/InsightToolkit
+
 
 %changelog

@@ -119,7 +119,7 @@ int
 main(int argc, char **argv) {
   if (argc < 3 || argc > 8) {
     printUsageInfo(argv[0]);
-    return 0;
+    return 2;
   }
 
 #if defined(__APPLE__)  
@@ -133,10 +133,14 @@ main(int argc, char **argv) {
   char *fieldName = argv[2];
   if (!parseArgs(argc, argv)) {
     printUsageInfo(argv[0]);
-    return 0;
+    return 2;
   }
 
   ifstream ptsstream(ptsName);
+  if (ptsstream.fail()) {
+    cerr << "Error -- Could not open file " << ptsName << "\n";
+    return 2;
+  }
   if (header) ptsstream >> ni >> nj;
   cerr << "number of points = ("<<ni<<" "<<nj<<")\n";
   StructQuadSurfMesh *qsm = new StructQuadSurfMesh(ni, nj);

@@ -125,7 +125,7 @@ int
 main(int argc, char **argv) {
   if (argc < 4 || argc > 9) {
     printUsageInfo(argv[0]);
-    return 0;
+    return 2;
   }
 #if defined(__APPLE__)  
   macForceLoad(); // Attempting to force load (and thus instantiation of
@@ -139,12 +139,16 @@ main(int argc, char **argv) {
   char *fieldName = argv[3];
   if (!parseArgs(argc, argv)) {
     printUsageInfo(argv[0]);
-    return 0;
+    return 2;
   }
 
   int npts;
   if (!ptsCountHeader) npts = getNumNonEmptyLines(ptsName);
   ifstream ptsstream(ptsName);
+  if (ptsstream.fail()) {
+    cerr << "Error -- Could not open file " << ptsName << "\n";
+    return 2;
+  }
   if (ptsCountHeader) ptsstream >> npts;
   cerr << "number of points = "<< npts <<"\n";
   int i;
@@ -160,6 +164,10 @@ main(int argc, char **argv) {
   int nedges;
   if (!elementsCountHeader) nedges = getNumNonEmptyLines(edgesName);
   ifstream edgesstream(edgesName);
+  if (edgesstream.fail()) {
+    cerr << "Error -- Could not open file " << edgesName << "\n";
+    return 2;
+  }
   if (elementsCountHeader) edgesstream >> nedges;
   cerr << "number of edges = "<< nedges <<"\n";
   for (i=0; i<nedges; i++) {
@@ -169,11 +177,11 @@ main(int argc, char **argv) {
     n2-=baseIndex; 
     if (n1<0 || n1>=npts) { 
       cerr << "Error -- n1 ("<<i<<") out of bounds: "<<n1<<"\n"; 
-      return 0; 
+      return 2; 
     }
     if (n2<0 || n2>=npts) { 
       cerr << "Error -- n2 ("<<i<<") out of bounds: "<<n2<<"\n"; 
-      return 0; 
+      return 2; 
     }
     cm->add_edge(n1, n2);
     if (debugOn) 

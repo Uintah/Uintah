@@ -61,7 +61,7 @@ itcl_class BaseWidget {
 	    return;
 	}
 	toplevel $w
-	wm minsize $w 100 100
+	#wm minsize $w 100 50
 
 	frame $w.f
 	Base_ui $w.f
@@ -73,8 +73,7 @@ itcl_class BaseWidget {
 	set opts $wid.opts
 	button $opts.close -text "Close" -command "destroy .ui[modname]"
 	button $opts.nextmode -text "NextMode" -command "$this-c nextmode"
-	button $opts.help -text "Help" -command "$this help"
-	pack $opts.close $opts.nextmode $opts.help -side left -padx 2 -pady 2 -anchor e
+	pack $opts.close $opts.nextmode -side left -padx 2 -pady 2 -anchor e
 	
 	frame $wid.scale
 	label $wid.scale.l -text "Scale"
@@ -112,16 +111,16 @@ itcl_class BaseWidget {
 	bind $defaultbox <Button-1> "$this bwdefselect %y $wid $defaultbox $materialbox"
 	bind $materialbox <Button-1> "$this bwselect %y $wid $materialbox $defaultbox"
 
-	pack $mat1 $mat2 -in $wid.mats -side left -padx 2 -pady 2 -fill both -expand yes
+	#pack $mat1 $mat2 -in $wid.mats -side left -padx 2 -pady 2 -fill both -expand yes
 	pack $wid.opts -in $wid -side top -padx 2 -pady 2 -anchor w
 	pack $wid.scale -in $wid -side top -padx 2 -pady 2 -anchor w -fill both -expand yes
-	pack $wid.mats -in $wid -side top -padx 2 -pady 2 -fill both -expand yes
+	#pack $wid.mats -in $wid -side top -padx 2 -pady 2 -fill both -expand yes
 
-	$this update_materials
+	#$this update_materials
 	
-	set matwin $wid.matwin
-	global $wid.matwin.mati
-	global $wid.matwin.mattype
+	#set matwin $wid.matwin
+	#global $wid.matwin.mati
+	#global $wid.matwin.mattype
     }
 
     method update_materials {} {
@@ -169,6 +168,7 @@ itcl_class BaseWidget {
 	    raise $matwin
 	} else {
 	    toplevel $wid.matwin
+	    wm title $wid.matwin "Material Editor"
 	    makeMaterialEditor $wid.matwin $this-material "$this bwcommit $box $obox" "$this bwcancel $box $obox"
 	}
     }
@@ -191,6 +191,7 @@ itcl_class BaseWidget {
 	    raise $matwin
 	} else {
 	    toplevel $wid.matwin
+	    wm title $wid.matwin "Material Editor"
 	    makeMaterialEditor $wid.matwin $this-material "$this bwcommit $box $obox" "$this bwcancel $box $obox"
 	}
     }

@@ -228,6 +228,14 @@ Module::Module(const string& name, GuiContext* ctx,
 
 Module::~Module()
 {
+  // kill_helper joins the helper thread & waits until module execution is done
+  kill_helper();
+  // After execution is done, delete the TCL command: $this-c
+  gui->delete_command(id+"-c" );
+  // Remove the dummy proc $this that was eating up all the TCL commands
+  // while the module finished up executing
+  gui->eval("catch {rename "+id+" \"\"}");
+  
 }
 
 int Module::addOPortByName(std::string name, std::string d_type)
@@ -568,7 +576,7 @@ void Module::want_to_execute()
     sched->do_scheduling();
 }
 
-void Module::widget_moved(bool)
+void Module::widget_moved(bool,BaseWidget*)
 {
 }
 
@@ -697,16 +705,7 @@ void Module::tcl_command(GuiArgs& args, void*)
     args.error("netedit needs a minor command");
     return;
   }
-  if(args[1] == "emit_vars") {
-    if (args.count() != 5)
-      args.error(args[0]+" "+args[1]+" needs a filename and variable name");
-    else { 
-      ofstream out;
-      out.open(args[2].c_str(), ofstream::out | ofstream::app);
-      emit_vars(out, args[3], args[4]);
-      out.close();
-    }
-  } else if(args[1] == "oportcolor") {
+  if(args[1] == "oportcolor") {
     if (args.count() != 3)
       args.error(args[0]+" "+args[1]+" takes a port #");
     int pnum;
@@ -901,14 +900,6 @@ int Module::numIPorts()
 {
   return iports.size();
 }
-
-void Module::emit_vars(std::ostream& out,
-		       const std::string& midx,
-		       const std::string& prefix)
-{
-  ctx->emit(out, midx, prefix);
-}
-
 
 GuiInterface* Module::getGui()
 {

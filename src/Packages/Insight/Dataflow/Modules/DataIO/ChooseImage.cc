@@ -51,6 +51,7 @@ using namespace SCIRun;
 class PSECORESHARE ChooseImage : public Module {
 private:
   GuiInt port_index_;
+  GuiInt usefirstvalid_;
 public:
   ChooseImage(GuiContext*);
 
@@ -65,7 +66,8 @@ public:
 DECLARE_MAKER(ChooseImage)
 ChooseImage::ChooseImage(GuiContext* ctx)
   : Module("ChooseImage", ctx, Source, "DataIO", "Insight"),
-    port_index_(ctx->subVar("port-index"))
+    port_index_(ctx->subVar("port-index")),
+    usefirstvalid_(ctx->subVar("usefirstvalid"))
 {
 }
 
@@ -86,22 +88,49 @@ void ChooseImage::execute(){
     return;
 
   port_map_type::iterator pi = range.first;
-  int idx=port_index_.get();
-  if (idx<0) { error("Can't choose a negative port"); return; }
-  while (pi != range.second && idx != 0) { ++pi ; idx--; }
-  int port_number=pi->second;
-  if (pi == range.second || ++pi == range.second) { 
-    error("Selected port index out of range"); return; 
+
+  int usefirstvalid = usefirstvalid_.get();
+
+  ITKDatatypeIPort *ifield = 0;
+  ITKDatatypeHandle field;
+  
+  if (usefirstvalid) {
+    // iterate over the connections and use the
+    // first valid field
+    int idx = 0;
+    bool found_valid = false;
+    while (pi != range.second) {
+      ifield = (ITKDatatypeIPort *)get_iport(idx);
+      if (ifield->get(field) && field != 0) {
+	found_valid = true;
+	break;
+      }
+      ++idx;
+      ++pi;
+    }
+    if (!found_valid) {
+      error("Didn't find any valid images\n");
+      return;
+    }
+  } else {
+    // use the index specified
+    int idx=port_index_.get();
+    if (idx<0) { error("Can't choose a negative port"); return; }
+    while (pi != range.second && idx != 0) { ++pi ; idx--; }
+    int port_number=pi->second;
+    if (pi == range.second || ++pi == range.second) { 
+      error("Selected port index out of range"); return; 
+    }
+
+    ifield = (ITKDatatypeIPort *)get_iport(port_number);
+    if (!ifield) {
+      error("Unable to initialize iport '" + to_string(port_number) + "'.");
+      return;
+    }
+    ifield->get(field);
   }
   
-  ITKDatatypeIPort *iimage = (ITKDatatypeIPort *)get_iport(port_number);
-  if (!iimage) {
-    error("Unable to initialize iport '" + to_string(port_number) + "'.");
-    return;
-  }
-  ITKDatatypeHandle image;
-  iimage->get(image);
-  oimg->send(image);
+  oimg->send(field);
 }
 
 void ChooseImage::tcl_command(GuiArgs& args, void* userdata)

@@ -76,7 +76,7 @@ public:
 
   virtual void execute();
   virtual void tcl_command(GuiArgs&, void*);
-  virtual void widget_moved(bool last);
+  virtual void widget_moved(bool last, BaseWidget*);
 };
 
 
@@ -286,7 +286,7 @@ ClipLattice::execute()
 
 
 void
-ClipLattice::widget_moved(bool last)
+ClipLattice::widget_moved(bool last, BaseWidget*)
 {
   if (last)
   {

@@ -65,7 +65,7 @@ DECLARE_MAKER(ColorMapWriter)
 
 ColorMapWriter::ColorMapWriter(GuiContext* ctx)
   : GenericWriter<ColorMapHandle>("ColorMapWriter", ctx, "DataIO", "SCIRun"),
-    gui_types_(ctx->subVar("types")),
+    gui_types_(ctx->subVar("types", false)),
     gui_exporttype_(ctx->subVar("exporttype"))
 {
   ColorMapIEPluginManager mgr;
@@ -73,8 +73,8 @@ ColorMapWriter::ColorMapWriter(GuiContext* ctx)
   mgr.get_exporter_list(exporters);
   
   string exporttypes = "{";
-  exporttypes += "{{SCIRun ColorMap File} {.fld} } ";
-  exporttypes += "{{SCIRun ColorMap Any} {.*} } ";
+  exporttypes += "{{SCIRun ColorMap Binary} {.cmap} } ";
+  exporttypes += "{{SCIRun ColorMap ASCII} {.cmap} } ";
 
   for (unsigned int i = 0; i < exporters.size(); i++)
   {
@@ -121,8 +121,14 @@ ColorMapWriter::execute()
   const string ft = ftpre.substr(0, loc);
 
   exporting_ = !(ft == "" ||
-		 ft == "SCIRun ColorMap File" ||
-		 ft == "SCIRun ColorMap Any");
+		 ft == "SCIRun ColorMap Binary" ||
+		 ft == "SCIRun ColorMap ASCII");
+
+  // Determine if we're ASCII or Binary
+  string ab = "Binary";
+  if (ft == "SCIRun ColorMap ASCII") ab = "ASCII";
+  filetype_.set(ab);
+
   GenericWriter<ColorMapHandle>::execute();
 }
 

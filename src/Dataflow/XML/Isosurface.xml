@@ -160,14 +160,59 @@
   </gui>
   <testing>
   </testing>
+<nets>
+<net id="Isosurface-list">
+<title>Isosurface-list Regression Test</title>
+
+<p>Test the Isosurface module by creating a list of values to isocontour
+on the boundary of the sphere-voltage test model.</p>
+
+<p>This network can be found at src/nets/Modules/Visualization/Isosurface-list.net.</p>
+
+</net>
+<net id="Isosurface-mcmp">
+<title>Isosurface-mcmp Regression Test</title>
+
+<p>Test the Field output of the Isosurface module in multiprocessor
+marching cubes mode.  This network demonstrates that the code which
+does the join for the different parts leaves a seam on the output
+field where the points are duplicated and thus breaks subsequent
+FieldBoundary and similar computations.  The lines across the middle
+of the sphere reflect the places where the data was cut up and
+assigned to different processors.</p>
+
+<p>This network can be found at src/nets/Modules/Visualization/Isosurface-mcmp.net.</p>
+
+</net>
+<net id="Isosurface-probe">
+<title>Isosurface-probe Regression Test</title>
+
+<p>Test useage of the Probe module to dynamically select which isovalue
+to use in the IsoSurface module.  The <modref package="SCIRun" name="Probe"/> widget can be moved around
+and the isovalue will cut through that point.</p>
+
+<p>This network can be found at src/nets/Modules/Visualization/Isosurface-probe.net.</p>
+
+</net>
+<net id="Isosurface-quantity">
+<title>Isosurface-quantity Regression Test</title>
+
+<p>Test the 'Quantity' method of selecting isovalues in the Isosurface
+module.  The boundary of the sphere-voltage model is isocontoured at
+10 evenly spaced intervals and the result is then displayed.</p>
+
+<p>This network can be found at src/nets/Modules/Visualization/Isosurface-quantity.net.</p>
+
+</net>
+<net id="Isosurface-slider">
+<title>Isosurface-slider Regression Test</title>
+
+<p>Test the 'Slider' method of selecting an isovalue in the IssSurface
+module.  The slider is used to select the value for an isocontour on
+the boundary of the sphere-volume data set.</p>
+
+<p>This network can be found at src/nets/Modules/Visualization/Isosurface-slider.net.</p>
+
+</net>
+</nets>
 </component> 
-
-
-
-
-
-
-
-
-
-

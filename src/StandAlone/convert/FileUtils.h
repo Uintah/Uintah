@@ -39,7 +39,7 @@ int getNumNonEmptyLines(char *fname) {
   FILE *fin = fopen(fname, "rt");
   if (!fin) {
     std::cerr << "Error -- could not open file "<<fname<<"\n";
-    exit(0);
+    exit(2);
   }
   int count=0;
   int haveNonWhiteSpace=0;

@@ -64,7 +64,7 @@ DECLARE_MAKER(ColorMapReader)
 
 ColorMapReader::ColorMapReader(GuiContext* ctx)
   : GenericReader<ColorMapHandle>("ColorMapReader", ctx, "DataIO", "SCIRun"),
-    gui_types_(ctx->subVar("types")),
+    gui_types_(ctx->subVar("types", false)),
     gui_filetype_(ctx->subVar("filetype"))
 {
   ColorMapIEPluginManager mgr;
@@ -72,7 +72,7 @@ ColorMapReader::ColorMapReader(GuiContext* ctx)
   mgr.get_importer_list(importers);
   
   string importtypes = "{";
-  importtypes += "{{SCIRun Colormap File} {.fld} } ";
+  importtypes += "{{SCIRun Colormap File} {.cmap} } ";
   importtypes += "{{SCIRun Colormap Any} {.*} } ";
 
   for (unsigned int i = 0; i < importers.size(); i++)

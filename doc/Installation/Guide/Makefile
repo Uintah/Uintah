@@ -34,7 +34,7 @@ stylesheet_chunk := ${STYLESHEET_XSL_HTML}/srdocbook-chunk.xsl
 stylesheet_nochunk := ${STYLESHEET_XSL_HTML}/srdocbook.xsl
 stylesheet_print := ${STYLESHEET_DSSSL_PRINT}/docbook.dsl
 params_print := -V %footnote-ulinks% -V %section-autolabel% \
-  -V "(define %default-quadding% 'justify)"
+  -V %generate-article-toc% -V bop-footnotes
 rxmlsrcs := ${wildcard *.rxml}
 edition := ../../edition.xml
 treetop := ../../..
@@ -68,7 +68,7 @@ srig.pdf : ${rxmlsrcs} ${edition}
 	done
 	openjade -t tex -V tex-backend -c ${CATALOG} -o srig.tex \
           -d ${stylesheet_print} ${params_print} ${XML_DCL} main.pxml
-	for i in 1 2 ; do jadetex srig.tex ; done
+	for i in 1 2 3; do jadetex srig.tex ; done
 	dvipdfm -p letter srig.dvi
 
 # Cleanage

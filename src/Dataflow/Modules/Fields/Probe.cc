@@ -93,7 +93,7 @@ public:
   virtual ~Probe();
 
   virtual void execute();
-  virtual void widget_moved(bool);
+  virtual void widget_moved(bool, BaseWidget*);
 };
 
 
@@ -468,7 +468,7 @@ Probe::execute()
 
 
 void
-Probe::widget_moved(bool last)
+Probe::widget_moved(bool last, BaseWidget*)
 {
   if (last)
   {

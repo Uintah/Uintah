@@ -99,7 +99,7 @@ class Hedgehog : public Module {
   //////////////////////
   //
   // widget_moved -  
-  virtual void widget_moved(bool last);
+  virtual void widget_moved(bool last, BaseWidget*);
   GuiDouble length_scale;
   GuiDouble width_scale;
   GuiDouble head_length;
@@ -443,7 +443,7 @@ void Hedgehog::execute()
   grid_id = ogeom->addObj(arrows, module_name);
 }
 
-void Hedgehog::widget_moved(bool last)
+void Hedgehog::widget_moved(bool last, BaseWidget*)
 {
     if(last && !abort_flag)
 	{

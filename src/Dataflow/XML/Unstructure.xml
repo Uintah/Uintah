@@ -67,4 +67,17 @@
   </io>
   <testing>
   </testing>
+<nets>
+<net id="Unstructure">
+<title>Unstructure Regression Test</title>
+
+<p>Convert an ImageField into a QuadSurfMesh using the Unstructure
+module.  Then clip out part of the QuadSurfMesh using the
+ClipByFunction module and display the two fields for comparison
+purposes.</p>
+
+<p>This network can be found at src/nets/Modules/FieldsGeometry/Unstructure.net.</p>
+
+</net>
+</nets>
 </component>
