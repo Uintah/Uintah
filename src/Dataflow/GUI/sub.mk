@@ -40,6 +40,9 @@ SRCS := \
 	$(SRCDIR)/ChangeFieldDataAt.tcl \
 	$(SRCDIR)/ChangeFieldDataType.tcl \
 	$(SRCDIR)/ChangeFieldBounds.tcl \
+	$(SRCDIR)/ChooseColorMap.tcl \
+	$(SRCDIR)/ChooseField.tcl \
+	$(SRCDIR)/ChooseMatrix.tcl \
 	$(SRCDIR)/ClipByFunction.tcl \
 	$(SRCDIR)/ClipField.tcl \
 	$(SRCDIR)/ClipLattice.tcl \

@@ -33,6 +33,7 @@ SRCS     += \
 	$(SRCDIR)/BuildNoise.cc\
 	$(SRCDIR)/BuildTransform.cc\
 	$(SRCDIR)/CastMatrix.cc\
+	$(SRCDIR)/ChooseMatrix.cc\
 	$(SRCDIR)/ErrorMetric.cc\
 	$(SRCDIR)/FieldToCanonicalTransform.cc\
 	$(SRCDIR)/LinAlgBinary.cc\
