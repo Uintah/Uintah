@@ -248,7 +248,7 @@ void ReactiveScalarSolver::buildLinearMatrixPred(const ProcessorGroup* pc,
     new_dw->getCopy(reactscalarVars.viscosity, d_lab->d_viscosityINLabel, 
 		matlIndex, patch, Ghost::AroundCells, Arches::ONEGHOSTCELL);
     new_dw->getCopy(reactscalarVars.scalar, d_lab->d_reactscalarOUTBCLabel, 
-		matlIndex, patch, Ghost::None, Arches::TWOGHOSTCELLS);
+		matlIndex, patch, Ghost::AroundCells, Arches::TWOGHOSTCELLS);
     // for explicit get old values
     new_dw->getCopy(reactscalarVars.uVelocity, d_lab->d_uVelocityOUTBCLabel, 
 		matlIndex, patch, Ghost::AroundFaces, Arches::ONEGHOSTCELL);
@@ -698,7 +698,7 @@ void ReactiveScalarSolver::buildLinearMatrixCorr(const ProcessorGroup* pc,
     new_dw->getCopy(reactscalarVars.viscosity, d_lab->d_viscosityIntermLabel, 
 		matlIndex, patch, Ghost::AroundCells, Arches::ONEGHOSTCELL);
     new_dw->getCopy(reactscalarVars.scalar, d_lab->d_reactscalarIntermLabel, 
-		matlIndex, patch, Ghost::None, Arches::TWOGHOSTCELLS);
+		matlIndex, patch, Ghost::AroundCells, Arches::TWOGHOSTCELLS);
   #else
   #ifdef Runge_Kutta_2nd
     new_dw->getCopy(reactscalarVars.old_density, d_lab->d_densityPredLabel, 
@@ -717,7 +717,7 @@ void ReactiveScalarSolver::buildLinearMatrixCorr(const ProcessorGroup* pc,
     new_dw->getCopy(reactscalarVars.viscosity, d_lab->d_viscosityPredLabel, 
 		matlIndex, patch, Ghost::AroundCells, Arches::ONEGHOSTCELL);
     new_dw->getCopy(reactscalarVars.scalar, d_lab->d_reactscalarPredLabel, 
-		matlIndex, patch, Ghost::None, Arches::TWOGHOSTCELLS);
+		matlIndex, patch, Ghost::AroundCells, Arches::TWOGHOSTCELLS);
   #endif
     // for explicit get old values
   #ifdef Runge_Kutta_3d
@@ -1207,7 +1207,7 @@ void ReactiveScalarSolver::buildLinearMatrixInterm(const ProcessorGroup* pc,
     new_dw->getCopy(reactscalarVars.viscosity, d_lab->d_viscosityPredLabel, 
 		matlIndex, patch, Ghost::AroundCells, Arches::ONEGHOSTCELL);
     new_dw->getCopy(reactscalarVars.scalar, d_lab->d_reactscalarPredLabel, 
-		matlIndex, patch, Ghost::None, Arches::TWOGHOSTCELLS);
+		matlIndex, patch, Ghost::AroundCells, Arches::TWOGHOSTCELLS);
     // for explicit get old values
     new_dw->getCopy(reactscalarVars.uVelocity, d_lab->d_uVelocityPredLabel, 
 		matlIndex, patch, Ghost::AroundFaces, Arches::ONEGHOSTCELL);
