@@ -36,7 +36,7 @@ public:
 	_direction = v;
     }
     inline Point eval(const double t) const {
-      return _origin * t + _direction;
+      return _origin + t * _direction;
     }
   
     inline Ray transform(Transform *t) const
