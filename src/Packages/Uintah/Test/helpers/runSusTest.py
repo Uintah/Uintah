@@ -18,6 +18,9 @@ def runSusTest(test, mode, susdir, algo, do_restart = "no"):
   ALGO = upper(algo)
   testname = path.splitext(input(test))[0];
 
+  if mode in ('dbg', 'dbgmpi'):
+    system("setenv MALLOC_STATS malloc_stats")
+
   if do_restart == "yes":
     print "%s-%s: Running restart test for %s on %s" % (ALGO, mode, testname, date())
   else:
@@ -57,7 +60,15 @@ def runSusTest(test, mode, susdir, algo, do_restart = "no"):
 	else:
 	    print "\tComparison tests passed.  (Note: No dat files to compare.)"
     else:
-	print "\tComparison tests passed."
+        print "\tComparison tests passed."
+
+    if mode in ('dbg', 'dbgmpi'):
+	rc = system("mem_leak_check %s %s %s %s" % (testname, "malloc_stats", ".", errors_to))
+        if rc == 0:
+	    print "\tMemory leak test (only tests scinew leaks) passed."
+	else:
+	    print "\t*** Warning, test %s failed memory leak test" % (testname)
+	    return 1
 
   return 0
 
