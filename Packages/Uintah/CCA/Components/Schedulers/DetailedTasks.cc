@@ -488,11 +488,11 @@ DetailedTasks::possiblyCreateDependency(DetailedTask* from,
   ASSERTRANGE(from->getAssignedResourceIndex(), 0, d_myworld->size());
   ASSERTRANGE(to->getAssignedResourceIndex(), 0, d_myworld->size());
   if(dbg.active()) {
-    dbg << d_myworld->myrank() << "        " << *to << " depends on " << *from << "\n";
+    dbg << d_myworld->myrank() << "          " << *to << " depends on " << *from << "\n";
     if(comp)
-      dbg << d_myworld->myrank() << "          From comp " << *comp;
+      dbg << d_myworld->myrank() << "            From comp " << *comp;
     else
-      dbg << d_myworld->myrank() << "          From OldDW ";
+      dbg << d_myworld->myrank() << "            From OldDW ";
     dbg << " to req " << *req << '\n';
   }
 
@@ -514,7 +514,7 @@ DetailedTasks::possiblyCreateDependency(DetailedTask* from,
     bool newRequireBatch = to->addRequires(batch);
     ASSERT(newRequireBatch);
     if(dbg.active())
-      dbg << d_myworld->myrank() << " NEW BATCH!\n";
+      dbg << d_myworld->myrank() << "          NEW BATCH!\n";
   } else if (mustConsiderInternalDependencies_) { // i.e. threaded mode
     if (to->addRequires(batch)) {
       // this is a new requires batch for this task, so add
@@ -522,7 +522,7 @@ DetailedTasks::possiblyCreateDependency(DetailedTask* from,
       batch->toTasks.push_back(to);
     }
     if(dbg.active())
-      dbg << d_myworld->myrank() << " USING PREVIOUSLY CREATED BATCH!\n";
+      dbg << d_myworld->myrank() << "          USING PREVIOUSLY CREATED BATCH!\n";
   }
   DetailedDep* dep = batch->head;
   for(;dep != 0; dep = dep->next){
@@ -537,7 +537,7 @@ DetailedTasks::possiblyCreateDependency(DetailedTask* from,
 			     low, high);
     batch->head = dep;
     if(dbg.active()) {
-      dbg << d_myworld->myrank() << "          ADDED " << low << " " << high << ", fromPatch = ";
+      dbg << d_myworld->myrank() << "            ADDED " << low << " " << high << ", fromPatch = ";
       if (fromPatch)
 	dbg << fromPatch->getID() << '\n';
       else
@@ -565,7 +565,7 @@ DetailedTasks::possiblyCreateDependency(DetailedTask* from,
       }
     }
     if(dbg.active()){
-      dbg << d_myworld->myrank() << "          EXTENDED from " << dep->low << " " << dep->high << " to " << l << " " << h << "\n";
+      dbg << d_myworld->myrank() << "            EXTENDED from " << dep->low << " " << dep->high << " to " << l << " " << h << "\n";
       dbg << *req->var << '\n';
       dbg << *dep->req->var << '\n';
       if(comp)
