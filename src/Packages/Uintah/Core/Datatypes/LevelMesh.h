@@ -410,7 +410,6 @@ const SCIRun::TypeDescription* get_type_description(Uintah::LevelMesh::Edge *);
 const SCIRun::TypeDescription* get_type_description(Uintah::LevelMesh::Face *);
 const SCIRun::TypeDescription* get_type_description(Uintah::LevelMesh::Cell *);
 
-
 } // namespace SCIRun
 
 #endif // SCI_project_LevelMesh_h

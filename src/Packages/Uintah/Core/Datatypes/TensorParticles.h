@@ -1,7 +1,7 @@
 #ifndef TENSORPARTICLES_H
 #define TENSORPARTICLES_H
 
-#include <Packages/Uintah/CCA/Components/MPM/Util/Matrix3.h>
+#include <Packages/Uintah/Core/Math/Matrix3.h>
 #include <Packages/Uintah/Core/Datatypes/PSet.h>
 #include <Packages/Uintah/CCA/Ports/DataArchive.h>
 #include <Packages/Uintah/Core/Grid/ShareAssignParticleVariable.h>
