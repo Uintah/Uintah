@@ -14,6 +14,7 @@
 
 #include <DaveW/Datatypes/General/SigmaSetPort.h>
 #include <DaveW/share/share.h>
+#include <SCICore/Malloc/Allocator.h>
 
 //namespace DaveW {
 //namespace Datatypes {
@@ -24,11 +25,11 @@ using namespace DaveW::Datatypes;
 extern "C" {
 DaveWSHARE IPort* make_SigmaSetIPort(Module* module,
 					 const clString& name) {
-  return new SimpleIPort<SigmaSetHandle>(module,name);
+  return scinew SimpleIPort<SigmaSetHandle>(module,name);
 }
 DaveWSHARE OPort* make_SigmaSetOPort(Module* module,
 					 const clString& name) {
-  return new SimpleOPort<SigmaSetHandle>(module,name);
+  return scinew SimpleOPort<SigmaSetHandle>(module,name);
 }
 }
 
@@ -40,6 +41,9 @@ template<> clString SimpleIPort<SigmaSetHandle>::port_color("chocolate4");
 
 //
 // $Log$
+// Revision 1.4  2000/11/29 09:49:30  moulding
+// changed all instances of "new" to "scinew"
+//
 // Revision 1.3  2000/11/22 17:30:16  moulding
 // added extern "C" make functions for input and output ports (to be used
 // by the autoport facility).
