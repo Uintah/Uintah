@@ -123,8 +123,10 @@ void ICE::problemSetup(const ProblemSpecP& prob_spec, GridP& grid,
   exch_ps->require("momentum",d_K_mom);
   exch_ps->require("heat",d_K_heat);
 
-  cout << "K_mom = " << d_K_mom << endl;
-  cout << "K_heat = " << d_K_heat << endl;
+  for (int i = 0; i<(int)d_K_mom.size(); i++)
+    cout << "K_mom = " << d_K_mom[i] << endl;
+  for (int i = 0; i<(int)d_K_heat.size(); i++)
+    cout << "K_heat = " << d_K_heat[i] << endl;
 
   cout << "Number of ICE materials: " << d_sharedState->getNumICEMatls()<< endl;
 
@@ -1228,7 +1230,7 @@ void ICE::actuallyStep1d(const ProcessorGroup*,
   vector<double> b(numMatls);
   DenseMatrix beta(numMatls,numMatls),a(numMatls,numMatls),K(numMatls,numMatls);
   for (int i = 0; i < numMatls; i++ ) {
-      K[numMatls-1-i][i] = d_K_mom(i);
+      K[numMatls-1-i][i] = d_K_mom[i];
   }
 
   for(int m = 0; m < numMatls; m++){
@@ -2052,8 +2054,8 @@ void ICE::actuallyStep5b(const ProcessorGroup*,
   DenseMatrix K(numMatls,numMatls),H(numMatls,numMatls),a(numMatls,numMatls);
   
   for (int i = 0; i < numMatls; i++ ) {
-      K[numMatls-1-i][i] = d_K_mom(i);
-      H[numMatls-1-i][i] = d_K_heat(i);
+      K[numMatls-1-i][i] = d_K_mom[i];
+      H[numMatls-1-i][i] = d_K_heat[i];
   }
 
   for(int m = 0; m < numMatls; m++){
@@ -3184,6 +3186,10 @@ const TypeDescription* fun_getTypeDescription(ICE::eflux*)
 
 //
 // $Log$
+// Revision 1.66  2000/12/21 21:54:50  jas
+// The exchange coefficients are now vector<double> so that an arbitrary
+// number of materials may be specified.
+//
 // Revision 1.65  2000/12/20 00:30:56  jas
 // Added john_debug to get rid of all debugging output.
 //
