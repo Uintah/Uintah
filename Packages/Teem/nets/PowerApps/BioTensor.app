@@ -4333,6 +4333,7 @@ class BioTensorApp {
 		$which != $mods(RescaleColorMap-Isosurface) && \
 		$which != $mods(RescaleColorMap-Fibers) && \
 		$which != $mods(RescaleColorMap-Glyphs) && \
+		$which != $mods(RescaleColorMap2) && \
 	        $which != $mods(SampleField-FiberSeeds) && \
 	        $which != $mods(SampleField-GlyphSeeds)} {
 	    if {$msg_state == "Error"} {
