@@ -408,6 +408,7 @@ OpenGL::redraw_loop()
     for(int i=0;i<nreply;i++) {
       recv_mailbox_.send(REDRAW_DONE);
     }
+    view_window_->gui_total_frames_.set(view_window_->gui_total_frames_.get()+1);
   } // end for(;;)
 }
 
@@ -959,14 +960,14 @@ OpenGL::redraw_frame()
 	throttle.wait_for_time(realtime);
       }
       //gui->lock();
+      gui_->execute("update idletasks");
+      view_window_->gui_total_frames_.set(view_window_->gui_total_frames_.get()+1);
 
       // Show the pretty picture
 #if defined(HAVE_PBUFFER)
       if (!have_pbuffer_ ||(!doing_movie_p_ && !doing_image_p_))
 #endif
 	tk_gl_context_->swap();
-      view_window_->gui_total_frames_.set(view_window_->gui_total_frames_.get()+1);
-      gui_->execute("update idletasks");
     }
     throttle.stop();
     double fps;
