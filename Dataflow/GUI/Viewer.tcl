@@ -98,9 +98,9 @@ itcl_class ViewWindow {
 	if {![info exists $this-bgcolor-b]} {set $this-bgcolor-b 0}
 
 	global $this-sbase
-	if {![info exists $this-sbase]} {set $this-sbase 0.5}
+	if {![info exists $this-sbase]} {set $this-sbase 1.0}
 	global $this-sr
-	if {![info exists $this-sr]} {set $this-sr 0}
+	if {![info exists $this-sr]} {set $this-sr 1}
 	global $this-do_stereo
 	if {![info exists $this-do_stereo]} {set $this-do_stereo 0}
     }
@@ -596,11 +596,12 @@ itcl_class ViewWindow {
 		-command "$this-c redraw"
 	pack $m.stereo -side top
 	
-	scale $m.sbase -variable $this-sbase -length 100 -from 0.1 -to 10 \
-		-resolution 0.1 -orient horizontal -label "Base Scale:"
+	scale $m.sbase -variable $this-sbase -length 100 -from 0.1 -to 4 \
+		-resolution 0.05 -orient horizontal -label "Fusion Scale:" \
+		-command "$this-c redraw"
 	pack $m.sbase -side top
-	checkbutton $m.sr -text "Rot. Shift" -variable $this-sr -anchor w
-	pack $m.sr -side top
+#	checkbutton $m.sr -text "Fixed\nFocal\nDepth" -variable $this-sr -anchor w
+#	pack $m.sr -side top
 	
 	# the stuff below doesn't have corresponding c-functions
 	
