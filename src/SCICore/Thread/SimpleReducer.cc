@@ -50,7 +50,7 @@ SimpleReducer::collectiveResize(int proc, int n)
 	    delete[] d_p;
 	}
         d_join[0]=new joinArray[n];
-        d_join[0]=new joinArray[n];
+        d_join[1]=new joinArray[n];
         d_p=new pdata[n];
         for(int i=0;i<n;i++)
 	    d_p[i].d_buf=0;
@@ -100,6 +100,9 @@ SimpleReducer::max(int proc, int n, double mymax)
 
 //
 // $Log$
+// Revision 1.4  1999/09/21 23:19:06  dmw
+// fixed a bug Steve missed... ;)
+//
 // Revision 1.3  1999/09/21 18:37:20  sparker
 // Fixed memory allocation bug
 //
