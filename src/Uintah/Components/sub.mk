@@ -8,13 +8,19 @@ SRCDIR := Uintah/Components
 
 SUBDIRS :=  $(SRCDIR)/DataArchiver \
 	$(SRCDIR)/Schedulers $(SRCDIR)/SimulationController \
-	$(SRCDIR)/MPM $(SRCDIR)/ICE \
+	$(SRCDIR)/MPM \
 	$(SRCDIR)/Arches $(SRCDIR)/ProblemSpecification
+
+#	$(SRCDIR)/MPM $(SRCDIR)/ICE \
 
 include $(SRCTOP)/scripts/recurse.mk
 
 #
 # $Log$
+# Revision 1.8  2000/06/08 02:25:12  jas
+# Don't build ICE since it has some stand alone code dependencies that
+# still need to be sorted out.
+#
 # Revision 1.7  2000/05/15 19:39:33  sparker
 # Implemented initial version of DataArchive (output only so far)
 # Other misc. cleanups
