@@ -43,6 +43,7 @@
 #define SCI_GEOMTEXRECTANGLE_H 1
 
 #include <Core/Geom/GeomObj.h>
+#include <Core/Geom/ShaderProgramARB.h>
 #include <Core/Geometry/Point.h>
 
 namespace SCIRun {
@@ -62,8 +63,8 @@ class SCICORESHARE GeomTexRectangle : public GeomObj {
   bool interp_;
   bool trans_;
   bool use_normal_;
-  bool mInit_;
-  bool mSupported_;
+  FragmentProgramARB *shader_;
+  FragmentProgramARB *fog_shader_;
   void	bind_texture();
 public:
   GeomTexRectangle();
@@ -78,7 +79,6 @@ public:
   void interpolate(bool b){ interp_ = b; }
   virtual GeomObj* clone();
   virtual void get_bounds(BBox&);
-  bool shaders_supported();
 
 #ifdef SCI_OPENGL
   virtual void draw(DrawInfoOpenGL*, Material*, double );

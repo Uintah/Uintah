@@ -68,8 +68,8 @@ GeomTexRectangle::GeomTexRectangle()
     interp_(false),
     trans_(false),
     use_normal_(false),
-    mInit_(false),
-    mSupported_(false)
+    shader_(0),
+    fog_shader_(0)
 {
 }
 
@@ -78,6 +78,8 @@ GeomTexRectangle::GeomTexRectangle( const GeomTexRectangle &copy ) : GeomObj(cop
 
 GeomTexRectangle::~GeomTexRectangle()
 {
+  if(shader_) delete shader_;
+  if(fog_shader_) delete fog_shader_;
 }
 
 void
