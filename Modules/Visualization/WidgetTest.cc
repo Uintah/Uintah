@@ -125,6 +125,9 @@ void WidgetTest::execute()
       for(i = 0; i < NumWidgetTypes; i++)
 	 widgets[i]->Connect(ogeom);
    }
+   cerr << "There are currently " << ogeom->getNRoe() << " active roe\n";
+   GeometryData* data=ogeom->getData(0, GEOM_ALLDATA);
+   cerr << "data=" << data << endl;
 }
 
 void WidgetTest::widget_moved(int last)
