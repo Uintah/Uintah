@@ -65,7 +65,7 @@ namespace Volume {
 
 struct UndoItem
 {
-  enum Action { UNDO_SELECT, UNDO_MOVE, UNDO_ADD, UNDO_DELETE };
+  enum Action { UNDO_SELECT, UNDO_MOVE, UNDO_ADD, UNDO_DELETE, UNDO_COLOR };
 
   int action_;
   int selected_;
@@ -216,8 +216,27 @@ EditTransferFunc2::tcl_command(GuiArgs& args, void* userdata)
   } else if (args[1] == "closewindow") {
     //cerr << "EVENT: close" << endl;
     ctx_ = 0;
-  } else if (args[1] == "color_change") {
-    update_from_gui();
+  } else if (!args[1].compare(0, 13, "color_change-")) {
+    int n;
+    string_to_int(args[1].substr(13), n);
+
+    gui_num_entries_.reset();
+    resize_gui();
+    gui_color_r_[n]->reset();
+    gui_color_g_[n]->reset();
+    gui_color_b_[n]->reset();
+    gui_color_a_[n]->reset();
+    const double r = gui_color_r_[n]->get();
+    const double g = gui_color_g_[n]->get();
+    const double b = gui_color_b_[n]->get();
+    const double a = gui_color_a_[n]->get();
+    Color c(widgets_[n]->color());
+    if (r != c.r() || g != c.g() || b != c.b() || a != widgets_[n]->alpha())
+    {
+      undo_stack_.push(UndoItem(UndoItem::UNDO_COLOR, n,
+				widgets_[n]->clone()));
+      update_from_gui();
+    }
   } else if (args[1] == "unpickle") {
     tcl_unpickle();
   } else if (args[1] == "addtriangle") {
@@ -271,7 +290,7 @@ EditTransferFunc2::presave()
     gui_wstate_[i]->set(widgets_[i]->tcl_pickle());
   }
 
-  // Deleta all of the unused variables.
+  // Delete all of the unused variables.
   for (i = widgets_.size(); i < gui_name_.size(); i++)
   {
     const string num = to_string(i);
@@ -332,6 +351,11 @@ EditTransferFunc2::undo()
       gui_update = true;
       break;
       
+    case UndoItem::UNDO_COLOR:
+      delete widgets_[item.selected_];
+      widgets_[item.selected_] = item.widget_;
+      gui_update = true;
+      break;
     }
     undo_stack_.pop();
     cmap_dirty_ = true;
