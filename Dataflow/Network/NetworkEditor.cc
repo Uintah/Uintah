@@ -379,6 +379,7 @@ void NetworkEditor::save_network(const clString& filename)
     out << "return\n";
     out << "######################\n";
     out << "::netedit dontschedule\n";
+    out << "\n";
     net->read_lock();
 
     // Added by Mohamed Dekhil for saving extra information
@@ -754,6 +755,9 @@ void postMessage(const clString& errmsg, bool err)
 
 //
 // $Log$
+// Revision 1.19  2000/11/02 21:47:20  dmw
+// fixed formatting
+//
 // Revision 1.18  2000/10/24 05:57:41  moulding
 // new module maker Phase 2: new module maker goes online
 //
