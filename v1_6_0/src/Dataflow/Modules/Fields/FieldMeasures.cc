@@ -104,6 +104,12 @@ FieldMeasures::measure_pointcloud()
   if (z) ncols++;
   PointCloudMesh::Node::size_type nnodes;
   mesh->size(nnodes);
+  if (ncols<=0) {
+    warning("No measures selected.  Sending empty matrix");
+    MatrixHandle matH=0;
+    omp->send(matH);
+    return;
+  }
   DenseMatrix *dm = scinew DenseMatrix(nnodes, ncols);
   
   PointCloudMesh::Node::iterator ni, nie;
@@ -157,6 +163,12 @@ FieldMeasures::measure_trisurf()
     if (valence) ncols++;
     TriSurfMesh::Node::size_type nnodes;
     mesh->size(nnodes);
+    if (ncols<=0) {
+      warning("No measures selected.  Sending empty matrix");
+      MatrixHandle matH=0;
+      omp->send(matH);
+      return;
+    }
     DenseMatrix *dm = scinew DenseMatrix(nnodes, ncols);
     TriSurfMesh::Node::iterator ni, nie;
     mesh->begin(ni); mesh->end(nie);
@@ -179,6 +191,12 @@ FieldMeasures::measure_trisurf()
     if (length) ncols++;
     TriSurfMesh::Edge::size_type nedges;
     mesh->size(nedges);
+    if (ncols<=0) {
+      warning("No measures selected.  Sending empty matrix");
+      MatrixHandle matH=0;
+      omp->send(matH);
+      return;
+    }
     DenseMatrix *dm = scinew DenseMatrix(nedges, ncols);
     TriSurfMesh::Edge::iterator ni, nie;
     mesh->begin(ni); mesh->end(nie);
@@ -206,6 +224,12 @@ FieldMeasures::measure_trisurf()
     if (elemSize) ncols++;
     TriSurfMesh::Elem::size_type nelems;
     mesh->size(nelems);
+    if (ncols<=0) {
+      warning("No measures selected.  Sending empty matrix");
+      MatrixHandle matH=0;
+      omp->send(matH);
+      return;
+    }
     DenseMatrix *dm = scinew DenseMatrix(nelems, ncols);
     TriSurfMesh::Elem::iterator ei, eie;
     mesh->begin(ei); mesh->end(eie);
@@ -258,6 +282,12 @@ FieldMeasures::measure_tetvol()
     if (valence) ncols++;
     TetVolMesh::Node::size_type nnodes;
     mesh->size(nnodes);
+    if (ncols<=0) {
+      warning("No measures selected.  Sending empty matrix");
+      MatrixHandle matH=0;
+      omp->send(matH);
+      return;
+    }
     DenseMatrix *dm = scinew DenseMatrix(nnodes, ncols);
     TetVolMesh::Node::iterator ni, nie;
     mesh->begin(ni); mesh->end(nie);
@@ -285,6 +315,12 @@ FieldMeasures::measure_tetvol()
     if (length) ncols++;
     TetVolMesh::Edge::size_type nedges;
     mesh->size(nedges);
+    if (ncols<=0) {
+      warning("No measures selected.  Sending empty matrix");
+      MatrixHandle matH=0;
+      omp->send(matH);
+      return;
+    }
     DenseMatrix *dm = scinew DenseMatrix(nedges, ncols);
     TetVolMesh::Edge::iterator ni, nie;
     mesh->begin(ni); mesh->end(nie);
@@ -312,6 +348,12 @@ FieldMeasures::measure_tetvol()
     if (elemSize) ncols++;
     TetVolMesh::Elem::size_type nelems;
     mesh->size(nelems);
+    if (ncols<=0) {
+      warning("No measures selected. Sending empty matrix");
+      MatrixHandle matH=0;
+      omp->send(matH);
+      return;
+    }
     DenseMatrix *dm = scinew DenseMatrix(nelems, ncols);
     TetVolMesh::Elem::iterator ei, eie;
     mesh->begin(ei); mesh->end(eie);
@@ -363,6 +405,12 @@ FieldMeasures::measure_quadtetvol()
     if (valence) ncols++;
     QuadraticTetVolMesh::Node::size_type nnodes;
     mesh->size(nnodes);
+    if (ncols<=0) {
+      warning("No measures selected.  Sending empty matrix");
+      MatrixHandle matH=0;
+      omp->send(matH);
+      return;
+    }
     DenseMatrix *dm = scinew DenseMatrix(nnodes, ncols);
     QuadraticTetVolMesh::Node::iterator ni, nie;
     mesh->begin(ni); mesh->end(nie);
@@ -390,6 +438,12 @@ FieldMeasures::measure_quadtetvol()
     if (length) ncols++;
     QuadraticTetVolMesh::Edge::size_type nedges;
     mesh->size(nedges);
+    if (ncols<=0) {
+      warning("No measures selected.  Sending empty matrix");
+      MatrixHandle matH=0;
+      omp->send(matH);
+      return;
+    }
     DenseMatrix *dm = scinew DenseMatrix(nedges, ncols);
     QuadraticTetVolMesh::Edge::iterator ni, nie;
     mesh->begin(ni); mesh->end(nie);
@@ -417,6 +471,12 @@ FieldMeasures::measure_quadtetvol()
     if (elemSize) ncols++;
     QuadraticTetVolMesh::Elem::size_type nelems;
     mesh->size(nelems);
+    if (ncols<=0) {
+      warning("No measures selected.  Sending empty matrix");
+      MatrixHandle matH=0;
+      omp->send(matH);
+      return;
+    }
     DenseMatrix *dm = scinew DenseMatrix(nelems, ncols);
     QuadraticTetVolMesh::Elem::iterator ei, eie;
     mesh->begin(ei); mesh->end(eie);
@@ -474,6 +534,12 @@ FieldMeasures::measure_latvol()
     if (valence) ncols++;
     LatVolMesh::Node::size_type nnodes;
     mesh->size(nnodes);
+    if (ncols<=0) {
+      warning("No measures selected.  Sending empty matrix");
+      MatrixHandle matH=0;
+      omp->send(matH);
+      return;
+    }
     DenseMatrix *dm = scinew DenseMatrix(nnodes, ncols);
     LatVolMesh::Node::iterator ni, nie;
     mesh->begin(ni); mesh->end(nie);
@@ -496,6 +562,12 @@ FieldMeasures::measure_latvol()
     if (length) ncols++;
     LatVolMesh::Edge::size_type nedges;
     mesh->size(nedges);
+    if (ncols<=0) {
+      warning("No measures selected.  Sending empty matrix");
+      MatrixHandle matH=0;
+      omp->send(matH);
+      return;
+    }
     DenseMatrix *dm = scinew DenseMatrix(nedges, ncols);
     LatVolMesh::Edge::iterator ni, nie;
     mesh->begin(ni); mesh->end(nie);
@@ -523,6 +595,12 @@ FieldMeasures::measure_latvol()
     if (elemSize) ncols++;
     LatVolMesh::Elem::size_type nelems;
     mesh->size(nelems);
+    if (ncols<=0) {
+      warning("No measures selected.  Sending empty matrix");
+      MatrixHandle matH=0;
+      omp->send(matH);
+      return;
+    }
     DenseMatrix *dm = scinew DenseMatrix(nelems, ncols);
     LatVolMesh::Elem::iterator ei, eie;
     mesh->begin(ei); mesh->end(eie);
@@ -547,7 +625,6 @@ FieldMeasures::measure_latvol()
   }
 
 }
-
 
 void
 FieldMeasures::execute()
@@ -589,4 +666,5 @@ FieldMeasures::execute()
 
 
 } // End namespace SCIRun
+
 
