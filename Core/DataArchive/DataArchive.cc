@@ -761,7 +761,7 @@ DataArchive::TimeHashMaps::TimeHashMaps(DataArchive *archive,
   dbg << "TimeHashMaps::TimeHashMaps::estimate = "<<estimate<<", default_cache_size = "<<default_cache_size<<"\n";
 }
 
-inline ProblemSpecP
+ProblemSpecP
 DataArchive::TimeHashMaps::findVariable(const string& name,
 					const Patch* patch, int matl,
 					double time, XMLURL& foundUrl)
@@ -772,7 +772,7 @@ DataArchive::TimeHashMaps::findVariable(const string& name,
     timeData->findVariable(name, patch, matl, foundUrl);
 }
 
-inline DataArchive::MaterialHashMaps*
+DataArchive::MaterialHashMaps*
 DataArchive::TimeHashMaps::findPatchData(double time, const Patch* patch)
 {
   //  cerr << "TimeHashMaps::findPatchData\n";
@@ -875,7 +875,7 @@ DataArchive::PatchHashMaps::~PatchHashMaps() {
 }
 
 void DataArchive::PatchHashMaps::init(XMLURL tsUrl, ProblemSpecP tsTopNode,
-				      int processor, int numProcessors)
+				      int /*processor*/, int /*numProcessors*/)
 {
   //  cerr << "PatchHashMaps["<<time<<"]::init\n";
   d_allParsed = false;
@@ -935,7 +935,7 @@ void DataArchive::PatchHashMaps::purgeCache()
 void DataArchive::PatchHashMaps::parseProc(int proc)
 {
   //  cerr << "PatchHashMaps::parseProc("<<proc<<")\n";
-  if (proc < 0 || proc >= d_xmlUrls.size()) {
+  if (proc < 0 || proc >= (int)d_xmlUrls.size()) {
     cerr << "DataArchive::PatchHashMaps::parseOne:ERROR processor index ("<<proc<<") is out of bounds [0, "<<d_xmlUrls.size()<<"]\n";
     return;
   }
@@ -986,7 +986,7 @@ void DataArchive::PatchHashMaps::parseProc(int proc)
 // This is the function that parses all the patch.xml files.
 void DataArchive::PatchHashMaps::parse()
 {
-  for (size_t proc = 0; proc < d_xmlUrls.size(); proc++) {
+  for (int proc = 0; proc < (int)d_xmlUrls.size(); proc++) {
     parseProc(proc);
   }
   
@@ -999,7 +999,7 @@ void DataArchive::PatchHashMaps::parse()
   d_lastFoundIt = d_matHashMaps.begin();
 }
 
-inline ProblemSpecP
+ProblemSpecP
 DataArchive::PatchHashMaps::findVariable(const string& name,
 					 const Patch* patch,
 					 int matl,
@@ -1045,7 +1045,7 @@ DataArchive::PatchHashMaps::findPatchData(const Patch* patch)
       // first attempt.  Future attemps could perhaps be smarter.
       int proc_guess = patchid;
       // Only look for it if we actually parse a new file, and if the file exists
-      if (!d_xmlParsed[proc_guess] && proc_guess >= 0 && proc_guess < d_xmlUrls.size()) {
+      if (!d_xmlParsed[proc_guess] && proc_guess >= 0 && proc_guess < (int)d_xmlUrls.size()) {
         //        cerr << "proc_guess =  "<<proc_guess<<"\n";
         parseProc(proc_guess);
         // Look for it again
