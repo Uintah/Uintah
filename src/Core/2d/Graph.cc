@@ -23,6 +23,7 @@ using std::ostringstream;
 #include <Core/Thread/Mutex.h>
 #include <Core/Thread/ConditionVariable.h>
 #include <Core/Thread/Runnable.h>
+#include <Core/Thread/Thread.h>
 #include <Core/GuiInterface/TclObj.h>
 #include <Core/GuiInterface/GuiInterface.h>
 
