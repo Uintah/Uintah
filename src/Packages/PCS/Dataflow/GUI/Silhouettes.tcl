@@ -38,6 +38,20 @@ itcl_class PCS_Visualization_Silhouettes {
     constructor {config} {
         set name Silhouettes
         set_defaults
+
+        global $this-build_field
+        global $this-build_geom
+	global $this-color-r
+	global $this-color-g
+	global $this-color-b
+        global $this-autoexecute
+
+        set $this-build_field 0
+        set $this-build_geom  1
+	set $this-color-r 0.4
+	set $this-color-g 0.2
+	set $this-color-b 0.9
+        set $this-autoexecute 1
     }
 
     method set_defaults {} {
@@ -52,8 +66,84 @@ itcl_class PCS_Visualization_Silhouettes {
 
 	toplevel $w
 
+	iwidgets::labeledframe $w.opt -labelpos nw -labeltext "Options"
+	set opt [$w.opt childsite]
+	
+	frame $opt.left
+	checkbutton $opt.left.auto -text "Execute automatically" \
+	    -variable $this-autoexecute
+
+	checkbutton $opt.left.field -text "Build Output Field" \
+	    -variable $this-build_field
+
+	checkbutton $opt.left.geom -text "Build Output Geometry" \
+	    -variable $this-build_geom
+
+	pack $opt.left.field -side top -anchor nw -pady 5
+	pack $opt.left.geom  -side top -anchor nw -pady 5
+	pack $opt.left.auto  -side top -anchor nw -pady 5
+
+	frame $opt.right
+	
+	addColorSelection $opt.right $this-color
+
+	pack $opt.left $opt.right -side left -pady 5
+
+	pack $w.opt -side top
 
 	makeSciButtonPanel $w $w $this
 	moveToCursor $w
     }
+    method raiseColor {swatch color} {
+	 global $color
+	 set window .ui[modname]
+	 if {[winfo exists $window.color]} {
+	     SciRaise $window.color
+	     return
+	 } else {
+	     makeColorPicker $window.color $color \
+		     "$this setColor $swatch $color" \
+		     "destroy $window.color"
+	 }
+    }
+
+    method setColor {swatch color} {
+	 global $color
+	 global $color-r
+	 global $color-g
+	 global $color-b
+	 set ir [expr int([set $color-r] * 65535)]
+	 set ig [expr int([set $color-g] * 65535)]
+	 set ib [expr int([set $color-b] * 65535)]
+
+	 set window .ui[modname]
+	 $swatch config -background [format #%04x%04x%04x $ir $ig $ib]
+         $this-c needexecute
+    }
+
+    method addColorSelection {frame color} {
+	 #add node color picking 
+	 global $color
+	 global $color-r
+	 global $color-g
+	 global $color-b
+	 set ir [expr int([set $color-r] * 65535)]
+	 set ig [expr int([set $color-g] * 65535)]
+	 set ib [expr int([set $color-b] * 65535)]
+	 
+	 frame $frame.colorFrame
+	 frame $frame.colorFrame.swatch -relief ridge -borderwidth \
+		 4 -height 0.8c -width 1.0c \
+		 -background [format #%04x%04x%04x $ir $ig $ib]
+	 
+	 set cmmd "$this raiseColor $frame.colorFrame.swatch $color"
+	 button $frame.colorFrame.set_color \
+		 -text "Default Color" -command $cmmd
+	 
+	 #pack the node color frame
+	 pack $frame.colorFrame.set_color $frame.colorFrame.swatch -side left
+	 pack $frame.colorFrame -side left -padx 3 -pady 3
+
+    }
+
 }

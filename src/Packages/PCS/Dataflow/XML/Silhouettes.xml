@@ -13,11 +13,19 @@
         <name>Input Field</name>
         <datatype>SCIRun::Field</datatype>
       </port>
+      <port>
+        <name>Optional Color Map</name>
+	<datatype>SCIRun::ColorMap</datatype>
+      </port>
     </inputs>
     <outputs>
       <port>
         <name>Silhouettes</name>
         <datatype>SCIRun::Field</datatype>
+      </port>
+      <port>
+        <name>Silouettes</name>
+	<datatype>SCIRun::Geometry</datatype>
       </port>
       <port>
         <name>View</name>
