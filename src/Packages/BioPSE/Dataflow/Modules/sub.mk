@@ -29,6 +29,7 @@ SUBDIRS := \
 	$(SRCDIR)/Inverse\
 	$(SRCDIR)/LeadField\
 	$(SRCDIR)/Visualization\
+	$(SRCDIR)/DataIO\
 #[INSERT NEW CATEGORY DIR HERE]
 
 include $(SCIRUN_SCRIPTS)/recurse.mk
