@@ -32,6 +32,7 @@ SRCS     += \
 	$(SRCDIR)/ApplyInterpolant.cc\
 	$(SRCDIR)/AttractNormals.cc\
 	$(SRCDIR)/BuildInterpolant.cc\
+	$(SRCDIR)/BuildMapping.cc\
 	$(SRCDIR)/CastMLVtoHV.cc\
 	$(SRCDIR)/CastTVtoMLV.cc\
 	$(SRCDIR)/Centroids.cc\
