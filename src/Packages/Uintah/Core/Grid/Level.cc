@@ -16,6 +16,7 @@
 #include <map>
 #include <Packages/Uintah/Core/Grid/BoundCondFactory.h>
 #include <Packages/Uintah/Core/Grid/BoundCondBase.h>
+#include <math.h>
 
 #ifdef SELECT_RANGETREE
 #include <Packages/Uintah/Core/Grid/PatchRangeTree.h>
@@ -369,7 +370,9 @@ void Level::finalizeLevel(bool periodicX, bool periodicY, bool periodicZ)
   BBox bbox;
   getSpatialRange(bbox);
   Box domain(bbox.min(), bbox.max());
-  IntVector extent = getCellIndex(bbox.max()) - getCellIndex(bbox.min());
+  Vector vextent = positionToIndex(bbox.max()) - positionToIndex(bbox.min());
+  IntVector extent((int)rint(vextent.x()), (int)rint(vextent.y()),
+		   (int)rint(vextent.z()));
   d_periodicBoundaries = IntVector(periodicX ? 1 : 0, periodicY ? 1 : 0,
 				   periodicZ ? 1 : 0);
   IntVector periodicBoundaryRange = d_periodicBoundaries * extent;
