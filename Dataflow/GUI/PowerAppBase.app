@@ -302,6 +302,19 @@ class PowerAppBase {
 	    disableModule $mods($m) 0
 	}
 	array donesearch mods $searchID
+
+	reset_defaults
+    }
+
+    #########################
+    ### reset_defaults
+    #########################
+    # Method that should be called when loading a session.  
+    method reset_defaults {} {
+	global Subnet
+	foreach module $Subnet(Subnet0_Modules) {
+	    $module set_defaults
+	}
     }
     
 
