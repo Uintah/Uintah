@@ -64,9 +64,19 @@ WARNING
 	 // Basic burn methods
 
 	  bool isBurnable();
-          virtual void checkIfIgnited() = 0;
+          virtual void checkIfIgnited(const Patch* patch,
+				      const MPMMaterial* matl,
+				      DataWarehouseP& old_dw,
+				      DataWarehouseP& new_dw) = 0;
+
           virtual void computeMassRate() = 0;
           virtual void updatedParticleMassAndVolume() = 0;
+
+          virtual void addCheckIfComputesAndRequires(Task* task,
+					      const MPMMaterial* matl,
+					      const Patch* patch,
+					      DataWarehouseP& old_dw,
+					      DataWarehouseP& new_dw) const = 0;
 	
        protected:
 	  bool d_burnable;
@@ -78,6 +88,9 @@ WARNING
 } // end namespace Uintah
    
 // $Log$
+// Revision 1.2  2000/06/06 18:04:01  guilkey
+// Added more stuff for the burn models.  Much to do still.
+//
 // Revision 1.1  2000/06/02 22:48:25  jas
 // Added infrastructure for Burn models.
 //

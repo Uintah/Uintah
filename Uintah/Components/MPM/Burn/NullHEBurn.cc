@@ -39,8 +39,21 @@ NullHEBurn::~NullHEBurn()
 
 }
 
-void NullHEBurn::checkIfIgnited()
+void NullHEBurn::addCheckIfComputesAndRequires(Task* task,
+                                               const MPMMaterial* matl,
+                                               const Patch* patch,
+                                               DataWarehouseP& old_dw,
+                                               DataWarehouseP& new_dw) const
 {
+
+}
+
+void NullHEBurn::checkIfIgnited(const Patch* patch,
+				const MPMMaterial* matl,
+				DataWarehouseP& old_dw,
+				DataWarehouseP& new_dw)
+{
+
 }
 
 void NullHEBurn::computeMassRate()
@@ -52,6 +65,9 @@ void NullHEBurn::updatedParticleMassAndVolume()
 }
 
 // $Log$
+// Revision 1.3  2000/06/06 18:04:02  guilkey
+// Added more stuff for the burn models.  Much to do still.
+//
 // Revision 1.2  2000/06/03 05:22:06  sparker
 // Added .cvsignore
 //
