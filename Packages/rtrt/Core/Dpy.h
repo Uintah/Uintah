@@ -43,6 +43,8 @@ class Dpy : public Runnable {
   
   int frameless;       // wether it's frameless or not...
   int synch_frameless; // 1 if frameless rendering is supposed to synchronize..
+
+  bool display_frames; // whether or not to display the rendering
   
   void get_input();         // some common code for frameless vs. not frameless
   
@@ -51,7 +53,7 @@ class Dpy : public Runnable {
 public:
   Dpy(Scene* scene, char* criteria1, char* criteria2,
       int nworkers, bool bench, int ncounters, int c0, int c1,
-      float xScale,float yScale,int frameless=0);
+      float xScale,float yScale, bool display_frames, int frameless=0);
   virtual ~Dpy();
   virtual void run();
   Barrier* get_barrier();

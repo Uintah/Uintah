@@ -120,10 +120,11 @@ namespace rtrt {
 
 Dpy::Dpy(Scene* scene, char* criteria1, char* criteria2,
 	 int nworkers, bool bench, int ncounters, int c0, int c1,
-	 float, float, int frameless)
+	 float, float, bool display_frames, int frameless)
   : scene(scene), criteria1(criteria1), criteria2(criteria2),
     nworkers(nworkers), bench(bench), ncounters(ncounters),
-    c0(c0), c1(c1), frameless(frameless),synch_frameless(0)
+    c0(c0), c1(c1), frameless(frameless),synch_frameless(0),
+    display_frames(display_frames)
 {
   //  barrier=new Barrier("Frame end", nworkers+1);
   barrier=new Barrier("Frame end");
@@ -873,9 +874,17 @@ void Dpy::run()
     counters=new Counters(ncounters, c0, c1);
   else
     counters=0;
-  xlock.lock();
+
+  ////////////////////////////////////////////////////////////
+  // open the display
   priv->xres=scene->get_image(0)->get_xres();
   priv->yres=scene->get_image(0)->get_yres();
+  Window win;
+  GLuint fontbase, fontbase2;
+  XFontStruct* fontInfo2;
+  xlock.lock();
+  if (display_frames) {
+    
   // Open an OpenGL window
   priv->dpy=XOpenDisplay(NULL);
   if(!priv->dpy){
@@ -919,7 +928,7 @@ void Dpy::run()
   atts.border_pixel = 0;
   atts.colormap=cmap;
   atts.event_mask=StructureNotifyMask|ExposureMask|ButtonPressMask|ButtonReleaseMask|ButtonMotionMask|KeyPressMask;
-  Window win=XCreateWindow(priv->dpy, RootWindow(priv->dpy, screen),
+  win=XCreateWindow(priv->dpy, RootWindow(priv->dpy, screen),
 			   0, 0, priv->xres, priv->yres, 0, vi->depth,
 			   InputOutput, vi->visual, flags, &atts);
   char* p="real time ray tracer";
@@ -946,7 +955,7 @@ void Dpy::run()
   unsigned int first = fontInfo->min_char_or_byte2;
   unsigned int last = fontInfo->max_char_or_byte2;
 
-  GLuint fontbase = glGenLists((GLuint) last+1);
+  fontbase = glGenLists((GLuint) last+1);
   if (fontbase == 0) {
     printf ("out of display lists\n");
     exit (0);
@@ -975,12 +984,13 @@ void Dpy::run()
 
   glShadeModel(GL_FLAT);
   glReadBuffer(GL_BACK);
-    
+  
   for(;;){
     XEvent e;
     XNextEvent(priv->dpy, &e);
     if(e.type == MapNotify)
       break;
+  }
   }
   int rendering_scene=0;
   priv->showing_scene=1;
@@ -1056,6 +1066,8 @@ void Dpy::run()
 
   if (!frameless) {
 
+    // counter
+    int counter = 1;
     for(;;){
       // Sync with the rendering processes...
       frame++;
@@ -1119,7 +1131,15 @@ void Dpy::run()
 	}
       }
       drawstats[showing_scene]->add(Time::currentSeconds(), Color(0,1,0));
+      // sync all the workers.  scene->get_image(rendering_scene) should now
+      // be completed
       barrier->wait(nworkers+1);
+      // dump the frame and quit for now
+      if (counter == 0) {
+	scene->get_image(showing_scene)->save("displayless.raw");
+	cerr <<"Wrote frame to displayless.raw\n";
+      }
+      counter--;
       // This is the last stat for the rendering scene (cyan)
       drawstats[showing_scene]->add(Time::currentSeconds(), Color(0,1,1));
       counters->end_frame();
@@ -1151,6 +1171,8 @@ void Dpy::run()
 	}
       }
 
+      bool dontswap;
+      if (display_frames) {
 #ifdef GL_INCLUDE
       glMatrixMode(GL_PROJECTION);
       glLoadIdentity();
@@ -1161,7 +1183,7 @@ void Dpy::run()
 #endif
 
 #if 1
-      bool dontswap=false;
+      dontswap=false;
       if(!bench){
 	if(scene->no_aa || last_changed){
 	  accum_count=0;
@@ -1194,6 +1216,7 @@ void Dpy::run()
       glClearColor(.3,.3,.3, 1);
       glClear(GL_COLOR_BUFFER_BIT);
 #endif
+      }
       Image* im=scene->get_image(showing_scene);
       midchanged=changed;
       last_changed=midchanged;
@@ -1201,6 +1224,7 @@ void Dpy::run()
       st->add(Time::currentSeconds(), Color(0,0,1));
       //      st->add(Time::currentSeconds(), Color(0.4,0.2,1));
       priv->camera=scene->get_camera(showing_scene);
+      if (display_frames) {
       // color 
       st->add(Time::currentSeconds(), Color(1,0.5,0));
       if(!bench && draw_framerate){
@@ -1251,7 +1275,8 @@ void Dpy::run()
       XFlush(priv->dpy);
 #endif
       st->add(Time::currentSeconds(), Color(1,0.5,0.3));
-
+      } // end if (display_frames)
+      
       if(scene->logframes){
 	  scene->frameno++;
 	  if(!scene->frametime_fp){
@@ -1272,8 +1297,9 @@ void Dpy::run()
 		  up.x(), up.y(), up.z(),
 		  fov);
       }
-	
-      get_input(); // this does all of the x stuff...
+
+      if (display_frames)
+	get_input(); // this does all of the x stuff...
 
       if(im->get_xres() != priv->xres || im->get_yres() != priv->yres || im->get_stereo() != stereo){
 	delete im;
