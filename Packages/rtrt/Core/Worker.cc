@@ -231,6 +231,7 @@ void Worker::run()
 	      stime = SCIRun::Time::currentSeconds();
 	    for(int y=sy;y<ey;y++){
 	      for(int x=sx;x<ex;x++){
+		//camera->makeRay(ray, x+xoffset+1, y+yoffset, ixres, iyres);
 		camera->makeRayL(ray, x+xoffset, y+yoffset, ixres, iyres);
 		traceRay(result, ray, 0, 1.0, Color(0,0,0), &cx);
 		if( !hotSpotMode ) {
@@ -243,15 +244,16 @@ void Worker::run()
 		}
 	      }
 	      for(int x=sx;x<ex;x++){
+		//camera->makeRay(ray, x+xoffset, y+yoffset, ixres, iyres);
 		camera->makeRayR(ray, x+xoffset, y+yoffset, ixres, iyres);
 		traceRay(result, ray, 0, 1.0, Color(0,0,0), &cx);
 		if( !hotSpotMode ) {
-		    (*image)(x,y).set(result);
+		    (*image)(x,y+yres).set(result);
 		} else {
 		    double etime=SCIRun::Time::currentSeconds();
 		    double dt=etime-stime;	
 		    stime=etime;
-		    (*image)(x,y).set(CMAP(dt));
+		    (*image)(x,y+yres).set(CMAP(dt));
 		}
 	      }
 	    }
