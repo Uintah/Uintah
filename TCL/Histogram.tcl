@@ -219,6 +219,7 @@ itcl_class Histogram {
 	    .ui$this.f.canvas coords left \
 		    [expr $rangeleft-5] $ymax $rangeleft $ymin
 	    $this repaint
+#	    $this-c left [$leftval]
 	}
     }
 
@@ -231,6 +232,7 @@ itcl_class Histogram {
 	    .ui$this.f.canvas coords right \
 		    $rangeright $ymax [expr $rangeright+5] $ymin
 	    $this repaint
+#	    $this-c right [$rightval]
 	}
     }
 

@@ -52,6 +52,8 @@ public:
    void GetRange( double& left, double& right );
    void SetRange( const double left, const double right );
    
+   void GetMaxMin( double& left, double& right );
+
    int GetNumBuckets();
    void SetNumBuckets( const int nb );
    

@@ -80,7 +80,21 @@ Histogram::tcl_command(TCLArgs& args, void*)
       SetNumBuckets(numbuckets);
       TCL::execute(id+" ui");
    }
-}
+/*
+   else if(args[1] == "left"){   
+       double val;
+       if (args.count() != 3) {
+	   args.error("Histogram needs value");
+	   return;
+       }
+       if (!args[2].get_double(val)) {
+	   args.error("Histogram can't parse ratio `"+args[2]+"'");
+	   return;
+       }
+// Tell module to execute
+   }     
+*/
+}	
 
 
 void
@@ -218,6 +232,12 @@ Histogram::GetRange( double& left, double& right )
    right = r.get();
 }
 
+void
+Histogram::GetMaxMin( double& left, double& right )
+{
+    left = minval;
+    right = maxval;
+}
 
 void
 Histogram::SetRange( const double left, const double right )
