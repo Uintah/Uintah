@@ -41,7 +41,6 @@
 
 #include <sgi_stl_warnings_off.h>
 #include <iostream>
-#include <limits>
 #include <sgi_stl_warnings_on.h>
 
 using std::cerr;
@@ -544,11 +543,7 @@ TextureBuilderAlgo<FieldType>::fill_brick(TextureBrickHandle &brick,
               tex0[idx*4+3] =
                 (unsigned char)(Clamp((v - vmin)/(vmax-vmin), 0.0, 1.0)*255.0);
               Vector g = gfld->fdata()[*iter];
-              double gn = g.length();
-              if(gn > std::numeric_limits<float>::epsilon())
-                g.normalize();
-              else
-                g = Vector(0.0, 0.0, 0.0);
+              const double gn = g.safe_normalize();
               tex0[idx*4+0] = (unsigned char)((g.x()*0.5 + 0.5)*255);
               tex0[idx*4+1] = (unsigned char)((g.y()*0.5 + 0.5)*255);
               tex0[idx*4+2] = (unsigned char)((g.z()*0.5 + 0.5)*255);
@@ -598,11 +593,7 @@ TextureBuilderAlgo<FieldType>::fill_brick(TextureBrickHandle &brick,
               tex0[idx*4+3] =
                 (unsigned char)(Clamp((v - vmin)/(vmax-vmin), 0.0, 1.0)*255.0);
               Vector g = gfld->fdata()[*iter];
-              double gn = g.length();
-              if(gn > std::numeric_limits<float>::epsilon())
-                g.normalize();
-              else
-                g = Vector(0.0, 0.0, 0.0);
+              const double gn = g.safe_normalize();
               tex0[idx*4+0] = (unsigned char)((g.x()*0.5 + 0.5)*255);
               tex0[idx*4+1] = (unsigned char)((g.y()*0.5 + 0.5)*255);
               tex0[idx*4+2] = (unsigned char)((g.z()*0.5 + 0.5)*255);
