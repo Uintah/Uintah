@@ -328,7 +328,7 @@ set $m22-width 1
 set $m22-height 1
 set $m22-mapType 3
 set $m22-minRes 12
-set $m22-resolution 12
+set $m22-resolution 255
 set $m23-notes {}
 set $m23-show_status 1
 set $m23-isFixed 0

@@ -128,7 +128,7 @@ set $m3-width 1
 set $m3-height 1
 set $m3-mapType 3
 set $m3-minRes 12
-set $m3-resolution 12
+set $m3-resolution 255
 set $m4-notes {}
 set $m4-show_status 1
 set $m4-isoval 0
