@@ -10,7 +10,7 @@
  *  Copyright (C) 2000 SCI Group
  */
 
-#include <SCICore/Datatypes/NektarScalarField.h>
+#include <Nektar/Datatypes/NektarScalarField.h>
 #include <SCICore/Util/NotFinished.h>
 #include <SCICore/Containers/String.h>
 #include <SCICore/Malloc/Allocator.h>
@@ -20,6 +20,7 @@ using std::cerr;
 namespace Nektar {
   namespace Datatypes {
 
+    using namespace SCICore::Datatypes;
     using namespace SCICore::Math;
     
     static Persistent* maker()
@@ -32,7 +33,7 @@ namespace Nektar {
 						maker);
 
     NektarScalarField::NektarScalarField()
-      : ScalarField(UnstructuredGrid),
+      : ScalarField(ScalarField::UnstructuredGrid)
     {
     }
 
@@ -41,7 +42,7 @@ namespace Nektar {
     {
     }
     
-    ScalarField* NektarScalarField::clone()
+    NektarScalarField* NektarScalarField::clone()
     {
       NOT_FINISHED("NektarScalarField::clone()");
       return 0;
@@ -101,7 +102,7 @@ namespace Nektar {
     }
 
     int NektarScalarField::interpolate(const Point&, 
-				       double&, int&, double1, double, int)
+				       double&, int&, double, double, int)
     {
       return 0;
     }

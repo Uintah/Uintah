@@ -8,7 +8,7 @@ include $(SRCTOP)/scripts/smallso_prologue.mk
 SRCDIR   := Nektar/Datatypes
 
 SRCS += $(SRCDIR)/NektarScalarField.cc \
-	$(SRCDIR)/NektarVectorField.cc  
+	$(SRCDIR)/NektarVectorField.cc  \
 	$(SRCDIR)/NektarScalarFieldPort.cc \
 	$(SRCDIR)/NektarVectorFieldPort.cc  
 

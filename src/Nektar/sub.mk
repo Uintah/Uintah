@@ -6,10 +6,7 @@ include $(SRCTOP)/scripts/largeso_prologue.mk
 
 SRCDIR := Nektar
 
-SUBDIRS := 
-
-#SUBDIRS := $(SRCDIR)/GUI $(SRCDIR)/Datatypes \
-#	$(SRCDIR)/Algorithms   $(SRCDIR)/Modules  
+SUBDIRS := $(SRCDIR)/GUI $(SRCDIR)/Datatypes $(SRCDIR)/Modules  
 
 include $(SRCTOP)/scripts/recurse.mk
 
