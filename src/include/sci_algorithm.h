@@ -41,5 +41,21 @@ namespace std {
     }
     return true;
   }
+  
+  template <class Iter>
+  bool is_sorted(Iter begin, Iter end)
+  {
+    if(begin == end)
+      return true;
+    Iter cur = begin;
+    Iter next = cur; next++;
+    while(next != end){
+      if (*next < *cur)
+	return false;
+      cur = next;
+      next++;
+    }
+    return true;
+  }
 }
 #endif
