@@ -228,6 +228,18 @@ SCI_ARG_WITH(globus,
   [with_globus="$withval"
    sci_check_globus=yes],
   [with_globus=""])
+SCI_ARG_WITH(crypto,
+  AC_HELP_STRING(--with-crypto=DIR,
+                 Use the crypto installation in DIR (only for use with globus)),
+  [with_crypto="$withval"
+   sci_check_crypto=yes],
+  [with_crypto=""])
+SCI_ARG_WITH(ssl,
+  AC_HELP_STRING(--with-ssl=DIR,
+                 Use the ssl installation in DIR (only for use with globus)),
+  [with_ssl="$withval"
+   sci_check_ssl=yes],
+  [with_ssl=""])
 SCI_ARG_WITH(insight,
   AC_HELP_STRING(--with-insight=DIR,
 	         Use the Insight installation in DIR),
@@ -2042,7 +2054,7 @@ AC_SUBST(MPI_LIB_FLAG)
 AC_SUBST(MPI_LIB_DIR_FLAG)
 AC_SUBST(INC_MPI_H)
 AC_SUBST(DEF_MPI)
-
+AC_SUBST(HAVE_MPI)
 
 ##  --  search for petsc stuff  ------------------------------------------
 # a required check for an optional library for base scirun, due to that 
@@ -2639,7 +2651,7 @@ AC_SUBST(DEF_PERFEX)
 
 if test "$sci_check_ssl" = "yes"; then
   if test "$with_ssl"; then
-    _sci_lib="$with_ssl"
+    _sci_lib="$with_ssl/lib"
   else
     _sci_lib="$sci_thirdparty_libs"
   fi
@@ -2665,7 +2677,7 @@ AC_SUBST(DEF_SSL)
 
 if test "$sci_check_crypto" = "yes"; then
   if test "$with_crypto"; then
-    _sci_lib="$with_crypto"
+    _sci_lib="$with_crypto/lib"
   else
     _sci_lib="$sci_thirdparty_libs"
   fi
@@ -2698,16 +2710,30 @@ if test "$sci_check_globus" = "yes"; then
     _sci_inc="$sci_thirdparty_includes"
   fi
   
+  if test ! "$DEF_SSL"; then
+    AC_MSG_WARN(SSL library not found.  This could cause globus check to fail.)
+  fi
+  if test ! "$DEF_CRYPTO"; then
+    AC_MSG_WARN(CRYPTO library not found.  This could cause globus check to fail.)
+  fi
+
   MISC_LIB_FLAG="$SSL_LIB_DIR_FLAG $SSL_LIB_FLAG $CRYPTO_LIB_DIR_FLAG $CRYPTO_LIB_FLAG"
   
-
   SCI_TRY_LINK(GLOBUS,globus library and headers,,
   $_sci_inc, globus_dc pthread,$_sci_lib,$MISC_LIB_FLAG,,optional)
+
+  # If no with-globus on command line, but we have found globus, try
+  # the one we found when doing the following AC_CHECK_FILES:
+  if test -z "$with_globus"; then
+    with_globus_lib=$LIB_DIR_GLOBUS/..
+  else
+    with_globus_lib=$with_globus
+  fi
 
   # These globus libs need SCIRun thread files to link.  Because we
   # don't have them yet (we haven't compiled SCIRun yet...), we
   # can't test for linking.  Therefore we just test for existence.
-  AC_CHECK_FILES($with_globus/lib/libglobus_common.so $with_globus/lib/libglobus_nexus.so $with_globus/lib/libglobus_io.so $with_globus/lib/libglobus_utp.so $with_globus/lib/libglobus_mp.so $with_globus/lib/libglobus_gss_assist.so $with_globus/lib/libglobus_gss.so $with_globus/lib/libglobus_gaa.so $with_globus/include/globus_nexus.h,,DEF_GLOBUS="")
+  AC_CHECK_FILES($with_globus_lib/lib/libglobus_common.so $with_globus_lib/lib/libglobus_nexus.so $with_globus_lib/lib/libglobus_io.so $with_globus_lib/lib/libglobus_utp.so $with_globus_lib/lib/libglobus_mp.so $with_globus_lib/lib/libglobus_gss_assist.so $with_globus_lib/lib/libglobus_gss.so $with_globus_lib/lib/libglobus_gaa.so $with_globus_lib/include/globus_nexus.h,,HAVE_GLOBUS="")
 
   if test "$HAVE_GLOBUS" = "yes"; then
     DEF_GLOBUS="#define HAVE_GLOBUS 1"
@@ -2721,13 +2747,13 @@ if test "$sci_check_globus" = "yes"; then
     echo
   fi
 
-
 fi #end sci_check_globus
 
 AC_SUBST(GLOBUS_LIB_FLAG)
 AC_SUBST(GLOBUS_LIB_DIR_FLAG)
 AC_SUBST(INC_GLOBUS_H)
 AC_SUBST(DEF_GLOBUS)
+AC_SUBST(HAVE_GLOBUS)
 
 ##  --  search for Qt  ----------------------------------------------------
 if test "$sci_check_qt" = "yes"; then
@@ -2965,14 +2991,6 @@ AC_SUBST(UUID_LIB_FLAG)
 ##  --  See if we have everything needed for SCIRun2 ----------------------
 
 if test "$enable_scirun2" = "yes"; then
-#  if test "$HAVE_GLOBUS" != "yes"; then
-#    if test "$with_globus" = "no"; then
-#      SCI_MSG_ERROR(Must include --with-globus with --enable-scirun2)
-#    else
-#      SCI_MSG_ERROR(Globus not found required for scirun2)
-#    fi
-#    exit 1
-#  fi
   if test "$have_uuid" != "yes"; then
     case $host in
       *linux*)
@@ -2984,15 +3002,6 @@ if test "$enable_scirun2" = "yes"; then
     esac
     exit 1
   fi
-# Do not require Qt for SCIRun2 yet: 
-#  if test "$HAVE_QT" != "yes"; then
-#    if test "$with_qt" = "no"; then
-#      SCI_MSG_ERROR(Must include --with-qt with --enable-scirun2)
-#    else
-#      SCI_MSG_ERROR(Qt not found required for scirun2)
-#    fi
-#    exit 1
-#  fi
   DEF_SCIRUN2="#define SCIRUN2"
   BUILD_SCIRUN2="yes"
 else
@@ -3001,7 +3010,6 @@ else
 fi
 AC_SUBST(DEF_SCIRUN2)
 AC_SUBST(BUILD_SCIRUN2)
-
 
 ##  ---------------------------------------------------------------------
 ##  --------------------  generate output files  ------------------------
