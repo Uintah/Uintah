@@ -1449,13 +1449,14 @@ void MPMICE::computeEquilibrationPressure(const ProcessorGroup*,
 
 
   //---- P R I N T   D A T A ------
-    if(d_ice -> switchDebug_equilibration_press)  { 
-        d_ice->printData( patch, 1, "TOP_equilibration", "Press_CC_top", press);
+    if(d_ice -> switchDebug_equilibration_press)  {
+        char description[50];
+        sprintf(description, "TOP_equilibration_patch_%d ", patch->getID());
+        d_ice->printData( patch, 1, description, "Press_CC_top", press); 
 
        for (int m = 0; m < numALLMatls; m++)  {
          Material* matl = d_sharedState->getMaterial( m );
          int dwindex = matl->getDWIndex();
-         char description[50];
          sprintf(description, "TOP_equilibration_Mat_%d_patch_%d ", 
                   dwindex, patch->getID());
          d_ice->printData( patch,1,description, "rho_CC",     rho_CC[m]);
@@ -1718,13 +1719,14 @@ void MPMICE::computeEquilibrationPressure(const ProcessorGroup*,
 
   //---- P R I N T   D A T A ------
     if(d_ice -> switchDebug_equilibration_press)  { 
-      d_ice->printData( patch, 1, "BOTTOM", "Press_CC_equil", press_new);
-      d_ice->printData( patch, 1, "BOTTOM", "delPress",       delPress_tmp);
+      char description[50];
+      sprintf(description, "BOT_equilibration_patch_%d ",patch->getID());
+      d_ice->printData( patch, 1, description, "Press_CC_equil", press_new);
+      d_ice->printData( patch, 1, description, "delPress",       delPress_tmp);
    #if 0                 
       for (int m = 0; m < numALLMatls; m++)  {
          Material* matl = d_sharedState->getMaterial( m );
          int dwindex = matl->getDWIndex(); 
-         char description[50];
          sprintf(description, "BOT_equilibration_Mat_%d_patch_%d ", 
                   dwindex,patch->getID());
          d_ice->printData( patch,1,description, "rho_CC",      rho_CC[m]);
@@ -1934,8 +1936,12 @@ void MPMICE::HEChemistry(const ProcessorGroup*,
         MPMMaterial* mpm_matl = dynamic_cast<MPMMaterial*>(matl);
         ICEMaterial* ice_matl = dynamic_cast<ICEMaterial*>(matl);
         char description[50];
-        if(ice_matl) sprintf(description, "ICEsources/sinks_Mat_%d",dwindex);
-        if(mpm_matl) sprintf(description, "MPMsources/sinks_Mat_%d",dwindex);
+        if(ice_matl) 
+          sprintf(description, "ICEsources/sinks_Mat_%d_patch_%d",
+                  dwindex,patch->getID());
+        if(mpm_matl) 
+          sprintf(description, "MPMsources/sinks_Mat_%d_patch_%d",
+                  dwindex,patch->getID());
         d_ice->printData( patch, 0, description,"burnedMass", burnedMass[m]);
         d_ice->printData( patch, 0, description,"releasedHeat",releasedHeat[m]);
 //      }
