@@ -97,7 +97,14 @@
 		     <BCType id = "0" label = "Pressure" var = "Neumann">
                            <value> 0.0   </value>
                      </BCType>
-		     <BCType id = "all" label = "Velocity" var = "Neumann">
+		     <BCType id = "0" label = "Symmetric" var = "symmetry">
+                     </BCType>
+		     <BCType id = "1" label = "Symmetric" var = "symmetry">
+                     </BCType>
+		     <BCType id = "2" label = "Velocity" var = "Neumann">
+                           <value> [0.,0.,0.] </value>
+                     </BCType>
+		     <BCType id = "3" label = "Velocity" var = "Neumann">
                            <value> [0.,0.,0.] </value>
                      </BCType>
 		     <BCType id = "all" label = "Temperature" var = "Neumann">
@@ -111,7 +118,14 @@
 		     <BCType id = "0" label = "Pressure" var = "Neumann">
                            <value> 0.0   </value>
                      </BCType>
-		     <BCType id = "all" label = "Velocity" var = "Neumann">
+		     <BCType id = "0" label = "Symmetric" var = "symmetry">
+                     </BCType>
+		     <BCType id = "1" label = "Symmetric" var = "symmetry">
+                     </BCType>
+		     <BCType id = "2" label = "Velocity" var = "Neumann">
+                           <value> [0.,0.,0.] </value>
+                     </BCType>
+		     <BCType id = "3" label = "Velocity" var = "Neumann">
                            <value> [0.,0.,0.] </value>
                      </BCType>
 		     <BCType id = "all" label = "Temperature" var = "Neumann">
