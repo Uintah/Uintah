@@ -103,6 +103,7 @@ public:
   friend SCICORESHARE void Pio( Piostream&, Point& );
 
 
+
   // is one point within a small interval of another?
 
   int Overlap( double a, double b, double e );
@@ -294,6 +295,7 @@ inline double Dot(const Point& p1, const Point& p2)
 const TypeDescription* get_type_description(Point*);
 
 } // End namespace SCIRun
+
 
 
 #endif //ifndef Geometry_Point_h

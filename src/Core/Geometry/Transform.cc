@@ -343,12 +343,40 @@ Point Transform::project(const Point& p) const
 	       mat[2][0]*p.x()+mat[2][1]*p.y()+mat[2][2]*p.z()+mat[2][3],
 	       mat[3][0]*p.x()+mat[3][1]*p.y()+mat[3][2]*p.z()+mat[3][3]);
 }
+void Transform::project(const Vector& p, Vector& res) const
+{
+    res.x(mat[0][0]*p.x()+mat[0][1]*p.y()+mat[0][2]*p.z());
+    res.y(mat[1][0]*p.x()+mat[1][1]*p.y()+mat[1][2]*p.z());
+    res.z(mat[2][0]*p.x()+mat[2][1]*p.y()+mat[2][2]*p.z());
+}
+
+void Transform::project_inplace(Vector& p) const
+{
+    p.x(mat[0][0]*p.x()+mat[0][1]*p.y()+mat[0][2]*p.z());
+    p.y(mat[1][0]*p.x()+mat[1][1]*p.y()+mat[1][2]*p.z());
+    p.z(mat[2][0]*p.x()+mat[2][1]*p.y()+mat[2][2]*p.z());
+}
 
 Vector Transform::project(const Vector& p) const
 {
   return Vector(mat[0][0]*p.x()+mat[0][1]*p.y()+mat[0][2]*p.z(),
 		mat[1][0]*p.x()+mat[1][1]*p.y()+mat[1][2]*p.z(),
 		mat[2][0]*p.x()+mat[2][1]*p.y()+mat[2][2]*p.z());
+}
+void Transform::project(const Point& p, Point& res) const
+{
+    double invw=1./(mat[3][0]*p.x()+mat[3][1]*p.y()+mat[3][2]*p.z()+mat[3][3]);
+    res.x(invw*(mat[0][0]*p.x()+mat[0][1]*p.y()+mat[0][2]*p.z()+mat[0][3]));
+    res.y(invw*(mat[1][0]*p.x()+mat[1][1]*p.y()+mat[1][2]*p.z()+mat[1][3]));
+    res.z(invw*(mat[2][0]*p.x()+mat[2][1]*p.y()+mat[2][2]*p.z()+mat[2][3]));
+}
+
+void Transform::project_inplace(Point& p) const
+{
+    double invw=1./(mat[3][0]*p.x()+mat[3][1]*p.y()+mat[3][2]*p.z()+mat[3][3]);
+    p.x(invw*(mat[0][0]*p.x()+mat[0][1]*p.y()+mat[0][2]*p.z()+mat[0][3]));
+    p.y(invw*(mat[1][0]*p.x()+mat[1][1]*p.y()+mat[1][2]*p.z()+mat[1][3]));
+    p.z(invw*(mat[2][0]*p.x()+mat[2][1]*p.y()+mat[2][2]*p.z()+mat[2][3]));
 }
 
 Point Transform::unproject(const Point& p)
@@ -360,6 +388,29 @@ Point Transform::unproject(const Point& p)
 	       imat[3][0]*p.x()+imat[3][1]*p.y()+imat[3][2]*p.z()+imat[3][3]);
 }
 
+void Transform::unproject(const Point& p, Point& res) const
+{
+    double invw=
+        1./(imat[3][0]*p.x()+imat[3][1]*p.y()+imat[3][2]*p.z()+imat[3][3]);
+    res.x(invw*
+          (imat[0][0]*p.x()+imat[0][1]*p.y()+imat[0][2]*p.z()+imat[0][3]));
+    res.y(invw*
+          (imat[1][0]*p.x()+imat[1][1]*p.y()+imat[1][2]*p.z()+imat[1][3]));
+    res.z(invw*
+          (imat[2][0]*p.x()+imat[2][1]*p.y()+imat[2][2]*p.z()+imat[2][3]));
+}
+
+void Transform::unproject_inplace(Point& p) const
+{
+    double invw=
+        1./(imat[3][0]*p.x()+imat[3][1]*p.y()+imat[3][2]*p.z()+imat[3][3]);
+    p.x(invw*
+          (imat[0][0]*p.x()+imat[0][1]*p.y()+imat[0][2]*p.z()+imat[0][3]));
+    p.y(invw*
+          (imat[1][0]*p.x()+imat[1][1]*p.y()+imat[1][2]*p.z()+imat[1][3]));
+    p.z(invw*
+          (imat[2][0]*p.x()+imat[2][1]*p.y()+imat[2][2]*p.z()+imat[2][3]));
+}
 
 Vector Transform::unproject(const Vector& p)
 {
@@ -369,12 +420,40 @@ Vector Transform::unproject(const Vector& p)
 		imat[2][0]*p.x()+imat[2][1]*p.y()+imat[2][2]*p.z());
 }
 
+void Transform::unproject(const Vector& v, Vector& res) const
+{
+    res.x(imat[0][0]*v.x()+imat[0][1]*v.y()+imat[0][2]*v.z());
+    res.y(imat[1][0]*v.x()+imat[1][1]*v.y()+imat[1][2]*v.z());
+    res.z(imat[2][0]*v.x()+imat[2][1]*v.y()+imat[2][2]*v.z());
+}
+
+void Transform::unproject_inplace(Vector& v) const
+{
+    v.x(imat[0][0]*v.x()+imat[0][1]*v.y()+imat[0][2]*v.z());
+    v.y(imat[1][0]*v.x()+imat[1][1]*v.y()+imat[1][2]*v.z());
+    v.z(imat[2][0]*v.x()+imat[2][1]*v.y()+imat[2][2]*v.z());
+}
+
 Vector Transform::project_normal(const Vector& p) const
 {
     double x=mat[0][0]*p.x()+mat[0][1]*p.x()+mat[0][2]*p.x()+mat[0][3];
     double y=mat[1][0]*p.y()+mat[1][1]*p.y()+mat[1][2]*p.y()+mat[1][3];
     double z=mat[2][0]*p.z()+mat[2][1]*p.z()+mat[2][2]*p.z()+mat[2][3];
     return Vector(x, y, z);
+}
+
+void Transform::project_normal(const Vector& p, Vector& res) const
+{
+    res.x(imat[0][0]*p.x()+imat[1][0]*p.x()+imat[2][0]*p.x()+imat[3][0]);
+    res.y(imat[0][1]*p.y()+imat[1][1]*p.y()+imat[2][1]*p.y()+imat[3][1]);
+    res.z(imat[0][2]*p.z()+imat[1][2]*p.z()+imat[2][2]*p.z()+imat[3][2]);
+}
+
+void Transform::project_normal_inplace(Vector& p) const
+{
+    p.x(imat[0][0]*p.x()+imat[1][0]*p.x()+imat[2][0]*p.x()+imat[3][0]);
+    p.y(imat[0][1]*p.y()+imat[1][1]*p.y()+imat[2][1]*p.y()+imat[3][1]);
+    p.z(imat[0][2]*p.z()+imat[1][2]*p.z()+imat[2][2]*p.z()+imat[3][2]);
 }
 
 void Transform::get(double* gmat) const
