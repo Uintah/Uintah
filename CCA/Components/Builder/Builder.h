@@ -44,7 +44,33 @@
 #include <Core/CCA/spec/cca_sidl.h>
 
 #include <string>
+/*
+<<<<<<< Builder.h
+namespace SCIRun {
+  class BuilderWindow;
+  class myBuilderPort : public virtual sci::cca::ports::BuilderPort {
+  public:
+    virtual ~myBuilderPort(){}
+    virtual void setServices(const sci::cca::Services::pointer& svc);
+    virtual void buildRemotePackageMenus(const  sci::cca::ports::ComponentRepository::pointer &reg,
+				    const std::string &frameworkURL);
+  protected:
+    sci::cca::Services::pointer services;
+    BuilderWindow* builder;
+  };
 
+  class Builder : public sci::cca::Component {
+  public:
+    Builder();
+    virtual ~Builder();
+    virtual void setServices(const sci::cca::Services::pointer& svc);
+    virtual void setCommunicator(int comm) {  };
+  private:
+    Builder(const Builder&);
+    Builder& operator=(const Builder&);
+    myBuilderPort builderPort;
+=======
+*/
 namespace SCIRun{
 class BuilderWindow;
 
@@ -91,6 +117,7 @@ private:
   Builder& operator=(const Builder&);
   myBuilderPort builderPort;  
 };
+//>>>>>>> 1.10
 
 } //namespace SCIRun
 

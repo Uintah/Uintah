@@ -718,11 +718,11 @@ void BuilderWindow::addCluster()
 
   ////////////////////////
   //Assume a QT Diaglog will return
-  std::string loaderName="qwerty";
-  std::string domainName="qwerty.sci.utah.edu";
-  std::string login="kzhang";
-  std::string loaderPath="mpirun -np 2 ploader";
-  std::string password="****"; //not used;
+  string loaderName="qwerty";
+  string domainName="qwerty.sci.utah.edu";
+  string login="kzhang";
+  string loaderPath="mpirun -np 3 ploader";
+  string password="****"; //not used;
 
 
   builder->addLoader(loaderName, login, domainName, loaderPath);
