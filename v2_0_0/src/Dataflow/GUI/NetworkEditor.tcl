@@ -846,7 +846,7 @@ proc loadnet {netedit_loadfile } {
 # (Because the enviroment variable SCIRUN_DATA was not set)
 proc getDataDirectory { dataset } {
    set answer [createSciDialog -warning -button1 "Ok" -button2 "Quit SCIRun" -message \
-         "The '$dataset' dataset was specified (either by the enviroment variable SCIRUN_DATASET or by the network loaded).  However, the location of this dataset was not specified (with the SCIRUN_DATA env var).  Please select a directory (eg: /usr/sci/data/SCIRunData/1.20.0).  Note, this directory must have the '$dataset' subdirectory in it." ]
+         "The '$dataset' dataset was specified (either by the enviroment variable\nSCIRUN_DATASET or by the network loaded).  However, the location of\nthis dataset was not specified (with the SCIRUN_DATA env var).  Please\nselect a directory (eg: /usr/sci/data/SCIRunData/1.20.0).  Note, this directory\nmust have the '$dataset' subdirectory in it." ]
    case $answer {
        1 "return [tk_chooseDirectory -mustexist true -initialdir /usr/sci/data/SCIRunData/1.20.0]"
        2 "netedit quit"
