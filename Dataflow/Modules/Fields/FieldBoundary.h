@@ -69,6 +69,12 @@ FieldBoundaryAlgoAuxT<Msh>::execute(const MeshHandle mesh_untyped,
   TriSurfMesh::Node::index_type node_idx[3];
 
   TriSurfMeshHandle tmesh = scinew TriSurfMesh;
+
+  Mesh::synchronized_t sync;
+  sync.set(Mesh::CELLS_E);
+  sync.set(Mesh::FACE_NEIGHBORS_E);
+  mesh->synchronize(sync);
+
   // Walk all the cells in the mesh.
   Point center;
   typename Msh::Cell::iterator citer; mesh->begin(citer);
