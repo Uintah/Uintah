@@ -82,7 +82,7 @@ protected:
   double radius_;
   int  nu_;
   vector<Point> points_;
-  vector<MaterialHandle> colors_;
+  vector<unsigned char> colors_;
   vector<float> indices_;
 
 public:
@@ -94,8 +94,8 @@ public:
   virtual void get_bounds(BBox&);
 
   bool add(const Point &p0, const Point &p1);
-  bool add(const Point &p0, MaterialHandle c0,
-	   const Point &p1, MaterialHandle c1);
+  bool add(const Point &p0, const MaterialHandle &c0,
+	   const Point &p1, const MaterialHandle &c1);
   bool add(const Point &p0, float index0,
 	   const Point &p1, float index1);
   void set_radius(double val) { radius_ = val; reset_bbox(); }
@@ -138,8 +138,8 @@ public:
   virtual GeomObj* clone();
 
   void add_radius(const Point &p0, const Point &p1, double r);
-  void add_radius(const Point &p0, MaterialHandle c0,
-		  const Point &p1, MaterialHandle c1, double r);
+  void add_radius(const Point &p0, const MaterialHandle &c0,
+		  const Point &p1, const MaterialHandle &c1, double r);
   void add_radius(const Point &p0, float index0,
 		  const Point &p1, float index1, double r);
 

@@ -218,6 +218,16 @@ GeomCylinders::io(Piostream& stream)
 }
 
 
+static unsigned char
+COLOR_FTOB(double v)
+{
+  const int inter = (int)(v * 255 + 0.5);
+  if (inter > 255) return 255;
+  if (inter < 0) return 0;
+  return (unsigned char)inter;
+}
+
+
 bool
 GeomCylinders::add(const Point& p1, const Point& p2)
 {
@@ -231,15 +241,33 @@ GeomCylinders::add(const Point& p1, const Point& p2)
 }
 
 bool
-GeomCylinders::add(const Point& p1, MaterialHandle c1,
-		   const Point& p2, MaterialHandle c2)
+GeomCylinders::add(const Point& p1, const MaterialHandle &c1,
+		   const Point& p2, const MaterialHandle &c2)
 {
   if ((p1 - p2).length2() > 1.0e-12)
   {
     points_.push_back(p1);
     points_.push_back(p2);
-    colors_.push_back(c1);
-    colors_.push_back(c2);
+    
+    const unsigned char r0 = COLOR_FTOB(c1->diffuse.r());
+    const unsigned char g0 = COLOR_FTOB(c1->diffuse.g());
+    const unsigned char b0 = COLOR_FTOB(c1->diffuse.b());
+    const unsigned char a0 = COLOR_FTOB(c1->transparency);
+
+    colors_.push_back(r0);
+    colors_.push_back(g0);
+    colors_.push_back(b0);
+    colors_.push_back(a0);
+
+    const unsigned char r1 = COLOR_FTOB(c2->diffuse.r());
+    const unsigned char g1 = COLOR_FTOB(c2->diffuse.g());
+    const unsigned char b1 = COLOR_FTOB(c2->diffuse.b());
+    const unsigned char a1 = COLOR_FTOB(c2->transparency);
+
+    colors_.push_back(r1);
+    colors_.push_back(g1);
+    colors_.push_back(b1);
+    colors_.push_back(a1);
     return true;
   }
   return false;
@@ -330,8 +358,9 @@ GeomCappedCylinders::add_radius(const Point& p1, const Point& p2, double r)
 }
 
 void
-GeomCappedCylinders::add_radius(const Point& p1, MaterialHandle c1,
-				const Point& p2, MaterialHandle c2, double r)
+GeomCappedCylinders::add_radius(const Point& p1, const MaterialHandle &c1,
+				const Point& p2, const MaterialHandle &c2,
+				double r)
 {
   if (add(p1, c1, p2, c2)) { radii_.push_back(r); }
 }
