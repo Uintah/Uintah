@@ -199,7 +199,7 @@ static void usage(char* progname)
   cerr << " -jitter          - jittered masks - fixed table for now\n";
   cerr << " -worker_gltest   - calls run_gl_test from worker threads\n";
   cerr << " -display_gltest  - calls run_gl_test from display thread\n";
-  cerr << " -displayless     - do not display and write a frame to displayless\n";
+  cerr << " -displayless     - do not display and write a frame to displayless.ppm\n";
   cerr << " -rserver         - Send the display to a remote display\n";
   cerr << " -bgcolor [value] - Override the scene's background with this one\n";
   cerr << "                    value can be:\n";
@@ -209,6 +209,7 @@ static void usage(char* progname)
   cerr << " -nomempolicy     - Do system default for memory distribution.\n";
   cerr << " -pin             - Assign each worker to a specific processor.\n"
        << "                    Use only if you have the entire machine to yourself.\n";
+  cerr << " -ambientlevel    - the level of ambient light.\n";
   
   exit(1);
 }
@@ -286,6 +287,11 @@ main(int argc, char* argv[])
   Color bgcolor;
   bool override_scene_bgcolor = false;
 
+  int maxdepth = 8;
+  bool override_maxdepth = false;
+
+  float ambient_level = -1;
+  
   printf("before glutInit\n");
   glutInit( &argc, argv );
   printf("after glutInit\n");
@@ -407,6 +413,13 @@ main(int argc, char* argv[])
     } else if (strcmp(argv[i],"-udp")==0){
       i++;
       rtrt_engine->updatePercent = atof(argv[i]);
+    } else if (strcmp(argv[i],"-raydepth")==0 ||
+	       strcmp(argv[i],"-maxdepth")==0) {
+      i++;
+      maxdepth = atoi(argv[i]);
+      override_maxdepth = true;
+    } else if (strcmp(argv[i],"-ambientlevel")==0) {
+      ambient_level = atof(argv[++i]);
     } else if (strcmp(argv[i],"-displayless")==0) {
       display_frames = false;
     } else if (strcmp(argv[i],"-frameless")==0) {
@@ -583,9 +596,16 @@ main(int argc, char* argv[])
 
   if (override_scene_bgcolor)
     scene->set_bgcolor(bgcolor);
+
+  if (ambient_level >= 0)
+    scene->setAmbientLevel(ambient_level);
   
   scene->no_aa=no_aa;
-  scene->maxdepth = 8;
+
+  if (override_maxdepth || scene->maxdepth == -1)
+    // Override what the scene specifies,
+    // or set it if the scene has no default (i.e. maxdepth == -1)
+    scene->maxdepth = maxdepth;
 
   if(use_bv){
     if(scene->nprims() > 1){
