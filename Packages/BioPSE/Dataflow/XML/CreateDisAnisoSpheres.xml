@@ -30,7 +30,7 @@
 	  </port>
 	  <port>
 		<name>AnisoConductivities</name>
-		<description> The port takes a matrix containing radial and tangential conductivities of all 4 layers.</description>
+		<description> The port takes a matrix containing radial and tangential conductivities of all 4 layers</description>
 		<datatype>SCIRun::Matrix</datatype>
 	  </port>
     </inputs>
