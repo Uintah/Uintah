@@ -417,7 +417,7 @@ RealDrawer::run()
   double t2;
   double frame_count_start = t;
   double time_since_frame_count_start;
-  int frames;
+  int frames = 0;
   while (!dead_) {
     module_->extract_all_slices();
     throttle_.wait_for_time(t);
