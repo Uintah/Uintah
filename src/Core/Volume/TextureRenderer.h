@@ -39,7 +39,7 @@
 #include <Core/Containers/Array2.h>
 #include <Core/Containers/Array3.h>
 
-#include <Core/Volume/Brick.h>
+#include <Core/Volume/TextureBrick.h>
 #include <Core/Volume/Texture.h>
 #include <Core/Volume/Colormap2.h>
 #include <Core/Volume/CM2Widget.h>
@@ -126,7 +126,7 @@ protected:
   {
     int nx, ny, nz, nb;
     uint id;
-    Brick* brick;
+    TextureBrick* brick;
     int comp;
     TexParam() : nx(0), ny(0), nz(0), nb(0), id(0), brick(0), comp(0) {}
     TexParam(int x, int y, int z, int b, uint i)
@@ -135,7 +135,7 @@ protected:
   vector<TexParam> tex_pool_;
   
   Ray compute_view();
-  void load_brick(Brick* b);
+  void load_brick(TextureBrick* b);
   void draw_polygons(Array1<float>& vertex, Array1<float>& texcoord, Array1<int>& poly,
                      bool normal, bool fog, Pbuffer* buffer);
 

@@ -36,7 +36,7 @@
 #include <Core/Datatypes/Datatype.h>
 #include <Core/Malloc/Allocator.h>
 #include <Core/Volume/Texture.h>
-#include <Core/Volume/Brick.h>
+#include <Core/Volume/TextureBrick.h>
 #include <Core/Datatypes/NrrdData.h>
 
 namespace SCIRun {
@@ -52,9 +52,9 @@ public:
              int card_mem);
 
 protected:
-  void build_bricks(std::vector<Brick*>& bricks, int nx, int ny, int nz,
+  void build_bricks(std::vector<TextureBrick*>& bricks, int nx, int ny, int nz,
                     int nc, int* nb, const BBox& bbox, int brick_mem);
-  void fill_brick(Brick* brick, Nrrd* nv_nrrd, Nrrd* gm_nrrd,
+  void fill_brick(TextureBrick* brick, Nrrd* nv_nrrd, Nrrd* gm_nrrd,
                   int ni, int nj, int nk);
 };
 

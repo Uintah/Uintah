@@ -102,7 +102,7 @@ NrrdTextureBuilderAlgo::build(TextureHandle texture,
 
   //
   texture->lock_bricks();
-  vector<Brick*>& bricks = texture->bricks();
+  vector<TextureBrick*>& bricks = texture->bricks();
   if(nx != texture->nx() || ny != texture->ny() || nz != texture->nz()
      || nc != texture->nc() || card_mem != texture->card_mem()) {
     build_bricks(bricks, nx, ny, nz, nc, nb, bbox, card_mem);
@@ -119,7 +119,7 @@ NrrdTextureBuilderAlgo::build(TextureHandle texture,
 }
 
 void
-NrrdTextureBuilderAlgo::build_bricks(vector<Brick*>& bricks, int nx, int ny,
+NrrdTextureBuilderAlgo::build_bricks(vector<TextureBrick*>& bricks, int nx, int ny,
                                      int nz, int nc, int* nb,
                                      const BBox& bbox, int card_mem)
 {
@@ -227,7 +227,7 @@ NrrdTextureBuilderAlgo::build_bricks(vector<Brick*>& bricks, int nx, int ny,
         (double)data_size[0]/(double)brick_size[0];
       for (int i=0; i<num_brick[0]; i++)
       {
-        Brick* b = scinew BrickT<unsigned char>(
+        TextureBrick* b = scinew TextureBrickT<unsigned char>(
           i < num_brick[0]-1 ? brick_size[0] : brick_pad[0],
           j < num_brick[1]-1 ? brick_size[1] : brick_pad[1],
           k < num_brick[2]-1 ? brick_size[2] : brick_pad[2],
@@ -273,11 +273,11 @@ NrrdTextureBuilderAlgo::build_bricks(vector<Brick*>& bricks, int nx, int ny,
 }
 
 void
-NrrdTextureBuilderAlgo::fill_brick(Brick* brick, Nrrd* nv_nrrd, Nrrd* gm_nrrd,
+NrrdTextureBuilderAlgo::fill_brick(TextureBrick* brick, Nrrd* nv_nrrd, Nrrd* gm_nrrd,
                                    int ni, int nj, int nk)
 {
-  BrickT<unsigned char>* br =
-    dynamic_cast<BrickT<unsigned char>*>(brick);
+  TextureBrickT<unsigned char>* br =
+    dynamic_cast<TextureBrickT<unsigned char>*>(brick);
   int nc = brick->nc();
   int nx = brick->nx();
   int ny = brick->ny();

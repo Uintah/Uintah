@@ -36,7 +36,7 @@
 #include <Core/Volume/VolShader.h>
 #include <Core/Volume/ShaderProgramARB.h>
 #include <Core/Volume/Pbuffer.h>
-#include <Core/Volume/Brick.h>
+#include <Core/Volume/TextureBrick.h>
 #include <Core/Util/DebugStream.h>
 
 using std::cerr;
@@ -147,7 +147,7 @@ VolumeRenderer::draw()
   tex_->lock_bricks();
   
   Ray view_ray = compute_view();
-  vector<Brick*> bricks;
+  vector<TextureBrick*> bricks;
   tex_->get_sorted_bricks(bricks, view_ray);
   if(bricks.size() == 0) return;
 
@@ -315,7 +315,7 @@ VolumeRenderer::draw()
   glMultMatrixd(mvmat);
   
   for(unsigned int i=0; i<bricks.size(); i++) {
-    Brick* b = bricks[i];
+    TextureBrick* b = bricks[i];
     load_brick(b);
     vertex.resize(0);
     texcoord.resize(0);
@@ -426,10 +426,10 @@ VolumeRenderer::draw_wireframe()
   GLboolean lighting = glIsEnabled(GL_LIGHTING);
   glDisable(GL_LIGHTING);
   glColor4f(0.8, 0.8, 0.8, 1.0);
-  vector<Brick*> bricks;
+  vector<TextureBrick*> bricks;
   tex_->get_sorted_bricks(bricks, view_ray);
   for(unsigned int i=0; i<bricks.size(); i++) {
-    Brick& brick = *bricks[i];
+    TextureBrick& brick = *bricks[i];
     glBegin(GL_LINES);
     {
       for(int i=0; i<4; i++) {

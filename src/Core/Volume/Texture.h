@@ -37,7 +37,7 @@
 #include <Core/Containers/LockingHandle.h>
 #include <Core/Datatypes/LatVolField.h>
 #include <Core/Thread/Mutex.h>
-#include <Core/Volume/Brick.h>
+#include <Core/Volume/TextureBrick.h>
 #include <Core/Volume/Utils.h>
 #include <vector>
 
@@ -73,8 +73,8 @@ public:
   inline Transform transform() const { return transform_; }
   inline void set_transform(Transform tform) { transform_ = tform; }
   
-  void get_sorted_bricks(std::vector<Brick*>& bricks, const Ray& view);
-  inline std::vector<Brick*>& bricks() { return brick_; }
+  void get_sorted_bricks(std::vector<TextureBrick*>& bricks, const Ray& view);
+  inline std::vector<TextureBrick*>& bricks() { return brick_; }
   
   inline double vmin() const { return vmin_; }
   inline double vmax() const { return vmax_; }
@@ -94,7 +94,7 @@ public:
   static PersistentTypeID type_id;
 
 protected:
-  std::vector<Brick*> brick_;
+  std::vector<TextureBrick*> brick_;
   Mutex brick_lock_;
   int nx_, ny_, nz_; // data size
   int nc_;

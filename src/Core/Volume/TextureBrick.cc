@@ -25,13 +25,13 @@
 //  FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 //  DEALINGS IN THE SOFTWARE.
 //  
-//    File   : Brick.cc
+//    File   : TextureBrick.cc
 //    Author : Milan Ikits
 //    Date   : Wed Jul 14 16:03:05 2004
 
 #include <math.h>
 
-#include <Core/Volume/Brick.h>
+#include <Core/Volume/TextureBrick.h>
 #include <Core/Volume/Utils.h>
 
 #include <iostream>
@@ -40,7 +40,7 @@ using std::endl;
 
 namespace SCIRun {
 
-Brick::Brick (int nx, int ny, int nz, int nc, int* nb, int ox, int oy, int oz,
+TextureBrick::TextureBrick (int nx, int ny, int nz, int nc, int* nb, int ox, int oy, int oz,
               int mx, int my, int mz, const BBox& bbox, const BBox& tbox)
   : nx_(nx), ny_(ny), nz_(nz), nc_(nc), ox_(ox), oy_(oy), oz_(oz),
     mx_(mx), my_(my), mz_(mz), bbox_(bbox), tbox_(tbox), dirty_(true)
@@ -115,12 +115,12 @@ Brick::Brick (int nx, int ny, int nz, int nc, int* nb, int ox, int oy, int oz,
   tex_edge_[11] = Ray(texture[4], texture[5] - texture[4]);
 }
 
-Brick::~Brick()
+TextureBrick::~TextureBrick()
 {}
 
 // compute polygon of edge plane intersections
 void
-Brick::compute_polygon(const Ray& view, double t,
+TextureBrick::compute_polygon(const Ray& view, double t,
                        Array1<float>& vertex, Array1<float>& texcoord,
                        Array1<int>& size) const
 {
@@ -128,7 +128,7 @@ Brick::compute_polygon(const Ray& view, double t,
 }
 
 void
-Brick::compute_polygons(const Ray& view, double dt,
+TextureBrick::compute_polygons(const Ray& view, double dt,
                         Array1<float>& vertex, Array1<float>& texcoord,
                         Array1<int>& size) const
 {
@@ -153,7 +153,7 @@ Brick::compute_polygons(const Ray& view, double dt,
 
 // compute polygon list of edge plane intersections
 void
-Brick::compute_polygons(const Ray& view, double tmin, double tmax, double dt,
+TextureBrick::compute_polygons(const Ray& view, double tmin, double tmax, double dt,
                         Array1<float>& vertex, Array1<float>& texcoord,
                         Array1<int>& size) const
 {

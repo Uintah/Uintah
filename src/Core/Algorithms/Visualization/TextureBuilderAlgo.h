@@ -36,7 +36,7 @@
 #include <Core/Malloc/Allocator.h>
 #include <Core/Util/DynamicLoader.h>
 #include <Core/Volume/Texture.h>
-#include <Core/Volume/Brick.h>
+#include <Core/Volume/TextureBrick.h>
 
 #include <iostream>
 using std::cerr;
@@ -62,9 +62,9 @@ public:
   static CompileInfoHandle get_compile_info(const TypeDescription* td);
 
 protected:
-  virtual void build_bricks(vector<Brick*>& bricks, int nx, int ny, int nz,
+  virtual void build_bricks(vector<TextureBrick*>& bricks, int nx, int ny, int nz,
                             int nc, int* nb, const BBox& bbox, int brick_mem) = 0;
-  virtual void fill_brick(Brick* brick,
+  virtual void fill_brick(TextureBrick* brick,
                           FieldHandle vfield, double vmin, double vmax,
                           FieldHandle gfield, double gmin, double gmax) = 0;
 };
@@ -84,9 +84,9 @@ public:
                      int card_mem);
   
 protected:
-  virtual void build_bricks(vector<Brick*>& bricks, int nx, int ny, int nz,
+  virtual void build_bricks(vector<TextureBrick*>& bricks, int nx, int ny, int nz,
                             int nc, int* nb, const BBox& bbox, int brick_mem);
-  virtual void fill_brick(Brick* brick,
+  virtual void fill_brick(TextureBrick* brick,
                           FieldHandle vfield, double vmin, double vmax,
                           FieldHandle gfield, double gmin, double gmax);
 }; 
@@ -113,7 +113,7 @@ TextureBuilderAlgo<FieldType>::build(TextureHandle texture,
   mesh->transform(tform);
   //
   texture->lock_bricks();
-  vector<Brick*>& bricks = texture->bricks();
+  vector<TextureBrick*>& bricks = texture->bricks();
   if(nx != texture->nx() || ny != texture->ny() || nz != texture->nz()
      || nc != texture->nc() || card_mem != texture->card_mem()) {
 //     cerr << "REBUILD" <<  nx << " " << ny << " " << nz << " " << card_mem << endl;
@@ -133,7 +133,7 @@ TextureBuilderAlgo<FieldType>::build(TextureHandle texture,
 
 template<typename FieldType>
 void
-TextureBuilderAlgo<FieldType>::build_bricks(vector<Brick*>& bricks, int nx, int ny,
+TextureBuilderAlgo<FieldType>::build_bricks(vector<TextureBrick*>& bricks, int nx, int ny,
                                             int nz, int nc, int* nb,
                                             const BBox& bbox, int card_mem)
 {
@@ -243,7 +243,7 @@ TextureBuilderAlgo<FieldType>::build_bricks(vector<Brick*>& bricks, int nx, int 
         (double)data_size[0]/(double)brick_size[0];
       for (int i=0; i<num_brick[0]; i++)
       {
-        Brick* b = scinew BrickT<unsigned char>(
+        TextureBrick* b = scinew TextureBrickT<unsigned char>(
           i < num_brick[0]-1 ? brick_size[0] : brick_pad[0],
           j < num_brick[1]-1 ? brick_size[1] : brick_pad[1],
           k < num_brick[2]-1 ? brick_size[2] : brick_pad[2],
@@ -293,7 +293,7 @@ TextureBuilderAlgo<FieldType>::build_bricks(vector<Brick*>& bricks, int nx, int 
 
 template <class FieldType>
 void 
-TextureBuilderAlgo<FieldType>::fill_brick(Brick* brick,
+TextureBuilderAlgo<FieldType>::fill_brick(TextureBrick* brick,
                                           FieldHandle vfield, double vmin, double vmax,
                                           FieldHandle gfield, double gmin, double gmax)
 {
@@ -302,8 +302,8 @@ TextureBuilderAlgo<FieldType>::fill_brick(Brick* brick,
   LatVolField<Vector>* gfld = 
     dynamic_cast<LatVolField<Vector>*>(gfield.get_rep());
   int nc = brick->nc();
-  BrickT<unsigned char>* br =
-    dynamic_cast<BrickT<unsigned char>*>(brick);
+  TextureBrickT<unsigned char>* br =
+    dynamic_cast<TextureBrickT<unsigned char>*>(brick);
 
   int nx = brick->nx();
   int ny = brick->ny();
