@@ -168,6 +168,7 @@ WARNING
 	 const VarLabel* gMomExedVelocityStarLabel;
 	 const VarLabel* gExternalForceLabel;
 	 const VarLabel* gInternalForceLabel;
+	 const VarLabel* gSelfContactLabel; //for fracture
 	 
       };
       
@@ -176,6 +177,9 @@ WARNING
    
 //
 // $Log$
+// Revision 1.22  2000/05/08 17:04:04  tan
+// Added grid VarLabel selfContactLabel
+//
 // Revision 1.21  2000/05/04 23:40:29  tan
 // Added fracture interface to general MPM.
 //
