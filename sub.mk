@@ -4,8 +4,11 @@ include $(SRCTOP_ABS)/scripts/largeso_prologue.mk
 
 SRCDIR := Packages/Uintah
 SUBDIRS := \
-	$(SRCDIR)/Core \
-	$(SRCDIR)/Dataflow
+	$(SRCDIR)/Core         \
+	$(SRCDIR)/Dataflow     \
+	$(SRCDIR)/CCA          \
+	$(SRCDIR)/StandAlone   \
+	$(SRCDIR)/testprograms
 
 include $(SRCTOP_ABS)/scripts/recurse.mk
 
