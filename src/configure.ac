@@ -1075,6 +1075,12 @@ case $host in
     ac_objext=o
     CFLAGS=" -Wall"
     CXXFLAGS=" -Wall"
+
+    if test "$enable_64bit" = "yes"; then
+       CFLAGS="-fPIC $CFLAGS"
+       CXXFLAGS="-fPIC $CXXFLAGS"
+    fi
+
     if test "$CC" != "pgcc"; then
       SCI_CHECK_VERSION($CC,--version,2.95.3,,
         echo configure: error: wrong $CC version.; exit)
@@ -1636,7 +1642,8 @@ if test "$with_opengl"; then
   _sci_inc="$with_opengl/include"
   _sci_optional=specific
 else
-  _sci_lib="/usr/X11R6/lib"
+  _sci_lib_dir="/usr/X11R6"
+  BASE_LIB_PATH(_sci_lib_dir,$_sci_lib_dir)
   _sci_inc="/usr/X11R6/include"
 fi
 
@@ -1706,8 +1713,6 @@ DEF_OGL_EXT_HDRS=""
 
 if test "$HAVE_EXT_HDRS" = "yes"; then
 
-  DEF_OGL_EXT_HDRS="#define CORRECT_OGLEXT_HDRS 1"
-
   SCI_COMPILE_LINK_TEST(AVR, Advanced Volume OpenGL support,
   [
     #define GL_GLEXT_PROTOTYPES
@@ -1733,6 +1738,7 @@ fi
   
 
 if test "$HAVE_AVR" = "yes"; then
+  DEF_OGL_EXT_HDRS="#define CORRECT_OGLEXT_HDRS 1"
   COMPILE_AVR=1
 fi
 
