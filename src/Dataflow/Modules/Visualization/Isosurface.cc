@@ -259,7 +259,7 @@ Isosurface::new_field( FieldHandle &field )
 
   // 1: field info
   ostringstream info;
-  info << id << " set_info " << type << " " << field->generation;
+  info << id << " set_info {" << type << "} " << field->generation;
   TCL::execute(info.str().c_str());
 
   // 2: min/max
