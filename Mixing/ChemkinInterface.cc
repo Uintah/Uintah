@@ -171,7 +171,7 @@ ChemkinInterface::convertMolestoMass(vector<double> Xvec)
 vector<double>
 ChemkinInterface::convertMasstoMoles(vector<double> Yvec)
 {
-  vector<double> Xvec(d_numSpecies);
+  vector<double> Xvec(d_numSpecies); 
   ckytx(&Yvec[0], d_ickwrk, d_rckwrk, &Xvec[0]);
   return Xvec;
 }
