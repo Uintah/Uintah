@@ -517,7 +517,7 @@ void Membrane::computePressEOSCM(const double rho_cur,double& pressure,
   double p_g = .5*bulk*(rho_cur/rho_orig - rho_orig/rho_cur);
   pressure = p_ref + p_g;
   dp_drho  = .5*bulk*(rho_orig/(rho_cur*rho_cur) + 1./rho_orig);
-  tmp = (bulk + 4.*shear/3.)/rho_cur;  // speed of sound squared
+  tmp = bulk/rho_cur;  // speed of sound squared
 }
 
 double Membrane::getCompressibility()
