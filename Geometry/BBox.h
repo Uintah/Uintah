@@ -28,7 +28,7 @@ public:
     Point min() const;
     Point max() const;
     Vector diagonal() const;
-    Point corner(int);
+    Point corner(int) const;
 };
 
 #endif

@@ -13,6 +13,7 @@
 
 #include <Geometry/BSphere.h>
 #include <Classlib/Assert.h>
+#include <Classlib/Persistent.h>
 #include <Geometry/Ray.h>
 
 BSphere::BSphere()
@@ -106,4 +107,15 @@ void BSphere::extend(const Point& p)
 	rad=1.e-4;
 	rad2=rad*rad;
     }
+}
+
+void Pio(Piostream& stream, BSphere& s)
+{
+    stream.begin_cheap_delim();
+    Pio(stream, s.have_some);
+    Pio(stream, s.cen);
+    Pio(stream, s.rad);
+    if(stream.reading())
+	s.rad2=s.rad*s.rad;
+    stream.end_cheap_delim();
 }

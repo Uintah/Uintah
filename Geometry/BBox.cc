@@ -113,7 +113,7 @@ Vector BBox::diagonal() const
     return cmax-cmin;
 }
 
-Point BBox::corner(int i)
+Point BBox::corner(int i) const
 {
     ASSERT(have_some);
     switch(i){
