@@ -33,7 +33,7 @@ namespace SCIRun {
 
 class ManageFieldSet : public Module
 {
-  GuiString          op_gui_;
+  GuiString          state_gui_;
 
   typedef map<string, FieldSetHandle, less<string> > FSHMap;
   typedef map<string, FieldHandle, less<string> >    FHMap;
@@ -45,10 +45,15 @@ public:
   virtual ~ManageFieldSet();
   virtual void execute();
 
-  void add_fieldset(clString widget, clString path, FieldSetHandle fieldset);
-  void add_field(clString widget, clString path, FieldHandle field);
+  void add_fieldset(clString path, FieldSetHandle fieldset);
+  void add_field(clString path, FieldHandle field);
 
   void update_hiertable();
+
+  const clString get_name(PropertyManager *pm);
+  const clString data_at_to_string(Field::data_location loc);
+
+  virtual void connection(Module::ConnectionMode mode, int a, int b);
 };
 
 
@@ -60,7 +65,7 @@ extern "C" Module* make_ManageFieldSet(const clString& id)
 
 ManageFieldSet::ManageFieldSet(const clString& id)
   : Module("ManageFieldSet", id, Filter, "Fields", "SCIRun"),
-    op_gui_("op_gui", id, this)
+    state_gui_("state", id, this)
 {
 }
 
@@ -70,47 +75,45 @@ ManageFieldSet::~ManageFieldSet()
 }
 
 
-
 void
-ManageFieldSet::add_fieldset(clString widget, clString path,
-			     FieldSetHandle fs)
+ManageFieldSet::add_fieldset(clString path, FieldSetHandle fs)
 {
-  const clString newpath = path + " " + fs->get_string("name").c_str();
-  clString res;
-
-  TCL::eval(widget + " insert end \"" + newpath + "\"", res);
-  string sres = res();
-  fsidmap_[sres] = fs;
-  TCL::eval(widget + " entry configure \"" + newpath + "\" -data { } ", res);
+  const clString name = get_name(fs.get_rep());
+  clString newpath;
+  TCL::eval(id + " add_sitem " + path + " " + name, newpath);
+  const string sindex = newpath();
+  fsidmap_[sindex] = fs;
 
   vector<FieldSetHandle>::iterator fsi = fs->fieldset_begin();
   while (fsi != fs->fieldset_end())
   {
-    add_fieldset(widget, newpath, *fsi);
+    add_fieldset(newpath, *fsi);
     fsi++;
   }
 
   vector<FieldHandle>::iterator fi = fs->field_begin();
   while (fi != fs->field_end())
   {
-    add_field(widget, newpath, *fi);
+    add_field(newpath, *fi);
     fi++;
   }
 }
 
 
 void
-ManageFieldSet::add_field(clString widget, clString path, FieldHandle f)
+ManageFieldSet::add_field(clString path, FieldHandle f)
 {
-  clString res;
+  const clString name = get_name(f.get_rep());
+  const clString data = clString("{") +
+    " Datatype " + "unknown" +
+    " Location " + data_at_to_string(f->data_at()) +
+    " }";
 
-  TCL::eval(widget + " insert end \"" + path + " " +
-		  f->get_string("name").c_str() + "\"", res);
-  string sres = res();
-  fidmap_[sres] = f;
-  TCL::eval(widget + " entry configure \"" 
-	    + path + " " + f->get_string("name").c_str() +
-	    "\" -data { } ", res);
+  clString index;
+  TCL::eval(id + " add_fitem " + path + " " +  name + " " + data, index);
+
+  const string sindex = index();
+  fidmap_[sindex] = f;
 }
 
 
@@ -118,7 +121,8 @@ void
 ManageFieldSet::update_hiertable()
 {
   clString result;
-  TCL::eval(".ui" + id + ".sel.h close -recursive 0", result);
+  TCL::eval(id + " ui", result);
+  TCL::eval(id + " clear_all", result);
 
   fsidmap_.clear();
   fidmap_.clear();
@@ -131,11 +135,9 @@ ManageFieldSet::update_hiertable()
 
     // Do something with port.
     FieldSetHandle h;
-    port->get(h);
-
-    if (h.get_rep())
+    if (port->get(h))
     {
-      add_fieldset(".ui" + id + ".sel.h", "", h);
+      add_fieldset("0", h);
     }
 
     ++pi;
@@ -149,17 +151,52 @@ ManageFieldSet::update_hiertable()
 
     // Do something with port.
     FieldHandle h;
-    port->get(h);
-
-    if (h.get_rep())
+    if (port->get(h))
     {
-      add_field(".ui" + id + ".sel.h", "", h);
+      add_field("0", h);
     }
 
     ++pi;
   }
 }
 
+
+const clString
+ManageFieldSet::get_name(PropertyManager *pm)
+{
+  const string n = pm->get_string("name");
+
+  if (n != "")
+  {
+    return n.c_str();
+  }
+  else
+  {
+    char buffer[256];
+    sprintf(buffer, "#<field-%lu>", (unsigned long)pm->generation);
+    return clString(buffer);
+  }
+}
+
+const clString
+ManageFieldSet::data_at_to_string(Field::data_location loc)
+{
+  switch(loc)
+  {
+  case Field::NODE:
+    return "node";
+  case Field::EDGE:
+    return "edge";
+  case Field::FACE:
+    return "face";
+  case Field::CELL:
+    return "cell";
+  case Field::NONE:
+    return "none";
+  default:
+    return "unknown";
+  }
+}
 
 
 static void
@@ -170,60 +207,91 @@ split(list<string> &result, const string vals)
   do {
     string::size_type index1 = vals.find(' ', index0);
     if (index1 > vals.size()) { index1 = vals.size(); }
-    result.push_back(vals.substr(index0, index1 - index0));
+    int len = index1 - index0;
+    if (len > 0)
+    {
+      result.push_back(vals.substr(index0, len));
+    }
     index0 = index1 + 1;
   } while (index0 < vals.size());
 }
 
 
 void
+ManageFieldSet::connection(Module::ConnectionMode mode, int a, int b)
+{
+  Module::connection(mode, a, b);
+  //update_hiertable();
+}
+
+
+void
 ManageFieldSet::execute()
 {
-  update_state(NeedData);
-
-  update_hiertable();
-
-  clString op_gui = op_gui_.get();
-
-  clString result;
-  TCL::eval(".ui" + id + ".sel.h curselection", result);
-
-  list<string> selected;
-  split(selected, result());
-
-  FieldSet *ofs = new FieldSet();
-  ofs->set_string("name", "glomfield");
-
-  list<string>::iterator si = selected.begin();
-  while (si != selected.end())
+  clString state_gui = state_gui_.get();
+  
+  if (state_gui != "output")
   {
-    const string &val = *si;
-    ++si;
+    update_hiertable();
+  }
+  else
+  {
+    cout << "outputting\n";
 
-    FSHMap::iterator fsloc = fsidmap_.find(val);
-    if (fsloc != fsidmap_.end())
+    state_gui_.set("update");
+
+    FieldSet *ofs = NULL;
+
+    clString result;
+    TCL::eval(".ui" + id + ".sel.h curselection", result);
+
+    list<string> selected;
+    split(selected, result());
+
+    list<string>::iterator si = selected.begin();
+    while (si != selected.end())
     {
-      ofs->push_back((*fsloc).second);
-    }
-    else
-    {
-      FHMap::iterator floc = fidmap_.find(val);
-      if (floc != fidmap_.end())
+      const string val = *si;
+      ++si;
+
+      cout << "Looking for '" << val << "'\n";
+
+      FSHMap::iterator fsloc = fsidmap_.find(val);
+      if (fsloc != fsidmap_.end())
       {
-	ofs->push_back((*floc).second);
+	if (ofs == NULL)
+	{
+	  ofs = new FieldSet();
+	}
+	ofs->push_back((*fsloc).second);
       }
       else
       {
-	cerr << val << " not found in the iports.\n";
+	FHMap::iterator floc = fidmap_.find(val);
+	if (floc != fidmap_.end())
+	{
+	  if (ofs == NULL)
+	  {
+	    ofs = new FieldSet();
+	  }
+	  ofs->push_back((*floc).second);
+	}
+	else
+	{
+	  cout << "Could not find '" << val << "' in the iports.\n";
+	}
       }
     }
+
+    if (ofs != NULL)
+    {
+      cout << "Dumping out a field set\n";
+      ofs->set_string("name", "glomfield");
+      FieldSetHandle ofsh(ofs);
+      FieldSetOPort *ofsp = (FieldSetOPort *)get_oport("Output FieldSet");
+      ofsp->send(ofsh);
+    }
   }
-
-  FieldSetHandle ofsh(ofs); 
-  FieldSetOPort *ofsp = (FieldSetOPort *)get_oport(0);
-  ofsp->send(ofsh);
-
-  //FieldOPort *ofp = (FieldOPort *)get_oport(1);
 }
 
 } // End namespace SCIRun
