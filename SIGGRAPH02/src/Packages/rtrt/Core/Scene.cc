@@ -64,7 +64,7 @@ Scene::Scene() :
   image1(0),
   background(0),
   ambient_environment_map(0)
-{}
+{ mainGroup_ = new Group(); }
 
 Scene::Scene(Object* ob, const Camera& cam, Image* image0, Image* image1,
 	     const Color& bgcolor,
@@ -90,8 +90,8 @@ Scene::Scene(Object* ob, const Camera& cam, Image* image0, Image* image1,
   ref_cnt(0),
   lock("rtrt::Scene lock"),
   soundVolume_(50),
-  obj(ob), 
-  mainGroup_(ob), 
+  obj(0), 
+  mainGroup_(0), 
   camera0(camera0), 
   image0(image0), 
   image1(image1),
@@ -102,13 +102,17 @@ Scene::Scene(Object* ob, const Camera& cam, Image* image0, Image* image1,
   groundplane(groundplane),
   transmissionMode_(false)
 {
+  mainGroup_ = new Group();
+  mainGroup_->add( ob );
   init(cam, bgcolor);
 }
 
 void Scene::init(const Camera& cam, const Color& bgcolor)
 {
-  lightsGroup_ = new Group;
-  mainGroupWithLights_ = new Group;
+  lightsGroup_ = new Group();
+  permanentLightsGroup_ = new Group();
+  mainGroupWithLights_ = new Group();
+  mainGroup_->add( permanentLightsGroup_ );
   mainGroupWithLights_->add( mainGroup_ );
   mainGroupWithLights_->add( lightsGroup_ );
 
@@ -148,7 +152,10 @@ void
 Scene::set_object(Object* new_obj) 
 {
   obj        = new_obj;
-  mainGroup_ = new_obj;
+  if (mainGroup_) delete mainGroup_;
+  mainGroup_ = new Group();
+  mainGroup_->add( permanentLightsGroup_ );
+  mainGroup_->add( new_obj );
   
   mainGroupWithLights_ = new Group;
   mainGroupWithLights_->add( new_obj );
@@ -192,7 +199,7 @@ Scene::Scene(Object* ob, const Camera& cam, const Color& bgcolor,
   lock("rtrt::Scene lock"),
   soundVolume_(50),
   obj(ob), 
-  mainGroup_(ob),
+  mainGroup_(0),
   camera0(camera0), 
   image0(0), 
   image1(0),
@@ -203,6 +210,8 @@ Scene::Scene(Object* ob, const Camera& cam, const Color& bgcolor,
   groundplane(groundplane), 
   transmissionMode_(false)
 {
+  mainGroup_ = new Group();
+  mainGroup_->add( ob );
   init(cam, bgcolor);
 }
 
@@ -212,6 +221,7 @@ Scene::~Scene()
     delete lightsGroup_;
     delete mainGroup_;
     delete mainGroupWithLights_;
+    delete permanentLightsGroup_;
     delete camera0;
     delete camera1;
     delete image0;
@@ -235,9 +245,21 @@ void Scene::add_light(Light* light)
   lights.add(light);
 }
 
+void Scene::add_permanent_light(Light* light)
+{
+  permanentLightsGroup_->add( light->getSphere() );
+  lights.add(light);
+}
+
 void Scene::add_per_matl_light( Light* light )
 {
   lightsGroup_->add( light->getSphere() );
+  per_matl_lights.add(light);
+}
+
+void Scene::add_perm_per_matl_light( Light* light )
+{
+  permanentLightsGroup_->add( light->getSphere() );
   per_matl_lights.add(light);
 }
 
@@ -272,6 +294,9 @@ void Scene::preprocess(double bvscale, int& pp_offset, int& scratchsize)
   for(i=0;i<shadows.size();i++)
     shadows[i]->preprocess(this, pp_offset, scratchsize);
   cerr << "Preprocess took " << SCIRun::Time::currentSeconds()-time << " seconds\n";
+
+  // obj must not be a group until after preprocess
+  obj = mainGroup_;
 }
 
 void Scene::copy_camera(int which)
@@ -387,11 +412,9 @@ Scene::renderLights( bool on )
   if( on ){ 
     // Draw spheres for all the lights
     obj = mainGroupWithLights_;
-    cout << "numObjects: " << ((Group*)obj)->numObjects() << endl;
   } else {
     // Remove the spheres for all the lights
     obj = mainGroup_;
-    cout << "numObjects: " << ((Group*)obj)->numObjects() << endl;
   }
 }
 
