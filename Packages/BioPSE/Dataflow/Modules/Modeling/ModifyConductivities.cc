@@ -144,10 +144,8 @@ ModifyConductivities::update_to_gui(vector<pair<string, Tensor> > &tensors)
     gui_m20_[i]->set(to_string(tensors[i].second.mat_[2][0]));
     gui_m21_[i]->set(to_string(tensors[i].second.mat_[2][1]));
     gui_m22_[i]->set(to_string(tensors[i].second.mat_[2][2]));
-
-    string result;
-    gui->eval(id + " create_entries", result);
   }
+  gui->execute(id + " create_entries");
 }
 
 
