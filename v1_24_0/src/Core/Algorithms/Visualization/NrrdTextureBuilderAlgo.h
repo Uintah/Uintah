@@ -54,9 +54,7 @@ public:
              int card_mem);
 
 protected:
-  void build_bricks(std::vector<TextureBrickHandle>& bricks,
-		    int nx, int ny, int nz, int nc, int* nb,
-		    const BBox& bbox, int brick_mem);
+
   void fill_brick(TextureBrickHandle &brick, const NrrdDataHandle &v_nrrd,
 		  const NrrdDataHandle &gm_nrrd, int ni, int nj, int nk);
 };
