@@ -15,5 +15,6 @@ again:
 	beqz	$5, again
         nop
 	j	$31
+	nop
 
 	.end	Allocator_try_lock
