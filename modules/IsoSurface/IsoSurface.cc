@@ -108,7 +108,6 @@ void IsoSurface::execute()
 {
     abort_flag=0;
     if(isosurface_id){
-	cerr << "Deleting object: " << isosurface_id << endl;
 	ogeom->delObj(isosurface_id);
     }
     Field3DHandle field;
@@ -134,7 +133,13 @@ void IsoSurface::execute()
 	if(!widget){
 	    widget_sphere=new GeomSphere(seed_point, 1*widget_scale);
 	    Vector grad(field->gradient(seed_point));
-	    grad.normalize();
+	    if(grad.length2() < 1.e-6){
+		// Just the point...
+		widget_scale=0.00001;
+		grad=Vector(0,0,1);
+	    } else {
+		grad.normalize();
+	    }
 	    Point cyl_top(seed_point+grad*(2*widget_scale));
 	    widget_cylinder=new GeomCylinder(seed_point, cyl_top,
 					     0.5*widget_scale);
@@ -161,6 +166,7 @@ void IsoSurface::execute()
 	if(grad.length2() < 1.e-6){
 	    // Just the point...
 	    widget_scale=0.00001;
+	    grad=Vector(0,0,1);
 	    widget->pick->set_principal(Vector(1,0,0),
 					Vector(0,1,0),
 					Vector(0,0,1));
@@ -247,6 +253,7 @@ int IsoSurface::iso_cube(int i, int j, int k, double isoval,
     int wcase=tab->which_case;
     switch(wcase){
     case 0:
+	cerr << "Case 0!\n";
 	break;
     case 1:
 	{
@@ -484,10 +491,12 @@ void IsoSurface::iso_reg_grid(const Field3DHandle& field, const Point& p,
     GeomID groupid=0;
     while(!surfQ.is_empty()) {
 	if (counter%400 == 0) {
-	    if (groupid)
-		ogeom->delObj(groupid);
-	    groupid=ogeom->addObj(group->clone(), surface_name);
-	    ogeom->flushViews();
+	    if(!ogeom->busy()){
+		if (groupid)
+		    ogeom->delObj(groupid);
+		groupid=ogeom->addObj(group->clone(), surface_name);
+		ogeom->flushViews();
+	    }
 	}
 	if(abort_flag){
 	    if(groupid)
@@ -500,7 +509,7 @@ void IsoSurface::iso_reg_grid(const Field3DHandle& field, const Point& p,
 	py=dummy/nx;
 	px=dummy%nx;
 	int nbrs=iso_cube(px, py, pz, isoval, group, field);
-	if ((nbrs | 1) && (px!=0)) {
+	if ((nbrs & 1) && (px!=0)) {
 	    pLoc-=1;
 	    if (!visitedPts.lookup(pLoc, dummy)) {
 		visitedPts.insert(pLoc, 0);
@@ -508,7 +517,7 @@ void IsoSurface::iso_reg_grid(const Field3DHandle& field, const Point& p,
 	    }
 	    pLoc+=1;
 	}
-	if ((nbrs | 2) && (px!=nx-2)) {
+	if ((nbrs & 2) && (px!=nx-2)) {
 	    pLoc+=1;
 	    if (!visitedPts.lookup(pLoc, dummy)) {
 		visitedPts.insert(pLoc, 0);
@@ -516,7 +525,7 @@ void IsoSurface::iso_reg_grid(const Field3DHandle& field, const Point& p,
 	    }
 	    pLoc-=1;
 	}
-	if ((nbrs | 4) && (py!=0)) {
+	if ((nbrs & 8) && (py!=0)) {
 	    pLoc-=nx;
 	    if (!visitedPts.lookup(pLoc, dummy)) {
 		visitedPts.insert(pLoc, 0);
@@ -524,7 +533,7 @@ void IsoSurface::iso_reg_grid(const Field3DHandle& field, const Point& p,
 	    }
 	    pLoc+=nx;
 	}
-	if ((nbrs | 8) && (py!=ny-2)) {
+	if ((nbrs & 4) && (py!=ny-2)) {
 	    pLoc+=nx;
 	    if (!visitedPts.lookup(pLoc, dummy)) {
 		visitedPts.insert(pLoc, 0);
@@ -532,7 +541,7 @@ void IsoSurface::iso_reg_grid(const Field3DHandle& field, const Point& p,
 	    }
 	    pLoc-=nx;
 	}
-	if ((nbrs | 16) && (pz!=0)) {
+	if ((nbrs & 16) && (pz!=0)) {
 	    pLoc-=nx*ny;
 	    if (!visitedPts.lookup(pLoc, dummy)) {
 		visitedPts.insert(pLoc, 0);
@@ -540,7 +549,7 @@ void IsoSurface::iso_reg_grid(const Field3DHandle& field, const Point& p,
 	    }
 	    pLoc+=nx*ny;
 	}
-	if ((nbrs | 32) && (pz!=nz-2)) {
+	if ((nbrs & 32) && (pz!=nz-2)) {
 	    pLoc+=nx*ny;
 	    if (!visitedPts.lookup(pLoc, dummy)) {
 		visitedPts.insert(pLoc, 0);
