@@ -60,18 +60,30 @@ itcl_class DataIO_Readers_MDSPlusDataReader {
 	set $this-status "Unkonwn"
 	set $this-port "na"
 
+	global $this-search-path
+	set $this-search-path 1
+
 	global $this-mergeData
 	global $this-assumeSVT
 
 	set $this-mergeData 1
 	set $this-assumeSVT 1
+
+	global allow_selection
+	set allow_selection true
     }
 
     method ui {} {
-	global $this-server
-	global $this-tree
-	global $this-shot
-	global $this-signal
+	global $this-load-server
+	global $this-load-tree
+	global $this-load-shot
+	global $this-load-signal
+
+	global $this-search-server
+	global $this-search-tree
+	global $this-search-shot
+	global $this-search-signal
+	global $this-search-path
 
 	global $this-mergeData
 	global $this-assumeSVT
@@ -84,16 +96,115 @@ itcl_class DataIO_Readers_MDSPlusDataReader {
 
         toplevel $w
 
+	global current_cursor
+	set current_cursor [$w cget -cursor]
+
+
+
+
+	iwidgets::labeledframe $w.treeview -labeltext "MDS Tree Traverser"
+
+	set treeframe [$w.treeview childsite]
+
+	frame $treeframe.info
+
+	frame $treeframe.info.box
+
+	frame $treeframe.info.box.title
+	label $treeframe.info.box.title.server -text "Server" -width 16 -relief groove
+	label $treeframe.info.box.title.tree   -text "Tree"   -width 12 -relief groove
+	label $treeframe.info.box.title.shot   -text "Shot"   -width  8 -relief groove
+	label $treeframe.info.box.title.signal -text "Signal" -width 48 -relief groove
+
+	pack $treeframe.info.box.title.server $treeframe.info.box.title.tree \
+	    $treeframe.info.box.title.shot $treeframe.info.box.title.signal \
+	    -side left
+
+	pack $treeframe.info.box.title
+
+	frame $treeframe.info.box.entry
+	entry $treeframe.info.box.entry.server -textvariable $this-load-server \
+	    -width 16
+	entry $treeframe.info.box.entry.tree   -textvariable $this-load-tree   \
+	    -width 12
+	entry $treeframe.info.box.entry.shot   -textvariable $this-load-shot   \
+	    -width  8
+	entry $treeframe.info.box.entry.signal -textvariable $this-load-signal \
+	    -width 48
+
+	pack $treeframe.info.box.entry.server $treeframe.info.box.entry.tree \
+	    $treeframe.info.box.entry.shot $treeframe.info.box.entry.signal \
+	    -side left 
+
+	pack $treeframe.info.box.title $treeframe.info.box.entry -side top \
+	     -fill both
+
+
+	button $treeframe.info.load -text "  Load  " \
+	    -command "$this AddRootSignals"
+
+	pack $treeframe.info.box  -padx 15 -side left
+	pack $treeframe.info.load -padx 20 -side left
+
+
+	pack $treeframe.info -side top -fill both -expand yes
+
+
+
+
+	option add *TreeView.font { Courier 12 }
+#	option add *TreeView.Button.background grey95
+#	option add *TreeView.Button.activeBackground grey90
+#	option add *TreeView.Column.background grey90
+	option add *TreeView.Column.titleShadow { grey70 1 }
+#	option add *TreeView.Column.titleFont { Helvetica 12 bold }
+	option add *TreeView.Column.font { Courier 12 }
+
+	global tree
+	set tree [blt::tree create]    
+
+	set treeview [Scrolled_Treeview $treeframe.tree \
+			  -width 600 -height 225 \
+			  -selectcommand [list $this SelectNotify] \
+			  -tree $tree]
+
+	#-selectmode multiple \
+
+  	pack $treeframe.tree -side top -pady 10 -fill x -expand yes
+
+	$treeview column configure treeView -text Node
+	$treeview column insert end "Node-Type" "Data-Type" "Value"
+	$treeview column configure "Node-Type" "Data-Type" "Value" \
+	    -justify left -edit no
+	$treeview column configure treeView -hide no -edit no
+#	$treeview text configure -selectborderwidth 0
+
+	focus $treeview
+
+  	pack $w.treeview -fill both -expand yes -side top
+
+	$treeview column bind all <ButtonRelease-3> {
+	    %W configure -flat no
+	}
+
+	$treeview column bind all <ButtonRelease-3> {
+	    %W configure -flat no
+	}
+
+	foreach column [$treeview column names] {
+	    $treeview column configure $column \
+		-command [list $this SortColumn $column]
+	}
 
 
 	frame $w.title
 	label $w.title.check  -text ""       -width  3 -relief groove
-	label $w.title.server -text "Server" -width 24 -relief groove
+	label $w.title.server -text "Server" -width 16 -relief groove
 	label $w.title.tree   -text "Tree"   -width 12 -relief groove
 	label $w.title.shot   -text "Shot"   -width  8 -relief groove
-	label $w.title.signal -text "Signal" -width 32 -relief groove
+	label $w.title.signal -text "Signal" -width 48 -relief groove
 	label $w.title.status -text "Status" -width  8 -relief groove
-	label $w.title.port   -text "Port"   -width  8 -relief groove
+	label $w.title.port   -text "Port"   -width  4 -relief groove
 	label $w.title.empty  -text ""        -width 3 -relief groove
 
 	pack $w.title.check \
@@ -101,7 +212,7 @@ itcl_class DataIO_Readers_MDSPlusDataReader {
 	    $w.title.status $w.title.port $w.title.empty \
 	    -side left 
 
-	pack $w.title  -fill x
+	pack $w.title -fill x
 
 	iwidgets::scrolledframe $w.entries -hscrollmode none
 	pack $w.entries -side top -fill both -expand yes
@@ -124,20 +235,13 @@ itcl_class DataIO_Readers_MDSPlusDataReader {
 	iwidgets::labeledframe $w.search -labeltext "Search Selection"
 	set search [$w.search childsite]
 
-	global $this-search-server
-	global $this-search-tree
-	global $this-search-shot
-	global $this-search-signal
-	global $this-search-regexp
-
-
 	frame $search.box
 
 	frame $search.box.title
-	label $search.box.title.server -text "Server" -width 24 -relief groove
+	label $search.box.title.server -text "Server" -width 16 -relief groove
 	label $search.box.title.tree   -text "Tree"   -width 12 -relief groove
 	label $search.box.title.shot   -text "Shot"   -width  8 -relief groove
-	label $search.box.title.signal -text "Signal" -width 32 -relief groove
+	label $search.box.title.signal -text "Signal" -width 40 -relief groove
 
 	pack $search.box.title.server $search.box.title.tree \
 	    $search.box.title.shot $search.box.title.signal \
@@ -147,13 +251,13 @@ itcl_class DataIO_Readers_MDSPlusDataReader {
 
 	frame $search.box.entry
 	entry $search.box.entry.server -textvariable $this-search-server \
-	    -width 24
+	    -width 16
 	entry $search.box.entry.tree   -textvariable $this-search-tree   \
 	    -width 12
 	entry $search.box.entry.shot   -textvariable $this-search-shot   \
 	    -width  8
 	entry $search.box.entry.signal -textvariable $this-search-signal \
-	    -width 32
+	    -width 40
 
 	pack $search.box.entry.server $search.box.entry.tree \
 	    $search.box.entry.shot $search.box.entry.signal \
@@ -165,15 +269,38 @@ itcl_class DataIO_Readers_MDSPlusDataReader {
 
 	frame $search.options
 
-	checkbutton $search.options.regexp -variable $this-search-regexp
-	label $search.options.label -text "Reg-Exp" -width 7 \
+	frame $search.options.path
+
+	frame $search.options.path.absolute
+
+	radiobutton $search.options.path.absolute.button \
+	    -variable $this-search-path -value 1
+	label $search.options.path.absolute.label -text "Absolute" -width 9 \
 	    -anchor w -just left
+
+	pack $search.options.path.absolute.button \
+	    $search.options.path.absolute.label -side left
+
+
+	frame $search.options.path.relative
+
+	radiobutton $search.options.path.relative.button \
+	    -variable $this-search-path -value 0
+	label $search.options.path.relative.label -text "Relative" -width 9 \
+	    -anchor w -just left
+
+	pack $search.options.path.relative.button \
+	    $search.options.path.relative.label -side left
+
+
+	pack $search.options.path.absolute $search.options.path.relative -side top
+
 	button $search.options.search -text " Search " \
 	    -command "$this-c search"
 
-	pack $search.options.regexp -side left -padx 5
-	pack $search.options.label -side left
-	pack $search.options.regexp $search.options.search -padx 5 -side left
+
+	pack $search.options.path -padx 5 -side left
+	pack $search.options.search -side left
 	pack $search.box $search.options -side left
 
 
@@ -264,17 +391,17 @@ itcl_class DataIO_Readers_MDSPlusDataReader {
 		    frame $entries.e-$i
 		    checkbutton $entries.e-$i.check -variable $this-check-$i
 		    entry $entries.e-$i.server \
-			-textvariable $this-server-$i -width 24
+			-textvariable $this-server-$i -width 16
 		    entry $entries.e-$i.tree \
 			-textvariable $this-tree-$i   -width 12
 		    entry $entries.e-$i.shot \
 			-textvariable $this-shot-$i   -width  8
 		    entry $entries.e-$i.signal \
-			-textvariable $this-signal-$i -width 32
+			-textvariable $this-signal-$i -width 48
 		    entry $entries.e-$i.status -state disabled \
 			-textvariable $this-status-$i -width  8
 		    entry $entries.e-$i.port -state disabled \
-			-textvariable $this-port-$i   -width  8
+			-textvariable $this-port-$i   -width  4
 
 		    pack $entries.e-$i.check \
 			$entries.e-$i.server \
@@ -293,6 +420,16 @@ itcl_class DataIO_Readers_MDSPlusDataReader {
 		destroy $entries.e-$i
 		incr i
 	    }
+	}
+    }
+
+    method AddRootSignals { } {
+	set w .ui[modname]
+	if [ expr [winfo exists $w] ] {
+
+	    $w config -cursor watch
+	    update idletasks
+	    $this-c update_tree root root
 	}
     }
 
@@ -355,6 +492,14 @@ itcl_class DataIO_Readers_MDSPlusDataReader {
 	    create_entries
 	    
 	    if { [set $this-num-entries] == 0 } {
+		global $this-signal
+		global $this-status
+		global $this-port
+
+		set $this-signal ""
+		set $this-status "Unknown"
+		set $this-port "na"
+
 		addEntry
 	    }
 	}
@@ -374,5 +519,602 @@ itcl_class DataIO_Readers_MDSPlusDataReader {
 	incr $this-num-entries
 	
 	create_entries
+    }
+
+
+    method build_tree { filename parent } {
+
+	global $this-dumpname
+	set $this-dumpname $filename
+
+	global $this-signals
+	set $this-signals ""
+
+	set w .ui[modname]
+
+	if [ expr [winfo exists $w] ] {
+	    set treeframe [$w.treeview childsite]
+	    set treeview $treeframe.tree.tree
+
+	    global tree
+
+	    if { $parent == "root" } {
+		$tree delete $parent
+	    }
+
+	    if {[catch {open $filename r} fileId]} {
+		global read_error
+
+		# the file may have been removed from the /tmp dir so
+		# try to recreate it.
+		if { $read_error == 0 } {
+		    set message "Can not find "
+		    append message $filename
+		    $this-c error $message
+		    return
+		} else {
+		    set message "Can not open "
+		    append message $filename
+		    $this-c error $message
+		    return
+		}
+	    } elseif {[gets $fileId line] >= 0 &&
+		      [string first MDSPlus* $line] != 1 } {
+		    process_file $tree $parent $fileId $line
+
+	    } else {
+		$this-c error "Not an MDSPlus file."
+		return
+	    }
+
+	    close $fileId
+
+	    $treeview entry configure "attribute" -foreground green4
+	    $treeview entry configure "signal"   -foreground cyan4
+	    
+	    $treeview open $parent
+	    set ids [$treeview entry children $parent]
+	    foreach id $ids {
+		$treeview open $id
+	    }
+
+	    global current_cursor
+	    $w config -cursor $current_cursor
+	}
+    }
+
+
+    method process_file { tree parent fileId input } {
+
+	global have_nodes
+	global have_attributes
+	global have_signals
+
+	set have_nodes      0
+	set have_attributes 0
+	set have_signals    0
+ 
+	while {[gets $fileId line] >= 0 && [string first "\}" $line] == -1} {
+
+	    if { [string first "NODE" $line] != -1 } {
+		if { $parent == "root" } {
+		    process_node $tree $parent $fileId $line
+		} else {
+		    process_node $tree $parent $fileId ""
+		} 
+	    } else {
+		$this-c error "File hierarchy mal formed."
+		return
+	    }
+	}
+    }
+
+
+    method process_node { tree parent fileId input } {
+	
+	if { $input != "" } {
+	    set name [process_name $input]
+	    set info(type) @blt::tv::normalOpenFolder
+	    set info(Node-Type) ""
+	    set info(Data-Type) ""
+	    set info(Value) ""
+	    set node [$tree insert $parent -tag "node" -label $name \
+			  -data [array get info]]
+	} else {
+	    set node $parent
+	}
+
+
+	global have_nodes
+	set have_nodes 1
+
+	while {[gets $fileId line] >= 0 && [string first "\}" $line] == -1} {
+
+	    if { [string first "NODE" $line] != -1 } {
+		process_node $tree $node $fileId $line
+	    } elseif { [string first "ATTRIBUTE" $line] != -1 } {
+		process_attribute $tree $node $fileId $line
+	    } elseif { [string first "SIGNAL" $line] != -1 } {
+		process_signal $tree $node $fileId $line
+	    } else {
+		set message "Unknown token: "
+		append message $line
+		$this-c error $message
+		return
+	    }
+	}
+    }
+
+    method process_attribute { tree parent fileId input } {
+
+	if {[gets $fileId line] >= 0 && \
+	    [string first "DATATYPE" $line] == -1} {
+	    set message "Bad datatype formation: "
+	    append message $line
+	    $this-c error $message
+	    return
+	}
+
+	set start [string first "\"" $line]
+	set end   [string  last "\"" $line]
+	set type  [string range $line [expr $start+1] [expr $end-1]]
+
+	if {[gets $fileId line] >= 0 && \
+	    [string first "DATA" $line] == -1} {
+	    set message "Bad attribute data formation: "
+	    append message $line
+	    $this-c error $message
+	    return
+	}
+
+	set attr ""
+
+	while { [gets $fileId line] >= 0 && [string first "\}" $line] == -1 } {
+
+	    if { [string length $attr] < 32 } { 
+		if { [string length $attr] > 0 } { 
+		    append attr ", "
+		}
+		append attr [string trim $line]
+	    } elseif { [string first "..." $attr] == -1 } { 
+		append attr " ..."
+	    }
+	}
+
+	if {[gets $fileId line] >= 0 && [string first "\}" $line] == -1} {
+	    set message "Bad attribute formation: "
+	    append message $line
+	    $this-c error $message
+	    return
+	} else {
+	    set aname [process_name $input]
+	    set info(type) ""
+	    set info(Node-Type) "Attribute"
+	    set info(Data-Type) $type
+	    set info(Value) $attr
+	    $tree insert $parent -tag "attribute" -label $aname \
+		-data [array get info]
+
+	    global have_attributes
+	    set have_attributes 1
+	}
+    }
+
+    method process_signal { tree parent fileId input } {
+
+	if {[gets $fileId line] >= 0 && \
+	    [string first "DATATYPE" $line] == -1} {
+	    set message "Bad signal formation: "
+	    append message $line
+	    $this-c error $message
+	    return
+	}
+
+	set start [string first "\"" $line]
+	set end   [string  last "\"" $line]
+	set type  [string range $line [expr $start+1] [expr $end-1]]
+
+	if {[gets $fileId line] >= 0 && \
+	    [string first "DATASPACE" $line] == -1} {
+	    set message "Bad signal formation: "
+	    append message $line
+	    $this-c error $message
+	    return
+	}
+
+	set start [string first "(" $line]
+	set end   [string  last ")" $line]
+	set dims  [string range $line $start $end]
+
+	set dsname [process_name $input]
+	set info(type) ""
+	set info(Node-Type) "Signal"
+	set info(Data-Type) $type
+	set info(Value) $dims
+	set node [$tree insert $parent -tag "signal" -label $dsname \
+		      -data [array get info]]
+  
+	global have_signals
+	set have_signals 1
+
+	while {[gets $fileId line] >= 0 && [string first "\}" $line] == -1} {
+
+	    if { [string first "ATTRIBUTE" $line] != -1 } {
+		process_attribute $tree $node $fileId $line
+	    } else {
+		set message "Unknown token: "
+		append message $line
+		$this-c error $message
+		return
+	    }
+	}
+    }
+
+    method process_name { line } {
+	set start [string first "\"" $line]
+	set end   [string  last "\"" $line]
+
+	return [string range $line [expr $start+1] [expr $end-1]]
+    }
+
+     method SortColumn { column } {
+	set w .ui[modname]
+
+	if [ expr [winfo exists $w] ] {
+
+	    set treeframe [$w.treeview childsite]
+	    set treeview $treeframe.tree.tree
+
+	    set old [$treeview sort cget -column] 
+	    set decreasing 0
+	    if { "$old" == "$column" } {
+		set decreasing [$treeview sort cget -decreasing]
+		set decreasing [expr !$decreasing]
+	    }
+	    $treeview sort configure -decreasing $decreasing -column $column -mode integer
+	    $treeview configure -flat yes
+	    $treeview sort auto yes
+
+	    blt::busy hold $treeview
+	    update
+	    blt::busy release $treeview
+	}
+    }
+
+    method SelectNotify { } {
+
+	global allow_selection
+
+	if { $allow_selection == "true" } {
+
+	    set allow_selection false
+
+	    set w .ui[modname]
+
+	    if [ expr [winfo exists $w] ] {
+
+		set treeframe [$w.treeview childsite]
+		set treeview $treeframe.tree.tree
+
+		focus $treeview
+
+		set id [$treeview curselection]
+
+		if { $id != "" } {
+
+		    global have_nodes
+		    global have_attributes
+
+		    if { $have_nodes == 1 } {
+			set nodes [$treeview tag nodes "node"]
+		    } else {
+			set nodes ""
+		    }
+
+		    if { $have_attributes == 1 } {
+			set attributes [$treeview tag nodes "attribute"]
+		    } else {
+			set attributes ""
+		    }
+
+		    # Check to see if the selection is an attribute
+		    foreach attribute $attributes {
+			if { $attribute == $id } { 
+			    $treeview selection clear $id
+			    break
+			}
+		    }
+		    
+		    # Check to see if the selection is a node
+		    foreach node $nodes {
+			if { $node == $id } { 
+			    $treeview selection clear $id
+			    AddChildrenSignals $id
+			    break
+			}
+		    }		    
+		}
+		
+		updateSelection
+	    }
+
+	    set allow_selection true
+	}
+    }
+
+    method AddChildrenSignals { parent } {
+	set w .ui[modname]
+
+	if [ expr [winfo exists $w] ] {
+
+	    set treeframe [$w.treeview childsite]
+	    set treeview $treeframe.tree.tree
+	    
+	    set children [eval $treeview entry children $parent]
+
+	    if { $children == "" } {
+
+		set name [eval $treeview get -full $parent]
+
+		# Remove any braces {}
+		set pos 0
+		while { $pos != -1 } {
+		    set pos [string last "\{" $name]
+		    set name [string replace $name $pos $pos ""]
+		}
+		set pos 0
+		while { $pos != -1 } {
+		    set pos [string last "\}" $name]
+		    set name [string replace $name $pos $pos ""]
+		}
+		# Replace all of ' ' in the base name with '.'.
+		set pos 0
+		while { $pos != -1 } {
+		    set pos [string last " " $name]
+		    set name [string replace $name $pos $pos "."]
+		}
+
+		$w config -cursor watch
+		update idletasks
+		$this-c update_tree $name $parent 
+	    }
+	}
+    }
+
+
+    method updateSelection {} {
+
+	set w .ui[modname]
+
+	if [ expr [winfo exists $w] ] {
+	    set treeframe [$w.treeview childsite]
+	    set treeview $treeframe.tree.tree
+
+	    set id [$treeview curselection]
+
+	    if { $id != "" } {
+		set signal [eval $treeview get -full $id]
+
+		# Remove any braces {}
+		set pos 0
+		while { $pos != -1 } {
+		    set pos [string last "\{" $signal]
+		    set signal [string replace $signal $pos $pos ""]
+		}
+		set pos 0
+		while { $pos != -1 } {
+		    set pos [string last "\}" $signal]
+		    set signal [string replace $signal $pos $pos ""]
+		}
+		# Replace all of ' ' in the base name with '.'.
+		set pos 0
+		while { $pos != -1 } {
+		    set pos [string last " " $signal]
+		    set signal [string replace $signal $pos $pos "."]
+		}
+
+		global $this-server
+		global $this-tree
+		global $this-shot
+		global $this-signal
+		global $this-status
+		global $this-port
+
+		global $this-load-server
+		global $this-load-tree
+		global $this-load-shot
+
+
+		set $this-server [set $this-load-server]
+		set $this-tree   [set $this-load-tree]
+		set $this-shot   [set $this-load-shot]
+		set $this-signal $signal
+		set $this-status "Unkonwn"
+		set $this-port "na"
+
+		global $this-num-entries
+
+		set add "true"
+
+		for {set i 0} {$i < [set $this-num-entries]} {incr i} {
+		    
+		    # See if the signal already exists
+		    if { [set $this-server-$i] == [set $this-load-server] &&
+			 [set $this-tree-$i]   == [set $this-tree] &&
+			 [set $this-shot-$i]   == [set $this-shot] &&
+			 [set $this-signal-$i] == [set $this-signal] } {
+			set add "false"
+			break
+		    }
+		}
+
+		if { $add == "true" } {
+		    addEntry
+		}
+	    }
+	}
+    }
+
+
+    method AddSelection { node } {
+	set w .ui[modname]
+
+	if [ expr [winfo exists $w] ] {
+
+	    global allow_selection
+	    set allow_selection false
+
+	    global $this-selectionString
+	    global $this-regexp
+
+	    set treeframe [$w.treeview childsite]
+	    set treeview $treeframe.tree.tree
+
+	    set path -full
+	    if { $node == 1 } {
+		set path -name
+	    }
+	    
+	    set match -exact
+	    if {[set $this-regexp] == 1 } {
+		set match -glob
+	    }
+
+	    set ids [eval $treeview find \
+			 $match $path "{[set $this-selectionString]}" ]
+
+	    foreach id $ids {
+		if { [eval $treeview entry isopen $id] == 1 } {
+		    $treeview selection set $id
+		} else {
+		    $treeview open $id
+		    $treeview selection set $id
+		    $treeview close $id
+		}
+	    }
+	    
+	    set allow_selection true
+
+	    SelectNotify
+	}
+    }
+
+    method DeleteSelection { } {
+	set w .ui[modname]
+
+	if [ expr [winfo exists $w] ] {
+#	    set sd [$w.sd childsite]
+#	    set listbox $sd.listbox
+
+	    set treeframe [$w.treeview childsite]
+	    set treeview $treeframe.tree.tree
+
+#	    set indices [$listbox.list curselection]
+#	    set indices ""
+
+	    if { [string first "\{" [set $this-signals]] == 0 } {
+		set tmp [set $this-signals]
+	    } else {
+		set tmp "\{"
+		append tmp [set $this-signals]
+		append tmp "\}"
+	    }
+	    
+	    set index 0
+	    # Reselect the signals
+	    foreach signal $tmp {
+
+		foreach idx $indices {
+		    if { $index == $idx } { 
+			set ids [eval $treeview find -exact -full "{$signal}"]
+			
+			foreach id $ids {
+			    if {"$id" != ""} {
+				$treeview selection clear $id
+				$treeview open $id
+			    } else {			    
+				set message "Could not find signal: "
+				append message $signal
+				$this-c error $message
+				return
+			    }
+			}
+		    }
+		}
+
+		incr index
+	    }
+	}
+    }
+
+
+# Copied from Chapter 30 of Practical Programming in Tcl and Tk
+# by Brent B. Welch.Copyright 2000 Pentice Hall. 
+
+    method Scroll_Set {scrollbar geoCmd offset size} {
+	if {$offset != 0.0 || $size != 1.0} {
+	    eval $geoCmd ;# Make sure it is visible
+	}
+	$scrollbar set $offset $size
+    }
+
+    method Scrolled_Listbox { f args } {
+	frame $f
+	listbox $f.list \
+		-xscrollcommand [list $this Scroll_Set $f.xscroll \
+			[list grid $f.xscroll -row 1 -column 0 -sticky we]] \
+		-yscrollcommand [list $this Scroll_Set $f.yscroll \
+			[list grid $f.yscroll -row 0 -column 1 -sticky ns]]
+	eval {$f.list configure} $args
+	scrollbar $f.xscroll -orient horizontal \
+		-command [list $f.list xview]
+	scrollbar $f.yscroll -orient vertical \
+		-command [list $f.list yview]
+	grid $f.list -sticky news
+	grid $f.xscroll -sticky news
+	grid rowconfigure $f 0 -weight 1
+	grid columnconfigure $f 0 -weight 1
+	return $f.list
+    }
+
+    method Scrolled_Text { f args } {
+	frame $f
+	eval {text $f.text -wrap none \
+		  -xscrollcommand [list $f.xscroll set] \
+		  -yscrollcommand [list $f.yscroll set]} $args
+	scrollbar $f.xscroll -orient horizontal \
+	    -command [list $f.text xview]
+	scrollbar $f.yscroll -orient vertical \
+	    -command [list $f.text yview]
+	grid $f.text $f.yscroll -sticky news
+	grid $f.xscroll -sticky news
+	grid rowconfigure $f 0 -weight 1
+	grid columnconfigure $f 0 -weight 1
+	return $f.text
+    }
+
+    method Scrolled_Treeview { f args } {
+	frame $f
+
+	if { [string match "IRIX*" $::tcl_platform(os)] } {
+	    eval {blt::treeview $f.tree \
+		      -xscrollcommand [list $f.xscroll set] \
+		      -yscrollcommand [list $f.yscroll set]} $args
+	} else {
+	    eval {blt::treeview $f.tree \
+		      -xscrollcommand [list $f.xscroll set] \
+		      -yscrollcommand [list $f.yscroll set]}
+	    eval { $f.tree configure } $args
+	}
+
+	scrollbar $f.xscroll -orient horizontal \
+	    -command [list $f.tree xview]
+	scrollbar $f.yscroll -orient vertical \
+	    -command [list $f.tree yview]
+	grid $f.tree $f.yscroll -sticky news
+	grid $f.xscroll -sticky news
+	grid rowconfigure $f 0 -weight 1
+	grid columnconfigure $f 0 -weight 1
+	return $f.tree
     }
 }
