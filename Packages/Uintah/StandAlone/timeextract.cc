@@ -90,18 +90,19 @@ void printData(DataArchive* archive, string& variable_name,
   }
 
   // set default max time value
-  if (time_step_upper == (unsigned int)-1)
+  if (time_step_upper == (unsigned long)-1) {
+    if (verbose)
+      cout <<"Initializing time_step_upper to "<<times.size()-1<<"\n";
     time_step_upper = times.size() - 1;
+  }
 
   if (time_step_upper >= times.size() || time_step_upper < time_step_lower) {
-    cerr << "timestephigh must be greater than " << time_step_lower 
+    cerr << "timestephigh("<<time_step_lower<<") must be greater than " << time_step_lower 
 	 << " and less than " << times.size()-1 << endl;
     exit(1);
   }
   
-  double time = times[time_step_lower];
-  if (!quite) cout << "time = " << time << endl;
-  GridP grid = archive->queryGrid(time);
+  if (!quite) cout << "outputting for times["<<time_step_lower<<"] = " << times[time_step_lower]<<" to times["<<time_step_upper<<"] = "<<times[time_step_upper] << endl;
   
   // set defaults for output stream
   out.setf(ios::scientific,ios::floatfield);
@@ -163,9 +164,9 @@ int main(int argc, char** argv)
     } else if (s == "-thigh" || s == "--timestephigh") {
       time_step_upper = strtoul(argv[++i],(char**)NULL,10);
     } else if (s == "-i" || s == "--index") {
-      unsigned long x = strtoul(argv[++i],(char**)NULL,10);
-      unsigned long y = strtoul(argv[++i],(char**)NULL,10);
-      unsigned long z = strtoul(argv[++i],(char**)NULL,10);
+      int x = atoi(argv[++i]);
+      int y = atoi(argv[++i]);
+      int z = atoi(argv[++i]);
       var_id = IntVector(x,y,z);
     } else if( (s == "-h") || (s == "--help") ) {
       usage( "", argv[0] );
