@@ -104,18 +104,50 @@ void
 TangentModulusTensor::contract(const Matrix3& D, Matrix3& sigrate) const
 {
   for (int ii = 0; ii < 3; ++ii) {
-    int ii1 = ii+1;
     for (int jj = 0; jj < 3; ++jj) {
-      int jj1 = jj+1;
-      sigrate(ii1,jj1) = 0.0;
+      sigrate(ii,jj) = 0.0;
       for (int kk = 0; kk < 3; ++kk) {
-        int kk1 = kk+1;
 	for (int ll = 0; ll < 3; ++ll) {
-          sigrate(ii1,jj1) += (*this)(ii,jj,kk,ll)*D(kk1,ll+1);
+          sigrate(ii,jj) += (*this)(ii,jj,kk,ll)*D(kk,ll);
 	}
       }
     }
   }
+}
+
+void TangentModulusTensor::transformBy2ndOrderTensor(const Matrix3& F, double J){
+/*      Computes c_ijkl = (1/J)*F_iI*F_jJ*F_kK*F_lL*C_IJKL    */
+  TangentModulusTensor c_ijkl;
+  for (int ii = 0; ii < 3; ++ii) {
+   for (int jj = 0; jj < 3; ++jj) {
+    for (int kk = 0; kk < 3; ++kk) {
+     for (int ll = 0; ll < 3; ++ll) {
+       c_ijkl(ii,jj,kk,ll) = 0.;
+     }
+    }
+   }
+  }
+
+  for (int ii = 0; ii < 3; ++ii) {
+   for (int jj = 0; jj < 3; ++jj) {
+    for (int kk = 0; kk < 3; ++kk) {
+     for (int ll = 0; ll < 3; ++ll) {
+      for (int II = 0; II < 3; ++II) {
+       for (int JJ = 0; JJ < 3; ++JJ) {
+        for (int KK = 0; KK < 3; ++KK) {
+         for (int LL = 0; LL < 3; ++LL) {
+          c_ijkl(ii,jj,kk,ll) += F(ii,II)*F(jj,JJ)
+                                *F(kk,KK)*F(ll,LL)*(*this)(II,JJ,KK,LL);
+        }
+       }
+      }
+     }
+    }
+   }
+  }
+ }
+
+ (*this) = c_ijkl;
 }
 
 ostream& operator<<(ostream& out, const TangentModulusTensor& C)

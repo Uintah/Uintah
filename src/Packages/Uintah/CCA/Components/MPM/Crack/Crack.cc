@@ -1704,10 +1704,10 @@ void Crack::CalculateFractureParameters(const ProcessorGroup*,
                   /* Step 7: Transform the solutions to crack-front coordinates
                   */
                   for(int j=0; j<=nSegs; j++) {
-                    for(int i1=1; i1<=3; i1++) {
-                      for(int j1=1; j1<=3; j1++) {
-                        for(int i2=1; i2<=3; i2++) {
-                          for(int j2=1; j2<=3; j2++) {
+                    for(int i1=0; i1<3; i1++) {
+                      for(int j1=0; j1<3; j1++) {
+                        for(int i2=0; i2<3; i2++) {
+                          for(int j2=0; j2<3; j2++) {
                             st[j](i1,j1) += T(i1,i2)*T(j1,j2)*ST[j](i2,j2);
                             dg[j](i1,j1) += T(i1,i2)*T(j1,j2)*DG[j](i2,j2);
                           } 
@@ -1727,13 +1727,13 @@ void Crack::CalculateFractureParameters(const ProcessorGroup*,
                     angle=2*PI*(float)j/(float)nSegs;
                     cosTheta=(xcprime*cos(angle)-ycprime*sin(angle))/scprime;
                     sinTheta=(ycprime*cos(angle)+xcprime*sin(angle))/scprime;
-                    t1=st[j](1,1)*cosTheta+st[j](1,2)*sinTheta;
-                    t2=st[j](2,1)*cosTheta+st[j](2,2)*sinTheta;
-                    t3=st[j](3,1)*cosTheta+st[j](3,2)*sinTheta;
+                    t1=st[j](0,0)*cosTheta+st[j](0,1)*sinTheta;
+                    t2=st[j](1,0)*cosTheta+st[j](1,1)*sinTheta;
+                    t3=st[j](2,0)*cosTheta+st[j](2,1)*sinTheta;
  
                     Vector t123=Vector(t1,t2,0./*t3*/); // plane state
-                    Vector dgx=Vector(dg[j](1,1),dg[j](2,1),dg[j](3,1));
-                    Vector dgy=Vector(dg[j](1,2),dg[j](2,2),dg[j](3,2));
+                    Vector dgx=Vector(dg[j](0,0),dg[j](1,0),dg[j](2,0));
+                    Vector dgy=Vector(dg[j](0,1),dg[j](1,1),dg[j](2,1));
   
                     f1ForJx[j]=(W[j]+K[j])*cosTheta-Dot(t123,dgx);
                     f1ForJy[j]=(W[j]+K[j])*sinTheta-Dot(t123,dgy);
@@ -1824,10 +1824,10 @@ void Crack::CalculateFractureParameters(const ProcessorGroup*,
  
                       dg[j]=Matrix3(0.0);
                       vg[j]=Matrix3(0.0);
-                      for(int i1=1; i1<=3; i1++) {
-                        for(int j1=1; j1<=3; j1++) {
-                          for(int i2=1; i2<=3; i2++) {
-                            for(int j2=1; j2<=3; j2++) {
+                      for(int i1=0; i1<3; i1++) {
+                        for(int j1=0; j1<3; j1++) {
+                          for(int i2=0; i2<3; i2++) {
+                            for(int j2=0; j2<3; j2++) {
                               dg[j](i1,j1) += T(i1,i2)*T(j1,j2)*DG(i2,j2);
                               vg[j](i1,j1) += T(i1,i2)*T(j1,j2)*VG(i2,j2);
                             }  
@@ -1840,10 +1840,10 @@ void Crack::CalculateFractureParameters(const ProcessorGroup*,
                     double rho=mpm_matl->getInitialDensity();
                     for(int j=0; j<count;j++) {
                       // Zero components in z direction for plane state
-                      Vector dgx=Vector(dg[j](1,1),dg[j](2,1),0./*dg[j](3,1)*/);
-                      Vector dgy=Vector(dg[j](1,2),dg[j](2,2),0./*dg[j](3,2)*/);
-                      Vector vgx=Vector(vg[j](1,1),vg[j](2,1),0./*vg[j](3,1)*/);
-                      Vector vgy=Vector(vg[j](1,2),vg[j](2,2),0./*vg[j](3,2)*/);
+                      Vector dgx=Vector(dg[j](0,0),dg[j](1,0),0./*dg[j](2,0)*/);
+                      Vector dgy=Vector(dg[j](0,1),dg[j](1,1),0./*dg[j](2,1)*/);
+                      Vector vgx=Vector(vg[j](0,0),vg[j](1,0),0./*vg[j](2,0)*/);
+                      Vector vgy=Vector(vg[j](0,1),vg[j](1,1),0./*vg[j](2,1)*/);
                       f2ForJx+=rho*(Dot(acc[j],dgx)-Dot(vel[j],vgx));
                       f2ForJy+=rho*(Dot(acc[j],dgy)-Dot(vel[j],vgy));
                     }

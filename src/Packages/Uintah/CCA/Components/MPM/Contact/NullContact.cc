@@ -22,7 +22,7 @@
 using namespace Uintah;
 
 #define FRACTURE
-#undef FRACTURE
+//#undef FRACTURE
 
 NullContact::NullContact(ProblemSpecP& ps, SimulationStateP& d_sS,MPMLabel* Mlb)
 {

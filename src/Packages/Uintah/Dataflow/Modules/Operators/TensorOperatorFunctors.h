@@ -82,7 +82,7 @@ struct PressureOp
 {
   PressureOp() {}
   inline double operator()(Matrix3 M)
-  { return -(M(1,1) + M(2,2) + M(3,3)) / 3; }
+  { return -M.Trace()/3.; }
 };
 
 struct EquivalentStressOp
@@ -126,7 +126,7 @@ struct NDotSigmaDotTOp
     double nsigmat = 0.0;
     for (int i = 0; i < 3; ++i) {
       for (int j = 0; j < 3; ++j) {
-        nsigmat += n[i]*M(i+1,j+1)*t[j];
+        nsigmat += n[i]*M(i,j)*t[j];
       }
     }
     return nsigmat;

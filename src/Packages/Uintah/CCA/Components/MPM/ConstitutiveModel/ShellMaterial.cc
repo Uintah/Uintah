@@ -630,8 +630,8 @@ ShellMaterial::computeStressTensor(const PatchSubset* patches,
 	for (int j = 0; j<3; j++){
 	  double d_SXoodx = d_S[k][j] * oodx[j];
 	  for (int i = 0; i<3; i++) {
-            velGrad(i+1,j+1) += gvel[i] * d_SXoodx;
-            rotGrad(i+1,j+1) += grot[i] * d_SXoodx;
+            velGrad(i,j) += gvel[i] * d_SXoodx;
+            rotGrad(i,j) += grot[i] * d_SXoodx;
           }
 	}
       }
@@ -727,8 +727,8 @@ ShellMaterial::computeStressTensor(const PatchSubset* patches,
 
       // Calculate the change in thickness in the direction of
       // the normal
-      double zTopInc = 0.5*(defGradTop_new(3,3)+defGradCen_new(3,3));
-      double zBotInc = 0.5*(defGradBot_new(3,3)+defGradCen_new(3,3));
+      double zTopInc = 0.5*(defGradTop_new(2,2)+defGradCen_new(2,2));
+      double zBotInc = 0.5*(defGradBot_new(2,2)+defGradCen_new(2,2));
       pThickTop_new[idx] = zTopInc*pThickTop0[idx];
       pThickBot_new[idx] = zBotInc*pThickBot0[idx];
       pThickTop0_new[idx] = pThickTop0[idx];
@@ -1339,7 +1339,7 @@ ShellMaterial::computePlaneStressAndDefGrad(Matrix3& F, Matrix3& sig)
   // Initial guess for F(3,3), delta
   double delta = 1.0;
   double epsilon = 1.e-14;
-  F(3,3) = 1.0/(F(1,1)*F(2,2));
+  F(2,2) = 1.0/(F(0,0)*F(1,1));
   do {
     // Central value
     J = F.Determinant();
@@ -1354,7 +1354,7 @@ ShellMaterial::computePlaneStressAndDefGrad(Matrix3& F, Matrix3& sig)
     sig = One*p + s;
 
     // Left value
-    Fp(3,3) = 1.00001*F(3,3);
+    Fp(2,2) = 1.00001*F(2,2);
     Jp = Fp.Determinant();
     if (!(Jp > 0.0)) {
        cerr << "** ERROR ** Fp = " << Fp << " det Fp = " << Jp << endl;
@@ -1364,10 +1364,10 @@ ShellMaterial::computePlaneStressAndDefGrad(Matrix3& F, Matrix3& sig)
     pp = (0.5*bulk)*(Jp - 1.0/Jp);
     bp = (Fp*Fp.Transpose())/pow(Jp, 2.0/3.0);
     sp = (bp - One*(bp.Trace()/3.0))*(shear/Jp);
-    sig33p = pp + sp(3,3);
+    sig33p = pp + sp(2,2);
 
     // Right value
-    Fm(3,3) = 0.99999*F(3,3);
+    Fm(2,2) = 0.99999*F(2,2);
     Jm = Fm.Determinant();
     if (!(Jm > 0.0)) {
        if (d_world->myrank() == 16) {
@@ -1381,12 +1381,12 @@ ShellMaterial::computePlaneStressAndDefGrad(Matrix3& F, Matrix3& sig)
     pm = (0.5*bulk)*(Jm - 1.0/Jm);
     bm = (Fm*Fm.Transpose())/pow(Jm, 2.0/3.0);
     sm = (bm - One*(bm.Trace()/3.0))*(shear/Jm);
-    sig33m = pm + sm(3,3);
+    sig33m = pm + sm(2,2);
 
     // Calculate slope and increment F(3,3)
-    slope = (Fp(3,3)-Fm(3,3))/(sig33p-sig33m);
-    delta = -sig(3,3)*slope;
-    F(3,3) += delta;
+    slope = (Fp(2,2)-Fm(2,2))/(sig33p-sig33m);
+    delta = -sig(2,2)*slope;
+    F(2,2) += delta;
 
   } while (fabs(delta) > epsilon);
 
@@ -1400,7 +1400,7 @@ ShellMaterial::computePlaneStressAndDefGrad(Matrix3& F, Matrix3& sig)
   b = (F*F.Transpose())/pow(J, 2.0/3.0);
   s = (b - One*(b.Trace()/3.0))*(shear/J);
   sig = One*p + s;
-  sig(3,3) = 0.0;
+  sig(2,2) = 0.0;
   return true;
   */
 }

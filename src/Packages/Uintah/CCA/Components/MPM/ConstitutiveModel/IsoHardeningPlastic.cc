@@ -174,14 +174,11 @@ IsoHardeningPlastic::computeTangentModulus(const Matrix3& stress,
 
   // Form the elastic-plastic tangent modulus
   for (int ii = 0; ii < 3; ++ii) {
-    int ii1 = ii+1;
     for (int jj = 0; jj < 3; ++jj) {
-      int jj1 = jj+1;
       for (int kk = 0; kk < 3; ++kk) {
-        int kk1 = kk+1;
 	for (int ll = 0; ll < 3; ++ll) {
           Cep(ii,jj,kk,ll) = Ce(ii,jj,kk,ll) - 
-                             2.0*shear*gamma*nn(ii1,jj1)*nn(kk1,ll+1);
+                             2.0*shear*gamma*nn(ii,jj)*nn(kk,ll);
 	}  
       }  
     }  

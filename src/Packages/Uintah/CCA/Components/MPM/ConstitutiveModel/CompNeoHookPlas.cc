@@ -310,7 +310,7 @@ void CompNeoHookPlas::computeStressTensor(const PatchSubset* patches,
 	 for (int j = 0; j<3; j++){
 	   double d_SXoodx = d_S[k][j] * oodx[j];
 	   for (int i = 0; i<3; i++) {
-	     velGrad(i+1,j+1) += gvel[i] * d_SXoodx;
+	     velGrad(i,j) += gvel[i] * d_SXoodx;
 	   }
 	 }
        }
