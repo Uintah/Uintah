@@ -94,7 +94,7 @@ public:
   virtual void tcl_command(GuiArgs&, void*);
 
 protected:
-  void animate_execute( string new_filename,
+  bool animate_execute( string new_filename,
 			vector< vector<string> >& frame_paths,
 			vector< vector<string> >& frame_datasets );
 			
@@ -103,6 +103,13 @@ protected:
 
 protected:
   GuiInt         power_app_;
+  GuiString      power_app_cmd_;
+  GuiString      animate_frame_;
+  GuiString	 animate_tab_;
+  GuiString	 basic_tab_;
+  GuiString	 extended_tab_;
+  GuiString	 playmode_tab_;
+
   GuiDouble      selectable_min_;
   GuiDouble      selectable_max_;
   GuiInt         selectable_inc_;
@@ -154,6 +161,9 @@ protected:
 
   NrrdDataHandle nHandles_[MAX_PORTS];
   MatrixHandle mHandle_;
+
+  bool update_;
+  int which_;
 
   bool loop_;
   bool error_;

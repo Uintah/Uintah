@@ -49,8 +49,8 @@ itcl_class DataIO_Readers_HDF5DataReader {
 	set    $this-power_app 0
 	set    power_app_command ""
 
-	global animate_frame
-	set animate_frame ""
+	global $this-animate_frame
+	set $this-animate_frame ""
 
 	global have_groups
 	global have_attributes
@@ -83,15 +83,15 @@ itcl_class DataIO_Readers_HDF5DataReader {
 	set $this-inc-amount         1
 	trace variable $this-current w "update idletasks;\#"
 
-	global animate_tab
-	global basic_tab
-	global extended_tab
-	global playmode_tab
+	global $this-animate_tab
+	global $this-basic_tab
+	global $this-extended_tab
+	global $this-playmode_tab
 
-	set animate_tab ""
-	set basic_tab ""
-	set extended_tab ""
-	set playmode_tab ""
+	set $this-animate_tab ""
+	set $this-basic_tab ""
+	set $this-extended_tab ""
+	set $this-playmode_tab ""
 
 
 	global $this-mergeData
@@ -1350,6 +1350,8 @@ itcl_class DataIO_Readers_HDF5DataReader {
     }
 
     method animate {} {
+	$this-c update_selection;
+
 	global $this-power_app
 	global power_app_command
 
@@ -1358,8 +1360,6 @@ itcl_class DataIO_Readers_HDF5DataReader {
 	    
 	    if [ expr [winfo exists $w] ] {
 		if { [set $this-animate] } {
-
-		    $this-c update_selection;
 
 		    set a [format "%s-animate" .ui[modname]]
 	    
@@ -1392,39 +1392,41 @@ itcl_class DataIO_Readers_HDF5DataReader {
     }
 
     method change_tab { which } {
-	global animate_tab
+	global $this-animate_tab
 	set initialized 1
 
 	# change tab for attached/detached
 
 	if {$initialized != 0} {
 	    if {$which == 0} {
-		$animate_tab view "Basic"
+		[set $this-animate_tab] view "Basic"
 		
 	    } elseif {$which == 1} {
-		$animate_tab view "Extended"
+		[set $this-animate_tab] view "Extended"
 		
 	    } elseif {$which == 2} {
-		$animate_tab view "Playmode"
+		[set $this-animate_tab] view "Playmode"
 	    }
 	}
     }
 
     method build_animate_ui { w } {
 
-	global animate_frame
-	set animate_frame $w
+	global $this-animate_frame
+	set $this-animate_frame $w
 
 	### Tabs
 	iwidgets::tabnotebook $w.tnb -width 250 \
 	    -height 250 -tabpos n
 	pack $w.tnb -padx 0 -pady 0 -anchor n -fill both -expand 1
 
-	global animate_tab
+	global $this-animate_tab
 	set animate_tab $w.tnb
+	set $this-animate_tab $animate_tab
 
-	global basic_tab
+	global $this-basic_tab
 	set basic_tab [$w.tnb add -label "Basic" -command "$this change_tab 0"]
+	set $this-basic_tab $basic_tab
 
 	frame $basic_tab.vcr -relief groove -borderwidth 2
 	set vcr $basic_tab.vcr
@@ -1480,8 +1482,9 @@ itcl_class DataIO_Readers_HDF5DataReader {
 	set rmax [set $this-range_max]
 
 
-	global extended_tab
+	global $this-extended_tab
 	set extended_tab [$w.tnb add -label "Extended" -command "$this change_tab 1"]
+	set $this-extended_tab $extended_tab
 	
 	# Create the various range sliders
 	iwidgets::labeledframe $extended_tab.min -labelpos nw -labeltext "Start"
@@ -1517,9 +1520,10 @@ itcl_class DataIO_Readers_HDF5DataReader {
 
 	
 
-	set playmode [$w.tnb add -label "Playmode" -command "$this change_tab 2"]
-	global playmode_tab
-	set playmode_tab $playmode
+	global $this-playmode_tab
+	set playmode_tab [$w.tnb add -label "Playmode" -command "$this change_tab 2"]
+	set $this-playmode_tab $playmode_tab
+	set playmode $playmode_tab
 
 	radiobutton $playmode.once -text "Once" \
 		-variable $this-playmode -value once
@@ -1555,21 +1559,28 @@ itcl_class DataIO_Readers_HDF5DataReader {
     }
 
     method update_range {} {
-	global animate_frame
-        if {[winfo exists $animate_frame]} {
-	    upvar \#0 $this-selectable_min min $this-selectable_max max
+	global $this-animate_frame
+	set w [set $this-animate_frame]
 
-	    global basic_tab
+        if {[winfo exists $w]} {
+	    upvar \#0 $this-selectable_min min
+	    upvar \#0 $this-selectable_max max
+
+	    upvar \#0 $this-basic_tab basic_tab
+	    upvar \#0 $this-extended_tab extended_tab
+
 	    set tmp [$basic_tab.cur childsite]
             $tmp.cur configure -from $min -to $max
 
-	    global extended_tab
 	    set tmp [$extended_tab.min childsite]
             $tmp.min configure -from $min -to $max
 	    set tmp [$extended_tab.max childsite]
 	    $tmp.max configure -from $min -to $max
 	    set tmp [$extended_tab.inc childsite]
 	    $tmp.inc configure -from 1 -to [expr $max-$min]
+
+	    set $this-range_main $min
+	    set $this-range_max $max
         }
     }
 
