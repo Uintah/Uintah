@@ -41,13 +41,15 @@
 #include <stdio.h>
 #include <math.h>
 #include <float.h>
+#include <errno.h>
 #include <algorithm>
 
 using namespace SCIRun;
 using namespace std;
 using namespace Uintah;
 
-
+// split string at sep into a list
+static
 vector<string> 
 split(const string & s, char sep, bool skipmult=false)
 {
@@ -151,7 +153,6 @@ public:
       }
     case 2:
       return t(0,0)+t(1,1)+t(2,2);
-      // return t.Trace();
     case 3:
       return t.MaxAbsElem();
     case 4:
@@ -168,8 +169,6 @@ public:
           return 0.;
         }
       }
-      // THIS LINE IS NOT REACHABLE!
-      //return t.MaxAbsElem();
     default:
       return 0.;
     }
@@ -177,117 +176,87 @@ public:
 };
 
 // -----------------------------------------------------------------------------
-
+// Base dumper class 
+// one dumper for each output format
 class Dumper {
+
+protected:
+  Dumper(DataArchive * da, string basedir);
+  
+  string createDirectory();
+  
 public:
-  Dumper(DataArchive * da, string datadir);
   virtual ~Dumper();
   
+  // extension for the output directory
+  virtual string directoryExt() const = 0;
+  
+  // add a new field
   virtual void addField(string fieldname, const Uintah::TypeDescription * type) = 0;
   
+  // dump a single step
   class Step {
   public:
-    Step(int index, double time) : index_(index), time_(time) {}
+    Step(string tsdir, int index, double time);
     
     virtual ~Step();
     
+    virtual string infostr() const = 0;
     virtual void   storeGrid() = 0;
     virtual void   storeField(string fieldname, const Uintah::TypeDescription * type) = 0;
-    virtual string infostr() const = 0;
     
+  public: // hmmm ....
+    string tsdir_;
     int    index_;
     double time_;
+    
+  protected:
+    string fileName(string variable_name, 
+                    int    materialNum,
+                    string extension="") const;
   };
-  
   virtual Step * addStep(int index, double time) = 0;
   virtual void finishStep(Step *) = 0;
 
-protected:
-  DataArchive* da_;
-  string       datadir_;
-};
-
-Dumper::Dumper(DataArchive * da, string datadir)
-  : da_(da),datadir_(datadir)
-{
-}
-
-Dumper::~Dumper() {}
-Dumper::Step::~Step() {}
-
-// -----------------------------------------------------------------------------
-
-#define ONEDIM_DIM 2
-
-class TextDumper : public Dumper 
-{
-public:
-  TextDumper(DataArchive* da, string datadir, bool onedim=false, bool tseries=false);
-
-  void addField(string /*fieldname*/, const Uintah::TypeDescription * /*type*/) {}
+  DataArchive * archive() const { return this->da_; }
   
-  class Step : public Dumper::Step {
-  public:
-    Step(DataArchive * da, string datadir, int index, double time, bool onedim, bool tseries);
-    
-    void storeGrid ();
-    void storeField(string fieldname, const Uintah::TypeDescription * type);
-    
-    string infostr() const { return stepdname_; }
-    
-  private:
-    string stepdname_;
-    
-    DataArchive* da_;
-    string       datadir_;
-    bool         onedim_, tseries_;
-  };
-  
-  //
-  Step * addStep(int index, double time);
-  void   finishStep(Dumper::Step * s);
-  
+private:
+  static string mat_string(int mval);
   static string time_string(double tval);
-  static string mat_string (int    mval);
 
-private:
-  static string makeFileName(string raydatadir, string time_file="", string variable_file="", 
-			     string materialType_file="", string extension="");
+protected:
+  string dirName(double tval) const;
   
 private:
-  ofstream idxos_;
-  bool     onedim_, tseries_;
-  FILE*    filelist_;
+  DataArchive* da_;
+  string       basedir_;
 };
 
-TextDumper::TextDumper(DataArchive* da, string datadir, bool onedim, bool tseries)
-  : Dumper(da, datadir+"_text"), onedim_(onedim), tseries_(tseries)
+Dumper::Dumper(DataArchive * da, string basedir)
+  : da_(da), basedir_(basedir)
 {
-  // set defaults for cout
-  cout.setf(ios::scientific,ios::floatfield);
-  cout.precision(8);
-  
-  // Create a directory if it's not already there.
-  // The exception occurs when the directory is already there
-  // and the Dir.create fails.  This exception is ignored. 
-  Dir dumpdir;
-  try {
-    dumpdir.create(datadir_);
-  } catch (Exception& /*e*/) {
-    ;
-  }
-  
-  // set up the file that contains a list of all the files
-  string filelistname = datadir + string("/") + string("timelist");
-  filelist_ = fopen(filelistname.c_str(),"w");
-  if (!filelist_) {
-    cerr << "Can't open output file " << filelistname << endl;
-    abort();
-  }
 }
 
 string
-TextDumper::time_string(double tval)
+Dumper::createDirectory()
+{
+  // Create a directory if it's not already there.
+  // The exception occurs when the directory is already there
+  // and the Dir.create fails.  This exception is ignored. 
+  string dirname = this->basedir_+"_"+this->directoryExt();
+  Dir dumpdir;
+  try {
+    dumpdir.create(dirname);
+  } catch (ErrnoException & e) {
+    // only allow exists as a reason for failure
+    if(e.getErrno()!= EEXIST)
+      throw;
+  }
+  return dirname;
+}
+
+string
+Dumper::time_string(double tval)
 {
   ostringstream b;
   b.setf(ios::fixed,ios::floatfield);
@@ -306,35 +275,119 @@ TextDumper::time_string(double tval)
 }
 
 string
-TextDumper::mat_string(int mval)
+Dumper::mat_string(int mval)
 {
   ostringstream b;
   b << setw(4) << setfill('0') << mval;
   return b.str();
 }
 
+string 
+Dumper::dirName(double time_val) const
+{
+  return this->basedir_+"_"+this->directoryExt()+"/"+time_string(time_val);
+}
+
+Dumper::~Dumper() {}
+
+Dumper::Step::Step(string tsdir, int index, double time)
+: tsdir_(tsdir), index_(index), time_(time) 
+{
+  // create directory to store output files 
+  Dir stepdir;
+  try {
+    stepdir.create(tsdir_);
+  } catch (ErrnoException & e) {
+    // only allow exists as a reason for failure
+    if(e.getErrno()!= EEXIST)
+      throw;
+  }
+}
+
 string
-TextDumper::makeFileName(string datadir, string time_file, string variable_file, 
-		     string materialType_file, string extension) {
-  string datafile;
-  if (datadir != "")
-    datafile+= datadir + string("/");
-  if (time_file!="")
-    datafile+= string("TS_") + time_file + string("/");
-  if (variable_file != "")
-    datafile+= string("VAR_") + variable_file + string(".");
-  if (materialType_file != "")
-    datafile+= string("MT_") + materialType_file + string(".");
-  if(extension != "")
-    datafile+= extension;
+Dumper::Step::fileName(string variable_name, int imat, string ext)  const
+{
+  string datafile = tsdir_+"/";
+  
+  datafile += string("VAR_") + variable_name + string(".");
+  
+  if (imat>=0)
+    datafile+= string("MT_") + mat_string(imat) + string(".");
+  
+  if (ext!="")
+    datafile+=ext;
+  
   return datafile;
+}
+
+Dumper::Step::~Step() {}
+
+// -----------------------------------------------------------------------------
+
+#define ONEDIM_DIM 2
+
+class TextDumper : public Dumper 
+{
+public:
+  TextDumper(DataArchive * da, string basedir, bool onedim=false, bool tseries=false);
+  
+  string directoryExt() const { return "text"; }
+  void addField(string fieldname, const Uintah::TypeDescription * /*type*/);
+  
+  class Step : public Dumper::Step {
+  public:
+    Step(DataArchive * da, string basedir, int index, double time, bool onedim, bool tseries);
+    
+    string infostr() const { return tsdir_; }
+    void   storeGrid () {}
+    void   storeField(string fieldname, const Uintah::TypeDescription * type);
+    
+  private:
+    DataArchive *       da_;
+    string              outdir_;
+    bool                onedim_;
+    bool                tseries_;
+  };
+  
+  //
+  Step * addStep(int index, double time);
+  void   finishStep(Dumper::Step * s);
+  
+private:
+  ofstream idxos_;
+  bool     onedim_, tseries_;
+  FILE*    filelist_;
+};
+
+TextDumper::TextDumper(DataArchive * da, string basedir, bool onedim, bool tseries)
+  : Dumper(da, basedir), onedim_(onedim), tseries_(tseries)
+{
+  // set defaults for cout
+  cout.setf(ios::scientific,ios::floatfield);
+  cout.precision(8);
+  
+  // set up a file that contains a list of all the files
+  string dirname = this->createDirectory();
+  string filelistname = dirname+"/timelist";
+  
+  filelist_ = fopen(filelistname.c_str(),"w");
+  if (!filelist_) {
+    cerr << "Can't open output file " << filelistname << endl;
+    abort();
+  }
 }
 
 TextDumper::Step * 
 TextDumper::addStep(int index, double time)
 {
-  return new Step(da_, datadir_, index, time, onedim_, tseries_);
+  return scinew Step(this->archive(), this->dirName(time), 
+                     index, time, onedim_, tseries_);
 }  
+
+void
+TextDumper::addField(string fieldname, const Uintah::TypeDescription * type)
+{
+}
 
 void
 TextDumper::finishStep(Dumper::Step * s)
@@ -342,36 +395,18 @@ TextDumper::finishStep(Dumper::Step * s)
   fprintf(filelist_, "%10d %16.8g  %20s\n", s->index_, s->time_, s->infostr().c_str());
 }
 
-TextDumper::Step::Step(DataArchive * da, string datadir, int index, double time,  bool onedim, bool tseries)
+TextDumper::Step::Step(DataArchive * da, string tsdir,
+                       int index, double time,  bool onedim, bool tseries)
   : 
-  Dumper::Step(index, time),
-  da_(da), datadir_(datadir), onedim_(onedim), tseries_(tseries)
+  Dumper::Step(tsdir, index, time),
+  da_(da), onedim_(onedim), tseries_(tseries)
 {
-  if(tseries)
-    stepdname_ = TextDumper::makeFileName(datadir, TextDumper::time_string(time_));
-  else
-    stepdname_ = TextDumper::makeFileName(datadir);
-  if(!tseries_ || index_==1)
-    {
-      Dir stepdir;
-      try {
-        stepdir.create(stepdname_);
-      } catch (...) {
-        ; // 
-      }
-    }
+  GridP grid = da_->queryGrid(time);
 }
 
-void
-TextDumper::Step::storeGrid()
-{
-  //GridP grid = da->queryGrid(time_);
-  
-  // dont store grid info in flat text mode
-}
-
+static
 bool
-_outside(IntVector p, IntVector mn, IntVector mx)
+outside(IntVector p, IntVector mn, IntVector mx)
 {
   return  ( p[0]<mn[0] || p[0]>=mx[0] ||
 	    p[1]<mn[1] || p[1]>=mx[1] ||
@@ -384,10 +419,10 @@ TextDumper::Step::storeField(string fieldname, const Uintah::TypeDescription * t
   GridP grid = da_->queryGrid(time_);
   
   cout << "   " << fieldname << endl;
-  
   const Uintah::TypeDescription* subtype = td->getSubType();
   
   int nmats = 0;
+  // count the materials
   for(int l=0;l<=0;l++) {
     LevelP level = grid->getLevel(l);
     for(Level::const_patchIterator iter = level->patchesBegin();iter != level->patchesEnd(); iter++) {
@@ -398,26 +433,6 @@ TextDumper::Step::storeField(string fieldname, const Uintah::TypeDescription * t
 	if(matl>=nmats) nmats = matl+1;
       }
     }
-  }
-  
-  vector<ofstream *> outfiles(nmats);
-  for(int imat=0;imat<nmats;imat++) {
-    string matname = TextDumper::mat_string(imat);
-    string tname   = "";
-    if(!tseries_) tname = time_string(time_);
-    string fname   = TextDumper::makeFileName(datadir_, tname, fieldname, matname, "txt");
-    
-    cout << "     " << fname << endl;
-    if(!tseries_ || index_==1)
-      {
-        outfiles[imat] = scinew ofstream(fname.c_str());
-        *(outfiles[imat]) << "# time = " << time_ << ", field = " << fieldname << ", mat " << matname << endl;
-      }
-    else
-      {
-        outfiles[imat] = scinew ofstream(fname.c_str(), ios::app);
-        *(outfiles[imat]) << endl << endl;
-      }
   }
   
   // only support level 0 for now
@@ -441,14 +456,23 @@ TextDumper::Step::storeField(string fieldname, const Uintah::TypeDescription * t
     for(Level::const_patchIterator iter = level->patchesBegin();
 	iter != level->patchesEnd(); iter++){
       const Patch* patch = *iter;
-	    
+      
       ConsecutiveRangeSet matls = da_->queryMaterials(fieldname, patch, time_);
-	    
+      
       // loop over materials
       for(ConsecutiveRangeSet::iterator matlIter = matls.begin();
 	  matlIter != matls.end(); matlIter++) {
 	const int matl = *matlIter;
-	      
+        
+        string fname = fileName(fieldname, matl, "txt");
+        ofstream outfile;
+        if(tseries_ || index_==1) {
+          outfile.open( fname.c_str() );
+          outfile << "# time = " << time_ << ", field = " << fieldname << ", mat " << matl << endl;
+        } else {
+          outfile.open( fname.c_str(), ios::app);
+          outfile << endl;
+        }
 	bool no_match = false;
 	      
 	ParticleVariable<Point> partposns;
@@ -467,14 +491,14 @@ TextDumper::Step::storeField(string fieldname, const Uintah::TypeDescription * t
 		
 		for(NodeIterator iter = patch->getNodeIterator();
 		    !iter.done(); iter++){
-		  if(_outside(*iter, minind, maxind)) continue;
+		  if(outside(*iter, minind, maxind)) continue;
 		  Point xpt = patch->nodePosition(*iter);
-                  if(tseries_) *outfiles[matl] << time_ << " ";
-                  *outfiles[matl]  << xpt(0) << " " 
-                                   << xpt(1) << " " 
-                                   << xpt(2) << " ";
-		  *outfiles[matl] << value[*iter] << " "
-                                  << endl;
+                  if(tseries_) outfile << time_ << " ";
+                  outfile << xpt(0) << " " 
+                          << xpt(1) << " " 
+                          << xpt(2) << " ";
+		  outfile << value[*iter] << " "
+                          << endl;
 		}
 	      } break;
 	    case Uintah::TypeDescription::CCVariable:
@@ -484,14 +508,14 @@ TextDumper::Step::storeField(string fieldname, const Uintah::TypeDescription * t
 		
 		for(CellIterator iter = patch->getCellIterator();
 		    !iter.done(); iter++){
-		  if(_outside(*iter, minind, maxind)) continue;
+		  if(outside(*iter, minind, maxind)) continue;
 		  Point xpt = patch->nodePosition(*iter);
-                  if(tseries_) *outfiles[matl] << time_ << " ";
-                  *outfiles[matl]  << xpt(0) << " " 
-                                   << xpt(1) << " " 
-                                   << xpt(2) << " ";
-		  *outfiles[matl] << value[*iter] << " "
-                                  << endl;
+                  if(tseries_) outfile << time_ << " ";
+                  outfile << xpt(0) << " " 
+                          << xpt(1) << " " 
+                          << xpt(2) << " ";
+		  outfile << value[*iter] << " "
+                          << endl;
 		}
 	      } break;
 	    case Uintah::TypeDescription::ParticleVariable:
@@ -502,12 +526,12 @@ TextDumper::Step::storeField(string fieldname, const Uintah::TypeDescription * t
 		for(ParticleSubset::iterator iter = pset->begin();
 		    iter != pset->end(); iter++) {
 		  Point xpt = partposns[*iter];
-                  if(tseries_) *outfiles[matl] << time_ << " ";
-                  *outfiles[matl]  << xpt(0) << " " 
-                                   << xpt(1) << " " 
-                                   << xpt(2) << " ";
-		  *outfiles[matl] << (value[*iter]) << " " 
-				  << endl;
+                  if(tseries_) outfile << time_ << " ";
+                  outfile << xpt(0) << " " 
+                          << xpt(1) << " " 
+                          << xpt(2) << " ";
+		  outfile << (value[*iter]) << " " 
+                          << endl;
 		}
 	      } break;
 	    default:
@@ -524,14 +548,14 @@ TextDumper::Step::storeField(string fieldname, const Uintah::TypeDescription * t
 			
 		for(NodeIterator iter = patch->getNodeIterator();
 		    !iter.done(); iter++){
-		  if(_outside(*iter, minind, maxind)) continue;
+		  if(outside(*iter, minind, maxind)) continue;
 		  Point xpt = patch->nodePosition(*iter);
-                  if(tseries_) *outfiles[matl] << time_ << " ";
-                  *outfiles[matl]  << xpt(0) << " " 
-                                   << xpt(1) << " " 
-                                   << xpt(2) << " ";
-		  *outfiles[matl] << value[*iter] << " "
-                                  << endl;
+                  if(tseries_) outfile << time_ << " ";
+                  outfile << xpt(0) << " " 
+                          << xpt(1) << " " 
+                          << xpt(2) << " ";
+		  outfile << value[*iter] << " "
+                          << endl;
 		}
 	      } break;
 	    case Uintah::TypeDescription::CCVariable:
@@ -541,14 +565,14 @@ TextDumper::Step::storeField(string fieldname, const Uintah::TypeDescription * t
 			
 		for(CellIterator iter = patch->getCellIterator();
 		    !iter.done(); iter++){
-		  if(_outside(*iter, minind, maxind)) continue;
+		  if(outside(*iter, minind, maxind)) continue;
 		  Point xpt = patch->nodePosition(*iter);
-                  if(tseries_) *outfiles[matl] << time_ << " ";
-                  *outfiles[matl]  << xpt(0) << " " 
-                                   << xpt(1) << " " 
-                                   << xpt(2) << " ";
-		  *outfiles[matl] << value[*iter] << " "
-                                  << endl;
+                  if(tseries_) outfile << time_ << " ";
+                  outfile << xpt(0) << " " 
+                          << xpt(1) << " " 
+                          << xpt(2) << " ";
+		  outfile << value[*iter] << " "
+                          << endl;
 		}
 	      } break;
 	    case Uintah::TypeDescription::ParticleVariable:
@@ -559,12 +583,12 @@ TextDumper::Step::storeField(string fieldname, const Uintah::TypeDescription * t
 		for(ParticleSubset::iterator iter = pset->begin();
 		    iter != pset->end(); iter++) {
 		  Point xpt = partposns[*iter];
-                  if(tseries_) *outfiles[matl] << time_ << " ";
-                  *outfiles[matl]  << xpt(0) << " " 
-                                   << xpt(1) << " " 
-                                   << xpt(2) << " ";
-		  *outfiles[matl] << (value[*iter]) << " " 
-                                  << endl;
+                  if(tseries_) outfile << time_ << " ";
+                  outfile << xpt(0) << " " 
+                          << xpt(1) << " " 
+                          << xpt(2) << " ";
+		  outfile << (value[*iter]) << " " 
+                          << endl;
 		}
 	      } break;
 	    default:
@@ -581,16 +605,16 @@ TextDumper::Step::storeField(string fieldname, const Uintah::TypeDescription * t
 		    
 		for(NodeIterator iter = patch->getNodeIterator();
 		    !iter.done(); iter++){
-		  if(_outside(*iter, minind, maxind)) continue;
+		  if(outside(*iter, minind, maxind)) continue;
 		  Point xpt = patch->nodePosition(*iter);
-                  if(tseries_) *outfiles[matl] << time_ << " ";
-                  *outfiles[matl]  << xpt(0) << " " 
-                                   << xpt(1) << " " 
-                                   << xpt(2) << " ";
-		  *outfiles[matl] << value[*iter](0) << " "
-                                  << value[*iter](1) << " "
-                                  << value[*iter](2) << " "
-                                  << endl;
+                  if(tseries_) outfile << time_ << " ";
+                  outfile << xpt(0) << " " 
+                          << xpt(1) << " " 
+                          << xpt(2) << " ";
+		  outfile << value[*iter](0) << " "
+                          << value[*iter](1) << " "
+                          << value[*iter](2) << " "
+                          << endl;
 		}
 	      } break;
 	    case Uintah::TypeDescription::CCVariable:
@@ -600,16 +624,16 @@ TextDumper::Step::storeField(string fieldname, const Uintah::TypeDescription * t
 		    
 		for(CellIterator iter = patch->getCellIterator();
 		    !iter.done(); iter++){
-		  if(_outside(*iter, minind, maxind)) continue;
+		  if(outside(*iter, minind, maxind)) continue;
 		  Point xpt = patch->nodePosition(*iter);
-                  if(tseries_) *outfiles[matl] << time_ << " ";
-                  *outfiles[matl]  << xpt(0) << " " 
-                                   << xpt(1) << " " 
-                                   << xpt(2) << " ";
-		  *outfiles[matl] << value[*iter](0) << " "
-                                  << value[*iter](1) << " "
-                                  << value[*iter](2) << " "
-                                  << endl;
+                  if(tseries_) outfile << time_ << " ";
+                  outfile << xpt(0) << " " 
+                          << xpt(1) << " " 
+                          << xpt(2) << " ";
+		  outfile << value[*iter](0) << " "
+                          << value[*iter](1) << " "
+                          << value[*iter](2) << " "
+                          << endl;
 		}
 	      } break;
 	    case Uintah::TypeDescription::ParticleVariable:
@@ -620,14 +644,14 @@ TextDumper::Step::storeField(string fieldname, const Uintah::TypeDescription * t
 		for(ParticleSubset::iterator iter = pset->begin();
 		    iter != pset->end(); iter++) {
 		  Point xpt = partposns[*iter];
-                  if(tseries_) *outfiles[matl] << time_ << " ";
-                  *outfiles[matl]  << xpt(0) << " " 
-                                   << xpt(1) << " " 
-                                   << xpt(2) << " ";
-		  *outfiles[matl] << value[*iter](0) << " "
-                                  << value[*iter](1) << " "
-                                  << value[*iter](2) << " "
-                                  << endl;
+                  if(tseries_) outfile << time_ << " ";
+                  outfile << xpt(0) << " " 
+                          << xpt(1) << " " 
+                          << xpt(2) << " ";
+		  outfile << value[*iter](0) << " "
+                          << value[*iter](1) << " "
+                          << value[*iter](2) << " "
+                          << endl;
 		}
 	      } break;
 	    default:
@@ -644,16 +668,16 @@ TextDumper::Step::storeField(string fieldname, const Uintah::TypeDescription * t
 		      
 		for(NodeIterator iter = patch->getNodeIterator();
 		    !iter.done(); iter++){
-		  if(_outside(*iter, minind, maxind)) continue;
+		  if(outside(*iter, minind, maxind)) continue;
 		  Point xpt = patch->nodePosition(*iter);
-                  if(tseries_) *outfiles[matl] << time_ << " ";
-                  *outfiles[matl]  << xpt(0) << " " 
-                                   << xpt(1) << " " 
-                                   << xpt(2) << " ";
-		  *outfiles[matl] << value[*iter][0] << " "
-                                  << value[*iter][1] << " "
-                                  << value[*iter][2] << " "
-                                  << endl;
+                  if(tseries_) outfile << time_ << " ";
+                  outfile << xpt(0) << " " 
+                          << xpt(1) << " " 
+                          << xpt(2) << " ";
+		  outfile << value[*iter][0] << " "
+                          << value[*iter][1] << " "
+                          << value[*iter][2] << " "
+                          << endl;
 		}
 	      } break;
 	    case Uintah::TypeDescription::CCVariable:
@@ -663,16 +687,16 @@ TextDumper::Step::storeField(string fieldname, const Uintah::TypeDescription * t
 		      
 		for(CellIterator iter = patch->getCellIterator();
 		    !iter.done(); iter++){
-		  if(_outside(*iter, minind, maxind)) continue;
+		  if(outside(*iter, minind, maxind)) continue;
 		  Point xpt = patch->nodePosition(*iter);
-                  if(tseries_) *outfiles[matl] << time_ << " ";
-                  *outfiles[matl]  << xpt(0) << " " 
-                                   << xpt(1) << " " 
-                                   << xpt(2) << " ";
-		  *outfiles[matl] << value[*iter][0] << " "
-                                  << value[*iter][1] << " "
-                                  << value[*iter][2] << " "
-                                  << endl;
+                  if(tseries_) outfile << time_ << " ";
+                  outfile << xpt(0) << " " 
+                          << xpt(1) << " " 
+                          << xpt(2) << " ";
+		  outfile << value[*iter][0] << " "
+                          << value[*iter][1] << " "
+                          << value[*iter][2] << " "
+                          << endl;
 		}
 	      } break;
 	    case Uintah::TypeDescription::ParticleVariable:
@@ -683,14 +707,14 @@ TextDumper::Step::storeField(string fieldname, const Uintah::TypeDescription * t
 		for(ParticleSubset::iterator iter = pset->begin();
 		    iter != pset->end(); iter++) {
 		  Point xpt = partposns[*iter];
-                  if(tseries_) *outfiles[matl] << time_ << " ";
-                  *outfiles[matl]  << xpt(0) << " " 
-                                   << xpt(1) << " " 
-                                   << xpt(2) << " ";
-		  *outfiles[matl] << value[*iter][0] << " "
-                                  << value[*iter][1] << " "
-                                  << value[*iter][2] << " "
-                                  << endl;
+                  if(tseries_) outfile << time_ << " ";
+                  outfile << xpt(0) << " " 
+                          << xpt(1) << " " 
+                          << xpt(2) << " ";
+		  outfile << value[*iter][0] << " "
+                          << value[*iter][1] << " "
+                          << value[*iter][2] << " "
+                          << endl;
 		}
 	      } break;
 	    default:
@@ -707,22 +731,22 @@ TextDumper::Step::storeField(string fieldname, const Uintah::TypeDescription * t
 		    
 		for(NodeIterator iter = patch->getNodeIterator();
 		    !iter.done(); iter++){
-		  if(_outside(*iter, minind, maxind)) continue;
+		  if(outside(*iter, minind, maxind)) continue;
 		  Point xpt = patch->nodePosition(*iter);
-                  if(tseries_) *outfiles[matl] << time_ << " ";
-                  *outfiles[matl]  << xpt(0) << " " 
-                                   << xpt(1) << " " 
-                                   << xpt(2) << " ";
-		  *outfiles[matl] << value[*iter](0,0) << " "
-                                  << value[*iter](0,1) << " "
-                                  << value[*iter](0,2) << " "
-                                  << value[*iter](1,0) << " "
-                                  << value[*iter](1,1) << " "
-                                  << value[*iter](1,2) << " "
-                                  << value[*iter](2,0) << " "
-                                  << value[*iter](2,1) << " "
-                                  << value[*iter](2,2) << " "
-                                  << endl;
+                  if(tseries_) outfile << time_ << " ";
+                  outfile << xpt(0) << " " 
+                          << xpt(1) << " " 
+                          << xpt(2) << " ";
+		  outfile << value[*iter](0,0) << " "
+                          << value[*iter](0,1) << " "
+                          << value[*iter](0,2) << " "
+                          << value[*iter](1,0) << " "
+                          << value[*iter](1,1) << " "
+                          << value[*iter](1,2) << " "
+                          << value[*iter](2,0) << " "
+                          << value[*iter](2,1) << " "
+                          << value[*iter](2,2) << " "
+                          << endl;
 		}
 	      } break;
 	    case Uintah::TypeDescription::CCVariable:
@@ -732,22 +756,22 @@ TextDumper::Step::storeField(string fieldname, const Uintah::TypeDescription * t
 		    
 		for(CellIterator iter = patch->getCellIterator();
 		    !iter.done(); iter++){
-		  if(_outside(*iter, minind, maxind)) continue;
+		  if(outside(*iter, minind, maxind)) continue;
 		  Point xpt = patch->nodePosition(*iter);
-                  if(tseries_) *outfiles[matl] << time_ << " ";
-                  *outfiles[matl]  << xpt(0) << " " 
-                                   << xpt(1) << " " 
-                                   << xpt(2) << " ";
-		  *outfiles[matl] << value[*iter](0,0) << " "
-                                  << value[*iter](0,1) << " "
-                                  << value[*iter](0,2) << " "
-                                  << value[*iter](1,0) << " "
-                                  << value[*iter](1,1) << " "
-                                  << value[*iter](1,2) << " "
-                                  << value[*iter](2,0) << " "
-                                  << value[*iter](2,1) << " "
-                                  << value[*iter](2,2) << " "
-                                  << endl;
+                  if(tseries_) outfile << time_ << " ";
+                  outfile << xpt(0) << " " 
+                          << xpt(1) << " " 
+                          << xpt(2) << " ";
+		  outfile << value[*iter](0,0) << " "
+                          << value[*iter](0,1) << " "
+                          << value[*iter](0,2) << " "
+                          << value[*iter](1,0) << " "
+                          << value[*iter](1,1) << " "
+                          << value[*iter](1,2) << " "
+                          << value[*iter](2,0) << " "
+                          << value[*iter](2,1) << " "
+                          << value[*iter](2,2) << " "
+                          << endl;
 		}
 	      } break;
 	    case Uintah::TypeDescription::ParticleVariable:
@@ -758,40 +782,44 @@ TextDumper::Step::storeField(string fieldname, const Uintah::TypeDescription * t
 		for(ParticleSubset::iterator iter = pset->begin();
 		    iter != pset->end(); iter++) {
 		  Point xpt = partposns[*iter];
-                  if(tseries_) *outfiles[matl] << time_ << " ";
-                  *outfiles[matl]  << xpt(0) << " " 
-                                   << xpt(1) << " " 
-                                   << xpt(2) << " ";
-		  *outfiles[matl] << value[*iter](0,0) << " "
-                                  << value[*iter](0,1) << " "
-                                  << value[*iter](0,2) << " "
-                                  << value[*iter](1,0) << " "
-                                  << value[*iter](1,1) << " "
-                                  << value[*iter](1,2) << " "
-                                  << value[*iter](2,0) << " "
-                                  << value[*iter](2,1) << " "
-                                  << value[*iter](2,2) << " "
-                                  << endl;
+                  if(tseries_) outfile << time_ << " ";
+                  outfile << xpt(0) << " " 
+                          << xpt(1) << " " 
+                          << xpt(2) << " ";
+		  outfile << value[*iter](0,0) << " "
+                          << value[*iter](0,1) << " "
+                          << value[*iter](0,2) << " "
+                          << value[*iter](1,0) << " "
+                          << value[*iter](1,1) << " "
+                          << value[*iter](1,2) << " "
+                          << value[*iter](2,0) << " "
+                          << value[*iter](2,1) << " "
+                          << value[*iter](2,2) << " "
+                          << endl;
 		}
 	      } break;
 	    default:
 	      no_match = true;
 	    }
 	  } break;
+          
+	case Uintah::TypeDescription::bool_type:
+	case Uintah::TypeDescription::short_int_type:
+	case Uintah::TypeDescription::long_type:
+	case Uintah::TypeDescription::long64_type:
+          {
+            ; // silently ignore integer variables
+          } break;
 	default:
 	  no_match = true;
 	} // type switch
         
 	if (no_match)
-	  cerr << "Unexpected type of " << td->getName() << "," << subtype->getName() << endl;
+	  cerr << "WARNING: Unexpected type for " << td->getName() << " of " << subtype->getName() << endl;
         
       } // materials
     } // patches
   } // levels 
-  
-  for(int imat=0;imat<nmats;imat++) {
-    delete outfiles[imat];
-  }
 }    
 
 // -----------------------------------------------------------------------------
@@ -867,8 +895,8 @@ private:
   };
 
   struct Data {
-    Data(DataArchive * da, string dir, FldDumper * dumper, bool onemesh, bool withpart)
-      : da_(da), dir_(dir), dumper_(dumper), onemesh_(onemesh), withpart_(withpart) {}
+    Data(DataArchive * da, FldDumper * dumper, bool onemesh, bool withpart)
+      : da_(da), dumper_(dumper), onemesh_(onemesh), withpart_(withpart) {}
     
     DataArchive * da_;
     string        dir_;
@@ -877,21 +905,21 @@ private:
   };
   
 public:
-  EnsightDumper(DataArchive* da, string datadir, bool binmode=false, bool onemesh=false, bool withpart=false);
+  EnsightDumper(DataArchive* da, string basedir, bool binmode=false, bool onemesh=false, bool withpart=false);
   ~EnsightDumper();
   
+  string directoryExt() const { return "ensight"; }
   void addField(string fieldname, const Uintah::TypeDescription * type);
   
   class Step : public Dumper::Step {
     friend class EnsightDumper;
   private:
-    Step(Data * data, int index, double time, int fileindex);
+    Step(Data * data, string tsdir, int index, double time, int fileindex);
     
   public:
-    void storeGrid ();
-    void storeField(string filename, const Uintah::TypeDescription * type);
-    
     string infostr() const { return stepdesc_; }
+    void   storeGrid ();
+    void   storeField(string filename, const Uintah::TypeDescription * type);
     
   private:
     void storePartField(string filename, const Uintah::TypeDescription * type);
@@ -933,20 +961,12 @@ private:
   Data          data_;
 };
 
-EnsightDumper::EnsightDumper(DataArchive* da_, string datadir_, bool bin_, bool onemesh_, bool withpart_)
+EnsightDumper::EnsightDumper(DataArchive* da_, string basedir_, bool bin_, bool onemesh_, bool withpart_)
   : 
-  Dumper(da_, datadir_+"_ensight"), nsteps_(0), flddumper_(bin_), 
-  data_(da_,datadir_+"_ensight",&flddumper_,onemesh_,withpart_)
+  Dumper(da_, basedir_), nsteps_(0), flddumper_(bin_), 
+  data_(da_,&flddumper_,onemesh_,withpart_)
 {
-  cerr << "using bin = " << bin_ << endl;
-  
-  // Create a directory if it's not already there.
-  Dir dumpdir;
-  try {
-    dumpdir.create(data_.dir_);
-  } catch (Exception& /*e*/) {
-    ; // ignore failure
-  }
+  data_.dir_ = this->createDirectory();
   
   // set up the file that contains a list of all the files
   string casefilename = data_.dir_ + string("/") + string("ensight.case");
@@ -1017,7 +1037,7 @@ EnsightDumper::addField(string fieldname, const Uintah::TypeDescription * td)
     {
       for(int idiag=0;idiag<4;idiag++)
 	casestrm_ << "scalar per " << typestr << ": 1 " 
-                 << fieldname << "_" << tensor_diagname(idiag) 
+                 << fieldname << tensor_diagname(idiag) 
                  << " " << nodots(fieldname) << tensor_diagname(idiag) << "****" << endl;
     }
   else
@@ -1029,7 +1049,7 @@ EnsightDumper::addField(string fieldname, const Uintah::TypeDescription * td)
 EnsightDumper::Step * 
 EnsightDumper::addStep(int index, double time)
 {
-  Step * res = new Step(&data_, index, time, nsteps_);
+  Step * res = scinew Step(&data_, this->dirName(time), index, time, nsteps_);
   nsteps_++;
   return res;
 }
@@ -1044,9 +1064,9 @@ EnsightDumper::finishStep(Dumper::Step * step)
   }
 }
 
-EnsightDumper::Step::Step(Data * data, int index, double time, int fileindex)
+EnsightDumper::Step::Step(Data * data, string tsdir, int index, double time, int fileindex)
   :
-  Dumper::Step(index, time),
+  Dumper::Step(tsdir, index, time),
   fileindex_(fileindex),
   data_(data),
   needmesh_(!data->onemesh_||(fileindex==0))
@@ -1205,7 +1225,9 @@ EnsightDumper::Step::storeGridField(string fieldname, const Uintah::TypeDescript
       
       int icol(0);
       
-      cout << "  " << outname << endl;
+      cout << "  " << outname;
+      cout.flush();
+      
       ofstream vstrm(outname);
       fd->setstrm(&vstrm);
       
@@ -1241,9 +1263,11 @@ EnsightDumper::Step::storeGridField(string fieldname, const Uintah::TypeDescript
 	    *vit = 0.;
 	  }
         
-	for(Level::const_patchIterator iter = level->patchesBegin();iter != level->patchesEnd(); iter++) {
+        cout << ", patch ";
+        for(Level::const_patchIterator iter = level->patchesBegin();iter != level->patchesEnd(); iter++) {
 	  const Patch* patch = *iter;
-          cout << "loading patch " << patch->getID() << endl;
+          cout << patch->getID() << " ";
+          cout.flush();
           
           IntVector ilow, ihigh;
           patch->computeVariableExtents(subtype->getType(), IntVector(0,0,0), Ghost::None, 0, ilow, ihigh);
@@ -1338,6 +1362,8 @@ EnsightDumper::Step::storeGridField(string fieldname, const Uintah::TypeDescript
 		}
 	      if(icol!=0) fd->endl();
 	    }
+        cout << endl;
+        
       } // components
       
       fd->unsetstrm();
@@ -1348,21 +1374,22 @@ EnsightDumper::Step::storeGridField(string fieldname, const Uintah::TypeDescript
 void
 EnsightDumper::Step::storePartField(string /*fieldname*/, const Uintah::TypeDescription * /*td*/)
 {
-  // WRITEME
+  cout << "no particles for you - i spit in your general direction" << endl;
 }
 
 // -----------------------------------------------------------------------------
 
-class DxDumper : public Dumper 
+class DXDumper : public Dumper 
 {
 public:
-  DxDumper(DataArchive* da, string datadir, bool binmode=false, bool onedim=false);
-  ~DxDumper();
+  DXDumper(DataArchive* da, string basedir, bool binmode=false, bool onedim=false);
+  ~DXDumper();
   
+  string directoryExt() const { return "dx"; }
   void addField(string fieldname, const Uintah::TypeDescription * type);
   
   struct FldWriter { 
-    FldWriter(string datadir, string fieldname);
+    FldWriter(string outdir, string fieldname);
     ~FldWriter();
     
     int      dxobj_;
@@ -1372,7 +1399,7 @@ public:
   
   class Step : public Dumper::Step {
   public:
-    Step(DataArchive * da, string datadir, int index, double time, int fileindex, 
+    Step(DataArchive * da, string outdir, int index, double time, int fileindex, 
 	 const map<string,FldWriter*> & fldwriters, bool bin, bool onedim);
     
     void storeGrid ();
@@ -1383,7 +1410,7 @@ public:
   private:
     DataArchive*  da_;
     int           fileindex_;
-    string        datadir_;
+    string        outdir_;
     ostringstream dxstrm_, fldstrm_;
     const map<string,FldWriter*> & fldwriters_;
     bool          bin_, onedim_;
@@ -1402,21 +1429,15 @@ private:
   map<string,FldWriter*> fldwriters_;
   bool          bin_;
   bool          onedim_;
+  string        dirname_;
 };
 
-DxDumper::DxDumper(DataArchive* da, string datadir, bool bin, bool onedim)
-  : Dumper(da, datadir+"_dx"), nsteps_(0), dxobj_(0), bin_(bin), onedim_(onedim)
+DXDumper::DXDumper(DataArchive* da, string basedir, bool bin, bool onedim)
+  : Dumper(da, basedir), nsteps_(0), dxobj_(0), bin_(bin), onedim_(onedim)
 {
-  // Create a directory if it's not already there.
-  Dir dumpdir;
-  try {
-    dumpdir.create(datadir_);
-  } catch (Exception& /*e*/) {
-    ; // ignore failure
-  }
-  
   // set up the file that contains a list of all the files
-  string indexfilename = datadir_ + string("/") + string("index.dx");
+  this->dirname_ = this->createDirectory();
+  string indexfilename = dirname_ + string("/") + string("index.dx");
   dxstrm_.open(indexfilename.c_str());
   if (!dxstrm_) {
     cerr << "Can't open output file " << indexfilename << endl;
@@ -1425,7 +1446,7 @@ DxDumper::DxDumper(DataArchive* da, string datadir, bool bin, bool onedim)
   cout << "     " << indexfilename << endl;
 }
 
-DxDumper::~DxDumper()
+DXDumper::~DXDumper()
 {
   dxstrm_ << "object \"udadata\" class series" << endl;
   dxstrm_ << timestrm_.str();
@@ -1439,29 +1460,30 @@ DxDumper::~DxDumper()
 }
 
 void
-DxDumper::addField(string fieldname, const Uintah::TypeDescription * /*td*/)
+DXDumper::addField(string fieldname, const Uintah::TypeDescription * /*td*/)
 {
-  fldwriters_[fieldname] = new FldWriter(datadir_, fieldname);
+  if(fieldname=="p.particleID") return;
+  fldwriters_[fieldname] = scinew FldWriter(this->dirname_, fieldname);
 }
 
-DxDumper::Step * 
-DxDumper::addStep(int index, double time)
+DXDumper::Step * 
+DXDumper::addStep(int index, double time)
 {
-  DxDumper::Step * r = new Step(da_, datadir_, index, time, nsteps_++, fldwriters_, bin_, onedim_);
+  DXDumper::Step * r = scinew Step(archive(), dirname_, index, time, nsteps_++, fldwriters_, bin_, onedim_);
   return r;
 }
   
 void
-DxDumper::finishStep(Dumper::Step * step)
+DXDumper::finishStep(Dumper::Step * step)
 {
   dxstrm_ << step->infostr() << endl;
   timestrm_ << "  member " << nsteps_-1 << " " << step->time_ << " \"stepf " << nsteps_ << "\" " << endl;
 }
 
-DxDumper::FldWriter::FldWriter(string datadir, string fieldname)
+DXDumper::FldWriter::FldWriter(string outdir, string fieldname)
   : dxobj_(0)
 {
-  string outname = datadir+"/"+fieldname+".dx";
+  string outname = outdir+"/"+fieldname+".dx";
   strm_.open(outname.c_str());
   if(!strm_) {
     cerr << "Can't open output file " << outname << endl;
@@ -1470,7 +1492,7 @@ DxDumper::FldWriter::FldWriter(string datadir, string fieldname)
   cout << "     " << outname << endl;
 }
 
-DxDumper::FldWriter::~FldWriter()
+DXDumper::FldWriter::~FldWriter()
 {
   strm_ << "# time series " << endl;
   strm_ << "object " << ++dxobj_ << " series" << endl;
@@ -1485,13 +1507,12 @@ DxDumper::FldWriter::~FldWriter()
   strm_ << "end" << endl;
 }
 
-DxDumper::Step::Step(DataArchive * da, string datadir, int index, double time, int fileindex, 
-		     const map<string,DxDumper::FldWriter*> & fldwriters, bool bin, bool onedim)
+DXDumper::Step::Step(DataArchive * da, string tsdir, int index, double time, int fileindex, 
+		     const map<string,DXDumper::FldWriter*> & fldwriters, bool bin, bool onedim)
   :
-  Dumper::Step(index, time),
+  Dumper::Step(tsdir, index, time),
   da_(da), 
   fileindex_(fileindex),
-  datadir_(datadir),
   fldwriters_(fldwriters),
   bin_(bin), onedim_(onedim)
 {
@@ -1507,13 +1528,16 @@ REMOVE_SMALL(double v)
 }
 
 void
-DxDumper::Step::storeGrid()
+DXDumper::Step::storeGrid()
 {
+  // FIXME: why arent I doing this (lazy ...)
 }
 
 void
-DxDumper::Step::storeField(string fieldname, const Uintah::TypeDescription * td)
+DXDumper::Step::storeField(string fieldname, const Uintah::TypeDescription * td)
 {
+  if(fieldname=="p.particleID") return;
+  
   FldWriter * fldwriter = fldwriters_.find(fieldname)->second;
   ostream & os = fldwriter->strm_;
   
@@ -2008,13 +2032,14 @@ DxDumper::Step::storeField(string fieldname, const Uintah::TypeDescription * td)
 class HistogramDumper : public Dumper 
 {
 public:
-  HistogramDumper(DataArchive* da, string datadir, int nbins=256);
+  HistogramDumper(DataArchive* da, string basedir, int nbins=256);
   
+  string directoryExt() const { return "hist"; }
   void addField(string /*fieldname*/, const Uintah::TypeDescription * /*theType*/) {}
   
   class Step : public Dumper::Step {
   public:
-    Step(DataArchive * da, string datadir, int index, double time, int nbins);
+    Step(DataArchive * da, string outdir, int index, double time, int nbins);
     
     void storeGrid () {}
     void storeField(string fieldname, const Uintah::TypeDescription * type);
@@ -2036,7 +2061,7 @@ public:
 #endif  
 
     DataArchive* da_;
-    string       datadir_;
+    string       basedir_;
     int          nbins_;
   };
   
@@ -2044,38 +2069,23 @@ public:
   Step * addStep(int index, double time);
   void   finishStep(Dumper::Step * s);
   
-  static string time_string(double tval);
-  static string mat_string (int    mval);
-
-private:
-  static string makeFileName(string raydatadir, string time_file="", string variable_file="", 
-			     string materialType_file="", string ext="");
-  
 private:
   ofstream idxos_;
   int      nbins_;
   FILE*    filelist_;
 };
 
-HistogramDumper::HistogramDumper(DataArchive* da, string datadir, int nbins)
-  : Dumper(da, datadir+"_hist"), nbins_(nbins)
+HistogramDumper::HistogramDumper(DataArchive* da, string basedir, int nbins)
+  : Dumper(da, basedir), nbins_(nbins)
 {
   // set defaults for cout
   cout.setf(ios::scientific,ios::floatfield);
   cout.precision(8);
   
-  // Create a directory if it's not already there.
-  // The exception occurs when the directory is already there
-  // and the Dir.create fails.  This exception is ignored. 
-  Dir dumpdir;
-  try {
-    dumpdir.create(datadir_);
-  } catch (Exception& /*e*/) {
-    ;
-  }
+  string outdir = this->createDirectory();
   
   // set up the file that contains a list of all the files
-  string filelistname = datadir + string("/") + string("timelist");
+  string filelistname = outdir + string("/") + string("timelist");
   filelist_ = fopen(filelistname.c_str(),"w");
   if (!filelist_) {
     cerr << "Can't open output file " << filelistname << endl;
@@ -2083,55 +2093,11 @@ HistogramDumper::HistogramDumper(DataArchive* da, string datadir, int nbins)
   }
 }
 
-string
-HistogramDumper::time_string(double tval)
-{
-  ostringstream b;
-  b.setf(ios::fixed,ios::floatfield);
-  b.precision(8);
-  b << setw(12) << setfill('0') << tval;
-  string btxt(b.str());
-  string r;
-  for(string::const_iterator bit(btxt.begin());bit!=btxt.end();bit++) {
-    char c = *bit;
-    if(c=='.' || c==' ')
-      r += '_';
-    else
-      r += c;
-  }
-  return r;
-}
-
-string
-HistogramDumper::mat_string(int mval)
-{
-  ostringstream b;
-  b << setw(4) << setfill('0') << mval;
-  return b.str();
-}
-
-string
-HistogramDumper::makeFileName(string datadir, string time_file, string variable_file, 
-                              string materialType_file, string ext) 
-{
-  string datafile;
-  if (datadir != "")
-    datafile+= datadir + string("/");
-  datafile+= string("TS_") + time_file + string("/");
-  if (variable_file != "")
-    datafile+= string("VAR_") + variable_file + string(".");
-  if (materialType_file != "")
-    datafile+= string("MT_") + materialType_file + string(".");
-  if (ext!="")
-    datafile+=ext;
-  return datafile;
-}
-
 HistogramDumper::Step * 
 HistogramDumper::addStep(int index, double time)
 {
-  return new Step(da_, datadir_, index, time, nbins_);
-}  
+  return scinew Step(this->archive(), this->dirName(time), index, time, nbins_);
+}
 
 void
 HistogramDumper::finishStep(Dumper::Step * s)
@@ -2139,18 +2105,10 @@ HistogramDumper::finishStep(Dumper::Step * s)
   fprintf(filelist_, "%10d %16.8g  %20s\n", s->index_, s->time_, s->infostr().c_str());
 }
 
-HistogramDumper::Step::Step(DataArchive * da, string datadir, int index, double time,  int nbins)
+HistogramDumper::Step::Step(DataArchive * da, string tsdir, int index, double time,  int nbins)
   : 
-  Dumper::Step(index, time),
-  da_(da), datadir_(datadir), nbins_(nbins)
+  Dumper::Step(tsdir, index, time), da_(da), nbins_(nbins)
 {
-  stepdname_ = HistogramDumper::makeFileName(datadir, TextDumper::time_string(time_));
-  Dir stepdir;
-  try {
-    stepdir.create(stepdname_);
-  } catch (ErrnoException& e) {
-    cerr << "WARNING " << e.message() << endl;
-  }
 }
 
 static inline double MIN(double a, double b) { if(a<b) return a; return b; }
@@ -2177,7 +2135,6 @@ _binvals(LevelP level, Uintah::TypeDescription::Type theType,
   ScalarDiagGen<ElemT> diaggen;
   
   ext = diaggen.name(idiag);
-  if(ext!="") ext = "_"+ext;
   
   minval =  FLT_MAX;
   maxval = -FLT_MAX;
@@ -2206,7 +2163,7 @@ _binvals(LevelP level, Uintah::TypeDescription::Type theType,
             da_->query(Mvalue, "g.mass", matl, patch, time_);
             
             for(NodeIterator iter = patch->getNodeIterator();!iter.done(); iter++){
-              if(_outside(*iter, minind, maxind)) continue;
+              if(outside(*iter, minind, maxind)) continue;
               
               double mcell = Mvalue[*iter];
               if(mcell<1.e-10) continue;
@@ -2227,7 +2184,7 @@ _binvals(LevelP level, Uintah::TypeDescription::Type theType,
             da_->query(value, fieldname, matl, patch, time_);
             
             for(NodeIterator iter = patch->getNodeIterator();!iter.done(); iter++){
-              if(_outside(*iter, minind, maxind)) continue;
+              if(outside(*iter, minind, maxind)) continue;
               double val = diaggen.gen(value[*iter], idiag);
               if(ipass==0) {
                 minval = MIN(minval, val);
@@ -2293,10 +2250,9 @@ HistogramDumper::Step::storeField(string fieldname, const Uintah::TypeDescriptio
       }
     }
   }
-
+  
   // dump one material at a time
   for(int imat=0;imat<nmats;imat++) {
-    
     int ndiags = 0;
     string ext = "";
     switch(td->getSubType()->getType()){
@@ -2337,8 +2293,7 @@ HistogramDumper::Step::storeField(string fieldname, const Uintah::TypeDescriptio
       // if no points found, dont write empty histogram
       if(minval>maxval) continue;
       
-      string matname = HistogramDumper::mat_string(imat);
-      string fname   = HistogramDumper::makeFileName(datadir_, time_string(time_), fieldname+ext, matname, "hist");
+      string fname   = this->fileName(fieldname+ext, imat, "hist");
       cout << "     " << fname << endl;
       cout << "       mat " << imat << ", "
            << "range = " << minval << "," << maxval
@@ -2346,7 +2301,7 @@ HistogramDumper::Step::storeField(string fieldname, const Uintah::TypeDescriptio
       
       ofstream os(fname.c_str());
       os << "# time = " << time_ << ", field = " 
-         << fieldname << ", mat " << matname << endl;
+         << fieldname << ", mat " << imat << endl;
       os << "# min = " << minval << endl;
       os << "# max = " << maxval << endl;
       
@@ -2374,18 +2329,24 @@ void usage(const string& badarg, const string& progname)
     cerr << "Error parsing argument: " << badarg << endl;
   cerr << "Usage: " << progname << " [options] <archive file>\n\n";
   cerr << "Valid options are:\n";
-  cerr << "  -bin                   dump in binary format\n";
-  cerr << "  -onemesh               only store single mesh (ensight only)\n";
-  cerr << "  -onedim                generate one dim plots (dx/text only)\n";
-  cerr << "  -tseries               generate single time series file (text only)\n";
-  cerr << "  -withpart              include particles (ensight only)\n";
-  cerr << "  -nbins                 number of particle bins\n";
+  cerr << "  -basename     [bnm]    output basename\n";
+  cerr << "  -field        [fld]    field to dump\n";
   cerr << "  -timesteplow  [int]    (only outputs timestep from int)\n";
   cerr << "  -timestephigh [int]    (only outputs timesteps upto int)\n";
   cerr << "  -timestepinc  [int]    (only outputs every int timesteps)\n";
-  cerr << "  -basename     [bnm]    basename to write to\n";
-  cerr << "  -format       [fmt]    output format, one of (text,ensight,dx,histogram)\n";
-  cerr << "  -field        [fld]    field to dump\n";
+  cerr << "  -format       [fmt]    output format, one of (text,ensight,opendx,histogram)\n";
+  cerr << "  text options:" << endl;
+  cerr << "      -onedim            generate one dim plots\n";
+  cerr << "      -tseries           generate single time series file\n";
+  cerr << "  histogram options:" << endl;
+  cerr << "      -nbins             number of particle bins\n";
+  cerr << "  ensight options:" << endl;
+  cerr << "      -withpart          include particles\n";
+  cerr << "      -onemesh           only store a single mesh\n";
+  cerr << "      -bin               dump in binary format\n";
+  cerr << "  opendx options:" << endl;
+  cerr << "      -onedim            generate one dim plots\n";
+  cerr << "      -bin               dump in binary format\n";
   exit(1);
 }
 
@@ -2399,16 +2360,17 @@ main(int argc, char** argv)
   int time_step_lower = 0;
   int time_step_upper = INT_MAX;
   int time_step_inc   = 1;
-  string datadir = "";
-  string fieldnames = "";
-  string fmt = "text";
-  bool binary = false;
-  bool onemesh = false;
-  bool onedim  = false;
+  string basedir      = "";
+  string fieldnames   = "";
+  string fmt    = "text";
+  bool binary   = false;
+  bool onemesh  = false;
+  bool onedim   = false;
   bool tseries  = false;
   bool withpart = false;
   int nbins(256);
   
+  int args = argc-1;
   for(int i=1;i<argc;i++){
     string s=argv[i];
     
@@ -2416,44 +2378,58 @@ main(int argc, char** argv)
       //do_verbose = true;
     } else if (s == "-timesteplow") {
       time_step_lower = (int)strtoul(argv[++i],(char**)NULL,10);
+      args -= 2;
     } else if (s == "-timestephigh") {
       time_step_upper = (int)strtoul(argv[++i],(char**)NULL,10);
+      args -= 2;
     } else if (s == "-timestepinc") {
       time_step_inc = (int)strtoul(argv[++i],(char**)NULL,10);
+      args -= 2;
     } else if (s == "-field") {
       fieldnames = argv[++i];
+      args -= 2;
     } else if (s == "-basename") {
-      datadir = argv[++i];
+      basedir = argv[++i];
+      args -= 2;
     } else if (s == "-format") {
       fmt = argv[++i];
+      args -= 2;
     } else if (s == "-bin") {
       binary = true;
+      args -= 1;
     } else if (s == "-onemesh") {
       onemesh = true;
+      args -= 1;
     } else if (s == "-onedim") {
       onedim = true;
+      args -= 1;
     } else if (s == "-nbins") {
       nbins = (int)strtoul(argv[++i],(char**)NULL,10);
+      args -= 2;
     } else if (s == "-tseries") {
       tseries = true;
+      args -= 1;
     } else if (s == "-withpart") {
       withpart = true;
+      args -= 1;
     } else if( (s == "-help") || (s == "-h") ) {
       usage( "", argv[0] );
+      args -= 1;
     }
   }
-  string filebase = argv[argc-1];
-  if(filebase == ""){
+  if(args!=1){
     cerr << "No archive file specified\n";
     usage("", argv[0]);
   }
+  string filebase = argv[argc-1];
   
-  if(!datadir.size())
+  if(!basedir.size())
     {
-      datadir = filebase.substr(0, filebase.find('.'));
+      basedir = filebase.substr(0, filebase.find('.'));
     }
   
   try {
+    cout << "filebase: " << filebase << endl;
     DataArchive* da = scinew DataArchive(filebase);
     
     // load list of possible variables from the data archive
@@ -2517,13 +2493,15 @@ main(int argc, char** argv)
     
     Dumper * dumper = 0;
     if(fmt=="text") {
-      dumper = new TextDumper(da, datadir, onedim, tseries);
+      dumper = scinew TextDumper(da, basedir, onedim, tseries);
     } else if(fmt=="ensight") {
-      dumper = new EnsightDumper(da, datadir, binary, onemesh, withpart);
-    } else if(fmt=="histogram") {
-      dumper = new HistogramDumper(da, datadir, nbins);
-    } else if(fmt=="dx") {
-      dumper = new DxDumper(da, datadir, binary, onedim);
+      dumper = scinew EnsightDumper(da, basedir, binary, onemesh, withpart);
+    } else if(fmt=="dx" || fmt=="opendx") {
+      dumper = scinew DXDumper(da, basedir, binary, onedim);
+    } else if(fmt=="histogram" || fmt=="hist") {
+      dumper = new HistogramDumper(da, basedir, nbins);
+    } else {
+      cerr << "Failed to find match to format '" + fmt + "'" << endl;
     }
     
     if(dumper) {
@@ -2537,7 +2515,7 @@ main(int argc, char** argv)
       // loop over the times
       for(int i=time_step_lower;i<=time_step_upper;i+=time_step_inc) {
 	cout << index[i] << ": " << times[i] << endl;
-      
+        
 	Dumper::Step * step_dumper = dumper->addStep(index[i], times[i]);
         
 	step_dumper->storeGrid();
@@ -2545,7 +2523,7 @@ main(int argc, char** argv)
 	for(list<typed_varname>::const_iterator vit(dumpvars.begin());vit!=dumpvars.end();vit++) {
 	  const string fieldname = vit->first;
 	  const Uintah::TypeDescription* td      = vit->second;
-	  
+          
 	  step_dumper->storeField(fieldname, td);
 	}
 	
@@ -2556,9 +2534,6 @@ main(int argc, char** argv)
       }
       
       delete dumper;
-      
-    } else {
-      cerr << "Failed to find match to format '" + fmt + "'" << endl;
     }
     
   } catch (Exception& e) {
