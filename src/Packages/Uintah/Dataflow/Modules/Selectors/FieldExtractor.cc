@@ -115,10 +115,6 @@ double FieldExtractor::field_update()
      archive.queryTimesteps( indices, times );
    }
 
-   if( levelnum != level_.get() ){
-     mesh_handle_ = 0;
-     levelnum = level_.get();
-   }
    if (timestep != new_timestep) {
      time = times[new_timestep];
      grid = archive.queryGrid(time);
@@ -128,6 +124,17 @@ double FieldExtractor::field_update()
    } else {
      time = times[timestep];
    }
+
+   // Deal with changed level information
+   int n = grid->numLevels();
+   if (level_.get() >= (n-1)){
+     level_.set(n-1);
+   }
+   if (levelnum != level_.get() ){
+     mesh_handle_ = 0;
+     levelnum = level_.get();
+   }
+
    get_vars( names, types );
    return time;
 }
