@@ -7,6 +7,7 @@
 #include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/ViscoTransIsoHyper.h>
 #include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/CompNeoHookPlas.h>
 #include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/ViscoScram.h>
+#include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/ViscoSCRAMHotSpot.h>
 #include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/HypoElastic.h>
 #include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/HypoElasticImplicit.h>
 #include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/MWViscoElastic.h>
@@ -79,8 +80,8 @@ ConstitutiveModel* ConstitutiveModelFactory::create(ProblemSpecP& ps,
   else if (mat_type ==  "visco_scram")
     return(scinew ViscoScram(child,lb,flags));
    
-  //else if (mat_type ==  "viscoSCRAM")
-  //  return(scinew ViscoSCRAM(child,lb,flags));
+  else if (mat_type ==  "viscoSCRAM_hs")
+    return(scinew ViscoSCRAMHotSpot(child,lb,flags));
    
   else if (mat_type ==  "hypo_elastic") {
     if (flags->d_integrator_type == "explicit" || 

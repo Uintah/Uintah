@@ -230,6 +230,7 @@ ViscoScram::initializeCMData(const Patch* patch,
       pStatedata[idx].DevStress[imaxwell] = zero;
     }
     pRand[idx] = .5;
+    //pRand[idx] = drand48();
   }
 
   computeStableTimestep(patch, matl, new_dw);
@@ -347,6 +348,7 @@ ViscoScram::computeStressTensor(const PatchSubset* patches,
   Gmw[4]=d_initialData.G[4];
 
   // Define particle and grid variables
+  delt_vartype delT;
   constParticleVariable<Short27>   pgCode;
   constParticleVariable<double>    pMass, pVol, pTemperature;
   constParticleVariable<double>    pCrackRadius;
@@ -363,7 +365,14 @@ ViscoScram::computeStressTensor(const PatchSubset* patches,
   ParticleVariable<StateData> pStatedata;
 
   // Other local variables
-  Matrix3 velGrad, pDefGradInc;
+  Matrix3 pVelGrad(0.0), pDefGradInc; pDefGradInc.Identity();
+
+  // Define interpolation variables
+  IntVector ni[MAX_BASIS];
+  Vector d_S[MAX_BASIS];
+
+  int dwi = matl->getDWIndex();
+  old_dw->get(delT, lb->delTLabel, getLevel(patches));
 
   for(int p=0;p<patches->size();p++){
 
@@ -376,31 +385,26 @@ ViscoScram::computeStressTensor(const PatchSubset* patches,
     Vector dx = patch->dCell();
     double oodx[3] = {1./dx.x(), 1./dx.y(), 1./dx.z()};
 
-    delt_vartype delT;
-    old_dw->get(delT, lb->delTLabel, getLevel(patches));
-
     // Get material information
-    int dwi = matl->getDWIndex();
     ParticleSubset* pset = old_dw->getParticleSubset(dwi, patch);
 
     // Get the particle and grid data for the current patch
     old_dw->get(pX,                  lb->pXLabel,                  pset);
-    old_dw->get(pStress,             lb->pStressLabel,             pset);
     old_dw->get(pMass,               lb->pMassLabel,               pset);
     old_dw->get(pVol,                lb->pVolumeLabel,             pset);
-    old_dw->get(pVelocity,           lb->pVelocityLabel,           pset);
     old_dw->get(pTemperature,        lb->pTemperatureLabel,        pset);
-    old_dw->get(pDefGrad,            lb->pDeformationMeasureLabel, pset);
     if(flag->d_8or27==27){
       old_dw->get(pSize,             lb->pSizeLabel,               pset);
     }
+    old_dw->get(pVelocity,           lb->pVelocityLabel,           pset);
+    old_dw->get(pDefGrad,            lb->pDeformationMeasureLabel, pset);
+    old_dw->get(pStress,             lb->pStressLabel,             pset);
     old_dw->get(pCrackRadius,        pCrackRadiusLabel,            pset);
-    new_dw->get(gVelocity,           lb->gVelocityLabel, dwi, patch, gac, NGN);
-
     if (flag->d_fracture) {
       new_dw->get(pgCode,            lb->pgCodeLabel,              pset);
       new_dw->get(Gvelocity,         lb->GVelocityLabel, dwi, patch, gac, NGN);
     }
+    new_dw->get(gVelocity,           lb->gVelocityLabel, dwi, patch, gac, NGN);
 
     // Allocate arrays for the updated particle data for the current patch
     new_dw->allocateAndPut(pVol_new,         
@@ -446,8 +450,6 @@ ViscoScram::computeStressTensor(const PatchSubset* patches,
       //double beta = 3.*alpha*bulk*(1.+.4*(pRand[idx]-.5));
 
       // Get the node indices that surround the cell
-      IntVector ni[MAX_BASIS];
-      Vector d_S[MAX_BASIS];
       if(flag->d_8or27==8){
         patch->findCellAndShapeDerivatives(pX[idx], ni, d_S);
       }
@@ -456,7 +458,7 @@ ViscoScram::computeStressTensor(const PatchSubset* patches,
       }
 
       Vector gvel;
-      velGrad.set(0.0);
+      pVelGrad.set(0.0);
       for(int k = 0; k < flag->d_8or27; k++) {
         if (flag->d_fracture) {
           if(pgCode[idx][k]==1) gvel = gVelocity[ni[k]];
@@ -465,13 +467,13 @@ ViscoScram::computeStressTensor(const PatchSubset* patches,
           gvel = gVelocity[ni[k]];
         for (int j = 0; j<3; j++){
           for (int i = 0; i<3; i++) {
-            velGrad(i,j)+=gvel[i] * d_S[k][j] * oodx[j];
+            pVelGrad(i,j)+=gvel[i] * d_S[k][j] * oodx[j];
           }
         }
       }
 
       // Calculate rate of deformation D, and deviatoric rate DPrime
-      Matrix3 D = (velGrad + velGrad.Transpose())*.5;
+      Matrix3 D = (pVelGrad + pVelGrad.Transpose())*.5;
       Matrix3 DPrime = D - Identity*onethird*D.Trace();
 
       // Effective deviatoric strain rate
@@ -656,7 +658,7 @@ ViscoScram::computeStressTensor(const PatchSubset* patches,
 
       // Compute the deformation gradient increment using the time_step
       // velocity gradient (F_n^np1 = dudx * dt + Identity)
-      pDefGradInc = velGrad * delT + Identity;
+      pDefGradInc = pVelGrad * delT + Identity;
       double Jinc = pDefGradInc.Determinant();
 
       // Update the deformation gradient tensor to its time n+1 value.
