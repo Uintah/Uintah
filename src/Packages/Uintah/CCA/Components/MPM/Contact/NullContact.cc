@@ -65,8 +65,8 @@ void NullContact::exMomInterpolated(const ProcessorGroup*,
       NCVariable<Vector> gvelocity;
       MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial( m );
       int dwi = mpm_matl->getDWIndex();
-      new_dw->get(gvelocity, lb->gVelocityLabel, dwi, patch, Ghost::None, 0);
-      new_dw->put(gvelocity, lb->gMomExedVelocityLabel, dwi, patch);
+      new_dw->get(   gvelocity, lb->gVelocityLabel, dwi, patch, Ghost::None, 0);
+      new_dw->modify(gvelocity, lb->gVelocityLabel, dwi, patch);
     }
   }
 }
@@ -100,10 +100,10 @@ void NullContact::exMomIntegrated(const ProcessorGroup*,
 
 void NullContact::addComputesAndRequiresInterpolated( Task* t,
 						const PatchSet*,
-						const MaterialSet* ) const
+						const MaterialSet* ms) const
 {
-  t->requires( Task::NewDW, lb->gVelocityLabel,Ghost::None);
-  t->computes( lb->gMomExedVelocityLabel);
+  const MaterialSubset* mss = ms->getUnion();
+  t->modifies( lb->gVelocityLabel, mss, Ghost::None);
 }
 
 void NullContact::addComputesAndRequiresIntegrated( Task* t,

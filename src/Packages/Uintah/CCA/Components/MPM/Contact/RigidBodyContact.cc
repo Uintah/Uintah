@@ -71,10 +71,10 @@ void RigidBodyContact::exMomInterpolated(const ProcessorGroup*,
     // Retrieve necessary data from DataWarehouse
     vector<NCVariable<double> > gmass(numMatls);
     vector<NCVariable<Vector> > gvelocity(numMatls),gvelocityME(numMatls);
-    for(int m=0,idx=0;m<matls->size();m++,idx++){
+    for(int m=0;m<matls->size();m++){
       int dwi = matls->get(m);
-      new_dw->get(gmass[idx],    lb->gMassLabel,     dwi, patch,Ghost::None,0);
-      new_dw->get(gvelocity[idx],lb->gVelocityLabel, dwi, patch,Ghost::None,0);
+      new_dw->get(gmass[m],    lb->gMassLabel,     dwi, patch,Ghost::None,0);
+      new_dw->get(gvelocity[m],lb->gVelocityLabel, dwi, patch,Ghost::None,0);
     }
 
 #if 0
@@ -102,9 +102,9 @@ void RigidBodyContact::exMomInterpolated(const ProcessorGroup*,
     }
 
     // Store new velocities in DataWarehouse
-    for(int m=0,idx=0;m<matls->size();m++,idx++){
+    for(int m=0;m<matls->size();m++){
       int dwindex = matls->get(m);
-      new_dw->put(gvelocity[idx], lb->gMomExedVelocityLabel, dwindex, patch);
+      new_dw->modify(gvelocity[m], lb->gVelocityLabel, dwindex, patch);
     }
   }
 }
@@ -129,12 +129,12 @@ void RigidBodyContact::exMomIntegrated(const ProcessorGroup*,
     vector<NCVariable<Vector> > gvelocity_starME(numMatls);
     vector<NCVariable<Vector> > gacceleration(numMatls);
     vector<NCVariable<Vector> > gaccelerationME(numMatls);
-    for(int m=0,idx=0;m<matls->size();m++,idx++){
+    for(int m=0;m<matls->size();m++){
       int dwindex = matls->get(m);
-      new_dw->get(gmass[idx], lb->gMassLabel,dwindex ,patch, Ghost::None, 0);
-      new_dw->get(gvelocity_star[idx], lb->gVelocityStarLabel, dwindex,
+      new_dw->get(gmass[m], lb->gMassLabel,dwindex ,patch, Ghost::None, 0);
+      new_dw->get(gvelocity_star[m], lb->gVelocityStarLabel, dwindex,
 		  patch, Ghost::None, 0);
-      new_dw->get(gacceleration[idx],  lb->gAccelerationLabel, dwindex,
+      new_dw->get(gacceleration[m],  lb->gAccelerationLabel, dwindex,
 		  patch, Ghost::None, 0);
     }
 
@@ -171,22 +171,22 @@ void RigidBodyContact::exMomIntegrated(const ProcessorGroup*,
     }
 
     // Store new velocities and accelerations in DataWarehouse
-    for(int m=0,idx=0;m<matls->size();m++,idx++){
+    for(int m=0;m<matls->size();m++){
       int dwi = matls->get(m);
-      new_dw->put(gvelocity_star[idx],lb->gMomExedVelocityStarLabel,dwi,patch);
-      new_dw->put(gacceleration[idx], lb->gMomExedAccelerationLabel,dwi,patch);
+      new_dw->put(gvelocity_star[m],lb->gMomExedVelocityStarLabel,dwi,patch);
+      new_dw->put(gacceleration[m], lb->gMomExedAccelerationLabel,dwi,patch);
     }
   }
 }
 
 void RigidBodyContact::addComputesAndRequiresInterpolated( Task* t,
 					     const PatchSet* ,
-					     const MaterialSet* ) const
+					     const MaterialSet* ms) const
 {
-  t->requires(Task::NewDW, lb->gMassLabel,     Ghost::None);
-  t->requires(Task::NewDW, lb->gVelocityLabel, Ghost::None);
+  const MaterialSubset* mss = ms->getUnion();
+  t->requires(Task::NewDW, lb->gMassLabel,          Ghost::None);
 
-  t->computes(lb->gMomExedVelocityLabel);
+  t->modifies(             lb->gVelocityLabel, mss, Ghost::None);
 }
 
 void RigidBodyContact::addComputesAndRequiresIntegrated( Task* t,

@@ -83,15 +83,15 @@ void FrictionContact::exMomInterpolated(const ProcessorGroup*,
     vector<NCVariable<Vector> > surfnorm(numMatls);
   
     // Retrieve necessary data from DataWarehouse
-    for(int m=0,idx=0;m<matls->size();m++,idx++){
+    for(int m=0;m<matls->size();m++){
       int dwindex = matls->get(m);
-        new_dw->get(gmass[idx], lb->gMassLabel,              dwindex, patch,
+        new_dw->get(gmass[m], lb->gMassLabel,              dwindex, patch,
 		  Ghost::None, 0);
-        new_dw->get(gvelocity[idx], lb->gVelocityLabel,      dwindex, patch,
+        new_dw->get(gvelocity[m], lb->gVelocityLabel,      dwindex, patch,
 		  Ghost::None, 0);
-        old_dw->get(normtraction[idx],lb->gNormTractionLabel,dwindex, patch,
+        old_dw->get(normtraction[m],lb->gNormTractionLabel,dwindex, patch,
 		Ghost::None, 0);
-        old_dw->get(surfnorm[idx],lb->gSurfNormLabel,        dwindex, patch,
+        old_dw->get(surfnorm[m],lb->gSurfNormLabel,        dwindex, patch,
 		  Ghost::None, 0);
     }
     delt_vartype delT;
@@ -163,9 +163,9 @@ void FrictionContact::exMomInterpolated(const ProcessorGroup*,
     }
 
     // Store new velocities in DataWarehouse
-    for(int m=0,idx=0;m<matls->size();m++,idx++){
+    for(int m=0;m<matls->size();m++){
       int dwindex = matls->get(m);
-      new_dw->put(gvelocity[idx], lb->gMomExedVelocityLabel, dwindex, patch);
+      new_dw->modify(gvelocity[m], lb->gVelocityLabel, dwindex, patch);
     }
   }
 }
@@ -204,10 +204,10 @@ void FrictionContact::exMomIntegrated(const ProcessorGroup*,
 
     // First, calculate the gradient of the mass everywhere
     // normalize it, and stick it in surfNorm
-    for(int m=0,idx=0;m<matls->size();m++,idx++){
+    for(int m=0;m<matls->size();m++){
       int dwi = matls->get(m);
-      new_dw->get(gmass[idx],lb->gMassLabel, dwi, patch, Ghost::AroundNodes, 1);
-      new_dw->allocate(gsurfnorm[idx],lb->gSurfNormLabel, dwi, patch);
+      new_dw->get(gmass[m],lb->gMassLabel, dwi, patch, Ghost::AroundNodes, 1);
+      new_dw->allocate(gsurfnorm[m],lb->gSurfNormLabel, dwi, patch);
 
       gsurfnorm[m].initialize(Vector(0.0,0.0,0.0));
 
@@ -387,7 +387,7 @@ void FrictionContact::exMomIntegrated(const ProcessorGroup*,
     // FINALLY, we have all the pieces in place, compute the proper interaction
 
     // Retrieve necessary data from DataWarehouse
-    for(int m=0,idx=0;m<matls->size();m++,idx++){
+    for(int m=0;m<matls->size();m++){
       int matlindex = matls->get(m);
       new_dw->get(gmass[m], lb->gMassLabel,matlindex,
 					patch,Ghost::None, 0);
@@ -481,11 +481,11 @@ void FrictionContact::exMomIntegrated(const ProcessorGroup*,
     //  ts++;
 
     // Store new velocities and accelerations in DataWarehouse
-    for(int m=0,idx=0;m<matls->size();m++,idx++){
+    for(int m=0;m<matls->size();m++){
       int matlindex = matls->get(m);
-      new_dw->put(gvelocity_star[idx], lb->gMomExedVelocityStarLabel,
+      new_dw->put(gvelocity_star[m], lb->gMomExedVelocityStarLabel,
 						matlindex, patch);
-      new_dw->put(gacceleration[idx],  lb->gMomExedAccelerationLabel,
+      new_dw->put(gacceleration[m],  lb->gMomExedAccelerationLabel,
 						matlindex, patch);
     }
   }
@@ -493,14 +493,13 @@ void FrictionContact::exMomIntegrated(const ProcessorGroup*,
 
 void FrictionContact::addComputesAndRequiresInterpolated( Task* t,
 					     const PatchSet* ,
-					     const MaterialSet* ) const
+					     const MaterialSet* ms) const
 {
-  t->requires(Task::OldDW, lb->gNormTractionLabel,Ghost::None);
-  t->requires(Task::OldDW, lb->gSurfNormLabel,    Ghost::None);
-  t->requires(Task::NewDW, lb->gMassLabel,        Ghost::None);
-  t->requires(Task::NewDW, lb->gVelocityLabel,    Ghost::None);
-
-  t->computes(lb->gMomExedVelocityLabel);
+  const MaterialSubset* mss = ms->getUnion();
+  t->requires(Task::OldDW, lb->gNormTractionLabel,  Ghost::None);
+  t->requires(Task::OldDW, lb->gSurfNormLabel,      Ghost::None);
+  t->requires(Task::NewDW, lb->gMassLabel,          Ghost::None);
+  t->modifies(             lb->gVelocityLabel, mss, Ghost::None);
 }
 
 void FrictionContact::addComputesAndRequiresIntegrated( Task* t,
