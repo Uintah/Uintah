@@ -139,6 +139,13 @@ public:
 			     int index,
 			     CellInformation* cellinfo,
 			     ArchesVariables* vars);
+      ////////////////////////////////////////////////////////////////////////
+      // Add multimaterial source term
+      void computemmMomentumSource(const ProcessorGroup* pc,
+				   const Patch* patch,
+				   int index,
+				   CellInformation* cellinfo,
+				   ArchesVariables* vars);
   
 private:
 

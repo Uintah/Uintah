@@ -98,6 +98,14 @@ namespace Uintah {
       SFCZVariable<double> residualWVelocity;
       CCVariable<double> residualScalar;      
 
+      // multimaterial variables
+      SFCXVariable<double> mmuVelSu;
+      SFCXVariable<double> mmuVelSp;
+      SFCYVariable<double> mmvVelSu;
+      SFCYVariable<double> mmvVelSp;
+      SFCZVariable<double> mmwVelSu;
+      SFCZVariable<double> mmwVelSp;
+      
     }; // End class ArchesVariables
 } // End namespace Uintah
 

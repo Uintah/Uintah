@@ -29,10 +29,11 @@ using namespace std;
 // Default constructor for MomentumSolver
 //****************************************************************************
 MomentumSolver::
-MomentumSolver(const ArchesLabel* label, TurbulenceModel* turb_model,
+MomentumSolver(const ArchesLabel* label, const MPMArchesLabel* MAlb,
+	       TurbulenceModel* turb_model,
 	       BoundaryCondition* bndry_cond,
 	       PhysicalConstants* physConst) : 
-                                   d_lab(label),
+                                   d_lab(label), d_MAlab(MAlb),
                                    d_turbModel(turb_model), 
                                    d_boundaryCondition(bndry_cond),
 				   d_physicalConsts(physConst)
@@ -163,6 +164,13 @@ MomentumSolver::sched_buildLinearMatrix(const LevelP& level,
 		      Ghost::AroundCells, numGhostCells);
 	tsk->requires(new_dw, d_lab->d_wVelocityCPBCLabel, matlIndex, patch, 
 		      Ghost::AroundCells, numGhostCells);
+	// for multimaterial
+	if (d_MAlab) {
+	  tsk->requires(new_dw, d_MAlab->d_uVel_mmLinSrcLabel, matlIndex, patch,
+			Ghost::None, zeroGhostCells);
+	  tsk->requires(new_dw, d_MAlab->d_uVel_mmNonlinSrcLabel, matlIndex, patch,
+			Ghost::None, zeroGhostCells);
+	}
 	break;
       case Arches::YDIR:
 	// use new uvelocity for v coef calculation
@@ -172,6 +180,12 @@ MomentumSolver::sched_buildLinearMatrix(const LevelP& level,
 		      Ghost::AroundCells, numGhostCells);
 	tsk->requires(new_dw, d_lab->d_wVelocityCPBCLabel, matlIndex, patch, 
 		      Ghost::AroundCells, numGhostCells);
+	if (d_MAlab) {
+	  tsk->requires(new_dw, d_MAlab->d_vVel_mmLinSrcLabel, matlIndex, patch,
+			Ghost::None, zeroGhostCells);
+	  tsk->requires(new_dw, d_MAlab->d_vVel_mmNonlinSrcLabel, matlIndex, patch,
+			Ghost::None, zeroGhostCells);
+	}
 	break;
       case Arches::ZDIR:
 	// use new uvelocity for v coef calculation
@@ -181,6 +195,13 @@ MomentumSolver::sched_buildLinearMatrix(const LevelP& level,
 		      Ghost::AroundCells, numGhostCells);
 	tsk->requires(new_dw, d_lab->d_wVelocityCPBCLabel, matlIndex, patch, 
 		      Ghost::AroundCells, numGhostCells);
+	if (d_MAlab) {
+	  tsk->requires(new_dw, d_MAlab->d_wVel_mmLinSrcLabel, matlIndex, patch,
+			Ghost::None, zeroGhostCells);
+	  tsk->requires(new_dw, d_MAlab->d_wVel_mmNonlinSrcLabel, matlIndex, patch,
+			Ghost::None, zeroGhostCells);
+	}
+
 	break;
       default:
 	throw InvalidValue("Invalid index in MomentumSolver");
@@ -362,6 +383,15 @@ MomentumSolver::buildLinearMatrix(const ProcessorGroup* pc,
     //cerr << "in moment solve just before allocate" << index << endl;
     //    new_dw->allocate(velocityVars.variableCalledDU, d_lab->d_DUMBLMLabel,
     //			matlIndex, patch);
+    // for multimaterial
+    if (d_MAlab) {
+      new_dw->get(velocityVars.mmuVelSu, d_MAlab->d_uVel_mmNonlinSrcLabel,
+		  matlIndex, patch,
+		  Ghost::None, zeroGhostCells);
+      new_dw->get(velocityVars.mmuVelSp, d_MAlab->d_uVel_mmLinSrcLabel,
+		  matlIndex, patch,
+		  Ghost::None, zeroGhostCells);
+    }
 
     for (int ii = 0; ii < nofStencils; ii++) {
       new_dw->allocate(velocityVars.uVelocityCoeff[ii], 
@@ -388,6 +418,16 @@ MomentumSolver::buildLinearMatrix(const ProcessorGroup* pc,
     //cerr << "in moment solve just before allocate" << index << endl;
     //    new_dw->allocate(velocityVars.variableCalledDV, d_lab->d_DVMBLMLabel,
     //			matlIndex, patch);
+    // for multimaterial
+    if (d_MAlab) {
+      new_dw->get(velocityVars.mmvVelSu, d_MAlab->d_vVel_mmNonlinSrcLabel,
+		  matlIndex, patch,
+		  Ghost::None, zeroGhostCells);
+      new_dw->get(velocityVars.mmvVelSp, d_MAlab->d_vVel_mmLinSrcLabel,
+		  matlIndex, patch,
+		  Ghost::None, zeroGhostCells);
+    }
+
     for (int ii = 0; ii < nofStencils; ii++) {
       new_dw->allocate(velocityVars.vVelocityCoeff[ii], 
 			  d_lab->d_vVelCoefMBLMLabel, ii, patch);
@@ -412,6 +452,15 @@ MomentumSolver::buildLinearMatrix(const ProcessorGroup* pc,
 		matlIndex, patch, Ghost::None, zeroGhostCells);
     //    new_dw->allocate(velocityVars.variableCalledDW, d_lab->d_DWMBLMLabel,
     //			matlIndex, patch);
+    // for multimaterial
+    if (d_MAlab) {
+      new_dw->get(velocityVars.mmwVelSu, d_MAlab->d_wVel_mmNonlinSrcLabel,
+		  matlIndex, patch,
+		  Ghost::None, zeroGhostCells);
+      new_dw->get(velocityVars.mmwVelSp, d_MAlab->d_wVel_mmLinSrcLabel,
+		  matlIndex, patch,
+		  Ghost::None, zeroGhostCells);
+    }
     for (int ii = 0; ii < nofStencils; ii++) {
       new_dw->allocate(velocityVars.wVelocityCoeff[ii], 
 			  d_lab->d_wVelCoefMBLMLabel, ii, patch);
@@ -452,12 +501,15 @@ MomentumSolver::buildLinearMatrix(const ProcessorGroup* pc,
 				    delta_t, index,
 				    Arches::MOMENTUM,
 				    cellinfo, &velocityVars);
+  if (d_MAlab)
+    d_source->computemmMomentumSource(pc, patch, index, cellinfo,
+				      &velocityVars);
 
 #ifdef multimaterialform
     if (d_mmInterface) {
       MultiMaterialVars* mmVars = d_mmInterface->getMMVars();
       d_mmSGSModel->computeMomentumSource(patch, index, cellinfo,
-					  mmvars, &pressureVars);
+					  mmvars, &velocityVars);
     }
 #endif
 
@@ -470,6 +522,11 @@ MomentumSolver::buildLinearMatrix(const ProcessorGroup* pc,
 				  index,
 				  Arches::MOMENTUM,
 				  cellinfo, &velocityVars);
+
+    // apply multimaterial velocity bc
+    // treats multimaterial wall as intrusion
+  if (d_MAlab)
+    d_boundaryCondition->mmvelocityBC(pc, patch, index, cellinfo, &velocityVars);
 
   // Modify Velocity Mass Source
   //  inputs : [u,v,w]VelocityCPBC, [u,v,w]VelCoefPBLM, 

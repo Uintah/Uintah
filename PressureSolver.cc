@@ -33,11 +33,12 @@ using namespace std;
 // Default constructor for PressureSolver
 //****************************************************************************
 PressureSolver::PressureSolver(const ArchesLabel* label,
+			       const MPMArchesLabel* MAlb,
 			       TurbulenceModel* turb_model,
 			       BoundaryCondition* bndry_cond,
 			       PhysicalConstants* physConst,
 			       const ProcessorGroup* myworld):
-                                      d_lab(label),
+                                     d_lab(label), d_MAlab(MAlb),
                                      d_turbModel(turb_model), 
                                      d_boundaryCondition(bndry_cond),
 				     d_physicalConsts(physConst),
@@ -176,6 +177,23 @@ PressureSolver::sched_buildLinearMatrix(const LevelP& level,
 		    Ghost::AroundCells, numGhostCells+1);
       tsk->requires(new_dw, d_lab->d_wVelocitySIVBCLabel, matlIndex, patch, 
 		    Ghost::AroundCells, numGhostCells+1);
+      // for multi-material
+    // requires su_drag[x,y,z], sp_drag[x,y,z] for arches
+      if (d_MAlab) {
+	tsk->requires(new_dw, d_MAlab->d_uVel_mmLinSrcLabel, matlIndex, patch,
+		      Ghost::None, zeroGhostCells);
+	tsk->requires(new_dw, d_MAlab->d_uVel_mmNonlinSrcLabel, matlIndex, patch,
+		      Ghost::None, zeroGhostCells);
+	tsk->requires(new_dw, d_MAlab->d_vVel_mmLinSrcLabel, matlIndex, patch,
+		      Ghost::None, zeroGhostCells);
+	tsk->requires(new_dw, d_MAlab->d_vVel_mmNonlinSrcLabel, matlIndex, patch,
+		      Ghost::None, zeroGhostCells);
+	tsk->requires(new_dw, d_MAlab->d_wVel_mmLinSrcLabel, matlIndex, patch,
+		      Ghost::None, zeroGhostCells);
+	tsk->requires(new_dw, d_MAlab->d_wVel_mmNonlinSrcLabel, matlIndex, patch,
+		      Ghost::None, zeroGhostCells);
+      }
+ 
 
       /// requires convection coeff because of the nodal
       // differencing
@@ -420,24 +438,37 @@ PressureSolver::buildLinearMatrix(const ProcessorGroup* pc,
 		matlIndex, patch, Ghost::AroundCells, numGhostCells);
   
   for(int index = 1; index <= Arches::NDIM; ++index) {
-#if  0
-    switch (index) {
-    case Arches::XDIR:
-      new_dw->allocate(pressureVars.variableCalledDU, d_lab->d_DUPBLMLabel,
-		       matlIndex, patch);
-      break;
-    case Arches::YDIR:
-      new_dw->allocate(pressureVars.variableCalledDV, d_lab->d_DVPBLMLabel,
-			  matlIndex, patch);
-      break;
-    case Arches::ZDIR:
-      new_dw->allocate(pressureVars.variableCalledDW, d_lab->d_DWPBLMLabel,
-			  matlIndex, patch);
-      break;
-    default:
-      throw InvalidValue("invalid index for velocity in PressureSolver"); 
+    // get multimaterial momentum source terms
+    if (d_MAlab) {
+      switch (index) {
+	
+      case Arches::XDIR:
+	new_dw->get(pressureVars.mmuVelSu, d_MAlab->d_uVel_mmNonlinSrcLabel,
+		    matlIndex, patch,
+		    Ghost::None, zeroGhostCells);
+	new_dw->get(pressureVars.mmuVelSp, d_MAlab->d_uVel_mmLinSrcLabel,
+		    matlIndex, patch,
+		    Ghost::None, zeroGhostCells);
+	break;
+      case Arches::YDIR:
+	new_dw->get(pressureVars.mmvVelSu, d_MAlab->d_vVel_mmNonlinSrcLabel,
+		    matlIndex, patch,
+		    Ghost::None, zeroGhostCells);
+	new_dw->get(pressureVars.mmvVelSp, d_MAlab->d_vVel_mmLinSrcLabel,
+		    matlIndex, patch,
+		    Ghost::None, zeroGhostCells);
+	break;
+      case Arches::ZDIR:
+	new_dw->get(pressureVars.mmwVelSu, d_MAlab->d_wVel_mmNonlinSrcLabel,
+		    matlIndex, patch,
+		    Ghost::None, zeroGhostCells);
+	new_dw->get(pressureVars.mmwVelSp, d_MAlab->d_wVel_mmLinSrcLabel,
+		    matlIndex, patch,
+		    Ghost::None, zeroGhostCells);
+	break;
+      }
     }
-#endif
+      
 
     for (int ii = 0; ii < nofStencils; ii++) {
       switch(index) {
@@ -503,6 +534,10 @@ PressureSolver::buildLinearMatrix(const ProcessorGroup* pc,
 				      delta_t, index,
 				      Arches::PRESSURE,
 				      cellinfo, &pressureVars);
+    // add multimaterial momentum source term
+    if (d_MAlab)
+      d_source->computemmMomentumSource(pc, patch, index, cellinfo,
+					&pressureVars);
 #ifdef multimaterialform
     if (d_mmInterface) {
       MultiMaterialVars* mmVars = d_mmInterface->getMMVars();
@@ -519,6 +554,10 @@ PressureSolver::buildLinearMatrix(const ProcessorGroup* pc,
     d_boundaryCondition->velocityBC(pc, patch, old_dw, new_dw, 
 				    index,
 				    Arches::PRESSURE, cellinfo, &pressureVars);
+    // apply multimaterial velocity bc
+    // treats multimaterial wall as intrusion
+    if (d_MAlab)
+      d_boundaryCondition->mmvelocityBC(pc, patch, index, cellinfo, &pressureVars);
 
     // Modify Velocity Mass Source
     //  inputs : [u,v,w]VelocitySIVBC, [u,v,w]VelCoefPBLM, 
@@ -665,7 +704,9 @@ PressureSolver::buildLinearMatrixPress(const ProcessorGroup* pc,
   //  outputs: presCoefPBLM
   d_boundaryCondition->pressureBC(pc, patch, old_dw, new_dw, 
 				  cellinfo, &pressureVars);
-
+  // do multimaterial bc
+  if (d_MAlab)
+    d_boundaryCondition->mmpressureBC(pc, patch, cellinfo, &pressureVars);
   // Calculate Pressure Diagonal
   //  inputs : presCoefPBLM, presLinSrcPBLM
   //  outputs: presCoefPBLM 
@@ -678,7 +719,7 @@ PressureSolver::buildLinearMatrixPress(const ProcessorGroup* pc,
 		   ii, patch);
   }
   new_dw->put(pressureVars.pressNonlinearSrc, 
-		 d_lab->d_presNonLinSrcPBLMLabel, matlIndex, patch);
+	      d_lab->d_presNonLinSrcPBLMLabel, matlIndex, patch);
 #ifdef ARCHES_PRES_DEBUG
   std::cerr << "Done building matrix for press coeff" << endl;
 #endif

@@ -42,6 +42,7 @@ WARNING
 #include <Packages/Uintah/Core/Grid/VarLabel.h>
 #include <Packages/Uintah/CCA/Components/Arches/ArchesVariables.h>
 #include <Packages/Uintah/CCA/Components/Arches/ArchesLabel.h>
+#include <Packages/Uintah/CCA/Components/MPMArches/MPMArchesLabel.h>
 namespace Uintah {
 class TurbulenceModel;
 class PhysicalConstants;
@@ -60,7 +61,8 @@ public:
       // PRECONDITIONS
       // POSTCONDITIONS
       //   A linear level solver is partially constructed.  
-      MomentumSolver(const ArchesLabel* label, TurbulenceModel* turb_model, 
+      MomentumSolver(const ArchesLabel* label, const MPMArchesLabel* MAlb,
+		     TurbulenceModel* turb_model, 
 		     BoundaryCondition* bndry_cond,
 		     PhysicalConstants* physConst);
 
@@ -138,6 +140,7 @@ private:
 
       // const VarLabel* (required)
       const ArchesLabel* d_lab;
+      const MPMArchesLabel* d_MAlab;
 
 
 }; // End class MomentumSolver

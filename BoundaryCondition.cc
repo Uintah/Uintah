@@ -44,13 +44,15 @@ using namespace SCIRun;
 // Constructor for BoundaryCondition
 //****************************************************************************
 BoundaryCondition::BoundaryCondition(const ArchesLabel* label,
+				     const MPMArchesLabel* MAlb,
 				     TurbulenceModel* turb_model,
 				     Properties* props):
-                                     d_lab(label), 
+                                     d_lab(label), d_MAlab(MAlb),
 				     d_turbModel(turb_model), 
 				     d_props(props)
 {
   d_nofScalars = d_props->getNumMixVars();
+  MM_CUTOFF_VOID_FRAC = 0.01;
 }
 
 //****************************************************************************
@@ -122,6 +124,11 @@ BoundaryCondition::problemSetup(const ProblemSpecP& params)
   else {
     d_outletBoundary = false;
   }
+  // if multimaterial then add an id for multimaterial wall
+  if (d_MAlab) 
+    d_mmWallID = total_cellTypes;
+  else
+    d_mmWallID = -9; // invalid cell type
 
 }
 
@@ -324,6 +331,76 @@ BoundaryCondition::cellTypeInit(const ProcessorGroup*,
 
   old_dw->put(cellType, d_lab->d_cellTypeLabel, matlIndex, patch);
 }  
+
+// for multimaterial
+//****************************************************************************
+// schedule the initialization of mm wall cell types
+//****************************************************************************
+void 
+BoundaryCondition::sched_mmWallCellTypeInit(const LevelP& level,
+					    SchedulerP& sched,
+					    DataWarehouseP& old_dw,
+					    DataWarehouseP& new_dw)
+{
+  for(Level::const_patchIterator iter=level->patchesBegin();
+      iter != level->patchesEnd(); iter++){
+    const Patch* patch=*iter;
+
+    // cell type initialization
+    Task* tsk = scinew Task("BoundaryCondition::mmWallCellTypeInit",
+			 patch, old_dw, new_dw, this,
+			 &BoundaryCondition::mmWallCellTypeInit);
+    int matlIndex = 0;
+    int numGhostcells = 0;
+    tsk->requires(new_dw, d_MAlab->void_frac_CCLabel, matlIndex, patch,
+		  Ghost::None, numGhostcells);
+    tsk->requires(old_dw, d_lab->d_cellTypeLabel, matlIndex, patch,
+		  Ghost::None, numGhostcells);
+    tsk->computes(new_dw, d_lab->d_mmcellTypeLabel, matlIndex, patch);
+    tsk->computes(new_dw, d_lab->d_mmgasVolFracLabel, matlIndex, patch);
+    
+    sched->addTask(tsk);
+  }
+}
+
+//****************************************************************************
+// Actual initialization of celltype
+//****************************************************************************
+void 
+BoundaryCondition::mmWallCellTypeInit(const ProcessorGroup*,
+				      const Patch* patch,
+				      DataWarehouseP& old_dw,
+				      DataWarehouseP& new_dw)
+{
+  int matlIndex = 0;
+  int numGhostcells = 0;
+  CCVariable<int> cellType;
+  old_dw->get(cellType, d_lab->d_cellTypeLabel, matlIndex, patch,
+	      Ghost::None, numGhostcells);
+  CCVariable<double> voidFrac;
+  new_dw->get(voidFrac, d_MAlab->void_frac_CCLabel, matlIndex, patch,
+	      Ghost::None, numGhostcells);
+  CCVariable<int> mmcellType;
+  new_dw->allocate(mmcellType, d_lab->d_mmcellTypeLabel, matlIndex, patch);
+  IntVector domLo = cellType.getFortLowIndex();
+  IntVector domHi = cellType.getFortHighIndex();
+  IntVector idxLo = domLo;
+  IntVector idxHi = domHi;
+  // resets old mmwall type back to flow field and sets cells with void fraction
+  // of less than .01 to mmWall
+  FORT_MMCELLTYPEINIT(domLo.get_pointer(), domHi.get_pointer(), 
+		      idxLo.get_pointer(), idxHi.get_pointer(),
+		      voidFrac.getPointer(),
+		      cellType.getPointer(),
+		      &d_mmWallID, &d_flowfieldCellTypeVal,
+		      &MM_CUTOFF_VOID_FRAC);
+
+  new_dw->put(cellType, d_lab->d_mmcellTypeLabel, matlIndex, patch);
+  // save in arches label
+  new_dw->put(voidFrac, d_lab->d_mmgasVolFracLabel, matlIndex, patch);
+}  
+
+
     
 //****************************************************************************
 // Actual initialization of celltype
@@ -338,7 +415,7 @@ BoundaryCondition::computeInletFlowArea(const ProcessorGroup*,
   CCVariable<int> cellType;
 
   // Get the cell type data from the old_dw
-  // **WARNING** numGhostcells, Ghost::NONE may change in the future
+  // **WARNING** numGhostcells, Ghost::None may change in the future
   int matlIndex = 0;
   int numGhostCells = 0;
   old_dw->get(cellType, d_lab->d_cellTypeLabel, matlIndex, patch,
@@ -1775,6 +1852,33 @@ BoundaryCondition::setFlatProfile(const ProcessorGroup* /*pc*/,
 #endif
 
 }
+
+
+      // compute multimaterial wall bc
+void 
+BoundaryCondition::mmvelocityBC(const ProcessorGroup*,
+				const Patch* patch,
+				int index, CellInformation* cellinfo,
+				ArchesVariables* vars) {
+  // add kumar's mmvelbc
+}
+
+void 
+BoundaryCondition::mmpressureBC(const ProcessorGroup*,
+				const Patch* patch,
+				CellInformation* cellinfo,
+				ArchesVariables* vars) {
+  // similar to mmwallbc replace it
+}
+// applies multimaterial bc's for scalars and pressure
+void
+BoundaryCondition::mmwallBC( const ProcessorGroup*,
+			     const Patch* patch,
+			     CellInformation* cellinfo,
+			     ArchesVariables* vars) {
+  // similar to wallbc in phil's code
+}
+
 
 //****************************************************************************
 // constructor for BoundaryCondition::WallBdry
