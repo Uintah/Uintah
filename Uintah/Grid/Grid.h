@@ -5,6 +5,7 @@
 #include "Handle.h"
 #include "LevelP.h"
 #include "RefCounted.h"
+#include <SCICore/Geometry/BBox.h>
 #include <vector>
 
 namespace Uintah {
@@ -39,37 +40,45 @@ WARNING
   
 ****************************************/
 
-   class Grid : public RefCounted {
-   public:
-      Grid();
-      virtual ~Grid();
-      
-      //////////
-      // Returns the number of levels in this grid.
-      int     numLevels() const;
-      
-      //////////
-      // Returns a "Handle" to the "idx"th level 
-      const LevelP& getLevel(int idx) const;
-      
-      //////////
-      // Adds a level to the grid.
-      void    addLevel(const LevelP& level);
-      
-      void performConsistencyCheck() const;
-      void printStatistics() const;
-      
-   private:
-      std::vector<LevelP> d_levels;
-      
-      Grid(const Grid&);
-      Grid& operator=(const Grid&);
-   };
-   
+  class Grid : public RefCounted {
+  public:
+    Grid();
+    virtual ~Grid();
+    
+    //////////
+    // Returns the number of levels in this grid.
+    int     numLevels() const;
+    
+    //////////
+    // Returns a "Handle" to the "idx"th level 
+    const LevelP& getLevel(int idx) const;
+    
+    //////////
+    // Adds a level to the grid.
+    void    addLevel(const LevelP& level);
+    
+    void performConsistencyCheck() const;
+    void printStatistics() const;
+    
+    //////////
+    // Computes the physical boundaries for the grid
+    void getSpatialRange(SCICore::Geometry::BBox& b) const;
+    
+  private:
+    std::vector<LevelP> d_levels;
+    
+    Grid(const Grid&);
+    Grid& operator=(const Grid&);
+  };
+  
 } // end namespace Uintah
 
 //
 // $Log$
+// Revision 1.5  2000/08/07 19:37:51  bigler
+// Added the getSpatialRange function which computes the physical
+// boundaries of the grid.
+//
 // Revision 1.4  2000/04/26 06:48:48  sparker
 // Streamlined namespaces
 //

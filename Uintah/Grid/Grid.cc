@@ -4,6 +4,7 @@ static char *id="@(#) $Id$";
 #include <Uintah/Grid/Grid.h>
 #include <Uintah/Grid/Level.h>
 #include <Uintah/Exceptions/InvalidGrid.h>
+#include <SCICore/Geometry/BBox.h>
 #include <iostream>
 using namespace Uintah;
 using namespace std;
@@ -65,3 +66,18 @@ void Grid::printStatistics() const
   cerr << "Total cells in grid:\t\t" << totalCells << " (" << ppc << " avg. per patch)\n";
   cerr << "\n";
 }
+
+//////////
+// Computes the physical boundaries for the grid
+void Grid::getSpatialRange(SCICore::Geometry::BBox& b) const
+{
+  // just call the same function for all the levels
+  for(int l=0; l < numLevels(); l++) {
+    getLevel(l)->getSpatialRange(b);
+  }
+}
+
+
+
+
+
