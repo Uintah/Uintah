@@ -241,7 +241,8 @@ private:
       PhysicalConstants* d_physicalConsts;
       // radiation model
       RadiationModel* d_DORadiation;
-
+      int d_radCounter; //to decide how often radiation calc is done
+      int d_radCalcFreq;
       bool d_radiationCalc;
       bool d_DORadiationCalc;
       const Patch* d_pressRefPatch;

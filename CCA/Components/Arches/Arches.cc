@@ -286,8 +286,11 @@ Arches::sched_paramInit(const LevelP& level,
     }
     if (d_calcReactingScalar)
       tsk->computes(d_lab->d_reactscalarINLabel);
-    if (d_calcEnthalpy)
+    if (d_calcEnthalpy) { // move it to enthalpy solver
       tsk->computes(d_lab->d_enthalpyINLabel); 
+      tsk->computes(d_lab->d_radiationSRCINLabel); 
+      tsk->computes(d_lab->d_radiationFluxWINLabel); 
+    }
     tsk->computes(d_lab->d_densityINLabel);
     tsk->computes(d_lab->d_viscosityINLabel);
     // for reacting flows save temperature and co2 
@@ -504,6 +507,14 @@ Arches::paramInit(const ProcessorGroup* ,
     if (d_calcEnthalpy) {
       new_dw->allocateAndPut(enthalpy, d_lab->d_enthalpyINLabel, matlIndex, patch);
       enthalpy.initialize(0.0);
+      CCVariable<double> qfluxw;
+      CCVariable<double> radEnthalpySrc;;
+      new_dw->allocateAndPut(radEnthalpySrc, d_lab->d_radiationSRCINLabel,
+			     matlIndex, patch);
+      radEnthalpySrc.initialize(0.0);
+      new_dw->allocateAndPut(qfluxw, d_lab->d_radiationFluxWINLabel,
+			     matlIndex, patch);
+      qfluxw.initialize(0.0);
     }
     new_dw->allocateAndPut(density, d_lab->d_densityINLabel, matlIndex, patch);
     new_dw->allocateAndPut(viscosity, d_lab->d_viscosityINLabel, matlIndex, patch);

@@ -57,6 +57,9 @@ EnthalpySolver::EnthalpySolver(const ArchesLabel* label,
   d_source = 0;
   d_linearSolver = 0;
   d_DORadiation = 0;
+  d_radCounter = -1; //to decide how often radiation calc is done
+  d_radCalcFreq = 0; 
+
 }
 
 //****************************************************************************
@@ -82,14 +85,18 @@ EnthalpySolver::problemSetup(const ProblemSpecP& params)
   ProblemSpecP db = params->findBlock("EnthalpySolver");
   db->require("radiation",d_radiationCalc);
   if (d_radiationCalc) {
-     db->require("discrete_ordinates", d_DORadiationCalc);
-     if (d_DORadiationCalc) {
-     d_DORadiation = scinew DORadiationModel(d_boundaryCondition, d_myworld);
-     d_DORadiation->problemSetup(db);
-     d_DORadiation->radiationInitialize();
-     }
+    if (db->findBlock("radiationCalFreq"))
+      db->require("radiationFreq",d_radCalcFreq);
+    else
+      d_radCalcFreq = 3; // default: radiation is computed every third time step
+    db->require("discrete_ordinates", d_DORadiationCalc);
+    if (d_DORadiationCalc) {
+      d_DORadiation = scinew DORadiationModel(d_boundaryCondition, d_myworld);
+      d_DORadiation->problemSetup(db);
+      d_DORadiation->radiationInitialize();
+    }
   }
-    string finite_diff;
+  string finite_diff;
   db->require("finite_difference", finite_diff);
   if (finite_diff == "second") 
     d_discretize = scinew Discretization();
@@ -501,6 +508,11 @@ EnthalpySolver::sched_buildLinearMatrixPred(const LevelP& level,
 		  Ghost::None, Arches::ZEROGHOSTCELLS);
     tsk->requires(Task::OldDW, d_lab->d_sootFVINLabel,
 		  Ghost::None, Arches::ZEROGHOSTCELLS);
+    tsk->requires(Task::OldDW, d_lab->d_radiationSRCINLabel,
+		  Ghost::None, Arches::ZEROGHOSTCELLS);
+    tsk->requires(Task::OldDW, d_lab->d_radiationFluxWINLabel,
+		  Ghost::None, Arches::ZEROGHOSTCELLS);
+
     }
   }      // added one more argument of index to specify enthalpy component
 
@@ -642,7 +654,9 @@ void EnthalpySolver::buildLinearMatrixPred(const ProcessorGroup* pc,
 #endif
       new_dw->allocateAndPut(enthalpyVars.qfluxw, d_lab->d_radiationFluxWINLabel,
 			     matlIndex, patch);
-      enthalpyVars.qfluxw.initialize(0.0);
+      old_dw->copyOut(enthalpyVars.qfluxw, d_lab->d_radiationFluxWINLabel,
+		      matlIndex, patch, Ghost::None, Arches::ZEROGHOSTCELLS);
+      //      enthalpyVars.qfluxw.initialize(0.0);
       enthalpyVars.qfluxn.allocate(patch->getCellLowIndex(),
 				   patch->getCellHighIndex());
       enthalpyVars.qfluxn.initialize(0.0);
@@ -666,7 +680,10 @@ void EnthalpySolver::buildLinearMatrixPred(const ProcessorGroup* pc,
 #endif
       new_dw->allocateAndPut(enthalpyVars.src, d_lab->d_radiationSRCINLabel,
 			     matlIndex, patch);
-      enthalpyVars.src.initialize(0.0);
+      old_dw->copyOut(enthalpyVars.src, d_lab->d_radiationSRCINLabel,
+		      matlIndex, patch, Ghost::None, Arches::ZEROGHOSTCELLS);
+
+      // enthalpyVars.src.initialize(0.0);
 
       old_dw->getCopy(enthalpyVars.co2, d_lab->d_co2INLabel, 
 		  matlIndex, patch, Ghost::None, Arches::ZEROGHOSTCELLS);
@@ -739,44 +756,45 @@ void EnthalpySolver::buildLinearMatrixPred(const ProcessorGroup* pc,
     if (d_radiationCalc) {
 
       if (d_DORadiationCalc){
-#if 0
-	enthalpyVars.ABSKG.allocate(patch->getCellLowIndex(),
-				    patch->getCellHighIndex());
-#endif
 	new_dw->allocateAndPut(enthalpyVars.ABSKG, d_lab->d_abskgINLabel,
 			       matlIndex, patch);
         enthalpyVars.ESRCG.allocate(patch->getCellLowIndex(),
 				    patch->getCellHighIndex());
-
-
+	
+	
 	enthalpyVars.ABSKG.initialize(0.0);
 	enthalpyVars.ESRCG.initialize(0.0);
-
-	d_DORadiation->computeRadiationProps(pc, patch,
-					     cellinfo, &enthalpyVars);
-	d_DORadiation->boundarycondition(pc, patch,
-					 cellinfo, &enthalpyVars);
-	d_DORadiation->intensitysolve(pc, patch,
-				      cellinfo, &enthalpyVars);
-      IntVector indexLow = patch->getCellFORTLowIndex();
-      IntVector indexHigh = patch->getCellFORTHighIndex();
-      for (int colZ = indexLow.z(); colZ <= indexHigh.z(); colZ ++) {
-        for (int colY = indexLow.y(); colY <= indexHigh.y(); colY ++) {
-          for (int colX = indexLow.x(); colX <= indexHigh.x(); colX ++) {
-	    IntVector currCell(colX, colY, colZ);
-	    enthalpyVars.scalarNonlinearSrc[currCell] += enthalpyVars.src[currCell];
-          }
-        }
-      }
+	// only do it once even for the 3rd RK method
+	d_radCounter++;
+	if (d_radCounter%d_radCalcFreq == 0) {
+	  enthalpyVars.src.initialize(0.0);
+	  enthalpyVars.qfluxw.initialize(0.0);
+	  d_DORadiation->computeRadiationProps(pc, patch,
+					       cellinfo, &enthalpyVars);
+	  d_DORadiation->boundarycondition(pc, patch,
+					   cellinfo, &enthalpyVars);
+	  d_DORadiation->intensitysolve(pc, patch,
+					cellinfo, &enthalpyVars);
+	}
+	IntVector indexLow = patch->getCellFORTLowIndex();
+	IntVector indexHigh = patch->getCellFORTHighIndex();
+	for (int colZ = indexLow.z(); colZ <= indexHigh.z(); colZ ++) {
+	  for (int colY = indexLow.y(); colY <= indexHigh.y(); colY ++) {
+	    for (int colX = indexLow.x(); colX <= indexHigh.x(); colX ++) {
+	      IntVector currCell(colX, colY, colZ);
+	      enthalpyVars.scalarNonlinearSrc[currCell] += enthalpyVars.src[currCell];
+	    }
+	  }
+	}
 #if 0
-      d_DORadiation->d_linearSolver->destroyMatrix();
+	d_DORadiation->d_linearSolver->destroyMatrix();
 #endif
 
       }
       else
-         d_source->computeEnthalpyRadThinSrc(pc, patch,
-      					  cellinfo, &enthalpyVars);
-    }      
+	d_source->computeEnthalpyRadThinSrc(pc, patch,
+					    cellinfo, &enthalpyVars);
+    }
 
     // similar to mascal
     // inputs :
