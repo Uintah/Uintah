@@ -1054,28 +1054,24 @@ TetVolMesh::get_weights(const Point &p,
 			Node::array_type &l, vector<double> &w)
 {
   Cell::index_type idx;
+  w.resize(4);
   if (locate(idx, p))
   {
-    Node::array_type ra(4);
-    get_nodes(ra,idx);
+    get_nodes(l,idx);
     Point p0,p1,p2,p3;
-    get_point(p0,ra[0]);
-    get_point(p1,ra[1]);
-    get_point(p2,ra[2]);
-    get_point(p3,ra[3]);
-    const double vol0 = tet_vol6(p, p1, p2, p3);
-    const double vol1 = tet_vol6(p, p0, p2, p3);
-    const double vol2 = tet_vol6(p, p1, p0, p3);
-    const double vol3 = tet_vol6(p, p1, p2, p0);
-    const double vol_sum = vol0+vol1+vol2+vol3;
-    l.push_back(ra[0]);
-    l.push_back(ra[1]);
-    l.push_back(ra[2]);
-    l.push_back(ra[3]);
-    w.push_back(vol0/vol_sum);
-    w.push_back(vol1/vol_sum);
-    w.push_back(vol2/vol_sum);
-    w.push_back(vol3/vol_sum);
+    get_point(p0,l[0]);
+    get_point(p1,l[1]);
+    get_point(p2,l[2]);
+    get_point(p3,l[3]);
+    w[0] = tet_vol6(p, p1, p2, p3);
+    w[1] = tet_vol6(p, p0, p2, p3);
+    w[2] = tet_vol6(p, p1, p0, p3);
+    w[3] = tet_vol6(p, p1, p2, p0);
+    const double vol_sum_inv = 1.0 / (w[0] + w[1] + w[2] + w[3]);
+    w[0] *= vol_sum_inv;
+    w[1] *= vol_sum_inv;
+    w[2] *= vol_sum_inv;
+    w[3] *= vol_sum_inv;
   }
 }
 
