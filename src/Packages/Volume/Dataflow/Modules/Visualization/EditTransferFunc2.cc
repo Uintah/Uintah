@@ -302,7 +302,7 @@ EditTransferFunc2::resize_gui()
     gui_color_g_.push_back(new GuiDouble(ctx->subVar(num +"-color-g")));
     gui_color_b_.push_back(new GuiDouble(ctx->subVar(num +"-color-b")));
     gui_color_a_.push_back(new GuiDouble(ctx->subVar(num +"-color-a")));
-    gui_wstate_.push_back(new GuiString(ctx->subVar("state-" + num)));
+    //gui_wstate_.push_back(new GuiString(ctx->subVar("state-" + num)));
   }
 }
 
