@@ -45,8 +45,6 @@
 using std::cerr;
 using std::string;
 
-#define LINUXCOMPAT 0
-
 namespace SCIRun {
 
 static const string Cmap2ShaderStringNV =
@@ -260,7 +258,6 @@ TextureRenderer::compute_view()
 void
 TextureRenderer::load_brick(TextureBrickHandle brick)
 {
-#ifdef HAVE_AVR_SUPPORT
   int nc = brick->nc();
 #ifndef GL_ARB_fragment_program 
   nc = 1;
@@ -371,20 +368,7 @@ TextureRenderer::load_brick(TextureBrickHandle brick)
         glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
       }
       // download texture data
-      unsigned int format = (nb == 1 ? GL_LUMINANCE : GL_RGBA);
-#if LINUXCOMPAT
-      if (reuse)
-      {
-        glTexSubImage3D(GL_TEXTURE_3D, 0, 0, 0, 0, nx, ny, nz, GL_COLOR_INDEX,
-			brick->tex_type(), brick->tex_data(c));
-      }
-      else
-      {
-	glTexImage3D(GL_TEXTURE_3D, 0, GL_COLOR_INDEX8_EXT,
-		     nx, ny, nz, 0, GL_COLOR_INDEX,
-                     brick->tex_type(), brick->tex_data(c));
-      }
-#elif defined( GL_TEXTURE_COLOR_TABLE_SGI ) && defined(__sgi)
+#if defined( GL_TEXTURE_COLOR_TABLE_SGI ) && defined(__sgi)
       if (reuse)
       {
         glTexSubImage3DEXT(GL_TEXTURE_3D, 0, 0, 0, 0, nx, ny, nz, GL_RED,
@@ -396,16 +380,37 @@ TextureRenderer::load_brick(TextureBrickHandle brick)
 			nx, ny, nz, 0, GL_RED,
 			brick->tex_type(), brick->tex_data(c));
       }
-#else
-      if (reuse)
+#elif defined (GL_ARB_fragment_program)
+      if (ShaderProgramARB::shaders_supported())
       {
-        glTexSubImage3D(GL_TEXTURE_3D, 0, 0, 0, 0, nx, ny, nz, format,
-                        brick->tex_type(), brick->tex_data(c));
+	unsigned int format = (nb == 1 ? GL_LUMINANCE : GL_RGBA);
+	if (reuse)
+	{
+	  glTexSubImage3D(GL_TEXTURE_3D, 0, 0, 0, 0, nx, ny, nz, format,
+			  brick->tex_type(), brick->tex_data(c));
+	}
+	else
+	{
+	  glTexImage3D(GL_TEXTURE_3D, 0, format, nx, ny, nz, 0, format,
+		       brick->tex_type(), brick->tex_data(c));
+	}
       }
       else
+#endif
+#ifdef GL_EXT_shared_texture_palette
       {
-        glTexImage3D(GL_TEXTURE_3D, 0, format, nx, ny, nz, 0, format,
-                     brick->tex_type(), brick->tex_data(c));
+	if (reuse)
+	{
+	  glTexSubImage3D(GL_TEXTURE_3D, 0, 0, 0, 0, nx, ny, nz,
+			  GL_COLOR_INDEX,
+			  brick->tex_type(), brick->tex_data(c));
+	}
+	else
+	{
+	  glTexImage3D(GL_TEXTURE_3D, 0, GL_COLOR_INDEX8_EXT,
+		       nx, ny, nz, 0, GL_COLOR_INDEX,
+		       brick->tex_type(), brick->tex_data(c));
+	}
       }
 #endif
     }
@@ -415,7 +420,6 @@ TextureRenderer::load_brick(TextureBrickHandle brick)
   glActiveTexture(GL_TEXTURE0);
 #endif
   CHECK_OPENGL_ERROR("VolumeRenderer::load_texture end");
-#endif
 }
 
 void
@@ -423,7 +427,6 @@ TextureRenderer::draw_polygons(vector<float>& vertex, vector<float>& texcoord,
                                vector<int>& poly, bool normal, bool fog,
 			       Pbuffer* buffer)
 {
-#ifdef HAVE_AVR_SUPPORT
   di_->polycount += poly.size();
   float mvmat[16];
   if(fog) {
@@ -478,7 +481,6 @@ TextureRenderer::draw_polygons(vector<float>& vertex, vector<float>& texcoord,
     glActiveTexture(GL_TEXTURE0);
 #endif
   }
-#endif
 }
 
 
@@ -594,7 +596,9 @@ TextureRenderer::build_colormap1(Array2<float>& cmap_array,
 void
 TextureRenderer::build_colormap2()
 {
-#ifdef HAVE_AVR_SUPPORT
+  if (!ShaderProgramARB::shaders_supported())
+    return;
+
   if(cmap2_dirty_ || alpha_dirty_) {
 
     if(!sw_raster_ && use_pbuffer_ && !raster_buffer_) {
@@ -793,7 +797,6 @@ TextureRenderer::build_colormap2()
 
   CHECK_OPENGL_ERROR("");
 
-#endif
   cmap2_dirty_ = false;
   alpha_dirty_ = false;
 }
@@ -801,16 +804,7 @@ TextureRenderer::build_colormap2()
 void
 TextureRenderer::bind_colormap1(unsigned int cmap_tex)
 {
-#ifdef HAVE_AVR_SUPPORT
-#if LINUXCOMPAT
-  glEnable(GL_SHARED_TEXTURE_PALETTE_EXT);
-  glColorTable(GL_SHARED_TEXTURE_PALETTE_EXT,
-               GL_RGBA,
-               256,
-               GL_RGBA,
-               GL_FLOAT,
-               &(cmap1_array_(0, 0)));
-#elif defined( GL_TEXTURE_COLOR_TABLE_SGI ) && defined(__sgi)
+#if defined( GL_TEXTURE_COLOR_TABLE_SGI ) && defined(__sgi)
   glEnable(GL_TEXTURE_COLOR_TABLE_SGI);
   glColorTable(GL_TEXTURE_COLOR_TABLE_SGI,
                GL_RGBA,
@@ -818,45 +812,57 @@ TextureRenderer::bind_colormap1(unsigned int cmap_tex)
                GL_RGBA,
                GL_FLOAT,
                &(cmap1_array_(0, 0)));
-#else
-  // bind texture to unit 2
-#ifdef GL_ARB_fragment_program 
-  glActiveTexture(GL_TEXTURE2_ARB);
-  glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE);
-  glEnable(GL_TEXTURE_1D);
-  glBindTexture(GL_TEXTURE_1D, cmap_tex);
-  // enable data texture unit 1
-  glActiveTexture(GL_TEXTURE1_ARB);
-  glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE);
-  glEnable(GL_TEXTURE_3D);
-  glActiveTexture(GL_TEXTURE0_ARB);
+#elif defined (GL_ARB_fragment_program)
+  if (ShaderProgramARB::shaders_supported())
+  {
+    glActiveTexture(GL_TEXTURE2_ARB);
+    glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE);
+    glEnable(GL_TEXTURE_1D);
+    glBindTexture(GL_TEXTURE_1D, cmap_tex);
+    // enable data texture unit 1
+    glActiveTexture(GL_TEXTURE1_ARB);
+    glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE);
+    glEnable(GL_TEXTURE_3D);
+    glActiveTexture(GL_TEXTURE0_ARB);
+  }
+  else
 #endif
+#ifdef GL_EXT_shared_texture_palette
+  {
+    glEnable(GL_SHARED_TEXTURE_PALETTE_EXT);
+    glColorTable(GL_SHARED_TEXTURE_PALETTE_EXT,
+		 GL_RGBA,
+		 256,
+		 GL_RGBA,
+		 GL_FLOAT,
+		 &(cmap1_array_(0, 0)));
+  }
 #endif
   CHECK_OPENGL_ERROR("");
-#endif
 }
 
 
 void
 TextureRenderer::bind_colormap2()
 {
-#ifdef HAVE_AVR_SUPPORT
 #ifdef GL_ARB_fragment_program
-  // bind texture to unit 2
-  glActiveTexture(GL_TEXTURE2_ARB);
-  glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE);
-  if(!sw_raster_ && use_pbuffer_) {
-    cmap2_buffer_->bind(GL_FRONT);
-  } else {
-    glEnable(GL_TEXTURE_2D);
-    glBindTexture(GL_TEXTURE_2D, cmap2_tex_);
+  if (ShaderProgramARB::shaders_supported())
+  {
+    // bind texture to unit 2
+    glActiveTexture(GL_TEXTURE2_ARB);
+    glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE);
+    if(!sw_raster_ && use_pbuffer_) {
+      cmap2_buffer_->bind(GL_FRONT);
+    } else {
+      glEnable(GL_TEXTURE_2D);
+      glBindTexture(GL_TEXTURE_2D, cmap2_tex_);
+    }
+    // enable data texture unit 1
+    glActiveTexture(GL_TEXTURE1_ARB);
+    glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE);
+    glEnable(GL_TEXTURE_3D);
+    glActiveTexture(GL_TEXTURE0_ARB);
   }
-  // enable data texture unit 1
-  glActiveTexture(GL_TEXTURE1_ARB);
-  glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE);
-  glEnable(GL_TEXTURE_3D);
-  glActiveTexture(GL_TEXTURE0_ARB);
-#endif
 #endif
 }
 
@@ -864,46 +870,54 @@ TextureRenderer::bind_colormap2()
 void
 TextureRenderer::release_colormap1()
 {
-#ifdef HAVE_AVR_SUPPORT
-#if LINUXCOMPAT
-  glDisable(GL_SHARED_TEXTURE_PALETTE_EXT);
-#elif defined(GL_TEXTURE_COLOR_TABLE_SGI) && defined(__sgi)
+#if defined(GL_TEXTURE_COLOR_TABLE_SGI) && defined(__sgi)
   glDisable(GL_TEXTURE_COLOR_TABLE_SGI);
-#else
-#ifdef GL_ARB_fragment_program
-  // bind texture to unit 2
-  glActiveTexture(GL_TEXTURE2_ARB);
-  glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE);
-  glDisable(GL_TEXTURE_1D);
-  glBindTexture(GL_TEXTURE_1D, 0);
-  // enable data texture unit 1
-  glActiveTexture(GL_TEXTURE1_ARB);
-  glDisable(GL_TEXTURE_3D);
-  glBindTexture(GL_TEXTURE_3D, 0);
-  glActiveTexture(GL_TEXTURE0_ARB);
+#elif defined (GL_ARB_fragment_program)
+  if (ShaderProgramARB::shaders_supported())
+  {
+    // bind texture to unit 2
+    glActiveTexture(GL_TEXTURE2_ARB);
+    glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE);
+    glDisable(GL_TEXTURE_1D);
+    glBindTexture(GL_TEXTURE_1D, 0);
+    // enable data texture unit 1
+    glActiveTexture(GL_TEXTURE1_ARB);
+    glDisable(GL_TEXTURE_3D);
+    glBindTexture(GL_TEXTURE_3D, 0);
+    glActiveTexture(GL_TEXTURE0_ARB);
+  }
+  else
 #endif
+#ifdef GL_EXT_shared_texture_palette
+  {
+    glDisable(GL_SHARED_TEXTURE_PALETTE_EXT);
+  }
 #endif
-#endif
+  CHECK_OPENGL_ERROR("");
 }
 
 
 void
 TextureRenderer::release_colormap2()
 {
-#ifdef HAVE_AVR_SUPPORT
 #ifdef GL_ARB_fragment_program
-  glActiveTexture(GL_TEXTURE2_ARB);
-  if(!sw_raster_ && use_pbuffer_) {
-    cmap2_buffer_->release(GL_FRONT);
-  } else {
-    glDisable(GL_TEXTURE_2D);
-    glBindTexture(GL_TEXTURE_2D, 0);
+  if (ShaderProgramARB::shaders_supported())
+  {
+    glActiveTexture(GL_TEXTURE2_ARB);
+    if (!sw_raster_ && use_pbuffer_)
+    {
+      cmap2_buffer_->release(GL_FRONT);
+    }
+    else
+    {
+      glDisable(GL_TEXTURE_2D);
+      glBindTexture(GL_TEXTURE_2D, 0);
+    }
+    glActiveTexture(GL_TEXTURE1_ARB);
+    glDisable(GL_TEXTURE_3D);
+    glBindTexture(GL_TEXTURE_3D, 0);
+    glActiveTexture(GL_TEXTURE0_ARB);
   }
-  glActiveTexture(GL_TEXTURE1_ARB);
-  glDisable(GL_TEXTURE_3D);
-  glBindTexture(GL_TEXTURE_3D, 0);
-  glActiveTexture(GL_TEXTURE0_ARB);
-#endif
 #endif
 }
 
