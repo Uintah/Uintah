@@ -26,6 +26,11 @@ using SCICore::Geometry::Vector;
 
 CompNeoHook::CompNeoHook(ProblemSpecP& ps)
 {
+  const DOM_Node root_node = ps->getNode().getOwnerDocument();
+  ProblemSpecP root_ps = scinew ProblemSpec(root_node);
+  ProblemSpecP time_ps= root_ps->findBlock("Uintah_specification")->findBlock("Time");
+  time_ps->require("timestep_multiplier",d_fudge);
+
   ps->require("bulk_modulus",d_initialData.Bulk);
   ps->require("shear_modulus",d_initialData.Shear);
 
@@ -368,6 +373,10 @@ const TypeDescription* fun_getTypeDescription(CompNeoHook::CMData*)
 }
 
 // $Log$
+// Revision 1.19  2000/06/09 21:07:32  jas
+// Added code to get the fudge factor directly into the constitutive model
+// inititialization.
+//
 // Revision 1.18  2000/06/09 00:20:13  bard
 // Removed computes pVolume, now computes only pVolumeDeformed
 //

@@ -8,8 +8,8 @@
 #include <Uintah/Grid/CellIterator.h>
 #include <Uintah/Grid/VarLabel.h>
 #include <Uintah/Grid/PerPatch.h>
-#include <Uintah/Components/MPM/GeometrySpecification/GeometryPieceFactory.h>
-#include <Uintah/Components/MPM/GeometrySpecification/UnionGeometryPiece.h>
+#include <Uintah/Grid/GeometryPieceFactory.h>
+#include <Uintah/Grid/UnionGeometryPiece.h>
 #include <Uintah/Components/MPM/GeometrySpecification/GeometryObject.h>
 #include <Uintah/Exceptions/ParameterNotFound.h>
 #include <Uintah/Interface/DataWarehouse.h>
@@ -311,6 +311,10 @@ double  MPMMaterial::getHeatTransferCoefficient() const
 }
 
 // $Log$
+// Revision 1.31  2000/06/09 21:02:40  jas
+// Added code to get the fudge factor directly into the constitutive model
+// inititialization.
+//
 // Revision 1.30  2000/06/08 16:50:52  guilkey
 // Changed some of the dependencies to account for what goes on in
 // the burn models.

@@ -12,7 +12,7 @@
 
 using namespace Uintah::MPM;
 
-ConstitutiveModel::ConstitutiveModel()
+ConstitutiveModel::ConstitutiveModel() : d_fudge(1.0)
 {
    // Constructor
 }

@@ -82,12 +82,19 @@ WARNING
 
          const VarLabel* gMomExedVelocityLabel;
 	 */
+
+        protected:
+	  double d_fudge;
       };
       
    } // end namespace MPM
 } // end namespace Uintah
 
 // $Log$
+// Revision 1.17  2000/06/09 21:02:39  jas
+// Added code to get the fudge factor directly into the constitutive model
+// inititialization.
+//
 // Revision 1.16  2000/05/30 20:19:03  sparker
 // Changed new to scinew to help track down memory leaks
 // Changed region to patch

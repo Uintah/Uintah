@@ -29,6 +29,11 @@ using namespace Uintah::MPM;
 
 ElasticConstitutiveModel::ElasticConstitutiveModel(ProblemSpecP &ps)
 {
+  const DOM_Node root_node = ps->getNode().getOwnerDocument();
+  ProblemSpecP root_ps = scinew ProblemSpec(root_node);
+  ProblemSpecP time_ps= root_ps->findBlock("Uintah_specification")->findBlock("Time");
+  time_ps->require("timestep_multiplier",d_fudge);
+
   ps->require("youngs_modulus",d_initialData.YngMod);
   ps->require("poissons_ratio",d_initialData.PoiRat); 
   p_cmdata_label = scinew VarLabel("p.cmdata",
@@ -498,6 +503,10 @@ int ElasticConstitutiveModel::getSize() const
 
 
 // $Log$
+// Revision 1.15  2000/06/09 21:07:33  jas
+// Added code to get the fudge factor directly into the constitutive model
+// inititialization.
+//
 // Revision 1.14  2000/06/03 05:25:45  sparker
 // Added a new for pSurfLabel (was uninitialized)
 // Uncommented pleaseSaveIntegrated
