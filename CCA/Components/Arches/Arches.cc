@@ -55,6 +55,8 @@ using namespace SCIRun;
 #include <Packages/Uintah/CCA/Components/Arches/fortran/initScal_fort.h>
 #include <Packages/Uintah/CCA/Components/Arches/fortran/init_fort.h>
 
+const int Arches::NDIM = 3;
+
 // ****************************************************************************
 // Actual constructor for Arches
 // ****************************************************************************

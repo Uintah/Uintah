@@ -1,13 +1,17 @@
+#if defined(_AIX)
+#  define flush flush_
+#endif
+
       subroutine mrhlen(leniwk, lenrwk, lencwk, linc, lout, fname,
      1                  flength)
       character*30 fname
       integer flength
       open(linc, FORM='UNFORMATTED', FILE=fname(1:flength))
       write(*,*) leniwk, lenrwk, lencwk, linc, lout
-      call flush_(lout)
+      call flush(lout)
       call cklen(linc,lout,leniwk,lenrwk,lencwk)
       write(*,*) 'CK requirements are (R,I,C): ',lenrwk,leniwk,lencwk
-      call flush_(lout)
+      call flush(lout)
       end
  
       subroutine mrhinit(leniwk, lenrwk, lencwk, linc, lout,
@@ -19,7 +23,7 @@
      1            rckwrk, cckwrk)
       write(*,*) 'Initialized Chemkin with linkfile: ',
      1fname(1:flength),'.'
-      call flush_(lout)
+      call flush(lout)
       end
  
       subroutine mrhsyms(cckwrk, lout, kname, kerr)
