@@ -33,19 +33,27 @@ SimulationTime::SimulationTime(const ProblemSpecP& params)
   if(!time_ps->get("max_delt_increase", max_delt_increase))
     max_delt_increase=1.e99;
 
-  num_time_steps = MAXINT;
-  time_ps->get( "max_iterations", num_time_steps );
+  max_iterations = MAXINT;
+  maxTimestep = MAXINT;
+  time_ps->get( "max_iterations", max_iterations );
+  time_ps->get( "maxTimestep", maxTimestep );
   time_ps->get( "override_restart_delt", override_restart_delt);
 
   if (!time_ps->get("clamp_timesteps_to_output", timestep_clamping))
     timestep_clamping = false;
   
 
-  if( num_time_steps < 1 )
+  if( max_iterations < 1 )
     {
       cerr << "Negative number of time steps is not allowed.\n";
-      cerr << "reseting to MAXINT time steps\n";
-      num_time_steps = MAXINT;
+      cerr << "resetting to MAXINT time steps\n";
+      max_iterations = MAXINT;
+    }
+  if( maxTimestep < 1 )
+    {
+      cerr << "Negative maxTimesteps is not allowed.\n";
+      cerr << "resetting to MAXINT time steps\n";
+      maxTimestep = MAXINT;
     }
 }
 

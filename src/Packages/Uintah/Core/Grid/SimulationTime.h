@@ -50,8 +50,12 @@ public:
   // Explicit number of timesteps to run.  Simulation runs either this
   // number of time steps, or to maxTime, which ever comes first.
   // if "max_iterations" is not specified in the .ups file, then
-  // num_time_steps == MAXINT.
-  int    num_time_steps; 
+  // max_iterations == MAXINT.  
+  // The difference between max_iterations and num_time_steps is 
+  // that on a restart, max_iterations will still go max_iterations,
+  // but maxTimestep will go until that time step.
+  int    max_iterations;
+  int    maxTimestep; 
 
   // Clamp the length of the timestep to the next
   // output or checkpoint if it will go over
