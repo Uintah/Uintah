@@ -53,7 +53,7 @@ int main(int argc, char **argv) {
   FieldHandle fH;
 
   // create a lattice Field and give it a handle
-  LatticeVol<double> *lf = new LatticeVol<double>;
+  LatticeVol<double> *lf = new LatticeVol<double>(Field::NODE);
   fH = FieldHandle(lf);
 
   // create a mesh identical to the base mesh
