@@ -7,7 +7,8 @@ include $(SRCTOP)/scripts/largeso_epilogue.mk
 SRCS := $(SRCDIR)/sus.cc
 ifneq ($(CC_DEPEND_REGEN),-MD)
 # Arches doesn't work under g++ yet
-ARCHES := Packages/Uintah/CCA/Components/Arches
+ARCHES := Packages/Uintah/CCA/Components/Arches \
+	Packages/Uintah/CCA/Components/MPMArches
 else
 SRCS := $(SRCS) $(SRCDIR)/FakeArches.cc
 endif
@@ -23,7 +24,6 @@ else
 	Packages/Uintah/CCA/Ports \
 	Packages/Uintah/CCA/Components/MPM \
 	Packages/Uintah/CCA/Components/MPMICE \
-	Packages/Uintah/CCA/Components/MPMArches \
 	Packages/Uintah/CCA/Components/DataArchiver \
 	Packages/Uintah/CCA/Components/SimulationController \
 	Packages/Uintah/CCA/Components/Schedulers \
@@ -35,7 +35,7 @@ else
 	Core/Thread
 
 endif
-LIBS := $(XML_LIBRARY) $(MPI_LIBRARY) $(GL_LIBS)
+LIBS := $(XML_LIBRARY) $(MPI_LIBRARY) $(GL_LIBS) 
 
 include $(SRCTOP)/scripts/program.mk
 
