@@ -168,6 +168,14 @@ ExplicitSolver::problemSetup(const ProblemSpecP& params)
       d_timeIntegratorLabels.push_back(scinew TimeIntegratorLabel(d_lab,
 					TimeIntegratorStepType::CorrectorRK3));
     }
+    else if (d_timeIntegratorType == "BEEmulation") {
+      d_timeIntegratorLabels.push_back(scinew TimeIntegratorLabel(d_lab,
+					TimeIntegratorStepType::BEEmulation1));
+      d_timeIntegratorLabels.push_back(scinew TimeIntegratorLabel(d_lab,
+					TimeIntegratorStepType::BEEmulation2));
+      d_timeIntegratorLabels.push_back(scinew TimeIntegratorLabel(d_lab,
+					TimeIntegratorStepType::BEEmulation3));
+    }
     else {
       throw ProblemSetupException("Integrator type is not defined"+d_timeIntegratorType);
     }
@@ -214,7 +222,7 @@ int ExplicitSolver::nonlinearSolve(const LevelP& level,
     numTimeIntegratorLevels = 1;
   else if ((d_timeIntegratorType == "RK2")||(d_timeIntegratorType == "RK2SSP"))
     numTimeIntegratorLevels = 2;
-  else if (d_timeIntegratorType == "RK3SSP")
+  else if ((d_timeIntegratorType == "RK3SSP")||(d_timeIntegratorType == "BEEmulation"))
     numTimeIntegratorLevels = 3;
 
   for (int curr_level = 0; curr_level < numTimeIntegratorLevels; curr_level ++)
@@ -265,7 +273,7 @@ int ExplicitSolver::nonlinearSolve(const LevelP& level,
     d_momSolver->solveVelHat(level, sched, d_timeIntegratorLabels[curr_level]);
 
     // averaging for RKSSP
-    if ((curr_level>0)&&(!(d_timeIntegratorType == "RK2"))) {
+    if ((curr_level>0)&&(!((d_timeIntegratorType == "RK2")||(d_timeIntegratorType == "BEEmulation")))) {
       d_props->sched_averageRKProps(sched, patches, matls,
 			   	    d_timeIntegratorLabels[curr_level]);
       d_props->sched_saveTempDensity(sched, patches, matls,
@@ -432,23 +440,23 @@ ExplicitSolver::sched_setInitialGuess(SchedulerP& sched,
 
   for (int ii = 0; ii < nofScalars; ii++) {
     tsk->computes(d_lab->d_scalarSPLabel);
-    if (d_timeIntegratorLabels[0]->number_of_steps > 1)
+    if (d_timeIntegratorLabels[0]->multiple_steps)
       tsk->computes(d_lab->d_scalarTempLabel);
   }
 
   if (d_reactingScalarSolver) {
     tsk->computes(d_lab->d_reactscalarSPLabel);
-    if (d_timeIntegratorLabels[0]->number_of_steps > 1)
+    if (d_timeIntegratorLabels[0]->multiple_steps)
       tsk->computes(d_lab->d_reactscalarTempLabel);
   }
   if (d_enthalpySolve) {
     tsk->computes(d_lab->d_enthalpySPLabel);
-    if (d_timeIntegratorLabels[0]->number_of_steps > 1)
+    if (d_timeIntegratorLabels[0]->multiple_steps)
     tsk->computes(d_lab->d_enthalpyTempLabel);
   }
   tsk->computes(d_lab->d_densityCPLabel);
   tsk->computes(d_lab->d_densityOldOldLabel);
-  if (d_timeIntegratorLabels[0]->number_of_steps > 1)
+  if (d_timeIntegratorLabels[0]->multiple_steps)
     tsk->computes(d_lab->d_densityTempLabel);
   tsk->computes(d_lab->d_viscosityCTSLabel);
   if (d_MAlab)
@@ -1047,7 +1055,7 @@ ExplicitSolver::setInitialGuess(const ProcessorGroup* ,
     for (int ii = 0; ii < nofScalars; ii++) {
       new_dw->allocateAndPut(scalar_new[ii], d_lab->d_scalarSPLabel, matlIndex, patch);
       scalar_new[ii].copyData(scalar[ii]); // copy old into new
-      if (d_timeIntegratorLabels[0]->number_of_steps > 1) {
+      if (d_timeIntegratorLabels[0]->multiple_steps) {
       new_dw->allocateAndPut(scalar_temp[ii], d_lab->d_scalarTempLabel, matlIndex, patch);
       scalar_temp[ii].copyData(scalar[ii]); // copy old into new
       }
@@ -1062,7 +1070,7 @@ ExplicitSolver::setInitialGuess(const ProcessorGroup* ,
       new_dw->allocateAndPut(new_reactscalar, d_lab->d_reactscalarSPLabel, matlIndex,
 		       patch);
       new_reactscalar.copyData(reactscalar);
-      if (d_timeIntegratorLabels[0]->number_of_steps > 1) {
+      if (d_timeIntegratorLabels[0]->multiple_steps) {
       new_dw->allocateAndPut(temp_reactscalar, d_lab->d_reactscalarTempLabel, matlIndex,
 		       patch);
       temp_reactscalar.copyData(reactscalar);
@@ -1075,7 +1083,7 @@ ExplicitSolver::setInitialGuess(const ProcessorGroup* ,
     if (d_enthalpySolve) {
       new_dw->allocateAndPut(new_enthalpy, d_lab->d_enthalpySPLabel, matlIndex, patch);
       new_enthalpy.copyData(enthalpy);
-      if (d_timeIntegratorLabels[0]->number_of_steps > 1) {
+      if (d_timeIntegratorLabels[0]->multiple_steps) {
       new_dw->allocateAndPut(temp_enthalpy, d_lab->d_enthalpyTempLabel, matlIndex, patch);
       temp_enthalpy.copyData(enthalpy);
       }
@@ -1086,7 +1094,7 @@ ExplicitSolver::setInitialGuess(const ProcessorGroup* ,
     CCVariable<double> density_oldold;
     new_dw->allocateAndPut(density_oldold, d_lab->d_densityOldOldLabel, matlIndex, patch);
     density_oldold.copyData(density); // copy old into new
-    if (d_timeIntegratorLabels[0]->number_of_steps > 1) {
+    if (d_timeIntegratorLabels[0]->multiple_steps) {
       CCVariable<double> density_temp;
       new_dw->allocateAndPut(density_temp, d_lab->d_densityTempLabel, matlIndex, patch);
       density_temp.copyData(density); // copy old into new
@@ -1257,6 +1265,11 @@ ExplicitSolver::sched_updatePressure(SchedulerP& sched, const PatchSet* patches,
 			  this, &ExplicitSolver::updatePressure,
 			  timelabels);
   
+  if ((timelabels->integrator_step_name == "BEEmulation2")||
+      (timelabels->integrator_step_name == "BEEmulation3")) 
+  tsk->requires(Task::NewDW, timelabels->pressure_guess, 
+		Ghost::None, Arches::ZEROGHOSTCELLS);
+  else
   tsk->requires(Task::OldDW, timelabels->pressure_guess, 
 		Ghost::None, Arches::ZEROGHOSTCELLS);
 
@@ -1283,6 +1296,11 @@ ExplicitSolver::updatePressure(const ProcessorGroup* ,
     CCVariable<double> pressure;
     new_dw->getModifiable(pressure, timelabels->pressure_out,
 			  matlIndex, patch);
+    if ((timelabels->integrator_step_name == "BEEmulation2")||
+        (timelabels->integrator_step_name == "BEEmulation3")) 
+    new_dw->get(pressure_guess, timelabels->pressure_guess, 
+		matlIndex, patch, Ghost::None, Arches::ZEROGHOSTCELLS);
+    else
     old_dw->get(pressure_guess, timelabels->pressure_guess, 
 		matlIndex, patch, Ghost::None, Arches::ZEROGHOSTCELLS);
     

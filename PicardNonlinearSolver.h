@@ -8,12 +8,12 @@ CLASS
    NonlinearSolver
    
    Class PicardNonlinearSolver is a subclass of NonlinearSolver
-   which implements the Fixed Point Picard iteration.[Ref Kumar's thesis]
+   implicit iteration.
 
 GENERAL INFORMATION
    PicardNonlinearSolver.h - declaration of the class
    
-   Author: Rajesh Rawat (rawat@crsim.utah.edu)
+   Author: Rajesh Rawat (rawat@crsim.utah.edu) and Co
    
    Creation Date:   Mar 1, 2000
    
@@ -26,9 +26,6 @@ KEYWORDS
 
 
 DESCRIPTION
-   Class PicardNonlinearSolver implements the
-   Fixed Point Picard iteration method is used by
-   ImplicitIntegrator to solve set of nonlinear equations
 
 WARNING
    none
@@ -43,13 +40,12 @@ namespace Uintah {
 class PressureSolver;
 class MomentumSolver;
 class ScalarSolver;
+class ReactiveScalarSolver; 
 class TurbulenceModel;
 class Properties;
 class BoundaryCondition;
 class PhysicalConstants;
-class EnthalpySolver; 
-const double MACHINEPRECISSION = 14.0; //used to compute residual
-
+class EnthalpySolver;
 class PicardNonlinearSolver: public NonlinearSolver {
 
 public:
@@ -63,6 +59,7 @@ public:
 			    BoundaryCondition* bc,
 			    TurbulenceModel* turbModel, 
 			    PhysicalConstants* physConst,
+		     	    bool calcReactscalar,
 			    bool calcEnthalpy,
 			    const ProcessorGroup* myworld);
 
@@ -91,7 +88,9 @@ public:
 
   
       ///////////////////////////////////////////////////////////////////////
-      // dummy Solve for proper initialization of MPMArches problem
+      // Do not solve the nonlinear system but just copy variables to end
+      // so that they retain the right guess for the next step
+
       virtual int noSolve(const LevelP& level,
 			  SchedulerP& sched);
   
@@ -103,7 +102,9 @@ public:
 				 const MaterialSet* matls);
 
       ///////////////////////////////////////////////////////////////////////
-      // Schedule the dummy solve
+      // Schedule dummy solve (data copy) for first time step of MPMArches
+      // to overcome scheduler limitation on getting pset from old_dw
+
       void sched_dummySolve(SchedulerP& sched,
 			    const PatchSet* patches,
 			    const MaterialSet* matls);
@@ -129,6 +130,21 @@ public:
 			     DataWarehouseP& old_dw,
 			     DataWarehouseP& new_dw);
 
+      void sched_printTotalKE(SchedulerP& sched,
+			      const PatchSet* patches,
+			      const MaterialSet* matls,
+			      const TimeIntegratorLabel* timelabels);
+
+      void sched_updatePressure(SchedulerP& sched,
+			      const PatchSet* patches,
+			      const MaterialSet* matls,
+			      const TimeIntegratorLabel* timelabels);
+
+      void sched_saveTempCopies(SchedulerP&, const PatchSet* patches,
+				const MaterialSet* matls,
+			        const TimeIntegratorLabel* timelabels);
+
+  
 protected :
 
 private:
@@ -150,10 +166,12 @@ private:
 			   DataWarehouse* new_dw);
 
       ///////////////////////////////////////////////////////////////////////
-      // Actual dummy solve
+      // actual data copy for first time step of MPMArches to overcome
+      // scheduler limitation on getting pset from old_dw
+
       void dummySolve(const ProcessorGroup* pc,
 		      const PatchSubset* patches,
-		      const MaterialSubset*,
+		      const MaterialSubset* matls,
 		      DataWarehouse* old_dw,
 		      DataWarehouse* new_dw);
 
@@ -173,37 +191,64 @@ private:
 		     DataWarehouse* old_dw,
 		     DataWarehouse* new_dw);
 
-private:
+      void printTotalKE(const ProcessorGroup* ,
+			const PatchSubset* patches,
+			const MaterialSubset*,
+			DataWarehouse*,
+			DataWarehouse* new_dw,
+			const TimeIntegratorLabel* timelabels);
 
+      void updatePressure(const ProcessorGroup* ,
+			const PatchSubset* patches,
+			const MaterialSubset*,
+			DataWarehouse* old_dw,
+			DataWarehouse* new_dw,
+			const TimeIntegratorLabel* timelabels);
+      
+      void saveTempCopies(const ProcessorGroup*,
+			  const PatchSubset* patches,
+			  const MaterialSubset* matls,
+			  DataWarehouse* old_dw,
+			  DataWarehouse* new_dw,
+			  const TimeIntegratorLabel* timelabels);
+
+private:
       // const VarLabel*
       const ArchesLabel* d_lab;
       const MPMArchesLabel* d_MAlab;
       // generation variable for DataWarehouse creation
-  
+
       // Total number of nonlinear iterates
       int d_nonlinear_its;
       // for probing data for debuging or plotting
       bool d_probe_data;
-      vector<IntVector> d_probePoints;
-      // nonlinear residual tolerance
-      double d_resTol;
-
       // properties...solves density, temperature and specie concentrations
       Properties* d_props;
       // Boundary conditions
       BoundaryCondition* d_boundaryCondition;
       // Turbulence Model
       TurbulenceModel* d_turbModel;
-
+      bool d_reactingScalarSolve;
       bool d_enthalpySolve;
+      vector<IntVector> d_probePoints;
+      // nonlinear residual tolerance
+      double d_resTol;
       // Pressure Eqn Solver
       PressureSolver* d_pressSolver;
       // Momentum Eqn Solver 
       MomentumSolver* d_momSolver;
       // Scalar solver
       ScalarSolver* d_scalarSolver;
+      // reacting scalar solver
+      ReactiveScalarSolver* d_reactingScalarSolver;
       // physcial constatns
       PhysicalConstants* d_physicalConsts;
+
+    std::vector<TimeIntegratorLabel* > d_timeIntegratorLabels;
+    TimeIntegratorLabel* nosolve_timelabels;
+    int numTimeIntegratorLevels;
+    bool nosolve_timelabels_allocated;
+    bool d_pressure_correction;
 
 }; // End class PicardNonlinearSolver
 } // End namespace Uintah

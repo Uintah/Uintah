@@ -179,6 +179,7 @@ Arches::problemSetup(const ProblemSpecP& params,
     d_nlSolver = scinew PicardNonlinearSolver(d_lab, d_MAlab, d_props, 
 					      d_boundaryCondition,
 					      d_turbModel, d_physicalConsts,
+					      d_calcReactingScalar,
 					      d_calcEnthalpy,
 					      d_myworld);
   }
@@ -270,7 +271,7 @@ Arches::sched_paramInit(const LevelP& level,
     tsk->computes(d_lab->d_newCCVVelocityLabel);
     tsk->computes(d_lab->d_newCCWVelocityLabel);
     tsk->computes(d_lab->d_pressurePSLabel);
-    if (!(d_timeIntegratorType == "FE"))
+    if (!((d_timeIntegratorType == "FE")||(d_timeIntegratorType == "BE")))
       tsk->computes(d_lab->d_pressurePredLabel);
     if (d_timeIntegratorType == "RK3SSP")
       tsk->computes(d_lab->d_pressureIntermLabel);
@@ -489,7 +490,7 @@ Arches::paramInit(const ProcessorGroup* ,
     new_dw->allocateAndPut(vVelocity, d_lab->d_vVelocitySPBCLabel, matlIndex, patch);
     new_dw->allocateAndPut(wVelocity, d_lab->d_wVelocitySPBCLabel, matlIndex, patch);
     new_dw->allocateAndPut(pressure, d_lab->d_pressurePSLabel, matlIndex, patch);
-    if (!(d_timeIntegratorType == "FE")) {
+    if (!((d_timeIntegratorType == "FE")||(d_timeIntegratorType == "BE"))) {
       new_dw->allocateAndPut(pressurePred, d_lab->d_pressurePredLabel,
 			     matlIndex, patch);
       pressurePred.initialize(0.0);
