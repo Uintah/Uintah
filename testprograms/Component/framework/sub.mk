@@ -27,6 +27,7 @@ SRCS    := $(SRCDIR)/cca_sidl.cc \
 	$(SRCDIR)/FrameworkImpl.cc \
 	$(SRCDIR)/SciServicesImpl.cc \
 	$(SRCDIR)/ConnectionServicesImpl.cc \
+	$(SRCDIR)/RegistryServicesImpl.cc \
 	$(SRCDIR)/LocalFramework.cc \
 	$(SRCDIR)/BuilderImpl.cc \
 	$(SRCDIR)/SenderImpl.cc \

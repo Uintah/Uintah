@@ -20,6 +20,7 @@ class ProvidePortRecord;
 class Registry;
 
 class ConnectionServicesImpl;
+class RegistryServicesImpl;
 
 class FrameworkImpl : public Framework_interface {
 private:
@@ -48,6 +49,7 @@ public:
   virtual void releasePort( const ComponentID &, const string &);
 
   friend class ConnectionServicesImpl;
+  friend class RegistryServicesImpl;
 };
 
 } // namespace sci_cca

@@ -25,11 +25,31 @@ BuilderImpl::setServices( const Services &svc )
   ComponentImpl::setServices( svc );
 
   if ( svc ) {
-    ConnectionServices port = pidl_cast<ConnectionServices>(svc->getPort("ConnectionServices"));
+    ConnectionServices port = pidl_cast<ConnectionServices>(
+                                          svc->getPort("ConnectionServices"));
     if ( !port ) {
       cerr << "Could not get connection port\n";
       return;
     }
+
+#if 0
+    RegistryServices reg_port = pidl_cast<RegistryServices>(
+                                           svc->getPort("RegistryServices"));
+    if ( !reg_port ) {
+      cerr << "Could not get registry port\n";
+      return;
+    } else {
+      array1<string> components;
+      reg_port->getActiveComponentList( components );
+
+      cerr << components.size() << " components returned:\n";
+
+      for( int cnt = 0; cnt < components.size(); cnt++ )
+	{
+	  cerr << cnt << ": " << components[ cnt ] << "\n";
+	}
+    }
+#endif
 
     Sender sender = new SenderImpl;
     Component s = sender;

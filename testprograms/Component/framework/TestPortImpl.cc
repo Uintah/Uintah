@@ -1,6 +1,10 @@
 #include <testprograms/Component/framework/TestPortImpl.h>
 
+#include <iostream>
+
 namespace sci_cca {
+
+using namespace std;
 
 TestPortImpl::TestPortImpl()
 {

@@ -85,6 +85,10 @@ package sci_cca {
     bool provideTo (in ComponentID sub, in string use, in string provide );
   };
 
+  interface RegistryServices extends Port {
+    void getActiveComponentList( out array<string> components );
+  };
+
 
   // 
   // builer component
