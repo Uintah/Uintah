@@ -73,7 +73,7 @@ using namespace SCIRun;
     level_(ctx->subVar("level")), grid(0), 
     archiveH(0), mesh_handle_(0),
     tcl_status(ctx->subVar("tcl_status")), 
-    sVar(ctx->subVar("suVar")),
+    sVar(ctx->subVar("sVar")),
     sMatNum(ctx->subVar("sMatNum")),
     type(0)
 
