@@ -35,9 +35,9 @@ using SCICore::Geometry::Point;
 using namespace Uintah;
 
 OnDemandDataWarehouse::OnDemandDataWarehouse( const ProcessorGroup* myworld,
-					      int generation ) :
+					      int generation, DataWarehouseP& parent) :
   d_lock("DataWarehouse lock"),
-  DataWarehouse( myworld, generation ),
+  DataWarehouse( myworld, generation, parent),
   d_responseTag( 0 )
 {
   d_finalized = false;
@@ -1378,6 +1378,9 @@ OnDemandDataWarehouse::deleteParticles(ParticleSubset* delset)
 
 //
 // $Log$
+// Revision 1.42  2000/07/28 03:01:54  rawat
+// modified createDatawarehouse and added getTop()
+//
 // Revision 1.41  2000/07/27 22:39:47  sparker
 // Implemented MPIScheduler
 // Added associated support

@@ -24,6 +24,7 @@ SingleProcessorScheduler::SingleProcessorScheduler(const ProcessorGroup* myworld
     	    	    	    	    	    	   Output* oport)
    : UintahParallelComponent(myworld), Scheduler(oport)
 {
+  d_generation = 0;
   if(!specialType)
      specialType = new TypeDescription(TypeDescription::ScatterGatherVariable,
 				       "DataWarehouse::specialInternalScatterGatherType", false, -1);
@@ -88,10 +89,12 @@ SingleProcessorScheduler::addTask(Task* task)
 }
 
 DataWarehouseP
-SingleProcessorScheduler::createDataWarehouse( int generation )
+SingleProcessorScheduler::createDataWarehouse(DataWarehouseP& parent_dw)
 {
-    return scinew OnDemandDataWarehouse(d_myworld, generation );
+  int generation = d_generation++;
+  return scinew OnDemandDataWarehouse(d_myworld, generation, parent_dw);
 }
+
 
 void
 SingleProcessorScheduler::scheduleParticleRelocation(const LevelP& level,
@@ -315,8 +318,12 @@ SingleProcessorScheduler::gatherParticles(const ProcessorGroup*,
    }
 }
 
+>>>>>>> 1.7
 //
 // $Log$
+// Revision 1.8  2000/07/28 03:01:54  rawat
+// modified createDatawarehouse and added getTop()
+//
 // Revision 1.7  2000/07/27 22:39:47  sparker
 // Implemented MPIScheduler
 // Added associated support
