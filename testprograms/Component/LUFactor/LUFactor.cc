@@ -58,7 +58,7 @@ void usage(char* progname)
     exit(1);
 }
 
-void generate(SIDL::array2<double>& A){
+void generate(SSIDL::array2<double>& A){
   unsigned int i, j;
   
   for( i=0; i<SIZE; i++ )       
@@ -74,7 +74,7 @@ int main(int argc, char* argv[])
     using LUFactor_ns::LUFactor_impl;
     using LUFactor_ns::LUFactor;
 
-    SIDL::array2<double> A;
+    SSIDL::array2<double> A;
     A.resize(SIZE,SIZE); 
 
     int myrank = 0;

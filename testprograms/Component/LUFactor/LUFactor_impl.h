@@ -40,7 +40,7 @@ namespace LUFactor_ns {
     public:
 	LUFactor_impl();
 	virtual ~LUFactor_impl();
-	virtual int LUFactorize(const SIDL::array2<double>& );
+	virtual int LUFactorize(const SSIDL::array2<double>& );
     };
 } // End namespace LUFactor
 
