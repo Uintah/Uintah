@@ -44,6 +44,7 @@ namespace SCIRun {
     virtual ~TCLInterface();
     virtual void execute(const string& str);
     virtual int eval(const string& str, string& result);
+    virtual string eval(const string &);
     virtual void source_once(const string&);
     virtual void add_command(const string&, GuiCallback*, void*);
     virtual void delete_command( const string& command );
