@@ -111,7 +111,7 @@ proc configureIPorts {modid} {
 		-x 0 -rely 1.0 -anchor nw
 	bind $w.iport$i <2> "startIPortConnection $modid $i"
 	bind $w.iport$i <B2-Motion> "trackIPortConnection $modid $i %x %y"
-	bind $w.iport$i <ButtonRelease-2> "endPortConnection $portcolor"
+	bind $w.iport$i <ButtonRelease-2> "endPortConnection \"$portcolor\""
 	incr i
     }
     rebuildConnections [netedit getconnected $modid]
@@ -198,7 +198,7 @@ proc buildConnection {connid portcolor omodid owhich imodid iwhich} {
     set path [routeConnection $omodid $owhich $imodid $iwhich]
     global netedit_canvas
     eval $netedit_canvas create bline $path -width 7 \
-	-borderwidth 2 -fill $portcolor \
+	-borderwidth 2 -fill \"$portcolor\" \
 	-tags $connid
 }
 
