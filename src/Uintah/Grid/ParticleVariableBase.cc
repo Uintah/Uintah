@@ -36,16 +36,41 @@ ParticleVariableBase& ParticleVariableBase::operator=(const ParticleVariableBase
 }   
 
 void ParticleVariableBase::getMPIBuffer(void*& buf, int& count,
-					MPI_Datatype& datatype)
+					MPI_Datatype& datatype, bool& free_datatype,
+					ParticleSubset* sendset)
 {
    buf = getBasePointer();
    const TypeDescription* td = virtualGetTypeDescription()->getSubType();
-   datatype=td->getMPIType();
-   count = d_pset->getParticleSet()->numParticles();
+   bool linear=true;
+   ParticleSubset::iterator iter = sendset->begin();
+   if(iter != sendset->end()){
+      particleIndex last = *iter;
+      for(;iter != sendset->end(); iter++){
+	 particleIndex idx = *iter;
+	 if(idx != last+1){
+	    linear=false;
+	    break;
+	 }
+      }
+   }
+   if(linear){
+      datatype=td->getMPIType();
+      count = sendset->getParticleSet()->numParticles();
+   } else {
+      vector<int> blocklens(sendset->numParticles(), 1);
+      MPI_Type_indexed(sendset->numParticles(), &blocklens[0],
+		       sendset->begin(), td->getMPIType(), &datatype);
+      MPI_Type_commit(&datatype);
+      count=1;
+      free_datatype=true;
+   } 
 }
 
 //
 // $Log$
+// Revision 1.4.4.1  2000/10/02 15:00:45  sparker
+// Support for sending only boundary particles
+//
 // Revision 1.4  2000/07/27 22:39:50  sparker
 // Implemented MPIScheduler
 // Added associated support
