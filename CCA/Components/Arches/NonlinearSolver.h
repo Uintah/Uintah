@@ -71,6 +71,11 @@ public:
       virtual int nonlinearSolve( const LevelP& level,
 				  SchedulerP& sched) = 0;
   
+      ///////////////////////////////////////////////////////////////////////
+      // Interface for dummy Solve of the nonlinear System
+      virtual int noSolve(const LevelP& level,
+			  SchedulerP& sched) = 0;
+  
 protected:
    const ProcessorGroup* d_myworld;
 private:

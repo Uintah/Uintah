@@ -82,6 +82,13 @@ public:
 			      const MaterialSet* matls);
 
       ///////////////////////////////////////////////////////////////////////
+      // Schedule the computation of proprties for the first actual time 
+      // step in an MPMArches run
+
+      void sched_computePropsFirst_mm(SchedulerP&, const PatchSet* patches,
+				      const MaterialSet* matls);
+
+      ///////////////////////////////////////////////////////////////////////
       // Schedule the recomputation of proprties
 
       void sched_reComputeProps(SchedulerP&, const PatchSet* patches,
@@ -158,6 +165,16 @@ private:
 			    const MaterialSubset* matls,
 			    DataWarehouse* old_dw,
 			    DataWarehouse* new_dw);
+
+      ///////////////////////////////////////////////////////////////////////
+      // Carry out actual computation of properties for the first actual
+      // time step in an MPMArches run
+
+      void computePropsFirst_mm(const ProcessorGroup*,
+				const PatchSubset* patches,
+				const MaterialSubset* matls,
+				DataWarehouse* old_dw,
+				DataWarehouse* new_dw);
 
       void computePropsInterm(const ProcessorGroup*,
 			    const PatchSubset* patches,

@@ -64,6 +64,12 @@ WARNING
 // Divergence constraint instead of drhodt in pressure equation
 //#define divergenceconstraint
 
+// Exact Initialization for first time step in
+// MPMArches problem, to eliminate problem of
+// sudden appearance of mass in second step
+//
+// #define ExactMPMArchesInitialize
+
 // Choices of scheme for convection of scalar
 
 //#define Scalar_ENO
@@ -237,6 +243,7 @@ private:
       Filter* d_filter;
 #endif
 
+      bool nofTimeSteps;
 #ifdef multimaterialform
       MultiMaterialInterface* d_mmInterface;
 #endif

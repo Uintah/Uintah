@@ -563,6 +563,12 @@ ArchesLabel::ArchesLabel()
   d_wVelRhoHatLabel= VarLabel::create("wvelRhoHat",
 				   SFCZVariable<double>::getTypeDescription() );
 
+  d_uVelRhoHat_CCLabel = VarLabel::create("uvelRhoHat_CC",
+					  CCVariable<double>::getTypeDescription() );
+  d_vVelRhoHat_CCLabel = VarLabel::create("vvelRhoHat_CC",
+					  CCVariable<double>::getTypeDescription() );
+  d_wVelRhoHat_CCLabel = VarLabel::create("wvelRhoHat_CC",
+					  CCVariable<double>::getTypeDescription() );
   // div constraint
   d_divConstraintLabel = VarLabel::create("divConstraint", 
 				    CCVariable<double>::getTypeDescription() );
@@ -1068,6 +1074,9 @@ ArchesLabel::~ArchesLabel()
   VarLabel::destroy(d_uVelRhoHatLabel);
   VarLabel::destroy(d_vVelRhoHatLabel);
   VarLabel::destroy(d_wVelRhoHatLabel);
+  VarLabel::destroy(d_uVelRhoHat_CCLabel);
+  VarLabel::destroy(d_vVelRhoHat_CCLabel);
+  VarLabel::destroy(d_wVelRhoHat_CCLabel);
   VarLabel::destroy(d_divConstraintLabel); 
   VarLabel::destroy(d_pressurePredLabel);
   VarLabel::destroy(d_presCoefCorrLabel);
