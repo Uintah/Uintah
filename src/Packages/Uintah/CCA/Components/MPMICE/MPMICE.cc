@@ -99,10 +99,10 @@ MPMICE::~MPMICE()
 }
 
 //__________________________________
-//    For restarting implicit pressure solver
+//    For restarting timesteps
 bool MPMICE::restartableTimesteps()
 {
-  return d_ice->d_impICE;
+  return true;
 }
 
 double MPMICE::recomputeTimestep(double current_dt)
