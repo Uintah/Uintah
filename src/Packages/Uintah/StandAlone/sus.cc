@@ -496,11 +496,12 @@ main( int argc, char** argv )
 	  sim = arches;
 	  comp = arches;
 	} else if(do_ice) {
-	  ICE* ice = scinew ICE(world);
-          if(do_AMR)
+	  ICE* ice = NULL;
+          if(do_AMR){
 	    ice = scinew AMRICE(world);
-	  else
+	  }else{
 	    ice = scinew ICE(world);
+         }
 	  sim = ice;
 	  comp = ice;
 	} else if(do_burger){
