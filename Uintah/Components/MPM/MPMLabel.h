@@ -14,7 +14,7 @@ namespace Uintah {
 
       static const MPMLabel* getLabels();
 
-      const VarLabel* deltLabel;
+      const VarLabel* delTLabel;
       
       const VarLabel* pDeformationMeasureLabel;
       const VarLabel* pStressLabel;
@@ -53,6 +53,9 @@ namespace Uintah {
 
 
 // $Log$
+// Revision 1.3  2000/05/30 17:07:34  dav
+// Removed commented out labels.  Other MPI fixes.  Changed delt to delT so I would stop thinking of it as just delta.
+//
 // Revision 1.2  2000/05/30 04:27:33  tan
 // Added gTemperatureRateLabel for heat conduction computations.
 //
