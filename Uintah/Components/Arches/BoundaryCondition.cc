@@ -1552,6 +1552,23 @@ BoundaryCondition::setFlatProfile(const ProcessorGroup* pc,
   IntVector idxLoW = patch->getSFCZFORTLowIndex();
   IntVector idxHiW = patch->getSFCZFORTHighIndex();
 
+  cout << "In set flat profile : " << endl;
+  cout << "DomLo = (" << domLo.x() << "," << domLo.y() << "," << domLo.z() << ")\n";
+  cout << "DomHi = (" << domHi.x() << "," << domHi.y() << "," << domHi.z() << ")\n";
+  cout << "DomLoU = (" << domLoU.x()<<","<<domLoU.y()<< "," << domLoU.z() << ")\n";
+  cout << "DomHiU = (" << domHiU.x()<<","<<domHiU.y()<< "," << domHiU.z() << ")\n";
+  cout << "DomLoV = (" << domLoV.x()<<","<<domLoV.y()<< "," << domLoV.z() << ")\n";
+  cout << "DomHiV = (" << domHiV.x()<<","<<domHiV.y()<< "," << domHiV.z() << ")\n";
+  cout << "DomLoW = (" << domLoW.x()<<","<<domLoW.y()<< "," << domLoW.z() << ")\n";
+  cout << "DomHiW = (" << domHiW.x()<<","<<domHiW.y()<< "," << domHiW.z() << ")\n";
+  cout << "IdxLo = (" << idxLo.x() << "," << idxLo.y() << "," << idxLo.z() << ")\n";
+  cout << "IdxHi = (" << idxHi.x() << "," << idxHi.y() << "," << idxHi.z() << ")\n";
+  cout << "IdxLoU = (" << idxLoU.x()<<","<<idxLoU.y()<< "," << idxLoU.z() << ")\n";
+  cout << "IdxHiU = (" << idxHiU.x()<<","<<idxHiU.y()<< "," << idxHiU.z() << ")\n";
+  cout << "IdxLoV = (" << idxLoV.x()<<","<<idxLoV.y()<< "," << idxLoV.z() << ")\n";
+  cout << "IdxHiV = (" << idxHiV.x()<<","<<idxHiV.y()<< "," << idxHiV.z() << ")\n";
+  cout << "IdxLoW = (" << idxLoW.x()<<","<<idxLoW.y()<< "," << idxLoW.z() << ")\n";
+  cout << "IdxHiW = (" << idxHiW.x()<<","<<idxHiW.y()<< "," << idxHiW.z() << ")\n";
   // loop thru the flow inlets to set all the components of velocity and density
   for (int indx = 0; indx < d_numInlets; indx++) {
     sum_vartype area_var;
@@ -1562,16 +1579,16 @@ BoundaryCondition::setFlatProfile(const ProcessorGroup* pc,
     FlowInlet fi = d_flowInlets[indx];
 
     FORT_PROFV(domLoU.get_pointer(), domHiU.get_pointer(),
-	       idxHiU.get_pointer(), idxHiU.get_pointer(),
+	       idxLoU.get_pointer(), idxHiU.get_pointer(),
 	       uVelocity.getPointer(), 
 	       domLoV.get_pointer(), domHiV.get_pointer(),
-	       idxHiV.get_pointer(), idxHiV.get_pointer(),
+	       idxLoV.get_pointer(), idxHiV.get_pointer(),
 	       vVelocity.getPointer(),
 	       domLoW.get_pointer(), domHiW.get_pointer(),
-	       idxHiW.get_pointer(), idxHiW.get_pointer(),
+	       idxLoW.get_pointer(), idxHiW.get_pointer(),
 	       wVelocity.getPointer(),
 	       domLo.get_pointer(), domHi.get_pointer(),
-	       idxHi.get_pointer(), idxHi.get_pointer(),
+	       idxLo.get_pointer(), idxHi.get_pointer(),
 	       cellType.getPointer(), 
 	       &area, &fi.d_cellTypeID, &fi.flowRate, 
 	       &fi.density);
@@ -1581,11 +1598,40 @@ BoundaryCondition::setFlatProfile(const ProcessorGroup* pc,
 		    cellType.getPointer(),
 		    &fi.density, &fi.d_cellTypeID);
   }   
+  // Testing if correct values have been put
+  cout << " After setting flat profile for Flow Inlets (BoundaryCondition)" << endl;
+  for (int kk = domLoU.z(); kk <= domHiU.z(); kk++) 
+    for (int jj = domLoU.y(); jj <= domHiU.y(); jj++) 
+      for (int ii = domLoU.x(); ii <= domHiU.x(); ii++) 
+	cout << "(" << ii << "," << jj << "," << kk << ") : "
+	     << " UU = " << uVelocity[IntVector(ii,jj,kk)] << endl;
+  for (int kk = domLoV.z(); kk <= domHiV.z(); kk++) 
+    for (int jj = domLoV.y(); jj <= domHiV.y(); jj++) 
+      for (int ii = domLoV.x(); ii <= domHiV.x(); ii++) 
+	cout << "(" << ii << "," << jj << "," << kk << ") : "
+	     << " VV = " << vVelocity[IntVector(ii,jj,kk)] << endl;
+  for (int kk = domLoW.z(); kk <= domHiW.z(); kk++) 
+    for (int jj = domLoW.y(); jj <= domHiW.y(); jj++) 
+      for (int ii = domLoW.x(); ii <= domHiW.x(); ii++) 
+	cout << "(" << ii << "," << jj << "," << kk << ") : "
+	     << " WW = " << wVelocity[IntVector(ii,jj,kk)] << endl;
+  for (int kk = domLo.z(); kk <= domHi.z(); kk++) 
+    for (int jj = domLo.y(); jj <= domHi.y(); jj++) 
+      for (int ii = domLo.x(); ii <= domHi.x(); ii++) 
+	cout << "(" << ii << "," << jj << "," << kk << ") : "
+	     << " DEN = " << density[IntVector(ii,jj,kk)] << endl;
+
   if (d_pressureBdry) {
     FORT_PROFSCALAR(domLo.get_pointer(), domHi.get_pointer(), 
 		    idxLo.get_pointer(), idxHi.get_pointer(),
 		    density.getPointer(), cellType.getPointer(),
 		    &d_pressureBdry->density, &d_pressureBdry->d_cellTypeID);
+    cout << " After setting flat profile for Pressure Bdry" << endl;
+    for (int kk = domLo.z(); kk <= domHi.z(); kk++) 
+      for (int jj = domLo.y(); jj <= domHi.y(); jj++) 
+	for (int ii = domLo.x(); ii <= domHi.x(); ii++) 
+	  cout << "(" << ii << "," << jj << "," << kk << ") : "
+	       << " DEN = " << density[IntVector(ii,jj,kk)] << endl;
   }    
   for (int indx = 0; indx < d_nofScalars; indx++) {
     for (int ii = 0; ii < d_numInlets; ii++) {
@@ -1595,12 +1641,25 @@ BoundaryCondition::setFlatProfile(const ProcessorGroup* pc,
 		      scalar[indx].getPointer(), cellType.getPointer(),
 		      &scalarValue, &d_flowInlets[ii].d_cellTypeID);
     }
+    cout << " After setting flat profile for scalar " << indx << endl;
+    for (int kk = domLo.z(); kk <= domHi.z(); kk++) 
+      for (int jj = domLo.y(); jj <= domHi.y(); jj++) 
+	for (int ii = domLo.x(); ii <= domHi.x(); ii++) 
+	  cout << "(" << ii << "," << jj << "," << kk << ") : "
+	       << " SCAL = " << (scalar[indx])[IntVector(ii,jj,kk)] << endl;
     if (d_pressBoundary) {
       double scalarValue = d_pressureBdry->streamMixturefraction[indx];
+      cout << "Scalar Value = " << scalarValue << endl;
       FORT_PROFSCALAR(domLo.get_pointer(), domHi.get_pointer(),
 		      idxLo.get_pointer(), idxHi.get_pointer(),
 		      scalar[indx].getPointer(), cellType.getPointer(),
 		      &scalarValue, &d_pressureBdry->d_cellTypeID);
+      cout << " After setting PressBdry flat profile for scalar " << indx << endl;
+      for (int kk = domLo.z(); kk <= domHi.z(); kk++) 
+	for (int jj = domLo.y(); jj <= domHi.y(); jj++) 
+	  for (int ii = domLo.x(); ii <= domHi.x(); ii++) 
+	    cout << "(" << ii << "," << jj << "," << kk << ") : "
+		 << " SCAL = " << (scalar[indx])[IntVector(ii,jj,kk)] << endl;
     }
   }
       
@@ -1791,6 +1850,9 @@ BoundaryCondition::FlowOutlet::problemSetup(ProblemSpecP& params)
 
 //
 // $Log$
+// Revision 1.33  2000/06/30 22:41:18  bbanerje
+// Corrected behavior of profv and profscalar
+//
 // Revision 1.32  2000/06/30 06:29:42  bbanerje
 // Got Inlet Area to be calculated correctly .. but now two CellInformation
 // variables are being created (Rawat ... check that).

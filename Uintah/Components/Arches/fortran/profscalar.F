@@ -41,29 +41,30 @@ c*********************************************************************
 c*********************************************************************
 c     Local Variables :
 c*********************************************************************
-      integer iBegGhost, jBegGhost, kBegGhost, NI, NJ, NK
+      integer iBegGhost, jBegGhost, kBegGhost
+      integer iEndGhost, jEndGhost, kEndGhost
       integer IST, JST, KST, IEND, JEND, KEND
       integer I, J, K
 
 c*********************************************************************
 c     Start :
 c*********************************************************************
-      iBegGhost = indexLow(1)
-      jBegGhost = indexLow(2)
-      kBegGhost = indexLow(3)
-      NI = indexHigh(1)
-      NJ = indexHigh(2)
-      NK = indexHigh(3)
-      IST = iBegGhost+1
-      JST = jBegGhost+1
-      KST = kBegGhost+1
-      IEND = NI-1
-      JEND = NJ-1
-      KEND = NK-1
+      iBegGhost = domainLow(1)
+      jBegGhost = domainLow(2)
+      kBegGhost = domainLow(3)
+      iEndGhost = domainHigh(1)
+      jEndGhost = domainHigh(2)
+      kEndGhost = domainHigh(3)
+      IST = indexLow(1)
+      JST = indexLow(2)
+      KST = indexLow(3)
+      IEND = indexHigh(1)
+      JEND = indexHigh(2)
+      KEND = indexHigh(3)
 
-      DO 200 K = kBegGhost,NK
-         DO 190 J = jBegGhost,NJ
-            DO 180 I = iBegGhost, NI
+      DO 200 K = kBegGhost,kEndGhost
+         DO 190 J = jBegGhost,jEndGhost
+            DO 180 I = iBegGhost,iEndGhost
                IF (PCELL(I,J,K).EQ.PFIELD) THEN
                   SCALAR(I,J,K) = SVAL
                END IF
@@ -77,6 +78,9 @@ c*********************************************************************
 c*********************************************************************
 c
 c $Log$
+c Revision 1.2  2000/06/30 22:41:19  bbanerje
+c Corrected behavior of profv and profscalar
+c
 c Revision 1.1  2000/06/20 20:42:38  rawat
 c added some more boundary stuff and modified interface to IntVector. Before
 c compiling the code you need to update /SCICore/Geometry/IntVector.h
