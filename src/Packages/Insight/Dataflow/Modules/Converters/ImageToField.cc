@@ -30,7 +30,8 @@
 #include <Packages/Insight/Dataflow/Ports/ITKDatatypePort.h>
 #include <Dataflow/Ports/FieldPort.h>
 #include <Core/Datatypes/ImageField.h>
-#include <Core/Datatypes/LatVolField.h>
+#include <Packages/Insight/Core/Datatypes/ITKLatVolField.h>
+//#include <Core/Datatype/LatVolField.h>
 
 #include <Core/Datatypes/ImageMesh.h>
 
@@ -183,7 +184,7 @@ FieldHandle ImageToField::create_image_field(ITKDatatypeHandle &nrd) {
 
   // fill data
   typename InputImageType::IndexType pixelIndex;
-  typedef ImageFieldType::value_type val_t;
+  typedef typename ImageFieldType::value_type val_t;
   val_t tmp;
   ImageFieldType* fld = (ImageFieldType* )fh.get_rep();
 
@@ -208,55 +209,59 @@ FieldHandle ImageToField::create_image_field(ITKDatatypeHandle &nrd) {
 template<class InputImageType>
 FieldHandle ImageToField::create_latvol_field(ITKDatatypeHandle &nrd) {
   InputImageType::PixelType;
-  typedef LatVolField<typename InputImageType::PixelType> LatVolFieldType;
+  typedef ITKLatVolField<typename InputImageType::PixelType> LatVolFieldType;
+  //typedef LatVolField<typename InputImageType::PixelType> LatVolFieldType;
   InputImageType *n = dynamic_cast< InputImageType * >( nrd.get_rep()->data_.GetPointer() );
 
   double spc[2];
   double data_center = n->GetOrigin()[0];
   
-  unsigned int size_x = (n->GetLargestPossibleRegion()).GetSize()[0];
-  unsigned int size_y = (n->GetLargestPossibleRegion()).GetSize()[1];
-  unsigned int size_z = (n->GetLargestPossibleRegion()).GetSize()[2];
+  unsigned int size_x = (n->GetRequestedRegion()).GetSize()[0];
+  unsigned int size_y = (n->GetRequestedRegion()).GetSize()[1];
+  unsigned int size_z = (n->GetRequestedRegion()).GetSize()[2];
 
   Point min(0., 0., 0.);
   Point max(size_x, size_y, size_z);
 
   //LatVolMesh* m = new LatVolMesh(size_x+1, size_y+1, size_z+1, min, max);
-LatVolMesh* m = new LatVolMesh(size_x, size_y, size_z, min, max);
+  LatVolMesh* m = new LatVolMesh(size_x, size_y, size_z, min, max);
 
   LatVolMeshHandle mh(m);
 
   FieldHandle fh;
   int mn_idx, mx_idx;
   
-  // assume data type is unsigned char
-  fh = new LatVolFieldType(mh, Field::NODE); 
-  LatVolMesh::Node::iterator iter, end;
-  mh->begin(iter);
-  mh->end(end);
-
-  // fill data
-  typename InputImageType::IndexType pixelIndex;
-  typedef LatVolFieldType::value_type val_t;
-  val_t tmp;
+  fh = new LatVolFieldType(mh, Field::NODE, n); 
   LatVolFieldType* fld = (LatVolFieldType* )fh.get_rep();
+  //fld->SetImage((itk::Object*)n);
+  
+//   LatVolMesh::Node::iterator iter, end;
 
-  for(int z=0; z < size_z; z++) {
-    for(int row=0; row < size_y; row++) {
-      for(int col=0; col < size_x; col++) {
-	if(iter == end) {
-	  return fh;
-	}
-	pixelIndex[0] = col;
-	pixelIndex[1] = row;
-	pixelIndex[2] = z;
+//   mh->begin(iter);
+//   mh->end(end);
+
+//   // fill data
+//   typename InputImageType::IndexType pixelIndex;
+//   typedef typename LatVolFieldType::value_type val_t;
+//   val_t tmp;
+
+
+//    for(int z=0; z < size_z; z++) {
+//      for(int row=0; row < size_y; row++) {
+//        for(int col=0; col < size_x; col++) {
+//  	if(iter == end) {
+//  	  return fh;
+//  	}
+//  	pixelIndex[0] = col;
+//  	pixelIndex[1] = row;
+//  	pixelIndex[2] = z;
 	
-	tmp = n->GetPixel(pixelIndex);
-	fld->set_value(tmp, *iter);
-	++iter;
-      }
-    }
-  }
+//  	tmp = n->GetPixel(pixelIndex);
+//  	//fld->set_value(tmp, *iter);
+//  	++iter;
+//        }
+//      }
+//    }
 
   return fh;
 }
