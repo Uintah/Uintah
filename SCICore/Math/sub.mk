@@ -7,9 +7,6 @@ include $(SRCTOP)/scripts/smallso_prologue.mk
 
 SRCDIR   := SCICore/Math
 
-LEX	:= flex -i
-YACC	:= bison -d -v
-
 FNSRCDIR	:= $(SRCTOP)/$(SRCDIR)
 
 $(FNSRCDIR)/fnparser.cc\
@@ -26,12 +23,16 @@ SRCS     += $(SRCDIR)/Mat.c $(SRCDIR)/MusilRNG.cc $(SRCDIR)/TrigTable.cc \
 	$(SRCDIR)/function.cc $(SRCDIR)/fnscanner.cc $(SRCDIR)/fnparser.cc
 
 PSELIBS := SCICore/Exceptions SCICore/Containers
-LIBS := -lm -L/usr/local/gnu/lib -lfl
+LIBS := -lm
 
 include $(SRCTOP)/scripts/smallso_epilogue.mk
 
 #
 # $Log$
+# Revision 1.5  2000/07/26 22:16:49  jehall
+# - Removed hardcoded LEX and YACC declarations; these get set portably
+#   by the top-level configure script
+#
 # Revision 1.4  2000/07/23 18:25:47  dahart
 # Initial commit of class & support for symbolic functions
 #
