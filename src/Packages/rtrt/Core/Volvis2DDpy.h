@@ -36,7 +36,7 @@ namespace rtrt {
     virtual bool insideAnyWidget( int x, int y );
     // moves user-selected widget to end of widgets vector to be drawn last
     virtual void prioritizeWidgets();
-    // retrieves information about picked widgets, determines which widget was picked
+    // retrieves picked widget(s) info, determines which widget was picked
     virtual void processHits( GLint hits, GLuint buffer[] );
     // determines which widget the user picked
     virtual void pickShape( int x, int y );
@@ -70,6 +70,16 @@ namespace rtrt {
     bool display_probe;
     RectWidget* cp_probe;
     
+    // texture replacement bounding box for Dpy acceleration
+    int subT_left;
+    int subT_top;
+    int subT_right;
+    int subT_bottom;
+
+    bool waiting_for_redraw;
+
+    // calculates the borders of a widget's texture (for texture acceleration)
+    void boundSubTexture( Widget* widget );
     // sets up a boolean grid based on opacity values of transfer function
     void setupAccGrid( void );
     // converts a boolean grid to an integer
@@ -119,15 +129,6 @@ namespace rtrt {
     bool widgetsMaintained;
     Texture <GLfloat> *transTexture3; // stores unchanging widget textures
 
-    // maintains user interface parameters to manage menus/graphs/etc
-    struct WindowParams {
-      float border;
-      float height;
-      float width;
-      float menu_height;
-    };
-    WindowParams* UIwind;
-
     // used only for rendering hack
     unsigned int render_mode;
 
@@ -169,8 +170,6 @@ namespace rtrt {
     vector<Widget*> widgets;
 
     int pickedIndex;                   // index of currently selected widget
-/*      int old_x;                         // saved most recent x-coordinate */
-/*      int old_y;                         // saved most recent y-coordinate */
     float pixel_width;                 // screenspace-to-worldspace x-dim ratio
     float pixel_height;                // screenspace-to-worldspace y-dim ratio
 
@@ -190,16 +189,13 @@ namespace rtrt {
     GLuint bgTextName;                 // histogram texture
     GLuint transFuncTextName;          // transfer function texture
     GLuint probeTextName;              // probe widget texture
-    GLuint widgetManipName;            // manipulated widget texture
     Texture <GLfloat> *bgTextImage;    // clean background texture
     Texture <GLfloat> *transTexture1;  // visible transfer functions
     Texture <GLfloat> *transTexture2;  // swapped to remove rendering "streaks"
 
-/*      Widget* manipWidget; */
-
     // used for acceleration method to improve rendering frame rates
-    unsigned long UIgrid;
-#define gridsize 32
+    unsigned long long UIgrid;
+#define gridsize 64
     bool UIgridblock[gridsize];
 
     // collection of volumes being rendered
