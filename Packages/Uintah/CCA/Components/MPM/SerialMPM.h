@@ -149,6 +149,14 @@ private:
 
   //////////
   // Insert Documentation Here:
+  void computeAccStrainEnergy(const ProcessorGroup*,
+                              const PatchSubset*,
+                              const MaterialSubset*,
+                              DataWarehouse* old_dw,
+                              DataWarehouse* new_dw);
+
+  //////////
+  // Insert Documentation Here:
   void computeInternalForce(const ProcessorGroup*,
 			    const PatchSubset* patches,
 			    const MaterialSubset* matls,
