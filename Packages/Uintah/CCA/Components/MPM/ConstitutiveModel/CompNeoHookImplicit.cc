@@ -19,9 +19,10 @@
 #include <Core/Util/NotFinished.h>
 #include <fstream>
 #include <iostream>
-
+#include <algorithm>
 
 using std::cerr;
+using std::sort;
 using namespace Uintah;
 using namespace SCIRun;
 
@@ -205,6 +206,7 @@ CompNeoHookImplicit::computeStressTensor(const PatchSubset* patches,
     FastMatrix Bnl(3,24);
     FastMatrix Bnltrans(24,3);
 
+
     for(ParticleSubset::iterator iter = pset->begin();
 	iter != pset->end(); iter++){
       particleIndex idx = *iter;
@@ -376,14 +378,15 @@ CompNeoHookImplicit::computeStressTensor(const PatchSubset* patches,
         kgeo.multiply(out1, Bnl);
         kgeo.multiply(volnew);
 
-       for (int I = 0; I < (int)dof.size();I++) {
-	int dofi = dof[I];
-	for (int J = 0; J < (int)dof.size(); J++) {
-	  int dofj = dof[J];
-	  double v = kmat(I,J) + kgeo(I,J);
-	  solver->fillMatrix(dofi,dofj,v);
+	sort(dof.begin(),dof.end());
+	for (int I = 0; I < (int)dof.size();I++) {
+	  int dofi = dof[I];
+	  for (int J = 0; J < (int)dof.size(); J++) {
+	    int dofj = dof[J];
+	    double v = kmat(I,J) + kgeo(I,J);
+	    solver->fillMatrix(dofi,dofj,v);
+	  }
 	}
-       }
       }  // Don't do it for the rigid body
       
     }

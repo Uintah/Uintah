@@ -121,7 +121,9 @@ void SimpleSolver::solve()
   }
 }
 
-void SimpleSolver::createMatrix(const ProcessorGroup* d_myworld)
+void SimpleSolver::createMatrix(const ProcessorGroup* d_myworld,
+				const vector<int>& diag, 
+				const vector<int>& off)
 {
   int globalrows = (int)d_totalNodes;
   int globalcolumns = (int)d_totalNodes;

@@ -5,6 +5,8 @@
 
 using namespace Uintah;
 using std::vector;
+#define LOG
+#undef LOG
 
 MPMPetscSolver::MPMPetscSolver()
 {
@@ -21,7 +23,11 @@ MPMPetscSolver::~MPMPetscSolver()
 void MPMPetscSolver::initialize()
 {
 #ifdef HAVE_PETSC
+#ifdef LOG
+  int argc = 5;
+#else
   int argc = 4;
+#endif
   char** argv;
   argv = new char*[argc];
   argv[0] = "ImpMPM::problemSetup";
@@ -30,6 +36,9 @@ void MPMPetscSolver::initialize()
   argv[1] = "-no_signal_handler";
   argv[2] = "-log_exclude_actions";
   argv[3] = "-log_exclude_objects";
+#ifdef LOG
+  argv[4] = "-log_info";
+#endif
 
   PetscInitialize(&argc,&argv, PETSC_NULL, PETSC_NULL);
 #endif
@@ -137,7 +146,9 @@ void MPMPetscSolver::solve()
 #endif
 }
 
-void MPMPetscSolver::createMatrix(const ProcessorGroup* d_myworld)
+void MPMPetscSolver::createMatrix(const ProcessorGroup* d_myworld,
+				  const vector<int>& dof_diag, 
+				  const vector<int>& dof_off)
 {
   int me = d_myworld->myrank();
   int numlrows = d_numNodes[me];
@@ -145,18 +156,34 @@ void MPMPetscSolver::createMatrix(const ProcessorGroup* d_myworld)
   int globalrows = (int)d_totalNodes;
   int globalcolumns = (int)d_totalNodes;
   
+  int *diag,*off;
+  diag = new int[(int)dof_diag.size()];
+  off = new int[(int)dof_off.size()];
+
+  for (int i = 0; i < (int)dof_diag.size(); i++) diag[i] = dof_diag[i];
+
+  for (int i = 0; i < (int)dof_off.size(); i++) off[i] = dof_off[i];
+  
+
 #ifdef HAVE_PETSC
   PetscTruth exists;
   PetscObjectExists((PetscObject)d_A,&exists);
   if (exists == PETSC_FALSE) {
+#if 0
     MatCreateMPIAIJ(PETSC_COMM_WORLD, numlrows, numlcolumns, globalrows,
 		    globalcolumns, PETSC_DEFAULT, PETSC_NULL, PETSC_DEFAULT,
 		    PETSC_NULL, &d_A);
+#endif
+#if 1
+    MatCreateMPIAIJ(PETSC_COMM_WORLD, numlrows, numlcolumns, globalrows,
+		    globalcolumns, PETSC_DEFAULT, diag, 
+		    PETSC_DEFAULT,PETSC_NULL, &d_A);
+#endif
    /* 
      Create vectors.  Note that we form 1 vector from scratch and
      then duplicate as needed.
   */
-
+    MatSetOption(d_A,MAT_KEEP_ZEROED_ROWS);
     VecCreateMPI(PETSC_COMM_WORLD,numlrows, globalrows,&d_B);
     VecDuplicate(d_B,&d_diagonal);
     VecDuplicate(d_B,&d_x);
@@ -164,6 +191,10 @@ void MPMPetscSolver::createMatrix(const ProcessorGroup* d_myworld)
 
 #endif
 
+
+
+  delete[] diag;
+  delete[] off;
 }
 
 
