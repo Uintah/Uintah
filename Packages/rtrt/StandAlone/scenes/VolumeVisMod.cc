@@ -482,8 +482,8 @@ Scene* make_scene(int argc, char* argv[], int /*nworkers*/)
 	 diffuse, specular, dpy);
   }
 
-  new Thread(dpy, "VolumeVis display thread");
-  
+  (new Thread(dpy, "VolumeVis display thread"))->detach();
+
   if(cut){
     PlaneDpy* pd=new PlaneDpy(Vector(0,0,1), Point(0,0,0));
     obj=(Object*)new CutPlane(obj, pd);
@@ -502,6 +502,8 @@ Scene* make_scene(int argc, char* argv[], int /*nworkers*/)
   
   scene->add_light(new Light(Point(500,-300,300), Color(.8,.8,.8), 0));
   scene->shadow_mode=1;
+  scene->attach_display(dpy);
+  
   return scene;
 }
 
