@@ -73,8 +73,6 @@ Isosurface::Isosurface(GuiContext* ctx) :
   gui_color_r_(ctx->subVar("color-r")),
   gui_color_g_(ctx->subVar("color-g")),
   gui_color_b_(ctx->subVar("color-b")),
-  gui_field_type_(ctx->subVar("field-type", false)),
-  gui_field_gen_(ctx->subVar("field-gen", false)),
   geom_id_(0),
   prev_min_(0),
   prev_max_(0),
@@ -453,13 +451,7 @@ Isosurface::new_field( FieldHandle field )
     return false;
   }
 
-  // Reset the GUI.
-
-  // 1: field info
-  gui_field_type_.set(type);
-  gui_field_gen_.set(field->generation);
-
-  // 2: min/max
+  // Set min/max
   pair<double, double> minmax;
   sfi->compute_min_max(minmax.first, minmax.second);
   if (minmax.first != prev_min_ || minmax.second != prev_max_)

@@ -63,8 +63,6 @@ class Isosurface : public Module {
   GuiDouble  gui_color_r_;
   GuiDouble  gui_color_g_;
   GuiDouble  gui_color_b_;
-  GuiString  gui_field_type_;
-  GuiInt     gui_field_gen_;
 
   //! status variables
   int        geom_id_;

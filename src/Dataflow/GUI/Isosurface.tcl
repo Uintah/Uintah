@@ -42,8 +42,6 @@ itcl_class SCIRun_Visualization_Isosurface {
 	global $this-continuous
 	global $this-extract-from-new-field
 	global $this-algorithm
-	global $this-field-type
-	global $this-field-gen
 	global $this-build_trisurf
 	global $this-np
 	global $this-active_tab
@@ -65,9 +63,7 @@ itcl_class SCIRun_Visualization_Isosurface {
 	set $this-continuous 0
 	set $this-extract-from-new-field 1
 	set $this-algorithm 0
-	set $this-field-type ""
-	set $this-field-gen 0
-	set $this-build_trisurf 0
+	set $this-build_trisurf 1
 	set $this-np 1
 	set $this-active_tab "MC"
 	set $this-update_type "on release"
@@ -146,7 +142,7 @@ itcl_class SCIRun_Visualization_Isosurface {
 	 
 	 set cmmd "$this raiseColor $frame.colorFrame.swatch $color"
 	 button $frame.colorFrame.set_color \
-		 -text "Change Color" -command $cmmd
+		 -text "Default Color" -command $cmmd
 	 
 	 #pack the node color frame
 	 pack $frame.colorFrame.set_color $frame.colorFrame.swatch -side left
@@ -178,7 +174,7 @@ itcl_class SCIRun_Visualization_Isosurface {
 	set oldmeth [set $this-active-isoval-selection-tab]
 
 	# Iso Value Selection Methods
-	iwidgets::labeledframe $w.f.iso -labelpos nw -labeltext "Isovalue Selection Methods"
+	iwidgets::labeledframe $w.f.iso -labelpos nw -labeltext "Isovalue Selection"
 	set isf [$w.f.iso childsite]
 
 	iwidgets::tabnotebook $isf.tabs -raiseselect true -height 180
@@ -193,33 +189,10 @@ itcl_class SCIRun_Visualization_Isosurface {
 	    [set $this-isoval-min] [set $this-isoval-max] \
 	     4c $this-isoval $this-isoval2
 
-#	scale $sel.isoval -label "Isovalue:" \
-#		-variable $this-isoval \
-#		-from [set $this-isoval-min] -to [set $this-isoval-max] \
-#		-length 5c \
-#		-showvalue true \
-#		-orient horizontal  \
-#		-digits 5 \
-#		-resolution 0.001 \
-#	        -command "$this change-isoval"
-
-	
 	button $sel.extract -text "Extract" -command "$this-c needexecute"
 
 	pack $sel.isoval  -fill x
 	pack $sel.extract -side top -expand 1
-
-	# Iso Value using text-entry
-	
-#	set sel [$isf.tabs add -label "Text" -command "set $this-active-isoval-selection-tab 1"]
-	
-#	frame $sel.f
-#	label $sel.f.l -text "Type isovalue:"
-#	entry $sel.f.e -width 20 -text $this-isoval-typed
-#	bind $sel.f.e <Return> "$this-c needexecute"
-#	pack $sel.f.l $sel.f.e -side left -fill x -expand 1
-#	button $sel.extract -text "Extract" -command "$this-c needexecute"
-#	pack $sel.f $sel.extract -side top -expand 1
 
 	# Iso Value using quantity
 	
@@ -278,22 +251,6 @@ itcl_class SCIRun_Visualization_Isosurface {
 	pack $isf.tabs -side top
 	pack $w.f.iso -side top
 
-	#  Info
-	
-	global $this-field-type
-	global $this-field-gen
-
-	iwidgets::labeledframe $w.f.info -labelpos nw -labeltext "Info"
-	set info [$w.f.info childsite]
-	
-	label $info.type_label -text "File Type: " 
-	label $info.type -textvar $this-field-type
-	label $info.gen_label -text "Generation: "
-	label $info.gen -textvar $this-field-gen
-
-	pack $info.type_label $info.type $info.gen_label $info.gen -side left
-	pack $w.f.info -side top -fill x -expand 1
-
 	#  Options
 
 	iwidgets::labeledframe $w.f.opt -labelpos nw -labeltext "Options"
@@ -314,16 +271,12 @@ itcl_class SCIRun_Visualization_Isosurface {
 	checkbutton $opt.aefnf -text "Auto Extract from New Field" \
 		-relief flat -variable $this-extract-from-new-field 
 
+
 	pack $opt.update $opt.aefnf $opt.buildsurf -side top -anchor w
+
+	addColorSelection $opt $this-color
+
 	pack $w.f.opt -side top -fill x -expand 1
-
-	# Color
-
-	iwidgets::labeledframe $w.f.color -labelpos nw -labeltext "Default Color"
-	set color [$w.f.color childsite]
-	addColorSelection $color $this-color
-	pack $w.f.color -side top -fill x -expand 1
-
 
 	#  Methods
 	iwidgets::labeledframe $w.f.meth -labelpos nw -labeltext "Methods"
