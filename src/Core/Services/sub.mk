@@ -41,6 +41,8 @@ SRCS     += 	$(SRCDIR)/Service.cc \
 		$(SRCDIR)/ServiceNode.cc \
 		$(SRCDIR)/ServiceClient.cc \
 		$(SRCDIR)/SimpleService.cc \
+		$(SRCDIR)/FileTransfer.cc \
+		$(SRCDIR)/FileTransferClient.cc
 			
 PSELIBS := \
 	Core/Thread \
