@@ -41,7 +41,7 @@ Level::Level(Grid* grid, const Point& anchor, const Vector& dcell)
 Level::~Level()
 {
   // Delete all of the patches managed by this level
-  for(patchIterator iter=d_patches.begin(); iter != d_patches.end(); iter++)
+  for(patchIterator iter=d_virtualAndRealPatches.begin(); iter != d_virtualAndRealPatches.end(); iter++)
     delete *iter;
 #if 0
   for(int i=0;i<(int)allbcs.size();i++)
@@ -68,22 +68,22 @@ void Level::setPatchDistributionHint(const IntVector& hint)
 
 Level::const_patchIterator Level::patchesBegin() const
 {
-    return d_patches.begin();
+    return d_realPatches.begin();
 }
 
 Level::const_patchIterator Level::patchesEnd() const
 {
-    return d_patches.end();
+    return d_realPatches.end();
 }
 
 Level::patchIterator Level::patchesBegin()
 {
-    return d_patches.begin();
+    return d_realPatches.begin();
 }
 
 Level::patchIterator Level::patchesEnd()
 {
-    return d_patches.end();
+    return d_realPatches.end();
 }
 
 Patch* Level::addPatch(const IntVector& lowIndex, 
@@ -93,7 +93,8 @@ Patch* Level::addPatch(const IntVector& lowIndex,
 {
     Patch* r = scinew Patch(this, lowIndex,highIndex,inLowIndex, 
 			    inHighIndex);
-    d_patches.push_back(r);
+    d_realPatches.push_back(r);
+    d_virtualAndRealPatches.push_back(r);
     return r;
 }
 
@@ -106,14 +107,15 @@ Patch* Level::addPatch(const IntVector& lowIndex,
  
     Patch* r = scinew Patch(this, lowIndex,highIndex,inLowIndex, 
 			    inHighIndex,ID);
-    d_patches.push_back(r);
+    d_realPatches.push_back(r);
+    d_virtualAndRealPatches.push_back(r);
     return r;
 }
 
 Patch* Level::getPatchFromPoint(const Point& p)
 {
-  for(int i=0;i<(int)d_patches.size();i++){
-    Patch* r = d_patches[i];
+  for(int i=0;i<(int)d_realPatches.size();i++){
+    Patch* r = d_realPatches[i];
     if( r->getBox().contains( p ) )
       return r;
   }
@@ -122,23 +124,23 @@ Patch* Level::getPatchFromPoint(const Point& p)
 
 int Level::numPatches() const
 {
-  return (int)d_patches.size();
+  return (int)d_realPatches.size();
 }
 
 void Level::performConsistencyCheck() const
 {
    if(!d_finalized)
       throw InvalidGrid("Consistency check cannot be performed until Level is finalized");
-  for(int i=0;i<(int)d_patches.size();i++){
-    Patch* r = d_patches[i];
+  for(int i=0;i<(int)d_virtualAndRealPatches.size();i++){
+    Patch* r = d_virtualAndRealPatches[i];
     r->performConsistencyCheck();
   }
 
   // This is O(n^2) - we should fix it someday if it ever matters
-  for(int i=0;i<(int)d_patches.size();i++){
-    Patch* r1 = d_patches[i];
-    for(int j=i+1;j<(int)d_patches.size();j++){
-      Patch* r2 = d_patches[j];
+  for(int i=0;i<(int)d_virtualAndRealPatches.size();i++){
+    Patch* r1 = d_virtualAndRealPatches[i];
+    for(int j=i+1;j<(int)d_virtualAndRealPatches.size();j++){
+      Patch* r2 = d_virtualAndRealPatches[j];
       if(r1->getBox().overlaps(r2->getBox())){
 	cerr << "r1: " << *r1 << '\n';
 	cerr << "r2: " << *r2 << '\n';
@@ -152,12 +154,12 @@ void Level::performConsistencyCheck() const
 
 void Level::findNodeIndexRange(IntVector& lowIndex,IntVector& highIndex) const
 {
-  lowIndex = d_patches[0]->getNodeLowIndex();
-  highIndex = d_patches[0]->getNodeHighIndex();
+  lowIndex = d_realPatches[0]->getNodeLowIndex();
+  highIndex = d_realPatches[0]->getNodeHighIndex();
   
-  for(int p=1;p<(int)d_patches.size();p++)
+  for(int p=1;p<(int)d_realPatches.size();p++)
   {
-    Patch* patch = d_patches[p];
+    Patch* patch = d_realPatches[p];
     IntVector l( patch->getNodeLowIndex() );
     IntVector u( patch->getNodeHighIndex() );
     for(int i=0;i<3;i++) {
@@ -169,12 +171,12 @@ void Level::findNodeIndexRange(IntVector& lowIndex,IntVector& highIndex) const
 
 void Level::findCellIndexRange(IntVector& lowIndex,IntVector& highIndex) const
 {
-  lowIndex = d_patches[0]->getCellLowIndex();
-  highIndex = d_patches[0]->getCellHighIndex();
+  lowIndex = d_realPatches[0]->getCellLowIndex();
+  highIndex = d_realPatches[0]->getCellHighIndex();
   
-  for(int p=1;p<(int)d_patches.size();p++)
+  for(int p=1;p<(int)d_realPatches.size();p++)
   {
-    Patch* patch = d_patches[p];
+    Patch* patch = d_realPatches[p];
     IntVector l( patch->getCellLowIndex() );
     IntVector u( patch->getCellHighIndex() );
     for(int i=0;i<3;i++) {
@@ -186,8 +188,8 @@ void Level::findCellIndexRange(IntVector& lowIndex,IntVector& highIndex) const
 
 void Level::getSpatialRange(BBox& b) const
 {
-  for(int i=0;i<(int)d_patches.size();i++){
-    Patch* r = d_patches[i];
+  for(int i=0;i<(int)d_realPatches.size();i++){
+    Patch* r = d_realPatches[i];
     b.extend(r->getBox().lower());
     b.extend(r->getBox().upper());
   }
@@ -196,8 +198,8 @@ void Level::getSpatialRange(BBox& b) const
 long Level::totalCells() const
 {
   long total=0;
-  for(int i=0;i<(int)d_patches.size();i++)
-    total+=d_patches[i]->totalCells();
+  for(int i=0;i<(int)d_realPatches.size();i++)
+    total+=d_realPatches[i]->totalCells();
   return total;
 }
 
@@ -248,8 +250,8 @@ void Level::selectPatches(const IntVector& low, const IntVector& high,
 {
 #ifdef SELECT_LINEAR
    // This sucks - it should be made faster.  -Steve
-   for(const_patchIterator iter=d_patches.begin();
-       iter != d_patches.end(); iter++){
+   for(const_patchIterator iter=d_virtualAndRealPatches.begin();
+       iter != d_virtualAndRealPatches.end(); iter++){
       const Patch* patch = *iter;
       IntVector l=Max(patch->getCellLowIndex(), low);
       IntVector u=Min(patch->getCellHighIndex(), high);
@@ -303,8 +305,8 @@ void Level::selectPatches(const IntVector& low, const IntVector& high,
    // Double-check the more advanced selection algorithms against the
    // slow (exhaustive) one.
    vector<const Patch*> tneighbors;
-   for(const_patchIterator iter=d_patches.begin();
-       iter != d_patches.end(); iter++){
+   for(const_patchIterator iter=d_virtualAndRealPatches.begin();
+       iter != d_virtualAndRealPatches.end(); iter++){
       const Patch* patch = *iter;
       IntVector l=Max(patch->getCellLowIndex(), low);
       IntVector u=Min(patch->getCellHighIndex(), high);
@@ -321,8 +323,8 @@ void Level::selectPatches(const IntVector& low, const IntVector& high,
 bool Level::containsPoint(const Point& p) const
 {
    // This sucks - it should be made faster.  -Steve
-   for(const_patchIterator iter=d_patches.begin();
-       iter != d_patches.end(); iter++){
+   for(const_patchIterator iter=d_realPatches.begin();
+       iter != d_realPatches.end(); iter++){
       const Patch* patch = *iter;
       if(patch->getBox().contains(p))
 	 return true;
@@ -335,15 +337,68 @@ void Level::finalizeLevel()
   each_patch = scinew PatchSet();
   each_patch->addReference();
 
-  // The compute set requires an array const Patch*, we must copy d_patches
-  vector<const Patch*> tmp_patches(d_patches.size());
-  for(int i=0;i<(int)d_patches.size();i++)
-    tmp_patches[i]=d_patches[i];
+  // The compute set requires an array const Patch*, we must copy d_realPatches
+  vector<const Patch*> tmp_patches(d_realPatches.size());
+  for(int i=0;i<(int)d_realPatches.size();i++)
+    tmp_patches[i]=d_realPatches[i];
   each_patch->addEach(tmp_patches);
   all_patches = scinew PatchSet();
   all_patches->addReference();
   all_patches->addAll(tmp_patches);
 
+  setBCTypes();
+}
+
+void Level::finalizeLevel(bool periodicX, bool periodicY, bool periodicZ)
+{
+  // set each_patch and all_patches before creating virtual patches
+  
+  each_patch = scinew PatchSet();
+  each_patch->addReference();
+
+  // The compute set requires an array const Patch*, we must copy d_realPatches
+  vector<const Patch*> tmp_patches(d_realPatches.size());
+  for(int i=0;i<(int)d_realPatches.size();i++)
+    tmp_patches[i]=d_realPatches[i];
+  each_patch->addEach(tmp_patches);
+  all_patches = scinew PatchSet();
+  all_patches->addReference();
+  all_patches->addAll(tmp_patches);
+
+  BBox bbox;
+  getSpatialRange(bbox);
+  Box domain(bbox.min(), bbox.max());
+  IntVector extent = getCellIndex(bbox.max()) - getCellIndex(bbox.min());
+  d_periodicBoundaries = IntVector(periodicX ? 1 : 0, periodicY ? 1 : 0,
+				   periodicZ ? 1 : 0);
+  IntVector periodicBoundaryRange = d_periodicBoundaries * extent;
+
+  int x,y,z;
+  for(int i=0;i<(int)tmp_patches.size();i++) {
+    for (x = -d_periodicBoundaries.x(); x <= d_periodicBoundaries.x(); x++) {
+      for (y = -d_periodicBoundaries.y(); y <= d_periodicBoundaries.y(); y++) {
+	for (z = -d_periodicBoundaries.z(); z <= d_periodicBoundaries.z(); z++)
+	{
+	  IntVector offset = IntVector(x, y, z) * periodicBoundaryRange;
+	  if (offset == IntVector(0,0,0))
+	    continue;
+	  Box box =
+	    getBox(tmp_patches[i]->getLowIndex() + offset - IntVector(1,1,1),
+		   tmp_patches[i]->getHighIndex() + offset + IntVector(1,1,1));
+	  if (box.overlaps(domain)) {
+	    Patch* newPatch = tmp_patches[i]->createVirtualPatch(offset);
+	    d_virtualAndRealPatches.push_back(newPatch);
+	  }
+	}
+      }
+    }
+  }
+  
+  setBCTypes();
+}
+
+void Level::setBCTypes()
+{
 #ifdef SELECT_GRID
    if(d_patchDistribution.x() >= 0 && d_patchDistribution.y() >= 0 &&
       d_patchDistribution.z() >= 0){
@@ -358,7 +413,7 @@ void Level::finalizeLevel()
    d_idxSize = d_idxHigh-d_idxLow;
    int numCells = d_gridSize.x()*d_gridSize.y()*d_gridSize.z();
    vector<int> counts(numCells+1, 0);
-   for(patchIterator iter=d_patches.begin(); iter != d_patches.end(); iter++){
+   for(patchIterator iter=d_virtualAndRealPatches.begin(); iter != d_virtualAndRealPatches.end(); iter++){
       Patch* patch = *iter;
       IntVector start = (patch->getCellLowIndex()-d_idxLow)*d_gridSize/d_idxSize;
       IntVector end = ((patch->getCellHighIndex()-d_idxLow)*d_gridSize+d_gridSize-IntVector(1,1,1))/d_idxSize;
@@ -380,7 +435,7 @@ void Level::finalizeLevel()
    }
    d_gridStarts[numCells]=count;
    d_gridPatches.resize(count);
-   for(patchIterator iter=d_patches.begin(); iter != d_patches.end(); iter++){
+   for(patchIterator iter=d_virtualAndRealPatches.begin(); iter != d_virtualAndRealPatches.end(); iter++){
       Patch* patch = *iter;
       IntVector start = (patch->getCellLowIndex()-d_idxLow)*d_gridSize/d_idxSize;
       IntVector end = ((patch->getCellHighIndex()-d_idxLow)*d_gridSize+d_gridSize-IntVector(1,1,1))/d_idxSize;
@@ -399,13 +454,13 @@ void Level::finalizeLevel()
 #ifdef SELECT_RANGETREE
    if (d_rangeTree != NULL)
      delete d_rangeTree;
-   d_rangeTree = scinew PatchRangeTree(d_patches);
+   d_rangeTree = scinew PatchRangeTree(d_virtualAndRealPatches);
 #endif   
 #endif
    patchIterator iter;
    int ii;
-  for(iter=d_patches.begin(), ii = 0;
-      iter != d_patches.end(); iter++, ii++){
+  for(iter=d_virtualAndRealPatches.begin(), ii = 0;
+      iter != d_virtualAndRealPatches.end(); iter++, ii++){
     Patch* patch = *iter;
     patch->setLevelIndex( ii );
     //cout << "Patch bounding box = " << patch->getBox() << endl;
@@ -480,7 +535,7 @@ void Level::assignBCS(const ProblemSpecP& grid_ps)
       allbcs.push_back(bcs[i]);
 #endif
 
-    for(patchIterator iter=d_patches.begin(); iter != d_patches.end(); 
+    for(patchIterator iter=d_virtualAndRealPatches.begin(); iter != d_virtualAndRealPatches.end(); 
 	iter++){
       Patch* patch = *iter;
       Patch::BCType bc_type = patch->getBCType(face_side);

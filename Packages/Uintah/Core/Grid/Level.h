@@ -67,6 +67,8 @@ WARNING
       virtual ~Level();
       
       void setPatchDistributionHint(const IntVector& patchDistribution);
+      void setBCTypes();
+     
       typedef std::vector<Patch*>::iterator patchIterator;
       typedef std::vector<Patch*>::const_iterator const_patchIterator;
       const_patchIterator patchesBegin() const;
@@ -90,6 +92,7 @@ WARNING
       Patch* getPatchFromPoint( const Point& );
 
       void finalizeLevel();
+      void finalizeLevel(bool periodicX, bool periodicY, bool periodicZ);
       void assignBCS(const ProblemSpecP& ps);
       
       int numPatches() const;
@@ -130,6 +133,11 @@ WARNING
 
       bool containsPoint(const Point&) const;
 
+      // IntVector whose elements are each 1 or 0 specifying whether there
+      // are periodic boundaries in each dimension (1 means periodic).
+      IntVector getPeriodicBoundaries() const
+      { return d_periodicBoundaries; }
+
       const PatchSet* eachPatch() const;
       const PatchSet* allPatches() const;
       const Patch* selectPatchForCellIndex( const IntVector& idx) const;
@@ -149,11 +157,15 @@ WARNING
       IntVector d_idxLow;
       IntVector d_idxHigh;
       IntVector d_patchDistribution;
+      IntVector d_periodicBoundaries;
 
       PatchSet* each_patch;
       PatchSet* all_patches;
 
       IntVector d_extraCells;
+
+      std::vector<Patch*> d_realPatches; // only real patches
+      std::vector<Patch*> d_virtualAndRealPatches; // real and virtual
 
 #ifdef SELECT_GRID
       IntVector d_idxLow;
