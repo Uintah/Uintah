@@ -1,5 +1,5 @@
 
-itcl_class Uintah_Visualization_ParticleEigenEvaluator {
+itcl_class Uintah_Operators_ParticleEigenEvaluator {
     inherit Module
 
     constructor {config} {

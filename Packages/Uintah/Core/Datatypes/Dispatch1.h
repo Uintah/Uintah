@@ -3,7 +3,7 @@
 #if !defined(Datatypes_Dispatch1_h)
 #define Datatypes_Dispatch1_h
 
-// uintah_dispatch1 macro follows
+// dispatch1 macro follows
 #define uintah_dispatch1(field1, callback)\
   bool disp_error = false;\
   string disp_msg;\
@@ -17,14 +17,6 @@
       } else {\
         disp_error = true; disp_msg = "LevelField<double>::get_type_name is broken";\
       }\
-    } else if (field1->get_type_name(1) == "int") {\
-      LevelField<int> *f1 = 0;\
-      f1 = dynamic_cast<LevelField<int>*>(field1.get_rep());\
-      if (f1) {\
-        callback(f1);\
-      } else {\
-        disp_error = true; disp_msg = "LevelField<int>::get_type_name is broken";\
-      }\
     } else if (field1->get_type_name(1) == "long") {\
       LevelField<long> *f1 = 0;\
       f1 = dynamic_cast<LevelField<long>*>(field1.get_rep());\
@@ -32,6 +24,14 @@
         callback(f1);\
       } else {\
         disp_error = true; disp_msg = "LevelField<long>::get_type_name is broken";\
+      }\
+    } else if (field1->get_type_name(1) == "float") {\
+      LevelField<float> *f1 = 0;\
+      f1 = dynamic_cast<LevelField<float>*>(field1.get_rep());\
+      if (f1) {\
+        callback(f1);\
+      } else {\
+        disp_error = true; disp_msg = "LevelField<float>::get_type_name is broken";\
       }\
     } else if (field1->get_type_name(1) == "Vector") {\
       LevelField<Vector> *f1 = 0;\

@@ -1,5 +1,5 @@
 
-itcl_class Uintah_Visualization_EigenEvaluator {
+itcl_class Uintah_Operators_EigenEvaluator {
     inherit Module
 
     constructor {config} {

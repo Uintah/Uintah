@@ -1,0 +1,61 @@
+#ifndef __OPERATORS_VECTORPARTICLESOPERATOR_H__
+#define __OPERATORS_VECTORPARTICLESOPERATOR_H__
+
+#include "VectorOperatorFunctors.h"
+#include <Core/GuiInterface/GuiVar.h>
+#include <Dataflow/Network/Module.h>
+#include <Uintah/Core/Datatypes/VectorParticlesPort.h>
+#include <Uintah/Core/Datatypes/ScalarParticlesPort.h>
+#include <string>
+
+using std::string;
+
+namespace Uintah {
+using namespace SCIRun;
+
+  class VectorParticlesOperator: public Module {
+  public:
+    VectorParticlesOperator(const string& id);
+    virtual ~VectorParticlesOperator() {}
+    
+    virtual void execute(void);
+    
+  private:
+    template<class VectorOp>
+      void computeScalars(VectorParticles* vectors, ScalarParticles* scalars,
+			  VectorOp op /* VectorOp should be a functor for
+					 converting vectors scalars */ );
+    //    GuiString gui_status;
+    GuiInt guiOperation;
+
+    VectorParticlesIPort *in;
+
+    ScalarParticlesOPort *spout;
+  };
+
+template<class VectorOp>
+void VectorParticlesOperator::computeScalars(VectorParticles* pTP, 
+					     ScalarParticles* pSP,
+					     VectorOp op
+					    /* VectorOp should be a functor for
+					       converting vectors scalars */ )
+{
+  pSP->Set(pTP->getParticleSet());
+  ParticleVariable<double> scalarSet;
+ 
+  vector< ParticleVariable<Vector> >& vectors = pTP->get();
+  vector< ParticleVariable<Vector> >::const_iterator iter;
+  for (iter = vectors.begin(); iter != vectors.end(); iter++) {
+    ParticleSubset* subset = (*iter).getParticleSubset();
+    scalarSet = ParticleVariable<double>(subset);
+    for (ParticleSubset::iterator sub_iter = subset->begin();
+	 sub_iter != subset->end(); sub_iter++) {
+      scalarSet[*sub_iter] = op((*iter)[*sub_iter]);
+    }
+    pSP->AddVar(scalarSet);
+  }
+}
+
+} //end namespace Uintah
+#endif // __OPERATORS_VECTORPARTICLESOPERATOR_H__
+

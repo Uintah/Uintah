@@ -72,11 +72,11 @@ VectorFieldExtractor::VectorFieldExtractor(const string& id)
   // Create Ports
   in=scinew ArchiveIPort(this, "Data Archive",
 		      ArchiveIPort::Atomic);
-  sfout=scinew FieldOPort(this, "VectorField", FieldIPort::Atomic);
+  vfout=scinew FieldOPort(this, "VectorField", FieldIPort::Atomic);
 
   // Add them to the Module
   add_iport(in);
-  add_oport(sfout);
+  add_oport(vfout);
 
 } 
 
@@ -206,9 +206,9 @@ void VectorFieldExtractor::execute()
     case TypeDescription::Vector:
       {	
 	LevelMeshHandle mesh = scinew LevelMesh( grid, 0 );
-	LevelField<Vector> *sfd =
+	LevelField<Vector> *vfd =
 	  scinew LevelField<Vector>( mesh, Field::NODE );
-	LevelField<Vector>::fdata_type &data = sfd->fdata();
+	LevelField<Vector>::fdata_type &data = vfd->fdata();
 	  
 	for(Level::const_patchIterator r = level->patchesBegin();
 	    r != level->patchesEnd(); r++ ){
@@ -216,7 +216,7 @@ void VectorFieldExtractor::execute()
 	  archive.query(sv, var, mat, *r, time);
 	  data.push_back( sv );
 	}
-	sfout->send(sfd);
+	vfout->send(vfd);
 	return;
       }
       break;
@@ -230,9 +230,9 @@ void VectorFieldExtractor::execute()
     case TypeDescription::Vector:
       {	
 	LevelMeshHandle mesh = scinew LevelMesh( grid, 0 );
-	LevelField<Vector> *sfd =
+	LevelField<Vector> *vfd =
 	  scinew LevelField<Vector>( mesh, Field::CELL );
-	LevelField<Vector>::fdata_type &data = sfd->fdata();
+	LevelField<Vector>::fdata_type &data = vfd->fdata();
 	  
 	for(Level::const_patchIterator r = level->patchesBegin();
 	    r != level->patchesEnd(); r++ ){
@@ -240,7 +240,8 @@ void VectorFieldExtractor::execute()
 	  archive.query(sv, var, mat, *r, time);
 	  data.push_back( sv );
 	}
-	sfout->send(sfd);
+
+	vfout->send(vfd);
 	return;
       }
       break;

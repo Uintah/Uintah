@@ -21,12 +21,14 @@ $(SRCDIR)/tclIndex: \
 	$(SRCDIR)/GLTextureBuilder.tcl\
 	$(SRCDIR)/CuttingPlane.tcl\
 	$(SRCDIR)/Hedgehog.tcl\
+	$(SRCDIR)/TensorOperator.tcl\
+	$(SRCDIR)/TensorFieldOperator.tcl\
+	$(SRCDIR)/TensorParticlesOperator.tcl\
+	$(SRCDIR)/VectorFieldOperator.tcl\
+	$(SRCDIR)/VectorParticlesOperator.tcl\
 #[INSERT NEW TCL FILE HERE]
 #	$(SRCDIR)/EigenEvaluator.tcl\
 #	$(SRCDIR)/ParticleEigenEvaluator.tcl\
-#	$(SRCDIR)/TensorOperator.tcl\
-#	$(SRCDIR)/TensorFieldOperator.tcl\
-#	$(SRCDIR)/TensorParticlesOperator.tcl\
 
 
 	$(OBJTOP)/createTclIndex $(SRCTOP)/Packages/Uintah/Dataflow/GUI

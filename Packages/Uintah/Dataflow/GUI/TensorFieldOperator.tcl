@@ -1,6 +1,6 @@
 
-itcl_class Uintah_Visualization_TensorFieldOperator {
-    inherit Uintah_Visualization_TensorOperator
+itcl_class Uintah_Operators_TensorFieldOperator {
+    inherit Uintah_Operators_TensorOperator
 
     constructor {config} {
 	set name TensorFieldOperator

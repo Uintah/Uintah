@@ -1,13 +1,11 @@
 #include "ParticleEigenEvaluator.h"
 #include <math.h>
 #include <Core/Malloc/Allocator.h>
-#include <Packages/Uintah/Core/Datatypes/TensorParticles.h>
-#include <Packages/Uintah/Core/Datatypes/ScalarParticles.h>
-#include <Packages/Uintah/Core/Datatypes/VectorParticles.h>
+#include <Uintah/Core/Datatypes/TensorParticles.h>
+#include <Uintah/Core/Datatypes/ScalarParticles.h>
+#include <Uintah/Core/Datatypes/VectorParticles.h>
 
 namespace Uintah {
-
-using namespace SCIRun;
 
 extern "C" Module* make_ParticleEigenEvaluator( const string& id ) { 
   return scinew ParticleEigenEvaluator( id );
@@ -15,8 +13,8 @@ extern "C" Module* make_ParticleEigenEvaluator( const string& id ) {
 
 ParticleEigenEvaluator::ParticleEigenEvaluator(const string& id)
   : Module("ParticleEigenEvaluator",id,Source),
-    tclEigenSelect("eigenSelect", id, this)
-    //    tcl_status("tcl_status", id, this),
+    guiEigenSelect("eigenSelect", id, this)
+    //    gui_status("gui_status", id, this),
 {
   // Create Ports
   in = scinew TensorParticlesIPort(this, "TensorParticles");
@@ -30,7 +28,7 @@ ParticleEigenEvaluator::ParticleEigenEvaluator(const string& id)
 }
   
 void ParticleEigenEvaluator::execute(void) {
-  //  tcl_status.set("Calling EigenEvaluator!"); 
+  //  gui_status.set("Calling EigenEvaluator!"); 
   TensorParticlesHandle hTF;
   
   if(!in->get(hTF)){
@@ -38,7 +36,7 @@ void ParticleEigenEvaluator::execute(void) {
     return;
   }
 
-  int chosenEValue = tclEigenSelect.get();
+  int chosenEValue = guiEigenSelect.get();
 
   TensorParticles* pTP = hTF.get_rep();
   ParticleVariable<double> selectedEValues;
@@ -84,7 +82,8 @@ void ParticleEigenEvaluator::execute(void) {
   spout->send(eValues);
   vpout->send(eVectors);  
 }
-} // End namespace Uintah
+
+}
 
 
 

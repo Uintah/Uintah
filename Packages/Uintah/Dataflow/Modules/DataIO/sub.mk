@@ -2,7 +2,7 @@
 
 include $(SCIRUN_SCRIPTS)/smallso_prologue.mk
 
-SRCDIR   := Packages/Uintah/Dataflow/Modules/Readers
+SRCDIR   := Packages/Uintah/Dataflow/Modules/DataIO
 
 SRCS     += \
 	$(SRCDIR)/ArchiveReader.cc\
