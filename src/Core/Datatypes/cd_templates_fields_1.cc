@@ -61,14 +61,27 @@ const TypeDescription* get_type_description(ImageField<unsigned short> *);
 const TypeDescription* get_type_description(ImageField<unsigned char> *);
 
 
-template class GenericField<QuadSurfMesh, vector<Tensor> >;
-template class GenericField<QuadSurfMesh, vector<Vector> >;
-template class GenericField<QuadSurfMesh, vector<double> >;
-template class GenericField<QuadSurfMesh, vector<float> >;
-template class GenericField<QuadSurfMesh, vector<int> >;
-template class GenericField<QuadSurfMesh, vector<short> >;
-template class GenericField<QuadSurfMesh, vector<char> >;
-template class GenericField<QuadSurfMesh, vector<unsigned int> >;
+
+
+vector<Tensor>;       
+vector<Vector>;       
+vector<double>;       
+vector<float>;        
+vector<int>;          
+vector<short>;        
+vector<char>;         
+vector<unsigned int>; 
+vector<unsigned short>;
+vector<unsigned char>;
+
+template class GenericField<QuadSurfMesh, vector<Tensor> >;       
+template class GenericField<QuadSurfMesh, vector<Vector> >;       
+template class GenericField<QuadSurfMesh, vector<double> >;       
+template class GenericField<QuadSurfMesh, vector<float> >;        
+template class GenericField<QuadSurfMesh, vector<int> >;          
+template class GenericField<QuadSurfMesh, vector<short> >;        
+template class GenericField<QuadSurfMesh, vector<char> >;         
+template class GenericField<QuadSurfMesh, vector<unsigned int> >; 
 template class GenericField<QuadSurfMesh, vector<unsigned short> >;
 template class GenericField<QuadSurfMesh, vector<unsigned char> >;
 
@@ -98,3 +111,12 @@ const TypeDescription* get_type_description(QuadSurfField<unsigned char> *);
 #if defined(__sgi) && !defined(__GNUC__) && (_MIPS_SIM != _MIPS_SIM_ABI32)
 #pragma reset woff 1468
 #endif
+
+
+
+
+
+
+
+
+
