@@ -66,11 +66,6 @@ public:
 
       // GROUP: Schedule Action :
       ///////////////////////////////////////////////////////////////////////
-      // Schedule the initialization of the Smagorinsky Coefficient
-      //    [in] 
-      //        data User data needed for solve 
-      
-      ///////////////////////////////////////////////////////////////////////
       // Schedule the recomputation of Turbulence Model data
       //    [in] 
       //        data User data needed for solve 
@@ -111,9 +106,6 @@ public:
       inline bool getDynScalarModel() const {
 	return false;
       }
-//      inline bool getMixedModel() const {
-//	return d_mixedModel;
-//      }
 
 protected:
       PhysicalConstants* d_physicalConsts;
@@ -128,7 +120,6 @@ private:
 
       // GROUP: Action Methods (private)  :
       ///////////////////////////////////////////////////////////////////////
-
       // Actually reCalculate the Turbulence sub model
       //    [in] 
       //        documentation here
