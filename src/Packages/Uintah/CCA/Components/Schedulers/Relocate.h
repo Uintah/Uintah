@@ -57,6 +57,7 @@ WARNING
 					    const vector<vector<const VarLabel*> >& old_labels,
 					    const VarLabel* new_posLabel,
 					    const vector<vector<const VarLabel*> >& new_labels,
+					    const VarLabel* particleIDLabel,
 					    const MaterialSet* matls);
 
 
@@ -70,6 +71,7 @@ WARNING
     vector<vector<const VarLabel*> > reloc_old_labels;
     const VarLabel* reloc_new_posLabel;
     vector<vector<const VarLabel*> > reloc_new_labels;
+    const VarLabel* particleIDLabel_;
     const MaterialSet* reloc_matls;
     LoadBalancer* lb;
   };
