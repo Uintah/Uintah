@@ -51,9 +51,14 @@ public:
 			 DataWarehouseP&,
 			 DataWarehouseP&);
 
+   void actuallyStep0(const ProcessorContext*,
+		      const Patch* patch,
+		      DataWarehouseP&,
+		      DataWarehouseP&);
+
    void actuallyStep1(const ProcessorContext*,
-			 const Patch* patch,
-			 DataWarehouseP&,
+		      const Patch* patch,
+		      DataWarehouseP&,
 		      DataWarehouseP&);
 
    void actuallyStep2(const ProcessorContext*,
@@ -87,10 +92,19 @@ public:
 		    DataWarehouseP&);
 
 
-   void convertNR_4dToUCF(const Patch*, CCVariable<Vector>& vel_ucf, 
+ void convertNR_4dToUCF(const Patch*, CCVariable<Vector>& vel_ucf, 
 			  double ****uvel_CC,
 			  double ****vvel_CC,
 			  double **** wvel_CC,
+			  int xLoLimit,
+			  int xHiLimit,
+			  int yLoLimit,
+			  int yHiLimit,
+			  int zLoLimit,
+			  int zHiLimit,
+			  int nMaterials);
+ void convertNR_4dToUCF(const Patch*, CCVariable<double>& vel_ucf, 
+			  double ****uvel_CC,
 			  int xLoLimit,
 			  int xHiLimit,
 			  int yLoLimit,
@@ -110,6 +124,15 @@ public:
 			  int zLoLimit,
 			  int zHiLimit,
 			  int nMaterials);
+ void convertUCFToNR_4d(const Patch*, CCVariable<double>& vel_ucf, 
+			  double ****uvel_CC,
+			  int xLoLimit,
+			  int xHiLimit,
+			  int yLoLimit,
+			  int yHiLimit,
+			  int zLoLimit,
+			  int zHiLimit,
+			  int nMaterials);
 
 
 			  
@@ -117,10 +140,19 @@ public:
 private:
     // These two will go away SOON - a really bad habit, won't work in parallel, blah blah blah
  
+ // Cell centered variables
 
     const VarLabel* delTLabel;
     const VarLabel* vel_CCLabel;
+    const VarLabel* press_CCLabel;
+    const VarLabel* rho_CCLabel;
+    const VarLabel* temp_CCLabel;
+    const VarLabel* cv_CCLabel;
 
+    // Face centered variables
+    const VarLabel* vel_FCLabel;
+    const VarLabel* press_FCLabel;
+    const VarLabel* tau_FCLabel;
 
    int  i,j,k,m,   
         xLoLimit,                       /* x array lower limits             */
