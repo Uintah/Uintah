@@ -181,7 +181,6 @@ SRCS += $(SRCDIR)/Worker.cc \
 	$(SRCDIR)/RServer.cc \
 	$(SRCDIR)/GeoProbeReader.cc \
 	$(SRCDIR)/PNGImage.cc \
-	$(SRCDIR)/SharedTexture.cc
 #	$(SRCDIR)/LumiDpy.cc \
 #	$(SRCDIR)/LumiCamera.cc \
 
