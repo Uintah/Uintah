@@ -219,7 +219,7 @@ Crack::Crack(const ProblemSpecP& ps,SimulationStateP& d_sS,
     m++; // Next material
   }  // End of loop over materials
 
-  #if 1
+  #if 0
   OutputInitialCrackPlane(numMPMMatls);
   #endif
 }
@@ -520,7 +520,7 @@ void Crack::OutputInitialCrackPlane(const int& numMatls)
                << "): meshed by " << pellipseNCells[m][i]
                << " cells on the circumference." << endl;
           if(pellipseCrkFrtSegID[m][i]==9999)
-            cout << "    crack front: on the ellipse circomference" << endl;
+            cout << "    crack front: on the ellipse circumference" << endl;
           else
             cout << "    crack front segment ID: " << pellipseCrkFrtSegID[m][i]
                  << endl;
