@@ -153,7 +153,7 @@ TextureBuilderAlgo<TexField>::build(FieldHandle vfield, FieldHandle gfield,
   // so this should work.
   LatVolMeshHandle mesh = (LatVolMesh*)(vfield->mesh().get_rep());
   transform_ = mesh->get_transform();
-  
+
   ni_ = mesh->get_ni();
   nj_ = mesh->get_nj();
   nk_ = mesh->get_nk();
@@ -166,8 +166,8 @@ TextureBuilderAlgo<TexField>::build(FieldHandle vfield, FieldHandle gfield,
   }
 
   bbox_.reset();
-  bbox_.extend(mesh->get_bounding_box().min());
-  bbox_.extend(mesh->get_bounding_box().max());
+  bbox_.extend(Point(0,0,0));
+  bbox_.extend(Point(mesh->get_ni()-1,mesh->get_nj()-1, mesh->get_nk()-1));
 
   // compute subdivision
   int brick_mem = card_mem*1024*1024/2;
@@ -181,12 +181,10 @@ TextureBuilderAlgo<TexField>::build(FieldHandle vfield, FieldHandle gfield,
   BinaryTree<BrickNode*>* root = 0; 
   buildBricks(root, vfield, gfield, brick_mem, sx, sy, sz, nc_, nb_);
 
-  //
-  Transform mytrans;
-  mesh->transform(mytrans);
-  myTexture = new Texture(root, bbox_.min(), bbox_.max(), mytrans,
+
+  myTexture = new Texture(root, bbox_.min(), bbox_.max(), transform_,
 			  vminval, vmaxval, gminval, gmaxval);
-  //BinaryTree<BrickNode*>* tree = myTexture->getTree();
+
   return myTexture;
 }
 
