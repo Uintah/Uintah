@@ -114,7 +114,7 @@ to applied to a grid, allowing it to be arbitrarily warped.</font></font>
 <br>&nbsp;
 <p><img SRC="Geom.gif" height=357 width=779>
 <br>&nbsp;
-<p><b><font face="Arial,Helvetica"><font size=+0>2.4 Class Field</font></font></b><b><font face="Arial,Helvetica"><font size=+0></font></font></b>
+<p><b><font face="Arial,Helvetica"><font size=+0>2.4 Class Field</font></font></b>
 <p><font face="Arial,Helvetica"><font size=+0>Fields provide methods that
 require information from both the geometry and the attribute that make
 it up.&nbsp; Fields are templatized on the type of data in the field, the
@@ -123,30 +123,70 @@ that the field uses.&nbsp; The GeneralField classes hold one Attribute
 and one Geometry.</font></font>
 <br><img SRC="Field.gif" height=173 width=552>
 <br>&nbsp;
-<p><b><font face="Arial,Helvetica"><font size=+0>2.6 Interfaces</font></font></b>
+<p><b><font face="Arial,Helvetica"><font size=+0>2.5 Interfaces</font></font></b>
 <p><font face="Arial,Helvetica"><font size=+0>The above classes use inherited
 interfaces to provide methods to the programmer.&nbsp; The interfaces used
 by fields are defined in PSECore/Datatypes/FieldInterface.h.&nbsp; Each
 field that uses one of the interfaces in this file, say SInterpolate, inherits
 from SInterpolate and implements a pure svirtual function in SInterpolate,
 called sinterpolate (by convention, the pure virtual function in the interface
-has the same name as the class except in lowercase).&nbsp; The query_interface(string)
-function allows access to the sinterpolate function.&nbsp; For example,
+has the same name as the class except in lowercase).&nbsp; The query_interface(Type
+T*) function allows access to the sinterpolate function.&nbsp; For example,
 if a module wishes to call sinterpolate, then the following code could
 be used</font></font>
 <p><tt><font size=+0>// Get the field from the input port</font></tt>
 <br><tt><font size=+0>if(iport->get(myfield)){</font></tt>
 <br><tt><font size=+0>&nbsp;&nbsp;&nbsp; // Check to see if this field
 supports a scalar interpolate function</font></tt>
-<br><tt><font size=+0>&nbsp;&nbsp;&nbsp; SInterpolate&lt;double> *interp
-= myfield->query_interface("sinterpolate");</font></tt>
+<br><tt><font size=+0>&nbsp;&nbsp;&nbsp; SLInterpolate&lt;double> *interp
+= myfield->query_interface((SLInterpolate*)0);</font></tt>
 <br><tt><font size=+0>&nbsp;&nbsp;&nbsp; if(interp){</font></tt>
 <br><tt>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; double retval;</tt>
-<br><tt>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; interp->sinterpolate(Point(1,2,3),
+<br><tt>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; interp->slinterpolate(Point(1,2,3),
 retval);</tt>
 <br><tt>&nbsp;&nbsp;&nbsp; }</tt>
 <br><tt>}</tt>
-<p><b><font face="Arial,Helvetica"><font size=+0>2.6 Dependencies</font></font></b>
+<p><b><font face="Arial,Helvetica"><font size=+0>2.6 Fast Accessors vs.
+Virtual Accessors</font></font></b>
+<p><font face="Arial,Helvetica"><font size=+0>The Attrib classes provide
+two forms of accessors.&nbsp; Virtual accessors are provided by the DiscreteAttrib
+class, while fast non-virtual accessors are provided by each child class.&nbsp;
+If the programmer is needs to either get or set an attribute's data values
+iwithin an inner loop, than he may downcast the attribute to the appropriate
+type and use the non-virtual function.&nbsp; If the application is not
+speed-critical, he may choose to use the virutal accessor to avoid downcasting.&nbsp;
+Here is an example of the use of these functions:</font></font>
+<p><b><font face="Arial,Helvetica"><font size=+0>Fast Accessors:</font></font></b>
+<p><tt><font size=+0>Attrib *attrib = sfield->get_attrib();</font></tt>
+<br><tt><font size=+0>FlatAttrib&lt;double>* flatattrib = attrib->downcast((FlatAttrib&lt;double>*)0);</font></tt>
+<br><tt><font size=+0>BrickAttrib&lt;double>* brickattrib = attrib->downcast((BricAttrib&lt;double>*>0);</font></tt>
+<br><tt><font size=+0>...</font></tt>
+<br><tt><font size=+0>if(flatattrib){</font></tt>
+<br><tt><font size=+0>&nbsp;&nbsp;&nbsp; double val = flatattrib->fget3(0,
+0, 0);&nbsp; // Get the value at (0, 0, 0)</font></tt>
+<br><tt><font size=+0>&nbsp;&nbsp;&nbsp; flatattrib->fset3(0, 0, 0, 3.14);&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+// Set the value at (0, 0, 0)</font></tt>
+<br><tt><font size=+0>}</font></tt>
+<br><tt><font size=+0>if(brickattrib){</font></tt>
+<br><tt><font size=+0>&nbsp;&nbsp;&nbsp; double val = brickattrib->fget3(0,
+0, 0);&nbsp; // Get the value at (0, 0, 0)</font></tt>
+<br><tt><font size=+0>&nbsp;&nbsp;&nbsp; brickattrib->fset3(0, 0, 0, 3.14);&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+// Set the value at (0, 0, 0)</font></tt>
+<br><tt><font size=+0>}</font></tt>
+<br><tt><font size=+0>...</font></tt>
+<p><b><font face="Arial,Helvetica"><font size=+0>Virtual Accessors:</font></font></b>
+<p><tt><font size=+0>Attrib *attrib = sfield->get_attrib();</font></tt>
+<br><tt><font size=+0>DiscreteAttrib&lt;double>* discreteattrib =</font></tt>
+<br><tt><font size=+0>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; attrib->downcast((DiscreteAttrib&lt;double>*)
+0);</font></tt>
+<br><tt><font size=+0>if(discreteattrib){<br>
+&nbsp;&nbsp;&nbsp; double val = discreteattrib->get3(0, 0, 0);&nbsp; //
+Get the value at (0, 0, 0)</font></tt>
+<br><tt><font size=+0>&nbsp;&nbsp;&nbsp; discreteattrib->set3(0, 0, 0,
+3.14);&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // Set the value
+at (0, 0, 0)</font></tt>
+<br><tt><font size=+0>}</font></tt>
+<p><b><font face="Arial,Helvetica"><font size=+0>2.7 Dependencies</font></font></b>
 <p><font face="Arial,Helvetica"><font size=+0>The implementation of the
 above classes makes use of various components of STL, including maps, vectors,
 and lists.</font></font>
