@@ -328,7 +328,6 @@ class ViewSlices : public Module
   UIdouble		background_threshold_;
 
   PaintCM2Widget *	paint_widget_;
-  vector<CM2WidgetHandle> widgets_;
 
   float *		temp_tex_data_;
 
@@ -674,7 +673,6 @@ ViewSlices::ViewSlices(GuiContext* ctx) :
   max_(ctx->subVar("max"), -1.0),
   background_threshold_(ctx->subVar("background_threshold"), 0.0),
   paint_widget_(0),
-  widgets_(),
   temp_tex_data_(0),
   cmap2_iport_((ColorMap2IPort*)get_iport("InputColorMap2")),
   n1_cmap_iport_((ColorMapIPort *)get_iport("Nrrd1ColorMap")),
@@ -3142,7 +3140,7 @@ ViewSlices::add_paint_widget() {
     }
     widgets.push_back(cm2_->widgets()[w]);
   }
-  cm2_->widgets() = widgets;
+  cm2_= scinew ColorMap2(widgets, false, cm2_->faux());
   cm2_->selected() = added;
   want_to_execute();
 }
@@ -3354,8 +3352,6 @@ ViewSlices::send_slice_geometry(NrrdSlice &slice) {
   gobjs_[name] = geom_oport_->addObj(gobj, name);
   
 }
-
-typedef vector<CM2WidgetHandle> CM2Widgets;
 
 void
 ViewSlices::rasterize_colormap2() {
