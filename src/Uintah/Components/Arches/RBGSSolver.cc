@@ -97,10 +97,10 @@ RBGSSolver::computePressResidual(const ProcessorGroup*,
 // Actual calculation of order of magnitude term for pressure equation
 //****************************************************************************
 void 
-RBGSSolver::computePressOrderOfMagnitude(const ProcessorGroup* pc,
-				const Patch* patch,
-				DataWarehouseP& old_dw,
-				DataWarehouseP& new_dw, ArchesVariables* vars)
+RBGSSolver::computePressOrderOfMagnitude(const ProcessorGroup* ,
+				const Patch* ,
+				DataWarehouseP& ,
+				DataWarehouseP& , ArchesVariables* )
 {
 
 //&vars->truncPress
@@ -150,9 +150,9 @@ RBGSSolver::pressLisolve(const ProcessorGroup* pc,
   IntVector domHi = vars->pressure.getFortHighIndex();
   IntVector idxLo = patch->getCellFORTLowIndex();
   IntVector idxHi = patch->getCellFORTHighIndex();
-  bool lswpwe = true;
-  bool lswpsn = true;
-  bool lswpbt = true;
+  //bool lswpwe = true;
+  //bool lswpsn = true;
+  //bool lswpbt = true;
   Array1<double> e1;
   Array1<double> f1;
   Array1<double> e2;
@@ -209,8 +209,8 @@ RBGSSolver::pressLisolve(const ProcessorGroup* pc,
 void 
 RBGSSolver::computeVelResidual(const ProcessorGroup* ,
 			       const Patch* patch,
-			       DataWarehouseP& old_dw ,
-			       DataWarehouseP& new_dw, 
+			       DataWarehouseP& ,
+			       DataWarehouseP& , 
 			       int index, ArchesVariables* vars)
 {
   // Get the patch bounds and the variable bounds
@@ -296,10 +296,10 @@ RBGSSolver::computeVelResidual(const ProcessorGroup* ,
 // Actual calculation of order of magnitude term for Velocity equation
 //****************************************************************************
 void 
-RBGSSolver::computeVelOrderOfMagnitude(const ProcessorGroup* pc,
-				const Patch* patch,
-				DataWarehouseP& old_dw,
-				DataWarehouseP& new_dw, ArchesVariables* vars)
+RBGSSolver::computeVelOrderOfMagnitude(const ProcessorGroup* ,
+				const Patch* ,
+				DataWarehouseP& ,
+				DataWarehouseP& , ArchesVariables* )
 {
 
   //&vars->truncUVel
@@ -316,8 +316,8 @@ RBGSSolver::computeVelOrderOfMagnitude(const ProcessorGroup* pc,
 void 
 RBGSSolver::computeVelUnderrelax(const ProcessorGroup* ,
 				 const Patch* patch,
-				 DataWarehouseP& old_dw ,
-				 DataWarehouseP& new_dw, 
+				 DataWarehouseP& ,
+				 DataWarehouseP& , 
 				 int index, ArchesVariables* vars)
 {
   // Get the patch bounds and the variable bounds
@@ -332,50 +332,39 @@ RBGSSolver::computeVelUnderrelax(const ProcessorGroup* ,
     domHi = vars->uVelocity.getFortHighIndex();
     idxLo = patch->getSFCXFORTLowIndex();
     idxHi = patch->getSFCXFORTHighIndex();
-  //fortran call
-#ifdef WONT_COMPILE_YET
+    //fortran call
     FORT_UNDERELAX(domLo.get_pointer(), domHi.get_pointer(),
 		   idxLo.get_pointer(), idxHi.get_pointer(),
 		   vars->uVelocity.getPointer(),
 		   vars->uVelocityCoeff[Arches::AP].getPointer(), 
-		   vars->uVelNonLinSrc.getPointer(),
+		   vars->uVelNonlinearSrc.getPointer(),
 		   &d_underrelax);
-
-
-#endif
     break;
     case Arches::YDIR:
     domLo = vars->vVelocity.getFortLowIndex();
     domHi = vars->vVelocity.getFortHighIndex();
     idxLo = patch->getSFCYFORTLowIndex();
     idxHi = patch->getSFCYFORTHighIndex();
-  //fortran call
-#ifdef WONT_COMPILE_YET
+    //fortran call
     FORT_UNDERELAX(domLo.get_pointer(), domHi.get_pointer(),
 		   idxLo.get_pointer(), idxHi.get_pointer(),
 		   vars->vVelocity.getPointer(),
 		   vars->vVelocityCoeff[Arches::AP].getPointer(), 
-		   vars->vVelNonLinSrc.getPointer(),
+		   vars->vVelNonlinearSrc.getPointer(),
 		   &d_underrelax);
-
-
-#endif
     break;
     case Arches::ZDIR:
     domLo = vars->wVelocity.getFortLowIndex();
     domHi = vars->wVelocity.getFortHighIndex();
     idxLo = patch->getSFCYFORTLowIndex();
     idxHi = patch->getSFCYFORTHighIndex();
-  //fortran call
-#ifdef WONT_COMPILE_YET
+    //fortran call
     FORT_UNDERELAX(domLo.get_pointer(), domHi.get_pointer(),
 		   idxLo.get_pointer(), idxHi.get_pointer(),
 		   vars->uVelocity.getPointer(),
 		   vars->uVelocityCoeff[Arches::AP].getPointer(), 
-		   vars->uVelNonLinSrc.getPointer(),
+		   vars->uVelNonlinearSrc.getPointer(),
 		   &d_underrelax);
-
-#endif
     break;
   default:
     throw InvalidValue("Invalid index in LinearSolver for velocity");
@@ -387,17 +376,37 @@ RBGSSolver::computeVelUnderrelax(const ProcessorGroup* ,
 // Velocity Solve
 //****************************************************************************
 void 
-RBGSSolver::velocityLisolve(const ProcessorGroup* ,
+RBGSSolver::velocityLisolve(const ProcessorGroup* pc,
 			    const Patch* patch,
 			    DataWarehouseP& old_dw ,
 			    DataWarehouseP& new_dw, 
-			    int index, ArchesVariables* vars)
+			    int index, 
+			    ArchesVariables* vars,
+			    const ArchesLabel* lab)
 {
   // Get the patch bounds and the variable bounds
   IntVector domLo;
   IntVector domHi;
   IntVector idxLo;
   IntVector idxHi;
+  IntVector Size;
+
+  Array1<double> e1;
+  Array1<double> f1;
+  Array1<double> e2;
+  Array1<double> f2;
+  Array1<double> e3;
+  Array1<double> f3;
+
+  sum_vartype resid;
+  sum_vartype trunc;
+
+  double nlResid;
+  double trunc_conv;
+
+  int velIter = 0;
+  double velResid = 0.0;
+  double theta = 0.5;
 
   switch (index) {
   case Arches::XDIR:
@@ -405,67 +414,135 @@ RBGSSolver::velocityLisolve(const ProcessorGroup* ,
     domHi = vars->uVelocity.getFortHighIndex();
     idxLo = patch->getSFCXFORTLowIndex();
     idxHi = patch->getSFCXFORTHighIndex();
-  //fortran call
-#ifdef WONT_COMPILE_YET
-    FORT_RBGSLISOLV(domLo.get_pointer(), domHi.get_pointer(),
-		    idxLo.get_pointer(), idxHi.get_pointer(),
-		    vars->uVelocity.getPointer(),
-		    vars->uVelocityCoeff[Arches::AP].getPointer(), 
-		    vars->uVelocityCoeff[Arches::AE].getPointer(), 
-		    vars->uVelocityCoeff[Arches::AW].getPointer(), 
-		    vars->uVelocityCoeff[Arches::AN].getPointer(), 
-		    vars->uVelocityCoeff[Arches::AS].getPointer(), 
-		    vars->uVelocityCoeff[Arches::AT].getPointer(), 
-		    vars->uVelocityCoeff[Arches::AB].getPointer(), 
-		    vars->uVelNonLinSrc.getPointer());
 
+    Size = domHi - domLo + IntVector(1,1,1);
 
-#endif
+    e1.resize(Size.x());
+    f1.resize(Size.x());
+    e2.resize(Size.y());
+    f2.resize(Size.y());
+    e3.resize(Size.z());
+    f3.resize(Size.z());
+
+    old_dw->get(resid, lab->d_uVelResidPSLabel);
+    old_dw->get(trunc, lab->d_uVelTruncPSLabel);
+
+    nlResid = resid;
+    trunc_conv = trunc*1.0E-7;
+
+    do {
+      //fortran call for lineGS solver
+      FORT_LINEGS(domLo.get_pointer(), domHi.get_pointer(),
+		  idxLo.get_pointer(), idxHi.get_pointer(),
+		  vars->uVelocity.getPointer(),
+		  vars->uVelocityCoeff[Arches::AE].getPointer(), 
+		  vars->uVelocityCoeff[Arches::AW].getPointer(), 
+		  vars->uVelocityCoeff[Arches::AN].getPointer(), 
+		  vars->uVelocityCoeff[Arches::AS].getPointer(), 
+		  vars->uVelocityCoeff[Arches::AT].getPointer(), 
+		  vars->uVelocityCoeff[Arches::AB].getPointer(), 
+		  vars->uVelocityCoeff[Arches::AP].getPointer(), 
+		  vars->uVelNonlinearSrc.getPointer(),
+		  e1.get_objs(), f1.get_objs(), e2.get_objs(), f2.get_objs(),
+		  e3.get_objs(), f3.get_objs(), &theta);
+
+      computeVelResidual(pc, patch, old_dw, new_dw, index, vars);
+      velResid = vars->residUVel;
+      ++velIter;
+    } while((velIter < d_maxSweeps)&&((velResid > d_residual*nlResid)||
+				      (velResid > trunc_conv)));
+    cerr << "After u Velocity solve " << velIter << " " << velResid << endl;
+    cerr << "After u Velocity solve " << nlResid << " " << trunc_conv <<  endl;
     break;
-    case Arches::YDIR:
+  case Arches::YDIR:
     domLo = vars->vVelocity.getFortLowIndex();
     domHi = vars->vVelocity.getFortHighIndex();
     idxLo = patch->getSFCYFORTLowIndex();
     idxHi = patch->getSFCYFORTHighIndex();
-  //fortran call
-#ifdef WONT_COMPILE_YET
-    FORT_RBGSLISOLV(domLo.get_pointer(), domHi.get_pointer(),
-		    idxLo.get_pointer(), idxHi.get_pointer(),
-		    vars->vVelocity.getPointer(),
-		    vars->vVelocityCoeff[Arches::AP].getPointer(), 
-		    vars->vVelocityCoeff[Arches::AE].getPointer(), 
-		    vars->vVelocityCoeff[Arches::AW].getPointer(), 
-		    vars->vVelocityCoeff[Arches::AN].getPointer(), 
-		    vars->vVelocityCoeff[Arches::AS].getPointer(), 
-		    vars->vVelocityCoeff[Arches::AT].getPointer(), 
-		    vars->vVelocityCoeff[Arches::AB].getPointer(), 
-		    vars->vVelNonLinSrc.getPointer());
 
+    Size = domHi - domLo + IntVector(1,1,1);
 
-#endif
+    e1.resize(Size.x());
+    f1.resize(Size.x());
+    e2.resize(Size.y());
+    f2.resize(Size.y());
+    e3.resize(Size.z());
+    f3.resize(Size.z());
+
+    old_dw->get(resid, lab->d_vVelResidPSLabel);
+    old_dw->get(trunc, lab->d_vVelTruncPSLabel);
+
+    nlResid = resid;
+    trunc_conv = trunc*1.0E-7;
+
+    do {
+      //fortran call for lineGS solver
+      FORT_LINEGS(domLo.get_pointer(), domHi.get_pointer(),
+		  idxLo.get_pointer(), idxHi.get_pointer(),
+		  vars->vVelocity.getPointer(),
+		  vars->vVelocityCoeff[Arches::AE].getPointer(), 
+		  vars->vVelocityCoeff[Arches::AW].getPointer(), 
+		  vars->vVelocityCoeff[Arches::AN].getPointer(), 
+		  vars->vVelocityCoeff[Arches::AS].getPointer(), 
+		  vars->vVelocityCoeff[Arches::AT].getPointer(), 
+		  vars->vVelocityCoeff[Arches::AB].getPointer(), 
+		  vars->vVelocityCoeff[Arches::AP].getPointer(), 
+		  vars->vVelNonlinearSrc.getPointer(),
+		  e1.get_objs(), f1.get_objs(), e2.get_objs(), f2.get_objs(),
+		  e3.get_objs(), f3.get_objs(), &theta);
+
+      computeVelResidual(pc, patch, old_dw, new_dw, index, vars);
+      velResid = vars->residVVel;
+      ++velIter;
+    } while((velIter < d_maxSweeps)&&((velResid > d_residual*nlResid)||
+				      (velResid > trunc_conv)));
+    cerr << "After v Velocity solve " << velIter << " " << velResid << endl;
+    cerr << "After v Velocity solve " << nlResid << " " << trunc_conv <<  endl;
     break;
-    case Arches::ZDIR:
+  case Arches::ZDIR:
     domLo = vars->wVelocity.getFortLowIndex();
     domHi = vars->wVelocity.getFortHighIndex();
     idxLo = patch->getSFCYFORTLowIndex();
     idxHi = patch->getSFCYFORTHighIndex();
-  //fortran call
-#ifdef WONT_COMPILE_YET
-    FORT_RBGSLISOLV(domLo.get_pointer(), domHi.get_pointer(),
-		    idxLo.get_pointer(), idxHi.get_pointer(),
-		    vars->wVelocity.getPointer(),
-		    vars->wVelocityCoeff[Arches::AP].getPointer(), 
-		    vars->wVelocityCoeff[Arches::AE].getPointer(), 
-		    vars->wVelocityCoeff[Arches::AW].getPointer(), 
-		    vars->wVelocityCoeff[Arches::AN].getPointer(), 
-		    vars->wVelocityCoeff[Arches::AS].getPointer(), 
-		    vars->wVelocityCoeff[Arches::AT].getPointer(), 
-		    vars->wVelocityCoeff[Arches::AB].getPointer(), 
-		    vars->wVelNonLinSrc.getPointer());
 
+    Size = domHi - domLo + IntVector(1,1,1);
 
+    e1.resize(Size.x());
+    f1.resize(Size.x());
+    e2.resize(Size.y());
+    f2.resize(Size.y());
+    e3.resize(Size.z());
+    f3.resize(Size.z());
 
-#endif
+    old_dw->get(resid, lab->d_wVelResidPSLabel);
+    old_dw->get(trunc, lab->d_wVelTruncPSLabel);
+
+    nlResid = resid;
+    trunc_conv = trunc*1.0E-7;
+
+    do {
+      //fortran call for lineGS solver
+      FORT_LINEGS(domLo.get_pointer(), domHi.get_pointer(),
+		  idxLo.get_pointer(), idxHi.get_pointer(),
+		  vars->wVelocity.getPointer(),
+		  vars->wVelocityCoeff[Arches::AE].getPointer(), 
+		  vars->wVelocityCoeff[Arches::AW].getPointer(), 
+		  vars->wVelocityCoeff[Arches::AN].getPointer(), 
+		  vars->wVelocityCoeff[Arches::AS].getPointer(), 
+		  vars->wVelocityCoeff[Arches::AT].getPointer(), 
+		  vars->wVelocityCoeff[Arches::AB].getPointer(), 
+		  vars->wVelocityCoeff[Arches::AP].getPointer(), 
+		  vars->wVelNonlinearSrc.getPointer(),
+		  e1.get_objs(), f1.get_objs(), e2.get_objs(), f2.get_objs(),
+		  e3.get_objs(), f3.get_objs(), &theta);
+
+      computeVelResidual(pc, patch, old_dw, new_dw, index, vars);
+      velResid = vars->residWVel;
+      ++velIter;
+    } while((velIter < d_maxSweeps)&&((velResid > d_residual*nlResid)||
+				      (velResid > trunc_conv)));
+    cerr << "After w Velocity solve " << velIter << " " << velResid << endl;
+    cerr << "After w Velocity solve " << nlResid << " " << trunc_conv <<  endl;
     break;
   default:
     throw InvalidValue("Invalid index in LinearSolver for velocity");
@@ -511,10 +588,10 @@ RBGSSolver::computeScalarResidual(const ProcessorGroup* ,
 // Actual calculation of order of magnitude term for Scalar equation
 //****************************************************************************
 void 
-RBGSSolver::computeScalarOrderOfMagnitude(const ProcessorGroup* pc,
-				const Patch* patch,
-				DataWarehouseP& old_dw,
-				DataWarehouseP& new_dw, ArchesVariables* vars)
+RBGSSolver::computeScalarOrderOfMagnitude(const ProcessorGroup* ,
+				const Patch* ,
+				DataWarehouseP& ,
+				DataWarehouseP& , ArchesVariables* )
 {
 
   //&vars->truncScalar
@@ -527,8 +604,8 @@ RBGSSolver::computeScalarOrderOfMagnitude(const ProcessorGroup* pc,
 void 
 RBGSSolver::computeScalarUnderrelax(const ProcessorGroup* ,
 				    const Patch* patch,
-				    DataWarehouseP& old_dw,
-				    DataWarehouseP& new_dw, 
+				    DataWarehouseP& ,
+				    DataWarehouseP& , 
 				    int index,
 				    ArchesVariables* vars)
 {
@@ -539,32 +616,25 @@ RBGSSolver::computeScalarUnderrelax(const ProcessorGroup* ,
   IntVector idxHi = patch->getCellFORTHighIndex();
 
   //fortran call
-#ifdef WONT_COMPILE_YET
   FORT_UNDERELAX(domLo.get_pointer(), domHi.get_pointer(),
 		 idxLo.get_pointer(), idxHi.get_pointer(),
 		 vars->scalar.getPointer(),
 		 vars->scalarCoeff[Arches::AP].getPointer(), 
-		 vars->scalarCoeff[Arches::AE].getPointer(), 
-		 vars->scalarCoeff[Arches::AW].getPointer(), 
-		 vars->scalarCoeff[Arches::AN].getPointer(), 
-		 vars->scalarCoeff[Arches::AS].getPointer(), 
-		 vars->scalarCoeff[Arches::AT].getPointer(), 
-		 vars->scalarCoeff[Arches::AB].getPointer(), 
-		 vars->scalarNonLinSrc.getPointer(), 
+		 vars->scalarNonlinearSrc.getPointer(),
 		 &d_underrelax);
-#endif
 }
 
 //****************************************************************************
 // Scalar Solve
 //****************************************************************************
 void 
-RBGSSolver::scalarLisolve(const ProcessorGroup* ,
+RBGSSolver::scalarLisolve(const ProcessorGroup* pc,
 			  const Patch* patch,
 			  DataWarehouseP& old_dw,
 			  DataWarehouseP& new_dw, 
 			  int index,
-			  ArchesVariables* vars)
+			  ArchesVariables* vars,
+			  const ArchesLabel* lab)
 {
   // Get the patch bounds and the variable bounds
   IntVector domLo = vars->scalar.getFortLowIndex();
@@ -572,25 +642,64 @@ RBGSSolver::scalarLisolve(const ProcessorGroup* ,
   IntVector idxLo = patch->getCellFORTLowIndex();
   IntVector idxHi = patch->getCellFORTHighIndex();
 
-#ifdef WONT_COMPILE_YET
-  //fortran call for red-black GS solver
-  FORT_RBGSLISOLV(domLo.get_pointer(), domHi.get_pointer(),
-		  idxLo.get_pointer(), idxHi.get_pointer(),
-		  vars->scalar.getPointer(),
-		  vars->scalarCoeff[Arches::AP].getPointer(), 
-		  vars->scalarCoeff[Arches::AE].getPointer(), 
-		  vars->scalarCoeff[Arches::AW].getPointer(), 
-		  vars->scalarCoeff[Arches::AN].getPointer(), 
-		  vars->scalarCoeff[Arches::AS].getPointer(), 
-		  vars->scalarCoeff[Arches::AT].getPointer(), 
-		  vars->scalarCoeff[Arches::AB].getPointer(), 
-		  vars->scalarNonLinSrc.getPointer());
-		  &d_underrelax);
-#endif
+  Array1<double> e1;
+  Array1<double> f1;
+  Array1<double> e2;
+  Array1<double> f2;
+  Array1<double> e3;
+  Array1<double> f3;
+
+  IntVector Size = domHi - domLo + IntVector(1,1,1);
+
+  e1.resize(Size.x());
+  f1.resize(Size.x());
+  e2.resize(Size.y());
+  f2.resize(Size.y());
+  e3.resize(Size.z());
+  f3.resize(Size.z());
+
+  sum_vartype resid;
+  sum_vartype trunc;
+
+  old_dw->get(resid, lab->d_scalarResidLabel);
+  old_dw->get(trunc, lab->d_scalarTruncLabel);
+
+  double nlResid = resid;
+  double trunc_conv = trunc*1.0E-7;
+  double theta = 0.5;
+  int scalarIter = 0;
+  double scalarResid = 0.0;
+
+  do {
+    //fortran call for lineGS solver
+    FORT_LINEGS(domLo.get_pointer(), domHi.get_pointer(),
+		idxLo.get_pointer(), idxHi.get_pointer(),
+		vars->scalar.getPointer(),
+		vars->scalarCoeff[Arches::AE].getPointer(), 
+		vars->scalarCoeff[Arches::AW].getPointer(), 
+		vars->scalarCoeff[Arches::AN].getPointer(), 
+		vars->scalarCoeff[Arches::AS].getPointer(), 
+		vars->scalarCoeff[Arches::AT].getPointer(), 
+		vars->scalarCoeff[Arches::AB].getPointer(), 
+		vars->scalarCoeff[Arches::AP].getPointer(), 
+		vars->scalarNonlinearSrc.getPointer(),
+		e1.get_objs(), f1.get_objs(), e2.get_objs(), f2.get_objs(),
+		e3.get_objs(), f3.get_objs(), &theta);
+    computeScalarResidual(pc, patch, old_dw, new_dw, index, vars);
+    scalarResid = vars->residScalar;
+    ++scalarIter;
+  } while((scalarIter < d_maxSweeps)&&((scalarResid > d_residual*nlResid)||
+				      (scalarResid > trunc_conv)));
+  cerr << "After scalar " << index <<" solve " << scalarIter << " " << scalarResid << endl;
+  cerr << "After scalar " << index <<" solve " << nlResid << " " << trunc_conv <<  endl;
+  
 }
 
 //
 // $Log$
+// Revision 1.18  2000/08/12 23:53:19  bbanerje
+// Added Linegs part to the solver.
+//
 // Revision 1.17  2000/08/11 21:26:36  rawat
 // added linear solver for pressure eqn
 //

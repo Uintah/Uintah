@@ -559,7 +559,7 @@ MomentumSolver::velocityLinearSolve(const ProcessorGroup* pc,
 				     d_velocityVars);
   // make it a separate task later
   d_linearSolver->velocityLisolve(pc, patch, new_dw, matrix_dw, index, 
-				     d_velocityVars);
+				     d_velocityVars, d_lab);
   // put back the results
   switch (index) {
   case Arches::XDIR:
@@ -590,6 +590,9 @@ MomentumSolver::velocityLinearSolve(const ProcessorGroup* pc,
   
 //
 // $Log$
+// Revision 1.24  2000/08/12 23:53:19  bbanerje
+// Added Linegs part to the solver.
+//
 // Revision 1.23  2000/08/10 21:29:09  rawat
 // fixed a bug in cellinformation
 //

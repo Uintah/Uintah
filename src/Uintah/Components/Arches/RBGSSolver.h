@@ -95,7 +95,9 @@ public:
       void pressLisolve(const ProcessorGroup* pc,
 			const Patch* patch,
 			DataWarehouseP& old_dw,
-			DataWarehouseP& new_dw, ArchesVariables* vars, const ArchesLabel* lab);
+			DataWarehouseP& new_dw, 
+			ArchesVariables* vars, 
+			const ArchesLabel* lab);
 
       ////////////////////////////////////////////////////////////////////////
       //
@@ -132,10 +134,11 @@ public:
       // Velocity Solve
       //
       void velocityLisolve(const ProcessorGroup* pc,
-				   const Patch* patch,
-				   DataWarehouseP& old_dw,
-				   DataWarehouseP& new_dw, int index,
-				   ArchesVariables* vars);
+			   const Patch* patch,
+			   DataWarehouseP& old_dw,
+			   DataWarehouseP& new_dw, int index,
+			   ArchesVariables* vars,
+			   const ArchesLabel* lab);
 
       ////////////////////////////////////////////////////////////////////////
       //
@@ -196,7 +199,8 @@ public:
 			 DataWarehouseP& old_dw,
 			 DataWarehouseP& new_dw, 
 			 int index,
-			 ArchesVariables* vars);
+			 ArchesVariables* vars,
+			 const ArchesLabel* lab);
 
 protected:
 
@@ -217,6 +221,9 @@ private:
   
 //
 // $Log$
+// Revision 1.17  2000/08/12 23:53:19  bbanerje
+// Added Linegs part to the solver.
+//
 // Revision 1.16  2000/08/11 21:26:36  rawat
 // added linear solver for pressure eqn
 //
