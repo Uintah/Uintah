@@ -143,8 +143,8 @@ void Scene::preprocess(double bvscale, int& pp_offset, int& scratchsize)
     if(lights[i]->radius > maxradius)
       maxradius=lights[i]->radius;
   for(;i<lights.size()+per_matl_lights.size(); i++)
-    if(per_matl_lights[i-lights.size()] > maxradius)
-      maxreadus=per_matl_lights[i-lights.size()]->radius;
+    if(per_matl_lights[i-lights.size()]->radius > maxradius)
+      maxradius=per_matl_lights[i-lights.size()]->radius;
   maxradius*=bvscale;
   double time=SCIRun::Time::currentSeconds();
   obj->preprocess(maxradius, pp_offset, scratchsize);
