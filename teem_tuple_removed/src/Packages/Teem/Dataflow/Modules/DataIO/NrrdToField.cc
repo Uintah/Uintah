@@ -675,21 +675,21 @@ NrrdToField::create_field_from_nrrds(NrrdDataHandle dataH, NrrdDataHandle points
 	    topology_ = STRUCTURED;
 	    geometry_ = REGULAR;
 	    if (offset && data->dim == 4) {
-	      if (has_min_pt)
+	      if (has_min_pt) 
 		minpt = Point ( data->axis[1].min, data->axis[2].min, data->axis[3].min);
 	      maxpt = Point( (data->axis[1].size - pt_off) * sp[0] + minpt.x(), 
 			     (data->axis[2].size - pt_off) * sp[1] + minpt.y(), 
-			     (data->axis[3].size - pt_off) * sp[3] + minpt.z());
+			     (data->axis[3].size - pt_off) * sp[2] + minpt.z());
 	      mHandle = scinew LatVolMesh( data->axis[1].size + mesh_off, 
 					   data->axis[2].size + mesh_off, 
 					   data->axis[3].size + mesh_off, 
 					   minpt, maxpt );
 	    } else {
-	      if (has_min_pt)
+	      if (has_min_pt) 
 		minpt = Point ( data->axis[0].min, data->axis[1].min, data->axis[2].min);
 	      maxpt = Point( (data->axis[0].size - pt_off) * sp[0] + minpt.x(), 
 			     (data->axis[1].size - pt_off) * sp[1] + minpt.y(), 
-			     (data->axis[2].size - pt_off) * sp[3] + minpt.z());
+			     (data->axis[2].size - pt_off) * sp[2] + minpt.z());
 	      mHandle = scinew LatVolMesh( data->axis[0].size + mesh_off, 
 					   data->axis[1].size + mesh_off, 
 					   data->axis[2].size + mesh_off, 
