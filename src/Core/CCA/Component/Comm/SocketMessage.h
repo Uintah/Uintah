@@ -15,18 +15,24 @@
   University of Utah. All Rights Reserved.
 */
 
-#ifndef SOCKET_MESSAGE_H
-#define SOCKET_MESSAGE_H 
+/*
+ *  SocketMessage.h: Socket implemenation of Message
+ *
+ *  Written by:
+ *   Kosta Damevski and Keming Zhang
+ *   Department of Computer Science
+ *   University of Utah
+ *   Jun 2003
+ *
+ *  Copyright (C) 1999 SCI Group
+ */
 
-#include <stdlib.h>
 
-///////////////////////////////
-//message layout
-//   [size(long)] [id (int)] [other marshaled segements]
-//
-//
+#ifndef CORE_CCA_COMPONENT_COMM_SOCKETMESSAGE_H
+#define CORE_CCA_COMPONENT_COMM_SOCKETMESSAGE_H
 
 #include <Core/CCA/Component/Comm/Message.h>
+#include <string>
 
 namespace SCIRun {
   class SocketEpChannel;
@@ -61,11 +67,29 @@ namespace SCIRun {
     void setSocketEp(SocketEpChannel* ep);
     void setSocketSp(SocketSpChannel* sp);
 
-    inline static int sendall(int sockfd, void *buf, int *len);
+    inline static int sendall(int sockfd, void *buf, int len);
+    inline static int recvall(int sockfd, void *buf, int len);
+
+
+    //static methods
+    static bool isLocal(const std::string& tag);
+    static void setSiteTag();
+    static std::string getSiteTag();
+    static std::string getHostname();
+
+    static std::string sitetag;  //  hostname:pid
+    static std::string hostname; // hostname;
+
+    //debug methods
+    void desplayMessage();
 
   private:
     inline void marshalBuf(const void *buf, int fullsize);
     inline void unmarshalBuf(void *buf, int fullsize);
+
+    ///////////////////////////////
+    //message layout
+    //   [size(long)] [id (int)] [other marshaled segements]
     void *msg;
     SocketEpChannel *ep;
     SocketSpChannel *sp;
@@ -73,6 +97,7 @@ namespace SCIRun {
     int msg_size;
     static const int INIT_SIZE=1024;
     int sockfd;  //the socket file descreptor through which the message is transmitted.
+    void *object;
   };
 }
 

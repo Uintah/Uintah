@@ -15,20 +15,21 @@
   University of Utah. All Rights Reserved.
 */
 
+
 /*
- *  QtUtils.cc:
+ *  SocketThread.h: Threads used by Socket communication channels
  *
  *  Written by:
  *   Keming Zhang
  *   Department of Computer Science
  *   University of Utah
- *   May 2003
+ *   Jun 2003
  *
+ *  Copyright (C) 1999 SCI Group
  */
 
-
-#ifndef SOCKET_THREAD_H
-#define SOCKET_THREAD_H 
+#ifndef CORE_CCA_COMPONENT_COMM_SOCKETTHREAD_H
+#define CORE_CCA_COMPONENT_COMM_SOCKETTHREAD_H
 
 #include <Core/Thread/Runnable.h>
 
@@ -42,7 +43,7 @@ namespace SCIRun{
     SocketThread(SocketEpChannel *ep, Message *msg, int id, int new_fd=-1);
     //id>=0, handlers
     //id==-1, accept
-    //id==-2, service...
+    //id==-2, service
     
     ~SocketThread() {}
     void run();

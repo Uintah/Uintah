@@ -15,10 +15,23 @@
   University of Utah. All Rights Reserved.
 */
 
+/*
+ *  SocketEpChannel.cc: Socket implemenation of Ep Channel
+ *
+ *  Written by:
+ *   Kosta Damevski and Keming Zhang
+ *   Department of Computer Science
+ *   University of Utah
+ *   Jun 2003
+ *
+ *  Copyright (C) 1999 SCI Group
+ */
+
+
+
 #include <iostream>
 #include <sstream>
 #include <unistd.h>
-#include <sys/time.h>
 #include <errno.h>
 #include <string.h>
 #include <sys/types.h>
@@ -43,7 +56,7 @@ using namespace std;
 using namespace SCIRun;
 
 SocketEpChannel::SocketEpChannel(){ 
-  //int new_fd;  // listen on sock_fd, new connection on new_fd
+  int new_fd;  // listen on sock_fd, new connection on new_fd
 
   struct sockaddr_in my_addr;    // my address information
   
@@ -70,7 +83,6 @@ SocketEpChannel::SocketEpChannel(){
 SocketEpChannel::~SocketEpChannel(){ 
   if(handler_table!=NULL) delete []handler_table;
   if(msg!=NULL) delete msg;
-  cerr<<"~SocketEpChannel"<<endl;
 }
 
 
@@ -111,7 +123,6 @@ void SocketEpChannel::activateConnection(void* obj){
 }
 
 Message* SocketEpChannel::getMessage() {
-  cerr<<"Ep getMessage() is called"<<endl;
   if (sockfd == 0)
     return NULL;
   if (msg == NULL)
@@ -131,15 +142,14 @@ SocketEpChannel::registerHandler(int num, void* handle){
 
 void 
 SocketEpChannel::bind(SpChannel* spchan){
-  cerr<<"****bind is called *****"<<endl;
-  spchan->openConnection(URL(getUrl()));
+  SocketSpChannel *chan=dynamic_cast<SocketSpChannel*>(spchan);
+  chan->ep_url=getUrl();
   //might save spchan for reference
 }
 
 
 void 
 SocketEpChannel::runAccept(){
-  //cerr<<"SocketAcceptThread is running\n";
   fd_set read_fds; // temp file descriptor list for select()
   struct timeval timeout;
   // add the listener to the master set
@@ -151,13 +161,12 @@ SocketEpChannel::runAccept(){
     if (select(sockfd+1, &read_fds, NULL, NULL, &timeout) == -1) {
       throw CommError("select", errno);
     }
-    //cerr<<"Still running..."<<endl;
     // run through the existing connections looking for data to read
     if(FD_ISSET(sockfd, &read_fds)){
       int new_fd;
       socklen_t sin_size = sizeof(struct sockaddr_in);
       sockaddr_in their_addr;
-      //cerr<<"Waiting for socket connections...\n";
+      //Waiting for socket connections ...;
       if ((new_fd = accept(sockfd, (struct sockaddr *)&their_addr,
 			   &sin_size)) == -1) {
 	throw CommError("accept", errno);
@@ -177,21 +186,12 @@ SocketEpChannel::runAccept(){
 
 void 
 SocketEpChannel::runService(int new_fd){
-  //cerr<<"SocketServiceThread is running\n";
-  bool done = false;
-  while( !done ){
+  while(true){
     int headerSize=sizeof(long)+sizeof(int);
     void *buf=malloc(headerSize);
     int numbytes=0;
-    while(numbytes==0){
-      if ((numbytes=recv(new_fd, buf, headerSize, MSG_WAITALL)) == -1) {
+    if (SocketMessage::recvall(new_fd, buf, headerSize) == -1) {
 	throw CommError("recv", errno);
-      }
-    }
-
-    if(numbytes!=headerSize){
-      //cerr<<"????? numbytes=, headerSize="<<numbytes<<", "<<headerSize<<endl;
-      CommError("numbytes!=headerSize",-1);
     }
 
     int msg_size;
@@ -199,33 +199,37 @@ SocketEpChannel::runService(int new_fd){
     memcpy(&msg_size, buf, sizeof(long));
     memcpy(&id, (char*)buf+sizeof(long), sizeof(int));
 
-    //cerr<<"=======RECV(runService)   msg_size, id="<<msg_size<<", "<<id<<endl;
+    //cerr<<"SERVICE RECV MSG:"<<msg_size<<" bytes, handlerID="<<id<<endl;
 
     buf=realloc(buf, msg_size-headerSize);
     numbytes=0;
-    while(numbytes==0 && msg_size-headerSize!=0){
-      if ((numbytes=recv(new_fd, buf, msg_size-headerSize, MSG_WAITALL)) == -1) {
-	throw CommError("recv", errno);
+    if((numbytes=SocketMessage::recvall(new_fd, buf, msg_size-headerSize)) == -1) {
+      throw CommError("recv", errno);
+    }
+
+
+
+    //filter internal messages
+    if(id<=-100){
+      if(id==-100){ //deleteReference
+	if(object==NULL) throw CommError("Access Null object", -1);
+	::SCIRun::ServerContext* _sc=static_cast< ::SCIRun::ServerContext*>(object);
+	_sc->d_objptr->deleteReference();
       }
     }
-    if(numbytes!=msg_size-headerSize) throw CommError("numbytes!=msg_size-headerSize",-1);
+    else{
+      SocketMessage* new_msg=new SocketMessage(new_fd, buf);
+      new_msg->setSocketEp(this);
+      //The SocketHandlerThread is responsible to free the buf.   
 
-    //if(msg!=NULL) delete msg;
-    SocketMessage* new_msg=new SocketMessage(new_fd, buf);
-    new_msg->setSocketEp(this);
-
-    Thread* t = new Thread(new SocketThread(this, new_msg, id, new_fd), "SocketHandlerThread", 0, Thread::Activated);
-    t->detach();
-
-    //sleep(2); //avoid the synchornization
-
-    //The SocketHandlerThread is responsible to free the buf.   
-
-    if(id==1){
-      close(new_fd);
-      break;
+      Thread* t = new Thread(new SocketThread(this, new_msg, id, new_fd), "SocketHandlerThread", 0, Thread::Activated);
+      t->detach();
+      if(id==1){
+	close(new_fd);
+	break;
+      }
     }
-  } // end while
-} // end runService()
+  }  
+}
 
 

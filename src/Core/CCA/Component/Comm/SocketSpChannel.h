@@ -15,9 +15,21 @@
   University of Utah. All Rights Reserved.
 */
 
+/*
+ *  SocketSpChannel.h: Socket implemenation of Sp Channel
+ *
+ *  Written by:
+ *   Kosta Damevski and Keming Zhang
+ *   Department of Computer Science
+ *   University of Utah
+ *   Jun 2003
+ *
+ *  Copyright (C) 1999 SCI Group
+ */
 
-#ifndef SOCKET_SP_CHANNEL_H
-#define SOCKET_SP_CHANNEL_H 
+
+#ifndef CORE_CCA_COMPONENT_COMM_SOCKETSPCHANNEL_H
+#define CORE_CCA_COMPONENT_COMM_SOCKETSPCHANNEL_H
 
 #include <Core/CCA/Component/Comm/SpChannel.h>
 
@@ -25,6 +37,7 @@ namespace SCIRun {
   using namespace std;
   class SocketSpChannel : public SpChannel {
     friend class SocketMessage;
+    friend class SocketEpChannel;
   public:
 
     SocketSpChannel();
@@ -44,8 +57,14 @@ namespace SCIRun {
     // URL of the endpoint
     string ep_url;
 
+    /////////////
+    // The real message: size, handler_id, ...
     SocketMessage* msg; 
 
+
+    /////////////
+    // The server context object
+    void *object;
   };
 }
 

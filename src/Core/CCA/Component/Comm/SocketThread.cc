@@ -16,15 +16,17 @@
 */
 
 /*
- *  QtUtils.cc:
+ *  SocketThread.cc: Threads used by Socket communication channels
  *
  *  Written by:
  *   Keming Zhang
  *   Department of Computer Science
  *   University of Utah
- *   May 2003
+ *   Jun 2003
  *
+ *  Copyright (C) 1999 SCI Group
  */
+
 
 #include <iostream>
 #include <Core/Thread/Semaphore.h>
@@ -38,7 +40,7 @@
 using namespace SCIRun;
 using namespace std;
 
-static Semaphore* startup;
+//static Semaphore* startup;
   
 SocketThread::SocketThread(SocketEpChannel *ep, Message* msg, int id, int new_fd){
   this->ep=ep;
@@ -47,12 +49,11 @@ SocketThread::SocketThread(SocketEpChannel *ep, Message* msg, int id, int new_fd
   this->new_fd=new_fd;
 }
 
-
 void 
 SocketThread::run()
 {
   if(id==-1) ep->runAccept();
-  if(id==-2) ep->runService(new_fd);
+  else if(id==-2) ep->runService(new_fd);
   else{
     //cerr<<"calling handler #"<<id<<"\n";
     ep->handler_table[id](msg);
@@ -61,9 +62,10 @@ SocketThread::run()
       ::SCIRun::ServerContext* _sc=static_cast< ::SCIRun::ServerContext*>(ep->object);
       if(_sc->d_objptr->getRefCount()==0){
 	//cerr<<"calling accept_thread->exit()...";
-	ep->dead=true;
-	//ep->accept_thread->exit();
+	//ep->accept_thread->stop();
+	//ep->accept_thread->exits();
 	//cerr<<"Done";
+	ep->dead=true;
       }
     }
   }
