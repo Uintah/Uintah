@@ -256,26 +256,26 @@ RingWidget::redraw()
    
   if (mode_switches[0]->get_state())
   {
-    ((GeomTorus*)geometries[GeomRing])->move(variables[CenterVar]->point(),
-					     normal,
-					     variables[DistVar]->real(),
-					     0.5*widget_scale_);
+    geometry<GeomTorus*>(GeomRing)->move(variables[CenterVar]->point(),
+					 normal,
+					 variables[DistVar]->real(),
+					 0.5*widget_scale_);
   }
 
   if (mode_switches[1]->get_state())
   {
-    ((GeomSphere*)geometries[GeomPointU])->move(U, widget_scale_);
-    ((GeomSphere*)geometries[GeomPointR])->move(R, widget_scale_);
-    ((GeomSphere*)geometries[GeomPointD])->move(D, widget_scale_);
-    ((GeomSphere*)geometries[GeomPointL])->move(L, widget_scale_);
-    ((GeomCappedCylinder*)geometries[GeomResizeU])->move(U, U - (GetDownAxis() * 1.5 * widget_scale_),
-							 0.5*widget_scale_);
-    ((GeomCappedCylinder*)geometries[GeomResizeR])->move(R, R + (GetRightAxis() * 1.5 * widget_scale_),
-							 0.5*widget_scale_);
-    ((GeomCappedCylinder*)geometries[GeomResizeD])->move(D, D + (GetDownAxis() * 1.5 * widget_scale_),
-							 0.5*widget_scale_);
-    ((GeomCappedCylinder*)geometries[GeomResizeL])->move(L, L - (GetRightAxis() * 1.5 * widget_scale_),
-							 0.5*widget_scale_);
+    geometry<GeomSphere*>(GeomPointU)->move(U, widget_scale_);
+    geometry<GeomSphere*>(GeomPointR)->move(R, widget_scale_);
+    geometry<GeomSphere*>(GeomPointD)->move(D, widget_scale_);
+    geometry<GeomSphere*>(GeomPointL)->move(L, widget_scale_);
+    geometry<GeomCappedCylinder*>(GeomResizeU)->move(U, U - (GetDownAxis() * 1.5 * widget_scale_),
+						     0.5*widget_scale_);
+    geometry<GeomCappedCylinder*>(GeomResizeR)->move(R, R + (GetRightAxis() * 1.5 * widget_scale_),
+						     0.5*widget_scale_);
+    geometry<GeomCappedCylinder*>(GeomResizeD)->move(D, D + (GetDownAxis() * 1.5 * widget_scale_),
+						     0.5*widget_scale_);
+    geometry<GeomCappedCylinder*>(GeomResizeL)->move(L, L - (GetRightAxis() * 1.5 * widget_scale_),
+						     0.5*widget_scale_);
   }
 
   Vector slide(variables[SliderVar]->point()-variables[CenterVar]->point());
@@ -290,11 +290,10 @@ RingWidget::redraw()
   }
   if (mode_switches[2]->get_state())
   {
-    ((GeomCappedCylinder*)geometries[GeomSlider])->move(variables[SliderVar]->point()
-							- (slide * 0.3 * widget_scale_),
-							variables[SliderVar]->point()
-							+ (slide * 0.3 * widget_scale_),
-							1.1*widget_scale_);
+    geometry<GeomCappedCylinder*>(GeomSlider)->
+      move(variables[SliderVar]->point() - (slide * 0.3 * widget_scale_),
+	   variables[SliderVar]->point() + (slide * 0.3 * widget_scale_),
+	   1.1*widget_scale_);
   }
    
   ((DistanceConstraint*)constraints[ConstRC])->SetMinimum(1.6*widget_scale_);

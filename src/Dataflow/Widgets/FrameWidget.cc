@@ -274,23 +274,23 @@ FrameWidget::redraw()
   // draw the bars
   if (mode_switches[0]->get_state())
   {
-    ((GeomCylinder*)geometries[GeomCylU])->move(UL, UR, cylinderrad);
-    ((GeomCylinder*)geometries[GeomCylR])->move(UR, DR, cylinderrad);
-    ((GeomCylinder*)geometries[GeomCylD])->move(DR, DL, cylinderrad);
-    ((GeomCylinder*)geometries[GeomCylL])->move(DL, UL, cylinderrad);
-    ((GeomSphere*)geometries[GeomSPointUL])->move(UL, cylinderrad);
-    ((GeomSphere*)geometries[GeomSPointUR])->move(UR, cylinderrad);
-    ((GeomSphere*)geometries[GeomSPointDR])->move(DR, cylinderrad);
-    ((GeomSphere*)geometries[GeomSPointDL])->move(DL, cylinderrad);
+    geometry<GeomCylinder*>(GeomCylU)->move(UL, UR, cylinderrad);
+    geometry<GeomCylinder*>(GeomCylR)->move(UR, DR, cylinderrad);
+    geometry<GeomCylinder*>(GeomCylD)->move(DR, DL, cylinderrad);
+    geometry<GeomCylinder*>(GeomCylL)->move(DL, UL, cylinderrad);
+    geometry<GeomSphere*>(GeomSPointUL)->move(UL, cylinderrad);
+    geometry<GeomSphere*>(GeomSPointUR)->move(UR, cylinderrad);
+    geometry<GeomSphere*>(GeomSPointDR)->move(DR, cylinderrad);
+    geometry<GeomSphere*>(GeomSPointDL)->move(DL, cylinderrad);
   }
 
   // draw the rotation points
   if (mode_switches[1]->get_state())
   {
-    ((GeomSphere*)geometries[GeomPointU])->move(U, sphererad);
-    ((GeomSphere*)geometries[GeomPointR])->move(R, sphererad);
-    ((GeomSphere*)geometries[GeomPointD])->move(D, sphererad);
-    ((GeomSphere*)geometries[GeomPointL])->move(L, sphererad);
+    geometry<GeomSphere*>(GeomPointU)->move(U, sphererad);
+    geometry<GeomSphere*>(GeomPointR)->move(R, sphererad);
+    geometry<GeomSphere*>(GeomPointD)->move(D, sphererad);
+    geometry<GeomSphere*>(GeomPointL)->move(L, sphererad);
   }
 
   // draw the resize cylinders
@@ -299,10 +299,10 @@ FrameWidget::redraw()
     const Vector resizeR(GetRightAxis()*1.5*widget_scale_);
     const Vector resizeD(GetDownAxis()*1.5*widget_scale_);
       
-    ((GeomCappedCylinder*)geometries[GeomResizeU])->move(U, U - resizeD, resizerad);
-    ((GeomCappedCylinder*)geometries[GeomResizeR])->move(R, R + resizeR, resizerad);
-    ((GeomCappedCylinder*)geometries[GeomResizeD])->move(D, D + resizeD, resizerad);
-    ((GeomCappedCylinder*)geometries[GeomResizeL])->move(L, L - resizeR, resizerad);
+    geometry<GeomCappedCylinder*>(GeomResizeU)->move(U, U - resizeD, resizerad);
+    geometry<GeomCappedCylinder*>(GeomResizeR)->move(R, R + resizeR, resizerad);
+    geometry<GeomCappedCylinder*>(GeomResizeD)->move(D, D + resizeD, resizerad);
+    geometry<GeomCappedCylinder*>(GeomResizeL)->move(L, L - resizeR, resizerad);
   }
 
   // draw the sliders
@@ -310,12 +310,12 @@ FrameWidget::redraw()
   {
     Point SliderR(UL+GetRightAxis()*variables[SDistRVar]->real()*2.0);
     Point SliderD(UL+GetDownAxis()*variables[SDistDVar]->real()*2.0);
-    ((GeomCappedCylinder*)geometries[GeomSliderCylR])->move(SliderR - (GetRightAxis() * 0.3 * widget_scale_),
-							    SliderR + (GetRightAxis() * 0.3 * widget_scale_),
-							    1.1*widget_scale_);
-    ((GeomCappedCylinder*)geometries[GeomSliderCylD])->move(SliderD - (GetDownAxis() * 0.3 * widget_scale_),
-							    SliderD + (GetDownAxis() * 0.3 * widget_scale_),
-							    1.1*widget_scale_);
+    geometry<GeomCappedCylinder*>(GeomSliderCylR)->move(SliderR - (GetRightAxis() * 0.3 * widget_scale_),
+							SliderR + (GetRightAxis() * 0.3 * widget_scale_),
+							1.1*widget_scale_);
+    geometry<GeomCappedCylinder*>(GeomSliderCylD)->move(SliderD - (GetDownAxis() * 0.3 * widget_scale_),
+							SliderD + (GetDownAxis() * 0.3 * widget_scale_),
+							1.1*widget_scale_);
   }
 
   ((DistanceConstraint*)constraints[ConstRC])->SetMinimum(1.6*widget_scale_);

@@ -200,31 +200,30 @@ GaugeWidget::redraw()
   // Draw the cylinder
   if (mode_switches[0]->get_state())
   {
-    ((GeomCappedCylinder*)geometries[GeomShaft])->
-      move(L, R, 0.5*widget_scale_);
+    geometry<GeomCappedCylinder*>(GeomShaft)->move(L, R, 0.5*widget_scale_);
   }
 
   // Draw the balls
   if (mode_switches[1]->get_state())
   {
-    ((GeomSphere*)geometries[GeomPointL])->move(L, widget_scale_);
-    ((GeomSphere*)geometries[GeomPointR])->move(R, widget_scale_);
+    geometry<GeomSphere*>(GeomPointL)->move(L, widget_scale_);
+    geometry<GeomSphere*>(GeomPointR)->move(R, widget_scale_);
   }
 
   if (mode_switches[2]->get_state())
   {
-    ((GeomCappedCylinder*)geometries[GeomResizeL])->
+    geometry<GeomCappedCylinder*>(GeomResizeL)->
       move(L, L - (GetAxis() * 1.5 * widget_scale_), 0.5*widget_scale_);
-    ((GeomCappedCylinder*)geometries[GeomResizeR])->
+    geometry<GeomCappedCylinder*>(GeomResizeR)->
       move(R, R + (GetAxis() * 1.5 * widget_scale_), 0.5*widget_scale_);
   }
 
   if (mode_switches[3]->get_state())
   {
-    ((GeomCappedCylinder*)geometries[GeomSlider])
-      ->move(S - (GetAxis() * 0.3 * widget_scale_),
-	     S + (GetAxis() * 0.3 * widget_scale_),
-	     1.1*widget_scale_);
+    geometry<GeomCappedCylinder*>(GeomSlider)->
+      move(S - (GetAxis() * 0.3 * widget_scale_),
+	   S + (GetAxis() * 0.3 * widget_scale_),
+	   1.1*widget_scale_);
   }
    
   Vector v(GetAxis()), v1, v2;

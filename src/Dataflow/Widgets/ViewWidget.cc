@@ -262,48 +262,48 @@ ViewWidget::redraw()
 
   if (mode_switches[0]->get_state())
   {
-    ((GeomSphere*)geometries[GeomEye])->move(variables[EyeVar]->point(), sphererad);
-    ((GeomSphere*)geometries[GeomFore])->move(variables[ForeVar]->point(), sphererad);
-    ((GeomSphere*)geometries[GeomUp])->move(variables[UpVar]->point(), sphererad);
-    ((GeomSphere*)geometries[GeomLookAt])->move(variables[LookAtVar]->point(), sphererad);
-    ((GeomCylinder*)geometries[GeomShaft])->move(variables[EyeVar]->point(),
-						 variables[LookAtVar]->point(),
-						 cylinderrad);
-    ((GeomCylinder*)geometries[GeomUpVector])->move(variables[UpVar]->point(),
-						    variables[ForeVar]->point(),
-						    cylinderrad);
-    ((GeomCappedCylinder*)geometries[GeomResizeUp])->move(variables[UpVar]->point(),
-							  variables[UpVar]->point()
-							  + (GetUpAxis() * 1.5 * widget_scale_),
-							  cylinderrad);
-    ((GeomCappedCylinder*)geometries[GeomResizeEye])->move(variables[EyeVar]->point(),
-							   variables[EyeVar]->point()
-							   - (GetEyeAxis() * 1.5 * widget_scale_),
-							   cylinderrad);
+    geometry<GeomSphere*>(GeomEye)->move(variables[EyeVar]->point(), sphererad);
+    geometry<GeomSphere*>(GeomFore)->move(variables[ForeVar]->point(), sphererad);
+    geometry<GeomSphere*>(GeomUp)->move(variables[UpVar]->point(), sphererad);
+    geometry<GeomSphere*>(GeomLookAt)->move(variables[LookAtVar]->point(), sphererad);
+    geometry<GeomCylinder*>(GeomShaft)->move(variables[EyeVar]->point(),
+					     variables[LookAtVar]->point(),
+					     cylinderrad);
+    geometry<GeomCylinder*>(GeomUpVector)->move(variables[UpVar]->point(),
+						variables[ForeVar]->point(),
+						cylinderrad);
+    geometry<GeomCappedCylinder*>(GeomResizeUp)->
+      move(variables[UpVar]->point(),
+	   variables[UpVar]->point() + (GetUpAxis() * 1.5 * widget_scale_),
+	   cylinderrad);
+    geometry<GeomCappedCylinder*>(GeomResizeEye)->
+      move(variables[EyeVar]->point(),
+	   variables[EyeVar]->point() - (GetEyeAxis() * 1.5 * widget_scale_),
+	   cylinderrad);
   }
 
   if (mode_switches[1]->get_state())
   {
-    ((GeomSphere*)geometries[GeomPointUL])->move(GetFrontUL(), cylinderrad);
-    ((GeomSphere*)geometries[GeomPointUR])->move(GetFrontUR(), cylinderrad);
-    ((GeomSphere*)geometries[GeomPointDR])->move(GetFrontDR(), cylinderrad);
-    ((GeomSphere*)geometries[GeomPointDL])->move(GetFrontDL(), cylinderrad);
-    ((GeomSphere*)geometries[GeomCornerUL])->move(GetBackUL(), cylinderrad);
-    ((GeomSphere*)geometries[GeomCornerUR])->move(GetBackUR(), cylinderrad);
-    ((GeomSphere*)geometries[GeomCornerDR])->move(GetBackDR(), cylinderrad);
-    ((GeomSphere*)geometries[GeomCornerDL])->move(GetBackDL(), cylinderrad);
-    ((GeomCylinder*)geometries[GeomCylU])->move(GetFrontUL(), GetFrontUR(), cylinderrad);
-    ((GeomCylinder*)geometries[GeomCylR])->move(GetFrontUR(), GetFrontDR(), cylinderrad);
-    ((GeomCylinder*)geometries[GeomCylD])->move(GetFrontDR(), GetFrontDL(), cylinderrad);
-    ((GeomCylinder*)geometries[GeomCylL])->move(GetFrontDL(), GetFrontUL(), cylinderrad);
-    ((GeomCylinder*)geometries[GeomEdgeU])->move(GetBackUL(), GetBackUR(), cylinderrad);
-    ((GeomCylinder*)geometries[GeomEdgeR])->move(GetBackUR(), GetBackDR(), cylinderrad);
-    ((GeomCylinder*)geometries[GeomEdgeD])->move(GetBackDR(), GetBackDL(), cylinderrad);
-    ((GeomCylinder*)geometries[GeomEdgeL])->move(GetBackDL(), GetBackUL(), cylinderrad);
-    ((GeomCylinder*)geometries[GeomDiagUL])->move(GetFrontUL(), GetBackUL(), cylinderrad);
-    ((GeomCylinder*)geometries[GeomDiagUR])->move(GetFrontUR(), GetBackUR(), cylinderrad);
-    ((GeomCylinder*)geometries[GeomDiagDR])->move(GetFrontDR(), GetBackDR(), cylinderrad);
-    ((GeomCylinder*)geometries[GeomDiagDL])->move(GetFrontDL(), GetBackDL(), cylinderrad);
+    geometry<GeomSphere*>(GeomPointUL)->move(GetFrontUL(), cylinderrad);
+    geometry<GeomSphere*>(GeomPointUR)->move(GetFrontUR(), cylinderrad);
+    geometry<GeomSphere*>(GeomPointDR)->move(GetFrontDR(), cylinderrad);
+    geometry<GeomSphere*>(GeomPointDL)->move(GetFrontDL(), cylinderrad);
+    geometry<GeomSphere*>(GeomCornerUL)->move(GetBackUL(), cylinderrad);
+    geometry<GeomSphere*>(GeomCornerUR)->move(GetBackUR(), cylinderrad);
+    geometry<GeomSphere*>(GeomCornerDR)->move(GetBackDR(), cylinderrad);
+    geometry<GeomSphere*>(GeomCornerDL)->move(GetBackDL(), cylinderrad);
+    geometry<GeomCylinder*>(GeomCylU)->move(GetFrontUL(), GetFrontUR(), cylinderrad);
+    geometry<GeomCylinder*>(GeomCylR)->move(GetFrontUR(), GetFrontDR(), cylinderrad);
+    geometry<GeomCylinder*>(GeomCylD)->move(GetFrontDR(), GetFrontDL(), cylinderrad);
+    geometry<GeomCylinder*>(GeomCylL)->move(GetFrontDL(), GetFrontUL(), cylinderrad);
+    geometry<GeomCylinder*>(GeomEdgeU)->move(GetBackUL(), GetBackUR(), cylinderrad);
+    geometry<GeomCylinder*>(GeomEdgeR)->move(GetBackUR(), GetBackDR(), cylinderrad);
+    geometry<GeomCylinder*>(GeomEdgeD)->move(GetBackDR(), GetBackDL(), cylinderrad);
+    geometry<GeomCylinder*>(GeomEdgeL)->move(GetBackDL(), GetBackUL(), cylinderrad);
+    geometry<GeomCylinder*>(GeomDiagUL)->move(GetFrontUL(), GetBackUL(), cylinderrad);
+    geometry<GeomCylinder*>(GeomDiagUR)->move(GetFrontUR(), GetBackUR(), cylinderrad);
+    geometry<GeomCylinder*>(GeomDiagDR)->move(GetFrontDR(), GetBackDR(), cylinderrad);
+    geometry<GeomCylinder*>(GeomDiagDL)->move(GetFrontDL(), GetBackDL(), cylinderrad);
   }
 
   Vector spvec1(GetEyeAxis());

@@ -116,21 +116,21 @@ CrosshairWidget::redraw()
   Point center(variables[CenterVar]->point());
    
   if (mode_switches[0]->get_state())
-    ((GeomSphere*)geometries[GeomCenter])->move(center, widget_scale_);
+    geometry<GeomSphere*>(GeomCenter)->move(center, widget_scale_);
 
   if (mode_switches[1]->get_state())
   {
     const double axislen(100.0*widget_scale_);
     const double axisrad(0.5*widget_scale_);
-    ((GeomCappedCylinder*)geometries[GeomAxis1])->move(center - (axis1 * axislen),
-						       center + (axis1 * axislen),
-						       axisrad);
-    ((GeomCappedCylinder*)geometries[GeomAxis2])->move(center - (axis2 * axislen),
-						       center + (axis2 * axislen),
-						       axisrad);
-    ((GeomCappedCylinder*)geometries[GeomAxis3])->move(center - (axis3 * axislen),
-						       center + (axis3 * axislen),
-						       axisrad);
+    geometry<GeomCappedCylinder*>(GeomAxis1)->move(center - (axis1 * axislen),
+						   center + (axis1 * axislen),
+						   axisrad);
+    geometry<GeomCappedCylinder*>(GeomAxis2)->move(center - (axis2 * axislen),
+						   center + (axis2 * axislen),
+						   axisrad);
+    geometry<GeomCappedCylinder*>(GeomAxis3)->move(center - (axis3 * axislen),
+						   center + (axis3 * axislen),
+						   axisrad);
   }
 
   for (Index geom = 0; geom < NumPcks; geom++)

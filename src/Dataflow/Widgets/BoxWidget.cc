@@ -414,37 +414,37 @@ BoxWidget::redraw()
   // draw the edges
   if (mode_switches[0]->get_state())
   {
-    ((GeomCylinder*)geometries[CylIU])->move(IUL, IUR, cylinderrad);
-    ((GeomCylinder*)geometries[CylIR])->move(IUR, IDR, cylinderrad);
-    ((GeomCylinder*)geometries[CylID])->move(IDR, IDL, cylinderrad);
-    ((GeomCylinder*)geometries[CylIL])->move(IDL, IUL, cylinderrad);
-    ((GeomCylinder*)geometries[CylMU])->move(IUL, OUL, cylinderrad);
-    ((GeomCylinder*)geometries[CylMR])->move(IUR, OUR, cylinderrad);
-    ((GeomCylinder*)geometries[CylMD])->move(IDR, ODR, cylinderrad);
-    ((GeomCylinder*)geometries[CylML])->move(IDL, ODL, cylinderrad);
-    ((GeomCylinder*)geometries[CylOU])->move(OUL, OUR, cylinderrad);
-    ((GeomCylinder*)geometries[CylOR])->move(OUR, ODR, cylinderrad);
-    ((GeomCylinder*)geometries[CylOD])->move(ODR, ODL, cylinderrad);
-    ((GeomCylinder*)geometries[CylOL])->move(ODL, OUL, cylinderrad);
-    ((GeomSphere*)geometries[SmallSphereIUL])->move(IUL, cylinderrad);
-    ((GeomSphere*)geometries[SmallSphereIUR])->move(IUR, cylinderrad);
-    ((GeomSphere*)geometries[SmallSphereIDR])->move(IDR, cylinderrad);
-    ((GeomSphere*)geometries[SmallSphereIDL])->move(IDL, cylinderrad);
-    ((GeomSphere*)geometries[SmallSphereOUL])->move(OUL, cylinderrad);
-    ((GeomSphere*)geometries[SmallSphereOUR])->move(OUR, cylinderrad);
-    ((GeomSphere*)geometries[SmallSphereODR])->move(ODR, cylinderrad);
-    ((GeomSphere*)geometries[SmallSphereODL])->move(ODL, cylinderrad);
+    geometry<GeomCylinder*>(CylIU)->move(IUL, IUR, cylinderrad);
+    geometry<GeomCylinder*>(CylIR)->move(IUR, IDR, cylinderrad);
+    geometry<GeomCylinder*>(CylID)->move(IDR, IDL, cylinderrad);
+    geometry<GeomCylinder*>(CylIL)->move(IDL, IUL, cylinderrad);
+    geometry<GeomCylinder*>(CylMU)->move(IUL, OUL, cylinderrad);
+    geometry<GeomCylinder*>(CylMR)->move(IUR, OUR, cylinderrad);
+    geometry<GeomCylinder*>(CylMD)->move(IDR, ODR, cylinderrad);
+    geometry<GeomCylinder*>(CylML)->move(IDL, ODL, cylinderrad);
+    geometry<GeomCylinder*>(CylOU)->move(OUL, OUR, cylinderrad);
+    geometry<GeomCylinder*>(CylOR)->move(OUR, ODR, cylinderrad);
+    geometry<GeomCylinder*>(CylOD)->move(ODR, ODL, cylinderrad);
+    geometry<GeomCylinder*>(CylOL)->move(ODL, OUL, cylinderrad);
+    geometry<GeomSphere*>(SmallSphereIUL)->move(IUL, cylinderrad);
+    geometry<GeomSphere*>(SmallSphereIUR)->move(IUR, cylinderrad);
+    geometry<GeomSphere*>(SmallSphereIDR)->move(IDR, cylinderrad);
+    geometry<GeomSphere*>(SmallSphereIDL)->move(IDL, cylinderrad);
+    geometry<GeomSphere*>(SmallSphereOUL)->move(OUL, cylinderrad);
+    geometry<GeomSphere*>(SmallSphereOUR)->move(OUR, cylinderrad);
+    geometry<GeomSphere*>(SmallSphereODR)->move(ODR, cylinderrad);
+    geometry<GeomSphere*>(SmallSphereODL)->move(ODL, cylinderrad);
   }
 
   // draw the rotating points
   if (mode_switches[1]->get_state())
   {
-    ((GeomSphere*)geometries[SphereR])->move(R, sphererad);
-    ((GeomSphere*)geometries[SphereL])->move(L, sphererad);
-    ((GeomSphere*)geometries[SphereD])->move(D, sphererad);
-    ((GeomSphere*)geometries[SphereU])->move(U, sphererad);
-    ((GeomSphere*)geometries[SphereI])->move(I, sphererad);
-    ((GeomSphere*)geometries[SphereO])->move(O, sphererad);
+    geometry<GeomSphere*>(SphereR)->move(R, sphererad);
+    geometry<GeomSphere*>(SphereL)->move(L, sphererad);
+    geometry<GeomSphere*>(SphereD)->move(D, sphererad);
+    geometry<GeomSphere*>(SphereU)->move(U, sphererad);
+    geometry<GeomSphere*>(SphereI)->move(I, sphererad);
+    geometry<GeomSphere*>(SphereO)->move(O, sphererad);
   }
 
   // draw the resizing cylinders
@@ -454,12 +454,12 @@ BoxWidget::redraw()
     const Vector resizeD(GetDownAxis()*1.5*widget_scale_);
     const Vector resizeI(GetInAxis()*1.5*widget_scale_);
       
-    ((GeomCappedCylinder*)geometries[GeomResizeR])->move(R, R + resizeR, resizerad);
-    ((GeomCappedCylinder*)geometries[GeomResizeL])->move(L, L - resizeR, resizerad);
-    ((GeomCappedCylinder*)geometries[GeomResizeD])->move(D, D + resizeD, resizerad);
-    ((GeomCappedCylinder*)geometries[GeomResizeU])->move(U, U - resizeD, resizerad);
-    ((GeomCappedCylinder*)geometries[GeomResizeI])->move(I, I + resizeI, resizerad);
-    ((GeomCappedCylinder*)geometries[GeomResizeO])->move(O, O - resizeI, resizerad);
+    geometry<GeomCappedCylinder*>(GeomResizeR)->move(R, R + resizeR, resizerad);
+    geometry<GeomCappedCylinder*>(GeomResizeL)->move(L, L - resizeR, resizerad);
+    geometry<GeomCappedCylinder*>(GeomResizeD)->move(D, D + resizeD, resizerad);
+    geometry<GeomCappedCylinder*>(GeomResizeU)->move(U, U - resizeD, resizerad);
+    geometry<GeomCappedCylinder*>(GeomResizeI)->move(I, I + resizeI, resizerad);
+    geometry<GeomCappedCylinder*>(GeomResizeO)->move(O, O - resizeI, resizerad);
   }
 
   // draw the sliders
@@ -468,15 +468,15 @@ BoxWidget::redraw()
     Point SliderR(OUL+GetRightAxis()*variables[SDistRVar]->real()*2.0);
     Point SliderD(OUL+GetDownAxis()*variables[SDistDVar]->real()*2.0);
     Point SliderI(OUL+GetInAxis()*variables[SDistIVar]->real()*2.0);
-    ((GeomCappedCylinder*)geometries[SliderCylR])->move(SliderR - (GetRightAxis() * 0.3 * widget_scale_),
-							SliderR + (GetRightAxis() * 0.3 * widget_scale_),
-							1.1*widget_scale_);
-    ((GeomCappedCylinder*)geometries[SliderCylD])->move(SliderD - (GetDownAxis() * 0.3 * widget_scale_),
-							SliderD + (GetDownAxis() * 0.3 * widget_scale_),
-							1.1*widget_scale_);
-    ((GeomCappedCylinder*)geometries[SliderCylI])->move(SliderI - (GetInAxis() * 0.3 * widget_scale_),
-							SliderI + (GetInAxis() * 0.3 * widget_scale_),
-							1.1*widget_scale_);
+    geometry<GeomCappedCylinder*>(SliderCylR)->move(SliderR - (GetRightAxis() * 0.3 * widget_scale_),
+						    SliderR + (GetRightAxis() * 0.3 * widget_scale_),
+						    1.1*widget_scale_);
+    geometry<GeomCappedCylinder*>(SliderCylD)->move(SliderD - (GetDownAxis() * 0.3 * widget_scale_),
+						    SliderD + (GetDownAxis() * 0.3 * widget_scale_),
+						    1.1*widget_scale_);
+    geometry<GeomCappedCylinder*>(SliderCylI)->move(SliderI - (GetInAxis() * 0.3 * widget_scale_),
+						    SliderI + (GetInAxis() * 0.3 * widget_scale_),
+						    1.1*widget_scale_);
   }
 
   Right.normalize();

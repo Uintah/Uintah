@@ -308,37 +308,41 @@ CriticalPointWidget::redraw()
 
   if (mode_switches[0]->get_state())
   {
-    ((GeomSphere*)geometries[GeomPoint])->move(center, sphererad);
-    ((GeomCylinder*)geometries[GeomShaft])->move(center, center+direct*twocenoff, cylinderrad);
-    ((GeomCappedCone*)geometries[GeomHead])->move(center+direct*twocenoff,
-						  center+direct*(twocenoff+2.0*widget_scale_),
-						  sphererad, 0);
+    geometry<GeomSphere*>(GeomPoint)->move(center, sphererad);
+    geometry<GeomCylinder*>(GeomShaft)->move(center, center+direct*twocenoff, cylinderrad);
+    geometry<GeomCappedCone*>(GeomHead)->move(center+direct*twocenoff,
+					      center+direct*(twocenoff+2.0*widget_scale_),
+					      sphererad, 0);
   }
    
   if (mode_switches[1]->get_state())
   {
-    ((GeomCappedCylinder*)geometries[GeomCylinder1])->move(cylinder1end1, cylinder1end2, rad);
-    ((GeomCappedCylinder*)geometries[GeomCylinder2])->move(cylinder2end1, cylinder2end2, rad);
-    ((GeomCappedCylinder*)geometries[GeomCylinder3])->move(cylinder3end1, cylinder3end2, rad);
-    ((GeomCappedCylinder*)geometries[GeomCylinder4])->move(cylinder4end1, cylinder4end2, rad);
+    geometry<GeomCappedCylinder*>(GeomCylinder1)->move(cylinder1end1, cylinder1end2, rad);
+    geometry<GeomCappedCylinder*>(GeomCylinder2)->move(cylinder2end1, cylinder2end2, rad);
+    geometry<GeomCappedCylinder*>(GeomCylinder3)->move(cylinder3end1, cylinder3end2, rad);
+    geometry<GeomCappedCylinder*>(GeomCylinder4)->move(cylinder4end1, cylinder4end2, rad);
   }
   if (mode_switches[2]->get_state())
   {
-    ((GeomTorusArc*)geometries[GeomTorus1])->move(torus1center, direct, cenoff, rad, v1,
-						  torus1start, torusangle);
-    ((GeomTorusArc*)geometries[GeomTorus2])->move(torus2center, direct, cenoff, rad, v1,
-						  torus2start, torusangle);
-    ((GeomTorusArc*)geometries[GeomTorus3])->move(torus3center, direct, cenoff, rad, v1,
-						  torus3start, torusangle);
-    ((GeomTorusArc*)geometries[GeomTorus4])->move(torus4center, direct, cenoff, rad, v1,
-						  torus4start, torusangle);
+    geometry<GeomTorusArc*>(GeomTorus1)->move(torus1center, direct,
+					      cenoff, rad, v1,
+					      torus1start, torusangle);
+    geometry<GeomTorusArc*>(GeomTorus2)->move(torus2center, direct,
+					      cenoff, rad, v1,
+					      torus2start, torusangle);
+    geometry<GeomTorusArc*>(GeomTorus3)->move(torus3center, direct,
+					      cenoff, rad, v1,
+					      torus3start, torusangle);
+    geometry<GeomTorusArc*>(GeomTorus4)->move(torus4center, direct,
+					      cenoff, rad, v1,
+					      torus4start, torusangle);
   }
   if (mode_switches[3]->get_state())
   {
-    ((GeomCappedCone*)geometries[GeomCone1])->move(cone1end1, cone1end2, conerad, 0);
-    ((GeomCappedCone*)geometries[GeomCone2])->move(cone2end1, cone2end2, conerad, 0);
-    ((GeomCappedCone*)geometries[GeomCone3])->move(cone3end1, cone3end2, conerad, 0);
-    ((GeomCappedCone*)geometries[GeomCone4])->move(cone4end1, cone4end2, conerad, 0);
+    geometry<GeomCappedCone*>(GeomCone1)->move(cone1end1, cone1end2, conerad, 0);
+    geometry<GeomCappedCone*>(GeomCone2)->move(cone2end1, cone2end2, conerad, 0);
+    geometry<GeomCappedCone*>(GeomCone3)->move(cone3end1, cone3end2, conerad, 0);
+    geometry<GeomCappedCone*>(GeomCone4)->move(cone4end1, cone4end2, conerad, 0);
   }
    
   for (Index geom = 0; geom < NumPcks; geom++)

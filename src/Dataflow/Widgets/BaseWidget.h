@@ -137,9 +137,17 @@ protected:
 
   vector<BaseConstraint*> constraints;
   vector<BaseVariable*>   variables;
-  vector<GeomObj*>        geometries;
+  vector<GeomHandle>      geometries;
   vector<GeomPick*>       picks;
   vector<GeomMaterial*>   materials;
+
+  template <class T> T geometry(int i) {
+    ASSERT(geometries[i].get_rep());
+    T tmp = dynamic_cast<T>(geometries[i].get_rep());
+    ASSERT(tmp);
+    return tmp;
+  }
+      
 
   enum {Mode0,Mode1,Mode2,Mode3,Mode4,Mode5,Mode6,Mode7,Mode8,Mode9};
   vector<long>        modes;
@@ -171,7 +179,7 @@ protected:
   // tcl command in args[1], params in args[2], args[3], ...
   virtual void widget_tcl( GuiArgs& );
 
-  void CreateModeSwitch( const Index snum, GeomObj* o );
+  void CreateModeSwitch( const Index snum, GeomHandle o );
   void SetMode( const Index mode, const long swtchs );
   void SetNumModes(int num) { modes.resize(num); }
   void FinishWidget();

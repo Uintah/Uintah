@@ -101,8 +101,8 @@ PointWidget::redraw()
 {
   if (mode_switches[0]->get_state())
   {
-    ((GeomSphere*)geometries[GeomPoint])->move(variables[PointVar]->point(),
-					       widget_scale_);
+    geometry<GeomSphere*>(GeomPoint)->move(variables[PointVar]->point(),
+					   widget_scale_);
   }
 }
 
