@@ -10,6 +10,7 @@
 #include <Packages/rtrt/Core/LambertianMaterial.h>
 #include <Packages/rtrt/Core/Scene.h>
 #include <Packages/rtrt/Core/VolumeVis.h>
+#include <Packages/rtrt/Core/HVolumeVis.h>
 #include <Packages/rtrt/Core/VolumeVisDpy.h>
 #include <Packages/rtrt/Core/CutPlane.h>
 #include <Packages/rtrt/Core/PlaneDpy.h>
@@ -25,6 +26,10 @@
 using namespace std;
 using namespace rtrt;
 using SCIRun::Thread;
+
+// Whether or not to use the HVolumeVis code
+static bool use_hvolume = false;
+static int np = 1;
 
 void get_material(Array1<Color> &matls, Array1<AlphaPos> &alphas) {
 
@@ -317,11 +322,17 @@ VolumeVisBase *create_volume_from_nrrd(char *filename,
 
   cout << "minP = "<<minP<<", maxP = "<<maxP<<endl;
 
-  return new VolumeVis<float>(data, data_min, data_max,
-			      nx, ny, nz,
-			      minP, maxP,
-			      spec_coeff, ambient, diffuse,
-			      specular, dpy);
+  if (!use_hvolume)
+    return new VolumeVis<float>(data, data_min, data_max,
+				nx, ny, nz,
+				minP, maxP,
+				spec_coeff, ambient, diffuse,
+				specular, dpy);
+  else
+    return new HVolumeVis<float,VMCell<float> >(data, data_min, data_max,
+						2, minP, maxP, dpy,
+						spec_coeff, ambient, diffuse,
+						specular, np);
 }  
 
 VolumeVisBase *create_volume_default(int scene_type, double val,
@@ -404,11 +415,17 @@ VolumeVisBase *create_volume_default(int scene_type, double val,
   if (override_data_max)
     data_max = data_max_in;
 
-  return new VolumeVis<float>(data, data_min, data_max,
-			      nx, ny, nz,
-			      minP, maxP,
-			      spec_coeff, ambient, diffuse,
-			      specular, dpy);
+  if (!use_hvolume)
+    return new VolumeVis<float>(data, data_min, data_max,
+				nx, ny, nz,
+				minP, maxP,
+				spec_coeff, ambient, diffuse,
+				specular, dpy);
+  else
+    return new HVolumeVis<float,VMCell<float> >(data, data_min, data_max,
+						2, minP, maxP, dpy,
+						spec_coeff, ambient, diffuse,
+						specular, np);
 }
 
 #define RAINBOW_COLOR_MAP 0
@@ -416,7 +433,7 @@ VolumeVisBase *create_volume_default(int scene_type, double val,
 #define NRRD_COLOR_MAP 2
 
 extern "C" 
-Scene* make_scene(int argc, char* argv[], int /*nworkers*/)
+Scene* make_scene(int argc, char* argv[], int nworkers)
 {
   int nx = 20;
   int ny = 30;
@@ -528,6 +545,8 @@ Scene* make_scene(int argc, char* argv[], int /*nworkers*/)
       g = atof(argv[++i]);
       b = atof(argv[++i]);
       bgcolor = Color(r,g,b);
+    } else if(strcmp(argv[i], "-usehv")==0){
+      use_hvolume = true;
     } else {
       cerr << "Unknown option: " << argv[i] << '\n';
       cerr << "Valid options for scene: " << argv[0] << '\n';
@@ -553,6 +572,7 @@ Scene* make_scene(int argc, char* argv[], int /*nworkers*/)
       cerr << " -colormap nrrd [filename.nrrd] - read in a nrrd for the colormap with alphas\n";
       cerr << " -alpha [filename.nrrd] - read in a nrrd with just the alpha transfer function\n";
       cerr << " -bgcolor [float] [float] [float] - the three floats are r, g, b\n";
+      cerr << " -usehv - use the HVolumeVis code instead of VolumeVis.\n";
       return 0;
     }
   }
@@ -565,6 +585,10 @@ Scene* make_scene(int argc, char* argv[], int /*nworkers*/)
   
   Camera cam(Point(0.5,0.5,3), Point(0.5,0.5,0.5),
 	     Vector(0,1,0), 40.0);
+
+  // Make this global so that we don't have to pass a million
+  // parameters around.
+  np = nworkers;
   
   double ambient_scale=1.0;
   
