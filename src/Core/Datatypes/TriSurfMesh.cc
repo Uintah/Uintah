@@ -619,13 +619,6 @@ TriSurfMesh::compute_edges()
     }
   }
   synchronized_ |= EDGES_E;
-
-  Edge::array_type array;
-  get_edges(array, Face::index_type(0));
-  get_edges(array, Face::index_type(34));
-  get_edges(array, Face::index_type(130));
-  get_edges(array, Face::index_type(131));
-  get_edges(array, Face::index_type(132));
 }
 
 
