@@ -45,9 +45,6 @@ using namespace Uintah;
 using namespace SCIRun;
 using namespace std;
 
-//#define Y_ONLY
-#undef Y_ONLY
-
 static DebugStream cout_doing("IMPM", false);
 
 ImpMPM::ImpMPM(const ProcessorGroup* myworld) :
@@ -127,6 +124,8 @@ void ImpMPM::problemSetup(const ProblemSpecP& prob_spec, GridP& /*grid*/,
 
    if (con_type == "rigid"){
       d_rigid_body = true;
+      Vector defaultDir(1,1,1);
+      child->getWithDefault("direction",d_contact_dirs, defaultDir);
    }
    else if (con_type == "single_velocity"){
       d_single_velocity = true;
@@ -945,11 +944,9 @@ void ImpMPM::rigidBody(const ProcessorGroup*,
         for (NodeIterator iter = patch->getNodeIterator(); !iter.done();iter++){
           IntVector n = *iter;
           if(!compare(mass_rigid[n],0.0)){
-#ifdef Y_ONLY
-            dispNew[n] = Vector(0.0,vel_rigid[n].y()*dt,0.0);
-#else
-            dispNew[n] = vel_rigid[n]*dt;  // ALL Components
-#endif
+            dispNew[n] = Vector(vel_rigid[n].x()*dt*d_contact_dirs.x(),
+                                vel_rigid[n].y()*dt*d_contact_dirs.y(),
+                                vel_rigid[n].z()*dt*d_contact_dirs.z());
           }
         }
       }
@@ -1262,11 +1259,9 @@ void ImpMPM::computeContact(const ProcessorGroup*,
         for (NodeIterator iter = patch->getNodeIterator(); !iter.done();iter++){
           IntVector c = *iter;
           if(!compare(mass_rigid[c],0.0)){
-#ifdef Y_ONLY
-            dispNew[c]=Vector(0.0,vel_rigid[c].y()*dt,0.0);
-#else
-            dispNew[c] = vel_rigid[c]*dt;  // ALL Components
-#endif
+            dispNew[c] = Vector(vel_rigid[c].x()*dt*d_contact_dirs.x(),
+                                vel_rigid[c].y()*dt*d_contact_dirs.y(),
+                                vel_rigid[c].z()*dt*d_contact_dirs.z());
             contact[n][c] = 2;
           }
         }
@@ -1315,14 +1310,17 @@ void ImpMPM::findFixedDOF(const ProcessorGroup*,
             d_solver[m]->d_DOF.insert(dof[1]);
             d_solver[m]->d_DOF.insert(dof[2]);
           }
-          if (contact[n] > 0) {  // Contact imposed on these nodes
-#ifdef Y_ONLY
-            d_solver[m]->d_DOF.insert(dof[1]);
-#else
+          if (contact[n] == 1) {  // Single Vel Contact imposed on these nodes
             d_solver[m]->d_DOF.insert(dof[0]);
             d_solver[m]->d_DOF.insert(dof[1]);
             d_solver[m]->d_DOF.insert(dof[2]);
-#endif
+          }
+          if (contact[n] == 2) {  // Rigid Contact imposed on these nodes
+            for(int i=0;i<3;i++){
+              if(d_contact_dirs[i]==1){
+               d_solver[m]->d_DOF.insert(dof[i]);  // specifically, these DOFs
+              }
+            }
           }
         }
     }
@@ -1695,12 +1693,13 @@ void ImpMPM::updateGridKinematics(const ProcessorGroup*,
         for (NodeIterator iter = patch->getNodeIterator();!iter.done();iter++){
 	  IntVector n = *iter;
           if(contact[n]==2){
-#ifdef Y_ONLY
-              dispNew[n] = Vector(dispNew[n].x(),velocity_rig[n].y()*dt,
-                                  dispNew[n].z());
-#else
-            dispNew[n]  = velocity_rig[n]*dt;
-#endif
+            dispNew[n] = Vector((1.-d_contact_dirs.x())*dispNew[n].x() +
+                                d_contact_dirs.x()*velocity_rig[n].x()*dt,
+                                (1.-d_contact_dirs.y())*dispNew[n].y() +
+                                d_contact_dirs.y()*velocity_rig[n].y()*dt,
+                                (1.-d_contact_dirs.z())*dispNew[n].z() +
+                                d_contact_dirs.z()*velocity_rig[n].z()*dt);
+
             velocity[n] = dispNew[n]*(2./dt) - oneifdyn*velocity_old[n];
           } // if contact == 2
         } // for
