@@ -12,6 +12,7 @@ SRCS     += $(SRCDIR)/SerialMPM.cc \
 
 SUBDIRS := $(SRCDIR)/ConstitutiveModel $(SRCDIR)/Contact \
 	$(SRCDIR)/Fracture \
+	$(SRCDIR)/Fracture \
 	$(SRCDIR)/ThermalContact \
 	$(SRCDIR)/Burn \
 	$(SRCDIR)/GeometrySpecification $(SRCDIR)/Util
@@ -27,6 +28,9 @@ include $(SRCTOP)/scripts/smallso_epilogue.mk
 
 #
 # $Log$
+# Revision 1.14  2000/06/20 23:23:02  tan
+# Added HeatConduction directory.
+#
 # Revision 1.13  2000/06/02 23:09:13  jas
 # Added Burn directory.
 #
