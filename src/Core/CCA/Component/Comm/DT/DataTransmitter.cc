@@ -148,100 +148,17 @@ DataTransmitter::getMessage(DTPoint *pt){
 
 void 
 DataTransmitter::run(){
-  Thread *listening_thread = new Thread(new DTThread(this, 0), "Data Transmitter Listening Thread", 0, Thread::Activated);
-  listening_thread->detach();
+  //at most 10 waiting clients
+  if (listen(sockfd, 10) == -1){ 
+    throw CommError("listen", errno);
+  }
+  //cerr<<"DataTransmitter is Listening: URL="<<getUrl()<<endl;
 
   Thread *sending_thread = new Thread(new DTThread(this, 1), "Data Transmitter Sending Thread", 0, Thread::Activated);
   sending_thread->detach();
 
   Thread *recving_thread = new Thread(new DTThread(this, 2), "Data Transmitter Recving Thread", 0, Thread::Activated);
   recving_thread->detach();
-}
-
-void 
-DataTransmitter::runListeningThread(){
-  //at most 10 waiting clients
-  if (listen(sockfd, 10) == -1){ 
-    throw CommError("listen", errno);
-  }
-
-  //cerr<<"DataTransmitter is Listening: URL="<<getUrl()<<endl;
-
-  fd_set read_fds; // temp file descriptor list for select()
-  struct timeval timeout;
-  // add the listener to the master set
-
-  while(!quit){
-    timeout.tv_sec=0;
-    timeout.tv_usec=500000;
-    //response for quit is half second, which is reasonable for
-    //most cases.
-    FD_ZERO(&read_fds);
-    FD_SET(sockfd, &read_fds);
-    if (select(sockfd+1, &read_fds, NULL, NULL, &timeout) == -1) {
-      throw CommError("select", errno);
-    }
-    // check the new connection requests
-    if(FD_ISSET(sockfd, &read_fds)){
-      int new_fd;
-      socklen_t sin_size = sizeof(struct sockaddr_in);
-      sockaddr_in their_addr;
-      //Waiting for socket connections ...;
-      if ((new_fd = accept(sockfd, (struct sockaddr *)&their_addr,
-			   &sin_size)) == -1) {
-	throw CommError("accept", errno);
-      }
-
-      static int protocol_id = -1;
-#if defined(__sgi)
-      // SGI does not have SOL_TCP defined.  To the best of my knowledge
-      // (ie: reading the man page) this is what you are supposed to do. (Dd)
-      if( protocol_id == -1 )
-	{
-	  struct protoent * p = getprotobyname("TCP");
-	  if( p == NULL )
-	    {
-	      cout << "DataTransmitter.cc: Error.  Lookup of protocol TCP failed!\n";
-	      exit();
-	      return;
-	    }
-	  protocol_id = p->p_proto;
-	}
-#else
-      protocol_id = SOL_TCP;
-#endif
-
-      int yes = 1;
-      if( setsockopt( new_fd, protocol_id, TCP_NODELAY, &yes, sizeof(int) ) == -1 ) {
-	perror("setsockopt");
-      }
-
-      //immediately register the new process address
-      //there is no way to get the remote listening port number,
-      //so it has to be sent explcitly.
-      DTAddress newAddr;
-      newAddr.ip=their_addr.sin_addr.s_addr;
-      short listPort;
-      newAddr.port=ntohs(their_addr.sin_port);
-      recvall(new_fd, &(newAddr.port), sizeof(short));
-      sockmap_mutex->lock();
-      sockmap[newAddr]=new_fd;
-      sockmap_mutex->unlock();
-    }
-  }
-  close(sockfd);
-  sockfd=-1;
-  //TODO: need a neat way to close the sockets
-  //using the internal messages: 
-  //if recved the close-connection request, send ACK and close
-  //if send the close-connection request, wait until ACK 
-  //  or peer's close-connection request.
-
-  for(SocketMap::iterator iter=sockmap.begin(); iter!=sockmap.end(); iter++){
-    //should wait sending and receving threads to finish
-    //close(iter->second);
-    //shutdown(iter->second, SHUT_RDWR);
-  }
 }
 
 
@@ -330,7 +247,10 @@ DataTransmitter::runRecvingThread(){
     timeout.tv_usec=20000;
     FD_ZERO(&read_fds);
     // add the listener to the master set
-    int maxfd=0;
+    int maxfd=sockfd;
+    FD_SET(sockfd, &read_fds);
+
+    // add all other sockets into read_fds
     for(SocketMap::iterator iter=sockmap.begin(); iter!=sockmap.end(); iter++){
       FD_SET(iter->second, &read_fds);
       if(maxfd<iter->second) maxfd=iter->second;
@@ -338,6 +258,7 @@ DataTransmitter::runRecvingThread(){
     if (select(maxfd+1, &read_fds, NULL, NULL, &timeout) == -1) {
       throw CommError("select", errno);
     }
+
     // run through the existing connections looking for data to read
     for(SocketMap::iterator iter=sockmap.begin(); iter!=sockmap.end(); iter++){
       if(FD_ISSET(iter->second, &read_fds)){
@@ -380,6 +301,69 @@ DataTransmitter::runRecvingThread(){
 	}
       }
     }
+    
+    
+    // check the new connection requests
+    if(FD_ISSET(sockfd, &read_fds)){
+      int new_fd;
+      socklen_t sin_size = sizeof(struct sockaddr_in);
+      sockaddr_in their_addr;
+      //Waiting for socket connections ...;
+      if ((new_fd = accept(sockfd, (struct sockaddr *)&their_addr,
+			   &sin_size)) == -1) {
+	throw CommError("accept", errno);
+      }
+      
+      static int protocol_id = -1;
+#if defined(__sgi)
+      // SGI does not have SOL_TCP defined.  To the best of my knowledge
+      // (ie: reading the man page) this is what you are supposed to do. (Dd)
+      if( protocol_id == -1 )
+	{
+	  struct protoent * p = getprotobyname("TCP");
+	  if( p == NULL )
+	    {
+	      cout << "DataTransmitter.cc: Error.  Lookup of protocol TCP failed!\n";
+	      exit();
+	      return;
+	    }
+	  protocol_id = p->p_proto;
+	}
+#else
+      protocol_id = SOL_TCP;
+#endif
+      
+      int yes = 1;
+      if( setsockopt( new_fd, protocol_id, TCP_NODELAY, &yes, sizeof(int) ) == -1 ) {
+	perror("setsockopt");
+      }
+      
+      //immediately register the new process address
+      //there is no way to get the remote listening port number,
+      //so it has to be sent explcitly.
+      DTAddress newAddr;
+      newAddr.ip=their_addr.sin_addr.s_addr;
+      short listPort;
+      newAddr.port=ntohs(their_addr.sin_port);
+      recvall(new_fd, &(newAddr.port), sizeof(short));
+      sockmap_mutex->lock();
+      sockmap[newAddr]=new_fd;
+      sockmap_mutex->unlock();
+    }
+  }
+
+  close(sockfd);
+  sockfd=-1;
+  //TODO: need a neat way to close the sockets
+  //using the internal messages: 
+  //if recved the close-connection request, send ACK and close
+  //if send the close-connection request, wait until ACK 
+  //  or peer's close-connection request.
+
+  for(SocketMap::iterator iter=sockmap.begin(); iter!=sockmap.end(); iter++){
+    //should wait sending and receving threads to finish
+    //close(iter->second);
+    //shutdown(iter->second, SHUT_RDWR);
   }
 }
 
@@ -444,5 +428,5 @@ DataTransmitter::isLocal(DTAddress& addr)
 void 
 DataTransmitter::exit(){
   quit=true;
-  sendQ_cond->conditionSignal(); //awake the sendingThread
+  sendQ_cond->conditionSignal(); //wake up the sendingThread
 }

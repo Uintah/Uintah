@@ -55,12 +55,12 @@ using namespace std;
 using namespace SCIRun;
 
 SocketSpChannel::SocketSpChannel() { 
-  sp=new DTPoint;
+  sp=new DTPoint(PIDL::getDT());
   ep=NULL;
 }
 
 SocketSpChannel::SocketSpChannel(SocketSpChannel &spchan) { 
-  sp=new DTPoint;
+  sp=new DTPoint(PIDL::getDT());
   ep=spchan.ep;
   ep_addr=spchan.ep_addr;
 }
