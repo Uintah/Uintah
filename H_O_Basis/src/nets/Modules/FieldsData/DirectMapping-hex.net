@@ -1,0 +1,188 @@
+# SCIRun Network v1.23.0
+
+# The MIT License
+# 
+# Copyright (c) 2004 Scientific Computing and Imaging Institute,
+# University of Utah.
+# 
+# License for the specific language governing rights and limitations under
+# Permission is hereby granted, free of charge, to any person obtaining a 
+# copy of this software and associated documentation files (the "Software"),
+# to deal in the Software without restriction, including without limitation 
+# the rights to use, copy, modify, merge, publish, distribute, sublicense, 
+# and/or sell copies of the Software, and to permit persons to whom the 
+# Software is furnished to do so, subject to the following conditions:
+# 
+# The above copyright notice and this permission notice shall be included 
+# in all copies or substantial portions of the Software.
+# 
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS 
+# OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, 
+# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL 
+# THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER 
+# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING 
+# FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER 
+# DEALINGS IN THE SOFTWARE.
+# 
+
+set name {Main}
+set bbox {72 5 739 533}
+set creationDate {Thu Aug 12 2004}
+set creationTime {14:53:59}
+set runDate {}
+set runTime {}
+set notes {}
+
+# Create a SCIRun->FieldsCreate->SampleLattice Module
+set m1 [addModuleAtPosition "SCIRun" "FieldsCreate" "SampleLattice" 78 5]
+
+# Create a SCIRun->FieldsData->TransformData Module
+set m2 [addModuleAtPosition "SCIRun" "FieldsData" "TransformData" 246 145]
+
+# Create a SCIRun->FieldsGeometry->ChangeFieldBounds Module
+set m3 [addModuleAtPosition "SCIRun" "FieldsGeometry" "ChangeFieldBounds" 88 214]
+
+# Create a SCIRun->FieldsCreate->SamplePlane Module
+set m4 [addModuleAtPosition "SCIRun" "FieldsCreate" "SamplePlane" 114 281]
+
+# Create a SCIRun->FieldsData->DirectInterpolate Module
+set m5 [addModuleAtPosition "SCIRun" "FieldsData" "DirectInterpolate" 72 351]
+
+# Create a SCIRun->Visualization->ShowField Module
+set m6 [addModuleAtPosition "SCIRun" "Visualization" "ShowField" 166 422]
+
+# Create a SCIRun->Visualization->GenStandardColorMaps Module
+set m7 [addModuleAtPosition "SCIRun" "Visualization" "GenStandardColorMaps" 339 241]
+
+# Create a SCIRun->Visualization->RescaleColorMap Module
+set m8 [addModuleAtPosition "SCIRun" "Visualization" "RescaleColorMap" 307 335]
+
+# Create a SCIRun->Render->Viewer Module
+set m9 [addModuleAtPosition "SCIRun" "Render" "Viewer" 137 489]
+
+# Create a SCIRun->FieldsCreate->Probe Module
+set m10 [addModuleAtPosition "SCIRun" "FieldsCreate" "Probe" 574 231]
+
+# Create a SCIRun->FieldsGeometry->Unstructure Module
+set m11 [addModuleAtPosition "SCIRun" "FieldsGeometry" "Unstructure" 156 79]
+
+# Create the Connections between Modules
+set c1 [addConnection $m1 0 $m11 0]
+set c2 [addConnection $m5 0 $m6 0]
+set c3 [addConnection $m2 0 $m10 0]
+set c4 [addConnection $m2 0 $m3 0]
+set c5 [addConnection $m3 0 $m4 0]
+set c6 [addConnection $m3 0 $m5 0]
+set c7 [addConnection $m3 1 $m9 0]
+set c8 [addConnection $m11 0 $m2 0]
+set c9 [addConnection $m7 0 $m8 0]
+set c10 [addConnection $m4 0 $m5 1]
+set c11 [addConnection $m2 0 $m8 1]
+set c12 [addConnection $m8 0 $m6 1]
+set c13 [addConnection $m6 0 $m9 1]
+
+# Set GUI variables for the SCIRun->FieldsData->TransformData Module
+set $m2-function {result = x*x + y*y;
+}
+
+# Set GUI variables for the SCIRun->FieldsGeometry->ChangeFieldBounds Module
+set $m3-outputcenterx {0.0}
+set $m3-outputcentery {0.0}
+set $m3-outputcenterz {0.237368734794}
+set $m3-outputsizex {1.52361595656}
+set $m3-outputsizey {1.75791589139}
+set $m3-outputsizez {1.99457441303}
+set $m3-box-scale {0.0519615242271}
+set $m3-box-center-x {0.0}
+set $m3-box-center-y {0.0}
+set $m3-box-center-z {0.237368734794}
+set $m3-box-right-x {0.761807978281}
+set $m3-box-right-y {-0.299969299267}
+set $m3-box-right-z {0.811535107656}
+set $m3-box-down-x {0.454636419344}
+set $m3-box-down-y {0.878957945697}
+set $m3-box-down-z {0.0933595132076}
+set $m3-box-in-x {-0.571008241064}
+set $m3-box-in-y {0.458747427468}
+set $m3-box-in-z {1.23465594131}
+
+# Set GUI variables for the SCIRun->FieldsCreate->SamplePlane Module
+set $m4-sizex {200}
+set $m4-sizey {200}
+
+# Set GUI variables for the SCIRun->FieldsData->DirectInterpolate Module
+set $m5-exhaustive_search {0}
+
+# Set GUI variables for the SCIRun->Visualization->ShowField Module
+set $m6-nodes-on {0}
+set $m6-edges-on {0}
+set $m6-has_scalar_data {1}
+set $m6-active_tab {Faces}
+set $m6-scalars_scale {0.3}
+
+# Set GUI variables for the SCIRun->Visualization->RescaleColorMap Module
+set $m8-min {0.00888888888889}
+set $m8-max {2.0}
+
+$m9 addViewer
+set $m9-ViewWindow_0-geometry 654x645+621+23
+
+# Set GUI variables for the SCIRun->Render->Viewer Module
+set $m9-ViewWindow_0-caxes {0}
+set $m9-ViewWindow_0-raxes {1}
+set $m9-ViewWindow_0-have_collab_vis {0}
+set $m9-ViewWindow_0-view-eyep-x {11.7576968551}
+set $m9-ViewWindow_0-view-eyep-y {0.977279935698}
+set $m9-ViewWindow_0-view-eyep-z {6.53520694628}
+set $m9-ViewWindow_0-view-lookat-x {0.0}
+set $m9-ViewWindow_0-view-lookat-y {0.0}
+set $m9-ViewWindow_0-view-lookat-z {0.0}
+set $m9-ViewWindow_0-view-up-x {-0.162334407342}
+set $m9-ViewWindow_0-view-up-y {0.975855177478}
+set $m9-ViewWindow_0-view-up-z {0.146130807093}
+set $m9-ViewWindow_0-view-fov {20.0}
+set $m9-ViewWindow_0-trackViewWindow0 {1}
+set $m9-ViewWindow_0-global-light0 {1}
+set $m9-ViewWindow_0-global-light1 {0}
+set $m9-ViewWindow_0-global-light2 {0}
+set $m9-ViewWindow_0-global-light3 {0}
+set $m9-ViewWindow_0-lightColors {{1.0 1.0 1.0} {1.0 1.0 1.0} {1.0 1.0 1.0} {1.0 1.0 1.0}}
+set $m9-ViewWindow_0-lightVectors {{ 0 0 1 } { 0 0 1 } { 0 0 1 } { 0 0 1 }}
+set $m9-ViewWindow_0-bgcolor-r {0.0}
+set $m9-ViewWindow_0-bgcolor-g {0.0}
+set $m9-ViewWindow_0-bgcolor-b {0.0}
+set $m9-ViewWindow_0-do_stereo {0}
+set $m9-ViewWindow_0-ambient-scale {1.0}
+set $m9-ViewWindow_0-diffuse-scale {1.0}
+set $m9-ViewWindow_0-specular-scale {0.4}
+set $m9-ViewWindow_0-emission-scale {1.0}
+set $m9-ViewWindow_0-shininess-scale {1.0}
+set $m9-ViewWindow_0-polygon-offset-factor {1.0}
+set $m9-ViewWindow_0-polygon-offset-units {0.0}
+set $m9-ViewWindow_0-point-size {1.0}
+set $m9-ViewWindow_0-line-width {1.0}
+set $m9-ViewWindow_0-sbase {0.4}
+set $m9-ViewWindow_0-sr {1}
+set $m9-ViewWindow_0-do_bawgl {0}
+set $m9-ViewWindow_0-global-light {1}
+set $m9-ViewWindow_0-global-fog {0}
+set $m9-ViewWindow_0-global-debug {0}
+set $m9-ViewWindow_0-global-clip {1}
+set $m9-ViewWindow_0-global-cull {0}
+set $m9-ViewWindow_0-global-dl {0}
+set $m9-ViewWindow_0-global-type {Gouraud}
+set $m9-ViewWindow_0-ortho-view {0}
+set $m9-ViewWindow_0-currentvisual {0}
+set "$m9-ViewWindow_0-ChangeFieldBounds Transform widget (1)" {1}
+set "$m9-ViewWindow_0-Faces (2)" {1}
+
+# Set GUI variables for the SCIRun->FieldsCreate->Probe Module
+set $m10-locx {0.0}
+set $m10-locy {0.0}
+set $m10-locz {0.0}
+set $m10-value {0.00888889}
+set $m10-node {2167}
+set $m10-cell {1687}
+
+
+::netedit scheduleok
