@@ -78,6 +78,7 @@ public:
   virtual void drawWireFrame() = 0;
   
   void Reload(){reload = (unsigned char *)1;}
+  void NewBricks(){ newbricks_ = true; }
 
   
 protected:
@@ -96,7 +97,9 @@ protected:
   const GLVolumeRenderer*  volren;
 
   GLuint* texName;
+  vector<GLuint> textureNames;
   unsigned char* reload;
+  bool newbricks_;
 };
 
 } // End namespace SCIRun

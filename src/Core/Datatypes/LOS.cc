@@ -39,6 +39,13 @@ LOS::draw()
 {
   Ray viewRay;
   Brick* brick;
+
+  if( newbricks_ ){
+    glDeleteTextures( textureNames.size(), &(textureNames[0]));
+    textureNames.clear();
+    newbricks_ = false;
+  }
+
   computeView(viewRay);
   
   LOSIterator it( volren->tex.get_rep(), viewRay,  volren->controlPoint);
