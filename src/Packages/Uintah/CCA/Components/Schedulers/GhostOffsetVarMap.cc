@@ -7,37 +7,57 @@ using namespace std;
 using namespace Uintah;
 
 void GhostOffsetVarMap::includeOffsets(const VarLabel* var,
-					Ghost::GhostType gtype,
-					int numGhostCells)
+				       const MaterialSubset* matls,
+				       const PatchSubset* patches,
+				       Ghost::GhostType gtype,
+				       int numGhostCells)
 {
-  Offsets& offsets = map_[var];
   IntVector lowOffset, highOffset;
   TypeDescription::Type varType = var->typeDescription()->getType();
   Patch::getGhostOffsets(varType, gtype, numGhostCells,
-			 lowOffset, highOffset); 
-  offsets.encompassOffsets(lowOffset, highOffset);
+			 lowOffset, highOffset);
+  for (int p = 0; p < patches->size(); p++) {
+    const Patch* patch = patches->get(p);
+    for (int m = 0; m < matls->size(); m++) {
+      VarLabelMatlPatch vmp(var, matls->get(m), patch);
+      Offsets& offsets = map_[vmp];  
+      offsets.encompassOffsets(lowOffset, highOffset);
+    }
+  }
 }
 
-void GhostOffsetVarMap::getExtents(const VarLabel* var, const Patch* patch,
-				   Ghost::GhostType gtype, int numGhostCells,
-				   IntVector& lowIndex,
-				   IntVector& highIndex) const
+void GhostOffsetVarMap::
+getExtents(const VarLabelMatlPatch& vmp,
+	   Ghost::GhostType requestedGType, int requestedNumGhostCells,
+	   IntVector& requiredLow, IntVector& requiredHigh,	   
+	   IntVector& requestedLow, IntVector& requestedHigh) const
 {
   IntVector lowOffset, highOffset;
+  const VarLabel* var = vmp.label_;
+  const Patch* patch = vmp.patch_;  
   Patch::VariableBasis basis =
     Patch::translateTypeToBasis(var->typeDescription()->getType(), true);
   Offsets offsets; // defaults to (0,0,0), (0,0,0)
-  Map::const_iterator foundIter = map_.find(var);
+  Map::const_iterator foundIter = map_.find(vmp);
   if (foundIter != map_.end()) {
     offsets = (*foundIter).second;
   }
 
-  Patch::getGhostOffsets(var->typeDescription()->getType(), gtype,
-			 numGhostCells, lowOffset, highOffset);
-  offsets.encompassOffsets(lowOffset, highOffset);
-  
+  // before taking the requested ghost cells into consideration
+  // (just those required by later tasks).
   offsets.getOffsets(lowOffset, highOffset);
-  patch->computeExtents(basis, lowOffset, highOffset, lowIndex, highIndex);  
+  patch->computeExtents(basis, lowOffset, highOffset,
+			requiredLow, requiredHigh);  
+
+  Patch::getGhostOffsets(var->typeDescription()->getType(),
+			 requestedGType, requestedNumGhostCells,
+			 lowOffset, highOffset);
+  offsets.encompassOffsets(lowOffset, highOffset);
+
+  // after taking the requested ghost cells into consideratio n 
+  offsets.getOffsets(lowOffset, highOffset);
+  patch->computeExtents(basis, lowOffset, highOffset,
+			requestedLow, requestedHigh);  
 }
 
 void GhostOffsetVarMap::Offsets::
