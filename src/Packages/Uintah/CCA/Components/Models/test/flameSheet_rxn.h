@@ -4,6 +4,12 @@
 
 #include <Packages/Uintah/CCA/Ports/ModelInterface.h>
 #include <Packages/Uintah/Core/Grid/ComputeSet.h>
+#include <Packages/Uintah/Core/Grid/CCVariable.h>
+#include <Packages/Uintah/Core/Grid/SFCXVariable.h>
+#include <Packages/Uintah/Core/Grid/SFCYVariable.h>
+#include <Packages/Uintah/Core/Grid/SFCZVariable.h>
+#include <Packages/Uintah/Core/Grid/VarTypes.h>
+
 #include <map>
 #include <vector>
 
@@ -74,6 +80,24 @@ WARNING
 	       const MaterialSubset* matls, DataWarehouse*, 
 	       DataWarehouse* new_dw, const ModelInfo*);
 
+template <class T> 
+   void q_diffusion(CellIterator iter, 
+                    IntVector adj_offset,
+                    const double diffusivity,
+                    const double dx,   
+                    const CCVariable<double>& q_CC,
+                    T& q_FC);
+                    
+   void computeQ_diffusion_FC(DataWarehouse* new_dw,
+                              const Patch* patch,
+                              const CCVariable<double>& rho_CC,      
+                              const CCVariable<double>& sp_vol_CC,   
+                              const CCVariable<double>& q_CC,
+                              const double diffusivity,
+                              SFCXVariable<double>& q_X_FC,
+                              SFCYVariable<double>& q_Y_FC,
+                              SFCZVariable<double>& q_Z_FC);
+
     flameSheet_rxn(const flameSheet_rxn&);
     flameSheet_rxn& operator=(const flameSheet_rxn&);
 
@@ -106,6 +130,7 @@ WARNING
     double d_cp;
     double d_T_oxidizer_inf;
     double d_T_fuel_init;
+    double d_diffusivity;
     SimulationStateP sharedState;
   };
 }
