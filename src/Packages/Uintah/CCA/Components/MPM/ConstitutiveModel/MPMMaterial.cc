@@ -69,6 +69,7 @@ MPMMaterial::MPMMaterial(ProblemSpecP& ps, MPMLabel* lb, int n8or27,
     d_particle_creator = scinew ShellParticleCreator(this,lb,n8or27,
 		                                     haveLoadCurve,
 						     doErosion);
+
   else
     d_particle_creator = scinew DefaultParticleCreator(this,lb,n8or27,
 						       haveLoadCurve,
