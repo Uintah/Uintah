@@ -25,8 +25,14 @@ prog-MeshToJAS:
 prog-SFRGfile:
 	@$(MAKE) --no-print-directory SRCS=SFRGfile.cc PROGRAM=SFRGfile SFRGfile
 
+prog-STreeToTris:
+	@$(MAKE) --no-print-directory SRCS=STreeToTris.cc PROGRAM=STreeToTris STreeToTris
+
 prog-SurfToJAS:
 	@$(MAKE) --no-print-directory SRCS=SurfToJAS.cc PROGRAM=SurfToJAS SurfToJAS
+
+prog-VDTtoMesh:
+	@$(MAKE) --no-print-directory SRCS=VDTtoMesh.cc PROGRAM=VDTtoMesh VDTtoMesh
 
 prog-WatsonToMesh:
 	@$(MAKE) --no-print-directory SRCS=WatsonToMesh.cc PROGRAM=WatsonToMesh WatsonToMesh
