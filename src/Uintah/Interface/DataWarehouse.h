@@ -71,7 +71,12 @@ WARNING
       virtual void setGrid(const GridP&)=0;
 
       virtual bool exists(const VarLabel*, int matlIndex, const Patch*) const =0;
-      
+
+      // Generic put, passing Variable as a pointer rather than by reference
+      // to avoid ambiguity with other put overloaded methods.
+      virtual void put(const Variable*, const VarLabel*, int matlIndex,
+		       const Patch*) = 0;
+     
       // Reduction Variables
       virtual void allocate(ReductionVariableBase&, const VarLabel*,
 			    int matlIndex = -1) = 0;
@@ -184,6 +189,9 @@ WARNING
 
 //
 // $Log$
+// Revision 1.44  2000/12/23 00:58:59  witzel
+// Added generic put(Variable*, ...) method
+//
 // Revision 1.43  2000/12/22 00:11:12  jas
 // Got rid of the X,Y,Z FCVariable stuff.
 //
