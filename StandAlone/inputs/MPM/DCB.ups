@@ -32,7 +32,7 @@
    </DataArchiver>
 
     <MPM>
-	<time_integrator>explicit</time_integrator>
+	<time_integrator>fracture</time_integrator>
 	<nodes8or27>8</nodes8or27>
     </MPM>
 
