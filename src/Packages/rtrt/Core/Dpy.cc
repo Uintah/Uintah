@@ -621,7 +621,7 @@ Dpy::renderFrame() {
     } else {
       // Display textual information on the screen:
       char buf[100];
-      sprintf( buf, "%3.1lf fps", priv->FrameRate );
+      sprintf( buf, "%3.1lf fps", (priv->FrameRate) );
       
       glMatrixMode(GL_PROJECTION);
       glLoadIdentity();

@@ -537,7 +537,7 @@ Gui::idleFunc()
 
     // Display textual information on the screen:
     char buf[100];
-    sprintf( buf, "%3.1lf fps", activeGui->priv->FrameRate );
+    sprintf( buf, "%3.1lf fps", (activeGui->priv->FrameRate) );
 
     bool redrawBG = false;
     if( dpy->fullScreenMode_ )

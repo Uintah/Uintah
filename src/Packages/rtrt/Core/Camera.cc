@@ -188,6 +188,7 @@ void Camera::getParams(Point& origin, Vector& direction,
 void
 Camera::followPath( Stealth & stealth )
 {
+  
   stealth.getNextLocation( eye, lookat);
   setup();
 }

@@ -35,6 +35,9 @@ protected:
   double refl;
   double transp;
   Array2<Color> image;
+  //this is for the alpha values
+  Array2<float> alpha;
+
   Color outcolor;
   bool valid_;
   string filename_;
@@ -68,6 +71,7 @@ public:
 		     Context* cx);
   bool valid() { return valid_; }
   Color interp_color(Array2<Color>& image, double u, double v);
+  //float return_alpha(Array2<float>& alpha, double u, double v)
   void set_refl(double r)
   {
     refl = r;

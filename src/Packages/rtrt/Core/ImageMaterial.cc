@@ -6,7 +6,14 @@
 #include <Core/Geometry/Point.h>
 #include <Packages/rtrt/Core/Ray.h>
 #include <Packages/rtrt/Core/Object.h>
+#include <Packages/rtrt/Core/Scene.h>
+#include <Packages/rtrt/Core/Stats.h>
+
+#include <Packages/rtrt/Core/Worker.h>
+#include <Packages/rtrt/Core/Context.h>
+#include <math.h>
 #include <Packages/rtrt/Core/PPMImage.h>
+#include <Packages/rtrt/Core/PNGImage.h>
 #include <iostream>
 #include <stdio.h>
 #include <fstream>
@@ -32,8 +39,11 @@ ImageMaterial::ImageMaterial(int, const string &texfile,
   umode(umode), vmode(vmode), Kd(Kd), specular(specular),
   specpow(specpow), refl(refl),  transp(0), valid_(false)
 {
+
+  //may have to include the png reader here but haven't done that yet!
     read_hdr_image(texfile);
     outcolor=Color(0,0,0);
+    
 }
 
 ImageMaterial::ImageMaterial(const string &texfile, ImageMaterial::Mode umode,
@@ -43,19 +53,45 @@ ImageMaterial::ImageMaterial(const string &texfile, ImageMaterial::Mode umode,
   umode(umode), vmode(vmode), Kd(Kd), specular(specular),
   specpow(specpow), refl(refl),  transp(0), valid_(false)
 {
-  filename_ = texfile;  // Save filename, mostly for debugging.
 
-  PPMImage ppm(texfile,flipped);
-  if (ppm.valid())  {
-    valid_=true;
-    int nu, nv;
-    ppm.get_dimensions_and_data(image, nu, nv);
-  } else {
+  filename_ = texfile;  // Save filename, mostly for debugging.
+  int string_length = texfile.length();
+
+  string sub_string = texfile.substr(string_length-3, 3);
+
+
+
+  if(sub_string == "ppm")
+  {
+    PPMImage ppm(texfile,flipped);
+    if (ppm.valid())  {
+      valid_=true;
+      int nu, nv;
+      ppm.get_dimensions_and_data(image, nu, nv);
+    }
+  }
+
+  else if(sub_string == "png")
+    {
+      PNGImage png(texfile,1);
+      if (png.valid()) {
+	valid_=true;
+	int nu, nv;
+	png.get_dimensions_and_data(image, alpha,nu, nv);
+
+      }
+    }
+
+        
+  else {
     cerr << "Error reading ImageMaterial: "<<texfile<<"\n";
     image.resize(3,3);
     image(0,0)=Color(1,0,1);
   }
   outcolor=Color(0,0,0);
+    
+  
+  
 }
 
 ImageMaterial::ImageMaterial(const string &texfile, ImageMaterial::Mode umode,
@@ -66,17 +102,42 @@ ImageMaterial::ImageMaterial(const string &texfile, ImageMaterial::Mode umode,
   umode(umode), vmode(vmode), specular(specular), Kd(Kd),
   specpow(specpow), refl(refl),  transp(transp), valid_(false)
 {
-  PPMImage ppm(texfile,flipped);
-  if (ppm.valid()) {
-      valid_=true;
-      int nu, nv;
-      ppm.get_dimensions_and_data(image, nu, nv);
-  } else {
+
+  
+  int string_length = texfile.length();
+  string sub_string = texfile.substr(string_length-3, 3);
+  if(sub_string == "ppm")
+    {
+      
+      PPMImage ppm(texfile,flipped);
+      if (ppm.valid()) {
+	valid_=true;
+	int nu, nv;
+	ppm.get_dimensions_and_data(image, nu, nv);
+      } 
+    }
+      
+  else if(sub_string == "png")
+    {
+      
+      
+      PNGImage png(texfile,1);
+      
+      if (png.valid()) {
+	valid_=true;
+	int nu, nv;
+	png.get_dimensions_and_data(image, alpha,nu, nv);
+	
+      } 
+    }
+  
+  else {
     cerr << "Error reading ImageMaterial: "<<texfile<<"\n";
     image.resize(3,3);
     image(0,0)=Color(1,0,1);
   }
   outcolor=Color(0,0,0);
+  
 }
 
 ImageMaterial::~ImageMaterial()
@@ -105,6 +166,27 @@ Color ImageMaterial::interp_color(Array2<Color>& image,
     return c;
 }
 
+float return_alpha(Array2<float>& alpha, double u, double v)
+{
+  
+  u *= (alpha.dim1()-3);
+  v *= (alpha.dim2()-3);
+  
+  int iu = (int)u;
+  int iv = (int)v;
+  
+  double tu = u-iu;
+  double tv = v-iv;
+
+  float alp = alpha(iu,iv)*(1-tu)*(1-tv)+
+	alpha(iu+1,iv)*tu*(1-tv)+
+	alpha(iu,iv+1)*(1-tu)*tv+
+	alpha(iu+1,iv+1)*tu*tv;
+
+  return alp;
+}
+  
+
 void ImageMaterial::shade(Color& result, const Ray& ray,
 			  const HitInfo& hit, int depth, 
 			  double atten, const Color& accumcolor,
@@ -114,9 +196,18 @@ void ImageMaterial::shade(Color& result, const Ray& ray,
     UV uv;
     Point hitpos(ray.origin()+ray.direction()*hit.min_t);
     map->uv(uv, hitpos, hit);
-    Color diffuse;
+    Color diffuse = Color(0.0,0.0,0.0);
+    Color  diffuse_temp;
     double u=uv.u()*uscale;
     double v=uv.v()*vscale;
+    Object* obj = cx->scene->get_object();
+    
+    Ray rray(hitpos, ray.direction());
+    HitInfo rhit;
+    
+   
+    
+
     switch(umode){
     case Nothing:
 	if(u<0 || u>1){
@@ -157,13 +248,54 @@ void ImageMaterial::shade(Color& result, const Ray& ray,
 	else if(v<0)
 	    v=0;
     };
+    
+     diffuse_temp = interp_color(image,u,v);
+    
+    if((alpha.dim1() == 0) && (alpha.dim2() == 0)) //for ppm files
+      {
+	
+	diffuse = diffuse_temp;
+      }
 
-    diffuse = interp_color(image,u,v);
+    else //for png files which has alpha values...
+      {
+	float current_alpha = return_alpha(alpha, u, v);
+	if(current_alpha == 1.0f) //if it is leaves
+	  {
+	    
+	    diffuse = diffuse_temp;
+	  }
+	
+	else //send a ray..........
+	  {
+	    
+	    
+	    diffuse = Color(0.0,0.0,0.0);
+	    if(depth < cx->scene->maxdepth)
+	    {
+		
 
-skip:
+		    double ratten = atten*(1.0-current_alpha); 
+		    Color rcolor;
+		       
+		    cx->worker->traceRay(rcolor, rray, depth+1, ratten,
+			   accumcolor+diffuse, cx);
+		    diffuse  +=   rcolor;
+
+		    goto skip2;
+		
+	    }
+	  }
+      }
+    
+ skip:
     phongshade(result, diffuse, specular, specpow, refl,
-                ray, hit, depth,  atten,
+	       ray, hit, depth,  atten,
                accumcolor, cx);
+    return;
+ skip2:
+    result = diffuse;
+    return;
 }
 
 void
@@ -234,3 +366,14 @@ void Pio(SCIRun::Piostream& stream, rtrt::ImageMaterial*& obj)
   }
 }
 } // end namespace SCIRun
+
+
+
+
+
+
+
+
+
+
+
