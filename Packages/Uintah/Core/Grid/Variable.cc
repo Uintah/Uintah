@@ -69,7 +69,7 @@ void Variable::emit(OutputContext& oc, string compressionMode)
 
     // then write the compressed data
     s = ::write(oc.fd, buffer, bufsize);
-    if(s != bufsize)
+    if(s != (long)bufsize)
       throw ErrnoException("Variable::emit (write call)", errno);
 
     oc.cur += bufsize;
@@ -102,6 +102,7 @@ void Variable::read(InputContext& ic, long end, string compressionMode)
   long datasize = end - ic.cur;
   string data;
   string bufferStr;
+  string* uncompressedData = &data;
 
   data.resize(datasize);
   // casting from const char* below to char* -- use caution
@@ -111,15 +112,14 @@ void Variable::read(InputContext& ic, long end, string compressionMode)
 
   
   ic.cur += datasize;
-  
-  istringstream instream(data);
 
   if (use_gzip) {
     // use gzip compression
 
     // first read the uncompressed data size
     unsigned long uncompressed_size;
-    instream.read((char*)&uncompressed_size, sizeof(unsigned long));
+    istringstream compressedStream(data);
+    compressedStream.read((char*)&uncompressed_size, sizeof(unsigned long));
     const char* compressed_data = data.c_str() + sizeof(unsigned long);
     long compressed_datasize = datasize - (long)sizeof(unsigned long);
 
@@ -131,14 +131,15 @@ void Variable::read(InputContext& ic, long end, string compressionMode)
 		   (const Bytef*)compressed_data, compressed_datasize) != Z_OK)
        cerr << "uncompress failed in Uintah::Variable::read\n";
 
-    instream.str(bufferStr);
+    uncompressedData = &bufferStr;
   }
 
+  istringstream instream(*uncompressedData);
   
   if (use_rle)
     readRLE(instream);
   else
     readNormal(instream);
   ASSERT(instream.fail() == 0);
-  ASSERT((unsigned long)instream.tellg() == instream.str().size());
+  ASSERT((unsigned long)instream.tellg() == uncompressedData->size());
 }
