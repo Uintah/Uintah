@@ -13,7 +13,8 @@ SRCDIR := Packages/MatlabInterface/Dataflow/GUI
 ALLTARGETS := $(ALLTARGETS) $(SRCDIR)/tclIndex
 
 $(SRCDIR)/tclIndex: \
-	$(SRCDIR)/VolumeRender.tcl\
+	$(SRCDIR)/MatrixSend.tcl\
+	$(SRCDIR)/MatrixReceive.tcl\
 #[INSERT NEW TCL FILE HERE]
 	$(SRCTOP)/scripts/createTclIndex $(SRCTOP)/Packages/MatlabInterface/Dataflow/GUI
 

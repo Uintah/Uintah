@@ -13,6 +13,8 @@ include $(SRCTOP)/scripts/smallso_prologue.mk
 SRCDIR   := Packages/MatlabInterface/Dataflow/Modules/DataIO
 
 SRCS     += \
+        $(SRCDIR)/MatrixReceive.cc \
+        $(SRCDIR)/MatrixSend.cc \
 #[INSERT NEW CODE FILE HERE]
 
 PSELIBS := Core/Datatypes Dataflow/Network Dataflow/Ports \
