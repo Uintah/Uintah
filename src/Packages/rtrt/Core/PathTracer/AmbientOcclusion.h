@@ -8,8 +8,8 @@
 
 */
 
-#include <Core/Packages/rtrt/Core/Array3.h>
-#include <Core/Packages/rtrt/Core/Array1.h>
+#include <Packages/rtrt/Core/Array3.h>
+#include <Packages/rtrt/Core/Array1.h>
 
 #include <Core/Geometry/Point.h>
 #include <Core/Geometry/Vector.h>
@@ -30,7 +30,11 @@ namespace rtrt {
 // threads.
 class AmbientOccContext {
 public:
-  AmbientOccContext();
+  AmbientOccContext(Object* geom,
+                    const Point& min, const Point& max,
+                    int nx, int ny, int nz,
+                    int num_samples,
+                    Background* bg);
   
   // This is the object for which we will be computing the ambient
   // occlusion for.
@@ -70,7 +74,7 @@ class AmbientOccWorker: public Runnable {
   DepthStats* depth_stats;
     
 public:
-  AmbientOccWorker();
+  AmbientOccWorker(AmbientOccContext* aoc);
   ~AmbientOccWorker();
 
   // Allocated memory for ambient_values and checks the input
