@@ -23,8 +23,7 @@ include $(SCIRUN_SCRIPTS)/smallso_prologue.mk
 SRCDIR   := Core/CCA/Component/Comm
 
 SRCS     += \
-	$(SRCDIR)/connector.cc \
-	$(SRCDIR)/listener.cc \
+	$(SRCDIR)/Message.cc \
 	$(SRCDIR)/SocketSpChannel.cc \
 	$(SRCDIR)/SocketEpChannel.cc \
 	$(SRCDIR)/NexusEpChannel.cc \
@@ -33,14 +32,11 @@ SRCS     += \
 	$(SRCDIR)/NexusSpMessage.cc \
 	$(SRCDIR)/NexusEpMessage.cc \
 	$(SRCDIR)/SocketMessage.cc \
-	$(SRCDIR)/Communication.cc \
-	$(SRCDIR)/sock.c \
-	$(SRCDIR)/buf.c \
 	$(SRCDIR)/ReplyEP.cc \
-	$(SRCDIR)/NexusHandlerThread.cc \
+	$(SRCDIR)/NexusHandlerThread.cc
 
-PSELIBS := Core/Exceptions Core/Thread 
-LIBS := $(GLOBUS_LIBS) -lglobus_nexus -lglobus_dc -lglobus_common
+PSELIBS := Core/Exceptions Core/Thread Core/globus_threads
+LIBS := $(GLOBUS_LIBS) -lglobus_nexus -lglobus_dc -lglobus_common -lglobus_io
 
 include $(SCIRUN_SCRIPTS)/smallso_epilogue.mk
 

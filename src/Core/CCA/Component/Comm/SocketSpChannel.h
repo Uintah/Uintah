@@ -19,55 +19,29 @@
 #ifndef SOCKET_SP_CHANNEL_H
 #define SOCKET_SP_CHANNEL_H 
 
-using namespace std;
-#include <Core/CCA/Component/PIDL/URL.h> 
 #include <Core/CCA/Component/Comm/SpChannel.h>
-#include <Core/CCA/Component/Comm/connector.h>
-#include <Core/CCA/Component/Comm/Message.h>
-#include <Core/CCA/Component/Comm/SocketMessage.h>
-#include <Core/CCA/Component/Comm/Communication.h>
 
-class SocketSpChannel : public SpChannel {
-public:
+namespace SCIRun {
+  class SocketSpChannel : public SpChannel {
+  public:
 
-  SocketSpChannel();
-  virtual ~SocketSpChannel();
-  void openConnection(const PIDL::URL& url);
-  void closeConnection();
-  Message* getMessage();
-  SpChannel* SPFactory(bool deep);
+    SocketSpChannel();
+    virtual ~SocketSpChannel();
+    void openConnection(const URL& url);
+    void closeConnection();
+    Message* getMessage();
+    SpChannel* SPFactory(bool deep);
 
-private:
+  private:
   
-  /////////////
-  // File descriptor for the socket
-  int connfd;  
+    /////////////
+    // File descriptor for the socket
+    int connfd;  
 
-  Message* msg; 
+    Message* msg; 
 
-};
-
+  };
+}
 
 
 #endif
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

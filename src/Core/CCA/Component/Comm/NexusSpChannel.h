@@ -18,74 +18,69 @@
 #ifndef NEXUS_SP_CHANNEL_H
 #define NEXUS_SP_CHANNEL_H
 
-using namespace std;
-#include <string>
-#include <globus_nexus.h>
-#include <Core/CCA/Component/PIDL/URL.h>
-#include <Core/CCA/Component/PIDL/TypeInfo.h>
 #include <Core/CCA/Component/Comm/SpChannel.h>
-#include <Core/CCA/Component/Comm/CommError.h>
-#include <Core/CCA/Component/Comm/NexusSpMessage.h>
-#include <Core/CCA/Component/Comm/Message.h>
+#include <globus_nexus.h>
+#include <string>
 
-
-/**************************************
+namespace SCIRun {
+  /**************************************
  
-CLASS
-   NexusSpChannel
+  CLASS
+     NexusSpChannel
    
-DESCRIPTION
-   A Globus-Nexus implementation of the SpChannel
-   abstract interface. 
+  DESCRIPTION
+     A Globus-Nexus implementation of the SpChannel
+     abstract interface. 
 
-SEE ALSO
-   SpChannel.h
+  SEE ALSO
+     SpChannel.h
 
-****************************************/
+  ****************************************/
 
-class NexusSpMessage;
-class NexusEpMessage;
+  class NexusSpMessage;
+  class NexusEpMessage;
 
-class NexusSpChannel : public SpChannel {
-public:
+  class NexusSpChannel : public SpChannel {
+  public:
 
-  NexusSpChannel();
-  virtual ~NexusSpChannel();
-  NexusSpChannel(NexusSpChannel& );
-  void openConnection(const ::PIDL::URL& );
-  void closeConnection();
-  Message* getMessage();  
-  SpChannel* SPFactory(bool deep); 
+    NexusSpChannel();
+    virtual ~NexusSpChannel();
+    NexusSpChannel(NexusSpChannel& );
+    void openConnection(const URL& );
+    void closeConnection();
+    Message* getMessage();  
+    SpChannel* SPFactory(bool deep); 
 
  
-private:
+  private:
 
-  //////////////////
-  // NexusEpChannel needs this in order to perform 
-  // NexusEpChannel::bind() properly
-  friend class NexusEpChannel;
+    //////////////////
+    // NexusEpChannel needs this in order to perform 
+    // NexusEpChannel::bind() properly
+    friend class NexusEpChannel;
 
-  ////////////////////
-  // The Nexus Message classes need access to the 
-  // startpoint in order to marshal it, if that is
-  // needed. 
-  friend class NexusSpMessage;
-  friend class NexusEpMessage;
+    ////////////////////
+    // The Nexus Message classes need access to the 
+    // startpoint in order to marshal it, if that is
+    // needed. 
+    friend class NexusSpMessage;
+    friend class NexusEpMessage;
 
-  //////////
-  // The startpoint
-  globus_nexus_startpoint_t d_sp;
+    //////////
+    // The startpoint
+    globus_nexus_startpoint_t d_sp;
 
-  //////////
-  // The message used for communication
-  NexusSpMessage* msg;
+    //////////
+    // The message used for communication
+    NexusSpMessage* msg;
 
-  void printDebug(string ); 
+    void printDebug( const std::string& ); 
 
-  //Toggles on/off whether debugging info gets printed
-  static const int kDEBUG=0;
+    //Toggles on/off whether debugging info gets printed
+    static const int kDEBUG=0;
 
-};
+  };
+}
 
 #endif
 

@@ -15,19 +15,21 @@
   University of Utah. All Rights Reserved.
 */
 
-#include <Core/Thread/Thread.h>
+#ifndef Core_CCA_Component_Comm_NexusHandlerThread_h
+#define Core_CCA_Component_Comm_NexusHandlerThread_h
+
+#include <Core/CCA/Component/Comm/EpChannel.h>
 #include <Core/Thread/Runnable.h>
-#include <Core/CCA/Component/Comm/NexusEpChannel.h>
-#include <Core/CCA/Component/Comm/Message.h>
-#include <iostream>
 
-using namespace SCIRun;
-
-class NexusHandlerThread : public Runnable {
-    HPF hfunc;
+namespace SCIRun {
+  class NexusEpChannel;
+  class NexusHandlerThread : public Runnable {
+    EpChannel::HPF hfunc;
     Message* msg;
-public:
+  public:
     NexusHandlerThread(NexusEpChannel *chan, int h_id);
     virtual void run();
-};
+  };
+}
 
+#endif

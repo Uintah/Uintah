@@ -19,56 +19,48 @@
 #ifndef MESSAGE_INTERFACE_H
 #define MESSAGE_INTERFACE_H 
 
-class SpChannel;
+namespace SCIRun {
+  class SpChannel;
 
-//Nexus is supposed to decrease the size of the
-//buffer before it sends the message in case it
-//is too large. For this reason we make the buffer
-//as big as we want.
-#define BUF_SIZE 10000
-
-/**************************************
+  /**************************************
  
-CLASS
-   Message
+  CLASS
+     Message
    
-DESCRIPTION
-   The base class for all communication-specific message 
-   abstractions. This class describes the methods one
-   communication instance needs to implement in order
-   to work properly under the sidl compiler. The names
-   of the methods themselver are self-explanatory and
-   need no further clarification.
+  DESCRIPTION
+    The base class for all communication-specific message 
+    abstractions. This class describes the methods one
+    communication instance needs to implement in order
+     to work properly under the sidl compiler. The names
+     of the methods themselver are self-explanatory and
+     need no further clarification.
 
-****************************************/
+  ****************************************/
 
-class Message {
-public:
-
-  virtual void* getLocalObj() = 0;
-  virtual void createMessage() = 0;
-  virtual void marshalInt(int *i, int size = 1) = 0;
-  virtual void marshalSpChannel(SpChannel* channel) = 0;
-  virtual void marshalByte(char *b, int size = 1) = 0; 
-  virtual void marshalChar(char *c, int size = 1) = 0;
-  virtual void marshalFloat(float *f, int size = 1) = 0;  
-  virtual void marshalDouble(double *d, int size = 1) = 0;
-  virtual void marshalLong(long *l, int size = 1) = 0;
-  virtual void sendMessage(int handler) = 0;
-  virtual void waitReply() = 0;
-  virtual void unmarshalReply() = 0;
-  virtual void unmarshalInt(int* i, int size = 1) = 0;
-  virtual void unmarshalByte(char* b, int size = 1) = 0;
-  virtual void unmarshalChar(char *c, int size = 1) = 0;
-  virtual void unmarshalFloat(float *f, int size = 1) = 0;
-  virtual void unmarshalDouble(double *d, int size = 1) = 0;
-  virtual void unmarshalLong(long *l, int size = 1) = 0;
-  virtual void unmarshalSpChannel(SpChannel* channel) = 0;
-  virtual void destroyMessage() = 0;
-};
-
-
+  class Message {
+  public:
+    virtual ~Message();
+    virtual void* getLocalObj() = 0;
+    virtual void createMessage() = 0;
+    virtual void marshalInt(int *i, int size = 1) = 0;
+    virtual void marshalSpChannel(SpChannel* channel) = 0;
+    virtual void marshalByte(char *b, int size = 1) = 0; 
+    virtual void marshalChar(char *c, int size = 1) = 0;
+    virtual void marshalFloat(float *f, int size = 1) = 0;  
+    virtual void marshalDouble(double *d, int size = 1) = 0;
+    virtual void marshalLong(long *l, int size = 1) = 0;
+    virtual void sendMessage(int handler) = 0;
+    virtual void waitReply() = 0;
+    virtual void unmarshalReply() = 0;
+    virtual void unmarshalInt(int* i, int size = 1) = 0;
+    virtual void unmarshalByte(char* b, int size = 1) = 0;
+    virtual void unmarshalChar(char *c, int size = 1) = 0;
+    virtual void unmarshalFloat(float *f, int size = 1) = 0;
+    virtual void unmarshalDouble(double *d, int size = 1) = 0;
+    virtual void unmarshalLong(long *l, int size = 1) = 0;
+    virtual void unmarshalSpChannel(SpChannel* channel) = 0;
+    virtual void destroyMessage() = 0;
+  };
+}
 
 #endif
-
-

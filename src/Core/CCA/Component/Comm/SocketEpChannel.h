@@ -19,67 +19,37 @@
 #ifndef SOCKET_EP_CHANNEL_H
 #define SOCKET_EP_CHANNEL_H 
 
-using namespace std;
-#include <unistd.h>
-#include <string>
-#include <Core/CCA/Component/PIDL/URL.h> 
-#include <Core/CCA/Component/Comm/CommError.h>
 #include <Core/CCA/Component/Comm/EpChannel.h>
-#include <Core/CCA/Component/Comm/listener.h>
-#include <Core/CCA/Component/Comm/Message.h>
-#include <Core/CCA/Component/Comm/SocketMessage.h>
-#include <Core/CCA/Component/Comm/Communication.h>
 
-#define PORT 22222
+namespace SCIRun {
+  class Message;
+  class SpChannel;
+  class SocketEpChannel : public EpChannel {
+  public:
 
-class SocketEpChannel : public EpChannel {
-public:
+    SocketEpChannel();
+    virtual ~SocketEpChannel();
+    void openConnection();
+    void activateConnection(void* obj);
+    void closeConnection();
+    string getUrl(); 
+    Message* getMessage();
+    void allocateHandlerTable(int size);
+    void registerHandler(int num, void* handle);
+    void bind(SpChannel* spchan);
 
-  SocketEpChannel();
-  virtual ~SocketEpChannel();
-  void openConnection();
-  void activateConnection(void* obj);
-  void closeConnection();
-  string getUrl(); 
-  Message* getMessage();
-  void allocateHandlerTable(int size);
-  void registerHandler(int num, void* handle);
-  void bind(SpChannel* spchan);
-
-private:
+  private:
   
-  /////////////
-  // Hostname of this computer
-  string hostname;
+    /////////////
+    // Hostname of this computer
+    string hostname;
 
-  /////////////
-  // File descriptor for the socket
-  int connfd;  
+    /////////////
+    // File descriptor for the socket
+    int connfd;  
 
-  Message* msg; 
-};
-
-
+    Message* msg; 
+  };
+}
 
 #endif
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

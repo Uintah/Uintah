@@ -19,50 +19,46 @@
 #ifndef SP_CHANNEL_INTERFACE_H
 #define SP_CHANNEL_INTERFACE_H 
 
-using namespace std;
-#include <string>
-#include <Core/CCA/Component/PIDL/URL.h> 
-#include <Core/CCA/Component/Comm/Message.h>
+namespace SCIRun {
+  class Message;
+  class URL;
 
-/**************************************
+  /**************************************
  
-CLASS
-   SpChannel
+  CLASS
+     SpChannel
    
-DESCRIPTION
-   The base class for all communication-specific startpoint 
-   channel abstractions. A startpoint channel is a client
-   channel in the sense that it binds to a particular server
-   based on the server's url. The channel abstraction itself
-   is meant to establish the connection and provide methods
-   in relation to it. The communication sends and recieves are
-   performed by the message class.
+  DESCRIPTION
+     The base class for all communication-specific startpoint 
+     channel abstractions. A startpoint channel is a client
+     channel in the sense that it binds to a particular server
+     based on the server's url. The channel abstraction itself
+     is meant to establish the connection and provide methods
+     in relation to it. The communication sends and recieves are
+     performed by the message class.
 
-****************************************/
+  ****************************************/
 
-class SpChannel {
-public:
+  class SpChannel {
+  public:
 
-  /////////////////
-  // Methods to establish communication
-  virtual void openConnection(const PIDL::URL& ) = 0;
-  virtual void closeConnection() = 0;
+    /////////////////
+    // Methods to establish communication
+    virtual void openConnection(const URL& ) = 0;
+    virtual void closeConnection() = 0;
   
-  /////////////////
-  // Creates a message associated with this communication
-  // channel. The message can then be used to perform
-  // sends/recieves.
-  virtual Message* getMessage() = 0;
+    /////////////////
+    // Creates a message associated with this communication
+    // channel. The message can then be used to perform
+    // sends/recieves.
+    virtual Message* getMessage() = 0;
 
-  ////////////////
-  // Abstract Factory method meant to create a copy
-  // from an instance of the class down the class
-  // hierarchy
-  virtual SpChannel* SPFactory(bool deep) = 0;
-};
-
-
+    ////////////////
+    // Abstract Factory method meant to create a copy
+    // from an instance of the class down the class
+    // hierarchy
+    virtual SpChannel* SPFactory(bool deep) = 0;
+  };
+}
 
 #endif
-
-

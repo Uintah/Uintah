@@ -34,80 +34,75 @@ SEE ALSO
 #ifndef NEXUS_EP_MESSAGE_H
 #define NEXUS_EP_MESSAGE_H 
 
-using namespace std;
+#include <Core/CCA/Component/Comm/Message.h>
 #include <string>
 #include <globus_nexus.h>
-#include <Core/CCA/Component/Comm/CommError.h>
-#include <Core/CCA/Component/Comm/Message.h>
-#include <Core/CCA/Component/Comm/ReplyEP.h>
-#include <Core/CCA/Component/Comm/SpChannel.h>
-#include <Core/CCA/Component/Comm/NexusSpChannel.h>
 
-class NexusEpMessage : public Message {
-public:
+namespace SCIRun {
+  class ReplyEP;
+  class NexusEpMessage : public Message {
+  public:
 
-  NexusEpMessage(globus_nexus_endpoint_t , globus_nexus_buffer_t msgbuff);
-  virtual ~NexusEpMessage();
-  void* getLocalObj();
-  void createMessage();
-  void marshalInt(int *i, int size = 1);
-  void marshalByte(char *b, int size = 1);
-  void marshalChar(char *c,int size = 1);
-  void marshalFloat(float *f, int size = 1);
-  void marshalDouble(double *d, int size = 1);
-  void marshalLong(long *l, int size = 1);
-  void marshalSpChannel(SpChannel* channel);
-  void sendMessage(int handler);
-  void waitReply();
-  void unmarshalReply();
-  void unmarshalInt(int *i, int size = 1); 
-  void unmarshalByte(char *b, int size = 1);
-  void unmarshalChar(char *c, int size = 1);
-  void unmarshalFloat(float *f, int size = 1);
-  void unmarshalDouble(double *d, int size = 1);
-  void unmarshalLong(long *l, int size = 1);
-  void unmarshalSpChannel(SpChannel* channel);
-  void destroyMessage();
+    NexusEpMessage(globus_nexus_endpoint_t , globus_nexus_buffer_t msgbuff);
+    virtual ~NexusEpMessage();
+    void* getLocalObj();
+    void createMessage();
+    void marshalInt(int *i, int size = 1);
+    void marshalByte(char *b, int size = 1);
+    void marshalChar(char *c,int size = 1);
+    void marshalFloat(float *f, int size = 1);
+    void marshalDouble(double *d, int size = 1);
+    void marshalLong(long *l, int size = 1);
+    void marshalSpChannel(SpChannel* channel);
+    void sendMessage(int handler);
+    void waitReply();
+    void unmarshalReply();
+    void unmarshalInt(int *i, int size = 1); 
+    void unmarshalByte(char *b, int size = 1);
+    void unmarshalChar(char *c, int size = 1);
+    void unmarshalFloat(float *f, int size = 1);
+    void unmarshalDouble(double *d, int size = 1);
+    void unmarshalLong(long *l, int size = 1);
+    void unmarshalSpChannel(SpChannel* channel);
+    void destroyMessage();
 
-private:
+  private:
 
-  ///////////////////////
-  // Buffer upon which we get the starting message
-  globus_nexus_buffer_t _buffer;
+    ///////////////////////
+    // Buffer upon which we get the starting message
+    globus_nexus_buffer_t _buffer;
 
-  //////////////////////
-  // Buffer upon which we send the reply on
-  globus_nexus_buffer_t* _sendbuff;
+    //////////////////////
+    // Buffer upon which we send the reply on
+    globus_nexus_buffer_t* _sendbuff;
 
-  /////////////////////
-  // The startpoint to reply to (marshalled to us via _buffer)
-  globus_nexus_startpoint_t msg_sp;
+    /////////////////////
+    // The startpoint to reply to (marshalled to us via _buffer)
+    globus_nexus_startpoint_t msg_sp;
 
-  ////////////////////
-  // Size of _sendbuff
-  int msgsize;
+    ////////////////////
+    // Size of _sendbuff
+    int msgsize;
 
-  ///////////////////////
-  // The endpoint associated with this Communication Channel
-  globus_nexus_endpoint_t d_ep;
+    ///////////////////////
+    // The endpoint associated with this Communication Channel
+    globus_nexus_endpoint_t d_ep;
   
-  /////////////////
-  // Reply endpoint to facilitate receiving a reply
-  ::ReplyEP* _reply;
+    /////////////////
+    // Reply endpoint to facilitate receiving a reply
+    ReplyEP* _reply;
 
-  ////////////////
-  // Startpoint which we marshal together with the
-  // message in order to recieve a reply.
-  globus_nexus_startpoint_t _reply_sp;
+    ////////////////
+    // Startpoint which we marshal together with the
+    // message in order to recieve a reply.
+    globus_nexus_startpoint_t _reply_sp;
 
-  void printDebug(string );
+    void printDebug( const std::string& );
 
-  //Toggles on/off whether debugging info gets printed
-  static const int kDEBUG=0;
-};
-
+    //Toggles on/off whether debugging info gets printed
+    static const int kDEBUG=0;
+  };
+}
 
 
 #endif
-
-

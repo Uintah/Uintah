@@ -20,7 +20,7 @@
 #include <iostream>
 #include <sstream>
 using namespace std;
-
+using namespace SCIRun;
 
 CommError::CommError(const string& msg, int code)
     : d_msg(msg), d_code(code)

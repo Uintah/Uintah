@@ -16,8 +16,15 @@
 */
 
 #include "NexusSpChannel.h"
+#include <Core/CCA/Component/Comm/NexusSpMessage.h>
+#include <Core/CCA/Component/Comm/CommError.h>
+#include <Core/CCA/Component/PIDL/URL.h>
+#include <Core/CCA/Component/PIDL/TypeInfo.h>
+#include <iostream>
+using namespace SCIRun;
+using namespace std;
  
-void NexusSpChannel::printDebug(string d) {
+void NexusSpChannel::printDebug(const string& d) {
   cout << d << endl;
 }
 
@@ -58,7 +65,7 @@ SpChannel* NexusSpChannel::SPFactory(bool deep) {
   return new_sp;
 }
 
-void NexusSpChannel::openConnection(const PIDL::URL& url) {
+void NexusSpChannel::openConnection(const URL& url) {
   string s1("NexusSpChannel::openConnection() ");
   s1 += url.getString();
   if (kDEBUG) printDebug(s1);
@@ -85,7 +92,7 @@ void NexusSpChannel::closeConnection() {
   }
 
   //Send the message
-  int handler=PIDL::TypeInfo::vtable_deleteReference_handler;
+  int handler=TypeInfo::vtable_deleteReference_handler;
   if(int gerr=globus_nexus_send_rsr(&buffer, &d_sp,
   				    handler, GLOBUS_TRUE, GLOBUS_FALSE)) {
     throw CommError("ProxyBase: send_rsr", gerr);

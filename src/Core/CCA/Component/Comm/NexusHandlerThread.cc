@@ -16,6 +16,9 @@
 */
 
 #include "NexusHandlerThread.h"
+#include <Core/CCA/Component/Comm/NexusEpChannel.h>
+#include <Core/CCA/Component/Comm/Message.h>
+using namespace SCIRun;
 
 NexusHandlerThread::NexusHandlerThread(NexusEpChannel *chan, int h_id)
 {
