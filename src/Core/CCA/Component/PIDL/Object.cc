@@ -131,7 +131,7 @@ Object::_addReference()
   Mutex* m=getMutexPool()->getMutex(mutex_index);
   m->lock();
   ref_cnt++;
-  ::std::cout << "Reference count is now " << ref_cnt << "\n";
+  //::std::cout << "Reference count is now " << ref_cnt << "\n";
   m->unlock();
 }
 
@@ -141,7 +141,7 @@ Object::_deleteReference()
   Mutex* m=getMutexPool()->getMutex(mutex_index);
   m->lock();
   ref_cnt--;
-  ::std::cout << "Reference count is now " << ref_cnt << "\n";
+  //::std::cout << "Reference count is now " << ref_cnt << "\n";
   bool del;
   if(ref_cnt == 0)
     del=true;
