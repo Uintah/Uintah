@@ -68,8 +68,8 @@ ContourField<Data>::maker()
 
 template <class Data>
 PersistentTypeID
-ContourField<Data>::type_id(type_name(),
-		GenericField<ContourMesh, vector<Data> >::type_name(),
+ContourField<Data>::type_id(type_name(-1),
+		GenericField<ContourMesh, vector<Data> >::type_name(-1),
                 maker); 
 
 template <class Data>

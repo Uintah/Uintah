@@ -241,17 +241,18 @@ private:
     }
   };
 
+
   //! Edge information.
   struct Edge {
     node_index         nodes_[2];   //! 2 nodes makes an edge.
     vector<cell_index> cells_;      //! list of all the cells this edge is in.
     
-    Edge() : cells_(6) {
+    Edge() : cells_(0) {
       nodes_[0] = -1;
       nodes_[1] = -1;
     }
     // node_[0] must be smaller than node_[1]. See Hash Function below.
-    Edge(node_index n1, node_index n2) : cells_(6) {
+    Edge(node_index n1, node_index n2) : cells_(0) {
       if (n1 < n2) {
 	nodes_[0] = n1;
 	nodes_[1] = n2; 

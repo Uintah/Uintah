@@ -73,8 +73,8 @@ TriSurf<T>::maker()
 
 template <class T>
 PersistentTypeID 
-TriSurf<T>::type_id(type_name(), 
-		    GenericField<TriSurfMesh, vector<T> >::type_name(),
+TriSurf<T>::type_id(type_name(-1), 
+		    GenericField<TriSurfMesh, vector<T> >::type_name(-1),
 		    maker);
 
 
