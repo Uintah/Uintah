@@ -40,6 +40,8 @@
 #include <Core/Malloc/Allocator.h>
 #include <Core/Thread/CrowdMonitor.h>
 #include <Core/Thread/Mutex.h>
+#include <Core/Containers/StringUtil.h>
+#include <Core/GuiInterface/GuiInterface.h>
 #include <Core/Util/NotFinished.h>
 #include <iostream>
 using std::cout;
@@ -125,9 +127,9 @@ BaseWidget::BaseWidget( Module* module, CrowdMonitor* lock,
     current_mode_(0),
     widget_scale_(widget_scale),
     epsilon_(1e-3),
-    tclmat_("material", id_, this)
+    gui(module->getGui()),
+    tclmat_(ctx=module->getGui()->createContext(id_))
 {
-
   init_tcl();
 }
 
@@ -161,15 +163,15 @@ BaseWidget::~BaseWidget()
 void
 BaseWidget::init_tcl()
 {
-  TCL::add_command(id_ + "-c", this, 0);
-  TCL::execute(name_ + " " + id_);
+  gui->add_command(id_ + "-c", this, 0);
+  gui->execute(name_ + " " + id_);
 }
 
 
 void
 BaseWidget::ui() const
 {
-  TCL::execute(id_ + " ui");
+  gui->execute(id_ + " ui");
 }
 
 
@@ -194,7 +196,7 @@ pmat( const MaterialHandle& mat )
 
 
 void
-BaseWidget::tcl_command(TCLArgs& args, void*)
+BaseWidget::tcl_command(GuiArgs& args, void*)
 {
   if(args.count() < 2)
   {
@@ -302,7 +304,7 @@ BaseWidget::tcl_command(TCLArgs& args, void*)
       args.error("widget material index out of range `"+args[2]+"'");
       return;
     }
-    reset_vars();
+    ctx->reset();
     MaterialHandle mat(scinew Material(tclmat_.get()));
     pmat(mat);
     SetDefaultMaterial(mati, mat);
@@ -324,7 +326,7 @@ BaseWidget::tcl_command(TCLArgs& args, void*)
       args.error("widget material index out of range `"+args[2]+"'");
       return;
     }
-    reset_vars();
+    ctx->reset();
     MaterialHandle mat(scinew Material(tclmat_.get()));
     pmat(mat);
     SetMaterial(mati, mat);
@@ -346,19 +348,19 @@ BaseWidget::tcl_command(TCLArgs& args, void*)
   }
   else if(args[1] == "dialdone")
   {
-    module_->widget_moved(1);
+    module_->widget_moved(true);
   }
   else
   {
     widget_tcl(args);
   }
 
-  reset_vars();
+  ctx->reset();
 }
 
 
 void
-BaseWidget::widget_tcl( TCLArgs& args )
+BaseWidget::widget_tcl( GuiArgs& args )
 {
   args.error("widget unknown tcl command `"+args[1]+"'");
 }
@@ -369,7 +371,7 @@ BaseWidget::SetScale( const double scale )
 {
   widget_scale_ = scale;
   solve->SetEpsilon(epsilon_ * widget_scale_);
-  // TCL::execute(id+" scale_changed "+to_string(widget_scale));
+  // gui->execute(id+" scale_changed "+to_string(widget_scale));
   execute(0);
 }
 
@@ -593,7 +595,7 @@ BaseWidget::execute(int always_callback)
 {
   if (always_callback || solve->VariablesChanged())
   {
-    module_->widget_moved(0);
+    module_->widget_moved(false);
     solve->ResetChanged();
   }
 
@@ -631,7 +633,8 @@ BaseWidget::geom_pick( GeomPick* pick, ViewWindow* /*roe*/,
 void
 BaseWidget::geom_release( GeomPick*, int /* cbdata */, const BState& )
 {
-  module_->widget_moved(1);
+
+  module_->widget_moved(true);
 }
 
 
@@ -744,14 +747,5 @@ operator<<( ostream& os, BaseWidget& w )
   w.print(os);
   return os;
 }
-
-#if 0
-BaseWidget&
-BaseWidget::operator=( const BaseWidget& )
-{
-  NOT_FINISHED("BaseWidget::operator=");
-  return *this;
-}
-#endif
 
 } // End namespace SCIRun
