@@ -12,8 +12,8 @@ using namespace SCIRun;
 SphereGeometryPiece::SphereGeometryPiece(ProblemSpecP& ps)
 {
   setName("sphere");
-  Point orig;
-  double rad;
+  Point orig = Point(0.,0.,0.);
+  double rad = 0.;
 
   if(!ps->get("center", orig)) // Alternate specification
     ps->require("origin",orig);
