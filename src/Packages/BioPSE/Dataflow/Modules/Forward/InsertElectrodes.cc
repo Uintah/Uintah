@@ -55,15 +55,29 @@ InsertElectrodes::~InsertElectrodes()
 bool InsertElectrodes::point_in_loop(const Point &pt,
 				    const Array1<Point> &contour,
 				    const Plane &pl) {
-  int sign=1;
-  if (pl.eval_point(pt+(Cross(pt-contour[0], pt-contour[1]))) < 0) sign=-1;
+  Vector v1, v2, v3;
   int i;
-  for (i=1; i<contour.size()-1; i++)
-    if (pl.eval_point(pt+(Cross(pt-contour[i], pt-contour[i+1])))*sign < 0)
-      return false;
-  if (pl.eval_point(pt+(Cross(pt-contour[i], pt-contour[0])))*sign < 0)
+  double angle, sum=0;
+  for (i=0; i<contour.size()-1; i++) {
+    v1=pt-contour[i];
+    v2=pt-contour[i+1];
+    v1.normalize();
+    v2.normalize();
+    angle=acos(Dot(v1,v2));
+    v3=Cross(v1, v2);
+    if (pl.eval_point(pt+v3) < 0) angle=-angle;
+    sum += angle;
+  }
+  sum/=(2.*M_PI);
+  sum=fabs(sum);
+  sum -= (((int)sum)/2)*2;
+  // sum is now between 0 and 1.99999
+  if (sum > 0.8 && sum < 1.2) return true;
+  else if (sum < 0.2 || sum > 1.8) return false;
+  else {
+    cerr << "Error -- point in loop was: "<<sum<<"\n";
     return false;
-  return true;
+  }
 }
 
 void InsertElectrodes::insertContourIntoTetMesh(
@@ -74,12 +88,14 @@ void InsertElectrodes::insertContourIntoTetMesh(
 				double voltage) {
 //  cerr << "entering insertCountourIntoTetMesh\n";
   Plane electrode_plane;
-  if (Cross(inner[1]-inner[0], inner[1]-outer[0]).length2()>1.e-5) {
-    electrode_plane=Plane(inner[1], inner[0], outer[0]);
+  if (Cross(inner[1]-inner[0], inner[1]-inner[2]).length2()>1.e-5) {
+    electrode_plane=Plane(inner[1], inner[0], inner[2]);
+  } else if (Cross(inner[1]-inner[0], inner[1]-inner[3]).length2()>1.e-5) {
+    electrode_plane=Plane(inner[1], inner[0], inner[3]);
   } else {
-    electrode_plane=Plane(inner[2], inner[0], outer[0]);
+    cerr << "InsertElectrode ERROR - FIRST FOUR INNER NODES OF THE ELEC ARE COLINEAR!\n";
+    return;
   }
-
 
   TetVolMesh::Cell::size_type ncells;
   tet_mesh->size(ncells);
@@ -114,13 +130,13 @@ void InsertElectrodes::insertContourIntoTetMesh(
 	!all_nodes_above_plane) { // cell was intersected by plane...
       
       // check to see if projected nodes are inside the electrode
-      int inside_inner=0, inside_outer=0, idx;
+      int idx;
       for (idx=0; idx<projections.size(); idx++) {
 	Point p;
 	TetVolMesh::Node::index_type nidx(projections[idx]);
 	tet_mesh->get_center(p, nidx);
+	p = electrode_plane.project(p);
 	if (point_in_loop(p, inner, electrode_plane)) {
-	  inside_inner = 1;
 	  if (is_electrode_node[nidx] == -1) {
 	    is_electrode_node[nidx] = 2;
 	    electrode_nodes.add(nidx);
@@ -130,8 +146,9 @@ void InsertElectrodes::insertContourIntoTetMesh(
       for (idx=0; idx<projections.size(); idx++) {
 	Point p;
 	TetVolMesh::Node::index_type nidx(projections[idx]);
+	tet_mesh->get_center(p, nidx);
+	p = electrode_plane.project(p);
 	if (point_in_loop(p, outer, electrode_plane)) {
-	  inside_outer = 1;
 	  if (is_electrode_node[nidx] == -1) {
 	    is_electrode_node[nidx] = 1;
 	    electrode_nodes.add(nidx);
@@ -144,7 +161,7 @@ void InsertElectrodes::insertContourIntoTetMesh(
 
   // project electrode nodes to plane, split them, and set Dirichlet
   int i;
-  cerr << "Electrode nodes: \n";
+//  cerr << "Electrode nodes: \n";
   for (i=0; i<electrode_nodes.size(); i++) {
     Point pt;
     TetVolMesh::Node::index_type ni = electrode_nodes[i];
@@ -152,11 +169,11 @@ void InsertElectrodes::insertContourIntoTetMesh(
     Point proj_pt = electrode_plane.project(pt);
     tet_mesh->set_point(proj_pt, ni);
     electrode_node_split_idx[ni] = tet_mesh->add_point(proj_pt);
-    cerr << "  "<<i<<" index="<<(int)(ni) <<" (copy index="<<(int)(electrode_node_split_idx[ni])<<"), is_elec_nodes="<<is_electrode_node[electrode_nodes[i]]<<"\n";
+//    cerr << "  "<<i<<" index="<<(int)(ni) <<" (copy index="<<(int)(electrode_node_split_idx[ni])<<"), is_elec_nodes="<<is_electrode_node[electrode_nodes[i]]<<"\n";
     if (is_electrode_node[electrode_nodes[i]] == 2) {
-//      dirichlet.push_back(pair<int,double>(electrode_node_split_idx[ni], 
-//					   voltage));
-      dirichlet.push_back(pair<int,double>(ni, voltage));
+      dirichlet.push_back(pair<int,double>(electrode_node_split_idx[ni], 
+					   voltage));
+//      dirichlet.push_back(pair<int,double>(ni, voltage));
     }
   }
 
@@ -225,7 +242,7 @@ void InsertElectrodes::execute() {
   vector<pair<string, Tensor> > *newConds =
     new vector<pair<string, Tensor> >(conds);
   for (int ii=0; ii<newConds->size(); ii++) {
-    cerr << "New conds ["<<ii<<"] = "<<(*newConds)[ii].first<<" , "<<(*newConds)[ii].second<<"\n";
+//    cerr << "New conds ["<<ii<<"] = "<<(*newConds)[ii].first<<" , "<<(*newConds)[ii].second<<"\n";
   }
 
   vector<pair<int, double> > *mergedDirichletNodes = 
@@ -233,12 +250,15 @@ void InsertElectrodes::execute() {
 
   port_range_type range = get_iports("Electrodes");
   if (range.first != range.second) {
-    cerr << "Cloning data...\n";
+//    cerr << "Cloning data...\n";
     // get our own local copy of the Field and mesh
+
+//    cerr << "Mesh pointer before = "<<imeshH->mesh().get_rep()<<"\n";
     imeshH.detach();
-    cerr << "Cloning mesh...\n";
+//    cerr << "Cloning mesh...\n";
     imeshH->mesh_detach();
-    cerr << "Done cloning!\n";
+//    cerr << "Done cloning!\n";
+//    cerr << "Mesh pointer after = "<<imeshH->mesh().get_rep()<<"\n";
 
     TetVol<int> *field = dynamic_cast<TetVol<int>*>(imeshH.get_rep());
     TetVolMeshHandle mesh = field->get_typed_mesh();
@@ -273,7 +293,9 @@ void InsertElectrodes::execute() {
 	else outer.add(p);
 	++ni;
       }
-      
+      inner.add(inner[0]);
+      outer.add(outer[0]);
+
       // modify mergedDirichletNodes, and mergedMesh to have new nodes
       insertContourIntoTetMesh(*mergedDirichletNodes, mesh,
 			       inner, outer, voltage);
