@@ -107,7 +107,8 @@ public:
 
   enum IntegratorType {
     Explicit,
-    Implicit
+    Implicit,
+    Fracture
   };
 
 private:
