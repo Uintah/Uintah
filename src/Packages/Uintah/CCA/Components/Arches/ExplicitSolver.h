@@ -117,13 +117,8 @@ public:
       //    to a Cell Centered Vector
       //    [in] 
       void sched_interpolateFromFCToCC(SchedulerP&, const PatchSet* patches,
-				       const MaterialSet* matls);
-
-      void sched_interpolateFromFCToCCPred(SchedulerP&, const PatchSet* patches,
-				       const MaterialSet* matls);
-
-      void sched_interpolateFromFCToCCInterm(SchedulerP&, const PatchSet* patches,
-				       const MaterialSet* matls);
+				       const MaterialSet* matls,
+				       const TimeIntegratorLabel* timelabels);
 
       void sched_probeData(SchedulerP&, const PatchSet* patches,
 			   const MaterialSet* matls);
@@ -141,8 +136,8 @@ public:
       void sched_printTotalKE(SchedulerP& sched,
 			      const PatchSet* patches,
 			      const MaterialSet* matls,
-			      const int Runge_Kutta_current_step,
-			      const bool Runge_Kutta_last_step);
+			      const TimeIntegratorLabel* timelabels);
+
   
 protected :
 
@@ -181,19 +176,8 @@ private:
 				 const PatchSubset* patches,
 				 const MaterialSubset* matls,
 				 DataWarehouse* old_dw,
-				 DataWarehouse* new_dw);
-
-      void interpolateFromFCToCCPred(const ProcessorGroup* pc,
-				 const PatchSubset* patches,
-				 const MaterialSubset* matls,
-				 DataWarehouse* old_dw,
-				 DataWarehouse* new_dw);
-
-      void interpolateFromFCToCCInterm(const ProcessorGroup* pc,
-				 const PatchSubset* patches,
-				 const MaterialSubset* matls,
-				 DataWarehouse* old_dw,
-				 DataWarehouse* new_dw);
+				 DataWarehouse* new_dw,
+				 const TimeIntegratorLabel* timelabels);
 
       void probeData(const ProcessorGroup* pc,
 		     const PatchSubset* patches,
@@ -206,8 +190,7 @@ private:
 			const MaterialSubset*,
 			DataWarehouse*,
 			DataWarehouse* new_dw,
-			const int Runge_Kutta_current_step,
-			const bool Runge_Kutta_last_step);
+			const TimeIntegratorLabel* timelabels);
 
 private:
       // const VarLabel*
@@ -242,6 +225,8 @@ private:
       EnthalpySolver* d_enthalpySolver;
       // physcial constatns
       PhysicalConstants* d_physicalConsts;
+
+    std::vector<TimeIntegratorLabel* > d_timeIntegratorLabels;
 
 }; // End class ExplicitSolver
 } // End namespace Uintah

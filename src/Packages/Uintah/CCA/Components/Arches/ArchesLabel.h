@@ -83,7 +83,6 @@ namespace Uintah {
       const VarLabel* d_filterdrhodtLabel;
       // for computing divergence constraint
       const VarLabel* d_drhodfCPLabel;
-      const VarLabel* d_drhodfPredLabel;
 
       // computed for old_dw in setProfile
       const VarLabel* d_densitySPLabel;
@@ -278,27 +277,11 @@ namespace Uintah {
       const VarLabel* d_scalCoefSBLMLabel;
 
       // scalar diffusion coeffs, required for divergence constraint
-      const VarLabel* d_scalDiffCoefPredLabel;
+      const VarLabel* d_scalDiffCoefLabel;
 
-      const VarLabel* d_scalDiffCoefSrcPredLabel;
+      const VarLabel* d_scalDiffCoefSrcLabel;
 
-      const VarLabel* d_scalDiffCoefCorrLabel;
-
-      const VarLabel* d_enthDiffCoefPredLabel;
-
-      const VarLabel* d_enthDiffCoefCorrLabel;
-
-      const VarLabel* d_reactscalDiffCoefPredLabel;
-
-      const VarLabel* d_reactscalDiffCoefCorrLabel;
-
-      // Scalar Conv Coef
-
-      const VarLabel* d_scalConvCoefSBLMLabel;
-
-      // Scalar Linear Src
-
-      const VarLabel* d_scalLinSrcSBLMLabel;
+      const VarLabel* d_enthDiffCoefLabel;
 
       // Scalar NonLinear Src
 
@@ -333,14 +316,10 @@ namespace Uintah {
 
       const VarLabel* d_reactscalCoefSBLMLabel;
 
-      // Reactscalar Conv Coef
+      // Reactscalar Diffusion Coef
 
-      const VarLabel* d_reactscalConvCoefSBLMLabel;
-
-      // Reactscalar Linear Src
-
-      const VarLabel* d_reactscalLinSrcSBLMLabel;
-
+      const VarLabel* d_reactscalDiffCoefLabel;
+      
       // Reactscalar NonLinear Src
 
       const VarLabel* d_reactscalNonLinSrcSBLMLabel;
@@ -422,14 +401,10 @@ namespace Uintah {
       const VarLabel* d_co2INLabel;
       const VarLabel* d_h2oINLabel;
       const VarLabel* d_denRefArrayLabel;
-      const VarLabel* d_denRefArrayPredLabel;
       const VarLabel* d_densityMicroLabel;
       const VarLabel* d_densityMicroINLabel;
       const VarLabel* d_pressPlusHydroLabel;
       // predicted
-      const VarLabel* d_tempINPredLabel;
-      const VarLabel* d_co2INPredLabel;
-      const VarLabel* d_h2oINPredLabel;
 
       // for outlet bc
       const VarLabel* d_uvwoutLabel;
@@ -438,70 +413,22 @@ namespace Uintah {
       const VarLabel* d_wVelocityOUTBCLabel;
       const VarLabel* d_scalarOUTBCLabel;
       // pred-corr labels
-      const VarLabel* d_scalCoefPredLabel;
 
-      // Scalar Conv Coef
 
-      const VarLabel* d_scalConvCoefPredLabel;
-
-      // Scalar Linear Src
-
-      const VarLabel* d_scalLinSrcPredLabel;
-
-      // Scalar NonLinear Src
-
-      const VarLabel* d_scalNonLinSrcPredLabel;
       // scalar pred
       const VarLabel* d_scalarPredLabel;
 
-      const VarLabel* d_scalCoefCorrLabel;
 
-      // Scalar Conv Coef
 
-      const VarLabel* d_scalConvCoefCorrLabel;
-
-      // Scalar Linear Src
-
-      const VarLabel* d_scalLinSrcCorrLabel;
-
-      // Scalar NonLinear Src
-
-      const VarLabel* d_scalNonLinSrcCorrLabel;
 
 
 
       // for reactive scalar
       const VarLabel* d_reactscalarOUTBCLabel;
-      // pred-corr labels
-      const VarLabel* d_reactscalCoefPredLabel;
 
-      // Scalar Conv Coef
-
-      const VarLabel* d_reactscalConvCoefPredLabel;
-
-      // Scalar Linear Src
-
-      const VarLabel* d_reactscalLinSrcPredLabel;
-
-      // Scalar NonLinear Src
-
-      const VarLabel* d_reactscalNonLinSrcPredLabel;
       // scalar pred
       const VarLabel* d_reactscalarPredLabel;
 
-      const VarLabel* d_reactscalCoefCorrLabel;
-
-      // Scalar Conv Coef
-
-      const VarLabel* d_reactscalConvCoefCorrLabel;
-
-      // Scalar Linear Src
-
-      const VarLabel* d_reactscalLinSrcCorrLabel;
-
-      // Scalar NonLinear Src
-
-      const VarLabel* d_reactscalNonLinSrcCorrLabel;
       // for corrector
       const VarLabel* d_uVelCoefPBLMCorrLabel;
 
@@ -581,7 +508,6 @@ namespace Uintah {
       const VarLabel* d_enthalpySPLabel;
       // for validation
       const VarLabel* d_enthalpyRXNLabel;
-      const VarLabel* d_enthalpyRXNPredLabel;
       // computed as a part of pressure boundary calculations
 
       const VarLabel* d_enthalpyCPBCLabel;
@@ -591,48 +517,13 @@ namespace Uintah {
 
       const VarLabel* d_enthCoefSBLMLabel;
 
-      // Enthalpy Conv Coef
-
-      const VarLabel* d_enthConvCoefSBLMLabel;
-
-      // Enthalpy Linear Src
-
-      const VarLabel* d_enthLinSrcSBLMLabel;
-
       // Enthalpy NonLinear Src
 
       const VarLabel* d_enthNonLinSrcSBLMLabel;
 
-      // pred-corr labels for enthalpy
-      const VarLabel* d_enthCoefPredLabel;
-
-      // Scalar Conv Coef
-
-      const VarLabel* d_enthConvCoefPredLabel;
-
-      // Scalar Linear Src
-
-      const VarLabel* d_enthLinSrcPredLabel;
-
-      // Scalar NonLinear Src
-
-      const VarLabel* d_enthNonLinSrcPredLabel;
       // scalar pred
       const VarLabel* d_enthalpyPredLabel;
 
-      const VarLabel* d_enthCoefCorrLabel;
-
-      // Scalar Conv Coef
-
-      const VarLabel* d_enthConvCoefCorrLabel;
-
-      // Scalar Linear Src
-
-      const VarLabel* d_enthLinSrcCorrLabel;
-
-      // Scalar NonLinear Src
-
-      const VarLabel* d_enthNonLinSrcCorrLabel;
       // for radiation
       const VarLabel* d_fvtfiveINLabel;
       const VarLabel* d_tfourINLabel;
@@ -652,50 +543,19 @@ namespace Uintah {
       const VarLabel* d_radiationFluxBINLabel;
       // reactive scalar source term from properties
       const VarLabel* d_reactscalarSRCINLabel;
-      const VarLabel* d_absorpINPredLabel;
-      const VarLabel* d_sootFVINPredLabel;
-      // reactive scalar source term from properties
-      const VarLabel* d_reactscalarSRCINPredLabel;
       
       // runge-kutta 3d order scalar labels
-      const VarLabel* d_scalCoefIntermLabel;
-      const VarLabel* d_scalNonLinSrcIntermLabel;
       const VarLabel* d_scalarIntermLabel;
-      const VarLabel* d_scalConvCoefIntermLabel;
-      const VarLabel* d_scalDiffCoefIntermLabel;
-      const VarLabel* d_scalLinSrcIntermLabel;
-      const VarLabel* d_scalarTempLabel;
       
       // runge-kutta 3d order enthalpy labels
-      const VarLabel* d_enthCoefIntermLabel;
-      const VarLabel* d_enthNonLinSrcIntermLabel;
       const VarLabel* d_enthalpyIntermLabel;
-      const VarLabel* d_enthConvCoefIntermLabel;
-      const VarLabel* d_enthDiffCoefIntermLabel;
-      const VarLabel* d_enthLinSrcIntermLabel;
-      const VarLabel* d_enthalpyTempLabel;
 
       // runge-kutta 3d order reactscalar labels
-      const VarLabel* d_reactscalCoefIntermLabel;
-      const VarLabel* d_reactscalNonLinSrcIntermLabel;
       const VarLabel* d_reactscalarIntermLabel;
-      const VarLabel* d_reactscalConvCoefIntermLabel;
-      const VarLabel* d_reactscalDiffCoefIntermLabel;
-      const VarLabel* d_reactscalLinSrcIntermLabel;
-      const VarLabel* d_reactscalarTempLabel;
       
       // runge-kutta 3d order properties labels
       const VarLabel* d_densityIntermLabel;     
       const VarLabel* d_viscosityIntermLabel;
-      const VarLabel* d_drhodfIntermLabel;
-      const VarLabel* d_tempINIntermLabel;
-      const VarLabel* d_co2INIntermLabel; 
-      const VarLabel* d_h2oINIntermLabel; 
-      const VarLabel* d_enthalpyRXNIntermLabel; 
-      const VarLabel* d_reactscalarSRCINIntermLabel; 
-      const VarLabel* d_absorpINIntermLabel; 
-      const VarLabel* d_sootFVINIntermLabel; 
-      const VarLabel* d_denRefArrayIntermLabel;
       const VarLabel* d_refDensityInterm_label;
       
       // runge-kutta 3d order pressure and momentum labels
@@ -718,9 +578,6 @@ namespace Uintah {
       const VarLabel* d_presCoefIntermLabel;
       const VarLabel* d_presLinSrcIntermLabel;
       const VarLabel* d_presNonLinSrcIntermLabel;
-      const VarLabel* d_uVelTempLabel;
-      const VarLabel* d_vVelTempLabel;
-      const VarLabel* d_wVelTempLabel;
       const VarLabel* d_uVelocityIntermLabel;
       const VarLabel* d_vVelocityIntermLabel;
       const VarLabel* d_wVelocityIntermLabel;
@@ -737,13 +594,6 @@ namespace Uintah {
       const VarLabel* d_maxAbsUInterm_label;
       const VarLabel* d_maxAbsVInterm_label;
       const VarLabel* d_maxAbsWInterm_label;
-// labels for interpolated velocity used in Runge-Kutta method
-      const VarLabel* d_newCCUVelocityPredLabel;
-      const VarLabel* d_newCCVVelocityPredLabel;
-      const VarLabel* d_newCCWVelocityPredLabel;
-      const VarLabel* d_newCCUVelocityIntermLabel;
-      const VarLabel* d_newCCVVelocityIntermLabel;
-      const VarLabel* d_newCCWVelocityIntermLabel;
 // filtered convection terms in momentum eqn
       const VarLabel* d_filteredRhoUjULabel;
       const VarLabel* d_filteredRhoUjVLabel;

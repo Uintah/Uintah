@@ -171,8 +171,7 @@ public:
 			 int index, double delta_t,
 			 ArchesVariables* vars,
 			 ArchesConstVariables* constvars,
-			 CellInformation* cellinfo,
-			 const ArchesLabel* lab);
+			 CellInformation* cellinfo);
       void computeEnthalpyUnderrelax(const ProcessorGroup* pc,
 				     const Patch* patch,
 				     ArchesVariables* vars,
@@ -185,8 +184,7 @@ public:
 			   double delta_t,
 			   ArchesVariables* vars,
 			   ArchesConstVariables* constvars,
-			   CellInformation* cellinfo,
-			   const ArchesLabel* lab);
+			   CellInformation* cellinfo);
        // to close petsc 
       void finalizeSolver();
 

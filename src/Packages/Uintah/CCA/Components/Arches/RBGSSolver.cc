@@ -935,8 +935,7 @@ RBGSSolver::scalarLisolve(const ProcessorGroup*,
 			  int, double delta_t,
 			  ArchesVariables* vars,
 			  ArchesConstVariables* constvars,
-			  CellInformation* cellinfo,
-			  const ArchesLabel*)
+			  CellInformation* cellinfo)
 {
   // Get the patch bounds and the variable bounds
   IntVector idxLo = patch->getCellFORTLowIndex();
@@ -1033,8 +1032,7 @@ RBGSSolver::enthalpyLisolve(const ProcessorGroup*,
 			  double delta_t,
 			  ArchesVariables* vars,
 			  ArchesConstVariables* constvars,
-			  CellInformation* cellinfo,
-			  const ArchesLabel*)
+			  CellInformation* cellinfo)
 {
   // Get the patch bounds and the variable bounds
   IntVector idxLo = patch->getCellFORTLowIndex();

@@ -113,7 +113,8 @@ public:
       //    to a Cell Centered Vector
       //    [in] 
       void sched_interpolateFromFCToCC(SchedulerP&, const PatchSet* patches,
-				       const MaterialSet* matls);
+				       const MaterialSet* matls,
+				       const TimeIntegratorLabel* timelabels);
 
       void sched_probeData(SchedulerP&, const PatchSet* patches,
 			   const MaterialSet* matls);
@@ -127,7 +128,7 @@ public:
 			     SchedulerP& sched,
 			     DataWarehouseP& old_dw,
 			     DataWarehouseP& new_dw);
-  
+
 protected :
 
 private:
@@ -163,7 +164,8 @@ private:
 				 const PatchSubset* patches,
 				 const MaterialSubset* matls,
 				 DataWarehouse* old_dw,
-				 DataWarehouse* new_dw);
+				 DataWarehouse* new_dw,
+				 const TimeIntegratorLabel* timelabels);
 
       void probeData(const ProcessorGroup* pc,
 		     const PatchSubset* patches,

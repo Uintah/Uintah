@@ -39,13 +39,6 @@
 #include <Core/Math/MinMax.h>
 #include <Core/Math/MiscMath.h>
 
-#ifdef Runge_Kutta_3d
-#ifndef Runge_Kutta_3d_ssp
-#include <Core/Math/Expon.h>
-#include <Core/Math/Trig.h>
-#endif
-#endif
-
 #include <iostream>
 using std::cerr;
 using std::endl;
@@ -201,6 +194,9 @@ Arches::problemSetup(const ProblemSpecP& params,
     throw InvalidValue("Nonlinear solver not supported: "+nlSolver);
 
   d_nlSolver->problemSetup(db);
+  d_timeIntegratorType = d_nlSolver->getTimeIntegratorType();
+  d_conv_scheme = d_nlSolver->getConvectionSchemeType();
+  d_boundaryCondition->setConvectionSchemeType(d_conv_scheme);
 }
 
 // ****************************************************************************
@@ -276,12 +272,11 @@ Arches::sched_paramInit(const LevelP& level,
     tsk->computes(d_lab->d_newCCVVelocityLabel);
     tsk->computes(d_lab->d_newCCWVelocityLabel);
     tsk->computes(d_lab->d_pressureINLabel);
-#ifdef correctorstep
-    tsk->computes(d_lab->d_pressurePredLabel);
-#ifdef Runge_Kutta_3d
-    tsk->computes(d_lab->d_pressureIntermLabel);
-#endif
-#endif
+    if (!(d_timeIntegratorType == "FE"))
+      tsk->computes(d_lab->d_pressurePredLabel);
+    if (d_timeIntegratorType == "RK3SSP")
+      tsk->computes(d_lab->d_pressureIntermLabel);
+
     for (int ii = 0; ii < d_nofScalars; ii++) 
       tsk->computes(d_lab->d_scalarINLabel); // only work for 1 scalar
     for (int ii = 0; ii < d_nofScalarStats; ii++) {
@@ -401,12 +396,7 @@ Arches::computeStableTimeStep(const ProcessorGroup* ,
 			     1.0/(cellinfo->sns[colY]*cellinfo->sns[colY]) +
 	                     1.0/(cellinfo->stb[colZ]*cellinfo->stb[colZ])) +
 	                   small_num;
-#ifdef Runge_Kutta_3d
-#ifndef Runge_Kutta_3d_ssp
-          tmp_time *= Pi;
-          tmp_time /= Sqrt(3.0);
-#endif
-#endif
+
 	  delta_t2=Min(1.0/tmp_time, delta_t2);
 #if 0								  
 	  delta_t2=Min(Abs(cellinfo->sew[colX]/
@@ -503,14 +493,17 @@ Arches::paramInit(const ProcessorGroup* ,
     new_dw->allocateAndPut(vVelocity, d_lab->d_vVelocityINLabel, matlIndex, patch);
     new_dw->allocateAndPut(wVelocity, d_lab->d_wVelocityINLabel, matlIndex, patch);
     new_dw->allocateAndPut(pressure, d_lab->d_pressureINLabel, matlIndex, patch);
-#ifdef correctorstep
-    new_dw->allocateAndPut(pressurePred, d_lab->d_pressurePredLabel, matlIndex, patch);
-    pressurePred.initialize(0.0);
-#ifdef Runge_Kutta_3d
-    new_dw->allocateAndPut(pressureInterm, d_lab->d_pressureIntermLabel, matlIndex, patch);
-    pressureInterm.initialize(0.0);
-#endif
-#endif
+    if (!(d_timeIntegratorType == "FE")) {
+      new_dw->allocateAndPut(pressurePred, d_lab->d_pressurePredLabel,
+			     matlIndex, patch);
+      pressurePred.initialize(0.0);
+    }
+    if (d_timeIntegratorType == "RK3SSP") {
+      new_dw->allocateAndPut(pressureInterm, d_lab->d_pressureIntermLabel,
+			     matlIndex, patch);
+      pressureInterm.initialize(0.0);
+    }
+
     if (d_MAlab) {
       new_dw->allocateAndPut(pPlusHydro, d_lab->d_pressPlusHydroLabel, matlIndex, patch);
       pPlusHydro.initialize(0.0);

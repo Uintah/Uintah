@@ -78,23 +78,22 @@ public:
       virtual void sched_reComputeTurbSubmodel(SchedulerP&,
 				 const PatchSet* patches,
 				 const MaterialSet* matls,
-				 const int Runge_Kutta_current_step,
-				 const bool Runge_Kutta_last_step);
+			         const TimeIntegratorLabel* timelabels);
 
       // GROUP: Schedule Action :
       ///////////////////////////////////////////////////////////////////////
       // Schedule the computation of Turbulence Model data
       //    [in] 
       //        data User data needed for solve 
-      virtual void sched_computeScalarVariance(SchedulerP&, const PatchSet* patches,
-					const MaterialSet* matls,
-				 	const int Runge_Kutta_current_step,
-				 	const bool Runge_Kutta_last_step);
+      virtual void sched_computeScalarVariance(SchedulerP&,
+					       const PatchSet* patches,
+					       const MaterialSet* matls,
+			                 const TimeIntegratorLabel* timelabels);
 
-      virtual void sched_computeScalarDissipation(SchedulerP&, const PatchSet* patches,
-						const MaterialSet* matls,
-				 		const int Runge_Kutta_current_step,
-				 		const bool Runge_Kutta_last_step);
+      virtual void sched_computeScalarDissipation(SchedulerP&,
+						  const PatchSet* patches,
+						  const MaterialSet* matls,
+			                 const TimeIntegratorLabel* timelabels);
 
 protected:
 
@@ -125,8 +124,7 @@ private:
 				 const MaterialSubset* matls,
 				 DataWarehouse* old_dw,
 				 DataWarehouse* new_dw,
-				 const int Runge_Kutta_current_step,
-				 const bool Runge_Kutta_last_step);
+			         const TimeIntegratorLabel* timelabels);
  
       ///////////////////////////////////////////////////////////////////////
       // Actually Calculate the subgrid scale variance
@@ -137,16 +135,14 @@ private:
 				 const MaterialSubset* matls,
 				 DataWarehouse* old_dw,
 				 DataWarehouse* new_dw,
-				 const int Runge_Kutta_current_step,
-				 const bool Runge_Kutta_last_step);
+			         const TimeIntegratorLabel* timelabels);
 
       void computeScalarDissipation(const ProcessorGroup*,
 				    const PatchSubset* patches,
 				    const MaterialSubset* matls,
 				    DataWarehouse* old_dw,
 				    DataWarehouse* new_dw,
-				    const int Runge_Kutta_current_step,
-				    const bool Runge_Kutta_last_step);
+			            const TimeIntegratorLabel* timelabels);
 
 private:
       double d_CF; //model constant

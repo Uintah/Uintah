@@ -74,8 +74,6 @@ ArchesLabel::ArchesLabel()
 				    CCVariable<double>::getTypeDescription() );
   d_drhodfCPLabel = VarLabel::create("drhodfCP", 
 				  CCVariable<double>::getTypeDescription() );
-  d_drhodfPredLabel = VarLabel::create("drhodfPred", 
-				  CCVariable<double>::getTypeDescription() );
   // Viscosity Labels
   d_viscosityINLabel = VarLabel::create("viscosityIN", 
 				   CCVariable<double>::getTypeDescription() );
@@ -238,12 +236,6 @@ ArchesLabel::ArchesLabel()
 				   CCVariable<double>::getTypeDescription() );
 
 
-  // Scalar Conv Coef
-  d_scalConvCoefSBLMLabel = VarLabel::create("scalConvCoefSBLM",
-				   CCVariable<double>::getTypeDescription() );
-  // Scalar Linear Src
-  d_scalLinSrcSBLMLabel = VarLabel::create("scalLinSrcSBLM",
-				   CCVariable<double>::getTypeDescription() );
   // Scalar Non Linear Src
   d_scalNonLinSrcSBLMLabel = VarLabel::create("scalNonLinSrcSBLM",
 				   CCVariable<double>::getTypeDescription() );
@@ -269,12 +261,6 @@ ArchesLabel::ArchesLabel()
 				       CCVariable<double>::getTypeDescription() );
   // Reactscalar Coef
   d_reactscalCoefSBLMLabel = VarLabel::create("reactscalCoefSBLM",
-				   CCVariable<double>::getTypeDescription() );
-  // Reactscalar Conv Coef
-  d_reactscalConvCoefSBLMLabel = VarLabel::create("reactscalConvCoefSBLM",
-				   CCVariable<double>::getTypeDescription() );
-  // Reactscalar Linear Src
-  d_reactscalLinSrcSBLMLabel = VarLabel::create("reactscalLinSrcSBLM",
 				   CCVariable<double>::getTypeDescription() );
   // Reactscalar Non Linear Src
   d_reactscalNonLinSrcSBLMLabel = VarLabel::create("reactscalNonLinSrcSBLM",
@@ -390,12 +376,6 @@ ArchesLabel::ArchesLabel()
   d_h2oINLabel = VarLabel::create("h2oIN",
 				  CCVariable<double>::getTypeDescription() );
 
-  d_tempINPredLabel = VarLabel::create("tempINPred",
-				  CCVariable<double>::getTypeDescription() );
-  d_co2INPredLabel = VarLabel::create("co2INPred",
-				  CCVariable<double>::getTypeDescription() );
-  d_h2oINPredLabel = VarLabel::create("h2oINPred",
-				  CCVariable<double>::getTypeDescription() );
 
 
   // Array containing the reference density multiplied by the void fraction
@@ -403,8 +383,6 @@ ArchesLabel::ArchesLabel()
   // case
 
   d_denRefArrayLabel = VarLabel::create("denRefArray",
-					CCVariable<double>::getTypeDescription() );
-  d_denRefArrayPredLabel = VarLabel::create("denRefArrayPred",
 					CCVariable<double>::getTypeDescription() );
 
   // Microscopic density (i.e., without void fraction) of gas
@@ -434,84 +412,29 @@ ArchesLabel::ArchesLabel()
 
 
   // predictor-corrector labels
-  // Scalar Coef
-  d_scalCoefPredLabel = VarLabel::create("scalCoefPred",
-				   CCVariable<double>::getTypeDescription() );
 
   // scalar diffusion coeff for divergence constraint
-  d_scalDiffCoefPredLabel = VarLabel::create("scalDiffCoefPred",
+  d_scalDiffCoefLabel = VarLabel::create("scalDiffCoef",
 				   CCVariable<double>::getTypeDescription() );
 
-  d_scalDiffCoefSrcPredLabel = VarLabel::create("scalDiffCoefSrcPred",
+  d_scalDiffCoefSrcLabel = VarLabel::create("scalDiffCoefSrc",
 				   CCVariable<double>::getTypeDescription() );
 
-  d_scalDiffCoefCorrLabel = VarLabel::create("scalDiffCoefCorr",
+
+
+
+  d_enthDiffCoefLabel = VarLabel::create("enthDiffCoef",
 				   CCVariable<double>::getTypeDescription() );
 
-  d_enthDiffCoefPredLabel = VarLabel::create("enthDiffCoefPred",
-				   CCVariable<double>::getTypeDescription() );
-
-  d_enthDiffCoefCorrLabel = VarLabel::create("enthDiffCoefCorr",
-				   CCVariable<double>::getTypeDescription() );
-
-  d_reactscalDiffCoefPredLabel = VarLabel::create("reactscalDiffCoefPred",
-				   CCVariable<double>::getTypeDescription() );
-
-  d_reactscalDiffCoefCorrLabel = VarLabel::create("reactscalDiffCoefCorr",
-				   CCVariable<double>::getTypeDescription() );
-
-  // Scalar Conv Coef
-  d_scalConvCoefPredLabel = VarLabel::create("scalConvCoefPred",
-				   CCVariable<double>::getTypeDescription() );
-  // Scalar Linear Src
-  d_scalLinSrcPredLabel = VarLabel::create("scalLinSrcPred",
-				   CCVariable<double>::getTypeDescription() );
-  // Scalar Non Linear Src
-  d_scalNonLinSrcPredLabel = VarLabel::create("scalNonLinSrcPred",
+  d_reactscalDiffCoefLabel = VarLabel::create("reactscalDiffCoef",
 				   CCVariable<double>::getTypeDescription() );
 
   d_scalarPredLabel = VarLabel::create("scalarPred",
 				   CCVariable<double>::getTypeDescription() );
 
-  d_scalCoefCorrLabel = VarLabel::create("scalCoefCorr",
-				   CCVariable<double>::getTypeDescription() );
-  // Scalar Conv Coef
-  d_scalConvCoefCorrLabel = VarLabel::create("scalConvCoefCorr",
-				   CCVariable<double>::getTypeDescription() );
-  // Scalar Linear Src
-  d_scalLinSrcCorrLabel = VarLabel::create("scalLinSrcCorr",
-				   CCVariable<double>::getTypeDescription() );
-  // Scalar Non Linear Src
-  d_scalNonLinSrcCorrLabel = VarLabel::create("scalNonLinSrcCorr",
-				   CCVariable<double>::getTypeDescription() );
-  
 
 
   // predictor-corrector labels
-  // Reactscalar Coef
-  d_reactscalCoefPredLabel = VarLabel::create("reactscalCoefPred",
-				   CCVariable<double>::getTypeDescription() );
-  // Reactscalar Conv Coef
-  d_reactscalConvCoefPredLabel = VarLabel::create("reactscalConvCoefPred",
-				   CCVariable<double>::getTypeDescription() );
-  // Reactscalar Linear Src
-  d_reactscalLinSrcPredLabel = VarLabel::create("reactscalLinSrcPred",
-				   CCVariable<double>::getTypeDescription() );
-  // Reactscalar Non Linear Src
-  d_reactscalNonLinSrcPredLabel = VarLabel::create("reactscalNonLinSrcPred",
-				   CCVariable<double>::getTypeDescription() );
-
-  d_reactscalCoefCorrLabel = VarLabel::create("reactscalCoefCorr",
-				   CCVariable<double>::getTypeDescription() );
-  // Reactscalar Conv Coef
-  d_reactscalConvCoefCorrLabel = VarLabel::create("reactscalConvCoefCorr",
-				   CCVariable<double>::getTypeDescription() );
-  // Reactscalar Linear Src
-  d_reactscalLinSrcCorrLabel = VarLabel::create("reactscalLinSrcCorr",
-				   CCVariable<double>::getTypeDescription() );
-  // Reactscalar Non Linear Src
-  d_reactscalNonLinSrcCorrLabel = VarLabel::create("reactscalNonLinSrcCorr",
-				   CCVariable<double>::getTypeDescription() );
 
   d_reactscalarPredLabel = VarLabel::create("reactscalarPred",
 				   CCVariable<double>::getTypeDescription() );
@@ -611,8 +534,6 @@ ArchesLabel::ArchesLabel()
   d_enthalpyRXNLabel = VarLabel::create("enthalpyRXN",
 				   CCVariable<double>::getTypeDescription() );
 
-  d_enthalpyRXNPredLabel = VarLabel::create("enthalpyRXNPred",
-				   CCVariable<double>::getTypeDescription() );
 
   d_enthalpyCPBCLabel = VarLabel::create("enthalpyCPBC",
 				      CCVariable<double>::getTypeDescription() );
@@ -622,41 +543,11 @@ ArchesLabel::ArchesLabel()
   // Enthalpy Coef
   d_enthCoefSBLMLabel = VarLabel::create("enthCoefSBLM",
 				   CCVariable<double>::getTypeDescription() );
-  // Enthalpy Conv Coef
-  d_enthConvCoefSBLMLabel = VarLabel::create("enthConvCoefSBLM",
-				   CCVariable<double>::getTypeDescription() );
-  // Enthalpy Linear Src
-  d_enthLinSrcSBLMLabel = VarLabel::create("enthLinSrcSBLM",
-				   CCVariable<double>::getTypeDescription() );
   // Enthalpy Non Linear Src
   d_enthNonLinSrcSBLMLabel = VarLabel::create("enthNonLinSrcSBLM",
 				   CCVariable<double>::getTypeDescription() );
 
   // predictor-corrector labels
-  // Enthalpy Coef
-  d_enthCoefPredLabel = VarLabel::create("enthCoefPred",
-				   CCVariable<double>::getTypeDescription() );
-  // Enthalpy Conv Coef
-  d_enthConvCoefPredLabel = VarLabel::create("enthConvCoefPred",
-				   CCVariable<double>::getTypeDescription() );
-  // Enthalpy Linear Src
-  d_enthLinSrcPredLabel = VarLabel::create("enthLinSrcPred",
-				   CCVariable<double>::getTypeDescription() );
-  // Enthalpy Non Linear Src
-  d_enthNonLinSrcPredLabel = VarLabel::create("enthNonLinSrcPred",
-				   CCVariable<double>::getTypeDescription() );
-
-  d_enthCoefCorrLabel = VarLabel::create("enthCoefCorr",
-				   CCVariable<double>::getTypeDescription() );
-  // Enthalpy Conv Coef
-  d_enthConvCoefCorrLabel = VarLabel::create("enthConvCoefCorr",
-				   CCVariable<double>::getTypeDescription() );
-  // Enthalpy Linear Src
-  d_enthLinSrcCorrLabel = VarLabel::create("enthLinSrcCorr",
-				   CCVariable<double>::getTypeDescription() );
-  // Enthalpy Non Linear Src
-  d_enthNonLinSrcCorrLabel = VarLabel::create("enthNonLinSrcCorr",
-				   CCVariable<double>::getTypeDescription() );
 
   d_enthalpyPredLabel = VarLabel::create("enthalpyPred",
 				   CCVariable<double>::getTypeDescription() );
@@ -700,82 +591,23 @@ ArchesLabel::ArchesLabel()
   d_reactscalarSRCINLabel = VarLabel::create("reactscalarSRCIN",
 				    CCVariable<double>::getTypeDescription() );
 
-  d_absorpINPredLabel = VarLabel::create("absorpINPred",
-				    CCVariable<double>::getTypeDescription() );
-  d_sootFVINPredLabel = VarLabel::create("sootFVINPred",
-				    CCVariable<double>::getTypeDescription() );
 
-  d_reactscalarSRCINPredLabel = VarLabel::create("reactscalarSRCINPred",
-				    CCVariable<double>::getTypeDescription() );
 
   // Runge-Kutta 3d order scalar labels
-  // Scalar Coef
-  d_scalCoefIntermLabel = VarLabel::create("scalCoefInterm",
-				   CCVariable<double>::getTypeDescription() );
-  // Scalar Conv Coef
-  d_scalConvCoefIntermLabel = VarLabel::create("scalConvCoefInterm",
-				   CCVariable<double>::getTypeDescription() );
   // Scalar Diff Coef
-  d_scalDiffCoefIntermLabel = VarLabel::create("scalDiffCoefInterm",
-				   CCVariable<double>::getTypeDescription() );
-  // Scalar Linear Src
-  d_scalLinSrcIntermLabel = VarLabel::create("scalLinSrcInterm",
-				   CCVariable<double>::getTypeDescription() );
-  // Scalar Non Linear Src
-  d_scalNonLinSrcIntermLabel = VarLabel::create("scalNonLinSrcInterm",
-				   CCVariable<double>::getTypeDescription() );
   // Scalar Intermediate step value
   d_scalarIntermLabel = VarLabel::create("scalarInterm",
-				   CCVariable<double>::getTypeDescription() );
-  // Scalar temp storage
-  d_scalarTempLabel = VarLabel::create("scalarTemp",
 				   CCVariable<double>::getTypeDescription() );
 
   
   // Runge-Kutta 3d order enthalpy labels
-  // Enthalpy Coef
-  d_enthCoefIntermLabel = VarLabel::create("enthCoefInterm",
-				   CCVariable<double>::getTypeDescription() );
-  // Enthalpy Conv Coef
-  d_enthConvCoefIntermLabel = VarLabel::create("enthConvCoefInterm",
-				   CCVariable<double>::getTypeDescription() );
-  // Enthalpy Diff Coef
-  d_enthDiffCoefIntermLabel = VarLabel::create("enthDiffCoefInterm",
-				   CCVariable<double>::getTypeDescription() );
-  // Enthalpy Linear Src
-  d_enthLinSrcIntermLabel = VarLabel::create("enthLinSrcInterm",
-				   CCVariable<double>::getTypeDescription() );
-  // Enthalpy Non Linear Src
-  d_enthNonLinSrcIntermLabel = VarLabel::create("enthNonLinSrcInterm",
-				   CCVariable<double>::getTypeDescription() );
   // Enthalpy Intermediate step value
   d_enthalpyIntermLabel = VarLabel::create("enthalpyInterm",
 				   CCVariable<double>::getTypeDescription() );
-  // Enthalpy temp storage
-  d_enthalpyTempLabel = VarLabel::create("enthalpyTemp",
-				   CCVariable<double>::getTypeDescription() );
 
   // Runge-Kutta 3d order reactive scalar labels
-  // Reactscalar Coef
-  d_reactscalCoefIntermLabel = VarLabel::create("reactscalCoefInterm",
-				   CCVariable<double>::getTypeDescription() );
-  // Reactscalar Conv Coef
-  d_reactscalConvCoefIntermLabel = VarLabel::create("reactscalConvCoefInterm",
-				   CCVariable<double>::getTypeDescription() );
-  // Reactscalar Diff Coef
-  d_reactscalDiffCoefIntermLabel = VarLabel::create("reactscalDiffCoefInterm",
-				   CCVariable<double>::getTypeDescription() );
-  // Reactscalar Linear Src
-  d_reactscalLinSrcIntermLabel = VarLabel::create("reactscalLinSrcInterm",
-				   CCVariable<double>::getTypeDescription() );
-  // Reactscalar Non Linear Src
-  d_reactscalNonLinSrcIntermLabel = VarLabel::create("reactscalNonLinSrcInterm",
-				   CCVariable<double>::getTypeDescription() );
   // Reactscalar Intermediate step value
   d_reactscalarIntermLabel = VarLabel::create("reactscalarInterm",
-				   CCVariable<double>::getTypeDescription() );
-  // Scalar temp storage
-  d_reactscalarTempLabel = VarLabel::create("reactscalarTemp",
 				   CCVariable<double>::getTypeDescription() );
 
   // required for scalesimilarity
@@ -805,24 +637,6 @@ ArchesLabel::ArchesLabel()
 				   CCVariable<double>::getTypeDescription() );
   d_viscosityIntermLabel = VarLabel::create("viscosityInterm", 
 				     CCVariable<double>::getTypeDescription() );
-  d_drhodfIntermLabel = VarLabel::create("drhodfInterm", 
-				  CCVariable<double>::getTypeDescription() );
-  d_tempINIntermLabel = VarLabel::create("tempINInterm",
-				  CCVariable<double>::getTypeDescription() );
-  d_co2INIntermLabel = VarLabel::create("co2INInterm",
-				  CCVariable<double>::getTypeDescription() );
-  d_h2oINIntermLabel = VarLabel::create("h2oINInterm",
-				  CCVariable<double>::getTypeDescription() );
-  d_enthalpyRXNIntermLabel = VarLabel::create("enthalpyRXNInterm",
-				   CCVariable<double>::getTypeDescription() );
-  d_reactscalarSRCINIntermLabel = VarLabel::create("reactscalarSRCINInterm",
-				    CCVariable<double>::getTypeDescription() );
-  d_absorpINIntermLabel = VarLabel::create("absorpINInterm",
-				    CCVariable<double>::getTypeDescription() );
-  d_sootFVINIntermLabel = VarLabel::create("sootFVINInterm",
-				    CCVariable<double>::getTypeDescription() );
-  d_denRefArrayIntermLabel = VarLabel::create("denRefArrayInterm",
-				CCVariable<double>::getTypeDescription() );
   d_refDensityInterm_label = VarLabel::create("refDensityIntermLabel",
 				       sum_vartype::getTypeDescription() );
 
@@ -865,12 +679,6 @@ ArchesLabel::ArchesLabel()
 					CCVariable<double>::getTypeDescription() );
   d_presNonLinSrcIntermLabel = VarLabel::create("presNonLinSrcInterm", 
 					   CCVariable<double>::getTypeDescription() );
-  d_uVelTempLabel = VarLabel::create("uvelTemp",
-				   SFCXVariable<double>::getTypeDescription() );
-  d_vVelTempLabel= VarLabel::create("vvelTemp",
-				   SFCYVariable<double>::getTypeDescription() );
-  d_wVelTempLabel= VarLabel::create("wvelTemp",
-				   SFCZVariable<double>::getTypeDescription() );
   d_uVelocityIntermLabel = VarLabel::create("uVelocityInterm", 
 				    SFCXVariable<double>::getTypeDescription() );
   d_vVelocityIntermLabel = VarLabel::create("vVelocityInterm", 
@@ -902,19 +710,6 @@ ArchesLabel::ArchesLabel()
 				       max_vartype::getTypeDescription() );
   d_maxAbsWInterm_label = VarLabel::create("maxAbsWInterm",
 				       max_vartype::getTypeDescription() );
-// labels for interpolated velocity used in Runge-Kutta method
-  d_newCCUVelocityPredLabel = VarLabel::create("newCCUVelocityPred",
-				CCVariable<double>::getTypeDescription() );
-  d_newCCVVelocityPredLabel = VarLabel::create("newCCVVelocityPred",
-				CCVariable<double>::getTypeDescription() );
-  d_newCCWVelocityPredLabel = VarLabel::create("newCCWVelocityPred",
-				CCVariable<double>::getTypeDescription() );
-  d_newCCUVelocityIntermLabel = VarLabel::create("newCCUVelocityInterm",
-				CCVariable<double>::getTypeDescription() );
-  d_newCCVVelocityIntermLabel = VarLabel::create("newCCVVelocityInterm",
-				CCVariable<double>::getTypeDescription() );
-  d_newCCWVelocityIntermLabel = VarLabel::create("newCCWVelocityInterm",
-				CCVariable<double>::getTypeDescription() );
 // filtered convection terms in momentum eqn
   d_filteredRhoUjULabel = VarLabel::create("filteredRhoUjU",
 				   SFCXVariable<double>::getTypeDescription() );
@@ -991,7 +786,6 @@ ArchesLabel::~ArchesLabel()
   VarLabel::destroy(d_densityCPLabel);
   VarLabel::destroy(d_filterdrhodtLabel);
   VarLabel::destroy(d_drhodfCPLabel);
-  VarLabel::destroy(d_drhodfPredLabel);
   VarLabel::destroy(d_densitySPLabel);
   VarLabel::destroy(d_viscosityINLabel);
   VarLabel::destroy(d_viscosityCTSLabel);
@@ -1049,8 +843,6 @@ ArchesLabel::~ArchesLabel()
   VarLabel::destroy(d_scalarDissINLabel);
   VarLabel::destroy(d_scalarDissSPLabel);
   VarLabel::destroy(d_scalCoefSBLMLabel);
-  VarLabel::destroy(d_scalConvCoefSBLMLabel);
-  VarLabel::destroy(d_scalLinSrcSBLMLabel);
   VarLabel::destroy(d_scalNonLinSrcSBLMLabel);
   VarLabel::destroy(d_reactscalarINLabel);
   VarLabel::destroy(d_reactscalarSPLabel);
@@ -1058,8 +850,6 @@ ArchesLabel::~ArchesLabel()
   VarLabel::destroy(d_reactscalarVarINLabel);
   VarLabel::destroy(d_reactscalarVarSPLabel);
   VarLabel::destroy(d_reactscalCoefSBLMLabel);
-  VarLabel::destroy(d_reactscalConvCoefSBLMLabel);
-  VarLabel::destroy(d_reactscalLinSrcSBLMLabel);
   VarLabel::destroy(d_reactscalNonLinSrcSBLMLabel);
   VarLabel::destroy(d_refDensity_label);
   VarLabel::destroy(d_refDensityPred_label);
@@ -1105,7 +895,6 @@ ArchesLabel::~ArchesLabel()
   VarLabel::destroy(d_co2INLabel);
   VarLabel::destroy(d_h2oINLabel);
   VarLabel::destroy(d_denRefArrayLabel);
-  VarLabel::destroy(d_denRefArrayPredLabel);
   VarLabel::destroy(d_densityMicroLabel);
   VarLabel::destroy(d_densityMicroINLabel);
   VarLabel::destroy(d_pressPlusHydroLabel);
@@ -1114,32 +903,13 @@ ArchesLabel::~ArchesLabel()
   VarLabel::destroy(d_vVelocityOUTBCLabel);
   VarLabel::destroy(d_wVelocityOUTBCLabel);
   VarLabel::destroy(d_scalarOUTBCLabel);
-  VarLabel::destroy(d_scalCoefPredLabel);
-  VarLabel::destroy(d_scalDiffCoefPredLabel);
-  VarLabel::destroy(d_scalDiffCoefSrcPredLabel);
-  VarLabel::destroy(d_scalDiffCoefCorrLabel);
-  VarLabel::destroy(d_enthDiffCoefPredLabel);
-  VarLabel::destroy(d_enthDiffCoefCorrLabel);
-  VarLabel::destroy(d_reactscalDiffCoefPredLabel);
-  VarLabel::destroy(d_reactscalDiffCoefCorrLabel);
-  VarLabel::destroy(d_scalConvCoefPredLabel);
-  VarLabel::destroy(d_scalLinSrcPredLabel);
-  VarLabel::destroy(d_scalNonLinSrcPredLabel);
+  VarLabel::destroy(d_scalDiffCoefLabel);
+  VarLabel::destroy(d_scalDiffCoefSrcLabel);
+  VarLabel::destroy(d_enthDiffCoefLabel);
+  VarLabel::destroy(d_reactscalDiffCoefLabel);
   VarLabel::destroy(d_scalarPredLabel);
-  VarLabel::destroy(d_scalCoefCorrLabel);
-  VarLabel::destroy(d_scalConvCoefCorrLabel);
-  VarLabel::destroy(d_scalLinSrcCorrLabel);
-  VarLabel::destroy(d_scalNonLinSrcCorrLabel);
   VarLabel::destroy(d_reactscalarOUTBCLabel);
-  VarLabel::destroy(d_reactscalCoefPredLabel);
-  VarLabel::destroy(d_reactscalConvCoefPredLabel);
-  VarLabel::destroy(d_reactscalLinSrcPredLabel);
-  VarLabel::destroy(d_reactscalNonLinSrcPredLabel);
   VarLabel::destroy(d_reactscalarPredLabel);
-  VarLabel::destroy(d_reactscalCoefCorrLabel);
-  VarLabel::destroy(d_reactscalConvCoefCorrLabel);
-  VarLabel::destroy(d_reactscalLinSrcCorrLabel);
-  VarLabel::destroy(d_reactscalNonLinSrcCorrLabel);
   VarLabel::destroy(d_densityPredLabel);
   VarLabel::destroy(d_uVelRhoHatLabel);
   VarLabel::destroy(d_vVelRhoHatLabel);
@@ -1162,18 +932,8 @@ ArchesLabel::~ArchesLabel()
   VarLabel::destroy(d_enthalpyCPBCLabel);
   VarLabel::destroy(d_enthalpyOUTBCLabel);
   VarLabel::destroy(d_enthCoefSBLMLabel);
-  VarLabel::destroy(d_enthConvCoefSBLMLabel);
-  VarLabel::destroy(d_enthLinSrcSBLMLabel);
   VarLabel::destroy(d_enthNonLinSrcSBLMLabel);
-  VarLabel::destroy(d_enthCoefPredLabel);
-  VarLabel::destroy(d_enthConvCoefPredLabel);
-  VarLabel::destroy(d_enthLinSrcPredLabel);
-  VarLabel::destroy(d_enthNonLinSrcPredLabel);
   VarLabel::destroy(d_enthalpyPredLabel);
-  VarLabel::destroy(d_enthCoefCorrLabel);
-  VarLabel::destroy(d_enthConvCoefCorrLabel);
-  VarLabel::destroy(d_enthLinSrcCorrLabel);
-  VarLabel::destroy(d_enthNonLinSrcCorrLabel);
   VarLabel::destroy(d_absorpINLabel);
   VarLabel::destroy(d_fvtfiveINLabel);
   VarLabel::destroy(d_tfourINLabel);
@@ -1191,14 +951,7 @@ ArchesLabel::~ArchesLabel()
   VarLabel::destroy(d_radiationFluxTINLabel);
   VarLabel::destroy(d_radiationFluxBINLabel);
   VarLabel::destroy(d_reactscalarSRCINLabel);
-  VarLabel::destroy(d_absorpINPredLabel);
-  VarLabel::destroy(d_co2INPredLabel);
-  VarLabel::destroy(d_h2oINPredLabel);
-  VarLabel::destroy(d_enthalpyRXNPredLabel);
   VarLabel::destroy(d_pressureCorrSPBCLabel);
-  VarLabel::destroy(d_reactscalarSRCINPredLabel);
-  VarLabel::destroy(d_sootFVINPredLabel);
-  VarLabel::destroy(d_tempINPredLabel);
   VarLabel::destroy(d_uVelCoefPBLMCorrLabel);
   VarLabel::destroy(d_uVelConvCoefPBLMCorrLabel);
   VarLabel::destroy(d_uVelLinSrcPBLMCorrLabel);
@@ -1215,41 +968,14 @@ ArchesLabel::~ArchesLabel()
   VarLabel::destroy(d_wVelNonLinSrcPBLMCorrLabel);
   VarLabel::destroy(d_wVelRhoHatCorrLabel);
  // Runge-Kutta 3d order scalar labels
-  VarLabel::destroy(d_scalCoefIntermLabel);
-  VarLabel::destroy(d_scalNonLinSrcIntermLabel);
   VarLabel::destroy(d_scalarIntermLabel);
-  VarLabel::destroy(d_scalConvCoefIntermLabel);
-  VarLabel::destroy(d_scalDiffCoefIntermLabel);
-  VarLabel::destroy(d_scalLinSrcIntermLabel);
-  VarLabel::destroy(d_scalarTempLabel);
  // Runge-Kutta 3d order enthalpy labels
-  VarLabel::destroy(d_enthCoefIntermLabel);
-  VarLabel::destroy(d_enthNonLinSrcIntermLabel);
   VarLabel::destroy(d_enthalpyIntermLabel);
-  VarLabel::destroy(d_enthConvCoefIntermLabel);
-  VarLabel::destroy(d_enthDiffCoefIntermLabel);
-  VarLabel::destroy(d_enthLinSrcIntermLabel);
-  VarLabel::destroy(d_enthalpyTempLabel);
  // Runge-Kutta 3d order reactscalar labels
-  VarLabel::destroy(d_reactscalCoefIntermLabel);
-  VarLabel::destroy(d_reactscalNonLinSrcIntermLabel);
   VarLabel::destroy(d_reactscalarIntermLabel);
-  VarLabel::destroy(d_reactscalConvCoefIntermLabel);
-  VarLabel::destroy(d_reactscalDiffCoefIntermLabel);
-  VarLabel::destroy(d_reactscalLinSrcIntermLabel);
-  VarLabel::destroy(d_reactscalarTempLabel);
  // Runge-Kutta 3d order properties labels
   VarLabel::destroy(d_densityIntermLabel); 
   VarLabel::destroy(d_viscosityIntermLabel);
-  VarLabel::destroy(d_drhodfIntermLabel);
-  VarLabel::destroy(d_tempINIntermLabel);
-  VarLabel::destroy(d_co2INIntermLabel); 
-  VarLabel::destroy(d_h2oINIntermLabel); 
-  VarLabel::destroy(d_enthalpyRXNIntermLabel); 
-  VarLabel::destroy(d_reactscalarSRCINIntermLabel); 
-  VarLabel::destroy(d_absorpINIntermLabel); 
-  VarLabel::destroy(d_sootFVINIntermLabel); 
-  VarLabel::destroy(d_denRefArrayIntermLabel);
   VarLabel::destroy(d_refDensityInterm_label);
  // Runge-Kutta 3d order pressure and momentum labels
   VarLabel::destroy(d_uVelCoefPBLMIntermLabel);
@@ -1271,9 +997,6 @@ ArchesLabel::~ArchesLabel()
   VarLabel::destroy(d_presCoefIntermLabel);
   VarLabel::destroy(d_presLinSrcIntermLabel);
   VarLabel::destroy(d_presNonLinSrcIntermLabel);
-  VarLabel::destroy(d_uVelTempLabel);
-  VarLabel::destroy(d_vVelTempLabel);
-  VarLabel::destroy(d_wVelTempLabel);
   VarLabel::destroy(d_uVelocityIntermLabel);
   VarLabel::destroy(d_vVelocityIntermLabel);
   VarLabel::destroy(d_wVelocityIntermLabel);
@@ -1294,13 +1017,6 @@ ArchesLabel::~ArchesLabel()
   VarLabel::destroy(d_maxAbsUInterm_label);
   VarLabel::destroy(d_maxAbsVInterm_label);
   VarLabel::destroy(d_maxAbsWInterm_label);
-// labels for interpolated velocity used in Runge-Kutta method
-  VarLabel::destroy(d_newCCUVelocityPredLabel);
-  VarLabel::destroy(d_newCCVVelocityPredLabel);
-  VarLabel::destroy(d_newCCWVelocityPredLabel);
-  VarLabel::destroy(d_newCCUVelocityIntermLabel);
-  VarLabel::destroy(d_newCCVVelocityIntermLabel);
-  VarLabel::destroy(d_newCCWVelocityIntermLabel);
 // filtered convection terms in momentum eqn
   VarLabel::destroy(d_filteredRhoUjULabel);
   VarLabel::destroy(d_filteredRhoUjVLabel);
