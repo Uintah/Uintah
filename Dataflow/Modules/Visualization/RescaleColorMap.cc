@@ -44,15 +44,12 @@
 
 namespace SCIRun {
 
-extern "C" Module* make_RescaleColorMap(const string& id) {
-  return new RescaleColorMap(id);
-}
-
-RescaleColorMap::RescaleColorMap(const string& id)
-  : Module("RescaleColorMap", id, Filter, "Visualization", "SCIRun"),
-    isFixed("isFixed", id, this),
-    min("min", id, this ),
-    max("max", id, this)
+DECLARE_MAKER(RescaleColorMap)
+RescaleColorMap::RescaleColorMap(GuiContext* ctx)
+  : Module("RescaleColorMap", ctx, Filter, "Visualization", "SCIRun"),
+    isFixed(ctx->subVar("isFixed")),
+    min(ctx->subVar("min")),
+    max(ctx->subVar("max"))
 {
 }
 

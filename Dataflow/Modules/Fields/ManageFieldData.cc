@@ -42,20 +42,16 @@ namespace SCIRun {
 class ManageFieldData : public Module
 {
 public:
-  ManageFieldData(const string& id);
+  ManageFieldData(GuiContext* ctx);
   virtual ~ManageFieldData();
 
   virtual void execute();
 };
 
 
-extern "C" Module* make_ManageFieldData(const string& id)
-{
-  return new ManageFieldData(id);
-}
-
-ManageFieldData::ManageFieldData(const string& id)
-  : Module("ManageFieldData", id, Filter, "Fields", "SCIRun")
+DECLARE_MAKER(ManageFieldData)
+ManageFieldData::ManageFieldData(GuiContext* ctx)
+  : Module("ManageFieldData", ctx, Filter, "Fields", "SCIRun")
 {
 }
 

@@ -37,19 +37,16 @@ template class GenericWriter<MatrixHandle>;
 class MatrixWriter : public GenericWriter<MatrixHandle> {
 public:
   GuiInt split_;
-  MatrixWriter(const string& id);
+  MatrixWriter(GuiContext* ctx);
   virtual void execute();
 };
 
 
-extern "C" Module* make_MatrixWriter(const string& id) {
-  return new MatrixWriter(id);
-}
+DECLARE_MAKER(MatrixWriter)
 
-
-MatrixWriter::MatrixWriter(const string& id)
-  : GenericWriter<MatrixHandle>("MatrixWriter", id, "DataIO", "SCIRun"),
-    split_("split", id, this)
+MatrixWriter::MatrixWriter(GuiContext* ctx)
+  : GenericWriter<MatrixHandle>("MatrixWriter", ctx, "DataIO", "SCIRun"),
+    split_(ctx->subVar("split"))
 {
 }
 

@@ -43,22 +43,18 @@ class ShowColorMap : public Module {
   MaterialHandle white_;
 
 public:
-  ShowColorMap(const string &id);
+  ShowColorMap(GuiContext*);
   virtual ~ShowColorMap();
   virtual void execute();
 };
 
-extern "C" Module *make_ShowColorMap(const string &id)
-{
-  return new ShowColorMap(id);
-}
+  DECLARE_MAKER(ShowColorMap);
 
-
-ShowColorMap::ShowColorMap(const string &id)
-  : Module("ShowColorMap", id, Filter, "Visualization", "SCIRun"),
-    gui_length_("length", id, this),
-    gui_side_("side", id, this),
-    gui_numlabels_("numlabels", id, this)
+ShowColorMap::ShowColorMap(GuiContext* ctx)
+  : Module("ShowColorMap", ctx, Filter, "Visualization", "SCIRun"),
+    gui_length_(ctx->subVar("length")),
+    gui_side_(ctx->subVar("side")),
+    gui_numlabels_(ctx->subVar("numlabels"))
 {
   white_ = scinew Material(Color(0,0,0), Color(1,1,1), Color(1,1,1), 20);
 }

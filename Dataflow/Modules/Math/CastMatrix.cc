@@ -46,20 +46,16 @@ class CastMatrix : public Module {
   GuiInt nrow_;
   GuiInt ncol_;
 public:
-  CastMatrix(const string& id);
+  CastMatrix(GuiContext* ctx);
   virtual ~CastMatrix();
   virtual void execute();
 };
 
-extern "C" Module* make_CastMatrix(const string& id)
-{
-    return new CastMatrix(id);
-}
-
-CastMatrix::CastMatrix(const string& id)
-: Module("CastMatrix", id, Filter,"Math", "SCIRun"),
-  oldtype_("oldtype", id, this), newtype_("newtype", id, this),
-  nrow_("nrow", id, this), ncol_("ncol", id, this)
+DECLARE_MAKER(CastMatrix)
+CastMatrix::CastMatrix(GuiContext* ctx)
+: Module("CastMatrix", ctx, Filter,"Math", "SCIRun"),
+  oldtype_(ctx->subVar("oldtype")), newtype_(ctx->subVar("newtype")),
+  nrow_(ctx->subVar("nrow")), ncol_(ctx->subVar("ncol"))
 {
 }
 

@@ -38,7 +38,9 @@
 #include <Dataflow/Widgets/BoxWidget.h>
 #include <Dataflow/Network/NetworkEditor.h>
 #include <Core/Datatypes/DenseMatrix.h>
+#include <Core/Containers/StringUtil.h>
 #include <map>
+#include <iostream>
 
 namespace SCIRun {
 
@@ -79,7 +81,7 @@ public:
   int widgetid_;
   pair<double,double> minmax_;
 
-  EditField(const string& id);
+  EditField(GuiContext* ctx);
 
   virtual ~EditField();
 
@@ -90,33 +92,31 @@ public:
 
   virtual void execute();
 
-  virtual void tcl_command(TCLArgs&, void*);
+  virtual void tcl_command(GuiArgs&, void*);
   virtual void widget_moved(int);
 };
 
-extern "C" PSECORESHARE Module* make_EditField(const string& id) {
-  return scinew EditField(id);
-}
+  DECLARE_MAKER(EditField);
 
-EditField::EditField(const string& id)
-  : Module("EditField", id, Source, "Fields", "SCIRun"),
-    numnodes_("numnodes2", id, this),
-    fldname_("fldname2", id, this),
-    typename_("typename2", id, this),
-    datamin_("datamin2", id, this),
-    datamax_("datamax2", id, this),
-    dataat_("dataat2", id, this),
-    cx_("cx2", id, this),
-    cy_("cy2", id, this),
-    cz_("cz2", id, this),
-    sizex_("sizex2", id, this),
-    sizey_("sizey2", id, this),
-    sizez_("sizez2", id, this),
-    cfldname_("cfldname", id, this),
-    ctypename_("ctypename", id, this),
-    cdataat_("cdataat", id, this),
-    cdataminmax_("cdataminmax", id, this),
-    cgeom_("cgeom", id, this),
+EditField::EditField(GuiContext* ctx)
+  : Module("EditField", ctx, Source, "Fields", "SCIRun"),
+    numnodes_(ctx->subVar("numnodes2")),
+    fldname_(ctx->subVar("fldname2")),
+    typename_(ctx->subVar("typename2")),
+    datamin_(ctx->subVar("datamin2")),
+    datamax_(ctx->subVar("datamax2")),
+    dataat_(ctx->subVar("dataat2")),
+    cx_(ctx->subVar("cx2")),
+    cy_(ctx->subVar("cy2")),
+    cz_(ctx->subVar("cz2")),
+    sizex_(ctx->subVar("sizex2")),
+    sizey_(ctx->subVar("sizey2")),
+    sizez_(ctx->subVar("sizez2")),
+    cfldname_(ctx->subVar("cfldname")),
+    ctypename_(ctx->subVar("ctypename")),
+    cdataat_(ctx->subVar("cdataat")),
+    cdataminmax_(ctx->subVar("cdataminmax")),
+    cgeom_(ctx->subVar("cgeom")),
     widget_lock_("EditField widget lock"),
     generation_(-1),
     minmax_(1,0)
@@ -133,37 +133,37 @@ EditField::~EditField(){
 
 void EditField::clear_vals() 
 {
-  TCL::execute(string("set ")+id+"-fldname \"---\"");
-  TCL::execute(string("set ")+id+"-typename \"---\"");
-  TCL::execute(string("set ")+id+"-datamin \"---\"");
-  TCL::execute(string("set ")+id+"-datamax \"---\"");
-  TCL::execute(string("set ")+id+"-numnodes \"---\"");
-  TCL::execute(string("set ")+id+"-numelems \"---\"");
-  TCL::execute(string("set ")+id+"-dataat \"---\"");
-  TCL::execute(string("set ")+id+"-cx \"---\"");
-  TCL::execute(string("set ")+id+"-cy \"---\"");
-  TCL::execute(string("set ")+id+"-cz \"---\"");
-  TCL::execute(string("set ")+id+"-sizex \"---\"");
-  TCL::execute(string("set ")+id+"-sizey \"---\"");
-  TCL::execute(string("set ")+id+"-sizez \"---\"");
-  TCL::execute(id+" update_multifields");
+  gui->execute(string("set ")+id+"-fldname \"---\"");
+  gui->execute(string("set ")+id+"-typename \"---\"");
+  gui->execute(string("set ")+id+"-datamin \"---\"");
+  gui->execute(string("set ")+id+"-datamax \"---\"");
+  gui->execute(string("set ")+id+"-numnodes \"---\"");
+  gui->execute(string("set ")+id+"-numelems \"---\"");
+  gui->execute(string("set ")+id+"-dataat \"---\"");
+  gui->execute(string("set ")+id+"-cx \"---\"");
+  gui->execute(string("set ")+id+"-cy \"---\"");
+  gui->execute(string("set ")+id+"-cz \"---\"");
+  gui->execute(string("set ")+id+"-sizex \"---\"");
+  gui->execute(string("set ")+id+"-sizey \"---\"");
+  gui->execute(string("set ")+id+"-sizez \"---\"");
+  gui->execute(id+" update_multifields");
 }
 
 void EditField::update_input_attributes(FieldHandle f) 
 {
   const string &tname = f->get_type_description()->get_name();
-  TCL::execute(string("set ")+id+"-typename \"" + tname + "\"");
+  gui->execute(string("set ")+id+"-typename \"" + tname + "\"");
 
   switch(f->data_at())
   {
   case Field::NODE:
-    TCL::execute(string("set ")+id+"-dataat Nodes"); break;
+    gui->execute(string("set ")+id+"-dataat Nodes"); break;
   case Field::EDGE: 
-    TCL::execute(string("set ")+id+"-dataat Edges"); break;
+    gui->execute(string("set ")+id+"-dataat Edges"); break;
   case Field::FACE: 
-    TCL::execute(string("set ")+id+"-dataat Faces"); break;
+    gui->execute(string("set ")+id+"-dataat Faces"); break;
   case Field::CELL: 
-    TCL::execute(string("set ")+id+"-dataat Cells"); break;
+    gui->execute(string("set ")+id+"-dataat Cells"); break;
   default: ;
   }
 
@@ -182,31 +182,31 @@ void EditField::update_input_attributes(FieldHandle f)
     size = bbox.diagonal();
     center = bbox.center();
   }
-  TCL::execute(string("set ")+id+"-cx "+to_string(center.x()));
-  TCL::execute(string("set ")+id+"-cy "+to_string(center.y()));
-  TCL::execute(string("set ")+id+"-cz "+to_string(center.z()));
-  TCL::execute(string("set ")+id+"-sizex "+to_string(size.x()));
-  TCL::execute(string("set ")+id+"-sizey "+to_string(size.y()));
-  TCL::execute(string("set ")+id+"-sizez "+to_string(size.z()));
+  gui->execute(string("set ")+id+"-cx "+to_string(center.x()));
+  gui->execute(string("set ")+id+"-cy "+to_string(center.y()));
+  gui->execute(string("set ")+id+"-cz "+to_string(center.z()));
+  gui->execute(string("set ")+id+"-sizex "+to_string(size.x()));
+  gui->execute(string("set ")+id+"-sizey "+to_string(size.y()));
+  gui->execute(string("set ")+id+"-sizez "+to_string(size.z()));
 
   ScalarFieldInterface *sdi = f->query_scalar_interface();
   if (sdi && f->data_at() != Field::NONE) {
     sdi->compute_min_max(minmax_.first,minmax_.second);
-    TCL::execute(string("set ")+id+"-datamin "+to_string(minmax_.first));
-    TCL::execute(string("set ")+id+"-datamax "+to_string(minmax_.second));
+    gui->execute(string("set ")+id+"-datamin "+to_string(minmax_.first));
+    gui->execute(string("set ")+id+"-datamax "+to_string(minmax_.second));
   } else {
-    TCL::execute(string("set ")+id+"-datamin \"--- N/A ---\"");
-    TCL::execute(string("set ")+id+"-datamax \"--- N/A ---\"");
+    gui->execute(string("set ")+id+"-datamin \"--- N/A ---\"");
+    gui->execute(string("set ")+id+"-datamax \"--- N/A ---\"");
   }
 
   string fldname;
   if (f->get_property("name",fldname))
-    TCL::execute(string("set ")+id+"-fldname "+fldname);
+    gui->execute(string("set ")+id+"-fldname "+fldname);
   else
-    TCL::execute(string("set ")+id+"-fldname \"--- Name Not Assigned ---\"");
+    gui->execute(string("set ")+id+"-fldname \"--- Name Not Assigned ---\"");
 
 
-  TCL::execute(id+" update_multifields");
+  gui->execute(id+" update_multifields");
 
   // Do this last, sometimes takes a while.
   const TypeDescription *meshtd = f->mesh()->get_type_description();
@@ -229,13 +229,13 @@ void EditField::update_input_attributes(FieldHandle f)
   int dimension;
   algo->execute(f->mesh(), num_nodes, num_elems, dimension);
 
-  TCL::execute(string("set ")+id+"-numnodes "+to_string(num_nodes));
-  TCL::execute(string("set ")+id+"-numelems "+to_string(num_elems));
+  gui->execute(string("set ")+id+"-numnodes "+to_string(num_nodes));
+  gui->execute(string("set ")+id+"-numelems "+to_string(num_elems));
 
-  TCL::execute(id+" update_multifields");
+  gui->execute(id+" update_multifields");
 
   // copy valid settings to the un-checked output field attributes
-  TCL::execute(id+" copy_attributes; update idletasks");
+  gui->execute(id+" copy_attributes; update idletasks");
 }
 
 bool EditField::check_types(FieldHandle f)
@@ -452,7 +452,7 @@ EditField::execute()
     msgStream_ << "Could not get algorithm." << endl;
     return;
   }
-  TCL::execute(id + " set_state Executing 0");
+  gui->execute(id + " set_state Executing 0");
   bool same_value_type_p = false;
   FieldHandle ef(algo->execute(fh, dataat, same_value_type_p));
 
@@ -478,7 +478,7 @@ EditField::execute()
       msgStream_ << "Could not get algorithm." << endl;
       return;
     }
-    TCL::execute(id + " set_state Executing 0");
+    gui->execute(id + " set_state Executing 0");
     algo->execute(fh, ef, scale, translate);
   }
   
@@ -538,7 +538,7 @@ EditField::execute()
 }
 
     
-void EditField::tcl_command(TCLArgs& args, void* userdata)
+void EditField::tcl_command(GuiArgs& args, void* userdata)
 {
   if(args.count() < 2){
     args.error("EditField needs a minor command");

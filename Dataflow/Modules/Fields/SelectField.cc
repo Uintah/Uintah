@@ -47,22 +47,18 @@ private:
   BBox last_bounds_;
 
 public:
-  SelectField(const string& id);
+  SelectField(GuiContext* ctx);
   virtual ~SelectField();
   virtual void execute();
 };
 
 
-extern "C" Module* make_SelectField(const string& id)
-{
-  return new SelectField(id);
-}
-
-SelectField::SelectField(const string& id)
-  : Module("SelectField", id, Filter, "Fields", "SCIRun"),
+DECLARE_MAKER(SelectField)
+SelectField::SelectField(GuiContext* ctx)
+  : Module("SelectField", ctx, Filter, "Fields", "SCIRun"),
     widget_lock_("SelectField widget lock"),
-    value_("stampvalue", id, this),
-    mode_("runmode", id, this),
+    value_(ctx->subVar("stampvalue")),
+    mode_(ctx->subVar("runmode")),
     last_generation_(0)
 {
   box_ = scinew BoxWidget(this, &widget_lock_, 1.0, false, false);

@@ -62,7 +62,7 @@ private:
   bool bbox_similar_to(const BBox &a, const BBox &b);
 
 public:
-  ClipField(const string& id);
+  ClipField(GuiContext* ctx);
   virtual ~ClipField();
 
   virtual void execute();
@@ -70,19 +70,16 @@ public:
 };
 
 
-extern "C" Module* make_ClipField(const string& id) {
-  return new ClipField(id);
-}
+DECLARE_MAKER(ClipField)
 
-
-ClipField::ClipField(const string& id)
-  : Module("ClipField", id, Source, "Fields", "SCIRun"),
+ClipField::ClipField(GuiContext* ctx)
+  : Module("ClipField", ctx, Source, "Fields", "SCIRun"),
     widget_lock_("ClipField widget lock"),
-    clip_location_("clip-location", id, this),
-    clip_mode_("clipmode", id, this),
-    autoexec_("autoexecute", id, this),
-    autoinvert_("autoinvert", id, this),
-    exec_mode_("execmode", id, this),
+    clip_location_(ctx->subVar("clip-location")),
+    clip_mode_(ctx->subVar("clipmode")),
+    autoexec_(ctx->subVar("autoexecute")),
+    autoinvert_(ctx->subVar("autoinvert")),
+    exec_mode_(ctx->subVar("execmode")),
     last_input_generation_(0),
     last_clip_generation_(0)
 {

@@ -64,7 +64,7 @@ private:
   bool bbox_similar_to(const BBox &a, const BBox &b);
 
 public:
-  Probe(const string& id);
+  Probe(GuiContext* ctx);
   virtual ~Probe();
 
   virtual void execute();
@@ -72,25 +72,21 @@ public:
 };
 
 
-extern "C" Module* make_Probe(const string& id)
-{
-  return new Probe(id);
-}
+DECLARE_MAKER(Probe)
 
-
-Probe::Probe(const string& id)
-  : Module("Probe", id, Source, "Fields", "SCIRun"),
+Probe::Probe(GuiContext* ctx)
+  : Module("Probe", ctx, Source, "Fields", "SCIRun"),
     widget_lock_("Probe widget lock"),
     last_input_generation_(0),
-    gui_locx_("locx", id, this),
-    gui_locy_("locy", id, this),
-    gui_locz_("locz", id, this),
-    gui_value_("value", id, this),
-    gui_node_("node", id, this),
-    gui_edge_("edge", id, this),
-    gui_face_("face", id, this),
-    gui_cell_("cell", id, this),
-    gui_moveto_("moveto", id, this)
+    gui_locx_(ctx->subVar("locx")),
+    gui_locy_(ctx->subVar("locy")),
+    gui_locz_(ctx->subVar("locz")),
+    gui_value_(ctx->subVar("value")),
+    gui_node_(ctx->subVar("node")),
+    gui_edge_(ctx->subVar("edge")),
+    gui_face_(ctx->subVar("face")),
+    gui_cell_(ctx->subVar("cell")),
+    gui_moveto_(ctx->subVar("moveto"))
 {
   widget_ = scinew PointWidget(this, &widget_lock_, 1.0);
 }

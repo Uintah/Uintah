@@ -51,23 +51,19 @@ namespace SCIRun {
 
 static string control_name("Control Widget");
 			 
-extern "C" Module* make_TextureVolVis( const string& id)
-{
-  return new TextureVolVis(id);
-}
+DECLARE_MAKER(TextureVolVis)
 
-
-TextureVolVis::TextureVolVis(const string& id)
-  : Module("TextureVolVis", id, Filter, "Visualization", "SCIRun"),
+TextureVolVis::TextureVolVis(GuiContext* ctx)
+  : Module("TextureVolVis", ctx, Filter, "Visualization", "SCIRun"),
     tex(0),
     control_lock("TextureVolVis resolution lock"),
     control_widget(0),
     control_id(-1),
-    num_slices("num_slices", id, this),
-    draw_mode("draw_mode", id, this),
-    render_style("render_style", id, this),
-    alpha_scale("alpha_scale", id, this),
-    interp_mode("interp_mode", id, this),
+    num_slices(ctx->subVar("num_slices")),
+    draw_mode(ctx->subVar("draw_mode")),
+    render_style(ctx->subVar("render_style")),
+    alpha_scale(ctx->subVar("alpha_scale")),
+    interp_mode(ctx->subVar("interp_mode")),
     volren(0)
 {
 }

@@ -59,12 +59,12 @@ typedef void (*FieldManipFunction)(vector<FieldHandle>& in, vector<FieldHandle>&
 class PSECORESHARE ManipFields : public Module 
 {
 public:
-  ManipFields(const string& id);
+  ManipFields(GuiContext* ctx);
   virtual ~ManipFields();
 
   // Compile and load .so for the selected manipulation
   virtual void execute();
-  virtual void tcl_command(TCLArgs& args, void* userdata);
+  virtual void tcl_command(GuiArgs& args, void* userdata);
 
 private:
   typedef vector<string>          StringVector;
@@ -112,8 +112,8 @@ ManipFields::manips_map_t ManipFields::manips_;
 
 
 
-ManipFields::ManipFields( const string& id ) 
-  : Module("ManipFields", id.c_str(), Source, "Fields", "SCIRun" )
+ManipFields::ManipFields( GuiContext* ctx ) 
+  : Module("ManipFields", gui.c_str(), Source, "Fields", "SCIRun" )
   , name_("manipulationName", id.c_str(), this)
   , id_(id)
   , curFun_(0)
@@ -184,7 +184,7 @@ ManipFields::execute()
 // ManipFields::tcl_command
 // 
 void 
-ManipFields::tcl_command(TCLArgs& args, void* userdata)
+ManipFields::tcl_command(GuiArgs& args, void* userdata)
 {
   name_.reset();
   cout << "TCLCOMMAND: curname: " << name_.get() << endl;
@@ -627,7 +627,7 @@ ManipFields::load_ui()
     names += manipName + " ";
   }
 
-  TCL::execute(( id_ + " set_names " + "{" + names + "}" ).c_str());
+  gui->execute(( id_ + " set_names " + "{" + names + "}" ).c_str());
 }
 
 
@@ -658,9 +658,9 @@ ManipFields::set_cur_manip( const string& name )
   string libpath = vector_to_string( manipData.libpath_ );
   string inc     = vector_to_string( manipData.inc_     );
 
-  TCL::execute((id_ + " set_cur_libs "    + "{" + libs    + "}").c_str());
-  TCL::execute((id_ + " set_cur_libpath " + "{" + libpath + "}").c_str());
-  TCL::execute((id_ + " set_cur_inc "     + "{" + inc     + "}").c_str());
+  gui->execute((id_ + " set_cur_libs "    + "{" + libs    + "}").c_str());
+  gui->execute((id_ + " set_cur_libpath " + "{" + libpath + "}").c_str());
+  gui->execute((id_ + " set_cur_inc "     + "{" + inc     + "}").c_str());
 }
 
 
@@ -683,12 +683,7 @@ ManipFields::getManips()
   }
 }
 
-
-
-extern "C" PSECORESHARE Module* make_ManipFields(const string& id) 
-{
-  return new ManipFields(id());
-}
+DECLAR_MAKER(ManipFields);
 
 } // End namespace SCIRun
 

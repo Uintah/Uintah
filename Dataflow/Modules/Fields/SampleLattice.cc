@@ -40,7 +40,7 @@ namespace SCIRun {
 class SampleLattice : public Module
 {
 public:
-  SampleLattice(const string& id);
+  SampleLattice(GuiContext* ctx);
   virtual ~SampleLattice();
 
   virtual void execute();
@@ -56,18 +56,15 @@ private:
 };
 
 
-extern "C" Module* make_SampleLattice(const string& id) {
-  return new SampleLattice(id);
-}
+DECLARE_MAKER(SampleLattice)
 
-
-SampleLattice::SampleLattice(const string& id)
-  : Module("SampleLattice", id, Filter, "Fields", "SCIRun"),
-    size_x_("sizex", id, this),
-    size_y_("sizey", id, this),
-    size_z_("sizez", id, this),
-    padpercent_("padpercent", id, this),
-    data_at_("data-at", id, this)
+SampleLattice::SampleLattice(GuiContext* ctx)
+  : Module("SampleLattice", ctx, Filter, "Fields", "SCIRun"),
+    size_x_(ctx->subVar("sizex")),
+    size_y_(ctx->subVar("sizey")),
+    size_z_(ctx->subVar("sizez")),
+    padpercent_(ctx->subVar("padpercent")),
+    data_at_(ctx->subVar("data-at"))
 {
 }
 

@@ -36,17 +36,14 @@ template class GenericWriter<FieldSetHandle>;
 
 class FieldSetWriter : public GenericWriter<FieldSetHandle> {
 public:
-  FieldSetWriter(const string& id);
+  FieldSetWriter(GuiContext* ctx);
 };
 
 
-extern "C" Module* make_FieldSetWriter(const string& id) {
-  return new FieldSetWriter(id);
-}
+DECLARE_MAKER(FieldSetWriter)
 
-
-FieldSetWriter::FieldSetWriter(const string& id)
-  : GenericWriter<FieldSetHandle>("FieldSetWriter", id, "DataIO", "SCIRun")
+FieldSetWriter::FieldSetWriter(GuiContext* ctx)
+  : GenericWriter<FieldSetHandle>("FieldSetWriter", ctx, "DataIO", "SCIRun")
 {
 }
 

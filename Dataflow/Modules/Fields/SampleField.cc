@@ -34,6 +34,7 @@
 #include <Core/Math/Trig.h>
 #include <Core/GuiInterface/GuiVar.h>
 #include <Core/Thread/CrowdMonitor.h>
+#include <Core/Containers/StringUtil.h>
 #include <Dataflow/Widgets/GaugeWidget.h>
 #include <math.h>
 #include <set>
@@ -84,38 +85,35 @@ class SampleField : public Module
 public:
   CrowdMonitor widget_lock_;
   GaugeWidget *rake_;
-  SampleField(const string& id);
+  SampleField(GuiContext* ctx);
   virtual ~SampleField();
   virtual void execute();
   virtual void widget_moved(int);
 };
 
 
-extern "C" Module* make_SampleField(const string& id) {
-  return new SampleField(id);
-}
+DECLARE_MAKER(SampleField)
 
+SampleField::SampleField(GuiContext* ctx)
+  : Module("SampleField", ctx, Filter, "Fields", "SCIRun"),
 
-SampleField::SampleField(const string& id)
-  : Module("SampleField", id, Filter, "Fields", "SCIRun"),
+    endpoints_ (ctx->subVar("endpoints")),
+    endpoint0x_(ctx->subVar("endpoint0x")),
+    endpoint0y_(ctx->subVar("endpoint0y")),
+    endpoint0z_(ctx->subVar("endpoint0z")),
+    endpoint1x_(ctx->subVar("endpoint1x")),
+    endpoint1y_(ctx->subVar("endpoint1y")),
+    endpoint1z_(ctx->subVar("endpoint1z")),
+    widgetscale_ (ctx->subVar("widgetscale")),
 
-    endpoints_ ("endpoints",  id, this),
-    endpoint0x_("endpoint0x", id, this),
-    endpoint0y_("endpoint0y", id, this),
-    endpoint0z_("endpoint0z", id, this),
-    endpoint1x_("endpoint1x", id, this),
-    endpoint1y_("endpoint1y", id, this),
-    endpoint1z_("endpoint1z", id, this),
-    widgetscale_ ("widgetscale",  id, this),
-
-    maxSeeds_("maxseeds", id, this),
-    numSeeds_("numseeds", id, this),
-    rngSeed_("rngseed", id, this),
-    clamp_("clamp", id, this),
-    autoexec_("autoexecute", id, this),
-    widgetType_("type", id, this),
-    randDist_("dist", id, this),
-    whichTab_("whichtab", id, this),
+    maxSeeds_(ctx->subVar("maxseeds")),
+    numSeeds_(ctx->subVar("numseeds")),
+    rngSeed_(ctx->subVar("rngseed")),
+    clamp_(ctx->subVar("clamp")),
+    autoexec_(ctx->subVar("autoexecute")),
+    widgetType_(ctx->subVar("type")),
+    randDist_(ctx->subVar("dist")),
+    whichTab_(ctx->subVar("whichtab")),
     vf_generation_(0),
     widget_lock_("StreamLines widget lock")
 {

@@ -50,7 +50,7 @@ class GenericReader : public Module
   time_t    old_filemodification_;
 
 public:
-  GenericReader(const string &name, const string& id,
+  GenericReader(const string &name, GuiContext* ctx,
 		const string &category, const string &package);
   virtual ~GenericReader();
 
@@ -59,10 +59,10 @@ public:
 
 
 template <class HType>
-GenericReader<HType>::GenericReader(const string &name, const string& id,
+GenericReader<HType>::GenericReader(const string &name, GuiContext* ctx,
 				    const string &cat, const string &pack)
-  : Module(name, id, Source, cat, pack),
-    filename_("filename", id, this),
+  : Module(name, ctx, Source, cat, pack),
+    filename_(ctx->subVar("filename")),
     old_filemodification_(0)
 {
 }
@@ -117,9 +117,9 @@ GenericReader<HType>::execute()
   }
 
   // Send the data downstream.
-  SimpleOPort<HType> *outport = (SimpleOPort<HType> *)get_oport(0);
+  SimpleOPort<HType> *outport = (SimpleOPort<HType> *)getOPort(0);
   if (!outport) {
-    postMessage("Unable to initialize "+name+"'s oport\n");
+    postMessage("Unable to initialize "+moduleName+"'s oport\n");
     return;
   }
   outport->send(handle_);

@@ -53,7 +53,7 @@ class DirectInterpolate : public Module
   GuiDouble  closeness_distance_;
 
 public:
-  DirectInterpolate(const string& id);
+  DirectInterpolate(GuiContext* ctx);
   virtual ~DirectInterpolate();
   virtual void execute();
 
@@ -61,16 +61,12 @@ public:
 
 };
 
-extern "C" Module* make_DirectInterpolate(const string& id)
-{
-  return new DirectInterpolate(id);
-}
-
-DirectInterpolate::DirectInterpolate(const string& id) : 
-  Module("DirectInterpolate", id, Filter, "Fields", "SCIRun"),
-  use_interp_("use_interp", id, this),
-  use_closest_("use_closest", id, this),
-  closeness_distance_("closeness_distance", id, this)
+DECLARE_MAKER(DirectInterpolate)
+DirectInterpolate::DirectInterpolate(GuiContext* ctx) : 
+  Module("DirectInterpolate", ctx, Filter, "Fields", "SCIRun"),
+  use_interp_(ctx->subVar("use_interp")),
+  use_closest_(ctx->subVar("use_closest")),
+  closeness_distance_(ctx->subVar("closeness_distance"))
 {
 }
 

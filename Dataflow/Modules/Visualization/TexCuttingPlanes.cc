@@ -47,27 +47,24 @@ namespace SCIRun {
 
 static string control_name("Control Widget");
 			 
-extern "C" Module* make_TexCuttingPlanes( const string& id) {
-  return scinew TexCuttingPlanes(id);
-}
+DECLARE_MAKER(TexCuttingPlanes)
 
-
-TexCuttingPlanes::TexCuttingPlanes(const string& id) : 
-  Module("TexCuttingPlanes", id, Filter, "Visualization", "SCIRun"), 
+TexCuttingPlanes::TexCuttingPlanes(GuiContext* ctx) : 
+  Module("TexCuttingPlanes", ctx, Filter, "Visualization", "SCIRun"), 
   tex_(0),
   control_lock_("TexCuttingPlanes resolution lock"),
   control_widget_(0),
   control_id_(-1),
-  drawX_("drawX", id, this),
-  drawY_("drawY", id, this),
-  drawZ_("drawZ", id, this),
-  drawView_("drawView", id, this),
-  interp_mode_("interp_mode", id, this),
-  draw_phi0_("draw_phi_0", id, this),
-  draw_phi1_("draw_phi_1", id, this),
-  phi0_("phi_0", id, this),
-  phi1_("phi_1", id, this),
-  cyl_active_("cyl_active", id, this),
+  drawX_(ctx->subVar("drawX")),
+  drawY_(ctx->subVar("drawY")),
+  drawZ_(ctx->subVar("drawZ")),
+  drawView_(ctx->subVar("drawView")),
+  interp_mode_(ctx->subVar("interp_mode")),
+  draw_phi0_(ctx->subVar("draw_phi_0")),
+  draw_phi1_(ctx->subVar("draw_phi_1")),
+  phi0_(ctx->subVar("phi_0")),
+  phi1_(ctx->subVar("phi_1")),
+  cyl_active_(ctx->subVar("cyl_active")),
   volren_(0)
 {
 }
@@ -77,7 +74,7 @@ TexCuttingPlanes::~TexCuttingPlanes()
 
 }
 void 
-TexCuttingPlanes::tcl_command( TCLArgs& args, void* userdata)
+TexCuttingPlanes::tcl_command( GuiArgs& args, void* userdata)
 {
   if (args[1] == "MoveWidget") {
       if (!control_widget_) return;

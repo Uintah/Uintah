@@ -36,15 +36,12 @@ template class GenericReader<FieldHandle>;
 
 class FieldReader : public GenericReader<FieldHandle> {
 public:
-  FieldReader(const string& id);
+  FieldReader(GuiContext* ctx);
 };
 
-extern "C" Module* make_FieldReader(const string& id) {
-  return new FieldReader(id);
-}
-
-FieldReader::FieldReader(const string& id)
-  : GenericReader<FieldHandle>("FieldReader", id, "DataIO", "SCIRun")
+DECLARE_MAKER(FieldReader)
+FieldReader::FieldReader(GuiContext* ctx)
+  : GenericReader<FieldHandle>("FieldReader", ctx, "DataIO", "SCIRun")
 {
 }
 

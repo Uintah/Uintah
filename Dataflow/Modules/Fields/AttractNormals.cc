@@ -65,19 +65,15 @@ public:
 class AttractNormals : public Module
 {
 public:
-  AttractNormals(const string& id);
+  AttractNormals(GuiContext* ctx);
   virtual ~AttractNormals();
   virtual void execute();
 };
 
 
-extern "C" Module* make_AttractNormals(const string& id)
-{
-  return new AttractNormals(id);
-}
-
-AttractNormals::AttractNormals(const string& id)
-  : Module("AttractNormals", id, Filter, "Fields", "SCIRun")
+DECLARE_MAKER(AttractNormals)
+AttractNormals::AttractNormals(GuiContext* ctx)
+  : Module("AttractNormals", ctx, Filter, "Fields", "SCIRun")
 {
 }
 
@@ -93,7 +89,7 @@ void
 AttractNormals::execute()
 {
   // Get input field.
-  FieldIPort *ifp = (FieldIPort *)get_iport("Input Field");
+  FieldIPort *ifp = (FieldIPort *)getIPort("Input Field");
   FieldHandle ifieldhandle;
   if (!ifp) {
     postMessage("Unable to initialize "+name+"'s iport\n");
@@ -174,7 +170,7 @@ AttractNormals::execute()
   }
   FieldHandle ofieldhandle(algo->execute(ifieldhandle, attractor));
 
-  FieldOPort *ofield_port = (FieldOPort *)get_oport("Output Field");
+  FieldOPort *ofield_port = (FieldOPort *)getOPort("Output Field");
   if (!ofield_port) {
     postMessage("Unable to initialize "+name+"'s oport\n");
     return;

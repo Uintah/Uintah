@@ -29,7 +29,7 @@ class RescaleColorMap : public Module {
 public:
 
   //! Constructor taking [in] id as an identifier
-  RescaleColorMap(const string& id);
+  RescaleColorMap(GuiContext* ctx);
 
   virtual ~RescaleColorMap();
   virtual void execute();

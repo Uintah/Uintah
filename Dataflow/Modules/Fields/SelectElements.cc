@@ -20,6 +20,7 @@
 //    Date   : August 2001
 
 #include <Dataflow/Network/Module.h>
+#include <Core/GuiInterface/GuiVar.h>
 #include <Core/Malloc/Allocator.h>
 #include <Core/Datatypes/TetVolField.h>
 #include <Core/Datatypes/ColumnMatrix.h>
@@ -40,18 +41,16 @@ using namespace std;
 class PSECORESHARE SelectElements : public Module {
 public:
   GuiString value_;
-  SelectElements(const string& id);
+  SelectElements(GuiContext* ctx);
   virtual ~SelectElements();
   virtual void execute();
 };
 
-extern "C" PSECORESHARE Module* make_SelectElements(const string& id) {
-  return scinew SelectElements(id);
-}
+  DECLARE_MAKER(SelectElements);
 
-SelectElements::SelectElements(const string& id)
-  : Module("SelectElements", id, Source, "Fields", "SCIRun"),
-    value_("value", id, this)
+SelectElements::SelectElements(GuiContext* ctx)
+  : Module("SelectElements", ctx, Source, "Fields", "SCIRun"),
+    value_(ctx->subVar("value"))
 {
 }
 

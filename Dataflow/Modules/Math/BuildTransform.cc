@@ -71,45 +71,41 @@ class BuildTransform : public Module {
   int ignoring_widget_changes_;
   int have_been_initialized_;
 public:
-  BuildTransform(const string& id);
+  BuildTransform(GuiContext* ctx);
   virtual ~BuildTransform();
   virtual void widget_moved(int last);
   virtual void execute();
-  void tcl_command( TCLArgs&, void * );
+  void tcl_command( GuiArgs&, void * );
 };
 
-extern "C" Module* make_BuildTransform(const string& id)
-{
-  return new BuildTransform(id);
-}
-
+DECLARE_MAKER(BuildTransform)
 static string module_name("BuildTransform");
 static string widget_name("TransformWidget");
 
-BuildTransform::BuildTransform(const string& id)
-  : Module("BuildTransform", id, Filter, "Math", "SCIRun"),
-    rotate_x_gui_("rotate_x", id, this),
-    rotate_y_gui_("rotate_y", id, this),
-    rotate_z_gui_("rotate_z", id, this), 
-    rotate_theta_gui_("rotate_theta", id, this),
-    translate_x_gui_("translate_x", id, this),
-    translate_y_gui_("translate_y", id, this),
-    translate_z_gui_("translate_z", id, this),
-    scale_uniform_gui_("scale_uniform", id, this),
-    scale_x_gui_("scale_x", id, this),
-    scale_y_gui_("scale_y", id, this), 
-    scale_z_gui_("scale_z", id, this), 
-    shear_plane_a_gui_("shear_plane_a", id, this),
-    shear_plane_b_gui_("shear_plane_b", id, this),
-    shear_plane_c_gui_("shear_plane_c", id, this),
-    shear_plane_d_gui_("shear_plane_d", id, this),
-    widget_resizable_gui_("widget_resizable", id, this),
-    permute_x_gui_("permute_x", id, this),
-    permute_y_gui_("permute_y", id, this), 
-    permute_z_gui_("permute_z", id, this),
-    pre_transform_gui_("pre_transform", id, this),
-    which_transform_gui_("which_transform", id, this),
-    widget_scale_gui_("widget_scale", id, this),
+BuildTransform::BuildTransform(GuiContext* ctx)
+  : Module("BuildTransform", ctx, Filter, "Math", "SCIRun"),
+    rotate_x_gui_(ctx->subVar("rotate_x")),
+    rotate_y_gui_(ctx->subVar("rotate_y")),
+    rotate_z_gui_(ctx->subVar("rotate_z")), 
+    rotate_theta_gui_(ctx->subVar("rotate_theta")),
+    translate_x_gui_(ctx->subVar("translate_x")),
+    translate_y_gui_(ctx->subVar("translate_y")),
+    translate_z_gui_(ctx->subVar("translate_z")),
+    scale_uniform_gui_(ctx->subVar("scale_uniform")),
+    scale_x_gui_(ctx->subVar("scale_x")),
+    scale_y_gui_(ctx->subVar("scale_y")), 
+    scale_z_gui_(ctx->subVar("scale_z")), 
+    shear_plane_a_gui_(ctx->subVar("shear_plane_a")),
+    shear_plane_b_gui_(ctx->subVar("shear_plane_b")),
+    shear_plane_c_gui_(ctx->subVar("shear_plane_c")),
+    shear_plane_d_gui_(ctx->subVar("shear_plane_d")),
+    widget_resizable_gui_(ctx->subVar("widget_resizable")),
+    permute_x_gui_(ctx->subVar("permute_x")),
+    permute_y_gui_(ctx->subVar("permute_y")), 
+    permute_z_gui_(ctx->subVar("permute_z")),
+    pre_transform_gui_(ctx->subVar("pre_transform")),
+    which_transform_gui_(ctx->subVar("which_transform")),
+    widget_scale_gui_(ctx->subVar("widget_scale")),
     widget_lock_("BuildTransform widget lock"),
     ignoring_widget_changes_(1),
     have_been_initialized_(0)
@@ -252,7 +248,7 @@ void BuildTransform::widget_moved(int last)
   }
 }
 
-void BuildTransform::tcl_command(TCLArgs& args, void* userdata) {
+void BuildTransform::tcl_command(GuiArgs& args, void* userdata) {
   if (args[1] == "hide_widget") {
     widget_switch_->set_state(0);
     ogeom_->flushViews();

@@ -46,7 +46,7 @@ class GenericWriter : public Module {
 public:
   GuiString filename_;
   GuiString filetype_;
-  GenericWriter(const string &name, const string& id,
+  GenericWriter(const string &name, GuiContext* ctx,
 		const string &category, const string &package);
   virtual ~GenericWriter();
 
@@ -55,11 +55,11 @@ public:
 
 
 template <class HType>
-GenericWriter<HType>::GenericWriter(const string &name, const string& id,
+GenericWriter<HType>::GenericWriter(const string &name, GuiContext* ctx,
 				    const string &cat, const string &pack)
-  : Module(name, id, Sink, cat, pack),
-    filename_("filename", id, this),
-    filetype_("filetype", id, this)
+  : Module(name, ctx, Sink, cat, pack),
+    filename_(ctx->subVar("filename")),
+    filetype_(ctx->subVar("filetype"))
 {
 }
 
@@ -73,9 +73,9 @@ template <class HType>
 void
 GenericWriter<HType>::execute()
 {
-  SimpleIPort<HType> *inport = (SimpleIPort<HType> *)get_iport(0);
+  SimpleIPort<HType> *inport = (SimpleIPort<HType> *)getIPort(0);
   if (!inport) {
-    postMessage("Unable to initialize "+name+"'s iport\n");
+    postMessage("Unable to initialize "+moduleName+"'s iport\n");
     return;
   }
 

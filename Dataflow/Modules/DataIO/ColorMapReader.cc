@@ -36,15 +36,13 @@ template class GenericReader<ColorMapHandle>;
 
 class ColorMapReader : public GenericReader<ColorMapHandle> {
 public:
-  ColorMapReader(const string& id);
+  ColorMapReader(GuiContext* ctx);
 };
 
-extern "C" Module* make_ColorMapReader(const string& id) {
-  return new ColorMapReader(id);
-}
+DECLARE_MAKER(ColorMapReader);
 
-ColorMapReader::ColorMapReader(const string& id)
-  : GenericReader<ColorMapHandle>("ColorMapReader", id, "DataIO", "SCIRun")
+ColorMapReader::ColorMapReader(GuiContext* ctx)
+  : GenericReader<ColorMapHandle>("ColorMapReader", ctx, "DataIO", "SCIRun")
 {
 }
 

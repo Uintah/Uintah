@@ -30,19 +30,15 @@ class LinAlgBinary : public Module {
   GuiString op_;
   GuiString function_;
 public:
-  LinAlgBinary(const string& id);
+  LinAlgBinary(GuiContext* ctx);
   virtual ~LinAlgBinary();
   virtual void execute();
 };
 
-extern "C" Module* make_LinAlgBinary(const string& id)
-{
-    return new LinAlgBinary(id);
-}
-
-LinAlgBinary::LinAlgBinary(const string& id)
-: Module("LinAlgBinary", id, Filter,"Math", "SCIRun"),
-  op_("op", id, this), function_("function", id, this)
+DECLARE_MAKER(LinAlgBinary)
+LinAlgBinary::LinAlgBinary(GuiContext* ctx)
+: Module("LinAlgBinary", ctx, Filter,"Math", "SCIRun"),
+  op_(ctx->subVar("op")), function_(ctx->subVar("function"))
 {
 }
 

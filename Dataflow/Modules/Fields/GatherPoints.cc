@@ -37,17 +37,14 @@ namespace SCIRun {
 
 class PSECORESHARE GatherPoints : public Module {
 public:
-  GatherPoints(const string& id);
+  GatherPoints(GuiContext* ctx);
   virtual ~GatherPoints();
   virtual void execute();
 };
 
-extern "C" Module* make_GatherPoints(const string& id) {
-  return new GatherPoints(id);
-}
-
-GatherPoints::GatherPoints(const string& id)
-  : Module("GatherPoints", id, Filter, "Fields", "SCIRun")
+DECLARE_MAKER(GatherPoints)
+GatherPoints::GatherPoints(GuiContext* ctx)
+  : Module("GatherPoints", ctx, Filter, "Fields", "SCIRun")
 {
 }
 

@@ -30,17 +30,15 @@ private:
   FieldHandle    ofieldH_;
 
 public:
-  CastMLVtoHV(const string& id);
+  CastMLVtoHV(GuiContext* ctx);
   virtual ~CastMLVtoHV();
   virtual void execute();
 };
 
-extern "C" PSECORESHARE Module* make_CastMLVtoHV(const string& id) {
-  return scinew CastMLVtoHV(id);
-}
+  DECLARE_MAKER(CastMLVtoHV);
 
-CastMLVtoHV::CastMLVtoHV(const string& id)
-  : Module("CastMLVtoHV", id, Source, "Fields", "SCIRun"), last_gen_(-1)
+CastMLVtoHV::CastMLVtoHV(GuiContext* ctx)
+  : Module("CastMLVtoHV", ctx, Source, "Fields", "SCIRun"), last_gen_(-1)
 {
 }
 

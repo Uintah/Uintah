@@ -52,7 +52,7 @@ const double d[][5]={{0, 0, 0, 0, 0},
 
 class PSECORESHARE StreamLines : public Module {
 public:
-  StreamLines(const string& id);
+  StreamLines(GuiContext* ctx);
 
   virtual ~StreamLines();
 
@@ -79,19 +79,17 @@ private:
   GuiInt                        remove_colinear_;
 };
 
-extern "C" PSECORESHARE Module* make_StreamLines(const string& id) {
-  return scinew StreamLines(id);
-}
+  DECLARE_MAKER(StreamLines);
 
-StreamLines::StreamLines(const string& id) : 
-  Module("StreamLines", id, Source, "Visualization", "SCIRun"),
+StreamLines::StreamLines(GuiContext* ctx) : 
+  Module("StreamLines", ctx, Source, "Visualization", "SCIRun"),
   vf_(0),
   sf_(0),
-  stepsize_("stepsize", id, this),
-  tolerance_("tolerance", id, this),
-  maxsteps_("maxsteps", id, this),
-  direction_("direction", id, this),
-  remove_colinear_("remove-colinear", id, this)
+  stepsize_(ctx->subVar("stepsize")),
+  tolerance_(ctx->subVar("tolerance")),
+  maxsteps_(ctx->subVar("maxsteps")),
+  direction_(ctx->subVar("direction")),
+  remove_colinear_(ctx->subVar("remove-colinear"))
 {
 }
 
@@ -285,14 +283,14 @@ void StreamLines::execute()
   if (!sfport_->get(sfhandle_) || !(sf_ = sfhandle_.get_rep()))
     return;
 
-  double tolerance;
-  double stepsize;
-  int maxsteps;
-  int direction;
-  get_gui_doublevar(id, "tolerance", tolerance);
-  get_gui_doublevar(id, "stepsize", stepsize);
-  get_gui_intvar(id, "maxsteps", maxsteps);
-  get_gui_intvar(id, "direction", direction);
+  tolerance_.reset();
+  double tolerance = tolerance_.get();
+  stepsize_.reset();
+  double stepsize = stepsize_.get();
+  maxsteps_.reset();
+  int maxsteps = maxsteps_.get();
+  direction_.reset();
+  int direction = direction_.get();
 
   const TypeDescription *smtd = sf_->mesh()->get_type_description();
   const TypeDescription *sltd = sf_->data_at_type_description();

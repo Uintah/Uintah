@@ -43,19 +43,15 @@
 namespace SCIRun {
 
 
-extern "C" Module* make_ScalarFieldStats(const string& id)
-{
-  return new ScalarFieldStats(id);
-}
-
-ScalarFieldStats::ScalarFieldStats(const string& id)
-  : Module("ScalarFieldStats", id, Filter, "Fields", "SCIRun"),
-    min_("min", id, this), max_("max", id, this),
-    mean_("mean", id, this),
-    median_("median", id, this),
-    sigma_("sigma", id, this),
-    is_fixed_("is_fixed", id, this),
-    nbuckets_("nbuckets", id, this)
+DECLARE_MAKER(ScalarFieldStats)
+ScalarFieldStats::ScalarFieldStats(GuiContext* ctx)
+  : Module("ScalarFieldStats", ctx, Filter, "Fields", "SCIRun"),
+    min_(ctx->subVar("min")), max_(ctx->subVar("max")),
+    mean_(ctx->subVar("mean")),
+    median_(ctx->subVar("median")),
+    sigma_(ctx->subVar("sigma")),
+    is_fixed_(ctx->subVar("is_fixed")),
+    nbuckets_(ctx->subVar("nbuckets"))
 {
 
 }
@@ -84,7 +80,7 @@ ScalarFieldStats::fill_histogram( vector<int>& hits)
   string smax( to_string(nmax) );
 
   char *data = ostr.str();
-  TCL::execute(id + " graph_data " + smin.c_str() + " "
+  gui->execute(id + " graph_data " + smin.c_str() + " "
 	       + smax.c_str() + " " + data );
   
   delete data;

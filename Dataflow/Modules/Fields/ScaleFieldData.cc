@@ -43,19 +43,15 @@ namespace SCIRun {
 class ScaleFieldData : public Module
 {
 public:
-  ScaleFieldData(const string& id);
+  ScaleFieldData(GuiContext* ctx);
   virtual ~ScaleFieldData();
   virtual void execute();
 };
 
 
-extern "C" Module* make_ScaleFieldData(const string& id)
-{
-  return new ScaleFieldData(id);
-}
-
-ScaleFieldData::ScaleFieldData(const string& id)
-  : Module("ScaleFieldData", id, Filter, "Fields", "SCIRun")
+DECLARE_MAKER(ScaleFieldData)
+ScaleFieldData::ScaleFieldData(GuiContext* ctx)
+  : Module("ScaleFieldData", ctx, Filter, "Fields", "SCIRun")
 {
 }
 

@@ -36,17 +36,14 @@ template class GenericWriter<ColorMapHandle>;
 
 class ColorMapWriter : public GenericWriter<ColorMapHandle> {
 public:
-  ColorMapWriter(const string& id);
+  ColorMapWriter(GuiContext* ctx);
 };
 
 
-extern "C" Module* make_ColorMapWriter(const string& id) {
-  return new ColorMapWriter(id);
-}
+DECLARE_MAKER(ColorMapWriter)
 
-
-ColorMapWriter::ColorMapWriter(const string& id)
-  : GenericWriter<ColorMapHandle>("ColorMapWriter", id, "DataIO", "SCIRun")
+ColorMapWriter::ColorMapWriter(GuiContext* ctx)
+  : GenericWriter<ColorMapHandle>("ColorMapWriter", ctx, "DataIO", "SCIRun")
 {
 }
 

@@ -38,7 +38,7 @@ namespace SCIRun {
 //! Module to build a surface field from a volume field.
 class FieldBoundary : public Module {
 public:
-  FieldBoundary(const string& id);
+  FieldBoundary(GuiContext* ctx);
   virtual ~FieldBoundary();
   virtual void execute();
 
@@ -61,13 +61,9 @@ private:
   FieldHandle              interp_fh_;
 };
 
-extern "C" Module* make_FieldBoundary(const string& id)
-{
-  return scinew FieldBoundary(id);
-}
-
-FieldBoundary::FieldBoundary(const string& id) : 
-  Module("FieldBoundary", id, Filter, "Fields", "SCIRun"),
+DECLARE_MAKER(FieldBoundary)
+FieldBoundary::FieldBoundary(GuiContext* ctx) : 
+  Module("FieldBoundary", ctx, Filter, "Fields", "SCIRun"),
   infield_gen_(-1),
   tri_fh_(0), interp_fh_(0)
 {

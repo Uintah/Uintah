@@ -60,18 +60,14 @@ class MinNormLeastSq : public Module {
   double error_norm(double* x1, double* x2, int n);
 
 public:
-  MinNormLeastSq(const string& id);
+  MinNormLeastSq(GuiContext* ctx);
   virtual ~MinNormLeastSq();
   virtual void execute();
 };
 
-extern "C" Module* make_MinNormLeastSq(const string& id)
-{
-    return new MinNormLeastSq(id);
-}
-
-MinNormLeastSq::MinNormLeastSq(const string& id)
-: Module("MinNormLeastSq", id, Filter, "Math", "SCIRun")
+DECLARE_MAKER(MinNormLeastSq)
+MinNormLeastSq::MinNormLeastSq(GuiContext* ctx)
+: Module("MinNormLeastSq", ctx, Filter, "Math", "SCIRun")
 {
 }
 

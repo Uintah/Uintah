@@ -48,21 +48,16 @@ private:
   FieldIPort *itp_port;
   FieldOPort *ofp;
 public:
-  ApplyInterpolant(const string& id);
+  ApplyInterpolant(GuiContext* ctx);
   virtual ~ApplyInterpolant();
 
   virtual void execute();
 };
 
+  DECLARE_MAKER(ApplyInterpolant);
 
-extern "C" Module* make_ApplyInterpolant(const string& id)
-{
-  return new ApplyInterpolant(id);
-}
-
-
-ApplyInterpolant::ApplyInterpolant(const string& id)
-  : Module("ApplyInterpolant", id, Filter, "Fields", "SCIRun")
+ApplyInterpolant::ApplyInterpolant(GuiContext* ctx)
+  : Module("ApplyInterpolant", ctx, Filter, "Fields", "SCIRun")
 {
 }
 
@@ -76,11 +71,11 @@ ApplyInterpolant::~ApplyInterpolant()
 void
 ApplyInterpolant::execute()
 {
-  src_port = (FieldIPort *)get_iport("Source");
+  src_port = (FieldIPort *)getIPort("Source");
   FieldHandle fsrc_h;
 
   if(!src_port) {
-    postMessage("Unable to initialize "+name+"'s iport");
+    postMessage("Unable to initialize "+moduleName+"'s iport");
     return;
   }
   if (!(src_port->get(fsrc_h) && fsrc_h.get_rep()))
@@ -120,7 +115,7 @@ ApplyInterpolant::execute()
     return;
   }
 
-  ofp = (FieldOPort *)get_oport("Output");
+  ofp = (FieldOPort *)getOPort("Output");
   if (!ofp) {
     postMessage("Unable to initialize "+name+"'s oport\n");
     return;
