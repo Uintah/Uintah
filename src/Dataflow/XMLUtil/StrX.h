@@ -21,6 +21,7 @@
 #if defined(__sgi) && !defined(__GNUC__) && (_MIPS_SIM != _MIPS_SIM_ABI32)
 #define IRIX
 #pragma set woff 1375
+#pragma set woff 3303
 #endif
 #include <util/PlatformUtils.hpp>
 #include <sax/SAXException.hpp>
@@ -30,6 +31,7 @@
 #include <sax/ErrorHandler.hpp>
 #if defined(__sgi) && !defined(__GNUC__) && (_MIPS_SIM != _MIPS_SIM_ABI32)
 #pragma reset woff 1375
+#pragma reset woff 3303
 #endif
 
 #include <iostream>
