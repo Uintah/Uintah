@@ -469,42 +469,130 @@ NrrdToField::create_field_from_nrrds(NrrdDataHandle dataH, NrrdDataHandle points
   if (has_connect_) {
     if (has_points_) {
       Nrrd* connect = connectH->nrrd;
-      int which = 0; // which index contains p
-      bool single_element = false;
+      int which; // which index contains p
+      bool single_element;
       // Look at connections nrrd's 2nd dimension
       // account for vector/scalar data
-      if (connect->dim == 1 && connect->axis[0].size <= 8) {
+      if (connect->dim == 1 ) {
 	// single element
 	which = 0;
 	single_element = true;
-      }
-      else if (connect->dim != 2) {
+      } else if (connect->dim == 2) {
+	// multiple elements assume p x n to start with.
+	which = 0;
+	single_element = false;
+      } else {
 	error("Connections Nrrd must be two dimensional (number of points in each connection by the number of elements)");
 	has_error_ = true;
 	return 0;
       }
-      
-      // check if connect array is p x n or n x p
-      if (!single_element && connect->axis[1].size <= 8 && 
-	  connect->axis[0].size <= 8) {
-	warning("Connections nrrd might be in the wrong order.  Assuming p x n where p is the number of points in each connection and n is the number of elements.");
-      }
-      if (!single_element) {
-	if ( connect->axis[1].size <= 8) {
-	  // p x n
-	  which = 1;
-	} else if (connect->axis[0].size <= 8) {
-	  // p x n
-	  which = 0;
-	} else { 
-	  error("Connections nrrd must have one axis with a size less than or equal to 8.");
-	  has_error_ = true;
-	  return 0;
-	}
-      }
 
       int pts = connect->axis[which].size;
       
+      if (pts != 2 && pts != 3 && pts != 4 && pts != 6 && pts != 8) {
+
+	if( single_element ) {
+	  error("Connections nrrd must have one axis with size 2, 3, 4, 6, or 8.");
+	  has_error_ = true;
+	  return 0;
+
+	} else {
+	  warning("Connections nrrd might not be p x n where p is the number of points in each connection and n is the number of elements.");
+	  warning("Assuming n x p.");
+
+	  which = 1;
+	  pts = connect->axis[which].size;
+      
+	  if (pts != 2 && pts != 3 && pts != 4 && pts != 6 && pts != 8) {
+
+	    error("Connections nrrd must have one axis with size 2, 3, 4, 6, or 8.");
+	    has_error_ = true;
+	    return 0;
+	  }
+	}
+      }
+
+      // If there is a cell type property make sure it matches what is 
+      // found automatically.
+      string cell_type = "Auto";
+      int nconnections = 0;
+
+      if (connectH->get_property( "Cell Type",property )) {
+	if( property.find( "Curve" ) != string::npos ) {
+	  cell_type = "Curve";
+	  nconnections = 2;
+	} else if( property.find( "Tri" ) != string::npos ) {
+	  cell_type = "Tri";
+	  nconnections = 3;
+	} else if( property.find( "Tet" ) != string::npos ) {
+	  cell_type = "Tet";
+	  nconnections = 4;
+	} else if( property.find( "Quad" ) != string::npos ) {
+	  cell_type = "Quad";
+	  nconnections = 4;
+	} else if( property.find( "Prism" ) != string::npos ) {
+	  cell_type = "Prism";
+	  nconnections = 6;
+	} else if( property.find( "Hex" ) != string::npos ) {
+	  cell_type = "Hex";
+	  nconnections = 8;
+	}
+      }
+
+      if( nconnections == 0 ) {
+	if (pointsH->get_property( "Cell Type",property )) {
+	  warning("Cell Type defined in Points nrrd instead of Connectivity nrrd.");
+	  if( property.find( "Curve" ) != string::npos ) {
+	    cell_type = "Curve";
+	    nconnections = 2;
+	  } else if( property.find( "Tri" ) != string::npos ) {
+	    cell_type = "Tri";
+	    nconnections = 3;
+	  } else if( property.find( "Tet" ) != string::npos ) {
+	    cell_type = "Tet";
+	    nconnections = 4;
+	  } else if( property.find( "Quad" ) != string::npos ) {
+	    cell_type = "Quad";
+	    nconnections = 4;
+	  } else if( property.find( "Prism" ) != string::npos ) {
+	    cell_type = "Prism";
+	    nconnections = 6;
+	  } else if( property.find( "Hex" ) != string::npos ) {
+	    cell_type = "Hex";
+	    nconnections = 8;
+	  }
+	}
+      }
+
+      if( nconnections == 0 && has_data_ ) {
+	if (dataH->get_property( "Cell Type",property )) {
+	  warning("Cell Type defined in Data nrrd instead of Connectivity nrrd.");
+	  if( property.find( "Curve" ) != string::npos ) {
+	    cell_type = "Curve";
+	    nconnections = 2;
+	  } else if( property.find( "Tri" ) != string::npos ) {
+	    cell_type = "Tri";
+	    nconnections = 3;
+	  } else if( property.find( "Tet" ) != string::npos ) {
+	    cell_type = "Tet";
+	    nconnections = 4;
+	  } else if( property.find( "Quad" ) != string::npos ) {
+	    cell_type = "Quad";
+	    nconnections = 4;
+	  } else if( property.find( "Prism" ) != string::npos ) {
+	    cell_type = "Prism";
+	    nconnections = 6;
+	  } else if( property.find( "Hex" ) != string::npos ) {
+	    cell_type = "Hex";
+	    nconnections = 8;
+	  }
+	}
+      }
+
+      if( nconnections && nconnections != pts ) {
+	warning("The cell type properties and the number of connections found do not match.");
+}
+
       switch (pts) {
       case 2:
 	// 2 -> curve
@@ -519,57 +607,30 @@ NrrdToField::create_field_from_nrrds(NrrdDataHandle dataH, NrrdDataHandle points
 	connectivity = 3;
 	topology_ = UNSTRUCTURED;
 	break;
-      case 4: {
+      case 4:
 	// 4 -> quad/tet (ask which if this case)
-	string cell_type = "Auto";
-	if (quad_or_tet == "Auto") {
-	  // determine if tet/quad based on properties
-	  if (connectH->get_property( "Cell Type",property )) {
-	    if( property.find( "Tet" ) != string::npos )
-	      cell_type = "Tet";
-	    else if( property.find( "Quad" ) != string::npos )
-	      cell_type = "Quad";
-	  }
-	  else if(pointsH->get_property( "Cell Type", property )) {
-	    if( property.find( "Tet" ) != string::npos )
-	      cell_type = "Tet";
-	    else if( property.find( "Quad" ) != string::npos )
-	      cell_type = "Quad";
-	    warning("Cell Type defined in Points nrrd instead of Connectivity nrrd.");
-	  } else if (has_data_ && dataH->get_property( "Cell Type", property )) {
-	    if( property.find( "Tet" ) != string::npos )
-	      cell_type = "Tet";
-	    else if( property.find( "Quad" ) != string::npos )
-	      cell_type = "Quad";
-	    warning("Cell Type defined in Data nrrd instead of Connectivity nrrd.");
-	  } else {
-	    warning("Auto detection of Cell Type using properties failed.  Using Tet for ambiguious case of 4 points per connection.");
-	    cell_type = "Tet";
-	  }
-	  
-	  if (cell_type == "Tet") {
-	    mHandle = scinew TetVolMesh();
-	    connectivity = 4;	    
-	  } else if (cell_type == "Quad") {
-	    mHandle = scinew QuadSurfMesh();
-	    connectivity = 4;
-	  } else {
-	    error("Connections Nrrd indicates 4 points per connection. Please indicate whether a Tet or Quad in UI.");
-	    has_error_ = true;
-	    return 0;
-	  }
+	if (quad_or_tet == "Quad") {
+	  mHandle = scinew QuadSurfMesh();
+	  connectivity = 4;
 	  topology_ = UNSTRUCTURED;
-	}
-	else if (quad_or_tet == "Quad") {
+	} else  if (quad_or_tet == "Tet") {
+	  mHandle = scinew TetVolMesh();
+	  connectivity = 4;
+	  topology_ = UNSTRUCTURED;
+	} else if (cell_type == "Tet") {
+	  mHandle = scinew TetVolMesh();
+	  connectivity = 4;	    
+	  topology_ = UNSTRUCTURED;
+	} else if (cell_type == "Quad") {
 	  mHandle = scinew QuadSurfMesh();
 	  connectivity = 4;
 	  topology_ = UNSTRUCTURED;
 	} else {
-	  mHandle = scinew TetVolMesh();
-	  connectivity = 4;
-	  topology_ = UNSTRUCTURED;
+	  error("Auto detection of Cell Type using properties failed.");
+	  error("Connections Nrrd indicates 4 points per connection. Please indicate whether a Tet or Quad in UI.");
+	  has_error_ = true;
+	  return 0;
 	}
-      }
 	break;
       case 6:
 	// 6 -> prism
