@@ -156,12 +156,19 @@
         <save label="p.volume"/>
         <save label="p.velocity"/>
         <save label="p.temperature"/>
+
+	<!-- needed for regression tester dat comparisons -->	
+	<save label="KineticEnergy"/>
+
+	<!-- need checkpointing for regression tester -->
+	<checkpoint interval="0.005" cycle="2"/>
    </DataArchiver>
 
    <Debug>
      <dbg_timeStart>       0.00   </dbg_timeStart>
      <dbg_timeStop>        0.03   </dbg_timeStop>
      <dbg_outputInterval>  1e-9   </dbg_outputInterval>
+
      <!--
      <debug label = "switchDebugInitialize"/>
      <debug label = "switchDebug_equilibration_press"/>
