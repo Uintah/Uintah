@@ -102,12 +102,12 @@ static void *NSGLGetProcAddress (const GLubyte *name)
 #endif
 #endif
 
-static PFNGLGENPROGRAMSARBPROC SCIglGenProgramsARB = 0;
-static PFNGLDELETEPROGRAMSARBPROC SCIglDeleteProgramsARB = 0;
-static PFNGLBINDPROGRAMARBPROC SCIglBindProgramARB = 0;
-static PFNGLPROGRAMSTRINGARBPROC SCIglProgramStringARB = 0;
-static PFNGLISPROGRAMARBPROC SCIglIsProgramARB = 0;
-static PFNGLPROGRAMLOCALPARAMETER4FARBPROC SCIglProgramLocalParameter4fARB = 0;
+//static PFNGLGENPROGRAMSARBPROC SCIglGenProgramsARB = 0;
+//static PFNGLDELETEPROGRAMSARBPROC SCIglDeleteProgramsARB = 0;
+//static PFNGLBINDPROGRAMARBPROC SCIglBindProgramARB = 0;
+//static PFNGLPROGRAMSTRINGARBPROC SCIglProgramStringARB = 0;
+//static PFNGLISPROGRAMARBPROC SCIglIsProgramARB = 0;
+//static PFNGLPROGRAMLOCALPARAMETER4FARBPROC SCIglProgramLocalParameter4fARB = 0;
 
 #endif /* HAVE_GLEW */
 
@@ -156,6 +156,7 @@ ShaderProgramARB::create()
       mSupported = true;
     }
     bool fail = !mSupported;
+#if 0
     fail = fail
       || (glGenProgramsARB = (PFNGLGENPROGRAMSARBPROC)getProcAddress("glGenProgramsARB")) == 0;
     fail = fail
@@ -168,6 +169,7 @@ ShaderProgramARB::create()
       || (glIsProgramARB = (PFNGLISPROGRAMARBPROC)getProcAddress("glIsProgramARB")) == 0;
     fail = fail
       || (glProgramLocalParameter4fARB = (PFNGLPROGRAMLOCALPARAMETER4FARBPROC)getProcAddress("glProgramLocalParameter4fARB")) == 0;
+#endif
     if(fail) {
       mSupported = false;
       cerr << "GL_ARB_fragment_program is not supported." << endl;
