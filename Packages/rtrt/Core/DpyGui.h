@@ -59,7 +59,7 @@ protected:
 
   virtual void resize(const int width, const int height);
 
-  // These are used for the mouse motion callbacks
+  // These are used for the mouse callbacks
   int last_x, last_y;
   // This keeps track of the last rotation for the camera
   Vector rotate_from;
