@@ -69,9 +69,24 @@ void
 HypreSolver::problemSetup(const ProblemSpecP& params)
 {
   ProblemSpecP db = params->findBlock("LinearSolver");
-  db->require("max_iter", d_maxSweeps);
-  db->require("ksptype",d_kspType);
-  db->require("underrelax", d_underrelax);
+  if (db->findBlock("max_iter"))
+    db->require("max_iter", d_maxSweeps);
+  else
+    d_maxSweeps = 75;
+  if (db->findBlock("ksptype"))
+    db->require("ksptype",d_kspType);
+  else
+    d_kspType = 11;
+  if (db->findBlock("underrelax"))
+    db->require("underrelax", d_underrelax);
+  else
+    d_underrelax = 1.0;
+  if (db->findBlock("res_tol"))
+    db->require("res_tol", d_residual);
+  else
+    d_underrelax = 1.0e-7;;
+
+
 }
 
 
@@ -143,7 +158,7 @@ HypreSolver::gridSetup(const ProcessorGroup*,
   int bx, by, bz;
   IntVector idxLo = patch->getCellFORTLowIndex();
   IntVector idxHi = patch->getCellFORTHighIndex();
-  
+
   nx = idxHi.x() - idxLo.x() + 1;
   ny = idxHi.y() - idxLo.y() + 1;
   nz = idxHi.z() - idxLo.z() + 1;
@@ -153,38 +168,26 @@ HypreSolver::gridSetup(const ProcessorGroup*,
   by = 1;
   bz = 1;
   d_dim = 3;
-  d_stencilSize = 7;
+  d_stencilSize = 4;
   d_nblocks = bx*by*bz;           //number of blocks per processor, now is set to 1
   d_stencilIndices = hypre_CTAlloc(int, d_stencilSize);
-  d_offsets = hypre_CTAlloc(int*, d_stencilSize);   //Allocating memory for 7 point stencil
-  d_offsets[0] = hypre_CTAlloc(int, 3);
-  d_offsets[0][0] = 0; 
-  d_offsets[0][1] = 0; 
-  d_offsets[0][2] = 0;
-  d_offsets[1] = hypre_CTAlloc(int, 3); //Allocating memory for 3 d_dimension indexing
-  d_offsets[1][0] = 0;            //setting the location of each stencil.
-  d_offsets[1][1] = 0;            //First index is the stencil number.
-  d_offsets[1][2] = -1;           //Second index is the [0,1,2]=[i,j,k]
+  d_offsets = hypre_CTAlloc(int*, d_stencilSize);   //Allocating memory for 7 point stencil but since I'm using symmetry, only 4 is needed
+  d_offsets[0] = hypre_CTAlloc(int, 3); //Allocating memory for 3 d_dimension indexing
+  d_offsets[0][0] = 0;            //setting the location of each stencil.
+  d_offsets[0][1] = 0;            //First index is the stencil number.
+  d_offsets[0][2] = -1;           //Second index is the [0,1,2]=[i,j,k]
+  d_offsets[1] = hypre_CTAlloc(int, 3);
+  d_offsets[1][0] = 0; 
+  d_offsets[1][1] = -1; 
+  d_offsets[1][2] = 0; 
   d_offsets[2] = hypre_CTAlloc(int, 3);
-  d_offsets[2][0] = 0; 
-  d_offsets[2][1] = -1; 
+  d_offsets[2][0] = -1; 
+  d_offsets[2][1] = 0; 
   d_offsets[2][2] = 0; 
   d_offsets[3] = hypre_CTAlloc(int, 3);
-  d_offsets[3][0] = -1; 
+  d_offsets[3][0] = 0; 
   d_offsets[3][1] = 0; 
-  d_offsets[3][2] = 0; 
-  d_offsets[4] = hypre_CTAlloc(int, 3);
-  d_offsets[4][0] = 1; 
-  d_offsets[4][1] = 0; 
-  d_offsets[4][2] = 0; 
-  d_offsets[5] = hypre_CTAlloc(int, 3);
-  d_offsets[5][0] = 0; 
-  d_offsets[5][1] = 1; 
-  d_offsets[5][2] = 0; 
-  d_offsets[6] = hypre_CTAlloc(int, 3);
-  d_offsets[6][0] = 0; 
-  d_offsets[6][1] = 0; 
-  d_offsets[6][2] = 1;
+  d_offsets[3][2] = 0;
      
   d_ilower = hypre_CTAlloc(int*, d_nblocks);
   d_iupper = hypre_CTAlloc(int*, d_nblocks);
@@ -212,7 +215,7 @@ HypreSolver::gridSetup(const ProcessorGroup*,
     }
   }
 #if 0
-  ib = 0;
+  ib = 0;  
   for (int iz = 0; iz < bz; iz++) {
     for (int iy = 0; iy < by; iy++) {
       for (int ix = 0; ix < bx; ix++) {
@@ -320,13 +323,15 @@ HypreSolver::setPressMatrix(const ProcessorGroup* pc,
 			    const Patch* patch,
 			    ArchesVariables* vars,
 			    const ArchesLabel*)
-{
+{ 
   double start_time = Time::currentSeconds();
   gridSetup(pc, patch);
   /*-----------------------------------------------------------
    * Set up the matrix structure
    *-----------------------------------------------------------*/
+
   HYPRE_StructMatrixCreate(MPI_COMM_WORLD, d_grid, d_stencil, &d_A);
+  HYPRE_StructMatrixSetSymmetric(d_A, 1);
   HYPRE_StructMatrixInitialize(d_A); 
 
    /*-----------------------------------------------------------
@@ -338,29 +343,33 @@ HypreSolver::setPressMatrix(const ProcessorGroup* pc,
    HYPRE_StructVectorInitialize(d_x);
   
   int i, s;
+ 
   IntVector idxLo = patch->getCellFORTLowIndex();
   IntVector idxHi = patch->getCellFORTHighIndex();
   d_value = hypre_CTAlloc(double, (d_stencilSize)*d_volume);
   
   /* Set the coefficients for the grid */
-
   i = 0;
   for (s = 0; s < (d_stencilSize); s++)
     {
       d_stencilIndices[s] = s;
     }
-  
   for (int colZ = idxLo.z(); colZ <= idxHi.z(); colZ ++) {
     for (int colY = idxLo.y(); colY <= idxHi.y(); colY ++) {
       for (int colX = idxLo.x(); colX <= idxHi.x(); colX ++) {
-	d_value[i] = vars->pressCoeff[Arches::AP][IntVector(colX,colY,colZ)]; //[0,0,0]
-	d_value[i+1] = -vars->pressCoeff[Arches::AB][IntVector(colX,colY,colZ)]; //[0,0,-1]
-	d_value[i+2] = -vars->pressCoeff[Arches::AS][IntVector(colX,colY,colZ)]; //[0,-1,0]
-	d_value[i+3] = -vars->pressCoeff[Arches::AW][IntVector(colX,colY,colZ)]; //[-1,0,0]
-	d_value[i+4] = -vars->pressCoeff[Arches::AE][IntVector(colX,colY,colZ)]; //[1,0,0]
-	d_value[i+5] = -vars->pressCoeff[Arches::AN][IntVector(colX,colY,colZ)]; //[0,1,0]
-	d_value[i+6] = -vars->pressCoeff[Arches::AT][IntVector(colX,colY,colZ)]; //[0,0,1]
-	i = i + d_stencilSize;
+	d_value[i] = -vars->pressCoeff[Arches::AB][IntVector(colX,colY,colZ)]; //[0,0,-1]
+	d_value[i+1] = -vars->pressCoeff[Arches::AS][IntVector(colX,colY,colZ)]; //[0,-1,0]
+	d_value[i+2] = -vars->pressCoeff[Arches::AW][IntVector(colX,colY,colZ)]; //[-1,0,0]
+	d_value[i+3] = vars->pressCoeff[Arches::AP][IntVector(colX,colY,colZ)]; //[0,0,0]
+
+#if 0
+	cerr << "["<<colX<<","<<colY<<","<<colZ<<"]"<<endl;  
+	cerr << "value[AB]=" << d_value[i] << endl;
+	cerr << "value[AS]=" << d_value[i+1] << endl;
+	cerr << "value[AW]=" << d_value[i+2] << endl;
+	cerr << "value[AP]=" << d_value[i+3] << endl;
+#endif
+	    i = i + d_stencilSize;
       }
     }
   }
@@ -373,6 +382,8 @@ HypreSolver::setPressMatrix(const ProcessorGroup* pc,
 
 
   HYPRE_StructMatrixAssemble(d_A);
+  //cerr << "Matrix Assemble time = " << Time::currentSeconds()-start_time << endl;
+
   //HYPRE_StructMatrixPrint("driver.out.A", d_A, 0);
   hypre_TFree(d_value);
 
@@ -383,11 +394,12 @@ HypreSolver::setPressMatrix(const ProcessorGroup* pc,
   for (int colZ = idxLo.z(); colZ <= idxHi.z(); colZ ++) {
     for (int colY = idxLo.y(); colY <= idxHi.y(); colY ++) {
       for (int colX = idxLo.x(); colX <= idxHi.x(); colX ++) {
-	d_value[i] = vars->pressNonlinearSrc[IntVector(colX,colY,colZ)]; 
-	i++;
+   	  d_value[i] = vars->pressNonlinearSrc[IntVector(colX,colY,colZ)]; 
+	  //cerr << "b[" << i << "] =" << d_value[i] << endl;
+	  i++;
+	}
       }
     }
-  }
     
   for (int ib = 0; ib < d_nblocks; ib++)
     {
@@ -396,15 +408,16 @@ HypreSolver::setPressMatrix(const ProcessorGroup* pc,
   
   i = 0;
   // Set up the initial guess
-  for (int colZ = idxLo.z(); colZ <= idxHi.z(); colZ ++) {  
+  for (int colZ = idxLo.z(); colZ <= idxHi.z(); colZ ++) {
     for (int colY = idxLo.y(); colY <= idxHi.y(); colY ++) {
       for (int colX = idxLo.x(); colX <= idxHi.x(); colX ++) {
 	d_value[i] = vars->pressure[IntVector(colX, colY, colZ)];
+	//cerr << "b[" << i << "] =" << d_value[i] << endl;
 	i++;;
       }
     }
   }
-  
+    
   for (int ib = 0; ib < d_nblocks; ib++)
     {
       HYPRE_StructVectorSetBoxValues(d_x, d_ilower[ib], d_iupper[ib], d_value);
@@ -419,11 +432,11 @@ HypreSolver::setPressMatrix(const ProcessorGroup* pc,
   //HYPRE_StructVectorPrint("driver.out.x0", d_x, 0);  
  
   hypre_TFree(d_value);
+
   int me = d_myworld->myrank();
   if(me == 0) {
-    cerr << "Time in Hypre pressure matrix solve: " << Time::currentSeconds()-start_time << " seconds\n";
+    cerr << "Time in HYPRE pressure matrix solve: " << Time::currentSeconds()-start_time << " seconds\n";
   }
-
 }
 
 bool
@@ -434,32 +447,34 @@ HypreSolver::pressLinearSolve()
    *-----------------------------------------------------------*/
   /* I have set this up so you can change to use different
      solvers and preconditioners without re-compiling.  Just
-     change the KSPTypre in the ups files to different numbers:
+     change the ksptype in the ups files to different numbers:
      0  = SMG
      1  = PFMG
      10 = SMG as the preconditoner and CG as the solver
-     11 = PFMG as the preconditioner and CG as the solver
-     anything else is just CG as the solver (default)
+     11 = PFMG as the preconditioner and CG as the solver (default)
+     17 = Jacobi as the preconditioner and CG as the solver
+     19 = CG as the solver with no preconditioner
   */
      
   
   int num_iterations;
-  int n_pre, n_post;
+  int n_pre, n_post, skip;
   double final_res_norm;
   n_pre = 1;
   n_post = 1;
+  skip = 1;
   HYPRE_StructSolver solver, precond;
 
   
   int me = d_myworld->myrank();
-  double solve_start = Time::currentSeconds();
+  double start_time = Time::currentSeconds();
   
   if (d_kspType == "0") {
     /*Solve the system using SMG*/
     HYPRE_StructSMGCreate(MPI_COMM_WORLD, &solver);
     HYPRE_StructSMGSetMemoryUse(solver, 0);
-    HYPRE_StructSMGSetMaxIter(solver, 75);
-    HYPRE_StructSMGSetTol(solver, 1.0e-06);
+    HYPRE_StructSMGSetMaxIter(solver, d_maxSweeps);
+    HYPRE_StructSMGSetTol(solver, d_residual);
     HYPRE_StructSMGSetRelChange(solver, 0);
     HYPRE_StructSMGSetNumPreRelax(solver, n_pre);
     HYPRE_StructSMGSetNumPostRelax(solver, n_post);
@@ -470,19 +485,19 @@ HypreSolver::pressLinearSolve()
     HYPRE_StructSMGGetNumIterations(solver, &num_iterations);
     HYPRE_StructSMGGetFinalRelativeResidualNorm(solver, &final_res_norm);
     HYPRE_StructSMGDestroy(solver);
-    //    cerr << "SMG Solve time = " << Time::currentSeconds()-solve_start << endl;
+    //    cerr << "SMG Solve time = " << Time::currentSeconds()-start_time << endl;
   }
   else if (d_kspType == "1") {
     /*Solve the system using PFMG*/
     HYPRE_StructPFMGCreate(MPI_COMM_WORLD, &solver);
-    HYPRE_StructPFMGSetMaxIter(solver, 75);
-    HYPRE_StructPFMGSetTol(solver, 1.0e-06);
+    HYPRE_StructPFMGSetMaxIter(solver, d_maxSweeps);
+    HYPRE_StructPFMGSetTol(solver, d_residual);
     HYPRE_StructPFMGSetRelChange(solver, 0);
     /* weighted Jacobi = 1; red-black GS = 2 */
     HYPRE_StructPFMGSetRelaxType(solver, 1);
     HYPRE_StructPFMGSetNumPreRelax(solver, n_pre);
     HYPRE_StructPFMGSetNumPostRelax(solver, n_post);
-    HYPRE_StructPFMGSetSkipRelax(solver, 1);
+    HYPRE_StructPFMGSetSkipRelax(solver, skip);
     /*HYPRE_StructPFMGSetDxyz(solver, dxyz);*/
     HYPRE_StructPFMGSetLogging(solver, 1);
     HYPRE_StructPFMGSetup(solver, d_A, d_b, d_x);
@@ -491,45 +506,44 @@ HypreSolver::pressLinearSolve()
     HYPRE_StructPFMGGetNumIterations(solver, &num_iterations);
     HYPRE_StructPFMGGetFinalRelativeResidualNorm(solver, &final_res_norm);
     HYPRE_StructPFMGDestroy(solver);
-    //cerr << "PFMG Solve time = " << Time::currentSeconds()-solve_start << endl;
+    //cerr << "PFMG Solve time = " << Time::currentSeconds()-start_time << endl;
   }
   else {
     HYPRE_StructPCGCreate(MPI_COMM_WORLD, &solver);
-    HYPRE_PCGSetMaxIter( (HYPRE_Solver)solver, 75);
-    HYPRE_PCGSetTol( (HYPRE_Solver)solver, 1.0e-06 );
-    //    HYPRE_PCGSetTwoNorm( (HYPRE_Solver)solver, 1 );
-    //    HYPRE_PCGSetRelChange( (HYPRE_Solver)solver, 0 );
-    //    HYPRE_PCGSetLogging( (HYPRE_Solver)solver, 1 );
+    HYPRE_PCGSetMaxIter( (HYPRE_Solver)solver, d_maxSweeps);
+    HYPRE_PCGSetTol( (HYPRE_Solver)solver, d_residual);
+    HYPRE_PCGSetTwoNorm( (HYPRE_Solver)solver, 1 );
+    HYPRE_PCGSetRelChange( (HYPRE_Solver)solver, 0 );
+    HYPRE_PCGSetLogging( (HYPRE_Solver)solver, 1 );
  
     
     if (d_kspType == "10") {
       /* use symmetric SMG as preconditioner */
       HYPRE_StructSMGCreate(MPI_COMM_WORLD, &precond);
-      //      HYPRE_StructSMGSetMemoryUse(precond, 0);
-      HYPRE_StructSMGSetMaxIter(precond, 20);
-      HYPRE_StructSMGSetTol(precond, 1.e-02);
-      //      HYPRE_StructSMGSetZeroGuess(precond);
-      //      HYPRE_StructSMGSetNumPreRelax(precond, n_pre);
-      //      HYPRE_StructSMGSetNumPostRelax(precond, n_post);
-      //      HYPRE_StructSMGSetLogging(precond, 0);
+      HYPRE_StructSMGSetMemoryUse(precond, 0);
+      HYPRE_StructSMGSetMaxIter(precond, 1);
+      HYPRE_StructSMGSetTol(precond, d_residual);
+      HYPRE_StructSMGSetZeroGuess(precond);
+      HYPRE_StructSMGSetNumPreRelax(precond, n_pre);
+      HYPRE_StructSMGSetNumPostRelax(precond, n_post);
+      HYPRE_StructSMGSetLogging(precond, 0);
       HYPRE_PCGSetPrecond( (HYPRE_Solver) solver,
 			   (HYPRE_PtrToSolverFcn) HYPRE_StructSMGSolve,
 			   (HYPRE_PtrToSolverFcn) HYPRE_StructSMGSetup,
 			   (HYPRE_Solver) precond);
-      //cerr << "SMG Precond time = " << Time::currentSeconds()-solve_start << endl;
+      //cerr << "SMG Precond time = " << Time::currentSeconds()-start_time << endl;
     }
   
     else if (d_kspType == "11") {  
       /* use symmetric PFMG as preconditioner */
       HYPRE_StructPFMGCreate(MPI_COMM_WORLD, &precond);
       HYPRE_StructPFMGSetMaxIter(precond, 1);
-      HYPRE_StructPFMGSetTol(precond, 0.0);
+      HYPRE_StructPFMGSetTol(precond, d_residual);
       HYPRE_StructPFMGSetZeroGuess(precond);
       /* weighted Jacobi = 1; red-black GS = 2 */
       HYPRE_StructPFMGSetRelaxType(precond, 1);
       HYPRE_StructPFMGSetNumPreRelax(precond, n_pre);
       HYPRE_StructPFMGSetNumPostRelax(precond, n_post);
-      int skip = 1;
       HYPRE_StructPFMGSetSkipRelax(precond, skip);
       /*HYPRE_StructPFMGSetDxyz(precond, dxyz);*/
       HYPRE_StructPFMGSetLogging(precond, 0);
@@ -537,25 +551,30 @@ HypreSolver::pressLinearSolve()
 			   (HYPRE_PtrToSolverFcn) HYPRE_StructPFMGSolve,
 			   (HYPRE_PtrToSolverFcn) HYPRE_StructPFMGSetup,
 			   (HYPRE_Solver) precond);
+      //cerr << "PFMG Precond time = " << Time::currentSeconds()-start_time << endl;
     }
     else if (d_kspType == "17") {
       /* use two-step Jacobi as preconditioner */
       HYPRE_StructJacobiCreate(MPI_COMM_WORLD, &precond);
-      HYPRE_StructJacobiSetMaxIter(precond, 4);
-      HYPRE_StructJacobiSetTol(precond, 1.0e-6);
+      HYPRE_StructJacobiSetMaxIter(precond, 2);
+      HYPRE_StructJacobiSetTol(precond, d_residual);
       HYPRE_StructJacobiSetZeroGuess(precond);
       HYPRE_PCGSetPrecond( (HYPRE_Solver) solver,
 			   (HYPRE_PtrToSolverFcn) HYPRE_StructJacobiSolve,
 			   (HYPRE_PtrToSolverFcn) HYPRE_StructJacobiSetup,
 			   (HYPRE_Solver) precond);
+      //cerr << "Jacobi Precond time = " << Time::currentSeconds()-start_time << endl;
     }
-
+    
+    //double dummy_start = Time::currentSeconds();
     HYPRE_PCGSetup
-      ( (HYPRE_Solver)solver, (HYPRE_Matrix)d_A, (HYPRE_Vector)d_b,
-	(HYPRE_Vector)d_x );
+      ( (HYPRE_Solver)solver, (HYPRE_Matrix)d_A, (HYPRE_Vector)d_b, (HYPRE_Vector)d_x );
+    //cerr << "PCG Setup time = " << Time::currentSeconds()-dummy_start << endl;
+
+    //dummy_start = Time::currentSeconds();
     HYPRE_PCGSolve
-      ( (HYPRE_Solver)solver, (HYPRE_Matrix)d_A, (HYPRE_Vector)d_b, 
-	(HYPRE_Vector)d_x);
+      ( (HYPRE_Solver)solver, (HYPRE_Matrix)d_A, (HYPRE_Vector)d_b, (HYPRE_Vector)d_x);
+    //cerr << "PCG Solve time = " << Time::currentSeconds()-dummy_start << endl;
     
     HYPRE_PCGGetNumIterations( (HYPRE_Solver)solver, &num_iterations );
     HYPRE_PCGGetFinalRelativeResidualNorm( (HYPRE_Solver)solver, &final_res_norm );
@@ -570,10 +589,9 @@ HypreSolver::pressLinearSolve()
     else if (d_kspType == "17") {
       HYPRE_StructJacobiDestroy(precond);
     }
-
   }
   if(me == 0) {
-    cerr << "hypre: final_res_norm: " << final_res_norm << ", iterations: " << num_iterations << ", time: " << Time::currentSeconds()-solve_start << " seconds\n";
+    cerr << "hypre: final_res_norm: " << final_res_norm << ", iterations: " << num_iterations << ", time: " << Time::currentSeconds()-start_time << " seconds\n";
   }
   return true;
 }
@@ -599,14 +617,14 @@ HypreSolver::copyPressSoln(const Patch* patch, ArchesVariables* vars)
   for (int colZ = idxLo.z(); colZ <= idxHi.z(); colZ ++) {
     for (int colY = idxLo.y(); colY <= idxHi.y(); colY ++) {
       for (int colX = idxLo.x(); colX <= idxHi.x(); colX ++) {
-	vars->pressure[IntVector(colX, colY, colZ)] = xvec[i];
+  	vars->pressure[IntVector(colX, colY, colZ)] = xvec[i];
+	//cerr << "xvec[" << i << "] = " << xvec[i] << endl;
 	i++;
       }
     }
   }
 
   hypre_TFree(xvec);
-
 }
   
 void
