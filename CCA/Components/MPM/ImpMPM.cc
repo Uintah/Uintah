@@ -1718,18 +1718,10 @@ void ImpMPM::checkConvergence(const ProcessorGroup*,
       if (dispIncNorm > dispIncNormMax){
 	dispIncNormMax = dispIncNorm;
       }
-
-      double nothing = 0.;
-      if(d_myworld->myrank() != 0){
-        new_dw->put(sum_vartype(nothing),lb->dispIncNormMax);
-        new_dw->put(sum_vartype(nothing), lb->dispIncQNorm0);
-      }
-      else {
-        new_dw->put(sum_vartype(dispIncNormMax),lb->dispIncNormMax);
-        new_dw->put(sum_vartype(dispIncQNorm0), lb->dispIncQNorm0);
-      }
       new_dw->put(sum_vartype(dispIncNorm),   lb->dispIncNorm);
       new_dw->put(sum_vartype(dispIncQNorm),  lb->dispIncQNorm);
+      new_dw->put(sum_vartype(dispIncNormMax),lb->dispIncNormMax);
+      new_dw->put(sum_vartype(dispIncQNorm0), lb->dispIncQNorm0);
      }
 
     }  // End of loop over materials
