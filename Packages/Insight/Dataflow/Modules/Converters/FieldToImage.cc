@@ -212,11 +212,7 @@ bool FieldToImage::run( const FieldHandle &fh)
     // unwrap it
     img_->data_ = dynamic_cast<ITKImageField< data >*>(fh.get_rep())->get_image();
   }
-  else {
-    // should never get here
-    return false;
-  }
-
+  return true;
 }
 
 void FieldToImage::execute(){
