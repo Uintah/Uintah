@@ -33,7 +33,7 @@ using std::hex;
 using std::dec;
 
 namespace Kurt {
-using namespace Kurt::Datatypes;
+
 using namespace SCIRun;
 
 static clString control_name("Control Widget");
@@ -46,6 +46,7 @@ extern "C" Module* make_TextureVolVis( const clString& id) {
 TextureVolVis::TextureVolVis(const clString& id)
   : Module("TextureVolVis", id, Filter), 
   alpha_scale("alpha_scale", id, this),
+  alpha_gamma("alpha_gamma", id, this),
   num_slices("num_slices", id, this),
   draw_mode("draw_mode", id, this),
   render_style("render_style", id, this),
@@ -145,6 +146,8 @@ void TextureVolVis::execute(void)
     }
     //    ogeom->delAll();
     ogeom->addObj( volren, "VolumeRenderer TransParent");
+    if(control_widget)
+      volren->SetControlPoint(control_widget->ReferencePoint());
   } else {
     volren->SetVol( tex );
     volren->SetColorMap( cmap );
@@ -190,7 +193,8 @@ void TextureVolVis::execute(void)
 
   //AuditAllocator(default_allocator);
   volren->SetNSlices( num_slices.get() );
-  volren->SetSliceAlpha( alpha_scale.get() );
+  volren->SetSliceAlpha( alpha_gamma.get() );
+  volren->SetScaleAlpha( alpha_scale.get() );
   volren->BuildTransferFunctions();
   //AuditAllocator(default_allocator);
   ogeom->flushViews();				  

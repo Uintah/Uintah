@@ -13,6 +13,7 @@ SRCS     += $(SRCDIR)/Brick.cc \
 	 $(SRCDIR)/GLMIP.cc \
 	 $(SRCDIR)/GLPlanes.cc \
 	 $(SRCDIR)/GLVolRenState.cc \
+	 $(SRCDIR)/LevelIterator.cc \
 	 $(SRCDIR)/FullRes.cc \
 	 $(SRCDIR)/FullResIterator.cc \
 	 $(SRCDIR)/LOS.cc \
@@ -35,8 +36,6 @@ PSELIBS := Core/Exceptions Core/Geometry \
 	Dataflow/Network PSECore/XMLUtil \
 	Uintah/Grid Packages/Uintah/Core/Datatypes Uintah/Exceptions \
 	Packages/Uintah/Dataflow/Modules/Visualization
-
-
 
 LIBS :=  $(LINK) $(XML_LIBRARY) $(GL_LIBS) -lmpi -lm
 

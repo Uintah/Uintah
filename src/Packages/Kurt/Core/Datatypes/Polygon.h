@@ -20,9 +20,8 @@
 #include <iosfwd>
 #include <vector>
 
+namespace Kurt {
 
-namespace Kurt {
-namespace Kurt {
 using namespace SCIRun;
 
 /**************************************
@@ -36,7 +35,7 @@ GENERAL INFORMATION
 
    Polygon.h
 
-   Packages/Kurt Zimmerman
+   Kurt Zimmerman
    Department of Computer Science
    University of Utah
 
@@ -54,7 +53,6 @@ WARNING
    This class does not check to see if 
    indeed the points are coplanar.  To be added later.
 ****************************************/
-
 
 class SCICORESHARE Polygon {
     vector<Point> vertices;
@@ -121,6 +119,5 @@ private:
   //SCICORESHARE std::istream& operator>>(std::istream& os, Polygon& p);
 
 } // End namespace Kurt
-} // End namespace Geometry
 
 #endif //ifndef Geometry_Polygon_h

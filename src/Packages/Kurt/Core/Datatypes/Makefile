@@ -2,7 +2,7 @@
 # makefile, at $(TOP).  The targets for this directory are
 # specified in sub.mk in this directory
 SRCTOP := .
-OBJTOP := ../..
-HERE_TARGET := lib/libPackages/Kurt_Datatypes.so
+OBJTOP := ../../../..
+HERE_TARGET := lib/libPackages_Kurt_Core_Datatypes.so
 
 include $(OBJTOP)/$(SRCTOP)/scripts/default.mk

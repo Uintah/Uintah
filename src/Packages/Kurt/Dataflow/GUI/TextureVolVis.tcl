@@ -1,7 +1,7 @@
 
 catch {rename TextureVolVis ""}
 
-itcl_class Packages/Kurt_Vis_TextureVolVis {
+itcl_class Kurt_Vis_TextureVolVis {
     inherit Module
     constructor {config} {
 	set name TextureVolVis

@@ -1,13 +1,13 @@
 /* share.h */
 
-#undef Packages/KurtSHARE
+#undef KurtSHARE
 
 #ifdef _WIN32
-  #if defined(BUILD_Packages/Kurt)
-    #define Packages/KurtSHARE __declspec(dllexport)
+  #if defined(BUILD_Kurt)
+    #define KurtSHARE __declspec(dllexport)
   #else
-    #define Packages/KurtSHARE __declspec(dllimport)
+    #define KurtSHARE __declspec(dllimport)
   #endif 
 #else 
-  #define Packages/KurtSHARE 
+  #define KurtSHARE 
 #endif 

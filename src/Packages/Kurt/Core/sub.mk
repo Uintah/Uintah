@@ -4,9 +4,10 @@ include $(SRCTOP_ABS)/scripts/largeso_prologue.mk
 
 SRCDIR := Packages/Kurt/Core
 SUBDIRS := \
-	$(SRCDIR)/Algorithms \
-	$(SRCDIR)/Datatypes \
-	$(SRCDIR)/ThirdParty \
+	$(SRCDIR)/Datatypes
+
+#	$(SRCDIR)/ThirdParty \
+#	$(SRCDIR)/Algorithms \
 
 include $(SRCTOP_ABS)/scripts/recurse.mk
 

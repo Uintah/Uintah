@@ -16,7 +16,7 @@ GENERAL INFORMATION
 
    TexPlanes.h
 
-   Packages/Kurt Zimmerman
+   Kurt Zimmerman
    Department of Computer Science
    University of Utah
 
@@ -57,7 +57,8 @@ public:
 protected:
   virtual void setAlpha(const Brick& brick);
   void draw(Brick&, Polygon*);
-} // End namespace Kurt
+};
 
+} // End namespace Kurt
 
 #endif

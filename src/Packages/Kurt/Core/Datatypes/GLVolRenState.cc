@@ -7,13 +7,14 @@
 #include <vector>
 #include <stdlib.h>
 #include <iostream>
+
 namespace Kurt {
+
 using namespace SCIRun;
-using namespace Kurt::Datatypes;
+
 using std::vector;
 using std::cerr;
 using std::endl;
-
 
 GLVolRenState::GLVolRenState(const GLVolumeRenderer* glvr)
     : volren( glvr ), texName(0), reload((unsigned char *)1)
@@ -157,7 +158,7 @@ GLVolRenState::loadTexture(Brick& brick)
 
   if( !brick.texName() || reload ) {
     if( !brick.texName() )
-      glGenTextures(1, brick.texNameP());
+      glGenTexturesEXT(1, brick.texNameP());
 
     glBindTexture(GL_TEXTURE_3D, brick.texName());
 
@@ -197,6 +198,7 @@ GLVolRenState::loadTexture(Brick& brick)
     glBindTexture(GL_TEXTURE_3D, brick.texName());
   }
 }
+
 void 
 GLVolRenState::makeTextureMatrix( const Brick& brick)
 {
@@ -353,7 +355,5 @@ GLVolRenState::drawWirePolys( const vector<Polygon *>& polys )
   glPopMatrix();
   glDisable(GL_DEPTH_TEST);
 }
+
 } // End namespace Kurt
-
-
-

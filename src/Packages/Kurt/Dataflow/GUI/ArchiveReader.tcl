@@ -1,4 +1,4 @@
-itcl_class Packages/Kurt_Vis_ArchiveReader { 
+itcl_class Kurt_Vis_ArchiveReader { 
 
     inherit Module 
     

@@ -56,10 +56,9 @@ using std::vector;
 using std::string;
 
 namespace Kurt {
+
 using namespace SCIRun;
-using Kurt::Datatypes::VisParticleSet;
 using namespace Uintah;
-using namespace Uintah::Datatypes;
 
 extern "C" Module* make_VisControl( const clString& id ) {
   return scinew VisControl( id ); 
@@ -432,5 +431,3 @@ VisControl::buildData(DataArchive& archive, vector< double >& times,
 } 
 
 } // End namespace Kurt
-//--------------------------------------------------------------- 
-  

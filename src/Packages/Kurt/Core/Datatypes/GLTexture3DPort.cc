@@ -2,24 +2,24 @@
 #include <Packages/Kurt/share/share.h>
 #include <Core/Malloc/Allocator.h>
 
-namespace Kurt {
-using namespace Kurt::Datatypes;
-
+using namespace SCIRun;
+using namespace Kurt;
 
 extern "C" {
-Packages/KurtSHARE IPort* make_GLTexture3DIPort(Module* module,
-					 const clString& name) {
+
+KurtSHARE IPort*
+make_GLTexture3DIPort(Module* module,
+		      const clString& name) {
   return scinew SimpleIPort<GLTexture3DHandle>(module,name);
 }
-Packages/KurtSHARE OPort* make_GLTexture3DOPort(Module* module,
-					 const clString& name) {
+
+KurtSHARE OPort*
+make_GLTexture3DOPort(Module* module,
+		      const clString& name) {
   return scinew SimpleOPort<GLTexture3DHandle>(module,name);
 }
 }
-
 template<> clString SimpleIPort<GLTexture3DHandle>::port_type("GLTexture3D");
 template<> clString SimpleIPort<GLTexture3DHandle>::port_color("gray40");
-
-} // End namespace Kurt
 
 

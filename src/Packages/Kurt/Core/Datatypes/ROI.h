@@ -16,7 +16,7 @@ GENERAL INFORMATION
 
    ROI.h
 
-   Packages/Kurt Zimmerman
+   Kurt Zimmerman
    Department of Computer Science
    University of Utah
 

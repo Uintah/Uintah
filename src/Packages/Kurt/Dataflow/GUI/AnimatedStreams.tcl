@@ -1,7 +1,7 @@
 
 catch {rename AnimatedStreams ""}
 
-itcl_class Packages/Kurt_Vis_AnimatedStreams {
+itcl_class Kurt_Vis_AnimatedStreams {
     inherit Module
     constructor {config} {
 	set name AnimatedStreams

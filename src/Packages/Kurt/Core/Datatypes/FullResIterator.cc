@@ -7,14 +7,12 @@
 namespace Kurt {
 using namespace SCIRun;
 
-
-
 FullResIterator::FullResIterator(const GLTexture3D* tex, Ray view,
 				 Point control):
     GLTextureIterator( tex, view, control)
 {
 
-  const Octree< Brick* >* node = (tex->bontree);
+  const Octree< Brick* >* node = tex->getBonTree();
   // AuditAllocator(default_allocator);
   if ( tex->depth() == 0 ){
     next = (*node)();

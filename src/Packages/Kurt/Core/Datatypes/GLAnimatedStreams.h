@@ -16,7 +16,6 @@
 namespace Kurt {
 
 using namespace SCIRun;
-//using namespace Packages/Kurt::Datatypes;
 
 struct streamerNode {
 				// to keep track of length
@@ -49,7 +48,8 @@ public:
   void Normals( bool n) {_normalsOn = n; }
   void SetLineWidth( int w){ _linewidth = w; }
   void SetStepSize( double step){ _stepsize = step; }
-
+  void SetWidgetLocation(Point p){ widgetLocation = p; }
+  //void UseWidget(bool b){ _usesWidget = b; }
   GLAnimatedStreams(const GLAnimatedStreams&);
   ~GLAnimatedStreams();
 
@@ -89,6 +89,8 @@ private:
   double slice_alpha;
 
   bool cmapHasChanged;
+  bool _usesWidget;
+  Point widgetLocation;
 
   bool _pause;
   bool _normalsOn;
@@ -114,9 +116,6 @@ private:
   double minspeed;
 };
 
-
 } // End namespace Kurt
- 
-
 
 #endif

@@ -14,7 +14,7 @@ GENERAL INFORMATION
 
    GLAttenuate.h
 
-   Packages/Kurt Zimmerman
+   Kurt Zimmerman
    Department of Computer Science
    University of Utah
 
@@ -51,7 +51,7 @@ public:
   //////////
   // postdrawing functions
   virtual void postDraw();
-  //////////
+
 private:
 
 };

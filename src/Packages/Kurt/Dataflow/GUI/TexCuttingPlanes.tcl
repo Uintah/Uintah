@@ -1,7 +1,7 @@
 
 catch {rename TexCuttingPlanes ""}
 
-itcl_class Packages/Kurt_Vis_TexCuttingPlanes {
+itcl_class Kurt_Vis_TexCuttingPlanes {
     inherit Module
 
     #protected inactivecolor "#010101"

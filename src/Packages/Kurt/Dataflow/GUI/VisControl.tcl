@@ -11,7 +11,7 @@
 #KEYWORDS
 #    ParticleGridReader, Material/Particle Method
 #AUTHOR
-#    Packages/Kurt Zimmerman
+#    Kurt Zimmerman
 #    Department of Computer Science
 #    University of Utah
 #    January 1999
@@ -22,7 +22,7 @@
 
 catch {rename VisControl ""}
 
-itcl_class Packages/Kurt_Vis_VisControl { 
+itcl_class Kurt_Vis_VisControl { 
     inherit Module 
 
     protected psVarList ""

@@ -5,15 +5,14 @@
 #include <iostream>
 
 namespace Kurt {
+
 using namespace SCIRun;
-
-
 
 ROIIterator::ROIIterator(const GLTexture3D* tex, Ray view,
 			 Point control):
     GLTextureIterator( tex, view, control )
 {
-  const Octree< Brick* >* node = (tex->bontree);
+  const Octree< Brick* >* node = tex->getBonTree();
   if ( tex->depth() == 0 ){
     next = (*node)();
   } else {
@@ -30,7 +29,8 @@ ROIIterator::ROIIterator(const GLTexture3D* tex, Ray view,
       order.back()->pop_front();
       node = (*node)[child];
       BBox b((*node)()->bbox());
-      if( !b.inside( control )){
+      if( !b.inside( control ) &&
+	(*node)()->level() == 1){
 	break;
       }
     } while (node->type() == Octree<Brick* >::PARENT);
@@ -84,7 +84,8 @@ ROIIterator::SetNext()
   
   while( node->type() == Octree<Brick* >::PARENT ){
     BBox b( (*node)()->bbox() );
-    if(!b.inside( control )){
+    if(!b.inside( control ) &&
+	(*node)()->level() == 1){
       break;
     }
     order.push_back( traversal( node ));
@@ -95,6 +96,5 @@ ROIIterator::SetNext()
   }
   next = (*node)();
 }
+
 } // End namespace Kurt
-
-

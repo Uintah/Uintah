@@ -5,7 +5,7 @@ include $(SRCTOP_ABS)/scripts/largeso_prologue.mk
 SRCDIR := Packages/Kurt
 SUBDIRS := \
 	$(SRCDIR)/Core \
-	$(SRCDIR)/Dataflow \
+	$(SRCDIR)/Dataflow 
 
 include $(SRCTOP_ABS)/scripts/recurse.mk
 

@@ -20,9 +20,8 @@
 #include <Packages/Kurt/Core/Datatypes/GLAnimatedStreams.h>
 
 namespace Kurt {
-using namespace SCIRun;
 
-class GeomObj;
+using namespace SCIRun;
 
 class AnimatedStreams : public Module {
 
@@ -30,6 +29,7 @@ public:
   AnimatedStreams( const clString& id);
 
   virtual ~AnimatedStreams();
+  virtual void widget_moved(int last);    
   virtual void execute();
   //  void tcl_command( TCLArgs&, void* );
 
@@ -53,10 +53,13 @@ private:
 
   Mutex mutex;
 
+  CrowdMonitor control_lock; 
+  PointWidget *control_widget;
+  GeomID control_id;
 
 
 };
-} // End namespace Kurt
 
+} // End namespace Kurt
 
 #endif

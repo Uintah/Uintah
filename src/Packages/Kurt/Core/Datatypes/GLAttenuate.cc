@@ -3,8 +3,6 @@
 #include <GL/gl.h>
 
 namespace Kurt {
-using namespace Kurt::Datatypes;
-
 
 GLAttenuate::GLAttenuate(const GLVolumeRenderer* glvr) :
   GLTexRenState( glvr )
@@ -23,5 +21,5 @@ void GLAttenuate::postDraw()
 {
   glDisable(GL_BLEND);
 }
-} // End namespace Kurt
 
+} // End namespace Kurt

@@ -1,7 +1,7 @@
 #ifndef TEXTUREVOLVIS_H
 #define TEXTUREVOLVIS_H
 /*
- * TextureVolVis.cc
+ * TextureVolVis.h
  *
  * Simple interface to volume rendering stuff
  */
@@ -20,10 +20,13 @@
 #include <Packages/Kurt/Core/Datatypes/GLTexture3DPort.h>
 #include <Packages/Kurt/Core/Datatypes/GLTexture3D.h>
 
-namespace Kurt {
-using namespace SCIRun;
-class GeomObj;
+namespace SCIRun {
+  class GeomObj;
+}
 
+namespace Kurt {
+
+using namespace SCIRun;
 
 class TextureVolVis : public Module {
 
@@ -55,6 +58,7 @@ private:
   TCLint draw_mode;
   TCLint render_style;
   TCLdouble alpha_scale;
+  TCLdouble alpha_gamma;
   TCLint interp_mode;
   GLVolumeRenderer *volren;
 
@@ -62,7 +66,7 @@ private:
 
   void SwapXZ( ScalarFieldHandle sfh );
 };
-} // End namespace Kurt
 
+} // End namespace Kurt
 
 #endif
