@@ -52,10 +52,8 @@ namespace SCIRun {
 
   private:
 
-    ProcessInfo::ProcessInfo  ( void ) {}
-    ProcessInfo::~ProcessInfo ( void ) {}
-
-    static unsigned long LinuxGetInfo ( int info_type );
+    ProcessInfo  ( void ) {}
+    ~ProcessInfo ( void ) {}
 
   }; // class ProcessInfo {
 
