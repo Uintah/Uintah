@@ -44,7 +44,7 @@ bool CommRecMPI::waitsome(const ProcessorGroup * pg,
   int me = pg->myrank();
   if (mixedDebug.active()) {
     mixedDebug << me << " Waitsome: " << ids.size() << " waiters:\n";
-    for (int i = 0; i < messageNums.size(); i++) {
+    for (int i = 0; i < (int)messageNums.size(); i++) {
       mixedDebug << me << "  Num: " << messageNums[i] << ", vars: " 
              << vars[i] << endl;
     }

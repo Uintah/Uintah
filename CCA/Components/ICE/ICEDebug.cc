@@ -968,7 +968,7 @@ void ICE::printConservedQuantities(const ProcessorGroup*,
                                    DataWarehouse* new_dw)
 {
   const Level* level = getLevel(patches);
-  int levelIndx = level->getIndex();
+  // Not used: int levelIndx = level->getIndex();
       
   for(int p=0; p<patches->size(); p++)  {
     const Patch* patch = patches->get(p);  
@@ -982,7 +982,7 @@ void ICE::printConservedQuantities(const ProcessorGroup*,
     static double initial_total_eng;
     static Vector initial_total_mom;
     int timestep = d_sharedState->getCurrentTopLevelTimeStep();
-    static int n_passes = 0;
+    // Not used: static int n_passes = 0;
     
     vector<Vector> mat_momentum(numICEmatls);
     vector<double> mat_mass(numICEmatls);

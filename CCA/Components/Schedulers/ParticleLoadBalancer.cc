@@ -162,7 +162,7 @@ void ParticleLoadBalancer::assignPatches(const LevelP& level,
   {
     Patch *patch = *iter;
     int id = patch->getID();
-    if (d_processorAssignment[id] != myrank)
+    if (d_processorAssignment[id] != (int)myrank)
       continue;
 
     int thisPatchParticles = 0;
@@ -196,7 +196,7 @@ void ParticleLoadBalancer::assignPatches(const LevelP& level,
   MPI_Type_contiguous(2, MPI_INT, &pairtype);
   MPI_Type_commit(&pairtype);
 
-  MPI_Gatherv(&particleList[0],particleList.size(),pairtype,
+  MPI_Gatherv(&particleList[0],(int)particleList.size(),pairtype,
 	      &allParticles[0], &recvcounts[0], &displs[0], pairtype,
 	      0, group->getComm());
 
@@ -236,7 +236,7 @@ void ParticleLoadBalancer::assignPatches(const LevelP& level,
       for (i = 0; i < numProcs; i++) {
 	int highpatch = allParticles[maxPatch].second;
 	int lowpatch = allParticles[minPatch].second;
-	if (patchesLeft >= 2*(numProcs-i)) {
+	if (patchesLeft >= (int)(2*(numProcs-i))) {
 	  // give it min and max
 	  d_processorAssignment[highpatch]=i;
 	  maxPatch--;
@@ -282,7 +282,7 @@ void ParticleLoadBalancer::assignResources(DetailedTasks& graph,
 					     const ProcessorGroup* group)
 {
   int nTasks = graph.numTasks();
-  int numProcs = group->size();
+  // Not used: int numProcs = (int)group->size(); 
 
   for(int i=0;i<nTasks;i++){
     DetailedTask* task = graph.getTask(i);
@@ -329,7 +329,7 @@ ParticleLoadBalancer::getPatchwiseProcessorAssignment(const Patch* patch,
 int
 ParticleLoadBalancer::getOldProcessorAssignment(const VarLabel* var, 
 						const Patch* patch, 
-						const int matl, 
+						      int /*matl*/, 
 						const ProcessorGroup* group)
 {
   if (var->typeDescription()->isReductionVariable()) {
@@ -344,8 +344,8 @@ ParticleLoadBalancer::getOldProcessorAssignment(const VarLabel* var,
 }
 
 bool 
-ParticleLoadBalancer::needRecompile(double time, double delt, 
-				    const GridP& grid)
+ParticleLoadBalancer::needRecompile(double /*time*/, double delt, 
+				    const GridP& /*grid*/)
 {
   //need to compensate for restarts
   d_currentTime += delt;
