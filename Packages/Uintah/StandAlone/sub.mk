@@ -114,6 +114,11 @@ LIBS    := $(XML_LIBRARY) $(MPI_LIBRARY) $(M_LIBRARY)
 
 include $(SCIRUN_SCRIPTS)/program.mk
 
+SRCS := $(SRCDIR)/timeextract.cc
+PROGRAM := Packages/Uintah/StandAlone/timeextract
+
+include $(SCIRUN_SCRIPTS)/program.mk
+
 SRCS := $(SRCDIR)/compare_uda.cc
 PROGRAM := Packages/Uintah/StandAlone/compare_uda
 
