@@ -354,17 +354,40 @@ void Module::remove_iport(int which)
       iports[loop1]->connection(loop2)->id = 
 	omod+"_p"+op+"_to_"+imod+"_p"+ip;
 
-      command = "global netedit_canvas;$netedit_canvas itemconfigure " +
+      command = "global netedit_canvas\n$netedit_canvas itemconfigure " +
 	omod + "_p" + op + "_to_" + imod + "_p" + to_string(loop1+1) +
 	" -tags " + iports[loop1]->connection(loop2)->id;
       TCL::execute(command);
 
-      command = "global netedit_canvas;$netedit_canvas bind " +
+      command = "global netedit_mini_canvas\n$netedit_mini_canvas itemconfigure " +
+	omod + "_p" + op + "_to_" + imod + "_p" + to_string(loop1+1) +
+	" -tags " + iports[loop1]->connection(loop2)->id;
+      TCL::execute(command);
+      
+      command = "global netedit_canvas\n$netedit_canvas bind " +
 	iports[loop1]->connection(loop2)->id +
 	" <ButtonPress-3> \"destroyConnection " +
 	iports[loop1]->connection(loop2)->id +
 	" " + omod + " " + imod + "\"";
       TCL::execute(command);
+
+      command = "global netedit_canvas\nset temp \"a\"\n$netedit_canvas bind " +
+	iports[loop1]->connection(loop2)->id +
+	" <ButtonPress-1> \"lightPipe $temp "+ omod + " " + op + " " +
+	imod + " " + ip + "\"";
+      TCL::execute(command);
+
+      command = "global netedit_canvas\n$netedit_canvas bind " +
+	iports[loop1]->connection(loop2)->id +
+	" <ButtonRelease-1> \"resetPipe $temp " + omod + " " + imod + "\"";
+      TCL::execute(command);
+
+      command = "global netedit_canvas\n$netedit_canvas bind " +
+	iports[loop1]->connection(loop2)->id +
+	" <Control-Button-1> \"raisePipe " +
+	iports[loop1]->connection(loop2)->id + "\"";
+      TCL::execute(command);
+
     }
   }
   TCL::execute(id+" module_shrink"); 
