@@ -1613,30 +1613,21 @@ void ViewWindow::setClip(DrawInfoOpenGL* drawinfo)
 
 void GeomViewerItem::draw(DrawInfoOpenGL* di, Material *m, double time)
 {
-  // here we need to query the ViewWindow with our name and give it our
-  // di so it can change things if they need to be...
+  // Here we need to query the ViewWindow with our name and give it our
+  // di so it can change things if they need to be.
   di->viewwindow->setDI(di,name);
   
-  // lets get the childs bounding box, and draw it...
-  
   BBox bb;
-  //    child->reset_bbox();
-  
   child->get_bounds(bb);
-  if(!bb.valid())
-    return;
-  
-  // might as well try and draw the arcball also...
-  
-  Point min,max;
-  
-  min = bb.min();
-  max = bb.max();
-  if (!di->debug)
+  if (!(di->debug && bb.valid()))
+  {
     child->draw(di,m,time);
-  
-  if (di->debug) {
-    
+  }
+  else
+  {
+    const Point &min(bb.min());
+    const Point &max(bb.max());
+
     glBlendFunc(GL_SRC_ALPHA,GL_ONE_MINUS_SRC_ALPHA);
     glEnable(GL_BLEND);
     glDisable(GL_DEPTH_TEST);
