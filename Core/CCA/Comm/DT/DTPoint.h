@@ -53,6 +53,7 @@ namespace SCIRun {
   class DTPoint{
   public:
     friend class DataTransmitter;
+    friend class SocketEpChannel;
     void *object;
     DTPoint(DataTransmitter *dt);
     ~DTPoint();
@@ -81,10 +82,9 @@ namespace SCIRun {
     //the sender field is filled by this method.
     void putMsg(DTMessage *msg);
 
+  private:
     //callback function
     void (*service)(DTMessage *msg);
-
-  private:
     DataTransmitter *dt;
   };
 

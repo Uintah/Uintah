@@ -133,6 +133,9 @@ DataTransmitter::putMessage(DTMessage *msg){
   msg->fr_addr=addr;
   
   DTMessageTag newTag=currentTag.nextTag();
+
+  //  cerr<<"===DT putMessage: "<<newTag.lo<<" Destination="; msg->getDestination().display();
+
   msg->tag=newTag;
   /////////////////////////////////
   // if the msg is sent to a local 
@@ -165,6 +168,7 @@ DataTransmitter::putMessage(DTMessage *msg){
 
 void 
 DataTransmitter::putMsg(DTMessage *msg){
+  //cerr<<"===DT putMsg: "<<msg->tag.lo<<" Destination="; msg->getDestination().display();
   msg->fr_addr=addr;
   
   DTMessageTag newTag=currentTag.defaultTag();
@@ -192,6 +196,7 @@ DataTransmitter::putMsg(DTMessage *msg){
 
 void
 DataTransmitter::putReplyMessage(DTMessage *msg){
+  //  cerr<<"===DT putReplyMessage: "<<msg->tag.lo<<" Destination="; msg->getDestination().display();
   msg->fr_addr=addr;
 
   /////////////////////////////////
@@ -383,7 +388,16 @@ DataTransmitter::runSendingThread(){
 	sentRecver=msg->getDestination();
 	send_msgMap.erase(rrIter);
 	rrIter=send_msgMap.begin();
-	//cerr<<"Send Message:";
+	string id="";
+	if((int)(msg->buf[0])==-101) id=" ADD ";
+	if((int)(msg->buf[0])==-102) id=" DEL ";
+	if((int)(msg->buf[0])==0) id=" ADD_ISA1 ";
+	if((int)(msg->buf[0])==1) id=" DEL_HAN2 ";
+	if((int)(msg->buf[0])==3) id=" ADD_HAN4 ";
+	if((int)(msg->buf[0])==4) id=" DEL_HAN5 ";
+	//if(id!="") 
+	//cerr<<"===DT Send Message: "<<msg->tag.lo<<id<<" Destination="; msg->getDestination().display();
+	//	cerr<<"Send Message:";
 	//msg->display();
 	delete msg;
       }
@@ -441,6 +455,18 @@ DataTransmitter::runRecvingThread(){
 	  if(msg->offset==msg->length){
 	    DTPoint *pt=msg->recver;
 	    recv_msgMap.erase(msg->tag);
+
+	    string id="";
+	    if(!(msg->tag==currentTag.defaultTag())){
+	      if((int)(msg->buf[0])==-101) id=" ADD ";
+	      if((int)(msg->buf[0])==-102) id=" DEL ";
+	      if((int)(msg->buf[0])==0) id=" ADD_ISA1 ";
+	      if((int)(msg->buf[0])==1) id=" DEL_HAN2 ";
+	      if((int)(msg->buf[0])==3) id=" ADD_HAN4 ";
+	      if((int)(msg->buf[0])==4) id=" DEL_HAN5 ";
+	    }
+	    //if(id!="") 
+	    //	      cerr<<"===DT Recv Message: "<<msg->tag.lo<<id<<" Destination="; msg->getDestination().display();
 
 	    if(pt->service!=NULL){
 	      pt->service(msg);

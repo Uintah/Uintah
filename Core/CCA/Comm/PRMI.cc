@@ -130,29 +130,43 @@ PRMI::init(){
   MPI_Comm_size(MPI_COMM_WORLD, &mpi_size);
   MPI_Comm_rank(MPI_COMM_WORLD, &mpi_rank);
 
-  //root broadcasts its orderSvc_ep and orderSvc_addr
+  DTAddress dtAddr=PIDL::getDT()->getAddress();
   if(mpi_rank==0){
-    orderSvc_ep=orderSvcEp.ep;
-    orderSvc_addr=PIDL::getDT()->getAddress();
+    orderSvc_ep=orderSvcEp.getEP();
+    orderSvc_addr.ip=dtAddr.ip;
+    orderSvc_addr.port=dtAddr.port;
   }
-  MPI_Bcast(&orderSvc_ep, 1, MPI_INT, 0, MPI_COMM_WORLD);
-  MPI_Bcast(&orderSvc_addr, 2, MPI_INT, 0, MPI_COMM_WORLD);
-
-  //root gatheres lockSvc_ep and lockSvc_addr
+  //root broadcasts its orderSvc_ep and orderSvc_addr
+  int* int_buf;
+  short* short_buf;
   if(mpi_rank==0){
     lockSvc_ep_list=new DTPoint*[mpi_size];
     lockSvc_addr_list=new DTAddress[mpi_size];
-  }else{
-    lockSvc_ep_list=new DTPoint*[1];
-    lockSvc_addr_list=new DTAddress[1];
+    int_buf=new int[mpi_size];
+    short_buf=new short[mpi_size];
   }
-  
-  lockSvc_ep_list[0]=lockSvcEp.ep;
-  lockSvc_addr_list[0]=PIDL::getDT()->getAddress();
-  MPI_Gather(lockSvc_ep_list,1, MPI_INT, lockSvc_ep_list, 0, 
-			      MPI_INT, 1, MPI_COMM_WORLD);
-  MPI_Gather(lockSvc_addr_list,2, MPI_INT, lockSvc_addr_list, 0, 
-			      MPI_INT, 2, MPI_COMM_WORLD);
+  //root broadcast order service ep and DT address
+  MPI_Bcast(&orderSvc_ep, 1, MPI_INT,0,MPI_COMM_WORLD);
+  MPI_Bcast(&orderSvc_addr.ip, 1, MPI_INT,0,MPI_COMM_WORLD);
+  MPI_Bcast(&orderSvc_addr.port, 1, MPI_SHORT,0,MPI_COMM_WORLD);
+
+
+  //root gatheres lockSvc_ep and lockSvc_addr
+  DTPoint* lockSvc_ep=lockSvcEp.getEP();
+  MPI_Gather(&lockSvc_ep, 1, MPI_INT, lockSvc_ep_list, 1, MPI_INT,
+	     0, MPI_COMM_WORLD);
+  MPI_Gather(&dtAddr.ip, 1, MPI_INT, int_buf, 1, MPI_INT,
+	     0, MPI_COMM_WORLD);
+  MPI_Gather(&dtAddr.port, 1, MPI_SHORT, short_buf, 1, MPI_SHORT,
+	     0, MPI_COMM_WORLD);
+  if(mpi_rank==0){
+    for(int i=0; i<mpi_size; i++){
+      lockSvc_addr_list[i].ip=int_buf[i];
+      lockSvc_addr_list[i].port=short_buf[i];
+    }
+    delete []int_buf;
+    delete []short_buf;
+  }
 }
 
 void
@@ -171,6 +185,8 @@ PRMI::lock(){
 
   SocketSpChannel spc(orderSvc_ep, orderSvc_addr);
   SocketMessage msg(&spc); 
+  //  cerr<<"#### PRMI:lock sending message to orderservice lockid= "<<lid.str()<<" ####\n";
+  msg.createMessage();
   msg.marshalInt(&lid.invID.iid);
   msg.marshalInt(&lid.invID.pid);
   msg.marshalInt(&lid.seq);
@@ -184,6 +200,7 @@ PRMI::lock(){
       lock_sema_map[lid]=new Semaphore("mpi lock semaphre",0);
     }
     lock_mutex->unlock();
+    //    cerr<<"PRMI::lock calls lock_sema_map[lid]->down()\n";
     lock_sema_map[lid]->down();
     //waiting for mpiunlock() or updatlock() to update the semaphore
   }else{
@@ -256,6 +273,8 @@ PRMI::setInvID(ProxyID id){
   else{
     lock_mutex->lock();
     states_map[Thread::self()]->invID=id;
+    states_map[Thread::self()]->lockSeq=0;
+    
     lock_mutex->unlock();
   }
 }
@@ -308,6 +327,7 @@ PRMI::peekProxyID(){
 
 void 
 PRMI::order_service(DTMessage *dtmsg){
+  //  cerr<<"#### PRMI:order_service called ####\n";
   SocketMessage msg(dtmsg);
   lockid lid;
   msg.unmarshalInt(&lid.invID.iid);
@@ -321,8 +341,10 @@ PRMI::order_service(DTMessage *dtmsg){
 
     //broadcast the order to lock services
     for(int i=0; i<mpi_size; i++){
+      //      cerr<<"#### PRMI:order_service sending message to lockservice at rank"<<i<<" lockid= "<<lid.str()<<" ####\n";
       SocketSpChannel spc(lockSvc_ep_list[i], lockSvc_addr_list[i]);
       SocketMessage msg(&spc); 
+      msg.createMessage();
       msg.marshalInt(&lid.invID.iid);
       msg.marshalInt(&lid.invID.pid);
       msg.marshalInt(&lid.seq);
@@ -341,6 +363,7 @@ PRMI::order_service(DTMessage *dtmsg){
 
 void 
 PRMI::lock_service(DTMessage *dtmsg){
+  //  cerr<<"#### PRMI:lock_service called ####\n";
   //first decode lockid
   SocketMessage msg(dtmsg);
   lockid lid;
@@ -360,6 +383,7 @@ PRMI::lock_service(DTMessage *dtmsg){
     }
     //raise the semaphore
     lock_sema_map[lid]->up();
+    //    cerr<<"PRMI::lock_service calls lock_sema_map[lid]->up()\n";
   }
   lock_mutex->unlock();
 }
