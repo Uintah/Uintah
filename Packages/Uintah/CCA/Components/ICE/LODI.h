@@ -34,7 +34,7 @@ namespace Uintah {
     CCVariable<Vector> nu;               
     StaticArray<CCVariable<Vector> > di; 
     double delT;
-    bool setLodiBcs;                 
+    bool setLodiBcs;           
   };
   //__________________________________
   // This struct contains the additional variables
@@ -112,7 +112,8 @@ namespace Uintah {
                     const Patch::FaceType face,
                     CCVariable<double>& temp_CC,
                     Lodi_vars* lv, 
-                    const Vector& dx);
+                    const Vector& dx,
+                    SimulationStateP& sharedState);
                
   void FacePress_LODI(const Patch* patch,
                       CCVariable<double>& press_CC,
@@ -120,6 +121,7 @@ namespace Uintah {
                       SimulationStateP& sharedState, 
                       Patch::FaceType face,
                       Lodi_vars_pressBC* lv);
+
                           
 } // End namespace Uintah
 #endif
