@@ -129,4 +129,18 @@ public:
     void set(const Color&);
 };
 
+class Material;
+class TCLMaterial : public TCLvar {
+    TCLColor ambient;
+    TCLColor diffuse;
+    TCLColor specular;
+    TCLdouble shininess;
+    TCLColor emission;
+    TCLdouble reflectivity;
+    TCLMaterial(const clString& name, const clString& id, TCL* tcl);
+    ~TCLMaterial();
+    Material get();
+    void set(const Material&);
+};
+
 #endif

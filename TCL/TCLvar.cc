@@ -15,6 +15,7 @@
 #include <TCL/TCLTask.h>
 #include <TCL/TCLvar.h>
 #include <Geom/Color.h>
+#include <Geom/Material.h>
 #include <Geometry/Point.h>
 #include <Geometry/Vector.h>
 
@@ -308,3 +309,32 @@ void TCLColor::set(const Color& p)
     b.set(p.b());
 }
 
+TCLMaterial::TCLMaterial(const clString& name, const clString& id, TCL* tcl)
+: TCLvar(name, id, tcl), ambient("ambient", str(), tcl),
+  diffuse("diffuse", str(), tcl), specular("specular", str(), tcl),
+  shininess("shininess", str(), tcl), emission("emission", str(), tcl),
+  reflectivity("reflectivity", str(), tcl)
+{
+}
+
+TCLMaterial::~TCLMaterial()
+{
+}
+
+Material TCLMaterial::get()
+{
+    Material m(ambient.get(), diffuse.get(), specular.get(), shininess.get());
+    m.emission=emission.get();
+    m.reflectivity=reflectivity.get();
+    return m;
+}
+
+void TCLMaterial::set(const Material& m)
+{
+    ambient.set(m.ambient);
+    diffuse.set(m.diffuse);
+    specular.set(m.specular);
+    shininess.set(m.shininess);
+    emission.set(m.emission);
+    reflectivity.set(m.reflectivity);
+}
