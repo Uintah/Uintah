@@ -692,6 +692,8 @@ main(int argc, char* argv[])
 		   pp_size, scratchsize, fullscreen, do_frameless==true,
                    rserver, stereo );
 
+  ThreadGroup *rtrt_engine_tg = new ThreadGroup("rtrt engine group");
+  
   //////////////////////////////////////////////////////////////////
   // Setup the DpyGui thread
 
@@ -699,7 +701,7 @@ main(int argc, char* argv[])
   dpygui->setDpy(dpy);
   dpygui->setRTRTEngine(rtrt_engine);
   dpygui->set_resolution(xres, yres);
-  (new Thread(dpygui, "DpyGui"))->detach();
+  new Thread(dpygui, "DpyGui", rtrt_engine_tg);
   
   //////////////////////////////////////////////////////////////////
   // This is the glut glui stuff
@@ -747,7 +749,7 @@ main(int argc, char* argv[])
   }
 
   /*  bigler */
-  (new Thread(dpy, "Display thread"))->detach();
+  new Thread(dpy, "Display thread", rtrt_engine_tg);
 
   if (show_gui) {
     // Must do this after glut is initialized.
@@ -778,11 +780,11 @@ main(int argc, char* argv[])
     Worker * worker = new Worker(dpy, scene, i,
 				 pp_size, scratchsize,
 				 ncounters, c0, c1);
-    Thread * thread = new Thread( worker, buf );
-    thread->detach();
+    Thread * thread = new Thread( worker, buf, rtrt_engine_tg);
   } // end for (create workers)
 
   //  Thread::exit();
+  rtrt_engine_tg->join();
   
   return 0;
 }
