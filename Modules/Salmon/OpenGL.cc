@@ -192,24 +192,13 @@ void OpenGL::redraw(Salmon* salmon, Roe* roe, double tbeg, double tend,
     double zfar;
     if(compute_depth(roe, view, znear, zfar)){
 
-	// Set up Lighting
-	glLightModeli(GL_LIGHT_MODEL_TWO_SIDE, GL_TRUE);
-	Lighting& l=salmon->lighting;
-	int idx=0;
-	int i;
-	for(i=0;i<l.lights.size();i++){
-	    Light* light=l.lights[i];
-	    light->opengl_setup(view, drawinfo, idx);
-	}
-	for(i=0;i<idx && i<maxlights;i++)
-	    glEnable(GL_LIGHT0+i);
-	for(;i<maxlights;i++)
-	    glDisable(GL_LIGHT0+i);
 
 	// Set up graphics state
 	glDepthFunc(GL_LEQUAL);
 	glEnable(GL_DEPTH_TEST);
 	glEnable(GL_NORMALIZE);
+	glColorMaterial(GL_FRONT_AND_BACK, GL_DIFFUSE);
+	glEnable(GL_COLOR_MATERIAL);
 
 	clString shading(roe->shading.get());
 //	GeomRenderMode::DrawType dt;
@@ -236,7 +225,6 @@ void OpenGL::redraw(Salmon* salmon, Roe* roe, double tbeg, double tend,
 	else
 	    glDisable(GL_LIGHTING);
 	drawinfo->pickmode=0;
-	glColorMaterial(GL_FRONT_AND_BACK, GL_DIFFUSE);
 
 	int errcode;
 	while((errcode=glGetError()) != GL_NO_ERROR){
@@ -315,6 +303,20 @@ void OpenGL::redraw(Salmon* salmon, Roe* roe, double tbeg, double tend,
 		      lookat.x(), lookat.y(), lookat.z(),
 		      up.x(), up.y(), up.z());
 
+	// Set up Lighting
+	glLightModeli(GL_LIGHT_MODEL_TWO_SIDE, GL_TRUE);
+	Lighting& l=salmon->lighting;
+	int idx=0;
+	int i;
+	for(i=0;i<l.lights.size();i++){
+	    Light* light=l.lights[i];
+	    light->opengl_setup(view, drawinfo, idx);
+	}
+	for(i=0;i<idx && i<maxlights;i++)
+	    glEnable(GL_LIGHT0+i);
+	for(;i<maxlights;i++)
+	    glDisable(GL_LIGHT0+i);
+
 	    // Draw it all...
 	    current_time=modeltime;
 #ifdef REAL_STEREO
@@ -363,7 +365,7 @@ void OpenGL::redraw(Salmon* salmon, Roe* roe, double tbeg, double tend,
 
 	    // Show the pretty picture
 	    glXSwapBuffers(dpy, win);
-	    glXWaitGL();
+//	    glXWaitGL();
 	}
 	throttle.stop();
 	double fps=nframes/throttle.time();
@@ -378,7 +380,7 @@ void OpenGL::redraw(Salmon* salmon, Roe* roe, double tbeg, double tend,
 	roe->set_current_time(tend);
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 	glXSwapBuffers(dpy, win);
-	glXWaitGL();
+//	glXWaitGL();
     }
 
     // Look for errors
@@ -430,7 +432,7 @@ void OpenGL::get_pick(Salmon*, Roe* roe, int x, int y,
     double aspect=double(xres)/double(yres);
     double fovy=RtoD(2*Atan(aspect*Tan(DtoR(view.fov()/2.))));
 
-    drawinfo->reset();
+//    drawinfo->reset();
 
     // Compute znear and zfar...
     double znear;
