@@ -1,4 +1,5 @@
 #include <Packages/rtrt/Core/VolumeVis.h>
+#include <Packages/rtrt/Core/VolumeVisDpy.h>
 #include <Packages/rtrt/Core/HitInfo.h>
 #include <Packages/rtrt/Core/Ray.h>
 #include <Packages/rtrt/Core/Light.h>
@@ -29,13 +30,13 @@ VolumeVis::VolumeVis(BrickArray3<float>& _data, float data_min, float data_max,
 		     Point min, Point max, const Array1<Color*> &matls,
 		     int nmatls, const Array1<float> &alphas, int nalphas,
 		     double spec_coeff, double ambient, double diffuse,
-		     double specular, float _t_inc):
+		     double specular, float _t_inc, VolumeVisDpy *dpy):
   Object(this), diag(max - min),
   data_min(data_min), data_max(data_max),
   nx(nx), ny(ny), nz(nz),
   min(min), max(max), matls(matls), nmatls(nmatls),
   alphas(alphas), nalphas(nalphas), spec_coeff(spec_coeff),
-  ambient(ambient), diffuse(diffuse), specular(specular)
+  ambient(ambient), diffuse(diffuse), specular(specular), dpy(dpy)
 {
   if (data_max < data_min) {
     float temp = data_max;
@@ -80,6 +81,8 @@ VolumeVis::VolumeVis(BrickArray3<float>& _data, float data_min, float data_max,
     alphas[i] = 1 - powf(1 - alphas[i], t_inc);
     cout << "ALPHAS[i="<<i<<"] = "<<alphas[i]<<endl;
   }
+
+  dpy->attach(this);
 }
 
 VolumeVis::~VolumeVis() {
@@ -191,14 +194,14 @@ Color VolumeVis::color(const Vector &N, const Vector &V, const Vector &L,
   // away from the light and should be shaded.
   if (L_N_dot > 0) {
     // do the ambient, diffuse, and specular calculations
-    Vector R;
-    double attinuation = 1;
+    double attenuation = 1;
 
     //    R = vector_norm(vector_sub(vector_mult(N, 2* L_N_dot),L));
-    R = (2.0 * N.dot(L) * N - L).normal();
-    double spec = attinuation * specular * pow(Max(R.dot(V),0.0), spec_coeff);
+    //    Vector R = (2.0 * N.dot(L) * N - L).normal();
+    Vector R = 2.0 * N.dot(L) * N - L;
+    double spec = attenuation * specular * pow(Max(R.dot(V),0.0), spec_coeff);
 
-    result = light_color * (object_color *(ambient+attinuation*diffuse*L_N_dot)
+    result = light_color * (object_color *(ambient+attenuation*diffuse*L_N_dot)
 			    + Color(spec, spec, spec));
   }
   else {
@@ -222,10 +225,6 @@ void VolumeVis::compute_bounds(BBox& bbox, double offset) {
 
 void VolumeVis::print(ostream& out) {
     out << "VolumeVis: min=" << min << ", max=" << max << '\n';
-}
-
-int VolumeVis::bound(const int val, const int min, const int max) {
-  return (val>min?(val<max?val:max):min);
 }
 
 #define RAY_TERMINATION_THRESHOLD 0.98
@@ -322,9 +321,11 @@ void VolumeVis::shade(Color& result, const Ray& ray,
 	dzly1 = dz1 * y_weight_low + dz2 * (1 - y_weight_low);
 	dzly2 = dz3 * y_weight_low + dz4 * (1 - y_weight_low);
 	dz = dzly1 * x_weight_low + dzly2 * (1 - x_weight_low);
-	if (dx || dy || dz)
-	  gradient = (Vector(dx,dy,dz)).normal();
-	else
+	if (dx || dy || dz){
+	  float length2 = dx*dx+dy*dy+dz*dz;
+	  float ilength2 = 1/sqrtf(length2);
+	  gradient = Vector(dx*ilength2, dy*ilength2, dz*ilength2);
+	} else
 	  gradient = Vector(0,0,0);
 
 	int idx=bound((int)(normalized*(nmatls-1)), 0, nmatls - 1);
