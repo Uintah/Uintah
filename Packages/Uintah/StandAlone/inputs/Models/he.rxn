@@ -6,7 +6,7 @@ mix. frac.
 Y
 21
 11
-Temp(K), density (kg/m3), specific volume(m3/kg), gas constant (kj/kg-K), heat capacity Cp(kj/kg-K), heat capacity Cv(kj/kg-K), gamma, sensible heat(kj), enthalpy of formation(kj), total enthalpy(kj), viscosity
+Temp(K), density (kg/m3), specific volume(m3/kg), gas constant (j/kg-K), heat capacity Cp(j/kg-K), heat capacity Cv(j/kg-K), gamma, sensible heat(j), enthalpy of formation(j), total enthalpy(j), viscosity
 0 0 0 0 0 0 0 0 0 0 0 
 298 1.178471737613 0.8485566247227146 287 1003.5 716.5 1.400558269364969 213517 0 213517 1.589e-05
 0.05 0.05 0.05 0.05 0.05 0.05 0.05 0.05 0.05 0.05 0.05 
