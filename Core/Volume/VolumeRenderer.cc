@@ -29,8 +29,6 @@
 //    Author : Milan Ikits
 //    Date   : Thu Jul  8 00:04:15 2004
 
-#include <string>
-#include <iostream>
 #include <Core/Geom/GeomOpenGL.h>
 #include <Core/Volume/VolumeRenderer.h>
 #include <Core/Volume/VolShader.h>
@@ -38,6 +36,11 @@
 #include <Core/Volume/Pbuffer.h>
 #include <Core/Volume/TextureBrick.h>
 #include <Core/Util/DebugStream.h>
+
+#include <sgi_stl_warnings_off.h>
+#include <string>
+#include <iostream>
+#include <sgi_stl_warnings_on.h>
 
 using std::cerr;
 using std::endl;
