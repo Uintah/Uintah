@@ -6,6 +6,7 @@ SRCDIR   := Packages/Uintah/CCA/Components/Schedulers
 
 SRCS += \
 	$(SRCDIR)/DetailedTasks.cc \
+	$(SRCDIR)/MemoryLog.cc \
 	$(SRCDIR)/MPIScheduler.cc \
 	$(SRCDIR)/MessageLog.cc \
 	$(SRCDIR)/MixedScheduler.cc \
