@@ -480,8 +480,10 @@ TriSurfMesh::compute_normals()
       ave += face_normals[*fiter];
       ++fiter;
     }
-    ave.normalize();
-    normals_[i] = ave; ++i;
+    if (ave.length2()) {
+      ave.normalize();
+      normals_[i] = ave; ++i;
+    }
     ++nif_iter;
   }
 }

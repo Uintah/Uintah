@@ -31,6 +31,7 @@
 
 #include <Core/Datatypes/ImageMesh.h>
 #include <Core/Datatypes/FieldAlgo.h>
+#include <Core/Math/MusilRNG.h>
 #include <iostream>
 
 
@@ -218,6 +219,41 @@ ImageMesh::get_weights(const Point &p,
     l.push_back(idx);
     w.push_back(1.0);
   }
+}
+
+
+/* To generate a random point inside of a triangle, we generate random
+   barrycentric coordinates (independent random variables between 0 and
+   1 that sum to 1) for the point. */
+void ImageMesh::get_random_point(Point &p, const Face::index_type &ci,
+				   int seed) const
+{
+  static MusilRNG rng;
+
+  // get the positions of the vertices
+  Node::array_type ra;
+  get_nodes(ra,ci);
+  Point p00, p10, p11, p01;
+  get_point(p00,ra[0]);
+  get_point(p10,ra[1]);
+  get_point(p11,ra[2]);
+  get_point(p01,ra[3]);
+  Vector dx=p10-p00;
+  Vector dy=p01-p00;
+  // generate the barrycentric coordinates
+  double u,v;
+  if (seed) {
+    MusilRNG rng1(seed);
+    rng1();
+    u = rng1(); 
+    v = rng1();
+  } else {
+    u = rng(); 
+    v = rng();
+  }
+
+  // compute the position of the random point
+  p = p00+dx*u+dy*v;
 }
 
 
