@@ -57,6 +57,7 @@
 #include <Core/Services/ServiceBase.h>
 #include <Core/Services/FileTransferClient.h>
 #include <Core/ICom/IComSocket.h>
+#include <Core/Thread/CleanupManager.h>
 
 #include <sgi_stl_warnings_off.h>
 #include <iostream>
@@ -245,6 +246,9 @@ class Matlab2 : public Module, public ServiceBase
 	GuiString		matlab_var_;
 	GuiString		matlab_add_output_;
 	GuiString		matlab_update_status_;
+    
+    GuiString       matlab_old_code_;
+    GuiString       matlab_old_address_;
 	
 	ServiceClientHandle				matlab_engine_;
     FileTransferClientHandle        file_transfer_;
@@ -252,6 +256,9 @@ class Matlab2 : public Module, public ServiceBase
     
     bool            need_file_transfer_;
     std::string     remote_tempdir_;
+    
+  public:
+    static void cleanup_callback();
 };
 
 
@@ -387,6 +394,11 @@ void MatlabEngineThread::run()
 }
 
 
+// Temp solution for removing processes after exit
+std::list<Matlab2*> matlab2_list;
+SCIRun::Mutex matlab2_list_lock("matlab2_list_lock");
+// end temp solution
+
 DECLARE_MAKER(Matlab2)
 
 Matlab2::Matlab2(GuiContext *context) :
@@ -410,6 +422,8 @@ Matlab2::Matlab2(GuiContext *context) :
   matlab_add_output_(context->subVar("matlab-add-output")),
   matlab_update_status_(context->subVar("matlab-update-status")),
   matlab_var_(context->subVar("matlab-var")),
+  matlab_old_code_(context->subVar("cmdTCL")),
+  matlab_old_address_(context->subVar("hpTCL")),
   need_file_transfer_(false)
 {
 
@@ -432,11 +446,64 @@ Matlab2::Matlab2(GuiContext *context) :
 	input_nrrd_name_list_.resize(NUM_NRRD_PORTS);
 	input_nrrd_name_list_old_.resize(NUM_NRRD_PORTS);
 
+    // Temp solution
+    // Register matlab2 module in a list
+    // and register cleanup routine which will invoke all
+    // the destructors that are not being called
+    
+    matlab2_list_lock.lock();
+    matlab2_list.push_front(this);
+    matlab2_list_lock.unlock();
+    CleanupManager::add_callback(Matlab2::cleanup_callback);
+
+    // end temp solution
+
 }
 
 
+// Function for cleaning up
+// matlab2 modules
+void Matlab2::cleanup_callback()
+{
+    try
+    {
+        matlab2_list_lock.lock();
+        std::list<Matlab2*>::iterator it;
+        for (it=matlab2_list.begin();it!=matlab2_list.end();it++)
+        {
+            Matlab2* ptr = (*it);
+            if (ptr)
+            {
+                ptr->close_matlab_engine();
+                ptr->delete_temp_directory();
+            }
+        }
+        matlab2_list_lock.unlock();
+    }
+    catch(...)
+    {
+        matlab2_list_lock.unlock();
+    }
+}
+// end temp solution
+
 Matlab2::~Matlab2()
 {
+    // Again if we registered a module for destruction and we are removing it
+    // we need to unregister
+    
+    try
+    {
+        matlab2_list_lock.lock();
+        matlab2_list.remove(this);
+        matlab2_list_lock.unlock();
+    }
+    catch(...)
+    {
+        matlab2_list_lock.unlock();
+    }
+    // end temp solution
+
 	close_matlab_engine();
 	delete_temp_directory();
 }
@@ -692,6 +759,7 @@ bool Matlab2::open_matlab_engine()
 			error(std::string("Matlab2: Could not open matlab engine (error=") + matlab_engine_->geterror() + std::string(")"));
 			error(std::string("Matlab2: Make sure the matlab engine has not been disabled in $HOME/SCIRun/services/matlabengine.rc"));
 			error(std::string("Matlab2: Check remote address information, or leave all fields except 'session' blank to connect to local matlab engine"));
+			error(std::string("Matlab2: If using matlab engine on local machine start engine with '-eai' option"));
 			
 			matlab_engine_ = 0;
 			return(false);
@@ -705,6 +773,7 @@ bool Matlab2::open_matlab_engine()
 			error(std::string("Matlab2: Could not open matlab engine file transfer service (error=") + matlab_engine_->geterror() + std::string(")"));
 			error(std::string("Matlab2: Make sure the matlab engine file transfer service has not been disabled in $HOME/SCIRun/services/matlabengine.rc"));
 			error(std::string("Matlab2: Check remote address information, or leave all fields except 'session' blank to connect to local matlab engine"));
+			error(std::string("Matlab2: If using matlab engine on local machine start engine with '-eai' option"));
 			
             matlab_engine_ = 0;
 			file_transfer_ = 0;
@@ -860,14 +929,11 @@ bool Matlab2::close_matlab_engine()
 		matlab_engine_ = 0;
 	}
 
-    // For debugging purposes
-    ::sleep(2);
 	if (file_transfer_.get_rep()) 
 	{
 		file_transfer_->close();
 		file_transfer_ = 0;
 	}
-
 	
 	return(true);
 }
@@ -1306,8 +1372,7 @@ bool Matlab2::create_temp_directory()
 
 bool Matlab2::delete_temp_directory()
 {
-
-	tfmanager_.delete_tempdir(temp_directory_);
+    if(temp_directory_ != "") tfmanager_.delete_tempdir(temp_directory_);
 	temp_directory_ = "";
 	return(true);
 }
