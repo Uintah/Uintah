@@ -45,36 +45,36 @@ class ShowField : public Module
   // all private data
   
 
-  DebugStream              d_dbg;  
-  FieldIPort*              d_infield;
-  FieldHandle              d_sfield;
-  GeometryOPort           *d_ogeom;  
+  DebugStream              dbg_;  
+  FieldIPort*              infield_;
+  FieldHandle              sfield_;
+  GeometryOPort           *ogeom_;  
 
   // scene graph ID's
-  int                      d_nodeId;
-  int                      d_conId;
+  int                      nodeId_;
+  int                      conId_;
 
   // Materials
-  MaterialHandle           d_nodeMat;
-  MaterialHandle           d_conMat;
+  MaterialHandle           nodeMat_;
+  MaterialHandle           conMat_;
   
   // top level nodes for
-  GeomSwitch*              d_conSwitch;
-  GeomSwitch*              d_nodeSwitch;
+  GeomSwitch*              conSwitch_;
+  GeomSwitch*              nodeSwitch_;
 
-  GuiString                d_nodeDisplayType;
-  GuiInt                   d_showConP;
-  GuiInt                   d_showProgress;
+  GuiString                nodeDisplayType_;
+  GuiInt                   showConP_;
+  GuiInt                   showProgress_;
 
   // Display color for nodes.
-  GuiDouble                d_nodeChanR;
-  GuiDouble                d_nodeChanG;
-  GuiDouble                d_nodeChanB;
+  GuiDouble                nodeChanR_;
+  GuiDouble                nodeChanG_;
+  GuiDouble                nodeChanB_;
   
   // Display color for connections.
-  GuiDouble                d_conChanR;
-  GuiDouble                d_conChanG;
-  GuiDouble                d_conChanB;
+  GuiDouble                conChanR_;
+  GuiDouble                conChanG_;
+  GuiDouble                conChanB_;
 
   
   // GROUP: Private Methods
@@ -84,29 +84,29 @@ class ShowField : public Module
   //////////
   // displayNode
   inline void displayNode(bool val) { 
-    if (d_nodeSwitch) {
-      d_nodeSwitch->set_state(val);
+    if (nodeSwitch_) {
+      nodeSwitch_->set_state(val);
     }
   }
 
   //////////
   // displayConnections
   inline void displayConnections(bool val) { 
-    if (d_conSwitch) {
-      d_conSwitch->set_state(val);
+    if (conSwitch_) {
+      conSwitch_->set_state(val);
     }
   }
 
   //////////
   // reloadNodeColor
   inline void reloadConColor() {
-    d_conMat->diffuse = Color(d_conChanR.get(), d_conChanG.get(), 
-			      d_conChanB.get());
+    conMat_->diffuse = Color(conChanR_.get(), conChanG_.get(), 
+			      conChanB_.get());
   }
   
   inline void reloadNodeColor() {
-    d_nodeMat->diffuse = Color(d_nodeChanR.get(), d_nodeChanG.get(), 
-			       d_nodeChanB.get());
+    nodeMat_->diffuse = Color(nodeChanR_.get(), nodeChanG_.get(), 
+			       nodeChanB_.get());
   }
   
 public:
@@ -119,39 +119,39 @@ public:
   // ShowField
   ShowField(const clString& id) : 
     Module("ShowField", id, Filter), 
-    d_showProgress("show_progress", id, this), 
-    d_nodeDisplayType("nodeDisplayType", id, this),
-    d_showConP("showConP", id, this),
-    d_nodeChanR("nodeChan-r", id, this), 
-    d_nodeChanG("nodeChan-g", id, this),
-    d_nodeChanB("nodeChan-b", id, this),
-    d_conChanR("conChan-r", id, this), 
-    d_conChanG("conChan-g", id, this),
-    d_conChanB("conChan-b", id, this),
-    d_dbg("ShowField", true),
-    d_nodeId(0),
-    d_conId(0),
-    d_conSwitch(NULL),
-    d_nodeSwitch(NULL)
+    showProgress_("show_progress", id, this), 
+    nodeDisplayType_("nodeDisplayType", id, this),
+    showConP_("showConP", id, this),
+    nodeChanR_("nodeChan-r", id, this), 
+    nodeChanG_("nodeChan-g", id, this),
+    nodeChanB_("nodeChan-b", id, this),
+    conChanR_("conChan-r", id, this), 
+    conChanG_("conChan-g", id, this),
+    conChanB_("conChan-b", id, this),
+    dbg_("ShowField", true),
+    nodeId_(0),
+    conId_(0),
+    conSwitch_(NULL),
+    nodeSwitch_(NULL)
   {
     // Create the input ports
-    d_infield = scinew FieldIPort(this, "Field", FieldIPort::Atomic);
-    add_iport(d_infield);
+    infield_ = scinew FieldIPort(this, "Field", FieldIPort::Atomic);
+    add_iport(infield_);
     
     // Create the output port
-    d_ogeom = scinew GeometryOPort(this, "Geometry", GeometryIPort::Atomic);
-    add_oport(d_ogeom);
+    ogeom_ = scinew GeometryOPort(this, "Geometry", GeometryIPort::Atomic);
+    add_oport(ogeom_);
 
-    d_nodeMat = scinew Material(Color(0,.3,0), 
-				Color(d_nodeChanR.get(),
-				      d_nodeChanG.get(),
-				      d_nodeChanB.get()),
+    nodeMat_ = scinew Material(Color(0,.3,0), 
+				Color(nodeChanR_.get(),
+				      nodeChanG_.get(),
+				      nodeChanB_.get()),
 				Color(.7,.7,.7), 50);
     
-    d_conMat = scinew Material(Color(0,.3,0), 
-			       Color(d_conChanR.get(),
-				     d_conChanG.get(),
-				     d_conChanB.get()),
+    conMat_ = scinew Material(Color(0,.3,0), 
+			       Color(conChanR_.get(),
+				     conChanG_.get(),
+				     conChanB_.get()),
 			       Color(.7,.7,.7), 50);
 
   }
@@ -167,52 +167,52 @@ public:
   {
     // Check for generation number. FIX_ME
     cerr << "Starting Execution..." << endl;
-    d_dbg << "SHOWGEOMETRY EXECUTING" << endl;
+    dbg_ << "SHOWGEOMETRY EXECUTING" << endl;
 
     // tell module downstream to delete everything we have sent it before.
     // This is typically salmon, it owns the scene graph memory we create here.
     
-    d_ogeom->delAll(); 
-    d_infield->get(d_sfield);
-    if(!d_sfield.get_rep()){
+    ogeom_->delAll(); 
+    infield_->get(sfield_);
+    if(!sfield_.get_rep()){
       return;
     }
 
-    if (!d_sfield->getAttrib().get_rep())
+    if (!sfield_->getAttrib().get_rep())
       cerr << "NO attribute!!1" << endl;
-    d_dbg << d_sfield->getAttrib()->getInfo();
+    dbg_ << sfield_->getAttrib()->getInfo();
 
-    Gradient *gradient = d_sfield->query_interface((Gradient *)0);
+    Gradient *gradient = sfield_->query_interface((Gradient *)0);
     if(!gradient){
       error("Gradient not supported by input field");
     }
 
     SLInterpolate *slinterpolate = 
-      d_sfield->query_interface((SLInterpolate *)0);
+      sfield_->query_interface((SLInterpolate *)0);
     if(!slinterpolate){
       error("SLInterpolate not supported by input field");
     }
 
     BBox bbox;
-    d_sfield->get_geom()->getBoundingBox(bbox);
+    sfield_->get_geom()->getBoundingBox(bbox);
 
-    d_dbg << bbox.min().x() << " " << bbox.min().y() << " " 
+    dbg_ << bbox.min().x() << " " << bbox.min().y() << " " 
 	  << bbox.min().z() << " " << bbox.max().x() << " " << bbox.max().y() 
 	  << " " << bbox.max().z() << endl;
 
     GeomGroup *bb = scinew GeomGroup;
-    d_conSwitch = scinew GeomSwitch(bb);
+    conSwitch_ = scinew GeomSwitch(bb);
 
     GeomGroup *verts = scinew GeomGroup;
-    GeomHandle geom = d_sfield->get_geom();
+    GeomHandle geom = sfield_->get_geom();
 
-    d_dbg << geom->getInfo();
+    dbg_ << geom->getInfo();
 
     LatticeGeomHandle grid = geom->downcast((LatticeGeom*)0);
     //LatticeGeom *grid = geom->get_latticegeom();
     TriSurfGeomHandle tsurf = geom->downcast((TriSurfGeom*)0);
 
-    d_dbg << "Cast to Lattice and TriSurf is done \n" << endl;
+    dbg_ << "Cast to Lattice and TriSurf is done \n" << endl;
     if (grid.get_rep()) {
 
       int nx = grid->getSizeX();
@@ -231,7 +231,7 @@ public:
       for (int i = 0; i < nx; i++) {
 	for (int j = 0; j < ny; j++) {
 	  for (int k = 0; k < nz; k++) {	
-	    if (d_nodeDisplayType.get() == "Spheres") {
+	    if (nodeDisplayType_.get() == "Spheres") {
 	      addSphere(i, j, k, grid, verts, aveScale);
 	    } else {
 	      addAxis(i, j, k, xDir, yDir, zDir, grid, verts);
@@ -243,23 +243,23 @@ public:
 	}
       }
     } else if (tsurf.get_rep()) {
-      d_dbg << "Writing out surface" << endl;
+      dbg_ << "Writing out surface" << endl;
       displaySurface(tsurf, verts);
     } else {
-      d_dbg << "Not a LatticGeom!!" << endl;
+      dbg_ << "Not a LatticGeom!!" << endl;
     }
 
     reloadNodeColor();
-    GeomMaterial *nodeGM = scinew GeomMaterial(verts, d_nodeMat);
-    d_nodeSwitch = scinew GeomSwitch(nodeGM);
+    GeomMaterial *nodeGM = scinew GeomMaterial(verts, nodeMat_);
+    nodeSwitch_ = scinew GeomSwitch(nodeGM);
 
     reloadConColor();
-    GeomMaterial *conGM = scinew GeomMaterial(bb, d_conMat);
-    d_conSwitch = scinew GeomSwitch(conGM);
+    GeomMaterial *conGM = scinew GeomMaterial(bb, conMat_);
+    conSwitch_ = scinew GeomSwitch(conGM);
   
-    d_nodeId = d_ogeom->addObj(d_nodeSwitch, "Nodes");
-    d_conId = d_ogeom->addObj(d_conSwitch, "Connections");
-    d_ogeom->flushViews();
+    nodeId_ = ogeom_->addObj(nodeSwitch_, "Nodes");
+    conId_ = ogeom_->addObj(conSwitch_, "Connections");
+    ogeom_->flushViews();
 
   }
 
@@ -359,49 +359,49 @@ public:
       args.error("ShowField needs a minor command");
       return;
     }
-    d_dbg << "tcl_command: " << args[1] << endl;
+    dbg_ << "tcl_command: " << args[1] << endl;
 
     if (args[1] == "nodeSphereP") {
       // toggle spheresP
       // Call reset so that we really get the value, not the cached one.
-      d_nodeDisplayType.reset();
-      if (d_nodeDisplayType.get() == "Spheres") {
-	d_dbg << "Render Spheres." << endl;
+      nodeDisplayType_.reset();
+      if (nodeDisplayType_.get() == "Spheres") {
+	dbg_ << "Render Spheres." << endl;
       } else {
-	d_dbg << "Render Axes." << endl;
+	dbg_ << "Render Axes." << endl;
       }
       // Tell salmon to redraw itself.
-      d_ogeom->flushViews();
+      ogeom_->flushViews();
 
     } else if (args[1] == "connectionDisplayChange"){
 
       // Toggle the GeomSwitch.
-      bool toggle = ! d_conSwitch->get_state();
-      d_conSwitch->set_state(toggle);
+      bool toggle = ! conSwitch_->get_state();
+      conSwitch_->set_state(toggle);
       // Tell salmon to redraw itself.
-      d_ogeom->flushViews();
+      ogeom_->flushViews();
 
     } else if (args[1] == "conColorChange"){
 
       // Fetch correct values from TCL
-      d_conChanR.reset();
-      d_conChanG.reset();
-      d_conChanB.reset();
+      conChanR_.reset();
+      conChanG_.reset();
+      conChanB_.reset();
       // Set new color in material.
       reloadConColor();
       // Tell salmon to redraw itself.
-      d_ogeom->flushViews();
+      ogeom_->flushViews();
 
     } else if (args[1] == "nodeColorChange"){
 
       // Fetch correct values from TCL.
-      d_nodeChanR.reset();
-      d_nodeChanG.reset();
-      d_nodeChanB.reset();
+      nodeChanR_.reset();
+      nodeChanG_.reset();
+      nodeChanB_.reset();
       // Set new color in material.
       reloadNodeColor();
       // Tell salmon to redraw itself.
-      d_ogeom->flushViews();
+      ogeom_->flushViews();
 
     } else {
       Module::tcl_command(args, userdata);
@@ -417,9 +417,9 @@ public:
     sx = (bbox.max().x() - bbox.min().x()) * 0.2L;
     sy = (bbox.max().y() - bbox.min().y()) * 0.2L;
     sz = (bbox.max().z() - bbox.min().z()) * 0.2L;
-    d_dbg << "sx: " << sx << endl;
-    d_dbg << "sy: " << sy << endl;
-    d_dbg << "sz: " << sz << endl;
+    dbg_ << "sx: " << sx << endl;
+    dbg_ << "sy: " << sy << endl;
+    dbg_ << "sz: " << sz << endl;
 
     int nx = grid->getSizeX();
     int ny = grid->getSizeY();

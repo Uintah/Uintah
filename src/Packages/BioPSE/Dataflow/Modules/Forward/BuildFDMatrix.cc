@@ -66,21 +66,21 @@ class BuildFDMatrix : public Module {
 
   //////////
   // Input port pointer
-  FieldIPort*        d_iportField;
+  FieldIPort*        iportField_;
 
   //////////
   // Output ports pointers
-  ColumnMatrixOPort* d_oportRhs;
-  MatrixOPort*       d_oportMatrix;
-  FieldOPort*        d_oportMapField;
+  ColumnMatrixOPort* oportRhs_;
+  MatrixOPort*       oportMatrix_;
+  FieldOPort*        oportMapField_;
   
-  MatrixHandle       d_hMtrx;                     // handle to matrix copy
-  ColumnMatrixHandle d_hRhs;                      // handle to Rhs copy
+  MatrixHandle       hMtrx_;                     // handle to matrix copy
+  ColumnMatrixHandle hRhs_;                      // handle to Rhs copy
   
   // step sizes in every dimension
-  double d_dx;
-  double d_dy;
-  double d_dz;
+  double dx_;
+  double dy_;
+  double dz_;
   
 public:
   
@@ -117,26 +117,26 @@ extern "C" Module* make_BuildFDMatrix(const clString& id) {
 
 BuildFDMatrix::BuildFDMatrix(const clString& id)
   : Module("BuildFDMatrix", id, Source),
-    d_dx(1.0),
-    d_dy(1.0),
-    d_dz(1.0)
+    dx_(1.0),
+    dy_(1.0),
+    dz_(1.0)
 {
   // Create the input ports
-  d_iportField = scinew FieldIPort(this, "Conductivity Field", FieldIPort::Atomic);
-  add_iport(d_iportField);
+  iportField_ = scinew FieldIPort(this, "Conductivity Field", FieldIPort::Atomic);
+  add_iport(iportField_);
 
   // Create the output ports
-  d_oportMatrix = scinew MatrixOPort(this, "FDM Matrix", MatrixIPort::Atomic);
-  add_oport(d_oportMatrix);
+  oportMatrix_ = scinew MatrixOPort(this, "FDM Matrix", MatrixIPort::Atomic);
+  add_oport(oportMatrix_);
   
-  d_oportRhs = scinew ColumnMatrixOPort(this,"RHS", ColumnMatrixIPort::Atomic);
-  add_oport(d_oportRhs);
+  oportRhs_ = scinew ColumnMatrixOPort(this,"RHS", ColumnMatrixIPort::Atomic);
+  add_oport(oportRhs_);
 
-  d_oportMapField = scinew FieldOPort(this, "Map Field", FieldIPort::Atomic);
-  add_oport(d_oportMapField);
+  oportMapField_ = scinew FieldOPort(this, "Map Field", FieldIPort::Atomic);
+  add_oport(oportMapField_);
   
-  d_hMtrx = new SparseRowMatrix();
-  d_hRhs  = new ColumnMatrix(1);
+  hMtrx_ = new SparseRowMatrix();
+  hRhs_  = new ColumnMatrix(1);
   
 }
 
@@ -151,7 +151,7 @@ void BuildFDMatrix::execute()
 {
   FieldHandle hField;
  
-  if(!d_iportField->get(hField)) { 
+  if(!iportField_->get(hField)) { 
     return;
   }
 
@@ -176,15 +176,15 @@ void BuildFDMatrix::execute()
   Vector diag;
   hGeom->getDiagonal(diag);
   
-  d_dx=diag.x()/(nx-1);
-  d_dy=diag.y()/(ny-1);
-  d_dz=diag.z()/(nz-1);
+  dx_=diag.x()/(nx-1);
+  dy_=diag.y()/(ny-1);
+  dz_=diag.z()/(nz-1);
   
-  double m=Max(d_dx,d_dy,d_dz);
+  double m=Max(dx_,dy_,dz_);
   
-  d_dx/=m;
-  d_dy/=m;
-  d_dz/=m;
+  dx_/=m;
+  dy_/=m;
+  dz_/=m;
   
   AttribHandle hTmpAttrib; 
   // -- getting sources
@@ -290,10 +290,10 @@ void BuildFDMatrix::execute()
     }
   }
   
-  d_hRhs->resize(activeNodes.size());
-  d_hRhs->zero();
+  hRhs_->resize(activeNodes.size());
+  hRhs_->zero();
 
-  double* rhs = d_hRhs.get_rep()->get_rhs();
+  double* rhs = hRhs_.get_rep()->get_rhs();
   int mSize = activeNodes.size();
 
   Array1<Array1<double> > lclMtrs(mSize);
@@ -343,7 +343,7 @@ void BuildFDMatrix::execute()
 	   && hNmnBC->getValid3(ii, jj, kk-1, nmnBC) 
 	   && nmnBC.dir.z()){
 	
-	val = dval+d_dz*nmnBC.val;
+	val = dval+dz_*nmnBC.val;
 	val = (nmnBC.dir.z()>0)?nmnBC.val:-nmnBC.val;
 	rhs[i] = val;
 	currLcl[3] = 1;
@@ -356,7 +356,7 @@ void BuildFDMatrix::execute()
 	   && hNmnBC->getValid3(ii, jj, kk+1, nmnBC) 
 	   && nmnBC.dir.z()){
 	
-	val = dval-d_dz*nmnBC.val;
+	val = dval-dz_*nmnBC.val;
 	val = (nmnBC.dir.z()>0)?nmnBC.val:-nmnBC.val;
 	rhs[i] = val;
 	currLcl[3] = 1;
@@ -369,7 +369,7 @@ void BuildFDMatrix::execute()
 	   && hNmnBC->getValid3(ii, jj-1, kk, nmnBC) 
 	   && nmnBC.dir.y()){
 	
-	val = dval+d_dz*nmnBC.val;
+	val = dval+dz_*nmnBC.val;
 	val = (nmnBC.dir.y()>0)?nmnBC.val:-nmnBC.val;
 	rhs[i] = val;
 	currLcl[3] = 1;
@@ -382,7 +382,7 @@ void BuildFDMatrix::execute()
 	   && hNmnBC->getValid3(ii, jj+1, kk, nmnBC) 
 	   && nmnBC.dir.y()){
 	
-	val = dval-d_dz*nmnBC.val;
+	val = dval-dz_*nmnBC.val;
 	val = (nmnBC.dir.y()>0)?nmnBC.val:-nmnBC.val;
 	rhs[i] = val;
 	currLcl[3] = 1;
@@ -395,7 +395,7 @@ void BuildFDMatrix::execute()
 	   && hNmnBC->getValid3(ii-1, jj, kk, nmnBC) 
 	   && nmnBC.dir.x()){
 	
-	val = dval+d_dz*nmnBC.val;
+	val = dval+dz_*nmnBC.val;
 	val = (nmnBC.dir.x()>0)?nmnBC.val:-nmnBC.val;
 	rhs[i] = val;
 	currLcl[3] = 1;
@@ -408,7 +408,7 @@ void BuildFDMatrix::execute()
 	   && hNmnBC->getValid3(ii+1, jj, kk, nmnBC) 
 	   && nmnBC.dir.x()){
 	
-	val = dval-d_dz*nmnBC.val;
+	val = dval-dz_*nmnBC.val;
 	val = (nmnBC.dir.x()>0)?nmnBC.val:-nmnBC.val;
 	rhs[i] = val;
 	currLcl[3] = 1;
@@ -424,10 +424,10 @@ void BuildFDMatrix::execute()
 	tmpSigma=(hTensors->get3(ii, jj, kk-1))[5];
 	
 	if (fabs(tmpSigma-ownSigma[5])>NUMZERO){
-	  currLcl[0] = 2*tmpSigma*ownSigma[5]/(tmpSigma+ownSigma[5])/(d_dz*d_dz);
+	  currLcl[0] = 2*tmpSigma*ownSigma[5]/(tmpSigma+ownSigma[5])/(dz_*dz_);
 	}
 	else {
-	  currLcl[0] = ownSigma[5]/(d_dz*d_dz);
+	  currLcl[0] = ownSigma[5]/(dz_*dz_);
 	}
 	cols.add(i-ny*nz);
       }
@@ -439,10 +439,10 @@ void BuildFDMatrix::execute()
       else {
 	tmpSigma=(hTensors->get3(ii, jj-1, kk))[3];
 	if (fabs(tmpSigma-ownSigma[3])>NUMZERO){
-	  currLcl[1] = 2*tmpSigma*ownSigma[3]/(tmpSigma+ownSigma[3])/(d_dy*d_dy);
+	  currLcl[1] = 2*tmpSigma*ownSigma[3]/(tmpSigma+ownSigma[3])/(dy_*dy_);
 	}
 	else {
-	  currLcl[1] = ownSigma[3]/(d_dy*d_dy);
+	  currLcl[1] = ownSigma[3]/(dy_*dy_);
 	}
 	cols.add(i-ny);
       }
@@ -454,10 +454,10 @@ void BuildFDMatrix::execute()
       else {
 	tmpSigma=(hTensors->get3(ii-1, jj, kk))[0];
 	if (fabs(tmpSigma-ownSigma[0])>NUMZERO){
-	  currLcl[2] = 2*tmpSigma*ownSigma[0]/(tmpSigma+ownSigma[0])/(d_dx*d_dx);
+	  currLcl[2] = 2*tmpSigma*ownSigma[0]/(tmpSigma+ownSigma[0])/(dx_*dx_);
 	}
 	else {
-	  currLcl[2] = ownSigma[0]/(d_dx*d_dx);
+	  currLcl[2] = ownSigma[0]/(dx_*dx_);
 	}
 	cols.add(i-1);
       }
@@ -473,10 +473,10 @@ void BuildFDMatrix::execute()
 	tmpSigma=(hTensors->get3(ii+1, jj, kk))[0];
 	
 	if (fabs(tmpSigma-ownSigma[0])>NUMZERO){
-	  currLcl[4] = 2*tmpSigma*ownSigma[0]/(tmpSigma+ownSigma[0])/(d_dx*d_dx);
+	  currLcl[4] = 2*tmpSigma*ownSigma[0]/(tmpSigma+ownSigma[0])/(dx_*dx_);
 	}
 	else {
-	  currLcl[4] = ownSigma[0]/(d_dx*d_dx);
+	  currLcl[4] = ownSigma[0]/(dx_*dx_);
 	}
 	cols.add(i+1);
       }
@@ -489,10 +489,10 @@ void BuildFDMatrix::execute()
 	tmpSigma=(hTensors->get3(ii, jj+1, kk))[3];
 
 	if (fabs(tmpSigma-ownSigma[3])>NUMZERO){
-	  currLcl[5] = 2*tmpSigma*ownSigma[3]/(tmpSigma+ownSigma[3])/(d_dy*d_dy);
+	  currLcl[5] = 2*tmpSigma*ownSigma[3]/(tmpSigma+ownSigma[3])/(dy_*dy_);
 	}
 	else {
-	  currLcl[5] = ownSigma[3]/(d_dy*d_dy);
+	  currLcl[5] = ownSigma[3]/(dy_*dy_);
 	}
 	cols.add(i+ny);
       }
@@ -505,10 +505,10 @@ void BuildFDMatrix::execute()
 	tmpSigma=(hTensors->get3(ii, jj, kk+1))[5];
 
 	if (fabs(tmpSigma-ownSigma[5])>NUMZERO){
-	  currLcl[6] = 2*tmpSigma*ownSigma[5]/(tmpSigma+ownSigma[5])/(d_dz*d_dz);
+	  currLcl[6] = 2*tmpSigma*ownSigma[5]/(tmpSigma+ownSigma[5])/(dz_*dz_);
 	}
 	else {
-	  currLcl[6] = ownSigma[5]/(d_dz*d_dz);
+	  currLcl[6] = ownSigma[5]/(dz_*dz_);
 	}
 	cols.add(i+ny*nz);
       }
@@ -529,7 +529,7 @@ void BuildFDMatrix::execute()
 	currLcl[1]*=2;
 	if (dir.x()!=0){                 // Neumann node
 	  val1 = (dir.x()>0)?val:-val;
-	  rhs[i]-=2*val1*currLcl[1]/d_dx;
+	  rhs[i]-=2*val1*currLcl[1]/dx_;
 	  dir.x(0.0);                    // Neumann BC is handled
 	}
       }
@@ -539,7 +539,7 @@ void BuildFDMatrix::execute()
 	currLcl[0]*=2;
 	if (dir.x()!=0){                 // Neumann node
 	  val1 = (dir.x()>0)?val:-val;
-	  rhs[i]-=2*val1*currLcl[0]/d_dx;
+	  rhs[i]-=2*val1*currLcl[0]/dx_;
 	  dir.x(0.0);                    // Neumann BC is handled
 	}
       }
@@ -549,7 +549,7 @@ void BuildFDMatrix::execute()
 	currLcl[3]*=2;
 	if (dir.y()!=0){                 // Neumann node
 	  val1 = (dir.y()>0)?val:-val;
-	  rhs[i]-=2*val1*currLcl[3]/d_dy;
+	  rhs[i]-=2*val1*currLcl[3]/dy_;
 	   dir.y(0.0);                    // Neumann BC is handled
 	}
       }
@@ -559,7 +559,7 @@ void BuildFDMatrix::execute()
 	currLcl[2]*=2;
 	if (dir.y()!=0){                 // Neumann node
 	  val1 = (dir.y()>0)?val:-val;
-	  rhs[i]-=2*val1*currLcl[2]/d_dy;
+	  rhs[i]-=2*val1*currLcl[2]/dy_;
 	  dir.y(0.0);                    // Neumann BC is handled 
 	}
       } 	     
@@ -569,7 +569,7 @@ void BuildFDMatrix::execute()
 	currLcl[5]*=2;
 	if (dir.z()!=0){                 // Neumann node
 	  val1 = (dir.z()>0)?val:-val;
-	  rhs[i]-=2*val1*currLcl[5]/d_dz;
+	  rhs[i]-=2*val1*currLcl[5]/dz_;
 	  dir.z(0.0);                    // Neumann BC is handled 
 	}
       }
@@ -579,7 +579,7 @@ void BuildFDMatrix::execute()
 	currLcl[4]*=2;
 	if (dir.z()!=0){                 // Neumann node
 	  val1 = (dir.z()>0)?val:-val;
-	  rhs[i]-=2*val1*currLcl[4]/d_dz;
+	  rhs[i]-=2*val1*currLcl[4]/dz_;
 	  dir.z(0.0);                    // Neumann BC is handled 
 	}
       }	
@@ -588,19 +588,19 @@ void BuildFDMatrix::execute()
       // handling pure Neumann BC left inside the volume
       if (dir.x()){
 	val1 = (dir.x()>0)?val:-val;
-	rhs[i]-=2*val1*currLcl[1]/d_dx;
+	rhs[i]-=2*val1*currLcl[1]/dx_;
 	currLcl[0] *=2;
 	currLcl[1] = 0;
       }
       else if(dir.y()){
 	val1 = (dir.y()>0)?val:-val;
-	rhs[i]-=2*val1*currLcl[3]/d_dy;
+	rhs[i]-=2*val1*currLcl[3]/dy_;
 	currLcl[2] *=2;
 	currLcl[3] = 0;
       }
       else if (dir.z()){
 	val1 = (dir.z()>0)?val:-val;
-	rhs[i]-=2*val1*currLcl[5]/d_dz;
+	rhs[i]-=2*val1*currLcl[5]/dz_;
 	currLcl[4] *=2;
 	currLcl[5] = 0;
       }
@@ -654,14 +654,14 @@ void BuildFDMatrix::execute()
   
   SparseRowMatrix* sm = scinew SparseRowMatrix(mSize, mSize, rows, cols);
   sm->a = pElems;
-  d_hMtrx = sm;
+  hMtrx_ = sm;
   
   mapField->addAttribute(AttribHandle(pMapAttrib));
   
   // -- sending handles
-  d_oportMatrix->send(MatrixHandle(d_hMtrx->clone()));
-  d_oportRhs->send(ColumnMatrixHandle(d_hRhs->clone()));
-  d_oportMapField->send(mapField);
+  oportMatrix_->send(MatrixHandle(hMtrx_->clone()));
+  oportRhs_->send(ColumnMatrixHandle(hRhs_->clone()));
+  oportMapField_->send(mapField);
 }
 
 } // End namespace BioPSE
