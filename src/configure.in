@@ -243,7 +243,7 @@ case $host in
            else
              echo "no"
            fi
-           if test "${CC}" = "" ; then
+#           if test "${CC}" = "" ; then
              if type CC | sed 's/^.* //' > /dev/null 2>&1 ; then
                CXX=`type CC | sed 's/^.* //' `
                echo "Using C++ compiler ${CXX}"
@@ -256,7 +256,7 @@ case $host in
                AS=`type as | sed 's/^.* //' `
                echo "Using Assembler ${AS}"
              fi
-           fi
+#           fi
 	   F77=f77
 	   FFLAGS="$BINARYFLAGS ${FFLAGS}"
            CFLAGS="-fullwarn -xansi -LANG:std $BINARYFLAGS $extra_cflags"
