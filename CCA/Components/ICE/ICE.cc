@@ -4139,14 +4139,10 @@ void ICE::computeTauX( const Patch* patch,
                        (rho_CC[left] + rho_CC[cell]);
                        
     double vol_frac_FC = rho_brack * sp_vol_CC[cell];  
-     
-    double vis_FC = viscosity[left] + viscosity[cell];
 
-    if (vis_FC < 1.0e-20)
-      vis_FC = 0.0;
-    else
-      vis_FC = (2.0 * viscosity[left] * viscosity[cell])/
-                         (viscosity[left] + viscosity[cell]); 
+    term1 =  viscosity[left];
+    term2 =  viscosity[cell];
+    double vis_FC = (2.0 * term1 * term2)/(term1 + term2); 
 
     //__________________________________
     // - find indices of surrounding cells
@@ -4271,12 +4267,9 @@ void ICE::computeTauY( const Patch* patch,
                        
     double vol_frac_FC = rho_brack * sp_vol_CC[cell]; 
     
-    double vis_FC = viscosity[bottom] + viscosity[cell];
-    if (vis_FC < 1.0e-20)
-      vis_FC = 0.0;
-    else
-      vis_FC = (2.0 * viscosity[bottom] * viscosity[cell])/
-                         (viscosity[bottom] + viscosity[cell]); 
+    term1 =  viscosity[bottom];
+    term2 =  viscosity[cell];
+    double vis_FC = (2.0 * term1 * term2)/(term1 + term2); 
 
     //__________________________________
     // - find indices of surrounding cells
@@ -4403,12 +4396,9 @@ void ICE::computeTauZ( const Patch* patch,
                        
     double vol_frac_FC = rho_brack * sp_vol_CC[cell]; 
     
-    double vis_FC = viscosity[back] + viscosity[cell];
-    if (vis_FC < 1.0e-20)
-      vis_FC = 0.0;
-    else
-      vis_FC = (2.0 * viscosity[back] * viscosity[cell])/
-                         (viscosity[back] + viscosity[cell]); 
+    term1 =  viscosity[back];
+    term2 =  viscosity[cell];
+    double vis_FC = (2.0 * term1 * term2)/(term1 + term2); 
 
     //__________________________________
     // - find indices of surrounding cells
