@@ -1,2 +1,1 @@
 0 22 * * * /usr/sci/projects/Uintah/tester/bin/startTester -j 8 -sendmail
-0 1 * * * /usr/sci/projects/Uintah/tester/bin/scirunBuildTest -j 4
