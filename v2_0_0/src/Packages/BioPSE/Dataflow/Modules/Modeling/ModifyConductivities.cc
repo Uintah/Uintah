@@ -358,7 +358,7 @@ ModifyConductivities::execute()
   }
 
   // New input tensors, update the gui.
-  if (!gui_use_gui_values_.get() &&
+  if ((!gui_use_gui_values_.get() || created_p) &&
       different_tensors(field_tensors, last_field_tensors_))
   {
     update_to_gui(field_tensors);
