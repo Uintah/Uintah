@@ -741,6 +741,29 @@ class PowerAppBase {
         }
     }
 
+    ##############################
+    ### grey_widget
+    ##############################
+    # This method greys out a widget by setting the foreground to be grey64
+    method grey_widget {w} {
+    	set has_foreground_option 0
+    	foreach opt [$w configure ] {
+	    set temp2 [lsearch -exact $opt "foreground"]
+            if {$temp2 > -1} {
+               set has_foreground_option 1
+            }
+        }
+
+        if {$has_foreground_option} {
+            $w configure -foreground grey64
+        }
+
+
+        foreach widg [winfo children $w] {
+	     grey_widget $widg
+        }
+    }
+
 
     ############################
     ### construct_indicator
