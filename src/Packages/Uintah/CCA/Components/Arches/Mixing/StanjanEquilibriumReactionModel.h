@@ -105,7 +105,7 @@ namespace Uintah {
     StanjanEquilibriumReactionModel(bool adiabatic);
 
     // Constructor with thermal NOx
-    StanjanEquilibriumReactionModel(bool adiabatici, bool d_thermalNOx);
+    StanjanEquilibriumReactionModel(bool adiabatic, bool d_thermalNOx);
 
     // GROUP: Destructor:
     /////////////////////////////////////////////////////////////////////////
