@@ -130,7 +130,7 @@ void ScalarFieldAverage::computeAverages(ScalarField1* scalarField1,
     typename ScalarField2::mesh_type::Cell::iterator s_it; s2mh->begin(s_it);
     for( ; v_it != v_end; ++v_it, ++s_it){
       scalarField2->fdata()[*s_it] =
-	(scalarField2->fdata()[*s_it] * scalarField1->fdata()[*v_it])/2.0;
+	(scalarField2->fdata()[*s_it] + scalarField1->fdata()[*v_it])/2.0;
       //ave = scalarField2->fdata()[*s_it];
       ++counter;
     }
@@ -141,7 +141,7 @@ void ScalarFieldAverage::computeAverages(ScalarField1* scalarField1,
       
     for( ; v_it != v_end; ++v_it, ++s_it){
       scalarField2->fdata()[*s_it] =
-	(scalarField2->fdata()[*s_it] * scalarField1->fdata()[*v_it])/2.0;
+	(scalarField2->fdata()[*s_it] + scalarField1->fdata()[*v_it])/2.0;
       //ave = scalarField2->fdata()[*s_it];
       ++counter;
     }
