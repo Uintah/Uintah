@@ -42,7 +42,7 @@ using namespace SCIRun;
       virtual void scheduleTimeAdvance(double t, double dt,const LevelP&,
 				       SchedulerP&, DataWarehouseP&,
 				       DataWarehouseP&);
-      
+                                                     
       void scheduleComputeEquilibrationPressure(
             const Patch* patch, SchedulerP&, DataWarehouseP&, DataWarehouseP&);
       
@@ -85,7 +85,7 @@ using namespace SCIRun;
       void actuallyComputeStableTimestep(const ProcessorGroup*,
 					 const Patch* patch, DataWarehouseP&,
 					 DataWarehouseP&);
-      
+                                    
       // calculateEquilibrationPressure
       void computeEquilibrationPressure(
             const ProcessorGroup*, const Patch* patch, DataWarehouseP&, 
@@ -151,8 +151,27 @@ using namespace SCIRun;
 
       void printData(const  Patch* patch,int include_GC,char message1[],
 		     char message2[], const  CCVariable<int>& q_CC);
+                   
       void printData(const  Patch* patch,int include_GC,char message1[],
-		     char message2[], const  CCVariable<double>& q_CC);      
+		     char message2[], const  CCVariable<double>& q_CC); 
+                   
+      void Message(int abort, char message1[],char message2[],char message3[]);
+      
+      // Debugging switches
+      bool switchDebugInitialize;
+      bool switchDebug_equilibration_press;
+      bool switchDebug_vel_FC;
+      bool switchDebug_Exchange_FC;
+      bool switchDebug_explicit_press;
+      bool switchDebug_PressFC;
+      bool switchDebugLagrangianValues;
+      bool switchDebugSource_Sink;
+      bool switchDebug_advance_advect;
+      bool switchDebug_advectQFirst;
+
+     // exchange coefficients -- off diagonal terms
+      vector<double> d_K_mom, d_K_heat;      
+     
     private:
       friend const TypeDescription* fun_getTypeDescription(fflux*);
       friend const TypeDescription* fun_getTypeDescription(eflux*);
@@ -221,9 +240,6 @@ using namespace SCIRun;
 			  CCVariable<eflux>& r_out_z_CF,
 			  const Vector& dx);
       
-      
-      void Message(int abort, char message1[],char message2[],char message3[]);
-
       void printVector(const  Patch* patch,int include_GC,char message1[],
 		     char message2[], int component, 
                    const CCVariable<Vector>& q_CC);
@@ -245,21 +261,6 @@ using namespace SCIRun;
       double d_CFL;
       int d_max_iter_equilibration;
 
-      // Debugging switches
-      bool switchDebugInitialize;
-      bool switchDebug_equilibration_press;
-      bool switchDebug_vel_FC;
-      bool switchDebug_Exchange_FC;
-      bool switchDebug_explicit_press;
-      bool switchDebug_PressFC;
-      bool switchDebugLagrangianValues;
-      bool switchDebugSource_Sink;
-      bool switchDebug_advance_advect;
-      bool switchDebug_advectQFirst;
-
-     // exchange coefficients -- off diagonal terms
-      vector<double> d_K_mom, d_K_heat; 
-      
       ICE(const ICE&);
       ICE& operator=(const ICE&);
       
