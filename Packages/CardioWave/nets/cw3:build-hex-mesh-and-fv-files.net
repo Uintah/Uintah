@@ -21,7 +21,7 @@ if {[llength [array get env CWDATA]] == 0} {
    puts ""
    puts "*** Error: this net depends on the CWDATA enviroment variable."
    puts "*** Please exit, set it in your shell, and rerun."
-   puts "*** (e.g. setenv SCIRUN_DATA /scratch/data/)"
+   puts "*** (e.g. setenv CWDATA /scratch/data/)"
    puts ""
    ::netedit scheduleok
    return
