@@ -683,6 +683,8 @@ itcl_class SCIRun_Visualization_ShowField {
 	frame $window.fname -borderwidth 2
 	label $window.fname.label -text "Field Name"
 	entry $window.fname.entry -textvar $this-field-name
+	
+	bind $window.fname.entry <Return> "$this-c rerender_all"
 
 	pack $window.fname.label $window.fname.entry -side left
 	pack $window.fname -anchor w -padx 10
