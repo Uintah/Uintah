@@ -206,7 +206,7 @@ DrawInfoOpenGL::DrawInfoOpenGL() :
   fog(0),
   cull(0),
   current_matl(0),
-  using_cmtexture_(false),
+  using_cmtexture_(0),
   cmtexture_(0)
 {
   for (int i=0; i < GEOM_FONT_COUNT; i++) {
@@ -918,7 +918,6 @@ GeomColorMap::draw(DrawInfoOpenGL* di, Material *m, double time)
 
   if (!cmap_.get_rep())
   {
-    di->using_cmtexture_ = false;
     child_->draw(di, m, time);
   }
   else
@@ -959,9 +958,9 @@ GeomColorMap::draw(DrawInfoOpenGL* di, Material *m, double time)
     glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE);
 
     // Draw child
-    di->using_cmtexture_ = true;
+    di->using_cmtexture_++;
     child_->draw(di,m,time);
-    di->using_cmtexture_ = false;
+    di->using_cmtexture_--;
     
     glMatrixMode(GL_TEXTURE);
     glPopMatrix();

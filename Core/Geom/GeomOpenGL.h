@@ -138,7 +138,7 @@ public:
     int    fontstatus[GEOM_FONT_COUNT];
     GLuint fontbase[GEOM_FONT_COUNT];
 
-    bool using_cmtexture_;
+    int using_cmtexture_;
     GLuint cmtexture_;  // GeomColorMap texture, 1D
 };
 
