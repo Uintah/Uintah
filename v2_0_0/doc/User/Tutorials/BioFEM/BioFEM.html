@@ -44,18 +44,11 @@
   <LI><A HREF="#figure_2">Figure 2: BioFEM Interface Window (Detached Panes)</A>
   <LI><A HREF="#figure_3">Figure 3: File Menu</A>
   <LI><A HREF="#figure_4">Figure 4: Help Menu</A>
-  <LI><A HREF="#figure_5">Figure 5: File Load Dialog</A>
-  <LI><A HREF="#figure_6">Figure 6: Registration Tab</A>
-  <LI><A HREF="#figure_7">Figure 7: Registration Improvement</A>
-  <LI><A HREF="#figure_8">Figure 8: Final Processing Stage</A>
-  <LI><A HREF="#figure_9">Figure 9: Cutting Plane Visualization</A>
-  <LI><A HREF="#figure_10">Figure 10: Isosurface Visualization</A>
-  <LI><A HREF="#figure_11">Figure 11: Clipped Plane Visualization</A>
-  <LI><A HREF="#figure_12">Figure 12: Glyph Box Visualization</A>
-  <LI><A HREF="#figure_13">Figure 13: Superquadric Glyph Visualization</A>
-  <LI><A HREF="#figure_14">Figure 14: Fiber Visualization</A>
-  <LI><A HREF="#figure_15">Figure 15: Single Fiber</A>
-  <LI><A HREF="#figure_16">Figure 16: Planes and Fibers</A>
+  <LI><A HREF="#figure_5">Figure 5: Default Visualization</A>
+  <LI><A HREF="#figure_6">Figure 6: Isosurface Visualization</A>
+  <LI><A HREF="#figure_7">Figure 7: Streamlines Visualization</A>
+  <LI><A HREF="#figure_8">Figure 8: Electrodes Visualization</A>
+  <LI><A HREF="#figure_9">Figure 9: Visualization with Red-to-Blue colormap</A>
 </UL>
 
 <H2><A NAME="section_1"> Section 1 -- Introduction </H2>
@@ -192,11 +185,18 @@ those controls and is now located on the Viewer Options tab.
 <P>
 Within the Vis Options tab of the Visualization pane, there are four categories for controlling the visualization settings.  We will now investigate the options on the four categories:  IsoSurface, StreamLines, Electrodes, and ColorMap.
 
+<A NAME="figure_5">
+<BR><BR>
+<CENTER>
+<P><IMG BORDER=1 SRC="figures/biofem-vis-all.jpg"><br>
+<B>Figure 5: Default Visualization.</b>
+</CENTER>
+
 <BR><H3><A NAME="section_4_2"> 4.2 IsoSurface Visualization </H3>
 
 Selecting the IsoSurface tab reveals the options for generating an
 isosurface from the DT volume.  As shown in <A
-HREF="#figure_10">Figure 10</A> you can:
+HREF="#figure_6">Figure 6</A> you can:
 
 <UL> 
    <LI> Choose whether or not to show the isosurface. </LI>
@@ -204,20 +204,20 @@ HREF="#figure_10">Figure 10</A> you can:
    <LI> Enable or disable rendering faces with interpolated normals for smoother renderings.</LI>
 </UL>
 
-<A NAME="figure_10">
+<A NAME="figure_6">
 <BR><BR>
 <CENTER>
-<P><IMG BORDER=1 SRC="figures/biofem-vis-isosurf.jpg"><br>
-<B>Figure 10: Isosurface Visualization.</b>
+<P><IMG BORDER=1 SRC="figures/biofem-vis-isosurface.jpg"><br>
+<B>Figure 6: Isosurface Visualization.</b>
 </CENTER>
 
 <BR><H3><A NAME="section_4_3"> 4.3 StreamLines Visualization </H3>
 
-<A NAME="figure_13">
+<A NAME="figure_7">
 <BR><BR>
 <CENTER>
-<P><IMG BORDER=1 SRC="figures/biofem-vis-sqg.jpg"><br>
-<B>Figure 13: Superquadric Glyph Visualization.</b>
+<P><IMG BORDER=1 SRC="figures/biofem-vis-streamlines.jpg"><br>
+<B>Figure 7: Streamlines Visualization.</b>
 </CENTER>
 
 <BR><H3><A NAME="section_4_4"> 4.4 Electrodes Visualization </H3>
@@ -247,29 +247,21 @@ fiber tracing algorithm.  These parameters include:
        (either Linear Anisotropy or Fractional Anisotropy).
 </UL>
 
+<A NAME="figure_8">
+<BR><BR>
+<CENTER>
+<P><IMG BORDER=1 SRC="figures/biofem-vis-electrodes.jpg"><br>
+<B>Figure 8: Electrodes Visualization.</b>
+</CENTER>
+
 <BR><H3><A NAME="section_4_5"> 4.5 ColorMap Selection </H3>
 
-<A NAME="figure_14">
+<A NAME="figure_9">
 <BR><BR>
 <CENTER>
-<P><IMG BORDER=1 SRC="figures/biofem-vis-fibers.jpg"><br>
-<B>Figure 14: Fiber Visualization.</b>
+<P><IMG BORDER=1 SRC="figures/biofem-vis-colormap.jpg"><br>
+<B>Figure 9: Visualization with the Red-to-Blue colormap selected.</b>
 </CENTER>
-
-<A NAME="figure_15">
-<BR><BR>
-<CENTER>
-<P><IMG BORDER=1 SRC="figures/biofem-vis-single-fiber.jpg"><br>
-<B>Figure 15: Single Fiber.</b>
-</CENTER>
-
-<A NAME="figure_16">
-<BR><BR>
-<CENTER>
-<P><IMG BORDER=1 SRC="figures/biofem-vis-planes-fibers.jpg"><br>
-<B>Figure 16: Planes and Fibers.</b>
-</CENTER>
-
 
 <P><IMG SRC="images/footer.gif"><br>
 
