@@ -2,7 +2,6 @@
 #include <Packages/Uintah/Core/ProblemSpec/ProblemSpec.h>
 #include <Packages/Uintah/CCA/Components/ICE/ICEMaterial.h>
 #include <Packages/Uintah/Core/Grid/GeometryPiece.h>
-#include <iostream>
 
 using namespace Uintah;
 
