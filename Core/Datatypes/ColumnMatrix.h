@@ -87,6 +87,8 @@ public:
 			      int beg=-1, int end=-1, int spVec=0) const;
   virtual void print();
 
+  virtual void scalar_multiply(double s);
+
   double vector_norm() const;
   double vector_norm(int& flops, int& memrefs) const;
   double vector_norm(int& flops, int& memrefs, int beg, int end) const;

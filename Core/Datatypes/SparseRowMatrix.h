@@ -98,12 +98,16 @@ public:
   
   virtual SparseRowMatrix* clone();
 
+  virtual void scalar_multiply(double s);
+
   //! Persistent representation...
   virtual void io(Piostream&);
   static PersistentTypeID type_id;
 
 
   friend SCICORESHARE SparseRowMatrix *AddSparse(const SparseRowMatrix &a,
+						 const SparseRowMatrix &b);
+  friend SCICORESHARE SparseRowMatrix *SubSparse(const SparseRowMatrix &a,
 						 const SparseRowMatrix &b);
 };
 

@@ -83,8 +83,8 @@ public:
   virtual double& get(int, int) const=0;
   inline MatrixRow operator[](int r);
 
-  friend SCICORESHARE Matrix *Add(Matrix *, Matrix *);
-  friend SCICORESHARE Matrix *Mult(Matrix *, Matrix *);
+  //friend SCICORESHARE Matrix *Add(Matrix *, Matrix *);
+  //friend SCICORESHARE Matrix *Mult(Matrix *, Matrix *);
 
   virtual string type_name() { return "Matrix"; }
 
@@ -113,6 +113,8 @@ public:
 
   virtual void print(ostream&) const {}
   virtual void print() const {}
+
+  virtual void scalar_multiply(double s) = 0;
 
   // Separate raw files.
   void set_raw(bool v) { separate_raw_ = v; }

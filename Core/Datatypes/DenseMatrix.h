@@ -105,6 +105,8 @@ public:
   virtual void    print() const;
   virtual void    print(ostream&) const;
   
+  virtual void scalar_multiply(double s);
+
   //! fast accessors
   inline double*  operator[](int r){
     return data[r];
@@ -131,6 +133,7 @@ public:
   //! Friend function
   friend SCICORESHARE void Mult(DenseMatrix&, const DenseMatrix&, const DenseMatrix&);
   friend SCICORESHARE void Add(DenseMatrix&, const DenseMatrix&, const DenseMatrix&);
+  friend SCICORESHARE void Sub(DenseMatrix&, const DenseMatrix&, const DenseMatrix&);
   friend SCICORESHARE void Add(DenseMatrix&, double, const DenseMatrix&, double, const DenseMatrix&);
   friend SCICORESHARE void Add(double, DenseMatrix&, double, const DenseMatrix&);
   friend SCICORESHARE void Mult_trans_X(DenseMatrix&, const DenseMatrix&, const DenseMatrix&);
