@@ -379,10 +379,10 @@ void ViscoTransIsoHyper::computeStressTensor(const PatchSubset* patches,
     Vector deformed_fiber_vector;
 
     ParticleInterpolator* interpolator = flag->d_interpolator->clone(patch);
-    IntVector* ni;
-    ni = new IntVector[interpolator->size()];
-    Vector* d_S;
-    d_S = new Vector[interpolator->size()];
+    vector<IntVector> ni;
+    ni.reserve(interpolator->size());
+    vector<Vector> d_S;
+    d_S.reserve(interpolator->size());
 
 
     Identity.Identity();
@@ -746,8 +746,6 @@ void ViscoTransIsoHyper::computeStressTensor(const PatchSubset* patches,
                 lb->delTLabel);
     new_dw->put(sum_vartype(se),        lb->StrainEnergyLabel);
     delete interpolator;
-    delete[] d_S;
-    delete[] ni;
   }
 }
 

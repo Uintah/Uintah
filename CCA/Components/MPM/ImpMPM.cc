@@ -965,10 +965,10 @@ void ImpMPM::interpolateParticlesToGrid(const ProcessorGroup*,
     }
 
     LinearInterpolator* interpolator = new LinearInterpolator(patch);
-    IntVector* ni;
-    ni = new IntVector[interpolator->size()];
-    double* S;
-    S = new double[interpolator->size()];
+    vector<IntVector> ni;
+    ni.reserve(interpolator->size());
+    vector<double> S;
+    S.reserve(interpolator->size());
 
     
 
@@ -1099,8 +1099,6 @@ void ImpMPM::interpolateParticlesToGrid(const ProcessorGroup*,
      }
     }  // End loop over materials
     delete interpolator;
-    delete[] S;
-    delete[] ni;
   }  // End loop over patches
 }
 
@@ -1531,10 +1529,10 @@ void ImpMPM::computeInternalForce(const ProcessorGroup*,
     }
     
     LinearInterpolator* interpolator = new LinearInterpolator(patch);
-    IntVector* ni;
-    ni = new IntVector[interpolator->size()];
-    Vector* d_S;
-    d_S = new Vector[interpolator->size()];
+    vector<IntVector> ni;
+    ni.reserve(interpolator->size());
+    vector<Vector> d_S;
+    d_S.reserve(interpolator->size());
 
 
     Vector dx = patch->dCell();
@@ -1601,8 +1599,6 @@ void ImpMPM::computeInternalForce(const ProcessorGroup*,
      }
     }  // matls
     delete interpolator;
-    delete[] d_S;
-    delete[] ni;
   }    // patches
 }
 
@@ -1991,12 +1987,12 @@ void ImpMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
     Ghost::GhostType  gac = Ghost::AroundCells;
 
     LinearInterpolator* interpolator = new LinearInterpolator(patch);
-    IntVector* ni;
-    ni = new IntVector[interpolator->size()];
-    double* S;
-    S = new double[interpolator->size()];
-    Vector* d_S;
-    d_S = new Vector[interpolator->size()];
+    vector<IntVector> ni;
+    ni.reserve(interpolator->size());
+    vector<double> S;
+    S.reserve(interpolator->size());
+    vector<Vector> d_S;
+    d_S.reserve(interpolator->size());
 
 
     // Performs the interpolation from the cell vertices of the grid
@@ -2128,9 +2124,6 @@ void ImpMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
     new_dw->put(sumvec_vartype(CMX), lb->CenterOfMassPositionLabel);
     new_dw->put(sumvec_vartype(CMV), lb->CenterOfMassVelocityLabel);
     delete interpolator;
-    delete[] S;
-    delete[] ni;
-    delete[] d_S;
   }
 }
 
@@ -2155,10 +2148,10 @@ void ImpMPM::interpolateStressToGrid(const ProcessorGroup*,
     }
 
     LinearInterpolator* interpolator = new LinearInterpolator(patch);
-    IntVector* ni;
-    ni = new IntVector[interpolator->size()];
-    double* S;
-    S = new double[interpolator->size()];
+    vector<IntVector> ni;
+    ni.reserve(interpolator->size());
+    vector<double> S;
+    S.reserve(interpolator->size());
 
     // This task is done for visualization only
 
@@ -2269,8 +2262,6 @@ void ImpMPM::interpolateStressToGrid(const ProcessorGroup*,
      } // if
    }  // matls
     delete interpolator;
-    delete[] S;
-    delete[] ni;
   }
 
   // be careful only to put the fields that we have built

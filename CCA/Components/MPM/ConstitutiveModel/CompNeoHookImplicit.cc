@@ -172,10 +172,10 @@ CompNeoHookImplicit::computeStressTensor(const PatchSubset* patches,
     Matrix3 Identity;
 
     LinearInterpolator* interpolator = new LinearInterpolator(patch);
-    IntVector* ni;
-    ni = new IntVector[interpolator->size()];
-    Vector* d_S;
-    d_S = new Vector[interpolator->size()];
+    vector<IntVector> ni;
+    ni.reserve(interpolator->size());
+    vector<Vector> d_S;
+    d_S.reserve(interpolator->size());
 
     
     Identity.Identity();
@@ -240,8 +240,10 @@ CompNeoHookImplicit::computeStressTensor(const PatchSubset* patches,
         particleIndex idx = *iter;
         dispGrad.set(0.0);
         // Get the node indices that surround the cell
-        IntVector ni[8];
-        Vector d_S[8];
+        vector<IntVector> ni;
+	ni.reserve(8);
+        vector<Vector> d_S;
+	d_S.reserve(8);
 
         interpolator->findCellAndShapeDerivatives(px[idx], ni, d_S);
         int dof[24];
@@ -423,8 +425,6 @@ CompNeoHookImplicit::computeStressTensor(const PatchSubset* patches,
       }  // end of loop over particles
     }
     delete interpolator;
-    delete[] d_S;
-    delete[] ni;
   }
   solver->flushMatrix();
 }
@@ -445,10 +445,10 @@ CompNeoHookImplicit::computeStressTensor(const PatchSubset* patches,
      Matrix3 Identity;
 
      LinearInterpolator* interpolator = new LinearInterpolator(patch);
-     IntVector* ni;
-     ni = new IntVector[interpolator->size()];
-     Vector* d_S;
-     d_S = new Vector[interpolator->size()];
+     vector<IntVector> ni;
+     ni.reserve(interpolator->size());
+     vector<Vector> d_S;
+     d_S.reserve(interpolator->size());
 
      Identity.Identity();
 
@@ -548,8 +548,6 @@ CompNeoHookImplicit::computeStressTensor(const PatchSubset* patches,
       }
      }
     delete interpolator;
-    delete[] d_S;
-    delete[] ni;
    }
 }
 

@@ -17,16 +17,16 @@ namespace Uintah {
     
     virtual Node27Interpolator* clone(const Patch*);
     
-    virtual void findCellAndWeights(const Point& p,IntVector *ni, 
-				    double *S, const Vector& size);
+    virtual void findCellAndWeights(const Point& p,vector<IntVector>& ni, 
+				    vector<double>& S, const Vector& size);
     virtual void findCellAndShapeDerivatives(const Point& pos,
-					     IntVector *ni,
-					     Vector *d_S,
+					     vector<IntVector>& ni,
+					     vector<Vector>& d_S,
 					     const Vector& size);
     virtual void findCellAndWeightsAndShapeDerivatives(const Point& pos,
-						       IntVector *ni,
-						       double *S,
-						       Vector *d_S,
+						       vector<IntVector>& ni,
+						       vector<double>& S,
+						       vector<Vector>& d_S,
 						       const Vector& size);
     virtual int size();
     

@@ -567,10 +567,10 @@ HypoElasticPlastic::computeStressTensor(const PatchSubset* patches,
     const Patch* patch = patches->get(p);
 
     ParticleInterpolator* interpolator = flag->d_interpolator->clone(patch);
-    IntVector* ni;
-    ni = new IntVector[interpolator->size()];
-    Vector* d_S;
-    d_S = new Vector[interpolator->size()];
+    vector<IntVector> ni;
+    ni.reserve(interpolator->size());
+    vector<Vector> d_S;
+    d_S.reserve(interpolator->size());
 
     //cerr << getpid() << " patch = " << patch->getID() << endl;
     // Get grid size
@@ -1233,8 +1233,6 @@ HypoElasticPlastic::computeStressTensor(const PatchSubset* patches,
                 lb->delTLabel);
     new_dw->put(sum_vartype(totalStrainEnergy), lb->StrainEnergyLabel);
     delete interpolator;
-    delete[] d_S;
-    delete[] ni;
   }
   //if ((patches->get(0))->getID() == 19)
 

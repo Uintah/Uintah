@@ -116,7 +116,7 @@ bool CommRecMPI::waitsome(const ProcessorGroup * pg, CommRecMPI & cr,
   int crDonecount = 0;
   
   int mySize = ids.size();
-  for (i = 0; i < donecount; i++) {
+  for (int i = 0; i < donecount; i++) {
     if (combinedIndices[i] < mySize) {
       indices.push_back(combinedIndices[i]);
       myDonecount++;

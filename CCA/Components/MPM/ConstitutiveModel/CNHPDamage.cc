@@ -172,10 +172,10 @@ CNHPDamage::computeStressTensor(const PatchSubset* patches,
     const Patch* patch = patches->get(pp);
 
     ParticleInterpolator* interpolator = flag->d_interpolator->clone(patch);
-    IntVector* ni;
-    ni = new IntVector[interpolator->size()];
-    Vector* d_S;
-    d_S = new Vector[interpolator->size()];
+    vector<IntVector> ni;
+    ni.reserve(interpolator->size());
+    vector<Vector> d_S;
+    d_S.reserve(interpolator->size());
 
     // Initialize patch variables
     double se = 0.0;
@@ -337,8 +337,6 @@ CNHPDamage::computeStressTensor(const PatchSubset* patches,
     new_dw->put(sum_vartype(se),        lb->StrainEnergyLabel);
 
     delete interpolator;
-    delete[] d_S;
-    delete[] ni;
   }
 }
 
@@ -384,10 +382,10 @@ CNHPDamage::computeStressTensorImplicit(const PatchSubset* patches,
     const Patch* patch = patches->get(pp);
 
     LinearInterpolator* interpolator = new LinearInterpolator(patch);
-    IntVector* ni;
-    ni = new IntVector[interpolator->size()];
-    Vector* d_S;
-    d_S = new Vector[interpolator->size()];
+    vector<IntVector> ni;
+    ni.reserve(interpolator->size());
+    vector<Vector> d_S;
+    d_S.reserve(interpolator->size());
 
     // Initialize patch variables
     double se = 0.0;
@@ -522,8 +520,6 @@ CNHPDamage::computeStressTensorImplicit(const PatchSubset* patches,
     }
     new_dw->put(sum_vartype(se), lb->StrainEnergyLabel);
     delete interpolator;
-    delete[] ni;
-    delete[] d_S;
   }
 }
 
@@ -598,10 +594,10 @@ CNHPDamage::computeStressTensor(const PatchSubset* patches,
     const Patch* patch = patches->get(pp);
 
     LinearInterpolator* interpolator = new LinearInterpolator(patch);
-    IntVector* ni;
-    ni = new IntVector[interpolator->size()];
-    Vector* d_S;
-    d_S = new Vector[interpolator->size()];
+    vector<IntVector> ni;
+    ni.reserve(interpolator->size());
+    vector<Vector> d_S;
+    d_S.reserve(interpolator->size());
 
     // Set up array for solver
     IntVector lowIndex = patch->getNodeLowIndex();
@@ -750,8 +746,6 @@ CNHPDamage::computeStressTensor(const PatchSubset* patches,
 
     }  // end of loop over particles
     delete interpolator;
-    delete[] ni;
-    delete[] d_S;
     
   }
   solver->flushMatrix();
