@@ -192,7 +192,7 @@ void BuildMisfitField::execute() {
       return;
     }
     if (!misfit_in->nrows() || !misfit_in->ncols()) {
-      cerr < "BuildMisfitField -- error, 0-sized misfit matrix.\n";
+      cerr << "BuildMisfitField -- error, 0-sized misfit matrix.\n";
       return;
     }
     double misfit = (*misfit_in.get_rep())[0][0];
