@@ -38,6 +38,7 @@
 #include <Packages/Uintah/CCA/Components/Schedulers/NirvanaLoadBalancer.h>
 #include <Packages/Uintah/CCA/Components/Schedulers/RoundRobinLoadBalancer.h>
 #include <Packages/Uintah/CCA/Components/Schedulers/SimpleLoadBalancer.h>
+#include <Packages/Uintah/CCA/Components/Solvers/CGSolver.h>
 #include <Packages/Uintah/CCA/Components/PatchCombiner/PatchCombiner.h>
 #include <Packages/Uintah/CCA/Components/DataArchiver/DataArchiver.h>
 #include <Packages/Uintah/CCA/Ports/DataWarehouse.h>
@@ -187,6 +188,7 @@ main( int argc, char** argv )
     string filename;
     string scheduler;
     string loadbalancer;
+    string solver = "CGSolver";
     IntVector layout(1,1,1);
 
     // Checks to see if user is running an MPI version of sus.
@@ -284,6 +286,11 @@ main( int argc, char** argv )
 	} else if(s == "-t") {
            if (i < argc-1)
 	      restartTimestep = atoi(argv[++i]);
+	} else if(s == "-solver") {
+	  if(++i == argc){
+	    usage("You must provide a solver name for -solver", s, argv[0]);
+	  }
+	  solver = argv[i];
 	} else if(s == "-layout") {
 	  if(++i == argc)
 	    usage("You must provide a vector arg for -layout",
@@ -376,36 +383,67 @@ main( int argc, char** argv )
 	Output* output = scinew DataArchiver(world);
 	ctl->attachPort("output", output);
 
+	// Solver
+	SolverInterface* solve = 0;
+	if(solver == "CGSolver") {
+	  solve = new CGSolver(world);
+	} else {
+	  cerr << "Unknown solver: " << solver << '\n';
+	  exit(1);
+	}
+
 	// Connect a MPM module if applicable
 	SimulationInterface* sim = 0;
+	UintahParallelComponent* comp = 0;
 	if(do_mpm && do_ice){
 	  MPMICE* mpmice = scinew MPMICE(world);
 	  mpmice->attachPort("output", output);
 	  sim = mpmice;
+	  comp = mpmice;
 	} else if(do_mpm && do_arches){
-	  sim = scinew MPMArches(world);
+	  MPMArches* mpmarches = scinew MPMArches(world);
+	  sim = mpmarches;
+	  comp = mpmarches;
 	} else if(do_mpm){
-	  sim = scinew SerialMPM(world);
+	  SerialMPM* mpm = scinew SerialMPM(world);
+	  sim = mpm;
+	  comp = mpm;
 	} else if(do_impmpm){
-	  sim = scinew ImpMPM(world);
+	  ImpMPM* impm = scinew ImpMPM(world);
+	  sim = impm;
+	  comp = impm;
 	} else if(do_arches){
-	  sim = scinew Arches(world);
+	  Arches* arches = scinew Arches(world);
+	  sim = arches;
+	  comp = arches;
 	} else if(do_ice) {
 	  ICE* ice = scinew ICE(world);
-	  ice->attachPort("output", output);
 	  sim = ice;
+	  comp = ice;
 	} else if(do_burger){
-	  sim = scinew Burger(world);
+	  Burger* burger = scinew Burger(world);
+	  sim = burger;
+	  comp = burger;
 	} else if(do_poisson1){
-	  sim = scinew Poisson1(world);
+	  Poisson1* poisson1 = scinew Poisson1(world);
+	  sim = poisson1;
+	  comp = poisson1;
 	} else if(do_poisson2){
-	  sim = scinew Poisson2(world);
+	  Poisson2* poisson2 = scinew Poisson2(world);
+	  sim = poisson2;
+	  comp = poisson2;
 	} else if(do_poisson3){
-	  sim = scinew Poisson3(world);
+	  Poisson3* poisson3 = scinew Poisson3(world);
+	  sim = poisson3;
+	  comp = poisson3;
 	} else if(do_simplecfd){
-	  sim = scinew SimpleCFD(world);
+	  SimpleCFD* simplecfd = scinew SimpleCFD(world);
+	  sim = simplecfd;
+	  comp = simplecfd;
 	} else if (combine_patches) {
-	  sim = scinew PatchCombiner(world, udaDir);
+	  PatchCombiner* pc = scinew PatchCombiner(world, udaDir);
+	  sim = pc;
+	  comp = pc;
 	  ctl->doCombinePatches(udaDir);
 	} else {
 	  usage("You need to specify a simulation: -arches, -ice, -mpm, "
@@ -414,6 +452,8 @@ main( int argc, char** argv )
 	}
 
 	ctl->attachPort("sim", sim);
+	comp->attachPort("solver", solve);
+	comp->attachPort("output", output);
 
 	if(world->myrank() == 0){
 	   cerr << "Using scheduler: " << scheduler 
