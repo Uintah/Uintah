@@ -144,10 +144,12 @@ TexturedTri::set_texcoords(const Point& tx1,
   lntu = ntu.length2();
   lntv = ntv.length2();
   if (lntu<=0 || lntv<-0) {
+#if 0
     cerr << "naughty texture coordinates!" << endl;
     cerr << "t1: " << t1.x() << ", " << t1.y() << ", " << t1.z() << endl;
     cerr << "t2: " << t2.x() << ", " << t2.y() << ", " << t2.z() << endl;
     cerr << "t3: " << t3.x() << ", " << t3.y() << ", " << t3.z() << endl;
+#endif
   } else {
     lntu = sqrt(lntu);
     lntv = sqrt(lntv);
