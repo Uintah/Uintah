@@ -39,8 +39,6 @@
 	    <material>
                 <burn>
                   <type>null</type>
-		  <a>.0004</a>
-                  <b>.2</b>
                 </burn>
 		<density>1000.0</density>
                 <comp_neo_hook_plastic>

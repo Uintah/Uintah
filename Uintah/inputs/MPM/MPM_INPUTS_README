@@ -1,0 +1,32 @@
+This is a brief description of the input files in inputs/MPM:
+
+disks.ups  This is the standard disks problem which we've been running
+since the first MPM code.
+
+disks2mat.ups This differs from disks.ups in that each disk is a separate
+velocity field and they interact via the friction contact algorithm.
+
+disks_4patch.ups Same as disks.ups except that it uses 4 patches to solve
+the problem.  Should give identical answers to disks.ups.
+
+disksel.ups Again, the disks problem with the CompNeoHook constitutive
+model being used.
+
+disksplas.ups  The disks problem with CompNeoHooPlas constitutive model
+being used.
+
+heatcond.ups  Problem to test heat conduction in a bar, with one side
+hot, one side cold.  They should go to equilibrium over time.
+
+heatcond2mat.ups  Similar to heatcond.ups, but uses separate 
+materials, and thus temperature fields for the hot and cold sides.
+This exercises the thermal contact algorithm.
+
+inclined_plane_sphere.ups  Sphere rolling down and inclined plane.
+This exercises the frictional contact algorithm.
+
+twomatburn.ups  Two adjacent materials, one burnable, the other inert.
+The first starts at 0 degrees, the latter at 100.  The second material
+is next to a 300 degree wall, as heat conducts through it, and into
+the first material, via the thermal contact algorithm, the first material
+ignites and burns away.
