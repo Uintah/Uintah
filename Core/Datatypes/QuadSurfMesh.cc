@@ -60,6 +60,7 @@ QuadSurfMesh::QuadSurfMesh()
 QuadSurfMesh::QuadSurfMesh(const QuadSurfMesh &copy)
   : points_(copy.points_),
     faces_(copy.faces_),
+    edges_(copy.edges_),
     edge_neighbors_(copy.edge_neighbors_),
     synchronized_(copy.synchronized_)
 {
