@@ -151,7 +151,7 @@ SeedFieldAlgoT<Mesh>::build_weight_table_sfi(MeshHandle mesh_h,
     }
     table.push_back(mesh->get_element_size(*ei) * val,*ei);
     ++ei;
-    while (ei != endi) {
+    while (ei != ei_end) {
       mesh->get_center(p,*ei);
       if (!sfi->interpolate(val,p)) continue;
       if ( mesh->get_element_size(*ei)>0 && val > 0) {
@@ -171,7 +171,7 @@ SeedFieldAlgoT<Mesh>::build_weight_table_sfi(MeshHandle mesh_h,
     }
     table.push_back(size * val, *ei);
     ++ei;
-    while (ei != endi) {
+    while (ei != ei_end) {
       mesh->get_center(p,*ei);
       if (!sfi->interpolate(val,p)) continue;
       if (val > 0) {
@@ -187,7 +187,7 @@ SeedFieldAlgoT<Mesh>::build_weight_table_sfi(MeshHandle mesh_h,
     }
     table.push_back(mesh->get_element_size(*ei),*ei);
     ++ei;
-    while (ei != endi) {
+    while (ei != ei_end) {
       if (mesh->get_element_size(*ei)>0)
 	table.push_back(mesh->get_element_size(*ei)+
 			table[table.size()-1].first,*ei);
@@ -196,7 +196,7 @@ SeedFieldAlgoT<Mesh>::build_weight_table_sfi(MeshHandle mesh_h,
   } else if (dist=="uniscat") { // standard size only
     table.push_back(size,*ei);
     ++ei;
-    while (ei != endi) {
+    while (ei != ei_end) {
       table.push_back(size+table[table.size()-1].first,*ei);
       ++ei;
     }    
@@ -246,7 +246,7 @@ SeedFieldAlgoT<Mesh>::build_weight_table_vfi(MeshHandle mesh_h,
     }
     table.push_back(mesh->get_element_size(*ei) * val.length(),*ei);
     ++ei;
-    while (ei != endi) {
+    while (ei != ei_end) {
       mesh->get_center(p,*ei);
       if (!vfi->interpolate(val,p)) continue;
       if ( mesh->get_element_size(*ei)>0 && val.length() > 0) {
@@ -266,7 +266,7 @@ SeedFieldAlgoT<Mesh>::build_weight_table_vfi(MeshHandle mesh_h,
     }
     table.push_back(size * val.length(), *ei);
     ++ei;
-    while (ei != endi) {
+    while (ei != ei_end) {
       mesh->get_center(p,*ei);
       if (!vfi->interpolate(val,p)) continue;
       if (val.length() > 0) {
@@ -282,7 +282,7 @@ SeedFieldAlgoT<Mesh>::build_weight_table_vfi(MeshHandle mesh_h,
     }
     table.push_back(mesh->get_element_size(*ei),*ei);
     ++ei;
-    while (ei != endi) {
+    while (ei != ei_end) {
       if (mesh->get_element_size(*ei)>0)
 	table.push_back(mesh->get_element_size(*ei)+
 			table[table.size()-1].first,*ei);
@@ -291,7 +291,7 @@ SeedFieldAlgoT<Mesh>::build_weight_table_vfi(MeshHandle mesh_h,
   } else if (dist=="uniscat") { // standard size only
     table.push_back(size,*ei);
     ++ei;
-    while (ei != endi) {
+    while (ei != ei_end) {
       table.push_back(size+table[table.size()-1].first,*ei);
       ++ei;
     }    
