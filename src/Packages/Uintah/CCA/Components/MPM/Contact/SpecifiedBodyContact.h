@@ -50,7 +50,7 @@ DESCRIPTION
 
   the format of the input is 
   <contact>
-    <format>specified</format>
+    <type>specified</type>
     <filename>fname.txt</filename>
     <direction>[1,1,1]</direction>
   </contact>
