@@ -35,7 +35,8 @@
 %define debug   opt
 %define thirdpartydotver 0
 %define thirdpartyversion 1.20
-%define hdf5    hdf5-1.6.1
+%define hdf5    hdf5-1.6.2
+%define ftgl	ftgl-2.0.9
 
 
 Name:		%{defname}WithFusion
@@ -66,8 +67,8 @@ source1:	%{defname}.%{version}.tar.gz
 source2:	Teem.PKG.%{version}.tar.gz
 source3:	Fusion.PKG.%{version}.tar.gz
 source4:	DataIO.PKG.%{version}.tar.gz
-source5:	hdf5-1.6.1.tar.gz
-
+source5:	%{hdf5}.tar.gz
+source6:	%{ftgl}.tar.gz
 
 %description
 SCIRun is a Problem Solving Environment (PSE), and a computational steering software system. SCIRun allows a scientist or engineer to interactively steer a computation, changing parameters, recomputing, and then revisualizing--all within the same programming environment. The tightly integrated modular environment provided by SCIRun allows computational steering to be applied to the broad range of advanced scientific computations that are addressed by the SCI Institute.
@@ -91,18 +92,25 @@ rm -rf $RPM_BUILD_DIR/%{hdf5}
 cd $RPM_BUILD_DIR
 tar -xzvf %{SOURCE5}
 
-rm -rf /usr/local/InsightToolkit*
-cd /usr/local
-tar -xvzf %{SOURCE3}
-	
+rm -rf  $RPM_BUILD_DIR/%{ftgl}
+mkdir -p $RPM_BUILD_DIR/%{ftgl}
+cd $RPM_BUILD_DIR/%{ftgl}
+tar -xvzf %{SOURCE6}
 
 
 %build
-cd $RPM_BUILD_DIR/%{hdf5}
-./configure --enable-threadsafe --with-pthread=/usr --prefix=/usr/local/hdf5/1.6.1
+cd $RPM_BUILD_DIR/%{ftgl}/FTGL/unix
+./configure --prefix=/usr/local/%{ftgl}
 make
 make install 
-cp $RPM_BUILD_DIR/%{hdf5}/COPYING /usr/local/hdf5/1.6.1
+cp $RPM_BUILD_DIR/%{ftgl}/FTGL/COPYING.txt /usr/local/%{ftgl}
+
+
+cd $RPM_BUILD_DIR/%{hdf5}
+./configure --enable-threadsafe --with-pthread=/usr --prefix=/usr/local/%{hdf5}
+make
+make install 
+cp $RPM_BUILD_DIR/%{hdf5}/COPYING /usr/local/%{hdf5}
 
 cd $RPM_BUILD_DIR/Thirdparty_install.%{thirdpartyversion}.%{thirdpartydotver}
 python $RPM_BUILD_DIR/Thirdparty_install.%{thirdpartyversion}.%{thirdpartydotver}/install /usr/local/SCIRun/Thirdparty 32 1
@@ -111,13 +119,13 @@ python $RPM_BUILD_DIR/Thirdparty_install.%{thirdpartyversion}.%{thirdpartydotver
 rm -rf /usr/local/SCIRun/bin
 mkdir -p /usr/local/SCIRun/bin
 cd /usr/local/SCIRun/bin
-/usr/local/SCIRun/src/configure --with-thirdparty="/usr/local/SCIRun/Thirdparty/%{defver}/Linux/gcc-%{gccver}-32bit/" --with-hdf5="/usr/local/hdf5/1.6.1" --with-mdsplus="/usr/local/mdsplus"  --enable-package="Fusion DataIO Teem"
+/usr/local/SCIRun/src/configure --with-thirdparty="/usr/local/SCIRun/Thirdparty/%{defver}/Linux/gcc-%{gccver}-32bit/" --with-ftgl="/usr/local/%{ftgl}/FTGL" --with-hdf5="/usr/local/%{hdf5}" --with-mdsplus="/usr/local/mdsplus"  --enable-package="Fusion DataIO Teem"
 cd /usr/local/SCIRun/bin/
 gmake
 
 %install
-chown -R root.root /usr/local/SCIRun /usr/local/hdf5/
-chmod -R a+r /usr/local/SCIRun /usr/local/hdf5
+chown -R root.root /usr/local/SCIRun /usr/local/%{hdf5}
+chmod -R a+r /usr/local/SCIRun /usr/local/%{hdf5}
 
 %clean
 rm -rf $RPM_BUILD_DIR/Thirdparty_install.%{thirdpartyversion}.%{thirdpartydotver}
@@ -125,6 +133,7 @@ rm -rf $RPM_BUILD_DIR/%{hdf5}
 
 %files
 /usr/local/SCIRun
-/usr/local/hdf5
+/usr/local/%{hdf5}
+/usr/local/%{ftgl}
 
 %changelog
