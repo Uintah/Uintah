@@ -602,7 +602,7 @@ PRINT_TEXT
       </question>
       <answer>
 	<para>Yes. The ShowSlices module will display orthogonal slices of
-	      a 3D nrrd in a 2D OpenGL window. 
+	      a 3D nrrd in a 2D OpenGL window.</para>
       </answer>
     </qandaentry>
 
