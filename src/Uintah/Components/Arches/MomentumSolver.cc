@@ -611,6 +611,13 @@ MomentumSolver::velocityLinearSolve(const ProcessorGroup* pc,
   d_linearSolver->computeVelUnderrelax(pc, patch, new_dw, matrix_dw, index, 
 				     d_velocityVars);
   // initial guess for explicit calculation
+  new_dw->allocate(d_velocityVars->old_uVelocity, d_lab->d_old_uVelocityGuess,
+			  matlIndex, patch);
+  new_dw->allocate(d_velocityVars->old_vVelocity, d_lab->d_old_vVelocityGuess,
+			  matlIndex, patch);
+  new_dw->allocate(d_velocityVars->old_wVelocity, d_lab->d_old_wVelocityGuess,
+			  matlIndex, patch);
+  
   d_velocityVars->old_uVelocity = d_velocityVars->uVelocity;
   d_velocityVars->old_vVelocity = d_velocityVars->vVelocity;
   d_velocityVars->old_wVelocity = d_velocityVars->wVelocity;  
@@ -641,6 +648,9 @@ MomentumSolver::velocityLinearSolve(const ProcessorGroup* pc,
   
 //
 // $Log$
+// Revision 1.27  2000/09/07 23:07:17  rawat
+// fixed some bugs in bc and added pressure solver using petsc
+//
 // Revision 1.26  2000/08/15 00:23:32  rawat
 // added explicit solve for momentum and scalar eqns
 //

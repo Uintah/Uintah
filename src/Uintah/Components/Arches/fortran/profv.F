@@ -137,6 +137,7 @@ C--------------------------------------------------------------------
           END IF
           IF (PCELL(iEndGhost,J,K).EQ.PFIELD) THEN
             UU(iEndGhostU,J,K) = -AVGVELP
+            UU(iEndGhostU-1,J,K) = -AVGVELP
 c            UINLT(J,K) = -AVGVELP
 c            UU(NI+1,J,K) = -AVGVELP
             VV(iEndGhostU,J,K) = ZERO
@@ -157,6 +158,7 @@ C--------------------------------------------------------------------
           END IF
           IF (PCELL(I,jEndGhost,K).EQ.PFIELD) THEN
             VV(I,jEndGhostV,K) = -AVGVELP
+            VV(I,jEndGhostV-1,K) = -AVGVELP
 c            VINLT(I,K) = -AVGVELP
 c            VV(I,NJ+1,K) = -AVGVELP
             WW(I,jEndGhostV,K) = ZERO
@@ -177,6 +179,7 @@ C--------------------------------------------------------------------
           END IF
           IF (PCELL(I,J,kEndGhost).EQ.PFIELD) THEN
             WW(I,J,kEndGhostW) = -AVGVELP
+            WW(I,J,kEndGhostW-1) = -AVGVELP
 c            WINLT(I,J) = -AVGVELP
 c            WW(I,J,NK+1) = -AVGVELP
             VV(I,J,kEndGhostW) = ZERO
@@ -191,6 +194,9 @@ c            WW(I,J,NK+1) = -AVGVELP
 c*********************************************************************
 c
 c $Log$
+c Revision 1.6  2000/09/07 23:07:21  rawat
+c fixed some bugs in bc and added pressure solver using petsc
+c
 c Revision 1.5  2000/08/08 23:34:20  rawat
 c fixed some bugs in profv.F and Properties.cc
 c

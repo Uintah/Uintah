@@ -280,7 +280,7 @@ c--------------------------------------------------------------------
             end if
           if ((pcell(i,j,idxLo(3)-1).eq.outletfield).or.
      $          ((pcell(i,j,idxLo(3)-1).eq.presstype).and.
-     $           (ww(i,j,idxLo(3)-1).gt.0.0))) then
+     $           (ww(i,j,idxLo(3)-1).lt.0.0))) then
                if ((loutsf).or.(pcell(i, j, idxLo(3)-1).eq.
      $              presstype)) then
                   f(i,j,idxLo(3)-1) = f(i,j,idxLo(3))
@@ -296,6 +296,9 @@ c--------------------------------------------------------------------
 
 c
 c $Log$
+c Revision 1.4  2000/09/07 23:07:21  rawat
+c fixed some bugs in bc and added pressure solver using petsc
+c
 c Revision 1.3  2000/08/19 16:36:40  rawat
 c fixed some bugs in scalarcoef calculations
 c

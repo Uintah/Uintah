@@ -224,6 +224,12 @@ namespace Uintah {
       const VarLabel* d_vVelocityRes;
       const VarLabel* d_wVelocityRes;
       const VarLabel* d_scalarRes;
+      // labels required for explicit solver to store old guess values
+      const VarLabel* d_old_uVelocityGuess;
+      const VarLabel* d_old_vVelocityGuess;
+      const VarLabel* d_old_wVelocityGuess;
+      const VarLabel* d_old_scalarGuess;
+
 
       // Not sure what these labels are for
       const VarLabel* d_DUPBLMLabel;
@@ -246,6 +252,9 @@ namespace Uintah {
 
 //
 // $Log$
+// Revision 1.8  2000/09/07 23:07:17  rawat
+// fixed some bugs in bc and added pressure solver using petsc
+//
 // Revision 1.7  2000/08/18 05:06:57  bbanerje
 // Added interpolation from FC Var to CC Var for velocity viz in
 // Picard.

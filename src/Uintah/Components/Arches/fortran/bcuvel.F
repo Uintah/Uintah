@@ -76,7 +76,7 @@ c*********************************************************************
       integer IST, JST, KST, IEND, JEND, KEND
       integer IBegGhost, JBegGhost, KBegGhost
       integer IEndGhost, JEndGhost, KEndGhost
-      integer idxVInlet, idxWInlet
+      integer idxUInlet, idxVInlet, idxWInlet
       integer i, j, k
 
       double precision YP, ZP, TMULT
@@ -96,8 +96,9 @@ c*********************************************************************
       iEndGhost = iend+1
       jEndGhost = jend+1
       kEndGhost = kend+1
-      idxVInlet = idxHiV(2)+1
-      idxWInlet = idxHiW(3)+1
+      idxUInlet = domHiU(1)
+      idxVInlet = domHiV(2)
+      idxWInlet = domHiW(3)
       
 c------------------------------------------------------------------ 
 c     interior intrusions
@@ -278,29 +279,44 @@ C--------------------------------------------------------------------
 C     PRESSURE BOUNDARY CONDITIONS 
 C--------------------------------------------------------------------
 C--------------------------------------------------------------------
-C     NORTH AND/OR SOUTH WALLS
+C     East AND/OR West WALLS
 C--------------------------------------------------------------------
       DO 310 K = kst, kend
-        DO 300 I = ist, iend
-           IF (PCELL(I,jEndGhost,K).EQ.PBCFLD.AND.
-     $          VV(I,idxVInlet,K).GT.0.0) THEN
-              UU(I,jEndGhost,K) = UU(I,jend,K)
-              AN(I,jend,K) = 2.0*TINY
+        DO 300 J = jst, jend
+           IF (PCELL(iEndGhost, J, K).EQ.PBCFLD) THEN
+              UU(iEndGhost+1,J,K) = UU(iEndGhost,J,K)
           END IF
-          IF (PCELL(I,jBegGhost,K).EQ.PBCFLD.AND.
-     $         VV(I,jBegGhost,K).LT.0.0) THEN
-             UU(I,jBegGhost,K) = UU(I,jst,K)
-             AS(I,jst,K) = 2.0*TINY
+          IF (PCELL(iBegGhost,J,K).EQ.PBCFLD) THEN
+             UU(iBegGhost,J,K) = UU(ist,J,K)
           END IF
   300   CONTINUE
   310 CONTINUE
 C--------------------------------------------------------------------
+C     North AND/OR South WALLS
+C--------------------------------------------------------------------
+      DO 410 K = kst, kend
+        DO 400 I = ist, iend
+          IF ((PCELL(I,jEndGhost, K).EQ.PBCFLD).AND.
+     $        (VV(I,jEndGhost+1,K).GT.0.0)) THEN
+             UU(I,jEndGhost,K) = UU(I,jend,K)
+             AN(I,jend,K) = 2.0*TINY
+          END IF
+          IF (PCELL(I,jBegGhost,K).EQ.PBCFLD.AND.
+     $         VV(I,jBegGhost,K).LT.0.0) THEN
+            UU(I,jBegGhost, K) = UU(I,jst,K)
+            AS(I,jst,K) = 2.0*TINY
+            END IF
+  400   CONTINUE
+  410 CONTINUE
+
+
+C--------------------------------------------------------------------
 C     TOP AND/OR BOTTOM WALLS
 C--------------------------------------------------------------------
-      DO 410 J = jst, jend
-        DO 400 I = ist, iend
-          IF (PCELL(I,J,kEndGhost).EQ.PBCFLD
-     $          .AND.WW(i,j,idxWInlet).GT.0.0) THEN
+      DO 510 J = jst, jend
+        DO 500 I = ist, iend
+          IF ((PCELL(I,J,kEndGhost).EQ.PBCFLD).AND.
+     $        (WW(I,J,kEndGhost+1).GT.0.0)) THEN
              UU(I,J,kEndGhost) = UU(I,J,kend)
              AT(I,J,kend) = 2.0*TINY
           END IF
@@ -309,8 +325,8 @@ C--------------------------------------------------------------------
             UU(I,J,kBegGhost) = UU(I,J,kst)
             AB(I,J,kst) = 2.0*TINY
             END IF
-  400   CONTINUE
-  410 CONTINUE
+  500   CONTINUE
+  510 CONTINUE
 
       RETURN
       END
@@ -318,6 +334,9 @@ C--------------------------------------------------------------------
 c*********************************************************************
 c
 c $Log$
+c Revision 1.6  2000/09/07 23:07:21  rawat
+c fixed some bugs in bc and added pressure solver using petsc
+c
 c Revision 1.5  2000/08/23 06:20:53  bbanerje
 c 1) Results now correct for pressure solve.
 c 2) Modified BCU, BCV, BCW to add stuff for pressure BC.
