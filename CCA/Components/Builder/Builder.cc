@@ -37,7 +37,6 @@
  *   October 2001
  *
  */
-
 #include <CCA/Components/Builder/Builder.h>
 #include <CCA/Components/Builder/BuilderWindow.h>
 #include <CCA/Components/Builder/QtUtils.h>
@@ -48,8 +47,7 @@
 
 #include <iostream>
 
-using namespace std;
-using namespace SCIRun;
+namespace SCIRun {
 
 extern "C" sci::cca::Component::pointer make_SCIRun_Builder()
 {
@@ -58,65 +56,61 @@ extern "C" sci::cca::Component::pointer make_SCIRun_Builder()
 
 Builder::Builder()
 {
-  cerr<<"Builder()"<<endl;
+  std::cerr<<"Builder()"<<std::endl;
 }
 
 Builder::~Builder()
 {
-  cerr<<"~Builder()"<<endl;
+  std::cerr<<"~Builder()"<<std::endl;
 }
 
 void Builder::setServices(const sci::cca::Services::pointer& services)
 {
-  cerr<<"Builder::setServices"<<endl;
+  std::cerr<<"Builder::setServices"<<std::endl;
   builderPort.setServices(services);
   sci::cca::TypeMap::pointer props = services->createTypeMap();
   myBuilderPort::pointer bp(&builderPort);
   services->addProvidesPort(bp,"builderPort","sci.cca.ports.BuilderPort", props);
   services->registerUsesPort("builder", "sci.cca.ports.BuilderPort", props);
-
-
+  
   sci::cca::ports::BuilderService::pointer builder 
     = pidl_cast<sci::cca::ports::BuilderService::pointer>
     (services->getPort("cca.BuilderService"));
   if(builder.isNull()){
-    cerr << "Fatal Error: Cannot find builder service\n";
-    return;
+  std::cerr << "Fatal Error: Cannot find builder service\n";
+  return;
   } 
-  //do not delelet the following line	
+  //do not delete the following line	
   //builder->registerServices(services);
-    
+  
   services->releasePort("cca.BuilderService"); 
-      
 }
 
 void myBuilderPort::setServices(const sci::cca::Services::pointer& svc)
 {
   services=svc;
-  cerr<<"BuilderPort::setServices"<<endl;
-
+  std::cerr<<"BuilderPort::setServices"<<std::endl;
+  
   QApplication* app = QtUtils::getApplication();
 #ifdef QT_THREAD_SUPPORT
   app->lock();
 #endif
-    cerr<<"creating builderwindow"<<endl;
+  std::cerr<<"creating builderwindow"<<std::endl;
   builder = new BuilderWindow(services);
-  cerr<<"builderwindow created"<<endl;
+  std::cerr<<"builderwindow created"<<std::endl;
   builder->addReference();
   builder->show();
-  cerr<<"Builderwindow is shown"<<endl;
+  std::cerr<<"Builderwindow is shown"<<std::endl;
 #ifdef QT_THREAD_SUPPORT
   app->unlock();
 #endif
 }
 
-void myBuilderPort::buildRemotePackageMenus(const  sci::cca::ports::ComponentRepository::pointer &reg,
-				    const std::string &frameworkURL)
+void myBuilderPort::buildRemotePackageMenus(const sci::cca::ports
+                                            ::ComponentRepository::pointer &reg,
+                                            const std::string &frameworkURL)
 {
   builder->buildRemotePackageMenus(reg, frameworkURL);
 }
 
-
-
-
-
+} // end namespace SCIRun

@@ -45,30 +45,53 @@
 
 #include <string>
 
-namespace SCIRun {
-  class BuilderWindow;
-  class myBuilderPort : public virtual sci::cca::ports::BuilderPort {
-  public:
-    virtual ~myBuilderPort(){}
-    virtual void setServices(const sci::cca::Services::pointer& svc);
-    virtual void buildRemotePackageMenus(const  sci::cca::ports::ComponentRepository::pointer &reg,
-				    const std::string &frameworkURL);
-  protected:
-    sci::cca::Services::pointer services;
-    BuilderWindow* builder;
-  };
+namespace SCIRun{
+class BuilderWindow;
 
-  class Builder : public sci::cca::Component {
-  public:
-    Builder();
-    virtual ~Builder();
-    virtual void setServices(const sci::cca::Services::pointer& svc);
-  private:
-    Builder(const Builder&);
-    Builder& operator=(const Builder&);
-    myBuilderPort builderPort;
+/**
+ * \class myBuilderPort
+ *
+ * An extension and implementation of sci::cca::ports::BuilderPort. 
+ */
+class myBuilderPort : public virtual sci::cca::ports::BuilderPort
+{
+public:
+  virtual ~myBuilderPort(){}
+  /** Obtain Services handle, through which the component communicates with the
+      framework. */
+  virtual void setServices(const sci::cca::Services::pointer& svc);
+  
+  /** ? */
+  virtual void buildRemotePackageMenus(const sci::cca::ports
+                                       ::ComponentRepository::pointer &reg,
+                                       const std::string &frameworkURL);
+protected:
+  sci::cca::Services::pointer services;
+  BuilderWindow* builder;
+};
 
-  };
+
+/**
+ * \class Builder
+ *
+ * ?
+ */
+class Builder : public sci::cca::Component
+{
+public:
+  Builder();
+  virtual ~Builder();
+  
+  /** Obtain Services handle, through which the component communicates with the
+      framework. */
+  virtual void setServices(const sci::cca::Services::pointer& svc);
+
+private:
+  Builder(const Builder&);
+  Builder& operator=(const Builder&);
+  myBuilderPort builderPort;  
+};
+
 } //namespace SCIRun
 
 #endif
