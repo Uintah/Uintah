@@ -11,7 +11,6 @@
 #include <Packages/Uintah/Core/Math/TntJama/tnt.h>
 #include <Core/Geometry/Vector.h>
 #include <Core/Util/Assert.h>
-#include <Core/share/share.h>
 
 #include <math.h>
 
