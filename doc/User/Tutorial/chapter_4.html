@@ -66,8 +66,8 @@
 
 	<p>The Isosurface takes a volume Field as input and outputs a surface Field or scene graph data (visualized with or without a color map).
 
-        <p><b>Figure 4.1</b> also shows the Isosurface module UI.  The
-	Iso Value slider widget determines the surface value in the
+        <p><b>Figure 4.1</b> shows the Isosurface module UI.  The
+	Iso Value slider widget determines the surface value for the
 	  incoming volume Field. Upon releasing the slider, the module executes.
 
 
@@ -87,8 +87,8 @@
         <p><b><A name="section-2">Putting the nets together</b></A>
 
         <p>Now we will add the visualization techniques from Chapter 3, a procedure that involves sharing the FieldReader and Viewer modules across the 3A, 3B, and 3C networks.  You may choose from the following two options for rebuilding the nets you saved in Chapter 3.  The first option is to manually reconstruct the nets by,
-	<ul>
-	<p><li>Repeat all of the steps for creating <b><A href="chapter_3.html#section-1">3A</b></A> in Chapter 3.</p>
+	<p><ul>
+	<li>Repeat all of the steps for creating <b><A href="chapter_3.html#section-1">3A</b></A> in Chapter 3.</p>
 	<p><li>Do the same for <b><A href="chapter_3.html#section-2">3B</b></A> and <b><A href="chapter_3.html#section-3">3C</b></A>, but use the FieldReader and
 	  Viewer from 
        3A.</ul></p>
@@ -99,17 +99,12 @@
 
 <p>Or, as the second option, you may use the File/Insert command to insert all of the nets you saved in Chapter 3, along with their settings.  You will need to destroy all but one Viewer module by right-clicking on the module and selecting the Destroy option.  To destroy a connection between two modules, right-click on the pipe connecting those modules. In addition to the Viewer, these nets will also share the FieldReader module (in the left uppermost corner of <b>Figure 4.2</b>), which loads the utahtorso-lowres-voltage.tvd.fld file.</p>
 
-<p>You can move module groupings by holding the middle-mouse button and drawing a box that contains the modules you wish to relocate. The selected modules will turn a darker gray.  You can then left-click the mouse in order to move the entire group to a new location in the NetEdit frame.</p>
-
+<p>You can move module groupings by holding the middle-mouse button and drawing a box that contains the modules you wish to relocate. The selected modules will turn a darker gray.  You can then left-click the mouse in order to move the entire group to a new location in the NetEdit frame. </p>
+<p>Be sure to save this net since you will use it again in Chapter 6.</p>
 	
-	<p>The complete network appears in
-	  <b>Figure 4.2</b>. The network is color coded to show the 
-	networks from previous chapters, 3A, 3B, and 3C. Yellow corresponds
-	to 3A, green to 3B, and red to 3C. Be sure to save this net since you will use it again in Chapter 6.
-
       </div>
 	<center>
-	<p><a href="images/figures/4_1_full.gif" target="_blank"><img height="450" width="549" src="images/figures/4_1.gif"></a><br>
+	<p><img height="450" width="549" src="images/figures/4_1.gif"><br>
 	<b>Figure 4.2 showing merged, color-coded net</b></p>
 	</center>
 	<div align="left">
