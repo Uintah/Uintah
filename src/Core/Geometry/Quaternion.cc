@@ -125,7 +125,7 @@ void Quaternion::from_matrix(const double matr[4][4]){
   }
   else {
     //finding max diag element
-    int mi=0, ia, ix, iy, iz;
+    int mi=0, ia = -1, ix = -1, iy = -1, iz = -1; // -1 quites compiler warning.
     double qtmp[4];
     for (int i=0; i<=2; i++)
       if (matr[mi][mi]<matr[i][i])
@@ -148,7 +148,6 @@ void Quaternion::from_matrix(const double matr[4][4]){
       ix=1;
       iy=3;
       iz=0;
-      
       break;
     case 2:
       ia=1;
