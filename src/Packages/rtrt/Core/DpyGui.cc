@@ -534,6 +534,13 @@ void DpyGui::button_pressed(MouseButton button,
                             const int mouse_x, const int mouse_y) {
 
   switch(button) {
+  case MouseButton1:
+  case MouseButton3:
+    {
+      last_x = mouse_x;
+      last_y = mouse_y;
+    }
+    break;
   case MouseButton2:
     {
       double xpos = 2.0*mouse_x/xres - 1.0;
@@ -552,7 +559,23 @@ void DpyGui::button_released(MouseButton /*button*/,
 void DpyGui::button_motion(MouseButton button,
                            const int mouse_x, const int mouse_y) {
   switch(button) {
-  case MouseButton2:
+  case MouseButton1: // Translate
+    {
+      double xmotion =  double(last_x-mouse_x)/xres;
+      double ymotion = -double(last_y-mouse_y)/yres;
+      // This could be more clever to translate pixel changed into
+      // real world changes.
+      double translate_speed = 1;
+      Vector translation(xmotion*translate_speed, ymotion*translate_speed, 0);
+      
+      // Perform the transform
+      rtrt_dpy->guiCam_->translate(translation);
+
+      last_x = mouse_x;
+      last_y = mouse_y;
+    }
+    break;
+  case MouseButton2: // Rotate
     {
       double xpos = 2.0*mouse_x/xres - 1.0;
       double ypos = 1.0 - 2.0*mouse_y/yres;
@@ -567,6 +590,49 @@ void DpyGui::button_motion(MouseButton button,
         rtrt_dpy->guiCam_->transform(trans, Camera::LookAt);
       }
     }
+    break;
+  case MouseButton3: 
+    if (shift_pressed) {
+      ////////////////////////////////////////
+      // Dolly
+      
+      double xmotion = -double(last_x-mouse_x)/xres;
+      double ymotion = double(last_y-mouse_y)/yres;
+      double scale;
+      // This could be come a prameter later
+      double dolly_speed = 5;
+      
+      if (Abs(xmotion)>Abs(ymotion))
+        scale=xmotion;
+      else
+        scale=ymotion;
+      scale *= dolly_speed;
+      
+      rtrt_dpy->guiCam_->dolly(scale);
+    } else {
+      ////////////////////////////////////////
+      // Zoom
+
+      double xmotion= double(last_x - mouse_x)/xres;
+      double ymotion= double(last_y - mouse_y)/yres;
+      double scale;
+      // This could be come a prameter later
+      double fov_speed = 10;
+      if (Abs(xmotion) > Abs(ymotion))
+        scale = xmotion;
+      else
+        scale = ymotion;
+      scale *= fov_speed;
+      
+      if (scale < 0)
+        scale = 1/(1-scale);
+      else
+        scale += 1;
+      
+      rtrt_dpy->guiCam_->scaleFOV(scale);
+    }
+    last_x = mouse_x;
+    last_y = mouse_y;
     break;
   } // end switch
 }
