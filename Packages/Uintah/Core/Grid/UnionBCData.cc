@@ -106,6 +106,7 @@ bool UnionBCData::inside(const Point &p) const
 
 void UnionBCData::print()
 {
+  cout << "Geometry type = " << typeid(this).name() << endl;
   for (vector<BCGeomBase*>::const_iterator i = child.begin(); i != child.end();
        ++i)
     (*i)->print();

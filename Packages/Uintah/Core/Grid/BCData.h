@@ -54,6 +54,7 @@ WARNING
     void print() const;
     bool find(const string& type) const;
     bool find(const string& bc_type,const string& bc_variable) const;
+    void combine(BCData& from);
     
    private:
       // The map is for the name of the
