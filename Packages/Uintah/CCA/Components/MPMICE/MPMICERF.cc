@@ -63,9 +63,12 @@ void MPMICE::computeRateFormPressure(const ProcessorGroup*,
     StaticArray<constCCVariable<double> > mat_vol(numALLMatls);
     StaticArray<constCCVariable<double> > rho_CC(numALLMatls);
     StaticArray<constCCVariable<double> > mass_CC(numALLMatls);
-    CCVariable<double> press_new; 
+    CCVariable<double> press_new, press_copy; 
 
+    //__________________________________
+    //  Implicit pressure calc. needs two copies of press 
     new_dw->allocateAndPut(press_new, Ilb->press_equil_CCLabel, 0,patch);
+    new_dw->allocateAndPut(press_copy,Ilb->press_CCLabel,       0,patch);
     Ghost::GhostType  gn = Ghost::None;   
    
     for (int m = 0; m < numALLMatls; m++) {
@@ -243,13 +246,15 @@ void MPMICE::computeRateFormPressure(const ProcessorGroup*,
     
     //__________________________________
     //  Update boundary conditions
+    // implicit pressure calc. needs two copies of the pressure
     for (int m = 0; m < numALLMatls; m++)   {
       setBC(matl_press[m],rho_micro[SURROUND_MAT],
            "rho_micro", "Pressure", patch, d_sharedState, 0, new_dw);
     }  
     setBC(press_new, rho_micro[SURROUND_MAT], 
           "rho_micro", "Pressure", patch, d_sharedState, 0,  new_dw);
-
+          
+    press_copy.copyData(press_new);
     //__________________________________
     // compute sp_vol_CC
     for (int m = 0; m < numALLMatls; m++)   {
