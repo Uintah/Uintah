@@ -318,6 +318,7 @@ FractureMPM::scheduleTimeAdvance(const LevelP & level,
   scheduleApplyExternalLoads(             sched, patches, matls);
   scheduleCalculateDampingRate(           sched, patches, matls);
   scheduleInterpolateToParticlesAndUpdate(sched, patches, matls);
+  scheduleDoCrackPropagation(             sched, patches, matls);
   scheduleMoveCracks(                      sched, patches, matls);
 
   sched->scheduleParticleRelocation(level, lb->pXLabel_preReloc,
@@ -896,6 +897,7 @@ void FractureMPM::scheduleInterpolateToParticlesAndUpdate(SchedulerP& sched,
   t->requires(Task::NewDW, lb->pgCodeLabel,            Ghost::None);
   t->requires(Task::OldDW, lb->pDispLabel,             Ghost::None);
   t->computes(lb->pDispLabel_preReloc);
+  t->computes(lb->pKineticEnergyDensityLabel);
 
   // The dampingCoeff (alpha) is 0.0 for standard usage, otherwise
   // it is determined by the damping rate if the artificial damping
@@ -928,6 +930,66 @@ void FractureMPM::scheduleInterpolateToParticlesAndUpdate(SchedulerP& sched,
   t->computes(lb->CenterOfMassPositionLabel);
   t->computes(lb->CenterOfMassVelocityLabel);
   sched->addTask(t, patches, matls);
+}
+
+// Do crack propgation
+void FractureMPM::scheduleDoCrackPropagation(SchedulerP& sched,
+                                    const PatchSet* patches,
+                                    const MaterialSet* matls)
+{
+  // Step 1: Calculate nodal solutions required for J Integral
+  Task* t = scinew Task("FractureMPM::GetNodalSolutions", this,
+                        &FractureMPM::GetNodalSolutions);
+  // requires and computes
+  Ghost::GhostType  gan   = Ghost::AroundNodes;
+  Ghost::GhostType  gnone = Ghost::None;
+  t->requires(Task::OldDW,lb->pXLabel,                            gan,NGP);
+  t->requires(Task::NewDW,lb->pStressLabel_preReloc,              gan,NGP);
+  t->requires(Task::NewDW,lb->pDispGradsLabel_preReloc,           gan,NGP);
+  t->requires(Task::NewDW,lb->pStrainEnergyDensityLabel_preReloc, gan,NGP);
+  t->requires(Task::NewDW,lb->pKineticEnergyDensityLabel,         gan,NGP);
+  t->requires(Task::NewDW,lb->pgCodeLabel,                        gan,NGP);
+  if(d_8or27==27)
+    t->requires(Task::OldDW, lb->pSizeLabel,                      gan,NGP);
+  t->requires(Task::NewDW,lb->gMassLabel,                         gnone);
+  t->requires(Task::NewDW,lb->GMassLabel,                         gnone);
+
+  t->computes(lb->gGridStressLabel);
+  t->computes(lb->GGridStressLabel);
+  t->computes(lb->gDispGradsLabel);
+  t->computes(lb->GDispGradsLabel);
+  t->computes(lb->gStrainEnergyDensityLabel);
+  t->computes(lb->GStrainEnergyDensityLabel);
+  t->computes(lb->gKineticEnergyDensityLabel);
+  t->computes(lb->GKineticEnergyDensityLabel);
+
+  sched->addTask(t, patches, matls);
+
+  // Step 2: Calculate J Integral
+  t = scinew Task("Crack::CalculateJIntegral", crackMethod,
+                        &Crack::CalculateJIntegral);
+  crackMethod->addComputesAndRequiresCalculateJIntegral(t, patches, matls);
+  sched->addTask(t, patches, matls);
+  
+  // Step 3: Convert J to K
+  int numMatls = d_sharedState->getNumMPMMatls();
+  t = scinew Task("FractureMPM::ConvertJToK", this, &FractureMPM::ConvertJToK);
+  for(int m = 0; m < numMatls; m++){
+    MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial(m);
+    ConstitutiveModel* cm = mpm_matl->getConstitutiveModel();
+    if(d_doErosion)
+      cm->addComputesAndRequiresConvertJToKWithErosion(t, mpm_matl, patches);
+    else 
+      cm->addComputesAndRequiresConvertJToK(t, mpm_matl, patches);
+  }
+  sched->addTask(t, patches, matls);
+
+  // Step 4: Propagate cracks
+  t = scinew Task("Crack::PropagateCracks", crackMethod,
+                        &Crack::PropagateCracks);
+  crackMethod->addComputesAndRequiresPropagateCracks(t, patches, matls);
+  sched->addTask(t, patches, matls);
+ 
 }
 
 // Move crack with center-of-mass velocity
@@ -2568,6 +2630,7 @@ void FractureMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
       ParticleVariable<long64> pids_new;
       constParticleVariable<Vector> pdisp;
       ParticleVariable<Vector> pdispnew;
+      ParticleVariable<double> pkineticEnergyDensity;
 
       // Get the arrays of grid data on which the new part. values depend
       constNCVariable<Vector> gvelocity_star, gacceleration;
@@ -2594,7 +2657,9 @@ void FractureMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
       new_dw->allocateAndPut(pids_new,     lb->pParticleIDLabel_preReloc, pset);
       new_dw->allocateAndPut(pTempNew,     lb->pTemperatureLabel_preReloc,pset);
       new_dw->allocateAndPut(pSp_volNew,   lb->pSp_volLabel_preReloc,     pset);
-     
+      new_dw->allocateAndPut(pkineticEnergyDensity,
+                                          lb->pKineticEnergyDensityLabel, pset);
+
       ParticleSubset* delset = scinew ParticleSubset
 	(pset->getParticleSet(),false,dwi,patch);
 
@@ -2726,6 +2791,9 @@ void FractureMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
 	else{
 	  rho = rho_init;
 	}
+
+        pkineticEnergyDensity[idx]=0.5*rho*pvelocitynew[idx].length2();
+
 	pmassNew[idx]        = Max(pmass[idx]*(1.    - burnFraction),0.);
 	pvolumeNew[idx]      = pmassNew[idx]/rho;
 	if(pmassNew[idx] <= d_min_part_mass ||
@@ -2803,3 +2871,160 @@ void FractureMPM::setSharedState(SimulationStateP& ssp)
 {
   d_sharedState = ssp;
 }
+
+void FractureMPM::GetNodalSolutions(const ProcessorGroup*,
+                              const PatchSubset* patches,
+                              const MaterialSubset* ,
+                              DataWarehouse* old_dw,
+                              DataWarehouse* new_dw)
+{
+  /* compute nodal solutions of stresses, displacement gradients, 
+     strain energy density and  kinetic energy density by interpolating 
+     particle's solutions to grid */
+
+  for(int p=0;p<patches->size();p++){
+    const Patch* patch = patches->get(p);
+
+    int numMPMMatls = d_sharedState->getNumMPMMatls();
+    for(int m = 0; m < numMPMMatls; m++){
+      MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial( m );
+      int dwi = mpm_matl->getDWIndex();
+
+      // Get particle's solutions
+      constParticleVariable<Short27> pgCode;
+      constParticleVariable<Point>   px;
+      constParticleVariable<Vector>  psize;
+      constParticleVariable<double>  pmass;
+      constParticleVariable<double>  pstrainenergydensity; 
+      constParticleVariable<double>  pkineticenergydensity;
+      constParticleVariable<Matrix3> pstress,pdispgrads;
+
+      ParticleSubset* pset = old_dw->getParticleSubset(dwi, patch,
+                                          Ghost::AroundNodes, NGP,
+                                                     lb->pXLabel);
+      old_dw->get(px,                   lb->pXLabel,                   pset);
+      if(d_8or27==27) old_dw->get(psize,lb->pSizeLabel,                pset);
+      new_dw->get(pgCode,               lb->pgCodeLabel,               pset);
+      new_dw->get(pkineticenergydensity,lb->pKineticEnergyDensityLabel,pset);
+
+      new_dw->get(pmass,                lb->pMassLabel_preReloc,       pset);
+      new_dw->get(pstress,              lb->pStressLabel_preReloc,     pset);
+      new_dw->get(pdispgrads,           lb->pDispGradsLabel_preReloc,  pset);
+      new_dw->get(pstrainenergydensity, 
+                               lb->pStrainEnergyDensityLabel_preReloc, pset);
+
+      // Get nodal mass
+      constNCVariable<double> gmass, Gmass;
+      new_dw->get(gmass, lb->gMassLabel, dwi, patch, Ghost::None, 0);
+      new_dw->get(Gmass, lb->GMassLabel, dwi, patch, Ghost::None, 0);
+
+      // Declare nodal variables calculated
+      NCVariable<Matrix3> ggridstress,Ggridstress;
+      NCVariable<Matrix3> gdispgrads,Gdispgrads;
+      NCVariable<double>  gstrainenergydensity,Gstrainenergydensity;
+      NCVariable<double>  gkineticenergydensity,Gkineticenergydensity;
+
+      new_dw->allocateAndPut(ggridstress, lb->gGridStressLabel,dwi,patch);
+      new_dw->allocateAndPut(Ggridstress, lb->GGridStressLabel,dwi,patch);
+      new_dw->allocateAndPut(gdispgrads,  lb->gDispGradsLabel, dwi,patch);
+      new_dw->allocateAndPut(Gdispgrads,  lb->GDispGradsLabel, dwi,patch);
+      new_dw->allocateAndPut(gstrainenergydensity,
+                                lb->gStrainEnergyDensityLabel, dwi,patch);
+      new_dw->allocateAndPut(Gstrainenergydensity,  
+                                lb->GStrainEnergyDensityLabel, dwi,patch);
+      new_dw->allocateAndPut(gkineticenergydensity,
+                                lb->gKineticEnergyDensityLabel,dwi,patch);
+      new_dw->allocateAndPut(Gkineticenergydensity,  
+                                lb->GKineticEnergyDensityLabel,dwi,patch);
+
+      Matrix3 zero_matrix3=Matrix3(0.,0.,0.,0.,0.,0.,0.,0.,0.); 
+      ggridstress.initialize(zero_matrix3);
+      Ggridstress.initialize(zero_matrix3);
+      gdispgrads.initialize(zero_matrix3);
+      Gdispgrads.initialize(zero_matrix3);
+      gstrainenergydensity.initialize(0.);
+      Gstrainenergydensity.initialize(0.);
+      gkineticenergydensity.initialize(0.);
+      Gkineticenergydensity.initialize(0.);
+
+      // Get the particle erosion information
+      constParticleVariable<double> pErosion;
+      if (d_doErosion) {
+        old_dw->get(pErosion, lb->pErosionLabel, pset);
+      } else {
+        setParticleDefaultWithTemp(pErosion, pset, new_dw, 1.0);
+      }
+
+      IntVector ni[MAX_BASIS];
+      double S[MAX_BASIS];
+
+      for (ParticleSubset::iterator iter = pset->begin();
+                             iter != pset->end(); iter++) {
+        particleIndex idx = *iter;
+
+        // Get the node indices that surround the cell
+        if(d_8or27==8){
+          patch->findCellAndWeights(px[idx], ni, S);
+        }
+        else if(d_8or27==27){
+          patch->findCellAndWeights27(px[idx], ni, S, psize[idx]);
+        }
+
+        for (int k = 0; k < d_8or27; k++){
+          if(patch->containsNode(ni[k])){
+            S[k] *= pErosion[idx];
+            double pmassTimesS=pmass[idx]*S[k];
+            if(pgCode[idx][k]==1) {
+              ggridstress[ni[k]] += pstress[idx]    * pmassTimesS;
+              gdispgrads[ni[k]]  += pdispgrads[idx] * pmassTimesS;
+              gstrainenergydensity[ni[k]]  += pstrainenergydensity[idx] * 
+                                                      pmassTimesS;
+              gkineticenergydensity[ni[k]] += pkineticenergydensity[idx] * 
+                                                      pmassTimesS;
+            }
+            else if(pgCode[idx][k]==2) {
+              Ggridstress[ni[k]] += pstress[idx]    * pmassTimesS;
+              Gdispgrads[ni[k]]  += pdispgrads[idx] * pmassTimesS;
+              Gstrainenergydensity[ni[k]]  += pstrainenergydensity[idx] *
+                                                      pmassTimesS;
+              Gkineticenergydensity[ni[k]] += pkineticenergydensity[idx] * 
+                                                      pmassTimesS;
+            }
+          }
+        }
+      }
+
+      for(NodeIterator iter = patch->getNodeIterator(); !iter.done(); iter++) {
+        IntVector c = *iter;
+        // for primary field
+        ggridstress[c]           /= gmass[c]; 
+        gdispgrads[c]            /= gmass[c];
+        gstrainenergydensity[c]  /= gmass[c];
+        gkineticenergydensity[c] /= gmass[c];
+        // for additional field
+        Ggridstress[c]           /= Gmass[c];
+        Gdispgrads[c]            /= Gmass[c];
+        Gstrainenergydensity[c]  /= Gmass[c];
+        Gkineticenergydensity[c] /= Gmass[c];
+      }
+    }
+  }
+}
+
+void FractureMPM::ConvertJToK(const ProcessorGroup*,
+                              const PatchSubset* patches,
+                              const MaterialSubset* ,
+                              DataWarehouse* old_dw,
+                              DataWarehouse* new_dw)
+{
+  // Convert J Integrals to stress intensity factors
+  for(int m = 0; m < d_sharedState->getNumMPMMatls(); m++){
+    MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial(m);
+    ConstitutiveModel* cm = mpm_matl->getConstitutiveModel();
+    if(d_doErosion) 
+      cm->ConvertJToKWithErosion(patches, mpm_matl, old_dw, new_dw);
+    else 
+      cm->ConvertJToK(patches, mpm_matl, old_dw, new_dw);
+  } // End of loop over matls
+}
+
