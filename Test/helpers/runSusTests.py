@@ -52,8 +52,11 @@ def runSusTests(argv, TESTS, algo, callback = nullCallback):
   
   startpath = getcwd()
 
+  # whether or not to display links on output
+  environ['outputlinks']="0"
+  
 # If run from startTester, tell it to output logs in web dir
-# otherwise, save it in the build
+# otherwise, save it in the build, and display links
   try:
 
 # if webpath exists, use that, otherwise, use BUILDROOT/mode
@@ -61,6 +64,7 @@ def runSusTests(argv, TESTS, algo, callback = nullCallback):
     weboutputpath = "%s-%s" % (environ['WEBLOG'], mode)
     try:
       # make outputpath/dbg or opt dirs
+      environ['outputlinks'] ="1"
       mkdir(outputpath)
     except Exception:
       pass
@@ -268,6 +272,16 @@ def runSusTest(test, susdir, inputxml, compare_root, algo, mode, max_parallelism
     except Exception:
       pass
 
+  # messages to print
+  if environ['outputlinks'] == "1":
+    sus_log_msg = '\t<A href=\"%s/sus.log.txt\">See sus.log</a> for details' % (logpath)
+    compare_msg = '\t<A href=\"%s/compare_sus_runs.log.txt\">See compare_sus_runs.log</A> for more comparison information.' % (logpath)
+    memory_msg  = '\t<A href=\"%s/mem_leak_check.log.txt\">See mem_leak_check.log</a> for more comparison information.' % (logpath)
+  else:
+    sus_log_msg = '\tSee %s/sus.log.txt for details' % (logpath)
+    compare_msg = '\tSee %s/compare_sus_runs.log.txt for more comparison information.' % (logpath)
+    memory_msg  = '\tSee %s/mem_leak_check.log.txt for more comparison information.' % (logpath)
+      
   rc = system("nice %s %s > sus.log.txt 2>&1" % (command, susinput))
   print "Command Line: %s %s" % (command, susinput)
 
@@ -278,7 +292,7 @@ def runSusTest(test, susdir, inputxml, compare_root, algo, mode, max_parallelism
     print "\t*** Test %s failed with code %d" % (testname, rc)
     if do_restart == "yes":
 	print "\t\tMake sure the problem makes checkpoints before finishing"
-    print '\t<A href=\"%s/sus.log.txt\">See sus.log</a> for details' % (logpath)
+    print sus_log_msg
     return 1
   else:
     # determine path of replace_msg in 2 places to not have 2 different msgs.
@@ -298,7 +312,7 @@ def runSusTest(test, susdir, inputxml, compare_root, algo, mode, max_parallelism
     if cu_rc != 0:
 	if cu_rc == 5 * 256:
      	    print "\t*** Warning, %s has changed or has different defaults.\n\tYou must update the gold standard." % (input(test))
-    	    print '\t<A href=\"%s/compare_sus_runs.log.txt\">See compare_sus_runs.log</A> for more comparison information.' % (logpath)
+    	    print compare_msg
  	    print "%s" % replace_msg
 	elif cu_rc == 10 * 256:
      	    print "\t*** Warning, %s has changed or has different defaults.\n\tYou must update the gold standard." % (input(test))
@@ -306,7 +320,7 @@ def runSusTest(test, susdir, inputxml, compare_root, algo, mode, max_parallelism
  	    print "%s" % replace_msg
 	elif cu_rc == 1 * 256:
     	    print "\t*** Warning, test %s failed uda comparison with error code %s" % (testname, cu_rc)
-            print '\t<A href=\"%s/compare_sus_runs.log.txt\">See compare_sus_runs.log</a> for more comparison information.' % (logpath)
+            print compare_msg
 	    if do_restart != "yes":
  	    	print "%s" % replace_msg
 	elif cu_rc == 65280: # (-1 return code)
@@ -332,13 +346,13 @@ def runSusTest(test, susdir, inputxml, compare_root, algo, mode, max_parallelism
 	    print "\t* Warning, no malloc_stats file created.  No memory leak test performed."
 	elif rc == 256:
 	    print "\t*** Warning, test %s failed memory leak test." % (testname)
-            print '\t<A href=\"%s/mem_leak_check.log.txt\">See mem_leak_check.log</a> for more comparison information.' % (logpath)
+            print memory_msg
 	    return 2
 	elif rc == 2*256:
 	    print "\t*** Warning, test %s failed memory highwater test." % (testname)
 	    if short_message != "":
 		print "\t%s" % (short_message)
-            print '\t<A href=\"%s/mem_leak_check.log.txt\">See mem_leak_check.log</a> for more comparison information.' % (logpath)
+            print memory_msg
  	    print "%s" % replace_msg
 	    return 2
 	else:
