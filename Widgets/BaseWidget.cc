@@ -16,19 +16,16 @@
 
 
 BaseWidget::BaseWidget( Module* module,
-			const Index vars, const Index cons,
-			const Index geoms, const Index mats )
+		       const Index NumVariables,
+		       const Index NumConstraints,
+		       const Index NumGeometries,
+		       const Index NumMaterials )
+: NumVariables(NumVariables), NumConstraints(NumConstraints),
+  NumGeometries(NumGeometries), NumMaterials(NumMaterials),
+  constraints(NumConstraints), variables(NumVariables),
+  geometries(NumGeometries), materials(NumMaterials),
+  module(module)
 {
-   this->module = module;
-   NumVariables = vars;
-   NumConstraints = cons;
-   NumGeometries = geoms;
-   NumMaterials = mats;
-
-   constraints = new BaseConstraint*[NumConstraints];
-   variables = new Variable*[NumVariables];
-   geometries = new GeomObj*[NumGeometries];
-   materials = new MaterialProp*[NumMaterials];
 }
 
 
@@ -39,22 +36,18 @@ BaseWidget::~BaseWidget()
    for (index = 0; index < NumVariables; index++) {
       delete variables[index];
    }
-   delete variables;
    
    for (index = 0; index < NumConstraints; index++) {
       delete constraints[index];
    }
-   delete constraints;
 
    for (index = 0; index < NumGeometries; index++) {
       delete geometries[index];
    }
-   delete geometries;
 
    for (index = 0; index < NumMaterials; index++) {
       delete materials[index];
    }
-   delete materials;
 }
 
 
