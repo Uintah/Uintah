@@ -29,9 +29,8 @@
 #include <Core/Persistent/PersistentSTL.h>
 #include <Core/Geometry/Tensor.h>
 #include <Core/Geometry/Vector.h>
-#include <Core/Datatypes/QuadraticLatVolMesh.h>
-#include <Core/Datatypes/QuadraticTetVolField.h>
 #include <Core/Datatypes/QuadraticLatVolField.h>
+#include <Core/Datatypes/QuadraticTetVolField.h>
 
 #if defined(__sgi) && !defined(__GNUC__) && (_MIPS_SIM != _MIPS_SIM_ABI32)
 /*
