@@ -106,7 +106,7 @@ void SerialMPM::problemSetup(const ProblemSpecP& prob_spec, GridP& grid,
      lb->registerPermanentParticleState(m,lb->pExternalForceLabel,
 					lb->pExternalForceLabel_preReloc);
 
-     if(mpm_matl->getBurnModel()->getBurns()){
+     if(mpm_matl->getHEBurnModel()->getBurns()){
        //     lb->registerPermanentParticleState(m,lb->pSurfLabel,
        //lb->pSurfLabel_preReloc);
        lb->registerPermanentParticleState(m,lb->pIsIgnitedLabel,
@@ -805,7 +805,7 @@ void SerialMPM::scheduleComputeMassRate(const Patch* patch,
                          this, &SerialMPM::computeMassRate);
   for(int m = 0; m < numMatls; m++){
     MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial(m);
-    HEBurn* heb = mpm_matl->getBurnModel();
+    HEBurn* heb = mpm_matl->getHEBurnModel();
     heb->addComputesAndRequires(t, mpm_matl, patch, old_dw, new_dw);
     if(!d_burns){
       d_burns=heb->getBurns();
@@ -946,7 +946,7 @@ void SerialMPM::actuallyInitialize(const ProcessorGroup*,
 
        mpm_matl->getConstitutiveModel()->initializeCMData(patch,
 						mpm_matl, new_dw);
-       mpm_matl->getBurnModel()->initializeBurnModelData(patch,
+       mpm_matl->getHEBurnModel()->initializeBurnModelData(patch,
 						mpm_matl, new_dw);
        if(mpm_matl->getFractureModel()) {
 	 mpm_matl->getFractureModel()->initializeFractureModelData( patch,
@@ -1226,7 +1226,7 @@ void SerialMPM::computeMassRate(const ProcessorGroup*,
 {
    for(int m = 0; m < d_sharedState->getNumMPMMatls(); m++){
       MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial(m);
-      HEBurn* heb = mpm_matl->getBurnModel();
+      HEBurn* heb = mpm_matl->getHEBurnModel();
       heb->computeMassRate(patch, mpm_matl, old_dw, new_dw);
    }
 }

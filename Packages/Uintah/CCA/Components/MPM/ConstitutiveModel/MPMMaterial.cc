@@ -19,6 +19,8 @@
 #include <Packages/Uintah/CCA/Components/MPM/Util/Matrix3.h>
 #include <Packages/Uintah/CCA/Components/MPM/Burn/HEBurnFactory.h>
 #include <Packages/Uintah/CCA/Components/MPM/Burn/HEBurn.h>
+#include <Packages/Uintah/CCA/Components/MPMICE/Combustion/BurnFactory.h>
+#include <Packages/Uintah/CCA/Components/MPMICE/Combustion/Burn.h>
 #include <Packages/Uintah/CCA/Components/MPM/Fracture/FractureFactory.h>
 #include <Packages/Uintah/CCA/Components/MPM/Fracture/Fracture.h>
 #include <Packages/Uintah/CCA/Components/MPM/MPMLabel.h>
@@ -56,9 +58,11 @@ MPMMaterial::MPMMaterial(ProblemSpecP& ps)
    if(!d_cm)
       throw ParameterNotFound("No constitutive model");
 
-   d_burn = HEBurnFactory::create(ps);
-   if (!d_burn)
-	throw ParameterNotFound("No burn model");
+   d_he_burn = HEBurnFactory::create(ps);
+   if (!d_he_burn)
+	throw ParameterNotFound("No HE burn model");
+
+   d_burn = BurnFactory::create(ps);
 	
    d_fracture = FractureFactory::create(ps);
 
@@ -104,6 +108,7 @@ MPMMaterial::~MPMMaterial()
 
   delete d_cm;
   delete lb;
+  delete d_he_burn;
   delete d_burn;
 
   for (int i = 0; i<(int)d_geom_objs.size(); i++) {
@@ -121,7 +126,15 @@ ConstitutiveModel * MPMMaterial::getConstitutiveModel() const
   return d_cm;
 }
 
-HEBurn * MPMMaterial::getBurnModel() const
+HEBurn * MPMMaterial::getHEBurnModel() const
+{
+  // Return the pointer to the burn model associated
+  // with this material
+
+  return d_he_burn;
+}
+
+Burn * MPMMaterial::getBurnModel()
 {
   // Return the pointer to the burn model associated
   // with this material
