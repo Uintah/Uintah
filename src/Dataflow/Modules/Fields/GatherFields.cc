@@ -50,6 +50,7 @@
 namespace SCIRun {
 
 class PSECORESHARE GatherFields : public Module {
+  GuiInt gui_force_pointcloud_;
 public:
   GatherFields(GuiContext* ctx);
   virtual ~GatherFields();
@@ -58,7 +59,8 @@ public:
 
 DECLARE_MAKER(GatherFields)
 GatherFields::GatherFields(GuiContext* ctx)
-  : Module("GatherFields", ctx, Filter, "FieldsCreate", "SCIRun")
+  : Module("GatherFields", ctx, Filter, "FieldsCreate", "SCIRun"),
+    gui_force_pointcloud_(ctx->subVar("force-pointcloud"))
 {
 }
 
@@ -134,7 +136,8 @@ GatherFields::execute()
     }
 
     if (fields[0]->mesh()->is_editable() &&
-	(same_field_kind || same_mesh_kind))
+	(same_field_kind || same_mesh_kind) &&
+	!gui_force_pointcloud_.get())
     {
       bool copy_data = same_data_location;
       if (!same_data_location)
