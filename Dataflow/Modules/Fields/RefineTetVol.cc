@@ -53,12 +53,12 @@ public:
   virtual void execute();
 
 private:
-  void delete_orphans(set<int> &removed_cells);
+  void delete_orphans(set<unsigned int> &removed_cells);
   void subdivide_to_level(unsigned);
   void locally_refine(TetVolField<int> *control);
 
   void subdivide(TetVolMesh::Cell::index_type ci, 
-		 set<int, less<int> >&removed_cells);
+		 set<unsigned int, less<unsigned int> >&removed_cells);
 
   int                     input_generation_;
   TetVolField<int>        *subdivided_;
@@ -166,7 +166,8 @@ RefineTetVol::execute()
     execution_mode_.reset();
     cell_index_.reset();
     if (execution_mode_.get() == "sub_one" && cell_index_.get() != -1) {
-      set<int, less<int> > rem; // Could delete cells so cache those indecies.
+      // Could delete cells so cache those indices.
+      set<unsigned int, less<unsigned int> > rem;
       subdivide(cell_index_.get(), rem);
       delete_orphans(rem);
     } else if (cell_index_.get() != -1) {
@@ -195,11 +196,11 @@ RefineTetVol::execute()
 }
 
 void 
-RefineTetVol::delete_orphans(set<int> &rem)
+RefineTetVol::delete_orphans(set<unsigned int> &rem)
 {
   if (rem.empty()) return;
   // Delete the largest index first.
-  set<int, less<int> >::reverse_iterator iter = rem.rbegin();
+  set<unsigned int, less<unsigned int> >::reverse_iterator iter = rem.rbegin();
   while (iter != rem.rend()) {
     // clean up levels list
     TetVolMesh::Cell::index_type ci = *iter++;
@@ -219,7 +220,7 @@ is_even(unsigned v) {
 // recursive call..
 void 
 RefineTetVol::subdivide(TetVolMesh::Cell::index_type ci, 
-			set<int, less<int> > &removed_cells) 
+			set<unsigned int, less<unsigned int> > &removed_cells) 
 {
   if (! subdivided_) return;
   if (removed_cells.count(ci)) {
@@ -360,7 +361,7 @@ void
 RefineTetVol::subdivide_to_level(unsigned target_level)
 {  
   TetVolField<int>::mesh_handle_type mh = subdivided_->get_typed_mesh();
-  set<int> removed;
+  set<unsigned int> removed;
   bool done = false;
   while(! done) {
     done = true;
@@ -385,7 +386,7 @@ RefineTetVol::locally_refine(TetVolField<int> *control)
 {  
   TetVolField<int>::mesh_handle_type cnt = control->get_typed_mesh();
   TetVolField<int>::mesh_handle_type mh = subdivided_->get_typed_mesh();
-  set<int> removed;
+  set<unsigned int> removed;
   
   TetVolMesh::Cell::size_type num_tets;
   cnt->size(num_tets);
