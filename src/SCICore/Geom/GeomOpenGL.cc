@@ -1686,10 +1686,15 @@ void GeomLine::draw(DrawInfoOpenGL* di, Material* matl, double)
 {
     if(!pre_draw(di, matl, 0)) return;
     di->polycount++;
+    // Set line width. Set it 
+    glLineWidth(d_lineWidth);
     glBegin(GL_LINE_STRIP);
     glVertex3d(p1.x(), p1.y(), p1.z());
     glVertex3d(p2.x(), p2.y(), p2.z());
     glEnd();
+    // HACK set line width back to default
+    // our scenegraph needs more graceful control of such state.
+    glLineWidth(1.0);
     post_draw(di);
 }
 
@@ -4205,6 +4210,9 @@ void GeomSticky::draw(DrawInfoOpenGL* di, Material* matl, double t) {
 
 //
 // $Log$
+// Revision 1.19.2.1  2000/09/22 23:32:42  mcole
+// added support for local line width control
+//
 // Revision 1.19  2000/05/31 21:54:00  kuzimmer
 // Changes to make the ColorMapKey Module work properly
 //

@@ -51,13 +51,19 @@ void GeomLine::operator delete(void* rp, size_t)
     Line_alloc.free(rp);
 }
 
-GeomLine::GeomLine(const Point& p1, const Point& p2)
-: GeomObj(), p1(p1), p2(p2)
+GeomLine::GeomLine(const Point& p1, const Point& p2) : 
+  GeomObj(), 
+  p1(p1), 
+  p2(p2),
+  d_lineWidth(1.0)
 {
 }
 
-GeomLine::GeomLine(const GeomLine& copy)
-: GeomObj(), p1(copy.p1), p2(copy.p2)
+GeomLine::GeomLine(const GeomLine& copy) : 
+  GeomObj(), 
+  p1(copy.p1), 
+  p2(copy.p2),
+  d_lineWidth(1.0)
 {
 }
 
@@ -73,6 +79,12 @@ void GeomLine::get_bounds(BBox& bb)
 {
     bb.extend(p1);
     bb.extend(p2);
+}
+
+void
+GeomLine::setLineWidth(float val) 
+{
+  d_lineWidth = val;
 }
 
 #define GEOMLINE_VERSION 1
@@ -398,6 +410,9 @@ void TexGeomLines::SortVecs()
 
 //
 // $Log$
+// Revision 1.8.2.1  2000/09/22 23:32:42  mcole
+// added support for local line width control
+//
 // Revision 1.8  1999/11/02 06:06:14  moulding
 // added a #ifdef for win32 to quiet the C++ compiler.  This change
 // relates to bug # 61 in csafe's bugzilla.
