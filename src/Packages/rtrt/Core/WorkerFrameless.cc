@@ -337,12 +337,12 @@
 	barrier->wait(dpy->get_num_procs()+1);
       }
 
-      int hotSpotMode = scene->getHotSpotsMode();
+      int hotSpotsMode = dpy->rtrt_engine->hotSpotsMode;
 
       if (!scene->get_rtrt_engine()->do_jitter) {
 	
 	double stime = 0;
-	if(hotSpotMode)
+	if(hotSpotsMode)
 	  stime=SCIRun::Time::currentSeconds();
 	for(int ci=0;ci<xpos.size();ci++) { 
 	  Ray ray;
@@ -375,8 +375,8 @@
 	    wc = lastC[ci]*(1-alpha) + result*alpha;
 	    lastC[ci] = wc;
 	    
-	    if( (hotSpotMode == 1) ||
-		(hotSpotMode == 2 && (x < xres/2) ) ){
+	    if( (hotSpotsMode == RTRT::HotSpotsOn) ||
+		(hotSpotsMode == RTRT::HotSpotsHalfScreen && (x < xres/2) ) ){
 	      double etime=SCIRun::Time::currentSeconds();
 	      double t=etime-stime;	
 	      stime=etime;
@@ -389,8 +389,8 @@
 	    wc = wc + result*0.5;
 	    lastC[ci] = wc;
 	    (*clrs[wcI&1])[ci] = result;
-	    if( (hotSpotMode == 1) ||
-		(hotSpotMode == 2 && (x < xres/2) ) ){
+	    if( (hotSpotsMode == RTRT::HotSpotsOn) ||
+		(hotSpotsMode == RTRT::HotSpotsHalfScreen && (x < xres/2) ) ){
 		double etime=SCIRun::Time::currentSeconds();
 		double t=etime-stime;	
 		stime=etime;
@@ -451,7 +451,7 @@
 	  double yib=jPosY[ji+2]+yoffset;
 	  int oji=(ji+1)&1;
 	  double stime = 0;
-	  if( hotSpotMode )
+	  if( hotSpotsMode )
 	    stime = SCIRun::Time::currentSeconds();
 	  for(int ci=0;ci<xpos.size();ci++) { 
 	    Ray ray;
@@ -486,8 +486,8 @@
 	      wc = lastC[ci]*(1-alpha) + result*alpha;
 	      lastC[ci] = wc;
 	    
-	      if( (hotSpotMode == 1) ||
-		  (hotSpotMode == 2 && (x < xres/2) ) ){
+	    if( (hotSpotsMode == RTRT::HotSpotsOn) ||
+		(hotSpotsMode == RTRT::HotSpotsHalfScreen && (x < xres/2) ) ){
 		double etime=SCIRun::Time::currentSeconds();
 		double t=etime-stime;	
 		stime=etime;
@@ -504,8 +504,9 @@
 	      Color sc = (*clrs[oji])[ci]*0.5 + (result + resultb)*0.25;
 	      //lastCs[ci] = sc;
 	      (*clrs[ji])[ci] = (result + resultb)*0.5;
-	      if( (hotSpotMode == 1) ||
-		  (hotSpotMode == 2 && (x < xres/2) ) ){
+              if( (hotSpotsMode == RTRT::HotSpotsOn) ||
+                  (hotSpotsMode == RTRT::HotSpotsHalfScreen &&
+                   (x < xres/2) ) ){
 		double etime=SCIRun::Time::currentSeconds();
 		double t=etime-stime;	
 		stime=etime;
@@ -522,8 +523,9 @@
 		Color wc = lastC[ci]*(1-alpha) + sc*alpha;
 		lastC[ci] = wc;
 		(*clrs[wcI&3])[ci] = result;
-		if( (hotSpotMode == 1) ||
-		    (hotSpotMode == 2 && (x < xres/2) ) ){
+                if( (hotSpotsMode == RTRT::HotSpotsOn) ||
+                    (hotSpotsMode == RTRT::HotSpotsHalfScreen &&
+                     (x < xres/2) ) ){
 		  double etime=SCIRun::Time::currentSeconds();
 		  double t=etime-stime;	
 		  stime=etime;
@@ -542,8 +544,9 @@
 		lastC[ci] = result;
 		(*clrs[wcI&3])[ci] = result;
 
-		if( (hotSpotMode == 1) ||
-		    (hotSpotMode == 2 && (x < xres/2) ) ){
+                if( (hotSpotsMode == RTRT::HotSpotsOn) ||
+                    (hotSpotsMode == RTRT::HotSpotsHalfScreen &&
+                     (x < xres/2) ) ){
 		  double etime=SCIRun::Time::currentSeconds();
 		  double t=etime-stime;	
 		  stime=etime;

@@ -72,6 +72,7 @@
 #include <Packages/rtrt/Core/Stealth.h>
 #include <Packages/rtrt/Core/PerProcessorContext.h>
 #include <Packages/rtrt/Core/Image.h>
+#include <Packages/rtrt/Core/rtrt.h>
 
 #include <Packages/rtrt/Core/Ball.h>
 #include <Packages/rtrt/Core/BallMath.h>
@@ -405,9 +406,9 @@ Dpy::checkGuiFlags()
 
   // Display image as a "transmission".  Ie: turn off every other scan line.
   if( turnOnTransmissionMode_ ){
-    scene->transmissionMode_ = true;
+    rtrt_engine->frameMode = RTRT::OddRows;
   } else {
-    scene->transmissionMode_ = false;
+    rtrt_engine->frameMode = RTRT::FullFrame;
   }
 
   if( showLights_ && !lightsShowing_ ){
