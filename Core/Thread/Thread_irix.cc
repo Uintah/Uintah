@@ -1231,7 +1231,7 @@ SCICore::Thread::ConditionVariable::timedWait(Mutex& m, const struct timespec* a
 		timeout.tv_sec = abstime->tv_sec - now.tv_sec;
 		timeout.tv_usec = abstime->tv_nsec/1000 - now.tv_usec;
 		if(timeout.tv_usec < 0){
-		    int secs = (-timeout.tv_usec)/1000000+1;
+		    long secs = (-timeout.tv_usec)/1000000+1;
 		    timeout.tv_sec-=secs;
 		    timeout.tv_usec+=secs*1000000;
 		}
@@ -1324,6 +1324,11 @@ SCICore::Thread::ConditionVariable::conditionBroadcast()
 
 //
 // $Log$
+// Revision 1.21  2000/03/23 10:21:27  sparker
+// Use libexc to print out stack straces on the SGI
+// Added "name" method to ThreadError to match exception base class
+// Fixed a compiler warning in Thread_irix.cc
+//
 // Revision 1.20  2000/03/08 18:22:34  dahart
 // Backed off of page 0 protection due to weird crash at program exit
 //
