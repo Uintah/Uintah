@@ -46,6 +46,7 @@
 @DEF_EXC@
 
 @DEF_MDSPLUS@
+@DEF_PLPLOT@
 @DEF_HASHMAP@
 
 /* MPI++ on SGI has a bad interaction with <iostream>.  This prevents
