@@ -91,7 +91,7 @@ public:
 };
 
 
-template <class FOUT>
+template <class FIELD>
 class ManageFieldMeshAlgoInsertT : public ManageFieldMeshAlgoInsert
 {
 public:
@@ -101,13 +101,31 @@ public:
 };
 
 
-template <class FOUT>
+template <class FIELD>
 FieldHandle
-ManageFieldMeshAlgoInsertT<FOUT>::execute(ProgressReporter *mod,
-					  FieldHandle mesh,
-					  MatrixHandle matrix)
+ManageFieldMeshAlgoInsertT<FIELD>::execute(ProgressReporter *mod,
+					   FieldHandle src,
+					   MatrixHandle matrix)
 {
-  return 0;
+  FIELD *copy = dynamic_cast<FIELD *>(src->clone());
+  copy->mesh_detach();
+  typename FIELD::mesh_handle_type mesh = copy->get_typed_mesh();
+
+  unsigned int index = 0;
+  typename FIELD::mesh_type::Node::iterator itr, eitr;
+  mesh->begin(itr);
+  mesh->end(eitr);
+  while (itr != eitr)
+  {
+    const Point p(matrix->get(index, 0),
+		  matrix->get(index, 1),
+		  matrix->get(index, 2));
+    mesh->set_point(p, *itr);
+    ++index;
+    ++itr;
+  }
+
+  return FieldHandle(copy);
 }
 
 
