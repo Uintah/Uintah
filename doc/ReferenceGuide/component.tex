@@ -49,6 +49,7 @@
 \newcommand{\icode}[1]{\texttt{#1}}
 \newcommand{\xmlvalidurl}{http://www.stg.brown.edu/service/xmlvalid/}
 \newcommand{\dtdurl}{http://www.sci.utah.edu/scirun\_docs/doc/ReferenceGuide/component.dtd}
+\newcommand{\thisdocurl}{http://www.sci.utah.edu/scirun\_docs/doc/ReferenceGuide/component.html}
 \newcommand{\rgpath}{<top-of-cvs-tree>/doc/ReferenceGuide}
 \newcommand{\dtdcvspath}{\rgpath{}/component.dtd}
 \newcommand{\componentexpath}{\rgpath{}/component-ex.xml}
@@ -95,6 +96,14 @@
 This section introduces the component specification document.  You should
 have already read \htmladdnormallinkfoot{\doctitle{Module Design/Implementation Procedure}}{\specprocurl}
 
+\begin{latexonly}
+  An online version of this document is available\footnote{\thisdocurl}.
+\end{latexonly}
+\begin{htmlonly}
+  A postscript verison of this document can be found, relative to the top
+  of your \sr\ \cvs\ tree, in \filename{doc/ReferenceGuide/component.ps}.
+\end{htmlonly}
+
 \subsection{\SUBSECwhySpec}
 \label{\SUBSECwhySpec}
 
@@ -102,15 +111,16 @@ Writing the \xml\ component specification is one of the first steps in the
 design and implementation of a component.
 
 The \xml\ component specification documents the use, design,
-implementation, and testing of a \sr\ component.  It also serves as data for
-applications and databases.  For example:
+implementation, and testing of a \sr\ component.  
+
+It also serves as data for applications and databases.  For example:
 
 \begin{itemize}
-\item Documention (html and pdf forms) for component users and developers
+\item Documentation (html and pdf forms) for component users and developers
   will be generated from the component specification.
 
 \item The collection of all component specifications will be part of a
-  searchable database.
+  search-able database.
   
 \item The component specification will help drive the component code generation
   process.
@@ -118,12 +128,12 @@ applications and databases.  For example:
 \item The component specification may drive an automated testing process.
 \end{itemize}
 
-Component specifications are written in a special markup language.  This
-language (call it the component specification markup language if you
-like) is in turn formulated using the \dfn{eXtensible Markup Language}
+Component specifications are written in a special mark-up language.  This
+language (call it the component specification mark-up language if you
+like) is in turn formulated using the \dfn{eXtensible Mark-up Language}
 (\xml).
 
-\Note{Components that are not accomponied by a valid and complete
+\Note{Components that are not accompanied by a valid and complete
   specification document will not be incorporated into official
   releases of the \pse\ software.}
 
@@ -143,11 +153,11 @@ the following goals:
   completeness) component specifications.
 \end{description}
 
-The component specification markup language is similar in concept to HTML but
+The component specification mark-up language is similar in concept to HTML but
 has a different (and much smaller) set of tags and a simpler and more
 regular set of document composition rules.
 Section~\sechyperref{\SECcontent} describes
-the component specification markup language in detail.
+the component specification mark-up language in detail.
 
 \subsection{\SUBSECwhatDtd}
 \label{\SUBSECwhatDtd}
@@ -156,7 +166,7 @@ A \dfn{Document Type Definition} (\dtd) defines a set of elements (and
 element attributes), and the way they must be used in order to produce a
 valid \xml\ document.
 
-The component specification's \dtd\ can be found here (relative to the top
+The component specification \dtd\ can be found here (relative to the top
 of your cvs tree):
 
 \begin{verbatim}
@@ -175,7 +185,7 @@ information.
 \section{\SECcontent}
 \label{\SECcontent}
 
-This section describes the component specification markup language in
+This section describes the component specification mark-up language in
 detail.
 
 \subsection{\SUBSECrules}
@@ -207,7 +217,7 @@ tree.
   
 \item Every element must be delimited with a start-tag and an end-tag.
   Tags are enclosed in angle brackets.  This means you may not use the
-  literal form of the characters \keyboard{\la} and \keyboard{\ra} in your
+  literal forms of the characters \keyboard{\la} and \keyboard{\ra} in your
   elements' content.  Instead you must type \keyboard{\&lt;} and
   \keyboard{\&gt;} respectively.
 
@@ -255,7 +265,7 @@ element, which is used in several contexts, is not described in detail here
         \elementitem{/author}
       \end{description}
       \elementitem{/authors}
-      \elementitem{summary} Short (1 or 2 sentance) summary of component's function.
+      \elementitem{summary} Short (1 or 2 sentence) summary of component's function.
       \elementitem{/summary}
       \elementitem{description} Comprehensive description of component's
       function.  The \element{description} element is a mini-documentation
@@ -271,7 +281,7 @@ element, which is used in several contexts, is not described in detail here
     \elementitem{io} Component's inputs and outputs.  Contains 2 elements,
     \element{inputs} followed by \element{outputs}.
     \begin{description}
-      \elementitem{inputs} Describes the components's inputs. Inputs may
+      \elementitem{inputs} Describes the component's inputs. Inputs may
       come from a port, a file, or a device.  Zero or more \element{port}
       elements are used to describe inputs from ports.  Zero or more
       \element{file} elements are used to describe inputs from files.  Zero
@@ -280,14 +290,14 @@ element, which is used in several contexts, is not described in detail here
       \element{file} element or 1 \element{device} element.
       \begin{description}
         \elementitem{port} States that input data comes from a port. 
-        Subelements describe the data further.
+        Sub-elements describe the data further.
         \begin{description}
           \elementitem{description} High level description of the data 
           accepted by the port, e.g. ``These are potential data from body 
           surface of a human.''
           \elementitem{/description}
-          \elementitem{datatype} The name of a PSE datatype, i.e. the 
-          datatype that is being transmitted on this port.
+          \elementitem{datatype} The name of a PSE data type, i.e. the 
+          data type that is being transmitted on this port.
           \elementitem{/datatype}
           \elementitem{componentname} The name of an upstream component
           that is commonly used to send data to this component on this
@@ -296,20 +306,20 @@ element, which is used in several contexts, is not described in detail here
         \end{description}
         \elementitem{/port}
         \elementitem{file} States that input comes from a file.
-        Subelements describe the data further.
+        Sub-elements describe the data further.
         \begin{description}
           \elementitem{description} High level description of the data 
           provided by the file, e.g. ``These are potential data from body 
           surface of a human.''
           \elementitem{/description}
-          \elementitem{datatype} The name of a \pse\ datatype, i.e. the 
-          datatype being read from the file.  \Note{Only \pse\ datatypes
+          \elementitem{datatype} The name of a \pse\ data type, i.e. the 
+          data type being read from the file.  \Note{Only \pse\ data types
             may be read from files - no custom formats allowed!}
           \elementitem{/datatype}
         \end{description}
         \elementitem{/file}
         \elementitem{device} States that input comes from a device.
-        Subelements describe the data further.
+        Sub-elements describe the data further.
         \begin{description}
           \elementitem{devicename} Device's name.
           \elementitem{/devicename}
@@ -326,14 +336,14 @@ element, which is used in several contexts, is not described in detail here
       \element{file} elements to describe outputs to files, and 0 or more
       \element{device} elements to describe outputs to devices.
       \begin{description}
-        \elementitem{port} States that output is sent a port. Subelements describe the data further.
+        \elementitem{port} States that output is sent a port. Sub-elements describe the data further.
         \begin{description}
           \elementitem{description} A high level description of the data
           sent to the port, e.g. ``These are potential data from the body
           surface of a human.''
           \elementitem{/description}
-          \elementitem{datatype} The name of a \pse\ datatype, i.e. the 
-          datatype that is being transmitted on this port.
+          \elementitem{datatype} The name of a \pse\ data type, i.e. the 
+          data type that is being transmitted on this port.
           \elementitem{/datatype}
           \elementitem{componentname} The name of a downstream component
           that is commonly connected to this output port.  This
@@ -342,19 +352,19 @@ element, which is used in several contexts, is not described in detail here
         \end{description}
         \elementitem{/port}
         \elementitem{file}  States that output is sent to a file.  It's 
-        subelements describe the outputs.
+        sub-elements describe the outputs.
         \begin{description}
           \elementitem{description} A high level description of the data 
           sent to the file, e.g. ``These are potential data from body 
           surface of a human.''
           \elementitem{/description}
-          \elementitem{datatype}  The name of a PSE datatype, i.e. the 
-          datatype being written to the file.
+          \elementitem{datatype}  The name of a PSE data type, i.e. the 
+          data type being written to the file.
           \elementitem{/datatype}
         \end{description}
         \elementitem{/file}
         \elementitem{device} States that output goes to a device.
-        Subelements describe the output further.
+        Sub-elements describe the output further.
         \begin{description}
           \elementitem{devicename} Device's name.
           \elementitem{/devicename}
@@ -368,13 +378,13 @@ element, which is used in several contexts, is not described in detail here
   \end{description}
   \elementitem{/io}
   \elementitem{gui} States that the component supports a \gui.
-  Subelements describe the \gui.
+  Sub-elements describe the \gui.
   \begin{description}
     \elementitem{description} Describes the purpose of the \gui, e.g.
     ``The \gui\ allows you to steer the simulation.''
     \elementitem{/description}
     \elementitem{parameter} Declares 1 \gui\  parameter.  A parameter is a
-    \gui\  item that can be modified by the user.  Subelements describe the
+    \gui\  item that can be modified by the user.  Sub-elements describe the
     parameter.  Use 1 parameter element for each item in the \gui.
     \begin{description}
       \elementitem{widget} The type name of parameter's tcl widget.
@@ -390,10 +400,10 @@ element, which is used in several contexts, is not described in detail here
     \elementitem{/img}
   \end{description}
   \elementitem{/gui}%
-  \elementitem{testing} Starts the testing section.  Subelements specify
+  \elementitem{testing} Starts the testing section.  Sub-elements specify
   1 or more testing plans.
   \begin{description}
-    \elementitem{plan} Declares 1 testing plan.  Subelements specify the
+    \elementitem{plan} Declares 1 testing plan.  Sub-elements specify the
     testing plan's details.
     \begin{description}
       \elementitem{description}  High level description of the testing
@@ -422,8 +432,8 @@ The \element{description} element contains text for human consumption.
 It allows you to organize your text into paragraphs, lists, and
 other structured content.
 
-Note that the literal form of the characters \la, \ra, and \& may not be
-used (this is an \xml\ thing).  Instead you must type \keyboard{\&lt;},
+Note that the literal forms of the characters \la, \ra, and \& may not be
+used in element content.  Instead you must type \keyboard{\&lt;},
 \keyboard{\&gt;}, and \keyboard{\&amp;} respectively.
 
 \subsubsection{\SUBSUBSECcommonUsage}
@@ -469,7 +479,7 @@ or \element{slink} elements:
 \end{verbatim}
 
 The \element{cite} element marks text as the title of a paper or
-book (but is not itself a hyperlink).
+book (but is not itself a hyper-link).
 
 The \element{slink} and \element{rlink} elements allow you to reference
 online material.
@@ -538,7 +548,7 @@ shown by indentation.
       \elementitem{keyboard} Encloses material that is typed at a keyboard.
       \elementitem{/keyboard}
       \elementitem{cite} Encloses a reference to a paper or other
-      publication.  Is not itself a hyperlink but it may be used within the
+      publication.  Is not itself a hyper-link but it may be used within the
       \element{slink} and \element{rlink} elements.
       \elementitem{/cite}
       \elementitem{acronym} Encloses an acronym (e.g.
@@ -728,12 +738,12 @@ To start a new component specification with \emacs\ do this:
   Replace \screen{<top-of-cvs-tree>} with the path to the top of your \sr\
   \cvs\ tree.
 \item Select the \menuitem{Parse DTD} item from the \menu{DTD} menu
-  which can be found in the window's main menu bar.  Or type \keyboard{C-c
+  which can be found in the window's main menu bar, or type \keyboard{C-c
     C-p}.
-\item Insert the top level \element{component} element using \emacs\ popup
+\item Insert the top level \element{component} element using \emacs\ pop-up
   menu (shift-button1 or shift-button3 for emacs and button3 for xemacs):
   Position the cursor at the end of the file and select the item named
-  \menuitem{component} from the popup menu.  After doing this you will be
+  \menuitem{component} from the pop-up menu.  After doing this you will be
   prompted for the \element{component} element's \attribute{name},
   \attribute{package}, and \attribute{category} attributes.
   attribute.  After typing in each of the attributes \Emacs\ 
@@ -742,28 +752,33 @@ To start a new component specification with \emacs\ do this:
   name between the start and end tags of the \element{author} element.
   Refer to section~\sechyperref{\SECcontent} if you have question about the
   content of any elements.
-\item Some elements, like the \element{description} element, are composed of
-  subelements.  To add subelements, position the cursor between the start
-  and end tags of the element and then insert an element using \emacs\ 
-  popup menu.  The popup menu will list elements that are valid at the
-  insertion point.
 \item The \element{gui} element is not automatically inserted by \emacs\ 
   because a gui is optional.  Most components will support a gui though so
   you will probably need to insert the \element{gui} element.  Do this by
   positioning the cursor after the end tag of the \element{io} element.
-  Then select the \element{gui} element from \emacs\ popup menu.  \Emacs\ 
-  will insert the \element{gui} and its required subelements.
-\item A few elements (namely \element{slink} and \element{rlink})
-  elements take attributes.  If these elements are added via \emacs\ popup
-  menu then \emacs\ will prompt you for the element's attribute values.  If
-  these element's are added manually then you may add the attributes via the
-  popup menu: position the cursor anywhere within the element's start tag
-  and select the desired attribute from the popup menu's list of
-  attributes.  \Emacs\ will prompt you for the value of the attribute and
-  insert it in the element's start tag.
+  Then select the \element{gui} element from \emacs\ pop-up menu.  \Emacs\ 
+  will insert the \element{gui} and its required sub-elements.
 \item Complete the component specification by adding content, elements, and
   attributes.
 \end{enumerate}
+
+Note:
+
+\begin{itemize}
+\item Most elements (like the \element{description} element) are composed of
+  sub-elements.  To add sub-elements, position the cursor between the start
+  and end tags of the element and then insert an element using \emacs\ 
+  pop-up menu.  The pop-up menu will list elements that are valid at the
+  insertion point.
+\item A few elements (namely \element{slink} and \element{rlink})
+  elements take attributes.  If these elements are added via \emacs\ pop-up
+  menu then \emacs\ will prompt you for the element's attribute values.  If
+  these element's are added manually then you may add the attributes via the
+  pop-up menu: position the cursor anywhere within the element's start tag
+  and select the desired attribute from the pop-up menu's list of
+  attributes.  \Emacs\ will prompt you for the value of the attribute and
+  insert it in the element's start tag.
+\end{itemize}
 
 
 \section{\SECvalidation}
@@ -784,7 +799,7 @@ preamble section to the following:
 \end{verbatim}
 
 This change will break emacs' \xml\ mode though so be sure to revert
-to the orginal before using emacs.
+to the original before using emacs.
 
 \section{\SECtools}
 \label{\SECtools}
