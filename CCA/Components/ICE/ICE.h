@@ -238,7 +238,6 @@ using namespace SCIRun;
       bool switchDebugSource_Sink;
       bool switchDebug_advance_advect;
       bool switchDebug_advectQFirst;
-      bool switchTestConservation;
       
       bool d_massExchange;
       
