@@ -146,6 +146,7 @@ using namespace SCIRun;
       void scheduleComputeLagrangianSpecificVolumeRF(SchedulerP&, 
                                                    const PatchSet*,
                                                    const MaterialSubset*,
+                                                   const MaterialSubset*,
                                                    const MaterialSet*);
 
       void scheduleAddExchangeToMomentumAndEnergyRF(SchedulerP&, 
