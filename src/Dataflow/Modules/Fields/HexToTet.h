@@ -195,7 +195,7 @@ HexToTetAlgoT<FSRC>::execute(FieldHandle srcH, FieldHandle& dstH,
   typename FSRC::value_type val;
 
   if (hvfield->data_at() == Field::NODE) {
-    for (unsigned int i = 0; i < hnsize; i++)
+    for (int i = 0; i < hnsize; i++)
     {
       hvfield->value(val, (typename FSRC::mesh_type::Node::index_type)(i));
       tvfield->set_value(val, (TetVolMesh::Node::index_type)(i));
@@ -266,7 +266,7 @@ LatToTetAlgoT<FSRC>::execute(FieldHandle srcH, FieldHandle& dstH,
   {
     typename FSRC::mesh_type::Node::array_type hvnodes(8);
     hvmesh->get_nodes(hvnodes, *bi);
-    if (((*bi).i_ ^ (*bi).j_ ^ (*bi).k_)&1)
+    if (!(((*bi).i_ ^ (*bi).j_ ^ (*bi).k_)&1))
     {
       tvmesh->add_tet((TetVolMesh::Node::index_type)((unsigned int)hvnodes[0]),
 		      (TetVolMesh::Node::index_type)((unsigned int)hvnodes[1]),
