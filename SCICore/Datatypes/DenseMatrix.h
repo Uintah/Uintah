@@ -18,12 +18,14 @@
 
 #include <SCICore/Datatypes/Matrix.h>
 #include <SCICore/Math/MiscMath.h>
+#include <vector>
 
 namespace SCICore {
 namespace Datatypes {
 
 using SCICore::Math::Abs;
 using namespace SCICore::Datatypes;
+using std::vector;
 
 class SCICORESHARE DenseMatrix : public Matrix {
     int nc;
@@ -47,6 +49,7 @@ public:
     inline double* getData() { return dataptr;}
     virtual void getRowNonzeros(int r, Array1<int>& idx, Array1<double>& val);
     virtual int solve(ColumnMatrix&);
+    virtual int solve(vector<double>& sol);
     virtual void zero();
 
     virtual void mult(const ColumnMatrix& x, ColumnMatrix& b,
@@ -77,6 +80,9 @@ public:
 
 //
 // $Log$
+// Revision 1.6  2000/10/18 17:26:14  guilkey
+// Added a version of solve which take a vector<double>.
+//
 // Revision 1.5  2000/07/12 15:45:08  dmw
 // Added Yarden's raw output thing to matrices, added neighborhood accessors to meshes, added ScalarFieldRGushort
 //
