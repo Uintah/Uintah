@@ -465,7 +465,7 @@ MPRead::GetParticleInfo( clString& name,
   s.remove_all();
   v.remove_all();
   psVars.remove_all();
-  pvvars.remove_all();
+  pvVars.remove_all();
 
     const int buflen = 1024;
     char buf[buflen];
