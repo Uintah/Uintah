@@ -54,19 +54,25 @@ using namespace SCIRun;
                                          const MaterialSubset* ice_matls, 
                                          const MaterialSubset* mpm_matls, 
                                          const MaterialSet* all_matls);    
-                                              
-      void scheduleComputeFC_vel_Temp(SchedulerP&, 
+
+      void scheduleComputeTempFC(SchedulerP&,
+                                 const PatchSet*,               
+                                 const MaterialSubset*,         
+                                 const MaterialSubset*,         
+                                 const MaterialSet*);           
+                                                                                        
+      void scheduleComputeVel_FC(SchedulerP&, 
                                       const PatchSet*,                
                                       const MaterialSubset*,          
                                       const MaterialSubset*,          
                                       const MaterialSubset*,          
                                       const MaterialSet*,
-                                      bool);            
+                                      const bool);            
       
       void scheduleAddExchangeContributionToFCVel(SchedulerP&, 
                                             const PatchSet*,
-                                            const MaterialSet*,
-                                            bool);
+                                            const MaterialSet*, 
+                                            const bool);
       
       void scheduleComputeDelPressAndUpdatePressCC(SchedulerP&, 
                                              const PatchSet*,
@@ -143,24 +149,30 @@ using namespace SCIRun;
                                    const LevelP&,
                                    const PatchSet*,
                                    const MaterialSubset*,
-                                   const MaterialSubset*,
                                    const MaterialSet*);
-
-      void scheduleImplicitFC_vel_Temp(SchedulerP&,
-                                      const PatchSet*,             
-                                      const MaterialSubset*,     
-                                      const MaterialSubset*,     
-                                      const MaterialSubset*,    
-                                      const MaterialSet*,
-                                      bool recursion);
-                                                                         
+                                   
+      void scheduleImplicitVel_FC(SchedulerP& sched,
+                                  const PatchSet* patches,                 
+                                  const MaterialSubset*,         
+                                  const MaterialSubset*,         
+                                  const MaterialSubset*,        
+                                  const MaterialSet*,           
+                                  const bool);  
+                                                  
+     void scheduleComputeDel_P(  SchedulerP& sched,
+                                 const LevelP& level,               
+                                 const PatchSet* patches,           
+                                 const MaterialSubset* one_matl,    
+                                 const MaterialSubset* press_matl,  
+                                 const MaterialSet* all_matls);
+                                   
       void scheduleImplicitPressureSolve(SchedulerP& sched,
                                          const LevelP& level,
                                          const PatchSet*,
                                          const MaterialSubset* one_matl,
                                          const MaterialSubset* press_matl,
-                                         const MaterialSubset* ice_matls_sub,
-                                         const MaterialSubset* mpm_matls_sub,
+                                         const MaterialSubset* ice_matls,
+                                         const MaterialSubset* mpm_matls,
                                          const MaterialSet* all_matls);  
                                    
       void setICELabel(ICELabel* Ilb) {
@@ -188,13 +200,19 @@ using namespace SCIRun;
                                           DataWarehouse*, 
                                           DataWarehouse*);
       
-      void computeFC_vel_Temp(const ProcessorGroup*, 
-                              const PatchSubset* patch,              
-                              const MaterialSubset* matls,           
-                              DataWarehouse*,                        
-                              DataWarehouse*,
-                              bool);  
-                              
+      void computeVel_FC(const ProcessorGroup*, 
+                         const PatchSubset*,                   
+                         const MaterialSubset*,                
+                         DataWarehouse*,                             
+                         DataWarehouse*,                   
+                         const bool);                      
+
+      void computeTempFC(const ProcessorGroup*,  
+                         const PatchSubset* patches,                    
+                         const MaterialSubset*,               
+                         DataWarehouse*,                         
+                         DataWarehouse*);
+                                                       
       template<class T> void computeTempFace(CellIterator it,
                                             IntVector adj_offset,
                                             constCCVariable<double>& rho_CC,
@@ -215,7 +233,7 @@ using namespace SCIRun;
                                           const MaterialSubset* matls,
                                           DataWarehouse*, 
                                           DataWarehouse*,
-                                          bool);
+                                          const bool);
 
       void computeDelPressAndUpdatePressCC(const ProcessorGroup*,
                                            const PatchSubset* patches,
@@ -347,21 +365,27 @@ using namespace SCIRun;
                     DataWarehouse* old_dw,                           
                     DataWarehouse* new_dw);
                        
-      void updatePressure(const ProcessorGroup*,
+       void updatePressure(const ProcessorGroup*,
                            const PatchSubset* patches,                      
                            const MaterialSubset* ,                          
                            DataWarehouse* old_dw,                           
                            DataWarehouse* new_dw);
-                            
+
+      void computeDel_P(const ProcessorGroup*,
+                         const PatchSubset* patches,                    
+                         const MaterialSubset* ,                        
+                         DataWarehouse* old_dw,                         
+                         DataWarehouse* new_dw);
+                                                     
       void implicitPressureSolve(const ProcessorGroup*,
-		                  const PatchSubset* patch_sub, 
-		                  const MaterialSubset*,       
-		                  DataWarehouse* ParentOldDW,    
-                                DataWarehouse* ParentNewDW,    
-		                  LevelP level,                 
-                                Scheduler* sched,
-                                const MaterialSubset* ice_matls,
-                                const MaterialSubset* mpm_matls);
+		                   const PatchSubset* patches,
+		                   const MaterialSubset*,     
+		                   DataWarehouse* old_dw,     
+                                 DataWarehouse* new_dw,     
+		                   LevelP level,     
+                                 Scheduler* sched,
+                                 const MaterialSubset*,
+                                 const MaterialSubset*);
                                                 
 //__________________________________ 
 //   O T H E R                            
@@ -460,6 +484,7 @@ using namespace SCIRun;
       bool switchDebug_setupMatrix;
       bool switchDebug_setupRHS;
       bool switchDebug_updatePressure;
+      bool switchDebug_computeDelP;
       bool switchDebug_PressFC;
       bool switchDebugLagrangianValues;
       bool switchDebugLagrangianSpecificVol;
@@ -477,6 +502,9 @@ using namespace SCIRun;
       int d_dbgVar1;
       int d_dbgVar2;
       int d_max_iter_equilibration;
+      int d_max_iter_implicit;
+      double d_outer_iter_tolerance;
+      
       vector<int>    d_add_heat_matls;
       vector<double> d_add_heat_coeff;
       double         d_add_heat_iters;
