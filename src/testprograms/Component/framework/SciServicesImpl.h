@@ -39,7 +39,10 @@ public:
   virtual ComponentID getComponentID();
 
   void init( const Framework &f, const ComponentID & id);
+  void done();
+
   void shutdown();
+
 protected:
 
   Framework framework_;

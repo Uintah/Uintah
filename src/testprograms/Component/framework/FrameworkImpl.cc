@@ -164,7 +164,7 @@ FrameworkImpl::registerComponent( const string &hostname,
   cr->component_ = c;
   cr->services_ = svc;
 
-  map<string,ComponentRecord*>::iterator i; 
+//  map<string,ComponentRecord*>::iterator i; 
 //   cerr << "Framework::before...\n";
 //   for ( i=registry_->components_.begin(); i!=registry_->components_.end(); i++)
 //     cerr << "component " << i->first << " -> " 
@@ -204,6 +204,23 @@ FrameworkImpl::unregisterComponent( const ComponentID &id )
 
 }
 
+void
+FrameworkImpl::shutdown()
+{
+  registry_->connections_.readLock();
+  
+  Registry::component_iterator iter = registry_->components_.begin();
+
+  for( ; iter != registry_->components_.end(); iter++ )
+    {
+      ComponentRecord * cr = (*iter).second;
+
+      cr->component_->setServices( 0 );
+      cr->component_ = 0;
+      cr->id_ = 0;
+    }
+  registry_->connections_.readUnlock();
+}
 
 } // namespace sci_cca
 

@@ -20,10 +20,13 @@ main( int argc, char *argv[] )
     return 1;
   }
 
-  cerr << "main cont.\n";
+  cerr << "main cont.\n";  
 
-  Component b = new Builder();
-  CCA::init( b );
+  Builder * b = new Builder();
+  Component bc = b;
+  CCA::init( bc, "Builder" );
+
+  b->ui(); // infinite ui loop (until ui quits)
 
   cerr << "done\n";
   CCA::done();

@@ -14,14 +14,16 @@ using SCIRun::InternalError;
 using std::string;
 
 class ComponentImpl : virtual public Component_interface {
-protected:
-  SciServices services_;
 
 public:
   ComponentImpl();
   ~ComponentImpl();
 
   virtual void setServices( const Services &s );
+
+protected:
+  SciServices services_;
+
 };
 
 } // namespace sci_cca

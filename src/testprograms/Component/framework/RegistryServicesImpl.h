@@ -31,6 +31,10 @@ public:
 
   // export services
   virtual void getActiveComponentList( array1<string> & components );
+
+  // Tells the framework to shut itself down... here for lack of better
+  // place to put it currently...
+  virtual void shutdown();
   
 protected:
   Framework framework_;

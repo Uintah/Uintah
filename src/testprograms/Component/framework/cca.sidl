@@ -87,6 +87,8 @@ package sci_cca {
 
   interface RegistryServices extends Port {
     void getActiveComponentList( out array<string> components );
+    void shutdown();  // Tells the framework to quit.  Here for now
+                      // as I don't have a better place to put it yet.
   };
 
   ////////////////////////////////////////////////////////////
@@ -103,7 +105,7 @@ package sci_cca {
   // REI Interfaces
   // 
 
-  //// Selective Catalytic Reduction Component
+  //// Selective Catalytic Reduction (SCR) Component
   interface scrInterface {
 
     void exec(in     int  cells,      // changed from long...

@@ -5,6 +5,8 @@
 #include <sstream>
 #include <iostream>
 
+#include <stdio.h>
+
 namespace sci_cca {
 
 using SCIRun::AtomicCounter;
@@ -49,6 +51,17 @@ string
 ComponentIdImpl::toString()
 {
   return id_;
+}
+
+string
+ComponentIdImpl::fullString()
+{
+  char full[ 1024 ];
+  
+  sprintf( full, "%s, %s, %d, %s", host_.c_str(), program_.c_str(), number_,
+	   id_.c_str() );
+
+  return string( full );
 }
 
 } // namespace sci_cca

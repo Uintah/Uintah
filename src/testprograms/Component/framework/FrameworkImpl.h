@@ -23,15 +23,6 @@ class ConnectionServicesImpl;
 class RegistryServicesImpl;
 
 class FrameworkImpl : public Framework_interface {
-private:
-  string hostname_;
-  ComponentID id_;
-  Registry *registry_;
-  map<string, Port> ports_;
-  
-  CrowdMonitor ports_lock_;
-
-  typedef map<string, Port>::iterator port_iterator;
 
 public:
   FrameworkImpl();
@@ -47,6 +38,18 @@ public:
 				const PortInfo&);
   virtual void removeProvidesPort( const ComponentID &, const string &);
   virtual void releasePort( const ComponentID &, const string &);
+
+private:
+  void shutdown();
+
+  string hostname_;
+  ComponentID id_;
+  Registry *registry_;
+  map<string, Port> ports_;
+  
+  CrowdMonitor ports_lock_;
+
+  typedef map<string, Port>::iterator port_iterator;
 
   friend class ConnectionServicesImpl;
   friend class RegistryServicesImpl;

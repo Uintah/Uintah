@@ -24,7 +24,9 @@ class Server : public Runnable {
 public:
   Server() {}
 
-  void run() { PIDL::PIDL::serveObjects(); CCA::semaphore_.up(); }
+  void run() { PIDL::PIDL::serveObjects(); 
+               cout << "Done serveObjects()\n";
+               CCA::semaphore_.up(); }
 };
 
 
@@ -87,6 +89,8 @@ CCA::init( int &argc, char *argv[] )
     PIDL::PIDL::initialize( argc, argv );
     if ( is_server_ ) {
       // start server
+      cout << "here\n";
+
       framework_ = new FrameworkImpl;
 
       cerr << "server = " << framework_->getURL().getString() << endl;
@@ -118,20 +122,29 @@ CCA::init( int &argc, char *argv[] )
 
 
 bool
-CCA::init( Component &component )
+CCA::init( Component & component, const string & component_name /* = "" */ )
 {
   if ( !initialized_ )
     return false;
 
+  string name = component_name;
+  if( name == "" ) name = program_;
+
   // user's component
-  return framework_->registerComponent( hostname_, program_, component );
+  return framework_->registerComponent( hostname_, name, component );
 }
 
 void
 CCA::done()
 {
   if ( is_server_ )
-    semaphore_.down();
+    {
+      local_framework_ = 0;
+      framework_ = 0;
+      cout << "done() is blocking\n";
+      semaphore_.down();
+      cout << "done() done blocking\n";
+    }
 }
 
 } // namespace sci_cca

@@ -15,6 +15,7 @@ Sender::Sender()
 
 Sender::~Sender()
 {
+  cout << "~Sender()\n";
 }
 
 void 
@@ -22,8 +23,11 @@ Sender::setServices( const Services &svc )
 {
   ComponentImpl::setServices( svc );
 
-  PortInfo info = new PortInfoImpl("Uses", "", 0);
-  svc->registerUsesPort( info );
+  if( svc )
+    {
+      PortInfo info = new PortInfoImpl("Uses", "", 0);
+      svc->registerUsesPort( info );
+    }
 }
 
 void
