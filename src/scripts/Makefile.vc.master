@@ -19,7 +19,7 @@
 # try to guess the architecture
 #
 
-!ifndef PROCESSOR_ARCHITECTURE
+!if !defined(PROCESSOR_ARCHITECTURE)||(("$(PROCESSOR_ARCHITECTURE)"!="x86")&&("$(PROCESSOR_ARCHITECTURE)"=="ALPHA"))
 !message ***
 !message *** Environment variable PROCESSOR_ARCHITECTURE not set.
 !message *** It must be set to "x86" for Intel processors, or "ALPHA" 
@@ -222,10 +222,10 @@ soclean:
 	-$(RM) $(FULLDLLNAME).lib 2> NUL
 
 $(EXENAME).exe: $(OBJS)
-	$(LINK) $(EXE_LFLAGS) $(LF) $(LIBS) $(SCILIBPATH) $(OBJS) -out:$(EXENAME).exe
+	$(LINK) $(EXE_LFLAGS) $(LF) $(SCILIBS) $(SCILIBPATH) $(OBJS) -out:$(EXENAME).exe
 
 $(FULLDLLNAME).dll: $(OBJS)
-	$(LINK) $(DLL_LFLAGS) $(LF) $(LIBS) $(SCILIBPATH) $(OBJS) -out:$(FULLDLLNAME).dll
+	$(LINK) $(DLL_LFLAGS) $(LF) $(SCILIBS) $(SCILIBPATH) $(OBJS) -out:$(FULLDLLNAME).dll
 
 .SUFFIXES: .cc .c
 
