@@ -69,6 +69,8 @@ public:
     virtual int should_execute();
     virtual void mui_callback(void*, int);
 
+    virtual void ui_button();
+
     // Our interface...
     virtual void get_iport_coords(int, int&, int&);
     virtual void get_oport_coords(int, int&, int&);

@@ -518,10 +518,15 @@ void UserModule::do_execute()
 void UserModule::widget_button(CallbackData*, void*)
 {
     // User interface...
+    ui_button();
     if(window)
 	window->popup();
     else
 	popup_on_create=1;
+}
+
+void UserModule::ui_button()
+{
 }
 
 void UserModule::mui_callback(void*, int)
