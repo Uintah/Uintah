@@ -64,9 +64,9 @@ int main(int argc, char **argv) {
   mesh->set_nz(base->nz);
   mesh->set_min(base->get_point(0,0,0));
   mesh->set_max(base->get_point(base->nx-1,base->ny-1,base->nz-1));
-  cout << "node index space extents = " 
+  cerr << "node index space extents = " 
        << base->nx << ", " << base->ny << ", " << base->nz << endl;
-  cout << "object space extents     = "
+  cerr << "object space extents     = "
        << mesh->get_min() << ", " << mesh->get_max() << endl;
 
   // create storage for the data, and copy base's data into it
