@@ -29,11 +29,11 @@ SRCDIR   := Packages/Teem/Dataflow/Modules/Filters
 
 SRCS     += \
 	$(SRCDIR)/NrrdConvert.cc\
+	$(SRCDIR)/NrrdPermute.cc\
 	$(SRCDIR)/NrrdQuantize.cc\
 	$(SRCDIR)/NrrdResample.cc\
 	$(SRCDIR)/NrrdSubvolume.cc\
 #[INSERT NEW CODE FILE HERE]
-#	$(SRCDIR)/NrrdPermute.cc\
 
 PSELIBS := Packages/Teem/Core/Datatypes Core/Datatypes \
 	Dataflow/Network Dataflow/Ports \
