@@ -48,7 +48,8 @@ ifeq ($(BUILD_SCIRUN2),yes)
 SUBDIRS := \
 	$(SUBDIRS) \
 	$(SRCDIR)/globus_threads \
-	$(SRCDIR)/CCA
+	$(SRCDIR)/CCA \
+	$(SRCDIR)/Babel
 endif
 
 include $(SCIRUN_SCRIPTS)/recurse.mk
