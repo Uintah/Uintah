@@ -14,6 +14,7 @@ class CFDInterface;
 class MPMInterface;
 class MPMCFDInterface;
 class MDInterface;
+  class Output;
 
 /**************************************
       
@@ -58,22 +59,23 @@ class MDInterface;
    private:
       void problemSetup(const ProblemSpecP&, GridP&);
       void scheduleInitialize(LevelP&, SchedulerP&,
-			      DataWarehouseP&,
 			      CFDInterface*,
 			      MPMInterface*,
 			      MPMCFDInterface*,
 			      MDInterface*);
       void scheduleComputeStableTimestep(LevelP&, SchedulerP&,
-					 DataWarehouseP&, CFDInterface*,
+					 CFDInterface*,
 					 MPMInterface*,
 					 MPMCFDInterface*,
 					 MDInterface*);
       void scheduleTimeAdvance(double t, double delt, LevelP&, SchedulerP&,
-			       DataWarehouseP& old_ds,
-			       DataWarehouseP& new_ds,
 			       CFDInterface*, MPMInterface*,
 			       MPMCFDInterface*, MDInterface*);
 
+     bool need_recompile(double t, double delt, const LevelP& level,
+			 CFDInterface* cfd, MPMInterface* mpm,
+			 MPMCFDInterface* mpmcfd,  MDInterface* md,
+			 Output* output);
       SimulationController(const SimulationController&);
       SimulationController& operator=(const SimulationController&);
 
