@@ -508,7 +508,7 @@ TetVolMesh::delete_cell_nodes(Cell::index_type c)
 //! span those two nodes
 bool
 TetVolMesh::is_edge(Node::index_type n0, Node::index_type n1,
-		    Edge::array_type *array = 0)
+		    Edge::array_type *array)
 {
   edge_lock_.lock();
   cells_lock_.lock();
@@ -542,7 +542,7 @@ TetVolMesh::is_edge(Node::index_type n0, Node::index_type n1,
 //! span those three nodes
 bool
 TetVolMesh::is_face(Node::index_type n0,Node::index_type n1, 
-		    Node::index_type n2, Face::array_type *array = 0)
+		    Node::index_type n2, Face::array_type *array)
 {
   edge_lock_.lock();
   cells_lock_.lock();
