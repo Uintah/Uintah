@@ -168,11 +168,11 @@ void SerialMPM::scheduleComputeStableTimestep(const LevelP&,
    // consitutive model
 }
 
-void SerialMPM::scheduleTimeAdvance(double /*t*/, double /*dt*/,
+void SerialMPM::scheduleTimeAdvance(double t, double dt,
 				    const LevelP&         level,
-				          SchedulerP&     sched,
-				          DataWarehouseP& old_dw, 
-				          DataWarehouseP& new_dw)
+				    SchedulerP&     sched,
+				    DataWarehouseP& old_dw, 
+				    DataWarehouseP& new_dw)
 {
    int fieldIndependentVariable = 0;
 
@@ -745,7 +745,29 @@ void SerialMPM::scheduleTimeAdvance(double /*t*/, double /*dt*/,
 
 	 sched->addTask(t);
       }
+#if 0
+      {
+	 Task *t = scinew Task("SerialMPM::interpolateParticlesForSaving",
+                            patch, old_dw, new_dw,
+                            this, &SerialMPM::interpolateParticlesForSaving);
+         for(int m = 0; m < numMatls; m++){
+            Material* matl = d_sharedState->getMaterial(m);
+            MPMMaterial* mpm_matl = dynamic_cast<MPMMaterial*>(matl);
+            if(mpm_matl){
+	      Material* matl = d_sharedState->getMaterial(m);
+	      int idx = matl->getDWIndex();
+	      t->requires(old_dw, lb->pStressLabel, idx, patch,
+			Ghost::AroundNodes, 1 );
+	      t->requires(old_dw, lb->pMassLabel, idx, patch,
+			Ghost::AroundNodes, 1 );
 
+	      t->computes(new_dw, lb->gStressLabel, idx, patch );
+            }
+         }
+         sched->addTask(t);
+
+      }
+#endif
     }
 
    // Ask Jim about this.  Now since we have multiple d_particleStates,
@@ -783,20 +805,172 @@ void SerialMPM::scheduleTimeAdvance(double /*t*/, double /*dt*/,
 
    new_dw->pleaseSave(lb->gTemperatureLabel, numMatls);
 
+//   new_dw->pleaseSave(lb->gStressLabel, numMatls);
+
    new_dw->pleaseSaveIntegrated(lb->StrainEnergyLabel);
    new_dw->pleaseSaveIntegrated(lb->KineticEnergyLabel);
    new_dw->pleaseSaveIntegrated(lb->TotalMassLabel);
    new_dw->pleaseSaveIntegrated(lb->CenterOfMassPositionLabel);
    new_dw->pleaseSaveIntegrated(lb->CenterOfMassVelocityLabel);
 
-//   pleaseSaveParticlesToGrid(lb->pVelocityLabel,lb->pMassLabel,numMatls,new_dw);
+   // Save the interpolated grid quantities (from particles)
+
+//   pleaseSaveParticlesToGrid(lb->pStressLabel,lb->pMassLabel,
+//					lb->gStressLabel,
+//					numMatls,old_dw,new_dw,t,level);
+
 }
 
-void SerialMPM::pleaseSaveParticlesToGrid(const VarLabel* var,
-				 const VarLabel* /*varweight*/, int number,
-				 DataWarehouseP& new_dw)
+void SerialMPM::interpolateParticlesForSaving(const ProcessorGroup*,
+				    	      const Patch* patch,
+					      DataWarehouseP& old_dw,
+					      DataWarehouseP& new_dw)
 {
-   new_dw->pleaseSave(var, number);
+  double nextOutputTime = 0.;
+//  if(time > nextOutputTime){
+
+//   cout << "Time = " << time << endl;
+
+//   for(Level::const_patchIterator iter=level->patchesBegin();
+//       iter != level->patchesEnd(); iter++){
+
+//     const Patch* patch=*iter;
+     int numMatls = d_sharedState->getNumMatls();
+
+     const VarLabel* var       = lb->pStressLabel;
+     const VarLabel* varweight = lb->pMassLabel;
+     const VarLabel* gvar      = lb->gStressLabel;
+
+     for(int m = 0; m < numMatls; m++){
+        Material* matl = d_sharedState->getMaterial( m );
+        MPMMaterial* mpm_matl = dynamic_cast<MPMMaterial*>(matl);
+        if(mpm_matl){
+          int matlindex = matl->getDWIndex();
+          int vfindex = matl->getVFIndex();
+          ParticleSubset* pset = old_dw->getParticleSubset(matlindex, patch,
+                                          Ghost::AroundNodes, 1, lb->pXLabel);
+
+          // Allocate storage & retrieve particle weighting and position
+          ParticleVariable<double> weighting;
+          old_dw->get(weighting, varweight, pset);
+          NCVariable<double> gweight;
+          new_dw->allocate(gweight, lb->gWeightLabel, vfindex, patch);
+          ParticleVariable<Point> px;
+          old_dw->get(px, lb->pXLabel, pset);
+
+          if (var->typeDescription()->getType()
+			 == TypeDescription::Vector) {
+	      cout << "setting up a vector nc variable" << endl;
+              NCVariable<Vector> gdata;
+              ParticleVariable<Vector> pdata;
+              new_dw->allocate(gdata, gvar, vfindex, patch);
+              old_dw->get(pdata, var, pset);
+              gdata.initialize(Vector(0,0,0));
+              // Do interpolation
+	      for(ParticleSubset::iterator iter = pset->begin();
+		  iter != pset->end(); iter++){
+		 particleIndex idx = *iter;
+
+		 // Get the node indices that surround the cell
+		 IntVector ni[8];  double S[8];
+	 
+		 if(!patch->findCellAndWeights(px[idx], ni, S))
+		    throw InternalError("Particle not in patch");
+
+		 // Add each particles contribution
+		 for(int k = 0; k < 8; k++) {
+		    if(patch->containsNode(ni[k])){
+		       gdata[ni[k]]   += pdata[idx] * weighting[idx] * S[k];
+		       gweight[ni[k]] += weighting[idx] * S[k];
+		    }
+		 }
+	      }
+	      for(NodeIterator iter = patch->getNodeIterator();
+					  !iter.done(); iter++){
+		 if(gweight[*iter] >= 1.e-10){
+		    gdata[*iter] *= 1./gweight[*iter];
+		 }
+	      }
+              new_dw->put(gdata, gvar, vfindex, patch);
+          }
+          else if (var->typeDescription()->getType()
+			== TypeDescription::Matrix3) {
+	      cout << "setting up a matrix3 nc variable" << endl;
+              NCVariable<Matrix3> gdata;
+              ParticleVariable<Matrix3> pdata;
+	      new_dw->allocate(gdata, gvar, vfindex, patch);
+	      old_dw->get(pdata, var, pset);
+              gdata.initialize(Matrix3(0.));
+              // Do interpolation
+	      for(ParticleSubset::iterator iter = pset->begin();
+		  iter != pset->end(); iter++){
+		 particleIndex idx = *iter;
+
+		 // Get the node indices that surround the cell
+		 IntVector ni[8];  double S[8];
+	 
+		 if(!patch->findCellAndWeights(px[idx], ni, S))
+		    throw InternalError("Particle not in patch");
+
+		 // Add each particles contribution
+		 for(int k = 0; k < 8; k++) {
+		    if(patch->containsNode(ni[k])){
+		       gdata[ni[k]]   += pdata[idx] * weighting[idx] * S[k];
+		       gweight[ni[k]] += weighting[idx] * S[k];
+		    }
+		 }
+	      }
+	      for(NodeIterator iter = patch->getNodeIterator();
+					  !iter.done(); iter++){
+		 if(gweight[*iter] >= 1.e-10){
+		    gdata[*iter] *= 1./gweight[*iter];
+		 }
+	      }
+
+              new_dw->put(gdata, gvar, vfindex, patch);
+          }
+          else if (var->typeDescription()->getType()
+			== TypeDescription::double_type) {
+	      cout << "setting up a double nc variable" << endl;
+              NCVariable<double> gdata;
+              ParticleVariable<double> pdata;
+	      new_dw->allocate(gdata, gvar, vfindex, patch);
+	      old_dw->get(pdata, var, pset);
+              gdata.initialize(0.);
+              // Do interpolation
+	      for(ParticleSubset::iterator iter = pset->begin();
+		  iter != pset->end(); iter++){
+		 particleIndex idx = *iter;
+
+		 // Get the node indices that surround the cell
+		 IntVector ni[8];  double S[8];
+	 
+		 if(!patch->findCellAndWeights(px[idx], ni, S))
+		    throw InternalError("Particle not in patch");
+
+		 // Add each particles contribution
+		 for(int k = 0; k < 8; k++) {
+		    if(patch->containsNode(ni[k])){
+		       gdata[ni[k]]   += pdata[idx] * weighting[idx] * S[k];
+		       gweight[ni[k]] += weighting[idx] * S[k];
+		    }
+		 }
+	      }
+	      for(NodeIterator iter = patch->getNodeIterator();
+					  !iter.done(); iter++){
+		 if(gweight[*iter] >= 1.e-10){
+		    gdata[*iter] *= 1./gweight[*iter];
+		 }
+	      }
+
+              new_dw->put(gdata, gvar, vfindex, patch);
+          }
+        } // if mpm_matl
+     }  // for matl's
+     // Save to the DW
+//     new_dw->pleaseSave(gvar,numMatls);
+//   } // Level
+//  }  // if time
 }
 
 void SerialMPM::actuallyInitialize(const ProcessorGroup*,
@@ -978,6 +1152,7 @@ void SerialMPM::interpolateParticlesToGrid(const ProcessorGroup*,
       }
 
       new_dw->put(sum_vartype(totalmass), lb->TotalMassLabel);
+
       new_dw->put(gmass,         lb->gMassLabel, vfindex, patch);
       new_dw->put(gvelocity,     lb->gVelocityLabel, vfindex, patch);
       new_dw->put(gexternalforce, lb->gExternalForceLabel, vfindex, patch);
@@ -1650,6 +1825,10 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
 }
 
 // $Log$
+// Revision 1.121  2000/08/30 00:12:42  guilkey
+// Added some stuff for interpolating particle data to the grid solely
+// for the purpose of saving to an uda.  This doesn't work yet.
+//
 // Revision 1.120  2000/08/29 21:46:25  guilkey
 // Moved the divide by mass stuff in interpolateParticlesToGrid to before
 // the BCs are applied.

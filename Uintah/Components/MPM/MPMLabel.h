@@ -80,6 +80,8 @@ namespace Uintah {
       const VarLabel* gNormTractionLabel;
       const VarLabel* gSurfNormLabel;
       const VarLabel* gStressLabel;
+      const VarLabel* gVolumeLabel; //for heat conduction
+      const VarLabel* gWeightLabel; //for who knows what?
       
       const VarLabel* cSelfContactLabel; //for fracture, CCVariable
       const VarLabel* cCrackedCellLabel; //for fracture, CCVariable
@@ -102,6 +104,10 @@ namespace Uintah {
 
 
 // $Log$
+// Revision 1.22  2000/08/30 00:12:42  guilkey
+// Added some stuff for interpolating particle data to the grid solely
+// for the purpose of saving to an uda.  This doesn't work yet.
+//
 // Revision 1.21  2000/08/08 19:55:59  tan
 // Added cCrackedCellLabel and pCrackSurfaceNormalLabel for fracture.
 //

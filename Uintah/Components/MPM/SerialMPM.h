@@ -88,9 +88,17 @@ protected:
 			  DataWarehouseP& old_dw,
 			  DataWarehouseP& new_dw);
 
-  void pleaseSaveParticlesToGrid(const VarLabel* var,
-                                 const VarLabel* varweight, int number,
-				 DataWarehouseP& new_dw);
+//  void pleaseSaveParticlesToGrid(const VarLabel* var,
+//                                 const VarLabel* varweight,
+//                                 const VarLabel* gvar, int number,
+//				 DataWarehouseP& old_dw,
+//				 DataWarehouseP& new_dw,double t,
+//				 const LevelP& level);
+
+  void interpolateParticlesForSaving(const ProcessorGroup*,
+				     const Patch* patch,
+				     DataWarehouseP& old_dw,
+				     DataWarehouseP& new_dw);
 
   //////////
   // Insert Documentation Here:
@@ -208,6 +216,10 @@ protected:
    
 //
 // $Log$
+// Revision 1.51  2000/08/30 00:12:42  guilkey
+// Added some stuff for interpolating particle data to the grid solely
+// for the purpose of saving to an uda.  This doesn't work yet.
+//
 // Revision 1.50  2000/08/18 20:29:19  tan
 // Fixed some bugs in SerialMPM, mainly in applyPhysicalBC.
 //

@@ -192,6 +192,12 @@ MPMLabel::MPMLabel()
   gStressLabel   = scinew VarLabel( "g.stress",
                    NCVariable<Matrix3>::getTypeDescription() );
 
+  gVolumeLabel = scinew VarLabel("g.volume",
+			NCVariable<double>::getTypeDescription());
+
+  gWeightLabel = scinew VarLabel("g.weight",
+			NCVariable<double>::getTypeDescription());
+
   // Cell centered variables
 
   cSelfContactLabel = scinew VarLabel( "c.selfContact",
@@ -315,6 +321,10 @@ void MPMLabel::registerPermanentParticleState(int i,
 }
 
 // $Log$
+// Revision 1.26  2000/08/30 00:12:42  guilkey
+// Added some stuff for interpolating particle data to the grid solely
+// for the purpose of saving to an uda.  This doesn't work yet.
+//
 // Revision 1.25  2000/08/09 03:17:58  jas
 // Changed new to scinew and added deletes to some of the destructors.
 //
