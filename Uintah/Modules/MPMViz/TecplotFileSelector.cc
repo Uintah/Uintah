@@ -110,16 +110,15 @@ void TecplotFileSelector::doAnimation()
   clString file = basename( filebase.get() );
   clString path = pathname( filebase.get() );
   const char *p = file();
-  //char n[5];
+  char n[5];
   char root[ 80 ];
   int i;
-  //int j = 0;
+  int j = 0;
   int k = 0;
   for( i= 0; i < file.len(); i++ )
     {
-	//if(isdigit(*p)) n[j++] = *p;
-	//else
-	root[k++] = *p;
+	if(isdigit(*p)) n[j++] = *p;
+	else root[k++] = *p;
       p++;
     }
   root[k] = '\0';
@@ -152,6 +151,10 @@ PSECore::Dataflow::Module* make_TecplotFileSelector( const clString& id ) {
 
 //
 // $Log$
+// Revision 1.4  1999/08/18 21:45:26  sparker
+// Array1 const correctness, and subsequent fixes
+// Array1 bug fix courtesy Tom Thompson
+//
 // Revision 1.3  1999/08/18 20:20:23  sparker
 // Eliminated copy constructor and clone in all modules
 // Added a private copy ctor and a private clone method to Module so
