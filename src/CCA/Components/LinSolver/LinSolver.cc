@@ -38,9 +38,9 @@
 using namespace std;
 using namespace SCIRun;
 
-extern "C" gov::cca::Component::pointer make_SCIRun_LinSolver()
+extern "C" sci::cca::Component::pointer make_SCIRun_LinSolver()
 {
-  return gov::cca::Component::pointer(new LinSolver());
+  return sci::cca::Component::pointer(new LinSolver());
 }
 
 LinSolver::LinSolver()
@@ -54,30 +54,30 @@ LinSolver::~LinSolver()
 
 }
 
-void LinSolver::setServices(const gov::cca::Services::pointer& svc)
+void LinSolver::setServices(const sci::cca::Services::pointer& svc)
 {
   services=svc;
   //add provides ports here ...  
 
-  gov::cca::TypeMap::pointer props = svc->createTypeMap();
+  sci::cca::TypeMap::pointer props = svc->createTypeMap();
   myGoPort::pointer gop(&goPort);
   myField2DPort::pointer fdp(&fieldPort);
-  svc->addProvidesPort(gop,"go","gov.cca.GoPort", props);
-  svc->addProvidesPort(fdp,"field","gov.cca.Field2DPort", props);
-  svc->registerUsesPort("matrix", "gov.cca.PDEMatrixPort",props);
+  svc->addProvidesPort(gop,"go","sci.cca.ports.GoPort", props);
+  svc->addProvidesPort(fdp,"field","sci.cca.ports.Field2DPort", props);
+  svc->registerUsesPort("matrix", "sci.cca.ports.PDEMatrixPort",props);
   // Remember that if the PortInfo is created but not used in a call to the svc object
   // then it must be freed.
   // Actually - the ref counting will take care of that automatically - Steve
 }
 
-bool LinSolver::jacobi(const gov::cca::Matrix::pointer &A, 
-		       const SIDL::array1<double> &b)
+bool LinSolver::jacobi(const sci::cca::Matrix::pointer &A, 
+		       const SSIDL::array1<double> &b)
 {
   //we might set the accurracy by UI
   double eps=1e-6;
   int maxiter=1000;
   
-  SIDL::array1<double> x;
+  SSIDL::array1<double> x;
   int N=b.size();
   while(x.size()<b.size()) x.push_back(1.0);
 
@@ -96,7 +96,7 @@ bool LinSolver::jacobi(const gov::cca::Matrix::pointer &A,
     if(norm<eps*eps) break;
     //cerr<<"iter="<<iter<<"  norm2="<<norm<<endl;
     
-    SIDL::array1<double> tempx=x;
+    SSIDL::array1<double> tempx=x;
     for(int i=0; i<N; i++){
       tempx[i]=b[i];
       for(int k=0; k<N; k++){
@@ -113,7 +113,7 @@ bool LinSolver::jacobi(const gov::cca::Matrix::pointer &A,
   return iter!=maxiter;
 }  
 
-SIDL::array1<double> myField2DPort::getField() 
+SSIDL::array1<double> myField2DPort::getField() 
 {
   return com->solution;
 }
@@ -121,16 +121,16 @@ SIDL::array1<double> myField2DPort::getField()
 int myGoPort::go() 
 {
   
-  gov::cca::Port::pointer pp=com->getServices()->getPort("matrix");	
+  sci::cca::Port::pointer pp=com->getServices()->getPort("matrix");	
   if(pp.isNull()){
     QMessageBox::warning(0, "LinSolver", "Port matrix is not available!");
     return 1;
   }  
-  gov::cca::ports::PDEMatrixPort::pointer matrixPort=
-    pidl_cast<gov::cca::ports::PDEMatrixPort::pointer>(pp);
+  sci::cca::ports::PDEMatrixPort::pointer matrixPort=
+    pidl_cast<sci::cca::ports::PDEMatrixPort::pointer>(pp);
   
-  gov::cca::Matrix::pointer A=matrixPort->getMatrix();
-  SIDL::array1<double> b=matrixPort->getVector();
+  sci::cca::Matrix::pointer A=matrixPort->getMatrix();
+  SSIDL::array1<double> b=matrixPort->getVector();
   
   com->getServices()->releasePort("matrix");	
   
