@@ -4,6 +4,7 @@
 #include <Packages/Uintah/CCA/Components/ICE/ICELabel.h>
 #include <Packages/Uintah/CCA/Components/MPMICE/MPMICELabel.h>
 #include <Packages/Uintah/CCA/Components/ICE/Advection/Advector.h>
+#include <Packages/Uintah/CCA/Ports/ModelInterface.h>
 #include <Packages/Uintah/CCA/Ports/Output.h>
 #include <Packages/Uintah/CCA/Ports/SolverInterface.h>
 #include <Packages/Uintah/CCA/Ports/SimulationInterface.h>
@@ -312,6 +313,12 @@ using namespace SCIRun;
                                           DataWarehouse*,
                                           DataWarehouse*); 
                                   
+      void transportModelVariables(const ProcessorGroup*,
+				   const PatchSubset* patches,
+				   const MaterialSubset* matls,
+				   DataWarehouse*,
+				   DataWarehouse*);
+
       void advectAndAdvanceInTime(const ProcessorGroup*,
                                   const PatchSubset* patches,
                                   const MaterialSubset* matls,
@@ -655,6 +662,20 @@ using namespace SCIRun;
       // For attachable models
       std::vector<ModelInterface*> d_models;
       ModelInfo* d_modelInfo;
+      struct TransportedVariable {
+	const MaterialSubset* matls;
+	VarLabel* var;
+	VarLabel* Lvar;
+      };
+      class ICEModelSetup : public ModelSetup {
+      public:
+	ICEModelSetup();
+	virtual ~ICEModelSetup();
+	virtual void registerTransportedVariable(const MaterialSubset* matls,
+						 VarLabel* var);
+	std::vector<TransportedVariable*> tvars;
+      };
+      ICEModelSetup* d_modelSetup;
     };
 
 #define SURROUND_MAT 0        /* Mat index of surrounding material, assumed */
