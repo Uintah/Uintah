@@ -3,6 +3,7 @@
 #define SATELLITE_H 1
 
 #include <Packages/rtrt/Core/UVSphere.h>
+#include <stdlib.h>
 
 namespace rtrt {
 
@@ -19,15 +20,20 @@ class Satellite : public UVSphere
 
  public:
 
-  Satellite(const string &name, Material *mat, const Point &center, 
-            double radius, const Vector &up=Vector(0,0,1), 
+  Satellite(const string &name, Material *mat, const Point &center,
+            double radius, double orb_radius, const Vector &up=Vector(0,0,1), 
             Satellite *parent=0) 
-    : UVSphere(mat,center,radius,up), parent_(parent), 
-    rev_speed_(.1), orb_speed_(.0001)
+    : UVSphere(mat, center, radius, up), parent_(parent), 
+    rev_speed_(1), orb_radius_(orb_radius), orb_speed_(1)
   {
-    orb_radius_ = center.asVector().length();
-    theta_ = sqrt(cen.x()*cen.x()+cen.y()*cen.y());
+    theta_ = drand48()*6.282;
     name_ = name;
+
+    if (orb_radius_ && parent_) {
+      cen = parent->get_center();
+      cen += Vector(orb_radius_*cos(theta_),
+                    orb_radius_*sin(theta_),0);
+    }
   }
   virtual ~Satellite() {}
 
@@ -60,36 +66,40 @@ class Satellite : public UVSphere
                   parent_->get_orb_radius()+parent_->get_radius()+
                   orb_radius_+radius+offset);
     } else {
-      bbox.extend(get_center(), orb_radius_+radius+offset);
+      bbox.extend(cen, orb_radius_+radius+offset);
     }
   }
 
   virtual void animate(double t, bool& changed)
   {
+    changed = false;
+
     // orbit
-    theta_ += orb_speed_*t;
-    if (theta_>628318.53) theta_=0; /* start over after 200,000 PI */
-    double x = orb_radius_*cos(theta_);
-    double y = orb_radius_*sin(theta_);
-    cen = Point(x,y,0);
-    if (parent_)
-      cen += (parent_->get_center().asVector());
+    if (orb_speed_) {
+      theta_ += orb_speed_*t;
+      if (theta_>628318.53) theta_=0; /* start over after 200,000 PI */
+      cen = Point(orb_radius_*cos(theta_),orb_radius_*sin(theta_),0);
+      if (parent_)
+        cen += (parent_->get_center().asVector());
+      changed = true;
+    }
 
     // revolution
-    xform.load_identity();
-    xform.pre_translate(-cen.asVector());
-    xform.rotate(right, Vector(1,0,0));
-    xform.rotate(up, Vector(0,0,1));
-    xform.pre_rotate(-rev_speed_*t,Vector(0,0,1));
-    xform.pre_scale(Vector(1./radius, 1./radius, 1./radius));
-    ixform.load_identity();
-    ixform.pre_scale(Vector(radius, radius, radius));
-    ixform.pre_rotate(rev_speed_*t,Vector(0,0,1));
-    ixform.rotate(Vector(0,0,1), up);
-    ixform.rotate(Vector(1,0,0), right);
-    ixform.pre_translate(cen.asVector());
-
-    changed = true;
+    if (rev_speed_) {
+      xform.load_identity();
+      xform.pre_translate(-cen.asVector());
+      xform.rotate(right, Vector(1,0,0));
+      xform.rotate(up, Vector(0,0,1));
+      xform.pre_rotate(-rev_speed_*t,Vector(0,0,1));
+      xform.pre_scale(Vector(1./radius, 1./radius, 1./radius));
+      ixform.load_identity();
+      ixform.pre_scale(Vector(radius, radius, radius));
+      ixform.pre_rotate(rev_speed_*t,Vector(0,0,1));
+      ixform.rotate(Vector(0,0,1), up);
+      ixform.rotate(Vector(1,0,0), right);
+      ixform.pre_translate(cen.asVector());
+      changed = true;      
+    }
   }
 };
 
