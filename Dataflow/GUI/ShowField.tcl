@@ -299,7 +299,7 @@ itcl_class SCIRun_Visualization_ShowField {
 		-variable $this-normalize-vectors
 
 	checkbutton $vector.bidirectional \
-		-text "Render Vectors bidirectionally" \
+		-text "Render Arrows bidirectionally" \
 		-command "$this-c toggle_bidirectional" \
 		-variable $this-bidirectional
 
