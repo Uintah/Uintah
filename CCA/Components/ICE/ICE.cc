@@ -2652,8 +2652,8 @@ void ICE::printConservedQuantities(const ProcessorGroup*,  const Patch* patch,
      mass            = rho_CC[*iter] * cell_vol;
 
      mom_xyz_dir    += vel_CC[*iter]*rho_CC[*iter] * mass;
-
-     total_KE       += 0.5 * mass * pow(vel_CC[*iter].length(), 2); 
+     double vel_sq = vel_CC[*iter].length() * vel_CC[*iter].length();
+     total_KE       += 0.5 * mass * vel_sq;
 
        total_int_eng  += mass * cv * Temp_CC[*iter];
 
@@ -3885,7 +3885,7 @@ void    ICE::printData_FC(const Patch* patch, int include_GC,
   for(k = zLo; k < zHi; k++)  {
     for(j = yLo; j < yHi; j++) {
       for(i = xLo; i < xHi; i++) {
-	IntVector idx(i+1, j, k);
+	IntVector idx(i, j, k);
 	fprintf(stderr,"[%d,%d,%d]~ %15.14f  ",
 		i,j,k, q_FC[idx]);
 	
@@ -3933,7 +3933,7 @@ void    ICE::printData_FC(const Patch* patch, int include_GC,
   for(k = zLo; k < zHi; k++)  {
     for(j = yLo; j < yHi; j++) {
       for(i = xLo; i < xHi; i++) {
-	IntVector idx(i,j+1, k);
+	IntVector idx(i,j, k);
 	fprintf(stderr,"[%d,%d,%d]~ %15.14f  ",
 		i,j,k, q_FC[idx]);
 	
@@ -3982,7 +3982,7 @@ void    ICE::printData_FC(const Patch* patch, int include_GC,
   for(k = zLo; k < zHi; k++)  {
     for(j = yLo; j < yHi; j++) {
       for(i = xLo; i < xHi; i++) {
-	IntVector idx(i,j, k+1);
+	IntVector idx(i,j, k);
 	fprintf(stderr,"[%d,%d,%d]~ %15.14f  ",
 		i,j,k, q_FC[idx]);
 	
