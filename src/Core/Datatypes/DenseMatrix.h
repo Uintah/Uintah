@@ -46,7 +46,7 @@ public:
     virtual double maxValue();
     inline double* getData() { return dataptr;}
     virtual void getRowNonzeros(int r, Array1<int>& idx, Array1<double>& val);
-    virtual void solve(ColumnMatrix&);
+    virtual int solve(ColumnMatrix&);
     virtual void zero();
 
     virtual void mult(const ColumnMatrix& x, ColumnMatrix& b,
@@ -76,6 +76,9 @@ public:
 
 //
 // $Log$
+// Revision 1.4  1999/12/10 06:58:57  dmw
+// DenseMatrix::solve() now returns an int (instead of void) indicating whether it succeeded or not.
+//
 // Revision 1.3  1999/08/25 03:48:33  sparker
 // Changed SCICore/CoreDatatypes to SCICore/Datatypes
 // Changed PSECore/CommonDatatypes to PSECore/Datatypes
