@@ -37,8 +37,6 @@ public:
 
   GuiInt cfldname_;
   GuiInt ctypename_;
-  GuiInt cdatamin_;
-  GuiInt cdatamax_;
   GuiInt cnumelems_;
   GuiInt cdataat_;
   GuiInt cdataminmax_;
@@ -50,6 +48,7 @@ public:
   template <class Field>
   void set_nums(Field *);
   void clear_vals();
+  void update_input_attributes(Field *);
 
   virtual void execute();
 
@@ -77,8 +76,6 @@ EditField::EditField(const string& id)
     maxz_("maxz2", id, this),
     cfldname_("cfldname", id, this),
     ctypename_("ctypename", id, this),
-    cdatamin_("cdatamin", id, this),
-    cdatamax_("cdatamax", id, this),
     cnumelems_("cnumelems", id, this),
     cdataat_("cdataat", id, this),
     cdataminmax_("cdataminmax", id, this)
@@ -119,27 +116,24 @@ EditField::set_nums(Field *f) {
 
 void EditField::clear_vals() 
 {
-  fldname_.set("---");
-  typename_.set("---");
-  datamin_.set("---");
-  datamax_.set("---");
-  numnodes_.set("---");
-  numelems_.set("---");
-  dataat_.set("---");
-  TCL::execute(id+" update_attributes");
+  TCL::execute(string("set ")+id+"-fldname \"---\"");
+  TCL::execute(string("set ")+id+"-typename \"---\"");
+  TCL::execute(string("set ")+id+"-datamin \"---\"");
+  TCL::execute(string("set ")+id+"-datamax \"---\"");
+  TCL::execute(string("set ")+id+"-numnodes \"---\"");
+  TCL::execute(string("set ")+id+"-numelems \"---\"");
+  TCL::execute(string("set ")+id+"-dataat \"---\"");
+  TCL::execute(string("set ")+id+"-minx \"---\"");
+  TCL::execute(string("set ")+id+"-miny \"---\"");
+  TCL::execute(string("set ")+id+"-minz \"---\"");
+  TCL::execute(string("set ")+id+"-maxx \"---\"");
+  TCL::execute(string("set ")+id+"-maxy \"---\"");
+  TCL::execute(string("set ")+id+"-maxz \"---\"");
+  TCL::execute(id+" update_multifields");
 }
 
-void EditField::execute(){
-  FieldIPort *iport=0; 
-  FieldHandle fh;
-  Field *f=0;
-  if (!(iport=(FieldIPort*)get_iport(0)) || 
-      !iport->get(fh) || 
-      !(f=fh.get_rep())) {
-    clear_vals();
-    return;
-  }
-
+void EditField::update_input_attributes(Field *f) 
+{
   string tname(f->get_type_name(-1));
 
   TCL::execute(string("set ")+id+"-typename "+tname);
@@ -196,8 +190,41 @@ void EditField::execute(){
     TCL::execute(string("set ")+id+"-fldname "+fldname);
   else
     TCL::execute(string("set ")+id+"-fldname \"--- Name Not Assigned ---\"");
-  
-  TCL::execute(id + " update_attributes");    
+
+  TCL::execute(id+" update_multifields");
+}
+
+void EditField::execute(){
+  FieldIPort *iport=0; 
+  FieldHandle fh;
+  Field *f=0;
+  if (!(iport=(FieldIPort*)get_iport(0)) || 
+      !iport->get(fh) || 
+      !(f=fh.get_rep())) {
+    clear_vals();
+    return;
+  }
+
+  update_input_attributes(f);
+  TCL::execute(id+" update_multifields");
+
+  GuiString fldname("fldname2", id, this);
+  GuiString type_name("typename2", id, this);
+  GuiString datamin("datamin2", id, this);
+  GuiString datamax("datamax2", id, this);
+  GuiString numelems("numelems2", id, this);
+  GuiString dataat("dataat2", id, this);
+  GuiDouble minx("minx2",id,this),miny("miny2",id,this),minz("minz2",id,this);
+  GuiDouble maxx("maxx2",id,this),maxy("maxy2",id,this),maxz("maxz2",id,this);
+
+  GuiInt cfldname("cfldname", id, this);
+  GuiInt ctypename("ctypename", id, this);
+  GuiInt cnumelems("cnumelems", id, this);
+  GuiInt cdataat("cdataat", id, this);
+  GuiInt cdataminmax("cdataminmax", id, this);
+
+  std::cerr << "fldname : " << fldname.get() << " " << cfldname.get() 
+	    << std::endl; 
 }
     
 void EditField::tcl_command(TCLArgs& args, void* userdata)
