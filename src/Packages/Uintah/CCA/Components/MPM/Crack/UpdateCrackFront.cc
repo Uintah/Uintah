@@ -115,7 +115,7 @@ void Crack::addComputesAndRequiresRecollectCrackFrontSegments(Task* t,
   int NGC=2*NGN;
   t->requires(Task::NewDW, lb->gMassLabel, gac, NGC);
   t->requires(Task::NewDW, lb->GMassLabel, gac, NGC);
-  if(d_8or27==27)
+  if(flag->d_8or27==27)
    t->requires(Task::OldDW,lb->pSizeLabel, Ghost::None);
 }
 
@@ -151,7 +151,7 @@ void Crack::RecollectCrackFrontSegments(const ProcessorGroup*,
       new_dw->get(Gmass, lb->GMassLabel, dwi, patch, gac, NGC);
 
       constParticleVariable<Vector> psize;
-      if(d_8or27==27) old_dw->get(psize, lb->pSizeLabel, pset);
+      if(flag->d_8or27==27) old_dw->get(psize, lb->pSizeLabel, pset);
 
       if(d_doCrackPropagation!="false") {
         IntVector ni[MAX_BASIS];
@@ -177,12 +177,12 @@ void Crack::RecollectCrackFrontSegments(const ProcessorGroup*,
               inMat[j]=YES;
 
               // Get the node indices that surround the cell
-              if(d_8or27==8)
+              if(flag->d_8or27==8)
                 patch->findCellAndWeights(pt, ni, S);
-              else if(d_8or27==27)
+              else if(flag->d_8or27==27)
                 patch->findCellAndWeights27(pt, ni, S, psize[j]);
 
-              for(int k = 0; k < d_8or27; k++) {
+              for(int k = 0; k < flag->d_8or27; k++) {
                 double totalMass=gmass[ni[k]]+Gmass[ni[k]];
                 if(totalMass<d_cell_mass/32.) {
                   inMat[j]=NO;
@@ -224,12 +224,12 @@ void Crack::RecollectCrackFrontSegments(const ProcessorGroup*,
               inMat[j]=YES;
 
               // Get the node indices that surround the cell
-              if(d_8or27==8)
+              if(flag->d_8or27==8)
                 patch->findCellAndWeights(cent, ni, S);
-              else if(d_8or27==27)
+              else if(flag->d_8or27==27)
                 patch->findCellAndWeights27(cent, ni, S, psize[j]);
 
-              for(int k = 0; k < d_8or27; k++) {
+              for(int k = 0; k < flag->d_8or27; k++) {
                 double totalMass=gmass[ni[k]]+Gmass[ni[k]];
                 if(totalMass<d_cell_mass/32.) {
                   inMat[j]=NO;
@@ -268,12 +268,12 @@ void Crack::RecollectCrackFrontSegments(const ProcessorGroup*,
             Point cent=cx[m][nd1]+(cx[m][nd2]-cx[m][nd1])/2.;
 
             // Get the node indices that surround the cell
-            if(d_8or27==8)
+            if(flag->d_8or27==8)
               patch->findCellAndWeights(cent, ni, S);
-            else if(d_8or27==27)
+            else if(flag->d_8or27==27)
               patch->findCellAndWeights27(cent, ni, S, psize[0]);
 
-            for(int k = 0; k < d_8or27; k++) {
+            for(int k = 0; k < flag->d_8or27; k++) {
               double totalMass=gmass[ni[k]]+Gmass[ni[k]];
               if(totalMass<d_cell_mass/32.) {
                 cfSegCenterInMat=NO;

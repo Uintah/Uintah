@@ -96,7 +96,7 @@ void Crack::addComputesAndRequiresMoveCracks(Task* t,
   t->requires(Task::NewDW, lb->GNumPatlsLabel,     gac, NGC);
   t->requires(Task::NewDW, lb->GVelocityStarLabel, gac, NGC);
 
-  if(d_8or27==27)
+  if(flag->d_8or27==27)
    t->requires(Task::OldDW,lb->pSizeLabel, Ghost::None);
 }
 
@@ -137,7 +137,7 @@ void Crack::MoveCracks(const ProcessorGroup*,
 
       ParticleSubset* pset=old_dw->getParticleSubset(dwi,patch);
       constParticleVariable<Vector> psize;
-      if(d_8or27==27)
+      if(flag->d_8or27==27)
         old_dw->get(psize,lb->pSizeLabel,pset);
 
       Ghost::GhostType  gac = Ghost::AroundCells;
@@ -168,16 +168,16 @@ void Crack::MoveCracks(const ProcessorGroup*,
               // Get element nodes and shape functions
               IntVector ni[MAX_BASIS];
               double S[MAX_BASIS];
-              if(d_8or27==8)
+              if(flag->d_8or27==8)
                 patch->findCellAndWeights(pt, ni, S);
-              else if(d_8or27==27)
+              else if(flag->d_8or27==27)
                 patch->findCellAndWeights27(pt, ni, S, psize[idx]);
 
               // Calculate center-of-velocity (vcm)
               // Sum of shape functions from nodes with particle(s) around them
               // This part is necessary for pt located outside the body
               double sumS=0.0;
-              for(int k =0; k < d_8or27; k++) {
+              for(int k =0; k < flag->d_8or27; k++) {
                 Point pi=patch->nodePosition(ni[k]);
                 if(PhysicalGlobalGridContainsPoint(dx_min,pi) &&  //ni[k] in real grid
                      (gnum[ni[k]]+Gnum[ni[k]]!=0)) {
@@ -186,7 +186,7 @@ void Crack::MoveCracks(const ProcessorGroup*,
                 }
               }
               if(sumS>1.e-6) {
-                for(int k = 0; k < d_8or27; k++) {
+                for(int k = 0; k < flag->d_8or27; k++) {
                   Point pi=patch->nodePosition(ni[k]);
                   if(PhysicalGlobalGridContainsPoint(dx_min,pi) &&
                              (gnum[ni[k]]+Gnum[ni[k]]!=0)) {
