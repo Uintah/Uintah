@@ -273,7 +273,24 @@ public:
 			     const Patch* patch, cellIndex min, cellIndex max);
 #endif
 
+public:
+  // When true, only the current timestep XML information is cached.
+  // For archives with many patch files and timesteps, Xerces data can
+  // gobble up tons of memory.
+  //
+  // I had wanted to not make this variable static, but the hash maps
+  // that make use of it would need a pointer to the DataArchive they
+  // reference.  I'm not about to make that change just as yet.
+  //
+  // Note: There could be problems with multithreaded code when the
+  // caching is turned off.  Currently there are no guards agains
+  // deleting the cache while another thread is accessing data.  For
+  // maximum thread safety, leave caching on (cacheOnlyCurrentTimestep
+  // = false).
   static bool cacheOnlyCurrentTimestep;
+
+  static void turnOnXMLCaching() { cacheOnlyCurrentTimestep = false; }
+  static void turnOffXMLCaching() { cacheOnlyCurrentTimestep = true; }
 protected:
   DataArchive();
   
