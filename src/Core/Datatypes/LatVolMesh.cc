@@ -199,6 +199,8 @@ LatVolMesh::io(Piostream& stream)
 {
   stream.begin_class(type_name().c_str(), LATVOLMESH_VERSION);
 
+  MeshBase::io(stream);
+
   // IO data members, in order
   Pio(stream, nx_);
   Pio(stream, ny_);
