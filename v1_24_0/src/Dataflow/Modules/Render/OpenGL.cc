@@ -704,25 +704,28 @@ OpenGL::redraw_frame()
 
   gui_->lock();
 #if defined(HAVE_PBUFFER)
-  int screen = Tk_ScreenNumber(tkwin_);
-  if( xres_ != pbuffer_->width() || yres_ != pbuffer_->height() ){
-    //cerr<<"creating new pbuffer: width = "<<xres<<", height == "<<yres<<"\n";
-    pbuffer_->destroy();
-    if( !pbuffer_->create( x11_dpy_, screen, x11_gl_context_,
-			   xres_, yres_, 8, 8 ) )
+  if (doing_movie_p_ || doing_image_p_)
+  {
+    if (xres_ != pbuffer_->width() || yres_ != pbuffer_->height())
     {
-      //  printf( "Pbuffer create failed.  PBuffering will not be used.\n" );
-    } else
-    {
-      have_pbuffer_ = true;
+      cerr << "creating new pbuffer: w = "<<xres_<<", h = "<<yres_<<"\n";
+      int screen = Tk_ScreenNumber(tkwin_);
+      pbuffer_->destroy();
+      if (pbuffer_->create(x11_dpy_, screen, x11_gl_context_,
+			   xres_, yres_, 8, 8))
+      {
+	have_pbuffer_ = true;
+      }
     }
   }
 
-  if((doing_movie_p_ || doing_image_p_) && 
-     pbuffer_->is_valid()){
+  if ((doing_movie_p_ || doing_image_p_) && pbuffer_->is_valid())
+  {
     pbuffer_->makeCurrent();
     glDrawBuffer( GL_FRONT );
-  } else if( have_pbuffer_ && pbuffer_->is_current() ) {
+  }
+  else if (have_pbuffer_ && pbuffer_->is_current())
+  {
     glXMakeCurrent(x11_dpy_, x11_win_, x11_gl_context_);
   }
 #endif
@@ -770,8 +773,8 @@ OpenGL::redraw_frame()
     CHECK_OPENGL_ERROR("after setting up the graphics state: ")
 
 #if defined(HAVE_PBUFFER)
-    if( pbuffer_->is_current() &&
-	(!doing_movie_p_ && !doing_image_p_) ){
+    if (pbuffer_->is_current() && (!doing_movie_p_ && !doing_image_p_))
+    {
       glXMakeCurrent(x11_dpy_, x11_win_, x11_gl_context_);
     }
 #endif
@@ -806,17 +809,23 @@ OpenGL::redraw_frame()
 	else
 	{
 #if defined(HAVE_PBUFFER)
-	  if(have_pbuffer_){
-	    if(!doing_movie_p_ && !doing_image_p_){
-	      if( pbuffer_->is_current() )
+	  if (have_pbuffer_)
+	  {
+	    if (!doing_movie_p_ && !doing_image_p_)
+	    {
+	      if (pbuffer_->is_current())
                 cerr<<"pbuffer is current while not doing Movie\n";
 #endif
-	    glDrawBuffer(GL_BACK);
+	      glDrawBuffer(GL_BACK);
 #if defined(HAVE_PBUFFER)
-	    } else {
-	    glDrawBuffer(GL_FRONT);
 	    }
-	  } else {
+	    else
+	    {
+	      glDrawBuffer(GL_FRONT);
+	    }
+	  }
+	  else
+	  {
 	    glDrawBuffer(GL_BACK);
 	  }
 #endif	
@@ -965,8 +974,7 @@ OpenGL::redraw_frame()
 
       // Show the pretty picture
 #if defined(HAVE_PBUFFER)
-      if( !have_pbuffer_ ||
-	  (!doing_movie_p_ && !doing_image_p_) )
+      if (!have_pbuffer_ ||(!doing_movie_p_ && !doing_image_p_))
 #endif
 	glXSwapBuffers(x11_dpy_, x11_win_);
     }
@@ -990,7 +998,7 @@ OpenGL::redraw_frame()
 	
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 #if defined(HAVE_PBUFFER)
-      if( !have_pbuffer_ || (!doing_movie_p_ && !doing_image_p_))
+      if (!have_pbuffer_ ||(!doing_movie_p_ && !doing_image_p_))
 #endif
     glXSwapBuffers(x11_dpy_, x11_win_);
   }
@@ -1347,7 +1355,8 @@ OpenGL::dump_image(const string& name, const string& /* type */)
 
 
 #if defined(HAVE_PBUFFER)
-  if( have_pbuffer_ && pbuffer_->is_valid() && pbuffer_->is_current() ){
+  if (have_pbuffer_ && pbuffer_->is_valid() && pbuffer_->is_current())
+  {
     glXMakeCurrent( x11_dpy_, x11_win_, x11_gl_context_ ); 
     glMatrixMode(GL_PROJECTION);
     glPushMatrix();
@@ -2097,7 +2106,8 @@ OpenGL::AddMpegFrame()
   glReadPixels(0,0,width,height,GL_RGB,GL_UNSIGNED_BYTE,ptr);
 
 #if defined(HAVE_PBUFFER)
-  if( have_pbuffer_ && pbuffer_->is_valid() && pbuffer_->is_current() ){
+  if (have_pbuffer_ && pbuffer_->is_valid() && pbuffer_->is_current())
+  {
     glXMakeCurrent( x11_dpy_, x11_win_, x11_gl_context_ ); 
     glMatrixMode(GL_PROJECTION);
     glPushMatrix();
