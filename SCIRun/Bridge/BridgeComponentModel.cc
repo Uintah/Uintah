@@ -76,13 +76,12 @@ int BridgeComponent::bridgeID(0);
 BridgeComponentModel::BridgeComponentModel(SCIRunFramework* framework)
   : ComponentModel("bridge"), framework(framework)
 {
-  if(!SCIRunComponentModel::gui) SCIRunComponentModel::initGuiInterface();
-  buildComponentList();
+    buildComponentList();
 }
 
 BridgeComponentModel::~BridgeComponentModel()
 {
-  destroyComponentList();
+    destroyComponentList();
 }
 
 void BridgeComponentModel::destroyComponentList()
