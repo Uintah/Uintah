@@ -19,6 +19,8 @@
 #include <xercesc/dom/DOMNodeList.hpp>
 #include <xercesc/dom/DOMException.hpp> 
 
+#include <Dataflow/XMLUtil/SimpleErrorHandler.h>
+
 #include <iostream>
 #include <fstream.h>
 
