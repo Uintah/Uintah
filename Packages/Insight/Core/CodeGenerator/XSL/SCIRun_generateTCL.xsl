@@ -5,7 +5,8 @@
 <xsl:output method="text" indent="no"/>
 
 <!-- ============ GLOBAL VARIABLES ============ -->
-<xsl:variable name="has_gui"><xsl:value-of select="/filter/filter-gui"/></xsl:variable>
+<xsl:variable name="gui_specified"><xsl:value-of select="/filter/filter-gui"/></xsl:variable>
+<xsl:variable name="no_params"><xsl:value-of select="/filter/filter-itk/parameters/param"/></xsl:variable>	      
 
 <!-- ============== /FILTER =====================-->
 <xsl:template match="/filter">
@@ -44,7 +45,7 @@
 </xsl:text>
 <!-- Create globals corresponding to parameters -->
 <xsl:choose>
-<xsl:when test="$has_gui = ''">
+<xsl:when test="$gui_specified = ''">
 <xsl:for-each select="/filter/filter-itk/parameters/param">
 <xsl:text>
          global $this-</xsl:text> 
@@ -68,7 +69,7 @@
     method set_defaults {} {
 </xsl:text>
 <xsl:choose>
-<xsl:when test="$has_gui = ''">
+<xsl:when test="$gui_specified = ''">
 <xsl:for-each select="/filter/filter-itk/parameters/param">
 <xsl:text>
          set $this-</xsl:text> 
@@ -89,7 +90,7 @@
 </xsl:text>
 <!-- Create ui function -->
 <xsl:choose>
-<xsl:when test="$has_gui = ''">
+<xsl:when test="$no_params = ''"> <!-- no ui method -->
 </xsl:when>
 <xsl:otherwise>
 <xsl:text>
@@ -106,7 +107,7 @@
 </xsl:text>
 <!-- Parameters -->
 <xsl:choose>
-<xsl:when test="$has_gui = ''">
+<xsl:when test="$gui_specified = ''">
 <xsl:for-each select="/filter/filter-itk/parameters/param">
 <xsl:variable name="gui"><xsl:value-of select="gui"/></xsl:variable>
   <xsl:call-template name="create_text_entry">
@@ -161,9 +162,11 @@
 <!--  ================= WIDGET FUNCTIONS ================= -->
 <xsl:template name="execute_and_close_buttons">
 <xsl:text disable-output-escaping="yes">        
-        button $w.execute -text &quot;Execute&quot; -command &quot;$this-c needexecute&quot;
-        button $w.close -text &quot;Close&quot; -command &quot;destroy $w&quot;
-        pack $w.execute $w.close -side left
+        frame $w.buttons
+        button $w.buttons.execute -text &quot;Execute&quot; -command &quot;$this-c needexecute&quot;
+        button $w.buttons.close -text &quot;Close&quot; -command &quot;destroy $w&quot;
+        pack $w.buttons.execute $w.buttons.close -side left
+	pack $w.buttons -side top -padx 5 -pady 5
 </xsl:text>
 </xsl:template>
 
@@ -171,7 +174,7 @@
 <xsl:template name="create_text_entry">
 <xsl:variable name="widget">entry</xsl:variable>
 <xsl:choose>
-<xsl:when test="$has_gui = ''">
+<xsl:when test="$gui_specified = ''">
 <xsl:variable name="path"><xsl:text>$w.</xsl:text><xsl:value-of select="name"/>
 </xsl:variable>
 <xsl:text>
