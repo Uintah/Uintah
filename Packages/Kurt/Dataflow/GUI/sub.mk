@@ -8,13 +8,20 @@ SRCDIR := Kurt/GUI
 ALLTARGETS := $(ALLTARGETS) $(SRCDIR)/tclIndex
 
 $(SRCDIR)/tclIndex: $(SRCDIR)/VolVis.tcl $(SRCDIR)/PadField.tcl \
-	$(SRCDIR)/TextureVolVis.tcl $(SRCDIR)/GLTextureBuilder.tcl
+	$(SRCDIR)/TextureVolVis.tcl $(SRCDIR)/GLTextureBuilder.tcl \
+	$(SRCDIR)/TexCuttingPlanes.tcl \
+	$(SRCDIR)/VisControl.tcl \
+	$(SRCDIR)/RescaleColorMapForParticles.tcl \
+	$(SRCDIR)/ParticleVis.tcl
 	$(SRCTOP)/scripts/createTclIndex $(SRCTOP)/Kurt/GUI
 
 CLEANPROGS := $(CLEANPROGS) $(SRCDIR)/tclIndex
 
 #
 # $Log$
+# Revision 1.5  2000/05/20 02:31:50  kuzimmer
+# Multiple changes for new vis tools
+#
 # Revision 1.4  2000/05/16 20:54:00  kuzimmer
 # added new directory
 #
