@@ -55,7 +55,6 @@ GraphPart::~GraphPart()
 void 
 GraphPart::set_num_lines( int n )
 {
-  cerr << "resizing lines to " << n << endl;
   data_.resize(n);
   reset(n);
   
