@@ -9,14 +9,14 @@ namespace rtrt {
 
   class Widget {
   public:
-    virtual void translate( float dx, float dy ) = 0;
+    virtual void translate( float x, float y ) = 0;
     virtual void draw( void ) = 0;
-    virtual void manipulate( float x, float dx, float y, float dy ) = 0;
+    virtual void manipulate( float x, float y ) = 0;
     virtual void paintTransFunc( GLfloat dest[textureHeight][textureWidth][4],
 				 float master_opacity ) = 0;
     virtual bool insideWidget( float x, float y ) = 0;
     virtual void returnParams( float *p[numWidgetParams] ) = 0;
-    virtual void adjustOpacity( float dx ) = 0;
+    virtual void adjustOpacity( float x ) = 0;
     virtual void invertColor( void ) = 0;
     virtual void changeColor( float r, float g, float b ) = 0;
     virtual void reflectTrans( void ) = 0;
@@ -56,14 +56,14 @@ namespace rtrt {
 	       float g, float b, float o, float o_x, float o_y, float t_r,
 	       float t_g, float t_b, int t_x, int t_y, int sF );
     virtual void draw( void );
-    virtual void translate( float dx, float dy );
-    void adjustShear( float dx, float dy );
-    void adjustWidth( float dx );
-    void adjustLowerBound( float dx, float dy );
-    virtual void manipulate( float x, float dx, float y, float dy );
+    virtual void translate( float x, float /*y*/ );
+    void adjustShear( float x, float y );
+    void adjustWidth( float x );
+    void adjustLowerBound( float y );
+    virtual void manipulate( float x, float y );
     virtual void paintTransFunc( GLfloat dest[textureHeight][textureWidth][4],
 				 float master_opacity );
-    virtual void adjustOpacity( float dx );
+    virtual void adjustOpacity( float x );
     virtual bool insideWidget( float x, float y );
     virtual void returnParams( float *p[numWidgetParams] );
     virtual void changeColor( float r, float g, float b );
@@ -86,18 +86,18 @@ namespace rtrt {
 		float b, float o, float f_x, float f_y, float o_x, float o_y,
 		float t_r, float t_g, float t_b, int t_x, int t_y, int sF );
     virtual void draw( void );
-    virtual void translate( float dx, float dy );
-    virtual void resize( float dx, float dy );
-    virtual void manipulate( float x, float dx, float y, float dy );
+    virtual void translate( float x, float y );
+    virtual void resize( float x, float y );
+    virtual void manipulate( float x, float y );
     virtual void paintTransFunc( GLfloat dest[textureHeight][textureWidth][4],
 				 float master_opacity );
     virtual bool insideWidget( float x, float y );
     virtual void returnParams( float *p[numWidgetParams] );
     virtual void changeColor( float r, float g, float b );
-    virtual void adjustOpacity( float dx );
+    virtual void adjustOpacity( float x );
     virtual void invertColor( void );
     virtual void reflectTrans( void );
-    void adjustFocus( float dx, float dy );
+    void adjustFocus( float x, float y );
   
     //private:
     GLStar *focusStar;
