@@ -138,6 +138,43 @@ void MPMICE::problemSetup(const ProblemSpecP& prob_spec, GridP& grid,
         switchDebug_InterpolatePAndGradP   = true;       
     }
   }
+  //__________________________________
+  //  reaction bulletproofing
+  bool react = false;
+  bool prod  = false;
+  int numALLMatls=d_sharedState->getNumMatls();
+  for(int m = 0; m < numALLMatls; m++) {
+    Material* matl = d_sharedState->getMaterial( m );
+    ICEMaterial* ice_matl = dynamic_cast<ICEMaterial*>(matl);
+    MPMMaterial* mpm_matl = dynamic_cast<MPMMaterial*>(matl);
+    if ( ice_matl) {
+     cout << "ice "<<endl;
+    }
+    if(mpm_matl){
+      cout << "mpm"<<endl;
+    }
+    if( (ice_matl && ice_matl->getRxProduct() == Material::product) ||
+        (mpm_matl && mpm_matl->getRxProduct() == Material::product) ){
+      prod = true;
+    }
+    if( (ice_matl && ice_matl->getRxProduct() == Material::reactant) ||
+        (mpm_matl && mpm_matl->getRxProduct() == Material::reactant) ){
+      react = true;
+    }
+  }
+     
+  if (d_ice->d_massExchange && (!react || !prod)) {
+   ostringstream warn;
+   warn<<"ERROR\n You've specified massExchange\n"<<
+         " but haven't specified either the product or reactant";
+   throw ProblemSetupException(warn.str());    
+  }
+  if (!d_ice->d_massExchange && (react || prod)) {
+   ostringstream warn;
+   warn<<"ERROR\n You've specified a product and reactant but have\n"<<
+         " turned on the massExchange flag";
+   throw ProblemSetupException(warn.str());    
+  }
   cout_norm << "Done with problemSetup \t\t\t MPMICE" <<endl;
   cout_norm << "--------------------------------\n"<<endl;
 }
