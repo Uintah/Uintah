@@ -165,6 +165,14 @@ private:
 
   //////////
   // Insert Documentation Here:
+  void computeArtificialViscosity(const ProcessorGroup*,
+                                  const PatchSubset* patches,
+                                  const MaterialSubset* matls,
+                                  DataWarehouse* old_dw,
+                                  DataWarehouse* new_dw);
+
+  //////////
+  // Insert Documentation Here:
   void computeInternalHeatRate(const ProcessorGroup*,
 			       const PatchSubset* patches,
 			       const MaterialSubset* matls,
@@ -252,6 +260,9 @@ private:
   void scheduleComputeInternalForce(SchedulerP&, const PatchSet*,
 				    const MaterialSet*);
 
+  void scheduleComputeArtificialViscosity(SchedulerP&, const PatchSet*,
+				    const MaterialSet*);
+
   void scheduleComputeInternalHeatRate(SchedulerP&, const PatchSet*,
 				       const MaterialSet*);
 
@@ -291,7 +302,7 @@ private:
 	 
   SimulationStateP d_sharedState;
   MPMLabel* lb;
-  bool             d_burns;
+  bool             d_artificial_viscosity;
   double           d_nextOutputTime;
   double           d_outputInterval;
   double           d_SMALL_NUM_MPM;
