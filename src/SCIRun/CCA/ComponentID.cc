@@ -42,8 +42,8 @@
 #include <SCIRun/SCIRunFramework.h>
 #include <Core/CCA/PIDL/URL.h>
 #include <iostream>
-using namespace SCIRun;
-using namespace std;
+
+namespace SCIRun {
 
 ComponentID::ComponentID(SCIRunFramework* framework, const std::string& name)
   : framework(framework), name(name)
@@ -54,13 +54,15 @@ ComponentID::~ComponentID()
 {
 }
 
-string ComponentID::getInstanceName()
+std::string ComponentID::getInstanceName()
 {
   return name;
 }
 
-string ComponentID::getSerialization()
+std::string ComponentID::getSerialization()
 {
-  string s = framework->getURL().getString()+"/"+name;
+  std::string s = framework->getURL().getString()+"/"+name;
   return s;
 }
+
+} // end namespace SCIRun
