@@ -67,6 +67,7 @@ public:
   ITKDatatypeOPort* outimage_;
   ITKDatatypeHandle outimage_handle_;
   ITKDatatype* img_;
+  GuiInt       copy_;
 
 
   FieldToImage(GuiContext*);
@@ -90,7 +91,8 @@ public:
 
 DECLARE_MAKER(FieldToImage)
 FieldToImage::FieldToImage(GuiContext* ctx)
-  : Module("FieldToImage", ctx, Source, "Converters", "Insight")
+  : Module("FieldToImage", ctx, Source, "Converters", "Insight"),
+    copy_(ctx->subVar("copy"))
 {
   img_ = scinew ITKDatatype;
 }
@@ -164,7 +166,7 @@ bool FieldToImage::run( const FieldHandle &fh)
     unsigned long size = (unsigned long)f->fdata().size();
 
     
-    img->GetPixelContainer()->SetImportPointer(imageData, size, true);
+    img->GetPixelContainer()->SetImportPointer(imageData, size, false);
 
     // send the data downstream
     img_->data_ = img;
@@ -217,7 +219,7 @@ bool FieldToImage::run( const FieldHandle &fh)
     unsigned long size = (unsigned long)f->fdata().size();
 
     
-    img->GetPixelContainer()->SetImportPointer(imageData, size, true);
+    img->GetPixelContainer()->SetImportPointer(imageData, size, false);
 
     // send the data downstream
     img_->data_ = img;
