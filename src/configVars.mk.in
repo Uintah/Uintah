@@ -128,7 +128,7 @@ ifneq ($(TAU_LIB_DIR),)
 else
   TAU_LIBRARY := $(TAU_LIB_FLAG)
 endif
-ifneq (@TAU_INCLUDE_DIR@,)
+ifneq ($(TAU_INCLUDE_DIR),)
 TAU_INCLUDE := -I@TAU_INCLUDE_DIR@
 endif
 
