@@ -91,14 +91,14 @@ static void make_arena()
 {
     if(!arena_created){
 	usconfig(CONF_ARENATYPE, US_SHAREDONLY);
-	usconfig(CONF_INITSIZE, 1024*1024);
+	usconfig(CONF_INITSIZE, 4096*1024);
 	usconfig(CONF_INITUSERS, (unsigned int)80);
 	char* lockfile=tempnam(NULL, "sci");
 	arena=usinit(lockfile);
 	free(lockfile);
 	if(!arena){
 	    perror("usinit");
-	    exit(-1);
+	    Task::exit_all(-1);
 	}
 	arena_created=1;
     }
@@ -111,14 +111,14 @@ static void makestack(TaskPrivate* priv)
 				 MAP_SHARED, devzero_fd, 0);
     if((int)priv->stackbot == -1){
 	perror("mmap");
-	exit(-1);
+	Task::exit_all(-1);
     }
     // Now unmap the bottom part of it...
     priv->redlen=DEFAULT_STACK_LENGTH-INITIAL_STACK_LENGTH;
     priv->sp=(char*)priv->stackbot+priv->stacklen-1;
     if(mprotect(priv->stackbot, priv->redlen, PROT_NONE) == -1){
 	perror("mprotect");
-	exit(-1);
+	Task::exit_all(-1);
     }
 }
 
@@ -150,17 +150,17 @@ void Task::taskexit(Task* xit, int retval)
     // See if everyone is done..
     if(uspsema(sched_lock) == -1){
 	perror("uspsema");
-	exit(-1);
+	Task::exit_all(-1);
     }
     if(--nsched == 0){
 	if(usvsema(main_sema) == -1){
 	    perror("usvsema");
-	    exit(-1);
+	    Task::exit_all(-1);
 	}
     }
     if(usvsema(sched_lock) == -1){
 	perror("usvsema");
-	exit(-1);
+	Task::exit_all(-1);
     }
     _exit(0);
 } 
@@ -170,7 +170,7 @@ void Task::activate(int task_arg)
 {
     if(activated){
 	cerr << "Error: task is being activated twice!" << endl;
-	exit(-1);
+	Task::exit_all(-1);
     }
     activated=1;
     priv=new TaskPrivate;
@@ -181,11 +181,15 @@ void Task::activate(int task_arg)
 	args->arg=task_arg;
 	args->t=this;
 	priv->running=usnewsema(arena, 0);
+	if(!priv->running){
+	    perror("usnewsema");
+	    Task::exit_all(-1);
+	}
 	makestack(priv);
 
 	if(uspsema(sched_lock) == -1){
 	    perror("uspsema");
-	    exit(-1);
+	    Task::exit_all(-1);
 	}
 	nsched++;
 	priv->tid=sprocsp((void (*)(void*, size_t))runbody,
@@ -193,12 +197,12 @@ void Task::activate(int task_arg)
 			  (void*)args, priv->sp, priv->stacklen);
 	if(priv->tid==-1){
 	    perror("sprocsp");
-	    exit(-1);
+	    Task::exit_all(-1);
 	}
 	tasks[ntasks++]=this;
 	if(usvsema(sched_lock) == -1){
 	    perror("usvsema");
-	    exit(-1);
+	    Task::exit_all(-1);
 	}
     }
 }
@@ -457,7 +461,15 @@ void Task::initialize(char* pn)
     if(!single_threaded.is_set()){
 	make_arena();
 	sched_lock=usnewsema(arena, 1);
+	if(!sched_lock){
+	    perror("usnewsema");
+	    exit(-1);
+	}
 	main_sema=usnewsema(arena, 0);
+	if(!main_sema){
+	    perror("main_sema");
+	    exit(-1);
+	}
 
 	// Set up the task local memory...
 	int fd=open("/dev/zero", O_RDWR);
@@ -576,11 +588,11 @@ int Task::wait_for_task(Task* task)
     if(!single_threaded.is_set()){
 	if(uspsema(task->priv->running) == -1){
 	    perror("usvsema");
-	    exit(-1);
+	    Task::exit_all(-1);
 	}
 	if(usvsema(task->priv->running) == -1){
 	    perror("usvsema");
-	    exit(-1);
+	    Task::exit_all(-1);
 	}
     }
     return task->priv->retval;
@@ -601,7 +613,7 @@ Semaphore::Semaphore(int count)
 	priv->semaphore=usnewsema(arena, count);
 	if(!priv->semaphore){
 	    perror("usnewsema");
-	    exit(-1);
+	    Task::exit_all(-1);
 	}
     } else {
 	priv=0;
@@ -621,7 +633,7 @@ void Semaphore::down()
     if(!single_threaded.is_set()){
 	if(uspsema(priv->semaphore) == -1){
 	    perror("upsema");
-	    exit(-1);
+	    Task::exit_all(-1);
 	}
     }
 }
@@ -631,7 +643,7 @@ void Semaphore::up()
     if(!single_threaded.is_set()){
 	if(usvsema(priv->semaphore) == -1){
 	    perror("usvsema");
-	    exit(-1);
+	    Task::exit_all(-1);
 	}
     }
 }
@@ -649,6 +661,10 @@ Mutex::Mutex()
 	priv=new Mutex_private;
 	make_arena();
 	priv->lock=usnewlock(arena);
+	if(!priv->lock){
+	    perror("usnewlock");
+	    Task::exit_all(-1);
+	}
     } else {
 	priv=0;
     }
@@ -667,7 +683,7 @@ void Mutex::lock()
     if(!single_threaded.is_set()){
 	if(ussetlock(priv->lock) == -1){
 	    perror("ussetlock");
-	    exit(-1);
+	    Task::exit_all(-1);
 	}
     }
 }
@@ -677,7 +693,7 @@ void Mutex::unlock()
     if(!single_threaded.is_set()){
 	if(usunsetlock(priv->lock) == -1){
 	    perror("usunsetlock");
-	    exit(-1);
+	    Task::exit_all(-1);
 	}
     }
 }
@@ -688,7 +704,7 @@ int Mutex::try_lock()
 	int val=uscsetlock(priv->lock, 5);
 	if(val == -1){
 	    perror("uscsetlock");
-	    exit(-1);
+	    Task::exit_all(-1);
 	}
 	return val;
     } else {
@@ -709,6 +725,10 @@ LibMutex::LibMutex()
     priv=new LibMutex_private;
     make_arena();
     priv->lock=usnewlock(arena);
+    if(!priv->lock){
+	perror("usnewlock");
+	Task::exit_all(-1);
+    }
 }
 
 LibMutex::~LibMutex()
@@ -721,7 +741,7 @@ void LibMutex::lock()
 {
     if(ussetlock(priv->lock) == -1){
 	perror("upsema");
-	exit(-1);
+	Task::exit_all(-1);
     }
 }
 
@@ -729,7 +749,7 @@ void LibMutex::unlock()
 {
     if(usunsetlock(priv->lock) == -1){
 	perror("usvsema");
-	exit(-1);
+	Task::exit_all(-1);
     }
 }
 
@@ -738,7 +758,7 @@ int LibMutex::try_lock()
     int val=uscsetlock(priv->lock, 5);
     if(val == -1){
 	perror("uscsetlock");
-	exit(-1);
+	Task::exit_all(-1);
     }
     return val;
 }
@@ -821,7 +841,7 @@ TaskInfo* Task::get_taskinfo()
 {
     if(uspsema(sched_lock) == -1){
 	perror("uspsema");
-	exit(-1);
+	Task::exit_all(-1);
     }
     TaskInfo* ti=new TaskInfo(ntasks);
     for(int i=0;i<ntasks;i++){
@@ -833,7 +853,7 @@ TaskInfo* Task::get_taskinfo()
     }
     if(usvsema(sched_lock) == -1){
 	perror("usvsema");
-	exit(-1);
+	Task::exit_all(-1);
     }
     return ti;
 }
