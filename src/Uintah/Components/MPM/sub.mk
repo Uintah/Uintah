@@ -12,6 +12,7 @@ SRCS     += $(SRCDIR)/SerialMPM.cc \
 
 SUBDIRS := $(SRCDIR)/ConstitutiveModel $(SRCDIR)/Contact \
 	$(SRCDIR)/Fracture \
+	$(SRCDIR)/ThermalContact \
 	$(SRCDIR)/GeometrySpecification $(SRCDIR)/Util
 
 include $(SRCTOP)/scripts/recurse.mk
@@ -25,6 +26,9 @@ include $(SRCTOP)/scripts/smallso_epilogue.mk
 
 #
 # $Log$
+# Revision 1.12  2000/05/31 22:20:22  tan
+# Added ThermalContact directory.
+#
 # Revision 1.11  2000/05/30 20:18:59  sparker
 # Changed new to scinew to help track down memory leaks
 # Changed region to patch
