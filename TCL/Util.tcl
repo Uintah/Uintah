@@ -80,8 +80,8 @@ itcl_class expscale {
 
 	set built 1
 	scale $this.scale -label $label -orient $orient \
-		-from 1 -to 10 -resolution 0.000001 \
-		-variable $variable
+		-from -1000000 -to 10000000 -resolution 0.000001 \
+		-variable $variable -command $command
 	pack $this.scale -fill x -side left -expand yes
 
 	frame $this.e
@@ -117,6 +117,7 @@ itcl_class expscale {
 	}
     }
     protected exp 0
+    public command ""
 
     method upexp {} {
 	incr exp
