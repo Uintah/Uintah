@@ -84,8 +84,7 @@ public:
   virtual void finish();
   virtual void detach(Connection *conn, bool blocked);
 
-  void send(const T&);
-  void send_intermediate(const T&);
+  void send(const T&, bool intermediate = false);
   void set_cache( bool cache = true )
   {
     cache_ = cache;
@@ -99,8 +98,7 @@ public:
   virtual void resend(Connection* conn);
 
 private:
-  void do_send(const T&);
-  void do_send_intermediate(const T&);
+  void do_send(const T&, bool intermediate = false);
 
   bool cache_;
   bool sent_something_;
@@ -213,19 +211,19 @@ SimpleOPort<T>::detach(Connection *conn, bool blocked)
 //! Field ports must only send const fields i.e. frozen fields.
 //! Definition in FieldPort.cc
 template<>
-void SimpleOPort<FieldHandle>::send(const FieldHandle& data);
+void SimpleOPort<FieldHandle>::send(const FieldHandle& data,
+				    bool intermediate);
 
 template<class T>
 void
-SimpleOPort<T>::send(const T& data)
+SimpleOPort<T>::send(const T& data, bool intermediate)
 {
-  do_send(data);
+  do_send(data, intermediate);
 }
 
-
 template<class T>
 void
-SimpleOPort<T>::do_send(const T& data)
+SimpleOPort<T>::do_send(const T& data, bool intermediate)
 {
   handle_ = cache_ ? data : 0;
 
@@ -234,41 +232,8 @@ SimpleOPort<T>::do_send(const T& data)
   // Change oport state and colors on screen.
   if (module->show_stats()) { turn_on(); }
 
-  for (int i = 0; i < nconnections(); i++)
-  {
-    // Add the new message.
-    Connection* conn = connections[i];
-    SimplePortComm<T>* msg = scinew SimplePortComm<T>(data);
-    ((SimpleIPort<T>*)conn->iport)->mailbox.send(msg);
-  }
-  sent_something_ = true;
-
-  if (module->show_stats()) { turn_off(); }
-}
-
-
-template<>
-void SimpleOPort<FieldHandle>::send_intermediate(const FieldHandle& data);
-
-template<class T>
-void
-SimpleOPort<T>::send_intermediate(const T& data)
-{
-  do_send_intermediate(data);
-}
-
-
-template<class T>
-void
-SimpleOPort<T>::do_send_intermediate(const T& data)
-{
-  handle_ = cache_ ? data : 0;
-
-  if (nconnections() == 0) { return; }
-
-  if (module->show_stats()) { turn_on(); }
-
-  module->request_multisend(this);
+  if( intermediate )
+    module->request_multisend(this);
 
   for (int i = 0; i < nconnections(); i++)
   {
@@ -277,8 +242,10 @@ SimpleOPort<T>::do_send_intermediate(const T& data)
     SimplePortComm<T>* msg = scinew SimplePortComm<T>(data);
     ((SimpleIPort<T>*)conn->iport)->mailbox.send(msg);
   }
+
   sent_something_ = true;
 
+  // Change oport state and colors on screen.
   if (module->show_stats()) { turn_off(); }
 }
 
