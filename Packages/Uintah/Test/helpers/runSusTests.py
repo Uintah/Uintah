@@ -217,7 +217,7 @@ def runSusTest(test, susdir, inputsdir, compare_root, algo, mode, max_parallelis
     if do_restart == "yes":
       chdir("..")
       system("rm *.uda")
-      system("cp -d --symbolic-link restart/*.uda .")
+      system("/usr/gnu/bin/cp -d --symbolic-link restart/*.uda .")
       chdir("restart")
     print "\tComparing udas on %s" % (date())
     replace_msg = "\tTo replace the gold standard uda and memory usage with these results,\n\trun: %s/replace_gold_standard" % (getcwd())
