@@ -7,16 +7,20 @@ include $(SRCTOP)/scripts/smallso_prologue.mk
 
 SRCDIR   := SCICore/Exceptions
 
-SRCS     += $(SRCDIR)/Exceptions.cc $(SRCDIR)/InternalError.cc
-
+SRCS     += $(SRCDIR)/ArrayIndexOutOfBounds.cc \
+	$(SRCDIR)/AssertionFailed.cc $(SRCDIR)/Exception.cc \
+	$(SRCDIR)/InternalError.cc
 
 PSELIBS := 
-LIBS := 
+LIBS := $(TRACEBACK_LIB)
 
 include $(SRCTOP)/scripts/smallso_epilogue.mk
 
 #
 # $Log$
+# Revision 1.3  2000/03/23 10:25:41  sparker
+# New exception facility - retired old "Exception.h" classes
+#
 # Revision 1.2  2000/03/20 19:37:36  sparker
 # Added VPATH support
 #

@@ -17,6 +17,7 @@
 #define SCICore_Exceptions_InternalError_h
 
 #include <SCICore/Exceptions/Exception.h>
+#include <string>
 
 namespace SCICore {
     namespace Exceptions {
@@ -24,7 +25,8 @@ namespace SCICore {
 	public:
 	    InternalError(const std::string&);
 	    virtual ~InternalError();
-	    virtual std::string message() const;
+	    virtual const char* message() const;
+	    virtual const char* type() const;
 	protected:
 	private:
 	    std::string d_message;
@@ -36,6 +38,9 @@ namespace SCICore {
 
 //
 // $Log$
+// Revision 1.2  2000/03/23 10:25:41  sparker
+// New exception facility - retired old "Exception.h" classes
+//
 // Revision 1.1  1999/08/25 19:03:16  sparker
 // Exception base class and generic error class
 //
