@@ -38,12 +38,7 @@ void ICE::scheduleSetupMatrix(  SchedulerP& sched,
   //  Form the matrix
   cout_doing << "ICE::scheduleSetupMatrix" << endl;
   t = scinew Task("ICE::setupMatrix", this, &ICE::setupMatrix);
-  t->requires( Task::ParentOldDW, lb->delTLabel);    
-  t->requires( Task::ParentNewDW, lb->sp_vol_CCLabel,     gac,1);    
-  t->requires( Task::ParentNewDW, lb->vol_frac_CCLabel,   gac,1); 
-  t->requires( Task::NewDW,       lb->uvel_FCMELabel,     gac,2); 
-  t->requires( Task::NewDW,       lb->vvel_FCMELabel,     gac,2); 
-  t->requires( Task::NewDW,       lb->wvel_FCMELabel,     gac,2); 
+  t->requires( Task::ParentOldDW, lb->delTLabel); 
   t->requires( Task::NewDW,       lb->sp_volX_FCLabel,    gac,1);
   t->requires( Task::NewDW,       lb->sp_volY_FCLabel,    gac,1);
   t->requires( Task::NewDW,       lb->sp_volZ_FCLabel,    gac,1);
@@ -333,14 +328,9 @@ void ICE::setupMatrix(const ProcessorGroup*,
     for(int m = 0; m < numMatls; m++) {
       Material* matl = d_sharedState->getMaterial( m );
       int indx = matl->getDWIndex();
-      constSFCXVariable<double> uvel_FC, sp_volX_FC, vol_fracX_FC;
-      constSFCYVariable<double> vvel_FC, sp_volY_FC, vol_fracY_FC;
-      constSFCZVariable<double> wvel_FC, sp_volZ_FC, vol_fracZ_FC;
-      constCCVariable<double> vol_frac, sp_vol_CC;     
-
-      new_dw->get(uvel_FC,          lb->uvel_FCMELabel,     indx,patch,gac, 2);
-      new_dw->get(vvel_FC,          lb->vvel_FCMELabel,     indx,patch,gac, 2);
-      new_dw->get(wvel_FC,          lb->wvel_FCMELabel,     indx,patch,gac, 2);
+      constSFCXVariable<double> sp_volX_FC, vol_fracX_FC;
+      constSFCYVariable<double> sp_volY_FC, vol_fracY_FC;
+      constSFCZVariable<double> sp_volZ_FC, vol_fracZ_FC;
       
       new_dw->get(sp_volX_FC,       lb->sp_volX_FCLabel,    indx,patch,gac, 1);
       new_dw->get(sp_volY_FC,       lb->sp_volY_FCLabel,    indx,patch,gac, 1);
@@ -350,9 +340,6 @@ void ICE::setupMatrix(const ProcessorGroup*,
       new_dw->get(vol_fracY_FC,     lb->vol_fracY_FCLabel,  indx,patch,gac, 1);    
       new_dw->get(vol_fracZ_FC,     lb->vol_fracZ_FCLabel,  indx,patch,gac, 1);    
             
-      parent_new_dw->get(vol_frac,  lb->vol_frac_CCLabel,   indx,patch,gac, 1);
-      parent_new_dw->get(sp_vol_CC, lb->sp_vol_CCLabel,     indx,patch,gac, 1);
-      
       //__________________________________
       // Sum (<upwinded volfrac> * sp_vol on faces)
       // +x -x +y -y +z -z
