@@ -34,6 +34,8 @@ using namespace SCICore::OS;
 using namespace SCICore::Exceptions;
 using namespace PSECore::XMLUtil;
 
+static Dir makeVersionedDir(const std::string nameBase);
+
 DataArchiver::DataArchiver(int MpiRank, int MpiProcesses)
    : UintahParallelComponent(MpiRank, MpiProcesses)
 {
@@ -52,7 +54,7 @@ void DataArchiver::problemSetup(const ProblemSpecP& params)
 
    d_currentTimestep = 0;
 
-   d_dir = Dir::create(d_filebase);
+   d_dir = makeVersionedDir(d_filebase);
 
    DOM_DOMImplementation impl;
     
@@ -434,8 +436,56 @@ void DataArchiver::output(const ProcessorContext*,
    topout << topDoc << endl;
 }
 
+static Dir makeVersionedDir(const std::string nameBase)
+{
+   Dir dir;
+   string dirName = nameBase;
+   unsigned int dirMin = 0;
+   unsigned int dirNum = 0;
+   unsigned int dirMax = 0;
+
+   bool dirCreated = false;
+   while (!dirCreated) {
+	   try {
+         dir = Dir::create(dirName);
+
+         dirMax = dirNum;
+         if (dirMax == dirMin)
+            dirCreated = true;
+         else
+            dir.remove();
+
+      } catch (ErrnoException& e) {
+         if (e.getErrno() != EEXIST)
+            throw e;
+
+         dirMin = dirNum + 1;
+      }
+
+      if (!dirCreated) {
+         if (dirMax == 0) {
+            if (dirNum == 0)
+               dirNum = 1;
+            else
+               dirNum *= 2;
+         } else {
+            dirNum = dirMin + ((dirMax - dirMin) / 2);
+         }
+	
+         ostringstream name;
+         name << nameBase << "." << setw(3) << setfill('0') << dirNum;
+         dirName = name.str();
+      }
+   }
+
+   return Dir(dir.getName());
+}
+
 //
 // $Log$
+// Revision 1.4  2000/05/31 15:21:50  jehall
+// - Added output dir versioning
+//
 // Revision 1.3  2000/05/30 20:18:54  sparker
 // Changed new to scinew to help track down memory leaks
 // Changed region to patch
