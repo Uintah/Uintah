@@ -432,6 +432,7 @@ void SerialMPM::interpolateParticlesToGrid(const ProcessorContext*,
       for(NodeIterator iter = region->getNodeIterator(); !iter.done(); iter++){
 	if(gmass[*iter] != 0.0){
 	    gvelocity[*iter] *= 1./gmass[*iter];
+//	    cerr << "mass[*iter] = " << gmass[*iter] << '\n';
 	}
       }
 
@@ -491,7 +492,7 @@ void SerialMPM::computeInternalForce(const ProcessorContext*,
 
       old_dw->get(px,      pXLabel, matlindex, region, 0);
       old_dw->get(pvol,    pVolumeLabel, matlindex, region, 0);
-      old_dw->get(pstress, pStressLabel, matlindex, region, 0);
+      new_dw->get(pstress, pStressLabel, matlindex, region, 0);
 
       new_dw->allocate(internalforce, gInternalForceLabel, vfindex, region);
   
@@ -555,6 +556,7 @@ void SerialMPM::solveEquationsMotion(const ProcessorContext*,
       // Do the computation of a = F/m for nodes where m!=0.0
       for(NodeIterator iter = region->getNodeIterator(); !iter.done(); iter++){
 	if(mass[*iter]>0.0){
+//          cerr << "Internal Force = " << internalforce[*iter] << '\n';
 	  acceleration[*iter] =
 		 (internalforce[*iter] + externalforce[*iter])/ mass[*iter];
 	}
@@ -635,9 +637,11 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorContext*,
       // Get the arrays of particle values to be changed
       ParticleVariable<Point> px;
       ParticleVariable<Vector> pvelocity;
+      ParticleVariable<double> pmass;
 
       old_dw->get(px,        pXLabel, matlindex, region, 0);
       old_dw->get(pvelocity, pVelocityLabel, matlindex, region, 0);
+      old_dw->get(pmass,          pMassLabel, matlindex, region, 0);
 
       // Get the arrays of grid data on which the new particle values depend
       NCVariable<Vector> gvelocity_star;
@@ -645,7 +649,7 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorContext*,
       delt_vartype delt;
 
       new_dw->get(gvelocity_star, gMomExedVelocityStarLabel, vfindex, region, 0);
-      new_dw->get(gacceleration,  gAccelerationLabel, vfindex, region, 0);
+      new_dw->get(gacceleration,  gMomExedAccelerationLabel, vfindex, region, 0);
 
       old_dw->get(delt, deltLabel);
 
@@ -675,7 +679,7 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorContext*,
         // Update the particle's position and velocity
         px[idx]        += vel * delt;
         pvelocity[idx] += acc * delt;
-        ke += pvelocity[idx].length2();
+        ke += .5*pmass[idx]*pvelocity[idx].length2();
 
        // If we were storing particles in cellwise lists, this
        // is where we would update the lists so that each particle
@@ -688,18 +692,16 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorContext*,
       tmpout << ts << " " << ke << std::endl;
     
       static ofstream tmpout2("tmp2.out");
-      tmpout2 << ts << " " << px[5] << std::endl;
+      tmpout2 << ts << " " << px[0] << std::endl;
       ts++;
 
       // Store the new result
       new_dw->put(px,        pXLabel, matlindex, region);
       new_dw->put(pvelocity, pVelocityLabel, matlindex, region);
 
-      ParticleVariable<double> pmass;
       ParticleVariable<double> pvolume;
       ParticleVariable<Vector> pexternalforce;
 
-      old_dw->get(pmass,          pMassLabel, matlindex, region, 0);
       new_dw->put(pmass,          pMassLabel, matlindex, region);
       old_dw->get(pvolume,        pVolumeLabel, matlindex, region, 0);
       new_dw->put(pvolume,        pVolumeLabel, matlindex, region);
@@ -710,6 +712,10 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorContext*,
 }
 
 // $Log$
+// Revision 1.39  2000/05/03 23:52:44  guilkey
+// Fixed some small errors in the MPM code to make it work
+// and give what appear to be correct answers.
+//
 // Revision 1.38  2000/05/02 18:41:15  guilkey
 // Added VarLabels to the MPM algorithm to comply with the
 // immutable nature of the DataWarehouse. :)

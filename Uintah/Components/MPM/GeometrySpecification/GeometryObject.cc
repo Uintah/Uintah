@@ -1,6 +1,7 @@
 
 #include "GeometryObject.h"
 #include <Uintah/Interface/ProblemSpec.h>
+#include <iostream>
 
 using namespace Uintah::MPM;
 
@@ -317,6 +318,10 @@ void GeometryObject::fillWithParticles(vector<Material *> &materials,
 #endif
   
 // $Log$
+// Revision 1.13  2000/05/03 23:52:47  guilkey
+// Fixed some small errors in the MPM code to make it work
+// and give what appear to be correct answers.
+//
 // Revision 1.12  2000/05/01 16:18:14  sparker
 // Completed more of datawarehouse
 // Initial more of MPM data
