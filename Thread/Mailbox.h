@@ -18,6 +18,28 @@
 #include "Mutex.h"
 #include "ConditionVariable.h"
 
+
+
+/**************************************
+ 
+CLASS
+   Mailbox
+   
+KEYWORDS
+   Mailbox
+   
+DESCRIPTION
+   A thread-safe, fixed-length FIFO queue which allows multiple
+   concurrent senders and receivers.  Multiple threads send <b>Item</b>s
+   to the mailbox, and multiple thread may receive <b>Item</b>s from the
+   mailbox.  Items are typically pointers to a message structure.
+PATTERNS
+
+
+WARNING
+   
+****************************************/
+
 template<class Item> class Mailbox {
     Mutex mutex;
     Item* ring_buffer;
@@ -32,14 +54,47 @@ template<class Item> class Mailbox {
     const char* name;
     inline int ringnext(int inc) ;
 public:
-    Mailbox(const char* name, int size)
-	;
+    //////////
+    //Create a mailbox with a maximum queue size of <i>size</i> items.  If size is zero, then
+    //the mailbox will use <i>rendevous symantics</i>, where a sender will block until a reciever
+    //is waiting for the item.  The item will be handed off synchronously. <i>name</i> should be
+    //a static string which describes the primitive for debugging purposes.
+    Mailbox(const char* name, int size) ;
+    
+    //////////
+    //Destroy the mailbox.  All items in the queue are silently dropped.
     ~Mailbox() ;
+    
+    //////////
+    //Puts <i>msg</i> in the queue.  If the queue is full, the thread will be blocked until
+    //there is room in the queue.  Multiple threads may call <i>send</i> concurrently, and the
+    //messages will be placed in the queue in an undefined order.
     void send(Item msg) ;
+    
+    //////////
+    //Attempt to send <i>msg</i> to the queue.  If the queue is full, the thread will not be
+    //blocked, and <i>try_send</i> will return false.  Otherwise, <i>try_send</i> will return 
+    //false.  This may never complete if the reciever only uses <i>try_recieve</i>.  
     bool try_send(Item msg);
+    
+    //////////
+    //Recieve an item from the queue.  If the queue is empty, the thread will block until another
+    //thread sends an item.  Multiple threads may call <i>recieve</i> concurrently, but no guarantee
+    //is made as to which thread will recieve the next token.  However, implementors should give
+    //preference to the thread that has been waiting the longest.
     Item receive() ;
+
+    //////////
+    //Attempt to recieve <i>item</i> from the mailbox.  If the queue is empty, the thread is
+    //blocked and <i>try_recieve</i> will return false.  Otherwise, <i>try_recieve</i> returns true.
     bool try_receive(Item& item) ;
+    
+    //////////
+    //Return the maximum size of the mailbox queue, as given in the constructor.
     int size() const ;
+
+    //////////
+    //Return the number of items currently in the queue
     int nitems() const ;
 };
 

@@ -11,13 +11,36 @@
  */
 class Thread;
 
+/**************************************
+ 
+CLASS
+   ThreadError
+   
+KEYWORDS
+   ThreadError
+   
+DESCRIPTION
+   
+   Interface to provide alternate handler for handling thread errors
+ 
+PATTERNS
 
+
+WARNING
+   
+****************************************/
 class ThreadError {
 protected:
     friend class Thread;
+    //////////
+	//Called when a thead might abort.  See <b>Thread::niceAbort</b>
     virtual char thread_abort(Thread* thread)=0;
 public:
+    //////////
+    //Destroy the ThreadError
     virtual ~ThreadError() ;
 };
 
 #endif
+
+

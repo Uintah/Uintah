@@ -13,13 +13,44 @@
 
 #include "ParallelBase.h"
 
+
+/**************************************
+ 
+CLASS
+   Parallel
+   
+KEYWORDS
+   Parallel
+   
+DESCRIPTION
+   Helper class to make instantiating threads to perform a parallel
+   task easier.
+PATTERNS
+
+
+WARNING
+   
+****************************************/
+
+
 template<class T> class Parallel  : public ParallelBase {
     T* obj;
+    //////////
+    //<i>No Documentation Provided</i>
     void (T::*pmf)(int);
 protected:
+    //////////
+    //<i>No documentation provided</i>
     virtual void run(int proc) ;
 public:
+    //////////
+    //Create the parallel object similar to the above, but using the specified member function
+    //instead of <i>parallel</i>.  This will typically be used like-
+    //<pre>Thread::parallel(Parallel&ltMyClass> (this, &ampMyClass::mymemberfn), nthreads)</pre>
     Parallel(T* obj, void (T::*pmf)(int)) ;
+    
+    //////////
+    //Destroy the Parallel object - the threads will remain alive.
     ~Parallel() ;
 };
 

@@ -11,14 +11,46 @@
 #include "Runnable.h"
 
 #include <stdio.h>
+
+/**************************************
+ 
+CLASS
+   Profiler
+   
+KEYWORDS
+   Profiler
+   
+DESCRIPTION
+   <i>No documentation provided</i>
+  
+PATTERNS
+
+
+WARNING
+   
+****************************************/
+
 class Profiler  : public Runnable {
+    
     FILE* in;
     FILE* out;
+    //////////
+    // <i>No documentation provided</i>
     virtual void run() ;
 public:
+    //////////
+    // <i>No documentation provided</i>
     Profiler() ;
+
+    //////////
+    // <i>No documentation provided</i>
     Profiler(FILE* in, FILE* out) ;
+
+    //////////
+    //  <i>No documentation provided</i>
     ~Profiler() ;
 };
 
 #endif
+
+

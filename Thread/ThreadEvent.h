@@ -13,12 +13,22 @@
 
 
 #include "Thread.h"
+
+
 struct ThreadEvent {
+    //////////
+    //The type of the event.
     enum EventType {
 	THREAD_START,
 	THREAD_DONE
     };
+
+    //////////
+    //The name of the thread thread for THREAD_START and THREAD__DONE events.
     const char* threadName;
+
+    //////////
+    //When the event happened.
     SysClock timestamp;
 };
 

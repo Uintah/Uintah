@@ -11,14 +11,39 @@
  * by a user program.  See <b>Parallel</b> instead.
  */
 
+/**************************************
+ 
+CLASS
+   ParallelBase
+   
+KEYWORDS
+   ParallelBase
+   
+DESCRIPTION
+   Helper class for Parallel class.  This will never be used
+   by a user program.  See <b>Parallel</b> instead.
+PATTERNS
+
+
+WARNING
+   
+****************************************/
 
 class ParallelBase {
 protected:
+    //////////
+    //<i>No documentation provided</i>
     ParallelBase() ;
+    //////////
+    //<i>No documentation provided</i>
     virtual ~ParallelBase() ;
     friend class Thread;
+    //////////
+    //<i>No documentation Provided</i>
     virtual void run(int proc)=0;
 public:
 };
 
 #endif
+
+

@@ -16,6 +16,30 @@ class ThreadGroup;
 
 #include "Barrier.h"
 
+/**************************************
+ 
+CLASS
+   Reducer
+   
+KEYWORDS
+   Reducer
+   
+DESCRIPTION
+   Perform reduction operations over a set of threads.  Reduction
+   operations include things like global sums, global min/max, etc.
+   In these operations, a local sum (operation) is performed on each
+   thread, and these sums are added together.
+ 
+ 
+PATTERNS
+
+
+WARNING
+   
+****************************************/
+
+
+
 class Reducer  : public Barrier {
     struct data {
 	double d;
@@ -32,13 +56,41 @@ class Reducer  : public Barrier {
     join_array* join[2];
     pdata* p;
     int arraysize;
+    //////////
+    //<i>No documentation provided</i>
     void collective_resize(int proc) ;
 public:
+    //////////
+    //Create a <b> Reducer</i> for the specified number of threads.  At each operation, a barrier wait
+    //is performed, and the operation will be performed to compute the global balue.  <i>name</i>
+    //should be a static string which describes the primitive for debugging purposes.
     Reducer(const char* name, int nthreads) ;
+
+    //////////
+    //Create a <b>Reducer</b> to be associated with a particular <b>ThreadGroup</b>.
     Reducer(const char* name, ThreadGroup* group) ;
+
+    //////////
+    //Destroy the reducer and free associated memory.
     virtual ~Reducer() ;
+
+    //////////
+    //Performs a global sum over all of the threads.  As soon as each thread has called sum with
+    //their local sum, each thread will return the same global sum.
     double sum(int proc, double mysum) ;
+
+    //////////
+    //Performs a global max over all of the threads.  As soon as each thread has called max
+    //with their local max, each thread will return the same global max.
     double max(int proc, double mymax) ;
 };
 
 #endif
+
+
+
+
+
+
+
+

@@ -18,6 +18,30 @@ class ThreadGroup;
 
 
 class Barrier_private;
+
+
+
+/**************************************
+ 
+CLASS
+   Barrier
+   
+KEYWORDS
+   Barrier
+   
+DESCRIPTION
+   Barrier synchronization primitive.  Provides a single wait
+   method to allow a set of threads to block at the barrier until all
+   threads arrive.
+PATTERNS
+
+
+WARNING
+   
+****************************************/
+
+
+
 class Barrier {
     Barrier_private* priv;
     const char* name;
@@ -25,10 +49,27 @@ protected:
     int nthreads;
     ThreadGroup* threadGroup;
 public:
+    //////////
+    //Create a barrier which will be used by nthreads threads.  name should be a static string
+    //which describes the primitive for debugging purposes.
     Barrier(const char* name, int nthreads);
+    
+    //////////
+    //Create a Barrier to be associated with a particular ThreadGroup.  If other threads outside
+    //of this ThreadGroup access the Barrier, the undefined behaviour may result.  In addition,
+    //threads should not be added or removed from the ThreadGroup while the Barrier is being
+    //accessed.
     Barrier(const char* name, ThreadGroup* group);
+    
+    //////////
+    //Destroy the barrier
     virtual ~Barrier();
+    
+    //////////
+    //This causes all of the threads to block at this method until all nthreads threads have
+    //calles the method.  After all threads have arrived, they are all allowed to return.
     void wait();
 };
 
 #endif
+
