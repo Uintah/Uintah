@@ -17,6 +17,9 @@
 
 #include "Array1.h"
 
+#ifndef __ARRAY1_CC__
+#define __ARRAY1_CC__
+
 namespace rtrt {
   
 template<class T>
@@ -192,4 +195,5 @@ void Pio(Piostream& stream, Array1<T>*& array) {
     Pio(stream, *array);
 }
 
+#endif // __ARRAY1_CC__
 } // end namespace rtrt
