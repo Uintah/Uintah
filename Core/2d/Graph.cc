@@ -27,7 +27,7 @@ using std::ostringstream;
 namespace SCIRun {
 
 
-ObjInfo::ObjInfo( const string &name, Drawable *d)  
+ObjInfo::ObjInfo( const string &name, DrawObj *d)  
 {
   name_ = name;
   obj_ = d;
@@ -52,7 +52,7 @@ ObjInfo::set_id( const string &id)
 
 
 Graph::Graph( const string &id )
-  : TclObj( "Graph" ), Drawable( id ), gl_window("gl-window", id, this )
+  : TclObj( "Graph" ), DrawObj( id ), gl_window("gl-window", id, this )
 {
   obj_ = 0;
 
@@ -80,7 +80,7 @@ Graph::set_window( const string &window )
 }
 
 void
-Graph::add( const string &name, Drawable *d )
+Graph::add( const string &name, DrawObj *d )
 {
   d->set_parent( this );
 

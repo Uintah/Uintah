@@ -47,10 +47,10 @@ Persistent* make_Widget()
   return scinew Widget;
 }
 
-PersistentTypeID Widget::type_id("Widget", "Drawable", make_Widget);
+PersistentTypeID Widget::type_id("Widget", "DrawObj", make_Widget);
 
 Widget::Widget( const string &name)
-  : Drawable(name)
+  : DrawObj(name)
 {
 }
 
@@ -66,7 +66,7 @@ void
 Widget::io(Piostream& stream)
 {
   stream.begin_class("Widget", WIDGET_VERSION);
-  Drawable::io(stream);
+  DrawObj::io(stream);
   stream.end_class();
 }
 

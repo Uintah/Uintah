@@ -32,7 +32,7 @@
 #include <Core/2d/OpenGL.h>
 #include <Core/2d/Polyline.h>
 #include <Core/2d/Diagram.h>
-#include <Core/2d/Hairline.h>
+#include <Core/2d/HairObj.h>
 #include <Core/2d/Axes.h>
 
 #include <GL/gl.h>
@@ -152,7 +152,7 @@ Diagram::draw()
 }
 
 void
-Hairline::draw() 
+HairObj::draw() 
 {
   glMatrixMode(GL_PROJECTION);
   glPushMatrix();

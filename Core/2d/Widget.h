@@ -31,11 +31,11 @@
 #ifndef SCI_Widget_h
 #define SCI_Widget_h 
 
-#include <Core/2d/Drawable.h>
+#include <Core/2d/DrawObj.h>
 
 namespace SCIRun {
   
-class SCICORESHARE Widget :  public Drawable {
+class SCICORESHARE Widget :  public DrawObj {
 private:
   BBox2d bbox_;
 
