@@ -28,7 +28,7 @@ void InsertStringInFile(char* filename, char* match, char* replacement)
   ofile = fopen(newfilename,"w");
 
   c = (char)fgetc(ifile);
-  while (c!=EOF) {
+  while (c!=(char)EOF) {
     fprintf(ofile,"%c",c);
     c = (char)fgetc(ifile);
   }
@@ -40,10 +40,10 @@ void InsertStringInFile(char* filename, char* match, char* replacement)
   int foundat = -1;
   ifile = fopen(newfilename,"r");
   c = (char)fgetc(ifile);
-  while (c!=EOF) {
+  while (c!=(char)EOF) {
     if (c==match[index2]) {
       foundat = index1;
-      while (index2<strlen(match) && c!=EOF && c==match[index2]) {
+      while (index2<strlen(match) && c!=(char)EOF && c==match[index2]) {
 	c = (char)fgetc(ifile);
 	index1++;
 	index2++;
@@ -66,7 +66,7 @@ void InsertStringInFile(char* filename, char* match, char* replacement)
     ifile = fopen(newfilename,"r");
     ofile = fopen(filename,"w");
     c = (char)fgetc(ifile);
-    while (c!=EOF) {
+    while (c!=(char)EOF) {
       if (index1==foundat)
         fprintf(ofile,"%s",replacement);
       fprintf(ofile,"%c",c);
