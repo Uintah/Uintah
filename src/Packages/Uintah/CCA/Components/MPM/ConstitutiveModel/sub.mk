@@ -11,6 +11,8 @@ SRCS     += \
 	$(SRCDIR)/ConstitutiveModel.cc        	\
 	$(SRCDIR)/MPMMaterial.cc              	\
 	$(SRCDIR)/CompNeoHook.cc              	\
+	$(SRCDIR)/CNHDamage.cc              	\
+	$(SRCDIR)/CNHPDamage.cc              	\
 	$(SRCDIR)/CompNeoHookImplicit.cc 	\
 	$(SRCDIR)/TransIsoHyper.cc              \
 	$(SRCDIR)/TransIsoHyperImplicit.cc 	\
