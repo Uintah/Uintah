@@ -11,7 +11,7 @@
    </Meta>
 
    <Time>
-	<maxTime>4.0</maxTime>
+	<maxTime>10.0</maxTime>
 	<initTime>0.0</initTime>
 	<delt_min>0.0001</delt_min>
 	<delt_max>0.01</delt_max>
@@ -21,6 +21,14 @@
    <DataArchiver>
         <filebase>heplumebox.uda</filebase>
 	<outputInterval>0.005</outputInterval>
+	<save label="pressurePS"/>
+        <save label="uVelocitySPBC"/>	
+        <save label="vVelocitySPBC"/>	
+        <save label="wVelocitySPBC"/>	
+        <save label="newCCVelocity"/>
+	<save label="scalarSP"/>
+	<save label="densityCP"/>
+	<save label="viscosityCTS"/>
    </DataArchiver>
 
     <PhysicalConstants>
@@ -33,10 +41,10 @@
 	<Level>
 	    <Box label="1">
 	        <lower>[0,0,0]</lower>
-	        <upper>[2,1,1]</upper>
-	        <resolution>[200,100,100]</resolution>
+	        <upper>[.6,.6,.6]</upper>
+	        <resolution>[80,80,80]</resolution>
                 <extraCells>[1,1,1]</extraCells>
-		<patches>[10,10,10]</patches>
+		<patches>[5,5,5]</patches>
 	    </Box>
 	</Level>
     </Grid>
