@@ -22,7 +22,8 @@ Field::Field(){
 
 }
 
-template <class T> T* Field::query_interface(){
+template <class T> T* Field::query_interface(T *)
+{
   return dynamic_cast<T*>(this);
 }
 
