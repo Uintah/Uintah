@@ -40,8 +40,9 @@ using namespace std;
 
 static Semaphore* startup;
   
-SocketThread::SocketThread(SocketEpChannel *ep, int id, int new_fd){
+SocketThread::SocketThread(SocketEpChannel *ep, Message* msg, int id, int new_fd){
   this->ep=ep;
+  this->msg=msg;
   this->id=id;
   this->new_fd=new_fd;
 }
@@ -54,9 +55,8 @@ SocketThread::run()
   if(id==-2) ep->runService(new_fd);
   else{
     //cerr<<"calling handler #"<<id<<"\n";
-    Message *msg=ep->getMessage();
     ep->handler_table[id](msg);
-    
+    delete msg;
     if(id==1){
       ::SCIRun::ServerContext* _sc=static_cast< ::SCIRun::ServerContext*>(ep->object);
       if(_sc->d_objptr->getRefCount()==0){

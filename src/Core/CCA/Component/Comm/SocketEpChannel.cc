@@ -103,11 +103,12 @@ string SocketEpChannel::getUrl() {
 
 void SocketEpChannel::activateConnection(void* obj){
   object=obj;
-  accept_thread = new Thread(new SocketThread(this, -1), "SocketAcceptThread", 0, Thread::Activated);
+  accept_thread = new Thread(new SocketThread(this, NULL,  -1), "SocketAcceptThread", 0, Thread::Activated);
   accept_thread->detach();
 }
 
 Message* SocketEpChannel::getMessage() {
+  cerr<<"Ep getMessage() is called"<<endl;
   if (sockfd == 0)
     return NULL;
   if (msg == NULL)
@@ -151,7 +152,7 @@ SocketEpChannel::runAccept(){
     ::SCIRun::ServerContext* _sc=static_cast< ::SCIRun::ServerContext*>(object);
     _sc->d_objptr->addReference();
 
-    Thread *t= new Thread(new SocketThread(this, -2, new_fd), "SocketServiceThread", 0, Thread::Activated);
+    Thread *t= new Thread(new SocketThread(this, NULL, -2, new_fd), "SocketServiceThread", 0, Thread::Activated);
     t->detach();
   }  
 }
@@ -191,11 +192,11 @@ SocketEpChannel::runService(int new_fd){
     }
     if(numbytes!=msg_size-headerSize) throw CommError("numbytes!=msg_size-headerSize",-1);
 
-    if(msg!=NULL) delete msg;
-    msg=new SocketMessage(new_fd, buf);
-    msg->setSocketEp(this);
+    //if(msg!=NULL) delete msg;
+    SocketMessage* new_msg=new SocketMessage(new_fd, buf);
+    new_msg->setSocketEp(this);
 
-    Thread* t = new Thread(new SocketThread(this, id, new_fd), "SocketHandlerThread", 0, Thread::Activated);
+    Thread* t = new Thread(new SocketThread(this, new_msg, id, new_fd), "SocketHandlerThread", 0, Thread::Activated);
     t->detach();
 
     //sleep(2); //avoid the synchornization

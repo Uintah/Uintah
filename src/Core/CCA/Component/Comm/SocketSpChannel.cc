@@ -74,9 +74,11 @@ SpChannel* SocketSpChannel::SPFactory(bool deep) {
   //I am not sure about this yet.
   SocketSpChannel *new_sp=new SocketSpChannel(); 
   if(deep){
+    cerr<<"SPFactory(deep) is called\n";
     new_sp->openConnection(ep_url);
   }
   else{
+    cerr<<"SPFactory(non-deep) is called\n";
     new_sp->ep_url=ep_url;
     new_sp->sockfd=sockfd;
     msg=NULL; // should I copy msg too?
@@ -87,7 +89,7 @@ SpChannel* SocketSpChannel::SPFactory(bool deep) {
 void SocketSpChannel::closeConnection() {
   if(msg==NULL)  msg = new SocketMessage(sockfd);
   msg->createMessage();
-  msg->sendMessage(1);  //delete the reference
+  msg->sendMessage(1);  //call deleteReference
   close(sockfd);
 }
 
