@@ -521,12 +521,93 @@ the ErrorMetric module to verify that they are equivalent.
 
 
 Visualization/Isosurface-list.net
+
+Test the Isosurface module by creating a list of values to isocontour
+on the boundary of the sphere-voltage test model.
+
+
+
+
 Visualization/Isosurface-mcmp.net
+
+Test the Field output of the Isosurface module in multiprocessor
+marching cubes mode.  This network demonstrates that the code which
+does the join for the different parts leaves a seam on the output
+field where the points are duplicated and thus breaks subsequent
+FieldBoundary and similar computations.  The lines across the middle
+of the sphere reflect the places where the data was cut up and
+assigned to different processors.
+
+
+
+
 Visualization/Isosurface-probe.net
+
+Test useage of the Probe module to dynamically select which isovalue
+to use in the IsoSurface module.  The Probe widget can be moved around
+and the isovalue will cut through that point.
+
+
+
+
 Visualization/Isosurface-quantity.net
+
+Test the Quantity method of selecting isovalues in the Isosurface
+module.  The boundary of the sphere-voltage model is isocontoured at
+10 evenly spaced intervals and the result is then displayed.
+
+
+
+
 Visualization/Isosurface-slider.net
+
+Test the Slider method of selecting an isovalue in the IssSurface
+module.  The slider is used to select the value for an isocontour on
+the boundary of the sphere-volume data set.
+
+
+
+
 Visualization/ShowField-colorcube.net
+
+Create and display a color cube using vectors to represent RGB values
+in a lattice volume.
+
+
+
+
 Visualization/ShowField-rgbscalars.net
+
+Create and display a color cube using vectors to represent RGB values
+in a lattice volume.  The cell centers are scaled by the vector
+magnitude of the RGB values in addition to being colored.
+
+
+
+
 Visualization/ShowField-vectorarrows.net
+
+Test Showfield to make sure that it renders vector fields as arrows
+properly.  The gradient is taken of the sphere-voltage data set and
+then this is displayed as an arrow field colored by the original
+scalar values.
+
+
+
+
 Visualization/ShowField-vectorcones.net
+
+Test Showfield to make sure that it renders vector fields as cones
+properly.  The gradient is taken of the sphere-voltage data set and
+then this is displayed as a cone field colored by the original
+scalar values.
+
+
+
+
 Visualization/ShowField-vectorneedles.net
+
+Test Showfield to make sure that it renders vector fields as needles
+properly.  The gradient is taken of the sphere-voltage data set and
+then this is displayed as a needle field colored by the original
+scalar values.
