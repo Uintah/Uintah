@@ -9,7 +9,8 @@ SRCDIR   := SCICore/Geom
 
 SRCS     += $(SRCDIR)/GeomObj.cc $(SRCDIR)/GeomOpenGL.cc \
 	$(SRCDIR)/GeomArrows.cc $(SRCDIR)/Pt.cc $(SRCDIR)/GeomText.cc \
-	$(SRCDIR)/BBoxCache.cc $(SRCDIR)/GeomGrid.cc \
+	$(SRCDIR)/BBoxCache.cc $(SRCDIR)/ColorMapTex.cc \
+	$(SRCDIR)/GeomGrid.cc \
 	$(SRCDIR)/GeomQMesh.cc $(SRCDIR)/TimeGrid.cc \
 	$(SRCDIR)/GeomBillboard.cc $(SRCDIR)/GeomGroup.cc \
 	$(SRCDIR)/GeomRenderMode.cc $(SRCDIR)/GeomTimeGroup.cc \
@@ -39,6 +40,9 @@ include $(SRCTOP)/scripts/smallso_epilogue.mk
 
 #
 # $Log$
+# Revision 1.4  2000/05/31 21:54:01  kuzimmer
+# Changes to make the ColorMapKey Module work properly
+#
 # Revision 1.3  2000/03/21 03:01:32  sparker
 # Partially fixed special_get method in SimplePort
 # Pre-instantiated a few key template types, in an attempt to reduce
