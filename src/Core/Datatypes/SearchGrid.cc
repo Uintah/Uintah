@@ -47,6 +47,7 @@
 #include <Core/Geometry/Vector.h>
 #include <Core/Math/MusilRNG.h>
 #include <vector>
+#include <iostream>
 
 namespace SCIRun {
 
@@ -109,6 +110,25 @@ SearchGridBase::locate(unsigned int &i, unsigned int &j, unsigned int &k,
 }
 
 
+void
+SearchGridBase::unsafe_locate(unsigned int &i, unsigned int &j,
+			      unsigned int &k, const Point &p) const
+{
+  const Point r = transform_.unproject(p);
+  
+  const double rx = floor(r.x());
+  const double ry = floor(r.y());
+  const double rz = floor(r.z());
+
+  //ASSERT(!(rx < 0.0      || ry < 0.0      || rz < 0.0    ||
+  //	   rx >= ni_     || ry >= nj_     || rz >= nk_   ));
+
+  i = (unsigned int)rx;
+  j = (unsigned int)ry;
+  k = (unsigned int)rz;
+}
+
+
 SearchGridConstructor::SearchGridConstructor(unsigned int x,
 					     unsigned int y,
 					     unsigned int z,
@@ -116,6 +136,7 @@ SearchGridConstructor::SearchGridConstructor(unsigned int x,
 					     const Point &max)
   : SearchGridBase(x, y, z, min, max), size_(0)
 {
+  bin_.resize(x * y * z);
 }
 
 
@@ -124,8 +145,8 @@ SearchGridConstructor::insert(under_type val, const BBox &bbox)
 {
   unsigned int mini, minj, mink, maxi, maxj, maxk;
 
-  ASSERT(locate(mini, minj, mink, bbox.min()) &&
-	 locate(maxi, maxj, maxk, bbox.max()));
+  unsafe_locate(mini, minj, mink, bbox.min());
+  unsafe_locate(maxi, maxj, maxk, bbox.max());
 
   for (unsigned int i = mini; i <= maxi; i++)
   {
@@ -190,15 +211,14 @@ SearchGrid::~SearchGrid()
 
 
 bool
-SearchGrid::lookup(const under_type *begin, const under_type *end,
-		   const Point &p) const
+SearchGrid::lookup(under_type **begin, under_type **end, const Point &p) const
 {
   unsigned int i, j, k;
   if (locate(i, j, k, p))
   {
     const unsigned int index = linearize(i, j, k);
-    begin = vals_ + accum_[index];
-    end = vals_ + accum_[index+1];
+    *begin = vals_ + accum_[index];
+    *end = vals_ + accum_[index+1];
     return true;
   }
   return false;
