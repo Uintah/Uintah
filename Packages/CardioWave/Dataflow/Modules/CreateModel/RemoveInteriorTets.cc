@@ -27,18 +27,18 @@ using namespace SCIRun;
 class CardioWaveSHARE RemoveInteriorTets : public Module {
   GuiString	threshold_;
 public:
-  RemoveInteriorTets(const string& id);
+  RemoveInteriorTets(GuiContext *context);
   virtual ~RemoveInteriorTets();
   virtual void execute();
 };
 
-extern "C" CardioWaveSHARE Module* make_RemoveInteriorTets(const string& id) {
-  return scinew RemoveInteriorTets(id);
-}
 
-RemoveInteriorTets::RemoveInteriorTets(const string& id)
-  : Module("RemoveInteriorTets", id, Source, "CreateModel", "CardioWave"),
-    threshold_("threshold", id, this)
+DECLARE_MAKER(RemoveInteriorTets)
+
+
+RemoveInteriorTets::RemoveInteriorTets(GuiContext *context)
+  : Module("RemoveInteriorTets", context, Source, "CreateModel", "CardioWave"),
+    threshold_(context->subVar("threshold"))
 {
 }
 
