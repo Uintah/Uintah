@@ -473,7 +473,7 @@ WARNING
     void doit(const ProcessorGroup* pc, const PatchSubset*,
 	      const MaterialSubset*, DataWarehouse* fromDW,
 	      DataWarehouse* toDW);
-    
+
     inline const char* getName() const {
       return d_taskName;
     }
@@ -532,6 +532,8 @@ WARNING
       }
     };
 
+    typedef multimap<const VarLabel*, Dependency*, VarLabel::Compare> DepMap;
+    
     const Dependency* getComputes() const {
       return comp_head;
     }
@@ -551,7 +553,19 @@ WARNING
     Dependency* getModifies() {
       return mod_head;
     }
-    
+
+    // finds if it computes or modifies var
+    bool hasComputes(const VarLabel* var, int matlIndex,
+		     const Patch* patch) const;
+
+    // finds if it requires or modifies var
+    bool hasRequires(const VarLabel* var, int matlIndex, const Patch* patch,
+		     WhichDW dw) const;
+
+    // finds if it modifies var
+    bool hasModifies(const VarLabel* var, int matlIndex,
+		     const Patch* patch) const;
+
     bool isReductionTask() const {
       return d_tasktype == Reduction;
     }
@@ -586,6 +600,9 @@ WARNING
     void setSets(const PatchSet* patches, const MaterialSet* matls);
     
   private: // class Task
+    bool isInDepMap(const DepMap& depMap, const VarLabel* var,
+		    int matlIndex, const Patch* patch) const;
+    
     //////////
     // Insert Documentation Here:
     SimpleString        d_taskName;
@@ -596,6 +613,11 @@ WARNING
     Dependency* req_tail;
     Dependency* mod_head;
     Dependency* mod_tail;
+
+    DepMap d_requiresOldDW;
+    DepMap d_computes; // also contains modifies
+    DepMap d_requires; // also contains modifies
+    DepMap d_modifies;
     
     const PatchSet* patch_set;
     const MaterialSet* matl_set;

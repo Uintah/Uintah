@@ -116,6 +116,11 @@ Task::requires(WhichDW dw, const VarLabel* var,
   else
     req_head=dep;
   req_tail=dep;
+
+  if (dw == OldDW)
+    d_requiresOldDW.insert(make_pair(var, dep));
+  else
+    d_requires.insert(make_pair(var, dep));
 }
 
 
@@ -201,6 +206,8 @@ Task::computes(const VarLabel* var,
   else
     comp_head=dep;
   comp_tail=dep;
+
+  d_computes.insert(make_pair(var, dep));
 }
 
 void
@@ -242,17 +249,16 @@ Task::modifies(const VarLabel* var,
   else
     mod_head=dep;
   mod_tail=dep;
+
+  d_requires.insert(make_pair(var, dep));
+  d_computes.insert(make_pair(var, dep));
+  d_modifies.insert(make_pair(var, dep));
 }
 
 void
 Task::modifies(const VarLabel* var, const PatchSubset* patches,
                const MaterialSubset* matls)
 {
-  TypeDescription::Type vartype = var->typeDescription()->getType();
-  if(!(vartype == TypeDescription::PerPatch
-       || vartype == TypeDescription::ReductionVariable))
-    throw InternalError("Modifies should specify ghost type for this variable");
-  
   modifies(var, patches, NormalDomain, matls, NormalDomain);
 }
 
@@ -269,6 +275,60 @@ Task::modifies(const VarLabel* var, const MaterialSubset* matls,
   modifies(var, 0, NormalDomain, matls, matls_dom);
 }
 
+bool Task::hasComputes(const VarLabel* var, int matlIndex,
+		       const Patch* patch) const
+{
+  return isInDepMap(d_computes, var, matlIndex, patch);
+}
+
+bool Task::hasRequires(const VarLabel* var, int matlIndex,
+		       const Patch* patch, WhichDW dw) const
+{
+  return isInDepMap((dw == OldDW) ? d_requiresOldDW : d_requires,
+		    var, matlIndex, patch);
+}
+
+bool Task::hasModifies(const VarLabel* var, int matlIndex,
+		       const Patch* patch) const
+{
+  return isInDepMap(d_modifies, var, matlIndex, patch);
+}
+
+bool Task::isInDepMap(const DepMap& depMap, const VarLabel* var,
+		      int matlIndex, const Patch* patch) const
+{
+  DepMap::const_iterator found_iter = depMap.find(var);
+  while (found_iter != depMap.end() &&
+	 (*found_iter).first->equals(var)) {
+    Dependency* dep = (*found_iter).second;
+    const PatchSubset* patches = dep->patches;
+    const MaterialSubset* matls = dep->matls;
+    if (patches == 0) {
+      if (!(var->typeDescription() &&
+	    var->typeDescription()->isReductionVariable())) {
+	patches = getPatchSet() ? getPatchSet()->getUnion() : 0;
+      }
+    }
+    if (matls == 0)
+      matls = getMaterialSet() ? getMaterialSet()->getUnion() : 0;
+    if (patches == 0 && matls == 0)
+      return true; // assume it is for any matl or patch
+    else if (patches == 0) {
+      // assume it is for any patch
+      if (matls->contains(matlIndex))
+	return true; 
+    }
+    else if (matls == 0) {
+      // assume it is for any matl
+      if (patches->contains(patch))
+	return true; 
+    }
+    else if (patches->contains(patch) && matls->contains(matlIndex))
+      return true;
+    found_iter++;
+  }
+  return false;
+}
 
 Task::Dependency::Dependency(Task* task, WhichDW dw, const VarLabel* var,
 			     const PatchSubset* patches,
@@ -301,8 +361,18 @@ Task::doit(const ProcessorGroup* pc, const PatchSubset* patches,
            const MaterialSubset* matls, DataWarehouse* fromDW,
            DataWarehouse* toDW)
 {
+  if (fromDW) fromDW->setCurrentTask(this);
+  if (toDW) toDW->setCurrentTask(this);    
   if(d_action)
      d_action->doit(pc, patches, matls, fromDW, toDW);
+  if (fromDW) {
+    fromDW->checkTasksAccesses(patches, matls);
+    fromDW->setCurrentTask(0);
+  }
+  if (toDW) {
+    toDW->checkTasksAccesses(patches, matls);
+    toDW->setCurrentTask(0);
+  }
 }
 
 void
