@@ -1,0 +1,44 @@
+<filter-gui name="Darby-CannySegmentationLevelSetImageFilterGui">
+  <parameters>
+    <param name="iterations">
+      <gui>text-entry</gui>
+      <default>10</default>
+    </param>
+    <param name="negative_features">
+      <gui>checkbutton</gui>
+      <default>1</default>
+    </param>
+    <param name="max_rms_change">
+      <gui>text-entry</gui>
+      <default>0.001</default>
+    </param>
+    <param name="threshold">
+      <gui>text-entry</gui>
+      <default>0.001</default>
+    </param>
+    <param name="variance">
+      <gui>scrollbar</gui>
+      <min>0</min>
+      <max>100</max>
+      <default>10</default>
+    </param>
+    <param name="propagation_scaling">
+      <gui>text-entry</gui>
+      <default>1.0</default>
+    </param>
+    <param name="advection_scaling">
+      <gui>text-entry</gui>
+      <default>1.0</default>
+    </param>
+    <param name="curvature_scaling">
+      <gui>text-entry</gui>
+      <default>1.0</default>
+    </param>
+    <param name="isovalue">
+      <gui>text-entry</gui>
+      <default>0.5</default>
+    </param>
+  </parameters>
+
+
+</filter-gui>

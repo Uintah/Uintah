@@ -1,0 +1,10 @@
+<filter-gui name="WatershedSegmenterGui_Darby">
+  <parameters>
+    <param name="threshold">
+      <gui>text-entry</gui>
+      <default>0.25</default>
+    </param>
+
+  </parameters>
+
+</filter-gui>

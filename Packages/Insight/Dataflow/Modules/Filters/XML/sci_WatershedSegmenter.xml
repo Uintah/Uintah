@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="iso-8859-1"?>
+<filter name="watershed::Segmenter">
+  <include href="../../../../ITK/itk_WatershedSegmenter.xml"/>
+  <include href="gui_WatershedSegmenter_Darby.xml"/>
+
+<filter-sci name="WatershedSegmenter">
+  <package>Insight</package>
+
+  <category>Filters</category>
+
+  <instantiations>
+    <instance num="1">
+      <type name="InputImageType">
+        <datatype>ITKDatatype</datatype>
+        <value>itk::Image&lt;float, 3&gt;</value>
+      </type>
+      <type name="LabeledImageType">
+        <datatype>ITKDatatype</datatype>
+        <value>itk::Image&lt;float, 3 &gt;</value>
+      </type>
+      <type name="SegmentTableType">
+        <datatype>ITKDatatype</datatype>
+        <value>SegmentTable&lt;float&gt;</value>
+      </type>
+      <type name="BoundaryType">
+        <datatype>ITKDatatype</datatype>
+        <value>Boundary&lt;float, 3 &gt;</value>
+      </type>
+     </instance>
+  </instantiations>
+
+  <includes>
+    <include>Packages/Insight/Dataflow/Ports/ITKDatatypePort.h</include>
+  </includes>
+
+</filter-sci>
+
+</filter>

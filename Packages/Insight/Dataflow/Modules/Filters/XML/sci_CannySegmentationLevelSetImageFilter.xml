@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="iso-8859-1"?>
+<filter name="CaannySegmentationLevelSetImageFilter">
+  <include href="../../../../ITK/itk_CannySegmentationLevelSetImageFilter.xml"/>
+  <include href="gui_CannySegmentationLevelSetImageFilter_Darby.xml"/>
+
+<filter-sci name="CannySegmentationLevelSetImageFilter">
+  <package>Insight</package>
+
+  <category>Filters</category>
+
+  <instantiations>
+    <instance num="1">
+      <type name="FeatureImageType">
+        <datatype>ITKDatatype</datatype>
+        <value>itk::Image&lt;unsigned char, 2&gt;</value>
+      </type>
+      <type name="SeedImageType">
+        <datatype>ITKDatatype</datatype>
+        <value>itk::Image&lt;float, 2&gt;</value>
+      </type>
+      <type name="OutputPixelType">
+        <datatype>ITKDatatype</datatype>
+        <value>float</value>
+      </type>
+     </instance>
+  </instantiations>
+
+  <includes>
+    <include>Packages/Insight/Dataflow/Ports/ITKDatatypePort.h</include>
+  </includes>
+
+</filter-sci>
+
+</filter>

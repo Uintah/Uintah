@@ -1,0 +1,12 @@
+<filter-gui name="Yarden-DiscreteGaussianImageFilterGui">
+  <parameters>
+    <param name="variance">
+      <gui>text-entry</gui>
+      <default>10</default>
+    </param>
+    <param name="maximum_error">
+      <gui>text-entry</gui>
+      <default>0.001</default>
+    </param>
+  </parameters>
+</filter-gui>
