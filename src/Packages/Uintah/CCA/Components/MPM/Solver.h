@@ -38,7 +38,7 @@ namespace Uintah {
     
     virtual void copyL2G(Array3<int>& l2g, const Patch* patch) = 0;
 
-    virtual void removeFixedDOF(set<int>& fixedDOF, int num_nodes) = 0;
+    virtual void removeFixedDOF(int num_nodes) = 0;
 
     virtual void flushMatrix() = 0;
 
@@ -47,6 +47,8 @@ namespace Uintah {
     virtual int getSolution(vector<double>& xPetsc) = 0;
 
     virtual void assembleVector() = 0;
+
+    set<int> d_DOF;
   };
 
 }

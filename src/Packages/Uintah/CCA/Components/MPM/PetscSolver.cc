@@ -226,14 +226,14 @@ void MPMPetscSolver::copyL2G(Array3<int>& mapping,const Patch* patch)
   mapping.copy(d_petscLocalToGlobal[patch]);
 }
 
-void MPMPetscSolver::removeFixedDOF(set<int>& fixedDOF,int num_nodes)
+void MPMPetscSolver::removeFixedDOF(int num_nodes)
 {
 #ifdef HAVE_PETSC
   IS is;
   int* indices;
   int in = 0;
-  PetscMalloc(fixedDOF.size() * sizeof(int), &indices);
-  for (set<int>::iterator iter = fixedDOF.begin(); iter != fixedDOF.end(); 
+  PetscMalloc(d_DOF.size() * sizeof(int), &indices);
+  for (set<int>::iterator iter = d_DOF.begin(); iter != d_DOF.end(); 
        iter++) {
     indices[in++] = *iter;
 
@@ -243,7 +243,7 @@ void MPMPetscSolver::removeFixedDOF(set<int>& fixedDOF,int num_nodes)
     VecSetValues(d_B,1,&index,&v,INSERT_VALUES);
   }    
 
-  ISCreateGeneral(PETSC_COMM_SELF,fixedDOF.size(),indices,&is);
+  ISCreateGeneral(PETSC_COMM_SELF,d_DOF.size(),indices,&is);
   PetscFree(indices);
   
   PetscScalar one = 1.0;

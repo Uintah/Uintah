@@ -170,11 +170,10 @@ ImpMPM::scheduleTimeAdvance( const LevelP& level, SchedulerP& sched, int, int )
 
   scheduleInterpolateParticlesToGrid(     sched, d_perproc_patches,matls);
 
-  scheduleApplyBoundaryConditions(        sched, d_perproc_patches,matls);
-
   scheduleDestroyMatrix(                  sched, d_perproc_patches,matls,false);
 
   scheduleCreateMatrix(                   sched, d_perproc_patches,matls,false);
+  scheduleApplyBoundaryConditions(        sched, d_perproc_patches,matls);
 
   scheduleComputeStressTensor(            sched, d_perproc_patches,matls,false);
 
@@ -1032,6 +1031,10 @@ void ImpMPM::applyBoundaryConditions(const ProcessorGroup*,
     cout_doing <<"Doing applyBoundaryConditions " <<"\t\t\t\t IMPM"
 	       << "\n" << "\n";
     
+    IntVector lowIndex = patch->getNodeLowIndex();
+    IntVector highIndex = patch->getNodeHighIndex()+IntVector(1,1,1);
+    Array3<int> l2g(lowIndex,highIndex);
+    d_solver->copyL2G(l2g,patch);
   
     // Apply grid boundary conditions to the velocity before storing the data
     IntVector offset =  IntVector(0,0,0);
@@ -1063,10 +1066,26 @@ void ImpMPM::applyBoundaryConditions(const ProcessorGroup*,
 	    fillFace(gacceleration,patch, face,bc->getValue(),offset);
 	  }
 	}
-	if (sym_bcs != 0) 
+	if (sym_bcs != 0) { 
 	  fillFaceNormal(gvelocity,patch, face,offset);
 	  fillFaceNormal(gacceleration,patch, face,offset);
-	
+#if 0
+	  IntVector l,h;
+	  patch->getFaceNodes(face,0,l,h);
+	  for(NodeIterator it(l,h); !it.done(); it++) {
+	    IntVector n = *it;
+	    int dof[3];
+	    int l2g_node_num = l2g[n];
+	    dof[0] = l2g_node_num;
+	    dof[1] = l2g_node_num+1;
+	    dof[2] = l2g_node_num+2;
+	    
+	    d_solver->d_DOF.insert(dof[0]);
+	    d_solver->d_DOF.insert(dof[1]);
+	    d_solver->d_DOF.insert(dof[2]);
+	  }
+#endif
+	}
       }
     }
   }
@@ -1437,7 +1456,6 @@ void ImpMPM::removeFixedDOF(const ProcessorGroup*,
   
   int num_nodes = 0;
   int matlindex = 0;
-  set<int> fixedDOF;
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
 
@@ -1470,9 +1488,9 @@ void ImpMPM::removeFixedDOF(const ProcessorGroup*,
       
       // Just look on the grid to see if the gmass is 0 and then remove that  
       if (compare(mass[n],0.)) {
-	fixedDOF.insert(dof[0]);
-	fixedDOF.insert(dof[1]);
-	fixedDOF.insert(dof[2]);
+	d_solver->d_DOF.insert(dof[0]);
+	d_solver->d_DOF.insert(dof[1]);
+	d_solver->d_DOF.insert(dof[2]);
       }
     }
 #if 0
@@ -1489,15 +1507,15 @@ void ImpMPM::removeFixedDOF(const ProcessorGroup*,
 	  dof[1] = l2g_node_num+1;
 	  dof[2] = l2g_node_num+2;
 	  
-	  fixedDOF.insert(dof[0]);
-	  fixedDOF.insert(dof[1]);
-	  fixedDOF.insert(dof[2]);
+	  d_solver->d_DOF.insert(dof[0]);
+	  d_solver->d_DOF.insert(dof[1]);
+	  d_solver->d_DOF.insert(dof[2]);
 	}
       }
     }
 #endif
   }
-  d_solver->removeFixedDOF(fixedDOF,num_nodes);
+  d_solver->removeFixedDOF(num_nodes);
 
 
 }

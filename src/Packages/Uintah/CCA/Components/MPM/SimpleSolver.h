@@ -40,7 +40,7 @@ namespace Uintah {
     
     virtual void copyL2G(Array3<int>& l2g, const Patch* patch);
 
-    virtual void removeFixedDOF(set<int>& fixedDOF, int num_nodes);
+    virtual void removeFixedDOF(int num_nodes);
 
     virtual void finalizeMatrix();
 
