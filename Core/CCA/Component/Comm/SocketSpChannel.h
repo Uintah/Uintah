@@ -22,10 +22,12 @@
 #include <Core/CCA/Component/Comm/SpChannel.h>
 
 namespace SCIRun {
+  using namespace std;
   class SocketSpChannel : public SpChannel {
   public:
 
     SocketSpChannel();
+    SocketSpChannel(const string &url);
     virtual ~SocketSpChannel();
     void openConnection(const URL& url);
     void closeConnection();
@@ -37,6 +39,10 @@ namespace SCIRun {
     /////////////
     // File descriptor for the socket
     int sockfd;  
+
+    /////////////
+    // URL of the endpoint
+    string ep_url;
 
     Message* msg; 
 

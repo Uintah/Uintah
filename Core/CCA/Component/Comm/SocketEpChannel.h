@@ -25,6 +25,7 @@ namespace SCIRun {
   class Message;
   class SpChannel;
   class SocketEpChannel : public EpChannel {
+    friend class SocketMessage;
   public:
 
     SocketEpChannel();
@@ -56,6 +57,10 @@ namespace SCIRun {
     int table_size;
 
     Message* msg; 
+
+    void *object;
+
+
   };
 }
 

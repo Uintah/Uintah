@@ -18,11 +18,18 @@
 #include <stdlib.h>
 #include <string.h>
 #include <Core/CCA/Component/Comm/SocketMessage.h>
+#include <Core/CCA/Component/Comm/SocketEpChannel.h>
 
 using namespace std;
 using namespace SCIRun;
 
 SocketMessage::SocketMessage() { 
+  sep=NULL;
+  msg=NULL;
+}
+
+SocketMessage::SocketMessage(SocketEpChannel* sep) { 
+  this->sep=sep;
   msg=NULL;
 }
 
@@ -122,7 +129,7 @@ SocketMessage::unmarshalSpChannel(SpChannel* channel){
 
 void* 
 SocketMessage::getLocalObj(){
-  return 0; 
+  return sep->object; 
 }
 
 void SocketMessage::destroyMessage() {
