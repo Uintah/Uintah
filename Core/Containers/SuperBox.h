@@ -395,10 +395,10 @@ protected:
 template <class BoxP, class Point, class Volume, class Value, class Evaluator>
 class BasicBox : public SuperBox<BoxP, Point, Volume, Value, Evaluator> {
 
-  typedef SCIRun::SuperBoxSet<BoxP, Point, Volume, Value, Evaluator>  SBS;
-  typedef SCIRun::SuperBox<BoxP, Point, Volume, Value, Evaluator>     SB;
-  typedef SCIRun::CompositeBox<BoxP, Point, Volume, Value, Evaluator> CB;
-  typedef SCIRun::BasicBox<BoxP, Point, Volume, Value, Evaluator>     BB;
+  typedef SuperBoxSet<BoxP, Point, Volume, Value, Evaluator>  SBS;
+  typedef SuperBox<BoxP, Point, Volume, Value, Evaluator>     SB;
+  typedef CompositeBox<BoxP, Point, Volume, Value, Evaluator> CB;
+  typedef BasicBox<BoxP, Point, Volume, Value, Evaluator>     BB;
 
 public:
   BasicBox(BoxP box)
@@ -457,10 +457,10 @@ private:
   
 template <class BoxP, class Point, class Volume, class Value, class Evaluator>
 class CompositeBox : public SuperBox<BoxP, Point, Volume, Value, Evaluator>  {
-  typedef SCIRun::SuperBoxSet<BoxP, Point, Volume, Value, Evaluator> SBS;
-  typedef SCIRun::SuperBox<BoxP, Point, Volume, Value, Evaluator>    SB;
-  typedef SCIRun::BasicBox<BoxP, Point, Volume, Value, Evaluator>    BB;
-  typedef SCIRun::CompositeBox<BoxP, Point, Volume, Value, Evaluator> CB;
+  typedef SuperBoxSet<BoxP, Point, Volume, Value, Evaluator> SBS;
+  typedef SuperBox<BoxP, Point, Volume, Value, Evaluator>    SB;
+  typedef BasicBox<BoxP, Point, Volume, Value, Evaluator>    BB;
+  typedef CompositeBox<BoxP, Point, Volume, Value, Evaluator> CB;
 
 public:
   CompositeBox(const vector<BB*>& basicBoxes,
