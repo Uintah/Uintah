@@ -28,6 +28,7 @@ SRCS     += \
 	$(SRCDIR)/Endian.cc \
 	$(SRCDIR)/SizeTypeConvert.cc \
 	$(SRCDIR)/MacroSubstitute.cc \
+	$(SRCDIR)/ModuleReporter.cc \
 	$(SRCDIR)/RCParse.cc \
 	$(SRCDIR)/RWS.cc \
 	$(SRCDIR)/sci_system.c \
