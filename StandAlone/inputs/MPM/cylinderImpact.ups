@@ -10,7 +10,7 @@
    <Time>
 	<maxTime>2</maxTime>
 	<initTime>0.0</initTime>
-	<delt_min>1.0e-9</delt_min>
+	<delt_min>1.0e-16</delt_min>
 	<delt_max>1.0e-8</delt_max>
 	<timestep_multiplier>0.8</timestep_multiplier>
    </Time>
@@ -33,8 +33,9 @@
 	<save label = "p.deformRatePlastic"/>
 	<save label = "p.plasticStrain"/>
 	<save label = "g.mass"/>
+	<save label = "g.volume"/>
 	<save label = "g.stressFS"/>
-	<checkpoint cycle = "2" interval = "0.1"/>
+	<checkpoint cycle = "2" interval = "2.0e-6"/>
    </DataArchiver>
 
     <MPM>
@@ -94,8 +95,8 @@
 	    <Box label = "1">
 		<lower>[0.0,0.0,0.0]</lower>
 		<upper>[2.0e-2,3.0e-2,2.0e-2]</upper>
-	        <resolution>[20,40,20]</resolution>
-		<patches>[1,2,1]</patches>
+	        <resolution>[10,15,10]</resolution>
+		<patches>[1,1,1]</patches>
 	    </Box>
 	</Level>
 	<BoundaryConditions>
