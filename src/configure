@@ -328,7 +328,7 @@ ac_includes_default="\
 # include <unistd.h>
 #endif"
 
-ac_subst_vars='SHELL PATH_SEPARATOR PACKAGE_NAME PACKAGE_TARNAME PACKAGE_VERSION PACKAGE_STRING PACKAGE_BUGREPORT exec_prefix prefix program_transform_name bindir sbindir libexecdir datadir sysconfdir sharedstatedir localstatedir libdir includedir oldincludedir infodir mandir build_alias host_alias target_alias DEFS ECHO_C ECHO_N ECHO_T LIBS CC CFLAGS LDFLAGS CXX CPPFLAGS CXXFLAGS F77 FFLAGS CPP CXXCPP MATLAB_ENG build build_cpu build_vendor build_os host host_cpu host_vendor host_os IS_OSX ac_ct_CC EXEEXT OBJEXT ac_ct_CXX ac_ct_F77 SO_OR_ARCHIVE_EXTENSION ASSERTION_LEVEL NOPRINTDIR DEF_MALLOC PACKAGE_DIRS LOAD_PACKAGE EXENAME LARGESOS TIME_IMPL AS LD NEED_OSX_HACK DEF_NEED_OSX_HACK CC_DEPEND_MODE CC_DEPEND_REGEN CC_DEPEND_EXT F77_DEPEND_MODE F77_DEPEND_REGEN F77_DEPEND_EXT GMAKE MAKE AWK YACC LEX LEXLIB LEX_OUTPUT_ROOT LEX_LIB_FLAG ETAGS PERL FORTRAN_UNDERSCORE G77 SOFLAGS ASFLAGS LDRUN_PREFIX extra_cflags MAKE_PARALLELISM NEED_SONAME REPOSITORY_FLAGS TEMPLATE_TAG TEMPLATE_BOX EGREP NBITS SCI_THIRDPARTY_LIB_DIR SCI_THIRDPARTY_LIB_DIR_FLAG M_LIB_FLAG M_LIB_DIR_FLAG X_LIB_FLAG X_LIB_DIR_FLAG THREAD_IMPL THREAD_LIB_FLAG DEF_THREAD SEMAPHORE_LIB_FLAG GL_LIB_FLAG GL_LIB_DIR_FLAG INC_GL_H DL_LIB_FLAG DL_LIB_DIR_FLAG DEF_IEEEFP DEF_HASHMAP LIB_DIR_TCL TCL_LIB_FLAG TCL_LIB_DIR_FLAG INC_TCL_H TK_LIB_FLAG TK_LIB_DIR_FLAG INC_TK_H LIB_DIR_ITCL ITCL_LIB_FLAG ITCL_LIB_DIR_FLAG INC_ITCL_H ITK_LIB_FLAG ITK_LIB_DIR_FLAG INC_ITK_H BLT_LIB_FLAG BLT_LIB_DIR_FLAG INC_BLT_H DEF_COLLAB_VIS HAVE_COLLAB_VIS PLPLOT_LIB_FLAG PLPLOT_LIB_DIR_FLAG INC_PLPLOT_H DEF_PLPLOT TCLMATRIX_LIB_FLAG TCLMATRIX_LIB_DIR_FLAG INC_TCLMATRIX_H DEF_TCLMATRIX TCL_PREFIX TCL_VERSION TK_VERSION ITCL_WIDGETS XERCES_C_LIB_FLAG XERCES_C_LIB_DIR_FLAG INC_XERCESC_H SSTREAM_COMPAT EXC_LIB_FLAG EXC_LIB_DIR_FLAG DEF_EXC MPEGE_LIB_FLAG MPEGE_LIB_DIR_FLAG DEF_MPEG MAGICK_LIB_FLAG MAGICK_LIB_DIR_FLAG INC_MAGICK_H DEF_MAGICK PNG_LIB_FLAG PNG_LIB_DIR_FLAG INC_PNG_H DEF_PNG Z_LIB_FLAG Z_LIB_DIR_FLAG INC_Z_H DEF_Z F_LIB_FLAG BLAS_LIB_FLAG BLAS_LIB_DIR_FLAG DEF_BLAS FTGL_LIB_FLAG FTGL_LIB_DIR_FLAG DEF_FTGL INC_FTGL_H DEF_LAPACK LAPACK_LIB_FLAG LAPACK_LIB_DIR_FLAG MPI_LIB_FLAG MPI_LIB_DIR_FLAG INC_MPI_H DEF_MPI HAVE_MPI MPIUNI_LIB_FLAG MPIUNI_LIB_DIR_FLAG INC_MPIUNI_H DEF_MPIUNI HAVE_PETSC PETSC_LIB_FLAG PETSC_LIB_DIR_FLAG DEF_PETSC INC_PETSC_H PETSC_UNI_LIB_FLAG PETSC_UNI_LIB_DIR_FLAG DEF_PETSC_UNI INC_PETSC_UNI_H HAVE_INSIGHT INSIGHT_LIB_FLAG INSIGHT_LIB_DIR_FLAG INC_INSIGHT_H DEF_INSIGHT XALAN_PATH TAU_MAKEFILE BABEL_BIN SIDL_LIB_FLAG SIDL_LIB_DIR_FLAG INC_SIDL_H HAVE_BABEL DEF_BABEL JPEG_LIB_FLAG JPEG_LIB_DIR_FLAG TIFF_LIB_FLAG TIFF_LIB_DIR_FLAG NETSOLVE_LIB_FLAG NETSOLVE_LIB_DIR_FLAG INC_GLUT_H GLUT_LIB_FLAG GLUT_LIB_DIR_FLAG INC_GLUI_H GLUI_LIB_FLAG GLUI_LIB_DIR_FLAG INC_OOGL_H DEF_OOGL OOGL_LIB_FLAG OOGL_LIB_DIR_FLAG DEF_AUDIO HAVE_AUDIO AUDIO_LIB_FLAG AUDIO_LIB_DIR_FLAG TEEM_LIB_FLAG TEEM_LIB_DIR_FLAG INC_TEEM_H DEF_TEEM HAVE_TEEM MDSPLUS_LIB_FLAG MDSPLUS_LIB_DIR_FLAG INC_MDSPLUS_H DEF_MDSPLUS HDF5_LIB_FLAG HDF5_LIB_DIR_FLAG INC_HDF5_H DEF_HDF5 PERFEX_LIB_FLAG PERFEX_LIB_DIR_FLAG DEF_PERFEX CRYPTO_LIB_FLAG CRYPTO_LIB_DIR_FLAG DEF_CRYPTO SSL_LIB_FLAG SSL_LIB_DIR_FLAG DEF_SSL GLOBUS_LIB_FLAG GLOBUS_LIB_DIR_FLAG INC_GLOBUS_H DEF_GLOBUS HAVE_GLOBUS QT_MOC_BIN HAVE_QT QT_MT_LIB_FLAG QT_MT_LIB_DIR_FLAG INC_QT_MT_H DEF_QT DEF_VDT VDT_LIB_FLAG VDT_LIB_DIR_FLAG INC_VDT_H HAVE_HYPRE DEF_HYPRE HYPRE_LIB_FLAG HYPRE_LIB_DIR_FLAG INC_HYPRE_H UUID_LIB_FLAG DEF_SCIRUN2 BUILD_SCIRUN2 abs_conftop_dir abs_srcdir LIBOBJS LTLIBOBJS'
+ac_subst_vars='SHELL PATH_SEPARATOR PACKAGE_NAME PACKAGE_TARNAME PACKAGE_VERSION PACKAGE_STRING PACKAGE_BUGREPORT exec_prefix prefix program_transform_name bindir sbindir libexecdir datadir sysconfdir sharedstatedir localstatedir libdir includedir oldincludedir infodir mandir build_alias host_alias target_alias DEFS ECHO_C ECHO_N ECHO_T LIBS CC CFLAGS LDFLAGS CXX CPPFLAGS CXXFLAGS F77 FFLAGS CPP CXXCPP MATLAB_ENG build build_cpu build_vendor build_os host host_cpu host_vendor host_os IS_OSX ac_ct_CC EXEEXT OBJEXT ac_ct_CXX ac_ct_F77 SO_OR_ARCHIVE_EXTENSION ASSERTION_LEVEL NOPRINTDIR DEF_MALLOC PACKAGE_DIRS LOAD_PACKAGE EXENAME LARGESOS TIME_IMPL AS LD NEED_OSX_HACK DEF_NEED_OSX_HACK CC_DEPEND_MODE CC_DEPEND_REGEN CC_DEPEND_EXT F77_DEPEND_MODE F77_DEPEND_REGEN F77_DEPEND_EXT GMAKE MAKE AWK YACC LEX LEXLIB LEX_OUTPUT_ROOT LEX_LIB_FLAG ETAGS PERL FORTRAN_UNDERSCORE G77 SOFLAGS ASFLAGS LDRUN_PREFIX extra_cflags MAKE_PARALLELISM NEED_SONAME REPOSITORY_FLAGS TEMPLATE_TAG TEMPLATE_BOX EGREP NBITS INC_SCI_THIRDPARTY_H SCI_THIRDPARTY_LIB_DIR SCI_THIRDPARTY_LIB_DIR_FLAG M_LIB_FLAG M_LIB_DIR_FLAG X_LIB_FLAG X_LIB_DIR_FLAG THREAD_IMPL THREAD_LIB_FLAG DEF_THREAD SEMAPHORE_LIB_FLAG GL_LIB_FLAG GL_LIB_DIR_FLAG INC_GL_H DL_LIB_FLAG DL_LIB_DIR_FLAG DEF_IEEEFP DEF_HASHMAP LIB_DIR_TCL TCL_LIB_FLAG TCL_LIB_DIR_FLAG INC_TCL_H TK_LIB_FLAG TK_LIB_DIR_FLAG INC_TK_H LIB_DIR_ITCL ITCL_LIB_FLAG ITCL_LIB_DIR_FLAG INC_ITCL_H ITK_LIB_FLAG ITK_LIB_DIR_FLAG INC_ITK_H BLT_LIB_FLAG BLT_LIB_DIR_FLAG INC_BLT_H DEF_COLLAB_VIS HAVE_COLLAB_VIS PLPLOT_LIB_FLAG PLPLOT_LIB_DIR_FLAG INC_PLPLOT_H DEF_PLPLOT TCLMATRIX_LIB_FLAG TCLMATRIX_LIB_DIR_FLAG INC_TCLMATRIX_H DEF_TCLMATRIX TCL_PREFIX TCL_VERSION TK_VERSION ITCL_WIDGETS XERCES_C_LIB_FLAG XERCES_C_LIB_DIR_FLAG INC_XERCESC_H SSTREAM_COMPAT EXC_LIB_FLAG EXC_LIB_DIR_FLAG DEF_EXC MPEGE_LIB_FLAG MPEGE_LIB_DIR_FLAG DEF_MPEG MAGICK_LIB_FLAG MAGICK_LIB_DIR_FLAG INC_MAGICK_H DEF_MAGICK PNG_LIB_FLAG PNG_LIB_DIR_FLAG INC_PNG_H DEF_PNG Z_LIB_FLAG Z_LIB_DIR_FLAG INC_Z_H DEF_Z F_LIB_FLAG BLAS_LIB_FLAG BLAS_LIB_DIR_FLAG DEF_BLAS FTGL_LIB_FLAG FTGL_LIB_DIR_FLAG DEF_FTGL INC_FTGL_H DEF_LAPACK LAPACK_LIB_FLAG LAPACK_LIB_DIR_FLAG MPI_LIB_FLAG MPI_LIB_DIR_FLAG INC_MPI_H DEF_MPI HAVE_MPI MPIUNI_LIB_FLAG MPIUNI_LIB_DIR_FLAG INC_MPIUNI_H DEF_MPIUNI HAVE_PETSC PETSC_LIB_FLAG PETSC_LIB_DIR_FLAG DEF_PETSC INC_PETSC_H PETSC_UNI_LIB_FLAG PETSC_UNI_LIB_DIR_FLAG DEF_PETSC_UNI INC_PETSC_UNI_H HAVE_INSIGHT INSIGHT_LIB_FLAG INSIGHT_LIB_DIR_FLAG INC_INSIGHT_H DEF_INSIGHT XALAN_PATH TAU_MAKEFILE BABEL_BIN SIDL_LIB_FLAG SIDL_LIB_DIR_FLAG INC_SIDL_H HAVE_BABEL DEF_BABEL JPEG_LIB_FLAG JPEG_LIB_DIR_FLAG TIFF_LIB_FLAG TIFF_LIB_DIR_FLAG NETSOLVE_LIB_FLAG NETSOLVE_LIB_DIR_FLAG INC_GLUT_H GLUT_LIB_FLAG GLUT_LIB_DIR_FLAG INC_GLUI_H GLUI_LIB_FLAG GLUI_LIB_DIR_FLAG INC_OOGL_H DEF_OOGL OOGL_LIB_FLAG OOGL_LIB_DIR_FLAG DEF_AUDIO HAVE_AUDIO AUDIO_LIB_FLAG AUDIO_LIB_DIR_FLAG TEEM_LIB_FLAG TEEM_LIB_DIR_FLAG INC_TEEM_H DEF_TEEM HAVE_TEEM MDSPLUS_LIB_FLAG MDSPLUS_LIB_DIR_FLAG INC_MDSPLUS_H DEF_MDSPLUS HDF5_LIB_FLAG HDF5_LIB_DIR_FLAG INC_HDF5_H DEF_HDF5 PERFEX_LIB_FLAG PERFEX_LIB_DIR_FLAG DEF_PERFEX CRYPTO_LIB_FLAG CRYPTO_LIB_DIR_FLAG DEF_CRYPTO SSL_LIB_FLAG SSL_LIB_DIR_FLAG DEF_SSL GLOBUS_LIB_FLAG GLOBUS_LIB_DIR_FLAG INC_GLOBUS_H DEF_GLOBUS HAVE_GLOBUS QT_MOC_BIN HAVE_QT QT_MT_LIB_FLAG QT_MT_LIB_DIR_FLAG INC_QT_MT_H DEF_QT DEF_VDT VDT_LIB_FLAG VDT_LIB_DIR_FLAG INC_VDT_H HAVE_HYPRE DEF_HYPRE HYPRE_LIB_FLAG HYPRE_LIB_DIR_FLAG INC_HYPRE_H UUID_LIB_FLAG DEF_SCIRUN2 BUILD_SCIRUN2 abs_conftop_dir abs_srcdir LIBOBJS LTLIBOBJS'
 ac_subst_files=''
 
 # Initialize some variables set by options.
@@ -7321,8 +7321,6 @@ echo "$as_me: WARNING: Default rtrt thirdparty directory $rtrt_tp_path does not 
 echo "${ECHO_T}Using default thirdparty directory $sci_thirdparty_dir" >&6
 fi
 
-first=true
-
 for i in $sci_thirdparty_dir; do
   if test ! -d "$i"; then
     continue
@@ -7335,24 +7333,22 @@ for i in $sci_thirdparty_dir; do
   # make sure there is no leading space in path
   if test -z "$sci_thirdparty_libs"; then
     sci_thirdparty_libs="$i/lib"
+    SCI_THIRDPARTY_LIB_DIR="$sci_thirdparty_libs"
+    SCI_THIRDPARTY_LIB_DIR_FLAG="$LDRUN_PREFIX$sci_thirdparty_libs -L$sci_thirdparty_libs"
   else
     sci_thirdparty_libs="$sci_thirdparty_libs $i/lib"
   fi
   if test -z "$sci_thirdparty_includes"; then
     sci_thirdparty_includes="$i/include"
+    INC_SCI_THIRDPARTY_H=-I"$sci_thirdparty_includes"
   else
     sci_thirdparty_includes="$sci_thirdparty_includes $i/include"
-  fi
-
-  if test $first="true"; then
-    SCI_THIRDPARTY_LIB_DIR="$sci_thirdparty_libs"
-    SCI_THIRDPARTY_LIB_DIR_FLAG="$LDRUN_PREFIX$sci_thirdparty_libs -L$sci_thirdparty_libs"
-    first=false
   fi
 done
 
 echo "$as_me:$LINENO: result: Thirdparty library directory $SCI_THIRDPARTY_LIB_DIR" >&5
 echo "${ECHO_T}Thirdparty library directory $SCI_THIRDPARTY_LIB_DIR" >&6
+
 
 
 
@@ -7499,14 +7495,22 @@ if { (eval echo "$as_me:$LINENO: \"$ac_link\"") >&5
   (exit $ac_status); }; }; then
 
 eval LIB_DIR_M='""'
+
 if test "" = "$SCI_THIRDPARTY_LIB_DIR"; then
   eval M_LIB_DIR_FLAG=''
 else
   eval M_LIB_DIR_FLAG='"$_sci_lib_path"'
 fi
+
 eval M_LIB_FLAG='"$_sci_libs"'
 eval HAVE_M="yes"
-eval INC_M_H='"$_sci_includes"'
+
+if test "$_sci_includes" = "$INC_SCI_THIRDPARTY_H"; then
+  eval INC_M_H=''
+else
+  eval INC_M_H='"$_sci_includes"'
+fi
+
 eval HAVE_M_H="yes"
 echo "$as_me:$LINENO: result: yes" >&5
 echo "${ECHO_T}yes" >&6
@@ -7693,14 +7697,22 @@ if { (eval echo "$as_me:$LINENO: \"$ac_link\"") >&5
   (exit $ac_status); }; }; then
 
 eval LIB_DIR_X='"$_x_lib_dir"'
+
 if test "$_x_lib_dir" = "$SCI_THIRDPARTY_LIB_DIR"; then
   eval X_LIB_DIR_FLAG=''
 else
   eval X_LIB_DIR_FLAG='"$_sci_lib_path"'
 fi
+
 eval X_LIB_FLAG='"$_sci_libs"'
 eval HAVE_X="yes"
-eval INC_X_H='"$_sci_includes"'
+
+if test "$_sci_includes" = "$INC_SCI_THIRDPARTY_H"; then
+  eval INC_X_H=''
+else
+  eval INC_X_H='"$_sci_includes"'
+fi
+
 eval HAVE_X_H="yes"
 echo "$as_me:$LINENO: result: yes" >&5
 echo "${ECHO_T}yes" >&6
@@ -7936,14 +7948,22 @@ if { (eval echo "$as_me:$LINENO: \"$ac_link\"") >&5
   (exit $ac_status); }; }; then
 
 eval LIB_DIR_FETCHOP='""'
+
 if test "" = "$SCI_THIRDPARTY_LIB_DIR"; then
   eval FETCHOP_LIB_DIR_FLAG=''
 else
   eval FETCHOP_LIB_DIR_FLAG='"$_sci_lib_path"'
 fi
+
 eval FETCHOP_LIB_FLAG='"$_sci_libs"'
 eval HAVE_FETCHOP="yes"
-eval INC_FETCHOP_H='"$_sci_includes"'
+
+if test "$_sci_includes" = "$INC_SCI_THIRDPARTY_H"; then
+  eval INC_FETCHOP_H=''
+else
+  eval INC_FETCHOP_H='"$_sci_includes"'
+fi
+
 eval HAVE_FETCHOP_H="yes"
 echo "$as_me:$LINENO: result: yes" >&5
 echo "${ECHO_T}yes" >&6
@@ -8103,14 +8123,22 @@ if { (eval echo "$as_me:$LINENO: \"$ac_link\"") >&5
   (exit $ac_status); }; }; then
 
 eval LIB_DIR_PTHREAD='""'
+
 if test "" = "$SCI_THIRDPARTY_LIB_DIR"; then
   eval PTHREAD_LIB_DIR_FLAG=''
 else
   eval PTHREAD_LIB_DIR_FLAG='"$_sci_lib_path"'
 fi
+
 eval PTHREAD_LIB_FLAG='"$_sci_libs"'
 eval HAVE_PTHREAD="yes"
-eval INC_PTHREAD_H='"$_sci_includes"'
+
+if test "$_sci_includes" = "$INC_SCI_THIRDPARTY_H"; then
+  eval INC_PTHREAD_H=''
+else
+  eval INC_PTHREAD_H='"$_sci_includes"'
+fi
+
 eval HAVE_PTHREAD_H="yes"
 echo "$as_me:$LINENO: result: yes" >&5
 echo "${ECHO_T}yes" >&6
@@ -8452,14 +8480,22 @@ if { (eval echo "$as_me:$LINENO: \"$ac_link\"") >&5
   (exit $ac_status); }; }; then
 
 eval LIB_DIR_GL='"$_sci_lib"'
+
 if test "$_sci_lib" = "$SCI_THIRDPARTY_LIB_DIR"; then
   eval GL_LIB_DIR_FLAG=''
 else
   eval GL_LIB_DIR_FLAG='"$_sci_lib_path"'
 fi
+
 eval GL_LIB_FLAG='"$_sci_libs"'
 eval HAVE_GL="yes"
-eval INC_GL_H='"$_sci_includes"'
+
+if test "$_sci_includes" = "$INC_SCI_THIRDPARTY_H"; then
+  eval INC_GL_H=''
+else
+  eval INC_GL_H='"$_sci_includes"'
+fi
+
 eval HAVE_GL_H="yes"
 echo "$as_me:$LINENO: result: yes" >&5
 echo "${ECHO_T}yes" >&6
@@ -8628,14 +8664,22 @@ if { (eval echo "$as_me:$LINENO: \"$ac_link\"") >&5
   (exit $ac_status); }; }; then
 
 eval LIB_DIR_DL='""'
+
 if test "" = "$SCI_THIRDPARTY_LIB_DIR"; then
   eval DL_LIB_DIR_FLAG=''
 else
   eval DL_LIB_DIR_FLAG='"$_sci_lib_path"'
 fi
+
 eval DL_LIB_FLAG='"$_sci_libs"'
 eval HAVE_DL="yes"
-eval INC_DL_H='"$_sci_includes"'
+
+if test "$_sci_includes" = "$INC_SCI_THIRDPARTY_H"; then
+  eval INC_DL_H=''
+else
+  eval INC_DL_H='"$_sci_includes"'
+fi
+
 eval HAVE_DL_H="yes"
 echo "$as_me:$LINENO: result: yes" >&5
 echo "${ECHO_T}yes" >&6
@@ -8817,14 +8861,22 @@ if { (eval echo "$as_me:$LINENO: \"$ac_link\"") >&5
   (exit $ac_status); }; }; then
 
 eval LIB_DIR_DL='"$sci_thirdparty_libs"'
+
 if test "$sci_thirdparty_libs" = "$SCI_THIRDPARTY_LIB_DIR"; then
   eval DL_LIB_DIR_FLAG=''
 else
   eval DL_LIB_DIR_FLAG='"$_sci_lib_path"'
 fi
+
 eval DL_LIB_FLAG='"$_sci_libs"'
 eval HAVE_DL="yes"
-eval INC_DL_H='"$_sci_includes"'
+
+if test "$_sci_includes" = "$INC_SCI_THIRDPARTY_H"; then
+  eval INC_DL_H=''
+else
+  eval INC_DL_H='"$_sci_includes"'
+fi
+
 eval HAVE_DL_H="yes"
 echo "$as_me:$LINENO: result: yes" >&5
 echo "${ECHO_T}yes" >&6
@@ -8980,14 +9032,22 @@ if { (eval echo "$as_me:$LINENO: \"$ac_link\"") >&5
   (exit $ac_status); }; }; then
 
 eval LIB_DIR_DL='""'
+
 if test "" = "$SCI_THIRDPARTY_LIB_DIR"; then
   eval DL_LIB_DIR_FLAG=''
 else
   eval DL_LIB_DIR_FLAG='"$_sci_lib_path"'
 fi
+
 eval DL_LIB_FLAG='"$_sci_libs"'
 eval HAVE_DL="yes"
-eval INC_DL_H='"$_sci_includes"'
+
+if test "$_sci_includes" = "$INC_SCI_THIRDPARTY_H"; then
+  eval INC_DL_H=''
+else
+  eval INC_DL_H='"$_sci_includes"'
+fi
+
 eval HAVE_DL_H="yes"
 echo "$as_me:$LINENO: result: yes" >&5
 echo "${ECHO_T}yes" >&6
@@ -9171,14 +9231,22 @@ if { (eval echo "$as_me:$LINENO: \"$ac_link\"") >&5
   (exit $ac_status); }; }; then
 
 eval LIB_DIR_STD_HDRS='""'
+
 if test "" = "$SCI_THIRDPARTY_LIB_DIR"; then
   eval STD_HDRS_LIB_DIR_FLAG=''
 else
   eval STD_HDRS_LIB_DIR_FLAG='"$_sci_lib_path"'
 fi
+
 eval STD_HDRS_LIB_FLAG='"$_sci_libs"'
 eval HAVE_STD_HDRS="yes"
-eval INC_STD_HDRS_H='"$_sci_includes"'
+
+if test "$_sci_includes" = "$INC_SCI_THIRDPARTY_H"; then
+  eval INC_STD_HDRS_H=''
+else
+  eval INC_STD_HDRS_H='"$_sci_includes"'
+fi
+
 eval HAVE_STD_HDRS_H="yes"
 echo "$as_me:$LINENO: result: yes" >&5
 echo "${ECHO_T}yes" >&6
@@ -9332,14 +9400,22 @@ if { (eval echo "$as_me:$LINENO: \"$ac_link\"") >&5
   (exit $ac_status); }; }; then
 
 eval LIB_DIR_STD_HDRS='""'
+
 if test "" = "$SCI_THIRDPARTY_LIB_DIR"; then
   eval STD_HDRS_LIB_DIR_FLAG=''
 else
   eval STD_HDRS_LIB_DIR_FLAG='"$_sci_lib_path"'
 fi
+
 eval STD_HDRS_LIB_FLAG='"$_sci_libs"'
 eval HAVE_STD_HDRS="yes"
-eval INC_STD_HDRS_H='"$_sci_includes"'
+
+if test "$_sci_includes" = "$INC_SCI_THIRDPARTY_H"; then
+  eval INC_STD_HDRS_H=''
+else
+  eval INC_STD_HDRS_H='"$_sci_includes"'
+fi
+
 eval HAVE_STD_HDRS_H="yes"
 echo "$as_me:$LINENO: result: yes" >&5
 echo "${ECHO_T}yes" >&6
@@ -9488,14 +9564,22 @@ if { (eval echo "$as_me:$LINENO: \"$ac_link\"") >&5
   (exit $ac_status); }; }; then
 
 eval LIB_DIR_STD_HDRS='""'
+
 if test "" = "$SCI_THIRDPARTY_LIB_DIR"; then
   eval STD_HDRS_LIB_DIR_FLAG=''
 else
   eval STD_HDRS_LIB_DIR_FLAG='"$_sci_lib_path"'
 fi
+
 eval STD_HDRS_LIB_FLAG='"$_sci_libs"'
 eval HAVE_STD_HDRS="yes"
-eval INC_STD_HDRS_H='"$_sci_includes"'
+
+if test "$_sci_includes" = "$INC_SCI_THIRDPARTY_H"; then
+  eval INC_STD_HDRS_H=''
+else
+  eval INC_STD_HDRS_H='"$_sci_includes"'
+fi
+
 eval HAVE_STD_HDRS_H="yes"
 echo "$as_me:$LINENO: result: yes" >&5
 echo "${ECHO_T}yes" >&6
@@ -9661,14 +9745,22 @@ if { (eval echo "$as_me:$LINENO: \"$ac_link\"") >&5
   (exit $ac_status); }; }; then
 
 eval LIB_DIR_STL_HEADERS='""'
+
 if test "" = "$SCI_THIRDPARTY_LIB_DIR"; then
   eval STL_HEADERS_LIB_DIR_FLAG=''
 else
   eval STL_HEADERS_LIB_DIR_FLAG='"$_sci_lib_path"'
 fi
+
 eval STL_HEADERS_LIB_FLAG='"$_sci_libs"'
 eval HAVE_STL_HEADERS="yes"
-eval INC_STL_HEADERS_H='"$_sci_includes"'
+
+if test "$_sci_includes" = "$INC_SCI_THIRDPARTY_H"; then
+  eval INC_STL_HEADERS_H=''
+else
+  eval INC_STL_HEADERS_H='"$_sci_includes"'
+fi
+
 eval HAVE_STL_HEADERS_H="yes"
 echo "$as_me:$LINENO: result: yes" >&5
 echo "${ECHO_T}yes" >&6
@@ -10136,14 +10228,22 @@ if { (eval echo "$as_me:$LINENO: \"$ac_link\"") >&5
   (exit $ac_status); }; }; then
 
 eval LIB_DIR_TCL='"$_sci_lib"'
+
 if test "$_sci_lib" = "$SCI_THIRDPARTY_LIB_DIR"; then
   eval TCL_LIB_DIR_FLAG=''
 else
   eval TCL_LIB_DIR_FLAG='"$_sci_lib_path"'
 fi
+
 eval TCL_LIB_FLAG='"$_sci_libs"'
 eval HAVE_TCL="yes"
-eval INC_TCL_H='"$_sci_includes"'
+
+if test "$_sci_includes" = "$INC_SCI_THIRDPARTY_H"; then
+  eval INC_TCL_H=''
+else
+  eval INC_TCL_H='"$_sci_includes"'
+fi
+
 eval HAVE_TCL_H="yes"
 echo "$as_me:$LINENO: result: yes" >&5
 echo "${ECHO_T}yes" >&6
@@ -10334,14 +10434,22 @@ if { (eval echo "$as_me:$LINENO: \"$ac_link\"") >&5
   (exit $ac_status); }; }; then
 
 eval LIB_DIR_TK='"$_sci_lib"'
+
 if test "$_sci_lib" = "$SCI_THIRDPARTY_LIB_DIR"; then
   eval TK_LIB_DIR_FLAG=''
 else
   eval TK_LIB_DIR_FLAG='"$_sci_lib_path"'
 fi
+
 eval TK_LIB_FLAG='"$_sci_libs"'
 eval HAVE_TK="yes"
-eval INC_TK_H='"$_sci_includes"'
+
+if test "$_sci_includes" = "$INC_SCI_THIRDPARTY_H"; then
+  eval INC_TK_H=''
+else
+  eval INC_TK_H='"$_sci_includes"'
+fi
+
 eval HAVE_TK_H="yes"
 echo "$as_me:$LINENO: result: yes" >&5
 echo "${ECHO_T}yes" >&6
@@ -10522,14 +10630,22 @@ if { (eval echo "$as_me:$LINENO: \"$ac_link\"") >&5
   (exit $ac_status); }; }; then
 
 eval LIB_DIR_ITCL='"$_sci_lib"'
+
 if test "$_sci_lib" = "$SCI_THIRDPARTY_LIB_DIR"; then
   eval ITCL_LIB_DIR_FLAG=''
 else
   eval ITCL_LIB_DIR_FLAG='"$_sci_lib_path"'
 fi
+
 eval ITCL_LIB_FLAG='"$_sci_libs"'
 eval HAVE_ITCL="yes"
-eval INC_ITCL_H='"$_sci_includes"'
+
+if test "$_sci_includes" = "$INC_SCI_THIRDPARTY_H"; then
+  eval INC_ITCL_H=''
+else
+  eval INC_ITCL_H='"$_sci_includes"'
+fi
+
 eval HAVE_ITCL_H="yes"
 echo "$as_me:$LINENO: result: yes" >&5
 echo "${ECHO_T}yes" >&6
@@ -10710,14 +10826,22 @@ if { (eval echo "$as_me:$LINENO: \"$ac_link\"") >&5
   (exit $ac_status); }; }; then
 
 eval LIB_DIR_ITK='"$_sci_lib"'
+
 if test "$_sci_lib" = "$SCI_THIRDPARTY_LIB_DIR"; then
   eval ITK_LIB_DIR_FLAG=''
 else
   eval ITK_LIB_DIR_FLAG='"$_sci_lib_path"'
 fi
+
 eval ITK_LIB_FLAG='"$_sci_libs"'
 eval HAVE_ITK="yes"
-eval INC_ITK_H='"$_sci_includes"'
+
+if test "$_sci_includes" = "$INC_SCI_THIRDPARTY_H"; then
+  eval INC_ITK_H=''
+else
+  eval INC_ITK_H='"$_sci_includes"'
+fi
+
 eval HAVE_ITK_H="yes"
 echo "$as_me:$LINENO: result: yes" >&5
 echo "${ECHO_T}yes" >&6
@@ -10897,14 +11021,22 @@ if { (eval echo "$as_me:$LINENO: \"$ac_link\"") >&5
   (exit $ac_status); }; }; then
 
 eval LIB_DIR_BLT='"$_sci_lib"'
+
 if test "$_sci_lib" = "$SCI_THIRDPARTY_LIB_DIR"; then
   eval BLT_LIB_DIR_FLAG=''
 else
   eval BLT_LIB_DIR_FLAG='"$_sci_lib_path"'
 fi
+
 eval BLT_LIB_FLAG='"$_sci_libs"'
 eval HAVE_BLT="yes"
-eval INC_BLT_H='"$_sci_includes"'
+
+if test "$_sci_includes" = "$INC_SCI_THIRDPARTY_H"; then
+  eval INC_BLT_H=''
+else
+  eval INC_BLT_H='"$_sci_includes"'
+fi
+
 eval HAVE_BLT_H="yes"
 echo "$as_me:$LINENO: result: yes" >&5
 echo "${ECHO_T}yes" >&6
@@ -11113,14 +11245,22 @@ if { (eval echo "$as_me:$LINENO: \"$ac_link\"") >&5
   (exit $ac_status); }; }; then
 
 eval LIB_DIR_PLPLOT='"$_sci_lib"'
+
 if test "$_sci_lib" = "$SCI_THIRDPARTY_LIB_DIR"; then
   eval PLPLOT_LIB_DIR_FLAG=''
 else
   eval PLPLOT_LIB_DIR_FLAG='"$_sci_lib_path"'
 fi
+
 eval PLPLOT_LIB_FLAG='"$_sci_libs"'
 eval HAVE_PLPLOT="yes"
-eval INC_PLPLOT_H='"$_sci_includes"'
+
+if test "$_sci_includes" = "$INC_SCI_THIRDPARTY_H"; then
+  eval INC_PLPLOT_H=''
+else
+  eval INC_PLPLOT_H='"$_sci_includes"'
+fi
+
 eval HAVE_PLPLOT_H="yes"
 echo "$as_me:$LINENO: result: yes" >&5
 echo "${ECHO_T}yes" >&6
@@ -11296,14 +11436,22 @@ if { (eval echo "$as_me:$LINENO: \"$ac_link\"") >&5
   (exit $ac_status); }; }; then
 
 eval LIB_DIR_PLPLOT='"$_sci_lib"'
+
 if test "$_sci_lib" = "$SCI_THIRDPARTY_LIB_DIR"; then
   eval PLPLOT_LIB_DIR_FLAG=''
 else
   eval PLPLOT_LIB_DIR_FLAG='"$_sci_lib_path"'
 fi
+
 eval PLPLOT_LIB_FLAG='"$_sci_libs"'
 eval HAVE_PLPLOT="yes"
-eval INC_PLPLOT_H='"$_sci_includes"'
+
+if test "$_sci_includes" = "$INC_SCI_THIRDPARTY_H"; then
+  eval INC_PLPLOT_H=''
+else
+  eval INC_PLPLOT_H='"$_sci_includes"'
+fi
+
 eval HAVE_PLPLOT_H="yes"
 echo "$as_me:$LINENO: result: yes" >&5
 echo "${ECHO_T}yes" >&6
@@ -11483,14 +11631,22 @@ if { (eval echo "$as_me:$LINENO: \"$ac_link\"") >&5
   (exit $ac_status); }; }; then
 
 eval LIB_DIR_TCLMATRIX='"$_sci_lib"'
+
 if test "$_sci_lib" = "$SCI_THIRDPARTY_LIB_DIR"; then
   eval TCLMATRIX_LIB_DIR_FLAG=''
 else
   eval TCLMATRIX_LIB_DIR_FLAG='"$_sci_lib_path"'
 fi
+
 eval TCLMATRIX_LIB_FLAG='"$_sci_libs"'
 eval HAVE_TCLMATRIX="yes"
-eval INC_TCLMATRIX_H='"$_sci_includes"'
+
+if test "$_sci_includes" = "$INC_SCI_THIRDPARTY_H"; then
+  eval INC_TCLMATRIX_H=''
+else
+  eval INC_TCLMATRIX_H='"$_sci_includes"'
+fi
+
 eval HAVE_TCLMATRIX_H="yes"
 echo "$as_me:$LINENO: result: yes" >&5
 echo "${ECHO_T}yes" >&6
@@ -11666,14 +11822,22 @@ if { (eval echo "$as_me:$LINENO: \"$ac_link\"") >&5
   (exit $ac_status); }; }; then
 
 eval LIB_DIR_TCLMATRIX='"$_sci_lib"'
+
 if test "$_sci_lib" = "$SCI_THIRDPARTY_LIB_DIR"; then
   eval TCLMATRIX_LIB_DIR_FLAG=''
 else
   eval TCLMATRIX_LIB_DIR_FLAG='"$_sci_lib_path"'
 fi
+
 eval TCLMATRIX_LIB_FLAG='"$_sci_libs"'
 eval HAVE_TCLMATRIX="yes"
-eval INC_TCLMATRIX_H='"$_sci_includes"'
+
+if test "$_sci_includes" = "$INC_SCI_THIRDPARTY_H"; then
+  eval INC_TCLMATRIX_H=''
+else
+  eval INC_TCLMATRIX_H='"$_sci_includes"'
+fi
+
 eval HAVE_TCLMATRIX_H="yes"
 echo "$as_me:$LINENO: result: yes" >&5
 echo "${ECHO_T}yes" >&6
@@ -12081,14 +12245,22 @@ if { (eval echo "$as_me:$LINENO: \"$ac_link\"") >&5
   (exit $ac_status); }; }; then
 
 eval LIB_DIR_XERCES_C='"$_xer_lib_path"'
+
 if test "$_xer_lib_path" = "$SCI_THIRDPARTY_LIB_DIR"; then
   eval XERCES_C_LIB_DIR_FLAG=''
 else
   eval XERCES_C_LIB_DIR_FLAG='"$_sci_lib_path"'
 fi
+
 eval XERCES_C_LIB_FLAG='"$_sci_libs"'
 eval HAVE_XERCES_C="yes"
-eval INC_XERCES_C_H='"$_sci_includes"'
+
+if test "$_sci_includes" = "$INC_SCI_THIRDPARTY_H"; then
+  eval INC_XERCES_C_H=''
+else
+  eval INC_XERCES_C_H='"$_sci_includes"'
+fi
+
 eval HAVE_XERCES_C_H="yes"
 echo "$as_me:$LINENO: result: yes" >&5
 echo "${ECHO_T}yes" >&6
@@ -12243,14 +12415,22 @@ if { (eval echo "$as_me:$LINENO: \"$ac_link\"") >&5
   (exit $ac_status); }; }; then
 
 eval LIB_DIR_SSTREAM='""'
+
 if test "" = "$SCI_THIRDPARTY_LIB_DIR"; then
   eval SSTREAM_LIB_DIR_FLAG=''
 else
   eval SSTREAM_LIB_DIR_FLAG='"$_sci_lib_path"'
 fi
+
 eval SSTREAM_LIB_FLAG='"$_sci_libs"'
 eval HAVE_SSTREAM="yes"
-eval INC_SSTREAM_H='"$_sci_includes"'
+
+if test "$_sci_includes" = "$INC_SCI_THIRDPARTY_H"; then
+  eval INC_SSTREAM_H=''
+else
+  eval INC_SSTREAM_H='"$_sci_includes"'
+fi
+
 eval HAVE_SSTREAM_H="yes"
 echo "$as_me:$LINENO: result: yes" >&5
 echo "${ECHO_T}yes" >&6
@@ -12444,14 +12624,22 @@ if { (eval echo "$as_me:$LINENO: \"$ac_link\"") >&5
   (exit $ac_status); }; }; then
 
 eval LIB_DIR_EXC='"$_sci_lib"'
+
 if test "$_sci_lib" = "$SCI_THIRDPARTY_LIB_DIR"; then
   eval EXC_LIB_DIR_FLAG=''
 else
   eval EXC_LIB_DIR_FLAG='"$_sci_lib_path"'
 fi
+
 eval EXC_LIB_FLAG='"$_sci_libs"'
 eval HAVE_EXC="yes"
-eval INC_EXC_H='"$_sci_includes"'
+
+if test "$_sci_includes" = "$INC_SCI_THIRDPARTY_H"; then
+  eval INC_EXC_H=''
+else
+  eval INC_EXC_H='"$_sci_includes"'
+fi
+
 eval HAVE_EXC_H="yes"
 echo "$as_me:$LINENO: result: yes" >&5
 echo "${ECHO_T}yes" >&6
@@ -12637,14 +12825,22 @@ if { (eval echo "$as_me:$LINENO: \"$ac_link\"") >&5
   (exit $ac_status); }; }; then
 
 eval LIB_DIR_MPEGE='"$_sci_lib"'
+
 if test "$_sci_lib" = "$SCI_THIRDPARTY_LIB_DIR"; then
   eval MPEGE_LIB_DIR_FLAG=''
 else
   eval MPEGE_LIB_DIR_FLAG='"$_sci_lib_path"'
 fi
+
 eval MPEGE_LIB_FLAG='"$_sci_libs"'
 eval HAVE_MPEGE="yes"
-eval INC_MPEGE_H='"$_sci_includes"'
+
+if test "$_sci_includes" = "$INC_SCI_THIRDPARTY_H"; then
+  eval INC_MPEGE_H=''
+else
+  eval INC_MPEGE_H='"$_sci_includes"'
+fi
+
 eval HAVE_MPEGE_H="yes"
 echo "$as_me:$LINENO: result: yes" >&5
 echo "${ECHO_T}yes" >&6
@@ -12867,14 +13063,22 @@ if { (eval echo "$as_me:$LINENO: \"$ac_link\"") >&5
   (exit $ac_status); }; }; then
 
 eval LIB_DIR_MAGICK='"$i/lib"'
+
 if test "$i/lib" = "$SCI_THIRDPARTY_LIB_DIR"; then
   eval MAGICK_LIB_DIR_FLAG=''
 else
   eval MAGICK_LIB_DIR_FLAG='"$_sci_lib_path"'
 fi
+
 eval MAGICK_LIB_FLAG='"$_sci_libs"'
 eval HAVE_MAGICK="yes"
-eval INC_MAGICK_H='"$_sci_includes"'
+
+if test "$_sci_includes" = "$INC_SCI_THIRDPARTY_H"; then
+  eval INC_MAGICK_H=''
+else
+  eval INC_MAGICK_H='"$_sci_includes"'
+fi
+
 eval HAVE_MAGICK_H="yes"
 echo "$as_me:$LINENO: result: yes" >&5
 echo "${ECHO_T}yes" >&6
@@ -13089,14 +13293,22 @@ if { (eval echo "$as_me:$LINENO: \"$ac_link\"") >&5
   (exit $ac_status); }; }; then
 
 eval LIB_DIR_PNG='"$i/lib"'
+
 if test "$i/lib" = "$SCI_THIRDPARTY_LIB_DIR"; then
   eval PNG_LIB_DIR_FLAG=''
 else
   eval PNG_LIB_DIR_FLAG='"$_sci_lib_path"'
 fi
+
 eval PNG_LIB_FLAG='"$_sci_libs"'
 eval HAVE_PNG="yes"
-eval INC_PNG_H='"$_sci_includes"'
+
+if test "$_sci_includes" = "$INC_SCI_THIRDPARTY_H"; then
+  eval INC_PNG_H=''
+else
+  eval INC_PNG_H='"$_sci_includes"'
+fi
+
 eval HAVE_PNG_H="yes"
 echo "$as_me:$LINENO: result: yes" >&5
 echo "${ECHO_T}yes" >&6
@@ -13301,14 +13513,22 @@ if { (eval echo "$as_me:$LINENO: \"$ac_link\"") >&5
   (exit $ac_status); }; }; then
 
 eval LIB_DIR_Z='"$_sci_lib"'
+
 if test "$_sci_lib" = "$SCI_THIRDPARTY_LIB_DIR"; then
   eval Z_LIB_DIR_FLAG=''
 else
   eval Z_LIB_DIR_FLAG='"$_sci_lib_path"'
 fi
+
 eval Z_LIB_FLAG='"$_sci_libs"'
 eval HAVE_Z="yes"
-eval INC_Z_H='"$_sci_includes"'
+
+if test "$_sci_includes" = "$INC_SCI_THIRDPARTY_H"; then
+  eval INC_Z_H=''
+else
+  eval INC_Z_H='"$_sci_includes"'
+fi
+
 eval HAVE_Z_H="yes"
 echo "$as_me:$LINENO: result: yes" >&5
 echo "${ECHO_T}yes" >&6
@@ -13481,14 +13701,22 @@ if { (eval echo "$as_me:$LINENO: \"$ac_link\"") >&5
   (exit $ac_status); }; }; then
 
 eval LIB_DIR_F='""'
+
 if test "" = "$SCI_THIRDPARTY_LIB_DIR"; then
   eval F_LIB_DIR_FLAG=''
 else
   eval F_LIB_DIR_FLAG='"$_sci_lib_path"'
 fi
+
 eval F_LIB_FLAG='"$_sci_libs"'
 eval HAVE_F="yes"
-eval INC_F_H='"$_sci_includes"'
+
+if test "$_sci_includes" = "$INC_SCI_THIRDPARTY_H"; then
+  eval INC_F_H=''
+else
+  eval INC_F_H='"$_sci_includes"'
+fi
+
 eval HAVE_F_H="yes"
 echo "$as_me:$LINENO: result: yes" >&5
 echo "${ECHO_T}yes" >&6
@@ -13641,14 +13869,22 @@ if { (eval echo "$as_me:$LINENO: \"$ac_link\"") >&5
   (exit $ac_status); }; }; then
 
 eval LIB_DIR_F='""'
+
 if test "" = "$SCI_THIRDPARTY_LIB_DIR"; then
   eval F_LIB_DIR_FLAG=''
 else
   eval F_LIB_DIR_FLAG='"$_sci_lib_path"'
 fi
+
 eval F_LIB_FLAG='"$_sci_libs"'
 eval HAVE_F="yes"
-eval INC_F_H='"$_sci_includes"'
+
+if test "$_sci_includes" = "$INC_SCI_THIRDPARTY_H"; then
+  eval INC_F_H=''
+else
+  eval INC_F_H='"$_sci_includes"'
+fi
+
 eval HAVE_F_H="yes"
 echo "$as_me:$LINENO: result: yes" >&5
 echo "${ECHO_T}yes" >&6
@@ -13802,14 +14038,22 @@ if { (eval echo "$as_me:$LINENO: \"$ac_link\"") >&5
   (exit $ac_status); }; }; then
 
 eval LIB_DIR_F='""'
+
 if test "" = "$SCI_THIRDPARTY_LIB_DIR"; then
   eval F_LIB_DIR_FLAG=''
 else
   eval F_LIB_DIR_FLAG='"$_sci_lib_path"'
 fi
+
 eval F_LIB_FLAG='"$_sci_libs"'
 eval HAVE_F="yes"
-eval INC_F_H='"$_sci_includes"'
+
+if test "$_sci_includes" = "$INC_SCI_THIRDPARTY_H"; then
+  eval INC_F_H=''
+else
+  eval INC_F_H='"$_sci_includes"'
+fi
+
 eval HAVE_F_H="yes"
 echo "$as_me:$LINENO: result: yes" >&5
 echo "${ECHO_T}yes" >&6
@@ -13960,14 +14204,22 @@ if { (eval echo "$as_me:$LINENO: \"$ac_link\"") >&5
   (exit $ac_status); }; }; then
 
 eval LIB_DIR_F='""'
+
 if test "" = "$SCI_THIRDPARTY_LIB_DIR"; then
   eval F_LIB_DIR_FLAG=''
 else
   eval F_LIB_DIR_FLAG='"$_sci_lib_path"'
 fi
+
 eval F_LIB_FLAG='"$_sci_libs"'
 eval HAVE_F="yes"
-eval INC_F_H='"$_sci_includes"'
+
+if test "$_sci_includes" = "$INC_SCI_THIRDPARTY_H"; then
+  eval INC_F_H=''
+else
+  eval INC_F_H='"$_sci_includes"'
+fi
+
 eval HAVE_F_H="yes"
 echo "$as_me:$LINENO: result: yes" >&5
 echo "${ECHO_T}yes" >&6
@@ -14120,14 +14372,22 @@ if { (eval echo "$as_me:$LINENO: \"$ac_link\"") >&5
   (exit $ac_status); }; }; then
 
 eval LIB_DIR_F='""'
+
 if test "" = "$SCI_THIRDPARTY_LIB_DIR"; then
   eval F_LIB_DIR_FLAG=''
 else
   eval F_LIB_DIR_FLAG='"$_sci_lib_path"'
 fi
+
 eval F_LIB_FLAG='"$_sci_libs"'
 eval HAVE_F="yes"
-eval INC_F_H='"$_sci_includes"'
+
+if test "$_sci_includes" = "$INC_SCI_THIRDPARTY_H"; then
+  eval INC_F_H=''
+else
+  eval INC_F_H='"$_sci_includes"'
+fi
+
 eval HAVE_F_H="yes"
 echo "$as_me:$LINENO: result: yes" >&5
 echo "${ECHO_T}yes" >&6
@@ -14283,14 +14543,22 @@ if { (eval echo "$as_me:$LINENO: \"$ac_link\"") >&5
   (exit $ac_status); }; }; then
 
 eval LIB_DIR_F='""'
+
 if test "" = "$SCI_THIRDPARTY_LIB_DIR"; then
   eval F_LIB_DIR_FLAG=''
 else
   eval F_LIB_DIR_FLAG='"$_sci_lib_path"'
 fi
+
 eval F_LIB_FLAG='"$_sci_libs"'
 eval HAVE_F="yes"
-eval INC_F_H='"$_sci_includes"'
+
+if test "$_sci_includes" = "$INC_SCI_THIRDPARTY_H"; then
+  eval INC_F_H=''
+else
+  eval INC_F_H='"$_sci_includes"'
+fi
+
 eval HAVE_F_H="yes"
 echo "$as_me:$LINENO: result: yes" >&5
 echo "${ECHO_T}yes" >&6
@@ -14467,14 +14735,22 @@ if { (eval echo "$as_me:$LINENO: \"$ac_link\"") >&5
   (exit $ac_status); }; }; then
 
 eval LIB_DIR_BLAS='"$_sci_lib"'
+
 if test "$_sci_lib" = "$SCI_THIRDPARTY_LIB_DIR"; then
   eval BLAS_LIB_DIR_FLAG=''
 else
   eval BLAS_LIB_DIR_FLAG='"$_sci_lib_path"'
 fi
+
 eval BLAS_LIB_FLAG='"$_sci_libs"'
 eval HAVE_BLAS="yes"
-eval INC_BLAS_H='"$_sci_includes"'
+
+if test "$_sci_includes" = "$INC_SCI_THIRDPARTY_H"; then
+  eval INC_BLAS_H=''
+else
+  eval INC_BLAS_H='"$_sci_includes"'
+fi
+
 eval HAVE_BLAS_H="yes"
 echo "$as_me:$LINENO: result: yes" >&5
 echo "${ECHO_T}yes" >&6
@@ -14637,14 +14913,22 @@ if { (eval echo "$as_me:$LINENO: \"$ac_link\"") >&5
   (exit $ac_status); }; }; then
 
 eval LIB_DIR_BLAS='"$_sci_lib"'
+
 if test "$_sci_lib" = "$SCI_THIRDPARTY_LIB_DIR"; then
   eval BLAS_LIB_DIR_FLAG=''
 else
   eval BLAS_LIB_DIR_FLAG='"$_sci_lib_path"'
 fi
+
 eval BLAS_LIB_FLAG='"$_sci_libs"'
 eval HAVE_BLAS="yes"
-eval INC_BLAS_H='"$_sci_includes"'
+
+if test "$_sci_includes" = "$INC_SCI_THIRDPARTY_H"; then
+  eval INC_BLAS_H=''
+else
+  eval INC_BLAS_H='"$_sci_includes"'
+fi
+
 eval HAVE_BLAS_H="yes"
 echo "$as_me:$LINENO: result: yes" >&5
 echo "${ECHO_T}yes" >&6
@@ -14807,14 +15091,22 @@ if { (eval echo "$as_me:$LINENO: \"$ac_link\"") >&5
   (exit $ac_status); }; }; then
 
 eval LIB_DIR_BLAS='"$_sci_lib"'
+
 if test "$_sci_lib" = "$SCI_THIRDPARTY_LIB_DIR"; then
   eval BLAS_LIB_DIR_FLAG=''
 else
   eval BLAS_LIB_DIR_FLAG='"$_sci_lib_path"'
 fi
+
 eval BLAS_LIB_FLAG='"$_sci_libs"'
 eval HAVE_BLAS="yes"
-eval INC_BLAS_H='"$_sci_includes"'
+
+if test "$_sci_includes" = "$INC_SCI_THIRDPARTY_H"; then
+  eval INC_BLAS_H=''
+else
+  eval INC_BLAS_H='"$_sci_includes"'
+fi
+
 eval HAVE_BLAS_H="yes"
 echo "$as_me:$LINENO: result: yes" >&5
 echo "${ECHO_T}yes" >&6
@@ -14976,14 +15268,22 @@ if { (eval echo "$as_me:$LINENO: \"$ac_link\"") >&5
   (exit $ac_status); }; }; then
 
 eval LIB_DIR_BLAS='"$_sci_lib"'
+
 if test "$_sci_lib" = "$SCI_THIRDPARTY_LIB_DIR"; then
   eval BLAS_LIB_DIR_FLAG=''
 else
   eval BLAS_LIB_DIR_FLAG='"$_sci_lib_path"'
 fi
+
 eval BLAS_LIB_FLAG='"$_sci_libs"'
 eval HAVE_BLAS="yes"
-eval INC_BLAS_H='"$_sci_includes"'
+
+if test "$_sci_includes" = "$INC_SCI_THIRDPARTY_H"; then
+  eval INC_BLAS_H=''
+else
+  eval INC_BLAS_H='"$_sci_includes"'
+fi
+
 eval HAVE_BLAS_H="yes"
 echo "$as_me:$LINENO: result: yes" >&5
 echo "${ECHO_T}yes" >&6
@@ -15180,14 +15480,22 @@ if { (eval echo "$as_me:$LINENO: \"$ac_link\"") >&5
   (exit $ac_status); }; }; then
 
 eval LIB_DIR_FTGL='"$_sci_lib"'
+
 if test "$_sci_lib" = "$SCI_THIRDPARTY_LIB_DIR"; then
   eval FTGL_LIB_DIR_FLAG=''
 else
   eval FTGL_LIB_DIR_FLAG='"$_sci_lib_path"'
 fi
+
 eval FTGL_LIB_FLAG='"$_sci_libs"'
 eval HAVE_FTGL="yes"
-eval INC_FTGL_H='"$_sci_includes"'
+
+if test "$_sci_includes" = "$INC_SCI_THIRDPARTY_H"; then
+  eval INC_FTGL_H=''
+else
+  eval INC_FTGL_H='"$_sci_includes"'
+fi
+
 eval HAVE_FTGL_H="yes"
 echo "$as_me:$LINENO: result: yes" >&5
 echo "${ECHO_T}yes" >&6
@@ -15372,14 +15680,22 @@ if { (eval echo "$as_me:$LINENO: \"$ac_link\"") >&5
   (exit $ac_status); }; }; then
 
 eval LIB_DIR_LAPACK='"$_sci_lib"'
+
 if test "$_sci_lib" = "$SCI_THIRDPARTY_LIB_DIR"; then
   eval LAPACK_LIB_DIR_FLAG=''
 else
   eval LAPACK_LIB_DIR_FLAG='"$_sci_lib_path"'
 fi
+
 eval LAPACK_LIB_FLAG='"$_sci_libs"'
 eval HAVE_LAPACK="yes"
-eval INC_LAPACK_H='"$_sci_includes"'
+
+if test "$_sci_includes" = "$INC_SCI_THIRDPARTY_H"; then
+  eval INC_LAPACK_H=''
+else
+  eval INC_LAPACK_H='"$_sci_includes"'
+fi
+
 eval HAVE_LAPACK_H="yes"
 echo "$as_me:$LINENO: result: yes" >&5
 echo "${ECHO_T}yes" >&6
@@ -15542,14 +15858,22 @@ if { (eval echo "$as_me:$LINENO: \"$ac_link\"") >&5
   (exit $ac_status); }; }; then
 
 eval LIB_DIR_LAPACK='"$_sci_lib"'
+
 if test "$_sci_lib" = "$SCI_THIRDPARTY_LIB_DIR"; then
   eval LAPACK_LIB_DIR_FLAG=''
 else
   eval LAPACK_LIB_DIR_FLAG='"$_sci_lib_path"'
 fi
+
 eval LAPACK_LIB_FLAG='"$_sci_libs"'
 eval HAVE_LAPACK="yes"
-eval INC_LAPACK_H='"$_sci_includes"'
+
+if test "$_sci_includes" = "$INC_SCI_THIRDPARTY_H"; then
+  eval INC_LAPACK_H=''
+else
+  eval INC_LAPACK_H='"$_sci_includes"'
+fi
+
 eval HAVE_LAPACK_H="yes"
 echo "$as_me:$LINENO: result: yes" >&5
 echo "${ECHO_T}yes" >&6
@@ -15713,14 +16037,22 @@ if { (eval echo "$as_me:$LINENO: \"$ac_link\"") >&5
   (exit $ac_status); }; }; then
 
 eval LIB_DIR_LAPACK='"$_sci_lib"'
+
 if test "$_sci_lib" = "$SCI_THIRDPARTY_LIB_DIR"; then
   eval LAPACK_LIB_DIR_FLAG=''
 else
   eval LAPACK_LIB_DIR_FLAG='"$_sci_lib_path"'
 fi
+
 eval LAPACK_LIB_FLAG='"$_sci_libs"'
 eval HAVE_LAPACK="yes"
-eval INC_LAPACK_H='"$_sci_includes"'
+
+if test "$_sci_includes" = "$INC_SCI_THIRDPARTY_H"; then
+  eval INC_LAPACK_H=''
+else
+  eval INC_LAPACK_H='"$_sci_includes"'
+fi
+
 eval HAVE_LAPACK_H="yes"
 echo "$as_me:$LINENO: result: yes" >&5
 echo "${ECHO_T}yes" >&6
@@ -15955,14 +16287,22 @@ if { (eval echo "$as_me:$LINENO: \"$ac_link\"") >&5
   (exit $ac_status); }; }; then
 
 eval LIB_DIR_MPI='"$_sci_lib"'
+
 if test "$_sci_lib" = "$SCI_THIRDPARTY_LIB_DIR"; then
   eval MPI_LIB_DIR_FLAG=''
 else
   eval MPI_LIB_DIR_FLAG='"$_sci_lib_path"'
 fi
+
 eval MPI_LIB_FLAG='"$_sci_libs"'
 eval HAVE_MPI="yes"
-eval INC_MPI_H='"$_sci_includes"'
+
+if test "$_sci_includes" = "$INC_SCI_THIRDPARTY_H"; then
+  eval INC_MPI_H=''
+else
+  eval INC_MPI_H='"$_sci_includes"'
+fi
+
 eval HAVE_MPI_H="yes"
 echo "$as_me:$LINENO: result: yes" >&5
 echo "${ECHO_T}yes" >&6
@@ -16138,14 +16478,22 @@ if { (eval echo "$as_me:$LINENO: \"$ac_link\"") >&5
   (exit $ac_status); }; }; then
 
 eval LIB_DIR_MPI='"$_sci_lib"'
+
 if test "$_sci_lib" = "$SCI_THIRDPARTY_LIB_DIR"; then
   eval MPI_LIB_DIR_FLAG=''
 else
   eval MPI_LIB_DIR_FLAG='"$_sci_lib_path"'
 fi
+
 eval MPI_LIB_FLAG='"$_sci_libs"'
 eval HAVE_MPI="yes"
-eval INC_MPI_H='"$_sci_includes"'
+
+if test "$_sci_includes" = "$INC_SCI_THIRDPARTY_H"; then
+  eval INC_MPI_H=''
+else
+  eval INC_MPI_H='"$_sci_includes"'
+fi
+
 eval HAVE_MPI_H="yes"
 echo "$as_me:$LINENO: result: yes" >&5
 echo "${ECHO_T}yes" >&6
@@ -16321,14 +16669,22 @@ if { (eval echo "$as_me:$LINENO: \"$ac_link\"") >&5
   (exit $ac_status); }; }; then
 
 eval LIB_DIR_MPI='"$_sci_lib"'
+
 if test "$_sci_lib" = "$SCI_THIRDPARTY_LIB_DIR"; then
   eval MPI_LIB_DIR_FLAG=''
 else
   eval MPI_LIB_DIR_FLAG='"$_sci_lib_path"'
 fi
+
 eval MPI_LIB_FLAG='"$_sci_libs"'
 eval HAVE_MPI="yes"
-eval INC_MPI_H='"$_sci_includes"'
+
+if test "$_sci_includes" = "$INC_SCI_THIRDPARTY_H"; then
+  eval INC_MPI_H=''
+else
+  eval INC_MPI_H='"$_sci_includes"'
+fi
+
 eval HAVE_MPI_H="yes"
 echo "$as_me:$LINENO: result: yes" >&5
 echo "${ECHO_T}yes" >&6
@@ -16653,14 +17009,22 @@ if { (eval echo "$as_me:$LINENO: \"$ac_link\"") >&5
   (exit $ac_status); }; }; then
 
 eval LIB_DIR_MPIUNI='"$_sci_lib"'
+
 if test "$_sci_lib" = "$SCI_THIRDPARTY_LIB_DIR"; then
   eval MPIUNI_LIB_DIR_FLAG=''
 else
   eval MPIUNI_LIB_DIR_FLAG='"$_sci_lib_path"'
 fi
+
 eval MPIUNI_LIB_FLAG='"$_sci_libs"'
 eval HAVE_MPIUNI="yes"
-eval INC_MPIUNI_H='"$_sci_includes"'
+
+if test "$_sci_includes" = "$INC_SCI_THIRDPARTY_H"; then
+  eval INC_MPIUNI_H=''
+else
+  eval INC_MPIUNI_H='"$_sci_includes"'
+fi
+
 eval HAVE_MPIUNI_H="yes"
 echo "$as_me:$LINENO: result: yes" >&5
 echo "${ECHO_T}yes" >&6
@@ -16834,14 +17198,22 @@ if { (eval echo "$as_me:$LINENO: \"$ac_link\"") >&5
   (exit $ac_status); }; }; then
 
 eval LIB_DIR_MPIUNICH='"$_sci_lib"'
+
 if test "$_sci_lib" = "$SCI_THIRDPARTY_LIB_DIR"; then
   eval MPIUNICH_LIB_DIR_FLAG=''
 else
   eval MPIUNICH_LIB_DIR_FLAG='"$_sci_lib_path"'
 fi
+
 eval MPIUNICH_LIB_FLAG='"$_sci_libs"'
 eval HAVE_MPIUNICH="yes"
-eval INC_MPIUNICH_H='"$_sci_includes"'
+
+if test "$_sci_includes" = "$INC_SCI_THIRDPARTY_H"; then
+  eval INC_MPIUNICH_H=''
+else
+  eval INC_MPIUNICH_H='"$_sci_includes"'
+fi
+
 eval HAVE_MPIUNICH_H="yes"
 echo "$as_me:$LINENO: result: yes" >&5
 echo "${ECHO_T}yes" >&6
@@ -17082,14 +17454,22 @@ if { (eval echo "$as_me:$LINENO: \"$ac_link\"") >&5
   (exit $ac_status); }; }; then
 
 eval LIB_DIR_PETSC='"$_sci_lib"'
+
 if test "$_sci_lib" = "$SCI_THIRDPARTY_LIB_DIR"; then
   eval PETSC_LIB_DIR_FLAG=''
 else
   eval PETSC_LIB_DIR_FLAG='"$_sci_lib_path"'
 fi
+
 eval PETSC_LIB_FLAG='"$_sci_libs"'
 eval HAVE_PETSC="yes"
-eval INC_PETSC_H='"$_sci_includes"'
+
+if test "$_sci_includes" = "$INC_SCI_THIRDPARTY_H"; then
+  eval INC_PETSC_H=''
+else
+  eval INC_PETSC_H='"$_sci_includes"'
+fi
+
 eval HAVE_PETSC_H="yes"
 echo "$as_me:$LINENO: result: yes" >&5
 echo "${ECHO_T}yes" >&6
@@ -17277,14 +17657,22 @@ if { (eval echo "$as_me:$LINENO: \"$ac_link\"") >&5
   (exit $ac_status); }; }; then
 
 eval LIB_DIR_PETSC_UNI='"$_sci_lib"'
+
 if test "$_sci_lib" = "$SCI_THIRDPARTY_LIB_DIR"; then
   eval PETSC_UNI_LIB_DIR_FLAG=''
 else
   eval PETSC_UNI_LIB_DIR_FLAG='"$_sci_lib_path"'
 fi
+
 eval PETSC_UNI_LIB_FLAG='"$_sci_libs"'
 eval HAVE_PETSC_UNI="yes"
-eval INC_PETSC_UNI_H='"$_sci_includes"'
+
+if test "$_sci_includes" = "$INC_SCI_THIRDPARTY_H"; then
+  eval INC_PETSC_UNI_H=''
+else
+  eval INC_PETSC_UNI_H='"$_sci_includes"'
+fi
+
 eval HAVE_PETSC_UNI_H="yes"
 echo "$as_me:$LINENO: result: yes" >&5
 echo "${ECHO_T}yes" >&6
@@ -17686,14 +18074,22 @@ if { (eval echo "$as_me:$LINENO: \"$ac_link\"") >&5
   (exit $ac_status); }; }; then
 
 eval LIB_DIR_SIDL='"$_sci_lib"'
+
 if test "$_sci_lib" = "$SCI_THIRDPARTY_LIB_DIR"; then
   eval SIDL_LIB_DIR_FLAG=''
 else
   eval SIDL_LIB_DIR_FLAG='"$_sci_lib_path"'
 fi
+
 eval SIDL_LIB_FLAG='"$_sci_libs"'
 eval HAVE_SIDL="yes"
-eval INC_SIDL_H='"$_sci_includes"'
+
+if test "$_sci_includes" = "$INC_SCI_THIRDPARTY_H"; then
+  eval INC_SIDL_H=''
+else
+  eval INC_SIDL_H='"$_sci_includes"'
+fi
+
 eval HAVE_SIDL_H="yes"
 echo "$as_me:$LINENO: result: yes" >&5
 echo "${ECHO_T}yes" >&6
@@ -17927,14 +18323,22 @@ if { (eval echo "$as_me:$LINENO: \"$ac_link\"") >&5
   (exit $ac_status); }; }; then
 
 eval LIB_DIR_JPEG='"$_sci_lib"'
+
 if test "$_sci_lib" = "$SCI_THIRDPARTY_LIB_DIR"; then
   eval JPEG_LIB_DIR_FLAG=''
 else
   eval JPEG_LIB_DIR_FLAG='"$_sci_lib_path"'
 fi
+
 eval JPEG_LIB_FLAG='"$_sci_libs"'
 eval HAVE_JPEG="yes"
-eval INC_JPEG_H='"$_sci_includes"'
+
+if test "$_sci_includes" = "$INC_SCI_THIRDPARTY_H"; then
+  eval INC_JPEG_H=''
+else
+  eval INC_JPEG_H='"$_sci_includes"'
+fi
+
 eval HAVE_JPEG_H="yes"
 echo "$as_me:$LINENO: result: yes" >&5
 echo "${ECHO_T}yes" >&6
@@ -18109,14 +18513,22 @@ if { (eval echo "$as_me:$LINENO: \"$ac_link\"") >&5
   (exit $ac_status); }; }; then
 
 eval LIB_DIR_TIFF='"$_sci_lib"'
+
 if test "$_sci_lib" = "$SCI_THIRDPARTY_LIB_DIR"; then
   eval TIFF_LIB_DIR_FLAG=''
 else
   eval TIFF_LIB_DIR_FLAG='"$_sci_lib_path"'
 fi
+
 eval TIFF_LIB_FLAG='"$_sci_libs"'
 eval HAVE_TIFF="yes"
-eval INC_TIFF_H='"$_sci_includes"'
+
+if test "$_sci_includes" = "$INC_SCI_THIRDPARTY_H"; then
+  eval INC_TIFF_H=''
+else
+  eval INC_TIFF_H='"$_sci_includes"'
+fi
+
 eval HAVE_TIFF_H="yes"
 echo "$as_me:$LINENO: result: yes" >&5
 echo "${ECHO_T}yes" >&6
@@ -18293,14 +18705,22 @@ if { (eval echo "$as_me:$LINENO: \"$ac_link\"") >&5
   (exit $ac_status); }; }; then
 
 eval LIB_DIR_NETSOLVE='"$_sci_lib"'
+
 if test "$_sci_lib" = "$SCI_THIRDPARTY_LIB_DIR"; then
   eval NETSOLVE_LIB_DIR_FLAG=''
 else
   eval NETSOLVE_LIB_DIR_FLAG='"$_sci_lib_path"'
 fi
+
 eval NETSOLVE_LIB_FLAG='"$_sci_libs"'
 eval HAVE_NETSOLVE="yes"
-eval INC_NETSOLVE_H='"$_sci_includes"'
+
+if test "$_sci_includes" = "$INC_SCI_THIRDPARTY_H"; then
+  eval INC_NETSOLVE_H=''
+else
+  eval INC_NETSOLVE_H='"$_sci_includes"'
+fi
+
 eval HAVE_NETSOLVE_H="yes"
 echo "$as_me:$LINENO: result: yes" >&5
 echo "${ECHO_T}yes" >&6
@@ -18494,14 +18914,22 @@ if { (eval echo "$as_me:$LINENO: \"$ac_link\"") >&5
   (exit $ac_status); }; }; then
 
 eval LIB_DIR_GLUT='"$_sci_lib"'
+
 if test "$_sci_lib" = "$SCI_THIRDPARTY_LIB_DIR"; then
   eval GLUT_LIB_DIR_FLAG=''
 else
   eval GLUT_LIB_DIR_FLAG='"$_sci_lib_path"'
 fi
+
 eval GLUT_LIB_FLAG='"$_sci_libs"'
 eval HAVE_GLUT="yes"
-eval INC_GLUT_H='"$_sci_includes"'
+
+if test "$_sci_includes" = "$INC_SCI_THIRDPARTY_H"; then
+  eval INC_GLUT_H=''
+else
+  eval INC_GLUT_H='"$_sci_includes"'
+fi
+
 eval HAVE_GLUT_H="yes"
 echo "$as_me:$LINENO: result: yes" >&5
 echo "${ECHO_T}yes" >&6
@@ -18700,14 +19128,22 @@ if { (eval echo "$as_me:$LINENO: \"$ac_link\"") >&5
   (exit $ac_status); }; }; then
 
 eval LIB_DIR_GLUI='"$_sci_lib"'
+
 if test "$_sci_lib" = "$SCI_THIRDPARTY_LIB_DIR"; then
   eval GLUI_LIB_DIR_FLAG=''
 else
   eval GLUI_LIB_DIR_FLAG='"$_sci_lib_path"'
 fi
+
 eval GLUI_LIB_FLAG='"$_sci_libs"'
 eval HAVE_GLUI="yes"
-eval INC_GLUI_H='"$_sci_includes"'
+
+if test "$_sci_includes" = "$INC_SCI_THIRDPARTY_H"; then
+  eval INC_GLUI_H=''
+else
+  eval INC_GLUI_H='"$_sci_includes"'
+fi
+
 eval HAVE_GLUI_H="yes"
 echo "$as_me:$LINENO: result: yes" >&5
 echo "${ECHO_T}yes" >&6
@@ -18920,14 +19356,22 @@ if { (eval echo "$as_me:$LINENO: \"$ac_link\"") >&5
   (exit $ac_status); }; }; then
 
 eval LIB_DIR_OOGL='"$_sci_lib"'
+
 if test "$_sci_lib" = "$SCI_THIRDPARTY_LIB_DIR"; then
   eval OOGL_LIB_DIR_FLAG=''
 else
   eval OOGL_LIB_DIR_FLAG='"$_sci_lib_path"'
 fi
+
 eval OOGL_LIB_FLAG='"$_sci_libs"'
 eval HAVE_OOGL="yes"
-eval INC_OOGL_H='"$_sci_includes"'
+
+if test "$_sci_includes" = "$INC_SCI_THIRDPARTY_H"; then
+  eval INC_OOGL_H=''
+else
+  eval INC_OOGL_H='"$_sci_includes"'
+fi
+
 eval HAVE_OOGL_H="yes"
 echo "$as_me:$LINENO: result: yes" >&5
 echo "${ECHO_T}yes" >&6
@@ -19111,14 +19555,22 @@ if { (eval echo "$as_me:$LINENO: \"$ac_link\"") >&5
   (exit $ac_status); }; }; then
 
 eval LIB_DIR_AUDIO='"$_sci_lib"'
+
 if test "$_sci_lib" = "$SCI_THIRDPARTY_LIB_DIR"; then
   eval AUDIO_LIB_DIR_FLAG=''
 else
   eval AUDIO_LIB_DIR_FLAG='"$_sci_lib_path"'
 fi
+
 eval AUDIO_LIB_FLAG='"$_sci_libs"'
 eval HAVE_AUDIO="yes"
-eval INC_AUDIO_H='"$_sci_includes"'
+
+if test "$_sci_includes" = "$INC_SCI_THIRDPARTY_H"; then
+  eval INC_AUDIO_H=''
+else
+  eval INC_AUDIO_H='"$_sci_includes"'
+fi
+
 eval HAVE_AUDIO_H="yes"
 echo "$as_me:$LINENO: result: yes" >&5
 echo "${ECHO_T}yes" >&6
@@ -19325,14 +19777,22 @@ if { (eval echo "$as_me:$LINENO: \"$ac_link\"") >&5
   (exit $ac_status); }; }; then
 
 eval LIB_DIR_TEEM='"$_sci_lib"'
+
 if test "$_sci_lib" = "$SCI_THIRDPARTY_LIB_DIR"; then
   eval TEEM_LIB_DIR_FLAG=''
 else
   eval TEEM_LIB_DIR_FLAG='"$_sci_lib_path"'
 fi
+
 eval TEEM_LIB_FLAG='"$_sci_libs"'
 eval HAVE_TEEM="yes"
-eval INC_TEEM_H='"$_sci_includes"'
+
+if test "$_sci_includes" = "$INC_SCI_THIRDPARTY_H"; then
+  eval INC_TEEM_H=''
+else
+  eval INC_TEEM_H='"$_sci_includes"'
+fi
+
 eval HAVE_TEEM_H="yes"
 echo "$as_me:$LINENO: result: yes" >&5
 echo "${ECHO_T}yes" >&6
@@ -19507,14 +19967,22 @@ if { (eval echo "$as_me:$LINENO: \"$ac_link\"") >&5
   (exit $ac_status); }; }; then
 
 eval LIB_DIR_TEEM='"$_sci_lib"'
+
 if test "$_sci_lib" = "$SCI_THIRDPARTY_LIB_DIR"; then
   eval TEEM_LIB_DIR_FLAG=''
 else
   eval TEEM_LIB_DIR_FLAG='"$_sci_lib_path"'
 fi
+
 eval TEEM_LIB_FLAG='"$_sci_libs"'
 eval HAVE_TEEM="yes"
-eval INC_TEEM_H='"$_sci_includes"'
+
+if test "$_sci_includes" = "$INC_SCI_THIRDPARTY_H"; then
+  eval INC_TEEM_H=''
+else
+  eval INC_TEEM_H='"$_sci_includes"'
+fi
+
 eval HAVE_TEEM_H="yes"
 echo "$as_me:$LINENO: result: yes" >&5
 echo "${ECHO_T}yes" >&6
@@ -19718,14 +20186,22 @@ if { (eval echo "$as_me:$LINENO: \"$ac_link\"") >&5
   (exit $ac_status); }; }; then
 
 eval LIB_DIR_MDSPLUS='"$_sci_lib"'
+
 if test "$_sci_lib" = "$SCI_THIRDPARTY_LIB_DIR"; then
   eval MDSPLUS_LIB_DIR_FLAG=''
 else
   eval MDSPLUS_LIB_DIR_FLAG='"$_sci_lib_path"'
 fi
+
 eval MDSPLUS_LIB_FLAG='"$_sci_libs"'
 eval HAVE_MDSPLUS="yes"
-eval INC_MDSPLUS_H='"$_sci_includes"'
+
+if test "$_sci_includes" = "$INC_SCI_THIRDPARTY_H"; then
+  eval INC_MDSPLUS_H=''
+else
+  eval INC_MDSPLUS_H='"$_sci_includes"'
+fi
+
 eval HAVE_MDSPLUS_H="yes"
 echo "$as_me:$LINENO: result: yes" >&5
 echo "${ECHO_T}yes" >&6
@@ -19933,14 +20409,22 @@ if { (eval echo "$as_me:$LINENO: \"$ac_link\"") >&5
   (exit $ac_status); }; }; then
 
 eval LIB_DIR_HDF5='"$_sci_lib"'
+
 if test "$_sci_lib" = "$SCI_THIRDPARTY_LIB_DIR"; then
   eval HDF5_LIB_DIR_FLAG=''
 else
   eval HDF5_LIB_DIR_FLAG='"$_sci_lib_path"'
 fi
+
 eval HDF5_LIB_FLAG='"$_sci_libs"'
 eval HAVE_HDF5="yes"
-eval INC_HDF5_H='"$_sci_includes"'
+
+if test "$_sci_includes" = "$INC_SCI_THIRDPARTY_H"; then
+  eval INC_HDF5_H=''
+else
+  eval INC_HDF5_H='"$_sci_includes"'
+fi
+
 eval HAVE_HDF5_H="yes"
 echo "$as_me:$LINENO: result: yes" >&5
 echo "${ECHO_T}yes" >&6
@@ -20125,14 +20609,22 @@ if { (eval echo "$as_me:$LINENO: \"$ac_link\"") >&5
   (exit $ac_status); }; }; then
 
 eval LIB_DIR_PERFEX='"$_sci_lib"'
+
 if test "$_sci_lib" = "$SCI_THIRDPARTY_LIB_DIR"; then
   eval PERFEX_LIB_DIR_FLAG=''
 else
   eval PERFEX_LIB_DIR_FLAG='"$_sci_lib_path"'
 fi
+
 eval PERFEX_LIB_FLAG='"$_sci_libs"'
 eval HAVE_PERFEX="yes"
-eval INC_PERFEX_H='"$_sci_includes"'
+
+if test "$_sci_includes" = "$INC_SCI_THIRDPARTY_H"; then
+  eval INC_PERFEX_H=''
+else
+  eval INC_PERFEX_H='"$_sci_includes"'
+fi
+
 eval HAVE_PERFEX_H="yes"
 echo "$as_me:$LINENO: result: yes" >&5
 echo "${ECHO_T}yes" >&6
@@ -20316,14 +20808,22 @@ if { (eval echo "$as_me:$LINENO: \"$ac_link\"") >&5
   (exit $ac_status); }; }; then
 
 eval LIB_DIR_CRYPTO='"$_sci_lib"'
+
 if test "$_sci_lib" = "$SCI_THIRDPARTY_LIB_DIR"; then
   eval CRYPTO_LIB_DIR_FLAG=''
 else
   eval CRYPTO_LIB_DIR_FLAG='"$_sci_lib_path"'
 fi
+
 eval CRYPTO_LIB_FLAG='"$_sci_libs"'
 eval HAVE_CRYPTO="yes"
-eval INC_CRYPTO_H='"$_sci_includes"'
+
+if test "$_sci_includes" = "$INC_SCI_THIRDPARTY_H"; then
+  eval INC_CRYPTO_H=''
+else
+  eval INC_CRYPTO_H='"$_sci_includes"'
+fi
+
 eval HAVE_CRYPTO_H="yes"
 echo "$as_me:$LINENO: result: yes" >&5
 echo "${ECHO_T}yes" >&6
@@ -20511,14 +21011,22 @@ if { (eval echo "$as_me:$LINENO: \"$ac_link\"") >&5
   (exit $ac_status); }; }; then
 
 eval LIB_DIR_SSL='"$_sci_lib"'
+
 if test "$_sci_lib" = "$SCI_THIRDPARTY_LIB_DIR"; then
   eval SSL_LIB_DIR_FLAG=''
 else
   eval SSL_LIB_DIR_FLAG='"$_sci_lib_path"'
 fi
+
 eval SSL_LIB_FLAG='"$_sci_libs"'
 eval HAVE_SSL="yes"
-eval INC_SSL_H='"$_sci_includes"'
+
+if test "$_sci_includes" = "$INC_SCI_THIRDPARTY_H"; then
+  eval INC_SSL_H=''
+else
+  eval INC_SSL_H='"$_sci_includes"'
+fi
+
 eval HAVE_SSL_H="yes"
 echo "$as_me:$LINENO: result: yes" >&5
 echo "${ECHO_T}yes" >&6
@@ -20732,14 +21240,22 @@ if { (eval echo "$as_me:$LINENO: \"$ac_link\"") >&5
   (exit $ac_status); }; }; then
 
 eval LIB_DIR_GLOBUS='"$_sci_lib"'
+
 if test "$_sci_lib" = "$SCI_THIRDPARTY_LIB_DIR"; then
   eval GLOBUS_LIB_DIR_FLAG=''
 else
   eval GLOBUS_LIB_DIR_FLAG='"$_sci_lib_path"'
 fi
+
 eval GLOBUS_LIB_FLAG='"$_sci_libs"'
 eval HAVE_GLOBUS="yes"
-eval INC_GLOBUS_H='"$_sci_includes"'
+
+if test "$_sci_includes" = "$INC_SCI_THIRDPARTY_H"; then
+  eval INC_GLOBUS_H=''
+else
+  eval INC_GLOBUS_H='"$_sci_includes"'
+fi
+
 eval HAVE_GLOBUS_H="yes"
 echo "$as_me:$LINENO: result: yes" >&5
 echo "${ECHO_T}yes" >&6
@@ -21212,14 +21728,22 @@ if { (eval echo "$as_me:$LINENO: \"$ac_link\"") >&5
   (exit $ac_status); }; }; then
 
 eval LIB_DIR_QT_MT='"$_sci_lib"'
+
 if test "$_sci_lib" = "$SCI_THIRDPARTY_LIB_DIR"; then
   eval QT_MT_LIB_DIR_FLAG=''
 else
   eval QT_MT_LIB_DIR_FLAG='"$_sci_lib_path"'
 fi
+
 eval QT_MT_LIB_FLAG='"$_sci_libs"'
 eval HAVE_QT_MT="yes"
-eval INC_QT_MT_H='"$_sci_includes"'
+
+if test "$_sci_includes" = "$INC_SCI_THIRDPARTY_H"; then
+  eval INC_QT_MT_H=''
+else
+  eval INC_QT_MT_H='"$_sci_includes"'
+fi
+
 eval HAVE_QT_MT_H="yes"
 echo "$as_me:$LINENO: result: yes" >&5
 echo "${ECHO_T}yes" >&6
@@ -21490,14 +22014,22 @@ if { (eval echo "$as_me:$LINENO: \"$ac_link\"") >&5
   (exit $ac_status); }; }; then
 
 eval LIB_DIR_VDT='"$_vdt_lib_path"'
+
 if test "$_vdt_lib_path" = "$SCI_THIRDPARTY_LIB_DIR"; then
   eval VDT_LIB_DIR_FLAG=''
 else
   eval VDT_LIB_DIR_FLAG='"$_sci_lib_path"'
 fi
+
 eval VDT_LIB_FLAG='"$_sci_libs"'
 eval HAVE_VDT="yes"
-eval INC_VDT_H='"$_sci_includes"'
+
+if test "$_sci_includes" = "$INC_SCI_THIRDPARTY_H"; then
+  eval INC_VDT_H=''
+else
+  eval INC_VDT_H='"$_sci_includes"'
+fi
+
 eval HAVE_VDT_H="yes"
 echo "$as_me:$LINENO: result: yes" >&5
 echo "${ECHO_T}yes" >&6
@@ -21698,14 +22230,22 @@ if { (eval echo "$as_me:$LINENO: \"$ac_link\"") >&5
   (exit $ac_status); }; }; then
 
 eval LIB_DIR_HYPRE='"$_sci_lib"'
+
 if test "$_sci_lib" = "$SCI_THIRDPARTY_LIB_DIR"; then
   eval HYPRE_LIB_DIR_FLAG=''
 else
   eval HYPRE_LIB_DIR_FLAG='"$_sci_lib_path"'
 fi
+
 eval HYPRE_LIB_FLAG='"$_sci_libs"'
 eval HAVE_HYPRE="yes"
-eval INC_HYPRE_H='"$_sci_includes"'
+
+if test "$_sci_includes" = "$INC_SCI_THIRDPARTY_H"; then
+  eval INC_HYPRE_H=''
+else
+  eval INC_HYPRE_H='"$_sci_includes"'
+fi
+
 eval HAVE_HYPRE_H="yes"
 echo "$as_me:$LINENO: result: yes" >&5
 echo "${ECHO_T}yes" >&6
@@ -22854,6 +23394,7 @@ s,@TEMPLATE_TAG@,$TEMPLATE_TAG,;t t
 s,@TEMPLATE_BOX@,$TEMPLATE_BOX,;t t
 s,@EGREP@,$EGREP,;t t
 s,@NBITS@,$NBITS,;t t
+s,@INC_SCI_THIRDPARTY_H@,$INC_SCI_THIRDPARTY_H,;t t
 s,@SCI_THIRDPARTY_LIB_DIR@,$SCI_THIRDPARTY_LIB_DIR,;t t
 s,@SCI_THIRDPARTY_LIB_DIR_FLAG@,$SCI_THIRDPARTY_LIB_DIR_FLAG,;t t
 s,@M_LIB_FLAG@,$M_LIB_FLAG,;t t

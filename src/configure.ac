@@ -1278,8 +1278,6 @@ if test -z "$thirdparty"; then
   AC_MSG_RESULT(Using default thirdparty directory $sci_thirdparty_dir)
 fi
 
-first=true
-
 for i in $sci_thirdparty_dir; do
   if test ! -d "$i"; then
     continue
@@ -1292,24 +1290,22 @@ for i in $sci_thirdparty_dir; do
   # make sure there is no leading space in path
   if test -z "$sci_thirdparty_libs"; then
     sci_thirdparty_libs="$i/lib"
+    SCI_THIRDPARTY_LIB_DIR="$sci_thirdparty_libs"
+    SCI_THIRDPARTY_LIB_DIR_FLAG="$LDRUN_PREFIX$sci_thirdparty_libs -L$sci_thirdparty_libs"
   else
     sci_thirdparty_libs="$sci_thirdparty_libs $i/lib"
   fi
   if test -z "$sci_thirdparty_includes"; then
     sci_thirdparty_includes="$i/include"
+    INC_SCI_THIRDPARTY_H=-I"$sci_thirdparty_includes"
   else
     sci_thirdparty_includes="$sci_thirdparty_includes $i/include"
-  fi
-
-  if test $first="true"; then
-    SCI_THIRDPARTY_LIB_DIR="$sci_thirdparty_libs"
-    SCI_THIRDPARTY_LIB_DIR_FLAG="$LDRUN_PREFIX$sci_thirdparty_libs -L$sci_thirdparty_libs"
-    first=false
   fi
 done
 
 AC_MSG_RESULT(Thirdparty library directory $SCI_THIRDPARTY_LIB_DIR)
 
+AC_SUBST(INC_SCI_THIRDPARTY_H)
 AC_SUBST(SCI_THIRDPARTY_LIB_DIR)
 AC_SUBST(SCI_THIRDPARTY_LIB_DIR_FLAG)
 
