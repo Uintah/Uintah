@@ -46,7 +46,7 @@ ICEMaterial::ICEMaterial(ProblemSpecP& ps): Material(ps)
    ps->require("gamma",d_gamma);
    
    d_isSurroundingMatl = false;
-   ps->get("isSurroundMatl",d_isSurroundingMatl);
+   ps->get("isSurroundingMatl",d_isSurroundingMatl);
 
    // Step 3 -- Loop through all of the pieces in this geometry object
    int piece_num = 0;
