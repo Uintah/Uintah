@@ -123,8 +123,8 @@ DEALINGS IN THE SOFTWARE.
       <literallayout class="monospaced">
 	rpm -e &sr;
       </literallayout>
-      Read  <citetitle pubwork="section"><xref
-      linkend="sec.prepare"/></citetitle> before
+      Read  <xref
+      linkend="sec.prepare"/> before
       <link linkend="sec.starting">starting</link> &sr;.
     </para>
     <!-- <figure id="fig.rpm_cmd"> -->
