@@ -732,7 +732,7 @@ RenderField<Fld>::add_disk(const Point &p, const Vector &vin, double scale,
 
   Vector v = vin;
   if (v.length() > 0.00001) {
-    v.normalize();
+    v.safe_normalize();
     v*=scale/6;
     GeomCappedCylinder *d = scinew GeomCappedCylinder(p + v, p - v, scale, 
 						    res_, 1, 1);

@@ -118,7 +118,7 @@ add_data(const Point &p, const Vector &d, GeomArrows *arrows,
 	 MaterialHandle &mat, const string &s, double sf, bool normalize)
 {
   Vector v(d);
-  if (normalize) { v.normalize(); }
+  if (normalize) { v.safe_normalize(); }
   arrows->add(p, v*sf, mat, mat, mat);
   return true;
 }
