@@ -1,4 +1,4 @@
-#
+
 #  The contents of this file are subject to the University of Utah Public
 #  License (the "License"); you may not use this file except in compliance
 #  with the License.
@@ -17,22 +17,21 @@
 
 # Makefile fragment for this subdirectory
 
-SRCDIR   := CCA/Components
+include $(SCIRUN_SCRIPTS)/smallso_prologue.mk
 
+SRCDIR   := CCA/Components/TTClient
 
+SRCS     += \
+	$(SRCDIR)/TTClient.cc
 
-ifeq ($(HAVE_QT),yes)
-SUBDIRS := $(SRCDIR)/Builder $(SRCDIR)/TxtBuilder $(SRCDIR)/Hello  $(SRCDIR)/ListPlotter \
-	$(SRCDIR)/ZList $(SRCDIR)/Viewer $(SRCDIR)/LinSolver \
-	$(SRCDIR)/FileReader $(SRCDIR)/FEM $(SRCDIR)/Tri $(SRCDIR)/TableTennis \
-	$(SRCDIR)/TTClient
-include $(SCIRUN_SCRIPTS)/recurse.mk
+PSELIBS := Core/CCA/Component/SIDL Core/CCA/Component/PIDL Core/CCA/Component/Comm\
+	Core/CCA/spec Core/Thread Core/Containers Core/Exceptions CCA/Components/TableTennis
+QT_LIBDIR := /home/sparker/SCIRun/SCIRun_Thirdparty_32_linux/lib
+LIBS := $(QT_LIBRARY)
 
-else
-SUBDIRS :=$(SRCDIR)/TxtBuilder $(SRCDIR)/Hello
-endif
+include $(SCIRUN_SCRIPTS)/smallso_epilogue.mk
 
-ifeq ($(HAVE_BABEL),yes)
-SUBDIRS:= $(SUBDIRS) $(SRCDIR)/BabelTest
-endif
-include $(SCIRUN_SCRIPTS)/recurse.mk
+#include $(SCIRUN_SCRIPTS)/program.mk
+
+$(SRCDIR)/TTClient.o: CCA/Components/TableTennis/TableTennis_sidl.h
+$(SRCDIR)/TTClient.o: Core/CCA/spec/cca_sidl.h
