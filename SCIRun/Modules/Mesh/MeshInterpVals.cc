@@ -37,6 +37,7 @@ class MeshInterpVals : public Module {
     ColumnMatrixOPort* omatrix;
     TCLstring method;
     TCLint zeroTCL;
+    TCLint potMatTCL;
     ColumnMatrixHandle mapH;
     MatrixOPort* omat;
     MatrixHandle matH;
@@ -56,7 +57,7 @@ Module* make_MeshInterpVals(const clString& id)
 
 MeshInterpVals::MeshInterpVals(const clString& id)
 : Module("MeshInterpVals", id, Filter), method("method", id, this),
-  zeroTCL("zeroTCL", id, this)
+  zeroTCL("zeroTCL", id, this), potMatTCL("potMatTCL", id, this)
 {
     imesh1=scinew MeshIPort(this, "Mesh", MeshIPort::Atomic);
     add_iport(imesh1);
@@ -123,14 +124,29 @@ void MeshInterpVals::execute()
 	}
 	ColumnMatrix *map=scinew ColumnMatrix(ts->bcIdx.size());
 	mapH=map;
-	int *rows=new int[ts->bcIdx.size()+1];
-	int *cols=new int[ts->bcIdx.size()];
-	double *a=new double[ts->bcIdx.size()];
-	SparseRowMatrix *mm=scinew SparseRowMatrix(ts->bcIdx.size(),
-						   meshH->nodes.size(),
-						   rows, cols,
-						   ts->bcIdx.size(), a);
-	for (i=0; i<ts->bcIdx.size()+1; i++) { rows[i]=i; }
+	int *rows;
+	int *cols;
+	double *a;
+	SparseRowMatrix *mm;
+	if (potMatTCL.get()) {
+	    rows=new int[ts->bcIdx.size()];
+	    cols=new int[(ts->bcIdx.size()-1)*2];
+	    a=new double[(ts->bcIdx.size()-1)*2];
+	    mm=scinew SparseRowMatrix(ts->bcIdx.size()-1,
+				      meshH->nodes.size(),
+				      rows, cols,
+				      ts->bcIdx.size()-1, a);
+	    for (i=0; i<ts->bcIdx.size(); i++) { rows[i]=i*2; }
+	} else {
+	    rows=new int[ts->bcIdx.size()+1];
+	    cols=new int[ts->bcIdx.size()];
+	    a=new double[ts->bcIdx.size()];
+	    mm=scinew SparseRowMatrix(ts->bcIdx.size(),
+				      meshH->nodes.size(),
+				      rows, cols,
+				      ts->bcIdx.size(), a);
+	    for (i=0; i<ts->bcIdx.size()+1; i++) { rows[i]=i; }
+	}
 	matH=mm;
 //	cerr << "MeshInterpVals 1)...\n";
 	double *vals=map->get_rhs();
@@ -140,6 +156,7 @@ void MeshInterpVals::execute()
 	    cerr << "Skipping zero'th mesh node.\n";
 	    firstNode=1;
 	}
+	int firstIdx;
 	if (m == "project") {
 	    if (p.size() > meshH->nodes.size()) {
 		cerr << "Too many points to project ("<<p.size()<<" to "<<meshH->nodes.size()<<")\n";
@@ -166,9 +183,30 @@ void MeshInterpVals::execute()
 		}
 		selected[si]=1;
 //		cerr << "("<<aa<<") closest to "<<p[aa]<<"="<<meshH->nodes[si]->p<<"\n";
-		vals[aa]=si;
-		a[aa]=1;
-		cols[aa]=si;
+		if (potMatTCL.get()) {
+		    if (aa==0) firstIdx=si;
+		    else {
+			if (firstIdx<si) {
+			    vals[(aa-1)*2]=firstIdx;
+			    a[(aa-1)*2]=-1;
+			    cols[(aa-1)*2]=firstIdx;
+			    vals[(aa-1)*2+1]=si;
+			    a[(aa-1)*2+1]=1;
+			    cols[(aa-1)*2+1]=si;
+			} else {
+			    vals[(aa-1)*2]=si;
+			    a[(aa-1)*2]=1;
+			    cols[(aa-1)*2]=si;
+			    vals[(aa-1)*2+1]=firstIdx;
+			    a[(aa-1)*2+1]=-1;
+			    cols[(aa-1)*2+1]=firstIdx;
+			}			    
+		    }
+		} else {
+		    vals[aa]=si;
+		    a[aa]=1;
+		    cols[aa]=si;
+	        }
 	    }
 	}
     } else {
@@ -185,6 +223,9 @@ void MeshInterpVals::execute()
 
 //
 // $Log$
+// Revision 1.3  1999/12/10 06:58:13  dmw
+// added another flag to MeshInterpVals
+//
 // Revision 1.2  1999/10/07 02:08:20  sparker
 // use standard iostreams and complex type
 //
