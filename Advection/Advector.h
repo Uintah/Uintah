@@ -26,7 +26,8 @@ namespace Uintah {
                                  const SFCYVariable<double>& vvel_FC,
                                  const SFCZVariable<double>& wvel_FC,
                                  const double& delT, 
-                                 const Patch* patch) = 0;
+                                 const Patch* patch,
+                                 const int& indx) = 0;
 
 
     virtual void advectQ(const CCVariable<double>& q_CC,
