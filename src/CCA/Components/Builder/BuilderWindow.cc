@@ -128,7 +128,6 @@ BuilderWindow::BuilderWindow(const gov::cca::Services::pointer& services)
   quitAction->addTo(file);
   exitAction->addTo(file);
 
-  menuBar()->insertSeparator();
   QColor bgcolor(0, 51, 102);
   QSplitter* vsplit = new QSplitter(Qt::Vertical, this);
   QSplitter* hsplit = new QSplitter(Qt::Horizontal, vsplit);
@@ -167,6 +166,7 @@ BuilderWindow::BuilderWindow(const gov::cca::Services::pointer& services)
 
   buildPackageMenus();
 
+  menuBar()->insertSeparator();
   QPopupMenu * help = new QPopupMenu( this );
   help->insertTearOffHandle();
   menuBar()->insertItem( "&Help", help );
