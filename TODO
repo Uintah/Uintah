@@ -1,7 +1,7 @@
 DONE Rework Geometry
 Fix Salmon
    DONE Fix interaction
-   Picking (1)
+   Picking
    Children windows...
    lighting
    Bounding box interactions
@@ -23,21 +23,21 @@ Fix Salmon
    Raytracer
    Postscript renderer
    X11 renderer
-     X server fixes
+     Verify transformations
      TrueColor support
      Fix mouse motions - backwards
-     Verify transformations
      Move bounding boxes only
-     Overlapping
+     Handle overlapping polygons
 TCL/TK:
-   Thumbwheel 2D widget *
-   Rewrite User Interfaces for all modules *
-   DONE File browser box *
+   Better data structure handling
+   Scheme?
+   Thumbwheel 2D widget
+   DONE File browser box
    Fix portlights
    Fix backward connections in NetworkEditor
    Fix one to many connections
    DONE Implement Quit button
-   Color Editor *
+   Color Editor
    DONE Import SCI_WORK so that we can run from other directories
    Right titles on windows
 Ports:
@@ -45,9 +45,8 @@ Ports:
    DEC port
    Freedom board port
 Bugs:
-   sluggish on Reality engine.... (3)
-   Salmon deadlocks on ONYX - make unbounded mailboxes (2)
-   Finish fixing MeshView
+   DONE sluggish on Reality engine....
+   DONE Salmon deadlocks on ONYX - make unbounded mailboxes
    Annoying flashing on startup.
    Lock I/O
 Optimizations:
@@ -62,3 +61,22 @@ Progress:
    Save/Load Networks
    Scheduler visualization?
    Manual scheduling
+Modules that need work:
+   ApplyBC - implement
+   BuildFEMatrix - implement
+   CrossFader - UI
+   GenSurface - implement
+   GenerateMesh - implement
+   Hedgehog - implement
+   IsoSurface - UI
+   MeshView - test/optimize/UI
+   SolveMatrix - implement
+   SoundFFT - implemennt
+   SoundFilter - finish
+   SoundInput - UI/finish
+   SoundOutput - UI
+   SoundReader - UI
+   SoundMixer - UI
+   Streamline - finish
+   Streamline - UI/finish
+   TransformContourSet - UI
