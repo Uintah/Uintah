@@ -1312,6 +1312,7 @@ void MPMICE::computeEquilibrationPressure(const ProcessorGroup*,
       new_dw->allocate(vol_frac[m],  Ilb->vol_frac_CCLabel,  dwindex, patch);
       new_dw->allocate(rho_micro[m], Ilb->rho_micro_CCLabel, dwindex, patch);
       new_dw->allocate(speedSound_new[m],Ilb->speedSound_CCLabel,dwindex,patch);
+      speedSound_new[m].initialize(0.0);
     }
     
     press_new.copyPatch(press);
