@@ -57,6 +57,8 @@ using namespace SCIRun;
 #include <Core/Persistent/PersistentSTL.h>
 #include <Core/Datatypes/PropertyManager.h>
 
+#if !defined(__sgi)
+// Needed for optimized linux build only
 template void Pio<char, char>(Piostream&, pair<char, char>&);
 template void Pio<int, int>(Piostream&, pair<int, int>&);
 template void Pio<float, float>(Piostream&, pair<float, float>&);
@@ -69,6 +71,7 @@ template void Pio<unsigned int, unsigned int>(Piostream&, pair<unsigned int,
 		  unsigned int>&);
 template void Pio<unsigned short, unsigned short>(Piostream&, pair<unsigned short,
 		  unsigned short>&);
+#endif
 
 template class LockingHandle<ColumnMatrix>;
 template class LockingHandle<Matrix>;
