@@ -133,18 +133,32 @@ ManageFieldData::execute()
     postMessage("Unable to initialize "+name+"'s iport\n");
     return;
   }
-  if (!imatrix_port->get(imatrixhandle) && (!imatrixhandle.get_rep()))
+  if (!(imatrix_port->get(imatrixhandle) && imatrixhandle.get_rep()))
   {
-    //remark("No input matrix connected.");
+    //remark("No input matrix connected, sending field as is.");
     result_field = ifieldhandle;
   }
   else
   {
+    int matrix_svt_flag = svt_flag;
+    if (imatrixhandle->nrows() == 1 || imatrixhandle->ncols() == 1)
+    {
+      matrix_svt_flag = 0;
+    }
+    else if (imatrixhandle->nrows() == 3 || imatrixhandle->ncols() == 3)
+    {
+      matrix_svt_flag = 1;
+    }
+    else if (imatrixhandle->nrows() == 9 || imatrixhandle->ncols() == 9)
+    {
+      matrix_svt_flag = 2;
+    }
+
     CompileInfo *ci_mesh =
       ManageFieldDataAlgoMesh::
       get_compile_info(ifieldhandle->mesh()->get_type_description(),
 		       ifieldhandle->get_type_description(),
-		       svt_flag);
+		       matrix_svt_flag);
     DynamicAlgoHandle algo_handle_mesh;
     if (! DynamicLoader::scirun_loader().get(*ci_mesh, algo_handle_mesh))
     {
