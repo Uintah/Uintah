@@ -168,8 +168,8 @@ ostream& operator<<(ostream& out, const TangentModulusTensor& C)
       out << C(index[ii][0], index[ii][1], index[jj][0], index[jj][1])
           << ' ';
     }
-    out << endl;
   }
+  out << endl;
 
   return out;
 }
