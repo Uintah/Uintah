@@ -75,11 +75,8 @@ void Pio( Piostream & stream, GeomObj *& obj )
 
 //
 // $Log$
-// Revision 1.5.2.2  2000/10/26 10:04:31  moulding
+// Revision 1.5.2.3  2000/10/26 17:18:36  moulding
 // merge HEAD into FIELD_REDESIGN
-//
-// Revision 1.5.2.1  2000/09/28 03:12:18  mcole
-// merge trunk into FIELD_REDESIGN branch
 //
 // Revision 1.8  2000/09/11 22:14:46  bigler
 // Added constructors that take an int and IntVector to allow unique
