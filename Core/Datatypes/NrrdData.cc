@@ -57,6 +57,7 @@ PersistentTypeID NrrdData::type_id("NrrdData", "PropertyManager", maker);
 
 NrrdData::NrrdData() : 
   nrrd(nrrdNew()),
+  write_nrrd_(true),
   embed_object_(false),
   data_owner_(0)
 {
@@ -65,6 +66,7 @@ NrrdData::NrrdData() :
 
 NrrdData::NrrdData(LockingHandle<Datatype> data_owner) : 
   nrrd(nrrdNew()),
+  write_nrrd_(true),
   embed_object_(false),
   data_owner_(data_owner)
 {
@@ -72,7 +74,8 @@ NrrdData::NrrdData(LockingHandle<Datatype> data_owner) :
 
 
 NrrdData::NrrdData(const NrrdData &copy) :
-  data_owner_(0)
+  data_owner_(0),
+  nrrd_fname_(copy.nrrd_fname_)
 {
   nrrd = nrrdNew();
   nrrdCopy(nrrd, copy.nrrd);
@@ -165,17 +168,29 @@ void NrrdData::io(Piostream& stream)
       // errors are reported
       // Functions have been added to supply a filename for external
       // nrrds 
-      string::size_type e = stream.file_name.rfind('.');
-      //remove the .nd
-      string nrrd_fname = stream.file_name.substr(0, e) + string(".nrrd");
-      if (version < 6) {
-	Pio(stream, nrrd_fname);
+      
+      // saved out filename basically indicates whether it will be
+      // a .nrrd or .nhdr file because we need to attach the path
+      // that was part of the stream filename
+      Pio(stream, nrrd_fname_);
+
+      // versions before 6 wrote out a full path so use that
+      // for reading in the nrrd file.  version 6 and after should 
+      // be writing out a relative path so strip off the ./ and 
+      // prepend the path given from the .nd file
+      if (version >= 6) {
+	string path = stream.file_name;
+	string::size_type e = path.find_last_of("/");
+	if (e == string::npos) e = path.find_last_of("\\");
+	if (e != string::npos) path = stream.file_name.substr(0,e+1);
+	nrrd_fname_ = path + nrrd_fname_.substr(2,nrrd_fname_.length());
       }
-      if (nrrdLoad(nrrd = nrrdNew(), nrrd_fname.c_str(), 0)) 
+
+      if (nrrdLoad(nrrd = nrrdNew(), nrrd_fname_.c_str(), 0)) 
       {
 	// Need to upgade error reporting
 	char *err = biffGet(NRRD);
-	cerr << "Error reading nrrd " << nrrd_fname << ": " << err << endl;
+	cerr << "Error reading nrrd " << nrrd_fname_ << ": " << err << endl;
 	free(err);
 	biffDone(NRRD);
 	return;
@@ -390,8 +405,33 @@ void NrrdData::io(Piostream& stream)
     { 
       
       string::size_type e = stream.file_name.rfind('.');
-      //remove the .nd
-      string nrrd_fname = stream.file_name.substr(0, e) + string(".nrrd");
+      //remove the .nd 
+      nrrd_fname_ = stream.file_name.substr(0, e);
+
+      // figure out file to save out in .nd file (relative path)
+      string full_filename = stream.file_name;
+      e = full_filename.find_last_of("/");
+      if (e == string::npos) e = full_filename.find_last_of("\\");
+      
+      string filename = full_filename;
+      if (e != string::npos) filename = full_filename.substr(e+1,full_filename.length());
+      
+      e = filename.find(".");
+      string root = string("./") + filename;
+
+      if (e != string::npos) {
+	root = string("./") + filename.substr(0,e);
+      }
+      
+      if (write_nrrd_) {
+	nrrd_fname_ += string(".nrrd");
+	root += string (".nrrd");
+      } else {
+	nrrd_fname_ += string(".nhdr");
+	root += string (".nhdr");
+      }
+      Pio(stream, root);
+
       NrrdIoState *no = 0;
       TextPiostream *text = dynamic_cast<TextPiostream*>(&stream);
       if (text)
@@ -399,10 +439,10 @@ void NrrdData::io(Piostream& stream)
 	no = nrrdIoStateNew();
 	no->encoding = nrrdEncodingAscii;
       } 
-      if (nrrdSave(nrrd_fname.c_str(), nrrd, no))
+      if (nrrdSave(nrrd_fname_.c_str(), nrrd, no))
       {
 	char *err = biffGet(NRRD);      
-	cerr << "Error writing nrrd " << nrrd_fname << ": "<< err << endl;
+	cerr << "Error writing nrrd " << nrrd_fname_ << ": "<< err << endl;
 	free(err);
 	biffDone(NRRD);
 	return;
