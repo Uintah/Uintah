@@ -197,17 +197,6 @@ main(int argc, char** argv)
       usage("No input file specified", "", argv[0]);
     }
 
-    if(scheduler == ""){
-       if(Uintah::Parallel::usingMPI()){
-	  scheduler="MPIScheduler"; // Default for parallel runs
-	  loadbalancer="SimpleLoadBalancer";
-	  Uintah::Parallel::noThreading();
-       } else {
-	  scheduler="SingleProcessorScheduler"; // Default for serial runs
-	  loadbalancer="SingleProcessorLoadBalancer";
-       }
-    }
-
     if (restart) {
        restartFromDir = filename;
        filename = filename + "/input.xml";
@@ -234,6 +223,19 @@ main(int argc, char** argv)
     #ifdef USE_VAMPIR
     VTsetup();
     #endif
+
+    // Must do this check after Parallel::initializeManager, as it
+    // sets "usingMPI".
+    if(scheduler == ""){
+       if(Uintah::Parallel::usingMPI()){
+	  scheduler="MPIScheduler"; // Default for parallel runs
+	  loadbalancer="SimpleLoadBalancer";
+	  Uintah::Parallel::noThreading();
+       } else {
+	  scheduler="SingleProcessorScheduler"; // Default for serial runs
+	  loadbalancer="SingleProcessorLoadBalancer";
+       }
+    }
 
     bool thrownException = false;
     
