@@ -85,8 +85,6 @@ void ColorMapKey::execute() {
 
   // default billboard coordinates
   Vector bbvec(0,0,0);
-  // default scaling
-  Vector scale(1,1,1);
 
   GeomGroup *all = new GeomGroup();
 
@@ -119,6 +117,7 @@ void ColorMapKey::execute() {
   ScalarFieldHandle sf;
   if( isf->get( sf ) ) {
 
+#if 0
     ScalarFieldRG *grid = sf->getRG();
     // but we need it to be a regular grid.
     if( grid == 0 ) {
@@ -126,8 +125,6 @@ void ColorMapKey::execute() {
       return;
     }
 
-    scale = Vector(grid->nx, grid->ny, 1 );
-    
     // find min and max scalar values
     double max = -MAXDOUBLE;
     double min = MAXDOUBLE;
@@ -138,6 +135,11 @@ void ColorMapKey::execute() {
 	min = ( min > grid->grid(i,j,0) ) ? grid->grid(i,j,0) : min;
       }
     }
+
+#endif
+
+    double min, max;
+    sf->get_minmax(min, max);
 
     // some bases for positioning text
     double xloc = xsize;
