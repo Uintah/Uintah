@@ -340,12 +340,13 @@ private:
   double           d_SMALL_NUM_MPM;
   double           d_conv_crit_disp;
   double           d_conv_crit_energy;
+  double           d_initialDt;
+  int              d_numIterations;
   
   const PatchSet* d_perproc_patches;
 
   vector<Solver*> d_solver;
-// Solver* d_solver;
-  
+
   bool dynamic;
   bool d_rigid_body;
   bool d_single_velocity;

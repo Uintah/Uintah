@@ -55,6 +55,7 @@ ImpMPM::ImpMPM(const ProcessorGroup* myworld) :
   d_nextOutputTime=0.;
   d_SMALL_NUM_MPM=0.;
   d_rigid_body = false;
+  d_numIterations=0;
 }
 
 ImpMPM::~ImpMPM()
@@ -227,9 +228,10 @@ void ImpMPM::scheduleComputeStableTimestep(const LevelP& lev, SchedulerP& sched)
                      this, &ImpMPM::actuallyComputeStableTimestep);
 
   const MaterialSet* matls = d_sharedState->allMPMMaterials();
-  t->computes(d_sharedState->get_delt_label());
-  sched->addTask(t,lev->eachPatch(), matls);
+  t->requires(Task::OldDW,d_sharedState->get_delt_label());
+  t->computes(            d_sharedState->get_delt_label());
 
+  sched->addTask(t,lev->eachPatch(), matls);
 }
 
 void
@@ -712,6 +714,9 @@ void ImpMPM::iterate(const ProcessorGroup*,
   subsched->get_dw(3)->finalize();
   subsched->advanceDataWarehouse(grid);
 
+//  double change_dt = .02;
+//  old_dw->override(delt_vartype(change_dt),d_sharedState->get_delt_label());
+
   while(!(dispInc && dispIncQ)) {
     if(d_myworld->myrank() == 0){
      cerr << "Beginning Iteration = " << count++ << "\n";
@@ -737,6 +742,7 @@ void ImpMPM::iterate(const ProcessorGroup*,
       dispIncQ = true;
     subsched->advanceDataWarehouse(grid);
   }
+  d_numIterations = count;
 
   // Move the particle data from subscheduler to scheduler.
   for (int p = 0; p < patches->size();p++) {
@@ -2008,8 +2014,15 @@ void ImpMPM::printParticleCount(const ProcessorGroup* pg,
 void ImpMPM::actuallyComputeStableTimestep(const ProcessorGroup*,
 					   const PatchSubset*,
 					   const MaterialSubset*,
-					   DataWarehouse*,
+					   DataWarehouse* old_dw,
 					   DataWarehouse* new_dw)
 {
-    new_dw->put(delt_vartype(d_initialDt), lb->delTLabel);
+    if(d_numIterations==0){
+      new_dw->put(delt_vartype(d_initialDt), lb->delTLabel);
+    }
+    else{
+      delt_vartype old_delT;
+      old_dw->get(old_delT, d_sharedState->get_delt_label());
+      new_dw->put(old_delT, lb->delTLabel);
+    }
 }
