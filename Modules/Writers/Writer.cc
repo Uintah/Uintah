@@ -83,8 +83,10 @@ void TYPEWriter::execute()
     clString ft(filetype.get());
     if(ft=="Binary"){
 	stream=scinew BinaryPiostream(fn, Piostream::Write);
-    } else {
+    } else if (ft=="ASCII"){
 	stream=scinew TextPiostream(fn, Piostream::Write);
+    } else {	// GUNZIP!
+	stream=scinew GzipPiostream(fn, Piostream::Write);
     }
     // Write the file
     //stream->watch_progress(watcher, (void*)this);

@@ -20,7 +20,7 @@ itcl_class TYPEWriter {
 	toplevel $w
 
 	make_labeled_radio $w.filetype "Format:" "" left $this-filetype \
-		{Binary ASCII}
+		{Binary ASCII Gzip}
 	pack $w.filetype
 	entry $w.f -textvariable $this-filename -width 40 \
 		-borderwidth 2 -relief sunken
