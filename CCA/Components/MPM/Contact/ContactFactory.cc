@@ -2,7 +2,6 @@
 #include <Packages/Uintah/CCA/Components/MPM/Contact/NullContact.h>
 #include <Packages/Uintah/CCA/Components/MPM/Contact/SingleVelContact.h>
 #include <Packages/Uintah/CCA/Components/MPM/Contact/FrictionContact.h>
-#include <Packages/Uintah/CCA/Components/MPM/Contact/RigidBodyContact.h>
 #include <Packages/Uintah/CCA/Components/MPM/Contact/SpecifiedBodyContact.h>
 #include <Packages/Uintah/CCA/Components/MPM/Contact/ApproachContact.h>
 #include <Packages/Uintah/CCA/Components/MPM/Contact/CompositeContact.h>
@@ -44,10 +43,8 @@ Contact* ContactFactory::create(const ProcessorGroup* myworld,
       else if (con_type == "approach")
         contact_list->add(scinew ApproachContact(myworld,child,ss,lb,flag));
       
-      else if (con_type == "rigid")
-        contact_list->add(scinew RigidBodyContact(myworld,child,ss,lb,flag));
-    
-      else if (con_type == "specified_velocity" || con_type == "specified" )
+      else if (con_type == "specified_velocity" || con_type == "specified"
+                                                || con_type == "rigid"  )
         contact_list->add(scinew SpecifiedBodyContact(myworld,child,ss,lb,flag));
       
       else {
@@ -64,4 +61,3 @@ Contact* ContactFactory::create(const ProcessorGroup* myworld,
    
    return contact_list;
 }
-
