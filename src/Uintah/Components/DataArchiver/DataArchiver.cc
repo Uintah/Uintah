@@ -112,11 +112,13 @@ void DataArchiver::problemSetup(const ProblemSpecP& params)
 	    p--;
 	 *p=0;
 	 d_dir = Dir(tmpname);
+#if 0
 	 cerr << d_myworld->myrank() << " dir=" << d_dir.getName();
 	 if(shared)
 	    cerr << " shared\n";
 	 else
 	    cerr << " NOT shared\n";
+#endif
 	 delete[] inbuf;
       }
       int s = shared;
@@ -623,6 +625,9 @@ static Dir makeVersionedDir(const std::string nameBase)
 
 //
 // $Log$
+// Revision 1.17  2000/08/25 18:04:42  sparker
+// Yanked print statement
+//
 // Revision 1.16  2000/08/25 17:41:15  sparker
 // All output from an MPI run now goes into a single UDA dir
 //
