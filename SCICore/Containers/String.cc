@@ -30,7 +30,6 @@ char *strcpy( char *, const char *);
 #include <ctype.h>
 
 #include <SCICore/Util/Assert.h>
-#include <SCICore/Persistent/Persistent.h>
 #include <SCICore/Containers/TrivialAllocator.h>
 #include <SCICore/Malloc/Allocator.h>
 #include <SCICore/Tester/RigorousTest.h>
@@ -279,7 +278,7 @@ int clString::index(const char match) const
     return -1;
 }
 
-clString clString::substr(int start, int length)
+clString clString::substr(int start, int length) const
 {
     ASSERT(p != 0);
     int len=strlen(p->s);
@@ -504,6 +503,9 @@ void clString::test_performance(PerfTest* __pt) {
 
 //
 // $Log$
+// Revision 1.8  2000/03/17 08:27:51  sparker
+// Added const to substr
+//
 // Revision 1.7  1999/11/17 22:27:07  moulding
 // changed #include<iostream.h> to #include<iostream>
 //
