@@ -251,15 +251,15 @@ endif
 
 # Copy Power App short cuts to the obj directory.
 ifneq ($(DEF_TEEM),)
-  $(OBJTOP)/BioTensor : $(SRCDIR)/Packages/Teem/nets/StandAlone/BioTensor
-	@(sed -e "s%__SRC_DIR__%$(SRCDIR)%" $(SRCDIR)/Packages/Teem/nets/StandAlone/BioTensor > $(OBJTOP)/BioTensor)
+  $(OBJTOP)/BioTensor : $(SRCDIR)/Packages/Teem/nets/PowerApps/BioTensor
+	@(sed -e "s%__SRC_DIR__%$(SRCDIR)%" $(SRCDIR)/Packages/Teem/nets/PowerApps/BioTensor > $(OBJTOP)/BioTensor)
 	@chmod +x BioTensor
 else
   $(OBJTOP)/BioTensor :
 endif
 ifeq ($(findstring BioPSE,$(LOAD_PACKAGE)),BioPSE)
-  $(OBJTOP)/BioFEM : $(SRCDIR)/Packages/BioPSE/nets/StandAlone/BioFEM
-	@(sed -e "s%__SRC_DIR__%$(SRCDIR)%" $(SRCDIR)/Packages/BioPSE/nets/StandAlone/BioFEM > $(OBJTOP)/BioFEM)
+  $(OBJTOP)/BioFEM : $(SRCDIR)/Packages/BioPSE/nets/PowerApps/BioFEM
+	@(sed -e "s%__SRC_DIR__%$(SRCDIR)%" $(SRCDIR)/Packages/BioPSE/nets/PowerApps/BioFEM > $(OBJTOP)/BioFEM)
 	@chmod +x BioFEM
 else
   $(OBJTOP)/BioFEM :

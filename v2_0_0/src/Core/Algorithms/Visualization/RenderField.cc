@@ -255,6 +255,8 @@ RenderTensorFieldBase::add_item(GeomGroup *g,
 
     double v1, v2, v3;
     t.get_eigenvalues(v1, v2, v3);
+    // don't render glyphs that are too small
+    if (v1 + v2 + v3 < 0.001) return;
 
     static const Point origin(0.0, 0.0, 0.0);
     Transform trans(origin, e1, e2, e3);
