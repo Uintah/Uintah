@@ -2252,6 +2252,13 @@ class BioTensorApp {
 	initialize_clip_info
 
         set initialized 1
+
+	global PowerAppSession
+	if {[info exists PowerAppSession] && [set PowerAppSession] != ""} { 
+	    set saveFile $PowerAppSession
+	    wm title .standalone "BioTensor - [getFileName $saveFile]"
+	    $this load_session
+	} 
     }
 
 
@@ -3460,7 +3467,9 @@ class BioTensorApp {
 	    {{Other} { * }}
 	}
 	
-	set saveFile [tk_getOpenFile -filetypes $types]
+	if {$saveFile == ""} {
+	    set saveFile [tk_getOpenFile -filetypes $types]
+	}
 
 	if {$saveFile != ""} {
 	    # configure title
