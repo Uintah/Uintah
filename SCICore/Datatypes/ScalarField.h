@@ -145,7 +145,7 @@ public:
     // separate raw files
     void set_raw(int v) { separate_raw = v; }
     int get_raw() { return separate_raw; }
-    void set_raw_filename( clString &f ) { raw_filename = f; }
+    void set_raw_filename( clString &f ) { raw_filename = f; separate_raw = 1;}
     clString &get_raw_filename() { return raw_filename; }
 
     // Persistent representation...
@@ -158,6 +158,10 @@ public:
 
 //
 // $Log$
+// Revision 1.6  2000/02/04 05:13:00  yarden
+// when set_raw_filename(name) is called it should set the separate_raw flag
+// on.
+//
 // Revision 1.5  2000/02/04 00:19:32  yarden
 // enable to store the grid part of a ScalarField in a seperate file.
 // a flag (sererate_raw) signal if this ScalarField was read from a split
