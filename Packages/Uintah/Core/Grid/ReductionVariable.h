@@ -26,7 +26,6 @@ namespace SCIRun {
 
 #include <iostream>
 
-class DOMElement;
 
 namespace Uintah {
 
@@ -80,7 +79,7 @@ WARNING
     virtual void print(ostream& out)
     { out << value; }
     virtual void emitNormal(ostream& out, const IntVector& /*l*/,
-			    const IntVector& /*h*/, DOMElement* /*varnode*/)
+			    const IntVector& /*h*/, ProblemSpecP /*varnode*/)
     { out.write((char*)&value, sizeof(double)); }
     virtual void readNormal(istream& in, bool swapBytes)
     {

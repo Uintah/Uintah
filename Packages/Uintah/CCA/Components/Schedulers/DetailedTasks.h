@@ -6,7 +6,6 @@
 #include <Packages/Uintah/Core/Grid/Task.h>
 #include <Packages/Uintah/Core/Grid/Patch.h>
 #include <Packages/Uintah/Core/Grid/VarLabelMatlPatchDW.h>
-#include <Dataflow/XMLUtil/XMLUtil.h>
 #include <Core/Thread/Mutex.h>
 #include <Core/Thread/Semaphore.h>
 #include <Core/Thread/ConditionVariable.h>
@@ -174,7 +173,7 @@ namespace Uintah {
     void findRequiringTasks(const VarLabel* var,
 			    list<DetailedTask*>& requiringTasks);
 
-    void emitEdges(DOMElement* edgesElement);
+    void emitEdges(ProblemSpecP edgesElement);
 
     bool addRequires(DependencyBatch*);
     void addComputes(DependencyBatch*);
@@ -262,7 +261,7 @@ namespace Uintah {
       return localtasks[idx];
     }
 
-    void emitEdges(DOMElement *edgesElement, int rank);
+    void emitEdges(ProblemSpecP edgesElement, int rank);
 
     DetailedTask* getNextInternalReadyTask();
     

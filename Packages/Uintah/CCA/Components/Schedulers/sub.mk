@@ -41,10 +41,9 @@ PSELIBS := \
 	Core/Containers                  \
 	Core/Thread                      \
 	Core/Exceptions                  \
-	Core/Util                        \
-	Dataflow/XMLUtil
+	Core/Util
 
-LIBS := $(XML_LIBRARY) $(TAU_LIBRARY) $(MPI_LIBRARY) $(VAMPIR_LIBRARY) $(PERFEX_LIBRARY)
+LIBS := $(TAU_LIBRARY) $(MPI_LIBRARY) $(VAMPIR_LIBRARY) $(PERFEX_LIBRARY)
 
 include $(SCIRUN_SCRIPTS)/smallso_epilogue.mk
 

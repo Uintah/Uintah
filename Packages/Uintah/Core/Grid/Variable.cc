@@ -8,7 +8,6 @@
 #include <Packages/Uintah/Core/Grid/Patch.h>
 #include <Core/Exceptions/ErrnoException.h>
 #include <Core/Malloc/Allocator.h>
-#include <Dataflow/XMLUtil/XMLUtil.h>
 #include <Core/Util/FancyAssert.h>
 #include <Core/Util/Endian.h>
 #include <Core/Util/SizeTypeConvert.h>
@@ -131,10 +130,9 @@ void Variable::emit(OutputContext& oc, const IntVector& l,
       compressionMode = "";
   }
 
-  DOMText* text = oc.varnode->getOwnerDocument()->createTextNode(to_xml_ch_ptr("compression"));
   if (compressionMode != "" && compressionMode != "none")
     //appendElement(oc.varnode, "compression", compressionMode);
-    appendElement(oc.varnode, text, compressionMode);
+    oc.varnode->appendElement("compression", compressionMode);
 }
 
 string* Variable::gzipCompress(string* pUncompressed, string* pBuffer)
@@ -243,7 +241,7 @@ void Variable::read(InputContext& ic, long end, bool swapBytes, int nByteMode,
 }
 
 bool Variable::emitRLE(ostream& /*out*/, const IntVector& /*l*/,
-		       const IntVector& /*h*/, DOMElement* /*varnode*/)
+		       const IntVector& /*h*/, ProblemSpecP /*varnode*/)
 {
   return false; // not supported by default
 }

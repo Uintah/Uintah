@@ -62,10 +62,9 @@ PSELIBS := \
 	Core/Exceptions                  \
 	Core/Geometry                    \
 	Core/Containers                  \
-	Core/Util                        \
-	Dataflow/XMLUtil
+	Core/Util
 
-LIBS := $(XML_LIBRARY) $(MPI_LIBRARY) $(M_LIBRARY) $(Z_LIBRARY)
+LIBS := $(MPI_LIBRARY) $(M_LIBRARY) $(Z_LIBRARY)
 
 include $(SCIRUN_SCRIPTS)/smallso_epilogue.mk
 

@@ -8,10 +8,9 @@
 #include <Packages/Uintah/Core/Grid/Task.h>
 #include <Packages/Uintah/Core/Grid/Patch.h>
 #include <Packages/Uintah/Core/Parallel/ProcessorGroup.h>
-#include <Packages/Uintah/Core/ProblemSpec/Handle.h>
+#include <Packages/Uintah/Core/ProblemSpec/ProblemSpec.h>
 #include <Packages/Uintah/CCA/Ports/DataWarehouse.h>
 
-#include <Dataflow/XMLUtil/XMLUtil.h>
 #include <Core/Exceptions/ErrnoException.h>
 #include <Core/Exceptions/InternalError.h>
 #include <Core/Malloc/Allocator.h>
@@ -19,8 +18,6 @@
 #include <Core/Util/DebugStream.h>
 #include <Core/Util/FancyAssert.h>
 
-#include <xercesc/dom/DOMImplementation.hpp>
-#include <xercesc/dom/DOMImplementationRegistry.hpp>
 
 #include <fstream>
 #include <iostream>
@@ -74,24 +71,17 @@ SchedulerCommon::makeTaskGraphDoc(const DetailedTasks*/* dt*/, int rank)
   if (!m_outPort->wasOutputTimestep())
     return;
   
-  DOMImplementation* impl = DOMImplementationRegistry::getDOMImplementation(to_xml_ch_ptr("LS"));
-
-  //m_graphDoc = scinew DOMDocument();
-  m_graphDoc = impl->createDocument(0, to_xml_ch_ptr("Uintah_TaskGraph"), 0);
-  DOMElement* root = m_graphDoc->getDocumentElement();
+  m_graphDoc = ProblemSpec::createDocument("Uintah_TaskGraph");
   
-  DOMElement* meta = m_graphDoc->createElement(to_xml_ch_ptr("Meta"));
-  root->appendChild(meta);
-  appendElement(meta, m_graphDoc->createTextNode(to_xml_ch_ptr("username")), getenv("LOGNAME"));
+  ProblemSpecP meta = m_graphDoc->appendChild("Meta");
+  meta->appendElement("username", getenv("LOGNAME"));
   time_t t = time(NULL);
-  appendElement(meta, m_graphDoc->createTextNode(to_xml_ch_ptr("date")), ctime(&t));
+  meta->appendElement("date", ctime(&t));
   
-  //m_nodes = scinew DOMElement(m_graphDoc->createElement("Nodes"));
-  m_nodes = m_graphDoc->createElement(to_xml_ch_ptr("Nodes"));
-  root->appendChild(m_nodes);
+  m_nodes = m_graphDoc->appendChild("Nodes");
+  m_graphDoc->appendChild(m_nodes);
   
-  DOMElement* edgesElement = m_graphDoc->createElement(to_xml_ch_ptr("Edges"));
-  root->appendChild(edgesElement);
+  ProblemSpecP edgesElement = m_graphDoc->appendChild("Edges");
   
   if (dts_) {
     dts_->emitEdges(edgesElement, rank);
@@ -110,7 +100,7 @@ SchedulerCommon::makeTaskGraphDoc(const DetailedTasks*/* dt*/, int rank)
     }
     graphfile << m_graphDoc << "\n";
   }
-  m_graphDoc->release();
+  m_graphDoc->releaseDocument();
 }
 
 bool
@@ -129,27 +119,27 @@ SchedulerCommon::emitNode( const DetailedTask* task,
                                  double        execution_flops,
                                  double        communication_flops )
 {  
-    if (m_nodes == NULL)
+    if (m_nodes == 0)
         return;
     
-    DOMElement* node = m_graphDoc->createElement(to_xml_ch_ptr("node"));
+    ProblemSpecP node = m_nodes->appendChild("node");
     m_nodes->appendChild(node);
 
-    appendElement(node, node->getOwnerDocument()->createTextNode(to_xml_ch_ptr("name")), task->getName());
-    appendElement(node, node->getOwnerDocument()->createTextNode(to_xml_ch_ptr("start")), start);
-    appendElement(node, node->getOwnerDocument()->createTextNode(to_xml_ch_ptr("duration")), duration);
+    node->appendElement("name", task->getName());
+    node->appendElement("start", start);
+    node->appendElement("duration", duration);
     if (execution_duration > 0)
-      appendElement(node, node->getOwnerDocument()->createTextNode(to_xml_ch_ptr("execution_duration")), execution_duration);
+      node->appendElement("execution_duration", execution_duration);
     if (execution_flops > 0)
-      appendElement(node, node->getOwnerDocument()->createTextNode(to_xml_ch_ptr("execution_flops")), (long)execution_flops);
+      node->appendElement("execution_flops", (long)execution_flops);
     if (communication_flops > 0)
-      appendElement(node, node->getOwnerDocument()->createTextNode(to_xml_ch_ptr("communication_flops")), (long)communication_flops);
+      node->appendElement("communication_flops", (long)communication_flops);
 }
 
 void
 SchedulerCommon::finalizeNodes(int process /* = 0*/)
 {
-    if (m_graphDoc == NULL)
+    if (m_graphDoc == 0)
         return;
 
     if (m_outPort->wasOutputTimestep()) {
@@ -162,10 +152,7 @@ SchedulerCommon::finalizeNodes(int process /* = 0*/)
       graphfile << m_graphDoc << "\n";
     }
     
-    delete m_nodes;
-    m_nodes = NULL;
-    delete m_graphDoc;
-    m_graphDoc = NULL;
+    m_graphDoc->releaseDocument();
 }
 
 void
