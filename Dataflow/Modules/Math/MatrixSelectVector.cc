@@ -129,8 +129,8 @@ MatrixSelectVector::send_selection(MatrixHandle mh, int which,
   }
   else
   {
+    osel->send(MatrixHandle(selected));
     ovec->send_intermediate(MatrixHandle(cm));
-    osel->send_intermediate(MatrixHandle(selected));
   }
 }
 
