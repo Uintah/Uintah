@@ -23,8 +23,8 @@ using namespace Uintah;
 using namespace SCIRun;
 using namespace std;
 
-#define DOING
-//#undef DOING
+//#define DOING
+#undef DOING
 
 MPMICE::MPMICE(const ProcessorGroup* myworld)
   : UintahParallelComponent(myworld)
@@ -435,7 +435,7 @@ void MPMICE::scheduleComputeMassBurnRate(SchedulerP& sched,
 //
 void MPMICE::actuallyInitialize(const ProcessorGroup*, 
 				const PatchSubset* patches,
-				const MaterialSubset* matls,
+				const MaterialSubset* ,
 				DataWarehouse*,
 				DataWarehouse* new_dw)
 {
@@ -457,7 +457,7 @@ void MPMICE::actuallyInitialize(const ProcessorGroup*,
 //
 void MPMICE::interpolatePressCCToPressNC(const ProcessorGroup*,
 					 const PatchSubset* patches,
-					 const MaterialSubset* matls,
+					 const MaterialSubset* ,
 					 DataWarehouse*,
 					 DataWarehouse* new_dw)
 {			       
@@ -494,7 +494,7 @@ void MPMICE::interpolatePressCCToPressNC(const ProcessorGroup*,
 //
 void MPMICE::interpolatePAndGradP(const ProcessorGroup*,
                                   const PatchSubset* patches,
-				  const MaterialSubset* matls,
+				  const MaterialSubset* ,
                                   DataWarehouse* old_dw,
                                   DataWarehouse* new_dw)
 {
@@ -561,7 +561,7 @@ void MPMICE::interpolatePAndGradP(const ProcessorGroup*,
 //
 void MPMICE::interpolateVelIncFCToNC(const ProcessorGroup*,
                                      const PatchSubset* patches,
-				         const MaterialSubset* matls,
+				     const MaterialSubset* ,
                                      DataWarehouse*,
                                      DataWarehouse* new_dw)
 {
@@ -627,7 +627,7 @@ void MPMICE::interpolateVelIncFCToNC(const ProcessorGroup*,
 //
 void MPMICE::interpolateNCToCC_0(const ProcessorGroup*,
                                  const PatchSubset* patches,
-				     const MaterialSubset* matls,
+				 const MaterialSubset* ,
                                  DataWarehouse*,
                                  DataWarehouse* new_dw)
 {
@@ -710,7 +710,7 @@ void MPMICE::interpolateNCToCC_0(const ProcessorGroup*,
 //
 void MPMICE::interpolateNCToCC(const ProcessorGroup*,
                                const PatchSubset* patches,
-			          const MaterialSubset* matls,
+			       const MaterialSubset* ,
                                DataWarehouse*,
                                DataWarehouse* new_dw)
 {
@@ -781,7 +781,7 @@ void MPMICE::interpolateNCToCC(const ProcessorGroup*,
 //
 void MPMICE::doCCMomExchange(const ProcessorGroup*,
                              const PatchSubset* patches,
-			        const MaterialSubset* matls,
+			     const MaterialSubset* ,
                              DataWarehouse* old_dw,
                              DataWarehouse* new_dw)
 {
@@ -1118,7 +1118,7 @@ void MPMICE::doCCMomExchange(const ProcessorGroup*,
 //
 void MPMICE::interpolateCCToNC(const ProcessorGroup*,
 			       const PatchSubset* patches,
-			       const MaterialSubset* matls,
+			       const MaterialSubset* ,
 			       DataWarehouse* old_dw,
 			       DataWarehouse* new_dw)
 {
@@ -1233,7 +1233,7 @@ Note:  The nomenclature follows the reference.
 _____________________________________________________________________*/
 void MPMICE::computeEquilibrationPressure(const ProcessorGroup*,
 					  const PatchSubset* patches,
-					  const MaterialSubset* matls,
+					  const MaterialSubset* ,
 					  DataWarehouse* old_dw,
 					  DataWarehouse* new_dw)
 {
@@ -1590,7 +1590,7 @@ void MPMICE::computeEquilibrationPressure(const ProcessorGroup*,
       }
     }     // end of cell interator
 
-      fprintf(stderr,"\tmax number of iterations in any cell %i\n",test_max_iter);
+    fprintf(stderr,"\tmax number of iterations in any cell %i\n",test_max_iter);
 
 
   /*`==========TESTING==========*/ 
@@ -1650,12 +1650,14 @@ void MPMICE::computeEquilibrationPressure(const ProcessorGroup*,
 _____________________________________________________________________*/ 
 void MPMICE::computeMassBurnRate(const ProcessorGroup*,
 				 const PatchSubset* patches,
-				 const MaterialSubset* matls,
+				 const MaterialSubset* ,
 				 DataWarehouse* old_dw,
 				 DataWarehouse* new_dw)
 
 {
+#ifdef DOING
   cout << "Doing computeMassBurnRate" << endl;
+#endif 
 
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
@@ -1740,7 +1742,6 @@ void MPMICE::computeMassBurnRate(const ProcessorGroup*,
         new_dw->put(releasedHeat[m], MIlb->releasedHeatCCLabel,dwindex, patch);
       }
     }
-    cout << "Computed Burned mass \n";
     //---- P R I N T   D A T A ------ 
     for(int m = 0; m < numALLMatls; m++) {
     #if 0  //turn off for quality control testing
