@@ -106,6 +106,7 @@ ColorMapReader::call_importer(const string &filename)
   if (pl)
   {
     handle_ = pl->filereader(this, filename.c_str());
+    msgStream_flush();
     return handle_.get_rep();
   }
   return false;

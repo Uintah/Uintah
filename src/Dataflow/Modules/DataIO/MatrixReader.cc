@@ -105,6 +105,7 @@ MatrixReader::call_importer(const string &filename)
   if (pl)
   {
     handle_ = pl->fileReader_(this, filename.c_str());
+    msgStream_flush();
     return handle_.get_rep();
   }
   return false;
