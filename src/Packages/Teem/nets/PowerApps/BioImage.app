@@ -1434,7 +1434,7 @@ class BioImageApp {
 	    setGlobal $m37-port-index 1
 
 	    set mod_list [list $m1 $m2 $m3 $m4 $m5 $m6 $m7 $m8 $m9 $m10 $m11 $m12 $m13 $m14 $m15 $m16 $m17 $m18 $m19 $m20 $m21 $m22 $m23 $m24 $m25 $m26 $m27 $m28 $m29 $m30 $m31 $m32 $m33 $m34 $m35 $m36 $m37]
-	    set filters(0) [list load $mod_list [list $m6] [list $m6 0] start end 0 0 1 "Data - Unknown"]
+	    set filters(0) [list load $mod_list [list $m6] [list $m35 0] start end 0 0 1 "Data - Unknown"]
 
             $this build_viewers $m25 $m26
 	}
@@ -1600,7 +1600,7 @@ class BioImageApp {
 	# Top entry
 	global top
 	entry $w.tentry -textvariable top -width 3
-	Tooltip $w.tentry "Edit the entries to indicate the various orientations.\nOptions include Superior (S) or Inferior (I),\nAnterior (A) or Posterior (P), and Left (L) or Right (R).\nTo update the orientations, press the cube image."
+	Tooltip $w.tentry "Indicates the current orientation.\nOptions include Superior (S) or Inferior (I),\nAnterior (A) or Posterior (P), and Left (L) or Right (R).\nTo update the orientations, press the cube image."
 	grid config $w.tentry -row 0 -column 0 -sticky "e"
 
         bind $w.tentry <ButtonPress-1> "$this check_crop"
@@ -1608,7 +1608,7 @@ class BioImageApp {
 	# Front entry
 	global front
 	entry $w.fentry -textvariable front -width 3
-	Tooltip $w.fentry "Edit the entries to indicate the various orientations.\nOptions include Superior (S) or Inferior (I),\nAnterior (A) or Posterior (P), and Left (L) or Right (R).\nTo update the orientations, press the cube image."
+	Tooltip $w.fentry "Indicate the current orientation.\nOptions include Superior (S) or Inferior (I),\nAnterior (A) or Posterior (P), and Left (L) or Right (R).\nTo update the orientations, press the cube image."
 	grid config $w.fentry -row 4 -column 2 -sticky "nw"
 
         bind $w.fentry <ButtonPress-1> "$this check_crop"
@@ -1617,7 +1617,7 @@ class BioImageApp {
 	# Side entry
 	global side
 	entry $w.sentry -textvariable side -width 3
-	Tooltip $w.sentry "Edit the entries to indicate the various orientations.\nOptions include Superior (S) or Inferior (I),\nAnterior (A) or Posterior (P), and Left (L) or Right (R).\nTo update the orientations, press the cube image."
+	Tooltip $w.sentry "Indicates the current orientations.\nOptions include Superior (S) or Inferior (I),\nAnterior (A) or Posterior (P), and Left (L) or Right (R).\nTo update the orientations, press the cube image."
 	grid config $w.sentry -row 1 -column 4 -sticky "n"
 
         bind $w.sentry <ButtonPress-1> "$this check_crop"
@@ -1762,6 +1762,43 @@ class BioImageApp {
 	    return
 	} 
 
+	# reset any downstream crop and resample params and issue
+	# warning to user
+	set reset 0
+	for {set i 1} {$i < $num_filters} {incr i} {
+	    if {[lindex $filters($i) $filter_type] == "crop" &&
+		[lindex $filters($i) $which_row] != -1} {
+		set reset 1
+		set UnuCrop [lindex [lindex $filters($i) $modules] 0]
+		global [set UnuCrop]-minAxis0
+		global [set UnuCrop]-maxAxis0
+		global [set UnuCrop]-minAxis1
+		global [set UnuCrop]-maxAxis1
+		global [set UnuCrop]-minAxis2
+		global [set UnuCrop]-maxAxis2
+		set [set UnuCrop]-minAxis0 0
+		set [set UnuCrop]-maxAxis0 M
+		set [set UnuCrop]-minAxis1 0
+		set [set UnuCrop]-maxAxis1 M
+		set [set UnuCrop]-minAxis2 0
+		set [set UnuCrop]-maxAxis2 M
+	    } elseif {[lindex $filters($i) $filter_type] == "resample" &&
+		      [lindex $filters($i) $which_row] != -1} {
+		set reset 1
+		set UnuResample [lindex [lindex $filters($i) $modules] 0]
+		global [set UnuResample]-resampAxis0
+		global [set UnuResample]-resampAxis1
+		global [set UnuResample]-resampAxis2
+		set [set UnuResample]-resampAxis0 "x1"
+		set [set UnuResample]-resampAxis1 "x1"
+		set [set UnuResample]-resampAxis2 "x1"
+	    }
+	}
+
+	if {$reset == 1} {
+	    tk_messageBox -message "Downstream crop and resample module are being reset." -type ok -icon info -parent .standalone
+	}
+	
 	# Permute into order where top   = S/I
 	#                          front = A/P
 	#                          side    L/R
@@ -1785,19 +1822,19 @@ class BioImageApp {
 	} elseif {$side == "A" || $side == "a"} {
 	    set new_side 1
 	    set need_permute 1
-	    set c_front "A"
+	    set c_side "A"
 	} elseif {$side == "P" || $side == "p"} {
 	    set new_side 1
 	    set need_permute 1
-	    set c_front "P"
+	    set c_side "P"
 	} elseif {$side == "S" || $side == "s"} {
 	    set new_side 2
 	    set need_permute 1
-	    set c_top "S"
+	    set c_side "S"
 	} else {
 	    set new_side 2
 	    set need_permute 1
-	    set c_top "I"
+	    set c_side "I"
 	}
 
 	# Check front variable which corresponds to axis 1
@@ -1810,19 +1847,19 @@ class BioImageApp {
 	} elseif {$front == "L" || $front == "l"} {
 	    set new_front 0
 	    set need_permute 1
-	    set c_side "L"
+	    set c_front "L"
 	} elseif {$front == "R" || $front == "r"} {
 	    set new_front 0
 	    set need_permute 1
-	    set c_side "R"
+	    set c_front "R"
 	} elseif {$front == "S" || $front == "s"} {
 	    set new_front 2
 	    set need_permute 1
-	    set c_top "S"
+	    set c_front "S"
 	} else {
 	    set new_front 2
 	    set need_permute 1
-	    set c_top "I"
+	    set c_front "I"
 	}
 
 	# Check top variable which is axis 2
@@ -1835,19 +1872,19 @@ class BioImageApp {
 	} elseif {$top == "L" || $top == "l"} { 
 	    set new_top 0
 	    set need_permute 1
-	    set c_side "L"
+	    set c_top "L"
 	} elseif {$top == "R" || $top == "r"} {
 	    set new_top 0
 	    set need_permute 1
-	    set c_side "R"
+	    set c_top "R"
 	} elseif {$top == "A" || $top == "a"} {
 	    set new_top 1
 	    set need_permute 1
-	    set c_front "A"
+	    set c_top "A"
 	} else {
 	    set new_top 1
 	    set need_permute 1
-	    set c_front "I"
+	    set c_top "I"
 	}
 
 	# only use permute if needed to avoid copying data
@@ -1868,10 +1905,15 @@ class BioImageApp {
 	    disableModule [set UnuPermute] 1
 	}
 
+	set flip_0 0
+	set flip_1 0
+	set flip_2 0
+
 	# only flip axes if needed
 	if {$c_side != "L"} {
 	    # need to flip axis 0
 	    $this flip0 1
+	    set flip_0 1
 	} else {
 	    $this flip0 0
 	}
@@ -1879,6 +1921,7 @@ class BioImageApp {
 	if {$c_front != "A"} {
 	    # need to flip axis 1
 	    $this flip1 1
+	    set flip_1 1
 	} else {
 	    $this flip1 0
 	}
@@ -1886,14 +1929,28 @@ class BioImageApp {
 	if {$c_top != "S"} {
 	    # need to flip axis 2
 	    $this flip2 1
+	    set flip_2 1
 	} else {
 	    $this flip2 0
 	}
 
 	# Re-execute
 	if {!$loading && $has_executed} {
-	    set m [lindex [lindex $filters(0) $modules] 5]
-	    $m-c needexecute
+	    if {$need_permute == 1} {
+		[set UnuPermute]-c needexecute
+	    } elseif {$flip_0 == 1} {
+		set UnuFlip [lindex [lindex $filters(0) $modules] 29]
+		[set UnuFlip]-c needexecute
+	    } elseif {$flip_1 == 1} {
+		set UnuFlip [lindex [lindex $filters(0) $modules] 30]
+		[set UnuFlip]-c needexecute
+	    } elseif {$flip_2 == 1} {
+		set UnuFlip [lindex [lindex $filters(0) $modules] 31]
+		[set UnuFlip]-c needexecute
+	    } else {
+		set m [lindex [lindex $filters(0) $modules] 5]
+		$m-c needexecute
+	    }
 	}
     }
 
@@ -5000,6 +5057,7 @@ class BioImageApp {
           $mods(Viewer)-ViewWindow_0-c autoview
 	}
     }
+
 
 
     # Application placing and size
