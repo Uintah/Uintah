@@ -107,7 +107,7 @@ C--------------------------------------------------------------------
      &              UU(I+1,J,K)+UU(I,J,K+1)+UU(I+1,J,K+1))/4.0
                UBP = (UU(I,J,K)+
      &              UU(I+1,J,K)+UU(I,J,K-1)+UU(I+1,J,K-1))/4.0 
-               DUDZ = (UTP-UBP)/(STB(K)) 
+               DUDZ = (UTP-UBP)/STB(K) 
                VEP = (VV(I,J,K)+
      &              VV(I,J+1,K)+VV(I+1,J,K)+VV(I+1,J+1,K))/4.0
                VWP = (VV(I,J,K)+
@@ -117,7 +117,7 @@ C--------------------------------------------------------------------
      &              VV(I,J+1,K)+VV(I,J,K+1)+VV(I,J+1,K+1))/4.0
                VBP = (VV(I,J,K)+
      &              VV(I,J+1,K)+VV(I,J,K-1)+VV(I,J+1,K-1))/4.0 
-               DVDZ = (VTP-VBP)/(STB(K))
+               DVDZ = (VTP-VBP)/STB(K)
                WEP = (WW(I,J,K)+
      &              WW(I,J,K+1)+WW(I+1,J,K)+WW(I+1,J,K+1))/4.0
                WWP = (WW(I,J,K)+
@@ -149,8 +149,10 @@ C            GRADVEL = ABS(DUDY + DUDZ + DVDX + DVDZ + DWDX + DWDY)
 
 C            GRADVEL =SQRT( DUDY**2 + DUDZ**2 + DVDX**2 
 C     &                   + DVDZ**2 + DWDX**2 + DWDY**2 )
+
                GRADVEL =SQRT(((DUDY + DVDX)**2) + ((DUDZ +
      &              DWDX)**2) + ((DVDZ + DWDY)**2))
+
 Cmjb.... logic within next if/then block can be invoked
 Cmjb     when using mixing length model to start up a k-e model
 Cmjb      * logic is somewhat obtuse
@@ -171,6 +173,10 @@ c              END IF
 c*********************************************************************
 c
 c $Log$
+c Revision 1.3  2000/07/01 05:21:01  bbanerje
+c Changed CellInformation calcs for Turbulence model requirements ..
+c CellInformation still needs work.
+c
 c Revision 1.2  2000/06/30 05:12:20  bbanerje
 c Changed reComputeTurbModel to reflect chnages to computeTurbModel.
 c Changed name Subroutine mixltm to Subroutine smagmodel

@@ -9,35 +9,53 @@ using namespace Uintah::ArchesSpace;
 
 CellInformation::CellInformation(const Patch* patch)
 {
-  IntVector domainLow = patch->getCellFORTLowIndex();
-  IntVector domainHigh = patch->getCellFORTHighIndex();
-  int xLo = domainLow.x(); int yLo = domainLow.x(); int zLo = domainLow.x();
-  int xHi = domainHigh.x(); int yHi = domainHigh.x(); int zHi = domainHigh.x();
-  int xSize = xHi - xLo + 1; 
-  int ySize = yHi - yLo + 1;
-  int zSize = zHi - zLo + 1;
-  IntVector indexLow(0, 0, 0);
-  IntVector indexHigh(xSize, ySize, zSize);
+  IntVector indexLow = patch->getCellLowIndex();
+  IntVector indexHigh = patch->getCellHighIndex();
+  int xLo = indexLow.x(); int yLo = indexLow.x(); int zLo = indexLow.x();
+  int xHi = indexHigh.x(); int yHi = indexHigh.x(); int zHi = indexHigh.x();
+  int xSize = xHi-xLo; 
+  int ySize = yHi-yLo;
+  int zSize = zHi-zLo;
+  IntVector domainLow(-1, -1, -1);
+  IntVector domainHigh(xSize, ySize, zSize);
+  ++xSize; ++ySize; ++zSize;
 
   // cell information
   xx.resize(xSize); yy.resize(ySize); zz.resize(zSize);
 
-  /// need to change it...its giving an index of -1
-  xx[indexLow.x()] = (patch->getBox().lower()).x()+0.5*(patch->dCell()).x();
-  yy[indexLow.y()] = (patch->getBox().lower()).y()+0.5*(patch->dCell()).y();
-  zz[indexLow.z()] = (patch->getBox().lower()).z()+0.5*(patch->dCell()).z();
-
   // cell grid information, for nonuniform grid it will be more
   // complicated
-  for (int ii = indexLow.x()+1; ii < indexHigh.x(); ii++) {
+  xx[0] = (patch->getBox().lower()).x()+0.5*(patch->dCell()).x();
+  for (int ii = 1; ii < xSize-1; ii++) {
     xx[ii] = xx[ii-1]+patch->dCell().x();
   }
-  for (int ii = indexLow.y()+1; ii < indexHigh.y(); ii++) {
+  xx[xSize-1] = (patch->getBox().upper()).x();
+  yy[0] = (patch->getBox().lower()).y()+0.5*(patch->dCell()).y();
+  for (int ii = 1; ii < ySize-1; ii++) {
     yy[ii] = yy[ii-1]+patch->dCell().y();
   }
-  for (int ii = indexLow.z()+1; ii < indexHigh.z(); ii++) {
+  yy[ySize-1] = (patch->getBox().upper()).y();
+  zz[0] = (patch->getBox().lower()).z()+0.5*(patch->dCell()).z();
+  for (int ii = 1; ii < zSize-1; ii++) {
     zz[ii] = zz[ii-1]+patch->dCell().z();
   }
+  zz[zSize-1] = (patch->getBox().upper()).z();
+
+  cout << "Lower x = " << patch->getBox().lower().x() << endl;
+  for (int ii = 0; ii < xSize; ii++) {
+    cout << "xx[" << ii <<"] = " << xx[ii] << endl;
+  }
+  cout << "Upper x = " << patch->getBox().upper().x() << endl;
+  cout << "Lower y = " << patch->getBox().lower().y() << endl;
+  for (int ii = 0; ii < ySize; ii++) {
+    cout << "yy[" << ii <<"] = " << yy[ii] << endl;
+  }
+  cout << "Upper y = " << patch->getBox().upper().y() << endl;
+  cout << "Lower z = " << patch->getBox().lower().z() << endl;
+  for (int ii = 0; ii < zSize; ii++) {
+    cout << "zz[" << ii <<"] = " << zz[ii] << endl;
+  }
+  cout << "Upper z = " << patch->getBox().upper().z() << endl;
   
   //  allocate memory for x-dim arrays
   dxep.resize(xSize);

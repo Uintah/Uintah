@@ -162,8 +162,9 @@ Properties::computeProps(const ProcessorGroup*,
   for (int ii = 0; ii < d_numMixingVars; ii++)
     old_dw->get(scalar[ii], d_scalarSPLabel, ii, patch, Ghost::None,
 		nofGhostCells);
-  CCVariable<double> new_density;
-  new_dw->allocate(new_density, d_densityCPLabel, matlIndex, patch);
+
+  //CCVariable<double> new_density;
+  //new_dw->allocate(new_density, d_densityCPLabel, matlIndex, patch);
   IntVector indexLow = patch->getCellLowIndex();
   IntVector indexHigh = patch->getCellHighIndex();
   // set density for the whole domain
@@ -175,24 +176,30 @@ Properties::computeProps(const ProcessorGroup*,
 	double local_den = 0.0;
 	double mixFracSum = 0.0;
 	for (int ii = 0; ii < d_numMixingVars; ii++ ) {
-	  local_den += (scalar[ii])[IntVector(colX, colY, colZ)]/d_streams[ii].d_density;
+	  local_den += 
+	    (scalar[ii])[IntVector(colX, colY, colZ)]/d_streams[ii].d_density;
 	  mixFracSum += (scalar[ii])[IntVector(colX, colY, colZ)];
 	}
-	local_den += (1.0 - mixFracSum)/d_streams[d_numMixingVars].d_density;
+	local_den += (1.0 - mixFracSum)/d_streams[d_numMixingVars-1].d_density;
 	std::cerr << "local_den " << local_den << endl;
 	if (local_den <= 0.0)
 	  throw InvalidValue("Computed zero density in props" );
 	else
 	  local_den = (1.0/local_den);
-	new_density[IntVector(colX, colY, colZ)] = d_denUnderrelax*local_den +
+	density[IntVector(colX, colY, colZ)] = d_denUnderrelax*local_den +
                  	  (1.0-d_denUnderrelax)*density[IntVector(colX, colY, colZ)];
       }
     }
   }
+  cout << "After compute properties \n";
+  for (int kk = indexLow.z(); kk < indexHigh.z(); kk++) 
+    for (int jj = indexLow.y(); jj < indexHigh.y(); jj++) 
+      for (int ii = indexLow.x(); ii < indexHigh.x(); ii++) 
+	cout << "(" << ii << "," << jj << "," << kk << ") : "
+	     << " DEN = " << density[IntVector(ii,jj,kk)] << endl;
   
   // Write the computed density to the new data warehouse
-  new_dw->put(new_density, d_densityCPLabel, matlIndex, patch);
-
+  new_dw->put(density, d_densityCPLabel, matlIndex, patch);
 }
 
 //****************************************************************************
@@ -251,6 +258,10 @@ Properties::Stream::problemSetup(ProblemSpecP& params)
 
 //
 // $Log$
+// Revision 1.21  2000/07/01 05:20:59  bbanerje
+// Changed CellInformation calcs for Turbulence model requirements ..
+// CellInformation still needs work.
+//
 // Revision 1.20  2000/06/30 04:19:17  rawat
 // added turbulence model and compute properties
 //

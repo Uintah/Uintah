@@ -36,12 +36,16 @@ SRCS     += $(SRCDIR)/init.F $(SRCDIR)/initScal.F $(SRCDIR)/celltypeInit.F \
 PSELIBS :=
 #LIBS := -lftn -lm -lblas
 
-#FFLAGS += -g -O3 -OPT:IEEE_arithmetic=3 -CG:if_conversion=false:reverse_if_conversion=false -LNO:pf2=0 -avoid_gp_overflow -I$(SRCDIR)
+FFLAGS += -g -O3 -OPT:IEEE_arithmetic=3 -CG:if_conversion=false:reverse_if_conversion=false -LNO:pf2=0 -avoid_gp_overflow -I$(SRCDIR)
 
 #include $(SRCTOP)/scripts/smallso_epilogue.mk
 
 #
 # $Log$
+# Revision 1.13  2000/07/01 05:21:01  bbanerje
+# Changed CellInformation calcs for Turbulence model requirements ..
+# CellInformation still needs work.
+#
 # Revision 1.12  2000/06/30 04:19:18  rawat
 # added turbulence model and compute properties
 #
