@@ -54,6 +54,7 @@ namespace Uintah {
      virtual const PatchSet* createPerProcessorPatchSet(const LevelP& level);
 
      virtual void dynamicReallocation(const GridP&, const SchedulerP&) {}
+     virtual int getNthProc() { return d_outputNthProc; }
    private:
      LoadBalancerCommon(const LoadBalancerCommon&);
      LoadBalancerCommon& operator=(const LoadBalancerCommon&);
@@ -61,6 +62,10 @@ namespace Uintah {
      SimulationStateP d_sharedState; // to keep track of timesteps
      
      std::set<const Patch*> d_neighbors;
+
+     // output on every nth processor.  This variable needs to be shared 
+     // with the DataArchiver as well, but we keep it here because the lb
+     // needs it to assign the processor resource.
      int d_outputNthProc;
 
    };
