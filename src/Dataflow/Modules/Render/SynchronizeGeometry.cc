@@ -223,17 +223,16 @@ SynchronizeGeometry::append_msg(GeometryComm* gmsg)
 void
 SynchronizeGeometry::forward_saved_msg()
 {
-  int i,num_flush;
-  GeometryComm* tmp_gmsg;
+  int i, num_flush;
 
   num_flush = 0;
   for (i = 0; i < max_portno_; i++)
   {
-    tmp_gmsg = msg_heads_[i];
+    GeometryComm *tmp_gmsg = msg_heads_[i];
     while (tmp_gmsg)
     {
       if (tmp_gmsg->type == MessageTypes::GeometryFlush ||
-	 tmp_gmsg->type == MessageTypes::GeometryFlushViews)
+	  tmp_gmsg->type == MessageTypes::GeometryFlushViews)
       {
 	num_flush++;
 	break;
@@ -246,27 +245,10 @@ SynchronizeGeometry::forward_saved_msg()
   {
     for (i = 0; i < max_portno_; i++)
     {
-      tmp_gmsg = msg_heads_[i];
-      bool flushport = false;
-      while (tmp_gmsg)
-      {	
-	if (tmp_gmsg->type == MessageTypes::GeometryFlush ||
-	   tmp_gmsg->type == MessageTypes::GeometryFlushViews)
-	{
-	  flushport = true;
-	  break;
-	}
-	else
-	{
-	  tmp_gmsg = tmp_gmsg->next;
-	}
-      }
-      if (flushport)
-      {
-	flush_port(i);
-      }
+      flush_port(i);
 
-      tmp_gmsg = msg_heads_[i];
+      // TODO:  Unclear why we flush again.  - MWC
+      GeometryComm *tmp_gmsg = msg_heads_[i];
       while (tmp_gmsg &&
 	     (tmp_gmsg->type == MessageTypes::GeometryFlush ||
 	      tmp_gmsg->type == MessageTypes::GeometryFlushViews))
@@ -283,8 +265,7 @@ void
 SynchronizeGeometry::flush_port(int portno)
 {
   bool delete_msg;
-  GeometryComm* gmsg,*gmsg2;
-  gmsg = msg_heads_[portno];
+  GeometryComm *gmsg = msg_heads_[portno];
   while (gmsg)
   {
     delete_msg = false;
@@ -294,9 +275,8 @@ SynchronizeGeometry::flush_port(int portno)
     }
 
     if (gmsg->type == MessageTypes::GeometryFlush ||
-       gmsg->type == MessageTypes::GeometryFlushViews)
+	gmsg->type == MessageTypes::GeometryFlushViews)
     {
-
       msg_heads_[portno] = gmsg->next;
       if (gmsg->next == NULL)
       {
@@ -310,15 +290,13 @@ SynchronizeGeometry::flush_port(int portno)
 
       break;
     }
-    else
+
+    GeometryComm *next = gmsg->next;
+    if (delete_msg)
     {
-      gmsg2 = gmsg;
-      gmsg = gmsg->next;
-      if (delete_msg)
-      {
-	delete gmsg2;
-      }
+      delete gmsg;
     }
+    gmsg = next;
   }
 }
 
