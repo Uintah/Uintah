@@ -281,6 +281,9 @@ MPMLabel::MPMLabel()
   NTractionZMinusLabel = VarLabel::create( "NTractionZMinus",
 			sum_vartype::getTypeDescription() );
 
+  integralAreaLabel = VarLabel::create( "integralArea",
+			sum_vartype::getTypeDescription() );
+
   CenterOfMassPositionLabel = VarLabel::create( "CenterOfMassPosition",
 				 sumvec_vartype::getTypeDescription() );
 
@@ -593,6 +596,7 @@ MPMLabel::~MPMLabel()
   VarLabel::destroy(KineticEnergyLabel);
   VarLabel::destroy(TotalMassLabel);
   VarLabel::destroy(NTractionZMinusLabel);
+  VarLabel::destroy(integralAreaLabel);
   VarLabel::destroy(CenterOfMassPositionLabel);
   VarLabel::destroy(CenterOfMassVelocityLabel);
   VarLabel::destroy(pCellNAPIDLabel);
