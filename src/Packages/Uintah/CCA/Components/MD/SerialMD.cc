@@ -1,4 +1,3 @@
-/* REFERENCED */
 
 #include <Packages/Uintah/CCA/Components/MD/SerialMD.h>
 #include <Packages/Uintah/Core/Grid/Array3Index.h>

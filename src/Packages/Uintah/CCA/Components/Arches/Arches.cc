@@ -1,7 +1,5 @@
 //----- Arches.cc ----------------------------------------------
 
-/* REFERENCED */
-
 #include <Packages/Uintah/CCA/Components/Arches/Arches.h>
 #include <Packages/Uintah/CCA/Components/Arches/ArchesFort.h>
 #include <Packages/Uintah/CCA/Components/Arches/PicardNonlinearSolver.h>
