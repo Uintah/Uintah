@@ -27,7 +27,7 @@ itcl_class SCIRun_FieldsData_TransformData2 {
     }
 
     method set_defaults {} {
-	set $this-function "result = v * 10;"
+	set $this-function "result = v0 * 10 + v1;"
 	set $this-outputdatatype "input 0"
     }
 
