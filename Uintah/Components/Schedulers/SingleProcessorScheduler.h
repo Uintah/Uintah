@@ -85,6 +85,8 @@ WARNING
       virtual VarLabelMaterialMap* makeVarLabelMaterialMap()
       { return graph.makeVarLabelMaterialMap(); }
      
+      virtual const vector<const Task::Dependency*>& getInitialRequires()
+      { return graph.getInitialRequires(); }
    private:
       const VarLabel* reloc_old_posLabel;
       vector<vector<const VarLabel*> > reloc_old_labels;
@@ -114,6 +116,9 @@ WARNING
 
 //
 // $Log$
+// Revision 1.9  2001/01/09 00:55:21  witzel
+// Added getInitialRequires() method.
+//
 // Revision 1.8  2000/12/06 23:56:01  witzel
 // Added makeVarLabelMaterialMap method
 //

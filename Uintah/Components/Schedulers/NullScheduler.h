@@ -85,6 +85,8 @@ WARNING
       virtual VarLabelMaterialMap* makeVarLabelMaterialMap()
       { return graph.makeVarLabelMaterialMap(); }
 
+      virtual const vector<const Task::Dependency*>& getInitialRequires()
+      { return graph.getInitialRequires(); }
    private:
       NullScheduler(const NullScheduler&);
       NullScheduler& operator=(const NullScheduler&);
@@ -98,6 +100,9 @@ WARNING
 
 //
 // $Log$
+// Revision 1.3  2001/01/09 00:55:21  witzel
+// Added getInitialRequires() method.
+//
 // Revision 1.2  2000/12/10 09:06:10  sparker
 // Merge from csafe_risky1
 //

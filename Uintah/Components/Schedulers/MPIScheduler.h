@@ -95,6 +95,9 @@ WARNING
       virtual VarLabelMaterialMap* makeVarLabelMaterialMap()
       { return graph.makeVarLabelMaterialMap(); }
 
+      virtual const vector<const Task::Dependency*>& getInitialRequires()
+      { return graph.getInitialRequires(); }
+     
    private:
       void scatterParticles(const ProcessorGroup*,
 			    const Patch* patch,
@@ -128,6 +131,9 @@ WARNING
 
 //
 // $Log$
+// Revision 1.10  2001/01/09 00:55:21  witzel
+// Added getInitialRequires() method.
+//
 // Revision 1.9  2000/12/10 09:06:10  sparker
 // Merge from csafe_risky1
 //
