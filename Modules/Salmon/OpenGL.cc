@@ -291,9 +291,11 @@ void OpenGL::get_pick(Salmon* salmon, Roe* roe, int x, int y,
 	HashTableIter<int, PortInfo*> iter(&salmon->portHash);
 	for (iter.first(); iter.ok(); ++iter) {
 	    HashTable<int, SceneItem*>* serHash=iter.get_data()->objs;
+	    cerr << "drawing port " << iter.get_data()->portno;
 	    HashTableIter<int, SceneItem*> serIter(serHash);
 	    for (serIter.first(); serIter.ok(); ++serIter) {
 		SceneItem *si=serIter.get_data();
+		cerr << "Drawing: " << si->name << endl;
 
 		// Look up this object by name and see if it is supposed to be
 		// displayed...
