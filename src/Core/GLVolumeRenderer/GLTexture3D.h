@@ -106,7 +106,16 @@ public:
   bool replace_data(FieldHandle texfld, 
 		    double &min, double &max,
 		    bool use_minmax);
-  
+
+  /////////
+  // sometimes we want several textures to use the same slices
+  // these bounds are set in index space! may or may not be good
+  void set_slice_bounds(const Point& min, const Point& max){
+      sminP_ = min; smaxP_ = max; slice_bounds_set = true; }
+  /////////
+  // Hack needed for multipipe rendering--should not be used otherwise
+    void set_bounds( const Point& min, const Point& max){
+      minP_ = min; maxP_ = max; }
 
   // GROUP: Access
   //////////
@@ -123,6 +132,13 @@ public:
   void get_bounds(BBox& b) const {
     b.extend(transform_.project(minP_)); b.extend(transform_.project(maxP_)); }
     // b.extend(texfld_->mesh()->get_bounding_box().min()); b.extend(texfld_->mesh()->get_bounding_box().max()); } //b.extend(minP_); b.extend(maxP_);}
+  /////////
+  // the bounding box for slices in WORLD SPACE
+  void get_slice_bounds(BBox & b) const {
+    b.extend(transform_.project(sminP_)); 
+    b.extend(transform_.project(smaxP_));}
+
+  bool has_slice_bounds(){return slice_bounds_set;}
   /////////
   // Get the brick
   int get_brick_size(){ return xmax_; }
@@ -146,8 +162,9 @@ protected:
   Octree<Brick*>* bontree_;
   FieldHandle texfld_;
   int levels_;
-  Point minP_;
-  Point maxP_;
+  Point minP_, maxP_;
+  Point sminP_, smaxP_;
+  bool slice_bounds_set;
   double min_, max_;
   int X_, Y_, Z_;
   //  int maxBrick;  // max brick dimension
@@ -502,7 +519,7 @@ GLTexture3D::build_bon_tree(Point min, Point max,
 
   Octree<Brick *> *node;
 
-  if (xoff > X_ || yoff > Y_ || zoff> Z_){
+  if (xoff-minP_.x() > X_ || yoff-minP_.y() > Y_ || zoff-minP_.z()> Z_){
     node = 0;
     return node;
   }
