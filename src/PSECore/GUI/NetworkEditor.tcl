@@ -529,19 +529,57 @@ proc CreateNewModule {} {
     }
     set specfile [tk_getOpenFile -filetypes $types]
     if { [file exists $specfile] } {
-	netedit load_component_spec $specfile
 	puts "loading component spec file $specfile"
+	netedit load_component_spec $specfile
     }
-}    
+}
 
-proc CreateNewModuleOk {} {
+proc GetPathAndPackage { compaddr compname catname } {
+    set w .componentlocation
+    if {[winfo exists $w]} {
+	destroy $w
+    }
+
+    toplevel $w
+    wm title $w "Specify new component location"
+
+    frame $w.row1
+    frame $w.row2
+    frame $w.row3
+    frame $w.row4
+    pack $w.row1 $w.row2 $w.row3 $w.row4 -pady 5 -padx 5
+
+    label $w.row1.compname -text "Component name: $compname"
+    label $w.row1.catname -text "Category name: $catname"
+    pack $w.row1.compname $w.row1.catname -side top -f both -e y
+
+    label $w.row2.psepath_l -text "PSE to insert into:"
+    entry $w.row2.psepath 
+    button $w.row2.browse -text "Browse"\
+	   -command "$w.row2.psepath delete 0 end;\
+	   $w.row2.psepath insert 0 \[tk_getOpenFile -filetypes\
+	                   {{ {PSE executables} {pse} }
+		            { {Other} { * } }}\]"
+    pack $w.row2.psepath_l $w.row2.psepath $w.row2.browse \
+	 -side left -f both -e y \
+
+    label $w.row3.packname_l -text "Package to insert into:"
+    entry $w.row3.packname 
+    pack $w.row3.packname_l $w.row3.packname -side left -f both -e y
+    
+    button $w.row4.ok -text "Ok" -command "CreateNewModuleOk $compaddr \
+	   $compname $catname \[$w.row3.packname get\] \[$w.row2.psepath get\]"
+    button $w.row4.cancel -text "Cancel" -command "destroy $w"
+    pack $w.row4.ok $w.row4.cancel -side left -f both -e y
+    focus $w.row2.psepath
+#    grab set $w
+    tkwait window $w
+}
+
+proc CreateNewModuleOk { compaddr compname catname packname psepath} {
     set w .newmoduledialog
-    set psepath [$w.ftop.row1.psepath get]
-    set module [$w.ftop.row2.name get]
-    set package [$w.ftop.row3.package get]
-    set category [$w.ftop.row4.category get]
 
-    if {$psepath=="" || $module=="" || $package=="" || $category==""} {
+    if {$psepath=="" || $compname=="" || $packname=="" || $catname==""} {
 	messagedialog "ERROR"\
                       "One or more of the entries was left blank.\
                        All entries must be filled in."
@@ -560,78 +598,79 @@ proc CreateNewModuleOk {} {
 	return
     }
 
-    if {![file exists ./$package]} {
+    if {![file exists $psepath/src/$packname]} {
 	yesnodialog "PACKAGE NAME WARNING" \
-                    "Package \"$package\" does not exist. \
+                    "Package \"$psepath/src/$packname\" does not exist. \
                      Create it now? \n \
-                     (If yes, the category \"$category\"\
+                     (If yes, the category \"$psepath/src/$packname/$catname\"\
                      will also be created.)" \
-		    "netedit create_pac_cat_mod $package $category $module;\
-                     destroy $w;\
-                     newpackagemessage $package"
+		    "netedit create_pac_cat_mod $psepath $packname\
+		    $catname $compname $compaddr; destroy $w;\
+                    newpackagemessage $packname"
 	return
     }
 
-    if {![file isdirectory ./$package]} {
+    if {![file isdirectory $psepath/src/$packname]} {
 	messagedialog "PACKAGE NAME ERROR" \
-                      "The name \"./$package\" is already in use\
+                      "The name \"$psepath/src/$packname\" is already in use\
                        by a non-package file"
 	return
     }
 
-    if {![expr [file exists ./$package/Modules] && \
-               [file isdirectory ./$package/Modules] && \
-               [file exists ./$package/components.xml] && \
-               ![file isdirectory ./$package/components.xml] && \
-               [file exists ./$package/sub.mk] && \
-               ![file isdirectory ./$package/sub.mk]]} {
+    if {![expr [file exists $psepath/src/$packname/Modules] && \
+               [file isdirectory $psepath/src/$packname/Modules] && \
+               [file exists $psepath/src/$packname/XML] && \
+               [file isdirectory $psepath/src/$packname/XML] && \
+               [file exists $psepath/src/$packname/sub.mk] && \
+               ![file isdirectory $psepath/src/$packname/sub.mk]]} {
 	messagedialog "PACKAGE ERROR" \
-                      "The file \"./$package\" does not appear\
+                      "The file \"$psepath/src/$packname\" does not appear\
                        to be a valid package or is somehow corrupt.\
-                       The module \"$module\" will not be added.\n\n\
+                       The module \"$compname\" will not be added.\n\n\
                        See the \"Create A New Module\" documentation for\
                        more information."
 	return
     }
              
-    if {![file exists ./$package/Modules/$category]} {
+    if {![file exists $psepath/src/$packname/Modules/$catname]} {
 	yesnodialog "CATEGORY NAME WARNING" \
-                    "Category \"$category\" does not exist.\
-                     Create it now?" \
-		    "netedit create_cat_mod $package $category $module;\
-                     destroy $w;\
-		     newmodulemessage $module"
+                    "Category \"$psepath/src/$packname/Modules/$catname\"\
+		    does not exist.  Create it now?" \
+		    "netedit create_cat_mod $psepath $packname\
+		    $catname $compname $compaddr; destroy $w;\
+		    newmodulemessage $compname"
 	return
     }
 
-    if {![file isdirectory ./$package/Modules/$category]} {
+    if {![file isdirectory $psepath/src/$packname/Modules/$catname]} {
 	messagedialog "CATEGORY NAME ERROR" \
-                      "The name \"./$package/Modules/$category\"\
+                      "The name \"$psepath/src/$packname/Modules/$catname\"\
                        is already in use by a non-category file"
 	return	
     }
 
-    if {![file exists ./$package/Modules/$category/sub.mk]} {
+    if {![file exists $psepath/src/$packname/Modules/$catname/sub.mk]} {
 	messagedialog "CATEGORY ERROR" \
-                      "The file \"./$package/Modules/$category\"\
+                      "The file \"$psepath/src/$packname/Modules/$catname\"\
                        does not appear to be a valid category or is\
-                       somehow corrupt.  The Module \"$module\" will\
+                       somehow corrupt.  The Module \"$compname\" will\
                        not be added.\n\n\
                        See the \"Create A New Module\" documentation for\
                        more information."
 	return
     }
 
-    if {[file exists ./$package/Modules/$category/$module.cc]} {
+    if {[file exists $psepath/src/$packname/Modules/$catname/$compname.cc]} {
 	messagedialog "MODULE NAME ERROR" \
-		      "The name \"./$package/Modules/$category/$module\"\
-                       is already in use by another file"
+		      "The name \
+		      \"$psepath/src/$packname/Modules/$catname/$compname\"\
+                      is already in use by another file"
 	return
     }
 
-    netedit create_mod $package $category $module
+    netedit create_mod $psepath $packname $catname $compname $compaddr
     destroy $w
-    newmodulemessage $module
+    newmodulemessage $compname
 }
 
 proc newpackagemessage {pac} {
@@ -679,7 +718,8 @@ proc yesnodialog {title message command} {
     wm title $w $title
     frame $w.top
     frame $w.bot
-    label $w.top.message -width 60 -text $message
+    text $w.top.message -width 60 -height 10 -wrap word -relief flat
+    $w.top.message insert 0.1 $message
     button $w.bot.yes -text "Yes" -command "$command;destroy $w"
     button $w.bot.no -text "no" -command "destroy $w"
     pack $w.top $w.bot

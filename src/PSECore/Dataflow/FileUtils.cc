@@ -5,6 +5,9 @@
 #include <string.h>
 #include <dirent.h>
 #include <PSECore/Dataflow/FileUtils.h>
+#include <unistd.h>
+#include <sys/wait.h>
+#include <errno.h>
 
 namespace PSECore {
 namespace Dataflow {
@@ -18,7 +21,7 @@ void InsertStringInFile(char* filename, char* match, char* replacement)
   sprintf(mod,"%s%s",replacement,match);
 
   string = new char[strlen(match)+strlen(replacement)+100];
-  sprintf(string,"sed -e 's,%s,%s,g' %s > %s.mod\n",match,mod,
+  sprintf(string,"sed -e 's,%s,%s,g' %s > %s.mod &\n",match,mod,
 	  filename,filename);
   system(string);
 
