@@ -7,11 +7,11 @@
 #include <Packages/Uintah/Core/Math/Matrix3.h>
 #include <Packages/Uintah/Core/Math/CubeRoot.h>
 #include <Packages/Uintah/Core/Disclosure/TypeDescription.h>
-
 #include <Core/Disclosure/TypeDescription.h>
 #include <Core/Util/FancyAssert.h>
 #include <Core/Malloc/Allocator.h>
 #include <Core/Util/Assert.h>
+#include <Core/Util/Endian.h>
 
 #ifdef __sgi
 #define IRIX
@@ -63,6 +63,14 @@ Pio(Piostream& stream, Matrix3& mat)
     Pio(stream, mat(1,0)); Pio(stream, mat(1,1)); Pio(stream, mat(1,2));
     Pio(stream, mat(2,0)); Pio(stream, mat(2,1)); Pio(stream, mat(2,2));
     stream.end_cheap_delim();
+}
+
+// needed for bigEndian/littleEndian conversion
+void swapbytes( Uintah::Matrix3& m){
+  double *p = (double *)(&m);
+  SWAP_8(*p); SWAP_8(*++p); SWAP_8(*++p);
+  SWAP_8(*++p); SWAP_8(*++p); SWAP_8(*++p);
+  SWAP_8(*++p); SWAP_8(*++p); SWAP_8(*++p);
 }
 
 } // namespace SCIRun

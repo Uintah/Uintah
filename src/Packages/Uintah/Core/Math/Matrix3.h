@@ -184,7 +184,7 @@ class Matrix3 {
   //! support dynamic compilation
   static const string& get_h_file_path();
 
-  friend void Pio( Piostream&, Matrix3& );
+  //  friend void Pio( Piostream&, Matrix3& );
 private:
   // Reduce the matrix and rhs, representing the equation system:
   // A*x = y = rhs, to a matrix in upper triangular form with
@@ -570,8 +570,9 @@ namespace SCIRun {
 
 using std::string;
 using Uintah::Matrix3;
-template<> const string find_type_name(Matrix3*);
 
+void swapbytes( Uintah::Matrix3& m);
+template<> const string find_type_name(Matrix3*);
 const TypeDescription* get_type_description(Matrix3*);
 void Pio( Piostream&, Uintah::Matrix3& );
 
