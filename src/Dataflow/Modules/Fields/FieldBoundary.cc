@@ -124,7 +124,7 @@ FieldBoundary::execute()
 
     algo->execute(this, mesh, tri_fh_, interp_mh_, input->data_at());
 
-    //
+    // Automatically apply the interpolant matrix to the output field.
     if (tri_fh_.get_rep() && interp_mh_.get_rep())
     {
       string actype = input->get_type_description(1)->get_name();
