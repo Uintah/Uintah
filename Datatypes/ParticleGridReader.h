@@ -65,6 +65,7 @@ public:
     virtual void GetParticleData(int particleId,
 			      int variableId,
 			      int fluidId,
+			      bool isVector,
 			      Array1<float>& values)=0;
   //////////
   // If the filename is set and it hasn't been read, read it and put

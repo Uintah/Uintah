@@ -33,9 +33,9 @@ OBJS = BasicSurfaces.o  Boolean.o BooleanPort.o ColorMap.o  ColorMapPort.o  \
 	cVector.o cVectorPort.o cMatrixPort.o \
 	ParticleSet.o ParticleSetPort.o \
 	ParticleGridReader.o ParticleGridReaderPort.o \
-	TecplotReader.o MEFluid.o ParticleSetExtension.o \
+	ParticleSetExtension.o \
 	ParticleSetExtensionPort.o \
-	cfdlibParticleSet.o \
+	MEFluid.o cfdlibParticleSet.o \
         TensorField.o TensorFieldBase.o TensorFieldPort.o \
 	KludgeMessage.o KludgeMessagePort.o \
 	$(TEMPLATE_OBJS)
@@ -72,10 +72,10 @@ SRCS = $(GENSRCS) BasicSurfaces.cc  \
 	VectorFieldZone.cc \
 	ParticleSetPort.cc ParticleSet.cc \
 	ParticleGridReader.cc ParticleGridReaderPort.cc \
-	TecplotReader.cc MEFluid.cc ParticleSetExtension.cc \
+	ParticleSetExtension.cc \
 	ParticleSetExtensionPort.cc \
 	VoidStar.cc VoidStarPort.cc \
-	cfdlibParticleSet.cc \
+	MEFluid.cc cfdlibParticleSet.cc \
         TensorField.cc TensorFieldBase.cc TensorFieldPort.cc \
 	KludgeMessage.cc KludgeMessagePort.cc \
 	$(TEMPLATE_SRCS)
