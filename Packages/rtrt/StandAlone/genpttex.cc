@@ -1,14 +1,18 @@
 
 /*
 
+ A useful genpttex command:
+
+ ./genpttex -num_samples 100 -depth 3 -tex_size 16 -light_pos 5 10 7.5 -intensity 5000
+
  Some useful unu commands
 
  # Use these to quantize the textures and copy them to ppms
  
- unu join -a 3 -i sphere0000*.nrrd | unu gamma -g 2 | unu quantize -b 8 | unu dice -a 3 -o sphere
+ unu gamma -g 2 -i sphere00000.nrrd | unu quantize -b 8 | unu dice -a 3 -o sphere
  echo 'for T in sphere*.png; do unu save -f pnm -i $T -o `basename $T .png`.ppm; done' | bash
 
- # This coppies the first column to the end to help with texture blending.
+ # This copies the first column to the end to help with texture blending.
  
  echo 'for T in sphere?.ppm; do unu slice -a 1 -p M -i $T | unu reshape -s 3 1 64 | unu join -a 1 -i - $T -o $T;done' | bash
 */
