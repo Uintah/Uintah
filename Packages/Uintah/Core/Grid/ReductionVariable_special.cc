@@ -33,7 +33,9 @@ ReductionVariable<double, Reductions::Max<double> >
    op = MPI_MAX;
 }
 
+#ifdef __sgi
 template<>
+#endif
 void
 ReductionVariable<double, Reductions::Sum<double> >
    ::getMPIBuffer(void*& buf, int& count,
