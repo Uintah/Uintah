@@ -46,6 +46,7 @@ public:
   data_location data_at() const { return data_at_; }
   //! Required virtual functions
   virtual MeshBaseHandle mesh() const = 0;
+  virtual void mesh_detach() = 0;
 
   //! Required interfaces
   virtual InterpBase* query_interpolate() const = 0;
