@@ -269,8 +269,10 @@ void DWDatabase<VarType>::put(const VarLabel* label, int matlIndex,
       typename globalDBtype::const_iterator globaliter = globals.find(label);
       if ((globaliter == globals.end()) || replace) {
 	VarType*& globalVar = globals[label];
-	if (globalVar != NULL)
+	if (globalVar != NULL) {
+	  ASSERT(globalVar != var);
 	  delete globalVar;
+	}
 	globalVar = var;
 	return;
       }
@@ -303,10 +305,12 @@ void DWDatabase<VarType>::put(const VarLabel* label, int matlIndex,
     for(unsigned long i=oldSize;i<(unsigned long)matlIndex;i++)
       rr->vars[i]=0;
   }
-  
+
   if(rr->vars[matlIndex]){
-    if(replace)
+    if(replace) {
+      ASSERT(rr->vars[matlIndex] != var);
       delete rr->vars[matlIndex];
+    }
     else
       throw InternalError("Put replacing old variable");
   }
