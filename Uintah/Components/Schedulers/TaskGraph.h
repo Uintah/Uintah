@@ -3,13 +3,58 @@
 
 #include <Uintah/Grid/TaskProduct.h>
 #include <Uintah/Grid/Task.h>
+#include <Uintah/Grid/Patch.h>
 #include <vector>
 #include <map>
 
-class DOM_Element;
-
 namespace Uintah {
-   class Task;
+
+using std::map;
+using std::vector;
+
+struct TaskData {
+
+  const Task * task;
+
+  TaskData() : task( 0 ) {}
+  TaskData( const Task * task ) : task( task ) {}
+
+  // Used for STL "map" ordering:
+  bool operator()( const TaskData & t1, const TaskData & t2 ) const {
+    return t1.task < t2.task;
+  }
+
+  bool operator<( const TaskData & t ) const {
+    return task < t.task;
+  }
+
+  bool operator==( const TaskData & t ) const {
+    if( t.task->getName() == task->getName() ) {
+      if( t.task->getPatch() && task->getPatch() )
+	return ( t.task->getPatch()->getID() == task->getPatch()->getID() );
+      else if( ( t.task->getPatch() && !task->getPatch() ) ||
+	       ( !t.task->getPatch() && task->getPatch() ) )
+	return false;
+      else
+	return true;
+    } else {
+      return false;
+    }
+  }
+};
+
+struct DependData {
+
+  const Task::Dependency * dep;
+
+  DependData() : dep( 0 ) {}
+  DependData( const Task::Dependency * dep ) : dep( dep ){}
+
+  bool operator()( const DependData & d1, const DependData & d2 ) const;
+  bool operator< ( const DependData & d ) const;
+  bool operator==( const DependData & d1 ) const;
+};
+
 /**************************************
 
 CLASS
@@ -55,6 +100,14 @@ WARNING
       //////////
       // Insert Documentation Here:
       virtual void topologicalSort(vector<Task*>& tasks);
+
+      //////////
+      // Used for the MixedScheduler, this routine has the side effect
+      // (just like the topological sort) of adding the reduction tasks.
+      // However, this routine leaves the tasks in the order they were
+      // added, so that reduction tasks are hit in the correct order
+      // by each MPI process.
+      void nullSort( vector<Task*>& tasks );
       
       //////////
       // Insert Documentation Here:
@@ -69,7 +122,16 @@ WARNING
       Task* getTask(int i);
       void assignSerialNumbers();
 
-      std::vector<Task*>& getTasks() {
+      ////////// 
+      // Assigns unique id numbers to each dependency based on name,
+      // material index, and patch.  In other words, even though a
+      // number of tasks depend on the same data, they create there
+      // own copy of the dependency data.  This routine determines
+      // that the dependencies are actually the same, and gives them
+      // the same id number.
+      void assignUniqueSerialNumbers();
+
+      vector<Task*>& getTasks() {
 	 return d_tasks;
       }
 
@@ -83,9 +145,9 @@ WARNING
 
       void processTask(Task* task, vector<Task*>& sortedTasks) const;
       
-      std::vector<Task*>        d_tasks;
+      vector<Task*>        d_tasks;
 
-      typedef std::map<TaskProduct, Task::Dependency*> actype;
+      typedef map<TaskProduct, Task::Dependency*> actype;
       actype d_allcomps;
    };
    
@@ -93,6 +155,9 @@ WARNING
 
 //
 // $Log$
+// Revision 1.5  2000/09/27 02:14:12  dav
+// Added support for mixed model
+//
 // Revision 1.4  2000/07/27 22:39:47  sparker
 // Implemented MPIScheduler
 // Added associated support
