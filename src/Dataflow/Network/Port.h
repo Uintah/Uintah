@@ -61,6 +61,7 @@ public:
     clString get_typename();
     clString get_portname();
     clString get_colorname();
+    void set_portname(clString&);
 };
 
 class PSECORESHARE IPort : public Port {
