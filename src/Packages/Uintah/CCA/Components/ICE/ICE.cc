@@ -177,6 +177,8 @@ void ICE::problemSetup(const ProblemSpecP& prob_spec, GridP& grid,
   // Pull out from CFD-ICE section
   ProblemSpecP cfd_ps = prob_spec->findBlock("CFD");
   cfd_ps->require("cfl",d_CFL);
+  d_canAddMaterial=false;
+  cfd_ps->get("CanAddMaterial",d_canAddMaterial);
   ProblemSpecP cfd_ice_ps = cfd_ps->findBlock("ICE"); 
   
   cfd_ice_ps->require("max_iteration_equilibration",d_max_iter_equilibration);
@@ -711,10 +713,7 @@ ICE::scheduleTimeAdvance( const LevelP& level, SchedulerP& sched,
                                                           mpm_matls_sub,        
                                                           all_matls);           
   }  
-  
 
- 
-  
   scheduleComputeTempFC(                   sched, patches, ice_matls_sub,  
                                                            mpm_matls_sub,
                                                            all_matls);    
@@ -790,7 +789,15 @@ ICE::scheduleTimeAdvance( const LevelP& level, SchedulerP& sched,
                                                           all_matls); 
   }
 
-  scheduleCheckNeedAddMaterial(           sched, level,   all_matls);
+  if(d_canAddMaterial){
+    //  This checks to see if the model on THIS patch says that it's
+    //  time to add a new material
+    scheduleCheckNeedAddMaterial(           sched, level,   all_matls);
+
+    //  This one checks to see if the model on ANY patch says that it's
+    //  time to add a new material
+    scheduleSetNeedAddMaterialFlag(         sched, level,   all_matls);
+  }
 
   //__________________________________
   //  clean up memory
@@ -5147,6 +5154,36 @@ void ICE::scheduleCheckNeedAddMaterial(SchedulerP& sched,
     }
   }
 }
+
+void ICE::scheduleSetNeedAddMaterialFlag(SchedulerP& sched,
+                                       const LevelP& level,
+                                       const MaterialSet* all_matls)
+{
+  if(d_models.size() != 0){
+    cout_doing << "ICE::scheduleSetNeedAddMaterialFlag" << endl;
+    Task* t= scinew Task("ICE::setNeedAddMaterialFlag",
+                 this, &ICE::setNeedAddMaterialFlag);
+    t->requires(Task::NewDW, lb->NeedAddIceMaterialLabel);
+    sched->addTask(t, level->eachPatch(), all_matls);
+  }
+}
+
+void ICE::setNeedAddMaterialFlag(const ProcessorGroup*,
+                                 const PatchSubset* /*patches*/,
+                                 const MaterialSubset* /*matls*/,
+                                 DataWarehouse* /*old_dw*/,
+                                 DataWarehouse* new_dw)
+{
+    sum_vartype need_add_flag;
+    new_dw->get(need_add_flag, lb->NeedAddIceMaterialLabel);
+
+    if(need_add_flag>0.1){
+      d_sharedState->setNeedAddMaterial(true);
+    }
+    else{
+      d_sharedState->setNeedAddMaterial(false);
+    }
+ }
 
 #if defined(__sgi) && !defined(__GNUC__) && (_MIPS_SIM != _MIPS_SIM_ABI32)
 #pragma set woff 1209
