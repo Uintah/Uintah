@@ -420,12 +420,18 @@ ParticleCreator::countAndCreateParticles(const Patch* patch,
   // SmoothCylGeomPiece) then use the particle creators in that 
   // class to do the counting
   SmoothGeomPiece   *sgp = dynamic_cast<SmoothGeomPiece*>(piece);
-  FileGeometryPiece *fgp = dynamic_cast<FileGeometryPiece*>(piece);
-  if(fgp){
-      fgp->readPoints(patch->getID());
-  }
   if (sgp) {
-    int numPts = sgp->returnPointCount();
+    int numPts = 0;
+    FileGeometryPiece *fgp = dynamic_cast<FileGeometryPiece*>(piece);
+    if(fgp){
+      fgp->readPoints(patch->getID());
+      numPts = fgp->returnPointCount();
+    } else {
+      Vector dxpp = patch->dCell()/obj->getNumParticlesPerCell();    
+      double dx = Min(Min(dxpp.x(),dxpp.y()), dxpp.z());
+      sgp->setParticleSpacing(dx);
+      numPts = sgp->createPoints();
+    }
     vector<Point>* points = sgp->getPoints();
     vector<double>* vols = sgp->getVolume();
     Point p;
