@@ -17,7 +17,7 @@
 
 set port_spacing 18
 set port_width 13
-set port_height 7
+set port_height 7 
 
 global selected_color
 global unselected_color
@@ -196,13 +196,15 @@ itcl_class Module {
 	return $temp
     }
 
-    method initialize_ui {} {
-	$this ui
+
+    method initialize_ui { {my_display "local"} } {
+        $this ui
 	if {[winfo exists .ui[modname]]!= 0} {
 	    set w .ui[modname]
 	    wm title $w [set_title [modname]]
 	}
     }
+
     method get_oports { which } {
 	set mmodid [$this MacroModule]
 	if { [string match [$mmodid mod_type] "module"] == 1 } {
