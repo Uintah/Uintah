@@ -21,6 +21,7 @@
 #include <Core/Malloc/Allocator.h>
 #include <Core/GuiInterface/GuiVar.h>
 #include <Teem/Dataflow/Ports/NrrdPort.h>
+#include <teem/ten.h>
 
 #include <sstream>
 #include <iostream>
@@ -81,9 +82,37 @@ TendEval::execute()
 
   Nrrd *nin = nrrd_handle->nrrd;
 
-  error("This module is a stub.  Implement me.");
+  int N, sx, sy, sz;
+  sx = nin->axis[1].size;
+  sy = nin->axis[2].size;
+  sz = nin->axis[3].size;
+  N = sx*sy*sz;
 
-  //onrrd_->send(NrrdDataHandle(nrrd_joined));
+  NrrdData *nout = new NrrdData();
+
+  nrrdAlloc(nout->nrrd, nrrdTypeFloat, 4, 3, sx, sy, sz);
+  if (tenTensorCheck(nin, nrrdTypeFloat, AIR_TRUE)) {
+    error("Input Nrrd was not a Tensor field of floats");
+    return;
+  }
+
+  float *edata = (float *)(nout->nrrd->data);
+  float *tdata = (float *)(nin->data);
+  float eval[3], evec[9];
+  
+  float thresh = threshold_.get();
+  for (int I=0; I<N; I++) {
+    tenEigensolve(eval, evec, tdata);
+    float scl = tdata[0] >= thresh;
+    for (int cc=0; cc<3; cc++) {
+      edata[cc] = scl*eval[cc];
+    }
+    edata += 3;
+    tdata += 7;
+  }
+  nrrdAxisInfoCopy(nout->nrrd, nin, NULL, NRRD_AXIS_INFO_SIZE_BIT);
+  nout->nrrd->axis[0].label = "Unknown:Scalar,Unknown:Scalar,Unknown:Scalar";
+  onrrd_->send(NrrdDataHandle(nout));
 }
 
 } // End namespace SCITeem
