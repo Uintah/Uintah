@@ -3,7 +3,6 @@
 #include <Uintah/Components/MPM/ConstitutiveModel/MPMMaterial.h>
 
 #include <Uintah/Components/MPM/MPMLabel.h>
-#include <Uintah/Grid/ParticleVariable.h>
 #include <Uintah/Grid/NCVariable.h>
 
 #include <Uintah/Interface/DataWarehouse.h>
@@ -271,9 +270,94 @@ void
 Fracture::
 updateParticleInformationInContactCells (
            const ProcessorGroup*,
-           const Patch* /*patch*/,
-           DataWarehouseP& /*old_dw*/,
-           DataWarehouseP& /*new_dw*/)
+           const Patch* patch,
+           DataWarehouseP& old_dw,
+           DataWarehouseP& new_dw)
+{
+  int numMatls = d_sharedState->getNumMatls();
+  for(int m = 0; m < numMatls; m++){
+    Material* matl = d_sharedState->getMaterial( m );
+    MPMMaterial* mpm_matl = dynamic_cast<MPMMaterial*>(matl);
+    if(mpm_matl){
+      int matlindex = matl->getDWIndex();
+      int vfindex = matl->getVFIndex();
+      updateParticleInformationInContactCells(matlindex,vfindex,patch,old_dw,
+         new_dw);
+    }
+  }
+}
+
+void
+Fracture::
+updateParticleInformationInContactCells(
+           int matlindex,
+           int vfindex,
+           const Patch* patch,
+           DataWarehouseP& old_dw,
+           DataWarehouseP& new_dw)
+{
+  const MPMLabel* lb = MPMLabel::getLabels();
+
+  ParticleVariable<Point> pX;
+  ParticleSubset* subset = old_dw->getParticleSubset(matlindex, patch);
+  old_dw->get(pX, lb->pXLabel, subset);
+  Lattice lattice(patch,pX);
+
+  for(CellIterator iter(lattice.getLowIndex(),lattice.getHighIndex());
+                   !iter.done(); 
+                   iter++)
+  {
+    Cell& cell = lattice[*iter];
+    if(cell.particles.size() > 0)
+    {
+      std::vector<particleIndex>::const_iterator pIdxIter;
+      for(pIdxIter = cell.particles.begin();
+          pIdxIter != cell.particles.end();
+          ++pIdxIter)
+      {
+/*
+        LeastrSquareInterpolateVector(pX,
+   const ParticleVariable<Vector>& pValue,
+   *pIdxIter,
+   const IntVector& cellIndex,
+   const Lattice& lattice,
+   ParticleVariable<Matrix3>& pInterpolateValue)
+*/
+      }
+    }
+  }
+}
+
+void
+Fracture::
+LeastrSquareInterpolateDouble(const ParticleVariable<Point>& pX,
+   const ParticleVariable<double>& pValue,
+   const particleIndex pIdx,
+   const IntVector& cellIndex,
+   const Lattice& lattice,
+   ParticleVariable<Vector>& pInterpolateValue)
+{
+}
+
+void
+Fracture::
+LeastrSquareInterpolateVector(const ParticleVariable<Point>& pX,
+   const ParticleVariable<Vector>& pValue,
+   const particleIndex pIdx,
+   const IntVector& cellIndex,
+   const Lattice& lattice,
+   ParticleVariable<Matrix3>& pInterpolateValue)
+{
+}
+
+void
+Fracture::
+LeastrSquareInterpolateInternalForce(const ParticleVariable<Point>& pX,
+   const ParticleVariable<Matrix3>& pStress,
+   const particleIndex pIdx,
+   const IntVector& cellIndex,
+   const Lattice& lattice,
+   ParticleVariable<Vector>& pInternalForce)
 {
 }
 
@@ -322,6 +406,9 @@ Fracture(ProblemSpecP& ps,SimulationStateP& d_sS)
 } //namespace Uintah
 
 // $Log$
+// Revision 1.24  2000/06/23 16:49:32  tan
+// Added LeastSquare Approximation and Lattice for neighboring algorithm.
+//
 // Revision 1.23  2000/06/23 01:38:07  tan
 // Moved material property toughness to Fracture class.
 //

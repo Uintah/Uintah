@@ -7,6 +7,11 @@
 #include <Uintah/Interface/ProblemSpecP.h>
 #include <Uintah/Grid/Patch.h>
 #include <Uintah/Grid/CCVariable.h>
+#include <Uintah/Grid/ParticleVariable.h>
+
+#include "Lattice.h"
+#include "Cell.h"
+#include <Uintah/Components/MPM/Util/Matrix3.h>
 
 #include <Uintah/Interface/DataWarehouseP.h>
 
@@ -58,6 +63,13 @@ public:
            DataWarehouseP& old_dw,
            DataWarehouseP& new_dw);
 
+  void   updateParticleInformationInContactCells(
+           int matlindex,
+           int vfindex,
+           const Patch* patch,
+           DataWarehouseP& old_dw,
+           DataWarehouseP& new_dw);
+
   void   crackGrow(
            const ProcessorGroup*,
            const Patch* patch,
@@ -102,6 +114,28 @@ private:
   static void setParticleStatus(Fracture::ParticleStatus status,
            Vector* particleSurfaceNormal);
 
+  //Leastr Square interpolation
+  void LeastrSquareInterpolateDouble(const ParticleVariable<Point>& pX,
+   const ParticleVariable<double>& pValue,
+   const particleIndex pIdx,
+   const IntVector& cellIndex,
+   const Lattice& lattice,
+   ParticleVariable<Vector>& pInterpolateValue);
+
+  void LeastrSquareInterpolateVector(const ParticleVariable<Point>& pX,
+   const ParticleVariable<Vector>& pValue,
+   const particleIndex pIdx,
+   const IntVector& cellIndex,
+   const Lattice& lattice,
+   ParticleVariable<Matrix3>& pInterpolateValue);
+
+  void LeastrSquareInterpolateInternalForce(const ParticleVariable<Point>& pX,
+   const ParticleVariable<Matrix3>& pStress,
+   const particleIndex pIdx,
+   const IntVector& cellIndex,
+   const Lattice& lattice,
+   ParticleVariable<Vector>& pInternalForce);
+
   double           d_averageMicrocrackLength;
   double           d_toughness;
   SimulationStateP d_sharedState;
@@ -113,6 +147,9 @@ private:
 #endif //__FRACTURE_H__
 
 // $Log$
+// Revision 1.19  2000/06/23 16:49:23  tan
+// Added LeastSquare Approximation and Lattice for neighboring algorithm.
+//
 // Revision 1.18  2000/06/23 01:37:59  tan
 // Moved material property toughness to Fracture class.
 //
