@@ -6,7 +6,6 @@
 #include <Core/Thread/Time.h>
 #include <Packages/Uintah/CCA/Components/Arches/Arches.h>
 #include <Packages/Uintah/CCA/Components/Arches/ArchesLabel.h>
-#include <Packages/Uintah/CCA/Components/Arches/ArchesVariables.h>
 #include <Packages/Uintah/CCA/Components/Arches/BoundaryCondition.h>
 #include <Packages/Uintah/CCA/Components/Arches/Discretization.h>
 #include <Packages/Uintah/CCA/Components/Arches/PressureSolver.h>
@@ -278,14 +277,16 @@ HypreSolver::computePressOrderOfMagnitude(const ProcessorGroup* ,
 void 
 HypreSolver::computePressUnderrelax(const ProcessorGroup*,
 				   const Patch* patch,
-				    ArchesVariables* vars)
+				    ArchesVariables* vars,
+				    ArchesConstVariables* constvars)
 {
   // Get the patch bounds and the variable bounds
   IntVector idxLo = patch->getCellFORTLowIndex();
   IntVector idxHi = patch->getCellFORTHighIndex();
 
   //fortran call
-  fort_underelax(idxLo, idxHi, vars->pressure, vars->pressCoeff[Arches::AP],
+  fort_underelax(idxLo, idxHi, constvars->pressure,
+		 vars->pressCoeff[Arches::AP],
 		 vars->pressNonlinearSrc, d_underrelax);
 
 #ifdef ARCHES_PRES_DEBUG
@@ -334,6 +335,7 @@ void
 HypreSolver::setPressMatrix(const ProcessorGroup* pc,
 			    const Patch* patch,
 			    ArchesVariables* vars,
+			    ArchesConstVariables* constvars,
 			    const ArchesLabel*)
 { 
   double start_time = Time::currentSeconds();
@@ -370,10 +372,10 @@ HypreSolver::setPressMatrix(const ProcessorGroup* pc,
   for (int colZ = idxLo.z(); colZ <= idxHi.z(); colZ ++) {
     for (int colY = idxLo.y(); colY <= idxHi.y(); colY ++) {
       for (int colX = idxLo.x(); colX <= idxHi.x(); colX ++) {
-	d_value[i] = -vars->pressCoeff[Arches::AB][IntVector(colX,colY,colZ)]; //[0,0,-1]
-	d_value[i+1] = -vars->pressCoeff[Arches::AS][IntVector(colX,colY,colZ)]; //[0,-1,0]
-	d_value[i+2] = -vars->pressCoeff[Arches::AW][IntVector(colX,colY,colZ)]; //[-1,0,0]
-	d_value[i+3] = vars->pressCoeff[Arches::AP][IntVector(colX,colY,colZ)]; //[0,0,0]
+	d_value[i] = -constvars->pressCoeff[Arches::AB][IntVector(colX,colY,colZ)]; //[0,0,-1]
+	d_value[i+1] = -constvars->pressCoeff[Arches::AS][IntVector(colX,colY,colZ)]; //[0,-1,0]
+	d_value[i+2] = -constvars->pressCoeff[Arches::AW][IntVector(colX,colY,colZ)]; //[-1,0,0]
+	d_value[i+3] = constvars->pressCoeff[Arches::AP][IntVector(colX,colY,colZ)]; //[0,0,0]
 
 #if 0
 	cerr << "["<<colX<<","<<colY<<","<<colZ<<"]"<<endl;  
@@ -407,7 +409,7 @@ HypreSolver::setPressMatrix(const ProcessorGroup* pc,
   for (int colZ = idxLo.z(); colZ <= idxHi.z(); colZ ++) {
     for (int colY = idxLo.y(); colY <= idxHi.y(); colY ++) {
       for (int colX = idxLo.x(); colX <= idxHi.x(); colX ++) {
-	d_value[i] = vars->pressNonlinearSrc[IntVector(colX,colY,colZ)]; 
+	d_value[i] = constvars->pressNonlinearSrc[IntVector(colX,colY,colZ)]; 
 	//cerr << "b[" << i << "] =" << d_value[i] << endl;
 	i++;
       }
@@ -837,8 +839,9 @@ HypreSolver::computeVelOrderOfMagnitude(const ProcessorGroup* ,
 //****************************************************************************
 void 
 HypreSolver::computeVelUnderrelax(const ProcessorGroup* ,
-				 const Patch* patch,
-				  int index, ArchesVariables* vars)
+				  const Patch* patch,
+				  int index, ArchesVariables* vars,
+				  ArchesConstVariables* constvars)
 {
   // Get the patch bounds and the variable bounds
   IntVector domLo;
@@ -850,13 +853,13 @@ HypreSolver::computeVelUnderrelax(const ProcessorGroup* ,
 
   switch (index) {
   case Arches::XDIR:
-    domLo = vars->uVelocity.getFortLowIndex();
-    domHi = vars->uVelocity.getFortHighIndex();
+    domLo = constvars->uVelocity.getFortLowIndex();
+    domHi = constvars->uVelocity.getFortHighIndex();
     domLong = vars->uVelocityCoeff[Arches::AP].getFortLowIndex();
     domHing = vars->uVelocityCoeff[Arches::AP].getFortHighIndex();
     idxLo = patch->getSFCXFORTLowIndex();
     idxHi = patch->getSFCXFORTHighIndex();
-    fort_underelax(idxLo, idxHi, vars->uVelocity,
+    fort_underelax(idxLo, idxHi, constvars->uVelocity,
 		   vars->uVelocityCoeff[Arches::AP], vars->uVelNonlinearSrc,
 		   d_underrelax);
 
@@ -898,13 +901,13 @@ HypreSolver::computeVelUnderrelax(const ProcessorGroup* ,
 
     break;
     case Arches::YDIR:
-    domLo = vars->vVelocity.getFortLowIndex();
-    domHi = vars->vVelocity.getFortHighIndex();
+    domLo = constvars->vVelocity.getFortLowIndex();
+    domHi = constvars->vVelocity.getFortHighIndex();
     domLong = vars->vVelocityCoeff[Arches::AP].getFortLowIndex();
     domHing = vars->vVelocityCoeff[Arches::AP].getFortHighIndex();
     idxLo = patch->getSFCYFORTLowIndex();
     idxHi = patch->getSFCYFORTHighIndex();
-    fort_underelax(idxLo, idxHi, vars->vVelocity,
+    fort_underelax(idxLo, idxHi, constvars->vVelocity,
 		   vars->vVelocityCoeff[Arches::AP], vars->vVelNonlinearSrc,
 		   d_underrelax);
 
@@ -946,13 +949,13 @@ HypreSolver::computeVelUnderrelax(const ProcessorGroup* ,
 
     break;
     case Arches::ZDIR:
-    domLo = vars->wVelocity.getFortLowIndex();
-    domHi = vars->wVelocity.getFortHighIndex();
+    domLo = constvars->wVelocity.getFortLowIndex();
+    domHi = constvars->wVelocity.getFortHighIndex();
     domLong = vars->wVelocityCoeff[Arches::AP].getFortLowIndex();
     domHing = vars->wVelocityCoeff[Arches::AP].getFortHighIndex();
     idxLo = patch->getSFCZFORTLowIndex();
     idxHi = patch->getSFCZFORTHighIndex();
-    fort_underelax(idxLo, idxHi, vars->wVelocity,
+    fort_underelax(idxLo, idxHi, constvars->wVelocity,
 		   vars->wVelocityCoeff[Arches::AP], vars->wVelNonlinearSrc,
 		   d_underrelax);
 
@@ -1310,14 +1313,15 @@ void
 HypreSolver::computeScalarUnderrelax(const ProcessorGroup* ,
 				    const Patch* patch,
 				    int,
-				    ArchesVariables* vars)
+				    ArchesVariables* vars,
+				    ArchesConstVariables* constvars)
 {
   // Get the patch bounds and the variable bounds
   IntVector idxLo = patch->getCellFORTLowIndex();
   IntVector idxHi = patch->getCellFORTHighIndex();
 
   //fortran call
-  fort_underelax(idxLo, idxHi, vars->scalar,
+  fort_underelax(idxLo, idxHi, constvars->scalar,
 		 vars->scalarCoeff[Arches::AP], vars->scalarNonlinearSrc,
 		 d_underrelax);
 }
@@ -1330,6 +1334,7 @@ HypreSolver::scalarLisolve(const ProcessorGroup*,
 			  const Patch*,
 			  int, double,
 			  ArchesVariables*,
+			  ArchesConstVariables*,
 			  CellInformation*,
 			  const ArchesLabel*)
 {
@@ -1429,14 +1434,15 @@ HypreSolver::scalarLisolve(const ProcessorGroup*,
 void 
 HypreSolver::computeEnthalpyUnderrelax(const ProcessorGroup* ,
 				       const Patch* patch,
-				       ArchesVariables* vars)
+				       ArchesVariables* vars,
+				       ArchesConstVariables* constvars)
 {
   // Get the patch bounds and the variable bounds
   IntVector idxLo = patch->getCellFORTLowIndex();
   IntVector idxHi = patch->getCellFORTHighIndex();
 
   //fortran call
-  fort_underelax(idxLo, idxHi, vars->enthalpy,
+  fort_underelax(idxLo, idxHi, constvars->enthalpy,
 		 vars->scalarCoeff[Arches::AP], vars->scalarNonlinearSrc,
 		 d_underrelax);
 }
@@ -1449,6 +1455,7 @@ HypreSolver::enthalpyLisolve(const ProcessorGroup*,
 			     const Patch*,
 			     double,
 			     ArchesVariables*,
+			     ArchesConstVariables*,
 			     CellInformation*,
 			     const ArchesLabel*)
 {
