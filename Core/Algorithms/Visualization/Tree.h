@@ -79,9 +79,9 @@ void Tree<Cell>::init( Field *field, int levels, int rx, int ry, int rz )
   typename Field::mesh_handle_type mesh_ = field->get_typed_mesh();
 
   levels_ = levels;
-  nx_ = mesh_->get_nx();
-  ny_ = mesh_->get_ny();
-  nz_ = mesh_->get_nz();
+  nx_ = mesh_->get_ni();
+  ny_ = mesh_->get_nj();
+  nz_ = mesh_->get_nk();
 
   //  Point bmin = mesh->get_min();
   //Point bmax = mesh->get_max();

@@ -63,9 +63,9 @@ ClipLatticeAlgoT<FIELD>::execute(FieldHandle fieldh,
   omesh->locate(ns, a);
   omesh->locate(ne, b);
 
-  const int onx = omesh->get_nx();
-  const int ony = omesh->get_ny();
-  const int onz = omesh->get_nz();
+  const int onx = omesh->get_ni();
+  const int ony = omesh->get_nj();
+  const int onz = omesh->get_nk();
 
   int si = (int)(ns.i_);
   int sj = (int)(ns.j_);

@@ -65,9 +65,9 @@ CastMLVtoHVAlgoT<FSRC, LSRC, FDST, LDST>::execute(FieldHandle lv_h,
   BBox bbox = lvm->get_bounding_box();
   Point min = bbox.min();
   Vector diag = bbox.diagonal();
-  const int nx = lvm->get_nx();
-  const int ny = lvm->get_ny();
-  const int nz = lvm->get_nz();
+  const int nx = lvm->get_ni();
+  const int ny = lvm->get_nj();
+  const int nz = lvm->get_nk();
   const double dx = diag.x()/(nx-1);
   const double dy = diag.y()/(ny-1);
   const double dz = diag.z()/(nz-1);
