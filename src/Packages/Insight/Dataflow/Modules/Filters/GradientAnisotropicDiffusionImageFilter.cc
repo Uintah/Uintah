@@ -87,7 +87,7 @@ bool GradientAnisotropicDiffusionImageFilter::run( itk::Object *obj1)
   
   filter->SetTimeStep( gui_time_step_.get() );
   
-  filter->SetIterations( gui_iterations_.get() );
+  filter->SetNumberOfIterations( gui_iterations_.get() );
   
   filter->SetConductanceParameter( gui_conductance_parameter_.get() );
      
