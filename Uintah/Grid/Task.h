@@ -445,7 +445,8 @@ WARNING
       
       //////////
       // Insert Documentation Here:
-      void requires(const DataWarehouseP& ds, const VarLabel*);
+      void requires(const DataWarehouseP& ds, const VarLabel*, \
+		    int matlIndex=-1);
       
       //////////
       // Insert Documentation Here:
@@ -563,6 +564,10 @@ ostream & operator << ( ostream & out, const Uintah::Task::Dependency & dep );
 
 //
 // $Log$
+// Revision 1.26  2000/12/07 01:29:27  witzel
+// Added material index argument to one of the overloaded require
+// methods for material specific reduction variables.
+//
 // Revision 1.25  2000/09/28 23:22:01  jas
 // Added (int) to remove g++ warnings for STL size().  Reordered initialization
 // to coincide with *.h declarations.
