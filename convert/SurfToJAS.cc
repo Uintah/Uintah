@@ -61,4 +61,5 @@ main(int argc, char **argv) {
 		ts->elements[i]->i2+1, ts->elements[i]->i3+1);
     }
     fclose(fout);
+    return 0;
 }    
