@@ -589,6 +589,14 @@ DataArchive::TimeHashMaps::findTimeData(double time)
   return NULL;
 }
 
+void DataArchive::TimeHashMaps::purgeTimeData(double time)
+{
+  // purge a timestep's cachine
+  PatchHashMaps* timeData = findTimeData(time);
+  if (timeData != 0) {
+    timeData->purgeCache();
+  }
+}
 
 
 
@@ -631,6 +639,12 @@ void DataArchive::PatchHashMaps::init(XMLURL tsUrl, DOM_Node tsTopNode,
       cerr << "WARNING: Unknown element in Data section: " << toString(n.getNodeName()) << '\n';
     }
   }
+}
+
+void DataArchive::PatchHashMaps::purgeCache()
+{
+  d_matHashMaps.clear();
+  d_isParsed = false;
 }
 
 void DataArchive::PatchHashMaps::parse()
