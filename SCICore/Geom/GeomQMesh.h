@@ -20,15 +20,15 @@
 #ifndef SCI_Geom_QMesh_h
 #define SCI_Geom_QMesh_h 1
 
-#include <Geom/GeomObj.h>
-#include <Geom/Material.h>
-#include <Geometry/Point.h>
-#include <Geometry/Vector.h>
+#include <SCICore/Geom/GeomObj.h>
+#include <SCICore/Geom/Material.h>
+#include <SCICore/Geometry/Point.h>
+#include <SCICore/Geometry/Vector.h>
 
 namespace SCICore {
 namespace GeomSpace {
 
-class GeomQMesh : public GeomObj {
+class SCICORESHARE GeomQMesh : public GeomObj {
   Array1<float> pts;    // data points
   Array1<float> nrmls;  // normals for above (central differences???)
   Array1<Colorub> clrs; // colors
@@ -66,6 +66,10 @@ public:
 
 //
 // $Log$
+// Revision 1.2  1999/08/17 06:39:11  sparker
+// Merged in modifications from PSECore to make this the new "blessed"
+// version of SCIRun/Uintah.
+//
 // Revision 1.1  1999/07/27 16:56:42  mcq
 // Initial commit
 //

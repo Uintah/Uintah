@@ -24,13 +24,14 @@ LOG
     Created January 8, 1999
 ----------------------------------------------------------------------*/
 
-#include <CommonDatatypes/SimplePort.h>
-#include <Datatypes/Particles/ParticleGridReader.h>
+#include <PSECore/CommonDatatypes/SimplePort.h>
+
+#include <Uintah/Datatypes/Particles/ParticleGridReader.h>
 
 namespace Uintah {
 namespace Datatypes {
 
-using namespace PSECommon::CommonDatatypes;
+using namespace PSECore::CommonDatatypes;
 
 typedef SimpleIPort<ParticleGridReaderHandle> ParticleGridReaderIPort;
 typedef SimpleOPort<ParticleGridReaderHandle> ParticleGridReaderOPort;
@@ -40,6 +41,10 @@ typedef SimpleOPort<ParticleGridReaderHandle> ParticleGridReaderOPort;
 
 //
 // $Log$
+// Revision 1.2  1999/08/17 06:40:08  sparker
+// Merged in modifications from PSECore to make this the new "blessed"
+// version of SCIRun/Uintah.
+//
 // Revision 1.1  1999/07/27 16:59:00  mcq
 // Initial commit
 //

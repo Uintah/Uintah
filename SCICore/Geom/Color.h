@@ -14,17 +14,9 @@
 #ifndef SCI_project_Color_h
 #define SCI_project_Color_h 1
 
-namespace SCICore {
-  namespace GeomSpace {
-    class Color;
-    class CharColor;
-  }
-  namespace PersistentSpace {
-    class Piostream;
-    void Pio( Piostream &, GeomSpace::Color & );
-    void Pio( Piostream &, GeomSpace::CharColor & );
-  }
-}
+#include <SCICore/share/share.h>
+
+#include <SCICore/Persistent/Persistent.h>
 
 namespace SCICore {
 namespace GeomSpace {
@@ -33,7 +25,8 @@ using SCICore::PersistentSpace::Piostream;
 
 class HSVColor;
 
-class Color {
+class SCICORESHARE Color {
+protected:
     double _r, _g, _b;
 public:
     Color();
@@ -77,11 +70,12 @@ public:
       }
     }
 
-    friend void PersistentSpace::Pio(Piostream&, Color&);
+    friend SCICORESHARE void Pio( Piostream&, Color& );
+
     friend class HSVColor;
 };
 
-class Colorub { // unsigned byte color
+class SCICORESHARE Colorub { // unsigned byte color
   unsigned char data[3]; // data...
 public:
   Colorub() {};
@@ -97,7 +91,7 @@ public:
   // should be enough for now - this is less bandwidth...
 };
 
-class HSVColor {
+class SCICORESHARE HSVColor {
     double _hue;
     double _sat;
     double _val;
@@ -134,7 +128,7 @@ public:
   This structure holds a simple RGB color in char format.
 *********************************************************/
 
-class CharColor {
+class SCICORESHARE CharColor {
 public:
   char red;
   char green;
@@ -153,7 +147,8 @@ public:
   CharColor operator= ( const CharColor& );
 
   int operator!= ( const CharColor& ) const;
-  friend void PersistentSpace::Pio(Piostream&, CharColor&);
+
+  friend SCICORESHARE void Pio( Piostream&, CharColor& );
 };
 
 } // End namespace GeomSpace
@@ -161,6 +156,10 @@ public:
 
 //
 // $Log$
+// Revision 1.2  1999/08/17 06:39:04  sparker
+// Merged in modifications from PSECore to make this the new "blessed"
+// version of SCIRun/Uintah.
+//
 // Revision 1.1  1999/07/27 16:56:36  mcq
 // Initial commit
 //

@@ -12,22 +12,22 @@
  *  Copyright (C) 1996 SCI Group
  */
 
-#include <Util/NotFinished.h>
-#include <Dataflow/Module.h>
-#include <CommonDatatypes/ScalarFieldPort.h>
-#include <CommonDatatypes/SurfacePort.h>
-#include <CoreDatatypes/ScalarFieldUG.h>
-#include <Geometry/Point.h>
-#include <Malloc/Allocator.h>
-#include <Multitask/Task.h>
-#include <TclInterface/TCLvar.h>
+#include <SCICore/Util/NotFinished.h>
+#include <PSECore/Dataflow/Module.h>
+#include <PSECore/CommonDatatypes/ScalarFieldPort.h>
+#include <PSECore/CommonDatatypes/SurfacePort.h>
+#include <SCICore/CoreDatatypes/ScalarFieldUG.h>
+#include <SCICore/Geometry/Point.h>
+#include <SCICore/Malloc/Allocator.h>
+#include <SCICore/Multitask/Task.h>
+#include <SCICore/TclInterface/TCLvar.h>
 #include <values.h>
 
 namespace PSECommon {
 namespace Modules {
 
-using namespace PSECommon::Dataflow;
-using namespace PSECommon::CommonDatatypes;
+using namespace PSECore::Dataflow;
+using namespace PSECore::CommonDatatypes;
 using namespace SCICore::TclInterface;
 using namespace SCICore::GeomSpace;
 using namespace SCICore::Math;
@@ -218,6 +218,10 @@ Vector FEMError::element_gradient(Element* e, ScalarFieldUG* sfield)
 
 //
 // $Log$
+// Revision 1.2  1999/08/17 06:37:25  sparker
+// Merged in modifications from PSECore to make this the new "blessed"
+// version of SCIRun/Uintah.
+//
 // Revision 1.1  1999/07/27 16:57:40  mcq
 // Initial commit
 //

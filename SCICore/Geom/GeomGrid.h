@@ -14,16 +14,16 @@
 #ifndef SCI_Geom_Grid_h
 #define SCI_Geom_Grid_h 1
 
-#include <Geom/GeomObj.h>
-#include <Geom/Material.h>
-#include <Geometry/Point.h>
-#include <Geometry/Vector.h>
-#include <Containers/Array2.h>
+#include <SCICore/Geom/GeomObj.h>
+#include <SCICore/Geom/Material.h>
+#include <SCICore/Geometry/Point.h>
+#include <SCICore/Geometry/Vector.h>
+#include <SCICore/Containers/Array2.h>
 
 namespace SCICore {
 namespace GeomSpace {
 
-class GeomGrid : public GeomObj {
+class SCICORESHARE GeomGrid : public GeomObj {
     Array1<float> data;
     int have_matls;
     int have_normals;
@@ -143,18 +143,18 @@ inline void GeomGrid::set(int i, int j, double h, const Vector& normal,
 #ifndef SCI_Geom_Grid_h
 #define SCI_Geom_Grid_h 1
 
-#include <Geom/GeomObj.h>
-#include <Geom/Material.h>
-#include <Geometry/Point.h>
-#include <Geometry/Vector.h>
-#include <Containers/Array2.h>
+#include <SCICore/Geom/GeomObj.h>
+#include <SCICore/Geom/Material.h>
+#include <SCICore/Geometry/Point.h>
+#include <SCICore/Geometry/Vector.h>
+#include <SCICore/Containers/Array2.h>
 
 namespace SCICore {
 namespace GeomSpace {
 
 using SCICore::Containers::Array2;
 
-class GeomGrid : public GeomObj {
+class SCICORESHARE GeomGrid : public GeomObj {
     Array2<double> verts;
     Array2<MaterialHandle> matls;
     Array2<Vector> normals;
@@ -201,6 +201,10 @@ public:
 
 //
 // $Log$
+// Revision 1.2  1999/08/17 06:39:08  sparker
+// Merged in modifications from PSECore to make this the new "blessed"
+// version of SCIRun/Uintah.
+//
 // Revision 1.1  1999/07/27 16:56:39  mcq
 // Initial commit
 //

@@ -88,6 +88,7 @@ itcl_class PSECommon_Surface_SurfToGeom {
 	make_labeled_radio $w.d.nodes "Render Nodes As: " "" \
 		left $this-ntype \
 		{{"Spheres" spheres} \
+		{"Disks" disks} \
 		{"Points" points}}
 	checkbutton $w.d.named -text "Only Render Named (SurfTree)" \
 		-variable $this-named

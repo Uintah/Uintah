@@ -15,7 +15,9 @@
  *  Copyright (C) 1998 SCI Group
  */
 
-#include <TclInterface/Remote.h>
+#ifndef _WIN32
+
+#include <SCICore/TclInterface/Remote.h>
 
 #include <stdio.h>
 #include <iostream.h>
@@ -54,7 +56,11 @@ cerr << "setupConnect() opened listen socket = " << in_socket << endl;
     master.sin_port = port;
 
     // bind to socket
+#ifdef LINUX
+    if (bind (in_socket, (sockaddr*)&master, sizeof(master))) {
+#else
     if (bind (in_socket, &master, sizeof(master))) {
+#endif
         perror ("binding stream socket");
         exit (-1);
     }
@@ -114,7 +120,11 @@ int requestConnect (int port, char* host)
     master.sin_family = SOCKET_DOMAIN;
     master.sin_port = htons (port);
 
+#ifdef LINUX
+    if (connect (master_socket, (sockaddr*)&master, sizeof(master)) < 0) {
+#else
     if (connect (master_socket, &master, sizeof(master)) < 0) {
+#endif
         perror ("connecting stream socket");
         return -1;
     }
@@ -160,8 +170,14 @@ int receiveReply (TCLMessage* msg, int skt)
 } // End namespace TclInterface
 } // End namespace SCICore
 
+#endif // win32
+
 //
 // $Log$
+// Revision 1.2  1999/08/17 06:39:44  sparker
+// Merged in modifications from PSECore to make this the new "blessed"
+// version of SCIRun/Uintah.
+//
 // Revision 1.1  1999/07/27 16:57:15  mcq
 // Initial commit
 //

@@ -14,8 +14,8 @@
 #ifndef SCI_project_Renderer_h
 #define SCI_project_Renderer_h
 
-#include <Containers/AVLTree.h>
-#include <Containers/String.h>
+#include <SCICore/Containers/AVLTree.h>
+#include <SCICore/Containers/String.h>
 
 namespace SCICore {
   namespace GeomSpace {
@@ -33,7 +33,7 @@ namespace SCICore {
   }
 }
 
-namespace PSECommon {
+namespace PSECore {
   namespace CommonDatatypes {
     struct GeometryData;
   }
@@ -42,7 +42,7 @@ namespace PSECommon {
 namespace PSECommon {
 namespace Modules {
 
-using PSECommon::CommonDatatypes::GeometryData;
+using PSECore::CommonDatatypes::GeometryData;
 
 using SCICore::Containers::clString;
 using SCICore::Containers::AVLTree;
@@ -102,6 +102,10 @@ public:
 
 //
 // $Log$
+// Revision 1.2  1999/08/17 06:37:38  sparker
+// Merged in modifications from PSECore to make this the new "blessed"
+// version of SCIRun/Uintah.
+//
 // Revision 1.1  1999/07/27 16:57:52  mcq
 // Initial commit
 //

@@ -14,13 +14,13 @@
 
 #if 1
 
-#include <Geometry/Point.h>
-#include <Geometry/Vector.h>
-#include <Util/Assert.h>
-#include <Persistent/Persistent.h>
-#include <Containers/String.h>
-#include <Math/MinMax.h>
-#include <Math/MiscMath.h>
+#include <SCICore/Geometry/Point.h>
+#include <SCICore/Geometry/Vector.h>
+#include <SCICore/Util/Assert.h>
+#include <SCICore/Persistent/Persistent.h>
+#include <SCICore/Containers/String.h>
+#include <SCICore/Math/MinMax.h>
+#include <SCICore/Math/MiscMath.h>
 #include <iostream.h>
 #include <stdio.h>
 
@@ -147,7 +147,7 @@ Point::InInterval( Point a, double epsilon )
 }
 
 
-#include <Geometry/Vector.h>
+#include <SCICore/Geometry/Vector.h>
 
 void Point::test_rigorous(RigorousTest* __test)
 {	
@@ -488,6 +488,10 @@ void Pio(Piostream& stream, Point& p)
 
 //
 // $Log$
+// Revision 1.2  1999/08/17 06:39:28  sparker
+// Merged in modifications from PSECore to make this the new "blessed"
+// version of SCIRun/Uintah.
+//
 // Revision 1.1  1999/07/27 16:56:56  mcq
 // Initial commit
 //

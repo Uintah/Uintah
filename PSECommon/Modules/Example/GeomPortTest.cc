@@ -10,13 +10,13 @@
  *  Copyright (C) 1994 SCI Group
  */
 
-#include <Classlib/NotFinished.h>
-#include <Dataflow/Module.h>
-#include <Geom/Sphere.h>
-#include <Geom/Group.h>
-#include <CommonDatatypes/GeometryPort.h>
-#include <CommonDatatypes/GeometryComm.h>
-#include <Malloc/Allocator.h>
+#include <SCICore/Util/NotFinished.h>
+#include <PSECommon/Dataflow/Module.h>
+#include <SCICore/Geom/Sphere.h>
+#include <SCICore/Geom/Group.h>
+#include <PSECommon/CommonDatatypes/GeometryPort.h>
+#include <PSECommon/CommonDatatypes/GeometryComm.h>
+#include <SCICore/Malloc/Allocator.h>
 
 class GeomPortTest : public Module {
     virtual void do_execute();

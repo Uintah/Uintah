@@ -12,12 +12,18 @@
  *  Copyright (C) 199? SCI Group
  */
 
-#include <Tester/PerfTest.h>
+#include <SCICore/Tester/PerfTest.h>
 #include <iostream.h>
 #include <limits.h>
 #include <string.h>
 #ifndef _WIN32
-#include <unistd.h>
+  #include <unistd.h>
+#endif
+
+#ifdef LINUX
+  #include <asm/param.h>
+#elif !defined(_WIN32)
+  #include <sys/param.h>
 #endif
 
 namespace SCICore {
@@ -106,6 +112,10 @@ void PerfTest::time(struct timeb* t)
 
 //
 // $Log$
+// Revision 1.2  1999/08/17 06:39:47  sparker
+// Merged in modifications from PSECore to make this the new "blessed"
+// version of SCIRun/Uintah.
+//
 // Revision 1.1  1999/07/27 16:57:19  mcq
 // Initial commit
 //

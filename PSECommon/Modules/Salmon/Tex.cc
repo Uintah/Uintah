@@ -12,16 +12,16 @@
  *  Copyright (C) 199? SCI Group
  */
 
-#include <Modules/Salmon/Tex.h>
+#include <PSECommon/Modules/Salmon/Tex.h>
 
-#include <Malloc/Allocator.h>
+#include <SCICore/Malloc/Allocator.h>
 #include <strstream.h>
 #include <fstream.h>
 #include <strings.h>
 
-#include <Geometry/BBox.h>
-#include <Geometry/BSphere.h>
-#include <TclInterface/TCLTask.h>
+#include <SCICore/Geometry/BBox.h>
+#include <SCICore/Geometry/BSphere.h>
+#include <SCICore/TclInterface/TCLTask.h>
 #include <tcl.h>
 #include <tk.h>
 #include <GL/gl.h>
@@ -470,6 +470,7 @@ void GeomTexVolRender::draw(DrawInfoOpenGL* di, Material *m, double time)
   glColor4f(1,1,1,1); // set to all white for modulation
   
   if (map1d && !quantnvol) {
+#ifdef __sgi
 //    cerr << "Using Lookup!\n";
     glEnable(GL_TEXTURE_COLOR_TABLE_SGI);
     glColorTableSGI(GL_TEXTURE_COLOR_TABLE_SGI,
@@ -478,6 +479,7 @@ void GeomTexVolRender::draw(DrawInfoOpenGL* di, Material *m, double time)
 		    GL_RGBA,  // need an alpha value...
 		    GL_UNSIGNED_BYTE, // try shorts...
 		    map1d);
+#endif
   }
 
   Vector vx,vy,vz;
@@ -519,9 +521,12 @@ void GeomTexVolRender::draw(DrawInfoOpenGL* di, Material *m, double time)
     glTexParameterf(GL_TEXTURE_3D_EXT, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
     glTexParameterf(GL_TEXTURE_3D_EXT, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
     
-    glTexImage3DEXT(GL_TEXTURE_3D_EXT,0,GL_INTENSITY8_EXT,
+#ifndef LINUX		    
+    glTexImage3DEXT(GL_TEXTURE_3D_EXT,0,
+		    GL_INTENSITY8_EXT,
 		    nx,ny,nz,0,
 		    GL_RED,GL_UNSIGNED_BYTE,vol3d);
+#endif
     
     
     map2d = 0; // clear it out...
@@ -606,8 +611,10 @@ void GeomTexVolRender::draw(DrawInfoOpenGL* di, Material *m, double time)
 #endif
   glDisable(GL_BLEND);
 
+#ifdef __sgi
   if (map1d && !quantnvol)
     glDisable(GL_TEXTURE_COLOR_TABLE_SGI);
+#endif
 }
 
 bool GeomTexVolRender::saveobj(ostream&, const clString& format, GeomSave*)
@@ -627,6 +634,10 @@ void GeomTexVolRender::Clear()
 
 //
 // $Log$
+// Revision 1.2  1999/08/17 06:37:40  sparker
+// Merged in modifications from PSECore to make this the new "blessed"
+// version of SCIRun/Uintah.
+//
 // Revision 1.1  1999/07/27 16:57:53  mcq
 // Initial commit
 //

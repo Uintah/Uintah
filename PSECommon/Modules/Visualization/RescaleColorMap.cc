@@ -14,21 +14,21 @@
 
 
 
-#include <Util/NotFinished.h>
-#include <CommonDatatypes/ColorMapPort.h>
-#include <CoreDatatypes/ColorMap.h>
-#include <CommonDatatypes/ScalarFieldPort.h>
-#include <CoreDatatypes/ScalarField.h>
-#include <Malloc/Allocator.h>
-#include <TclInterface/TCLvar.h>
+#include <SCICore/Util/NotFinished.h>
+#include <PSECore/CommonDatatypes/ColorMapPort.h>
+#include <SCICore/CoreDatatypes/ColorMap.h>
+#include <PSECore/CommonDatatypes/ScalarFieldPort.h>
+#include <SCICore/CoreDatatypes/ScalarField.h>
+#include <SCICore/Malloc/Allocator.h>
+#include <SCICore/TclInterface/TCLvar.h>
 
-#include <Modules/Visualization/RescaleColorMap.h>
+#include <PSECommon/Modules/Visualization/RescaleColorMap.h>
 
 namespace PSECommon {
 namespace Modules {
 
-using namespace PSECommon::Dataflow;
-using namespace PSECommon::CommonDatatypes;
+using namespace PSECore::Dataflow;
+using namespace PSECore::CommonDatatypes;
 using namespace SCICore::TclInterface;
 
 
@@ -129,6 +129,10 @@ RescaleColorMap::connection(ConnectionMode mode, int which_port, int)
 
 //
 // $Log$
+// Revision 1.2  1999/08/17 06:37:53  sparker
+// Merged in modifications from PSECore to make this the new "blessed"
+// version of SCIRun/Uintah.
+//
 // Revision 1.1  1999/07/27 16:58:16  mcq
 // Initial commit
 //

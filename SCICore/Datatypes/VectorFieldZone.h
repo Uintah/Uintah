@@ -14,8 +14,8 @@
 #ifndef SCI_project_VectorFieldZone_h
 #define SCI_project_VectorFieldZone_h 1
 
-#include <CoreDatatypes/VectorField.h>
-#include <Containers/Array1.h>
+#include <SCICore/CoreDatatypes/VectorField.h>
+#include <SCICore/Containers/Array1.h>
 
 namespace SCICore {
 namespace CoreDatatypes {
@@ -44,6 +44,10 @@ public:
 
 //
 // $Log$
+// Revision 1.2  1999/08/17 06:39:00  sparker
+// Merged in modifications from PSECore to make this the new "blessed"
+// version of SCIRun/Uintah.
+//
 // Revision 1.1  1999/07/27 16:56:33  mcq
 // Initial commit
 //

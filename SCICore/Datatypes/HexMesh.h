@@ -21,42 +21,23 @@
 #ifndef SCI_project_HexMesh_h
 #define SCI_project_HexMesh_h 1
 
-
 /*******************************************************************************
 * Includes
 *******************************************************************************/
 
-#include <CoreDatatypes/Datatype.h>
-#include <Containers/Array1.h>
-#include <Containers/HashTable.h>
-#include <Containers/LockingHandle.h>
-#include <Geometry/Point.h>
-#include <Geometry/Vector.h>
+#include <SCICore/share/share.h>
+
+#include <SCICore/CoreDatatypes/Datatype.h>
+#include <SCICore/Containers/Array1.h>
+#include <SCICore/Containers/HashTable.h>
+#include <SCICore/Containers/LockingHandle.h>
+#include <SCICore/Geometry/Point.h>
+#include <SCICore/Geometry/Vector.h>
 
 
 /*******************************************************************************
 * Class & function forward declarations and type declarations
 *******************************************************************************/
-namespace SCICore {
-  namespace CoreDatatypes {
-    class HexNode;
-    class HexFace;
-    class Hexahedron;
-  }
-}
-
-namespace SCICore {
-  namespace PersistentSpace {
-    void Pio( Piostream & p, SCICore::CoreDatatypes::HexNode &);
-    void Pio( Piostream & p, SCICore::CoreDatatypes::HexNode * &);
-    void Pio( Piostream & p, SCICore::CoreDatatypes::HexFace &);
-    void Pio( Piostream & p, SCICore::CoreDatatypes::HexFace * &);
-    void Pio( Piostream & p, SCICore::CoreDatatypes::Hexahedron &);
-    void Pio( Piostream & p, SCICore::CoreDatatypes::Hexahedron * &);
-  }
-}
-    
-
 namespace SCICore {
 namespace CoreDatatypes {
 
@@ -133,7 +114,7 @@ struct KDTree
 
 // This class contains one point, similar to Node in mesh.h.
 
-class HexNode : public Point
+class SCICORESHARE HexNode : public Point
 {
   private:
   
@@ -147,16 +128,16 @@ class HexNode : public Point
     inline void set_index (int i) { my_index = i; };
     inline int index () { return my_index; };
     
-    friend ostream & operator << (ostream & o, const HexNode & n);
-    friend void PersistentSpace::Pio (Piostream & p, HexNode &);
-    friend void PersistentSpace::Pio (Piostream & p, HexNode * &);
+    friend SCICORESHARE ostream & operator << (ostream & o, const HexNode & n);
+    friend SCICORESHARE void Pio( Piostream & p, HexNode & );
+    friend SCICORESHARE void Pio( Piostream & p, HexNode * & );
 };
 
 
 // This class defines one surface, similar to face in mesh.h.
 //   Note that many fields are INVALID for degenerate faces (lines, points).
 
-class HexFace
+class SCICORESHARE HexFace
 {
   private:
       
@@ -203,15 +184,15 @@ class HexFace
     
     // I/o functions.
     
-    friend ostream & operator << (ostream & o, const HexFace & n);
-    friend void PersistentSpace::Pio (Piostream & p, HexFace &);
-    friend void PersistentSpace::Pio (Piostream & p, HexFace * &);
+    friend SCICORESHARE ostream & operator << (ostream & o, const HexFace & n);
+    friend SCICORESHARE void Pio( Piostream & p, HexFace & );
+    friend SCICORESHARE void Pio( Piostream & p, HexFace * & );
     void finish_read (HexMesh * m);
 };
 
 // This class defines one volume unit, similar to element in mesh.h.
 
-class Hexahedron
+class SCICORESHARE Hexahedron
 {  
   private:
   
@@ -250,14 +231,14 @@ class Hexahedron
         
     void find_stu (const Vector & P, double & s, double & t, double & u);    
         
-    friend ostream & operator << (ostream & o, const Hexahedron & n);
-    friend void PersistentSpace::Pio (Piostream & p, Hexahedron &);
-    friend void PersistentSpace::Pio (Piostream & p, Hexahedron * &);
+    friend SCICORESHARE ostream & operator << (ostream & o, const Hexahedron & n);
+    friend SCICORESHARE void Pio( Piostream & p, Hexahedron & );
+    friend SCICORESHARE void Pio( Piostream & p, Hexahedron * & );
     void finish_read (HexMesh * m);
 };
 
 
-class HexMesh : public Datatype
+class SCICORESHARE HexMesh : public Datatype
 {
   private:
 
@@ -313,7 +294,7 @@ class HexMesh : public Datatype
     
     // Io functions
         
-    friend ostream & operator << (ostream & o, HexMesh & m);
+    friend SCICORESHARE ostream & operator << (ostream & o, HexMesh & m);
     virtual void io (Piostream & p);
 };
 
@@ -322,6 +303,10 @@ class HexMesh : public Datatype
 
 //
 // $Log$
+// Revision 1.2  1999/08/17 06:38:46  sparker
+// Merged in modifications from PSECore to make this the new "blessed"
+// version of SCIRun/Uintah.
+//
 // Revision 1.1  1999/07/27 16:56:21  mcq
 // Initial commit
 //

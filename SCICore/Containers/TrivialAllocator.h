@@ -14,15 +14,17 @@
 #ifndef sci_Containers_TrivialAllocator_h
 #define sci_Containers_TrivialAllocator_h 1
 
-#include <Multitask/ITC.h>
-#include <Malloc/Allocator.h>
+#include <SCICore/share/share.h>
+
+#include <SCICore/Multitask/ITC.h>
+#include <SCICore/Malloc/Allocator.h>
 
 namespace SCICore {
 namespace Containers {
 
 using SCICore::Multitask::Mutex;
 
-class TrivialAllocator {
+class SCICORESHARE TrivialAllocator {
     struct List {
 	List* next;
 	void* pad; // For 8 byte alignment
@@ -85,6 +87,10 @@ inline void TrivialAllocator::free(void* rp)
 
 //
 // $Log$
+// Revision 1.2  1999/08/17 06:38:39  sparker
+// Merged in modifications from PSECore to make this the new "blessed"
+// version of SCIRun/Uintah.
+//
 // Revision 1.1  1999/07/27 16:56:15  mcq
 // Initial commit
 //

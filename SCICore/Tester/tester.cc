@@ -12,9 +12,9 @@
  *  Copyright (C) 199? SCI Group
  */
 
-#include <Tester/PerfTest.h>
-#include <Tester/RigorousTest.h>
-#include <Tester/TestTable.h>
+#include <SCICore/Tester/PerfTest.h>
+#include <SCICore/Tester/RigorousTest.h>
+#include <SCICore/Tester/TestTable.h>
 #include <dlfcn.h>
 #include <iostream.h>
 #include <stdio.h>
@@ -167,6 +167,10 @@ int main(int argc, char* argv[])
 
 //
 // $Log$
+// Revision 1.2  1999/08/17 06:39:48  sparker
+// Merged in modifications from PSECore to make this the new "blessed"
+// version of SCIRun/Uintah.
+//
 // Revision 1.1  1999/07/27 16:57:20  mcq
 // Initial commit
 //

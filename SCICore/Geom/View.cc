@@ -13,10 +13,10 @@
  */
 
 #include <stdio.h>
-#include <Geom/View.h>
-#include <Persistent/Persistent.h>
-#include <Containers/String.h>
-#include <Math/Trig.h>
+#include <SCICore/Geom/View.h>
+#include <SCICore/Persistent/Persistent.h>
+#include <SCICore/Containers/String.h>
+#include <SCICore/Math/Trig.h>
 
 namespace SCICore {
 namespace GeomSpace {
@@ -307,6 +307,7 @@ void Pio(Piostream& stream, GeomSpace::ExtendedView& v)
 {
     using SCICore::PersistentSpace::Pio;
     using SCICore::Geometry::Pio;
+    using SCICore::GeomSpace::Pio;
 
     stream.begin_class("ExtendedView", VIEW_VERSION);
     Pio(stream, v.eyep_);
@@ -325,6 +326,10 @@ void Pio(Piostream& stream, GeomSpace::ExtendedView& v)
 
 //
 // $Log$
+// Revision 1.2  1999/08/17 06:39:25  sparker
+// Merged in modifications from PSECore to make this the new "blessed"
+// version of SCIRun/Uintah.
+//
 // Revision 1.1  1999/07/27 16:56:54  mcq
 // Initial commit
 //

@@ -26,14 +26,14 @@ LOG
     Created January 6, 1999
 ----------------------------------------------------------------------*/
 
-#include <Datatypes/Particles/ParticleGridReader.h>
-#include <Datatypes/Particles/MPMaterial.h>
+#include <SCICore/CoreDatatypes/Datatype.h>
+#include <SCICore/Containers/LockingHandle.h>
+#include <SCICore/Containers/Array1.h>
+#include <SCICore/Containers/String.h>
+#include <SCICore/Geometry/Vector.h>
 
-#include <CoreDatatypes/Datatype.h>
-#include <Containers/LockingHandle.h>
-#include <Containers/Array1.h>
-#include <Containers/String.h>
-#include <Geometry/Vector.h>
+#include <Uintah/Datatypes/Particles/ParticleGridReader.h>
+#include <Uintah/Datatypes/Particles/MPMaterial.h>
 
 namespace Uintah {
 namespace Datatypes {
@@ -136,6 +136,10 @@ private:
 
 //
 // $Log$
+// Revision 1.2  1999/08/17 06:40:12  sparker
+// Merged in modifications from PSECore to make this the new "blessed"
+// version of SCIRun/Uintah.
+//
 // Revision 1.1  1999/07/27 17:08:58  mcq
 // Initial commit
 //

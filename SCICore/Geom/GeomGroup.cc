@@ -12,12 +12,17 @@
  *  Copyright (C) 1994 SCI Group
  */
 
-#include <Geom/GeomGroup.h>
-#include <Containers/Array2.h>
-#include <Util/NotFinished.h>
-#include <Containers/String.h>
-#include <Malloc/Allocator.h>
+#include <SCICore/Geom/GeomGroup.h>
+#include <SCICore/Containers/Array2.h>
+#include <SCICore/Util/NotFinished.h>
+#include <SCICore/Containers/String.h>
+#include <SCICore/Malloc/Allocator.h>
+#ifdef _WIN32
+#include <float.h>
+#define MAXDOUBLE DBL_MAX
+#else
 #include <values.h>
+#endif
 
 namespace SCICore {
 namespace GeomSpace {
@@ -156,7 +161,7 @@ void GeomGroup::reset_bbox()
 
 void GeomGroup::preprocess()
 {
-    int i;
+    int i,j;
     for(i=0;i<objs.size();i++){
 	objs[i]->preprocess();
     }
@@ -172,7 +177,7 @@ void GeomGroup::preprocess()
 	current[i]=scinew ITreeLeaf(objs[i]);
 	volumes(i, i)=MAXDOUBLE;
 	objs[i]->get_bounds(bounds[i]);
-	for(int j=0;j<i;j++){
+	for(j=0;j<i;j++){
 	    BSphere bs(bounds[i]);
 	    bs.extend(bounds[j]);
 	    volumes(i,j)=volumes(j,i)=bs.volume();
@@ -184,8 +189,8 @@ void GeomGroup::preprocess()
 	// Fix this loop - cache minimums for each row.
 	double min=MAXDOUBLE;
 	int obj1=-1, obj2=-1;
-	for(int i=0;i<s;i++){
-	    for(int j=0;j<i;j++){
+	for(i=0;i<s;i++){
+	    for(j=0;j<i;j++){
 		if(volumes(i,j) < min){
 		    min=volumes(i,j);
 		    obj1=i;
@@ -214,7 +219,7 @@ void GeomGroup::preprocess()
 	if(next < objs.size()){
 	    current[obj2]=scinew ITreeLeaf(objs[next]);
 	    objs[next]->get_bounds(bounds[obj2]);
-	    for(int i=0;i<s;i++){
+	    for(i=0;i<s;i++){
 		if(current[i] && i!=obj2){
 		    BSphere s(bounds[obj2]);
 		    s.extend(bounds[i]);
@@ -231,7 +236,7 @@ void GeomGroup::preprocess()
 	    current[obj2]=0;
 	    bounds[obj2].reset();
 	}
-	for(int i=0;i<s;i++){
+	for(i=0;i<s;i++){
 	    if(current[i] && i!=obj1){
 		BSphere s(bounds[obj1]);
 		s.extend(bounds[i]);
@@ -350,6 +355,10 @@ ITree::~ITree()
 
 //
 // $Log$
+// Revision 1.2  1999/08/17 06:39:08  sparker
+// Merged in modifications from PSECore to make this the new "blessed"
+// version of SCIRun/Uintah.
+//
 // Revision 1.1  1999/07/27 16:56:40  mcq
 // Initial commit
 //

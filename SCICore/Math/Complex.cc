@@ -21,6 +21,10 @@
 #define M_PI 3.1415926535898
 #endif
 
+#ifndef M_PI
+#define M_PI 3.1415926535898
+#endif
+
 namespace SCICore {
 namespace Math {
 
@@ -141,6 +145,10 @@ istream &operator>> (istream &input, Complex &C){
 
 //
 // $Log$
+// Revision 1.2  1999/08/17 06:39:32  sparker
+// Merged in modifications from PSECore to make this the new "blessed"
+// version of SCIRun/Uintah.
+//
 // Revision 1.1  1999/07/27 16:57:02  mcq
 // Initial commit
 //

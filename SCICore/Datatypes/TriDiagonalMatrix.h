@@ -14,14 +14,14 @@
 #ifndef DATATYPES_TRIDIAGONALMATRIX_H
 #define DATATYPES_TRIDIAGONALMATRIX_H 1
 
-#include <CoreDatatypes/Matrix.h>
+#include <SCICore/CoreDatatypes/Matrix.h>
 
 namespace SCICore {
 namespace CoreDatatypes {
 
 typedef double TriRow[3];
 
-class TriDiagonalMatrix : public Matrix {
+class SCICORESHARE TriDiagonalMatrix : public Matrix {
     int rows;
     TriRow* data;
 public:
@@ -49,6 +49,10 @@ public:
 
 //
 // $Log$
+// Revision 1.2  1999/08/17 06:38:57  sparker
+// Merged in modifications from PSECore to make this the new "blessed"
+// version of SCIRun/Uintah.
+//
 // Revision 1.1  1999/07/27 16:56:30  mcq
 // Initial commit
 //

@@ -12,8 +12,8 @@
  */
 
 
-#include <Multitask/Task.h>
-#include <Multitask/ITC.h>
+#include <SCICore/Multitask/Task.h>
+#include <SCICore/Multitask/ITC.h>
 #include <iostream.h>
 #include <stdlib.h>
 #include <synch.h>

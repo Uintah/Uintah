@@ -12,20 +12,20 @@
  *  Copyright (C) 1998 SCI Group
  */
 
-#include <Util/NotFinished.h>
-#include <Dataflow/Module.h>
-#include <CoreDatatypes/ColorMap.h>
-#include <CommonDatatypes/ColorMapPort.h>
-#include <CommonDatatypes/ScalarFieldPort.h>
-#include <CoreDatatypes/ScalarFieldRG.h>
-#include <CommonDatatypes/GeometryPort.h>
-#include <Geom/GeomGroup.h>
-#include <Geom/GeomText.h>
-#include <Geom/TexSquare.h>
-#include <Geom/GeomTransform.h>
-#include <Geometry/Transform.h>
-#include <Malloc/Allocator.h>
-#include <Geom/Sticky.h>
+#include <SCICore/Util/NotFinished.h>
+#include <PSECore/Dataflow/Module.h>
+#include <SCICore/CoreDatatypes/ColorMap.h>
+#include <PSECore/CommonDatatypes/ColorMapPort.h>
+#include <PSECore/CommonDatatypes/ScalarFieldPort.h>
+#include <SCICore/CoreDatatypes/ScalarFieldRG.h>
+#include <PSECore/CommonDatatypes/GeometryPort.h>
+#include <SCICore/Geom/GeomGroup.h>
+#include <SCICore/Geom/GeomText.h>
+#include <SCICore/Geom/TexSquare.h>
+#include <SCICore/Geom/GeomTransform.h>
+#include <SCICore/Geometry/Transform.h>
+#include <SCICore/Malloc/Allocator.h>
+#include <SCICore/Geom/Sticky.h>
 #include <values.h>
 #include <stdio.h>
 
@@ -33,8 +33,8 @@
 namespace PSECommon {
 namespace Modules {
 
-using namespace PSECommon::Dataflow;
-using namespace PSECommon::CommonDatatypes;
+using namespace PSECore::Dataflow;
+using namespace PSECore::CommonDatatypes;
 using namespace SCICore::TclInterface;
 using namespace SCICore::GeomSpace;
 
@@ -182,6 +182,10 @@ void ColorMapKey::execute() {
 
 //
 // $Log$
+// Revision 1.2  1999/08/17 06:37:47  sparker
+// Merged in modifications from PSECore to make this the new "blessed"
+// version of SCIRun/Uintah.
+//
 // Revision 1.1  1999/07/27 16:58:11  mcq
 // Initial commit
 //

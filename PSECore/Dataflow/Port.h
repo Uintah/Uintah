@@ -14,11 +14,12 @@
 #ifndef SCI_project_Port_h
 #define SCI_project_Port_h 1
 
-#include <Containers/Array1.h>
-#include <Containers/String.h>
-#include <Comm/MessageBase.h>
+#include <SCICore/share/share.h>
+#include <SCICore/Containers/Array1.h>
+#include <SCICore/Containers/String.h>
+#include <PSECore/Comm/MessageBase.h>
 
-namespace PSECommon {
+namespace PSECore {
 namespace Dataflow {
 
 using SCICore::Containers::clString;
@@ -27,7 +28,7 @@ using SCICore::Containers::Array1;
 class Connection;
 class Module;
 
-class Port {
+class SCICORESHARE Port {
     clString type_name;
     clString portname;
     clString colorname;
@@ -65,7 +66,7 @@ public:
     clString get_colorname();
 };
 
-class IPort : public Port {
+class SCICORESHARE IPort : public Port {
     void update_light();
 protected:
     IPort(Module*, const clString&, const clString&,
@@ -76,7 +77,7 @@ public:
     virtual ~IPort();
 };
 
-class OPort : public Port {    
+class SCICORESHARE OPort : public Port {    
     void update_light();
 protected:
     OPort(Module*, const clString&, const clString&,
@@ -90,10 +91,14 @@ public:
 };
 
 } // End namespace Dataflow
-} // End namespace PSECommon
+} // End namespace PSECore
 
 //
 // $Log$
+// Revision 1.2  1999/08/17 06:38:25  sparker
+// Merged in modifications from PSECore to make this the new "blessed"
+// version of SCIRun/Uintah.
+//
 // Revision 1.1  1999/07/27 16:56:00  mcq
 // Initial commit
 //

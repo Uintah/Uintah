@@ -14,7 +14,7 @@
 #ifndef SCI_Containers_Stack_h
 #define SCI_Containers_Stack_h 1
 
-#include <Containers/Array1.h>
+#include <SCICore/Containers/Array1.h>
 
 namespace SCICore {
 namespace Containers {
@@ -61,7 +61,7 @@ public:
 // Start of included Stack.cc
 //
 
-#include <Util/Assert.h>
+#include <SCICore/Util/Assert.h>
 
 namespace SCICore {
 namespace Containers {
@@ -101,6 +101,10 @@ void Stack<T>::remove_all()
 
 //
 // $Log$
+// Revision 1.2  1999/08/17 06:38:38  sparker
+// Merged in modifications from PSECore to make this the new "blessed"
+// version of SCIRun/Uintah.
+//
 // Revision 1.1  1999/07/27 16:56:14  mcq
 // Initial commit
 //

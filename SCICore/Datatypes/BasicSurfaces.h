@@ -14,11 +14,13 @@
 #ifndef SCI_CoreDatatypes_BasicSurfaces_h
 #define SCI_CoreDatatypes_BasicSurfaces_h 1
 
-#include <CoreDatatypes/Surface.h>
-#include <CoreDatatypes/Mesh.h>
-#include <Geometry/Point.h>
-#include <Geometry/Vector.h>
-#include <Containers/Array1.h>
+#include <SCICore/share/share.h>
+
+#include <SCICore/CoreDatatypes/Surface.h>
+#include <SCICore/CoreDatatypes/Mesh.h>
+#include <SCICore/Geometry/Point.h>
+#include <SCICore/Geometry/Vector.h>
+#include <SCICore/Containers/Array1.h>
 
 namespace SCICore {
 namespace CoreDatatypes {
@@ -27,7 +29,7 @@ using Containers::Array1;
 using Geometry::Point;
 using Geometry::Vector;
 
-class CylinderSurface : public Surface {
+class SCICORESHARE CylinderSurface : public Surface {
     Point p1;
     Point p2;
     double radius;
@@ -63,7 +65,7 @@ public:
     static PersistentTypeID type_id;
 };
 
-class PointSurface : public Surface {
+class SCICORESHARE PointSurface : public Surface {
     Point pos;
     void add_node(Array1<NodeHandle>& nodes,
 		  char* id, const Point& p);
@@ -84,7 +86,7 @@ public:
     static PersistentTypeID type_id;
 };
 
-class SphereSurface : public Surface {
+class SCICORESHARE SphereSurface : public Surface {
     Point cen;
     Vector pole;
     double radius;
@@ -117,7 +119,7 @@ public:
     static PersistentTypeID type_id;
 };
 
-class PointsSurface : public Surface {
+class SCICORESHARE PointsSurface : public Surface {
 public:
     Array1<Point> pos;
     Array1<double> val;
@@ -144,6 +146,10 @@ public:
 
 //
 // $Log$
+// Revision 1.2  1999/08/17 06:38:43  sparker
+// Merged in modifications from PSECore to make this the new "blessed"
+// version of SCIRun/Uintah.
+//
 // Revision 1.1  1999/07/27 16:56:18  mcq
 // Initial commit
 //

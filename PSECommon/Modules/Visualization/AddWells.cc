@@ -12,22 +12,22 @@
  *  Copyright (C) 1995 SCI Group
  */
 
-#include <Util/NotFinished.h>
-#include <Dataflow/Module.h>
-#include <CommonDatatypes/GeometryPort.h>
-#include <Geom/GeomCylinder.h>
-#include <Geom/GeomGroup.h>
-#include <Geom/GeomLine.h>
-#include <Geom/Material.h>
-#include <Malloc/Allocator.h>
-#include <TclInterface/TCLvar.h>
+#include <SCICore/Util/NotFinished.h>
+#include <PSECore/Dataflow/Module.h>
+#include <PSECore/CommonDatatypes/GeometryPort.h>
+#include <SCICore/Geom/GeomCylinder.h>
+#include <SCICore/Geom/GeomGroup.h>
+#include <SCICore/Geom/GeomLine.h>
+#include <SCICore/Geom/Material.h>
+#include <SCICore/Malloc/Allocator.h>
+#include <SCICore/TclInterface/TCLvar.h>
 #include <fstream.h>
 
 namespace PSECommon {
 namespace Modules {
 
-using namespace PSECommon::Dataflow;
-using namespace PSECommon::CommonDatatypes;
+using namespace PSECore::Dataflow;
+using namespace PSECore::CommonDatatypes;
 using namespace SCICore::TclInterface;
 using namespace SCICore::GeomSpace;
 
@@ -164,6 +164,10 @@ void AddWells::execute()
 
 //
 // $Log$
+// Revision 1.2  1999/08/17 06:37:46  sparker
+// Merged in modifications from PSECore to make this the new "blessed"
+// version of SCIRun/Uintah.
+//
 // Revision 1.1  1999/07/27 16:58:10  mcq
 // Initial commit
 //

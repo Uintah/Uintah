@@ -12,20 +12,20 @@
  *  Copyright (C) 1994 SCI Group
  */
 
-#include <Util/NotFinished.h>
-#include <Dataflow/Connection.h>
-#include <Dataflow/Module.h>
-#include <CommonDatatypes/MeshPort.h>
-#include <CoreDatatypes/Mesh.h>
-#include <CommonDatatypes/BooleanPort.h>
-#include <CoreDatatypes/Boolean.h>
-#include <Malloc/Allocator.h>
+#include <SCICore/Util/NotFinished.h>
+#include <PSECore/Dataflow/Connection.h>
+#include <PSECore/Dataflow/Module.h>
+#include <PSECore/CommonDatatypes/MeshPort.h>
+#include <SCICore/CoreDatatypes/Mesh.h>
+#include <PSECore/CommonDatatypes/BooleanPort.h>
+#include <SCICore/CoreDatatypes/Boolean.h>
+#include <SCICore/Malloc/Allocator.h>
 
 namespace PSECommon {
 namespace Modules {
 
-using namespace PSECommon::Dataflow;
-using namespace PSECommon::CommonDatatypes;
+using namespace PSECore::Dataflow;
+using namespace PSECore::CommonDatatypes;
 using namespace SCICore::TclInterface;
 using namespace SCICore::GeomSpace;
 
@@ -127,6 +127,10 @@ void MeshIterator::execute()
 
 //
 // $Log$
+// Revision 1.2  1999/08/17 06:37:30  sparker
+// Merged in modifications from PSECore to make this the new "blessed"
+// version of SCIRun/Uintah.
+//
 // Revision 1.1  1999/07/27 16:57:45  mcq
 // Initial commit
 //

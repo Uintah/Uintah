@@ -35,9 +35,9 @@ case $host in
              CXX=/opt/MIPSpro/bin/CC
              AS=/opt/MIPSpro/bin/as
              LD=/opt/MIPSpro/bin/ld
-             CFLAGS="-g -xansi -LANG:ansi-for-init-scope=ON -n32 ${CFLAGS}"
-             SOFLAGS="-g -shared -n32 -no_unresolved -J\$(MAKE_PARALLELISM) -update_registry \$(OBJTOP)/so_locations ${SOFLAGS}"
-             LDFLAGS="-g -n32 -no_unresolved -J\$(MAKE_PARALLELISM)"
+             CFLAGS="-fullwarn -xansi -LANG:ansi-for-init-scope=ON -n32 ${CFLAGS}"
+             SOFLAGS="-shared -n32 -no_unresolved -J\$(MAKE_PARALLELISM) -update_registry \$(OBJTOP)/so_locations ${SOFLAGS}"
+             LDFLAGS="-n32 -no_unresolved -J\$(MAKE_PARALLELISM)"
              LDRUN_PREFIX="-Wl,-rpath -Wl,"
            else
              echo "no"
@@ -272,7 +272,6 @@ if test "$ITCL_VERSION" = "3.0" ; then
   ITCL_INCLUDE_DIR="${ITCL_PREFIX}/include"
   ITCL_LIB_DIR="${ITCL_PREFIX}/lib"
   ITCL_LIB_FLAG="-litk3.0 -litcl3.0"
-  ITCL_WIDGETS="${ITCL_LIB_DIR}/iwidgets/scripts"
 
   echo -L$ITCL_PREFIX $ITCL_LIB_FLAG
 else
@@ -284,7 +283,6 @@ fi
 AC_SUBST(ITCL_INCLUDE_DIR)
 AC_SUBST(ITCL_LIB_DIR)
 AC_SUBST(ITCL_LIB_FLAG)
-AC_SUBST(ITCL_WIDGETS)
 
 ##-- Check for header files ---------------------------------------------------
 
@@ -298,49 +296,46 @@ AC_CHECK_HEADERS(sys/time.h)
 AC_OUTPUT(Makefile \
             scripts/compile.mk \
             scripts/targets.mk \
-            Makefile \
-              libs/Makefile \
-                libs/SCICore/Makefile \
-                  libs/SCICore/Containers/Makefile \
-                  libs/SCICore/CoreDatatypes/Makefile \
-                  libs/SCICore/Exceptions/Makefile \
-                  libs/SCICore/Geom/Makefile \
-                  libs/SCICore/Geometry/Makefile \
-                  libs/SCICore/Malloc/Makefile \
-                  libs/SCICore/Math/Makefile \
-                  libs/SCICore/Multitask/Makefile \
-                  libs/SCICore/Persistent/Makefile \
-                  libs/SCICore/TclInterface/Makefile \
-                  libs/SCICore/TkExtensions/Makefile \
-                  libs/SCICore/Tester/Makefile \
-                  libs/SCICore/Util/Makefile \
-                libs/PSECore/Makefile \
-                  libs/PSECore/Comm/Makefile \
-                  libs/PSECore/CommonDatatypes/Makefile \
-                  libs/PSECore/Constraints/Makefile \
-                  libs/PSECore/Dataflow/Makefile \
-                  libs/PSECore/Widgets/Makefile \
+              SCICore/Makefile \
+                SCICore/Containers/Makefile \
+                SCICore/CoreDatatypes/Makefile \
+                SCICore/Exceptions/Makefile \
+                SCICore/Geom/Makefile \
+                SCICore/Geometry/Makefile \
+                SCICore/Malloc/Makefile \
+                SCICore/Math/Makefile \
+                SCICore/Multitask/Makefile \
+                SCICore/Persistent/Makefile \
+                SCICore/TclInterface/Makefile \
+                SCICore/TkExtensions/Makefile \
+                SCICore/Tester/Makefile \
+                SCICore/Util/Makefile \
+              PSECore/Makefile \
+                PSECore/Comm/Makefile \
+                PSECore/CommonDatatypes/Makefile \
+                PSECore/Constraints/Makefile \
+                PSECore/Dataflow/Makefile \
+                PSECore/Widgets/Makefile \
               main/Makefile \
-              packages/Makefile \
-                packages/PSECommon/Makefile \
-                  packages/PSECommon/ThirdParty/Makefile \
-                    packages/PSECommon/ThirdParty/mpeg/Makefile \
-                  packages/PSECommon/Modules/Makefile \
-                    packages/PSECommon/Modules/FEM/Makefile \
-                    packages/PSECommon/Modules/Readers/Makefile \
-                    packages/PSECommon/Modules/Salmon/Makefile \
-                    packages/PSECommon/Modules/Surface/Makefile \
-                    packages/PSECommon/Modules/Matrix/Makefile \
-                    packages/PSECommon/Modules/Iterators/Makefile \
-                    packages/PSECommon/Modules/Fields/Makefile \
-                    packages/PSECommon/Modules/Writers/Makefile \
-                    packages/PSECommon/Modules/Visualization/Makefile \
-                packages/Uintah/Makefile \
-                  packages/Uintah/Datatypes/Makefile \
-                    packages/Uintah/Datatypes/Particles/Makefile \
-                  packages/Uintah/Modules/Makefile \
-                    packages/Uintah/Modules/MPMViz/Makefile \
-                    packages/Uintah/Modules/Readers/Makefile \
+              PSECommon/Makefile \
+                PSECommon/ThirdParty/Makefile \
+                  PSECommon/ThirdParty/mpeg/Makefile \
+                PSECommon/Modules/Makefile \
+                  PSECommon/Modules/FEM/Makefile \
+                  PSECommon/Modules/Readers/Makefile \
+                  PSECommon/Modules/Salmon/Makefile \
+                  PSECommon/Modules/Surface/Makefile \
+                  PSECommon/Modules/Matrix/Makefile \
+                  PSECommon/Modules/Iterators/Makefile \
+                  PSECommon/Modules/Fields/Makefile \
+                  PSECommon/Modules/Writers/Makefile \
+                  PSECommon/Modules/Visualization/Makefile \
+              Uintah/Makefile \
+                Uintah/Datatypes/Makefile \
+                  Uintah/Datatypes/Particles/Makefile \
+                Uintah/Modules/Makefile \
+                  Uintah/Modules/MPMViz/Makefile \
+                  Uintah/Modules/Readers/Makefile \
          )
 
 #              PSECore/Makefile \

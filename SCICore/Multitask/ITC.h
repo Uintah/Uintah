@@ -14,7 +14,7 @@
 #ifndef SCI_Multitask_ITC_h
 #define SCI_Multitask_ITC_h 1
 
-#include <share/share.h>
+#include <SCICore/share/share.h>
 
 namespace SCICore {
 namespace Multitask {
@@ -27,7 +27,7 @@ struct LibMutex_private;
 struct Semaphore_private;
 
 
-class SHARE Mutex {
+class SCICORESHARE Mutex {
     Mutex_private* priv;
     friend class ConditionVariable;
 public:
@@ -38,7 +38,7 @@ public:
     int try_lock();
 };
 
-class SHARE LibMutex {
+class SCICORESHARE LibMutex {
     LibMutex_private* priv;
 public:
     LibMutex();
@@ -48,7 +48,7 @@ public:
     int try_lock();
 };
 
-class SHARE Semaphore {
+class SCICORESHARE Semaphore {
     Semaphore_private* priv;
 public:
     Semaphore(int count);
@@ -58,7 +58,7 @@ public:
     int try_down();
 };
 
-class SHARE Barrier {
+class SCICORESHARE Barrier {
     Barrier_private* priv;
 public:
     Barrier();
@@ -66,7 +66,7 @@ public:
     void wait(int n);
 };
 
-class SHARE ConditionVariable {
+class SCICORESHARE ConditionVariable {
     ConditionVariable_private* priv;
 public:
     ConditionVariable();
@@ -76,7 +76,7 @@ public:
     void broadcast();
 };
 
-class SHARE CrowdMonitor {
+class SCICORESHARE CrowdMonitor {
     CrowdMonitor_private* priv;
 public:
     CrowdMonitor();
@@ -93,6 +93,10 @@ public:
 
 //
 // $Log$
+// Revision 1.2  1999/08/17 06:39:37  sparker
+// Merged in modifications from PSECore to make this the new "blessed"
+// version of SCIRun/Uintah.
+//
 // Revision 1.1  1999/07/27 16:57:06  mcq
 // Initial commit
 //
@@ -111,6 +115,6 @@ public:
 //
 //
 
-#include <Multitask/Mailbox.h>
+#include <SCICore/Multitask/Mailbox.h>
 
 #endif /* SCI_Multitask_ITC_h */

@@ -12,22 +12,22 @@
  *  Copyright (C) 1995 SCI Group
  */
 
-#include <Util/NotFinished.h>
-#include <Containers/String.h>
-#include <Dataflow/Module.h>
-#include <CoreDatatypes/ScalarFieldRGchar.h>
-#include <CommonDatatypes/ScalarFieldPort.h>
+#include <SCICore/Util/NotFinished.h>
+#include <SCICore/Containers/String.h>
+#include <PSECore/Dataflow/Module.h>
+#include <SCICore/CoreDatatypes/ScalarFieldRGchar.h>
+#include <PSECore/CommonDatatypes/ScalarFieldPort.h>
 #include <GL/gl.h>
 #include <GL/glu.h>
 #include <GL/glx.h>
-#include <Geom/Color.h>
-#include <Geom/GeomOpenGL.h>
-#include <Malloc/Allocator.h>
-#include <Math/MinMax.h>
-#include <Math/MiscMath.h>
-#include <TclInterface/TCLTask.h>
-#include <TclInterface/TCLvar.h>
-#include <TclInterface/TCL.h>
+#include <SCICore/Geom/Color.h>
+#include <SCICore/Geom/GeomOpenGL.h>
+#include <SCICore/Malloc/Allocator.h>
+#include <SCICore/Math/MinMax.h>
+#include <SCICore/Math/MiscMath.h>
+#include <SCICore/TclInterface/TCLTask.h>
+#include <SCICore/TclInterface/TCLvar.h>
+#include <SCICore/TclInterface/TCL.h>
 #include <tcl.h>
 #include <tk.h>
 #include <iostream.h>
@@ -41,8 +41,8 @@ extern "C" GLXContext OpenGLGetContext(Tcl_Interp*, char*);
 namespace PSECommon {
 namespace Modules {
 
-using namespace PSECommon::Dataflow;
-using namespace PSECommon::CommonDatatypes;
+using namespace PSECore::Dataflow;
+using namespace PSECore::CommonDatatypes;
 using namespace SCICore::TclInterface;
 using namespace SCICore::GeomSpace;
 using namespace SCICore::Math;
@@ -793,6 +793,10 @@ int TrainSeg2::makeCurrent() {
 
 //
 // $Log$
+// Revision 1.2  1999/08/17 06:37:29  sparker
+// Merged in modifications from PSECore to make this the new "blessed"
+// version of SCIRun/Uintah.
+//
 // Revision 1.1  1999/07/27 16:57:43  mcq
 // Initial commit
 //

@@ -12,19 +12,25 @@
  *  Copyright (C) 1994 SCI Group
  */
 
-#include <CommonDatatypes/ScalarFieldPort.h>
+#include <PSECore/CommonDatatypes/ScalarFieldPort.h>
 
-namespace PSECommon {
+namespace PSECore {
 namespace CommonDatatypes {
+
+using namespace SCICore::CoreDatatypes;
 
 clString SimpleIPort<ScalarFieldHandle>::port_type("ScalarField");
 clString SimpleIPort<ScalarFieldHandle>::port_color("VioletRed2");
 
 } // End namespace CommonDatatypes
-} // End namespace PSECommon
+} // End namespace PSECore
 
 //
 // $Log$
+// Revision 1.2  1999/08/17 06:38:10  sparker
+// Merged in modifications from PSECore to make this the new "blessed"
+// version of SCIRun/Uintah.
+//
 // Revision 1.1  1999/07/27 16:55:49  mcq
 // Initial commit
 //

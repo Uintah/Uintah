@@ -12,20 +12,20 @@
  *  Copyright (C) 1994 SCI Group
  */
 
-#include <Dataflow/ModuleHelper.h>
+#include <PSECore/Dataflow/ModuleHelper.h>
 
-#include <Comm/MessageBase.h>
-#include <Comm/MessageTypes.h>
-#include <Dataflow/Connection.h>
-#include <Dataflow/Module.h>
-#include <Dataflow/NetworkEditor.h>
-#include <Dataflow/Port.h>
+#include <PSECore/Comm/MessageBase.h>
+#include <PSECore/Comm/MessageTypes.h>
+#include <PSECore/Dataflow/Connection.h>
+#include <PSECore/Dataflow/Module.h>
+#include <PSECore/Dataflow/NetworkEditor.h>
+#include <PSECore/Dataflow/Port.h>
 
 #include <iostream.h>
 
 #define DEFAULT_MODULE_PRIORITY 90
 
-namespace PSECommon {
+namespace PSECore {
 namespace Dataflow {
 
 ModuleHelper::ModuleHelper(Module* module)
@@ -40,7 +40,7 @@ ModuleHelper::~ModuleHelper()
 
 int ModuleHelper::body(int)
 {
-  using PSECommon::Comm::MessageTypes;
+  using PSECore::Comm::MessageTypes;
 
     if(module->have_own_dispatch){
 	module->do_execute();
@@ -82,10 +82,14 @@ int ModuleHelper::body(int)
 }
 
 } // End namespace Dataflow
-} // End namespace PSECommon
+} // End namespace PSECore
 
 //
 // $Log$
+// Revision 1.2  1999/08/17 06:38:23  sparker
+// Merged in modifications from PSECore to make this the new "blessed"
+// version of SCIRun/Uintah.
+//
 // Revision 1.1  1999/07/27 16:55:58  mcq
 // Initial commit
 //

@@ -15,15 +15,14 @@
 #ifndef SCI_Containers_Queue_h
 #define SCI_Containers_Queue_h 1
 
-#include <Util/Assert.h>
+#include <SCICore/Util/Assert.h>
 
 namespace SCICore {
-  namespace Tester {
-    class RigorousTest;
-  }
+
+namespace Tester {
+  class RigorousTest;
 }
 
-namespace SCICore {
 namespace Containers {
 
 using SCICore::Tester::RigorousTest;
@@ -104,7 +103,9 @@ public:
 // Start of included Queue.cc
 //
 
-#include <Malloc/Allocator.h>
+#include <SCICore/Malloc/Allocator.h>
+#include <SCICore/Tester/RigorousTest.h>
+//#include <iostream.h>
 
 namespace SCICore {
 namespace Containers {
@@ -136,7 +137,9 @@ template<class T> void Queue<T>::append(const T& item)
     _length++;
 }
 
-template<class T> T Queue<T>::pop()
+template<class T>
+T
+Queue<T>::pop()
 {
     ASSERT(head != 0);
     T item=head->item;
@@ -163,13 +166,18 @@ Queue<T>::length()
 }
 
 
-#include <Tester/RigorousTest.h>
+#include <SCICore/Tester/RigorousTest.h>
 //#include <iostream.h>
 
 
 template<class T>
 void Queue<T>::test_rigorous(RigorousTest* __test)
 {
+  // Dd: I don't understand how this test_rigorous is supposed to work
+  //     It is getting instantiated (at least under g++) for T == char *
+  //     This causes the code not to compile because we are tryping
+  //     to compare "char *"s (returned from pop() with ints.
+#if 0
     //Test the queue when holding ints
     Queue x;
     
@@ -247,6 +255,7 @@ void Queue<T>::test_rigorous(RigorousTest* __test)
      
     TEST(cq.length()==0);
     TEST(cq.is_empty()==1);
+#endif
 }
 
 } // End namespace Containers
@@ -254,6 +263,10 @@ void Queue<T>::test_rigorous(RigorousTest* __test)
 
 //
 // $Log$
+// Revision 1.2  1999/08/17 06:38:37  sparker
+// Merged in modifications from PSECore to make this the new "blessed"
+// version of SCIRun/Uintah.
+//
 // Revision 1.1  1999/07/27 16:56:13  mcq
 // Initial commit
 //

@@ -15,28 +15,28 @@
 #include <config.h>
 #undef SCI_ASSERTION_LEVEL_3
 #define SCI_ASSERTION_LEVEL_2
-#include <Tester/RigorousTest.h>
-#include <Containers/BitArray1.h>
-#include <Containers/HashTable.h>
-#include <Util/NotFinished.h>
-#include <Dataflow/Module.h>
-#include <CommonDatatypes/GeometryPort.h>
-#include <CoreDatatypes/Mesh.h>
-#include <CoreDatatypes/ScalarField.h>
-#include <CoreDatatypes/ScalarFieldRG.h>
-#include <CoreDatatypes/ScalarFieldUG.h>
-#include <CommonDatatypes/ScalarFieldPort.h>
-#include <CommonDatatypes/SurfacePort.h>
-#include <CoreDatatypes/TriSurface.h>
-#include <Geometry/Point.h>
-#include <Geom/GeomObj.h>
-#include <Geom/Pt.h>
-#include <Geom/GeomGroup.h>
-#include <Geom/Material.h>
-#include <Geom/GeomTri.h>
-#include <Malloc/Allocator.h>
-#include <Multitask/Task.h>
-#include <TclInterface/TCLvar.h>
+#include <SCICore/Tester/RigorousTest.h>
+#include <SCICore/Containers/BitArray1.h>
+#include <SCICore/Containers/HashTable.h>
+#include <SCICore/Util/NotFinished.h>
+#include <PSECore/Dataflow/Module.h>
+#include <PSECore/CommonDatatypes/GeometryPort.h>
+#include <SCICore/CoreDatatypes/Mesh.h>
+#include <SCICore/CoreDatatypes/ScalarField.h>
+#include <SCICore/CoreDatatypes/ScalarFieldRG.h>
+#include <SCICore/CoreDatatypes/ScalarFieldUG.h>
+#include <PSECore/CommonDatatypes/ScalarFieldPort.h>
+#include <PSECore/CommonDatatypes/SurfacePort.h>
+#include <SCICore/CoreDatatypes/TriSurface.h>
+#include <SCICore/Geometry/Point.h>
+#include <SCICore/Geom/GeomObj.h>
+#include <SCICore/Geom/Pt.h>
+#include <SCICore/Geom/GeomGroup.h>
+#include <SCICore/Geom/Material.h>
+#include <SCICore/Geom/GeomTri.h>
+#include <SCICore/Malloc/Allocator.h>
+#include <SCICore/Multitask/Task.h>
+#include <SCICore/TclInterface/TCLvar.h>
 #include <iostream.h>
 #include <strstream.h>
 
@@ -51,8 +51,8 @@
 namespace PSECommon {
 namespace Modules {
 
-using namespace PSECommon::Dataflow;
-using namespace PSECommon::CommonDatatypes;
+using namespace PSECore::Dataflow;
+using namespace PSECore::CommonDatatypes;
 using namespace SCICore::TclInterface;
 using namespace SCICore::GeomSpace;
 using namespace SCICore::Containers;
@@ -292,6 +292,10 @@ void BitVisualize::vol_render1_grid() {
 
 //
 // $Log$
+// Revision 1.2  1999/08/17 06:37:46  sparker
+// Merged in modifications from PSECore to make this the new "blessed"
+// version of SCIRun/Uintah.
+//
 // Revision 1.1  1999/07/27 16:58:10  mcq
 // Initial commit
 //

@@ -12,26 +12,26 @@
  *  Copyright (C) 1994 SCI Group
  */
 
-#include <Util/NotFinished.h>
-#include <Dataflow/Module.h>
-#include <CommonDatatypes/ScalarFieldPort.h>
-#include <CommonDatatypes/SurfacePort.h>
-#include <CoreDatatypes/ScalarFieldRG.h>
-#include <CoreDatatypes/ScalarFieldUG.h>
-#include <CommonDatatypes/VectorFieldPort.h>
-#include <CoreDatatypes/VectorFieldRG.h>
-#include <CoreDatatypes/VectorFieldUG.h>
-#include <Geometry/Point.h>
-#include <Geometry/Vector.h>
-#include <TclInterface/TCLvar.h>
-#include <Math/Expon.h>
-#include <Multitask/Task.h>
+#include <SCICore/Util/NotFinished.h>
+#include <PSECore/Dataflow/Module.h>
+#include <PSECore/CommonDatatypes/ScalarFieldPort.h>
+#include <PSECore/CommonDatatypes/SurfacePort.h>
+#include <SCICore/CoreDatatypes/ScalarFieldRG.h>
+#include <SCICore/CoreDatatypes/ScalarFieldUG.h>
+#include <PSECore/CommonDatatypes/VectorFieldPort.h>
+#include <SCICore/CoreDatatypes/VectorFieldRG.h>
+#include <SCICore/CoreDatatypes/VectorFieldUG.h>
+#include <SCICore/Geometry/Point.h>
+#include <SCICore/Geometry/Vector.h>
+#include <SCICore/TclInterface/TCLvar.h>
+#include <SCICore/Math/Expon.h>
+#include <SCICore/Multitask/Task.h>
 
 namespace PSECommon {
 namespace Modules {
 
-using namespace PSECommon::Dataflow;
-using namespace PSECommon::CommonDatatypes;
+using namespace PSECore::Dataflow;
+using namespace PSECore::CommonDatatypes;
 using namespace SCICore::TclInterface;
 using namespace SCICore::GeomSpace;
 using namespace SCICore::Multitask;
@@ -153,6 +153,10 @@ void GradientMagnitude::execute()
 
 //
 // $Log$
+// Revision 1.2  1999/08/17 06:37:28  sparker
+// Merged in modifications from PSECore to make this the new "blessed"
+// version of SCIRun/Uintah.
+//
 // Revision 1.1  1999/07/27 16:57:42  mcq
 // Initial commit
 //

@@ -20,11 +20,12 @@
 #ifndef SCI_project_GuiServer_h
 #define SCI_project_GuiServer_h 1
 
-#include <Util/share.h>
-#include <Containers/Array1.h>
-#include <Multitask/Task.h>
-#include <TclInterface/Remote.h>
-#include <TclInterface/TCLTask.h>
+#include <SCICore/share/share.h>
+
+#include <SCICore/Containers/Array1.h>
+#include <SCICore/Multitask/Task.h>
+#include <SCICore/TclInterface/Remote.h>
+#include <SCICore/TclInterface/TCLTask.h>
 
 namespace SCICore {
 namespace TclInterface {
@@ -32,7 +33,7 @@ namespace TclInterface {
 using SCICore::Multitask::Task;
 using SCICore::Containers::Array1;
 
-class SHARE GuiServer : public Task {
+class SCICORESHARE GuiServer : public Task {
     private:
 	int gui_socket;
 	Array1<int> clients;
@@ -50,6 +51,10 @@ class SHARE GuiServer : public Task {
 
 //
 // $Log$
+// Revision 1.2  1999/08/17 06:39:43  sparker
+// Merged in modifications from PSECore to make this the new "blessed"
+// version of SCIRun/Uintah.
+//
 // Revision 1.1  1999/07/27 16:57:14  mcq
 // Initial commit
 //

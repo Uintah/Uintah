@@ -47,7 +47,7 @@ PATTERNS
 WARNING
    
 ****************************************/
-class RealtimeThread {
+class SCICORESHARE RealtimeThread {
     int interval;
 public:
     //////////

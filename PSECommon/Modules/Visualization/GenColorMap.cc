@@ -12,22 +12,22 @@
  *  Copyright (C) 1995 SCI Group
  */
 
-#include <Dataflow/Module.h>
-#include <Util/NotFinished.h>
-#include <CommonDatatypes/ColorMapPort.h>
-#include <CoreDatatypes/ColorMap.h>
-#include <Geom/Material.h>
-#include <Geom/TCLGeom.h>
-#include <Malloc/Allocator.h>
-#include <Math/CatmullRomSpline.h>
+#include <PSECore/Dataflow/Module.h>
+#include <SCICore/Util/NotFinished.h>
+#include <PSECore/CommonDatatypes/ColorMapPort.h>
+#include <SCICore/CoreDatatypes/ColorMap.h>
+#include <SCICore/Geom/Material.h>
+#include <SCICore/Geom/TCLGeom.h>
+#include <SCICore/Malloc/Allocator.h>
+#include <SCICore/Math/CatmullRomSpline.h>
 
-#include <TclInterface/TCLvar.h>
+#include <SCICore/TclInterface/TCLvar.h>
 
 namespace PSECommon {
 namespace Modules {
 
-using namespace PSECommon::Dataflow;
-using namespace PSECommon::CommonDatatypes;
+using namespace PSECore::Dataflow;
+using namespace PSECore::CommonDatatypes;
 using namespace SCICore::TclInterface;
 using namespace SCICore::GeomSpace;
 using namespace SCICore::Containers;
@@ -52,6 +52,42 @@ public:
 };
 
 
+/**************************************
+CLASS
+   GenColorMap
+       GenColorMap generates a colormap which is used to map
+       voltage values to colors.  The output of this module is used
+       by the SurfToGeom, Streamline, IsoSurface, and CuttingPlane
+       modules.  The colormap can be changed interactively.
+
+GENERAL INFORMATION
+
+   GenColorMap
+  
+   Author:  James T. Purciful<br>
+            Department of Computer Science<br>
+            University of Utah
+
+   Date:    April 1995
+   
+   C-SAFE
+   
+   Copyright <C> 1995 SCI Group
+
+KEYWORDS
+   Visualization, SurfToGeom, Streamline, IsoSurface, CuttingPlane
+
+DESCRIPTION
+   GenColorMap generates a colormap which is used to map
+   voltage values to colors.  The output of this module is used
+   by the SurfToGeom, Streamline, IsoSurface, and CuttingPlane
+   modules.  The colormap can be changed interactively.
+
+WARNING
+   None
+
+****************************************/
+
 class GenColorMap : public Module {
    ColorMapOPort* outport;
    
@@ -69,19 +105,51 @@ class GenColorMap : public Module {
    TCLdouble max;
 
    TCLint gen_rangemap;
-   
+ 
+        // GROUP:  Private functions:
+        //////////////////////////////
+        //  
    Material find_level( const double );
+        /////////////////
    void gen_map( const clString& mt );
    int making_map;
    
 public:
+
+        // GROUP:  Constructors:
+        ///////////////////////////
+        //
+        // Constructs an instance of class GenColorMap
+        //
+        // Constructor taking
+        //    [in] id as an identifier
+        //
    GenColorMap( const clString& id );
+
+        ///////////////////////////
+        //
+        // Constructor taking
+        //    [in] GenColorMap for copying
+        //    [in] deep a copying flag
+        //
    GenColorMap( const GenColorMap&, int deep );
+
+        // GROUP:  Destructor:
+        ///////////////////////////
+        // Destructor
    virtual ~GenColorMap();
    virtual Module* clone( int deep );
+
+        // GROUP:  Access functions:
+        ///////////////////////////
+        //
+        // execute() - execution scheduled by scheduler
    virtual void execute();
 
+        ///////////////////////////
    void init_tcl();
+        //////////////////////////
+        // tcl_command - overides tcl_command in base class Module, takes:
    void tcl_command( TCLArgs&, void* );
 };
 
@@ -626,6 +694,10 @@ GenColorMap::gen_map( const clString& mt )
 
 //
 // $Log$
+// Revision 1.2  1999/08/17 06:37:48  sparker
+// Merged in modifications from PSECore to make this the new "blessed"
+// version of SCIRun/Uintah.
+//
 // Revision 1.1  1999/07/27 16:58:12  mcq
 // Initial commit
 //

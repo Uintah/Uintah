@@ -12,10 +12,12 @@
  *  Copyright (C) 1998 SCI Group
  */
 
-#include <Datatypes/Particles/cfdlibParticleSet.h>
-#include <Containers/String.h>
-#include <Malloc/Allocator.h>
 #include <iostream.h>
+
+#include <SCICore/Containers/String.h>
+#include <SCICore/Malloc/Allocator.h>
+
+#include <Uintah/Datatypes/Particles/cfdlibParticleSet.h>
 
 namespace Uintah {
 namespace Datatypes {
@@ -202,6 +204,10 @@ void cfdlibParticleSet::print() {
 
 //
 // $Log$
+// Revision 1.2  1999/08/17 06:40:09  sparker
+// Merged in modifications from PSECore to make this the new "blessed"
+// version of SCIRun/Uintah.
+//
 // Revision 1.1  1999/07/27 16:59:01  mcq
 // Initial commit
 //

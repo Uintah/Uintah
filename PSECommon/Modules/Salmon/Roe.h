@@ -14,18 +14,18 @@
 #ifndef SCI_project_module_Roe_h
 #define SCI_project_module_Roe_h
 
-#include <Containers/Array1.h>
-#include <Containers/HashTable.h>
-#include <Comm/MessageBase.h>
-#include <Geom/Color.h>
-#include <Geom/TCLGeom.h>
-#include <Geom/TCLView.h>
-#include <Geom/View.h>
-#include <Geometry/BBox.h>
-#include <Geometry/Transform.h>
-#include <TclInterface/TCL.h>
-#include <TclInterface/TCLvar.h>
-#include <Modules/Salmon/BallAux.h>
+#include <SCICore/Containers/Array1.h>
+#include <SCICore/Containers/HashTable.h>
+#include <PSECore/Comm/MessageBase.h>
+#include <SCICore/Geom/Color.h>
+#include <SCICore/Geom/TCLGeom.h>
+#include <SCICore/Geom/TCLView.h>
+#include <SCICore/Geom/View.h>
+#include <SCICore/Geometry/BBox.h>
+#include <SCICore/Geometry/Transform.h>
+#include <SCICore/TclInterface/TCL.h>
+#include <SCICore/TclInterface/TCLvar.h>
+#include <PSECommon/Modules/Salmon/BallAux.h>
 
 namespace SCICore {
   namespace GeomSpace {
@@ -44,7 +44,7 @@ namespace SCICore {
   }
 }
 
-namespace PSECommon {
+namespace PSECore {
   namespace CommonDatatypes {
     struct GeometryData;
   }
@@ -53,8 +53,8 @@ namespace PSECommon {
 namespace PSECommon {
 namespace Modules {
 
-using PSECommon::Comm::MessageBase;
-using PSECommon::CommonDatatypes::GeometryData;
+using PSECore::Comm::MessageBase;
+using PSECore::CommonDatatypes::GeometryData;
 
 using SCICore::GeomSpace::TCLColor;
 using SCICore::GeomSpace::TCLView;
@@ -235,6 +235,8 @@ public:
     // Object processing utility routines
     void do_for_visible(Renderer*, RoeVisPMF);
 
+    void do_for_pick(Renderer*, RoeVisPMF);
+
     void set_current_time(double time);
 
     void dump_objects(const clString&, const clString& format);
@@ -264,6 +266,10 @@ public:
 
 //
 // $Log$
+// Revision 1.2  1999/08/17 06:37:39  sparker
+// Merged in modifications from PSECore to make this the new "blessed"
+// version of SCIRun/Uintah.
+//
 // Revision 1.1  1999/07/27 16:57:52  mcq
 // Initial commit
 //

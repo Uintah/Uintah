@@ -12,19 +12,24 @@
  *  Copyright (C) 1994 SCI Group
  */
 
-#include <CoreDatatypes/TriSurface.h>
+#include <SCICore/CoreDatatypes/TriSurface.h>
 
-#include <Util/Assert.h>
-#include <Util/NotFinished.h>
-#include <Containers/TrivialAllocator.h>
-#include <Containers/Queue.h>
-#include <CoreDatatypes/SurfTree.h>
-#include <Geometry/BBox.h>
-#include <Geometry/Grid.h>
-#include <Math/MiscMath.h>
-#include <Malloc/Allocator.h>
+#include <SCICore/Util/Assert.h>
+#include <SCICore/Util/NotFinished.h>
+#include <SCICore/Containers/TrivialAllocator.h>
+#include <SCICore/Containers/Queue.h>
+#include <SCICore/CoreDatatypes/SurfTree.h>
+#include <SCICore/Geometry/BBox.h>
+#include <SCICore/Geometry/Grid.h>
+#include <SCICore/Math/MiscMath.h>
+#include <SCICore/Malloc/Allocator.h>
 
 #include <iostream.h>
+
+#ifdef _WIN32
+#include <stdlib.h>
+#define drand48() rand()
+#endif
 
 namespace SCICore {
 namespace CoreDatatypes {
@@ -81,7 +86,10 @@ TriSurface::TriSurface(const TriSurface& copy, Representation)
 : Surface(copy)
 {
     points=copy.points;
-    elements=copy.elements;
+    elements=Array1<TSElement*>(copy.elements.size());
+    for (int i=0; i<elements.size(); i++)
+	elements[i]=new TSElement(*(copy.elements[i]));
+//    elements=copy.elements;
     bcIdx=copy.bcIdx;
     bcVal=copy.bcVal;
     haveNodeInfo=copy.haveNodeInfo;
@@ -1095,6 +1103,7 @@ void TriSurface::distribute_samples()
 void Pio(Piostream& stream, TSElement*& data)
 {
     using SCICore::PersistentSpace::Pio;
+    using SCICore::Containers::Pio;
 
     if(stream.reading())
 	data=new TSElement(0,0,0);
@@ -1122,6 +1131,10 @@ void Pio(Piostream& stream, TSEdge*& data)
 
 //
 // $Log$
+// Revision 1.2  1999/08/17 06:38:57  sparker
+// Merged in modifications from PSECore to make this the new "blessed"
+// version of SCIRun/Uintah.
+//
 // Revision 1.1  1999/07/27 16:56:30  mcq
 // Initial commit
 //

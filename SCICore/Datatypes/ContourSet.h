@@ -14,20 +14,22 @@
 #ifndef SCI_project_ContourSet_h
 #define SCI_project_ContourSet_h 1
 
-#include <CoreDatatypes/Datatype.h>
+#include <SCICore/CoreDatatypes/Datatype.h>
 
-#include <Containers/Array1.h>
-#include <Containers/LockingHandle.h>
-#include <Containers/String.h>
-#include <Geometry/BBox.h>
-#include <Geometry/Point.h>
-#include <Geometry/Vector.h>
+#include <SCICore/Containers/Array1.h>
+#include <SCICore/Containers/Array2.h>
+#include <SCICore/Containers/LockingHandle.h>
+#include <SCICore/Containers/String.h>
+#include <SCICore/Geometry/BBox.h>
+#include <SCICore/Geometry/Point.h>
+#include <SCICore/Geometry/Vector.h>
 
 namespace SCICore {
 namespace CoreDatatypes {
 
 using SCICore::Containers::LockingHandle;
 using SCICore::Containers::Array1;
+using SCICore::Containers::Array2;
 using SCICore::Geometry::Point;
 using SCICore::Geometry::Vector;
 using SCICore::Geometry::BBox;
@@ -38,16 +40,20 @@ using SCICore::PersistentSpace::PersistentTypeID;
 class ContourSet;
 typedef LockingHandle<ContourSet> ContourSetHandle;
 
-class ContourSet : public Datatype {
+class SCICORESHARE ContourSet : public Datatype {
 public:
     Array1<Array1<Point> > contours;
     Array1<double> conductivity;
+    Array1<Array1<Array1<Point> > > levels;
+    Array1<Array1<int> > level_map;
     int bdry_type;
     Vector basis[3];
     Vector origin;
     BBox bbox;
     double space;
-    clString name;
+    Array1<clString> name;
+    Array2<int> split_join; //split_join[line#][param]
+    Array1<int> matl;	// what's the matl idx for each named contour
 
     ContourSet();
     ContourSet(const ContourSet &copy);
@@ -67,6 +73,10 @@ public:
 
 //
 // $Log$
+// Revision 1.2  1999/08/17 06:38:44  sparker
+// Merged in modifications from PSECore to make this the new "blessed"
+// version of SCIRun/Uintah.
+//
 // Revision 1.1  1999/07/27 16:56:20  mcq
 // Initial commit
 //

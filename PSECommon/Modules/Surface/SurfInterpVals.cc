@@ -59,6 +59,10 @@ class SurfInterpVals : public Module {
     TCLstring method;
     TCLint numnbrs;
     TCLstring surfid;
+    TCLint cache;
+    Array2<int> contribIdx;
+    Array2<double> contribAmt;
+    
 public:
     SurfInterpVals(const clString& id);
     SurfInterpVals(const SurfInterpVals&, int deep);
@@ -75,7 +79,8 @@ static clString module_name("SurfInterpVals");
 
 SurfInterpVals::SurfInterpVals(const clString& id)
 : Module("SurfInterpVals", id, Filter), method("method", id, this),
-  numnbrs("numnbrs", id, this), surfid("surfid", id, this)
+  numnbrs("numnbrs", id, this), surfid("surfid", id, this),
+  cache("cache", id, this)
 {
     isurface1=scinew SurfaceIPort(this, "Surface", SurfaceIPort::Atomic);
     add_iport(isurface1);
@@ -88,7 +93,8 @@ SurfInterpVals::SurfInterpVals(const clString& id)
 
 SurfInterpVals::SurfInterpVals(const SurfInterpVals& copy, int deep)
 : Module(copy, deep), method("method", id, this),
-  numnbrs("numnbrs", id, this), surfid("surfid", id, this)
+  numnbrs("numnbrs", id, this), surfid("surfid", id, this),
+  cache("cache", id, this)
 {
     NOT_FINISHED("SurfInterpVals::SurfInterpVals");
 }
@@ -392,6 +398,10 @@ void SurfInterpVals::execute()
 
 //
 // $Log$
+// Revision 1.2  1999/08/17 06:37:44  sparker
+// Merged in modifications from PSECore to make this the new "blessed"
+// version of SCIRun/Uintah.
+//
 // Revision 1.1  1999/07/27 16:57:59  mcq
 // Initial commit
 //

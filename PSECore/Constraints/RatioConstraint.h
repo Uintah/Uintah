@@ -15,12 +15,13 @@
 #ifndef SCI_project_Ratio_Constraint_h
 #define SCI_project_Ratio_Constraint_h 1
 
-#include <Constraints/BaseConstraint.h>
+#include <SCICore/share/share.h>
+#include <PSECore/Constraints/BaseConstraint.h>
 
-namespace PSECommon {
+namespace PSECore {
 namespace Constraints {
 
-class RatioConstraint : public BaseConstraint {
+class SCICORESHARE RatioConstraint : public BaseConstraint {
 public:
    RatioConstraint( const clString& name,
 		    const Index numSchemes,
@@ -34,15 +35,19 @@ protected:
 };
 
 } // End namespace Constraints
-} // End namespace PSECommon
+} // End namespace PSECore
 
 //
 // $Log$
+// Revision 1.2  1999/08/17 06:38:19  sparker
+// Merged in modifications from PSECore to make this the new "blessed"
+// version of SCIRun/Uintah.
+//
 // Revision 1.1  1999/07/27 16:55:56  mcq
 // Initial commit
 //
 // Revision 1.3  1999/05/06 20:17:07  dav
-// added back PSECommon .h files
+// added back PSECore .h files
 //
 // Revision 1.1.1.1  1999/04/24 23:12:52  dav
 // Import sources

@@ -14,7 +14,7 @@
 #ifndef TESTER_RIGOROUSTEST_H
 #define TESTER_RIGOROUSTEST_H 1
 
-#include <share/share.h>
+#include <SCICore/share/share.h>
 
 /*
  * Helper class for rigorous tests
@@ -25,7 +25,7 @@
 namespace SCICore {
 namespace Tester {
 
-class SHARE RigorousTest {
+class SCICORESHARE RigorousTest {
 public:
     RigorousTest(char* symname);
     ~RigorousTest();
@@ -54,11 +54,15 @@ private:
 
 //
 // $Log$
+// Revision 1.2  1999/08/17 06:39:47  sparker
+// Merged in modifications from PSECore to make this the new "blessed"
+// version of SCIRun/Uintah.
+//
 // Revision 1.1  1999/07/27 16:57:20  mcq
 // Initial commit
 //
 // Revision 1.4  1999/07/06 20:53:24  moulding
-// added SHARE for win32 and modified timer stuff for portability
+// added share for win32 and modified timer stuff for portability
 //
 // Revision 1.3  1999/05/06 19:56:25  dav
 // added back .h files

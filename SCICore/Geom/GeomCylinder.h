@@ -14,15 +14,15 @@
 #ifndef SCI_Geom_Cylinder_h
 #define SCI_Geom_Cylinder_h 1
 
-#include <Geom/GeomObj.h>
-#include <Geom/GeomOpenGL.h>
-#include <Geom/GeomRaytracer.h>
-#include <Geom/GeomSave.h>
-#include <Geometry/Point.h>
-#include <Geometry/Vector.h>
-#include <Geometry/BBox.h>
-#include <Geometry/BSphere.h>
-#include <Geometry/Ray.h>
+#include <SCICore/Geom/GeomObj.h>
+#include <SCICore/Geom/GeomOpenGL.h>
+#include <SCICore/Geom/GeomRaytracer.h>
+#include <SCICore/Geom/GeomSave.h>
+#include <SCICore/Geometry/Point.h>
+#include <SCICore/Geometry/Vector.h>
+#include <SCICore/Geometry/BBox.h>
+#include <SCICore/Geometry/BSphere.h>
+#include <SCICore/Geometry/Ray.h>
 
 namespace SCICore {
 namespace GeomSpace {
@@ -31,7 +31,7 @@ using SCICore::Geometry::BBox;
 using SCICore::Geometry::BSphere;
 using SCICore::Geometry::Ray;
 
-class GeomCylinder : public GeomObj {
+class SCICORESHARE GeomCylinder : public GeomObj {
 protected:
     Vector v1;
     Vector v2;
@@ -72,7 +72,7 @@ public:
     virtual bool saveobj(ostream&, const clString& format, GeomSave*);
 };
 
-class GeomCappedCylinder : public GeomCylinder {
+class SCICORESHARE GeomCappedCylinder : public GeomCylinder {
     int nvdisc;
 public:
     GeomCappedCylinder(int nu=20, int nv=10, int nvdisc=4);
@@ -100,6 +100,10 @@ public:
 
 //
 // $Log$
+// Revision 1.2  1999/08/17 06:39:07  sparker
+// Merged in modifications from PSECore to make this the new "blessed"
+// version of SCIRun/Uintah.
+//
 // Revision 1.1  1999/07/27 16:56:39  mcq
 // Initial commit
 //

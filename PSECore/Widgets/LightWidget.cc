@@ -13,19 +13,19 @@
  */
 
 
-#include <Widgets/LightWidget.h>
-#include <Widgets/FrameWidget.h>
-#include <Constraints/DistanceConstraint.h>
-#include <Constraints/ProjectConstraint.h>
-#include <Constraints/RatioConstraint.h>
-#include <Geom/GeomCone.h>
-#include <Geom/GeomCylinder.h>
-#include <Geom/GeomSphere.h>
-#include <Geom/GeomTorus.h>
-#include <Malloc/Allocator.h>
-#include <Dataflow/Module.h>
+#include <PSECore/Widgets/LightWidget.h>
+#include <PSECore/Widgets/FrameWidget.h>
+#include <PSECore/Constraints/DistanceConstraint.h>
+#include <PSECore/Constraints/ProjectConstraint.h>
+#include <PSECore/Constraints/RatioConstraint.h>
+#include <SCICore/Geom/GeomCone.h>
+#include <SCICore/Geom/GeomCylinder.h>
+#include <SCICore/Geom/GeomSphere.h>
+#include <SCICore/Geom/GeomTorus.h>
+#include <SCICore/Malloc/Allocator.h>
+#include <PSECore/Dataflow/Module.h>
 
-namespace PSECommon {
+namespace PSECore {
 namespace Widgets {
 
 using SCICore::GeomSpace::GeomGroup;
@@ -37,7 +37,7 @@ using SCICore::GeomSpace::GeomCylinder;
 using SCICore::GeomSpace::GeomCappedCylinder;
 using SCICore::Geometry::Cross;
 
-using namespace PSECommon::Constraints;
+using namespace PSECore::Constraints;
 
 const Index NumCons = 4;
 const Index NumVars = 6;
@@ -406,10 +406,14 @@ LightWidget::GetMaterialName( const Index mindex ) const
 
 
 } // End namespace Widgets
-} // End namespace PSECommon
+} // End namespace PSECore
 
 //
 // $Log$
+// Revision 1.2  1999/08/17 06:38:30  sparker
+// Merged in modifications from PSECore to make this the new "blessed"
+// version of SCIRun/Uintah.
+//
 // Revision 1.1  1999/07/27 16:56:07  mcq
 // Initial commit
 //

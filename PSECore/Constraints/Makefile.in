@@ -1,6 +1,6 @@
 SRCTOP   = @top_srcdir@
 SRCDIR   = @srcdir@
-OBJTOP   = ../../..
+OBJTOP   = ../..
 
 SRCS     = AngleConstraint.cc BaseConstraint.cc BaseVariable.cc \
            CenterConstraint.cc ConstraintSolver.cc DistanceConstraint.cc \
@@ -8,6 +8,6 @@ SRCS     = AngleConstraint.cc BaseConstraint.cc BaseVariable.cc \
            PythagorasConstraint.cc RatioConstraint.cc SegmentConstraint.cc \
            VarCore.cc
 
-INCLUDES = -I$(OBJTOP) -I$(SRCDIR)/.. -I$(SRCDIR)/../../SCICore
+INCLUDES = -I$(OBJTOP)
 
 include $(SRCTOP)/scripts/objs.mk

@@ -14,12 +14,50 @@
 #ifndef SCI_CoreDatatypes_TopoSurfTree_h
 #define SCI_CoreDatatypes_TopoSurfTree_h 1
 
-#include <CoreDatatypes/SurfTree.h>
+#include <SCICore/CoreDatatypes/SurfTree.h>
 
 namespace SCICore {
 namespace CoreDatatypes {
 
 struct SrchLst;
+
+typedef struct _Region {
+    Array1<int> outerPatches;
+    Array1<Array1<int> > innerPatches;
+} Region;
+
+typedef struct _Patch {
+    Array1<int> wires;
+    Array1<int> wiresOrient;
+} Patch;
+
+typedef struct _PatchInfo {
+    Array1<int> faces;			// indices into SurfTree elems
+    Array1<Array1<int> > facesOrient;
+    Array1<int> regions;
+    Array1<int> bdryEdgeFace; // what face is opposite each bdry edge
+} PatchInfo;
+
+typedef struct _Wire {
+    Array1<int> nodes;
+} Wire;
+
+typedef struct _WireInfo {
+    Array1<int> edges;			// indices into SurfTree edges
+    Array1<Array1<int> > edgesOrient;
+    Array1<int> patches;
+} WireInfo;
+
+typedef struct _JunctionInfo {
+    Array1<int> wires;			// list of all wires it bounds
+} JunctionInfo;
+
+enum TopoType {NONE, PATCH, WIRE, JUNCTION};
+
+typedef struct _TopoEntity {
+    TopoType type;
+    int idx;
+} TopoEntity;
 
 class TopoSurfTree : public SurfTree {
     void addPatchAndDescend(SrchLst*, Array1<Array1<int> > &, 
@@ -30,23 +68,18 @@ class TopoSurfTree : public SurfTree {
 			   Array1<int> &visList);
     void addJunctionAndDescend(SrchLst*, Array1<int> &visList);
 public:
-    Array1< Array1<int> > patches;	// indices into the SurfTree elems
-    Array1< Array1< Array1<int> > > patchesOrient;
-    Array1< Array1<int> > patchRegions;
-    Array1< Array1<int> > wires;	// indices into the SurfTree edges
-    Array1< Array1< Array1<int> > > wiresOrient;
-    Array1< Array1<int> > wirePatches;
-    Array1<int> junctions;		// indices into the SurfTree nodes
-    Array1<Array1<int> > junctionWires;
-    Array1<int> junctionlessWires;	// wires can be closed loops
-    Array1< Array1<int> > patchBdryEdgeFace;  // each patch boundary edge has
-                                              // an idx to the face it bounds
-    Array1< Array1<int> > wireBdryNodes;      // each wire has a list of the
-                                              // nodes that bound it
-    Array1<int> faceToPatch;		// what patch is a particular face in
-    Array1<int> edgeToWire;		// what wire is an edge in (none = -1)
-    Array1<int> nodeToJunction;		// what junction is a node (none = -1)
+    Array1<Region> regions;
+    Array1<Patch> patches;
+    Array1<Wire> wires;
+    Array1<int> junctions;
 
+    Array1<PatchInfo> patchI;
+    Array1<WireInfo> wireI;
+    Array1<JunctionInfo> junctionI;
+
+    Array1<TopoEntity> topoNodes;
+    Array1<TopoEntity> topoEdges;
+    Array1<TopoEntity> topoFaces;
 public:
     TopoSurfTree(Representation r=TSTree);
     TopoSurfTree(const TopoSurfTree& copy, Representation r=STree);
@@ -57,6 +90,7 @@ public:
     void BldPatches();
     void BldWires();
     void BldJunctions();
+    void BldOrientations();
 
     // Persistent representation...
     virtual GeomObj* get_obj(const ColorMapHandle&);
@@ -64,11 +98,23 @@ public:
     static PersistentTypeID type_id;
 };
 
+void Pio(Piostream&, TopoEntity&);
+void Pio(Piostream&, Patch&);
+void Pio(Piostream&, PatchInfo&);
+void Pio(Piostream&, Wire&);
+void Pio(Piostream&, WireInfo&);
+void Pio(Piostream&, JunctionInfo&);
+void Pio(Piostream&, Region&);
+
 } // End namespace CoreDatatypes
 } // End namespace SCICore
 
 //
 // $Log$
+// Revision 1.2  1999/08/17 06:38:56  sparker
+// Merged in modifications from PSECore to make this the new "blessed"
+// version of SCIRun/Uintah.
+//
 // Revision 1.1  1999/07/27 16:56:30  mcq
 // Initial commit
 //

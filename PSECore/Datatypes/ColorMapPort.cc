@@ -12,19 +12,25 @@
  *  Copyright (C) 1994 SCI Group
  */
 
-#include <CommonDatatypes/ColorMapPort.h>
+#include <PSECore/CommonDatatypes/ColorMapPort.h>
 
-namespace PSECommon {
+namespace PSECore {
 namespace CommonDatatypes {
+
+using namespace SCICore::CoreDatatypes;
 
 clString ColorMapIPort::port_type("ColorMap");
 clString ColorMapIPort::port_color("blueviolet");
 
 } // End namespace CommonDatatypes
-} // End namespace PSECommon
+} // End namespace PSECore
 
 //
 // $Log$
+// Revision 1.2  1999/08/17 06:38:06  sparker
+// Merged in modifications from PSECore to make this the new "blessed"
+// version of SCIRun/Uintah.
+//
 // Revision 1.1  1999/07/27 16:55:46  mcq
 // Initial commit
 //

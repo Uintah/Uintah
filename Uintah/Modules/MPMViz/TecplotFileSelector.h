@@ -30,18 +30,19 @@ LOG
     Created January 5, 1999
 ----------------------------------------------------------------------*/
     
-#include <Datatypes/Particles/ParticleGridReaderPort.h>
+#include <SCICore/Util/NotFinished.h> 
+#include <SCICore/TclInterface/TCLvar.h> 
 
-#include <Util/NotFinished.h> 
-#include <Dataflow/Module.h> 
-#include <TclInterface/TCLvar.h> 
+#include <PSECore/Dataflow/Module.h> 
+
+#include <Uintah/Datatypes/Particles/ParticleGridReaderPort.h>
 
 namespace Uintah {
 namespace Modules {
 
 using namespace Uintah::Datatypes;
-using namespace PSECommon::Dataflow;
-using namespace PSECommon::CommonDatatypes;
+using namespace PSECore::Dataflow;
+using namespace PSECore::CommonDatatypes;
 using namespace SCICore::TclInterface;
 
 class TecplotFileSelector : public Module { 
@@ -75,6 +76,10 @@ private:
 
 //
 // $Log$
+// Revision 1.2  1999/08/17 06:40:12  sparker
+// Merged in modifications from PSECore to make this the new "blessed"
+// version of SCIRun/Uintah.
+//
 // Revision 1.1  1999/07/27 17:08:58  mcq
 // Initial commit
 //

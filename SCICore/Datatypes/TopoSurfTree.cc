@@ -13,18 +13,20 @@
  */
 #include <iostream.h>
 
-#include <Util/Assert.h>
-#include <Containers/HashTable.h>
-#include <Util/NotFinished.h>
-#include <Containers/Queue.h>
-#include <Containers/TrivialAllocator.h>
-#include <CoreDatatypes/TopoSurfTree.h>
-#include <Malloc/Allocator.h>
+#include <SCICore/Util/Assert.h>
+#include <SCICore/Containers/Array2.h>
+#include <SCICore/Containers/HashTable.h>
+#include <SCICore/Util/NotFinished.h>
+#include <SCICore/Containers/Queue.h>
+#include <SCICore/Containers/TrivialAllocator.h>
+#include <SCICore/CoreDatatypes/TopoSurfTree.h>
+#include <SCICore/Malloc/Allocator.h>
 #include <math.h>
 
 namespace SCICore {
 namespace CoreDatatypes {
 
+using Containers::Array2;
 using Containers::TrivialAllocator;
 using Containers::Queue;
 
@@ -55,9 +57,19 @@ Surface* TopoSurfTree::clone()
 }
 
 void TopoSurfTree::BldTopoInfo() {
+    TopoEntity unused;
+    unused.type=NONE;
+    unused.idx=-1;
+    topoNodes.resize(nodes.size());
+    topoNodes.initialize(unused);
+    topoEdges.resize(edges.size());
+    topoEdges.initialize(unused);
+    topoFaces.resize(faces.size());
+    topoFaces.initialize(unused);
     BldPatches();
     BldWires();
     BldJunctions();
+    BldOrientations();
 }
 
 void order(Array1<int>& a) {
@@ -123,18 +135,17 @@ void TopoSurfTree::addPatchAndDescend(SrchLst* curr,
 			      Array1<Array1<Array1<int> > > &tmpPatchesOrient, 
 			      Array1<int> &visList) {
     if (curr->items.size()) {
-	int currSize=patchRegions.size();
-	patchBdryEdgeFace.resize(currSize+1);
-	patchBdryEdgeFace[currSize].resize(edgeI.size());
-	patchBdryEdgeFace[currSize].initialize(-1);
+	int currSize=patchI.size();
+	patchI.resize(currSize+1);
+	patchI[currSize].bdryEdgeFace.resize(edgeI.size());
+	patchI[currSize].bdryEdgeFace.initialize(-1);
 	patches.resize(currSize+1);
 	tmpPatches.resize(currSize+1);
 	tmpPatches[currSize]=curr->items;
-	patchesOrient.resize(currSize+1);
-	patchesOrient[currSize].resize(curr->orient.size());
+	patchI[currSize].facesOrient.resize(curr->orient.size());
 	tmpPatchesOrient.resize(currSize+1);
 	tmpPatchesOrient[currSize]=curr->orient;
-	patchRegions.add(visList);
+	patchI[currSize].regions=visList;
 	for (int j=0; j<curr->items.size(); j++) {
 	    faceI[curr->items[j]].patchIdx=currSize;
 	    faceI[curr->items[j]].patchEntry=j;
@@ -152,15 +163,14 @@ void TopoSurfTree::addWireAndDescend(SrchLst* curr,
 			      Array1<Array1<Array1<int> > > &tmpWiresOrient, 
 			      Array1<int> &visList) {
     if (curr->items.size()) {
-	int currSize=wirePatches.size();
+	int currSize=wireI.size();
+	wireI.resize(currSize+1);
 	wires.resize(currSize+1);
 	tmpWires.resize(currSize+1);
-	wireBdryNodes.resize(currSize+1);
-	wiresOrient.resize(currSize+1);
 	tmpWiresOrient.resize(currSize+1);
 	tmpWiresOrient[currSize]=curr->orient;
 	tmpWires[currSize]=curr->items;
-	wirePatches.add(visList);
+	wireI[currSize].patches=visList;
 	for (int j=0; j<curr->items.size(); j++) {
 	    edgeI[curr->items[j]].wireIdx=currSize;
 	    edgeI[curr->items[j]].wireEntry=j;
@@ -174,14 +184,14 @@ void TopoSurfTree::addWireAndDescend(SrchLst* curr,
 }
 
 void TopoSurfTree::addJunctionAndDescend(SrchLst* curr, Array1<int> &visList) {
-    int j;
-    for (j=0; j<curr->items.size(); j++) {
-	int currSize=junctionWires.size();
+    for (int j=0; j<curr->items.size(); j++) {
+	int currSize=junctionI.size();
 	junctions.resize(currSize+1);
 	junctions[currSize]=curr->items[j];
-	junctionWires.add(visList);
+	junctionI.resize(currSize+1);
+	junctionI[currSize].wires=visList;
     }
-    for (j=0; j<curr->next.size(); j++) {
+    for (int j=0; j<curr->next.size(); j++) {
 	visList.add(curr->lookup[j]);
 	addJunctionAndDescend(curr->next[j], visList);
 	visList.resize(visList.size()-1);
@@ -195,11 +205,14 @@ void descendAndFree(SrchLst *curr) {
     delete(curr);
 }
 
+// we'll build the connected components based on the nbrs list
+void buildCCs(const Array1<Array1<int> > &nbrs, Array1<Array1<int> > &CCs) {
+    Array1<int> visited(nbrs.size());
+    visited.initialize(0);
+}
+
 void TopoSurfTree::BldPatches() {
     int i,j,k,l;
-
-    faceToPatch.resize(faces.size());
-    faceToPatch.initialize(-1);
 
     cerr << "We have "<<faces.size()<<" faces.\n";
     if (!faces.size()) return;
@@ -313,7 +326,7 @@ void TopoSurfTree::BldPatches() {
 
     cerr << "Allocating and storing temporary patch values... ";
 
-    cerr << "\nPatchRegions.size()="<<patchRegions.size()<<"\n";
+//    cerr << "\nPatchRegions.size()="<<patchRegions.size()<<"\n";
     
     // recursively descend the tmpPatchIdx srchList -- add all items
     // to the tmpPatches and tmpPatchesOrient lists
@@ -391,11 +404,10 @@ void TopoSurfTree::BldPatches() {
 //		    cerr << "Adding another patch!\n";
 		    int currSize=patches.size();
 		    patches.resize(currSize+1);
-		    patchesOrient.resize(currSize+1);
-		    patchesOrient[currSize].resize(patchRegions[i].size());
-		    patchBdryEdgeFace.resize(currSize+1);
-		    patchBdryEdgeFace[currSize].resize(edgeI.size());
-		    patchBdryEdgeFace[currSize].initialize(-1);
+		    patchI.resize(currSize+1);
+		    patchI[currSize].facesOrient.resize(patchI[i].regions.size());
+		    patchI[currSize].bdryEdgeFace.resize(edgeI.size());
+		    patchI[currSize].bdryEdgeFace.initialize(-1);
 		}
 
 		Queue<int> q;
@@ -412,7 +424,7 @@ void TopoSurfTree::BldPatches() {
 			int eidx=faceI[c].edges[k];
 
 			if (localEdgeFaces[eidx].size() == 1) // boundary!
-			    patchBdryEdgeFace[currPatchIdx][eidx]=c;
+			    patchI[currPatchIdx].bdryEdgeFace[eidx]=c;
 			    
 			for (l=0; l<localEdgeFaces[eidx].size(); l++) {
 			    
@@ -427,11 +439,11 @@ void TopoSurfTree::BldPatches() {
 				int tmpEntry=faceI[fidx].patchEntry;
 				faceI[fidx].patchIdx=currPatchIdx;
 				faceI[fidx].patchEntry=
-				    patches[currPatchIdx].size();
-				patches[currPatchIdx].add(
+				    patchI[currPatchIdx].faces.size();
+				patchI[currPatchIdx].faces.add(
 					      tmpPatches[tmpIdx][tmpEntry]);
-				for (int m=0; m<patchRegions[i].size(); m++) {
-				    patchesOrient[currPatchIdx][m].add(tmpPatchesOrient[tmpIdx][m][tmpEntry]);
+				for (int m=0; m<patchI[i].regions.size(); m++) {
+				    patchI[currPatchIdx].facesOrient[m].add(tmpPatchesOrient[tmpIdx][m][tmpEntry]);
 				}
 			    }
 			}
@@ -442,7 +454,7 @@ void TopoSurfTree::BldPatches() {
 		// copy it for each connected component
 
 		if (currPatchIdx != i)
-		    patchRegions.add(patchRegions[i]);
+		    patchI[currPatchIdx].regions=patchI[i].regions;
 
 		// set currPatchIdx to point at a new patch - allocation will
 		// take place later, when we find the first face of this patch
@@ -474,11 +486,116 @@ void TopoSurfTree::BldPatches() {
 		cerr << "patchBdryEdgeFace["<<i<<"]["<<j<<"]="<<patchBdryEdgeFace[i][j]<<"\n";
 #endif
 
-    cerr << "Done with BuildPatches!!\n";
+    // now - for all of the regions, figure out which patches are inside
+    //    and which are outside
 
-    for (i=0; i<patches.size(); i++)
-	for (j=0; j<patches[i].size(); j++)
-	    faceToPatch[patches[i][j]] = i;
+    // for each patch, we have all the regions that it's part of
+    // so it's easy to "invert" that such that for each region, we have
+    //   a list of the patches that are part of it.
+    
+    Array1<Array1<int> > regionPatches(surfI.size());
+
+    // for a particular patch in a particular regions, what region is on
+    //   the other side of it
+    Array1<Array1<int> > regionPatchRegOpp(surfI.size());
+    
+    // a lookup table so we can rapidly see if a region is directly inside 
+    //   another region
+    Array2<int> regionInside(surfI.size(), surfI.size());
+    regionInside.initialize(0);
+    for (i=0; i<surfI.size(); i++) 
+	for (j=0; j<surfI[i].inner.size(); j++) 
+	    regionInside(i,surfI[i].inner[j])=1;
+	
+    for (i=0; i<patchI.size(); i++)
+	for (j=0; j<patchI[i].regions.size(); j++) {
+	    int reg=patchI[i].regions[j];
+	    regionPatches[reg].add(i);
+	    for (k=0; k<patchI[i].regions.size(); k++)
+		if (j!=k) regionPatchRegOpp[reg].add(j);
+	}
+
+    // the difficulty is figuring out which ones are inside vs outside
+    //   and for the inside ones, clustering them.
+    // we can figure out inside by looking at the other region the patch
+    //   borders -- if our region is the "outside" of that region, then
+    //   it's an inside patch.
+    // but since "ouside" is a bit sloppy, instead we'll look at inside...
+
+    // regionInsidePatches will hold the unorganized set of inside patches
+    Array1<Array1<int> > regionInsidePatches(surfI.size());
+    
+    for (i=0; i<regionPatches.size(); i++) {
+	for (j=0; j<regionPatches[i].size(); j++) {
+	    int reg=regionPatchRegOpp[i][j];
+	    if (regionInside(i,reg)) 
+		regionInsidePatches[i].add(regionPatches[i][j]);
+	    else 
+		regions[i].outerPatches.add(regionPatches[i][j]);
+	}
+    }
+
+    // now we have to break up each region of regionInsidePatches into
+    //   connected components
+    Array1<int> regionInsidePatchesTab(patches.size());
+    for (i=0; i<regionInsidePatches.size(); i++) {
+
+	// we'll use a lookup table (rather than traversing an array) to 
+	//   check membership
+	regionInsidePatchesTab.initialize(0);
+	for (j=0; j<regionInsidePatches[i].size(); j++)
+	    regionInsidePatchesTab[regionInsidePatches[i][j]]=1;
+
+	// build up the nbr info to send our connected-component algorithm...
+	Array1<Array1<int> > nbrs(patches.size());
+	for (j=0; j<regionInsidePatches[i].size(); j++) {
+	    int p=regionInsidePatches[i][j];
+	    for (k=0; k<patchI[p].regions.size(); k++)
+		if (i != patchI[p].regions[k])
+		    nbrs[j].add(patchI[p].regions[k]);
+	}
+
+	Array1<Array1<int> > CCs;
+	buildCCs(nbrs, CCs);
+	regions[i].innerPatches.resize(CCs.size());
+	for (j=0; j<CCs.size(); j++) 
+	    for (k=0; k<CCs[j].size(); k++)
+		if (regionInsidePatchesTab[CCs[j][k]])
+		    regions[i].innerPatches[j].add(CCs[j][k]);
+    }
+
+    // we can do clustering through connected component analysis of the
+    //   patches.  first figure out the neighbors of every region (iterate
+    //   through the patches to build this).  then seed a queue with one 
+    //   of the inside regions and push all of the unvisited neighbors onto 
+    //   the queue.  go until the q is empty.  everyone we popped off, who
+    //   is also part one of the "patchRegions" is part of a single shell.
+    //   if there's an inner region who hasn't been visited, seed the q
+    //   with them and start over.  continue until there aren't any inner
+    //   regions left.
+
+    // we'll straighten out orientations later...
+
+    // add all of the nodes, edges and faces - and make them part of a PATCH
+
+    for (i=0; i<patchI.size(); i++)
+	for (j=0; j<patchI[i].faces.size(); j++) {
+	    int f=patchI[i].faces[j];
+	    topoFaces[f].type = PATCH;
+	    topoFaces[f].idx = i;
+	    for (k=0; k<faceI[f].edges.size(); k++) {
+		int e=faceI[f].edges[k];
+		topoEdges[e].type = PATCH;
+		topoEdges[e].idx = i;
+		int n=edges[faceI[f].edges[k]]->i1;
+		topoNodes[n].type = PATCH;
+		topoNodes[n].idx = i;
+		n=edges[faceI[f].edges[k]]->i2;
+		topoNodes[n].type = PATCH;
+		topoNodes[n].idx = i;
+	    }
+	}
+    cerr << "Done with BuildPatches!!\n";
 }
 
 void TopoSurfTree::BldWires() {
@@ -496,16 +613,13 @@ void TopoSurfTree::BldWires() {
     //    wiresOrient and wiresPatches arrays
     int i,j,k;
 
-    edgeToWire.resize(edges.size());
-    edgeToWire.initialize(-1);
-
     cerr << "We have "<<edges.size()<<" edges.\n";
     // make a list of what patches each edge is attached to
     Array1<Array1<int> > allEdgePatches(edges.size());
     
     for (i=0; i<patches.size(); i++)
 	for (j=0; j<edges.size(); j++)
-	    if (patchBdryEdgeFace[i][j] != -1)
+	    if (patchI[i].bdryEdgeFace[j] != -1)
 		allEdgePatches[j].add(i);
     int maxFacesOnAnEdge=1;
 
@@ -585,7 +699,7 @@ void TopoSurfTree::BldWires() {
 	//   list and add its orientation information to orient[][]
 
         for (j=0; j<allEdgePatches[i].size(); j++) {
-	    int fidx=patchBdryEdgeFace[j][i];
+	    int fidx=patchI[j].bdryEdgeFace[i];
 	    if (fidx == -1) continue;
             for (k=0; k<faceI[fidx].edges.size(); k++) {
 		if (faceI[fidx].edges[k] == i) {
@@ -675,8 +789,7 @@ void TopoSurfTree::BldWires() {
 //		    cerr << "Adding another wire!\n";
 		    int currSize=wires.size();
 		    wires.resize(currSize+1);
-		    wiresOrient.resize(currSize+1);
-		    wireBdryNodes.resize(currSize+1);
+		    wireI.resize(currSize+1);
 		}
 
 		Queue<int> q;
@@ -703,9 +816,9 @@ void TopoSurfTree::BldWires() {
 			    int tmpIdx=edgeI[eidx].wireIdx;
 			    int tmpEntry=edgeI[eidx].wireEntry;
 			    edgeI[eidx].wireIdx=currWireIdx;
-			    edgeI[eidx].wireEntry=wires[currWireIdx].size();
-			    wires[currWireIdx].add(tmpWires[tmpIdx][tmpEntry]);
-			    wiresOrient[currWireIdx].add(tmpWires[tmpIdx][tmpEntry]);
+			    edgeI[eidx].wireEntry=wireI[currWireIdx].edges.size();
+			    wireI[currWireIdx].edges.add(tmpWires[tmpIdx][tmpEntry]);
+			    wireI[currWireIdx].edgesOrient.add(tmpWires[tmpIdx][tmpEntry]);
 			}
 		    }
 
@@ -726,9 +839,9 @@ void TopoSurfTree::BldWires() {
 			    int tmpIdx=edgeI[eidx].wireIdx;
 			    int tmpEntry=edgeI[eidx].wireEntry;
 			    edgeI[eidx].wireIdx=currWireIdx;
-			    edgeI[eidx].wireEntry=wires[currWireIdx].size();
-			    wires[currWireIdx].add(tmpWires[tmpIdx][tmpEntry]);
-			    wiresOrient[currWireIdx].add(tmpWires[tmpIdx][tmpEntry]);
+			    edgeI[eidx].wireEntry=wireI[currWireIdx].edges.size();
+			    wireI[currWireIdx].edges.add(tmpWires[tmpIdx][tmpEntry]);
+			    wireI[currWireIdx].edgesOrient.add(tmpWires[tmpIdx][tmpEntry]);
 			}
 		    }		    
 		}
@@ -739,20 +852,20 @@ void TopoSurfTree::BldWires() {
 
 		for (k=0; k<nodesSeen.size(); k++) {
 		    if (localNodeEdges[nodesSeen[k]].size() == 1) {
-			wireBdryNodes[currWireIdx].add(nodesSeen[k]);
+			wires[currWireIdx].nodes.add(nodesSeen[k]);
 //			cerr << "wireBdryNodes["<<currWireIdx<<"].add("<<nodesSeen[k]<<")\n";
 		    }
 		}
-		if (wireBdryNodes[currWireIdx].size() == 0) {
+		if (wires[currWireIdx].nodes.size() == 0) {
 //		    cerr << "junctionlesWires.add("<<nodesSeen[0]<<")\n";
-		    junctionlessWires.add(nodesSeen[0]);
+		    wires[currWireIdx].nodes.add(nodesSeen[0]);
 		}
 
 		// wirePatches wasn't stored in a temp array - just need to
 		// copy it for each connected component
 
 		if (currWireIdx != i)
-		    wirePatches.add(wirePatches[i]);
+		    wireI[currWireIdx].patches=wireI[i].patches;
 
 		// set currWireIdx to point at a new wire - allocation will
 		// take place later, when we find the first edge of this wire
@@ -762,11 +875,32 @@ void TopoSurfTree::BldWires() {
 	}   
     }
 
-    for (i=0; i<wires.size(); i++)
-	for (j=0; j<wires[i].size(); j++)
-	    edgeToWire[wires[i][j]] = i;
 
+    // now - for each patch, figure out which wires bound it
+
+    // go through all the wires, and for each one, add it to the patches
+    //   it bounds.
+
+    // sort the wires, so they're head-to-tail according to the nodes of the
+    //   wires.
+
+    // now, look for any patches without wires -- we have to add a 
+    //   wire to those -- just choose a triangle and make its edges a wire
+
+    // once again, we'll handle orientations later...
+
+    for (i=0; i<wireI.size(); i++) {
+	for (j=0; j<wireI[i].edges.size(); j++) {
+	    topoEdges[wireI[i].edges[j]].type = WIRE;
+	    topoEdges[wireI[i].edges[j]].idx = i;
+	}
+	for (j=0; i<wires[i].nodes.size(); i++) {
+	    topoNodes[wires[i].nodes[j]].type = WIRE;
+	    topoNodes[wires[i].nodes[j]].idx = i;
+	}	    
+    }
     cerr << "Done with BuildWires!!\n";
+
 }
 
 void TopoSurfTree::BldJunctions() {
@@ -783,9 +917,6 @@ void TopoSurfTree::BldJunctions() {
     //    and junctionsWires arrays
     int i,j,k;
 
-    nodeToJunction.resize(nodes.size());
-    nodeToJunction.initialize(-1);
-
     cerr << "We have "<<nodes.size()<<" nodes.\n";
     if (!wires.size()) return;
 
@@ -793,10 +924,10 @@ void TopoSurfTree::BldJunctions() {
     Array1<Array1<int> > allNodeWires(nodes.size());
 
 //    cerr << "Here are the wireBdryNodes...\n";
-    for (i=0; i<wireBdryNodes.size(); i++)
-	for (j=0; j<wireBdryNodes[i].size(); j++) {
+    for (i=0; i<wires.size(); i++)
+	for (j=0; j<wires[i].nodes.size(); j++) {
 //	    cerr << "   wireBdryNodes["<<i<<"]["<<j<<"]="<<wireBdryNodes[i][j]<<"\n";
-	    allNodeWires[wireBdryNodes[i][j]].add(i);
+	    allNodeWires[wires[i].nodes[j]].add(i);
 	}
 
     // sort all of the lists from above, and find the maximum number of
@@ -870,10 +1001,33 @@ void TopoSurfTree::BldJunctions() {
 	cerr << "junctionlessWires["<<i<<"] = "<<junctionlessWires[i]<<"\n";
 #endif
 
-    for (i=0; i<junctions.size(); i++)
-	nodeToJunction[junctions[i]] = i;
+    // make a list of all the wires and note which ones have junctions
+    // any that don't have junctions still need to be added
+
+    Array1<int> visited(wires.size());
+    visited.initialize(0);
+    for (i=0; i<junctionI.size(); i++)
+	for (j=0; j<junctionI[i].wires.size(); j++)
+	    visited[junctionI[i].wires[j]]=1;
+
+    for (i=0; i<visited.size(); i++)
+	if (!visited[i]) {
+	    junctions.add(wires[i].nodes[0]);
+	    junctionI.resize(junctionI.size()+1);
+	    junctionI[junctionI.size()-1].wires.add(i);
+	}
+
+    // for each of the wires, figure out which junctions bound it.
+
+    for (i=0; i<junctions.size(); i++) {
+	topoNodes[junctions[i]].type = JUNCTION;
+	topoNodes[junctions[i]].idx = i;
+    }
 
     cerr << "Done with BuildJunctions!!\n";
+}
+
+void TopoSurfTree::BldOrientations() {
 }
 
 GeomObj* TopoSurfTree::get_obj(const ColorMapHandle&)
@@ -885,27 +1039,78 @@ GeomObj* TopoSurfTree::get_obj(const ColorMapHandle&)
 #define TopoSurfTree_VERSION 1
 
 void TopoSurfTree::io(Piostream& stream) {
-
-    using SCICore::PersistentSpace::Pio;
-    using SCICore::Containers::Pio;
-
-    int version=stream.begin_class("TopoSurfTree", TopoSurfTree_VERSION);
+/*  int version=*/stream.begin_class("TopoSurfTree", TopoSurfTree_VERSION);
     SurfTree::io(stream);		    
-    Pio(stream, patches);	// indices into the SurfTree elems
-    Pio(stream, patchesOrient);
-    Pio(stream, patchRegions);
-    Pio(stream, wires);		// indices into the SurfTree edges
-    Pio(stream, wiresOrient);
-    Pio(stream, wirePatches);
-    Pio(stream, junctions);		// indices into the SurfTree nodes
-    Pio(stream, junctionWires);
-    Pio(stream, junctionlessWires);
-    Pio(stream, junctions);
-    Pio(stream, faceToPatch);
-    Pio(stream, edgeToWire);
-    Pio(stream, nodeToJunction);
+    SCICore::Containers::Pio(stream, regions);
+    SCICore::Containers::Pio(stream, patches);
+    SCICore::Containers::Pio(stream, patchI);
+    SCICore::Containers::Pio(stream, wires);
+    SCICore::Containers::Pio(stream, wireI);
+    SCICore::Containers::Pio(stream, junctions);
+    SCICore::Containers::Pio(stream, junctionI);
+    SCICore::Containers::Pio(stream, topoNodes);
+    SCICore::Containers::Pio(stream, topoEdges);
+    SCICore::Containers::Pio(stream, topoFaces);
     stream.end_class();
 }
+
+void Pio(Piostream& stream, TopoEntity& te)
+{
+    stream.begin_cheap_delim();
+    int* typep=(int*)&(te.type);
+    SCICore::PersistentSpace::Pio(stream, *typep);
+    SCICore::PersistentSpace::Pio(stream, te.idx);
+    stream.end_cheap_delim();
+}
+
+void Pio(Piostream& stream, Patch& p) {
+    stream.begin_cheap_delim();
+    SCICore::Containers::Pio(stream, p.wires);
+    SCICore::Containers::Pio(stream, p.wiresOrient);
+    stream.end_cheap_delim();
+}
+
+void Pio(Piostream& stream, PatchInfo& pi) {
+    stream.begin_cheap_delim();
+    SCICore::Containers::Pio(stream, pi.faces);
+    SCICore::Containers::Pio(stream, pi.facesOrient);
+    SCICore::Containers::Pio(stream, pi.regions);
+    SCICore::Containers::Pio(stream, pi.bdryEdgeFace);
+    stream.end_cheap_delim();
+}
+
+void Pio(Piostream& stream, Wire& w) {
+    stream.begin_cheap_delim();
+    SCICore::Containers::Pio(stream, w.nodes);
+    stream.end_cheap_delim();
+}
+
+void Pio(Piostream& stream, WireInfo& wi) {
+    stream.begin_cheap_delim();
+    SCICore::Containers::Pio(stream, wi.edges);
+    SCICore::Containers::Pio(stream, wi.edgesOrient);
+    SCICore::Containers::Pio(stream, wi.patches);
+    stream.end_cheap_delim();
+}
+
+void Pio(Piostream& stream, JunctionInfo& ji) {
+    stream.begin_cheap_delim();
+    SCICore::Containers::Pio(stream, ji.wires);
+    stream.end_cheap_delim();
+}
+
+void Pio(Piostream& stream, Region& r) {
+    stream.begin_cheap_delim();
+    SCICore::Containers::Pio(stream, r.outerPatches);
+    SCICore::Containers::Pio(stream, r.innerPatches);
+    stream.end_cheap_delim();
+}
+
+
+
+
+
+
 
 
 
@@ -1005,6 +1210,10 @@ void TopoSurfTree::TypesToSurfs() {
 
 //
 // $Log$
+// Revision 1.2  1999/08/17 06:38:56  sparker
+// Merged in modifications from PSECore to make this the new "blessed"
+// version of SCIRun/Uintah.
+//
 // Revision 1.1  1999/07/27 16:56:30  mcq
 // Initial commit
 //

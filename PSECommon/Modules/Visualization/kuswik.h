@@ -1,7 +1,7 @@
 #ifndef _KUSWIK_H_
 #define _KUSWIK_H_
 
-#include <Geom/Color.h>
+#include <SCICore/Geom/Color.h>
 
 #define at() cerr << "@ " << __FILE__ << ":" << __LINE__ << endl
 

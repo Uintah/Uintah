@@ -13,7 +13,7 @@
 
 
 
-#include <Math/MusilRNG.h>
+#include <SCICore/Math/MusilRNG.h>
 
 MusilRNG::MusilRNG(int seed)
 {

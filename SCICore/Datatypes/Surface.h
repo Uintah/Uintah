@@ -14,13 +14,13 @@
 #ifndef SCI_project_Surface_h
 #define SCI_project_Surface_h 1
 
-#include <CoreDatatypes/Datatype.h>
-#include <CoreDatatypes/ColorMap.h>
-#include <Containers/LockingHandle.h>
-#include <Containers/Array1.h>
-#include <Containers/HashTable.h>
-#include <Containers/String.h>
-#include <Geometry/Point.h>
+#include <SCICore/CoreDatatypes/Datatype.h>
+#include <SCICore/CoreDatatypes/ColorMap.h>
+#include <SCICore/Containers/LockingHandle.h>
+#include <SCICore/Containers/Array1.h>
+#include <SCICore/Containers/HashTable.h>
+#include <SCICore/Containers/String.h>
+#include <SCICore/Geometry/Point.h>
 
 namespace SCICore {
 
@@ -53,7 +53,7 @@ class SurfTree;
 typedef LockingHandle<Surface> SurfaceHandle;
 typedef LockingHandle<Node> NodeHandle;
 
-class Surface : public Datatype {
+class SCICORESHARE Surface : public Datatype {
 protected:
     enum Representation {
 	TriSurf,
@@ -114,6 +114,10 @@ public:
 
 //
 // $Log$
+// Revision 1.2  1999/08/17 06:38:55  sparker
+// Merged in modifications from PSECore to make this the new "blessed"
+// version of SCIRun/Uintah.
+//
 // Revision 1.1  1999/07/27 16:56:29  mcq
 // Initial commit
 //

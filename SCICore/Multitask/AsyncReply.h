@@ -14,7 +14,7 @@
 #ifndef SCI_Multitask_AsyncReply_h
 #define SCI_Multitask_AsyncReply_h 1
 
-#include <Multitask/ITC.h>
+#include <SCICore/Multitask/ITC.h>
 
 namespace SCICore {
 namespace Multitask {
@@ -70,6 +70,10 @@ void AsyncReply<Item>::reply(Item i)
 
 //
 // $Log$
+// Revision 1.2  1999/08/17 06:39:37  sparker
+// Merged in modifications from PSECore to make this the new "blessed"
+// version of SCIRun/Uintah.
+//
 // Revision 1.1  1999/07/27 16:57:06  mcq
 // Initial commit
 //

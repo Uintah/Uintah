@@ -15,36 +15,38 @@
 #ifndef _H_MANIFEST_VALUES
 #define _H_MANIFEST_VALUES
 
+#include <SCICore/share/share.h>
+
 #include <stdlib.h>
 #include <math.h>
-#include <Util/Assert.h>
+#include <SCICore/Util/Assert.h>
 #include <iostream.h>
 
-namespace PSECommon {
+namespace PSECore {
 namespace Constraints {
 
 typedef double Real;
 typedef unsigned int Index;
 
-inline Real
+inline SCICORESHARE Real
 RealAbs ( Real x )
 {
    return fabs(x);
 }
 
-inline int
+inline SCICORESHARE int
 RealRound ( Real x )
 {
    return (int)(floor (x + 0.5));
 }
 
-inline Real
+inline SCICORESHARE Real
 RealMin ( Real x1, Real x2 )
 {
    return ((x1 < x2) ? x1 : x2);
 }
 
-inline Real
+inline SCICORESHARE Real
 RealMax ( Real x1, Real x2 )
 {
    return ((x1 > x2) ? x1 : x2);
@@ -55,6 +57,6 @@ RealMax ( Real x1, Real x2 )
 #define ERROR_HERE(what) cerr << "Error: " << what << " in " << __FILE__ << " (line " << __LINE__ << ") " << endl
 
 } // End namespace Constraints
-} // End namespace PSECommon
+} // End namespace PSECore
 
 #endif

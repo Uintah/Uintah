@@ -14,14 +14,14 @@
 #ifndef SCI_Geom_Pick_h
 #define SCI_Geom_Pick_h 1
 
-#include <Geom/GeomContainer.h>
-#include <Geom/Pickable.h>
-#include <Geom/Material.h>
-#include <Containers/Array1.h>
-#include <Geometry/Vector.h>
-#include <Multitask/ITC.h>
+#include <SCICore/Geom/GeomContainer.h>
+#include <SCICore/Geom/Pickable.h>
+#include <SCICore/Geom/Material.h>
+#include <SCICore/Containers/Array1.h>
+#include <SCICore/Geometry/Vector.h>
+#include <SCICore/Multitask/ITC.h>
 
-namespace PSECommon {
+namespace PSECore {
   namespace Widgets {
     class BaseWidget;
   }
@@ -36,10 +36,10 @@ namespace PSECommon {
 namespace SCICore {
 namespace GeomSpace {
 
-using PSECommon::Widgets::BaseWidget;
-using PSECommon::Comm::MessageBase;
+using PSECore::Widgets::BaseWidget;
+using PSECore::Comm::MessageBase;
 
-class GeomPick : public GeomContainer {
+class SCICORESHARE GeomPick : public GeomContainer {
     Pickable* module;
     void* cbdata;
     int pick_index;
@@ -95,6 +95,10 @@ public:
 
 //
 // $Log$
+// Revision 1.2  1999/08/17 06:39:10  sparker
+// Merged in modifications from PSECore to make this the new "blessed"
+// version of SCIRun/Uintah.
+//
 // Revision 1.1  1999/07/27 16:56:42  mcq
 // Initial commit
 //

@@ -12,17 +12,19 @@
  *  Copyright (C) 199? SCI Group
  */
 
-#include <Malloc/Allocator.h>
-#include <Malloc/AllocPriv.h>
+#include <SCICore/Malloc/Allocator.h>
+#include <SCICore/Malloc/AllocPriv.h>
 
 // irix64 KCC stuff
 #include <strings.h>
 
 #ifdef __sun
-#include <string.h>
-#define bzero(p,sz)  memset(p,0, sz);
+  #include <string.h>
+  #define bzero(p,sz)  memset(p,0, sz);
 #else
-#include <bstring.h>
+  #ifndef LINUX
+    #include <bstring.h>
+  #endif
 #endif
 
 extern "C" {
@@ -79,6 +81,10 @@ void* valloc(size_t)
 
 //
 // $Log$
+// Revision 1.2  1999/08/17 06:39:31  sparker
+// Merged in modifications from PSECore to make this the new "blessed"
+// version of SCIRun/Uintah.
+//
 // Revision 1.1  1999/07/27 16:56:59  mcq
 // Initial commit
 //

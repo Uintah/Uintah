@@ -21,11 +21,11 @@
 #include <stdlib.h>
 #include "tiffio.h"
 
-namespace PSECommon {
+namespace PSECore {
 namespace Modules {
 
-using namespace PSECommon::Dataflow;
-using namespace PSECommon::CommonDatatypes;
+using namespace PSECore::Dataflow;
+using namespace PSECore::CommonDatatypes;
 using namespace SCICore::TclInterface;
 using namespace SCICore::PersistentSpace;
 
@@ -214,10 +214,14 @@ void TiffWriter::execute()
 }
 
 } // End namespace Modules
-} // End namespace PSECommon
+} // End namespace PSECore
 
 //
 // $Log$
+// Revision 1.2  1999/08/17 06:40:04  sparker
+// Merged in modifications from PSECore to make this the new "blessed"
+// version of SCIRun/Uintah.
+//
 // Revision 1.1  1999/07/27 16:58:57  mcq
 // Initial commit
 //

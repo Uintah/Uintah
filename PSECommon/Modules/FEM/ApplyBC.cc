@@ -12,17 +12,17 @@
  *  Copyright (C) 1994 SCI Group
  */
 
-#include <Util/NotFinished.h>
-#include <Dataflow/Module.h>
-#include <CommonDatatypes/SurfacePort.h>
-#include <Geometry/Point.h>
-#include <Malloc/Allocator.h>
+#include <SCICore/Util/NotFinished.h>
+#include <PSECore/Dataflow/Module.h>
+#include <PSECore/CommonDatatypes/SurfacePort.h>
+#include <SCICore/Geometry/Point.h>
+#include <SCICore/Malloc/Allocator.h>
 
 namespace PSECommon {
 namespace Modules {
 
-using namespace PSECommon::Dataflow;
-using namespace PSECommon::CommonDatatypes;
+using namespace PSECore::Dataflow;
+using namespace PSECore::CommonDatatypes;
 using namespace SCICore::TclInterface;
 using namespace SCICore::GeomSpace;
 
@@ -80,6 +80,10 @@ void ApplyBC::execute()
 
 //
 // $Log$
+// Revision 1.2  1999/08/17 06:37:24  sparker
+// Merged in modifications from PSECore to make this the new "blessed"
+// version of SCIRun/Uintah.
+//
 // Revision 1.1  1999/07/27 16:57:39  mcq
 // Initial commit
 //

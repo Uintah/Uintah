@@ -32,11 +32,11 @@ DESCRIPTION
 
 ****************************************/   
 
-#include <Modules/Visualization/GenStandardColorMaps.h> 
-#include <Util/NotFinished.h> 
-#include <CommonDatatypes/ColorMapPort.h>
-#include <Geom/Material.h>
-#include <Malloc/Allocator.h>
+#include <PSECommon/Modules/Visualization/GenStandardColorMaps.h> 
+#include <SCICore/Util/NotFinished.h> 
+#include <PSECore/CommonDatatypes/ColorMapPort.h>
+#include <SCICore/Geom/Material.h>
+#include <SCICore/Malloc/Allocator.h>
 
 #include <math.h>
 #include <iostream.h> 

@@ -14,14 +14,16 @@
 #ifndef SCI_project_Mesh_h
 #define SCI_project_Mesh_h 1
 
-#include <CoreDatatypes/Datatype.h>
+#include <SCICore/share/share.h>
 
-#include <Containers/Array1.h>
-#include <Containers/LockingHandle.h>
+#include <SCICore/CoreDatatypes/Datatype.h>
 
-#include <CoreDatatypes/Surface.h>
-#include <Geometry/Point.h>
-#include <Geometry/Vector.h>
+#include <SCICore/Containers/Array1.h>
+#include <SCICore/Containers/LockingHandle.h>
+
+#include <SCICore/CoreDatatypes/Surface.h>
+#include <SCICore/Geometry/Point.h>
+#include <SCICore/Geometry/Vector.h>
 
 #include <stdlib.h> // For size_t
 
@@ -136,7 +138,7 @@ struct Edge{
 class Mesh;
 typedef LockingHandle<Mesh> MeshHandle;
 
-class Mesh : public Datatype {
+class SCICORESHARE Mesh : public Datatype {
 public:
     Array1<int> ids;
     Array1<NodeHandle> nodes;
@@ -201,19 +203,18 @@ inline int Element::face(int i)
     return faces[i];
 }
 
+void Pio(Piostream&, Element*&);
+void Pio(Piostream& stream, NodeVersion1& node);
+void Pio(Piostream& stream, ElementVersion1& node);
 } // End namespace CoreDatatypes
-} // End namespace SCICore
-
-namespace SCICore {
-  namespace PersistentSpace {
-    void Pio(Piostream&, SCICore::CoreDatatypes::Element*&);
-    void Pio(Piostream& stream,SCICore::CoreDatatypes::NodeVersion1& node);
-    void Pio(Piostream& stream,SCICore::CoreDatatypes::ElementVersion1& node);
-  } // End namespace PersistentSpace
 } // End namespace SCICore
 
 //
 // $Log$
+// Revision 1.2  1999/08/17 06:38:48  sparker
+// Merged in modifications from PSECore to make this the new "blessed"
+// version of SCIRun/Uintah.
+//
 // Revision 1.1  1999/07/27 16:56:23  mcq
 // Initial commit
 //

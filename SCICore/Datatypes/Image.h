@@ -15,10 +15,10 @@
 #ifndef SCI_DATATYPES_IMAGE_H
 #define SCI_DATATYPES_IMAGE_H 1
 
-#include <CoreDatatypes/Datatype.h>
-#include <Containers/LockingHandle.h>
-#include <Containers/Array2.h>
-#include <Geom/Color.h>
+#include <SCICore/CoreDatatypes/Datatype.h>
+#include <SCICore/Containers/LockingHandle.h>
+#include <SCICore/Containers/Array2.h>
+#include <SCICore/Geom/Color.h>
 
 namespace SCICore {
 namespace CoreDatatypes {
@@ -32,7 +32,7 @@ using SCICore::GeomSpace::Color;
 class Image;
 typedef LockingHandle<Image> ImageHandle;
 
-class Image : public Datatype {
+class SCICORESHARE Image : public Datatype {
     /* Complex... */
 public:
     float** rows;
@@ -59,7 +59,7 @@ public:
     static PersistentTypeID type_id;
 };
 
-class ColorImage {
+class SCICORESHARE ColorImage {
 public:
     ColorImage(int xres, int yres);
     ~ColorImage();
@@ -74,7 +74,7 @@ public:
     int yres() const;
 };
 
-class DepthImage {
+class SCICORESHARE DepthImage {
 public:
     DepthImage(int xres, int yres);
     ~DepthImage();
@@ -94,6 +94,10 @@ public:
 
 //
 // $Log$
+// Revision 1.2  1999/08/17 06:38:46  sparker
+// Merged in modifications from PSECore to make this the new "blessed"
+// version of SCIRun/Uintah.
+//
 // Revision 1.1  1999/07/27 16:56:22  mcq
 // Initial commit
 //

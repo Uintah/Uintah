@@ -12,20 +12,22 @@
  *  Copyright (C) 1994 SCI Group
  */
 
-#include <Util/NotFinished.h>
-#include <Dataflow/Module.h>
-#include <Datatypes/Particles/ParticleSetPort.h>
-#include <Datatypes/Particles/ParticleSet.h>
-#include <Malloc/Allocator.h>
-#include <TclInterface/TCLTask.h>
-#include <TclInterface/TCLvar.h>
+#include <SCICore/Util/NotFinished.h>
+#include <SCICore/Malloc/Allocator.h>
+#include <SCICore/TclInterface/TCLTask.h>
+#include <SCICore/TclInterface/TCLvar.h>
+
+#include <PSECore/Dataflow/Module.h>
+
+#include <Uintah/Datatypes/Particles/ParticleSetPort.h>
+#include <Uintah/Datatypes/Particles/ParticleSet.h>
 
 namespace Uintah {
 namespace Modules {
 
 using namespace Uintah::Datatypes;
-using namespace PSECommon::Dataflow;
-using namespace PSECommon::CommonDatatypes;
+using namespace PSECore::Dataflow;
+using namespace PSECore::CommonDatatypes;
 using namespace SCICore::TclInterface;
 using namespace SCICore::PersistentSpace;
 
@@ -113,10 +115,14 @@ void ParticleSetReader::execute()
 }
 
 } // End namespace Modules
-} // End namespace PSECommon
+} // End namespace PSECore
 
 //
 // $Log$
+// Revision 1.2  1999/08/17 06:40:13  sparker
+// Merged in modifications from PSECore to make this the new "blessed"
+// version of SCIRun/Uintah.
+//
 // Revision 1.1  1999/07/27 17:08:59  mcq
 // Initial commit
 //

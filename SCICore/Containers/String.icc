@@ -10,7 +10,7 @@
  *  Copyright (C) 1994 SCI Group
  */
 
-#include <Util/Assert.h>
+#include <SCICore/Util/Assert.h>
 #include <string.h>
 #include <ctype.h>
 

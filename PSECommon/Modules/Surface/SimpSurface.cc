@@ -13,16 +13,16 @@
  *
  */
 
-#include <config.h>
-#include <Containers/String.h>
-#include <Util/NotFinished.h>
-#include <Dataflow/Module.h>
-#include <CoreDatatypes/BasicSurfaces.h>
-#include <CommonDatatypes/SurfacePort.h>
-#include <CoreDatatypes/TriSurface.h>
-#include <TclInterface/TCLvar.h>
+#include <SCICore/config.h>
+#include <SCICore/Containers/String.h>
+#include <SCICore/Util/NotFinished.h>
+#include <PSECommon/Dataflow/Module.h>
+#include <SCICore/CoreDatatypes/BasicSurfaces.h>
+#include <PSECommon/CommonDatatypes/SurfacePort.h>
+#include <SCICore/CoreDatatypes/TriSurface.h>
+#include <SCICore/TclInterface/TCLvar.h>
 #include <iostream.h>
-#include <Malloc/Allocator.h>
+#include <SCICore/Malloc/Allocator.h>
 
 #include <GHAbstraction.h>
 
@@ -170,6 +170,10 @@ void SimpSurface::execute()
 
 //
 // $Log$
+// Revision 1.2  1999/08/17 06:37:43  sparker
+// Merged in modifications from PSECore to make this the new "blessed"
+// version of SCIRun/Uintah.
+//
 // Revision 1.1  1999/07/27 16:57:58  mcq
 // Initial commit
 //

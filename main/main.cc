@@ -38,13 +38,13 @@ using SCICore::TclInterface::TCLTask;
 using SCICore::TclInterface::GuiManager;
 using SCICore::TclInterface::GuiServer;
 using namespace SCICore::Containers;
-using namespace PSECommon::Dataflow;
+using namespace PSECore::Dataflow;
 
-using PSECommon::Dataflow::Network;
-using PSECommon::Dataflow::NetworkEditor;
-//using PSECommon::Distributed::SlaveController;
+using PSECore::Dataflow::Network;
+using PSECore::Dataflow::NetworkEditor;
+//using PSECore::Distributed::SlaveController;
 
-namespace PSECommon {
+namespace PSECore {
   namespace Dataflow {
     extern bool global_remote;
   }
@@ -67,10 +67,6 @@ char** global_argv;
 
 #ifndef SCICORETCL
 #error You must set SCICORETCL to the SCICore/Tcl path
-#endif
-
-#ifndef ITCL_WIDGETS
-#error You must set ITCL_WIDGETS to the iwidgets/scripts path
 #endif
 
 #ifndef DEFAULT_PACKAGE_PATH
@@ -97,7 +93,6 @@ int main(int argc, char** argv)
     TCL::eval("set SCICoreTCL "SCICORETCL,result);
     TCL::eval("lappend auto_path "SCICORETCL,result);
     TCL::eval("lappend auto_path "PSECORETCL,result);
-    TCL::eval("lappend auto_path "ITCL_WIDGETS,result);
 
     // Create initial network
     // We build the Network with a 1, indicating that this is the
@@ -136,8 +131,9 @@ int main(int argc, char** argv)
 
 //
 // $Log$
-// Revision 1.2  1999/07/29 20:07:34  mcq
-// Added IWidgets path to TCL auto_path
+// Revision 1.3  1999/08/17 06:40:15  sparker
+// Merged in modifications from PSECore to make this the new "blessed"
+// version of SCIRun/Uintah.
 //
 // Revision 1.1  1999/07/27 16:57:37  mcq
 // Initial commit

@@ -14,15 +14,15 @@
 #ifndef SCI_Geom_Billboard_h
 #define SCI_Geom_Billboard_h 1
 
-#include <Geom/GeomObj.h>
-#include <Containers/String.h>
-#include <Geometry/BBox.h>
-#include <Geometry/BSphere.h>
+#include <SCICore/Geom/GeomObj.h>
+#include <SCICore/Containers/String.h>
+#include <SCICore/Geometry/BBox.h>
+#include <SCICore/Geometry/BSphere.h>
 
 namespace SCICore {
 namespace GeomSpace {
 
-class GeomBillboard: public GeomObj {
+class SCICORESHARE GeomBillboard: public GeomObj {
   GeomObj* child;
   Point at;
   
@@ -56,6 +56,10 @@ public:
 
 //
 // $Log$
+// Revision 1.2  1999/08/17 06:39:05  sparker
+// Merged in modifications from PSECore to make this the new "blessed"
+// version of SCIRun/Uintah.
+//
 // Revision 1.1  1999/07/27 16:56:37  mcq
 // Initial commit
 //

@@ -14,20 +14,15 @@
 #ifndef SCI_Geom_Light_h
 #define SCI_Geom_Light_h 1
 
+#include <SCICore/share/share.h>
+
+#ifndef _WIN32
 #include <config.h>
-#include <Persistent/Persistent.h>
-#include <Containers/String.h>
+#endif
+#include <SCICore/Persistent/Persistent.h>
+#include <SCICore/Containers/String.h>
 
 namespace SCICore {
-
-namespace GeomSpace {
-  class Light;
-}
-
-namespace PersistentSpace {
-  class Piostream;
-  void Pio( Piostream &, GeomSpace::Light *& );
-}
 
 namespace Geometry {
   class Point;
@@ -50,7 +45,7 @@ class View;
 struct DrawInfoOpenGL;
 
 
-class Light : public Persistent {
+class SCICORESHARE Light : public Persistent {
 protected:
     Light(const clString& name);
 public:
@@ -59,14 +54,16 @@ public:
     virtual void compute_lighting(const View& view, const Point& at,
 				  Color&, Vector&)=0;
     virtual GeomObj* geom()=0;
-#ifdef SCI_OPENGL
-    virtual void opengl_setup(const View& view, DrawInfoOpenGL*, int& idx)=0;
-#endif
     virtual void lintens(const OcclusionData& od, const Point& hit_position,
 			 Color& light, Vector& light_dir)=0;
     virtual void io(Piostream&);
-    friend void PersistentSpace::Pio(Piostream&, Light*&);
+
+    friend SCICORESHARE void Pio( Piostream&, Light*& );
+
     static PersistentTypeID type_id;
+#ifdef SCI_OPENGL
+    virtual void opengl_setup(const View& view, DrawInfoOpenGL*, int& idx)=0;
+#endif
 };
 
 } // End namespace GeomSpace
@@ -74,6 +71,10 @@ public:
 
 //
 // $Log$
+// Revision 1.2  1999/08/17 06:39:19  sparker
+// Merged in modifications from PSECore to make this the new "blessed"
+// version of SCIRun/Uintah.
+//
 // Revision 1.1  1999/07/27 16:56:49  mcq
 // Initial commit
 //

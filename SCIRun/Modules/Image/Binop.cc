@@ -29,8 +29,8 @@
 namespace SCIRun {
 namespace Modules {
 
-using namespace PSECommon::Dataflow;
-using namespace PSECommon::CommonDatatypes;
+using namespace PSECore::Dataflow;
+using namespace PSECore::CommonDatatypes;
 
 using namespace SCICore::TclInterface;
 using namespace SCICore::Containers;
@@ -223,6 +223,10 @@ void Binop::tcl_command(TCLArgs& args, void* userdata)
 
 //
 // $Log$
+// Revision 1.2  1999/08/17 06:39:57  sparker
+// Merged in modifications from PSECore to make this the new "blessed"
+// version of SCIRun/Uintah.
+//
 // Revision 1.1  1999/07/27 16:58:51  mcq
 // Initial commit
 //

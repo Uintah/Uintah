@@ -12,15 +12,15 @@
  *  Copyright (C) 199? SCI Group
  */
 
-#include <CoreDatatypes/SparseRowMatrix.h>
-#include <Math/ssmult.h>
-#include <Math/MiscMath.h>
-#include <Math/MinMax.h>
-#include <Util/Assert.h>
-#include <Exceptions/Exceptions.h>
-#include <Containers/String.h>
-#include <CoreDatatypes/ColumnMatrix.h>
-#include <Malloc/Allocator.h>
+#include <SCICore/CoreDatatypes/SparseRowMatrix.h>
+#include <SCICore/Math/ssmult.h>
+#include <SCICore/Math/MiscMath.h>
+#include <SCICore/Math/MinMax.h>
+#include <SCICore/Util/Assert.h>
+#include <SCICore/Exceptions/Exceptions.h>
+#include <SCICore/Containers/String.h>
+#include <SCICore/CoreDatatypes/ColumnMatrix.h>
+#include <SCICore/Malloc/Allocator.h>
 #include <iostream.h>
 #include <stdio.h>
 
@@ -224,14 +224,14 @@ void SparseRowMatrix::zero()
 
 void SparseRowMatrix::solve(ColumnMatrix&)
 {
-    EXCEPTION(General("SparseRowMatrix can't do a direct solve!"));
+    EXCEPTION(SCICore::ExceptionsSpace::General("SparseRowMatrix can't do a direct solve!"));
 }
 
 void SparseRowMatrix::mult(const ColumnMatrix& x, ColumnMatrix& b,
 			      int& flops, int& memrefs, int beg, int end) const
 {
     // Compute A*x=b
-    ASSERT(x.nrows() == nnrows);
+    ASSERT(x.nrows() == nncols);
     ASSERT(b.nrows() == nnrows);
     if(beg==-1)beg=0;
     if(end==-1)end=nnrows;
@@ -317,6 +317,10 @@ void SparseRowMatrix::io(Piostream& stream)
 
 //
 // $Log$
+// Revision 1.2  1999/08/17 06:38:54  sparker
+// Merged in modifications from PSECore to make this the new "blessed"
+// version of SCIRun/Uintah.
+//
 // Revision 1.1  1999/07/27 16:56:28  mcq
 // Initial commit
 //

@@ -11,8 +11,8 @@
  *  Copyright (C) 1999 University of Utah
  */
 
-#include <Geom/Pickable.h>
-#include <Util/NotFinished.h>
+#include <SCICore/Geom/Pickable.h>
+#include <SCICore/Util/NotFinished.h>
 
 namespace SCICore {
 namespace GeomSpace {
@@ -89,6 +89,10 @@ Pickable::geom_moved(GeomPick*,int,double,const Vector&,const BState&, int)
 
 //
 // $Log$
+// Revision 1.2  1999/08/17 06:39:20  sparker
+// Merged in modifications from PSECore to make this the new "blessed"
+// version of SCIRun/Uintah.
+//
 // Revision 1.1  1999/07/27 16:56:50  mcq
 // Initial commit
 //

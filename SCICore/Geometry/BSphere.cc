@@ -12,10 +12,14 @@
  *  Copyright (C) 1994 SCI Group
  */
 
-#include <Geometry/BSphere.h>
-#include <Util/Assert.h>
-#include <Persistent/Persistent.h>
-#include <Geometry/Ray.h>
+#include <SCICore/Geometry/BSphere.h>
+#include <SCICore/Util/Assert.h>
+#include <SCICore/Persistent/Persistent.h>
+#include <SCICore/Geometry/Ray.h>
+
+#ifndef M_PI
+#define M_PI 3.1415926535898
+#endif
 
 namespace SCICore {
 namespace Geometry {
@@ -144,6 +148,10 @@ void Pio(Piostream& stream, Geometry::BSphere& s)
 
 //
 // $Log$
+// Revision 1.2  1999/08/17 06:39:26  sparker
+// Merged in modifications from PSECore to make this the new "blessed"
+// version of SCIRun/Uintah.
+//
 // Revision 1.1  1999/07/27 16:56:55  mcq
 // Initial commit
 //

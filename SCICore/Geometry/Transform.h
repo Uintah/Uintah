@@ -14,7 +14,7 @@
 #ifndef Geometry_Transform_h
 #define Geometry_Transform_h 1
 
-#include <share/share.h>
+#include <SCICore/share/share.h>
 
 namespace SCICore {
 namespace Geometry {
@@ -22,13 +22,13 @@ namespace Geometry {
 class Vector;
 class Point;
 
-class SHARE Transform {
+class SCICORESHARE Transform {
     double mat[4][4];
     double imat[4][4];
     int inverse_valid;
     void install_mat(double[4][4]);
-    void compute_imat();
     void build_rotate(double m[4][4], double, const Vector&);
+    void build_shear(double mat[4][4], Vector, const Vector&, double);
     void build_scale(double m[4][4], const Vector&);
     void build_translate(double m[4][4], const Vector&);
     void pre_mulmat(double[4][4]);
@@ -48,11 +48,15 @@ public:
     void change_basis(Transform&);
 
     void post_trans(Transform&);
+    void pre_trans(Transform&);
+    
     void print(void);
     void printi(void);
 
     void pre_scale(const Vector&);
     void post_scale(const Vector&);
+    void pre_shear(const Vector&, const Vector&, double);
+    void post_shear(const Vector&, const Vector&, double);
     void pre_rotate(double, const Vector& axis);
     void post_rotate(double, const Vector& axis);
     void pre_translate(const Vector&);
@@ -68,14 +72,19 @@ public:
 		     const Vector& up, double fov,
 		     double znear, double zfar,
 		     int xres, int yres);
+    void compute_imat();
     void invert();
 };
 
-} // End namespace GeomSpace
 } // End namespace SCICore
+} // End namespace GeomSpace
 
 //
 // $Log$
+// Revision 1.2  1999/08/17 06:39:29  sparker
+// Merged in modifications from PSECore to make this the new "blessed"
+// version of SCIRun/Uintah.
+//
 // Revision 1.1  1999/07/27 16:56:57  mcq
 // Initial commit
 //

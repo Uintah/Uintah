@@ -14,15 +14,15 @@
 #ifndef SCI_Geom_BBoxCache_h 
 #define SCI_Geom_BBoxCache_h 1
 
-#include <Geom/GeomObj.h>
-#include <Containers/String.h>
-#include <Geometry/BBox.h>
-#include <Geometry/BSphere.h>
+#include <SCICore/Geom/GeomObj.h>
+#include <SCICore/Containers/String.h>
+#include <SCICore/Geometry/BBox.h>
+#include <SCICore/Geometry/BSphere.h>
 
 namespace SCICore {
 namespace GeomSpace {
 
-class GeomBBoxCache: public GeomObj {
+class SCICORESHARE GeomBBoxCache: public GeomObj {
     GeomObj* child;
 
     int bbox_cached;
@@ -58,6 +58,10 @@ public:
 
 //
 // $Log$
+// Revision 1.2  1999/08/17 06:39:04  sparker
+// Merged in modifications from PSECore to make this the new "blessed"
+// version of SCIRun/Uintah.
+//
 // Revision 1.1  1999/07/27 16:56:36  mcq
 // Initial commit
 //

@@ -13,8 +13,8 @@
  *  Copyright (C) 199? SCI Group
  */
 
-#include <Dataflow/Module.h>
-#include <CoreDatatypes/TriSurface.h>
+#include <PSECommon/Dataflow/Module.h>
+#include <SCICore/CoreDatatypes/TriSurface.h>
 
 class Model;
 
@@ -55,6 +55,10 @@ public:
 
 //
 // $Log$
+// Revision 1.2  1999/08/17 06:37:42  sparker
+// Merged in modifications from PSECore to make this the new "blessed"
+// version of SCIRun/Uintah.
+//
 // Revision 1.1  1999/07/27 16:57:56  mcq
 // Initial commit
 //

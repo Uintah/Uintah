@@ -1,6 +1,3 @@
-#ifndef cVECTOR_H
-#define cVECTOR_H 1
-
 /*
  *  cVector.h : ?
  *
@@ -13,13 +10,18 @@
  *  Copyright (C) 199? SCI Group
  */
 
+#ifndef cVECTOR_H
+#define cVECTOR_H 1
+
+#include <SCICore/share/share.h>
+
 #include <iostream.h>
 #include <fstream.h>
 #include <math.h>
-#include <Math/Complex.h>
+#include <SCICore/Math/Complex.h>
 
-#include <CoreDatatypes/Datatype.h>
-#include <Containers/LockingHandle.h>
+#include <SCICore/CoreDatatypes/Datatype.h>
+#include <SCICore/Containers/LockingHandle.h>
 
 namespace SCICore {
 namespace CoreDatatypes {
@@ -32,7 +34,7 @@ using SCICore::PersistentSpace::PersistentTypeID;
 class cVector;
 typedef LockingHandle<cVector> cVectorHandle;
 
-class cVector :public Datatype{
+class SCICORESHARE cVector :public Datatype{
 
   friend class cDMatrix;
   friend class cSMatrix;
@@ -68,13 +70,13 @@ public:
   cVector operator+(const cVector& B) const;
   cVector operator-(const cVector& B) const;
   
-  friend Complex operator*(cVector& A, cVector& B);
-  friend cVector  operator*(const cVector& B,Complex x);
-  friend cVector  operator*(Complex x, const cVector &B);
-  friend cVector  operator*(const cVector& B,double x);
-  friend cVector  operator*(double x, const cVector &B);
+  friend SCICORESHARE Complex operator*(cVector& A, cVector& B);
+  friend SCICORESHARE cVector  operator*(const cVector& B,Complex x);
+  friend SCICORESHARE cVector  operator*(Complex x, const cVector &B);
+  friend SCICORESHARE cVector  operator*(const cVector& B,double x);
+  friend SCICORESHARE cVector  operator*(double x, const cVector &B);
   
-  friend ostream &operator<< (ostream &output, cVector &B);
+  friend SCICORESHARE ostream &operator<< (ostream &output, cVector &B);
   
 };
 
@@ -83,6 +85,10 @@ public:
 
 //
 // $Log$
+// Revision 1.2  1999/08/17 06:39:02  sparker
+// Merged in modifications from PSECore to make this the new "blessed"
+// version of SCIRun/Uintah.
+//
 // Revision 1.1  1999/07/27 16:56:35  mcq
 // Initial commit
 //

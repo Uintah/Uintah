@@ -14,13 +14,14 @@
 #ifndef SCI_project_Module_h
 #define SCI_project_Module_h 1
 
-#include <Containers/Array1.h>
-#include <Containers/String.h>
-#include <Util/Timer.h>
-#include <Multitask/ITC.h>
-#include <TclInterface/TCL.h>
-#include <TclInterface/TCLvar.h>
-#include <Geom/Pickable.h>
+#include <SCICore/share/share.h>
+#include <SCICore/Containers/Array1.h>
+#include <SCICore/Containers/String.h>
+#include <SCICore/Util/Timer.h>
+#include <SCICore/Multitask/ITC.h>
+#include <SCICore/TclInterface/TCL.h>
+#include <SCICore/TclInterface/TCLvar.h>
+#include <SCICore/Geom/Pickable.h>
 
 namespace SCICore {
   namespace Geometry {
@@ -31,16 +32,18 @@ namespace SCICore {
   }
 }
 
-namespace PSECommon {
+namespace PSECore {
   namespace Comm {
     class MessageBase;
   }
+}
+namespace PSECommon {
   namespace Modules {
     class Roe;
   }
 }
 
-namespace PSECommon {
+namespace PSECore {
 namespace Dataflow {
 
 using SCICore::TclInterface::TCL;
@@ -54,7 +57,7 @@ using SCICore::Geometry::Vector;
 using SCICore::Containers::clString;
 using SCICore::Containers::Array1;
 
-using PSECommon::Comm::MessageBase;
+using PSECore::Comm::MessageBase;
 using PSECommon::Modules::Roe;
 
 class Connection;
@@ -63,7 +66,7 @@ class NetworkEditor;
 class OPort;
 class IPort;
 
-class Module : public TCL, public Pickable {
+class SCICORESHARE Module : public TCL, public Pickable {
     // Added by Mohamed Dekhil for the CSAFE project
   TCLstring notes ;
 public:
@@ -153,10 +156,7 @@ public:
     NetworkEditor* netedit;
     Network* network;
     clString name;
-    clString categoryName;
-    clString packageName;
-    clString moduleName;
-  int abort_flag;
+    int abort_flag;
 public:
     int niports();
     int noports();
@@ -181,12 +181,13 @@ public:
 typedef Module* (*ModuleMaker)(const clString& id);
 
 } // End namespace Dataflow
-} // End namespace PSECommon
+} // End namespace PSECore
 
 //
 // $Log$
-// Revision 1.2  1999/07/30 17:12:28  kuzimmer
-// Fixed Saving and loading
+// Revision 1.3  1999/08/17 06:38:22  sparker
+// Merged in modifications from PSECore to make this the new "blessed"
+// version of SCIRun/Uintah.
 //
 // Revision 1.1  1999/07/27 16:55:58  mcq
 // Initial commit

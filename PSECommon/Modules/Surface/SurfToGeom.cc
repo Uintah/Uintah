@@ -24,30 +24,31 @@
  *  Copyright (C) 1994 SCI Group
  */
 
-#include <Util/NotFinished.h>
-#include <Dataflow/Module.h>
-#include <CoreDatatypes/BasicSurfaces.h>
-#include <CoreDatatypes/ColorMap.h>
-#include <CommonDatatypes/ColorMapPort.h>
-#include <CommonDatatypes/GeometryPort.h>
-#include <CommonDatatypes/ScalarFieldPort.h>
-#include <CommonDatatypes/SurfTree.h>
-#include <CoreDatatypes/Surface.h>
-#include <CommonDatatypes/SurfacePort.h>
-#include <CoreDatatypes/ScalarField.h>
-#include <CoreDatatypes/TriSurface.h>
-#include <CommonDatatypes/ScalarTriSurface.h>
-#include <Geom/GeomArrows.h>
-#include <Geom/Color.h>
-#include <Geom/GeomObj.h>
-#include <Geom/Material.h>
-#include <Geom/GeomGroup.h>
-#include <Geom/Pt.h>
-#include <Geom/GeomSphere.h>
-#include <Geom/GeomTri.h>
-#include <Geom/GeomTriangles.h>
-#include <Malloc/Allocator.h>
-#include <TclInterface/TCLvar.h>
+#include <SCICore/Util/NotFinished.h>
+#include <PSECommon/Dataflow/Module.h>
+#include <SCICore/CoreDatatypes/BasicSurfaces.h>
+#include <SCICore/CoreDatatypes/ColorMap.h>
+#include <PSECommon/CommonDatatypes/ColorMapPort.h>
+#include <PSECommon/CommonDatatypes/GeometryPort.h>
+#include <PSECommon/CommonDatatypes/ScalarFieldPort.h>
+#include <PSECommon/CommonDatatypes/SurfTree.h>
+#include <SCICore/CoreDatatypes/Surface.h>
+#include <PSECommon/CommonDatatypes/SurfacePort.h>
+#include <SCICore/CoreDatatypes/ScalarField.h>
+#include <SCICore/CoreDatatypes/TriSurface.h>
+#include <PSECommon/CommonDatatypes/ScalarTriSurface.h>
+#include <SCICore/Geom/GeomArrows.h>
+#include <SCICore/Goem/GeomCylinder.h>
+#include <SCICore/Geom/Color.h>
+#include <SCICore/Geom/GeomObj.h>
+#include <SCICore/Geom/Material.h>
+#include <SCICore/Geom/GeomGroup.h>
+#include <SCICore/Geom/Pt.h>
+#include <SCICore/Geom/GeomSphere.h>
+#include <SCICore/Geom/GeomTri.h>
+#include <SCICore/Geom/GeomTriangles.h>
+#include <SCICore/Malloc/Allocator.h>
+#include <SCICore/TclInterface/TCLvar.h>
 
 namespace PSECommon {
 namespace Modules {
@@ -187,9 +188,12 @@ void SurfToGeom::execute()
     SurfTree* st=surf->getSurfTree();
 
     reset_vars();
-    int sph;
-    if (ntype.get() == "spheres") sph=1; else sph=0;
+    int sph=0;
+    int dsk=0;
+    if (ntype.get() == "spheres" || ntype.get() == "disks") sph=1;
+    if (ntype.get() == "disks") dsk=1;
     double radius=rad.get();
+    if (radius < 0.0000001) radius=0.0000001;
     int res=resol.get();
 
 //    cerr << "sph="<<sph<<"   radius="<<radius<<"   resol="<<res<<" \n";
@@ -203,6 +207,7 @@ void SurfToGeom::execute()
 	cerr << "We don't use ScalarTriSurfaces any more -- use a TriSurface\n";
 	return;
     } else if (ts) {
+	if (ts->normals.size() != ts->bcIdx.size()) dsk=0;
 	if (nodes.get()) {
 	    surf->monitor.read_lock();
 	    if (!sph) {
@@ -309,6 +314,7 @@ void SurfToGeom::execute()
 				ga->set_matl(mat1, mat1, mat1);
 				spheres->add(ga);
 			    }
+#endif
 			}
 		    }
 		} else {	// spheres -- no cmap
@@ -667,6 +673,10 @@ void SurfToGeom::execute()
 
 //
 // $Log$
+// Revision 1.2  1999/08/17 06:37:44  sparker
+// Merged in modifications from PSECore to make this the new "blessed"
+// version of SCIRun/Uintah.
+//
 // Revision 1.1  1999/07/27 16:57:59  mcq
 // Initial commit
 //

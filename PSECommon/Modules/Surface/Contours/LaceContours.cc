@@ -11,19 +11,19 @@
  *  Copyright (C) 1994 SCI Group
  */
 
-#include <Classlib/Array1.h>
-#include <Classlib/Assert.h>
-#include <Classlib/NotFinished.h>
-#include <Dataflow/Module.h>
-#include <CommonDatatypes/ContourSet.h>
-#include <CommonDatatypes/ContourSetPort.h>
-#include <CommonDatatypes/Surface.h>
-#include <CommonDatatypes/SurfacePort.h>
-#include <CommonDatatypes/TriSurface.h>
-#include <Geometry/Grid.h>
-#include <Math/MiscMath.h>
-#include <Math/MinMax.h>
-#include <Math/Expon.h>
+#include <SCICore/Containers/Array1.h>
+#include <SCICore/Containers/Assert.h>
+#include <SCICore/Containers/NotFinished.h>
+#include <PSECommon/Dataflow/Module.h>
+#include <PSECommon/CommonDatatypes/ContourSet.h>
+#include <PSECommon/CommonDatatypes/ContourSetPort.h>
+#include <PSECommon/CommonDatatypes/Surface.h>
+#include <PSECommon/CommonDatatypes/SurfacePort.h>
+#include <PSECommon/CommonDatatypes/TriSurface.h>
+#include <SCICore/Geometry/Grid.h>
+#include <SCICore/Math/MiscMath.h>
+#include <SCICore/Math/MinMax.h>
+#include <SCICore/Math/Expon.h>
 
 #include <iostream.h>
 

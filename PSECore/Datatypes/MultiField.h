@@ -14,17 +14,19 @@
 #ifndef SCI_project_ScalarField_h
 #define SCI_project_ScalarField_h 1
 
-#include <CommonDatatypes/Datatype.h>
-#include <Containers/LockingHandle.h>
-#include <Geometry/Vector.h>
-#include <Geometry/Point.h>
+#include <PSECore/share/share.h>
+
+#include <PSECore/CommonDatatypes/Datatype.h>
+#include <SCICore/Containers/LockingHandle.h>
+#include <SCICore/Geometry/Vector.h>
+#include <SCICore/Geometry/Point.h>
 
 class ScalarFieldRG;
 class ScalarFieldUG;
 class ScalarField;
 typedef LockingHandle<ScalarField> ScalarFieldHandle;
 
-class ScalarField : public Datatype {
+class SCICORESHARE ScalarField : public Datatype {
 protected:
     int have_bounds;
     Point bmin;

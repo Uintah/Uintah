@@ -5,8 +5,7 @@
 
 */
 
-#include <Containers/Sort.h>
-#include <Util/Timer.h>
+#include <SCICore/Containers/Sort.h>
 
 #include <iostream.h>
 #include <stdlib.h>
@@ -39,22 +38,24 @@ void SortObjs::DoRadixSort(Array1<unsigned int>& data,
 
   unsigned int cur_index=0;
 
-  for(unsigned int i=0;i<NPASS;i++) {
+  unsigned int i,j;
+
+  for(i=0;i<NPASS;i++) {
     // toggle between index and nindex...
     keys.initialize(0); // reset this thing...
 
-    for(unsigned int j=0;j<data.size();j++) {
+    for(j=0;j<data.size();j++) {
       unsigned int idex = (datap[j]>>back_shift)&BMASK;
       keys[idex]++;
     } // frequency of each value
 
-    for(unsigned int j=1;j<K;j++) {
+    for(j=1;j<K;j++) {
       keys[j] += keys[j-1]; // prefix sum table...
     }
 
     unsigned int other_index = (cur_index+1)%2;
 
-    for(unsigned int j=data.size()-1;j<data.size();--j) { // will wrap...
+    for(j=data.size()-1;j<data.size();--j) { // will wrap...
       unsigned int ri = indeces[cur_index][j]; // real index to use...
       unsigned int ci = (datap[ri]>>back_shift)&BMASK;
 
@@ -102,20 +103,22 @@ void SortObjs::RSort16(Array1<unsigned int>& data,
   unsigned int *src_ptr = &sindex[0];
   unsigned int *dst_ptr = &dindex[0];
   unsigned int *datap = &data[0];
+
+  unsigned int j;
   
 
   keys.initialize(0);
 
-  for(unsigned int j=0;j<data.size();j++) {
+  for(j=0;j<data.size();j++) {
     unsigned int idex = (datap[j]>>back_shift)&BMASK16;
     keys[idex]++;
   } // frequency of each value
 
-  for(unsigned int j=1;j<K16;j++) {
+  for(j=1;j<K16;j++) {
     keys[j] += keys[j-1]; // prefix sum table...
   }
 
-  for(unsigned int j=data.size()-1;j<data.size();--j) { // will wrap...
+  for(j=data.size()-1;j<data.size();--j) { // will wrap...
     unsigned int ri = src_ptr[j]; // real index to use...
     unsigned int ci = (datap[ri]>>back_shift)&BMASK16;
     
@@ -141,19 +144,20 @@ void SortObjs::RSort12(Array1<unsigned int>& data,
   unsigned int *dst_ptr = &dindex[0];
   unsigned int *datap = &data[0];
   
+  unsigned int j;
 
   keys.initialize(0);
 
-  for(unsigned int j=0;j<data.size();j++) {
+  for(j=0;j<data.size();j++) {
     unsigned int idex = (datap[j]>>back_shift)&BMASK12;
     keys[idex]++;
   } // frequency of each value
 
-  for(unsigned int j=1;j<K12;j++) {
+  for(j=1;j<K12;j++) {
     keys[j] += keys[j-1]; // prefix sum table...
   }
 
-  for(unsigned int j=data.size()-1;j<data.size();--j) { // will wrap...
+  for(j=data.size()-1;j<data.size();--j) { // will wrap...
     unsigned int ri = src_ptr[j]; // real index to use...
     unsigned int ci = (datap[ri]>>back_shift)&BMASK12;
     
@@ -178,20 +182,22 @@ void SortObjs::RSort8(Array1<unsigned int>& data,
   unsigned int *src_ptr = &sindex[0];
   unsigned int *dst_ptr = &dindex[0];
   unsigned int *datap = &data[0];
+
+  unsigned int j;
   
 
   keys.initialize(0);
 
-  for(unsigned int j=0;j<data.size();j++) {
+  for(j=0;j<data.size();j++) {
     unsigned int idex = (datap[j]>>back_shift)&BMASK8;
     keys[idex]++;
   } // frequency of each value
 
-  for(unsigned int j=1;j<K8;j++) {
+  for(j=1;j<K8;j++) {
     keys[j] += keys[j-1]; // prefix sum table...
   }
 
-  for(unsigned int j=data.size()-1;j<data.size();--j) { // will wrap...
+  for(j=data.size()-1;j<data.size();--j) { // will wrap...
     unsigned int ri = src_ptr[j]; // real index to use...
     unsigned int ci = (datap[ri]>>back_shift)&BMASK8;
     
@@ -216,20 +222,21 @@ void SortObjs::RSort4(Array1<unsigned int>& data,
   unsigned int *src_ptr = &sindex[0];
   unsigned int *dst_ptr = &dindex[0];
   unsigned int *datap = &data[0];
+  int j;
   
 
   keys.initialize(0);
 
-  for(unsigned int j=0;j<data.size();j++) {
+  for(j=0;j<data.size();j++) {
     unsigned int idex = (datap[j]>>back_shift)&BMASK4;
     keys[idex]++;
   } // frequency of each value
 
-  for(unsigned int j=1;j<K4;j++) {
+  for(j=1;j<K4;j++) {
     keys[j] += keys[j-1]; // prefix sum table...
   }
 
-  for(unsigned int j=data.size()-1;j<data.size();--j) { // will wrap...
+  for(j=data.size()-1;j<data.size();--j) { // will wrap...
     unsigned int ri = src_ptr[j]; // real index to use...
     unsigned int ci = (datap[ri]>>back_shift)&BMASK4;
     
@@ -316,12 +323,14 @@ void SortObjs::DoSmartRadixSort(Array1<unsigned int>& data,
 
   int use_nindex = (npass&1);
 
+  int i;
+
   if (use_nindex) {
-    for(int i=0;i<data.size();i++) {
+    for(i=0;i<data.size();i++) {
       tmp_idex[i] = i;
     }
   } else {
-    for(int i=0;i<data.size();i++) {
+    for(i=0;i<data.size();i++) {
       nindex[i] = i;
     }
   }
@@ -419,10 +428,11 @@ int SimpCompI(const void* e1, const void* e2)
 void SortObjs::DoQSort(Array1<float>& data, Array1<unsigned int>& index)
 {
   Array1<QSortHelperF> helpers;
+  int i;
 
   helpers.resize(data.size());
 
-  for(int i=0;i<helpers.size();i++) {
+  for(i=0;i<helpers.size();i++) {
     helpers[i].data = &data[0];
     helpers[i].id = i;
   }
@@ -432,7 +442,7 @@ void SortObjs::DoQSort(Array1<float>& data, Array1<unsigned int>& index)
   // now just dump the data back...
 
   index.setsize(data.size());
-  for(int i=0;i<helpers.size();i++) {
+  for(i=0;i<helpers.size();i++) {
     index[i] = helpers[i].id;
   }
 }
@@ -442,10 +452,11 @@ void SortObjs::DoQSort(Array1<float>& data, Array1<unsigned int>& index)
 void SortObjs::DoQSort(Array1<unsigned int>& data, Array1<unsigned int>& index)
 {
   Array1<QSortHelperI> helpers;
+  int i;
 
   helpers.resize(data.size());
 
-  for(int i=0;i<helpers.size();i++) {
+  for(i=0;i<helpers.size();i++) {
     helpers[i].data = &data[0];
     helpers[i].id = i;
   }
@@ -455,7 +466,7 @@ void SortObjs::DoQSort(Array1<unsigned int>& data, Array1<unsigned int>& index)
   // now just dump the data back...
 
   index.setsize(data.size());
-  for(int i=0;i<helpers.size();i++) {
+  for(i=0;i<helpers.size();i++) {
     index[i] = helpers[i].id;
   }
 }
@@ -471,12 +482,13 @@ void main(int argc, char* argv)
 {
   Array1<float> vals(nvals);
   Array1<unsigned int>   ivals(nvals);
+  int i,j;
 
   Array1<unsigned int> index(nvals);
 
   cerr << KEY_SIZE << " " << K12 << " " << BMASK12 << " " << NPASS << endl;
 
-  for(int i=0;i<nvals;i++) {
+  for(i=0;i<nvals;i++) {
     vals[i] = drand48();  // make it a random number
   }
 
@@ -496,7 +508,7 @@ void main(int argc, char* argv)
       ivals[i] = vals[i]*SCALE_FAC;
     }
 
-    for (int j=0;j<10;j++) {
+    for (j=0;j<10;j++) {
 
       mytime.start();
 
@@ -556,6 +568,10 @@ void main(int argc, char* argv)
 
 //
 // $Log$
+// Revision 1.2  1999/08/17 06:38:37  sparker
+// Merged in modifications from PSECore to make this the new "blessed"
+// version of SCIRun/Uintah.
+//
 // Revision 1.1  1999/07/27 16:56:14  mcq
 // Initial commit
 //

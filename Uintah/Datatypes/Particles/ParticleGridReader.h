@@ -27,11 +27,12 @@ LOG
     Created January 6, 1999
 ----------------------------------------------------------------------*/
 
-#include <CoreDatatypes/Datatype.h>
-#include <Containers/LockingHandle.h>
-#include <Containers/Array1.h>
-#include <Datatypes/Particles/MPMaterial.h>
-#include <Geometry/Vector.h>
+#include <SCICore/CoreDatatypes/Datatype.h>
+#include <SCICore/Containers/LockingHandle.h>
+#include <SCICore/Containers/Array1.h>
+#include <SCICore/Geometry/Vector.h>
+
+#include <Uintah/Datatypes/Particles/MPMaterial.h>
 
 namespace Uintah {
 namespace Datatypes {
@@ -84,6 +85,10 @@ public:
 
 //
 // $Log$
+// Revision 1.2  1999/08/17 06:40:08  sparker
+// Merged in modifications from PSECore to make this the new "blessed"
+// version of SCIRun/Uintah.
+//
 // Revision 1.1  1999/07/27 16:58:59  mcq
 // Initial commit
 //

@@ -16,17 +16,20 @@
 #ifndef SCI_project_TCLView_h
 #define SCI_project_TCLView_h 1
 
-#include <Geom/View.h>
-#include <Geom/TCLGeom.h>
-#include <Containers/String.h>
-#include <TclInterface/TCLvar.h>
+#include <SCICore/share/share.h>
+
+#include <SCICore/Geom/View.h>
+#include <SCICore/Geom/TCLGeom.h>
+#include <SCICore/Containers/String.h>
+#include <SCICore/TclInterface/TCLvar.h>
 
 namespace SCICore {
 namespace GeomSpace {
 
 using SCICore::Containers::clString;
+using namespace SCICore::TclInterface;
 
-class TCLView : public TCLvar {
+class SCICORESHARE TCLView : public TCLvar {
     TCLPoint eyep;
     TCLPoint lookat;
     TCLVector up;
@@ -42,7 +45,7 @@ public:
     virtual void emit(ostream& out);
 };
 
-class TCLExtendedView : public TCLvar {
+class SCICORESHARE TCLExtendedView : public TCLvar {
     TCLPoint eyep;
     TCLPoint lookat;
     TCLVector up;
@@ -68,6 +71,10 @@ public:
 
 //
 // $Log$
+// Revision 1.2  1999/08/17 06:39:24  sparker
+// Merged in modifications from PSECore to make this the new "blessed"
+// version of SCIRun/Uintah.
+//
 // Revision 1.1  1999/07/27 16:56:52  mcq
 // Initial commit
 //

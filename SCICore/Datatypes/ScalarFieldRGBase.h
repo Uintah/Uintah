@@ -14,8 +14,8 @@
 #ifndef SCI_project_ScalarFieldRGBase_h
 #define SCI_project_ScalarFieldRGBase_h 1
 
-#include <CoreDatatypes/ScalarField.h>
-#include <CoreDatatypes/LockArray3.h>
+#include <SCICore/CoreDatatypes/ScalarField.h>
+#include <SCICore/CoreDatatypes/LockArray3.h>
 
 namespace SCICore {
 namespace CoreDatatypes {
@@ -32,7 +32,7 @@ class ScalarFieldRGshort;
 class ScalarFieldRGchar;
 class ScalarFieldRGuchar;
 
-class ScalarFieldRGBase : public ScalarField {
+class SCICORESHARE ScalarFieldRGBase : public ScalarField {
 public:
     enum Representation {
 	Double,
@@ -94,6 +94,10 @@ public:
 
 //
 // $Log$
+// Revision 1.2  1999/08/17 06:38:50  sparker
+// Merged in modifications from PSECore to make this the new "blessed"
+// version of SCIRun/Uintah.
+//
 // Revision 1.1  1999/07/27 16:56:25  mcq
 // Initial commit
 //

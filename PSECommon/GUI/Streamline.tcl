@@ -353,7 +353,7 @@ itcl_class PSECommon_Visualization_Streamline {
 	set $s-drawdist .1
 	
 	$this-c need_find $sid
-	$this-c needexecute
+#	$this-c needexecute
     }
     method selectmarker {} {
 	setup_markerspec $sourcelist($currentsource)

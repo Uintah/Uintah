@@ -30,23 +30,22 @@ LOG
 #ifndef PARTICLEGRIDVISCONTROL_H
 #define PARTICLEGRIDVISCONTROL_H 1
 
+#include <SCICore/TclInterface/TCLvar.h> 
 
-#include <Datatypes/Particles/ParticleGridReader.h>
-#include <Datatypes/Particles/ParticleGridReaderPort.h>
-#include <Datatypes/Particles/ParticleSetPort.h>
+#include <PSECore/CommonDatatypes/ScalarFieldPort.h>
+#include <PSECore/CommonDatatypes/VectorFieldPort.h>
+#include <PSECore/Dataflow/Module.h> 
 
-#include <CommonDatatypes/ScalarFieldPort.h>
-#include <CommonDatatypes/VectorFieldPort.h>
-#include <Dataflow/Module.h> 
-#include <TclInterface/TCLvar.h> 
-
+#include <Uintah/Datatypes/Particles/ParticleGridReader.h>
+#include <Uintah/Datatypes/Particles/ParticleGridReaderPort.h>
+#include <Uintah/Datatypes/Particles/ParticleSetPort.h>
   
 namespace Uintah {
 namespace Modules {
 
 using namespace Uintah::Datatypes;
-using namespace PSECommon::Dataflow;
-using namespace PSECommon::CommonDatatypes;
+using namespace PSECore::Dataflow;
+using namespace PSECore::CommonDatatypes;
 using namespace SCICore::TclInterface;
 
 class ParticleGridVisControl : public Module { 
@@ -107,6 +106,10 @@ private:
 
 //
 // $Log$
+// Revision 1.2  1999/08/17 06:40:11  sparker
+// Merged in modifications from PSECore to make this the new "blessed"
+// version of SCIRun/Uintah.
+//
 // Revision 1.1  1999/07/27 17:08:57  mcq
 // Initial commit
 //

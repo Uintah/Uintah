@@ -12,9 +12,9 @@
  *  Copyright (C) 1994 SCI Group
  */
 
-#include <CoreDatatypes/Surface.h>
-#include <Util/NotFinished.h>
-#include <Geometry/Grid.h>
+#include <SCICore/CoreDatatypes/Surface.h>
+#include <SCICore/Util/NotFinished.h>
+#include <SCICore/Geometry/Grid.h>
 
 namespace SCICore {
 namespace CoreDatatypes {
@@ -35,7 +35,7 @@ Surface::~Surface()
 }
 
 Surface::Surface(const Surface& copy)
-: closed(copy.closed), rep(copy.rep), name(copy.name)
+: closed(copy.closed), rep(copy.rep), name(copy.name), grid(0)
 {
 //    NOT_FINISHED("Surface::Surface");
 }
@@ -127,6 +127,10 @@ void Surface::set_bc(const clString& bc_expr)
 
 //
 // $Log$
+// Revision 1.2  1999/08/17 06:38:55  sparker
+// Merged in modifications from PSECore to make this the new "blessed"
+// version of SCIRun/Uintah.
+//
 // Revision 1.1  1999/07/27 16:56:29  mcq
 // Initial commit
 //

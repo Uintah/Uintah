@@ -17,19 +17,22 @@
 6) Destroy allocators
 */
 
-#include <Malloc/Allocator.h>
-#include <Malloc/AllocPriv.h>
-#include <Malloc/AllocOS.h>
+#include <SCICore/Malloc/Allocator.h>
+#include <SCICore/Malloc/AllocPriv.h>
+#include <SCICore/Malloc/AllocOS.h>
 
 // irix64 KCC stuff
 #include <strings.h>
 
 #ifdef __sun
-#include <string.h>
-#define bcopy(src,dest,n) memcpy(dest,src,n)
+  #include <string.h>
+  #define bcopy(src,dest,n) memcpy(dest,src,n)
 #else
-#include <bstring.h>
+  #ifndef LINUX
+    #include <bstring.h>
+  #endif
 #endif
+
 #include <stdio.h>
 #include <config.h>
 
@@ -1024,6 +1027,10 @@ void DumpAllocator(Allocator* a)
 
 //
 // $Log$
+// Revision 1.2  1999/08/17 06:39:30  sparker
+// Merged in modifications from PSECore to make this the new "blessed"
+// version of SCIRun/Uintah.
+//
 // Revision 1.1  1999/07/27 16:56:58  mcq
 // Initial commit
 //

@@ -25,8 +25,8 @@ namespace Modules {
 
 using namespace SCICore::TclInterface;
 
-using namespace PSECommon::Dataflow;
-using namespace PSECommon::CommonDatatypes;
+using namespace PSECore::Dataflow;
+using namespace PSECore::CommonDatatypes;
 
 using namespace SCIRun::Datatypes;
 
@@ -203,11 +203,15 @@ void PMFilterImage::execute()
 
 //
 // $Log$
+// Revision 1.2  1999/08/17 06:40:01  sparker
+// Merged in modifications from PSECore to make this the new "blessed"
+// version of SCIRun/Uintah.
+//
 // Revision 1.1  1999/07/27 16:58:54  mcq
 // Initial commit
 //
 // Revision 1.2  1999/04/30 01:11:53  dav
-// moved TiffReader to SCIRun from PSECommon
+// moved TiffReader to SCIRun from PSECore
 //
 // Revision 1.1  1999/04/29 22:26:33  dav
 // Added image files to SCIRun

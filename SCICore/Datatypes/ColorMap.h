@@ -14,12 +14,12 @@
 #ifndef SCI_project_ColorMap_h
 #define SCI_project_ColorMap_h 1
 
-#include <CoreDatatypes/Datatype.h>
-#include <Containers/Array1.h>
-#include <Containers/LockingHandle.h>
-#include <Geom/Material.h>
-#include <Geom/Color.h>
-#include <Geom/GeomColormapInterface.h>
+#include <SCICore/CoreDatatypes/Datatype.h>
+#include <SCICore/Containers/Array1.h>
+#include <SCICore/Containers/LockingHandle.h>
+#include <SCICore/Geom/Material.h>
+#include <SCICore/Geom/Color.h>
+#include <SCICore/Geom/GeomColormapInterface.h>
 
 /* changed to work less stupid with transfer functions
  * Peter-Pike Sloan
@@ -39,7 +39,7 @@ using SCICore::PersistentSpace::PersistentTypeID;
 class ColorMap;
 typedef LockingHandle<ColorMap> ColorMapHandle;
 
-class ColorMap : public Datatype, public GeomColormapInterface {
+class SCICORESHARE ColorMap : public Datatype, public GeomColormapInterface {
 public:
     int type; // 0 is stupid, 1 is not stupid
     double min;
@@ -111,6 +111,10 @@ private:
 
 //
 // $Log$
+// Revision 1.2  1999/08/17 06:38:43  sparker
+// Merged in modifications from PSECore to make this the new "blessed"
+// version of SCIRun/Uintah.
+//
 // Revision 1.1  1999/07/27 16:56:19  mcq
 // Initial commit
 //

@@ -12,10 +12,10 @@
  *  Copyright (C) 1994 SCI Group
  */
 
-#include <Geom/HeadLight.h>
-#include <Geom/GeomRaytracer.h>
-#include <Geom/View.h>
-#include <Util/NotFinished.h>
+#include <SCICore/Geom/HeadLight.h>
+#include <SCICore/Geom/GeomRaytracer.h>
+#include <SCICore/Geom/View.h>
+#include <SCICore/Util/NotFinished.h>
 
 namespace SCICore {
 namespace GeomSpace {
@@ -36,21 +36,8 @@ HeadLight::~HeadLight()
 {
 }
 
-void HeadLight::compute_lighting(const View& view, const Point& at,
-				  Color& color, Vector& to)
-{
-    to=at-view.eyep();
-    to.normalize();
-    color=c;
-}
-
-GeomObj* HeadLight::geom()
-{
-    return 0; // Never seen
-}
-
-void HeadLight::lintens(const OcclusionData&, const Point&,
-			Color&, Vector&)
+void HeadLight::lintens(const OcclusionData& od, const Point& hit_position,
+			 Color& light, Vector& light_dir)
 {
     NOT_FINISHED("HeadLight::lintens");
 #if 0
@@ -68,6 +55,19 @@ void HeadLight::lintens(const OcclusionData&, const Point&,
 #endif
 }
 
+void HeadLight::compute_lighting(const View& view, const Point& at,
+				  Color& color, Vector& to)
+{
+    to=at-view.eyep();
+    to.normalize();
+    color=c;
+}
+
+GeomObj* HeadLight::geom()
+{
+    return 0; // Never seen
+}
+
 #define HEADLIGHT_VERSION 1
 
 void HeadLight::io(Piostream& stream)
@@ -77,7 +77,7 @@ void HeadLight::io(Piostream& stream)
     stream.begin_class("HeadLight", HEADLIGHT_VERSION);
     // Do the base class first...
     Light::io(stream);
-    Pio(stream, c);
+    GeomSpace::Pio(stream, c);
     stream.end_class();
 }
 
@@ -87,6 +87,10 @@ void HeadLight::io(Piostream& stream)
 
 //
 // $Log$
+// Revision 1.2  1999/08/17 06:39:18  sparker
+// Merged in modifications from PSECore to make this the new "blessed"
+// version of SCIRun/Uintah.
+//
 // Revision 1.1  1999/07/27 16:56:48  mcq
 // Initial commit
 //

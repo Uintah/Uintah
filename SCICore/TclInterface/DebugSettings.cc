@@ -12,11 +12,11 @@
  *  Copyright (C) 1994 SCI Group
  */
 
-#include <TclInterface/DebugSettings.h>
+#include <SCICore/TclInterface/DebugSettings.h>
 
-#include <Util/Debug.h>
-#include <Malloc/Allocator.h>
-#include <TclInterface/TCLvar.h>
+#include <SCICore/Util/Debug.h>
+#include <SCICore/Malloc/Allocator.h>
+#include <SCICore/TclInterface/TCLvar.h>
 
 #include <iostream.h>
 #include <string.h>
@@ -92,6 +92,10 @@ void DebugSettings::tcl_command(TCLArgs& args, void*)
 
 //
 // $Log$
+// Revision 1.2  1999/08/17 06:39:41  sparker
+// Merged in modifications from PSECore to make this the new "blessed"
+// version of SCIRun/Uintah.
+//
 // Revision 1.1  1999/07/27 16:57:13  mcq
 // Initial commit
 //

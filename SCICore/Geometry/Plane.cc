@@ -12,9 +12,9 @@
  *  Copyright (C) 1994 SCI Group
  */
 
-#include <Geometry/Plane.h>
-#include <Geometry/Point.h>
-#include <Geometry/Vector.h>
+#include <SCICore/Geometry/Plane.h>
+#include <SCICore/Geometry/Point.h>
+#include <SCICore/Geometry/Vector.h>
 #include <iostream.h>
 
 namespace SCICore {
@@ -131,6 +131,10 @@ Plane::Intersect( Point s, Vector v, Point& hit )
 
 //
 // $Log$
+// Revision 1.2  1999/08/17 06:39:27  sparker
+// Merged in modifications from PSECore to make this the new "blessed"
+// version of SCIRun/Uintah.
+//
 // Revision 1.1  1999/07/27 16:56:56  mcq
 // Initial commit
 //

@@ -14,12 +14,12 @@
 #ifndef SCI_Geom_TriStrip_h
 #define SCI_Geom_TriStrip_h 1
 
-#include <Geom/GeomVertexPrim.h>
+#include <SCICore/Geom/GeomVertexPrim.h>
 
 namespace SCICore {
 namespace GeomSpace {
 
-class GeomTriStrip : public GeomVertexPrim {
+class SCICORESHARE GeomTriStrip : public GeomVertexPrim {
 public:
     GeomTriStrip();
     GeomTriStrip(const GeomTriStrip&);
@@ -42,7 +42,7 @@ public:
     virtual bool saveobj(ostream&, const clString& format, GeomSave*);
 };
 
-class GeomTriStripList : public GeomObj {
+class SCICORESHARE GeomTriStripList : public GeomObj {
     int n_strips;
     Array1<float> pts;
     Array1<float> nrmls;
@@ -87,6 +87,10 @@ public:
 
 //
 // $Log$
+// Revision 1.2  1999/08/17 06:39:16  sparker
+// Merged in modifications from PSECore to make this the new "blessed"
+// version of SCIRun/Uintah.
+//
 // Revision 1.1  1999/07/27 16:56:47  mcq
 // Initial commit
 //

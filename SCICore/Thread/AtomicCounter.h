@@ -34,7 +34,7 @@ PATTERNS
 WARNING
    
 ****************************************/
-class AtomicCounter {
+class SCICORESHARE AtomicCounter {
     const char* name;
     Mutex lock;
     int value;

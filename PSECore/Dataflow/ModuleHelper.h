@@ -14,16 +14,18 @@
 #ifndef SCI_project_ModuleHelper_h
 #define SCI_project_ModuleHelper_h 1
 
-#include <Multitask/Task.h>
+#include <SCICore/share/share.h>
 
-namespace PSECommon {
+#include <SCICore/Multitask/Task.h>
+
+namespace PSECore {
 namespace Dataflow {
 
 using SCICore::Multitask::Task;
 
 class Module;
 
-class ModuleHelper : public Task {
+class SCICORESHARE ModuleHelper : public Task {
     Module* module;
 public:
     ModuleHelper(Module* module);
@@ -33,10 +35,14 @@ public:
 };
 
 } // End namespace Dataflow
-} // End namespace PSECommon
+} // End namespace PSECore
 
 //
 // $Log$
+// Revision 1.2  1999/08/17 06:38:23  sparker
+// Merged in modifications from PSECore to make this the new "blessed"
+// version of SCIRun/Uintah.
+//
 // Revision 1.1  1999/07/27 16:55:58  mcq
 // Initial commit
 //

@@ -14,27 +14,27 @@
 #ifndef SCI_project_module_Salmon_h
 #define SCI_project_module_Salmon_h
 
-#include <Dataflow/Module.h>
-#include <Comm/MessageBase.h>
-#include <Containers/Array1.h>
-#include <Containers/HashTable.h>
-#include <CommonDatatypes/GeometryPort.h>
-#include <CommonDatatypes/GeometryComm.h>
-#include <Geom/GeomObj.h>
-#include <Geom/Material.h>
-#include <Geom/Lighting.h>
-#include <Multitask/ITC.h>
-#include <Geom/IndexedGroup.h>
-#include <Modules/Salmon/SalmonGeom.h>
-#include <TclInterface/TCL.h>
+#include <PSECore/Dataflow/Module.h>
+#include <PSECore/Comm/MessageBase.h>
+#include <SCICore/Containers/Array1.h>
+#include <SCICore/Containers/HashTable.h>
+#include <PSECore/CommonDatatypes/GeometryPort.h>
+#include <PSECore/CommonDatatypes/GeometryComm.h>
+#include <SCICore/Geom/GeomObj.h>
+#include <SCICore/Geom/Material.h>
+#include <SCICore/Geom/Lighting.h>
+#include <SCICore/Multitask/ITC.h>
+#include <SCICore/Geom/IndexedGroup.h>
+#include <PSECommon/Modules/Salmon/SalmonGeom.h>
+#include <SCICore/TclInterface/TCL.h>
 
 namespace PSECommon {
 namespace Modules {
 
-using PSECommon::CommonDatatypes::GeomID;
-using PSECommon::Comm::MessageBase;
-using PSECommon::Comm::MessageTypes;
-using PSECommon::CommonDatatypes::GeomReply;
+using PSECore::CommonDatatypes::GeomID;
+using PSECore::Comm::MessageBase;
+using PSECore::Comm::MessageTypes;
+using PSECore::CommonDatatypes::GeomReply;
 
 using SCICore::Containers::HashTable;
 using SCICore::Multitask::Mailbox;
@@ -138,6 +138,10 @@ public:
 
 //
 // $Log$
+// Revision 1.2  1999/08/17 06:37:39  sparker
+// Merged in modifications from PSECore to make this the new "blessed"
+// version of SCIRun/Uintah.
+//
 // Revision 1.1  1999/07/27 16:57:53  mcq
 // Initial commit
 //

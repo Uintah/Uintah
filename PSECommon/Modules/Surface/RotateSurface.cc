@@ -12,21 +12,21 @@
  *  Copyright (C) 1994 SCI Group
  */
 
-#include <Util/NotFinished.h>
-#include <Dataflow/Module.h>
-#include <Dataflow/ModuleList.h>
-#include <CommonDatatypes/SurfacePort.h>
-#include <CommonDatatypes/BasicSurfaces.h>
-#include <CommonDatatypes/ScalarTriSurface.h>
-#include <CommonDatatypes/SurfTree.h>
-#include <CommonDatatypes/TriSurface.h>
-#include <Geometry/BBox.h>
-#include <Math/Expon.h>
-#include <Math/MusilRNG.h>
-#include <Math/Trig.h>
-#include <TclInterface/TCLvar.h>
+#include <SCICore/Util/NotFinished.h>
+#include <PSECommon/Dataflow/Module.h>
+#include <PSECommon/Dataflow/ModuleList.h>
+#include <PSECommon/CommonDatatypes/SurfacePort.h>
+#include <PSECommon/CommonDatatypes/BasicSurfaces.h>
+#include <PSECommon/CommonDatatypes/ScalarTriSurface.h>
+#include <PSECommon/CommonDatatypes/SurfTree.h>
+#include <PSECommon/CommonDatatypes/TriSurface.h>
+#include <SCICore/Geometry/BBox.h>
+#include <SCICore/Math/Expon.h>
+#include <SCICore/Math/MusilRNG.h>
+#include <SCICore/Math/Trig.h>
+#include <SCICore/TclInterface/TCLvar.h>
 #include <stdio.h>
-#include <Malloc/Allocator.h>
+#include <SCICore/Malloc/Allocator.h>
 
 namespace PSECommon {
 namespace Modules {
@@ -220,6 +220,10 @@ void RotateSurface::execute()
 
 //
 // $Log$
+// Revision 1.2  1999/08/17 06:37:43  sparker
+// Merged in modifications from PSECore to make this the new "blessed"
+// version of SCIRun/Uintah.
+//
 // Revision 1.1  1999/07/27 16:57:58  mcq
 // Initial commit
 //

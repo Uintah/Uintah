@@ -12,6 +12,10 @@
  #  Log Information:
  #
  #  $Log$
+ #  Revision 1.2  1999/08/17 06:38:00  sparker
+ #  Merged in modifications from PSECore to make this the new "blessed"
+ #  version of SCIRun/Uintah.
+ #
  #  Revision 1.1  1999/07/27 16:58:30  mcq
  #  Initial commit
  #
@@ -38,6 +42,8 @@ itcl_class PSECommon_Surface_SurfInterpVals {
 	set $this-method volumeblur
 	global $this-numnbrs
 	set $this-numnbrs 5
+	global $this-cache
+	set $this-cache 0
 	global $this-surfid
 	set $this-surfid ""
     }
@@ -67,8 +73,10 @@ itcl_class PSECommon_Surface_SurfInterpVals {
 	label $w.f.surfid.l -text "SurfTree SurfId: "
 	entry $w.f.surfid.e -relief sunken -width 10 -textvariable $this-surfid
 	pack $w.f.surfid.l $w.f.surfid.e -side left
-	
-	pack $w.f.method $w.f.numnbrs $w.f.surfid -side top -fill x
+	global $this-cache
+	checkbutton $w.f.cache -text "Use Cache" -variable $this-cache
+
+	pack $w.f.method $w.f.numnbrs $w.f.surfid $w.f.cache -side top -fill x
         pack $w.f -side top -expand yes
     }
 }

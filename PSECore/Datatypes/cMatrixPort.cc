@@ -12,19 +12,25 @@
  *  Copyright (C) 1997 SCI Group
  */
 
-#include <CommonDatatypes/cMatrixPort.h>
+#include <PSECore/CommonDatatypes/cMatrixPort.h>
 
-namespace PSECommon {
+namespace PSECore {
 namespace CommonDatatypes {
+
+using namespace SCICore::CoreDatatypes;
 
 clString SimpleIPort<cMatrixHandle>::port_type("cMatrix");
 clString SimpleIPort<cMatrixHandle>::port_color("red");
 
 } // End namespace CommonDatatypes
-} // End namespace PSECommon
+} // End namespace PSECore
 
 //
 // $Log$
+// Revision 1.2  1999/08/17 06:38:13  sparker
+// Merged in modifications from PSECore to make this the new "blessed"
+// version of SCIRun/Uintah.
+//
 // Revision 1.1  1999/07/27 16:55:51  mcq
 // Initial commit
 //

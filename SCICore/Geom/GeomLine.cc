@@ -12,13 +12,13 @@
  *  Copyright (C) 1994 SCI Group
  */
 
-#include <Geom/GeomLine.h>
-#include <Util/NotFinished.h>
-#include <Containers/String.h>
-#include <Containers/TrivialAllocator.h>
-#include <Geometry/BBox.h>
-#include <Geometry/BSphere.h>
-#include <Malloc/Allocator.h>
+#include <SCICore/Geom/GeomLine.h>
+#include <SCICore/Util/NotFinished.h>
+#include <SCICore/Containers/String.h>
+#include <SCICore/Containers/TrivialAllocator.h>
+#include <SCICore/Geometry/BBox.h>
+#include <SCICore/Geometry/BSphere.h>
+#include <SCICore/Malloc/Allocator.h>
 
 #include <stdlib.h>
 
@@ -333,7 +333,7 @@ void TexGeomLines::batch_add(Array1<double>&, Array1<Point>& ps,
   int tstart = tangents.size();
   int cstart = colors.size();
 
-  cerr << "Adding with colors...\n";
+//  cerr << "Adding with colors...\n";
 
   pts.grow(2*(ps.size()-1));
   tangents.grow(2*(ps.size()-1));
@@ -469,6 +469,10 @@ void TexGeomLines::SortVecs()
 
 //
 // $Log$
+// Revision 1.2  1999/08/17 06:39:08  sparker
+// Merged in modifications from PSECore to make this the new "blessed"
+// version of SCIRun/Uintah.
+//
 // Revision 1.1  1999/07/27 16:56:40  mcq
 // Initial commit
 //

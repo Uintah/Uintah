@@ -14,12 +14,12 @@
 #ifndef SCI_Geom_GeomColormapInterface_h
 #define SCI_Geom_GeomColormapInterface_h 1
 
-#include <Geom/Material.h>
+#include <SCICore/Geom/Material.h>
 
 namespace SCICore {
 namespace GeomSpace {
 
-class GeomColormapInterface {
+class SCICORESHARE GeomColormapInterface {
 public:
     virtual MaterialHandle& lookup2(double value)=0;
     virtual double getMin()=0;
@@ -31,6 +31,10 @@ public:
 
 //
 // $Log$
+// Revision 1.2  1999/08/17 06:39:06  sparker
+// Merged in modifications from PSECore to make this the new "blessed"
+// version of SCIRun/Uintah.
+//
 // Revision 1.1  1999/07/27 16:56:37  mcq
 // Initial commit
 //

@@ -12,9 +12,9 @@
  *  Copyright (C) 1994 SCI Group
  */
 
-#include <Geom/Color.h>
-#include <Math/MinMax.h>
-#include <Persistent/Persistent.h>
+#include <SCICore/Geom/Color.h>
+#include <SCICore/Math/MinMax.h>
+#include <SCICore/Persistent/Persistent.h>
 
 namespace SCICore {
 namespace GeomSpace {
@@ -227,38 +227,35 @@ CharColor::operator!= ( const CharColor& c ) const
     return 0;
 }
 
-} // End namespace GeomSpace
-
-
-namespace PersistentSpace {
-
-using namespace GeomSpace;
-
 void Pio(Piostream& stream, Color& p)
 {
     stream.begin_cheap_delim();
-    Pio(stream, p._r);
-    Pio(stream, p._g);
-    Pio(stream, p._b);
+    SCICore::PersistentSpace::Pio(stream, p._r);
+    SCICore::PersistentSpace::Pio(stream, p._g);
+    SCICore::PersistentSpace::Pio(stream, p._b);
     stream.end_cheap_delim();
 }
 
 void Pio(Piostream& stream, CharColor& p)
 {
     stream.begin_cheap_delim();
-    Pio(stream, p.red);
-    Pio(stream, p.green);
-    Pio(stream, p.blue);
+    SCICore::PersistentSpace::Pio(stream, p.red);
+    SCICore::PersistentSpace::Pio(stream, p.green);
+    SCICore::PersistentSpace::Pio(stream, p.blue);
     stream.end_cheap_delim();
 }
 
-} // End namespace PersistentSpace
+} // End namespace GeomSpace
 } // End namespace SCICore
 
 
 
 //
 // $Log$
+// Revision 1.2  1999/08/17 06:39:04  sparker
+// Merged in modifications from PSECore to make this the new "blessed"
+// version of SCIRun/Uintah.
+//
 // Revision 1.1  1999/07/27 16:56:36  mcq
 // Initial commit
 //

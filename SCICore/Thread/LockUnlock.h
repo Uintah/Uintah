@@ -49,7 +49,7 @@ WARNING
    
 ****************************************/
 
-class LockUnlock {
+class SCICORESHARE LockUnlock {
     Mutex* mutex;
     CrowdMonitor* monitor;
 public:

@@ -7,7 +7,7 @@
 #include <SCICore/Containers/String.h>
 #include <PSECore/Dataflow/Module.h>
 
-namespace PSECommon {
+namespace PSECore {
   namespace Dataflow {
 
     using SCICore::Containers::clString;

@@ -14,11 +14,11 @@
 #ifndef SCI_Geom_Material_h
 #define SCI_Geom_Material_h 1
 
-//#include <Persistent/Persistent.h>
-#include <Containers/LockingHandle.h>
-#include <Geom/Color.h>
-#include <Geom/GeomContainer.h>
-#include <Multitask/ITC.h>
+//#include <SCICore/Persistent/Persistent.h>
+#include <SCICore/Containers/LockingHandle.h>
+#include <SCICore/Geom/Color.h>
+#include <SCICore/Geom/GeomContainer.h>
+#include <SCICore/Multitask/ITC.h>
 
 namespace SCICore {
 namespace Containers {
@@ -33,7 +33,7 @@ using SCICore::Containers::LockingHandle;
 using SCICore::Containers::clString;
 using SCICore::Multitask::Mutex;
 
-class Material : public Persistent {
+class SCICORESHARE Material : public Persistent {
 public:
     int ref_cnt;
     Mutex lock;
@@ -61,7 +61,7 @@ public:
 
 typedef LockingHandle<Material> MaterialHandle;
 
-class GeomMaterial : public GeomContainer {
+class SCICORESHARE GeomMaterial : public GeomContainer {
     MaterialHandle matl;
 public:
     GeomMaterial(GeomObj*, const MaterialHandle&);

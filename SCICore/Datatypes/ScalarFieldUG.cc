@@ -12,11 +12,16 @@
  *  Copyright (C) 1994 SCI Group
  */
 
-#include <CoreDatatypes/ScalarFieldUG.h>
-#include <Util/NotFinished.h>
-#include <Containers/String.h>
-#include <Math/MusilRNG.h>
-#include <Malloc/Allocator.h>
+#include <SCICore/CoreDatatypes/ScalarFieldUG.h>
+#include <SCICore/Util/NotFinished.h>
+#include <SCICore/Containers/String.h>
+#include <SCICore/Math/MusilRNG.h>
+#include <SCICore/Malloc/Allocator.h>
+
+#ifdef _WIN32
+#include <stdlib.h>
+#define drand48() rand()
+#endif
 
 namespace SCICore {
 namespace CoreDatatypes {
@@ -391,6 +396,10 @@ void ScalarFieldUG::over_grad_augment(double vol_wt, double grad_wt,
 
 //
 // $Log$
+// Revision 1.2  1999/08/17 06:38:53  sparker
+// Merged in modifications from PSECore to make this the new "blessed"
+// version of SCIRun/Uintah.
+//
 // Revision 1.1  1999/07/27 16:56:28  mcq
 // Initial commit
 //

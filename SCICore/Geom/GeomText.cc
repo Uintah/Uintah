@@ -12,15 +12,15 @@
  *  Copyright (C) 1998 SCI Text
  */
 
-#include <Util/NotFinished.h>
-#include <Containers/String.h>
-#include <Geometry/BBox.h>
-#include <Geometry/BSphere.h>
-#include <Malloc/Allocator.h>
-#include <Geom/Color.h>
-#include <Geometry/Point.h>
-#include <Geom/GeomSave.h>
-#include <Geom/GeomText.h>
+#include <SCICore/Util/NotFinished.h>
+#include <SCICore/Containers/String.h>
+#include <SCICore/Geometry/BBox.h>
+#include <SCICore/Geometry/BSphere.h>
+#include <SCICore/Malloc/Allocator.h>
+#include <SCICore/Geom/Color.h>
+#include <SCICore/Geometry/Point.h>
+#include <SCICore/Geom/GeomSave.h>
+#include <SCICore/Geom/GeomText.h>
 
 namespace SCICore {
 namespace GeomSpace {
@@ -120,6 +120,10 @@ bool GeomText::saveobj(ostream&, const clString&, GeomSave*)
 
 //
 // $Log$
+// Revision 1.2  1999/08/17 06:39:14  sparker
+// Merged in modifications from PSECore to make this the new "blessed"
+// version of SCIRun/Uintah.
+//
 // Revision 1.1  1999/07/27 16:56:45  mcq
 // Initial commit
 //

@@ -13,18 +13,18 @@
 #ifndef SCI_Geom_Transform_h
 #define SCI_Geom_Transform_h 1
 
-#include <Persistent/Persistent.h>
-#include <Containers/LockingHandle.h>
-#include <Geom/GeomContainer.h>
-#include <Geometry/Transform.h>
-#include <Multitask/ITC.h>
+#include <SCICore/Persistent/Persistent.h>
+#include <SCICore/Containers/LockingHandle.h>
+#include <SCICore/Geom/GeomContainer.h>
+#include <SCICore/Geometry/Transform.h>
+#include <SCICore/Multitask/ITC.h>
 
 namespace SCICore {
 namespace GeomSpace {
 
 using SCICore::Geometry::Transform;
 
-class GeomTransform : public GeomContainer {
+class SCICORESHARE GeomTransform : public GeomContainer {
     Transform trans;
 public:
     GeomTransform(GeomObj*);

@@ -15,7 +15,7 @@
 #ifndef SCI_Containers_FastHashTable_h
 #define SCI_Containers_FastHashTable_h 1
 
-#include <Util/Assert.h>
+#include <SCICore/Util/Assert.h>
 
 #ifdef __GNUG__
 #pragma interface
@@ -211,8 +211,8 @@ inline int FastHashTable<Key>::remove(const Key* k)
 
 #include <iostream.h>
 
-#include <Util/Assert.h>
-#include <Malloc/Allocator.h>
+#include <SCICore/Util/Assert.h>
+#include <SCICore/Malloc/Allocator.h>
 
 namespace SCICore {
 namespace Containers {
@@ -372,6 +372,10 @@ Key* FastHashTableIter<Key>::get_key()
 
 //
 // $Log$
+// Revision 1.2  1999/08/17 06:38:35  sparker
+// Merged in modifications from PSECore to make this the new "blessed"
+// version of SCIRun/Uintah.
+//
 // Revision 1.1  1999/07/27 16:56:12  mcq
 // Initial commit
 //

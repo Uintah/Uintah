@@ -15,6 +15,14 @@ extern "C" {
 
 #include <stdio.h>
 
+#ifdef LINUX
+  #define _IOERR          0040    /* I/O error from system */
+
+  #define _IOREAD         0001    /* currently reading */
+  #define _IOWRT          0002    /* currently writing */
+  #define _IORW           0200    /* opened for reading and writing */
+#endif
+
 #define IMAGIC 	0732
 
 /* colormap of images */

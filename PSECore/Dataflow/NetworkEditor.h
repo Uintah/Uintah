@@ -14,13 +14,14 @@
 #ifndef SCI_project_NetworkEditor_h
 #define SCI_project_NetworkEditor_h 1
 
-#include <Comm/MessageBase.h>
-#include <Multitask/Task.h>
-#include <Multitask/ITC.h>
-#include <Multitask/Mailbox.h>
-#include <TclInterface/TCL.h>
+#include <SCICore/share/share.h>
+#include <PSECore/Comm/MessageBase.h>
+#include <SCICore/Multitask/Task.h>
+#include <SCICore/Multitask/ITC.h>
+#include <SCICore/Multitask/Mailbox.h>
+#include <SCICore/TclInterface/TCL.h>
 
-namespace PSECommon {
+namespace PSECore {
 namespace Dataflow {
 
 using SCICore::Multitask::Task;
@@ -29,7 +30,7 @@ using SCICore::TclInterface::TCL;
 using SCICore::TclInterface::TCLArgs;
 using SCICore::Containers::clString;
 
-using PSECommon::Comm::MessageBase;
+using PSECore::Comm::MessageBase;
 
 class Connection;
 class Datatype;
@@ -38,7 +39,7 @@ class Module;
 class Network;
 class OPort;
 
-class NetworkEditor : public Task, public TCL {
+class SCICORESHARE NetworkEditor : public Task, public TCL {
     Network* net;
     void multisend(OPort*);
     void do_scheduling(Module*);
@@ -59,7 +60,7 @@ private:
     virtual void tcl_command(TCLArgs&, void*);
 };
 
-class Scheduler_Module_Message : public MessageBase {
+class SCICORESHARE Scheduler_Module_Message : public MessageBase {
 public:
     Connection* conn;
     Scheduler_Module_Message();
@@ -67,7 +68,7 @@ public:
     virtual ~Scheduler_Module_Message();
 };
 
-class Module_Scheduler_Message : public MessageBase {
+class SCICORESHARE Module_Scheduler_Message : public MessageBase {
 public:
     OPort* p1;
     OPort* p2;
@@ -77,10 +78,14 @@ public:
 };
 
 } // End namespace Dataflow
-} // End namespace PSECommon
+} // End namespace PSECore
 
 //
 // $Log$
+// Revision 1.2  1999/08/17 06:38:24  sparker
+// Merged in modifications from PSECore to make this the new "blessed"
+// version of SCIRun/Uintah.
+//
 // Revision 1.1  1999/07/27 16:55:59  mcq
 // Initial commit
 //

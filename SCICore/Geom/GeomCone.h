@@ -14,14 +14,14 @@
 #ifndef SCI_Geom_Cone_h
 #define SCI_Geom_Cone_h 1
 
-#include <Geom/GeomObj.h>
-#include <Geometry/Point.h>
-#include <Geometry/Vector.h>
+#include <SCICore/Geom/GeomObj.h>
+#include <SCICore/Geometry/Point.h>
+#include <SCICore/Geometry/Vector.h>
 
 namespace SCICore {
 namespace GeomSpace {
 
-class GeomCone : public GeomObj {
+class SCICORESHARE GeomCone : public GeomObj {
 protected:
     Vector v1;
     Vector v2;
@@ -63,7 +63,7 @@ public:
     virtual bool saveobj(ostream&, const clString& format, GeomSave*);
 };
 
-class GeomCappedCone : public GeomCone {
+class SCICORESHARE GeomCappedCone : public GeomCone {
     int nvdisc1;
     int nvdisc2;
 public:
@@ -92,6 +92,10 @@ public:
 
 //
 // $Log$
+// Revision 1.2  1999/08/17 06:39:06  sparker
+// Merged in modifications from PSECore to make this the new "blessed"
+// version of SCIRun/Uintah.
+//
 // Revision 1.1  1999/07/27 16:56:38  mcq
 // Initial commit
 //

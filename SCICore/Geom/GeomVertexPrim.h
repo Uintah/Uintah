@@ -14,11 +14,11 @@
 #ifndef SCI_Geom_VertexPrim_h
 #define SCI_Geom_VertexPrim_h 1
 
-#include <Geom/GeomObj.h>
-#include <Geom/Material.h>
-#include <Geom/Color.h>
-#include <Containers/Array1.h>
-#include <Geometry/Point.h>
+#include <SCICore/Geom/GeomObj.h>
+#include <SCICore/Geom/Material.h>
+#include <SCICore/Geom/Color.h>
+#include <SCICore/Containers/Array1.h>
+#include <SCICore/Geometry/Point.h>
 #include <stdlib.h>
 
 namespace SCICore {
@@ -128,7 +128,7 @@ struct GeomCVertex : public GeomVertex {
 #endif
 };
 
-class GeomVertexPrim : public GeomObj {
+class SCICORESHARE GeomVertexPrim : public GeomObj {
 public:
     Array1<double> times;
     Array1<GeomVertex*> verts;
@@ -152,17 +152,17 @@ public:
     static PersistentTypeID type_id;
 };
 
-} // End namespace GeomSpace
-
-namespace PersistentSpace {
   void Pio(Piostream&, GeomSpace::GeomVertex*&);
-}
-
+} // End namespace GeomSpace
 } // End namespace SCICore
 
 
 //
 // $Log$
+// Revision 1.2  1999/08/17 06:39:18  sparker
+// Merged in modifications from PSECore to make this the new "blessed"
+// version of SCIRun/Uintah.
+//
 // Revision 1.1  1999/07/27 16:56:48  mcq
 // Initial commit
 //

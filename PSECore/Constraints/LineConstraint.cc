@@ -12,11 +12,11 @@
  *  Copyright (C) 1994 SCI Group
  */
 
-#include <Constraints/LineConstraint.h>
-#include <Geometry/Vector.h>
-#include <Util/Debug.h>
+#include <PSECore/Constraints/LineConstraint.h>
+#include <SCICore/Geometry/Vector.h>
+#include <SCICore/Util/Debug.h>
 
-namespace PSECommon {
+namespace PSECore {
 namespace Constraints {
 
 using SCICore::Util::DebugSwitch;
@@ -119,10 +119,14 @@ LineConstraint::Satisfy( const Index index, const Scheme scheme, const Real Epsi
 }
 
 } // End namespace Constraints
-} // End namespace PSECommon
+} // End namespace PSECore
 
 //
 // $Log$
+// Revision 1.2  1999/08/17 06:38:17  sparker
+// Merged in modifications from PSECore to make this the new "blessed"
+// version of SCIRun/Uintah.
+//
 // Revision 1.1  1999/07/27 16:55:54  mcq
 // Initial commit
 //

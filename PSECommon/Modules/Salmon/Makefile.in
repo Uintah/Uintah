@@ -1,6 +1,6 @@
 SRCTOP   = @top_srcdir@
 SRCDIR   = @srcdir@
-OBJTOP   = ../../../..
+OBJTOP   = ../../..
 
 TCL_INCLUDE_DIR  = @TCL_INCLUDE_DIR@
 TK_INCLUDE_DIR   = @TK_INCLUDE_DIR@
@@ -10,8 +10,7 @@ SRCS     = Ball.cc BallAux.cc BallMath.cc Postscript.cc Tex.cc close.c name.c \
            open.c rdwr.c rle.c MpegEncoder.cc row.c Roe.cc OpenGL.cc \
            Raytracer.cc Renderer.cc Salmon.cc SalmonGeom.cc X11.cc
 
-INCLUDES = -I$(OBJTOP) -I$(SRCTOP)/libs/SCICore -I$(SRCTOP)/libs/PSECore \
-           -I$(SRCTOP)/packages/PSECommon \
+INCLUDES = -I$(OBJTOP) \
            -I$(TCL_INCLUDE_DIR) -I$(TK_INCLUDE_DIR) -I$(ITCL_INCLUDE_DIR)
 
 include $(SRCTOP)/scripts/objs.mk

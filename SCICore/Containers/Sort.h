@@ -6,14 +6,16 @@
  */
 
 #ifndef SCI_Containers_SORT_H_
-#define  SCI_Containers_SORT_H_ 1
+#define SCI_Containers_SORT_H_ 1
 
-#include <Containers/Array1.h>
+#include <SCICore/share/share.h>
+
+#include <SCICore/Containers/Array1.h>
 
 namespace SCICore {
 namespace Containers {
 
-class SortObjs {
+class SCICORESHARE SortObjs {
 public:
   SortObjs() {};
 
@@ -63,6 +65,10 @@ protected:
 
 //
 // $Log$
+// Revision 1.2  1999/08/17 06:38:38  sparker
+// Merged in modifications from PSECore to make this the new "blessed"
+// version of SCIRun/Uintah.
+//
 // Revision 1.1  1999/07/27 16:56:14  mcq
 // Initial commit
 //

@@ -14,7 +14,9 @@
 #ifndef SCI_project_TCLvar_h
 #define SCI_project_TCLvar_h 1
 
-#include <Containers/String.h>
+#include <SCICore/share/share.h>
+
+#include <SCICore/Containers/String.h>
 
 namespace SCICore {
   namespace Geometry {
@@ -32,7 +34,7 @@ using SCICore::Geometry::Point;
 
 class TCL;
 
-class TCLvar {
+class SCICORESHARE TCLvar {
 protected:
     clString varname;
     int is_reset;
@@ -48,7 +50,7 @@ public:
     virtual void emit(ostream& out)=0;
 };
 
-class TCLstring : public TCLvar {
+class SCICORESHARE TCLstring : public TCLvar {
     clString value;
 public:
     TCLstring(const clString& name, const clString& id, TCL* tcl);
@@ -59,7 +61,7 @@ public:
     virtual void emit(ostream& out);
 };
 
-class TCLdouble : public TCLvar {
+class SCICORESHARE TCLdouble : public TCLvar {
     double value;
 public:
     TCLdouble(const clString& name, const clString& id, TCL* tcl);
@@ -70,7 +72,7 @@ public:
     virtual void emit(ostream& out);
 };
 
-class TCLint : public TCLvar {
+class SCICORESHARE TCLint : public TCLvar {
     int value;
 public:
     TCLint(const clString& name, const clString& id, TCL* tcl);
@@ -81,7 +83,7 @@ public:
     virtual void emit(ostream& out);
 };
 
-class TCLvardouble : public TCLvar {
+class SCICORESHARE TCLvardouble : public TCLvar {
     double value;
 public:
     TCLvardouble(const clString& name, const clString& id, TCL* tcl);
@@ -92,7 +94,7 @@ public:
     virtual void emit(ostream& out);
 };
 
-class TCLvarint : public TCLvar {
+class SCICORESHARE TCLvarint : public TCLvar {
     int value;
 public:
     TCLvarint(const clString& name, const clString& id, TCL* tcl);
@@ -103,7 +105,7 @@ public:
     virtual void emit(ostream& out);
 };
 
-class TCLvarintp : public TCLvar {
+class SCICORESHARE TCLvarintp : public TCLvar {
     int* value;
 public:
     TCLvarintp(int*, const clString& name, const clString& id, TCL* tcl);
@@ -114,7 +116,7 @@ public:
     virtual void emit(ostream& out);
 };
 
-class TCLPoint : public TCLvar {
+class SCICORESHARE TCLPoint : public TCLvar {
     TCLdouble x;
     TCLdouble y;
     TCLdouble z;
@@ -127,7 +129,7 @@ public:
     virtual void emit(ostream& out);
 };
 
-class TCLVector : public TCLvar {
+class SCICORESHARE TCLVector : public TCLvar {
     TCLdouble x;
     TCLdouble y;
     TCLdouble z;
@@ -145,6 +147,10 @@ public:
 
 //
 // $Log$
+// Revision 1.2  1999/08/17 06:39:46  sparker
+// Merged in modifications from PSECore to make this the new "blessed"
+// version of SCIRun/Uintah.
+//
 // Revision 1.1  1999/07/27 16:57:17  mcq
 // Initial commit
 //

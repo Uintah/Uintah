@@ -46,7 +46,7 @@ WARNING
    
 ****************************************/
 
-class RecursiveMutex {
+class SCICORESHARE RecursiveMutex {
     Mutex mylock;
     RecursiveMutex_private* priv;
     Thread* owner;

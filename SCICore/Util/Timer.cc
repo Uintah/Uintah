@@ -12,15 +12,42 @@
  */
 
 
-#include <Util/Timer.h>
-#include <Util/NotFinished.h>
+#include <SCICore/Util/Timer.h>
+#include <SCICore/Util/NotFinished.h>
 #include <sys/types.h>
+#ifndef _WIN32
 #include <sys/times.h>
 #include <sys/time.h>
 #include <sys/resource.h>
+#include <unistd.h>
+#endif
 #include <limits.h>
 #include <iostream.h>
-#include <unistd.h>
+
+#include <time.h>
+#ifdef _WIN32
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+#ifndef _CLOCK_T_DEFINED
+#define _CLOCK_T_DEFINED
+typedef long clock_t;
+#endif
+
+struct tms
+{
+    clock_t tms_utime;
+    clock_t tms_stime;
+    clock_t tms_cutime;
+    clock_t tms_cstime;
+};
+
+#ifdef __cplusplus
+}
+#endif
+#include <sys/timeb.h>
+#endif
 
 #ifdef CLK_TCK
 extern "C" long _sysconf(int);
@@ -28,6 +55,23 @@ extern "C" long _sysconf(int);
 #else
 #include <sys/param.h>
 #define CLOCK_INTERVAL HZ
+#endif
+
+#ifdef _WIN32
+clock_t times(struct tms* buffer)
+{
+	timeb curtime;
+	ftime(&curtime);
+
+	long ticks = (curtime.time*1000)+curtime.millitm;
+
+	buffer->tms_utime = buffer->tms_cutime = ticks;
+	buffer->tms_stime = buffer->tms_cstime = 0;
+
+	return ticks;
+
+	//cerr << "times() called" << endl;
+}
 #endif
 
 static double ci=0;
@@ -172,6 +216,6 @@ void TimeThrottle::wait_for_time(double endtime)
     }
     sginap(nticks);
 #else
-//    NOT_FINISHED("TimeThrottle::wait_for_time");
+    //NOT_FINISHED("TimeThrottle::wait_for_time");
 #endif
 }

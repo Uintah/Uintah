@@ -14,21 +14,21 @@
 #ifndef SCI_Geom_Point_h
 #define SCI_Geom_Point_h 1
 
-#include <Geom/GeomObj.h>
-#include <Geom/Color.h>
-#include <Geometry/Point.h>
-#include <Geometry/Vector.h>
-#include <Geometry/BBox.h>
+#include <SCICore/Geom/GeomObj.h>
+#include <SCICore/Geom/Color.h>
+#include <SCICore/Geometry/Point.h>
+#include <SCICore/Geometry/Vector.h>
+#include <SCICore/Geometry/BBox.h>
 
-#include <Multitask/Task.h>
-#include <Multitask/ITC.h>
+#include <SCICore/Multitask/Task.h>
+#include <SCICore/Multitask/ITC.h>
 
 namespace SCICore {
 namespace GeomSpace {
 
 using SCICore::Geometry::BBox;
 
-class GeomPts : public GeomObj {
+class SCICORESHARE GeomPts : public GeomObj {
 public:
     Array1<float> pts;
     inline void add(const Point& p) {
@@ -163,9 +163,9 @@ struct TimedParticle {
 // spatial partioning with - probably also have a "time" hiearchy
 // this should make it easy to parallelize things...
 
-#include <Geometry/BBox.h>
+#include <SCICore/Geometry/BBox.h>
 
-class GeomTimedParticles : public GeomObj {
+class SCICORESHARE GeomTimedParticles : public GeomObj {
   Array1< TimedParticle > particles; // actual particles
 
   int drawMode;                      // 0 - pts at t0
@@ -221,6 +221,10 @@ public:
 
 //
 // $Log$
+// Revision 1.2  1999/08/17 06:39:22  sparker
+// Merged in modifications from PSECore to make this the new "blessed"
+// version of SCIRun/Uintah.
+//
 // Revision 1.1  1999/07/27 16:56:51  mcq
 // Initial commit
 //

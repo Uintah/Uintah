@@ -12,26 +12,28 @@
  *  Copyright (C) 1994 SCI Group
  */
 
-#include <Util/NotFinished.h>
-#include <Dataflow/Module.h>
-#include <CommonDatatypes/ColumnMatrixPort.h>
-#include <CommonDatatypes/MatrixPort.h>
-#include <CoreDatatypes/Matrix.h>
-#include <CoreDatatypes/SymSparseRowMatrix.h>
-#include <CommonDatatypes/MeshPort.h>
-#include <CoreDatatypes/Mesh.h>
-#include <CommonDatatypes/SurfacePort.h>
-#include <Geometry/Point.h>
-#include <Malloc/Allocator.h>
-#include <Multitask/ITC.h>
-#include <Multitask/Task.h>
-#include <TclInterface/TCLvar.h>
+#include <SCICore/Util/NotFinished.h>
+#include <PSECore/Dataflow/Module.h>
+#include <PSECore/CommonDatatypes/ColumnMatrixPort.h>
+#include <PSECore/CommonDatatypes/MatrixPort.h>
+#include <SCICore/CoreDatatypes/Matrix.h>
+#include <SCICore/CoreDatatypes/SymSparseRowMatrix.h>
+#include <PSECore/CommonDatatypes/MeshPort.h>
+#include <SCICore/CoreDatatypes/Mesh.h>
+#include <PSECore/CommonDatatypes/SurfacePort.h>
+#include <SCICore/Geometry/Point.h>
+#include <SCICore/Malloc/Allocator.h>
+#include <SCICore/Multitask/ITC.h>
+#include <SCICore/Multitask/Task.h>
+#include <SCICore/TclInterface/TCLvar.h>
+
+#define PINVAL 1
 
 namespace PSECommon {
 namespace Modules {
 
-using namespace PSECommon::Dataflow;
-using namespace PSECommon::CommonDatatypes;
+using namespace PSECore::Dataflow;
+using namespace PSECore::CommonDatatypes;
 using namespace SCICore::TclInterface;
 using namespace SCICore::GeomSpace;
 using namespace SCICore::Multitask;
@@ -55,8 +57,14 @@ class BuildFEMatrix : public Module {
     Mesh* mesh;
     SymSparseRowMatrix* gbl_matrix;
     ColumnMatrix* rhs;
-    TCLint DirSubFlag;	// don't apply Dirichlet conditions, so we can do
+    TCLstring BCFlag; // do we want Dirichlet conditions applied or PinZero
     int DirSub;	//  matrix decomposition and local regularization later
+    TCLint UseCondTCL;
+    int UseCond;
+    int PinZero;
+    MatrixHandle gbl_matrixH;
+    ColumnMatrixHandle rhsH;
+    int gen;
 public:
     void parallel(int);
     BuildFEMatrix(const clString& id);
@@ -79,7 +87,8 @@ Module* make_BuildFEMatrix(const clString& id) {
 
 
 BuildFEMatrix::BuildFEMatrix(const clString& id)
-: Module("BuildFEMatrix", id, Filter), DirSubFlag("DirSubFlag", id, this)
+: Module("BuildFEMatrix", id, Filter), BCFlag("BCFlag", id, this),
+  UseCondTCL("UseCondTCL", id, this)
 {
     // Create the input port
     inmesh = scinew MeshIPort(this, "Mesh", MeshIPort::Atomic);
@@ -90,10 +99,12 @@ BuildFEMatrix::BuildFEMatrix(const clString& id)
     add_oport(outmatrix);
     rhsoport=scinew ColumnMatrixOPort(this, "RHS", ColumnMatrixIPort::Atomic);
     add_oport(rhsoport);
+    gen=-1;
 }
 
 BuildFEMatrix::BuildFEMatrix(const BuildFEMatrix& copy, int deep)
-: Module(copy, deep), DirSubFlag("DirSubFlag", id, this)
+: Module(copy, deep), BCFlag("BCFlag", id, this),
+  UseCondTCL("UseCondTCL", id, this)
 {
     NOT_FINISHED("BuildFEMatrix::BuildFEMatrix");
 }
@@ -119,7 +130,7 @@ void BuildFEMatrix::parallel(int proc)
     Array1<int> mycols(0, 15*ndof);
     for(i=start_node;i<end_node;i++){
 	rows[r++]=mycols.size();
-	if(mesh->nodes[i]->bc && DirSub) {
+	if((mesh->nodes[i]->bc && DirSub) || (i==0 && PinZero)) {
 	    mycols.add(i); // Just a diagonal term
 	} else {
 	    mesh->add_node_neighbors(i, mycols, DirSub);
@@ -187,12 +198,15 @@ void BuildFEMatrix::parallel(int proc)
 	}
     }
     for(i=start_node;i<end_node;i++){
-	if(mesh->nodes[i]->bc && DirSub){
+	if((mesh->nodes[i]->bc && DirSub) || (PinZero && i==0)){
 	    // This is just a dummy entry...
 //	    (*gbl_matrix)[i][i]=1;
 	    int id=rows[i];
 	    a[id]=1;
-	    (*rhs)[i]=mesh->nodes[i]->bc->value;
+	    if (i==0 && PinZero)
+	      (*rhs)[i]=PINVAL;
+	    else
+	      (*rhs)[i]=mesh->nodes[i]->bc->value;
 	}
     }
 }
@@ -202,19 +216,32 @@ void BuildFEMatrix::execute()
      MeshHandle mesh;
      if(!inmesh->get(mesh))
 	  return;
+     if (mesh->generation == gen && gbl_matrixH.get_rep() && rhsH.get_rep()) {
+	 outmatrix->send(gbl_matrixH);
+	 rhsoport->send(rhsH);
+	 return;
+     }
+     gen=mesh->generation;
+     UseCond=UseCondTCL.get();
 
      this->mesh=mesh.get_rep();
      int nnodes=mesh->nodes.size();
      rows=scinew int[nnodes+1];
      np=Task::nprocessors();
-     np=1;
+     if (np>10) np=5;
      colidx.resize(np+1);
-     DirSub = DirSubFlag.get();
+
+     DirSub=PinZero=0;
+     if (BCFlag.get() == "DirSub") DirSub=1;
+     else if (BCFlag.get() == "PinZero") PinZero=1;
+  
 
      Task::multiprocess(np, do_parallel, this);
 
-     outmatrix->send(MatrixHandle(gbl_matrix));
-     rhsoport->send(ColumnMatrixHandle(rhs));
+     gbl_matrixH=gbl_matrix;
+     outmatrix->send(gbl_matrixH);
+     rhsH=rhs;
+     rhsoport->send(rhsH);
      this->mesh=0;
 }
 
@@ -265,18 +292,24 @@ void BuildFEMatrix::build_local_matrix(Element *elem,
     //  [5] => sigma zz
 
     double el_cond[3][3];
+    el_cond[0][0]=el_cond[1][1]=el_cond[2][2]=1;
+    el_cond[0][1]=el_cond[1][0]=el_cond[0][2]=el_cond[2][0]=el_cond[1][2]=el_cond[2][1]=0;
+
     // in el_cond, the indices tell you the directions
     // the value is refering to. i.e. 0=x, 1=y, and 2=z
     // so el_cond[1][2] is the same as sigma yz
-    el_cond[0][0] = mesh->cond_tensors[elem->cond][0];
-    el_cond[0][1] = mesh->cond_tensors[elem->cond][1];
-    el_cond[1][0] = mesh->cond_tensors[elem->cond][1];
-    el_cond[0][2] = mesh->cond_tensors[elem->cond][2];
-    el_cond[2][0] = mesh->cond_tensors[elem->cond][2];
-    el_cond[1][1] = mesh->cond_tensors[elem->cond][3];
-    el_cond[1][2] = mesh->cond_tensors[elem->cond][4];
-    el_cond[2][1] = mesh->cond_tensors[elem->cond][4];
-    el_cond[2][2] = mesh->cond_tensors[elem->cond][5];
+
+    if (UseCond) {
+	el_cond[0][0] = mesh->cond_tensors[elem->cond][0];
+	el_cond[0][1] = mesh->cond_tensors[elem->cond][1];
+	el_cond[1][0] = mesh->cond_tensors[elem->cond][1];
+	el_cond[0][2] = mesh->cond_tensors[elem->cond][2];
+	el_cond[2][0] = mesh->cond_tensors[elem->cond][2];
+	el_cond[1][1] = mesh->cond_tensors[elem->cond][3];
+	el_cond[1][2] = mesh->cond_tensors[elem->cond][4];
+	el_cond[2][1] = mesh->cond_tensors[elem->cond][4];
+	el_cond[2][2] = mesh->cond_tensors[elem->cond][5];
+    }
 
     // build the local matrix
     for(int i=0; i< 4; i++) {
@@ -312,15 +345,16 @@ void BuildFEMatrix::add_lcl_gbl(Matrix& gbl_a, double lcl_a[4][4],
      {	  
 	  int ii = mesh->elems[el]->n[i];
 	  NodeHandle& n1=mesh->nodes[ii];
-	  if (!n1->bc || !DirSub) {
+	  if (!((n1->bc && DirSub) || (ii==0 && PinZero))) {
 	      for (int j=0; j<4; j++) {
 		  int jj = mesh->elems[el]->n[j];
 		  NodeHandle& n2=mesh->nodes[jj];
-		  if(!n2->bc || !DirSub){
-		      gbl_a[ii][jj] += lcl_a[i][j];
+		  if (n2->bc && DirSub){
+		      rhs[ii] -= n2->bc->value*lcl_a[i][j];
+		  } else if (jj==0 && PinZero){
+		      rhs[ii] -= PINVAL*lcl_a[i][j];
 		  } else {
-		      // Eventually look at nodetype...
-		      rhs[ii]-=n2->bc->value*lcl_a[i][j];
+		      gbl_a[ii][jj] += lcl_a[i][j];
 		  }
 	      }
 	  }
@@ -341,15 +375,16 @@ void BuildFEMatrix::add_lcl_gbl(Matrix& gbl_a, double lcl_a[4][4],
 	  int ii = mesh->elems[el]->n[i];
 	  if(ii >= s && ii < e){
 	      NodeHandle& n1=mesh->nodes[ii];
-	      if (!n1->bc || !DirSub) {
+	      if ((!n1->bc || !DirSub) && (ii!=0 || !PinZero)) {
 		  for (int j=0; j<4; j++) {
 		      int jj = mesh->elems[el]->n[j];
 		      NodeHandle& n2=mesh->nodes[jj];
-		      if(!n2->bc || !DirSub){
-			  gbl_a[ii][jj] += lcl_a[i][j];
+		      if (n2->bc && DirSub){
+			  rhs[ii] -= n2->bc->value*lcl_a[i][j];
+		      } else if (jj==0 && PinZero){
+			  rhs[ii] -= PINVAL*lcl_a[i][j];
 		      } else {
-			  // Eventually look at nodetype...
-			  rhs[ii]-=n2->bc->value*lcl_a[i][j];
+			  gbl_a[ii][jj] += lcl_a[i][j];
 		      }
 		  }
 	      }
@@ -362,6 +397,10 @@ void BuildFEMatrix::add_lcl_gbl(Matrix& gbl_a, double lcl_a[4][4],
 
 //
 // $Log$
+// Revision 1.2  1999/08/17 06:37:25  sparker
+// Merged in modifications from PSECore to make this the new "blessed"
+// version of SCIRun/Uintah.
+//
 // Revision 1.1  1999/07/27 16:57:39  mcq
 // Initial commit
 //

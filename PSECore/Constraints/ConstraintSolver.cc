@@ -12,12 +12,12 @@
  *  Copyright (C) 1995 SCI Group
  */
 
-#include <Constraints/ConstraintSolver.h>
-#include <Util/Debug.h>
+#include <PSECore/Constraints/ConstraintSolver.h>
+#include <SCICore/Util/Debug.h>
 #include <stdio.h>
 #include <string.h>
 
-namespace PSECommon {
+namespace PSECore {
 namespace Constraints {
 
 using SCICore::Util::DebugSwitch;
@@ -129,7 +129,7 @@ ConstraintSolver::Solve( BaseVariable* var, const VarCore& newValue, const Schem
 
    while (!stack.empty() && !abort) {
       StackItem& item = stack.top();
-      BaseVariable* v(item.var);
+      BaseVariable (*v)(item.var);      // without the () around *v, visualC++ gets confused
 
       if (cs2_debug) {
 	 cout << "Stack top: (" << stack.size() << ")" << endl;
@@ -256,10 +256,14 @@ ConstraintSolver::Solve( BaseVariable* var, const VarCore& newValue, const Schem
 }
 
 } // End namespace Constraints
-} // End namespace PSECommon
+} // End namespace PSECore
 
 //
 // $Log$
+// Revision 1.2  1999/08/17 06:38:16  sparker
+// Merged in modifications from PSECore to make this the new "blessed"
+// version of SCIRun/Uintah.
+//
 // Revision 1.1  1999/07/27 16:55:54  mcq
 // Initial commit
 //

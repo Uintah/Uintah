@@ -13,18 +13,18 @@
  *  Copyright (C) 199? SCI Group
  */
 
-#include <Geom/IndexedGroup.h>
-#include <Geom/GeomObj.h>
-#include <Geom/GeomOpenGL.h>
-#include <Geom/Material.h>
-#include <Geom/GeomSave.h>
-#include <Geometry/Ray.h>
-#include <Geometry/BBox.h>
-#include <Geometry/BSphere.h>
-#include <Containers/String.h>
-#include <Containers/Array1.h>
-#include <Persistent/Persistent.h>
-#include <Dataflow/Module.h>
+#include <SCICore/Geom/IndexedGroup.h>
+#include <SCICore/Geom/GeomObj.h>
+#include <SCICore/Geom/GeomOpenGL.h>
+#include <SCICore/Geom/Material.h>
+#include <SCICore/Geom/GeomSave.h>
+#include <SCICore/Geometry/Ray.h>
+#include <SCICore/Geometry/BBox.h>
+#include <SCICore/Geometry/BSphere.h>
+#include <SCICore/Containers/String.h>
+#include <SCICore/Containers/Array1.h>
+#include <SCICore/Persistent/Persistent.h>
+#include <PSECore/Dataflow/Module.h>
 
 namespace SCICore {
   namespace Multitask {
@@ -32,7 +32,7 @@ namespace SCICore {
   }
 }
 
-namespace PSECommon {
+namespace PSECore {
   namespace CommonDatatypes {
     class GeometryComm;
   }
@@ -41,8 +41,8 @@ namespace PSECommon {
 namespace PSECommon {
 namespace Modules {
 
-using PSECommon::Dataflow::Module;
-using PSECommon::CommonDatatypes::GeometryComm;
+using PSECore::Dataflow::Module;
+using PSECore::CommonDatatypes::GeometryComm;
 
 using SCICore::GeomSpace::GeomIndexedGroup;
 using SCICore::GeomSpace::GeomObj;
@@ -119,6 +119,10 @@ public:
 
 //
 // $Log$
+// Revision 1.2  1999/08/17 06:37:40  sparker
+// Merged in modifications from PSECore to make this the new "blessed"
+// version of SCIRun/Uintah.
+//
 // Revision 1.1  1999/07/27 16:57:53  mcq
 // Initial commit
 //

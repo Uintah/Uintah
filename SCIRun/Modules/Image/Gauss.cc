@@ -49,8 +49,8 @@ extern "C" GLXContext OpenGLGetContext(Tcl_Interp*, char*);
 namespace SCIRun {
 namespace Modules {
 
-using namespace PSECommon::Dataflow;
-using namespace PSECommon::CommonDatatypes;
+using namespace PSECore::Dataflow;
+using namespace PSECore::CommonDatatypes;
 
 using namespace SCICore::TclInterface;
 
@@ -514,6 +514,10 @@ int Gauss::makeCurrent(void)
 
 //
 // $Log$
+// Revision 1.2  1999/08/17 06:39:59  sparker
+// Merged in modifications from PSECore to make this the new "blessed"
+// version of SCIRun/Uintah.
+//
 // Revision 1.1  1999/07/27 16:58:52  mcq
 // Initial commit
 //

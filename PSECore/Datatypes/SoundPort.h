@@ -14,16 +14,17 @@
 #ifndef SCI_project_SoundPort_h
 #define SCI_project_SoundPort_h 1
 
-#include <Dataflow/Port.h>
-#include <Multitask/ITC.h>
+#include <SCICore/share/share.h>
+#include <PSECore/Dataflow/Port.h>
+#include <SCICore/Multitask/ITC.h>
 
-namespace PSECommon {
+namespace PSECore {
 namespace CommonDatatypes {
 
-using PSECommon::Dataflow::IPort;
-using PSECommon::Dataflow::OPort;
-using PSECommon::Dataflow::Module;
-using PSECommon::Dataflow::Connection;
+using PSECore::Dataflow::IPort;
+using PSECore::Dataflow::OPort;
+using PSECore::Dataflow::Module;
+using PSECore::Dataflow::Connection;
 using SCICore::Multitask::Mailbox;
 using SCICore::Containers::clString;
 
@@ -41,7 +42,7 @@ struct SoundComm {
     double* samples;
 };
 
-class SoundIPort : public IPort {
+class SCICORESHARE SoundIPort : public IPort {
 public:
     enum Protocol {
 	Atomic=0x01,
@@ -82,7 +83,7 @@ public:
     virtual void finish();
 };
 
-class SoundOPort : public OPort {
+class SCICORESHARE SoundOPort : public OPort {
     int total_samples;
     double rate;
     int stereo;
@@ -132,15 +133,19 @@ inline int SoundIPort::end_of_stream()
 }
 
 } // End namespace CommonDatatypes
-} // End namespace PSECommon
+} // End namespace PSECore
 
 //
 // $Log$
+// Revision 1.2  1999/08/17 06:38:12  sparker
+// Merged in modifications from PSECore to make this the new "blessed"
+// version of SCIRun/Uintah.
+//
 // Revision 1.1  1999/07/27 16:55:50  mcq
 // Initial commit
 //
 // Revision 1.3  1999/05/06 20:17:03  dav
-// added back PSECommon .h files
+// added back PSECore .h files
 //
 // Revision 1.1.1.1  1999/04/24 23:12:47  dav
 // Import sources

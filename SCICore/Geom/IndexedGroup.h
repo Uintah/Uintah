@@ -14,12 +14,12 @@
 #ifndef SCI_Geom_IndexedGroup_h
 #define SCI_Geom_IndexedGroup_h 1
 
-#include <Containers/Array1.h>
-#include <Containers/HashTable.h>
+#include <SCICore/Containers/Array1.h>
+#include <SCICore/Containers/HashTable.h>
 
-#include <Geom/GeomObj.h>
-#include <Geometry/BBox.h>
-#include <Geometry/BSphere.h>
+#include <SCICore/Geom/GeomObj.h>
+#include <SCICore/Geometry/BBox.h>
+#include <SCICore/Geometry/BSphere.h>
 
 namespace SCICore {
 namespace GeomSpace {
@@ -27,7 +27,7 @@ namespace GeomSpace {
 using SCICore::Containers::HashTable;
 using SCICore::Containers::HashTableIter;
 
-class GeomIndexedGroup: public GeomObj {
+class SCICORESHARE GeomIndexedGroup: public GeomObj {
     HashTable<int, GeomObj*> objs;
 public:
     GeomIndexedGroup( const GeomIndexedGroup& );
@@ -65,6 +65,10 @@ public:
 
 //
 // $Log$
+// Revision 1.2  1999/08/17 06:39:19  sparker
+// Merged in modifications from PSECore to make this the new "blessed"
+// version of SCIRun/Uintah.
+//
 // Revision 1.1  1999/07/27 16:56:49  mcq
 // Initial commit
 //

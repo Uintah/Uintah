@@ -16,39 +16,52 @@
  *  Copyright (C) 1994 SCI Group
  */
 
-#include <Dataflow/NetworkEditor.h>
-#include <PSECore/Dataflow/PackageDB.h>
+#ifdef _WIN32
+#pragma warning(disable:4786)
+#endif
 
-#include <Util/NotFinished.h>
-#include <Containers/Queue.h>
-#include <Comm/MessageBase.h>
-#include <Dataflow/Connection.h>
-#include <Dataflow/Module.h>
-#include <Dataflow/Network.h>
-#include <Dataflow/Port.h>
-#include <Malloc/Allocator.h>
-#include <Math/MiscMath.h>
-#include <TclInterface/Remote.h>
-#include <TclInterface/TCL.h>
-#include <TclInterface/TCLTask.h>
+#include <PSECore/Dataflow/NetworkEditor.h>
+  
+#include <SCICore/Util/NotFinished.h>
+#include <SCICore/Containers/Queue.h>
+#include <PSECore/Comm/MessageBase.h>
+#include <PSECore/Dataflow/Connection.h>
+#include <PSECore/Dataflow/Module.h>
+#include <PSECore/Dataflow/Network.h>
+#include <PSECore/Dataflow/PackageDB.h>
+#include <PSECore/Dataflow/Port.h>
+#include <SCICore/Malloc/Allocator.h>
+#include <SCICore/Math/MiscMath.h>
+#include <SCICore/TclInterface/Remote.h>
+#include <SCICore/TclInterface/TCL.h>
+#include <SCICore/TclInterface/TCLTask.h>
 #include <time.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <sys/types.h>
+#ifndef _WIN32
 #include <unistd.h>
-
+#else
+#include <string.h>
+#include <io.h>
+#endif
+  
 #include <fstream.h>
-
+  
 //#define DEBUG 1
 #include <tcl.h>
-
-extern Tcl_Interp* the_interp;
-
-namespace PSECommon {
+  
+#ifdef _WIN32
+extern "C" __declspec(dllimport) Tcl_Interp* the_interp;
+#else
+extern "C" Tcl_Interp* the_interp;
+#endif
+  
+namespace PSECore {
 namespace Dataflow {
 
 using SCICore::TclInterface::Message;
-using PSECommon::Comm::MessageTypes;
+using PSECore::Comm::MessageTypes;
 
 // This function was added by Mohamed Dekhil for CSAFE
 void init_notes ()
@@ -69,8 +82,10 @@ void init_notes ()
 
     //userID = getuid () ;
     //strcpy (n, getlogin()) ;
+#ifndef _WIN32
     strcpy (n, cuserid(NULL)) ;
     printf ("User Name: %s\n", n) ;
+#endif
 
     t1 = time(NULL) ;
     t2 = localtime (&t1) ;
@@ -90,7 +105,6 @@ NetworkEditor::NetworkEditor(Network* net)
 : Task("Network Editor", 1), net(net),
   first_schedule(1), mailbox(100), schedule(1)
 {
-
     // Create User interface...
     TCL::add_command("netedit", this, 0);
     TCL::source_once("$PSECoreTCL/NetworkEditor.tcl");
@@ -388,10 +402,8 @@ void NetworkEditor::save_network(const clString& filename)
         Module* module=net->module(i);
 	int x, y;
 	module->get_position(x,y);
-        out << "set m" << i << " [addModuleAtPosition \""
-	    << module->packageName << "\" \""<< module->categoryName
-	    <<"\" \""<< module->moduleName<<"\" "
-	    << x << " " << y << "]\n";
+        out << "set m" << i << " [addModuleAtPosition " << module->name
+	  << " " << x << " " << y << "]\n";
     }
     out << "\n";
     for(i=0;i<net->nconnections();i++){
@@ -446,13 +458,14 @@ cerr << "Emit vars for " << module->name << endl;
 void NetworkEditor::tcl_command(TCLArgs& args, void*)
 {
     using SCICore::Containers::to_string;
-    using namespace PSECommon::Dataflow;
+    using namespace PSECore::Dataflow;
 
     if(args.count() < 2){
 	args.error("netedit needs a minor command");
 	return;
     }
     if(args[1] == "quit"){
+	printf("quit received {%s,%d}\n"__FILE__,__LINE__);
 	Task::exit_all(-1);
     } else if(args[1] == "addmodule"){
 	if(args.count() < 5){
@@ -651,12 +664,13 @@ void NetworkEditor::tcl_command(TCLArgs& args, void*)
 }
 
 } // End namespace Dataflow
-} // End namespace PSECommon
+} // End namespace PSECore
 
 //
 // $Log$
-// Revision 1.2  1999/07/30 17:12:28  kuzimmer
-// Fixed Saving and loading
+// Revision 1.3  1999/08/17 06:38:24  sparker
+// Merged in modifications from PSECore to make this the new "blessed"
+// version of SCIRun/Uintah.
 //
 // Revision 1.1  1999/07/27 16:55:59  mcq
 // Initial commit

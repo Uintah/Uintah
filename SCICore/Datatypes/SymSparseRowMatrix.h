@@ -15,14 +15,16 @@
 #ifndef SCI_project_SymSparseRowMatrix_h
 #define SCI_project_SymSparseRowMatrix_h 1
 
-#include <CoreDatatypes/Matrix.h>
-#include <Containers/Array1.h>
+#include <SCICore/share/share.h>
+
+#include <SCICore/CoreDatatypes/Matrix.h>
+#include <SCICore/Containers/Array1.h>
 
 namespace SCICore {
 namespace CoreDatatypes {
 
 class AddMatrices;
-class SymSparseRowMatrix : public Matrix {
+class SCICORESHARE SymSparseRowMatrix : public Matrix {
     int nnrows;
     int nncols;
     double dummy;
@@ -65,7 +67,7 @@ public:
 				int& flops, int& memrefs, int beg=-1, int end=-1);
     virtual void print();
     MatrixRow operator[](int r);
-    friend class AddMatrices;
+    friend SCICORESHARE class AddMatrices;
 
     // Persistent representation...
     virtual void io(Piostream&);
@@ -77,6 +79,10 @@ public:
 
 //
 // $Log$
+// Revision 1.2  1999/08/17 06:38:56  sparker
+// Merged in modifications from PSECore to make this the new "blessed"
+// version of SCIRun/Uintah.
+//
 // Revision 1.1  1999/07/27 16:56:30  mcq
 // Initial commit
 //

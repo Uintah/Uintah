@@ -14,12 +14,14 @@
 #ifndef SCI_CommonDatatypes_SurfTree_h
 #define SCI_CommonDatatypes_SurfTree_h 1
 
-#include <CoreDatatypes/Surface.h>
-#include <CoreDatatypes/Mesh.h>
-#include <CoreDatatypes/TriSurface.h>
-#include <Containers/Array1.h>
-#include <Geometry/Point.h>
-#include <Geometry/BBox.h>
+#include <SCICore/share/share.h>
+
+#include <SCICore/CoreDatatypes/Surface.h>
+#include <SCICore/CoreDatatypes/Mesh.h>
+#include <SCICore/CoreDatatypes/TriSurface.h>
+#include <SCICore/Containers/Array1.h>
+#include <SCICore/Geometry/Point.h>
+#include <SCICore/Geometry/BBox.h>
 #include <stdlib.h> // For size_t
 
 namespace SCICore {
@@ -29,7 +31,7 @@ using Containers::Array1;
 using Geometry::BBox;
 using Geometry::Point;
 
-struct SurfInfo {
+typedef struct SurfInfo {
     clString name;		// names of surfaces
     Array1<int> faces;		// indices of faces in each surface
     Array1<int> faceOrient;	// is each face properly oriented
@@ -38,33 +40,33 @@ struct SurfInfo {
     Array1<int> inner;		// indices of surfs withink this surf
     Array1<Vector> nodeNormals;	// optional info    
     BBox bbox;
-};
+} SurfInfo;
 
-struct FaceInfo {
+typedef struct FaceInfo {
     Array1<int> surfIdx;
     Array1<int> surfOrient;
     int patchIdx;
     int patchEntry;
     Array1<int> edges;		// indices of the edges of each face
     Array1<int> edgeOrient;	// are the edges properly oriented
-};
+} FaceInfo;
 
-struct EdgeInfo {
+typedef struct EdgeInfo {
     int wireIdx;
     int wireEntry;
     Array1<int> faces;		// which faces is an edge part of
 
-    friend void Pio(Piostream& stream, CoreDatatypes::EdgeInfo& edge);
-};
+    friend SCICORESHARE void Pio(Piostream& stream, CoreDatatypes::EdgeInfo& edge);
+} EdgeInfo;
 
-struct NodeInfo {
+typedef struct NodeInfo {
     Array1<int> surfs;	// which surfaces is a node part of
     Array1<int> faces;	// which faces is a node part of
     Array1<int> edges;	// which edges is a node part of
     Array1<int> nbrs;	// which nodes are one neighbors
 
-    friend void Pio(Piostream& stream, CoreDatatypes::NodeInfo& node);
-};
+    friend SCICORESHARE void Pio(Piostream& stream, CoreDatatypes::NodeInfo& node);
+} NodeInfo;
 
 class TopoSurfTree;
 
@@ -73,7 +75,7 @@ void Pio(Piostream& stream, FaceInfo& face);
 void Pio(Piostream& stream, EdgeInfo& edge);
 void Pio(Piostream& stream, NodeInfo& node);
 
-class SurfTree : public Surface {
+class SCICORESHARE SurfTree : public Surface {
 public:
     Array1<Point> nodes;		// array of all nodes
     Array1<TSElement*> faces;		// array of all faces/elements
@@ -132,6 +134,10 @@ public:
 
 //
 // $Log$
+// Revision 1.2  1999/08/17 06:38:55  sparker
+// Merged in modifications from PSECore to make this the new "blessed"
+// version of SCIRun/Uintah.
+//
 // Revision 1.1  1999/07/27 16:56:29  mcq
 // Initial commit
 //

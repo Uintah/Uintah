@@ -12,9 +12,9 @@
  *  Copyright (C) 1994 SCI Group
  */
 
-#include <Containers/BitArray1.h>
-#include <Malloc/Allocator.h>
-#include <Tester/RigorousTest.h>
+#include <SCICore/Containers/BitArray1.h>
+#include <SCICore/Malloc/Allocator.h>
+#include <SCICore/Tester/RigorousTest.h>
 
 #include <iostream.h>
 
@@ -22,7 +22,7 @@ namespace SCICore {
 namespace Containers {
 
 BitArray1::BitArray1(int size, int initial)
-: size(size), nbits(size/8 + ((size&7)?1:0)), bits(scinew unsigned char[nbits])
+  : size(size), nbits(size/8 + ((size&7)?1:0)), bits(scinew unsigned char)//[nbits])
 {
     if(initial)
 	set_all();
@@ -130,6 +130,10 @@ void BitArray1::test_rigorous(RigorousTest* __test)
 
 //
 // $Log$
+// Revision 1.2  1999/08/17 06:38:35  sparker
+// Merged in modifications from PSECore to make this the new "blessed"
+// version of SCIRun/Uintah.
+//
 // Revision 1.1  1999/07/27 16:56:11  mcq
 // Initial commit
 //

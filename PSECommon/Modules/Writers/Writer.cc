@@ -12,13 +12,13 @@
  *  Copyright (C) 1994 SCI Group
  */
 
-#include <Util/NotFinished.h>
-#include <Persistent/Pstreams.h>
-#include <Dataflow/Module.h>
-#include <CommonDatatypes/TYPEPort.h>
-#include <CommonDatatypes/TYPE.h>
-#include <Malloc/Allocator.h>
-#include <TclInterface/TCLvar.h>
+#include <SCICore/Util/NotFinished.h>
+#include <SCICore/Persistent/Pstreams.h>
+#include <PSECommon/Dataflow/Module.h>
+#include <PSECommon/CommonDatatypes/TYPEPort.h>
+#include <PSECommon/CommonDatatypes/TYPE.h>
+#include <SCICore/Malloc/Allocator.h>
+#include <SCICore/TclInterface/TCLvar.h>
 
 namespace PSECommon {
 namespace Modules {
@@ -103,6 +103,10 @@ void TYPEWriter::execute()
 
 //
 // $Log$
+// Revision 1.2  1999/08/17 06:37:58  sparker
+// Merged in modifications from PSECore to make this the new "blessed"
+// version of SCIRun/Uintah.
+//
 // Revision 1.1  1999/07/27 16:58:21  mcq
 // Initial commit
 //

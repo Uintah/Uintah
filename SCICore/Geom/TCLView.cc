@@ -15,11 +15,11 @@
 
 #include <tcl.h>
 
-#include <TclInterface/TCL.h>
-#include <TclInterface/TCLTask.h>
-#include <Geometry/Point.h>
-#include <Geometry/Vector.h>
-#include <Geom/TCLView.h>
+#include <SCICore/TclInterface/TCL.h>
+#include <SCICore/TclInterface/TCLTask.h>
+#include <SCICore/Geometry/Point.h>
+#include <SCICore/Geometry/Vector.h>
+#include <SCICore/Geom/TCLView.h>
 
 namespace SCICore {
 namespace GeomSpace {
@@ -123,6 +123,10 @@ TCLExtendedView::emit(ostream& out)
 
 //
 // $Log$
+// Revision 1.2  1999/08/17 06:39:24  sparker
+// Merged in modifications from PSECore to make this the new "blessed"
+// version of SCIRun/Uintah.
+//
 // Revision 1.1  1999/07/27 16:56:52  mcq
 // Initial commit
 //

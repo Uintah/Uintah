@@ -11,12 +11,12 @@
  *  Copyright (C) 1994 SCI Group
  */
 
-#include <Geom/Material.h>
-#include <Util/NotFinished.h>
-#include <Containers/String.h>
-#include <Geom/GeomSave.h>
-#include <Malloc/Allocator.h>
-//#include <Containers/LockingHandle.h>
+#include <SCICore/Geom/Material.h>
+#include <SCICore/Util/NotFinished.h>
+#include <SCICore/Containers/String.h>
+#include <SCICore/Geom/GeomSave.h>
+#include <SCICore/Malloc/Allocator.h>
+//#include <SCICore/Containers/LockingHandle.h>
 
 namespace SCICore {
 namespace GeomSpace {
@@ -97,6 +97,8 @@ Material* Material::clone()
 void Material::io(Piostream& stream)
 {
     using SCICore::PersistentSpace::Pio;
+    using SCICore::GeomSpace::Pio;
+    using SCICore::Containers::Pio;
 
     /* int version= */stream.begin_class("Material", MATERIAL_VERSION);
     Pio(stream, ambient);
@@ -171,17 +173,21 @@ bool GeomMaterial::saveobj(ostream& out, const clString& format,
 	saveinfo->start_sep(out);
 	saveinfo->start_node(out, "Material");
 	saveinfo->indent(out);
-	Color& amb(matl->ambient);
+	//Color& amb(matl->ambient);  // visual C++ hates constructors as reference initializers
+	Color& amb = matl->ambient;
 	out << "ambientColor " << amb.r() << " " << amb.g() << " " << amb.b() << "\n";
 
 	saveinfo->indent(out);
-	Color& dif(matl->diffuse);
+	//Color& dif(matl->diffuse);
+	Color& dif = matl->diffuse;
 	out << "diffuseColor " << dif.r() << " " << dif.g() << " " << dif.b() << "\n";
 	saveinfo->indent(out);
-	Color& spec(matl->specular);
+	//Color& spec(matl->specular);
+	Color& spec = matl->specular;
 	out << "specularColor " << spec.r() << " " << spec.g() << " " << spec.b() << "\n";
 	saveinfo->indent(out);
-	Color& em(matl->emission);
+	//Color& em(matl->emission);
+	Color& em = matl->emission;
 	out << "emissiveColor " << em.r() << " " << em.g() << " " << em.b() << "\n";
 	saveinfo->indent(out);
 	out << "shininess " << matl->shininess << "\n";
@@ -194,8 +200,10 @@ bool GeomMaterial::saveobj(ostream& out, const clString& format,
 	return true;
     } else if(format == "rib"){
 	saveinfo->start_attr(out);
-	Color& spec(matl->specular);
-	Color& dif(matl->diffuse);
+	//Color& spec(matl->specular);
+	Color& spec = matl->specular;
+	//Color& dif(matl->diffuse);
+	Color& dif = matl->diffuse;
 
 	saveinfo->indent(out);
 	out << "Color [ " << dif.r() << " " << dif.g() << " " << dif.b() << " ]\n";

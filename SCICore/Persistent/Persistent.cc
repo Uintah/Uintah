@@ -12,12 +12,12 @@
  *  Copyright (C) 1994 SCI Group
  */
 
-#include <Persistent/Persistent.h>
-#include <Persistent/Pstreams.h>
-#include <Containers/HashTable.h>
-#include <Containers/String.h>
-#include <Malloc/Allocator.h>
-#include <Multitask/Task.h>
+#include <SCICore/Persistent/Persistent.h>
+#include <SCICore/Persistent/Pstreams.h>
+#include <SCICore/Containers/HashTable.h>
+#include <SCICore/Containers/String.h>
+#include <SCICore/Malloc/Allocator.h>
+#include <SCICore/Multitask/Task.h>
 
 namespace SCICore {
 namespace PersistentSpace {

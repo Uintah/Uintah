@@ -6,23 +6,23 @@
  * Peter-Pike Sloan
  */
 
-#include <Util/NotFinished.h>
-#include <Dataflow/Module.h>
-#include <CommonDatatypes/ColorMapPort.h>
-#include <CoreDatatypes/ColorMap.h>
-#include <CommonDatatypes/GeometryPort.h>
+#include <SCICore/Util/NotFinished.h>
+#include <PSECore/Dataflow/Module.h>
+#include <PSECore/CommonDatatypes/ColorMapPort.h>
+#include <SCICore/CoreDatatypes/ColorMap.h>
+#include <PSECore/CommonDatatypes/GeometryPort.h>
 
-#include <Math/CatmullRomSpline.h>
-#include <Malloc/Allocator.h>
+#include <SCICore/Math/CatmullRomSpline.h>
+#include <SCICore/Malloc/Allocator.h>
 
-#include <TclInterface/TCLvar.h>
-#include <TclInterface/TCLTask.h>
+#include <SCICore/TclInterface/TCLvar.h>
+#include <SCICore/TclInterface/TCLTask.h>
 
-#include <Geom/Color.h>
+#include <SCICore/Geom/Color.h>
 
 #define Colormap XColormap
 
-#include <Geom/GeomOpenGL.h>
+#include <SCICore/Geom/GeomOpenGL.h>
 #include <GL/gl.h>
 #include <GL/glu.h>
 #include <GL/glx.h>
@@ -45,8 +45,8 @@ extern "C" GLXContext OpenGLGetContext(Tcl_Interp*, char*);
 namespace PSECommon {
 namespace Modules {
 
-using namespace PSECommon::Dataflow;
-using namespace PSECommon::CommonDatatypes;
+using namespace PSECore::Dataflow;
+using namespace PSECore::CommonDatatypes;
 using namespace SCICore::TclInterface;
 using namespace SCICore::GeomSpace;
 
@@ -894,6 +894,10 @@ int GenTransferFunc::makeCurrent(void)
 
 //
 // $Log$
+// Revision 1.2  1999/08/17 06:37:49  sparker
+// Merged in modifications from PSECore to make this the new "blessed"
+// version of SCIRun/Uintah.
+//
 // Revision 1.1  1999/07/27 16:58:13  mcq
 // Initial commit
 //

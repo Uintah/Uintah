@@ -13,8 +13,8 @@
  *  Copyright (C) 199? SCI Group
  */
 
-#include <CoreDatatypes/Datatype.h>
-#include <Containers/LockingHandle.h>
+#include <SCICore/CoreDatatypes/Datatype.h>
+#include <SCICore/Containers/LockingHandle.h>
 
 
 namespace SCICore {
@@ -35,7 +35,7 @@ class cMatrix;
 typedef LockingHandle<cMatrix> cMatrixHandle;
 
 class cVector;
-class cMatrix:public Datatype{
+class SCICORESHARE cMatrix:public Datatype{
   
 public:
  virtual cVector operator*( cVector &V)=0;
@@ -55,6 +55,10 @@ public:
 
 //
 // $Log$
+// Revision 1.2  1999/08/17 06:39:01  sparker
+// Merged in modifications from PSECore to make this the new "blessed"
+// version of SCIRun/Uintah.
+//
 // Revision 1.1  1999/07/27 16:56:34  mcq
 // Initial commit
 //

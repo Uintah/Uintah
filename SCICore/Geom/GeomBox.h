@@ -14,13 +14,13 @@
 #ifndef SCI_Geom_Box_h
 #define SCI_Geom_Box_h 1
 
-#include <Geom/GeomObj.h>
-#include <Geometry/Point.h>
+#include <SCICore/Geom/GeomObj.h>
+#include <SCICore/Geometry/Point.h>
 
 namespace SCICore {
 namespace GeomSpace {
 
-class GeomBox : public GeomObj {
+class SCICORESHARE GeomBox : public GeomObj {
   Point min, max;
   int opacity[6];
 public:
@@ -54,6 +54,10 @@ public:
 
 //
 // $Log$
+// Revision 1.2  1999/08/17 06:39:05  sparker
+// Merged in modifications from PSECore to make this the new "blessed"
+// version of SCIRun/Uintah.
+//
 // Revision 1.1  1999/07/27 16:56:37  mcq
 // Initial commit
 //

@@ -19,12 +19,14 @@
 #ifndef SCI_project_SlaveController_h
 #define SCI_project_SlaveController_h
 
-#include <Comm/MessageBase.h>
-#include <Multitask/Task.h>
-#include <Multitask/Mailbox.h>
-#include <TclInterface/Remote.h>
+#include <PSECore/share/share.h>
 
-namespace PSECommon {
+#include <PSECore/Comm/MessageBase.h>
+#include <SCICore/Multitask/Task.h>
+#include <SCICore/Multitask/Mailbox.h>
+#include <SCICore/TclInterface/Remote.h>
+
+namespace PSECore {
   namespace Dataflow {
     class Module;
     class OPort; 
@@ -36,19 +38,19 @@ namespace PSECommon {
   }
 }
 
-namespace PSECommon {
+namespace PSECore {
 namespace Distributed {
 
-using PSECommon::Dataflow::Module;
-using PSECommon::Dataflow::OPort;
-using PSECommon::Dataflow::Connection;
-using PSECommon::Dataflow::Network;
-using PSECommon::Comm::MessageBase;
+using PSECore::Dataflow::Module;
+using PSECore::Dataflow::OPort;
+using PSECore::Dataflow::Connection;
+using PSECore::Dataflow::Network;
+using PSECore::Comm::MessageBase;
 
 using SCICore::Multitask::Task;
 using SCICore::Multitask::Mailbox;
 
-class SlaveController : public Task {
+class SCICORESHARE SlaveController : public Task {
     private:
 	Network* 	net;
 	char 		masterHost[HOSTNAME];	
@@ -71,7 +73,7 @@ class SlaveController : public Task {
 	virtual int body(int);
 };
 
-class R_Scheduler_Module_Message : public MessageBase {
+class SCICORESHARE R_Scheduler_Module_Message : public MessageBase {
 public:
     Connection* conn;
     R_Scheduler_Module_Message();			// execute msg
@@ -79,7 +81,7 @@ public:
     virtual ~R_Scheduler_Module_Message();
 };
 
-class R_Module_Scheduler_Message : public MessageBase {
+class SCICORESHARE R_Module_Scheduler_Message : public MessageBase {
 public:
     OPort* p1;
     OPort* p2;
@@ -89,10 +91,14 @@ public:
 };
 
 } // End namespace Distributed
-} // End namespace PSECommon
+} // End namespace PSECore
 
 //
 // $Log$
+// Revision 1.2  1999/08/17 06:38:26  sparker
+// Merged in modifications from PSECore to make this the new "blessed"
+// version of SCIRun/Uintah.
+//
 // Revision 1.1  1999/07/27 16:56:01  mcq
 // Initial commit
 //

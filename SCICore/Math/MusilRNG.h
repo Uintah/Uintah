@@ -15,9 +15,9 @@
 #ifndef sci_Math_MusilRNG_h
 #define sci_Math_MusilRNG_h 1
 
-#include <share/share.h>
+#include <SCICore/share/share.h>
 
-class SHARE MusilRNG {
+class SCICORESHARE MusilRNG {
 	int d[16], n[16];
 	int stab[2][32];
 	int point;

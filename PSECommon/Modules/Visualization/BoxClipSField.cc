@@ -12,30 +12,30 @@
  *  Copyright (C) 1994 SCI Group
  */
 
-#include <Tester/RigorousTest.h>
-#include <Util/NotFinished.h>
-#include <Containers/Array1.h>
-#include <Containers/Array3.h>
-#include <Dataflow/Module.h>
-#include <CommonDatatypes/GeometryPort.h>
-#include <CommonDatatypes/ScalarFieldPort.h>
-#include <CommonDatatypes/SurfacePort.h>
-#include <CoreDatatypes/ScalarField.h>
-#include <CoreDatatypes/ScalarFieldRG.h>
-#include <CoreDatatypes/ScalarFieldUG.h>
-#include <Geometry/Point.h>
-#include <Geometry/Plane.h>
-#include <TclInterface/TCLvar.h>
+#include <SCICore/Tester/RigorousTest.h>
+#include <SCICore/Util/NotFinished.h>
+#include <SCICore/Containers/Array1.h>
+#include <SCICore/Containers/Array3.h>
+#include <PSECore/Dataflow/Module.h>
+#include <PSECore/CommonDatatypes/GeometryPort.h>
+#include <PSECore/CommonDatatypes/ScalarFieldPort.h>
+#include <PSECore/CommonDatatypes/SurfacePort.h>
+#include <SCICore/CoreDatatypes/ScalarField.h>
+#include <SCICore/CoreDatatypes/ScalarFieldRG.h>
+#include <SCICore/CoreDatatypes/ScalarFieldUG.h>
+#include <SCICore/Geometry/Point.h>
+#include <SCICore/Geometry/Plane.h>
+#include <SCICore/TclInterface/TCLvar.h>
 #include <stdio.h>
-#include <Widgets/ScaledBoxWidget.h>
-#include <Malloc/Allocator.h>
+#include <PSECore/Widgets/ScaledBoxWidget.h>
+#include <SCICore/Malloc/Allocator.h>
 
 namespace PSECommon {
 namespace Modules {
 
-using namespace PSECommon::Dataflow;
-using namespace PSECommon::CommonDatatypes;
-using namespace PSECommon::Widgets;
+using namespace PSECore::Dataflow;
+using namespace PSECore::CommonDatatypes;
+using namespace PSECore::Widgets;
 using namespace SCICore::TclInterface;
 using namespace SCICore::GeomSpace;
 using namespace SCICore::Geometry;
@@ -420,6 +420,10 @@ void BoxClipSField::tcl_command(TCLArgs& args, void* userdata)
 
 //
 // $Log$
+// Revision 1.2  1999/08/17 06:37:47  sparker
+// Merged in modifications from PSECore to make this the new "blessed"
+// version of SCIRun/Uintah.
+//
 // Revision 1.1  1999/07/27 16:58:11  mcq
 // Initial commit
 //

@@ -12,16 +12,16 @@
  *  Copyright (C) 1995 SCI Group
  */
 
-#include <Util/NotFinished.h>
-#include <Containers/String.h>
-#include <Dataflow/Module.h>
-#include <CoreDatatypes/DenseMatrix.h>
-#include <CoreDatatypes/Matrix.h>
-#include <CommonDatatypes/MatrixPort.h>
-#include <CoreDatatypes/SymSparseRowMatrix.h>
-#include <Malloc/Allocator.h>
-#include <TclInterface/TCLvar.h>
-#include <TclInterface/TCL.h>
+#include <SCICore/Util/NotFinished.h>
+#include <SCICore/Containers/String.h>
+#include <PSECore/Dataflow/Module.h>
+#include <SCICore/CoreDatatypes/DenseMatrix.h>
+#include <SCICore/CoreDatatypes/Matrix.h>
+#include <PSECore/CommonDatatypes/MatrixPort.h>
+#include <SCICore/CoreDatatypes/SymSparseRowMatrix.h>
+#include <SCICore/Malloc/Allocator.h>
+#include <SCICore/TclInterface/TCLvar.h>
+#include <SCICore/TclInterface/TCL.h>
 #include <tcl.h>
 #include <iostream.h>
 #include <string.h>
@@ -31,8 +31,8 @@
 namespace PSECommon {
 namespace Modules {
 
-using namespace PSECommon::Dataflow;
-using namespace PSECommon::CommonDatatypes;
+using namespace PSECore::Dataflow;
+using namespace PSECore::CommonDatatypes;
 using namespace SCICore::TclInterface;
 using namespace SCICore::GeomSpace;
 using namespace SCICore::Containers;
@@ -245,6 +245,10 @@ void EditMatrix::tcl_command(TCLArgs& args, void* userdata) {
 
 //
 // $Log$
+// Revision 1.2  1999/08/17 06:37:31  sparker
+// Merged in modifications from PSECore to make this the new "blessed"
+// version of SCIRun/Uintah.
+//
 // Revision 1.1  1999/07/27 16:57:45  mcq
 // Initial commit
 //

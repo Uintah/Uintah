@@ -14,8 +14,8 @@
 #ifndef SCI_CoreDatatypes_Interval_h
 #define SCI_CoreDatatypes_Interval_h 1
 
-#include <CoreDatatypes/Datatype.h>
-#include <Containers/LockingHandle.h>
+#include <SCICore/CoreDatatypes/Datatype.h>
+#include <SCICore/Containers/LockingHandle.h>
 
 namespace SCICore {
 namespace CoreDatatypes {
@@ -27,7 +27,7 @@ using SCICore::PersistentSpace::PersistentTypeID;
 class Interval;
 typedef LockingHandle<Interval> IntervalHandle;
 
-class Interval : public Datatype {
+class SCICORESHARE Interval : public Datatype {
 public:
     double low, high;
     Interval(double low, double high);
@@ -45,6 +45,10 @@ public:
 
 //
 // $Log$
+// Revision 1.2  1999/08/17 06:38:47  sparker
+// Merged in modifications from PSECore to make this the new "blessed"
+// version of SCIRun/Uintah.
+//
 // Revision 1.1  1999/07/27 16:56:22  mcq
 // Initial commit
 //

@@ -14,8 +14,10 @@
 #ifndef SCI_project_DenseMatrix_h
 #define SCI_project_DenseMatrix_h 1
 
-#include <CoreDatatypes/Matrix.h>
-#include <Math/MiscMath.h>
+#include <SCICore/share/share.h>
+
+#include <SCICore/CoreDatatypes/Matrix.h>
+#include <SCICore/Math/MiscMath.h>
 
 namespace SCICore {
 namespace CoreDatatypes {
@@ -23,7 +25,7 @@ namespace CoreDatatypes {
 using SCICore::Math::Abs;
 using namespace SCICore::CoreDatatypes;
 
-class DenseMatrix : public Matrix {
+class SCICORESHARE DenseMatrix : public Matrix {
     int nc;
     int nr;
     double minVal;
@@ -62,10 +64,10 @@ public:
     void invert();
     void mult(double s);
 
-    friend void Mult(DenseMatrix&, const DenseMatrix&, const DenseMatrix&);
-    friend void Add(DenseMatrix&, const DenseMatrix&, const DenseMatrix&);
-    friend void Mult_trans_X(DenseMatrix&, const DenseMatrix&, const DenseMatrix&);
-    friend void Mult_X_trans(DenseMatrix&, const DenseMatrix&, const DenseMatrix&);
+    friend SCICORESHARE void Mult(DenseMatrix&, const DenseMatrix&, const DenseMatrix&);
+    friend SCICORESHARE void Add(DenseMatrix&, const DenseMatrix&, const DenseMatrix&);
+    friend SCICORESHARE void Mult_trans_X(DenseMatrix&, const DenseMatrix&, const DenseMatrix&);
+    friend SCICORESHARE void Mult_X_trans(DenseMatrix&, const DenseMatrix&, const DenseMatrix&);
 
 };
 
@@ -74,6 +76,10 @@ public:
 
 //
 // $Log$
+// Revision 1.2  1999/08/17 06:38:45  sparker
+// Merged in modifications from PSECore to make this the new "blessed"
+// version of SCIRun/Uintah.
+//
 // Revision 1.1  1999/07/27 16:56:21  mcq
 // Initial commit
 //

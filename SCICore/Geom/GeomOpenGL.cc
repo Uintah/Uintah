@@ -11,60 +11,71 @@
  *  Copyright (C) 1994 SCI Group
  */
 
-#include <Util/NotFinished.h>
-
-#include <Geom/GeomOpenGL.h>
-#include <Geom/GeomArrows.h>
-#include <Geom/BBoxCache.h>
-#include <Geom/GeomBillboard.h>
-#include <Geom/GeomBox.h>
-#include <Geom/GeomCone.h>
-#include <Geom/GeomCylinder.h>
-#include <Geom/GeomDisc.h>
-#include <Geom/GeomObj.h>
-#include <Geom/GeomColormapInterface.h>
-#include <Geom/GeomGrid.h>
-#include <Geom/GeomQMesh.h>
-#include <Geom/tGrid.h>
-#include <Geom/TimeGrid.h>
-#include <Geom/GeomGroup.h>
-#include <Geom/GeomTimeGroup.h>
-#include <Geom/HeadLight.h>
-#include <Geom/IndexedGroup.h>
-#include <Geom/Light.h>
-#include <Geom/GeomLine.h>
-#include <Geom/Material.h>
-#include <Geom/GeomPick.h>
-#include <Geom/PointLight.h>
-#include <Geom/GeomPolyline.h>
-#include <Geom/Pt.h>
-#include <Geom/RenderMode.h>
-#include <Geom/GeomSphere.h>
-#if 0
-#include <Geom/Squares.h>
+#ifdef _WIN32
+#define WINGDIAPI __declspec(dllimport)
+#define APIENTRY __stdcall
+#define CALLBACK APIENTRY
+#include <stddef.h>
+#include <stdlib.h>
+#define GL_INTENSITY_EXT GL_INTENSITY
 #endif
-#include <Geom/Switch.h>
-#include <Geom/GeomTetra.h>
-#include <Geom/GeomTexSlices.h>
-#include <Geom/TexSquare.h>
-#include <Geom/GeomText.h>
-#include <Geom/GeomTorus.h>
-#include <Geom/GeomTransform.h>
-#include <Geom/GeomTri.h>
-#include <Geom/GeomTriangles.h>
-#include <Geom/GeomTube.h>
-#include <Geom/GeomTriStrip.h>
-#include <Geom/View.h>
-#include <Geom/Sticky.h>
-#include <Geom/Color.h>
-#include <Math/MinMax.h>
-#include <Math/TrigTable.h>
-#include <Math/Trig.h>
-#include <Geometry/Plane.h>
+#include <SCICore/Util/NotFinished.h>
+
+#include <SCICore/Geom/GeomOpenGL.h>
+#include <SCICore/Geom/GeomArrows.h>
+#include <SCICore/Geom/BBoxCache.h>
+#include <SCICore/Geom/GeomBillboard.h>
+#include <SCICore/Geom/GeomBox.h>
+#include <SCICore/Geom/GeomCone.h>
+#include <SCICore/Geom/GeomCylinder.h>
+#include <SCICore/Geom/GeomDisc.h>
+#include <SCICore/Geom/GeomObj.h>
+#include <SCICore/Geom/GeomColormapInterface.h>
+#include <SCICore/Geom/GeomGrid.h>
+#include <SCICore/Geom/GeomQMesh.h>
+#include <SCICore/Geom/tGrid.h>
+#include <SCICore/Geom/TimeGrid.h>
+#include <SCICore/Geom/GeomGroup.h>
+#include <SCICore/Geom/GeomTimeGroup.h>
+#include <SCICore/Geom/HeadLight.h>
+#include <SCICore/Geom/IndexedGroup.h>
+#include <SCICore/Geom/Light.h>
+#include <SCICore/Geom/GeomLine.h>
+#include <SCICore/Geom/Material.h>
+#include <SCICore/Geom/GeomPick.h>
+#include <SCICore/Geom/PointLight.h>
+#include <SCICore/Geom/GeomPolyline.h>
+#include <SCICore/Geom/Pt.h>
+#include <SCICore/Geom/RenderMode.h>
+#include <SCICore/Geom/GeomSphere.h>
+#if 0
+#include <SCICore/Geom/Squares.h>
+#endif
+#include <SCICore/Geom/Switch.h>
+#include <SCICore/Geom/GeomTetra.h>
+#include <SCICore/Geom/GeomTexSlices.h>
+#include <SCICore/Geom/TexSquare.h>
+#include <SCICore/Geom/GeomText.h>
+#include <SCICore/Geom/GeomTorus.h>
+#include <SCICore/Geom/GeomTransform.h>
+#include <SCICore/Geom/GeomTri.h>
+#include <SCICore/Geom/GeomTriangles.h>
+#include <SCICore/Geom/GeomTube.h>
+#include <SCICore/Geom/GeomTriStrip.h>
+#include <SCICore/Geom/View.h>
+#include <SCICore/Geom/Sticky.h>
+#include <SCICore/Geom/Color.h>
+#include <SCICore/Math/MinMax.h>
+#include <SCICore/Math/TrigTable.h>
+#include <SCICore/Math/Trig.h>
+#include <SCICore/Geometry/Plane.h>
 
 #include <GL/gl.h>
 #include <GL/glu.h>
+#if !defined(LINUX) && !defined(_WIN32)
 #include <GL/gls.h>
+#endif
+
 
 #include <X11/X.h>
 #include <X11/Xlib.h>
@@ -760,6 +771,33 @@ void GeomDisc::draw(DrawInfoOpenGL* di, Material* matl, double)
     glPopMatrix();
 }
 
+#if 0
+void GeomEllipsoid::draw(DrawInfoOpenGL* di, Material* matl, double)
+{
+  if(rad < 1.e-6)
+    { printf("Radius too small %f\n", rad);
+    return;
+    }
+
+  pre_draw(di, matl, 1);
+  glPushMatrix();
+  
+  glTranslated(cen.x(), cen.y(), cen.z());
+  
+  //  printf("%f, %f, %f center\n", cen.x(), cen.y(), cen.z());
+  //  printf("%f %f %f %f\n%f %f %f %f\n %f %f %f %f\n %f %f %f %f\n", m_tensor_matrix[0], m_tensor_matrix[1], m_tensor_matrix[2], m_tensor_matrix[3], m_tensor_matrix[4], m_tensor_matrix[5], m_tensor_matrix[6], m_tensor_matrix[7], m_tensor_matrix[8], m_tensor_matrix[9], m_tensor_matrix[10], m_tensor_matrix[11], m_tensor_matrix[12], m_tensor_matrix[13], m_tensor_matrix[14], m_tensor_matrix[15]);
+
+  glMultMatrixd(m_tensor_matrix);
+  di->polycount+=2*(nu-1)*(nv-1);
+  
+  
+
+  gluSphere(di->qobj, rad, nu, nv);
+  
+  glPopMatrix();
+}
+#endif
+
 // this is for alexandras volume render thing
 // this should be changed to use texture objects
 
@@ -866,16 +904,16 @@ void TexGeomGrid::draw(DrawInfoOpenGL* di, Material* matl, double)
 			  GL_NEAREST);
 	  glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
 
-#ifndef linux
+#if !defined(LINUX)&&!defined(_WIN32)
 	  glConvolutionFilter2DEXT(GL_CONVOLUTION_2D_EXT,
 				   GL_INTENSITY_EXT,
 				   conv_dim,conv_dim,
 				   GL_FLOAT,GL_RED,conv_data);
-#endif
 	  
 	  glTexImage2D(GL_TEXTURE_2D,0,GL_INTENSITY_EXT,
 		       tmap_size,tmap_size,
 		       0,GL_RED,GL_UNSIGNED_BYTE,tmapdata);
+#endif
 	  glEndList();
 	  // cerr << "Generated List " << tmap_dlist << endl;
 	}
@@ -1466,13 +1504,13 @@ void GeomGrid::draw(DrawInfoOpenGL* di, Material* matl, double)
                   float c[4];
                   matls(i,j)->diffuse.get_color(c);
                   glColor3fv(c);
-                  Vector& normal(normals(i, j));
+                  Vector& normal = normals(i, j);
                   glNormal3d(normal.x(), normal.y(), normal.z());
                   glVertex3d(pp1.x(), pp1.y(), pp1.z());
 
                   matls(i+1, j)->diffuse.get_color(c);
                   glColor3fv(c);
-                  Vector& normal2(normals(i+1, j));
+                  Vector& normal2 = normals(i+1, j);
                   glNormal3d(normal2.x(), normal2.y(), normal2.z());
                   glVertex3d(pp2.x(), pp2.y(), pp2.z());
                   p1+=vv;
@@ -1512,11 +1550,11 @@ void GeomGrid::draw(DrawInfoOpenGL* di, Material* matl, double)
                 for(int j=0;j<nv;j++){
                   Point pp1(p1+w*verts(i, j));
                   Point pp2(p2+w*verts(i+1, j));
-                  Vector& normal(normals(i, j));
+                  Vector& normal = normals(i, j);
                   glNormal3d(normal.x(), normal.y(), normal.z());
                   glVertex3d(pp1.x(), pp1.y(), pp1.z());
 
-                  Vector& normal2(normals(i+1, j));
+                  Vector& normal2 = normals(i+1, j);
                   glNormal3d(normal2.x(), normal2.y(), normal2.z());
                   glVertex3d(pp2.x(), pp2.y(), pp2.z());
                   p1+=vv;
@@ -3969,6 +4007,26 @@ void HeadLight::opengl_setup(const View& /*view*/, DrawInfoOpenGL*, int& idx)
     glPopMatrix();
 }
 
+
+#ifdef _WIN32
+
+// cheesy hack
+
+// Visual C++ won't link without these.  They aren't actuallty referenced anywhere in here 
+// so it shouldn't affect anything...
+
+void HeadLight::lintens(const OcclusionData& od, const Point& hit_position,
+			 Color& light, Vector& light_dir)
+{
+}
+
+void PointLight::lintens(const OcclusionData& od, const Point& hit_position,
+			 Color& light, Vector& light_dir)
+{
+}
+
+#endif
+
 void GeomIndexedGroup::draw(DrawInfoOpenGL* di, Material* m, double time)
 {
     HashTableIter<int, GeomObj*> iter(&objs);
@@ -3980,6 +4038,7 @@ void GeomIndexedGroup::draw(DrawInfoOpenGL* di, Material* m, double time)
 
 void GeomText::draw(DrawInfoOpenGL* di, Material* matl, double)
 {
+#ifndef _WIN32
   pre_draw(di,matl,0);
 
   if ( init ) {
@@ -4015,6 +4074,7 @@ void GeomText::draw(DrawInfoOpenGL* di, Material* matl, double)
   glListBase(fontbase);
   glCallLists(strlen(text()), GL_UNSIGNED_BYTE, (GLubyte *)text());
   glPopAttrib ();
+#endif
 }
 
 
@@ -4090,6 +4150,10 @@ void GeomSticky::draw(DrawInfoOpenGL* di, Material* matl, double t) {
 
 //
 // $Log$
+// Revision 1.2  1999/08/17 06:39:09  sparker
+// Merged in modifications from PSECore to make this the new "blessed"
+// version of SCIRun/Uintah.
+//
 // Revision 1.1  1999/07/27 16:56:41  mcq
 // Initial commit
 //

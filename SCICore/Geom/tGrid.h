@@ -14,16 +14,16 @@
 #ifndef SCI_Geom_tGrid_h
 #define SCI_Geom_tGrid_h 1
 
-#include <Geom/GeomObj.h>
-#include <Geom/Material.h>
-#include <Geometry/Point.h>
-#include <Geometry/Vector.h>
-#include <Containers/Array2.h>
+#include <SCICore/Geom/GeomObj.h>
+#include <SCICore/Geom/Material.h>
+#include <SCICore/Geometry/Point.h>
+#include <SCICore/Geometry/Vector.h>
+#include <SCICore/Containers/Array2.h>
 
 namespace SCICore {
 namespace GeomSpace {
 
-class TexGeomGrid : public GeomObj {
+class SCICORESHARE TexGeomGrid : public GeomObj {
     int tmap_size;
     int tmap_dlist;
     Point corner;
@@ -74,6 +74,10 @@ public:
 
 //
 // $Log$
+// Revision 1.2  1999/08/17 06:39:25  sparker
+// Merged in modifications from PSECore to make this the new "blessed"
+// version of SCIRun/Uintah.
+//
 // Revision 1.1  1999/07/27 16:56:54  mcq
 // Initial commit
 //

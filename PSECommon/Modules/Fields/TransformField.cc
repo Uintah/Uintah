@@ -12,20 +12,20 @@
  *  Copyright (C) 1995 SCI Group
  */
 
-#include <Util/NotFinished.h>
-#include <Containers/String.h>
-#include <Dataflow/Module.h>
-#include <CoreDatatypes/ScalarFieldRGdouble.h>
-#include <CoreDatatypes/ScalarFieldRGfloat.h>
-#include <CoreDatatypes/ScalarFieldRGint.h>
-#include <CoreDatatypes/ScalarFieldRGshort.h>
-#include <CoreDatatypes/ScalarFieldRGuchar.h>
-#include <CommonDatatypes/ScalarFieldPort.h>
-#include <Malloc/Allocator.h>
-#include <Math/MiscMath.h>
-#include <TclInterface/TCLTask.h>
-#include <TclInterface/TCLvar.h>
-#include <TclInterface/TCL.h>
+#include <SCICore/Util/NotFinished.h>
+#include <SCICore/Containers/String.h>
+#include <PSECore/Dataflow/Module.h>
+#include <SCICore/CoreDatatypes/ScalarFieldRGdouble.h>
+#include <SCICore/CoreDatatypes/ScalarFieldRGfloat.h>
+#include <SCICore/CoreDatatypes/ScalarFieldRGint.h>
+#include <SCICore/CoreDatatypes/ScalarFieldRGshort.h>
+#include <SCICore/CoreDatatypes/ScalarFieldRGuchar.h>
+#include <PSECore/CommonDatatypes/ScalarFieldPort.h>
+#include <SCICore/Malloc/Allocator.h>
+#include <SCICore/Math/MiscMath.h>
+#include <SCICore/TclInterface/TCLTask.h>
+#include <SCICore/TclInterface/TCLvar.h>
+#include <SCICore/TclInterface/TCL.h>
 #include <tcl.h>
 #include <tk.h>
 #include <iostream.h>
@@ -36,8 +36,8 @@
 namespace PSECommon {
 namespace Modules {
 
-using namespace PSECommon::Dataflow;
-using namespace PSECommon::CommonDatatypes;
+using namespace PSECore::Dataflow;
+using namespace PSECore::CommonDatatypes;
 using namespace SCICore::TclInterface;
 using namespace SCICore::GeomSpace;
 using namespace SCICore::Math;
@@ -457,6 +457,10 @@ void TransformField::tcl_command(TCLArgs& args, void* userdata) {
 
 //
 // $Log$
+// Revision 1.2  1999/08/17 06:37:30  sparker
+// Merged in modifications from PSECore to make this the new "blessed"
+// version of SCIRun/Uintah.
+//
 // Revision 1.1  1999/07/27 16:57:44  mcq
 // Initial commit
 //

@@ -13,10 +13,10 @@
  */
 
 
-#include <Constraints/RatioConstraint.h>
-#include <Util/Debug.h>
+#include <PSECore/Constraints/RatioConstraint.h>
+#include <SCICore/Util/Debug.h>
 
-namespace PSECommon {
+namespace PSECore {
 namespace Constraints {
 
 using SCICore::Util::DebugSwitch;
@@ -105,10 +105,14 @@ RatioConstraint::Satisfy( const Index index, const Scheme scheme, const Real Eps
 }
 
 } // End namespace Constraints
-} // End namespace PSECommon
+} // End namespace PSECore
 
 //
 // $Log$
+// Revision 1.2  1999/08/17 06:38:19  sparker
+// Merged in modifications from PSECore to make this the new "blessed"
+// version of SCIRun/Uintah.
+//
 // Revision 1.1  1999/07/27 16:55:56  mcq
 // Initial commit
 //

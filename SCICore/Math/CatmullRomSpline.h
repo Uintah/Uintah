@@ -14,9 +14,11 @@
 #ifndef SCI_Math_CatmullRomSpline_h
 #define SCI_Math_CatmullRomSpline_h
 
-#include <share/share.h>
+#include <SCICore/share/share.h>
 
-#include <Containers/Array1.h>
+#include <SCICore/share/share.h>
+
+#include <SCICore/Containers/Array1.h>
 
 namespace SCICore {
 namespace Math {
@@ -24,7 +26,7 @@ namespace Math {
 using SCICore::Containers::Array1;
 
 template<class T>
-class SHARE CatmullRomSpline {
+class SCICORESHARE CatmullRomSpline {
    Array1<T> d;
    int nintervals;
    int nset;
@@ -53,7 +55,7 @@ public:
 // Start of included CatmullRomSpline.cc
 //
 
-#include <Util/Assert.h>
+#include <SCICore/Util/Assert.h>
 
 namespace SCICore {
 namespace Math {
@@ -148,6 +150,10 @@ T& CatmullRomSpline<T>::operator[]( const int idx )
 
 //
 // $Log$
+// Revision 1.2  1999/08/17 06:39:32  sparker
+// Merged in modifications from PSECore to make this the new "blessed"
+// version of SCIRun/Uintah.
+//
 // Revision 1.1  1999/07/27 16:57:02  mcq
 // Initial commit
 //

@@ -18,11 +18,12 @@
  *  Copyright (C) 1998 SCI Group
  */
 
-#include <TclInterface/GuiServer.h>
+#ifndef _WIN32
+#include <SCICore/TclInterface/GuiServer.h>
 
-#include <Containers/Array1.h>
-#include <Multitask/Task.h>
-#include <TclInterface/TCLTask.h>
+#include <SCICore/Containers/Array1.h>
+#include <SCICore/Multitask/Task.h>
+#include <SCICore/TclInterface/TCLTask.h>
 
 #include <sys/types.h>
 #include <tcl.h>
@@ -31,7 +32,7 @@
 //#include <strings.h>
 
 //#define DEBUG 1
-extern Tcl_Interp* the_interp;
+extern "C" Tcl_Interp* the_interp;
 
 namespace SCICore {
 namespace TclInterface {
@@ -191,9 +192,14 @@ cerr << "GuiServer::getValue(): string = " << msg->un.tstring << endl;
 
 } // End namespace TclInterface
 } // End namespace SCICore
+#endif // win32
 
 //
 // $Log$
+// Revision 1.2  1999/08/17 06:39:42  sparker
+// Merged in modifications from PSECore to make this the new "blessed"
+// version of SCIRun/Uintah.
+//
 // Revision 1.1  1999/07/27 16:57:14  mcq
 // Initial commit
 //

@@ -13,13 +13,13 @@
 #ifndef SCI_STICKY_H
 #define SCI_STICKY_H 1
 
-#include <Geom/GeomObj.h>
-#include <Geometry/Point.h>
+#include <SCICore/Geom/GeomObj.h>
+#include <SCICore/Geometry/Point.h>
 
 namespace SCICore {
 namespace GeomSpace {
 
-class GeomSticky : public GeomObj {
+class SCICORESHARE GeomSticky : public GeomObj {
   GeomObj *child;
   
 public:
@@ -50,6 +50,10 @@ public:
 
 //
 // $Log$
+// Revision 1.2  1999/08/17 06:39:22  sparker
+// Merged in modifications from PSECore to make this the new "blessed"
+// version of SCIRun/Uintah.
+//
 // Revision 1.1  1999/07/27 16:56:51  mcq
 // Initial commit
 //

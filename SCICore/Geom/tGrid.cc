@@ -12,15 +12,20 @@
  *  Copyright (C) 1995 SCI Group
  */
 
-#include <Geom/tGrid.h>
-#include <Util/NotFinished.h>
-#include <Containers/String.h>
-#include <Geometry/BBox.h>
-#include <Geometry/BSphere.h>
-#include <Malloc/Allocator.h>
+#include <SCICore/Geom/tGrid.h>
+#include <SCICore/Util/NotFinished.h>
+#include <SCICore/Containers/String.h>
+#include <SCICore/Geometry/BBox.h>
+#include <SCICore/Geometry/BSphere.h>
+#include <SCICore/Malloc/Allocator.h>
+#ifdef _WIN32
+#include <string.h>
+#include <memory.h>
+#else
 #include <strings.h>
+#endif
 
-#ifdef __sun
+#if defined(__sun)||defined(_WIN32)
 #define bcopy(src,dest,n) memcpy(dest,src,n)
 #endif
 
@@ -176,6 +181,10 @@ bool TexGeomGrid::saveobj(ostream&, const clString&, GeomSave*)
 
 //
 // $Log$
+// Revision 1.2  1999/08/17 06:39:25  sparker
+// Merged in modifications from PSECore to make this the new "blessed"
+// version of SCIRun/Uintah.
+//
 // Revision 1.1  1999/07/27 16:56:54  mcq
 // Initial commit
 //

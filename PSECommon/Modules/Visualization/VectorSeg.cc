@@ -15,19 +15,19 @@
 #include <config.h>
 #undef SCI_ASSERTION_LEVEL_3
 #define SCI_ASSERTION_LEVEL_2
-#include <Containers/Array1.h>
-#include <Containers/Array2.h>
-#include <Containers/Array3.h>
-#include <Util/Assert.h>
-#include <Util/NotFinished.h>
-#include <Containers/String.h>
-#include <Dataflow/Module.h>
-#include <CoreDatatypes/ScalarFieldRG.h>
-#include <CoreDatatypes/ScalarFieldUG.h>
-#include <CommonDatatypes/ScalarFieldPort.h>
-#include <Malloc/Allocator.h>
-#include <Multitask/Task.h>
-#include <TclInterface/TCLvar.h>
+#include <SCICore/Containers/Array1.h>
+#include <SCICore/Containers/Array2.h>
+#include <SCICore/Containers/Array3.h>
+#include <SCICore/Util/Assert.h>
+#include <SCICore/Util/NotFinished.h>
+#include <SCICore/Containers/String.h>
+#include <PSECore/Dataflow/Module.h>
+#include <SCICore/CoreDatatypes/ScalarFieldRG.h>
+#include <SCICore/CoreDatatypes/ScalarFieldUG.h>
+#include <PSECore/CommonDatatypes/ScalarFieldPort.h>
+#include <SCICore/Malloc/Allocator.h>
+#include <SCICore/Multitask/Task.h>
+#include <SCICore/TclInterface/TCLvar.h>
 #include <stdio.h>
 
 // just so I can see the proccess id...
@@ -40,8 +40,8 @@
 namespace PSECommon {
 namespace Modules {
 
-using namespace PSECommon::Dataflow;
-using namespace PSECommon::CommonDatatypes;
+using namespace PSECore::Dataflow;
+using namespace PSECore::CommonDatatypes;
 using namespace SCICore::TclInterface;
 using namespace SCICore::GeomSpace;
 using namespace SCICore::Containers;
@@ -297,6 +297,10 @@ void VectorSeg::vector_seg_rg(const Array1<ScalarFieldHandle> &,
 
 //
 // $Log$
+// Revision 1.2  1999/08/17 06:37:54  sparker
+// Merged in modifications from PSECore to make this the new "blessed"
+// version of SCIRun/Uintah.
+//
 // Revision 1.1  1999/07/27 16:58:17  mcq
 // Initial commit
 //

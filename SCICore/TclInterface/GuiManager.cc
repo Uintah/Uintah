@@ -16,12 +16,16 @@
  *  Copyright (C) 1998 SCI Group
  */
 
-#include <TclInterface/GuiManager.h>
-#include <Containers/Array1.h>
+#ifndef _WIN32
+
+#include <SCICore/TclInterface/GuiManager.h>
+#include <SCICore/Containers/Array1.h>
 
 #include <string.h>
 #include <stdio.h>
+#ifndef _WIN32
 #include <unistd.h>
+#endif
 #include <stdlib.h>	// needed for atoi
 
 namespace SCICore {
@@ -98,8 +102,15 @@ GuiManager::putConnection (int sock)
 } // End namespace TclInterface
 } // End namespace SCICore
 
+#endif
+
+
 //
 // $Log$
+// Revision 1.2  1999/08/17 06:39:42  sparker
+// Merged in modifications from PSECore to make this the new "blessed"
+// version of SCIRun/Uintah.
+//
 // Revision 1.1  1999/07/27 16:57:13  mcq
 // Initial commit
 //

@@ -14,14 +14,14 @@
 
 #ifdef BROKEN
 
-#include <Geom/GeomGrid.h>
-#include <Util/NotFinished.h>
-#include <Containers/String.h>
-#include <Geom/Save.h>
-#include <Geometry/BBox.h>
-#include <Geometry/BSphere.h>
-#include <Malloc/Allocator.h>
-#include <Math/hf.h>
+#include <SCICore/Geom/GeomGrid.h>
+#include <SCICore/Util/NotFinished.h>
+#include <SCICore/Containers/String.h>
+#include <SCICore/Geom/Save.h>
+#include <SCICore/Geometry/BBox.h>
+#include <SCICore/Geometry/BSphere.h>
+#include <SCICore/Malloc/Allocator.h>
+#include <SCICore/Math/hf.h>
 
 namespace SCICore {
 namespace GeomSpace {
@@ -158,13 +158,13 @@ void GeomGrid::compute_normals()
 
 #endif
 
-#include <Geom/GeomGrid.h>
-#include <Util/NotFinished.h>
-#include <Containers/String.h>
-#include <Geom/GeomSave.h>
-#include <Geometry/BBox.h>
-#include <Geometry/BSphere.h>
-#include <Malloc/Allocator.h>
+#include <SCICore/Geom/GeomGrid.h>
+#include <SCICore/Util/NotFinished.h>
+#include <SCICore/Containers/String.h>
+#include <SCICore/Geom/GeomSave.h>
+#include <SCICore/Geometry/BBox.h>
+#include <SCICore/Geometry/BSphere.h>
+#include <SCICore/Malloc/Allocator.h>
 #include <stdio.h>
 
 namespace SCICore {
@@ -345,6 +345,7 @@ void GeomGrid::io(Piostream& stream)
 bool GeomGrid::saveobj(ostream& out, const clString& format,
 		       GeomSave* saveinfo)
 {
+	int i,j;
     if(format == "vrml" || format == "iv"){    
 	int nu=verts.dim1();
 	int nv=verts.dim2();
@@ -355,9 +356,9 @@ bool GeomGrid::saveobj(ostream& out, const clString& format,
 	saveinfo->indent(out);
 	out << "point [";
 	Point rstart(corner);
-	for(int i=0;i<nu;i++){
+	for(i=0;i<nu;i++){
 	    Point p1(rstart);
-	    for(int j=0;j<nv;j++){
+	    for(j=0;j<nv;j++){
 		Point pp1(p1+w*verts(i, j));
 		if(i>0 || j>0)
 		    out << ", ";
@@ -384,14 +385,15 @@ bool GeomGrid::saveobj(ostream& out, const clString& format,
 	saveinfo->indent(out);
 	if(have_normals){
 	    out << "vector [\n";
-	    for(int i=0;i<nu;i++){
-		for(int j=0;j<nv;j++){
+	    for(i=0;i<nu;i++){
+		for(j=0;j<nv;j++){
 		    if(i>0 || j>0){
 			out << ',';
 		    }	
 		    out << '\n';
 		    saveinfo->indent(out);
-		    Vector& normal(normals(i, j));
+		    //Vector& normal(normals(i, j));  // Visual C++ hates this reference constructor syntax
+			Vector& normal = normals(i,j);
 		    out << normal.x() << ' ' << normal.y() << ' ' << normal.z();
 		}
 	    }
@@ -413,8 +415,8 @@ bool GeomGrid::saveobj(ostream& out, const clString& format,
 	    saveinfo->start_node(out, "Material");
 	    saveinfo->indent(out);
 	    out << "diffuseColor [\n";
-	    for(int i=0;i<nu-1;i++){
-		for(int j=0;j<nv-1;j++){
+	    for(i=0;i<nu-1;i++){
+		for(j=0;j<nv-1;j++){
 		    if(i>0 || j>0){
 			out << ',';
 		    }	
@@ -433,8 +435,8 @@ bool GeomGrid::saveobj(ostream& out, const clString& format,
 	saveinfo->start_node(out, "IndexedFaceSet");
 	saveinfo->indent(out);
 	out << "coordIndex [";
-	for(int i=0;i<nu-1;i++){
-	    for(int j=0;j<nv-1;j++){
+	for(i=0;i<nu-1;i++){
+	    for(j=0;j<nv-1;j++){
 		int i1=i*nv+j;
 		int i2=i1+1;
 		int i3=i1+nv+1;
@@ -453,8 +455,8 @@ bool GeomGrid::saveobj(ostream& out, const clString& format,
 	if(have_matls){
 	    saveinfo->indent(out);
 	    out << "materialIndex [";
-	    for(int i=0;i<nu-1;i++){
-		for(int j=0;j<nv-1;j++){
+	    for(i=0;i<nu-1;i++){
+		for(j=0;j<nv-1;j++){
 		    int i1=i*nv+j;
 		    int i2=i1+1;
 		    int i3=i1+nv+1;
@@ -474,8 +476,8 @@ bool GeomGrid::saveobj(ostream& out, const clString& format,
 	if(have_normals){
 	    saveinfo->indent(out);
 	    out << "normalIndex [";
-	    for(int i=0;i<nu-1;i++){
-		for(int j=0;j<nv-1;j++){
+	    for(i=0;i<nu-1;i++){
+		for(j=0;j<nv-1;j++){
 		    int i1=i*nv+j;
 		    int i2=i1+1;
 		    int i3=i1+nv+1;
@@ -506,6 +508,10 @@ bool GeomGrid::saveobj(ostream& out, const clString& format,
 
 //
 // $Log$
+// Revision 1.2  1999/08/17 06:39:08  sparker
+// Merged in modifications from PSECore to make this the new "blessed"
+// version of SCIRun/Uintah.
+//
 // Revision 1.1  1999/07/27 16:56:39  mcq
 // Initial commit
 //

@@ -14,6 +14,8 @@
 #ifndef SCI_project_Persistent_h
 #define SCI_project_Persistent_h 1
 
+#include <SCICore/share/share.h>
+
 #include <fstream.h>
 
 //forwardDeclare(class SCICore::Containers::clString;)
@@ -33,14 +35,14 @@ using SCICore::Containers::clString;
 
 class Persistent;
 
-struct PersistentTypeID {
+struct SCICORESHARE PersistentTypeID {
     char* type;
     char* parent;
     Persistent* (*maker)();
     PersistentTypeID(char* type, char* parent, Persistent* (*maker)());
 };
 
-class Piostream {
+class SCICORESHARE Piostream {
 public:
     enum Direction {
 	Read,
@@ -95,24 +97,24 @@ Piostream* auto_istream(const clString& filename);
 Piostream* auto_istream(int fd);
 Piostream* auto_istream(ifstream* inp, const char *name=0);
 
-class Persistent {
+class SCICORESHARE Persistent {
 public:
     virtual ~Persistent();
     virtual void io(Piostream&)=0;
 };
 
-inline void Pio(Piostream& stream, char& data) { stream.io(data); }
-inline void Pio(Piostream& stream, unsigned char& data) { stream.io(data); }
-inline void Pio(Piostream& stream, short& data) { stream.io(data); }
-inline void Pio(Piostream& stream, unsigned short& data) { stream.io(data); }
-inline void Pio(Piostream& stream, int& data) { stream.io(data); }
-inline void Pio(Piostream& stream, unsigned int& data) { stream.io(data); }
-inline void Pio(Piostream& stream, long& data) { stream.io(data); }
-inline void Pio(Piostream& stream, unsigned long& data) { stream.io(data); }
-inline void Pio(Piostream& stream, double& data) { stream.io(data); }
-inline void Pio(Piostream& stream, float& data) { stream.io(data); }
-inline void Pio(Piostream& stream, clString& data) { stream.io(data); }
-inline void Pio(Piostream& stream, Persistent& data) { data.io(stream); }
+SCICORESHARE inline void Pio(Piostream& stream, char& data) { stream.io(data); }
+SCICORESHARE inline void Pio(Piostream& stream, unsigned char& data) { stream.io(data); }
+SCICORESHARE inline void Pio(Piostream& stream, short& data) { stream.io(data); }
+SCICORESHARE inline void Pio(Piostream& stream, unsigned short& data) { stream.io(data); }
+SCICORESHARE inline void Pio(Piostream& stream, int& data) { stream.io(data); }
+SCICORESHARE inline void Pio(Piostream& stream, unsigned int& data) { stream.io(data); }
+SCICORESHARE inline void Pio(Piostream& stream, long& data) { stream.io(data); }
+SCICORESHARE inline void Pio(Piostream& stream, unsigned long& data) { stream.io(data); }
+SCICORESHARE inline void Pio(Piostream& stream, double& data) { stream.io(data); }
+SCICORESHARE inline void Pio(Piostream& stream, float& data) { stream.io(data); }
+SCICORESHARE inline void Pio(Piostream& stream, clString& data) { stream.io(data); }
+SCICORESHARE inline void Pio(Piostream& stream, Persistent& data) { data.io(stream); }
 
 } // End namespace PersistentSpace
 } // End namespace SCICore
@@ -123,7 +125,7 @@ namespace Containers {
   //typedef Persistent* PersistentPointer;
 
   //const??
-inline int Hash(PersistentSpace::Persistent * k, int hash_size)
+inline SCICORESHARE int Hash(PersistentSpace::Persistent * k, int hash_size)
 {
    return (int)((unsigned long)((long)k^(3*hash_size+1))%(unsigned long)hash_size);
 }

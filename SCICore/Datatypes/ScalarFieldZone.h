@@ -14,13 +14,13 @@
 #ifndef SCI_project_ScalarFieldZone_h
 #define SCI_project_ScalarFieldZone_h 1
 
-#include <CoreDatatypes/ScalarField.h>
-#include <Containers/Array1.h>
+#include <SCICore/CoreDatatypes/ScalarField.h>
+#include <SCICore/Containers/Array1.h>
 
 namespace SCICore {
 namespace CoreDatatypes {
 
-class ScalarFieldZone : public ScalarField {
+class SCICORESHARE ScalarFieldZone : public ScalarField {
 public:
     Array1<ScalarFieldHandle> zones;
     ScalarFieldZone(int nzones);
@@ -44,6 +44,10 @@ public:
 
 //
 // $Log$
+// Revision 1.2  1999/08/17 06:38:54  sparker
+// Merged in modifications from PSECore to make this the new "blessed"
+// version of SCIRun/Uintah.
+//
 // Revision 1.1  1999/07/27 16:56:28  mcq
 // Initial commit
 //

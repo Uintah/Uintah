@@ -19,7 +19,7 @@
 #pragma interface
 #endif
 
-#include <Containers/Array1.h>
+#include <SCICore/Containers/Array1.h>
 
 namespace SCICore {
 namespace Containers {
@@ -67,6 +67,10 @@ template<class T> Ring<T>::~Ring()
 
 //
 // $Log$
+// Revision 1.2  1999/08/17 06:38:37  sparker
+// Merged in modifications from PSECore to make this the new "blessed"
+// version of SCIRun/Uintah.
+//
 // Revision 1.1  1999/07/27 16:56:14  mcq
 // Initial commit
 //

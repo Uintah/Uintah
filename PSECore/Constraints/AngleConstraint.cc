@@ -12,12 +12,12 @@
  *  Copyright (C) 1995 SCI Group
  */
 
-#include <Constraints/AngleConstraint.h>
-#include <Geometry/Plane.h>
-#include <Geometry/Vector.h>
-#include <Util/Debug.h>
+#include <PSECore/Constraints/AngleConstraint.h>
+#include <SCICore/Geometry/Plane.h>
+#include <SCICore/Geometry/Vector.h>
+#include <SCICore/Util/Debug.h>
 
-namespace PSECommon {
+namespace PSECore {
 namespace Constraints {
 
 using SCICore::Util::DebugSwitch;
@@ -142,10 +142,14 @@ AngleConstraint::Satisfy( const Index index, const Scheme scheme, const Real Eps
 }
 
 } // End namespace Constraints
-} // End namespace PSECommon
+} // End namespace PSECore
 
 //
 // $Log$
+// Revision 1.2  1999/08/17 06:38:15  sparker
+// Merged in modifications from PSECore to make this the new "blessed"
+// version of SCIRun/Uintah.
+//
 // Revision 1.1  1999/07/27 16:55:52  mcq
 // Initial commit
 //

@@ -12,12 +12,12 @@
  *  Copyright (C) 199? SCI Group
  */
 
-#include <Geometry/BBox.h>
-#include <Geometry/Vector.h>
-#include <Util/Assert.h>
-#include <Exceptions/Exceptions.h>
-#include <Math/MinMax.h>
-#include <Persistent/Persistent.h>
+#include <SCICore/Geometry/BBox.h>
+#include <SCICore/Geometry/Vector.h>
+#include <SCICore/Util/Assert.h>
+#include <SCICore/Exceptions/Exceptions.h>
+#include <SCICore/Math/MinMax.h>
+#include <SCICore/Persistent/Persistent.h>
 #include <stdlib.h>
 
 namespace SCICore {
@@ -361,7 +361,7 @@ BBox::Intersect( const Point& e, const Vector& v, Point& hitNear )
       else
 	if ( ty >= tz )
 	  {
-	    if ( ! ty > 0 )
+	    if ( ! (ty > 0) )
 	      return 0;
 	    
 	    worked = TestTy( e, v, ty, hitNear );
@@ -375,7 +375,7 @@ BBox::Intersect( const Point& e, const Vector& v, Point& hitNear )
 	  }
 	else
 	  {
-	    if ( ! tz > 0 )
+	    if ( ! (tz > 0) )
 	      return 0;
 
 	    worked = TestTz( e, v, tz, hitNear );
@@ -400,7 +400,7 @@ BBox::Intersect( const Point& e, const Vector& v, Point& hitNear )
       else
 	if ( tx >= tz )
 	  {
-	    if ( ! tx > 0 )
+	    if ( ! (tx > 0) )
 	      return 0;
 	    
 	    worked = TestTx( e, v, tx, hitNear );
@@ -414,7 +414,7 @@ BBox::Intersect( const Point& e, const Vector& v, Point& hitNear )
 	  }
 	else
 	  {
-	    if ( ! tz > 0 )
+	    if ( ! (tz > 0) )
 	      return 0;
 
 	    worked = TestTz( e, v, tz, hitNear );
@@ -439,7 +439,7 @@ BBox::Intersect( const Point& e, const Vector& v, Point& hitNear )
       else
 	if ( ty >= tx )
 	  {
-	    if ( ! ty > 0 )
+	    if ( ! (ty > 0) )
 	      return 0;
 	    
 	    worked = TestTy( e, v, ty, hitNear );
@@ -453,7 +453,7 @@ BBox::Intersect( const Point& e, const Vector& v, Point& hitNear )
 	  }
 	else
 	  {
-	    if ( ! tx > 0 )
+	    if ( ! (tx > 0) )
 	      return 0;
 
 	    worked = TestTx( e, v, tx, hitNear );
@@ -531,6 +531,10 @@ void Pio(Piostream & stream, BBox & box) {
 
 //
 // $Log$
+// Revision 1.2  1999/08/17 06:39:26  sparker
+// Merged in modifications from PSECore to make this the new "blessed"
+// version of SCIRun/Uintah.
+//
 // Revision 1.1  1999/07/27 16:56:54  mcq
 // Initial commit
 //

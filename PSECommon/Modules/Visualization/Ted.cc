@@ -10,28 +10,28 @@
  *  Copyright (C) 1997 SCI Group
  */
 
-#include <Containers/Array1.h>
-#include <Util/NotFinished.h>
-#include <Dataflow/Module.h>
-#include <CommonDatatypes/GeometryPort.h>
-#include <CommonDatatypes/ScalarFieldPort.h>
-#include <CoreDatatypes/ScalarFieldRG.h>
-#include <CoreDatatypes/ScalarFieldRGint.h>
-#include <CoreDatatypes/ScalarFieldRGshort.h>
-#include <CoreDatatypes/ScalarFieldRGfloat.h>
-#include <CoreDatatypes/ScalarFieldRGBase.h>
-#include <Geometry/Point.h>
-#include <Math/MinMax.h>
-#include <Malloc/Allocator.h>
-#include <Multitask/Task.h>
-#include <Multitask/ITC.h>
-#include <TclInterface/TCLvar.h>
-#include <TclInterface/TCLTask.h>
+#include <SCICore/Containers/Array1.h>
+#include <SCICore/Util/NotFinished.h>
+#include <PSECommon/Dataflow/Module.h>
+#include <PSECommon/CommonDatatypes/GeometryPort.h>
+#include <PSECommon/CommonDatatypes/ScalarFieldPort.h>
+#include <SCICore/CoreDatatypes/ScalarFieldRG.h>
+#include <SCICore/CoreDatatypes/ScalarFieldRGint.h>
+#include <SCICore/CoreDatatypes/ScalarFieldRGshort.h>
+#include <SCICore/CoreDatatypes/ScalarFieldRGfloat.h>
+#include <SCICore/CoreDatatypes/ScalarFieldRGBase.h>
+#include <SCICore/Geometry/Point.h>
+#include <SCICore/Math/MinMax.h>
+#include <SCICore/Malloc/Allocator.h>
+#include <SCICore/Multitask/Task.h>
+#include <SCICore/Multitask/ITC.h>
+#include <SCICore/TclInterface/TCLvar.h>
+#include <SCICore/TclInterface/TCLTask.h>
 
 #include <GL/gl.h>
 #include <GL/glu.h>
 
-#include <Geom/GeomOpenGL.h>
+#include <SCICore/Geom/GeomOpenGL.h>
 #include <GL/gl.h>
 #include <GL/glu.h>
 #include <GL/glx.h>
@@ -706,6 +706,10 @@ int Ted::makeCurrent(void)
 
 //
 // $Log$
+// Revision 1.2  1999/08/17 06:37:54  sparker
+// Merged in modifications from PSECore to make this the new "blessed"
+// version of SCIRun/Uintah.
+//
 // Revision 1.1  1999/07/27 16:58:17  mcq
 // Initial commit
 //

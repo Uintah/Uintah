@@ -14,7 +14,7 @@
 #ifndef SCI_Containers_Handle_h
 #define SCI_Containers_Handle_h 1
 
-#include <Util/Assert.h>
+#include <SCICore/Util/Assert.h>
 
 namespace SCICore {
 namespace Containers {
@@ -155,6 +155,10 @@ T* Handle<T>::get_rep() const
 
 //
 // $Log$
+// Revision 1.2  1999/08/17 06:38:36  sparker
+// Merged in modifications from PSECore to make this the new "blessed"
+// version of SCIRun/Uintah.
+//
 // Revision 1.1  1999/07/27 16:56:12  mcq
 // Initial commit
 //

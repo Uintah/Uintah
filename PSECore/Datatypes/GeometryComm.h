@@ -14,9 +14,11 @@
 #ifndef SCI_CommonDatatypes_GeometryComm_h
 #define SCI_CommonDatatypes_GeometryComm_h 1
 
-#include <Comm/MessageBase.h>
-#include <CommonDatatypes/GeometryPort.h>
-#include <Multitask/ITC.h>
+#include <SCICore/share/share.h>
+
+#include <PSECore/Comm/MessageBase.h>
+#include <PSECore/CommonDatatypes/GeometryPort.h>
+#include <SCICore/Multitask/ITC.h>
 
 namespace SCICore {
   namespace GeomSpace {
@@ -27,11 +29,11 @@ namespace SCICore {
   }
 }
 
-namespace PSECommon {
+namespace PSECore {
 namespace CommonDatatypes {
 
-using PSECommon::Comm::MessageBase;
-using PSECommon::Comm::MessageTypes;
+using PSECore::Comm::MessageBase;
+using PSECore::Comm::MessageTypes;
 using SCICore::Multitask::Semaphore;
 using SCICore::Multitask::AsyncReply;
 
@@ -42,7 +44,7 @@ struct GeomReply {
     GeomReply(int, int*);
 };
 
-class GeometryComm : public MessageBase {
+class SCICORESHARE GeometryComm : public MessageBase {
 public:
     GeometryComm(Mailbox<GeomReply>*);
     GeometryComm(int, GeomID, GeomObj*, const clString&, CrowdMonitor* lock);
@@ -74,15 +76,19 @@ public:
 };
 
 } // End namespace CommonDatatypes
-} // End namespace PSECommon
+} // End namespace PSECore
 
 //
 // $Log$
+// Revision 1.2  1999/08/17 06:38:08  sparker
+// Merged in modifications from PSECore to make this the new "blessed"
+// version of SCIRun/Uintah.
+//
 // Revision 1.1  1999/07/27 16:55:47  mcq
 // Initial commit
 //
 // Revision 1.3  1999/05/06 20:17:00  dav
-// added back PSECommon .h files
+// added back PSECore .h files
 //
 // Revision 1.1.1.1  1999/04/24 23:12:48  dav
 // Import sources

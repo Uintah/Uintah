@@ -16,15 +16,15 @@
 #ifndef SCI_CoreDatatypes_VoidStar_h
 #define SCI_CoreDatatypes_VoidStar_h 1
 
-#include <CoreDatatypes/Datatype.h>
-#include <Containers/Array1.h>
-#include <Containers/Array2.h>
-#include <Containers/LockingHandle.h>
-#include <Containers/String.h>
-#include <Geometry/Point.h>
-#include <Geometry/Vector.h>
-#include <CoreDatatypes/Datatype.h>
-#include <Multitask/ITC.h>
+#include <SCICore/CoreDatatypes/Datatype.h>
+#include <SCICore/Containers/Array1.h>
+#include <SCICore/Containers/Array2.h>
+#include <SCICore/Containers/LockingHandle.h>
+#include <SCICore/Containers/String.h>
+#include <SCICore/Geometry/Point.h>
+#include <SCICore/Geometry/Vector.h>
+#include <SCICore/CoreDatatypes/Datatype.h>
+#include <SCICore/Multitask/ITC.h>
 
 namespace SCICore {
 namespace CoreDatatypes {
@@ -36,7 +36,7 @@ using SCICore::PersistentSpace::PersistentTypeID;
 class VoidStar;
 typedef LockingHandle<VoidStar> VoidStarHandle;
 
-class VoidStar : public Datatype {
+class SCICORESHARE VoidStar : public Datatype {
 protected:
     VoidStar();
 public:
@@ -54,6 +54,10 @@ public:
 
 //
 // $Log$
+// Revision 1.2  1999/08/17 06:39:00  sparker
+// Merged in modifications from PSECore to make this the new "blessed"
+// version of SCIRun/Uintah.
+//
 // Revision 1.1  1999/07/27 16:56:33  mcq
 // Initial commit
 //

@@ -12,19 +12,25 @@
  *  Copyright (C) 199? SCI Group
  */
 
-#include <CommonDatatypes/cVectorPort.h>
+#include <PSECore/CommonDatatypes/cVectorPort.h>
 
-namespace PSECommon {
+namespace PSECore {
 namespace CommonDatatypes {
+
+using namespace SCICore::CoreDatatypes;
 
 clString SimpleIPort<cVectorHandle>::port_type("cVector");
 clString SimpleIPort<cVectorHandle>::port_color("yellow");
 
 } // End namespace CommonDatatypes
-} // End namespace PSECommon
+} // End namespace PSECore
 
 //
 // $Log$
+// Revision 1.2  1999/08/17 06:38:14  sparker
+// Merged in modifications from PSECore to make this the new "blessed"
+// version of SCIRun/Uintah.
+//
 // Revision 1.1  1999/07/27 16:55:51  mcq
 // Initial commit
 //

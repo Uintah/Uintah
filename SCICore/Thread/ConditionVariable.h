@@ -50,7 +50,7 @@ WARNING
    
 ****************************************/
 
-class ConditionVariable {
+class SCICORESHARE ConditionVariable {
     const char* name;
     int nwaiters;
     Mutex mutex;

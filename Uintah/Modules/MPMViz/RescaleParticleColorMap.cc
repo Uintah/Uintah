@@ -13,11 +13,12 @@
  */
 
 
-#include <Datatypes/Particles/MPVizParticleSet.h>
-#include <Util/NotFinished.h>
-#include <CoreDatatypes/ColorMap.h>
-#include <Malloc/Allocator.h>
-#include <RescaleParticleColorMap.h>
+#include <SCICore/Util/NotFinished.h>
+#include <SCICore/CoreDatatypes/ColorMap.h>
+#include <SCICore/Malloc/Allocator.h>
+
+#include "RescaleParticleColorMap.h"
+#include <Uintah/Datatypes/Particles/MPVizParticleSet.h>
 
 namespace Uintah {
 namespace Modules {
@@ -25,8 +26,8 @@ namespace Modules {
 
 using namespace Uintah::Datatypes;
 
-using namespace PSECommon::Dataflow;
-using namespace PSECommon::CommonDatatypes;
+using namespace PSECore::Dataflow;
+using namespace PSECore::CommonDatatypes;
 
 using namespace SCICore::TclInterface;
 using namespace SCICore::Containers;
@@ -132,6 +133,10 @@ Module* make_RescaleParticleColorMap( const clString& id ) {
 
 //
 // $Log$
+// Revision 1.2  1999/08/17 06:40:11  sparker
+// Merged in modifications from PSECore to make this the new "blessed"
+// version of SCIRun/Uintah.
+//
 // Revision 1.1  1999/07/27 17:08:57  mcq
 // Initial commit
 //

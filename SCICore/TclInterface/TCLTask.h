@@ -14,10 +14,10 @@
 #ifndef SCI_project_TCLTask_h
 #define SCI_project_TCLTask_h 1
 
-#include <Multitask/Task.h>
-#include <Multitask/ITC.h>
+#include <SCICore/Multitask/Task.h>
+#include <SCICore/Multitask/ITC.h>
 
-#include <Util/share.h>
+#include <SCICore/share/share.h>
 
 namespace SCICore {
 namespace TclInterface {
@@ -25,7 +25,7 @@ namespace TclInterface {
 using SCICore::Multitask::Task;
 using SCICore::Multitask::Semaphore;
 
-class SHARE TCLTask : public Task {
+class SCICORESHARE TCLTask : public Task {
     int argc;
     char** argv;
     Semaphore cont;
@@ -50,6 +50,10 @@ public:
 
 //
 // $Log$
+// Revision 1.2  1999/08/17 06:39:45  sparker
+// Merged in modifications from PSECore to make this the new "blessed"
+// version of SCIRun/Uintah.
+//
 // Revision 1.1  1999/07/27 16:57:16  mcq
 // Initial commit
 //

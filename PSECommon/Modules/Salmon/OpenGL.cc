@@ -11,22 +11,6 @@
  *  Copyright (C) 1994 SCI Group
  */
 
-
-#include <Modules/Salmon/Renderer.h>
-#include <Modules/Salmon/Roe.h>
-#include <Modules/Salmon/Ball.h>
-#include <Modules/Salmon/Salmon.h>
-#include <Modules/Salmon/SalmonGeom.h>
-#include <Containers/HashTable.h>
-#include <Util/NotFinished.h>
-#include <Util/Timer.h>
-#include <Geom/GeomObj.h>
-#include <Geom/GeomOpenGL.h>
-#include <Geom/RenderMode.h>
-#include <Geom/Light.h>
-#include <Malloc/Allocator.h>
-#include <Math/Trig.h>
-#include <TclInterface/TCLTask.h>
 #include <tcl.h>
 #include <tk.h>
 #include <GL/gl.h>
@@ -34,11 +18,31 @@
 #include <GL/glx.h>
 #include <strstream.h>
 #include <fstream.h>
-#include "image.h"
 #include <string.h>
-#include <CoreDatatypes/Image.h>
-#include <Multitask/AsyncReply.h>
-#include <Modules/Salmon/MpegEncoder.h>
+
+#include "image.h"
+#include <SCICore/Geom/GeomObj.h>
+#include <SCICore/Containers/HashTable.h>
+#include <SCICore/Util/NotFinished.h>
+#include <SCICore/Util/Timer.h>
+#include <SCICore/Geom/GeomObj.h>
+#include <SCICore/Geom/GeomOpenGL.h>
+#include <SCICore/Geom/Light.h>
+#include <SCICore/Geom/Lighting.h>
+#include <SCICore/Geom/RenderMode.h>
+#include <SCICore/Geom/View.h>
+#include <SCICore/Malloc/Allocator.h>
+#include <SCICore/Math/Trig.h>
+#include <SCICore/TclInterface/TCLTask.h>
+#include <SCICore/CoreDatatypes/Image.h>
+#include <SCICore/Multitask/AsyncReply.h>
+#include <SCICore/Multitask/Mailbox.h>
+#include <PSECore/CommonDatatypes/GeometryPort.h>
+#include <PSECommon/Modules/Salmon/Ball.h>
+#include <PSECommon/Modules/Salmon/MpegEncoder.h>
+#include <PSECommon/Modules/Salmon/Renderer.h>
+#include <PSECommon/Modules/Salmon/Roe.h>
+#include <PSECommon/Modules/Salmon/Salmon.h>
 
 #ifdef __sgi
 #include <X11/extensions/SGIStereo.h>
@@ -51,13 +55,18 @@ extern Tcl_Interp* the_interp;
 namespace PSECommon {
 namespace Modules {
 
-using PSECommon::CommonDatatypes::GeometryData;
-using PSECommon::CommonDatatypes::DepthImage;
+using PSECore::CommonDatatypes::GeometryData;
+using SCICore::CoreDatatypes::DepthImage;
 
 using SCICore::CoreDatatypes::ColorImage;
 using SCICore::Multitask::AsyncReply;
 using SCICore::GeomSpace::Light;
+using SCICore::GeomSpace::Lighting;
+using SCICore::GeomSpace::View;
 using SCICore::Containers::to_string;
+using SCICore::TclInterface::TCLTask;
+using SCICore::Multitask::Task;
+using SCICore::Multitask::Mailbox;
 
 const int STRINGSIZE=200;
 class OpenGLHelper;
@@ -82,7 +91,7 @@ class OpenGL : public Renderer {
     GLXContext cx;
     char* strbuf;
     int maxlights;
-    DrawInfoOpenGL* drawinfo;
+    SCICore::GeomSpace::DrawInfoOpenGL* drawinfo;
     WallClockTimer fpstimer;
     double current_time;
 
@@ -94,7 +103,7 @@ class OpenGL : public Renderer {
     void pick_draw_obj(Salmon* salmon, Roe* roe, GeomObj* obj);
     OpenGLHelper* helper;
     clString my_openglname;
-    Array1<XVisualInfo*> visuals;
+    SCICore::Containers::Array1<XVisualInfo*> visuals;
 
    /* Call this each time an mpeg frame is generated. */
    void addMpegFrame();
@@ -179,7 +188,7 @@ OpenGL::OpenGL()
 {
     encoding_mpeg = false;
     strbuf=scinew char[STRINGSIZE];
-    drawinfo=scinew DrawInfoOpenGL;
+    drawinfo=scinew SCICore::GeomSpace::DrawInfoOpenGL;
     fpstimer.start();
 }
 
@@ -782,7 +791,8 @@ void OpenGL::real_get_pick(Salmon*, Roe* roe, int x, int y,
 	drawinfo->lighting=0;
 	drawinfo->set_drawtype(DrawInfoOpenGL::Flat);
 	drawinfo->pickmode=1;
-
+	//drawinfo->pickable=0;
+	
 	// Draw it all...
 	roe->do_for_visible(this, (RoeVisPMF)&OpenGL::pick_draw_obj);
 
@@ -908,6 +918,7 @@ void OpenGL::put_scanline(int y, int width, Color* scanline, int repeat)
 
 void OpenGL::pick_draw_obj(Salmon* salmon, Roe*, GeomObj* obj)
 {
+#if 0
 #if (_MIPS_SZPTR == 64)
     unsigned long o=(unsigned long)obj;
     unsigned int o1=(o>>32)&0xffffffff;
@@ -922,6 +933,7 @@ void OpenGL::pick_draw_obj(Salmon* salmon, Roe*, GeomObj* obj)
     glPopName();
     glLoadName((GLuint)obj);
     glPushName(0x12345678);
+#endif
 #endif
     obj->draw(drawinfo, salmon->default_matl.get_rep(), current_time);
 }
@@ -1088,7 +1100,7 @@ void Roe::setClip(DrawInfoOpenGL* drawinfo)
     if (get_tcl_stringvar(id,"clip-visible",val) && 
 	get_tcl_intvar(id,num_clip,i)) {
 
-	int cur_flag = GeomSpace::CLIP_P5;
+	int cur_flag = SCICore::GeomSpace::CLIP_P5;
 	if ( (i>0 && i<7) ) {
 	    while(i--) {
 		
@@ -1364,6 +1376,7 @@ void OpenGL::setvisual(const clString& wname, int which, int width, int height)
   current_drawer=0;
   cerr << "choosing visual " << which << '\n';
   TCL::execute(clString("opengl ")+wname+" -visual "+to_string((int)visuals[which]->visualid)+" -direct true -geometry "+to_string(width)+"x"+to_string(height));
+  cerr << clString("opengl ")+wname+" -visual "+to_string((int)visuals[which]->visualid)+" -direct true -geometry "+to_string(width)+"x"+to_string(height) << endl;
   cerr << "done choosing visual\n";
 }
 
@@ -1454,6 +1467,10 @@ template class Mailbox<GetReq>;
 
 //
 // $Log$
+// Revision 1.2  1999/08/17 06:37:37  sparker
+// Merged in modifications from PSECore to make this the new "blessed"
+// version of SCIRun/Uintah.
+//
 // Revision 1.1  1999/07/27 16:57:51  mcq
 // Initial commit
 //

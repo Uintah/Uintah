@@ -12,16 +12,16 @@
  */
 
 
-#include <Modules/Salmon/Renderer.h>
-#include <Modules/Salmon/Roe.h>
-#include <Containers/HashTable.h>
-#include <Containers/String.h>
-#include <Geometry/BBox.h>
-#include <Malloc/Allocator.h>
+#include <PSECommon/Modules/Salmon/Renderer.h>
+#include <PSECommon/Modules/Salmon/Roe.h>
+#include <SCICore/Containers/HashTable.h>
+#include <SCICore/Containers/String.h>
+#include <SCICore/Geometry/BBox.h>
+#include <SCICore/Malloc/Allocator.h>
 #include <iostream.h>
 #include <values.h>
-#include <Util/NotFinished.h>
-#include <Multitask/AsyncReply.h>
+#include <SCICore/Util/NotFinished.h>
+#include <SCICore/Multitask/AsyncReply.h>
 
 namespace PSECommon {
 namespace Modules {
@@ -164,6 +164,10 @@ void Renderer::getData(int, AsyncReply<GeometryData*>* result)
 
 //
 // $Log$
+// Revision 1.2  1999/08/17 06:37:38  sparker
+// Merged in modifications from PSECore to make this the new "blessed"
+// version of SCIRun/Uintah.
+//
 // Revision 1.1  1999/07/27 16:57:52  mcq
 // Initial commit
 //

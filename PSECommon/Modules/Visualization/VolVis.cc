@@ -13,47 +13,47 @@
  */
 
 
-#include <Dataflow/Module.h>
-#include <CoreDatatypes/ScalarFieldRG.h>
-#include <CommonDatatypes/ScalarFieldPort.h>
-#include <CommonDatatypes/GeometryPort.h>
-#include <CommonDatatypes/ColorMapPort.h>
+#include <PSECore/Dataflow/Module.h>
+#include <SCICore/CoreDatatypes/ScalarFieldRG.h>
+#include <PSECore/CommonDatatypes/ScalarFieldPort.h>
+#include <PSECore/CommonDatatypes/GeometryPort.h>
+#include <PSECore/CommonDatatypes/ColorMapPort.h>
 
-#include <Geometry/BBox.h>
-#include <Geom/View.h>
-#include <Geom/TCLView.h>
-#include <Geom/TCLGeom.h>
-#include <Geometry/Point.h>
-#include <Geometry/Vector.h>
+#include <SCICore/Geometry/BBox.h>
+#include <SCICore/Geom/View.h>
+#include <SCICore/Geom/TCLView.h>
+#include <SCICore/Geom/TCLGeom.h>
+#include <SCICore/Geometry/Point.h>
+#include <SCICore/Geometry/Vector.h>
 
-#include <Geom/GeomOpenGL.h>
+#include <SCICore/Geom/GeomOpenGL.h>
 #include <GL/gl.h>
 #include <GL/glu.h>
 #include <GL/glx.h>
 
 
-#include <Malloc/Allocator.h>
-#include <TclInterface/TCLTask.h>
-#include <TclInterface/TCL.h>
+#include <SCICore/Malloc/Allocator.h>
+#include <SCICore/TclInterface/TCLTask.h>
+#include <SCICore/TclInterface/TCL.h>
 
 #include <tcl.h>
 #include <tk.h>
 
-#include <Containers/Array2.h>
-#include <Util/NotFinished.h>
-#include <Containers/String.h>
+#include <SCICore/Containers/Array2.h>
+#include <SCICore/Util/NotFinished.h>
+#include <SCICore/Containers/String.h>
 #include <iostream.h>
 #include <stdlib.h>
 #include <string.h>
-#include <Util/Timer.h>
+#include <SCICore/Util/Timer.h>
 
-#include <Multitask/Mailbox.h>
-#include <Multitask/Task.h>
-#include <Multitask/ITC.h>
+#include <SCICore/Multitask/Mailbox.h>
+#include <SCICore/Multitask/Task.h>
+#include <SCICore/Multitask/ITC.h>
 
-#include <Math/Trig.h>
+#include <SCICore/Math/Trig.h>
 
-#include <Modules/Visualization/FastRender.h>
+#include <PSECommon/Modules/Visualization/FastRender.h>
 #include "kuswik.h"
 
 
@@ -84,8 +84,8 @@ extern "C" GLXContext OpenGLGetContext(Tcl_Interp*, char*);
 namespace PSECommon {
 namespace Modules {
 
-using namespace PSECommon::Dataflow;
-using namespace PSECommon::CommonDatatypes;
+using namespace PSECore::Dataflow;
+using namespace PSECore::CommonDatatypes;
 using namespace SCICore::TclInterface;
 using namespace SCICore::GeomSpace;
 using namespace SCICore::Containers;
@@ -1776,6 +1776,10 @@ VolVis::CalculateRayIncrements ()
 
 //
 // $Log$
+// Revision 1.2  1999/08/17 06:37:55  sparker
+// Merged in modifications from PSECore to make this the new "blessed"
+// version of SCIRun/Uintah.
+//
 // Revision 1.1  1999/07/27 16:58:17  mcq
 // Initial commit
 //

@@ -12,35 +12,35 @@
  *  Copyright (C) 1995 SCI Group
  */
 
-#include <Util/NotFinished.h>
-#include <Dataflow/Module.h>
-#include <CommonDatatypes/GeometryPort.h>
-#include <Geometry/Point.h>
-#include <Malloc/Allocator.h>
-#include <TclInterface/TCLvar.h>
+#include <SCICore/Util/NotFinished.h>
+#include <PSECore/Dataflow/Module.h>
+#include <PSECore/CommonDatatypes/GeometryPort.h>
+#include <SCICore/Geometry/Point.h>
+#include <SCICore/Malloc/Allocator.h>
+#include <SCICore/TclInterface/TCLvar.h>
 
-#include <Widgets/PointWidget.h>
-#include <Widgets/ArrowWidget.h>
-#include <Widgets/CriticalPointWidget.h>
-#include <Widgets/CrosshairWidget.h>
-#include <Widgets/GaugeWidget.h>
-#include <Widgets/RingWidget.h>
-#include <Widgets/FrameWidget.h>
-#include <Widgets/ScaledFrameWidget.h>
-#include <Widgets/BoxWidget.h>
-#include <Widgets/ScaledBoxWidget.h>
-#include <Widgets/ViewWidget.h>
-#include <Widgets/LightWidget.h>
-#include <Widgets/PathWidget.h>
+#include <PSECore/Widgets/PointWidget.h>
+#include <PSECore/Widgets/ArrowWidget.h>
+#include <PSECore/Widgets/CriticalPointWidget.h>
+#include <PSECore/Widgets/CrosshairWidget.h>
+#include <PSECore/Widgets/GaugeWidget.h>
+#include <PSECore/Widgets/RingWidget.h>
+#include <PSECore/Widgets/FrameWidget.h>
+#include <PSECore/Widgets/ScaledFrameWidget.h>
+#include <PSECore/Widgets/BoxWidget.h>
+#include <PSECore/Widgets/ScaledBoxWidget.h>
+#include <PSECore/Widgets/ViewWidget.h>
+#include <PSECore/Widgets/LightWidget.h>
+#include <PSECore/Widgets/PathWidget.h>
 
 #include <iostream.h>
 
 namespace PSECommon {
 namespace Modules {
 
-using namespace PSECommon::Dataflow;
-using namespace PSECommon::CommonDatatypes;
-using namespace PSECommon::Widgets;
+using namespace PSECore::Dataflow;
+using namespace PSECore::CommonDatatypes;
+using namespace PSECore::Widgets;
 using namespace SCICore::TclInterface;
 using namespace SCICore::GeomSpace;
 
@@ -198,6 +198,10 @@ void WidgetTest::tcl_command(TCLArgs& args, void* userdata)
 
 //
 // $Log$
+// Revision 1.2  1999/08/17 06:37:55  sparker
+// Merged in modifications from PSECore to make this the new "blessed"
+// version of SCIRun/Uintah.
+//
 // Revision 1.1  1999/07/27 16:58:18  mcq
 // Initial commit
 //

@@ -12,11 +12,11 @@
  *  Copyright (C) 1994 SCI Group
  */
 
-#include <Geom/TCLGeom.h>
-#include <TclInterface/TCL.h>
-#include <TclInterface/TCLTask.h>
-#include <Geom/Color.h>
-#include <Geom/Material.h>
+#include <SCICore/Geom/TCLGeom.h>
+#include <SCICore/TclInterface/TCL.h>
+#include <SCICore/TclInterface/TCLTask.h>
+#include <SCICore/Geom/Color.h>
+#include <SCICore/Geom/Material.h>
 
 namespace SCICore {
 namespace GeomSpace {
@@ -103,6 +103,10 @@ void TCLMaterial::emit(ostream& out)
 
 //
 // $Log$
+// Revision 1.2  1999/08/17 06:39:23  sparker
+// Merged in modifications from PSECore to make this the new "blessed"
+// version of SCIRun/Uintah.
+//
 // Revision 1.1  1999/07/27 16:56:52  mcq
 // Initial commit
 //

@@ -38,7 +38,7 @@ WARNING
    
 ****************************************/
 
-class ThreadAlert {
+class SCICORESHARE ThreadAlert {
     friend class Thread;
     //////////
     //<i>No documentation provided</i>

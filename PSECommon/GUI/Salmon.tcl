@@ -183,8 +183,8 @@ itcl_class Roe {
 	pack $w.menu.spawn -side left
 	pack $w.menu.dialbox -side left
 	pack $w.menu.visual -side left
-	tk_menuBar $w.menu $w.menu.edit $w.menu.renderer \
-		$w.menu.spawn $w.menu.dialbox $w.menu.visual
+#	tk_menuBar $w.menu $w.menu.edit $w.menu.renderer \
+#		$w.menu.spawn $w.menu.dialbox $w.menu.visual
 
 	# Create Dialbox and attach to it
 	Dialbox $w.dialbox "Salmon - Translate/Scale"
@@ -238,10 +238,19 @@ itcl_class Roe {
 	pack $w.bframe.v.gohome -fill x -pady 2
 	frame $w.bframe.dolly
 	pack $w.bframe.dolly -side left -anchor nw 
-	button $w.bframe.dolly.in -text "In" -command "$this-c dolly .8"
-	button $w.bframe.dolly.out -text "Out" -command "$this-c dolly 1.25"
-	pack $w.bframe.dolly.in $w.bframe.dolly.out -fill x -padx 2 -pady 2 \
-		-anchor nw
+	frame $w.bframe.dolly.i
+	button $w.bframe.dolly.i.b -text "++" -command "$this-c dolly2 .8"
+	button $w.bframe.dolly.i.o -text "In" -command "$this-c dolly .8"
+	button $w.bframe.dolly.i.s -text "+" -command "$this-c dolly2 .96"
+	pack $w.bframe.dolly.i.b $w.bframe.dolly.i.o $w.bframe.dolly.i.s \
+		-fill x -padx 2 -pady 2 -side left -expand 1
+	frame $w.bframe.dolly.o
+	button $w.bframe.dolly.o.b -text "--" -command "$this-c dolly2 1.2"
+	button $w.bframe.dolly.o.o -text "Out" -command "$this-c dolly 1.25"
+	button $w.bframe.dolly.o.s -text "-" -command "$this-c dolly2 1.04"
+	pack $w.bframe.dolly.o.b $w.bframe.dolly.o.o $w.bframe.dolly.o.s \
+		-fill x -padx 2 -pady 2 -side left -expand 1
+	pack $w.bframe.dolly.i $w.bframe.dolly.o -fill x -anchor nw
 	
 	button $w.bframe.more -text "+" -padx 3 \
 		-font "-Adobe-Helvetica-bold-R-Normal-*-12-75-*" \
@@ -308,8 +317,8 @@ itcl_class Roe {
 	pack $m.objlist -side left -padx 2 -pady 2 -fill y
 	label $m.objlist.title -text "Objects:"
 	pack $m.objlist.title -side top
-	canvas $m.objlist.canvas -width 400 -height 100 \
-	        -scrollregion "0 0 400 100" \
+	canvas $m.objlist.canvas -width 390 -height 100 \
+	        -scrollregion "0 0 390 100" \
 		-yscrollcommand "$m.objlist.scroll set" -borderwidth 0 -yscrollincrement 10
 	pack $m.objlist.canvas -side right -padx 2 -pady 2 -fill y
 	
@@ -334,7 +343,7 @@ itcl_class Roe {
 		-command "$this-c tracker"
 	pack $m.tracker -side top
 
-	button $m.tracker_reset -text "Reset tracker" \
+	button $m.tracker_reset -text " Reset\nTracker" \
 		-command "$this-c reset_tracker"
 	pack $m.tracker_reset -side top
 	

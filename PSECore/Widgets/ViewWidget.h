@@ -15,10 +15,10 @@
 #ifndef SCI_project_View_Widget_h
 #define SCI_project_View_Widget_h 1
 
-#include <Widgets/BaseWidget.h>
-#include <Geom/View.h>
+#include <PSECore/Widgets/BaseWidget.h>
+#include <SCICore/Geom/View.h>
 
-namespace PSECommon {
+namespace PSECore {
 namespace Widgets {
 
 using SCICore::GeomSpace::View;
@@ -72,15 +72,19 @@ private:
 };
 
 } // End namespace Widgets
-} // End namespace PSECommon
+} // End namespace PSECore
 
 //
 // $Log$
+// Revision 1.2  1999/08/17 06:38:33  sparker
+// Merged in modifications from PSECore to make this the new "blessed"
+// version of SCIRun/Uintah.
+//
 // Revision 1.1  1999/07/27 16:56:10  mcq
 // Initial commit
 //
 // Revision 1.3  1999/05/06 20:17:26  dav
-// added back PSECommon .h files
+// added back PSECore .h files
 //
 // Revision 1.1.1.1  1999/04/24 23:12:29  dav
 // Import sources

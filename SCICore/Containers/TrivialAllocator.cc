@@ -12,8 +12,8 @@
  *  Copyright (C) 1994 SCI Group
  */
 
-#include <Containers/TrivialAllocator.h>
-#include <Malloc/Allocator.h>
+#include <SCICore/Containers/TrivialAllocator.h>
+#include <SCICore/Malloc/Allocator.h>
 #include <stdlib.h>
 
 namespace SCICore {
@@ -46,6 +46,10 @@ TrivialAllocator::~TrivialAllocator()
 
 //
 // $Log$
+// Revision 1.2  1999/08/17 06:38:39  sparker
+// Merged in modifications from PSECore to make this the new "blessed"
+// version of SCIRun/Uintah.
+//
 // Revision 1.1  1999/07/27 16:56:15  mcq
 // Initial commit
 //

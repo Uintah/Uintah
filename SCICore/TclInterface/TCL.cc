@@ -11,24 +11,26 @@
  *  Copyright (C) 1994 SCI Group
  */
 
-#include <Util/NotFinished.h>
-#include <Containers/String.h>
-//#include <Dataflow/Module.h>
-#include <Malloc/Allocator.h>
-#include <Multitask/Task.h>
-#include <TclInterface/GuiManager.h>
-#include <TclInterface/Remote.h>
-#include <TclInterface/TCL.h>
-#include <TclInterface/TCLTask.h>
-#include <TclInterface/TCLvar.h>
+#include <SCICore/Util/NotFinished.h>
+#include <SCICore/Containers/String.h>
+//#include <PSECore/Dataflow/Module.h>
+#include <SCICore/Malloc/Allocator.h>
+#include <SCICore/Multitask/Task.h>
+#include <SCICore/TclInterface/GuiManager.h>
+#include <SCICore/TclInterface/Remote.h>
+#include <SCICore/TclInterface/TCL.h>
+#include <SCICore/TclInterface/TCLTask.h>
+#include <SCICore/TclInterface/TCLvar.h>
 
 #include <tcl.h>
 #include <tk.h>
 #include <stdlib.h>
 #include <string.h>
+#ifndef _WIN32
 #include <unistd.h>                             // defines read() and write()
+#endif
 
-extern Tcl_Interp* the_interp;
+extern "C" Tcl_Interp* the_interp;
 
 namespace SCICore {
 namespace TclInterface {
@@ -51,11 +53,11 @@ static clString prefix()
     static int haveit=0;
     static clString pf;
     if(!haveit){
-	char* p;
-	if((p=getenv("PSE_WORK"))){
+	char* p = getenv("PSE_WORK");
+	if(p){
 	    pf=clString(p);
 	} else {
-	    cerr << "Error: PSE_WORK variable not set!\n";
+		printf("Error: PSE_WORK variable not set!\n");
 	    Task::exit_all(-1);
 	}
     }
@@ -68,11 +70,11 @@ static clString application()
     static int haveit=0;
     static clString app;
     if(!haveit){
-	char* a;
-	if((a=getenv("APPLICATION"))){
+	char* a = getenv("APPLICATION");
+	if(a){
 	    app=clString(a);
 	} else {
-	    cerr << "Error: APPLICATION environment variable not set!\n";
+		printf("Error; APPLICATION environment variable not set!\n");
 	    Task::exit_all(-1);
 	}
     }
@@ -81,10 +83,11 @@ static clString application()
 
 void TCL::execute(const clString& string)
 {
+#ifndef _WIN32
     if (gm != NULL) {
     	int skt = gm->getConnection();
 
-printf ("TCL::execute(%s): Got skt from gm->getConnection() = %d", 
+	printf ("TCL::execute(%s): Got skt from gm->getConnection() = %d", 
 	string(), skt);
 
 	// format request - no TCL variable name, just a string to execute
@@ -124,11 +127,17 @@ printf ("TCL::execute(%s): Got skt from gm->getConnection() = %d", string,skt);
 	}
         gm->putConnection (skt);
     }
-    else {
-        TCLTask::lock();
+    else 
+#endif
+	{
+		printf("TCL::execute() 1\n");
+	    TCLTask::lock();
         int code = Tcl_Eval(the_interp, string);
         if(code != TCL_OK)
-	    Tk_BackgroundError(the_interp);
+		{
+			Tk_BackgroundError(the_interp);
+			printf("Tcl_Eval(the_inter,%s) failed\n",string);
+		}
         TCLTask::unlock();
     }
 }
@@ -447,6 +456,10 @@ void TCL::set_tclvar(const clString& base, const clString& name,
 
 //
 // $Log$
+// Revision 1.2  1999/08/17 06:39:44  sparker
+// Merged in modifications from PSECore to make this the new "blessed"
+// version of SCIRun/Uintah.
+//
 // Revision 1.1  1999/07/27 16:57:15  mcq
 // Initial commit
 //

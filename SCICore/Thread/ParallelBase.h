@@ -29,7 +29,7 @@ WARNING
    
 ****************************************/
 
-class ParallelBase {
+class SCICORESHARE ParallelBase {
 protected:
     //////////
     //<i>No documentation provided</i>

@@ -29,40 +29,40 @@ hook up user interface buttons
  *  Copyright (C) 1994 SCI Group
  */
 
-#include <Tester/RigorousTest.h>
-#include <Containers/HashTable.h>
-#include <Util/NotFinished.h>
-#include <Math/Trig.h>
-#include <Dataflow/Module.h>
-#include <CommonDatatypes/ColorMapPort.h>
-#include <CommonDatatypes/GeometryPort.h>
-#include <CoreDatatypes/ScalarField.h>
-#include <CoreDatatypes/ScalarFieldRG.h>
-#include <CoreDatatypes/ScalarFieldUG.h>
-#include <CommonDatatypes/ScalarFieldPort.h>
-#include <CoreDatatypes/VectorField.h>
-#include <CoreDatatypes/VectorFieldUG.h>
-#include <CommonDatatypes/VectorFieldPort.h>
-#include <Geom/GeomCylinder.h>
-#include <Geom/GeomDisc.h>
-#include <Geom/GeomObj.h>
-#include <Geom/Material.h>
-#include <Geom/GeomTriStrip.h>
-#include <Geom/GeomGroup.h>
-#include <Geom/GeomPick.h>
-#include <Geom/GeomPolyline.h>
-#include <Geom/GeomSphere.h>
-#include <Geom/Switch.h>
-#include <Geom/GeomTube.h>
-#include <Geom/GeomLine.h>
-#include <Geometry/Point.h>
-#include <Malloc/Allocator.h>
-#include <Math/MinMax.h>
-#include <Multitask/Task.h>
-#include <Widgets/GaugeWidget.h>
-#include <Widgets/PointWidget.h>
-#include <Widgets/RingWidget.h>
-#include <Widgets/ScaledFrameWidget.h>
+#include <SCICore/Tester/RigorousTest.h>
+#include <SCICore/Containers/HashTable.h>
+#include <SCICore/Util/NotFinished.h>
+#include <SCICore/Math/Trig.h>
+#include <PSECore/Dataflow/Module.h>
+#include <PSECore/CommonDatatypes/ColorMapPort.h>
+#include <PSECore/CommonDatatypes/GeometryPort.h>
+#include <SCICore/CoreDatatypes/ScalarField.h>
+#include <SCICore/CoreDatatypes/ScalarFieldRG.h>
+#include <SCICore/CoreDatatypes/ScalarFieldUG.h>
+#include <PSECore/CommonDatatypes/ScalarFieldPort.h>
+#include <SCICore/CoreDatatypes/VectorField.h>
+#include <SCICore/CoreDatatypes/VectorFieldUG.h>
+#include <PSECore/CommonDatatypes/VectorFieldPort.h>
+#include <SCICore/Geom/GeomCylinder.h>
+#include <SCICore/Geom/GeomDisc.h>
+#include <SCICore/Geom/GeomObj.h>
+#include <SCICore/Geom/Material.h>
+#include <SCICore/Geom/GeomTriStrip.h>
+#include <SCICore/Geom/GeomGroup.h>
+#include <SCICore/Geom/GeomPick.h>
+#include <SCICore/Geom/GeomPolyline.h>
+#include <SCICore/Geom/GeomSphere.h>
+#include <SCICore/Geom/Switch.h>
+#include <SCICore/Geom/GeomTube.h>
+#include <SCICore/Geom/GeomLine.h>
+#include <SCICore/Geometry/Point.h>
+#include <SCICore/Malloc/Allocator.h>
+#include <SCICore/Math/MinMax.h>
+#include <SCICore/Multitask/Task.h>
+#include <PSECore/Widgets/GaugeWidget.h>
+#include <PSECore/Widgets/PointWidget.h>
+#include <PSECore/Widgets/RingWidget.h>
+#include <PSECore/Widgets/ScaledFrameWidget.h>
 
 #include <iostream.h>
 #include <values.h>
@@ -71,9 +71,9 @@ hook up user interface buttons
 namespace PSECommon {
 namespace Modules {
 
-using namespace PSECommon::Dataflow;
-using namespace PSECommon::CommonDatatypes;
-using namespace PSECommon::Widgets;
+using namespace PSECore::Dataflow;
+using namespace PSECore::CommonDatatypes;
+using namespace PSECore::Widgets;
 using namespace SCICore::TclInterface;
 using namespace SCICore::GeomSpace;
 using namespace SCICore::Containers;
@@ -2069,6 +2069,10 @@ void SLSourceInfo::pick_source(const clString& sname,
 
 //
 // $Log$
+// Revision 1.2  1999/08/17 06:37:54  sparker
+// Merged in modifications from PSECore to make this the new "blessed"
+// version of SCIRun/Uintah.
+//
 // Revision 1.1  1999/07/27 16:58:17  mcq
 // Initial commit
 //

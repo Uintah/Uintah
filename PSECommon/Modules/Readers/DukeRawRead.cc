@@ -12,22 +12,22 @@
  *  Copyright (C) 1994 SCI Group
  */
 
-#include <Util/NotFinished.h>
-#include <Dataflow/Module.h>
-#include <CommonDatatypes/ScalarFieldPort.h>
-#include <CoreDatatypes/ScalarField.h>
-#include <CoreDatatypes/ScalarFieldRG.h>
-#include <Malloc/Allocator.h>
-#include <TclInterface/TCLTask.h>
-#include <TclInterface/TCLvar.h>
+#include <SCICore/Util/NotFinished.h>
+#include <PSECore/Dataflow/Module.h>
+#include <PSECore/CommonDatatypes/ScalarFieldPort.h>
+#include <SCICore/CoreDatatypes/ScalarField.h>
+#include <SCICore/CoreDatatypes/ScalarFieldRG.h>
+#include <SCICore/Malloc/Allocator.h>
+#include <SCICore/TclInterface/TCLTask.h>
+#include <SCICore/TclInterface/TCLvar.h>
 
 #include <stdio.h>
 
 namespace PSECommon {
 namespace Modules {
 
-using namespace PSECommon::Dataflow;
-using namespace PSECommon::CommonDatatypes;
+using namespace PSECore::Dataflow;
+using namespace PSECore::CommonDatatypes;
 using namespace SCICore::TclInterface;
 using namespace SCICore::PersistentSpace;
 
@@ -186,6 +186,10 @@ void DukeRawReader::execute()
 
 //
 // $Log$
+// Revision 1.2  1999/08/17 06:37:33  sparker
+// Merged in modifications from PSECore to make this the new "blessed"
+// version of SCIRun/Uintah.
+//
 // Revision 1.1  1999/07/27 16:57:47  mcq
 // Initial commit
 //

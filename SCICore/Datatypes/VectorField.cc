@@ -12,8 +12,8 @@
  *  Copyright (C) 199? SCI Group
  */
 
-#include <CoreDatatypes/VectorField.h>
-#include <Containers/String.h>
+#include <SCICore/CoreDatatypes/VectorField.h>
+#include <SCICore/Containers/String.h>
 
 namespace SCICore {
 namespace CoreDatatypes {
@@ -94,6 +94,10 @@ void VectorField::io(Piostream& stream)
 
 //
 // $Log$
+// Revision 1.2  1999/08/17 06:38:57  sparker
+// Merged in modifications from PSECore to make this the new "blessed"
+// version of SCIRun/Uintah.
+//
 // Revision 1.1  1999/07/27 16:56:31  mcq
 // Initial commit
 //

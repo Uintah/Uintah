@@ -12,10 +12,10 @@
  *  Copyright (C) 1994 SCI Group
  */
 
-#include <CoreDatatypes/VectorFieldZone.h>
-#include <Util/NotFinished.h>
-#include <Containers/String.h>
-#include <Malloc/Allocator.h>
+#include <SCICore/CoreDatatypes/VectorFieldZone.h>
+#include <SCICore/Util/NotFinished.h>
+#include <SCICore/Containers/String.h>
+#include <SCICore/Malloc/Allocator.h>
 
 namespace SCICore {
 namespace CoreDatatypes {
@@ -101,6 +101,10 @@ void VectorFieldZone::get_boundary_lines(Array1<Point>& lines)
 
 //
 // $Log$
+// Revision 1.2  1999/08/17 06:39:00  sparker
+// Merged in modifications from PSECore to make this the new "blessed"
+// version of SCIRun/Uintah.
+//
 // Revision 1.1  1999/07/27 16:56:33  mcq
 // Initial commit
 //

@@ -12,12 +12,12 @@
  *  Copyright (C) 199? SCI Group
  */
 
-#include <CoreDatatypes/TriDiagonalMatrix.h>
-#include <Util/NotFinished.h>
-#include <CoreDatatypes/ColumnMatrix.h>
-#include <Math/LinAlg.h>
-#include <Math/MinMax.h>
-#include <Math/MiscMath.h>
+#include <SCICore/CoreDatatypes/TriDiagonalMatrix.h>
+#include <SCICore/Util/NotFinished.h>
+#include <SCICore/CoreDatatypes/ColumnMatrix.h>
+#include <SCICore/Math/LinAlg.h>
+#include <SCICore/Math/MinMax.h>
+#include <SCICore/Math/MiscMath.h>
 
 namespace SCICore {
 namespace CoreDatatypes {
@@ -169,6 +169,10 @@ void TriDiagonalMatrix::solve(ColumnMatrix& cc)
 
 //
 // $Log$
+// Revision 1.2  1999/08/17 06:38:56  sparker
+// Merged in modifications from PSECore to make this the new "blessed"
+// version of SCIRun/Uintah.
+//
 // Revision 1.1  1999/07/27 16:56:30  mcq
 // Initial commit
 //

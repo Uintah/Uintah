@@ -12,19 +12,20 @@
  *  Copyright (C) 1994 SCI Group
  */
 
-#include <Util/NotFinished.h>
-#include <Persistent/Pstreams.h>
-#include <Dataflow/Module.h>
-#include <CommonDatatypes/ContourSetPort.h>
-#include <CoreDatatypes/ContourSet.h>
-#include <Malloc/Allocator.h>
-#include <TclInterface/TCLvar.h>
+#include <SCICore/Util/NotFinished.h>
+#include <SCICore/Persistent/Pstreams.h>
+#include <SCICore/CoreDatatypes/ContourSet.h>
+#include <SCICore/Malloc/Allocator.h>
+#include <SCICore/TclInterface/TCLvar.h>
+
+#include <PSECore/Dataflow/Module.h>
+#include <PSECore/CommonDatatypes/ContourSetPort.h>
 
 namespace PSECommon {
 namespace Modules {
 
-using namespace PSECommon::Dataflow;
-using namespace PSECommon::CommonDatatypes;
+using namespace PSECore::Dataflow;
+using namespace PSECore::CommonDatatypes;
 using namespace SCICore::TclInterface;
 using namespace SCICore::PersistentSpace;
 
@@ -105,6 +106,10 @@ void ContourSetWriter::execute()
 
 //
 // $Log$
+// Revision 1.2  1999/08/17 06:37:56  sparker
+// Merged in modifications from PSECore to make this the new "blessed"
+// version of SCIRun/Uintah.
+//
 // Revision 1.1  1999/07/27 16:58:19  mcq
 // Initial commit
 //

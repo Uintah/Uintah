@@ -42,24 +42,24 @@
 
 
 
-#include <Util/NotFinished.h>
-#include <Dataflow/Module.h>
-#include <CommonDatatypes/ColumnMatrixPort.h>
-#include <CoreDatatypes/SparseRowMatrix.h>
-#include <CommonDatatypes/MatrixPort.h>
-#include <CommonDatatypes/SurfacePort.h>
-#include <Geometry/Point.h>
-#include <Malloc/Allocator.h>
-#include <TclInterface/TCLvar.h>
+#include <SCICore/Util/NotFinished.h>
+#include <PSECore/Dataflow/Module.h>
+#include <PSECore/CommonDatatypes/ColumnMatrixPort.h>
+#include <SCICore/CoreDatatypes/SparseRowMatrix.h>
+#include <PSECore/CommonDatatypes/MatrixPort.h>
+#include <PSECore/CommonDatatypes/SurfacePort.h>
+#include <SCICore/Geometry/Point.h>
+#include <SCICore/Malloc/Allocator.h>
+#include <SCICore/TclInterface/TCLvar.h>
 #include <strstream.h>
 
-#include <Multitask/Task.h>
+#include <SCICore/Multitask/Task.h>
 
 namespace PSECommon {
 namespace Modules {
 
-using namespace PSECommon::Dataflow;
-using namespace PSECommon::CommonDatatypes;
+using namespace PSECore::Dataflow;
+using namespace PSECore::CommonDatatypes;
 using namespace SCICore::TclInterface;
 using namespace SCICore::GeomSpace;
 using namespace SCICore::Multitask;
@@ -285,7 +285,10 @@ void SolveMatrix::append_values(int niter, const Array1<double>& errlist,
     str << id << " append_graph " << niter << " \"";
     int i;
     for(i=last_update;i<errlist.size();i++){
-	str << i << " " << errlist[i] << " ";
+	if (errlist[i]<1000000) 
+	    str << i << " " << errlist[i] << " ";
+	else 
+	    str << i << " 1000000 ";
     }
     str << "\" \"";
     for(i=last_errupdate;i<targetidx.size();i++){
@@ -772,6 +775,8 @@ void SolveMatrix::jacobi_sci(Matrix* matrix,
     double bnorm=rhs.vector_norm(flop, memref);
     double err=Z.vector_norm(flop, memref)/bnorm;
 
+    if (!(err < 10000000)) err=1000000;
+
     orig_error.set(err);
     current_error.set(err);
 
@@ -832,6 +837,8 @@ void SolveMatrix::jacobi_sci(Matrix* matrix,
 	matrix->mult(lhs, Z, flop, memref);
 	Sub(Z, rhs, Z, flop, memref);
 	err=Z.vector_norm(flop, memref)/bnorm;
+
+	if (!(err < 10000000)) err=1000000;
 
 	errlist.add(err);
 
@@ -1009,12 +1016,17 @@ void SolveMatrix::parallel_conjugate_gradient(CGData* data, int processor)
     data->P=new ColumnMatrix(size);
 //     ColumnMatrix& P=*data->P;
     data->err=R.vector_norm(stats->flop, stats->memref)/data->bnorm;
+
     if(data->err == 0){
       lhs=rhs;
       stats->memref+=2*size*sizeof(double);
       return;
+    } else {
+	int ev=(data->err<1000000);
+//	cerr << "EVALUATING "<<ev<<"\n";
+	if (!ev) data->err=1000000;
     }
-    
+
     data->niter=0;
     data->toomany=maxiter.get();
     if(data->toomany == 0)
@@ -1115,6 +1127,12 @@ void SolveMatrix::parallel_conjugate_gradient(CGData* data, int processor)
     err=0;
     for(ii=0;ii<data->np;ii++)
       err+=data->res3[ii].r;
+
+    int ev=(err<1000000);
+//    cerr << "EVALUATING2 "<<ev<<"\n";
+    if (!ev) err=1000000;
+
+
     stats->gflop+=stats->flop/1000000000;
     stats->flop=stats->flop%1000000000;
     stats->grefs+=stats->memref/1000000000;
@@ -1146,8 +1164,10 @@ void SolveMatrix::parallel_conjugate_gradient(CGData* data, int processor)
 	    update_progress(progress);
 	  }
 	}
-	if(data->niter%60 == 0)
+
+	if(emit_partial.get() && data->niter%60 == 0)
 	  solport->send_intermediate(lhs.clone());
+
       }
     }
   }
@@ -1283,6 +1303,10 @@ void SolveMatrix::parallel_bi_conjugate_gradient(CGData* data, int processor)
       lhs=rhs;
       stats->memref+=2*size*sizeof(double);
       return;
+    } else {
+	int ev=(data->err<1000000);
+//	cerr << "EVALUATING "<<ev<<"\n";
+	if (!ev) data->err=1000000;
     }
     
     data->niter=0;
@@ -1425,6 +1449,11 @@ void SolveMatrix::parallel_bi_conjugate_gradient(CGData* data, int processor)
     err=0;
     for(ii=0;ii<data->np;ii++)
       err+=data->res3[ii].r;
+
+    int ev=(err<1000000);
+//    cerr << "EVALUATING2 "<<ev<<"\n";
+    if (!ev) err=1000000;
+
     stats->gflop+=stats->flop/1000000000;
     stats->flop=stats->flop%1000000000;
     stats->grefs+=stats->memref/1000000000;
@@ -1489,6 +1518,10 @@ void SolveMatrix::parallel_bi_conjugate_gradient(CGData* data, int processor)
 
 //
 // $Log$
+// Revision 1.2  1999/08/17 06:37:31  sparker
+// Merged in modifications from PSECore to make this the new "blessed"
+// version of SCIRun/Uintah.
+//
 // Revision 1.1  1999/07/27 16:57:46  mcq
 // Initial commit
 //

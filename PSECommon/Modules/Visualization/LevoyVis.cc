@@ -20,14 +20,14 @@
  *
  */
 
-#include <config.h>
+#include <SCICore/config.h>
 #undef SCI_ASSERTION_LEVEL_3
 #define SCI_ASSERTION_LEVEL_2
 
 #include "kuswik.h"
-#include <Util/Timer.h>
-#include <Modules/Visualization/LevoyVis.h>
-#include <Math/MiscMath.h>
+#include <SCICore/Util/Timer.h>
+#include <PSECommon/Modules/Visualization/LevoyVis.h>
+#include <SCICore/Math/MiscMath.h>
 #include "FastRender.h"
 
 

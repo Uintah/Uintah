@@ -13,19 +13,19 @@
  *  Copyright (C) 1999 SCI Group
  */
 
-#include <Persistent/Pstreams.h>
-#include <Dataflow/Module.h>
-#include <Geom/GeomObj.h>
-#include <CommonDatatypes/GeometryPort.h>
-#include <Malloc/Allocator.h>
-#include <CommonDatatypes/GeometryComm.h>
-#include <TclInterface/TCLvar.h>
+#include <SCICore/Persistent/Pstreams.h>
+#include <PSECore/Dataflow/Module.h>
+#include <SCICore/Geom/GeomObj.h>
+#include <PSECore/CommonDatatypes/GeometryPort.h>
+#include <SCICore/Malloc/Allocator.h>
+#include <PSECore/CommonDatatypes/GeometryComm.h>
+#include <SCICore/TclInterface/TCLvar.h>
 
 namespace PSECommon {
 namespace Modules {
 
-using namespace PSECommon::Dataflow;
-using namespace PSECommon::CommonDatatypes;
+using namespace PSECore::Dataflow;
+using namespace PSECore::CommonDatatypes;
 using namespace SCICore::TclInterface;
 using namespace SCICore::PersistentSpace;
 
@@ -116,7 +116,7 @@ void GeometryWriter::process_event() {
       }
 
       // Write the file
-      Pio(*stream, gmsg->obj);
+      SCICore::GeomSpace::Pio(*stream, gmsg->obj);
       delete stream;
       done = 1;
     }
@@ -146,6 +146,10 @@ void GeometryWriter::execute() {
 
 //
 // $Log$
+// Revision 1.2  1999/08/17 06:37:56  sparker
+// Merged in modifications from PSECore to make this the new "blessed"
+// version of SCIRun/Uintah.
+//
 // Revision 1.1  1999/07/27 16:58:19  mcq
 // Initial commit
 //

@@ -12,20 +12,20 @@
  *  Copyright (C) 1995 SCI Group
  */
 
-#include <Util/NotFinished.h>
-#include <Persistent/Pstreams.h>
-#include <Dataflow/Module.h>
-#include <CommonDatatypes/MeshPort.h>
-#include <CoreDatatypes/Mesh.h>
-#include <TclInterface/TCLvar.h>
+#include <SCICore/Util/NotFinished.h>
+#include <SCICore/Persistent/Pstreams.h>
+#include <PSECore/Dataflow/Module.h>
+#include <PSECore/CommonDatatypes/MeshPort.h>
+#include <SCICore/CoreDatatypes/Mesh.h>
+#include <SCICore/TclInterface/TCLvar.h>
 #include <fstream.h>
 #include <string.h>
 
 namespace PSECommon {
 namespace Modules {
 
-using namespace PSECommon::Dataflow;
-using namespace PSECommon::CommonDatatypes;
+using namespace PSECore::Dataflow;
+using namespace PSECore::CommonDatatypes;
 using namespace SCICore::TclInterface;
 using namespace SCICore::PersistentSpace;
 
@@ -120,6 +120,10 @@ void TetraWriter::execute()
 
 //
 // $Log$
+// Revision 1.2  1999/08/17 06:37:57  sparker
+// Merged in modifications from PSECore to make this the new "blessed"
+// version of SCIRun/Uintah.
+//
 // Revision 1.1  1999/07/27 16:58:21  mcq
 // Initial commit
 //

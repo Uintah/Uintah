@@ -12,11 +12,11 @@
  *  Copyright (C) 1994 SCI Group
  */
 
-#include <CoreDatatypes/Matrix.h>
-#include <CoreDatatypes/ColumnMatrix.h>
-#include <Util/Assert.h>
-#include <Util/NotFinished.h>
-#include <Containers/String.h>
+#include <SCICore/CoreDatatypes/Matrix.h>
+#include <SCICore/CoreDatatypes/ColumnMatrix.h>
+#include <SCICore/Util/Assert.h>
+#include <SCICore/Util/NotFinished.h>
+#include <SCICore/Containers/String.h>
 
 namespace SCICore {
 namespace CoreDatatypes {
@@ -105,6 +105,10 @@ void Mult(ColumnMatrix& result, const Matrix& mat, const ColumnMatrix& v)
 
 //
 // $Log$
+// Revision 1.2  1999/08/17 06:38:47  sparker
+// Merged in modifications from PSECore to make this the new "blessed"
+// version of SCIRun/Uintah.
+//
 // Revision 1.1  1999/07/27 16:56:23  mcq
 // Initial commit
 //

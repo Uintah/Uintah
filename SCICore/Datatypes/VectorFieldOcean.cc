@@ -12,12 +12,13 @@
  *  Copyright (C) 1994 SCI Group
  */
 
-#include <CoreDatatypes/VectorFieldOcean.h>
-#include <Util/NotFinished.h>
-#include <Malloc/Allocator.h>
-#include <Geom/GeomGrid.h>
-
+#include <SCICore/CoreDatatypes/VectorFieldOcean.h>
+#include <SCICore/Util/NotFinished.h>
+#include <SCICore/Malloc/Allocator.h>
+#include <SCICore/Geom/GeomGrid.h>
+#ifndef _WIN32
 #include <sys/mman.h>
+#endif
 #include <sys/stat.h>
 #include <iostream.h>
 #include <fcntl.h>
@@ -28,6 +29,9 @@
 #define MMAP_TYPE void*
 #endif
 #include <stdio.h>
+#ifdef _WIN32
+#include <io.h>
+#endif
 
 namespace SCICore {
 namespace CoreDatatypes {
@@ -57,11 +61,15 @@ VectorFieldOcean::VectorFieldOcean(const clString& filename, const clString& dep
     data=0;
     return;
   }
+#ifndef SCI_NOMMAP_IO
   data=(float*)mmap(0, buf.st_size, PROT_READ, MAP_PRIVATE, fd, 0);
   if(data == (float*)-1){
     cerr << "Error mapping file...\n";
     data=0;
   }
+#else
+  data=0;
+#endif
   close(fd);
   double depthscale=1./50;
   bmin=Point(0,0,-5200*depthscale);
@@ -78,11 +86,15 @@ VectorFieldOcean::VectorFieldOcean(const clString& filename, const clString& dep
     data=0;
     return;
   }
+#ifndef SCI_NOMMAP_IO
   depth=(int*)mmap(0, buf.st_size, PROT_READ, MAP_PRIVATE, fd, 0);
   if(depth == (int*)-1){
     cerr << "Error mapping file...\n";
     data=0;
   }
+#else
+  data=0;
+#endif
   close(fd);
 
   depthval.add(0.0);
@@ -112,8 +124,10 @@ VectorFieldOcean::VectorFieldOcean(const clString& filename, const clString& dep
 
 VectorFieldOcean::~VectorFieldOcean()
 {
+#ifndef SCI_NOMMAP_IO
   munmap((MMAP_TYPE)data, 1280*896*20*2*sizeof(float));
   munmap((MMAP_TYPE)depth, 1280*896*sizeof(int));
+#endif
 }
 
 void VectorFieldOcean::locate(const Point& p, int& ix, int& iy, int& iz)
@@ -253,6 +267,10 @@ void VectorFieldOcean::get_boundary_lines(Array1<Point>&)
 
 //
 // $Log$
+// Revision 1.2  1999/08/17 06:38:58  sparker
+// Merged in modifications from PSECore to make this the new "blessed"
+// version of SCIRun/Uintah.
+//
 // Revision 1.1  1999/07/27 16:56:32  mcq
 // Initial commit
 //

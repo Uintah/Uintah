@@ -14,16 +14,18 @@
 #ifndef SCI_Geom_HeadLight_h
 #define SCI_Geom_HeadLight_h 1
 
-#include <Geom/Light.h>
-#include <Geom/Color.h>
-#include <Geometry/Point.h>
+#include <SCICore/share/share.h>
+
+#include <SCICore/Geom/Light.h>
+#include <SCICore/Geom/Color.h>
+#include <SCICore/Geometry/Point.h>
 
 namespace SCICore {
 namespace GeomSpace {
 
 using SCICore::PersistentSpace::Persistent;
 
-class HeadLight : public Light {
+class SCICORESHARE HeadLight : public Light {
     Color c;
 public:
     HeadLight(const clString& name, const Color&);
@@ -31,13 +33,13 @@ public:
     virtual void compute_lighting(const View& view, const Point& at,
 				  Color&, Vector&);
     virtual GeomObj* geom();
-#ifdef SCI_OPENGL
-    virtual void opengl_setup(const View& view, DrawInfoOpenGL*, int& idx);
-#endif
     virtual void lintens(const OcclusionData& od, const Point& hit_position,
 			 Color& light, Vector& light_dir);
     virtual void io(Piostream&);
     static PersistentTypeID type_id;
+#ifdef SCI_OPENGL
+    virtual void opengl_setup(const View& view, DrawInfoOpenGL*, int& idx);
+#endif
 };
 
 } // End namespace GeomSpace
@@ -45,6 +47,10 @@ public:
 
 //
 // $Log$
+// Revision 1.2  1999/08/17 06:39:18  sparker
+// Merged in modifications from PSECore to make this the new "blessed"
+// version of SCIRun/Uintah.
+//
 // Revision 1.1  1999/07/27 16:56:48  mcq
 // Initial commit
 //

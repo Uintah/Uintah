@@ -12,8 +12,8 @@
  *  Copyright (C) 1994 SCI Group
  */
 
-#include <Geom/GeomObj.h>
-#include <Geometry/Vector.h>
+#include <SCICore/Geom/GeomObj.h>
+#include <SCICore/Geometry/Vector.h>
 #include <iostream.h>
 
 namespace SCICore {
@@ -59,14 +59,6 @@ void GeomObj::io(Piostream&)
     // Nothing for now...
 }
 
-} // End namespace GeomSpace
-} // End namespace SCICore
-
-namespace SCICore {
-namespace PersistentSpace {
-
-using namespace GeomSpace;
-
 void Pio( Piostream & stream, GeomObj *& obj )
 {
     Persistent* tmp=obj;
@@ -80,6 +72,10 @@ void Pio( Piostream & stream, GeomObj *& obj )
 
 //
 // $Log$
+// Revision 1.2  1999/08/17 06:39:09  sparker
+// Merged in modifications from PSECore to make this the new "blessed"
+// version of SCIRun/Uintah.
+//
 // Revision 1.1  1999/07/27 16:56:40  mcq
 // Initial commit
 //

@@ -14,9 +14,9 @@
 #ifndef SCI_project_VectorFieldRG_h
 #define SCI_project_VectorFieldRG_h 1
 
-#include <CoreDatatypes/VectorField.h>
-#include <Containers/Array1.h>
-#include <Containers/Array3.h>
+#include <SCICore/CoreDatatypes/VectorField.h>
+#include <SCICore/Containers/Array1.h>
+#include <SCICore/Containers/Array3.h>
 
 namespace SCICore {
 namespace CoreDatatypes {
@@ -24,7 +24,7 @@ namespace CoreDatatypes {
 using SCICore::Containers::Array1;
 using SCICore::Containers::Array3;
 
-class VectorFieldRG : public VectorField {
+class SCICORESHARE VectorFieldRG : public VectorField {
 public:
     int nx;
     int ny;
@@ -54,6 +54,10 @@ public:
 
 //
 // $Log$
+// Revision 1.2  1999/08/17 06:38:59  sparker
+// Merged in modifications from PSECore to make this the new "blessed"
+// version of SCIRun/Uintah.
+//
 // Revision 1.1  1999/07/27 16:56:32  mcq
 // Initial commit
 //

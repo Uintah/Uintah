@@ -1,11 +1,9 @@
 SRCTOP   = @top_srcdir@
 SRCDIR   = @srcdir@
-OBJTOP   = ../../../..
+OBJTOP   = ../../..
 
-SRCS     = ParticleSetReader.cc TriangleReader.cc
+SRCS     = ParticleSetReader.cc
 
-INCLUDES = -I$(OBJTOP) -I$(SRCTOP)/libs \
-           -I$(SRCTOP)/libs/PSECore -I$(SRCTOP)/libs/SCICore \
-           -I$(SRCTOP)/packages/Uintah
+INCLUDES = -I$(OBJTOP)
 
 include $(SRCTOP)/scripts/objs.mk

@@ -53,7 +53,7 @@ extern int Tk_RangeCmd _ANSI_ARGS_((ClientData clientData,
 extern int Tk_CursorCmd _ANSI_ARGS_((ClientData clientData,
 	Tcl_Interp *interp, int argc, char **argv));
 extern int BLineInit _ANSI_ARGS_((void));
-/* extern int Blt_Init _ANSI_ARGS_((Tcl_Interp* interp));*/
+// extern int Blt_Init _ANSI_ARGS_((Tcl_Interp* interp));
 extern int Table_Init _ANSI_ARGS_((Tcl_Interp* interp));
 
 /* include tclInt.h for access to namespace API */
@@ -247,11 +247,10 @@ printf("main = %p\n", main);
     /*
      * Add BLT....
      */
-/*
-    if (Blt_Init(interp) == TCL_ERROR) {
-	return TCL_ERROR;
-    }
-*/
+//    if (Blt_Init(interp) == TCL_ERROR) {
+//	return TCL_ERROR;
+//    }
+
 #if 0
     /*
      * Add the table extensions
