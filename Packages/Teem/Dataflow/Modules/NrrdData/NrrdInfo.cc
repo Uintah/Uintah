@@ -213,70 +213,63 @@ NrrdInfo::update_input_attributes(NrrdDataHandle nh)
       gui->execute(lab.str());
     }
 
-    if (nh->nrrd->axis[i].kind == NULL || nh->nrrd->axis[i].kind == nrrdKindUnknown) {
+    switch(nh->nrrd->axis[i].kind) {
+    case nrrdKindDomain:
+      kind << "set " << id.c_str() << "-kind" << i 
+           << " {nrrdKindDomain}";
+      gui->execute(kind.str());
+      break;
+    case nrrdKindScalar:
+      kind << "set " << id.c_str() << "-kind" << i 
+           << " {nrrdKindScalar}";
+      gui->execute(kind.str());
+      break;
+    case nrrdKind3Color:
+      kind << "set " << id.c_str() << "-kind" << i 
+           << " {nrrdKind3Color}";
+      gui->execute(kind.str());
+      break;
+    case nrrdKind3Vector:
+      kind << "set " << id.c_str() << "-kind" << i 
+           << " {nrrdKind3Vector}";
+      gui->execute(kind.str());
+      break;
+    case nrrdKind3Normal:
+      kind << "set " << id.c_str() << "-kind" << i 
+           << " {nrrdKind3Normal}";
+      gui->execute(kind.str());
+      break;
+    case nrrdKind3DSymTensor:
+      kind << "set " << id.c_str() << "-kind" << i 
+           << " {nrrdKind3DSymTensor}";
+      gui->execute(kind.str());
+      break;
+    case nrrdKind3DMaskedSymTensor:
+      kind << "set " << id.c_str() << "-kind" << i 
+           << " {nrrdKind3DMaskedSymTensor}";
+      gui->execute(kind.str());
+      break;
+    case nrrdKind3DTensor:
+      kind << "set " << id.c_str() << "-kind" << i 
+           << " {nrrdKind3DTensor}";
+      gui->execute(kind.str());
+      break;
+    case nrrdKindList:
+      kind << "set " << id.c_str() << "-kind" << i 
+           << " {nrrdKindList}";
+      gui->execute(kind.str());
+      break;	
+    case nrrdKindStub:
+      kind << "set " << id.c_str() << "-kind" << i 
+           << " {nrrdKindStub}";
+      gui->execute(kind.str());
+      break;	
+    default:
       nh->nrrd->axis[i].kind = nrrdKindUnknown;
       kind << "set " << id.c_str() << "-kind" << i 
-	  << " {" << "nrrdKindUnknown" << "}";
+           << " {" << "nrrdKindUnknown" << "}";
       gui->execute(kind.str());
-    } else {
-      switch(nh->nrrd->axis[i].kind) {
-      case nrrdKindDomain:
-	kind << "set " << id.c_str() << "-kind" << i 
-	    << " {nrrdKindDomain}";
-	gui->execute(kind.str());
-	break;
-      case nrrdKindScalar:
-	kind << "set " << id.c_str() << "-kind" << i 
-	    << " {nrrdKindScalar}";
-	gui->execute(kind.str());
-	break;
-      case nrrdKind3Color:
-	kind << "set " << id.c_str() << "-kind" << i 
-	    << " {nrrdKind3Color}";
-	gui->execute(kind.str());
-	break;
-      case nrrdKind3Vector:
-	kind << "set " << id.c_str() << "-kind" << i 
-	    << " {nrrdKind3Vector}";
-	gui->execute(kind.str());
-	break;
-      case nrrdKind3Normal:
-	kind << "set " << id.c_str() << "-kind" << i 
-	    << " {nrrdKind3Normal}";
-	gui->execute(kind.str());
-	break;
-      case nrrdKind3DSymTensor:
-	kind << "set " << id.c_str() << "-kind" << i 
-	    << " {nrrdKind3DSymTensor}";
-	gui->execute(kind.str());
-	break;
-      case nrrdKind3DMaskedSymTensor:
-	kind << "set " << id.c_str() << "-kind" << i 
-	    << " {nrrdKind3DMaskedSymTensor}";
-	gui->execute(kind.str());
-	break;
-      case nrrdKind3DTensor:
-	kind << "set " << id.c_str() << "-kind" << i 
-	    << " {nrrdKind3DTensor}";
-	gui->execute(kind.str());
-	break;
-      case nrrdKindList:
-	kind << "set " << id.c_str() << "-kind" << i 
-	    << " {nrrdKindList}";
-	gui->execute(kind.str());
-	break;	
-      case nrrdKindStub:
-	kind << "set " << id.c_str() << "-kind" << i 
-	    << " {nrrdKindStub}";
-	gui->execute(kind.str());
-	break;	
-      default:
-	nh->nrrd->axis[i].kind = nrrdKindUnknown;
-	kind << "set " << id.c_str() << "-kind" << i 
-	    << " {" << "nrrdKindUnknown" << "}";
-	gui->execute(kind.str());
-	break;
-      }
+      break;
     }
 
     spac << "set " << id.c_str() << "-spacing" << i 
