@@ -16,153 +16,150 @@
 */
 
 /*
- *  ConductivitySearch.cc:  Solve for the optimal conductivities for a mesh
+ *  ConductivitySearch.cc:  Search for the optimal conductivity
  *
  *  Written by:
  *   David Weinstein
  *   Department of Computer Science
  *   University of Utah
- *   August 2000
+ *   May 1999
  *
- *  Copyright (C) 2000 SCI Institute
+ *  Copyright (C) 1999 SCI Institute
  *
  */
 
-#include <Packages/DaveW/ThirdParty/NumRec/amoeba.h>
-#include <Packages/DaveW/ThirdParty/NumRec/nrutil.h>
 #include <Dataflow/Network/Module.h>
-#include <Dataflow/Ports/ColumnMatrixPort.h>
 #include <Dataflow/Ports/MatrixPort.h>
-#include <Dataflow/Ports/MeshPort.h>
+#include <Dataflow/Ports/FieldPort.h>
+#include <Core/Containers/Array2.h>
 #include <Core/Containers/String.h>
-#include <Core/Datatypes/DenseMatrix.h>
-#include <Core/Datatypes/SparseRowMatrix.h>
-#include <Core/Datatypes/SparseRowMatrix.h>
+#include <Core/Datatypes/ColumnMatrix.h>
+#include <Core/Datatypes/TetVol.h>
 #include <Core/Math/MusilRNG.h>
 #include <Core/GuiInterface/GuiVar.h>
 #include <Core/Thread/Mutex.h>
-#include <Core/Thread/Parallel.h>
-#include <Core/Thread/Semaphore.h>
-#include <Core/Thread/Thread.h>
 #include <iostream>
 using std::cerr;
 using std::endl;
 #include <stdio.h>
 #include <math.h>
 
-namespace DaveW {
+
+namespace BioPSE {
 using namespace SCIRun;
 
-
-// these static variables are necessary b/c NumRec needs a pointer
-// to a static function (error_eval) in Amoeba.  the variables
-// referenced in that function, therefore, need to be static.  ugh.
-    
-double ** _CS_p; //holds initial dipole configuration 
-int _CS_nCondReg;
-int _CS_in_bounds;
-int _CS_need_error;
-int _CS_send_pos;
-int _CS_stop;
-MatrixHandle _CS_cond_params;
-double * _CS_err;
-Semaphore * _CS_error_sem, * _CS_pos_sem, *_CS_helper_sem;
-
 class ConductivitySearch : public Module {    
-  MeshIPort* mesh_iport;
-  MatrixIPort* cond_iport;
-  MatrixIPort* mat_iport;
-  ColumnMatrixIPort* rms_iport;
-  MatrixOPort* mat_oport;
-  ColumnMatrixOPort* cond_oport;
-  double FTOL;
-  int nfunc;
-  int counter;
-  clString state;
-  double* y; //holds initial errors for p configuration
-  GuiString seedTCL;
-public:
-  MeshHandle mesh;
-  MusilRNG* mr;
-  MatrixHandle AmatH;   // hold the stiffness matrix - we want its shape
-  SparseRowMatrix *AmatHp;
-  int AHgen;
-  int seed;
-  ColumnMatrixHandle conds;
+  FieldIPort     *mesh_iport_;
+  MatrixIPort    *cond_params_iport_;
+  MatrixIPort    *misfit_iport_;
 
-  Array1<Array1<double> > dataC;
-  Array1<Array1<int> > nzeros;
-  
-  int pinzero, refnode;
-  Mutex mylock;
-  GuiString refnodeTCL;
-  GuiInt pinzeroTCL;
+  FieldOPort     *mesh_oport_;
+  MatrixOPort    *cond_vector_oport_;
+  MatrixOPort    *fem_mat_oport_;
+
+  FieldHandle mesh_in_;
+  FieldHandle mesh_out_;
+  MatrixHandle cond_params_;
+  MatrixHandle cond_vector_;
+
+  Array1<Array1<double> > basis_data;
+  Array1<Array1<int> > basis_nzeros;
+  Array1<double> misfit_;
+  Array2<double> conductivities_;
+  Array1<int> cell_visited_;
+  Array1<double> cell_err_;
+  Array1<Vector> cell_dir_;  
+  int seed_counter_;
+  clString state_;
+  int stop_search_;
+  int last_intermediate_;
+  Mutex mylock_;
+  MusilRNG* mr;
+
+  static int NDIM_;
+  static int NSEEDS_;
+  static int NCONDUCTIVITIES_;
+  static int MAX_EVALS_;
+  static double CONVERGENCE_;
+  static double OUT_OF_BOUNDS_MISFIT_;
+
+  void build_basis_matrices();
+  double gaussian(double sigma);
+  void initialize_search();
+  void build_composite_matrix(int which_conductivity);
+  void send_and_get_data(int which_conductivity);
+  int pre_search();
+  void eval_test_conductivity();
+  double simplex_step(Array1<double>& sum, double factor, int worst);
+  void simplex_search();
+  void read_mesh_and_cond_param_ports(int &valid_data, int &new_data);
+public:
+  GuiInt seed_gui_;
   ConductivitySearch(const clString& id);
   virtual ~ConductivitySearch();
-  void buildCompositeMat(const Array1<double> &conds);
-  void buildCondMatrices(int);
   virtual void execute();
-  double gaussian(double w);
-  static double *error_eval(int);
-  void helper(int proc);
   void tcl_command( TCLArgs&, void * );
-}; //class
-
+};
 
 extern "C" Module* make_ConductivitySearch(const clString& id) {
   return new ConductivitySearch(id);
 }
 
-//---------------------------------------------------------------
+int ConductivitySearch::NDIM_ = 3;
+int ConductivitySearch::NSEEDS_ = 4;
+int ConductivitySearch::NCONDUCTIVITIES_ = 5;
+int ConductivitySearch::MAX_EVALS_ = 100;
+double ConductivitySearch::CONVERGENCE_ = 0.001;
+double ConductivitySearch::OUT_OF_BOUNDS_MISFIT_ = 1000000;
+
 ConductivitySearch::ConductivitySearch(const clString& id)
   : Module("ConductivitySearch", id, Filter), 
-  mylock("pause lock for ConductivitySearch"),
-  pinzeroTCL("pinzeroTCL", id, this), refnodeTCL("refnodeTCL", id, this),
-  seedTCL("seedTCL", id, this)
+  mylock_("pause lock for ConductivitySearch"), 
+  seed_gui_("seed_gui", id, this)
 {
-  mesh_iport = new MeshIPort(this,"Mesh",
-			     MeshIPort::Atomic);
-  add_iport(mesh_iport);
-    
-  cond_iport = new MatrixIPort(this, "Conductivity Parameters",
-			       MatrixIPort::Atomic);
-  add_iport(cond_iport);
-    
-  mat_iport = new MatrixIPort(this, "Stiffness Matrix",
-			      MatrixIPort::Atomic);
-  add_iport(mat_iport);
-    
-  rms_iport = new ColumnMatrixIPort(this, "RMS",
-				    ColumnMatrixIPort::Atomic);
-  add_iport(rms_iport);
-    
-  mat_oport = new MatrixOPort(this,"A Matrix",
-			      MatrixIPort::Atomic);
-  add_oport(mat_oport);
-    
-  cond_oport = new ColumnMatrixOPort(this, "Old and New Conductivities", 
-				     ColumnMatrixIPort::Atomic);
-  add_oport(cond_oport);
+  // FEM mesh without conductivities
+  mesh_iport_ = new FieldIPort(this,"FiniteElementMesh",
+			       FieldIPort::Atomic);
+  add_iport(mesh_iport_);
 
-  counter = 0;
-  state = "START";
-    
-  _CS_error_sem = new Semaphore("ConductivitySearch error sync", 0);
-  _CS_pos_sem = new Semaphore("ConductivitySearch position sync", 0);
-  _CS_helper_sem = new Semaphore("ConductivitySearch amoeba sync", 0);
-    
-  Thread::parallel(Parallel<ConductivitySearch>(this, &ConductivitySearch::helper), 1, false);
-  //    Task::multiprocess(1, start_me_up, this, false);
-    
-  cerr<<"Constructor Done!"<<endl;
-  mylock.unlock();
-  AHgen=-1;
+  // optimal orientation for the test conductivity
+  cond_params_iport_ = new MatrixIPort(this,"ConductivityParameters",
+				       MatrixIPort::Atomic);
+  add_iport(cond_params_iport_);
+  
+  // the computed misfit for the latest test conductivity
+  misfit_iport_ = new MatrixIPort(this, "TestMisfit",
+				  MatrixIPort::Atomic);
+  add_iport(misfit_iport_);
+  
+  // FEM mesh with new conductivities
+  mesh_oport_ = new FieldOPort(this, "FiniteElementMesh",
+			       FieldIPort::Atomic);
+  add_oport(mesh_oport_);
+
+  // vector of old and new conductivities
+  cond_vector_oport_ = new MatrixOPort(this, "OldAndNewConductivities",
+				       MatrixIPort::Atomic);
+  add_oport(cond_vector_oport_);
+  
+  // FEM matrix reflecting test conductivities
+  fem_mat_oport_ = new MatrixOPort(this, "FiniteElementMatrix",
+				   MatrixIPort::Atomic);
+  add_oport(fem_mat_oport_);
+  
+  mylock_.unlock();
+  state_ = "SEEDING";
+  stop_search_ = 0;
+  seed_counter_ = 0;
 }
 
-//------------------------------------------------------------
 ConductivitySearch::~ConductivitySearch(){}
 
-//--------------------------------------------------------------
+
+void ConductivitySearch::build_basis_matrices() {
+  // TODO -- build the fem basis matrices (using BuildFEMatrix alg)
+}
+
 
 double ConductivitySearch::gaussian(double sigma) {
   double x;
@@ -170,447 +167,340 @@ double ConductivitySearch::gaussian(double sigma) {
   return x*sigma*sqrt((-2.0 * log(x*x)) / (x*x));
 }
 
-void ConductivitySearch::buildCompositeMat(const Array1<double> &conds) {
-  int c, idx, nz;
-  double *data=AmatHp->a;
-  int nnz=AmatHp->nnz;
-  for (idx=0; idx<nnz; idx++) 
-    data[idx]=0;
-  for (c=0; c<_CS_nCondReg; c++)
-    for (nz=0; nz<nzeros[c].size(); nz++) {
-      idx=nzeros[c][nz];
-      data[idx] += dataC[c][idx]*conds[c];
-    }
 
-  cerr << "Building composite: conds = ";
-  for (c=0; c<conds.size(); c++)
-    cerr << conds[c]<<" ";
-  cerr << "\n";
+//! Initialization sets up our conductivity search matrix, our misfit vector,
+//!   and our stiffness matrix frame
 
-#if 0  
-  for (c=0; c<conds.size(); c++) {
-    cerr << "nzeros["<<c<<"] ";
-    for (nz=0; nz<nzeros[c].size(); nz++) {
-      cerr << "("<<nz<<") "<< nzeros[c][nz]<<"  ";
-    }
-    cerr << "\n";
-    cerr << "dataC["<<c<<"] ";
-    for (idx=0; idx<dataC[c].size(); idx++) {
-      cerr << "("<<idx<<") "<<dataC[c][idx]<<"  ";
-    }
-    cerr << "\n";
-  }
+void ConductivitySearch::initialize_search() {
+  // fill in our random conductivities and build our stiffness matrix frame
+  misfit_.resize(NCONDUCTIVITIES_);
+  conductivities_.newsize(NCONDUCTIVITIES_, NDIM_);
 
-  cerr << "data: ";
-  for (idx=0; idx<dataC[0].size(); idx++) {
-    cerr << "("<<idx<<") "<<data[idx]<<"  ";
-  }
-  cerr << "\n";
-#endif
-}
+  int seed = seed_gui_.get();
+  seed_gui_.set(seed+1);
+  mr = new MusilRNG(seed);
+  (*mr)();  // first number isn't really random
 
-void ConductivitySearch::buildCondMatrices(int ncond) {
-  if (dataC.size() != ncond) {
-    dataC.resize(ncond);
-    nzeros.resize(ncond);
-  }
-  int i,j,c,e;
-  for (c=0; c<ncond; c++) {
-    dataC[c].resize(AmatHp->nnz);
-    dataC[c].initialize(0);
-    nzeros[c].resize(0);
-  }
-  
-  // go through the mesh and build all of the nonzeros for each element into
-  // dataC and nzeros
-  
-  // for each element
-  //   build the local matrix (w/o cond) and store non-zeros in dataC[i]
-  // for each conductivity type c
-  //   for each nonzero in dataC[c]
-  //     add its index to nzeros[c]
-
-  for (e=0; e<mesh->elems.size(); e++){
-
-    // build local matrix
-    double lcl_a[4][4];
-    for(i=0;i<4;i++)
-      for(j=0;j<4;j++)
-	lcl_a[i][j]=0;
-
-    Element *elem=mesh->elems[e];
-    Point pt;
-    Vector grad1,grad2,grad3,grad4;
-    double vol = mesh->get_grad(elem,pt,grad1,grad2,grad3,grad4);
-    if(vol < 1.e-10) {
-      cerr << "Skipping element..., volume=" << vol << endl;
-      break;
-    }
-   
-    double el_coefs[4][3];
-    el_coefs[0][0]=grad1.x();el_coefs[0][1]=grad1.y();el_coefs[0][2]=grad1.z();
-    el_coefs[1][0]=grad2.x();el_coefs[1][1]=grad2.y();el_coefs[1][2]=grad2.z();
-    el_coefs[2][0]=grad3.x();el_coefs[2][1]=grad3.y();el_coefs[2][2]=grad3.z();
-    el_coefs[3][0]=grad4.x();el_coefs[3][1]=grad4.y();el_coefs[3][2]=grad4.z();
-
-    for(int i=0; i< 4; i++)
-      for(int j=0; j< 4; j++) {
-	for (int k=0; k< 3; k++)
-	  lcl_a[i][j] += el_coefs[i][k]*el_coefs[j][k];
-	lcl_a[i][j] *= vol;
-      }
-
-    // now add these values into dataC[c]
-    c=elem->cond;
-
-    for (i=0; i<4; i++) {	  
-      int ii = elem->n[i];
-      if (ii!=refnode || !pinzero)
-	for (int j=0; j<4; j++) {
-	  int jj = elem->n[j];
-	  if (jj!=refnode || !pinzero) {
-	    int idx=AmatHp->getIdx(ii,jj);
-	    dataC[c][idx] += lcl_a[i][j];
-	  }
-	}
-      else {
-	int idx=AmatHp->getIdx(ii,ii);
-	dataC[c][idx] = 1;
-      }
-    }
-  }
-
-  // go through each conductivity type and add nonzero dataC indices to nzeros
-  for (c=0; c<ncond; c++) {
-    for (i=0; i<AmatHp->nnz; i++)
-      if (dataC[c][i] != 0) 
-	nzeros[c].add(i);
-  }
-}
-
-void ConductivitySearch::execute() {
-  if (state != "START") {
-    cerr << "Sending last result again...\n";
-    mat_oport->send(AmatH);
-    cond_oport->send(conds);
-    return;
-  }
-
-  if(!mesh_iport->get(mesh) || !mesh.get_rep()) {
-    cerr << "ConductivitySearch -- couldn't get mesh.  Returning.\n";
-    return;
-  }
-
-  MatrixHandle AH;
-  if (!mat_iport->get(AH) || !AH.get_rep()) {
-    cerr << "ConductivitySearch -- couldn't get stiffness matrix.\n";
-    return;
-  }
-
-  _CS_nCondReg = mesh->cond_tensors.size();
-
-  cerr << "Getting refnode and pinzero...\n";
-  refnodeTCL.get().get_int(refnode);
-  pinzero = pinzeroTCL.get();
-  cerr << "pinzero="<<pinzero<<"  refnode="<<refnode<<"\n";
+  // load Gaussian distribution of conductivity values into our search matrix
   int i, j;
-  int newSeed;
-  seedTCL.get().get_int(newSeed);
-  if (AH->generation != AHgen || seed != newSeed) {
-    SparseRowMatrix *AHp=dynamic_cast<SparseRowMatrix*>(AH.get_rep());
-    if (!AHp) {
-      cerr << "Error - A matrix wasn't a SparseRowMatrix!\n";
-      return;
-    }
-    seed=newSeed;
-    seedTCL.set(to_string(seed+1));
-    mr = new MusilRNG(seed);
-    (*mr)();        // first number isn't random
-    AHgen=AH->generation;
-    // because the SparseRowMatrix copy constructor doesn't exist yet...
-    Array1<int> rows(AHp->nrows()+1);
-    Array1<int> cols(AHp->nnz);
-    for (i=0; i<rows.size(); i++) rows[i]=AHp->rows[i];
-    for (i=0; i<cols.size(); i++) cols[i]=AHp->columns[i];    
-    AmatH=AmatHp=new SparseRowMatrix(AHp->nrows(),AHp->ncols(),rows,cols);
-    buildCondMatrices(_CS_nCondReg);
-  }
-
-  conds=new ColumnMatrix(_CS_nCondReg*2);
-  ColumnMatrix *condsp = conds.get_rep();
-
-  for (i=0; i<_CS_nCondReg; i++) (*condsp)[i]=mesh->cond_tensors[i][0];
-
-  if(!cond_iport->get(_CS_cond_params)) {
-    cerr << "ConductivitySearch -- couldn't get conductivity parameters.  Returning.\n";
-    return; 
-  }
-  if (_CS_cond_params->nrows() != _CS_nCondReg) {
-    cerr << "Error - need same number of mesh conductivity regions ("<<_CS_nCondReg<<") as conductivity parameter rows ("<<_CS_cond_params->nrows()<<".\n";
-    return;
-  }
-  if (_CS_cond_params->ncols() != 4) {
-    cerr <<"Error - found "<<_CS_cond_params->ncols()<<" parameters per conductivity region, but we need 4: mean, sigma, min, max.\n";
-    return;
-  }
-
-  _CS_p = dmatrix(1, _CS_nCondReg+2, 1, _CS_nCondReg);
-  y = dvector(1, _CS_nCondReg);
-    
-  cerr << "Choosing starting conductivities...\n";
-  // load Gaussian distribution of conductivity values into p
-  for (i=0; i<_CS_nCondReg; i++) { // cond regions
-    for (j=0; j<_CS_nCondReg+2; j++) { // amoeba vertex (last won't be used)
+  for (i=0; i<NDIM_; i++) {
+    for (j=0; j<NDIM_+2; j++) {
       double val, min, max;
-      do 
-      {
+      do {
 	double g, sigma, avg;
-	avg=(*(_CS_cond_params.get_rep()))[i][0];
-	sigma=(*(_CS_cond_params.get_rep()))[i][1];
+	avg=(*(cond_params_.get_rep()))[i][0];
+	sigma=(*(cond_params_.get_rep()))[i][1];
 	g=gaussian(sigma);
-	min=(*(_CS_cond_params.get_rep()))[i][2];
-	max=(*(_CS_cond_params.get_rep()))[i][3];
-	val= _CS_p[j+1][i+1] = avg + g;
-//	cerr << "i="<<i<<" j="<<j<<"  avg="<<  avg<<"  sigma="<<sigma<<"  g="<<g<<"  min="<<min<<"  max="<<max<<"  val="<<val<<"\n";
+	min=(*(cond_params_.get_rep()))[i][2];
+	max=(*(cond_params_.get_rep()))[i][3];
+	val= conductivities_(j,i) = avg + g;
       } while (val > max || val < min);
     }
   }
-  cerr << "Starting conductivities...\n";
-  for (i=0; i<_CS_nCondReg+1; i++) {
-    cerr << "node "<<i+1 << ":  ";
-    for (j=0; j<_CS_nCondReg; j++)
-      cerr << _CS_p[i+1][j+1] << " ";
-    cerr << "\n";
-  }
-
-  _CS_send_pos = 1;
-  _CS_need_error = 1;
-  _CS_in_bounds = 1;
-
-  int num_evals=1;
-  int count=1;
-
-  Array1<double> curr_conds(_CS_nCondReg);
-  int ii;
-  for (ii=0; ii<_CS_nCondReg; ii++)
-    (*condsp)[ii+_CS_nCondReg]=curr_conds[ii]=_CS_p[1][ii+1];
-  buildCompositeMat(curr_conds);
-
-  mat_oport->send_intermediate(AmatH);
-  cond_oport->send_intermediate(conds);
-
-  cerr << "conductivities = ";
-  for (ii=0; ii<_CS_nCondReg; ii++)
-    cerr << curr_conds[ii]<<" ";
-  cerr << "\n";
-
-  counter=1;
-  while(1) {
-    count++;
-    //	cerr << "ABOUT TO TRY LOCK\n";
-    if (!mylock.tryLock()) {
-      //	    cerr << "ConductivitySearch -- Pausing...\n";
-      mylock.lock();
-      mylock.unlock();
-      //	    cerr << "ConductivitySearch -- Unpausing...\n";
-    } else {
-      //	    cerr << "ConductivitySearch -- got the lock, but I don't want it...";
-      mylock.unlock();
-      //	    cerr << " so I just unlocked it.\n";
-    }
-    //	cerr << "DONE TRYING LOCK\n";
-	
-    //	cerr <<"Getting new error!"<<endl;
-    ColumnMatrixHandle rms;
-
-    if (_CS_need_error) {
-      num_evals++;
-      if(!rms_iport->get(rms)) {
-	cerr << "Error - ConductivitySearch didn't get an errorMetric!\n";
-	return;
-      }
-      //	cerr << "ConductivitySearch: got errormetric.\n";
-    } else {
-      rms = new ColumnMatrix(1);
-      double *rms_err = rms->get_rhs();
-      cerr << "ConductivitySearch - using out of bounds error.\n";
-      rms_err[0] = 1000000;
-    }
-
-    //	cerr << "ConductivitySearch -- got the data!!\n";
-    double *rms_err = rms->get_rhs();
-	
-    _CS_err=new double[1];
-    _CS_err[0]=rms_err[0];
-
-    cerr << "ConductivitySearch: error=" << _CS_err[0] << "\n";
-	
-    if (counter>(_CS_nCondReg+1)) {
-      _CS_error_sem->up();
-    }
-
-    if (counter <= _CS_nCondReg) {
-      for (ii=0; ii<_CS_nCondReg; ii++)
-	(*condsp)[ii+_CS_nCondReg]=curr_conds[ii]=_CS_p[counter+1][ii+1];
-      buildCompositeMat(curr_conds);
-      y[counter]=_CS_err[0];
-      counter++;
-    } else {
-      if (counter == (_CS_nCondReg+1)) {
-	y[counter]=_CS_err[0];
-	for (ii=0; ii<_CS_nCondReg; ii++)
-	  (*condsp)[ii+_CS_nCondReg]=curr_conds[ii]=_CS_p[counter+1][ii+1];
-	buildCompositeMat(curr_conds);
-	_CS_helper_sem->up();
-	counter++;
-      }
-      _CS_pos_sem->down();
-    }	
-    if (counter>(_CS_nCondReg+1)) {
-      for (ii=0; ii<_CS_nCondReg; ii++)
-	(*condsp)[ii+_CS_nCondReg]=curr_conds[ii]=_CS_p[_CS_nCondReg+2][ii+1];
-      buildCompositeMat(curr_conds);
-    }
-
-    if (_CS_need_error) {
-      if (_CS_send_pos) {
-	mat_oport->send_intermediate(AmatH);
-	cond_oport->send_intermediate(conds);
-      } else {
-	cerr << "I'm sending final version\n";
-	mat_oport->send(AmatH);
-	cond_oport->send(conds);
-		
-	// gotta clear this port so when we start again everything works
-	rms_iport->get(rms);
-	break;
-      }
-    }
-  }
-  cerr << "Done downhill!   num_evals="<<num_evals<<"  count="<<count<<"\n";
-  state = "DONE";
+  build_basis_matrices();
 }
 
 
-// helper is a second thread that runs the Numerical Recipes amoeba code
-//   the main thread controls marshalling for port I/O, and startup/shoutdown 
-// the two threads communicate through semaphores - _CS_pos_sem and _CS_error_sem
-// the main thread waits on _CS_pos_sem - the amoeba has to tell it what position
-//   it wants evaluated
-// the helper thread waits on _CS_error_sem - it wants to know the error for
-//   a new position, which the main thread evaluates by sending/receiving port
-//   data
-//---------------------------------------------------------------
-void ConductivitySearch::helper(int /*proc*/){
-  while(1){
-    _CS_helper_sem->down();
-	
-    cerr <<"Calling amoeba()"<<endl;
-    FTOL = 1.0e-10;
-    nfunc=200;
-	
-    int i;
-    for (i=1; i<=(_CS_nCondReg+2); i++) {
-      printf("%3d ",i);
-      for (int j=1;j<=_CS_nCondReg;j++) printf("%12.6f ",_CS_p[i][j]);
-      printf("%12.6f\n",y[i]);
-    }
-	
-    cerr <<"_CS_nCondReg = "<<_CS_nCondReg<<endl;
-	
-    _CS_stop=0;
-    amoeba(_CS_p, y, _CS_nCondReg, FTOL, ConductivitySearch::error_eval,
-	   &nfunc,0,&_CS_stop);
-	
-    printf("\nNumber of function evaluations: %3d\n",nfunc);
-    printf("function values at the vertices:\n\n");
-    for (i=1; i<=(_CS_nCondReg+2); i++) {
-      printf("%3d ",i);
-      for (int j=1;j<=_CS_nCondReg;j++) printf("%12.6f ",_CS_p[i][j]);
-      printf("%12.6f\n",y[i]);
-    }
-	
-    _CS_send_pos=0;
-    _CS_in_bounds = 1;
-    _CS_need_error = 1;
-    _CS_pos_sem->up();
-  }
+//! Scale the basis matrices by the conductivities and sum
+
+void ConductivitySearch::build_composite_matrix(int which_conductivity) {
+  // TODO -- reset sum to zero, scale bases and add em up
 }
 
-// this is the method that the amoeba calls when it needs to know the
-//   error for a particular configuration.
-// the "hidden" variables that are being used are "p", which is a 
-//   matrix containing all of the conductivity configurations; and  
-//   "y" contains the error for each configuration in p
-//---------------------------------------------------------------
-double* ConductivitySearch::error_eval(int) {
-  _CS_send_pos = 1;
-  _CS_in_bounds = 1;
-  _CS_need_error = 1;
+//! Find the misfit and optimal orientation for a single conductivity
 
-  int i,j;
-
-  // check to see if the new conductivities are within the min-max ranges
-
-  for (i=0; i<_CS_nCondReg; i++) 
-    if (_CS_p[_CS_nCondReg+2][i+1] < (*(_CS_cond_params.get_rep()))[i][2] || 
-	_CS_p[_CS_nCondReg+2][i+1] > (*(_CS_cond_params.get_rep()))[i][3]) {
-      cerr << "Cond["<<i<<"] = "<<_CS_p[_CS_nCondReg+2][i+1]<<"\n";
-      _CS_in_bounds=0;
-    }
-
-  // check to see if we have converged
-  double resid=0;
-  for (i=0; i<_CS_nCondReg; i++)
-    for (j=1; j<_CS_nCondReg+1; j++)
-      resid += fabs(_CS_p[1][i+1]-_CS_p[j+1][i+1]);
-  if (resid/(_CS_nCondReg*(_CS_nCondReg+1)) < 0.00005) {
-    cerr << "Resid="<<resid<<" -- we've converged!\n";
-    _CS_stop=1;
-  }
-
-  if (_CS_in_bounds) {
-    _CS_pos_sem->up();
-    _CS_error_sem->down();
+void ConductivitySearch::send_and_get_data(int which_conductivity) {
+  if (!mylock_.tryLock()) {
+    mylock_.lock();
+    mylock_.unlock();
   } else {
-    cerr << "Conductivity out of bounds.\n";
-    _CS_need_error = 0;
-    _CS_pos_sem->up();
-    _CS_error_sem->down();
+    mylock_.unlock();
   }
-  return _CS_err;
+
+  // build the new conductivity vector, the new mesh (just new tensors), 
+  // and the new fem matrix
+
+  // TODO -- fill in the three data structures below
+
+  SparseRowMatrix *fem;
+  TetVol<int> *mesh_out;
+  ColumnMatrix *cond_vector;
+  
+  // send out data
+  mesh_out_=mesh_out;
+  mesh_oport_->send_intermediate(mesh_out_);
+  cond_vector_=cond_vector;
+  cond_vector_oport_->send_intermediate(cond_vector_);
+  MatrixHandle femH=(Matrix*)fem;
+  fem_mat_oport_->send(femH);
+  last_intermediate_=1;
+
+  // read back data, and set the caches and search matrix
+  MatrixHandle mH;
+  Matrix* m;
+  if (!misfit_iport_->get(mH) || !(m = mH.get_rep())) {
+    error("ConductivitySearch::failed to read back error");
+    return;
+  }
+  misfit_[which_conductivity]=(*m)[0][0];
+}  
+
+
+//! pre_search gets called once for each seed conductivity.  It sends out
+//!   one of the seeds, reads back the results, and fills the data
+//!   into the caches and the search matrix
+//! return "fail" if any seeds are out of range or if we don't get
+//!   back a misfit after a send 
+
+int ConductivitySearch::pre_search() {
+  if (seed_counter_ == 0) {
+    initialize_search();
+  }
+
+  send_and_get_data(seed_counter_);
+  seed_counter_++;
+
+  // done seeding, prepare for search phase
+  if (seed_counter_ > NSEEDS_) {
+    seed_counter_ = 0;
+    state_ = "START_SEARCHING";
+  }
+  return 1;
 }
+
+
+//! Evaluate a test conductivity.
+
+void ConductivitySearch::eval_test_conductivity() {
+
+  // TODO -- if (conductivities_[NSEEDS_][0] is in range)
+
+  if (conductivities_(NSEEDS_,0) > 0) {
+    send_and_get_data(NSEEDS_);
+  } else {
+    misfit_[NSEEDS_]=OUT_OF_BOUNDS_MISFIT_;
+  }
+}
+
+
+//! Take a single simplex step.  Evaluate a new position -- if it's
+//! better then an existing vertex, swap them.
+
+double ConductivitySearch::simplex_step(Array1<double>& sum, double factor,
+					int worst) {
+  double factor1 = (1 - factor)/NDIM_;
+  double factor2 = factor1-factor;
+  int i;
+  for (i=0; i<NDIM_; i++) 
+    conductivities_(NSEEDS_,i) = sum[i]*factor1 - 
+      conductivities_(worst,i)*factor2;
+
+  // evaluate the new guess
+  eval_test_conductivity();
+
+  // if this is better, swap it with the worst one
+  if (misfit_[NSEEDS_] < misfit_[worst]) {
+    misfit_[worst] = misfit_[NSEEDS_];
+    for (i=0; i<NDIM_; i++) {
+      sum[i] = sum[i] + conductivities_(NSEEDS_,i)-conductivities_(worst,i);
+      conductivities_(worst,i) = conductivities_(NSEEDS_,i);
+    }
+  }
+  return misfit_[NSEEDS_];
+}
+
+
+
+//vol_mesh_=(TetVolMesh*)dynamic_cast<TetVolMesh*>(mesh_in_->mesh().get_rep());
+
+
+
+//! The simplex has been constructed -- now let's search for a minimal misfit
+
+void ConductivitySearch::simplex_search() {
+  Array1<double> sum(NDIM_); // sum of the entries in the search matrix rows
+  sum.initialize(0);
+  int i, j;
+  for (i=0; i<NSEEDS_; i++) 
+    for (j=0; j<NDIM_; j++)
+      sum[j]+=conductivities_(i,j); 
+
+  double relative_tolerance;
+  int num_evals = 0;
+
+  while(1) {
+    int best, worst, next_worst;
+    best = 0;
+    if (misfit_[0] > misfit_[1]) {
+      worst = 0;
+      next_worst = 1;
+    } else {
+      worst = 1;
+      next_worst = 0;
+    }
+    int i;
+    for (i=0; i<NSEEDS_; i++) {
+      if (misfit_[i] <= misfit_[best]) best=i;
+      if (misfit_[i] > misfit_[worst]) {
+	next_worst = worst;
+	worst = i;
+      } else 
+	if (misfit_[i] > misfit_[next_worst] && (i != worst)) 
+	  next_worst=i;
+      relative_tolerance = 2*(misfit_[worst]-misfit_[best])/
+	(misfit_[worst]+misfit_[best]);
+    }
+
+    if ((relative_tolerance < CONVERGENCE_) || 
+	(num_evals > MAX_EVALS_) || (stop_search_)) 
+      break;
+
+    double step_misfit = simplex_step(sum, -1, worst);
+    num_evals++;
+    if (step_misfit <= misfit_[best]) {
+      step_misfit = simplex_step(sum, 2, worst);
+      num_evals++;
+    } else if (step_misfit >= misfit_[worst]) {
+      double old_misfit = misfit_[worst];
+      step_misfit = simplex_step(sum, 0.5, worst);
+      num_evals++;
+      if (step_misfit >= old_misfit) {
+	for (i=0; i<NSEEDS_; i++) {
+	  if (i != best) {
+	    int j;
+	    for (j=0; j<NDIM_; j++)
+	      conductivities_(i,j) = conductivities_(NSEEDS_,j) = 
+		0.5 * (conductivities_(i,j) + conductivities_(best,j));
+	    eval_test_conductivity();
+	    misfit_[i] = misfit_[NSEEDS_];
+	    num_evals++;
+	  }
+	}
+      }
+      sum.initialize(0);
+      for (i=0; i<NSEEDS_; i++) {
+	for (j=0; j<NDIM_; j++)
+	  sum[j]+=conductivities_(i,j); 
+      }
+    }
+  }
+}
+
+
+//! Read the input fields.  Check whether the inputs are valid,
+//! and whether they've changed since last time.
+
+void ConductivitySearch::read_mesh_and_cond_param_ports(int &valid_data, 
+							int &new_data) {
+  FieldHandle mesh;
+  valid_data=1;
+  new_data=0;
+  if (mesh_iport_->get(mesh) && mesh.get_rep() &&
+      (mesh->get_type_name(0) == "TetVol") &&
+      (mesh->get_type_name(1) == "int")) {
+    if (!mesh_in_.get_rep() || (mesh_in_->generation != mesh->generation)) {
+      new_data=1;
+      mesh_in_=mesh;
+    } else {
+      cerr << "ConductivitySearch -- same VolumeMesh as before."<<endl;
+    }
+  } else {
+    valid_data=0;
+    cerr << "ConductivitySearch -- didn't get a valid VolumeMesh."<<endl;
+  }
+
+  TetVol<int> *meshTV = dynamic_cast<TetVol<int> *>(mesh.get_rep());
+  Array1<Tensor> tens;
+  pair<int,int> minmax;
+  minmax.second=1;
+  if (!field_minmax(*meshTV, minmax)) valid_data=0;
+  NDIM_ = minmax.second+1;
+  NSEEDS_ = minmax.second+2;
+  NCONDUCTIVITIES_ = minmax.second+3;
+
+  MatrixHandle cond_params;
+  if (cond_params_iport_->get(cond_params) && cond_params.get_rep() &&
+      (cond_params->nrows() == NDIM_) && (cond_params->ncols() == 4)) {
+    if (!cond_params_.get_rep() || 
+	(cond_params_->generation != cond_params->generation)) {
+      new_data = 1;
+      cond_params_=cond_params;
+    } else {
+      cerr << "ConductivitySearch -- same ConductivityParams as before."<<endl;
+    }
+  } else {
+    valid_data=0;
+    cerr << "ConductivitySearch -- didn't get valid ConductivityParams."<<endl;
+  }
+}
+
+
+//! If we have an old solution and the inputs haven't changed, send that
+//! one.  Otherwise, if the input is valid, run a simplex search to find
+//! a conductivity with minimal misfit.
+
+void ConductivitySearch::execute() {
+  int valid_data, new_data;
+  read_mesh_and_cond_param_ports(valid_data, new_data);
+  if (!valid_data) return;
+  if (!new_data) {
+    if (mesh_out_.get_rep()) { // if we have valid old data
+      // send old data and clear ports
+      mesh_oport_->send(mesh_out_);
+      cond_vector_oport_->send(cond_vector_);
+      MatrixHandle dummy_mat;
+      misfit_iport_->get(dummy_mat);
+      return;
+    } else {
+      return;
+    }
+  }
+
+  last_intermediate_=0;
+
+  // we have new, valid data -- run the simplex search
+  while (1) {
+    if (state_ == "SEEDING") {
+      if (!pre_search()) break;
+    } else if (state_ == "START_SEARCH") {
+      simplex_search();
+      state_ = "DONE";
+    }
+    if (stop_search_ || state_ == "DONE") break;
+  }
+  if (last_intermediate_) { // last sends were send_intermediates
+    // gotta do final sends and clear the ports
+    mesh_oport_->send(mesh_out_);
+    cond_vector_oport_->send(cond_vector_);
+    MatrixHandle dummy_mat;
+    fem_mat_oport_->send(dummy_mat);
+    misfit_iport_->get(dummy_mat);
+  }
+  state_ = "SEEDING";
+  stop_search_=0;
+  seed_counter_=0;
+}
+
+
+//! Commands invoked from the Gui.  Pause/unpause/stop the search.
 
 void ConductivitySearch::tcl_command(TCLArgs& args, void* userdata) {
-  if (args[1] == "pause") {
-    if (mylock.tryLock())
-      cerr << "Pausing...\n";
-    else 
-      cerr << "Can't lock -- already locked!\n";
-  } else if (args[1] == "unpause") {
-    if (mylock.tryLock())
-      cerr << "Can't unlock -- already unlocked!\n";
-    else
-      cerr << "Unpausing.\n";
-    mylock.unlock();
-  } else if (args[1] == "stop") {
-    _CS_stop=1;
-  } else if (args[1] == "print") {
-    int i,j;
-    for (j=0; j<_CS_nCondReg+1; j++) { // amoeba vertex (last won't be used)
-      cerr << j+1 << "\t";
-      for (i=0; i<_CS_nCondReg; i++)   // cond regions
-	cerr << _CS_p[j+1][i+1] << "\t";
-      cerr << "error="<<y[j+1]<<"\n";
+    if (args[1] == "pause") {
+        if (mylock_.tryLock())
+	  cerr << "ConductivitySearch pausing..."<<endl;
+        else 
+	  cerr << "ConductivitySearch: can't lock -- already locked"<<endl;
+    } else if (args[1] == "unpause") {
+        if (mylock_.tryLock())
+	  cerr << "ConductivitySearch: can't unlock -- already unlocked"<<endl;
+        else
+	  cerr << "ConductivitySearch: unpausing"<<endl;
+        mylock_.unlock();
+    } else if (args[1] == "stop") {
+        stop_search_=1;
+    } else {
+        Module::tcl_command(args, userdata);
     }
-  } else if (args[1] == "exec") {
-    state = "START";
-    want_to_execute();
-  } else {
-    Module::tcl_command(args, userdata);
-  }
 }
-} // End namespace DaveW
-//---------------------------------------------------------------
 
-
+} // End namespace BioPSE

@@ -26,12 +26,8 @@ itcl_class BioPSE_Inverse_ConductivitySearch {
     }
 
     method set_defaults {} {	
-	global $this-refnodeTCL
-	global $this-pinzeroTCL
-	global $this-seedTCL
-	set $this-refnodeTCL 0
-	set $this-pinzeroTCL 1
-	set $this-seedTCL 0
+	global $this-seed_gui
+	set $this-seed_gui 0
     }
 
     method make_entry {w text v c} {
@@ -54,21 +50,16 @@ itcl_class BioPSE_Inverse_ConductivitySearch {
 	frame $w.g
         button $w.g.go -text "Execute" -relief raised -command "$this-c exec"
         button $w.g.p -text "Pause" -relief raised -command "$this-c pause"
-        button $w.g.np -text "Unpause" -relief raised -command "$this-c unpause"
-	button $w.g.print -text "Print" -relief raised -command "$this-c print"
+        button $w.g.np -text "Unpause" -relief raised -command \
+		"$this-c unpause"
 	button $w.g.stop -text "Stop" -relief raised -command "$this-c stop"
-	pack $w.g.go $w.g.p $w.g.np $w.g.print $w.g.stop -side left -fill x -expand 1 -padx 3
-	frame $w.ref
-	global $this-pinzeroTCL
-	checkbutton $w.ref.pinzero -text "Pin A Reference Node" -variable $this-pinzeroTCL
-	global $this-refnodeTCL
-	make_entry $w.ref.refnode "Reference node:" $this-refnodeTCL "$this-c needexecute"
-	pack $w.ref.pinzero $w.ref.refnode -side top -fill x -expand 1
+	pack $w.g.go $w.g.p $w.g.np $w.g.stop -side left -fill x -expand 1
 	frame $w.seed
-	global $this-seedTCL
-	make_entry $w.seed.seed "Random number seed:" $this-seedTCL "$this-c needexecute"
+	global $this-seed_gui
+	make_entry $w.seed.seed "Random seed:" $this-seed_gui \
+		"$this-c needexecute"
 	pack $w.seed.seed -side top -fill x -expand 1
-	pack $w.g $w.ref $w.seed -side top -fill x -expand 1
+	pack $w.g $w.seed -side top -fill x -expand 1
     }
 }
 
