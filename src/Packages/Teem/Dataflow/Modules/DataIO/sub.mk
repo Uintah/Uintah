@@ -32,13 +32,15 @@ SRCDIR   := Packages/Teem/Dataflow/Modules/DataIO
 
 
 SRCS     += \
+	$(SRCDIR)/AnalyzeToNrrd.cc\
         $(SRCDIR)/ConvertToField.cc\
 	$(SRCDIR)/ConvertToNrrd.cc\
+	$(SRCDIR)/DicomToNrrd.cc\
 	$(SRCDIR)/FieldToNrrd.cc\
 	$(SRCDIR)/NrrdReader.cc\
 	$(SRCDIR)/NrrdWriter.cc\
 	$(SRCDIR)/NrrdToField.cc\
-	$(SRCDIR)/DicomToNrrd.cc\
+
 
 #[INSERT NEW CODE FILE HERE]
 

@@ -25,6 +25,7 @@
 SRCDIR := Packages/Teem/Dataflow/GUI
 
 SRCS := \
+	$(SRCDIR)/AnalyzeToNrrd.tcl\
 	$(SRCDIR)/axis_info_sel_box.tcl\
 	$(SRCDIR)/ChooseNrrd.tcl\
 	$(SRCDIR)/DicomToNrrd.tcl\
