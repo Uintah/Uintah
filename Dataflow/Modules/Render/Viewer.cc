@@ -411,7 +411,6 @@ void Viewer::tcl_command(TCLArgs& args, void* userdata)
 	ViewWindow* r=scinew ViewWindow(this, args[2]);
 	viewwindow.add(r);
     } else if(args[1] == "listrenderers"){
-      cerr << "listrenderers called" << endl;
 	Array1<clString> list;
 	AVLTreeIter<clString, RegisterRenderer*> iter(Renderer::get_db());
 	for(iter.first();iter.ok();++iter){
