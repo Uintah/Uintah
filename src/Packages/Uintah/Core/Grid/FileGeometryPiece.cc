@@ -56,6 +56,7 @@ void FileGeometryPiece::readPoints(const string& f_name, bool var)
     }
     d_points.push_back(Point(x,y,z));
   }
+  source.close();
 
   // Find the min and max points so that the bounding box can be determined.
   Point min(1e30,1e30,1e30),max(-1e30,-1e30,-1e30);
