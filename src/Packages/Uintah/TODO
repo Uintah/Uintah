@@ -1,12 +1,9 @@
 
-Reader for DataArchive
 More info in xml files:
- - variable types
  - variable min/max for some types
  - encoding: RLE?
 Optimize!
 
-Array bounds for windows
 Regions - common origin,etc.
 Make ghost cells work for get
 Compute gets/puts with task data
