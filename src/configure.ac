@@ -2226,10 +2226,20 @@ if test "$HAVE_LAPACK" != "yes"; then
   SCI_TRY_LINK(LAPACK,flapack library,,,flapack,$_sci_lib,$BLAS_LIB_DIR_FLAG $BLAS_LIB_FLAG $F_LIB_DIR_FLAG $F_LIB_FLAG,,optional)
 fi
 
+# In some cases, some files need complib.sgimath_mp for the lapack
+# library.  I have created this new var LAPACKMP to keep track of this
+# information.  If the configure script finds complib.sgimath_mp, then
+# the LAPACKMP vars will be updated.  If it does not, then the LAPACK
+# vars will be used.
+HAVE_LAPACKMP=$HAVE_LAPACK
+LAPACKMP_LIB_FLAG=$LAPACK_LIB_FLAG
+LAPACKMP_LIB_DIR_FLAG=$LAPACK_LIB_DIR_FLAG
+
 if test "$HAVE_LAPACK" != "yes"; then
-  SCI_TRY_LINK(LAPACK,complib.sgimath_mp library,,,complib.sgimath_mp,$_sci_lib,,,optional)
+  SCI_TRY_LINK(LAPACK,complib.sgimath library,,,complib.sgimath,$_sci_lib,,,optional)
   if test "$HAVE_LAPACK" = "yes"; then
        AC_MSG_WARN(Using complib for lapack)
+       SCI_TRY_LINK(LAPACKMP,complib.sgimath_mp library,,,complib.sgimath_mp,$_sci_lib,,,optional)
   fi
 fi
 
@@ -2247,6 +2257,10 @@ AC_SUBST(HAVE_LAPACK)
 AC_SUBST(DEF_LAPACK)
 AC_SUBST(LAPACK_LIB_FLAG)
 AC_SUBST(LAPACK_LIB_DIR_FLAG)
+
+AC_SUBST(HAVE_LAPACKMP)
+AC_SUBST(LAPACKMP_LIB_FLAG)
+AC_SUBST(LAPACKMP_LIB_DIR_FLAG)
 
 ##  --  search for mpi  --------------------------------------------------
 
