@@ -2717,30 +2717,23 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
 
       // Delete particles that have left the domain
       // This is only needed if extra cells are being used.
+      // Also delete particles whose mass is too small (due to combustion)
+      // For particles whose new velocity exceeds a maximum set in the input
+      // file, set their velocity back to the velocity that it came into
+      // this step with
       for(ParticleSubset::iterator iter  = pset->begin();
                                    iter != pset->end(); iter++){
         particleIndex idx = *iter;
         bool pointInReal = lvl->containsPointInRealCells(pxnew[idx]);
         bool pointInAny = lvl->containsPoint(pxnew[idx]);
-        if(!pointInReal && pointInAny){
+        if((!pointInReal && pointInAny) || (pmassNew[idx] <= d_min_part_mass)){
           delset->addParticle(idx);
+        }
+        if(pvelocitynew[idx].length() > d_max_vel){
+          pvelocitynew[idx]=pvelocity[idx];
         }
       }
 
-      if(combustion_problem){
-       // Delete particles based on mass or velocity
-       if(m==RMI){
-        for(ParticleSubset::iterator iter  = pset->begin();
-                                     iter != pset->end(); iter++){
-          particleIndex idx = *iter;
-          bool pointInLevel = lvl->containsPointInRealCells(pxnew[idx]);
-          if(pmassNew[idx] <= d_min_part_mass || !pointInLevel ||
-             pvelocitynew[idx].length() > d_max_vel){
-            delset->addParticle(idx);
-          }
-        }
-       }
-      }
       new_dw->deleteParticles(delset);      
       //__________________________________
       //  particle debugging label-- carry forward
