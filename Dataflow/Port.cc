@@ -18,6 +18,7 @@
 #include <Dataflow/Module.h>
 
 #include <iostream.h>
+#include <strstream.h>
 
 Port::Port(Module* module, const clString& typename,
 	   const clString& portname, const clString& colorname,
@@ -80,12 +81,50 @@ void Port::set_which_port(int wp)
 
 void IPort::update_light()
 {
-    NOT_FINISHED("IPort::update_light");
+    char* color;
+    switch(portstate){
+    case Resetting:
+	color="blue";
+	break;
+    case Finishing:
+	color="dark violet";
+	break;
+    case On:
+	color="red";
+	break;
+    case Off:
+    default:
+	color="black";
+	break;
+    }
+    char buf[1000];
+    ostrstream str(buf, 1000);
+    str << ".cframe.f.canvas.module" << module->id << ".iportlight" << which_port << " configure -background " << color;
+    TCL::execute(str.str());
 }
 
 void OPort::update_light()
 {
-    NOT_FINISHED("OPort::update_light");
+    char* color;
+    switch(portstate){
+    case Resetting:
+	color="blue";
+	break;
+    case Finishing:
+	color="\"dark violet\"";
+	break;
+    case On:
+	color="red";
+	break;
+    case Off:
+    default:
+	color="black";
+	break;
+    }
+    char buf[1000];
+    ostrstream str(buf, 1000);
+    str << ".cframe.f.canvas.module" << module->id << ".oportlight" << which_port << " configure -background " << color;
+    TCL::execute(str.str());
 }
 
 void IPort::turn_on(PortState st)

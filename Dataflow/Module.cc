@@ -26,13 +26,13 @@
 Module::Module(const clString& name, const clString& id,
 	       SchedClass sched_class)
 : name(name), id(id), sched_class(sched_class), state(NeedData), mailbox(100),
-  helper(0), sched_state(SchedDormant), have_own_dispatch(0)
+  helper(0), sched_state(SchedDormant), have_own_dispatch(0), abort_flag(0)
 {
 }
 
 Module::Module(const Module& copy, int)
 : name(copy.name), id(copy.id), state(NeedData), mailbox(5),
- sched_state(SchedDormant), have_own_dispatch(0)
+ sched_state(SchedDormant), have_own_dispatch(0), abort_flag(0)
 {
     NOT_FINISHED("Module copy CTOR");
 }
@@ -180,7 +180,10 @@ void Module::tcl_command(TCLArgs& args, void*)
 	}
 	args.result(args.make_list(info));
     } else if(args[1] == "needexecute"){
-	want_to_execute();
+	if(!abort_flag){
+	    abort_flag=1;
+	    want_to_execute();
+	}
     } else {
 	args.error("Unknown minor command for module: "+args[1]);
     }
@@ -245,6 +248,7 @@ int Module::should_execute()
 
 void Module::do_execute()
 {
+    abort_flag=0;
     // Reset all of the ports...
     for(int i=0;i<oports.size();i++){
 	OPort* port=oports[i];
