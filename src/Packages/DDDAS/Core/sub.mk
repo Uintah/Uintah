@@ -4,6 +4,7 @@ SRCDIR := Packages/DDDAS/Core
 
 SUBDIRS := \
         $(SRCDIR)/Datatypes \
+        $(SRCDIR)/Utils \
 
 include $(SCIRUN_SCRIPTS)/recurse.mk
 
