@@ -470,8 +470,10 @@ Properties::sched_computePropsFirst_mm(SchedulerP& sched, const PatchSet* patche
 		Ghost::None, Arches::ZEROGHOSTCELLS);
     tsk->requires(Task::OldDW, d_lab->d_co2INLabel, 
 		Ghost::None, Arches::ZEROGHOSTCELLS);
+    /*
     tsk->requires(Task::OldDW, d_lab->d_enthalpyRXNLabel, 
 		Ghost::None, Arches::ZEROGHOSTCELLS);
+    */
     if (d_mixingModel->getNumRxnVars())
       tsk->requires(Task::OldDW, d_lab->d_reactscalarSRCINLabel, 
 		Ghost::None, Arches::ZEROGHOSTCELLS);
@@ -512,7 +514,9 @@ Properties::sched_computePropsFirst_mm(SchedulerP& sched, const PatchSet* patche
     tsk->computes(d_lab->d_tempINLabel);
     tsk->computes(d_lab->d_cpINLabel);
     tsk->computes(d_lab->d_co2INLabel);
+    /*
     tsk->computes(d_lab->d_enthalpyRXNLabel);
+    */
     if (d_mixingModel->getNumRxnVars())
       tsk->computes(d_lab->d_reactscalarSRCINLabel);
   }
@@ -589,12 +593,16 @@ Properties::computePropsFirst_mm(const ProcessorGroup*,
     constCCVariable<double> tempIN;
     constCCVariable<double> cpIN;
     constCCVariable<double> co2IN;
+    /*
     constCCVariable<double> enthalpyRXN; 
+    */
     constCCVariable<double> reactScalarSrc;
     CCVariable<double> tempIN_new;
     CCVariable<double> cpIN_new;
     CCVariable<double> co2IN_new;
+    /*
     CCVariable<double> enthalpyRXN_new;
+    */
     CCVariable<double> reactScalarSrc_new;
     constCCVariable<double> solidTemp;
 
@@ -609,8 +617,10 @@ Properties::computePropsFirst_mm(const ProcessorGroup*,
 		  Ghost::None, Arches::ZEROGHOSTCELLS);
       old_dw->get(co2IN, d_lab->d_co2INLabel, matlIndex, patch,
 		  Ghost::None, Arches::ZEROGHOSTCELLS);
+      /*
       old_dw->get(enthalpyRXN, d_lab->d_enthalpyRXNLabel, matlIndex, patch,
 		  Ghost::None, Arches::ZEROGHOSTCELLS);
+      */
       if (d_mixingModel->getNumRxnVars()) {
 	old_dw->get(reactScalarSrc, d_lab->d_reactscalarSRCINLabel,
 		    matlIndex, patch, Ghost::None, Arches::ZEROGHOSTCELLS);
@@ -628,9 +638,11 @@ Properties::computePropsFirst_mm(const ProcessorGroup*,
 			     matlIndex, patch);
       co2IN_new.copyData(co2IN);
 
+      /*
       new_dw->allocateAndPut(enthalpyRXN_new, d_lab->d_enthalpyRXNLabel, 
 			     matlIndex, patch);
       enthalpyRXN_new.copyData(enthalpyRXN);
+      */
 
       if (d_mixingModel->getNumRxnVars()) {
 	new_dw->allocateAndPut(reactScalarSrc_new, d_lab->d_reactscalarSRCINLabel,
