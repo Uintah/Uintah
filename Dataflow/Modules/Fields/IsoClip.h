@@ -406,16 +406,16 @@ IsoClipAlgoT<FIELD>::execute(ProgressReporter *mod, FieldHandle fieldh,
       nnodes[3] = inodes[7];
       clipped->add_elem(nnodes);
 
-      nnodes[0] = inodes[1];
-      nnodes[1] = inodes[2];
+      nnodes[0] = inodes[0];
+      nnodes[1] = inodes[6];
       nnodes[2] = inodes[7];
-      nnodes[3] = inodes[6];
+      nnodes[3] = inodes[1];
       clipped->add_elem(nnodes);
 
       nnodes[0] = inodes[0];
       nnodes[1] = inodes[1];
-      nnodes[2] = inodes[2];
-      nnodes[3] = inodes[6];
+      nnodes[2] = inodes[7];
+      nnodes[3] = inodes[2];
       clipped->add_elem(nnodes);
     }
     else// if (inside == 0x3 || inside == 0x5 || inside == 0x6 ||
