@@ -49,7 +49,7 @@
 #include <Core/share/share.h>
 
 #ifndef _TK
-#include "tk.h"
+#  include <tk.h>
 #endif
 
 
