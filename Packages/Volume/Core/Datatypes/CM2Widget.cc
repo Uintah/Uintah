@@ -546,6 +546,7 @@ string
 TriangleCM2Widget::tcl_pickle()
 {
   ostringstream s;
+  s << "t ";
   s << base_ << " ";
   s << top_x_ << " ";
   s << top_y_ << " ";
@@ -558,11 +559,15 @@ void
 TriangleCM2Widget::tcl_unpickle(const string &p)
 {
   istringstream s(p);
+  char c;
+  s >> c;
   s >> base_;
   s >> top_x_;
   s >> top_y_;
   s >> width_;
   s >> bottom_;
+
+  cout << "Triangle unpickled, " << base_ << " " << top_x_ << " " << top_y_ << " " << width_ << " " << bottom_ << "\n";
 }
 
 
@@ -925,6 +930,7 @@ string
 RectangleCM2Widget::tcl_pickle()
 {
   ostringstream s;
+  s << "r ";
   s << type_ << " ";
   s << left_x_ << " ";
   s << left_y_ << " ";
@@ -938,6 +944,8 @@ void
 RectangleCM2Widget::tcl_unpickle(const string &p)
 {
   istringstream s(p);
+  char c;
+  s >> c;
   s >> type_;
   s >> left_x_;
   s >> left_y_;
