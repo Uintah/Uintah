@@ -82,29 +82,29 @@ EditFusionFieldAlgoT<FIELD>::execute(FieldHandle field_h,
 
   // Account for the repeated values in the theta and phi directions
   // by subtracting 1 in the j and k directions.
-  const unsigned int idim_in = imesh->get_nx();
+  //  const unsigned int idim_in = imesh->get_nx();
   const unsigned int jdim_in = imesh->get_ny() - 1;
   const unsigned int kdim_in = imesh->get_nz() - 1;
 
   // Add one because we want the last node.
   unsigned int idim_out = (iend - istart) / iskip + 1;
   unsigned int jdim_out = (jend - jstart) / jskip + 1;
-  unsigned int kdin_out = (kend - kstart) / kskip + 1;
+  unsigned int kdim_out = (kend - kstart) / kskip + 1;
 
   // Account for the modulo of skipping nodes so that the last node will be
   // included even if it "partial" cell when compared to the others.
   if( (iend - istart) % iskip ) idim_out += 1;
   if( (jend - jstart) % jskip ) jdim_out += 1;
-  if( (kend - kstart) % kskip ) kdin_out += 1;
+  if( (kend - kstart) % kskip ) kdim_out += 1;
 
   typename FIELD::mesh_handle_type omesh =
-    scinew typename FIELD::mesh_type(idim_out, jdim_out, kdin_out);
+    scinew typename FIELD::mesh_type(idim_out, jdim_out, kdim_out);
 
   // Now after the mesh has been created, create the field.
   FIELD *ofield = scinew FIELD(omesh, Field::NODE);
 
   unsigned int i, j, k;
-  unsigned int iend_skip = iend+iskip;
+  unsigned int iend_skip = iend+iskip-1;  // Minus one - no wrap around.
   unsigned int jend_skip = jend+jskip;
   unsigned int kend_skip = kend+kskip;
 
@@ -142,8 +142,8 @@ EditFusionFieldAlgoT<FIELD>::execute(FieldHandle field_h,
       for( i=istart, new_node.i_=0; i<iend_skip; i+=iskip, new_node.i_++ ) {
 
 	// Check for going past the end.
-	if( i > iend )
-	  i = iend;
+	if( i > iend - 1 )
+	  i = iend - 1;
 
 	old_node.i_ = i;
  
