@@ -489,7 +489,6 @@ void ICE::accumulateEnergySourceSinks_RF(const ProcessorGroup*,
     delt_vartype delT;
     old_dw->get(delT, d_sharedState->get_delt_label());
     Vector dx = patch->dCell();
-    double cell_vol = dx.x() * dx.y() * dx.z();
     double areaX = dx.y() * dx.z();
     double areaY = dx.x() * dx.z();
     double areaZ = dx.x() * dx.y();
@@ -508,7 +507,7 @@ void ICE::accumulateEnergySourceSinks_RF(const ProcessorGroup*,
     constSFCXVariable<double> pressDiffX_FC;
     constSFCYVariable<double> pressDiffY_FC;
     constSFCZVariable<double> pressDiffZ_FC;
-
+    
     StaticArray<constCCVariable<double>   > vol_frac(numMatls);            
     StaticArray<constCCVariable<Vector>   > vel_CC(numMatls);
     StaticArray<constSFCXVariable<double> > uvel_FC(numMatls);
@@ -566,7 +565,7 @@ void ICE::accumulateEnergySourceSinks_RF(const ProcessorGroup*,
         double tmp_R = 0.0, tmp_L   = 0.0;
         double tmp_T = 0.0, tmp_BOT = 0.0;
         double tmp_F = 0.0, tmp_BK  = 0.0;
-
+      
         for(int m = 0; m < numMatls; m++) {
         
           //   O H   T H I S   I S   G O I N G   T O   B E   S L O W   
@@ -782,8 +781,7 @@ void ICE::addExchangeToMomentumAndEnergyRF(const ProcessorGroup*,
         
       new_dw->allocateAndPut(Tdot[m],        lb->Tdot_CCLabel,    indx, patch);          
       new_dw->allocateAndPut(mom_L_ME[m],    lb->mom_L_ME_CCLabel,indx, patch);         
-      new_dw->allocateAndPut(tot_eng_L_ME[m],lb->int_eng_L_ME_CCLabel,
-                                                                  indx,patch);
+      new_dw->allocateAndPut(tot_eng_L_ME[m],lb->eng_L_ME_CCLabel,indx,patch);
       e_prime_v[m] = Joule_coeff * cv[m];
       Tdot[m].initialize(0.0);
       tot_eng_L_ME[m].initialize(0.0);
@@ -982,28 +980,17 @@ void ICE::computeLagrangianSpecificVolumeRF(const ProcessorGroup*,
 
     int numALLMatls = d_sharedState->getNumMatls();
     Vector  dx = patch->dCell();
-    double vol = dx.x()*dx.y()*dx.z();
-    double areaX = dx.y() * dx.z();
-    double areaY = dx.x() * dx.z();
-    double areaZ = dx.x() * dx.y();    
-    Ghost::GhostType  gac = Ghost::AroundCells;
+    double vol = dx.x()*dx.y()*dx.z();   
     Ghost::GhostType  gn  = Ghost::None;
-    StaticArray<constSFCXVariable<double> > uvel_FC(numALLMatls);
-    StaticArray<constSFCYVariable<double> > vvel_FC(numALLMatls);
-    StaticArray<constSFCZVariable<double> > wvel_FC(numALLMatls); 
-
+    StaticArray<constCCVariable<double> > volFrac_advected(numALLMatls); 
     StaticArray<constCCVariable<double> > Tdot(numALLMatls);
     StaticArray<constCCVariable<double> > vol_frac(numALLMatls);
     StaticArray<constCCVariable<double> > Temp_CC(numALLMatls);
     constCCVariable<double> rho_CC, rho_micro, f_theta,sp_vol_CC;
-    constCCVariable<double> delP_Dilatate, press_CC, speedSound;
     CCVariable<double> sum_therm_exp;
     vector<double> if_mpm_matl_ignore(numALLMatls);
 
-    new_dw->get(press_CC,        lb->press_CCLabel,      0,patch, gn,0);
-    new_dw->get(delP_Dilatate,   lb->delP_DilatateLabel, 0,patch, gn,0);
     new_dw->allocateTemporary(sum_therm_exp,patch);
-
     sum_therm_exp.initialize(0.);
     //__________________________________
     // Sum of thermal expansion
@@ -1015,11 +1002,9 @@ void ICE::computeLagrangianSpecificVolumeRF(const ProcessorGroup*,
       int indx = matl->getDWIndex();
       new_dw->get(Tdot[m],    lb->Tdot_CCLabel,    indx,patch, gn,0);  
       new_dw->get(vol_frac[m],lb->vol_frac_CCLabel,indx,patch, gn,0);  
-      old_dw->get(Temp_CC[m], lb->temp_CCLabel,    indx,patch, gn,0); 
-      new_dw->get(uvel_FC[m], lb->uvel_FCMELabel,  indx, patch, gac, 1);   
-      new_dw->get(vvel_FC[m], lb->vvel_FCMELabel,  indx, patch, gac, 1);   
-      new_dw->get(wvel_FC[m], lb->wvel_FCMELabel,  indx, patch, gac, 1);   
-
+      old_dw->get(Temp_CC[m], lb->temp_CCLabel,    indx,patch, gn,0);    
+      new_dw->get(volFrac_advected[m],lb->volFrac_advectedLabel,
+                                                   indx,patch, gn,0);
       if_mpm_matl_ignore[m] = 1.0; 
       if ( mpm_matl) {       
         if_mpm_matl_ignore[m] = 0.0; 
@@ -1033,9 +1018,6 @@ void ICE::computeLagrangianSpecificVolumeRF(const ProcessorGroup*,
     }
 
     //__________________________________ 
-    //  Compute spec_vol_L[m] = Mass[m] * sp_vol[m]
-    //  this is consistent with 4.8c.
-    //  
     for(int m = 0; m < numALLMatls; m++) {
       Material* matl = d_sharedState->getMaterial( m );
       int indx = matl->getDWIndex();
@@ -1046,67 +1028,32 @@ void ICE::computeLagrangianSpecificVolumeRF(const ProcessorGroup*,
       
       new_dw->get(sp_vol_CC, lb->sp_vol_CCLabel,    indx,patch,gn, 0);
       new_dw->get(rho_CC,    lb->rho_CCLabel,       indx,patch,gn, 0);
-      new_dw->get(speedSound,lb->speedSound_CCLabel,indx,patch,gn, 0);
       new_dw->get(f_theta,   lb->f_theta_CCLabel,   indx,patch,gn, 0);
 
+      //__________________________________
+      //  compute spec_vol_L * mass
       for(CellIterator iter=patch->getExtraCellIterator();!iter.done();iter++){
         IntVector c = *iter;
         spec_vol_L[c] = (rho_CC[c] * vol)*sp_vol_CC[c];
       }
-
+      //__________________________________
+      //  add the sources to spec_vol_L
       for(CellIterator iter=patch->getCellIterator();!iter.done();iter++){
         IntVector c = *iter;
-
-        IntVector right, left, top, bottom, front, back;
-        right    = c + IntVector(1,0,0);    left     = c + IntVector(0,0,0);
-        top      = c + IntVector(0,1,0);    bottom   = c + IntVector(0,0,0);
-        front    = c + IntVector(0,0,1);    back     = c + IntVector(0,0,0);
-        //__________________________________
-        //  term1
-        double term1, term1_X, term1_Y, term1_Z;
-        double tmp_R = 0.0, tmp_L   = 0.0;
-        double tmp_T = 0.0, tmp_BOT = 0.0;
-        double tmp_F = 0.0, tmp_BK  = 0.0;
-        //   O H   T H I S   I S   G O I N G   T O   B E   S L O W  
-        //  A N D   N E E D S   T O   B E   R E D O N E
-        for(int m = 0; m < numALLMatls; m++) {
-          //  use the upwinded vol_frac
-          IntVector upwc;     
-          upwc     = upwindCell_X(c, uvel_FC[m][right],  1.0);
-          tmp_R   += vol_frac[m][upwc] * uvel_FC[m][right];
-          upwc     = upwindCell_X(c, uvel_FC[m][left],   0.0);
-          tmp_L   += vol_frac[m][upwc] * uvel_FC[m][left];
-          
-          upwc     = upwindCell_Y(c, vvel_FC[m][top],    1.0);
-          tmp_T   += vol_frac[m][upwc] * vvel_FC[m][top];
-          upwc     = upwindCell_Y(c, vvel_FC[m][bottom], 0.0);
-          tmp_BOT += vol_frac[m][upwc] * vvel_FC[m][bottom];
-          
-          upwc     = upwindCell_Z(c, vvel_FC[m][front],  1.0);
-          tmp_F   += vol_frac[m][upwc] * wvel_FC[m][front];
-          upwc     = upwindCell_Z(c, vvel_FC[m][back],   0.0);
-          tmp_BK  += vol_frac[m][upwc] * wvel_FC[m][back];
-        } 
-        term1_X = (tmp_R - tmp_L)   * areaX;
-        term1_Y = (tmp_T - tmp_BOT) * areaY;
-        term1_Z = (tmp_F - tmp_BK)  * areaZ;
-
-        term1 = f_theta[c] * delT * (term1_X + term1_Y + term1_Z);
+        
+        double sumVolFrac_advected = 0.0;
+        for(int k = 0; k < numALLMatls; k++) {        
+          sumVolFrac_advected -= volFrac_advected[k][c];
+        }
+        double term1 = vol * f_theta[c] * sumVolFrac_advected;
        
-/*`==========TESTING==========*/
-#if 0
-        double kappa = sp_vol_CC[c]/(speedSound[c] * speedSound[c]);
-        double term1 = -vol * vol_frac[m][c] * kappa * delP_Dilatate[c]; 
-#endif 
-/*===========TESTING==========`*/
 
         double alpha = 1.0/Temp_CC[m][c];  // HARDWRIED FOR IDEAL GAS
         double term2 = delT * vol * (vol_frac[m][c] * alpha *  Tdot[m][c] -
                                    f_theta[c] * sum_therm_exp[c]);
                                    
         // This is actually mass * sp_vol
-        spec_vol_source[c] = term1 + if_mpm_matl_ignore[m] * term2; 
-
+        spec_vol_source[c] = term1 + if_mpm_matl_ignore[m] * term2;
         spec_vol_L[c] += spec_vol_source[c]; 
      }
 
@@ -1120,11 +1067,9 @@ void ICE::computeLagrangianSpecificVolumeRF(const ProcessorGroup*,
         printData(  patch,1, desc.str(), "Temp",          Temp_CC[m]);
         printData(  patch,1, desc.str(), "vol_frac[m]",   vol_frac[m]);
         printData(  patch,1, desc.str(), "rho_CC",        rho_CC);
-        printData(  patch,1, desc.str(), "speedSound",    speedSound);
         printData(  patch,1, desc.str(), "sp_vol_CC",     sp_vol_CC);
         printData(  patch,1, desc.str(), "Tdot",          Tdot[m]);
         printData(  patch,1, desc.str(), "f_theta",       f_theta);
-        printData(  patch,1, desc.str(), "delP_Dilatate", delP_Dilatate); 
         printData(  patch,1, desc.str(), "sum_therm_exp", sum_therm_exp);
         printData(  patch,1, desc.str(), "spec_vol_source",spec_vol_source);
         printData(  patch,1, desc.str(), "spec_vol_L",     spec_vol_L);
@@ -1134,7 +1079,6 @@ void ICE::computeLagrangianSpecificVolumeRF(const ProcessorGroup*,
       if (!areAllValuesPositive(spec_vol_L, neg_cell)) {
         cout << "matl            "<< indx << endl;
         cout << "sum_thermal_exp "<< sum_therm_exp[neg_cell] << endl;
-        cout << "delP_Dilatate   "<< delP_Dilatate[neg_cell] << endl;
         cout << "spec_vol_source "<< spec_vol_source[neg_cell] << endl;
         cout << "sp_vol_L        "<< spec_vol_L[neg_cell] << endl;
         cout << "mass "<< (rho_CC[neg_cell]*vol*sp_vol_CC[neg_cell]) << endl;
