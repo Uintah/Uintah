@@ -96,7 +96,6 @@ void BallData::Update(void)
 	if (axisSet!=NoAxes) {
 	    vFrom = ConstrainToAxis(vFrom, set[axisIndex]);
 	    vTo = ConstrainToAxis(vTo, set[axisIndex]);
-	    printf("Constraint!\n");
 	}
 	qDrag = Qt_FromBallPoints(vFrom, vTo);
 	qNow = qDrag*qDown;
@@ -236,9 +235,6 @@ void DrawAnyArc(HVect vFrom, HVect vTo)
     double dot;
     pts[0] = vFrom;
     pts[1] = pts[NSEGS] = vTo;
-//    printf("%lf %lf %lf %lf -> %lf %lf %lf %lf\n",
-//	   vFrom.x,vFrom.y,vFrom.z,vFrom.w,
-//	   vTo.x,vTo.y,vTo.z,vTo.w);
 	   
     for (i=0; i<LG_NSEGS; i++) pts[1] = V3_Bisect(pts[0], pts[1]);
     dot = 2.0*V3_Dot(pts[0], pts[1]);

@@ -250,8 +250,6 @@ ManageFieldSet::execute()
   }
   else
   {
-    cout << "outputting\n";
-
     state_gui_.set("update");
 
     FieldSet *ofs = NULL;
@@ -267,8 +265,6 @@ ManageFieldSet::execute()
     {
       const string val = *si;
       ++si;
-
-      cout << "Looking for '" << val << "'\n";
 
       FSHMap::iterator fsloc = fsidmap_.find(val);
       if (fsloc != fsidmap_.end())
@@ -292,14 +288,14 @@ ManageFieldSet::execute()
 	}
 	else
 	{
-	  cout << "Could not find '" << val << "' in the iports.\n";
+	  remark("Could not find '" + val + "' in the iports.");
 	}
       }
     }
 
     if (ofs != NULL)
     {
-      cout << "Dumping out a field set\n";
+      remark("Dumping out a field set.");
       ofs->store("name", string("glomfield"));
       FieldSetHandle ofsh(ofs);
       FieldSetOPort *ofsp = (FieldSetOPort *)get_oport("Output FieldSet");

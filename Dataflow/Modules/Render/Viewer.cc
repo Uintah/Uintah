@@ -193,7 +193,8 @@ int Viewer::process_event(int block)
 		    break;
 	    }
 	    if(i==viewwindow.size()){
-		cerr << "Warning: ViewWindow not found for redraw! (id=" << rmsg->rid << "\n";
+	        warning("ViewWindow not found for redraw! (id=" + rmsg->rid +
+			").");
 	    } else if(rmsg->nframes == 0){
 		// Normal redraw (lazy)
 		r->need_redraw=1;
@@ -277,16 +278,12 @@ int Viewer::process_event(int block)
 	if(gmsg->which_viewwindow >= viewwindow.size()){
 	    gmsg->datareply->send(0);
 	} else {
-	    cerr << "Calling viewwindow->getData\n";
 	    viewwindow[gmsg->which_viewwindow]->getData(gmsg->datamask, gmsg->datareply);
-	    cerr << "getDat done\n";
 	}
 	break;
     case MessageTypes::GeometrySetView:
 	if(gmsg->which_viewwindow < viewwindow.size()){
-	    cerr << "Calling viewwindow->setView\n";
 	    viewwindow[gmsg->which_viewwindow]->setView(gmsg->view);
-	    cerr << "setView done\n";
 	}
 	break;
 #if 0
@@ -302,7 +299,7 @@ int Viewer::process_event(int block)
 	break;
 #endif
     default:
-	cerr << "Viewer: Illegal Message type: " << msg->type << endl;
+        error("Illegal Message type: " + to_string(msg->type));
 	break;
     }
     if(msg)
@@ -357,7 +354,8 @@ void Viewer::delObj(GeomViewerPort* port, int serial, int del)
 	    viewwindow[i]->itemDeleted(si);
 	port->delObj(serial, del);
     } else {
-	cerr << "Error deleting object, object not in database...(serial=" << serial << ")" << endl;
+        error("Error deleting object, object not in database...(serial=" +
+	      to_string(serial));
     }
 }
 
@@ -464,11 +462,18 @@ ViewerMessage::ViewerMessage(const string& rid)
 //----------------------------------------------------------------------
 ViewerMessage::ViewerMessage(const string& rid, double tbeg, double tend,
 			     int nframes, double framerate)
-: MessageBase(MessageTypes::ViewWindowRedraw), rid(rid), tbeg(tbeg), tend(tend),
-  nframes(nframes), framerate(framerate)
+  : MessageBase(MessageTypes::ViewWindowRedraw),
+    rid(rid),
+    tbeg(tbeg),
+    tend(tend),
+    nframes(nframes),
+    framerate(framerate)
 {
-    if(nframes == 0)
-	cerr << "Warning - nframes shouldn't be zero for animation\n";
+    if (nframes <= 0)
+    {
+      std::cerr << "nframes shouldn't be zero for animation.\n";
+      nframes = 1;
+    }
 }
 
 //----------------------------------------------------------------------
@@ -511,9 +516,10 @@ void Viewer::append_port_msg(GeometryComm* gmsg)
   // PortInfo* pi;
   GeomViewerPort *pi;
   
-  if (!(pi = ((GeomViewerPort*)ports.getObj(gmsg->portno)))) {
-    // if(portHash.find(gmsg->portno) == portHash.end()){
-    cerr << "Geometry message sent to bad port!!!: " << gmsg->portno << "\n";
+  if (!(pi = ((GeomViewerPort*)ports.getObj(gmsg->portno))))
+  {
+    warning("Geometry message sent to bad port!!!: " +
+	    to_string(gmsg->portno));
     return;
   }
   
@@ -533,8 +539,8 @@ void Viewer::flushPort(int portid)
 {
     // Look up the right port number
     GeomViewerPort* pi;
-    if(!(pi = ((GeomViewerPort*)ports.getObj(portid)))){
-	cerr << "Geometry message sent to bad port!!!\n";
+    if(!(pi = ((GeomViewerPort*)ports.getObj(portid)))) {
+        warning("Geometry message sent to bad port!!!\n");
 	return;
     }
     GeometryComm* gmsg=pi->msg_head;
@@ -550,7 +556,7 @@ void Viewer::flushPort(int portid)
 	    delAll(pi);
 	    break;
 	default:
-	    cerr << "How did this message get in here???\n";
+	    error("How did this message get in here???");
 	}
 	GeometryComm* next=gmsg->next;
 	delete gmsg;
@@ -585,7 +591,6 @@ void Viewer::insert_specific(const string& key, void* data)
 //----------------------------------------------------------------------
 void Viewer::emit_vars(ostream& out, string& midx)
 {
-//  cerr << "Viewer emitvars" << endl;
   TCL::emit_vars(out, midx);
   string viewwindowstr;
   for(int i=0;i<viewwindow.size();i++){

@@ -57,7 +57,6 @@ public:
   virtual bool get( Field *field, pair<double,double> &p ) {
     F *f = dynamic_cast<F *>(field);
     if ( !f ) return false;
-    cerr << "compute minmax...\n";
     return field_minmax( *f, p );
   }
 };

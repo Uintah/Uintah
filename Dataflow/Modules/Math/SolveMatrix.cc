@@ -70,8 +70,6 @@
 #include <Core/Thread/SimpleReducer.h>
 #include <Core/Thread/Thread.h>
 #include <iostream>
-using std::cerr;
-using std::endl;
 #include <sstream>
 
 namespace SCIRun {
@@ -216,7 +214,7 @@ void SolveMatrix::execute()
   }
   
   if ( !matrix.get_rep() || !rhs.get_rep() ) {
-    cerr << "Solve: no input\n";
+    warning("No input.");
     solport->send(MatrixHandle(0));
     return;
   }
@@ -250,12 +248,11 @@ void SolveMatrix::execute()
   ColumnMatrix *solp = dynamic_cast<ColumnMatrix*>(solution.get_rep());
 
   if (!rhsp) {
-    cerr << "Error - rhs isn't a column!\n";
+    error("rhs isn't a column!");
     return;
   }
 
   ep=emit_partial.get();
-//  cerr << "emit_partial="<<ep<<"\n";
   string meth=method.get();
 #ifdef SCI_SPARSELIB
     if(meth == "conjugate_gradient"){
@@ -938,14 +935,9 @@ CGData::CGData()
 void SolveMatrix::conjugate_gradient_sci(Matrix* matrix,
 					 ColumnMatrix& lhs, ColumnMatrix& rhs)
 {
-//  cerr << "cg started\n";
   CPUTimer timer;
   timer.start();
   int np = tcl_np.get();
-  //     int np=Task::nprocessors();
-//  cerr << "np=" << np << endl;
-
-//  data=new CGData;
 
   data.module=this;
   data.np=np;
@@ -960,7 +952,6 @@ void SolveMatrix::conjugate_gradient_sci(Matrix* matrix,
   delete data.stats;
 //  delete data;
   timer.stop();
-//  cerr << "cg done: " << timer.time() << " seconds\n";
 }
 
 void SolveMatrix::parallel_conjugate_gradient(int processor)
@@ -1042,7 +1033,6 @@ void SolveMatrix::parallel_conjugate_gradient(int processor)
       return;
     } else {
 	int ev=(data.err<1000000);
-//	cerr << "EVALUATING "<<ev<<"\n";
 	if (!ev) data.err=1000000;
     }
 
@@ -1107,8 +1097,6 @@ void SolveMatrix::parallel_conjugate_gradient(int processor)
     double my_bknum=Dot(Z, R, stats->flop, stats->memref, beg, end);
     double bknum=data.reducer.sum(processor, data.np, my_bknum);
 
-//    if (processor==0) cerr << "bknum="<<bknum<<"\n";
-    
     if(data.niter==1){
       Copy(P, Z, stats->flop, stats->memref, beg, end);
     } else {
@@ -1118,33 +1106,21 @@ void SolveMatrix::parallel_conjugate_gradient(int processor)
     data.reducer.wait(data.np);
     // Calculate coefficient ak, new iterate x and new residuals r and rr
 
-#if 0
-    if (processor==2) {
-	cerr << "P=";
-	for (int iii=beg; iii<end; iii++) cerr << " "<<P[iii];
-	cerr << "\n";
-    }
-#endif
 
     matrix->mult(P, Z, stats->flop, stats->memref, beg, end);
     bkden=bknum;
     double my_akden=Dot(Z, P, stats->flop, stats->memref, beg, end);
-//    cerr << "p="<<processor<<" my_akden="<<my_akden<<"\n";
 
     double akden=data.reducer.sum(processor, data.np, my_akden);
     
     double ak=bknum/akden;
-//    if (processor == 0) cerr << "ak="<<ak<<"  akden="<<akden<<"\n";
     ColumnMatrix& lhs=*data.lhs;
     ScMult_Add(lhs, ak, P, lhs, stats->flop, stats->memref, beg, end);
-//     ColumnMatrix& rhs=*data.rhs;
     ScMult_Add(R, -ak, Z, R, stats->flop, stats->memref, beg, end);
     
     double my_err=R.vector_norm(stats->flop, stats->memref, beg, end)/data.bnorm;
     err=data.reducer.sum(processor, data.np, my_err);
-//    if (processor==0) cerr << "err="<<err<<"\n";
     int ev=(err<1000000);
-//    cerr << "EVALUATING2 "<<ev<<"\n";
     if (!ev) err=1000000;
 
 
@@ -1173,9 +1149,7 @@ void SolveMatrix::parallel_conjugate_gradient(int processor)
 			targetlist, last_errupdate);
 	  
 	  if(err > 0){
-	    double progress=(log_orig-log(err))/(log_orig-log_targ);                        
-//	    cerr << "err=" << err << endl;
-	    //                         cerr << "log_orig=" << log_orig << endl;
+	    double progress = (log_orig-log(err))/(log_orig-log_targ);
 	    update_progress(progress);
 	  }
 	}
@@ -1197,7 +1171,6 @@ void SolveMatrix::parallel_conjugate_gradient(int processor)
     floprate.set(14*(stats->gflop*1.e3+stats->flop*1.e-6)/time);
     memrefs.set(14*stats->grefs*1.e9+stats->memref);
     memrate.set(14*(stats->grefs*1.e3+stats->memref*1.e-6)/time);
-//    cerr << "Done in " << time << " seconds\n";
     
     TCL::execute(id+" finish_graph");
     append_values(data.niter, errlist, last_update, targetidx, targetlist,
@@ -1211,7 +1184,6 @@ void
 SolveMatrix::bi_conjugate_gradient_sci(Matrix* matrix,
 				       ColumnMatrix& lhs, ColumnMatrix& rhs)
 {
-  cerr << "bi_cg started\n";
   CPUTimer timer;
   timer.start();
   int np = tcl_np.get();
@@ -1222,7 +1194,7 @@ SolveMatrix::bi_conjugate_gradient_sci(Matrix* matrix,
       trans = tr;
       tr->transpose( *matrix->getSparseRow() );
   } else {
-      cerr << "Input matrix isn't sparse of sym-sparse - can't use CG (no transpose)\n";
+      error("Input matrix isn't sparse of sym-sparse - can't use CG (no transpose)");
       return;
   }
 
@@ -1243,16 +1215,12 @@ SolveMatrix::bi_conjugate_gradient_sci(Matrix* matrix,
   delete data.stats;
 //  delete data;
   timer.stop();
-  cerr << "bi_cg done: " << timer.time() << " seconds\n";
+  remark("bi_cg done in " + to_string(timer.time()) + " seconds");
 }
 
 
 void SolveMatrix::parallel_bi_conjugate_gradient(int processor)
 {
-#ifdef PRINT
-  //if ( processor == 0)
-    printf("BiCG[%d]: %d\n",processor, getpid());
-#endif
   Matrix* matrix=data.mat;
   PStats* stats=&data.stats[processor];
   int size=matrix->nrows();
@@ -1333,7 +1301,6 @@ void SolveMatrix::parallel_bi_conjugate_gradient(int processor)
       return;
     } else {
 	int ev=(data.err<1000000);
-//	cerr << "EVALUATING "<<ev<<"\n";
 	if (!ev) data.err=1000000;
     }
     
@@ -1414,7 +1381,6 @@ void SolveMatrix::parallel_bi_conjugate_gradient(int processor)
       //tol = 
       // max_iter = 
       // return 2
-      printf("BiCG[%d]: bknum == 0\n", processor);
       break;
     }
     
@@ -1455,7 +1421,6 @@ void SolveMatrix::parallel_bi_conjugate_gradient(int processor)
     err=data.reducer.sum(processor, data.np, my_err);
 
     int ev=(err<1000000);
-//    cerr << "EVALUATING2 "<<ev<<"\n";
     if (!ev) err=1000000;
 
     stats->gflop+=stats->flop/1000000000;
@@ -1484,8 +1449,7 @@ void SolveMatrix::parallel_bi_conjugate_gradient(int processor)
 	  
 	  if(err > 0){
 	    double progress=(log_orig-log(err))/(log_orig-log_targ);                        
-	    cerr << "err=" << err << endl;
-	    //                         cerr << "log_orig=" << log_orig << endl;
+	    warning("err=" + to_string(err));
 	    update_progress(progress);
 	  }
 	}
@@ -1508,7 +1472,7 @@ void SolveMatrix::parallel_bi_conjugate_gradient(int processor)
     floprate.set(14*(stats->gflop*1.e3+stats->flop*1.e-6)/time);
     memrefs.set(14*stats->grefs*1.e9+stats->memref);
     memrate.set(14*(stats->grefs*1.e3+stats->memref*1.e-6)/time);
-    cerr << "Done in " << time << " seconds\n";
+    remark("Done in " + to_string(time) + " seconds.");
     
     TCL::execute(id+" finish_graph");
     append_values(data.niter, errlist, last_update, targetidx, targetlist,

@@ -28,7 +28,6 @@
  */
 
 #include <iostream>
-using std::cerr;
 using std::ostream;
 
 #include <Core/Geom/GeomOpenGL.h>
@@ -68,7 +67,7 @@ GeomViewerItem::GeomViewerItem()
 
 GeomViewerItem::GeomViewerItem(GeomObj* obj,const string& nm, 
 			       CrowdMonitor* lck)
-:child(obj),name(nm),lock(lck)
+  :child(obj), name(nm), lock(lck)
 {
     if (!lock)
 	child = new GeomBBoxCache(obj);
@@ -86,10 +85,11 @@ void GeomViewerItem::get_triangles( Array1<float> &v)
     child->get_triangles(v);
 }
 
-GeomObj* GeomViewerItem::clone()
+GeomObj*
+GeomViewerItem::clone()
 {
-    cerr << "GeomViewerItem::clone not implemented!\n";
-    return 0;
+  // Untested.
+  return new GeomViewerItem(child, name, lock);
 }
 
 void GeomViewerItem::reset_bbox()
