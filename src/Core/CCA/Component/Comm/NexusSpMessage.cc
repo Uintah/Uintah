@@ -191,6 +191,7 @@ void NexusSpMessage::unmarshalSpChannel(SpChannel* channel) {
   NexusSpChannel* nex_chan = dynamic_cast<NexusSpChannel*>(channel);
   if (!nex_chan)
     throw CommError("error in comm. libraries in unmarshaling call",1000); 
+  if (nex_chan->d_sp) delete(nex_chan->d_sp);
   if(int _gerr=globus_nexus_get_startpoint(_recvbuff,&(nex_chan->d_sp), 1))
     throw CommError("get_startpoint",_gerr);
 }
