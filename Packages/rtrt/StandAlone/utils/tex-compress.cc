@@ -5,6 +5,8 @@
 #include <string>
 #include <sgi_stl_warnings_on.h>
 
+// #define SAVE_ERROR 1
+
 using namespace std;
 
 // Declare external FORTRAN function
@@ -20,14 +22,32 @@ extern "C" {
 	       int ifail[], int& info);
 }
 
+class IndexValuePair {
+public:
+  int idx;
+  float value;
+
+  // Defined for sorting in descending order
+  inline bool operator<(const IndexValuePair& other) const {
+    return (other.value<value);
+  };
+};
+
+
 // Global variables
 int num_textures=0;
-int num_subset=0;
-int num_bases=0;
+int num_subset=100;
+int num_add=10;
+int num_bases=10;
 int width=0;
 int height=0;
 int num_pixels=0;
+float max_error=0;
+float mean_error=0;
+float prev_error=0;
+bool use_mean=true;
 char* outbasename=0;
+bool inf_norm=true;
 char* nrrd_ext=".nhdr";
 int verbose=0;
 
@@ -38,11 +58,15 @@ void usage(char* me, const char* unknown=0) {
   // Print out the usage
   cerr<<"usage:  "<<me<<" [options] -i <filename> -o <basename>"<<endl;
   cerr<<"options:"<<endl;
-  cerr<<"  -numsubset <int>   maximum number of textures to include in PCA subset (0)"<<endl;
-  cerr<<"  -numbases <int>    maximum number of basis textures for PCA (0)"<<endl;
-  cerr<<"  -nrrd              use .nrrd extension (false)"<<endl;
-  cerr<<"  -v <int>           set verbosity level (0)"<<endl;
-  cerr<<"  --help             print this message and exit"<<endl;
+  cerr<<"  -nsubset <int>    maximum number of textures to include in PCA subset (100)"<<endl;
+  cerr<<"  -nadd <int>       number of textures to add per iteration (10)"<<endl;
+  cerr<<"  -nbases <int>     maximum number of basis textures for PCA (10)"<<endl;
+  cerr<<"  -mse              compute the mean squared error (false)"<<endl;
+  cerr<<"  -thresh <float>   set error threshold for early termination (0)"<<endl;
+  cerr<<"  -maxerr           use maximum error when evaluating early termination (false)"<<endl;
+  cerr<<"  -nrrd             use .nrrd extension (false)"<<endl;
+  cerr<<"  -v <int>          set verbosity level (0)"<<endl;
+  cerr<<"  --help            print this message and exit"<<endl;
 
   if (unknown)
     exit(1);
@@ -136,6 +160,39 @@ Nrrd *computeMean(Nrrd* nin) {
   return mean;
 }
 
+IndexValuePair* computeVariance(Nrrd* nin) {
+  char* me="computeVariance";
+  
+  if (verbose)
+    cout<<"Computing texture variance"<<endl;
+  
+  IndexValuePair* variance=new IndexValuePair[num_textures];
+  if (!variance) {
+    cerr<<me<<":  error allocating memory for variance"<<endl;
+    return 0;
+  }
+  
+  float* in_data=(float*)(nin->data);
+  for (int tex=0; tex<num_textures; tex++) {
+    float min = FLT_MAX;
+    float max = -FLT_MAX;
+    for (int y=0; y<height; y++) {
+      for (int x=0; x<width; x++) {
+	float value = in_data[(y*width + x)*num_textures + tex];
+	if (value < min)
+	  min = value;
+	if (value > max)
+	  max = value;
+      }
+    }
+    
+    variance[tex].idx = tex;
+    variance[tex].value = max - min;
+  }
+
+  return variance;
+}
+
 Nrrd* computeCovariance(Nrrd* nin, Nrrd* mean, int* pca_idx) {
   char* me="computeCovariance";
   char* err;
@@ -165,7 +222,7 @@ Nrrd* computeCovariance(Nrrd* nin, Nrrd* mean, int* pca_idx) {
 	for(int row=column; row<num_subset; row++) {
 	  int pixel=(y*width + x)*num_textures;
 	  int idx1=pixel + pca_idx[column];
-	  int idx2=pixel+ pca_idx[row];
+	  int idx2=pixel + pca_idx[row];
 
 	  cov_data[row]+=(in_data[idx1] + mean_data[pca_idx[column]])*
 			 (in_data[idx2] + mean_data[pca_idx[row]]);
@@ -397,9 +454,6 @@ Nrrd *normalizeBasis(Nrrd* basis) {
 
   delete [] mag;
   
-  if (verbose)
-    cout<<"Basis textures normalized"<<endl;
-
   return basis;
 }
 
@@ -443,7 +497,8 @@ Nrrd* computeCoefficients(Nrrd* nin, Nrrd* basis) {
   return coeff;
 }
 
-float* computeError(Nrrd* nin, Nrrd* basis, Nrrd* coeff, Nrrd* mean) {
+IndexValuePair* computeError(Nrrd* nin, Nrrd* basis, Nrrd* coeff,
+			     Nrrd* mean, IndexValuePair* error) {
   char* me="computeError";
 
   // Compute texture with maximum error in current basis
@@ -457,13 +512,7 @@ float* computeError(Nrrd* nin, Nrrd* basis, Nrrd* coeff, Nrrd* mean) {
     return 0;
   }
 
-  float* error=new float[num_textures];
-  if (!recon) {
-    cerr<<me<<":  error allocating memory for error"<<endl;
-    return 0;
-  }
-
-  float* o_data=(float*)(nin->data);
+  float* in_data=(float*)(nin->data);
   float* c_data=(float*)(coeff->data);
   float* mean_data=(float*)(mean->data);
   for (int tex=0; tex<num_textures; tex++) {
@@ -488,70 +537,146 @@ float* computeError(Nrrd* nin, Nrrd* basis, Nrrd* coeff, Nrrd* mean) {
       r_data+=width;
     }
 
-    // Compute MSE between reconstructed and original
+    // Compute error between reconstructed and original
     r_data=recon;
-    for (int y=0; y<height; y++) {
-      for (int x=0; x<width; x++) {
-	float diff=r_data[x]-o_data[(y*width + x)*num_textures + tex];
-	error[tex]+=diff*diff;
+    error[tex].idx=tex;
+    if (inf_norm) {
+      // Using infinity norm
+      error[tex].value=-FLT_MAX;
+      for (int y=0; y<height; y++) {
+	for (int x=0; x<width; x++) {
+	  float residual=fabsf(r_data[x] -
+			       in_data[(y*width + x)*num_textures + tex]);
+	  if (residual>error[tex].value)
+	    error[tex].value=residual;
+	}
+	
+	r_data+=width;
       }
-
-      r_data+=width;
+    } else {
+      // Using mean squared error
+      for (int y=0; y<height; y++) {
+	for (int x=0; x<width; x++) {
+	  float residual=r_data[x] - in_data[(y*width + x)*num_textures + tex];
+	  error[tex].value+=residual*residual;
+	}
+	
+	r_data+=width;
+      }
+      
+      error[tex].value/=num_pixels;
     }
     
-    error[tex]/=num_pixels;
-
     c_data+=num_bases;
   }
 
   delete [] recon;
 
-  if (verbose) {
-    float max_error=-FLT_MAX;
-    float total_error=0;
-    for (int tex=0; tex<num_textures; tex++) {
-      if (error[tex]>max_error)
-	max_error=error[tex];
-      
-      total_error+=error[tex];
-    }
+  if (use_mean)
+    prev_error=mean_error;
+  else
+    prev_error=max_error;
+  
+  float total_error=0;
+  for (int tex=0; tex<num_textures; tex++) {
+    if (error[tex].value>max_error)
+      max_error=error[tex].value;
+    
+    total_error+=error[tex].value;
+  }
 
+  mean_error=total_error/num_textures;
+  
+  if (verbose) {
     cout<<"Maximum error:  "<<max_error<<endl;
-    cout<<"Mean error:  "<<total_error/num_textures<<endl;
+    cout<<"Mean error:  "<<mean_error<<endl;
   }
 
   return error;
 }
 
-int nextTexture(float* error, int* pca_idx) {
-  // Ignore already included textures
-  for (int i=0; i<num_subset; i++)
-    error[pca_idx[i]]=0;
+int* updatePCASubset(IndexValuePair* error, int* pca_idx) {
+  char* me="updatePCASubset";
 
-  // Find index of next texture to include
-  float max_error=-FLT_MAX;
-  int tex_idx=-1;
-  for (int tex=0; tex<num_textures; tex++) {
-    if (error[tex]>max_error) {
-      max_error=error[tex];
-      tex_idx=tex;
+  if (verbose)
+    cout<<"Updating PCA subset"<<endl;
+  
+  // Ignore already included textures
+  for (int subset=0; subset<num_subset; subset++) {
+    for (int tex=0; tex<num_textures; tex++) {
+      if (pca_idx[subset]==error[tex].idx) {
+	error[tex].value=0;
+	break;
+      }
     }
   }
+  
+#ifdef SAVE_ERROR
+  for (int add=0; add<num_add; add++) {
+    // Find texture with highest error
+    float max_error=-FLT_MAX;
+    int tex_idx=-1;
+    for (int tex=0; tex<num_textures; tex++) {
+      if (error[tex].value>max_error) {
+	max_error=error[tex].value;
+	tex_idx=error[tex].idx;
+      }
+    }
+    
+    if (tex_idx<0) {
+      cerr<<me<<":  error updating PCA subset:  invalid texture index"<<endl;
+      return 0;
+    }
 
-  return tex_idx;
+    // Update PCA subset
+    if (verbose>4)
+      cout<<"Adding texture["<<tex_idx<<"] to PCA subset"<<endl;
+
+    for (int tex=0; tex<num_textures; tex++) {
+      if (error[tex].idx==tex_idx) {
+	error[tex].value=0;
+	break;
+      }
+    }
+    
+    pca_idx[num_subset]=tex_idx;
+    num_subset++;
+  }
+#else
+#if 0
+  // XXX - Why doesn't nth element give the same result as
+  //       actually sorting the array?
+  // Put num_add elements with highest error at top
+  nth_element(error, error+num_add, error+num_textures);
+#else
+  // Sort the error array
+  sort(error, error+num_textures);
+#endif
+
+  // Update PCA subset
+  for (int add=0; add<num_add; add++) {
+    if (verbose>4)
+      cout<<"Adding texture["<<error[add].idx<<"] to PCA subset"<<endl;
+    
+    pca_idx[num_subset]=error[add].idx;
+    num_subset++;
+  }
+#endif
+
+  return pca_idx;
 }
 
-int saveNrrd(Nrrd* nin, char* type) {
+int saveNrrd(Nrrd* nin, char* type, char* ext) {
   char* me="saveNrrd";
   char* err;
   
   size_t outbasename_len=strlen(outbasename);
   size_t type_len=strlen(type);
-  size_t ext_len=strlen(nrrd_ext);
+  size_t ext_len=strlen(ext);
   size_t length=outbasename_len+type_len+ext_len;
   
   char* fname=new char[length];
-  sprintf(fname, "%s%s%s", outbasename, type, nrrd_ext);
+  sprintf(fname, "%s%s%s", outbasename, type, ext);
   if (nrrdSave(fname, nin, 0)) {
     err=biffGet(NRRD);
     cerr<<me<<":  error saving to "<<fname<<":  "<<err<<endl;
@@ -564,13 +689,39 @@ int saveNrrd(Nrrd* nin, char* type) {
   return 0;
 }
 
+#ifdef SAVE_ERROR
+int saveError(IndexValuePair* error, Nrrd* errorNrrd) {
+  char* me="saveError";
+  
+  // Sort the reconstruction error array
+  sort(error, error+num_textures);
+  
+  if (num_subset%10==0) {
+    // Save the error nrrd
+    float* error_data=(float*)(errorNrrd->data);
+    for (int tex=0; tex<num_textures; tex++)
+      error_data[tex]=error[tex].value;
+    
+    char type[24];
+    sprintf(type, "-error%05d", num_subset);
+    if (saveNrrd(errorNrrd, type, ".nrrd")) {
+      cerr<<me<<":  error saving reconstruction error nrrd"<<endl;
+      return 1;
+    }
+  }
+
+  return 0;
+}
+#endif
+
 int main(int argc, char *argv[]) {
   char* me=argv[0];
   char* err;
   char* infilename=0;
   int max_num_subset=0;
   int max_num_bases=0;
-
+  float error_thresh=0;
+  
   // Parse arguments
   for(int i=1; i<argc; i++) {
     string arg(argv[i]);
@@ -578,14 +729,25 @@ int main(int argc, char *argv[]) {
       infilename=argv[++i];
     } else if (arg=="-output" || arg=="-o") {
       outbasename=argv[++i];
-    } else if (arg=="-numsubset") {
+    } else if (arg=="-nsubset") {
       max_num_subset=atoi(argv[++i]);
-    } else if (arg=="-numbases") {
+    } else if (arg=="-nadd") {
+      num_add=atoi(argv[++i]);
+    } else if (arg=="-nbases") {
       max_num_bases=atoi(argv[++i]);
+    } else if (arg=="-mse") {
+      inf_norm=false;
+    } else if (arg=="-thresh") {
+      error_thresh=atof(argv[++i]);
+    } else if (arg=="-maxerr") {
+      use_mean=false;
     } else if (arg=="-nrrd") {
       nrrd_ext=".nrrd";
-    } else if (arg=="-v" ) {
+    } else if (arg=="-v") {
       verbose=atoi(argv[++i]);
+    } else if (arg=="--help") {
+      usage(me);
+      exit(0);
     } else {
       usage(me, arg.c_str());
     }
@@ -593,19 +755,25 @@ int main(int argc, char *argv[]) {
 
   // Verify the arguments
   if (!infilename) {
-    cerr<<"input filename not specified"<<endl;
+    cerr<<me<<":  input filename not specified"<<endl;
     usage(me);
     exit(1);
   }
   
   if (!outbasename) {
-    cerr<<"output basename not specified"<<endl;
+    cerr<<me<<":  output basename not specified"<<endl;
     usage(me);
     exit(1);
   }
 
   if (max_num_bases<=0) {
-    cerr<<"invalid number of basis textures ("<<num_bases<<")"<<endl;
+    cerr<<me<<":  invalid number of basis textures ("<<num_bases<<")"<<endl;
+    exit(1);
+  }
+
+  if (num_add<=0) {
+    cerr<<me<<":  invalid number of textures to add to PCA subset per iteration ("
+        <<num_add<<")"<<endl;
     exit(1);
   }
   
@@ -622,7 +790,8 @@ int main(int argc, char *argv[]) {
   // Verify the texture dimensions
   if (nin->dim!=3) {
     cerr<<me<<":  number of dimesions "<<nin->dim
-	<<" of textures is not equal to 3 [width,height,channel]"<<endl;
+	<<" of textures is not equal to 3,"
+	<<" expecting (width, height, texture)"<<endl;
     exit(1);
   }
 
@@ -637,9 +806,7 @@ int main(int argc, char *argv[]) {
     cerr<<"number of basis textures ("<<num_bases<<") is greater"
 	<<" than the number input textures ("<<num_textures<<")"<<endl;
     exit(1);
-  }
-
-  if (max_num_subset<=0) {
+  } else if (max_num_subset<=0) {
     max_num_subset=num_textures;
     cerr<<"setting maximum number of textures in PCA subset to "
 	<<max_num_subset<<endl;
@@ -682,24 +849,53 @@ int main(int argc, char *argv[]) {
     }
   }
   
-  if (verbose)
-    cout << endl;
-  
-  // Main loop
-  int* pca_idx=new int[max_num_subset];
-  int tex_idx=0;
+  // Setup the variables 
   Nrrd* basis=0;
   Nrrd* coeff=0;
-  bool done=false;
+
+  int* pca_idx=new int[max_num_subset];
+  if (!pca_idx) {
+    cerr<<me<<":  error allocating memory for PCA index array"<<endl;
+    exit(1);
+  }
+
+  IndexValuePair* error=new IndexValuePair[num_textures];
+  if (!error) {
+    cerr<<me<<":  error allocating memory for error array"<<endl;
+    exit(1);
+  }
+
+#ifdef SAVE_ERROR
+  Nrrd* errorNrrd=nrrdNew();
+  if (nrrdAlloc(errorNrrd, nrrdTypeFloat, 1, num_textures)) {
+    err=biffGet(NRRD);
+    cerr<<me<<":  error allocating error nrrd:  "<<err<<endl;
+    exit(1);
+  }
+#endif
+
+  // Prime the PCA subset with highest variance textures
+  if (verbose)
+    cout<<"Priming the PCA subset"<<endl;
+  
+  IndexValuePair *variance=computeVariance(nin);
+  sort(variance, variance+num_textures);
+  for (num_subset=0; num_subset<num_add; num_subset++) {
+    if (verbose>4)
+      cout<<"Adding texture["<<variance[num_subset].idx<<"] to PCA subset"<<endl;
+    
+    pca_idx[num_subset]=variance[num_subset].idx;
+  }
+
+  delete [] variance;
+  
+  if (verbose)
+    cout << endl;
+
+  // Main loop
   do {
     if (verbose)
       cout<<"-------------------------------------------------------"<<endl;
-    
-    // Update PCA subset
-    if (verbose)
-      cout<<"Adding texture["<<tex_idx<<"] to PCA subset"<<endl;
-    pca_idx[num_subset]=tex_idx;
-    num_subset++;
     
     // Determine new basis textures via PCA
     num_bases=(num_subset>max_num_bases) ? max_num_bases : num_subset;
@@ -742,51 +938,85 @@ int main(int argc, char *argv[]) {
       exit(1);
     }
 
-    // Determine texture with maximum error in current basis
-    float* error=computeError(nin, basis, coeff, mean);
+    // Compute error between reconstructed and original textures
+    error=computeError(nin, basis, coeff, mean, error);
     if (!error) {
-      cerr<<me<<":  error computing error"<<endl;
+      cerr<<me<<":  error computing reconstruction error"<<endl;
+      exit(1);
+    }
+
+#ifdef SAVE_ERROR
+    if (saveError(error, errorNrrd)) {
+      cerr<<me<<":  error saving reconstruction error nrrd"<<endl;
+      exit(1);
+    }
+#endif
+
+    // Check termination criteria
+    float delta;
+    if (use_mean)
+      delta=fabsf(mean_error-prev_error);
+    else
+      delta=fabsf(max_error-prev_error);
+
+    if (verbose)
+      cout<<"Error delta:  "<<delta<<endl;
+
+    if (delta<error_thresh) {
+      if (verbose) {
+	cout<<"-------------------------------------------------------"<<endl;
+	cout<<endl;
+	cout<<"Error between iterations ("<<delta<<") is below threshold ("
+	    <<error_thresh<<")"<<endl;
+	cout<<endl;
+      }
+      
+      break;
+    } else if (num_subset>=max_num_subset) {
+      if (verbose) {
+	cout<<"-------------------------------------------------------"<<endl;
+	cout<<endl;
+	cout<<"Maximum number of PCA subset textures has been reached"<<endl;
+	cout<<endl;
+      }
+
+      break;
+    }
+
+    // Update PCA subset
+    pca_idx=updatePCASubset(error, pca_idx);
+    if (!pca_idx) {
+      cerr<<me<<":  error updating PCA subset"<<endl;
       exit(1);
     }
     
-    tex_idx=nextTexture(error, pca_idx);
-    if (tex_idx<0 && num_subset<max_num_subset) {
-      cerr<<me<<":  error determining next PCA texture"<<endl;
-      exit(1);
-    }
-
-    delete [] error;
-
-    // Check termination criteria
-    if (num_subset>=max_num_subset)
-      done=true;
-    else {
-      basis=nrrdNuke(basis);
-      coeff=nrrdNuke(coeff);
-    }
-  } while (!done);
+    basis=nrrdNuke(basis);
+    coeff=nrrdNuke(coeff);
+  } while (true);
 
   if (verbose) {
-    cout<<"-------------------------------------------------------"<<endl;
-    cout<<endl;
   }
   
   // Save the mean values, basis textures, and PCA coefficients
   int E=0;
-  if (!E) E|=saveNrrd(mean, "-mean");
-  if (!E) E|=saveNrrd(basis, "-basis");
-  if (!E) E|=saveNrrd(coeff, "-coeff");
+  if (!E) E|=saveNrrd(mean, "-mean", nrrd_ext);
+  if (!E) E|=saveNrrd(basis, "-basis", nrrd_ext);
+  if (!E) E|=saveNrrd(coeff, "-coeff", nrrd_ext);
   if (E) {
     cerr<<me<<":  error saving output nrrds"<<endl;
     exit(1);
   }
 
   // Clean up memory
-  delete [] pca_idx;
   nin=nrrdNuke(nin);
   mean=nrrdNuke(mean);
   basis=nrrdNuke(basis);
   coeff=nrrdNuke(coeff);
+  delete [] pca_idx;
+  delete [] error;
+#ifdef SAVE_ERROR
+  errorNrrd=nrrdNuke(errorNrrd);
+#endif
   
   return 0;
 }
