@@ -55,8 +55,8 @@ using std::endl;
 #endif
 
 // This needs to be synced with the contents of
-// SCIRun/doc/edition.xml and Dataflow/GUI/NetworkEditor.tcl
-#define VERSION "1.20.1"                         
+// SCIRun/doc/edition.xml
+#define VERSION "1.22"                         
 
 using namespace SCIRun;
 
@@ -84,9 +84,8 @@ usage()
   exit( 0 );
 }
 
-// Apparently some args are passed through to TCL where they are parsed...
-// Probably need to check to make sure they are at least valid here???
-
+// Parse the supported command-line arugments.
+// Returns the argument # of the .net file
 int
 parse_args( int argc, char *argv[] )
 {
@@ -166,24 +165,22 @@ public:
 // depends on GuiInterface to present the user with the license dialog.
 void
 show_license_and_copy_scirunrc(GuiInterface *gui) {
-  string tclresult;
-  gui->eval(string("licenseDialog 1"), tclresult);
-
+  const string tclresult = gui->eval("licenseDialog 1");
   if (tclresult == "cancel")
   {
     Thread::exitAll(1);
   }
-
   // check to make sure home directory is there
   char* HOME = getenv("HOME");
   if (!HOME) return;
-
+  // If the user accepted the license then create a .scirunrc for them
   if (tclresult == "accept") {
     string homerc = string(HOME)+"/.scirunrc";
     string cmd = string("cp -f ")+SCIRUN_SRCDIR+string("/scirunrc ")+homerc;
-    if (sci_system(cmd.c_str())) {
+    if (sci_system(cmd.c_str())) {      
       std::cerr << "Error executing: " << cmd << std::endl;
-    } else {
+    } else { 
+      // if the scirunrc file was copied, then parse it
       parse_scirunrc(homerc);
     }
   }
@@ -202,24 +199,21 @@ main(int argc, char *argv[], char **envp) {
 #endif
 
   // Start up TCL...
-  TCLTask* tcl_task = new TCLTask(1, argv);  // Discard argv on Tk side.
+  TCLTask* tcl_task = new TCLTask(1, argv);// Only passes program name to TCL
   Thread* t=new Thread(tcl_task, "TCL main event loop");
   t->detach();
   tcl_task->mainloop_waitstart();
 
   // Create user interface link
   GuiInterface* gui = new TCLInterface();
-
+  // Set a few useful variables in the TCL side
+  gui->execute("global SCIRUN_VERSION; set SCIRUN_VERSION "VERSION);
+  gui->execute("global SCIRUN_SRCDIR; set SCIRUN_SRCDIR "SCIRUN_SRCDIR);
+  gui->execute("global SCIRUN_OBJDIR; set SCIRUN_OBJDIR "SCIRUN_OBJDIR);
+  gui->execute("global scirun2; set scirun2 0");
   // Set up the TCL environment to find core components
-  const string DataflowTCLpath = SCIRUN_SRCDIR+string("/Dataflow/GUI");
-  const string CoreTCLpath = SCIRUN_SRCDIR+string("/Core/GUI");
-  gui->execute("global CoreTCL SCIRUN_SRCDIR SCIRUN_OBJDIR scirun2");
-  gui->execute("set CoreTCL "+CoreTCLpath);
-  gui->execute("set SCIRUN_SRCDIR "SCIRUN_SRCDIR);
-  gui->execute("set SCIRUN_OBJDIR "SCIRUN_OBJDIR);
-  gui->execute("set scirun2 0");
-  gui->execute("lappend auto_path "+CoreTCLpath);
-  gui->execute("lappend auto_path "+DataflowTCLpath);
+  gui->execute("lappend auto_path "SCIRUN_SRCDIR"/Core/GUI");
+  gui->execute("lappend auto_path "SCIRUN_SRCDIR"/Dataflow/GUI");
   gui->execute("lappend auto_path "ITCL_WIDGETS);
 
   // Create initial network
@@ -264,11 +258,8 @@ main(int argc, char *argv[], char **envp) {
   // load the packages
   packageDB->loadPackage();
   
-
   // Check the dynamic compilation directory for validity
-  string result;
-  gui->eval("getOnTheFlyLibsDir",result);
-  sci_putenv("SCIRUN_ON_THE_FLY_LIBS_DIR",result,gui);
+  sci_putenv("SCIRUN_ON_THE_FLY_LIBS_DIR",gui->eval("getOnTheFlyLibsDir"));
 
   // Activate "File" menu sub-menus once packages are all loaded.
   gui->execute("activate_file_submenus");
@@ -276,7 +267,6 @@ main(int argc, char *argv[], char **envp) {
   if (startnetno)
   {
     gui->execute(string("loadnet {")+argv[startnetno]+string("}"));
-
     if (execute_flag || getenv("SCI_REGRESSION_TESTING"))
     {
       gui->execute("netedit scheduleall");
