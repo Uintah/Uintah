@@ -106,7 +106,7 @@ TexCuttingPlanes::tcl_command( TCLArgs& args, void* userdata)
   }
 }
 
-void TexCuttingPlanes::widget_moved(int obj)
+void TexCuttingPlanes::widget_moved(int)
 {
   if( volren ){
       volren->SetControlPoint(control_widget->ReferencePoint());

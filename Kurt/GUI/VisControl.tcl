@@ -265,7 +265,7 @@ itcl_class Kurt_Vis_VisControl {
 	pack $parent.m.m.fr.v -expand yes -fill both
 	for {set i 0} { $i < $ns} {incr i} {
 	    $buttontype $parent.m.m.fl.gs$i -text $i \
-		-variable $this-gvMatNum -command $c -value $i
+		-variable $this-gsMatNum -command $c -value $i
 	    pack $parent.m.m.fl.gs$i -side top
 	}
 	for {set i 0} { $i < $nv} {incr i} {

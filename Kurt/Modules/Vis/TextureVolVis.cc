@@ -80,7 +80,7 @@ TextureVolVis::~TextureVolVis()
 
 }
 
-void TextureVolVis::widget_moved(int obj)
+void TextureVolVis::widget_moved(int)
 {
   if( volren ){
       volren->SetControlPoint(control_widget->ReferencePoint());
@@ -141,13 +141,13 @@ void TextureVolVis::execute(void)
 
   if( !volren ){
     volren = new GLVolumeRenderer(0x12345676,
-				  tex.get_rep(),
-				  cmap.get_rep());
-
-    ogeom->addObj( volren, "Volume Renderer");
+				  tex,
+				  cmap);
+    //    ogeom->delAll();
+    ogeom->addObj( volren, "VolumeRenderer TransParent");
   } else {
-    volren->SetVol( tex.get_rep() );
-    volren->SetColorMap( cmap.get_rep() );
+    volren->SetVol( tex );
+    volren->SetColorMap( cmap );
   }
 
   switch( render_style.get() ) {

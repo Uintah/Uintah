@@ -16,6 +16,9 @@ using Kurt::Datatypes::Brick;
 using Kurt::Datatypes::SliceTable;
 
 
+double GLVolumeRenderer::swapMatrix[16] = { 0,0,1,0, 0,1,0,0, 1,0,0,0, 0,0,0,1};
+
+
 GLVolumeRenderer::GLVolumeRenderer(int id) 
  : GeomObj( id ), 
   tex(0),  cmap(0),
@@ -33,7 +36,7 @@ GLVolumeRenderer::GLVolumeRenderer(int id,
 				   GLTexture3DHandle tex,
 				   ColorMapHandle map)
  : GeomObj( id ), 
-  tex(tex),  cmap(map->raw1d),
+  tex(tex.get_rep()),  cmap(map->raw1d),
   controlPoint(Point(0,0,0)), slices(0),
   cmapHasChanged(true),
   slice_alpha(1.0), _state(FullRes::Instance(this)),
@@ -90,7 +93,7 @@ GLVolumeRenderer::draw(DrawInfoOpenGL* di, Material* mat, double)
 void
 GLVolumeRenderer::setup()
 {
-  glDisable(GL_DEPTH_TEST);
+  //  glDisable(GL_DEPTH_TEST);
   glEnable(GL_TEXTURE_3D_EXT);
   glTexEnvi(GL_TEXTURE_ENV,GL_TEXTURE_ENV_MODE, GL_MODULATE); 
 
@@ -110,19 +113,23 @@ GLVolumeRenderer::setup()
     }
   }
   glColor4f(1,1,1,1); // set to all white for modulation
-  
+  //  glPushMatrix();
+  // swap x & z;
+  glMultMatrixd(swapMatrix);
 }
 
 
 void
 GLVolumeRenderer::cleanup()
 {
+  glMultMatrixd(swapMatrix);
+  //  glPopMatrix();
 #ifdef __sgi
   if( cmap )
     glDisable(GL_TEXTURE_COLOR_TABLE_SGI);
 #endif
   glDisable(GL_TEXTURE_3D_EXT);
-  glEnable(GL_DEPTH_TEST);  
+  // glEnable(GL_DEPTH_TEST);  
 }  
 
 
