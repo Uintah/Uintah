@@ -93,6 +93,8 @@ WARNING
       virtual bool haveParticleSubset(int matlIndex, const Patch*) = 0;
       virtual ParticleSubset* getParticleSubset(int matlIndex,
 					const Patch*) = 0;
+      virtual ParticleSubset* getDeleteSubset(int matlIndex,
+					     const Patch*) = 0;
       virtual ParticleSubset* getParticleSubset(int matlIndex,
 			 const Patch*, Ghost::GhostType, int numGhostCells,
 			 const VarLabel* posvar) = 0;
