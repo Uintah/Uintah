@@ -678,6 +678,12 @@ void Module::tcl_command(GuiArgs& args, void*)
     args.result(to_string(pid_));
   } else if(args[1] == "help"){
     args.result(parse_description(description));
+  } else if(args[1] == "remark"){
+    remark(args[2]);
+  } else if(args[1] == "warning"){
+    warning(args[2]);
+  } else if(args[1] == "error"){
+    error(args[2]);
   } else {
     args.error("Unknown minor command for module: "+args[1]);
   }
