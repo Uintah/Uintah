@@ -74,11 +74,12 @@ ManageFieldData::execute()
   FieldIPort *ifp = (FieldIPort *)get_iport("Input Field");
   FieldHandle ifieldhandle;
   if (!ifp) {
-    postMessage("Unable to initialize "+name+"'s iport\n");
+    error("Unable to initialize "+name+"'s iport\n");
     return;
   }
   if (!(ifp->get(ifieldhandle) && (ifieldhandle.get_rep())))
   {
+    error( "No handle or representation" );
     return;
   }
 
@@ -118,7 +119,7 @@ ManageFieldData::execute()
 
   MatrixOPort *omp = (MatrixOPort *)get_oport("Output Matrix");
   if (!omp) {
-    postMessage("Unable to initialize "+name+"'s oport\n");
+    error("Unable to initialize "+name+"'s oport\n");
   }
   else
   {
@@ -130,7 +131,7 @@ ManageFieldData::execute()
   MatrixIPort *imatrix_port = (MatrixIPort *)get_iport("Input Matrix");
   MatrixHandle imatrixhandle;
   if (!imatrix_port) {
-    postMessage("Unable to initialize "+name+"'s iport\n");
+    error("Unable to initialize "+name+"'s iport\n");
     return;
   }
   if (!(imatrix_port->get(imatrixhandle) && imatrixhandle.get_rep()))
@@ -181,7 +182,7 @@ ManageFieldData::execute()
 
   FieldOPort *ofp = (FieldOPort *)get_oport("Output Field");
   if (!ofp) {
-    postMessage("Unable to initialize "+name+"'s oport\n");
+    error("Unable to initialize "+name+"'s oport\n");
     return;
   }
   ofp->send(result_field);
