@@ -69,7 +69,7 @@ PSELIBS := Dataflow/Network Dataflow/Widgets Dataflow/Ports \
 	Core/Exceptions Core/Thread Core/GuiInterface Core/Geom \
 	Core/Persistent Core/Geometry Core/2d Core/Util \
 	Core/TkExtensions Core/Algorithms/Visualization \
-	Core/GLVolumeRenderer Core/GeomInterface Core/Volume
+	Core/GLVolumeRenderer Core/GeomInterface Core/Volume Core/Basis
 
 LIBS := $(TEEM_LIBRARY) $(FTGL_LIBRARY) $(TK_LIBRARY) $(GL_LIBRARY) $(M_LIBRARY)
 
