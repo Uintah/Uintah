@@ -153,11 +153,10 @@ void CompNeoHook::computeStressTensor(const PatchSubset* patches,
     old_dw->get(px,                  lb->pXLabel,                  pset);
     old_dw->get(deformationGradient, lb->pDeformationMeasureLabel, pset);
     old_dw->get(bElBar,              bElBarLabel,                  pset);
-    old_dw->get(pstress,             lb->pStressLabel,             pset);
     old_dw->get(pmass,               lb->pMassLabel,               pset);
     old_dw->get(pvolume,             lb->pVolumeLabel,             pset);
     old_dw->get(pvelocity,           lb->pVelocityLabel,           pset);
-  
+    new_dw->allocate(pstress,        lb->pStressLabel,             pset);
 
     new_dw->get(gvelocity, lb->gMomExedVelocityLabel, matlindex,patch,
             Ghost::AroundCells, 1);
@@ -305,7 +304,6 @@ void CompNeoHook::addComputesAndRequires(Task* task,
    task->requires(Task::OldDW, lb->pXLabel,      matlset, Ghost::None);
    task->requires(Task::OldDW, lb->pMassLabel,   matlset, Ghost::None);
    task->requires(Task::OldDW, lb->pVolumeLabel, matlset, Ghost::None);
-   task->requires(Task::OldDW, lb->pStressLabel, matlset, Ghost::None);
    task->requires(Task::OldDW, lb->pDeformationMeasureLabel,
 						 matlset, Ghost::None);
    task->requires(Task::OldDW, bElBarLabel,      matlset, Ghost::None);
