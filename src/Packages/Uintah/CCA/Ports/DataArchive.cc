@@ -237,7 +237,7 @@ DataArchive::queryGrid( double time )
       Vector dcell;
       if(!get(n, "cellspacing", dcell))
 	throw InternalError("Error parsing level cellspacing");
-      LevelP level = scinew Level(grid.get_rep(), anchor, dcell);
+      LevelP level = grid->addLevel(anchor, dcell);
       int numPatches = -1234;
       long totalCells = 0;
       IntVector periodicBoundaries(0, 0, 0);      
@@ -287,7 +287,6 @@ DataArchive::queryGrid( double time )
       else {
 	level->finalizeLevel();
       }
-      grid->addLevel(level);
     } else if(n.getNodeType() != DOM_Node::TEXT_NODE){
       cerr << "WARNING: Unknown grid data: " << toString(n.getNodeName()) << '\n';
     }
