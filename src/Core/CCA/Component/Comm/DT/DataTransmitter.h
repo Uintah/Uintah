@@ -107,7 +107,6 @@ namespace SCIRun {
     //int nquit; 
 
     bool quit;
-    bool quitSending;
   };
 
 }//namespace SCIRun
