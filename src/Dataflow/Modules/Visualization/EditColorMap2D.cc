@@ -129,6 +129,7 @@ private:
   ColorMap2Handle		sent_cmap2_;
 
   bool				just_resend_selection_;
+  bool				force_execute_;
   TkOpenGLContext *		ctx_;
   int				width_;
   int				height_;
@@ -163,7 +164,6 @@ private:
   GuiDouble			scale_;
 
   bool				updating_; // updating the tf or not
-  int				execute_count_;
   GuiDouble			gui_histo_;
 
   // The currently selected widget
@@ -228,7 +228,6 @@ EditColorMap2D::EditColorMap2D(GuiContext* ctx)
     pan_y_(ctx->subVar("pany")),
     scale_(ctx->subVar("scale_factor")),
     updating_(false),
-    execute_count_(0),
     gui_histo_(ctx->subVar("histo")),
     gui_selected_widget_(ctx->subVar("selected_widget"), -1),
     gui_selected_object_(ctx->subVar("selected_object"), -1),
@@ -399,6 +398,7 @@ EditColorMap2D::tcl_command(GuiArgs& args, void* userdata)
 		    gui_selected_object_.get());
       cmap_dirty_ = true;
     }
+    if (gui_histo_.changed()) histo_dirty_ = true;
     redraw();
   } else if (args[1] == "destroygl") {
     if (ctx_) {
@@ -435,6 +435,7 @@ EditColorMap2D::tcl_command(GuiArgs& args, void* userdata)
       widgets_[n]->set_color(new_color);
       widgets_[n]->set_alpha(a);
       want_to_execute();
+      force_execute_ = true;
     }
 
   } else if (!args[1].compare(0, 12, "shadewidget-")) {
@@ -448,6 +449,7 @@ EditColorMap2D::tcl_command(GuiArgs& args, void* userdata)
     cmap_dirty_ = true;
     redraw();
     want_to_execute();
+    force_execute_ = true;
   } else if(!args[1].compare(0, 9, "toggleon-")) {
     int n;
     string_to_int(args[1].substr(9), n);
@@ -458,6 +460,7 @@ EditColorMap2D::tcl_command(GuiArgs& args, void* userdata)
     cmap_dirty_ = true;
     redraw();
     want_to_execute();
+    force_execute_ = true;
   } else if (args[1] == "swatch_save") {
     save_ppm_ = true;
     filename_.reset();
@@ -514,6 +517,7 @@ EditColorMap2D::tcl_command(GuiArgs& args, void* userdata)
         redraw();
         update_to_gui();
         want_to_execute();
+	force_execute_ = true;
       }
     }    
   } else if (args[1] == "save") {
@@ -549,6 +553,7 @@ EditColorMap2D::add_triangle_widget()
     select_widget(widgets_.size()-1, 1);
     cmap_dirty_ = true;
     redraw();
+    force_execute_ = true;
     want_to_execute();
 }
 
@@ -562,6 +567,7 @@ EditColorMap2D::add_rectangle_widget()
     select_widget(widgets_.size()-1, 1);
     cmap_dirty_ = true;
     redraw();
+    force_execute_ = true;
     want_to_execute();
 }
 
@@ -573,6 +579,7 @@ EditColorMap2D::add_paint_widget()
   update_to_gui();
   select_widget(widgets_.size()-1, 1);
   // PaintCM2Widgets start blank, so no need set cmap_dirty and redraw here
+  force_execute_ = true;
   want_to_execute();
 }
 
@@ -594,6 +601,7 @@ EditColorMap2D::delete_selected_widget()
     select_widget(gui_selected_widget_.get(), 1);
   cmap_dirty_ = true;
   redraw();
+  force_execute_ = true;
   want_to_execute();
 }
 
@@ -692,6 +700,7 @@ EditColorMap2D::undo()
     }
     undo_stack_.pop();
     cmap_dirty_ = true;
+    force_execute_ = true;
     want_to_execute();
   }
 }
@@ -771,7 +780,7 @@ EditColorMap2D::update_from_gui()
       cmap_dirty_ = true;
     }
     
-    if (widgets_[i]->get_alpha() != gui_color_a_[i]->get()) {
+    if (fabs(widgets_[i]->get_alpha() - gui_color_a_[i]->get()) > 0.001) {
       widgets_[i]->set_alpha(gui_color_a_[i]->get());
       cmap_dirty_ = true;
     }
@@ -786,6 +795,7 @@ EditColorMap2D::update_from_gui()
       cmap_dirty_ = true;
     }
   }
+  //  if (cmap_dirty_) force_execute_ = true;
 }
 
 
@@ -920,12 +930,11 @@ EditColorMap2D::motion(int x, int y)
     }
   }
   cmap_dirty_ = true;
+  redraw();
   updating_ = true;
-  if (execute_count_ == 0) {
-    ++execute_count_;
-    icmap_generation_ = -1;
-    want_to_execute();
-  }
+
+  force_execute_ = true;
+  want_to_execute();
 }
 
 
@@ -941,7 +950,7 @@ EditColorMap2D::release(int x, int y)
   {
     widgets_[selected]->release(x, height_-1-y, width_, height_);
     updating_ = false;
-    icmap_generation_ = -1;
+    force_execute_ = true;
     want_to_execute();
   }
 }
@@ -957,10 +966,14 @@ EditColorMap2D::execute()
   cmap_iport_->get(icmap);
   hist_iport_->get(h);
 
-  if (icmap.get_rep() && icmap->generation == icmap_generation_) {
-    if (!h.get_rep() || h->generation == hist_generation_) 
-      return;
-  }
+  if ((!icmap.get_rep() || icmap->generation == icmap_generation_) &&
+      (!h.get_rep() || h->generation == hist_generation_) &&
+      !gui_faux_.changed() && !gui_histo_.changed() &&
+      !just_resend_selection_ && !force_execute_ &&
+      !cmap_dirty_ && !histo_dirty_)
+    return;
+
+  force_execute_ = false;
 
   if (icmap.get_rep() && icmap->generation != icmap_generation_) {
     widgets_ = icmap->widgets();
@@ -968,14 +981,14 @@ EditColorMap2D::execute()
     cmap_dirty_ = true;
     if (!just_resend_selection_ && icmap->selected() != -1) 
       gui_selected_widget_.set(icmap->selected());
+    update_to_gui();
   }
-
-  update_to_gui();
 
   if (h.get_rep() && h->generation != hist_generation_) {
     hist_generation_ = h->generation;
     if(h->nrrd->dim != 2 && h->nrrd->dim != 3) {
-      error("Invalid input dimension.");
+      error("Invalid input histogram dimension.");
+      return;
     }
     histo_ = h->nrrd;
     histo_dirty_ = true;
@@ -997,9 +1010,7 @@ EditColorMap2D::execute()
   sent_cmap2_->selected() = gui_selected_widget_.get();
   just_resend_selection_ = false;
   icmap_generation_ = sent_cmap2_->generation;
-  if (execute_count_ > 0) --execute_count_;
   cmap_oport_->send(sent_cmap2_);
-
 }
 
 
