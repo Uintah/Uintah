@@ -388,21 +388,17 @@ CLAMP(int a, int lower, int upper)
 
 double
 StreamLinesAccAlgo::RayPlaneIntersection(const Point &p, const Vector &dir,
-					 const Point &p0, const Point &p1,
-					 const Point &p2)
+					 const Point &p0, const Vector &pn)
 {
-  // Compute plane normal.
-  Vector Pn = Cross(p1 - p0, p2 - p0);
-
   // Compute divisor.
-  const double Vd = Dot(dir, Pn);
+  const double Vd = Dot(dir, pn);
 
   // Return no intersection if parallel to plane or no cross product.
   if (fabs(Vd) < 1.0e-12) { return 1.0e24; }
 
-  const double D = - Dot(Pn, p0);
+  const double D = - Dot(pn, p0);
 
-  const double V0 = - (Dot(Pn, p) + D);
+  const double V0 = - (Dot(pn, p) + D);
     
   return V0 / Vd;
 }
