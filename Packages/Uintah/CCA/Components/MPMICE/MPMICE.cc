@@ -1847,9 +1847,18 @@ void MPMICE::computeMassBurnRate(const ProcessorGroup*,
 	      normalX = gradRhoX/absGradRho;
 	      normalY = gradRhoY/absGradRho;
 	      normalZ = gradRhoZ/absGradRho;
+
+	      double TmpX, TmpY, TmpZ;
+
+	      TmpX = normalX*delX;
+	      TmpY = normalY*delY;
+	      TmpZ = normalZ*delZ;
+
+	      if (TmpX<0) TmpX = -TmpX;
+	      if (TmpY<0) TmpY = -TmpY;
+	      if (TmpZ<0) TmpZ = -TmpZ;
 	      
-	      surfArea = delX*delY*delZ / 
-		(abs(normalX*delX)+abs(normalY*delY)+abs(normalZ*delZ));
+	      surfArea = delX*delY*delZ / (TmpX+TmpY+TmpZ); 
 	      	  
 	  // For clarity, this should be renamed computeBurnRate
 	      matl->getBurnModel()->computeBurn(gasTemperature[*iter],
