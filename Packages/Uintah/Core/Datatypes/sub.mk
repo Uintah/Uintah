@@ -4,14 +4,23 @@ include $(SRCTOP)/scripts/smallso_prologue.mk
 
 SRCDIR := Packages/Uintah/Core/Datatypes
 
-SRCS     += $(SRCDIR)/Archive.cc  $(SRCDIR)/ArchivePort.cc \
-	$(SRCDIR)/NCVectorField.cc $(SRCDIR)/CCVectorField.cc \
-	$(SRCDIR)/NCTensorField.cc $(SRCDIR)/CCTensorField.cc \
-	$(SRCDIR)/TensorField.cc $(SRCDIR)/TensorFieldPort.cc \
-	$(SRCDIR)/ScalarParticles.cc $(SRCDIR)/ScalarParticlesPort.cc \
-	$(SRCDIR)/VectorParticles.cc $(SRCDIR)/VectorParticlesPort.cc \
-	$(SRCDIR)/TensorParticles.cc $(SRCDIR)/TensorParticlesPort.cc \
+SRCS     += \
+	$(SRCDIR)/Archive.cc \
+	$(SRCDIR)/ArchivePort.cc \
+	$(SRCDIR)/NCTensorField.cc \
+	$(SRCDIR)/CCTensorField.cc \
+	$(SRCDIR)/TensorField.cc \
+	$(SRCDIR)/TensorFieldPort.cc \
+	$(SRCDIR)/ScalarParticles.cc \
+	$(SRCDIR)/ScalarParticlesPort.cc \
+	$(SRCDIR)/VectorParticles.cc \
+	$(SRCDIR)/VectorParticlesPort.cc \
+	$(SRCDIR)/TensorParticles.cc \
+	$(SRCDIR)/TensorParticlesPort.cc \
 	$(SRCDIR)/PSet.cc
+
+#	$(SRCDIR)/CCVectorField.cc \
+#	$(SRCDIR)/NCVectorField.cc \
 
 PSELIBS := \
 	Dataflow/Network \
