@@ -596,7 +596,7 @@ AC_SUBST(BLT_LIB_FLAG)
 echo -n "Looking for Pre-built Xerces-c... "
 
 if test "$xerces"; then
-  XML_LIB_DIR=$xerces/lib
+  XML_LIB_DIR=$xerces
 fi
 
 if test -z "$XML_LIB_DIR"; then
@@ -872,6 +872,9 @@ AC_OUTPUT(Makefile \
 
 #
 # $Log$
+# Revision 1.82  2000/12/18 01:48:31  witzel
+# removed hard-coded /lib from xerces path
+#
 # Revision 1.81  2000/12/12 20:14:06  yarden
 # fix a problem with xerces dir
 #
