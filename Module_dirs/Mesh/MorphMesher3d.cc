@@ -478,6 +478,8 @@ void MorphMesher3d::mesh_mult_surfs(const Array1<SurfaceHandle> &surfs,
 
     TriSurface* outer=surfs[0]->getTriSurface();
     TriSurface* inner=surfs[1]->getTriSurface();
+    if(!outer->grid)
+	outer->construct_grid();
     double gr_sp=outer->grid->get_spacing();
 
     inner->construct_grid(outer->grid->dim1()+1, outer->grid->dim2()+1, 
@@ -593,7 +595,10 @@ cerr << "MorphMesher starting on t=" << t << "\n";
 	    pLoc-=nx*ny;
 	}
 
+	int ndone=0;
 	while(!surfQ.is_empty()) {
+	    update_progress(ndone, surfQ.length()+ndone);
+	    ndone++;
 	    pLoc=surfQ.pop();
 	    ASSERT((pLoc < nx*ny*nz) && (pLoc >= 0));
 	    pz=pLoc/(nx*ny)+zmin;
