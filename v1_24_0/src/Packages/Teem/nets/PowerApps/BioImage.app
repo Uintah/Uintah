@@ -208,6 +208,8 @@ class BioImageApp {
         set updating_crop_ui 0
         set needs_update 1
 
+	set crop_reset 0
+
 
 
 	### Define Tooltips
@@ -251,11 +253,13 @@ class BioImageApp {
 
         # disregard UnuCrop errors, hopefully they are due to 
 	# upstream crops changing bounds
-	#if {[string first "UnuCrop" $which] != -1 && $msg_state == "Warning"} {
-	    #puts "Reseting value to M so we should make it a hard number corresponding to the NrrdInfo"
-# 	    tk_messageBox -message "One of your cropping values was out of range.  This could be due to recent changes to an upstream crop filter's settings affecting a downstream crop filter. The downstream crop values were reset to the bounding box." -type ok -icon info 
-# 	    return
-	#}         
+	if {[string first "UnuCrop" $which] != -1 && $msg_state == "Warning"} {
+	    #tk_messageBox -message "One of your cropping values was out of range.  This could be due to recent changes to an upstream crop filter's settings affecting a downstream crop filter. The downstream crop values were reset to the bounding box." -type ok -icon info 
+		#return
+	    puts "One of the crop filters axis was reset due to bad vals"
+	    #after 700 "$this stop_crop"
+	    #set crop_reset 1
+	}         
 
 
 	if {$msg_state == "Error"} {
@@ -584,6 +588,15 @@ class BioImageApp {
 			#puts "FIX ME change_indicate_val - labels"
 			change_indicator_labels "Visualizing..."
 		    }
+
+# 		    if {$crop_reset == 1} {
+# 			# if {$turn_off_crop == 1} {
+# 			    $this stop_crop
+# 			# }
+# 			puts "Crop axes out of range"
+# 			#tk_messageBox -message "One of your cropping values was out of range.  This could be due to recent changes to an upstream crop filter's settings affecting a downstream crop filter. The downstream crop values were reset to the bounding box. Crop widget was turned off." -type ok -icon info -parent .standalone
+# 			set crop_reset 0
+# 		    }
 		} elseif {$executing_modules < 0} {
 		    # something wasn't caught, reset
 		    set executing_modules 0
@@ -2026,6 +2039,23 @@ class BioImageApp {
 
 	    set page [$vis.tnb add -label "Planes" -command "$this check_crop"]
 
+#             # display window and level
+#             global $mods(ViewImage)-axial-viewport0-clut_ww $mods(ViewImage)-axial-viewport0-clut_wl
+#             iwidgets::labeledframe $page.winlevel \
+#                  -labeltext "Window/Level Controls" \
+#                  -labelpos nw
+#             pack $page.winlevel -side top -anchor nw -expand no -fill x
+#             set winlevel [$page.winlevel childsite]
+
+#             scale $winlevel.ww -variable $mods(ViewImage)-axial-viewport0-clut_ww \
+#                 -from 0 -to 1300 \
+#                 -showvalue true -orient horizontal
+
+#             scale $winlevel.wl -variable $mods(ViewImage)-axial-viewport0-clut_wl \
+#                 -from 0 -to 1299 \
+#                 -showvalue true -orient horizontal
+#             pack $winlevel.ww $winlevel.wl -side top -anchor n -pady 1
+
 
             frame $page.planes -relief groove -borderwidth 2
             pack $page.planes -side top -anchor nw -expand no -fill x
@@ -3236,6 +3266,8 @@ class BioImageApp {
 
         global [set UnuCrop]-reset_data
         set [set UnuCrop]-reset_data 0
+        global [set UnuCrop]-digits_only
+        set [set UnuCrop]-digits_only 1
 
 	for {set i 0} {$i < $dimension} {incr i} {
 	    global [set UnuCrop]-minAxis$i
@@ -4572,6 +4604,7 @@ class BioImageApp {
     variable turn_off_crop
     variable updating_crop_ui
     variable needs_update
+    variable crop_reset
 }
 
 
