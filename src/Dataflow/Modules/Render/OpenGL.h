@@ -61,7 +61,6 @@
 #include <Dataflow/Modules/Render/Renderer.h>
 #include <Dataflow/Modules/Render/ViewWindow.h>
 #include <Dataflow/Modules/Render/Viewer.h>
-#include <Dataflow/Modules/Render/logo.h>
 #include <Core/Thread/FutureValue.h>
 #include <Core/Thread/Runnable.h>
 #include <Core/Thread/Thread.h>
@@ -77,9 +76,6 @@
 #endif // MPEG
 
 #ifdef __sgi
-#ifdef LIBIMAGE
-#include <image.h>
-#endif //LIBIMAGE
 #include <X11/extensions/SGIStereo.h>
 #if (_MIPS_SZPTR == 64)
 //#else

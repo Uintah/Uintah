@@ -29,6 +29,7 @@
  */
 
 #include <Dataflow/Modules/Render/OpenGL.h>
+#include <Dataflow/Modules/Render/logo.h>
 
 #ifdef __sgi
 #include <ifl/iflFile.h>
@@ -764,40 +765,33 @@ void OpenGL::redraw_frame()
 	  // Show the pretty picture
 	  glXSwapBuffers(dpy, win);
 #ifdef __sgi
-#ifdef LIBIMAGE
 	  if(saveprefix != ""){
 	    // Save out the image...
 	    char filename[200];
 	    sprintf(filename, "%s%04d.rgb", saveprefix.c_str(), t);
-	    unsigned short* reddata=scinew unsigned short[xres*yres];
-	    unsigned short* greendata=scinew unsigned short[xres*yres];
-	    unsigned short* bluedata=scinew unsigned short[xres*yres];
-	    glReadPixels(0, 0, xres, yres, GL_RED, GL_UNSIGNED_SHORT, reddata);
-	    glReadPixels(0, 0, xres, yres, GL_GREEN, GL_UNSIGNED_SHORT, greendata);
-	    glReadPixels(0, 0, xres, yres, GL_BLUE, GL_UNSIGNED_SHORT, bluedata);
-	    IMAGE* image=iopen(filename, "w", RLE(1), 3, xres, yres, 3);
-	    unsigned short* rr=reddata;
-	    unsigned short* gg=greendata;
-	    unsigned short* bb=bluedata;
-	    for(int y=0;y<yres;y++){
-	      for(int x=0;x<xres;x++){
-		rr[x]>>=8;
-		gg[x]>>=8;
-		bb[x]>>=8;
-	      }
-	      putrow(image, rr, y, 0);
-	      putrow(image, gg, y, 1);
-	      putrow(image, bb, y, 2);
-	      rr+=xres;
-	      gg+=xres;
-	      bb+=xres;
+	    unsigned char* rgbdata=scinew unsigned char[xres*yres*3];
+	    glReadPixels(0, 0, xres, yres, GL_RGB, GL_UNSIGNED_BYTE, rgbdata);
+	    iflSize dims(xres, yres, 1);
+	    iflFileConfig fc(&dims, iflUChar);
+	    iflStatus sts;
+	    iflFile *file=iflFile::create(filename, NULL, &fc, NULL, &sts);
+	    if (sts != iflOKAY) {
+	      cerr << "Unable to save image file "<<filename<<"\n";
+	      break;
 	    }
-	    iclose(image);
-	    delete[] reddata;
-	    delete[] greendata;
-	    delete[] bluedata;
+	    sts = file->setTile(0, 0, 0, xres, yres, 1, rgbdata);
+	    if (sts != iflOKAY) {
+	      cerr << "Unable to save image tile to "<<filename<<"\n";
+	      break;
+	    }
+	    sts = file->flush();
+	    if (sts != iflOKAY) {
+	      cerr << "Unable to write tile to "<<filename<<"\n";
+	      break;
+	    }
+	    file->close();
+	    delete[] rgbdata;
 	  }
-#endif // LIBIMAGE
 #endif // __sgi
 	}
 	throttle.stop();

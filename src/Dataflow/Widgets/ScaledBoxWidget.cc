@@ -491,6 +491,42 @@ ScaledBoxWidget::redraw()
    }
 }
 
+// if rotating, save the start position of the selected widget 
+void
+ScaledBoxWidget::geom_pick( GeomPick*, ViewWindow*, int pick, const BState& )
+{
+  Point c2=(variables[CenterVar]->point().vector()*2).point();
+  rot_start_d_=variables[PointDVar]->point();
+  rot_start_r_=variables[PointRVar]->point();
+  rot_start_i_=variables[PointIVar]->point();
+  switch(pick){
+  case PickSphU:
+    rot_start_pt_=(c2-rot_start_d_).point();
+    break;
+  case PickSphD:
+    rot_start_pt_=rot_start_d_;
+    break;
+  case PickSphL:
+    rot_start_pt_=(c2-rot_start_r_).point();
+    break;
+  case PickSphR:
+    rot_start_pt_=rot_start_r_;
+    break;
+  case PickSphO:
+    rot_start_pt_=(c2-rot_start_i_).point();
+    break;
+  case PickSphI:
+    rot_start_pt_=rot_start_i_;
+    break;
+  default:
+    return;
+  }
+  rot_start_ray_norm_=rot_start_pt_-variables[CenterVar]->point();
+  rot_curr_ray_ = rot_start_ray_norm_;
+  rot_start_ray_norm_.normalize();
+}
+
+
 /***************************************************************************
  * The widget's geom_moved method receives geometry move requests from
  *      the widget's picks.  The widget's variables must be altered to
@@ -508,31 +544,31 @@ void
 ScaledBoxWidget::geom_moved( GeomPick*, int axis, double dist,
 			     const Vector& delta, int pick, const BState& )
 {
+   Transform trans;
+   Vector rot_curr_ray_norm;
+   double dot;
+   Vector rot_axis;
+   Point c(variables[CenterVar]->point());
    switch(pick){
-   case PickSphU:
-       if (!is_aligned_)
-      variables[PointDVar]->SetDelta(-delta);
-      break;
-   case PickSphR:
-       if (!is_aligned_)
-      variables[PointRVar]->SetDelta(delta);
-      break;
-   case PickSphD:
-       if (!is_aligned_)
-      variables[PointDVar]->SetDelta(delta);
-      break;
-   case PickSphL:
-       if (!is_aligned_)
-      variables[PointRVar]->SetDelta(-delta);
-      break;
-   case PickSphI:
-       if (!is_aligned_)
-      variables[PointIVar]->SetDelta(delta);
-      break;
-   case PickSphO:
-       if (!is_aligned_)
-      variables[PointIVar]->SetDelta(-delta);
-      break;
+   case PickSphU: case PickSphD: 
+   case PickSphL: case PickSphR: 
+   case PickSphI: case PickSphO:
+     if (is_aligned_) break;
+     rot_curr_ray_ += delta;
+     rot_curr_ray_norm=rot_curr_ray_;
+     rot_curr_ray_norm.normalize();
+     rot_axis=Cross(rot_start_ray_norm_, rot_curr_ray_norm);
+     if (rot_axis.length2()<1.e-16) rot_axis=Vector(1,0,0);
+     else rot_axis.normalize();
+     dot=Dot(rot_start_ray_norm_, rot_curr_ray_norm);
+
+     trans.post_translate(c.vector());
+     trans.post_rotate(acos(dot), rot_axis);
+     trans.post_translate(-c.vector());
+     variables[PointDVar]->Move(trans.project(rot_start_d_));
+     variables[PointRVar]->Move(trans.project(rot_start_r_));
+     variables[PointIVar]->Move(trans.project(rot_start_i_));
+     break;
    case PickResizeU:
       variables[PointRVar]->MoveDelta(delta/2.0);
       variables[PointIVar]->MoveDelta(delta/2.0);
@@ -572,7 +608,8 @@ ScaledBoxWidget::geom_moved( GeomPick*, int axis, double dist,
 	  if (axis==1) dist*=-1.0;
 	  double sdist(variables[SDistRVar]->real()+dist/2.0);
 	  if (sdist<0.0) sdist=0.0;
-	  else if (sdist>variables[DistRVar]->real()) sdist=variables[DistRVar]->real();
+	  else if (sdist>variables[DistRVar]->real()) 
+	    sdist=variables[DistRVar]->real();
 	  variables[SDistRVar]->Set(sdist);
       }
       break;
@@ -582,7 +619,8 @@ ScaledBoxWidget::geom_moved( GeomPick*, int axis, double dist,
 	  if (axis==1) dist*=-1.0;
 	  double sdist = variables[SDistDVar]->real()+dist/2.0;
 	  if (sdist<0.0) sdist=0.0;
-	  else if (sdist>variables[DistDVar]->real()) sdist=variables[DistDVar]->real();
+	  else if (sdist>variables[DistDVar]->real()) 
+	    sdist=variables[DistDVar]->real();
 	  variables[SDistDVar]->Set(sdist);
       }
       break;
@@ -592,17 +630,17 @@ ScaledBoxWidget::geom_moved( GeomPick*, int axis, double dist,
 	  if (axis==1) dist*=-1.0;
 	  double sdist = variables[SDistIVar]->real()+dist/2.0;
 	  if (sdist<0.0) sdist=0.0;
-	  else if (sdist>variables[DistIVar]->real()) sdist=variables[DistIVar]->real();
+	  else if (sdist>variables[DistIVar]->real()) 
+	    sdist=variables[DistIVar]->real();
 	  variables[SDistIVar]->Set(sdist);
       }
       break;
    case PickCyls:
-      MoveDelta(delta);
+      MoveDelta(delta/1.0);
       break;
    }
    execute(0);
 }
-
 
 /***************************************************************************
  * This standard method simply moves all the widget's PointVariables by

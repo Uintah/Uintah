@@ -50,6 +50,7 @@ public:
 
    virtual void redraw();
    virtual void geom_moved(GeomPick*, int, double, const Vector&, int, const BState&);
+   virtual void geom_pick(GeomPick*, ViewWindow*, int, const BState& bs);
 
    virtual void MoveDelta( const Vector& delta );
    virtual Point ReferencePoint() const;
@@ -91,6 +92,12 @@ private:
    bool is_slideable_;
 
    Vector oldrightaxis, olddownaxis, oldinaxis;
+   Point rot_start_pt_;
+   Point rot_start_d_;
+   Point rot_start_r_;
+   Point rot_start_i_;
+   Vector rot_start_ray_norm_;
+   Vector rot_curr_ray_;
 };
 
 } // End namespace SCIRun
