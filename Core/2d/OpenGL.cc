@@ -220,8 +220,6 @@ XAxis::draw( bool pick )
       glTextAnchor(loc);
       glprintf("%-1.3f",parent_->x_get_at((loc[0]+1.)/2.));
 
-      //glprintf(loc,norm,up,CHAR_W,CHAR_H,"%-1.3f",
-      //       parent_->x_get_at((loc[0]+1.)/2.));
     }
 
     glPopMatrix();
@@ -251,7 +249,7 @@ YAxis::draw( bool pick )
     double delta = 2./(num_tics_+1);
 
     glTextNormal(norm);
-    glTextAlign(GL_LEFT);
+    glTextAlign(GL_RIGHT);
     glTextSize(CHAR_W,CHAR_H);
     
     // set the projection to NDC
@@ -264,13 +262,11 @@ YAxis::draw( bool pick )
     up[1] = 1.;
     up[2] = 0.;      
     glTextUp(up);
-    loc[0] = pos+0.01;
+    loc[0] = pos-0.01;
     for (loop=1;loop<=num_tics_;++loop) {
       loc[1] = (loop*delta)+(.5*CHAR_H)-1.;
       glTextAnchor(loc);
       glprintf("%-1.3f",parent_->y_get_at((loc[1]+1.)/2.));
-      //      glprintf(loc,norm,up,CHAR_W,CHAR_H,"%-1.3f",
-      //       parent_->y_get_at((loc[1]+1.)/2.));
     }
     
     glPopMatrix();
