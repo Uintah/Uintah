@@ -281,7 +281,13 @@ itcl_class SCIRun_Visualization_GenStandardColorMaps {
 	set index [lsearch [set $this-nodeList] $selected]
 	if { $index == -1 } {
 	    makeNode $x $y
+	    set index [lsearch [set $this-nodeList] $selected]
 	} 
+	set loc [$c coords $selected]
+	if { $loc != "" } {
+	    set curX [expr ([lindex $loc 0]+[lindex $loc 2])*0.5]
+	    set curY [expr ([lindex $loc 1]+[lindex $loc 3])*0.5]
+	}
     }
 	
 
