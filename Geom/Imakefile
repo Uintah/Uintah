@@ -1,8 +1,25 @@
 
 #include <config/sci.cf>
 
-OBJS = Color.o  Geom.o
-SRCS = Color.cc Geom.cc
+#ifdef SCI_MACHINE_LINUX
+OPENGLOBJS =
+OPENGLSRCS =
+#else
+OPENGLOBJS = GeomOpenGL.o
+OPENGLSRCS = GeomOpenGL.cc
+#endif
+
+X11OBJS = GeomX11.o
+X11SRCS = GeomX11.cc
+
+OBJS = Color.o  Cone.o  Cylinder.o  Disc.o  Geom.o  Group.o  \
+	Line.o  Pick.o  PickMessage.o  Polyline.o  Sphere.o  \
+	Tetra.o  Tri.o  TriStrip.o  \
+	$(OPENGLOBJS) $(X11OBJS)
+SRCS = Color.cc Cone.cc Cylinder.cc Disc.cc Geom.cc Group.cc \
+	Line.cc Pick.cc PickMessage.cc Polyline.cc Sphere.cc \
+	Tetra.cc Tri.cc TriStrip.cc \
+	$(OPENGLSRCS) $(X11SRCS)
 
 LIBNAME = Geom
 
