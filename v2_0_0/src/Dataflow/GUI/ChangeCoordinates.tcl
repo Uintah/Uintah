@@ -45,8 +45,8 @@ itcl_class SCIRun_FieldsGeometry_ChangeCoordinates {
 	pack $w.f -padx 2 -pady 2 -expand 1 -fill x
 	set n "$this-c needexecute "
 
-	frame $w.f.old
-	frame $w.f.new
+	frame $w.f.old -relief groove -borderwidth 2
+	frame $w.f.new -relief groove -borderwidth 2
 	
 	label $w.f.old.l -text "Input coordinate system: "
 	radiobutton $w.f.old.e -text "Cartesian   " -variable $this-oldsystem \
@@ -57,7 +57,7 @@ itcl_class SCIRun_FieldsGeometry_ChangeCoordinates {
 	    -value "Polar"
 	radiobutton $w.f.old.r -text "Range" -variable $this-oldsystem \
 	    -value "Range"
-	pack $w.f.old.l $w.f.old.e $w.f.old.s $w.f.old.p $w.f.old.r -side left
+	pack $w.f.old.l $w.f.old.e $w.f.old.s $w.f.old.p $w.f.old.r -side top -anchor w
 
 	label $w.f.new.l -text "Output coordinate system: "
 	radiobutton $w.f.new.e -text "Cartesian   " -variable $this-newsystem \
@@ -68,9 +68,11 @@ itcl_class SCIRun_FieldsGeometry_ChangeCoordinates {
 	    -value "Polar"
 	radiobutton $w.f.new.r -text "Range" -variable $this-newsystem \
 	    -value "Range"
-	pack $w.f.new.l $w.f.new.e $w.f.new.s $w.f.new.p $w.f.new.r -side left
+	pack $w.f.new.l $w.f.new.e $w.f.new.s $w.f.new.p $w.f.new.r -side top -anchor w
 
-	button $w.f.e -text "Execute" -command "$this-c needexecute"
-	pack $w.f.old $w.f.new $w.f.e -side top
+	pack $w.f.old $w.f.new -side left -pady 2 -padx 2
+
+	makeSciButtonPanel $w $w $this
+	moveToCursor $w
     }
 }
