@@ -36,6 +36,24 @@ SmoothGeomPiece::getVolume()
   return &d_volume;
 }
 
+//////////////////////////////////////////////////////////////////////
+/* Deletes the vector containing the set of particle locations */
+//////////////////////////////////////////////////////////////////////
+void 
+SmoothGeomPiece::deletePoints()
+{
+  d_points.clear();
+}
+
+//////////////////////////////////////////////////////////////////////
+/* Deletes the vector containing the set of particle volumes */
+//////////////////////////////////////////////////////////////////////
+void 
+SmoothGeomPiece::deleteVolume()
+{
+  d_volume.clear();
+}
+
 void 
 SmoothGeomPiece::writePoints(const string& f_name, const string& var)
 {
