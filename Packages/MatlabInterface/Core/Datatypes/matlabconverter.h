@@ -39,9 +39,24 @@
 /*
  *  This class converts matlab matrices into SCIRun objects and vice versa.
  *  The class is more a collection of functions then a real object.
+ *
+ *  The functions in this class are an attempt to bridge between the C++ kind
+ *  of Object Oriented data management, towards a more classical way orginazing
+ *  data in an ensamble of arrays of differrnt types
+ *
+ *  As SCIRun was not designed to easily extract and insert data the conversion
+ *  algorithms are far from perfect and will need constant updating. A different
+ *  way of managing data within SCIRun would greatly enhance the usability of
+ *  SCIRun and make the conversions less cumbersome
+ * 
  */
 
 #define HAVE_TEEM_PACKAGE	1
+
+/* 
+ * SCIRun data types have a lot of different classes, hence we need to include
+ * a large number of class definitions......
+ */
 
 #include <vector>
 #include <string>
@@ -98,15 +113,17 @@
  * the matlabconverter_error class.
  * 
  * COPYING/ASSIGNMENT
- * There is no data stored in the object, so it can be copied indefinitely
+ * Only the converter options are stored in the object and thence the 
+ * object can be copied without any problems.
  *
  * RESOURCE ALLOCATION
- * no external resource are used
+ * no external resources are used
  *
  */ 
 
 
  namespace MatlabIO {
+ 
  
  class matlabconverter : public matfilebase {
  
@@ -156,21 +173,32 @@
 	// Nrrd key value pairs:
 	// These key value pairs are not supported yet, like in the rest of SCIRun
 
+	// Constructor
+	matlabconverter();
+
+	// SET CONVERTER OPTIONS:
+	// Data type sets the export type of the data
+	void setdatatype(matlabarray::mitype dataformat);
+	// Index base sets the index base used for indices in for example geometries
+    void setindexbase(long indexbase);
+	// In a numericmatrix all data will be stripped and the data will be saved as
+	// a plain dense or sparse matrix.
+	void converttonumericmatrix();
+	void converttostructmatrix();
+
 	// SCIRun MATRICES
 	long sciMatrixCompatible(matlabarray &mlarray, std::string &infostring);
 	void mlArrayTOsciMatrix(matlabarray &mlmat,SCIRun::MatrixHandle &scimat);
-	void sciMatrixTOmlMatrix(SCIRun::MatrixHandle &scimat,matlabarray &mlmat,matlabarray::mitype dataformat = matlabarray::miDOUBLE);
-	void sciMatrixTOmlArray(SCIRun::MatrixHandle &scimat,matlabarray &mlmat,matlabarray::mitype dataformat = matlabarray::miDOUBLE);
+	void sciMatrixTOmlArray(SCIRun::MatrixHandle &scimat,matlabarray &mlmat);
 
 #ifdef HAVE_TEEM_PACKAGE
 	// SCIRun NRRDS
 	long sciNrrdDataCompatible(matlabarray &mlarray, std::string &infostring);
 	void mlArrayTOsciNrrdData(matlabarray &mlmat,SCITeem::NrrdDataHandle &scinrrd);
-	void sciNrrdDataTOmlMatrix(SCITeem::NrrdDataHandle &scinrrd, matlabarray &mlmat,matlabarray::mitype dataformat = matlabarray::miDOUBLE);
-	void sciNrrdDataTOmlArray(SCITeem::NrrdDataHandle &scinrrd, matlabarray &mlmat,matlabarray::mitype dataformat = matlabarray::miDOUBLE);
+	void sciNrrdDataTOmlArray(SCITeem::NrrdDataHandle &scinrrd, matlabarray &mlmat);
 #endif
 
-	// SCIRun Fields/Meshs
+	// SCIRun Fields/Meshes
 	long sciFieldCompatible(matlabarray &mlarray,std::string &infostring);
 	void mlArrayTOsciField(matlabarray &mlarray,SCIRun::FieldHandle &scifield);
 
@@ -179,8 +207,10 @@
 	// Test whether the proposed name of a matlab matrix is valid.
 	bool isvalidmatrixname(std::string name);
 
- private:
- 
+private:
+	// FUNCTION FOR TRANSLATING THE CONTENTS OF A MATRIX (THE NUMERIC PART OF THE DATA)
+	void sciMatrixTOmlMatrix(SCIRun::MatrixHandle &scimat,matlabarray &mlmat);
+
 	// FUNCTIONS FOR TRANSLATING THE PROPERTY MANAGER
 	// add the field "property" in a matlabarray to a scirun property manager
 	void mlPropertyTOsciProperty(matlabarray &ma,SCIRun::PropertyManager *handle);
@@ -189,21 +219,29 @@
 
 
 #ifdef HAVE_TEEM_PACKAGE
-	// support functions for converting matlab arrays to nrrds and vice versa
+	// FUNCTIONS FOR TRANSLATING THE CONTENTS OF A NRRD (THE NUMERIC PART OF THE DATA)
+	void sciNrrdDataTOmlMatrix(SCITeem::NrrdDataHandle &scinrrd, matlabarray &mlmat);
 	unsigned int convertmitype(matlabarray::mitype type);
-
 	matlabarray::mitype convertnrrdtype(int type);
 #endif
 
-	// FUNCTIONS FOR CONVERTING FIELDS
+ private:
 
-private:
+	// CONVERTER OPTIONS:
+	
+	// Matrix should be translated as a numeric matrix directly
+	bool numericarray_;
+	// Specify the indexbase for the output
+	long indexbase_;
+	// Specify the data of output data
+	matlabarray::mitype datatype_;
+
+	// FUNCTIONS FOR CONVERTING FIELDS:
 	
 	struct fieldstruct
 	{
-		// mesh information
+		// unstructured mesh submatrices
 		matlabarray node; 
-		matlabarray snode;  // structured mesh version
 		matlabarray edge;
 		matlabarray face;
 		matlabarray cell;
@@ -212,6 +250,14 @@ private:
 		matlabarray x;
 		matlabarray y;
 		matlabarray z;
+		
+		// structured regular meshes
+		
+		matlabarray dims;
+		matlabarray offset;
+		matlabarray size;
+		matlabarray rotation;
+		matlabarray transform;
 		
 		// field information
 		matlabarray scalarfield;
@@ -227,6 +273,7 @@ private:
 		
 		// Property matrix to set properties
 		matlabarray property;
+		
 	};
 
 	// analyse a matlab matrix and sort out all the different fieldname
@@ -248,7 +295,6 @@ private:
 	template<class MESH>   void addedges(SCIRun::LockingHandle<MESH> meshH,matlabarray mlarray);
 	template<class MESH>   void addfaces(SCIRun::LockingHandle<MESH> meshH,matlabarray mlarray);
 	template<class MESH>   void addcells(SCIRun::LockingHandle<MESH> meshH,matlabarray mlarray);
-
 
  };
  
