@@ -5,6 +5,7 @@ include $(SCIRUN_SCRIPTS)/smallso_prologue.mk
 SRCDIR   := Packages/Uintah/CCA/Components/Examples
 
 SRCS     += \
+	$(SRCDIR)/AMRWave.cc \
 	$(SRCDIR)/Wave.cc \
 	$(SRCDIR)/Poisson1.cc \
 	$(SRCDIR)/Poisson2.cc \
