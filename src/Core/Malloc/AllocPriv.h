@@ -30,6 +30,15 @@
 
 #include <stdlib.h>
 #include <stdio.h>
+#ifdef SCI_PTHREAD
+#include <pthread.h>
+#else
+#ifdef __sgi
+#include <abi_mutex.h>
+#else
+#error "No lock implementation for this architecture"
+#endif
+#endif
 
 namespace SCIRun {
 
@@ -65,10 +74,17 @@ struct AllocBin {
 };
 
 struct Allocator {
-    unsigned int the_lock;
+#ifdef SCI_PTHREAD
+   pthread_mutex_t the_lock;
+#else
+#ifdef __sgi
+   abilock_t the_lock;
+#else
+#error "No lock implementation for this architecture"
+#endif
+#endif
     void initlock();
     inline void lock();
-    void longlock();
     inline void unlock();
 
     void* alloc_big(size_t size, const char* tag);
@@ -102,8 +118,6 @@ struct Allocator {
     size_t nfree;
     size_t sizealloc;
     size_t sizefree;
-    size_t nlonglocks;
-    size_t nnaps;
 
     size_t nfillbin;
     size_t nmmap;
