@@ -15,21 +15,31 @@
 #  University of Utah. All Rights Reserved.
 #
 
-.PHONY: tar products
+.PHONY: tar tarball
 
 TAR = SCIRunDocs.tar
 TARBALL = ${TAR}.gz
 PRODUCTS = FAQBook Installation User Developer
 
-$(TARBALL): tar
+# Build all docs except code view docs (in Developer/CodeViews).  To
+# additionallly build code views invoke make this way: make WITH_CV=true
+default : products
+
+# Build all docs and put them in  a tarball.
+tarball : tar
+	echo "Making a tarball"
 	-rm -f ${TARBALL}
 	gzip ${TAR}
 
+# Build all docs and put them in a tar archive.
 tar: products
+	echo "Making a tar archive"
 	-rm -f SCIRunDocs.tar
 	cd ..; tar cvf doc/SCIRunDocs.tar \
 		doc/index.html \
 		doc/.htaccess \
+		doc/Installation/index.html \
+                doc/Installation/Guide/*.html \
 		doc/User/index.html \
 		doc/User/Guide/usersguide \
 		doc/User/Guide/Figures \
@@ -38,13 +48,12 @@ tar: products
 		doc/User/Guide/usersguide2.ps.gz \
 		doc/Developer/index.html \
                 doc/Developer/Guide/*.html \
-		doc/Installation/index.html \
-                doc/Installation/Guide/*.html \
+		doc/Developer/CodeViews/html \
 		doc/FAQBook/*.html \
                 doc/Utilities/HTML/doc_styles.css \
 		doc/Utilities/Figures
 
-
+# Build all docs.
 products:
 	for p in ${PRODUCTS} ; do cd $$p; ${MAKE}; cd ..; done
 
