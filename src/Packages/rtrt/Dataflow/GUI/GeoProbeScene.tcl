@@ -47,8 +47,8 @@ itcl_class rtrt_Scenes_GeoProbeScene {
 	global $this-iso_max
 	global $this-iso_val
 	set $this-iso_min 0
-	set $this-iso_max 1
-	set $this-iso_val 0.5
+	set $this-iso_max 255
+	set $this-iso_val 40
     }
 
     method raiseColor {swatch color msg} {
@@ -99,7 +99,7 @@ itcl_class rtrt_Scenes_GeoProbeScene {
 	 
 	 #pack the node color frame
 	 pack $w.frame.set_color $w.frame.swatch -side left
-	 pack $w.frame -side left
+	 pack $w.frame -side top
 
     }
 
@@ -114,44 +114,61 @@ itcl_class rtrt_Scenes_GeoProbeScene {
 	toplevel $w
 	wm minsize $w 100 50
 	set n "$this-c needexecute"
+
+	frame $w.cut
+	scale $w.cut.xa -variable $this-xa \
+	    -label "X Low" -showvalue true -orient horizontal \
+	    -relief groove -length 200 -from 0 -to 1 \
+	    -tickinterval 0.25 -resolution 0.01 \
+	    -command "$this-c update_cut xa"
+	scale $w.cut.xb -variable $this-xb \
+	    -label "X High" -showvalue true -orient horizontal \
+	    -relief groove -length 200 -from 0 -to 1 \
+	    -tickinterval 0.25 -resolution 0.01 \
+	    -command "$this-c update_cut xb"
+	scale $w.cut.ya -variable $this-ya \
+	    -label "Y Low" -showvalue true -orient horizontal \
+	    -relief groove -length 200 -from 0 -to 1 \
+	    -tickinterval 0.25 -resolution 0.01 \
+	    -command "$this-c update_cut ya"
+	scale $w.cut.yb -variable $this-yb \
+	    -label "Y High" -showvalue true -orient horizontal \
+	    -relief groove -length 200 -from 0 -to 1 \
+	    -tickinterval 0.25 -resolution 0.01 \
+	    -command "$this-c update_cut yb"
+	scale $w.cut.za -variable $this-za \
+	    -label "Z Low" -showvalue true -orient horizontal \
+	    -relief groove -length 200 -from 0 -to 1 \
+	    -tickinterval 0.25 -resolution 0.01 \
+	    -command "$this-c update_cut za"
+	scale $w.cut.zb -variable $this-zb \
+	    -label "Z High" -showvalue true -orient horizontal \
+	    -relief groove -length 200 -from 0 -to 1 \
+	    -tickinterval 0.25 -resolution 0.01 \
+	    -command "$this-c update_cut zb"
+	pack $w.cut.xa $w.cut.xb $w.cut.ya $w.cut.yb $w.cut.za $w.cut.zb \
+	    -side top -expand 1 -fill x
 	
-	frame $w.options
-	pack $w.options -side top -fill x -padx 2 -pady 2
-	scale $w.options.reflectance -variable $this-reflectance \
-		-label "Reflectance" -showvalue true -orient horizontal \
-		-relief groove -length 200 -from 0.00 -to 1.00 \
-		-tickinterval 0.20 -resolution 0.01
-	scale $w.options.shininess -variable $this-shininess \
-		-label "Shininess" -showvalue true -orient horizontal \
-		-relief groove -length 200 -from 0 -to 100 \
-		-tickinterval 20 -resolution 1
-	pack $w.options.reflectance $w.options.shininess -side top -expand 1 \
-		-fill x
-
-	frame $w.buttons
-	button $w.buttons.execute -text "Execute" -command $n
-	button $w.buttons.update -text "Update" \
-		-command "$this-c update_sphere_material"
-#	button $w.buttons.update -text "Update" -command $n
-	button $w.buttons.dismiss -text "Dismiss" -command "wm withdraw $w"
-	pack $w.buttons.execute $w.buttons.update $w.buttons.dismiss \
-		-side left -padx 10
-#	pack $w.buttons.update $w.buttons.dismiss \
-#		-side left -padx 15
-
-	frame $w.isocolor
-	addColorSelection $w.isocolor "Isosurface Color" $this-color \
-	    "update_isosurface_material"
-
-	frame $w.isoval
-	scale $w.isoval.slider -variable $this-iso_val \
+	frame $w.isosurface
+	scale $w.isosurface.slider -variable $this-iso_val \
 	    -label "Isovalue" -showvalue true -orient horizontal \
 	    -relief groove -length 200 -from 0 -to 255 \
-	    -tickinterval 64 -resolution 0.01 \
+	    -tickinterval 80 -resolution 0.01 \
 	    -command "$this-c update_isosurface_value"
-	pack $w.isoval.slider -side top -expand 1 -fill x
 
-	pack $w.options -side top -expand yes -fill x -pady 5
-	pack $w.buttons $w.isocolor $w.isoval -side top -pady 5
+	frame $w.isosurface.color
+	addColorSelection $w.isosurface.color "Isosurface Color" $this-color \
+	    "update_isosurface_material"
+
+	pack $w.isosurface.slider $w.isosurface.color \
+	    -side top -expand 1 -fill x
+
+
+	frame $w.buttons
+	button $w.buttons.dismiss -text "Dismiss" -command "wm withdraw $w"
+	pack $w.buttons.dismiss \
+		-side left -padx 10
+
+	pack $w.cut $w.isosurface $w.buttons -side top -pady 5
     }
 }
