@@ -33,7 +33,7 @@ namespace rtrt {
 DpyBase::DpyBase(const char *name, const int window_mode):
   xres(300), yres(300), on_death_row(false),
   redraw(true), control_pressed(false), shift_pressed(false),
-  window_mode(window_mode)
+  window_mode(window_mode), scene(0)
 {
   window_name = name;
   cwindow_name = (char*)malloc(256*sizeof(char));
