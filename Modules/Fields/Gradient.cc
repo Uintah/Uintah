@@ -20,7 +20,7 @@
 #include <Datatypes/ScalarFieldRGint.h>
 #include <Datatypes/ScalarFieldRGshort.h>
 #include <Datatypes/ScalarFieldRGchar.h>
-#include <Datatypes/ScalarFieldRGuchar.h>
+// #include <Datatypes/ScalarFieldRGuchar.h>
 #include <Datatypes/VectorFieldPort.h>
 #include <Datatypes/VectorFieldRG.h>
 #include <Datatypes/VectorFieldUG.h>
@@ -149,7 +149,7 @@ void Gradient::execute()
 	ScalarFieldRGint *sfri=sfb->getRGInt();
 	ScalarFieldRGshort *sfrs=sfb->getRGShort();
 	ScalarFieldRGchar *sfrc=sfb->getRGChar();
-	ScalarFieldRGuchar *sfru=sfb->getRGUchar();
+//	ScalarFieldRGuchar *sfru=sfb->getRGUchar();
 	for(int k=0;k<nz;k++){
 	    update_progress(k, nz);
 	    for(int j=0;j<ny;j++){
@@ -164,8 +164,8 @@ void Gradient::execute()
 			vfrg->grid(i,j,k)=sfrs->gradient(i,j,k);
 		    else if (sfrc)
 			vfrg->grid(i,j,k)=sfrc->gradient(i,j,k);
-		    else if (sfru)
-			vfrg->grid(i,j,k)=sfru->gradient(i,j,k);
+//		    else if (sfru)
+//			vfrg->grid(i,j,k)=sfru->gradient(i,j,k);
 		    else {
 			cerr << "Unknown ScalarFieldBase in Gradient.\n";
 			return;
