@@ -37,7 +37,6 @@
 #include <iostream>
 #include <fstream>
 
-#include "GeometrySpecification/Problem.h"
 #include <Uintah/Components/MPM/MPMLabel.h>
 
 
@@ -89,10 +88,21 @@ void SerialMPM::problemSetup(const ProblemSpecP& prob_spec, GridP& grid,
    if(!p->get("outputInterval", d_outputInterval))
       d_outputInterval = 1.0;
 
-   Problem prob_description;
-   prob_description.preProcessor(prob_spec, grid, d_sharedState);
+  cerr << "In SerialMPM::problemSetup . . ." << endl;
 
-   cerr << "Number of velocity fields = " << d_sharedState->getNumVelFields()
+  // Search for the MaterialProperties block and then get the MPM section
+
+  ProblemSpecP mat_ps =  prob_spec->findBlock("MaterialProperties");
+
+  ProblemSpecP mpm_mat_ps = mat_ps->findBlock("MPM");
+
+  for (ProblemSpecP ps = mpm_mat_ps->findBlock("material"); ps != 0;
+       ps = ps->findNextBlock("material") ) {
+     MPMMaterial *mat = scinew MPMMaterial(ps);
+     sharedState->registerMaterial(mat);
+  }
+
+  cerr << "Number of velocity fields = " << d_sharedState->getNumVelFields()
 	<< std::endl;
 
    // Load up all the VarLabels that will be used in each of the
@@ -2091,6 +2101,9 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
 
 
 // $Log$
+// Revision 1.158  2000/11/06 20:50:11  guilkey
+// Moved functionality of Problem into SerialMPM.
+//
 // Revision 1.157  2000/11/02 21:29:22  jas
 // Changed the way grid bcs are implemented.
 //
