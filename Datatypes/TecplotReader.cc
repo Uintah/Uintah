@@ -94,7 +94,7 @@ void TecplotReader::GetParticleData(int particleId,
   values.remove_all();
   
   float val;
-  int index;
+  int index = 1;
   char num[2];
   int fluidIndex;
   // Begin by finding the root file name;
@@ -318,7 +318,7 @@ int TecplotReader::find( char c, char *buf)
 	if( iss.get(tok, LINEMAX, ',')) {
 	  clString str(tok);
 	  str.get_int(i);
-	  //	  cerr << c <<" = "<<i<<endl;
+	  //	  cqerr << c <<" = "<<i<<endl;
 	  return i;
 	} else return 0;
       } else return 0;
@@ -355,9 +355,14 @@ void TecplotReader::readZone(istream& is)
       } else {
 	i = find( 'I', buf);
 	p = buf;
-	while ( !isdigit(*p) && *p != '\0') p++;
-	if( *p == '\0' ) cerr<<"Error in Particle format\n";
-	num[0] = *p;
+	while ( *p != '"') p++;
+	while ( !isdigit(*p) && *p != '"') p++;
+	if( *p == '"' ){
+	  //cerr<<"Error in Particle format\n";
+	  num[0] = '1';
+	} else {
+	  num[0] = *p;
+	}
 	num[1] = '\0';
 	fluidIndex = atoi(num) -1;
 	readParticles( i, fluidIndex, is);
@@ -419,7 +424,16 @@ void TecplotReader::readParticles(int ii, int fluidIndex, istream& is)
 	  v += 2;
 	  ps->addVectorVar( clString( "UVW" ) );
 	}
-      } else if( *p == 'M') {
+      } else if( *p == 'A' ) {
+	vids.add(v);  // a vectorvar index
+	if( TwoD ) {
+	  v++;
+	  ps->addVectorVar( clString( "AXY" ) );
+	} else {
+	  v += 2;
+	  ps->addVectorVar( clString( "AXYZ" ) );
+	}
+      } else if( *p == 'M' && *(++p) == 'O' ) {
 	vids.add(v);  // a vectorvar index
 	if( TwoD ) {
 	  v++;
@@ -427,6 +441,15 @@ void TecplotReader::readParticles(int ii, int fluidIndex, istream& is)
 	} else {
 	  v += 2;
 	  ps->addVectorVar( clString( "MOXYZ" ) );
+	}
+      } else if( *p == 'S' && *(++p) == 'N') {
+	vids.add(v);
+	if( TwoD ) {
+	  v++;
+	  ps->addVectorVar( clString( "SNXY" ) );
+	} else {
+	  v += 2;
+	  ps->addVectorVar( clString( "SNXYZ" ) );
 	}
       } else {   // a scalar variable
 	ps->addScalarVar( stripped );
@@ -443,7 +466,6 @@ void TecplotReader::readParticles(int ii, int fluidIndex, istream& is)
   ts->scalars.resize( sids.size() );
  
   float x, y, z;
-
   for(i = 0 ; i < ii; i++ ){
     int vid = 0;  
     int sid = 0;
@@ -452,7 +474,7 @@ void TecplotReader::readParticles(int ii, int fluidIndex, istream& is)
       if ( v > lastID ){
 	is >> x;
       } else {
-	if (v == vids[vid]){ // we have a vector variable
+	if (vid < vids.size() && v == vids[vid]){ // we have a vector variable
 	  if( TwoD ) {
 	    is >> x >> y;
 	    ts->vectors[vid].add( Vector( x, y, 0) );
@@ -482,7 +504,7 @@ void TecplotReader::readParticles(int ii, int fluidIndex, istream& is)
 void TecplotReader::readBlock(int i, int j, int k, istream& is)
 {
   char *p;
-  int index;  // Note that for the ME guys indexing starts at 1.
+  int index = 1;  // Note that for the ME guys indexing starts at 1.
   clString stripped;
 
 
@@ -491,6 +513,7 @@ void TecplotReader::readBlock(int i, int j, int k, istream& is)
   for(int v = 0; v < variables.size(); v++)
     {
       clString var = variables[v];
+      p = var();
       //      cerr << var <<endl;
       if( var == "X"){ // || variables[v] == "Y") {
 	getBounds(xmin, xmax, i, j, k, is);
@@ -502,7 +525,7 @@ void TecplotReader::readBlock(int i, int j, int k, istream& is)
 	ScalarFieldHandle sfh = makeScalarField(i,j,k,is);
 	for(int f=0; f < fluids.size(); f++)
 	  fluids[f]->AddScalarField( var, sfh );
-      }	else if ( *(p = var()) == 'U' ){
+      }	else if ( *p == 'U' ){
 				//  We can assume the next two (Possibly 
 				//  three) variables make up the vectorfield
 	VectorFieldHandle vfh = makeVectorField(i,j,k,is);
@@ -514,7 +537,17 @@ void TecplotReader::readBlock(int i, int j, int k, istream& is)
 	  v += 2;
 	  fluids[index-1]->AddVectorField( clString("UVW"), vfh);
 	}
-      } else if ( *(p = var()) == 'M') { // Momentum
+      } else if ( *p == 'A' ){
+	VectorFieldHandle vfh = makeVectorField(i,j,k,is);
+	stripVar(var,  stripped, index );
+	if( TwoD ) {
+	  v ++;
+	  fluids[index-1]->AddVectorField( clString("AXY"), vfh);
+	} else {
+	  v += 2;
+	  fluids[index-1]->AddVectorField( clString("AXYZ"), vfh);
+	}
+      } else if ( *p == 'M' && *(++p) == 'O' ) { // Momentum
 	VectorFieldHandle vfh = makeVectorField(i,j,k,is);
 	stripVar(var,  stripped, index );
 	if( TwoD ) {
@@ -523,6 +556,16 @@ void TecplotReader::readBlock(int i, int j, int k, istream& is)
 	} else {
 	  v += 2;
 	  fluids[index-1]->AddVectorField( clString("MOXYZ"), vfh);
+	}
+      } else if ( *p  == 'S' && *(++p) == 'N' ) { // Momentum
+	VectorFieldHandle vfh = makeVectorField(i,j,k,is);
+	stripVar(var,  stripped, index );
+	if( TwoD ) {
+	  v ++;
+	  fluids[index-1]->AddVectorField( clString("SNXY"), vfh);
+	} else {
+	  v += 2;
+	  fluids[index-1]->AddVectorField( clString("SNXYZ"), vfh);
 	}
       } else {
 	ScalarFieldHandle sfh = makeScalarField(i,j,k, is);
