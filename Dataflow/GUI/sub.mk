@@ -20,7 +20,6 @@ $(SRCDIR)/tclIndex: \
 	$(SRCDIR)/GridVisualizer.tcl\
 	$(SRCDIR)/PatchVisualizer.tcl\
 	$(SRCDIR)/PatchDataVisualizer.tcl\
-	$(SRCDIR)/RescaleColorMap.tcl\
 	$(SRCDIR)/CuttingPlane.tcl\
 	$(SRCDIR)/Hedgehog.tcl\
 	$(SRCDIR)/ScalarOperator.tcl\
