@@ -370,7 +370,7 @@ ifeq (,$(findstring objs,$(MAKECMDGOALS)))
   ifeq ($(CC_DEPEND_REGEN),-MD)
     -include $(patsubst %.o,$(OBJTOP_ABS)/%.d, $(CLEANOBJS))
   else
-    -include $(patsubst %,$(OBJTOP_ABS)/%/depend.mk, $(ALLSUBDIRS))
+    -include $(patsubst %,$(OBJTOP_ABS)/%/depend.mk, $(patsubst $(SRCTOP)/%,%,$(ALLSUBDIRS)))
   endif
 
 else
@@ -384,6 +384,10 @@ endif
 
 #
 # $Log$
+# Revision 1.43  2000/09/14 20:46:22  yarden
+# fix the make dependency for the depend.mk files if we compile on
+# a binary tree. (fix by sparker)
+#
 # Revision 1.42  2000/09/12 15:48:18  sparker
 # Added PETSc configuration
 #
