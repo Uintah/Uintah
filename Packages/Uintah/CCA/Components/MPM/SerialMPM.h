@@ -94,9 +94,11 @@ public:
 
   void setAnalyze(PatchDataAnalyze* analyze);
 
-public:
+private:
   //////////
   // Insert Documentation Here:
+  friend class MPMICE;
+
   void actuallyInitialize(const ProcessorGroup*,
 			  const Patch* patch,
 			  DataWarehouseP& old_dw,
@@ -117,6 +119,15 @@ public:
 
   //////////
   // Insert Documentation Here:
+  void stressRelease(const ProcessorGroup*,
+			     const Patch* patch,
+			     DataWarehouseP& old_dw,
+			     DataWarehouseP& new_dw);
+
+
+  //////////
+  // Insert Documentation Here:
+
   void computeConnectivity(const ProcessorGroup*,
 			     const Patch* patch,
 			     DataWarehouseP& old_dw,
