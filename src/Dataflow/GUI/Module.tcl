@@ -45,11 +45,23 @@ itcl_class Module {
 	# messages should be accumulating
 	if {[info exists $this-msgStream]} {
 	    $msgLogStream registerVar $this-msgStream
+	} else {
+	    puts "No stream buffer variable exists"
 	}
 
 	set MacroModule ""
 	set Macroed 0
 	set menumod 0
+    }
+
+    destructor {
+	set w .mLogWnd[modname]
+	if {[winfo exists $w]!=0} {
+	    destroy $w
+	}
+	
+	$msgLogStream destructor
+	destroy $this
     }
     
     method config {config} {
@@ -702,7 +714,7 @@ itcl_class Module {
     }
 
     method displayLog {} {
-	set w .mLogWnd
+	set w .mLogWnd[modname]
 	
 	# does the window exist?
 	if [winfo exists $w] {
@@ -2362,8 +2374,7 @@ proc moduleHelp {name} {
 
 # By Mohamed Dekhil
 
-proc moduleNotes {name mclass} {
-    
+proc moduleNotes {name mclass} {    
     global $mclass-notes
     set w .module_notes
     toplevel $w
