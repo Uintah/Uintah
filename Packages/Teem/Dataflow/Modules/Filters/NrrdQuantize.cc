@@ -97,22 +97,24 @@ NrrdQuantize::execute()
     return;
   }
 
-  last_generation_ = nrrdH->generation;
-  last_minf_ = minf;
-  last_maxf_ = maxf;
-  last_nbits_ = nbits;
-
   Nrrd *nin = nrrdH->nrrd;
   nin->min = minf;
   nin->max = maxf;
 
-  Nrrd *nout = nrrdNew();
-
   cerr << "Quantizing -- min="<<minf<<" max="<<maxf<<" nbits="<<nbits<<endl;
-
-  nrrdQuantize(nout, nin, nbits, nrrdMinMaxUse);
+  cerr << "nrrdMinMaxUse = "<<nrrdMinMaxUse<<"\n";
   NrrdData *nrrd = scinew NrrdData;
-  nrrd->nrrd = nout;
+  if (nrrdQuantize(nrrd->nrrd = nrrdNew(), nin, nbits, nrrdMinMaxUse)) {
+    char *err = biffGet(NRRD);
+    fprintf(stderr, "NrrdQuantize: trouble quantizing:\n%s\n", err);
+    free(err);
+    return;
+  }
+
+  last_generation_ = nrrdH->generation;
+  last_minf_ = minf;
+  last_maxf_ = maxf;
+  last_nbits_ = nbits;
   last_nrrdH_ = nrrd;
   onrrd_->send(last_nrrdH_);
 }
