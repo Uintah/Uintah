@@ -240,6 +240,11 @@ void StreamLines::TemplatedExecute(VectorField *vf, SeedField *sf)
   sf_mesh_type *smesh =
     dynamic_cast<sf_mesh_type*>(sf->get_typed_mesh().get_rep());
 
+  //! needed by some meshes before locate will work
+  smesh->finish_mesh();
+
+  cerr << "finished the mesh..." << endl;
+
   // try to find the streamline for each seed point
   sf_node_iterator seed_iter = smesh->node_begin();
 
@@ -247,9 +252,12 @@ void StreamLines::TemplatedExecute(VectorField *vf, SeedField *sf)
 
     // Is the seed point inside the field?
     smesh->get_point(seed,*seed_iter);
-    if (!interp_->interpolate(seed,test))
+    if (!interp_->interpolate(seed,test)) {
       postMessage("StreamLines: WARNING: seed point "
 		  "was not inside the field.");
+      ++seed_iter;
+      continue;
+    }
 
     cerr << "new streamline." << endl;
 
@@ -322,8 +330,6 @@ void StreamLines::execute()
     return;
   }
 
-  cerr << "got here" << endl;
-
   // this is a pain...
   // use Marty's dispatch here instead...
   if (vf_->get_type_name(0) == "LatticeVol") {
@@ -332,12 +338,16 @@ void StreamLines::execute()
 	TemplatedExecute((LatticeVol<double>*)vf_,(ContourField<double>*)sf_);
       } else if (sf_->get_type_name(-1) == "TriSurf<double>") {
 	TemplatedExecute((LatticeVol<double>*)vf_,(TriSurf<double>*)sf_);
+      } else if (sf_->get_type_name(-1) == "PointCloud<double>") {
+	TemplatedExecute((LatticeVol<double>*)vf_,(PointCloud<double>*)sf_);
       }
     } else if (vf_->get_type_name(1) == "Vector") {
       if (sf_->get_type_name(-1) == "ContourField<double>") {
 	TemplatedExecute((LatticeVol<Vector>*)vf_,(ContourField<double>*)sf_);
       } else if (sf_->get_type_name(-1) == "TriSurf<double>") {
 	TemplatedExecute((LatticeVol<Vector>*)vf_,(TriSurf<double>*)sf_);
+      } else if (sf_->get_type_name(-1) == "PointCloud<double>") {
+	TemplatedExecute((LatticeVol<Vector>*)vf_,(PointCloud<double>*)sf_);
       }
     }
   } else if (vf_->get_type_name(0) =="TetVol") {
@@ -346,12 +356,16 @@ void StreamLines::execute()
 	TemplatedExecute((TetVol<double>*)vf_,(ContourField<double>*)sf_);
       } else if (sf_->get_type_name(-1) == "TriSurf<double>") {
 	TemplatedExecute((TetVol<double>*)vf_,(TriSurf<double>*)sf_);
+      } else if (sf_->get_type_name(-1) == "PointCloud<double>") {
+	TemplatedExecute((TetVol<double>*)vf_,(PointCloud<double>*)sf_);
       }
     } else if (vf_->get_type_name(1) == "Vector") {
       if (sf_->get_type_name(-1) == "ContourField<double>") {
 	TemplatedExecute((TetVol<Vector>*)vf_,(ContourField<double>*)sf_);
       } else if (sf_->get_type_name(-1) == "TriSurf<double>") {
 	TemplatedExecute((TetVol<Vector>*)vf_,(TriSurf<double>*)sf_);
+      } else if (sf_->get_type_name(-1) == "PointCloud<double>") {
+	TemplatedExecute((TetVol<Vector>*)vf_,(PointCloud<double>*)sf_);
       }
     }
   }
