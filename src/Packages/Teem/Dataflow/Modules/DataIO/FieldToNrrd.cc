@@ -120,8 +120,17 @@ void FieldToNrrd::execute()
   FieldHandle field_handle; 
   if (!ifield_->get(field_handle))
     return;
-  
-  if (ifield_generation_ != field_handle->generation) {
+
+  // TODO:  Need to cache this such that we can reconnect and not be broken.
+  //const bool compute_points_p = opoints_->nconnections();
+  //const bool compute_connects_p = oconnect_->nconnections();
+  //const bool compute_data_p = field_handle->basis_order() != -1;
+  const bool compute_points_p = true;
+  const bool compute_connects_p = true;
+  const bool compute_data_p = true;
+
+  if (ifield_generation_ != field_handle->generation)
+  {
     ifield_generation_ = field_handle->generation;
     points_handle_ = connect_handle_ = data_handle_ = 0;
     
@@ -131,10 +140,10 @@ void FieldToNrrd::execute()
     if (!module_dynamic_compile(ci, algo)) return;  
     
     label_.reset();
-    string lab = label_.get();
     algo->convert_to_nrrd(field_handle, points_handle_, 
 			  connect_handle_, data_handle_,
-			  lab);
+			  compute_points_p, compute_connects_p,
+			  compute_data_p, label_.get());
   }
   
   // set the Nrrd names and send them
