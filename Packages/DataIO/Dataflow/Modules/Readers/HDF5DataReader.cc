@@ -736,7 +736,9 @@ void HDF5DataReader::parseDatasets( string new_datasets,
       // Remove the dataset name from the path.
       path.erase( pos, path.length()-pos);
 
-      
+      // Just incase the dataset is at the root.
+      if( path.length() == 0 ) path = string( "/" );
+
       paths.push_back( path );
       datasets.push_back( dataset );
     }
@@ -881,6 +883,7 @@ vector<int> HDF5DataReader::getDatasetDims( string filename,
   }
 
   /* Open the group in the file. */
+
   if( (g_id = H5Gopen(file_id, group.c_str())) < 0 ) {
     error( "Error opening group - " + group );
     return idims;
