@@ -31,6 +31,10 @@
 #include <Uintah/Parallel/ProcessorGroup.h>
 #include <SCICore/Exceptions/Exception.h>
 
+#ifdef USE_VAMPIR
+#include <Uintah/Parallel/Vampir.h>
+#endif
+
 #if HAVE_FPSETMASK
 #include <ieeefp.h>
 #endif
@@ -82,6 +86,10 @@ int main(int argc, char** argv)
      * Initialize MPI
      */
     Parallel::initializeManager(argc, argv);
+
+    #ifdef USE_VAMPIR
+    VTsetup();
+    #endif
 
 #if HAVE_FPSETMASK
     fpsetmask(FP_X_OFL|FP_X_DZ|FP_X_INV);
@@ -303,6 +311,9 @@ int main(int argc, char** argv)
 
 //
 // $Log$
+// Revision 1.25.2.1  2000/10/06 23:59:41  witzel
+// Added VTsetup call for vampir trace initialization.
+//
 // Revision 1.25  2000/09/29 05:32:06  sparker
 // Quiet warning from g++
 //
