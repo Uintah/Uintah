@@ -202,12 +202,8 @@ Isosurface::execute()
 
   vector<double> isovals;
   if (gui_active_isoval_selection_tab_.get() == "0")
-  { // slider
-    isovals.push_back(gui_iso_value_.get());
-  }
-  else if (gui_active_isoval_selection_tab_.get() == "1")
-  { // typed
-    const double val = gui_iso_value_typed_.get();
+  { // slider / typed
+    const double val = gui_iso_value_.get();
     if (val < prev_min_ || val > prev_max_)
     {
       warning("Typed isovalue out of range -- skipping isosurfacing.");
@@ -215,7 +211,7 @@ Isosurface::execute()
     }
     isovals.push_back(val);
   }
-  else if (gui_active_isoval_selection_tab_.get() == "2")
+  else if (gui_active_isoval_selection_tab_.get() == "1")
   { // quantity
     int num=gui_iso_value_quantity_.get();
     if (num<1)

@@ -324,13 +324,15 @@ itcl_class SCIRun_Visualization_ShowField {
 	    return;
 	}
 	toplevel $window
-	
+	wm minsize $window 380 548
+
 	#frame for all options to live
 	frame $window.options
  
 	# node frame holds ui related to vert display (left side)
 	frame $window.options.disp -borderwidth 2
-	pack $window.options.disp -padx 2 -pady 2 -side left -fill y
+	pack $window.options.disp -padx 2 -pady 2 -side left \
+		-fill both -expand 1
 
 	# Display Options
 	iwidgets::labeledframe $window.options.disp.frame_title \
@@ -355,10 +357,10 @@ itcl_class SCIRun_Visualization_ShowField {
 	$dof.tabs view [set $this-active_tab]	
 	$dof.tabs configure -tabpos "n"
 
-	pack $dof.tabs -side top -expand yes
+	pack $dof.tabs -side top -fill x -expand yes
 
 	#pack notebook frame
-	pack $window.options.disp.frame_title -side top -expand yes
+	pack $window.options.disp.frame_title -side top -expand yes -fill x
 	
 	#add bottom frame for execute and dismiss buttons
 	frame $window.control -relief groove -borderwidth 2 -width 500
@@ -389,7 +391,7 @@ itcl_class SCIRun_Visualization_ShowField {
 
 	pack $res.scale -side top -fill both -expand 1
 
-	pack $window.options -padx 2 -pady 2 -side top
+	pack $window.options -padx 2 -pady 2 -side top -fill x -expand 1
 	pack $window.resolution -padx 2 -pady 2 -side top -fill x -expand 1
 	pack $window.def_col $window.control -padx 2 -pady 2 -side top
 
