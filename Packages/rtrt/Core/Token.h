@@ -110,10 +110,24 @@ class Token
   Token(const string &s) 
     : parent_(0), file_(false), moniker_(s), nargs_(0)
     { token_manager_.AddToken(this); }
-  virtual ~Token() {}
+  virtual ~Token() {
+    destroy_children();
+  }
+
+  void destroy_children()
+  {
+    unsigned length = children_.size();
+    unsigned loop;
+    for (loop=0; loop<length; ++loop) {
+      children_[loop]->destroy_children();
+      delete children_[loop];
+    }
+    children_.resize(0);
+  } 
 
   /* to avoid stupid (read "s-g-i") warnings */
   virtual bool Parse() { return false; }
+  virtual void Write() {}
 
   virtual bool Parse(ifstream &);
   virtual bool ParseArgs(ifstream &);

@@ -28,7 +28,7 @@ class SceneToken : public Token
     AddChildMoniker("*SCENE_ENVMAP");
     AddChildMoniker("*SCENE_AMBIENT_STATIC");
   }
-  virtual ~SceneToken() {}
+  virtual ~SceneToken() { destroy_children(); }
     
   virtual Token *MakeToken() { return new SceneToken(); }
 };
@@ -43,7 +43,7 @@ class SceneEnvMapToken : public Token
   SceneEnvMapToken() : Token("*SCENE_ENVMAP") {
     AddChildMoniker("*BITMAP");
   }
-  virtual ~SceneEnvMapToken() {}
+  virtual ~SceneEnvMapToken() { destroy_children(); }
 
   virtual Token *MakeToken() { return new SceneEnvMapToken(); }
 };
@@ -56,7 +56,7 @@ class SceneAmbientStaticToken : public Token
  public:
 
   SceneAmbientStaticToken() : Token("*SCENE_AMBIENT_STATIC") { nargs_ = 3; }
-  virtual ~SceneAmbientStaticToken() {}
+  virtual ~SceneAmbientStaticToken() { destroy_children(); }
 
   virtual Token *MakeToken() { return new SceneAmbientStaticToken(); }
 };
@@ -71,7 +71,7 @@ class MaterialListToken : public Token
   MaterialListToken() : Token("*MATERIAL_LIST") {
     AddChildMoniker("*MATERIAL");
   }
-  virtual ~MaterialListToken() {}
+  virtual ~MaterialListToken() { destroy_children(); }
 
   virtual Token *MakeToken() { return new MaterialListToken(); }
 };
@@ -84,7 +84,7 @@ class BitmapToken : public Token
  public:
 
   BitmapToken() : Token("*BITMAP") { nargs_ = 1; }
-  virtual ~BitmapToken() {}
+  virtual ~BitmapToken() { destroy_children(); }
 
   virtual void Write(ofstream &str) {
     Indent(str);
@@ -134,7 +134,7 @@ class MaterialToken : public Token
     AddChildMoniker("*SUBMATERIAL");
     AddChildMoniker("*NUMSUBMTLS");
   }
-  virtual ~MaterialToken() {}
+  virtual ~MaterialToken() { destroy_children(); }
 
   virtual bool Parse(ifstream &str) {
     str >> index_;
@@ -239,7 +239,7 @@ class SubMaterialToken : public MaterialToken
   SubMaterialToken() : MaterialToken("*SUBMATERIAL") {
     nargs_ = 1; 
   }
-  virtual ~SubMaterialToken() {}
+  virtual ~SubMaterialToken() { destroy_children(); }
 
   virtual bool Parse(ifstream &str) {
     str >> index_;
@@ -280,7 +280,7 @@ class NumSubMtlsToken : public Token
  public:
   
   NumSubMtlsToken() : Token("*NUMSUBMTLS") { nargs_ = 1; }
-  virtual ~NumSubMtlsToken() {}
+  virtual ~NumSubMtlsToken() { destroy_children(); }
 
   virtual bool Parse(ifstream &str) {
     unsigned num;
@@ -306,7 +306,7 @@ class MaterialClassToken : public Token
  public:
   
   MaterialClassToken() : Token("*MATERIAL_CLASS") { nargs_ = 1; }
-  virtual ~MaterialClassToken() {}
+  virtual ~MaterialClassToken() { destroy_children(); }
 
   virtual bool Parse(ifstream &str) {
     ParseArgs(str);
@@ -331,7 +331,7 @@ class MaterialNameToken : public Token
  public:
   
   MaterialNameToken() : Token("*MATERIAL_NAME") { nargs_ = 1; }
-  virtual ~MaterialNameToken() {}
+  virtual ~MaterialNameToken() { destroy_children(); }
 
   virtual bool Parse(ifstream &str) {
     ParseArgs(str);
@@ -356,7 +356,7 @@ class MaterialAmbientToken : public Token
  public:
   
   MaterialAmbientToken() : Token("*MATERIAL_AMBIENT") {}
-  virtual ~MaterialAmbientToken() {}
+  virtual ~MaterialAmbientToken() { destroy_children(); }
 
   virtual bool Parse(ifstream &str) {
     double color[3];
@@ -386,7 +386,7 @@ class MaterialDiffuseToken : public Token
  public:
   
   MaterialDiffuseToken() : Token("*MATERIAL_DIFFUSE") {}
-  virtual ~MaterialDiffuseToken() {}
+  virtual ~MaterialDiffuseToken() { destroy_children(); }
  
   virtual bool Parse(ifstream &str) {
     double color[3];
@@ -416,7 +416,7 @@ class MaterialSpecularToken : public Token
  public:
   
   MaterialSpecularToken() : Token("*MATERIAL_SPECULAR") {}
-  virtual ~MaterialSpecularToken() {}
+  virtual ~MaterialSpecularToken() { destroy_children(); }
 
   virtual bool Parse(ifstream &str) {
     double color[3];
@@ -446,7 +446,7 @@ class MaterialShineToken : public Token
  public:
   
   MaterialShineToken() : Token("*MATERIAL_SHINE") {}
-  virtual ~MaterialShineToken() {}
+  virtual ~MaterialShineToken() { destroy_children(); }
 
   virtual bool Parse(ifstream &str) {
     double shine;
@@ -471,7 +471,7 @@ class MaterialTransparencyToken : public Token
  public:
   
   MaterialTransparencyToken() : Token("*MATERIAL_TRANSPARENCY") {}
-  virtual ~MaterialTransparencyToken() {}
+  virtual ~MaterialTransparencyToken() { destroy_children(); }
 
   virtual bool Parse(ifstream &str) {
     double t;
@@ -499,7 +499,7 @@ class MapDiffuseToken : public Token
   MapDiffuseToken() : Token("*MAP_DIFFUSE") {
     AddChildMoniker("*BITMAP");
   }
-  virtual ~MapDiffuseToken() {}
+  virtual ~MapDiffuseToken() { destroy_children(); }
 
   virtual bool Parse(ifstream &str) {
     ParseChildren(str);
@@ -523,7 +523,7 @@ class MapBumpToken : public Token
   MapBumpToken() : Token("*MAP_BUMP") {
     AddChildMoniker("*BITMAP");
   }
-  virtual ~MapBumpToken() {}
+  virtual ~MapBumpToken() { destroy_children(); }
 
   virtual bool Parse(ifstream &str) {
     ParseChildren(str);
@@ -547,7 +547,7 @@ class MapOpacityToken : public Token
   MapOpacityToken() : Token("*MAP_OPACITY") { 
     AddChildMoniker("*BITMAP");
   }
-  virtual ~MapOpacityToken() {}
+  virtual ~MapOpacityToken() { destroy_children(); }
 
   virtual bool Parse(ifstream &str) {
     ParseChildren(str);
@@ -571,7 +571,7 @@ class MapSelfIllumToken : public Token
   MapSelfIllumToken() : Token("*MAP_SELFILLUM") { 
     AddChildMoniker("*BITMAP");
   }
-  virtual ~MapSelfIllumToken() {}
+  virtual ~MapSelfIllumToken() { destroy_children(); }
 
   virtual bool Parse(ifstream &str) {
     ParseChildren(str);
@@ -603,7 +603,7 @@ class GeomObjectToken : public Token
     AddChildMoniker("*NODE_NAME");
     AddChildMoniker("*MESH");
   }
-  virtual ~GeomObjectToken() {}
+  virtual ~GeomObjectToken() { destroy_children(); }
 
   virtual bool Parse(ifstream &str) {
     ParseArgs(str);
@@ -634,7 +634,7 @@ class NodeNameToken : public Token
  public:
 
   NodeNameToken() : Token("*NODE_NAME") { nargs_ = 1; }
-  virtual ~NodeNameToken() {}
+  virtual ~NodeNameToken() { destroy_children(); }
 
   virtual bool Parse(ifstream &str) {
     bool status = ParseArgs(str);
@@ -690,7 +690,7 @@ class MeshToken : public Token
     AddChildMoniker("*MESH_TFACELIST");
     AddChildMoniker("*MESH_NORMALS");
   }
-  virtual ~MeshToken() {}
+  virtual ~MeshToken() { destroy_children(); }
 
   unsigned GetNumVertices() { return numvertices_; }
   void SetNumVertices(unsigned n) {
@@ -737,7 +737,7 @@ class MeshNumVertexToken : public Token
  public:
 
   MeshNumVertexToken() : Token("*MESH_NUMVERTEX") { nargs_ = 1; }
-  virtual ~MeshNumVertexToken() {}
+  virtual ~MeshNumVertexToken() { destroy_children(); }
 
   virtual bool Parse(ifstream &str) {
     unsigned num;
@@ -763,7 +763,7 @@ class MeshNumTVertexToken : public Token
  public:
 
   MeshNumTVertexToken() : Token("*MESH_NUMTVERTEX") { nargs_ = 1; }
-  virtual ~MeshNumTVertexToken() {}
+  virtual ~MeshNumTVertexToken() { destroy_children(); }
 
   virtual bool Parse(ifstream &str) {
     unsigned num;
@@ -789,7 +789,7 @@ class MeshNumFacesToken : public Token
  public:
 
   MeshNumFacesToken() : Token("*MESH_NUMFACES") { nargs_ = 1; }
-  virtual ~MeshNumFacesToken() {}
+  virtual ~MeshNumFacesToken() { destroy_children(); }
 
   virtual bool Parse(ifstream &str) {
     unsigned num;
@@ -815,7 +815,7 @@ class MeshNumTVFacesToken : public Token
  public:
 
   MeshNumTVFacesToken() : Token("*MESH_NUMTVFACES") { nargs_ = 1; }
-  virtual ~MeshNumTVFacesToken() {}
+  virtual ~MeshNumTVFacesToken() { destroy_children(); }
 
   virtual bool Parse(ifstream &str) {
     unsigned num;
@@ -845,7 +845,7 @@ class MeshVertexListToken : public Token
  public:
 
   MeshVertexListToken() : Token("*MESH_VERTEX_LIST") {}
-  virtual ~MeshVertexListToken() {}
+  virtual ~MeshVertexListToken() { destroy_children(); }
 
   virtual bool Parse(ifstream &str) {
     unsigned index;
@@ -911,7 +911,7 @@ class MeshTVertListToken : public Token
  public:
 
   MeshTVertListToken() : Token("*MESH_TVERTLIST") {}
-  virtual ~MeshTVertListToken() {}
+  virtual ~MeshTVertListToken() { destroy_children(); }
 
   virtual bool Parse(ifstream &str) {
     unsigned numtvertices = ((MeshToken*)parent_)->GetNumTVertices();
@@ -979,7 +979,7 @@ class MeshFaceListToken : public Token
  public:
 
   MeshFaceListToken() : Token("*MESH_FACE_LIST") {}
-  virtual ~MeshFaceListToken() {}
+  virtual ~MeshFaceListToken() { destroy_children(); }
 
   virtual bool Parse(ifstream &str) {
     unsigned numfaces = ((MeshToken*)parent_)->GetNumFaces();
@@ -1065,7 +1065,7 @@ class MeshTFaceListToken : public Token
  public:
 
   MeshTFaceListToken() : Token("*MESH_TFACELIST") {}
-  virtual ~MeshTFaceListToken() {}
+  virtual ~MeshTFaceListToken() { destroy_children(); }
 
   virtual bool Parse(ifstream &str) {
     unsigned numtfaces = ((MeshToken*)parent_)->GetNumTFaces();
@@ -1139,7 +1139,7 @@ class MeshNormalsToken : public Token
     AddChildMoniker("*MESH_FACENORMAL");
     AddChildMoniker("*MESH_VERTEXNORMAL");
   }
-  virtual ~MeshNormalsToken() {}
+  virtual ~MeshNormalsToken() { destroy_children(); }
 
   virtual bool Parse(ifstream &str) {
     unsigned faceindex;
@@ -1246,7 +1246,7 @@ class MaterialRefToken : public Token
  public:
 
   MaterialRefToken() : Token("*MATERIAL_REF") {}
-  virtual ~MaterialRefToken() {}
+  virtual ~MaterialRefToken() { destroy_children(); }
 
   virtual bool Parse(ifstream &str) {
     str >> index_;
@@ -1275,7 +1275,7 @@ class GroupToken : public Token
     AddChildMoniker("*GEOMOBJECT");
     AddChildMoniker("*GROUP");
   }
-  virtual ~GroupToken() {}
+  virtual ~GroupToken() { destroy_children(); }
 
   virtual bool Parse(ifstream &str) {
     ParseArgs(str);
@@ -1351,7 +1351,7 @@ class ASEFile : public Token
     // try to open the given file
     is_open_ = str_.is_open();
   }
-  virtual ~ASEFile() {}
+  virtual ~ASEFile() { destroy_children(); }
 
   void open(const string& s) {
     moniker_ = s;
@@ -1500,12 +1500,23 @@ class ASEDir
 {
   
   string dir_;
-  vector<ASEFile*> asefiles;
+  vector<ASEFile*> asefiles_;
 
  public:
 
   ASEDir(const string& s) : dir_(s) {}
-  virtual ~ASEDir() {}
+  virtual ~ASEDir() { destroy_children(); }
+
+  void destroy_children()
+  {
+    unsigned length = asefiles_.size();
+    unsigned loop;
+    for (loop=0; loop<length; ++loop) {
+      asefiles_[loop]->destroy_children();
+      delete asefiles_[loop];
+    }
+    asefiles_.resize(0);
+  }    
 
   bool Parse() {
     char buf[100];
@@ -1523,7 +1534,7 @@ class ASEDir
 
     dirlist.getline(buf,100);
     while (!dirlist.eof()) {
-      asefiles.push_back(new ASEFile(buf));
+      asefiles_.push_back(new ASEFile(buf));
       dirlist.getline(buf,100);
     }
     dirlist.close();
@@ -1532,11 +1543,11 @@ class ASEDir
     curstring += dir_ + "/__++temp++__";
     system(curstring.c_str());
     
-    unsigned length = asefiles.size();
+    unsigned length = asefiles_.size();
     cout << "found " << length << " ASE files" << endl;
     unsigned loop;
     for (loop=0; loop<length; ++loop) {
-      asefiles[loop]->Parse();
+      asefiles_[loop]->Parse();
     }
 
     return true;
