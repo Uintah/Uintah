@@ -259,7 +259,7 @@ void OpenGL::redraw(Salmon* salmon, Roe* roe, double tbeg, double tend,
 	    cerr << "Xflush done\n";
 	}
 	if(old_stereo && !do_stereo){
-	    system("/usr/gfx/setmon 72HZ");
+//	    system("/usr/gfx/setmon 72HZ");
 #if 0
 	    if(!XSGISetStereoMode(dpy, win, 0, 0, STEREO_OFF)){
 		cerr << "Cannot set stereo mode!\n";
