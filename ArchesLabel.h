@@ -4,8 +4,8 @@
 #define Uintah_Components_Arches_ArchesLabel_h
 
 #include <Packages/Uintah/Core/Grid/SimulationStateP.h>
-#include <Packages/Uintah/Core/Grid/ComputeSet.h>
-#include <Packages/Uintah/Core/ProblemSpec/Handle.h>
+#include <Packages/Uintah/Core/Variables/ComputeSet.h>
+#include <Packages/Uintah/Core/Util/Handle.h>
 
 
 /**************************************
