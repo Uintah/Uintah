@@ -586,7 +586,7 @@ void Viewer::emit_vars(ostream& out, string& midx)
   TCL::emit_vars(out, midx);
   string viewwindowstr;
   for(unsigned int i=0;i<viewwindow.size();i++){
-    viewwindowstr=midx+string("-ViewWindow_")+to_string((int)i);
+    viewwindowstr=midx+string("-ViewWindow_")+to_string(i);
     out << midx << " ui\n";
     viewwindow[i]->emit_vars(out, viewwindowstr);
   }
