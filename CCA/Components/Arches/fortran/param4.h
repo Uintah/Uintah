@@ -9,6 +9,7 @@ c*********************************************************************
       double precision pt8,pt9,pt99,onept5,twopt5
       double precision tiny,small,great
       double precision PI
+      double precision SIGMA
       PARAMETER (ZERO=0.0D0,ONE=1.0D0,TWO =2.0D0,THREE=3.0D0)
       PARAMETER (FOUR=4.0D0,FIVE=5.0D0,SIX=6.0D0,SEVEN=7.0D0)
       PARAMETER (EIGHT=8.0D0,RNINE=9.0D0,TEN=10.0D0,CENT=100.0D0)
@@ -19,6 +20,7 @@ c*********************************************************************
       PARAMETER (ONEPT5=1.5D0,TWOPT5=2.5D0)
       PARAMETER (TINY=1.0D-20,SMALL=1.0D-14,GREAT=1.0D+25)
       PARAMETER (PI=3.1415925D0)
+      PARAMETER (SIGMA=5.67D-08)
 
 
 c*********************************************************************

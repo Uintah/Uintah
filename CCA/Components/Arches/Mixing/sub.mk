@@ -13,7 +13,7 @@ SRCS     += $(SRCDIR)/MixingModel.cc $(SRCDIR)/ColdflowMixingModel.cc  \
 		$(SRCDIR)/StanjanEquilibriumReactionModel.cc \
 		$(SRCDIR)/Common.cc \
 		$(SRCDIR)/Stream.cc $(SRCDIR)/InletStream.cc \
-		$(SRCDIR)/ChemkinInterface.cc 
+		$(SRCDIR)/ChemkinInterface.cc $(SRCDIR)/DynamicTable.cc 
 
 SUBDIRS := $(SRCDIR)/fortran
 include $(SCIRUN_SCRIPTS)/recurse.mk

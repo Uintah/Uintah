@@ -50,10 +50,12 @@ using namespace SCIRun;
 BoundaryCondition::BoundaryCondition(const ArchesLabel* label,
 				     const MPMArchesLabel* MAlb,
 				     TurbulenceModel* turb_model,
-				     Properties* props):
+				     Properties* props,
+				     bool calcEnthalpy):
                                      d_lab(label), d_MAlab(MAlb),
 				     d_turbModel(turb_model), 
-				     d_props(props)
+				     d_props(props),
+				     d_enthalpySolve(calcEnthalpy)
 {
   d_nofScalars = d_props->getNumMixVars();
   MM_CUTOFF_VOID_FRAC = 0.01;
@@ -1063,6 +1065,14 @@ BoundaryCondition::sched_transOutletBC(SchedulerP& sched,
     tsk->requires(Task::NewDW, d_lab->d_scalarCPBCLabel, 
 		  Ghost::None, zeroGhostCells);
   tsk->requires(Task::NewDW, d_lab->d_uvwoutLabel);
+  if (d_enthalpySolve) {
+    tsk->requires(Task::NewDW, d_lab->d_enthalpyCPBCLabel, 
+		  Ghost::None, zeroGhostCells);
+    tsk->requires(Task::NewDW, d_lab->d_enthalpyINLabel, 
+		  Ghost::None, zeroGhostCells);
+    tsk->computes(d_lab->d_enthalpyOUTBCLabel);
+  }
+
   // This task computes new uVelocity, vVelocity and wVelocity
   tsk->computes(d_lab->d_uVelocityOUTBCLabel);
   tsk->computes(d_lab->d_vVelocityOUTBCLabel);
@@ -1093,7 +1103,7 @@ BoundaryCondition::transOutletBC(const ProcessorGroup* ,
     int matlIndex = d_lab->d_sharedState->getArchesMaterial(archIndex)->getDWIndex(); 
     CCVariable<int> cellType;
     CCVariable<double> pressure;
-    StaticArray< CCVariable<double> > scalar(d_nofScalars);
+    StaticArray<CCVariable<double> > scalar(d_nofScalars);
     SFCXVariable<double> uVelocity;
     SFCYVariable<double> vVelocity;
     SFCZVariable<double> wVelocity;
@@ -1172,8 +1182,7 @@ BoundaryCondition::transOutletBC(const ProcessorGroup* ,
     int yplus =  patch->getBCType(Patch::yplus) == Patch::Neighbor?0:1;
     int zminus = patch->getBCType(Patch::zminus) == Patch::Neighbor?0:1;
     int zplus =  patch->getBCType(Patch::zplus) == Patch::Neighbor?0:1;
-    
-    // assuming outlet to be pos x
+
     FORT_OUTLETBC(domLoU.get_pointer(), domHiU.get_pointer(), 
 		  uVelocity.getPointer(),
 		  domLoV.get_pointer(), domHiV.get_pointer(), 
@@ -1200,6 +1209,41 @@ BoundaryCondition::transOutletBC(const ProcessorGroup* ,
 		  &delta_t,
 		  domLoGeom.get_pointer(), domHiGeom.get_pointer(),
 		  cellinfo->dxpwu.get_objs(), cellinfo->dxpw.get_objs());
+
+
+    if (d_enthalpySolve) {
+      CCVariable<double> enthalpy;
+      CCVariable<double> old_enthalpy;
+      new_dw->get(enthalpy, d_lab->d_enthalpyCPBCLabel, matlIndex, patch, 
+		  Ghost::None,
+		  nofGhostCells);
+      new_dw->get(old_enthalpy, d_lab->d_enthalpyINLabel, matlIndex, patch,
+		  Ghost::None,
+		  nofGhostCells);
+      // Get the low and high index for the patch and the variables
+      IntVector domLoEnth_old = old_enthalpy.getFortLowIndex();
+      IntVector domHiEnth_old = old_enthalpy.getFortHighIndex();
+      IntVector domLoEnth = enthalpy.getFortLowIndex();
+      IntVector domHiEnth = enthalpy.getFortHighIndex();
+
+    // assuming outlet to be pos x
+      FORT_OUTLETBCENTH(domLoEnth.get_pointer(), domHiEnth.get_pointer(), 
+			enthalpy.getPointer(),
+			domLoEnth_old.get_pointer(), domHiEnth_old.get_pointer(),
+			old_enthalpy.getPointer(),
+			domLoCT.get_pointer(), domHiCT.get_pointer(), 
+			idxLo.get_pointer(), idxHi.get_pointer(), 
+			cellType.getPointer(),
+			&(d_outletBC->d_cellTypeID),
+			&uvwout,
+			&xminus, &xplus, &yminus, &yplus,
+			&zminus, &zplus,
+			&delta_t,
+			domLoGeom.get_pointer(), domHiGeom.get_pointer(),
+			cellinfo->dxpw.get_objs());
+      new_dw->put(enthalpy, d_lab->d_enthalpyOUTBCLabel, matlIndex, patch);
+    }
+
   // Put the calculated data into the new DW
     new_dw->put(uVelocity, d_lab->d_uVelocityOUTBCLabel, matlIndex, patch);
     new_dw->put(vVelocity, d_lab->d_vVelocityOUTBCLabel, matlIndex, patch);
@@ -1241,7 +1285,11 @@ BoundaryCondition::sched_recomputePressureBC(SchedulerP& sched,
   for (int ii = 0; ii < d_nofScalars; ii++)
     tsk->requires(Task::NewDW, d_lab->d_scalarINLabel, 
 		  Ghost::None, numGhostCells);
-  
+  if (d_enthalpySolve) {
+    tsk->requires(Task::NewDW, d_lab->d_enthalpyINLabel, 
+		  Ghost::None, numGhostCells);
+    tsk->computes(d_lab->d_enthalpyCPBCLabel);
+  }
   
   // This task computes new uVelocity, vVelocity and wVelocity
   tsk->computes(d_lab->d_uVelocityCPBCLabel);
@@ -1330,6 +1378,11 @@ BoundaryCondition::sched_setProfile(SchedulerP& sched, const PatchSet* patches,
   for (int ii = 0; ii < d_props->getNumMixVars(); ii++) 
     tsk->requires(Task::NewDW, d_lab->d_scalarINLabel,
 		  Ghost::None, numGhostCells);
+  if (d_enthalpySolve) {
+    tsk->requires(Task::NewDW, d_lab->d_enthalpyINLabel,
+		  Ghost::None, numGhostCells);
+    tsk->computes(d_lab->d_enthalpySPLabel);
+  }
   // This task computes new density, uVelocity, vVelocity and wVelocity, scalars
   tsk->computes(d_lab->d_densitySPLabel);
   tsk->computes(d_lab->d_uVelocitySPLabel);
@@ -1338,47 +1391,6 @@ BoundaryCondition::sched_setProfile(SchedulerP& sched, const PatchSet* patches,
   for (int ii = 0; ii < d_props->getNumMixVars(); ii++) 
     tsk->computes(d_lab->d_scalarSPLabel);
   sched->addTask(tsk, patches, matls);
-#if 0
-  for(Level::const_patchIterator iter=level->patchesBegin();
-      iter != level->patchesEnd(); iter++){
-    const Patch* patch=*iter;
-    {
-      Task* tsk = scinew Task("BoundaryCondition::setProfile",
-			      patch, old_dw, new_dw, this,
-			      &BoundaryCondition::setFlatProfile);
-      int numGhostCells = 0;
-      int matlIndex = 0;
-
-      // This task requires cellTypeVariable and areaLabel for inlet boundary
-      // Also densityIN, [u,v,w] velocityIN, scalarIN
-      tsk->requires(old_dw, d_lab->d_cellTypeLabel, matlIndex, patch, Ghost::None,
-		    numGhostCells);
-      for (int ii = 0; ii < d_numInlets; ii++) {
-	tsk->requires(old_dw, d_flowInlets[ii].d_area_label);
-      }
-      // This task requires old density, uVelocity, vVelocity and wVelocity
-      tsk->requires(old_dw, d_lab->d_densityINLabel, matlIndex, patch, Ghost::None,
-		    numGhostCells);
-      tsk->requires(old_dw, d_lab->d_uVelocityINLabel, matlIndex, patch, Ghost::None,
-		    numGhostCells);
-      tsk->requires(old_dw, d_lab->d_vVelocityINLabel, matlIndex, patch, Ghost::None,
-		    numGhostCells);
-      tsk->requires(old_dw, d_lab->d_wVelocityINLabel, matlIndex, patch, Ghost::None,
-		    numGhostCells);
-      for (int ii = 0; ii < d_props->getNumMixVars(); ii++) 
-	tsk->requires(old_dw, d_lab->d_scalarINLabel, ii, patch, Ghost::None,
-		      numGhostCells);
-      // This task computes new density, uVelocity, vVelocity and wVelocity, scalars
-      tsk->computes(new_dw, d_lab->d_densitySPLabel, matlIndex, patch);
-      tsk->computes(new_dw, d_lab->d_uVelocitySPLabel, matlIndex, patch);
-      tsk->computes(new_dw, d_lab->d_vVelocitySPLabel, matlIndex, patch);
-      tsk->computes(new_dw, d_lab->d_wVelocitySPLabel, matlIndex, patch);
-      for (int ii = 0; ii < d_props->getNumMixVars(); ii++) 
-	tsk->computes(new_dw, d_lab->d_scalarSPLabel, ii, patch);
-      sched->addTask(tsk);
-    }
-  }
-#endif
 }
 
 //****************************************************************************
@@ -1893,6 +1905,131 @@ BoundaryCondition::scalarBC(const ProcessorGroup*,
 }
 
 
+
+//****************************************************************************
+// Actually compute the scalar bcs
+//****************************************************************************
+void 
+BoundaryCondition::enthalpyBC(const ProcessorGroup*,
+			    const Patch* patch,
+			    CellInformation* cellinfo,
+			    ArchesVariables* vars)
+{
+  // Get the low and high index for the patch
+  IntVector domLo = vars->density.getFortLowIndex();
+  IntVector domHi = vars->density.getFortHighIndex();
+  IntVector domLong = vars->enthalpy.getFortLowIndex();
+  IntVector domHing = vars->enthalpy.getFortHighIndex();
+  IntVector idxLo = patch->getCellFORTLowIndex();
+  IntVector idxHi = patch->getCellFORTHighIndex();
+  IntVector domLoU = vars->uVelocity.getFortLowIndex();
+  IntVector domHiU = vars->uVelocity.getFortHighIndex();
+  IntVector domLoV = vars->vVelocity.getFortLowIndex();
+  IntVector domHiV = vars->vVelocity.getFortHighIndex();
+  IntVector domLoW = vars->wVelocity.getFortLowIndex();
+  IntVector domHiW = vars->wVelocity.getFortHighIndex();
+
+  // Get the wall boundary and flow field codes
+  int wall_celltypeval = d_wallBdry->d_cellTypeID;
+  int press_celltypeval = d_pressureBdry->d_cellTypeID;
+  // ** WARNING ** Symmetry/sfield/outletfield/ffield hardcoded to -3,-4,-5, -6
+  //               Fmixin hardcoded to 0
+  int symmetry_celltypeval = -3;
+  int sfield = -4;
+  int outletfield = -5;
+  int ffield = -1;
+  double fmixin = 0.0;
+  int xminus = patch->getBCType(Patch::xminus) == Patch::Neighbor?0:1;
+  int xplus =  patch->getBCType(Patch::xplus) == Patch::Neighbor?0:1;
+  int yminus = patch->getBCType(Patch::yminus) == Patch::Neighbor?0:1;
+  int yplus =  patch->getBCType(Patch::yplus) == Patch::Neighbor?0:1;
+  int zminus = patch->getBCType(Patch::zminus) == Patch::Neighbor?0:1;
+  int zplus =  patch->getBCType(Patch::zplus) == Patch::Neighbor?0:1;
+
+  //fortran call
+  FORT_ENTHALPYBC(domLo.get_pointer(), domHi.get_pointer(),
+		domLong.get_pointer(), domHing.get_pointer(),
+		idxLo.get_pointer(), idxHi.get_pointer(),
+		vars->enthalpy.getPointer(), 
+		vars->scalarCoeff[Arches::AE].getPointer(),
+		vars->scalarCoeff[Arches::AW].getPointer(),
+		vars->scalarCoeff[Arches::AN].getPointer(),
+		vars->scalarCoeff[Arches::AS].getPointer(),
+		vars->scalarCoeff[Arches::AT].getPointer(),
+		vars->scalarCoeff[Arches::AB].getPointer(),
+		vars->scalarNonlinearSrc.getPointer(),
+		vars->scalarLinearSrc.getPointer(),
+		vars->density.getPointer(),
+		domLoU.get_pointer(), domHiU.get_pointer(),
+		vars->uVelocity.getPointer(), 
+		domLoV.get_pointer(), domHiV.get_pointer(),
+		vars->vVelocity.getPointer(), 
+		domLoW.get_pointer(), domHiW.get_pointer(),
+		vars->wVelocity.getPointer(), 
+		cellinfo->sew.get_objs(), cellinfo->sns.get_objs(), 
+		cellinfo->stb.get_objs(),
+		vars->cellType.getPointer(),
+		&wall_celltypeval, &symmetry_celltypeval,
+		&d_flowInlets[0].d_cellTypeID, &press_celltypeval,
+		&ffield, &sfield, &outletfield,
+		&xminus, &xplus, &yminus, &yplus,
+		&zminus, &zplus);
+
+#ifdef ARCHES_BC_DEBUG
+  cerr << "AFTER FORT_ENTHALPYBC" << endl;
+  cerr << "Print Enthalpy" << endl;
+  vars->enthalpy.print(cerr);
+  cerr << "Print enthalpy coeff, AE:" << endl;
+  vars->scalarCoeff[Arches::AE].print(cerr);
+#endif
+}
+
+
+void 
+BoundaryCondition::enthalpyRadWallBC(const ProcessorGroup*,
+				     const Patch* patch,
+				     CellInformation* cellinfo,
+				     ArchesVariables* vars)
+{
+
+  IntVector domLo = vars->qfluxe.getFortLowIndex();
+  IntVector domHi = vars->qfluxe.getFortHighIndex();
+  IntVector domLoT = vars->temperature.getFortLowIndex();
+  IntVector domHiT = vars->temperature.getFortHighIndex();
+  IntVector domLoP = vars->cellType.getFortLowIndex();
+  IntVector domHiP = vars->cellType.getFortHighIndex();
+  IntVector idxLo = patch->getCellFORTLowIndex();
+  IntVector idxHi = patch->getCellFORTHighIndex();
+
+  // Get the wall boundary and flow field codes
+  int wall_celltypeval = d_wallBdry->d_cellTypeID;
+  int xminus = patch->getBCType(Patch::xminus) == Patch::Neighbor?0:1;
+  int xplus =  patch->getBCType(Patch::xplus) == Patch::Neighbor?0:1;
+  int yminus = patch->getBCType(Patch::yminus) == Patch::Neighbor?0:1;
+  int yplus =  patch->getBCType(Patch::yplus) == Patch::Neighbor?0:1;
+  int zminus = patch->getBCType(Patch::zminus) == Patch::Neighbor?0:1;
+  int zplus =  patch->getBCType(Patch::zplus) == Patch::Neighbor?0:1;
+
+  //fortran call
+  FORT_ENTHALPYRADWALLBC(domLo.get_pointer(), domHi.get_pointer(),
+			 idxLo.get_pointer(), idxHi.get_pointer(),
+			 vars->qfluxe.getPointer(),
+			 vars->qfluxw.getPointer(),
+			 vars->qfluxn.getPointer(),
+			 vars->qfluxs.getPointer(),
+			 vars->qfluxt.getPointer(),
+			 vars->qfluxb.getPointer(),
+			 domLoT.get_pointer(), domHiT.get_pointer(),
+			 vars->temperature.getPointer(),
+			 domLoP.get_pointer(), domHiP.get_pointer(),
+			 vars->cellType.getPointer(),
+			 &wall_celltypeval, 
+			 &xminus, &xplus, &yminus, &yplus,
+			 &zminus, &zplus);
+}
+
+
+
 //****************************************************************************
 // Actually set the inlet velocity BC
 //****************************************************************************
@@ -2045,7 +2182,7 @@ BoundaryCondition::recomputePressureBC(const ProcessorGroup* ,
     CCVariable<int> cellType;
     CCVariable<double> density;
     CCVariable<double> pressure;
-    StaticArray< CCVariable<double> > scalar(d_nofScalars);
+    StaticArray<CCVariable<double> > scalar(d_nofScalars);
     SFCXVariable<double> uVelocity;
     SFCYVariable<double> vVelocity;
     SFCZVariable<double> wVelocity;
@@ -2152,6 +2289,25 @@ BoundaryCondition::recomputePressureBC(const ProcessorGroup* ,
 		      &xminus, &xplus, &yminus, &yplus,
 		      &zminus, &zplus);
     }
+    if (d_enthalpySolve) {
+      CCVariable<double> enthalpy;
+      new_dw->get(enthalpy, d_lab->d_enthalpyINLabel, matlIndex, patch, 
+		  Ghost::None,
+		  nofGhostCells);
+      // Get the low and high index for the patch and the variables
+      IntVector domLoEnth = enthalpy.getFortLowIndex();
+      IntVector domHiEnth = enthalpy.getFortHighIndex();
+      FORT_PROFSCALAR(domLoEnth.get_pointer(), domHiEnth.get_pointer(),
+		      domLoCT.get_pointer(), domHiCT.get_pointer(),
+		      idxLo.get_pointer(), idxHi.get_pointer(),
+		      enthalpy.getPointer(), cellType.getPointer(),
+		      &(d_pressureBdry->calcStream.d_enthalpy),
+		      &(d_pressureBdry->d_cellTypeID),
+		      &xminus, &xplus, &yminus, &yplus,
+		      &zminus, &zplus);
+      new_dw->put(enthalpy, d_lab->d_enthalpyCPBCLabel, matlIndex, patch);
+    }
+
 #if 0
     if(patch->containsCell(n1))
       cerr << "4,0,0: " << pressure[n1] << '\n';
@@ -2213,7 +2369,8 @@ BoundaryCondition::setFlatProfile(const ProcessorGroup* /*pc*/,
     SFCXVariable<double> uVelocity;
     SFCYVariable<double> vVelocity;
     SFCZVariable<double> wVelocity;
-    StaticArray< CCVariable<double> > scalar(d_nofScalars);
+    StaticArray<CCVariable<double> > scalar(d_nofScalars);
+    CCVariable<double> enthalpy;
     int nofGhostCells = 0;
     
     // get cellType, density and velocity
@@ -2231,10 +2388,18 @@ BoundaryCondition::setFlatProfile(const ProcessorGroup* /*pc*/,
       new_dw->get(scalar[ii], d_lab->d_scalarINLabel, matlIndex, patch, Ghost::None,
 		  nofGhostCells);
     }
+    if (d_enthalpySolve)
+      new_dw->get(enthalpy, d_lab->d_enthalpyINLabel, matlIndex, patch, Ghost::None,
+		  nofGhostCells);
 
     // Get the low and high index for the patch and the variables
+    IntVector domLoEnth = enthalpy.getFortLowIndex();
+    IntVector domHiEnth = enthalpy.getFortHighIndex();
+
     IntVector domLo = density.getFortLowIndex();
     IntVector domHi = density.getFortHighIndex();
+    IntVector domLoScal = scalar[0].getFortLowIndex();
+    IntVector domHiScal = scalar[0].getFortHighIndex();
     IntVector domLoCT = cellType.getFortLowIndex();
     IntVector domHiCT = cellType.getFortHighIndex();
     IntVector idxLo = patch->getCellFORTLowIndex();
@@ -2290,8 +2455,19 @@ BoundaryCondition::setFlatProfile(const ProcessorGroup* /*pc*/,
 		      idxLo.get_pointer(), idxHi.get_pointer(),
 		      density.getPointer(), 
 		      cellType.getPointer(),
-		      &fi.calcStream.d_density, &fi.d_cellTypeID, &xminus, &xplus, &yminus, &yplus,
+		      &fi.calcStream.d_density, &fi.d_cellTypeID, &xminus,
+		      &xplus, &yminus, &yplus,
 		      &zminus, &zplus);
+      if (d_enthalpySolve)
+	FORT_PROFSCALAR(domLoEnth.get_pointer(), domHiEnth.get_pointer(),
+			domLoCT.get_pointer(), domHiCT.get_pointer(),
+			idxLo.get_pointer(), idxHi.get_pointer(),
+			enthalpy.getPointer(), 
+			cellType.getPointer(),
+			&fi.calcStream.d_enthalpy, &fi.d_cellTypeID, &xminus,
+			&xplus, &yminus, &yplus,
+			&zminus, &zplus);
+
     }   
     if (d_pressureBdry) {
       // set density
@@ -2303,11 +2479,22 @@ BoundaryCondition::setFlatProfile(const ProcessorGroup* /*pc*/,
 		      &d_pressureBdry->d_cellTypeID, 
 		      &xminus, &xplus, &yminus, &yplus,
 		      &zminus, &zplus);
+      if (d_enthalpySolve)
+	FORT_PROFSCALAR(domLoEnth.get_pointer(), domHiEnth.get_pointer(),
+			domLoCT.get_pointer(), domHiCT.get_pointer(),
+			idxLo.get_pointer(), idxHi.get_pointer(),
+			enthalpy.getPointer(), 
+			cellType.getPointer(),
+			&d_pressureBdry->calcStream.d_enthalpy,
+			&d_pressureBdry->d_cellTypeID, &xminus,
+			&xplus, &yminus, &yplus,
+			&zminus, &zplus);
+
     }    
     for (int indx = 0; indx < d_nofScalars; indx++) {
       for (int ii = 0; ii < d_numInlets; ii++) {
 	double scalarValue = d_flowInlets[ii].streamMixturefraction.d_mixVars[indx];
-	FORT_PROFSCALAR(domLo.get_pointer(), domHi.get_pointer(), 
+	FORT_PROFSCALAR(domLoScal.get_pointer(), domHiScal.get_pointer(), 
 			domLoCT.get_pointer(), domHiCT.get_pointer(), 
 			idxLo.get_pointer(), idxHi.get_pointer(),
 			scalar[indx].getPointer(), cellType.getPointer(),
@@ -2317,7 +2504,7 @@ BoundaryCondition::setFlatProfile(const ProcessorGroup* /*pc*/,
       }
       if (d_pressBoundary) {
 	double scalarValue = d_pressureBdry->streamMixturefraction.d_mixVars[indx];
-	FORT_PROFSCALAR(domLo.get_pointer(), domHi.get_pointer(),
+	FORT_PROFSCALAR(domLoScal.get_pointer(), domHiScal.get_pointer(),
 			domLoCT.get_pointer(), domHiCT.get_pointer(),
 			idxLo.get_pointer(), idxHi.get_pointer(),
 			scalar[indx].getPointer(), cellType.getPointer(),
@@ -2335,6 +2522,8 @@ BoundaryCondition::setFlatProfile(const ProcessorGroup* /*pc*/,
     for (int ii =0; ii < d_nofScalars; ii++) {
       new_dw->put(scalar[ii], d_lab->d_scalarSPLabel, matlIndex, patch);
     }
+    if (d_enthalpySolve)
+      new_dw->put(enthalpy, d_lab->d_enthalpySPBCLabel, matlIndex, patch);
     
 #ifdef ARCHES_BC_DEBUG
     // Testing if correct values have been put

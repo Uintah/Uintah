@@ -109,7 +109,7 @@ public:
  const double SMALL = 1e-15;
  const double ZERO = 1e-40;
 
- extern "C" {double gammaln_(double* x); }
+ extern "C" {double dgammaln_(double* x); }
 } // end namespace Uintah
 
 #endif

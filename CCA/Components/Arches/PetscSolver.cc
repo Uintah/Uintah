@@ -1422,3 +1422,40 @@ PetscSolver::scalarLisolve(const ProcessorGroup* pc,
     vars->truncScalar = 1.0;
 #endif
 }
+
+
+void 
+PetscSolver::computeEnthalpyUnderrelax(const ProcessorGroup* ,
+				       const Patch* patch,
+				       ArchesVariables* vars)
+{
+  // Get the patch bounds and the variable bounds
+  IntVector domLo = vars->enthalpy.getFortLowIndex();
+  IntVector domHi = vars->enthalpy.getFortHighIndex();
+  IntVector domLong = vars->scalarCoeff[Arches::AP].getFortLowIndex();
+  IntVector domHing = vars->scalarCoeff[Arches::AP].getFortHighIndex();
+  IntVector idxLo = patch->getCellFORTLowIndex();
+  IntVector idxHi = patch->getCellFORTHighIndex();
+
+  //fortran call
+  FORT_UNDERELAX(domLo.get_pointer(), domHi.get_pointer(),
+		 domLong.get_pointer(), domHing.get_pointer(),
+		 idxLo.get_pointer(), idxHi.get_pointer(),
+		 vars->enthalpy.getPointer(),
+		 vars->scalarCoeff[Arches::AP].getPointer(), 
+		 vars->scalarNonlinearSrc.getPointer(),
+		 &d_underrelax);
+}
+
+//****************************************************************************
+// Scalar Solve
+//****************************************************************************
+void 
+PetscSolver::enthalpyLisolve(const ProcessorGroup* pc,
+			  const Patch* patch,
+			  double delta_t,
+			  ArchesVariables* vars,
+			  CellInformation* cellinfo,
+			  const ArchesLabel* lab)
+{
+}

@@ -31,7 +31,11 @@ SRCS     += $(SRCDIR)/init.F $(SRCDIR)/initScal.F $(SRCDIR)/celltypeInit.F \
 	$(SRCDIR)/mm_modify_prescoef.F \
 	$(SRCDIR)/bcinout.F $(SRCDIR)/outarea.F $(SRCDIR)/denaccum.F \
 	$(SRCDIR)/add_hydrostatic_term_topressure.F $(SRCDIR)/outletbc.F \
-	$(SRCDIR)/computeVel.F $(SRCDIR)/explicit_vel.F $(SRCDIR)/pressrcpred.F
+	$(SRCDIR)/computeVel.F $(SRCDIR)/explicit_vel.F $(SRCDIR)/pressrcpred.F \
+        $(SRCDIR)/outletbcenth.F $(SRCDIR)/bcenthalpy.F \
+	$(SRCDIR)/enthalpyradsrc.F $(SRCDIR)/enthalpyradwallbc.F \
+	$(SRCDIR)/enthalpyradflux.F $(SRCDIR)/enthalpyradthinsrc.F
+
 
 
 # SRCS     += $(SRCDIR)/apcal.F $(SRCDIR)/areain.F $(SRCDIR)/arradd.F \

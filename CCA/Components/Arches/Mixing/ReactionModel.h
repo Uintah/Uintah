@@ -103,16 +103,44 @@ namespace  Uintah {
     //
     virtual void problemSetup(const ProblemSpecP& params) = 0;
 
-    // GROUP: Access functions
-    //////////////////////////////////////////////////////////////////////
-    // returns the pointer to chemkin interface class
-    virtual ChemkinInterface* getChemkinInterface() = 0;
     //
-    // [in] mixRxnVar Array of independent variables from which dependent
-    // variables are calculated; array includes heat loss if system is nonadiabatic
-    virtual Stream computeRxnStateSpace(Stream& mixRxnVar) = 0;
+    // GROUP: Actual Action Methods :
+    /////////////////////////////////////////////////////////////////////////
+    //
+    //computeEnthalpy returns the enthalpies (J/kg) used in the linearization 
+    // of the local enthalpy(absH), given the unreacted stream information 
+    // and values for the independent variables (no variance).
+    //
+    virtual Stream computeEnthalpy(Stream& unreactedMixture,
+				   const std::vector<double>& mixRxnVar) = 0;
+    /////////////////////////////////////////////////////////////////////////
+    //
+    //normalizeParameter returns the minimum and maximum parameter values used 
+    // to normalize the reaction parameter.
+    // 
+    //virtual std::vector<double> normalizeParameter(Stream& unreactedMixture,
+    //				   const std::vector<double>& mixRxnVar) = 0;
+    ///////////////////////////////////////////////////////////////////////
+    //
+    // Computes the state space (dependent) variables given the unreacted
+    // stream information and values for the independent variables 
+    // (no variance)
+    //
+    virtual Stream computeRxnStateSpace(Stream& unreactedMixture,
+					const std::vector<double>& mixRxnVar,
+					bool adiabatic) = 0;
+
+      
+    // GROUP: Get Methods :
+    ///////////////////////////////////////////////////////////////////////
+    //    
+    // returns the pointer to chemkin interface class
+    //
+    virtual ChemkinInterface* getChemkinInterface() = 0;
+				
+
 #if 0
-    virtual Stream computeEnthalpy(Stream& mixRxnVar) = 0;
+    virtual Stream computeEnthalpy(Stream& unreactedMixture) = 0;
 #endif
     //virtual vector<double> findRxnVariables(double* mixRxnVar, double* yArray) = 0;
   
@@ -126,6 +154,9 @@ namespace  Uintah {
 
 //
 // $Log$
+// Revision 1.2  2001/07/16 21:15:38  rawat
+// added enthalpy solver and Jennifer's changes in Mixing and Reaction model required for ILDM and non-adiabatic cases
+//
 // Revision 1.1  2001/01/31 16:35:30  rawat
 // Implemented mixing and reaction models for fire.
 //

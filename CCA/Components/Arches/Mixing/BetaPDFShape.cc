@@ -41,8 +41,16 @@ BetaPDFShape::computePDFFunction(double* meanMixVar,
 				 double statVar)
 {
   d_validGammaValue = true;
+  cout<<"Beta::meanMixVar ="<<meanMixVar[0]<<" "<<meanMixVar[1]<<endl;
   d_gammafnValue = computeBetaPDFShape(meanMixVar, statVar);
-  if (d_gammafnValue < SMALL)
+  cout<<"Beta::PDFFunction statVar = "<<statVar<<endl;
+  cout << "LN(gammafnValue) = " << d_gammafnValue << endl; 
+  //if (d_gammafnValue < SMALL)  //Old check before Wing put in
+  // robust gammafn
+  //  d_validGammaValue = false;
+  // ***Jennifer's note- This kluge will only work for integration over
+  // ONE variable*** 
+  if (statVar < 1e-05*meanMixVar[0])
     d_validGammaValue = false;
   return;
 }
@@ -61,12 +69,17 @@ BetaPDFShape::computeBetaPDFShape(double* meanMixVar,
   double new_factor = 0.0, new_d_statVar = 0.0;
   double sumMixVars = 0.0;
   double sumSqrMixVars = 0.0;
+  //Because multi-dim PDF formulation is used here, need to
+  //correct statVar for 1-D PDF
+  if (d_dimPDF == 1)
+    statVar = 2.0*statVar;
   for (int i = 0; i < d_dimPDF; i++) {
     sumMixVars += meanMixVar[i];
     sumSqrMixVars += meanMixVar[i]*meanMixVar[i];
   }
   double lastMixVars = 1.0 - sumMixVars; // 1.0 - fi's
   sumSqrMixVars += lastMixVars*lastMixVars; //SUM(sqr(fi's))
+  cout<<"statVar = "<<statVar<<endl;
   if (statVar < SMALL) 
     factor = 0.0;
   else
@@ -77,6 +90,8 @@ BetaPDFShape::computeBetaPDFShape(double* meanMixVar,
   vector<double> gammafn(d_dimPDF+1);
   for (int i = 0; i < d_dimPDF; i++) {
     d_coef[i] = meanMixVar[i]*factor; // ai = fi*(1-S)/Q - 1
+    cout << meanMixVar[i] << " Beta(" << i << ") = " << d_coef[i] << endl;
+
     if (d_coef[i] <= 0.0)
       //upper limit, if Q is greater than (1-S), ai becomes negative.  So we reset the new Q = 0.9*fi*(1-fi)/2
       {
@@ -85,28 +100,30 @@ BetaPDFShape::computeBetaPDFShape(double* meanMixVar,
 	d_coef[i] = meanMixVar[i]*new_factor;
 	cout << "beta is negative, new beta is calculated" << endl;
       }
-    gammafn[i] = gammaln_(&d_coef[i]); // gammaln(ai)
-    //    cout << "gammaln(" << i << ") = " << d_gammafn[i] << endl;
+    gammafn[i] = dgammaln_(&d_coef[i]); // gammaln(ai)
+    cout << "gammaln(" << i << ") = " << gammafn[i] << endl;
     multGamma += gammafn[i]; // LN(gamma(a1))+LN(gamma(a2))...LN(gamma(a(N-1)))
     sumCoefs += d_coef[i];  // a1+a2+...+a(N-1)
   }
   d_coef[d_dimPDF] = lastMixVars*factor; // computing aN
   if (d_coef[d_dimPDF] <= 0.0)
     {
-      new_d_statVar = 0.9*meanMixVar[d_dimPDF]*(1-meanMixVar[d_dimPDF])/2.0;
+      new_d_statVar = 0.9*lastMixVars*(1-lastMixVars)/2.0;
+      cout << "lastMixVar = "<<lastMixVars<<" mean[d_dimPDF] = "<<meanMixVar[d_dimPDF]<<endl;
       new_factor = (1.0 - sumSqrMixVars)/new_d_statVar - 1.0;
       d_coef[d_dimPDF] = lastMixVars*new_factor;
       cout << "Beta is negative, new beta is calculated" << endl;
     }    
 
-  //  cout << lastMixVars << " Beta(" << d_dimPDF << ") = " << d_coef[d_dimPDF] << endl;
+  cout << lastMixVars << " Beta(" << d_dimPDF << ") = " << d_coef[d_dimPDF] << endl;
+  gammafn[d_dimPDF] = dgammaln_(&d_coef[d_dimPDF]); // computing gamma(aN)
   //  cout << "gammaln(" << i << ") = " << d_gammafn[i] << endl;
   //  cout << "*******************" << endl;
   multGamma += gammafn[d_dimPDF];    // LN(gamma(a1))+...+LN(gamma(aN))
   cout << "LN(mult) = " << multGamma << endl;
   sumCoefs += d_coef[d_dimPDF];
   //  cout << "sumCoefs = " << sumCoefs << endl;
-  double gammafnNum = gammaln_(&sumCoefs);   // LN(gamma(a1+a2+...+aN))
+  double gammafnNum = dgammaln_(&sumCoefs);   // LN(gamma(a1+a2+...+aN))
   cout << "LN(sum) = " << gammafnNum << endl;
   return (gammafnNum-multGamma);   
 } // gamma(a1+a2+...+aN)/(gamma(a1)*...*gamma(aN))
@@ -134,6 +151,9 @@ BetaPDFShape::computeShapeFunction(double *var) {
 
 //
 // $Log$
+// Revision 1.3  2001/07/16 21:15:37  rawat
+// added enthalpy solver and Jennifer's changes in Mixing and Reaction model required for ILDM and non-adiabatic cases
+//
 // Revision 1.2  2001/02/02 01:54:33  rawat
 // cnges made for checkpointing to work
 //

@@ -58,11 +58,15 @@ ColdflowMixingModel::computeProps(const InletStream& inStream,
   // this is similar to prcf.f
   double local_den = 0.0;
   double mixFracSum = 0.0;
+  double localTemp = 0.0;
   for (int ii = 0; ii < d_numMixingVars; ii++ ) {
     local_den += inStream.d_mixVars[ii]/d_streams[ii].d_density; 
+    localTemp += inStream.d_mixVars[ii]*d_streams[ii].d_temperature; 
     mixFracSum += inStream.d_mixVars[ii];
   }
   local_den += (1.0 - mixFracSum)/d_streams[d_numMixingVars].d_density;
+  localTemp += (1.0 - mixFracSum)*d_streams[d_numMixingVars].d_temperature;
+  outStream.d_temperature = localTemp;
   if (local_den <= 0.0)
     throw InvalidValue("Computed zero density in ColdflowMixingModel" );
   else
@@ -71,6 +75,9 @@ ColdflowMixingModel::computeProps(const InletStream& inStream,
 
 //
 // $Log$
+// Revision 1.2  2001/07/16 21:15:38  rawat
+// added enthalpy solver and Jennifer's changes in Mixing and Reaction model required for ILDM and non-adiabatic cases
+//
 // Revision 1.1  2001/01/31 16:35:30  rawat
 // Implemented mixing and reaction models for fire.
 //

@@ -89,7 +89,7 @@ public:
       //
       Stream integrate(int* tableKeyIndex);
       Stream computeMeanValues(int* tableKeyIndex);
-      void computeKeyValues(int* tableKeyIndex);
+      void convertKeytoMeanValues(int* tableKeyIndex);
       double fun(double* x);
 
 protected :
@@ -120,6 +120,8 @@ private:
       PDFShape* d_mixingPDF;
       std::vector<double> d_meanValues;
       std::vector<double> d_keyValues;
+      //Vector of all independent variables, excluding variance
+      std::vector<double> d_varsHFPi;
       int d_tableDimension;
       bool d_lfavre;
       int d_count;
