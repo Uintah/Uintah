@@ -1666,7 +1666,7 @@ void OpenGL::real_saveImage(const string& name,
     glXMakeCurrent(dpy, win, cx);
     TCLTask::unlock();
   }
-  
+  TCLTask::lock();  
   glGetIntegerv(GL_VIEWPORT,vp);
   int n=3*vp[2]*vp[3];
   unsigned char* pxl=scinew unsigned char[n];
@@ -1679,9 +1679,33 @@ void OpenGL::real_saveImage(const string& name,
     ofstream dumpfile(name.c_str());
     dumpfile.write((const char *)pxl,n);
     dumpfile.close();
+  } else if( type == "ppm") {
+    cerr << "Saving PPM file "<< name <<endl;
+
+    int width = vp[2];
+    int height = vp[3];
+    int r=3*width;
+    static unsigned char* row = 0;
+    if( !row )
+      row = scinew unsigned char[r];
+    unsigned char* p0, *p1;
+    
+    int k, j;
+    for(k = height -1, j = 0; j < height/2; k--, j++){
+      p0 = pxl + r*j;
+      p1 = pxl + r*k;
+      memcpy( row, p0, r);
+      memcpy( p0, p1, r);
+      memcpy( p1, row, r);
+    }
+    ofstream ppm(name.c_str());
+    ppm <<"P6 "<<width<<" "<<height<<" "<<255<<"\n";
+    ppm.write((const char *)pxl, n);
+    ppm.close();
+
   }
 #ifdef __sgi
-  else if(type == "rgb" || type == "ppm" || type == "jpg" ){
+  else if(type == "rgb" || type == "jpg" ){
     cerr << "Saving file "<< name <<endl;
     iflSize dims(vp[2], vp[3], 3);
     iflFileConfig fc(&dims, iflUChar);
@@ -1695,6 +1719,7 @@ void OpenGL::real_saveImage(const string& name,
     cerr<<"Error unknown image file type\n";
   }
   delete[] pxl;
+  TCLTask::unlock();
 }
 
 
