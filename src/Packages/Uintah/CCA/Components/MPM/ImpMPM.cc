@@ -212,6 +212,7 @@ void ImpMPM::scheduleTimeAdvance(const LevelP& level, SchedulerP& sched)
   scheduleInterpolateStressToGrid(sched,patches,matls);
 #endif
   sched->scheduleParticleRelocation(level, lb->pXLabel_preReloc, 
+				    lb->pKeepDeleteLabel,
 				    lb->d_particleState_preReloc,
 				    lb->pXLabel, lb->d_particleState,
 				    lb->pParticleIDLabel, matls);

@@ -87,6 +87,7 @@ SimpleScheduler::execute(const ProcessorGroup * pc)
 void
 SimpleScheduler::scheduleParticleRelocation(const LevelP& level,
 					    const VarLabel* old_posLabel,
+					    const VarLabel* keepDeleteLabel,
 					    const vector<vector<const VarLabel*> >& old_labels,
 					    const VarLabel* new_posLabel,
 					    const vector<vector<const VarLabel*> >& new_labels,
@@ -94,7 +95,7 @@ SimpleScheduler::scheduleParticleRelocation(const LevelP& level,
 					    const MaterialSet* matls)
 {
   reloc.scheduleParticleRelocation(this, d_myworld, 0, level,
-				   old_posLabel, old_labels,
+				   old_posLabel, keepDeleteLabel, old_labels,
 				   new_posLabel, new_labels,
 				   particleIDLabel, matls);
 }
