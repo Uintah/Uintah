@@ -123,10 +123,10 @@ itcl_class Uintah_Readers_TriangleReader {
 		set dir $env(PWD)
 	    }
 	    iwidgets::fileselectionbox $w.f1.fb \
-		-directory $env(PSE_DATA)
+		-directory $dir
 
 	    $w.f1.fb.filter delete 0 end
-	    $w.f1.fb.filter insert 0 "$env(PSE_DATA)/*"
+	    $w.f1.fb.filter insert 0 "$dir/*"
 	    $w.f1.fb filter
 	    pack $w.f1.fb -padx 2 -pady 2 -side top
 	} else {
