@@ -829,9 +829,16 @@ void ICE::createDirs( const string& desc, string& path)
   }
   closedir(check);
   
+  if (pos2 == string::npos){
+    ostringstream warn;
+    warn<< "\n \nICE:PrintData:GNUPLOT the printData description isn't properly formatted"
+        << " you must have _patch_ at the end of the description \n\n";
+    throw InternalError(warn.str());
+  }
+  
+  
   ostringstream DW;
   DW << dataArchiver->getCurrentTimestep();
-  
   //__________________________________
   // parse desc into dirName, matl and patch
   if (pos == string::npos ){  // if Mat isn't in the desc
@@ -843,8 +850,10 @@ void ICE::createDirs( const string& desc, string& path)
   string patchDir  = desc.substr(pos2);
   
   if (patchDir == ""||dirName == "") {
-    Message(1,"\nGNUPLOT the printData description isn't properly formatted",
-              " you must have _patch_ at the end of the description","");
+    ostringstream warn;
+    warn<< "\n \nICE:PrintData:GNUPLOT the printData description isn't properly formatted"
+        << " you must have _patch_ at the end of the description \n\n";
+    throw InternalError(warn.str());
   }
   //  cout << desc << " dirName "<< dirName << " matDir "<< matDir 
   //        << " patchDir "<< patchDir<<endl;
