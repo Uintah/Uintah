@@ -58,10 +58,13 @@ Isosurface::Isosurface(GuiContext* ctx) :
   gui_iso_value(ctx->subVar("isoval")),
   gui_iso_value_min(ctx->subVar("isoval-min")),
   gui_iso_value_max(ctx->subVar("isoval-max")),
+  gui_iso_value_typed_(ctx->subVar("isoval-typed")),
+  gui_iso_value_quantity_(ctx->subVar("isoval-quantity")),
   extract_from_new_field(ctx->subVar("extract-from-new-field")),
   use_algorithm(ctx->subVar("algorithm")),
   build_trisurf_(ctx->subVar("build_trisurf")),
   np_(ctx->subVar("np")),
+  active_isoval_selection_tab_(ctx->subVar("active-isoval-selection-tab")),
   active_tab_(ctx->subVar("active_tab")),
   update_type_(ctx->subVar("update_type")),
   color_r_(ctx->subVar("color-r")),
@@ -127,8 +130,32 @@ void Isosurface::execute()
   // Color the surface
   //   have_colorfield=incolorfield->get(colorfield);
   have_ColorMap=inColorMap->get(cmap);
-  
-  iso_value = gui_iso_value.get();
+
+  isovals_.resize(0);
+  if (active_isoval_selection_tab_.get() == "0") { // slider
+    isovals_.push_back(gui_iso_value.get());
+  } else if (active_isoval_selection_tab_.get() == "1") { // typed
+    double val=gui_iso_value_typed_.get();
+    if (val<prev_min || val>prev_max) {
+      warning("Typed isovalue out of range -- skipping isosurfacing.");
+      return;
+    }
+    isovals_.push_back(val);
+  } else if (active_isoval_selection_tab_.get() == "2") { // quantity
+    int num=gui_iso_value_quantity_.get();
+    if (num<1) {
+      warning("Isosurface quantity must be at least one -- skipping isosurfacing.");
+      return;
+    }
+    double di=(prev_max-prev_min)/(num+1);
+    for (int i=0; i<num; i++) 
+      isovals_.push_back((i+1)*di+prev_min);
+  } else {
+    error("Bad active_isoval_selection_tab value");
+    return;
+  }
+
+  surface.resize(0);
   trisurf_mesh_ = 0;
   build_trisurf = build_trisurf_.get();
   const TypeDescription *td = field->get_type_description();
@@ -147,8 +174,11 @@ void Isosurface::execute()
       if ( np_.get() > 1 )
 	build_trisurf = false;
       mc_alg_->set_field( field.get_rep() );
-      mc_alg_->search( iso_value, build_trisurf);
-      surface = mc_alg_->get_geom();
+      for (unsigned int iv=0; iv<isovals_.size(); iv++) {
+	mc_alg_->search( isovals_[iv], build_trisurf);
+	surface.push_back( mc_alg_->get_geom() );
+      }
+      // if multiple isosurfaces, just send last one for Field output
       trisurf_mesh_ = mc_alg_->get_field();
     }
     break;
@@ -162,7 +192,10 @@ void Isosurface::execute()
 	}
 	noise_alg_->set_field(field.get_rep());
       }
-      surface = noise_alg_->search(iso_value, build_trisurf);
+      for (unsigned int iv=0; iv<isovals_.size(); iv++) {
+	surface.push_back(noise_alg_->search(isovals_[iv], build_trisurf));
+      }
+      // if multiple isosurfaces, just send last one for Field output
       trisurf_mesh_ = noise_alg_->get_field();
     }
     break;
@@ -176,10 +209,12 @@ void Isosurface::execute()
 	}
 	sage_alg_->set_field(field.get_rep());
       } 
-      GeomGroup *group = new GeomGroup;
-      GeomPts *points = new GeomPts(1000);
-      sage_alg_->search(iso_value, group, points);
-      surface = group;
+      for (unsigned int iv=0; iv<isovals_.size(); iv++) {
+	GeomGroup *group = new GeomGroup;
+	GeomPts *points = new GeomPts(1000);
+	sage_alg_->search(isovals_[0], group, points);
+	surface.push_back( group );
+      }
     }
     break;
   default: // Error
@@ -192,28 +227,25 @@ void Isosurface::execute()
 void
 Isosurface::send_results()
 {
+  GeomGroup *geom = new GeomGroup;;
+  
+  for (unsigned int iv=0; iv<isovals_.size(); iv++) {
+    MaterialHandle matl;
+    if (have_ColorMap) 
+      matl=cmap->lookup(isovals_[iv]);
+    else 
+      matl=new Material(Color(color_r_.get(), color_g_.get(), color_b_.get()));
+    if (surface[iv]) 
+      geom->add(new GeomMaterial( surface[iv] , matl ));
+  }
+
   // stop showing the prev. surface
   if ( geom_id )
     ogeom->delObj( geom_id );
 
-  // if no surface than we are done
-  if( !surface ) {
+  if (!geom->size()) {
     geom_id=0;
-    
     return;
-  }
-
-  GeomObj *geom;
-  
-  if(have_ColorMap /* && !have_colorfield */){
-    // Paint entire surface based on ColorMap
-    geom=scinew GeomMaterial( surface , cmap->lookup(iso_value) );
-//   } else if(have_ColorMap && have_colorfield){
-//     geom = surface;     // Nothing - done per vertex
-  } else {
-    Color color(color_r_.get(), color_g_.get(), color_b_.get());
-    MaterialHandle matl = scinew Material(color);
-    geom=scinew GeomMaterial( surface, matl ); // Default material
   }
 
   // send to viewer
