@@ -720,10 +720,10 @@ void MultiBrick::drawBonTree( const VolumeOctree<Brick*>* node,
     if(debug)
       cerr<<"drawing node "<< node->getId()<<" at level "<<brick->getLevel()<<endl;
     if(!mode) {
-    brick->draw(viewRay, drawWireFrame, reload != 0,  widgetPoint );
-  } else {
-    brick->draw( viewRay, alpha, drawWireFrame, reload != 0, tmin, tmax, dt);/*     for( i = 0; i < 8; i++) */
-  }
+      brick->draw(viewRay, drawWireFrame, reload != 0,  widgetPoint );
+    } else {
+      brick->draw( viewRay, alpha, drawWireFrame, reload != 0, tmin, tmax, dt);/*     for( i = 0; i < 8; i++) */
+    }
     if( reload !=0 )
       reload = 0;
 /*       ts[i] = intersectParam(-viewRay.direction(), */

@@ -52,8 +52,12 @@ private:
   int init;
   CrowdMonitor widget_lock;
   PointWidget *widget;
+  GeomID widget_id;
   void widget_moved(int /*last*/);
-  int widgetMoved;
+
+  CrowdMonitor  res_lock;
+  PointWidget *res;
+  GeomID res_id;
   
   int field_id; // id for the scalar field...
   int cmap_id;  // id associated with color map...
