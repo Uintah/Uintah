@@ -1428,6 +1428,13 @@ else
    pkg_vdt=no
 fi
 
+u=`echo $package | sed 's/.*Fusion.*/Fusion/'`
+if test "$u" = "Fusion" ; then
+   pkg_fusion="yes"
+else
+   pkg_fusion="no"
+fi
+
 if test "$enable_sci_malloc" = "yes"; then
   DEF_MALLOC=""
 else
@@ -2473,38 +2480,71 @@ AC_SUBST(BLT_LIB_FLAG)
 AC_SUBST(BLT_LIB_DIR_FLAG)
 AC_SUBST(INC_BLT_H)
 
-
-SCI_CHECK_LIB($dirs,plplot,main,$TK_LIB_DIR_FLAG $TK_LIB_FLAG $TCL_LIB_DIR_FLAG $TCL_LIB_FLAG,,optional)
-if test "$HAVE_LIB_PLPLOT"; then
-   echo "Have optimized version"
-else
-  SCI_CHECK_LIB($dirs,plplotd,main,$TK_LIB_DIR_FLAG $TK_LIB_FLAG $TCL_LIB_DIR_FLAG $TCL_LIB_FLAG,,optional)
+if test "$pkg_fusion" = "yes"; then
+  SCI_CHECK_LIB($dirs,plplot,main,$TK_LIB_DIR_FLAG $TK_LIB_FLAG $TCL_LIB_DIR_FLAG $TCL_LIB_FLAG,,optional)
+  if test "$HAVE_LIB_PLPLOT"; then
+    echo "Have optimized version"
+  else
+    SCI_CHECK_LIB($dirs,plplotd,main,$TK_LIB_DIR_FLAG $TK_LIB_FLAG $TCL_LIB_DIR_FLAG $TCL_LIB_FLAG,,optional)
 # Slight name change for convience
-  if test "$HAVE_LIB_PLPLOTD"; then
-     echo "Have debug version"
-     HAVE_LIB_PLPLOT="$HAVE_LIB_PLPLOTD"
-     LIBPLPLOT="$LIB_DIR_PLPLOTD"
-     PLPLOT_LIB_FLAG="$PLPLOTD_LIB_FLAG"
-     PLPLOT_LIB_DIR_FLAG="$PLPLOTD_LIB_DIR_FLAG"
+    if test "$HAVE_LIB_PLPLOTD"; then
+      echo "Have debug version"
+      HAVE_LIB_PLPLOT="$HAVE_LIB_PLPLOTD"
+      LIBPLPLOT="$LIB_DIR_PLPLOTD"
+      PLPLOT_LIB_FLAG="$PLPLOTD_LIB_FLAG"
+      PLPLOT_LIB_DIR_FLAG="$PLPLOTD_LIB_DIR_FLAG"
+    fi
   fi
-fi
 
-SCI_CHECK_HEADERS($LIB_DIR_PLPLOT/../include,plplot/plplot.h,$INC_TCL_H $INC_TK_H,,optional)
+  SCI_CHECK_HEADERS($LIB_DIR_PLPLOT/../include,plplot/plplot.h,$INC_TCL_H $INC_TK_H,,optional)
 
-if test "$HAVE_LIB_PLPLOT" && test "$HAVE_PLPLOT_PLPLOT_H"; then
-  DEF_PLPLOT="#define HAVE_PLPLOT 1"
-  INC_PLPLOT_H="$INC_PLPLOT_PLPLOT_H"
-else
-  DEF_PLPLOT=""
-  PLPLOT_LIB_FLAG=""
-  PLPLOT_LIB_DIR_FLAG=""
-  INC_PLPLOT_H=""
+  if test "$HAVE_LIB_PLPLOT" && test "$HAVE_PLPLOT_PLPLOT_H"; then
+    DEF_PLPLOT="#define HAVE_PLPLOT 1"
+    INC_PLPLOT_H="$INC_PLPLOT_PLPLOT_H"
+  else
+    DEF_PLPLOT=""
+    PLPLOT_LIB_FLAG=""
+    PLPLOT_LIB_DIR_FLAG=""
+    INC_PLPLOT_H=""
+  fi
+
+  SCI_CHECK_LIB($dirs,tclmatrix,main,$TK_LIB_DIR_FLAG $TK_LIB_FLAG $TCL_LIB_DIR_FLAG $TCL_LIB_FLAG,,optional)
+  if test "$HAVE_LIB_TCLMATRIX"; then
+    echo "Have optimized version"
+  else
+    SCI_CHECK_LIB($dirs,tclmatrixd,main,$TK_LIB_DIR_FLAG $TK_LIB_FLAG $TCL_LIB_DIR_FLAG $TCL_LIB_FLAG,,optional)
+# Slight name change for convience
+    if test "$HAVE_LIB_TCLMATRIXD"; then
+      echo "Have debug version"
+      HAVE_LIB_TCLMATRIX="$HAVE_LIB_TCLMATRIXD"
+      LIBTCLMATRIX="$LIB_DIR_TCLMATRIXD"
+      TCLMATRIX_LIB_FLAG="$TCLMATRIXD_LIB_FLAG"
+      TCLMATRIX_LIB_DIR_FLAG="$TCLMATRIXD_LIB_DIR_FLAG"
+    fi
+  fi
+
+  SCI_CHECK_HEADERS($LIB_DIR_TCLMATRIX/../include,plplot/tclMatrix.h,$INC_TCL_H $INC_TK_H,,optional)
+
+  if test "$HAVE_LIB_TCLMATRIX" && test "$HAVE_PLPLOT_TCLMATRIX_H"; then
+    DEF_TCLMATRIX="#define HAVE_TCLMATRIX 1"
+    INC_TCLMATRIX_H="$INC_TCLMATRIX_TCLMATRIX_H"
+  else
+    DEF_TCLMATRIX=""
+    TCLMATRIX_LIB_FLAG=""
+    TCLMATRIX_LIB_DIR_FLAG=""
+    INC_TCLMATRIX_H=""
+  fi
 fi
 
 AC_SUBST(PLPLOT_LIB_FLAG)
 AC_SUBST(PLPLOT_LIB_DIR_FLAG)
 AC_SUBST(INC_PLPLOT_H)
 AC_SUBST(DEF_PLPLOT)
+
+AC_SUBST(TCLMATRIX_LIB_FLAG)
+AC_SUBST(TCLMATRIX_LIB_DIR_FLAG)
+AC_SUBST(INC_TCLMATRIX_H)
+AC_SUBST(DEF_TCLMATRIX)
 
 
 CORRECT_TCL_VERSION=no
@@ -2807,26 +2847,29 @@ AC_SUBST(DEF_MPEG)
 
 ##  --  search for mdsplus  -------------------------------------------------
 
-if test "$with_mdsplus"; then
+if test "$pkg_fusion" = "yes"; then
+
+  if test "$with_mdsplus"; then
   dirs="$with_mdsplus/lib $SCI_LAB_TP_LIBS"
-else
-  dirs="$SCI_LAB_TP_LIBS"
-fi
+  else
+    dirs="$SCI_LAB_TP_LIBS"
+  fi
 
-SCI_CHECK_LIB($dirs,MdsLib_client,main,,no,optional)
-SCI_CHECK_HEADERS($LIB_DIR_MDSLIB_CLIENT/../include,mdslib.h,,no,optional)
+  SCI_CHECK_LIB($dirs,MdsLib_client,main,,no,optional)
+  SCI_CHECK_HEADERS($LIB_DIR_MDSLIB_CLIENT/../include,mdslib.h,,no,optional)
 
-if test "$HAVE_LIB_MDSLIB_CLIENT" && test "$HAVE_MDSLIB_H"; then
-   MDSPLUS_LIB_FLAG="$MDSLIB_CLIENT_LIB_FLAG"
-   MDSPLUS_LIB_DIR_FLAG="$MDSLIB_CLIENT_LIB_DIR_FLAG"
-   INC_MDSPLUS_H=$INC_MDSLIB_H
-   DEF_MDSPLUS="#define HAVE_MDSPLUS 1"
-fi
+  if test "$HAVE_LIB_MDSLIB_CLIENT" && test "$HAVE_MDSLIB_H"; then
+    MDSPLUS_LIB_FLAG="$MDSLIB_CLIENT_LIB_FLAG"
+    MDSPLUS_LIB_DIR_FLAG="$MDSLIB_CLIENT_LIB_DIR_FLAG"
+    INC_MDSPLUS_H=$INC_MDSLIB_H
+    DEF_MDSPLUS="#define HAVE_MDSPLUS 1"
+  fi
 
-if test "$with_mdsplus" && test ! "$DEF_MDSPLUS"; then
-  echo
-  AC_MSG_ERROR(One or more of the MDS PLUS components is missing.)
-  echo
+  if test "$with_mdsplus" && test ! "$DEF_MDSPLUS"; then
+    echo
+    AC_MSG_ERROR(One or more of the MDS PLUS components is missing.)
+    echo
+  fi
 fi
 
 AC_SUBST(MDSPLUS_LIB_FLAG)
