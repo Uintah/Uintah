@@ -39,53 +39,10 @@ include $(SCIRUN_SCRIPTS)/program.mk
 PSELIBS := Core/Exceptions Core/Thread
 LIBS := $(TEEM_LIBRARY) $(PNG_LIBRARY) $(Z_LIBRARY) $(FASTM_LIBRARY) $(M_LIBRARY) $(THREAD_LIBRARY) $(PERFEX_LIBRARY)
 
-PROGRAM := $(SRCDIR)/vq
-SRCS := $(SRCDIR)/vq.cc
-include $(SCIRUN_SCRIPTS)/program.mk
-
-PROGRAM := $(SRCDIR)/parallel_vq-pnn
-SRCS := $(SRCDIR)/parallel_vq-pnn.cc
-include $(SCIRUN_SCRIPTS)/program.mk
-
-PROGRAM := $(SRCDIR)/vq-error
-SRCS := $(SRCDIR)/vq-error.cc
-include $(SCIRUN_SCRIPTS)/program.mk
-
-PROGRAM := $(SRCDIR)/pca-error
-SRCS := $(SRCDIR)/pca-error.cc
-include $(SCIRUN_SCRIPTS)/program.mk
-
-PROGRAM := $(SRCDIR)/pca-reconstruct
-SRCS := $(SRCDIR)/pca-reconstruct.cc
-# Does need teem
-include $(SCIRUN_SCRIPTS)/program.mk
-
-PROGRAM := $(SRCDIR)/pca-coeff
-SRCS := $(SRCDIR)/pca-coeff.cc
-# Does need teem
-include $(SCIRUN_SCRIPTS)/program.mk
-
-PROGRAM := $(SRCDIR)/tex-subset
-SRCS := $(SRCDIR)/tex-subset.cc
-# Does need teem
-include $(SCIRUN_SCRIPTS)/program.mk
-
 PROGRAM := $(SRCDIR)/dilate
 SRCS := $(SRCDIR)/dilate.cc
 # Does need teem
 include $(SCIRUN_SCRIPTS)/program.mk
-
-ifeq ($(HAVE_LAPACKMP),yes)
-PROGRAM := $(SRCDIR)/pca-image
-SRCS := $(SRCDIR)/pca-image.cc
-# Does need teem
-LIBS += $(LAPACKMP_LIBRARY) $(F_LIBRARY)
-include $(SCIRUN_SCRIPTS)/program.mk
-
-PROGRAM := $(SRCDIR)/tex-compress
-SRCS := $(SRCDIR)/tex-compress.cc
-include $(SCIRUN_SCRIPTS)/program.mk
-endif
 
 # Reset the library to make sure we get rid of LAPACK
 LIBS :=
