@@ -9,7 +9,7 @@ SRCDIR := Uintah
 
 SUBDIRS := $(SRCDIR)/Components $(SRCDIR)/Datatypes $(SRCDIR)/Exceptions \
 	$(SRCDIR)/GUI $(SRCDIR)/Grid $(SRCDIR)/Interface $(SRCDIR)/Math \
-	$(SRCDIR)/Modules $(SRCDIR)/Parallel
+	$(SRCDIR)/Modules $(SRCDIR)/Parallel $(SRCDIR)/testprograms
 
 include $(SRCTOP)/scripts/recurse.mk
 
@@ -55,6 +55,9 @@ include $(SRCTOP)/scripts/recurse.mk
 
 #
 # $Log$
+# Revision 1.16  2000/08/23 21:02:52  witzel
+# added testprograms sub-directory
+#
 # Revision 1.15  2000/07/28 05:13:15  jehall
 # - Added tools directory
 #
