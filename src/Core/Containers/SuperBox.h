@@ -11,6 +11,10 @@
 
 #include <sci_hash_map.h>
 
+#if !defined(HAVE_HASH_MAP)
+#  include <map>
+#endif
+
 #ifdef SUPERBOX_DEBUGGING
 #include <iostream>
 #include <sstream>
