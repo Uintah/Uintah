@@ -1,3 +1,7 @@
+// need this before including anything else
+// set _USING_GRID2_ to: 1 for Grid2, 0 for regular Grid
+#define _USING_GRID_  0
+#define _USING_GRID2_ 0
 
 #include <Packages/rtrt/Core/MapBlendMaterial.h>
 #include <Packages/rtrt/Core/HaloMaterial.h>
@@ -19,6 +23,7 @@
 #include <Packages/rtrt/Core/Scene.h>
 #include <Packages/rtrt/Core/Light.h>
 #include <Packages/rtrt/Core/Light2.h>
+#include <Packages/rtrt/Core/Grid.h>
 #include <Packages/rtrt/Core/Grid2.h>
 #include <Packages/rtrt/Core/BV1.h>
 
@@ -125,8 +130,16 @@ Scene *make_scene(int /*argc*/, char* /*argv*/[], int /*nworkers*/)
 {
   Group *galaxy_room = new Group();
   Group *solar_system = new Group();
-  //Grid2 *solar_grid = new Grid2(solar_system,8);
+#if _USING_GRID_
+#if _USING_GRID2_
+  Grid2 *solar_grid = new Grid2(solar_system,8);
+#else
+  Grid *solar_grid = new Grid(solar_system,8);
+#endif
+  galaxy_room->add( solar_grid );
+#else
   galaxy_room->add( solar_system );
+#endif
   BV1 *room_grid = new BV1(galaxy_room);
 
   Camera cam( Point(10,0,1.8), 
@@ -296,8 +309,14 @@ Scene *make_scene(int /*argc*/, char* /*argv*/[], int /*nworkers*/)
                                               Vector(0,0,ROOMHEIGHT+
                                                      (WALLTHICKNESS*2)));
   
+#if _USING_GRID2_
+  // extend the bbox for the grid2 to the size of the room
+  solar_system->add( floor );
+  solar_system->add( ceiling );
+#else
   galaxy_room->add( floor );
   galaxy_room->add( ceiling );
+#endif
   galaxy_room->add( wall0 );
   galaxy_room->add( wall1 );
   galaxy_room->add( wall2 );
@@ -306,8 +325,10 @@ Scene *make_scene(int /*argc*/, char* /*argv*/[], int /*nworkers*/)
   galaxy_room->add( outwall1 );
   galaxy_room->add( outwall2 );
   galaxy_room->add( outwall3 );
-  scene->addObjectOfInterest( floor, true );
-  scene->addObjectOfInterest( wall0, true );
+
+  // to animate the holo room on/off
+  scene->addObjectOfInterest( "floor", floor, true, false );
+  scene->addObjectOfInterest( "wall0", wall0, true, false );
 
   // doors
   
@@ -374,8 +395,14 @@ Scene *make_scene(int /*argc*/, char* /*argv*/[], int /*nworkers*/)
   solar_system->add( earth );
   
   // these two lines needed for animation
-  //earth->set_anim_grid(solar_grid);
-  scene->addObjectOfInterest(earth,ANIMATE);
+#if _USING_GRID_
+#if _USING_GRID2_
+  earth->set_anim_grid(solar_grid);
+#endif
+  scene->addObjectOfInterest( earth->get_name(), earth, ANIMATE, true);
+#else
+  scene->addObjectOfInterest( earth, ANIMATE );
+#endif
 
   // build the other satellites
   for (unsigned loop=2; table[loop].radius_!=0; ++loop) {
@@ -404,8 +431,14 @@ Scene *make_scene(int /*argc*/, char* /*argv*/[], int /*nworkers*/)
     bbox.reset();
     newsat->compute_bounds( bbox, 1E-6 );
     solar_system->add( newsat );
-    //newsat->set_anim_grid(solar_grid);
+#if _USING_GRID_
+#if _USING_GRID2_
+    newsat->set_anim_grid(solar_grid);
+#endif
+    scene->addObjectOfInterest( newsat->get_name(), newsat, ANIMATE, true );
+#else
     scene->addObjectOfInterest( newsat, ANIMATE );
+#endif
 
     if (newsat->get_name() == "saturn") {
       bbox.reset();
@@ -424,8 +457,14 @@ Scene *make_scene(int /*argc*/, char* /*argv*/[], int /*nworkers*/)
       bbox.reset();
       rings->compute_bounds( bbox, 1E-6 );
       solar_system->add( rings );
-      //rings->set_anim_grid(solar_grid);
+#if _USING_GRID_
+#if _USING_GRID2_
+      rings->set_anim_grid(solar_grid);
+#endif
+      scene->addObjectOfInterest( "rings", rings, ANIMATE, true );
+#else
       scene->addObjectOfInterest( rings, ANIMATE );
+#endif
     }
   }
 #endif
