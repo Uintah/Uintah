@@ -56,7 +56,7 @@
 		<geom_object>
 		    <box label = "Piston">
 			<min>[0.0,0.0,0.1]</min>
-			<max>[0.1,0.1,0.101]</max>
+			<max>[0.1,0.1,0.102]</max>
 		    </box>
 		    <res>[2,2,2]</res>
 		    <velocity>[0.0,0.0,-.1]</velocity>
@@ -266,10 +266,10 @@
 	<Level>
 	    <Box label = "1">
 		<lower>[0.0,0.0,0.0]</lower>
-		<upper>[0.1,0.1,0.103]</upper>
+		<upper>[0.1,0.1,0.106]</upper>
 	        <extraCells>   [0,0,1]    </extraCells>
                 <patches>[1,1,1]</patches>
-		<resolution>[50,50,103]</resolution>
+		<resolution>[50,50,53]</resolution>
 	    </Box>
             <periodic>[1,1,0]</periodic>
 	</Level>
