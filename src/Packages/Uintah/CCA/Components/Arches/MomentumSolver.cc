@@ -2254,8 +2254,15 @@ MomentumSolver::sched_buildLinearMatrixVelHatPred(SchedulerP& sched,
   // Requires
   // from old_dw for time integration
   // get old_dw from getTop function
-  tsk->requires(Task::NewDW, d_lab->d_cellTypeLabel,
-		Ghost::AroundCells, Arches::ONEGHOSTCELL);
+
+  if (d_MAlab) {
+    tsk->requires(Task::NewDW, d_lab->d_cellTypeLabel,
+		  Ghost::AroundCells, Arches::TWOGHOSTCELLS);
+  }
+  else {
+    tsk->requires(Task::NewDW, d_lab->d_cellTypeLabel,
+		  Ghost::AroundCells, Arches::ONEGHOSTCELL);
+  }
 
   tsk->requires(Task::NewDW, d_lab->d_pressurePSLabel, 
 		Ghost::AroundCells, Arches::ONEGHOSTCELL);
@@ -2514,8 +2521,15 @@ MomentumSolver::buildLinearMatrixVelHatPred(const ProcessorGroup* pc,
 		matlIndex, patch, Ghost::None, Arches::ZEROGHOSTCELLS);
     new_dw->getCopy(pressureVars.old_density, d_lab->d_densityINLabel, 
 		matlIndex, patch, Ghost::AroundCells, Arches::ONEGHOSTCELL);
-    new_dw->getCopy(pressureVars.cellType, d_lab->d_cellTypeLabel, 
-		matlIndex, patch, Ghost::AroundCells, Arches::ONEGHOSTCELL);
+
+    if (d_MAlab) {
+      new_dw->getCopy(pressureVars.cellType, d_lab->d_cellTypeLabel, 
+		      matlIndex, patch, Ghost::AroundCells, Arches::TWOGHOSTCELLS);
+    }
+    else {
+      new_dw->getCopy(pressureVars.cellType, d_lab->d_cellTypeLabel, 
+		      matlIndex, patch, Ghost::AroundCells, Arches::ONEGHOSTCELL);
+    }
     
     for(int index = 1; index <= Arches::NDIM; ++index) {
 
