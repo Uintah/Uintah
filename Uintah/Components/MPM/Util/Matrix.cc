@@ -1,3 +1,6 @@
+#ifndef __Matrix_cc__
+#define __Matrix_cc__
+
 //  Matrix.cc
 //  
 //  class matrix
@@ -903,8 +906,12 @@ template<class T> Matrix<T>  operator * (const Matrix<T> &left,
   return result;
 }
 
+#endif // __Matrix_cc__
 
 // $Log$
+// Revision 1.3  2000/05/26 22:28:44  tan
+// include the template implementations into the head file.
+//
 // Revision 1.2  2000/05/20 08:09:11  sparker
 // Improved TypeDescription
 // Finished I/O
