@@ -178,6 +178,7 @@ Sampler::reset()
 
   if ( graph_ )
     graph_->set_num_lines(nparms);
+
   likelihood_->measurements( measurements_ );
 
 
@@ -185,7 +186,8 @@ Sampler::reset()
   for (int i=0; i<nparms; i++) 
     theta[old][i] = distribution_->theta[i]; // we should let the user change 
                                              // it too
-  
+  interface_->kappa( distribution_->kappa );
+
   int len = interface_->iterations();
 
   results->k_.reserve( len );
@@ -208,7 +210,7 @@ Sampler::get_lkappa()
   if ( !has_lkappa_ ) {
     // init Cholesky of proposal distribution covariance matrix
   
-    kappa = distribution_->kappa;
+    kappa = interface_->kappa();
     
     lkappa.newsize( nparms, nparms );
 
@@ -302,7 +304,10 @@ Sampler::tcl_command( TCLArgs &args, void *data)
 
     connect( gui->num_iter, interface_, &SamplerInterface::num_iterations );
     connect( gui->subsample, interface_, &SamplerInterface::subsample );
+    connect( gui->kappa, interface_, &SamplerInterface::kappa);
     connect( gui->go, interface_, &SamplerInterface::go);
+
+    connect( interface_->kappa_changed, gui, &SamplerGui::set_kappa );
     connect( interface_->current_iter_changed, gui, &SamplerGui::set_iter );
     connect( interface_->has_child, (PartGui* )gui, &PartGui::add_child );
     connect( interface_->done, gui, &SamplerGui::done );

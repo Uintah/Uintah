@@ -43,11 +43,13 @@ public:
   // Signals
   Signal1<int> num_iter;
   Signal1<int> subsample;
+  Signal1<double> kappa;
   Signal1<int> go;
 
   // Slots
   void set_iter( int );
   void done();
+  void set_kappa(double );
 
 public:
   SamplerGui( const string &name, const string &script = "SamplerGui"); 

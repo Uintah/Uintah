@@ -53,6 +53,13 @@ SamplerGui::set_iter( int i )
   tcl_exec();
 }
 
+void
+SamplerGui::set_kappa( double k ) 
+{
+  tcl_ << "set-kappa " << k;
+  tcl_exec();
+}
+
 void 
 SamplerGui::done()
 {
@@ -64,6 +71,7 @@ void
 SamplerGui::tcl_command( TCLArgs &args, void *data)
 {
   int i;
+  double d;
   if ( args[1] == "iterations") {
     string_to_int(args[2],i);
     num_iter(i);
@@ -71,6 +79,10 @@ SamplerGui::tcl_command( TCLArgs &args, void *data)
   else if ( args[1] == "sub" ) {
     string_to_int(args[2],i);
     subsample(i);
+  }
+  else if ( args[1] == "k" ) {
+    string_to_double(args[2],d);
+    kappa(d);
   }
   else if ( args[1] == "run" ) {
     go( 1 );

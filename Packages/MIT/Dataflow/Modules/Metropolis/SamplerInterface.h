@@ -46,23 +46,27 @@ protected:
   int num_iterations_;
   int current_iter_;
   int subsample_;
-
+  double kappa_;
+  
 public:
   SamplerInterface( Sampler *, PartInterface *parent );
   virtual ~SamplerInterface();
-
+  
   // get values
   int iterations() { return num_iterations_; }
   int subsample() { return subsample_; }
-
+  double kappa() { return kappa_; }
+  
   // set values
   void num_iterations( int i ) { num_iterations_ = i; } 
   void current_iter( int i ) { current_iter_ = i; current_iter_changed(i); }
   void go( int );
   void subsample( int i ) { subsample_ = i ; }
-
+  void kappa( double k ) { if ( kappa_ != k ) {kappa_ = k; kappa_changed(k); }}
+  
   // Signals
   Signal1<int> current_iter_changed;
+  Signal1<double> kappa_changed;
   Signal done;
 };
 
