@@ -31,6 +31,9 @@ def runSusTests(argv, TESTS, algo, callback = nullCallback):
 
   ALGO = upper(algo)
   susdir =  path.normpath(path.join(getcwd(), argv[1]))
+
+  if ALGO == "EXAMPLES":
+    ALGO = "Examples"
   inputsdir = "%s/%s" % (path.normpath(path.join(getcwd(), inputs_root())), \
                          ALGO)
   gold_standard = path.normpath(path.join(getcwd(), argv[3]))
@@ -127,12 +130,16 @@ def runSusTests(argv, TESTS, algo, callback = nullCallback):
 
     # call the callback function before running each test
     callback(test, susdir, inputsdir, compare_root, algo, mode, max_parallelism)
+    if ALGO == "Examples":
+      newalgo = testname
+    else:
+      newalgo = ""
 
     inputxml = path.basename(input(test))
     system("cp %s/%s %s" % (inputsdir, input(test), inputxml))
 
     # Run normal test
-    rc = runSusTest(test, susdir, inputxml, compare_root, algo, mode, max_parallelism)
+    rc = runSusTest(test, susdir, inputxml, compare_root, algo, mode, max_parallelism, "no", newalgo)
     if rc == 0:
       # Prepare for restart test
       mkdir("restart")
@@ -142,7 +149,7 @@ def runSusTests(argv, TESTS, algo, callback = nullCallback):
       callback(test, susdir, inputsdir, compare_root, algo, mode, max_parallelism);
 
       # Run restart test
-      rc = runSusTest(test, susdir, inputxml, compare_root, algo, mode, max_parallelism, DO_RESTART)
+      rc = runSusTest(test, susdir, inputxml, compare_root, algo, mode, max_parallelism, DO_RESTART, newalgo)
       if rc == 1:
         failcode = 1
       chdir("..")
@@ -175,8 +182,9 @@ def runSusTests(argv, TESTS, algo, callback = nullCallback):
   exit(failcode)
 
 
-def runSusTest(test, susdir, inputxml, compare_root, algo, mode, max_parallelism, do_restart = "no"):
-  ALGO = upper(algo)
+def runSusTest(test, susdir, inputxml, compare_root, algo, mode, max_parallelism, do_restart = "no", newalgo = ""):
+  if newalgo != "":
+    algo = newalgo
   testname = nameoftest(test)
   np = float(num_processes(test))
   if (np > max_parallelism):
@@ -187,6 +195,8 @@ def runSusTest(test, susdir, inputxml, compare_root, algo, mode, max_parallelism
     return -1; 
 
   extra_flags = extra_sus_flags(test)
+
+# set the command for sus, based on # of processors
   if np == 1:
     command = "%s/sus -%s %s" % (susdir, algo, extra_flags)
     mpimsg = ""
@@ -212,6 +222,8 @@ def runSusTest(test, susdir, inputxml, compare_root, algo, mode, max_parallelism
       malloc_stats_file = "malloc_stats"
     environ['MALLOC_STATS'] = malloc_stats_file
 
+  print getcwd()
+  print "nice %s %s > sus.log 2>&1" % (command, susinput)
   rc = system("nice %s %s > sus.log 2>&1" % (command, susinput))
 
   if mode == "dbg":
