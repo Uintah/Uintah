@@ -9,7 +9,6 @@ SRCDIR   := SCICore/Datatypes
 
 GENSRCS := $(SRCDIR)/ScalarFieldRG.cc $(SRCDIR)/ScalarFieldRGchar.cc \
 	$(SRCDIR)/ScalarFieldRGuchar.cc $(SRCDIR)/ScalarFieldRGshort.cc \
-	$(SRCDIR)/ScalarFieldRGushort.cc \
 	$(SRCDIR)/ScalarFieldRGint.cc $(SRCDIR)/ScalarFieldRGfloat.cc \
 	$(SRCDIR)/ScalarFieldRGdouble.cc
 
@@ -91,6 +90,9 @@ clean::
 
 #
 # $Log$
+# Revision 1.5  2000/07/17 16:29:40  bigler
+# Removed reference to ScalarFieldRGushort.cc which did not exist.
+#
 # Revision 1.4  2000/07/12 15:45:11  dmw
 # Added Yarden's raw output thing to matrices, added neighborhood accessors to meshes, added ScalarFieldRGushort
 #
