@@ -14,10 +14,9 @@ SRCDIR   := Dataflow/Modules/Math
 SRCS     += \
 	$(SRCDIR)/BuildTransform.cc\
 	$(SRCDIR)/ErrorMetric.cc\
-	$(SRCDIR)/ManipMatrix.cc\
+        $(SRCDIR)/ManipMatrix.cc\
 	$(SRCDIR)/SolveMatrix.cc\
 #[INSERT NEW CODE FILE HERE]
-
 
 CFLAGS   := $(CFLAGS) -DMM_COMP_PATH=\"$(SRCTOP_ABS)/Dataflow/Modules/Math/Manip\"
 
