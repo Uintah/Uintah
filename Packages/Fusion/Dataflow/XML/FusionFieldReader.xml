@@ -20,11 +20,19 @@
 	<datatype>SCIRun::Field</datatype>
       </port>
       <port>
+	<name>Output Temperature Field</name>
+	<datatype>SCIRun::Field</datatype>
+      </port>
+      <port>
 	<name>Output B Field</name>
 	<datatype>SCIRun::Field</datatype>
       </port>
       <port>
 	<name>Output V Field</name>
+	<datatype>SCIRun::Field</datatype>
+      </port>
+      <port>
+	<name>Output Error Field</name>
 	<datatype>SCIRun::Field</datatype>
       </port>
      </outputs>
