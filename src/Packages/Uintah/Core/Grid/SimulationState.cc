@@ -82,9 +82,15 @@ void SimulationState::finalizeMaterials()
   all_matls = scinew MaterialSet();
   all_matls->addReference();
   vector<int> tmp_matls(matls.size());
-  for(int i=0;i<(int)matls.size();i++)
+  for(int i=0 ;i<(int)matls.size();i++)
     tmp_matls[i] = matls[i]->getDWIndex();
   all_matls->addAll(tmp_matls);
+
+  allInOneMatl = scinew MaterialSubset();
+  allInOneMatl->addReference();
+  // a material that represents all materials 
+  // (i.e. summed over all materials -- the whole enchilada)
+  allInOneMatl->add((int)matls.size());
 }
 
 int SimulationState::getNumVelFields() const {
