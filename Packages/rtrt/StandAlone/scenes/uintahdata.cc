@@ -105,11 +105,11 @@ Scene* make_scene(int argc, char* argv[], int nworkers)
     obj1=new CutPlane(obj1, Point(0,.25,0), Vector(0,1,0));
     group->add(new CutPlane(obj1, pdpy));
     group->add(timeobj2);
-    new Thread(pdpy, "CutPlane GUI thread");
+    (new Thread(pdpy, "CutPlane GUI thread"))->detach();
 #else
     group->add(obj1);
 #endif
-    new Thread(dpy, "Volume GUI thread");
+    (new Thread(dpy, "Volume GUI thread"))->detach();
 
     double bgscale=0.3;
     Color groundcolor(0,0,0);
@@ -130,7 +130,8 @@ Scene* make_scene(int argc, char* argv[], int nworkers)
     scene->shadow_mode=0;
     scene->ambient_hack=false;
     scene->maxdepth=0;
-
+    scene->attach_display(dpy);
+    //scene->attach_display(pdpy);
     return scene;
 }
 

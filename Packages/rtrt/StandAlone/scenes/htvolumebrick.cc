@@ -121,7 +121,7 @@ Scene* make_scene(int argc, char* argv[], int nworkers)
     
     HTVolumeBrick* htvol=new HTVolumeBrick(matl0, dpy, file, depth,
                                            nworkers, density);
-    new Thread(dpy, "HTVolume GUI thread");
+    (new Thread(dpy, "HTVolume GUI thread"))->detach();
 
     Object* obj;
 
@@ -301,6 +301,7 @@ Scene* make_scene(int argc, char* argv[], int nworkers)
 
     scene->shadow_mode=0;
     scene->ambient_hack=false;
+    scene->attach_display(dpy);
     return scene;
 }
 

@@ -271,10 +271,10 @@ Scene* make_scene(int argc, char* argv[], int nworkers)
   temp_to_trans_material->scale(min_temp,max_temp);
 
   for (int n = 0; n < num_non_trans; n++) {
-    new Thread(dpys[n], "Volume GUI thread");
+    (new Thread(dpys[n], "Volume GUI thread"))->detach();
   }
   for (int n = 0; n < num_trans; n++) {
-    new Thread(dpys_trans[n], "Volume GUI thread2");
+    (new Thread(dpys_trans[n], "Volume GUI thread2"))->detach();
   }
 	
   
@@ -303,7 +303,7 @@ Scene* make_scene(int argc, char* argv[], int nworkers)
   if(cut){
     PlaneDpy* pd=new PlaneDpy(Vector(0,0,1), Point(0,0,100));
     obj=new CutPlane(obj, pd);
-    new Thread(pd, "Cutting plane display thread");
+    (new Thread(pd, "Cutting plane display thread"))->detach();
   }
 
   //double bgscale=0.5;
@@ -330,6 +330,14 @@ Scene* make_scene(int argc, char* argv[], int nworkers)
 
   scene->shadow_mode=0;
   scene->ambient_hack=false;
+
+  for (int n = 0; n < num_non_trans; n++) {
+    scene->attach_display(dpys[n]);
+  }
+  for (int n = 0; n < num_trans; n++) {
+    scene->attach_display(dpys_trans[n]);
+  }
+
   return scene;
 }
 

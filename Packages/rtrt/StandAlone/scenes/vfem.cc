@@ -128,6 +128,7 @@ Scene* make_scene(int argc, char* argv[], int nworkers)
 				    .1, .5, .6, 50,  0);
     }
     VolumeDpy* dpy=new VolumeDpy(bone?1224.5:600.5);
+    scene->attach_display(dpy);
     HVolume<short, BrickArray3<short>, BrickArray3<VMCell<short> > >* obj0=
 	new HVolume<short, BrickArray3<short>, BrickArray3<VMCell<short> > >
 	(matl0, dpy, "vfem/vfem16_0", depth, nworkers);
@@ -149,7 +150,7 @@ Scene* make_scene(int argc, char* argv[], int nworkers)
     HVolume<short, BrickArray3<short>, BrickArray3<VMCell<short> > >* obj6=
 	new HVolume<short, BrickArray3<short>, BrickArray3<VMCell<short> > >
 	(matl0, dpy, "vfem/vfem16_6", depth, nworkers);
-    new Thread(dpy, "Volume GUI thread");
+    (new Thread(dpy, "Volume GUI thread"))->detach();
 
     Group* group=new Group();
     group->add(obj0);
@@ -168,6 +169,7 @@ Scene* make_scene(int argc, char* argv[], int nworkers)
 	    matl1=matl0;
 	}
 	VolumeDpy* dpy2=new VolumeDpy(1459.5);
+	scene->attach_display(dpy2);
 	HVolume<short, BrickArray3<short>, BrickArray3<VMCell<short> > >* obj00=
 	    new HVolume<short, BrickArray3<short>, BrickArray3<VMCell<short> > >
 	    (matl1, dpy, obj0);
@@ -199,7 +201,7 @@ Scene* make_scene(int argc, char* argv[], int nworkers)
 	group2->add(obj66);
 	group->add(group2);
 	scene->shadowobj=group2;
-	new Thread(dpy2, "Volume GUI thread");
+	(new Thread(dpy2, "Volume GUI thread"))->detach();
     }
     if(rect){
 	group->add(new Rect(matl0, Point(1734/2.,5,5),

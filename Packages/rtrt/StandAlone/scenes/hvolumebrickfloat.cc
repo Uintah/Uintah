@@ -256,7 +256,7 @@ Scene* make_scene(int argc, char* argv[], int nworkers)
     if(cut){
 	PlaneDpy* pd=new PlaneDpy(Vector(0,0,1), Point(0,0,100));
 	obj=new CutPlane(obj, pd);
-	new Thread(pd, "Cutting plane display thread");
+	(new Thread(pd, "Cutting plane display thread"))->detach();
     }
 
     // Start up the thread to handle the slider
@@ -282,6 +282,7 @@ Scene* make_scene(int argc, char* argv[], int nworkers)
 
     scene->shadow_mode=0;
     scene->ambient_hack=false;
+    scene->attach_display(dpy);
     return scene;
 }
 
