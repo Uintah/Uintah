@@ -106,9 +106,18 @@ void FirstOrderAdvector::inFluxOutFluxVolume(
     //__________________________________
     //  Bullet proofing
     double total_fluxout = 0.0;
+#if 0
     for(int face = TOP; face <= BACK; face++ )  {
       total_fluxout  += d_OFS[curcell].d_fflux[face];
     }
+#endif
+
+      total_fluxout  += d_OFS[curcell].d_fflux[TOP];
+      total_fluxout  += d_OFS[curcell].d_fflux[BOTTOM];
+      total_fluxout  += d_OFS[curcell].d_fflux[RIGHT];
+      total_fluxout  += d_OFS[curcell].d_fflux[LEFT];
+      total_fluxout  += d_OFS[curcell].d_fflux[FRONT];
+      total_fluxout  += d_OFS[curcell].d_fflux[BACK];
 
     if (total_fluxout > vol) {
       err_cell = *iter;
@@ -178,10 +187,20 @@ template <class T> void FirstOrderAdvector::advect(const CCVariable<T>& q_CC,
     
     //__________________________________
     //  OUTFLUX: SLAB 
+#if 0
     for(int face = TOP; face <= BACK; face++ )  {
       sum_q_outflux  += q_CC[curcell] * d_OFS[curcell].d_fflux[face];
     }
+#endif
 
+    sum_q_outflux  += q_CC[curcell] * d_OFS[curcell].d_fflux[BOTTOM];
+    sum_q_outflux  += q_CC[curcell] * d_OFS[curcell].d_fflux[TOP];
+    sum_q_outflux  += q_CC[curcell] * d_OFS[curcell].d_fflux[LEFT];
+    sum_q_outflux  += q_CC[curcell] * d_OFS[curcell].d_fflux[RIGHT];
+    sum_q_outflux  += q_CC[curcell] * d_OFS[curcell].d_fflux[BACK];
+    sum_q_outflux  += q_CC[curcell] * d_OFS[curcell].d_fflux[FRONT];
+
+    
     //__________________________________
     //  INFLUX: SLABS
     adjcell = IntVector(i, j+1, k);       // TOP

@@ -1,6 +1,19 @@
-#include <stdio.h>
 #include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/MPMMaterial.h>
 #include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/ConstitutiveModel.h>
+#include "ICE.h"
+#include <Packages/Uintah/Core/Grid/Task.h>
+#include <Packages/Uintah/CCA/Ports/Scheduler.h>
+#include <Core/Util/DebugStream.h>
+#include <Packages/Uintah/CCA/Components/ICE/ICEMaterial.h>
+#include <Packages/Uintah/Core/Grid/SimulationState.h>
+#include <Packages/Uintah/Core/Grid/CellIterator.h>
+#include <Packages/Uintah/Core/Grid/VarTypes.h>
+
+using namespace SCIRun;
+using namespace Uintah;
+
+static DebugStream cout_norm("ICE_NORMAL_COUT", false);  
+static DebugStream cout_doing("ICE_DOING_COUT", false);
 
 /* ---------------------------------------------------------------------
  Function~ ICE::scheduleComputeFCPressDiffRF
