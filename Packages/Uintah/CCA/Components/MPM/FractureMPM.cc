@@ -295,7 +295,6 @@ FractureMPM::scheduleTimeAdvance(const LevelP & level,
 {
   const PatchSet* patches = level->eachPatch();
   const MaterialSet* matls = d_sharedState->allMPMMaterials();
-
   scheduleParticleVelocityField(          sched, patches, matls); 
   scheduleInterpolateParticlesToGrid(     sched, patches, matls);
   scheduleComputeHeatExchange(            sched, patches, matls);
@@ -322,7 +321,7 @@ FractureMPM::scheduleTimeAdvance(const LevelP & level,
 				    lb->pParticleIDLabel, matls);
 }
 
-// for Fracture
+// determine if particles are above, below or in same side with nodes
 void FractureMPM::scheduleParticleVelocityField(SchedulerP& sched,
                                                   const PatchSet* patches,
                                                   const MaterialSet* matls)
@@ -1193,31 +1192,6 @@ void FractureMPM::interpolateParticlesToGrid(const ProcessorGroup*,
       // for Fracture
       constParticleVariable<Short27> pgCode;
       new_dw->get(pgCode,lb->pgCodeLabel,pset);
-
-#if 0 // output particle velocity field code
-      cout << "\n*** Particle velocity field information retrieved from"
-           << " dataWarehouse (new_dw)" << endl;
-      cout << "    in FractureMPM::interpolateParticlesToGrid\n" << endl;
-      for(ParticleSubset::iterator iter=pset->begin();
-                        iter!=pset->end();iter++) {
-        particleIndex idx=*iter;
-        cout << "p["<< idx << "]: " << px[idx]<< ", mass=" << pmass[idx]
-            << ", force=" << pexternalforce[idx] << endl;
-        for(int k=0; k<d_8or27; k++) {
-          if(pgCode[idx][k]==1)
-             cout << setw(10) << "Node: " << k
-                  << ",\tvfld: " << pgCode[idx][k] << endl;
-          else if(pgCode[idx][k]==2)
-             cout << setw(10) << "Node: " << k
-                  << ",\tvfld: " << pgCode[idx][k] << " ***" << endl;
-          else {
-             cout << "Unknown particle velocity code in "
-                  << "FractureMPM::interpolateParticlesToGrid" << endl;
-             exit(1);
-          }
-        }  // End loop over nodes (k)
-      }  // End loop over particles
-#endif
 
       // Create arrays for the grid data
       NCVariable<double> gmass;
@@ -2584,7 +2558,7 @@ void FractureMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
       ParticleSubset* pset = old_dw->getParticleSubset(dwi, patch);
 
       old_dw->get(px,                    lb->pXLabel,                     pset);
-      old_dw->get(px0,                   lb->pX0Label,                    pset);//for Fracture
+      old_dw->get(px0,                   lb->pX0Label,                    pset);
       old_dw->get(pmass,                 lb->pMassLabel,                  pset);
       old_dw->get(pids,                  lb->pParticleIDLabel,            pset);
       old_dw->get(pSp_vol,               lb->pSp_volLabel,                pset);
@@ -2594,7 +2568,7 @@ void FractureMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
 
       new_dw->allocateAndPut(pvelocitynew, lb->pVelocityLabel_preReloc,   pset);
       new_dw->allocateAndPut(pxnew,        lb->pXLabel_preReloc,          pset);
-      new_dw->allocateAndPut(px0new,       lb->pX0Label_preReloc,         pset);//for Fracture
+      new_dw->allocateAndPut(px0new,       lb->pX0Label_preReloc,         pset);
       new_dw->allocateAndPut(pmassNew,     lb->pMassLabel_preReloc,       pset);
       new_dw->allocateAndPut(pvolumeNew,   lb->pVolumeLabel_preReloc,     pset);
       new_dw->allocateAndPut(pids_new,     lb->pParticleIDLabel_preReloc, pset);
@@ -2604,7 +2578,7 @@ void FractureMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
       ParticleSubset* delset = scinew ParticleSubset
 	(pset->getParticleSet(),false,dwi,patch);
 
-      px0new.copyData(px0);  // for Fracture
+      px0new.copyData(px0); 
       pids_new.copyData(pids);
       if(d_8or27==27){
 	old_dw->get(psize,               lb->pSizeLabel,                 pset);
@@ -2774,7 +2748,6 @@ void FractureMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
 
     // cout << "THERMAL ENERGY " << thermal_energy << endl;
   }
-  
 }
 
 void 
