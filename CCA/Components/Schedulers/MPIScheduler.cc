@@ -408,7 +408,7 @@ MPIScheduler::scheduleParticleRelocation(const LevelP& level,
   reloc_matls = matls;
   reloc_matls->addReference();
   ASSERTEQ(reloc_old_labels.size(), reloc_new_labels.size());
-  int numMatls = reloc_old_labels.size();
+  int numMatls = (int)reloc_old_labels.size();
   ASSERTEQ(matls->size(), 1);
   ASSERTEQ(numMatls, matls->getSubset(0)->size());
   for (int m = 0; m< numMatls; m++)
@@ -606,7 +606,7 @@ MPIScheduler::relocateParticles(const ProcessorGroup* pg,
   // First pass: For each of the patches we own, look for particles
   // that left the patch.  Create a scatter record for each one.
   MPIScatterRecords scatter_records;
-  int numMatls = reloc_old_labels.size();
+  int numMatls = (int)reloc_old_labels.size();
   Array2<ParticleSubset*> keepsets(patches->size(), numMatls);
   keepsets.initialize(0);
   for(int p=0;p<patches->size();p++){
@@ -723,7 +723,7 @@ MPIScheduler::relocateParticles(const ProcessorGroup* pg,
 	it != pr->patches.end(); it++){
       const Patch* toPatch = *it;
       for(int matl=0;matl<numMatls;matl++){
-	int numVars = reloc_old_labels[matl].size();
+	int numVars = (int)reloc_old_labels[matl].size();
 	int numParticles=0;
 	pair<maptype::iterator, maptype::iterator> pr;
 	pr = scatter_records.records.equal_range(make_pair(toPatch, matl));
@@ -760,7 +760,7 @@ MPIScheduler::relocateParticles(const ProcessorGroup* pg,
 	it != pr->patches.end(); it++){
       const Patch* toPatch = *it;
       for(int matl=0;matl<numMatls;matl++){
-	int numVars = reloc_old_labels[matl].size();
+	int numVars = (int)reloc_old_labels[matl].size();
 
 	pair<maptype::iterator, maptype::iterator> pr;
 	pr = scatter_records.records.equal_range(make_pair(toPatch, matl));
@@ -879,7 +879,7 @@ MPIScheduler::relocateParticles(const ProcessorGroup* pg,
 
     for(int m = 0; m < matls->size(); m++){
       int matl = matls->get(m);
-      int numVars = reloc_old_labels[matl].size();
+      int numVars = (int)reloc_old_labels[matl].size();
       vector<ParticleSubset*> orig_psets;
       vector<ParticleSubset*> subsets;
       ParticleSubset* keepset = keepsets(p, m);
@@ -972,7 +972,7 @@ MPIScheduler::relocateParticles(const ProcessorGroup* pg,
   }
 
   // Wait to make sure that all of the sends completed
-  int numsends = sendrequests.size();
+  int numsends = (int)sendrequests.size();
   vector<MPI_Status> statii(numsends);
   MPI_Waitall(numsends, &sendrequests[0], &statii[0]);
 

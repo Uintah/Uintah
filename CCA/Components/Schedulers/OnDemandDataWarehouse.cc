@@ -215,6 +215,7 @@ OnDemandDataWarehouse::sendMPI(SendState& ss, DependencyBatch* batch,
     break;
   case TypeDescription::SFCXVariable:
     {
+      if(!d_sfcxDB.exists(label, matlIndex, patch))
 	throw UnknownVariable(label->getName(), patch, matlIndex,
 			      "in sendMPI");
       SFCXVariableBase* var = d_sfcxDB.get(label, matlIndex, patch);
@@ -712,7 +713,7 @@ OnDemandDataWarehouse::get(NCVariableBase& var, const VarLabel* label,
 	    totalNodes+=dnodes.x()*dnodes.y()*dnodes.z();
 	 }
       }
-      IntVector dn = highIndex-lowIndex;
+      //IntVector dn = highIndex-lowIndex;
       //      long wantnodes = dn.x()*dn.y()*dn.z();
       //      ASSERTEQ(wantnodes, totalNodes);
 //      if(wantnodes!=totalNodes){
