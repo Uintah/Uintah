@@ -66,20 +66,20 @@ public:
 
   inline float operator[](int i ) const {
     switch( i ) {
-    case 0: return r; BREAK
-			case 1: return g; BREAK
-					    case 2: return b; BREAK
-								default: return 0.0; BREAK
-										       }
+    case 0: return r; BREAK;
+    case 1: return g; BREAK;
+    case 2: return b; BREAK;
+    default: return 0.0; BREAK;
+    }
   }
 
   inline float& operator[](int i ) {
     switch( i ) {
-    case 0: return r; BREAK
-			case 1: return g; BREAK
-					    case 2: return b; BREAK
-								default: return r; BREAK
-										     }
+    case 0: return r; BREAK;
+    case 1: return g; BREAK;
+    case 2: return b; BREAK;
+    default: return r; BREAK;
+    }
   }
 
   inline float red() const {
