@@ -41,11 +41,11 @@ MPMICELabel::MPMICELabel()
   velInc_NCLabel     = scinew VarLabel("velIncNC",
 			NCVariable<Vector>::getTypeDescription());
 
-  burnedMass_CCLabel = scinew VarLabel("burnedMass_CC",
+  burnedMassCCLabel   = scinew VarLabel("burnedMass",
 			CCVariable<double>::getTypeDescription());  
-  releasedHeat_CCLabel = scinew VarLabel("releasedHeat_CC",
+  releasedHeatCCLabel = scinew VarLabel("releasedHeat",
 			CCVariable<double>::getTypeDescription());
-  sumBurnedMassLabel = scinew VarLabel("sumBurnedMass",
+  sumBurnedMassLabel  = scinew VarLabel("sumBurnedMass",
 			CCVariable<double>::getTypeDescription());  
   sumReleasedHeatLabel = scinew VarLabel("sumReleasedHeat",
 			CCVariable<double>::getTypeDescription());
@@ -66,8 +66,8 @@ MPMICELabel::~MPMICELabel()
   delete press_NCLabel;
   delete velInc_CCLabel;
   delete velInc_NCLabel;
-  delete burnedMass_CCLabel;
-  delete releasedHeat_CCLabel;
+  delete burnedMassCCLabel;
+  delete releasedHeatCCLabel;
   delete sumBurnedMassLabel;
   delete sumReleasedHeatLabel;
 }
