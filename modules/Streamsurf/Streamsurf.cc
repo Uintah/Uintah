@@ -9,6 +9,10 @@
  *
  *  Copyright (C) 1994 SCI Group
  */
+#include <Geometry/Point.h>
+#include <Geometry/Vector.h>
+#undef SCI_ASSERTION_LEVEL
+#define SCI_ASSERTION_LEVEL 3
 
 #include <Streamsurf/Streamsurf.h>
 #include <ScalarFieldRG.h>
@@ -19,6 +23,7 @@
 #include <MUI.h>
 #include <NotFinished.h>
 #include <Geometry/Point.h>
+#include <Math/Trig.h>
 #include <iostream.h>
 #include <fstream.h>
 
@@ -33,11 +38,27 @@ static RegisterModule db2("Visualization", "Streamsurf", make_Streamsurf);
 static clString widget_name("Streamsurf Widget");
 static clString streamsurf_name("Streamsurf");
 
-struct SSurf {
+struct SSLine {
     Point p;
+    Point op;
     int outside;
-    SSurf(const Point&);
+    SSLine(const Point&);
     int advance(const VectorFieldHandle&, int alg, double);
+    int have_normal;
+    Vector normal;
+};
+
+struct SSurf {
+    SSLine* l1;
+    SSLine* l2;
+    SSurf* left;
+    SSurf* right;
+    GeomTriStrip* tri;
+    int split;
+    int outside;
+    void advance(const VectorFieldHandle&);
+    void newtri(const VectorFieldHandle&, ObjGroup*);
+    SSurf(const VectorFieldHandle&, ObjGroup*, SSLine*, SSLine*);
 };
 
 Streamsurf::Streamsurf()
@@ -62,12 +83,6 @@ Streamsurf::Streamsurf()
     choice->add_choice("Stream Function");
     add_ui(choice);
 
-    stepsize=0.1;
-    MUI_slider_real* slider=new MUI_slider_real("Step size", &stepsize,
-						MUI_widget::Immediate, 0);
-    slider->set_minmax(0, 10);
-    add_ui(slider);
-
     maxsteps=100;
     MUI_slider_int* islider=new MUI_slider_int("Max steps", &maxsteps,
 					       MUI_widget::Immediate, 0);
@@ -75,8 +90,9 @@ Streamsurf::Streamsurf()
     add_ui(islider);
 
     maxangle=5;
-    slider=new MUI_slider_real("Maximum surface angle", &maxangle,
-			       MUI_widget::Immediate, 0);
+    MUI_slider_real* slider=new MUI_slider_real("Maximum surface angle",
+						&maxangle,
+						MUI_widget::Immediate, 0);
     slider->set_minmax(0, 90);
     add_ui(slider);
     need_p1=1;
@@ -188,82 +204,101 @@ void Streamsurf::execute()
 
 
     ObjGroup* group=new ObjGroup;
-
-    Array1<SSurf*> ssurfs;
-    Vector line(p2-p1);
-    double l=line.length();
-    for(double x=0;x<=l;x+=slider1_dist){
-	ssurfs.add(new SSurf(p1+line*(x/l)));
-    }
-
-    int n=0;
     int groupid=0;
-    Array1<GeomTriStrip*> strips(ssurfs.size()-1);
-    Vector vv1(ssurfs[1]->p-ssurfs[0]->p);
-    Vector vv2;
-    field->interpolate(ssurfs[0]->p, vv2);
-    Vector norm(Cross(vv1, vv2));
-    norm.normalize();
-    for(int i=0;i<strips.size();i++){
-	strips[i]=new GeomTriStrip;
-	strips[i]->add(ssurfs[i]->p, norm);
-	if(i<strips.size()-1){
-	    Vector v1(ssurfs[i+2]->p-ssurfs[i]->p);
-	    Vector v2;
-	    field->interpolate(ssurfs[i+1]->p, v2);
-	    norm=Cross(v1, v2);
-	    norm.normalize();
-	} else {
-	    Vector v1(ssurfs[i+1]->p-ssurfs[i]->p);
-	    Vector v2;
-	    field->interpolate(ssurfs[i+1]->p, v2);
-	    norm=Cross(v1, v2);
-	    norm.normalize();
-	}
-	strips[i]->add(ssurfs[i+1]->p, norm);
-	group->add(strips[i]);
+
+    Array1<SSLine*> slines;
+    Point op1(p1);
+    Point op2(p2);
+    double d2=4*slider1_dist*slider1_dist;
+    double ca=Cos(maxangle);
+    double ss=slider1_dist/2;
+    Vector line(op2-op1);
+    double l=line.length();
+    for(double x=0;x<=l;x+=slider1_dist)
+	slines.add(new SSLine(op1+line*(x/l)));
+    Array1<SSurf*> ssurfs(slines.size()-1);
+    for(int i=0;i<ssurfs.size();i++)
+	ssurfs[i]=new SSurf(field, group, slines[i], slines[i+1]);
+    for(i=0;i<ssurfs.size();i++){
+	if(i>0)
+	    ssurfs[i]->left=ssurfs[i-1];
+	if(i<ssurfs.size()-1)
+	    ssurfs[i]->right=ssurfs[i+1];
     }
-    for(i=0;i<maxsteps;i++){
-	double ss=stepsize;
-	for(int i=0;i<ssurfs.size();i++)
-	    n+=ssurfs[i]->advance(field, alg, ss);
-	Vector v1(ssurfs[1]->p-ssurfs[0]->p);
-	Vector v2;
-	field->interpolate(ssurfs[0]->p, v2);
-	Vector norm(Cross(v1, v2));
-	norm.normalize();
-	for(i=0;i<strips.size();i++){
-	    SSurf* s1=ssurfs[i];
-	    SSurf* s2=ssurfs[i+1];
-	    if(!s1->outside && !s2->outside){
-		if(i>0 && ssurfs[i-1]->outside){
-		    // Recompute normal...
-		    Vector v1(ssurfs[i+1]->p-ssurfs[i]->p);
-		    Vector v2;
-		    field->interpolate(ssurfs[i]->p, v2);
-		    norm=Cross(v1, v2);
-		    norm.normalize();
+    int n=0;
+    for(int iter=0;iter<maxsteps;iter++){
+	update_progress(iter, maxsteps);
+	if(abort_flag)
+	    break;
+	if(n > 500 && !ogeom->busy()){
+	    n=0;
+	    if(groupid)
+		ogeom->delObj(groupid);
+	    groupid=ogeom->addObj(group->clone(), streamsurf_name);
+	    ogeom->flushViews();
+	}
+	int oldn=n;
+	for(int i=0;i<slines.size();i++)
+	    n+=slines[i]->advance(field, alg, ss);
+	if(n==oldn)
+	   break;
+	for(i=0;i<ssurfs.size();i++)
+	    ssurfs[i]->advance(field);
+	for(i=0;i<ssurfs.size();i++)
+	    ssurfs[i]->split=0;
+	for(i=0;i<ssurfs.size();i++){
+	    SSurf* surf=ssurfs[i];
+	    if(!surf->split && !surf->outside){
+		// Check lengths...
+		Vector v1(surf->l2->p-surf->l1->p);
+		if(v1.length2() > d2){
+		    surf->split=1;
 		}
-		strips[i]->add(s1->p, norm);
-		if(i<strips.size()-1 && !ssurfs[i+2]->outside){
-		    Vector v1(ssurfs[i+2]->p-ssurfs[i]->p);
-		    Vector v2;
-		    field->interpolate(ssurfs[i+1]->p, v2);
-		    norm=Cross(v1, v2);
-		    norm.normalize();
-		} else {
-		    Vector v1(ssurfs[i+1]->p-ssurfs[i]->p);
-		    Vector v2;
-		    field->interpolate(ssurfs[i+1]->p, v2);
-		    norm=Cross(v1, v2);
-		    norm.normalize();
+		if(!surf->split && surf->right){
+		    Vector v2(surf->right->l2->p-surf->l2->p);
+		    v1.normalize();
+		    v2.normalize();
+		    double a=Dot(v1, v2);
+		    if(a<ca){
+			surf->split=1;
+			surf->right->split=1;
+		    }
 		}
-		strips[i]->add(s2->p, norm);
+	    }
+	}
+	// Now do the splitting...
+    	int size=ssurfs.size();
+	for(i=0;i<size;i++){
+	    SSurf* surf=ssurfs[i];
+	    if(surf->split){
+		Point newp(Interpolate(surf->l1->op, surf->l2->op, 0.5));
+		SSLine* newline=new SSLine(newp);
+		// advance it...
+		for(int ii=0;ii<=iter;ii++)
+		    newline->advance(field, alg, ss);
+		// Save the advanced point for this - use the interpolated
+		// one - to avoid holes
+		Point save(newline->p);
+		newline->p=Interpolate(surf->l1->p, surf->l2->p, 0.5);
+
+		SSurf* newsurf=new SSurf(field, group, newline, surf->l2);
+		newsurf->right=surf->right;
+		newsurf->left=surf;
+		surf->right=newsurf;
+		surf->l2=newline;
+		surf->newtri(field, group);
+		newline->p=save;
+		ssurfs.add(newsurf);
+		slines.add(newline);
 	    }
 	}
     }
     if(groupid)
 	ogeom->delObj(groupid);
+    for(i=0;i<ssurfs.size();i++)
+	delete ssurfs[i];
+    for(i=0;i<slines.size();i++)
+	delete slines[i];
     if(group->size() == 0){
 	delete group;
 	streamsurf_id=0;
@@ -317,17 +352,19 @@ void Streamsurf::geom_moved(int axis, double dist, const Vector& delta,
     }
 }
 
-SSurf::SSurf(const Point& p)
-: p(p)
+SSLine::SSLine(const Point& p)
+: p(p), op(p)
 {
     outside=0;
+    have_normal=0;
 }
 
-int SSurf::advance(const VectorFieldHandle& field, int alg,
+int SSLine::advance(const VectorFieldHandle& field, int alg,
 		   double stepsize)
 {
     if(outside)
 	return 0;
+    have_normal=0;
     switch(alg){
     case Streamsurf::AEuler:
 	{
@@ -336,19 +373,86 @@ int SSurf::advance(const VectorFieldHandle& field, int alg,
 		outside=1;
 		return 0;
 	    }
-	    p+=(v*stepsize);
+	    if(v.length2() > 0){
+		v.normalize();
+		p+=(v*stepsize);
+	    } else {
+		// Stagnation...
+		outside=1;
+	    }
 	}
 	break;
     case Streamsurf::ARK4:
 	{
-	    NOT_FINISHED("SSurf::advance for RK4");
+	    NOT_FINISHED("SSLine::advance for RK4");
 	}
 	break;
     case Streamsurf::AStreamFunction:
 	{
-	    NOT_FINISHED("SSurf::advance for Stream Function");
+	    NOT_FINISHED("SSLine::advance for Stream Function");
 	}
 	break;
     }
     return 1;
+}
+
+void SSurf::advance(const VectorFieldHandle& field)
+{
+    if(l1->outside || l2->outside){
+	outside=1;
+	return;
+    }
+    if(!l1->have_normal){
+	Vector v1;
+	if(left && !left->l1->outside){
+	    v1=Vector(l2->p-left->l1->p);
+	} else {
+	    v1=Vector(l2->p-l1->p);
+	}
+	Vector v2;
+	if(!field->interpolate(l1->p, v2)){
+	    outside=1;
+	    l1->outside=1;
+	    if(left)left->outside=1;
+	    return;
+	}
+	l1->normal=Cross(v2, v1);
+	l1->have_normal=1;
+    }
+    if(!l2->have_normal){
+	Vector v1;
+	if(right && !right->l2->outside){
+	    v1=Vector(right->l2->p-l1->p);
+	} else {
+	    v1=Vector(l2->p-l1->p);
+	}
+	Vector v2;
+	if(!field->interpolate(l2->p, v2)){
+	    outside=1;
+	    l2->outside=1;
+	    if(right)right->outside=1;
+	    return;
+	}
+	l2->normal=Cross(v2, v1);
+	l2->have_normal=1;
+    }
+    tri->add(l1->p, l1->normal);
+    tri->add(l2->p, l2->normal);
+}
+
+SSurf::SSurf(const VectorFieldHandle& field,
+	     ObjGroup* group, SSLine* l1, SSLine* l2)
+: l1(l1), l2(l2), tri(new GeomTriStrip)
+{
+    outside=0;
+    group->add(tri);
+    left=right=0;
+    advance(field);
+}
+
+void SSurf::newtri(const VectorFieldHandle& field, ObjGroup* group)
+{
+    tri=new GeomTriStrip;
+    group->add(tri);
+    advance(field);
 }

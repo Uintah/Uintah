@@ -47,7 +47,6 @@ public:
 private:
     int alg;
 
-    double stepsize;
     int maxsteps;
     double maxangle;
 
