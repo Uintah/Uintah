@@ -125,6 +125,7 @@ BoundaryCondition::problemSetup(const ProblemSpecP& params)
   
 // flow ramping is on or off, it is the same for all inlets  
   db->getWithDefault("ramping_inlet_flowrate", d_ramping_inlet_flowrate, true);
+  db->getWithDefault("carbon_balance", d_carbon_balance, false);
   if (ProblemSpecP inlet_db = db->findBlock("FlowInlet")) {
     d_inletBoundary = true;
     for (ProblemSpecP inlet_db = db->findBlock("FlowInlet");
@@ -873,6 +874,7 @@ BoundaryCondition::setFlatProfile(const ProcessorGroup* /*pc*/,
         sum_vartype area_var;
         new_dw->get(area_var, d_flowInlets[indx].d_area_label);
         double area = area_var;
+	double actual_flow_rate;
       
         // Get a copy of the current flow inlet
         // check if given patch intersects with the inlet boundary of type index
@@ -883,7 +885,9 @@ BoundaryCondition::setFlatProfile(const ProcessorGroup* /*pc*/,
 		   cellType, area, fi.d_cellTypeID, fi.flowRate, fi.inletVel,
 		   fi.calcStream.d_density,
 		   xminus, xplus, yminus, yplus, zminus, zplus, time,
-		   d_ramping_inlet_flowrate);
+		   d_ramping_inlet_flowrate, actual_flow_rate);
+
+	d_flowInlets[indx].flowRate = actual_flow_rate;
 
         fort_profscalar(idxLo, idxHi, density, cellType,
 		        fi.calcStream.d_density, fi.d_cellTypeID,
@@ -2040,6 +2044,7 @@ BoundaryCondition::FlowInlet::FlowInlet(int /*numMix*/, int cellID):
   turb_lengthScale = 0.0;
   flowRate = 0.0;
   inletVel = 0.0;
+  fcr = 0.0;
   // add cellId to distinguish different inlets
   d_area_label = VarLabel::create("flowarea"+cellID,
    ReductionVariable<double, Reductions::Sum<double> >::getTypeDescription()); 
@@ -2051,12 +2056,14 @@ BoundaryCondition::FlowInlet::FlowInlet():
   turb_lengthScale = 0.0;
   flowRate = 0.0;
   inletVel = 0.0;
+  fcr = 0.0;
 }
 
 BoundaryCondition::FlowInlet::FlowInlet(const FlowInlet& copy) :
   d_cellTypeID (copy.d_cellTypeID),
   flowRate(copy.flowRate),
   inletVel(copy.inletVel),
+  fcr(copy.fcr),
   streamMixturefraction(copy.streamMixturefraction),
   turb_lengthScale(copy.turb_lengthScale),
   calcStream(copy.calcStream),
@@ -2079,6 +2086,7 @@ BoundaryCondition::FlowInlet& BoundaryCondition::FlowInlet::operator=(const Flow
   d_cellTypeID = copy.d_cellTypeID;
   flowRate = copy.flowRate;
   inletVel = copy.inletVel;
+  fcr = copy.fcr;
   streamMixturefraction = copy.streamMixturefraction;
   turb_lengthScale = copy.turb_lengthScale;
   calcStream = copy.calcStream;
@@ -2105,6 +2113,7 @@ BoundaryCondition::FlowInlet::problemSetup(ProblemSpecP& params)
   params->getWithDefault("Flow_rate", flowRate,0.0);
   params->getWithDefault("InletVelocity", inletVel,0.0);
   params->require("TurblengthScale", turb_lengthScale);
+  params->getWithDefault("CarbonMassFractionInFuel", fcr, 0.0);
   // check to see if this will work
   ProblemSpecP geomObjPS = params->findBlock("geom_object");
   GeometryPieceFactory::create(geomObjPS, d_geomPiece);
@@ -4087,12 +4096,17 @@ BoundaryCondition::sched_getFlowINOUT(SchedulerP& sched,
 		Ghost::None, Arches::ZEROGHOSTCELLS);
   tsk->requires(Task::NewDW, d_lab->d_wVelocitySPBCLabel,
 		Ghost::None, Arches::ZEROGHOSTCELLS);
+  if ((timelabels->integrator_last_step)&&(d_carbon_balance))
+    tsk->requires(Task::NewDW, d_lab->d_co2INLabel,
+		  Ghost::None, Arches::ZEROGHOSTCELLS);
 
   tsk->computes(timelabels->flowIN);
   tsk->computes(timelabels->flowOUT);
   tsk->computes(timelabels->denAccum);
   tsk->computes(timelabels->floutbc);
   tsk->computes(timelabels->areaOUT);
+  if ((timelabels->integrator_last_step)&&(d_carbon_balance))
+    tsk->computes(d_lab->d_CO2FlowRateLabel);
 
   sched->addTask(tsk, patches, matls);
 }
@@ -4118,6 +4132,7 @@ BoundaryCondition::getFlowINOUT(const ProcessorGroup*,
     constSFCXVariable<double> uVelocity;
     constSFCYVariable<double> vVelocity;
     constSFCZVariable<double> wVelocity;
+    CCVariable<double> co2;
 
     new_dw->get(filterdrhodt, d_lab->d_filterdrhodtLabel,
 		matlIndex, patch, Ghost::None, Arches::ZEROGHOSTCELLS);
@@ -4141,7 +4156,16 @@ BoundaryCondition::getFlowINOUT(const ProcessorGroup*,
 		patch, Ghost::None, Arches::ZEROGHOSTCELLS);
     new_dw->get(wVelocity, d_lab->d_wVelocitySPBCLabel, matlIndex,
 		patch, Ghost::None, Arches::ZEROGHOSTCELLS);
-   
+    bool doing_carbon_balance = 
+	 (timelabels->integrator_last_step)&&(d_carbon_balance);
+    if (doing_carbon_balance)
+      new_dw->getCopy(co2, d_lab->d_co2INLabel, matlIndex, patch, 
+		      Ghost::None, Arches::ZEROGHOSTCELLS);
+    else {
+      co2.allocate(patch->getCellLowIndex(), patch->getCellHighIndex());
+      co2.initialize(0.0);
+    }
+
     // Get the low and high index for the patch and the variables
     IntVector idxLo = patch->getCellFORTLowIndex();
     IntVector idxHi = patch->getCellFORTHighIndex();
@@ -4157,6 +4181,8 @@ BoundaryCondition::getFlowINOUT(const ProcessorGroup*,
     double denAccum = 0.0;
     double floutbc = 0.0;
     double areaOUT = 0.0;
+    double co2IN  = 0.0;
+    double co2OUT  = 0.0;
 
     for (int kk = idxLo.z(); kk <= idxHi.z(); kk++) {
       for (int jj = idxLo.y(); jj <= idxHi.y(); jj++) {
@@ -4176,13 +4202,18 @@ BoundaryCondition::getFlowINOUT(const ProcessorGroup*,
 	//CellTypeInfo flowType = FLOW;
 	FlowInlet fi = d_flowInlets[indx];
 	double fout = 0.0;
+	double co2out_inlet = 0.0;
+	double co2in_inlet = 0.0;
 	fort_inlpresbcinout(uVelocity, vVelocity, wVelocity, idxLo, idxHi,
 			   density, cellType, fi.d_cellTypeID,
 			   flowIN, fout, cellinfo->sew, cellinfo->sns,
 			   cellinfo->stb, xminus, xplus, yminus, yplus,
-			   zminus, zplus);
+			   zminus, zplus, doing_carbon_balance,
+			   co2, co2in_inlet, co2out_inlet);
 	if (fout > 0.0)
 		throw InvalidValue("Flow comming out of inlet");
+	if ((co2out_inlet > 0.0)&&(doing_carbon_balance))
+		throw InvalidValue("CO2 comming out of inlet");
       } 
 
       if (d_pressureBoundary) {
@@ -4191,7 +4222,8 @@ BoundaryCondition::getFlowINOUT(const ProcessorGroup*,
 			    density, cellType, pressure_celltypeval,
 			    flowIN, flowOUT, cellinfo->sew, cellinfo->sns,
 			    cellinfo->stb, xminus, xplus, yminus, yplus,
-			    zminus, zplus);
+			    zminus, zplus, doing_carbon_balance,
+			    co2, co2IN, co2OUT);
       }
       if (d_outletBoundary) {
 	int outlet_celltypeval = d_outletBC->d_cellTypeID;
@@ -4208,6 +4240,14 @@ BoundaryCondition::getFlowINOUT(const ProcessorGroup*,
      	    	 floutbc -= avdenlow*uVelocity[currCell] *
 	          	     cellinfo->sns[colY] * cellinfo->stb[colZ];
     	         areaOUT += cellinfo->sns[colY] * cellinfo->stb[colZ];
+		 if (doing_carbon_balance) {
+ 	           co2OUT -= Min(0.0,avdenlow*uVelocity[currCell] *
+ 	          	     cellinfo->sns[colY] * cellinfo->stb[colZ]*
+			     0.5*(co2[currCell]+co2[xminusCell]));
+ 	           co2IN += Max(0.0,avdenlow*uVelocity[currCell] *
+ 	          	     cellinfo->sns[colY] * cellinfo->stb[colZ]*
+			     0.5*(co2[currCell]+co2[xminusCell]));
+		 }
               }
 	    }
 	  }
@@ -4225,6 +4265,14 @@ BoundaryCondition::getFlowINOUT(const ProcessorGroup*,
 	         floutbc += avden*uVelocity[xplusCell] *
 	       	     cellinfo->sns[colY] * cellinfo->stb[colZ];
     	         areaOUT += cellinfo->sns[colY] * cellinfo->stb[colZ];
+		 if (doing_carbon_balance) {
+ 	           co2OUT += Max(0.0,avden*uVelocity[xplusCell] *
+ 	          	     cellinfo->sns[colY] * cellinfo->stb[colZ]*
+			     0.5*(co2[currCell]+co2[xplusCell]));
+ 	           co2IN -= Min(0.0,avden*uVelocity[xplusCell] *
+ 	          	     cellinfo->sns[colY] * cellinfo->stb[colZ]*
+			     0.5*(co2[currCell]+co2[xplusCell]));
+		 }
 	      }
 	    }
 	  }
@@ -4244,6 +4292,14 @@ BoundaryCondition::getFlowINOUT(const ProcessorGroup*,
  	         flowIN += Max(0.0,avdenlow*vVelocity[currCell] *
 	                   cellinfo->sew[colX] * cellinfo->stb[colZ]);
     	         areaOUT += cellinfo->sew[colX] * cellinfo->stb[colZ];
+		 if (doing_carbon_balance) {
+ 	           co2OUT -= Min(0.0,avdenlow*vVelocity[currCell] *
+ 	          	     cellinfo->sew[colX] * cellinfo->stb[colZ]*
+			     0.5*(co2[currCell]+co2[yminusCell]));
+ 	           co2IN += Max(0.0,avdenlow*vVelocity[currCell] *
+ 	          	     cellinfo->sew[colX] * cellinfo->stb[colZ]*
+			     0.5*(co2[currCell]+co2[yminusCell]));
+		 }
  	      }
  	    }
  	  }
@@ -4263,6 +4319,14 @@ BoundaryCondition::getFlowINOUT(const ProcessorGroup*,
  	         flowIN -= Min(0.0,avden*vVelocity[yplusCell] *
  	          	     cellinfo->sew[colX] * cellinfo->stb[colZ]);
     	         areaOUT += cellinfo->sew[colX] * cellinfo->stb[colZ];
+		 if (doing_carbon_balance) {
+ 	           co2OUT += Max(0.0,avden*vVelocity[yplusCell] *
+ 	          	     cellinfo->sew[colX] * cellinfo->stb[colZ]*
+			     0.5*(co2[currCell]+co2[yplusCell]));
+ 	           co2IN -= Min(0.0,avden*vVelocity[yplusCell] *
+ 	          	     cellinfo->sew[colX] * cellinfo->stb[colZ]*
+			     0.5*(co2[currCell]+co2[yplusCell]));
+		 }
  	      }
  	    }
  	  }
@@ -4282,6 +4346,14 @@ BoundaryCondition::getFlowINOUT(const ProcessorGroup*,
  	         flowIN += Max(0.0,avdenlow*wVelocity[currCell] *
  	          	     cellinfo->sew[colX] * cellinfo->sns[colY]);
     	         areaOUT += cellinfo->sew[colX] * cellinfo->sns[colY];
+		 if (doing_carbon_balance) {
+ 	           co2OUT -= Min(0.0,avdenlow*wVelocity[currCell] *
+ 	          	     cellinfo->sew[colX] * cellinfo->sns[colY]*
+			     0.5*(co2[currCell]+co2[zminusCell]));
+ 	           co2IN += Max(0.0,avdenlow*wVelocity[currCell] *
+ 	          	     cellinfo->sew[colX] * cellinfo->sns[colY]*
+			     0.5*(co2[currCell]+co2[zminusCell]));
+		 }
  	      }
  	    }
  	  }
@@ -4301,6 +4373,14 @@ BoundaryCondition::getFlowINOUT(const ProcessorGroup*,
  	         flowIN -= Min(0.0,avden*wVelocity[zplusCell] *
  	          	     cellinfo->sew[colX] * cellinfo->sns[colY]);
     	         areaOUT += cellinfo->sew[colX] * cellinfo->sns[colY];
+		 if (doing_carbon_balance) {
+ 	           co2OUT += Max(0.0,avden*wVelocity[zplusCell] *
+ 	          	     cellinfo->sew[colX] * cellinfo->sns[colY]*
+			     0.5*(co2[currCell]+co2[zplusCell]));
+ 	           co2IN -= Min(0.0,avden*wVelocity[zplusCell] *
+ 	          	     cellinfo->sew[colX] * cellinfo->sns[colY]*
+			     0.5*(co2[currCell]+co2[zplusCell]));
+		 }
  	      }
  	    }
  	  }
@@ -4313,6 +4393,8 @@ BoundaryCondition::getFlowINOUT(const ProcessorGroup*,
   new_dw->put(sum_vartype(denAccum), timelabels->denAccum);
   new_dw->put(sum_vartype(floutbc), timelabels->floutbc);
   new_dw->put(sum_vartype(areaOUT), timelabels->areaOUT);
+  if (doing_carbon_balance)
+    new_dw->put(sum_vartype(co2OUT-co2IN), d_lab->d_CO2FlowRateLabel);
   }
 }
 
@@ -4337,9 +4419,13 @@ void BoundaryCondition::sched_correctVelocityOutletBC(SchedulerP& sched,
   tsk->requires(Task::NewDW, timelabels->denAccum);
   tsk->requires(Task::NewDW, timelabels->floutbc);
   tsk->requires(Task::NewDW, timelabels->areaOUT);
+  if ((timelabels->integrator_last_step)&&(d_carbon_balance))
+    tsk->requires(Task::NewDW, d_lab->d_CO2FlowRateLabel);
 
   if (timelabels->integrator_last_step)
     tsk->computes(d_lab->d_uvwoutLabel);
+  if ((timelabels->integrator_last_step)&&(d_carbon_balance))
+    tsk->computes(d_lab->d_carbonEfficiencyLabel);
 
   sched->addTask(tsk, patches, matls);
 }
@@ -4402,6 +4488,24 @@ BoundaryCondition::correctVelocityOutletBC(const ProcessorGroup* pc,
     }
     if (timelabels->integrator_last_step)
       new_dw->put(delt_vartype(uvwcorr), d_lab->d_uvwoutLabel);
+
+    sum_vartype sum_CO2FlowRate;
+    double CO2FlowRate;
+    double totalCarbonFlowRate = 0.0;
+    double carbonEfficiency;
+    if ((timelabels->integrator_last_step)&&(d_carbon_balance)) {
+      new_dw->get(sum_CO2FlowRate, d_lab->d_CO2FlowRateLabel);
+      CO2FlowRate = sum_CO2FlowRate;
+      for (int indx = 0; indx < d_numInlets; indx++) {
+	FlowInlet fi = d_flowInlets[indx];
+	totalCarbonFlowRate += fi.flowRate * fi.fcr;
+      }
+      if (totalCarbonFlowRate > 0.0)
+	carbonEfficiency = CO2FlowRate * 12.0/28.0 /totalCarbonFlowRate;
+      else 
+	throw InvalidValue("No carbon in the domain");
+      new_dw->put(delt_vartype(carbonEfficiency), d_lab->d_carbonEfficiencyLabel);
+    }
  
 }
 //****************************************************************************

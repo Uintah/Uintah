@@ -11,7 +11,7 @@ c     Local Variables :
 c*********************************************************************
       integer IST, JST, KST, IEND, JEND, KEND
       integer i, j, k
-      double precision FLOW, RHO, AVGVELP
+      double precision AVGVELP
       double precision factor
 
 c*********************************************************************
@@ -27,17 +27,17 @@ c*********************************************************************
 C-------------------------------------------------------------------- 
 C     CALCULATION OF U IN PRIMARY STREAMS
 C---------------------------------------------------------------------
-      FLOW = FLOWPR
-      RHO = DENPR
-      if (flow.eq.0.0D0) then
+      if (flowpr.eq.0.0D0) then
       AVGVELP = inletvel
+      actual_flow_rate = AVGVELP*DENPR*AREAPR
       else
-      IF (AREAPR.le.TINY) THEN
-        AVGVELP = ZERO
-        FLOWPR = ZERO
-      ELSE
-        AVGVELP = FLOW/(RHO*AREAPR)
-      ENDIF
+        IF (AREAPR.le.TINY) THEN
+          AVGVELP = ZERO
+          actual_flow_rate = ZERO
+        ELSE
+          AVGVELP = FLOWPR/(DENPR*AREAPR)
+          actual_flow_rate = flowpr
+        ENDIF
       endif
 
 #include <Packages/Uintah/CCA/Components/Arches/fortran/ramping.h>
