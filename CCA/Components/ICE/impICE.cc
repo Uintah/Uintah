@@ -671,11 +671,12 @@ void ICE::updatePressure(const ProcessorGroup*,
                    patch, new_dw, d_sharedState, d_Lodi_variable_basket, true);
       }
     }
-    
+    NG_BC_vars* ng = new NG_BC_vars;  // NG hack
+    ng->setNGBcs = false;
     setBC(press_CC, placeHolder, sp_vol_CC, d_surroundingMatl_indx,
-          "sp_vol", "Pressure", patch ,d_sharedState, 0, new_dw, lv);
+          "sp_vol", "Pressure", patch ,d_sharedState, 0, new_dw, lv, ng);
           
-    delete lv;
+    delete lv, ng;
         
     //---- P R I N T   D A T A ------  
     if (switchDebug_updatePressure) {
