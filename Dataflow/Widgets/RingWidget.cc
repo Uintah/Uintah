@@ -349,7 +349,8 @@ RingWidget::redraw()
  */
 void
 RingWidget::geom_moved( GeomPick*, int axis, double dist,
-			const Vector& delta, int pick, const BState& )
+			const Vector& delta, int pick, const BState&,
+			const Vector &pick_offset)
 {
   Point p;
   const double resize_min(1.5*widget_scale_);

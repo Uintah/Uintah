@@ -187,7 +187,8 @@ ArrowWidget::redraw()
  */
 void
 ArrowWidget::geom_moved( GeomPick*, int /* axis */, double /* dist */,
-			 const Vector& delta, int pick, const BState& )
+			 const Vector& delta, int pick, const BState&,
+			 const Vector &pick_offset)
 {
   ((DistanceConstraint*)constraints[ConstDist])->SetDefault(GetDirection());
   switch(pick)

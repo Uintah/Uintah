@@ -269,7 +269,8 @@ LightWidget::redraw()
  */
 void
 LightWidget::geom_moved( GeomPick* gp, int axis, double dist,
-			 const Vector& delta, int pick, const BState& state )
+			 const Vector& delta, int pick, const BState& state,
+			 const Vector &pick_offset)
 {
   switch(ltype)
   {
@@ -303,7 +304,7 @@ LightWidget::geom_moved( GeomPick* gp, int axis, double dist,
     break;
 
   case AreaLight:
-    arealight->geom_moved(gp, axis, dist, delta, pick, state);
+    arealight->geom_moved(gp, axis, dist, delta, pick, state, pick_offset);
     break;
 
   default:

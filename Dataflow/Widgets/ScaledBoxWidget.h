@@ -34,10 +34,6 @@
 #include <Dataflow/Widgets/BaseWidget.h>
 #include <Core/Datatypes/Clipper.h>
 
-#if defined(__sgi) && !defined(__GNUC__) && (_MIPS_SIM != _MIPS_SIM_ABI32)
-// Turn off warnings about partially overridden virtual functions
-#pragma set woff 1682
-#endif
 
 namespace SCIRun {
 
@@ -49,7 +45,8 @@ public:
   virtual ~ScaledBoxWidget();
 
   virtual void redraw();
-  virtual void geom_moved(GeomPick*, int, double, const Vector&, int, const BState&);
+  virtual void geom_moved(GeomPick*, int, double, const Vector&, int,
+			  const BState&, const Vector &pick_offset);
   virtual void geom_pick(GeomPick*, ViewWindow*, int, const BState& bs);
 
   virtual void MoveDelta( const Vector& delta );
@@ -102,9 +99,5 @@ private:
 
 
 } // End namespace SCIRun
-
-#if defined(__sgi) && !defined(__GNUC__) && (_MIPS_SIM != _MIPS_SIM_ABI32)
-#pragma reset woff 1682
-#endif
 
 #endif

@@ -109,7 +109,9 @@ public:
    
   virtual void geom_pick(GeomPick*, ViewWindow*, int, const BState& bs);
   virtual void geom_release(GeomPick*, int, const BState& bs);
-  virtual void geom_moved(GeomPick*, int, double, const Vector&, int, const BState& bs);
+  virtual void geom_moved(GeomPick*, int, double, const Vector&, int,
+			  const BState& button_state,
+			  const Vector &pick_offset);
 
   //BaseWidget& operator=( const BaseWidget& );
   int operator==( const BaseWidget& );

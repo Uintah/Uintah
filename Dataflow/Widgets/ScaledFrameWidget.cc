@@ -388,7 +388,8 @@ ScaledFrameWidget::geom_pick( GeomPick*, ViewWindow*, int pick, const BState& )
  */
 void
 ScaledFrameWidget::geom_moved( GeomPick*, int axis, double dist,
-			       const Vector& delta, int pick, const BState& )
+			       const Vector& delta, int pick, const BState&,
+			       const Vector &pick_offset)
 {
   Vector delt(delta);
   double ResizeMin(1.5*widget_scale_);

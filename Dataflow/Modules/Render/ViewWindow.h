@@ -129,6 +129,7 @@ protected:
   BBox bb;
   
   int last_x, last_y;
+  int pick_x, pick_y;
   double total_x, total_y, total_z;
   Point rot_point;
   int rot_point_valid;

@@ -49,7 +49,7 @@ WidgetPickable::geom_release(GeomPick*, int, const BState& bs)
 
 void
 WidgetPickable::geom_moved(GeomPick*, int, double, const Vector&,
-			   int, const BState&)
+			   int, const BState&, const Vector &pick_offset)
 {
 }
 

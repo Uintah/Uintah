@@ -346,7 +346,8 @@ ViewWidget::redraw()
  */
 void
 ViewWidget::geom_moved( GeomPick*, int /* axis */, double /* dist */,
-			const Vector& delta, int pick, const BState& )
+			const Vector& delta, int pick, const BState&,
+			const Vector &pick_offset)
 {
   switch(pick)
   {
