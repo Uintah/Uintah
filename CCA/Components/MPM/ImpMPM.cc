@@ -1644,6 +1644,10 @@ void ImpMPM::destroyMatrix(const ProcessorGroup*,
   PetscObjectExists((PetscObject)diagonal,&exists);
   if (exists == PETSC_TRUE)
     VecDestroy(diagonal);
+
+  PetscObjectExists((PetscObject)d_x,&exists);
+  if (exists == PETSC_TRUE)
+    VecDestroy(d_x);
 #endif
 
 }
@@ -2661,9 +2665,11 @@ void ImpMPM::solveForDuCGPetsc(const ProcessorGroup*,
     PetscPrintf(PETSC_COMM_WORLD,"Iterations %d\n",its);
     PetscScalar* xPetsc;
     VecGetArray(d_x,&xPetsc);
+#if 0
     for (int i = 0; i < num_nodes; i++) {
       PetscPrintf(PETSC_COMM_WORLD,"d_x[%d] = %g\n",i,xPetsc[i]);
     }
+#endif
 #endif
 #ifdef OLD_SPARSE
   valarray<double> x(0.,num_nodes);
@@ -2723,7 +2729,7 @@ void ImpMPM::solveForDuCGPetsc(const ProcessorGroup*,
   }
 #ifdef HAVE_PETSC
   VecRestoreArray(d_x,&xPetsc);
-  VecDestroy(d_x);
+  //VecDestroy(d_x);
 #endif
 
 }
