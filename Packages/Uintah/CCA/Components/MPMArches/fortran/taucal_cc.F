@@ -197,6 +197,11 @@ c     length model
 
             tmult = tmult*epss(iorig,jorig,korig)
 
+c     This kstabu causes a parallelization bug; we need to 
+c     (perhaps) have a separate function for the stability
+c     conditions for all four (momentum + energy) mm equations.
+c     Seshadri Kumar, July 25, 2003
+c
 c            kstabu(i,j,k) = kstabu(i,j,k) + 
 c     $           ((csmag*yp)**2*
 c     $           abs((up_fcy(ii,jj,kk) - ug_cc(i,j,k))/yp)+
