@@ -53,13 +53,6 @@ PACKAGE_PATH := @PACKAGE_PATH@
 BUILD_PARALLEL := @BUILD_PARALLEL@
 ifeq ($(BUILD_PARALLEL),yes)
 COMPONENT_DIRS := tools/sidl Component
-%_sidl.o: %_sidl.cc %_sidl.h
-
-%_sidl.cc: %.sidl $(SIDL_EXE)
-	$(SIDL_EXE) -o $@ $<
-
-%_sidl.h: %.sidl $(SIDL_EXE)
-	$(SIDL_EXE) -h -o $@ $<
 endif
 
 # These cannot be :=
@@ -221,6 +214,17 @@ $(LIBDIR):
 $(ALLOBJS): $(ALLGEN)
 
 #
+# This rule must be after the includes, so that it will find $(SIDL_EXE)
+#
+%_sidl.o: %_sidl.cc %_sidl.h
+
+%_sidl.cc: %.sidl $(SIDL_EXE)
+	$(SIDL_EXE) -o $@ $<
+
+%_sidl.h: %.sidl $(SIDL_EXE)
+	$(SIDL_EXE) -h -o $@ $<
+
+#
 # The sophsticated looking $(...) mess below is just to convert a
 # subdirectory of the form a/b/c into ../../..
 #
@@ -277,6 +281,10 @@ endif
 
 #
 # $Log$
+# Revision 1.19  2000/03/23 10:54:26  sparker
+# Moved sidl pattern rule to after the recursive include - so that
+#  $(SIDL_EXE) will be defined
+#
 # Revision 1.18  2000/03/23 10:33:09  sparker
 # Configure new exception facility (using libexc on SGI)
 #
