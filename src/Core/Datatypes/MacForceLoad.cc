@@ -35,6 +35,7 @@
 
 #include <Core/Datatypes/PointCloudField.h>
 #include <Core/Datatypes/TriSurfField.h>
+#include <Core/Datatypes/StructQuadSurfField.h>
 #include <Core/Datatypes/TriSurfMesh.h>
 #include <Core/Datatypes/StructHexVolField.h>
 
@@ -53,6 +54,8 @@ macForceLoad()
 
   PointCloudField<double> pcfd;
   TriSurfField<double> tsfd;
+  StructQuadSurfField<double> sqsfd;
   TriSurfMesh tsmd;
   StructHexVolField<double> shvfd;
+
 }
