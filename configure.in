@@ -16,7 +16,7 @@ AC_ARG_ENABLE(scirun,
 AC_ARG_ENABLE(uintah,
 	[  --enable-uintah		Build the Uintah modules],
 	[uintah="$enableval"],
-	[uintah=${uintah='no'}])
+	[uintah=${uintah='yes'}])
 AC_ARG_ENABLE(davew,
 	[  --enable-davew		Build the Dave Weinstein modules],
 	[davew="$enableval"],

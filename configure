@@ -577,7 +577,7 @@ if test "${enable_uintah+set}" = set; then
   enableval="$enable_uintah"
   uintah="$enableval"
 else
-  uintah=${uintah='no'}
+  uintah=${uintah='yes'}
 fi
 
 # Check whether --enable-davew or --disable-davew was given.
