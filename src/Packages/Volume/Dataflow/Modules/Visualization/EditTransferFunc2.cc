@@ -260,10 +260,45 @@ EditTransferFunc2::tcl_command(GuiArgs& args, void* userdata)
 void
 EditTransferFunc2::presave()
 {
-  // TODO: Remove deleted variables from those GuiVar arrays in the
-  // presave function.  This would make the nets cleaner as extra
-  // variables can get written.
+  unsigned int i;
+
+  resize_gui();
   update_to_gui(false);
+
+  // Pickle up the tcl states.
+  for (i = 0; i < widgets_.size(); i++)
+  {
+    gui_wstate_[i]->set(widgets_[i]->tcl_pickle());
+  }
+
+  // Deleta all of the unused variables.
+  for (i = widgets_.size(); i < gui_name_.size(); i++)
+  {
+    const string num = to_string(i);
+    ctx->erase("name-" + num);
+    ctx->erase(num +"-color-r");
+    ctx->erase(num +"-color-g");
+    ctx->erase(num +"-color-b");
+    ctx->erase(num +"-color-a");
+    ctx->erase("state-" + num);
+
+    delete gui_name_[i];
+    delete gui_color_r_[i];
+    delete gui_color_g_[i];
+    delete gui_color_b_[i];
+    delete gui_color_a_[i];
+    delete gui_wstate_[i];
+  }
+  if (widgets_.size() < gui_name_.size())
+  {
+    const unsigned int ws = widgets_.size();
+    gui_name_.erase(gui_name_.begin() + ws, gui_name_.end());
+    gui_color_r_.erase(gui_color_r_.begin() + ws, gui_color_r_.end());
+    gui_color_g_.erase(gui_color_g_.begin() + ws, gui_color_g_.end());
+    gui_color_b_.erase(gui_color_b_.begin() + ws, gui_color_b_.end());
+    gui_color_a_.erase(gui_color_a_.begin() + ws, gui_color_a_.end());
+    gui_wstate_.erase(gui_wstate_.begin() + ws, gui_wstate_.end());
+  }
 }
 
 
@@ -349,7 +384,6 @@ EditTransferFunc2::update_to_gui(bool forward)
     gui_color_g_[i]->set(c.g());
     gui_color_b_[i]->set(c.b());
     gui_color_a_[i]->set(widgets_[i]->alpha());
-    gui_wstate_[i]->set(widgets_[i]->tcl_pickle());
   }
   if (forward) { gui->execute(id + " create_entries"); }
 }
