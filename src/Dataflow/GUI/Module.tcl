@@ -618,7 +618,134 @@ itcl_class Module {
     method is_subnet {} {
 	return $isSubnetModule
     }
+
+    method compile_error { filename } {
+	set ccfile [netedit getenv SCIRUN_ON_THE_FLY_LIBS_DIR]/${filename}cc
+	if { ![file exists $ccfile] || ![file readable $ccfile] } return
 	
+       	set w .text[modname]
+	# create the window
+	if { [winfo exists $w] } {
+	    destroy $w
+	}
+	toplevel $w
+	wm title $w "$name failed to compile"
+	
+	# create frame to display source code
+	frame $w.f1
+	text $w.f1.txt -relief sunken -wrap char \
+	    -bd 2 -yscrollcommand "$w.f1.sb set" \
+	    -font -*-fixed-*-*-*-*-*-120-*-*-*-*-*-1
+
+	scrollbar $w.f1.sb -relief sunken -command "$w.f1.txt yview"
+	pack $w.f1.sb -side right -padx 5 -pady 5 -fill y
+	pack $w.f1.txt -side left -padx 5 -pady 5 -expand 1 -fill both 
+
+	# create button to close dialog window
+	frame $w.fbuttons 
+	button $w.fbuttons.ok -text "Close" -command "destroy $w"
+	
+	pack $w.fbuttons.ok -side top -padx 5 -pady 5
+	pack $w.fbuttons -side bottom     
+	pack $w.f1 -side top -padx 5 -pady 2 -expand 1 -fill both
+			
+	# open the cc file and append its contents into the text widget
+	set cc [open $ccfile]
+	set i 0
+	while { ![eof $cc] } {
+	    set line [gets $cc]
+	    incr i
+	    set ln [format "%4d" $i]
+	    $w.f1.txt insert end "${ln}: $line\n"
+	    # tag line number region for later higlighting
+	    $w.f1.txt tag add linenum $i.0 $i.5
+	    
+	}
+	close $cc
+	# highlight the line numbers text in blue
+	$w.f1.txt tag configure linenum -foreground blue
+
+	# if no log file exists, we are done, so return
+	set logfile [netedit getenv SCIRUN_ON_THE_FLY_LIBS_DIR]/${filename}log
+	if { ![file exists $logfile] || ![file readable $logfile] } return
+
+	# Create extra widgets to display error messages for each line
+	frame $w.f2
+	label $w.f2.label -anchor w \
+	    -text "Mouse over highligted line for compiler message:"
+	text $w.f2.txt -relief sunken -wrap char -height 6 \
+	    -bd 2 -yscrollcommand "$w.f2.sb set" \
+	    -font -*-fixed-*-*-*-*-*-120-*-*-*-*-*-1		
+	scrollbar $w.f2.sb -relief sunken -command "$w.f2.txt yview"
+	pack $w.f2.label -side top -padx 0 -pady 0 -expand 1 -fill x
+	pack $w.f2.sb -side right -padx 5 -fill y
+	pack $w.f2.txt -side left -padx 5 -pady 0 -expand 1 -fill both 
+	pack $w.f2 -side top -padx 5 -pady 2 -expand 1 -fill both
+
+	# iterate over the log file
+	set log [open $logfile]
+	while { ![eof $log] } {
+	    set line [gets $log]
+	    set line [split $line :]
+	    set num [lindex $line 1]
+	    # if the log file has a line number in it that refers
+	    # to this file, then highlight that line
+	    if { ([string first $filename [lindex $line 0]] == 0) && \
+		     [string is integer $num] } {
+		# Tag as warning if message starts with ' warning'
+		if { [string first " warning" [lindex $line 2]] == 0} {
+		    $w.f1.txt tag add warnlines $num.6 $num.end
+		} else { ; # otherwise, assume its an error
+		    $w.f1.txt tag add errorlines $num.6 $num.end
+		}
+		# Tag the source display's line as being an error
+		# used to bind mouse events when user mouses-over line
+		$w.f1.txt tag add error$num $num.6 $num.end
+		
+		# if this isn't the first error for this line, append new-line
+		if { [info exists errortext($num)] } {
+		    append errortext($num) "\n"
+		}
+		# append the first line of the error message to our cache
+		append errortext($num) "[join [lrange $line 2 end] ":"]\n"
+		set done 0
+		while {!$done} {
+		    # this line may not be an error message, but we
+		    # dont know until its read, save our position first
+		    set lastpos [tell $log]
+		    # get the line
+		    set line [gets $log]
+		    # if the line is indented, assume its part of the error msg
+		    if { [string first "   " $line] == 0 } {
+			append errortext($num) "$line\n"
+		    } else { ;# else assume its not, and undo the last read
+			set done 1
+			seek $log $lastpos ; # jumps to position before read
+		    }
+		}
+
+		# bind mouse-over event to display error text in bottom textbox
+		$w.f1.txt tag bind error$num <Enter> \
+			 "$w.f2.label configure -text \"Compiler message for line $num:\"
+                          $w.f2.txt delete 0.0 end       
+                          $w.f2.txt insert end \"$errortext($num)\""
+
+
+	    }
+	}
+	close $log
+	# highlight the source code error lines in light red background
+	$w.f1.txt tag configure errorlines -background "\#FF4444"
+	# highlight the source code warning lines in light yellow background
+	$w.f1.txt tag configure warnlines -background yellow3
+	# Make the mouse cursor change when over highlighed source code
+	foreach tag {errorlines warnlines} {
+	    $w.f1.txt tag bind $tag <Enter> \
+		"$w.f1.txt configure -cursor question_arrow"
+	    $w.f1.txt tag bind $tag <Leave> \
+		"$w.f1.txt configure -cursor xterm"
+	}
+    }
 }   
 
 proc fadeinIcon { modid { seconds 0.333 } { center 0 }} {
@@ -1783,7 +1910,7 @@ proc disabledTrace { ArrayName Index mode } {
     if ![string length $Index] return
     networkHasChanged
     global Subnet Disabled Notes Color    
-    if [info exists Subnet($Index)] {
+    if { [info exists Subnet($Index)] } {
 	return
     } else {
 	if { [info exists Disabled($Index)] && $Disabled($Index) } {
@@ -1793,7 +1920,17 @@ proc disabledTrace { ArrayName Index mode } {
 	}
 	set conn [parseConnectionID $Index]
 	if [string equal w $mode] {
-	    drawConnections [list $conn]	
+	    if { !$Disabled($Index) } {
+		foreach rconn [findRealConnections $conn] {
+		    eval netedit addconnection $rconn
+		}
+	    } else {
+		foreach conn [findRealConnections $conn] {
+		    netedit deleteconnection [makeConnID $conn] 1
+		}
+	    }
+
+	    drawConnections [list $conn]
 	    $Subnet(Subnet$Subnet([oMod conn])_canvas) raise $Index
 	    checkForDisabledModules [oMod conn] [iMod conn]
 	}
