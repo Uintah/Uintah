@@ -13,13 +13,13 @@ p {margin-left:100px; margin-right:80px; font-family:"arial", "helvetica", "sans
 
 .head {background-color:#6699FF; color:#000000; margin:0px; border:none; font-size:large; text-indent:80px; margin-bottom:30px; font-family:"arial", "helvetica", "sans-serif"}
 
-.subhead {background-color:#99CCFF; margin:0px; border:none; font-size:1.15em; text-indent:80px; margin-bottom:30px; font-family:"arial", "helvetica", "sans-serif"}
+.subhead {background-color:#99CCFF; margin:0px; border:none; font-size:1.15em; text-indent:80px; margin-bottom:10px; font-family:"arial", "helvetica", "sans-serif"}
 
-.subsubhead {background-color:#BBBBBB; margin:0px; border:none;  font-weight:bold; text-indent:80px; margin-bottom:30px; font-family:"arial", "helvetica", "sans-serif"}
+.subsubhead {background-color:#BBBBBB; margin:0px; border:none;  font-weight:bold; text-indent:80px; margin-bottom:10px; font-family:"arial", "helvetica", "sans-serif"}
 
-.firstpara {margin-left:50px; margin-right:30px; text-align:left; font-family:"arial", "helvetica", "sans-serif"}
+.firstpara {margin-left:20px; margin-right:10px; text-align:left; font-family:"arial", "helvetica", "sans-serif"}
 
-.nextpara {margin-left:50px; margin-right:30px; text-align:left; text-indent:2em;  font-family:"arial", "helvetica", "sans-serif"}
+.nextpara {margin-left:20px; margin-right:10px; text-align:left; text-indent:2em;  font-family:"arial", "helvetica", "sans-serif"}
 
 .example {margin-left:100px; white-space:pre; font-family:monospace}
 
