@@ -50,7 +50,7 @@ using namespace std;
 
 void HDF5Dump_tab( ostream *iostr );
 
-herr_t HDF5Dump_file(const char *fname, ostream *iostr);
+herr_t HDF5Dump_file(const std::string fname, ostream *iostr);
 herr_t HDF5Dump_attr(hid_t group_id, const char *name, void *op_data);
 herr_t HDF5Dump_all(hid_t obj_id, const char *name, void *op_data);
 herr_t HDF5Dump_group(hid_t group_id, const char *name, ostream *iostr );
@@ -58,6 +58,7 @@ herr_t HDF5Dump_dataset(hid_t dataset_id, const char *name, ostream *iostr);
 herr_t HDF5Dump_datatype(hid_t obj_id, hid_t type, ostream *iostr);
 herr_t HDF5Dump_dataspace(hid_t file_space_id, ostream *iostr);
 herr_t HDF5Dump_data(hid_t obj_id, hid_t type, ostream *iostr);
+std::string HDF5Dump_error();
 
 }
 
