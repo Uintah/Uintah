@@ -76,6 +76,7 @@ MP(TensorFieldReader)
 
 // Tensor
 MP(Bundles)
+MP(Flood)
 MP(TensorAccessFields)
 MP(TensorAnisotropy)
 
@@ -163,6 +164,7 @@ void initPackage(const clString& tcl) {
 
   // Tensor
   RM("Tensor",	      "Bundles",	 	 make_Bundles,   	    tcl+"/Bundles.tcl");
+  RM("Tensor",	      "Flood",	 	 	make_Flood,   	    	    tcl+"/Flood.tcl");
   RM("Tensor",	      "TensorAccessFields",	 make_TensorAccessFields,   "");
   RM("Tensor",	      "TensorAnisotropy",	 make_TensorAnisotropy,	    "");
 
