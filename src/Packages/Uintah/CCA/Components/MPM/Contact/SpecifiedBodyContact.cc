@@ -22,6 +22,7 @@
 #include <vector>
 #include <iostream>
 #include <fstream>
+#include <limits>
 #include <sgi_stl_warnings_on.h>
 using std::cerr;
 
@@ -30,40 +31,45 @@ using namespace Uintah;
 using namespace SCIRun;
 
 SpecifiedBodyContact::SpecifiedBodyContact(ProblemSpecP& ps,SimulationStateP& d_sS, 
-				   MPMLabel* Mlb, MPMFlags* MFlag)
+                                           MPMLabel* Mlb, MPMFlags* MFlag)
 {
   // Constructor
   // read a list of values from a file
   std::string fname;
-  ps->require("filename", fname);
+  ps->get("filename", fname);
   
-  IntVector defaultDir(1,1,1);
-  ps->getWithDefault("direction",d_direction, defaultDir);
- 
-  std::ifstream is(fname.c_str());
-  if (!is ){
-    throw ProblemSetupException("ERROR: opening MPM rigid motion file '"+fname+"'\nFailed to find profile file");
+  ps->require("direction",d_direction);
+  ps->getWithDefault("material", d_material, 0);
+  
+  if(fname!="") {
+    std::ifstream is(fname.c_str());
+    if (!is ){
+      throw ProblemSetupException("ERROR: opening MPM rigid motion file '"+fname+"'\nFailed to find profile file");
+    }
+    double t0(-1.e9);
+    while(is)
+      {
+        double t1;
+        double vx, vy, vz;
+        is >> t1 >> vx >> vy >> vz;
+        if(is)
+          {
+            if(t1<=t0)
+              throw ProblemSetupException("ERROR: profile file is not monotomically increasing");
+            d_vel_profile.push_back( std::pair<double,Vector>(t1,Vector(vx,vy,vz)) );
+          }
+        t0 = t1;
+      }
+    if(d_vel_profile.size()<2)
+      {
+        throw ProblemSetupException("ERROR: Failed to generate valid velocity profile");
+      }
   }
-  double t0(-100);
-  while(is)
-    {
-      double t1;
-      double vx, vy, vz;
-      is >> t1 >> vx >> vy >> vz;
-      if(is)
-        {
-          if(t1<=t0)
-            throw ProblemSetupException("ERROR: profile file is not monotomically increasing");
-          d_vel_profile.push_back( std::pair<double,Vector>(t1,Vector(vx,vy,vz)) );
-        }
-      t0 = t1;
-    }
-  if(d_vel_profile.size()<2)
-    {
-      throw ProblemSetupException("ERROR: Failed to generate value velocity profile");
-    }
-
-
+  
+  // disable all changes after this time
+  ps->getWithDefault("stop_time",d_stop_time, std::numeric_limits<double>::max());
+  ps->getWithDefault("velocity_after_stop",d_vel_after_stop, Vector(0,0,0));
+  
   d_sharedState = d_sS;
   lb = Mlb;
   flag = MFlag;
@@ -71,12 +77,11 @@ SpecifiedBodyContact::SpecifiedBodyContact(ProblemSpecP& ps,SimulationStateP& d_
 
 SpecifiedBodyContact::~SpecifiedBodyContact()
 {
-  // Destructor
-
 }
 
+// find velocity from table of values
 Vector
-SpecifiedBodyContact::findVel(double t) const
+SpecifiedBodyContact::findVelFromProfile(double t) const
 {
   int smin = 0;
   int smax = d_vel_profile.size()-1;
@@ -92,7 +97,10 @@ SpecifiedBodyContact::findVel(double t) const
     }
   else
     {
-
+      // bisection search on table
+      // could probably speed this up by keeping copy of last successful
+      // search, and looking at that point and a couple to the right
+      //
       while (smax>smin+1)
         {
           int smid = (smin+smax)/2;
@@ -110,46 +118,83 @@ SpecifiedBodyContact::findVel(double t) const
     }
 }
 
-
-
+// apply boundary conditions to interpolated velocity v^k
 void SpecifiedBodyContact::exMomInterpolated(const ProcessorGroup*,
-					 const PatchSubset* patches,
-					 const MaterialSubset* matls,
-					 DataWarehouse*,
-					 DataWarehouse* new_dw)
+                                             const PatchSubset* patches,
+                                             const MaterialSubset* matls,
+                                             DataWarehouse* old_dw,
+                                             DataWarehouse* new_dw)
 {
   int numMatls = d_sharedState->getNumMPMMatls();
   ASSERTEQ(numMatls, matls->size());
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
 
+    delt_vartype delT;
+    old_dw->get(delT, lb->delTLabel, getLevel(patches));
+
     // Retrieve necessary data from DataWarehouse
     StaticArray<constNCVariable<double> > gmass(numMatls);
-    StaticArray<NCVariable<Vector> > gvelocity(numMatls);
+    StaticArray<     NCVariable<Vector> > gvelocity(numMatls);
+    StaticArray<     NCVariable<double> > frictionWork(numMatls);
+    
     for(int m=0;m<matls->size();m++){
       int dwi = matls->get(m);
-      new_dw->get(gmass[m],    lb->gMassLabel,     dwi, patch,Ghost::None,0);
-      new_dw->getModifiable(gvelocity[m],lb->gVelocityLabel, dwi, patch);
+      new_dw->get(gmass[m],           lb->gMassLabel,     dwi, patch,Ghost::None,0);
+      new_dw->getModifiable(gvelocity[m],lb->gVelocityLabel,     dwi, patch);
+      if (flag->d_fracture)
+        new_dw->getModifiable(frictionWork[m],lb->frictionalWorkLabel,dwi,patch);
+      else {
+        new_dw->allocateAndPut(frictionWork[m], lb->frictionalWorkLabel,dwi,
+                               patch);
+        frictionWork[m].initialize(0.);
+      }
     }
-    double tcurr = d_sharedState->getElapsedTime();
-    Vector new_velocity = findVel(tcurr);
-
-    // set velocity to profile vel
+    const double tcurr = d_sharedState->getElapsedTime();
+    
+    // three ways to get velocity 
+    //   if > stop time, always use stop velocity
+    //   if we have a specified profile, use value from the velocity profile
+    //   otherwise, apply rigid velocity to all cells that share a rigid body.
+    //
+    
+    bool  rigid_velocity = true;
+    Vector requested_velocity;
+    if(tcurr>d_stop_time) {
+      requested_velocity = d_vel_after_stop;
+      rigid_velocity = false;
+    } else if(d_vel_profile.size()>0) {
+      requested_velocity = findVelFromProfile(tcurr);
+      rigid_velocity  = false;
+    }
+    
+    // Set each field's velocity equal to the requested velocity
     for(NodeIterator iter = patch->getNodeIterator(); !iter.done(); iter++){
       IntVector c = *iter; 
       
-      if(!compare(gmass[0][c],0.0)){ // only update if shares cell with rigid body
-        for(int n = 1; n < numMatls; n++){ // dont update rigid body here
-          // set each velocity component that is being modified to new velocity
-          if(d_direction[0]) gvelocity[n][c].x( new_velocity.x() );
-          if(d_direction[1]) gvelocity[n][c].y( new_velocity.y() );
-          if(d_direction[2]) gvelocity[n][c].z( new_velocity.z() );
+      if(!compare(gmass[d_material][c],0.0)){ // only update if shares cell with rigid body d_material
+        for(int n = 0; n < numMatls; n++){ // update rigid body here
+          Vector rigid_vel = requested_velocity;
+          if(rigid_velocity) {
+            rigid_vel = gvelocity[d_material][c];
+            if(n==d_material) break; // compatibility with old mode, where rigid velocity doesnt change material 0
+          }
+          
+          // set each velocity component being modified to a new velocity
+          Vector new_vel( gvelocity[n][c] );
+          if(d_direction[0]) new_vel.x( rigid_vel.x() );
+          if(d_direction[1]) new_vel.y( rigid_vel.y() );
+          if(d_direction[2]) new_vel.z( rigid_vel.z() );
+          
+          // this is the updated velocity
+          gvelocity[n][c] = new_vel;
         }
       }
     }
   }
 }
 
+// apply boundary conditions to the interpolated velocity v^k+1
 void SpecifiedBodyContact::exMomIntegrated(const ProcessorGroup*,
 				       const PatchSubset* patches,
 				       const MaterialSubset* matls,
@@ -162,15 +207,17 @@ void SpecifiedBodyContact::exMomIntegrated(const ProcessorGroup*,
 
     // Retrieve necessary data from DataWarehouse
     StaticArray<constNCVariable<double> > gmass(numMatls);
-    StaticArray<NCVariable<Vector> > gvelocity_star(numMatls);
-    StaticArray<NCVariable<Vector> > gacceleration(numMatls);
-    StaticArray<NCVariable<double> > frictionWork(numMatls);
+    StaticArray<NCVariable<Vector> >      gvelocity_star(numMatls);
+    StaticArray<constNCVariable<Vector> > gvelocity(numMatls);
+    StaticArray<NCVariable<Vector> >      gacceleration(numMatls);
+    StaticArray<NCVariable<double> >      frictionWork(numMatls);
 
     for(int m=0;m<matls->size();m++){
      int dwi = matls->get(m);
      new_dw->get(gmass[m], lb->gMassLabel,dwi ,patch, Ghost::None, 0);
-     new_dw->getModifiable(gvelocity_star[m],lb->gVelocityStarLabel, dwi,patch);
-     new_dw->getModifiable(gacceleration[m], lb->gAccelerationLabel, dwi,patch);
+     new_dw->get(gvelocity[m],lb->gVelocityInterpLabel, dwi,patch, Ghost::None,0); // -> v^k
+     new_dw->getModifiable(gvelocity_star[m],  lb->gVelocityStarLabel,   dwi,patch); // -> v*^k+1
+     new_dw->getModifiable(gacceleration[m],   lb->gAccelerationLabel,   dwi,patch); // -> a*^k+1/2
      if (flag->d_fracture)
        new_dw->getModifiable(frictionWork[m],lb->frictionalWorkLabel,dwi,
 			     patch);
@@ -183,23 +230,39 @@ void SpecifiedBodyContact::exMomIntegrated(const ProcessorGroup*,
     
     delt_vartype delT;
     old_dw->get(delT, lb->delTLabel, getLevel(patches));
-
-    // set velocity to profile vel
-    const double tcurr = d_sharedState->getElapsedTime();
-    Vector new_velocity = findVel(tcurr);
+    
+    // set velocity to appropriate vel
+    const double tcurr = d_sharedState->getElapsedTime(); // FIXME: + dt ?
+    
+    bool  rigid_velocity = true;
+    Vector requested_velocity;
+    if(tcurr>d_stop_time) {
+      rigid_velocity = false;
+      requested_velocity = d_vel_after_stop;
+    } else if(d_vel_profile.size()>0) {
+      rigid_velocity = false;
+      requested_velocity = findVelFromProfile(tcurr);
+    }
     
     for(NodeIterator iter = patch->getNodeIterator(); !iter.done(); iter++){
       IntVector c = *iter; 
       
-      if(!compare(gmass[0][c],0.0)){  // rigid matl is always index 0
+      if(!compare(gmass[d_material][c],0.0)){
         
-        for(int  n = 0; n < numMatls; n++){ // update material 0 to new velocity also.
+        for(int  n = 0; n < numMatls; n++){ // also updates material d_material to new velocity.
+          Vector rigid_vel = requested_velocity;
+          if(rigid_velocity) {
+            rigid_vel = gvelocity_star[d_material][c];
+            if(n==d_material) break; // compatibility with rigid motion, doesnt affect matl 0
+          }
+          
           Vector new_vel( gvelocity_star[n][c] );
-          if(d_direction[0]) new_vel.x( new_velocity.x() );
-          if(d_direction[1]) new_vel.y( new_velocity.y() );
-          if(d_direction[2]) new_vel.z( new_velocity.z() );
-          gacceleration[n][c]   += (new_vel - gvelocity_star[n][c])/delT;
-          gvelocity_star[n][c]   = new_vel;
+          if(d_direction[0]) new_vel.x( rigid_vel.x() );
+          if(d_direction[1]) new_vel.y( rigid_vel.y() );
+          if(d_direction[2]) new_vel.z( rigid_vel.z() );
+          
+          gvelocity_star[n][c] =  new_vel;
+          gacceleration[n][c]  = (gvelocity_star[n][c]  - gvelocity[n][c])/delT;
         }
       }
     }
@@ -212,8 +275,7 @@ void SpecifiedBodyContact::addComputesAndRequiresInterpolated( Task* t,
 {
   const MaterialSubset* mss = ms->getUnion();
   t->requires(Task::NewDW, lb->gMassLabel,          Ghost::None);
-
-  t->modifies(             lb->gVelocityLabel, mss);
+  t->modifies(             lb->gVelocityLabel,       mss);
 }
 
 void SpecifiedBodyContact::addComputesAndRequiresIntegrated( Task* t,
@@ -222,13 +284,14 @@ void SpecifiedBodyContact::addComputesAndRequiresIntegrated( Task* t,
 {
   const MaterialSubset* mss = ms->getUnion();
   t->requires(Task::OldDW, lb->delTLabel);    
-  t->requires(Task::NewDW, lb->gMassLabel,              Ghost::None);
-  t->modifies(             lb->gVelocityStarLabel, mss);
-  t->modifies(             lb->gAccelerationLabel, mss);
+  t->requires(Task::NewDW, lb->gMassLabel, Ghost::None);
+  t->requires(Task::NewDW, lb->gVelocityInterpLabel, Ghost::None);
+  t->modifies(             lb->gVelocityStarLabel,   mss);
+  t->modifies(             lb->gAccelerationLabel,   mss);
   if (flag->d_fracture)
-    t->modifies(             lb->frictionalWorkLabel, mss);
+    t->modifies(           lb->frictionalWorkLabel,  mss);
   else
-    t->computes(             lb->frictionalWorkLabel);
+    t->computes(           lb->frictionalWorkLabel);
 }
 
 
