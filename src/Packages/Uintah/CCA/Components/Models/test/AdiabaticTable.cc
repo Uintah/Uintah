@@ -134,7 +134,7 @@ if (!oldStyleAdvect.active()){
   d_cv_index            = table->addDependentVariable("heat_capac_Cv");
   d_viscosity_index     = table->addDependentVariable("viscosity");
   d_thermalcond_index   = table->addDependentVariable("thermal_conductivity");
-  d_ref_cv_index    = table->addDependentVariable("reference_heat_capacity_Cv");
+  d_ref_cv_index    = table->addDependentVariable("reference_heat_capac_Cv");
   d_ref_gamma_index = table->addDependentVariable("reference_gamma");
   d_ref_temp_index  = table->addDependentVariable("reference_Temp");
   table->setup();
