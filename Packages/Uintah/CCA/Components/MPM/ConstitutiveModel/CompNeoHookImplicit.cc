@@ -202,7 +202,6 @@ CompNeoHookImplicit::computeStressTensor(const PatchSubset* patches,
       for(ParticleSubset::iterator iter = pset->begin();
                                    iter != pset->end(); iter++){
         particleIndex idx = *iter;
-
         dispGrad.set(0.0);
         // Get the node indices that surround the cell
         IntVector ni[8];
@@ -375,7 +374,7 @@ CompNeoHookImplicit::computeStressTensor(const PatchSubset* patches,
 	    solver->fillMatrix(dofi,dofj,v);
 	  }
 	}
-     }
+      }
     }
   }
   solver->flushMatrix();
