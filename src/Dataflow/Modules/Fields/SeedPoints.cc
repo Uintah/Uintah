@@ -312,6 +312,10 @@ SeedPoints::execute()
 
 	  
 	  MaterialHandle redMatl = new Material(Color(red_.get(), green_.get(), blue_.get()));
+	  redMatl->specular.r(0.2);
+	  redMatl->specular.g(0.2);
+	  redMatl->specular.b(0.2);
+
 	  MaterialHandle greyMatl = new Material(Color(0.5, 0.5, 0.5));
 	  seed->SetMaterial(1,redMatl);
 	  seed->SetDefaultMaterial(5,greyMatl);
