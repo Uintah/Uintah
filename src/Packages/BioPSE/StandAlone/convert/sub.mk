@@ -26,7 +26,7 @@ PSELIBS := Core
 else
 PSELIBS := Core/Datatypes Core/Containers Core/Persistent Core/Exceptions Core/Thread Core/Geometry Core/Disclosure
 endif
-LIBS := -lm
+LIBS := $(XML_LIBRARY) -lm
 
 PROGRAM := $(SRCDIR)/ContinuityToTetVolDouble
 SRCS := $(SRCDIR)/ContinuityToTetVolDouble.cc
