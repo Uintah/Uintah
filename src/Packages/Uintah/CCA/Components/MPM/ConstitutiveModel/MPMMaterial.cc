@@ -26,10 +26,10 @@
 #include <Packages/Uintah/CCA/Components/MPM/PhysicalBC/CrackBC.h>
 #include <Packages/Uintah/CCA/Components/ICE/EOS/EquationOfState.h>
 #include <Packages/Uintah/CCA/Components/ICE/EOS/EquationOfStateFactory.h>
-#include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/ImplicitParticleCreator.h>
-#include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/DefaultParticleCreator.h>
-#include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/MembraneParticleCreator.h>
-#include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/FractureParticleCreator.h>
+#include <Packages/Uintah/CCA/Components/MPM/ParticleCreator/ImplicitParticleCreator.h>
+#include <Packages/Uintah/CCA/Components/MPM/ParticleCreator/DefaultParticleCreator.h>
+#include <Packages/Uintah/CCA/Components/MPM/ParticleCreator/MembraneParticleCreator.h>
+#include <Packages/Uintah/CCA/Components/MPM/ParticleCreator/FractureParticleCreator.h>
 #include <Core/Util/NotFinished.h>
 #include <iostream>
 
