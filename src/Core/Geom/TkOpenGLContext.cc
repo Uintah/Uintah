@@ -58,7 +58,6 @@ using namespace std;
 extern "C" Tcl_Interp* the_interp;
 
 static GLXContext first_context = NULL;
-static set<GLXContext> contexts;
 vector<int> TkOpenGLContext::valid_visuals_ = vector<int>();
 
 TkOpenGLContext::TkOpenGLContext(const string &id, int visualid, 
@@ -82,6 +81,11 @@ TkOpenGLContext::TkOpenGLContext(const string &id, int visualid,
 
   if (valid_visuals_.empty())
     listvisuals();
+  if (visualid < 0 || visualid >= (int)valid_visuals_.size())
+  {
+    cerr << "Bad visual id, does not exist.\n";
+    visualid = 0;
+  }
   visualid_ = valid_visuals_[visualid];
 
   if (visualid_) {
