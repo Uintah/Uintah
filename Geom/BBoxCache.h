@@ -1,6 +1,7 @@
 #ifndef SCI_Geom_BBoxCache_h 
 #define SCI_Geom_BBoxCache_h 1
 #include <Geom/Geom.h>
+#include <Classlib/String.h>
 #include <Geometry/BBox.h>
 #include <Geometry/BSphere.h>
 
