@@ -113,7 +113,7 @@ AC_DEFUN([SCI_TRY_LINK], [
 ## arg 5 : list of libs to link against
 ##           If the libraries do not have a '-l' on them, it is appeneded.
 ##           If the arg has any prefix besides '-l' (eg: -L or -D), then the arg
-##           is removed completely.
+##           is removed completely.  (-framework is also allowed for Mac support.)
 ##           All the libs specified in arg 5 will be part of the <VAR>_LIB_FLAG
 ##           if the link is successful.
 ## arg 6 : lib paths
@@ -221,7 +221,8 @@ if test -n "$5"; then
       has_minus=`echo $lib | sed 's/-.*//'`
       if test -z "$has_minus"; then
          has_minus_l=`echo $lib | sed 's/-l.*//'`
-         if test -n "$has_minus_l"; then
+         has_minus_framework=`echo $lib | sed 's/-framework.*//'`
+         if test -n "$has_minus_l" || test -n "$has_minus_framework"; then
             # Has some other -?.
             AC_MSG_WARN(Only -l options are allowed in arg 5 of $1 check (disregarding $lib).)
             continue
