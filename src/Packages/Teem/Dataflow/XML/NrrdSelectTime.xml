@@ -75,7 +75,7 @@ by the <modref package="SCIRun" name="ManageFieldData"/> module. </p>
     <inputs lastportdynamic="no"> 
       <port>
         <name>Time Axis nrrd</name>
-	<datatype>Teem::Nrrd</datatype>
+	<datatype>SCIRun::Nrrd</datatype>
       </port>
       <port>
         <name>Current Index</name>
@@ -85,7 +85,7 @@ by the <modref package="SCIRun" name="ManageFieldData"/> module. </p>
     <outputs>
       <port>
         <name>Time Slice</name>
-	<datatype>Teem::Nrrd</datatype>
+	<datatype>SCIRun::Nrrd</datatype>
       </port>
       <port>
         <name>Selected Index</name>

@@ -50,7 +50,7 @@
 #include <Core/Malloc/Allocator.h>
 #include <Core/Datatypes/Field.h>
 #include <Dataflow/Ports/FieldPort.h>
-#include <Packages/Teem/Dataflow/Ports/NrrdPort.h>
+#include <Dataflow/Ports/NrrdPort.h>
 #include <Core/Datatypes/DenseMatrix.h>
 #include <Core/Datatypes/SparseRowMatrix.h>
 #include <Core/Datatypes/Matrix.h>

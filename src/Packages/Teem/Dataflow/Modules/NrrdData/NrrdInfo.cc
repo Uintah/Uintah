@@ -33,7 +33,7 @@
 #include <Dataflow/Network/Module.h>
 #include <Dataflow/share/share.h>
 
-#include <Teem/Dataflow/Ports/NrrdPort.h>
+#include <Dataflow/Ports/NrrdPort.h>
 
 #include <Core/Containers/StringUtil.h>
 #include <iostream>

@@ -52,7 +52,7 @@ as any other nrrd independently from the NrrdData (.nd) file.</p>
     <inputs lastportdynamic="no">
       <port>
         <name>Input Data</name>
-	<datatype>Teem::Nrrd</datatype>
+	<datatype>SCIRun::Nrrd</datatype>
       </port>
     </inputs>
     <outputs>

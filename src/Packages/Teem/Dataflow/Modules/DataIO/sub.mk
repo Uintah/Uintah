@@ -58,12 +58,11 @@ SRCS     += \
 	$(SRCDIR)/MatrixToNrrd.cc\
 #[INSERT NEW CODE FILE HERE]
 
-PSELIBS := Packages/Teem/Dataflow/Ports \
-	Dataflow/Network Dataflow/Ports \
-        Core/Datatypes Core/Persistent Core/Containers \
+PSELIBS := Core/Datatypes Core/Persistent Core/Containers \
 	Core/Util Core/Exceptions Core/Thread Core/GuiInterface \
         Core/Geom Core/Geometry Core/GeomInterface \
         Core/TkExtensions Core/Algorithms/DataIO \
+	Dataflow/Network Dataflow/Ports \
 
 LIBS := $(TEEM_LIBRARY) $(PNG_LIBRARY) $(Z_LIBRARY) $(MAGICK_LIBRARY)
 

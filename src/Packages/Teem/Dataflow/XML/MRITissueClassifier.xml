@@ -47,29 +47,29 @@
     <inputs lastportdynamic="no"> 
       <port>
         <name>T1</name>
-	<datatype>Teem::Nrrd</datatype>
+	<datatype>SCIRun::Nrrd</datatype>
       </port>
 
       <port>
         <name>T2</name>
-	<datatype>Teem::Nrrd</datatype>
+	<datatype>SCIRun::Nrrd</datatype>
       </port>
 
       <port>
         <name>PD</name>
-	<datatype>Teem::Nrrd</datatype>
+	<datatype>SCIRun::Nrrd</datatype>
       </port>
 
       <port>
         <name>FATSAT</name>
-	<datatype>Teem::Nrrd</datatype>
+	<datatype>SCIRun::Nrrd</datatype>
       </port>
 
     </inputs>
     <outputs>
       <port>
         <name>Tissue</name>
-	<datatype>Teem::Nrrd</datatype>
+	<datatype>SCIRun::Nrrd</datatype>
       </port>
     </outputs>
   </io>

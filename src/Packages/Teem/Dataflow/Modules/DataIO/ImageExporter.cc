@@ -40,7 +40,7 @@
  */
 
 #include <Dataflow/Network/Module.h>
-#include <Teem/Dataflow/Ports/NrrdPort.h>
+#include <Dataflow/Ports/NrrdPort.h>
 #include <Core/GuiInterface/GuiVar.h>
 
 #ifdef HAVE_MAGICK
@@ -50,7 +50,6 @@ namespace C_Magick {
 #endif
 
 using namespace SCIRun;
-using namespace SCITeem;
 
 
 class ImageExporter : public Module {

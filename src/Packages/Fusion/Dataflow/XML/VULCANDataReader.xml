@@ -44,39 +44,39 @@
     <outputs>
       <port>
 	<name>Grid Points</name>
-	<datatype>Teem::Nrrd</datatype>
+	<datatype>SCIRun::Nrrd</datatype>
       </port>
       <port>
 	<name>Grid Vector</name>
-	<datatype>Teem::Nrrd</datatype>
+	<datatype>SCIRun::Nrrd</datatype>
       </port>
       <port>
 	<name>Cell Connections</name>
-	<datatype>Teem::Nrrd</datatype>
+	<datatype>SCIRun::Nrrd</datatype>
       </port>
       <port>
 	<name>Cell Density</name>
-	<datatype>Teem::Nrrd</datatype>
+	<datatype>SCIRun::Nrrd</datatype>
       </port>
       <port>
 	<name>Cell Temperature</name>
-	<datatype>Teem::Nrrd</datatype>
+	<datatype>SCIRun::Nrrd</datatype>
       </port>
       <port>
 	<name>Cell Pressure</name>
-	<datatype>Teem::Nrrd</datatype>
+	<datatype>SCIRun::Nrrd</datatype>
       </port>
       <port>
 	<name>Cell Ye Fraction</name>
-	<datatype>Teem::Nrrd</datatype>
+	<datatype>SCIRun::Nrrd</datatype>
       </port>
       <port>
 	<name>Cell Entropy</name>
-	<datatype>Teem::Nrrd</datatype>
+	<datatype>SCIRun::Nrrd</datatype>
       </port>
       <port>
 	<name>Cell Angular Velocity</name>
-	<datatype>Teem::Nrrd</datatype>
+	<datatype>SCIRun::Nrrd</datatype>
       </port>
       <port>
 	<name>Time Slice</name>

@@ -83,7 +83,7 @@ certain other SCIRun modules.
     <outputs>
       <port>
         <name>Nrrd</name>
-	<datatype>Teem::Nrrd</datatype>
+	<datatype>SCIRun::Nrrd</datatype>
       </port>
     </outputs>
   </io>

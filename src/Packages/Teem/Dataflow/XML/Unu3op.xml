@@ -69,21 +69,21 @@
     <inputs lastportdynamic="no">
       <port>
         <name>InputNrrd1</name>
-        <datatype>Teem::Nrrd</datatype>
+        <datatype>SCIRun::Nrrd</datatype>
       </port>
       <port>
         <name>InputNrrd2</name>
-        <datatype>Teem::Nrrd</datatype>
+        <datatype>SCIRun::Nrrd</datatype>
       </port>
       <port>
         <name>InputNrrd3</name>
-        <datatype>Teem::Nrrd</datatype>
+        <datatype>SCIRun::Nrrd</datatype>
       </port>
     </inputs>
     <outputs>
       <port>
         <name>OutputNrrd</name>
-        <datatype>Teem::Nrrd</datatype>
+        <datatype>SCIRun::Nrrd</datatype>
       </port>
     </outputs>
   </io>

@@ -40,7 +40,7 @@
  */
 
 #include <Dataflow/Network/Module.h>
-#include <Teem/Dataflow/Ports/NrrdPort.h>
+#include <Dataflow/Ports/NrrdPort.h>
 #include <Core/Containers/StringUtil.h>
 #include <Core/Containers/Handle.h>
 #include <Core/GuiInterface/GuiVar.h>

@@ -53,7 +53,7 @@
     <inputs lastportdynamic="no">
       <port>
         <name>Input Data</name>
-	<datatype>Teem::Nrrd</datatype>
+	<datatype>SCIRun::Nrrd</datatype>
       </port>
     </inputs>
     <outputs>

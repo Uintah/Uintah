@@ -41,7 +41,7 @@
  */
 
 #include <Dataflow/Network/Module.h>
-#include <Teem/Dataflow/Ports/NrrdPort.h>
+#include <Dataflow/Ports/NrrdPort.h>
 #include <Dataflow/Ports/FieldPort.h>
 #include <Core/Datatypes/LatVolField.h>
 #include <Core/Malloc/Allocator.h>

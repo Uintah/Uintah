@@ -59,13 +59,13 @@ is below the given threshold.</p>
     <inputs lastportdynamic="no">
       <port>
         <name>InputNrrd</name>
-        <datatype>Teem::Nrrd</datatype>
+        <datatype>SCIRun::Nrrd</datatype>
       </port>
     </inputs>
     <outputs>
       <port>
         <name>OutputNrrd</name>
-        <datatype>Teem::Nrrd</datatype>
+        <datatype>SCIRun::Nrrd</datatype>
       </port>
     </outputs>
   </io>

@@ -69,13 +69,13 @@
     <inputs lastportdynamic="no">
       <port>
 	<name>Input</name>
-	<datatype>Teem::Nrrd</datatype>
+	<datatype>SCIRun::Nrrd</datatype>
       </port>
     </inputs>
     <outputs>
       <port>
 	<name>Output</name>
-	<datatype>Teem::Nrrd</datatype>
+	<datatype>SCIRun::Nrrd</datatype>
       </port>
     </outputs>
   </io>

@@ -121,21 +121,21 @@
       </port>
 	  <port>
         <name>Nrrd1</name>
-		<datatype>Teem::Nrrd</datatype>
+		<datatype>SCIRun::Nrrd</datatype>
 		<description>
 		Nrrd input port 1
 		</description>			
       </port>
 	  <port>
         <name>Nrrd2</name>
-		<datatype>Teem::Nrrd</datatype>
+		<datatype>SCIRun::Nrrd</datatype>
 		<description>
 		Nrrd input port 2
 		</description>	
       </port>
 	  <port>
         <name>Nrrd3</name>
-		<datatype>Teem::Nrrd</datatype>
+		<datatype>SCIRun::Nrrd</datatype>
 		<description>
 		Nrrd input port 3
 		</description>	

@@ -32,7 +32,7 @@
 
 #include <Core/Datatypes/ColumnMatrix.h>
 #include <Dataflow/Ports/MatrixPort.h>
-#include <Teem/Dataflow/Ports/NrrdPort.h>
+#include <Dataflow/Ports/NrrdPort.h>
 #include <Core/GuiInterface/GuiVar.h>
 #include <iostream>
 #include <sstream>

@@ -53,7 +53,7 @@ displayed. </p>
     <inputs lastportdynamic="no">
       <port>
         <name>Query Nrrd</name>
-        <datatype>Teem::Nrrd</datatype>
+        <datatype>SCIRun::Nrrd</datatype>
 	<description>
           <p>
              The NrrdData that will be queried for attributes to

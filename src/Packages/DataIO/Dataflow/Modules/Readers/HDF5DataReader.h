@@ -40,7 +40,7 @@
 #include <Core/Util/TypeDescription.h>
 #include <Core/Util/DynamicLoader.h>
 
-#include <Packages/Teem/Dataflow/Ports/NrrdPort.h>
+#include <Dataflow/Ports/NrrdPort.h>
 
 #include <Dataflow/Ports/MatrixPort.h>
 

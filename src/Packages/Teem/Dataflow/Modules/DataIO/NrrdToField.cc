@@ -46,7 +46,7 @@
 #include <Core/GuiInterface/GuiVar.h>
 #include <Core/Malloc/Allocator.h>
 
-#include <Teem/Dataflow/Ports/NrrdPort.h>
+#include <Dataflow/Ports/NrrdPort.h>
 #include <Dataflow/Ports/FieldPort.h>
 
 #include <iostream>

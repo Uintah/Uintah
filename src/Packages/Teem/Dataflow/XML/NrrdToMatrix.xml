@@ -53,15 +53,15 @@
     <inputs lastportdynamic="no">
       <port>
         <name>Data</name>
-        <datatype>Teem::Nrrd</datatype>
+        <datatype>SCIRun::Nrrd</datatype>
       </port>
       <port>
         <name>Rows</name>
-        <datatype>Teem::Nrrd</datatype>
+        <datatype>SCIRun::Nrrd</datatype>
       </port>
       <port>
         <name>Columns</name>
-        <datatype>Teem::Nrrd</datatype>
+        <datatype>SCIRun::Nrrd</datatype>
       </port>
     </inputs>
     <outputs>

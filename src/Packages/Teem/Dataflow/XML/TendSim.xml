@@ -54,21 +54,21 @@ corresponding volume of diffusion tensors.</p>
     <inputs lastportdynamic="no">
       <port>
         <name>BMatrixNrrd</name>
-        <datatype>Teem::Nrrd</datatype>
+        <datatype>SCIRun::Nrrd</datatype>
       </port>
       <port>
         <name>ReferenceNrrd</name>
-        <datatype>Teem::Nrrd</datatype>
+        <datatype>SCIRun::Nrrd</datatype>
       </port>
       <port>
         <name>TensorNrrd</name>
-        <datatype>Teem::Nrrd</datatype>
+        <datatype>SCIRun::Nrrd</datatype>
       </port>
     </inputs>
     <outputs>
       <port>
         <name>OutputNrrd</name>
-        <datatype>Teem::Nrrd</datatype>
+        <datatype>SCIRun::Nrrd</datatype>
       </port>
     </outputs>
   </io>

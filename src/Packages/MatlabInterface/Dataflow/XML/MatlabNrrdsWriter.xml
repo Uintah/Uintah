@@ -83,42 +83,42 @@
     <inputs lastportdynamic="no">
       <port>
         <name>Nrrd1</name>
-		<datatype>Teem::Nrrd</datatype>
+		<datatype>SCIRun::Nrrd</datatype>
 		<description>
 		Nrrd input port 1
 		</description>	
       </port>
 	  <port>
         <name>Nrrd2</name>
-		<datatype>Teem::Nrrd</datatype>
+		<datatype>SCIRun::Nrrd</datatype>
 		<description>
 		Nrrd input port 2
 		</description>	
       </port>
 	  <port>
         <name>Nrrd3</name>
-		<datatype>Teem::Nrrd</datatype>
+		<datatype>SCIRun::Nrrd</datatype>
 		<description>
 		Nrrd input port 3
 		</description>	
       </port>
 	  <port>
         <name>Nrrd4</name>
-		<datatype>Teem::Nrrd</datatype>
+		<datatype>SCIRun::Nrrd</datatype>
 		<description>
 		Nrrd input port 4
 		</description>			
       </port>
 	  <port>
         <name>Nrrd5</name>
-		<datatype>Teem::Nrrd</datatype>
+		<datatype>SCIRun::Nrrd</datatype>
 		<description>
 		Nrrd input port 5
 		</description>	
       </port>
 	  <port>
         <name>Nrrd6</name>
-		<datatype>Teem::Nrrd</datatype>
+		<datatype>SCIRun::Nrrd</datatype>
 		<description>
 		Nrrd input port 6
 		</description>	

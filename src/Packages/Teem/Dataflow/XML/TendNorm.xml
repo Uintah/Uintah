@@ -57,13 +57,13 @@ eigenvalues by some user-defined amount .</p>
     <inputs lastportdynamic="no">
       <port>
         <name>nin</name>
-	<datatype>Teem::Nrrd</datatype>
+	<datatype>SCIRun::Nrrd</datatype>
       </port>
     </inputs>
     <outputs>
       <port>
         <name>nout</name>
-	<datatype>Teem::Nrrd</datatype>
+	<datatype>SCIRun::Nrrd</datatype>
       </port>
     </outputs>
   </io>

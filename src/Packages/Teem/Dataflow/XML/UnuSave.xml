@@ -70,7 +70,7 @@ with 0.5 inch margins.</p>
     <inputs lastportdynamic="no">
       <port>
         <name>InputNrrd</name>
-        <datatype>Teem::Nrrd</datatype>
+        <datatype>SCIRun::Nrrd</datatype>
       </port>
     </inputs>
     <outputs>

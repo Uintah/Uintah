@@ -136,35 +136,35 @@ NrrdSelectTime. If it is not selected data will be assumed to be
     <outputs>
       <port>
 	<name>Output 0 Nrrd</name>
-	<datatype>Teem::Nrrd</datatype>
+	<datatype>SCIRun::Nrrd</datatype>
       </port>
       <port>
 	<name>Output 1 Nrrd</name>
-	<datatype>Teem::Nrrd</datatype>
+	<datatype>SCIRun::Nrrd</datatype>
       </port>
       <port>
 	<name>Output 2 Nrrd</name>
-	<datatype>Teem::Nrrd</datatype>
+	<datatype>SCIRun::Nrrd</datatype>
       </port>
       <port>
 	<name>Output 3 Nrrd</name>
-	<datatype>Teem::Nrrd</datatype>
+	<datatype>SCIRun::Nrrd</datatype>
       </port>
       <port>
 	<name>Output 4 Nrrd</name>
-	<datatype>Teem::Nrrd</datatype>
+	<datatype>SCIRun::Nrrd</datatype>
       </port>
       <port>
 	<name>Output 5 Nrrd</name>
-	<datatype>Teem::Nrrd</datatype>
+	<datatype>SCIRun::Nrrd</datatype>
       </port>
       <port>
 	<name>Output 6 Nrrd</name>
-	<datatype>Teem::Nrrd</datatype>
+	<datatype>SCIRun::Nrrd</datatype>
       </port>
       <port>
 	<name>Output 7 Nrrd</name>
-	<datatype>Teem::Nrrd</datatype>
+	<datatype>SCIRun::Nrrd</datatype>
       </port>
       <port>
         <name>Selected Index</name>

@@ -51,7 +51,7 @@
     <outputs>
       <port>
         <name>Output</name>
-        <datatype>Teem::Nrrd</datatype>
+        <datatype>SCIRun::Nrrd</datatype>
       </port>
     </outputs>
   </io>

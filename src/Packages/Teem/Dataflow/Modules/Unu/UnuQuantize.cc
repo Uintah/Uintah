@@ -42,7 +42,7 @@
 #include <Dataflow/Network/Module.h>
 #include <Core/Malloc/Allocator.h>
 #include <Core/GuiInterface/GuiVar.h>
-#include <Teem/Dataflow/Ports/NrrdPort.h>
+#include <Dataflow/Ports/NrrdPort.h>
 
 #include <sstream>
 #include <iostream>
@@ -50,6 +50,7 @@ using std::endl;
 #include <stdio.h>
 
 namespace SCITeem {
+using namespace SCIRun;
 
 class UnuQuantize : public Module {
   NrrdIPort* inrrd_;

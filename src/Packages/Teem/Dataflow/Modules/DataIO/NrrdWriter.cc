@@ -41,7 +41,7 @@
 
 #include <Core/Persistent/Pstreams.h>
 #include <Dataflow/Network/Module.h>
-#include <Teem/Dataflow/Ports/NrrdPort.h>
+#include <Dataflow/Ports/NrrdPort.h>
 #include <Core/Malloc/Allocator.h>
 #include <Core/GuiInterface/GuiVar.h>
 #include <sstream>
