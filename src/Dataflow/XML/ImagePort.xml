@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="UTF-8" ?>
  
-<port name="Matrix">
-   <datatype>matrix</datatype>
-   <color>BlueViolet</color>
+<port name="Image">
+   <datatype>Image</datatype>
+   <color>MistyRose</color>
 </port>
 
 

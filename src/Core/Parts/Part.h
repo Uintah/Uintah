@@ -35,6 +35,7 @@
 #include <map>
 #include <vector>
 #include <stdio.h>
+#include <iostream>
 
 
 #include <Core/GuiInterface/TCLArgs.h>
@@ -42,10 +43,8 @@
 
 namespace SCIRun {
 
-using std::string;
-using std::vector;
-using std::map;
-  
+using namespace std;  
+
 class GuiVar;
 class PartPort;
 

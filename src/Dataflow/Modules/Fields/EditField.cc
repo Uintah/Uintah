@@ -497,7 +497,8 @@ EditField::execute()
   // Set some field attributes.
   if (cfldname_.get())
   {
-    ef->store(string("name"), fldname_.get(), false);
+    // Hack warning. the string cast should not need to be...
+    ef->store(string("name"), (string)fldname_.get(), false);
   }
 
   ScalarFieldInterface* sfi = ef->query_scalar_interface();
