@@ -3397,6 +3397,7 @@ class BioTensorApp {
 	    set vis_activated 0
 	    set IsPAttached 1
 	    set IsVAttached 1
+	    set executing_modules 0
 
 	    # configure each vis tab
 	    configure_variance_tabs
