@@ -219,7 +219,7 @@ PropertyManager::is_property(const string &name)
 
 
 string
-PropertyManager::get_property_name(unsigned int index)
+PropertyManager::get_property_name(size_t index)
 {
   if (index < nproperties())
   {
@@ -227,7 +227,7 @@ PropertyManager::get_property_name(unsigned int index)
 
     map_type::const_iterator pi = properties_.begin();
 
-    for( unsigned int i=0; i<index; i++ )
+    for(size_t i=0; i<index; i++ )
       ++pi;
 
     lock.unlock();
