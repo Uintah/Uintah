@@ -14,7 +14,6 @@ ifeq ($(CC),newmpxlc)
         Dataflow/Comm     \
         Dataflow/Network  \
         Dataflow/Ports    \
-        Dataflow/XMLUtil  \
         Core/GuiInterface \
         Core/Malloc       \
         Core/Math         \
@@ -45,13 +44,13 @@ else
         Packages/Uintah/Core/Grid \
         Packages/Uintah/Core/Parallel \
         Packages/Uintah/Core/Math \
-        Packages/Uintah/Core/ProblemSpec \
         Packages/Uintah/Core/Disclosure \
         Packages/Uintah/Core/Exceptions \
         Packages/Uintah/CCA/Ports \
         Packages/Uintah/CCA/Components/MPM \
         Packages/Uintah/CCA/Components/MPMICE \
         Packages/Uintah/CCA/Components/DataArchiver \
+        Packages/Uintah/Core/ProblemSpec \
         Packages/Uintah/CCA/Components/SimulationController \
         Packages/Uintah/CCA/Components/Schedulers \
         Packages/Uintah/CCA/Components/ProblemSpecification \
@@ -98,8 +97,8 @@ else
         Packages/Uintah/Core/Disclosure    \
         Packages/Uintah/Core/ProblemSpec   \
         Packages/Uintah/Core/Disclosure    \
-        Packages/Uintah/CCA/Ports          \
-        Dataflow/XMLUtil \
+        Packages/Uintah/Core/DataArchive   \
+	Packages/Uintah/CCA/Ports          \
         Core/Exceptions  \
         Core/Geometry    \
         Core/Thread      \
@@ -124,8 +123,8 @@ else
         Packages/Uintah/Core/Disclosure    \
         Packages/Uintah/Core/Math          \
         Packages/Uintah/Core/ProblemSpec   \
-        Packages/Uintah/CCA/Ports          \
-        Dataflow/XMLUtil \
+        Packages/Uintah/Core/DataArchive   \
+	Packages/Uintah/CCA/Ports          \
         Core/Exceptions  \
         Core/Geometry    \
         Core/Thread      \
@@ -146,13 +145,13 @@ else
 PSELIBS := \
         Packages/Uintah/Core/Exceptions \
         Packages/Uintah/Core/Grid \
-        Packages/Uintah/Core/ProblemSpec \
         Packages/Uintah/Core/Parallel \
         Packages/Uintah/Core/Disclosure \
-        Packages/Uintah/CCA/Ports \
+        Packages/Uintah/Core/DataArchive \
+	Packages/Uintah/CCA/Ports \
         Packages/Uintah/CCA/Components/DataArchiver \
+        Packages/Uintah/Core/ProblemSpec \
         Packages/Uintah/CCA/Components/ProblemSpecification \
-        Dataflow/XMLUtil \
         Core/Exceptions  \
         Core/Geometry    \
         Core/Thread      \
