@@ -3,8 +3,8 @@
 // Symbol:        who.UIPort-v1.0
 // Symbol Type:   class
 // Babel Version: 0.7.0
-// SIDL Created:  20020730 13:51:05 MST
-// Generated:     20020730 13:51:13 MST
+// SIDL Created:  20020730 17:57:40 MST
+// Generated:     20020730 17:57:41 MST
 // Description:   Server-side implementation for who.UIPort
 // 
 // WARNING: Automatically generated; only changes within splicers preserved
