@@ -33429,6 +33429,8 @@ _sci_includes=''
         if test "$HAVE_MPI" != "yes"; then
           # Try without pmpi (and with pthreads) (for the newer version
           # of lam mpi.
+          # Use -DMPIPP_H soe we don't include mpi++.h where we don't want it.
+
 
 ##
 ## SCI_TRY_LINK (MPI):  mpi library and header-2
@@ -33941,7 +33943,7 @@ _sci_includes=''
 ## arg 4 : $_sci_inc /usr/include/mpi
 ## arg 5 : mpi
 ## arg 6 : $_sci_lib
-## arg 7 :
+## arg 7 : -DMPIPP_H
 ## arg 8 : <Can't expand it here as it may be multiple lines and cause sh problems.>
 ## arg 9 : optional
 ##
@@ -34165,7 +34167,7 @@ fi
 CFLAGS="$_sci_includes $CFLAGS"
 CXXFLAGS="$_sci_includes $CXXFLAGS"
 LDFLAGS="$_sci_lib_path $LDFLAGS"
-LIBS="$_sci_libs  $LIBS"
+LIBS="$_sci_libs -DMPIPP_H $LIBS"
 
 # Build up a list of the #include <file> lines for use in compilation:
 __extern_c="no"
@@ -36064,6 +36066,7 @@ if (test "$HAVE_MPI" = "yes" || test "$HAVE_MPI_UNI" = "yes") && test "$HAVE_BLA
   fi
 
 # For Petsc 2.2.0 use this line below:   petsc petscvec petscmat petscdm petscsnes petscts petscksp petscfortran $LAPACK_LIB_FLAG $BLAS_LIB_FLAG $M_LIB_FLAG $MPI_LIB_FLAG $F_LIB_FLAG $DL_LIB_FLAG,
+# Use -DMPIPP_H soe we don't include mpi++.h where we don't want it.
 
 
 ##
@@ -36104,7 +36107,7 @@ if (test "$HAVE_MPI" = "yes" || test "$HAVE_MPI_UNI" = "yes") && test "$HAVE_BLA
 ## arg 4 : $_sci_inc /usr/include/petsc
 ## arg 5 : petsc petscvec petscmat petscdm petsccontrib petscsnes petscts petscsles petscfortran $LAPACK_LIB_FLAG $BLAS_LIB_FLAG $M_LIB_FLAG $MPI_LIB_FLAG $F_LIB_FLAG $DL_LIB_FLAG
 ## arg 6 : $_sci_lib_dir $LAPACK_LIB_DIR_FLAG $BLAS_LIB_DIR_FLAG $MPI_LIB_DIR_FLAG
-## arg 7 : $INC_MPI_H
+## arg 7 : $INC_MPI_H -DMPIPP_H
 ## arg 8 : <Can't expand it here as it may be multiple lines and cause sh problems.>
 ## arg 9 : optional
 ##
@@ -36328,7 +36331,7 @@ fi
 CFLAGS="$_sci_includes $CFLAGS"
 CXXFLAGS="$_sci_includes $CXXFLAGS"
 LDFLAGS="$_sci_lib_path $LDFLAGS"
-LIBS="$_sci_libs $INC_MPI_H $LIBS"
+LIBS="$_sci_libs $INC_MPI_H -DMPIPP_H $LIBS"
 
 # Build up a list of the #include <file> lines for use in compilation:
 __extern_c="no"
@@ -36563,7 +36566,7 @@ echo "$as_me: error: One or more of the PETSc components is missing." >&2;}
     fi
 
 # For petsc 2.2.0 use this line below:  petsc petscvec petscmat petscdm petscsnes petscts petscfortran petscksp,
-
+# Use -DMPIPP_H soe we don't include mpi++.h where we don't want it.
 
 ##
 ## SCI_TRY_LINK (PETSC_UNI):  petsc-uni libraries and headers
@@ -36603,7 +36606,7 @@ echo "$as_me: error: One or more of the PETSc components is missing." >&2;}
 ## arg 4 : $_sci_inc /usr/include/petsc
 ## arg 5 : petsc petscvec petscmat petscdm petscsnes petscts petscfortran
 ## arg 6 : $_sci_lib
-## arg 7 : $LAPACK_LIB_DIR_FLAG $LAPACK_LIB_FLAG $BLAS_LIB_DIR_FLAG $BLAS_LIB_FLAG $M_LIB_FLAG $INC_MPI_UNI_H $MPI_UNI_LIB_DIR_FLAG $MPI_UNI_LIB_FLAG $F_LIB_FLAG
+## arg 7 : $LAPACK_LIB_DIR_FLAG $LAPACK_LIB_FLAG $BLAS_LIB_DIR_FLAG $BLAS_LIB_FLAG $M_LIB_FLAG $INC_MPI_UNI_H $MPI_UNI_LIB_DIR_FLAG $MPI_UNI_LIB_FLAG $F_LIB_FLAG -DMPIPP_H
 ## arg 8 : <Can't expand it here as it may be multiple lines and cause sh problems.>
 ## arg 9 : optional
 ##
@@ -36827,7 +36830,7 @@ fi
 CFLAGS="$_sci_includes $CFLAGS"
 CXXFLAGS="$_sci_includes $CXXFLAGS"
 LDFLAGS="$_sci_lib_path $LDFLAGS"
-LIBS="$_sci_libs $LAPACK_LIB_DIR_FLAG $LAPACK_LIB_FLAG $BLAS_LIB_DIR_FLAG $BLAS_LIB_FLAG $M_LIB_FLAG $INC_MPI_UNI_H $MPI_UNI_LIB_DIR_FLAG $MPI_UNI_LIB_FLAG $F_LIB_FLAG $LIBS"
+LIBS="$_sci_libs $LAPACK_LIB_DIR_FLAG $LAPACK_LIB_FLAG $BLAS_LIB_DIR_FLAG $BLAS_LIB_FLAG $M_LIB_FLAG $INC_MPI_UNI_H $MPI_UNI_LIB_DIR_FLAG $MPI_UNI_LIB_FLAG $F_LIB_FLAG -DMPIPP_H $LIBS"
 
 # Build up a list of the #include <file> lines for use in compilation:
 __extern_c="no"
