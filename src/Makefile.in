@@ -203,7 +203,7 @@ $(ALLOBJS): $(ALLGEN)
 #
 $(MAKEFILES): scripts/Makefile.tmpl
 	@echo creating $@
-	sed -e s,@OBJTOP@,$(shell echo $(foreach t,$(subst /," ",$(dir $(subst $(OBJTOP_ABS)/,,$@))),../) | sed -e 's,../ ,../,g' -e 's,/../$$,,'), -e s,@SRCTOP@,$(SRCTOP), $< > $@
+	@sed -e s,@OBJTOP@,$(shell echo $(foreach t,$(subst /," ",$(dir $(subst $(OBJTOP_ABS)/,,$@))),../) | sed -e 's,../ ,../,g' -e 's,/../$$,,'), -e s,@SRCTOP@,$(SRCTOP), $< > $@
 
 clean::
 	rm -f $(CLEANOBJS)
@@ -231,6 +231,9 @@ endif
 
 #
 # $Log$
+# Revision 1.14  2000/03/20 23:14:13  sparker
+# Quieted make output in rules for building subdir Makefiles (added @)
+#
 # Revision 1.13  2000/03/20 23:07:05  yarden
 #  enable compilation in any subdir (sparker)
 #  fix sstream include
