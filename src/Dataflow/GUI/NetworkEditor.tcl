@@ -1499,16 +1499,15 @@ proc listFindAndRemove { name elem } {
 }
 
 
-proc initVar { var save substitute } {
+proc initVarStates { var save substitute } {
     set var [string trimleft $var :]
     if { [string first msgStream $var] != -1 } return
-    global ModuleVars ModuleSavedVars ModleSubstitutedVars
+    global ModuleSavedVars ModleSubstitutedVars
     set ids [split $var -]
     if { [llength $ids] < 2 } return
     set module [lindex $ids 0]
     set varname [join [lrange $ids 1 end] -]
     
-    lappend ModuleVars($module) $varname
     if { $save } {
 	lappend ModuleSavedVars($module) $varname
 	uplevel \#0 trace variable \"$var\" w networkHasChanged
@@ -1567,6 +1566,15 @@ proc printvars { pattern } {
 proc setGlobal { var val } {
     uplevel \#0 set \"$var\" \{$val\}
 }
+
+# Will only set global variable $var to $val if it doesnt already exist
+proc initGlobal { var val } {
+    upvar \#0 $var globalvar
+    if { ![info exists globalvar] } {
+	set globalvar $val
+    }
+}
+
 
 proc popFront { listname } {
     upvar 1 $listname list
