@@ -1424,6 +1424,7 @@ echo "configure:1394: checking /opt/MIPSpro/bin/cc" >&5
              fi
 #           fi
 	   F77=f77
+	   FLIBS="-lftn"
 	   FFLAGS="$BINARYFLAGS $extra_cflags"
            CFLAGS="-fullwarn -xansi -LANG:std $BINARYFLAGS $extra_cflags"
 	   ASFLAGS="$BINARYFLAGS ${ASFLAGS}"
@@ -1446,6 +1447,7 @@ echo "configure:1394: checking /opt/MIPSpro/bin/cc" >&5
   *-linux-gnu)
      CFLAGS="-Wall $extra_cflags"
      FFLAGS="$extra_cflags"
+     FLIBS="-lg2c"
      TEMPLATE_TAG=
      TEMPLATE_BOX="<>"
      SOFLAGS="-shared ${SOFLAGS}"
@@ -1456,12 +1458,12 @@ echo "configure:1394: checking /opt/MIPSpro/bin/cc" >&5
      TRACEBACK_LIB=""
      IMAGE_LIBS=""
      echo $ac_n "checking how to run the C++ preprocessor""... $ac_c" 1>&6
-echo "configure:1460: checking how to run the C++ preprocessor" >&5
+echo "configure:1462: checking how to run the C++ preprocessor" >&5
 if test -z "$CXXCPP"; then
 if eval "test \"`echo '$''{'ac_cv_prog_CXXCPP'+set}'`\" = set"; then
   echo $ac_n "(cached) $ac_c" 1>&6
 else
-      ac_ext=C
+  ac_ext=C
 # CXXFLAGS is not in ac_cpp because -g, -O, etc. are not valid cpp options.
 ac_cpp='$CXXCPP $CPPFLAGS'
 ac_compile='${CXX-g++} -c $CXXFLAGS $CPPFLAGS conftest.$ac_ext 1>&5'
@@ -1469,12 +1471,12 @@ ac_link='${CXX-g++} -o conftest${ac_exeext} $CXXFLAGS $CPPFLAGS $LDFLAGS conftes
 cross_compiling=$ac_cv_prog_cxx_cross
   CXXCPP="${CXX-g++} -E"
   cat > conftest.$ac_ext <<EOF
-#line 1473 "configure"
+#line 1475 "configure"
 #include "confdefs.h"
 #include <stdlib.h>
 EOF
 ac_try="$ac_cpp conftest.$ac_ext >/dev/null 2>conftest.out"
-{ (eval echo configure:1478: \"$ac_try\") 1>&5; (eval $ac_try) 2>&5; }
+{ (eval echo configure:1480: \"$ac_try\") 1>&5; (eval $ac_try) 2>&5; }
 ac_err=`grep -v '^ *+' conftest.out | grep -v "^conftest.${ac_ext}\$"`
 if test -z "$ac_err"; then
   :
@@ -1487,33 +1489,30 @@ else
 fi
 rm -f conftest*
   ac_cv_prog_CXXCPP="$CXXCPP"
-  ac_ext=C
+ac_ext=C
 # CXXFLAGS is not in ac_cpp because -g, -O, etc. are not valid cpp options.
 ac_cpp='$CXXCPP $CPPFLAGS'
 ac_compile='${CXX-g++} -c $CXXFLAGS $CPPFLAGS conftest.$ac_ext 1>&5'
 ac_link='${CXX-g++} -o conftest${ac_exeext} $CXXFLAGS $CPPFLAGS $LDFLAGS conftest.$ac_ext $LIBS 1>&5'
 cross_compiling=$ac_cv_prog_cxx_cross
-
 fi
-  CXXCPP="$ac_cv_prog_CXXCPP"
-else
-  ac_cv_prog_CXXCPP=$CXXCPP
 fi
+CXXCPP="$ac_cv_prog_CXXCPP"
 echo "$ac_t""$CXXCPP" 1>&6
 
 ac_safe=`echo "sstream" | sed 'y%./+-%__p_%'`
 echo $ac_n "checking for sstream""... $ac_c" 1>&6
-echo "configure:1507: checking for sstream" >&5
+echo "configure:1506: checking for sstream" >&5
 if eval "test \"`echo '$''{'ac_cv_header_$ac_safe'+set}'`\" = set"; then
   echo $ac_n "(cached) $ac_c" 1>&6
 else
   cat > conftest.$ac_ext <<EOF
-#line 1512 "configure"
+#line 1511 "configure"
 #include "confdefs.h"
 #include <sstream>
 EOF
 ac_try="$ac_cpp conftest.$ac_ext >/dev/null 2>conftest.out"
-{ (eval echo configure:1517: \"$ac_try\") 1>&5; (eval $ac_try) 2>&5; }
+{ (eval echo configure:1516: \"$ac_try\") 1>&5; (eval $ac_try) 2>&5; }
 ac_err=`grep -v '^ *+' conftest.out | grep -v "^conftest.${ac_ext}\$"`
 if test -z "$ac_err"; then
   rm -rf conftest*
@@ -1544,6 +1543,7 @@ fi
      echo "configure: warning: WARNING: Untested configuration - you are on your own!" 1>&2
      ;;
 esac
+
 
 
 
@@ -4356,7 +4356,7 @@ done
 
 ac_given_srcdir=$srcdir
 
-trap 'rm -fr `echo "$output_files  sci_config.h" | sed "s/:[^ ]*//g"` conftest*; exit 1' 1 2 15
+trap 'rm -fr `echo "$output_files sci_config.h" | sed "s/:[^ ]*//g"` conftest*; exit 1' 1 2 15
 EOF
 cat >> $CONFIG_STATUS <<EOF
 
@@ -4409,6 +4409,7 @@ s%@LDRUN_PREFIX@%$LDRUN_PREFIX%g
 s%@BINARYFLAGS@%$BINARYFLAGS%g
 s%@F77@%$F77%g
 s%@CXXCPP@%$CXXCPP%g
+s%@FLIBS@%$FLIBS%g
 s%@PLATFORM_LDFLAGS@%$PLATFORM_LDFLAGS%g
 s%@NEED_SONAME@%$NEED_SONAME%g
 s%@SSTREAM_COMPAT@%$SSTREAM_COMPAT%g
@@ -4542,7 +4543,7 @@ EOF
 
 cat >> $CONFIG_STATUS <<EOF
 
-CONFIG_FILES=\${CONFIG_FILES-"$output_files "}
+CONFIG_FILES=\${CONFIG_FILES-"$output_files"}
 EOF
 cat >> $CONFIG_STATUS <<\EOF
 for ac_file in .. $CONFIG_FILES; do if test "x$ac_file" != x..; then
@@ -4708,30 +4709,13 @@ cat >> $CONFIG_STATUS <<EOF
 
 EOF
 cat >> $CONFIG_STATUS <<\EOF
-
+echo timestamp > stamp-h 
 exit 0
 EOF
 chmod +x $CONFIG_STATUS
 rm -fr confdefs* $ac_clean_files
 test "$no_create" = yes || ${CONFIG_SHELL-/bin/sh} $CONFIG_STATUS || exit 1
 
-
-## I tried adding these after a "," to the AC_OUTPUT list...
-#  Then I tried using AC_OUTPUT_COMMANDS to do them.
-#  For whatever reason, when added to AC_OUTPUT, it just
-#  create files ",", "echo", "755" etc.
-#  When used in AC_OUTPUT_COMMANDS, the echo used the entire
-#  line as an argument to echo, instead of running all the
-#  commands.  If someone knows what is going on, please
-#  feel free to fix this back.  Dd.
-
-echo timestamp > stamp-h
-
-# Only do the following if configuring with Uintah
-# - Uintah specific shell commands.
-if test "$uintah" = "yes" ; then
-   chmod 755 Packages/Uintah/tools/fspec.pl
-fi
 
 if cmp -s sci_defs.h sci_testdefs.h 2>/dev/null; then
   echo "sci_defs.h is unchanged"
