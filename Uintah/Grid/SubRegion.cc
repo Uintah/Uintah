@@ -3,10 +3,8 @@ static char *id="@(#) $Id$";
 
 #include "SubRegion.h"
 
+using namespace Uintah;
 using SCICore::Geometry::Point;
-
-namespace Uintah {
-namespace Grid {
 
 SubRegion::SubRegion(const Point& lower, const Point& upper,
 		     int sx, int sy, int sz,
@@ -28,11 +26,11 @@ SubRegion::~SubRegion()
 {
 }
 
-} // end namespace Grid
-} // end namespace Uintah
-
 //
 // $Log$
+// Revision 1.3  2000/04/26 06:48:58  sparker
+// Streamlined namespaces
+//
 // Revision 1.2  2000/03/16 22:08:01  dav
 // Added the beginnings of cocoon docs.  Added namespaces.  Did a few other coding standards updates too
 //

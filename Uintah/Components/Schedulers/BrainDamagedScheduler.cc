@@ -13,8 +13,7 @@ static char *id="@(#) $Id$";
 #include <iostream>
 #include <set>
 
-namespace Uintah {
-namespace Components {
+using namespace Uintah;
 
 using SCICore::Exceptions::InternalError;
 using SCICore::Thread::SimpleReducer;
@@ -228,12 +227,11 @@ TaskRecord::TaskRecord(Task* t)
 {
 }
 
-
-} // end namespace Components
-} // end namespace Uintah
-
 //
 // $Log$
+// Revision 1.8  2000/04/26 06:48:32  sparker
+// Streamlined namespaces
+//
 // Revision 1.7  2000/04/20 18:56:25  sparker
 // Updates to MPM
 //

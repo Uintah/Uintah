@@ -6,11 +6,10 @@
 #include <Uintah/Grid/Box.h>
 #include <string>
 
-using SCICore::Geometry::Point;
-using Uintah::Grid::Box;
 
 namespace Uintah {
-namespace Components {
+   namespace MPM {
+      using SCICore::Geometry::Point;
 
 /**************************************
 	
@@ -49,36 +48,39 @@ WARNING
 	
 ****************************************/
 
-class TriGeometryPiece : public GeometryPiece {
- public:
-  //////////
-  //  Constructor that takes a ProblemSpecP argument.   It reads the xml 
-  // input specification and builds the triangulated surface piece.
-  TriGeometryPiece(ProblemSpecP &);
-  //////////
-
-  // Destructor
-  virtual ~TriGeometryPiece();
-
-  //////////
-  // Determins whether a point is inside the triangulated surface.
-  virtual bool inside(const Point &p) const;
-
-  //////////
-  // Returns the bounding box surrounding the triangulated surface.
-  virtual Box getBoundingBox() const;
-
- private:
-  
-
-};
-
-} // end namespace Components
+      class TriGeometryPiece : public GeometryPiece {
+      public:
+	 //////////
+	 //  Constructor that takes a ProblemSpecP argument.   It reads the xml 
+	 // input specification and builds the triangulated surface piece.
+	 TriGeometryPiece(ProblemSpecP &);
+	 //////////
+	 
+	 // Destructor
+	 virtual ~TriGeometryPiece();
+	 
+	 //////////
+	 // Determins whether a point is inside the triangulated surface.
+	 virtual bool inside(const Point &p) const;
+	 
+	 //////////
+	 // Returns the bounding box surrounding the triangulated surface.
+	 virtual Box getBoundingBox() const;
+	 
+      private:
+	 
+	 
+      };
+      
+   } // end namespace MPM
 } // end namespace Uintah
 
 #endif // __TRI_GEOMETRY_PIECE_H__
 
 // $Log$
+// Revision 1.3  2000/04/26 06:48:26  sparker
+// Streamlined namespaces
+//
 // Revision 1.2  2000/04/24 21:04:33  sparker
 // Working on MPM problem setup and object creation
 //

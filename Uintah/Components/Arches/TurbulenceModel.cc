@@ -1,7 +1,7 @@
 #include <Uintah/Components/Arches/TurbulenceModel.h>
 #include <SCICore/Util/NotFinished.h>
 
-using Uintah::Components::TurbulenceModel;
+using namespace Uintah::Arches;
 
 TurbulenceModel::TurbulenceModel()
 {

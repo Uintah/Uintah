@@ -5,12 +5,8 @@ static char *id="@(#) $Id$";
 #include <SCICore/Thread/AtomicCounter.h>
 #include <SCICore/Thread/Mutex.h>
 #include <SCICore/Util/Assert.h>
-
-using SCICore::Thread::AtomicCounter;
-using SCICore::Thread::Mutex;
-
-namespace Uintah {
-namespace Grid {
+using namespace Uintah;
+using namespace SCICore::Thread;
 
 static const int    NLOCKS=123;
 static       Mutex* locks[NLOCKS];
@@ -51,11 +47,11 @@ bool RefCounted::removeReference()
     return status;
 }
 
-} // end namespace Grid
-} // end namespace Uintah
-
 //
 // $Log$
+// Revision 1.4  2000/04/26 06:48:53  sparker
+// Streamlined namespaces
+//
 // Revision 1.3  2000/03/16 22:08:00  dav
 // Added the beginnings of cocoon docs.  Added namespaces.  Did a few other coding standards updates too
 //

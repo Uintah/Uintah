@@ -1,7 +1,7 @@
 
 #include "GeometryObject.h"
 
-using namespace Uintah::Components;
+using namespace Uintah::MPM;
 
 GeometryObject::GeometryObject(GeometryPiece* piece, const IntVector& num_par)
    : d_piece(piece), d_resolution(num_par)
@@ -377,6 +377,9 @@ void GeometryObject::fillWithParticles(vector<Material *> &materials,
 #endif
   
 // $Log$
+// Revision 1.10  2000/04/26 06:48:24  sparker
+// Streamlined namespaces
+//
 // Revision 1.9  2000/04/25 18:43:30  jas
 // Changed variable name of d_num_par_per_cell to d_resolution.
 //

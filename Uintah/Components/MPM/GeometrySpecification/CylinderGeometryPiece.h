@@ -6,11 +6,10 @@
 #include <Uintah/Grid/Box.h>
 
 
-using SCICore::Geometry::Point;
-using Uintah::Grid::Box;
-
 namespace Uintah {
-namespace Components {
+   namespace MPM{
+      using SCICore::Geometry::Point;
+
 
 /**************************************
 	
@@ -50,41 +49,44 @@ WARNING
 	
 ****************************************/
 
-class CylinderGeometryPiece : public GeometryPiece {
-
- public:
-  //////////
-  // Constructor that takes a ProblemSpecP argument.   It reads the xml 
-  // input specification and builds a generalized cylinder.
-  CylinderGeometryPiece(ProblemSpecP &);
-
-  //////////
-  // Destructor
-  virtual ~CylinderGeometryPiece();
-
-  //////////
-  // Determines whether a point is inside the cylinder.
-  virtual bool inside(const Point &p) const;
-
-  //////////
-  // Returns the bounding box surrounding the cylinder.
-  virtual Box getBoundingBox() const;
- 
- private:
-   Point d_bottom;
-   Point d_top;
-   double d_radius;
- 
-  
-
-};
-
+      class CylinderGeometryPiece : public GeometryPiece {
+	 
+      public:
+	 //////////
+	 // Constructor that takes a ProblemSpecP argument.   It reads the xml 
+	 // input specification and builds a generalized cylinder.
+	 CylinderGeometryPiece(ProblemSpecP &);
+	 
+	 //////////
+	 // Destructor
+	 virtual ~CylinderGeometryPiece();
+	 
+	 //////////
+	 // Determines whether a point is inside the cylinder.
+	 virtual bool inside(const Point &p) const;
+	 
+	 //////////
+	 // Returns the bounding box surrounding the cylinder.
+	 virtual Box getBoundingBox() const;
+	 
+      private:
+	 Point d_bottom;
+	 Point d_top;
+	 double d_radius;
+	 
+	 
+	 
+      };
+      
+   } // end namespace MPM
 } // end namespace Uintah
-} // end namespace Components
 
 #endif // __CYLINDER_GEOMTRY_Piece_H__
 
 // $Log$
+// Revision 1.3  2000/04/26 06:48:23  sparker
+// Streamlined namespaces
+//
 // Revision 1.2  2000/04/24 21:04:28  sparker
 // Working on MPM problem setup and object creation
 //

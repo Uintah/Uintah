@@ -4,9 +4,8 @@
 
 
 namespace Uintah {
-namespace Grid {
 
-class Region;
+   class Region;
 
 /**************************************
 
@@ -37,24 +36,26 @@ WARNING
   
 ****************************************/
 
-class ParticleVariableBase {
-public:
-
-    virtual ~ParticleVariableBase();
-
-protected:
-    ParticleVariableBase(const ParticleVariableBase&);
-    ParticleVariableBase();
-
-private:
-    ParticleVariableBase& operator=(const ParticleVariableBase&);
-};
-
-} // end namespace Grid
+   class ParticleVariableBase {
+   public:
+      
+      virtual ~ParticleVariableBase();
+      
+   protected:
+      ParticleVariableBase(const ParticleVariableBase&);
+      ParticleVariableBase();
+      
+   private:
+      ParticleVariableBase& operator=(const ParticleVariableBase&);
+   };
+   
 } // end namespace Uintah
 
 //
 // $Log$
+// Revision 1.2  2000/04/26 06:48:52  sparker
+// Streamlined namespaces
+//
 // Revision 1.1  2000/04/20 20:09:22  jas
 // I don't know what these do, but Steve says we need them.
 //

@@ -12,10 +12,7 @@ using std::cerr;
 using std::ifstream;
 using std::ofstream;
 
-using namespace Uintah::Components;
-//class ConstitutiveModel;
-#include "ConstitutiveModel.h"
-
+using namespace Uintah::MPM;
 
 ConstitutiveModel* ConstitutiveModelFactory::create(ProblemSpecP ps)
 {

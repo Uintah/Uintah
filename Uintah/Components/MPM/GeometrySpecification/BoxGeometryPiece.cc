@@ -6,7 +6,8 @@ using SCICore::Geometry::Min;
 using SCICore::Geometry::Max;
 #include <string>
 
-using namespace Uintah::Components;
+using namespace Uintah::MPM;
+using namespace Uintah;
 
 BoxGeometryPiece::BoxGeometryPiece(ProblemSpecP& ps)
 {
@@ -37,6 +38,9 @@ Box BoxGeometryPiece::getBoundingBox() const
 }
 
 // $Log$
+// Revision 1.4  2000/04/26 06:48:22  sparker
+// Streamlined namespaces
+//
 // Revision 1.3  2000/04/24 21:04:28  sparker
 // Working on MPM problem setup and object creation
 //

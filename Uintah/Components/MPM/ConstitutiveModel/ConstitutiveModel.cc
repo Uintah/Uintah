@@ -8,10 +8,7 @@
 #include <Uintah/Interface/DataWarehouse.h>
 #include <Uintah/Grid/Region.h>
 
-using namespace Uintah::Components;
-using SCICore::Geometry::Vector;
-using namespace Uintah::Components;
-using namespace Uintah::Interface;
+using namespace Uintah::MPM;
 
 ConstitutiveModel::ConstitutiveModel()
 {

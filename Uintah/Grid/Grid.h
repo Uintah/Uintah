@@ -8,7 +8,6 @@
 #include <vector>
 
 namespace Uintah {
-namespace Grid {
 
 /**************************************
 
@@ -40,38 +39,40 @@ WARNING
   
 ****************************************/
 
-class Grid : public RefCounted {
-public:
-  Grid();
-  virtual ~Grid();
-
-  //////////
-  // Returns the number of levels in this grid.
-  int     numLevels() const;
-
-  //////////
-  // Returns a "Handle" to the "idx"th level 
-  const LevelP& getLevel(int idx) const;
-
-  //////////
-  // Adds a level to the grid.
-  void    addLevel(const LevelP& level);
-
-  void performConsistencyCheck() const;
-  void printStatistics() const;
-
-private:
-  std::vector<LevelP> d_levels;
-
-  Grid(const Grid&);
-  Grid& operator=(const Grid&);
-};
-
-} // end namespace Grid
+   class Grid : public RefCounted {
+   public:
+      Grid();
+      virtual ~Grid();
+      
+      //////////
+      // Returns the number of levels in this grid.
+      int     numLevels() const;
+      
+      //////////
+      // Returns a "Handle" to the "idx"th level 
+      const LevelP& getLevel(int idx) const;
+      
+      //////////
+      // Adds a level to the grid.
+      void    addLevel(const LevelP& level);
+      
+      void performConsistencyCheck() const;
+      void printStatistics() const;
+      
+   private:
+      std::vector<LevelP> d_levels;
+      
+      Grid(const Grid&);
+      Grid& operator=(const Grid&);
+   };
+   
 } // end namespace Uintah
 
 //
 // $Log$
+// Revision 1.4  2000/04/26 06:48:48  sparker
+// Streamlined namespaces
+//
 // Revision 1.3  2000/04/12 23:00:46  sparker
 // Starting problem setup code
 // Other compilation fixes

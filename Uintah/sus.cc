@@ -18,7 +18,6 @@
 #include <Uintah/Components/ProblemSpecification/ProblemSpecReader.h>
 #include <Uintah/Components/SimulationController/SimulationController.h>
 #include <Uintah/Components/MPM/SerialMPM.h>
-#include <Uintah/Components/MPM/ThreadedMPM.h>
 #include <Uintah/Components/Arches/Arches.h>
 #include <Uintah/Components/ICE/ICE.h>
 #include <Uintah/Components/Schedulers/BrainDamagedScheduler.h>
@@ -29,19 +28,8 @@
 #include <vector>
 
 using SCICore::Exceptions::Exception;
-using std::cerr;
-using std::string;
-using std::vector;
-
-using Uintah::Parallel::Parallel;
-using Uintah::Components::SimulationController;
-using Uintah::Components::SerialMPM;
-using Uintah::Components::ThreadedMPM;
-using Uintah::Components::Arches;
-using Uintah::Components::ICE;
-using Uintah::Components::BrainDamagedScheduler;
-using Uintah::Interface::MPMInterface;
-using Uintah::Interface::CFDInterface;
+using namespace std;
+using namespace Uintah;
 
 void usage(const std::string& badarg, const std::string& progname)
 {
@@ -142,7 +130,7 @@ int main(int argc, char** argv)
 	if(do_mpm){
 	    MPMInterface* mpm;
 	    if(numThreads == 0){
-		mpm = new SerialMPM( MpiRank, MpiProcesses );
+		mpm = new MPM::SerialMPM( MpiRank, MpiProcesses );
 	    } else {
 #ifdef WONT_COMPILE_YET
 		mpm = new ThreadedMPM();
@@ -156,10 +144,10 @@ int main(int argc, char** argv)
 	// Connect a CFD module if applicable
 	CFDInterface* cfd = 0;
 	if(do_arches){
-	    cfd = new Arches( MpiRank, MpiProcesses );
+	    cfd = new Arches::Arches( MpiRank, MpiProcesses );
 	}
 	if(do_ice){
-	    cfd = new ICE();
+	    cfd = new ICE::ICE();
 	}
 	if(cfd)
 	    sim->attachPort("cfd", cfd);
@@ -193,6 +181,9 @@ int main(int argc, char** argv)
 
 //
 // $Log$
+// Revision 1.8  2000/04/26 06:47:56  sparker
+// Streamlined namespaces
+//
 // Revision 1.7  2000/04/19 22:43:51  dav
 // more mpi stuff
 //

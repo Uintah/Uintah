@@ -4,17 +4,24 @@
 #include <Uintah/Interface/DataWarehouseP.h>
 #include <Uintah/Grid/Material.h>
 #include <Uintah/Interface/ProblemSpecP.h>
+#include <Uintah/Grid/ParticleVariable.h>
 #include <vector>
 
+namespace SCICore {
+   namespace Geometry {
+      class Point;
+   }
+}
+
 namespace Uintah {
-  namespace Components {
-    class GeometryObject;
-class ConstitutiveModel;
-using Uintah::Grid::Material;
-using Uintah::Interface::ProblemSpecP;
-
+   class Region;
+   namespace MPM {
+      class GeometryObject;
+      class ConstitutiveModel;
+      using SCICore::Geometry::Point;
+      
 /**************************************
-
+     
 CLASS
    MPMMaterial
 
@@ -42,40 +49,45 @@ WARNING
 
 ****************************************/
 
-class MPMMaterial : public Material {
-public:
-   MPMMaterial(ProblemSpecP&);
+      class MPMMaterial : public Material {
+      public:
+	 MPMMaterial(ProblemSpecP&);
+	 
+	 ~MPMMaterial();
+	 
+	 //////////
+	 // Return correct constitutive model pointer for this material
+	 ConstitutiveModel * getConstitutiveModel();
+	 
+	 long countParticles(const Region*);
+	 void createParticles(ParticleVariable<Point>& position, const Region*);
+      private:
+	 
+	 // Specific constitutive model associated with this material
+	 ConstitutiveModel *d_cm;
+	 
+	 double d_density;
+	 double d_toughness;
+	 double d_thermal_cond;
+	 double d_spec_heat;
+	 std::vector<GeometryObject*> d_geom_objs;
+	 
+	 // Prevent copying of this class
+	 // copy constructor
+	 MPMMaterial(const MPMMaterial &mpmm);
+	 MPMMaterial& operator=(const MPMMaterial &mpmm);
+	 
+      };
 
-   ~MPMMaterial();
-
-   //////////
-   // Return correct constitutive model pointer for this material
-   ConstitutiveModel * getConstitutiveModel();
-
-private:
-
-   // Specific constitutive model associated with this material
-   ConstitutiveModel *d_cm;
-
-   double d_density;
-   double d_toughness;
-   double d_thermal_cond;
-   double d_spec_heat;
-   std::vector<GeometryObject*> d_geom_objs;
-
-   // Prevent copying of this class
-   // copy constructor
-   MPMMaterial(const MPMMaterial &mpmm);
-   MPMMaterial& operator=(const MPMMaterial &mpmm);
-
-};
-
-  } // end namespace Components
+} // end namespace MPM
 } // end namespace Uintah
 
 #endif // __MPM_MATERIAL_H__
 
 // $Log$
+// Revision 1.6  2000/04/26 06:48:17  sparker
+// Streamlined namespaces
+//
 // Revision 1.5  2000/04/24 21:04:26  sparker
 // Working on MPM problem setup and object creation
 //

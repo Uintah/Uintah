@@ -5,14 +5,10 @@ static char *id="@(#) $Id$";
 #include <Uintah/Grid/Handle.h>
 #include <Uintah/Grid/Region.h>
 #include <Uintah/Exceptions/InvalidGrid.h>
-using Uintah::Exceptions::InvalidGrid;
-
 #include <iostream>
-using SCICore::Geometry::Point;
-using std::cerr;
-
-namespace Uintah {
-namespace Grid {
+using namespace Uintah;
+using namespace SCICore::Geometry;
+using namespace std;
 
 Level::Level()
 {
@@ -89,11 +85,11 @@ long Level::totalCells() const
   return total;
 }
 
-} // end namespace Grid
-} // end namespace Uintah
-
 //
 // $Log$
+// Revision 1.5  2000/04/26 06:48:49  sparker
+// Streamlined namespaces
+//
 // Revision 1.4  2000/04/13 06:51:01  sparker
 // More implementation to get this to work
 //

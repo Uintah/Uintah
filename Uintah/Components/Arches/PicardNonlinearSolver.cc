@@ -14,7 +14,7 @@
 #include <SCICore/Util/NotFinished.h>
 #include <math.h>
 
-using Uintah::Components::PicardNonlinearSolver;
+using namespace Uintah::Arches;
 
 PicardNonlinearSolver::PicardNonlinearSolver(Properties* props, 
 					     BoundaryCondition* bc,

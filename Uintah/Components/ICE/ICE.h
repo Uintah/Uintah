@@ -3,19 +3,11 @@
 #define UINTAH_HOMEBREW_ICE_H
 
 #include <Uintah/Interface/CFDInterface.h>
+namespace Uintah {
 class ProcessorContext;
 class Region;
 
-namespace Uintah {
-namespace Components {
-
-using Uintah::Interface::CFDInterface;
-using Uintah::Interface::DataWarehouseP;
-using Uintah::Interface::SchedulerP;
-using Uintah::Interface::ProblemSpecP;
-using Uintah::Grid::LevelP;
-using Uintah::Grid::GridP;
-using Uintah::Grid::SimulationStateP;
+namespace ICE {
 
 class ICE : public CFDInterface {
 public:

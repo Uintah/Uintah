@@ -6,23 +6,9 @@
 #include <string>
 
 namespace Uintah {
-
-  namespace Grid {
     class Task;
     class VarLabel;
-  }
-
-  namespace Parallel {
     class ProcessorContext;
-  }
-
-namespace Interface {
-
-using Uintah::Parallel::UintahParallelPort;
-using Uintah::Parallel::ProcessorContext;
-using Uintah::Grid::Task;
-using Uintah::Grid::VarLabel;
-
 /**************************************
 
 CLASS
@@ -52,41 +38,43 @@ WARNING
   
 ****************************************/
 
-class Scheduler : public UintahParallelPort {
-public:
-    Scheduler();
-    virtual ~Scheduler();
-
-    //////////
-    // Insert Documentation Here:
-    virtual void initialize() = 0;
-
-    //////////
-    // Insert Documentation Here:
-    virtual void execute(const ProcessorContext*) = 0;
-
-    //////////
-    // Insert Documentation Here:
-    virtual void addTarget(const VarLabel*) = 0;
-
-    //////////
-    // Insert Documentation Here:
-    virtual void addTask(Task* t) = 0;
-
-    //////////
-    // Insert Documentation Here:
-    virtual DataWarehouseP createDataWarehouse() = 0;
-
-private:
-    Scheduler(const Scheduler&);
-    Scheduler& operator=(const Scheduler&);
-};
-
-} // end namespace Interface
+    class Scheduler : public UintahParallelPort {
+    public:
+       Scheduler();
+       virtual ~Scheduler();
+       
+       //////////
+       // Insert Documentation Here:
+       virtual void initialize() = 0;
+       
+       //////////
+       // Insert Documentation Here:
+       virtual void execute(const ProcessorContext*) = 0;
+       
+       //////////
+       // Insert Documentation Here:
+       virtual void addTarget(const VarLabel*) = 0;
+       
+       //////////
+       // Insert Documentation Here:
+       virtual void addTask(Task* t) = 0;
+       
+       //////////
+       // Insert Documentation Here:
+       virtual DataWarehouseP createDataWarehouse() = 0;
+       
+    private:
+       Scheduler(const Scheduler&);
+       Scheduler& operator=(const Scheduler&);
+    };
+    
 } // end namespace Uintah
 
 //
 // $Log$
+// Revision 1.7  2000/04/26 06:49:12  sparker
+// Streamlined namespaces
+//
 // Revision 1.6  2000/04/19 05:26:19  sparker
 // Implemented new problemSetup/initialization phases
 // Simplified DataWarehouse interface (not finished yet)

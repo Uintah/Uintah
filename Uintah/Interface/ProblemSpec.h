@@ -19,22 +19,15 @@
 #endif
 
 namespace SCICore {
-    namespace Geometry {
-	class IntVector;
-	class Vector;
-	class Point;
-    }
+   namespace Geometry {
+      class IntVector;
+      class Vector;
+      class Point;
+   }
 }
 
 namespace Uintah {
-    namespace Grid {
-	class TypeDescription;
-    }
-namespace Interface {
-
-using Uintah::Grid::RefCounted;
-using Uintah::Grid::TypeDescription;
-
+   class TypeDescription;
 
 // This is the "base" problem spec.  There should be ways of breaking
 // this up
@@ -69,58 +62,60 @@ WARNING
 ****************************************/
 
 
-
-class ProblemSpec : public RefCounted {
-public:
-    ProblemSpec();
-    virtual ~ProblemSpec();
-    void setDoc(const DOM_Document& doc);
-    void setNode(const DOM_Node& node);
-
-    ProblemSpecP findBlock(const std::string& name) const;
-    ProblemSpecP findBlock() const;
-    ProblemSpecP findNextBlock(const std::string& name) const;
-    ProblemSpecP findNextBlock() const;
-
-    std::string getNodeName() const;
-
-    DOM_Node findNode(const std::string &name, DOM_Node node) const;
-
-    void require(const std::string& name, double& value);
-    void require(const std::string& name, int& value);
-    void require(const std::string& name, bool& value);
-    void require(const std::string& name, std::string& value);
-    void require(const std::string& name, SCICore::Geometry::IntVector& value);
-    void require(const std::string& name, SCICore::Geometry::Vector& value);
-    void require(const std::string& name, SCICore::Geometry::Point& value);
-
-    ProblemSpecP get(const std::string& name, double& value);
-    ProblemSpecP get(const std::string& name, int& value);
-    ProblemSpecP get(const std::string& name, bool& value);
-    ProblemSpecP get(const std::string& name, std::string& value);
-    ProblemSpecP get(const std::string& name, 
-		     SCICore::Geometry::IntVector& value);
-    ProblemSpecP get(const std::string& name, 
-		     SCICore::Geometry::Vector& value);
-    ProblemSpecP get(const std::string& name, 
-		     SCICore::Geometry::Point& value);
-
-    static const TypeDescription* getTypeDescription();
-
-private:
-    ProblemSpec(const ProblemSpec&);
-    ProblemSpec& operator=(const ProblemSpec&);
-
-    DOM_Document d_doc;
-    DOM_Node d_node;
- 
-};
-
-} // end namespace Interface
+   
+   class ProblemSpec : public RefCounted {
+   public:
+      ProblemSpec();
+      virtual ~ProblemSpec();
+      void setDoc(const DOM_Document& doc);
+      void setNode(const DOM_Node& node);
+      
+      ProblemSpecP findBlock(const std::string& name) const;
+      ProblemSpecP findBlock() const;
+      ProblemSpecP findNextBlock(const std::string& name) const;
+      ProblemSpecP findNextBlock() const;
+      
+      std::string getNodeName() const;
+      
+      DOM_Node findNode(const std::string &name, DOM_Node node) const;
+      
+      void require(const std::string& name, double& value);
+      void require(const std::string& name, int& value);
+      void require(const std::string& name, bool& value);
+      void require(const std::string& name, std::string& value);
+      void require(const std::string& name, SCICore::Geometry::IntVector& value);
+      void require(const std::string& name, SCICore::Geometry::Vector& value);
+      void require(const std::string& name, SCICore::Geometry::Point& value);
+      
+      ProblemSpecP get(const std::string& name, double& value);
+      ProblemSpecP get(const std::string& name, int& value);
+      ProblemSpecP get(const std::string& name, bool& value);
+      ProblemSpecP get(const std::string& name, std::string& value);
+      ProblemSpecP get(const std::string& name, 
+		       SCICore::Geometry::IntVector& value);
+      ProblemSpecP get(const std::string& name, 
+		       SCICore::Geometry::Vector& value);
+      ProblemSpecP get(const std::string& name, 
+		       SCICore::Geometry::Point& value);
+      
+      static const TypeDescription* getTypeDescription();
+      
+   private:
+      ProblemSpec(const ProblemSpec&);
+      ProblemSpec& operator=(const ProblemSpec&);
+      
+      DOM_Document d_doc;
+      DOM_Node d_node;
+      
+   };
+   
 } // end namespace Uintah
 
 //
 // $Log$
+// Revision 1.11  2000/04/26 06:49:11  sparker
+// Streamlined namespaces
+//
 // Revision 1.10  2000/04/20 22:37:18  jas
 // Fixed up the GeometryObjectFactory.  Added findBlock() and findNextBlock()
 // to ProblemSpec stuff.  This will iterate through all of the nodes (hopefully).

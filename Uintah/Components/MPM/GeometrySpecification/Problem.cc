@@ -10,22 +10,10 @@
 #include <Uintah/Grid/GridP.h>
 #include <Uintah/Grid/SimulationState.h>
 
-using Uintah::Interface::DataWarehouseP;
-using Uintah::Grid::GridP;
-using Uintah::Grid::Region;
-using Uintah::Grid::SimulationStateP;
-using Uintah::Interface::ProblemSpec;
-using Uintah::Interface::ProblemSpecP;
 using SCICore::Geometry::Point;
 
-using std::cerr;
-using std::endl;
-
-using std::string;
-using std::vector;
-using std::cout;
-
-using namespace Uintah::Components;
+using namespace std;
+using namespace Uintah::MPM;
 
 class GeometryObject;
 
@@ -98,6 +86,9 @@ void Problem::createParticles(const Region* region, DataWarehouseP& dw)
 #endif
 
 // $Log$
+// Revision 1.13  2000/04/26 06:48:25  sparker
+// Streamlined namespaces
+//
 // Revision 1.12  2000/04/24 21:04:32  sparker
 // Working on MPM problem setup and object creation
 //

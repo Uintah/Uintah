@@ -2,8 +2,8 @@
 #include <Uintah/Grid/Box.h>
 #include <iostream>
 
-using Uintah::Grid::Box;
-using std::ostream;
+using namespace Uintah;
+using namespace std;
 
 Box::Box()
 {
@@ -49,6 +49,9 @@ ostream& operator<<(ostream& out, const Box& b)
 
 //
 // $Log$
+// Revision 1.2  2000/04/26 06:48:46  sparker
+// Streamlined namespaces
+//
 // Revision 1.1  2000/04/13 06:51:01  sparker
 // More implementation to get this to work
 //

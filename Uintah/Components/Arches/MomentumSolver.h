@@ -39,14 +39,9 @@ WARNING
 #include <Uintah/Interface/DataWarehouseP.h>
 
 namespace Uintah {
-    namespace Components {
+    namespace Arches {
 
 
-#ifndef LACKS_NAMESPACE
-using namespace Uintah::Grid;
-using namespace Uintah::Components;
-using namespace Uintah::Interface;
-#endif
 class TurbulenceModel;
 class PhysicalConstants;
 class Discretization;

@@ -3,7 +3,7 @@
 #include <Uintah/Interface/ProblemSpec.h>
 #include <string>
 
-using namespace Uintah::Grid;
+using namespace Uintah;
 
 SimulationTime::SimulationTime(const ProblemSpecP& params)
 {
@@ -16,6 +16,9 @@ SimulationTime::SimulationTime(const ProblemSpecP& params)
 
 //
 // $Log$
+// Revision 1.2  2000/04/26 06:48:56  sparker
+// Streamlined namespaces
+//
 // Revision 1.1  2000/04/13 06:51:02  sparker
 // More implementation to get this to work
 //

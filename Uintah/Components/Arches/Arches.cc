@@ -18,12 +18,7 @@ static char *id="@(#) $Id$";
 using std::cerr;
 using std::endl;
 
-using Uintah::Components::Arches;
-using Uintah::Exceptions::InvalidValue;
-using namespace Uintah::Grid;
-
-namespace Uintah {
-namespace Components {
+using namespace Uintah::Arches;
 
 Arches::Arches( int MpiRank, int MpiProcesses ) :
   UintahParallelComponent( MpiRank, MpiProcesses )
@@ -176,13 +171,11 @@ void Arches::paramInit(const ProcessorContext*,
 }
   
 
-
-
-} // end namespace Components
-} // end namespace Uintah
-
 //
 // $Log$
+// Revision 1.23  2000/04/26 06:48:00  sparker
+// Streamlined namespaces
+//
 // Revision 1.22  2000/04/24 21:04:19  sparker
 // Working on MPM problem setup and object creation
 //

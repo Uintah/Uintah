@@ -24,157 +24,159 @@
 
 
 namespace Uintah {
-namespace Components {
-
-
-class ElasticConstitutiveModel : public ConstitutiveModel {
- private:
-  // data areas
-  // Symmetric stress tensor (3 x 3 matrix)  
-  Matrix3 stressTensor;
-  // Symmetric strain tensor (3 x 3 matrix)
-  Matrix3 strainTensor;
-  // Symmetric strain increment tensor (3 x 3 matrix)
-  Matrix3 strainIncrement;
- // Symmetric stress increment tensor (3 x 3 matrix)
-  Matrix3 stressIncrement;
-  // rotation increment (3 x 3 matrix)
-  Matrix3 rotationIncrement;
-
-  // ConstitutiveModel's properties
-  // Young's Modulus
-  double YngMod;
-  // Poisson's Ratio
-  double PoiRat;
- 
- 
-
- public:
-  // constructors
-  ElasticConstitutiveModel(ProblemSpecP& ps);
-  ElasticConstitutiveModel(double YM,double PR);
-       
-  // copy constructor
-  ElasticConstitutiveModel(const ElasticConstitutiveModel &cm);
- 
-  // destructor 
-  virtual ~ElasticConstitutiveModel();
-
-  // assign the ElasticConstitutiveModel components 
-  
-  // set Young's Modulus
-  void setYngMod(double ym);
-  // set Poisson's Ratio
-  void setPoiRat(double pr);
-  // assign the Symmetric stress tensor
-  virtual void setStressTensor(Matrix3 st);
-  // assign the strain increment tensor
-  void  setDeformationMeasure(Matrix3 strain);
-  // assign the strain increment tensor
-  void  setStrainIncrement(Matrix3 si);
-  // assign the stress increment tensor
-  void  setStressIncrement(Matrix3 si);
-  // assign the rotation increment tensor
-  void  setRotationIncrement(Matrix3 ri);
-
-  // access components of the ElasticConstitutiveModel
-  // access Young's Modulus
-  double getYngMod() const;
-  // access Poisson's Ratio
-  double getPoiRat() const;
-  // access the Symmetric stress tensor
-  virtual Matrix3 getStressTensor() const;
-  // access the Symmetric strain tensor
-  virtual Matrix3 getDeformationMeasure() const;
-  // access the mechanical properties
-  std::vector<double> getMechProps() const;
-
-  // access the strain increment tensor
-  Matrix3 getStrainIncrement() const;
-  // access the stress increment tensor
-  Matrix3 getStressIncrement() const;
-  // access the rotation increment tensor
-  Matrix3 getRotationIncrement() const;
-
-  // Return the Lame constants - used for computing sound speeds
-  double getLambda() const;
-  double getMu() const;
- 
-  
-  // Compute the various quantities of interest
-
-  Matrix3 deformationIncrement(double time_step);
-  void computeStressIncrement();
-  void computeRotationIncrement(Matrix3 defInc);
-  //////////
-  // Basic constitutive model calculations
-  virtual void computeStressTensor(const Region* region,
-				   const MPMMaterial* matl,
-				   const DataWarehouseP& new_dw,
-				   DataWarehouseP& old_dw);
-
-  //////////
-  // Computation of strain energy.  Useful for tracking energy balance.
-  virtual double computeStrainEnergy(const Region* region,
-				   const MPMMaterial* matl,
-                                   const DataWarehouseP& new_dw);
-
-  // initialize  each particle's constitutive model data
-  virtual void initializeCMData(const Region* region,
-				const MPMMaterial* matl,
-				DataWarehouseP& new_dw);   
-  
-  // class function to read correct number of parameters
-  // from the input file
-  static void readParameters(ProblemSpecP ps, double *p_array);
-
-  // class function to write correct number of parameters
-  // to the output file
-  static void writeParameters(std::ofstream& out, double *p_array);
-
-  // class function to read correct number of parameters
-  // from the input file, and create a new object
-  static ConstitutiveModel* readParametersAndCreate(ProblemSpecP ps);
-
-  // member function to write correct number of parameters
-  // to output file, and to write any other particle information
-  // needed to restart the model for this particle
-  virtual void writeRestartParameters(std::ofstream& out) const;
-
-  // member function to read correct number of parameters
-  // from the input file, and any other particle information
-  // need to restart the model for this particle 
-  // and create a new object
-  static ConstitutiveModel* readRestartParametersAndCreate(ProblemSpecP ps);
-
-  // class function to create a new object from parameters
-  static ConstitutiveModel* create(double *p_array);
-
-  // member function to determine the model type.
-  virtual int getType() const;
-  // member function to get model's name
-  virtual std::string getName() const;
-  // member function to get number of parameters for model
-  virtual int getNumParameters() const;
-  // member function to print parameter names for model
-  virtual void printParameterNames(std::ofstream& out) const;
-  
-  // member function to make a duplicate
-  virtual ConstitutiveModel* copy() const;
-
-  ConstitutiveModel & operator=(const ElasticConstitutiveModel &cm);
-
-  virtual int getSize() const;
-};
-
-
-} // end namespace Components
+   namespace MPM {
+      
+      class ElasticConstitutiveModel : public ConstitutiveModel {
+      private:
+	 // data areas
+	 // Symmetric stress tensor (3 x 3 matrix)  
+	 Matrix3 stressTensor;
+	 // Symmetric strain tensor (3 x 3 matrix)
+	 Matrix3 strainTensor;
+	 // Symmetric strain increment tensor (3 x 3 matrix)
+	 Matrix3 strainIncrement;
+	 // Symmetric stress increment tensor (3 x 3 matrix)
+	 Matrix3 stressIncrement;
+	 // rotation increment (3 x 3 matrix)
+	 Matrix3 rotationIncrement;
+	 
+	 // ConstitutiveModel's properties
+	 // Young's Modulus
+	 double YngMod;
+	 // Poisson's Ratio
+	 double PoiRat;
+	 
+	 
+	 
+      public:
+	 // constructors
+	 ElasticConstitutiveModel(ProblemSpecP& ps);
+	 ElasticConstitutiveModel(double YM,double PR);
+	 
+	 // copy constructor
+	 ElasticConstitutiveModel(const ElasticConstitutiveModel &cm);
+	 
+	 // destructor 
+	 virtual ~ElasticConstitutiveModel();
+	 
+	 // assign the ElasticConstitutiveModel components 
+	 
+	 // set Young's Modulus
+	 void setYngMod(double ym);
+	 // set Poisson's Ratio
+	 void setPoiRat(double pr);
+	 // assign the Symmetric stress tensor
+	 virtual void setStressTensor(Matrix3 st);
+	 // assign the strain increment tensor
+	 void  setDeformationMeasure(Matrix3 strain);
+	 // assign the strain increment tensor
+	 void  setStrainIncrement(Matrix3 si);
+	 // assign the stress increment tensor
+	 void  setStressIncrement(Matrix3 si);
+	 // assign the rotation increment tensor
+	 void  setRotationIncrement(Matrix3 ri);
+	 
+	 // access components of the ElasticConstitutiveModel
+	 // access Young's Modulus
+	 double getYngMod() const;
+	 // access Poisson's Ratio
+	 double getPoiRat() const;
+	 // access the Symmetric stress tensor
+	 virtual Matrix3 getStressTensor() const;
+	 // access the Symmetric strain tensor
+	 virtual Matrix3 getDeformationMeasure() const;
+	 // access the mechanical properties
+	 std::vector<double> getMechProps() const;
+	 
+	 // access the strain increment tensor
+	 Matrix3 getStrainIncrement() const;
+	 // access the stress increment tensor
+	 Matrix3 getStressIncrement() const;
+	 // access the rotation increment tensor
+	 Matrix3 getRotationIncrement() const;
+	 
+	 // Return the Lame constants - used for computing sound speeds
+	 double getLambda() const;
+	 double getMu() const;
+	 
+	 
+	 // Compute the various quantities of interest
+	 
+	 Matrix3 deformationIncrement(double time_step);
+	 void computeStressIncrement();
+	 void computeRotationIncrement(Matrix3 defInc);
+	 //////////
+	 // Basic constitutive model calculations
+	 virtual void computeStressTensor(const Region* region,
+					  const MPMMaterial* matl,
+					  const DataWarehouseP& new_dw,
+					  DataWarehouseP& old_dw);
+	 
+	 //////////
+	 // Computation of strain energy.  Useful for tracking energy balance.
+	 virtual double computeStrainEnergy(const Region* region,
+					    const MPMMaterial* matl,
+					    const DataWarehouseP& new_dw);
+	 
+	 // initialize  each particle's constitutive model data
+	 virtual void initializeCMData(const Region* region,
+				       const MPMMaterial* matl,
+				       DataWarehouseP& new_dw);   
+	 
+	 // class function to read correct number of parameters
+	 // from the input file
+	 static void readParameters(ProblemSpecP ps, double *p_array);
+	 
+	 // class function to write correct number of parameters
+	 // to the output file
+	 static void writeParameters(std::ofstream& out, double *p_array);
+	 
+	 // class function to read correct number of parameters
+	 // from the input file, and create a new object
+	 static ConstitutiveModel* readParametersAndCreate(ProblemSpecP ps);
+	 
+	 // member function to write correct number of parameters
+	 // to output file, and to write any other particle information
+	 // needed to restart the model for this particle
+	 virtual void writeRestartParameters(std::ofstream& out) const;
+	 
+	 // member function to read correct number of parameters
+	 // from the input file, and any other particle information
+	 // need to restart the model for this particle 
+	 // and create a new object
+	 static ConstitutiveModel* readRestartParametersAndCreate(ProblemSpecP ps);
+	 
+	 // class function to create a new object from parameters
+	 static ConstitutiveModel* create(double *p_array);
+	 
+	 // member function to determine the model type.
+	 virtual int getType() const;
+	 // member function to get model's name
+	 virtual std::string getName() const;
+	 // member function to get number of parameters for model
+	 virtual int getNumParameters() const;
+	 // member function to print parameter names for model
+	 virtual void printParameterNames(std::ofstream& out) const;
+	 
+	 // member function to make a duplicate
+	 virtual ConstitutiveModel* copy() const;
+	 
+	 ConstitutiveModel & operator=(const ElasticConstitutiveModel &cm);
+	 
+	 virtual int getSize() const;
+      };
+      
+      
+   } // end namespace Components
 } // end namespace Uintah
 
 
 #endif  // __ELASTIC_CONSTITUTIVE_MODEL_H__ 
 
 // $Log$
+// Revision 1.7  2000/04/26 06:48:16  sparker
+// Streamlined namespaces
+//
 // Revision 1.6  2000/04/25 18:42:34  jas
 // Revised the factory method and constructor to take a ProblemSpec argument
 // to create a new constitutive model.

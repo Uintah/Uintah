@@ -9,23 +9,8 @@
 #include <Uintah/Interface/ProblemSpecP.h>
 
 namespace Uintah {
-
-namespace Interface {
-  class CFDInterface;
-  class MPMInterface;
-}
-
-namespace Components {
-      
-using Uintah::Parallel::UintahParallelComponent;
-using Uintah::Interface::ProblemSpecP;
-using Uintah::Grid::LevelP;
-using Uintah::Grid::GridP;
-using Uintah::Interface::SchedulerP;
-using Uintah::Interface::DataWarehouseP;
-using Uintah::Interface::MPMInterface;
-using Uintah::Interface::CFDInterface;
-      
+   class CFDInterface;
+   class MPMInterface;
 /**************************************
       
   CLASS
@@ -55,36 +40,38 @@ using Uintah::Interface::CFDInterface;
       
 ****************************************/
     
-class SimulationController : public UintahParallelComponent {
-public:
-  SimulationController( int MpiRank, int MpiProcesses);
-  virtual ~SimulationController();
+   class SimulationController : public UintahParallelComponent {
+   public:
+      SimulationController( int MpiRank, int MpiProcesses);
+      virtual ~SimulationController();
       
-  void run();
-
-private:
-  void problemSetup(const ProblemSpecP&, GridP&);
-  void scheduleInitialize(LevelP&, SchedulerP&,
-			  DataWarehouseP&,
-			  CFDInterface*, MPMInterface*);
-  void scheduleComputeStableTimestep(LevelP&, SchedulerP&,
-				     DataWarehouseP&,
-				     CFDInterface*, MPMInterface*);
-  void scheduleTimeAdvance(double t, double delt, LevelP&, SchedulerP&,
-			   const DataWarehouseP&, DataWarehouseP&,
-			   CFDInterface*, MPMInterface*);
-	 
-  SimulationController(const SimulationController&);
-  SimulationController& operator=(const SimulationController&);
-
-  bool restarting;
-};
+      void run();
       
-} // end namespace Components
+   private:
+      void problemSetup(const ProblemSpecP&, GridP&);
+      void scheduleInitialize(LevelP&, SchedulerP&,
+			      DataWarehouseP&,
+			      CFDInterface*, MPMInterface*);
+      void scheduleComputeStableTimestep(LevelP&, SchedulerP&,
+					 DataWarehouseP&,
+					 CFDInterface*, MPMInterface*);
+      void scheduleTimeAdvance(double t, double delt, LevelP&, SchedulerP&,
+			       const DataWarehouseP&, DataWarehouseP&,
+			       CFDInterface*, MPMInterface*);
+      
+      SimulationController(const SimulationController&);
+      SimulationController& operator=(const SimulationController&);
+      
+      bool restarting;
+   };
+   
 } // end namespace Uintah
 
 //
 // $Log$
+// Revision 1.9  2000/04/26 06:48:36  sparker
+// Streamlined namespaces
+//
 // Revision 1.8  2000/04/20 18:56:28  sparker
 // Updates to MPM
 //

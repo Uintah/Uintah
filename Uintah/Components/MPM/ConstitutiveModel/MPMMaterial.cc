@@ -11,8 +11,7 @@
 #include <iostream>
 #include "ConstitutiveModelFactory.h"
 using namespace std;
-using namespace Uintah::Exceptions;
-using namespace Uintah::Components;
+using namespace Uintah::MPM;
 using namespace SCICore::Geometry;
 
 
@@ -71,6 +70,8 @@ MPMMaterial::~MPMMaterial()
   // Destructor
 }
 
+#if 0
+
 ConstitutiveModel * MPMMaterial::getConstitutiveModel()
 {
   // Return the pointer to the constitutive model associated
@@ -78,3 +79,40 @@ ConstitutiveModel * MPMMaterial::getConstitutiveModel()
 
   return d_cm;
 }
+
+long MPMMaterial::countParticles(const Region* region)
+{
+   long sum = 0;
+   for(int i=0; i<d_geom_objs.size(); i++)
+      sum+= countParticles(d_geom_objs[i], region);
+   return sum;
+}
+
+void MPMMaterial::countParticles(ParticleVariable<Point>& position,
+				 const Region* region)
+{
+   long start = 0;
+   for(int i=0; i<d_geom_objs.size(); i++)
+      start += createParticles(d_geom_objs[i], start, position, region);
+}
+
+long MPMMaterial::countParticles(GeometryObject* obj,
+				 const Region*) const
+{
+   Vector dxpp = dCell/numParPCell;
+
+   Box b1 = objs->getBox();
+   Box b2 = objs->getbox();
+   Box b = b1.intersect(b2);
+   if(b.degenerate())
+      return 0;
+
+   int count = 0;
+   for(...){
+      if(obj->inside(p))
+	 count++;
+   }
+   return count;
+}
+
+#endif

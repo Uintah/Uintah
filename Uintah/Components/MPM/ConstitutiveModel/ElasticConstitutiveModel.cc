@@ -27,7 +27,7 @@ using std::string;
 #include <iostream>
 using std::cerr;
 
-using namespace Uintah::Components;
+using namespace Uintah::MPM;
 
 ElasticConstitutiveModel::ElasticConstitutiveModel(ProblemSpecP &ps)
 {
@@ -401,8 +401,8 @@ void ElasticConstitutiveModel::writeParameters(ofstream& out, double *p_array)
   out << p_array[0] << " " << p_array[1] << " ";
 }
 
-Uintah::Components::ConstitutiveModel* ElasticConstitutiveModel::readParametersAndCreate(
-					     ProblemSpecP ps)
+ConstitutiveModel*
+ElasticConstitutiveModel::readParametersAndCreate(ProblemSpecP ps)
 {
   double p_array[2];
   readParameters(ps, p_array);
@@ -421,8 +421,8 @@ void ElasticConstitutiveModel::writeRestartParameters(ofstream& out) const
       << (getStressTensor())(3,3) << endl;
 }
 
-Uintah::Components::ConstitutiveModel* ElasticConstitutiveModel::readRestartParametersAndCreate(
-                                             ProblemSpecP ps)
+ConstitutiveModel*
+ElasticConstitutiveModel::readRestartParametersAndCreate(ProblemSpecP ps)
 {
 #if 0
   Matrix3 st(0.0);
@@ -441,7 +441,8 @@ Uintah::Components::ConstitutiveModel* ElasticConstitutiveModel::readRestartPara
 #endif
 }
 
-Uintah::Components::ConstitutiveModel* ElasticConstitutiveModel::create(double *p_array)
+ConstitutiveModel*
+ElasticConstitutiveModel::create(double *p_array)
 {
 #ifdef WONT_COMPILE_YET
   return(new ElasticConstitutiveModel(p_array[0], p_array[1]));
@@ -471,7 +472,8 @@ void ElasticConstitutiveModel::printParameterNames(ofstream& out) const
       << "Pois. Rat" << endl;
 }
 
-Uintah::Components::ConstitutiveModel* ElasticConstitutiveModel::copy() const
+ConstitutiveModel*
+ElasticConstitutiveModel::copy() const
 {
 #ifdef WONT_COMPILE_YET
   return( new ElasticConstitutiveModel(*this) );
@@ -480,7 +482,8 @@ Uintah::Components::ConstitutiveModel* ElasticConstitutiveModel::copy() const
 #endif
 }
 
-Uintah::Components::ConstitutiveModel &ElasticConstitutiveModel::operator=(const ElasticConstitutiveModel &cm)
+ConstitutiveModel&
+ElasticConstitutiveModel::operator=(const ElasticConstitutiveModel &cm)
 {
  
   stressTensor=cm.stressTensor;
@@ -505,6 +508,9 @@ int ElasticConstitutiveModel::getSize() const
 
 
 // $Log$
+// Revision 1.8  2000/04/26 06:48:16  sparker
+// Streamlined namespaces
+//
 // Revision 1.7  2000/04/25 18:42:34  jas
 // Revised the factory method and constructor to take a ProblemSpec argument
 // to create a new constitutive model.

@@ -14,25 +14,8 @@
 class SimulationStateP;
 
 namespace Uintah {
-
-namespace Grid {
-  class Region;
-  class VarLabel;
-}
-
-namespace Components {
-
-using Uintah::Interface::MPMInterface;
-using Uintah::Interface::DataWarehouseP;
-using Uintah::Interface::SchedulerP;
-using Uintah::Parallel::ProcessorContext;
-using Uintah::Parallel::UintahParallelComponent;
-using Uintah::Grid::Region;
-using Uintah::Grid::LevelP;
-using Uintah::Grid::SimulationStateP;
-using Uintah::Interface::ProblemSpecP;
-using Uintah::Grid::GridP;
-using Uintah::Grid::VarLabel;
+   class VarLabel;
+   namespace MPM {
 
 /**************************************
 
@@ -68,46 +51,49 @@ WARNING
   
 ****************************************/
 
-class SingleVelContact : public Contact {
- private:
-
-  // Prevent copying of this class
-  // copy constructor
-  SingleVelContact(const SingleVelContact &con);
-  SingleVelContact& operator=(const SingleVelContact &con);
-
-  SimulationStateP d_sharedState;
-
- public:
-   // Constructor
-   SingleVelContact(const SimulationStateP& d_sS);
-
-   // Destructor
-   virtual ~SingleVelContact();
-
-   // Basic contact methods
-   virtual void exMomInterpolated(const ProcessorContext*,
-				  const Region* region,
-                                  const DataWarehouseP& old_dw,
-                                  DataWarehouseP& new_dw);
-
-   virtual void exMomIntegrated(const ProcessorContext*,
-				const Region* region,
-                                const DataWarehouseP& old_dw,
-                                DataWarehouseP& new_dw);
-
-   const VarLabel* gMassLabel;
-   const VarLabel* gAccelerationLabel;
-   const VarLabel* gVelocityLabel;
-   const VarLabel* gVelocityStarLabel;
-};
-
-} // end namespace Components
+      class SingleVelContact : public Contact {
+      private:
+	 
+	 // Prevent copying of this class
+	 // copy constructor
+	 SingleVelContact(const SingleVelContact &con);
+	 SingleVelContact& operator=(const SingleVelContact &con);
+	 
+	 SimulationStateP d_sharedState;
+	 
+      public:
+	 // Constructor
+	 SingleVelContact(const SimulationStateP& d_sS);
+	 
+	 // Destructor
+	 virtual ~SingleVelContact();
+	 
+	 // Basic contact methods
+	 virtual void exMomInterpolated(const ProcessorContext*,
+					const Region* region,
+					const DataWarehouseP& old_dw,
+					DataWarehouseP& new_dw);
+	 
+	 virtual void exMomIntegrated(const ProcessorContext*,
+				      const Region* region,
+				      const DataWarehouseP& old_dw,
+				      DataWarehouseP& new_dw);
+	 
+	 const VarLabel* gMassLabel;
+	 const VarLabel* gAccelerationLabel;
+	 const VarLabel* gVelocityLabel;
+	 const VarLabel* gVelocityStarLabel;
+      };
+      
+   } // end namespace MPM
 } // end namespace Uintah
 
 #endif /* __SINGLE_VEL_H__ */
 
 // $Log$
+// Revision 1.4  2000/04/26 06:48:21  sparker
+// Streamlined namespaces
+//
 // Revision 1.3  2000/04/25 22:57:31  guilkey
 // Fixed Contact stuff to include VarLabels, SimulationState, etc, and
 // made more of it compile.

@@ -1,7 +1,7 @@
 
 #include "InvalidValue.h"
 
-using Uintah::Exceptions::InvalidValue;
+using namespace Uintah;
 
 InvalidValue::InvalidValue(const std::string& msg)
     : ProblemSetupException(msg)

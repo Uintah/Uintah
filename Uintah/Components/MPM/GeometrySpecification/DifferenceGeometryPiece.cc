@@ -7,8 +7,8 @@ using SCICore::Geometry::Point;
 using SCICore::Geometry::Min;
 using SCICore::Geometry::Max;
 
-using namespace Uintah::Components;
-
+using namespace Uintah::MPM;
+using namespace Uintah;
 
 DifferenceGeometryPiece::DifferenceGeometryPiece(ProblemSpecP &ps) 
 {

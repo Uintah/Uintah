@@ -3,7 +3,7 @@
 #include <Uintah/Grid/VarLabel.h>
 #include <Uintah/Grid/ReductionVariable.h>
 
-using namespace Uintah::Grid;
+using namespace Uintah;
 
 SimulationState::SimulationState()
 {
@@ -17,6 +17,9 @@ void SimulationState::registerMaterial(Material* matl)
 
 //
 // $Log$
+// Revision 1.3  2000/04/26 06:48:54  sparker
+// Streamlined namespaces
+//
 // Revision 1.2  2000/04/24 21:04:38  sparker
 // Working on MPM problem setup and object creation
 //

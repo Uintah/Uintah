@@ -7,9 +7,8 @@
 #include <iostream> // TEMPORARY
 
 namespace Uintah {
-namespace Grid {
 
-class TypeDescription;
+   class TypeDescription;
 
 /**************************************
 
@@ -40,96 +39,97 @@ WARNING
   
 ****************************************/
 
-template<class T>
-class FCVariable : public DataItem {
-public:
-    FCVariable();
-    FCVariable(const FCVariable<T>&);
-    virtual ~FCVariable();
-
-    //////////
-    // Insert Documentation Here:
-    static const TypeDescription* getTypeDescription();
-
-    //////////
-    // Insert Documentation Here:
-    virtual void get(DataItem&) const;
-
-    //////////
-    // Insert Documentation Here:
-    virtual FCVariable<T>* clone() const;
-
-    //////////
-    // Insert Documentation Here:
-    virtual void allocate(const Region*);
-
-    FCVariable<T>& operator=(const FCVariable<T>&);
-private:
-};
-
-template<class T>
-const TypeDescription*
-FCVariable<T>::getTypeDescription()
-{
-    //cerr << "FCVariable::getTypeDescription not done\n";
-    return 0;
-}
-
-template<class T>
-FCVariable<T>::~FCVariable()
-{
-}
-
-template<class T>
-void
-FCVariable<T>::get(DataItem& copy) const
-{
-    FCVariable<T>* ref=dynamic_cast<FCVariable<T>*>(&copy);
-    if(!ref)
-	throw TypeMismatchException("FCVariable<T>");
-    *ref = *this;
-}
-
-template<class T>
-FCVariable<T>*
-FCVariable<T>::clone() const
-{
-    return new FCVariable<T>(*this);
-}
-
-template<class T>
-FCVariable<T>&
-FCVariable<T>::operator=(const FCVariable<T>& copy)
-{
-    if(this != &copy){
-	std::cerr << "FCVariable<T>::operator= not done!\n";
-    }
-    return *this;
-}
-
-template<class T>
-FCVariable<T>::FCVariable()
-{
-    std::cerr << "FCVariable ctor not done!\n";
-}
-
-template<class T>
-FCVariable<T>::FCVariable(const FCVariable<T>& copy)
-{
-    std::cerr << "FCVariable copy ctor not done!\n";
-}
-
-template<class T>
-void FCVariable<T>::allocate(const Region*)
-{
-    std::cerr << "FCVariable::allocate not done!\n";
-}
-
-} // end namespace Grid
+   template<class T> class FCVariable : public DataItem {
+   public:
+      FCVariable();
+      FCVariable(const FCVariable<T>&);
+      virtual ~FCVariable();
+      
+      //////////
+      // Insert Documentation Here:
+      static const TypeDescription* getTypeDescription();
+      
+      //////////
+      // Insert Documentation Here:
+      virtual void get(DataItem&) const;
+      
+      //////////
+      // Insert Documentation Here:
+      virtual FCVariable<T>* clone() const;
+      
+      //////////
+      // Insert Documentation Here:
+      virtual void allocate(const Region*);
+      
+      FCVariable<T>& operator=(const FCVariable<T>&);
+   private:
+   };
+   
+   template<class T>
+      const TypeDescription*
+      FCVariable<T>::getTypeDescription()
+      {
+	 //cerr << "FCVariable::getTypeDescription not done\n";
+	 return 0;
+      }
+   
+   template<class T>
+      FCVariable<T>::~FCVariable()
+      {
+      }
+   
+   template<class T>
+      void
+      FCVariable<T>::get(DataItem& copy) const
+      {
+	 FCVariable<T>* ref=dynamic_cast<FCVariable<T>*>(&copy);
+	 if(!ref)
+	    throw TypeMismatchException("FCVariable<T>");
+	 *ref = *this;
+      }
+   
+   template<class T>
+      FCVariable<T>*
+      FCVariable<T>::clone() const
+      {
+	 return new FCVariable<T>(*this);
+      }
+   
+   template<class T>
+      FCVariable<T>&
+      FCVariable<T>::operator=(const FCVariable<T>& copy)
+      {
+	 if(this != &copy){
+	    std::cerr << "FCVariable<T>::operator= not done!\n";
+	 }
+	 return *this;
+      }
+   
+   template<class T>
+      FCVariable<T>::FCVariable()
+      {
+	 std::cerr << "FCVariable ctor not done!\n";
+      }
+   
+   template<class T>
+      FCVariable<T>::FCVariable(const FCVariable<T>& copy)
+      {
+	 std::cerr << "FCVariable copy ctor not done!\n";
+      }
+   
+   template<class T>
+      void FCVariable<T>::allocate(const Region*)
+      {
+	 std::cerr << "FCVariable::allocate not done!\n";
+      }
+   
 } // end namespace Uintah
 
 //
 // $Log$
+// Revision 1.2  2000/04/26 06:48:47  sparker
+// Streamlined namespaces
+//
 // Revision 1.1  2000/03/22 00:32:12  sparker
 // Added Face-centered variable class
 // Added Per-region data class

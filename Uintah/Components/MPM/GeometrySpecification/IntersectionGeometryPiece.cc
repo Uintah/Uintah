@@ -6,7 +6,8 @@ using SCICore::Geometry::Point;
 using SCICore::Geometry::Max;
 using SCICore::Geometry::Min;
 
-using namespace Uintah::Components;
+using namespace Uintah::MPM;
+using namespace Uintah;
 
 
 IntersectionGeometryPiece::IntersectionGeometryPiece(ProblemSpecP &ps) 

@@ -32,25 +32,7 @@ using SCICore::Geometry::Point;
 using SCICore::Geometry::Vector;
 using SCICore::Math::Abs;
 using SCICore::Thread::Time;
-using Uintah::Components::SimulationController;
-using Uintah::Exceptions::ProblemSetupException;
-using Uintah::Grid::Grid;
-using Uintah::Grid::Level;
-using Uintah::Grid::SimulationTime;
-using Uintah::Grid::ReductionVariable;
-using Uintah::Grid::SimulationState;
-using Uintah::Grid::SimulationStateP;
-using Uintah::Grid::SoleVariable;
-using Uintah::Interface::CFDInterface;
-using Uintah::Interface::MPMInterface;
-using Uintah::Interface::Output;
-using Uintah::Interface::ProblemSpecInterface;
-using Uintah::Interface::Scheduler;
-using Uintah::Parallel::ProcessorContext;
-using Uintah::Parallel::UintahParallelPort;
-
-namespace Uintah {
-namespace Components {
+using namespace Uintah;
 
 SimulationController::SimulationController( int MpiRank, int MpiProcesses ) :
   UintahParallelComponent( MpiRank, MpiProcesses )
@@ -79,7 +61,7 @@ void SimulationController::run()
       throw ProblemSetupException("Input file is not a Uintah specification");
    
    // Setup the initial grid
-   GridP grid=new Uintah::Grid::Grid();
+   GridP grid=new Grid();
    
    problemSetup(ups, grid);
    
@@ -379,11 +361,11 @@ void SimulationController::scheduleTimeAdvance(double t, double delt,
 #endif
 }
 
-} // end namespace Components
-} // end namespace Uintah
-
 //
 // $Log$
+// Revision 1.11  2000/04/26 06:48:36  sparker
+// Streamlined namespaces
+//
 // Revision 1.10  2000/04/20 18:56:28  sparker
 // Updates to MPM
 //

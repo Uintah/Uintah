@@ -32,97 +32,101 @@ WARNING
   
 ****************************************/
 
-template<class T>
-class Array3 {
-
-public:
-    Array3() {
-	d_window = 0;
-    }
-    Array3(int size1, int size2, int size3) {
-	d_window=new Array3Window<T>(new Array3Data<T>(size1, size2, size3));
-	d_window->addReference();
-    }
-    Array3(const Array3Index& lowIndex, const Array3Index& highIndex);
-    virtual ~Array3();
-    Array3(const Array3& copy)
-	: d_window(copy.d_window)
-    {
-	if(d_window)
+namespace Uintah {
+   template<class T> class Array3 {
+      
+   public:
+      Array3() {
+	 d_window = 0;
+      }
+      Array3(int size1, int size2, int size3) {
+	 d_window=new Array3Window<T>(new Array3Data<T>(size1, size2, size3));
+	 d_window->addReference();
+      }
+      Array3(const Array3Index& lowIndex, const Array3Index& highIndex);
+      virtual ~Array3();
+      Array3(const Array3& copy)
+	 : d_window(copy.d_window)
+      {
+	 if(d_window)
 	    d_window->addReference();
-    }
-
-    Array3& operator=(const Array3& copy) {
-	if(copy.d_window)
+      }
+      
+      Array3& operator=(const Array3& copy) {
+	 if(copy.d_window)
 	    copy.d_window->addReference();
-	if(d_window && d_window->removeReference()){
+	 if(d_window && d_window->removeReference()){
 	    delete d_window;
-	}
-	d_window = copy.d_window;
-	return *this;
-    }
-
-    int dim1() const {
-	return d_window->dim1();
-    }
-    int dim2() const {
-	return d_window->dim2();
-    }
-    int dim3() const {
-	return d_window->dim3();
-    }
-    T& operator()(int i, int j, int k) const {
-	//ASSERT(d_window);
-	return d_window->get(i, j, k);
-    }
-    void initialize(const T& value) {
-	d_window->initialize(value);
-    }
-
-    void initialize(const T& value, int sx, int sy, int sz, int ex, int ey, int ez) {
-	d_window->initialize(value, sx, sy, sz, ex, ey, ez);
-    }
-
-    void resize(int size1, int size2, int size3) {
-	if(d_window){
+	 }
+	 d_window = copy.d_window;
+	 return *this;
+      }
+      
+      int dim1() const {
+	 return d_window->dim1();
+      }
+      int dim2() const {
+	 return d_window->dim2();
+      }
+      int dim3() const {
+	 return d_window->dim3();
+      }
+      T& operator()(int i, int j, int k) const {
+	 //ASSERT(d_window);
+	 return d_window->get(i, j, k);
+      }
+      void initialize(const T& value) {
+	 d_window->initialize(value);
+      }
+      
+      void initialize(const T& value, int sx, int sy, int sz, int ex, int ey, int ez) {
+	 d_window->initialize(value, sx, sy, sz, ex, ey, ez);
+      }
+      
+      void resize(int size1, int size2, int size3) {
+	 if(d_window){
 	    Array3Data<T>* data = d_window->getData();
 	    if(data && size1 == data->dim1() && size2 == data->dim2() && size3 == data->dim3())
-		return;
-	}
-	if(d_window && d_window->removeReference())
+	       return;
+	 }
+	 if(d_window && d_window->removeReference())
 	    delete d_window;
-	//std::cerr << "Creating array: " << size1 << "x" << size2 << "x" << size3 << " (size " << sizeof(T) << ")\n";
-	d_window=new Array3Window<T>(new Array3Data<T>(size1, size2, size3));
-	d_window->addReference();
-    }
-    T& operator[](const Array3Index& idx) const {
-	return d_window->get(idx.i(), idx.j(), idx.k());
-    }
-
-    inline Array3Window<T>* getWindow() const {
-	return d_window;
-    }
-    T& operator[](const Array3Index& idx) {
-	return d_window->get(idx.i(), idx.j(), idx.k());
-    }
-
-    Array3Index getLowIndex() const;
-    Array3Index getHighIndex() const;
-
-private:
-    Array3Window<T>* d_window;
-};
-
-template<class T>
-Array3<T>::~Array3()
-{
-    if(d_window && d_window->removeReference()){
-	delete d_window;
-    }
+	 //std::cerr << "Creating array: " << size1 << "x" << size2 << "x" << size3 << " (size " << sizeof(T) << ")\n";
+	 d_window=new Array3Window<T>(new Array3Data<T>(size1, size2, size3));
+	 d_window->addReference();
+      }
+      T& operator[](const Array3Index& idx) const {
+	 return d_window->get(idx.i(), idx.j(), idx.k());
+      }
+      
+      inline Array3Window<T>* getWindow() const {
+	 return d_window;
+      }
+      T& operator[](const Array3Index& idx) {
+	 return d_window->get(idx.i(), idx.j(), idx.k());
+      }
+      
+      Array3Index getLowIndex() const;
+      Array3Index getHighIndex() const;
+      
+   private:
+      Array3Window<T>* d_window;
+   };
+   
+   template<class T>
+      Array3<T>::~Array3()
+      {
+	 if(d_window && d_window->removeReference()){
+	    delete d_window;
+	 }
+      }
 }
-
+   
 //
 // $Log$
+// Revision 1.6  2000/04/26 06:48:46  sparker
+// Streamlined namespaces
+//
 // Revision 1.5  2000/03/22 23:41:27  sparker
 // Working towards getting arches to compile/run
 //

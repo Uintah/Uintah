@@ -4,9 +4,6 @@
 #include <Uintah/Grid/RefCounted.h>
 
 namespace Uintah {
-namespace Parallel {
-
-using Uintah::Grid::RefCounted;
 
 /**************************************
 
@@ -37,17 +34,19 @@ WARNING
   
 ****************************************/
 
-class UintahParallelPort : public RefCounted {
-public:
-    UintahParallelPort();
-    virtual ~UintahParallelPort();
-};
+   class UintahParallelPort : public RefCounted {
+   public:
+      UintahParallelPort();
+      virtual ~UintahParallelPort();
+   };
 
-} // end namespace Parallel
 } // end namespace Uintah
 
 //
 // $Log$
+// Revision 1.3  2000/04/26 06:49:16  sparker
+// Streamlined namespaces
+//
 // Revision 1.2  2000/03/16 22:08:39  dav
 // Added the beginnings of cocoon docs.  Added namespaces.  Did a few other coding standards updates too
 //

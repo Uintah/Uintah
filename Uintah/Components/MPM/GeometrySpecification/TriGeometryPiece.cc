@@ -3,7 +3,8 @@
 #include <Uintah/Interface/ProblemSpec.h>
 #include <Uintah/Grid/Box.h>
 
-using namespace Uintah::Components;
+using namespace Uintah::MPM;
+using namespace Uintah;
 
 TriGeometryPiece::TriGeometryPiece(ProblemSpecP &ps)
 {
@@ -31,6 +32,9 @@ Box TriGeometryPiece::getBoundingBox() const
 
 //
 // $Log$
+// Revision 1.3  2000/04/26 06:48:26  sparker
+// Streamlined namespaces
+//
 // Revision 1.2  2000/04/24 21:04:33  sparker
 // Working on MPM problem setup and object creation
 //

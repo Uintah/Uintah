@@ -8,9 +8,7 @@
 #include <Uintah/Grid/PerRegion.h>
 #include <Uintah/Grid/SoleVariable.h>
 #include <SCICore/Geometry/Vector.h>
-using Uintah::Components::Discretization;
-using namespace Uintah::Components;
-using namespace Uintah::Grid;
+using namespace Uintah::Arches;
 using SCICore::Geometry::Vector;
 
 Source::Source()

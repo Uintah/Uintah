@@ -35,12 +35,7 @@ WARNING
 #include <Uintah/Components/Arches/Arches.h>
 
 namespace Uintah {
-  namespace Components {
-
-#ifndef LACKS_NAMESPACE
-using namespace Uintah::Components;
-#endif
-
+  namespace Arches {
 
 class TurbulenceModel
 {

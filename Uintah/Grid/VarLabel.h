@@ -5,8 +5,7 @@
 #include <string>
 
 namespace Uintah {
-  namespace Grid {
-     class TypeDescription;
+   class TypeDescription;
     
     /**************************************
       
@@ -37,27 +36,29 @@ namespace Uintah {
       
       ****************************************/
     
-    class VarLabel {
-    public:
-       VarLabel(const std::string&, const TypeDescription*);
-
-       const std::string& getName() const {
-	  return d_name;
-       }
-    private:
-       std::string d_name;
-       const TypeDescription* d_td;
-
-       VarLabel(const VarLabel&);
-       VarLabel& operator=(const VarLabel&);
-    };
-
+   class VarLabel {
+   public:
+      VarLabel(const std::string&, const TypeDescription*);
+      
+      const std::string& getName() const {
+	 return d_name;
+      }
+   private:
+      std::string d_name;
+      const TypeDescription* d_td;
+      
+      VarLabel(const VarLabel&);
+      VarLabel& operator=(const VarLabel&);
+   };
+   
     
-  } // end namespace Grid
 } // end namespace Uintah
 
 //
 // $Log$
+// Revision 1.3  2000/04/26 06:49:01  sparker
+// Streamlined namespaces
+//
 // Revision 1.2  2000/04/20 18:56:32  sparker
 // Updates to MPM
 //

@@ -12,19 +12,11 @@ using std::string;
 
 namespace Uintah {
 
-namespace Parallel {
-  class ProcessorContext;
-}
-
-namespace Grid {
-
-class VarLabel;
-class Region;
-class TypeDescription;
-
-using Uintah::Parallel::ProcessorContext;
-using Uintah::Interface::DataWarehouseP;
-
+   class ProcessorContext;
+   class VarLabel;
+   class Region;
+   class TypeDescription;
+   
 /**************************************
 
 CLASS
@@ -54,225 +46,227 @@ WARNING
   
 ****************************************/
 
-class Task {
-
-  class ActionBase {
-  public:
-    virtual ~ActionBase();
-    virtual void doit(const ProcessorContext* pc,
-		      const Region* region,
-		      const DataWarehouseP& fromDW,
-			    DataWarehouseP& toDW) = 0;
-  };
-
-  template<class T>
-  class Action : public ActionBase {
-
-    T* ptr;
-    void (T::*pmf)(const ProcessorContext*,
-		   const Region*,
-		   const DataWarehouseP&,
-		   DataWarehouseP&);
-  public:
-    Action( T* ptr,
-	    void (T::*pmf)(const ProcessorContext*, 
-			   const Region*, 
-			   const DataWarehouseP&,
-			         DataWarehouseP&) )
-      : ptr(ptr), pmf(pmf) {}
-    virtual ~Action() {}
-
-    //////////
-    // Insert Documentation Here:
-    virtual void doit(const ProcessorContext* pc,
-		      const Region* region,
-		      const DataWarehouseP& fromDW,
-			    DataWarehouseP& toDW) {
-      (ptr->*pmf)(pc, region, fromDW, toDW);
-    }
-  };
-
-public:
-  template<class T>
-  Task(const string&         taskName,
-       const Region*         region,
-       const DataWarehouseP& fromDW,
-       DataWarehouseP&       toDW,
-       T*                     ptr,
-       void (T::*pmf)(const ProcessorContext*,
-		      const Region*,
-		      const DataWarehouseP&,
-			    DataWarehouseP&) )
-    : d_taskName( taskName ), 
-      d_region( region ),
-      d_action( new Action<T>(ptr, pmf) ),
-      d_fromDW( fromDW ),
-      d_toDW( toDW )
-  {
-    d_completed = false;
-    d_usesThreads = false;
-    d_usesMPI = false;
-    d_subregionCapable = false;
-  }
-
-  template<class T>
-  Task(const string&         taskName,
-       const DataWarehouseP& fromDW,
-       DataWarehouseP&       toDW,
-       T*                     ptr,
-       void (T::*pmf)(const ProcessorContext*,
-		      const Region*,
-		      const DataWarehouseP&,
-			    DataWarehouseP&) )
-    : d_taskName( taskName ), 
-      d_region( 0 ),
-      d_action( new Action<T>(ptr, pmf) ),
-      d_fromDW( fromDW ),
-      d_toDW( toDW )
-  {
-    d_completed = false;
-    d_usesThreads = false;
-    d_usesMPI = false;
-    d_subregionCapable = false;
-  }
-
-  template<class T, class Arg1>
-  Task(const string&         taskName,
-       const Region*         region,
-       const DataWarehouseP& fromDW,
-       DataWarehouseP&       toDW,
-       T*                     ptr,
-       void (T::*pmf)(const ProcessorContext*,
-		      const Region*,
-		      const DataWarehouseP&,
-			    DataWarehouseP&,
-		      Arg1),
-       Arg1)
-    : d_taskName( taskName ), 
-      d_region( region ),
-      //d_action( new Action<T>(ptr, pmf) ),
-      d_fromDW( fromDW ),
-      d_toDW( toDW )
-  {
-    d_completed = false;
-    d_usesThreads = false;
-    d_usesMPI = false;
-    d_subregionCapable = false;
-  }
-
-  ~Task();
-
-  void usesMPI(bool state=true);
-  void usesThreads(bool state);
-  bool usesThreads() const {
-    return d_usesThreads;
-  }
-
-  //////////
-  // Insert Documentation Here:
-  void subregionCapable(bool state=true);
-
-  //////////
-  // Insert Documentation Here:
-  void requires(const DataWarehouseP& ds, const VarLabel*);
-
-  //////////
-  // Insert Documentation Here:
-  void requires(const DataWarehouseP& ds, const VarLabel*,
-		const Region* region, int numGhostCells);
-
-  //////////
-  // Insert Documentation Here:
-  void computes(const DataWarehouseP& ds, const VarLabel*);
-
-  //////////
-  // Insert Documentation Here:
-  void computes(const DataWarehouseP& ds, const VarLabel*,
-		const Region* region);
-
-  //////////
-  // Insert Documentation Here:
-  void doit(const ProcessorContext* pc);
-  const string& getName() const {
-    return d_taskName;
-  }
-
-  //////////
-  // Insert Documentation Here:
-  bool isCompleted() const {
-    return d_completed;
-  }
-
-  struct Dependency {
-          Task*            d_task;
-          DataWarehouseP   d_dw;
-          const VarLabel*  d_var;
-
-    const Region*          d_region;
-    int                    d_numGhostCells;
-
-    Dependency(      Task*           task,
-	       const DataWarehouseP& dw,
-	       const VarLabel* d_var,
-	       const Region*,
-		     int numGhostcells );
-
-    bool operator<(const Dependency& c) const {
-      if(d_var->getName() < c.d_var->getName()) {
-		return true;
+   class Task {
+      
+      class ActionBase {
+      public:
+	 virtual ~ActionBase();
+	 virtual void doit(const ProcessorContext* pc,
+			   const Region* region,
+			   const DataWarehouseP& fromDW,
+			   DataWarehouseP& toDW) = 0;
+      };
+      
+      template<class T>
+      class Action : public ActionBase {
+	 
+	 T* ptr;
+	 void (T::*pmf)(const ProcessorContext*,
+			const Region*,
+			const DataWarehouseP&,
+			DataWarehouseP&);
+      public:
+	 Action( T* ptr,
+		 void (T::*pmf)(const ProcessorContext*, 
+				const Region*, 
+				const DataWarehouseP&,
+				DataWarehouseP&) )
+	    : ptr(ptr), pmf(pmf) {}
+	 virtual ~Action() {}
+	 
+	 //////////
+	 // Insert Documentation Here:
+	 virtual void doit(const ProcessorContext* pc,
+			   const Region* region,
+			   const DataWarehouseP& fromDW,
+			   DataWarehouseP& toDW) {
+	    (ptr->*pmf)(pc, region, fromDW, toDW);
+	 }
+      };
+      
+   public:
+      template<class T>
+      Task(const string&         taskName,
+	   const Region*         region,
+	   const DataWarehouseP& fromDW,
+	   DataWarehouseP&       toDW,
+	   T*                     ptr,
+	   void (T::*pmf)(const ProcessorContext*,
+			  const Region*,
+			  const DataWarehouseP&,
+			  DataWarehouseP&) )
+	 : d_taskName( taskName ), 
+	   d_region( region ),
+	   d_action( new Action<T>(ptr, pmf) ),
+	   d_fromDW( fromDW ),
+	   d_toDW( toDW )
+      {
+	 d_completed = false;
+	 d_usesThreads = false;
+	 d_usesMPI = false;
+	 d_subregionCapable = false;
+      }
+      
+      template<class T>
+      Task(const string&         taskName,
+	   const DataWarehouseP& fromDW,
+	   DataWarehouseP&       toDW,
+	   T*                     ptr,
+	   void (T::*pmf)(const ProcessorContext*,
+			  const Region*,
+			  const DataWarehouseP&,
+			  DataWarehouseP&) )
+	 : d_taskName( taskName ), 
+	   d_region( 0 ),
+	   d_action( new Action<T>(ptr, pmf) ),
+	   d_fromDW( fromDW ),
+	   d_toDW( toDW )
+      {
+	 d_completed = false;
+	 d_usesThreads = false;
+	 d_usesMPI = false;
+	 d_subregionCapable = false;
+      }
+      
+      template<class T, class Arg1>
+      Task(const string&         taskName,
+	   const Region*         region,
+	   const DataWarehouseP& fromDW,
+	   DataWarehouseP&       toDW,
+	   T*                     ptr,
+	   void (T::*pmf)(const ProcessorContext*,
+			  const Region*,
+			  const DataWarehouseP&,
+			  DataWarehouseP&,
+			  Arg1),
+	   Arg1)
+	 : d_taskName( taskName ), 
+	   d_region( region ),
+	   //d_action( new Action<T>(ptr, pmf) ),
+	   d_fromDW( fromDW ),
+	   d_toDW( toDW )
+      {
+	 d_completed = false;
+	 d_usesThreads = false;
+	 d_usesMPI = false;
+	 d_subregionCapable = false;
+      }
+      
+      ~Task();
+      
+      void usesMPI(bool state=true);
+      void usesThreads(bool state);
+      bool usesThreads() const {
+	 return d_usesThreads;
+      }
+      
+      //////////
+      // Insert Documentation Here:
+      void subregionCapable(bool state=true);
+      
+      //////////
+      // Insert Documentation Here:
+      void requires(const DataWarehouseP& ds, const VarLabel*);
+      
+      //////////
+      // Insert Documentation Here:
+      void requires(const DataWarehouseP& ds, const VarLabel*,
+		    const Region* region, int numGhostCells);
+      
+      //////////
+      // Insert Documentation Here:
+      void computes(const DataWarehouseP& ds, const VarLabel*);
+      
+      //////////
+      // Insert Documentation Here:
+      void computes(const DataWarehouseP& ds, const VarLabel*,
+		    const Region* region);
+      
+      //////////
+      // Insert Documentation Here:
+      void doit(const ProcessorContext* pc);
+      const string& getName() const {
+	 return d_taskName;
+      }
+      
+      //////////
+      // Insert Documentation Here:
+      bool isCompleted() const {
+	 return d_completed;
+      }
+      
+      struct Dependency {
+	 Task*            d_task;
+	 DataWarehouseP   d_dw;
+	 const VarLabel*  d_var;
+	 
+	 const Region*          d_region;
+	 int                    d_numGhostCells;
+	 
+	 Dependency(      Task*           task,
+			  const DataWarehouseP& dw,
+			  const VarLabel* d_var,
+			  const Region*,
+			  int numGhostcells );
+	 
+	 bool operator<(const Dependency& c) const {
+	    if(d_var->getName() < c.d_var->getName()) {
+	       return true;
 	    } else if(d_var->getName() == c.d_var->getName()){
-		if(d_region < c.d_region){
-		    return true;
-		} else if(d_region == c.d_region) {
-		    if(d_dw.get_rep() < c.d_dw.get_rep()) {
-			return true;
-		    } else if(d_dw.get_rep() == c.d_dw.get_rep()){
-			return false;
-		    } else {
-			return false;
-		    }
-		} else {
-		    return false;
-		}
+	       if(d_region < c.d_region){
+		  return true;
+	       } else if(d_region == c.d_region) {
+		  if(d_dw.get_rep() < c.d_dw.get_rep()) {
+		     return true;
+		  } else if(d_dw.get_rep() == c.d_dw.get_rep()){
+		     return false;
+		  } else {
+		     return false;
+		  }
+	       } else {
+		  return false;
+	       }
 	    } else {
-		return false;
+	       return false;
 	    }
-	}
-    }; // end struct Dependency
-
-  //////////
-  // Insert Documentation Here:
-  void addComps(std::vector<Dependency*>&) const;
-
-  //////////
-  // Insert Documentation Here:
-  void addReqs(std::vector<Dependency*>&) const;
-
-private:
-    //////////
-    // Insert Documentation Here:
-          string              d_taskName;
-    const Region*             d_region;
-          ActionBase*         d_action;
-          DataWarehouseP      d_fromDW;
-          DataWarehouseP      d_toDW;
-          bool                d_completed;
-          vector<Dependency*> d_reqs;
-          vector<Dependency*> d_comps;
-
-          bool                d_usesMPI;
-          bool                d_usesThreads;
-          bool                d_subregionCapable;
-
-    Task(const Task&);
-    Task& operator=(const Task&);
-};
-
-} // end namespace Grid
+	 }
+      }; // end struct Dependency
+      
+      //////////
+      // Insert Documentation Here:
+      void addComps(std::vector<Dependency*>&) const;
+      
+      //////////
+      // Insert Documentation Here:
+      void addReqs(std::vector<Dependency*>&) const;
+      
+   private:
+      //////////
+      // Insert Documentation Here:
+      string              d_taskName;
+      const Region*             d_region;
+      ActionBase*         d_action;
+      DataWarehouseP      d_fromDW;
+      DataWarehouseP      d_toDW;
+      bool                d_completed;
+      vector<Dependency*> d_reqs;
+      vector<Dependency*> d_comps;
+      
+      bool                d_usesMPI;
+      bool                d_usesThreads;
+      bool                d_subregionCapable;
+      
+      Task(const Task&);
+      Task& operator=(const Task&);
+   };
+   
 } // end namespace Uintah
 
 //
 // $Log$
+// Revision 1.8  2000/04/26 06:49:00  sparker
+// Streamlined namespaces
+//
 // Revision 1.7  2000/04/20 18:56:31  sparker
 // Updates to MPM
 //

@@ -8,12 +8,10 @@ static char *id="@(#) $Id$";
 #include <SCICore/Thread/Guard.h>
 #include <iostream>
 
-using namespace Uintah::Components;
+using namespace Uintah;
 
 using SCICore::Exceptions::InternalError;
 using SCICore::Thread::Guard;
-using Uintah::Exceptions::TypeMismatchException;
-using Uintah::Exceptions::UnknownVariable;
 using std::cerr;
 
 OnDemandDataWarehouse::OnDemandDataWarehouse( int MpiRank, int MpiProcesses )
@@ -48,6 +46,12 @@ void OnDemandDataWarehouse::get(ReductionVariableBase&, const VarLabel*) const
     dr->di->get(result);
 #endif
    cerr << "OnDemandDataWarehouse::get not finished\n";
+}
+
+void OnDemandDataWarehouse::allocate(int numParticles, ParticleVariableBase&,
+				     const VarLabel*, const Region*) const
+{
+   cerr << "OnDemend DataWarehouse::allocate not finished\n";
 }
 
 void OnDemandDataWarehouse::allocate(ReductionVariableBase&, const VarLabel*) const
@@ -269,6 +273,9 @@ OnDemandDataWarehouse::DataRecord::DataRecord(DataItem* di,
 
 //
 // $Log$
+// Revision 1.11  2000/04/26 06:48:33  sparker
+// Streamlined namespaces
+//
 // Revision 1.10  2000/04/24 15:17:01  sparker
 // Fixed unresolved symbols
 //

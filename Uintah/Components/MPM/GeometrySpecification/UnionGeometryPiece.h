@@ -7,11 +7,8 @@
 #include <Uintah/Grid/Box.h>
 #include <SCICore/Geometry/Point.h>
 
-using Uintah::Grid::Box;
-using SCICore::Geometry::Point;
-
 namespace Uintah {
-namespace Components {
+   namespace MPM {
 
 /**************************************
 	
@@ -59,42 +56,45 @@ WARNING
 	
 ****************************************/
 
-class UnionGeometryPiece : public GeometryPiece {
-
- public:
-  //////////
-  // Constructor that takes a ProblemSpecP argument.   It reads the xml 
-  // input specification and builds the intersection of geometry pieces.
-  UnionGeometryPiece(ProblemSpecP &);
-
-  //////////
-  // Constructor that takes an array of children. It copies the array,
-  // and assume ownership of the children.
-  UnionGeometryPiece(const std::vector<GeometryPiece*>& children);
-
-  //////////
-  // Destructor
-  virtual ~UnionGeometryPiece();
-
-  //////////
-  // Determines whether a point is inside the intersection piece.
-  virtual bool inside(const Point &p) const;
-
-  //////////
-  // Returns the bounding box surrounding the union piece.
-  virtual Box getBoundingBox() const;
-
- private:
-  std::vector<GeometryPiece* > child;
-
-};
-
-} //end namespace Components
+      class UnionGeometryPiece : public GeometryPiece {
+	 
+      public:
+	 //////////
+	 // Constructor that takes a ProblemSpecP argument.   It reads the xml 
+	 // input specification and builds the intersection of geometry pieces.
+	 UnionGeometryPiece(ProblemSpecP &);
+	 
+	 //////////
+	 // Constructor that takes an array of children. It copies the array,
+	 // and assume ownership of the children.
+	 UnionGeometryPiece(const std::vector<GeometryPiece*>& children);
+	 
+	 //////////
+	 // Destructor
+	 virtual ~UnionGeometryPiece();
+	 
+	 //////////
+	 // Determines whether a point is inside the intersection piece.
+	 virtual bool inside(const Point &p) const;
+	 
+	 //////////
+	 // Returns the bounding box surrounding the union piece.
+	 virtual Box getBoundingBox() const;
+	 
+      private:
+	 std::vector<GeometryPiece* > child;
+	 
+      };
+      
+   } //end namespace MPM
 } //end namespace Uintah
 
 #endif // __UNION_GEOMETRY_PIECE_H__
 
 // $Log$
+// Revision 1.2  2000/04/26 06:48:27  sparker
+// Streamlined namespaces
+//
 // Revision 1.1  2000/04/24 21:04:34  sparker
 // Working on MPM problem setup and object creation
 //

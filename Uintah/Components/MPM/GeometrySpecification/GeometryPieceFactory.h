@@ -6,21 +6,19 @@
 #include <vector>
 
 namespace Uintah {
-namespace Components {
-using Uintah::Interface::ProblemSpecP;
-class GeometryPiece;
-
-class GeometryPieceFactory
-{
-public:
-  // this function has a switch for all known go_types
-  // and calls the proper class' readParameters()
-  // addMaterial() calls this
-  static void create(const ProblemSpecP& ps,
-		     std::vector<GeometryPiece*>& objs);
-};
-
-} // end namespace Components
+   namespace MPM {
+      class GeometryPiece;
+      
+      class GeometryPieceFactory
+      {
+      public:
+	 // this function has a switch for all known go_types
+	 // and calls the proper class' readParameters()
+	 // addMaterial() calls this
+	 static void create(const ProblemSpecP& ps,
+			    std::vector<GeometryPiece*>& objs);
+      };
+   } // end namespace MPM
 } // end namespace Uintah
 
 

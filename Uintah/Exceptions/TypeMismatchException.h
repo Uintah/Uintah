@@ -20,26 +20,27 @@
 #include <string>
 
 namespace Uintah {
-    namespace Exceptions {
-	class TypeMismatchException : public SCICore::Exceptions::Exception {
-	public:
-	    TypeMismatchException(const std::string& msg);
-	    TypeMismatchException(const TypeMismatchException&);
-	    virtual ~TypeMismatchException();
-	    virtual const char* message() const;
-	    virtual const char* type() const;
-	protected:
-	private:
-	    std::string d_msg;
-	    TypeMismatchException& operator=(const TypeMismatchException&);
-	};
-    }
+   class TypeMismatchException : public SCICore::Exceptions::Exception {
+   public:
+      TypeMismatchException(const std::string& msg);
+      TypeMismatchException(const TypeMismatchException&);
+      virtual ~TypeMismatchException();
+      virtual const char* message() const;
+      virtual const char* type() const;
+   protected:
+   private:
+      std::string d_msg;
+      TypeMismatchException& operator=(const TypeMismatchException&);
+   };
 }
 
 #endif
 
 //
 // $Log$
+// Revision 1.6  2000/04/26 06:48:42  sparker
+// Streamlined namespaces
+//
 // Revision 1.5  2000/04/11 07:10:46  sparker
 // Completing initialization and problem setup
 // Finishing Exception modifications

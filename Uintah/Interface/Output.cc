@@ -4,11 +4,7 @@ static char *id="@(#) $Id$";
 #include "Output.h"
 #include <iostream>
 
-namespace Uintah {
-namespace Interface {
-
-    using Uintah::Grid::LevelP;
-
+using namespace Uintah;
 using std::cerr;
 
 Output::Output()
@@ -26,11 +22,11 @@ Output::finalizeTimestep(double t, double, const LevelP&,
     //cerr << "Finalizing time step: t=" << t << '\n';
 }
 
-} // end namespace Interface
-} // end namespace Uintah
-
 //
 // $Log$
+// Revision 1.4  2000/04/26 06:49:11  sparker
+// Streamlined namespaces
+//
 // Revision 1.3  2000/03/17 09:30:03  sparker
 // New makefile scheme: sub.mk instead of Makefile.in
 // Use XML-based files for module repository

@@ -20,24 +20,25 @@
 #include <string>
 
 namespace Uintah {
-    namespace Exceptions {
-	class InvalidValue : public ProblemSetupException {
-	public:
-	    InvalidValue(const std::string&);
-	    InvalidValue(const InvalidValue&);
-	    virtual ~InvalidValue();
-	    virtual const char* type() const;
-	protected:
-	private:
-	    InvalidValue& operator=(const InvalidValue&);
-	};
-    }
+   class InvalidValue : public ProblemSetupException {
+   public:
+      InvalidValue(const std::string&);
+      InvalidValue(const InvalidValue&);
+      virtual ~InvalidValue();
+      virtual const char* type() const;
+   protected:
+   private:
+      InvalidValue& operator=(const InvalidValue&);
+   };
 }
 
 #endif
 
 //
 // $Log$
+// Revision 1.5  2000/04/26 06:48:39  sparker
+// Streamlined namespaces
+//
 // Revision 1.4  2000/04/11 07:10:44  sparker
 // Completing initialization and problem setup
 // Finishing Exception modifications

@@ -9,9 +9,8 @@
 
 
 namespace Uintah {
-namespace Components {
-using Uintah::Grid::Box;
-using SCICore::Geometry::Point;
+   namespace MPM {
+      using SCICore::Geometry::Point;
 
 
 /**************************************
@@ -60,37 +59,40 @@ WARNING
 	
 ****************************************/
 
-class IntersectionGeometryPiece : public GeometryPiece {
-
- public:
-  //////////
-  // Constructor that takes a ProblemSpecP argument.   It reads the xml 
-  // input specification and builds the intersection of geometry pieces.
-  IntersectionGeometryPiece(ProblemSpecP &);
-
-  //////////
-  // Destructor
-  virtual ~IntersectionGeometryPiece();
-
-  //////////
-  // Determines whether a point is inside the intersection piece.  
-  virtual bool inside(const Point &p) const;
-
-  //////////
-  // Returns the bounding box surrounding the intersection piece.
-  virtual Box getBoundingBox() const;
-
- private:
-  std::vector<GeometryPiece* > child;
-
-};
-
-} // end namespace Components
+      class IntersectionGeometryPiece : public GeometryPiece {
+	 
+      public:
+	 //////////
+	 // Constructor that takes a ProblemSpecP argument.   It reads the xml 
+	 // input specification and builds the intersection of geometry pieces.
+	 IntersectionGeometryPiece(ProblemSpecP &);
+	 
+	 //////////
+	 // Destructor
+	 virtual ~IntersectionGeometryPiece();
+	 
+	 //////////
+	 // Determines whether a point is inside the intersection piece.  
+	 virtual bool inside(const Point &p) const;
+	 
+	 //////////
+	 // Returns the bounding box surrounding the intersection piece.
+	 virtual Box getBoundingBox() const;
+	 
+      private:
+	 std::vector<GeometryPiece* > child;
+	 
+      };
+      
+   } // end namespace MPM
 } // end namespace Uintah
 
 #endif // __INTERSECTION_GEOMETRY_PIECE_H__
 
 // $Log$
+// Revision 1.2  2000/04/26 06:48:25  sparker
+// Streamlined namespaces
+//
 // Revision 1.1  2000/04/24 21:04:31  sparker
 // Working on MPM problem setup and object creation
 //

@@ -4,7 +4,8 @@
 #include <Uintah/Grid/Box.h>
 #include <SCICore/Geometry/Vector.h>
 
-using namespace Uintah::Components;
+using namespace Uintah::MPM;
+using namespace Uintah;
 using namespace SCICore::Geometry;
 
 
@@ -64,6 +65,9 @@ Box CylinderGeometryPiece::getBoundingBox() const
 }
 
 // $Log$
+// Revision 1.5  2000/04/26 06:48:23  sparker
+// Streamlined namespaces
+//
 // Revision 1.4  2000/04/24 21:04:28  sparker
 // Working on MPM problem setup and object creation
 //

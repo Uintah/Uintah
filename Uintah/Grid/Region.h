@@ -13,15 +13,14 @@
 #include <iosfwd>
 
 namespace Uintah {
-namespace Grid {
     
-using SCICore::Geometry::Point;
-using SCICore::Geometry::Vector;
-using SCICore::Geometry::IntVector;
-    
-class NodeSubIterator;
-class NodeIterator;
-    
+   using SCICore::Geometry::Point;
+   using SCICore::Geometry::Vector;
+   using SCICore::Geometry::IntVector;
+   
+   class NodeSubIterator;
+   class NodeIterator;
+   
 /**************************************
       
 CLASS
@@ -51,123 +50,122 @@ WARNING
      
 ****************************************/
     
-class Region {
-public:
-      
-  //////////
-  // Insert Documentation Here:
-  Vector dCell() const;
-      
-  //////////
-  // Insert Documentation Here:
-  void findCell(const Vector& pos, int& ix, int& iy, int& iz) const;
-      
-  //////////
-  // Insert Documentation Here:
-  bool findCellAndWeights(const SCICore::Geometry::Vector& pos,
-			  Array3Index ni[8], double S[8]) const;
-  //////////
-  // Insert Documentation Here:
-  bool findCellAndShapeDerivatives(const SCICore::Geometry::Vector& pos,
-				   Array3Index ni[8],
-				   SCICore::Geometry::Vector S[8]) const;
-  //////////
-  // Insert Documentation Here:
-  inline NodeIterator begin() const;
+   class Region {
+   public:
       
       //////////
       // Insert Documentation Here:
-  inline NodeIterator end() const;
+      Vector dCell() const;
       
-  //////////
-  // Insert Documentation Here:
-  void subregionIteratorPair(int i, int n,
-			     NodeSubIterator& iter,
-			     NodeSubIterator& end) const;
-  //////////
-  // Insert Documentation Here:
-  SubRegion subregion(int i, int n) const;
+      //////////
+      // Insert Documentation Here:
+      void findCell(const Vector& pos, int& ix, int& iy, int& iz) const;
       
-  Array3Index getLowIndex() const;
-  Array3Index getHighIndex() const;
+      //////////
+      // Insert Documentation Here:
+      bool findCellAndWeights(const SCICore::Geometry::Vector& pos,
+			      Array3Index ni[8], double S[8]) const;
+      //////////
+      // Insert Documentation Here:
+      bool findCellAndShapeDerivatives(const SCICore::Geometry::Vector& pos,
+				       Array3Index ni[8],
+				       SCICore::Geometry::Vector S[8]) const;
+      //////////
+      // Insert Documentation Here:
+      inline NodeIterator begin() const;
       
-  inline Box getBox() const {
-    return d_box;
-  }
-
-  inline IntVector getNCells() const {
-    return d_res;
-  }
-
-  long totalCells() const;
-
-  void performConsistencyCheck() const;
+      //////////
+      // Insert Documentation Here:
+      inline NodeIterator end() const;
       
-  //////////
-  // Insert Documentation Here:
+      //////////
+      // Insert Documentation Here:
+      void subregionIteratorPair(int i, int n,
+				 NodeSubIterator& iter,
+				 NodeSubIterator& end) const;
+      //////////
+      // Insert Documentation Here:
+      SubRegion subregion(int i, int n) const;
+      
+      Array3Index getLowIndex() const;
+      Array3Index getHighIndex() const;
+      
+      inline Box getBox() const {
+	 return d_box;
+      }
+      
+      inline IntVector getNCells() const {
+	 return d_res;
+      }
+      
+      long totalCells() const;
+      
+      void performConsistencyCheck() const;
+      
+      //////////
+      // Insert Documentation Here:
 #if 0
-  inline bool contains(const Array3Index& idx) const {
-    return idx.i() >= 0 && idx.j() >= 0 && idx.k() >= 0
-      && idx.i() <= d_nx && idx.j() <= d_ny && idx.k() <= d_nz;
-  }
+      inline bool contains(const Array3Index& idx) const {
+	 return idx.i() >= 0 && idx.j() >= 0 && idx.k() >= 0
+	    && idx.i() <= d_nx && idx.j() <= d_ny && idx.k() <= d_nz;
+      }
 #endif
-protected:
-  friend class Level;
-      
-  //////////
-  // Insert Documentation Here:
-  Region(const SCICore::Geometry::Point& min,
-	 const SCICore::Geometry::Point& max,
-	 const SCICore::Geometry::IntVector& res);
-  ~Region();
-      
-private:
-  Region(const Region&);
-  Region& operator=(const Region&);
-      
-  //////////
-  // Insert Documentation Here:
-  Box d_box;
+   protected:
+      friend class Level;
       
       //////////
       // Insert Documentation Here:
-  IntVector d_res;
+      Region(const SCICore::Geometry::Point& min,
+	     const SCICore::Geometry::Point& max,
+	     const SCICore::Geometry::IntVector& res);
+      ~Region();
       
-  friend class NodeIterator;
-};
-
-    
-} // end namespace Grid
+   private:
+      Region(const Region&);
+      Region& operator=(const Region&);
+      
+      //////////
+      // Insert Documentation Here:
+      Box d_box;
+      
+      //////////
+      // Insert Documentation Here:
+      IntVector d_res;
+      
+      friend class NodeIterator;
+   };
+   
 } // end namespace Uintah
 
-std::ostream& operator<<(std::ostream& out, const Uintah::Grid::Region* r);
+std::ostream& operator<<(std::ostream& out, const Uintah::Region* r);
 
 #include "NodeIterator.h"
 
 namespace Uintah {
-namespace Grid {
-    
-inline NodeIterator Region::begin() const
-{
-  return NodeIterator(this,
-		      d_box.lower().x(), 
-		      d_box.lower().y(), 
-		      d_box.lower().z());
-}
-    
-inline NodeIterator Region::end() const
-{
-  return NodeIterator(this, 
-		      d_box.upper().x()+1, 
-		      d_box.upper().y()+1, 
-		      d_box.upper().z()+1);
-}
-    
-} // end namespace Grid
+   
+   inline NodeIterator Region::begin() const
+      {
+	 return NodeIterator(this,
+			     d_box.lower().x(), 
+			     d_box.lower().y(), 
+			     d_box.lower().z());
+      }
+   
+   inline NodeIterator Region::end() const
+      {
+	 return NodeIterator(this, 
+			     d_box.upper().x()+1, 
+			     d_box.upper().y()+1, 
+			     d_box.upper().z()+1);
+      }
+   
 } // end namespace Uintah
 
 //
 // $Log$
+// Revision 1.8  2000/04/26 06:48:54  sparker
+// Streamlined namespaces
+//
 // Revision 1.7  2000/04/25 00:41:21  dav
 // more changes to fix compilations
 //

@@ -6,12 +6,9 @@
 #include <Uintah/Grid/Box.h>
 #include <SCICore/Geometry/Point.h>
 
-
-using Uintah::Grid::Box;
-using SCICore::Geometry::Point;
-
 namespace Uintah {
-namespace Components {
+   namespace MPM {
+      using SCICore::Geometry::Point;
 
 /**************************************
 	
@@ -60,39 +57,42 @@ WARNING
 	
 ****************************************/
 
-class DifferenceGeometryPiece : public GeometryPiece {
-
- public:
-  //////////
-  //  Constructor that takes a ProblemSpecP argument.   It reads the xml 
-  // input specification and builds the union of geometry Pieces.
-  DifferenceGeometryPiece(ProblemSpecP &);
-
-  //////////
-  // Destructor
-  virtual ~DifferenceGeometryPiece();
-
-  //////////
-  // Determines whether a point is inside the union Piece.
-  virtual bool inside(const Point &p) const;
-
-  //////////
-  // Returns the bounding box surrounding the union Piece.
-  virtual Box getBoundingBox() const;
-
- private:
-  GeometryPiece* left;
-  GeometryPiece* right;
-
-
-};
-
-} // end namespace Components
+      class DifferenceGeometryPiece : public GeometryPiece {
+	 
+      public:
+	 //////////
+	 //  Constructor that takes a ProblemSpecP argument.   It reads the xml 
+	 // input specification and builds the union of geometry Pieces.
+	 DifferenceGeometryPiece(ProblemSpecP &);
+	 
+	 //////////
+	 // Destructor
+	 virtual ~DifferenceGeometryPiece();
+	 
+	 //////////
+	 // Determines whether a point is inside the union Piece.
+	 virtual bool inside(const Point &p) const;
+	 
+	 //////////
+	 // Returns the bounding box surrounding the union Piece.
+	 virtual Box getBoundingBox() const;
+	 
+      private:
+	 GeometryPiece* left;
+	 GeometryPiece* right;
+	 
+	 
+      };
+      
+   } // end namespace MPM
 } // end namespace Uintah
 
 #endif // __DIFFERENCE_GEOMETRY_Piece_H__
 
 // $Log$
+// Revision 1.2  2000/04/26 06:48:23  sparker
+// Streamlined namespaces
+//
 // Revision 1.1  2000/04/24 21:04:29  sparker
 // Working on MPM problem setup and object creation
 //

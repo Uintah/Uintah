@@ -22,7 +22,7 @@ using std::ofstream;
 using std::endl;
 using std::string;
 
-using namespace Uintah::Components;
+using namespace Uintah::MPM;
 
 CompNeoHookPlas::CompNeoHookPlas(ProblemSpecP& ps)
 {
@@ -385,6 +385,9 @@ int CompNeoHookPlas::getSize() const
 
 
 // $Log$
+// Revision 1.6  2000/04/26 06:48:15  sparker
+// Streamlined namespaces
+//
 // Revision 1.5  2000/04/25 18:42:34  jas
 // Revised the factory method and constructor to take a ProblemSpec argument
 // to create a new constitutive model.

@@ -47,11 +47,6 @@ none
 #define UNDEFINED -1
 #endif
 
-#ifndef LACKS_NAMESPACE 
-using namespace UINTAH;
-#endif
-
-
 class ImplicitTimeIntegrator:
 {
 public:

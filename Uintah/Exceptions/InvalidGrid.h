@@ -20,26 +20,27 @@
 #include <string>
 
 namespace Uintah {
-    namespace Exceptions {
-	class InvalidGrid : public SCICore::Exceptions::Exception {
-	public:
-	    InvalidGrid(const std::string& msg);
-	    InvalidGrid(const InvalidGrid&);
-	    virtual ~InvalidGrid();
-	    virtual const char* message() const;
-	    virtual const char* type() const;
-	protected:
-	private:
-	    std::string d_msg;
-	    InvalidGrid& operator=(const InvalidGrid&);
-	};
-    }
+   class InvalidGrid : public SCICore::Exceptions::Exception {
+   public:
+      InvalidGrid(const std::string& msg);
+      InvalidGrid(const InvalidGrid&);
+      virtual ~InvalidGrid();
+      virtual const char* message() const;
+      virtual const char* type() const;
+   protected:
+   private:
+      std::string d_msg;
+      InvalidGrid& operator=(const InvalidGrid&);
+   };
 }
 
 #endif
 
 //
 // $Log$
+// Revision 1.2  2000/04/26 06:48:39  sparker
+// Streamlined namespaces
+//
 // Revision 1.1  2000/04/12 22:57:47  sparker
 // Added new exception classes
 //

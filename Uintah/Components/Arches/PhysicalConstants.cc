@@ -5,11 +5,7 @@ static char *id="@(#) $Id$";
 #include <Uintah/Interface/ProblemSpec.h>
 #include <Uintah/Interface/DataWarehouse.h>
 
-using namespace Uintah::Grid;
-using namespace Uintah::Components;
-
-namespace Uintah {
-namespace Components {
+using namespace Uintah::Arches;
 
 PhysicalConstants::PhysicalConstants()
 {
@@ -28,8 +24,4 @@ void PhysicalConstants::problemSetup(const ProblemSpecP& params)
   db->require("viscosity", d_viscosity);
 
 }
-
-
-} // end namespace Components
-} // end namespace Uintah
 

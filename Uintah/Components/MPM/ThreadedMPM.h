@@ -4,17 +4,9 @@
 #include <Uintah/Interface/MPMInterface.h>
 
 namespace Uintah {
-
-namespace Parallel {
-  class ProcessorContext;
-}
-
-namespace Grid {
-  class Region;
-}
-
-namespace Components {
-
+   class ProcessorContext;
+   class Region;
+   namespace MPM {
 /**************************************
 
 CLASS
@@ -100,11 +92,14 @@ private:
     ThreadedMPM& operator=(const ThreadedMPM&);
 };
 
-} // end namespace Components
+} // end namespace MPM
 } // end namespace Uintah
 
 //
 // $Log$
+// Revision 1.6  2000/04/26 06:48:12  sparker
+// Streamlined namespaces
+//
 // Revision 1.5  2000/04/20 18:56:16  sparker
 // Updates to MPM
 //

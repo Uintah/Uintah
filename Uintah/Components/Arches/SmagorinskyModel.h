@@ -36,11 +36,7 @@ WARNING
 #include <Uintah/Components/Arches/TurbulenceModel.h>
 
 namespace Uintah {
-  namespace Components {
-
-#ifndef LACKS_NAMESPACE
-using namespace Uintah::Components;
-#endif
+  namespace Arches {
 
 class PhysicalConstants;
 

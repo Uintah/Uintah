@@ -3,9 +3,8 @@
 
 
 namespace Uintah {
-namespace Grid {
 
-class Region;
+   class Region;
 
 /**************************************
 
@@ -36,27 +35,29 @@ WARNING
   
 ****************************************/
 
-class DataItem {
-public:
-
-    virtual ~DataItem();
-    virtual void get(DataItem&) const = 0;
-    virtual DataItem* clone() const = 0;
-    virtual void allocate(const Region*) = 0;
-
-protected:
-    DataItem(const DataItem&);
-    DataItem();
-
-private:
-    DataItem& operator=(const DataItem&);
-};
-
-} // end namespace Grid
+   class DataItem {
+   public:
+      
+      virtual ~DataItem();
+      virtual void get(DataItem&) const = 0;
+      virtual DataItem* clone() const = 0;
+      virtual void allocate(const Region*) = 0;
+      
+   protected:
+      DataItem(const DataItem&);
+      DataItem();
+      
+   private:
+      DataItem& operator=(const DataItem&);
+   };
+   
 } // end namespace Uintah
 
 //
 // $Log$
+// Revision 1.3  2000/04/26 06:48:47  sparker
+// Streamlined namespaces
+//
 // Revision 1.2  2000/03/16 22:07:58  dav
 // Added the beginnings of cocoon docs.  Added namespaces.  Did a few other coding standards updates too
 //

@@ -6,7 +6,6 @@
 #include <vector>
 
 namespace Uintah {
-namespace Grid {
 
 /**************************************
 
@@ -37,79 +36,81 @@ WARNING
   
 ****************************************/
 
-class ParticleSubset : public RefCounted {
-public:
-    ParticleSubset(ParticleSet* pset);
-    ~ParticleSubset();
-
-    //////////
-    // Insert Documentation Here:
-    ParticleSet* getParticleSet() const {
-	return d_pset;
-    }
-
-    //////////
-    // Insert Documentation Here:
-    particleIndex addParticle() {
-	particleIndex idx = d_pset->addParticle();
-	d_particles.push_back(idx);
-	return idx;
-    }
-
-    typedef std::vector<particleIndex>::iterator iterator;
-
-    //////////
-    // Insert Documentation Here:
-    iterator begin() {
-	return d_particles.begin();
-    }
-
-    //////////
-    // Insert Documentation Here:
-    iterator end() {
-	return d_particles.end();
-    }
-
-    //////////
-    // Insert Documentation Here:
-    particleIndex numParticles() {
-	return (particleIndex) d_particles.size();
-    }
-
-    //////////
-    // Insert Documentation Here:
-    iterator seek(int idx) {
-	return d_particles.begin() + idx;
-    }
-
-    //////////
-    // Insert Documentation Here:
-    void resize(particleIndex newSize) {
-	d_particles.resize(newSize);
-    }
-
-    //////////
-    // Insert Documentation Here:
-    void set(particleIndex idx, particleIndex value) {
-	d_particles[idx] = value;
-    }
-
-private:
-    //////////
-    // Insert Documentation Here:
-    ParticleSet*               d_pset;
-    std::vector<particleIndex> d_particles;
-
-    ParticleSubset();
-    ParticleSubset(const ParticleSubset& copy);
-    ParticleSubset& operator=(const ParticleSubset&);
-};
-
-} // end namespace Grid
+   class ParticleSubset : public RefCounted {
+   public:
+      ParticleSubset(ParticleSet* pset);
+      ~ParticleSubset();
+      
+      //////////
+      // Insert Documentation Here:
+      ParticleSet* getParticleSet() const {
+	 return d_pset;
+      }
+      
+      //////////
+      // Insert Documentation Here:
+      particleIndex addParticle() {
+	 particleIndex idx = d_pset->addParticle();
+	 d_particles.push_back(idx);
+	 return idx;
+      }
+      
+      typedef std::vector<particleIndex>::iterator iterator;
+      
+      //////////
+      // Insert Documentation Here:
+      iterator begin() {
+	 return d_particles.begin();
+      }
+      
+      //////////
+      // Insert Documentation Here:
+      iterator end() {
+	 return d_particles.end();
+      }
+      
+      //////////
+      // Insert Documentation Here:
+      particleIndex numParticles() {
+	 return (particleIndex) d_particles.size();
+      }
+      
+      //////////
+      // Insert Documentation Here:
+      iterator seek(int idx) {
+	 return d_particles.begin() + idx;
+      }
+      
+      //////////
+      // Insert Documentation Here:
+      void resize(particleIndex newSize) {
+	 d_particles.resize(newSize);
+      }
+      
+      //////////
+      // Insert Documentation Here:
+      void set(particleIndex idx, particleIndex value) {
+	 d_particles[idx] = value;
+      }
+      
+   private:
+      //////////
+      // Insert Documentation Here:
+      ParticleSet*               d_pset;
+      std::vector<particleIndex> d_particles;
+      
+      ParticleSubset();
+      ParticleSubset(const ParticleSubset& copy);
+      ParticleSubset& operator=(const ParticleSubset&);
+   };
+   
 } // end namespace Uintah
 
 //
 // $Log$
+// Revision 1.3  2000/04/26 06:48:51  sparker
+// Streamlined namespaces
+//
 // Revision 1.2  2000/03/16 22:08:00  dav
 // Added the beginnings of cocoon docs.  Added namespaces.  Did a few other coding standards updates too
 //

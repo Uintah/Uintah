@@ -1,7 +1,7 @@
 
 #include "InvalidGrid.h"
 
-using Uintah::Exceptions::InvalidGrid;
+using namespace Uintah;
 
 InvalidGrid::InvalidGrid(const std::string& msg)
     : d_msg(msg)

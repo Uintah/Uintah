@@ -18,12 +18,15 @@ include $(SRCTOP)/scripts/recurse.mk
 PSELIBS := Uintah/Interface Uintah/Grid Uintah/Parallel \
 	Uintah/Exceptions SCICore/Exceptions SCICore/Thread \
 	SCICore/Geometry
-LIBS := $(XML_LIBRARY)
+LIBS := $(XML_LIBRARY) -lm
 
 include $(SRCTOP)/scripts/smallso_epilogue.mk
 
 #
 # $Log$
+# Revision 1.5  2000/04/26 06:48:12  sparker
+# Streamlined namespaces
+#
 # Revision 1.4  2000/04/12 22:59:03  sparker
 # Working to make it compile
 # Added xerces to link line

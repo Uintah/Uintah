@@ -1,7 +1,7 @@
 
 #include "UnknownVariable.h"
 
-using Uintah::Exceptions::UnknownVariable;
+using namespace Uintah;
 
 UnknownVariable::UnknownVariable(const std::string& msg)
     : d_msg(msg)

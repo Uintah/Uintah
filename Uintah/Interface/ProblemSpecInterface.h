@@ -6,9 +6,6 @@
 #include <Uintah/Interface/ProblemSpecP.h>
 
 namespace Uintah {
-namespace Interface {
-
-using Uintah::Parallel::UintahParallelPort;
 
 /**************************************
 
@@ -39,23 +36,25 @@ WARNING
   
 ****************************************/
 
-class ProblemSpecInterface : public UintahParallelPort {
-public:
-    ProblemSpecInterface();
-    virtual ~ProblemSpecInterface();
-
-    virtual ProblemSpecP readInputFile() = 0;
-
-private:
-    ProblemSpecInterface(const ProblemSpecInterface&);
-    ProblemSpecInterface& operator=(const ProblemSpecInterface&);
-};
-
-} // end namespace Interface
+   class ProblemSpecInterface : public UintahParallelPort {
+   public:
+      ProblemSpecInterface();
+      virtual ~ProblemSpecInterface();
+      
+      virtual ProblemSpecP readInputFile() = 0;
+      
+   private:
+      ProblemSpecInterface(const ProblemSpecInterface&);
+      ProblemSpecInterface& operator=(const ProblemSpecInterface&);
+   };
+   
 } // end namespace Uintah
 
 //
 // $Log$
+// Revision 1.2  2000/04/26 06:49:12  sparker
+// Streamlined namespaces
+//
 // Revision 1.1  2000/04/11 07:10:54  sparker
 // Completing initialization and problem setup
 // Finishing Exception modifications

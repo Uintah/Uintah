@@ -12,8 +12,6 @@
 #include <SCICore/Geometry/Point.h>
 using SCICore::Geometry::Vector;
 using SCICore::Geometry::Point;
-using Uintah::Interface::DataWarehouseP;
-using Uintah::Grid::ParticleVariable;
 #include <fstream>
 #include <string>
 #include <iostream>
@@ -22,7 +20,7 @@ using std::ifstream;
 using std::string;
 using std::vector;
 
-using namespace Uintah::Components;
+using namespace Uintah::MPM;
 
 GeometryPiece::GeometryPiece()
 {
@@ -392,6 +390,9 @@ void GeometryObject::fillWithParticles(vector<Material *> &materials,
 
   
 // $Log$
+// Revision 1.5  2000/04/26 06:48:24  sparker
+// Streamlined namespaces
+//
 // Revision 1.4  2000/04/24 21:04:30  sparker
 // Working on MPM problem setup and object creation
 //

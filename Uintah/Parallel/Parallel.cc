@@ -7,10 +7,8 @@ static char *id="@(#) $Id$";
 #include <mpi.h>
 #include <stdlib.h>
 
+using namespace Uintah;
 using std::cerr;
-
-namespace Uintah {
-namespace Parallel {
 
 static bool usingMPI;
 static MPI_Comm worldComm;
@@ -81,11 +79,11 @@ Parallel::finalizeManager()
     }
 }
 
-} // end namespace Parallel
-} // end namespace Uintah
-
 //
 // $Log$
+// Revision 1.6  2000/04/26 06:49:15  sparker
+// Streamlined namespaces
+//
 // Revision 1.5  2000/04/25 00:41:23  dav
 // more changes to fix compilations
 //

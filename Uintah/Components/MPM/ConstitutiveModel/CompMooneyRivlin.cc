@@ -19,9 +19,7 @@
 #include <Uintah/Components/MPM/ConstitutiveModel/MPMMaterial.h>
 #include <iostream>
 using std::cerr;
-using namespace Uintah::Grid;
-using namespace Uintah::Components;
-using namespace Uintah::Interface;
+using namespace Uintah::MPM;
 using SCICore::Math::Min;
 using SCICore::Math::Max;
 using SCICore::Geometry::Vector;
@@ -281,6 +279,9 @@ ConstitutiveModel* CompMooneyRivlin::create(double *p_array)
 }
 
 // $Log$
+// Revision 1.11  2000/04/26 06:48:14  sparker
+// Streamlined namespaces
+//
 // Revision 1.10  2000/04/25 18:42:33  jas
 // Revised the factory method and constructor to take a ProblemSpec argument
 // to create a new constitutive model.

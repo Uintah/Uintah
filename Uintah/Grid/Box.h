@@ -6,9 +6,8 @@
 #include <iosfwd>
 
 namespace Uintah {
-namespace Grid {
 
-using SCICore::Geometry::Point;
+   using SCICore::Geometry::Point;
 
 /**************************************
 
@@ -37,37 +36,39 @@ using SCICore::Geometry::Point;
   
 ****************************************/
 
-class Box {
-public:
-  Box();
-  ~Box();
-  Box(const Box&);
-  Box& operator=(const Box&);
-
-  Box(const Point& lower, const Point& upper);
-
-  bool overlaps(const Box&, double epsilon=1.e-6) const;
-
-  inline Point lower() const {
-    return d_lower;
-  }
-  inline Point upper() const {
-    return d_upper;
-  }
-
-private:
-  Point d_lower;
-  Point d_upper;
-};
-
-} // end namespace Grid
+   class Box {
+   public:
+      Box();
+      ~Box();
+      Box(const Box&);
+      Box& operator=(const Box&);
+      
+      Box(const Point& lower, const Point& upper);
+      
+      bool overlaps(const Box&, double epsilon=1.e-6) const;
+      
+      inline Point lower() const {
+	 return d_lower;
+      }
+      inline Point upper() const {
+	 return d_upper;
+      }
+      
+   private:
+      Point d_lower;
+      Point d_upper;
+   };
+   
 } // end namespace Uintah
 
-std::ostream& operator<<(std::ostream& out, const Uintah::Grid::Box& b);
+std::ostream& operator<<(std::ostream& out, const Uintah::Box& b);
     
 
 //
 // $Log$
+// Revision 1.3  2000/04/26 06:48:47  sparker
+// Streamlined namespaces
+//
 // Revision 1.2  2000/04/25 00:41:21  dav
 // more changes to fix compilations
 //

@@ -4,9 +4,9 @@
 #include <Uintah/Grid/Box.h>
 #include <Uintah/Interface/ProblemSpec.h>
 
-using namespace Uintah::Components;
+using namespace Uintah::MPM;
+using namespace Uintah;
 using SCICore::Geometry::Vector;
-
 
 SphereGeometryPiece::SphereGeometryPiece(ProblemSpecP& ps)
 {
@@ -49,6 +49,9 @@ Box SphereGeometryPiece::getBoundingBox() const
 }
 
 // $Log$
+// Revision 1.4  2000/04/26 06:48:26  sparker
+// Streamlined namespaces
+//
 // Revision 1.3  2000/04/24 21:04:32  sparker
 // Working on MPM problem setup and object creation
 //

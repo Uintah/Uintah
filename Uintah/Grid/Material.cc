@@ -3,7 +3,7 @@
 
 #include "Material.h"
 
-using namespace Uintah::Grid;
+using namespace Uintah;
 
 int Material::getDWIndex() const
 {

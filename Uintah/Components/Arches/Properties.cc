@@ -5,11 +5,7 @@ static char *id="@(#) $Id$";
 #include <Uintah/Interface/ProblemSpec.h>
 #include <Uintah/Interface/DataWarehouse.h>
 
-using namespace Uintah::Components;
-using namespace Uintah::Grid;
-
-namespace Uintah {
-namespace Components {
+using namespace Uintah::Arches;
 
 Properties::Properties()
 {
@@ -82,8 +78,3 @@ void Properties::Stream::problemSetup(ProblemSpecP& params)
   params->require("Density", d_density);
   params->require("Temperature", d_temperature);
 }
-
-
-} // end namespace Components
-} // end namespace Uintah
-
