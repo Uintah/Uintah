@@ -341,16 +341,16 @@ Patch::getExtraCellIterator(const Box& b) const
 }
 
 CellIterator
-Patch::getCellIterator() const
+Patch::getCellIterator(const IntVector gc) const
 {
   //   return CellIterator(getCellLowIndex(), getCellHighIndex());
-   return CellIterator(d_inLowIndex, d_inHighIndex);
+   return CellIterator(d_inLowIndex-gc, d_inHighIndex+gc);
 }
 
 CellIterator
-Patch::getExtraCellIterator() const
+Patch::getExtraCellIterator(const IntVector gc) const
 {
-  return CellIterator(getCellLowIndex(), getCellHighIndex());
+  return CellIterator(getCellLowIndex()-gc, getCellHighIndex()+gc);
 }
 
 
