@@ -1184,9 +1184,17 @@ void EditField::tcl_command(TCLArgs& args, void* userdata)
 void EditField::widget_moved(int i)
 {
   if (i==1) {
+    Point center, right, down, in;
+    box_->GetPosition(center,right,down,in);
+    minx_.set((center-(right-center)).x());
+    miny_.set((center-(down-center)).y());
+    minz_.set((center-(in-center)).z());
+    maxx_.set(right.x());
+    maxy_.set(down.y());
+    maxz_.set(in.z());
     want_to_execute();
   } else {
-    Module::widget_moved(i);
+    //Module::widget_moved(i);
   }
 }
 
