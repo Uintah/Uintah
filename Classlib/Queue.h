@@ -54,6 +54,8 @@ WARNING
   
 ****************************************/
 
+class RigorousTest;
+
 template<class T> class Queue {
     QueueNode<T>* head;
     QueueNode<T>* tail;
