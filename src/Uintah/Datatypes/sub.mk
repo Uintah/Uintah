@@ -17,7 +17,8 @@ SRCS     += $(SRCDIR)/Archive.cc  $(SRCDIR)/ArchivePort.cc \
 	$(SRCDIR)/TensorField.cc $(SRCDIR)/TensorFieldPort.cc \
 	$(SRCDIR)/ScalarParticles.cc $(SRCDIR)/ScalarParticlesPort.cc \
 	$(SRCDIR)/VectorParticles.cc $(SRCDIR)/VectorParticlesPort.cc \
-	$(SRCDIR)/TensorParticles.cc $(SRCDIR)/TensorParticlesPort.cc 
+	$(SRCDIR)/TensorParticles.cc $(SRCDIR)/TensorParticlesPort.cc \
+	$(SRCDIR)/PSet.cc
 
 
 
@@ -38,6 +39,9 @@ include $(SRCTOP)/scripts/smallso_epilogue.mk
 
 #
 # $Log$
+# Revision 1.5  2000/10/14 03:11:30  kuzimmer
+# Added code to reduce memory usage when viewing particle data
+#
 # Revision 1.4  2000/07/31 17:45:42  kuzimmer
 # Added files and modules for Field Extraction from uda
 #
