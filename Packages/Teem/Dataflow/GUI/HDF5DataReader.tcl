@@ -328,6 +328,10 @@ itcl_class Teem_DataIO_HDF5DataReader {
 	    global $this-$i-stride
 	    global $this-$i-stride2
 
+	    set $this-$i-start2  [set $this-$i-start]
+	    set $this-$i-count2  [set $this-$i-count]
+	    set $this-$i-stride2 [set $this-$i-stride]
+
 	    # Update the sliders to have the new end values.
 
 	    set start_val 1
@@ -440,7 +444,6 @@ itcl_class Teem_DataIO_HDF5DataReader {
     }
 
     method manualSliderEntry { start count var1 var2 } {
-
 	if { [set $var2] < $start } {
 	    set $var2 $start }
 	
@@ -634,7 +637,6 @@ itcl_class Teem_DataIO_HDF5DataReader {
     }
 
     method set_size {ndims dims} {
-
 	global $this-ndims
 	set $this-ndims $ndims
 
