@@ -190,6 +190,7 @@ void DataArchiver::problemSetup(const ProblemSpecP& params)
        string test_string = ts.str();
        const char* outbuf = test_string.c_str();
        int outlen = (int)strlen(outbuf);
+
        MPI_Bcast(&outlen, 1, MPI_INT, 0, d_myworld->getComm());
        MPI_Bcast(const_cast<char*>(outbuf), outlen, MPI_CHAR, 0,
 		 d_myworld->getComm());
@@ -220,7 +221,6 @@ void DataArchiver::problemSetup(const ProblemSpecP& params)
      if(fclose(tmpout) != 0)
        throw ErrnoException("fclose", errno);
      MPI_Barrier(d_myworld->getComm());
-
      // See who else we can see
      d_writeMeta=true;
      int i;
@@ -1230,62 +1230,98 @@ void DataArchiver::output(const ProcessorGroup*,
  pLock->unlock();  
 }
 
-static Dir makeVersionedDir(const std::string nameBase)
+static
+Dir
+makeVersionedDir(const std::string nameBase)
 {
-   Dir dir;
-   unsigned int dirMin = 0;
-   unsigned int dirNum = 0;
-   unsigned int dirMax = 0;
+  unsigned int dirMin = 0;
+  unsigned int dirNum = 0;
+  unsigned int dirMax = 0;
 
-   bool dirCreated = false;
-   while (!dirCreated) {
-      ostringstream name;
-      name << nameBase << "." << setw(3) << setfill('0') << dirNum;
-      string dirName = name.str();
+  bool dirCreated = false;
+
+  // My (Dd) understanding of this while loop is as follows: We try to
+  // make a new directory starting at 0 (000), then 1 (001), and then
+  // doubling the number each time that the directory already exists.
+  // Once we find a directory number that does not exist, we start
+  // back at the minimum number that we had already tried and work
+  // forward to find an actual directory number that we can use.
+  //
+  // Eg: If 001 and 002 already exist, then the algorithm tries to
+  // create 001, fails (it already exists), tries to created 002,
+  // fails again, tries to create 004, succeeds, deletes 004 because
+  // we aren't sure that it is the smallest new number, creates 003,
+  // succeeds, and since 003 is the smallest (dirMin) the algorithm
+  // stops.
+  //
+  // This routine has been re-written to not use the Dir class because
+  // the Dir class throws exceptions and exceptions (under SGI CC) add
+  // a huge memory penalty in one (same penalty if more than) are
+  // thrown.  This causes memory usage to change if the very first
+  // directory (000) can be created (because no exception is thrown
+  // and thus no memory is allocated for exceptions).
+  //
+  // If there is a real error, then we can throw an exception becuase
+  // we don't care about the memory penalty.
+
+  string dirName;
+
+  while (!dirCreated) {
+    ostringstream name;
+    name << nameBase << "." << setw(3) << setfill('0') << dirNum;
+    dirName = name.str();
       
-      try {
-         dir = Dir::create(dirName);
-            // throws an exception if dir exists
-
-         dirMax = dirNum;
-         if (dirMax == dirMin)
-            dirCreated = true;
-         else
-            dir.remove();
-      } catch (ErrnoException& e) {
-         if (e.getErrno() != EEXIST)
-            throw;
-
-         dirMin = dirNum + 1;
+    int code = mkdir( dirName.c_str(), 0777 );
+    if( code == 0 ) // Created the directory successfully
+      {
+	dirMax = dirNum;
+	if (dirMax == dirMin)
+	  dirCreated = true;
+	else
+	  {
+	    int code = rmdir( dirName.c_str() );
+	    if (code != 0)
+	      throw ErrnoException("DataArchiver.cc: rmdir failed", errno);
+	  }
+      }
+    else
+      {
+	if( errno != EEXIST )
+	  {
+	    cerr << "makeVersionedDir: Error " << errno << " in mkdir\n";
+	    throw ErrnoException("DataArchiver.cc: mkdir failed for some "
+				 "reason besides dir already exists", errno);
+	  }
+	dirMin = dirNum + 1;
       }
 
-      if (!dirCreated) {
-         if (dirMax == 0) {
-            if (dirNum == 0)
-               dirNum = 1;
-            else
-               dirNum *= 2;
-         } else {
-            dirNum = dirMin + ((dirMax - dirMin) / 2);
-         }
+    if (!dirCreated) {
+      if (dirMax == 0) {
+	if (dirNum == 0)
+	  dirNum = 1;
+	else
+	  dirNum *= 2;
+      } else {
+	dirNum = dirMin + ((dirMax - dirMin) / 2);
       }
-   }
-   // Move the symbolic link to point to the new version. We need to be careful
-   // not to destroy data, so we only create the link if no file/dir by that
-   // name existed or if it's already a link.
-   bool make_link = false;
-   struct stat sb;
-   int rc = lstat(nameBase.c_str(), &sb);
-   if ((rc != 0) && (errno == ENOENT))
-      make_link = true;
-   else if ((rc == 0) && (S_ISLNK(sb.st_mode))) {
-      unlink(nameBase.c_str());
-      make_link = true;
-   }
-   if (make_link)
-      symlink(dir.getName().c_str(), nameBase.c_str());
+    }
+  }
+  // Move the symbolic link to point to the new version. We need to be careful
+  // not to destroy data, so we only create the link if no file/dir by that
+  // name existed or if it's already a link.
+  bool make_link = false;
+  struct stat sb;
+  int rc = lstat(nameBase.c_str(), &sb);
+  if ((rc != 0) && (errno == ENOENT))
+    make_link = true;
+  else if ((rc == 0) && (S_ISLNK(sb.st_mode))) {
+    unlink(nameBase.c_str());
+    make_link = true;
+  }
+  if (make_link)
+    symlink(dirName.c_str(), nameBase.c_str());
    
-   return Dir(dir.getName());
+  return Dir(dirName);
 }
 
 void  DataArchiver::initSaveLabels(SchedulerP& sched)
