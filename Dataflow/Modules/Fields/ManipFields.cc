@@ -19,8 +19,11 @@
 
 namespace SCIRun {
 
-extern const char* FIELD_MANIP_COMPILATION_PATH;
+#ifndef FM_COMP_PATH
+#error main/sub.mk needs to define FM_COMP_PATH
+#endif
 
+const char* FIELD_MANIP_COMPILATION_PATH = FM_COMP_PATH;
 
 // The function pointer definition.
 typedef FieldHandle& (*fieldManipFunction)(vector<FieldHandle> &);

@@ -24,6 +24,7 @@
 #include <Core/TclInterface/TCL.h>
 #include <Core/Thread/Thread.h>
 #include <Core/Containers/String.h>
+
 #ifdef SCI_PARALLEL
 #include <Core/CCA/Component/PIDL/PIDL.h>
 #include <iostream>
@@ -39,16 +40,9 @@ using Component::PIDL::PIDL;
 
 using namespace SCIRun;
 
-#ifndef FM_COMP_PATH
-#error main/sub.mk needs to define FM_COMP_PATH
-#endif
-
-
 namespace SCIRun {
 extern bool global_remote;
 void set_guiManager( GuiManager * );
-const char* FIELD_MANIP_COMPILATION_PATH = FM_COMP_PATH;
-
 }
 
 //extern void set_guiManager( GuiManager* );

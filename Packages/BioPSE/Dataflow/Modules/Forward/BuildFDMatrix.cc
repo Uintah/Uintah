@@ -332,6 +332,9 @@ void BuildFDMatrix::execute()
       Vector dir(0, 0, 0);
       double dval, val;
 
+
+      // -- determining valid neighborhood
+      unsigned char empty=0;
       // -----------------------------------------------------------------------
       // --  if it has neighboor with Neumann and Dirichlet BC at the same time,
       // just set it to the combined value of the BC's
@@ -412,9 +415,6 @@ void BuildFDMatrix::execute()
 	cols.add(i);
 	goto lNextNode;
       }
-
-      // -- determining valid neighborhood
-      unsigned char empty=0;
       
       // --------------------------------------------------------------
       if ( kk==0 || !hTensors->isValid(ii, jj, kk-1)){                  // ----1-
@@ -423,7 +423,7 @@ void BuildFDMatrix::execute()
       else {
 	tmpSigma=(hTensors->get3(ii, jj, kk-1))[5];
 	
-	if (abs(tmpSigma-ownSigma[5])>NUMZERO){
+	if (fabs(tmpSigma-ownSigma[5])>NUMZERO){
 	  currLcl[0] = 2*tmpSigma*ownSigma[5]/(tmpSigma+ownSigma[5])/(d_dz*d_dz);
 	}
 	else {
@@ -438,7 +438,7 @@ void BuildFDMatrix::execute()
       }
       else {
 	tmpSigma=(hTensors->get3(ii, jj-1, kk))[3];
-	if (abs(tmpSigma-ownSigma[3])>NUMZERO){
+	if (fabs(tmpSigma-ownSigma[3])>NUMZERO){
 	  currLcl[1] = 2*tmpSigma*ownSigma[3]/(tmpSigma+ownSigma[3])/(d_dy*d_dy);
 	}
 	else {
@@ -453,7 +453,7 @@ void BuildFDMatrix::execute()
       }
       else {
 	tmpSigma=(hTensors->get3(ii-1, jj, kk))[0];
-	if (abs(tmpSigma-ownSigma[0])>NUMZERO){
+	if (fabs(tmpSigma-ownSigma[0])>NUMZERO){
 	  currLcl[2] = 2*tmpSigma*ownSigma[0]/(tmpSigma+ownSigma[0])/(d_dx*d_dx);
 	}
 	else {
@@ -472,7 +472,7 @@ void BuildFDMatrix::execute()
       else {
 	tmpSigma=(hTensors->get3(ii+1, jj, kk))[0];
 	
-	if (abs(tmpSigma-ownSigma[0])>NUMZERO){
+	if (fabs(tmpSigma-ownSigma[0])>NUMZERO){
 	  currLcl[4] = 2*tmpSigma*ownSigma[0]/(tmpSigma+ownSigma[0])/(d_dx*d_dx);
 	}
 	else {
@@ -488,7 +488,7 @@ void BuildFDMatrix::execute()
       else {
 	tmpSigma=(hTensors->get3(ii, jj+1, kk))[3];
 
-	if (abs(tmpSigma-ownSigma[3])>NUMZERO){
+	if (fabs(tmpSigma-ownSigma[3])>NUMZERO){
 	  currLcl[5] = 2*tmpSigma*ownSigma[3]/(tmpSigma+ownSigma[3])/(d_dy*d_dy);
 	}
 	else {
@@ -504,7 +504,7 @@ void BuildFDMatrix::execute()
       else {
 	tmpSigma=(hTensors->get3(ii, jj, kk+1))[5];
 
-	if (abs(tmpSigma-ownSigma[5])>NUMZERO){
+	if (fabs(tmpSigma-ownSigma[5])>NUMZERO){
 	  currLcl[6] = 2*tmpSigma*ownSigma[5]/(tmpSigma+ownSigma[5])/(d_dz*d_dz);
 	}
 	else {
