@@ -95,26 +95,19 @@ void Image::draw( int window_size, bool fullscreen )
       rtrtMidTopTexQuad->draw();
     }
   } else {
-    // Not full screen
-    rtrtMidTopTex->reset( GL_UNSIGNED_BYTE, &image[0][0] );
-    rtrtMidTopTexQuad->draw();
-  }
-
-#if 0
     if(stereo){
-	glDrawBuffer(GL_BACK_LEFT);
-	glRasterPos2i(0,0);
-	glDrawPixels(xres, yres, GL_RGBA, GL_UNSIGNED_BYTE, &image[0][0]);
-	glDrawBuffer(GL_BACK_RIGHT);
-	glRasterPos2i(0,0);
-	glDrawPixels(xres, yres, GL_RGBA, GL_UNSIGNED_BYTE, &image[yres][0]);
+      glDrawBuffer(GL_BACK_LEFT);
+      glRasterPos2i(0,0);
+      glDrawPixels(xres, yres, GL_RGBA, GL_UNSIGNED_BYTE, &image[0][0]);
+      glDrawBuffer(GL_BACK_RIGHT);
+      glRasterPos2i(0,0);
+      glDrawPixels(xres, yres, GL_RGBA, GL_UNSIGNED_BYTE, &image[yres][0]);
     } else {
-	glDrawBuffer(GL_BACK);
-	//	glRasterPos2i(0,0);
-	glRasterPos2i(128,286);
-	glDrawPixels(xres, yres, GL_RGBA, GL_UNSIGNED_BYTE, &image[0][0]);
+      glDrawBuffer(GL_BACK);
+      glRasterPos2i(0,0);
+      glDrawPixels(xres, yres, GL_RGBA, GL_UNSIGNED_BYTE, &image[0][0]);
     }
-#endif
+  }
 }
 
 void Image::set(const Pixel& value)
