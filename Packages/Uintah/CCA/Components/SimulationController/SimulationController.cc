@@ -31,6 +31,7 @@
 #include <Packages/Uintah/Core/Grid/VarTypes.h>
 
 #include <iostream>
+#include <iomanip>
 #include <values.h>
 
 #ifdef OUTPUT_AVG_ELAPSED_WALLTIME
@@ -300,6 +301,14 @@ void SimulationController::run()
       }
       
       
+      if(log_dw_mem){
+	scheduler->logMemoryUse();
+	ostringstream fn;
+	fn << "alloc." << setw(5) << setfill('0') << d_myworld->myrank() << ".out";
+	string filename(fn.str());
+	DumpAllocator(DefaultAllocator(), filename.c_str());
+      }
+
       if(d_myworld->myrank() == 0){
 	if( analyze ) analyze->showStepInformation();
 	cout << "Time=" << t << ", delT=" << delt 
@@ -319,10 +328,6 @@ void SimulationController::run()
 	  cout << " (max)";
 	}
 	cout << endl;
-
-	if(log_dw_mem){
-	  scheduler->logMemoryUse();
-	}
 
 #ifdef OUTPUT_AVG_ELAPSED_WALLTIME
 	if (n > 1) // ignore first set of elapsed times
