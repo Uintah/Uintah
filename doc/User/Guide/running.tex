@@ -45,8 +45,7 @@ window.  \note{Don't start \sr{} in the background, \ie don't type
 The \command{scirun} command is located in \sr{}'s build directory
 (see the
 \htmladdnormallinkfoot{\srig}{\htmlurl{\latexhtml{\scisoftware/doc}{../../..}/Installation/Guide/ch.inst.html}}
-for details).  The person who installed \sr{} can locate this command.
-
+for details).
 
 \begin{figure}[htb]
   \begin{makeimage}
@@ -56,19 +55,18 @@ for details).  The person who installed \sr{} can locate this command.
 \end{figure}
 
 
-The \command{scirun} command may take 1 argument, which is the name of
-a \dfn{\sr{} network file}.  (these files use a \filename{.net}
-extension).  These files hold previously defined \sr{} networks.
-\sr{} will load the specified network.  Network files are discussed in
-a later section.
+The \command{scirun} command may take 1 argument, the name of a
+\dfn{\sr{} network file} (these files use a \filename{.net} extension)
+for \sr{} to load.  Network files are discussed in a later section.
 
-Typing \keyboard{scirun} with no arguments starts \sr{} with a blank
-\sr{} window as shown in Figure~\ref{fig:srwindow}
-(Section~\ref{sec:windowanatomy} discusses the main features of this
-window).
+If you don't provide the name of a network file, \sr{} will start with
+a blank window as shown in Figure~\ref{fig:srwindow}.
+Section~\ref{sec:windowanatomy} discusses the main features of this
+window.
 
-\sr{} may encounter errors during start up.  Errors will be displayed in
-\sr{}'s error frame (see Figure~\ref{fig:srwindow}).  These errors
+\sr{} may encounter errors during start up.  Errors, warnings, and
+other messages will be displayed in
+\sr{}'s error frame (see Figure~\ref{fig:srwindow}).   Errors
 should be \htmladdnormallink{reported}{\bugsurl} to the \sr{} development
 team (See \secref{Reporting Bugs}{sec:bugs} for information on
 reporting bugs).
@@ -144,9 +142,9 @@ Figure~\ref{fig:srwindow}):
   \end{description}
 
   \begin{description}
-    \descitem{...}  There may be other package menus if other packages
-    have been installed.  They also have category sub-menus
-    and module menu items.
+    \descitem{\ptext{Other Package Menus}} There may be other
+    package menus if other packages have been installed.  They also
+    have category sub-menus and module menu items.
   \end{description}
   
   \descitem{Global View Frame} The Global View Frame is located in the
@@ -198,7 +196,7 @@ optional.
   
   \descitem{\envvar{SCIRUN\_DATA} \& \envvar{SCIRUN\_DATASET}}  These
   two variables specify the complete path to a \sr{} \dfn{data set}. A data set is a collection of \sr{} type data  fields,
-  matricies, \etc{} that are stored in a directory and are used in
+  matrices, \etc{} that are stored in a directory and are used in
   \sr{} networks.
 
   \envvar{SCIRUN\_DATA} specifies a directory that contains a
@@ -251,18 +249,18 @@ for a csh-style shell
   xhost +remote-machine-name
 \end{verbatim}
   
-  \envitem{LOAD\_PACKAGE} A comma seperated list of package names that
+  \envitem{LOAD\_PACKAGE} A comma separated list of package names that
   \sr{} loads.
   
-\sr{} loads these packages instead of packages specified at configure time. Each package on the list must have been previously compiled.
-  
-  \option{\-\-enable-package} option at configure time.
+  \sr{} loads these packages instead of packages specified at
+  configure time. Each package on the list must be previously
+  compiled.
   
   \envitem{PACKAGE\_SRC\_PATH} A colon separated list of paths to
   package source trees.  The path
   \directory{\ptext{build\_dir}/Packages} is implicitly part of this
   list.  \ptext{build\_dir} is the directory where
-  \command{configure} and \command{make} command are run.
+  \command{configure} and \command{make} were run.
   
   \sr{} searches this path list to find XML description files and
   user interface code corresponding to packages
@@ -293,7 +291,7 @@ loads the content of the file \filename{.scirunrc}.  \sr{} searches for
 \item current working directory
 \item root of \sr's build directory
 \item home directory
-\item  root of \sr's source code directory
+\item root of \sr's source code directory
 \end{enumerate}
 
 This file may contain assignment of values to variables and variable
@@ -323,7 +321,7 @@ for the meanings of  other variables).
 Before executing \sr{},  be aware of the
 \dfn{Dynamic Compilation} feature.
 
-Dynamic compilition is a technique used by \sr{} to discover and
+Dynamic compilation is a technique used by \sr{} to discover and
 generate code for the data types and algorithms used by modules in
 networks.  This is done at runtime and once for each new
 data type and algorithm encountered.  This technique provides a number
@@ -381,7 +379,7 @@ Setting a unique value of SCIRUN\_ON\_THE\_FLY\_LIBS\_DIR for each
 
 \end{itemize}
 
-Dynamic compilition will cause a delay the first time a module is
+Dynamic compilation will cause a delay the first time a module is
 executed.  The module will change color while it is being
 compiled.
 
@@ -391,7 +389,7 @@ compiled.
 Exit \sr{} by selecting the \menuitem{Quit} item from the \menu{File} menu
 
 Do not press \keyboard{control-c} to exit \sr{}.  Doing this will drop
-you into a debugger.
+\sr{} into a debugger.
 
 
 %%% Local Variables: 
