@@ -2,6 +2,7 @@
 
 #include <Packages/Uintah/CCA/Components/Arches/debug.h>
 #include <Packages/Uintah/CCA/Components/Arches/Properties.h>
+#include <Packages/Uintah/CCA/Components/Arches/Arches.h>
 #include <Packages/Uintah/CCA/Components/Arches/ArchesLabel.h>
 #include <Packages/Uintah/CCA/Components/Arches/Mixing/MixingModel.h>
 #include <Packages/Uintah/CCA/Components/Arches/Mixing/ColdflowMixingModel.h>
@@ -102,22 +103,21 @@ Properties::sched_computeProps(SchedulerP& sched, const PatchSet* patches,
 			  this,
 			  &Properties::computeProps);
 
-  int numGhostCells = 0;
   tsk->requires(Task::NewDW, d_lab->d_cellTypeLabel, Ghost::None,
-		numGhostCells);
+		Arches::ZEROGHOSTCELLS);
   // requires scalars
   tsk->modifies(d_lab->d_densityINLabel);
   // will only work for one mixing variables
   tsk->requires(Task::NewDW, d_lab->d_scalarSPLabel, Ghost::None,
-		numGhostCells);
+		Arches::ZEROGHOSTCELLS);
 
   if (d_numMixStatVars > 0) {
     tsk->requires(Task::NewDW, d_lab->d_scalarVarSPLabel, Ghost::None,
-		numGhostCells);
+		Arches::ZEROGHOSTCELLS);
   }
   if (d_mixingModel->getNumRxnVars())
     tsk->requires(Task::NewDW, d_lab->d_reactscalarSPLabel, Ghost::None,
-		  numGhostCells);
+		  Arches::ZEROGHOSTCELLS);
 
   tsk->computes(d_lab->d_refDensity_label);
   tsk->computes(d_lab->d_densityCPLabel);
@@ -125,10 +125,10 @@ Properties::sched_computeProps(SchedulerP& sched, const PatchSet* patches,
   // commenting stuff below for debug, sk, 01/22/02
   //  if (d_MAlab) 
   //    tsk->requires(Task::NewDW, d_lab->d_mmcellTypeLabel, Ghost::None,
-  //		  numGhostCells);
+  //		  Arches::ZEROGHOSTCELLS);
   //  else
   //    tsk->requires(Task::NewDW, d_lab->d_cellTypeLabel, Ghost::None,
-  //		  numGhostCells);
+  //		  Arches::ZEROGHOSTCELLS);
 
   if (d_enthalpySolve)
     tsk->computes(d_lab->d_enthalpySPLabel);
@@ -146,7 +146,7 @@ Properties::sched_computeProps(SchedulerP& sched, const PatchSet* patches,
   }
   if (d_MAlab) {
     //    tsk->requires(Task::NewDW, d_lab->d_mmgasVolFracLabel, Ghost::None,
-    //		  numGhostCells);
+    //		  Arches::ZEROGHOSTCELLS);
     tsk->computes(d_lab->d_densityMicroLabel);
   }
 
@@ -164,32 +164,31 @@ Properties::sched_reComputeProps(SchedulerP& sched, const PatchSet* patches,
 			  this,
 			  &Properties::reComputeProps);
 
-  int numGhostCells = 0;
   // requires scalars
   tsk->requires(Task::NewDW, d_lab->d_densityINLabel,
-		Ghost::AroundCells,
-		numGhostCells+2);
+		Ghost::None,
+		Arches::ZEROGHOSTCELLS);
   if (d_MAlab) {
     tsk->requires(Task::NewDW, d_lab->d_mmgasVolFracLabel, 
-		  Ghost::None, numGhostCells);
+		  Ghost::None, Arches::ZEROGHOSTCELLS);
     //    tsk->requires(Task::NewDW, d_lab->d_densityMicroINLabel, 
-    //		  Ghost::None, numGhostCells);
+    //		  Ghost::None, Arches::ZEROGHOSTCELLS);
   }
   tsk->requires(Task::NewDW, d_lab->d_scalarSPLabel, Ghost::None,
-		numGhostCells);
+		Arches::ZEROGHOSTCELLS);
 
   if (d_numMixStatVars > 0) {
     tsk->requires(Task::NewDW, d_lab->d_scalarVarSPLabel, Ghost::None,
-		numGhostCells);
+		Arches::ZEROGHOSTCELLS);
   }
 
   if (d_mixingModel->getNumRxnVars())
     tsk->requires(Task::NewDW, d_lab->d_reactscalarSPLabel, Ghost::None,
-		  numGhostCells);
+		  Arches::ZEROGHOSTCELLS);
 
   if (!(d_mixingModel->isAdiabatic()))
     tsk->requires(Task::NewDW, d_lab->d_enthalpySPLabel, Ghost::None,
-		  numGhostCells);
+		  Arches::ZEROGHOSTCELLS);
 
   tsk->computes(d_lab->d_refDensity_label);
   tsk->computes(d_lab->d_densityCPLabel);
@@ -225,7 +224,6 @@ Properties::sched_computeDenRefArray(SchedulerP& sched,
   Task* tsk = scinew Task("Properties::computeDenRefArray",
 			  this, &Properties::computeDenRefArray);
 
-  int zeroGhostCells = 0;
 
   tsk->requires(Task::OldDW, d_lab->d_refDensity_label);
   tsk->computes(d_lab->d_denRefArrayLabel);
@@ -233,7 +231,7 @@ Properties::sched_computeDenRefArray(SchedulerP& sched,
   if (d_MAlab) {
 
     tsk->requires(Task::NewDW, d_lab->d_mmgasVolFracLabel, 
-		  Ghost::None, zeroGhostCells);
+		  Ghost::None, Arches::ZEROGHOSTCELLS);
   }
   sched->addTask(tsk, patches, matls);
 
@@ -257,10 +255,9 @@ Properties::computeProps(const ProcessorGroup*,
 
     // Get the cellType and density from the old datawarehouse
 
-    int nofGhostCells = 0;
     constCCVariable<int> cellType;
     new_dw->get(cellType, d_lab->d_cellTypeLabel, matlIndex, patch, 
-		Ghost::None, nofGhostCells);
+		Ghost::None, Arches::ZEROGHOSTCELLS);
     constCCVariable<double> density_old;
     CCVariable<double> density;
     StaticArray<constCCVariable<double> > scalar(d_numMixingVars);
@@ -271,7 +268,7 @@ Properties::computeProps(const ProcessorGroup*,
     if (d_enthalpySolve) {
       //constCCVariable<double> enthalpy_old;
       //new_dw->get(enthalpy_old, d_lab->d_enthalpySPBCLabel, 
-      //	  matlIndex, patch, Ghost::None, nofGhostCells);
+      //	  matlIndex, patch, Ghost::None, Arches::ZEROGHOSTCELLS);
       new_dw->allocate(enthalpy, d_lab->d_enthalpySPLabel, matlIndex, patch);
       //enthalpy.copyData(enthalpy_old);
     }
@@ -279,11 +276,11 @@ Properties::computeProps(const ProcessorGroup*,
     // temporary comment, for debug, sk, 01/22/02
     //    if (d_MAlab) {
     //      new_dw->get(cellType, d_lab->d_mmcellTypeLabel, matlIndex, patch, 
-    //		  Ghost::None, nofGhostCells);
+    //		  Ghost::None, Arches::ZEROGHOSTCELLS);
     //    }
     //    else {
     //      new_dw->get(cellType, d_lab->d_cellTypeLabel, matlIndex, patch, 
-    //		Ghost::None, nofGhostCells);
+    //		Ghost::None, Arches::ZEROGHOSTCELLS);
     //    }
 
     CCVariable<double> temperature;
@@ -310,21 +307,21 @@ Properties::computeProps(const ProcessorGroup*,
     }
     for (int ii = 0; ii < d_numMixingVars; ii++)
       new_dw->get(scalar[ii], d_lab->d_scalarSPLabel, 
-		  matlIndex, patch, Ghost::None, nofGhostCells);
+		  matlIndex, patch, Ghost::None, Arches::ZEROGHOSTCELLS);
 
     StaticArray<constCCVariable<double> > scalarVar(d_numMixStatVars);
 
     if (d_numMixStatVars > 0) {
     for (int ii = 0; ii < d_numMixStatVars; ii++)
       new_dw->get(scalarVar[ii], d_lab->d_scalarVarSPLabel, 
-		  matlIndex, patch, Ghost::None, nofGhostCells);
+		  matlIndex, patch, Ghost::None, Arches::ZEROGHOSTCELLS);
     }
     StaticArray<constCCVariable<double> > reactScalar(d_mixingModel->getNumRxnVars());
     
     if (d_mixingModel->getNumRxnVars() > 0) {
       for (int ii = 0; ii < d_mixingModel->getNumRxnVars(); ii++)
 	new_dw->get(reactScalar[ii], d_lab->d_reactscalarSPLabel, 
-		    matlIndex, patch, Ghost::None, nofGhostCells);
+		    matlIndex, patch, Ghost::None, Arches::ZEROGHOSTCELLS);
     }
 
     //CCVariable<double> new_density;
@@ -338,7 +335,7 @@ Properties::computeProps(const ProcessorGroup*,
     if (d_MAlab){
       // temporary comment for debug, sk, 01/22/02
       //      new_dw->get(voidFraction, d_lab->d_mmgasVolFracLabel, 
-      //      		  matlIndex, patch, Ghost::None, nofGhostCells);
+      //      		  matlIndex, patch, Ghost::None, Arches::ZEROGHOSTCELLS);
       new_dw->allocate(denMicro, d_lab->d_densityMicroLabel,
 		       matlIndex, patch);
     }
@@ -523,34 +520,33 @@ Properties::reComputeProps(const ProcessorGroup*,
     CCVariable<double> denMicro;
     //    CCVariable<double> denMicro_old;
 
-    int nofGhostCells = 0;
     new_dw->allocate(drhodf, d_lab->d_drhodfCPLabel, matlIndex, patch);
     drhodf.initialize(0.0);
 
     new_dw->allocate(new_density, d_lab->d_densityCPLabel, matlIndex, patch);
     new_dw->get(density, d_lab->d_densityINLabel, 
-		matlIndex, patch, Ghost::None, nofGhostCells);
+		matlIndex, patch, Ghost::None, Arches::ZEROGHOSTCELLS);
     new_density.copyData(density);
 
     if (d_MAlab){
       new_dw->get(voidFraction, d_lab->d_mmgasVolFracLabel, 
-		  matlIndex, patch, Ghost::None, nofGhostCells);
+		  matlIndex, patch, Ghost::None, Arches::ZEROGHOSTCELLS);
       //new_dw->get(denMicro_old, d_lab->d_densityMicroINLabel, 
-      //	  matlIndex, patch, Ghost::None, nofGhostCells);
+      //	  matlIndex, patch, Ghost::None, Arches::ZEROGHOSTCELLS);
       new_dw->allocate(denMicro, d_lab->d_densityMicroLabel, matlIndex, patch);
       //denMicro.copyData(denMicro_old);
     }
 
     for (int ii = 0; ii < d_numMixingVars; ii++)
       new_dw->get(scalar[ii], d_lab->d_scalarSPLabel, 
-		  matlIndex, patch, Ghost::None, nofGhostCells);
+		  matlIndex, patch, Ghost::None, Arches::ZEROGHOSTCELLS);
 
     StaticArray<constCCVariable<double> > scalarVar(d_numMixStatVars);
 
     if (d_numMixStatVars > 0) {
       for (int ii = 0; ii < d_numMixStatVars; ii++)
 	new_dw->get(scalarVar[ii], d_lab->d_scalarVarSPLabel, 
-		    matlIndex, patch, Ghost::None, nofGhostCells);
+		    matlIndex, patch, Ghost::None, Arches::ZEROGHOSTCELLS);
     }
 
     StaticArray<constCCVariable<double> > reactScalar(d_mixingModel->getNumRxnVars());
@@ -558,13 +554,13 @@ Properties::reComputeProps(const ProcessorGroup*,
     if (d_mixingModel->getNumRxnVars() > 0) {
       for (int ii = 0; ii < d_mixingModel->getNumRxnVars(); ii++)
 	new_dw->get(reactScalar[ii], d_lab->d_reactscalarSPLabel, 
-		    matlIndex, patch, Ghost::None, nofGhostCells);
+		    matlIndex, patch, Ghost::None, Arches::ZEROGHOSTCELLS);
     }
 
 
     if (!(d_mixingModel->isAdiabatic()))
       new_dw->get(enthalpy_comp, d_lab->d_enthalpySPLabel, 
-		  matlIndex, patch, Ghost::None, nofGhostCells);
+		  matlIndex, patch, Ghost::None, Arches::ZEROGHOSTCELLS);
 
     IntVector indexLow = patch->getCellLowIndex();
     IntVector indexHigh = patch->getCellHighIndex();
@@ -718,7 +714,6 @@ Properties::computeDenRefArray(const ProcessorGroup*,
     CCVariable<double> denRefArray;
     constCCVariable<double> voidFraction;
 
-    int zeroGhostCells = 0;
 
     sum_vartype den_ref_var;
     old_dw->get(den_ref_var, d_lab->d_refDensity_label);
@@ -730,7 +725,7 @@ Properties::computeDenRefArray(const ProcessorGroup*,
     if (d_MAlab) {
 
       new_dw->get(voidFraction, d_lab->d_mmgasVolFracLabel, 
-		  matlIndex, patch, Ghost::None, zeroGhostCells);
+		  matlIndex, patch, Ghost::None, Arches::ZEROGHOSTCELLS);
 
     }
 
@@ -767,31 +762,30 @@ Properties::sched_computePropsPred(SchedulerP& sched, const PatchSet* patches,
 			  this,
 			  &Properties::computePropsPred);
 
-  int numGhostCells = 0;
   // requires scalars
   tsk->requires(Task::NewDW, d_lab->d_densityINLabel,
-		Ghost::AroundCells,
-		numGhostCells+2);
+		Ghost::None,
+		Arches::ZEROGHOSTCELLS);
   if (d_MAlab) {
     tsk->requires(Task::NewDW, d_lab->d_mmgasVolFracLabel, 
-		  Ghost::None, numGhostCells);
+		  Ghost::None, Arches::ZEROGHOSTCELLS);
     //    tsk->requires(Task::NewDW, d_lab->d_densityMicroINLabel, 
-    //		  Ghost::None, numGhostCells);
+    //		  Ghost::None, Arches::ZEROGHOSTCELLS);
   }
   tsk->requires(Task::NewDW, d_lab->d_scalarPredLabel, Ghost::None,
-		numGhostCells);
+		Arches::ZEROGHOSTCELLS);
   if (d_numMixStatVars > 0) {
     tsk->requires(Task::NewDW, d_lab->d_scalarVarSPLabel, Ghost::None,
-		numGhostCells);
+		Arches::ZEROGHOSTCELLS);
   }
 
   if (d_mixingModel->getNumRxnVars())
     tsk->requires(Task::NewDW, d_lab->d_reactscalarPredLabel, Ghost::None,
-		  numGhostCells);
+		  Arches::ZEROGHOSTCELLS);
 
   if (!(d_mixingModel->isAdiabatic()))
     tsk->requires(Task::NewDW, d_lab->d_enthalpyPredLabel, Ghost::None,
-		  numGhostCells);
+		  Arches::ZEROGHOSTCELLS);
 
 
   tsk->computes(d_lab->d_densityPredLabel);
@@ -864,31 +858,30 @@ Properties::computePropsPred(const ProcessorGroup*,
     //constCCVariable<double> denMicro;
     constCCVariable<double> enthalpy_comp;
 
-    int nofGhostCells = 0;
     new_dw->allocate(drhodf, d_lab->d_drhodfPredLabel, matlIndex, patch);
     drhodf.initialize(0.0);
 
     new_dw->allocate(new_density, d_lab->d_densityPredLabel, matlIndex, patch);
     new_dw->get(density, d_lab->d_densityINLabel, 
-		matlIndex, patch, Ghost::None, nofGhostCells);
+		matlIndex, patch, Ghost::None, Arches::ZEROGHOSTCELLS);
     new_density.copyData(density);
     if (d_MAlab){
       new_dw->get(voidFraction, d_lab->d_mmgasVolFracLabel, 
-		  matlIndex, patch, Ghost::None, nofGhostCells);
+		  matlIndex, patch, Ghost::None, Arches::ZEROGHOSTCELLS);
       //new_dw->get(denMicro, d_lab->d_densityMicroINLabel, 
-      //	  matlIndex, patch, Ghost::None, nofGhostCells);
+      //	  matlIndex, patch, Ghost::None, Arches::ZEROGHOSTCELLS);
     }
 
     for (int ii = 0; ii < d_numMixingVars; ii++)
       new_dw->get(scalar[ii], d_lab->d_scalarPredLabel, 
-		  matlIndex, patch, Ghost::None, nofGhostCells);
+		  matlIndex, patch, Ghost::None, Arches::ZEROGHOSTCELLS);
 
     StaticArray<constCCVariable<double> > scalarVar(d_numMixStatVars);
 
     if (d_numMixStatVars > 0) {
       for (int ii = 0; ii < d_numMixStatVars; ii++)
 	new_dw->get(scalarVar[ii], d_lab->d_scalarVarSPLabel, 
-		    matlIndex, patch, Ghost::None, nofGhostCells);
+		    matlIndex, patch, Ghost::None, Arches::ZEROGHOSTCELLS);
     }
 
 
@@ -896,12 +889,12 @@ Properties::computePropsPred(const ProcessorGroup*,
     if (d_mixingModel->getNumRxnVars() > 0) {
       for (int ii = 0; ii < d_mixingModel->getNumRxnVars(); ii++)
 	new_dw->get(reactScalar[ii], d_lab->d_reactscalarPredLabel, 
-		    matlIndex, patch, Ghost::None, nofGhostCells);
+		    matlIndex, patch, Ghost::None, Arches::ZEROGHOSTCELLS);
     }
 
     if (!(d_mixingModel->isAdiabatic()))
       new_dw->get(enthalpy_comp, d_lab->d_enthalpyPredLabel, 
-		  matlIndex, patch, Ghost::None, nofGhostCells);
+		  matlIndex, patch, Ghost::None, Arches::ZEROGHOSTCELLS);
 
     IntVector indexLow = patch->getCellLowIndex();
     IntVector indexHigh = patch->getCellHighIndex();
@@ -1041,31 +1034,30 @@ Properties::sched_computePropsInterm(SchedulerP& sched, const PatchSet* patches,
 			  this,
 			  &Properties::computePropsInterm);
 
-  int numGhostCells = 0;
   // requires scalars
   tsk->requires(Task::NewDW, d_lab->d_densityINLabel,
-		Ghost::AroundCells,
-		numGhostCells+2);
+		Ghost::None,
+		Arches::ZEROGHOSTCELLS);
   if (d_MAlab) {
     tsk->requires(Task::NewDW, d_lab->d_mmgasVolFracLabel, 
-		  Ghost::None, numGhostCells);
+		  Ghost::None, Arches::ZEROGHOSTCELLS);
     tsk->requires(Task::NewDW, d_lab->d_densityMicroINLabel, 
-		  Ghost::None, numGhostCells);
+		  Ghost::None, Arches::ZEROGHOSTCELLS);
   }
   tsk->requires(Task::NewDW, d_lab->d_scalarIntermLabel, Ghost::None,
-		numGhostCells);
+		Arches::ZEROGHOSTCELLS);
   if (d_numMixStatVars > 0) {
     tsk->requires(Task::NewDW, d_lab->d_scalarVarSPLabel, Ghost::None,
-		numGhostCells);
+		Arches::ZEROGHOSTCELLS);
   }
 
   if (d_mixingModel->getNumRxnVars())
     tsk->requires(Task::NewDW, d_lab->d_reactscalarIntermLabel, Ghost::None,
-		  numGhostCells);
+		  Arches::ZEROGHOSTCELLS);
 
   if (!(d_mixingModel->isAdiabatic()))
     tsk->requires(Task::NewDW, d_lab->d_enthalpyIntermLabel, Ghost::None,
-		  numGhostCells);
+		  Arches::ZEROGHOSTCELLS);
 
 
   tsk->computes(d_lab->d_densityIntermLabel);
@@ -1138,31 +1130,30 @@ Properties::computePropsInterm(const ProcessorGroup*,
     //constCCVariable<double> denMicro;
     constCCVariable<double> enthalpy_comp;
 
-    int nofGhostCells = 0;
     new_dw->allocate(drhodf, d_lab->d_drhodfIntermLabel, matlIndex, patch);
     drhodf.initialize(0.0);
 
     new_dw->allocate(new_density, d_lab->d_densityIntermLabel, matlIndex, patch);
     new_dw->get(density, d_lab->d_densityINLabel, 
-		matlIndex, patch, Ghost::None, nofGhostCells);
+		matlIndex, patch, Ghost::None, Arches::ZEROGHOSTCELLS);
     new_density.copyData(density);
     if (d_MAlab){
       new_dw->get(voidFraction, d_lab->d_mmgasVolFracLabel, 
-		  matlIndex, patch, Ghost::None, nofGhostCells);
+		  matlIndex, patch, Ghost::None, Arches::ZEROGHOSTCELLS);
       //new_dw->get(denMicro, d_lab->d_densityMicroINLabel, 
-      //	  matlIndex, patch, Ghost::None, nofGhostCells);
+      //	  matlIndex, patch, Ghost::None, Arches::ZEROGHOSTCELLS);
     }
 
     for (int ii = 0; ii < d_numMixingVars; ii++)
       new_dw->get(scalar[ii], d_lab->d_scalarIntermLabel, 
-		  matlIndex, patch, Ghost::None, nofGhostCells);
+		  matlIndex, patch, Ghost::None, Arches::ZEROGHOSTCELLS);
 
     StaticArray<constCCVariable<double> > scalarVar(d_numMixStatVars);
 
     if (d_numMixStatVars > 0) {
       for (int ii = 0; ii < d_numMixStatVars; ii++)
 	new_dw->get(scalarVar[ii], d_lab->d_scalarVarSPLabel, 
-		    matlIndex, patch, Ghost::None, nofGhostCells);
+		    matlIndex, patch, Ghost::None, Arches::ZEROGHOSTCELLS);
     }
 
 
@@ -1170,12 +1161,12 @@ Properties::computePropsInterm(const ProcessorGroup*,
     if (d_mixingModel->getNumRxnVars() > 0) {
       for (int ii = 0; ii < d_mixingModel->getNumRxnVars(); ii++)
 	new_dw->get(reactScalar[ii], d_lab->d_reactscalarIntermLabel, 
-		    matlIndex, patch, Ghost::None, nofGhostCells);
+		    matlIndex, patch, Ghost::None, Arches::ZEROGHOSTCELLS);
     }
 
     if (!(d_mixingModel->isAdiabatic()))
       new_dw->get(enthalpy_comp, d_lab->d_enthalpyIntermLabel, 
-		  matlIndex, patch, Ghost::None, nofGhostCells);
+		  matlIndex, patch, Ghost::None, Arches::ZEROGHOSTCELLS);
 
     IntVector indexLow = patch->getCellLowIndex();
     IntVector indexHigh = patch->getCellHighIndex();
