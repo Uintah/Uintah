@@ -40,8 +40,8 @@
 
 #include <SCIRun/PortInstance.h>
 #include <iostream>
-using namespace SCIRun;
-using namespace std;
+
+namespace SCIRun {
 
 std::string PortInstance::getType()
 {
@@ -55,13 +55,15 @@ std::string PortInstance::getModel()
 
 bool PortInstance::available()
 {
-  cerr<<"default available() is called!";
+  std::cerr << "default available() is called!"
+            << std::endl;
   return true;
 }
 
 PortInstance* PortInstance::getPeer()
 {
-  cerr<<"default getPeer() is called!";
+  std::cerr << "default getPeer() is called!"
+            << std::endl;
   return 0;
 }
 
@@ -72,3 +74,5 @@ PortInstance::PortInstance()
 PortInstance::~PortInstance()
 {
 }
+
+} // end namespace SCIRun
