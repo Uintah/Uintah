@@ -32,6 +32,10 @@
 #include <Teem/Dataflow/Ports/NrrdPort.h>
 #include <Core/Malloc/Allocator.h>
 #include <Core/GuiInterface/GuiVar.h>
+#include <strstream>
+#include <fstream>
+using std::ifstream;
+using std::ostrstream;
 
 namespace SCITeem {
 
@@ -65,6 +69,7 @@ NrrdWriter::~NrrdWriter()
 
 void NrrdWriter::execute()
 {
+  static int counter = 1;
   // Read data from the input port
   NrrdDataHandle handle;
   inport_ = (NrrdIPort *)get_iport("Input Data");
@@ -82,6 +87,24 @@ void NrrdWriter::execute()
     error("Warning: no filename in NrrdWriter");
     return;
   }
+
+  ifstream in (fn.c_str(), ios::in);
+  if( in ) { //succeeded file already exists
+    //hack find . insert number there
+    ostrstream convert;
+    // width pads the number to 4 digits
+    convert.width(4);
+    // This tells the stream to fill with zeros ('0').
+    convert.fill('0');
+    convert << counter;
+    unsigned long pos = fn.find(".");
+    
+    //add count to file name
+    
+    fn.insert(pos, convert.str());
+    ++counter;
+  }
+  in.close();
 
   if (nrrdSave(strdup(fn.c_str()), handle->nrrd, 0)) {
     char *err = biffGetDone(NRRD);      
