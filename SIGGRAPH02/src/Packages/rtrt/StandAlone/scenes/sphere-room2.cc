@@ -17,6 +17,7 @@
 #include <Packages/rtrt/Core/Scene.h>
 #include <Packages/rtrt/Core/Light.h>
 #include <Packages/rtrt/Core/Light2.h>
+#include <Packages/rtrt/Core/Grid2.h>
 
 #include <iostream>
 #include <math.h>
@@ -116,7 +117,10 @@ satellite_data table[] = {
 extern "C"
 Scene *make_scene(int /*argc*/, char* /*argv*/[], int /*nworkers*/) 
 {
-  Group *solar_system = new Group();
+  Group *galaxy_room = new Group();
+  Grid2 *solar_system = new Grid2(galaxy_room,8);
+
+  galaxy_room->add( solar_system );
 
   Camera cam( Point(10,0,1.8), 
               Point(9,ROOMRADIUS,1.8), 
@@ -131,7 +135,7 @@ Scene *make_scene(int /*argc*/, char* /*argv*/[], int /*nworkers*/)
   Color cdown(0.82, 0.62, 0.62);
   Color cup(0.1, 0.3, 0.8);
   rtrt::Plane groundplane ( Point(0, 0, 0), Vector(0, 0, 1) );
-  Scene* scene=new Scene(solar_system, cam,
+  Scene* scene=new Scene(galaxy_room, cam,
                          bgcolor, cdown, cup, groundplane,
                          ambient_scale, Constant_Ambient);
   scene->select_shadow_mode(No_Shadows);
@@ -237,12 +241,12 @@ Scene *make_scene(int /*argc*/, char* /*argv*/[], int /*nworkers*/)
                                            Vector(0,-ROOMRADIUS*2,0),
                                            Vector(0,0,ROOMHEIGHT));
 
-  solar_system->add( ceiling );
-  solar_system->add( floor );
-  solar_system->add( wall0 );
-  solar_system->add( wall1 );
-  solar_system->add( wall2 );
-  solar_system->add( wall3 );
+  galaxy_room->add( ceiling );
+  galaxy_room->add( floor );
+  galaxy_room->add( wall0 );
+  galaxy_room->add( wall1 );
+  galaxy_room->add( wall2 );
+  galaxy_room->add( wall3 );
 
   // doors
   
@@ -270,10 +274,10 @@ Scene *make_scene(int /*argc*/, char* /*argv*/[], int /*nworkers*/)
                             Vector(0,-DOORWIDTH,0),
                             Vector(0,0,DOORHEIGHT));
 
-  solar_system->add(door0a);
-  solar_system->add(door0b);
-  solar_system->add(door1a);
-  solar_system->add(door1b);
+  galaxy_room->add(door0a);
+  galaxy_room->add(door0b);
+  galaxy_room->add(door1a);
+  galaxy_room->add(door1b);
   PortalParallelogram::attach(door0a,door0b);
   PortalParallelogram::attach(door1a,door1b);
 #endif
@@ -305,6 +309,9 @@ Scene *make_scene(int /*argc*/, char* /*argv*/[], int /*nworkers*/)
   table[1].self_ = earth;
   cerr << earth->name_ << " = " << earth << endl;
   solar_system->add( earth );
+  
+  // these two lines needed for animation
+  earth->set_anim_grid(solar_system);
   scene->addObjectOfInterest(earth,ANIMATE);
 
   // build the other satellites
@@ -332,6 +339,7 @@ Scene *make_scene(int /*argc*/, char* /*argv*/[], int /*nworkers*/)
     newsat->set_rev_speed(1./table[loop].rot_speed_*SYSTEM_TIME_SCALE1);
     newsat->set_orb_speed(1./table[loop].orb_speed_*SYSTEM_TIME_SCALE2);
     solar_system->add( newsat );
+    newsat->set_anim_grid(solar_system);
     scene->addObjectOfInterest( newsat, ANIMATE );
 
     if (newsat->get_name() == "saturn") {
@@ -348,6 +356,7 @@ Scene *make_scene(int /*argc*/, char* /*argv*/[], int /*nworkers*/)
                           newsat);
 
       solar_system->add( rings );
+      rings->set_anim_grid(solar_system);
       scene->addObjectOfInterest( rings, ANIMATE );
     }
   }
