@@ -23,10 +23,17 @@ using namespace PSECore::XMLUtil;
 #include <Uintah/Grid/TempThermalBoundCond.h>
 #include <Uintah/Grid/SymmetryBoundCond.h>
 
+#ifdef SELECT_RANGETREE
+#include <Uintah/Grid/PatchRangeTree.h>
+#endif
+
 Level::Level(Grid* grid, const Point& anchor, const Vector& dcell)
    : grid(grid), d_anchor(anchor), d_dcell(dcell),
      d_patchDistribution(-1,-1,-1)
 {
+#ifdef SELECT_RANGETREE
+   d_rangeTree = NULL;
+#endif
    d_finalized=false;
 }
 
@@ -35,6 +42,10 @@ Level::~Level()
   // Delete all of the patches managed by this level
   for(patchIterator iter=d_patches.begin(); iter != d_patches.end(); iter++)
     delete *iter;
+
+#ifdef SELECT_RANGETREE
+  delete d_rangeTree;
+#endif 
 }
 
 void Level::setPatchDistributionHint(const IntVector& hint)
@@ -241,7 +252,12 @@ void Level::selectPatches(const IntVector& low, const IntVector& high,
    }
    neighbors.resize(i);
 #else
+#ifdef SELECT_RANGETREE
+   d_rangeTree->query(low, high, neighbors);
+   sort(neighbors.begin(), neighbors.end(), Patch::Compare());
+#else
 #error "No selectPatches algorithm defined"
+#endif
 #endif
 #endif
 
@@ -329,6 +345,12 @@ void Level::finalizeLevel()
 	 }
       }
    }
+#else
+#ifdef SELECT_RANGETREE
+   if (d_rangeTree != NULL)
+     delete d_rangeTree;
+   d_rangeTree = scinew PatchRangeTree(d_patches);
+#endif   
 #endif
   for(patchIterator iter=d_patches.begin(); iter != d_patches.end(); iter++){
     Patch* patch = *iter;
@@ -403,6 +425,9 @@ Box Level::getBox(const IntVector& l, const IntVector& h) const
 }
 //
 // $Log$
+// Revision 1.22.4.4  2000/10/25 20:36:31  witzel
+// Added RangeTree option for selectPatches implementation.
+//
 // Revision 1.22.4.3  2000/10/10 05:28:08  sparker
 // Added support for NullScheduler (used for profiling taskgraph overhead)
 //
