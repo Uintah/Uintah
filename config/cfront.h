@@ -27,5 +27,5 @@
 #define CppNeedsIncludes
 #define LinkerNeedsCppFlags
 
-#define SCI_MakeTemplateLib make_templates
-#define SCI_TemplateDir $(TOP)/../templates
+#define SCI_MakeTemplateLib $(TOP)/etc/make_templates
+#define SCI_TemplateDir $(TOP)/templates

@@ -32,7 +32,7 @@
 #define SCI_GNULinkerFlags
 #define SCI_GNULinkerLib $(TOP)/gnupt
 
-#define SCI_TemplateLib $(TOP)/../templates/fast_templates.o
+#define SCI_TemplateLib $(TOP)/templates/fast_templates.o
 
 #define SCI_Size size
 
