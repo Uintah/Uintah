@@ -37,6 +37,10 @@
 #include <Core/Datatypes/PrismVolField.h>
 #include <Core/Datatypes/HexVolField.h>
 
+#include <Core/Datatypes/LatVolField.h>
+#include <Core/Datatypes/ImageField.h>
+#include <Core/Datatypes/ScanlineField.h>
+
 #include <Core/Datatypes/StructHexVolField.h>
 #include <Core/Datatypes/StructQuadSurfField.h>
 #include <Core/Datatypes/StructCurveField.h>
@@ -105,32 +109,62 @@ execute(MeshHandle mHandle,
 
   if( property.find("Cartesian") != std::string::npos ) {
   
-    PNTYPE *ptr = (PNTYPE *)(nHandles[mesh[0]]->nrrd->data);
+    if( mesh.size() == 1 ) {
+      PNTYPE *ptr = (PNTYPE *)(nHandles[mesh[0]]->nrrd->data);
     
-    int rank = 0;
-    string label(nHandles[mesh[0]]->nrrd->axis[0].label);
+      int rank = 0;
+      string label(nHandles[mesh[0]]->nrrd->axis[0].label);
 
-    if( label.find( ":Scalar" ) != string::npos )
-      rank = nHandles[mesh[0]]->nrrd->axis[ nHandles[mesh[0]]->nrrd->dim-1].size;
-    else if( label.find( ":Vector" ) != string::npos )
-      rank = 3;
+      if( label.find( ":Scalar" ) != string::npos )
+	rank = nHandles[mesh[0]]->nrrd->axis[ nHandles[mesh[0]]->nrrd->dim-1].size;
+      else if( label.find( ":Vector" ) != string::npos )
+	rank = 3;
 
-    for( k=0; k<kdim; k++ ) {
-      for( j=0; j<jdim; j++ ) {
-	for( i=0; i<idim; i++ ) {
+      for( k=0; k<kdim; k++ ) {
+	for( j=0; j<jdim; j++ ) {
+	  for( i=0; i<idim; i++ ) {
 	  
-	  int index = (i * jdim + j) * kdim + k;
+	    int index = (i * jdim + j) * kdim + k;
 
-	  float xVal = 0, yVal = 0, zVal = 0;
+	    float xVal = 0, yVal = 0, zVal = 0;
 
-	  // Mesh
-	  if( rank >= 1 ) xVal = ptr[index*rank + 0];
-	  if( rank >= 2 ) yVal = ptr[index*rank + 1];
-	  if( rank >= 3 ) zVal = ptr[index*rank + 2];
+	    // Mesh
+	    if( rank >= 1 ) xVal = ptr[index*rank + 0];
+	    if( rank >= 2 ) yVal = ptr[index*rank + 1];
+	    if( rank >= 3 ) zVal = ptr[index*rank + 2];
 	
-	  imesh->set_point(Point(xVal, yVal, zVal), *inodeItr);
+	    imesh->set_point(Point(xVal, yVal, zVal), *inodeItr);
 
-	  ++inodeItr;
+	    ++inodeItr;
+	  }
+	}
+      }
+    } else {
+      int rank = mesh.size();
+
+      PNTYPE *ptr[3] = {NULL, NULL, NULL};
+
+      if( rank >= 1 ) ptr[0] = (PNTYPE *)(nHandles[mesh[0]]->nrrd->data);
+      if( rank >= 2 ) ptr[1] = (PNTYPE *)(nHandles[mesh[1]]->nrrd->data);
+      if( rank >= 3 ) ptr[2] = (PNTYPE *)(nHandles[mesh[2]]->nrrd->data);
+
+      for( k=0; k<kdim; k++ ) {
+	for( j=0; j<jdim; j++ ) {
+	  for( i=0; i<idim; i++ ) {
+	  
+	    int index = (i * jdim + j) * kdim + k;
+
+	    float xVal = 0, yVal = 0, zVal = 0;
+
+	    // Mesh
+	    if( ptr[0] ) xVal = ptr[0][index];
+	    if( ptr[1] ) yVal = ptr[1][index];
+	    if( ptr[2] ) zVal = ptr[2][index];
+	
+	    imesh->set_point(Point(xVal, yVal, zVal), *inodeItr);
+
+	    ++inodeItr;
+	  }
 	}
       }
     }
@@ -366,6 +400,32 @@ execute(MeshHandle mHandle,
 	}
       }
     }
+  } else {
+    typename FIELD::mesh_type::Node::iterator inodeItr;
+
+    imesh->begin( inodeItr );
+
+    register int i, j, k;
+				  
+    NTYPE *ptr[3] ={NULL,NULL,NULL};
+
+    ptr[0] = (NTYPE *)(nHandles[data[0]]->nrrd->data);
+    ptr[1] = (NTYPE *)(nHandles[data[1]]->nrrd->data);
+    ptr[2] = (NTYPE *)(nHandles[data[2]]->nrrd->data);
+
+    for( k=0; k<kdim; k++ ) {
+      for( j=0; j<jdim; j++ ) {
+	for( i=0; i<idim; i++ ) {
+	  int index = (i * jdim + j) * kdim + k;
+	
+	  ifield->set_value( Vector( ptr[0][index],
+				     ptr[1][index],
+				     ptr[2][index] ), *inodeItr);
+	
+	  ++inodeItr;
+	}
+      }
+    }
   }
 
   return FieldHandle( ifield );
@@ -399,7 +459,27 @@ execute(MeshHandle mHandle,
 			 *inodeItr);	
       ++inodeItr;
     }
-  }
+  } else {
+    typename FIELD::mesh_type::Node::iterator inodeItr;
+
+    imesh->begin( inodeItr );
+
+    NTYPE *ptr[3];
+
+    ptr[0] = (NTYPE *)(nHandles[data[0]]->nrrd->data);
+    ptr[1] = (NTYPE *)(nHandles[data[1]]->nrrd->data);
+    ptr[2] = (NTYPE *)(nHandles[data[2]]->nrrd->data);
+
+    int npts = nHandles[data[0]]->nrrd->axis[1].size;
+
+    for( int i=0; i<npts; i++ ) {
+
+      ifield->set_value( Vector( ptr[0][i],
+				 ptr[1][i],
+				 ptr[2][i]),
+			 *inodeItr);	
+      ++inodeItr;
+   }
 
   return FieldHandle( ifield );
 }
