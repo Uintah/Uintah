@@ -208,6 +208,19 @@ ViewWindow::ViewWindow(Viewer* s, GuiInterface* gui, GuiContext* ctx)
 #endif
   // CollabVis code end
 
+  // Clip plane variables, declare them so that they are saved out.
+  ctx->subVar("clip-num");
+  ctx->subVar("clip-visible");
+  ctx->subVar("clip-selected");
+  for (unsigned int i = 0; i < 6; i++)
+  {
+    const string istr = to_string(i+1);
+    ctx->subVar("clip-visible-" + istr);
+    ctx->subVar("clip-normal-x-" + istr);
+    ctx->subVar("clip-normal-y-" + istr);
+    ctx->subVar("clip-normal-z-" + istr);
+    ctx->subVar("clip-normal-d-" + istr);
+  }
 }
 
 

@@ -1118,6 +1118,8 @@ itcl_class ViewWindow {
 	pack $w.f -fill x -expand 1
     }	
 
+
+
     method makeClipPopup {} {
 	set w .clip[modname]
 	if {[winfo exists $w]} {
@@ -1130,37 +1132,32 @@ itcl_class ViewWindow {
 	set clip $this-clip
 
 	global $clip-num
-	set $clip-num 6
-
 	global $clip-normal-x
 	global $clip-normal-y
 	global $clip-normal-z
 	global $clip-normal-d
 	global $clip-visible
-	set $clip-visible 0
-	set $clip-normal-d 0.0
-	set $clip-normal-x 1.0
-	set $clip-normal-y 0.0
-	set $clip-normal-z 0.0
+	global $clip-selected
 
-	for {set i 1} {$i <= [set $clip-num]} {incr i 1} {
-	    set mod $i
-
-
-	    global $clip-normal-x-$mod
-	    global $clip-normal-y-$mod
-	    global $clip-normal-z-$mod
-	    global $clip-normal-d-$mod
-	    global $clip-visible-$mod
-	    set $clip-visible-$mod 0
-	    set $clip-normal-d-$mod 0.0
-	    set $clip-normal-x-$mod 1.0
-	    set $clip-normal-y-$mod 0.0
-	    set $clip-normal-z-$mod 0.0
+	if {![info exists $clip-num]} {
+	    set $clip-num 6
+	    
+	    for {set i 1} {$i <= [set $clip-num]} {incr i 1} {
+		set mod $i
+		global $clip-normal-x-$mod
+		global $clip-normal-y-$mod
+		global $clip-normal-z-$mod
+		global $clip-normal-d-$mod
+		global $clip-visible-$mod
+		set $clip-visible-$mod 0
+		set $clip-normal-d-$mod 0.0
+		set $clip-normal-x-$mod 1.0
+		set $clip-normal-y-$mod 0.0
+		set $clip-normal-z-$mod 0.0
+	    }
+	    set $clip-selected 1
 	}
 	set c "$this setClip ; $this-c redraw"
-	global $clip-selected
-	set $clip-selected 1
 	set menup [tk_optionMenu $w.which $clip-selected 1 2 3 4 5 6]
 
 	for {set i 0}  {$i < [set $clip-num]} {incr i 1} {
@@ -1176,6 +1173,8 @@ itcl_class ViewWindow {
 	pack $w.normal -side left -expand yes -fill x
 	frame $w.f -relief groove -borderwidth 2
 	pack $w.f -expand yes -fill x
+
+	useClip
     }
 
     method useClip {} {
