@@ -17,6 +17,8 @@
 #include <GeometryPort.h>
 #include <Classlib/Array1.h>
 #include <Multitask/ITC.h>
+#include <Classlib/HashTable.h>
+
 class CallbackData;
 class DialogShellC;
 class DrawingAreaC;
@@ -46,13 +48,16 @@ class Salmon : public Module {
     FrameC* gr_frame;
     GLwMDrawC* graphics;
 
+
     int max_portno;
     // Per port information
     
 
     //gotta store the geometry!
+    HashTable<int, HashTable<int, GeomObj*>*> portHash;
 
 public:
+    friend class Roe;
     Salmon();
     Salmon(const Salmon&, int deep);
     virtual ~Salmon();
@@ -62,8 +67,9 @@ public:
     void delObj(int portno, GeomID serial);
     void delAll(int portno);
     void addTopRoe(Roe *r);
-    void makeTopRoe();
     void delTopRoe(Roe *r);
+    void spawnIndCB(CallbackData*, void*);
+    void printFamilyTree();
 };
 
 #endif

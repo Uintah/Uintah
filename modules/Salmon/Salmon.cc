@@ -30,8 +30,9 @@
 #include <XQColor.h>
 #include <Mt/DrawingArea.h>
 #include <iostream.h>
-
-class GeomObj;
+#include <Geom.h>
+#include <Classlib/HashTable.h>
+#include <iostream.h>
 
 extern MtXEventLoop* evl;
 
@@ -51,12 +52,6 @@ Salmon::Salmon()
 
 }
 
-Salmon::Salmon(const Salmon& copy, int deep)
-: Module(copy, deep)
-{
-    NOT_FINISHED("Salmon::Salmon");
-}
-
 Salmon::~Salmon()
 {
 }
@@ -72,6 +67,13 @@ void Salmon::do_execute()
 	MessageBase* msg=mailbox.receive();
 	GeometryComm* gmsg=(GeometryComm*)msg;
 	switch(msg->type){
+	case MessageTypes::DoCallback:
+	    {
+		Callback_Message* cmsg=(Callback_Message*)msg;
+		cmsg->mcb->perform(cmsg->cbdata);
+		if(cmsg->cbdata)delete cmsg->cbdata;
+	    }
+	    break;
 	case MessageTypes::GeometryInit:
 	    initPort(gmsg->reply);
 	    break;	
@@ -114,11 +116,13 @@ void Salmon::create_interface()
 				   &Salmon::redraw_widget, 0, 0);
 
     drawing_a->Create(*netedit->drawing_a, "usermodule");
-
+    evl->unlock();
 
     // Create the viewer window...
     topRoe.add(new Roe(this));
-    evl->unlock();
+    topRoe[topRoe.size()-1]->SetTop();
+    
+    printFamilyTree();
 
     // Start up the event loop thread...
     helper=new ModuleHelper(this, 1);
@@ -147,6 +151,87 @@ int Salmon::should_execute()
     return changed;
 }
 
+void Salmon::initPort(Mailbox<int>* reply)
+{
+    reply->send(max_portno++);
+}
+
+void Salmon::addObj(int portno, int serial, GeomObj *obj)
+{
+    cerr << "I'm adding an Object!\n";
+    HashTable<int, GeomObj*>* serHash;
+    if (!portHash.lookup(portno, serHash)) {
+	// need to make this table
+	serHash = new HashTable<int, GeomObj*>;
+	portHash.insert(portno, serHash);
+    }
+    serHash->insert(serial, obj);
+    for (int i=0; i<topRoe.size(); i++) {
+	topRoe[i]->redrawAll();
+    }
+}
+
+void Salmon::delObj(int portno, int serial)
+{
+    HashTable<int, GeomObj*>* serHash;
+    if (portHash.lookup(portno, serHash)) {
+	serHash->remove(serial);
+    }
+    for (int i=0; i<topRoe.size(); i++) {
+	topRoe[i]->redrawAll();
+    }
+}
+
+void Salmon::printFamilyTree()
+{
+    cerr << "\nSalmon Family Tree\n";
+    for (int i=0, flag=1; flag!=0; i++) {
+	flag=0;
+	for (int j=0; j<topRoe.size(); j++) {
+	    topRoe[j]->printLevel(i, flag);
+	}
+	cerr << "\n";
+    }
+}
+
+void Salmon::delAll(int portno)
+{
+
+    HashTable<int, GeomObj*>* serHash;
+    if (portHash.lookup(portno, serHash)) {
+	serHash->remove_all();
+    }
+    for (int i=0; i<topRoe.size(); i++) {
+	topRoe[i]->redrawAll();
+    }
+
+}
+
+void Salmon::addTopRoe(Roe *r)
+{
+    topRoe.add(r);
+}
+
+void Salmon::delTopRoe(Roe *r)
+{
+    for (int i=0; i<topRoe.size(); i++) {
+	if (r==topRoe[i]) topRoe.remove(i);
+    }
+} 
+
+void Salmon::spawnIndCB(CallbackData*, void*)
+{
+  topRoe.add(new Roe(this));
+  topRoe[topRoe.size()-1]->SetTop();
+  printFamilyTree();
+}
+
+Salmon::Salmon(const Salmon& copy, int deep)
+: Module(copy, deep)
+{
+    NOT_FINISHED("Salmon::Salmon");
+}
+
 void Salmon::reconfigure_iports()
 {
     NOT_FINISHED("Salmon::reconfigure_iports");
@@ -157,37 +242,3 @@ void Salmon::reconfigure_oports()
     NOT_FINISHED("Salmon::reconfigure_oports");
 }
 
-void Salmon::initPort(Mailbox<int>* reply)
-{
-    reply->send(max_portno++);
-}
-
-void Salmon::addObj(int portno, int serial, GeomObj *obj)
-{
-    NOT_FINISHED("Salmon::addObj");
-}
-
-void Salmon::delObj(int portno, int serial)
-{
-    NOT_FINISHED("Salmon::delObj");
-}
-
-void Salmon::delAll(int portno)
-{
-    NOT_FINISHED("Salmon::delAll");
-}
-
-void Salmon::addTopRoe(Roe *r)
-{
-    NOT_FINISHED("Salmon::addTopRoe");
-}
-
-void Salmon::makeTopRoe()
-{
-    NOT_FINISHED("Salmon::makeTopRoe");
-}
-
-void Salmon::delTopRoe(Roe *r)
-{
-    NOT_FINISHED("Salmon::delTopRoe");
-}
