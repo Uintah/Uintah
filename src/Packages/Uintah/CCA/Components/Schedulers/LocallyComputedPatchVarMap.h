@@ -21,6 +21,7 @@
 #include <Packages/Uintah/Core/Grid/Level.h>
 #include <Packages/Uintah/Core/Grid/VarLabel.h>
 #include <Core/Containers/SuperBox.h>
+#include <map>
 
 namespace Uintah {
 
@@ -68,13 +69,13 @@ namespace Uintah {
       const SuperPatchContainer* getSuperPatches() const;
       void makeGroups();
     private:
-      typedef map<const Patch*, const SuperPatch*> PatchMapType;
+      typedef std::map<const Patch*, const SuperPatch*> PatchMapType;
       PatchMapType map_;
       SuperPatchSet* connectedPatchGroups_;
     };
   private:
 
-    typedef map<pair<const VarLabel*, const Level*>, LocallyComputedPatchSet*, Compare> MapType;
+    typedef std::map<std::pair<const VarLabel*, const Level*>, LocallyComputedPatchSet*, Compare> MapType;
     MapType map_;
     bool groupsMade;
   };

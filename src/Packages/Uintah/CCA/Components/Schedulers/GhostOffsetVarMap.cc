@@ -46,7 +46,7 @@ getExtents(const VarLabelMatlPatch& vmp,
   // before taking the requested ghost cells into consideration
   // (just those required by later tasks).
   offsets.getOffsets(lowOffset, highOffset);
-  patch->computeExtents(basis, lowOffset, highOffset,
+  patch->computeExtents(basis, var->getBoundaryLayer(), lowOffset, highOffset,
 			requiredLow, requiredHigh);  
 
   Patch::getGhostOffsets(var->typeDescription()->getType(),
@@ -56,7 +56,7 @@ getExtents(const VarLabelMatlPatch& vmp,
 
   // after taking the requested ghost cells into consideratio n 
   offsets.getOffsets(lowOffset, highOffset);
-  patch->computeExtents(basis, lowOffset, highOffset,
+  patch->computeExtents(basis, var->getBoundaryLayer(), lowOffset, highOffset,
 			requestedLow, requestedHigh);  
 }
 

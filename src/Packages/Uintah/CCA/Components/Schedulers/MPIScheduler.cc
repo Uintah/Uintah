@@ -579,12 +579,14 @@ MPIScheduler::execute(const ProcessorGroup * pg)
   int ntasks = dts_->numLocalTasks();
   if(dbg.active()){
     dbg << "MPIScheduler executing " << dts_->numTasks() << " tasks (" << ntasks << " local), ";
-    for(int i=0;i<numOldDWs;i++){
+    if (numOldDWs != 0){
       dbg << "from DWs: ";
-      if(dws[i])
-	dbg << dws[i]->getID() << ", ";
-      else
-	dbg << "Null, ";
+      for(int i=0;i<numOldDWs;i++){
+	if(dws[i])
+	  dbg << dws[i]->getID() << ", ";
+	else
+	  dbg << "Null, ";
+      }
     }
     if(dws.size()-numOldDWs>1){
       dbg << "intermediate DWs: ";

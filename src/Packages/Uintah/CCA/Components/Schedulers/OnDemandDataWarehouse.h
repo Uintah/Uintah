@@ -122,7 +122,8 @@ public:
    // NCVariables Variables
    virtual void allocateTemporary(NCVariableBase&, const Patch*,
 				  Ghost::GhostType = Ghost::None,
-				  int numGhostCells = 0);
+				  int numGhostCells = 0,
+				  const IntVector& boundaryLayer = IntVector(0,0,0));
    virtual void allocateAndPut(NCVariableBase&, const VarLabel*,
 			       int matlIndex, const Patch*,
 			       Ghost::GhostType = Ghost::None,
@@ -131,13 +132,17 @@ public:
 		    const Patch*, Ghost::GhostType, int numGhostCells);
    virtual void getModifiable(NCVariableBase&, const VarLabel*, int matlIndex,
 			      const Patch*);
+   virtual void getRegion(constNCVariableBase&, const VarLabel*,
+			  int matlIndex, const Level* level,
+			  const IntVector& low, const IntVector& high);
    virtual void put(NCVariableBase&, const VarLabel*,
 		    int matlIndex, const Patch*, bool replace = false);
 
    // CCVariables Variables
    virtual void allocateTemporary(CCVariableBase&, const Patch*, 
 				  Ghost::GhostType = Ghost::None,
-				  int numGhostCells = 0);
+				  int numGhostCells = 0,
+				  const IntVector& boundaryLayer = IntVector(0,0,0));
    virtual void allocateAndPut(CCVariableBase&, const VarLabel*,
 			       int matlIndex, const Patch*, 
 			       Ghost::GhostType = Ghost::None,
@@ -146,13 +151,17 @@ public:
 		    const Patch*, Ghost::GhostType, int numGhostCells);
    virtual void getModifiable(CCVariableBase&, const VarLabel*, int matlIndex,
 			      const Patch*);
+   virtual void getRegion(constCCVariableBase&, const VarLabel*,
+			  int matlIndex, const Level* level,
+			  const IntVector& low, const IntVector& high);
    virtual void put(CCVariableBase&, const VarLabel*,
 		    int matlIndex, const Patch*, bool replace = false);
 
    // SFC[X-Z]Variables Variables
    virtual void allocateTemporary(SFCXVariableBase&, const Patch*,
 				  Ghost::GhostType = Ghost::None,
-				  int numGhostCells = 0);
+				  int numGhostCells = 0,
+				  const IntVector& boundaryLayer = IntVector(0,0,0));
    virtual void allocateAndPut(SFCXVariableBase&, const VarLabel*,
 			       int matlIndex, const Patch*,
 			       Ghost::GhostType = Ghost::None,
@@ -161,12 +170,16 @@ public:
 		    const Patch*, Ghost::GhostType, int numGhostCells);
    virtual void getModifiable(SFCXVariableBase&, const VarLabel*,
 			      int matlIndex, const Patch*);
+   virtual void getRegion(constSFCXVariableBase&, const VarLabel*,
+			  int matlIndex, const Level* level,
+			  const IntVector& low, const IntVector& high);
    virtual void put(SFCXVariableBase&, const VarLabel*,
 		    int matlIndex, const Patch*, bool replace = false);
 
    virtual void allocateTemporary(SFCYVariableBase&, const Patch*,
 				  Ghost::GhostType = Ghost::None,
-				  int numGhostCells = 0); 
+				  int numGhostCells = 0,
+				  const IntVector& boundaryLayer = IntVector(0,0,0)); 
    virtual void allocateAndPut(SFCYVariableBase&, const VarLabel*,
 			       int matlIndex, const Patch*,
 			       Ghost::GhostType = Ghost::None,
@@ -175,12 +188,16 @@ public:
 		    const Patch*, Ghost::GhostType, int numGhostCells);
    virtual void getModifiable(SFCYVariableBase&, const VarLabel*,
 			      int matlIndex, const Patch*);
+   virtual void getRegion(constSFCYVariableBase&, const VarLabel*,
+			  int matlIndex, const Level* level,
+			  const IntVector& low, const IntVector& high);
    virtual void put(SFCYVariableBase&, const VarLabel*,
 		    int matlIndex, const Patch*, bool replace = false);
 
    virtual void allocateTemporary(SFCZVariableBase&, const Patch*,
 				  Ghost::GhostType = Ghost::None,
-				  int numGhostCells = 0);	 
+				  int numGhostCells = 0,
+				  const IntVector& boundaryLayer = IntVector(0,0,0));	 
    virtual void allocateAndPut(SFCZVariableBase&, const VarLabel*,
 			       int matlIndex, const Patch*,
 			       Ghost::GhostType = Ghost::None,
@@ -189,6 +206,9 @@ public:
 		    const Patch*, Ghost::GhostType, int numGhostCells);
    virtual void getModifiable(SFCZVariableBase&, const VarLabel*,
 			      int matlIndex, const Patch*);
+   virtual void getRegion(constSFCZVariableBase&, const VarLabel*,
+			  int matlIndex, const Level* level,
+			  const IntVector& low, const IntVector& high);
    virtual void put(SFCZVariableBase&, const VarLabel*,
 		    int matlIndex, const Patch*, bool replace = false);
    // PerPatch Variables
@@ -293,7 +313,8 @@ private:
 
    template <Patch::VariableBasis basis, class VariableBase>
    void allocateTemporaryGridVar(VariableBase& var, const Patch* patch,
-				 Ghost::GhostType gtype, int numGhostCells);
+				 Ghost::GhostType gtype, int numGhostCells,
+				 const IntVector& boundaryLayer);
 
    template <Patch::VariableBasis basis, class VariableBase, class DWDatabase>
    void allocateAndPutGridVar(VariableBase& var, DWDatabase& db,
