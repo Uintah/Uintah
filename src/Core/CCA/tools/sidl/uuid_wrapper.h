@@ -30,7 +30,7 @@
 #ifndef UUID_MASTER
 #define UUID_MASTER 8
 
-#include <include/sci_defs/config_defs.h>
+#include <sci_defs/config_defs.h>
 
 #include <sgi_stl_warnings_off.h>
 #include <string>
