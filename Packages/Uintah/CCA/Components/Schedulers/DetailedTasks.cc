@@ -889,7 +889,7 @@ void DetailedTasks::logMemoryUse(ostream& out, unsigned long& total,
 	    elems3.str(), ndeps*sizeof(DetailedDep), 0);
 }
 
-void DetailedTasks::emitEdges(DOM_Element edgesElement, int rank)
+void DetailedTasks::emitEdges(DOMElement* edgesElement, int rank)
 {
   for (int i = 0; i < (int)tasks.size(); i++) {
     if (tasks[i]->getAssignedResourceIndex() == rank) {
@@ -898,15 +898,19 @@ void DetailedTasks::emitEdges(DOM_Element edgesElement, int rank)
   }
 }
 
-void DetailedTask::emitEdges(DOM_Element edgesElement)
+void DetailedTask::emitEdges(DOMElement* edgesElement)
 {
   map<DependencyBatch*, DependencyBatch*>::iterator req_iter;
   for (req_iter = reqs.begin(); req_iter != reqs.end(); req_iter++) {
     DetailedTask* fromTask = (*req_iter).first->fromTask;
-    DOM_Element edge = edgesElement.getOwnerDocument().createElement("edge");
-    appendElement(edge, "source", fromTask->getName());
-    appendElement(edge, "target", getName());
-    edgesElement.appendChild(edge);
+    DOMElement* edge = edgesElement->getOwnerDocument()->createElement(XMLString::transcode("edge"));
+    appendElement(edge, 
+		  edgesElement->getOwnerDocument()->createTextNode(XMLString::transcode("source")), 
+		  fromTask->getName());
+    appendElement(edge, 
+		  edgesElement->getOwnerDocument()->createTextNode(XMLString::transcode("target")), 
+		  getName());
+    edgesElement->appendChild(edge);
   }
 
   list<InternalDependency>::iterator iter;
@@ -919,10 +923,14 @@ void DetailedTask::emitEdges(DOM_Element edgesElement)
       // are only needed for logistic reasons
       continue;
     }
-    DOM_Element edge = edgesElement.getOwnerDocument().createElement("edge");
-    appendElement(edge, "source", fromTask->getName());
-    appendElement(edge, "target", getName());
-    edgesElement.appendChild(edge);
+    DOMElement* edge = edgesElement->getOwnerDocument()->createElement(XMLString::transcode("edge"));
+    appendElement(edge, 
+		  edgesElement->getOwnerDocument()->createTextNode(XMLString::transcode("source")), 
+		  fromTask->getName());
+    appendElement(edge, 
+		  edgesElement->getOwnerDocument()->createTextNode(XMLString::transcode("target")), 
+		  getName());
+    edgesElement->appendChild(edge);
   }
 }
 

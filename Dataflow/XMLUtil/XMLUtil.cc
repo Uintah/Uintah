@@ -39,7 +39,8 @@ static void postMessage(const string& errmsg)
 const DOMNode* findNode(const std::string &name, const DOMNode *node)
 {
   // Convert string name to a DOMText;
-  
+  if (node == 0)
+    return 0;
   const XMLCh *search_name = to_xml_ch_ptr(name.c_str());
   // Do the child nodes now
   const DOMNode *child = node->getFirstChild();
@@ -52,34 +53,34 @@ const DOMNode* findNode(const std::string &name, const DOMNode *node)
   return 0;
 }
 
-// DOMNode findNextNode(const std::string& name, DOMNode node)
-// {
-//   // Iterate through all of the child nodes that have this name
-//   DOMNode found_node = node.getNextSibling();
+const DOMNode* findNextNode(const std::string& name, const DOMNode* node)
+{
+  // Iterate through all of the child nodes that have this name
+  DOMNode* found_node = node->getNextSibling();
 
-//   DOMText search_name(name.c_str());
-//   while(found_node != 0){
-//     DOMText node_name = found_node.getNodeName();
-//     if (search_name.equals(node_name) ) {
-//       break;
-//     }
-//     found_node = found_node.getNextSibling();
-//   }
-//   return found_node;
-// }
+  while(found_node != 0){
+    if (strcmp(name.c_str(), XMLString::transcode(found_node->getNodeName())) == 0 ) {
+      break;
+    }
+    found_node = found_node->getNextSibling();
+  }
+  return found_node;
+}
 
 
-// DOMNode findTextNode(DOMNode node)
-// {
-//    for (DOMNode child = node.getFirstChild(); child != 0;
-// 	child = child.getNextSibling()) {
-//       if (child.getNodeType() == DOMNode::TEXT_NODE) {
-// 	 return child;
-//       }
-//    }
-//   DOMNode unknown;
-//   return unknown;   
-// }
+const DOMNode* findTextNode(const DOMNode* node)
+{
+   for (DOMNode* child = node->getFirstChild(); child != 0;
+	child = child->getNextSibling()) {
+      if (child->getNodeType() == DOMNode::TEXT_NODE) {
+	 return child;
+      }
+   }
+
+   //not sure what to do here...
+  DOMNode* unknown = NULL;
+  return unknown;   
+}
 
 // string toString(const XMLCh* const str)
 // {

@@ -24,6 +24,8 @@
 #include <Core/Util/Endian.h>
 #include <Core/Thread/Time.h>
 
+#include <dom/DOMImplementationRegistry.hpp>
+#include <dom/DOMImplementation.hpp>
 #include <iomanip>
 #include <errno.h>
 #include <fstream>
@@ -337,7 +339,7 @@ void DataArchiver::restartSetup(Dir& restartFromDir, int startTimestep,
      // just add <restart from = ".." timestep = ".."> tag.
      copySection(restartFromDir, d_dir, "restarts");
      string iname = d_dir.getName()+"/index.xml";
-     DOM_Document indexDoc = loadDocument(iname);
+     DOMDocument* indexDoc = loadDocument(iname);
      if (timestep >= 0)
        addRestartStamp(indexDoc, restartFromDir, timestep);
      ofstream copiedIndex(iname.c_str());
@@ -372,17 +374,17 @@ void DataArchiver::combinePatchSetup(Dir& fromDir)
    }
    
    string iname = fromDir.getName()+"/index.xml";
-   DOM_Document indexDoc = loadDocument(iname);
+   DOMDocument* indexDoc = loadDocument(iname);
 
-   DOM_Node globals = findNode("globals", indexDoc.getDocumentElement());
+   const DOMNode* globals = findNode("globals", indexDoc->getDocumentElement());
    if (globals != 0) {
-      DOM_Node variable = findNode("variable", globals);
+      DOMNode* variable = const_cast<DOMNode*>(findNode("variable", globals));
       while (variable != 0) {
-	DOM_NamedNodeMap attributes = variable.getAttributes();
-	DOM_Node nameNode = attributes.getNamedItem("name");
+	DOMNamedNodeMap* attributes = variable->getAttributes();
+	DOMNode* nameNode = attributes->getNamedItem(XMLString::transcode("name"));
 	if (nameNode == 0)
 	  throw InternalError("global variable name attribute not found");
-	string varname = nameNode.getNodeValue().transcode();
+	string varname = XMLString::transcode(nameNode->getNodeValue());
 
 	// this isn't the most efficient, but i don't think it matters
 	// to much for this initialization code
@@ -395,7 +397,7 @@ void DataArchiver::combinePatchSetup(Dir& fromDir)
 	    it++;
 	  }
 	}
-	variable = findNextNode("variable", variable);	
+	variable = const_cast<DOMNode*>(findNextNode("variable", variable));
       }
    }
 
@@ -411,23 +413,23 @@ void DataArchiver::combinePatchSetup(Dir& fromDir)
 void DataArchiver::copySection(Dir& fromDir, Dir& toDir, string section)
 {
   string iname = fromDir.getName()+"/index.xml";
-  DOM_Document indexDoc = loadDocument(iname);
+  DOMDocument* indexDoc = loadDocument(iname);
 
   iname = toDir.getName()+"/index.xml";
-  DOM_Document myIndexDoc = loadDocument(iname);
+  DOMDocument* myIndexDoc = loadDocument(iname);
   
-  DOM_Node sectionNode = findNode(section, indexDoc.getDocumentElement());
+   DOMNode* sectionNode = const_cast<DOMNode*>(findNode(section, indexDoc->getDocumentElement()));
   if (sectionNode != 0) {
-    DOM_Node newNode = myIndexDoc.importNode(sectionNode, true);
+    DOMNode* newNode = myIndexDoc->importNode(sectionNode, true);
     
     // replace whatever was in the section previously
-    DOM_Node mySectionNode = findNode(section, myIndexDoc.getDocumentElement());
+    DOMNode* mySectionNode = const_cast<DOMNode*>(findNode(section, myIndexDoc->getDocumentElement()));
     if (mySectionNode != 0) {
-      myIndexDoc.getDocumentElement().replaceChild(newNode, mySectionNode);
+      myIndexDoc->getDocumentElement()->replaceChild(newNode, mySectionNode);
     }
     else {
-      myIndexDoc.getDocumentElement().appendChild(myIndexDoc.createTextNode("\n"));
-      myIndexDoc.getDocumentElement().appendChild(newNode);
+      myIndexDoc->getDocumentElement()->appendChild(myIndexDoc->createTextNode(XMLString::transcode("\n")));
+      myIndexDoc->getDocumentElement()->appendChild(newNode);
     }
   }
   
@@ -435,25 +437,27 @@ void DataArchiver::copySection(Dir& fromDir, Dir& toDir, string section)
   indexOut << myIndexDoc << endl;
 }
 
-void DataArchiver::addRestartStamp(DOM_Document indexDoc, Dir& fromDir,
+void DataArchiver::addRestartStamp(DOMDocument* indexDoc, Dir& fromDir,
 				   int timestep)
 {
-   DOM_Text leader = indexDoc.createTextNode("\n");
-   DOM_Text returnTab = indexDoc.createTextNode("\n\t");
-   DOM_Node restarts = findNode("restarts", indexDoc.getDocumentElement());
+   DOMText* leader = indexDoc->createTextNode(XMLString::transcode("\n"));
+   DOMText* returnTab = indexDoc->createTextNode(XMLString::transcode("\n\t"));
+   DOMNode* restarts = const_cast<DOMNode*>(findNode("restarts", indexDoc->getDocumentElement()));
    if (restarts == 0) {
-     restarts = indexDoc.createElement("restarts");
-     indexDoc.getDocumentElement().appendChild(leader);
-     indexDoc.getDocumentElement().appendChild(restarts);
+     restarts = indexDoc->createElement(XMLString::transcode("restarts"));
+     indexDoc->getDocumentElement()->appendChild(leader);
+     indexDoc->getDocumentElement()->appendChild(restarts);
    }
-   DOM_Element restartInfo = indexDoc.createElement("restart");
-   restartInfo.setAttribute("from", fromDir.getName().c_str());
+   DOMElement* restartInfo = indexDoc->createElement(XMLString::transcode("restart"));
+   restartInfo->setAttribute(XMLString::transcode("from"), 
+			     XMLString::transcode(fromDir.getName().c_str()));
    ostringstream timestep_str;
    timestep_str << timestep;
-   restartInfo.setAttribute("timestep", timestep_str.str().c_str());
-   restarts.appendChild(returnTab);
-   restarts.appendChild(restartInfo);
-   restarts.appendChild(leader);
+   restartInfo->setAttribute(XMLString::transcode("timestep"), 
+			     XMLString::transcode(timestep_str.str().c_str()));
+   restarts->appendChild(returnTab);
+   restarts->appendChild(restartInfo);
+   restarts->appendChild(leader);
 }
 
 void DataArchiver::copyTimesteps(Dir& fromDir, Dir& toDir, int startTimestep,
@@ -461,28 +465,28 @@ void DataArchiver::copyTimesteps(Dir& fromDir, Dir& toDir, int startTimestep,
 				 bool areCheckpoints /*=false*/)
 {
    string old_iname = fromDir.getName()+"/index.xml";
-   DOM_Document oldIndexDoc = loadDocument(old_iname);
+   DOMDocument* oldIndexDoc = loadDocument(old_iname);
    string iname = toDir.getName()+"/index.xml";
-   DOM_Document indexDoc = loadDocument(iname);
-   DOM_Text leader = indexDoc.createTextNode("\n");
-   DOM_Node oldTimesteps = findNode("timesteps",
-				    oldIndexDoc.getDocumentElement());
-   DOM_Node ts;
+   DOMDocument* indexDoc = loadDocument(iname);
+   DOMText* leader = indexDoc->createTextNode(XMLString::transcode("\n"));
+   const DOMNode* oldTimesteps = findNode("timesteps",
+				    oldIndexDoc->getDocumentElement());
+   DOMNode* ts;
    if (oldTimesteps != 0)
-      ts = findNode("timestep", oldTimesteps);
+     ts = const_cast<DOMNode*>(findNode("timestep", oldTimesteps));
 
    // while we're at it, add restart information to index.xml
    if (maxTimestep >= 0)
      addRestartStamp(indexDoc, fromDir, maxTimestep);
 
    // create timesteps element if necessary
-   DOM_Node timesteps = findNode("timesteps",
-				 indexDoc.getDocumentElement());
+   DOMNode* timesteps = const_cast<DOMNode*>(findNode("timesteps",
+				 indexDoc->getDocumentElement()));
    if (timesteps == 0) {
-      leader = indexDoc.createTextNode("\n");
-      indexDoc.getDocumentElement().appendChild(leader);
-      timesteps = indexDoc.createElement("timesteps");
-      indexDoc.getDocumentElement().appendChild(timesteps);
+      leader = indexDoc->createTextNode(XMLString::transcode("\n"));
+      indexDoc->getDocumentElement()->appendChild(leader);
+      timesteps = indexDoc->createElement(XMLString::transcode("timesteps"));
+      indexDoc->getDocumentElement()->appendChild(timesteps);
    }
    
    int timestep;
@@ -491,11 +495,11 @@ void DataArchiver::copyTimesteps(Dir& fromDir, Dir& toDir, int startTimestep,
       if (timestep > startTimestep &&
 	  (timestep <= maxTimestep || maxTimestep < 0)) {
 	 // copy the timestep directory over
-	 DOM_NamedNodeMap attributes = ts.getAttributes();
-	 DOM_Node hrefNode = attributes.getNamedItem("href");
+	 DOMNamedNodeMap* attributes = ts->getAttributes();
+	 DOMNode* hrefNode = attributes->getNamedItem(XMLString::transcode("href"));
 	 if (hrefNode == 0)
 	    throw InternalError("timestep href attribute not found");
-	 char* href = hrefNode.getNodeValue().transcode();
+	 char* href = XMLString::transcode(hrefNode->getNodeValue());
 	 strtok(href, "/"); // just grab the directory part
 	 Dir timestepDir = fromDir.getSubdir(href);
 	 if (removeOld)
@@ -509,22 +513,22 @@ void DataArchiver::copyTimesteps(Dir& fromDir, Dir& toDir, int startTimestep,
 	 delete[] href;
 
 	 // add the timestep to the index.xml
-	 leader = indexDoc.createTextNode("\n\t");
-	 timesteps.appendChild(leader);
-	 DOM_Element newTS = indexDoc.createElement("timestep");
+	 leader = indexDoc->createTextNode(XMLString::transcode("\n\t"));
+	 timesteps->appendChild(leader);
+	 DOMElement* newTS = indexDoc->createElement(XMLString::transcode("timestep"));
 	 ostringstream timestep_str;
 	 timestep_str << timestep;
-	 DOM_Text value = indexDoc.createTextNode(timestep_str.str().c_str());
-	 newTS.appendChild(value);
-	 for (unsigned int i = 0; i < attributes.getLength(); i++)
-	    newTS.setAttribute(attributes.item(i).getNodeName(),
-			       attributes.item(i).getNodeValue());
+	 DOMText* value = indexDoc->createTextNode(XMLString::transcode(timestep_str.str().c_str()));
+	 newTS->appendChild(value);
+	 for (unsigned int i = 0; i < attributes->getLength(); i++)
+	    newTS->setAttribute(attributes->item(i)->getNodeName(),
+			       attributes->item(i)->getNodeValue());
 	 
-	 timesteps.appendChild(newTS); // copy to new index.xml
-	 DOM_Text trailer = indexDoc.createTextNode("\n");
-	 timesteps.appendChild(trailer);
+	 timesteps->appendChild(newTS); // copy to new index.xml
+	 DOMText* trailer = indexDoc->createTextNode(XMLString::transcode("\n"));
+	 timesteps->appendChild(trailer);
       }
-      ts = findNextNode("timestep", ts);
+      ts = const_cast<DOMNode*>(findNextNode("timestep", ts));
    }
 
    ofstream copiedIndex(iname.c_str());
@@ -538,17 +542,17 @@ void DataArchiver::copyDatFiles(Dir& fromDir, Dir& toDir, int startTimestep,
 
    // find the dat file via the globals block in index.xml
    string iname = fromDir.getName()+"/index.xml";
-   DOM_Document indexDoc = loadDocument(iname);
+   DOMDocument* indexDoc = loadDocument(iname);
 
-   DOM_Node globals = findNode("globals", indexDoc.getDocumentElement());
+   const DOMNode* globals = findNode("globals", indexDoc->getDocumentElement());
    if (globals != 0) {
-      DOM_Node variable = findNode("variable", globals);
+      DOMNode* variable = const_cast<DOMNode*>(findNode("variable", globals));
       while (variable != 0) {
-	 DOM_NamedNodeMap attributes = variable.getAttributes();
-	 DOM_Node hrefNode = attributes.getNamedItem("href");
+	 DOMNamedNodeMap* attributes = variable->getAttributes();
+	 DOMNode* hrefNode = attributes->getNamedItem(XMLString::transcode("href"));
 	 if (hrefNode == 0)
 	    throw InternalError("global variable href attribute not found");
-	 char* href = hrefNode.getNodeValue().transcode();
+	 char* href = XMLString::transcode(hrefNode->getNodeValue());
 	 
 	 // copy up to maxTimestep lines of the old dat file to the copy
 	 ifstream datFile((fromDir.getName()+"/"+href).c_str());
@@ -566,28 +570,31 @@ void DataArchiver::copyDatFiles(Dir& fromDir, Dir& toDir, int startTimestep,
 	 
 	 delete[] href;
 	 
-	 variable = findNextNode("variable", variable);
+	 variable = const_cast<DOMNode*>(findNextNode("variable", variable));
       }
    }
 }
 
 void DataArchiver::createIndexXML(Dir& dir)
 {
-   DOM_DOMImplementation impl;
+   DOMImplementation* impl = DOMImplementationRegistry::getDOMImplementation(XMLString::transcode("LS"));
     
-   DOM_Document doc = impl.createDocument(0,"Uintah_DataArchive",
-					     DOM_DocumentType());
-   DOM_Element rootElem = doc.getDocumentElement();
+   DOMDocument* doc = impl->createDocument(0, XMLString::transcode("Uintah_DataArchive"),0);
+   DOMElement* rootElem = doc->getDocumentElement();
 
-   appendElement(rootElem, "numberOfProcessors", d_myworld->size());
+   appendElement(rootElem, doc->createTextNode(XMLString::transcode("numberOfProcessors")), d_myworld->size());
 
-   DOM_Element metaElem = doc.createElement("Meta");
-   rootElem.appendChild(metaElem);
-   appendElement(metaElem, "username", getenv("LOGNAME"));
+   DOMElement* metaElem = doc->createElement(XMLString::transcode("Meta"));
+   rootElem->appendChild(metaElem);
+   appendElement(metaElem, doc->createTextNode(XMLString::transcode("username")), 
+		 getenv("LOGNAME"));
    time_t t = time(NULL) ;
-   appendElement(metaElem, "date", ctime(&t));
-   appendElement(metaElem, "endianness", endianness().c_str() );
-   appendElement(metaElem, "nBits", (int)sizeof(unsigned long) * 8 );
+   appendElement(metaElem, doc->createTextNode(XMLString::transcode("date")), 
+		 ctime(&t));
+   appendElement(metaElem, doc->createTextNode(XMLString::transcode("endianness")), 
+		 endianness().c_str() );
+   appendElement(metaElem, doc->createTextNode(XMLString::transcode("nBits")),
+		 (int)sizeof(unsigned long) * 8 );
    
    string iname = dir.getName()+"/index.xml";
    ofstream out(iname.c_str());
@@ -706,7 +713,7 @@ void DataArchiver::beginOutputTimestep(double time, double delt,
 		   d_checkpointReductionLabels.size() > 0);
     
     string iname = d_checkpointsDir.getName()+"/index.xml";
-    DOM_Document index;
+    DOMDocument* index;
     
     if (d_writeMeta) {
       index = loadDocument(iname);
@@ -722,11 +729,12 @@ void DataArchiver::beginOutputTimestep(double time, double delt,
       if (d_writeMeta) {
 	// remove reference to outdated checkpoint directory from the
 	// checkpoint index
-	DOM_Node ts = findNode("timesteps", index.getDocumentElement());
-	DOM_Node removed;
+	DOMNode* ts = const_cast<DOMNode*>(findNode("timesteps", index->getDocumentElement()));
+	DOMNode* removed;
 	do {
-	  removed = ts.removeChild(ts.getFirstChild());
-	} while (removed.getNodeType() != DOM_Node::ELEMENT_NODE);
+	  DOMNode* temp = ts->getFirstChild();
+	  removed = ts->removeChild(temp);
+	} while (removed->getNodeType() != DOMNode::ELEMENT_NODE);
 	ofstream indexout(iname.c_str());
 	indexout << index << endl;
 	
@@ -769,82 +777,83 @@ void DataArchiver::outputTimestep(Dir& baseDir,
     try {
       tdir = baseDir.createSubdir(tname.str());
       
-      DOM_DOMImplementation impl;
+      DOMImplementation* impl = DOMImplementationRegistry::getDOMImplementation(XMLString::transcode("LS"));;
 	 
-      DOM_Document doc = impl.createDocument(0,"Uintah_timestep",
-					     DOM_DocumentType());
-      DOM_Element rootElem = doc.getDocumentElement();
+      DOMDocument* doc = impl->createDocument(0,XMLString::transcode("Uintah_timestep"),0);
+      DOMElement* rootElem = doc->getDocumentElement();
 
-      DOM_Element timeElem = doc.createElement("Time");
-      rootElem.appendChild(timeElem);
+      DOMElement* timeElem = doc->createElement(XMLString::transcode("Time"));
+      rootElem->appendChild(timeElem);
       
-      appendElement(timeElem, "timestepNumber", timestep);
-      appendElement(timeElem, "currentTime", time+delt);
-      appendElement(timeElem, "delt", delt);
+      appendElement(timeElem, doc->createTextNode(XMLString::transcode("timestepNumber")), timestep);
+      appendElement(timeElem, doc->createTextNode(XMLString::transcode("currentTime")), time+delt);
+      appendElement(timeElem, doc->createTextNode(XMLString::transcode("delt")), delt);
       
-      DOM_Element gridElem = doc.createElement("Grid");
-      rootElem.appendChild(gridElem);
+      DOMElement* gridElem = doc->createElement(XMLString::transcode("Grid"));
+      rootElem->appendChild(gridElem);
       
-      appendElement(gridElem, "numLevels", numLevels);
+      appendElement(gridElem, doc->createTextNode(XMLString::transcode("numLevels")), numLevels);
       for(int l = 0;l<numLevels;l++){
 	LevelP level = grid->getLevel(l);
-	DOM_Element levelElem = doc.createElement("Level");
-	gridElem.appendChild(levelElem);
+	DOMElement* levelElem = doc->createElement(XMLString::transcode("Level"));
+	gridElem->appendChild(levelElem);
 
 	if (level->getPeriodicBoundaries() != IntVector(0,0,0))
-	  appendElement(levelElem, "periodic", level->getPeriodicBoundaries());
-	appendElement(levelElem, "numPatches", level->numPatches());
-	appendElement(levelElem, "totalCells", level->totalCells());
-	appendElement(levelElem, "cellspacing", level->dCell());
-	appendElement(levelElem, "anchor", level->getAnchor());
-	appendElement(levelElem, "id", level->getID());
+	  appendElement(levelElem, doc->createTextNode(XMLString::transcode("periodic")), level->getPeriodicBoundaries());
+	appendElement(levelElem, doc->createTextNode(XMLString::transcode("numPatches")), level->numPatches());
+	appendElement(levelElem, doc->createTextNode(XMLString::transcode("totalCells")), level->totalCells());
+	appendElement(levelElem, doc->createTextNode(XMLString::transcode("cellspacing")), level->dCell());
+	appendElement(levelElem, doc->createTextNode(XMLString::transcode("anchor")), level->getAnchor());
+	appendElement(levelElem, doc->createTextNode(XMLString::transcode("id")), level->getID());
 	Level::const_patchIterator iter;
 	for(iter=level->patchesBegin(); iter != level->patchesEnd(); iter++){
 	  const Patch* patch=*iter;
-	  DOM_Element patchElem = doc.createElement("Patch");
-	  levelElem.appendChild(patchElem);
-	  appendElement(patchElem, "id", patch->getID());
-	  appendElement(patchElem, "lowIndex", patch->getCellLowIndex());
-	  appendElement(patchElem, "highIndex", patch->getCellHighIndex());
+	  DOMElement* patchElem = doc->createElement(XMLString::transcode("Patch"));
+	  levelElem->appendChild(patchElem);
+	  appendElement(patchElem, doc->createTextNode(XMLString::transcode("id")), patch->getID());
+	  appendElement(patchElem, doc->createTextNode(XMLString::transcode("lowIndex")), patch->getCellLowIndex());
+	  appendElement(patchElem, doc->createTextNode(XMLString::transcode("highIndex")), patch->getCellHighIndex());
 	  Box box = patch->getBox();
-	  appendElement(patchElem, "lower", box.lower());
-	  appendElement(patchElem, "upper", box.upper());
-	  appendElement(patchElem, "totalCells", patch->totalCells());
+	  appendElement(patchElem, doc->createTextNode(XMLString::transcode("lower")), box.lower());
+	  appendElement(patchElem, doc->createTextNode(XMLString::transcode("upper")), box.upper());
+	  appendElement(patchElem, doc->createTextNode(XMLString::transcode("totalCells")), patch->totalCells());
 	}
       }
-      DOM_Element dataElem = doc.createElement("Data");
-      rootElem.appendChild(dataElem);
+      DOMElement* dataElem = doc->createElement(XMLString::transcode("Data"));
+      rootElem->appendChild(dataElem);
       for(int l=0;l<numLevels;l++){
 	ostringstream lname;
 	lname << "l" << l;
 	for(int i=0;i<d_myworld->size();i++){
 	  ostringstream pname;
 	  pname << lname.str() << "/p" << setw(5) << setfill('0') << i << ".xml";
-	  DOM_Text leader = doc.createTextNode("\n\t");
-	  dataElem.appendChild(leader);
-	  DOM_Element df = doc.createElement("Datafile");
-	  dataElem.appendChild(df);
-	  df.setAttribute("href", pname.str().c_str());
+	  DOMText* leader = doc->createTextNode(XMLString::transcode("\n\t"));
+	  dataElem->appendChild(leader);
+	  DOMElement* df = doc->createElement(XMLString::transcode("Datafile"));
+	  dataElem->appendChild(df);
+	  df->setAttribute(XMLString::transcode("href"), 
+			   XMLString::transcode(pname.str().c_str()));
 	  ostringstream procID;
 	  procID << i;
-	  df.setAttribute("proc", procID.str().c_str());
+	  df->setAttribute(XMLString::transcode("proc"), 
+			   XMLString::transcode(procID.str().c_str()));
 	  ostringstream labeltext;
 	  labeltext << "Processor " << i << " of " << d_myworld->size();
-	  DOM_Text label = doc.createTextNode(labeltext.str().c_str());
-	  df.appendChild(label);
-	  DOM_Text trailer = doc.createTextNode("\n");
-	  dataElem.appendChild(trailer);
+	  DOMText* label = doc->createTextNode(XMLString::transcode(labeltext.str().c_str()));
+	  df->appendChild(label);
+	  DOMText* trailer = doc->createTextNode(XMLString::transcode("\n"));
+	  dataElem->appendChild(trailer);
 	}
       }
 	 
       if (hasGlobals) {
-	DOM_Text leader = doc.createTextNode("\n\t");
-	dataElem.appendChild(leader);
-	DOM_Element df = doc.createElement("Datafile");
-	dataElem.appendChild(df);
-	df.setAttribute("href", "global.xml");
-	DOM_Text trailer = doc.createTextNode("\n");
-	dataElem.appendChild(trailer);
+	DOMText* leader = doc->createTextNode(XMLString::transcode("\n\t"));
+	dataElem->appendChild(leader);
+	DOMElement* df = doc->createElement(XMLString::transcode("Datafile"));
+	dataElem->appendChild(df);
+	df->setAttribute(XMLString::transcode("href"), XMLString::transcode("global.xml"));
+	DOMText* trailer = doc->createTextNode(XMLString::transcode("\n"));
+	dataElem->appendChild(trailer);
       }
 	 
       string name = tdir.getName()+"/timestep.xml";
@@ -890,17 +899,17 @@ void DataArchiver::executedTimestep()
     // Reference this timestep in index.xml
     if(d_writeMeta){
       string iname = baseDirs[i]->getName()+"/index.xml";
-      DOM_Document indexDoc = loadDocument(iname);
-      DOM_Node ts = findNode("timesteps", indexDoc.getDocumentElement());
+      DOMDocument* indexDoc = loadDocument(iname);
+      DOMNode* ts = const_cast<DOMNode*>(findNode("timesteps", indexDoc->getDocumentElement()));
       if(ts == 0){
-	DOM_Text leader = indexDoc.createTextNode("\n");
-	indexDoc.getDocumentElement().appendChild(leader);
-	ts = indexDoc.createElement("timesteps");
-	indexDoc.getDocumentElement().appendChild(ts);
+	DOMText* leader = indexDoc->createTextNode(XMLString::transcode("\n"));
+	indexDoc->getDocumentElement()->appendChild(leader);
+	ts = indexDoc->createElement(XMLString::transcode("timesteps"));
+	indexDoc->getDocumentElement()->appendChild(ts);
       }
       bool found=false;
-      for(DOM_Node n = ts.getFirstChild(); n != 0; n=n.getNextSibling()){
-	if(n.getNodeName().equals(DOMString("timestep"))){
+      for(DOMNode* n = ts->getFirstChild(); n != 0; n=n->getNextSibling()){
+	if(strcmp(XMLString::transcode(n->getNodeName()),"timestep") == 0){
 	  int readtimestep;
 	  if(!get(n, readtimestep))
 	    throw InternalError("Error parsing timestep number");
@@ -912,17 +921,17 @@ void DataArchiver::executedTimestep()
       }
       if(!found){
 	string timestepindex = tname.str()+"/timestep.xml";      
-	DOM_Text leader = indexDoc.createTextNode("\n\t");
-	ts.appendChild(leader);
-	DOM_Element newElem = indexDoc.createElement("timestep");
-	ts.appendChild(newElem);
+	DOMText* leader = indexDoc->createTextNode(XMLString::transcode("\n\t"));
+	ts->appendChild(leader);
+	DOMElement* newElem = indexDoc->createElement(XMLString::transcode("timestep"));
+	ts->appendChild(newElem);
 	ostringstream value;
 	value << timestep;
-	DOM_Text newVal = indexDoc.createTextNode(value.str().c_str());
-	newElem.appendChild(newVal);
-	newElem.setAttribute("href", timestepindex.c_str());
-	DOM_Text trailer = indexDoc.createTextNode("\n");
-	ts.appendChild(trailer);
+	DOMText* newVal = indexDoc->createTextNode(XMLString::transcode(value.str().c_str()));
+	newElem->appendChild(newVal);
+	newElem->setAttribute(XMLString::transcode("href"), XMLString::transcode(timestepindex.c_str()));
+	DOMText* trailer = indexDoc->createTextNode(XMLString::transcode("\n"));
+	ts->appendChild(trailer);
       }
       
       ofstream indexOut(iname.c_str());
@@ -956,10 +965,10 @@ DataArchiver::scheduleOutputTimestep(Dir& baseDir,
   dbg << "Created " << n << " output tasks\n";
 }
 
-DOM_Document DataArchiver::loadDocument(string xmlName)
+DOMDocument* DataArchiver::loadDocument(string xmlName)
 {
    // Instantiate the DOM parser.
-   DOMParser parser;
+   XercesDOMParser parser;
    parser.setDoValidation(false);
    
    SimpleErrorHandler handler;
@@ -986,39 +995,40 @@ void DataArchiver::indexAddGlobals()
   static bool wereGlobalsAdded = false;
    if (d_writeMeta && !wereGlobalsAdded) {
      wereGlobalsAdded = true;
-      // add saved global (reduction) variables to index.xml
+     // add saved global (reduction) variables to index.xml
       string iname = d_dir.getName()+"/index.xml";
-      DOM_Document indexDoc = loadDocument(iname);
-      DOM_Node leader = indexDoc.createTextNode("\n");
-      indexDoc.getDocumentElement().appendChild(leader);
-      DOM_Node globals = indexDoc.createElement("globals");
-      indexDoc.getDocumentElement().appendChild(globals);
+      DOMDocument* indexDoc = loadDocument(iname);
+      DOMNode* leader = indexDoc->createTextNode(XMLString::transcode("\n"));
+      indexDoc->getDocumentElement()->appendChild(leader);
+      DOMNode* globals = indexDoc->createElement(XMLString::transcode("globals"));
+      indexDoc->getDocumentElement()->appendChild(globals);
       for (vector<SaveItem>::iterator iter = d_saveReductionLabels.begin();
-	   iter != d_saveReductionLabels.end(); iter++) {
-	 SaveItem& saveItem = *iter;
-	 const VarLabel* var = saveItem.label_;
-	 const MaterialSubset* matls = saveItem.getMaterialSet()->getUnion();
-	 for (int m = 0; m < matls->size(); m++) {
-	    int matlIndex = matls->get(m);
-	    ostringstream href;
-	    href << var->getName();
-	    if (matlIndex < 0)
-	       href << ".dat\0";
-	    else
-	       href << "_" << matlIndex << ".dat\0";
-	    DOM_Element newElem = indexDoc.createElement("variable");
-	    DOM_Text leader = indexDoc.createTextNode("\n\t");
-	    DOM_Text trailer = indexDoc.createTextNode("\n");
-	    globals.appendChild(leader);
-	    globals.appendChild(newElem);
-	    globals.appendChild(trailer);
-	    newElem.setAttribute("href", href.str().c_str());
-	    newElem.setAttribute("type",
-				 var->typeDescription()->getName().c_str());
-	    newElem.setAttribute("name", var->getName().c_str());	 
-	 }
+           iter != d_saveReductionLabels.end(); iter++) {
+         SaveItem& saveItem = *iter;
+         const VarLabel* var = saveItem.label_;
+         const MaterialSubset* matls = saveItem.getMaterialSet()->getUnion();
+         for (int m = 0; m < matls->size(); m++) {
+            int matlIndex = matls->get(m);
+            ostringstream href;
+            href << var->getName();
+            if (matlIndex < 0)
+	      href << ".dat\0";
+            else
+	      href << "_" << matlIndex << ".dat\0";
+            DOMElement* newElem = indexDoc->createElement(XMLString::transcode("variable"));
+            DOMText* leader = indexDoc->createTextNode(XMLString::transcode("\n\t"));
+            DOMText* trailer = indexDoc->createTextNode(XMLString::transcode("\n"));
+            globals->appendChild(leader);
+            globals->appendChild(newElem);
+            globals->appendChild(trailer);
+            newElem->setAttribute(XMLString::transcode("href"), 
+				  XMLString::transcode(href.str().c_str()));
+            newElem->setAttribute(XMLString::transcode("type"),
+				  XMLString::transcode(var->typeDescription()->getName().c_str()));
+            newElem->setAttribute(XMLString::transcode("name"), XMLString::transcode(var->getName().c_str()));
+         }
       }
-      
+
       ofstream indexOut(iname.c_str());
       indexOut << indexDoc << endl;
    }
@@ -1145,11 +1155,11 @@ void DataArchiver::output(const ProcessorGroup*,
   // file, but also lock because xerces (DOM..) has thread-safety issues.
  d_outputLock.lock(); 
  { // make sure doc's constructor is called after the lock.
-  DOM_Document doc; 
+  DOMDocument* doc; 
   ifstream test(xmlFilename.c_str());
   if(test){
     // Instantiate the DOM parser.
-    DOMParser parser;
+    XercesDOMParser parser;
     parser.setDoValidation(false);
     
     SimpleErrorHandler handler;
@@ -1166,34 +1176,34 @@ void DataArchiver::output(const ProcessorGroup*,
     // Add the parser contents to the ProblemSpecP d_doc
     doc = parser.getDocument();
   } else {
-    DOM_DOMImplementation impl;
+    DOMImplementation* impl = DOMImplementationRegistry::getDOMImplementation(XMLString::transcode("LS"));;
     
-    doc = impl.createDocument(0,"Uintah_Output",
-			      DOM_DocumentType());
+    doc = impl->createDocument(0,XMLString::transcode("Uintah_Output"),
+			      0);
   }
 
   // Find the end of the file
-  DOM_Node n = doc.getDocumentElement();
-  ASSERT(!n.isNull());
-  n = findNode("Variable", n);
+  DOMNode* n = doc->getDocumentElement();
+  ASSERT(n != NULL);
+  n = const_cast<DOMNode*>(findNode("Variable", n));
    
   long cur=0;
-  while(!n.isNull()){
-    DOM_Node endNode = findNode("end", n);
+  while(n != NULL){
+    DOMNode* endNode = const_cast<DOMNode*>(findNode("end", n));
     ASSERT(!endNode.isNull());
-    DOM_Node tn = findTextNode(endNode);
-    DOMString val = tn.getNodeValue();
-    char* s = val.transcode();
+    const DOMNode* tn = findTextNode(endNode);
+    //DOMString val = tn->getNodeValue();
+    char* s = XMLString::transcode(tn->getNodeValue());
     long end = atol(s);
     delete[] s;
     
     if(end > cur)
       cur=end;
-    n=findNextNode("Variable", n);
+    n = const_cast<DOMNode*>(findNextNode("Variable", n));
   }
 
 
-  DOM_Element rootElem = doc.getDocumentElement();
+  DOMElement* rootElem = doc->getDocumentElement();
   // Open the data file
   int fd = open(dataFilename.c_str(), O_WRONLY|O_CREAT, 0666);
   if(fd == -1){
@@ -1214,15 +1224,16 @@ void DataArchiver::output(const ProcessorGroup*,
     int patchID = patch?patch->getID():-1;
     for(int m=0;m<matls->size();m++){
       int matlIndex = matls->get(m);
-      DOM_Element pdElem = doc.createElement("Variable");
-      rootElem.appendChild(pdElem);
-      DOM_Text tailer = doc.createTextNode("\n");
-      rootElem.appendChild(tailer);
+      DOMElement* pdElem = doc->createElement(XMLString::transcode("Variable"));
+      rootElem->appendChild(pdElem);
+      DOMText* tailer = doc->createTextNode(XMLString::transcode("\n"));
+      rootElem->appendChild(tailer);
   
-      appendElement(pdElem, "variable", var->getName());
-      appendElement(pdElem, "index", matlIndex);
-      appendElement(pdElem, "patch", patchID);
-      pdElem.setAttribute("type", var->typeDescription()->getName().c_str());
+      appendElement(pdElem, doc->createTextNode(XMLString::transcode("variable")), var->getName());
+      appendElement(pdElem, doc->createTextNode(XMLString::transcode("index")), matlIndex);
+      appendElement(pdElem, doc->createTextNode(XMLString::transcode("patch")), patchID);
+      pdElem->setAttribute(XMLString::transcode("type"), 
+			   XMLString::transcode(var->typeDescription()->getName().c_str()));
 
 #ifdef __sgi
       off64_t ls = lseek64(fd, cur, SEEK_SET);
@@ -1242,12 +1253,12 @@ void DataArchiver::output(const ProcessorGroup*,
 	delete[] zero;
       }
       ASSERTEQ(cur%PADSIZE, 0);
-      appendElement(pdElem, "start", cur);
+      appendElement(pdElem, doc->createTextNode(XMLString::transcode("start")), cur);
 
       OutputContext oc(fd, cur, pdElem);
       new_dw->emit(oc, var, matlIndex, patch);
-      appendElement(pdElem, "end", oc.cur);
-      appendElement(pdElem, "filename", dataFilebase.c_str());
+      appendElement(pdElem, doc->createTextNode(XMLString::transcode("end")), oc.cur);
+      appendElement(pdElem, doc->createTextNode(XMLString::transcode("filename")), dataFilebase.c_str());
       s = fstat(fd, &st);
       if(s == -1)
 	throw ErrnoException("DataArchiver::output (stat call)", errno);
@@ -1266,26 +1277,26 @@ void DataArchiver::output(const ProcessorGroup*,
   if(d_writeMeta){
     // Rewrite the index if necessary...
     string iname = p_dir->getName()+"/index.xml";
-    DOM_Document indexDoc = loadDocument(iname);
+    DOMDocument* indexDoc = loadDocument(iname);
     
-    DOM_Node vs;
+    DOMNode* vs;
     string variableSection = (isReduction) ? "globals" : "variables";
 	 
-    vs = findNode(variableSection, indexDoc.getDocumentElement());
+    vs = const_cast<DOMNode*>(findNode(variableSection, indexDoc->getDocumentElement()));
     if(vs == 0){
-      DOM_Text leader = indexDoc.createTextNode("\n");
-      indexDoc.getDocumentElement().appendChild(leader);
-      vs = indexDoc.createElement(variableSection.c_str());
-      indexDoc.getDocumentElement().appendChild(vs);
+      DOMText* leader = indexDoc->createTextNode(XMLString::transcode("\n"));
+      indexDoc->getDocumentElement()->appendChild(leader);
+      vs = indexDoc->createElement(XMLString::transcode(variableSection.c_str()));
+      indexDoc->getDocumentElement()->appendChild(vs);
     }
     bool found=false;
-    for(DOM_Node n = vs.getFirstChild(); n != 0; n=n.getNextSibling()){
-      if(n.getNodeName().equals(DOMString("variable"))){
-	DOM_NamedNodeMap attributes = n.getAttributes();
-	DOM_Node varname = attributes.getNamedItem("name");
+    for(DOMNode* n = vs->getFirstChild(); n != 0; n=n->getNextSibling()){
+      if(strcmp(XMLString::transcode(n->getNodeName()),"variable") == 0) {
+	DOMNamedNodeMap* attributes = n->getAttributes();
+	DOMNode* varname = attributes->getNamedItem(XMLString::transcode("name"));
 	if(varname == 0)
 	  throw InternalError("varname not found");
-	string vn = toString(varname.getNodeValue());
+	string vn = XMLString::transcode(varname->getNodeValue());
 	if(vn == var->getName()){
 	  found=true;
 	  break;
@@ -1293,14 +1304,15 @@ void DataArchiver::output(const ProcessorGroup*,
       }
     }
     if(!found){
-      DOM_Text leader = indexDoc.createTextNode("\n\t");
-      vs.appendChild(leader);
-      DOM_Element newElem = indexDoc.createElement("variable");
-      vs.appendChild(newElem);
-      newElem.setAttribute("type", var->typeDescription()->getName().c_str());
-      newElem.setAttribute("name", var->getName().c_str());
-      DOM_Text trailer = indexDoc.createTextNode("\n");
-      vs.appendChild(trailer);
+      DOMText* leader = indexDoc->createTextNode(XMLString::transcode("\n\t"));
+      vs->appendChild(leader);
+      DOMElement* newElem = indexDoc->createElement(XMLString::transcode("variable"));
+      vs->appendChild(newElem);
+      newElem->setAttribute(XMLString::transcode("type"), 
+			    XMLString::transcode(var->typeDescription()->getName().c_str()));
+      newElem->setAttribute(XMLString::transcode("name"), XMLString::transcode(var->getName().c_str()));
+      DOMText* trailer = indexDoc->createTextNode(XMLString::transcode("\n"));
+      vs->appendChild(trailer);
     }
 
     ofstream indexOut(iname.c_str());
@@ -1581,3 +1593,4 @@ bool DataArchiver::need_recompile(double time, double dt,
     dbg << "We do not request recompile\n";
   return recompile;
 }
+

@@ -4,7 +4,7 @@
 #include <string>
 #include <iosfwd>
 
-class DOM_Element;
+class DOMElement;
 
 namespace SCIRun {
   class IntVector;
@@ -65,10 +65,10 @@ public:
   void read(InputContext&, long end, bool swapbytes, int nByteMode,
 	    const string& compressionMode);
 
-  virtual void emitNormal(ostream& out, DOM_Element varnode) = 0;
+  virtual void emitNormal(ostream& out, DOMElement* varnode) = 0;
   virtual void readNormal(istream& in, bool swapbytes) = 0;
 
-  virtual bool emitRLE(ostream& /*out*/, DOM_Element /*varnode*/);
+  virtual bool emitRLE(ostream& /*out*/, DOMElement* /*varnode*/);
   virtual void readRLE(istream& /*in*/, bool swapbytes, int nByteMode);
   
   virtual void allocate(const Patch* patch) = 0;

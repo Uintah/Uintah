@@ -76,11 +76,11 @@ GV_TaskGraph::inflate(string xmlDir)
     return 0;
   }
 
-  list<DOM_Document> docs;
+  list<DOMDocument*> docs;
 
   GV_TaskGraph* pGraph = scinew GV_TaskGraph();
   
-  DOMParser parser;
+  XercesDOMParser parser;
   parser.setDoValidation(false);
   SimpleErrorHandler handler;
   parser.setErrorHandler(&handler);
@@ -102,7 +102,7 @@ GV_TaskGraph::inflate(string xmlDir)
       cerr << "Error parsing taskgraph file " << xmlFileName << endl;
       return 0;
     }
-
+ 
     docs.push_back(parser.getDocument());
 
     pGraph->readNodes(parser.getDocument());
@@ -117,7 +117,7 @@ GV_TaskGraph::inflate(string xmlDir)
     return 0;
   }
   
-  for (list<DOM_Document>::iterator docIter = docs.begin();
+  for (list<DOMDocument*>::iterator docIter = docs.begin();
        docIter != docs.end(); docIter++) {
     pGraph->readEdges(*docIter);
   }
@@ -131,12 +131,12 @@ GV_TaskGraph::GV_TaskGraph()
 {
 }
 
-void GV_TaskGraph::readNodes(DOM_Document xmlDoc)
+void GV_TaskGraph::readNodes(DOMDocument* xmlDoc)
 {
-  DOM_Element docElement = xmlDoc.getDocumentElement();
-  DOM_Node nodes = findNode("Nodes", docElement);
-  for (DOM_Node node = findNode("node", nodes); node != 0;
-       node = findNextNode("node", node)) {
+  DOMElement* docElement = xmlDoc->getDocumentElement();
+  const DOMNode* nodes = findNode("Nodes", docElement);
+  for (DOMNode* node = const_cast<DOMNode*>(findNode("node", nodes)); node != 0;
+       node = const_cast<DOMNode*>(findNextNode("node", node))) {
     string task_name;
     double task_duration;
     get(node, "name", task_name);
@@ -157,12 +157,13 @@ void GV_TaskGraph::readNodes(DOM_Document xmlDoc)
   }
 }
 
-void GV_TaskGraph::readEdges(DOM_Document xmlDoc)
+void GV_TaskGraph::readEdges(DOMDocument* xmlDoc)
 {
-  DOM_Element docElement = xmlDoc.getDocumentElement();
-  DOM_Node edges = findNode("Edges", docElement);
-  for (DOM_Node node = findNode("edge", edges); node != 0;
-       node = findNextNode("edge", node)) {
+  const DOMElement* docElement = xmlDoc->getDocumentElement();
+  const DOMNode* edges = findNode("Edges", docElement);
+  for (DOMNode* node = const_cast<DOMNode*>(findNode("edge", edges)); 
+       node != 0;
+       node = const_cast<DOMNode*>(findNextNode("edge", node))) {
     string source;
     string target;
     get(node, "source", source);

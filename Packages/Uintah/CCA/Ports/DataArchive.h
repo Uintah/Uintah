@@ -22,9 +22,9 @@
 #pragma set woff 1375
 #endif
 #include <util/PlatformUtils.hpp>
-#include <parsers/DOMParser.hpp>
-#include <dom/DOM_Node.hpp>
-#include <dom/DOM_NamedNodeMap.hpp>
+#include <parsers/XercesDOMParser.hpp>
+#include <dom/DOMNode.hpp>
+#include <dom/DOMNamedNodeMap.hpp>
 #include <util/XMLURL.hpp>
 #if defined(__sgi) && !defined(__GNUC__) && (_MIPS_SIM != _MIPS_SIM_ABI32)
 #pragma reset woff 1375
@@ -45,9 +45,9 @@ class VarLabel;
      }
    };
 
-   typedef HashTable<string, pair<DOM_Node, XMLURL> > VarHashMap;
+   typedef HashTable<string, pair<DOMNode*, XMLURL> > VarHashMap;
 
-   typedef HashTableIter<string, pair<DOM_Node, XMLURL> >
+   typedef HashTableIter<string, pair<DOMNode*, XMLURL> >
    VarHashMapIterator;
 
    /**************************************
@@ -92,10 +92,10 @@ private:
   public:
     TimeHashMaps(const vector<double>& tsTimes,
 		 const vector<XMLURL>& tsUrls,
-		 const vector<DOM_Node>& tsTopNodes,
+		 const vector<DOMNode*>& tsTopNodes,
 		 int processor, int numProcessors);
     
-    inline DOM_Node findVariable(const string& name, const Patch* patch,
+    inline DOMNode* findVariable(const string& name, const Patch* patch,
 				 int matl, double time, XMLURL& foundUrl);
     
     inline PatchHashMaps* findTimeData(double time);
@@ -113,16 +113,16 @@ private:
     friend class TimeHashMaps;
   public:
     PatchHashMaps();
-    void init(XMLURL tsUrl, DOM_Node tsTopNode,
+    void init(XMLURL tsUrl, DOMNode* tsTopNode,
 	      int processor, int numProcessors);
     void purgeCache(); // purge the cached data
-    inline DOM_Node findVariable(const string& name, const Patch* patch,
+    inline DOMNode* findVariable(const string& name, const Patch* patch,
 				 int matl, XMLURL& foundUrl);
     MaterialHashMaps* findPatchData(const Patch* patch);
   private:
     void parse();    
     void add(const string& name, int patchid, int matl,
-	     DOM_Node varNode, XMLURL url)
+	     DOMNode* varNode, XMLURL url)
     { d_matHashMaps[patchid].add(name, matl, varNode, url); }
     
     map<int, MaterialHashMaps> d_matHashMaps;
@@ -138,14 +138,14 @@ private:
   public:
     MaterialHashMaps() {}
     
-    DOM_Node findVariable(const string& name, int matl,
+    DOMNode* findVariable(const string& name, int matl,
 			  XMLURL& foundUrl);
     
     // note that vector is offset by one to allow for matl=-1 at element 0
     const vector<VarHashMap>& getVarHashMaps() const
     { return d_varHashMaps; }
   private:
-    void add(const string& name, int matl, DOM_Node varNode, XMLURL url);
+    void add(const string& name, int matl, DOMNode* varNode, XMLURL url);
     
     vector<VarHashMap> d_varHashMaps;
   };
@@ -267,13 +267,13 @@ private:
   DataArchive(const DataArchive&);
   DataArchive& operator=(const DataArchive&);
   
-  DOM_Node getTimestep(double time, XMLURL& url);
+  DOMNode* getTimestep(double time, XMLURL& url);
   string queryEndianness();  
   int queryNBits();  
-  void query( Variable& var, DOM_Node vnode, XMLURL url,
+  void query( Variable& var, DOMNode* vnode, XMLURL url,
 	      int matlIndex,	const Patch* patch );
 
-  void queryVariables( DOM_Node vars, vector<string>& names,
+  void queryVariables( const DOMNode* vars, vector<string>& names,
 		       vector<const TypeDescription*>& types);
 
   
@@ -293,10 +293,10 @@ private:
   void initVariable(const Patch* patch,
 		    DataWarehouse* new_dw,
 		    VarLabel* label, int matl,
-		    pair<DOM_Node, XMLURL> dataRef);   
+		    pair<DOMNode*, XMLURL> dataRef);   
   
   std::string d_filebase;  
-  DOM_Document d_indexDoc;
+  DOMDocument* d_indexDoc;
   XMLURL d_base;
 
   bool d_swapBytes;
@@ -305,7 +305,7 @@ private:
   bool have_timesteps;
   std::vector<int> d_tsindex;
   std::vector<double> d_tstimes;
-  std::vector<DOM_Node> d_tstop;
+  std::vector<DOMNode*> d_tstop;
   std::vector<XMLURL> d_tsurl;
   TimeHashMaps* d_varHashMaps;
   
@@ -318,7 +318,7 @@ private:
   
   Mutex d_lock;
   
-  DOM_Node findVariable(const string& name, const Patch* patch,
+  DOMNode* findVariable(const string& name, const Patch* patch,
 			int matl, double time, XMLURL& url);
   void findPatchAndIndex(GridP grid, Patch*& patch, particleIndex& idx,
 			 long64 particleID, int matIndex,

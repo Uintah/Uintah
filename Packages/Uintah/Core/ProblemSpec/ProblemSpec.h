@@ -9,7 +9,7 @@
 #include <vector>
 #include <map>
 
-class DOM_Node;
+class DOMNode;
 
 namespace SCIRun {
   class IntVector;
@@ -61,7 +61,7 @@ WARNING
   
    class ProblemSpec : public RefCounted {
    public:
-      ProblemSpec(const DOM_Node& node, bool doWrite=true);
+      ProblemSpec(const DOMNode* node, bool doWrite=true);
       virtual ~ProblemSpec();
       
       ProblemSpecP findBlock(const std::string& name) const;
@@ -102,7 +102,7 @@ WARNING
 
       static const TypeDescription* getTypeDescription();
       
-      DOM_Node* getNode() const {
+      DOMNode* getNode() const {
 	 return d_node;
       }
 
@@ -116,7 +116,7 @@ WARNING
       ProblemSpec(const ProblemSpec&);
       ProblemSpec& operator=(const ProblemSpec&);
       
-      DOM_Node* d_node;
+      DOMNode* d_node;
       bool d_write;
    };
    

@@ -173,7 +173,7 @@ namespace Uintah {
     void findRequiringTasks(const VarLabel* var,
 			    list<DetailedTask*>& requiringTasks);
 
-    void emitEdges(DOM_Element edgesElement);
+    void emitEdges(DOMElement* edgesElement);
 
     bool addRequires(DependencyBatch*);
     void addComputes(DependencyBatch*);
@@ -261,7 +261,7 @@ namespace Uintah {
       return localtasks[idx];
     }
 
-    void emitEdges(DOM_Element edgesElement, int rank);
+    void emitEdges(DOMElement *edgesElement, int rank);
 
     DetailedTask* getNextInternalReadyTask();
     

@@ -1040,7 +1040,7 @@ int main(int argc, char** argv)
   try {
     XMLPlatformUtils::Initialize();
   } catch(const XMLException& toCatch) {
-    cerr << "Caught XML exception: " << toString(toCatch.getMessage()) 
+    cerr << "Caught XML exception: " << XMLString::transcode(toCatch.getMessage()) 
 	 << '\n';
     Thread::exitAll( 1 );
   }

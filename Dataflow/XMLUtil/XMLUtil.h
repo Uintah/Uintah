@@ -100,6 +100,8 @@ bool string_is(const XMLCh *childname, const char *const name) {
   return (XMLString::compareString(childname, to_xml_ch_ptr(name)) == 0);
 }
 const DOMNode* findNode(const std::string &name, const DOMNode *node);
+const DOMNode* findNextNode(const std::string& name, const DOMNode* node);
+const DOMNode* findTextNode(const DOMNode* node);
 void outputContent(std::ostream& target, const XMLCh *s);
 std::ostream& operator<<(std::ostream& target, const DOMText* toWrite);
 std::ostream& operator<<(std::ostream& target, const DOMNode* toWrite);
