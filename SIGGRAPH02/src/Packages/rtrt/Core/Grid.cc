@@ -90,6 +90,11 @@ void Grid::preprocess(double maxradius, int& pp_offset, int& scratchsize)
 {
   if (was_preprocessed) return;
   was_preprocessed=true;
+  
+  if (name_ != "") std::cerr << "\n\n"
+                             << "\n==========================================================\n"
+                             << "* Building Regular Grid for Object " << name_ 
+			     << "\n==========================================================\n";
 
     cerr << "Building grid\n";
     double time=Time::currentSeconds();

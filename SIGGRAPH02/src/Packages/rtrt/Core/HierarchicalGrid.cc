@@ -95,6 +95,12 @@ HierarchicalGrid::preprocess( double maxradius, int& pp_offset,
     if (was_preprocessed) return;
     was_preprocessed=true;
 
+   if (name_ != "") std::cerr << "\n\n"
+                              << "\n==========================================================\n"
+                              << "* Building Hierarchical Grid for Object " << name_
+                              << "\n==========================================================\n";
+
+
     obj->preprocess(maxradius, pp_offset, scratchsize);
 
     Array1<Object*> prims;
