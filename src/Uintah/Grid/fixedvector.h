@@ -47,8 +47,15 @@ namespace Uintah {
       typedef int size_type;
       typedef ptrdiff_t difference_type;
 
-      fixedvector() {cursize=0;}
-      ~fixedvector() {}
+      fixedvector() {
+	 curalloc=Len;
+	 cursize=0;
+	 data=&fixed[0];
+      }
+      ~fixedvector() {
+	 if(data != &fixed[0])
+	    delete[] data;
+      }
       fixedvector(const fixedvector<T,Len>&);
       fixedvector<T,Len>& operator=(const fixedvector<T,Len>&);
 
@@ -58,9 +65,22 @@ namespace Uintah {
       const_iterator end() const { return &data[cursize]; }
 
       void push_back(const T& x) {
-	 if(cursize>=Len)
-	    throw SCICore::Exceptions::InternalError("fixed vector too small");
+	 if(cursize>=curalloc){
+	    enlarge();
+	 }
 	 data[cursize++]=x;
+      }
+
+
+      void enlarge() {
+	 curalloc+=(curalloc>>1);
+	 T* newdata = new T[curalloc];
+	 for(int i=0;i<cursize;i++)
+	    newdata[i]=data[i];
+	 if(data != &fixed[0])
+	    delete[] data;
+	 data=newdata;
+	 //cerr << "dynamic, size=" << curalloc << '\n';
       }
 
       size_type size() const { return cursize; }
@@ -68,13 +88,18 @@ namespace Uintah {
       reference operator[](size_type n) { return data[n]; }
       const_reference operator[](size_type n) const {return data[n]; }
    private:
-      T data[Len];
+      T* data;
+      T fixed[Len];
       int cursize;
+      int curalloc;
    };
 } // end namespace Uintah
 
 //
 // $Log$
+// Revision 1.1.2.2  2000/10/10 15:54:44  sparker
+// Made fixedvector revert to dynamic mode when it gets too big
+//
 // Revision 1.1.2.1  2000/10/10 05:32:29  sparker
 // fixedvector is a fixed-size version of std::vector
 // SimpleString is a low-overhead string class
