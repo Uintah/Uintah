@@ -3,7 +3,7 @@
 <?xml-stylesheet href="../../../doc/Utilities/XML/component.xsl" type="text/xsl"?>
 <?cocoon-process type="xslt"?>
 
-<component name="CastTVtoMLV" category="Fields">
+<component name="CastTVtoMLV" category="FieldsGeometry">
   <overview>
     <authors>
       <author>Chris Moulding</author>

@@ -21,7 +21,7 @@
 -->
 
 
-<component name="TransformScalarData" category="Fields">
+<component name="TransformScalarData" category="FieldsData">
   <overview>
     <authors>
       <author>Michael Callahan</author>

@@ -21,7 +21,7 @@
 -->
 
 
-<component name="TransformVectorData" category="Fields">
+<component name="TransformVectorData" category="FieldsData">
   <overview>
     <authors>
       <author>Michael Callahan</author>

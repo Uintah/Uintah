@@ -15,7 +15,7 @@
 #  University of Utah. All Rights Reserved.
 #
 
-itcl_class SCIRun_Fields_FieldInfo {
+itcl_class SCIRun_FieldsOther_FieldInfo {
     inherit Module
     constructor {config} {
         set name FieldInfo

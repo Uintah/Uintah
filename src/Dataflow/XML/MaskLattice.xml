@@ -21,7 +21,7 @@
 -->
 
 
-<component name="MaskLattice" category="Fields">
+<component name="MaskLattice" category="FieldsData">
   <overview>
     <authors>
       <author>McKay Davis</author>

@@ -15,7 +15,7 @@
 #  University of Utah. All Rights Reserved.
 #
 
-itcl_class SCIRun_Fields_ChangeFieldDataAt {
+itcl_class SCIRun_FieldsData_ChangeFieldDataAt {
     inherit Module
     constructor {config} {
         set name ChangeFieldDataAt

@@ -3,7 +3,7 @@
 <?xml-stylesheet href="../../../doc/package-component.xsl" type="text/xsl"?>
 <?cocoon-process type="xslt"?>
 
-<component name="TetVol2QuadraticTetVol" category="Fields">
+<component name="TetVol2QuadraticTetVol" category="FieldsGeometry">
   <overview>
     <authors>
       <author>Martin Cole</author>

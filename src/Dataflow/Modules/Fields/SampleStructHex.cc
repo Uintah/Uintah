@@ -61,7 +61,7 @@ private:
 DECLARE_MAKER(SampleStructHex)
 
 SampleStructHex::SampleStructHex(GuiContext* ctx)
-  : Module("SampleStructHex", ctx, Filter, "Fields", "SCIRun"),
+  : Module("SampleStructHex", ctx, Filter, "FieldsCreate", "SCIRun"),
     size_x_(ctx->subVar("sizex")),
     size_y_(ctx->subVar("sizey")),
     size_z_(ctx->subVar("sizez")),

@@ -21,7 +21,7 @@
 -->
 
 
-<component name="AttractNormals" category="Fields">
+<component name="AttractNormals" category="FieldsData">
   <overview>
     <authors>
       <author>Michael Callahan</author>

@@ -15,7 +15,7 @@
 #  University of Utah. All Rights Reserved.
 #
 
-itcl_class SCIRun_Fields_Probe {
+itcl_class SCIRun_FieldsCreate_Probe {
     inherit Module
     constructor {config} {
         set name Probe

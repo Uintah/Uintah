@@ -15,7 +15,7 @@
 #  University of Utah. All Rights Reserved.
 #
 
-itcl_class SCIRun_Fields_ClipByFunction {
+itcl_class SCIRun_FieldsCreate_ClipByFunction {
     inherit Module
     constructor {config} {
         set name ClipByFunction

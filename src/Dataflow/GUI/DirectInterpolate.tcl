@@ -15,7 +15,7 @@
 #  University of Utah. All Rights Reserved.
 #
 
-itcl_class SCIRun_Fields_DirectInterpolate {
+itcl_class SCIRun_FieldsData_DirectInterpolate {
     inherit Module
     constructor {config} {
         set name DirectInterpolate

@@ -39,7 +39,7 @@ public:
   DECLARE_MAKER(CastMLVtoHV)
 
 CastMLVtoHV::CastMLVtoHV(GuiContext* ctx)
-  : Module("CastMLVtoHV", ctx, Filter, "Fields", "SCIRun"), last_gen_(-1)
+  : Module("CastMLVtoHV", ctx, Filter, "FieldsGeometry", "SCIRun"), last_gen_(-1)
 {
 }
 

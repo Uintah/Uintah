@@ -21,7 +21,7 @@
 -->
 
 
-<component name="SetProperty" category="Fields">
+<component name="SetProperty" category="FieldsOther">
   <overview>
     <authors>
       <author>David Weinstein</author>

@@ -59,7 +59,7 @@ public:
   DECLARE_MAKER(ApplyInterpolant)
 
 ApplyInterpolant::ApplyInterpolant(GuiContext* ctx)
-  : Module("ApplyInterpolant", ctx, Filter, "Fields", "SCIRun")
+  : Module("ApplyInterpolant", ctx, Filter, "FieldsData", "SCIRun")
 {
 }
 

@@ -21,7 +21,7 @@
 -->
 
 
-<component name="SampleField" category="Fields">
+<component name="SampleField" category="FieldsCreate">
   <overview>
     <authors>
       <author>Chris Moulding</author>

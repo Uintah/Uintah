@@ -18,7 +18,7 @@
 
 catch {rename ChangeCoordinates ""}
 
-itcl_class SCIRun_Fields_ChangeCoordinates {
+itcl_class SCIRun_FieldsGeometry_ChangeCoordinates {
     inherit Module
     
     constructor {config} {

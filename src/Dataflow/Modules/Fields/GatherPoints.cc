@@ -46,7 +46,7 @@ public:
 
 DECLARE_MAKER(GatherPoints)
 GatherPoints::GatherPoints(GuiContext* ctx)
-  : Module("GatherPoints", ctx, Filter, "Fields", "SCIRun")
+  : Module("GatherPoints", ctx, Filter, "FieldsCreate", "SCIRun")
 {
 }
 

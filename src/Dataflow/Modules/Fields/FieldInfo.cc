@@ -68,7 +68,7 @@ public:
   DECLARE_MAKER(FieldInfo)
 
 FieldInfo::FieldInfo(GuiContext* ctx)
-  : Module("FieldInfo", ctx, Sink, "Fields", "SCIRun"),
+  : Module("FieldInfo", ctx, Sink, "FieldsOther", "SCIRun"),
     gui_fldname_(ctx->subVar("fldname", false)),
     gui_typename_(ctx->subVar("typename", false)),
     gui_datamin_(ctx->subVar("datamin", false)),

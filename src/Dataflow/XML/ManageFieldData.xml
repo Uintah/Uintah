@@ -21,7 +21,7 @@
 -->
 
 
-<component name="ManageFieldData" category="Fields">
+<component name="ManageFieldData" category="FieldsData">
   <overview>
     <authors>
       <author>Michael Callahan</author>

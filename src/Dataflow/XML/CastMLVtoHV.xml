@@ -3,7 +3,7 @@
 <?xml-stylesheet href="../../../doc/Utilities/XML/component.xsl" type="text/xsl"?>
 <?cocoon-process type="xslt"?>
 
-<component name="CastMLVtoHV" category="Fields">
+<component name="CastMLVtoHV" category="FieldsGeometry">
   <overview>
     <authors>
       <author>Chris Moulding</author>

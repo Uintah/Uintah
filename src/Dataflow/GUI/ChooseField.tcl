@@ -15,7 +15,7 @@
 #  University of Utah. All Rights Reserved.
 #
 
-itcl_class SCIRun_Fields_ChooseField {
+itcl_class SCIRun_FieldsOther_ChooseField {
     inherit Module
     constructor {config} {
         set name ChooseField

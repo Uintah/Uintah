@@ -21,7 +21,7 @@
 -->
 
 
-<component name="TransformField" category="Fields">
+<component name="TransformField" category="FieldsGeometry">
   <overview>
     <authors>
       <author>Michael Callahan</author>

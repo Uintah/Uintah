@@ -15,7 +15,7 @@
 #  University of Utah. All Rights Reserved.
 #
 
-itcl_class SCIRun_Fields_MaskLattice {
+itcl_class SCIRun_FieldsData_MaskLattice {
     inherit Module
     constructor {config} {
         set name MaskLattice

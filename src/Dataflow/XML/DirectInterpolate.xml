@@ -21,7 +21,7 @@
 -->
 
 
-<component name="DirectInterpolate" category="Fields">
+<component name="DirectInterpolate" category="FieldsData">
   <overview>
     <authors>
       <author>Michael Callahan</author>

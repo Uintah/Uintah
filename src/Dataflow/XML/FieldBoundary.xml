@@ -21,7 +21,7 @@
 -->
 
 
-<component name="FieldBoundary" category="Fields">
+<component name="FieldBoundary" category="FieldsCreate">
   <overview>
     <authors>
       <author>Martin Cole</author>

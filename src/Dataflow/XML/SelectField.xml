@@ -21,7 +21,7 @@
 -->
 
 
-<component name="SelectField" category="Fields">
+<component name="SelectField" category="FieldsOther">
   <overview>
     <authors>
       <author>Michael Callahan</author>

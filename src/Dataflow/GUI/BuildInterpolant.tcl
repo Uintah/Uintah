@@ -15,7 +15,7 @@
 #  University of Utah. All Rights Reserved.
 #
 
-itcl_class SCIRun_Fields_BuildInterpolant {
+itcl_class SCIRun_FieldsData_BuildInterpolant {
     inherit Module
     constructor {config} {
         set name BuildInterpolant

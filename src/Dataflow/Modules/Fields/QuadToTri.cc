@@ -60,7 +60,7 @@ DECLARE_MAKER(QuadToTri)
 
 
 QuadToTri::QuadToTri(GuiContext *context) : 
-  Module("QuadToTri", context, Filter, "Fields", "SCIRun"),
+  Module("QuadToTri", context, Filter, "FieldsGeometry", "SCIRun"),
   last_generation_(0)
 {
 }

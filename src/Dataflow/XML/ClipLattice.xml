@@ -21,7 +21,7 @@
 -->
 
 
-<component name="ClipLattice" category="Fields">
+<component name="ClipLattice" category="FieldsCreate">
   <overview>
     <authors>
       <author>Michael Callahan</author>

@@ -20,7 +20,7 @@
   University of Utah. All Rights Reserved.
 -->
 
-<component name="FieldSlicer" category="Fields">
+<component name="FieldSlicer" category="FieldsCreate">
   <overview>
     <authors>
       <author>ARSanderson</author>

@@ -21,7 +21,7 @@
 -->
 
 
-<component name="SamplePlane" category="Fields">
+<component name="SamplePlane" category="FieldsCreate">
   <overview>
     <authors>
       <author>Michael Callahan</author>

@@ -23,7 +23,7 @@
 # This GUI interface is for selecting an axis and index for sub sampling a
 # topologically structured field
 
-itcl_class SCIRun_Fields_FieldSlicer {
+itcl_class SCIRun_FieldsCreate_FieldSlicer {
     inherit Module
     constructor {config} {
         set name FieldSlicer

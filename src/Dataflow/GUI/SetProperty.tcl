@@ -25,9 +25,9 @@
  #  Copyright (C) 2000 SCI Group
  ##
 
-catch {rename SCIRun_Fields_SetProperty ""}
+catch {rename SCIRun_FieldsOther_SetProperty ""}
 
-itcl_class SCIRun_Fields_SetProperty {
+itcl_class SCIRun_FieldsOther_SetProperty {
     inherit Module
     constructor {config} {
         set name SetProperty

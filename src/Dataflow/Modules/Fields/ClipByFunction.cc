@@ -61,7 +61,7 @@ public:
 DECLARE_MAKER(ClipByFunction)
 
 ClipByFunction::ClipByFunction(GuiContext* ctx)
-  : Module("ClipByFunction", ctx, Filter, "Fields", "SCIRun"),
+  : Module("ClipByFunction", ctx, Filter, "FieldsCreate", "SCIRun"),
     clipmode_(ctx->subVar("clipmode")),
     clipfunction_(ctx->subVar("clipfunction")),
     last_input_generation_(0)

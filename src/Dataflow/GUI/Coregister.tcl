@@ -20,7 +20,7 @@ catch {rename Coregister ""}
 
 package require Iwidgets 3.0   
 
-itcl_class SCIRun_Fields_Coregister {
+itcl_class SCIRun_FieldsOther_Coregister {
     inherit Module
     
     constructor {config} {

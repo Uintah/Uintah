@@ -20,7 +20,7 @@
   University of Utah. All Rights Reserved.
 -->
 
-<component name="ChangeFieldBounds" category="Fields">
+<component name="ChangeFieldBounds" category="FieldsGeometry">
   <overview>
     <authors>
       <author>McKay Davis</author>

@@ -20,7 +20,7 @@
   University of Utah. All Rights Reserved.
 -->
 
-<component name="ChangeFieldDataAt" category="Fields">
+<component name="ChangeFieldDataAt" category="FieldsData">
   <overview>
     <authors>
       <author>McKay Davis</author>

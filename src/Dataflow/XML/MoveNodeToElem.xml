@@ -21,7 +21,7 @@
 -->
 
 
-<component name="MoveNodeToElem" category="Fields">
+<component name="MoveNodeToElem" category="FieldsData">
   <overview>
     <authors>
       <author>Michael Callahan</author>

@@ -15,7 +15,7 @@
 #  University of Utah. All Rights Reserved.
 #
 
-itcl_class SCIRun_Fields_FieldMeasures {
+itcl_class SCIRun_FieldsOther_FieldMeasures {
     inherit Module
     constructor {config} {
         set name FieldMeasures

@@ -21,7 +21,7 @@
 -->
 
 
-<component name="MapDataToMeshCoord" category="Fields">
+<component name="MapDataToMeshCoord" category="FieldsGeometry">
   <overview>
     <authors>
       <author>David Weinstein</author>

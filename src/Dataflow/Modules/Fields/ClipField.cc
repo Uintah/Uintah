@@ -78,7 +78,7 @@ public:
 DECLARE_MAKER(ClipField)
 
 ClipField::ClipField(GuiContext* ctx)
-  : Module("ClipField", ctx, Filter, "Fields", "SCIRun"),
+  : Module("ClipField", ctx, Filter, "FieldsCreate", "SCIRun"),
     widget_lock_("ClipField widget lock"),
     clip_location_(ctx->subVar("clip-location")),
     clip_mode_(ctx->subVar("clipmode")),

@@ -65,7 +65,7 @@ public:
 DECLARE_MAKER(FieldMeasures)
 
 FieldMeasures::FieldMeasures(GuiContext* ctx)
-  : Module("FieldMeasures", ctx, Filter, "Fields", "SCIRun"),
+  : Module("FieldMeasures", ctx, Filter, "FieldsOther", "SCIRun"),
     simplexString_(ctx->subVar("simplexString")),
     xFlag_(ctx->subVar("xFlag")), 
     yFlag_(ctx->subVar("yFlag")),

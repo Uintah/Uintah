@@ -21,7 +21,7 @@
 -->
 
 
-<component name="QuadToTri" category="Fields">
+<component name="QuadToTri" category="FieldsGeometry">
   <overview>
     <authors>
       <author>David Weinstein</author>

@@ -46,7 +46,7 @@ namespace SCIRun {
 
 DECLARE_MAKER(ScalarFieldStats)
 ScalarFieldStats::ScalarFieldStats(GuiContext* ctx)
-  : Module("ScalarFieldStats", ctx, Filter, "Fields", "SCIRun"),
+  : Module("ScalarFieldStats", ctx, Filter, "FieldsOther", "SCIRun"),
     min_(ctx->subVar("min")), max_(ctx->subVar("max")),
     mean_(ctx->subVar("mean")),
     median_(ctx->subVar("median")),

@@ -52,7 +52,7 @@ public:
 
 DECLARE_MAKER(ScaleFieldData)
 ScaleFieldData::ScaleFieldData(GuiContext* ctx)
-  : Module("ScaleFieldData", ctx, Filter, "Fields", "SCIRun")
+  : Module("ScaleFieldData", ctx, Filter, "FieldsData", "SCIRun")
 {
 }
 

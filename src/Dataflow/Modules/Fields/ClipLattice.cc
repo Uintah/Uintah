@@ -71,7 +71,7 @@ public:
 DECLARE_MAKER(ClipLattice)
 
 ClipLattice::ClipLattice(GuiContext* ctx)
-  : Module("ClipLattice", ctx, Filter, "Fields", "SCIRun"),
+  : Module("ClipLattice", ctx, Filter, "FieldsCreate", "SCIRun"),
     widget_lock_("ClipLattice widget lock"),
     gui_exec_p_(true),
     last_input_generation_(0),

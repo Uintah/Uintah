@@ -21,7 +21,7 @@
 -->
 
 
-<component name="BuildInterpolant" category="Fields">
+<component name="BuildInterpolant" category="FieldsData">
   <overview>
     <authors>
       <author>Peter-Pike Sloan</author>

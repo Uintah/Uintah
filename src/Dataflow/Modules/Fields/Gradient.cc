@@ -54,7 +54,7 @@ protected:
 DECLARE_MAKER(Gradient)
 
 Gradient::Gradient(GuiContext* ctx)
-  : Module("Gradient", ctx, Filter, "Fields", "SCIRun"),
+  : Module("Gradient", ctx, Filter, "FieldsData", "SCIRun"),
     fGeneration_(-1)
 {
 }

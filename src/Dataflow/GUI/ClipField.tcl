@@ -15,7 +15,7 @@
 #  University of Utah. All Rights Reserved.
 #
 
-itcl_class SCIRun_Fields_ClipField {
+itcl_class SCIRun_FieldsCreate_ClipField {
     inherit Module
     constructor {config} {
         set name ClipField
