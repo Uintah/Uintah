@@ -153,8 +153,8 @@ std::ostream& operator<<(std::ostream&, const SCICore::Geometry::IntVector&);
 
 //
 // $Log$
-// Revision 1.5.2.1  2000/09/28 03:12:21  mcole
-// merge trunk into FIELD_REDESIGN branch
+// Revision 1.5.2.2  2000/10/26 17:55:49  moulding
+// merge HEAD into FIELD_REDESIGN
 //
 // Revision 1.10  2000/09/25 19:47:04  sparker
 // Added += and -= operators

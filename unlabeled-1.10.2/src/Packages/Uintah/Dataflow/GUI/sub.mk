@@ -34,7 +34,7 @@ CLEANPROGS := $(CLEANPROGS) $(SRCDIR)/tclIndex
 
 #
 # $Log$
-# Revision 1.10.2.1  2000/10/26 10:06:04  moulding
+# Revision 1.10.2.2  2000/10/26 17:57:24  moulding
 # merge HEAD into FIELD_REDESIGN
 #
 # Revision 1.14  2000/10/24 05:57:54  moulding

@@ -373,8 +373,8 @@ inline Point Vector::asPoint() const {
 
 //
 // $Log$
-// Revision 1.6.2.1  2000/09/28 03:12:22  mcole
-// merge trunk into FIELD_REDESIGN branch
+// Revision 1.6.2.2  2000/10/26 17:55:50  moulding
+// merge HEAD into FIELD_REDESIGN
 //
 // Revision 1.9  2000/07/06 00:05:06  tan
 // Made const works for operator()

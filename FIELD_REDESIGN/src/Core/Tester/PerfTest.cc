@@ -116,11 +116,8 @@ void PerfTest::time(struct timeb* t)
 
 //
 // $Log$
-// Revision 1.3.2.2  2000/10/26 10:04:47  moulding
+// Revision 1.3.2.3  2000/10/26 17:40:21  moulding
 // merge HEAD into FIELD_REDESIGN
-//
-// Revision 1.3.2.1  2000/09/28 03:11:46  mcole
-// merge trunk into FIELD_REDESIGN branch
 //
 // Revision 1.4  2000/09/25 19:48:27  sparker
 // Quiet warnings under g++

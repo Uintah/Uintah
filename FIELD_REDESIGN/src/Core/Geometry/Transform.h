@@ -91,8 +91,8 @@ public:
 
 //
 // $Log$
-// Revision 1.3.2.1  2000/09/28 03:12:21  mcole
-// merge trunk into FIELD_REDESIGN branch
+// Revision 1.3.2.2  2000/10/26 17:55:49  moulding
+// merge HEAD into FIELD_REDESIGN
 //
 // Revision 1.5  2000/08/04 19:09:25  dmw
 // fixed shear
