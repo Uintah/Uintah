@@ -20,10 +20,13 @@
 #if ! defined(Datatypes_TypeDescription_h)
 #define Datatypes_TypeDescription_h
 
-#include <string>
+#include <Core/Malloc/Allocator.h>
 #include <Core/Geometry/Tensor.h>
+#include <vector>
+#include <string>
 
-using std::string;
+
+using namespace std;
 
 namespace SCIRun {
 
@@ -72,6 +75,7 @@ private:
 
 
 const TypeDescription* get_type_description(double*);
+const TypeDescription* get_type_description(float*);
 const TypeDescription* get_type_description(short*);
 const TypeDescription* get_type_description(int*);
 const TypeDescription* get_type_description(unsigned char*);
@@ -81,6 +85,19 @@ const TypeDescription* get_type_description(Tensor*);
 const TypeDescription* get_type_description(Point*);
 const TypeDescription* get_type_description(Transform*);
 const TypeDescription* get_type_description(string*);
+
+template <class T>
+const TypeDescription* get_type_description(vector<T>*)
+{
+  static TypeDescription* td = 0;
+  static string v("vector");
+  static string path("std::vector"); // dynamic loader will parse off the std
+  if(!td){
+    const TypeDescription *sub = SCIRun::get_type_description((T*)0);
+    td = scinew TypeDescription(v, sub, path);
+  }
+  return td;
+}
 
 } // End namespace SCIRun
 
