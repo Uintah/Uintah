@@ -44,8 +44,8 @@ Scene* make_scene(int argc, char* argv[], int nworkers)
   Camera cam(Point(5,0,0), Point(0,0,0),
 	     Vector(0,1,0), 60);
   
-  Color surf(.5, 0.2, 0.35);
-  Material* matl0=new Phong(surf, Color(1,1,1), 100, .4);
+  Color surf(.5, 0.1, 0.15);
+  Material* matl0=new Phong(surf, Color(1,1,1), 100, 0);
   Hist2DDpy* dpy=new Hist2DDpy();
   
   cerr << "Reading " << file << "\n";
@@ -66,7 +66,14 @@ Scene* make_scene(int argc, char* argv[], int nworkers)
   Scene* scene=new Scene(o, cam,
 			 bgcolor, groundcolor*averagelight, bgcolor, groundplane, 
 			 ambient_scale);
-  Light *light0 = new Light(Point(5,-3,3), Color(1,1,.8)*2, 0);
+  // Let's try and make a good guess as to where the light should be.
+  BBox bounds;
+  o->compute_bounds(bounds, 0);
+  // Take the corners and then extend one of them
+  Point light0_loc = bounds.max() + (bounds.max()-bounds.min())*0.2;
+  
+  Light *light0 = new Light(light0_loc, Color(1,1,.8),
+			    (bounds.max()-bounds.min()).length()*0.01);
   light0->name_ = "light 0";
   scene->add_light(light0);
   scene->shadow_mode=No_Shadows;
