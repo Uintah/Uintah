@@ -114,7 +114,7 @@ ViewWindow::ViewWindow(Viewer* s, const string& id)
 
   view.set(homeview);
 
-  tcl_add_command(id+"-c", this, 0);
+  tcl_add_command(id+"-c");
   current_renderer=0;
   maxtag=0;
   mouse_obj=0;
@@ -223,7 +223,7 @@ void ViewWindow::spawnChCB(CallbackData*, void*)
 
 ViewWindow::~ViewWindow()
 {
-  tcl_delete_command( id+"-c" );
+  tcl_rem_command( id+"-c" );
 }
 
 void ViewWindow::get_bounds(BBox& bbox)

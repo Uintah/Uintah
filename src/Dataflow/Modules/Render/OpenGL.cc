@@ -761,7 +761,7 @@ void OpenGL::redraw_frame()
 	  double realtime=t*frametime;
 	  throttle.wait_for_time(realtime);
 	  //gm->lock();
-	  Part::tcl_execute("update idletasks");
+	  gm->execute("update idletasks");
 	  
 	  // Show the pretty picture
 	  glXSwapBuffers(dpy, win);
@@ -805,7 +805,7 @@ void OpenGL::redraw_frame()
 	int fps_hund=(int)((fps-fps_whole)*100);
 	ostringstream str;
 	str << viewwindow->id << " setFrameRate " << fps_whole << "." << fps_hund;
-	Part::tcl_execute(str.str().c_str());
+	gm->execute(str.str().c_str());
 	viewwindow->set_current_time(tend);
       } else {
 	// Just show the cleared screen
@@ -923,7 +923,7 @@ void OpenGL::redraw_frame()
 	  EndMpeg();
 	}
       }
-      Part::tcl_execute(str.str().c_str());
+      gm->execute(str.str().c_str());
       gm->unlock();
 }
     
@@ -1626,7 +1626,7 @@ void OpenGL::setvisual(const string& wname, int which, int width, int height)
   tkwin=0;
   current_drawer=0;
   //cerr << "choosing visual " << which << '\n';
-  Part::tcl_execute("opengl " + wname +
+  gm->execute("opengl " + wname +
 	       " -visual " + to_string((int)visuals[which]->visualid) +
 	       " -direct true" +
 	       " -geometry " + to_string(width) + "x" + to_string(height));

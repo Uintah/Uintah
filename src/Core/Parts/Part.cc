@@ -146,7 +146,19 @@ Part::set_gui_var(const string &base, const string &name, const string &value )
 void
 Part::var_set( GuiVar *var )
 {
-  port_->var_set( var );
+  port_->var_set_signal( var );
+}
+
+void 
+Part::command( const string &cmd )
+{
+  port_->command_signal( cmd );
+}
+
+void
+Part::eval( const string &cmd, string &results )
+{
+  port_->eval_signal( cmd, results );
 }
 
 // 
