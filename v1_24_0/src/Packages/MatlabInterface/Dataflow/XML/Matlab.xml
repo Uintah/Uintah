@@ -492,7 +492,7 @@
   <implementation>
   </implementation>
   <io>
-    <inputs lastportdynamic="yes">
+    <inputs lastportdynamic="no">
       <port>
         <name>i1</name>
         <datatype>SCIRun::Matrix</datatype>
