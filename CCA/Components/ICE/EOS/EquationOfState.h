@@ -40,41 +40,42 @@ WARNING
   
 ****************************************/
 
-      class EquationOfState {
-      public:
-        EquationOfState();
-        virtual ~EquationOfState();
-        
-        // Per cell
+  class EquationOfState {
+  public:
+    EquationOfState();
+    virtual ~EquationOfState();
 
-         virtual double computeRhoMicro(double press,double gamma,
-                                        double cv, double Temp) =0;
+    // Per cell
 
-         virtual void computePressEOS(double rhoM, double gamma,
-                                      double cv, double Temp,
-                                      double& press, double& dp_drho, 
-                                      double& dp_de) = 0;
+     virtual double computeRhoMicro(double press,double gamma,
+                                    double cv, double Temp) =0;
 
-        virtual void computeTempCC(const Patch* patch,
+     virtual void computePressEOS(double rhoM, double gamma,
+                                  double cv, double Temp,
+                                  double& press, double& dp_drho, 
+                                  double& dp_de) = 0;
+
+    virtual void computeTempCC(const Patch* patch,
                                const string& comp_domain,
                                const CCVariable<double>& press, 
-                               const double& gamma,
-                               const double& cv,
+                               const CCVariable<double>& gamma,
+                               const CCVariable<double>& cv,
                                const CCVariable<double>& rho_micro, 
                                CCVariable<double>& Temp,
-                               Patch::FaceType face=Patch::xplus) = 0;
-       
-         virtual double getAlpha(double temp,double sp_v,double P, double cv)=0;
+                               Patch::FaceType face)=0;
+
+     virtual double getAlpha(double temp,double sp_v,double P, double cv)=0;
 
 
-        virtual void hydrostaticTempAdjustment(Patch::FaceType face,
-                                          const Patch* patch,
-                                          Vector& gravity,
-                                          const double& gamma,
-                                          const double& cv,
-                                          const Vector& dx,
-                                          CCVariable<double>& Temp_CC)=0;
-      };
+     virtual void hydrostaticTempAdjustment(Patch::FaceType face, 
+                                            const Patch* patch,
+                                            const vector<IntVector>& bound,
+                                            Vector& gravity,
+                                            const CCVariable<double>& gamma,
+                                            const CCVariable<double>& cv,
+                                            const Vector& dx,
+                                            CCVariable<double>& Temp_CC)=0;
+  };
 } // End namespace Uintah
       
 #endif  // __EQUATION_OF_STATE_H__
