@@ -44,7 +44,6 @@
 #define SCI_project_MatrixIEPlugin_h 1
 
 #include <Core/Util/Assert.h>
-#include <Core/share/share.h>
 #include <Core/Util/ProgressReporter.h>
 #include <Core/Datatypes/Matrix.h>
 
@@ -59,7 +58,7 @@ using std::map;
 
 
 //----------------------------------------------------------------------
-class SCICORESHARE MatrixIEPlugin {
+class MatrixIEPlugin {
 public:
   const string pluginname_;
 
@@ -85,7 +84,7 @@ public:
 
 
 
-class SCICORESHARE MatrixIEPluginManager {
+class MatrixIEPluginManager {
 public:
   void get_importer_list(vector<string> &results);
   void get_exporter_list(vector<string> &results);
