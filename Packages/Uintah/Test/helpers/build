@@ -75,7 +75,7 @@ if [ $retval != "0" ]; then
 	cp "${BUILDROOT}/src/Packages/Uintah/CCA/Components/sub.mk.orig" "${BUILDROOT}/src/Packages/Uintah/CCA/Components/sub.mk"
 
 	failed_sus=0
-	if [ $retval == "0" ]; then
+	if [ $retval = "0" ]; then
 	    echo "*** Make failed with ARCHES, but passed without it."
 	    echo ""
 	    echo "Showing make errors with ARCHES:" > ../make_results.log

@@ -21,7 +21,7 @@ error=0
 echo "Checking $TEST for scinew memory leaks"
 grep '\.' $MALLOC_STATS > $TMPDIR/scinew_malloc_stats
 retval=$?
-if [ $retval == "0" ]; then
+if [ $retval = "0" ]; then
     echo "***Memory leaks found***"
     echo "Here are the object allocated with scinew but not deleted."
     echo
