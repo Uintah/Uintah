@@ -63,11 +63,9 @@ template <class Data>
 class LevelFieldSFI : public ScalarFieldInterface {
 public:
   LevelFieldSFI(const LevelField<Data>* fld) : fld_(fld) {}
-  virtual bool minmax( pair<double, double>& mm) const;
+  virtual bool compute_min_max(double &minout, double &maxout) const;
   virtual bool interpolate(double &result, const Point &p) const;
-  virtual void interpolate_many(vector<double> &results,
-				vector<bool> &success,
-				const vector<Point> &pts) const;
+
 private:
   const LevelField<Data>* fld_;
 };
@@ -93,39 +91,39 @@ public:
     end_(0), end_initialized(false) {}
   virtual ~LevelData(){ }
   
-  const value_type &operator[](typename LevelMesh::cell_index idx) const 
+  const value_type &operator[](typename LevelMesh::Cell::index_type idx) const 
 { return parent::operator[](idx.patch_->getLevelIndex())
     [IntVector(idx.i_,idx.j_,idx.k_)]; } 
-  const value_type &operator[](typename LevelMesh::face_index idx) const
+  const value_type &operator[](typename LevelMesh::Face::index_type idx) const
 { return parent::operator[](0)
     [IntVector(idx.i_,0,0)];}
-const value_type &operator[](typename LevelMesh::edge_index idx) const 
+const value_type &operator[](typename LevelMesh::Edge::index_type idx) const 
 { return parent::operator[](0)
     [IntVector(idx.i_, 0, 0)]; }
-const value_type &operator[](typename LevelMesh::node_index idx) const
+const value_type &operator[](typename LevelMesh::Node::index_type idx) const
 { return parent::operator[](idx.patch_->getLevelIndex())
     [IntVector(idx.i_,idx.j_,idx.k_)]; }
 
-value_type &operator[](typename LevelMesh::cell_index idx)
+value_type &operator[](typename LevelMesh::Cell::index_type idx)
 { return parent::operator[](idx.patch_->getLevelIndex())
     [IntVector(idx.i_,idx.j_,idx.k_)]; } 
-value_type &operator[](typename LevelMesh::face_index idx)
+value_type &operator[](typename LevelMesh::Face::index_type idx)
 { return parent::operator[](0)
     [IntVector(idx.i_, 0, 0)]; }
-value_type &operator[](typename LevelMesh::edge_index idx)
+value_type &operator[](typename LevelMesh::Edge::index_type idx)
 { return parent::operator[](0)
     [IntVector(idx.i_, 0, 0)]; }
-value_type &operator[](typename LevelMesh::node_index idx)
+value_type &operator[](typename LevelMesh::Node::index_type idx)
 { return parent::operator[](idx.patch_->getLevelIndex())
     [IntVector(idx.i_,idx.j_,idx.k_)]; }
 
 static const string type_name(int n = -1);
 virtual const string get_type_name(int n = -1) const { return type_name(n); }
 
-void resize(const LevelMesh::node_size_type &) {}
-void resize(LevelMesh::edge_size_type) {}
-void resize(LevelMesh::face_size_type) {}
-void resize(const LevelMesh::cell_size_type &) {}
+void resize(const LevelMesh::Node::size_type &) {}
+void resize(LevelMesh::Edge::size_type) {}
+void resize(LevelMesh::Face::size_type) {}
+void resize(const LevelMesh::Cell::size_type &) {}
 void resize(int i){ vector<Array3<Data> >::resize(i); }
 
   class iterator
@@ -244,7 +242,7 @@ public:
  
   static const string type_name(int n = -1);
   virtual const string get_type_name(int n = -1) const { return type_name(n); }
-  virtual SFIHandle query_scalar_interface() const;
+  virtual ScalarFieldInterface* query_scalar_interface() const;
   virtual VectorFieldInterface* query_vector_interface() const;
   virtual TensorFieldInterface* query_tensor_interface() const;
   static PersistentTypeID type_id;
@@ -311,7 +309,7 @@ LevelField<Data>::io(Piostream &stream)
 
 //! Virtual interface.
 template <class Data>
-SFIHandle 
+ScalarFieldInterface
 LevelField<Data>::query_scalar_interface() const
 {
   return new LevelFieldSFI<Data>( this );
@@ -465,7 +463,7 @@ bool LevelField<Data>::interpolate(Data &g, const Point &p) const {
     Data y1=Interpolate(x01, x11, fy);
     g=Interpolate(y0, y1, fz);
   } else if( data_at() == Field::CELL) {
-    //typename mesh_type::cell_index ci;
+    //typename mesh_type::Cell::index_type ci;
     //if( mesh->locate(ci, p) ) {
     //  g = value( ci );
     //} else {
@@ -545,9 +543,13 @@ template <>
 bool LevelFieldSFI<long>::interpolate( double& result, const Point &p) const;
   
 template <class Data>
-bool LevelFieldSFI<Data>::minmax( pair<double, double>& mm) const
+bool LevelFieldSFI<Data>::compute_min_max(double &minout, double& maxout) const
 {
-  return fld_->minmax( mm );
+  pair<double, double> tmp;
+  bool result = fld_->minmax( tmp );
+  minout = tmp.first;
+  maxout = tmp.second;
+  return result;
 }
 
 template <class Data>
@@ -555,15 +557,6 @@ bool LevelFieldSFI<Data>::interpolate( double& result, const Point &p) const
 {
   return false;
 }
-
-template <class Data>
-void  LevelFieldSFI<Data>::interpolate_many(vector<double> &results,
-					    vector<bool> &success,
-					    const vector<Point> &pts) const
-{
-  ASSERTFAIL("not implemented");
-}
-
 
 } // namespace Uintah
 

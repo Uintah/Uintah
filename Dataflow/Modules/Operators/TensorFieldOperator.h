@@ -135,17 +135,17 @@ void TensorFieldOperator::computeScalars(TensorField* tensorField,
   typename ScalarField::mesh_handle_type smh = scalarField->get_typed_mesh();
 
   if( tensorField->data_at() == Field::CELL){
-    typename TensorField::mesh_type::cell_iterator t_it = tmh->cell_begin();
-    typename ScalarField::mesh_type::cell_iterator s_it = smh->cell_begin();
-    typename TensorField::mesh_type::cell_iterator t_end = tmh->cell_end();
+    typename TensorField::mesh_type::Cell::iterator t_it = tmh->cell_begin();
+    typename ScalarField::mesh_type::Cell::iterator s_it = smh->cell_begin();
+    typename TensorField::mesh_type::Cell::iterator t_end = tmh->cell_end();
     
     for( ; t_it != t_end; ++t_it, ++s_it){
       scalarField->fdata()[*s_it] = op(tensorField->fdata()[*t_it]);
     }
   } else {
-    typename TensorField::mesh_type::node_iterator t_it = tmh->node_begin();
-    typename ScalarField::mesh_type::node_iterator s_it = smh->node_begin();
-    typename TensorField::mesh_type::node_iterator t_end = tmh->node_end();
+    typename TensorField::mesh_type::Node::iterator t_it = tmh->node_begin();
+    typename ScalarField::mesh_type::Node::iterator s_it = smh->node_begin();
+    typename TensorField::mesh_type::Node::iterator t_end = tmh->node_end();
   
     for( ; t_it != t_end; ++t_it, ++s_it){
       scalarField->fdata()[*s_it] = op(tensorField->fdata()[*t_it]);

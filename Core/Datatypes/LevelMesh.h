@@ -240,29 +240,37 @@ public:
     }
   };  
 
-  typedef LevelIndex index_type;
+  //typedef LevelIndex under_type;
   
   //! Index and Iterator types required for Mesh Concept.
-  typedef NodeIndex       node_index;
-  typedef NodeIter        node_iterator;
-  typedef NodeIndex       node_size_type;
+  struct Node {
+    typedef NodeIndex          index_type;
+    typedef NodeIter           iterator;
+    typedef NodeIndex          size_type;
+    typedef vector<index_type> array_type;
+  };			    
+			    
+  struct Edge {		    
+    typedef EdgeIndex          index_type;     
+    typedef EdgeIter           iterator;
+    typedef EdgeIndex          size_type;
+    typedef vector<index_type> array_type;
+  };			       
+			       
+  struct Face {		       
+    typedef FaceIndex          index_type;
+    typedef FaceIter           iterator;
+    typedef FaceIndex          size_type;
+    typedef vector<index_type> array_type;
+  };			       
+			       
+  struct Cell {		       
+    typedef CellIndex          index_type;
+    typedef CellIter           iterator;
+    typedef CellIndex          size_type;
+    typedef vector<index_type> array_type;
+  };
 
-  typedef EdgeIndex       edge_index;     
-  typedef EdgeIter        edge_iterator;
-  typedef EdgeIndex       edge_size_type;
- 
-  typedef FaceIndex       face_index;
-  typedef FaceIter        face_iterator;
-  typedef FaceIndex       face_size_type;
- 
-  typedef CellIndex       cell_index;
-  typedef CellIter        cell_iterator;
-  typedef CellIndex       cell_size_type;
-  // storage types for get_* functions
-  typedef vector<node_index>  node_array;
-  typedef vector<edge_index>  edge_array;
-  typedef vector<face_index>  face_array;
-  typedef vector<cell_index>  cell_array;
   typedef vector<double>      weight_array;
 
   friend class NodeIter;
@@ -291,27 +299,27 @@ public:
   virtual LevelMesh *clone(){ return scinew LevelMesh(*this); }
   virtual ~LevelMesh() {}
 
-  node_index  node(int i, int j, int k) const
-    { return node_index(this, i, j, k); }
-  node_iterator node_begin() const { return node_iterator(this, 0, 0, 0); }
-  node_iterator node_end() const { return node_iterator(this,0, 0, nz_); }
-  node_size_type nodes_size() const {
-    return node_size_type(this, nx_, ny_, nz_);
+  Node::index_type  node(int i, int j, int k) const
+    { return Node::index_type(this, i, j, k); }
+  Node::iterator node_begin() const { return Node::iterator(this, 0, 0, 0); }
+  Node::iterator node_end() const { return Node::iterator(this,0, 0, nz_); }
+  Node::size_type nodes_size() const {
+    return Node::size_type(this, nx_, ny_, nz_);
   }
-  edge_iterator edge_begin() const { return edge_iterator(this, 0); }
-  edge_iterator edge_end() const  { return edge_iterator(this, 0); }
-  edge_size_type edges_size() const { return edge_size_type(0); }
+  Edge::iterator edge_begin() const { return Edge::iterator(this, 0); }
+  Edge::iterator edge_end() const  { return Edge::iterator(this, 0); }
+  Edge::size_type edges_size() const { return Edge::size_type(0); }
 
-  face_iterator face_begin() const { return face_iterator(this,0); }
-  face_iterator face_end() const { return face_iterator(this,0); }
-  face_size_type faces_size() const { return face_size_type(0); }
+  Face::iterator face_begin() const { return Face::iterator(this,0); }
+  Face::iterator face_end() const { return Face::iterator(this,0); }
+  Face::size_type faces_size() const { return Face::size_type(0); }
 
-  cell_index  cell(int i, int j, int k) const
-    { return cell_index(this, i, j, k); }
-   cell_iterator cell_begin() const { return cell_iterator(this, 0, 0, 0); }
-  cell_iterator cell_end() const { return cell_iterator(this, 0, 0, nz_-1); }
-  cell_size_type cells_size() const {
-    return cell_size_type(this, nx_-1, ny_-1, nz_-1);
+  Cell::index_type  cell(int i, int j, int k) const
+    { return Cell::index_type(this, i, j, k); }
+   Cell::iterator cell_begin() const { return Cell::iterator(this, 0, 0, 0); }
+  Cell::iterator cell_end() const { return Cell::iterator(this, 0, 0, nz_-1); }
+  Cell::size_type cells_size() const {
+    return Cell::size_type(this, nx_-1, ny_-1, nz_-1);
   }
 
   //! get the mesh statistics
@@ -331,40 +339,40 @@ public:
   void set_max(Point p) { max_ = p; }
 
   //! get the child elements of the given index
-  void get_nodes(node_array &, edge_index) const {}
-  void get_nodes(node_array &, face_index) const {}
-  void get_nodes(node_array &array, cell_index idx) const;
-  void get_edges(edge_array &, face_index) const {}
-  void get_edges(edge_array &, cell_index) const {}
-  void get_faces(face_array &, cell_index) const {}
+  void get_nodes(Node::array_type &, Edge::index_type) const {}
+  void get_nodes(Node::array_type &, Face::index_type) const {}
+  void get_nodes(Node::array_type &array, Cell::index_type idx) const;
+  void get_edges(Edge::array_type &, Face::index_type) const {}
+  void get_edges(Edge::array_type &, Cell::index_type) const {}
+  void get_faces(Face::array_type &, Cell::index_type) const {}
 
   //! get the parent element(s) of the given index
-  int get_edges(edge_array &, node_index) const { return 0; }
-  int get_faces(face_array &, node_index) const { return 0; }
-  int get_faces(face_array &, edge_index) const { return 0; }
-  int get_cells(cell_array &, node_index) const { return 0; }
-  int get_cells(cell_array &, edge_index) const { return 0; }
-  int get_cells(cell_array &, face_index) const { return 0; }
+  int get_edges(Edge::array_type &, Node::index_type) const { return 0; }
+  int get_faces(Face::array_type &, Node::index_type) const { return 0; }
+  int get_faces(Face::array_type &, Edge::index_type) const { return 0; }
+  int get_cells(Cell::array_type &, Node::index_type) const { return 0; }
+  int get_cells(Cell::array_type &, Edge::index_type) const { return 0; }
+  int get_cells(Cell::array_type &, Face::index_type) const { return 0; }
 
-  //! similar to get_cells() with face_index argument, but
+  //! similar to get_cells() with Face::index_type argument, but
   //  returns the "other" cell if it exists, not all that exist
-  void get_neighbor(cell_index &, face_index) const {}
+  void get_neighbor(Cell::index_type &, Face::index_type) const {}
 
   //! get the center point (in object space) of an element
-  void get_center(Point &result, node_index idx) const;
-  void get_center(Point &, edge_index) const {}
-  void get_center(Point &, face_index) const {}
-  void get_center(Point &result, cell_index idx) const;
+  void get_center(Point &result, Node::index_type idx) const;
+  void get_center(Point &, Edge::index_type) const {}
+  void get_center(Point &, Face::index_type) const {}
+  void get_center(Point &result, Cell::index_type idx) const;
 
 
-  bool locate(node_index &node, const Point &p) const;
-  bool locate(edge_index &, const Point &) const { return false; }
-  bool locate(face_index &, const Point &) const { return false; }
-  bool locate(cell_index &cell, const Point &p) const;
+  bool locate(Node::index_type &node, const Point &p) const;
+  bool locate(Edge::index_type &, const Point &) const { return false; }
+  bool locate(Face::index_type &, const Point &) const { return false; }
+  bool locate(Cell::index_type &cell, const Point &p) const;
 
   void unlocate(Point &result, const Point &p) const { result =  p; };
 
-  void get_point(Point &result, node_index index) const;
+  void get_point(Point &result, Node::index_type index) const;
 
   virtual void io(Piostream&);
   static PersistentTypeID type_id;
@@ -379,7 +387,7 @@ private:
   IntVector idxLow_; // cache the low index
 
 
-  //! the node_index space extents of a LevelMesh (min=0, max=n-1)
+  //! the Node::index_type space extents of a LevelMesh (min=0, max=n-1)
   int nx_, ny_, nz_;
 
   //! the object space extents of a LevelMesh
