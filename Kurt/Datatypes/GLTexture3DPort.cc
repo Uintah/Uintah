@@ -1,4 +1,3 @@
-
 #include <Kurt/Datatypes/GLTexture3DPort.h>
 #include <Kurt/share/share.h>
 #include <SCICore/Malloc/Allocator.h>

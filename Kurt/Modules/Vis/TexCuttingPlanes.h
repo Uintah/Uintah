@@ -29,7 +29,6 @@ using namespace PSECore::Widgets;
 using namespace SCICore::TclInterface;
 using namespace SCICore::GeomSpace;
 using namespace SCICore::Geometry;
-class SCICore::GeomSpace::GeomObj;
 
 
 

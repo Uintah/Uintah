@@ -31,7 +31,8 @@ LOS::draw()
   SliceTable st(volren->tex->min(),
 		volren->tex->max(), 
 		viewRay,
-		volren->slices);
+		volren->slices,
+		volren->tex->depth());
   
   vector<Polygon* > polys;
   Point vertex;
@@ -49,20 +50,26 @@ LOS::draw()
 
     b.ComputePolys( viewRay,  tmin, tmax, dt, ts, polys);
     
+    drawBrick( b, polys );
+  }
+}
+
+void LOS::drawBrick( Brick& b, const vector<Polygon *>& polys)
+{
     loadTexture( b );
     makeTextureMatrix( b );
     enableTexCoords();
-    setAlpha( b );
+    //setAlpha( b );
     drawPolys( polys );
     disableTexCoords();
-  }
 }
 
 void
 LOS::setAlpha( const Brick& b )
 {
-  double alphaScale = 1.0/pow(2.0, b.level());
-  glColor4f(1,1,1, volren->slice_alpha*alphaScale);
+  double sliceRatio = pow(2.0, volren->tex->depth() - b.level() - 1); 
+  double alpha = 1.0 - pow((1.0 - volren->slice_alpha), sliceRatio);
+  glColor4f(1,1,1, alpha);
 }
 
 void 

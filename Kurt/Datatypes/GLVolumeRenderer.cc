@@ -2,6 +2,7 @@
 #include <SCICore/Util/NotFinished.h>
 #include <SCICore/Geom/GeomOpenGL.h>
 #include <SCICore/Malloc/Allocator.h>
+#include <SCICore/Geom/Color.h>
 #include <GL/gl.h>
 #include <iostream>
 
@@ -14,7 +15,6 @@ using namespace SCICore::Geometry;
 using namespace SCICore::Datatypes;
 using Kurt::Datatypes::Octree;
 using Kurt::Datatypes::Brick;
-using Kurt::Datatypes::SliceTable;
   //using SCICore::Thread::Mutex;
 
 
@@ -22,6 +22,8 @@ double GLVolumeRenderer::swapMatrix[16] = { 0,0,1,0,
 					    0,1,0,0,
 					    1,0,0,0,
 					    0,0,0,1};
+
+int GLVolumeRenderer::rCount = 0;
 
 GLVolumeRenderer::GLVolumeRenderer(int id) 
   : GeomObj( id ), mutex("GLVolumeRenderer Mutex"),
@@ -34,7 +36,7 @@ GLVolumeRenderer::GLVolumeRenderer(int id)
   _oo(0), _mip(0), _atten(0), _planes(0),
   _state(state(_fr, 0)),  _gl_state(state(_oo, 0))
 {
-
+  rCount++;
   NOT_FINISHED("GLVolumeRenderer::GLVolumeRenderer(int id, const Texture3D* tex, ColorMap* cmap)");
 }
 
@@ -52,6 +54,7 @@ GLVolumeRenderer::GLVolumeRenderer(int id,
   _oo(0), _mip(0), _atten(0), _planes(0),
   _state(state(_fr, 0)),  _gl_state(state(_oo, 0))
 {
+  rCount++;
 }
 
 GLVolumeRenderer::GLVolumeRenderer(const GLVolumeRenderer& copy)
@@ -67,6 +70,7 @@ GLVolumeRenderer::GLVolumeRenderer(const GLVolumeRenderer& copy)
    _los(copy._los), _oo(copy._oo), _mip(copy._mip), _atten(copy._atten),
    _planes(copy._planes)
 {
+  rCount++;
 } 
 
 GLVolumeRenderer::~GLVolumeRenderer()
@@ -83,7 +87,7 @@ GLVolumeRenderer::~GLVolumeRenderer()
   delete _mip;
   delete _atten;
   delete _planes;
-  
+  rCount--;
 }
 
 GeomObj* 
@@ -129,18 +133,22 @@ GLVolumeRenderer::setup()
   glEnable(GL_TEXTURE_3D_EXT);
   glTexEnvi(GL_TEXTURE_ENV,GL_TEXTURE_ENV_MODE, GL_MODULATE); 
 
+
+
+
   if( cmap.get_rep() ) {
 #ifdef __sgi
     //cerr << "Using Lookup!\n";
     glEnable(GL_TEXTURE_COLOR_TABLE_SGI);
     
-    if( cmapHasChanged ) {
-      glColorTable(GL_TEXTURE_COLOR_TABLE_SGI,
-		      GL_RGBA,
-		      256, // try larger sizes?
-		      GL_RGBA,  // need an alpha value...
-		      GL_UNSIGNED_BYTE, // try shorts...
-		      (cmap->raw1d));
+    if( cmapHasChanged || rCount != 1) {
+      BuildTransferFunctions();
+//       glColorTable(GL_TEXTURE_COLOR_TABLE_SGI,
+// 		      GL_RGBA,
+// 		      256, // try larger sizes?
+// 		      GL_RGBA,  // need an alpha value...
+// 		      GL_UNSIGNE_BYTE, // try shorts...
+// 		      (cmap->raw1d));
       
 
 //       if( cmap->IsScaled()){
@@ -164,7 +172,7 @@ GLVolumeRenderer::setup()
 
 
 #endif
-      cmapHasChanged = true;
+      cmapHasChanged = false;
     }
   }
   glColor4f(1,1,1,1); // set to all white for modulation
@@ -196,12 +204,112 @@ void GLVolumeRenderer::io(Piostream&)
 
 
 bool
-GLVolumeRenderer::saveobj(std::ostream&, const clString& format, GeomSave*)
+GLVolumeRenderer::saveobj(std::ostream&, const clString&, GeomSave*)
 {
    NOT_FINISHED("GLVolumeRenderer::saveobj");
     return false;
 }
+inline Color FindColor(const Array1<Color>& c,const Array1<float>& s,float t)
+{
+  int j=0;
 
+  if (t<=s[0])
+    return c[0];
+  if (t>= s[s.size()-1])
+    return c[c.size()-1];
+
+  // t is within the interval...
+
+  while((j < c.size()) && (t > s[j])) {
+    j++;
+  }
+
+  double slop = (s[j] - t)/(s[j]-s[j-1]);
+
+  return c[j-1]*slop + c[j]*(1.0-slop);
   
+}
+
+inline double FindAlpha(const Array1<float>& c,const Array1<float>& s,float t)
+{
+  int j=0;
+
+  if (t<=s[0])
+    return c[0];
+  if (t>= s[s.size()-1])
+    return c[c.size()-1];
+
+  // t is within the interval...
+
+  while((j < c.size()) && (t > s[j])) {
+    j++;
+  }
+
+  float slop = (s[j] - t)/(s[j]-s[j-1]);
+
+  return c[j-1]*slop + c[j]*(1.0-slop);
+}
+
+void
+GLVolumeRenderer::BuildTransferFunctions( )
+{
+  const int tSize = 256;
+  int defaultSamples = 512;
+  double L = (tex->max() - tex->min()).length();
+  //  double dt = L/defaultSamples;
+  float mul = 1.0/(tSize - 1);
+  if( tex->depth() > 8 ) {
+    cerr<<"Error: Texture too deep\n";
+    return;
+  }
+//  bp = tan(1.570796327*(0.5 - bcglutB*0.49999));
+//   cp = tan(1.570796327*(0.5 + bcglutC*0.49999));
+//   g = bcglutG*0.99999 + 0.000005;
+//   for (i=0; i<=NRRDIMGLUTSIZE-1; i++) {
+//     v =  (float)i/(NRRDIMGLUTSIZE-1);
+//     if (v < g) {
+//       tv = v/g;
+//       tv = pow(tv, cp);
+//       tv = tv*g;
+//     }
+//     else {
+//       tv = (v-g)/(1.0-g);
+//       tv = 1-pow(1-tv, cp);
+//       tv = tv*(1.0-g) + g;
+//     }
+//     tv = pow(tv, bp);
+//     tv = NRRD_CLAMP(0.0, tv, 1.0);
+//     NRRD_INDEX(0.0, tv, 1.0, 256, ans);
+//     bcglutUC[i] = ans;
+
+
+  double bp = tan( 1.570796327*(0.5 - slice_alpha*0.49999));
+  for(int i = 0; i < tex->depth() + 1; i++){
+      double sliceRatio = defaultSamples/(double(slices)/
+					  pow(2.0, tex->depth() - i));
+
+      double alpha, alpha1, alpha2;
+      for( int j = 0; j < tSize; j++ )
+	{
+	  Color c = FindColor(cmap->rawRampColor,
+				    cmap->rawRampColorT, j*mul);
+	  alpha = FindAlpha(cmap->rawRampAlpha,
+			    cmap->rawRampAlphaT, j*mul);
+
+
+	  alpha1 = pow(alpha, bp);
+
+	  if( j == 128 ) cerr <<" alpha = "<< alpha<<std::endl;
+	  if( j == 128 ) cerr <<" alpha1 = "<< alpha1<<std::endl;
+
+	  alpha2 = 1.0 - pow((1.0 - alpha1), sliceRatio);
+	  if( j == 128 ) cerr <<" alpha2 = "<< alpha2<<std::endl;
+	  TransferFunctions[i][4*j + 0] = (c.r()*255);
+	  TransferFunctions[i][4*j + 1] = (c.g()*255);
+	  TransferFunctions[i][4*j + 2] = (c.b()*255);
+	  TransferFunctions[i][4*j + 3] = (alpha2*255);
+	}
+  }
+}
 } // namespace SCICore
 } // namespace GeomSpace

@@ -28,6 +28,8 @@ itcl_class Kurt_Vis_GLTextureBuilder {
 	frame $w.f 
 	pack $w.f -padx 2 -pady 2 -fill x
 	
+	set n "$this-c needexecute"
+	
 	frame $w.f.dimframe -relief groove -border 2
 	label $w.f.dimframe.l -text "Brick Size Cubed"
 	pack $w.f.dimframe -side top -padx 2 -pady 2 -fill both
@@ -60,8 +62,8 @@ itcl_class Kurt_Vis_GLTextureBuilder {
         pack $w.f3.l1 $w.f3.e1 $w.f3.l2 $w.f3.e2 -side left \
             -expand yes -fill x -padx 2 -pady 2
 
-        bind $w.f3.e1 <Return> "$this-c needexecute"
-        bind $w.f3.e2 <Return> "$this-c needexecute"
+        bind $w.f3.e1 <Return> $n
+        bind $w.f3.e2 <Return> $n
 
 	button $w.b -text Close -command "wm withdraw $w"
 	pack $w.b -side bottom -fill x
