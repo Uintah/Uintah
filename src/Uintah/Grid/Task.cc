@@ -47,9 +47,10 @@ Task::subpatchCapable(bool state)
 }
 
 void
-Task::requires(const DataWarehouseP& ds, const VarLabel* var)
+Task::requires(const DataWarehouseP& ds, const VarLabel* var,
+	       int matlIndex /* = -1 */)
 {
-  d_reqs.push_back(scinew Dependency(ds, var, -1, 0, this));
+  d_reqs.push_back(scinew Dependency(ds, var, matlIndex, 0, this));
 }
 
 void
@@ -258,6 +259,10 @@ operator << (ostream &out, const Task::TaskType & tt)
 
 //
 // $Log$
+// Revision 1.25  2000/12/07 01:29:27  witzel
+// Added material index argument to one of the overloaded require
+// methods for material specific reduction variables.
+//
 // Revision 1.24  2000/09/28 23:22:01  jas
 // Added (int) to remove g++ warnings for STL size().  Reordered initialization
 // to coincide with *.h declarations.
