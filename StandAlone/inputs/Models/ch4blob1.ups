@@ -174,7 +174,7 @@
     <!--     P  H  Y  S  I  C  A  L     C  O  N  S  T  A  N  T  S           -->
     <!--____________________________________________________________________-->   
     <PhysicalConstants>
-       <gravity>[0,0,0]</gravity>
+       <gravity>[0,-9.81,0]</gravity>
     </PhysicalConstants>
     <!--____________________________________________________________________-->
     <!--     MATERIAL PROPERTIES AND INITIAL CONDITIONS                     -->
@@ -220,8 +220,8 @@
                    <radius>           0.5              </radius>
                 </cylinder>
               <res>                [2,2,2]             </res>
-              <velocity>           [0.0,0.0,0.0]       </velocity>
-              <density>        110.1176829268292683    </density>
+              <velocity>           [0.2,1.0,0.0]       </velocity>
+              <density>        110.1176829268292683          </density>
               <pressure>      101325.0                 </pressure>     
               <temperature>   93000.0                  </temperature>
            </geom_object>
@@ -241,15 +241,12 @@
        <Model type="AdiabaticTable">
         <table name="adiabatic" type="Arches">
 	   <defaultValue name="heat loss">0.0</defaultValue>
-           <derivedValue name="initial heat capacity Cp(j/kg-K)">[heat capacity Cp(j/kg-K)]</derivedValue>
-           <derivedValue name="initial heat capacity Cv(j/kg-K)">[heat capacity Cv(j/kg-K)]</derivedValue>
-           <derivedValue name="initial gamma">[gamma]</derivedValue>
-           <constantValue name="initial temp(K)">298</constantValue>
 	   <filename>inputs/Models/ch4.rxn</filename>
 	</table>
         <material>BackgroundGas</material>
         <scalar name="f">
         <constants>
+                <xxdiffusivity>1.4e-4</xxdiffusivity>
         </constants>
        <geom_object>
               <difference>
