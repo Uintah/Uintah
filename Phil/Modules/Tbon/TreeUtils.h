@@ -1,4 +1,4 @@
-$Id$
+//static char *id="@(#) $Id$";
 
 /* TreeUtils.h
  * Routines for TbonTree, TbonTreeUG, etc. (with no class information required)
@@ -344,6 +344,9 @@ createTreeS( char* xa, char* ya, char* za, int idx, int cutoff,
 
 //
 // $Log$
+// Revision 1.2  2000/02/04 22:09:57  psutton
+// fixed ID problem
+//
 // Revision 1.1  2000/02/04 20:52:33  psutton
 // initial revision
 //

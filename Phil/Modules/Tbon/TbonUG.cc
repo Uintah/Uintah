@@ -1,4 +1,4 @@
-$Id$
+//static char *id="@(#) $Id$";
 
 /* TbonUG.cc
    Temporal Branch-on-Need tree (T-BON) - Unstructured Grid implementation
@@ -308,6 +308,9 @@ TbonUG::processQuery() {
 
 //
 // $Log$
+// Revision 1.2  2000/02/04 22:15:08  psutton
+// fixed ID problem
+//
 // Revision 1.1  2000/02/04 21:07:59  psutton
 // initial revision
 //

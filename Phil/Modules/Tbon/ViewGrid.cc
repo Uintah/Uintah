@@ -1,4 +1,4 @@
-$Id$
+//static char *id="@(#) $Id$";
 
 /* ViewGrid.cc
    Display grid points for regular or curvilinear grids
@@ -248,6 +248,9 @@ ViewGrid::execute() {
 
 //
 // $Log$
+// Revision 1.2  2000/02/04 22:16:48  psutton
+// fixed ID problem
+//
 // Revision 1.1  2000/02/04 21:16:47  psutton
 // initial revision
 //

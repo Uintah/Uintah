@@ -1,4 +1,4 @@
-$Id$
+//static char *id="@(#) $Id$";
 
 /* BonoTree.h
    class declarations for the BONO tree
@@ -874,6 +874,9 @@ BonoTree<T>::searchSecondPass( int myindex, int d, double iso,
 
 //
 // $Log$
+// Revision 1.2  2000/02/04 22:07:17  psutton
+// fixed ID problem
+//
 // Revision 1.1  2000/02/04 20:46:49  psutton
 // initial revision
 //

@@ -1,4 +1,4 @@
-$Id$
+//static char *id="@(#) $Id$";
 
 /*
  * TriGroup.cc:  Group of triangles
@@ -295,6 +295,9 @@ GeomTriGroup::saveobj(std::ostream& out, const clString& format,
 
 //
 // $Log$
+// Revision 1.2  2000/02/04 22:11:14  psutton
+// fixed ID problem
+//
 // Revision 1.1  2000/02/04 20:56:52  psutton
 // initial revision
 //

@@ -1,4 +1,4 @@
-$Id$
+//static char *id="@(#) $Id$";
 
 /*
  * TriGroup.h:  Group of triangles
@@ -121,6 +121,9 @@ private:
 
 //
 // $Log$
+// Revision 1.2  2000/02/04 22:11:13  psutton
+// fixed ID problem
+//
 // Revision 1.1  2000/02/04 20:56:52  psutton
 // initial revision
 //

@@ -1,4 +1,4 @@
-$Id$
+//static char *id="@(#) $Id$";
 
 /* TbonTreeOOC2.h
    class declarations and code for the T-BON tree
@@ -1013,6 +1013,9 @@ TbonTreeOOC2<T>::searchSecondPass( int myindex, int d, double iso,
 
 //
 // $Log$
+// Revision 1.2  2000/02/04 22:16:47  psutton
+// fixed ID problem
+//
 // Revision 1.1  2000/02/04 21:14:25  psutton
 // initial revision
 //

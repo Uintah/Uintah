@@ -1,4 +1,4 @@
-$Id$
+//static char *id="@(#) $Id$";
 
 /*
   mcubeBONO.h
@@ -946,6 +946,9 @@ MCubesBonoCL<T>::interpRegular( int zone, int cell, double iso ) {
 
 //
 // $Log$
+// Revision 1.2  2000/02/04 22:07:18  psutton
+// fixed ID problem
+//
 // Revision 1.1  2000/02/04 20:46:50  psutton
 // initial revision
 //
