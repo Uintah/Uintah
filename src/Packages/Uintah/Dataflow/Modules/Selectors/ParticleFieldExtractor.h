@@ -80,7 +80,7 @@ public:
   //////////
   // callback taking
   // [in] particleID--an index into the particle set.
-  void callback(long particleID);
+  void callback(long64 particleID);
 
   //////////
   // command from the tcl code
