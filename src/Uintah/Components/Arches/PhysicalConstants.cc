@@ -1,9 +1,9 @@
+//----- PhysicalConstants.cc --------------------------------------------------
+
 /* REFERENCED */
 static char *id="@(#) $Id$";
 
 #include <Uintah/Components/Arches/PhysicalConstants.h>
-//----- PhysicalConstants.cc --------------------------------------------------
-
 #include <Uintah/Interface/ProblemSpec.h>
 #include <Uintah/Interface/DataWarehouse.h>
 
@@ -39,6 +39,11 @@ void PhysicalConstants::problemSetup(const ProblemSpecP& params)
 
 //
 // $Log$
+// Revision 1.6  2000/05/31 08:12:45  bbanerje
+// Added Cocoon stuff to Properties, added VarLabels, changed task, requires,
+// computes, get etc.in Properties, changed fixed size Mixing Var array to
+// vector.
+//
 // Revision 1.5  2000/05/31 06:03:34  bbanerje
 // Added Cocoon stuff to PhysicalConstants.h and gravity vector initializer to
 // PhysicalConstants.cc
