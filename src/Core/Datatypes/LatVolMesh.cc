@@ -272,6 +272,15 @@ LatVolMesh::get_nodes(Node::array_type &array, Cell::index_type idx) const
   array[5].i_ = idx.i_+1; array[5].j_ = idx.j_;   array[5].k_ = idx.k_+1;
   array[6].i_ = idx.i_+1; array[6].j_ = idx.j_+1; array[6].k_ = idx.k_+1;
   array[7].i_ = idx.i_;   array[7].j_ = idx.j_+1; array[7].k_ = idx.k_+1;
+
+  array[0].mesh_ = this;
+  array[1].mesh_ = this;
+  array[2].mesh_ = this;
+  array[3].mesh_ = this;
+  array[4].mesh_ = this;
+  array[5].mesh_ = this;
+  array[6].mesh_ = this;
+  array[7].mesh_ = this;
 }
 
 
