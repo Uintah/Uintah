@@ -58,13 +58,12 @@ void TYPEReader::execute()
 	    return; // Can't open file...
 	}
 	// Read the file...
-	TYPE* object=(TYPE*)stream->io(TYPE::typeid);
-	if(!object){
+	Pio(*stream, handle);
+	if(!handle.get_rep()){
 	    error("Error reading TYPE from file");
 	    delete stream;
 	    return;
 	}
-	handle=object;
 	delete stream;
     }
     outport->send(handle);
