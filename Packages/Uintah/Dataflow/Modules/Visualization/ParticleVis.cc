@@ -217,27 +217,34 @@ void ParticleVis::execute()
   
   bool have_particle = false;
 
+
+  
   // Check to see if we are dealing with a new dataset
   // if so, check the generation number and update the particlesize
-  // based on the cell size of the data.
-  if( auto_radius.get() ){
+  // and vectorsize based on the cell size of the data.
+  double cell_size = 0;  // may be used later
+  double max_vlength = 0;  // may be used later
+  if( auto_radius.get() || (hasVectors && auto_length_scale.get()) )
+  {
     BBox spatial_box;
     IntVector low, hi, range;
     pset->getLevel()->findIndexRange( low, hi );
     range = hi -low;
     pset->getLevel()->getSpatialRange(spatial_box);
-    Vector srange = spatial_box.max() - spatial_box.min();
-    double max_srange = ((srange.x() > srange.y() && srange.x() > srange.z()) ?
-		     srange.x():((srange.y() > srange.z()) ?
-				srange.y(): srange.z()));
-    int max_range = ((range.x() > range.y() && range.x() > range.z()) ?
-		     range.x():((range.y() > range.z()) ?
-				range.y(): range.z()));
-    double cell_size = max_srange/max_range;
-    double part_size = cell_size/4.0;
-    if (part_size > 0)
-      radius.set( cell_size/4.0);
+    Vector drange = spatial_box.max() - spatial_box.min();
+    Vector crange(drange.x()/range.x(), drange.y()/range.y(),
+		  drange.z()/range.z());
+    // use the length of the domain diagonol as the domain size value
+    double domain_size = sqrt(Dot(drange,drange));
+    // use the length of a cell diagonol as the cell size value
+    cell_size = sqrt(Dot(crange, crange));
     
+    if( auto_radius.get() ){  // set particle radius to 1/4 cell size per
+                              // request by container dynamics.
+      double part_size = cell_size/4.0;
+      if (part_size > 0)
+	radius.set( part_size);
+    }  
     if(hasVectors && auto_length_scale.get()) { 
       // lets mess with the vectors too...
       double max_length2 = 0;
@@ -246,10 +253,21 @@ void ParticleVis::execute()
 	for(ParticleSubset::iterator iter = ps->begin();
 	    iter != ps->end(); iter++){
 	  max_length2 = (( max_length2 > ((*v_it)[*iter]).length2()) ?
-	    max_length2 : ((*v_it)[*iter]).length2());
+			 max_length2 : ((*v_it)[*iter]).length2());
 	}
       }
-      length_scale.set( max_srange/((2 * sqrt(max_length2))));
+      // max_lenght2 is the length sqared of the longest vector.
+      // Take the sqare root.
+      max_vlength = sqrt(max_length2);
+      // set the length scale so that the longest vector is scaled to
+      // the size of the domain
+      double len_scale_val = domain_size/(max_vlength); 
+      length_scale.set( 0 );
+      length_scale.set(len_scale_val );
+      // manipulate head & width scale so that the head size is approx
+      // cell size for a vector of max_vlength
+      head_length.set( cell_size/(max_vlength*len_scale_val ));
+      width_scale.set( head_length.get()/2.0);
       p_it = points.begin();
       v_it = vect->get().begin();
     }
@@ -371,20 +389,20 @@ void ParticleVis::execute()
 	    sp->setId((long long)((*id_it)[*iter]));
 	    obj->add( scinew GeomMaterial( sp,(cmap->lookup(value).get_rep())));
 	  }
-	  count = 0;
-	}
- 	if( drawVectors.get() == 1 && hasVectors){
- 	  Vector V = (*v_it)[*iter];
-	  double len = V.length() * length_scale.get();
- 	  if(len > min_crop_length.get() ){
-	    if( max_crop_length.get() == 0 ||
-		len < max_crop_length.get()){
-	      arrows->add( (*p_it)[*iter],
-			   V*length_scale.get(),
-			   outcolor, outcolor, outcolor);
+	  if( drawVectors.get() == 1 && hasVectors){
+	    Vector V = (*v_it)[*iter];
+	    double len = V.length() * length_scale.get();
+	    if(len > min_crop_length.get() ){
+	      if( max_crop_length.get() == 0 ||
+		  len < max_crop_length.get()){
+		arrows->add( (*p_it)[*iter],
+			     V*length_scale.get(),
+			     outcolor, outcolor, outcolor);
+	      }
 	    }
 	  }
- 	}
+	  count = 0;
+	}
       }
       
       if(have_particle ){
