@@ -176,7 +176,7 @@ void GridVisualizer::setup_widget() {
   cerr << "\t\tStarting widget stuff\n";
   if (init == 1) {
     init = 0;
-    GeomObj *w2d = widget2d->GetWidget();
+    GeomHandle w2d = widget2d->GetWidget();
     widget_id = ogeom->addObj(w2d, widget_name, &widget_lock);
 
     widget2d->Connect (ogeom);
