@@ -26,6 +26,14 @@ PSELIBS := Core/Datatypes Core/Containers Core/Persistent Core/Exceptions Core/T
 endif
 LIBS := -lm
 
+PROGRAM := $(SRCDIR)/CVRTItoTetVolGrad
+SRCS := $(SRCDIR)/CVRTItoTetVolGrad.cc
+include $(SCIRUN_SCRIPTS)/program.mk
+
+PROGRAM := $(SRCDIR)/CVRTItoTetVolPot
+SRCS := $(SRCDIR)/CVRTItoTetVolPot.cc
+include $(SCIRUN_SCRIPTS)/program.mk
+
 PROGRAM := $(SRCDIR)/RawToContourField
 SRCS := $(SRCDIR)/RawToContourField.cc
 include $(SCIRUN_SCRIPTS)/program.mk
