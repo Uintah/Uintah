@@ -70,7 +70,7 @@ public:
     virtual void io(Piostream&);
     static PersistentTypeID type_id;
 
-    virtual int saveobj(ostream&, const clString& format, GeomSave*)=0;
+    virtual bool saveobj(ostream&, const clString& format, GeomSave*)=0;
 };
 
 void Pio(Piostream&, GeomObj*&);

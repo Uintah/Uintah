@@ -139,7 +139,7 @@ void GeomArrows::io(Piostream& stream)
     stream.end_class();
 }
 
-int GeomArrows::saveobj(ostream& out, const clString& format, GeomSave* saveinfo)
+bool GeomArrows::saveobj(ostream& out, const clString& format, GeomSave* saveinfo)
 {
   int n=positions.size();
 

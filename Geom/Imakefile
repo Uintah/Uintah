@@ -51,8 +51,8 @@ SRCS = Arrows.cc BBoxCache.cc Color.cc Cone.cc Container.cc Cylinder.cc \
 	$(OPENGLSRCS) $(X11SRCS)
 LOCALINCLUDES = $(OPENGLINCS) $(XINCLUDE)
 SO_LIBS = 
-SO_LDFLAGS = -L$(TOP)/lib -lTCL  -lGeometry -lClasslib -lMalloc \
-	$(OPENGLLIBS)
+SO_LDFLAGS = -L$(TOP)/lib -lMath -lTCL -lGeometry -lClasslib \
+	-lMultitask -lMalloc $(OPENGLLIBS) -lm -lC -lc
 
 LIBNAME = Geom
 
