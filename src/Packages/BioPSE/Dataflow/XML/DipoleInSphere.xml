@@ -27,17 +27,16 @@
       <author>Alexei Samsonov</author>
     </authors>
 
-    <summary>Fills in supplied sphere field with potentials values due
-      to the specified dipoles</summary>
+    <summary>Due to the specified dipoles, DipoleInSphere fills the sphere field with potentials values.</summary>
 
     <description>
       <p>Version Date: March 2001</p>
       <p>Version: 1.1</p>
       <p>The current version of the module provides analytical
-	calculation of potential on the surface of supplied sphere. The
-	sphere is assumed to have uniform conductivity equal 1. The
+	calculation of potentials on the surface of the supplied sphere. We assume that the
+	sphere has uniform conductivity equal to 1. The
 	center of the sphere is the center of the bounding box, and the
-	radius is half of the maximum dimension of the box</p>
+	radius is half of the maximum dimension of the box.</p>
     </description>
   </overview>
   
@@ -48,18 +47,17 @@
 	<name>Sphere</name>
 	<description>
 	  <p>The port takes a handle to the field data object that
-	  contans TriSurfMesh as geometry</p>
+	  contans TriSurfMesh as geometry.</p>
 	</description>
 	<datatype>SCIRun::Field</datatype>
       </port>
       <port>
 	<name>Dipole Sources</name>
 	<description>
-	  <p>The port takes handle to the matrix of size n-by-6,
-	  contating parameters of n dipoles (the first three column are dipole
-	  position, the other there are dipole moment). The dipoles
-	  are assumed to lie inside the sphere. Otherwise warning
-	  message is produced in the module log window</p>
+	  <p>The port takes a handle to the matrix that is n-by-6 in size,
+	  containing parameters of n dipoles (the first three column are dipole
+	  positions, the other three are dipole moments). We also assume that the dipoles
+	  lie inside the sphere. Otherwise, the moudle log window produces a warning message.</p>
 	</description>
 	<datatype>SCIRun::Field</datatype>
       </port>
@@ -71,8 +69,8 @@
 	<name>SphereWithPots</name>
 	<description>
 	  <p> Send the handle to the field object to downstream
-	  module. The field object is initial one populated with
-	  potential values at sphere nodes</p>
+	  module. This is the initial field object and is populated with
+	  potential values at the sphere nodes.</p>
 	</description>
 	<datatype>SCIRun::Field</datatype>
       </port>
