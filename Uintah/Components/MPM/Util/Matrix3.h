@@ -100,6 +100,9 @@ class Matrix3 {
   //Norm, sqrt(M:M)
   inline double Norm() const;
 
+  //Maximum element absolute value
+  inline double MaxAbsElem() const;
+  
   //Identity
   inline void Identity();
 
@@ -109,13 +112,13 @@ class Matrix3 {
   // Returns number of real, unique eigen values and passes
   // back the values.  If it returns 1, the value is passed back
   // in e1.  If it returns 2, the values are passed back in e1
-  // and e2 such that e1 < e2.  If 3, then e1 < e2 < e3.
+  // and e2 such that e1 > e2.  If 3, then e1 > e2 > e3.
   int getEigenValues(double& e1, double& e2, double& e3) const;
 
   // Get the eigen values of the 2x2 sub-matrix specified by
   // the appropriate plane, returning the number of different real
   // values.  If there is only 1 (unique) eigenvalue, it is
-  // passed back in e1.  If 2, then e1 < e2.
+  // passed back in e1.  If 2, then e1 > e2.
   int getXYEigenValues(double& e1, double& e2) const;
   int getYZEigenValues(double& e1, double& e2) const;
   int getXZEigenValues(double& e1, double& e2) const;
@@ -126,32 +129,49 @@ class Matrix3 {
   // 1, 2, or 3 ({1,0,0},{0,1,0},{0,0,1}) of these eigenvectors
   // (> 1 if eigen value has degeneracies I believe) and they
   // will NOT necessarily be normalized.
-  inline std::vector<Vector> getEigenVectors(double eigen_value) const;
+  // The relative_scale is used to determine what constitutes
+  // values small enough to be considered zero.  The suggested
+  // value for relative_scale is the maximum eigen value (e1) or
+  // MaxAbsElem().
+  inline std::vector<Vector> getEigenVectors(double eigen_value,
+	 double relative_scale /* e1 suggested */) const;
 
   // Solves for a single particular solution (possible arbitrary) to
   // the equation system: Ax = rhs where A is this Matrix.
   // Returns false if there is no solution, otherwise a particular
   // solution is passed back via xp.
-  inline bool solveParticular(Vector rhs, Vector& xp) const;
+  // The relative_scale is used to determine what constitutes values
+  // small enough to be considered zero.  The suggested value for
+  // relative_scale is MaxAbsElem() or the maximum eigen-value.
+  inline bool solveParticular(Vector rhs, Vector& xp,
+	 double relative_scale /* MaxAbsElem() suggested */) const;
   
   // Solves for the space of solutions for Ax = 0 where A is this Matrix.
   // The solution is any linear combination of the resulting array
   // of vectors.  That is, if result = {xg1, xg2, ...}, then
   // x = a*xg1 + b*xg2 + ... where a, b, etc. are arbitrary scalars.
+  // The relative_scale is used to determine what constitutes values
+  // small enough to be considered zero.  The suggested value for
+  // relative_scale is MaxAbsElem() or the maximum eigen-value.
   //
   // Result Possibilities:
   // Single Solution: result.size() = 0, {0,0,0} is only solution
   // Line of Solutions: result.size() = 1
   // Plane of Solutions: result.size() = 2
   // Solution everywhere: result = {{1,0,0},{0,1,0},{0,0,1}}
-  inline std::vector<Vector> solveHomogenous() const;
+  inline std::vector<Vector> solveHomogenous(double relative_scale /* =
+					     MaxAbsElem() suggested */) const;
 
   // Solves for the space of solutions for Ax = rhs where A is this Matrix.
   // This is a more efficient combination of solveParticular and
   // solveHomogenous (where the homogenous results are passed back via
   // xg_basis).
+  // The relative_scale is used to determine what constitutes values small
+  // enough to be considered zero.  The suggested value for relative_scale
+  // is MaxAbsElem() or the maximum eigen value.
   inline bool solve(Vector rhs, Vector& xp,
-		    std::vector<Vector>& xg_basis) const;
+		    std::vector<Vector>& xg_basis,
+		    double relative_scale /* MaxAbsElem() suggested */) const;
 private:
   // Reduce the matrix and rhs, representing the equation system:
   // A*x = y = rhs, to a matrix in upper triangular form with
@@ -162,7 +182,8 @@ private:
   // any row has zeroes in every other row and a one in that row.
   // If rhs == NULL, then the rhs is assumed to be
   // the zero vector and thus will not need to change.
-  static void triangularReduce(Matrix3& A, Vector* rhs, int& num_zero_rows);
+  static void triangularReduce(Matrix3& A, Vector* rhs, int& num_zero_rows,
+			       double relative_scale);
 
   // solveHomogenous for a Matrix that has already by triangularReduced
   std::vector<Vector> solveHomogenousReduced(int num_zero_rows) const;
@@ -257,7 +278,19 @@ inline double Matrix3::Norm() const
   }
 
   return sqrt(norm);
+}
 
+inline double Matrix3::MaxAbsElem() const
+{
+  double max = 0;
+  double absval;
+  for (int i = 0; i< 3; i++) {
+    for(int j=0;j<3;j++){
+	absval = fabs(mat3[i][j]);
+	if (absval > max) max = absval;
+    }
+  }
+  return max;
 }
 
 inline Matrix3 Matrix3::Transpose() const
@@ -446,7 +479,8 @@ inline double &Matrix3::operator () (int i, int j)
   return mat3[i-1][j-1];
 }
 
-inline std::vector<Vector> Matrix3::getEigenVectors(double eigen_value) const
+inline std::vector<Vector> Matrix3::getEigenVectors(double eigen_value,
+					       double relative_scale) const
 {
   // A*x = e*x
   // (A - e*I)*x = 0
@@ -454,32 +488,34 @@ inline std::vector<Vector> Matrix3::getEigenVectors(double eigen_value) const
 	       mat3[1][0], mat3[1][1] - eigen_value, mat3[1][2],
 	       mat3[2][0], mat3[2][1], mat3[2][2] - eigen_value);
   int num_zero_rows;
-  triangularReduce(A_sub_eI, NULL, num_zero_rows);
+  triangularReduce(A_sub_eI, NULL, num_zero_rows, relative_scale);
   return A_sub_eI.solveHomogenousReduced(num_zero_rows);
 }
 
-inline bool Matrix3::solveParticular(Vector rhs, Vector& xp) const
+inline bool Matrix3::solveParticular(Vector rhs, Vector& xp,
+				     double relative_scale) const
 {
   int num_zero_rows;
   Matrix3 A(*this);
-  triangularReduce(A, &rhs, num_zero_rows);
+  triangularReduce(A, &rhs, num_zero_rows, relative_scale);
   return A.solveParticularReduced(rhs, xp, num_zero_rows);
 }
 
-inline std::vector<Vector> Matrix3::solveHomogenous() const
+inline std::vector<Vector> Matrix3::solveHomogenous(double relative_scale)
+  const
 {
   int num_zero_rows;
   Matrix3 A(*this);
-  triangularReduce(A, NULL, num_zero_rows);
+  triangularReduce(A, NULL, num_zero_rows, relative_scale);
   return A.solveHomogenousReduced(num_zero_rows);
 }
 
 inline bool Matrix3::solve(Vector rhs, Vector& xp,
-		  std::vector<Vector>& xg_basis) const
+		  std::vector<Vector>& xg_basis, double relative_scale) const
 {
   int num_zero_rows;
   Matrix3 A(*this);
-  triangularReduce(A, &rhs, num_zero_rows);
+  triangularReduce(A, &rhs, num_zero_rows, relative_scale);
   if (A.solveParticularReduced(rhs, xp, num_zero_rows)) {
     xg_basis = A.solveHomogenousReduced(num_zero_rows);
     return true;
@@ -506,6 +542,11 @@ inline SCICore::Geometry::Vector operator*(const SCICore::Geometry::Vector& v, c
 #endif  // __MATRIX3_H__
 
 // $Log$
+// Revision 1.10  2000/09/20 18:01:49  witzel
+// Changed the ordering of the eigenvalues (e1 > e2 > e3) and added
+// the relative_scale parameter to getEigenVectors and solve methods
+// to make NEAR_ZERO relative to the scale of the matrix.
+//
 // Revision 1.9  2000/09/16 22:15:40  tan
 // Finished the implementation of += operator.
 //

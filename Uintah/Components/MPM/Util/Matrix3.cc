@@ -27,7 +27,7 @@ using std::ostream;
 
 // Anything with absolute value < NEAR_ZERO may be considered
 // zero, assuming error is caused by round-off.
-#define NEAR_ZERO 1e-5
+#define NEAR_ZERO 1e-10
 
 void Matrix3::set(const int i, const int j, const double value)
 {
@@ -84,11 +84,13 @@ inline void swap(double& v1, double& v2)
 // any row has zeroes in every other row and a one in that row.
 // If rhs == NULL, then the rhs is assumed to be
 // the zero vector and thus will not need to change.
-void Matrix3::triangularReduce(Matrix3& A, Vector* rhs, int& num_zero_rows)
+void Matrix3::triangularReduce(Matrix3& A, Vector* rhs, int& num_zero_rows,
+			       double relative_scale)
 {
   int i, j, k, pivot;
   int pivoting_row = 0;
   double tmp, mag;
+  double relNearZero = relative_scale * NEAR_ZERO;
 
   // put the matrix in upper triangular form 
   for (i = 0; i < 3; i++) {
@@ -96,7 +98,7 @@ void Matrix3::triangularReduce(Matrix3& A, Vector* rhs, int& num_zero_rows)
     pivot = -1;
     // because of precision errors, consider anything smaller
     // than NEAR_ZERO as zero
-    mag = NEAR_ZERO;
+    mag = relNearZero;
     for (j = pivoting_row; j < 3; j++) {
       tmp = fabs(A.mat3[j][i]);
       if (tmp > mag) {
@@ -157,7 +159,7 @@ void Matrix3::triangularReduce(Matrix3& A, Vector* rhs, int& num_zero_rows)
 
   if (rhs != NULL) {
     for (i = 0; i < 3; i++)
-      if (fabs((*rhs)(i)) < NEAR_ZERO)
+      if (fabs((*rhs)(i)) <= relNearZero)
 	(*rhs)(i) = 0; // set near zero's to zero to compensate for round-off
   }
   
@@ -362,23 +364,23 @@ int Matrix3::getEigenValues(double& e1, double& e2, double& e3) const
 
   // sort the eigen values
   if (num_values == 3) {
-    int least = 1;
+    int greatest = 1;
     e1 = r[0];    
-    if (r[1] < e1) {
+    if (r[1] > e1) {
       e1 = r[1];
-      least = 2;
+      greatest = 2;
     }
-    if (r[2] < e1) {
+    if (r[2] > e1) {
       e1 = r[2];
-      least = 3;
+      greatest = 3;
     }
-    e2 = (least != 2) ? r[1] : r[0];
-    e3 = (least != 3) ? r[2] : r[0];
-    if (e2 > e3)
+    e2 = (greatest != 2) ? r[1] : r[0];
+    e3 = (greatest != 3) ? r[2] : r[0];
+    if (e2 < e3)
       swap(e2, e3);
   }
   else if (num_values == 2)
-    if (r[0] < r[1]) {
+    if (r[0] > r[1]) {
       e1 = r[0];
       e2 = r[1];
     } else {
@@ -414,7 +416,7 @@ int Matrix3::getXYEigenValues(double& e1, double& e2) const
   // a*x^2 + b*x + c
   double b = -(mat3[0][0] + mat3[1][1]);
   double c = mat3[0][0] * mat3[1][1] - mat3[0][1] * mat3[1][0];
-  return SolveQuadratic(b, c, e1, e2);
+  return SolveQuadratic(b, c, e2, e1);
 }
 
 int Matrix3::getYZEigenValues(double& e1, double& e2) const
@@ -423,7 +425,7 @@ int Matrix3::getYZEigenValues(double& e1, double& e2) const
   // a*x^2 + b*x + c
   double b = -(mat3[1][1] + mat3[2][2]);
   double c = mat3[1][1] * mat3[2][2] - mat3[1][2] * mat3[2][1];
-  return SolveQuadratic(b, c, e1, e2);
+  return SolveQuadratic(b, c, e2, e1);
 }
 
 int Matrix3::getXZEigenValues(double& e1, double& e2) const
@@ -432,7 +434,7 @@ int Matrix3::getXZEigenValues(double& e1, double& e2) const
   // a*x^2 + b*x + c
   double b = -(mat3[0][0] + mat3[2][2]);
   double c = mat3[0][0] * mat3[2][2] - mat3[0][2] * mat3[2][0];
-  return SolveQuadratic(b, c, e1, e2);
+  return SolveQuadratic(b, c, e2, e1);
 }
 
 ostream & operator << (ostream &out_file, const Matrix3 &m3)
@@ -468,6 +470,11 @@ MPI_Datatype makeMPI_Matrix3()
 }
 
 //$Log$
+//Revision 1.10  2000/09/20 18:01:49  witzel
+//Changed the ordering of the eigenvalues (e1 > e2 > e3) and added
+//the relative_scale parameter to getEigenVectors and solve methods
+//to make NEAR_ZERO relative to the scale of the matrix.
+//
 //Revision 1.9  2000/09/18 16:28:52  witzel
 //Increased NEAR_ZERO from 1e-8 to 1e-5 because some of the matrices
 //were unable to yield eigen-vectors due to precision errors.  There is
