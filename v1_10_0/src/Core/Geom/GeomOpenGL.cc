@@ -81,6 +81,7 @@
 #include <Core/Geom/GeomTransform.h>
 #include <Core/Geom/GeomTri.h>
 #include <Core/Geom/GeomTriangles.h>
+#include <Core/Geom/GeomQuads.h>
 #include <Core/Geom/GeomTube.h>
 #include <Core/Geom/GeomTriStrip.h>
 #include <Core/Geom/View.h>
@@ -3450,6 +3451,165 @@ GeomTranspTriangles::draw(DrawInfoOpenGL* di, Material* matl, double)
       glArrayElement(clist[(ntris-i-1)*3+0]);
       glArrayElement(clist[(ntris-i-1)*3+1]);
       glArrayElement(clist[(ntris-i-1)*3+2]);
+    }
+    glEnd();
+  }
+
+  glDisableClientState(GL_NORMAL_ARRAY);
+
+  glDisable(GL_BLEND);
+  glEnable(GL_NORMALIZE);
+
+  if (di->get_drawtype() == DrawInfoOpenGL::Flat)
+  {
+    glShadeModel(GL_SMOOTH);
+  }
+
+  post_draw(di);
+}
+
+
+void
+GeomFastQuads::draw(DrawInfoOpenGL* di, Material* matl, double)
+{
+  if (!pre_draw(di, matl, 1)) return;
+  di->polycount += size();
+
+  if (di->currently_lit)
+  {
+#ifdef SCI_NORM_OGL
+    glEnable(GL_NORMALIZE);
+#else
+    glDisable(GL_NORMALIZE);
+#endif
+    glNormalPointer(GL_FLOAT, 0, &(normals_.front()));
+    glEnableClientState(GL_NORMAL_ARRAY);
+  }
+  else
+  {
+    glDisableClientState(GL_NORMAL_ARRAY);
+    glDisable(GL_NORMALIZE);
+  }
+
+  if (di->get_drawtype() == DrawInfoOpenGL::Flat)
+  {
+    glShadeModel(GL_FLAT);
+  }
+  else
+  {
+    glShadeModel(GL_SMOOTH);
+  }
+
+  glVertexPointer(3, GL_FLOAT, 0, &(points_.front()));
+  glEnableClientState(GL_VERTEX_ARRAY);
+
+  glColorPointer(4, GL_UNSIGNED_BYTE, 0, &(colors_.front()));
+  glEnableClientState(GL_COLOR_ARRAY);
+
+  if (material_.get_rep()) { di->set_matl(material_.get_rep()); }
+
+  glDrawArrays(GL_QUADS, 0, points_.size()/3);
+
+  glDisableClientState(GL_NORMAL_ARRAY);
+
+  glEnable(GL_NORMALIZE);
+  if (di->get_drawtype() == DrawInfoOpenGL::Flat)
+  {
+    glShadeModel(GL_SMOOTH);
+  }
+
+  post_draw(di);
+}
+
+
+void
+GeomTranspQuads::draw(DrawInfoOpenGL* di, Material* matl, double)
+{
+  if (!pre_draw(di, matl, 1)) return;
+  di->polycount += size();
+
+  SortPolys();
+
+  GLdouble matrix[16];
+  glGetDoublev(GL_MODELVIEW_MATRIX, matrix);
+  const double lvx = fabs(matrix[2]);
+  const double lvy = fabs(matrix[6]);
+  const double lvz = fabs(matrix[10]);
+  if (lvx >= lvy && lvx >= lvz)
+  {
+    di->axis = 0;
+    if (matrix[2] > 0) { di->dir = 1; }
+    else { di->dir = -1; }
+      
+  }
+  else if (lvy >= lvx && lvy >= lvz)
+  {
+    di->axis = 1;
+    if (matrix[6] > 0) { di->dir = 1; }
+    else { di->dir = -1; }
+  }
+  else if (lvz >= lvx && lvz >= lvy)
+  {
+    di->axis = 2;
+    if (matrix[10] > 0) { di->dir = 1; }
+    else { di->dir = -1; }
+  }
+
+  const vector<unsigned int> &clist =
+    (di->axis==0)?xlist_:((di->axis==1)?ylist_:zlist_);
+
+  if (di->currently_lit)
+  {
+#ifdef SCI_NORM_OGL
+    glEnable(GL_NORMALIZE);
+#else
+    glDisable(GL_NORMALIZE);
+#endif
+    glNormalPointer(GL_FLOAT, 0, &(normals_.front()));
+    glEnableClientState(GL_NORMAL_ARRAY);
+  }
+  else
+  {
+    glDisableClientState(GL_NORMAL_ARRAY);
+    glDisable(GL_NORMALIZE);
+  }
+
+  if (di->get_drawtype() == DrawInfoOpenGL::Flat)
+  {
+    glShadeModel(GL_FLAT);
+  }
+  else
+  {
+    glShadeModel(GL_SMOOTH);
+  }
+
+  glVertexPointer(3, GL_FLOAT, 0, &(points_.front()));
+  glEnableClientState(GL_VERTEX_ARRAY);
+
+  glColorPointer(4, GL_UNSIGNED_BYTE, 0, &(colors_.front()));
+  glEnableClientState(GL_COLOR_ARRAY);
+
+  glEnable(GL_BLEND);
+  glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
+  if (material_.get_rep()) { di->set_matl(material_.get_rep()); }
+
+  if (di->dir == 1)
+  {
+    glDrawElements(GL_QUADS, clist.size(), GL_UNSIGNED_INT,
+		   &(clist.front()));
+  }
+  else
+  {
+    // Preserve triangle CCW/CW by drawing vertices in same order.
+    const unsigned int ntris = clist.size()/4;
+    glBegin(GL_QUADS);
+    for (unsigned int i = 0; i < ntris; i++)
+    {
+      glArrayElement(clist[(ntris-i-1)*4+0]);
+      glArrayElement(clist[(ntris-i-1)*4+1]);
+      glArrayElement(clist[(ntris-i-1)*4+2]);
+      glArrayElement(clist[(ntris-i-1)*4+3]);
     }
     glEnd();
   }
