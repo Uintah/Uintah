@@ -25,7 +25,7 @@ typedef AVLTreeIter<clString, DebugVars*> DebugIter;
 
 /*
  * DebugSwitchs initialize to no debugging unless the environment
- * variable SR_DEBUG contains an entry of the form module(var),
+ * variable SCI_DEBUG contains an entry of the form module(var),
  * where module and var are identical to the module and var
  * parameters, respectivly.
  */
