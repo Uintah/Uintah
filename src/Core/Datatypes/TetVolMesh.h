@@ -129,6 +129,11 @@ public:
   bool locate(Face::index_type &loc, const Point &p) const;
   bool locate(Cell::index_type &loc, const Point &p) const;
 
+  void get_weights(const Point &p, Node::array_type &l, vector<double> &w) {}
+  void get_weights(const Point &p, Edge::array_type &l, vector<double> &w) {}
+  void get_weights(const Point &p, Face::array_type &l, vector<double> &w) {}
+  void get_weights(const Point &p, Cell::array_type &l, vector<double> &w) {}
+
   void get_point(Point &result, Node::index_type index) const
   { result = points_[index]; }
   void get_normal(Vector &/* result */, Node::index_type /* index */) const

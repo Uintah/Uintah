@@ -64,6 +64,10 @@ public:
   virtual bool compute_min_max(double &minout, double &maxout) const;
   virtual bool interpolate(double &result, const Point &p) const;
 
+  virtual void compute_weights(const vector<double> &w, const Point &p,
+			       vector<Point> &pp) const {}
+  virtual bool interp(double &result, const Point &p) const;
+
 private:
   friend class linear_interp;
 
@@ -75,6 +79,7 @@ private:
     linear_interp(const SFInterface *par) :
       par_(par)
     {}
+
     
     //! do linear interp at data location.
     bool operator()(double &result, const Point &p) const {
@@ -154,6 +159,88 @@ bool
 SFInterface<Fld>::interpolate(double &result, const Point &p) const
 {
   return interp_(result, p);
+}
+
+template <class F>
+bool
+SFInterface<F>::interp(double &result, const Point &p) const
+{
+  typename F::mesh_handle_type mesh = fld_->get_typed_mesh();
+  switch(fld_->data_at())
+  {
+  case F::NODE:
+    {
+      typename F::mesh_type::Node::array_type locs;
+      vector<double> weights;
+      mesh->get_weights(p, locs, weights);
+
+      result = 0;
+      for (int i = 0; i < locs.size(); i++)
+      {
+	typename F::value_type tmp;
+	if (fld_->value(tmp, locs[i]))
+	{
+	  result += tmp * weights[i];
+	}
+      }
+    }
+    break;
+
+  case F::EDGE:
+    {
+      typename F::mesh_type::Edge::array_type locs;
+      vector<double> weights;
+      mesh->get_weights(p, locs, weights);
+
+      result = 0;
+      for (int i = 0; i < locs.size(); i++)
+      {
+	typename F::value_type tmp;
+	if (fld_->value(tmp, locs[i]))
+	{
+	  result += tmp * weights[i];
+	}
+      }
+    }
+    break;
+
+  case F::FACE:
+    {
+      typename F::mesh_type::Face::array_type locs;
+      vector<double> weights;
+      mesh->get_weights(p, locs, weights);
+
+      result = 0;
+      for (int i = 0; i < locs.size(); i++)
+      {
+	typename F::value_type tmp;
+	if (fld_->value(tmp, locs[i]))
+	{
+	  result += tmp * weights[i];
+	}
+      }
+    }
+    break;
+
+  case F::CELL:
+    {
+      typename F::mesh_type::Cell::array_type locs;
+      vector<double> weights;
+      mesh->get_weights(p, locs, weights);
+
+      result = 0;
+      for (int i = 0; i < locs.size(); i++)
+      {
+	typename F::value_type tmp;
+	if (fld_->value(tmp, locs[i]))
+	{
+	  result += tmp * weights[i];
+	}
+      }
+    }
+    break;
+  }
+  return true;
 }
 
 
