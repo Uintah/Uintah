@@ -49,7 +49,7 @@
 #include <Core/Math/MiscMath.h>
 #include <Core/GuiInterface/GuiVar.h>
 #include <iostream>
-#include <values.h>
+#include <sci_values.h>
 
 namespace SCIRun {
 

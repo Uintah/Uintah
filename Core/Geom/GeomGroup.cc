@@ -44,14 +44,7 @@
 #include <Core/Malloc/Allocator.h>
 #include <Core/Persistent/PersistentSTL.h>
 #include <iostream>
-#ifdef _WIN32
-#include <float.h>
-#define MAXDOUBLE DBL_MAX
-#elif defined(__APPLE__)
-   // no include
-#else
-#include <values.h>
-#endif
+#include <sci_values.h>
 
 namespace SCIRun {
 
