@@ -177,9 +177,9 @@ itcl_class BB {
 	    # as the normal vector and the field of view angle.
 	    
 	    makePoint $w.eyep "Eye Point" $view-eyep \
-		    "$this notify_of_change_when_idle" 6c
+		    "$this notify_of_change_when_idle"
 	    makePoint $w.lookat "Look at Point" $view-lookat \
-		    "$this notify_of_change_when_idle" "6c"
+		    "$this notify_of_change_when_idle"
 	    makeNormalVector $w.up "Up Vector" $view-up \
 		    "$this notify_of_change_when_idle"
 
