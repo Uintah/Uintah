@@ -188,11 +188,32 @@ Module* PackageDB::instantiateModule(const clString& packageName,
     return 0;
   }
 
-  // Source the UI file if there is one and we haven't yet
-
-//This was and is again all handled through TCL...
-//
 #if 0
+  // This was McQ's somewhat silly replacement for TCL's tclIndex/auto_path
+  // mechanism.  The idea was that there would be a path in the index.cc
+  // that pointed to a TCL file to source before instantiating a module
+  // of some particular class for the frist time -- sortof a TCL-end class
+  // constructor for the module's class.
+  //
+  // Steve understandably doesn't like new, fragile mechanisms where
+  // perfectly good old, traditional ones already exist, so he if0'd this
+  // away and added the "lappend auto_path" at package-load-time, above.
+  //
+  // This code is still here 'cause Some Day it might be nice to allow the
+  // source of the TCL files to be stored in the .so (as strings) and eval'd
+  // here.  This was the "faraway vision" that drove me to do things this way
+  // in the first place, but since that vision seems to have stalled
+  // indefinately in lieu of Useful Work, there's no reason not to use
+  // auto_path (except that it produces yet one more file to maintain).  And
+  // auto_path is useful if you write global f'ns and want to use them in lots
+  // of your modules -- auto_path nicely handles this whereas the code below
+  // doesn't handle it at all.
+  //
+  // Some day it might be nice to actually achieve the "package is one .so
+  // and that's all" vision, but not today.  :)
+  //
+  //                                                      -mcq 99/10/6
+
   if(moduleInfo->uiFile!="") {
     clString result;
     if(!TCL::eval(clString("source ")+moduleInfo->uiFile,result)) {
@@ -280,6 +301,9 @@ PackageDB::moduleNames(const clString& packageName,
 
 //
 // $Log$
+// Revision 1.13  1999/10/06 20:37:37  mcq
+// Added memoirs.
+//
 // Revision 1.12  1999/09/22 23:51:46  dav
 // removed debug print
 //
