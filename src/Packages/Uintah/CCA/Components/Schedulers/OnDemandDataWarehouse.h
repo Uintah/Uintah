@@ -241,8 +241,14 @@ public:
 
    // For related datawarehouses
    virtual DataWarehouse* getOtherDataWarehouse(Task::WhichDW);
+
+   //! Copy a var from the parameter DW to this one.  If newPatches
+   //! is not null, then it associates the copy of the variable with
+   //! newPatches, and otherwise it uses patches (the same it finds
+   //! the variable with.
    virtual void transferFrom(DataWarehouse*, const VarLabel*,
-			     const PatchSubset*, const MaterialSubset*);
+			     const PatchSubset* patches, const MaterialSubset*,
+                             const PatchSubset* newPatches = 0);
 
    virtual bool isFinalized() const;
    virtual bool exists(const VarLabel*, const Patch*) const;
