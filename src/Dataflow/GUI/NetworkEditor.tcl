@@ -735,30 +735,36 @@ proc ExecuteAll {} {
     netedit scheduleall
 }
 
+proc initInfo { {force 0 } } {
+    global userName runDate runTime notes env
+    if { $force || ![info exists userName] } {
+	if { [info exists env(LOGNAME)] } { set userName $env(LOGNAME) 
+	} elseif [info exists env(USER)] { set userName $env(USER) 
+	} else { set userName unknown }
+    }
+    if { $force || ![info exists runDate] } {
+	set runDate [clock format [clock seconds] -format "%a %b %d %Y"]
+    }
+    if { $force || ![info exists runTime] } {
+	set runTime [clock format [clock seconds] -format "%H:%M:%S"]
+    }
+    if { ![info exists notes] } { set notes "" }    
+}    
+
+
+
 
 # This proc was added by Mohamed Dekhil to save some info about the net
 
 proc popupInfoMenu {} {
+    global userName runDate runTime notes
+    global oldUserName oldRunDate oldRunTime oldNotes
+    initInfo
 
-    global userName
-    global runDate
-    global runTime
-    global notes
-
-    global oldUserName
-    global oldRunDate
-    global oldRunTime
-    global oldNotes
-
-    set oldUserName ""
-    set oldRunDate ""
-    set oldRunTime ""
-    set oldNotes ""
-
-    if [info exists userName] {set oldUserName $userName}
-    if [info exists runDate] {set oldRunDate $runDate}
-    if [info exists runTime] {set oldRunTime $runTime}
-    if [info exists notes] {set oldNotes $notes}    
+    set oldUserName $userName
+    set oldRunDate $runDate
+    set oldRunTime $runTime
+    set oldNotes $notes
 
     set w .netedit_info
     if {[winfo exists $w]} {
@@ -771,7 +777,6 @@ proc popupInfoMenu {} {
     label $w.fname.lname -text "User: " -padx 3 -pady 3
     entry $w.fname.ename -width 50 -relief sunken -bd 2 -textvariable userName
 
-
     frame $w.fdt
     label $w.fdt.ldate -text "Date: " -padx 3 -pady 3 
     entry $w.fdt.edate -width 20 -relief sunken -bd 2 -textvariable runDate
@@ -780,13 +785,14 @@ proc popupInfoMenu {} {
     label $w.fdt.ltime -text "Time: " -padx 5 -pady 3 
     entry $w.fdt.etime -width 10 -relief sunken -bd 2 -textvariable runTime
 
+    button $w.fdt.reset -text "Reset Date & Time" -command "initInfo 1"
+
     frame $w.fnotes
     label $w.fnotes.lnotes -text "Notes " -padx 2 -pady 5 
     text $w.fnotes.tnotes -relief sunken -bd 2 -yscrollcommand "$w.fnotes.scroll set"
     scrollbar $w.fnotes.scroll -command "$w.fnotes.tnotes yview"
     if [info exists notes] {$w.fnotes.tnotes insert 1.0 $notes}
 
-    
     frame $w.fbuttons 
     button $w.fbuttons.ok -text "Done" -command "infoOk $w"
     button $w.fbuttons.clear -text "Clear All" -command "infoClear $w"
@@ -796,7 +802,8 @@ proc popupInfoMenu {} {
 
     pack $w.fname.lname $w.fname.ename -side left
 
-    pack $w.fdt.ldate $w.fdt.edate $w.fdt.ltime $w.fdt.etime -side left 
+    pack $w.fdt.ldate $w.fdt.edate $w.fdt.ltime $w.fdt.etime -side left
+    pack $w.fdt.reset -side right
 
     pack $w.fnotes.lnotes $w.fnotes.tnotes -side left
     pack $w.fnotes.scroll -side right -fill y
@@ -805,10 +812,7 @@ proc popupInfoMenu {} {
 }
 
 proc infoClear {w} {
-    global userName
-    global runDate
-    global runTime
-    global notes
+    global userName runDate runTime notes
 
     set userName ""
     set runDate ""
@@ -816,32 +820,21 @@ proc infoClear {w} {
     set notes ""
 
     $w.fnotes.tnotes delete 1.0 end
-#    destroy $w
 }
 
 proc infoOk {w} {
     global notes
-
     set notes [$w.fnotes.tnotes get 1.0 end]
     destroy $w
 }
 
 proc infoCancel {w} {
-    global userName
-    global runDate
-    global runTime
-    global notes
-
-    global oldUserName
-    global oldRunDate
-    global oldRunTime
-    global oldNotes
-
+    global userName runDate runTime notes
+    global oldUserName oldRunDate oldRunTime oldNotes
     set userName $oldUserName
     set runDate $oldRunDate
     set runTime $oldRunTime
     set notes $oldNotes
-
     destroy $w
 } 
 
