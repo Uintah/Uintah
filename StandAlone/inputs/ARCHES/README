@@ -4,7 +4,8 @@ be in the directory you run from, e.g.
 
 UPS file name                   Chemistry file required
 
-methane_explicit_table.ups      chem_meth.bin for SGI, chem_meth.linux.bin for Linux
+methane_explicit_table.ups      chem_bins/chem_meth.bin for SGI,
+                                chem_bins/chem_meth.linux.bin for Linux
 
 methane_1m.ups                  StaticMixingTables/Methane/nonadeqlb.tbl
 
