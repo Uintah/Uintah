@@ -8,6 +8,7 @@
 #include <Packages/Uintah/Core/Grid/Patch.h>
 #include <Packages/Uintah/Core/Grid/PerPatch.h>
 #include <Packages/Uintah/Core/Grid/SimulationState.h>
+#include <Packages/Uintah/Core/Grid/SimulationTime.h>
 #include <Packages/Uintah/Core/Grid/Task.h>
 #include <Packages/Uintah/Core/Grid/VarTypes.h>
 #include <Packages/Uintah/Core/Grid/CellIterator.h>
@@ -343,6 +344,19 @@ void ICE::problemSetup(const ProblemSpecP& prob_spec, GridP& /**/,
   }
 
   cout_norm << "Mass exchange = " << d_massExchange << endl;
+  
+  //__________________________________
+  // WARNINGS
+  SimulationTime timeinfo(prob_spec); 
+  if ( d_impICE && 
+       (timeinfo.max_delt_increase  > 10  || d_delT_scheme != "conservative" ) ) {
+    cout <<"\n \n W A R N I N G: " << endl;
+    cout << " When running implicit ICE you should specify "<<endl;
+    cout <<" \t \t <max_delt_increase>    2.0ish  "<<endl;
+    cout << "\t \t <Scheme_for_delT_calc> conservative " << endl;
+    cout << " to a) prevent rapid fluctuations in the timestep and "<< endl;
+    cout << "    b) to prevent outflux Vol > cell volume \n \n" <<endl;
+  } 
 
   //__________________________________
   //  Print out what I've found
@@ -673,7 +687,10 @@ void ICE::scheduleAddExchangeContributionToFCVel(SchedulerP& sched,
   task->requires(Task::NewDW,lb->uvel_FCLabel,      Ghost::AroundCells,2);
   task->requires(Task::NewDW,lb->vvel_FCLabel,      Ghost::AroundCells,2);
   task->requires(Task::NewDW,lb->wvel_FCLabel,      Ghost::AroundCells,2);
- 
+
+  task->computes(lb->sp_volX_FCLabel);
+  task->computes(lb->sp_volY_FCLabel);
+  task->computes(lb->sp_volZ_FCLabel); 
   task->computes(lb->uvel_FCMELabel);
   task->computes(lb->vvel_FCMELabel);
   task->computes(lb->wvel_FCMELabel);
@@ -1102,7 +1119,6 @@ void ICE::actuallyComputeStableTimestep(const ProcessorGroup*,
 //      cout << "  Aggressive delT Based on currant number "<< delt_CFL << endl; 
       } 
 
-
       if (d_delT_scheme == "conservative") {  //      C O N S E R V A T I V E
         //__________________________________
         // Use a characteristic velocity
@@ -1119,12 +1135,23 @@ void ICE::actuallyComputeStableTimestep(const ProcessorGroup*,
         faceArea[2] = dx.x() * dx.y();        // Z
 
         double vol = dx.x() * dx.y() * dx.z();  
-
+        Vector grav = d_sharedState->getGravity();
+        double grav_vel =  Sqrt( dx.x() * fabs(grav.x()) + 
+                                 dx.y() * fabs(grav.y()) + 
+                                 dx.z() * fabs(grav.z()) ); 
+        
+        double thermalCond = ice_matl->getThermalConductivity();
+        double viscosity   = ice_matl->getViscosity();
+        double dx_length   = dx.length();                              
+        double cv    = ice_matl->getSpecificHeat();
+        double gamma = ice_matl->getGamma();
+        double cp    = cv * gamma;       
+        
         delt_CFL = 1000.0; 
         for(CellIterator iter=patch->getCellIterator(); !iter.done(); iter++){
           double sumSwept_Vol = 0.0;
+          IntVector c = *iter;
           for (int dir = 0; dir <3; dir++) {  //loop over all three directions
-            IntVector c = *iter;
             IntVector L = c - adj_offset[dir];
             IntVector R = c + adj_offset[dir];
 
@@ -1132,25 +1159,35 @@ void ICE::actuallyComputeStableTimestep(const ProcessorGroup*,
             double vel_C = vel_CC[c][dir];
             double vel_L = vel_CC[L][dir];
 
-            double vel_FC_R= 0.5 * vel_R + vel_C;
-            double vel_FC_L= 0.5 * vel_L + vel_C;
+            double vel_FC_R= 0.5 * (vel_R + vel_C);
+            double vel_FC_L= 0.5 * (vel_L + vel_C);
 
             double c_L = speedSound[L];  
             double c_R = speedSound[R];                    
             double speedSound = max(c_L,c_R );      
 
-            double relative_vel_R = abs(vel_R - vel_C);
-            double relative_vel_L = abs(vel_L - vel_C);
+            double relative_vel       = fabs(vel_R - vel_L);
+
+            double thermalDiffusivity = thermalCond * sp_vol_CC[c]/cp;
+            double diffusion_vel      = std::max(thermalDiffusivity, viscosity)
+                                      /dx_length;
 
             double characteristicVel_R = vel_FC_R 
                                        + d_delT_knob * speedSound 
-                                       + relative_vel_R; 
+                                       + relative_vel
+                                       + grav_vel
+                                       + diffusion_vel; 
             double characteristicVel_L = vel_FC_L 
-                                       + d_delT_knob * speedSound 
-                                       + relative_vel_L;
+                                       - d_delT_knob * speedSound 
+                                       - relative_vel
+                                       - grav_vel
+                                       - diffusion_vel;
 
-            double sweptVol_R = abs(characteristicVel_R) * faceArea[dir];
-            double sweptVol_L = abs(characteristicVel_L) * faceArea[dir];
+            double sweptVol_R = characteristicVel_R * faceArea[dir];
+            double sweptVol_L = characteristicVel_L * -faceArea[dir]; 
+            
+            sweptVol_R = std::max( 0.0, sweptVol_R);  // only compute outflow volumes
+            sweptVol_L = std::max( 0.0, sweptVol_L);
             sumSwept_Vol += sweptVol_R + sweptVol_L;
           } // dir loop
           
@@ -1174,7 +1211,7 @@ void ICE::actuallyComputeStableTimestep(const ProcessorGroup*,
           for(CellIterator iter=patch->getCellIterator(); !iter.done(); iter++){
             IntVector c = *iter;
             double inv_thermalDiffusivity = cp/(sp_vol_CC[c] * thermalCond);
-            double A =  0.5 * inv_sum_invDelx_sqr * inv_thermalDiffusivity;
+            double A =  d_CFL * 0.5 * inv_sum_invDelx_sqr * inv_thermalDiffusivity;
             delt_cond = std::min(A, delt_cond);
           }
         }  //
@@ -1267,48 +1304,57 @@ void ICE::actuallyInitialize(const ProcessorGroup*,
                                 press_CC,  numALLMatls,    patch, new_dw);
 
       cv[m] = ice_matl->getSpecificHeat();
-      cout << "Works before setBCJohn pressure" << endl;
+      
 #ifdef JOHN_BCS
+cout << "Works before setBCJohn pressure" << endl;
       setBCJohn(press_CC,   rho_micro[SURROUND_MAT], "rho_micro","Pressure", 
                                               patch, d_sharedState, 0, new_dw);
 #else
       setBC(press_CC,   rho_micro[SURROUND_MAT], "rho_micro","Pressure", 
                                               patch, d_sharedState, 0, new_dw);
 #endif
-      cout << "Works after setBCJohn pressure" << endl;
+      
 #ifdef JOHN_BCS
+cout << "Works after setBCJohn pressure" << endl;
       setBCJohn(rho_CC[m],        "Density",      patch, d_sharedState, indx);
 #else
       setBC(rho_CC[m],        "Density",      patch, d_sharedState, indx);
 #endif
-      cout << "Works after setBCJohn Density" << endl;
+      
 
 #ifdef JOHN_BCS
+cout << "Works after setBCJohn Density" << endl;
       setBCJohn(rho_micro[m],     "Density",      patch, d_sharedState, indx);
 #else
       setBC(rho_micro[m],     "Density",      patch, d_sharedState, indx);
 #endif
 
-      cout << "Works after setBCJohn rho_micro" << endl;
+      
 #ifdef JOHN_BCS
+cout << "Works after setBCJohn rho_micro" << endl;
       setBCJohn(Temp_CC[m],       "Temperature",  patch, d_sharedState, indx);
 #else
       setBC(Temp_CC[m],       "Temperature",  patch, d_sharedState, indx);
 #endif
-      cout << "Works after setBCJohn Temperature" << endl;
+      
 
 #ifdef JOHN_BCS
+cout << "Works after setBCJohn Temperature" << endl;
       setBCJohn(speedSound[m],    "zeroNeumann",  patch, d_sharedState, indx); 
 #else
       setBC(speedSound[m],    "zeroNeumann",  patch, d_sharedState, indx); 
 #endif
 
-      cout << "Works after setBCJohn zeroNeumann" << endl;
+      
 #ifdef JOHN_BCS
+cout << "Works after setBCJohn zeroNeumann" << endl;
       setBCJohn(vel_CC[m],        "Velocity",     patch, indx); 
 #else
       setBC(vel_CC[m],        "Velocity",     patch, indx); 
+       cout << "Works after setBCJohn Velocity" << endl;
 #endif
+     
+      
       for (CellIterator iter = patch->getExtraCellIterator();
                                                         !iter.done();iter++){
         IntVector c = *iter;
@@ -1959,15 +2005,92 @@ void ICE::computeVel_FC(const ProcessorGroup*,
     } // matls loop
   }  // patch loop
 }
+
+/* ---------------------------------------------------------------------
+ Function~  ICE::add_vel_FC_exchange--
+ Purpose~   Add the exchange contribution to vel_FC and compute 
+            sp_vol_FC for implicit Pressure solve
+_____________________________________________________________________*/
+template<class V, class T> 
+    void ICE::add_vel_FC_exchange( CellIterator iter,
+                                       IntVector adj_offset,
+                                       int numMatls,
+                                       FastMatrix& K,
+                                       double delT,
+                                       StaticArray<constCCVariable<double> >& vol_frac_CC,
+                                       StaticArray<constCCVariable<double> >& sp_vol_CC,
+                                       V& vel_FC,
+                                       T& sp_vol_FC,
+                                       T& vel_FCME)        
+                                       
+{
+  vector<double> b(numMatls), b_sp_vol(numMatls), X(numMatls);
+  FastMatrix beta(numMatls, numMatls), a(numMatls, numMatls);
+  FastMatrix a_inverse(numMatls, numMatls);
+  double tmp, sp_vol_brack;
+  
+  for(;!iter.done(); iter++){
+    IntVector c = *iter;
+    IntVector adj = c + adj_offset; 
+
+    //__________________________________
+    //   Compute beta and off diagonal term of
+    //   Matrix A, this includes b[m][m].
+    //  You need to make sure that mom_exch_coeff[m][m] = 0
+    
+    for(int m = 0; m < numMatls; m++)  {
+      for(int n = 0; n < numMatls; n++)  {
+        tmp = (vol_frac_CC[n][adj] + vol_frac_CC[n][c]) * K(n,m);
+
+        sp_vol_brack = 2.0 * (sp_vol_CC[m][adj] * sp_vol_CC[m][c])/
+                             (sp_vol_CC[m][adj] + sp_vol_CC[m][c]);
+
+        beta(m,n) = 0.5 * sp_vol_brack * delT * tmp;
+        a(m,n)    = -beta(m,n);
+        b_sp_vol[m] = sp_vol_brack;
+      }
+    }
+    //__________________________________
+    // - Form diagonal terms of Matrix (A)
+    for(int m = 0; m < numMatls; m++) {
+      a(m,m) = 1.;
+      for(int n = 0; n < numMatls; n++) {
+        a(m,m) +=  beta(m,n);
+      }
+    }
+    //__________________________________
+    //  - Form RHS (b) 
+    for(int m = 0; m < numMatls; m++)  {
+      b[m] = 0.0;
+      for(int n = 0; n < numMatls; n++)  {
+        b[m] += beta(m,n) * (vel_FC[n][c] - vel_FC[m][c]);
+      }
+    }
+    //__________________________________
+    //  - solve and backout velocities
+    a_inverse.destructiveInvert(a);
+    a_inverse.multiply(b,X);
+    
+//  a.destructiveSolve(b,X);               // old style
+    for(int m = 0; m < numMatls; m++) {
+      vel_FCME[m][c] = vel_FC[m][c] + X[m];
+    }
+    
+    //__________________________________
+    //  For implicit solve we need sp_vol_FC
+    a_inverse.multiply(b_sp_vol,X);
+    for(int m = 0; m < numMatls; m++) {    // only needed by implicit Pressure
+      sp_vol_FC[m][c] = X[m];
+    }
+  }  // iterator
+}
+
 /*---------------------------------------------------------------------
  Function~  addExchangeContributionToFCVel--
  Purpose~
    This function adds the momentum exchange contribution to the 
    existing face-centered velocities
 
- Prerequisites:
-            The face centered velocity for each material without
-            the exchange must be solved prior to this routine.
             
                    (A)                              (X)
 | (1+b12 + b13)     -b12          -b23          |   |del_FC[1]  |    
@@ -1984,12 +2107,6 @@ void ICE::computeVel_FC(const ProcessorGroup*,
 | b21( uvel_FC[1] - uvel_FC[2] ) + b23 ( uvel_FC[3] -uvel_FC[2])    | 
 |                                                                   |
 | b31( uvel_FC[1] - uvel_FC[3] ) + b32 ( uvel_FC[2] -uvel_FC[3])    | 
- 
- Steps for each face:
-    1) Comute the beta coefficients
-    2) Form and A matrix and B vector
-    3) Solve for del_FC[*]
-    4) Add del_FC[*] to the appropriate velocity
  
  References: see "A Cell-Centered ICE method for multiphase flow simulations"
  by Kashiwa, above equation 4.13.
@@ -2022,29 +2139,22 @@ void ICE::addExchangeContributionToFCVel(const ProcessorGroup*,
     delt_vartype delT;
     pOldDW->get(delT, d_sharedState->get_delt_label());
 
-    double tmp, sp_vol_brack;
     StaticArray<constCCVariable<double> > sp_vol_CC(numMatls);
     StaticArray<constCCVariable<double> > vol_frac_CC(numMatls);
     StaticArray<constSFCXVariable<double> > uvel_FC(numMatls);
     StaticArray<constSFCYVariable<double> > vvel_FC(numMatls);
     StaticArray<constSFCZVariable<double> > wvel_FC(numMatls);
 
-    StaticArray<SFCXVariable<double> > uvel_FCME(numMatls);
-    StaticArray<SFCYVariable<double> > vvel_FCME(numMatls);
-    StaticArray<SFCZVariable<double> > wvel_FCME(numMatls);
+    StaticArray<SFCXVariable<double> >uvel_FCME(numMatls),sp_vol_XFC(numMatls);  
+    StaticArray<SFCYVariable<double> >vvel_FCME(numMatls),sp_vol_YFC(numMatls);  
+    StaticArray<SFCZVariable<double> >wvel_FCME(numMatls),sp_vol_ZFC(numMatls);
+    
     // lowIndex is the same for all vel_FC
     IntVector lowIndex(patch->getSFCXLowIndex()); 
     
     // Extract the momentum exchange coefficients
-    vector<double> b(numMatls);
-    vector<double> X(numMatls);
-    FastMatrix beta(numMatls, numMatls),a(numMatls, numMatls);
     FastMatrix K(numMatls, numMatls), junk(numMatls, numMatls);
 
-    // Is it necessary to zero them?  It doesn't hhurt because it is
-    // only one per patch, but it could potentially mask some bugs.. - Steve
-    beta.zero();
-    a.zero();
     K.zero();
     getExchangeCoefficients( K, junk);
     Ghost::GhostType  gac = Ghost::AroundCells;    
@@ -2060,148 +2170,52 @@ void ICE::addExchangeContributionToFCVel(const ProcessorGroup*,
       new_dw->allocateAndPut(uvel_FCME[m], lb->uvel_FCMELabel, indx, patch);
       new_dw->allocateAndPut(vvel_FCME[m], lb->vvel_FCMELabel, indx, patch);
       new_dw->allocateAndPut(wvel_FCME[m], lb->wvel_FCMELabel, indx, patch);
+      
+      new_dw->allocateAndPut(sp_vol_XFC[m],lb->sp_volX_FCLabel,indx, patch);   
+      new_dw->allocateAndPut(sp_vol_YFC[m],lb->sp_volY_FCLabel,indx, patch);   
+      new_dw->allocateAndPut(sp_vol_ZFC[m],lb->sp_volZ_FCLabel,indx, patch); 
 
-      uvel_FCME[m].initialize(0.0, lowIndex,patch->getSFCXHighIndex());
-      vvel_FCME[m].initialize(0.0, lowIndex,patch->getSFCYHighIndex());
-      wvel_FCME[m].initialize(0.0, lowIndex,patch->getSFCZHighIndex());
+      uvel_FCME[m].initialize(0.0,  lowIndex,patch->getSFCXHighIndex());
+      vvel_FCME[m].initialize(0.0,  lowIndex,patch->getSFCYHighIndex());
+      wvel_FCME[m].initialize(0.0,  lowIndex,patch->getSFCZHighIndex());
+      
+      sp_vol_XFC[m].initialize(0.0, lowIndex,patch->getSFCXHighIndex());
+      sp_vol_YFC[m].initialize(0.0, lowIndex,patch->getSFCYHighIndex());
+      sp_vol_ZFC[m].initialize(0.0, lowIndex,patch->getSFCZHighIndex());     
     }   
-    //__________________________________
-    //    B O T T O M  F A C E -- B  E  T  A      
-    //  Note this includes b[m][m]
-    //  You need to make sure that mom_exch_coeff[m][m] = 0
-    //   - form off diagonal terms of (a) 
-    int offset=0;   // 0=Compute all faces in computational domain
-                    // 1=Skip the faces at the border between interior and gc 
-    for(CellIterator iter=patch->getSFCYIterator(offset);!iter.done();iter++){
-      IntVector cur = *iter;
-      IntVector adj(cur.x(),cur.y()-1,cur.z()); 
-      for(int m = 0; m < numMatls; m++) {
-        for(int n = 0; n < numMatls; n++) {
-          tmp = (vol_frac_CC[n][adj] + vol_frac_CC[n][cur]) * K(n,m);
-   
-          sp_vol_brack = (sp_vol_CC[m][adj] * sp_vol_CC[m][cur])/
-                         (sp_vol_CC[m][adj] + sp_vol_CC[m][cur]);
-          beta(m,n) = sp_vol_brack * delT * tmp;
-          a(m,n) = -beta(m,n);
-        }
-      }
-      //__________________________________
-      //  F  O  R  M     M  A  T  R  I  X   (a)
-      //  - Diagonal terms      
-      for(int m = 0; m < numMatls; m++) {
-       a(m,m) = 1.;
-       for(int n = 0; n < numMatls; n++) {
-         a(m,m) +=  beta(m,n);
-       }
-      }
-      //__________________________________
-      //    F  O  R  M     R  H  S  (b)     
-      for(int m = 0; m < numMatls; m++) {
-       b[m] = 0.0;
-       for(int n = 0; n < numMatls; n++)  {
-         b[m] += beta(m,n) * (vvel_FC[n][cur] - vvel_FC[m][cur]);
-       }
-      }
-      //__________________________________
-      //      S  O  L  V  E  
-      //   - backout velocities
-      a.destructiveSolve(b,X);
-      for(int m = 0; m < numMatls; m++) {
-       vvel_FCME[m][cur] = vvel_FC[m][cur] + X[m];
-      }
-    }
-
-    //__________________________________
-    //   L E F T  F A C E-- B  E  T  A      
-    //  Note this includes b[m][m]
-    //  You need to make sure that mom_exch_coeff[m][m] = 0
-    //   - form off diagonal terms of (a)
-    for(CellIterator iter=patch->getSFCXIterator(offset);!iter.done();iter++){
-      IntVector cur = *iter;
-      IntVector adj(cur.x()-1,cur.y(),cur.z()); 
-
-      for(int m = 0; m < numMatls; m++)  {
-       for(int n = 0; n < numMatls; n++)  {
-         tmp = (vol_frac_CC[n][adj] + vol_frac_CC[n][cur]) * K(n,m);
-
-          sp_vol_brack = (sp_vol_CC[m][adj] * sp_vol_CC[m][cur])/
-                         (sp_vol_CC[m][adj] + sp_vol_CC[m][cur]);
-                           
-          beta(m,n) = sp_vol_brack * delT * tmp;
-          a(m,n) = -beta(m,n);
-       }
-      }
-      //__________________________________
-      //  F  O  R  M     M  A  T  R  I  X   (a)
-      //  - Diagonal terms  
-      for(int m = 0; m < numMatls; m++) {
-       a(m,m) = 1.;
-       for(int n = 0; n < numMatls; n++) {
-         a(m,m) +=  beta(m,n);
-       }
-      }
-
-      //__________________________________
-      //    F  O  R  M     R  H  S  (b) 
-      for(int m = 0; m < numMatls; m++)  {
-       b[m] = 0.0;
-       for(int n = 0; n < numMatls; n++)  {
-         b[m] += beta(m,n) * (uvel_FC[n][cur] - uvel_FC[m][cur]);
-       }
-      }
-      //__________________________________
-      //      S  O  L  V  E
-      //   - backout velocities
-      a.destructiveSolve(b,X);
-      for(int m = 0; m < numMatls; m++) {
-       uvel_FCME[m][cur] = uvel_FC[m][cur] + X[m];
-      }   
-    }
-    //__________________________________
-    //  B A C K  F A C E -- B  E  T  A      
-    //  Note this includes b[m][m]
-    //  You need to make sure that mom_exch_coeff[m][m] = 0
-    //   - form off diagonal terms of (a)
-    for(CellIterator iter=patch->getSFCZIterator(offset);!iter.done();iter++){
-      IntVector cur = *iter;
-      IntVector adj(cur.x(),cur.y(),cur.z()-1); 
-      for(int m = 0; m < numMatls; m++)  {
-        for(int n = 0; n < numMatls; n++) {
-          tmp = (vol_frac_CC[n][adj] + vol_frac_CC[n][cur]) * K(n,m);
-  
-          sp_vol_brack = (sp_vol_CC[m][adj] * sp_vol_CC[m][cur])/
-                         (sp_vol_CC[m][adj] + sp_vol_CC[m][cur]);
-                           
-          beta(m,n) = sp_vol_brack * delT * tmp;
-          a(m,n) = -beta(m,n);
-        }
-      }
-      //__________________________________
-      //  F  O  R  M     M  A  T  R  I  X   (a)
-      // - Diagonal terms
-      for(int m = 0; m < numMatls; m++) {
-       a(m,m) = 1.;
-       for(int n = 0; n < numMatls; n++) {
-         a(m,m) +=  beta(m,n);
-       }
-      }
-      //__________________________________
-      //    F  O  R  M     R  H  S  (b)
-      for(int m = 0; m < numMatls; m++) {
-       b[m] = 0.0;
-       for(int n = 0; n < numMatls; n++) {
-         b[m] += beta(m,n) * (wvel_FC[n][cur] - wvel_FC[m][cur]);
-       }
-      }
-      //__________________________________
-      //      S  O  L  V  E
-      //   - backout velocities 
-      a.destructiveSolve(b,X);
-      for(int m = 0; m < numMatls; m++) {
-       wvel_FCME[m][cur] = wvel_FC[m][cur] + X[m];
-      }
-    }
     
+    vector<IntVector> adj_offset(3);
+    adj_offset[0] = IntVector(-1, 0, 0);    // X faces
+    adj_offset[1] = IntVector(0, -1, 0);    // Y faces
+    adj_offset[2] = IntVector(0,  0, -1);   // Z faces
+    int offset=0;   // 0=Compute all faces in computational domain
+                    // 1=Skip the faces at the border between interior and gc
+                                   
+    //__________________________________
+    //  tack on exchange contribution
+    add_vel_FC_exchange<StaticArray<constSFCXVariable<double> >,
+                        StaticArray<     SFCXVariable<double> > >
+                        (patch->getSFCXIterator(offset), 
+                        adj_offset[0],  numMatls,    K, 
+                        delT,           vol_frac_CC, sp_vol_CC,
+                        uvel_FC,        sp_vol_XFC,  uvel_FCME);
+                        
+    add_vel_FC_exchange<StaticArray<constSFCYVariable<double> >,
+                        StaticArray<     SFCYVariable<double> > >
+                        (patch->getSFCYIterator(offset), 
+                        adj_offset[1],  numMatls,    K, 
+                        delT,           vol_frac_CC, sp_vol_CC,
+                        vvel_FC,        sp_vol_YFC,  vvel_FCME);
+                        
+    add_vel_FC_exchange<StaticArray<constSFCZVariable<double> >,
+                        StaticArray<     SFCZVariable<double> > >
+                        (patch->getSFCZIterator(offset), 
+                        adj_offset[2],  numMatls,    K, 
+                        delT,           vol_frac_CC, sp_vol_CC,
+                        wvel_FC,        sp_vol_ZFC,  wvel_FCME);
+                                    
+    //__________________________________
+    //    Boundary Conditons
     for (int m = 0; m < numMatls; m++)  {
       Material* matl = d_sharedState->getMaterial( m );
       int indx = matl->getDWIndex();
