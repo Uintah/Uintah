@@ -2375,29 +2375,6 @@ fi
 
 AC_SUBST(XALAN_PATH)
 
-##  --  search for xalan-c++ --
-if test "$with_xalan"; then
-  AC_MSG_CHECKING(for  Xalan-C++.)
-
-  _xalan_lib_path="$with_xalan/c/lib"
-  _xalan_inc="$with_xalan/c/src $_xer_inc"
-
-  _xalan_lib="xalan-c1_5_0"
-
-  SCI_TRY_LINK(XALAN,xalan library and headers,[
-#include <Include/PlatformDefinitions.hpp>
-#include <xercesc/util/PlatformUtils.hpp>
-#include <XalanTransformer/XalanTransformer.hpp>
-],$_xalan_inc,$_xalan_lib $_xer_lib,$_xalan_lib_path $_xer_lib_path,,[
-	XALAN_CPP_NAMESPACE_USE;
-	XalanTransformer::initialize();
-],not-optional)
-fi
-
-AC_SUBST(XALAN_LIB_FLAG)
-AC_SUBST(XALAN_LIB_DIR_FLAG)
-AC_SUBST(INC_XALAN_H)
-
 ##  --  if building uintah, search for TAU makefile  ---------------------
 
 if test "$sci_check_tau" = "yes" && test "$with_tau"; then
