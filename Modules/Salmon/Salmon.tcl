@@ -76,7 +76,6 @@ proc makeRoe {salmon rid} {
     frame $w.mframe
     frame $w.mframe.f
     pack $w.mframe -side bottom -fill x
-    pack $w.mframe.f -anchor w
 
     frame $w.bframe
     pack $w.bframe -side bottom -fill x
@@ -100,8 +99,40 @@ proc makeRoe {salmon rid} {
 
     button $w.bframe.more -text "+" -padx 3 \
 	    -font "-Adobe-Helvetica-bold-R-Normal-*-140-75-*" \
-	    -command "addMFrame $w $rid"
+	    -command "addMFrame $w"
     pack $w.bframe.more -pady 2 -padx 2 -anchor se -side right
+
+    set r "$rid redraw"
+    set m $w.mframe.f
+    frame $m.shade -borderwidth 2 -relief groove
+    pack $m.shade -anchor w -padx 2 -side left
+    label $m.shade.title -text "Shading:" -anchor w -relief flat 
+    pack $m.shade.title -fill x -padx 2
+    radiobutton $m.shade.wire -text "Wire" -anchor w -relief flat \
+	    -variable shading,$rid -command $r
+    pack $m.shade.wire -fill x -padx 2
+    radiobutton $m.shade.flat -text "Flat" -anchor w -relief flat \
+	    -variable shading,$rid -command $r
+    pack $m.shade.flat -fill x -padx 2
+    radiobutton $m.shade.gouraud -text "Gouraud" -anchor w -relief flat \
+	    -padx 2 -variable shading,$rid -command $r
+    pack $m.shade.gouraud -fill x -padx 2
+    radiobutton $m.shade.phong -text "Phong" -anchor w -relief flat \
+	    -variable shading,$rid -command $r
+    pack $m.shade.phong -fill x -padx 2
+    $m.shade.phong select
+
+    frame $m.objlist -relief groove -borderwidth 2
+    pack $m.objlist -side left -padx 2 -pady 2
+    label $m.objlist.title -text "Objects:"
+    pack $m.objlist.title -side top
+    listbox $m.objlist.list -geometry 30x5 -yscroll "$m.objlist.scroll set" \
+	    -relief sunken -exportselection false
+    pack $m.objlist.list -side left -padx 2 -pady 2
+    scrollbar $m.objlist.scroll -relief sunken \
+	    -command "$m.objlist.list yview" \
+	    -foreground plum2 -activeforeground SteelBlue2
+    pack $m.objlist.scroll -fill y -side right -padx 2 -pady 2
 
     frame $w.wframe -borderwidth 3 -relief sunken
     pack $w.wframe -expand yes -fill both -padx 4 -pady 4
@@ -130,46 +161,14 @@ proc bindEvents {w rid} {
     bind $w <Shift-ButtonRelease-1> "$rid mpick end %x %y"
 }
 
-proc removeMFrame {w rid} {
-    destroy $w.mframe.f
-    frame $w.mframe.f
-    pack $w.mframe.f -anchor w
-    $w.bframe.more configure -command "addMFrame $w $rid" -text "+"
+proc removeMFrame {w} {
+    pack forget $w.mframe.f
+    $w.bframe.more configure -command "addMFrame $w" -text "+"
 }
 
-proc addMFrame {w rid} {
-    set r "$rid redraw"
-    $w.bframe.more configure -command "removeMFrame $w rid" -text "-"
-    set m $w.mframe.f
-    frame $m.shade -borderwidth 2 -relief groove
-    pack $m.shade -anchor w -padx 2 -side left
-    label $m.shade.title -text "Shading:" -anchor w -relief flat 
-    pack $m.shade.title -fill x -padx 2
-    radiobutton $m.shade.wire -text "Wire" -anchor w -relief flat \
-	    -variable shading,$rid -command $r
-    pack $m.shade.wire -fill x -padx 2
-    radiobutton $m.shade.flat -text "Flat" -anchor w -relief flat \
-	    -variable shading,$rid -command $r
-    pack $m.shade.flat -fill x -padx 2
-    radiobutton $m.shade.gouraud -text "Gouraud" -anchor w -relief flat \
-	    -padx 2 -variable shading,$rid -command $r
-    pack $m.shade.gouraud -fill x -padx 2
-    radiobutton $m.shade.phong -text "Phong" -anchor w -relief flat \
-	    -variable shading,$rid -command $r
-    pack $m.shade.phong -fill x -padx 2
-    $m.shade.gouraud select
-
-    frame $m.objlist -relief groove -borderwidth 2
-    pack $m.objlist -side left -padx 2 -pady 2
-    label $m.objlist.title -text "Objects:"
-    pack $m.objlist.title -side top
-    listbox $m.objlist.list -geometry 30x5 -yscroll "$m.objlist.scroll set" \
-	    -relief sunken -exportselection false
-    pack $m.objlist.list -side left -padx 2 -pady 2
-    scrollbar $m.objlist.scroll -relief sunken \
-	    -command "$m.objlist.list yview" \
-	    -foreground plum2 -activeforeground SteelBlue2
-    pack $m.objlist.scroll -fill y -side right -padx 2 -pady 2
+proc addMFrame {w} {
+    pack $w.mframe.f -anchor w
+    $w.bframe.more configure -command "removeMFrame $w" -text "-"
 }
 
 proc switchRenderer {rid renderer} {

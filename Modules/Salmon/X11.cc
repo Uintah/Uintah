@@ -16,6 +16,9 @@
 #include <tcl/tcl7.3/tcl.h>
 #include <tcl/tk3.6/tk.h>
 #include <stdlib.h>
+#include <strstream.h>
+
+const int STRINGSIZE=100;
 
 extern Tcl_Interp* the_interp;
 
@@ -25,6 +28,7 @@ class X11 : public Renderer {
     DrawInfoX11* drawinfo;
     int ncolors;
     XColor** tkcolors;
+    char* strbuf;
 
     void setup_window();
 public:
@@ -49,10 +53,12 @@ RegisterRenderer X11_renderer("X11", &make_X11);
 X11::X11()
 : tkwin(0), drawinfo(0), tkcolors(0)
 {
+    strbuf=new char[STRINGSIZE];
 }
 
 X11::~X11()
 {
+    delete[] strbuf;
     if(drawinfo){
 	if(drawinfo->colors)
 	    delete[] drawinfo->colors;
@@ -178,6 +184,7 @@ void X11::redraw(Salmon* salmon, Roe* roe)
     double znear;
     double zfar;
     if(compute_depth(roe, view, znear, zfar)){
+	cerr << "znear=" << znear << ", zfar=" << zfar << endl;
 	Transform trans;
 	trans.load_identity();
 	trans.perspective(view.eyep, view.lookat,
@@ -190,14 +197,21 @@ void X11::redraw(Salmon* salmon, Roe* roe)
 	NOT_FINISHED("Light source selection");
 	drawinfo->lighting=salmon->lighting;
 	AVLTree<double, GeomObj*> objs;
+	double zmin=1000;
+	double zmax=-1000;
 	for(int i=0;i<free.size();i++){
 	    GeomObj* obj=free[i];
 	    objs.insert(-obj->depth(drawinfo), obj);
+	    zmin=Min(zmin, -obj->depth(drawinfo));
+	    zmax=Max(zmax, -obj->depth(drawinfo));
 	}
 	for(i=0;i<dontfree.size();i++){
 	    GeomObj* obj=dontfree[i];
 	    objs.insert(-obj->depth(drawinfo), obj);
+	    zmin=Min(zmin, -obj->depth(drawinfo));
+	    zmax=Max(zmax, -obj->depth(drawinfo));
 	}
+	cerr << "Z goes from " << zmin << " to " << zmax << endl;
 
 	AVLTreeIter<double, GeomObj*> iter(&objs);
 	TCLTask::lock();
@@ -216,15 +230,13 @@ void X11::redraw(Salmon* salmon, Roe* roe)
 	TCLTask::unlock();
     }
     timer.stop();
-    clString perf1(to_string(npolys)+" polygons in "+to_string(timer.time())+" seconds");
-    double pps=double(npolys)/timer.time();
-    clString perf2(to_string(pps)+" polys/sec");
-    static clString q("\"");
-    static clString s(" ");
-    static clString c("updatePerf ");
-    TCLTask::lock();
-    TCL::execute(c+roe->id+s+q+perf1+q+s+q+perf2+q);
-    TCLTask::unlock();
+    ostrstream str(strbuf, STRINGSIZE);
+    str << "updatePerf " << roe->id << " \"";
+    str << npolys << " polygons in " << timer.time()
+	<< " seconds\" \"" << npolys/timer.time()
+	<< " polygons/second\"";
+    cerr << "str=" << str.str() << endl;
+    TCL::execute(str.str());
 }
 
 void X11::hide()
