@@ -29,8 +29,8 @@ using namespace rtrt;
 #define NUM_TEXTURES 8
 #define MAX_LINE_LEN 256
 
-TextureGridSphere* texGridFromFile(char *fname, int tex_res, float radius,
-				   int nsides, int gdepth);
+TextureGridSpheres* texGridFromFile(char *fname, int tex_res, float radius,
+				    int nsides, int gdepth);
 
 float radius = 1.0;
 
@@ -121,10 +121,9 @@ Group *make_geometry_tg(char* tex_names[NUM_TEXTURES], int tex_res,
 
   int *tex_indices = 0;
   group->add(new 
-	     TextureGridSphere(spheres, nspheres, radius, tex_indices,
-		    tex_data, nspheres, tex_res,
-		    nsides, gdepth));
-
+	     TextureGridSpheres(spheres, nspheres, radius, tex_indices,
+				tex_data, nspheres, tex_res,
+				nsides, gdepth));
   return group;
 }
 
@@ -228,8 +227,8 @@ Scene* make_scene(int argc, char** argv, int /*nworkers*/)
 // Parse input file and populate data structues
 // Returns a pointer to a newly allocated TextureGridSpheres
 //   on success, NULL on any failure
-TextureGridSphere* texGridFromFile(char *fname, int tex_res, float radius,
-				   int nsides, int gdepth) {
+TextureGridSpheres* texGridFromFile(char *fname, int tex_res, float radius,
+				    int nsides, int gdepth) {
   // Declare a few variables
   float* sphere_data=0;
   int* index_data=0;
@@ -608,11 +607,10 @@ TextureGridSphere* texGridFromFile(char *fname, int tex_res, float radius,
   infile2.close();
 
   // Create the TextureGridSpheres structure
-  TextureGridSphere* tex_grid;
-  tex_grid = new TextureGridSphere(sphere_data, total_nspheres,
+  TextureGridSpheres* tex_grid;
+  tex_grid = new TextureGridSpheres(sphere_data, total_nspheres,
 				    radius, index_data, tex_data,
 				    total_ntextures, tex_res,
 				    nsides, gdepth);
-
   return tex_grid;
 }
