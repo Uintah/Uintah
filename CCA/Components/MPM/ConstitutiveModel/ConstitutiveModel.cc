@@ -47,6 +47,12 @@ void ConstitutiveModel::computeStressTensor(const PatchSubset*,
 {
 }
 
+void ConstitutiveModel::addInitialComputesAndRequires(Task* task,
+						      const MPMMaterial* matl,
+						      const PatchSet*) const
+{
+}
+
 void ConstitutiveModel::addComputesAndRequires(Task*, 
 					       const MPMMaterial*,
 					       const PatchSet*) const

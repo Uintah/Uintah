@@ -71,10 +71,6 @@ namespace Uintah {
 				ParticleSubset* subset,
 				map<const VarLabel*, ParticleVariableBase*>* newState);
 
-    virtual void addInitialComputesAndRequires(Task* task,
-					       const MPMMaterial* matl,
-					       const PatchSet* patches) const;
-
     virtual void addComputesAndRequires(Task* task,
 					const MPMMaterial* matl,
 					const PatchSet* patches) const;
