@@ -173,7 +173,7 @@ itcl_class Uintah_Operators_TensorOperator {
 
     method equivalent_stress_ui {w} {
 	label $w.l1 -text "Stress Tensor Operation"
-	label $w.l2 -text "J_2 = .5*sum(stress_ij*stress_ij)"
+	label $w.l2 -text "s_eq = sqrt(1.5*(sdev_ij*sdev_ij))"
 	pack $w.l1 
 	pack $w.l2 -anchor c -expand yes
     }

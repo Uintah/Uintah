@@ -68,7 +68,12 @@ struct EquivalentStressOp
 {
   EquivalentStressOp() {}
   inline double operator()(Matrix3 M)
-  { return M.NormSquared()/2; }
+  { 
+    // Calculate deviatoric part
+    Matrix3 one; one.Identity();
+    Matrix3 Mdev = M - one*(M.Trace()/3.0);
+    return sqrt(Mdev.NormSquared()*1.5); 
+  }
 };
 
 /*
