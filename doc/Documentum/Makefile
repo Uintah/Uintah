@@ -38,6 +38,7 @@ stylesheet_print=${STYLESHEET_DSSSL_PRINT}/docbook.dsl
 params_print := -V %footnote-ulinks% -V %section-autolabel% \
   -V "(define %default-quadding% 'justify)"
 treetop := ../..
+edition := ${treetop}/src/main/sci_version.h
 
 latex:=latex -interaction=nonstopmode
 latex2htmloptions:= -info 0 -split 0 -no_white -link 1 -no_navigation \
@@ -45,13 +46,13 @@ latex2htmloptions:= -info 0 -split 0 -no_white -link 1 -no_navigation \
 -long_titles 1 -prefix module-latex -image_type gif \
 -style ../../Utilities/HTML/srlatex2html.css
 
-define rxml_to_pxml
-OUTPUT_MODE=print eruby --delimiters xml ${1} > ${subst .rxml,.pxml,${1}}
-endef
+# Implicit rule to generate sources for html output
+%.hxml : %.rxml
+	TREETOP=${treetop} OUTPUT_MODE=html eruby --delimiters xml $< > $@
 
-define rxml_to_hxml
-OUTPUT_MODE=html eruby --delimiters xml ${1} > ${subst .rxml,.hxml,${1}}
-endef
+# Implicit rule to generate sources for print output
+%.pxml : %.rxml
+	TREETOP=${treetop} OUTPUT_MODE=print eruby --delimiters xml $< > $@
 
 rmfiles:=rm -f
 rmdirs:=rm -rf
@@ -89,8 +90,7 @@ documentum : documentum-html documentum-print
 
 documentum-html : documentum.html
 
-documentum.html : documentum.rxml ${edition}
-	${call rxml_to_hxml,$<}
+documentum.html : documentum.hxml ${edition}
 	java com.icl.saxon.StyleSheet -w2 documentum.hxml \
          ${stylesheet_chunk} ${params_chunk} treetop=${treetop} 
 	java com.icl.saxon.StyleSheet -w2 documentum.hxml \
@@ -98,8 +98,7 @@ documentum.html : documentum.rxml ${edition}
 
 documentum-print : documentum.pdf
 
-documentum.pdf : documentum.rxml ${edition}
-	${call rxml_to_pxml,$<}
+documentum.pdf : documentum.pxml ${edition}
 	openjade -t tex -V tex-backend -c ${CATALOG} -o documentum.tex \
 -d ${stylesheet_print}  ${params_print} ${XML_DCL} documentum.pxml 
 	for i in 1 2 ; do jadetex documentum.tex ; done
@@ -110,7 +109,7 @@ mod-spec-ref : mod-spec-ref-html mod-spec-ref-print
 
 mod-spec-ref-html : mod-spec-ref.html
 
-mod-spec-ref.html : mod-spec-ref.rxml mod-spec-ref-partI.rxml mod-spec-ref-partII.rxml ${edition}
+mod-spec-ref.html : mod-spec-ref.hxml mod-spec-ref-partI.hxml mod-spec-ref-partII.hxml ${edition}
 	${call rxml_to_hxml,mod-spec-ref.rxml}
 	${call rxml_to_hxml,mod-spec-ref-partI.rxml}
 	${call rxml_to_hxml,mod-spec-ref-partII.rxml}
@@ -121,7 +120,7 @@ mod-spec-ref.html : mod-spec-ref.rxml mod-spec-ref-partI.rxml mod-spec-ref-partI
 
 mod-spec-ref-print : mod-spec-ref.pdf
 
-mod-spec-ref.pdf : mod-spec-ref.rxml ${edition}
+mod-spec-ref.pdf : mod-spec-ref.pxml mod-spec-ref-partI.pxml mod-spec-ref-partII.pxml ${edition}
 	${call rxml_to_pxml,mod-spec-ref.rxml}
 	${call rxml_to_pxml,mod-spec-ref-partI.rxml}
 	${call rxml_to_pxml,mod-spec-ref-partII.rxml}
@@ -136,8 +135,7 @@ doc_inventory : doc_inventory-html doc_inventory-print
 
 doc_inventory-html : doc_inventory.html
 
-doc_inventory.html : doc_inventory.rxml ${edition}
-	${call rxml_to_hxml,$<}
+doc_inventory.html : doc_inventory.hxml ${edition}
 	java com.icl.saxon.StyleSheet -w2 doc_inventory.hxml \
          ${stylesheet_chunk} ${params_chunk} treetop=${treetop} 
 	java com.icl.saxon.StyleSheet -w2 doc_inventory.hxml \
@@ -145,8 +143,7 @@ doc_inventory.html : doc_inventory.rxml ${edition}
 
 doc_inventory-print : doc_inventory.pdf
 
-doc_inventory.pdf : doc_inventory.rxml ${edition}
-	${call rxml_to_pxml,$<}
+doc_inventory.pdf : doc_inventory.pxml ${edition}
 	openjade -t tex -V tex-backend -c ${CATALOG} -o doc_inventory.tex \
 -d ${stylesheet_print}  ${params_print} ${XML_DCL} doc_inventory.pxml 
 	for i in 1 2 ; do jadetex doc_inventory.tex ; done
