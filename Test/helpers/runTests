@@ -49,7 +49,7 @@ if [ "$WEEKLY" != "1" ]; then
   fi
 else
   WKLY_STRING=" Weekly"
-
+fi
 
 #opt webpage header
 echo "" >> "$HTMLLOG"
