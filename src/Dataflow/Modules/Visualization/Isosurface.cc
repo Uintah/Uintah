@@ -339,7 +339,7 @@ Isosurface::execute()
       for (unsigned int iv=0; iv<isovals.size(); iv++)
       {
 	GeomGroup *group = new GeomGroup;
-	GeomPoints *points = new GeomPoints(1000);
+	GeomPoints *points = new GeomPoints();
 	sage_alg->search(isovals[0], group, points);
 	geometries.push_back( group );
       }

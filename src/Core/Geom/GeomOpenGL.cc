@@ -2522,21 +2522,16 @@ void GeomPolylineTC::draw(DrawInfoOpenGL* di, Material* matl, double currenttime
 
 void GeomPoints::draw(DrawInfoOpenGL* di, Material* matl, double)
 {
+  //  if (!pre_draw(di, matl, have_normal)) { return; }
+  if (!pre_draw(di, matl, 0)) { return; }
 
-  if (have_normal) {
-    if (!pre_draw(di, matl, 1)) { return; }
-  } else {
-    if(!pre_draw(di, matl, 0)) { return; }
-  }
-
-  di->polycount+=pts.size()/3;
-  //  glPushAttrib(GL_POINT_BIT);
+  di->polycount+=points_.size()/3;
   
   if (di->pickmode) {
     if (pickable) {
       glLoadName(0);
-      float* p=&pts[0];
-      for (int i=0; i<pts.size(); i+=3) {
+      float* p=&points_[0];
+      for (int i=0; i<points_.size(); i+=3) {
 	glLoadName(i/3);
 	glBegin(GL_POINTS);
 	glVertex3fv(p);
@@ -2545,65 +2540,20 @@ void GeomPoints::draw(DrawInfoOpenGL* di, Material* matl, double)
       }
      
     }
-    return;
   }
-  
-#ifdef SCI_NORM_OGL
-	glEnable(GL_NORMALIZE);
-#else
-	glDisable(GL_NORMALIZE);
-#endif
+  else
+  {
+    glVertexPointer(3, GL_FLOAT, 0, &(points_[0]));
+    glEnableClientState(GL_VERTEX_ARRAY);
 
-  glBegin(GL_POINTS);
-  float* p=&pts[0];
+    glColorPointer(4, GL_UNSIGNED_BYTE, 0, &(colors_[0]));
+    glEnableClientState(GL_COLOR_ARRAY);
 
-  if ( have_normal ) {
-    float* n=&normals[0];
-    if(colors.size() > 0){
-      float rgb[3];  
-      for (int i=0; i<pts.size(); i+=3) {
-	MaterialHandle c = colors[i/3];
-	rgb[0] = c->diffuse.r();
-	rgb[1] = c->diffuse.g();
-	rgb[2] = c->diffuse.b();
-	glColor3fv(rgb);
-	glNormal3fv(n);
-	glVertex3fv(p);
-	p+=3;
-	n+=3;
-      }
-    } else {
-      for (int i=0; i<pts.size(); i+=3) {
-	glNormal3fv(n);
-	glVertex3fv(p);
-	p+=3;
-	n+=3;
-      }
-    }
+    glDrawArrays(GL_POINTS, 0, points_.size()/3);
   }
-  else { // no normals
-    if(colors.size() > 0){
-      float rgb[3];  
-      for (int i=0; i<pts.size(); i+=3) {
-	MaterialHandle c = colors[i/3];
-	rgb[0] = c->diffuse.r();
-	rgb[1] = c->diffuse.g();
-	rgb[2] = c->diffuse.b();
-	glColor3fv(rgb);
-	glVertex3fv(p);
-	p+=3;
-      }
-    } else {
-      for (int i=0; i<pts.size(); i+=3) {
-	glVertex3fv(p);
-	p+=3;
-      }
-    }
-  }
-  glEnd();
-  //glPopAttrib();
   post_draw(di);
 }
+
 
 void GeomTexSlices::draw(DrawInfoOpenGL* di, Material* matl, double) {
     if(!pre_draw(di, matl, 0)) return;
