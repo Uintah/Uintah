@@ -947,6 +947,7 @@ EditTransferFunc2::execute()
   if (!just_resend_selection_)
     sent_cmap2_ = scinew ColorMap2(widgets_, updating_, gui_faux_.get());
   just_resend_selection_ = false;
+  icmap_generation_ = sent_cmap2_->generation;
   sent_cmap2_->selected() = gui_selected_widget_.get();
   cmap_oport_->send(sent_cmap2_);
 
