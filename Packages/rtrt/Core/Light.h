@@ -2,12 +2,14 @@
 #ifndef LIGHT_H
 #define LIGHT_H 1
 
-#include "Point.h"
-#include "Color.h"
-#include "Array1.h"
+#include <Core/Geometry/Point.h>
+#include <Packages/rtrt/Core/Color.h>
+#include <Packages/rtrt/Core/Array1.h>
 
 namespace rtrt {
 
+  using namespace SCIRun;
+  
 class Light {
 protected:
     Point pos;

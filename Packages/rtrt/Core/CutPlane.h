@@ -2,13 +2,14 @@
 #ifndef CUTPLANE_H
 #define CUTPLANE_H 1
 
-#include "Object.h"
-#include "Point.h"
+#include <Packages/rtrt/Core/Object.h>
+#include <Core/Geometry/Point.h>
 
 namespace rtrt {
 
 class PlaneDpy;
-
+  using namespace SCIRun;
+  
 class CutPlane : public Object {
     Object* child;
     Point cen;

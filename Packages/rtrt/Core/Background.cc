@@ -1,4 +1,4 @@
-#include "Background.h"
+#include <Packages/rtrt/Core/Background.h>
 
 using namespace rtrt;
 
@@ -34,7 +34,7 @@ LinearBackground::LinearBackground( const Color& C1, const Color& C2,  const Vec
 
     
 Color LinearBackground::color_in_direction(const Vector& v) const {
-    double t = 0.5* (1 + v.dot( direction_to_C1 ) );
+    double t = 0.5* (1 + Dot(v, direction_to_C1 ) );
     return (t)*C1 + (1-t)*C2;
 }
 

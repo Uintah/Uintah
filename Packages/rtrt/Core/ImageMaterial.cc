@@ -1,11 +1,11 @@
 
-#include "ImageMaterial.h"
-#include "HitInfo.h"
-#include "UVMapping.h"
-#include "UV.h"
-#include "Point.h"
-#include "Ray.h"
-#include "Object.h"
+#include <Packages/rtrt/Core/ImageMaterial.h>
+#include <Packages/rtrt/Core/HitInfo.h>
+#include <Packages/rtrt/Core/UVMapping.h>
+#include <Packages/rtrt/Core/UV.h>
+#include <Core/Geometry/Point.h>
+#include <Packages/rtrt/Core/Ray.h>
+#include <Packages/rtrt/Core/Object.h>
 #include <iostream>
 #include <stdio.h>
 #include <fstream>

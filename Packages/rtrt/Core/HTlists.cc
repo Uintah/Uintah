@@ -1,7 +1,6 @@
-#include "Malloc/Allocator.h"
-#include "Point.h"
-#include "Vector.h"
-#include "Array1.h"
+#include <Core/Geometry/Point.h>
+#include <Core/Geometry/Vector.h>
+#include <Packages/rtrt/Core/Array1.h>
 #include <stdlib.h>
 #include <stdio.h>
 #include <fstream>
@@ -89,10 +88,10 @@ bool vertex_in_tetra(const Point&  v, const Point& p0, const Point& p1,
   a3*=iV6;
   a4*=iV6;
 
-  if (v.dot(g1) + a1 >= -1e-3 &&
-      v.dot(g2) + a2 >= -1e-3 &&
-      v.dot(g3) + a3 >= -1e-3 &&
-      v.dot(g4) + a4 >= -1e-3) return true;
+  if (Dot(v, g1) + a1 >= -1e-3 &&
+      Dot(v, g2) + a2 >= -1e-3 &&
+      Dot(v, g3) + a3 >= -1e-3 &&
+      Dot(v, g4) + a4 >= -1e-3) return true;
 
   return false;
 }

@@ -1,9 +1,10 @@
 
-#include "Camera.h"
-#include "Ray.h"
+#include <Packages/rtrt/Core/Camera.h>
+#include <Packages/rtrt/Core/Ray.h>
 #include <iostream>
 
 using namespace rtrt;
+using namespace SCIRun;
 using std::cerr;
 
 Camera::Camera()
@@ -67,12 +68,12 @@ void Camera::setup()
 {
     direction=lookat-eye;
     double dist=direction.length();
-    v=direction.cross(up);
+    v=Cross(direction, up);
     if(v.length2() == 0.0){
 	cerr << "Ambiguous up direciton...\n";
     }
     v.normalize();
-    u=v.cross(direction);
+    u=Cross(v, direction);
     u.normalize();
     double height=2.0*dist*tan(fov*0.5*M_PI/180.);
     u*=height;

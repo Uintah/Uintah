@@ -1,10 +1,10 @@
 
-#include "HVolumeBrick16.h"
-#include "BBox.h"
-#include "HitInfo.h"
-#include "Ray.h"
-#include "Color.h"
-#include "VolumeDpy.h"
+#include <Packages/rtrt/Core/HVolumeBrick16.h>
+#include <Packages/rtrt/Core/BBox.h>
+#include <Packages/rtrt/Core/HitInfo.h>
+#include <Packages/rtrt/Core/Ray.h>
+#include <Packages/rtrt/Core/Color.h>
+#include <Packages/rtrt/Core/VolumeDpy.h>
 #include <Core/Thread/Parallel.h>
 #include <Core/Thread/Thread.h>
 #include <Core/Thread/Time.h>
@@ -606,7 +606,7 @@ void HVolumeBrick16::isect(int depth, float isoval, double t,
 			    Vector v1=v10*fy1+v11*fy;
 			    *n=v0*fx1+v1*fx;
 			    n->normalize();
-			    hit.min_t+=3/n->dot(ray.direction();
+			    hit.min_t+=3/Dot(n, ray.direction());
 				
 			    break;
 #endif

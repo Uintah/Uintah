@@ -1,12 +1,12 @@
 
-#include "Disc.h"
-#include "Ray.h"
-#include "Light.h"
-#include "HitInfo.h"
-#include "BBox.h"
-#include "MiscMath.h"
-#include "Stats.h"
-#include "UV.h"
+#include <Packages/rtrt/Core/Disc.h>
+#include <Packages/rtrt/Core/Ray.h>
+#include <Packages/rtrt/Core/Light.h>
+#include <Packages/rtrt/Core/HitInfo.h>
+#include <Packages/rtrt/Core/BBox.h>
+#include <Packages/rtrt/Core/MiscMath.h>
+#include <Packages/rtrt/Core/Stats.h>
+#include <Packages/rtrt/Core/UV.h>
 
 using namespace rtrt;
 
@@ -15,7 +15,7 @@ Disc::Disc(Material* matl, const Point& cen, const Vector& n,
     : Object(matl), cen(cen), n(n), radius(radius)
 {
     this->n.normalize();
-    d=this->n.dot(cen);
+    d=Dot(this->n, cen);
 }
 
 Disc::~Disc()
@@ -27,10 +27,10 @@ void Disc::intersect(const Ray& ray, HitInfo& hit, DepthStats*,
 {
     Vector dir(ray.direction());
     Point orig(ray.origin());
-    double dt=dir.dot(n);
+    double dt=Dot(dir, n);
     if(dt < 1.e-6 && dt > -1.e-6)
 	return;
-    double t=(d-n.dot(orig))/dt;
+    double t=(d-Dot(n, orig))/dt;
     if(hit.was_hit && t>hit.min_t)
 	return;
     Point p(orig+dir*t);
@@ -50,10 +50,10 @@ void Disc::light_intersect(Light*, const Ray& ray,
 {
     Vector dir(ray.direction());
     Point orig(ray.origin());
-    double dt=dir.dot(n);
+    double dt=Dot(dir, n);
     if(dt < 1.e-6 && dt > -1.e-6)
 	return;
-    double t=(d-n.dot(orig))/dt;
+    double t=(d-Dot(n, orig))/dt;
     Point p(orig+dir*t);
     double l=(p-cen).length2();
     if(l < radius*radius)

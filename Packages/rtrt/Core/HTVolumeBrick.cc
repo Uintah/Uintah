@@ -1,12 +1,11 @@
-//#include "Malloc/Allocator.h"
-#include "HTVolumeBrick.h"
-#include "BBox.h"
-#include "HitInfo.h"
-#include "Ray.h"
-#include "Color.h"
+#include <Packages/rtrt/Core/HTVolumeBrick.h>
+#include <Packages/rtrt/Core/BBox.h>
+#include <Packages/rtrt/Core/HitInfo.h>
+#include <Packages/rtrt/Core/Ray.h>
+#include <Packages/rtrt/Core/Color.h>
 #include <Core/Thread/Parallel.h>
 #include <Core/Thread/Thread.h>
-#include "VolumeDpy.h"
+#include <Packages/rtrt/Core/VolumeDpy.h>
 #include <stdio.h>
 #include <fstream>
 #include <unistd.h>
@@ -93,10 +92,10 @@ bool HTVolumeBrick::vertex_in_tetra(const Point&  v, const Point& p0,
   a3*=iV6;
   a4*=iV6;
 
-  if (v.dot(g1) + a1 >= -1e-3 &&
-      v.dot(g2) + a2 >= -1e-3 &&
-      v.dot(g3) + a3 >= -1e-3 &&
-      v.dot(g4) + a4 >= -1e-3) return true;
+  if (Dot(v, g1) + a1 >= -1e-3 &&
+      Dot(v, g2) + a2 >= -1e-3 &&
+      Dot(v, g3) + a3 >= -1e-3 &&
+      Dot(v, g4) + a4 >= -1e-3) return true;
 
   return false;
 }
@@ -841,14 +840,14 @@ void HTVolumeBrick::isect(int depth, float isoval, double t,
 	      a3*=iV6;
 	      a4*=iV6;
 	      
-	      double A=isoval - (o.dot(g1) + a1) * p1[3]
-		- (o.dot(g2) + a2) * p2[3]
-		- (o.dot(g3) + a3) * p3[3]
-		- (o.dot(g4) + a4) * p4[3];
-	      double B=v.dot(g1) * p1[3] +
-		v.dot(g2) * p2[3] +
-		v.dot(g3) * p3[3] +
-		v.dot(g4) * p4[3];
+	      double A=isoval - (Dot(o, g1) + a1) * p1[3]
+		- (Dot(o, g2) + a2) * p2[3]
+		- (Dot(o, g3) + a3) * p3[3]
+		- (Dot(o, g4) + a4) * p4[3];
+	      double B=Dot(v, g1) * p1[3] +
+		Dot(v, g2) * p2[3] +
+		Dot(v, g3) * p3[3] +
+		Dot(v, g4) * p4[3];
 	      
 	      if( B < -1.e-6 || B > 1.e-6) {
 		
@@ -856,10 +855,10 @@ void HTVolumeBrick::isect(int depth, float isoval, double t,
 		
 		Point hitpoint=o+v*t;
 		
-		if (hitpoint.dot(g1) + a1 >= -1e-6 &&
-		    hitpoint.dot(g2) + a2 >= -1e-6 &&
-		    hitpoint.dot(g3) + a3 >= -1e-6 &&
-		    hitpoint.dot(g4) + a4 >= -1e-6) {
+		if (Dot(hitpoint, g1) + a1 >= -1e-6 &&
+		    Dot(hitpoint, g2) + a2 >= -1e-6 &&
+		    Dot(hitpoint, g3) + a3 >= -1e-6 &&
+		    Dot(hitpoint, g4) + a4 >= -1e-6) {
 		  
 		  if(hit.hit(this, (double) t)){
 		    Vector* n=(Vector*)hit.scratchpad;

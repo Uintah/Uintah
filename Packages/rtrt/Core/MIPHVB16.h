@@ -2,10 +2,10 @@
 #ifndef MIPHVB16_H
 #define MIPHVB16_H 1
 
-#include "Object.h"
-#include "Material.h"
+#include <Packages/rtrt/Core/Object.h>
+#include <Packages/rtrt/Core/Material.h>
 #include <Core/Thread/WorkQueue.h>
-#include "Point.h"
+#include <Core/Geometry/Point.h>
 #include <stdlib.h>
 
 namespace rtrt {

@@ -2,10 +2,12 @@
 #ifndef BBOX_H
 #define BBOX_H 1
 
-#include "Point.h"
+#include <Core/Geometry/Point.h>
 
 namespace rtrt {
 
+  using namespace SCIRun;
+  
 class BBox {
 protected:
     Point cmin;

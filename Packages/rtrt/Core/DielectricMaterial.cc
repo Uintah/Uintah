@@ -1,12 +1,12 @@
-#include "DielectricMaterial.h"
-#include "HitInfo.h"
-#include "Light.h"
-#include "Ray.h"
-#include "Scene.h"
-#include "Stats.h"
-#include "Object.h"
-#include "Worker.h"
-#include "Context.h"
+#include <Packages/rtrt/Core/DielectricMaterial.h>
+#include <Packages/rtrt/Core/HitInfo.h>
+#include <Packages/rtrt/Core/Light.h>
+#include <Packages/rtrt/Core/Ray.h>
+#include <Packages/rtrt/Core/Scene.h>
+#include <Packages/rtrt/Core/Stats.h>
+#include <Packages/rtrt/Core/Object.h>
+#include <Packages/rtrt/Core/Worker.h>
+#include <Packages/rtrt/Core/Context.h>
 #include <math.h>
 #include <iostream>
 
@@ -77,7 +77,7 @@ void DielectricMaterial::shade(Color& result, const Ray& ray,
     Object* obj=hit.hit_obj;
     Point hitpos(ray.origin()+ray.direction()*nearest);
     Vector normal(obj->normal(hitpos, hit));
-    double cosine = -normal.dot(ray.direction());
+    double cosine = -Dot(normal, ray.direction());
     bool incoming = true;
 
     Color filter;

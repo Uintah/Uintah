@@ -3,9 +3,9 @@
 #define HTVOLUMEBRICK_H 1
 
 #include <Core/Thread/WorkQueue.h>
-#include "VolumeBase.h"
-#include "Point.h"
-#include "BrickArray3.h"
+#include <Packages/rtrt/Core/VolumeBase.h>
+#include <Core/Geometry/Point.h>
+#include <Packages/rtrt/Core/BrickArray3.h>
 #include <stdlib.h>
 
 namespace rtrt {

@@ -1,22 +1,27 @@
 #ifndef __HVOLUMEMATHERIAL_H__
 #define __HVOLUMEMATHERIAL_H__
 
-#include "Color.h"
-#include "Array1.h"
-#include "Material.h"
-#include "ScalarTransform1D.h"
+#include <Packages/rtrt/Core/Color.h>
+#include <Packages/rtrt/Core/Array1.h>
+#include <Packages/rtrt/Core/Material.h>
+#include <Packages/rtrt/Core/ScalarTransform1D.h>
+
+namespace SCIRun {
+  class Point;
+  class Vector;
+}
 
 namespace rtrt {
 
   struct Context;
-  class Point;
   class HitInfo;
   class Scene;
   class Ray;
   class Stats;
-  class Vector;
   class Worker;
   class VolumeDpy;
+
+  using namespace SCIRun;
   
 class HVolumeMaterial: public Material {
   VolumeDpy *vdpy;

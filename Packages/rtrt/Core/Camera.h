@@ -3,11 +3,13 @@
 #ifndef CAMERA_H
 #define CAMERA_H 1
 
-#include "Point.h"
-#include "Vector.h"
+#include <Core/Geometry/Point.h>
+#include <Core/Geometry/Vector.h>
 
 namespace rtrt {
 
+  using namespace SCIRun;
+  
 class Ray;
 
 class Camera {
