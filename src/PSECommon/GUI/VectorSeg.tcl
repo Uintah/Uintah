@@ -6,8 +6,8 @@ itcl_class PSECommon_Visualization_VectorSeg {
     }
     method set_defaults {} {
 	set material(1,name) skin
-	set material(1,min) 0
-	set material(1,max) 0
+	set material(1,min) 40
+	set material(1,max) 255
 	set material(2,name) bone
 	set material(2,min) 0
 	set material(2,max) 0
@@ -21,6 +21,36 @@ itcl_class PSECommon_Visualization_VectorSeg {
 	set material(5,min) 0
 	set material(5,max) 0
 	set num_fields 0
+
+
+
+	global $this-numFields
+	set $this-numFields 0
+	global $this-f1m1min
+	set $this-f1m1min 40
+	global $this-f1m1max
+	set $this-f1m1max 255
+
+	global $this-f1m2min
+	set $this-f1m2min 0
+	global $this-f1m2max
+	set $this-f1m2max 0
+
+	global $this-f1m3min
+	set $this-f1m3min 0
+	global $this-f1m3max
+	set $this-f1m3max 0
+
+	global $this-f1m4min
+	set $this-f1m4min 0
+	global $this-f1m4max
+	set $this-f1m4max 0
+
+	global $this-f1m5min
+	set $this-f1m5min 0
+	global $this-f1m5max
+	set $this-f1m5max 0
+
     }
     method ui {} {
 	set w .ui[modname]
