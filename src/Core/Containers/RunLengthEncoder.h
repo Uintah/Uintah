@@ -893,7 +893,8 @@ T RunLengthEncoder<T, Sequencer>::seekPriv(int fd, unsigned long index,
   if (header_size % header_item_size != 0)
     throw InternalError("Invalid RunLengthEncoded data");
 
-  unsigned long group_start_index;
+  // so it knows which swapbytes to call
+  uint32_t group_start_index;
 
   unsigned long low = 0;
   unsigned long num_runs = header_size / header_item_size - 1;
@@ -917,10 +918,10 @@ T RunLengthEncoder<T, Sequencer>::seekPriv(int fd, unsigned long index,
   ssize_t data_end;
   unsigned long group_end_index;
   lseek(fd, start + low * header_item_size, SEEK_SET);
-  readSizeType(in, needConversion, swapBytes, nByteMode, data_start);
-  readSizeType(in, needConversion, swapBytes, nByteMode, group_start_index);
-  readSizeType(in, needConversion, swapBytes, nByteMode, data_end);
-  readSizeType(in, needConversion, swapBytes, nByteMode, group_end_index);
+  readSizeType(fd, needConversion, swapBytes, nByteMode, data_start);
+  readSizeType(fd, needConversion, swapBytes, nByteMode, group_start_index);
+  readSizeType(fd, needConversion, swapBytes, nByteMode, data_end);
+  readSizeType(fd, needConversion, swapBytes, nByteMode, group_end_index);
     
   unsigned long group_index = index - group_start_index;
   unsigned long group_length = group_end_index - group_start_index;

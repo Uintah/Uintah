@@ -152,7 +152,7 @@ OffsetArray1<T>::OffsetArray1(const OffsetArray1<T>& a)
     objs=new T[size]-_l;
   else
     objs=0;
-  for(int i=l;i<h;i++)objs[i]=a.objs[i];
+  for(int i=this->l;i<this->h;i++)objs[i]=a.objs[i];
 }
 
 template<class T>
@@ -224,7 +224,7 @@ T* OffsetArray1<T>::get_objs()
 template<class T>
 void Pio(Piostream& stream, OffsetArray1<T>& array)
 {
-  /* int version= */stream.begin_class("OffsetArray1", ARRAY1_VERSION);
+  /* int version= */stream.begin_class("OffsetArray1", OFFSETARRAY1_VERSION);
   int l=array.low();
   int h=array.high();
   Pio(stream, l);
