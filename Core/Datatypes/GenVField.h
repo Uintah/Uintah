@@ -1,19 +1,24 @@
 //  GenVField.h - A general scalar field, comprised of one attribute and one geometry
+//
 //  Written by:
 //   Eric Kuehne
 //   Department of Computer Science
 //   University of Utah
 //   April 2000
+//
 //  Copyright (C) 2000 SCI Institute
+//
 //  DESCRIPTION:
+//
 //  This class represents a basic scalar field, containing one
 //  attribute and one geometry.  The attribute (template argument A)
 //  defaults to a DiscreteSAttrib unless otherwise specified at compile
 //  time.
+//
+//
 
 #ifndef SCI_project_GenVField_h
 #define SCI_project_GenVField_h 1
-
 
 #include <Core/Datatypes/Datatype.h>
 #include <Core/Containers/LockingHandle.h>
@@ -21,24 +26,22 @@
 #include <Core/Datatypes/DiscreteAttrib.h>
 
 namespace SCIRun {
-    
-
 
 template <class T, class G, class A=DiscreteAttrib<T> > 
-class SCICORESHARE GenVField: public Field, public SLInterpolate
+class SCICORESHARE GenVField: public Field, public VLInterpolate
 {
-public:
-  
+  public:
+    
   /////////
   // Constructors
   GenVField();
   GenVField(G*, A*);
   GenVField(const GenVField&);
-  
+
   /////////
   // Destructors
   ~GenVField();
-  
+
   virtual const T& grid(int, int, int) const;
   virtual T& operator[](int);
 
@@ -82,7 +85,7 @@ public:
   
   //////////
   // Interpolate at the point
-  virtual int slinterpolate(const Point& ipoint, double& outval, double eps=1.e-6);
+  virtual int vlinterpolate(const Point& ipoint, Vector& outval);
 
   /////////
   // Compute the gradient at the point
@@ -100,7 +103,7 @@ public:
   // The geometry and attribute associated with this field
   LockingHandle<G> geom;
   LockingHandle<A> attrib;
-    
+
 };
 
 //////////
@@ -112,15 +115,16 @@ Persistent* GenVField<T,G,A>::maker(){
 
 template <class T, class G, class A>
 string GenVField<T,G,A>::typeName(){
-  static string typeName = "GenVField<"+findTypeName((T*)0)+","+findTypeName((G*)0)+","+findTypeName((A*)0)+">";
+  static string typeName = "GenVField<"+findTypeName((T*)0)+","+
+    findTypeName((G*)0)+","+findTypeName((A*)0)+">";
   return typeName;
 }
 
 template <class T, class G, class A>
 PersistentTypeID GenVField<T,G,A>::type_id(GenVField<T,G,A>::typeName(), 
-					   "Field",
-					   maker);
-
+                                           "Field",
+                                           maker);
+ 
 #define GENVFIELD_VERSION 1
 template <class T, class G, class A >
 void GenVField<T,G,A>::io(Piostream& stream){
@@ -152,7 +156,6 @@ GenVField<T,G,A>::GenVField(const GenVField&)
 {
 }
 
-
 template <class T, class G, class A >
 bool
 GenVField<T, G, A>::resize(int x, int y, int z)
@@ -165,8 +168,6 @@ GenVField<T, G, A>::resize(int x, int y, int z)
 
   return true;
 }
-
-
 
 template <class T, class G, class A >
 const T& GenVField<T,G,A>::grid(int x, int y, int z) const
@@ -231,22 +232,13 @@ template <class T, class G, class A >
 bool GenVField<T,G,A>::get_bbox(BBox& bbox)
 {
   if(geom.get_rep())
-    {
-      if(geom->getBoundingBox(bbox))
-	{
-	  return 1;
-	}
-      else
-	{
-	  return 0;
-	}
-    }
-  else
-    {
+    if(geom->getBoundingBox(bbox))
+      return 1;
+    else
       return 0;
-    }
+  else
+    return 0;
 }
-
 
 template <class T, class G, class A >
 bool GenVField<T,G,A>::longest_dimension(double &odouble)
@@ -267,16 +259,14 @@ bool GenVField<T,G,A>::longest_dimension(double &odouble)
 //  return op;
 //}
 
-
 template <class T, class G, class A >
-int GenVField<T,G,A>::slinterpolate(const Point& , double& , double)
+int GenVField<T,G,A>::vlinterpolate(const Point& p, Vector& outval)
 {
-  //T out;
-  //geom->interp(attrib.get_rep(), p, out);
-  //outval = out;
+  T out;
+  geom->interp(attrib.get_rep(), p, out);
+  outval = out;
   return 0;
 }
-
 
 template <class T, class G, class A >
 Vector GenVField<T,G,A>::gradient(const Point& /* ipoint */)
