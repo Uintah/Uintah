@@ -274,7 +274,7 @@ main(int argc, char *argv[] )
   WaitForSingleObject(forever,INFINITE);
 #endif
 
-#ifndef __sgi
+#if !defined(__sgi)
   Semaphore wait("main wait", 0);
   wait.down();
 #endif
