@@ -290,10 +290,8 @@ void CompNeoHook::computeStressTensorImplicit(const PatchSubset* patches,
     ParticleSubset* pset = old_dw->getParticleSubset(dwi, patch);
     cout << "number of particles = " << pset->numParticles() << endl;
     constParticleVariable<Point> px;
-    ParticleVariable<Matrix3> deformationGradient_new,bElBar_new,
-      deformGrad_rec,bElBar_rec;
-    ParticleVariable<Matrix3> deformationGradient_old,bElBar_old;
-    constParticleVariable<Matrix3> deformGrad_no_rec,bElBar_no_rec;
+    ParticleVariable<Matrix3> deformationGradient_new,bElBar_new;
+    constParticleVariable<Matrix3> deformationGradient,bElBar_old;
     ParticleVariable<Matrix3> pstress;
     constParticleVariable<double> pvolume,pvolumeold;
     ParticleVariable<double> pvolume_deformed;
@@ -304,51 +302,30 @@ void CompNeoHook::computeStressTensorImplicit(const PatchSubset* patches,
     old_dw->get(pvolume,             lb->pVolumeLabel,             pset);
     old_dw->get(pvolumeold,          lb->pVolumeOldLabel,          pset);
     if (recursion) {
-      new_dw->getModifiable(deformGrad_rec,
-			    lb->pDeformationMeasureLabel_preReloc, pset);
-      new_dw->getModifiable(bElBar_rec, lb->bElBarLabel_preReloc, pset);
-      new_dw->getModifiable(deformationGradient_new,
-			    lb->pDeformationMeasureLabel_preReloc, pset);
-      new_dw->getModifiable(bElBar_new, lb->bElBarLabel_preReloc, pset);
+      cout << "Trying to get deformationMeasure+" << endl;
+      old_dw->get(deformationGradient,lb->pDeformationMeasureLabel_preReloc,
+		  pset);
+      old_dw->get(bElBar_old, lb->bElBarLabel_preReloc, pset);
     }
     else {
-      old_dw->get(deformGrad_no_rec,lb->pDeformationMeasureLabel,pset);
-      old_dw->get(bElBar_no_rec, lb->bElBarLabel, pset);
+      old_dw->get(deformationGradient,lb->pDeformationMeasureLabel,pset);
+      old_dw->get(bElBar_old, lb->bElBarLabel, pset);
     }
 
-
-    if (recursion) {
-      new_dw->allocateTemporary(deformationGradient_old,pset);
-      new_dw->allocateTemporary(bElBar_old,pset);
-      deformationGradient_old.copyData(deformGrad_rec);
-      bElBar_old.copyData(bElBar_rec);
-    } else {
-      new_dw->allocateTemporary(deformationGradient_old,pset);
-      new_dw->allocateTemporary(bElBar_old,pset);
-      deformationGradient_old.copyData(deformGrad_no_rec);
-      bElBar_old.copyData(bElBar_no_rec);
-    }
     
   
     if (recursion)
-      new_dw->get(dispNew,lb->dispNewLabel,dwi,patch, Ghost::AroundCells,1);
+      old_dw->get(dispNew,lb->dispNewLabel,dwi,patch,Ghost::None,0);
     else
-      new_dw->get(dispNew,lb->dispNewLabel,dwi,patch, Ghost::AroundCells,1);
-    if (recursion) {
-      new_dw->getModifiable(pstress,        lb->pStressLabel_preReloc, pset);
-      new_dw->getModifiable(pvolume_deformed, lb->pVolumeDeformedLabel, pset);
-    }
-    else {
-      new_dw->allocateAndPut(pstress, lb->pStressLabel_preReloc, pset);
-      new_dw->allocateAndPut(pvolume_deformed, lb->pVolumeDeformedLabel, pset);
-    }
+      new_dw->get(dispNew,lb->dispNewLabel,dwi,patch, Ghost::None,0);
     
-
-    if (!recursion) {
-      new_dw->allocateAndPut(deformationGradient_new,
-			     lb->pDeformationMeasureLabel_preReloc, pset);
-      new_dw->allocateAndPut(bElBar_new,lb->bElBarLabel_preReloc, pset);
-    }
+    new_dw->allocateAndPut(pstress,        lb->pStressLabel_preReloc, pset);
+    
+    new_dw->allocateAndPut(pvolume_deformed, lb->pVolumeDeformedLabel, pset);
+    new_dw->allocateAndPut(deformationGradient_new,
+		     lb->pDeformationMeasureLabel_preReloc, pset);
+    new_dw->allocateAndPut(bElBar_new,lb->bElBarLabel_preReloc, pset);
+    
     
     
     double shear = d_initialData.Shear;
@@ -461,7 +438,7 @@ void CompNeoHook::computeStressTensorImplicit(const PatchSubset* patches,
       for (int i = 1; i<= 3; i++) {
 	for (int j = 1; j <= 3; j++) {
 	  cout << "defGrad(" << i << "," << j << ")= " 
-	       << deformationGradient_old[idx](i,j)  << "\t";
+	       << deformationGradient[idx](i,j)  << "\t";
 	}
 	cout << endl;
       }
@@ -477,7 +454,7 @@ void CompNeoHook::computeStressTensorImplicit(const PatchSubset* patches,
 #endif
       // Update the deformation gradient tensor to its time n+1 value.
       deformationGradient_new[idx] = deformationGradientInc *
-	deformationGradient_old[idx];
+	deformationGradient[idx];
       
       // get the volumetric part of the deformation
       double J = deformationGradient_new[idx].Determinant();
@@ -838,44 +815,36 @@ void CompNeoHook::addComputesAndRequires(Task* task,
 
 void CompNeoHook::addComputesAndRequiresImplicit(Task* task,
 						  const MPMMaterial* matl,
-						  const PatchSet*,
+						  const PatchSet* patches,
 						  const bool recursion)
 {
   const MaterialSubset* matlset = matl->thisMaterial();
-  
+
   task->requires(Task::OldDW, lb->pXLabel,      matlset, Ghost::None);
   task->requires(Task::OldDW, lb->pVolumeLabel, matlset, Ghost::None);
   task->requires(Task::OldDW, lb->pVolumeOldLabel, matlset, Ghost::None);
   if (recursion) {
-    task->modifies(lb->pDeformationMeasureLabel_preReloc,matlset);
-    task->modifies(lb->bElBarLabel_preReloc,matlset);
-    task->requires(Task::NewDW,lb->dispNewLabel,matlset,Ghost::AroundCells,1);
+    task->requires(Task::OldDW, lb->pDeformationMeasureLabel_preReloc,
+		   matlset,Ghost::None);
+    task->requires(Task::OldDW,lb->bElBarLabel_preReloc,matlset,Ghost::None);
+    task->requires(Task::OldDW,lb->dispNewLabel,matlset,Ghost::None,0);
   }
   else {
     task->requires(Task::OldDW, lb->pDeformationMeasureLabel,
 		   matlset, Ghost::None);
     task->requires(Task::OldDW,lb->bElBarLabel,matlset,Ghost::None);
-    task->requires(Task::NewDW,lb->dispNewLabel,matlset,Ghost::AroundCells,1);
+    task->requires(Task::NewDW,lb->dispNewLabel,matlset,Ghost::None,0);
   }
   
 
   if(d_8or27==27){
     task->requires(Task::OldDW, lb->pSizeLabel,      matlset, Ghost::None);
   }
-  if (recursion) {
-    task->modifies(lb->pStressLabel_preReloc,matlset);
-    task->modifies(lb->pVolumeDeformedLabel, matlset);
-  }
-  else {
-    task->computes(lb->pStressLabel_preReloc,matlset);
-    task->computes(lb->pVolumeDeformedLabel,              matlset);  
-  }
-  if (!recursion) {
-    task->computes(lb->pDeformationMeasureLabel_preReloc, matlset);
-    task->computes(lb->bElBarLabel_preReloc,matlset);
-  }
 
-  
+  task->computes(lb->pStressLabel_preReloc,matlset);  
+  task->computes(lb->pDeformationMeasureLabel_preReloc, matlset);
+  task->computes(lb->pVolumeDeformedLabel,              matlset);
+  task->computes(lb->bElBarLabel_preReloc,matlset);
 
   
 }
@@ -889,7 +858,12 @@ void CompNeoHook::addComputesAndRequiresImplicitOnly(Task* task,
   task->requires(Task::OldDW, lb->pXLabel,      matlset, Ghost::None);
   task->requires(Task::OldDW, lb->pVolumeLabel, matlset, Ghost::None);
   task->requires(Task::OldDW, lb->pVolumeOldLabel, matlset, Ghost::None);
-  task->requires(Task::NewDW,lb->dispNewLabel,matlset,Ghost::AroundCells,1);
+#if 0
+  task->requires(Task::OldDW, lb->pDeformationMeasureLabel,
+		 matlset, Ghost::None);
+  task->requires(Task::OldDW,lb->bElBarLabel,matlset,Ghost::None);
+#endif
+  task->requires(Task::NewDW,lb->dispNewLabel,matlset,Ghost::None,0);
   
   task->requires(Task::OldDW, lb->delTLabel);
   
@@ -903,6 +877,7 @@ void CompNeoHook::addComputesAndRequiresImplicitOnly(Task* task,
   task->modifies(lb->bElBarLabel_preReloc,matlset);
   task->computes(lb->delTLabel);
   
+
 }
 
 
