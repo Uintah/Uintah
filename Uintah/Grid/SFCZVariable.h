@@ -81,6 +81,8 @@ class SFCZVariable : public Array3<T>, public SFCZVariableBase {
      
      virtual void* getBasePointer();
      virtual const TypeDescription* virtualGetTypeDescription() const;
+     virtual void getSizes(IntVector& low, IntVector& high,
+			   IntVector& siz) const;
 
      // Replace the values on the indicated face with value
      void fillFace(Patch::FaceType face, const T& value)
@@ -357,13 +359,22 @@ class SFCZVariable : public Array3<T>, public SFCZVariableBase {
       {
 	 return getTypeDescription();
       }
-   
+      template<class T>
+     void
+     SFCZVariable<T>::getSizes(IntVector& low, IntVector& high, 
+			       IntVector& siz) const
+     {
+       low = getLowIndex();
+       high = getHighIndex();
+       siz = size();
+     }
+
 } // end namespace Uintah
 
 //
 // $Log$
-// Revision 1.4  2000/09/22 22:06:16  rawat
-// fixed some bugs in staggered variables call
+// Revision 1.5  2000/09/25 14:41:32  rawat
+// added mpi support for cell centered and staggered cell variables
 //
 // Revision 1.3  2000/08/08 01:32:47  jas
 // Changed new to scinew and eliminated some(minor) memory leaks in the scheduler

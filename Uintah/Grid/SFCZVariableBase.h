@@ -3,6 +3,7 @@
 #define UINTAH_HOMEBREW_SFCZVariableBase_H
 
 #include <Uintah/Grid/Variable.h>
+#include <mpi.h>
 
 namespace SCICore {
    namespace Geometry {
@@ -61,6 +62,11 @@ WARNING
 			      const IntVector& lowIndex,
 			      const IntVector& highIndex) = 0;
       virtual void emit(OutputContext&) = 0;
+
+      void getMPIBuffer(void*& buf, int& count, MPI_Datatype& datatype);
+      virtual void* getBasePointer() = 0;
+      virtual const TypeDescription* virtualGetTypeDescription() const = 0;
+      virtual void getSizes(IntVector& low, IntVector& high, IntVector& siz) const = 0;
    protected:
       SFCZVariableBase(const SFCZVariableBase&);
       SFCZVariableBase();
@@ -73,6 +79,9 @@ WARNING
 
 //
 // $Log$
+// Revision 1.3  2000/09/25 14:41:32  rawat
+// added mpi support for cell centered and staggered cell variables
+//
 // Revision 1.2  2000/07/27 22:39:50  sparker
 // Implemented MPIScheduler
 // Added associated support

@@ -95,6 +95,25 @@ Task::requires(const DataWarehouseP& ds, const VarLabel* var, int matlIndex,
 	 h=1;
          break;
       case TypeDescription::CCVariable:
+	// all neighbours
+	 l=-1;
+	 h=1;
+         break;
+      case TypeDescription::SFCXVariable:
+		// all neighbours
+	 l=-1;
+	 h=1;
+         break;
+      case TypeDescription::SFCYVariable:
+		// all neighbours
+	 l=-1;
+	 h=1;
+         break;
+      case TypeDescription::SFCZVariable:
+		// all neighbours
+	 l=-1;
+	 h=1;
+         break;
       case TypeDescription::ParticleVariable:
 	 // All 27 neighbors
 	 l=-1;
@@ -221,6 +240,9 @@ operator << (ostream &out, const Task::TaskType & tt)
 
 //
 // $Log$
+// Revision 1.20  2000/09/25 14:41:32  rawat
+// added mpi support for cell centered and staggered cell variables
+//
 // Revision 1.19  2000/09/13 20:57:25  sparker
 // Added ostream operator for dependencies
 //
