@@ -1256,7 +1256,7 @@ OpenGL::real_get_pick(int x, int y,
     GLuint hit_pick=0;
     //GLuint hit_pick_index = 0x12345678;  // need for object indexing
 #endif
-    cerr << "hits=" << hits << "\n";
+//    cerr << "hits=" << hits << "\n";
     if(hits >= 1)
     {
       int idx=0;
@@ -1949,13 +1949,13 @@ OpenGL::real_getData(int datamask, FutureValue<GeometryData*>* result)
   {
     ColorImage* img = res->colorbuffer = new ColorImage(xres_, yres_);
     float* data=new float[xres_*yres_*3];
-    cerr << "xres_=" << xres_ << ", yres_=" << yres_ << "\n";
+//    cerr << "xres_=" << xres_ << ", yres_=" << yres_ << "\n";
     WallClockTimer timer;
     timer.start();
 
     glReadPixels(0, 0, xres_, yres_, GL_RGB, GL_FLOAT, data);
     timer.stop();
-    cerr << "done in " << timer.time() << " seconds\n";
+//    cerr << "done in " << timer.time() << " seconds\n";
     float* p=data;
     for(int y=0;y<yres_;y++)
     {
@@ -1971,12 +1971,12 @@ OpenGL::real_getData(int datamask, FutureValue<GeometryData*>* result)
   {
     //    DepthImage* img=res->depthbuffer=new DepthImage(xres_, yres_);
     unsigned int* data=new unsigned int[xres_*yres_*3];
-    cerr << "reading depth...\n";
+//    cerr << "reading depth...\n";
     WallClockTimer timer;
     timer.start();
     glReadPixels(0, 0,xres_,yres_, GL_DEPTH_COMPONENT, GL_UNSIGNED_INT, data);
     timer.stop();
-    cerr << "done in " << timer.time() << " seconds\n";
+//    cerr << "done in " << timer.time() << " seconds\n";
   }
 
   if(datamask&(GEOM_COLORBUFFER|GEOM_DEPTHBUFFER/*CollabVis*/|GEOM_MATRICES))
