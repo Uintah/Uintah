@@ -30,8 +30,15 @@ SRCS += $(GENSRCS) $(SRCDIR)/TriSurface.cc $(SRCDIR)/BasicSurfaces.cc \
 	$(SRCDIR)/VoidStar.cc $(SRCDIR)/cDMatrix.cc \
 	$(SRCDIR)/cMatrix.cc $(SRCDIR)/cSMatrix.cc $(SRCDIR)/cVector.cc \
 	$(SRCDIR)/SurfTree.cc $(SRCDIR)/ScalarFieldRGCC.cc \
-	$(SRCDIR)/VectorFieldRGCC.cc $(SRCDIR)/templates.cc
-
+	$(SRCDIR)/VectorFieldRGCC.cc $(SRCDIR)/templates.cc \
+	$(SRCDIR)/Geom.cc $(SRCDIR)/Attrib.cc $(SRCDIR)/FlatSAttrib.cc \
+	$(SRCDIR)/SAttrib.cc $(SRCDIR)/Field.cc $(SRCDIR)/SField.cc \
+	$(SRCDIR)/GenSField.cc \
+	$(SRCDIR)/FieldWrapper.cc $(SRCDIR)/Domain.cc \
+	$(SRCDIR)/SField.cc $(SRCDIR)/VField.cc \
+	$(SRCDIR)/TField.cc $(SRCDIR)/LatticeGeom.cc \
+	$(SRCDIR)/RegLatticeGeom.cc $(SRCDIR)/StructuredGeom.cc \
+	
 $(SRCDIR)/ScalarFieldRG.h: $(SRCDIR)/ScalarFieldRGTYPE.h
 	sed -e 's/RGTYPE/RG/g' -e 's/TYPE/double/g' < $< > $@
 
@@ -90,6 +97,9 @@ clean::
 
 #
 # $Log$
+# Revision 1.3.2.1  2000/06/07 17:42:25  kuehne
+# Added datastructures used by the new fields
+#
 # Revision 1.3  2000/03/21 03:01:28  sparker
 # Partially fixed special_get method in SimplePort
 # Pre-instantiated a few key template types, in an attempt to reduce
