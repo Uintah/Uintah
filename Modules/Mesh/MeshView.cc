@@ -293,11 +293,11 @@ void MeshView::execute()
 	    }
 	    if (i < nL)
 	    {
-		levMatl[i]->set_matl(mat2);
+		levMatl[i]->setMaterial(mat2);
 	    }
 	    else
 	    {
-		levMatl[i]->set_matl(mat1);
+		levMatl[i]->setMaterial(mat1);
 	    }
 	}
 //    }
