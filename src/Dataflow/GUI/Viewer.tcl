@@ -132,6 +132,15 @@ itcl_class ViewWindow {
 	if {![info exists $this-sr]} {set $this-sr 1}
 	global $this-do_stereo
 	if {![info exists $this-do_stereo]} {set $this-do_stereo 0}
+
+	global $this-resx
+	set $this-resx 640
+	global $this-resy
+	set $this-resy 512
+
+	global $this-aspect
+	set $this-aspect 1
+	global $this-aspect-rat
     }
 
     destructor {
@@ -155,8 +164,6 @@ itcl_class ViewWindow {
 	menu $w.menu.file.menu
 #	$w.menu.file.menu add command -label "Save geom file..." -underline 0 \
 #		-command "$this makeSaveObjectsPopup"
-	$w.menu.file.menu add command -label "Save hi-res image file..." \
-	    -underline 0 -command "$this makeSaveHiResImagePopup"
 	$w.menu.file.menu add command -label "Save image file..." \
 	    -underline 0 -command "$this makeSaveImagePopup"
 
@@ -1369,9 +1376,50 @@ itcl_class ViewWindow {
 	global $this-saveobjfile $this-saveformat
 	$this-c saveobj [set $this-saveobjfile] [set $this-saveformat]
     }
+
+    method do_validate_x {path} {
+	global $this-resx
+	global $this-resy
+	global $this-aspect
+	global $this_aspect-rat
+	puts "do_validate_x: "
+	puts [set $this-resx]
+	puts [set $this-resy]
+	if {[set $this-aspect]} {
+	    puts "changing y"
+	    set $this-resy [expr [set $this-resx] * 
+	                    [expr 1 / [set $this-aspect-rat]]]
+	    
+	}
+	puts $path
+	return 1
+    }
+
+    method do_validate_y {path} {
+	global $this-resx
+	global $this-resy
+	puts "do_validate_y: "
+	puts [set $this-resx]
+	puts [set $this-resy]
+	if {[string length [set $this-resy]] > 3} { 
+	    set $this-resy "0"
+	    return 0 
+	}
+	puts $path
+	return 1
+    }
+
+    method do_aspect {t} {
+	puts "do_aspect: "
+	puts $t
+    }
+
     method makeSaveImagePopup {} {
 	global $this-saveFile
 	global $this-saveType
+	global $this-resx
+	global $this-resy
+	global $this-aspect
 	toplevel .ui[modname]-saveImage
 	set w .ui[modname]-saveImage
 	makeFilebox $w \
@@ -1387,92 +1435,30 @@ itcl_class ViewWindow {
 	    -text "PPM File" -value "ppm" \
 	    -command "$this changeName $w ppm"
 
+	radiobutton $ex.byextension -variable $this-saveType \
+	    -text "By Extension" -value "magick" \
+	    -command "$this changeName $w jpeg"
+
 	if { [set $this-saveType] == "ppm" } {
 	    $ex.ppm select
-	} else { $ex.raw select }
+	} elseif { [set $this-saveType] == "raw" } {
+	    $ex.raw select 
+	} else { $ex.byextension select }
 
-	pack $ex.raw $ex.ppm -side top -anchor w
+	label $ex.resxl  -text "X:" 
+	entry $ex.resx -width 5 -text $this-resx 
+#	-validate all -validatecommand "$this do_validate_x $ex"
+
+	label $ex.resyl  -text "Y:" 
+	entry $ex.resy -width 5 -text $this-resy 
+#	-validate all	-validatecommand "$this do_validate_y $ex"
+	checkbutton $ex.aspect -text "Preserve Aspect Ratio" \
+		-variable $this-aspect -command "$this do_aspect $ex" 
+	$ex.aspect select
+	pack $ex.raw $ex.ppm $ex.byextension -side top -anchor w
+	pack $ex.resxl $ex.resx $ex.resyl $ex.resy -side left -anchor w
     }
     
-    method makeSaveHiResImagePopup {} {
-	global $this-saveFile
-	set w .ui[modname]
-	iwidgets::dialog .d -modality application
-	.d delete Apply
-	.d delete Help
-	.d buttonconfigure OK -command {.d deactivate 1}
-	.d buttonconfigure Cancel -command {.d deactivate 0}
-	
-	label [.d childsite].l -text \
-	    "  You are about to make a high resolution image.\n \
-	This will divide your current view into four\n \
-	quadrants.  Each quadrant will expand to  your\n \
-	current screen size and be saved as a ppm file.\n \
-        You can then convert the images and composite\n \
-        them with your favorite image editing software\n \
-	(For example, if your ViewWindow is 640x512 and\n \
-	your image is called 'image', 4 files will\n \
-	be created: 1.image.ppm, 2.image.ppm etc.\n \
-	If the ImageMagick tools are installed you\n \
-	can combine the files with the command:\n \
-	  'montage -borderwidth 0 -tile 2x2\n \
-	  -geometry 640x512 1.image.ppm 2.image.ppm\n \
-	  3.image.ppm 4.image.ppm image.ppm')\n \
-	Please make sure that there are no windows\n \
-	covering the ViewWindow. Would you like to continue?" \
-	    -justify left
-	pack [.d childsite].l -expand yes -fill both
-	if { [.d activate] } {
-	    set defext ".ppm"
-	    set defname "image"
-	    set title "Save quadrants"
-	    set types {
-		{{PPM File} {.ppm} }
-		{{Raw File} {.raw} }
-		{{All Files} {.*} }
-	    }
-	    set $this-saveFile [ tk_getSaveFile \
-				 -parent $w \
-				 -title $title \
-				 -filetypes $types \
-				 -initialfile $defname \
-				 -defaultextension $defext ] 
-	    if { [set $this-saveFile] != "" } {
-		$this doSaveHiResImage
-	    }
-	}
-	destroy .d
-#	pack $ex.ppm -side top -anchor w
-	# 	set sgi [$this-c sgi_defined]
-# 	if { $sgi == 1 || $sgi == 2 } {
-# 	    radiobutton $ex.rgb -variable $this-saveType \
-# 		-text "SGI RGB File" -value "rgb" \
-# 	    -command "$this changeName $w rgb"
-# 	    radiobutton $ex.jpg -variable $this-saveType \
-# 		-text "JPEG File" -value "jpg" \
-# 	    -command "$this changeName $w jpg"
-# 	} else {
-# 	    radiobutton $ex.rgb -variable $this-saveType \
-# 		-text "SGI RGB File" -value "rgb" \
-# 		-state disabled -disabledforeground ""
-# 	    radiobutton $ex.jpg -variable $this-saveType \
-# 		-text "JPEG File" -value "jpg" \
-# 		-state disabled -disabledforeground ""
-# 	}
-
-#	if { [set $this-saveType] == "ppm" } { 
-#	    $ex.ppm select 
-# 	} 
-# 	elseif { [set $this-saveType] == "rgb" } {
-# 	    $ex.rgb select
-# 	} elseif { [set $this-saveType] == "jpg" } {
-# 	    $ex.jpg select
-# 	} else { $ex.raw select }
-# 	pack $ex.rgb $ex.jpg -side top -anchor w
-
-
-    }
-	
     method changeName { w type} {
 	global $this-saveFile
 	set name [split [set $this-saveFile] .]
@@ -1482,13 +1468,7 @@ itcl_class ViewWindow {
     method doSaveImage {} {
 	global $this-saveFile
 	global $this-saveType
-	$this-c dump_viewwindow [set $this-saveFile] [set $this-saveType]
-    }
-    method doSaveHiResImage {} {
-	global $this-saveFile
-	set path [split [set $this-saveFile] / ]
-	set fname  [lindex $path [expr [llength $path] - 1] ]
-	$this-c dump_hires_viewwindow $fname
+	$this-c dump_viewwindow [set $this-saveFile] [set $this-saveType] [set $this-resx] [set $this-resy]
 	$this-c redraw
     }
 }
