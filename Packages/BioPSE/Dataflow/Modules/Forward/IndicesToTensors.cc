@@ -24,8 +24,6 @@ namespace BioPSE {
 using namespace SCIRun;
 
 class IndicesToTensors : public Module {
-  GuiInt outside_;
-  GuiInt groundfirst_;
 public:
   IndicesToTensors(GuiContext *context);
   virtual ~IndicesToTensors();
@@ -37,9 +35,7 @@ DECLARE_MAKER(IndicesToTensors)
 
 
 IndicesToTensors::IndicesToTensors(GuiContext *context)
-  : Module("IndicesToTensors", context, Filter, "Forward", "BioPSE"),
-    outside_(context->subVar("outside")),
-    groundfirst_(context->subVar("groundfirst"))
+  : Module("IndicesToTensors", context, Filter, "Forward", "BioPSE")
 {
 }
 
