@@ -1,14 +1,34 @@
 
 #include <config/sci.cf>
 
-OBJS = ClipField.o  FieldFilter.o  Gradient.o
-SRCS = ClipField.cc FieldFilter.cc Gradient.cc
+#ifdef SCI_OPENGL
+OPENGLOBJS = TrainSegment.o
+OPENGLSRCS = TrainSegment.cc
+
+#ifdef SCI_MESA
+OPENGLINCS = -I$(TOP)/Mesa/include
+OPENGLLIBS = -L$(TOP)/Mesa/lib -lMesaGLU -lMesaGL -lXext -lX11
+#else
+OPENGLINCS =
+OPENGLLIBS = -lGLU -lGL -lXext -lX11
+#endif
+#else
+OPENGLOBJS =
+OPENGLSRCS = 
+#endif
+
+OBJS = ClipField.o  FieldFilter.o  GenSigmaSet.o  Gradient.o  MMeshToSFUG.o  \
+	TransformField.o  $(OPENGLOBJS)
+SRCS = ClipField.cc FieldFilter.cc GenSigmaSet.cc Gradient.cc MMeshToSFUG.cc \
+	TransformField.cc $(OPENGLSRCS)
 
 LIBNAME = Fields
 
+LOCALINCLUDES = $(OPENGLINCS)
 SO_LIBS =
+
 SO_LDFLAGS = -L$(TOP)/lib -lDatatypes -lDataflow -lGeom -lTCL -lClasslib \
-	-lMultitask -lMalloc
+	-lMultitask $(OPENGLLIBS) -ltk -lMalloc -lWidgets -lGeometry -lm
 
 SCIDependTarget($(SRCS))
 SCIObjLibraryTarget($(LIBNAME),$(OBJS),$(SO_LIBS),$(SO_LDFLAGS))
