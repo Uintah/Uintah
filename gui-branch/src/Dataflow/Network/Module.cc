@@ -140,7 +140,7 @@ int Module::clone(int)
 
 void Module::update_state(State st)
 {
-  if (!show_stat) return;
+  //if (!show_stat) return;
   state=st;
   char* s="unknown";
   switch(st){
@@ -158,33 +158,33 @@ void Module::update_state(State st)
     break;
   }
   double time=timer.time();
-  tcl_execute(id+" set_state "+s+" "+to_string(time));
+  tcl_execute(string(" set_state ")+s+" "+to_string(time));
 }
 
 void Module::update_progress(double p)
 {
-  if (!show_stat) return;
+  //if (!show_stat) return;
   if (state == JustStarted)
     update_state(Executing);
   int opp=(int)(progress*100);
   int npp=(int)(p*100);
   if(opp != npp){
     double time=timer.time();
-    tcl_execute(id+" set_progress "+to_string(p)+" "+to_string(time));
+    tcl_execute(" set_progress "+to_string(p)+" "+to_string(time));
     progress=p;
   }
 }
 
 void Module::update_progress(double p, Timer &t)
 {
-  if (!show_stat) return;
+  //if (!show_stat) return;
   if (state == JustStarted)
     update_state(Executing);
   int opp=(int)(progress*100);
   int npp=(int)(p*100);
   if(opp != npp){
     double time=t.time();
-    tcl_execute(id+" set_progress "+to_string(p)+" "+to_string(time));
+    tcl_execute(" set_progress "+to_string(p)+" "+to_string(time));
     progress=p;
   }
 }
@@ -204,7 +204,7 @@ void Module::update_progress(int n, int max, Timer &t)
 void Module::add_iport(IPort* port)
 {
   if(lastportdynamic && dynamic_port_maker) {
-    tcl_execute(id+" module_grow "+to_string(iports.size()));
+    tcl_execute(" module_grow "+to_string(iports.size()));
   }
   port->set_which_port(iports.size());
   iports.add(port);
@@ -285,7 +285,7 @@ void Module::remove_iport(int which)
 
     }
   }
-  tcl_execute(id+" module_shrink"); 
+  tcl_execute(" module_shrink"); 
   reconfigure_iports();
 }
 
@@ -384,19 +384,19 @@ void Module::widget_moved(int)
 void Module::get_position(int& x, int& y)
 {
   string result;
-  tcl_eval(id+" get_x", result);
+  tcl_eval(" get_x", result);
   if(!string_to_int(result, x)) {
     error("Error parsing x coordinate");
     return;
   }
-  tcl_eval(id+" get_y", result);
+  tcl_eval(" get_y", result);
   if(!string_to_int(result, y)) {
     error("Error parsing y coordinate");
     return;
   }
 
 #ifdef Yarden
-  if(!tcl_eval(id+" get_x", result)){
+  if(!tcl_eval(" get_x", result)){
     error("Error getting x coordinate");
     return;
   }
@@ -404,7 +404,7 @@ void Module::get_position(int& x, int& y)
     error("Error parsing x coordinate");
     return;
   }
-  if(!tcl_eval(id+" get_y", result)){
+  if(!tcl_eval(" get_y", result)){
     error("Error getting y coordinate");
     return;
   }
@@ -418,6 +418,10 @@ void Module::get_position(int& x, int& y)
 
 void Module::tcl_command(TCLArgs& args, void*)
 { 
+  cerr << "Module tcl_command " << args[0] << " ";
+  for (int i=1; i<args.count(); i++)
+    cerr << args[i] << " ";
+  cerr << endl;
   if(args.count() < 2){
     args.error("netedit needs a minor command");
     return;
@@ -484,7 +488,7 @@ void Module::do_execute()
   int i;
   
   //    string result;
-  show_stat=show_status.get();
+  //show_stat=show_status.get();
   //    if (!tcl_eval(id+" get_show_status", result)) {
   //	error("Error getting show_status");
   //    } else if (!result.get_int(show_status)) {

@@ -85,6 +85,7 @@ GenericReader<HType>::execute()
     return;
   }
 
+  cerr << "Generic Reader: " << fn << endl;
   // If we haven't read yet, or if it's a new filename, 
   //  or if the datestamp has changed -- then read...
 #ifdef __sgi
@@ -123,6 +124,7 @@ GenericReader<HType>::execute()
     return;
   }
   outport->send(handle_);
+  cerr << "Generic Reader done\n";
 }
 
 } // End namespace SCIRun
