@@ -8,6 +8,7 @@
 #include <Core/Geometry/Vector.h>
 #include <Core/Math/MinMax.h>
 
+#include <map>
 #include <vector>
 #include <iostream>
 
@@ -129,6 +130,9 @@ public:
   void setCurrentTopLevelTimeStep( int ts ) { d_topLevelTimeStep = ts; }
   void incrementCurrentTopLevelTimeStep() { d_topLevelTimeStep++; }
 
+  Material* parseAndLookupMaterial(ProblemSpecP& params,
+				   const std::string& name) const;
+  Material* getMaterialByName(const std::string& name) const;
 private:
 
   void registerMaterial(Material*);
@@ -144,6 +148,8 @@ private:
   std::vector<ArchesMaterial*> arches_matls;
   std::vector<ICEMaterial*>    ice_matls;
   std::vector<SimpleMaterial*> simple_matls;
+
+  std::map<std::string, Material*> named_matls;
 
   Vector d_gravity;
 

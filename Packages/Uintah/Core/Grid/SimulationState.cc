@@ -1,5 +1,6 @@
 
 #include <Packages/Uintah/Core/Grid/SimulationState.h>
+#include <Packages/Uintah/Core/Exceptions/ProblemSetupException.h>
 #include <Packages/Uintah/Core/Grid/VarLabel.h>
 #include <Packages/Uintah/Core/Grid/VarTypes.h>
 #include <Packages/Uintah/Core/Grid/ReductionVariable.h>
@@ -9,6 +10,7 @@
 #include <Packages/Uintah/CCA/Components/Arches/ArchesMaterial.h>
 #include <Packages/Uintah/CCA/Components/ICE/ICEMaterial.h>
 #include <Packages/Uintah/Core/Grid/Reductions.h>
+#include <Core/Containers/StringUtil.h>
 #include <Core/Malloc/Allocator.h>
 
 using namespace Uintah;
@@ -47,6 +49,9 @@ void SimulationState::registerMaterial(Material* matl)
 {
    matl->setDWIndex((int)matls.size());
    matls.push_back(matl);
+
+   if(matl->hasName())
+     named_matls[matl->getName()] = matl;
 }
 
 void SimulationState::registerMPMMaterial(MPMMaterial* matl)
@@ -164,4 +169,30 @@ const MaterialSet* SimulationState::allMaterials() const
 {
   ASSERT(all_matls != 0);
   return all_matls;
+}
+
+Material* SimulationState::getMaterialByName(const std::string& name) const
+{
+  map<string, Material*>::const_iterator iter = named_matls.find(name);
+  if(iter == named_matls.end())
+    return 0;
+  return iter->second;
+}
+
+Material* SimulationState::parseAndLookupMaterial(ProblemSpecP& params,
+						  const std::string& name) const
+{
+  string matlname;
+  if(!params->get(name, matlname))
+    throw ProblemSetupException("Cannot find fromMaterial for TestModel");
+  Material* result = getMaterialByName(matlname);
+  if(!result){
+    int matlidx;
+    if(!params->get(name, matlidx))
+      throw ProblemSetupException("Cannot find material called "+matlname);
+    if(matlidx < 0 || matlidx >= matls.size())
+      throw ProblemSetupException("Invalid material: "+to_string(matlidx));
+    result = matls[matlidx];
+  }
+  return result;
 }
