@@ -32,32 +32,39 @@ DEALINGS IN THE SOFTWARE.
 <chapter id="getting_started">
   <title>Getting Started</title>
 
-  <para>BioImage is a SCIRun PowerApp for visualizing regular, three
-  dimensional scalar volumes from CT and MRI data.  In addition to 2D
-  and 3D visualization tools, BioImage provides a range of
-  pre-visualization processing filters, such as re-sampling and
-  cropping.</para>
-  
-  <para>BioImage offers 2D visualization of three standard planes:
-  axial, sagittal, and coronal.  The 2D views allow the user to
-  quickly investigate a volume slice by slice or via a maximum
-  intensity projection. The 2D views provide standard zooming and
-  translation capabilities as well as the ability to change the
-  brightness and contrast (also known as window and level) of the
-  images. <xref linkend="sec.2dviewers"/> discusses 2D visualization
-  in detail.</para>
+  <section>
+    <title>Introduction</title>
 
-  <para>BioImage provides a powerful volume rendering tool that allows
-  the user to interactively visualize an area of interest by assigning
-  a color to a range of values in the volume.</para>
-  
-  <para>In this tutorial the user will: launch BioImage, load a tooth
-  volume dataset, resample the tooth volume using a pre-visualization
-  filter, and visualize tooth planes and the tooth volume.</para>
+    <para>BioImage is a SCIRun PowerApp for visualizing regular, three
+    dimensional scalar volumes from CT and MRI data.  In addition to
+    2D and 3D visualization tools, BioImage provides a number of
+    <firstterm>dynamic filters</firstterm>, such as re-sampling and
+    cropping.  Dynamic filters are used to enhance the features of a dataset
+    most important to the user.  Dynamic filters can be applied at any
+    time and in any order and can be easily undone.</para>
+    
+    <para>BioImage offers 2D visualization of three standard planes:
+    axial, sagittal, and coronal.  The 2D views allow the user to
+    quickly investigate a volume slice by slice or via a maximum
+    intensity projection. The 2D views provide standard zooming and
+    translation capabilities as well as the ability to change the
+    brightness and contrast (also known as window and level) of the
+    images. <xref linkend="sec.2dviewers"/> discusses 2D visualization
+    in detail.</para>
 
-  <para>This tutorial provides a simple example of a BioImage
-  session. See <xref linkend="part.reference"/> for information on all
-  of BioImage's capabilities.</para>
+    <para>BioImage provides a powerful volume rendering tool that allows
+    the user to interactively visualize an area of interest by assigning
+    a color to a range of values in the volume.</para>
+    
+    <para>In this tutorial the user will: launch BioImage, load a tooth
+    volume dataset, resample and crop the tooth volume using dynamic
+    filter, and visualize tooth planes and the tooth volume.</para>
+
+    <para>This tutorial provides a simple example of a BioImage
+    session. See <xref linkend="part.reference"/> for information on all
+    of BioImage's capabilities.</para>
+
+  </section>
 
   <section>
     <title>Preparations</title>
@@ -119,13 +126,16 @@ ulimit -n unlimited
 
   <section>
     <title>Starting BioImage</title>
-    <para>To launch the BioImage application, change the current
-    working directory (using the cd command) to the directory
-    containing the BioImage executable. The directory for an RPM
-    installation is <filename>/usr/local/SCIRun/bin/</filename>.  Type
-    <userinput>./BioImage</userinput> to start the program. BioImage
-    takes a few moments to start up, then launches the user interface
-    window shown in <xref linkend="fig.gui-launch"/>.</para>
+
+    <para>To start BioImage, change the current working directory to
+    the directory containing the BioImage executable and type
+    <userinput>./BioImage</userinput>, for example:
+    <literallayout class="monospaced">
+cd /usr/local/SCIRun/bin
+./BioImage
+    </literallayout>
+    BioImage takes a few moments to start up, then launches the user
+    interface window shown in <xref linkend="fig.gui-launch"/>.</para>
 
     <figure id="fig.gui-launch">
       <title>BioImage Interface Window Initial State <!--%= doc.doIfHTML(){%Q{(<ulink url="Figures/gui-launch-large.gif">Larger image)</ulink>}} %--></title>
