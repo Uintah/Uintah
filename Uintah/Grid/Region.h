@@ -67,7 +67,7 @@ WARNING
       //////////
       // Insert Documentation Here:
       bool findCellAndWeights(const SCICore::Geometry::Point& /*pos*/,
-			      IntVector /*ni*/[8], double /*S*/[8]) const{ return false;}
+			      IntVector /*ni*/[8], double /*S*/[8]) const;
 
       //////////
       // Insert Documentation Here:
@@ -150,6 +150,9 @@ std::ostream& operator<<(std::ostream& out, const Uintah::Region* r);
 
 //
 // $Log$
+// Revision 1.13  2000/05/02 20:13:05  sparker
+// Implemented findCellAndWeights
+//
 // Revision 1.12  2000/05/02 06:07:23  sparker
 // Implemented more of DataWarehouse and SerialMPM
 //

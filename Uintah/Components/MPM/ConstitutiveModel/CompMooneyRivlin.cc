@@ -156,8 +156,6 @@ void CompMooneyRivlin::computeStressTensor(const Region* region,
   ASSERT(pset == pmass.getParticleSubset());
   ASSERT(pset == pvolume.getParticleSubset());
 
-  cerr << " In compute Stress " << std::endl;
-
   for(ParticleSubset::iterator iter = pset->begin();
      iter != pset->end(); iter++){
      particleIndex idx = *iter;
@@ -166,7 +164,6 @@ void CompMooneyRivlin::computeStressTensor(const Region* region,
      // Get the node indices that surround the cell
      IntVector ni[8];
      Vector d_S[8];
-  cerr << " In compute Stress " << std::endl;
      if(!region->findCellAndShapeDerivatives(px[idx], ni, d_S))
          continue;
 
@@ -220,6 +217,7 @@ void CompMooneyRivlin::computeStressTensor(const Region* region,
       double PR = (2.*C1 + 5.*C2 + 2.*C4)/
 		(4.*C4 + 5.*C1 + 11.*C2);
       double lambda = 2.*mu*(1.+PR)/(3.*(1.-2.*PR)) - (2./3.)*mu;
+      cerr << "mass=" << pmass[idx] << ", volume=" << pvolume[idx] << '\n';
       c_dil = Max(c_dil,(lambda + 2.*mu)*pvolume[idx]/pmass[idx]);
       c_rot = Max(c_rot, mu*pvolume[idx]/pmass[idx]);
     }
@@ -229,6 +227,8 @@ void CompMooneyRivlin::computeStressTensor(const Region* region,
     new_dw->put(pstress, pStressLabel, matlindex, region);
     new_dw->put(deformationGradient, pDeformationMeasureLabel,
 		matlindex, region);
+
+    // This is just carried forward.
     new_dw->put(cmdata, p_cmdata_label, matlindex, region);
 }
 
@@ -324,6 +324,9 @@ ConstitutiveModel* CompMooneyRivlin::readRestartParametersAndCreate(
 #endif
 
 // $Log$
+// Revision 1.20  2000/05/02 20:13:00  sparker
+// Implemented findCellAndWeights
+//
 // Revision 1.19  2000/05/02 19:31:23  guilkey
 // Added a put for cmdata.
 //
