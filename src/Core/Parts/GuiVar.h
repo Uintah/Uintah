@@ -93,48 +93,68 @@ public:
   friend PartPort;
 };
 
-template<> void 
-GuiTypedVar<string>::string_set( const string &value )
-{
-  value_ = value;
-}
+class GuiString : public GuiVar {
+  string value_;
+public:
+  GuiString( const string &name, Part *part ) : GuiVar( name, part ) {}
 
-template<> const string 
-GuiTypedVar<string>::string_get()
-{
-  return value_;
-}
+  // backward compatibility
+  GuiString( const string &name, const string &, Part *part ) 
+    : GuiVar( name, part ) {}
+  virtual ~GuiString() {}
 
-template<> void 
-GuiTypedVar<int>::string_set( const string &value )
-{
-  string_to_int( value, value_ );
-}
+  const string &get() { return value_; }
+  void set( const string &v ) { value_ = v; update(); }
+  virtual void string_set( const string &v ) { value_ = v; }
+  virtual const string string_get() { return value_; }
+  virtual void emit(std::ostream& out, string& midx) {
+    out << "set " << midx << "-" << name_ << " {" << value_ << "}" << endl;
+  }
 
-template<> const string
-GuiTypedVar<int>::string_get()
-{
-  return to_string( value_ );
-}
+  friend PartPort;
+};
 
-template<> void
-GuiTypedVar<double>::string_set( const string &value )
-{
-  string_to_double( value, value_ );
-}
+class GuiInt : public GuiVar {
+  int value_;
+public:
+  GuiInt( const string &name, Part *part ) : GuiVar( name, part ) {}
 
-template<> const string 
-GuiTypedVar<double>::string_get()
-{
-  return to_string( value_ );
-}
+  // backward compatibility
+  GuiInt( const string &name, const string &, Part *part ) 
+    : GuiVar( name, part ) {}
+  virtual ~GuiInt() {}
 
+  const int &get() { return value_; }
+  void set( const int &v ) { value_ = v; update(); }
+  virtual void string_set( const string &v ) { string_to_int( v, value_ ); }
+  virtual const string string_get() { return to_string( value_ ); }
+  virtual void emit(std::ostream& out, string& midx) {
+    out << "set " << midx << "-" << name_ << " {" << value_ << "}" << endl;
+  }
 
+  friend PartPort;
+};
 
-typedef GuiTypedVar<int> GuiInt;
-typedef GuiTypedVar<double> GuiDouble;
-typedef GuiTypedVar<string> GuiString;
+class GuiDouble : public GuiVar {
+  double value_;
+public:
+  GuiDouble( const string &name, Part *part ) : GuiVar( name, part ) {}
 
+  // backward compatibility
+  GuiDouble( const string &name, const string &, Part *part ) 
+    : GuiVar( name, part ) {}
+  virtual ~GuiDouble() {}
+
+  const double &get() { return value_; }
+  void set( const double &v ) { value_ = v; update(); }
+  virtual void string_set( const string &v ) { string_to_double( v, value_ ); }
+  virtual const string string_get() { return to_string( value_ ); }
+  virtual void emit(std::ostream& out, string& midx) {
+    out << "set " << midx << "-" << name_ << " {" << value_ << "}" << endl;
+  }
+
+  friend PartPort;
+};
 
 typedef GuiTypedVar<double> GuiVardouble;  // NEED TO GET RID OF
 typedef GuiTypedVar<int> GuiVarint;   // NEED TO GET RID OF
