@@ -117,6 +117,12 @@ public:
     void init_view(double znear, double zfar, Point& eyep, Point& lookat);
 
     ViewWindow* viewwindow;
+  
+    double ambient_scale_;
+    double diffuse_scale_;
+    double specular_scale_;
+    double emission_scale_;
+    double shininess_scale_;
 #ifndef _WIN32
     Display *dpy;
 #endif

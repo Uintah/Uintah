@@ -300,35 +300,16 @@ void DrawInfoOpenGL::set_matl(Material* matl)
 	return;	
     }
     float color[4];
-    if (!current_matl) {
-	matl->ambient.get_color(color);
-	glMaterialfv(GL_FRONT_AND_BACK, GL_AMBIENT, color);
-	matl->diffuse.get_color(color);
-	glColor4fv(color);
-	matl->specular.get_color(color);
-	glMaterialfv(GL_FRONT_AND_BACK, GL_SPECULAR, color);
-	matl->emission.get_color(color);
-	glMaterialf(GL_FRONT_AND_BACK, GL_SHININESS, matl->shininess);
-	glMaterialfv(GL_FRONT_AND_BACK, GL_EMISSION, color);
-    }    
-    else {
-	matl->ambient.get_color(color);
-	glMaterialfv(GL_FRONT_AND_BACK, GL_AMBIENT, color);
-
-	matl->diffuse.get_color(color);
-	glColor4fv(color);
-
-	glMaterialfv(GL_FRONT_AND_BACK, GL_DIFFUSE, color);
-
-	matl->specular.get_color(color);
-	glMaterialfv(GL_FRONT_AND_BACK, GL_SPECULAR, color);
-
-	matl->emission.get_color(color);	
-	glMaterialfv(GL_FRONT_AND_BACK, GL_EMISSION, color);
-
-        if (matl->shininess != current_matl->shininess) {
-	    glMaterialf(GL_FRONT_AND_BACK, GL_SHININESS, matl->shininess);
-        }
+    (matl->ambient*ambient_scale_).get_color(color);
+    glMaterialfv(GL_FRONT_AND_BACK, GL_AMBIENT, color);
+    (matl->diffuse*diffuse_scale_).get_color(color);
+    glColor4fv(color);
+    (matl->specular*specular_scale_).get_color(color);
+    glMaterialfv(GL_FRONT_AND_BACK, GL_SPECULAR, color);
+    (matl->emission*emission_scale_).get_color(color);
+    glMaterialfv(GL_FRONT_AND_BACK, GL_EMISSION, color);
+    if (!current_matl || matl->shininess != current_matl->shininess) {
+      glMaterialf(GL_FRONT_AND_BACK, GL_SHININESS, matl->shininess*shininess_scale_);
     }	
     current_matl=matl;
 }

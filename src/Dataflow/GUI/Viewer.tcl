@@ -114,6 +114,18 @@ itcl_class ViewWindow {
 	global $this-bgcolor-b
 	if {![info exists $this-bgcolor-b]} {set $this-bgcolor-b 0}
 
+	# Need to initialize the scene material scales
+	global $this-ambientscale
+	if {![info exists $this-ambient-scale]} {set $this-ambient-scale 1.0}
+	global $this-diffuse-scale
+	if {![info exists $this-diffuse-scale]} {set $this-diffuse-scale 1.0}
+	global $this-specular-scale
+	if {![info exists $this-specular-scale]} {set $this-specular-scale 1.0}
+	global $this-emission-scale
+	if {![info exists $this-emission-scale]} {set $this-emission-scale 1.0}
+	global $this-shininessscale
+	if {![info exists $this-shininess-scale]} {set $this-shininess-scale 1.0}
+
 	global $this-sbase
 	if {![info exists $this-sbase]} {set $this-sbase 1.0}
 	global $this-sr
@@ -187,6 +199,8 @@ itcl_class ViewWindow {
 #		-command "$this makeAnimationPopup"
 	$w.menu.edit.menu add command -label "Point Size..." -underline 0 \
 		-command "$this makePointSizePopup"
+	$w.menu.edit.menu add command -label "Scene Materials..." -underline 0 \
+		-command "$this makeSceneMaterialsPopup"
 #	menubutton $w.menu.spawn -text "Spawn" -underline 0 \
 #		-menu $w.menu.spawn.menu
 #	menu $w.menu.spawn.menu
@@ -492,7 +506,6 @@ itcl_class ViewWindow {
 	global "$this-global-resize"
 	global "$this-x-resize"
 	global "$this-y-resize"
-	
 	global $this-do_stereo
 	global $this-sbase
 	global $this-sr
@@ -834,6 +847,58 @@ itcl_class ViewWindow {
 #  	entry $w.f.fove -textvariable $view-fov
 #  	pack $w.f.fove -side top -expand yes -fill x
 #  	bind $w.f.fove <Return> "$command $view-fov"
+    }
+
+    method makeSceneMaterialsPopup {} {
+	set w .scenematerials[modname]
+	toplevel $w
+	wm title $w "Scene Materials"
+	wm iconname $w materials
+	wm minsize $w 100 100
+	set c "$this-c redraw "
+
+	frame $w.ambient
+	label $w.ambient.l -width 16 -text "Ambient Scale"
+	global $this-ambient-scale
+	entry $w.ambient.e -relief sunken -width 6 \
+		-textvariable $this-ambient-scale
+	bind $w.ambient.e <Return> $c
+	pack $w.ambient.l $w.ambient.e -side left -fill x
+
+	frame $w.diffuse
+	label $w.diffuse.l -width 16 -text "Diffuse Scale"
+	global $this-diffuse-scale
+	entry $w.diffuse.e -relief sunken -width 6 \
+		-textvariable $this-diffuse-scale
+	bind $w.diffuse.e <Return> $c
+	pack $w.diffuse.l $w.diffuse.e -side left -fill x
+
+	frame $w.specular
+	label $w.specular.l -width 16 -text "Specular Scale"
+	global $this-specular-scale
+	entry $w.specular.e -relief sunken -width 6 \
+		-textvariable $this-specular-scale
+	bind $w.specular.e <Return> $c
+	pack $w.specular.l $w.specular.e -side left -fill x
+
+	frame $w.shininess
+	label $w.shininess.l -width 16 -text "Shininess Scale"
+	global $this-shininess-scale
+	entry $w.shininess.e -relief sunken -width 6 \
+		-textvariable $this-shininess-scale
+	bind $w.shininess.e <Return> $c
+	pack $w.shininess.l $w.shininess.e -side left -fill x
+
+	frame $w.emission
+	label $w.emission.l -width 16 -text "Emission Scale"
+	global $this-emission-scale
+	entry $w.emission.e -relief sunken -width 6 \
+		-textvariable $this-emission-scale
+	bind $w.emission.e <Return> $c
+	pack $w.emission.l $w.emission.e -side left -fill x
+
+	pack $w.ambient $w.diffuse $w.specular $w.emission $w.shininess \
+		-side top -fill both
     }
 
     method makeBackgroundPopup {} {
