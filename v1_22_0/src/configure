@@ -8139,8 +8139,8 @@ ac_compiler_gnu=$ac_cv_c_compiler_gnu
 ## arg 2 : checking message
 ## arg 3 : includes that arg 8 needs to compile (e.g., math.h)
 ##           If the first arg is "extern_C", then extern "C" is added around includes.
-## arg 4 : include path(s). -I is appened to each path (unless it already has a -I).
-##           Any other -? args are removed.
+## arg 4 : include path(s). -I is appended to each path (unless it already has a -I).
+##           Any other -? args are removed.  (-faltivec is ok on mac)
 ##           (Only one may be given if "Specific" (arg9) is chosen.)
 ## arg 5 : list of libs to link against
 ##           If the libraries do not have a '-l' on them, it is appeneded.
@@ -8606,8 +8606,8 @@ fi
 ## arg 2 : checking message
 ## arg 3 : includes that arg 8 needs to compile (e.g., math.h)
 ##           If the first arg is "extern_C", then extern "C" is added around includes.
-## arg 4 : include path(s). -I is appened to each path (unless it already has a -I).
-##           Any other -? args are removed.
+## arg 4 : include path(s). -I is appended to each path (unless it already has a -I).
+##           Any other -? args are removed.  (-faltivec is ok on mac)
 ##           (Only one may be given if "Specific" (arg9) is chosen.)
 ## arg 5 : list of libs to link against
 ##           If the libraries do not have a '-l' on them, it is appeneded.
@@ -8686,10 +8686,12 @@ echo "$as_me: error: Please do not specify /usr/include as the location for X in
 
   # Make sure it doesn't have any thing but -I
   #   The following "sed" replaces anything that starts with a '-' with nothing (blank).
+  has_minus_faltivec=no
   has_minus=`echo $inc | sed 's/-.*//'`
   if test -z "$has_minus"; then
      has_minus_i=`echo $inc | sed 's/-I.*//'`
-     if test -n "$has_minus_i"; then
+     has_minus_faltivec=`echo $inc | sed 's/-faltivec//'`
+     if test -n "$has_minus_i" && test -n "$has_minus_faltivec"; then
         # Has some other -?.
         echo
         { echo "$as_me:$LINENO: WARNING: Only -I options are allowed in arg 4 ($_x_inc_dir) of X check.  Skipping $inc." >&5
@@ -8699,7 +8701,7 @@ echo "$as_me: WARNING: Only -I options are allowed in arg 4 ($_x_inc_dir) of X c
   fi
 
   the_inc=`echo $inc | grep "\-I"`
-  if test -z "$the_inc"; then
+  if test -z "$the_inc" && test "$has_minus_faltivec" = "no"; then
      # If the include arg does not already have -I on it.
      if test -d $inc; then
         # If the directory exists
@@ -9157,8 +9159,8 @@ case $threads in
 ## arg 2 : checking message
 ## arg 3 : includes that arg 8 needs to compile (e.g., math.h)
 ##           If the first arg is "extern_C", then extern "C" is added around includes.
-## arg 4 : include path(s). -I is appened to each path (unless it already has a -I).
-##           Any other -? args are removed.
+## arg 4 : include path(s). -I is appended to each path (unless it already has a -I).
+##           Any other -? args are removed.  (-faltivec is ok on mac)
 ##           (Only one may be given if "Specific" (arg9) is chosen.)
 ## arg 5 : list of libs to link against
 ##           If the libraries do not have a '-l' on them, it is appeneded.
@@ -9584,8 +9586,8 @@ _sci_includes=''
 ## arg 2 : checking message
 ## arg 3 : includes that arg 8 needs to compile (e.g., math.h)
 ##           If the first arg is "extern_C", then extern "C" is added around includes.
-## arg 4 : include path(s). -I is appened to each path (unless it already has a -I).
-##           Any other -? args are removed.
+## arg 4 : include path(s). -I is appended to each path (unless it already has a -I).
+##           Any other -? args are removed.  (-faltivec is ok on mac)
 ##           (Only one may be given if "Specific" (arg9) is chosen.)
 ## arg 5 : list of libs to link against
 ##           If the libraries do not have a '-l' on them, it is appeneded.
@@ -10188,8 +10190,8 @@ esac
 ## arg 2 : checking message
 ## arg 3 : includes that arg 8 needs to compile (e.g., math.h)
 ##           If the first arg is "extern_C", then extern "C" is added around includes.
-## arg 4 : include path(s). -I is appened to each path (unless it already has a -I).
-##           Any other -? args are removed.
+## arg 4 : include path(s). -I is appended to each path (unless it already has a -I).
+##           Any other -? args are removed.  (-faltivec is ok on mac)
 ##           (Only one may be given if "Specific" (arg9) is chosen.)
 ## arg 5 : list of libs to link against
 ##           If the libraries do not have a '-l' on them, it is appeneded.
@@ -10268,10 +10270,12 @@ echo "$as_me: error: Please do not specify /usr/include as the location for GL i
 
   # Make sure it doesn't have any thing but -I
   #   The following "sed" replaces anything that starts with a '-' with nothing (blank).
+  has_minus_faltivec=no
   has_minus=`echo $inc | sed 's/-.*//'`
   if test -z "$has_minus"; then
      has_minus_i=`echo $inc | sed 's/-I.*//'`
-     if test -n "$has_minus_i"; then
+     has_minus_faltivec=`echo $inc | sed 's/-faltivec//'`
+     if test -n "$has_minus_i" && test -n "$has_minus_faltivec"; then
         # Has some other -?.
         echo
         { echo "$as_me:$LINENO: WARNING: Only -I options are allowed in arg 4 ($_sci_inc) of GL check.  Skipping $inc." >&5
@@ -10281,7 +10285,7 @@ echo "$as_me: WARNING: Only -I options are allowed in arg 4 ($_sci_inc) of GL ch
   fi
 
   the_inc=`echo $inc | grep "\-I"`
-  if test -z "$the_inc"; then
+  if test -z "$the_inc" && test "$has_minus_faltivec" = "no"; then
      # If the include arg does not already have -I on it.
      if test -d $inc; then
         # If the directory exists
@@ -10659,8 +10663,8 @@ fi
 ## arg 2 : checking message
 ## arg 3 : includes that arg 8 needs to compile (e.g., math.h)
 ##           If the first arg is "extern_C", then extern "C" is added around includes.
-## arg 4 : include path(s). -I is appened to each path (unless it already has a -I).
-##           Any other -? args are removed.
+## arg 4 : include path(s). -I is appended to each path (unless it already has a -I).
+##           Any other -? args are removed.  (-faltivec is ok on mac)
 ##           (Only one may be given if "Specific" (arg9) is chosen.)
 ## arg 5 : list of libs to link against
 ##           If the libraries do not have a '-l' on them, it is appeneded.
@@ -11087,8 +11091,8 @@ else
 ## arg 2 : checking message
 ## arg 3 : includes that arg 8 needs to compile (e.g., math.h)
 ##           If the first arg is "extern_C", then extern "C" is added around includes.
-## arg 4 : include path(s). -I is appened to each path (unless it already has a -I).
-##           Any other -? args are removed.
+## arg 4 : include path(s). -I is appended to each path (unless it already has a -I).
+##           Any other -? args are removed.  (-faltivec is ok on mac)
 ##           (Only one may be given if "Specific" (arg9) is chosen.)
 ## arg 5 : list of libs to link against
 ##           If the libraries do not have a '-l' on them, it is appeneded.
@@ -11167,10 +11171,12 @@ echo "$as_me: error: Please do not specify /usr/include as the location for DL i
 
   # Make sure it doesn't have any thing but -I
   #   The following "sed" replaces anything that starts with a '-' with nothing (blank).
+  has_minus_faltivec=no
   has_minus=`echo $inc | sed 's/-.*//'`
   if test -z "$has_minus"; then
      has_minus_i=`echo $inc | sed 's/-I.*//'`
-     if test -n "$has_minus_i"; then
+     has_minus_faltivec=`echo $inc | sed 's/-faltivec//'`
+     if test -n "$has_minus_i" && test -n "$has_minus_faltivec"; then
         # Has some other -?.
         echo
         { echo "$as_me:$LINENO: WARNING: Only -I options are allowed in arg 4 ($sci_thirdparty_includes) of DL check.  Skipping $inc." >&5
@@ -11180,7 +11186,7 @@ echo "$as_me: WARNING: Only -I options are allowed in arg 4 ($sci_thirdparty_inc
   fi
 
   the_inc=`echo $inc | grep "\-I"`
-  if test -z "$the_inc"; then
+  if test -z "$the_inc" && test "$has_minus_faltivec" = "no"; then
      # If the include arg does not already have -I on it.
      if test -d $inc; then
         # If the directory exists
@@ -11547,8 +11553,8 @@ _sci_includes=''
 ## arg 2 : checking message
 ## arg 3 : includes that arg 8 needs to compile (e.g., math.h)
 ##           If the first arg is "extern_C", then extern "C" is added around includes.
-## arg 4 : include path(s). -I is appened to each path (unless it already has a -I).
-##           Any other -? args are removed.
+## arg 4 : include path(s). -I is appended to each path (unless it already has a -I).
+##           Any other -? args are removed.  (-faltivec is ok on mac)
 ##           (Only one may be given if "Specific" (arg9) is chosen.)
 ## arg 5 : list of libs to link against
 ##           If the libraries do not have a '-l' on them, it is appeneded.
@@ -11983,8 +11989,8 @@ ac_ext="cc"
 ## arg 2 : checking message
 ## arg 3 : includes that arg 8 needs to compile (e.g., math.h)
 ##           If the first arg is "extern_C", then extern "C" is added around includes.
-## arg 4 : include path(s). -I is appened to each path (unless it already has a -I).
-##           Any other -? args are removed.
+## arg 4 : include path(s). -I is appended to each path (unless it already has a -I).
+##           Any other -? args are removed.  (-faltivec is ok on mac)
 ##           (Only one may be given if "Specific" (arg9) is chosen.)
 ## arg 5 : list of libs to link against
 ##           If the libraries do not have a '-l' on them, it is appeneded.
@@ -12416,8 +12422,8 @@ fi
 ## arg 2 : checking message
 ## arg 3 : includes that arg 8 needs to compile (e.g., math.h)
 ##           If the first arg is "extern_C", then extern "C" is added around includes.
-## arg 4 : include path(s). -I is appened to each path (unless it already has a -I).
-##           Any other -? args are removed.
+## arg 4 : include path(s). -I is appended to each path (unless it already has a -I).
+##           Any other -? args are removed.  (-faltivec is ok on mac)
 ##           (Only one may be given if "Specific" (arg9) is chosen.)
 ## arg 5 : list of libs to link against
 ##           If the libraries do not have a '-l' on them, it is appeneded.
@@ -12843,8 +12849,8 @@ case $host in
 ## arg 2 : checking message
 ## arg 3 : includes that arg 8 needs to compile (e.g., math.h)
 ##           If the first arg is "extern_C", then extern "C" is added around includes.
-## arg 4 : include path(s). -I is appened to each path (unless it already has a -I).
-##           Any other -? args are removed.
+## arg 4 : include path(s). -I is appended to each path (unless it already has a -I).
+##           Any other -? args are removed.  (-faltivec is ok on mac)
 ##           (Only one may be given if "Specific" (arg9) is chosen.)
 ## arg 5 : list of libs to link against
 ##           If the libraries do not have a '-l' on them, it is appeneded.
@@ -13267,8 +13273,8 @@ _sci_includes=''
 ## arg 2 : checking message
 ## arg 3 : includes that arg 8 needs to compile (e.g., math.h)
 ##           If the first arg is "extern_C", then extern "C" is added around includes.
-## arg 4 : include path(s). -I is appened to each path (unless it already has a -I).
-##           Any other -? args are removed.
+## arg 4 : include path(s). -I is appended to each path (unless it already has a -I).
+##           Any other -? args are removed.  (-faltivec is ok on mac)
 ##           (Only one may be given if "Specific" (arg9) is chosen.)
 ## arg 5 : list of libs to link against
 ##           If the libraries do not have a '-l' on them, it is appeneded.
@@ -13701,8 +13707,8 @@ ac_compiler_gnu=$ac_cv_cxx_compiler_gnu
 ## arg 2 : checking message
 ## arg 3 : includes that arg 8 needs to compile (e.g., math.h)
 ##           If the first arg is "extern_C", then extern "C" is added around includes.
-## arg 4 : include path(s). -I is appened to each path (unless it already has a -I).
-##           Any other -? args are removed.
+## arg 4 : include path(s). -I is appended to each path (unless it already has a -I).
+##           Any other -? args are removed.  (-faltivec is ok on mac)
 ##           (Only one may be given if "Specific" (arg9) is chosen.)
 ## arg 5 : list of libs to link against
 ##           If the libraries do not have a '-l' on them, it is appeneded.
@@ -14301,8 +14307,8 @@ fi
 ## arg 2 : checking message
 ## arg 3 : includes that arg 8 needs to compile (e.g., math.h)
 ##           If the first arg is "extern_C", then extern "C" is added around includes.
-## arg 4 : include path(s). -I is appened to each path (unless it already has a -I).
-##           Any other -? args are removed.
+## arg 4 : include path(s). -I is appended to each path (unless it already has a -I).
+##           Any other -? args are removed.  (-faltivec is ok on mac)
 ##           (Only one may be given if "Specific" (arg9) is chosen.)
 ## arg 5 : list of libs to link against
 ##           If the libraries do not have a '-l' on them, it is appeneded.
@@ -14381,10 +14387,12 @@ echo "$as_me: error: Please do not specify /usr/include as the location for TCL 
 
   # Make sure it doesn't have any thing but -I
   #   The following "sed" replaces anything that starts with a '-' with nothing (blank).
+  has_minus_faltivec=no
   has_minus=`echo $inc | sed 's/-.*//'`
   if test -z "$has_minus"; then
      has_minus_i=`echo $inc | sed 's/-I.*//'`
-     if test -n "$has_minus_i"; then
+     has_minus_faltivec=`echo $inc | sed 's/-faltivec//'`
+     if test -n "$has_minus_i" && test -n "$has_minus_faltivec"; then
         # Has some other -?.
         echo
         { echo "$as_me:$LINENO: WARNING: Only -I options are allowed in arg 4 ($_sci_tcl_inc) of TCL check.  Skipping $inc." >&5
@@ -14394,7 +14402,7 @@ echo "$as_me: WARNING: Only -I options are allowed in arg 4 ($_sci_tcl_inc) of T
   fi
 
   the_inc=`echo $inc | grep "\-I"`
-  if test -z "$the_inc"; then
+  if test -z "$the_inc" && test "$has_minus_faltivec" = "no"; then
      # If the include arg does not already have -I on it.
      if test -d $inc; then
         # If the directory exists
@@ -14772,8 +14780,8 @@ fi
 ## arg 2 : checking message
 ## arg 3 : includes that arg 8 needs to compile (e.g., math.h)
 ##           If the first arg is "extern_C", then extern "C" is added around includes.
-## arg 4 : include path(s). -I is appened to each path (unless it already has a -I).
-##           Any other -? args are removed.
+## arg 4 : include path(s). -I is appended to each path (unless it already has a -I).
+##           Any other -? args are removed.  (-faltivec is ok on mac)
 ##           (Only one may be given if "Specific" (arg9) is chosen.)
 ## arg 5 : list of libs to link against
 ##           If the libraries do not have a '-l' on them, it is appeneded.
@@ -14852,10 +14860,12 @@ echo "$as_me: error: Please do not specify /usr/include as the location for TK i
 
   # Make sure it doesn't have any thing but -I
   #   The following "sed" replaces anything that starts with a '-' with nothing (blank).
+  has_minus_faltivec=no
   has_minus=`echo $inc | sed 's/-.*//'`
   if test -z "$has_minus"; then
      has_minus_i=`echo $inc | sed 's/-I.*//'`
-     if test -n "$has_minus_i"; then
+     has_minus_faltivec=`echo $inc | sed 's/-faltivec//'`
+     if test -n "$has_minus_i" && test -n "$has_minus_faltivec"; then
         # Has some other -?.
         echo
         { echo "$as_me:$LINENO: WARNING: Only -I options are allowed in arg 4 ($_x_inc_dir $_sci_tk_inc) of TK check.  Skipping $inc." >&5
@@ -14865,7 +14875,7 @@ echo "$as_me: WARNING: Only -I options are allowed in arg 4 ($_x_inc_dir $_sci_t
   fi
 
   the_inc=`echo $inc | grep "\-I"`
-  if test -z "$the_inc"; then
+  if test -z "$the_inc" && test "$has_minus_faltivec" = "no"; then
      # If the include arg does not already have -I on it.
      if test -d $inc; then
         # If the directory exists
@@ -15234,8 +15244,8 @@ _sci_includes=''
 ## arg 2 : checking message
 ## arg 3 : includes that arg 8 needs to compile (e.g., math.h)
 ##           If the first arg is "extern_C", then extern "C" is added around includes.
-## arg 4 : include path(s). -I is appened to each path (unless it already has a -I).
-##           Any other -? args are removed.
+## arg 4 : include path(s). -I is appended to each path (unless it already has a -I).
+##           Any other -? args are removed.  (-faltivec is ok on mac)
 ##           (Only one may be given if "Specific" (arg9) is chosen.)
 ## arg 5 : list of libs to link against
 ##           If the libraries do not have a '-l' on them, it is appeneded.
@@ -15314,10 +15324,12 @@ echo "$as_me: error: Please do not specify /usr/include as the location for ITCL
 
   # Make sure it doesn't have any thing but -I
   #   The following "sed" replaces anything that starts with a '-' with nothing (blank).
+  has_minus_faltivec=no
   has_minus=`echo $inc | sed 's/-.*//'`
   if test -z "$has_minus"; then
      has_minus_i=`echo $inc | sed 's/-I.*//'`
-     if test -n "$has_minus_i"; then
+     has_minus_faltivec=`echo $inc | sed 's/-faltivec//'`
+     if test -n "$has_minus_i" && test -n "$has_minus_faltivec"; then
         # Has some other -?.
         echo
         { echo "$as_me:$LINENO: WARNING: Only -I options are allowed in arg 4 ($_sci_inc) of ITCL check.  Skipping $inc." >&5
@@ -15327,7 +15339,7 @@ echo "$as_me: WARNING: Only -I options are allowed in arg 4 ($_sci_inc) of ITCL 
   fi
 
   the_inc=`echo $inc | grep "\-I"`
-  if test -z "$the_inc"; then
+  if test -z "$the_inc" && test "$has_minus_faltivec" = "no"; then
      # If the include arg does not already have -I on it.
      if test -d $inc; then
         # If the directory exists
@@ -15697,8 +15709,8 @@ _sci_includes=''
 ## arg 2 : checking message
 ## arg 3 : includes that arg 8 needs to compile (e.g., math.h)
 ##           If the first arg is "extern_C", then extern "C" is added around includes.
-## arg 4 : include path(s). -I is appened to each path (unless it already has a -I).
-##           Any other -? args are removed.
+## arg 4 : include path(s). -I is appended to each path (unless it already has a -I).
+##           Any other -? args are removed.  (-faltivec is ok on mac)
 ##           (Only one may be given if "Specific" (arg9) is chosen.)
 ## arg 5 : list of libs to link against
 ##           If the libraries do not have a '-l' on them, it is appeneded.
@@ -15777,10 +15789,12 @@ echo "$as_me: error: Please do not specify /usr/include as the location for ITK 
 
   # Make sure it doesn't have any thing but -I
   #   The following "sed" replaces anything that starts with a '-' with nothing (blank).
+  has_minus_faltivec=no
   has_minus=`echo $inc | sed 's/-.*//'`
   if test -z "$has_minus"; then
      has_minus_i=`echo $inc | sed 's/-I.*//'`
-     if test -n "$has_minus_i"; then
+     has_minus_faltivec=`echo $inc | sed 's/-faltivec//'`
+     if test -n "$has_minus_i" && test -n "$has_minus_faltivec"; then
         # Has some other -?.
         echo
         { echo "$as_me:$LINENO: WARNING: Only -I options are allowed in arg 4 ($_x_inc_dir $_sci_inc) of ITK check.  Skipping $inc." >&5
@@ -15790,7 +15804,7 @@ echo "$as_me: WARNING: Only -I options are allowed in arg 4 ($_x_inc_dir $_sci_i
   fi
 
   the_inc=`echo $inc | grep "\-I"`
-  if test -z "$the_inc"; then
+  if test -z "$the_inc" && test "$has_minus_faltivec" = "no"; then
      # If the include arg does not already have -I on it.
      if test -d $inc; then
         # If the directory exists
@@ -16159,8 +16173,8 @@ _sci_includes=''
 ## arg 2 : checking message
 ## arg 3 : includes that arg 8 needs to compile (e.g., math.h)
 ##           If the first arg is "extern_C", then extern "C" is added around includes.
-## arg 4 : include path(s). -I is appened to each path (unless it already has a -I).
-##           Any other -? args are removed.
+## arg 4 : include path(s). -I is appended to each path (unless it already has a -I).
+##           Any other -? args are removed.  (-faltivec is ok on mac)
 ##           (Only one may be given if "Specific" (arg9) is chosen.)
 ## arg 5 : list of libs to link against
 ##           If the libraries do not have a '-l' on them, it is appeneded.
@@ -16239,10 +16253,12 @@ echo "$as_me: error: Please do not specify /usr/include as the location for BLT 
 
   # Make sure it doesn't have any thing but -I
   #   The following "sed" replaces anything that starts with a '-' with nothing (blank).
+  has_minus_faltivec=no
   has_minus=`echo $inc | sed 's/-.*//'`
   if test -z "$has_minus"; then
      has_minus_i=`echo $inc | sed 's/-I.*//'`
-     if test -n "$has_minus_i"; then
+     has_minus_faltivec=`echo $inc | sed 's/-faltivec//'`
+     if test -n "$has_minus_i" && test -n "$has_minus_faltivec"; then
         # Has some other -?.
         echo
         { echo "$as_me:$LINENO: WARNING: Only -I options are allowed in arg 4 ($_sci_inc) of BLT check.  Skipping $inc." >&5
@@ -16252,7 +16268,7 @@ echo "$as_me: WARNING: Only -I options are allowed in arg 4 ($_sci_inc) of BLT c
   fi
 
   the_inc=`echo $inc | grep "\-I"`
-  if test -z "$the_inc"; then
+  if test -z "$the_inc" && test "$has_minus_faltivec" = "no"; then
      # If the include arg does not already have -I on it.
      if test -d $inc; then
         # If the directory exists
@@ -16827,8 +16843,8 @@ esac
 ## arg 2 : checking message
 ## arg 3 : includes that arg 8 needs to compile (e.g., math.h)
 ##           If the first arg is "extern_C", then extern "C" is added around includes.
-## arg 4 : include path(s). -I is appened to each path (unless it already has a -I).
-##           Any other -? args are removed.
+## arg 4 : include path(s). -I is appended to each path (unless it already has a -I).
+##           Any other -? args are removed.  (-faltivec is ok on mac)
 ##           (Only one may be given if "Specific" (arg9) is chosen.)
 ## arg 5 : list of libs to link against
 ##           If the libraries do not have a '-l' on them, it is appeneded.
@@ -16907,10 +16923,12 @@ echo "$as_me: error: Please do not specify /usr/include as the location for XERC
 
   # Make sure it doesn't have any thing but -I
   #   The following "sed" replaces anything that starts with a '-' with nothing (blank).
+  has_minus_faltivec=no
   has_minus=`echo $inc | sed 's/-.*//'`
   if test -z "$has_minus"; then
      has_minus_i=`echo $inc | sed 's/-I.*//'`
-     if test -n "$has_minus_i"; then
+     has_minus_faltivec=`echo $inc | sed 's/-faltivec//'`
+     if test -n "$has_minus_i" && test -n "$has_minus_faltivec"; then
         # Has some other -?.
         echo
         { echo "$as_me:$LINENO: WARNING: Only -I options are allowed in arg 4 ($_xer_inc) of XERCES_C check.  Skipping $inc." >&5
@@ -16920,7 +16938,7 @@ echo "$as_me: WARNING: Only -I options are allowed in arg 4 ($_xer_inc) of XERCE
   fi
 
   the_inc=`echo $inc | grep "\-I"`
-  if test -z "$the_inc"; then
+  if test -z "$the_inc" && test "$has_minus_faltivec" = "no"; then
      # If the include arg does not already have -I on it.
      if test -d $inc; then
         # If the directory exists
@@ -17297,8 +17315,8 @@ _sci_includes=''
 ## arg 2 : checking message
 ## arg 3 : includes that arg 8 needs to compile (e.g., math.h)
 ##           If the first arg is "extern_C", then extern "C" is added around includes.
-## arg 4 : include path(s). -I is appened to each path (unless it already has a -I).
-##           Any other -? args are removed.
+## arg 4 : include path(s). -I is appended to each path (unless it already has a -I).
+##           Any other -? args are removed.  (-faltivec is ok on mac)
 ##           (Only one may be given if "Specific" (arg9) is chosen.)
 ## arg 5 : list of libs to link against
 ##           If the libraries do not have a '-l' on them, it is appeneded.
@@ -17739,8 +17757,8 @@ fi
 ## arg 2 : checking message
 ## arg 3 : includes that arg 8 needs to compile (e.g., math.h)
 ##           If the first arg is "extern_C", then extern "C" is added around includes.
-## arg 4 : include path(s). -I is appened to each path (unless it already has a -I).
-##           Any other -? args are removed.
+## arg 4 : include path(s). -I is appended to each path (unless it already has a -I).
+##           Any other -? args are removed.  (-faltivec is ok on mac)
 ##           (Only one may be given if "Specific" (arg9) is chosen.)
 ## arg 5 : list of libs to link against
 ##           If the libraries do not have a '-l' on them, it is appeneded.
@@ -17819,10 +17837,12 @@ echo "$as_me: error: Please do not specify /usr/include as the location for EXC 
 
   # Make sure it doesn't have any thing but -I
   #   The following "sed" replaces anything that starts with a '-' with nothing (blank).
+  has_minus_faltivec=no
   has_minus=`echo $inc | sed 's/-.*//'`
   if test -z "$has_minus"; then
      has_minus_i=`echo $inc | sed 's/-I.*//'`
-     if test -n "$has_minus_i"; then
+     has_minus_faltivec=`echo $inc | sed 's/-faltivec//'`
+     if test -n "$has_minus_i" && test -n "$has_minus_faltivec"; then
         # Has some other -?.
         echo
         { echo "$as_me:$LINENO: WARNING: Only -I options are allowed in arg 4 ($_sci_inc) of EXC check.  Skipping $inc." >&5
@@ -17832,7 +17852,7 @@ echo "$as_me: WARNING: Only -I options are allowed in arg 4 ($_sci_inc) of EXC c
   fi
 
   the_inc=`echo $inc | grep "\-I"`
-  if test -z "$the_inc"; then
+  if test -z "$the_inc" && test "$has_minus_faltivec" = "no"; then
      # If the include arg does not already have -I on it.
      if test -d $inc; then
         # If the directory exists
@@ -18222,8 +18242,8 @@ fi
 ## arg 2 : checking message
 ## arg 3 : includes that arg 8 needs to compile (e.g., math.h)
 ##           If the first arg is "extern_C", then extern "C" is added around includes.
-## arg 4 : include path(s). -I is appened to each path (unless it already has a -I).
-##           Any other -? args are removed.
+## arg 4 : include path(s). -I is appended to each path (unless it already has a -I).
+##           Any other -? args are removed.  (-faltivec is ok on mac)
 ##           (Only one may be given if "Specific" (arg9) is chosen.)
 ## arg 5 : list of libs to link against
 ##           If the libraries do not have a '-l' on them, it is appeneded.
@@ -18727,8 +18747,8 @@ echo "${ECHO_T}Using $_sci_lib/../bin/Magick-config to set ImageMagick variables
 ## arg 2 : checking message
 ## arg 3 : includes that arg 8 needs to compile (e.g., math.h)
 ##           If the first arg is "extern_C", then extern "C" is added around includes.
-## arg 4 : include path(s). -I is appened to each path (unless it already has a -I).
-##           Any other -? args are removed.
+## arg 4 : include path(s). -I is appended to each path (unless it already has a -I).
+##           Any other -? args are removed.  (-faltivec is ok on mac)
 ##           (Only one may be given if "Specific" (arg9) is chosen.)
 ## arg 5 : list of libs to link against
 ##           If the libraries do not have a '-l' on them, it is appeneded.
@@ -18807,10 +18827,12 @@ echo "$as_me: error: Please do not specify /usr/include as the location for MAGI
 
   # Make sure it doesn't have any thing but -I
   #   The following "sed" replaces anything that starts with a '-' with nothing (blank).
+  has_minus_faltivec=no
   has_minus=`echo $inc | sed 's/-.*//'`
   if test -z "$has_minus"; then
      has_minus_i=`echo $inc | sed 's/-I.*//'`
-     if test -n "$has_minus_i"; then
+     has_minus_faltivec=`echo $inc | sed 's/-faltivec//'`
+     if test -n "$has_minus_i" && test -n "$has_minus_faltivec"; then
         # Has some other -?.
         echo
         { echo "$as_me:$LINENO: WARNING: Only -I options are allowed in arg 4 ($includes) of MAGICK check.  Skipping $inc." >&5
@@ -18820,7 +18842,7 @@ echo "$as_me: WARNING: Only -I options are allowed in arg 4 ($includes) of MAGIC
   fi
 
   the_inc=`echo $inc | grep "\-I"`
-  if test -z "$the_inc"; then
+  if test -z "$the_inc" && test "$has_minus_faltivec" = "no"; then
      # If the include arg does not already have -I on it.
      if test -d $inc; then
         # If the directory exists
@@ -19226,8 +19248,8 @@ fi
 ## arg 2 : checking message
 ## arg 3 : includes that arg 8 needs to compile (e.g., math.h)
 ##           If the first arg is "extern_C", then extern "C" is added around includes.
-## arg 4 : include path(s). -I is appened to each path (unless it already has a -I).
-##           Any other -? args are removed.
+## arg 4 : include path(s). -I is appended to each path (unless it already has a -I).
+##           Any other -? args are removed.  (-faltivec is ok on mac)
 ##           (Only one may be given if "Specific" (arg9) is chosen.)
 ## arg 5 : list of libs to link against
 ##           If the libraries do not have a '-l' on them, it is appeneded.
@@ -19306,10 +19328,12 @@ echo "$as_me: error: Please do not specify /usr/include as the location for Z in
 
   # Make sure it doesn't have any thing but -I
   #   The following "sed" replaces anything that starts with a '-' with nothing (blank).
+  has_minus_faltivec=no
   has_minus=`echo $inc | sed 's/-.*//'`
   if test -z "$has_minus"; then
      has_minus_i=`echo $inc | sed 's/-I.*//'`
-     if test -n "$has_minus_i"; then
+     has_minus_faltivec=`echo $inc | sed 's/-faltivec//'`
+     if test -n "$has_minus_i" && test -n "$has_minus_faltivec"; then
         # Has some other -?.
         echo
         { echo "$as_me:$LINENO: WARNING: Only -I options are allowed in arg 4 ($_sci_inc) of Z check.  Skipping $inc." >&5
@@ -19319,7 +19343,7 @@ echo "$as_me: WARNING: Only -I options are allowed in arg 4 ($_sci_inc) of Z che
   fi
 
   the_inc=`echo $inc | grep "\-I"`
-  if test -z "$the_inc"; then
+  if test -z "$the_inc" && test "$has_minus_faltivec" = "no"; then
      # If the include arg does not already have -I on it.
      if test -d $inc; then
         # If the directory exists
@@ -19716,8 +19740,8 @@ fi
 ## arg 2 : checking message
 ## arg 3 : includes that arg 8 needs to compile (e.g., math.h)
 ##           If the first arg is "extern_C", then extern "C" is added around includes.
-## arg 4 : include path(s). -I is appened to each path (unless it already has a -I).
-##           Any other -? args are removed.
+## arg 4 : include path(s). -I is appended to each path (unless it already has a -I).
+##           Any other -? args are removed.  (-faltivec is ok on mac)
 ##           (Only one may be given if "Specific" (arg9) is chosen.)
 ## arg 5 : list of libs to link against
 ##           If the libraries do not have a '-l' on them, it is appeneded.
@@ -19796,10 +19820,12 @@ echo "$as_me: error: Please do not specify /usr/include as the location for UNP 
 
   # Make sure it doesn't have any thing but -I
   #   The following "sed" replaces anything that starts with a '-' with nothing (blank).
+  has_minus_faltivec=no
   has_minus=`echo $inc | sed 's/-.*//'`
   if test -z "$has_minus"; then
      has_minus_i=`echo $inc | sed 's/-I.*//'`
-     if test -n "$has_minus_i"; then
+     has_minus_faltivec=`echo $inc | sed 's/-faltivec//'`
+     if test -n "$has_minus_i" && test -n "$has_minus_faltivec"; then
         # Has some other -?.
         echo
         { echo "$as_me:$LINENO: WARNING: Only -I options are allowed in arg 4 ($_sci_inc) of UNP check.  Skipping $inc." >&5
@@ -19809,7 +19835,7 @@ echo "$as_me: WARNING: Only -I options are allowed in arg 4 ($_sci_inc) of UNP c
   fi
 
   the_inc=`echo $inc | grep "\-I"`
-  if test -z "$the_inc"; then
+  if test -z "$the_inc" && test "$has_minus_faltivec" = "no"; then
      # If the include arg does not already have -I on it.
      if test -d $inc; then
         # If the directory exists
@@ -20226,8 +20252,8 @@ fi
 ## arg 2 : checking message
 ## arg 3 : includes that arg 8 needs to compile (e.g., math.h)
 ##           If the first arg is "extern_C", then extern "C" is added around includes.
-## arg 4 : include path(s). -I is appened to each path (unless it already has a -I).
-##           Any other -? args are removed.
+## arg 4 : include path(s). -I is appended to each path (unless it already has a -I).
+##           Any other -? args are removed.  (-faltivec is ok on mac)
 ##           (Only one may be given if "Specific" (arg9) is chosen.)
 ## arg 5 : list of libs to link against
 ##           If the libraries do not have a '-l' on them, it is appeneded.
@@ -20306,10 +20332,12 @@ echo "$as_me: error: Please do not specify /usr/include as the location for PNG 
 
   # Make sure it doesn't have any thing but -I
   #   The following "sed" replaces anything that starts with a '-' with nothing (blank).
+  has_minus_faltivec=no
   has_minus=`echo $inc | sed 's/-.*//'`
   if test -z "$has_minus"; then
      has_minus_i=`echo $inc | sed 's/-I.*//'`
-     if test -n "$has_minus_i"; then
+     has_minus_faltivec=`echo $inc | sed 's/-faltivec//'`
+     if test -n "$has_minus_i" && test -n "$has_minus_faltivec"; then
         # Has some other -?.
         echo
         { echo "$as_me:$LINENO: WARNING: Only -I options are allowed in arg 4 ($_sci_inc) of PNG check.  Skipping $inc." >&5
@@ -20319,7 +20347,7 @@ echo "$as_me: WARNING: Only -I options are allowed in arg 4 ($_sci_inc) of PNG c
   fi
 
   the_inc=`echo $inc | grep "\-I"`
-  if test -z "$the_inc"; then
+  if test -z "$the_inc" && test "$has_minus_faltivec" = "no"; then
      # If the include arg does not already have -I on it.
      if test -d $inc; then
         # If the directory exists
@@ -20753,8 +20781,8 @@ case $host in
 ## arg 2 : checking message
 ## arg 3 : includes that arg 8 needs to compile (e.g., math.h)
 ##           If the first arg is "extern_C", then extern "C" is added around includes.
-## arg 4 : include path(s). -I is appened to each path (unless it already has a -I).
-##           Any other -? args are removed.
+## arg 4 : include path(s). -I is appended to each path (unless it already has a -I).
+##           Any other -? args are removed.  (-faltivec is ok on mac)
 ##           (Only one may be given if "Specific" (arg9) is chosen.)
 ## arg 5 : list of libs to link against
 ##           If the libraries do not have a '-l' on them, it is appeneded.
@@ -21176,8 +21204,8 @@ _sci_includes=''
 ## arg 2 : checking message
 ## arg 3 : includes that arg 8 needs to compile (e.g., math.h)
 ##           If the first arg is "extern_C", then extern "C" is added around includes.
-## arg 4 : include path(s). -I is appened to each path (unless it already has a -I).
-##           Any other -? args are removed.
+## arg 4 : include path(s). -I is appended to each path (unless it already has a -I).
+##           Any other -? args are removed.  (-faltivec is ok on mac)
 ##           (Only one may be given if "Specific" (arg9) is chosen.)
 ## arg 5 : list of libs to link against
 ##           If the libraries do not have a '-l' on them, it is appeneded.
@@ -21600,8 +21628,8 @@ _sci_includes=''
 ## arg 2 : checking message
 ## arg 3 : includes that arg 8 needs to compile (e.g., math.h)
 ##           If the first arg is "extern_C", then extern "C" is added around includes.
-## arg 4 : include path(s). -I is appened to each path (unless it already has a -I).
-##           Any other -? args are removed.
+## arg 4 : include path(s). -I is appended to each path (unless it already has a -I).
+##           Any other -? args are removed.  (-faltivec is ok on mac)
 ##           (Only one may be given if "Specific" (arg9) is chosen.)
 ## arg 5 : list of libs to link against
 ##           If the libraries do not have a '-l' on them, it is appeneded.
@@ -22021,8 +22049,8 @@ _sci_includes=''
 ## arg 2 : checking message
 ## arg 3 : includes that arg 8 needs to compile (e.g., math.h)
 ##           If the first arg is "extern_C", then extern "C" is added around includes.
-## arg 4 : include path(s). -I is appened to each path (unless it already has a -I).
-##           Any other -? args are removed.
+## arg 4 : include path(s). -I is appended to each path (unless it already has a -I).
+##           Any other -? args are removed.  (-faltivec is ok on mac)
 ##           (Only one may be given if "Specific" (arg9) is chosen.)
 ## arg 5 : list of libs to link against
 ##           If the libraries do not have a '-l' on them, it is appeneded.
@@ -22444,8 +22472,8 @@ _sci_includes=''
 ## arg 2 : checking message
 ## arg 3 : includes that arg 8 needs to compile (e.g., math.h)
 ##           If the first arg is "extern_C", then extern "C" is added around includes.
-## arg 4 : include path(s). -I is appened to each path (unless it already has a -I).
-##           Any other -? args are removed.
+## arg 4 : include path(s). -I is appended to each path (unless it already has a -I).
+##           Any other -? args are removed.  (-faltivec is ok on mac)
 ##           (Only one may be given if "Specific" (arg9) is chosen.)
 ## arg 5 : list of libs to link against
 ##           If the libraries do not have a '-l' on them, it is appeneded.
@@ -22867,8 +22895,8 @@ _sci_includes=''
 ## arg 2 : checking message
 ## arg 3 : includes that arg 8 needs to compile (e.g., math.h)
 ##           If the first arg is "extern_C", then extern "C" is added around includes.
-## arg 4 : include path(s). -I is appened to each path (unless it already has a -I).
-##           Any other -? args are removed.
+## arg 4 : include path(s). -I is appended to each path (unless it already has a -I).
+##           Any other -? args are removed.  (-faltivec is ok on mac)
 ##           (Only one may be given if "Specific" (arg9) is chosen.)
 ## arg 5 : list of libs to link against
 ##           If the libraries do not have a '-l' on them, it is appeneded.
@@ -23289,8 +23317,8 @@ _sci_includes=''
 ## arg 2 : checking message
 ## arg 3 : includes that arg 8 needs to compile (e.g., math.h)
 ##           If the first arg is "extern_C", then extern "C" is added around includes.
-## arg 4 : include path(s). -I is appened to each path (unless it already has a -I).
-##           Any other -? args are removed.
+## arg 4 : include path(s). -I is appended to each path (unless it already has a -I).
+##           Any other -? args are removed.  (-faltivec is ok on mac)
 ##           (Only one may be given if "Specific" (arg9) is chosen.)
 ## arg 5 : list of libs to link against
 ##           If the libraries do not have a '-l' on them, it is appeneded.
@@ -23737,8 +23765,8 @@ echo "$as_me: error: Don't specify a path for atlas when on a Mac (we use vecLib
 ## arg 2 : checking message
 ## arg 3 : includes that arg 8 needs to compile (e.g., math.h)
 ##           If the first arg is "extern_C", then extern "C" is added around includes.
-## arg 4 : include path(s). -I is appened to each path (unless it already has a -I).
-##           Any other -? args are removed.
+## arg 4 : include path(s). -I is appended to each path (unless it already has a -I).
+##           Any other -? args are removed.  (-faltivec is ok on mac)
 ##           (Only one may be given if "Specific" (arg9) is chosen.)
 ## arg 5 : list of libs to link against
 ##           If the libraries do not have a '-l' on them, it is appeneded.
@@ -23762,12 +23790,12 @@ echo "$as_me: error: Don't specify a path for atlas when on a Mac (we use vecLib
 ## Here are the specific values for this invocation:
 ##
 ## arg 1 : BLAS
-## arg 2 : atlas version oflibraries and headers
+## arg 2 : atlas version oflibraries and headers (OSX)
 ## arg 3 : vecLib/cblas.h
-## arg 4 :
+## arg 4 : -faltivec
 ## arg 5 :
 ## arg 6 :
-## arg 7 : -faltivec -framework vecLib
+## arg 7 : -framework vecLib
 ## arg 8 : <Can't expand it here as it may be multiple lines and cause sh problems.>
 ## arg 9 : optional
 ##
@@ -23782,14 +23810,14 @@ echo "$as_me: error: Don't specify a path for atlas when on a Mac (we use vecLib
 ##      HAVE_BLAS_H         => yes or no
 
 if test 9 != 9; then
-     { { echo "$as_me:$LINENO: error: Wrong number of parameters (9) for SCI-TRY-LINK for atlas version oflibraries and headers.  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu." >&5
-echo "$as_me: error: Wrong number of parameters (9) for SCI-TRY-LINK for atlas version oflibraries and headers.  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu." >&2;}
+     { { echo "$as_me:$LINENO: error: Wrong number of parameters (9) for SCI-TRY-LINK for atlas version oflibraries and headers (OSX).  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu." >&5
+echo "$as_me: error: Wrong number of parameters (9) for SCI-TRY-LINK for atlas version oflibraries and headers (OSX).  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu." >&2;}
    { (exit 1); exit 1; }; }
 fi
 
 
-echo "$as_me:$LINENO: checking for atlas version oflibraries and headers (optional)" >&5
-echo $ECHO_N "checking for atlas version oflibraries and headers (optional)... $ECHO_C" >&6
+echo "$as_me:$LINENO: checking for atlas version oflibraries and headers (OSX) (optional)" >&5
+echo $ECHO_N "checking for atlas version oflibraries and headers (OSX) (optional)... $ECHO_C" >&6
 _sci_savelibs=$LIBS
 _sci_saveldflags=$LDFLAGS
 _sci_savecflags=$CFLAGS
@@ -23799,12 +23827,50 @@ _sci_includes=
 
 if test "optional" != "optional" -a "optional" != "required" -a "optional" != "specific"; then
      echo
-     { { echo "$as_me:$LINENO: error: Last parameter of SCI-TRY-LINK for atlas version oflibraries and headers must be: optional or required or specific.  (You had optional.)  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu." >&5
-echo "$as_me: error: Last parameter of SCI-TRY-LINK for atlas version oflibraries and headers must be: optional or required or specific.  (You had optional.)  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu." >&2;}
+     { { echo "$as_me:$LINENO: error: Last parameter of SCI-TRY-LINK for atlas version oflibraries and headers (OSX) must be: optional or required or specific.  (You had optional.)  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu." >&5
+echo "$as_me: error: Last parameter of SCI-TRY-LINK for atlas version oflibraries and headers (OSX) must be: optional or required or specific.  (You had optional.)  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu." >&2;}
    { (exit 1); exit 1; }; }
 fi
 
-# If  (the -I paths) is blank, do nothing, else do the for statement.
+# If -faltivec (the -I paths) is blank, do nothing, else do the for statement.
+
+for inc in -faltivec; do
+
+  if test "$inc" = "/usr/include" || test "$inc" = "-I/usr/include"; then
+     echo ""
+     { { echo "$as_me:$LINENO: error: Please do not specify /usr/include as the location for BLAS include files." >&5
+echo "$as_me: error: Please do not specify /usr/include as the location for BLAS include files." >&2;}
+   { (exit 1); exit 1; }; }
+  fi
+
+  # Make sure it doesn't have any thing but -I
+  #   The following "sed" replaces anything that starts with a '-' with nothing (blank).
+  has_minus_faltivec=no
+  has_minus=`echo $inc | sed 's/-.*//'`
+  if test -z "$has_minus"; then
+     has_minus_i=`echo $inc | sed 's/-I.*//'`
+     has_minus_faltivec=`echo $inc | sed 's/-faltivec//'`
+     if test -n "$has_minus_i" && test -n "$has_minus_faltivec"; then
+        # Has some other -?.
+        echo
+        { echo "$as_me:$LINENO: WARNING: Only -I options are allowed in arg 4 (-faltivec) of BLAS check.  Skipping $inc." >&5
+echo "$as_me: WARNING: Only -I options are allowed in arg 4 (-faltivec) of BLAS check.  Skipping $inc." >&2;}
+        continue
+     fi
+  fi
+
+  the_inc=`echo $inc | grep "\-I"`
+  if test -z "$the_inc" && test "$has_minus_faltivec" = "no"; then
+     # If the include arg does not already have -I on it.
+     if test -d $inc; then
+        # If the directory exists
+        _sci_includes="$_sci_includes -I$inc"
+     fi
+  else
+     # It already has -I so just add it directly.
+     _sci_includes="$_sci_includes $inc"
+  fi
+done
 
 ### Take care of arg 5 (the list of libs)
 
@@ -23915,10 +23981,10 @@ echo "$as_me: error: For specific SCI-TRY-LINK test for BLAS only one library pa
    { (exit 1); exit 1; }; }
   fi
   # and only one include path:
-  ### Determine if there is only one item in
+  ### Determine if there is only one item in -faltivec
   __sci_pass=false
   __sci_first_time=true
-  for value in "" ; do
+  for value in "" -faltivec; do
     if test "$value" = ""; then
       continue
     fi
@@ -23930,8 +23996,8 @@ echo "$as_me: error: For specific SCI-TRY-LINK test for BLAS only one library pa
     fi
   done
   if test $__sci_pass != "true"; then
-       { { echo "$as_me:$LINENO: error: For specific SCI-TRY-LINK test for BLAS only one include path may be specified for arg 4 (you had: ).  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu." >&5
-echo "$as_me: error: For specific SCI-TRY-LINK test for BLAS only one include path may be specified for arg 4 (you had: ).  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu." >&2;}
+       { { echo "$as_me:$LINENO: error: For specific SCI-TRY-LINK test for BLAS only one include path may be specified for arg 4 (you had: -faltivec).  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu." >&5
+echo "$as_me: error: For specific SCI-TRY-LINK test for BLAS only one include path may be specified for arg 4 (you had: -faltivec).  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu." >&2;}
    { (exit 1); exit 1; }; }
   fi
 fi
@@ -23944,7 +24010,7 @@ fi
 CFLAGS="$_sci_includes $CFLAGS"
 CXXFLAGS="$_sci_includes $CXXFLAGS"
 LDFLAGS="$_sci_lib_path $LDFLAGS"
-LIBS="$_sci_libs -faltivec -framework vecLib $LIBS"
+LIBS="$_sci_libs -framework vecLib $LIBS"
 
 # Build up a list of the #include <file> lines for use in compilation:
 __extern_c="no"
@@ -24119,10 +24185,10 @@ if test "optional" = "specific"; then
 #echo specific
   # Make sure the exact includes were found
   for i in "" vecLib/cblas.h; do
-#echo looking for /$i
-    if test ! -e /$i; then
-     { { echo "$as_me:$LINENO: error: Specificly requested BLAS include file '/$i' was not found" >&5
-echo "$as_me: error: Specificly requested BLAS include file '/$i' was not found" >&2;}
+#echo looking for -faltivec/$i
+    if test ! -e -faltivec/$i; then
+     { { echo "$as_me:$LINENO: error: Specificly requested BLAS include file '-faltivec/$i' was not found" >&5
+echo "$as_me: error: Specificly requested BLAS include file '-faltivec/$i' was not found" >&2;}
    { (exit 1); exit 1; }; }
     fi
   done
@@ -24148,9 +24214,6 @@ _sci_libs=''
 _sci_includes=''
 
 
-     if test "$HAVE_BLAS" = yes ; then
-        BLAS_LIB_FLAG="-faltivec -framework vecLib"
-     fi
      ;;
    *)
 
@@ -24162,8 +24225,8 @@ _sci_includes=''
 ## arg 2 : checking message
 ## arg 3 : includes that arg 8 needs to compile (e.g., math.h)
 ##           If the first arg is "extern_C", then extern "C" is added around includes.
-## arg 4 : include path(s). -I is appened to each path (unless it already has a -I).
-##           Any other -? args are removed.
+## arg 4 : include path(s). -I is appended to each path (unless it already has a -I).
+##           Any other -? args are removed.  (-faltivec is ok on mac)
 ##           (Only one may be given if "Specific" (arg9) is chosen.)
 ## arg 5 : list of libs to link against
 ##           If the libraries do not have a '-l' on them, it is appeneded.
@@ -24242,10 +24305,12 @@ echo "$as_me: error: Please do not specify /usr/include as the location for BLAS
 
   # Make sure it doesn't have any thing but -I
   #   The following "sed" replaces anything that starts with a '-' with nothing (blank).
+  has_minus_faltivec=no
   has_minus=`echo $inc | sed 's/-.*//'`
   if test -z "$has_minus"; then
      has_minus_i=`echo $inc | sed 's/-I.*//'`
-     if test -n "$has_minus_i"; then
+     has_minus_faltivec=`echo $inc | sed 's/-faltivec//'`
+     if test -n "$has_minus_i" && test -n "$has_minus_faltivec"; then
         # Has some other -?.
         echo
         { echo "$as_me:$LINENO: WARNING: Only -I options are allowed in arg 4 ($_sci_inc) of BLAS check.  Skipping $inc." >&5
@@ -24255,7 +24320,7 @@ echo "$as_me: WARNING: Only -I options are allowed in arg 4 ($_sci_inc) of BLAS 
   fi
 
   the_inc=`echo $inc | grep "\-I"`
-  if test -z "$the_inc"; then
+  if test -z "$the_inc" && test "$has_minus_faltivec" = "no"; then
      # If the include arg does not already have -I on it.
      if test -d $inc; then
         # If the directory exists
@@ -24659,8 +24724,8 @@ if test "$HAVE_BLAS" != "yes"; then
 ## arg 2 : checking message
 ## arg 3 : includes that arg 8 needs to compile (e.g., math.h)
 ##           If the first arg is "extern_C", then extern "C" is added around includes.
-## arg 4 : include path(s). -I is appened to each path (unless it already has a -I).
-##           Any other -? args are removed.
+## arg 4 : include path(s). -I is appended to each path (unless it already has a -I).
+##           Any other -? args are removed.  (-faltivec is ok on mac)
 ##           (Only one may be given if "Specific" (arg9) is chosen.)
 ## arg 5 : list of libs to link against
 ##           If the libraries do not have a '-l' on them, it is appeneded.
@@ -25081,8 +25146,8 @@ _sci_includes=''
 ## arg 2 : checking message
 ## arg 3 : includes that arg 8 needs to compile (e.g., math.h)
 ##           If the first arg is "extern_C", then extern "C" is added around includes.
-## arg 4 : include path(s). -I is appened to each path (unless it already has a -I).
-##           Any other -? args are removed.
+## arg 4 : include path(s). -I is appended to each path (unless it already has a -I).
+##           Any other -? args are removed.  (-faltivec is ok on mac)
 ##           (Only one may be given if "Specific" (arg9) is chosen.)
 ## arg 5 : list of libs to link against
 ##           If the libraries do not have a '-l' on them, it is appeneded.
@@ -25503,8 +25568,8 @@ _sci_includes=''
 ## arg 2 : checking message
 ## arg 3 : includes that arg 8 needs to compile (e.g., math.h)
 ##           If the first arg is "extern_C", then extern "C" is added around includes.
-## arg 4 : include path(s). -I is appened to each path (unless it already has a -I).
-##           Any other -? args are removed.
+## arg 4 : include path(s). -I is appended to each path (unless it already has a -I).
+##           Any other -? args are removed.  (-faltivec is ok on mac)
 ##           (Only one may be given if "Specific" (arg9) is chosen.)
 ## arg 5 : list of libs to link against
 ##           If the libraries do not have a '-l' on them, it is appeneded.
@@ -25583,10 +25648,12 @@ echo "$as_me: error: Please do not specify /usr/include as the location for BLAS
 
   # Make sure it doesn't have any thing but -I
   #   The following "sed" replaces anything that starts with a '-' with nothing (blank).
+  has_minus_faltivec=no
   has_minus=`echo $inc | sed 's/-.*//'`
   if test -z "$has_minus"; then
      has_minus_i=`echo $inc | sed 's/-I.*//'`
-     if test -n "$has_minus_i"; then
+     has_minus_faltivec=`echo $inc | sed 's/-faltivec//'`
+     if test -n "$has_minus_i" && test -n "$has_minus_faltivec"; then
         # Has some other -?.
         echo
         { echo "$as_me:$LINENO: WARNING: Only -I options are allowed in arg 4 ($_sci_inc) of BLAS check.  Skipping $inc." >&5
@@ -25596,7 +25663,7 @@ echo "$as_me: WARNING: Only -I options are allowed in arg 4 ($_sci_inc) of BLAS 
   fi
 
   the_inc=`echo $inc | grep "\-I"`
-  if test -z "$the_inc"; then
+  if test -z "$the_inc" && test "$has_minus_faltivec" = "no"; then
      # If the include arg does not already have -I on it.
      if test -d $inc; then
         # If the directory exists
@@ -25965,8 +26032,8 @@ _sci_includes=''
 ## arg 2 : checking message
 ## arg 3 : includes that arg 8 needs to compile (e.g., math.h)
 ##           If the first arg is "extern_C", then extern "C" is added around includes.
-## arg 4 : include path(s). -I is appened to each path (unless it already has a -I).
-##           Any other -? args are removed.
+## arg 4 : include path(s). -I is appended to each path (unless it already has a -I).
+##           Any other -? args are removed.  (-faltivec is ok on mac)
 ##           (Only one may be given if "Specific" (arg9) is chosen.)
 ## arg 5 : list of libs to link against
 ##           If the libraries do not have a '-l' on them, it is appeneded.
@@ -26045,10 +26112,12 @@ echo "$as_me: error: Please do not specify /usr/include as the location for BLAS
 
   # Make sure it doesn't have any thing but -I
   #   The following "sed" replaces anything that starts with a '-' with nothing (blank).
+  has_minus_faltivec=no
   has_minus=`echo $inc | sed 's/-.*//'`
   if test -z "$has_minus"; then
      has_minus_i=`echo $inc | sed 's/-I.*//'`
-     if test -n "$has_minus_i"; then
+     has_minus_faltivec=`echo $inc | sed 's/-faltivec//'`
+     if test -n "$has_minus_i" && test -n "$has_minus_faltivec"; then
         # Has some other -?.
         echo
         { echo "$as_me:$LINENO: WARNING: Only -I options are allowed in arg 4 ($_sci_inc) of BLAS check.  Skipping $inc." >&5
@@ -26058,7 +26127,7 @@ echo "$as_me: WARNING: Only -I options are allowed in arg 4 ($_sci_inc) of BLAS 
   fi
 
   the_inc=`echo $inc | grep "\-I"`
-  if test -z "$the_inc"; then
+  if test -z "$the_inc" && test "$has_minus_faltivec" = "no"; then
      # If the include arg does not already have -I on it.
      if test -d $inc; then
         # If the directory exists
@@ -26427,8 +26496,8 @@ _sci_includes=''
 ## arg 2 : checking message
 ## arg 3 : includes that arg 8 needs to compile (e.g., math.h)
 ##           If the first arg is "extern_C", then extern "C" is added around includes.
-## arg 4 : include path(s). -I is appened to each path (unless it already has a -I).
-##           Any other -? args are removed.
+## arg 4 : include path(s). -I is appended to each path (unless it already has a -I).
+##           Any other -? args are removed.  (-faltivec is ok on mac)
 ##           (Only one may be given if "Specific" (arg9) is chosen.)
 ## arg 5 : list of libs to link against
 ##           If the libraries do not have a '-l' on them, it is appeneded.
@@ -26848,8 +26917,8 @@ _sci_includes=''
 ## arg 2 : checking message
 ## arg 3 : includes that arg 8 needs to compile (e.g., math.h)
 ##           If the first arg is "extern_C", then extern "C" is added around includes.
-## arg 4 : include path(s). -I is appened to each path (unless it already has a -I).
-##           Any other -? args are removed.
+## arg 4 : include path(s). -I is appended to each path (unless it already has a -I).
+##           Any other -? args are removed.  (-faltivec is ok on mac)
 ##           (Only one may be given if "Specific" (arg9) is chosen.)
 ## arg 5 : list of libs to link against
 ##           If the libraries do not have a '-l' on them, it is appeneded.
@@ -27305,8 +27374,8 @@ if test "$sci_required_ftgl" = "yes"; then
 ## arg 2 : checking message
 ## arg 3 : includes that arg 8 needs to compile (e.g., math.h)
 ##           If the first arg is "extern_C", then extern "C" is added around includes.
-## arg 4 : include path(s). -I is appened to each path (unless it already has a -I).
-##           Any other -? args are removed.
+## arg 4 : include path(s). -I is appended to each path (unless it already has a -I).
+##           Any other -? args are removed.  (-faltivec is ok on mac)
 ##           (Only one may be given if "Specific" (arg9) is chosen.)
 ## arg 5 : list of libs to link against
 ##           If the libraries do not have a '-l' on them, it is appeneded.
@@ -27385,10 +27454,12 @@ echo "$as_me: error: Please do not specify /usr/include as the location for FTGL
 
   # Make sure it doesn't have any thing but -I
   #   The following "sed" replaces anything that starts with a '-' with nothing (blank).
+  has_minus_faltivec=no
   has_minus=`echo $inc | sed 's/-.*//'`
   if test -z "$has_minus"; then
      has_minus_i=`echo $inc | sed 's/-I.*//'`
-     if test -n "$has_minus_i"; then
+     has_minus_faltivec=`echo $inc | sed 's/-faltivec//'`
+     if test -n "$has_minus_i" && test -n "$has_minus_faltivec"; then
         # Has some other -?.
         echo
         { echo "$as_me:$LINENO: WARNING: Only -I options are allowed in arg 4 ($_sci_inc) of FTGL check.  Skipping $inc." >&5
@@ -27398,7 +27469,7 @@ echo "$as_me: WARNING: Only -I options are allowed in arg 4 ($_sci_inc) of FTGL 
   fi
 
   the_inc=`echo $inc | grep "\-I"`
-  if test -z "$the_inc"; then
+  if test -z "$the_inc" && test "$has_minus_faltivec" = "no"; then
      # If the include arg does not already have -I on it.
      if test -d $inc; then
         # If the directory exists
@@ -27800,8 +27871,8 @@ case $host in
 ## arg 2 : checking message
 ## arg 3 : includes that arg 8 needs to compile (e.g., math.h)
 ##           If the first arg is "extern_C", then extern "C" is added around includes.
-## arg 4 : include path(s). -I is appened to each path (unless it already has a -I).
-##           Any other -? args are removed.
+## arg 4 : include path(s). -I is appended to each path (unless it already has a -I).
+##           Any other -? args are removed.  (-faltivec is ok on mac)
 ##           (Only one may be given if "Specific" (arg9) is chosen.)
 ## arg 5 : list of libs to link against
 ##           If the libraries do not have a '-l' on them, it is appeneded.
@@ -28225,8 +28296,8 @@ _sci_includes=''
 ## arg 2 : checking message
 ## arg 3 : includes that arg 8 needs to compile (e.g., math.h)
 ##           If the first arg is "extern_C", then extern "C" is added around includes.
-## arg 4 : include path(s). -I is appened to each path (unless it already has a -I).
-##           Any other -? args are removed.
+## arg 4 : include path(s). -I is appended to each path (unless it already has a -I).
+##           Any other -? args are removed.  (-faltivec is ok on mac)
 ##           (Only one may be given if "Specific" (arg9) is chosen.)
 ## arg 5 : list of libs to link against
 ##           If the libraries do not have a '-l' on them, it is appeneded.
@@ -28649,8 +28720,8 @@ if test "$HAVE_LAPACK" != "yes"; then
 ## arg 2 : checking message
 ## arg 3 : includes that arg 8 needs to compile (e.g., math.h)
 ##           If the first arg is "extern_C", then extern "C" is added around includes.
-## arg 4 : include path(s). -I is appened to each path (unless it already has a -I).
-##           Any other -? args are removed.
+## arg 4 : include path(s). -I is appended to each path (unless it already has a -I).
+##           Any other -? args are removed.  (-faltivec is ok on mac)
 ##           (Only one may be given if "Specific" (arg9) is chosen.)
 ## arg 5 : list of libs to link against
 ##           If the libraries do not have a '-l' on them, it is appeneded.
@@ -29081,8 +29152,8 @@ if test "$HAVE_LAPACK" != "yes"; then
 ## arg 2 : checking message
 ## arg 3 : includes that arg 8 needs to compile (e.g., math.h)
 ##           If the first arg is "extern_C", then extern "C" is added around includes.
-## arg 4 : include path(s). -I is appened to each path (unless it already has a -I).
-##           Any other -? args are removed.
+## arg 4 : include path(s). -I is appended to each path (unless it already has a -I).
+##           Any other -? args are removed.  (-faltivec is ok on mac)
 ##           (Only one may be given if "Specific" (arg9) is chosen.)
 ## arg 5 : list of libs to link against
 ##           If the libraries do not have a '-l' on them, it is appeneded.
@@ -29504,8 +29575,8 @@ echo "$as_me: WARNING: Using complib for lapack" >&2;}
 ## arg 2 : checking message
 ## arg 3 : includes that arg 8 needs to compile (e.g., math.h)
 ##           If the first arg is "extern_C", then extern "C" is added around includes.
-## arg 4 : include path(s). -I is appened to each path (unless it already has a -I).
-##           Any other -? args are removed.
+## arg 4 : include path(s). -I is appended to each path (unless it already has a -I).
+##           Any other -? args are removed.  (-faltivec is ok on mac)
 ##           (Only one may be given if "Specific" (arg9) is chosen.)
 ## arg 5 : list of libs to link against
 ##           If the libraries do not have a '-l' on them, it is appeneded.
@@ -29986,8 +30057,8 @@ echo "$as_me: checking for required MPI components......" >&6;}
 ## arg 2 : checking message
 ## arg 3 : includes that arg 8 needs to compile (e.g., math.h)
 ##           If the first arg is "extern_C", then extern "C" is added around includes.
-## arg 4 : include path(s). -I is appened to each path (unless it already has a -I).
-##           Any other -? args are removed.
+## arg 4 : include path(s). -I is appended to each path (unless it already has a -I).
+##           Any other -? args are removed.  (-faltivec is ok on mac)
 ##           (Only one may be given if "Specific" (arg9) is chosen.)
 ## arg 5 : list of libs to link against
 ##           If the libraries do not have a '-l' on them, it is appeneded.
@@ -30066,10 +30137,12 @@ echo "$as_me: error: Please do not specify /usr/include as the location for MPI 
 
   # Make sure it doesn't have any thing but -I
   #   The following "sed" replaces anything that starts with a '-' with nothing (blank).
+  has_minus_faltivec=no
   has_minus=`echo $inc | sed 's/-.*//'`
   if test -z "$has_minus"; then
      has_minus_i=`echo $inc | sed 's/-I.*//'`
-     if test -n "$has_minus_i"; then
+     has_minus_faltivec=`echo $inc | sed 's/-faltivec//'`
+     if test -n "$has_minus_i" && test -n "$has_minus_faltivec"; then
         # Has some other -?.
         echo
         { echo "$as_me:$LINENO: WARNING: Only -I options are allowed in arg 4 ($_sci_inc /usr/include/mpi) of MPI check.  Skipping $inc." >&5
@@ -30079,7 +30152,7 @@ echo "$as_me: WARNING: Only -I options are allowed in arg 4 ($_sci_inc /usr/incl
   fi
 
   the_inc=`echo $inc | grep "\-I"`
-  if test -z "$the_inc"; then
+  if test -z "$the_inc" && test "$has_minus_faltivec" = "no"; then
      # If the include arg does not already have -I on it.
      if test -d $inc; then
         # If the directory exists
@@ -30446,8 +30519,8 @@ _sci_includes=''
 ## arg 2 : checking message
 ## arg 3 : includes that arg 8 needs to compile (e.g., math.h)
 ##           If the first arg is "extern_C", then extern "C" is added around includes.
-## arg 4 : include path(s). -I is appened to each path (unless it already has a -I).
-##           Any other -? args are removed.
+## arg 4 : include path(s). -I is appended to each path (unless it already has a -I).
+##           Any other -? args are removed.  (-faltivec is ok on mac)
 ##           (Only one may be given if "Specific" (arg9) is chosen.)
 ## arg 5 : list of libs to link against
 ##           If the libraries do not have a '-l' on them, it is appeneded.
@@ -30526,10 +30599,12 @@ echo "$as_me: error: Please do not specify /usr/include as the location for MPI 
 
   # Make sure it doesn't have any thing but -I
   #   The following "sed" replaces anything that starts with a '-' with nothing (blank).
+  has_minus_faltivec=no
   has_minus=`echo $inc | sed 's/-.*//'`
   if test -z "$has_minus"; then
      has_minus_i=`echo $inc | sed 's/-I.*//'`
-     if test -n "$has_minus_i"; then
+     has_minus_faltivec=`echo $inc | sed 's/-faltivec//'`
+     if test -n "$has_minus_i" && test -n "$has_minus_faltivec"; then
         # Has some other -?.
         echo
         { echo "$as_me:$LINENO: WARNING: Only -I options are allowed in arg 4 ($_sci_inc /usr/include/mpi) of MPI check.  Skipping $inc." >&5
@@ -30539,7 +30614,7 @@ echo "$as_me: WARNING: Only -I options are allowed in arg 4 ($_sci_inc /usr/incl
   fi
 
   the_inc=`echo $inc | grep "\-I"`
-  if test -z "$the_inc"; then
+  if test -z "$the_inc" && test "$has_minus_faltivec" = "no"; then
      # If the include arg does not already have -I on it.
      if test -d $inc; then
         # If the directory exists
@@ -30905,8 +30980,8 @@ _sci_includes=''
 ## arg 2 : checking message
 ## arg 3 : includes that arg 8 needs to compile (e.g., math.h)
 ##           If the first arg is "extern_C", then extern "C" is added around includes.
-## arg 4 : include path(s). -I is appened to each path (unless it already has a -I).
-##           Any other -? args are removed.
+## arg 4 : include path(s). -I is appended to each path (unless it already has a -I).
+##           Any other -? args are removed.  (-faltivec is ok on mac)
 ##           (Only one may be given if "Specific" (arg9) is chosen.)
 ## arg 5 : list of libs to link against
 ##           If the libraries do not have a '-l' on them, it is appeneded.
@@ -30985,10 +31060,12 @@ echo "$as_me: error: Please do not specify /usr/include as the location for MPI 
 
   # Make sure it doesn't have any thing but -I
   #   The following "sed" replaces anything that starts with a '-' with nothing (blank).
+  has_minus_faltivec=no
   has_minus=`echo $inc | sed 's/-.*//'`
   if test -z "$has_minus"; then
      has_minus_i=`echo $inc | sed 's/-I.*//'`
-     if test -n "$has_minus_i"; then
+     has_minus_faltivec=`echo $inc | sed 's/-faltivec//'`
+     if test -n "$has_minus_i" && test -n "$has_minus_faltivec"; then
         # Has some other -?.
         echo
         { echo "$as_me:$LINENO: WARNING: Only -I options are allowed in arg 4 ($_sci_inc /usr/include/mpi) of MPI check.  Skipping $inc." >&5
@@ -30998,7 +31075,7 @@ echo "$as_me: WARNING: Only -I options are allowed in arg 4 ($_sci_inc /usr/incl
   fi
 
   the_inc=`echo $inc | grep "\-I"`
-  if test -z "$the_inc"; then
+  if test -z "$the_inc" && test "$has_minus_faltivec" = "no"; then
      # If the include arg does not already have -I on it.
      if test -d $inc; then
         # If the directory exists
@@ -31363,8 +31440,8 @@ _sci_includes=''
 ## arg 2 : checking message
 ## arg 3 : includes that arg 8 needs to compile (e.g., math.h)
 ##           If the first arg is "extern_C", then extern "C" is added around includes.
-## arg 4 : include path(s). -I is appened to each path (unless it already has a -I).
-##           Any other -? args are removed.
+## arg 4 : include path(s). -I is appended to each path (unless it already has a -I).
+##           Any other -? args are removed.  (-faltivec is ok on mac)
 ##           (Only one may be given if "Specific" (arg9) is chosen.)
 ## arg 5 : list of libs to link against
 ##           If the libraries do not have a '-l' on them, it is appeneded.
@@ -31443,10 +31520,12 @@ echo "$as_me: error: Please do not specify /usr/include as the location for MPI 
 
   # Make sure it doesn't have any thing but -I
   #   The following "sed" replaces anything that starts with a '-' with nothing (blank).
+  has_minus_faltivec=no
   has_minus=`echo $inc | sed 's/-.*//'`
   if test -z "$has_minus"; then
      has_minus_i=`echo $inc | sed 's/-I.*//'`
-     if test -n "$has_minus_i"; then
+     has_minus_faltivec=`echo $inc | sed 's/-faltivec//'`
+     if test -n "$has_minus_i" && test -n "$has_minus_faltivec"; then
         # Has some other -?.
         echo
         { echo "$as_me:$LINENO: WARNING: Only -I options are allowed in arg 4 ($_sci_inc /usr/include/mpi) of MPI check.  Skipping $inc." >&5
@@ -31456,7 +31535,7 @@ echo "$as_me: WARNING: Only -I options are allowed in arg 4 ($_sci_inc /usr/incl
   fi
 
   the_inc=`echo $inc | grep "\-I"`
-  if test -z "$the_inc"; then
+  if test -z "$the_inc" && test "$has_minus_faltivec" = "no"; then
      # If the include arg does not already have -I on it.
      if test -d $inc; then
         # If the directory exists
@@ -31984,8 +32063,8 @@ fi
 ## arg 2 : checking message
 ## arg 3 : includes that arg 8 needs to compile (e.g., math.h)
 ##           If the first arg is "extern_C", then extern "C" is added around includes.
-## arg 4 : include path(s). -I is appened to each path (unless it already has a -I).
-##           Any other -? args are removed.
+## arg 4 : include path(s). -I is appended to each path (unless it already has a -I).
+##           Any other -? args are removed.  (-faltivec is ok on mac)
 ##           (Only one may be given if "Specific" (arg9) is chosen.)
 ## arg 5 : list of libs to link against
 ##           If the libraries do not have a '-l' on them, it is appeneded.
@@ -32064,10 +32143,12 @@ echo "$as_me: error: Please do not specify /usr/include as the location for MPIU
 
   # Make sure it doesn't have any thing but -I
   #   The following "sed" replaces anything that starts with a '-' with nothing (blank).
+  has_minus_faltivec=no
   has_minus=`echo $inc | sed 's/-.*//'`
   if test -z "$has_minus"; then
      has_minus_i=`echo $inc | sed 's/-I.*//'`
-     if test -n "$has_minus_i"; then
+     has_minus_faltivec=`echo $inc | sed 's/-faltivec//'`
+     if test -n "$has_minus_i" && test -n "$has_minus_faltivec"; then
         # Has some other -?.
         echo
         { echo "$as_me:$LINENO: WARNING: Only -I options are allowed in arg 4 ($_sci_inc) of MPIUNI check.  Skipping $inc." >&5
@@ -32077,7 +32158,7 @@ echo "$as_me: WARNING: Only -I options are allowed in arg 4 ($_sci_inc) of MPIUN
   fi
 
   the_inc=`echo $inc | grep "\-I"`
-  if test -z "$the_inc"; then
+  if test -z "$the_inc" && test "$has_minus_faltivec" = "no"; then
      # If the include arg does not already have -I on it.
      if test -d $inc; then
         # If the directory exists
@@ -32442,8 +32523,8 @@ if test "$HAVE_MPIUNI" != "yes"; then
 ## arg 2 : checking message
 ## arg 3 : includes that arg 8 needs to compile (e.g., math.h)
 ##           If the first arg is "extern_C", then extern "C" is added around includes.
-## arg 4 : include path(s). -I is appened to each path (unless it already has a -I).
-##           Any other -? args are removed.
+## arg 4 : include path(s). -I is appended to each path (unless it already has a -I).
+##           Any other -? args are removed.  (-faltivec is ok on mac)
 ##           (Only one may be given if "Specific" (arg9) is chosen.)
 ## arg 5 : list of libs to link against
 ##           If the libraries do not have a '-l' on them, it is appeneded.
@@ -32522,10 +32603,12 @@ echo "$as_me: error: Please do not specify /usr/include as the location for MPIU
 
   # Make sure it doesn't have any thing but -I
   #   The following "sed" replaces anything that starts with a '-' with nothing (blank).
+  has_minus_faltivec=no
   has_minus=`echo $inc | sed 's/-.*//'`
   if test -z "$has_minus"; then
      has_minus_i=`echo $inc | sed 's/-I.*//'`
-     if test -n "$has_minus_i"; then
+     has_minus_faltivec=`echo $inc | sed 's/-faltivec//'`
+     if test -n "$has_minus_i" && test -n "$has_minus_faltivec"; then
         # Has some other -?.
         echo
         { echo "$as_me:$LINENO: WARNING: Only -I options are allowed in arg 4 ($_sci_inc) of MPIUNICH check.  Skipping $inc." >&5
@@ -32535,7 +32618,7 @@ echo "$as_me: WARNING: Only -I options are allowed in arg 4 ($_sci_inc) of MPIUN
   fi
 
   the_inc=`echo $inc | grep "\-I"`
-  if test -z "$the_inc"; then
+  if test -z "$the_inc" && test "$has_minus_faltivec" = "no"; then
      # If the include arg does not already have -I on it.
      if test -d $inc; then
         # If the directory exists
@@ -32974,8 +33057,8 @@ if (test "$HAVE_MPI" = "yes" || test "$HAVE_MPIUNI" = "yes") &&
 ## arg 2 : checking message
 ## arg 3 : includes that arg 8 needs to compile (e.g., math.h)
 ##           If the first arg is "extern_C", then extern "C" is added around includes.
-## arg 4 : include path(s). -I is appened to each path (unless it already has a -I).
-##           Any other -? args are removed.
+## arg 4 : include path(s). -I is appended to each path (unless it already has a -I).
+##           Any other -? args are removed.  (-faltivec is ok on mac)
 ##           (Only one may be given if "Specific" (arg9) is chosen.)
 ## arg 5 : list of libs to link against
 ##           If the libraries do not have a '-l' on them, it is appeneded.
@@ -33054,10 +33137,12 @@ echo "$as_me: error: Please do not specify /usr/include as the location for PETS
 
   # Make sure it doesn't have any thing but -I
   #   The following "sed" replaces anything that starts with a '-' with nothing (blank).
+  has_minus_faltivec=no
   has_minus=`echo $inc | sed 's/-.*//'`
   if test -z "$has_minus"; then
      has_minus_i=`echo $inc | sed 's/-I.*//'`
-     if test -n "$has_minus_i"; then
+     has_minus_faltivec=`echo $inc | sed 's/-faltivec//'`
+     if test -n "$has_minus_i" && test -n "$has_minus_faltivec"; then
         # Has some other -?.
         echo
         { echo "$as_me:$LINENO: WARNING: Only -I options are allowed in arg 4 ($_sci_inc /usr/include/petsc) of PETSC check.  Skipping $inc." >&5
@@ -33067,7 +33152,7 @@ echo "$as_me: WARNING: Only -I options are allowed in arg 4 ($_sci_inc /usr/incl
   fi
 
   the_inc=`echo $inc | grep "\-I"`
-  if test -z "$the_inc"; then
+  if test -z "$the_inc" && test "$has_minus_faltivec" = "no"; then
      # If the include arg does not already have -I on it.
      if test -d $inc; then
         # If the directory exists
@@ -33452,8 +33537,8 @@ echo "$as_me: error: One or more of the PETSc components is missing." >&2;}
 ## arg 2 : checking message
 ## arg 3 : includes that arg 8 needs to compile (e.g., math.h)
 ##           If the first arg is "extern_C", then extern "C" is added around includes.
-## arg 4 : include path(s). -I is appened to each path (unless it already has a -I).
-##           Any other -? args are removed.
+## arg 4 : include path(s). -I is appended to each path (unless it already has a -I).
+##           Any other -? args are removed.  (-faltivec is ok on mac)
 ##           (Only one may be given if "Specific" (arg9) is chosen.)
 ## arg 5 : list of libs to link against
 ##           If the libraries do not have a '-l' on them, it is appeneded.
@@ -33532,10 +33617,12 @@ echo "$as_me: error: Please do not specify /usr/include as the location for PETS
 
   # Make sure it doesn't have any thing but -I
   #   The following "sed" replaces anything that starts with a '-' with nothing (blank).
+  has_minus_faltivec=no
   has_minus=`echo $inc | sed 's/-.*//'`
   if test -z "$has_minus"; then
      has_minus_i=`echo $inc | sed 's/-I.*//'`
-     if test -n "$has_minus_i"; then
+     has_minus_faltivec=`echo $inc | sed 's/-faltivec//'`
+     if test -n "$has_minus_i" && test -n "$has_minus_faltivec"; then
         # Has some other -?.
         echo
         { echo "$as_me:$LINENO: WARNING: Only -I options are allowed in arg 4 ($_sci_inc /usr/include/petsc) of PETSC_UNI check.  Skipping $inc." >&5
@@ -33545,7 +33632,7 @@ echo "$as_me: WARNING: Only -I options are allowed in arg 4 ($_sci_inc /usr/incl
   fi
 
   the_inc=`echo $inc | grep "\-I"`
-  if test -z "$the_inc"; then
+  if test -z "$the_inc" && test "$has_minus_faltivec" = "no"; then
      # If the include arg does not already have -I on it.
      if test -d $inc; then
         # If the directory exists
@@ -34154,8 +34241,8 @@ if test "$sci_required_babel" = "yes"; then
 ## arg 2 : checking message
 ## arg 3 : includes that arg 8 needs to compile (e.g., math.h)
 ##           If the first arg is "extern_C", then extern "C" is added around includes.
-## arg 4 : include path(s). -I is appened to each path (unless it already has a -I).
-##           Any other -? args are removed.
+## arg 4 : include path(s). -I is appended to each path (unless it already has a -I).
+##           Any other -? args are removed.  (-faltivec is ok on mac)
 ##           (Only one may be given if "Specific" (arg9) is chosen.)
 ## arg 5 : list of libs to link against
 ##           If the libraries do not have a '-l' on them, it is appeneded.
@@ -34234,10 +34321,12 @@ echo "$as_me: error: Please do not specify /usr/include as the location for SIDL
 
   # Make sure it doesn't have any thing but -I
   #   The following "sed" replaces anything that starts with a '-' with nothing (blank).
+  has_minus_faltivec=no
   has_minus=`echo $inc | sed 's/-.*//'`
   if test -z "$has_minus"; then
      has_minus_i=`echo $inc | sed 's/-I.*//'`
-     if test -n "$has_minus_i"; then
+     has_minus_faltivec=`echo $inc | sed 's/-faltivec//'`
+     if test -n "$has_minus_i" && test -n "$has_minus_faltivec"; then
         # Has some other -?.
         echo
         { echo "$as_me:$LINENO: WARNING: Only -I options are allowed in arg 4 ($_sci_inc) of SIDL check.  Skipping $inc." >&5
@@ -34247,7 +34336,7 @@ echo "$as_me: WARNING: Only -I options are allowed in arg 4 ($_sci_inc) of SIDL 
   fi
 
   the_inc=`echo $inc | grep "\-I"`
-  if test -z "$the_inc"; then
+  if test -z "$the_inc" && test "$has_minus_faltivec" = "no"; then
      # If the include arg does not already have -I on it.
      if test -d $inc; then
         # If the directory exists
@@ -34683,8 +34772,8 @@ if test "$sci_required_jpeg" = "yes"; then
 ## arg 2 : checking message
 ## arg 3 : includes that arg 8 needs to compile (e.g., math.h)
 ##           If the first arg is "extern_C", then extern "C" is added around includes.
-## arg 4 : include path(s). -I is appened to each path (unless it already has a -I).
-##           Any other -? args are removed.
+## arg 4 : include path(s). -I is appended to each path (unless it already has a -I).
+##           Any other -? args are removed.  (-faltivec is ok on mac)
 ##           (Only one may be given if "Specific" (arg9) is chosen.)
 ## arg 5 : list of libs to link against
 ##           If the libraries do not have a '-l' on them, it is appeneded.
@@ -35117,8 +35206,8 @@ if test "$sci_required_tiff" = "yes"; then
 ## arg 2 : checking message
 ## arg 3 : includes that arg 8 needs to compile (e.g., math.h)
 ##           If the first arg is "extern_C", then extern "C" is added around includes.
-## arg 4 : include path(s). -I is appened to each path (unless it already has a -I).
-##           Any other -? args are removed.
+## arg 4 : include path(s). -I is appended to each path (unless it already has a -I).
+##           Any other -? args are removed.  (-faltivec is ok on mac)
 ##           (Only one may be given if "Specific" (arg9) is chosen.)
 ## arg 5 : list of libs to link against
 ##           If the libraries do not have a '-l' on them, it is appeneded.
@@ -35553,8 +35642,8 @@ if test "$sci_required_netsolve" = "yes"; then
 ## arg 2 : checking message
 ## arg 3 : includes that arg 8 needs to compile (e.g., math.h)
 ##           If the first arg is "extern_C", then extern "C" is added around includes.
-## arg 4 : include path(s). -I is appened to each path (unless it already has a -I).
-##           Any other -? args are removed.
+## arg 4 : include path(s). -I is appended to each path (unless it already has a -I).
+##           Any other -? args are removed.  (-faltivec is ok on mac)
 ##           (Only one may be given if "Specific" (arg9) is chosen.)
 ## arg 5 : list of libs to link against
 ##           If the libraries do not have a '-l' on them, it is appeneded.
@@ -36089,8 +36178,8 @@ if test "$sci_required_glut" = "yes"; then
 ## arg 2 : checking message
 ## arg 3 : includes that arg 8 needs to compile (e.g., math.h)
 ##           If the first arg is "extern_C", then extern "C" is added around includes.
-## arg 4 : include path(s). -I is appened to each path (unless it already has a -I).
-##           Any other -? args are removed.
+## arg 4 : include path(s). -I is appended to each path (unless it already has a -I).
+##           Any other -? args are removed.  (-faltivec is ok on mac)
 ##           (Only one may be given if "Specific" (arg9) is chosen.)
 ## arg 5 : list of libs to link against
 ##           If the libraries do not have a '-l' on them, it is appeneded.
@@ -36169,10 +36258,12 @@ echo "$as_me: error: Please do not specify /usr/include as the location for GLUT
 
   # Make sure it doesn't have any thing but -I
   #   The following "sed" replaces anything that starts with a '-' with nothing (blank).
+  has_minus_faltivec=no
   has_minus=`echo $inc | sed 's/-.*//'`
   if test -z "$has_minus"; then
      has_minus_i=`echo $inc | sed 's/-I.*//'`
-     if test -n "$has_minus_i"; then
+     has_minus_faltivec=`echo $inc | sed 's/-faltivec//'`
+     if test -n "$has_minus_i" && test -n "$has_minus_faltivec"; then
         # Has some other -?.
         echo
         { echo "$as_me:$LINENO: WARNING: Only -I options are allowed in arg 4 ($_sci_inc) of GLUT check.  Skipping $inc." >&5
@@ -36182,7 +36273,7 @@ echo "$as_me: WARNING: Only -I options are allowed in arg 4 ($_sci_inc) of GLUT 
   fi
 
   the_inc=`echo $inc | grep "\-I"`
-  if test -z "$the_inc"; then
+  if test -z "$the_inc" && test "$has_minus_faltivec" = "no"; then
      # If the include arg does not already have -I on it.
      if test -d $inc; then
         # If the directory exists
@@ -36702,8 +36793,8 @@ if test "$sci_required_glui" = "yes"; then
 ## arg 2 : checking message
 ## arg 3 : includes that arg 8 needs to compile (e.g., math.h)
 ##           If the first arg is "extern_C", then extern "C" is added around includes.
-## arg 4 : include path(s). -I is appened to each path (unless it already has a -I).
-##           Any other -? args are removed.
+## arg 4 : include path(s). -I is appended to each path (unless it already has a -I).
+##           Any other -? args are removed.  (-faltivec is ok on mac)
 ##           (Only one may be given if "Specific" (arg9) is chosen.)
 ## arg 5 : list of libs to link against
 ##           If the libraries do not have a '-l' on them, it is appeneded.
@@ -36782,10 +36873,12 @@ echo "$as_me: error: Please do not specify /usr/include as the location for GLUI
 
   # Make sure it doesn't have any thing but -I
   #   The following "sed" replaces anything that starts with a '-' with nothing (blank).
+  has_minus_faltivec=no
   has_minus=`echo $inc | sed 's/-.*//'`
   if test -z "$has_minus"; then
      has_minus_i=`echo $inc | sed 's/-I.*//'`
-     if test -n "$has_minus_i"; then
+     has_minus_faltivec=`echo $inc | sed 's/-faltivec//'`
+     if test -n "$has_minus_i" && test -n "$has_minus_faltivec"; then
         # Has some other -?.
         echo
         { echo "$as_me:$LINENO: WARNING: Only -I options are allowed in arg 4 ($_sci_inc) of GLUI check.  Skipping $inc." >&5
@@ -36795,7 +36888,7 @@ echo "$as_me: WARNING: Only -I options are allowed in arg 4 ($_sci_inc) of GLUI 
   fi
 
   the_inc=`echo $inc | grep "\-I"`
-  if test -z "$the_inc"; then
+  if test -z "$the_inc" && test "$has_minus_faltivec" = "no"; then
      # If the include arg does not already have -I on it.
      if test -d $inc; then
         # If the directory exists
@@ -37197,8 +37290,8 @@ if test "$sci_required_oogl" = "yes"; then
 ## arg 2 : checking message
 ## arg 3 : includes that arg 8 needs to compile (e.g., math.h)
 ##           If the first arg is "extern_C", then extern "C" is added around includes.
-## arg 4 : include path(s). -I is appened to each path (unless it already has a -I).
-##           Any other -? args are removed.
+## arg 4 : include path(s). -I is appended to each path (unless it already has a -I).
+##           Any other -? args are removed.  (-faltivec is ok on mac)
 ##           (Only one may be given if "Specific" (arg9) is chosen.)
 ## arg 5 : list of libs to link against
 ##           If the libraries do not have a '-l' on them, it is appeneded.
@@ -37277,10 +37370,12 @@ echo "$as_me: error: Please do not specify /usr/include as the location for OOGL
 
   # Make sure it doesn't have any thing but -I
   #   The following "sed" replaces anything that starts with a '-' with nothing (blank).
+  has_minus_faltivec=no
   has_minus=`echo $inc | sed 's/-.*//'`
   if test -z "$has_minus"; then
      has_minus_i=`echo $inc | sed 's/-I.*//'`
-     if test -n "$has_minus_i"; then
+     has_minus_faltivec=`echo $inc | sed 's/-faltivec//'`
+     if test -n "$has_minus_i" && test -n "$has_minus_faltivec"; then
         # Has some other -?.
         echo
         { echo "$as_me:$LINENO: WARNING: Only -I options are allowed in arg 4 ($_sci_inc) of OOGL check.  Skipping $inc." >&5
@@ -37290,7 +37385,7 @@ echo "$as_me: WARNING: Only -I options are allowed in arg 4 ($_sci_inc) of OOGL 
   fi
 
   the_inc=`echo $inc | grep "\-I"`
-  if test -z "$the_inc"; then
+  if test -z "$the_inc" && test "$has_minus_faltivec" = "no"; then
      # If the include arg does not already have -I on it.
      if test -d $inc; then
         # If the directory exists
@@ -37716,8 +37811,8 @@ if test "$sci_required_glew" = "yes"; then
 ## arg 2 : checking message
 ## arg 3 : includes that arg 8 needs to compile (e.g., math.h)
 ##           If the first arg is "extern_C", then extern "C" is added around includes.
-## arg 4 : include path(s). -I is appened to each path (unless it already has a -I).
-##           Any other -? args are removed.
+## arg 4 : include path(s). -I is appended to each path (unless it already has a -I).
+##           Any other -? args are removed.  (-faltivec is ok on mac)
 ##           (Only one may be given if "Specific" (arg9) is chosen.)
 ## arg 5 : list of libs to link against
 ##           If the libraries do not have a '-l' on them, it is appeneded.
@@ -37796,10 +37891,12 @@ echo "$as_me: error: Please do not specify /usr/include as the location for GLEW
 
   # Make sure it doesn't have any thing but -I
   #   The following "sed" replaces anything that starts with a '-' with nothing (blank).
+  has_minus_faltivec=no
   has_minus=`echo $inc | sed 's/-.*//'`
   if test -z "$has_minus"; then
      has_minus_i=`echo $inc | sed 's/-I.*//'`
-     if test -n "$has_minus_i"; then
+     has_minus_faltivec=`echo $inc | sed 's/-faltivec//'`
+     if test -n "$has_minus_i" && test -n "$has_minus_faltivec"; then
         # Has some other -?.
         echo
         { echo "$as_me:$LINENO: WARNING: Only -I options are allowed in arg 4 ($_sci_inc) of GLEW check.  Skipping $inc." >&5
@@ -37809,7 +37906,7 @@ echo "$as_me: WARNING: Only -I options are allowed in arg 4 ($_sci_inc) of GLEW 
   fi
 
   the_inc=`echo $inc | grep "\-I"`
-  if test -z "$the_inc"; then
+  if test -z "$the_inc" && test "$has_minus_faltivec" = "no"; then
      # If the include arg does not already have -I on it.
      if test -d $inc; then
         # If the directory exists
@@ -38206,8 +38303,8 @@ if test "$sci_required_audio" = "yes"; then
 ## arg 2 : checking message
 ## arg 3 : includes that arg 8 needs to compile (e.g., math.h)
 ##           If the first arg is "extern_C", then extern "C" is added around includes.
-## arg 4 : include path(s). -I is appened to each path (unless it already has a -I).
-##           Any other -? args are removed.
+## arg 4 : include path(s). -I is appended to each path (unless it already has a -I).
+##           Any other -? args are removed.  (-faltivec is ok on mac)
 ##           (Only one may be given if "Specific" (arg9) is chosen.)
 ## arg 5 : list of libs to link against
 ##           If the libraries do not have a '-l' on them, it is appeneded.
@@ -38682,8 +38779,8 @@ echo "$as_me: error: Please fix this problem and then configure again." >&2;}
 ## arg 2 : checking message
 ## arg 3 : includes that arg 8 needs to compile (e.g., math.h)
 ##           If the first arg is "extern_C", then extern "C" is added around includes.
-## arg 4 : include path(s). -I is appened to each path (unless it already has a -I).
-##           Any other -? args are removed.
+## arg 4 : include path(s). -I is appended to each path (unless it already has a -I).
+##           Any other -? args are removed.  (-faltivec is ok on mac)
 ##           (Only one may be given if "Specific" (arg9) is chosen.)
 ## arg 5 : list of libs to link against
 ##           If the libraries do not have a '-l' on them, it is appeneded.
@@ -38762,10 +38859,12 @@ echo "$as_me: error: Please do not specify /usr/include as the location for TEEM
 
   # Make sure it doesn't have any thing but -I
   #   The following "sed" replaces anything that starts with a '-' with nothing (blank).
+  has_minus_faltivec=no
   has_minus=`echo $inc | sed 's/-.*//'`
   if test -z "$has_minus"; then
      has_minus_i=`echo $inc | sed 's/-I.*//'`
-     if test -n "$has_minus_i"; then
+     has_minus_faltivec=`echo $inc | sed 's/-faltivec//'`
+     if test -n "$has_minus_i" && test -n "$has_minus_faltivec"; then
         # Has some other -?.
         echo
         { echo "$as_me:$LINENO: WARNING: Only -I options are allowed in arg 4 ($_sci_inc) of TEEM check.  Skipping $inc." >&5
@@ -38775,7 +38874,7 @@ echo "$as_me: WARNING: Only -I options are allowed in arg 4 ($_sci_inc) of TEEM 
   fi
 
   the_inc=`echo $inc | grep "\-I"`
-  if test -z "$the_inc"; then
+  if test -z "$the_inc" && test "$has_minus_faltivec" = "no"; then
      # If the include arg does not already have -I on it.
      if test -d $inc; then
         # If the directory exists
@@ -39177,8 +39276,8 @@ if test "$sci_required_mdsplus" = "yes"; then
 ## arg 2 : checking message
 ## arg 3 : includes that arg 8 needs to compile (e.g., math.h)
 ##           If the first arg is "extern_C", then extern "C" is added around includes.
-## arg 4 : include path(s). -I is appened to each path (unless it already has a -I).
-##           Any other -? args are removed.
+## arg 4 : include path(s). -I is appended to each path (unless it already has a -I).
+##           Any other -? args are removed.  (-faltivec is ok on mac)
 ##           (Only one may be given if "Specific" (arg9) is chosen.)
 ## arg 5 : list of libs to link against
 ##           If the libraries do not have a '-l' on them, it is appeneded.
@@ -39257,10 +39356,12 @@ echo "$as_me: error: Please do not specify /usr/include as the location for MDSP
 
   # Make sure it doesn't have any thing but -I
   #   The following "sed" replaces anything that starts with a '-' with nothing (blank).
+  has_minus_faltivec=no
   has_minus=`echo $inc | sed 's/-.*//'`
   if test -z "$has_minus"; then
      has_minus_i=`echo $inc | sed 's/-I.*//'`
-     if test -n "$has_minus_i"; then
+     has_minus_faltivec=`echo $inc | sed 's/-faltivec//'`
+     if test -n "$has_minus_i" && test -n "$has_minus_faltivec"; then
         # Has some other -?.
         echo
         { echo "$as_me:$LINENO: WARNING: Only -I options are allowed in arg 4 ($_sci_inc) of MDSPLUS check.  Skipping $inc." >&5
@@ -39270,7 +39371,7 @@ echo "$as_me: WARNING: Only -I options are allowed in arg 4 ($_sci_inc) of MDSPL
   fi
 
   the_inc=`echo $inc | grep "\-I"`
-  if test -z "$the_inc"; then
+  if test -z "$the_inc" && test "$has_minus_faltivec" = "no"; then
      # If the include arg does not already have -I on it.
      if test -d $inc; then
         # If the directory exists
@@ -39672,8 +39773,8 @@ if test "$sci_required_hdf5" = "yes"; then
 ## arg 2 : checking message
 ## arg 3 : includes that arg 8 needs to compile (e.g., math.h)
 ##           If the first arg is "extern_C", then extern "C" is added around includes.
-## arg 4 : include path(s). -I is appened to each path (unless it already has a -I).
-##           Any other -? args are removed.
+## arg 4 : include path(s). -I is appended to each path (unless it already has a -I).
+##           Any other -? args are removed.  (-faltivec is ok on mac)
 ##           (Only one may be given if "Specific" (arg9) is chosen.)
 ## arg 5 : list of libs to link against
 ##           If the libraries do not have a '-l' on them, it is appeneded.
@@ -39752,10 +39853,12 @@ echo "$as_me: error: Please do not specify /usr/include as the location for HDF5
 
   # Make sure it doesn't have any thing but -I
   #   The following "sed" replaces anything that starts with a '-' with nothing (blank).
+  has_minus_faltivec=no
   has_minus=`echo $inc | sed 's/-.*//'`
   if test -z "$has_minus"; then
      has_minus_i=`echo $inc | sed 's/-I.*//'`
-     if test -n "$has_minus_i"; then
+     has_minus_faltivec=`echo $inc | sed 's/-faltivec//'`
+     if test -n "$has_minus_i" && test -n "$has_minus_faltivec"; then
         # Has some other -?.
         echo
         { echo "$as_me:$LINENO: WARNING: Only -I options are allowed in arg 4 ($_sci_inc) of HDF5 check.  Skipping $inc." >&5
@@ -39765,7 +39868,7 @@ echo "$as_me: WARNING: Only -I options are allowed in arg 4 ($_sci_inc) of HDF5 
   fi
 
   the_inc=`echo $inc | grep "\-I"`
-  if test -z "$the_inc"; then
+  if test -z "$the_inc" && test "$has_minus_faltivec" = "no"; then
      # If the include arg does not already have -I on it.
      if test -d $inc; then
         # If the directory exists
@@ -40157,8 +40260,8 @@ if test "$sci_required_perfex" = "yes"; then
 ## arg 2 : checking message
 ## arg 3 : includes that arg 8 needs to compile (e.g., math.h)
 ##           If the first arg is "extern_C", then extern "C" is added around includes.
-## arg 4 : include path(s). -I is appened to each path (unless it already has a -I).
-##           Any other -? args are removed.
+## arg 4 : include path(s). -I is appended to each path (unless it already has a -I).
+##           Any other -? args are removed.  (-faltivec is ok on mac)
 ##           (Only one may be given if "Specific" (arg9) is chosen.)
 ## arg 5 : list of libs to link against
 ##           If the libraries do not have a '-l' on them, it is appeneded.
@@ -40597,8 +40700,8 @@ if test "$sci_required_crypto" = "yes"; then
 ## arg 2 : checking message
 ## arg 3 : includes that arg 8 needs to compile (e.g., math.h)
 ##           If the first arg is "extern_C", then extern "C" is added around includes.
-## arg 4 : include path(s). -I is appened to each path (unless it already has a -I).
-##           Any other -? args are removed.
+## arg 4 : include path(s). -I is appended to each path (unless it already has a -I).
+##           Any other -? args are removed.  (-faltivec is ok on mac)
 ##           (Only one may be given if "Specific" (arg9) is chosen.)
 ## arg 5 : list of libs to link against
 ##           If the libraries do not have a '-l' on them, it is appeneded.
@@ -41044,8 +41147,8 @@ if test "$sci_required_ssl" = "yes"; then
 ## arg 2 : checking message
 ## arg 3 : includes that arg 8 needs to compile (e.g., math.h)
 ##           If the first arg is "extern_C", then extern "C" is added around includes.
-## arg 4 : include path(s). -I is appened to each path (unless it already has a -I).
-##           Any other -? args are removed.
+## arg 4 : include path(s). -I is appended to each path (unless it already has a -I).
+##           Any other -? args are removed.  (-faltivec is ok on mac)
 ##           (Only one may be given if "Specific" (arg9) is chosen.)
 ## arg 5 : list of libs to link against
 ##           If the libraries do not have a '-l' on them, it is appeneded.
@@ -41506,8 +41609,8 @@ echo "$as_me: error: CRYPTO library not found.  This will cause globus check to 
 ## arg 2 : checking message
 ## arg 3 : includes that arg 8 needs to compile (e.g., math.h)
 ##           If the first arg is "extern_C", then extern "C" is added around includes.
-## arg 4 : include path(s). -I is appened to each path (unless it already has a -I).
-##           Any other -? args are removed.
+## arg 4 : include path(s). -I is appended to each path (unless it already has a -I).
+##           Any other -? args are removed.  (-faltivec is ok on mac)
 ##           (Only one may be given if "Specific" (arg9) is chosen.)
 ## arg 5 : list of libs to link against
 ##           If the libraries do not have a '-l' on them, it is appeneded.
@@ -41586,10 +41689,12 @@ echo "$as_me: error: Please do not specify /usr/include as the location for GLOB
 
   # Make sure it doesn't have any thing but -I
   #   The following "sed" replaces anything that starts with a '-' with nothing (blank).
+  has_minus_faltivec=no
   has_minus=`echo $inc | sed 's/-.*//'`
   if test -z "$has_minus"; then
      has_minus_i=`echo $inc | sed 's/-I.*//'`
-     if test -n "$has_minus_i"; then
+     has_minus_faltivec=`echo $inc | sed 's/-faltivec//'`
+     if test -n "$has_minus_i" && test -n "$has_minus_faltivec"; then
         # Has some other -?.
         echo
         { echo "$as_me:$LINENO: WARNING: Only -I options are allowed in arg 4 ($_sci_inc) of GLOBUS check.  Skipping $inc." >&5
@@ -41599,7 +41704,7 @@ echo "$as_me: WARNING: Only -I options are allowed in arg 4 ($_sci_inc) of GLOBU
   fi
 
   the_inc=`echo $inc | grep "\-I"`
-  if test -z "$the_inc"; then
+  if test -z "$the_inc" && test "$has_minus_faltivec" = "no"; then
      # If the include arg does not already have -I on it.
      if test -d $inc; then
         # If the directory exists
@@ -42261,8 +42366,8 @@ if test "$sci_required_qt" = "yes"; then
 ## arg 2 : checking message
 ## arg 3 : includes that arg 8 needs to compile (e.g., math.h)
 ##           If the first arg is "extern_C", then extern "C" is added around includes.
-## arg 4 : include path(s). -I is appened to each path (unless it already has a -I).
-##           Any other -? args are removed.
+## arg 4 : include path(s). -I is appended to each path (unless it already has a -I).
+##           Any other -? args are removed.  (-faltivec is ok on mac)
 ##           (Only one may be given if "Specific" (arg9) is chosen.)
 ## arg 5 : list of libs to link against
 ##           If the libraries do not have a '-l' on them, it is appeneded.
@@ -42341,10 +42446,12 @@ echo "$as_me: error: Please do not specify /usr/include as the location for QT_M
 
   # Make sure it doesn't have any thing but -I
   #   The following "sed" replaces anything that starts with a '-' with nothing (blank).
+  has_minus_faltivec=no
   has_minus=`echo $inc | sed 's/-.*//'`
   if test -z "$has_minus"; then
      has_minus_i=`echo $inc | sed 's/-I.*//'`
-     if test -n "$has_minus_i"; then
+     has_minus_faltivec=`echo $inc | sed 's/-faltivec//'`
+     if test -n "$has_minus_i" && test -n "$has_minus_faltivec"; then
         # Has some other -?.
         echo
         { echo "$as_me:$LINENO: WARNING: Only -I options are allowed in arg 4 ($_qt_inc) of QT_MT check.  Skipping $inc." >&5
@@ -42354,7 +42461,7 @@ echo "$as_me: WARNING: Only -I options are allowed in arg 4 ($_qt_inc) of QT_MT 
   fi
 
   the_inc=`echo $inc | grep "\-I"`
-  if test -z "$the_inc"; then
+  if test -z "$the_inc" && test "$has_minus_faltivec" = "no"; then
      # If the include arg does not already have -I on it.
      if test -d $inc; then
         # If the directory exists
@@ -42801,8 +42908,8 @@ if test "$sci_required_ruby" = "yes"; then
 ## arg 2 : checking message
 ## arg 3 : includes that arg 8 needs to compile (e.g., math.h)
 ##           If the first arg is "extern_C", then extern "C" is added around includes.
-## arg 4 : include path(s). -I is appened to each path (unless it already has a -I).
-##           Any other -? args are removed.
+## arg 4 : include path(s). -I is appended to each path (unless it already has a -I).
+##           Any other -? args are removed.  (-faltivec is ok on mac)
 ##           (Only one may be given if "Specific" (arg9) is chosen.)
 ## arg 5 : list of libs to link against
 ##           If the libraries do not have a '-l' on them, it is appeneded.
@@ -42881,10 +42988,12 @@ echo "$as_me: error: Please do not specify /usr/include as the location for RUBY
 
   # Make sure it doesn't have any thing but -I
   #   The following "sed" replaces anything that starts with a '-' with nothing (blank).
+  has_minus_faltivec=no
   has_minus=`echo $inc | sed 's/-.*//'`
   if test -z "$has_minus"; then
      has_minus_i=`echo $inc | sed 's/-I.*//'`
-     if test -n "$has_minus_i"; then
+     has_minus_faltivec=`echo $inc | sed 's/-faltivec//'`
+     if test -n "$has_minus_i" && test -n "$has_minus_faltivec"; then
         # Has some other -?.
         echo
         { echo "$as_me:$LINENO: WARNING: Only -I options are allowed in arg 4 ($_ruby_inc) of RUBY check.  Skipping $inc." >&5
@@ -42894,7 +43003,7 @@ echo "$as_me: WARNING: Only -I options are allowed in arg 4 ($_ruby_inc) of RUBY
   fi
 
   the_inc=`echo $inc | grep "\-I"`
-  if test -z "$the_inc"; then
+  if test -z "$the_inc" && test "$has_minus_faltivec" = "no"; then
      # If the include arg does not already have -I on it.
      if test -d $inc; then
         # If the directory exists
@@ -43289,8 +43398,8 @@ if test "$sci_required_vtk" = "yes"; then
 ## arg 2 : checking message
 ## arg 3 : includes that arg 8 needs to compile (e.g., math.h)
 ##           If the first arg is "extern_C", then extern "C" is added around includes.
-## arg 4 : include path(s). -I is appened to each path (unless it already has a -I).
-##           Any other -? args are removed.
+## arg 4 : include path(s). -I is appended to each path (unless it already has a -I).
+##           Any other -? args are removed.  (-faltivec is ok on mac)
 ##           (Only one may be given if "Specific" (arg9) is chosen.)
 ## arg 5 : list of libs to link against
 ##           If the libraries do not have a '-l' on them, it is appeneded.
@@ -43369,10 +43478,12 @@ echo "$as_me: error: Please do not specify /usr/include as the location for VTK 
 
   # Make sure it doesn't have any thing but -I
   #   The following "sed" replaces anything that starts with a '-' with nothing (blank).
+  has_minus_faltivec=no
   has_minus=`echo $inc | sed 's/-.*//'`
   if test -z "$has_minus"; then
      has_minus_i=`echo $inc | sed 's/-I.*//'`
-     if test -n "$has_minus_i"; then
+     has_minus_faltivec=`echo $inc | sed 's/-faltivec//'`
+     if test -n "$has_minus_i" && test -n "$has_minus_faltivec"; then
         # Has some other -?.
         echo
         { echo "$as_me:$LINENO: WARNING: Only -I options are allowed in arg 4 ($_vtk_inc) of VTK check.  Skipping $inc." >&5
@@ -43382,7 +43493,7 @@ echo "$as_me: WARNING: Only -I options are allowed in arg 4 ($_vtk_inc) of VTK c
   fi
 
   the_inc=`echo $inc | grep "\-I"`
-  if test -z "$the_inc"; then
+  if test -z "$the_inc" && test "$has_minus_faltivec" = "no"; then
      # If the include arg does not already have -I on it.
      if test -d $inc; then
         # If the directory exists
@@ -43800,8 +43911,8 @@ if test "$sci_required_vdt" = "yes"; then
 ## arg 2 : checking message
 ## arg 3 : includes that arg 8 needs to compile (e.g., math.h)
 ##           If the first arg is "extern_C", then extern "C" is added around includes.
-## arg 4 : include path(s). -I is appened to each path (unless it already has a -I).
-##           Any other -? args are removed.
+## arg 4 : include path(s). -I is appended to each path (unless it already has a -I).
+##           Any other -? args are removed.  (-faltivec is ok on mac)
 ##           (Only one may be given if "Specific" (arg9) is chosen.)
 ## arg 5 : list of libs to link against
 ##           If the libraries do not have a '-l' on them, it is appeneded.
@@ -43880,10 +43991,12 @@ echo "$as_me: error: Please do not specify /usr/include as the location for VDT 
 
   # Make sure it doesn't have any thing but -I
   #   The following "sed" replaces anything that starts with a '-' with nothing (blank).
+  has_minus_faltivec=no
   has_minus=`echo $inc | sed 's/-.*//'`
   if test -z "$has_minus"; then
      has_minus_i=`echo $inc | sed 's/-I.*//'`
-     if test -n "$has_minus_i"; then
+     has_minus_faltivec=`echo $inc | sed 's/-faltivec//'`
+     if test -n "$has_minus_i" && test -n "$has_minus_faltivec"; then
         # Has some other -?.
         echo
         { echo "$as_me:$LINENO: WARNING: Only -I options are allowed in arg 4 ($_vdt_inc) of VDT check.  Skipping $inc." >&5
@@ -43893,7 +44006,7 @@ echo "$as_me: WARNING: Only -I options are allowed in arg 4 ($_vdt_inc) of VDT c
   fi
 
   the_inc=`echo $inc | grep "\-I"`
-  if test -z "$the_inc"; then
+  if test -z "$the_inc" && test "$has_minus_faltivec" = "no"; then
      # If the include arg does not already have -I on it.
      if test -d $inc; then
         # If the directory exists
@@ -44296,8 +44409,8 @@ fi
 ## arg 2 : checking message
 ## arg 3 : includes that arg 8 needs to compile (e.g., math.h)
 ##           If the first arg is "extern_C", then extern "C" is added around includes.
-## arg 4 : include path(s). -I is appened to each path (unless it already has a -I).
-##           Any other -? args are removed.
+## arg 4 : include path(s). -I is appended to each path (unless it already has a -I).
+##           Any other -? args are removed.  (-faltivec is ok on mac)
 ##           (Only one may be given if "Specific" (arg9) is chosen.)
 ## arg 5 : list of libs to link against
 ##           If the libraries do not have a '-l' on them, it is appeneded.
@@ -44376,10 +44489,12 @@ echo "$as_me: error: Please do not specify /usr/include as the location for HYPR
 
   # Make sure it doesn't have any thing but -I
   #   The following "sed" replaces anything that starts with a '-' with nothing (blank).
+  has_minus_faltivec=no
   has_minus=`echo $inc | sed 's/-.*//'`
   if test -z "$has_minus"; then
      has_minus_i=`echo $inc | sed 's/-I.*//'`
-     if test -n "$has_minus_i"; then
+     has_minus_faltivec=`echo $inc | sed 's/-faltivec//'`
+     if test -n "$has_minus_i" && test -n "$has_minus_faltivec"; then
         # Has some other -?.
         echo
         { echo "$as_me:$LINENO: WARNING: Only -I options are allowed in arg 4 ($_sci_inc) of HYPRE check.  Skipping $inc." >&5
@@ -44389,7 +44504,7 @@ echo "$as_me: WARNING: Only -I options are allowed in arg 4 ($_sci_inc) of HYPRE
   fi
 
   the_inc=`echo $inc | grep "\-I"`
-  if test -z "$the_inc"; then
+  if test -z "$the_inc" && test "$has_minus_faltivec" = "no"; then
      # If the include arg does not already have -I on it.
      if test -d $inc; then
         # If the directory exists

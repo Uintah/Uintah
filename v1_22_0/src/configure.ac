@@ -2165,11 +2165,8 @@ case $host in
      if test "$with_atlas" && test "$with_atlas" != yes ; then
        AC_MSG_ERROR(Don't specify a path for atlas when on a Mac (we use vecLib by default.))
      fi
-     SCI_TRY_LINK(BLAS,atlas version oflibraries and headers,vecLib/cblas.h,
-                  ,,,-faltivec -framework vecLib,,optional)
-     if test "$HAVE_BLAS" = yes ; then
-        BLAS_LIB_FLAG="-faltivec -framework vecLib"
-     fi
+     SCI_TRY_LINK(BLAS,atlas version oflibraries and headers (OSX),vecLib/cblas.h,
+                  -faltivec,,,-framework vecLib,,optional)
      ;;
    *)
      SCI_TRY_LINK(BLAS,atlas version of libraries and headers,cblas.h,
