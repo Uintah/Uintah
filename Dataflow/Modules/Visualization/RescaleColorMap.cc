@@ -115,11 +115,11 @@ RescaleColorMap::execute()
       FieldHandle field;
       if (ifield->get(field) && field.get_rep()) {
 
-	ScalarFieldInterface *sfi;
+	ScalarFieldInterfaceHandle sfi;
 	string units;
 	if (field->get_property("units", units))
 	  cmap->units=units;
-	if ((sfi = field->query_scalar_interface(this)))
+	if ((sfi = field->query_scalar_interface(this)).get_rep())
 	{
 	  sfi->compute_min_max(minmax_.first, minmax_.second);
 	} else {

@@ -46,13 +46,13 @@ namespace SCIRun {
 class ScalarClipper : public Clipper
 {
 private:
-  ScalarFieldInterface *sfi_;
+  ScalarFieldInterfaceHandle sfi_;
   string function_;
   GuiInterface *gui_;
   string id_;
 
 public:
-  ScalarClipper(ScalarFieldInterface *sfi,
+  ScalarClipper(ScalarFieldInterfaceHandle sfi,
 		string function,
 		GuiInterface *gui,
 		string id) :
@@ -229,8 +229,8 @@ ClipField::execute()
   if (usefunction_.get())
   {
     ifieldhandle->mesh()->synchronize(Mesh::LOCATE_E);
-    ScalarFieldInterface *sfi = ifieldhandle->query_scalar_interface();
-    if (sfi)
+    ScalarFieldInterfaceHandle sfi = ifieldhandle->query_scalar_interface();
+    if (sfi.get_rep())
     {
       clipper_ = scinew ScalarClipper(sfi, clipfunction_.get(), gui, id);
       do_clip_p = true;

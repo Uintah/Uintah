@@ -88,7 +88,7 @@ MapDataToMeshCoord::execute()
     return;
   }
 
-  if (ifield->query_scalar_interface(this) == 0)
+  if (ifield->query_scalar_interface(this).get_rep() == 0)
   {
     error("This module only works on scalar fields.");
     return;

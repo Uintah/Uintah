@@ -113,7 +113,7 @@ void Plot2DViewer::execute(){
       return;
     }
 
-    if (!fHandle->query_scalar_interface()) {
+    if (!fHandle->query_scalar_interface().get_rep()) {
       error( "Only availible for Scalar data." );
       return;
     }
@@ -250,7 +250,7 @@ void Plot2DViewer::trueExecute( unsigned int port, unsigned int slice )
     return;
   }
 
-  if (!fHandle->query_scalar_interface()) {
+  if (!fHandle->query_scalar_interface().get_rep()) {
     error( "Only availible for Scalar data." );
     return;
   }

@@ -99,7 +99,7 @@ ScalarFieldStats::execute()
   {
     return;
   }
-  if (!ifieldhandle->query_scalar_interface(this))
+  if (!ifieldhandle->query_scalar_interface(this).get_rep())
   {
     error("This module only works on scalar fields.");
     return;

@@ -239,9 +239,9 @@ ModifyConductivities::execute()
   if (!field->get_property("conductivity_table", field_tensors))
   {
     created_p = true;
-    ScalarFieldInterface *sfi = field->query_scalar_interface(this);
+    ScalarFieldInterfaceHandle sfi = field->query_scalar_interface(this);
     double minval, maxval;
-    if (sfi)
+    if (sfi.get_rep())
     {
       sfi->compute_min_max(minval, maxval);
     }
