@@ -110,20 +110,35 @@ FieldHandle ImageToField::create_image_field(ITKDatatypeHandle &nrd) {
 
 template<class InputImageType>
 FieldHandle ImageToField::create_latvol_field(ITKDatatypeHandle &nrd) {
- 
+  
   typedef ITKLatVolField<typename InputImageType::PixelType> ITKLatVolFieldType;
   InputImageType *n = dynamic_cast< InputImageType * >( nrd.get_rep()->data_.GetPointer() );
 
-  double spc[2];
-  double data_center = n->GetOrigin()[0];
-  
+  // get number of data points
   unsigned int size_x = (n->GetRequestedRegion()).GetSize()[0];
   unsigned int size_y = (n->GetRequestedRegion()).GetSize()[1];
   unsigned int size_z = (n->GetRequestedRegion()).GetSize()[2];
 
-  Point min(0., 0., 0.);
-  Point max(size_x, size_y, size_z);
+  // get spacing between data points
+  float space_x = n->GetSpacing()[0];
+  float space_y = n->GetSpacing()[1];
+  float space_z = n->GetSpacing()[2];
 
+  // get origin in physical space
+  double origin_x = n->GetOrigin()[0];
+  double origin_y = n->GetOrigin()[1];
+  double origin_z = n->GetOrigin()[2];
+
+  // the origin specified by the itk image should remain the same
+  // so we must make the min and max points accordingly
+
+  double spread_x = (space_x * size_x)/2;
+  double spread_y = (space_y * size_y)/2;
+  double spread_z = (space_z * size_z)/2;
+  
+  Point min(origin_x - spread_x, origin_y - spread_y, origin_z - spread_z);
+  Point max(origin_x + spread_x, origin_y + spread_y, origin_z + spread_z);
+  
   LatVolMesh* m = new LatVolMesh(size_x, size_y, size_z, min, max);
 
   LatVolMeshHandle mh(m);
@@ -189,6 +204,7 @@ void ImageToField::execute(){
   if(0) { }
   else if(run< itk::Image<float, 2> >(n)) { }
   else if(run< itk::Image<float, 3> >(n)) { }
+  else if(run< itk::Image<double, 3> >(n)) { }
   else if(run< itk::Image<unsigned char, 2> >(n)) { }
   else if(run< itk::Image<unsigned short, 2> >(n)) { }
   else {
