@@ -1,0 +1,93 @@
+BioImage Tutorial
+===================
+1. Introduction
+
+2. Getting Started
+
+3. Loading Data
+
+4. Pre-processing Filters
+
+5. Visualization
+
+---------------------------------------------------------------------------
+
+1. Introduction
+	a. goal of BioImage (data inspection, pre-processing, visualization)
+	b. explain tutorial will walk users through loading, pre-processing,
+                                               and volume rendering a volume
+
+2. Getting Started
+	a. Preparations
+		1. environment variables and sample data
+		2. unlimit command 
+	b. Launching BioImage
+        c. User Interface Organization (briefly touch on each)
+                1. menus 
+	        2. processing tab (see Reference Guide)
+                3. rendering windows (see Reference Guide for more information on controls
+                                                                for the 2D and 3D viewers)
+	        4. Visualization Pane (see Reference Guide for more information on 
+                                                          visualization techniques)
+
+3. Loading Data
+	a. BioImage works on 3D regular data
+	b. types of input files include Nrrd, Dicom, Analyze, Field (see Reference Guide for
+                              more information on loading these different kinds of datasets)
+	c. introduce the tooth dataset and explain steps to load it 
+	d. explain orientation cube, labels, and what they see in each window
+        e. talk about Update button and eye (see Reference Guide for more options)         
+  
+	
+4. Pre-processing Filters 
+	a. explain motivation behind dynamic filters and maintaining a history
+	b. walk through process of resampling tooth dataset (see Reference Guide for more
+                                                                 pre-processing filters)
+
+5. Visualization
+	a. Planes
+	       1. change the slices
+               2. change the colormap (see Reference Guide for more Planes visualizaiton options)
+	
+	b. Volume Rendering
+	       1. turning on
+	       2. explain the transfer function, what the points represent, and how to pull 
+  	  		          out basic features (see Reference Guide for more advanced
+                                     explainations regarding editing the transfer function)
+
+	c. Viewer Options
+               1. rotating volume, zoom in/out, translate
+
+Reference Guide
+-------------------
+User Interface Organization
+     Processing Tab
+     Dynamic Filters    
+	     dynamic filters and history
+             hide/show filter ui
+             change labels of filters
+             insert/delete
+             notion of the "eye"
+             currently selected
+             Update button
+      Rendering Windows
+             ability to separate windows
+             2D window interactions
+	     3D window interactions
+      Visualization Pane
+             Planes options
+	     Volume Rendering options
+	     TransferFunction editing
+
+Types of Data Input
+      Nrrd
+      Dicom
+      Analyze
+      Field
+
+Pre-processing Filters
+      Resample
+      Crop	
+      Histogram
+      Cmedian
+      
