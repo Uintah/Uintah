@@ -3,9 +3,12 @@
 #define UINTAH_HOMEBREW_ICE_H
 #include <Packages/Uintah/CCA/Components/ICE/ICELabel.h>
 #include <Packages/Uintah/CCA/Components/MPMICE/MPMICELabel.h>
+#include <Packages/Uintah/CCA/Components/ICE/Advection/Advector.h>
+#include <Packages/Uintah/CCA/Ports/Output.h>
+#include <Packages/Uintah/CCA/Ports/SolverInterface.h>
 #include <Packages/Uintah/CCA/Ports/SimulationInterface.h>
-#include <Packages/Uintah/Core/Grid/GridP.h>
-#include <Packages/Uintah/Core/Grid/LevelP.h>
+#include <Packages/Uintah/Core/Grid/Grid.h>
+#include <Packages/Uintah/Core/Grid/Level.h>
 #include <Packages/Uintah/Core/Grid/CCVariable.h>
 #include <Packages/Uintah/Core/Grid/SFCXVariable.h>
 #include <Packages/Uintah/Core/Grid/SFCYVariable.h>
@@ -13,19 +16,12 @@
 #include <Packages/Uintah/Core/Grid/Stencil7.h>
 #include <Packages/Uintah/Core/Parallel/UintahParallelComponent.h>
 #include <Packages/Uintah/Core/ProblemSpec/ProblemSpecP.h>
-#include <Packages/Uintah/CCA/Ports/Output.h>
 #include <Packages/Uintah/Core/Math/FastMatrix.h>
 #include <Core/Containers/StaticArray.h>
 #include <vector>
-#include <Packages/Uintah/CCA/Components/ICE/Advection/Advector.h>
-/*`==========TESTING==========*/
-#include <Packages/Uintah/CCA/Ports/SolverInterface.h> 
-/*==========TESTING==========`*/
-namespace Uintah {
-/*`==========TESTING==========*/
-  class SolverInterface;
-  class SolverParameters; 
-/*==========TESTING==========`*/
+
+
+namespace Uintah { 
 using namespace SCIRun;
     
     class ICE : public UintahParallelComponent, public SimulationInterface {
@@ -125,7 +121,36 @@ using namespace SCIRun;
       void schedulePrintConservedQuantities(SchedulerP&, const PatchSet*,
                                        const MaterialSubset*,
                                        const MaterialSet*);
-      
+                                       
+//__________________________________ 
+//  I M P L I C I T   I C E
+                                         
+      void scheduleSetupMatrix(  SchedulerP&,
+                                 const LevelP&,                  
+                                 const PatchSet*,
+                                 const MaterialSubset*,              
+                                 const MaterialSet*); 
+                                 
+      void scheduleSetupRHS(  SchedulerP&,
+                              const LevelP&,                  
+                              const PatchSet*, 
+                              const MaterialSubset*,             
+                              const MaterialSet*); 
+                                                  
+      void scheduleUpdatePressure(  SchedulerP&,
+                                   const LevelP&,
+                                   const PatchSet*,
+                                   const MaterialSubset*,
+                                   const MaterialSubset*,
+                                   const MaterialSet*);
+                                   
+      void scheduleImplicitPressureSolve(SchedulerP& sched,
+                                         const LevelP& level,
+                                         const PatchSet*,
+                                         const MaterialSubset* one_matl,
+                                         const MaterialSubset* press_matl,
+                                         const MaterialSet* all_matls);  
+                                   
       void setICELabel(ICELabel* Ilb) {
        delete lb;
        lb = Ilb;
@@ -293,19 +318,9 @@ using namespace SCIRun;
                                           DataWarehouse*,
                                           DataWarehouse*); 
 
+
 //__________________________________ 
-//  I M P L I C I T   I C E
-                          
-      void scheduleImplicitPressureSolve(SchedulerP&,
-                                         const LevelP&,                       
-                                         SolverInterface*,                   
-                                         const SolverParameters*, 
-                                         const PatchSet* patches, 
-                                         const MaterialSubset*,                  
-                                         const MaterialSubset*,           
-                                         const MaterialSubset*,           
-                                         const MaterialSet* );             
-                                            
+//  I M P L I C I T   I C E                                                                            
       void setupMatrix(const ProcessorGroup*,
                        const PatchSubset* patches,                      
                        const MaterialSubset* ,                          
@@ -322,7 +337,15 @@ using namespace SCIRun;
                            const PatchSubset* patches,                      
                            const MaterialSubset* ,                          
                            DataWarehouse* old_dw,                           
-                           DataWarehouse* new_dw); 
+                           DataWarehouse* new_dw);
+                            
+      void implicitPressureSolve(const ProcessorGroup*,
+		                   const PatchSubset* patches,
+		                   const MaterialSubset*,     
+		                   DataWarehouse* old_dw,     
+                                 DataWarehouse* new_dw,     
+		                   LevelP level,     
+                                 Scheduler* sched);
                                                 
 //__________________________________ 
 //   O T H E R                            
