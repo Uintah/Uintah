@@ -121,9 +121,11 @@ void ICE::scheduleUpdatePressure(  SchedulerP& sched,
   t->requires(Task::NewDW,         lb->imp_delPLabel,        press_matl,  gn);
 
   if(d_usingLODI) {
-    t->requires(Task::ParentOldDW,   lb->temp_CCLabel,   ice_matls, gn);      
-    t->requires(Task::ParentNewDW, MIlb->temp_CCLabel,   mpm_matls, gn);      
-    t->requires(Task::ParentNewDW,   lb->f_theta_CCLabel,           gn);
+    t->requires(Task::ParentNewDW,   lb->gammaLabel,        ice_matls, gn);
+    t->requires(Task::ParentNewDW,   lb->specific_heatLabel,ice_matls, gn);
+    t->requires(Task::ParentOldDW,   lb->temp_CCLabel,      ice_matls, gn);      
+    t->requires(Task::ParentNewDW, MIlb->temp_CCLabel,      mpm_matls, gn);      
+    t->requires(Task::ParentNewDW,   lb->f_theta_CCLabel,              gn);
   }
 
   t->computes(lb->press_CCLabel,      press_matl); 
@@ -262,9 +264,11 @@ void ICE::scheduleImplicitPressureSolve(  SchedulerP& sched,
   t->requires( Task::NewDW, lb->press_CCLabel,   press_matl, gac,1);  
 
   if(d_usingLODI) {
-    t->requires(Task::OldDW,  lb->temp_CCLabel,    ice_matls, gn);    
-    t->requires(Task::NewDW,MIlb->temp_CCLabel,    mpm_matls, gn);    
-    t->requires(Task::NewDW,  lb->f_theta_CCLabel,            gn);
+    t->requires(Task::ParentNewDW,   lb->gammaLabel,        ice_matls, gn);
+    t->requires(Task::ParentNewDW,   lb->specific_heatLabel,ice_matls, gn);
+    t->requires(Task::OldDW,         lb->temp_CCLabel,      ice_matls, gn);    
+    t->requires(Task::NewDW,       MIlb->temp_CCLabel,      mpm_matls, gn);    
+    t->requires(Task::NewDW,         lb->f_theta_CCLabel,              gn);
   }
   //__________________________________
   // ImplicitVel_FC
@@ -586,10 +590,12 @@ void ICE::updatePressure(const ProcessorGroup*,
     cout_doing<<"Doing updatePressure on patch "
               << patch->getID() <<"\t\t\t\t ICE" << endl;
 
-   // define parent_new_dw
+   // define parent_dw
     DataWarehouse* parent_new_dw = 
 	  new_dw->getOtherDataWarehouse(Task::ParentNewDW); 
-            
+    DataWarehouse* parent_old_dw = 
+	  new_dw->getOtherDataWarehouse(Task::ParentOldDW);
+                    
     int numMatls  = d_sharedState->getNumMatls(); 
       
     CCVariable<double> press_CC;     
@@ -633,7 +639,8 @@ void ICE::updatePressure(const ProcessorGroup*,
     lv->setLodiBcs = true;
     lv->usingLODI = d_usingLODI;
     if(d_usingLODI) { 
-      lodi_getVars_pressBC(  patch, lv, lb, d_sharedState, old_dw, new_dw);
+      lodi_getVars_pressBC(  patch, lv, lb, d_sharedState, 
+                             parent_old_dw, parent_new_dw);
     } 
     
     setBC(press_CC, placeHolder, sp_vol_CC, d_surroundingMatl_indx,
@@ -845,7 +852,7 @@ void ICE::implicitPressureSolve(const ProcessorGroup* pg,
       cout << "\nWARNING: outer interation is diverging now "
            << "restarting the timestep"
            << " Max_RHS " << max_RHS 
-           << "smallest_max_RHS_sofar "<< smallest_max_RHS_sofar<< endl;
+           << " smallest_max_RHS_sofar "<< smallest_max_RHS_sofar<< endl;
       restart = true;
     }
     if(restart){
