@@ -7,7 +7,9 @@ include $(SRCTOP)/scripts/so_prologue.mk
 
 SRCDIR := Kurt
 
-SUBDIRS := $(SRCDIR)/GUI $(SRCDIR)/Geom $(SRCDIR)/Modules
+SUBDIRS := $(SRCDIR)/GUI $(SRCDIR)/Geom $(SRCDIR)/Modules \
+		$(SRCDIR)/Datatypes
+
 
 include $(SRCTOP)/scripts/recurse.mk
 
@@ -25,6 +27,9 @@ include $(SRCTOP)/scripts/so_epilogue.mk
 
 #
 # $Log$
+# Revision 1.4  2000/05/16 20:53:59  kuzimmer
+# added new directory
+#
 # Revision 1.3  2000/03/21 17:33:23  kuzimmer
 # updating volume renderer
 #

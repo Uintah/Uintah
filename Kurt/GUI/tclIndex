@@ -8,4 +8,6 @@
 
 set auto_index(Kurt_VolVis_PadField) [list source [file join $dir PadField.tcl]]
 set auto_index(updateCanvas) [list source [file join $dir test.tcl]]
+set auto_index(Kurt_VolVis_GLTextureBuilder) [list source [file join $dir GLTextureBuilder.tcl]]
 set auto_index(Kurt_VolVis_VolVis) [list source [file join $dir VolVis.tcl]]
+set auto_index(Kurt_VolVis_TextureVolVis) [list source [file join $dir TextureVolVis.tcl]]

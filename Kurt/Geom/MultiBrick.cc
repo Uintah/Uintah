@@ -746,7 +746,7 @@ void MultiBrick::drawBonTree( const VolumeOctree<Brick*>* node,
 /* 			     brick->getCorner(i), viewRay); */
 /*     sortParameters(ts,8); */
 /*     brick->draw( viewRay, alpha, drawWireFrame, ts[7], ts[0], (ts[0]-ts[7])/slices ); */
-  } else if (!box.inside(resPoint) && mode && !overlap(box, pointBox)){ 
+  } else if (!box.inside(resPoint) && mode && !box.Overlaps( pointBox)){ 
     st.getParameters( brick, tmin, tmax, dt );
     brick->draw( viewRay, alpha, drawWireFrame,
 		 reload != 0, tmin, tmax, dt);
@@ -755,7 +755,7 @@ void MultiBrick::drawBonTree( const VolumeOctree<Brick*>* node,
 	  <<" at level "<<brick->getLevel()<<endl;
     if( reload !=0 )
       reload = 0;
-  } else if (!box.inside(resPoint) && mode && overlap(box, pointBox) &&
+  } else if (!box.inside(resPoint) && mode && box.Overlaps(pointBox) &&
 	     child->getType() == VolumeOctree<Brick*>::LEAF){ 
     st.getParameters( brick, tmin, tmax, dt );
     brick->draw( viewRay, alpha, drawWireFrame,
