@@ -36,11 +36,6 @@ using namespace std;
 static DebugStream cout_norm("MPMICE_NORMAL_COUT", false);  
 static DebugStream cout_doing("MPMICE_DOING_COUT", false);
 
-#define EOSCM
-//#undef EOSCM
-//#define IDEAL_GAS
-#undef IDEAL_GAS
-
 MPMICE::MPMICE(const ProcessorGroup* myworld)
   : UintahParallelComponent(myworld)
 {
@@ -833,13 +828,6 @@ void MPMICE::interpolateNCToCC_0(const ProcessorGroup*,
 
       //__________________________________
       //  Compute Temp_CC
-#ifdef IDEAL_GAS
-      // This temp is only used in computeEquilibrationPressure ideal gas EOS 
-      // so for now it's hardwired.  We should really put this in MPMICE 
-      // initialization. -Todd
-      Temp_CC.initialize(300.0);
-#endif
-#ifdef EOSCM    //
      Temp_CC.initialize(0.0);
      for(CellIterator iter =patch->getExtraCellIterator();!iter.done();iter++){
         patch->findNodesFromCell(*iter,nodeIdx);
@@ -862,7 +850,6 @@ void MPMICE::interpolateNCToCC_0(const ProcessorGroup*,
           }
 	}
      }
-#endif
 
       for(CellIterator iter =patch->getCellIterator();!iter.done();iter++){
         patch->findNodesFromCell(*iter,nodeIdx);
@@ -1690,7 +1677,6 @@ void MPMICE::computeEquilibrationPressure(const ProcessorGroup*,
         } 
 
         if(mpm_matl){                //  M P M
-  #ifdef EOSCM
 	   rho_micro[m][*iter] =  mpm_matl->getConstitutiveModel()->
 	     computeRhoMicroCM(press_new[*iter],press_ref, mpm_matl);
 
@@ -1699,24 +1685,8 @@ void MPMICE::computeEquilibrationPressure(const ProcessorGroup*,
                               dp_drho[m], tmp,mpm_matl);
            speedSound_new[m][*iter] = sqrt(tmp);
 
-  #endif
 	   mat_volume[m] = mat_vol[m][*iter];
 
-  //    This is the IDEAL GAS stuff
-  #ifdef IDEAL_GAS
-	   double gamma   = mpm_matl->getGamma();
-	   rho_micro[m][*iter] = mpm_matl->
-	     getConstitutiveModel()->computeRhoMicro(press_new[*iter],gamma,
-	                                        cv[m],Temp[m][*iter]);
-	   mpm_matl->getConstitutiveModel()->
-	     computePressEOS(rho_micro[m][*iter],gamma,cv[m],Temp[m][*iter],
-	                   press_eos[m],dp_drho[m], dp_de[m]);
-
-	   tmp = dp_drho[m] + dp_de[m] *
-	     (press_eos[m]/(rho_micro[m][*iter]*rho_micro[m][*iter]));
-            
-          speedSound_new[m][*iter] = sqrt(tmp);
-  #endif
         }              
         total_mat_vol += mat_volume[m];
        }
@@ -1783,21 +1753,9 @@ void MPMICE::computeEquilibrationPressure(const ProcessorGroup*,
                                              press_eos[m], dp_drho[m],dp_de[m]);
          }
          if(mpm_matl){
-          //__________________________________
-          //  Hardwire for an ideal gas
-  #ifdef EOSCM
             mpm_matl->getConstitutiveModel()->
                  computePressEOSCM(rho_micro[m][*iter],press_eos[m],press_ref,
                                    dp_drho[m], tmp,mpm_matl);
-  #endif
-  //    This is the IDEAL GAS stuff
-  #ifdef IDEAL_GAS
-            double gamma = mpm_matl->getGamma();
-            mpm_matl->getConstitutiveModel()->
-              computePressEOS(rho_micro[m][*iter],gamma, cv[m],Temp[m][*iter],
-			      press_eos[m], dp_drho[m], dp_de[m]);
-  #endif
-
          }
        }
 
@@ -1832,18 +1790,9 @@ void MPMICE::computeEquilibrationPressure(const ProcessorGroup*,
                                                cv[m],Temp[m][*iter]);
          }
          if(mpm_matl){
-  #ifdef EOSCM
            rho_micro[m][*iter] =  
              mpm_matl->getConstitutiveModel()->computeRhoMicroCM(
-						press_new[*iter],press_ref,mpm_matl);
-  #endif
-  //    This is the IDEAL GAS stuff
-  #ifdef IDEAL_GAS
-           double gamma = mpm_matl->getGamma();
-           rho_micro[m][*iter] = 
-           mpm_matl->getConstitutiveModel()->computeRhoMicro(press_new[*iter],
-					  gamma, cv[m],Temp[m][*iter]);
-  #endif
+					press_new[*iter],press_ref,mpm_matl);
          }
        }
        //__________________________________
@@ -1870,21 +1819,9 @@ void MPMICE::computeEquilibrationPressure(const ProcessorGroup*,
                       (press_eos[m]/(rho_micro[m][*iter]*rho_micro[m][*iter]));
          }
          if(mpm_matl){
-  #ifdef EOSCM
             mpm_matl->getConstitutiveModel()->
                  computePressEOSCM(rho_micro[m][*iter],press_eos[m],press_ref,
                                    dp_drho[m],tmp,mpm_matl);
-  #endif
-  //    This is the IDEAL GAS stuff
-  #ifdef IDEAL_GAS
-           double gamma = mpm_matl->getGamma();
-           mpm_matl->getConstitutiveModel()->
-               computePressEOS(rho_micro[m][*iter],gamma,
-                                            cv[m],Temp[m][*iter],
-                                            press_eos[m],dp_drho[m], dp_de[m]);
-           tmp = dp_drho[m] + dp_de[m] * 
-                      (press_eos[m]/(rho_micro[m][*iter]*rho_micro[m][*iter]));
-  #endif
          }
          speedSound_new[m][*iter] = sqrt(tmp);
        }
