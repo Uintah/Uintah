@@ -395,7 +395,7 @@ WARNING
 	throw InternalError("Cannot yet write non-flat objects!\n");
     }
 
-    virtual void emitRLE(ostream& out, DOM_Element /*varnode*/)
+    virtual bool emitRLE(ostream& out, DOM_Element /*varnode*/)
     {
       const TypeDescription* td = fun_getTypeDescription((T*)0);
       if(td->isFlat()){
@@ -404,6 +404,7 @@ WARNING
       }
       else
 	throw InternalError("Cannot yet write non-flat objects!\n");
+      return true;
     }
 
     virtual void readNormal(istream& in)
