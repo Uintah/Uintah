@@ -114,7 +114,7 @@ interpolate(VectorFieldInterface *vfi,
 }
 
 
-static bool
+static int
 ComputeRKFTerms(vector<Vector> &v, // storage for terms
 		const Point &p,    // previous point
 		double s,          // current step size
@@ -122,43 +122,43 @@ ComputeRKFTerms(vector<Vector> &v, // storage for terms
 {
   if (!interpolate(vfi, p, v[0]))
   {
-    return false;
+    return -1;
   }
   v[0] *= s;
   
   if (!interpolate(vfi, p + v[0]*d[1][0], v[1]))
   {
-    return false;
+    return 0;
   }
   v[1] *= s;
   
   if (!interpolate(vfi, p + v[0]*d[2][0] + v[1]*d[2][1], v[2]))
   {
-    return false;
+    return 1;
   }
   v[2] *= s;
   
   if (!interpolate(vfi, p + v[0]*d[3][0] + v[1]*d[3][1] + v[2]*d[3][2], v[3]))
   {
-    return false;
+    return 2;
   }
   v[3] *= s;
   
   if (!interpolate(vfi, p + v[0]*d[4][0] + v[1]*d[4][1] + v[2]*d[4][2] + 
 		   v[3]*d[4][3], v[4]))
   {
-    return false;
+    return 3;
   }
   v[4] *= s;
   
   if (!interpolate(vfi, p + v[0]*d[5][0] + v[1]*d[5][1] + v[2]*d[5][2] + 
 		   v[3]*d[5][3] + v[4]*d[5][4], v[5]))
   {
-    return false;
+    return 4;
   }
   v[5] *= s;
 
-  return true;
+  return 5;
 }
 
 
@@ -181,9 +181,15 @@ StreamLinesAlgo::FindStreamLineNodes(vector<Point> &v, // storage for points
   {
 
     // Compute the next set of terms.
-    if (!ComputeRKFTerms(terms, x, s, vfi))
+    int tmp = ComputeRKFTerms(terms, x, s, vfi);
+    if (tmp == -1)
     {
       break;
+    }
+    else if (tmp < 5)
+    {
+      s /= 1.5;
+      continue;
     }
 
     // Compute the approximate local truncation error.
