@@ -43,6 +43,7 @@ SRCDIR   := Packages/MatlabInterface/Dataflow/Modules/DataIO
 
 SRCS     += \
 	$(SRCDIR)/Matlab.cc\
+	$(SRCDIR)/Matlab2.cc\
 	$(SRCDIR)/MatlabDataReader.cc\
 	$(SRCDIR)/MatlabDataWriter.cc\
 	$(SRCDIR)/MatlabFieldsReader.cc \
@@ -57,10 +58,12 @@ PSELIBS := Core/Persistent Core/Containers Core/Util \
         Core/Exceptions Core/Thread Core/GuiInterface \
         Core/Geom Core/Datatypes Core/Geometry Core/GeomInterface \
         Core/TkExtensions Dataflow/Network Dataflow/Ports \
+	Dataflow/XMLUtil \
 	Packages/MatlabInterface/Core/Datatypes \
-        Packages/MatlabInterface/Core/Util
+        Packages/MatlabInterface/Core/Util \
+	Core/Services Core/ICom Core/SystemCall
 
-LIBS := $(TEEM_LIBRARY) $(PNG_LIBRARY) $(Z_LIBRARY) $(TK_LIBRARY) $(GL_LIBS) $(M_LIBRARY)
+LIBS := $(TEEM_LIBRARY) $(Z_LIBRARY) $(TK_LIBRARY) $(GL_LIBS) $(M_LIBRARY)
 
 include $(SCIRUN_SCRIPTS)/smallso_epilogue.mk
 
