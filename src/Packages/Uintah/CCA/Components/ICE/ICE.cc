@@ -3320,21 +3320,21 @@ template <class T> void ICE::advectQFirst(const CCVariable<T>&   q_CC,
 {
   T  sum_q_outflux, sum_q_outflux_EF, sum_q_outflux_CF, sum_q_influx;
   T  sum_q_influx_EF, sum_q_influx_CF;
+  T zero = T(0);
   IntVector adjcell;
-  
+
   for(CellIterator iter = patch->getCellIterator(); !iter.done(); iter++) { 
     IntVector curcell = *iter;
     int i = curcell.x();
     int j = curcell.y();
     int k = curcell.z();
-   
-    sum_q_outflux      *= 0.0;
-    sum_q_outflux_EF   *= 0.0;
-    sum_q_outflux_CF   *= 0.0;
-    sum_q_influx       *= 0.0;
-    sum_q_influx_EF    *= 0.0;
-    sum_q_influx_CF    *= 0.0;
     
+    sum_q_outflux     = zero;
+    sum_q_outflux_EF  = zero;
+    sum_q_outflux_CF  = zero;
+    sum_q_influx      = zero;
+    sum_q_influx_EF   = zero;
+    sum_q_influx_CF   = zero;
     //__________________________________
     //  OUTFLUX: SLAB 
     for(int face = TOP; face <= BACK; face++ )  {
