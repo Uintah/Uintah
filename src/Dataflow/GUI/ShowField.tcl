@@ -377,6 +377,8 @@ itcl_class SCIRun_Visualization_ShowField {
 
 	scale $res.scale -orient horizontal -variable $this-resolution \
 		-from 3 -to 20 -showvalue true -resolution 1
+	
+	bind $res.scale <ButtonRelease> "$this-c resolution_scale"
 
 	# execute policy
 	make_labeled_radio $window.control.exc_policy \
