@@ -602,7 +602,7 @@ void NodeHedgehog::execute()
     Level::const_patchIterator iter;
 #ifdef USE_HOG_THREADS
     // set up the worker thread stuff
-    int max_workers = Max(Thread::numProcessors()/2, 8);
+    int max_workers = Max(Thread::numProcessors()/2, 2);
     Semaphore* thread_sema = scinew Semaphore( "nodehedge semahpore",
 					       max_workers);
 #endif
@@ -613,20 +613,21 @@ void NodeHedgehog::execute()
 
 #ifdef USE_HOG_THREADS
       thread_sema->down();
-      Thread *thrd = scinew Thread(scinew NodeHedgehogWorker(patch,
-							     fld,
-							     ssfield,
-							     have_sfield,
-							     cmap,
-							     have_cmap,
-							     boundaryRegion,
-							     this,
-							     arrows,
-							     &max_length,
-							     &max_vector,
-							     &add_arrows,
-							     thread_sema),
-				   "nodehedgehogworker");
+      Thread *thrd = scinew
+	Thread(scinew NodeHedgehogWorker(patch,
+					 fld,
+					 ssfield,
+					 have_sfield,
+					 cmap,
+					 have_cmap,
+					 boundaryRegion,
+					 this,
+					 arrows,
+					 &max_length,
+					 &max_vector,
+					 &add_arrows,
+					 thread_sema),
+	       "nodehedgehogworker");
       thrd->detach();
 #else      
       if( fld->data_at() == Field::NODE) {
