@@ -57,15 +57,16 @@ SCENES := $(SRCDIR)/0.mo \
 	$(SRCDIR)/volume_color.mo \
 	$(SRCDIR)/envmap-sphere.mo  \
 	$(SRCDIR)/single-sphere.mo  \
-	$(SRCDIR)/ramsey.mo \
 	$(SRCDIR)/spinning_instance_demo.mo \
 	$(SRCDIR)/david.mo \
 	$(SRCDIR)/david_old.mo \
+	$(SRCDIR)/VolumeVisMod.mo \
 	$(SRCDIR)/davidhead.mo  \
 	$(SRCDIR)/science-room.mo \
 	$(SRCDIR)/science-room-full.mo \
 	$(SRCDIR)/stadium.mo \
-	$(SRCDIR)/dtiglyph.mo 
+#	$(SRCDIR)/dtiglyph.mo 
+#	$(SRCDIR)/ramsey.mo \
 # 	$(SRCDIR)/miptest.mo \
 # 	$(SRCDIR)/cbox.mo \
 # 	$(SRCDIR)/david.mo \
@@ -76,9 +77,9 @@ SCENES := $(SRCDIR)/0.mo \
 #	$(SRCDIR)/graphics-museum-works.mo \
 # 	$(SRCDIR)/buddha.mo \
 
+
 ifeq ($(findstring Uintah, $(LOAD_PACKAGE)),Uintah)
 SCENES += \
-	$(SRCDIR)/VolumeVisMod.mo \
 	$(SRCDIR)/uintahdata.mo \
 	$(SRCDIR)/uintahisosurface.mo \
 	$(SRCDIR)/uintahparticle2.mo \
@@ -112,7 +113,7 @@ ALLTARGETS := $(ALLTARGETS) $(SCENES)
 RTRT_ULIBS = -lPackages_rtrt_Core -lPackages_Uintah_CCA_Components_DataArchiver -lPackages_Uintah_CCA_Components_MPM -lPackages_Uintah_Core_Grid -lCore_Persistent -lCore_Geometry -lCore_Containers -lCore_Exceptions -lDataflow_Comm -lDataflow_XMLUtil $(XML_LIBRARY) $(MPI_LIBRARY) -lCore_Malloc
 
 $(SRCDIR)/VolumeVisMod.mo: $(SRCDIR)/VolumeVisMod.o
-	$(CXX) -o $@ $(LDFLAGS) -shared $(patsubst %.mo,%.o,$(filter %.mo,$@)) $(RTRT_ULIBS) -lnrrd -lair -lbiff -lnrrd -lm $(GLUI_LIBRARY) $(GLUT_LIBRARY)
+	$(CXX) -o $@ $(LDFLAGS) -shared $(patsubst %.mo,%.o,$(filter %.mo,$@)) -lPackages_rtrt_Core -lCore_Exceptions -lCore_Geometry -lCore_Persistent -lCore_Malloc -lCore_Thread -lnrrd -lair -lbiff -lnrrd -lm $(GLUI_LIBRARY) $(GLUT_LIBRARY)
 
 $(SRCDIR)/dtiglyph.mo: $(SRCDIR)/dtiglyph.o
 	$(CXX) -o $@ -L$(TEEM_LIB_DIR) $(LDFLAGS) -shared $(patsubst %.mo,%.o,$(filter %.mo,$@)) -lPackages_rtrt_Core -lCore_Exceptions -lCore_Geometry -lCore_Persistent -lCore_Malloc -lCore_Thread -lten -ldye -lell -lnrrd -lhest -lbiff -lair -lm $(GLUI_LIBRARY) $(GLUT_LIBRARY) -m
