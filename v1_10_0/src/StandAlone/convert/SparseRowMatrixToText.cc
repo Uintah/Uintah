@@ -34,12 +34,16 @@
 // separated); the file will also have a one line header, specifying
 // the number of rows and number of columns in the matrix, unless the
 // user specifies the -noHeader command-line argument.
+// The user can specify the -oneBasedIndexing flag to support fortran 
+// and matlab type matrices; the default is zero-based indexing.
 
 #include <Core/Datatypes/SparseRowMatrix.h>
 #include <Core/Persistent/Pstreams.h>
+#include <StandAlone/convert/FileUtils.h>
 #include <iostream>
 #include <fstream>
 #include <stdlib.h>
+
 using std::cerr;
 using std::ifstream;
 using std::endl;
@@ -47,16 +51,21 @@ using std::endl;
 using namespace SCIRun;
 
 bool header;
+int baseIndex;
 
 void setDefaults() {
   header=true;
+  baseIndex=0;
 }
 
 int parseArgs(int argc, char *argv[]) {
-  int currArg = 4;
+  int currArg = 3;
   while (currArg < argc) {
     if (!strcmp(argv[currArg],"-noHeader")) {
       header=false;
+      currArg++;
+    } else if (!strcmp(argv[currArg], "-oneBasedIndexing")) {
+      baseIndex=1;
       currArg++;
     } else {
       cerr << "Error - unrecognized argument: "<<argv[currArg]<<"\n";
@@ -66,37 +75,35 @@ int parseArgs(int argc, char *argv[]) {
   return 1;
 }
 
-int getNumNonEmptyLines(char *fname) {
-  // read through the file -- when you see a non-white-space set a flag to one.
-  // when you get to the end of the line (or EOF), see if the flag has
-  // been set.  if it has, increment the count and reset the flag to zero.
-
-  FILE *fin = fopen(fname, "rt");
-  int count=0;
-  int haveNonWhiteSpace=0;
-  int c;
-  while ((c=fgetc(fin)) != EOF) {
-    if (!isspace(c)) haveNonWhiteSpace=1;
-    else if (c=='\n' && haveNonWhiteSpace) {
-      count++;
-      haveNonWhiteSpace=0;
-    }
-  }
-  if (haveNonWhiteSpace) count++;
-  cerr << "number of nonempty lines was: "<<count<<"\n";
-  return count;
+void printUsageInfo(char *progName) {
+  cerr << "\n Usage: "<<progName<<" SparseRowMatrix textfile [-noHeader]\n\n";
+  cerr << "\t This program will read in a SCIRun SparseRowMatrix, and will \n";
+  cerr << "\t save it out to a text version: a .txt file.  The .txt file \n";
+  cerr << "\t will contain one data value per line, consisting of the row \n";
+  cerr << "\t index, the column index, and the data value (white-space \n";
+  cerr << "\t separated); the file will also have a one line header, \n";
+  cerr << "\t specifying the number of rows and number of columns in the \n";
+  cerr << "\t matrix, unless the user specifies the -noHeader command-line \n";
+  cerr << "\t argument. \n";
+  cerr << "\t The user can specify the -oneBasedIndexing flag to support \n";
+  cerr << "\t fortran and matlab type matrices; the default is zero-based \n";
+  cerr << "\t indexing.\n\n";
 }
 
 int
 main(int argc, char **argv) {
-  if (argc < 3 || argc > 4) {
-    cerr << "Usage: "<<argv[0]<<" SparseRowMatrix textfile [-noHeader]\n";
+  if (argc < 3 || argc > 5) {
+    printUsageInfo(argv[0]);
     return 0;
   }
+  setDefaults();
 
   char *matrixName = argv[1];
   char *textfileName = argv[2];
-  if (!parseArgs(argc, argv)) return 0;
+  if (!parseArgs(argc, argv)) {
+    printUsageInfo(argv[0]);
+    return 0;
+  }
 
   MatrixHandle handle;
   Piostream* stream=auto_istream(matrixName);
@@ -132,7 +139,7 @@ main(int argc, char **argv) {
   int idx=0;
   for (int r=0; r<nr; r++) {
     while(idx<rows[r+1]) {
-      fprintf(fTxt, "%d %d %lf\n", r, columns[idx], a[idx]);
+      fprintf(fTxt, "%d %d %lf\n", r+baseIndex, columns[idx]+baseIndex, a[idx]);
       idx++;
     }
   }

@@ -41,7 +41,7 @@
 #include <Core/Datatypes/HexVolField.h>
 #include <Core/Persistent/Pstreams.h>
 #include <Core/Containers/HashTable.h>
-
+#include <StandAlone/convert/FileUtils.h>
 #include <iostream>
 #include <fstream>
 #include <stdlib.h>
@@ -82,31 +82,25 @@ int parseArgs(int argc, char *argv[]) {
   return 1;
 }
 
-int getNumNonEmptyLines(char *fname) {
-  // read through the file -- when you see a non-white-space set a flag to one.
-  // when you get to the end of the line (or EOF), see if the flag has
-  // been set.  if it has, increment the count and reset the flag to zero.
-
-  FILE *fin = fopen(fname, "rt");
-  int count=0;
-  int haveNonWhiteSpace=0;
-  int c;
-  while ((c=fgetc(fin)) != EOF) {
-    if (!isspace(c)) haveNonWhiteSpace=1;
-    else if (c=='\n' && haveNonWhiteSpace) {
-      count++;
-      haveNonWhiteSpace=0;
-    }
-  }
-  if (haveNonWhiteSpace) count++;
-  cerr << "number of nonempty lines was: "<<count<<"\n";
-  return count;
+void printUsageInfo(char *progName) {
+  cerr << "\n Usage: "<<progName<<" HexVolField pts hexes [-noPtsCount] [-noHexesCount] [-oneBasedIndexing]\n\n";
+  cerr << "\t This program will read in a SCIRun HexVolField, and will \n";
+  cerr << "\t save out the HexVolMesh into two files: a .pts file and a \n";
+  cerr << "\t .hex file.  The .pts file will specify the x/y/z \n";
+  cerr << "\t coordinates of each point, one per line, entries separated \n";
+  cerr << "\t by white space; the file will also have a one line header, \n";
+  cerr << "\t specifying number of points, unless the user specifies the \n";
+  cerr << "\t -noPtsCount command-line argument.  The .hex file will \n";
+  cerr << "\t specify the i/j/k/l/m/n/o/p indices for each hex, also one \n";
+  cerr << "\t per line, again with a one line header (unless a \n";
+  cerr << "\t -noHexesCount flag is used).  The hex entries will be \n";
+  cerr << "\t zero-based, unless the user specifies -oneBasedIndexing.\n\n";
 }
 
 int
 main(int argc, char **argv) {
   if (argc < 4 || argc > 7) {
-    cerr << "Usage: "<<argv[0]<<" HexVolField pts hexes [-noPtsCount] [-noHexesCount] [-oneBasedIndexing]\n";
+    printUsageInfo(argv[0]);
     return 0;
   }
   setDefaults();
@@ -114,7 +108,10 @@ main(int argc, char **argv) {
   char *fieldName = argv[1];
   char *ptsName = argv[2];
   char *hexesName = argv[3];
-  if (!parseArgs(argc, argv)) return 0;
+  if (!parseArgs(argc, argv)) {
+    printUsageInfo(argv[0]);
+    return 0;
+  }
 
   FieldHandle handle;
   Piostream* stream=auto_istream(fieldName);
@@ -173,7 +170,7 @@ main(int argc, char **argv) {
   cerr << "Number of hexes = "<< csize <<"\n";
   while(citer != citer_end) {
     hvm->get_nodes(cell_nodes, *citer);
-    fprintf(fHexes, "%d %d %d %d\n", 
+    fprintf(fHexes, "%d %d %d %d %d %d %d %d\n", 
 	    (int)cell_nodes[0]+baseIndex,
 	    (int)cell_nodes[1]+baseIndex,
 	    (int)cell_nodes[2]+baseIndex,

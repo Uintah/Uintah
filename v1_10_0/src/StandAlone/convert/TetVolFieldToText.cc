@@ -41,7 +41,7 @@
 #include <Core/Datatypes/TetVolField.h>
 #include <Core/Persistent/Pstreams.h>
 #include <Core/Containers/HashTable.h>
-
+#include <StandAlone/convert/FileUtils.h>
 #include <iostream>
 #include <fstream>
 #include <stdlib.h>
@@ -82,31 +82,25 @@ int parseArgs(int argc, char *argv[]) {
   return 1;
 }
 
-int getNumNonEmptyLines(char *fname) {
-  // read through the file -- when you see a non-white-space set a flag to one.
-  // when you get to the end of the line (or EOF), see if the flag has
-  // been set.  if it has, increment the count and reset the flag to zero.
-
-  FILE *fin = fopen(fname, "rt");
-  int count=0;
-  int haveNonWhiteSpace=0;
-  int c;
-  while ((c=fgetc(fin)) != EOF) {
-    if (!isspace(c)) haveNonWhiteSpace=1;
-    else if (c=='\n' && haveNonWhiteSpace) {
-      count++;
-      haveNonWhiteSpace=0;
-    }
-  }
-  if (haveNonWhiteSpace) count++;
-  cerr << "number of nonempty lines was: "<<count<<"\n";
-  return count;
+void printUsageInfo(char *progName) {
+  cerr << "\n Usage: "<<progName<<" TetVolField pts tets [-noPtsCount] [-noTetsCount] [-oneBasedIndexing]\n\n";
+  cerr << "\t This program will read in a SCIRun TetVolField, and will \n";
+  cerr << "\t save out the TetVolMesh into two files: a .pts file and a \n";
+  cerr << "\t .tet file.  The .pts file will specify the x/y/z coordinates \n";
+  cerr << "\t of each point, one per line, entries separated by white \n";
+  cerr << "\t space; the file will also have a one line header, specifying \n";
+  cerr << "\t number of points, unless the user specifies the -noPtsCount \n";
+  cerr << "\t command-line argument.  The .tet file will specify the \n";
+  cerr << "\t i/j/k/l indices for each tet, also one per line, again with \n";
+  cerr << "\t a one line header (unless a -noTetsCount flag is used).  The \n";
+  cerr << "\t tet entries will be zero-based, unless the user specifies \n";
+  cerr << "\t -oneBasedIndexing.\n\n";
 }
 
 int
 main(int argc, char **argv) {
   if (argc < 4 || argc > 7) {
-    cerr << "Usage: "<<argv[0]<<" TetVolField pts tets [-noPtsCount] [-noTetsCount] [-oneBasedIndexing]\n";
+    printUsageInfo(argv[0]);
     return 0;
   }
   setDefaults();
@@ -114,7 +108,10 @@ main(int argc, char **argv) {
   char *fieldName = argv[1];
   char *ptsName = argv[2];
   char *tetsName = argv[3];
-  if (!parseArgs(argc, argv)) return 0;
+  if (!parseArgs(argc, argv)) {
+    printUsageInfo(argv[0]);
+    return 0;
+  }
 
   FieldHandle handle;
   Piostream* stream=auto_istream(fieldName);

@@ -37,7 +37,7 @@
 #include <Core/Datatypes/PointCloudField.h>
 #include <Core/Persistent/Pstreams.h>
 #include <Core/Containers/HashTable.h>
-
+#include <StandAlone/convert/FileUtils.h>
 #include <iostream>
 #include <fstream>
 #include <stdlib.h>
@@ -59,7 +59,7 @@ void setDefaults() {
 }
 
 int parseArgs(int argc, char *argv[]) {
-  int currArg = 4;
+  int currArg = 3;
   while (currArg < argc) {
     if (!strcmp(argv[currArg],"-noPtsCount")) {
       ptsCountHeader=false;
@@ -78,39 +78,32 @@ int parseArgs(int argc, char *argv[]) {
   return 1;
 }
 
-int getNumNonEmptyLines(char *fname) {
-  // read through the file -- when you see a non-white-space set a flag to one.
-  // when you get to the end of the line (or EOF), see if the flag has
-  // been set.  if it has, increment the count and reset the flag to zero.
-
-  FILE *fin = fopen(fname, "rt");
-  int count=0;
-  int haveNonWhiteSpace=0;
-  int c;
-  while ((c=fgetc(fin)) != EOF) {
-    if (!isspace(c)) haveNonWhiteSpace=1;
-    else if (c=='\n' && haveNonWhiteSpace) {
-      count++;
-      haveNonWhiteSpace=0;
-    }
-  }
-  if (haveNonWhiteSpace) count++;
-  cerr << "number of nonempty lines was: "<<count<<"\n";
-  return count;
+void printUsageInfo(char *progName) {
+  cerr << "\n Usage: "<<progName<<" pts PointCloudMesh [-noPtsCount] [-binOutput] [-debug]\n\n";
+  cerr << "\t This program will read in a .pts (specifying the x/y/z \n";
+  cerr << "\t coords of each point, one per line, entries separated by \n";
+  cerr << "\t white space, file can have an optional one line header \n";
+  cerr << "\t specifying number of points... and if it doesn't, you \n";
+  cerr << "\t have to use the -noPtsCount command-line argument).  And \n";
+  cerr << "\t the SCIRun output file is written in ASCII, unless you \n";
+  cerr << "\t specify -binOutput.\n\n";
 }
 
 int
 main(int argc, char **argv) {
   PointCloudMesh *pcm = new PointCloudMesh();
   if (argc < 3 || argc > 6) {
-    cerr << "Usage: "<<argv[0]<<" pts PointCloudMesh [-noPtsCount] [-binOutput] [-debug]\n";
+    printUsageInfo(argv[0]);
     return 0;
   }
   setDefaults();
 
   char *ptsName = argv[1];
   char *fieldName = argv[2];
-  if (!parseArgs(argc, argv)) return 0;
+  if (!parseArgs(argc, argv)) {
+    printUsageInfo(argv[0]);
+    return 0;
+  }
 
   int npts;
   if (!ptsCountHeader) npts = getNumNonEmptyLines(ptsName);

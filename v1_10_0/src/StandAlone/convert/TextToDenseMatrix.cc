@@ -28,10 +28,10 @@
  */
 
 // This program will read in a .txt file specifying a matrix.  The .txt
-// file will have one matrix entry per line, and will have a one line
-// header indicating the number of rows and number of columns of the
-// matrix (unless the user has specified the -noHeader flag, in which
-// case the next two command line arguments must be the number of rows
+// file will have white-space separated matrix entries and a one line 
+// header indicating the number of rows and number of columns of the 
+// matrix (unless the user has specified the -noHeader flag, in which 
+// case the next two command line arguments must be the number of rows 
 // and the number of columns in the matrix).
 // The SCIRun .mat file will be saved as ASCII by default, unless the
 // user specified the -binOutput flag.
@@ -39,7 +39,7 @@
 #include <Core/Datatypes/DenseMatrix.h>
 #include <Core/Persistent/Pstreams.h>
 #include <Core/Containers/HashTable.h>
-
+#include <StandAlone/convert/FileUtils.h>
 #include <iostream>
 #include <fstream>
 #include <stdlib.h>
@@ -65,7 +65,7 @@ void setDefaults() {
 }
 
 int parseArgs(int argc, char *argv[]) {
-  int currArg = 4;
+  int currArg = 3;
   while (currArg < argc) {
     if (!strcmp(argv[currArg],"-noHeader")) {
       header=false;
@@ -88,40 +88,36 @@ int parseArgs(int argc, char *argv[]) {
   return 1;
 }
 
-int getNumNonEmptyLines(char *fname) {
-  // read through the file -- when you see a non-white-space set a flag to one.
-  // when you get to the end of the line (or EOF), see if the flag has
-  // been set.  if it has, increment the count and reset the flag to zero.
-
-  FILE *fin = fopen(fname, "rt");
-  int count=0;
-  int haveNonWhiteSpace=0;
-  int c;
-  while ((c=fgetc(fin)) != EOF) {
-    if (!isspace(c)) haveNonWhiteSpace=1;
-    else if (c=='\n' && haveNonWhiteSpace) {
-      count++;
-      haveNonWhiteSpace=0;
-    }
-  }
-  if (haveNonWhiteSpace) count++;
-  cerr << "number of nonempty lines was: "<<count<<"\n";
-  return count;
+void printUsageInfo(char *progName) {
+  cerr << "\n Usage: "<<progName<<" textfile DenseMatix [-noHeader nrows ncols] [-binOutput] [-debugOn]\n\n";
+  cerr << "\t This program will read in a .txt file specifying a matrix. \n";
+  cerr << "\t The .txt file will have white-space separated matrix entries \n";
+  cerr << "\t and  a one line header indicating the number of rows and \n";
+  cerr << "\t number of columns of the matrix (unless the user has \n";
+  cerr << "\t specified the -noHeader flag, in which case the next two \n";
+  cerr << "\t command line arguments must be the number of rows and the \n";
+  cerr << "\t number of columns in the matrix).  The SCIRun .mat file will \n";
+  cerr << "\t be saved as ASCII by default, unless the user specified the \n";
+  cerr << "\t -binOutput flag.\n\n";
 }
 
 int
 main(int argc, char **argv) {
   if (argc < 3 || argc > 8) {
-    cerr << "Usage: "<<argv[0]<<" textfile DenseMatix [-noHeader nrows ncols] [-binOutput] [-debugOn]\n";
+    printUsageInfo(argv[0]);
     return 0;
   }
   setDefaults();
 
   char *textfileName = argv[1];
   char *matrixName = argv[2];
-  if (!parseArgs(argc, argv)) return 0;
+  if (!parseArgs(argc, argv)) {
+    printUsageInfo(argv[0]);
+    return 0;
+  }
+
   ifstream matstream(textfileName);
-  if (!header) matstream >> nr >> nc;
+  if (header) matstream >> nr >> nc;
 
   cerr << "nrows="<<nr<<" ncols="<<nc<<"\n";
   DenseMatrix *dm = scinew DenseMatrix(nr,nc);
