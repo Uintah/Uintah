@@ -983,10 +983,6 @@ void ICE::computeEquilibrationPressure(const ProcessorGroup*,
     for (CellIterator iter=patch->getExtraCellIterator();!iter.done();iter++) {
 
       IntVector curcell = *iter;    //So I have a chance at finding bugs -Todd
-      int i,j,k;
-      i   = curcell.x();
-      j   = curcell.y();
-      k   = curcell.z();
 
       double delPress = 0.;
       bool converged  = false;
@@ -2384,8 +2380,7 @@ void ICE::computeLagrangianValues(const ProcessorGroup*,
           plusMinusOne *= int_eng_L[*iter]/fabs(int_eng_L[*iter]);     
         }
         if (plusMinusOne < 0.0) {
-	  string warn = "ICE::computeLagrangianValues:" 
-	    + "Negative Internal energy or Temperature detected";
+	  string warn = "ICE::computeLagrangianValues: Negative Internal energy or Temperature detected";
 	  throw InvalidValue(warn);
         }
       }  // if (ice_matl)
