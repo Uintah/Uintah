@@ -25,6 +25,7 @@
 #include <Core/GuiInterface/GuiVar.h>
 #include <Packages/BioPSE/share/share.h>
 #include <vector>
+#include <string>
 #include <fstream>
 #include <sys/stat.h>
 
@@ -92,6 +93,8 @@ void RawToDenseMatrix::execute(){
   time_t new_filemodification = buf.st_mtime;
 #endif
 
+
+
   if (!handle_.get_rep() || 
       filename_.get() != old_filename_ || 
       new_filemodification != old_filemodification_)
@@ -111,8 +114,15 @@ void RawToDenseMatrix::execute(){
       error("Could not open file: " + filename_.get());
       return;
     } 
-
     infile.close();
+
+    if (potfiles_.size() == 0) {
+      //then the filename was saved in a net, not entered into the gui.
+      //trigger the list of file names to parse.
+      string dummy;
+      TCL::eval(id + " working_files " + filename_.get(), dummy);
+    }
+
     DenseMatrix* mat = scinew DenseMatrix(rows, potfiles_.size());
     int col = 0;
     vector<string>::iterator iter = potfiles_.begin();
