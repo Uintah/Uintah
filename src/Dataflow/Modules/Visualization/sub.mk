@@ -15,27 +15,13 @@ SRCS     += \
 	$(SRCDIR)/GLTextureBuilder.cc\
 	$(SRCDIR)/GenStandardColorMaps.cc\
 	$(SRCDIR)/GenTransferFunc.cc\
-	$(SRCDIR)/Hedgehog.cc\
-	$(SRCDIR)/HedgehogLitLines.cc\
-	$(SRCDIR)/ImageViewer.cc\
-	$(SRCDIR)/IsoSurfaceDW.cc\
 	$(SRCDIR)/RescaleColorMap.cc\
-	$(SRCDIR)/ScalarFieldProbe.cc\
-	$(SRCDIR)/ShowColorMap.cc\
-	$(SRCDIR)/ShowDipoles.cc\
-	$(SRCDIR)/ShowFieldSlice.cc\
-	$(SRCDIR)/ShowHist.cc\
-	$(SRCDIR)/ShowImage.cc\
-	$(SRCDIR)/ShowMatrix.cc\
-	$(SRCDIR)/ShowMesh.cc\
-	$(SRCDIR)/ShowSurface.cc\
-	$(SRCDIR)/ShowWidgets.cc\
 	$(SRCDIR)/Streamline.cc\
 	$(SRCDIR)/TexCuttingPlanes.cc\
 	$(SRCDIR)/TextureVolVis.cc\
-#	$(SRCDIR)/FieldCage.cc\
-#	$(SRCDIR)/Ted.cc\
 [INSERT NEW CODE FILE HERE]
+#	$(SRCDIR)/IsoSurface.cc\
+#	$(SRCDIR)/ShowField.cc\
 
 
 PSELIBS := Dataflow/Network Core/Datatypes Dataflow/Widgets \

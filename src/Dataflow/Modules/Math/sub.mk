@@ -14,13 +14,7 @@ SRCDIR   := Dataflow/Modules/Math
 SRCS     += \
 	$(SRCDIR)/BuildTransform.cc\
 	$(SRCDIR)/ErrorMetric.cc\
-	$(SRCDIR)/MatMat.cc\
-	$(SRCDIR)/MatSelectVec.cc\
-	$(SRCDIR)/MatVec.cc\
-	$(SRCDIR)/RemapVector.cc\
 	$(SRCDIR)/SolveMatrix.cc\
-	$(SRCDIR)/VecVec.cc\
-#	$(SRCDIR)/LeastSquaresSolve.cc\
 #[INSERT NEW CODE FILE HERE]
 
 PSELIBS := Dataflow/Network Dataflow/Ports Core/Datatypes Core/Persistent \
