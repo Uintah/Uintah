@@ -23,10 +23,10 @@
 
   <DataArchiver>
     <filebase>test_cyl_pene_no_ero.uda</filebase>
-    <!--
     <outputTimestepInterval>10</outputTimestepInterval>
-    -->
+    <!--
     <outputInterval>2.0e-5</outputInterval>
+    -->
     <save label = "KineticEnergy"/>
     <save label = "TotalMass"/>
     <save label = "StrainEnergy"/>
@@ -44,12 +44,13 @@
     <save label = "p.porosity"/>
     <save label = "p.localized"/>
     <save label = "p.plasticTemp"/>
+    <save label = "p.temperature"/>
     <save label = "g.mass"/>
     <save label = "g.volume"/>
     <save label = "g.stressFS"/>
-    <checkpoint cycle = "2" interval = "1.0e-5"/>
+    <checkpoint cycle = "2" timestepInterval = "20"/>
     <!--
-    <checkpoint cycle = "2" timestepInterval = "100"/>
+    <checkpoint cycle = "2" interval = "1.0e-5"/>
     -->
   </DataArchiver>
 
@@ -64,6 +65,7 @@
     <use_load_curves>                false      </use_load_curves>
     <turn_on_adiabatic_heating>      false      </turn_on_adiabatic_heating>
     <ForceBC_force_increment_factor> 1.0        </ForceBC_force_increment_factor>
+    <do_contact_friction_heating> false </do_contact_friction_heating>
     <erosion algorithm = "none"/>
 <!--
     <erosion algorithm = "AllowNoTension"/>
