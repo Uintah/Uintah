@@ -1,289 +1,254 @@
 <html>
+<head>
+<meta http-equiv="content-type" content="text/html;charset=iso-8859-1">
+<meta name="generator" content="Adobe GoLive 4">
+<title>Derived Fields</title>
+</head>
 
+<body bgcolor="#a9a9a9">
+<table align="center" border="0" cellpadding="0" cellspacing="0" width="306" bgcolor="#cccccc">
+<tr>
+<td><img height="92" width="600" src="images/sub-banner.jpg" border="0" usemap="#sub-banner8662a0c4"><map name="sub-banner8662a0c4"><area coords="581,65,598,84" shape="rect" title nohref><area href="chapter_7.html" coords="557,64,575,83" shape="rect" title="Feedback"><area href="chapter_6.html" coords="532,64,550,82" shape="rect" title="Putting Simulation and Visualization Together"><area href="chapter_5.html" coords="508,64,527,83" shape="rect" title="Bioelectric Field Simulation"><area href="chapter_4.html" coords="483,64,502,83" shape="rect" title="Multi-Vis"><area href="chapter_3.html" coords="460,64,478,83" shape="rect" title="Derived Fields"><area href="chapter_2.html" coords="436,64,454,83" shape="rect" title="Looking at the Data"><area href="chapter_1.html" coords="412,64,430,81" shape="rect" title="Geometry Visualization"><area href="Intro.html" coords="354,64,406,84" shape="rect" title="Introduction"><area href="http://software.sci.utah.edu/doc/index.html" coords="205,63,343,83" shape="rect" title="Documentation"><area href="http://software.sci.utah.edu/" coords="103,63,195,82" shape="rect" title="Software"><area href="index.html" coords="1,65,92,81" shape="rect" title="Tutorial Home"></map></td>
+</tr>
 
+<tr>
+<td>
+<center>
+<table border="0" cellpadding="0" cellspacing="5" width="600">
+	<tr>
+	<td>
+	<center>
+	<br>
+	<font size="4"
+	face="Arial,Helvetica,Geneva,Swiss,SunSans-Regular"
+	color="maroon">
+	<b>Chapter 3: Derived Fields</b></font> </p>
+        <p>&nbsp; </p>
+        </center>
+        <div align="left">
 
-	<head>
+        <p><b>Chapter Overview</b><br>
 
-		<meta http-equiv="content-type" content="text/html;charset=iso-8859-1">
-
-		<meta name="generator" content="Adobe GoLive 4">
-
-		<title>Derived Fields</title>
-
-	</head>
-
-
-
-	<body bgcolor="#a9a9a9">
-
-		<table align="center" border="0" cellpadding="0" cellspacing="0" width="306" bgcolor="#cccccc">
-
-			<tr>
-
-				<td><img height="92" width="600" src="images/sub-banner.jpg" border="0" usemap="#sub-banner8662a0c4"><map name="sub-banner8662a0c4"><area coords="581,65,598,84" shape="rect" title nohref><area href="chapter_7.html" coords="557,64,575,83" shape="rect" title="Feedback"><area href="chapter_6.html" coords="532,64,550,82" shape="rect" title="Putting Simulation and Visualization Together"><area href="chapter_5.html" coords="508,64,527,83" shape="rect" title="Bioelectric Field Simulation"><area href="chapter_4.html" coords="483,64,502,83" shape="rect" title="Multi-Vis"><area href="chapter_3.html" coords="460,64,478,83" shape="rect" title="Derived Fields"><area href="chapter_2.html" coords="436,64,454,83" shape="rect" title="Looking at the Data"><area href="chapter_1.html" coords="412,64,430,81" shape="rect" title="Geometry Visualization"><area href="Intro.html" coords="354,64,406,84" shape="rect" title="Introduction"><area href="http://software.sci.utah.edu/doc/index.html" coords="205,63,343,83" shape="rect" title="Documentation"><area href="http://software.sci.utah.edu/" coords="103,63,195,82" shape="rect" title="Software"><area href="index.html" coords="1,65,92,81" shape="rect" title="Tutorial Home"></map></td>
-
-			</tr>
-
-			<tr>
-
-				<td>
-
-					<center>
-
-						<table border="0" cellpadding="0" cellspacing="5" width="600">
-
-							<tr>
-
-								<td>
-
-									<center>
-
-										<br>
-
-										<font size="4" face="Arial,Helvetica,Geneva,Swiss,SunSans-Regular" color="maroon"><b>Chapter 3: Derived Fields<br>
-
-										<hr>
-
-										</b></font></center>
-
-									
-              <div align="left"> 
-                <p><b>Chapter overview</b><br>
-
-                <p>In Chapters 1 and 2, we constructed SCIRun networks
-                to visualize the geometry and data values in a Field.
-                In this Chapter we will explore some more
-                visualization techniques, and will look at
-                &quot;filter&quot; modules that input a Field and
-                produce a new derived Field as output.  Rather than
-                building one net to introduce all of these new
-                modules, we will construct several nets, each
-                describing a single technique.  To keep things simple,
-                we will divide this chapter into three sections,
-                one for each method.
+        <p>In Chapters 1 and 2, we constructed SCIRun networks to
+        visualize the geometry and data values in a Field.  In this
+        Chapter we will explore some more visualization techniques,
+        and will look at &quot;filter&quot; modules that input a Field
+        and produce a new derived Field as output.  Rather than
+        building one net to introduce all of these new modules, we
+        will construct several nets, each describing a single
+        technique.  To keep things simple, we will divide this chapter
+        into four sections, one for each method.
                 
-                <p><b>Section:3A - SampleField</b><br>
+        <p><b>Section:3A - FieldBoundary</b><br>
 
-		<p>Given a large Field of data, it is often useful to
-                sample a subset of the Field in order to make the
-                visualization manageable and to avoid visual clutter.
-                One example of this is to examine a cutting plane
-                inside of a three-dimensional dataset.  A similar
-                technique examines a cutting volume.
+	<p>The first visualization we will implement will be a
+        boundary extraction.  This module takes any type of Field as
+        input, and produces a new Field that only contains the
+        boundary as output.  For example, given a tetrahedral volume
+        Field, the module produces a surface Field of just the
+        boundary faces as output.
+
+	<p>Create a FieldBounday module from
+	SCIRun/Fields/FieldBoundary.  Attach the output from a
+	FieldReader (choose the utahtorso-lowres.tvd.fld file again)
+	to the FieldBoundary input port, and pass the contents of the
+	first output port of the FieldBoundary into a ShowField
+	module.  Set the ShowField module to display just edges, turn
+	off the nodes and the faces.  Render the edges as cylinder,
+	with a scale of 1.0.
+
+	<p>Connect the output from the ShowField module into a Viewer.
+	The net you have created should look like the one shown in
+	Figure XXX; the view in the ViewWindow should look like Figure
+	XXX.
+
+        <p><b>Section:3B - SampleField</b><br>
+
+	<p>Given a large Field of data, it is often useful to sample a
+        subset of the Field in order to make the visualization
+        manageable and to avoid visual clutter.  One example of this
+        is to examine a cutting plane inside of a three-dimensional
+        dataset.  A similar technique examines a cutting volume.
+
+	<p>In SCIRun, the functionality described above is split into
+        two steps.  The first step is to generate a set of samples
+        points; the second is to interpolate the datavalues from the
+        original Field onto those new sample points.  In this section
+        we will describe some of our sample generation modules.  In
+        the next section we will talk about data interpolation.
                   
-		<p>In SCIRun, the functionality described above is
-                split into two steps.  The first step is to generate a
-                set of samples points; the second is to interpolate
-                the datavalues from the original Field onto those new
-                sample points.  In this section we will describe
-                some of our sample generation modules.  In the next
-                section we will talk about data interpolation.
-                  
-                <p>To generate a cutting plane, we use a
-                SCIRun/Fields/SamplePlane module.  This module takes
-                a Field as input, and sends a Field as output.  The
-                input Field is only used to specify the geometric
-                bounds for the samples.  The SamplePlane module
-                generates a set of regularly spaced samples on a Plane
-                (an ImageField) you can choose to line up with the
-                X, Y, or Z axis.  The user specifies the orientation,
-                as well as the number of samples via the module's UI.
+        <p>To generate a cutting plane, we use a
+        SCIRun/Fields/SamplePlane module.  This module takes a Field
+        as input, and sends a Field as output.  The input Field is
+        only used to specify the geometric bounds for the samples.
+        The SamplePlane module generates a set of regularly spaced
+        samples on a Plane (an ImageField) you can choose to line up
+        with the X, Y, or Z axis.  The user specifies the orientation,
+        as well as the number of samples via the module's UI.
 
-                <p><b>Figure 3.1</b> shows an example of this module in use.
+        <p><b>Figure 3.1</b> shows an example of this module in use.
 
-</div>
-									<center>
-										<p><img height="150" width="220" src="images/figures/3_1.gif"><br>
-										<b>Figure 3.1</b></p>
-									</center>
-									<div align="left">
-										<p><br>
+	</div>
+	<center>
+	<p><img height="150" width="220" src="images/figures/3_1.gif"><br>
+	<b>Figure 3.1</b></p>
+	</center>
+	<div align="left">
+	<p><br>
  
-                In previous chapters, We have created a FieldReader
-                module and a SamplePlane module, and have hooked them together (see Figure 1.7).
+        <p>We have created a FieldReader module and a SamplePlane
+        module, and have hooked them together (see Figure 1.7).
 
-                For this example, we will again use the
-                utahtorso-lowres-voltage.tvd.fld as our input file.
-                The output of SamplePlane is a Field that contains
-                geometry (an ImageMesh), but no meaningful data yet.
-                We can visualize its geometry, though, using a
-                ShowField module and a Viewer module.
+        <p>For this example, we will again use the
+        utahtorso-lowres-voltage.tvd.fld as our input file.  The
+        output of SamplePlane is a Field that contains geometry (an
+        ImageMesh), but no meaningful data yet.  We can visualize its
+        geometry, though, using a ShowField module and a Viewer
+        module.
 
-                <p>Another sample generation module in SCIRun is the
-                SampleField module (<b>Figure 3.2.</b>)
+        <p>Another sample generation module in SCIRun is the
+        SampleField module (<b>Figure 3.2.</b>)
 
-</div>
-									<center>
-										<p><img height="260" width="358" src="images/figures/3_2.gif"><br>
-										<b>Figure 3.2</b></p>
-									</center>
-									<div align="left">
-										<p><br>
+	</div>
+	<center>
+	<p><img height="260" width="358" src="images/figures/3_2.gif"><br>
+	<b>Figure 3.2</b></p>
+	</center>
+	<div align="left">
+	<p><br>
 
-                SampleField generates samples
-                from any type of input field and outputs the samples
-                as a PointCloud field.  The samples can be generated
-                randomly or can be user selected via a 3D widget.  The
-                random sampling can be weighted by importance
-                (determined by the data value of the sample) or left
-                unweighted.  The random sampling can also be limited
-                to the selection of node points, rather than points
-                from the interior of the fields elements, by clamping
-                the samples to nodes.  The &quot;uniform&quot;
-                distributions are a uniformly random function over the
-                spacial extents of the field (i.e., the elements are
-                weighted by their volume or area), whereas the
-                &quot;scattered&quot; distributions are a uniformly
-                random function over the elements only (i.e., all
-                elements have the same weight).  The &quot;importance
-                weighted&quot; distributions multiply the existing
-                weight of a sample by the interpolated data value
-                associated with it, while the &quot;not weighted&quot;
-                distributions leave the existing weight of a sample
-                unchanged.
+	<p>SampleField generates samples from any type of input field
+        and outputs the samples as a PointCloud field.  The samples
+        can be generated randomly or can be user selected via a 3D
+        widget.  The random sampling can be weighted by importance
+        (determined by the data value of the sample) or left
+        unweighted.  The random sampling can also be limited to the
+        selection of node points, rather than points from the interior
+        of the fields elements, by clamping the samples to nodes.  The
+        &quot;uniform&quot; distributions are a uniformly random
+        function over the spacial extents of the field (i.e., the
+        elements are weighted by their volume or area), whereas the
+        &quot;scattered&quot; distributions are a uniformly random
+        function over the elements only (i.e., all elements have the
+        same weight).  The &quot;importance weighted&quot;
+        distributions multiply the existing weight of a sample by the
+        interpolated data value associated with it, while the
+        &quot;not weighted&quot; distributions leave the existing
+        weight of a sample unchanged.
 
-                <p><b>Section:3B - DirectInterpolate</b><br>
+        <p><b>Section:3C - DirectInterpolate</b><br>
 
-                <p>In the previous sub-section, we generated sample
-                distributions based on an input Field.  In this
-                section, we will use the DirectInterpolate module to
-                interpolate datavalues onto those new samples.  We
-                begin by creating a FieldReader and a SamplePlane
-                module, as described above.  To map datavalues onto
-                the plane, we use the DirectInterpolate module.  To
-                the first input port we attach the datavalues source,
-                in this case the output from the FieldReader.  To the
-                second input port we attach the destination field, in
-                this case the output from SamplePlane.  The
-                DirectInterpolate module uses linear interpolation to
-                produce a new Field containing the geometry of the
-                second input Field mapped with datavalues from the
-                first input Field.
+        <p>In the previous sub-section, we generated sample
+        distributions based on an input Field.  In this section, we
+        will use the DirectInterpolate module to interpolate
+        datavalues onto those new samples.  We begin by creating a
+        FieldReader and a SamplePlane module, as described above.  To
+        map datavalues onto the plane, we use the DirectInterpolate
+        module.  To the first input port we attach the datavalues
+        source, in this case the output from the FieldReader.  To the
+        second input port we attach the destination field, in this
+        case the output from SamplePlane.  The DirectInterpolate
+        module uses linear interpolation to produce a new Field
+        containing the geometry of the second input Field mapped with
+        datavalues from the first input Field.
                   
-                <p>Having computed the values on the plane, we can now
-                visualize those datavalues with color-mapped geometry.
-                To do this, we hook up the modules just as shown in
-                Figure xx.  The resulting ViewWindow image should look
-                like the image in Figure xx.
+        <p>Having computed the values on the plane, we can now
+        visualize those datavalues with color-mapped geometry.  To do
+        this, we hook up the modules just as shown in Figure xx.  The
+        resulting ViewWindow image should look like the image in
+        Figure xx.
 
-                <p><b>Section:3C - StreamLines network</b><br>
+        <p><b>Section:3D - StreamLines network</b><br>
 
-                <p>The last visualization module we will introduce in
-                this Chapter is the StreamLines module.  This
-                module takes in a vector Field, and a Field of sample
-                points, and outputs a new Field consisting of a
-                sequence of path-integral curves generated
-                from advecting (integrating) the sample positions
-                through the (derivative) vector Field.
+        <p>The last visualization module we will introduce in this
+        Chapter is the StreamLines module.  This module takes in a
+        vector Field, and a Field of sample points, and outputs a new
+        Field consisting of a sequence of path-integral curves
+        generated from advecting (integrating) the sample positions
+        through the (derivative) vector Field.
 
-		<p>We will generate the input vector Field by using
-		the Gradient module (SCIRun/Fields/Gradient) to compute
-		the gradient of the utahtorso-lowres-voltage.tvd.fld
-		(this produces the negative electric field).  Connect
-		the output from the Gradient module to the the first
-		Field input port of the StreamLines module.
+	<p>We will generate the input vector Field by using the
+	Gradient module (SCIRun/Fields/Gradient) to compute the
+	gradient of the utahtorso-lowres-voltage.tvd.fld (this
+	produces the negative electric field).  Connect the output
+	from the Gradient module to the the first Field input port of
+	the StreamLines module.
 
-		<p>To generate a sample distribution of streamline
-		seed points, we will use the SampleField module
-		described above.  We want to interactively position a
-		"rake" of seed points within the volume, so we must
-		connect the Geometry output port (pink) from this
-		module to the Viewer module.  Then select the "rake"
-		option from the SampleField UI and set the number of
-		samples to 15.  Finally, connect the Field output port
-		from this module to the second Field input port of the
-		StreamLines module.
+	<p>To generate a sample distribution of streamline seed
+	points, we will use the SampleField module described above.
+	We want to interactively position a "rake" of seed points
+	within the volume, so we must connect the Geometry output port
+	(pink) from this module to the Viewer module.  Then select the
+	"rake" option from the SampleField UI and set the number of
+	samples to 15.  Finally, connect the Field output port from
+	this module to the second Field input port of the StreamLines
+	module.
 
-		<p>At this point, we have streamlines coming out of
-                the StreamLines module, and we would like to render
-                them.  Before we do, though, we can attach scalar
-                datavalues to the streamline nodes.  To accomplish
-                this, we use the DirectInterpolate module described
-                above.  We will again use the voltage datavalues from
-                the utahtorso-lowres-voltage.tvd.fld Field.  Attaching
-                all of the modules, we have the network shown in
-                Figure XXX.
+	<p>At this point, we have streamlines coming out of the
+        StreamLines module, and we would like to render them.  Before
+        we do, though, we can attach scalar datavalues to the
+        streamline nodes.  To accomplish this, we use the
+        DirectInterpolate module described above.  We will again use
+        the voltage datavalues from the
+        utahtorso-lowres-voltage.tvd.fld Field.  Attaching all of the
+        modules, we have the network shown in Figure XXX.
 
-		<p>The Streamlines module works by integrating the
-		seed points through the vector Field.  We are using a fifth
-		order integration mthod: Runge-Kutta-Fehlberg algorithm.
-		To run this algorithm, we must set three parameters: Error
-		Tolerance, Step Size, and a Maximum Number of Steps.
-		These three parameters should be set to 0.01, 0.1, and
-		200, respectively, in the StreamLines UI (as shown in
-		<b>Figure 3.6)</b>.
+	<p>The Streamlines module works by integrating the seed points
+	through the vector Field.  We are using a fifth order
+	integration mthod: Runge-Kutta-Fehlberg algorithm.  To run
+	this algorithm, we must set three parameters: Error Tolerance,
+	Step Size, and a Maximum Number of Steps.  These three
+	parameters should be set to 0.01, 0.1, and 200, respectively,
+	in the StreamLines UI (as shown in <b>Figure 3.6)</b>.
 
-</div>
-									<center>
-										<p><img height="150" width="266" src="images/figures/3_6.gif"><br>
-										<b>Figure 3.6</b></p>
-									</center>
-									<div align="left">
-										<p><br>
+	</div>
+	<center>
+	<p><img height="150" width="266" src="images/figures/3_6.gif"><br>
+	<b>Figure 3.6</b></p>
+	</center>
+	<div align="left">
+	<p><br>
 
-                <p><b>Network execution and data dependence</b><br>
+        <p><b>Network execution and data dependence</b><br>
 
-		<p>There are several ways to initiate execution of a SCIRun network that has not yet "fired".  The first is
-		to click the right mouse button on the name of one of
-		the module icons, and to select the "Execute" option
-		from the dropdown menu (<b>Figure 3.7</b>).  The second is to press any of
-=======
-		SCIRun network that has not yet "fired." First, click the
-		right mouse button on the name of one module icon, and
-		select the "Execute" option
-		from the dropdown menu.  Second, press any of
-		the "Execute" buttons that appear on many of the
-		module User Interface.  Either of these actions will
-		initiate the execution of the selected module, as well
-		as the execution of any modules that are part of the
-		data dependency graph of that selected module.
+	<p>There are several ways to initiate execution of a SCIRun
+	network that has not yet "fired".  The first is to click the
+	right mouse button on the name of one of the module icons, and
+	to select the "Execute" option from the dropdown menu
+	(<b>Figure 3.7</b>).  The second is to press any of the
+	"Execute" buttons that appear on many of the module User
+	Interface.  Either of these actions will initiate the
+	execution of the selected module, as well as the execution of
+	any modules that are part of the data dependency graph of that
+	selected module.
 
-</div>
-									<center>
-										<p><img height="165" width="270" src="images/figures/3_7.gif"><br>
-										<b>Figure 3.7</b></p>
-									</center>
-									<div align="left">
-										<p><br>
+	</div>
+	<center>
+	<p><img height="165" width="270" src="images/figures/3_7.gif"><br>
+	<b>Figure 3.7</b></p>
+	</center>
+	<div align="left">
+	<p><br>
 
-		<p>After executing the network, you should see an
-		image like <b>Figure 3.8</b> in the ViewWindow.  The rake
-		widget appears as a gray stick in the scene.  You can
-		move this widget around to new positions by pressing
-		down the shift key and then clicking on the widget
-		with the left mouse button.  When you release the
-		mouse button, the streamlines will automatically be
-		recomputed from the new seed positions.<br>
-<br>
-<br>
-
-
-
-              </div>
-
-								</td>
-
-							</tr>
-
-						</table>
-
-					</center>
-
-				</td>
-
-			</tr>
-
-			<tr>
-
-				<td><img height="35" width="600" src="images/sub-banner-bottom.jpg" border="0" usemap="#sub-banner-bottom8ac341b7"><map name="sub-banner-bottom8ac341b7"><area href="chapter_4.html" coords="563,1,590,21" shape="rect"><area href="chapter_2.html" coords="533,1,561,21" shape="rect"><area href="http://www.sci.utah.edu" coords="6,6,67,31" shape="rect"></map></td>
-
-			</tr>
-
-		</table>
-
-	</body>
-
-
-
+	<p>After executing the network, you should see an image like
+	<b>Figure 3.8</b> in the ViewWindow.  The rake widget appears
+	as a gray stick in the scene.  You can move this widget around
+	to new positions by pressing down the shift key and then
+	clicking on the widget with the left mouse button.  When you
+	release the mouse button, the streamlines will automatically
+	be recomputed from the new seed positions.<br>
+	<br>
+	<br>
+        </div>
+	</td>
+	</tr>
+</table>
+</center>
+</td>
+</tr>
+<tr>
+<td><img height="35" width="600" src="images/sub-banner-bottom.jpg" border="0" usemap="#sub-banner-bottom8ac341b7"><map name="sub-banner-bottom8ac341b7"><area href="chapter_4.html" coords="563,1,590,21" shape="rect"><area href="chapter_2.html" coords="533,1,561,21" shape="rect"><area href="http://www.sci.utah.edu" coords="6,6,67,31" shape="rect"></map></td>
+</tr>
+</table>
+</body>
 </html>
-
