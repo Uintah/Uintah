@@ -64,7 +64,7 @@ protected:
 
 DECLARE_MAKER(BundleWriter)
 BundleWriter::BundleWriter(GuiContext* ctx)
-  : GenericWriter<BundleHandle>("BundleWriter", ctx, "Bundle", "SCIRun"),
+  : GenericWriter<BundleHandle>("BundleWriter", ctx, "DataIO", "SCIRun"),
     guiTypes_(ctx->subVar("types")),
     guiFileType_(ctx->subVar("filetype")) 
 {

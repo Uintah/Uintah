@@ -33,7 +33,7 @@
 # NOTE: if file to be splitted, uncomment corresponding lines in the file
 
 
-itcl_class SCIRun_Bundle_BundleWriter {
+itcl_class SCIRun_DataIO_BundleWriter {
     inherit Module
     constructor {config} {
         set name BundleWriter
