@@ -8,17 +8,18 @@ itcl_class PSECommon_Visualization_IsoSurfaceDW {
 	set_defaults
     }
     method set_defaults {} {
-	global $this-have_seedpoint
-	set $this-have_seedpoint 0
-	global $this-do_3dwidget
-	set $this-do_3dwidget 0
 	global $this-isoval
+	set $this-isoval 1
 	global $this-emit_surface
-	set $this-emit_surface 0
+	set $this-emit_surface 1
+	global $this-auto_update
+	set $this-auto_update 0
+	global $this-logTCL
+	set $this-logTCL 0
 	global $this-single
-	set $this-single 0
+	set $this-single 1
 	global $this-method
-	set $this-method MC
+	set $this-method Hash
 	global $this-min $this-max
 	set $this-min 0
 	set $this-max 200
@@ -30,14 +31,6 @@ itcl_class PSECommon_Visualization_IsoSurfaceDW {
 	set $this-clr-r 0.5
 	set $this-clr-g 0.7
 	set $this-clr-b 0.3
-
-	global $this-xmin $this-xmax $this-ymin $this-ymax $this-zmin $this-zmax
-	set $this-xmin 0
-	set $this-ymin 0
-	set $this-zmin 0
-	set $this-xmax 1
-	set $this-ymax 1
-	set $this-zmax 1
     }
     method raiseColor { col } {
 	set w .ui[modname]
@@ -72,19 +65,6 @@ itcl_class PSECommon_Visualization_IsoSurfaceDW {
 	pack $w.f -padx 2 -pady 2 -expand 1 -fill x
 	set n "$this-c needexecute "
 
-	frame $w.f.seedpoint
-	pack $w.f.seedpoint
-	label $w.f.seedpoint.label -text "Algorithm: "
-	radiobutton $w.f.seedpoint.value -text Value -relief flat \
-		-variable $this-have_seedpoint -value 0
-	radiobutton $w.f.seedpoint.seedpoint -text Seedpoint -relief flat \
-		-variable $this-have_seedpoint -value 1
-
-	checkbutton $w.f.seedpoint.w3d -text "3D widget" -relief flat \
-		-variable $this-do_3dwidget -state disabled
-	pack $w.f.seedpoint.label $w.f.seedpoint.value \
-		$w.f.seedpoint.seedpoint $w.f.seedpoint.w3d -side left
-
 	global $this-min $this-max
 	scale $w.f.isoval -variable $this-isoval \
 		-from [set $this-min] -to [set $this-max] -label "IsoValue:" \
@@ -97,18 +77,18 @@ itcl_class PSECommon_Visualization_IsoSurfaceDW {
 		-showvalue true -orient horizontal
 	pack $w.f.blocksize -side top -fill x
 
-	#makePoint $w.f.seed "Seed Point" $this-seed_point $n
-	#pack $w.f.seed -fill x
-	global $this-xmin $this-ymin $this-zmin $this-xmax $this-ymax $this-zmax
-	set_bounds [set $this-xmin] [set $this-ymin] [set $this-zmin] [set $this-xmax] [set $this-ymax] [set $this-zmax]
-	
 	frame $w.f.b
 	frame $w.f.b.l
 	checkbutton $w.f.b.l.emit_surface -text "Emit Surface" -relief flat \
 		-variable $this-emit_surface
+	checkbutton $w.f.b.l.auto_update -text "Auto Update" -relief flat \
+		-variable $this-auto_update -command "$this auto"
+	global $this-logTCL
+	checkbutton $w.f.b.l.log -text "Log Isovalue" -relief flat \
+		-variable $this-logTCL -command "$this-c log"
 	checkbutton $w.f.b.l.single -text "Single Processor" -relief flat \
 		-variable $this-single
-	pack $w.f.b.l.emit_surface $w.f.b.l.single -side top -expand 1
+	pack $w.f.b.l.emit_surface $w.f.b.l.auto_update $w.f.b.l.log $w.f.b.l.single -side top -expand 1
 	make_labeled_radio $w.f.b.r "Method: " "" \
 		top $this-method \
 		{{Hash "Hash"} {Rings "Rings"} {MC "MC"} {None "None"}}
@@ -135,21 +115,13 @@ itcl_class PSECommon_Visualization_IsoSurfaceDW {
 	set $this-max $max
 	$w.f.isoval configure -from $min -to $max
     }
-    method set_bounds {xmin ymin zmin xmax ymax zmax} {
-	return
+    method auto { } {
 	set w .ui[modname]
-	$w.f.seed.x configure -from $xmin -to $xmax
-	$w.f.seed.y configure -from $ymin -to $ymax
-	$w.f.seed.z configure -from $zmin -to $zmax
-
-	global $this-xmin $this-xmax
-	set $this-xmin $xmin
-	set $this-xmax $xmax
-	global $this-ymin $this-ymax
-	set $this-ymin $ymin
-	set $this-ymax $ymax
-	global $this-zmin $this-zmax
-	set $this-zmin $zmin
-	set $this-zmax $zmax
+	global $this-auto_update
+	if {[set $this-auto_update]} {
+	    $w.f.isoval configure -command "$this-c needexecute"
+	} else {
+	    $w.f.isoval configure -command ""
+	}
     }
 }
