@@ -8,16 +8,17 @@
 
 #include <iostream>
 #include <mpi.h>
-#include <stdlib.h>
 
 using namespace Uintah;
 using std::cerr;
 using namespace SCICore::Exceptions;
 using std::string;
 
-static bool usingMPI;
-static MPI_Comm worldComm;
+static bool            usingMPI = false;
+static int             maxThreads = 1;
+static MPI_Comm        worldComm = -1;
 static ProcessorGroup* rootContext = 0;
+static int             PSE_MPI_DEBUG_LEVEL = 0;
 
 static
 void
@@ -37,9 +38,27 @@ Parallel::usingMPI()
    return ::usingMPI;
 }
 
+int
+Parallel::getMaxThreads()
+{
+   return ::maxThreads;
+}
+
 void
 Parallel::initializeManager(int& argc, char**& argv)
 {
+   if( char * max = getenv( "PSE_MAX_THREADS" ) ){
+      ::maxThreads = atoi( max );
+      cerr << "PSE_MAX_THREADS set to " << ::maxThreads << "\n";
+
+      if( ::maxThreads <= 0 || ::maxThreads > 16 ){
+         // Empirical evidence points to 16 being the most threads
+         // that we should use... (this isn't conclusive evidence)
+         cerr << "PSE_MAX_THREADS is out of range 1..16\n";
+         throw InternalError( "PSE_MAX_THREADS is out of range 1..16\n" );
+      }
+   }
+  
    ::usingMPI=false;
    // Look for SGI MPI
    if(getenv("MPI_ENVIRONMENT")){
@@ -53,6 +72,7 @@ Parallel::initializeManager(int& argc, char**& argv)
       }
    }
    if(::usingMPI){	
+
       int status;
       if((status=MPI_Init(&argc, &argv)) != MPI_SUCCESS)
 	 MpiError("MPI_Init", status);
@@ -67,11 +87,11 @@ Parallel::initializeManager(int& argc, char**& argv)
 					  worldRank,worldSize);
    } else {
       rootContext = scinew ProcessorGroup(0,0, false, 0, 1);
-      worldComm=-1;
    }
 
    ProcessorGroup* world = getRootProcessorGroup();
-   cerr << "Parallel: processor " << world->myrank() << " of " << world->size();
+   cerr << "Parallel: processor " << world->myrank() + 1 
+	<< " of " << world->size();
    if(::usingMPI)
       cerr << " (using MPI)";
    cerr << '\n';
@@ -102,6 +122,9 @@ Parallel::getRootProcessorGroup()
 
 //
 // $Log$
+// Revision 1.11  2000/09/26 21:42:34  dav
+// added getMaxThreads
+//
 // Revision 1.10  2000/09/25 18:44:59  sparker
 // Added using statement for std::string
 //

@@ -55,19 +55,26 @@ WARNING
       //////////
       // Returns true if this process is using MPI
       static bool usingMPI();
+
+      //////////
+      // Returns the number of threads that a processing element is
+      // allowed to use to compute its tasks.  
+      static int getMaxThreads();
       
    private:
       Parallel();
       Parallel(const Parallel&);
       ~Parallel();
       Parallel& operator=(const Parallel&);
-      
    };
 
 } // end namespace Uintah
 
 //
 // $Log$
+// Revision 1.8  2000/09/26 21:42:25  dav
+// added getMaxThreads
+//
 // Revision 1.7  2000/09/25 18:13:51  sparker
 // Correctly handle mpich
 //
