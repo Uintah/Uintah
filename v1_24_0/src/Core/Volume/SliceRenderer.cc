@@ -733,7 +733,164 @@ SliceRenderer::multi_level_draw()
 
 void 
 SliceRenderer::draw_wireframe()
-{}
+{
+  tex_->lock_bricks();
+  Ray view_ray = compute_view();
+  Transform tform = tex_->transform();
+  double mvmat[16];
+  tform.get_trans(mvmat);
+  glMatrixMode(GL_MODELVIEW);
+  glPushMatrix();
+  glMultMatrixd(mvmat);
+  GLboolean lighting = glIsEnabled(GL_LIGHTING);
+  glDisable(GL_LIGHTING);
+  vector<TextureBrickHandle> bricks;
+  tex_->get_sorted_bricks(bricks, view_ray);
+
+  vector<float> vertex;
+  vector<float> texcoord;
+  vector<int> size;
+
+  for (unsigned int i=0; i<bricks.size(); i++)
+  {
+    glColor4f(0.8, 0.8, 0.8, 1.0);
+
+    TextureBrickHandle b = bricks[i];
+    const Point &pmin(b->bbox().min());
+    const Point &pmax(b->bbox().max());
+    Point corner[8];
+    corner[0] = pmin;
+    corner[1] = Point(pmin.x(), pmin.y(), pmax.z());
+    corner[2] = Point(pmin.x(), pmax.y(), pmin.z());
+    corner[3] = Point(pmin.x(), pmax.y(), pmax.z());
+    corner[4] = Point(pmax.x(), pmin.y(), pmin.z());
+    corner[5] = Point(pmax.x(), pmin.y(), pmax.z());
+    corner[6] = Point(pmax.x(), pmax.y(), pmin.z());
+    corner[7] = pmax;
+
+    glBegin(GL_LINES);
+    {
+      for(int i=0; i<4; i++) {
+        glVertex3d(corner[i].x(), corner[i].y(), corner[i].z());
+        glVertex3d(corner[i+4].x(), corner[i+4].y(), corner[i+4].z());
+      }
+    }
+    glEnd();
+    glBegin(GL_LINE_LOOP);
+    {
+      glVertex3d(corner[0].x(), corner[0].y(), corner[0].z());
+      glVertex3d(corner[1].x(), corner[1].y(), corner[1].z());
+      glVertex3d(corner[3].x(), corner[3].y(), corner[3].z());
+      glVertex3d(corner[2].x(), corner[2].y(), corner[2].z());
+    }
+    glEnd();
+    glBegin(GL_LINE_LOOP);
+    {
+      glVertex3d(corner[4].x(), corner[4].y(), corner[4].z());
+      glVertex3d(corner[5].x(), corner[5].y(), corner[5].z());
+      glVertex3d(corner[7].x(), corner[7].y(), corner[7].z());
+      glVertex3d(corner[6].x(), corner[6].y(), corner[6].z());
+    }
+    glEnd();
+
+    glColor4f(0.4, 0.4, 0.4, 1.0);
+
+    vertex.clear();
+    texcoord.clear();
+    size.clear();
+
+    const Point view = view_ray.origin();
+    const Point &bmin = b->bbox().min();
+    const Point &bmax = b->bbox().max();
+    const Point &bmid = b->bbox().center();
+    const Point c(control_point_);
+    double t;
+    bool draw_z = false;
+    if(draw_cyl_) {
+      const double to_rad = M_PI / 180.0;
+      BBox bb;
+      tex_->get_bounds(bb);
+      Point cyl_mid = bb.center();
+      if(draw_phi0_) {
+	Vector phi(1.,0,0);
+	Transform rot;
+	rot.pre_rotate(phi0_ * to_rad, Vector(0,0,1.));
+	phi = rot.project(phi);
+	Ray r(cyl_mid, phi);
+        r.planeIntersectParameter(-r.direction(), control_point_, t);
+        b->compute_polygon(r, t, vertex, texcoord, size);
+      }
+      if(draw_phi1_) {
+	Vector phi(1.,0,0);
+	Transform rot;
+	rot.pre_rotate(phi1_ * to_rad, Vector(0,0,1.));
+	phi = rot.project(phi);
+	Ray r(cyl_mid, phi);
+        r.planeIntersectParameter(-r.direction(), control_point_, t);
+        b->compute_polygon(r, t, vertex, texcoord, size);
+      }
+      if(draw_z_) {
+        draw_z = true;
+      }
+    } else {
+      if(draw_view_) {
+        view_ray.planeIntersectParameter(-view_ray.direction(), control_point_, t);
+        b->compute_polygon(view_ray, t, vertex, texcoord, size);
+      } else {
+	if(draw_x_) {
+	  Point o(bmin.x(), bmid.y(), bmid.z());
+	  Vector v(c.x() - o.x(), 0,0);
+	  if(c.x() > bmin.x() && c.x() < bmax.x() ){
+	    if(view.x() > c.x()) {
+	      o.x(bmax.x());
+	      v.x(c.x() - o.x());
+	    } 
+	    Ray r(o,v);
+            r.planeIntersectParameter(-r.direction(), control_point_, t);
+            b->compute_polygon(r, t, vertex, texcoord, size);
+	  }
+	}
+	if(draw_y_) {
+	  Point o(bmid.x(), bmin.y(), bmid.z());
+	  Vector v(0, c.y() - o.y(), 0);
+	  if(c.y() > bmin.y() && c.y() < bmax.y() ){
+	    if(view.y() > c.y()) {
+	      o.y(bmax.y());
+	      v.y(c.y() - o.y());
+	    } 
+	    Ray r(o,v);
+            r.planeIntersectParameter(-r.direction(), control_point_, t);
+            b->compute_polygon(r, t, vertex, texcoord, size);
+	  }
+	}
+        if(draw_z_) {
+          draw_z = true;
+        }
+      }
+    }
+    
+    if (draw_z) {
+      Point o(bmid.x(), bmid.y(), bmin.z());
+      Vector v(0, 0, c.z() - o.z());
+      if(c.z() > bmin.z() && c.z() < bmax.z() ) {
+	if(view.z() > c.z()) {
+	  o.z(bmax.z());
+	  v.z(c.z() - o.z());
+	} 
+	Ray r(o,v);
+        r.planeIntersectParameter(-r.direction(), control_point_, t);
+        b->compute_polygon(r, t, vertex, texcoord, size);
+      }
+    }
+
+    draw_polygons_wireframe(vertex, texcoord, size, false, false, 0);
+  }
+
+  if(lighting) glEnable(GL_LIGHTING);
+  glMatrixMode(GL_MODELVIEW);
+  glPopMatrix();
+  tex_->unlock_bricks();
+}
 
 #endif // SCI_OPENGL
 
