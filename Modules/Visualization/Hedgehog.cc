@@ -25,7 +25,6 @@
 class Hedgehog : public Module {
     VectorFieldIPort* infield;
     GeometryOPort* ogeom;
-    int abort_flag;
 
     Point min;
     Point max;
@@ -126,7 +125,6 @@ Module* Hedgehog::clone(int deep)
 
 void Hedgehog::execute()
 {
-    abort_flag=0;
     if(hedgehog_id)
 	ogeom->delObj(hedgehog_id);
     VectorFieldHandle field;

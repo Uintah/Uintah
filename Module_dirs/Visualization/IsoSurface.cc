@@ -46,7 +46,6 @@ class IsoSurface : public Module {
     ScalarFieldIPort* incolorfield;
     GeometryOPort* ogeom;
     SurfaceOPort* osurf;
-    int abort_flag;
 
     TCLPoint seed_point;
     TCLint have_seedpoint;
@@ -69,6 +68,8 @@ class IsoSurface : public Module {
 
     double old_min;
     double old_max;
+    Point old_bmin;
+    Point old_bmax;
 
     MaterialHandle widget_matl;
     MaterialHandle widget_highlight_matl;
@@ -148,10 +149,13 @@ IsoSurface::IsoSurface(const clString& id)
 			     Color(.5,.5,.5), 20);
     widget_highlight_matl=new Material(Color(0,0,0), Color(.7,.7,.7),
 				       Color(0,0,.6), 20);
-    matl=new Material(Color(0,0,0), Color(0,.6,0),
-		      Color(0,0.5,0), 20);
+    matl=new Material(Color(0,0,0), Color(.6,0,0),
+		      Color(.5,0,0), 20);
     widget=0;
     isosurface_id=0;
+
+    old_min=old_max=0;
+    old_bmin=old_bmax=Point(0,0,0);
 }
 
 IsoSurface::IsoSurface(const IsoSurface& copy, int deep)
@@ -173,7 +177,6 @@ Module* IsoSurface::clone(int deep)
 
 void IsoSurface::execute()
 {
-    abort_flag=0;
     if(isosurface_id){
 	ogeom->delObj(isosurface_id);
     }
@@ -190,12 +193,22 @@ void IsoSurface::execute()
 	old_min=min;
 	old_max=max;
     }
+    Point bmin, bmax;
+    field->get_bounds(bmin, bmax);
+    if(bmin != old_bmin || bmax != old_bmax){
+	char buf[1000];
+	ostrstream str(buf, 1000);
+	str << "IsoSurface_set_bounds " << id << " " << bmin.x() << " " << bmin.y() << " " << bmin.z() << " " << bmax.x() << " " << bmax.y() << " " << bmax.z() << endl;
+	TCL::execute(str.str());
+	old_bmin=bmin;
+	old_bmax=bmax;	
+    }
     if(need_seed){
 	find_seed_from_value(field);
 	need_seed=0;
     }
     if(do_3dwidget.get()){
-	widget_scale=0.01*field->longest_dimension();
+	widget_scale=0.05*field->longest_dimension();
 	if(!widget){
 	    Point min, max;
 	    field->get_bounds(min, max);
@@ -210,10 +223,7 @@ void IsoSurface::execute()
 	    } else {
 		grad.normalize();
 	    }
-	    cerr << "grad=" << grad << endl;
-	    cerr << "widget_scale=" << widget_scale << endl;
 	    Point cyl_top(sp+grad*(2*widget_scale));
-	    cerr << "sp=" << sp << ", cyl_top=" << cyl_top << endl;
 	    widget_cylinder=new GeomCylinder(sp, cyl_top,
 					     0.5*widget_scale);
 	    Point cone_top(cyl_top+grad*(1.0*widget_scale));
@@ -905,7 +915,6 @@ void IsoSurface::iso_tetrahedra(ScalarFieldUG* field, const Point& p,
 	return;
     }
     isoval.set(iv);
-    cerr << "Isoval = " << iv << "\n";
     BitArray1 visited(nelems, 0);
     Queue<int> surfQ;
     int ix;
