@@ -91,7 +91,10 @@ extern "C" Module* make_RescaleColorMap(const string& id) {
 }
 
 RescaleColorMap::RescaleColorMap( const string& id) :
-  SCIRun::RescaleColorMap( id ) {}
+  SCIRun::RescaleColorMap( id ) 
+{
+  packageName = "Uintah";
+}
 
 RescaleColorMap::~RescaleColorMap() 
 {
