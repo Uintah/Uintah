@@ -122,6 +122,7 @@ itcl_class Teem_Tend_TendEpireg {
 		{"Cubic (Catmull-Rom)" cubicCR} \
 		{"Cubic (B-spline)" cubicBS} \
 		{"Quartic" quartic} \
+		{"Windowed Sinc" hann} \
 		{"Gaussian" gaussian}}
 
         pack $w.f.options.kernel -side top -expand yes -fill x
