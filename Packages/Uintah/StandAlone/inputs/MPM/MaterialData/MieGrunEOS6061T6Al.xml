@@ -2,10 +2,8 @@
 <!-- 6061 T6 Aluminum Alloy -->
 <Uintah_Include>
   <equation_of_state type="mie_gruneisen">
-    <!--
-    <C_0>3574</C_0>
-    <Gamma_0>1.69</Gamma_0>
-    <S_alpha>1.92</S_alpha>
-    -->
+    <C_0>5386</C_0>
+    <Gamma_0>1.99</Gamma_0>
+    <S_alpha>1.339</S_alpha>
   </equation_of_state>
 </Uintah_Include>
