@@ -94,6 +94,13 @@ void GLTextureBuilder::real_execute(FieldHandle sfield)
     return;
   }
 
+  ScalarFieldInterface *sfi = sfield->query_scalar_interface();
+  if (!sfi)
+  {
+    error("Input field is of nonscalar LatVolField type.");
+    return;
+  }
+
   reset_vars();
 
   double minV, maxV;
