@@ -106,11 +106,7 @@ protected:
   static DebugStream dbg;
 };
 
-}
-}
 
-namespace SCICore {
-namespace Datatypes {
 
 template <class T> DebugStream FlatAttrib<T>::dbg("FlatAttrib", true);
 
@@ -377,6 +373,7 @@ template <class T> string FlatAttrib<T>::get_info(){
   retval <<
     "Name = " << name << '\n' <<
     "Type = FlatAttrib" << '\n' <<
+    "Dim = " << dim << ": " << nx << ' ' << ny << ' ' << nz << '\n' <<
     "Size = " << size() << '\n' <<
     "Data = ";
   vector<T>::iterator itr = data.begin();
