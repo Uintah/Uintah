@@ -80,7 +80,7 @@ void Variable::emit(OutputContext& oc, const string& compressionModeHint)
 	
 	if ((*writeoutString2).size() < (*writeoutString).size()) {
 	  // rle was making it worse
-	  writeoutString->clear(); // erase the old one to save space
+	  writeoutString->erase(); // erase the old one to save space
 	  writeoutString = writeoutString2; 
 	  used_rle = true;
 	  if (writeoutString2 == &buffer2)
@@ -89,7 +89,7 @@ void Variable::emit(OutputContext& oc, const string& compressionModeHint)
 	  used_gzip = false;
 	}
 	else
-	  writeoutString2->clear(); // doesn't get used, so erase it
+	  writeoutString2->erase(); // doesn't get used, so erase it
       }
       catch (InvalidCompressionMode& ) {
 	// just trying, if it doesn't like it then forget it
@@ -146,7 +146,7 @@ string* Variable::gzipCompress(string* pUncompressed, string* pBuffer)
   if (pBuffer->size() > uncompressedSize) {
     // gzip made it worse -- forget that
     // (this should rarely, if ever, happen, but just in case)
-    pBuffer->clear(); /* the other buffer isn't needed, erase it to
+    pBuffer->erase(); /* the other buffer isn't needed, erase it to
 			 save space */
     return pUncompressed;
   }
@@ -156,7 +156,7 @@ string* Variable::gzipCompress(string* pUncompressed, string* pBuffer)
     for (int i = 0; i < sizeof(unsigned long); i++, pbyte++) {
       (*pBuffer)[i] = *pbyte;
     }
-    pUncompressed->clear(); /* the original buffer isn't needed, erase it to
+    pUncompressed->erase(); /* the original buffer isn't needed, erase it to
 			       save space */
     return pBuffer;
   } 
