@@ -118,7 +118,7 @@ Object* TypeInfo::pidl_cast(Object* obj) const
       message->marshalInt((int*)&_flag);
       //Marshal the sessionID and number of actual calls from this proxy
       ::std::string _sessionID = p->getProxyUUID();
-      message->marshalChar(const_cast<char*>(_sessionID.c_str()), 64);
+      message->marshalChar(const_cast<char*>(_sessionID.c_str()), 36);
       //CALLNORET always sends (1 call + redis) number of calls per callee proc.
       int _numCalls = 1;
       message->marshalInt(&_numCalls);
