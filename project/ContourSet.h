@@ -20,6 +20,7 @@
 #include <Geometry/Point.h>
 #include <Geometry/Vector.h>
 #include <Classlib/String.h>
+#include <Geometry/BBox.h>
 
 class ContourSet;
 typedef LockingHandle<ContourSet> ContourSetHandle;
@@ -29,15 +30,18 @@ public:
     Array1<Array1<Point> > contours;
     Vector basis[3];
     Vector origin;
+    BBox bbox;
     double space;
     clString name;
 
     ContourSet();
     ContourSet(const ContourSet &copy);
+    ContourSet* clone();
     virtual ~ContourSet();
     void translate(const Vector &v);
     void scale(double sc);
     void rotate(const Vector &rot);
+    void build_bbox();
     // Persistent representation...
     virtual void io(Piostream&);
     static PersistentTypeID typeid;
