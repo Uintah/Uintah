@@ -184,7 +184,7 @@ Material* SimulationState::parseAndLookupMaterial(ProblemSpecP& params,
 {
   string matlname;
   if(!params->get(name, matlname))
-    throw ProblemSetupException("Cannot find fromMaterial for TestModel");
+    throw ProblemSetupException("Cannot find material section");
   Material* result = getMaterialByName(matlname);
   if(!result){
     int matlidx;
