@@ -83,7 +83,7 @@ WARNING
 	 case Region::xminus:
 	   for (int j = low.y(); j<hi.y(); j++) {
 	     for (int k = low.z(); k<hi.z(); k++) {
-	       Array3<T>::operator()(low.x()-1,j,k) = value;
+	       Array3<T>::operator()(low.x(),j,k) = value;
 	     }
 	   }
 	   break;
@@ -97,7 +97,7 @@ WARNING
 	 case Region::yminus:
 	   for (int i = low.x(); i<hi.x(); i++) {
 	     for (int k = low.z(); k<hi.z(); k++) {
-	       Array3<T>::operator()(i,low.y()-1,k) = value;
+	       Array3<T>::operator()(i,low.y(),k) = value;
 	     }
 	   }
 	   break;
@@ -111,7 +111,7 @@ WARNING
 	 case Region::zminus:
 	   for (int i = low.x(); i<hi.x(); i++) {
 	     for (int j = low.y(); j<hi.y(); j++) {
-	       Array3<T>::operator()(i,j,low.z()-1) = value;
+	       Array3<T>::operator()(i,j,low.z()) = value;
 	     }
 	   }
 	   break;
@@ -194,6 +194,10 @@ WARNING
 
 //
 // $Log$
+// Revision 1.15  2000/05/10 19:56:46  guilkey
+// D'ohhh!!!  Got a little carried away with my last "correction".  fillFace
+// should be right now.
+//
 // Revision 1.14  2000/05/10 19:39:48  guilkey
 // Fixed the fillFace function, it was previously reading and writing out
 // of bounds.
