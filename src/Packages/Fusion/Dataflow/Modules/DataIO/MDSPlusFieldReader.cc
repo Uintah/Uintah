@@ -28,15 +28,14 @@
  *  Copyright (C) 2002 SCI Group
  */
 
+#include <sci_defs.h>
+
 #include <Dataflow/Network/Module.h>
 #include <Core/Malloc/Allocator.h>
 
 #include <Dataflow/Ports/FieldPort.h>
 
-#include <Core/Datatypes/HexVolMesh.h>
-#include <Core/Datatypes/HexVolField.h>
-#include <Packages/Fusion/share/share.h>
-
+#include <Packages/Fusion/Core/Datatypes/StructHexVolField.h>
 #include <Packages/Fusion/share/share.h>
 
 #include <Packages/Fusion/Core/ThirdParty/mdsPlusAPI.h>
@@ -135,6 +134,7 @@ void MDSPlusFieldReader::execute(){
 
     std::string sNode("SCALARS");                 // Node/Data to fetch
     std::string vNode("VECTORS.CYLINDRICAL");     // Node/Data to fetch
+    std::string axis;
 
     int nRadial, nTheta, nPhi;  // Dimension of the data.    
    
@@ -148,12 +148,16 @@ void MDSPlusFieldReader::execute(){
     double  *v_field_data[3];   // Time slice V Field  data. 
     double *pressure_data;      // Time slice Pressure data. 
 
-    pressure_data = NULL;
-
     for( int i=0; i<3; i++ )
       grid_data[i] = b_field_data[i] = v_field_data[i] = NULL;
 
-    std::string axis;
+    pressure_data = NULL;
+
+
+    StructHexVolMesh *hvm = NULL;
+    StructHexVolField<Vector> *bfield = NULL;
+    StructHexVolField<Vector> *vfield = NULL;
+    StructHexVolField<double> *pfield = NULL;
 
     /* Connect to MDSplus */
     if( MDS_Connect(server.c_str()) < 0 ) {
@@ -190,9 +194,6 @@ void MDSPlusFieldReader::execute(){
 	if( nRadial != dims[0] || nTheta != dims[1] )
 	{
 	  error( "Error Grid dims do not match: " );
-	  //			dims[0] + " != " + nRadial + "  " +
-	  //			dims[1] + " != " + nTheta );
-
 	  return;
 	}
       }
@@ -216,10 +217,16 @@ void MDSPlusFieldReader::execute(){
 
       cout << "MDSPLUSFieldReader - Processing slice " << name << " at time " << time << endl;
 
+      
+      hvm = scinew StructHexVolMesh(nRadial, nTheta, nPhi);
+
       // Fetch the Pressure data from the node
       if( pressure_ ) {
 	buf = sNode + ":PRESSURE";
 	pressure_data = get_realspace_data( name, buf.c_str(), dims );
+
+	pfield = scinew StructHexVolField<double>(hvm, Field::NODE);
+	pHandle_ = pfield;
       }
 
       // Fetch the B Field data from the node
@@ -232,6 +239,9 @@ void MDSPlusFieldReader::execute(){
 
 	buf = vNode + ":BFIELD:PHI";
 	b_field_data[2] = get_realspace_data( name, buf.c_str(), dims );
+
+	bfield = scinew StructHexVolField<Vector>(hvm, Field::NODE);
+	bHandle_ = bfield;
       }
 
       // Fetch the Velocity Field data from the node
@@ -244,42 +254,34 @@ void MDSPlusFieldReader::execute(){
 
 	buf = vNode + ":VFIELD:PHI";
 	v_field_data[2] = get_realspace_data( name, buf.c_str(), dims );
+
+	vfield = scinew StructHexVolField<Vector>(hvm, Field::NODE);
+	vHandle_ = vfield;
       }
 
-      int idim = nRadial;
-      int jdim = nTheta;
-      int kdim = nPhi;
+      unsigned int idim = nRadial;
+      unsigned int jdim = nTheta;
+      unsigned int kdim = nPhi;
 
-      // Create the grid, and scalar and vector data matrices.
-      HexVolMesh *hvm = scinew HexVolMesh;
+      cout << "MDSPLUSFieldReader - Creating mesh and field. " << endl;
 
-      Vector *bVector = NULL;
-      Vector *vVector = NULL;
-      double *pValues = NULL;
-
-
-      if( bField_ )
-	bVector = scinew Vector[idim*jdim*kdim];
-
-      if( vField_ )
-	vVector = scinew Vector[idim*jdim*kdim];
-
-      if( pressure_ )
-	pValues = scinew double[idim*jdim*kdim];
-
-      cout << "MDSPLUSFieldReader - Storing data. " << endl;
-
-      // Read the data.
+      // Convert the data and place in the mesh and field.
       double xVal, yVal, zVal, pVal, rad, phi;
 
-      int cc = 0;
+      StructHexVolMesh::Node::index_type node;
 
-      for( int k=0; k<kdim; k++ ) {
+      register unsigned int i, j, k, cc = 0;
+
+      for( k=0; k<kdim; k++ ) {
 
 	phi = grid_data[2][k];
 
-	for( int j=0; j<jdim; j++ ) {
-	  for( int i=0; i<idim; i++ ) {
+	for( j=0; j<jdim; j++ ) {
+	  for( i=0; i<idim; i++ ) {
+
+	    node.i_ = i;
+	    node.j_ = j;
+	    node.k_ = k;
 
 	    rad = grid_data[0][i+j*idim];
 
@@ -287,7 +289,7 @@ void MDSPlusFieldReader::execute(){
 	    yVal = -rad * sin( phi );
 	    zVal =  grid_data[1][i+j*idim];
 
-	    hvm->add_point( Point( xVal, yVal, zVal ) );
+	    hvm->set_point(node, Point( xVal, yVal, zVal ) );
 
 	    if( bField_ )
 	    {
@@ -298,7 +300,7 @@ void MDSPlusFieldReader::execute(){
 
 	      zVal =  b_field_data[1][cc];
 
-	      bVector[cc] = Vector( xVal, yVal, zVal);
+	      bfield->set_value(Vector(xVal, yVal, zVal), node);
 	    }
 
 	    if( vField_ )
@@ -310,135 +312,19 @@ void MDSPlusFieldReader::execute(){
 
 	      zVal =  v_field_data[1][cc];
 
-	      vVector[cc] = Vector( xVal, yVal, zVal);
+	      vfield->set_value(Vector(xVal, yVal, zVal), node);
 	    }
 
 	    if( pressure_ ) {
 	      pVal = pressure_data[cc];
 
-	      pValues[cc] = pVal;
+	      pfield->set_value(pVal, node);
 	    }
 
 	    cc++;
 	  }
 	}
       }
-
-      cout << "MDSPLUSFieldReader - Creating mesh. " << endl;
-
-      // Create the Hex Vol Mesh.
-      HexVolMesh::Node::array_type nnodes(8);
-
-      int ijdim = idim * jdim;
-
-      int istart=0, iend=idim;
-      int jstart=0, jend=jdim;
-      int kstart=0, kend=kdim/2;
-
-      int iskip = 10;
-      int jskip = 5;
-
-      int i,  j,  k;
-      int i0, j0, k0;
-      int i1, j1, k1;
-
-      for( k = kstart; k<kend; k++ ) { 
-
-	k0 = (k    ) % kdim;
-	k1 = (k + 1) % kdim;
-
-	for( j = jstart; j<jend; j+=jskip ) {
- 
-	  j0 = (j        ) % jdim;
-	  j1 = (j + jskip) % jdim;
-
-	  if( j1 > jend - 1)
-	    j1 = jend - 1;
-
-	  for( i = istart; i<iend-1; i+=iskip ) { 
-
-	    i0 = i;
-	    i1 = i + iskip;
-
-	    if( i1 > iend - 1)
-	      i1 = iend - 1;
-
-	    nnodes[0] = i0 + j0 * idim + k0 * ijdim;
-	    nnodes[1] = i1 + j0 * idim + k0 * ijdim;
-	    nnodes[2] = i1 + j1 * idim + k0 * ijdim;
-	    nnodes[3] = i0 + j1 * idim + k0 * ijdim;   
-	    nnodes[4] = i0 + j0 * idim + k1 * ijdim;
-	    nnodes[5] = i1 + j0 * idim + k1 * ijdim;
-	    nnodes[6] = i1 + j1 * idim + k1 * ijdim;
-	    nnodes[7] = i0 + j1 * idim + k1 * ijdim;   
-
-	    hvm->add_elem(nnodes);
-	  }
-	}
-      }
-
-
-      hvm->set_property( "I Dim", idim, false );
-      hvm->set_property( "J Dim", jdim, false );
-      hvm->set_property( "K Dim", kdim, false );
-
-      int ijkdim = idim * jdim * kdim;
-
-      // Now after the mesh has been created, create the field and put the
-      // data into the field.
-
-      if( pValues ) {
-
-	HexVolField<double> *hvfP =
-	  scinew HexVolField<double>(HexVolMeshHandle(hvm), Field::NODE);
-
-	pHandle_ = FieldHandle( hvfP );
-
-	// Add the data to the field.
-	HexVolField<double>::fdata_type::iterator outP = hvfP->fdata().begin();
-
-	for( int i=0; i<ijkdim; i++ ) {
-
-	  *outP = pValues[i];
-	  outP++;
-	}
-      }
-
-
-      if( bVector ) {
-	HexVolField<Vector> *hvfB =
-	  scinew HexVolField<Vector>(HexVolMeshHandle(hvm), Field::NODE);
-
-	bHandle_ = FieldHandle( hvfB );
-
-	// Add the data to the field.
-	HexVolField<Vector>::fdata_type::iterator outB = hvfB->fdata().begin();
-
-	for( int i=0; i<ijkdim; i++ ) {
-	  *outB = bVector[i];
-	  outB++;
-	}
-      }
-
-
-      if( vVector ) {
-	HexVolField<Vector> *hvfV =
-	  scinew HexVolField<Vector>(HexVolMeshHandle(hvm), Field::NODE);
-    
-	vHandle_ = FieldHandle( hvfV );
-
-	// Add the data to the field.
-	HexVolField<Vector>::fdata_type::iterator outV = hvfV->fdata().begin();
-
-	for( int i=0; i<ijkdim; i++ ) {
-	  *outV = vVector[i];
-	  outV++;
-	}
-      }
-    }
-    else {
-      error( "Not a valid slice." );
-      return;
     }
   }
 
