@@ -10,6 +10,7 @@ public:
 				   const clString& width,
 				   const clString& height);
     virtual void redraw(Salmon*, Roe*);
+    virtual void hide();
 };
 
 static Renderer* make_Postscript()
@@ -37,4 +38,8 @@ clString Postscript::create_window(const clString& name,
 void Postscript::redraw(Salmon*, Roe*)
 {
     NOT_FINISHED("X11::redraw");
+}
+
+void Postscript::hide()
+{
 }

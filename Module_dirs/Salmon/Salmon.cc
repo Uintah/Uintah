@@ -37,17 +37,14 @@ Salmon::Salmon(const clString& id)
 {
     // Create the input port
     add_iport(new GeometryIPort(this, "Geometry", GeometryIPort::Atomic));
-    default_matl=new MaterialProp(Color(.1,.1,.1),
-				  Color(.6,0,0),
-				  Color(.7,.7,.7),
-				  10);
+    default_matl=new Material(Color(.1,.1,.1), Color(.6,0,0),
+			      Color(.7,.7,.7), 10);
     busy_bit=1;
     have_own_dispatch=1;
 }
 
 Salmon::~Salmon()
 {
-    delete default_matl;
 }
 
 Module* Salmon::clone(int deep)
@@ -173,18 +170,6 @@ void Salmon::delObj(int portno, int serial)
 	}
     } else {
 	cerr << "Error deleting object, port not in database...(port=" << portno << ")" << endl;
-    }
-}
-
-void Salmon::printFamilyTree()
-{
-    cerr << "\nSalmon Family Tree\n";
-    for (int i=0, flag=1; flag!=0; i++) {
-	flag=0;
-	for (int j=0; j<topRoe.size(); j++) {
-	    topRoe[j]->printLevel(i, flag);
-	}
-	cerr << "\n";
     }
 }
 

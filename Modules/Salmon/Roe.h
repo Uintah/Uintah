@@ -14,28 +14,16 @@
 #define SCI_project_module_Roe_h
 
 #include <Classlib/Array1.h>
+#include <Classlib/HashTable.h>
 #include <Geometry/BBox.h>
-#include <GL/glx.h>
 #include <TCL/TCL.h>
 
-class BBox;
 class DBContext;
-class DrawInfo;
+class GeomObj;
 class GeomPick;
 class Salmon;
 class Vector;
-class GeomObj;
 class Renderer;
-
-class GeomItem {
-public:
-    GeomObj* geom;
-    clString name;
-    int vis;
-    int active;
-    GeomItem();
-    ~GeomItem();
-};
 
 class Roe : public TCL {
     Salmon* manager;
@@ -46,14 +34,7 @@ class Roe : public TCL {
 
     DBContext* dbcontext_st;
     
-    void make_current();
-
-    Array1<Roe *> kids;
-    Roe *parent;
-    int firstGen;	// am I first generation? (important for deleting)
-    int roeNum;
     makeIndepRoe();
-    GLXContext cx;
     int doneInit;
     int last_x;
     int last_y;
@@ -73,8 +54,8 @@ class Roe : public TCL {
     Roe(const Roe&);
 public:
     clString id;
-    Array1<GeomItem *> geomItemA;
-    DrawInfo* drawinfo;
+
+    HashTable<clString, int> visible;
     Roe(Salmon *s, const clString& id);
     ~Roe();
     void RoeInit(Salmon *s);
@@ -90,7 +71,6 @@ public:
     void SetTop();
     void redrawAll();
     void redraw_if_needed(int always);
-    void printLevel(int level, int&flag);
 
     void mouse_translate(int, int, int, int, int);
     void mouse_scale(int, int, int, int, int);

@@ -8,6 +8,7 @@
 #include <Classlib/NotFinished.h>
 #include <Geometry/Transform.h>
 #include <Geom/Geom.h>
+#include <Geom/GeomX11.h>
 #include <TCL/TCLTask.h>
 #include <X11/Xlib.h>
 #include <tcl/tcl7.3/tcl.h>
@@ -16,7 +17,6 @@
 extern Tcl_Interp* the_interp;
 
 class X11 : public Renderer {
-    int have_win;
     clString windowname;
     Tk_Window tkwin;
     Display* dpy;
@@ -29,6 +29,7 @@ public:
 				   const clString& width,
 				   const clString& height);
     virtual void redraw(Salmon* salmon, Roe* roe);
+    virtual void hide();
 };
 
 static Renderer* make_X11()
@@ -39,6 +40,7 @@ static Renderer* make_X11()
 RegisterRenderer X11_renderer("X11", &make_X11);
 
 X11::X11()
+: tkwin(0)
 {
 }
 
@@ -50,7 +52,6 @@ clString X11::create_window(const clString& name,
 			    const clString& width,
 			    const clString& height)
 {
-    have_win=0;
     windowname=name;
     return "canvas "+name+" -width "+width+" -height "+height+" -background black";
 }
@@ -59,9 +60,8 @@ void X11::redraw(Salmon* salmon, Roe* roe)
 {
     WallClockTimer timer;
     timer.start();
-    if(!have_win){
+    if(!tkwin){
 	TCLTask::lock();
-	have_win=1;
 	tkwin=Tk_NameToWindow(the_interp, windowname(),
 			      Tk_MainWindow(the_interp));
 	dpy=Tk_Display(tkwin);
@@ -86,7 +86,7 @@ void X11::redraw(Salmon* salmon, Roe* roe)
     }
     int npolys=free.size()+dontfree.size();
     // Set up drawinfo....
-    DrawInfo drawinfo;
+    DrawInfoX11 drawinfo;
     drawinfo.dpy=dpy;
     drawinfo.win=win;
     drawinfo.gc=gc;
@@ -113,7 +113,7 @@ void X11::redraw(Salmon* salmon, Roe* roe)
     XClearWindow(dpy, win);
     for(iter.first();iter.ok();++iter){
 	GeomObj* obj=iter.get_data();
-	obj->draw_X11(&drawinfo);
+	obj->draw(&drawinfo);
     }
     TCLTask::unlock();
     for(i=0;i<free.size();i++){
@@ -127,4 +127,9 @@ void X11::redraw(Salmon* salmon, Roe* roe)
     static clString s(" ");
     static clString c("updatePerf ");
     TCL::execute(c+roe->id+s+q+perf1+q+s+q+perf2+q);
+}
+
+void X11::hide()
+{
+    tkwin=0;
 }

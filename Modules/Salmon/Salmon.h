@@ -17,11 +17,9 @@
 #include <Classlib/Array1.h>
 #include <Classlib/HashTable.h>
 #include <Datatypes/GeometryPort.h>
+#include <Geom/Geom.h>
 #include <Multitask/ITC.h>
 
-class GeomObj;
-class GeometryIPort;
-class MaterialProp;
 class Roe;
 
 class Salmon : public Module {
@@ -34,8 +32,8 @@ class Salmon : public Module {
     int max_portno;
     virtual void connection(Module::ConnectionMode, int, int);
 
-    MaterialProp* default_matl;
 public:
+    MaterialHandle default_matl;
     friend class Roe;
     Salmon(const clString& id);
     Salmon(const Salmon&, int deep);
@@ -50,7 +48,6 @@ public:
     void flushViews();
     void addTopRoe(Roe *r);
     void delTopRoe(Roe *r);
-    void printFamilyTree();
 
     void tcl_command(TCLArgs&, void*);
 

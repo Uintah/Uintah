@@ -91,15 +91,6 @@ static MouseHandlerData* mouse_handlers[8][3] = {
 
 static total_salmon_count=1;
 
-GeomItem::GeomItem() {
-}
-
-GeomItem::~GeomItem() {
-#ifdef OLDUI
-    delete btn;
-#endif
-}
-
 #ifdef OLDUI
 Roe::Roe(Salmon* s, double *m, double scl) {
     haveInheritMat=1;
@@ -116,6 +107,7 @@ Roe::Roe(Salmon* s, const clString& id)
     TCL::add_command(id, this, 0);
     haveInheritMat=0;
     mtnScl=1;
+    current_renderer=0;
     RoeInit(s);
 }
 
@@ -569,79 +561,22 @@ void Roe::initCB(CallbackData*, void*) {
 }
 #endif
 
-void Roe::make_current() {
-#ifdef OLDUI
-    if(gl_current_window != graphics){
-	evl->lock();
-	GLwDrawingAreaMakeCurrent(*graphics, cx);
-	gl_current_window=graphics;
-	evl->unlock();
-    }
-#endif
-}
-
 void Roe::itemAdded(GeomObj *g, const clString& name)
 {
-    GeomItem *item=0;
-    for(int i=0;i<geomItemA.size();i++){
-	if(geomItemA[i]->name == name){
-	    // re-use this one...
-	    if(geomItemA[i]->active){
-		cerr << "Warning: two different objects with the same name given to Salmon" << endl;
-	    }
-	    item=geomItemA[i];
-	    break;
-	}
-    }
-#ifdef OLDUI
-    evl->lock();
-    if(!item){
-	item= new GeomItem;
-	ToggleButtonC *bttn;
-	bttn = new ToggleButtonC;
-	item->btn=bttn;
-	item->vis=1;
-	item->name=name;
-	geomItemA.add(item);
-	new MotifCallback<Roe>FIXCB(item->btn, XmNvalueChangedCallback,
-				    &manager->mailbox, this,
-				    &Roe::itemCB,
-				    (void *) item, 0);
-	item->btn->SetSet(True);
-	item->btn->Create(*objRC, name());
-    } else {
-	XtManageChild(*item->btn);
-    }
-    item->geom=g;
-    item->active=1;
-#endif
-
-    for (i=0; i<kids.size(); i++)
-	kids[i]->itemAdded(g, name);
-
+    NOT_FINISHED("Roe::itemAdded");
     // invalidate the bounding box
     bb.reset();
 }
 
 void Roe::itemDeleted(GeomObj *g)
 {
-    for (int i=0; i<geomItemA.size(); i++) {
-	if (geomItemA[i]->geom == g) {
-	    geomItemA[i]->geom=0;
-	    geomItemA[i]->active=0;
-#ifdef OLDUI
-	    XtUnmanageChild(*geomItemA[i]->btn);
-#endif
-	}
-    }
-    for (i=0; i<kids.size(); i++)
-	kids[i]->itemDeleted(g);
-
+    NOT_FINISHED("Roe::itemDeleted");
     // invalidate the bounding box
     bb.reset();
 }
 
 
+#ifdef OLDUI
 void Roe::redrawAll()
 {
     if (doneInit) {
@@ -701,18 +636,8 @@ void Roe::redrawAll()
 #endif
     }
 }
+#endif
 
-void Roe::printLevel(int level, int&flag) {
-    if (level == 0) {
-	flag=1;
-	cerr << "* ";
-    } else {
-	for (int i=0; i<kids.size(); i++) {
-	    kids[i]->printLevel(level-1, flag);
-	}
-    }
-}
- 
 // need to fill this in!   
 #ifdef OLDUI
 void Roe::itemCB(CallbackData*, void *gI) {
@@ -739,64 +664,12 @@ void Roe::spawnChCB(CallbackData*, void*)
   kids[kids.size()-1]->SetParent(this);
   for (int i=0; i<geomItemA.size(); i++)
       kids[kids.size()-1]->itemAdded(geomItemA[i]->geom, geomItemA[i]->name);
-//  manager->printFamilyTree();
 
 }
 #endif
     
 Roe::~Roe()
 {
-    delete drawinfo;
-
-    for (int i=0; i<geomItemA.size(); i++)
-	delete geomItemA[i];
-    geomItemA.remove_all();
-
-    // tell my parent to delete me from their kid list
-    if (firstGen) {
-	manager->delTopRoe(this);
-    } else {
-	parent->deleteChild(this);
-    }
-
-    // now take care of the kids!  If I'm first generation, add them
-    // to the Salmon's topRoe and delete myself from the Salmon's topRoe
-    // Otherwise, give them to my parents and delete myself from my parents
-    // Don't forget to set their firstGen, and parent variables accordingly
-    if (firstGen) {
-	for (int i=0; i<kids.size(); i++) {
-	    kids[i]->SetTop();
-	    manager->addTopRoe(kids[i]);
-	}
-    } else {
-	for (int i=0; i<kids.size(); i++) {
-	    kids[i]->SetParent(parent);
-	    parent->addChild(kids[i]);
-	}
-    }
-//    manager->printFamilyTree();
-}
-
-void Roe::SetParent(Roe *r)
-{
-  parent = r;
-}
-
-void Roe::SetTop()
-{
-  firstGen=True;
-}
-
-void Roe::addChild(Roe *r)
-{
-    kids.add(r);
-}
-
-// self-called method
-void Roe::deleteChild(Roe *r)
-{
-    for (int i=0; i<kids.size(); i++)
-	if (r==kids[i]) kids.remove(i);
 }
 
 #ifdef OLDUI
@@ -900,6 +773,8 @@ void Roe::goHomeCB(CallbackData*, void*)
 
 void Roe::get_bounds(BBox& bbox)
 {
+    NOT_FINISHED("Roe::get_bounds");
+#ifdef OLDUI
     bbox.reset();
     HashTableIter<int,HashTable<int, GeomObj*>*> iter(&manager->portHash);
     for (iter.first(); iter.ok(); ++iter) {
@@ -913,7 +788,8 @@ void Roe::get_bounds(BBox& bbox)
 			geom->get_bounds(bbox);
 		    }
 	}		
-    }	
+    }
+#endif
 }
 
 #ifdef OLDUI
@@ -967,9 +843,9 @@ Roe::Roe(const Roe&)
 
 void Roe::rotate(double angle, Vector v, Point c)
 {
+    NOT_FINISHED("Roe::rotate");
 #ifdef OLDUI
     evl->lock();
-#endif
     make_current();
     double temp[16];
     glGetDoublev(GL_MODELVIEW_MATRIX, temp);
@@ -981,7 +857,6 @@ void Roe::rotate(double angle, Vector v, Point c)
     glMultMatrixd(temp);
     for (int i=0; i<kids.size(); i++)
 	kids[i]->rotate(angle, v, c);
-#ifdef OLDUI
     evl->unlock();
 #endif
     need_redraw=1;
@@ -989,16 +864,15 @@ void Roe::rotate(double angle, Vector v, Point c)
 
 void Roe::rotate_obj(double angle, const Vector& v, const Point& c)
 {
+    NOT_FINISHED("Roe::rotate_obj");
 #ifdef OLDUI
     evl->lock();
-#endif
     make_current();
     glTranslated(c.x(), c.y(), c.z());
     glRotated(angle, v.x(), v.y(), v.z());
     glTranslated(-c.x(), -c.y(), -c.z());
     for(int i=0; i<kids.size(); i++)
 	kids[i]->rotate(angle, v, c);
-#ifdef OLDUI
     evl->unlock();
 #endif
     need_redraw=1;
@@ -1017,9 +891,9 @@ static void mmult(double *m, double *p1, double *p2) {
 
 void Roe::translate(Vector v)
 {
+    NOT_FINISHED("Roe::translate");
 #ifdef OLDUI
     evl->lock();
-#endif
     make_current();
     double temp[16];
     glGetDoublev(GL_MODELVIEW_MATRIX, temp);
@@ -1029,7 +903,6 @@ void Roe::translate(Vector v)
     glMultMatrixd(temp);
     for (int i=0; i<kids.size(); i++)
 	kids[i]->translate(v);
-#ifdef OLDUI
     evl->unlock();
 #endif
     need_redraw=1;
@@ -1037,9 +910,9 @@ void Roe::translate(Vector v)
 
 void Roe::scale(Vector v, Point c)
 {
+    NOT_FINISHED("Roe::scale");
 #ifdef OLDUI
     evl->lock();
-#endif
     make_current();
     glTranslated(c.x(), c.y(), c.z());
     glScaled(v.x(), v.y(), v.z());
@@ -1047,7 +920,6 @@ void Roe::scale(Vector v, Point c)
     mtnScl*=v.x();
     for (int i=0; i<kids.size(); i++)
 	kids[i]->scale(v, c);
-#ifdef OLDUI
     evl->unlock();
 #endif
     need_redraw=1;
@@ -1219,6 +1091,8 @@ void Roe::eventCB(CallbackData* cbdata, void*)
 
 void Roe::mouse_translate(int action, int x, int y, int, int)
 {
+    NOT_FINISHED("Roe::mouse_translate");
+#ifdef OLDUI
     switch(action){
     case BUTTON_DOWN:
 	last_x=x;
@@ -1268,10 +1142,13 @@ void Roe::mouse_translate(int action, int x, int y, int, int)
 #endif
 	break;
     }
+#endif
 }
 
 void Roe::mouse_scale(int action, int x, int y, int, int)
 {
+    NOT_FINISHED("Roe::mouse_scale");
+#ifdef OLDUI
     switch(action){
     case BUTTON_DOWN:
 	{
@@ -1323,10 +1200,13 @@ void Roe::mouse_scale(int action, int x, int y, int, int)
 #endif
 	break;
     }	
+#endif
 }
 
 void Roe::mouse_rotate(int action, int x, int y, int, int)
 {
+    NOT_FINISHED("Roe::mouse_rotate");
+#ifdef OLDUI
     switch(action){
     case BUTTON_DOWN:
 	{
@@ -1399,10 +1279,13 @@ void Roe::mouse_rotate(int action, int x, int y, int, int)
 #endif
 	break;
     }
+#endif
 }
 
 void Roe::mouse_pick(int action, int x, int y, int, int)
 {
+    NOT_FINISHED("Roe::mouse_pick");
+#ifdef OLDUI
     switch(action){
     case BUTTON_DOWN:
 	{
@@ -1573,6 +1456,7 @@ void Roe::mouse_pick(int action, int x, int y, int, int)
 #endif
 	break;
     }
+#endif
 }
 
 #ifdef OLDUI
@@ -1719,12 +1603,15 @@ void Roe::DBrotate(DBContext*, int, double, double delta,
 
 void Roe::redraw_if_needed(int always)
 {
+    NOT_FINISHED("Roe::redraw_if_needed");
+#ifdef OLDUI
     if(need_redraw || always){
 	need_redraw=0;
 	redrawAll();
     }
     for (int i=0; i<kids.size(); i++)
 	kids[i]->redraw_if_needed(always);
+#endif
 }
 
 #ifdef OLDUI
@@ -1766,11 +1653,13 @@ void Roe::tcl_command(TCLArgs& args, void* userdata)
 	    }
 	    renderers.insert(args[2], r);
 	}
+	if(current_renderer)
+	    current_renderer->hide();
 	current_renderer=r;
 	args.result(r->create_window(args[3], args[4], args[5]));
     } else if(args[1] == "redraw"){
 	// We need to dispatch this one to the remote thread
-	// We use an ID instead of a pointer in case this roe
+	// We use an ID string instead of a pointer in case this roe
 	// gets killed by the time the redraw message gets dispatched.
 	manager->mailbox.send(new RedrawMessage(id));
     } else {
