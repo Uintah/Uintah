@@ -13,6 +13,7 @@ SRCS	+= \
        $(SRCDIR)/Mixing.cc \
        $(SRCDIR)/SimpleRxn.cc \
        $(SRCDIR)/AdiabaticTable.cc \
+       $(SRCDIR)/NonAdiabaticTable.cc \
        $(SRCDIR)/ArchesTable.cc \
        $(SRCDIR)/MaterialProperties.cc \
        $(SRCDIR)/PassiveScalar.cc \
