@@ -57,7 +57,7 @@ namespace Uintah
     d_centerOfDomain   = (( d_gridMax - d_gridMin ) / 2.0 ) + d_gridMin;
     d_radiusOfBall     = 0.10 * d_gridMax.x();
     d_radiusOfOrbit    = 0.25 * d_gridMax.x();
-    d_angularVelocity  = 1;
+    d_angularVelocity  = 30;
 
     d_radiusGrowth = false;
     d_radiusGrowthDir = true; // true is to expand, false to shrink
@@ -92,7 +92,7 @@ namespace Uintah
     Task* task = scinew Task( "errorEstimate", this, &RegridderTest::errorEstimate, false );
     task->requires( Task::OldDW, d_currentAngleLabel, (Level*) 0);
     task->requires( Task::NewDW, d_examplesLabel->density, Ghost::AroundCells, 1 );
-    task->requires( Task::NewDW, d_oldDensityLabel, Ghost::None, 0 );
+    task->requires( Task::NewDW, d_oldDensityLabel, Ghost::AroundCells, 1 );
     task->modifies( d_sharedState->get_refineFlag_label(), d_sharedState->refineFlagMaterials() );
     task->modifies( d_sharedState->get_oldRefineFlag_label(), d_sharedState->refineFlagMaterials() );
     task->modifies( d_sharedState->get_refinePatchFlag_label(), d_sharedState->refineFlagMaterials() );
@@ -103,7 +103,7 @@ namespace Uintah
   void RegridderTest::scheduleInitialErrorEstimate ( const LevelP& level, SchedulerP& scheduler )
   {
     Task* task = scinew Task( "initialErrorEstimate", this, &RegridderTest::errorEstimate, true );
-    task->requires( Task::NewDW, d_examplesLabel->density, Ghost::None, 0 );
+    task->requires( Task::NewDW, d_examplesLabel->density, Ghost::AroundCells, 1 );
     task->modifies( d_sharedState->get_refineFlag_label(), d_sharedState->refineFlagMaterials() );
     task->modifies( d_sharedState->get_oldRefineFlag_label(), d_sharedState->refineFlagMaterials() );
     task->modifies( d_sharedState->get_refinePatchFlag_label(), d_sharedState->refineFlagMaterials() );
