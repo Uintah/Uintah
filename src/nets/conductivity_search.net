@@ -117,8 +117,8 @@ set $m2-UseCondTCL 1
 set $m2-BCFlag {GroundZero}
 set $m3-notes {}
 set $m3-show_status 1
-set $m3-sourceNodeTCL 100
-set $m3-sinkNodeTCL 300
+set $m3-sourceNodeTCL 4
+set $m3-sinkNodeTCL 14
 set $m3-modeTCL {electrodes}
 set $m4-notes {}
 set $m4-show_status 1
@@ -144,7 +144,7 @@ set $m6-notes {}
 set $m6-show_status 1
 set $m7-notes {}
 set $m7-show_status 1
-set $m7-filename $env(SCIRUN_DATA)/cylinder3-sm-bdry.pcd.fld
+set $m7-filename $env(SCIRUN_DATA)/cylinder3-elecs.pcd.fld
 set $m8-notes {}
 set $m8-show_status 1
 set $m9-notes {}
