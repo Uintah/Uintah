@@ -103,6 +103,8 @@ $(SRCDIR)/tclIndex: \
 	$(SRCDIR)/TexCuttingPlanes.tcl \
 	$(SRCDIR)/TextureVolVis.tcl \
 	$(SRCDIR)/TransformData.tcl \
+	$(SRCDIR)/TransformData2.tcl \
+	$(SRCDIR)/TransformData3.tcl \
 	$(SRCDIR)/TransformScalarData.tcl \
 	$(SRCDIR)/TransformVectorData.tcl \
 	$(SRCDIR)/ViewWidget.tcl \
