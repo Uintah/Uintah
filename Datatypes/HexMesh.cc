@@ -1530,6 +1530,9 @@ void HexMesh::finish ()
         hf.get_data()->finish_read (this);
         neighbor_set.insert ( hf.get_data()->corner_set(), hf.get_data());
       }
+      
+  if (!classified)    
+    classify ();
 }
 
 void HexMesh::get_boundary_lines(Array1<Point>& lines)
