@@ -264,7 +264,7 @@ void RegridderCommon::problemSetup(const ProblemSpecP& params,
 
 bool RegridderCommon::flaggedCellsExist(CCVariable<int>& flaggedCells, IntVector low, IntVector high)
 {
-  rdbg << "RegridderCommon::flaggedCellsExist() BGN" << endl;
+  //  rdbg << "RegridderCommon::flaggedCellsExist() BGN" << endl;
 
   if (low > high) {
     throw InternalError("Regridder has given flagCellsExist incorrect parameters!");
@@ -273,12 +273,12 @@ bool RegridderCommon::flaggedCellsExist(CCVariable<int>& flaggedCells, IntVector
   for ( CellIterator iter( low, newHigh ); !iter.done(); iter++ ) {
     IntVector idx( *iter );
     if (flaggedCells[idx]) {
-      rdbg << "RegridderCommon::flaggedCellsExist( true ) END" << endl;
+      //      rdbg << "RegridderCommon::flaggedCellsExist( true ) END" << endl;
       return true;
     }
   }
 
-  rdbg << "RegridderCommon::flaggedCellsExist( false ) END" << endl;
+  //  rdbg << "RegridderCommon::flaggedCellsExist( false ) END" << endl;
   return false;
 }
 
