@@ -170,7 +170,7 @@ particleIndex MPMMaterial::countParticles(GeometryObject* obj,
       return 0;
 
    IntVector ppc = obj->getNumParticlesPerCell();
-   Vector dxpp = region->dCell()*obj->getNumParticlesPerCell();
+   Vector dxpp = region->dCell()/obj->getNumParticlesPerCell();
    Vector dcorner = dxpp*0.5;
 
    particleIndex count = 0;
@@ -209,7 +209,7 @@ particleIndex MPMMaterial::createParticles(GeometryObject* obj,
       return 0;
 
    IntVector ppc = obj->getNumParticlesPerCell();
-   Vector dxpp = region->dCell()*obj->getNumParticlesPerCell();
+   Vector dxpp = region->dCell()/obj->getNumParticlesPerCell();
    Vector dcorner = dxpp*0.5;
 
    particleIndex count = 0;
