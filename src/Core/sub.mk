@@ -24,7 +24,10 @@ SUBDIRS := \
 #	$(SRCDIR)/Algorithms \
 
 ifeq ($(BUILD_PARALLEL),yes)
-SUBDIRS := $(SUBDIRS) $(SRCDIR)/globus_threads
+SUBDIRS := \
+	$(SUBDIRS) \
+	$(SRCDIR)/globus_threads \
+	$(SRCDIR)/CCA
 endif
 
 include $(SRCTOP)/scripts/recurse.mk
