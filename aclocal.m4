@@ -69,6 +69,32 @@ $1
 fi
 ])
 
+AC_DEFUN([BASE_LIB_PATH], [
+## arguments mean:
+## arg 1 : This argument will be written with the result
+## arg 2 : library base.  I.e. /usr, /usr/local, /usr/X11R6
+##
+## This function assums the enable_64bit variable is in scope
+##
+
+  _new_lib_path=$2/lib
+
+  ## if 64 bit is enabled, check for lib64 first, otherwise use lib
+  if test "$enable_64bit" = "yes"; then
+    _new_lib_path=$2/lib64
+    if test ! -e $_new_lib_path; then
+      _new_lib_path=$2/lib
+    fi
+  else
+  ## We should look for lib32 (IRIX), then default to lib
+    _new_lib_path=$2/lib32
+    if test ! -e $_new_lib_path; then
+      _new_lib_path=$2/lib
+    fi
+  fi
+  eval $1='"$_new_lib_path"'
+])
+
 AC_DEFUN([SCI_TRY_LINK], [
 ## arguments mean:
 ## arg 1 : variable base name i.e. MATH
