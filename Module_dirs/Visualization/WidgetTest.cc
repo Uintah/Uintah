@@ -111,6 +111,7 @@ WidgetTest::WidgetTest(const clString& id)
    histo.SetValueTitle("Volume");
    histo.SetFrequencyTitle("Number");
    histo.ShowGrid();
+   histo.ShowRange();
 }
 
 WidgetTest::WidgetTest(const WidgetTest& copy, int deep)
