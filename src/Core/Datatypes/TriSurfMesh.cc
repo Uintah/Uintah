@@ -52,7 +52,7 @@
 
 namespace SCIRun {
 
-PersistentTypeID TriSurfMesh::type_id("TriSurfMesh", "Mesh", NULL);
+PersistentTypeID TriSurfMesh::type_id("TriSurfMesh", "Mesh", maker);
 
 
 const string

@@ -284,6 +284,8 @@ private:
   Mutex			node_neighbor_lock_;
   unsigned int		synchronized_;
 
+  // returns a TriSurfMesh
+  static Persistent *maker() { return new TriSurfMesh(); }
 };
 
 typedef LockingHandle<TriSurfMesh> TriSurfMeshHandle;

@@ -48,7 +48,7 @@
 
 namespace SCIRun {
 
-PersistentTypeID QuadSurfMesh::type_id("QuadSurfMesh", "Mesh", NULL);
+PersistentTypeID QuadSurfMesh::type_id("QuadSurfMesh", "Mesh", maker);
 
 
 const string
