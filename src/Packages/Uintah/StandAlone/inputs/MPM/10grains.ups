@@ -17,13 +17,13 @@
 
    <DataArchiver>
         <filebase>10grains.uda</filebase>
-        <outputInterval>.005</outputInterval>
+        <outputInterval>.01</outputInterval>
         <save label = "KineticEnergy"/>
         <save label = "TotalMass"/>
         <save label = "StrainEnergy"/>
 	<save label = "p.x"/>
 	<save label = "p.mass"/>
-	<save label = "p.stress"/>
+	<save label = "p.temperature"/>
         <save label = "g.mass"/>
         <save label = "g.stressFS"/>
 	<checkpoint cycle = "2" interval = "0.02"/>
@@ -50,7 +50,7 @@
                     <alpha> 0.0 </alpha>
                 </constitutive_model>
                 <toughness>10.e6</toughness>
-                <thermal_conductivity>1.0</thermal_conductivity>
+                <thermal_conductivity>.5e-7</thermal_conductivity>
                 <specific_heat>1.004e-5</specific_heat>
                 <geom_object>
                     <box label = "Piston">
@@ -59,7 +59,7 @@
                     </box>
                     <res>[2,2,2]</res>
                     <velocity>[0.0,0.0,-.01]</velocity>
-                <temperature>0</temperature>
+                <temperature>300</temperature>
                 </geom_object>
                 <velocity_field>0</velocity_field>
             </material>
@@ -75,7 +75,7 @@
                     <alpha> 0.0 </alpha>
                 </constitutive_model>
                 <toughness>10.e6</toughness>
-                <thermal_conductivity>1.0</thermal_conductivity>
+                <thermal_conductivity>.5e-7</thermal_conductivity>
                 <specific_heat>1.004e-5</specific_heat>
 
                 <geom_object>
@@ -85,7 +85,7 @@
                     </sphere>
                     <res>[2,2,2]</res>
                     <velocity>[0.0,0.0,0]</velocity>
-                <temperature>0</temperature>
+                <temperature>300</temperature>
                 </geom_object>
                 <velocity_field>1</velocity_field>
             </material>
@@ -101,7 +101,7 @@
                     <alpha> 0.0 </alpha>
                 </constitutive_model>
                 <toughness>10.e6</toughness>
-                <thermal_conductivity>1.0</thermal_conductivity>
+                <thermal_conductivity>.5e-7</thermal_conductivity>
                 <specific_heat>1.004e-5</specific_heat>
 
                 <geom_object>
@@ -111,7 +111,7 @@
                     </sphere>
                     <res>[2,2,2]</res>
                     <velocity>[0.0,0.0,0]</velocity>
-                <temperature>0</temperature>
+                <temperature>300</temperature>
                 </geom_object>
                 <velocity_field>2</velocity_field>
             </material>
@@ -127,7 +127,7 @@
                     <alpha> 0.0 </alpha>
                 </constitutive_model>
                 <toughness>10.e6</toughness>
-                <thermal_conductivity>1.0</thermal_conductivity>
+                <thermal_conductivity>.5e-7</thermal_conductivity>
                 <specific_heat>1.004e-5</specific_heat>
 
                 <geom_object>
@@ -137,7 +137,7 @@
                     </sphere>
                     <res>[2,2,2]</res>
                     <velocity>[0.0,0.0,0]</velocity>
-                <temperature>0</temperature>
+                <temperature>300</temperature>
                 </geom_object>
                 <velocity_field>3</velocity_field>
             </material>
@@ -153,7 +153,7 @@
                     <alpha> 0.0 </alpha>
                 </constitutive_model>
                 <toughness>10.e6</toughness>
-                <thermal_conductivity>1.0</thermal_conductivity>
+                <thermal_conductivity>.5e-7</thermal_conductivity>
                 <specific_heat>1.004e-5</specific_heat>
 
                 <geom_object>
@@ -163,7 +163,7 @@
                     </sphere>
                     <res>[2,2,2]</res>
                     <velocity>[0.0,0.0,0]</velocity>
-                <temperature>0</temperature>
+                <temperature>300</temperature>
                 </geom_object>
                 <velocity_field>4</velocity_field>
             </material>
@@ -179,7 +179,7 @@
                     <alpha> 0.0 </alpha>
                 </constitutive_model>
                 <toughness>10.e6</toughness>
-                <thermal_conductivity>1.0</thermal_conductivity>
+                <thermal_conductivity>.5e-7</thermal_conductivity>
                 <specific_heat>1.004e-5</specific_heat>
 
                 <geom_object>
@@ -189,7 +189,7 @@
                     </sphere>
                     <res>[2,2,2]</res>
                     <velocity>[0.0,0.0,0]</velocity>
-                <temperature>0</temperature>
+                <temperature>300</temperature>
                 </geom_object>
                 <velocity_field>5</velocity_field>
             </material>
@@ -205,7 +205,7 @@
                     <alpha> 0.0 </alpha>
                 </constitutive_model>
                 <toughness>10.e6</toughness>
-                <thermal_conductivity>1.0</thermal_conductivity>
+                <thermal_conductivity>.5e-7</thermal_conductivity>
                 <specific_heat>1.004e-5</specific_heat>
 
                 <geom_object>
@@ -215,7 +215,7 @@
                     </sphere>
                     <res>[2,2,2]</res>
                     <velocity>[0.0,0.0,0]</velocity>
-                <temperature>0</temperature>
+                <temperature>300</temperature>
                 </geom_object>
                 <velocity_field>6</velocity_field>
             </material>
@@ -231,7 +231,7 @@
                     <alpha> 0.0 </alpha>
                 </constitutive_model>
                 <toughness>10.e6</toughness>
-                <thermal_conductivity>1.0</thermal_conductivity>
+                <thermal_conductivity>.5e-7</thermal_conductivity>
                 <specific_heat>1.004e-5</specific_heat>
 
                 <geom_object>
@@ -241,7 +241,7 @@
                     </sphere>
                     <res>[2,2,2]</res>
                     <velocity>[0.0,0.0,0]</velocity>
-                <temperature>0</temperature>
+                <temperature>300</temperature>
                 </geom_object>
                 <velocity_field>7</velocity_field>
             </material>
@@ -257,7 +257,7 @@
                     <alpha> 0.0 </alpha>
                 </constitutive_model>
                 <toughness>10.e6</toughness>
-                <thermal_conductivity>1.0</thermal_conductivity>
+                <thermal_conductivity>.5e-7</thermal_conductivity>
                 <specific_heat>1.004e-5</specific_heat>
 
                 <geom_object>
@@ -267,7 +267,7 @@
                     </sphere>
                     <res>[2,2,2]</res>
                     <velocity>[0.0,0.0,0]</velocity>
-                <temperature>0</temperature>
+                <temperature>300</temperature>
                 </geom_object>
                 <velocity_field>8</velocity_field>
             </material>
@@ -283,7 +283,7 @@
                     <alpha> 0.0 </alpha>
                 </constitutive_model>
                 <toughness>10.e6</toughness>
-                <thermal_conductivity>1.0</thermal_conductivity>
+                <thermal_conductivity>.5e-7</thermal_conductivity>
                 <specific_heat>1.004e-5</specific_heat>
 
                 <geom_object>
@@ -293,7 +293,7 @@
                     </sphere>
                     <res>[2,2,2]</res>
                     <velocity>[0.0,0.0,0]</velocity>
-                <temperature>0</temperature>
+                <temperature>300</temperature>
                 </geom_object>
                 <velocity_field>9</velocity_field>
             </material>
@@ -309,7 +309,7 @@
                     <alpha> 0.0 </alpha>
                 </constitutive_model>
                 <toughness>10.e6</toughness>
-                <thermal_conductivity>1.0</thermal_conductivity>
+                <thermal_conductivity>.5e-7</thermal_conductivity>
                 <specific_heat>1.004e-5</specific_heat>
 
                 <geom_object>
@@ -319,7 +319,7 @@
                     </sphere>
                     <res>[2,2,2]</res>
                     <velocity>[0.0,0.0,0]</velocity>
-                <temperature>0</temperature>
+                <temperature>300</temperature>
                 </geom_object>
                 <velocity_field>10</velocity_field>
             </material>
@@ -339,8 +339,8 @@
             <Box label = "1">
                 <lower>[0.0,0.0,0.0]</lower>
                 <upper>[0.01,0.01,0.01]</upper>
-                <resolution>[20,20,20]</resolution>
-                <patches>[1,1,1]</patches>
+                <resolution>[40,40,40]</resolution>
+                <patches>[2,2,2]</patches>
             </Box>
         </Level>
         <BoundaryConditions>
