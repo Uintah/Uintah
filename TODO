@@ -1,22 +1,45 @@
 
+Make config script use versions - quarks, tcl, tk, itcl, mesa
+Fix SurfaceReader
+Save more Geom files to test
+Save all geom - redo Salmon structure first?
+DONE Fix % operator - broken
+
+Picking broken on 32 bit machines?
+cp.sr crashes
+Finish streamline code
+Finish Geom files
+Scheduler sometimes confused when connecting modules
+
+This weekend:
+Annotated list of modules
+Update solver
+
 Shared libraries:
 1) Fix initialization/locking problems
 2) General configuration file
 3) Renderers in config file
 4) Get rid of dependencies in Widgets and Geom
 5) Tune for R8000
-6) Readers broken
-7) Salmon broken
+6) Picking broken
+
+BIG problems:
+1) Delaunay
+DONE 2) Scheduler
+3) Startup time
+4) Apply BC
+5) Isosurface widget broken
+6) Streamline widget broken
+
+4) Persistent geometry
 
 DONE 1) Fix allocator - use doubly linked list???
 Tag malloc - put in TK/TCL
 DONE Use scinew everywhere...
 2) Fix memory leak - where to 36k 0-8 byte objects go in cp.sr for
 torso_ug.
-3) Better test files for Colette
-4) Fix scheduler
+DONE 4) Fix scheduler
 5) Better interactive widgets
-6) Stats broken - fragmentation in wrong place
 7) James - 
 	Frame widget broken
 	Widget scale with mouse
