@@ -6,10 +6,8 @@
 #include <Packages/rtrt/Core/BBox.h>
 #include <Packages/rtrt/Core/Color.h>
 #include <Packages/rtrt/Core/Material.h>
-#include <string>
 
 namespace rtrt {
-using std::string;
 
   struct MCell;
   class UV;
@@ -19,7 +17,7 @@ protected:
   float* spheres;
   size_t nspheres;
   float radius;
-  int *tex_indices;
+  int *tex_indices; // length of spheres
   unsigned char *tex_data;
   size_t ntextures;
   int tex_res;
