@@ -98,7 +98,7 @@ void printData(DataArchive* archive, string& variable_name,
   }
 
   if (time_step_upper >= times.size() || time_step_upper < time_step_lower) {
-    cerr << "timestephigh("<<time_step_lower<<") must be greater than " << time_step_lower 
+    cerr << "timestephigh("<<time_step_upper<<") must be greater than " << time_step_lower 
 	 << " and less than " << times.size()-1 << endl;
     exit(1);
   }
