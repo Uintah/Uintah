@@ -506,7 +506,7 @@ Isosurface::execute()
 
     // Multiple fields.
     else {
-      const TypeDescription *mtd = fields[0]->get_type_description();
+      const TypeDescription *mtd = fields[0]->get_type_description(0);
       
       if( mtd->get_name() == "TriSurfField" ) {
 	vector<TriSurfField<double> *> tfields(fields.size());
