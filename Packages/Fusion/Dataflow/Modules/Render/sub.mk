@@ -13,7 +13,6 @@ include $(SCIRUN_SCRIPTS)/smallso_prologue.mk
 SRCDIR   := Packages/Fusion/Dataflow/Modules/Render
 
 SRCS     += \
-	$(SRCDIR)/Plot2DViewer.cc\
 #[INSERT NEW CODE FILE HERE]
 
 PSELIBS := Core/Datatypes Dataflow/Network Dataflow/Ports \
