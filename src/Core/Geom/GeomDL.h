@@ -36,16 +36,18 @@
 #endif
 #include <Core/Geom/GeomContainer.h>
 
+#include <list>
 
 namespace SCIRun {
     
+class DrawInfoOpenGL;
+using std::list;
+
 class SCICORESHARE GeomDL : public GeomContainer {
 protected:
   int polygons_;
-  int type_;
-  int lighting_;
-  unsigned int display_list_;
-      
+  list<DrawInfoOpenGL *> drawinfo_;
+
 public:
   GeomDL(GeomHandle);
   GeomDL(const GeomDL &copy);
@@ -53,6 +55,9 @@ public:
       
   virtual GeomObj* clone();
   virtual void reset_bbox();
+
+  void dl_register(DrawInfoOpenGL *info);
+  void dl_unregister(DrawInfoOpenGL *info);
 
 #ifdef SCI_OPENGL
   virtual void draw(DrawInfoOpenGL*, Material*, double time);

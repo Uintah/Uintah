@@ -46,6 +46,9 @@
 #include <Core/Geometry/Vector.h>
 #include <Core/Geometry/Point.h>
 
+#include <map>
+#include <list>
+
 namespace SCIRun {
 
 
@@ -53,6 +56,7 @@ namespace SCIRun {
 
 class ViewWindow;
 class Material;
+class GeomDL;
 
 const int CLIP_P0 = 1;
 const int CLIP_P1 = 2;
@@ -140,6 +144,13 @@ public:
 
     int using_cmtexture_;
     GLuint cmtexture_;  // GeomColorMap texture, 1D
+
+    std::map<GeomDL *, std::pair<unsigned int, unsigned int> > dl_map_;
+    std::list<unsigned int> dl_freelist_;
+    bool dl_lookup(GeomDL *obj, unsigned int &state, unsigned int &dl);
+    bool dl_update(GeomDL *obj, unsigned int state);
+    bool dl_addnew(GeomDL *obj, unsigned int state, unsigned int &dl);
+    bool dl_remove(GeomDL *obj);
 };
 
 } // End namespace SCIRun
