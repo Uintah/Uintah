@@ -36,7 +36,6 @@ static DebugStream dbg("TaskGraph", false);
 // multiple threads at the same time)  From sus.cc:
 extern Mutex cerrLock;
 extern DebugStream mixedDebug;
-extern DebugStream brydbg;
 
 #define DAV_DEBUG 0
 
