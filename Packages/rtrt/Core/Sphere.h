@@ -52,6 +52,7 @@ public:
   // Be careful using this, as if the sphere is in an efficiency structure
   // this won't work correctly.
   void updatePosition( const Point & pos );
+  void updateRadius( double new_radius );
 };
 
 } // end namespace rtrt

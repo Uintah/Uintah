@@ -62,7 +62,8 @@ public:
 
   void updatePosition( const Point & newPos );
   virtual void updatePosition( const Point & newPos, const Vector &offset, const Vector &fwd );
-
+  void updateRadius( double new_radius );
+  
   virtual Object *getSphere() const { return sphere_; }
 
   // This is the directional offset from the eye where
