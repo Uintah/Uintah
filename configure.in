@@ -864,6 +864,8 @@ AC_DEFUN(SCI_ARG_ENABLE,
 DIRNAME_IS=`which dirname`
 BASENAME_IS=`which dirname`
 
+saved_args = $*
+
 ## We use both of these in a number of spots, so I think this is fair:
 ## (Eventually we could write our own if necessary...
 if test -z "$DIRNAME_IS" -o -z "$BASENAME_IS"; then
@@ -871,14 +873,22 @@ if test -z "$DIRNAME_IS" -o -z "$BASENAME_IS"; then
 fi
 
 if test "$CC" = ""; then
-  AC_MSG_ERROR(Specify the C compiler using the 'CC' environment var.)
+  AC_PROG_CC()
+  AC_MSG_WARN(C compiler not specified with 'CC' environment variable.\n\t \
+	    Using default... $CC)
+  
 fi
+
 if test "$CXX" = ""; then
-  AC_MSG_ERROR(Specify the C++ compiler using the 'CXX' environment var.)
+  AC_PROG_CXX()
+  AC_MSG_WARN(C++ compiler not specified with 'CXX' environment variable.\n\t \
+	    Using default... $CXX)
+
 fi
 if test "$F77" = ""; then
-  AC_MSG_WARN(Specify the fortran compiler using the 'F77' environment var.)
-  AC_MSG_ERROR(Usually fortran compiler will by f77, g77, f90, xlf, ifc, etc.)
+  AC_PROG_F77()
+  AC_MSG_WARN(Fortran compiler not specified with 'F77' environment \
+	    variable. Using default... $F77)
 fi
 
 CC_REALLY_IS=`which $CC`
@@ -1038,7 +1048,7 @@ SCI_ARG_ENABLE(scirun2,
 ##
 
 IFS='^'
-args=`echo "$*" | sed 's% %_%g'`
+args=`echo "$saved_args" | sed 's% %_%g'`
 IFS=' '
 myargs=`echo $args | sed 's%\^% %g'`
 
@@ -1183,6 +1193,13 @@ if test "$u" = "Uintah" ; then
    uintah=yes
 else
    uintah=no
+fi
+
+u=`echo $package | sed 's/.*VDT.*/VDT/'`
+if test "$u" = "VDT" ; then
+   wantvdt=yes
+else
+   wantvdt=no
 fi
 
 if test "$enable_sci_malloc" = "yes"; then
@@ -1891,10 +1908,17 @@ else
   opengl_include=
 fi
 
+
 dirs="$opengl_lib /usr/lib /usr/X11R6/lib"
 
+is_linux=`echo $host | sed 's/.*linux.*/linux/'`
+GLU_OTHERS="-lGL"
+if test "$is_linux" = "linux"; then
+  GLU_OTHERS="-lGL -lpthreads"
+fi
+
 SCI_CHECK_LIB($dirs,GL, main,    ,,not-optional)
-SCI_CHECK_LIB($dirs,GLU,main,-lGL,,not-optional)
+SCI_CHECK_LIB($dirs,GLU,main,$GLU_OTHERS,,not-optional)
 
 SCI_CHECK_HEADERS($opengl_include $LIBGL/../include,GL/gl.h GL/glu.h GL/glx.h,,,not-optional)
 
@@ -2484,37 +2508,52 @@ VDT_INCLUDE=""
 VDT_LIB=""
 VDT_ADDITIONAL_LIBS=""
 
-AC_MSG_WARN(I broke the configure w.r.t. vdt.  Call me so you can)
-AC_MSG_WARN(help me fix it.  Dav.  1x4078)
+if test $wantvdt = "yes"; then
+  for i in $with_vdt $thirdparty $SCI_LAB_TP_DEFAULT; do
+    if test ! -d "$i"; then
+      continue
+    fi
+  
+    #from here we should find src/vdt/bin
+    if test ! -d "$i/src/vdt/bin"; then
+      continue
+    fi
+  
+    guess=`sh $i/src/vdt/bin/config.guess`
+    ad=`sh $i/src/vdt/bin/config.sub $guess`
+  
+    #this is where the lib actually lives
+    if test ! -d "$i/src/vdt/VDT/lib/$ad"; then
+      continue
+    fi
+  
+  	  
+  # Testing the link also need by vdt to link is:
+    VDT_LIB_PATH="-L$i/src/vdt/G3D/lib/$ad -L$i/src/vdt/Ckit/lib/$ad -L$i/src/vdt/LOBS/lib/$ad -L$i/src/vdt/PiRaT/lib/$ad -L$i/src/vdt/Meschach/$ad -L$i/src/vdt/lp_solve_2.2/$ad -L$i/src/vdt/Elixir/lib/$ad -L$i/src/vdt/VDT/lib/$ad $X_LIBRARY"
+  
+    VDT_NEEDED_LIBRARIES='-lesi -lelixir -llpk -lpirat -llobs3d -llobs2d -llobs1d -lg3d -lckit -lmeschach -lX11 -lXext -lXaw -lXt -lXmu -lm'
+  
+    SCI_CHECK_LIB($i/src/vdt/VDT/lib/$ad,vdt,VDT_triangulate,$VDT_LIB_PATH $VDT_NEEDED_LIBRARIES $LEXLIB,,optional)
+    echo "holy shit"
 
-#dirs="$with_vdt/lib $thirdparty/lib $SCI_LAB_TP_LIBS"
-
-# Testing the link also need by vdt to link is:
-#VDT_LIB_PATH="-L$i/src/vdt/G3D/lib/$ad -L$i/src/vdt/Ckit/lib/$ad -L$i/src/vdt/LOBS/lib/$ad -L$i/src/vdt/PiRaT/lib/$ad -L$i/src/vdt/Meschach/$ad -L$i/src/vdt/lp_solve_2.2/$ad -L$i/src/vdt/Elixir/lib/$ad -L$i/src/vdt/VDT/lib/$ad $X_LIBRARY"
-
-#VDT_NEEDED_LIBRARIES='-lesi -lelixir -llpk -lpirat -llobs3d -llobs2d -llobs1d -lg3d -lckit -lmeschach -lX11 -lXext -lXaw -lXt -lXmu -lm'
-
-#SCI_CHECK_LIB($i/src/vdt/VDT/lib/$ad,vdt,VDT_triangulate,,continue,$VDT_LIB_PATH $VDT_NEEDED_LIBRARIES $LEXLIB)
-
-#guess=`sh $i/src/vdt/bin/config.guess`
-#ad=`sh $i/src/vdt/bin/config.sub $guess`
-
-if test "$HAVE_LIBVDT"; then
-    FOUND_ALL_VDT=yes
-    DEF_VDT="#define HAVE_VDT 1"
-    HAVE_VDT="yes"
-    VDT_INCLUDE="$i/src/vdt/VDT/src"
-    VDT_LIB="$i/src/vdt/VDT/lib/$ad"
-    ELIXIR_LIB="$i/src/vdt/Elixir/lib/$ad"
-    LP_SOLVE_LIB="$i/src/vdt/lp_solve_2.2/$ad"
-    MESCHACH_LIB="$i/src/vdt/Meschach/$ad"
-    PIRAT_LIB="$i/src/vdt/PiRaT/lib/$ad"
-    LOBS_LIB="$i/src/vdt/LOBS/lib/$ad"
-    CKIT_LIB="$i/src/vdt/Ckit/lib/$ad"
-    G3D_LIB="$i/src/vdt/G3D/lib/$ad"
-    VDT_LINK="-lvdt $VDT_NEEDED_LIBRARIES $LEXLIB"
+    if test "$HAVE_LIBVDT"; then
+  	FOUND_ALL_VDT=yes
+  	DEF_VDT="#define HAVE_VDT 1"
+  	HAVE_VDT="yes"
+  	VDT_INCLUDE="$i/src/vdt/VDT/src"
+  	VDT_LIB="$i/src/vdt/VDT/lib/$ad"
+  	ELIXIR_LIB="$i/src/vdt/Elixir/lib/$ad"
+  	LP_SOLVE_LIB="$i/src/vdt/lp_solve_2.2/$ad"
+  	MESCHACH_LIB="$i/src/vdt/Meschach/$ad"
+  	PIRAT_LIB="$i/src/vdt/PiRaT/lib/$ad"
+  	LOBS_LIB="$i/src/vdt/LOBS/lib/$ad"
+  	CKIT_LIB="$i/src/vdt/Ckit/lib/$ad"
+  	G3D_LIB="$i/src/vdt/G3D/lib/$ad"
+  	VDT_LINK="-lvdt $VDT_NEEDED_LIBRARIES $LEXLIB"
+    fi
+  done
 fi
-
+ 
 AC_SUBST(HAVE_VDT)
 AC_SUBST(DEF_VDT)
 AC_SUBST(VDT_INCLUDE)
@@ -2536,32 +2575,40 @@ MAGICK_INCLUDE=""
 MAGICK_LIB=""
 MAGICK_ADDITIONAL_LIBS=""
 
-dirs="$with_imagemagick/lib $thirdparty/lib $SCI_LAB_TP_LIBS"
+for i in $with_imagemagick $thirdparty $SCI_LAB_TP_DEFAULT; do
+  if test ! -d "$i"; then
+    continue
+  fi
 
-AC_MSG_WARN(I broke the configure w.r.t. image magick.  Call me so you can)
-AC_MSG_WARN(help me fix it.  Dav.  1x4078)
+  #this is where the lib actually lives
+  if test ! -d "$i/lib"; then
+    continue
+  fi
 
-# capture in the libs to link
-#  IM_LDFLAGS=`$i/bin/Magick-config --ldflags`
-#  IM_LIBS=`$i/bin/Magick-config --libs`
+  #this is where the scripts for configuration live
+  if test ! -d "$i/bin"; then
+    continue
+  fi
 
-  # Testing the link also need by vdt to link is:
-  #MAGICK_LIB_PATH="-L$i/src/vdt/G3D/lib/$ad -L$i/src/vdt/Ckit/lib/$ad -L$i/src/vdt/LOBS/lib/$ad -L$i/src/vdt/PiRaT/lib/$ad -L$i/src/vdt/Meschach/$ad -L$i/src/vdt/lp_solve_2.2/$ad -L$i/src/vdt/Elixir/lib/$ad -L$i/src/vdt/MAGICK/lib/$ad $X_LIBRARY"
+  # capture in the libs to link
+  IM_LDFLAGS=`$i/bin/Magick-config --ldflags`
+  IM_LIBS=`$i/bin/Magick-config --libs`
 
-  #MAGICK_NEEDED_LIBRARIES='-lesi -lelixir -llpk -lpirat -llobs3d -llobs2d -llobs1d -lg3d -lckit -lmeschach -lX11 -lXext -lXaw -lXt -lXmu -lm'
 
-#  SCI_CHECK_LIB($i/lib,Magick,WriteImage,,continue, $IM_LDFLAGS $IM_LIBS)
 
-if test "$HAVE_LIBMAGICK"; then
-    FOUND_ALL_MAGICK=yes
-    DEF_MAGICK="#define HAVE_MAGICK 1"
-    HAVE_MAGICK="yes"
-    MAGICK_INCLUDE="$i/include"
-    MAGICK_LIB="$i/lib"
-    #parse out the -L parts and leave only the -l parts
-    MAGICK_LINK=`echo $IM_LIBS | sed 's|-L[[A-Za-z0-9/\.\-]]* ||g'`
-fi
+  SCI_CHECK_LIB($dirs,Magick,WriteImage,$IM_LDFLAGS $IM_LIBS,,optional)
 
+  if test "$HAVE_LIBMAGICK"; then
+      FOUND_ALL_MAGICK=yes
+      DEF_MAGICK="#define HAVE_MAGICK 1"
+      HAVE_MAGICK="yes"
+      MAGICK_INCLUDE="$i/include"
+      MAGICK_LIB="$i/lib"
+      #parse out the -L parts and leave only the -l parts
+      MAGICK_LINK=`echo $IM_LIBS | sed 's|-L[[A-Za-z0-9/\.\-]]* ||g'`
+  fi
+done
+ 
 AC_SUBST(HAVE_MAGICK)
 AC_SUBST(DEF_MAGICK)
 AC_SUBST(MAGICK_INCLUDE)
