@@ -198,6 +198,11 @@ SCIRUN_GUI_UseGuiFetch = on
 SCIRUN_GUI_MoveGuiToMouse = on
 
 
+### SCIRUN_STRAIGHT_CONNECTIONS = [boolean]
+#   Use straight lines to represent connections between modules in the
+#   network editor.
+SCIRUN_STRAIGHT_CONNECTIONS = off
+
 #################
 # UNDOCUMENTED ##
 #################
