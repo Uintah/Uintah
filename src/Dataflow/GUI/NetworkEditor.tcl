@@ -610,6 +610,8 @@ proc addModuleAtPosition {package category module { xpos 10 } { ypos 10 } } {
     return $modid
 }
 
+# addModule2 creates a SCIRun module to be used in the SCIRun2 framework
+# as an instance of the SCIRunComponentModel.
 proc addModule2 {package category module modid} {  
     global Subnet
     set Subnet($modid) $Subnet(Loading)
@@ -618,11 +620,11 @@ proc addModule2 {package category module modid} {
 
     set className [join "${package}_${category}_${module}" ""]
     if {[catch "$className $modid" exception]} {
-	# Use generic module
-	if {$exception != "invalid command name \"$className\""} {
-	    bgerror "Error instantiating iTcl class for module:\n$exception";
-	}
-	Module $modid -name "$module"
+        # Use generic module
+        if {$exception != "invalid command name \"$className\""} {
+            bgerror "Error instantiating iTcl class for module:\n$exception";
+        }
+        Module $modid -name "$module"
     }
 
     # fix for bug 2441: since SCIRun2's builder GUI takes care of
