@@ -112,6 +112,7 @@ parse_args( int argc, char *argv[] )
   int cnt = 1;
   while (cnt < argc)
     {
+
       string arg( argv[ cnt ] );
       if( ( arg == "--version" ) || ( arg == "-version" )
           || ( arg == "-v" ) || ( arg == "--v" ) )
@@ -176,7 +177,8 @@ parse_args( int argc, char *argv[] )
       else
         {
           struct stat buf;
-          if (stat(arg.c_str(),&buf) < 0)
+	  // let powerapp scripts handle additional arguments
+          if (!powerapp && stat(arg.c_str(),&buf) < 0)
             {
               std::cerr << "Couldn't find net file " << arg
                         << ".\nNo such file or directory.  Exiting." << std::endl;
