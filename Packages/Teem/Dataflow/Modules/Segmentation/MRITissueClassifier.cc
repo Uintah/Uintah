@@ -337,7 +337,7 @@ MRITissueClassifier::execute()
     m_SliceThickness = gui_slice_thickness_.get();
 
     update_state(Module::Executing);
-    if (m_Top) {
+    if (!m_Top) {
       NrrdDataHandle temp;
       temp = create_nrrd_of_floats(m_width, m_height, m_depth);
       nrrdFlip(temp->nrrd, m_T1_Data->nrrd, 3);
@@ -358,7 +358,7 @@ MRITissueClassifier::execute()
     }
     update_state(Module::Executing);
 
-    if (m_Anterior) {
+    if (!m_Anterior) {
       NrrdDataHandle temp;
       temp = create_nrrd_of_floats(m_width, m_height, m_depth);
       nrrdFlip(temp->nrrd, m_T1_Data->nrrd, 2);
@@ -840,6 +840,8 @@ MRITissueClassifier::EyeDetection()
   m_EyeSlice = Max((int)rint(0.5*(m_EyePosition[0][2]+m_EyePosition[1][2])),0);
   std::cout<<"Eye bottom slice = "<<m_BottomOfEyeSlice<<" , top slice = "<<m_TopOfEyeSlice<<std::endl;
 
+
+  write_flat_volume(m_Label,"/tmp/eye.ppm");
   free (xpl);
   free (xpr);
   free (ypl);
@@ -1432,6 +1434,7 @@ MRITissueClassifier::BackgroundDetection ()
           else if (e<min) min=e;
 	}
       }
+  write_flat_volume(m_Energy, "/tmp/m_energy.ppm");
   w = 1.0/((float)(m_width*m_height*m_depth));
   std::cout<<"Energy min = "<<min<<" , max = "<<max<<std::endl;
   // compute 1d histogram
@@ -1555,6 +1558,7 @@ MRITissueClassifier::BackgroundDetection ()
       }
     } // z-loop
   std::cout<<"Top of head slice = "<<m_TopOfHead<<std::endl;
+  write_flat_volume(m_Label, "/tmp/fore-back1.ppm");
 
   // slices below the eyes have to be dealt with differently because the
   // background can leak into bone through the ears
@@ -1638,6 +1642,7 @@ MRITissueClassifier::BackgroundDetection ()
 	  set_nrrd_float(m_DistBG,val,x,y,z);
 	}
   }
+  write_flat_volume(m_Label, "/tmp/fore-back2.ppm");
 }
 
 void
@@ -4107,32 +4112,87 @@ MRITissueClassifier::get_m_Data(int x, int y, int z)
 void
 MRITissueClassifier::write_flat_volume(NrrdDataHandle data, string filename)
 {
-   int new_height, new_width, num_col_tiles, num_row_tiles;
-   float sqrt_depth;
-   sqrt_depth = ::sqrt((double)data->nrrd->axis[3].size);
+  vector <char> r(23), g(23), b(23);
+  r[0] =  0;   g[0] =  0;   b[0] = 0;
+  r[1] =  0;   g[1] =  100; b[1] = 0;
+  r[2] =  0;   g[2] =  0;   b[2] = 100;
+  r[3] =  100; g[3] =  100; b[3] = 0;
+  r[4] =  100; g[4] =  0;   b[4] = 100;
+  r[5] =  000; g[5] =  100; b[5] = 100;
+  r[6] =  100; g[6] =  100; b[6] = 100;
+  r[7] =  100; g[7] =  200; b[7] = 0;
+  r[8] =  100; g[8] =  0;   b[8] = 200;
+  r[9] =  0;   g[9] =  200; b[9] = 200;
+  r[10] = 100; g[10] = 0;   b[10] = 0;
+  r[21] = 50;  g[21] = 100; b[21] = 200;
+  r[22] = 200; g[22] = 100; b[22] = 50;
 
-   num_col_tiles = (int)ceil(sqrt_depth);
-   num_row_tiles = (int)ceil((float)data->nrrd->axis[3].size/
-			     (float)num_col_tiles);
+  const int *idata = (int *)data->nrrd->data;
+  const float *fdata = (float *)data->nrrd->data;
 
-   new_width = num_col_tiles*data->nrrd->axis[1].size;
-   new_height = num_row_tiles*data->nrrd->axis[2].size;
+  const bool greyscale = (data->nrrd->type == nrrdTypeFloat);
+  float fmax, fmin;
+  if (greyscale)
+  {
+    fmax = fmin = fdata[0];
+    for (int z=0;z<data->nrrd->axis[3].size;z++)
+      for (int y=0;y<data->nrrd->axis[2].size;y++)
+	for (int x=0;x<data->nrrd->axis[1].size;x++)
+	{
+	  float fval = get_nrrd_float(data, x, y, z);
+	  if (fval>fmax) fmax=fval;
+	  else if (fval<fmin) fmin=fval;
+	}
+  }
 
-   FILE *out = fopen(filename.c_str(), "wb");
-   if (out) {
-     int i, j, y, z;
-     int *idata = (int *)data->nrrd->data;
-     for (j = 0; j < num_row_tiles; j++)
-       for (y = 0; y < data->nrrd->axis[2].size; y++)
-	 for (i = 0; i < num_col_tiles; i++)
-	 {
-	   z = j + i * num_row_tiles;
-	   fwrite (idata + data->nrrd->axis[1].size*(y+data->nrrd->axis[2].size*z),
-		   sizeof(int), data->nrrd->axis[1].size, out);
-	   
-	 }
-   }
-   fclose (out);
+      
+  
+  const int dx = data->nrrd->axis[1].size;
+  const int dy = data->nrrd->axis[2].size;
+  const int dz = data->nrrd->axis[3].size;
+  const int max = dx*dy*dz;
+
+  const int num_col_tiles = (int)ceil(::sqrt((double)dz));
+  const int num_row_tiles = (int)ceil((float)dz/
+				      (float)num_col_tiles);
+ 
+  const int new_width = num_col_tiles*dx;
+  const int new_height = num_row_tiles*dy;
+  
+
+  const int zero = 0;
+  int i, j, k, x, y;
+  char c;
+
+  FILE *out = fopen(filename.c_str(), "wb");
+  if (!out) return;
+
+  fprintf (out, "P6\n%d %d\n%d\n", new_width, new_height, 255);
+  for (j = 0; j < num_row_tiles; j++)
+    for (y = 0; y < dy; y++)
+      for (i = 0; i < num_col_tiles; i++)
+	for (x = 0; x < dx; x++) 
+	{
+	  k = x + dx*(y+dy*(i + j * num_col_tiles));
+	  if (k > max) {
+	    fwrite (&zero, 1, 3, out);
+	    continue;
+	  }
+
+	  if (greyscale) {
+	    c = (int)ceil((fdata[k]-fmin)*255.0/fmax);
+	    fwrite (&c, 1, 1, out);
+	    fwrite (&c, 1, 1, out);
+	    fwrite (&c, 1, 1, out);
+	  } else {
+	    fwrite (&r[idata[k]], 1, 1, out);
+	    fwrite (&g[idata[k]], 1, 1, out);
+	    fwrite (&b[idata[k]], 1, 1, out);
+	  }
+	}
+
+  fclose (out);
+  std::cerr << "Wrote: " << filename << "." << std::endl;
 } 
 
 
