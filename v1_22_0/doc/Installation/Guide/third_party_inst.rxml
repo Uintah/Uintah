@@ -306,10 +306,5 @@ setenv TEEM_ZLIB_IPATH -I/usr/local/include
     </para>
   </section>
 
-  <section>
-    <title>Next</title>
-    <para>Proceed to <xref linkend="sec.build-sr"/>.</para>
-  </section>
-
 </section>
 

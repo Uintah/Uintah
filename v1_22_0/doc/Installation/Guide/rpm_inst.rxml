@@ -33,6 +33,19 @@ DEALINGS IN THE SOFTWARE.
   <section>
     <title>Introduction</title>
 
+    <para>The version of &sr; included in the RPMs has been configured
+    to support BLAS (or ATLAS), LAPACK, Insight, HDF5, and MDSplus.
+    Also, the RPMs include Insight and HDF5 libraries.  The RPMs do
+    not, however, include BLAS (or ATLAS), LAPACK, or MDSplus
+    software.  These must be installed separately if they are not
+    already present.<footnote><para>BLAS/ATLAS and LAPACK are often
+    pre-installed in Linux distributions.</para></footnote> <xref
+    linkend="sec.blas_lapack_inst"/> provides installation
+    instructions for <acronym>BLAS</acronym> and
+    <acronym>LAPACK</acronym>.  <xref linkend="sec.mdsplus_inst"/>
+    provides installation instructions for <acronym>MDSplus</acronym>
+    libraries.</para>
+
     <para>
       Root privileges are required to install the &sr;
       <acronym>RPM</acronym>s.
