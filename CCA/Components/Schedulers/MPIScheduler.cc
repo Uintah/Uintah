@@ -341,7 +341,9 @@ MPIScheduler::postMPISends( DetailedTask         * task )
 	posDW = dws[req->req->task->mapDataWarehouse(Task::OldDW)].get_rep();
 	posLabel = reloc_new_posLabel_;
       }
-      dw->sendMPI(*ss_, batch, pg_, posLabel, mpibuff, posDW, req);
+      MPIScheduler* top = this;
+      while(top->parentScheduler) top = top->parentScheduler;
+      dw->sendMPI(*top->ss_, batch, pg_, posLabel, mpibuff, posDW, req);
     }
     // Post the send
     if(mpibuff.count()>0){
