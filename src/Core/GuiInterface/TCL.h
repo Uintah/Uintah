@@ -36,15 +36,14 @@
 
 namespace SCIRun {
 
-
 class GuiVar;
 
 class SCICORESHARE TCLArgs {
-    Array1<clString> args;
+    Array1<clString> args_;
 public:
-    int have_error;
-    int have_result;
-    clString string;
+    bool have_error_;
+    bool have_result_;
+    clString string_;
 
     TCLArgs(int argc, char* argv[]);
     ~TCLArgs();
