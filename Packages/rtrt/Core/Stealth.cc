@@ -19,7 +19,7 @@ Stealth::Stealth( double translate_scale, double rotate_scale,
   accel_cnt_( 0 ), horizontal_accel_cnt_( 0 ),
   vertical_accel_cnt_( 0 ), pitch_accel_cnt_( 0 ), rotate_accel_cnt_( 0 ),
   translate_scale_( translate_scale ), rotate_scale_(rotate_scale), 
-  segment_percentage_( 0 ), gravity_force_( gravity_force )
+  segment_percentage_( 0 ), gravity_force_( gravity_force ), gravity_on_(0)
 {
   path_.push_back( Point(-5.5,-5,5) );
   path_.push_back( Point(4.5,5.3,1) );
