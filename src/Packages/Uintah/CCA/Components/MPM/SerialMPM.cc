@@ -878,6 +878,7 @@ void SerialMPM::scheduleInterpolateToParticlesAndUpdate(SchedulerP& sched,
   t->computes(lb->pXXLabel);
 
   t->computes(lb->KineticEnergyLabel);
+  t->computes(lb->ThermalEnergyLabel);
   t->computes(lb->CenterOfMassPositionLabel);
   t->computes(lb->CenterOfMassVelocityLabel);
   sched->addTask(t, patches, matls);
@@ -1265,7 +1266,7 @@ void SerialMPM::computeStressTensor(const ProcessorGroup*,
                                     DataWarehouse* new_dw)
 {
 
-  cout_doing <<"Doing computeStressTensor " <<"\t\t\t\t MPM"<< endl;
+  cout_doing <<"Doing computeStressTensor:MPM: " ;
 
   if (flags->d_doErosion) {
     for(int m = 0; m < d_sharedState->getNumMPMMatls(); m++){
@@ -1277,13 +1278,20 @@ void SerialMPM::computeStressTensor(const ProcessorGroup*,
     }
   } else {
     for(int m = 0; m < d_sharedState->getNumMPMMatls(); m++){
+      cout_doing << " Patch = " << (patches->get(0))->getID();
+      cout_doing << " Mat = " << m;
       MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial(m);
+      cout_doing << " MPM_Mat = " << mpm_matl;
       ConstitutiveModel* cm = mpm_matl->getConstitutiveModel();
+      cout_doing << " CM = " << cm;
       cm->setWorld(d_myworld);
       cm->setAdiabaticHeating(flags->d_adiabaticHeating);
+      cout_doing << " Enter .." ;
       cm->computeStressTensor(patches, mpm_matl, old_dw, new_dw);
+      cout_doing << " Exit .." ;
     }
   }
+  cout_doing << "\n";
 }
 
 void SerialMPM::computeArtificialViscosity(const ProcessorGroup*,
@@ -2217,7 +2225,7 @@ void SerialMPM::addNewParticles(const ProcessorGroup*,
       for (ParticleSubset::iterator iter = pset->begin(); iter != pset->end();
            iter++) {
         if (damage[*iter]) {
-          cout << "damage[" << *iter << "]=" << damage[*iter] << endl;
+          //cout << "damage[" << *iter << "]=" << damage[*iter] << endl;
           delset->addParticle(*iter);
         }
       }
@@ -2331,7 +2339,7 @@ void SerialMPM::convertLocalizedParticles(const ProcessorGroup*,
       iter = pset->begin(); 
       for (; iter != pset->end(); iter++) {
         if (isLocalized[*iter]) {
-          cout << "damage[" << *iter << "]=" << isLocalized[*iter] << endl;
+          //cout << "damage[" << *iter << "]=" << isLocalized[*iter] << endl;
           delset->addParticle(*iter);
         }
       }
@@ -2667,6 +2675,7 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
 
     // DON'T MOVE THESE!!!
     new_dw->put(sum_vartype(ke),     lb->KineticEnergyLabel);
+    new_dw->put(sum_vartype(thermal_energy), lb->ThermalEnergyLabel);
     new_dw->put(sumvec_vartype(CMX), lb->CenterOfMassPositionLabel);
     new_dw->put(sumvec_vartype(CMV), lb->CenterOfMassVelocityLabel);
 
