@@ -604,14 +604,3 @@ proc infoCancel {w} {
     destroy $w
 } 
 
-source $SCICoreTCL/MemStats.tcl
-source $SCICoreTCL/DebugSettings.tcl
-source $SCICoreTCL/ThreadStats.tcl
-source $SCICoreTCL/ColorPicker.tcl
-source $SCICoreTCL/Dialbox.tcl
-source $SCICoreTCL/Util.tcl
-source $SCICoreTCL/Filebox.tcl
-source $SCICoreTCL/PointVector.tcl
-source $SCICoreTCL/MaterialEditor.tcl
-source $SCICoreTCL/ColorPicker.tcl
-source $PSECoreTCL/Module.tcl
