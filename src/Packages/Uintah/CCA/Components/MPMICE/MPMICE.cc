@@ -109,30 +109,34 @@ void MPMICE::scheduleTimeAdvance(double, double,
   const MaterialSet* ice_matls = d_sharedState->allICEMaterials();
   const MaterialSet* mpm_matls = d_sharedState->allMPMMaterials();
   const MaterialSet* all_matls = d_sharedState->allMaterials();
+  const MaterialSubset* press_matl    = scinew MaterialSubset();
+  press_matl ->addReference();
   const MaterialSubset* ice_matls_sub = ice_matls->getUnion();
   const MaterialSubset* mpm_matls_sub = mpm_matls->getUnion();
 
   if(d_fracture) {
-    d_mpm->scheduleSetPositions(sched, patches, matls);
-    d_mpm->scheduleComputeBoundaryContact(sched, patches, matls);
-    d_mpm->scheduleComputeConnectivity(sched, patches, matls);
+    d_mpm->scheduleSetPositions(                  sched, patches, matls);
+    d_mpm->scheduleComputeBoundaryContact(        sched, patches, matls);
+    d_mpm->scheduleComputeConnectivity(           sched, patches, matls);
   }
-  d_mpm->scheduleInterpolateParticlesToGrid(sched, patches, matls);
+  d_mpm->scheduleInterpolateParticlesToGrid(      sched, patches, matls);
 
   if (MPMPhysicalModules::thermalContactModel) {
-    d_mpm->scheduleComputeHeatExchange(sched, patches, matls);
+    d_mpm->scheduleComputeHeatExchange(           sched, patches, matls);
   }
 
   // schedule the interpolation of mass and volume to the cell centers
-  scheduleInterpolateNCToCC_0(sched, patches, matls);
-  scheduleComputeEquilibrationPressure(sched, patches, matls);
+  scheduleInterpolateNCToCC_0(                    sched, patches, matls);
+  scheduleComputeEquilibrationPressure(           sched, patches, matls);
 
-  d_ice->scheduleComputeFaceCenteredVelocities(sched, patches, ice_matls_sub,
-                                                               mpm_matls_sub,
-                                                               all_matls);
+  d_ice->scheduleComputeFaceCenteredVelocities(   sched, patches, ice_matls_sub,
+                                                                  mpm_matls_sub,
+                                                                  press_matl,
+                                                                  all_matls);
                                                                
-  d_ice->scheduleAddExchangeContributionToFCVel(sched, patches, matls);
-  d_ice->scheduleComputeDelPressAndUpdatePressCC(sched, patches, matls);
+  d_ice->scheduleAddExchangeContributionToFCVel(  sched, patches, matls);
+  d_ice->scheduleComputeDelPressAndUpdatePressCC( sched, patches, press_matl,
+                                                                  matls);
 
   // scheduleInterpolateVelIncFCToNC(sched, patches, matls);
   
@@ -141,9 +145,12 @@ void MPMICE::scheduleTimeAdvance(double, double,
      
   scheduleComputeMassBurnRate(                    sched, patches, matls);
 
-  d_ice->scheduleComputePressFC(                  sched, patches, matls);
-  d_ice->scheduleAccumulateMomentumSourceSinks(   sched, patches, matls);
-  d_ice->scheduleAccumulateEnergySourceSinks(     sched, patches, matls);
+  d_ice->scheduleComputePressFC(                  sched, patches, press_matl,
+                                                                  matls);
+  d_ice->scheduleAccumulateMomentumSourceSinks(   sched, patches, press_matl,
+                                                                  matls);
+  d_ice->scheduleAccumulateEnergySourceSinks(     sched, patches, press_matl,
+                                                                  matls);
   d_ice->scheduleComputeLagrangianValues(         sched, patches, ice_matls_sub, 
                                                                   all_matls);
 
