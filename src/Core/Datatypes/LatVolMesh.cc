@@ -268,7 +268,8 @@ LatVolMesh::get_nodes(Node::array_type &array, Face::index_type idx) const
 
 // Note: This code does not respect boundaries of the mesh
 void
-LatVolMesh::get_nodes(Node::array_type &array, Cell::index_type idx) const
+LatVolMesh::get_nodes(Node::array_type &array,
+		      const Cell::index_type &idx) const
 {
   array.resize(8);
   array[0].i_ = idx.i_;   array[0].j_ = idx.j_;   array[0].k_ = idx.k_;
@@ -350,7 +351,8 @@ LatVolMesh::get_edges(Edge::array_type &array, Face::index_type idx) const
   
     
 void
-LatVolMesh::get_edges(Edge::array_type &array, Cell::index_type idx) const
+LatVolMesh::get_edges(Edge::array_type &array,
+		      const Cell::index_type &idx) const
 {
   array.resize(12);
   const unsigned int j_start= (ni_-1)*nj_*nk_; 
@@ -376,7 +378,8 @@ LatVolMesh::get_edges(Edge::array_type &array, Cell::index_type idx) const
 
 
 void
-LatVolMesh::get_faces(Face::array_type &array, Cell::index_type idx) const
+LatVolMesh::get_faces(Face::array_type &array,
+		      const Cell::index_type &idx) const
 {
   array.resize(6);
 
@@ -435,7 +438,7 @@ LatVolMesh::get_cells(Cell::array_type &arr, const BBox &bbox)
 bool
 LatVolMesh::get_neighbor(Cell::index_type &neighbor,
 			 const Cell::index_type &from,
-			 const Face::index_type &face) const
+			 Face::index_type face) const
 {
   const unsigned int xidx = face;
   if (xidx < (ni_ - 1) * (nj_ - 1) * nk_)
@@ -665,7 +668,7 @@ LatVolMesh::get_center(Point &result, const Node::index_type &idx) const
 
 
 double
-LatVolMesh::get_size(Node::index_type idx) const
+LatVolMesh::get_size(const Node::index_type &idx) const
 {
   return 0.0;
 }
@@ -700,7 +703,7 @@ LatVolMesh::get_size(Face::index_type idx) const
 
 
 double
-LatVolMesh::get_size(Cell::index_type idx) const
+LatVolMesh::get_size(const Cell::index_type &idx) const
 {
   Node::array_type nodes;
   get_nodes(nodes, idx);
@@ -1007,7 +1010,7 @@ LatVolMesh::size(LatVolMesh::Cell::size_type &s) const
 }
 
 int
-LatVolMesh::get_valence(LatVolMesh::Node::index_type i) const
+LatVolMesh::get_valence(const Node::index_type &i) const
 {
   return (((i.i_ == 0 || i.i_ == ni_) ? 1 : 2) +
 	  ((i.j_ == 0 || i.j_ == nj_) ? 1 : 2) +
@@ -1028,7 +1031,7 @@ LatVolMesh::get_valence(LatVolMesh::Face::index_type i) const
 
 
 int
-LatVolMesh::get_valence(LatVolMesh::Cell::index_type i) const
+LatVolMesh::get_valence(const Cell::index_type &i) const
 {
   return 1;
 }
