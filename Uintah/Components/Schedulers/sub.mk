@@ -7,13 +7,15 @@ include $(SRCTOP)/scripts/smallso_prologue.mk
 
 SRCDIR   := Uintah/Components/Schedulers
 
-SRCS     += $(SRCDIR)/MPIScheduler.cc $(SRCDIR)/MessageLog.cc \
+SRCS += $(SRCDIR)/templates.cc \
+	$(SRCDIR)/MPIScheduler.cc $(SRCDIR)/MessageLog.cc \
 	$(SRCDIR)/OnDemandDataWarehouse.cc \
 	$(SRCDIR)/RoundRobinLoadBalancer.cc \
 	$(SRCDIR)/SimpleLoadBalancer.cc \
 	$(SRCDIR)/SingleProcessorScheduler.cc \
 	$(SRCDIR)/SingleProcessorLoadBalancer.cc \
-	$(SRCDIR)/TaskGraph.cc
+	$(SRCDIR)/TaskGraph.cc \
+	$(SRCDIR)/ThreadPool.cc
 
 PSELIBS := Uintah/Grid Uintah/Interface SCICore/Thread Uintah/Parallel \
 	Uintah/Exceptions SCICore/Exceptions SCICore/Util PSECore/XMLUtil
@@ -23,6 +25,9 @@ include $(SRCTOP)/scripts/smallso_epilogue.mk
 
 #
 # $Log$
+# Revision 1.11  2000/09/26 18:27:33  dav
+# added templates.cc
+#
 # Revision 1.10  2000/09/20 16:00:29  sparker
 # Added external interface to LoadBalancer (for per-processor tasks)
 # Added message logging functionality. Put the tag <MessageLog/> in
