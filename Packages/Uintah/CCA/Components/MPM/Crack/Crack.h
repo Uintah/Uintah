@@ -144,15 +144,6 @@ class Crack
                                 DataWarehouse* old_dw,
                                 DataWarehouse* new_dw);
 
-    void addComputesAndRequiresUpdateCrackExtentAndNormals(Task* task,
-                                const PatchSet* patches,
-                                const MaterialSet* matls) const;
-    void UpdateCrackExtentAndNormals(const ProcessorGroup*,
-                                const PatchSubset* patches,
-                                const MaterialSubset* matls,
-                                DataWarehouse* old_dw,
-                                DataWarehouse* new_dw);
-
  private:
 
      // Prevent copying of this class
@@ -236,8 +227,9 @@ class Crack
      vector<vector<int> >  cfSegNodes;        // Crack-front elem nodes
      vector<vector<int> > cfSegNodesT;        // Crack-front nodes after propagation 
      vector<vector<Point> > cfSegPtsT;        // Crack-front points after propagation
-     vector<vector<Vector> >  cfSegV3;        // Tangential vectors of crack-front nodes
-     vector<vector<Vector> >  cfSegV2;        // Crack-front elem out-of-plane normals
+     vector<vector<Vector> >  cfSegV3;        // Tangential normal at crack-front nodes
+     vector<vector<Vector> >  cfSegV2;        // Normals at crack-front nodes
+     vector<vector<Vector> >  cfSegV1;        // Bi-normals at crack-front nodes
      vector<vector<Vector> >   cfSegJ;        // J-integral of crack-front elems
      vector<vector<Vector> >   cfSegK;        // SIF of crack-front elems
      vector<vector<short> > cfSegNodesInMat;  // Flag if crack-front nodes inside material
@@ -299,8 +291,8 @@ class Crack
      void DiscretizePartialEllipticCracks(const int&,int&);
      void OutputCrackPlaneMesh(const int&);
 
-     // Smooth crack-front and get tangential direction 
-     short SmoothCrackFrontAndGetTangentialVector(const int&);
+     // Calculate crack-front normals, tangential normals and bi-normals
+     short CalculateCrackFrontNormals(const int& m);
      
      // Cubic spline fitting
      short CubicSpline(const int& n, const int& m, const int& n1,
