@@ -53,6 +53,13 @@ using namespace Uintah;
 bool verbose = false;
 bool quiet = false;
 bool attached_header = true;
+enum {
+  None,
+  Det,
+  Norm,
+  Trace
+};
+int matrix_op = None;
 
 class QueryInfo {
 public:
@@ -92,6 +99,9 @@ void usage(const std::string& badarg, const std::string& progname)
     cerr << "  -tlow,--timesteplow [int] (only outputs timestep from int) [defaults to 0]\n";
     cerr << "  -thigh,--timestephigh [int] (only outputs timesteps up to int) [defaults to last timestep]\n";
     cerr << "  -tstep,--timestep [int] (only outputs timestep int)\n";
+    cerr << "  -mo <operator> type of operator to apply to matricies.\n";
+    cerr << "                 Options are none, det, norm, and trace\n";
+    cerr << "                 [defaults to none]\n";
     cerr << "  -vv,--verbose (prints status of output)\n";
     cerr << "  -q,--quiet (very little output)\n";
     exit(1);
@@ -254,10 +264,6 @@ void build_field(QueryInfo &qinfo,
 #endif
 }
 
-// This is the function we need in order to write the nrrd header without
-// writing the data.  We want to write the data ourselves.
-extern int _nrrdWriteNrrd(FILE *file, Nrrd *nrrd, NrrdIO *io, int writeData);
-
 // Allocates memory for dest when needed (sets delete_me to true if it
 // does allocate memory), then copies all the data to dest from
 // source.
@@ -279,15 +285,6 @@ Nrrd* wrap_nrrd(LatVolField<T> *source, bool &delete_data) {
   delete_data = false;
   void *data = (void*)&(source->fdata()(0,0,0));
 
-#if 0
-  size_t num = source->fdata().size();
-  for(int z = 0; z < size[2]; z++)
-    for(int y = 0; y < size[1]; y++)
-      for(int x = 0; x < size[0]; x++)
-	T t = source->fdata()(x,y,z);
-  for(size_t i = 0; i < num; i++)
-    T t = ((T*)data)[i];
-#endif
   if (nrrdWrap_nva(out, data, get_nrrd_type<T>(), dim, size) == 0) {
     return out;
   } else {
@@ -325,6 +322,81 @@ Nrrd* wrap_nrrd(LatVolField<Vector> *source, bool &delete_data) {
     *datap++ = vec_data->y();
     *datap++ = vec_data->z();
     vec_data++;
+  }
+
+  if (nrrdWrap_nva(out, data, nrrdTypeDouble, dim, size) == 0) {
+    return out;
+  } else {
+    nrrdNix(out);
+    delete data;
+    return 0;
+  }
+}
+
+// Do the one for Matrix3
+template <>
+Nrrd* wrap_nrrd(LatVolField<Matrix3> *source, bool &delete_data) {
+  Nrrd *out = nrrdNew();
+  int dim = matrix_op == None? 5 : 3;
+  int size[5];
+
+  if (matrix_op == None) {
+    size[0] = 3;
+    size[1] = 3;
+    size[2] = source->fdata().dim3();
+    size[3] = source->fdata().dim2();
+    size[4] = source->fdata().dim1();
+  } else {
+    size[0] = source->fdata().dim3();
+    size[1] = source->fdata().dim2();
+    size[2] = source->fdata().dim1();
+  }
+  if (verbose) for(int i = 0; i < dim; i++) cout << "size["<<i<<"] = "<<size[i]<<endl;
+  unsigned int num_mat = source->fdata().size();
+  int elem_size = matrix_op == None? 9 : 1;
+  double *data = new double[num_mat*elem_size];
+  if (!data) {
+    cerr << "Cannot allocate memory ("<<num_mat*elem_size*sizeof(double)<<" byptes) for temp storage of vectors\n";
+    nrrdNix(out);
+    return 0;
+  }
+  double *datap = data;
+  delete_data = true;
+  Matrix3 *mat_data = &(source->fdata()(0,0,0));
+
+  // Copy the data
+  switch (matrix_op) {
+  case None:
+    for(unsigned int i = 0; i < num_mat; i++) {
+      for(int i = 0; i < 3; i++)
+	for(int j = 0; j < 3; j++)
+	  *datap++ = (*mat_data)(i,j);
+      mat_data++;
+    }
+    break;
+  case Det:
+    for(unsigned int i = 0; i < num_mat; i++) {
+      *datap++ = mat_data->Determinant();
+      mat_data++;
+    }
+    break;
+  case Trace:
+    for(unsigned int i = 0; i < num_mat; i++) {
+      *datap++ = mat_data->Trace();
+      mat_data++;
+    }
+    break;
+  case Norm:
+    for(unsigned int i = 0; i < num_mat; i++) {
+      *datap++ = mat_data->Norm();
+      mat_data++;
+    }
+    break;
+  default:
+    cerr << "Unknown matrix operation\n";
+    nrrdNix(out);
+    delete data;
+    return 0;
   }
 
   if (nrrdWrap_nva(out, data, nrrdTypeDouble, dim, size) == 0) {
@@ -508,6 +580,18 @@ int main(int argc, char** argv)
       input_uda_name = string(argv[++i]);
     } else if (s == "-o" || s == "--out") {
       output_file_name = string(argv[++i]);
+    } else if(s == "-mo") {
+      s = argv[++i];
+      if (s == "det")
+	matrix_op = Det;
+      else if (s == "norm")
+	matrix_op = Norm;
+      else if (s == "trace")
+	matrix_op = Trace;
+      else if (s == "none")
+	matrix_op = None;
+      else
+	usage(s, argv[0]);
     } else if(s == "-binary") {
       do_binary=true;
     } else {
@@ -669,6 +753,8 @@ int main(int argc, char** argv)
 	getVariable<Vector>(qinfo, low, range, box, filename);
 	break;
       case Uintah::TypeDescription::Matrix3:
+	getVariable<Matrix3>(qinfo, low, range, box, filename);
+	break;
       case Uintah::TypeDescription::bool_type:
       case Uintah::TypeDescription::short_int_type:
       case Uintah::TypeDescription::long_type:
