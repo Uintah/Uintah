@@ -145,6 +145,28 @@ ArchesLabel::ArchesLabel()
   d_reactscalNonLinSrcSBLMLabel = VarLabel::create("reactscalNonLinSrcSBLM",
 				   CCVariable<double>::getTypeDescription() );
 
+  //thermal NOx labels 
+
+  d_thermalnoxSPLabel = VarLabel::create("thermalnoxSP",
+                                   CCVariable<double>::getTypeDescription() );
+
+  d_thermalnoxTempLabel = VarLabel::create("thermalnoxTemp",
+                                   CCVariable<double>::getTypeDescription() );
+
+  // thermal NOx Coef
+  d_thermalnoxCoefSBLMLabel = VarLabel::create("thermalnoxCoefSBLM",
+                                   CCVariable<double>::getTypeDescription() );
+  // thermal NOx Non Linear Src
+  d_thermalnoxNonLinSrcSBLMLabel = VarLabel::create("thermalnoxNonLinSrcSBLM",
+                                   CCVariable<double>::getTypeDescription() );
+
+  d_thermalnoxDiffCoefLabel = VarLabel::create("thermalnoxDiffCoef",
+                                   CCVariable<double>::getTypeDescription() );
+
+  d_thermalnoxSRCINLabel = VarLabel::create("thermalnoxSRCIN",
+                                    CCVariable<double>::getTypeDescription() );
+  // End of thermal NOx labels
+
 
   // labels for nonlinear residuals
   d_presResidPSLabel = VarLabel::create("presResidPSLabel",
@@ -183,6 +205,9 @@ ArchesLabel::ArchesLabel()
 
   d_reactscalarRes = VarLabel::create("reactscalarRes",
 				   CCVariable<double>::getTypeDescription() );
+
+  d_thermalnoxRes = VarLabel::create("thermalnoxRes",
+                                   CCVariable<double>::getTypeDescription() );
 
   d_enthalpyRes = VarLabel::create("enthalpyRes",
 				   CCVariable<double>::getTypeDescription() );
@@ -576,6 +601,7 @@ ArchesLabel::~ArchesLabel()
   VarLabel::destroy(d_wVelocityRes);
   VarLabel::destroy(d_scalarRes);
   VarLabel::destroy(d_reactscalarRes);
+  VarLabel::destroy(d_thermalnoxRes);
   VarLabel::destroy(d_DUPBLMLabel);
   VarLabel::destroy(d_DVPBLMLabel);
   VarLabel::destroy(d_DWPBLMLabel);
@@ -693,6 +719,14 @@ ArchesLabel::~ArchesLabel()
   VarLabel::destroy(d_totalAreaOUTIntermLabel);
       	       
   VarLabel::destroy(d_oldDeltaTLabel);
+  // Thermal NOx destructor
+  VarLabel::destroy(d_thermalnoxSPLabel);
+  VarLabel::destroy(d_thermalnoxTempLabel);
+  VarLabel::destroy(d_thermalnoxCoefSBLMLabel);
+  VarLabel::destroy(d_thermalnoxNonLinSrcSBLMLabel);
+  VarLabel::destroy(d_thermalnoxSRCINLabel);
+  VarLabel::destroy(d_thermalnoxDiffCoefLabel);
+
 }           
 
 void ArchesLabel::setSharedState(SimulationStateP& sharedState)
