@@ -23,6 +23,8 @@ using std::vector;
       //non PermanentParticleState
       const VarLabel* pDeformationMeasureLabel;
       const VarLabel* pConnectivityLabel;
+
+      const VarLabel* pTouchNormalLabel;
       const VarLabel* pContactNormalLabel;
       
       const VarLabel* pXXLabel;
