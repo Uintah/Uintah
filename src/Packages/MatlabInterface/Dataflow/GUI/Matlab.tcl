@@ -156,11 +156,19 @@ itcl_class MatlabInterface_DataIO_Matlab {
 	}
 
     method backcompat_cmdTCL {a b c} {
+	global $this-cmdTCL
+	global $this-matlab-code
 	set $this-matlab-code [set $this-cmdTCL]
     }
 
     method backcompat_hpTCL {a b c} {
-	# do something based upon the hpTCL variable.
+	global $this-hpTCL
+	global $this-inet-address
+	global $this-inet-port
+	set sp [lindex [split [set $this-hpTCL]] 0]
+	set spl [split $sp ":"]
+	set $this-inet-address [lindex $spl 0]
+	set $this-inet-port [lindex $spl 1]
     }
 
     method ui {} {
