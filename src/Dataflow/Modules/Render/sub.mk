@@ -36,6 +36,7 @@ SRCS     += \
 	$(SRCDIR)/EditPath.cc\
 	$(SRCDIR)/OpenGL.cc\
 	$(SRCDIR)/Parser.cc\
+	$(SRCDIR)/PBuffer.cc \
 	$(SRCDIR)/SCIBaWGL.cc\
 	$(SRCDIR)/SharedMemory.cc\
 	$(SRCDIR)/SynchronizeGeometry.cc\
@@ -45,6 +46,7 @@ SRCS     += \
 	$(SRCDIR)/Viewer.cc\
 	$(SRCDIR)/glMath.cc\
 #[INSERT NEW CODE FILE HERE]
+
 
 PSELIBS := Dataflow/Widgets Dataflow/Network Dataflow/Ports Core/Datatypes \
 	Dataflow/Comm Core/Persistent Core/Exceptions Core/Geometry \
