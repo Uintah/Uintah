@@ -1866,11 +1866,11 @@ else
 fi
 
 # capture in the libs to link
-if test -e $i/bin/Magick-config; then
-    AC_MSG_RESULT(Using $i/bin/Magick-config to set ImageMagick variables.)
+if test -e $_sci_lib/../bin/Magick-config; then
+    AC_MSG_RESULT(Using $_sci_lib/../bin/Magick-config to set ImageMagick variables.)
     MAGICK_LIB_DIR_FLAG=""
-    MAGICK_LIB_FLAG=`$i/bin/Magick-config --libs`
-    INC_MAGICK_H=`$i/bin/Magick-config --cppflags`
+    MAGICK_LIB_FLAG=`$_sci_lib/../bin/Magick-config --libs`
+    INC_MAGICK_H=`$_sci_lib/../bin/Magick-config --cppflags`
     HAVE_MAGICK=yes
 else
     SCI_TRY_LINK(MAGICK,ImageMagick library and headers,magick/magick.h,

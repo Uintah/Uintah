@@ -14568,12 +14568,12 @@ else
 fi
 
 # capture in the libs to link
-if test -e $i/bin/Magick-config; then
-    echo "$as_me:$LINENO: result: Using $i/bin/Magick-config to set ImageMagick variables." >&5
-echo "${ECHO_T}Using $i/bin/Magick-config to set ImageMagick variables." >&6
+if test -e $_sci_lib/../bin/Magick-config; then
+    echo "$as_me:$LINENO: result: Using $_sci_lib/../bin/Magick-config to set ImageMagick variables." >&5
+echo "${ECHO_T}Using $_sci_lib/../bin/Magick-config to set ImageMagick variables." >&6
     MAGICK_LIB_DIR_FLAG=""
-    MAGICK_LIB_FLAG=`$i/bin/Magick-config --libs`
-    INC_MAGICK_H=`$i/bin/Magick-config --cppflags`
+    MAGICK_LIB_FLAG=`$_sci_lib/../bin/Magick-config --libs`
+    INC_MAGICK_H=`$_sci_lib/../bin/Magick-config --cppflags`
     HAVE_MAGICK=yes
 else
 
