@@ -124,30 +124,30 @@ HexToTetAlgoT<FSRC>::execute(FieldHandle srcH, FieldHandle& dstH)
 			    (TetVolMesh::Node::index_type)(hvnodes[7]));
 
 	    tvmesh->add_tet((TetVolMesh::Node::index_type)(hvnodes[0]),
-			    (TetVolMesh::Node::index_type)(hvnodes[2]),
 			    (TetVolMesh::Node::index_type)(hvnodes[5]),
+			    (TetVolMesh::Node::index_type)(hvnodes[2]),
 			    (TetVolMesh::Node::index_type)(hvnodes[7]));
 
 	    tvmesh->add_tet((TetVolMesh::Node::index_type)(hvnodes[0]),
-			    (TetVolMesh::Node::index_type)(hvnodes[4]),
 			    (TetVolMesh::Node::index_type)(hvnodes[5]),
-			    (TetVolMesh::Node::index_type)(hvnodes[7]));
+			    (TetVolMesh::Node::index_type)(hvnodes[7]),
+			    (TetVolMesh::Node::index_type)(hvnodes[4]));
 
-	    tvmesh->add_tet((TetVolMesh::Node::index_type)(hvnodes[2]),
-			    (TetVolMesh::Node::index_type)(hvnodes[5]),
-			    (TetVolMesh::Node::index_type)(hvnodes[6]),
-			    (TetVolMesh::Node::index_type)(hvnodes[7]));
+	    tvmesh->add_tet((TetVolMesh::Node::index_type)(hvnodes[5]),
+			    (TetVolMesh::Node::index_type)(hvnodes[2]),
+			    (TetVolMesh::Node::index_type)(hvnodes[7]),
+			    (TetVolMesh::Node::index_type)(hvnodes[6]));
 	  }
 	  else
 	  {
-	    tvmesh->add_tet((TetVolMesh::Node::index_type)(hvnodes[1]),
-			    (TetVolMesh::Node::index_type)(hvnodes[0]),
+	    tvmesh->add_tet((TetVolMesh::Node::index_type)(hvnodes[0]),
+			    (TetVolMesh::Node::index_type)(hvnodes[1]),
 			    (TetVolMesh::Node::index_type)(hvnodes[3]),
 			    (TetVolMesh::Node::index_type)(hvnodes[4]));
 
 	    tvmesh->add_tet((TetVolMesh::Node::index_type)(hvnodes[1]),
-			    (TetVolMesh::Node::index_type)(hvnodes[3]),
 			    (TetVolMesh::Node::index_type)(hvnodes[2]),
+			    (TetVolMesh::Node::index_type)(hvnodes[3]),
 			    (TetVolMesh::Node::index_type)(hvnodes[6]));
 
 	    tvmesh->add_tet((TetVolMesh::Node::index_type)(hvnodes[1]),
@@ -157,13 +157,13 @@ HexToTetAlgoT<FSRC>::execute(FieldHandle srcH, FieldHandle& dstH)
 
 	    tvmesh->add_tet((TetVolMesh::Node::index_type)(hvnodes[1]),
 			    (TetVolMesh::Node::index_type)(hvnodes[5]),
-			    (TetVolMesh::Node::index_type)(hvnodes[4]),
-			    (TetVolMesh::Node::index_type)(hvnodes[6]));
+			    (TetVolMesh::Node::index_type)(hvnodes[6]),
+			    (TetVolMesh::Node::index_type)(hvnodes[4]));
 
 	    tvmesh->add_tet((TetVolMesh::Node::index_type)(hvnodes[3]),
 			    (TetVolMesh::Node::index_type)(hvnodes[4]),
-			    (TetVolMesh::Node::index_type)(hvnodes[7]),
-			    (TetVolMesh::Node::index_type)(hvnodes[6]));
+			    (TetVolMesh::Node::index_type)(hvnodes[6]),
+			    (TetVolMesh::Node::index_type)(hvnodes[7]));
 	  }
 
 	  elemmap.push_back(buffers[flipflop][i]);
