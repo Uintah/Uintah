@@ -3,9 +3,10 @@
 #define MULTIMATERIAL_H 1
 
 #include <Packages/rtrt/Core/Material.h>
-#include <vector>
 
-using std::vector;
+#include <sgi_stl_warnings_off.h>
+#include <vector>
+#include <sgi_stl_warnings_on.h>
 
 namespace rtrt {
 class MatPercent;
@@ -34,7 +35,7 @@ class MultiMaterial : public Material {
 
  protected:
 
-  vector<MatPercent*> material_stack_;
+  std::vector<MatPercent*> material_stack_;
 
  public:
 

@@ -740,7 +740,7 @@ bool VolumeVis2D::lookup_value(Point &p,
 
 // template<class T>
 void 
-VolumeVis2D::io(SCIRun::Piostream &str)
+VolumeVis2D::io(SCIRun::Piostream&)
 {
   ASSERTFAIL("Pio not implemented for VolumeVis2D");
 }

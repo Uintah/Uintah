@@ -7,17 +7,22 @@
 #include <Packages/rtrt/Core/VolumeDpy.h>
 #include <Packages/rtrt/Core/PerProcessorContext.h>
 #include <Packages/rtrt/Core/PriorityQ.h>
+
 #include <Core/Thread/Thread.h>
 #include <Core/Thread/Time.h>
 #include <Core/Thread/Parallel.h>
 #include <Core/Thread/Mutex.h>
-#include <stdio.h>
+
+#include <sgi_stl_warnings_off.h>
 #include <fstream>
+#include <iostream>
+#include <sgi_stl_warnings_on.h>
+
+#include <stdio.h>
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <fcntl.h>
 #include <unistd.h>
-#include <iostream>
 
 using namespace rtrt;
 using namespace std;
@@ -516,7 +521,7 @@ void MIPHVB16::parallel_calc_mcell(int)
 }
 
 void 
-MIPHVB16::io(SCIRun::Piostream &str)
+MIPHVB16::io(SCIRun::Piostream&)
 {
   ASSERTFAIL("Pio for MIPHVB16 not implemented");
 }

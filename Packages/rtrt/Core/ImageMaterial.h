@@ -5,7 +5,9 @@
 #include <Packages/rtrt/Core/Material.h>
 #include <Packages/rtrt/Core/Array2.h>
 
+#include <sgi_stl_warnings_off.h>
 #include <string>
+#include <sgi_stl_warnings_on.h>
 
 using namespace std;
 

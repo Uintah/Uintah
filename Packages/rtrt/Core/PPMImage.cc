@@ -1,8 +1,11 @@
 
 #include <Packages/rtrt/Core/PPMImage.h>
+
 #include <Core/Persistent/PersistentSTL.h>
 
+#include <sgi_stl_warnings_off.h>
 #include <map>
+#include <sgi_stl_warnings_on.h>
 
 using namespace rtrt;
 using namespace std;

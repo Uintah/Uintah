@@ -135,7 +135,7 @@ void UVCylinderArc::print(ostream& out)
 	<< ", radius=" << radius << '\n';
 }
 
-void UVCylinderArc::uv(UV &uv, const Point &p, const HitInfo &hit)
+void UVCylinderArc::uv(UV &uv, const Point &p, const HitInfo &/*hit*/)
 {
     Point xp = xform.project(p);
     double angle = xp.x();

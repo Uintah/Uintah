@@ -5,13 +5,17 @@
 #include <Packages/rtrt/Core/Ray.h>
 #include <Packages/rtrt/Core/Color.h>
 #include <Packages/rtrt/Core/VolumeDpy.h>
-#include <stdio.h>
+
+#include <sgi_stl_warnings_off.h>
 #include <fstream>
+#include <iostream>
+#include <sgi_stl_warnings_on.h>
+
+#include <stdio.h>
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <fcntl.h>
 #include <unistd.h>
-#include <iostream>
 
 using namespace rtrt;
 using namespace std;
