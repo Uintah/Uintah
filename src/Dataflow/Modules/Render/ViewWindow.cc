@@ -396,7 +396,7 @@ ViewWindow::mouse_translate(int action, int x, int y, int, int, int)
     break;
   case MouseEnd:
     update_mode_string("");
-    //need_redraw_=true; -- this would be needed for mouse-adaptive rendering
+    need_redraw_ = 1; // this is needed for mouse-adaptive rendering
     break;
   }
 }
@@ -484,6 +484,7 @@ ViewWindow::mouse_dolly(int action, int x, int y, int, int, int)
     break;
   case MouseEnd:
     update_mode_string("");
+    need_redraw_ = 1;
     break;
   }
 }
@@ -528,6 +529,7 @@ ViewWindow::mouse_scale(int action, int x, int y, int, int, int)
     break;
   case MouseEnd:
     update_mode_string("");
+    need_redraw_ = 1;
     break;
   }
 }
