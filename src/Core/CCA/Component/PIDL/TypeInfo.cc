@@ -130,13 +130,9 @@ Object* TypeInfo::pidl_cast(Object* obj) const
     }
 
     // return the correct proxy
-    ReferenceMgr* new_rm = new ReferenceMgr(*_rm);
-    for(unsigned int i=0; i < new_rm->d_ref.size(); i++)
-      new_rm->d_ref[i].d_vtable_base=vtbase;
-    //return (*d_priv->create_proxy)(*new_rm);
-    Object *obj=(*d_priv->create_proxy)(*new_rm);
-    delete new_rm;
-    return obj;
+    for(unsigned int i=0; i < _rm->d_ref.size(); i++)
+      _rm->d_ref[i].d_vtable_base=vtbase;
+    return (*d_priv->create_proxy)(*_rm);
   }
 }
 

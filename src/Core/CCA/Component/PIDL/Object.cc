@@ -189,13 +189,9 @@ void Object::setCalleeDistribution(std::string distname,
   d_serverContext->d_sched->setCalleeRepresentation(distname,arrrep);
 }
 
-void Object::createSubset(int ssize)
+void Object::createSubset(int localsize, int remotesize)
 {
-  if(d_serverContext)
-    ::std::cerr << "Object::createSubset()-SERVER\n";
-  else {
-    ::std::cerr << "Object::createSubset()-PROXY\n";
-  }  
+  ::std::cerr << "createSubset(int,int) has no effect on this object\n";
 }
 
 int Object::getRefCount(){

@@ -34,11 +34,12 @@ ReferenceMgr::ReferenceMgr()
 {
   localSize=1; 
   localRank=0;
-  isSubset=false;
+  s_lSize=1;
+  s_refSize=0;
 }
 
 ReferenceMgr::ReferenceMgr(int rank, int size)
-  :localSize(size), localRank(rank), isSubset(false)
+  :localSize(size), localRank(rank), s_lSize(size), s_refSize(0)
 {
 }
 
@@ -46,31 +47,25 @@ ReferenceMgr& ReferenceMgr::operator=(const ReferenceMgr& copy)
 {
   d_ref = copy.d_ref;
   for(unsigned int i=0; i < d_ref.size(); i++) {
-	if(d_ref[i].chan!=NULL) delete d_ref[i].chan; //K.z.
+    if(d_ref[i].chan!=NULL) delete d_ref[i].chan; 
     d_ref[i].chan = (copy.d_ref[i].chan)->SPFactory(true);
   }
   localSize = copy.localSize;
   localRank = copy.localRank;
-  isSubset = copy.isSubset;
-  if(isSubset) {
-    save_lSize = copy.save_lSize;
-  } 
+  s_lSize = copy.s_lSize;
+  s_refSize = copy.s_refSize;
   intracomm = copy.intracomm;
   return *this;
 }
 
 ReferenceMgr::ReferenceMgr(const ReferenceMgr& copy)
   :localSize(copy.localSize),localRank(copy.localRank),
-   isSubset(copy.isSubset), d_ref(copy.d_ref),
-   intracomm(copy.intracomm) 
+   s_lSize(copy.s_lSize), s_refSize(copy.s_refSize),
+   d_ref(copy.d_ref), intracomm(copy.intracomm)  
 {
   for(unsigned int i=0; i < d_ref.size(); i++) {
-	if(d_ref[i].chan!=NULL) delete d_ref[i].chan; //K.z.
-
-      		  d_ref[i].chan = (copy.d_ref[i].chan)->SPFactory(true);
-  }
-  if(isSubset) {
-    save_lSize = copy.save_lSize;
+    if(d_ref[i].chan!=NULL) delete d_ref[i].chan; 
+    d_ref[i].chan = (copy.d_ref[i].chan)->SPFactory(true);
   }
 }
 
@@ -84,7 +79,7 @@ ReferenceMgr::~ReferenceMgr()
 
 Reference* ReferenceMgr::getIndependentReference() const
 {
-  return (Reference*)(&(d_ref[localRank % d_ref.size()]));
+  return (Reference*)(&(d_ref[localRank % s_refSize]));
 }
 
 ::std::vector<Reference*> ReferenceMgr::getCollectiveReference(callType tip)
@@ -92,16 +87,18 @@ Reference* ReferenceMgr::getIndependentReference() const
   ::std::vector<Reference*> refPtrList;
   refList::iterator iter;
 
-  if (localRank >= localSize) return refPtrList;
+  /*Sanity check:*/
+  if (localRank >= s_lSize) return refPtrList;
+
 
   switch(tip) {
   case (CALLONLY):
   case (NOCALLRET):
-    refPtrList.insert(refPtrList.begin(), &(d_ref[localRank % d_ref.size()]));
+    refPtrList.insert(refPtrList.begin(), &(d_ref[localRank % s_refSize]));
     break;
   case (CALLNORET):
-    iter = d_ref.begin() + (localRank + localSize);
-    for(int i=(localRank + localSize); i < (int)d_ref.size(); i+=localSize, iter+=localSize) 
+    iter = d_ref.begin() + (localRank + s_lSize);
+    for(int i=(localRank + s_lSize); i < (int)s_refSize; i+=s_lSize, iter+=s_lSize) 
       refPtrList.insert(refPtrList.begin(), &(d_ref[i]));
     break;
   case (REDIS):
@@ -113,23 +110,26 @@ Reference* ReferenceMgr::getIndependentReference() const
 
 refList* ReferenceMgr::getAllReferences() const
 {
-  if (localRank >= localSize) return(new refList());
-  return (refList*)(&d_ref);
+  if (localRank >= s_lSize) return(new refList());
+  refList *rl = new refList(d_ref);
+  rl->resize(s_refSize);
+  return (refList*)(rl);
 }
 
 void ReferenceMgr::insertReference(const Reference& ref)
 {
   d_ref.insert(d_ref.begin(),ref);
+  s_refSize++;
 }
 
 int ReferenceMgr::getRemoteSize()
 {
-  return (d_ref.size());
+  return s_refSize;
 }
 
 int ReferenceMgr::getSize()
 {
-  return localSize;
+  return s_lSize;
 }
 
 int ReferenceMgr::getRank()
@@ -137,23 +137,26 @@ int ReferenceMgr::getRank()
   return localRank;
 }
 
-void ReferenceMgr::createSubset(int ssize)
+void ReferenceMgr::createSubset(int localsize, int remotesize)
 {
-  if(ssize) { 
-    if(ssize >= localSize) return;
-    if(!isSubset){
-      isSubset=true;
-      save_lSize=localSize;
-    }
-    localSize=ssize; 
+  /*LOCALSIZE*/
+  if(localsize > 0) { 
+    if(localsize < this->localSize) s_lSize=localsize;
   }
   else { 
-    if(isSubset) {
-      /*reset subsetting*/
-      localSize=save_lSize;
-      isSubset=false;
-    }
+    /*reset subsetting*/
+    s_lSize=localSize;
   } 
+
+  /*REMOTESIZE*/
+  if(remotesize > 0) { 
+    if(remotesize < d_ref.size()) s_refSize=remotesize;
+  }
+  else { 
+    /*reset subsetting*/
+    s_refSize=d_ref.size();
+  } 
+
 
 }
 
