@@ -37,7 +37,7 @@ WARNING
    class NeighBoundCond : public BoundCondBase {
    public:
       NeighBoundCond() : BoundCondBase("Neighbor") {}; 
-      NeighBoundCond(ProblemSpecP& ps) {};
+      NeighBoundCond(ProblemSpecP&) {};
       virtual ~NeighBoundCond() {};
 
    private:
