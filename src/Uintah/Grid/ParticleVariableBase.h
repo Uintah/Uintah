@@ -55,6 +55,7 @@ WARNING
       virtual ParticleVariableBase* clone() const = 0;
       virtual ParticleVariableBase* cloneSubset(ParticleSubset*) const = 0;
 
+      virtual void allocate(const Patch*) = 0; // will throw an InternalError
       virtual void allocate(ParticleSubset*) = 0;
       virtual void gather(ParticleSubset* dest,
 			  std::vector<ParticleSubset*> subsets,
@@ -98,6 +99,11 @@ WARNING
 
 //
 // $Log$
+// Revision 1.11  2000/12/23 00:32:47  witzel
+// Added emit(OutputContext), read(InputContext), and allocate(Patch*) as
+// pure virtual methods to class Variable and did any needed implementations
+// of these in sub-classes.
+//
 // Revision 1.10  2000/12/10 09:06:17  sparker
 // Merge from csafe_risky1
 //

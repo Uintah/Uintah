@@ -79,6 +79,9 @@ class CCVariable : public Array3<T>, public CCVariableBase {
       // Insert Documentation Here:
       virtual void allocate(const IntVector& lowIndex,
 			    const IntVector& highIndex);
+
+      virtual void allocate(const Patch* patch)
+      { allocate(patch->getCellLowIndex(), patch->getCellHighIndex()); }
       
       //////////
       // Insert Documentation Here:
@@ -447,7 +450,7 @@ class CCVariable : public Array3<T>, public CCVariableBase {
 		  ssize_t size = (ssize_t)(sizeof(T)*(h.x()-l.x()));
 		  ssize_t s=::read(oc.fd, &(*this)[IntVector(l.x(),y,z)], size);
 		  if(size != s)
-		     throw ErrnoException("CCVariable::emit (write call)", errno);
+		     throw ErrnoException("CCVariable::read (read call)", errno);
 		  oc.cur+=size;
 	       }
 	    }
@@ -481,6 +484,11 @@ class CCVariable : public Array3<T>, public CCVariableBase {
 
 //
 // $Log$
+// Revision 1.31  2000/12/23 00:32:47  witzel
+// Added emit(OutputContext), read(InputContext), and allocate(Patch*) as
+// pure virtual methods to class Variable and did any needed implementations
+// of these in sub-classes.
+//
 // Revision 1.30  2000/12/20 20:45:13  jas
 // Added methods to retriever the interior cell index and use those for
 // filling in the bcs for either the extraCells layer or the regular

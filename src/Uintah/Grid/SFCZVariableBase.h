@@ -58,6 +58,7 @@ WARNING
       // Insert Documentation Here:
       virtual SFCZVariableBase* clone() const = 0;
 
+      virtual void allocate(const Patch*) = 0;
       virtual void allocate(const IntVector& lowIndex,
 			    const IntVector& highIndex) = 0;
       virtual void copyPatch(SFCZVariableBase* src,
@@ -86,6 +87,11 @@ WARNING
 
 //
 // $Log$
+// Revision 1.6  2000/12/23 00:32:47  witzel
+// Added emit(OutputContext), read(InputContext), and allocate(Patch*) as
+// pure virtual methods to class Variable and did any needed implementations
+// of these in sub-classes.
+//
 // Revision 1.5  2000/12/10 09:06:17  sparker
 // Merge from csafe_risky1
 //

@@ -6,14 +6,19 @@
 #include <Uintah/Grid/TypeDescription.h>
 #include <Uintah/Grid/TypeUtils.h>
 #include <Uintah/Exceptions/TypeMismatchException.h>
+#include <SCICore/Exceptions/InternalError.h>
+#include <SCICore/Exceptions/ErrnoException.h>
 #include <SCICore/Malloc/Allocator.h>
 #include <Uintah/Grid/Reductions.h>
 
 #include <iosfwd>
 #include <iostream>
+#include <errno.h>
 using namespace std;
 
 namespace Uintah {
+   using SCICore::Exceptions::ErrnoException;
+   using SCICore::Exceptions::InternalError;
    class TypeDescription;
 
 /**************************************
@@ -61,6 +66,11 @@ WARNING
       virtual void copyPointer(const ReductionVariableBase&);
       virtual void reduce(const ReductionVariableBase&);
       virtual void emit(ostream&);
+      virtual void emit(OutputContext&);
+      virtual void read(InputContext&);
+      virtual void allocate(const Patch*)
+      { throw InternalError("Should not call ReductionVariable<T, Op>::allocate(const Patch*)"); }
+      
       virtual const TypeDescription* virtualGetTypeDescription() const;
       virtual void getMPIBuffer(void*& buf, int& count, MPI_Datatype& datatype, MPI_Op& op);
    private:
@@ -145,10 +155,35 @@ WARNING
         intout << value;
       }
 
+   template<class T, class Op>
+      void
+      ReductionVariable<T, Op>::emit(OutputContext& oc)
+      {
+	 ssize_t s = write(oc.fd, &value, sizeof(double));
+	 if (s != sizeof(double))
+	    throw ErrnoException("ReductionVariable::emit (write call)", errno);
+	 oc.cur += s;
+      }
+
+   template<class T, class Op>
+      void
+      ReductionVariable<T, Op>::read(InputContext& ic)
+      {
+	 ssize_t s = ::read(ic.fd, &value, sizeof(double));
+	 if (s != sizeof(double))
+	    throw ErrnoException("ReductionVariable::read (read call)", errno);
+	 ic.cur += s;
+      }
+   
 } // end namespace Uintah
 
 //
 // $Log$
+// Revision 1.14  2000/12/23 00:32:47  witzel
+// Added emit(OutputContext), read(InputContext), and allocate(Patch*) as
+// pure virtual methods to class Variable and did any needed implementations
+// of these in sub-classes.
+//
 // Revision 1.13  2000/09/25 18:12:20  sparker
 // do not use covariant return types due to problems with g++
 // other linux/g++ fixes

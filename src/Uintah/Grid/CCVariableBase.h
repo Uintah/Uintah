@@ -58,6 +58,7 @@ WARNING
       // Insert Documentation Here:
       virtual CCVariableBase* clone() const = 0;
 
+      virtual void allocate(const Patch* patch) = 0;
       virtual void allocate(const IntVector& lowIndex,
 			    const IntVector& highIndex) = 0;
       virtual void copyPatch(CCVariableBase* src,
@@ -85,6 +86,11 @@ WARNING
 
 //
 // $Log$
+// Revision 1.8  2000/12/23 00:32:47  witzel
+// Added emit(OutputContext), read(InputContext), and allocate(Patch*) as
+// pure virtual methods to class Variable and did any needed implementations
+// of these in sub-classes.
+//
 // Revision 1.7  2000/12/10 09:06:16  sparker
 // Merge from csafe_risky1
 //

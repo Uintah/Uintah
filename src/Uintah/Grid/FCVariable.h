@@ -76,7 +76,7 @@ class FCVariable : public Array3<T>, public FCVariableBase {
 
       virtual void allocate(const IntVector& lowIndex,
 			    const IntVector& highIndex);
-      
+
       //////////
       // Insert Documentation Here:
       void copyPatch(FCVariableBase* src,
@@ -446,6 +446,11 @@ class FCVariable : public Array3<T>, public FCVariableBase {
 
 //
 // $Log$
+// Revision 1.18  2000/12/23 00:32:47  witzel
+// Added emit(OutputContext), read(InputContext), and allocate(Patch*) as
+// pure virtual methods to class Variable and did any needed implementations
+// of these in sub-classes.
+//
 // Revision 1.17  2000/11/21 21:57:27  jas
 // More things to get FCVariables to work.
 //

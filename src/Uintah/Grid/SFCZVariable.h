@@ -75,6 +75,9 @@ class SFCZVariable : public Array3<T>, public SFCZVariableBase {
      virtual void allocate(const IntVector& lowIndex,
 			   const IntVector& highIndex);
      
+     virtual void allocate(const Patch* patch)
+     { allocate(patch->getSFCZLowIndex(), patch->getSFCZHighIndex()); }
+   
      virtual void copyPatch(SFCZVariableBase* src,
 			     const IntVector& lowIndex,
 			     const IntVector& highIndex);
@@ -467,6 +470,11 @@ class SFCZVariable : public Array3<T>, public SFCZVariableBase {
 
 //
 // $Log$
+// Revision 1.13  2000/12/23 00:32:47  witzel
+// Added emit(OutputContext), read(InputContext), and allocate(Patch*) as
+// pure virtual methods to class Variable and did any needed implementations
+// of these in sub-classes.
+//
 // Revision 1.12  2000/12/20 20:45:13  jas
 // Added methods to retriever the interior cell index and use those for
 // filling in the bcs for either the extraCells layer or the regular

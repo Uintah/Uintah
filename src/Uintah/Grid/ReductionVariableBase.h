@@ -48,6 +48,7 @@ WARNING
       virtual void copyPointer(const ReductionVariableBase&) = 0;
       virtual ReductionVariableBase* clone() const = 0;
       virtual void reduce(const ReductionVariableBase&) = 0;
+      virtual void emit(OutputContext&) = 0;
       virtual void emit(ostream&) = 0;
       virtual void getMPIBuffer(void*& buf, int& count, MPI_Datatype& datatype, MPI_Op& op) = 0;
       virtual const TypeDescription* virtualGetTypeDescription() const = 0;
@@ -63,6 +64,11 @@ WARNING
 
 //
 // $Log$
+// Revision 1.8  2000/12/23 00:32:47  witzel
+// Added emit(OutputContext), read(InputContext), and allocate(Patch*) as
+// pure virtual methods to class Variable and did any needed implementations
+// of these in sub-classes.
+//
 // Revision 1.7  2000/07/27 22:39:50  sparker
 // Implemented MPIScheduler
 // Added associated support
