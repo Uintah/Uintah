@@ -73,4 +73,36 @@ public:
     static PersistentTypeID type_id;
 };
 
+class SphereSurface : public Surface {
+    Point cen;
+    Vector pole;
+    double radius;
+    int nu;
+    int nv;
+
+    Vector u;
+    Vector v;
+
+    double rad2;
+    void add_node(Array1<NodeHandle>& nodes,
+		  char* id, const Point& p, double r,
+		  double theta, double phi);
+public:
+    SphereSurface(const Point& cen, double radius,
+		    int nu, int nv);
+    SphereSurface(const SphereSurface&);
+    virtual ~SphereSurface();
+    virtual Surface* clone();
+    virtual int inside(const Point& p);
+    virtual void get_surfnodes(Array1<NodeHandle>&);
+    virtual void construct_grid(int, int, int, const Point &, double);
+    virtual void construct_grid();
+
+    virtual GeomObj* get_obj(const ColormapHandle&);
+
+    // Persistent representation...
+    virtual void io(Piostream&);
+    static PersistentTypeID type_id;
+};
+
 #endif /* SCI_Datatypes_BasicSurfaces_h */

@@ -15,6 +15,7 @@
 #include <Classlib/NotFinished.h>
 #include <Geom/Cylinder.h>
 #include <Geom/Group.h>
+#include <Geom/Sphere.h>
 #include <Geom/Triangles.h>
 #include <Malloc/Allocator.h>
 #include <Math/Trig.h>
@@ -207,7 +208,8 @@ GeomObj* CylinderSurface::get_obj(const ColormapHandle& cmap)
     double v1=nodes[0]->bc->value;
     Color cc1(cmap->lookup(v1)->diffuse);
     Point& pp1(nodes[0]->p);
-    for(int j=0;j<nv;j++){
+    int j;
+    for(j=0;j<nv;j++){
 	int i2=1+(j%nv);
 	int i3=1+((j+1)%nv);
 	double v2=nodes[i2]->bc->value;
@@ -219,6 +221,213 @@ GeomObj* CylinderSurface::get_obj(const ColormapHandle& cmap)
 	tris->add(pp1, cc1, pp2, cc2, pp3, cc3);
     }
     for(i=0;i<2*(ndiscu-2)+nu;i++){
+	for(int j=0;j<nv;j++){
+	    int i1=s+(j%nv);
+	    int i2=s+((j+1)%nv);
+	    int i3=i1+nv;
+	    int i4=i2+nv;
+	    double v1=nodes[i1]->bc->value;
+	    double v2=nodes[i2]->bc->value;
+	    double v3=nodes[i3]->bc->value;
+	    double v4=nodes[i4]->bc->value;
+	    Color cc1(cmap->lookup(v1)->diffuse);
+	    Color cc2(cmap->lookup(v2)->diffuse);
+	    Color cc3(cmap->lookup(v3)->diffuse);
+	    Color cc4(cmap->lookup(v4)->diffuse);
+	    Point& pp1(nodes[i1]->p);
+	    Point& pp2(nodes[i2]->p);
+	    Point& pp3(nodes[i3]->p);
+	    Point& pp4(nodes[i4]->p);
+	    tris->add(pp1, cc1, pp2, cc2, pp3, cc3);
+	    tris->add(pp2, cc2, pp3, cc3, pp4, cc4);
+	}
+	s+=nv;
+    }
+    int last=nodes.size()-1;
+    double v3=nodes[last]->bc->value;
+    Color cc3(cmap->lookup(v3)->diffuse);
+    Point& pp3(nodes[last]->p);
+    for(j=0;j<nv;j++){
+	int i1=s+(j%nv);
+	int i2=s+((j+1)%nv);
+	double v1=nodes[i1]->bc->value;
+	double v2=nodes[i2]->bc->value;
+	Color cc1(cmap->lookup(v1)->diffuse);
+	Color cc2(cmap->lookup(v2)->diffuse);
+	Point& pp1(nodes[i1]->p);
+	Point& pp2(nodes[i2]->p);
+	tris->add(pp1, cc1, pp2, cc2, pp3, cc3);
+    }
+    return group;
+}
+
+static Persistent* make_SphereSurface()
+{
+    return scinew SphereSurface(Point(0,0,0),1,10,10);
+}
+
+PersistentTypeID SphereSurface::type_id("SphereSurface", "Surface",
+					make_SphereSurface);
+
+SphereSurface::SphereSurface(const Point& cen, double radius,
+			     int nu, int nv)
+: Surface(Other, 1),
+  cen(cen), radius(radius), nu(nu), nv(nv)
+{
+    pole=Vector(0,0,1);
+    rad2=radius*radius;
+    if(pole.length2() > 1.e-6) {
+	pole.normalize();
+    } else {
+	// Degenerate sphere
+	pole=Vector(0,0,1);
+    }
+    pole.find_orthogonal(u, v);
+}
+
+SphereSurface::~SphereSurface()
+{
+}
+
+SphereSurface::SphereSurface(const SphereSurface& copy)
+: Surface(copy), cen(copy.cen), radius(copy.radius),
+  nu(copy.nu), nv(copy.nv)
+{
+}
+
+Surface* SphereSurface::clone()
+{
+    return scinew SphereSurface(*this);
+}
+
+int SphereSurface::inside(const Point& p)
+{
+    double dl2=(p-cen).length2();
+    if(dl2 > rad2)
+	return 0;
+    return 1;
+}
+
+void SphereSurface::add_node(Array1<NodeHandle>& nodes,
+			     char* id, const Point& p, double r,
+			     double theta, double phi)
+{
+    Node* node=new Node(p);
+    if(boundary_type == DirichletExpression){
+	char str [200];
+	ostrstream s(str, 200);
+	s << id << " " << p.x() << " " << p.y() << " " << p.z()
+	  << " " << r << " " << theta << " " << phi << '\0';
+	clString retval;
+	int err=TCL::eval(str, retval);
+	if(err){
+	    cerr << "Error evaluating boundary value" << endl;
+	    boundary_type = None;
+	    return;
+	}
+	double value;
+	if(!retval.get_double(value)){
+	    cerr << "Bad result from boundary value" << endl;
+	    boundary_type = None;
+	    return;
+	}
+	node->bc=new DirichletBC(this, value);
+    }
+    nodes.add(node);
+}
+
+void SphereSurface::get_surfnodes(Array1<NodeHandle>& nodes)
+{
+    char id[100];
+    if(boundary_type == DirichletExpression){
+	// Format this string - we will use it later...
+	char proc_string[1000];
+	sprintf(id, "CylinderSurface%p%p", this, &nodes);
+	ostrstream proc(proc_string, 1000);
+	proc << "proc " << id << " {x y z r theta phi} { expr "
+	     << boundary_expr << "}" << '\0';
+	TCL::execute(proc_string);
+    }
+    add_node(nodes, id, cen-pole*radius, radius, 0, -Pi/2);
+    if(boundary_type == None)
+	return;
+    SinCosTable phitab(nu, -Pi/2, Pi/2);
+    SinCosTable tab(nv+1, 0, 2*Pi, radius);
+    int i;
+    for(i=1;i<nu-1;i++){
+	double phi=(double(i)/double(nu)-0.5)*Pi;
+	for(int j=0;j<nv;j++){
+	    double theta=double(j)/double(nv)*2*Pi;
+	    Point p(cen+(u*tab.sin(j)+v*tab.cos(j))*phitab.cos(i)+pole*phitab.sin(i)*radius);
+	    add_node(nodes, id, p, radius, theta, phi);
+	    if(boundary_type == None)
+		return;
+	}
+    }
+    add_node(nodes, id, cen+pole*radius, radius, 0, Pi/2);
+    if(boundary_type == None)
+	return;
+    TCL::execute(clString("rename ")+id+" \"\"");
+}
+
+#define SPHERESURFACE_VERSION 1
+
+void SphereSurface::io(Piostream& stream)
+{
+    /*int version=*/stream.begin_class("SphereSurface", SPHERESURFACE_VERSION);
+    Surface::io(stream);
+    Pio(stream, cen);
+    Pio(stream, radius);
+    Pio(stream, nu);
+    Pio(stream, nv);
+    stream.end_class();
+}
+
+void SphereSurface::construct_grid(int, int, int, const Point&, double)
+{
+    NOT_FINISHED("SphereSurface::construct_grid");
+}
+
+void SphereSurface::construct_grid()
+{
+    NOT_FINISHED("SphereSurface::construct_grid");
+}
+
+GeomObj* SphereSurface::get_obj(const ColormapHandle& cmap)
+{
+    if(boundary_type == None)
+	return scinew GeomSphere(cen, radius);
+
+    Array1<NodeHandle> nodes;
+    get_surfnodes(nodes);
+
+    // This is here twice, since get_surfnodes may reduce back to 
+    // no BC's if there is an error...
+    if(boundary_type == None)
+	return scinew GeomSphere(cen, radius);
+
+    GeomGroup* group=new GeomGroup;
+    GeomTrianglesPC* tris=new GeomTrianglesPC;
+    group->add(tris);
+
+    int s=1;
+    int i;
+    double v1=nodes[0]->bc->value;
+    Color cc1(cmap->lookup(v1)->diffuse);
+    Point& pp1(nodes[0]->p);
+    int j;
+    for(j=0;j<nv;j++){
+	int i2=1+(j%nv);
+	int i3=1+((j+1)%nv);
+	double v2=nodes[i2]->bc->value;
+	double v3=nodes[i3]->bc->value;
+	Color cc2(cmap->lookup(v2)->diffuse);
+	Color cc3(cmap->lookup(v3)->diffuse);
+	Point& pp2(nodes[i2]->p);
+	Point& pp3(nodes[i3]->p);
+	tris->add(pp1, cc1, pp2, cc2, pp3, cc3);
+    }
+    for(i=0;i<nu-3;i++){
 	for(int j=0;j<nv;j++){
 	    int i1=s+(j%nv);
 	    int i2=s+((j+1)%nv);
@@ -349,6 +558,12 @@ void PointSurface::construct_grid(int, int, int, const Point &, double)
 void PointSurface::construct_grid()
 {
     NOT_FINISHED("PointSurface::construct_grid");
+}
+
+GeomObj* PointSurface::get_obj(const ColormapHandle&)
+{
+    NOT_FINISHED("PointSurface::get_obj");
+    return 0;
 }
 
 #ifdef __GNUG__

@@ -574,6 +574,12 @@ void TriSurface::get_surfnodes(Array1<NodeHandle>& nodes)
     NOT_FINISHED("TriSurface::get_surfpoints");
 }
 
+GeomObj* TriSurface::get_obj(const ColormapHandle&)
+{
+    NOT_FINISHED("TriSurface::get_obj");
+    return 0;
+}
+
 #ifdef __GNUG__
 
 #include <Classlib/Array1.cc>
