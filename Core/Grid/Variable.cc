@@ -118,7 +118,7 @@ void Variable::emit(OutputContext& oc, const IntVector& l,
   ssize_t s = ::write(oc.fd, writebuffer, writebufferSize);
 
   if(s != (long)writebufferSize) {
-    cout << "Variable::emit - write system call failed with errno " << errno << ": " << strerror(errno) <<  endl;
+    cerr << "Variable::emit - write system call failed writing to " << oc.filename << " with errno " << errno << ": " << strerror(errno) <<  endl;
 
     SCI_THROW(ErrnoException("Variable::emit (write call)", errno));
   }
@@ -209,9 +209,10 @@ void Variable::read(InputContext& ic, long end, bool swapBytes, int nByteMode,
   data.resize(datasize);
   // casting from const char* -- use caution
   ssize_t s = ::read(ic.fd, const_cast<char*>(data.c_str()), datasize);
-  if(s != datasize)
+  if(s != datasize) {
+    cerr << "Error reading file: " << ic.filename << ", errno=" << errno << '\n';
     SCI_THROW(ErrnoException("Variable::read (read call)", errno));
-
+  }
   
   ic.cur += datasize;
 
