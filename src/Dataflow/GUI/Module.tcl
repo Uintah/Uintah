@@ -76,6 +76,10 @@ itcl_class Module {
     public isSubnetModule 0
     public subnetNumber 0
 
+    method get_msg_state {} {
+	return $msg_state
+    }
+
     method compiling_p {} { return $compiling_p }
     method set_compiling_p { val } { 
 	set compiling_p $val	
@@ -399,11 +403,16 @@ itcl_class Module {
 	    set color grey75
 	}
 	global Subnet
-	set canvas $Subnet(Subnet$Subnet([modname])_canvas)
+	set number $Subnet([modname])
+	set canvas $Subnet(Subnet${number}_canvas)
 	set indicator $canvas.module[modname].ff.msg.indicator
 	place forget $indicator
 	$indicator configure -width $indicator_width -background $color
 	place $indicator -relheight 1 -anchor nw 
+
+	if $number {
+	    SubnetIcon$number update_msg_state
+	}
 
 	if {[winfo exists .standalone]} {
 	    app indicate_error [modname] $msg_state
@@ -537,10 +546,29 @@ itcl_class Module {
 	
 }   
 
-proc fadeinIcon { modid { seconds 0.333 } } {
+proc fadeinIcon { modid { seconds 0.333 } { center 0 }} {
     if [llength [info script]] {
 	$modid setColorAndTitle
 	return
+    }
+    global Color Subnet
+    if $center {
+	set canvas $Subnet(Subnet$Subnet($modid)_canvas)
+	set bbox [$canvas bbox $modid]
+	if { [lindex $bbox 0] < [$canvas canvasx 0] ||
+	     [lindex $bbox 1] < [$canvas canvasy 0] ||
+	     [lindex $bbox 2] > [$canvas canvasy [winfo width $canvas]] ||
+	     [lindex $bbox 3] > [$canvas canvasy [winfo height $canvas]] } {
+	    set modW [expr [lindex $bbox 2] - [lindex $bbox 0]]
+	    set modH [expr [lindex $bbox 3] - [lindex $bbox 1]]
+	    set canScroll [$canvas cget -scrollregion]
+	    set x [expr [lindex $bbox 0] - ([winfo width  $canvas] - $modW)/2]
+	    set y [expr [lindex $bbox 1] - ([winfo height $canvas] - $modH)/2]
+	    set x [expr $x/([lindex $canScroll 2] - [lindex $canScroll 0])]
+	    set y [expr $y/([lindex $canScroll 3] - [lindex $canScroll 1])]
+	    $canvas xview moveto $x
+	    $canvas yview moveto $y
+	}
     }
 
     set frequency 12
@@ -550,8 +578,6 @@ proc fadeinIcon { modid { seconds 0.333 } } {
     set dA [expr double(1.0/($seconds*$frequency))]
     set alpha $dA
 	    
-    set toggle 1
-    global Color
     $modid setColorAndTitle $Color(IconFadeStart)
     while { $t < $stopAt } {
 	set color [blend $Color(Selected) $Color(IconFadeStart) $alpha]
@@ -642,12 +668,14 @@ proc regenConnectionMenu { menu_id conn } {
 }
 
 proc notesDoneModule { id } {
-    global Notes $id-notes
-    set $id-notes $Notes($id)
+    global $id-notes Notes
+    if { [info exists Notes($id)] } {
+	set $id-notes $Notes($id)
+    }
 }
 
 proc notesWindow { id {done ""} } {
-    global Notes Color
+    global Notes Color Subnet
     if { [winfo exists .notes] } { destroy .notes }
     setIfExists cache Notes($id) ""
     toplevel .notes
@@ -658,7 +686,7 @@ proc notesWindow { id {done ""} } {
     frame .notes.b
     button .notes.b.done -text "Done" \
 	-command "okNotesWindow $id \"$done\""
-    button .notes.b.clear -text "Clear" -command ".notes.input delete 1.0 end"
+    button .notes.b.clear -text "Clear" -command ".notes.input delete 1.0 end; set Notes($id) {}"
     button .notes.b.cancel -text "Cancel" -command \
 	"set Notes($id) \"$cache\"; destroy .notes"
 
@@ -671,17 +699,17 @@ proc notesWindow { id {done ""} } {
 	"colorNotes $id"
 
     frame .notes.d -relief groove -borderwidth 2
+
     setIfExists Notes($id-Position) Notes($id-Position) def
-    make_labeled_radio .notes.d.pos "Display:" "" left Notes($id-Position) \
-	{
-	    { "Default" def } \
-		{ "None" none } \
-		{ "Tooltip" tooltip } \
-		{ "Top" n } \
-		{ "Left" w } \
-		{ "Right" e } \
-		{ "Bottom" s } \
-	    }
+
+    set radiobuttons { {"Default" def} {"None" none} {"Tooltip" tooltip} {"Top" n} }
+    if [info exists Subnet($id)] {
+	lappend radiobuttons {"Left" w}
+	lappend radiobuttons {"Right" e}
+	lappend radiobuttons {"Bottom" s}
+    }
+	
+    make_labeled_radio .notes.d.pos "Display:" "" left Notes($id-Position) $radiobuttons
 
     pack .notes.input -fill x -side top -padx 5 -pady 3
     pack .notes.d -fill x -side top -padx 5 -pady 0
@@ -1564,13 +1592,14 @@ proc moduleHelp {modid} {
 }
 
 proc moduleDestroy {modid} {
-    netedit deletemodule_warn $modid
     global Subnet CurrentlySelectedModules
     networkHasChanged
     if [isaSubnetIcon $modid] {
 	foreach submod $Subnet(Subnet$Subnet(${modid}_num)_Modules) {
 	    moduleDestroy $submod
 	}
+    } else {
+	netedit deletemodule_warn $modid
     }
 
     # Deleting the module connections backwards works for dynamic modules
@@ -1832,7 +1861,8 @@ proc drawPort { port { color red } { connected 0 } } {
 
 proc lightPort { { port "" } { color "black" } } {
     global Subnet LitPorts
-
+    if {![info exists Subnet([pMod port])]} return
+    
     if ![string length $port] {
 	if [info exists LitPorts] {
 	    foreach port [lsort -unique $LitPorts] {
@@ -2056,7 +2086,9 @@ proc unsetIfExists { Varname } {
 
 
 proc notesTrace { ArrayName Index mode } {
+    global Subnet $Index-notes
     networkHasChanged
+    # the next lines are to handle notes color and options
     set pos [string last - $Index]
     if { $pos != -1 } { set Index [string range $Index 0 [expr $pos-1]] }
     drawNotes $Index
