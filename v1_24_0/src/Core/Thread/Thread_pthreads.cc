@@ -624,7 +624,7 @@ install_signal_handlers()
     if(sigaction(SIGBUS, &action, NULL) == -1)
 	throw ThreadError(std::string("SIGBUS failed") + strerror(errno));
     if(sigaction(SIGSEGV, &action, NULL) == -1)
-	throw ThreadError(std::string("SIGSEGV ailed") + strerror(errno));
+	throw ThreadError(std::string("SIGSEGV failed") + strerror(errno));
 
     action.sa_handler=(SIG_HANDLER_T)handle_quit;
     if(sigaction(SIGQUIT, &action, NULL) == -1)
