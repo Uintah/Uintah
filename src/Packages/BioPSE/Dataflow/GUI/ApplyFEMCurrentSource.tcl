@@ -47,17 +47,19 @@ itcl_class BioPSE_Forward_ApplyFEMCurrentSource {
 
 	set w .ui[modname]
 	if {[winfo exists $w]} {
-	    raise $w
-	    return;
+	    return
 	}
 	toplevel $w
 	
 	make_labeled_radio $w.mode "Source model:" "" left $this-modeTCL \
-		{dipole sources-and-sinks}
+	    {dipole {"electrode pair"} {"electrode set"}}
 	make_entry $w.source "Source electrode:" $this-sourceNodeTCL "$this-c needexecute"
 	make_entry $w.sink "Sink electrode:" $this-sinkNodeTCL "$this-c needexecute"
 	bind $w.source <Return> "$this-c needexecute"
 	bind $w.sink <Return> "$this-c needexecute"
 	pack $w.mode $w.source $w.sink -side top -fill x
+
+	makeSciButtonPanel $w $w $this
+	moveToCursor $w
     }
 }

@@ -44,12 +44,14 @@ itcl_class BioPSE_Visualization_ShowDipoles {
 	global $this-showLastVecGui_
 	global $this-showLinesGui_
 	global $this-num-dipoles
+	global $this-force-field-reset
 
 	set $this-widgetSizeGui_ 1
 	set $this-scaleModeGui_ normalize
 	set $this-showLastVecGui_ 0
 	set $this-showLinesGui_ 1
 	set $this-num-dipoles 0
+	set $this-force-field-reset 0
     }
     method make_entry {w text v c} {
         frame $w
@@ -61,10 +63,9 @@ itcl_class BioPSE_Visualization_ShowDipoles {
         pack $w.e -side right
     }
     method ui {} {
-        set w .ui$[modname]
+        set w .ui[modname]
         if {[winfo exists $w]} {
-            raise $w
-            return;
+            return
         }
 
         toplevel $w
@@ -82,23 +83,19 @@ itcl_class BioPSE_Visualization_ShowDipoles {
 	radiobutton $w.f.r.scale -text "Scale Size" -value "scale" \
 	    -variable $this-scaleModeGui_ -command "$this-c scale_mode"
 
-	pack $w.f.r.fixed $w.f.r.normalize $w.f.r.scale -side top -fill both -expand yes
+	pack $w.f.r.fixed $w.f.r.normalize $w.f.r.scale -side top -anchor w
 	global $this-showLastVecGui_
 	checkbutton $w.f.v -text "Show Last As Vector" -variable $this-showLastVecGui_ -command "$this-c show_last_vec"
 	global $this-showLinesGui_
 	checkbutton $w.f.l -text "Show Lines" -variable $this-showLinesGui_ -command "$this-c show_lines"
 
+	pack $w.f.s -side top -anchor w -padx 4 -pady 4
+	pack $w.f.r -side top -anchor w -padx 4 -pady 4 -expand true -fill x
+	pack $w.f.v $w.f.l -side top -anchor w -padx 4 -pady 4
 
-	frame $w.f.buttons
-	pack $w.f.s $w.f.r $w.f.v $w.f.l $w.f.buttons -side top \
-	    -fill x -expand yes
-
-
-	button $w.f.buttons.reset -text "Reset to input" \
-	    -command "$this-c reset"
-	button $w.f.buttons.exe -text "Execute" -command "$this-c needexecute"
-	pack $w.f.buttons.reset $w.f.buttons.exe -side left -fill x -expand yes
         pack $w.f -side top -fill x -expand yes
 
+	makeSciButtonPanel $w $w $this "\"Reset\" \"$this-c reset\" \"Reset to input.\""
+	moveToCursor $w
     }
 }

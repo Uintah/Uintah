@@ -21,9 +21,12 @@
 <filter-gui name="WatershedImageFilter">
 
     <param name="level">
-      <text-entry>
+      <scrollbar>
+        <min>0.0</min>
+        <max>1.0</max>
+        <step>0.001</step>
         <default>0.1</default>
-      </text-entry>
+      </scrollbar>
     </param>
 
     <param name="threshold">

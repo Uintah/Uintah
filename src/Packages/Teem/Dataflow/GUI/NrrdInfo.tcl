@@ -142,7 +142,7 @@ itcl_class Teem_NrrdData_NrrdInfo {
 	iwidgets::labeledframe $w.att -labelpos nw \
 	    -labeltext "Nrrd Attributes" 
 			       
-	pack $w.att 
+	pack $w.att -expand y -fill both
 	set att [$w.att childsite]
 	
 	labelpair $att.type "C Type" $this-type

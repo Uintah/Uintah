@@ -42,6 +42,20 @@
         <value>Boundary&lt;float, 3 &gt;</value>
       </type>
      </instance>
+    <instance>
+      <type name="InputImageType">
+        <value>itk::Image&lt;float, 2&gt;</value>
+      </type>
+      <type name="LabeledImageType">
+        <value>itk::Image&lt;float, 2 &gt;</value>
+      </type>
+      <type name="SegmentTableType">
+        <value>SegmentTable&lt;float&gt;</value>
+      </type>
+      <type name="BoundaryType">
+        <value>Boundary&lt;float, 2 &gt;</value>
+      </type>
+     </instance>
   </instantiations>
 
   <includes>

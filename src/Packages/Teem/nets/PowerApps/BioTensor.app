@@ -168,7 +168,6 @@ set m135 [addModuleAtPosition "SCIRun" "Visualization" "ChooseColorMap" 1274 135
 set m136 [addModuleAtPosition "Teem" "NrrdData" "ChooseNrrd" 204 392]
 
 
-
 # Create the Connections between Modules
 set c0 [addConnection $m119 0 $m40 0]
 set c1 [addConnection $m94 1 $m93 0]
@@ -357,7 +356,7 @@ set $m0-notes {}
 set $m0-label {unknown}
 set $m0-type {Scalar}
 set $m0-axis {axis0}
-set $m0-add {0}
+#set $m0-add {0}
 if {[file exists $DATADIR/$DATASET/demo-DWI.nrrd]} {
     set $m0-filename $DATADIR/$DATASET/demo-DWI.nrrd
 } else {
@@ -819,50 +818,67 @@ set $m40-notes {}
 # set $m43-color-r {0.4}
 # set $m43-color-g {0.2}
 # set $m43-color-b {0.9}
-set $m44-notes {}
-set $m44-ViewWindow_0-pos {z0_y0}
-set $m44-ViewWindow_0-caxes {0}
-set $m44-ViewWindow_0-raxes {1}
-set $m44-ViewWindow_0-iaxes {}
-set $m44-ViewWindow_0-have_collab_vis {0}
-set $m44-ViewWindow_0-view-eyep-x {-7.6630625798236407}
-set $m44-ViewWindow_0-view-eyep-y {75.028175882540012}
-set $m44-ViewWindow_0-view-eyep-z {1015.1705499788859}
-set $m44-ViewWindow_0-view-lookat-x {-3.0535172036584237}
-set $m44-ViewWindow_0-view-lookat-y {89.966866425184293}
-set $m44-ViewWindow_0-view-lookat-z {35.278357023344782}
-set $m44-ViewWindow_0-view-up-x {-0.0064389303591822541}
-set $m44-ViewWindow_0-view-up-y {-0.99986262175693541}
-set $m44-ViewWindow_0-view-up-z {-0.015273434099017805}
+
+
+ set $m44-notes {}
+# set $m44-ViewWindow_0-pos {z0_y0}
+# set $m44-ViewWindow_0-caxes {0}
+# set $m44-ViewWindow_0-raxes {1}
+# set $m44-ViewWindow_0-iaxes {}
+# set $m44-ViewWindow_0-have_collab_vis {0}
+# set $m44-ViewWindow_0-view-eyep-x {-7.6630625798236407}
+# set $m44-ViewWindow_0-view-eyep-y {75.028175882540012}
+# set $m44-ViewWindow_0-view-eyep-z {1015.1705499788859}
+# set $m44-ViewWindow_0-view-lookat-x {-3.0535172036584237}
+# set $m44-ViewWindow_0-view-lookat-y {89.966866425184293}
+# set $m44-ViewWindow_0-view-lookat-z {35.278357023344782}
+# set $m44-ViewWindow_0-view-up-x {-0.0064389303591822541}
+# set $m44-ViewWindow_0-view-up-y {-0.99986262175693541}
+# set $m44-ViewWindow_0-view-up-z {-0.015273434099017805}
+# set $m44-ViewWindow_0-view-fov {20}
+# set $m44-ViewWindow_0-view-eyep_offset-x {}
+# set $m44-ViewWindow_0-view-eyep_offset-y {}
+# set $m44-ViewWindow_0-view-eyep_offset-z {}
+# set $m44-ViewWindow_0-lightColors {{1.0 1.0 1.0} {1.0 1.0 1.0} {1.0 1.0 1.0} {1.0 1.0 1.0}}
+# set $m44-ViewWindow_0-lightVectors {{ 0 0 1 } { 0 0 1 } { 0 0 1 } { 0 0 1 }}
+# set $m44-ViewWindow_0-bgcolor-r {0}
+# set $m44-ViewWindow_0-bgcolor-g {0}
+# set $m44-ViewWindow_0-bgcolor-b {0}
+# set $m44-ViewWindow_0-shading {}
+# set $m44-ViewWindow_0-do_stereo {0}
+# set $m44-ViewWindow_0-ambient-scale {1.0}
+# set $m44-ViewWindow_0-diffuse-scale {1.0}
+# set $m44-ViewWindow_0-specular-scale {0.4}
+# set $m44-ViewWindow_0-emission-scale {1.0}
+# set $m44-ViewWindow_0-shininess-scale {1.0}
+# set $m44-ViewWindow_0-polygon-offset-factor {1.0}
+# set $m44-ViewWindow_0-polygon-offset-units {0.0}
+# set $m44-ViewWindow_0-point-size {1.0}
+# set $m44-ViewWindow_0-line-width {1.0}
+# set $m44-ViewWindow_0-sbase {0.40}
+# set $m44-ViewWindow_0-sr {1}
+# set $m44-ViewWindow_0-do_bawgl {0}
+# set $m44-ViewWindow_0-drawimg {}
+# set $m44-ViewWindow_0-saveprefix {}
+# set $m44-ViewWindow_0-resx {}
+# set $m44-ViewWindow_0-resy {}
+# set $m44-ViewWindow_0-aspect {}
+# set $m44-ViewWindow_0-aspect_ratio {}
+# set $m44-ViewWindow_0-ortho-view {1}
+# set $m44-ViewWindow_0-unused {1}
+# set $m44-ViewWindow_0-unused {1}
+
+set $m44-ViewWindow_0-view-eyep-x {-95.50000095367432}
+set $m44-ViewWindow_0-view-eyep-y {110.5000021118158}
+set $m44-ViewWindow_0-view-eyep-z {-792.366673105479}
+set $m44-ViewWindow_0-view-lookat-x {-95.50000095367432}
+set $m44-ViewWindow_0-view-lookat-y {110.5000021118158}
+set $m44-ViewWindow_0-view-lookat-z {0}
+set $m44-ViewWindow_0-view-up-x {0}
+set $m44-ViewWindow_0-view-up-y {-1}
+set $m44-ViewWindow_0-view-up-z {0}
 set $m44-ViewWindow_0-view-fov {20}
-set $m44-ViewWindow_0-view-eyep_offset-x {}
-set $m44-ViewWindow_0-view-eyep_offset-y {}
-set $m44-ViewWindow_0-view-eyep_offset-z {}
-set $m44-ViewWindow_0-lightColors {{1.0 1.0 1.0} {1.0 1.0 1.0} {1.0 1.0 1.0} {1.0 1.0 1.0}}
-set $m44-ViewWindow_0-lightVectors {{ 0 0 1 } { 0 0 1 } { 0 0 1 } { 0 0 1 }}
-set $m44-ViewWindow_0-bgcolor-r {0}
-set $m44-ViewWindow_0-bgcolor-g {0}
-set $m44-ViewWindow_0-bgcolor-b {0}
-set $m44-ViewWindow_0-shading {}
-set $m44-ViewWindow_0-do_stereo {0}
-set $m44-ViewWindow_0-ambient-scale {1.0}
-set $m44-ViewWindow_0-diffuse-scale {1.0}
 set $m44-ViewWindow_0-specular-scale {0.4}
-set $m44-ViewWindow_0-emission-scale {1.0}
-set $m44-ViewWindow_0-shininess-scale {1.0}
-set $m44-ViewWindow_0-polygon-offset-factor {1.0}
-set $m44-ViewWindow_0-polygon-offset-units {0.0}
-set $m44-ViewWindow_0-point-size {1.0}
-set $m44-ViewWindow_0-line-width {1.0}
-set $m44-ViewWindow_0-sbase {0.40}
-set $m44-ViewWindow_0-sr {1}
-set $m44-ViewWindow_0-do_bawgl {0}
-set $m44-ViewWindow_0-drawimg {}
-set $m44-ViewWindow_0-saveprefix {}
-set $m44-ViewWindow_0-resx {}
-set $m44-ViewWindow_0-resy {}
-set $m44-ViewWindow_0-aspect {}
-set $m44-ViewWindow_0-aspect_ratio {}
 set $m44-ViewWindow_0-global-light {1}
 set $m44-ViewWindow_0-global-fog {0}
 set $m44-ViewWindow_0-global-debug {0}
@@ -870,9 +886,8 @@ set $m44-ViewWindow_0-global-clip {0}
 set $m44-ViewWindow_0-global-cull {1}
 set $m44-ViewWindow_0-global-dl {0}
 set $m44-ViewWindow_0-global-type {Gouraud}
-set $m44-ViewWindow_0-ortho-view {1}
-set $m44-ViewWindow_0-unused {1}
-set $m44-ViewWindow_0-unused {1}
+
+
 set $m45-notes {}
 set $m45-port-index {0}
 set $m46-notes {}
@@ -906,7 +921,7 @@ set $m48-notes {}
 set $m48-label {unknown}
 set $m48-type {Scalar}
 set $m48-axis {axis0}
-set $m48-add {1}
+#set $m48-add {1}
 if {[file exists $DATADIR/$DATASET/demo-DWI.nrrd]} {
     set $m48-filename $DATADIR/$DATASET/demo-B0.nrrd
 } else {
@@ -918,7 +933,7 @@ set $m50-notes {}
 set $m50-label {unknown}
 set $m50-type {Scalar}
 set $m50-axis {axis0}
-set $m50-add {0}
+#set $m50-add {0}
 if {[file exists $DATADIR/$DATASET/demo-DWI.nrrd]} {
     set $m50-filename $DATADIR/$DATASET/demo-gradients.txt
 } else {
@@ -1012,8 +1027,8 @@ set $m62-notes {}
 set $m63-notes {}
 set $m63-label {unknown}
 set $m63-type {Scalar}
-set $m63-axis {axis0}
-set $m63-add {1}
+set $m63-axis {axisCreateNewTuple}
+#set $m63-add {1}
 set $m63-filename {}
 # set $m64-notes {}
 # set $m64-threshold {0.5}
@@ -1566,6 +1581,7 @@ set mods(ChooseNrrd-BMatrix) $m49
 set mods(ChooseNrrd-ToReg) $m105
 set mods(ChooseNrrd-KnownB0) $m136
 set mods(ChooseNrrd-ToSmooth) $m104
+set mods(ChangeFieldBounds-Variance) $m46
 
 set mods(NrrdReader-Gradient) $m50
 
@@ -1803,13 +1819,13 @@ class BioTensorApp {
 	set win .standalone
 
 	# Set window sizes
-	set viewer_width 435
-	set viewer_height 565
+	set viewer_width 436
+	set viewer_height 566
 	
-	set notebook_width 280
+	set notebook_width 281
 	set notebook_height [expr $viewer_height - 50]
 	
-	set process_width 275
+	set process_width 267
 	set process_height $viewer_height
 	
 	set vis_width [expr $notebook_width + 30]
@@ -2139,8 +2155,10 @@ class BioTensorApp {
 	set viewer_border 3
 	set eviewer [$mods(Viewer) ui_embedded]
 
-	frame $win.viewer -relief sunken -borderwidth $viewer_border
-	$eviewer setWindow $win.viewer.v [expr $viewer_width - 2*$viewer_border] [expr $viewer_height - 2*$viewer_border]
+	#frame $win.viewer -relief sunken -borderwidth $viewer_border
+	$eviewer setWindow $win.viewer $viewer_width $viewer_height
+	# $eviewer setWindow $win.viewer.v $viewer_width $viewer_height
+	#$eviewer setWindow $win.viewer.v [expr $viewer_width - 2*$viewer_border] [expr $viewer_height - 2*$viewer_border]
 	
 	
 	### Processing Part
@@ -2207,10 +2225,12 @@ class BioTensorApp {
 
 
 	### pack 3 frames
+	#pack $attachedPFr $win.viewer $attachedVFr -side left \
+	#    -anchor n -fill both -expand 1
 	pack $attachedPFr -side left -anchor n
 
 	pack $win.viewer -side left -anchor n -fill both -expand 1
-	pack $win.viewer.v -side top -anchor n -fill both -expand 1
+	# pack $win.viewer.v -side top -anchor n -fill both -expand 1
 
 	pack $attachedVFr -side left -anchor n 
 
@@ -2303,7 +2323,7 @@ class BioTensorApp {
 	    } else {
 		set $mods(TendEstim)-knownB0 0
 	    }
-  
+
 	    ### Data Acquisition
             iwidgets::tabnotebook $step_tab.tnb \
 		-width [expr $process_width - 55 ] -height 250 \
@@ -3118,28 +3138,87 @@ class BioTensorApp {
     # This implements saving a BioTensor session
     method save_session {} {
 	global mods
-	
-	set types {
-	    {{App Settings} {.set} }
-	    {{Other} { * } }
-	} 
-	set savefile [ tk_getSaveFile -defaultextension {.set} \
-			   -filetypes $types ]
-	if { $savefile != "" } {
-	    set fileid [open $savefile w]
+
+	if {$saveFile == ""} {
+	    
+	    set types {
+		{{App Settings} {.ses} }
+		{{Other} { * } }
+	    } 
+	    set saveFile [ tk_getSaveFile -defaultextension {.ses} \
+			       -filetypes $types ]
+	}
+	if { $saveFile != "" } {
+	    # configure title
+	    wm title .standalone "BioTensor - [getFileName $saveFile]" 
+	    
+	    set fileid [open $saveFile w]
 	    
 	    # Save out data information 
 	    puts $fileid "# BioTensor Session\n"
 	    puts $fileid "set app_version 1.0"
-
+	    
 	    save_module_variables $fileid
-	    save_class_variables $fileid
-
+	    save_class_variables $fileid 
+	    
 	    save_global_variables $fileid
 	    save_disabled_modules $fileid
+	    save_disabled_connections $fileid
 	    
 	    close $fileid
+	    
+	    global NetworkChanged
+	    set NetworkChanged 0
+	} 
+    }
+
+
+
+    #########################
+    ### save_class_variables
+    #########################
+    # Save out all of the class variables 
+    method save_class_variables { fileid} {
+	puts $fileid "\n# Class Variables\n"
+	foreach v [info variable] {
+	    set var [get_class_variable_name $v]
+	    if {$var != "this" } {
+		puts $fileid "set $var \{[set $var]\}"
+	    }
 	}
+	puts $fileid "set loading 1"
+    }
+
+    #########################
+    ### save_disabled_connections
+    #########################
+    # Save out the call to disable all modules connections
+    # that are currently disabled
+    method save_disabled_connections { fileid } {
+	global mods Disabled
+	
+	puts $fileid "\n# Disabled Module Connections\n"
+	
+	# Check the connections between the ChooseField-X, ChooseField-Y,
+	# or ChooseField-Z and the GatherPoints module
+
+	set name "$mods(ChooseField-X)_p0_to_$mods(GatherPoints)_p0"
+	if {[info exists Disabled($name)] && $Disabled($name)} {
+	    puts $fileid "disableConnection \"\$mods(ChooseField-X) 0 \$mods(GatherPoints) 0\""
+	}
+
+	set name "$mods(ChooseField-Y)_p0_to_$mods(GatherPoints)_p1"
+	if {[info exists Disabled($name)] && $Disabled($name)} {
+	    puts $fileid "disableConnection \"\$mods(ChooseField-Y) 0 \$mods(GatherPoints) 1\""
+	}
+
+	set name "$mods(ChooseField-Z)_p0_to_$mods(GatherPoints)_p2"
+	if {[info exists Disabled($name)] && $Disabled($name)} {
+	    puts $fileid "disableConnection \"\$mods(ChooseField-Z) 0 \$mods(GatherPoints) 2\""
+	}
+
+
+	
     }
 
 
@@ -3361,7 +3440,7 @@ class BioTensorApp {
         }
     }
     
-    
+
     
     ###########################
     ### load_session
@@ -3373,12 +3452,15 @@ class BioTensorApp {
     # all messed up.
     method load_session {} {	
 	set types {
-	    {{App Settings} {.set} }
+	    {{App Settings} {.ses} }
 	    {{Other} { * }}
 	}
 	
-	set file [tk_getOpenFile -filetypes $types]
-	if {$file != ""} {
+	set saveFile [tk_getOpenFile -filetypes $types]
+
+	if {$saveFile != ""} {
+	    # configure title
+	    wm title .standalone "BioTensor - [getFileName $saveFile]" 
 	    
 	    # Reset application 
 	    reset_app
@@ -3386,8 +3468,60 @@ class BioTensorApp {
 	    foreach g [info globals] {
 		global $g
 	    }
+
+	    source $saveFile
 	    
-	    source $file
+
+	    if {$c_data_tab == "Analyze"} {
+		# This is a hack for the AnalyzeToNrrd module.
+		# The problem is that the filenames$i variables
+		# are created as data is selected and loaded.  For
+		# some reason when loading the setting for an app
+		# the filenames$i variables aren't seen.  This
+		# needs to be looked into more for 1.20.2
+		global mods
+		global data_mode
+		if {$data_mode == "DWIknownB0"} {
+		    # Check AnalyzeToNrrd-T2
+		    global $mods(AnalyzeToNrrd-T2)-num-files
+		    global $mods(AnalyzeToNrrd-T2)-file
+		    set num [set $mods(AnalyzeToNrrd-T2)-num-files]
+		    for {set i 0} {$i < $num} {incr i} {
+			if {[info exists $mods(AnalyzeToNrrd-T2)-filenames$i]} {
+			    set temp [set $mods(AnalyzeToNrrd-T2)-filenames$i]
+			    unset $mods(AnalyzeToNrrd-T2)-filenames$i
+			    set $mods(AnalyzeToNrrd-T2)-file $temp
+			    
+			    global $mods(AnalyzeToNrrd-T2)-filenames$i
+			    set $mods(AnalyzeToNrrd-T2)-filenames$i [set $mods(AnalyzeToNrrd-T2)-file]
+			    
+			    # Call the c++ function that adds this data to its data 
+			    # structure.
+			    $mods(AnalyzeToNrrd-T2)-c add_data [set $mods(AnalyzeToNrrd-T2)-file]
+			}
+		    }
+		}
+		# Check AnalyzeToNrrd1
+		global $mods(AnalyzeToNrrd1)-num-files
+		global $mods(AnalyzeToNrrd1)-file
+		set num [set $mods(AnalyzeToNrrd1)-num-files]
+		for {set i 0} {$i < $num} {incr i} {
+		    if {[info exists $mods(AnalyzeToNrrd1)-filenames$i]} {
+			set temp [set $mods(AnalyzeToNrrd1)-filenames$i]
+			unset $mods(AnalyzeToNrrd1)-filenames$i
+			set $mods(AnalyzeToNrrd1)-file $temp
+			
+			global $mods(AnalyzeToNrrd1)-filenames$i
+			set $mods(AnalyzeToNrrd1)-filenames$i [set $mods(AnalyzeToNrrd1)-file]
+			
+			# Call the c++ function that adds this data to its data 
+			# structure.
+			$mods(AnalyzeToNrrd1)-c add_data [set $mods(AnalyzeToNrrd1)-file]
+		    }
+		}
+	    }
+
+
 
 	    # set a few variables that need to be reset
 	    set indicate 0
@@ -3395,6 +3529,7 @@ class BioTensorApp {
 	    set vis_activated 0
 	    set IsPAttached 1
 	    set IsVAttached 1
+	    set executing_modules 0
 
 	    # configure each vis tab
 	    configure_variance_tabs
@@ -3421,9 +3556,22 @@ class BioTensorApp {
 	    configure_registration_tab
 	    configure_dt_tab
 
-	    change_indicator_labels "Executing to Save Point..."
+	    $indicatorL1 configure -text "Press Execute to run to save point..."
+	    $indicatorL2 configure -text "Press Execute to run to save point..."
+
 	}	
     }
+
+    ##############################
+    ### save_image
+    ##############################
+    # To be filled in by child class. It should save out the
+    # viewer image.
+    method save_image {} {
+	global mods
+	$mods(Viewer)-ViewWindow_0 makeSaveImagePopup
+    }
+
 
 
     ############################
@@ -3432,32 +3580,21 @@ class BioTensorApp {
     # Show the help menu
     method show_help {} {
 	global SCIRUN_SRCDIR
-	
-	if {[winfo exists .splash]} {
-	    wm deiconify .splash
-	    raise .splash
-	    return;
-	}
-	
-	# CHANGE FILENAME HERE
-	set filename [file join $SCIRUN_SRCDIR Packages Teem Dataflow GUI splash-tensor.ppm]
-	image create photo ::img::splash -file "$filename"
-	toplevel .splash
-	
-	wm protocol .splash WM_DELETE_WINDOW "wm withdraw .splash"
-	
-	wm title .splash {Welcome to SCIRun}
-	label .splash.splash -image ::img::splash
-	pack .splash.splash
 
-	wm geometry .splash 504x480+135+170
-	label .splash.m1 -text "Please refer to the online BioTensor Tutorial"
-	label .splash.m2 -text "http://software.sci.utah.edu/doc/User/BioTensorTutorial" 
-	pack .splash.m1 .splash.m2 -anchor n
+	showSplash [file join $SCIRUN_SRCDIR Packages Teem Dataflow GUI splash-tensor.ppm]
 
-	button .splash.ok -text " OK " -command "wm withdraw .splash"
-	pack .splash.ok -side bottom -padx 5 -pady 5 -fill none
-	
+	global tutorial_link
+	set tutorial_link "http://software.sci.utah.edu/doc/User/Tutorials/BioTensor"
+	set help_font "-Adobe-Helvetica-normal-R-Normal-*-12-120-75-*"
+
+	label .splash.m1 -text "Please refer to the online BioTensor Tutorial" \
+	    -font $help_font
+
+	entry .splash.m2 -relief flat -textvariable tutorial_link \
+	    -state disabled -width 45 -font $help_font
+	pack .splash.m1 .splash.m2 -before .splash.ok -anchor n \
+	    -pady 2
+
 	update idletasks
     }
     
@@ -3467,7 +3604,7 @@ class BioTensorApp {
     ##########################
     # Show about box
     method show_about {} {
-	tk_messageBox -message "An application for computing and visualizing diffusion tensor\ndata.  Visualizations include planes, isosurfaces, glyphs,\nand fibers. For more information, see the BioTensor Tutorial\n\n  http://software.sci.utah.edu/doc/User/BioTensorTutorial" -type ok -icon info -parent .standalone
+	tk_messageBox -message "BioTensor is a program used to process and visualize diffusion tensor images. It can read diffusion weighted images (DWIs), perform correction for a common class of distortions in echo-planar imaging, estimate tensors from DWIs, and visualize the diffusion tensor field." -type ok -icon info -parent .standalone
     }
     
     
@@ -3480,7 +3617,7 @@ class BioTensorApp {
      method indicate_dynamic_compile { which mode } {
  	if {$mode == "start"} {
  	    change_indicate_val 1
- 	    change_indicator_labels "Dynamically Compiling Code..."
+ 	    change_indicator_labels "Dynamically Compiling [$which name]..."
          } else {
  	    change_indicate_val 2
 
@@ -3561,7 +3698,9 @@ class BioTensorApp {
 	    change_indicate_val 1
 	} elseif {$which == $mods(TendEstim) && $state == "Completed"} {
 	    change_indicate_val 2
-	    activate_vis
+	    if {!$loading} {
+		activate_vis
+	    }
 	} elseif {$which == $mods(NrrdInfo1) && $state == "JustStarted"} {
 	    change_indicate_val 1
 	} elseif {$which == $mods(NrrdInfo1) && $state == "Completed"} {
@@ -3583,7 +3722,7 @@ class BioTensorApp {
 		global $mods(NrrdInfo1)-min1
 		global $mods(NrrdInfo1)-min2
 		global $mods(NrrdInfo1)-min3
-
+		
 		set volumes [set $mods(NrrdInfo1)-size0]
 		set size_x [expr [set $mods(NrrdInfo1)-size1] - 1]
 		set size_y [expr [set $mods(NrrdInfo1)-size2] - 1]
@@ -3608,6 +3747,7 @@ class BioTensorApp {
 		global glyph_scale_val
 		set glyph_scale_val 0.5
 
+		
 		if {$data_mode == "DWI" || $data_mode == "DWIknownB0"} {
 		    # new data has been loaded, configure
 		    # the vis tabs and sync their values
@@ -3619,7 +3759,16 @@ class BioTensorApp {
 		    sync_fibers_tabs
 		    
 		    configure_sample_planes
-		    
+
+		    # configure the variance offset
+		    global $mods(ChangeFieldBounds-Variance)-outputcenterx
+		    global $mods(ChangeFieldBounds-Variance)-outputcentery
+		    set $mods(ChangeFieldBounds-Variance)-outputcenterx \
+			[expr -($min_x + ($size_x*$spacing_x/2.0)*1.1)]
+		    set $mods(ChangeFieldBounds-Variance)-outputcentery \
+			[expr $min_y + ($size_y*$spacing_y/2.0)]
+
+
 		    # reconfigure registration reference image slider
 		    $ref_image1.s.ref configure -from 1 -to $volumes
 		    $ref_image2.s.ref configure -from 1 -to $volumes
@@ -3632,6 +3781,8 @@ class BioTensorApp {
 		    configure_sample_planes
 		    
 		}
+	    } else {
+		puts "DATA DID NOT LOAD PROPERLY"
 	    }
  	} elseif {$which == $mods(ShowField-X) && $state == "JustStarted"} {
 	    change_indicate_val 1
@@ -3762,11 +3913,59 @@ class BioTensorApp {
     method execute_Data {} {
 	global mods 
 	global data_mode
+	global $mods(ChooseNrrd1)-port-index
 
-	set data_completed 1
 
 	if {$data_mode == "DWI" || $data_mode == "DWIknownB0"} {
-	    if {!$dt_completed} {
+	    # determine if we are loading nrrd, dicom, or analyze
+	    # and check if both DWI and T2 files have been specified
+	    if {[set $mods(ChooseNrrd1)-port-index] == 0} {
+		# Nrrd
+
+		global $mods(NrrdReader1)-filename
+		if {![file exists [set $mods(NrrdReader1)-filename]]} {
+		    set answer [tk_messageBox -message \
+				    "Please specify an valid nrrd file\nwith DWI volumes before executing." -type ok -icon info -parent .standalone] 
+		    return
+		}
+		global $mods(NrrdReader-T2)-filename
+		if {![file exists [set $mods(NrrdReader-T2)-filename]]} {
+		    set answer [tk_messageBox -message \
+				    "Please specify an existing nrrd file\nwith a T2 reference image before\nexecuting." -type ok -icon info -parent .standalone] 
+		    return
+		}
+		
+		global $mods(NrrdReader1)-axis
+		set $mods(NrrdReader1)-axis axis0
+
+		global $mods(NrrdReader-T2)-axis
+		set $mods(NrrdReader-T2)-axis axis0
+	    } elseif {[set $mods(ChooseNrrd1)-port-index] == 1} {
+		# Dicom 
+
+	    } elseif {[set $mods(ChooseNrrd1)-port-index] == 2} {
+		# Analyze
+		global $mods(AnalyzeToNrrd1)-num-files
+		global $mods(AnalyzeToNrrd-T2)-num-files
+
+		if {[set $mods(AnalyzeToNrrd1)-num-files] == 0} {
+		    set answer [tk_messageBox -message \
+				    "Please specify an existing analyze files\nof a DWI Volumes image before\nexecuting." -type ok -icon info -parent .standalone] 
+		    return
+		}
+		if {[set $mods(AnalyzeToNrrd-T2)-num-files] == 0} {
+		    set answer [tk_messageBox -message \
+				    "Please specify an existing analyze files\nof a T2 reference image before\nexecuting." -type ok -icon info -parent .standalone] 
+		    return
+		}
+	    } else {
+		# shouldn't get here
+		return
+	    }
+	    
+	    set data_completed 1
+
+	    if {!$dt_completed && !$loading} {
 		disableModule $mods(ChooseNrrd-DT) 1
 	    }
 
@@ -3778,6 +3977,38 @@ class BioTensorApp {
 	    $data_next_button2 configure -state normal \
 		-foreground black -background $next_color
 	} else {
+	    # Loading tensors
+	    # determine if we are loading nrrd, dicom, or analyze
+	    # and check if the tensors file has been specified
+	    if {[set $mods(ChooseNrrd1)-port-index] == 0} {
+		# Nrrd
+		global $mods(NrrdReader1)-filename
+		if {![file exists [set $mods(NrrdReader1)-filename]]} {
+		    set answer [tk_messageBox -message \
+				    "Please specify an valid nrrd file\nwith tensors before executing." -type ok -icon info -parent .standalone] 
+		    return
+		}
+		global $mods(NrrdReader1)-axis
+		set $mods(NrrdReader1)-axis axis0
+	    } elseif {[set $mods(ChooseNrrd1)-port-index] == 1} {
+		# Dicom 
+
+	    } elseif {[set $mods(ChooseNrrd1)-port-index] == 2} {
+		# Analyze
+		global $mods(AnalyzeToNrrd1)-num-files
+
+		if {[set $mods(AnalyzeToNrrd1)-num-files] == 0} {
+		    set answer [tk_messageBox -message \
+				    "Please specify an existing analyze files\nof a DWI Volumes image before\nexecuting." -type ok -icon info -parent .standalone] 
+		    return
+		}
+	    } else {
+		# shouldn't get here
+		return
+	    }
+
+	    set data_completed 1
+
 	    disableModule $mods(TendEpireg) 1
 	    disableModule $mods(ChooseNrrd-DT) 0
 	    disableModule $mods(TendEstim) 1
@@ -3896,10 +4127,10 @@ class BioTensorApp {
 	    #activate_registration
 	    
 	    #activate_dt
-	    
+
 	    set $mods(TendEstim)-knownB0 0
 	    set $mods(ChooseNrrd-KnownB0)-port-index 1
-
+	    
         } else {
 	    configure_readers all
 	    
@@ -3968,8 +4199,8 @@ class BioTensorApp {
 	    # fix execute in dt
 	    $dt_tab1.last.ex configure -foreground grey64 -background grey75
 	    $dt_tab2.last.ex configure -foreground grey64 -background grey75
-
-	    set $mods(ChooseNrrd-KnownB0)-port-index 0	    
+	    
+	    set $mods(ChooseNrrd-KnownB0)-port-index 0	
         }
 
     }
@@ -4087,15 +4318,13 @@ class BioTensorApp {
     #############################
     # Specify a nrrd file, set the tuple axis to 0
     method load_nrrd_dwi {} {
+
 	global mods
 	set theWindow [$mods(NrrdReader1) make_file_open_box]
-	
-	tkwait window $theWindow
-	
-	update idletasks
 
- 	global $mods(NrrdReader1)-axis
-	set $mods(NrrdReader1)-axis axis0
+	# tkwait window $theWindow
+	
+	# update idletasks
     }
     
 
@@ -4107,12 +4336,9 @@ class BioTensorApp {
 	global mods
         set theWindow [$mods(NrrdReader-T2) make_file_open_box]
 	
-	tkwait window $theWindow
+	# tkwait window $theWindow
 
-	update idletasks
-
- 	global $mods(NrrdReader-T2)-axis
-	set $mods(NrrdReader-T2)-axis axis0
+	# update idletasks
     } 
 
     
@@ -4140,6 +4366,9 @@ class BioTensorApp {
 	    # activate reg variance checkbutton
 	    $variance_tab1.reg configure -state normal
 	    $variance_tab2.reg configure -state normal
+
+	    global $mods(NrrdReader-Gradient)-axis
+	    set $mods(NrrdReader-Gradient)-axis axis0
 
 	    # execute
 	    $mods(TendEpireg)-c needexecute
@@ -4211,12 +4440,9 @@ class BioTensorApp {
         global mods
         set theWindow [$mods(NrrdReader-Gradient) make_file_open_box]
 	
-        tkwait window $theWindow
+        #tkwait window $theWindow
 	
-        update idletasks
-	
- 	global $mods(NrrdReader-Gradient)-axis
-	set $mods(NrrdReader-Gradient)-axis axis0
+        #update idletasks
     }
     
     method set_resampling_filter { w } {
@@ -4309,18 +4535,23 @@ class BioTensorApp {
 
 
     method execute_DT {} {
-       global mods
- 
-       # Check bmatrix has been loaded
-       global $mods(NrrdReader-BMatrix)-filename
-       global bmatrix
-
+	global mods
+	
+	# Check bmatrix has been loaded
+	global $mods(NrrdReader-BMatrix)-filename
+	global bmatrix
+	
 	if {$bmatrix == "load"} {
 	    if {[set $mods(NrrdReader-BMatrix)-filename] == ""} {
 		set answer [tk_messageBox -message \
 				"Please load a B-Matrix file containing." -type ok -icon info -parent .standalone]
 		return
 	    }
+	    
+	    # Set the BMatrix to add a tuple axis
+	    global $mods(NrrdReader-BMatrix)-axis
+	    set $mods(NrrdReader-BMatrix)-axis {axisCreateNewTuple}
+	    
 	} 
 	
 	# unblock modules
@@ -4363,6 +4594,10 @@ class BioTensorApp {
 	tkwait window $theWindow
 	
 	update idletasks
+
+	
+#        global $mods(NrrdReader-BMatrix)-axis
+#        set $mods(NrrdReader-BMatrix)-axis 0
     } 
     
     method toggle_do_registration {} {
@@ -4373,6 +4608,7 @@ class BioTensorApp {
 	if {$do_registration == 1} {
 	    disableModule $mods(TendEpireg) 0
 	    disableModule $mods(UnuJoin) 0
+	    disableModule $mods(NrrdReader-Gradient) 0
 	    
 	    activate_registration
 
@@ -4381,6 +4617,7 @@ class BioTensorApp {
         } else {
 	    disableModule $mods(TendEpireg) 1
 	    disableModule $mods(UnuJoin) 1
+	    disableModule $mods(NrrdReader-Gradient) 1
 	    
 	    # disable registration tab
 	    foreach w [winfo children $reg_tab1] {
@@ -4456,17 +4693,45 @@ class BioTensorApp {
 	set $mods(SamplePlane-Z)-pos $result_z
 	
 	# configure ClipByFunction string
+	configure_ClipByFunction            
+    }
+
+    method configure_ClipByFunction {} {
+	global mods
 	global $mods(ClipByFunction-Seeds)-clipfunction
 	global $mods(Isosurface)-isoval
+	global plane_x plane_y plane_z
+
 	set span_x [expr [expr $plane_x*$spacing_x]+$min_x]
 	set span_y [expr [expr $plane_y*$spacing_y]+$min_y]
 	set span_z [expr [expr $plane_z*$spacing_z]+$min_z]
 
-	set $mods(ClipByFunction-Seeds)-clipfunction "(v > [set $mods(Isosurface)-isoval]) && (x $clip_x $span_x) && (y $clip_y $span_y) && (z $clip_z $span_z)"
-        
+	# Only include axis information for planes that are turned on
+	global $mods(ShowField-X)-faces-on
+	global $mods(ShowField-Y)-faces-on
+	global $mods(ShowField-Z)-faces-on
+
+	set function "(v > [set $mods(Isosurface)-isoval]) &&"
+	if {[set $mods(ShowField-X)-faces-on]} {
+	    set index [string last "&&" $function]
+	    set function [string replace $function $index end "&& (x $clip_x $span_x) &&"]
+	}
+	if {[set $mods(ShowField-Y)-faces-on]} {
+	    set index [string last "&&" $function]
+	    set function [string replace $function $index end "&& (y $clip_y $span_y) &&"]
+	}
+	if {[set $mods(ShowField-Z)-faces-on]} {
+	    set index [string last "&&" $function]
+	    set function [string replace $function $index end "&& (z $clip_z $span_z) &&"]
+	}
+	set index [string last "&&" $function]
+	set function [string replace $function $index end ""]
+
+	set $mods(ClipByFunction-Seeds)-clipfunction $function
+
+	#set $mods(ClipByFunction-Seeds)-clipfunction "(v > [set $mods(Isosurface)-isoval]) && (x $clip_x $span_x) && (y $clip_y $span_y) && (z $clip_z $span_z)"
 	
     }
-
 
 
     method toggle_dt_threshold {} {
@@ -4703,6 +4968,8 @@ class BioTensorApp {
 	$variance_tab1.slice configure -from 0 -to [expr $size_z - 1]
 	$variance_tab2.slice configure -from 0 -to [expr $size_z - 1]
 
+	set $mods(UnuSlice1)-position [expr $size_z / 2]
+	set $mods(UnuSlice2)-position [expr $size_z / 2]
 	# give initial value in middle
 
 	update_variance_slice
@@ -4726,7 +4993,9 @@ class BioTensorApp {
     }
 
     method update_variance_slice {} {
-	if {$data_completed} {
+	# only update if not in loading mode, otherwise
+	# everything will execute twice
+	if {$data_completed && !$loading} {
 	    global mods
 	    $mods(UnuSlice1)-c needexecute
 	    
@@ -5298,16 +5567,10 @@ class BioTensorApp {
            } else {
              set clip_x "<"
            }
-           global $mods(ClipByFunction-Seeds)-clipfunction
-           global $mods(Isosurface)-isoval
-	    set span_x [expr [expr $plane_x*$spacing_x]+$min_x]
-	    set span_y [expr [expr $plane_y*$spacing_y]+$min_y]
-	    set span_z [expr [expr $plane_z*$spacing_z]+$min_z]
+
+	    configure_ClipByFunction
 	    
-	    set $mods(ClipByFunction-Seeds)-clipfunction "(v > [set $mods(Isosurface)-isoval]) && (x $clip_x $span_x) && (y $clip_y $span_y) && (z $clip_z $span_z)"
-	    
-	    
-           $mods(Viewer)-ViewWindow_0-c redraw
+	    $mods(Viewer)-ViewWindow_0-c redraw
         }
     }
 
@@ -5347,16 +5610,10 @@ class BioTensorApp {
            } else {
              set clip_y "<"
            }
-           global $mods(ClipByFunction-Seeds)-clipfunction
-           global $mods(Isosurface)-isoval
-	    set span_x [expr [expr $plane_x*$spacing_x]+$min_x]
-	    set span_y [expr [expr $plane_y*$spacing_y]+$min_y]
-	    set span_z [expr [expr $plane_z*$spacing_z]+$min_z]
 	    
-	    set $mods(ClipByFunction-Seeds)-clipfunction "(v > [set $mods(Isosurface)-isoval]) && (x $clip_x $span_x) && (y $clip_y $span_y) && (z $clip_z $span_z)"
-	    
+	    configure_ClipByFunction
 
-           $mods(Viewer)-ViewWindow_0-c redraw
+	    $mods(Viewer)-ViewWindow_0-c redraw
         }
     }
 
@@ -5396,287 +5653,297 @@ class BioTensorApp {
            } else {
              set clip_z "<"
            }
-           global $mods(ClipByFunction-Seeds)-clipfunction
-           global $mods(Isosurface)-isoval
-	    set span_x [expr [expr $plane_x*$spacing_x]+$min_x]
-	    set span_y [expr [expr $plane_y*$spacing_y]+$min_y]
-	    set span_z [expr [expr $plane_z*$spacing_z]+$min_z]
-	    
-	    set $mods(ClipByFunction-Seeds)-clipfunction "(v > [set $mods(Isosurface)-isoval]) && (x $clip_x $span_x) && (y $clip_y $span_y) && (z $clip_z $span_z)"
 
+	    configure_ClipByFunction
 
-           $mods(Viewer)-ViewWindow_0-c redraw
+	    $mods(Viewer)-ViewWindow_0-c redraw
         }
     }
 
     method toggle_clip_to_isosurface {} {
-       global mods
-       global clip_to_isosurface
-       global $mods(ChooseField-X)-port-index
-       global $mods(ChooseField-Y)-port-index
-       global $mods(ChooseField-Z)-port-index
-
-       if {$clip_to_isosurface == 1} {
-	# change ChooseField port to 1
- 
-        set $mods(ChooseField-X)-port-index 1
-        set $mods(ChooseField-Y)-port-index 1
-        set $mods(ChooseField-Z)-port-index 1
-       } else {
-	# change ChooseField port to 0
- 
-        set $mods(ChooseField-X)-port-index 0
-        set $mods(ChooseField-Y)-port-index 0
-        set $mods(ChooseField-Z)-port-index 0
-       }
-
-       # re-execute
-       $mods(ChooseField-ColorPlanes)-c needexecute
+	global mods
+	global clip_to_isosurface
+	global $mods(ChooseField-X)-port-index
+	global $mods(ChooseField-Y)-port-index
+	global $mods(ChooseField-Z)-port-index
+	
+	if {$clip_to_isosurface == 1} {
+	    # change ChooseField port to 1
+	    
+	    set $mods(ChooseField-X)-port-index 1
+	    set $mods(ChooseField-Y)-port-index 1
+	    set $mods(ChooseField-Z)-port-index 1
+	} else {
+	    # change ChooseField port to 0
+	    
+	    set $mods(ChooseField-X)-port-index 0
+	    set $mods(ChooseField-Y)-port-index 0
+	    set $mods(ChooseField-Z)-port-index 0
+	}
+	
+	# re-execute
+	$mods(ChooseField-ColorPlanes)-c needexecute
     }
-
+    
     method update_plane_x { } {
-       global mods plane_x plane_y plane_z
-       global $mods(SamplePlane-X)-pos
- 
-       if {$vis_activated} {
-          # set the sample plane position to be the normalized value
-          set result [expr [expr $plane_x / [expr $size_x / 2.0] ] - 1.0]
-          set $mods(SamplePlane-X)-pos $result
-
-          # set the glabal clipping planes values
-          set clip $mods(Viewer)-ViewWindow_0-clip
-          global $clip-normal-d-1
-          global $clip-normal-d-2
-	  set span_x [expr [expr $plane_x*$spacing_x]+$min_x]
-	  set span_y [expr [expr $plane_y*$spacing_y]+$min_y]
-	  set span_z [expr [expr $plane_z*$spacing_z]+$min_z]
-
-          set $clip-normal-d-1 [expr -$span_x  + $plane_inc]
-          set $clip-normal-d-2 [expr $span_x  + $plane_inc]
-
-          # configure ClipByFunction
-          global $mods(ClipByFunction-Seeds)-clipfunction
-          global $mods(Isosurface)-isoval
-	  
-	  set $mods(ClipByFunction-Seeds)-clipfunction "(v > [set $mods(Isosurface)-isoval]) && (x $clip_x $span_x) && (y $clip_y $span_y) && (z $clip_z $span_z)"
-         
-
-	  $mods(ClipByFunction-Seeds)-c needexecute
-	  
-          $mods(SamplePlane-X)-c needexecute
-          $mods(Viewer)-ViewWindow_0-c redraw
-       }
+	global mods plane_x plane_y plane_z
+	global $mods(SamplePlane-X)-pos
+	
+	if {$vis_activated} {
+	    # set the sample plane position to be the normalized value
+	    set result [expr [expr $plane_x / [expr $size_x / 2.0] ] - 1.0]
+	    set $mods(SamplePlane-X)-pos $result
+	    
+	    # set the glabal clipping planes values
+	    set clip $mods(Viewer)-ViewWindow_0-clip
+	    global $clip-normal-d-1
+	    global $clip-normal-d-2
+	    set span_x [expr [expr $plane_x*$spacing_x]+$min_x]
+	    set span_y [expr [expr $plane_y*$spacing_y]+$min_y]
+	    set span_z [expr [expr $plane_z*$spacing_z]+$min_z]
+	    
+	    set $clip-normal-d-1 [expr -$span_x  + $plane_inc]
+	    set $clip-normal-d-2 [expr $span_x  + $plane_inc]
+	    
+	    # configure ClipByFunction
+	    configure_ClipByFunction
+	    
+	    $mods(ClipByFunction-Seeds)-c needexecute
+	    
+	    $mods(SamplePlane-X)-c needexecute
+	    $mods(Viewer)-ViewWindow_0-c redraw
+	}
     }
-
+    
     method update_plane_y {} {
-       global mods plane_x plane_y plane_z
-       global $mods(SamplePlane-Y)-pos
- 
-       if {$vis_activated} {
-          # set the sample plane position to be the normalized value
-          set result [expr [expr $plane_y / [expr $size_y / 2.0] ] - 1.0]
-          set $mods(SamplePlane-Y)-pos $result
-
-          # set the glabal clipping planes values
-          set clip $mods(Viewer)-ViewWindow_0-clip
-          global $clip-normal-d-3
-          global $clip-normal-d-4
-	  set span_x [expr [expr $plane_x*$spacing_x]+$min_x]
-	  set span_y [expr [expr $plane_y*$spacing_y]+$min_y]
-	  set span_z [expr [expr $plane_z*$spacing_z]+$min_z]
-
-          set $clip-normal-d-3 [expr -$span_y  + $plane_inc]
-          set $clip-normal-d-4 [expr $span_y  + $plane_inc]
-
-          # configure ClipByFunction
-          global $mods(Isosurface)-isoval
-          global $mods(ClipByFunction-Seeds)-clipfunction
-	  
-	  set $mods(ClipByFunction-Seeds)-clipfunction "(v > [set $mods(Isosurface)-isoval]) && (x $clip_x $span_x) && (y $clip_y $span_y) && (z $clip_z $span_z)"
-          
-	  $mods(ClipByFunction-Seeds)-c needexecute
-
-          $mods(SamplePlane-Y)-c needexecute
-          $mods(Viewer)-ViewWindow_0-c redraw
-       }
+	global mods plane_x plane_y plane_z
+	global $mods(SamplePlane-Y)-pos
+	
+	if {$vis_activated} {
+	    # set the sample plane position to be the normalized value
+	    set result [expr [expr $plane_y / [expr $size_y / 2.0] ] - 1.0]
+	    set $mods(SamplePlane-Y)-pos $result
+	    
+	    # set the glabal clipping planes values
+	    set clip $mods(Viewer)-ViewWindow_0-clip
+	    global $clip-normal-d-3
+	    global $clip-normal-d-4
+	    set span_x [expr [expr $plane_x*$spacing_x]+$min_x]
+	    set span_y [expr [expr $plane_y*$spacing_y]+$min_y]
+	    set span_z [expr [expr $plane_z*$spacing_z]+$min_z]
+	    
+	    set $clip-normal-d-3 [expr -$span_y  + $plane_inc]
+	    set $clip-normal-d-4 [expr $span_y  + $plane_inc]
+	    
+	    # configure ClipByFunction
+	    configure_ClipByFunction
+	    
+	    $mods(ClipByFunction-Seeds)-c needexecute
+	    
+	    $mods(SamplePlane-Y)-c needexecute
+	    $mods(Viewer)-ViewWindow_0-c redraw
+	}
     }
-
+    
     method update_plane_z {} {
-       global mods plane_x plane_y plane_z
-       global $mods(SamplePlane-Z)-pos
- 
-       if {$vis_activated} {
-          # set the sample plane position to be the normalized value
-          set result [expr [expr $plane_z / [expr $size_z / 2.0] ] - 1.0]
-          set $mods(SamplePlane-Z)-pos $result
+	global mods plane_x plane_y plane_z
+	global $mods(SamplePlane-Z)-pos
+	
+	if {$vis_activated} {
+	    # set the sample plane position to be the normalized value
+	    set result [expr [expr $plane_z / [expr $size_z / 2.0] ] - 1.0]
+	    set $mods(SamplePlane-Z)-pos $result
+	    
+	    # set the glabal clipping planes values
+	    set clip $mods(Viewer)-ViewWindow_0-clip
+	    global $clip-normal-d-5
+	    global $clip-normal-d-6
+	    set span_x [expr [expr $plane_x*$spacing_x]+$min_x]
+	    set span_y [expr [expr $plane_y*$spacing_y]+$min_y]
+	    set span_z [expr [expr $plane_z*$spacing_z]+$min_z]
+	    
+	    set $clip-normal-d-5 [expr -$span_z  + $plane_inc]
+	    set $clip-normal-d-6 [expr $span_z  + $plane_inc]
+	    
+	    # configure ClipByFunction
+	    configure_ClipByFunction
 
-          # set the glabal clipping planes values
-          set clip $mods(Viewer)-ViewWindow_0-clip
-          global $clip-normal-d-5
-          global $clip-normal-d-6
-	  set span_x [expr [expr $plane_x*$spacing_x]+$min_x]
-	  set span_y [expr [expr $plane_y*$spacing_y]+$min_y]
-	  set span_z [expr [expr $plane_z*$spacing_z]+$min_z]
-	  
-          set $clip-normal-d-5 [expr -$span_z  + $plane_inc]
-          set $clip-normal-d-6 [expr $span_z  + $plane_inc]
-
-          # configure ClipByFunction
-          global $mods(Isosurface)-isoval
-          global $mods(ClipByFunction-Seeds)-clipfunction
-
-	set $mods(ClipByFunction-Seeds)-clipfunction "(v > [set $mods(Isosurface)-isoval]) && (x $clip_x $span_x) && (y $clip_y $span_y) && (z $clip_z $span_z)"
-
-	  $mods(ClipByFunction-Seeds)-c needexecute
-
-          $mods(SamplePlane-Z)-c needexecute
-          $mods(Viewer)-ViewWindow_0-c redraw
-       }
+	    $mods(ClipByFunction-Seeds)-c needexecute
+	    
+	    $mods(SamplePlane-Z)-c needexecute
+	    $mods(Viewer)-ViewWindow_0-c redraw
+	}
     }
-
+    
     method toggle_plane { which } {
-       global mods
-       global show_plane_x show_plane_y show_plane_z
-       global $mods(ShowField-X)-faces-on
-       global $mods(ShowField-Y)-faces-on
-       global $mods(ShowField-Z)-faces-on
-       global $mods(Viewer)-ViewWindow_0-clip
-       set clip $mods(Viewer)-ViewWindow_0-clip
+	global mods
+	global show_plane_x show_plane_y show_plane_z
+	global $mods(ShowField-X)-faces-on
+	global $mods(ShowField-Y)-faces-on
+	global $mods(ShowField-Z)-faces-on
+        global $mods(ChooseField-GlyphSeeds)-port-index
+        global $mods(ChooseField-FiberSeeds)-port-index
+	global $mods(Viewer)-ViewWindow_0-clip
+	set clip $mods(Viewer)-ViewWindow_0-clip
+	
+	
+	# turn off showfields and configure global clipping planes
+	
+	if {$which == "X"} {
+	    global $clip-visible-$last_x
+	    if {$show_plane_x == 0} {
+		# turn off plane face and global clipping plane
+		set $mods(ShowField-X)-faces-on 0
+		set $clip-visible-$last_x 0
+		
+		# disable connection
+		block_connection $mods(ChooseField-X) 0 $mods(GatherPoints) 0
+	    } else {
+		set $mods(ShowField-X)-faces-on 1
+		set $clip-visible-$last_x 1
+		# enable connection
+		unblock_connection $mods(ChooseField-X) 0 $mods(GatherPoints) 0
+	    }  
 
+	    configure_ClipByFunction
 
-       # turn off showfields and configure global clipping planes
+	    # only take the time to rexecute of glyphs or fibers are
+	    # being seeded in the grid
+	    if {[set $mods(ChooseField-GlyphSeeds)-port-index] == 3 || [set $mods(ChooseField-FiberSeeds)-port-index] == 3} {
+		$mods(ClipByFunction-Seeds)-c needexecute
+	    }
 
-       if {$which == "X"} {
-          global $clip-visible-$last_x
-          if {$show_plane_x == 0} {
-              # turn off 
-              set $mods(ShowField-X)-faces-on 0
-              set $clip-visible-$last_x 0
-	      
-	      # disable connection
-	      block_connection $mods(ChooseField-X) 0 $mods(GatherPoints) 0
-          } else {
-              set $mods(ShowField-X)-faces-on 1
-              set $clip-visible-$last_x 1
-	      # enable connection
-	      unblock_connection $mods(ChooseField-X) 0 $mods(GatherPoints) 0
-          }  
-	   $mods(GatherPoints)-c needexecute
+	    $mods(GatherPoints)-c needexecute
+	    
+	    $mods(ShowField-X)-c toggle_display_faces  
+	    $mods(Viewer)-ViewWindow_0-c redraw
+	} elseif {$which == "Y"} {
+	    global $clip-visible-$last_y
+	    if {$show_plane_y == 0} {
+		set $mods(ShowField-Y)-faces-on 0
+		set $clip-visible-$last_y 0   
+		block_connection $mods(ChooseField-Y) 0 $mods(GatherPoints) 1
+	    } else {
+		set $mods(ShowField-Y)-faces-on 1
+		set $clip-visible-$last_y 1
+		unblock_connection $mods(ChooseField-Y) 0 $mods(GatherPoints) 1
+	    }   
+	    configure_ClipByFunction
 
-	   $mods(ShowField-X)-c toggle_display_faces  
-	   $mods(Viewer)-ViewWindow_0-c redraw
-       } elseif {$which == "Y"} {
-          global $clip-visible-$last_y
-          if {$show_plane_y == 0} {
-              set $mods(ShowField-Y)-faces-on 0
-              set $clip-visible-$last_y 0   
-	      block_connection $mods(ChooseField-Y) 0 $mods(GatherPoints) 1
-          } else {
-              set $mods(ShowField-Y)-faces-on 1
-              set $clip-visible-$last_y 1
-	      unblock_connection $mods(ChooseField-Y) 0 $mods(GatherPoints) 1
-          }   
-	   $mods(GatherPoints)-c needexecute
+	    # only take the time to rexecute of glyphs or fibers are
+	    # being seeded in the grid
+	    if {[set $mods(ChooseField-GlyphSeeds)-port-index] == 3 || [set $mods(ChooseField-FiberSeeds)-port-index] == 3} {
+		$mods(ClipByFunction-Seeds)-c needexecute
+	    }
 
-          $mods(ShowField-Y)-c toggle_display_faces
-          $mods(Viewer)-ViewWindow_0-c redraw
-       } else {
-	   # Z plane
-          global $clip-visible-$last_z
-          if {$show_plane_z == 0} {
-              set $mods(ShowField-Z)-faces-on 0
-              set $clip-visible-$last_z 0  
-	      block_connection $mods(ChooseField-Z) 0 $mods(GatherPoints) 2
-          } else {
-              set $mods(ShowField-Z)-faces-on 1
-              set $clip-visible-$last_z 1            
-	      unblock_connection $mods(ChooseField-Z) 0 $mods(GatherPoints) 2
-          }   
+	    $mods(GatherPoints)-c needexecute
+	    
+	    $mods(ShowField-Y)-c toggle_display_faces
+	    $mods(Viewer)-ViewWindow_0-c redraw
+	} else {
+	    # Z plane
+	    global $clip-visible-$last_z
+	    if {$show_plane_z == 0} {
+		set $mods(ShowField-Z)-faces-on 0
+		set $clip-visible-$last_z 0  
+		block_connection $mods(ChooseField-Z) 0 $mods(GatherPoints) 2
+	    } else {
+		set $mods(ShowField-Z)-faces-on 1
+		set $clip-visible-$last_z 1            
+		unblock_connection $mods(ChooseField-Z) 0 $mods(GatherPoints) 2
+	    }   
+	    configure_ClipByFunction
 
-	  $mods(GatherPoints)-c needexecute
-
-          $mods(ShowField-Z)-c toggle_display_faces
-          $mods(Viewer)-ViewWindow_0-c redraw
-       }
+	    # only take the time to rexecute of glyphs or fibers are
+	    # being seeded in the grid
+	    if {[set $mods(ChooseField-GlyphSeeds)-port-index] == 3 || [set $mods(ChooseField-FiberSeeds)-port-index] == 3} {
+		$mods(ClipByFunction-Seeds)-c needexecute
+	    }
+	    
+	    $mods(GatherPoints)-c needexecute
+	    
+	    $mods(ShowField-Z)-c toggle_display_faces
+	    $mods(Viewer)-ViewWindow_0-c redraw
+	}
     }
-
+    
     method toggle_plane_y {} {
-       global mods
-       global show_plane_y
-       global $mods(ShowField-Y)-faces-on
-
-       if {$show_plane_y == 0} {
-           set $mods(ShowField-Y)-faces-on 0
-       } else {
-           set $mods(ShowField-X)-faces-on 1
-       }     
- 
-       # execute showfield
-       $mods(ShowField-X)-c toggle_display_faces
+	global mods
+	global show_plane_y
+	global $mods(ShowField-Y)-faces-on
+	
+	if {$show_plane_y == 0} {
+	    set $mods(ShowField-Y)-faces-on 0
+	} else {
+	    set $mods(ShowField-X)-faces-on 1
+	}     
+	
+	# execute showfield
+	$mods(ShowField-X)-c toggle_display_faces
     }
-
+    
     method toggle_plane_x {} {
-       global mods
-       global show_plane_x
-       global $mods(ShowField-X)-faces-on
-
-       if {$show_plane_x == 0} {
-           set $mods(ShowField-X)-faces-on 0
-       } else {
-           set $mods(ShowField-X)-faces-on 1
-       }     
- 
-       # execute showfield
-       $mods(ShowField-X)-c toggle_display_faces
+	global mods
+	global show_plane_x
+	global $mods(ShowField-X)-faces-on
+	
+	if {$show_plane_x == 0} {
+	    set $mods(ShowField-X)-faces-on 0
+	} else {
+	    set $mods(ShowField-X)-faces-on 1
+	}     
+	
+	# execute showfield
+	$mods(ShowField-X)-c toggle_display_faces
     }
 
     method toggle_show_planes {} {
-      global mods
-      global show_planes
-
-      global $mods(ShowField-X)-faces-on
-      global $mods(ShowField-Y)-faces-on
-      global $mods(ShowField-Z)-faces-on
-
-      global $mods(Viewer)-ViewWindow_0-clip
-      set clip $mods(Viewer)-ViewWindow_0-clip
-
-      global $clip-visible-$last_x
-      global $clip-visible-$last_y
-      global $clip-visible-$last_z
-
-      if {$show_planes == 0} {
-         # turn off global clipping planes
-         set $clip-visible-$last_x 0
-         set $clip-visible-$last_y 0
-         set $clip-visible-$last_z 0
- 
-         set $mods(ShowField-X)-faces-on 0
-         set $mods(ShowField-Y)-faces-on 0
-         set $mods(ShowField-Z)-faces-on 0
-
-         $mods(ChooseField-ColorPlanes)-c needexecute
-         $mods(Viewer)-ViewWindow_0-c redraw
-      } else {
-         global show_plane_x show_plane_y show_plane_z
-
-         if {$show_plane_x} {
-            set $mods(ShowField-X)-faces-on 1
-            set $clip-visible-$last_x 1
-         }
-         if {$show_plane_y} {
-            set $mods(ShowField-Y)-faces-on 1
-            set $clip-visible-$last_y 1
-         }
-         if {$show_plane_z} {
-            set $mods(ShowField-Z)-faces-on 1
-            set $clip-visible-$last_z 1
-         }
-         $mods(ChooseField-ColorPlanes)-c needexecute
-         $mods(Viewer)-ViewWindow_0-c redraw
-      }
+	global mods
+	global show_planes
+	
+	global $mods(ShowField-X)-faces-on
+	global $mods(ShowField-Y)-faces-on
+	global $mods(ShowField-Z)-faces-on
+	
+	global $mods(Viewer)-ViewWindow_0-clip
+	set clip $mods(Viewer)-ViewWindow_0-clip
+	
+	global $clip-visible-$last_x
+	global $clip-visible-$last_y
+	global $clip-visible-$last_z
+	
+	if {$show_planes == 0} {
+	    # turn off global clipping planes
+	    set $clip-visible-$last_x 0
+	    set $clip-visible-$last_y 0
+	    set $clip-visible-$last_z 0
+	    
+	    set $mods(ShowField-X)-faces-on 0
+	    set $mods(ShowField-Y)-faces-on 0
+	    set $mods(ShowField-Z)-faces-on 0
+	    
+	    $mods(ChooseField-ColorPlanes)-c needexecute
+	    $mods(Viewer)-ViewWindow_0-c redraw
+	} else {
+	    global show_plane_x show_plane_y show_plane_z
+	    
+	    if {$show_plane_x} {
+		set $mods(ShowField-X)-faces-on 1
+		set $clip-visible-$last_x 1
+	    }
+	    if {$show_plane_y} {
+		set $mods(ShowField-Y)-faces-on 1
+		set $clip-visible-$last_y 1
+	    }
+	    if {$show_plane_z} {
+		set $mods(ShowField-Z)-faces-on 1
+		set $clip-visible-$last_z 1
+	    }
+	    $mods(ChooseField-ColorPlanes)-c needexecute
+	    $mods(Viewer)-ViewWindow_0-c redraw
+	}
     }
-
+    
 
 
 ######## ISOSURFACE #########
@@ -6821,6 +7088,7 @@ class BioTensorApp {
         global $mods(ChooseField-GlyphSeeds)-port-index
 
         if {[set $mods(ChooseField-GlyphSeeds)-port-index] == 0} {
+	    # Point
             uplevel \#0 set "\{$mods(Viewer)-ViewWindow_0-Probe Selection Widget (8)\}" 1
             uplevel \#0 set "\{$mods(Viewer)-ViewWindow_0-StreamLines rake (7)\}" 0
 	    $glyphs_tab1.seed.childsite.a.pointf.w configure -state normal
@@ -6829,6 +7097,7 @@ class BioTensorApp {
 	    $glyphs_tab1.seed.childsite.a.rakef.w configure -state disabled
 	    $glyphs_tab2.seed.childsite.a.rakef.w configure -state disabled
         } elseif {[set $mods(ChooseField-GlyphSeeds)-port-index] == 1} {
+	    # Rake
             uplevel \#0 set "\{$mods(Viewer)-ViewWindow_0-Probe Selection Widget (8)\}" 0
             uplevel \#0 set "\{$mods(Viewer)-ViewWindow_0-StreamLines rake (7)\}" 1
 	    $glyphs_tab1.seed.childsite.a.pointf.w configure -state disabled
@@ -6837,6 +7106,7 @@ class BioTensorApp {
 	    $glyphs_tab1.seed.childsite.a.rakef.w configure -state normal
 	    $glyphs_tab2.seed.childsite.a.rakef.w configure -state normal
         } else {
+	    # Grid or Planes
             uplevel \#0 set "\{$mods(Viewer)-ViewWindow_0-Probe Selection Widget (8)\}" 0
             uplevel \#0 set "\{$mods(Viewer)-ViewWindow_0-StreamLines rake (7)\}" 0
 	    $glyphs_tab1.seed.childsite.a.pointf.w configure -state disabled
@@ -7669,6 +7939,7 @@ class BioTensorApp {
         global $mods(ChooseField-FiberSeeds)-port-index
 
         if {[set $mods(ChooseField-FiberSeeds)-port-index] == 0} {
+	    # Point
             uplevel \#0 set "\{$mods(Viewer)-ViewWindow_0-Probe Selection Widget (11)\}" 1
             uplevel \#0 set "\{$mods(Viewer)-ViewWindow_0-StreamLines rake (12)\}" 0
 	    $fibers_tab1.seed.childsite.a.pointf.w configure -state normal
@@ -7677,6 +7948,7 @@ class BioTensorApp {
 	    $fibers_tab1.seed.childsite.a.rakef.w configure -state disabled
 	    $fibers_tab2.seed.childsite.a.rakef.w configure -state disabled
         } elseif {[set $mods(ChooseField-FiberSeeds)-port-index] == 1} {
+	    # Rake
             uplevel \#0 set "\{$mods(Viewer)-ViewWindow_0-Probe Selection Widget (11)\}" 0
             uplevel \#0 set "\{$mods(Viewer)-ViewWindow_0-StreamLines rake (12)\}" 1
 	    $fibers_tab1.seed.childsite.a.pointf.w configure -state disabled
@@ -7685,6 +7957,7 @@ class BioTensorApp {
 	    $fibers_tab1.seed.childsite.a.rakef.w configure -state normal
 	    $fibers_tab2.seed.childsite.a.rakef.w configure -state normal
         } else {
+	    # Grid or Planes
             uplevel \#0 set "\{$mods(Viewer)-ViewWindow_0-Probe Selection Widget (11)\}" 0
             uplevel \#0 set "\{$mods(Viewer)-ViewWindow_0-StreamLines rake (12)\}" 0
 	    $fibers_tab1.seed.childsite.a.pointf.w configure -state disabled
@@ -8005,11 +8278,21 @@ class BioTensorApp {
 		    # NOT SURE ABOUT THIS RESCALE
 		    #disableModule $mods(RescaleColorMap2) 0
 		    disableModule $mods(TendEpireg) 1
-		    disableModule $mods(UnuJoin) 1
-		    $mods(ChooseNrrd-ToReg)-c needexecute
+                    global data_mode
+                    # Enable the UnuJoin module if it hasn't already
+		    # been enabled when the B0 volume has been provided.
+		    # This could have been missed being enabled if
+		    # registration was skipped.
+		    if {$data_mode == "DWIknownB0" && $data_completed} {
+			disableModule $mods(UnuJoin) 0
+		    } else {
+			disableModule $mods(UnuJoin) 1
+		    }
+		    #$mods(ChooseNrrd-ToReg)-c needexecute
 		    activate_dt
 		    $proc_tab1 view "Build Tensors"
 		    $proc_tab2 view "Build Tensors"
+		    change_indicator_labels "Press Execute to Build Diffusion Tensors..."
 		} elseif {$reg_completed} {
 		    # Building DTs step
 		    $proc_tab1 view "Build Tensors"
@@ -8097,8 +8380,8 @@ class BioTensorApp {
 	} else {
 	    # $msg != "Dynamically Compiling Code..."
 	    if {$msg != "E R R O R !"} {
-		$indicatorL1 configure -text "Executing to Save Point..."
-		$indicatorL2 configure -text "Executing to Save Point..."
+		$indicatorL1 configure -text "Executing to save point..."
+		$indicatorL2 configure -text "Executing to save point..."
 	    } else {
 		$indicatorL1 configure -text $msg
 		$indicatorL2 configure -text $msg

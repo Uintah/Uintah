@@ -531,9 +531,8 @@
 <xsl:template name="execute_and_close_buttons">
 <xsl:text disable-output-escaping="yes">        
         frame $w.buttons
-        button $w.buttons.execute -text &quot;Execute&quot; -command &quot;$this-c needexecute&quot;
-        button $w.buttons.close -text &quot;Close&quot; -command &quot;destroy $w&quot;
-        pack $w.buttons.execute $w.buttons.close -side left -padx 3 -pady 8
+	makeSciButtonPanel $w.buttons $w $this
+	moveToCursor $w
 	pack $w.buttons -side top 
 </xsl:text>
 </xsl:template>
@@ -579,6 +578,7 @@
   <xsl:param name="var"/>
 <xsl:variable name="widget">scale</xsl:variable>
 <xsl:variable name="path"><xsl:text>$w.</xsl:text><xsl:value-of select="$name"/></xsl:variable>
+<xsl:variable name="step"><xsl:value-of select="/filter/filter-gui/param[@name=$name]/scrollbar/step"/></xsl:variable>
 
         frame <xsl:value-of select="$path"/><xsl:text>
         </xsl:text>
@@ -587,7 +587,8 @@
 <xsl:value-of select="$path"/><xsl:text>.</xsl:text><xsl:value-of select="$widget"/>
 <xsl:text> -label </xsl:text> &quot;<xsl:value-of select="$text"/>&quot; \
 <xsl:text>           -variable $this-</xsl:text><xsl:value-of select="$var"/> \
-           -from <xsl:value-of select="/filter/filter-gui/param[@name=$name]/scrollbar/min"/> -to <xsl:value-of select="/filter/filter-gui/param[@name=$name]/scrollbar/max"/> -orient horizontal<xsl:text>
+           -from <xsl:value-of select="/filter/filter-gui/param[@name=$name]/scrollbar/min"/> -to <xsl:value-of select="/filter/filter-gui/param[@name=$name]/scrollbar/max"/> -orient horizontal <xsl:if test="$step != ''"> \
+           -resolution <xsl:value-of select="$step"/></xsl:if><xsl:text>
         pack </xsl:text>
 <xsl:value-of select="$path"/><xsl:text>.</xsl:text><xsl:value-of select="$widget"/><xsl:text> -side left
         pack </xsl:text><xsl:value-of select="$path"/>

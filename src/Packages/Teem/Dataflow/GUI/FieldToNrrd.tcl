@@ -43,7 +43,6 @@ itcl_class Teem_DataIO_FieldToNrrd {
     method ui {} {
         set w .ui[modname]
         if {[winfo exists $w]} {
-            raise $w
             return
         }
         toplevel $w
@@ -52,14 +51,17 @@ itcl_class Teem_DataIO_FieldToNrrd {
 
 	pack $w.lab -side top -e y -f both -padx 5 -pady 5
 	
-	label $w.lab.label -text "Label Data   "
+	label $w.lab.label -text "Label Data:"
 	entry $w.lab.dat-label -textvariable $this-label \
 	    -validate key -validatecommand "$this valid_string %i %P"
 
-	pack $w.lab.label $w.lab.dat-label -side left
+	pack $w.lab.label $w.lab.dat-label -side left -padx 4 -pady 4
 
-	button $w.execute -text "Set Label" -command "destroy $w"
-	pack $w.execute -side top -e n -f both
+	button $w.execute -text "Set Label:" -command "wm withdraw $w"
+	pack $w.execute -side top -e n -f both -padx 4 -pady 2
+
+	makeSciButtonPanel $w $w $this
+	moveToCursor $w
     }
 }
 
