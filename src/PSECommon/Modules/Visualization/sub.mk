@@ -52,7 +52,7 @@ SRCS     += \
 	$(SRCDIR)/WidgetTest.cc\
 	$(SRCDIR)/FastRender.c\
 	$(SRCDIR)/HedgehogLitLines.cc\
-#[INSERT NEW MODULE HERE]
+#[INSERT NEW CODE FILE HERE]
 
 #	$(SRCDIR)/Span.cc\
 #	$(SRCDIR)/Noise.cc\
@@ -70,6 +70,12 @@ include $(SRCTOP)/scripts/smallso_epilogue.mk
 
 #
 # $Log$
+# Revision 1.9  2000/10/24 05:57:39  moulding
+# new module maker Phase 2: new module maker goes online
+#
+# These changes clean out the last remnants of the old module maker and
+# bring the new module maker online.
+#
 # Revision 1.8  2000/07/26 20:14:46  yarden
 # Isosurface extraction module based on the NOISE
 # algorithm. This module accepts SpanUniverse through

@@ -27,8 +27,8 @@ SRCS     += \
 	$(SRCDIR)/MeshInterpVals.cc\
 	$(SRCDIR)/MeshRender.cc\
 	$(SRCDIR)/MeshToGeom.cc\
-	$(SRCDIR)/MeshView.cc
-#[INSERT NEW MODULE HERE]
+	$(SRCDIR)/MeshView.cc\
+#[INSERT NEW CODE FILE HERE]
 
 PSELIBS := PSECore/Dataflow PSECore/Datatypes PSECore/Widgets \
 	SCICore/Geom SCICore/Thread SCICore/Exceptions \
@@ -40,6 +40,12 @@ include $(SRCTOP)/scripts/smallso_epilogue.mk
 
 #
 # $Log$
+# Revision 1.9  2000/10/24 05:57:53  moulding
+# new module maker Phase 2: new module maker goes online
+#
+# These changes clean out the last remnants of the old module maker and
+# bring the new module maker online.
+#
 # Revision 1.8  2000/09/07 16:14:42  dmw
 # removed MeshNodeComponent from sub.mk -- it wasnt ready to be committed yet...
 #
