@@ -6,18 +6,18 @@ SRCDIR   := Packages/Uintah/Dataflow/Modules/Visualization
 
 SRCS     += \
 	$(SRCDIR)/GridVisualizer.cc \
-	$(SRCDIR)/NodeHedgehog.cc \
 	$(SRCDIR)/TimestepSelector.cc \
 	$(SRCDIR)/ScalarFieldExtractor.cc \
 	$(SRCDIR)/VectorFieldExtractor.cc \
 	$(SRCDIR)/TensorFieldExtractor.cc \
 	$(SRCDIR)/ParticleFieldExtractor.cc \
 	$(SRCDIR)/RescaleColorMapForParticles.cc \
-	$(SRCDIR)/ParticleVis.cc \
-	$(SRCDIR)/EigenEvaluator.cc \
-	$(SRCDIR)/ParticleEigenEvaluator.cc \
-	$(SRCDIR)/TensorFieldOperator.cc \
-	$(SRCDIR)/TensorParticlesOperator.cc
+	$(SRCDIR)/ParticleVis.cc #\
+#	$(SRCDIR)/NodeHedgehog.cc \
+#	$(SRCDIR)/EigenEvaluator.cc \
+#	$(SRCDIR)/ParticleEigenEvaluator.cc \
+#	$(SRCDIR)/TensorFieldOperator.cc \
+#	$(SRCDIR)/TensorParticlesOperator.cc
 
 PSELIBS := \
 	Dataflow/Network Dataflow/Ports Core/Datatypes \

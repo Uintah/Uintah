@@ -2,8 +2,7 @@
 
 SRCDIR := Packages/Uintah/Dataflow
 SUBDIRS := \
-	$(SRCDIR)/GUI 
-
-#	$(SRCDIR)/Modules
+	$(SRCDIR)/GUI \
+	$(SRCDIR)/Modules
 
 include $(SRCTOP_ABS)/scripts/recurse.mk

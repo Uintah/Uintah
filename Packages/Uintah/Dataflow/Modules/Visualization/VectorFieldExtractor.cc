@@ -36,14 +36,14 @@ LOG
 #include <Core/Geometry/IntVector.h>
 #include <Core/Geometry/BBox.h>
 #include <Packages/Uintah/CCA/Components/MPM/Util/Matrix3.h>
-#include <Packages/Uintah/Core/Datatypes/NCVectorField.h>
-#include <Packages/Uintah/Core/Datatypes/CCVectorField.h>
+#include <Packages/Uintah/Core/Datatypes/LevelMesh.h>
+#include <Packages/Uintah/Core/Datatypes/LevelField.h>
 #include <Packages/Uintah/CCA/Ports/DataArchive.h>
 #include <Packages/Uintah/Core/Grid/Grid.h>
 #include <Packages/Uintah/Core/Grid/GridP.h>
 #include <Packages/Uintah/Core/Grid/Level.h>
 #include <Packages/Uintah/Core/Grid/Patch.h>
- 
+#include <Core/Containers/ConsecutiveRangeSet.h>
 
 #include <iostream> 
 #include <sstream>
@@ -55,6 +55,7 @@ using std::cerr;
 using std::endl;
 using std::vector;
 using std::string;
+using std::ostringstream;
 
 using namespace SCIRun;
 
@@ -72,7 +73,7 @@ VectorFieldExtractor::VectorFieldExtractor(const clString& id)
   // Create Ports
   in=scinew ArchiveIPort(this, "Data Archive",
 		      ArchiveIPort::Atomic);
-  sfout=scinew VectorFieldOPort(this, "VectorField", VectorFieldIPort::Atomic);
+  sfout=scinew FieldOPort(this, "VectorField", FieldIPort::Atomic);
 
   // Add them to the Module
   add_iport(in);
@@ -137,7 +138,8 @@ void VectorFieldExtractor::setVars()
   GridP grid = archive.queryGrid(times[0]);
   LevelP level = grid->getLevel( 0 );
   Patch* r = *(level->patchesBegin());
-  int nMatls = archive.queryNumMaterials(sVar.get()(), r, times[0]);
+  ConsecutiveRangeSet matls = 
+    archive.queryMaterials(sVar.get()(), r, times[0]);
 
   clString visible;
   TCL::eval(id + " isVisible", visible);
@@ -145,8 +147,7 @@ void VectorFieldExtractor::setVars()
     TCL::execute(id + " destroyFrames");
     TCL::execute(id + " build");
     
-    TCL::execute(id + " buildMaterials " 
-		 + to_string(nMatls) );
+    TCL::execute(id + " buildMaterials " + matls.expandedString().c_str());
 
     TCL::execute(id + " setVectors " + sNames.c_str());
     TCL::execute(id + " buildVarList");
@@ -204,59 +205,48 @@ void VectorFieldExtractor::execute()
   case TypeDescription::NCVariable:
     switch ( subtype->getType() ) {
     case TypeDescription::Vector:
-      {
-	NCVectorField *vfd  = scinew NCVectorField();
-	
-	if(var != ""){
-	  vfd->SetGrid( grid );
-	  vfd->SetLevel( level );
-	  vfd->SetName( var );
-	  vfd->SetMaterial( mat );
-	  // iterate over patches
-	  for(Level::const_patchIterator r = level->patchesBegin();
-	      r != level->patchesEnd(); r++ ){
-	    NCVariable< Vector > vv;
-	    archive.query(vv, var, mat, *r, time);
-	    vfd->AddVar( vv );
-	  }
-	  sfout->send(vfd);
-	  return;
+      {	
+	LevelMeshHandle mesh = scinew LevelMesh( grid, 0 );
+	LevelField<Vector> *sfd =
+	  scinew LevelField<Vector>( mesh, Field::NODE );
+	LevelField<Vector>::fdata_type &data = sfd->fdata();
+	  
+	for(Level::const_patchIterator r = level->patchesBegin();
+	    r != level->patchesEnd(); r++ ){
+	  NCVariable< Vector > sv;
+	  archive.query(sv, var, mat, *r, time);
+	  data.push_back( sv );
 	}
-      } 
+	sfout->send(sfd);
+	return;
+      }
       break;
     default:
-      cerr<<"NCVectorField<?>  Unknown vector type\n";
+      cerr<<"NCVariable<?>  Unknown vector type\n";
       return;
     }
     break;
   case TypeDescription::CCVariable:
     switch ( subtype->getType() ) {
     case TypeDescription::Vector:
-      {
-	CCVectorField *vfd  = scinew CCVectorField();
-	
-	if(var != ""){
-	  vfd->SetGrid( grid );
-	  vfd->SetLevel( level );
-	  vfd->SetName( var );
-	      
-	  vfd->SetMaterial( mat );
-	  // iterate over patches
-	  for(Level::const_patchIterator r = level->patchesBegin();
-	      r != level->patchesEnd(); r++ ){
-	    CCVariable< Vector > vv;
-	    archive.query(vv, var, mat, (*r), time);
-	    vfd->AddVar( vv );
-
-	    
-	  }
-	  sfout->send(vfd);
-	  return;
+      {	
+	LevelMeshHandle mesh = scinew LevelMesh( grid, 0 );
+	LevelField<Vector> *sfd =
+	  scinew LevelField<Vector>( mesh, Field::CELL );
+	LevelField<Vector>::fdata_type &data = sfd->fdata();
+	  
+	for(Level::const_patchIterator r = level->patchesBegin();
+	    r != level->patchesEnd(); r++ ){
+	  CCVariable< Vector > sv;
+	  archive.query(sv, var, mat, *r, time);
+	  data.push_back( sv );
 	}
-      } 
+	sfout->send(sfd);
+	return;
+      }
       break;
     default:
-      cerr<<"CCVectorField<?> Unknown vector type\n";
+      cerr<<"CCVariable<?> Unknown vector type\n";
       return;
     }
     break;

@@ -335,7 +335,7 @@ void GridVisualizer::setVars(GridP grid) {
 	varNames += " ";
 	varNames += names[i];
 	ostringstream mat;
-	mat << " " << archive->queryNumMaterials(names[i], patch, time);
+	mat << " " << archive->queryMaterials(names[i], patch, time);
 	matls += mat.str();
 	add_type(type_list,types[i]->getSubType());
       }
@@ -345,7 +345,7 @@ void GridVisualizer::setVars(GridP grid) {
 	varNames += " ";
 	varNames += names[i];
 	ostringstream mat;
-	mat << " " << archive->queryNumMaterials(names[i], patch, time);
+	mat << " " << archive->queryMaterials(names[i], patch, time);
 	matls += mat.str();
 	add_type(type_list,types[i]->getSubType());
       }
