@@ -97,7 +97,9 @@
       <p>
         Some linux distributions are shipped with a version of the GCC
         compiler (e.g. 2.96, 2.97) that doesn't work for building SCIRun. 
-        For more information, please visit 
+        For more information, please visit
+        <a href="http://www.gnu.org/software/gcc/gcc-2.96.html">the GCC site
+        </a> regarding this problem.
       </p>
       <p>
         The solution to this problem is to update your compiler to version
