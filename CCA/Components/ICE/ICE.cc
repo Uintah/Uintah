@@ -394,8 +394,9 @@ void ICE::scheduleTimeAdvance(const LevelP& level, SchedulerP& sched)
 
   scheduleAddExchangeToMomentumAndEnergy( sched, patches, ice_matls_sub,
                                                           mpm_matls_sub,
-                                                          all_matls);  
-
+                                                          press_matl,
+                                                          all_matls);
+                                                           
   scheduleComputeLagrangianSpecificVolume(sched, patches, press_matl,
                                                           ice_matls_sub, 
                                                           all_matls);
@@ -754,12 +755,20 @@ void ICE::scheduleAddExchangeToMomentumAndEnergy(SchedulerP& sched,
                                const PatchSet* patches,
                                const MaterialSubset* ice_matls,
                                const MaterialSubset* mpm_matls,
+                               const MaterialSubset* press_matl,
                                const MaterialSet* all_matls)
 {
   Task* t;
-  cout_doing << "ICE::scheduleAddExchangeToMomentumAndEnergy" << endl;
-  t=scinew Task("ICE::addExchangeToMomentumAndEnergy",
-                this, &ICE::addExchangeToMomentumAndEnergy);
+  if (d_RateForm) {     //RATE FORM
+    cout_doing << "ICE::scheduleAddExchangeToMomentumAndEnergy_RF" << endl;
+    t=scinew Task("ICE::addExchangeToMomentumAndEnergyRF",
+                  this, &ICE::addExchangeToMomentumAndEnergyRF);
+  }
+  else if (d_EqForm) {       // EQ 
+    cout_doing << "ICE::scheduleAddExchangeToMomentumAndEnergy" << endl;
+    t=scinew Task("ICE::addExchangeToMomentumAndEnergy",
+                  this, &ICE::addExchangeToMomentumAndEnergy);
+  }
 
   t->requires(Task::OldDW, d_sharedState->get_delt_label());
                                 // I C E
@@ -767,11 +776,20 @@ void ICE::scheduleAddExchangeToMomentumAndEnergy(SchedulerP& sched,
                                 // M P M 
   t->requires(Task::NewDW,  lb->temp_CCLabel,  mpm_matls, Ghost::None);
                                 // A L L  M A T L S
-  t->requires(Task::NewDW,  lb->mass_L_CCLabel,    Ghost::None); 
-  t->requires(Task::NewDW,  lb->mom_L_CCLabel,     Ghost::None);
-  t->requires(Task::NewDW,  lb->int_eng_L_CCLabel, Ghost::None);
-  t->requires(Task::NewDW,  lb->sp_vol_CCLabel,    Ghost::None); 
-  t->requires(Task::NewDW,  lb->vol_frac_CCLabel,  Ghost::None);
+  t->requires(Task::NewDW,  lb->mass_L_CCLabel,           Ghost::None); 
+  t->requires(Task::NewDW,  lb->mom_L_CCLabel,            Ghost::None);
+  t->requires(Task::NewDW,  lb->int_eng_L_CCLabel,        Ghost::None);
+  t->requires(Task::NewDW,  lb->sp_vol_CCLabel,           Ghost::None); 
+  t->requires(Task::NewDW,  lb->vol_frac_CCLabel,         Ghost::None);
+  if (d_RateForm) {     // RATE FORM
+    t->requires(Task::NewDW, lb->f_theta_CCLabel,         Ghost::None);  
+    t->requires(Task::NewDW, lb->sp_vol_CCLabel,          Ghost::None); 
+    t->requires(Task::NewDW, lb->rho_CCLabel,             Ghost::None); 
+    t->requires(Task::NewDW, lb->speedSound_CCLabel,      Ghost::None);         
+    t->requires(Task::NewDW, lb->int_eng_source_CCLabel,  Ghost::None);        
+    t->requires(Task::NewDW, lb->press_CCLabel,     press_matl, Ghost::None);  
+    t->requires(Task::NewDW, lb->delP_DilatateLabel,press_matl, Ghost::None);  
+  }
   t->computes(lb->Tdot_CCLabel);
   t->computes(lb->mom_L_ME_CCLabel);      
   t->computes(lb->int_eng_L_ME_CCLabel); 
@@ -1904,8 +1922,6 @@ template <class T> void ICE::computePressFace(int& numMatls,
                               constCCVariable<double>& press_CC,
                               T& press_FC)
 {
-/*`==========TESTING==========*/
-#if 1
   for(;!iter.done(); iter++){
     IntVector R = *iter;
     IntVector L = R + adj_offset; 
@@ -1918,23 +1934,6 @@ template <class T> void ICE::computePressFace(int& numMatls,
     press_FC[R] = (press_CC[R] * sum_rho_L + press_CC[L] * sum_rho_R)/
       (sum_rho_R + sum_rho_L);
   }
-#endif
-#if 0
-for(;!iter.done(); iter++){
-    IntVector c = *iter;
-    IntVector adj = c + adj_offset; 
-    double sum_rho     = 0.0;
-    double sum_rho_adj = 0.0;
-    for(int m = 0; m < numMatls; m++) {
-      sum_rho      += rho_CC[m][c];
-      sum_rho_adj  += rho_CC[m][adj];
-    }
-    
-    press_FC[c] = (press_CC[c] * sum_rho_adj + press_CC[adj] * sum_rho)/
-      (sum_rho + sum_rho_adj);
-  } 
-  #endif
-/*==========TESTING==========`*/
 }
 
 //______________________________________________________________________
