@@ -422,30 +422,26 @@ void TransIsoHyper::computeStressTensor(const PatchSubset* patches,
        shear = 2.*c1+c2+I4tilde*(4.*d2WdI4tilde2*lambda_tilde*lambda_tilde
                                 -2.*dWdI4tilde*lambda_tilde);
        }
-
-       //________________________________hydrostatic pressure term
-        p = Bulk*log(J)/J;
-        pressure = Identity*p;
-
+//cout <<"************************************************************************" << endl;
 	//________________________________Failure and stress terms
 	fail[idx] = 0.;
-	if (failure == 1)
+      if (failure == 1)
 	{double matrix_failed = 0.;
 	 double fiber_failed = 0.;
 	//________________________________Mooney Rivlin deviatoric term +failure of matrix
-	Matrix3 RCG;
-        RCG = deformationGradient_new[idx].Transpose()*deformationGradient_new[idx];
-        double e1,e2,e3;//eigenvalues of C=symm.+pos.def.->Dis<=0
-	double Q,R,Dis;
-        double pi = 3.1415926535897932384;
-	double I1 = RCG.Trace();
-	double I2 = .5*(I1*I1 -(RCG*RCG).Trace());
-	double I3 = RCG.Determinant();
-	Q = (1./9.)*(3.*I2-pow(I1,2));
-	R = (1./54.)*(-9.*I1*I2+27.*I3+2.*pow(I1,3));
-	Dis = pow(Q,3)+pow(R,2);
-	if (Dis <= 1.e-5 && Dis >= 0.)
-	   {if (R >= -1.e-5 || R<= 1.e-5)
+	 Matrix3 RCG;
+         RCG = deformationGradient_new[idx].Transpose()*deformationGradient_new[idx];
+         double e1,e2,e3;//eigenvalues of C=symm.+pos.def.->Dis<=0
+	 double Q,R,Dis;
+         double pi = 3.1415926535897932384;
+	 double I1 = RCG.Trace();
+	 double I2 = .5*(I1*I1 -(RCG*RCG).Trace());
+	 double I3 = RCG.Determinant();
+	 Q = (1./9.)*(3.*I2-pow(I1,2));
+	 R = (1./54.)*(-9.*I1*I2+27.*I3+2.*pow(I1,3));
+	 Dis = pow(Q,3)+pow(R,2);
+	 if (Dis <= 1.e-5 && Dis >= 0.)
+	   {if (R >= -1.e-5 && R<= 1.e-5)
 	      e1 = e2 = e3 = I1/3.;
 	    else
 	      {
@@ -455,7 +451,7 @@ void TransIsoHyper::computeStressTensor(const PatchSubset* patches,
 	      e2=e3;
 	      }
 	    }
-	else
+	 else
 	   {double theta = acos(R/pow(-Q,3./2.));
 	   e1 = 2.*pow(-Q,1./2.)*cos(theta/3.)+I1/3.;
 	   e2 = 2.*pow(-Q,1./2.)*cos(theta/3.+2.*pi/3.)+I1/3.;
@@ -463,34 +459,52 @@ void TransIsoHyper::computeStressTensor(const PatchSubset* patches,
 	   if (e1 < e2) swap(e1,e2);
 	   if (e1 < e3) swap(e1,e3);
 	   if (e2 < e3) swap(e2,e3);
-	  };
-cout <<"e1=" << e1 << " e2=" << e2 << " e3=" << e3 << endl;
+	   };
+//cout <<"e1=" << e1 << " e2=" << e2 << " e3=" << e3 << endl;
         double max_shear_strain = (e1-e3)/2.;
-cout <<"max_shear_strain=" << max_shear_strain << endl;
+//cout <<"max_shear_strain=" << max_shear_strain << endl;
         if (max_shear_strain<= crit_shear)
       	  {deviatoric_stress = (leftCauchyGreentilde_new*(c1+c2*I1tilde)
 			   - leftCauchyGreentilde_new*leftCauchyGreentilde_new*c2
 			   - Identity*(1./3.)*(c1*I1tilde+2.*c2*I2tilde))*2./J;
 	  }
         else
-	  {deviatoric_stress = 0.;
+	  {deviatoric_stress = Identity*0.;
 	  fail[idx] = 1.;
 	  matrix_failed = 1.;
 	  }
+//cout << "dev_stress=" << endl;
+//cout << deviatoric_stress << endl;
         //________________________________fiber stress term + failure of fibers
         if (stretch[idx] <= crit_stretch)
           {fiber_stress = (DY*dWdI4tilde*I4tilde
       				- Identity*(1./3.)*dWdI4tilde*I4tilde)*2./J;
 	  }
         else
-          {fiber_stress = 0.;
+          {fiber_stress = Identity*0.;
 	   fail[idx] = 2.;
 	   fiber_failed =1.;
 	  }
-cout << "fiber stretch =" << stretch[idx] << endl;
-
+//cout << "fiber stretch =" << stretch[idx] << endl;
+//cout << "fiber stress=" << endl;
+//cout << fiber_stress << endl;
 	if ( (matrix_failed + fiber_failed) == 2.)
 	 fail[idx] = 3.;
+	 //________________________________hydrostatic pressure term
+	if (fail[idx] == 1.0 ||fail[idx] == 3.0)
+	pressure = Identity*0.;
+	else
+	{
+         p = Bulk*log(J)/J;
+	if (p >= -1.e-5 && p <= 1.e-5)
+	 p = 0.;
+         pressure = Identity*p;
+	}
+//cout << "J=" << J <<endl;
+//cout << "log J=" << log(J) <<endl;
+//cout << "bulk=" << Bulk << endl;
+//cout <<"pressure="<< endl;
+//cout << pressure << endl;
         //_______________________________Cauchy stress
         pstress[idx] = pressure + deviatoric_stress + fiber_stress;
 	}
@@ -501,12 +515,18 @@ cout << "fiber stretch =" << stretch[idx] << endl;
 			   - Identity*(1./3.)*(c1*I1tilde+2.*c2*I2tilde))*2./J;
 	fiber_stress = (DY*dWdI4tilde*I4tilde
       				- Identity*(1./3.)*dWdI4tilde*I4tilde)*2./J;
+	p = Bulk*log(J)/J;
+	if (p >= -1.e-5 && p <= 1.e-5)
+	 p = 0.;
+         pressure = Identity*p;
         //Cauchy stress
         pstress[idx] = pressure + deviatoric_stress + fiber_stress;
        }
       //________________________________end stress
-cout <<"stress=" << endl;
-cout << pstress[idx] << endl;
+//cout <<"stress=" << endl;
+//cout << pstress[idx] << endl;
+//cout << "corresponding def gradient =" << endl;
+//cout << deformationGradient_new[idx] <<endl;
 
       // Compute the strain energy for all the particles
       U = .5*log(J)*log(J)*Bulk;
