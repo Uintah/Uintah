@@ -22,11 +22,15 @@ else
 SRCS +=	$(SRCDIR)/FakePetscSolver.cc
 endif
 
+$(SRCDIR)/SmagorinskyModel.o: $(SRCDIR)/fortran/smagmodel_fort.h
 
+ifneq ($(CC_DEPEND_REGEN),-MD)
+# The fortran code doesn't work under g++ yet
 SUBDIRS := $(SRCDIR)/fortran $(SRCDIR)/Mixing
 
 include $(SCIRUN_SCRIPTS)/recurse.mk
 FLIB := -lftn
+endif
 
 PSELIBS := \
 	Packages/Uintah/Core/Parallel    \
@@ -52,9 +56,6 @@ ifneq ($(PETSC_DIR),)
 CFLAGS +=	-DHAVE_PETSC
 endif
 #LIBS += -lblas
-
-
-$(SRCDIR)/SmagorinskyModel.o: $(SRCDIR)/fortran/smagmodel_fort.h
 
 include $(SCIRUN_SCRIPTS)/smallso_epilogue.mk
 
