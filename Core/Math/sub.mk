@@ -8,6 +8,7 @@ SRCS     += \
 	$(SRCDIR)/FastMatrix.cc \
 	$(SRCDIR)/Primes.cc     \
 	$(SRCDIR)/Matrix3.cc    \
+	$(SRCDIR)/SymmMatrix3.cc    \
 	$(SRCDIR)/CubeRoot.cc	\
 	$(SRCDIR)/Sparse.cc	\
 	$(SRCDIR)/Short27.cc \
