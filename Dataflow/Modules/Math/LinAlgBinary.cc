@@ -103,7 +103,7 @@ void LinAlgBinary::execute() {
       Add(*cc, *ac, *bc);
       omat_->send(MatrixHandle(cc));
     }
-    else if (dynamic_cast<SparseRowMatrix *>(aH.get_rep()) ||
+    else if (dynamic_cast<SparseRowMatrix *>(aH.get_rep()) &&
 	     dynamic_cast<SparseRowMatrix *>(bH.get_rep()))
     {
       SparseRowMatrix *as, *bs, *cs;

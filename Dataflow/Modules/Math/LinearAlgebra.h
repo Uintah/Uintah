@@ -25,6 +25,7 @@
 #include <Core/Util/TypeDescription.h>
 #include <Core/Util/DynamicLoader.h>
 #include <Core/Datatypes/Matrix.h>
+#include <Core/Datatypes/MatrixOperations.h>
 #include <Core/Math/function.h>
 
 namespace SCIRun {
@@ -32,6 +33,7 @@ namespace SCIRun {
 class LinearAlgebraAlgo : public DynamicAlgoBase
 {
 public:
+  virtual MatrixHandle function0();
   virtual MatrixHandle function1(MatrixHandle A);
   virtual MatrixHandle function2(MatrixHandle A,
 				 MatrixHandle B);
@@ -51,7 +53,8 @@ public:
   virtual string identify() = 0;
 
   //! support the dynamically compiled algorithm concept
-  static CompileInfoHandle get_compile_info(string function,
+  static CompileInfoHandle get_compile_info(int matrixcount,
+					    string function,
 					    int hashoffset);
 };
 
