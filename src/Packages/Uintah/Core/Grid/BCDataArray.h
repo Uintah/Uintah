@@ -125,6 +125,8 @@ namespace Uintah {
        if (i2.x() < i1.x()) return false;
        if (i1.y() < i2.y()) return true;
        if (i1.z() < i2.z()) return true;
+       
+       return false;
      }
    };
 
@@ -134,6 +136,8 @@ namespace Uintah {
        if (i2.y() < i1.y()) return false;
        if (i1.z() < i2.z()) return true;
        if (i1.x() < i2.x()) return true;
+
+       return false;
      }
    };
 
@@ -143,6 +147,8 @@ namespace Uintah {
        if (i2.z() < i1.z()) return false;
        if (i1.y() < i2.y()) return true;
        if (i1.x() < i2.x()) return true;
+
+       return false;
      }
    };
    
