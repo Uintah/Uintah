@@ -36,6 +36,11 @@ itcl_class rtrt_Scenes_GeoProbeScene {
 	global $this-gpfilename
 	set $this-gpfilename "/usr/sci/data/Seismic/BP/k12bvox.vol"
 
+	global $this-xa-active
+	set $this-xa-active 1
+	global $this-xa-usemat
+	set $this-xa-usemat 1
+
 	global $this-color-r
 	global $this-color-g
 	global $this-color-b
@@ -116,11 +121,21 @@ itcl_class rtrt_Scenes_GeoProbeScene {
 	set n "$this-c needexecute"
 
 	frame $w.cut
-	scale $w.cut.xa -variable $this-xa \
+	
+	frame $w.cut.xa
+	scale $w.cut.xa.scale -variable $this-xa \
 	    -label "X Low" -showvalue true -orient horizontal \
 	    -relief groove -length 200 -from 0 -to 1 \
 	    -tickinterval 0.25 -resolution 0.01 \
 	    -command "$this-c update_cut xa"
+	checkbutton $w.cut.xa.act -text "Active" \
+	    -variable $this-xa-active -command "$this-c update_active xa"
+	checkbutton $w.cut.xa.mat -text "Use Material" \
+	    -variable $this-xa-usemat -command "$this-c update_usemat xa"
+	
+	pack $w.cut.xa.scale -side left -expand 1
+	pack $w.cut.xa.act $w.cut.xa.mat -side top -anchor w -fill x -expand 1
+	
 	scale $w.cut.xb -variable $this-xb \
 	    -label "X High" -showvalue true -orient horizontal \
 	    -relief groove -length 200 -from 0 -to 1 \
