@@ -213,46 +213,28 @@ DORadiationModel::intensitysolve(const ProcessorGroup* pg,
 					ArchesConstVariables* constvars)
 {
   double solve_start = Time::currentSeconds();
+   rgamma.resize(1,28);
+   sd15.resize(1,480);
+   sd.resize(1,2256);
+   sd7.resize(1,48);
+   sd3.resize(1,96);
+
+   rgamma.initialize(0.0);
+   sd15.initialize(0.0);
+   sd.initialize(0.0);
+   sd7.initialize(0.0);
+   sd3.initialize(0.0);
 
   wavemin = 50;
   wavemax = 10000;
 
-  int i,j;
 
-  for(i=0; i<7; i++)
-     for(j=0; j<4; j++)
-       {
-	 rgamma[j][i]=0.0;
-       }
 
-  for(i=0; i<80; i++)
-     for(j=0; j<6; j++)
-       {
-	 sd15[j][i]=0.0;
-       }
-
-  for(i=0; i<376; i++)
-     for(j=0; j<6; j++)
-       {
-	 sd[j][i]=0.0;
-       }
-
-  for(i=0; i<16; i++)
-     for(j=0; j<3; j++)
-       {
-	 sd7[j][i]=0.0;
-       }
-
- for(i=0; i<32; i++)
-     for(j=0; j<3; j++)
-       {
-	 sd3[j][i]=0.0;
-       }
 
   if (lambda > 1) {
   dom = (wavemax - wavemin)/(lambda - 1); 
   omega = wavemin - dom;
-  fort_radarray(rgamma[0][0], sd15[0][0], sd[0][0], sd7[0][0], sd3[0][0]);
+  fort_radarray(rgamma, sd15, sd, sd7, sd3);
   }
 
   IntVector idxLo = patch->getCellFORTLowIndex();
@@ -304,7 +286,7 @@ DORadiationModel::intensitysolve(const ProcessorGroup* pg,
 
   if(lradcal==true){    
               fort_radcal(idxLo, idxHi, vars->ABSKG, vars->ESRCG,
-		cellinfo->xx, cellinfo->yy, cellinfo->zz, bands, dom, omega, constvars->cellType, ffield, constvars->co2, constvars->h2o, constvars->sootFV, constvars->temperature, lprobone, lprobtwo, lambda, fraction, rgamma[0][0], sd15[0][0], sd[0][0], sd7[0][0], sd3[0][0], d_opl);
+		cellinfo->xx, cellinfo->yy, cellinfo->zz, bands, dom, omega, constvars->cellType, ffield, constvars->co2, constvars->h2o, constvars->sootFV, constvars->temperature, lprobone, lprobtwo, lambda, fraction, rgamma, sd15, sd, sd7, sd3, d_opl);
   }
 
   for (int direcn = 1; direcn <=d_totalOrds; direcn++)

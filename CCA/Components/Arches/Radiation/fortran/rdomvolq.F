@@ -1,6 +1,6 @@
 #include <Packages/Uintah/CCA/Components/Arches/Radiation/fortran/rdomvolq_fort.h>
 
-      integer i,j,k,l
+      integer i,j,k
 
 c     calculate incident flux at cell centers
 
