@@ -319,10 +319,6 @@ bool </xsl:text><xsl:value-of select="$sci-name"/><xsl:text>::run( </xsl:text>
 <xsl:otherwise>
      last_<xsl:value-of select="@name"/>_ = inhandle_<xsl:value-of select="@name"/>_->generation;</xsl:otherwise></xsl:choose>
      </xsl:for-each>
-     // unregister filter_ only if it has been created
-     if(filter_ != 0) {
-       filter_->UnRegister();
-     }
 
      // create a new one
      filter_ = FilterType::New();
