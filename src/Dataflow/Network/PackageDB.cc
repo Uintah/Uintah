@@ -154,7 +154,9 @@ bool PackageDB::findMaker(ModuleInfo* moduleInfo)
     package_error = SOError();
 
   // try the small version of the shared library
-  libname = "lib" + cat_bname + moduleInfo->categoryName + lib_ext;
+  string cat_name = moduleInfo->categoryName;
+  if (cat_name.substr(0, 6) == "Fields") { cat_name = "Fields"; }
+  libname = "lib" + cat_bname + cat_name + lib_ext;
   LIBRARY_HANDLE category_so = findLibInPath(libname,libpath);
   string category_error;
   if (!category_so)
