@@ -48,8 +48,8 @@ public:
     offset_(offset),
     min_(min_i),
     max_(max_i),
-    lock_(lock),
     sema_(sema),
+    lock_(lock),
     swapbytes_(swapbytes)
   {
     var_.copyPointer(patchData);
