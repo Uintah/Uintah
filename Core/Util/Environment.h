@@ -33,6 +33,7 @@
 
 namespace SCIRun {
   using std::string;
+  void store_existing_environment(char **environ);
   bool find_and_parse_scirunrc();
   bool parse_scirunrc(const string filename);
   void sci_putenv(const string &key, const string &val, bool force=false);

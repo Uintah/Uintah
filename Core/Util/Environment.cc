@@ -27,9 +27,6 @@
 #include <set>
 #include <sgi_stl_warnings_on.h>
 
-// for extern char **environ;
-#include <unistd.h>
-
 
 namespace SCIRun {
 
@@ -86,18 +83,13 @@ MacroSubstitute( char * var_val )
   return retval;
 }
 
-// External list of strings containing the environment, from unistd.h
-extern "C" { 
-  extern char **environ; 
-}
-
 // This set stores all of the environemnt keys that were set when scirun was
 // started.  Its checked by sci_putenv to ensure we don't overwrite env variables
 set<string> existing_env;
 
 // get_existing_env() will fill up the SCIRun::existing_env string set
 // with all the currently set environment variable keys, but not their values
-void get_existing_env() 
+void store_existing_environment(char **environ) 
 {  
   char **environment = environ;
   existing_env.clear();
@@ -108,7 +100,7 @@ void get_existing_env()
   }
 }
 
-// sci_putenv will check the existing_env set string (filled in get_existing_env)
+// sci_putenv will check the existing_env set string (filled in store_existing_env)
 // If the environment key existed when the program was run, then  it will not
 // be overwritten.  This follows the Unix convention of using environment 
 // variables to supercede default program settings and .rc files.
@@ -203,9 +195,6 @@ parse_scirunrc( const string rcfile )
 bool
 find_and_parse_scirunrc()
 {
-  // This is a good place to save out what env vars we dont want to overwrite
-  get_existing_env();
-
   // Tell the user that we are searching for the .scirunrc file...
   std::cout << "Parsing .scirunrc... ";
   bool foundrc=false;
