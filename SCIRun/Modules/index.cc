@@ -44,44 +44,45 @@ using namespace PSECore::Dataflow;
 using namespace SCIRun::Modules;
 
 #define RM(a,b,c,d) packageDB.registerModule("SCIRun",a,b,c,d)
+#define RMI(b,c,d) RM("Image",b,c,d)
 
 extern "C" {
 void initPackage(const clString& tcl) {
 
     // Image
-  RM("Binop",	     "Image", make_Binop,	    tcl+"/Binop.tcl");
-  RM("Edge",	     "Image", make_Edge,	    tcl+"/Edge.tcl");
-  RM("FFT",	     "Image", make_FFT,	            tcl+"/FFT.tcl");
-  RM("FFTImage",     "Image", make_FFTImage,	    tcl+"/FFTImage.tcl");
-  RM("FilterImage",  "Image", make_FilterImage,     tcl+"/FilterImage.tcl");
-  RM("Gauss",	     "Image", make_Gauss,	    tcl+"/Gauss.tcl");
-  RM("Hist",	     "Image", make_Hist,	    tcl+"/Hist.tcl");
-  RM("HistEq",	     "Image", make_HistEq,	    tcl+"/HistEq.tcl");
-  RM("IFFT",	     "Image", make_IFFT,	    tcl+"/IFFT.tcl");
-  RM("IFFTImage",    "Image", make_IFFTImage,	    tcl+"/IFFTImage.tcl");
-  RM("ImageConvolve","Image", make_ImageConvolve,   tcl+"/ImageConvolve.tcl");
-  RM("ImageGen",     "Image", make_ImageGen,	    tcl+"/ImageGen.tcl");
-  RM("ImageSel",     "Image", make_ImageSel,	    tcl+"/ImageSel.tcl");
-  RM("ImageToGeom",  "Image", make_ImageToGeom,     tcl+"/ImageToGeom.tcl");
-  RM("Noise",	     "Image", make_Noise,	    tcl+"/Noise.tcl");
-  RM("PMFilterImage","Image", make_PMFilterImage,   tcl+"/PMFilterImage.tcl");
-  RM("Radon",	     "Image", make_Radon,	    tcl+"/Radon.tcl");
-  RM("Segment",	     "Image", make_Segment,	    tcl+"/Segment.tcl");
-  RM("Sharpen",	     "Image", make_Sharpen,	    tcl+"/Sharpen.tcl");
-  RM("Snakes",	     "Image", make_Snakes,	    tcl+"/Snakes.tcl");
-  RM("Subsample",    "Image", make_Subsample,	    tcl+"/Subsample.tcl");
-  RM("Ted",	     "Image", make_Ted,	            tcl+"/Ted.tcl");
-  RM("Threshold",    "Image", make_Threshold,	    tcl+"/Threshold.tcl");
-  //  RM("TiffReader",   "Image",     make_TiffReader,	    tcl+"/TiffReader.tcl");
-  RM("Transforms",   "Image", make_Transforms,	    tcl+"/Transforms.tcl");
-  RM("Turk",	     "Image", make_Turk,	    tcl+"/Turk.tcl");
-  RM("Unop",	     "Image", make_Unop,	    tcl+"/Unop.tcl");
-  RM("ViewHist",     "Image", make_ViewHist,	    tcl+"/ViewHist.tcl");
-  RM("WhiteNoiseImage","WhiteNoiseImage",make_WhiteNoiseImage,tcl+"/WhiteNoiseImage.tcl");
+  RMI("Binop", 		make_Binop,	    tcl+"/Binop.tcl");
+  RMI("Edge", 		make_Edge,	    tcl+"/Edge.tcl");
+  RMI("FFT", 		make_FFT,	            tcl+"/FFT.tcl");
+  RMI("FFTImage", 	make_FFTImage,	    tcl+"/FFTImage.tcl");
+  RMI("FilterImage", 	make_FilterImage,     tcl+"/FilterImage.tcl");
+  RMI("Gauss", 		make_Gauss,	    tcl+"/Gauss.tcl");
+  RMI("Hist", 		make_Hist,	    tcl+"/Hist.tcl");
+  RMI("HistEq", 	make_HistEq,	    tcl+"/HistEq.tcl");
+  RMI("IFFT", 		make_IFFT,	    tcl+"/IFFT.tcl");
+  RMI("IFFTImage", 	make_IFFTImage,	    tcl+"/IFFTImage.tcl");
+  RMI("ImageConvolve", 	make_ImageConvolve,   tcl+"/ImageConvolve.tcl");
+  RMI("ImageGen", 	make_ImageGen,	    tcl+"/ImageGen.tcl");
+  RMI("ImageSel", 	make_ImageSel,	    tcl+"/ImageSel.tcl");
+  RMI("ImageToGeom", 	make_ImageToGeom,     tcl+"/ImageToGeom.tcl");
+  RMI("Noise",		make_Noise,	    tcl+"/Noise.tcl");
+  RMI("PMFilterImage",	make_PMFilterImage,   tcl+"/PMFilterImage.tcl");
+  RMI("Radon", 		make_Radon,	    tcl+"/Radon.tcl");
+  RMI("Segment", 	make_Segment,	    tcl+"/Segment.tcl");
+  RMI("Sharpen", 	make_Sharpen,	    tcl+"/Sharpen.tcl");
+  RMI("Snakes", 	make_Snakes,	    tcl+"/Snakes.tcl");
+  RMI("Subsample", 	make_Subsample,	    tcl+"/Subsample.tcl");
+  RMI("Ted", 		make_Ted,	            tcl+"/Ted.tcl");
+  RMI("Threshold", 	make_Threshold,	    tcl+"/Threshold.tcl");
+  //  RMI("TiffReader",     make_TiffReader,	    tcl+"/TiffReader.tcl");
+  RMI("Transforms", 	make_Transforms,	    tcl+"/Transforms.tcl");
+  RMI("Turk", 		make_Turk,	    tcl+"/Turk.tcl");
+  RMI("Unop", 		make_Unop,	    tcl+"/Unop.tcl");
+  RMI("ViewHist", 	make_ViewHist,	    tcl+"/ViewHist.tcl");
+  RMI("WhiteNoiseImage",make_WhiteNoiseImage,tcl+"/WhiteNoiseImage.tcl");
 
 
     // Writers
-  //  RM("TiffWriter",   "Writers",     make_TiffWriter,	    tcl+"/TiffWriter.tcl");
+  //  RM("Writers", "TiffWriter",     make_TiffWriter,	    tcl+"/TiffWriter.tcl");
 
   cerr << "Initfn done -- TCL path was " << tcl << "\n";
 }
