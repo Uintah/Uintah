@@ -592,7 +592,7 @@ itcl_class Uintah_Selectors_ParticleFieldExtractor {
 	    label $fname.label -text "$name"
 	    pack $fname.label -side left -padx 2 -pady 2
 	    
-	    button $fname.button -text "Graph" -command "$this graphbutton $part_id $name $varid $mat_list $type"
+	    button $fname.button -text "Graph" -command "$this graphbutton $part_id $name $varid { $mat_list } $type"
 	    pack $fname.button -side right -padx 2 -pady 2
 
 	    make_mat_menu $fname $part_id $mat_list $varid $type
