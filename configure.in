@@ -31,6 +31,25 @@ for i in $package; do
   PACKAGE_PATH=$PACKAGE_PATH,"\$(SRCTOP_ABS)/$i/components.xml"
 done
 
+##-- check for user supplied tcl paths --------------------------------------
+
+AC_ARG_WITH(tcl,
+        [  --with-tcl=<path-to-tcl>      <path-to-tcl>/bin/tclsh8.0],
+        [tcl="$withval"],
+        [tcl=""])
+AC_ARG_WITH(tk,
+        [  --with-tk=<path-to-tk>        <path-to-tk>/bin/wish8.0],
+        [tk="$withval"],
+        [tk=""])
+AC_ARG_WITH(itcl,
+        [  --with-itcl=<path-to-itcl>    <path-to-itcl>/bin/itkwish3.0],
+        [itcl="$withval"],
+        [itcl=""])
+AC_ARG_WITH(blt,
+        [  --with-blt=<path-to-btl>      <path-to-btl>/bin/bltwish24],
+        [blt="$withval"],
+        [blt=""])
+
 
 if test "$exename" = "default"; then
   EXENAME=pse
@@ -307,6 +326,16 @@ AC_SUBST(MAKE_PARALLELISM)
 ##-- Find TCL ----------------------------------------------------------------
 
 echo -n "Looking for Pre-built TCL 8.0.4... "
+
+if test "$tcl" ; then
+  unset cfsh
+  cfsh="$tcl/lib/tclConfig.sh"
+  if test -f $cfsh ; then
+    . $cfsh
+  fi
+fi
+
+if test -z "$TCL_VERSION" ; then
 unset Wish80
 if Wish80="`type tclsh8.0 | sed 's/^.* //'`" ; then
   unset cfsh
@@ -315,6 +344,8 @@ if Wish80="`type tclsh8.0 | sed 's/^.* //'`" ; then
     . $cfsh
   fi
 fi
+fi
+
 if test "$TCL_VERSION" = "8.0" -a "$TCL_PATCH_LEVEL" = ".4" ; then
   # TCL_PREFIX set by tclConfig.sh
   TCL_INCLUDE_DIR="${TCL_PREFIX}/include"
@@ -329,8 +360,12 @@ if test "$TCL_VERSION" = "8.0" -a "$TCL_PATCH_LEVEL" = ".4" ; then
   fi
 
 else
-  echo "not found -- must build"
-  echo "  Implement me."
+  if test -z "TCL_VERSION" ; then
+    echo "not found -- must build"
+    echo "  Implement me."
+  else
+    echo "incorrect tcl version $TCL_VERSION$TCL_PATCH_LEVEL found"
+  fi
   exit 1
 fi
 
@@ -341,6 +376,23 @@ AC_SUBST(TCL_LIB_FLAG)
 ##-- Find Tk -----------------------------------------------------------------
 
 echo -n "Looking for Pre-built Tk 8.0.4... "
+
+if test "$tk" ; then
+  unset cfsh
+  cfsh="$tk/lib/tkConfig.sh"
+  if test -f $cfsh ; then
+    . $cfsh
+    echo -n --with-tk gives $TK_VERSION$TK_PATCH_LEVEL
+  fi
+elif test "$tcl" ; then
+  unset cfsh
+  cfsh="$tcl/lib/tkConfig.sh"
+  if test -f $cfsh ; then
+    . $cfsh
+  fi
+fi
+
+if test -z "$TK_VERSION" ; then
 unset Wish80
 if Wish80="`type wish8.0 | sed 's/^.* //'`" ; then
   unset cfsh
@@ -349,6 +401,8 @@ if Wish80="`type wish8.0 | sed 's/^.* //'`" ; then
     . $cfsh
   fi
 fi
+fi
+
 if test "$TK_VERSION" = "8.0" -a "$TK_PATCH_LEVEL" = ".4" ; then
   # TK_PREFIX set by tclConfig.sh
   TK_INCLUDE_DIR="${TK_PREFIX}/include"
@@ -385,7 +439,26 @@ AC_SUBST(TK_LIB_FLAG)
 ##-- Find iTcl ---------------------------------------------------------------
 
 echo -n "Looking for Pre-built iTk 3.0... "
+
 if test "$BUILDING_TK" = "" ; then
+
+if test "$itcl" ; then
+  unset cfsh
+  cfsh="$itcl/lib/itkConfig.sh"
+  if test -f $cfsh ; then
+    . $cfsh
+    ITCL_PREFIX=$itcl
+  fi
+elif test "$tcl" ; then
+  unset cfsh
+  cfsh="$tcl/lib/itkConfig.sh"
+  if test -f $cfsh ; then
+    . $cfsh
+    ITCL_PREFIX=$tcl
+  fi
+fi
+
+if test -z "$ITCL_VERSION" ; then
   unset Wish80
   if sh="`type itkwish3.0 | sed 's/^.* //'`" ; then
     unset cfsh
@@ -396,17 +469,26 @@ if test "$BUILDING_TK" = "" ; then
     fi
   fi
 fi
+fi # end BUILDING_TK
+
 if test "$ITCL_VERSION" = "3.0" ; then
-  ITCL_PREFIX="`cd $shdir/.. ; pwd`"
+  if test -z "$ITCL_PREFIX" ; then
+   ITCL_PREFIX="`cd $shdir/.. ; pwd`"
+  fi
   ITCL_INCLUDE_DIR="${ITCL_PREFIX}/include"
   ITCL_LIB_DIR="${ITCL_PREFIX}/lib"
   ITCL_LIB_FLAG="-litk3.0 -litcl3.0"
   ITCL_WIDGETS="${ITCL_LIB_DIR}/iwidgets/scripts"
 
-  echo -L$ITCL_PREFIX $ITCL_LIB_FLAG
+  #echo -L$ITCL_PREFIX $ITCL_LIB_FLAG
+  echo -L$ITCL_LIB_DIR $ITCL_LIB_FLAG
 else
-  echo "not found -- must build"
-  echo "  Implement me."
+  if test -z "$ITCL_VERSION" ; then
+    echo "not found -- must build"
+    echo "  Implement me."
+  else
+    echo "incorrect itcl/itk version $ITCL_VERSION$ITCL_PATCH_LEVEL found"
+  fi
   exit 1
 fi
 
@@ -415,25 +497,29 @@ AC_SUBST(ITCL_LIB_DIR)
 AC_SUBST(ITCL_LIB_FLAG)
 AC_SUBST(ITCL_WIDGETS)
 
-##-- Find etags ------------------------------------------------------------
-
-AC_PATH_PROG(ETAGS, etags, notfound)
-if test "$ETAGS" = "notfound" ; then
-  echo "\tetags not found"
-else
-  echo "\tFound etags at " $ETAGS
-fi
- 
 ##-- Find BLT ---------------------------------------------------------------
 
 echo -n "Looking for Pre-built blt2.4... "
+
+if test "$blt" ; then
+  BLT_PREFIX=$blt
+elif test "$tcl" ; then
+  BLT_PREFIX=$tcl
+fi
+
+if test -z "$BLT_PREFIX" ; then
 if sh="`type bltwish24 | sed 's/^.* //'`" ; then
   shdir="`dirname $sh`"
   BLT_PREFIX="`cd $shdir/.. ; pwd`"
+fi
+fi
+
+if test "$BLT_PREFIX" ; then
   BLT_INCLUDE_DIR="${BLT_PREFIX}/include"
   BLT_LIB_DIR="${BLT_PREFIX}/lib"
   BLT_LIB_FLAG="-lBLT24"
-  echo -L$BLT_PREFIX $BLT_LIB_FLAG
+  #echo -L$BLT_PREFIX $BLT_LIB_FLAG
+  echo -L$BLT_LIB_DIR $BLT_LIB_FLAG
 else
   echo "not found -- must build"
   echo "  Implement me."
@@ -460,10 +546,17 @@ if test "$GL_INCLUDE_DIR" = ""; then
   echo ""
   exit 1
 else
-  echo "$GL_INCLUDE_DIR"
+  echo $GL_INCLUDE_DIR/GL
 fi
 
 AC_SUBST(GL_INCLUDE_DIR)
+
+##-- Find etags ------------------------------------------------------------
+
+AC_PATH_PROG(ETAGS, etags, notfound)
+if test "$ETAGS" = "notfound" ; then
+  echo "\tetags not found"
+fi
 
 ##-- Check for option to build new parallel (distributed memory) SCIRun ------
 
@@ -607,6 +700,9 @@ AC_OUTPUT(Makefile \
 
 #
 # $Log$
+# Revision 1.61  2000/08/01 19:17:37  moulding
+# Added Todd Miller's "-with-tcl" stuff
+#
 # Revision 1.60  2000/07/11 20:21:56  yarden
 # add -rpath if the x_libraries are not in the standard place.
 #
