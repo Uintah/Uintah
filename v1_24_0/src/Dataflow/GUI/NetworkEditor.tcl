@@ -1275,19 +1275,28 @@ proc displayErrorWarningOrInfo { msg status } {
 
 
 #centers window w1 over window w2
-proc centerWindow { w1 w2 } {
+proc centerWindow { w1 { w2 "" } } {
     update
 #    wm overrideredirect $w1 1
     wm geometry $w1 ""
     update idletasks
-    set w [winfo width $w2]
-    set h [winfo height $w2]
+    if { [winfo exists $w2] } {
+	set w [winfo width $w2]
+	set h [winfo height $w2]
+	set x [winfo x $w2]
+	set y [winfo y $w2]
+    } else {
+	set w 0
+	set h 0
+	set x 0
+	set y 0
+    }
 
     if {$w < 2} { set w [winfo screenwidth .] }
     if {$h < 2} { set h [winfo screenheight .] }    
 
-    set x [expr [winfo x $w2]+($w - [winfo width $w1])/2]
-    set y [expr [winfo y $w2]+($h - [winfo height $w1])/2]
+    set x [expr $x+($w - [winfo width $w1])/2]
+    set y [expr $y+($h - [winfo height $w1])/2]
     wm geometry $w1 +${x}+${y}
     if { [winfo ismapped $w1] } {
 	raise $w1
@@ -1603,6 +1612,38 @@ proc licenseAccept { } {
     }
 }
 
+
+proc promptUserToCopySCIRunrc {} {
+    global dontAskAgain copyResult
+    set w .copyRCprompt
+    toplevel $w
+    wm withdraw $w
+    set copyResult 0
+    set dontAskAgain 0
+    set version [netedit getenv SCIRUN_VERSION]
+    wm title $w "Copy v$version .scirunrc file?"
+    label $w.message -text "A newer version of your ~/.scirunrc file is avaliable with this release.\n\nThis file contains SCIRun environment variables that are\nneccesary for some new features like fonts.\n\nPlease note: If you have made changes to your ~/.scirunrc file\nthey will be undone by this action.  Your existing file will be copied\nto ~/.scirunrc.$version\n\nWould you like SCIRun to copy over the new .scirunrc?\n\n" -justify left
+    frame $w.but
+    button $w.but.ok -text Copy -command "set copyResult 1"
+    button $w.but.no -text "Don't Copy" -command "set copyResult 0"
+    checkbutton $w.dontAskAgain -text "Dont Ask Me This Question Again" -variable dontAskAgain -offvalue 0 -onvalue 1
+#    pack $w.but.dontAskAgain -side topy -pady 5
+    pack $w.but.ok $w.but.no -side left -padx 5 -ipadx 5
+    pack $w.message $w.dontAskAgain $w.but -side top
+    centerWindow $w
+    vwait copyResult
+    if { $dontAskAgain && !$copyResult } {
+	if [catch { set rcfile [open ~/.scirunrc "WRONLY APPEND"] }] return
+	puts $rcfile "\n\# This next variable was added when the user chose 'Dont Ask This Question Again'"
+	puts $rcfile "\# when prompted about updating the .scirurc file version"
+	puts $rcfile "SCIRUN_RCFILE_VERSION=${version}"
+	close $rcfile
+    }
+    destroy $w
+    unset dontAskAgain
+    return $copyResult
+}
+    
 proc validFile { args } {
     set name [lindex $args 0]
     return [expr [file isfile $name] && [file readable $name]]
