@@ -19,6 +19,7 @@
 #ifndef SCI_DEFS_H
 #define SCI_DEFS_H
 
+
 #define SCI_ASSERTION_LEVEL @ASSERTION_LEVEL@
 #define SCI_OPENGL
 #define SCI_NORM_OGL
@@ -28,6 +29,14 @@
 @PARALLEL_DEFINE@
 @THREAD_DEFINE@
 @MALLOC_DEFINE@
+
+/* paths for alternate compilation directories */
+#define MATH_MANIP_SRC "@top_srcdir@/Dataflow/Modules/Math/Manip"
+#define MATH_MANIP_OBJ "./Dataflow/Modules/Math/Manip"
+#define FIELD_MANIP_SRC "@top_srcdir@/Dataflow/Modules/Fields/Manip"
+#define FIELD_MAMIP_OBJ "./Dataflow/Modules/Fields/Manip"
+#define ON_THE_FLY_SRC "@top_srcdir@/on-the-fly-libs"
+#define ON_THE_FLY_OBJ "./on-the-fly-libs"
 
 /* Someday, we should make this a config variable - it might help the
    optimizer, at the cost of more difficult debugging */

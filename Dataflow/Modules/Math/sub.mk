@@ -37,8 +37,6 @@ SRCS     += \
 #[INSERT NEW CODE FILE HERE]
 #        $(SRCDIR)/ManipMatrix.cc\
 
-CFLAGS   := $(CFLAGS) -DMM_SRC=\"$(SRCTOP_ABS)/Dataflow/Modules/Math/Manip\" -DMM_OBJ=\"$(OBJTOP_ABS)/Dataflow/Modules/Math/Manip\"
-
 PSELIBS := Dataflow/Network Dataflow/Ports Dataflow/XMLUtil \
 	Core/Datatypes Core/Persistent \
 	Core/Exceptions Core/Thread Core/Containers \

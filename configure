@@ -4090,12 +4090,19 @@ fi
 
 
 ##-- Generate Output Files ---------------------------------------------------
+
 if ! test -d "Dataflow/Modules/Fields/Manip"; then
   mkdir -p "Dataflow/Modules/Fields/Manip";
 fi
 if ! test -d "Dataflow/Modules/Math/Manip"; then
   mkdir -p "Dataflow/Modules/Math/Manip";
 fi
+
+if ! test -d "on-the-fly-libs"; then
+  mkdir -p "on-the-fly-libs";
+fi
+
+##-- Generate Output Files ---------------------------------------------------
 trap '' 1 2 15
 cat > confcache <<\EOF
 # This file is a shell script that caches the results of configure
@@ -4198,6 +4205,7 @@ ac_given_srcdir=$srcdir
 
 trap 'rm -fr `echo "configVars.mk \
 		Makefile \
+		on-the-fly-libs/Makefile\
 		disjointPackageMakefile \
                 Dataflow/Modules/Fields/Manip/Makefile\
 		Dataflow/Modules/Math/Manip/Makefile\
@@ -4380,6 +4388,7 @@ cat >> $CONFIG_STATUS <<EOF
 
 CONFIG_FILES=\${CONFIG_FILES-"configVars.mk \
 		Makefile \
+		on-the-fly-libs/Makefile\
 		disjointPackageMakefile \
                 Dataflow/Modules/Fields/Manip/Makefile\
 		Dataflow/Modules/Math/Manip/Makefile\
