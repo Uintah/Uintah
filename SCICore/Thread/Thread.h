@@ -173,7 +173,7 @@ DESCRIPTION
 	    static void couldBlockDone(int restore);
 	    
 	    //////////
-	    // Voluntarily give up time to another processor
+	    // The calling process voluntarily gives up time to another process
 	    static void yield();
 
 	private:
@@ -183,24 +183,23 @@ DESCRIPTION
 	    friend class Semaphore;
 	    friend class Thread_private;
 	    
-	    ~Thread();
-
 	    Runnable* d_runner;
 	    const char* d_threadname;
-	    Thread_private* d_priv;
 	    ThreadGroup* d_group;
 	    unsigned long d_stacksize;
-	    int d_cpu;
 	    bool d_daemon;
 	    bool d_detached;
 	    bool d_activated;
-	    
 	    void os_start(bool stopped);
 	    static void initialize();
 	    Thread(ThreadGroup* g, const char* name);
-	    void run_body();	    
-	    static void checkExit();
 
+	public:
+	    static void checkExit();
+	    int d_cpu;
+	    ~Thread();
+	    Thread_private* d_priv;
+	    void run_body();	    	    
 	    enum ThreadState {
 		STARTUP,
 		RUNNING,
@@ -215,6 +214,7 @@ DESCRIPTION
 		BLOCK_SEMAPHORE,
 		BLOCK_CONDITIONVARIABLE
 	    };
+	private:
 	    static const char* getStateString(ThreadState);
 	    static int push_bstack(Thread_private*, ThreadState s,
 				   const char* why);
@@ -233,6 +233,9 @@ DESCRIPTION
 
 //
 // $Log$
+// Revision 1.17  1999/11/10 19:41:16  moulding
+// modified the comment for yield
+//
 // Revision 1.16  1999/11/03 01:23:03  moulding
 // fixed a typo in the description (comment) for Thread::isDetached()
 //
