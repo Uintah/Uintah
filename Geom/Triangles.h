@@ -16,6 +16,8 @@
 
 #include <Geom/VertexPrim.h>
 
+class Color;
+
 class GeomTriangles : public GeomVertexPrim {
 private:
     void add(const Point&);
@@ -35,6 +37,9 @@ public:
     void add(const Point&, const MaterialHandle&,
 	     const Point&, const MaterialHandle&,
 	     const Point&, const MaterialHandle&);
+    void add(const Point&, const Color&,
+	     const Point&, const Color&,
+	     const Point&, const Color&);
     void add(const Point&, const Vector&, const MaterialHandle&,
 	     const Point&, const Vector&, const MaterialHandle&,
 	     const Point&, const Vector&, const MaterialHandle&);

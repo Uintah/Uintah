@@ -83,6 +83,22 @@ void GeomTriangles::add(const Point& p1, const MaterialHandle& m1,
     GeomVertexPrim::add(p3, m3);
 }
 
+void GeomTriangles::add(const Point& p1, const Color& c1,
+			const Point& p2, const Color& c2,
+			const Point& p3, const Color& c3) {
+    Vector n(Cross(p2-p1, p3-p1));
+    if(n.length2() > 0){
+	n.normalize();
+    } else {
+	cerr << "Degenerate triangle!!!\n" << endl;
+	return;
+    }
+    normals.add(n);
+    GeomVertexPrim::add(p1, c1);
+    GeomVertexPrim::add(p2, c2);
+    GeomVertexPrim::add(p3, c3);
+}
+
 void GeomTriangles::add(const Point& p1, const Vector& v1, 
 			const MaterialHandle& m1, const Point& p2, 
 			const Vector& v2, const MaterialHandle& m2,
