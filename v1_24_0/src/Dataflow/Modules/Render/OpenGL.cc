@@ -219,7 +219,12 @@ OpenGL::redraw(double _tbeg, double _tend, int _nframes, double _framerate)
   if(!helper_)
   {
     helper_=new OpenGLHelper(this);
-    helper_thread_ = new Thread(helper_, string("OpenGL: "+myname_).c_str());
+    helper_thread_ = new Thread(helper_, 
+				string("OpenGL: "+myname_).c_str(),
+				0, Thread::NotActivated);
+    helper_thread_->setStackSize(1024*1024);
+    helper_thread_->activate(false);
+    helper_thread_->detach();
   }
   send_mailbox_.send(DO_REDRAW);
   int rc=recv_mailbox_.receive();
