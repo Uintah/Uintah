@@ -120,6 +120,20 @@ public:
 	{
 	  return d_lab;
 	}
+      NonlinearSolver* getNonlinearSolver()
+	{
+	  return d_nlSolver;
+	}
+
+      BoundaryCondition* getBoundaryCondition()
+	{
+	  return d_boundaryCondition;
+	}
+
+      TurbulenceModel* getTurbulenceModel()
+	{
+	  return d_turbModel;
+	}
 
 
 protected:

@@ -107,6 +107,18 @@ public:
       }
 
       ////////////////////////////////////////////////////////////////////////
+      // mm Wall boundary ID
+      int getMMWallId() const {
+	return d_mmWallID;
+      }
+
+      ////////////////////////////////////////////////////////////////////////
+      // flowfield cell id
+      int getFlowId() const {
+	return d_flowfieldCellTypeVal;
+      }
+
+        ////////////////////////////////////////////////////////////////////////
       // Wall boundary ID
       inline int wallCellType() const { 
 	return d_wallBdry->d_cellTypeID; 
