@@ -31,13 +31,15 @@ public:
 
   //! Required interfaces
   virtual InterpolateToScalar* query_interpolate_to_scalar() const = 0;
-
+  virtual bool get_minmax( double &, double & ) = 0;
+  virtual bool compute_minmax() = 0;
 
   //! Persistent I/O.
   virtual void io(Piostream &stream);
   static  PersistentTypeID type_id;
   //! All instantiable classes need to define this.
   virtual const string get_type_name(int n = -1) const = 0;
+
   
 protected:
 

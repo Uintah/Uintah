@@ -38,13 +38,17 @@ public:
   GenericField() : 
     Field(),
     mesh_(mesh_handle_type(new mesh_type())),
-    fdata_(fdata_type())
+    fdata_(fdata_type()),
+    has_minmax(false)
   {};
+
   GenericField(data_location data_at) : 
     Field(data_at),
     mesh_(mesh_handle_type(new mesh_type())),
-    fdata_(fdata_type()) 
+    fdata_(fdata_type()),
+    has_minmax(false)
   {};
+
   virtual ~GenericField() {};
 
   //! Required virtual functions from field base.
@@ -53,6 +57,8 @@ public:
 
   //! Required interfaces from field base.
   virtual InterpolateToScalar* query_interpolate_to_scalar() const;
+  bool get_minmax( double &, double &);
+  bool compute_minmax();
 
   //! Required interface to support Field Concept.
   bool value(value_type &val, typename mesh_type::node_index i) const
@@ -99,6 +105,9 @@ private:
   mesh_handle_type             mesh_;
   //! Data container.
   fdata_type                   fdata_;
+  //! minmax
+  bool has_minmax;
+  double min_, max_;
 }; 
 
 // Virtual interface.
@@ -137,6 +146,39 @@ GenericField<Mesh, FData>::query_interpolate_to_scalar() const
 {
   return new GInterp(this);
 }
+   
+template <class Mesh, class FData>
+bool
+GenericField<Mesh, FData>::compute_minmax()
+{
+  typename Mesh::node_iterator i = mesh_->node_begin();
+  if ( i == mesh_->node_end() )
+    return false;
+  min_ = max_ = fdata_[*i];
+  for (++i; i != mesh_->node_end(); ++i) {
+    value_type v = fdata_[*i];
+    if ( v < min_ ) min_ = v;
+    else if ( v > max_ ) max_ = v;
+  }
+  
+  return true;
+}
+
+template<class Mesh, class FData>
+bool
+GenericField<Mesh, FData>::get_minmax( double &min, double &max) 
+{
+  if ( !has_minmax ) { 
+    if ( !compute_minmax() )
+      return false;
+    has_minmax = true;
+  }
+
+  min = min_;
+  max = max_;
+
+  return true;
+}
 
 #if defined(__sgi)  
 // Turns off REMARKS like this:
@@ -149,6 +191,7 @@ GenericField<Mesh, FData>::query_interpolate_to_scalar() const
 
 // PIO
 const double GENERICFIELD_VERSION = 1.0;
+
 
 template <class Mesh, class FData>
 Persistent* make_GenericField()
