@@ -95,12 +95,8 @@ itcl_class SCIRun_Visualization_Isosurface {
 
 	bind $w.f.isoval <ButtonRelease> "$this set-isoval"
 	
-	global $this-build_trisurf
-	checkbutton $w.f.buildsurf -text "Build TriSurf" \
-		-variable $this-build_trisurf
 	button $w.f.extract -text "Extract" -command "$this-c needexecute"
 	pack $w.f.isoval  -fill x
-	pack $w.f.buildsurf
 	pack $w.f.extract
 
 	#  Info
@@ -131,17 +127,15 @@ itcl_class SCIRun_Visualization_Isosurface {
 
 	global $this-update
 	set $this-update $opt.update
-#	$opt.update select Manual
 
-# 	checkbutton $opt.hash -text "Hash" -relief flat \
-# 	    -variable $this-hash
-# 	checkbutton $opt.emit -text "Emit Surface" -relief flat \
-# 	    -variable $this-emit
+	global $this-build_trisurf
+	checkbutton $opt.buildsurf -text "Build TriSurf" \
+		-variable $this-build_trisurf
+
 	checkbutton $opt.aefnf -text "Auto Extract from New Field" \
 	    -relief flat -variable $this-extract-from-new-field 
 
-# 	pack $opt.update $opt.emit $opt.hash $opt.aefnf -side top -anchor w
-	pack $opt.update $opt.aefnf -side top -anchor w
+	pack $opt.update $opt.aefnf $opt.buildsurf -side top -anchor w
 	pack $w.f.opt -side top -anchor w
 
 
