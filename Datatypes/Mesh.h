@@ -81,7 +81,7 @@ public:
     int inside(const Point& p, Element* elem);
     void get_interp(Element* elem, const Point& p, double& s1,
 		    double& s2, double& s3, double& s4);
-    void get_grad(Element* elem, const Point& p, Vector& g1,
+    double get_grad(Element* elem, const Point& p, Vector& g1,
 		  Vector& g2, Vector& g3, Vector& g4);
     void get_bounds(Point& min, Point& max);
     int unify(Element*, const Array1<int>&, const Array1<int>&,
