@@ -92,24 +92,6 @@ using std::ostringstream;
 
 namespace SCIRun {
   
-class KillRenderer :public Runnable {
-public:
-  KillRenderer(OpenGL *cr, Viewer* m, ViewWindow *vw) :
-    cur_renderer_(cr),
-    manager_(m),
-    vw_(vw)
-  {}
-  
-  void run() {
-    cur_renderer_->kill_helper();
-    manager_->delete_viewwindow(vw_);
-  }
-private:
-  OpenGL     *cur_renderer_;
-  Viewer     *manager_;
-  ViewWindow *vw_;
-};
-
 
 ViewWindow::ViewWindow(Viewer* s, GuiInterface* gui, GuiContext* ctx)
   : gui(gui), ctx(ctx), manager(s),
@@ -304,8 +286,7 @@ ViewWindow::~ViewWindow()
   delete current_renderer;
   delete ball;
   delete bawgl;
-
-  gui->delete_command( id+"-c" );
+  gui->delete_command( id+"-c" ); 
 }
 
 void ViewWindow::get_bounds(BBox& bbox)
@@ -2274,16 +2255,6 @@ void ViewWindow::tcl_command(GuiArgs& args, void*)
 					id, lightNo, on, Vector(x,y,z),
 					Color(r,g,b)));
 
-  } else if (args[1] == "killwindow") {
-    
-    inertia_mode=0;
-    KillRenderer *kr = scinew KillRenderer(current_renderer, manager, 
-					   (ViewWindow*)this);
-    string tname(id + "VW kill current renderer thread");
-    Thread *ren_deleter = scinew Thread(kr, tname.c_str());
-    ren_deleter->detach();
-    return;
-
   } else if(args[1] == "saveobj") {
     if(args.count() != 6){
       args.error("ViewWindow::dump_viewwindow needs an output file name and format!");
@@ -2676,11 +2647,5 @@ GeomHandle ViewWindow::createGenAxes() {
   return all;
 }
 
-void ViewWindow::emit_vars(std::ostream& out,
-			   const std::string& midx,
-			   const std::string& prefix)
-{
-  ctx->emit(out, midx, prefix);
-}
 
 } // End namespace SCIRun
