@@ -791,7 +791,7 @@ proc ClearCanvas { {confirm 1} {subnet 0} } {
 
 proc NiceQuit {} {
     global NetworkChanged netedit_savefile
-    if { $NetworkChanged } {
+    if { $NetworkChanged && ![envBool SCIRUN_FAST_QUIT] } {
 	set result [createSciDialog -warning -title "Quit?" \
 		    -button1 "Don't Save" -button2 "Cancel" -button3 "Save" \
 		    -message "Your session has not been saved.\nWould you like to save before exiting?"]
