@@ -52,7 +52,7 @@ DataArchiver::DataArchiver(const ProcessorGroup* myworld)
    : UintahParallelComponent(myworld)
 {
   d_wasOutputTimestep = false;
-  d_wereSavesAndCheckpointsInitialized = false;
+  d_wasCheckpointTimestep = false;
   d_currentTime=-1;
   d_currentTimestep=-1;
 }
@@ -388,26 +388,29 @@ void DataArchiver::createIndexXML(Dir& dir)
 void DataArchiver::finalizeTimestep(double time, double delt,
 				    const LevelP& level, SchedulerP& sched)
 {
+  static bool wereSavesAndCheckpointsInitialized = false;
+  cout << "Finalize delt= " << delt << endl;
   d_currentTime=time+delt;
-  if (!d_wereSavesAndCheckpointsInitialized &&
+
+  if (!wereSavesAndCheckpointsInitialized &&
       !(delt == 0) /* skip the initialization timestep for this
 		      because it needs all computes to be set
 		      to find the save labels */) {
     
     // This assumes that the TaskGraph doesn't change after the second
     // timestep and will need to change if the TaskGraph becomes dynamic. 
-    d_wereSavesAndCheckpointsInitialized = true;
+    wereSavesAndCheckpointsInitialized = true;
     
     if (d_outputInterval != 0.0) {
       initSaveLabels(sched);
       indexAddGlobals(); /* add saved global (reduction)
 			    variables to index.xml */
     }
-    
+
     if (d_checkpointInterval != 0)
       initCheckpoints(sched);
   }
-
+  
   bool do_output=false;
   if (d_outputInterval != 0.0 && delt != 0) {
     // Schedule task to dump out reduction variables at every timestep
@@ -416,12 +419,8 @@ void DataArchiver::finalizeTimestep(double time, double delt,
     
     for(int i=0;i<(int)d_saveReductionLabels.size();i++) {
       SaveItem& saveItem = d_saveReductionLabels[i];
-      const VarLabel* var = saveItem.label;
-      MaterialSubset* matls = scinew MaterialSubset();
-      for (ConsecutiveRangeSet::iterator matIt = saveItem.matls.begin();
-	   matIt != saveItem.matls.end(); matIt++){
-	matls->add(*matIt);
-      }
+      const VarLabel* var = saveItem.label_;
+      const MaterialSubset* matls = saveItem.getMaterialSet()->getUnion();
       t->requires(Task::NewDW, var, matls);
     }
     
@@ -441,12 +440,9 @@ void DataArchiver::finalizeTimestep(double time, double delt,
     
     for(int i=0;i<(int)d_checkpointReductionLabels.size();i++) {
       SaveItem& saveItem = d_checkpointReductionLabels[i];
-      const VarLabel* var = saveItem.label;
-      MaterialSubset* matls = scinew MaterialSubset();
-      for (ConsecutiveRangeSet::iterator matIt = saveItem.matls.begin();
-	   matIt != saveItem.matls.end(); matIt++)
-	matls->add(*matIt);
-      t->requires(Task::NewDW, var, matls) ;
+      const VarLabel* var = saveItem.label_;
+      const MaterialSubset* matls = saveItem.getMaterialSet()->getUnion();
+      t->requires(Task::NewDW, var, matls);
     }
     sched->addTask(t, 0, 0);
     
@@ -694,16 +690,11 @@ void DataArchiver::scheduleOutputTimestep(Dir& baseDir,
   const PatchSet* patches = level->eachPatch();
   for(saveIter = saveLabels.begin(); saveIter!= saveLabels.end();
       saveIter++) {
-    ConsecutiveRangeSet::iterator matlIter = (*saveIter).matls.begin();
-    MaterialSet* matls = scinew MaterialSet();
-    vector<int> ms;
-    for ( ; matlIter != (*saveIter).matls.end(); matlIter++)
-      ms.push_back(*matlIter);
-    matls->addAll(ms);
+    const MaterialSet* matls = (*saveIter).getMaterialSet();
     Task* t = scinew Task("DataArchiver::output", 
 			  this, &DataArchiver::output,
-			  &baseDir, (*saveIter).label);
-    t->requires(Task::NewDW, (*saveIter).label, Ghost::None);
+			  &baseDir, (*saveIter).label_);
+    t->requires(Task::NewDW, (*saveIter).label_, Ghost::None);
     sched->addTask(t, patches, matls);
     n++;
   }
@@ -736,7 +727,11 @@ DataArchiver::getOutputLocation() const
 
 void DataArchiver::indexAddGlobals()
 {
-   if (d_writeMeta) {
+  // assume for now that global variables that get computed will not
+  // change from timestep to timestep
+  static bool wereGlobalsAdded = false;
+   if (d_writeMeta && !wereGlobalsAdded) {
+     wereGlobalsAdded = true;
       // add saved global (reduction) variables to index.xml
       string iname = d_dir.getName()+"/index.xml";
       DOM_Document indexDoc = loadDocument(iname);
@@ -747,10 +742,10 @@ void DataArchiver::indexAddGlobals()
       for (vector<SaveItem>::iterator iter = d_saveReductionLabels.begin();
 	   iter != d_saveReductionLabels.end(); iter++) {
 	 SaveItem& saveItem = *iter;
-	 const VarLabel* var = saveItem.label;
-	 for (ConsecutiveRangeSet::iterator matIt = saveItem.matls.begin();
-	      matIt != saveItem.matls.end(); matIt++) {
-	    int matlIndex = *matIt;
+	 const VarLabel* var = saveItem.label_;
+	 const MaterialSubset* matls = saveItem.getMaterialSet()->getUnion();
+	 for (int m = 0; m < matls->size(); m++) {
+	    int matlIndex = matls->get(m);
 	    ostringstream href;
 	    href << var->getName();
 	    if (matlIndex < 0)
@@ -777,7 +772,7 @@ void DataArchiver::indexAddGlobals()
 
 void DataArchiver::outputReduction(const ProcessorGroup*,
 				   const PatchSubset*,
-				   const MaterialSubset*,
+				   const MaterialSubset* /*matls*/,
 				   DataWarehouse* /*old_dw*/,
 				   DataWarehouse* new_dw)
 {
@@ -786,10 +781,11 @@ void DataArchiver::outputReduction(const ProcessorGroup*,
 
   for(int i=0;i<(int)d_saveReductionLabels.size();i++) {
     SaveItem& saveItem = d_saveReductionLabels[i];
-    const VarLabel* var = saveItem.label;
-    for (ConsecutiveRangeSet::iterator matIt = saveItem.matls.begin();
-	 matIt != saveItem.matls.end(); matIt++) {
-      int matlIndex = *matIt;
+    const VarLabel* var = saveItem.label_;
+    const MaterialSubset* matls = saveItem.getMaterialSet()->getUnion();
+    for (int m = 0; m < matls->size(); m++) {
+      int matlIndex = matls->get(m);
+      dbg << "Reduction matl " << matlIndex << endl;
       ostringstream filename;
       filename << d_dir.getName() << "/" << var->getName();
       if (matlIndex < 0)
@@ -811,23 +807,20 @@ void DataArchiver::outputReduction(const ProcessorGroup*,
 
 void DataArchiver::outputCheckpointReduction(const ProcessorGroup* world,
 					     const PatchSubset*,
-					     const MaterialSubset*,
+					     const MaterialSubset* /*matls*/,
 					     DataWarehouse* old_dw,
 					     DataWarehouse* new_dw)
 {
+  dbg << "DataArchiver::outputCheckpointReduction called\n";
   // Dump the stuff in the reduction saveset into files in the uda
 
   for(int i=0;i<(int)d_checkpointReductionLabels.size();i++) {
     SaveItem& saveItem = d_checkpointReductionLabels[i];
-    const VarLabel* var = saveItem.label;
-    MaterialSubset* matls = scinew MaterialSubset(0);
-    for (ConsecutiveRangeSet::iterator matIt = saveItem.matls.begin();
-	 matIt != saveItem.matls.end(); matIt++)
-      matls->add(*matIt);
+    const VarLabel* var = saveItem.label_;
+    const MaterialSubset* matls = saveItem.getMaterialSet()->getUnion();
     PatchSubset* patches = scinew PatchSubset(0);
     patches->add(0);
     output(world, patches, matls, old_dw, new_dw, &d_checkpointsDir, var);
-    delete matls;
     delete patches;
   }
 }
@@ -850,7 +843,10 @@ void DataArchiver::output(const ProcessorGroup*,
     for(int p=0;p<patches->size();p++){
       if(p != 0)
 	dbg << ", ";
-      dbg << patches->get(p)->getID();
+      if (patches->get(p) == 0)
+	dbg << -1;
+      else
+	dbg << patches->get(p)->getID();
     }
   }
   dbg << ", variable: " << var->getName() << ", materials: ";
@@ -1107,6 +1103,8 @@ void  DataArchiver::initSaveLabels(SchedulerP& sched)
 {
   dbg << "initSaveLabels called\n";
    SaveItem saveItem;
+   d_saveReductionLabels.clear();
+   d_saveLabels.clear();
   
    d_saveLabels.reserve(d_saveLabelNames.size());
    Scheduler::VarLabelMaterialMap* pLabelMatlMap;
@@ -1129,16 +1127,18 @@ void  DataArchiver::initSaveLabels(SchedulerP& sched)
          throw ProblemSetupException((*it).labelName +
 				  " variable not computed for saving.");
       
-      saveItem.label = var;
-      saveItem.matls = ConsecutiveRangeSet((*found).second);
-      saveItem.matls = saveItem.matls.intersected((*it).matls);
+      saveItem.label_ = var;
+      ConsecutiveRangeSet matlsToSave =
+	(ConsecutiveRangeSet((*found).second)).intersected((*it).matls);
+      saveItem.setMaterials(matlsToSave);
+      
       if (((*it).matls != ConsecutiveRangeSet::all) &&
-	  ((*it).matls != saveItem.matls)) {
+	  ((*it).matls != matlsToSave)) {
          throw ProblemSetupException((*it).labelName +
 	  " variable not computed for all materials specified to save.");
       }
       
-      if (saveItem.label->typeDescription()->isReductionVariable())
+      if (saveItem.label_->typeDescription()->isReductionVariable())
          d_saveReductionLabels.push_back(saveItem);
       else
          d_saveLabels.push_back(saveItem);
@@ -1148,27 +1148,34 @@ void  DataArchiver::initSaveLabels(SchedulerP& sched)
 }
 
 
-void  DataArchiver::initCheckpoints(SchedulerP& sched)
+void DataArchiver::initCheckpoints(SchedulerP& sched)
 {
-#if 0
    typedef vector<const Task::Dependency*> dep_vector;
    const dep_vector& initreqs = sched->getInitialRequires();
    SaveItem saveItem;
+   d_checkpointReductionLabels.clear();
+   d_checkpointLabels.clear();
 
-   // Not the most efficient, but it only happens once.
-   // When and if we start using dynamic task graphs, this should be made
-   // more efficient.
-   
-   map< string, list<int> > label_matl_map;
+   map< string, ConsecutiveRangeSet > label_matl_map;
 
    for (dep_vector::const_iterator iter = initreqs.begin();
 	iter != initreqs.end(); iter++) {
       const Task::Dependency* dep = *iter;
-      label_matl_map[dep->d_var->getName()].push_back(dep->d_matlIndex);
+      ConsecutiveRangeSet matls;
+      const MaterialSubset* matSubset = (dep->matls != 0) ?
+	dep->matls : dep->task->getMaterialSet()->getUnion();
+
+      // The matSubset is assumed to be in ascending order or
+      // addInOrder will throw an exception.
+      matls.addInOrder(matSubset->getVector().begin(),
+		       matSubset->getVector().end());
+      ConsecutiveRangeSet& unionedVarMatls =
+	label_matl_map[dep->var->getName()];
+      unionedVarMatls = unionedVarMatls.unioned(matls);      
    }
          
    d_checkpointLabels.reserve(label_matl_map.size());
-   map< string, list<int> >::iterator mapIter;
+   map< string, ConsecutiveRangeSet >::iterator mapIter;
    for (mapIter = label_matl_map.begin();
         mapIter != label_matl_map.end(); mapIter++) {
       VarLabel* var = VarLabel::find((*mapIter).first);
@@ -1176,17 +1183,38 @@ void  DataArchiver::initCheckpoints(SchedulerP& sched)
          throw ProblemSetupException((*mapIter).first +
 				  " variable not found to checkpoint.");
 
-      saveItem.label = var;
-      saveItem.matls = ConsecutiveRangeSet((*mapIter).second);
+      saveItem.label_ = var;
+      saveItem.setMaterials((*mapIter).second);
 
-      if (saveItem.label->typeDescription()->isReductionVariable())
+      if (saveItem.label_->typeDescription()->isReductionVariable())
          d_checkpointReductionLabels.push_back(saveItem);
       else
          d_checkpointLabels.push_back(saveItem);
    }
-#else
-   NOT_FINISHED("new task stuff");
-#endif
+}
+
+ConsecutiveRangeSet DataArchiver::SaveItem::prevMatls_;
+MaterialSetP DataArchiver::SaveItem::prevMatlSet_ = 0;
+
+void DataArchiver::SaveItem::setMaterials(const ConsecutiveRangeSet& matls)
+{
+  // reuse material sets when the same set of materials is used for different
+  // SaveItems in a row -- easier than finding all reusable material set, but
+  // effective in many common cases.
+  if ((prevMatlSet_ != 0) && (matls == prevMatls_)) {
+    matlSet_ = prevMatlSet_;
+  }
+  else {
+    matlSet_ = scinew MaterialSet();
+    vector<int> matlVec;
+    matlVec.reserve(matls.size());
+    for (ConsecutiveRangeSet::iterator iter = matls.begin();
+	 iter != matls.end(); iter++)
+      matlVec.push_back(*iter);
+    matlSet_->addAll(matlVec);
+    prevMatlSet_ = matlSet_;
+    prevMatls_ = matls;
+  }
 }
 
 bool DataArchiver::need_recompile(double time, double dt ,

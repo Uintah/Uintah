@@ -3,6 +3,7 @@
 
 #include <Packages/Uintah/CCA/Ports/Output.h>
 #include <Packages/Uintah/Core/Parallel/UintahParallelComponent.h>
+#include <Packages/Uintah/Core/Grid/MaterialSetP.h>
 #include <Core/OS/Dir.h>
 #include <Core/Containers/ConsecutiveRangeSet.h>
 
@@ -67,8 +68,8 @@ using std::pair;
       // Insert Documentation Here:
       virtual const string getOutputLocation() const;
 
-     virtual bool need_recompile(double time, double dt,
-				 const LevelP& level);
+      virtual bool need_recompile(double time, double dt,
+				  const LevelP& level);
 
       //////////
       // Insert Documentation Here:
@@ -113,13 +114,23 @@ using std::pair;
       { return d_lastTimestepLocation; }
    private:
       struct SaveNameItem {
-	 string labelName;
- 	 string compressionMode;
-         ConsecutiveRangeSet matls;
+	string labelName;
+	string compressionMode;
+	ConsecutiveRangeSet matls;
       };
-      struct SaveItem {
-	 const VarLabel* label;
-         ConsecutiveRangeSet matls;
+
+      class SaveItem {
+      public:
+	void setMaterials(const ConsecutiveRangeSet& matls);
+
+	const MaterialSet* getMaterialSet() const
+	{ return matlSet_.get_rep(); }
+	  
+	const VarLabel* label_;
+      private:
+	static ConsecutiveRangeSet prevMatls_;
+	static MaterialSetP prevMatlSet_;
+	MaterialSetP matlSet_;
       };
 
       void initSaveLabels(SchedulerP& sched);
@@ -161,7 +172,6 @@ using std::pair;
 
       double d_currentTime;
 
-      bool d_wereSavesAndCheckpointsInitialized;      
       // d_saveLabelNames is a temporary list containing VarLabel
       // names to be saved and the materials to save them for.  The
       // information will be basically transferred to d_saveLabels or
