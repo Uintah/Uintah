@@ -383,7 +383,9 @@ private:
   void updateSoundPanel();
   void loadAllRoutes();
   void handleTriggers();
-  void setBackgroundImage( int room );
+  bool setBackgroundImage( int room ); // return false if already there.
+  bool checkBackgroundWindow(); // checks to see what room we are near.
+  void drawBackground();
 
   // Functions to draw text, etc on GL window.
   void displayText(GLuint fontbase, double x, double y,
