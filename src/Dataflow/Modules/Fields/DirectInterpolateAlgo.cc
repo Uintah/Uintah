@@ -38,20 +38,6 @@ DirectInterpAlgoBase::~DirectInterpAlgoBase()
 {}
 
 
-static string
-strip(const string s)
-{
-  string result;
-  for (unsigned int i = 0; i < s.size(); i++)
-  {
-    if (isalnum(s[i]))
-    {
-      result += s[i];
-    }
-  }
-  return result;
-}
-
 CompileInfo *
 DirectInterpAlgoBase::get_compile_info(const TypeDescription *td0,
 				       const TypeDescription *td1)
@@ -62,8 +48,9 @@ DirectInterpAlgoBase::get_compile_info(const TypeDescription *td0,
   static const string base_class_name("DirectInterpAlgoBase");
 
   CompileInfo *rval = 
-    scinew CompileInfo(strip(template_class_name + "." + td0->get_name(".", ".") +
-		       td1->get_name(".", ".")) + ".",
+    scinew CompileInfo(to_filename(template_class_name + "." +
+				   td0->get_name(".", ".") +
+				   td1->get_name(".", ".")) + ".",
                        base_class_name, 
                        template_class_name, 
                        td0->get_name() + ", " + td1->get_name());

@@ -61,6 +61,26 @@ DynamicAlgoBase::DynamicAlgoBase() :
 {
 }
 
+DynamicAlgoBase::~DynamicAlgoBase()
+{
+}
+
+
+string
+DynamicAlgoBase::to_filename(const string s)
+{
+  string result;
+  for (unsigned int i = 0; i < s.size(); i++)
+  {
+    if (isalnum(s[i]))
+    {
+      result += s[i];
+    }
+  }
+  return result;
+}
+
+
 DynamicLoader::DynamicLoader() :
   map_crowd_("DynamicLoader: One compilation at a time."),
   compilation_cond_("DynamicLoader: waits for compilation to finish."),
