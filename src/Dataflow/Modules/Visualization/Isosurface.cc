@@ -56,13 +56,15 @@ extern "C" Module* make_Isosurface(const string& id) {
 static string surface_name("Isosurface");
 static string widget_name("Isosurface");
 
-Isosurface::Isosurface(const string& id)
-  : Module("Isosurface", id, Filter, "Visualization", "SCIRun"), 
-    gui_iso_value("isoval", id, this),
-    extract_from_new_field("extract-from-new-field", id, this ),
-    use_algorithm("algorithm", id, this),
-    build_trisurf_("build_trisurf", id, this),
-    np_("np", id, this)  
+Isosurface::Isosurface(const string& id) : 
+  Module("Isosurface", id, Filter, "Visualization", "SCIRun"), 
+  gui_iso_value("isoval", id, this),
+  extract_from_new_field("extract-from-new-field", id, this ),
+  use_algorithm("algorithm", id, this),
+  build_trisurf_("build_trisurf", id, this),
+  np_("np", id, this),
+  active_tab_("active_tab", id, this),
+  update_type_("update_type", id, this)
 {
   matl_ = scinew Material(Color(0,.3,0), Color(0,.6,0), Color(.7,.7,.7), 50);
 
