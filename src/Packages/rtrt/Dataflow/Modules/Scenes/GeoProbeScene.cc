@@ -17,16 +17,23 @@
 #include <Packages/rtrt/Core/Light.h>
 #include <Packages/rtrt/Core/Scene.h>
 #include <Packages/rtrt/Core/Group.h>
-#include <Packages/rtrt/Core/Sphere.h>
 #include <Packages/rtrt/Core/Rect.h>
-#include <Packages/rtrt/Core/MetalMaterial.h>
-#include <Packages/rtrt/Core/PhongMaterial.h>
-#include <Packages/rtrt/Core/CycleMaterial.h>
+#include <Packages/rtrt/Core/LambertianMaterial.h>
+#include <Packages/rtrt/Core/CutMaterial.h>
+#include <Packages/rtrt/Core/ColorMap.h>
+#include <Packages/rtrt/Core/GeoProbeReader.h>
+#include <Packages/rtrt/Core/VolumeDpy.h>
+#include <Packages/rtrt/Core/HVolume.h>
+#include <Packages/rtrt/Core/BrickArray3.h>
+#include <Packages/rtrt/Core/CutVolumeDpy.h>
+
 // all the module stuff
 #include <Dataflow/Network/Module.h>
 #include <Core/Malloc/Allocator.h>
 #include <Core/GuiInterface/GuiVar.h>
 #include <Packages/rtrt/Dataflow/Ports/ScenePort.h>
+#include <Dataflow/Ports/ColorMapPort.h>
+
 // general libs
 #include <iostream>
 
@@ -42,16 +49,20 @@ public:
   virtual void execute();
   void tcl_command(GuiArgs& args, void* userdata);
 private:
-  CycleMaterial *sphere_matl_;
-  GuiDouble color_r_;
-  GuiDouble color_g_;
-  GuiDouble color_b_;
-  GuiDouble color_a_;
-  GuiDouble reflectance_;
-  GuiDouble shininess_;
+  VolumeDpy *vdpy;
+  int first_execute_;
+  int cmap_generation_;
+  string execute_string_;
+  GuiDouble isoval_;
+  GuiDouble xa_;
+  GuiDouble xb_;
+  GuiDouble ya_;
+  GuiDouble yb_;
+  GuiDouble za_;
+  GuiDouble zb_;
+  GuiString gpfilename_;
 
-  void update_sphere_material();
-  Scene* make_scene();
+  Scene* make_scene(Object *obj);
   SceneContainerHandle sceneHandle_;
 };
 
@@ -59,13 +70,18 @@ DECLARE_MAKER(GeoProbeScene)
 
 GeoProbeScene::GeoProbeScene(GuiContext* ctx)
   : Module("GeoProbeScene", ctx, Filter, "Scenes", "rtrt"),
-    sphere_matl_(0),
-    color_r_(ctx->subVar("color-r")),
-    color_g_(ctx->subVar("color-g")),
-    color_b_(ctx->subVar("color-b")),
-    color_a_(ctx->subVar("color-a")),
-    reflectance_(ctx->subVar("reflectance")),
-    shininess_(ctx->subVar("shininess"))
+    vdpy(0),
+    first_execute_(1),
+    cmap_generation_(-1),
+    execute_string_(""),
+    isoval_(ctx->subVar("isoval")),
+    xa_(ctx->subVar("xa")),
+    xb_(ctx->subVar("xb")),
+    ya_(ctx->subVar("ya")),
+    yb_(ctx->subVar("yb")),
+    za_(ctx->subVar("za")),
+    zb_(ctx->subVar("zb")),
+    gpfilename_(ctx->subVar("gpfilename"))
 {
 }
 
@@ -73,44 +89,8 @@ GeoProbeScene::~GeoProbeScene()
 {
 }
 
-void GeoProbeScene::update_sphere_material() 
+Scene* GeoProbeScene::make_scene(Object *obj)
 {
-  reset_vars();
-  double r=color_r_.get();
-  double g=color_g_.get();
-  double b=color_b_.get();
-  double opacity=color_a_.get();
-  double reflectance=reflectance_.get();
-  double shininess=shininess_.get();
-  PhongMaterial *p = 
-    new PhongMaterial(Color(r,g,b), opacity, reflectance, shininess);
-
-  if (sphere_matl_ == 0) {
-    sphere_matl_ = new CycleMaterial;
-    sphere_matl_->members.add(p);
-  } else {
-    // we can't delete the old one, since someone might have a pointer
-    // to it -- really need to use MaterialHandle's rather than pointers
-    sphere_matl_->members[0] = p;
-  }
-}
-
-Scene* GeoProbeScene::make_scene()
-{
-  update_sphere_material();
-
-  // materials for the scene
-  Material *gray_metal = new MetalMaterial(Color(0.5, 0.5, 0.5));
-
-  // geometry for the scene
-  Group *obj_group = new Group();
-  for( int i = 0; i < 3; i++ )
-    for( int j = 0; j < 3; j++ )
-      obj_group->add(new Sphere(sphere_matl_, Point((i-1)*10,(j-1)*10,0), 1));
-
-  obj_group->add(new Rect(gray_metal, Point(0,0,-1.3), 
-			  Vector(12,0,0), Vector(0,12,0)));
-
   // set up all of the parameters for the Scene constructor
   Camera cam(Point(30.678, 2.8381, 16.9925),
 	     Point(0, 0, 0),
@@ -121,7 +101,7 @@ Scene* GeoProbeScene::make_scene()
   Color cdown(0.82, 0.62, 0.62);
   Color cup(0.1, 0.3, 0.8);
   Plane groundplane ( Point(0, 0, 0), Vector(0, 0, 1) );
-  Scene* scene=new Scene(obj_group, cam, bgcolor, cdown, cup, groundplane,
+  Scene* scene=new Scene(obj, cam, bgcolor, cdown, cup, groundplane,
 			 ambient_scale, Arc_Ambient);
 
   // add a named light
@@ -141,16 +121,92 @@ Scene* GeoProbeScene::make_scene()
 void GeoProbeScene::execute()
 {
   // Get the output port
-  SceneOPort *scene_out_port = (SceneOPort *) get_oport("Scene");
-  if (!scene_out_port) {
-    error("No output port");
+  ColorMapIPort *cmap_iport = (ColorMapIPort *) get_iport("Colormap");
+  if (!cmap_iport) {
+    error("No colormap input port");
+  }
+
+  ColorMapHandle cmH;
+  if (!cmap_iport->get(cmH) || !cmH.get_rep()) {
+    error("No valid colormap input");
     return;
   }
-  Scene *scene = make_scene();
-  SceneContainer *container = scinew SceneContainer();
-  container->put_scene(scene);
-  sceneHandle_ = container;
-  scene_out_port->send(sceneHandle_);
+
+  SceneOPort *scene_oport = (SceneOPort *) get_oport("Scene");
+  if (!scene_oport) {
+    error("No scene output port");
+    return;
+  }
+
+  if (first_execute_) {
+    int nx, ny, nz;
+    Point min, max;
+    unsigned char datamin, datamax;
+    Array3<unsigned char> data;
+    cerr << "input file = "<<gpfilename_.get()<<"\n";
+    if (!read_geoprobe(gpfilename_.get().c_str(), nx, ny, nz, min, max, 
+		       datamin, datamax, data)) {
+      error("Could not read GeoProbe input file");
+      return;
+    }
+    double xa = xa_.get();
+    double xb = xb_.get();
+    double ya = ya_.get();
+    double yb = yb_.get();
+    double za = za_.get();
+    double zb = zb_.get();
+    xa = max.x()*xa+min.x()*(1-xa);
+    xb = max.x()*xb+min.x()*(1-xb);
+    ya = max.y()*ya+min.y()*(1-ya);
+    yb = max.y()*yb+min.y()*(1-yb);
+    za = max.z()*za+min.z()*(1-za);
+    zb = max.z()*zb+min.z()*(1-zb);
+    Group *g = new Group;
+    Material *surfmat = new LambertianMaterial(Color(0.5, 0.5, 0.5));
+    ColorMap *cmap =new ColorMap("/opt/SCIRun/data/Geometry/volumes/vol_cmap");
+    CutPlaneDpy *cpdpy = new CutPlaneDpy(Vector(1,0,0), Point(xa,0,0));
+    Material *cutmat = new CutMaterial(surfmat, cmap, cpdpy);
+    CutVolumeDpy *cvdpy = new CutVolumeDpy(82.5, cmap);
+    vdpy = new VolumeDpy(isoval_.get());
+    HVolume<unsigned char, BrickArray3<unsigned char>, 
+      BrickArray3<VMCell<unsigned char> > > *hvol = 
+        new HVolume<unsigned char, BrickArray3<unsigned char>, 
+                    BrickArray3<VMCell<unsigned char> > >
+                      (surfmat, vdpy, 3 /*depth*/, 1 /*np*/, nx, ny, nz, 
+	  	       min, max, datamin, datamax, data);
+    g->add(hvol);
+    Scene *scene = make_scene(g);
+    SceneContainer *container = scinew SceneContainer();
+    container->put_scene(scene);
+    sceneHandle_ = container;
+    scene_oport->send(sceneHandle_);
+
+    // do everything
+    // ...
+    first_execute_ = 0;
+    cmap_generation_ = cmH->generation;
+    execute_string_ = "";
+    return;
+  }
+
+  if (cmH->generation != cmap_generation_) {
+    // need to update the colormap
+    // ...
+    cmap_generation_ = cmH->generation;
+    execute_string_ = "";
+  }
+
+  if (execute_string_ == "") return; // nothing to do
+
+  if (execute_string_ == "newfile") {
+    // read in new file
+    return;
+  }
+
+  if (execute_string_ == "newplanes") {
+    // set the new cutting plane positions
+    return;
+  }
 }
 
 // This is called when the tcl code explicity calls a function other than
@@ -160,8 +216,8 @@ void GeoProbeScene::tcl_command(GuiArgs& args, void* userdata)
   if(args.count() < 2) {
     args.error("Streamline needs a minor command");
     return;
-  } else if (args[1] == "update_sphere_material") {
-    update_sphere_material();
+  } else if (args[1] == "update_plane") {
+    want_to_execute();
   } else {
     Module::tcl_command(args, userdata);
   }

@@ -19,18 +19,22 @@ itcl_class rtrt_Scenes_GeoProbeScene {
     }
     
     method set_defaults {} {
-	global $this-color-r
-	set $this-color-r 0.1
-	global $this-color-g
-	set $this-color-g 0.3
-	global $this-color-b
-	set $this-color-b 0.1
-	global $this-color-a
-	set $this-color-a 0.2
-	global $this-reflectance
-	set $this-reflectance 0.5
-	global $this-shininess
-	set $this-shininess 30.0
+	global $this-isoval
+	set $this-isoval 100
+	global $this-xa
+	set $this-xa 0.1
+	global $this-xb
+	set $this-xb 0.9
+	global $this-ya
+	set $this-ya 0.1
+	global $this-yb
+	set $this-yb 0.9
+	global $this-za
+	set $this-za 0.1
+	global $this-zb
+	set $this-zb 0.9
+	global $this-gpfilename
+	set $this-gpfilename "/usr/sci/data/Seismic/BP/k12bvox.vol"
     }
 
     method raiseColor {swatch color msg} {

@@ -14,6 +14,12 @@
     </description>
   </overview>
   <io>
+    <inputs lastportdynamic="yes">
+     <port>
+       <name>Colormap</name>
+       <datatype>SCIRun::ColorMap</datatype>
+     </port>
+    </inputs>
     <outputs>
       <port>
         <name>Scene</name>
