@@ -136,6 +136,7 @@ public:
   OpenGL(GuiInterface* gui, Viewer *, ViewWindow *);
   ~OpenGL();
   void			kill_helper();
+  void			start_helper();
   static bool		query(GuiInterface* gui);
   void			redraw_loop();
   void			get_pick(int, int, GeomHandle&, GeomPickHandle&, int&);

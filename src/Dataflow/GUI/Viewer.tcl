@@ -594,15 +594,6 @@ itcl_class ViewWindow {
 	init_frame $msframe.f "Double-click here to detach - - - - - - - - - - - - - - - - - - - - -"
 	# End initialization of attachment
         
-        # This after statement works around a synchronization problem
-        # on Apple and Linux.  On Apple the graphics system can
-        # completely lock up if you open a view window on an already
-        # running network.  On newer Linux systems we get a crash on
-        # exit if the viewer is opened from within a command line
-        # network.
-        #switchvisual
-	after 500 "$this switchvisual"
-
 	$this-c startup
 	
 	pack slaves $w
@@ -614,9 +605,10 @@ itcl_class ViewWindow {
            # appear after all the other windows and thus on systems without
            # pbuffers, we don't get the drawing window obscured.  Three seconds
            # seems to be enough time.
-           after 3000 "SciRaise $w"
+            after 3000 "SciRaise $w; $this switchvisual"
         } else {
-           SciRaise $w
+            SciRaise $w
+            switchvisual
         }
     }
     # end constructor()

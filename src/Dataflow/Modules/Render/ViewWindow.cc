@@ -1555,6 +1555,7 @@ ViewWindow::tcl_command(GuiArgs& args, void*)
       scinew TkOpenGLContext(args[2], visualid, width, height);
     renderer_->old_tk_gl_context_ = 0;
     renderer_->myname_ = args[2];
+    renderer_->start_helper();
   } else if(args[1] == "destroygl") {
     ASSERT(args[2] == renderer_->myname_);
     ASSERT(renderer_->tk_gl_context_);

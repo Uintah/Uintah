@@ -209,6 +209,19 @@ OpenGL::redraw(double _tbeg, double _tend, int _nframes, double _framerate)
   animate_time_end_=_tend;
   animate_num_frames_=_nframes;
   animate_framerate_=_framerate;
+  send_mailbox_.send(DO_REDRAW);
+  int rc=recv_mailbox_.receive();
+  if(rc != REDRAW_DONE)
+  {
+    cerr << "Wanted redraw_done, but got: " << rc << "\n";
+  }
+}
+
+
+
+void
+OpenGL::start_helper()
+{
   // This is the first redraw - if there is not an OpenGL thread,
   // start one...
   if(!helper_)
@@ -219,12 +232,6 @@ OpenGL::redraw(double _tbeg, double _tend, int _nframes, double _framerate)
 				0, Thread::NotActivated);
     helper_thread_->setStackSize(1024*1024);
     helper_thread_->activate(false);
-  }
-  send_mailbox_.send(DO_REDRAW);
-  int rc=recv_mailbox_.receive();
-  if(rc != REDRAW_DONE)
-  {
-    cerr << "Wanted redraw_done, but got: " << rc << "\n";
   }
 }
 
