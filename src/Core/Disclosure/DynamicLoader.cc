@@ -55,6 +55,28 @@ CompileInfo::CompileInfo(const string &fn, const string &bcn,
 {
 }
 
+
+void
+CompileInfo::add_include(const string &inc)
+{
+  bool unique = true;
+  list<string>::iterator itr = includes_.begin();
+  while (itr != includes_.end())
+  {
+    if (*itr == inc)
+    {
+      unique = false;
+    }
+    ++itr;
+  }
+  
+  if (unique)
+  {
+    includes_.push_front(inc);
+  }
+}
+
+
 DynamicAlgoBase::DynamicAlgoBase() :
   ref_cnt(0),
   lock("DynamicAlgoBase ref_cnt lock")
@@ -281,9 +303,9 @@ DynamicLoader::create_cc(const CompileInfo &info)
   fstr << "// This is an autamatically generated file, do not edit!" << endl;
 
   // generate includes
-  CompileInfo::ci_map_type::const_iterator iter = info.includes_.begin();
+  list<string>::const_iterator iter = info.includes_.begin();
   while (iter != info.includes_.end()) { 
-    const string &s = (*iter).first;
+    const string &s = *iter;
     if (s.substr(0, 5) == STD_STR) {
       string std_include = s.substr(5, s.length() -1);
       fstr << "#include <" << std_include << ">" << endl;
