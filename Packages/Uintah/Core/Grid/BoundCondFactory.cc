@@ -31,8 +31,9 @@ void BoundCondFactory::create(const ProblemSpecP& ps,BCData& objs)
      int mat_id;
        
      bool massFractionBC = false;   // check for massFraction BC
-     string::size_type pos = bc_attr["label"].find ("massFraction");
-     if ( pos != std::string::npos ){
+     string::size_type pos1 = bc_attr["label"].find ("massFraction");
+     string::size_type pos2 = bc_attr["label"].find ("scalar");
+     if ( pos1 != std::string::npos || pos2 != std::string::npos ){
       massFractionBC = true;
      }
      
