@@ -81,11 +81,11 @@ SRCS := $(SRCDIR)/pca-image.cc
 # Does need teem
 LIBS += $(LAPACKMP_LIBRARY) $(F_LIBRARY)
 include $(SCIRUN_SCRIPTS)/program.mk
-endif
 
 PROGRAM := $(SRCDIR)/tex-compress
 SRCS := $(SRCDIR)/tex-compress.cc
 include $(SCIRUN_SCRIPTS)/program.mk
+endif
 
 # Reset the library to make sure we get rid of LAPACK
 LIBS :=
