@@ -101,6 +101,7 @@ ClipByFunction::execute()
   Handle<ClipByFunctionAlgo> algo;
   if (!module_maybe_dynamic_compile(ci, algo))
   {
+    DynamicLoader::scirun_loader().remove_cc(*(ci.get_rep()), cout);
     error("Your function would not compile.");
     return;
   }
