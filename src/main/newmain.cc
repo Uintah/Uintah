@@ -83,7 +83,7 @@ main(int argc, char *argv[] )
 
   try {
     // TODO: Move this out of here???
-    PIDL::PIDL::initialize(argc, argv);
+    PIDL::initialize(argc, argv);
   } catch(const Exception& e) {
     cerr << "Caught exception:\n";
     cerr << e.message() << '\n';
@@ -119,7 +119,7 @@ main(int argc, char *argv[] )
     }
     main_services->releasePort("cca.BuilderService");
     cerr << "SCIRun " << VERSION << " started...\n";
-    PIDL::PIDL::serveObjects();
+    PIDL::serveObjects();
     cerr << "serveObjects done!\n";
   } catch(const Exception& e) {
     cerr << "Caught exception:\n";
