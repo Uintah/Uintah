@@ -11,17 +11,18 @@
  *  Copyright (C) 1994 SCI Group
  */
 
-#include <Geom.h>
+#include <Geom/Geom.h>
+#include <Classlib/NotFinished.h>
+#include <Dataflow/Module.h>
+#include <Geometry/BBox.h>
+#include <Geometry/Transform.h>
+#include <Math/Trig.h>
+#include <Math/TrigTable.h>
+
 #include <GL/glx.h>
 #include <GL/gl.h>
 #include <GL/glu.h>
-#include <Math/Trig.h>
-#include <Math/TrigTable.h>
-#include <Module.h>
-#include <NotFinished.h>
 #include <iostream.h>
-#include <Geometry/BBox.h>
-#include <Geometry/Transform.h>
 
 int GeomPick::nprincipal() {
     return directions.size();

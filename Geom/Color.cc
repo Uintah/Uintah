@@ -11,7 +11,7 @@
  *  Copyright (C) 1994 SCI Group
  */
 
-#include <Color.h>
+#include <Geom/Color.h>
 
 Color::Color()
 : _r(0), _g(0), _b(0)
