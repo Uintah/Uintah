@@ -61,11 +61,13 @@ SocketEpChannel::SocketEpChannel(){
   handler_table=NULL;
   msg = NULL;
   object=NULL;
+  accept_thread=NULL;
 }
 
 SocketEpChannel::~SocketEpChannel(){ 
   if(handler_table!=NULL) delete []handler_table;
   if(msg!=NULL) delete msg;
+  cerr<<"~SocketEpChannel"<<endl;
 }
 
 
@@ -101,8 +103,8 @@ string SocketEpChannel::getUrl() {
 
 void SocketEpChannel::activateConnection(void* obj){
   object=obj;
-  Thread* t = new Thread(new SocketThread(this, -1), "SocketAcceptThread", 0, Thread::Activated);
-  t->detach();
+  accept_thread = new Thread(new SocketThread(this, -1), "SocketAcceptThread", 0, Thread::Activated);
+  accept_thread->detach();
 }
 
 Message* SocketEpChannel::getMessage() {
@@ -148,12 +150,9 @@ SocketEpChannel::runAccept(){
     if(object==NULL) throw CommError("Access Null object", -1);
     ::SCIRun::ServerContext* _sc=static_cast< ::SCIRun::ServerContext*>(object);
     _sc->d_objptr->addReference();
-    
-    Thread* t = new Thread(new SocketThread(this, -2, new_fd), "SocketServiceThread", 0, Thread::Activated);
+
+    Thread *t= new Thread(new SocketThread(this, -2, new_fd), "SocketServiceThread", 0, Thread::Activated);
     t->detach();
-
-    //add some break condition
-
   }  
 }
 
