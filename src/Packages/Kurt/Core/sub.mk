@@ -1,17 +1,15 @@
-#Makefile fragment for the Packages/Kurt/Core directory
+#Makefile fragment for the Packages/Kurt directory
 
-include $(SRCTOP_ABS)/scripts/largeso_prologue.mk
+include $(SCIRUN_SCRIPTS)/largeso_prologue.mk
 
 SRCDIR := Packages/Kurt/Core
 SUBDIRS := \
-	$(SRCDIR)/Datatypes
-
-#	$(SRCDIR)/ThirdParty \
-#	$(SRCDIR)/Algorithms \
-
-include $(SRCTOP_ABS)/scripts/recurse.mk
+	$(SRCDIR)/Geom
+#	$(SRCDIR)/Dataflow  \
+#[INSERT NEW CODE FILE HERE]
+include $(SCIRUN_SCRIPTS)/recurse.mk
 
 PSELIBS := 
 LIBS := $(TK_LIBRARY) $(GL_LIBS) -lm
 
-include $(SRCTOP_ABS)/scripts/largeso_epilogue.mk
+include $(SCIRUN_SCRIPTS)/largeso_epilogue.mk

@@ -3,9 +3,8 @@
 SRCDIR := Packages/Kurt/Dataflow/Modules
 
 SUBDIRS := \
-
+	$(SRCDIR)/Visualization
 #[INSERT NEW CATEGORY DIR HERE]
-#	$(SRCDIR)/Vis\
 
 include $(SRCTOP)/scripts/recurse.mk
 

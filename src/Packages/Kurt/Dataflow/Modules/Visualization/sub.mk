@@ -5,10 +5,12 @@ include $(SRCTOP)/scripts/smallso_prologue.mk
 SRCDIR   := Packages/Kurt/Dataflow/Modules/Visualization
 
 SRCS     += \
-	$(SRCDIR)/ParticleColorMapKey.cc \
+	$(SRCDIR)/GridVolVis.cc
 #[INSERT NEW CODE FILE HERE]
+#	$(SRCDIR)/ParticleColorMapKey.cc \
 
 PSELIBS := \
+	Packages/Kurt/Core/Geom \
 	Dataflow/Network Dataflow/Ports \
 	Dataflow/Modules/Visualization Core/Datatypes \
         Core/Thread Core/Persistent Core/Exceptions \
@@ -17,6 +19,7 @@ PSELIBS := \
 	Core/Geometry Dataflow/Widgets Dataflow/XMLUtil \
 	Core/Util \
 	Packages/Uintah/Core/Grid        \
+	Packages/Uintah/Dataflow/Ports \
 	Packages/Uintah/CCA/Ports       \
 	Packages/Uintah/Core/ProblemSpec \
 	Packages/Uintah/Core/Exceptions  \

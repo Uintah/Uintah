@@ -1,0 +1,165 @@
+/*
+  The contents of this file are subject to the University of Utah Public
+  License (the "License"); you may not use this file except in compliance
+  with the License.
+  
+  Software distributed under the License is distributed on an "AS IS"
+  basis, WITHOUT WARRANTY OF ANY KIND, either express or implied. See the
+  License for the specific language governing rights and limitations under
+  the License.
+  
+  The Original Source Code is SCIRun, released March 12, 2001.
+  
+  The Original Source Code was developed by the University of Utah.
+  Portions created by UNIVERSITY are Copyright (C) 2001, 1994 
+  University of Utah. All Rights Reserved.
+*/
+
+
+/*
+ * GridVolVis.cc
+ *
+ * Simple interface to volume rendering stuff
+ */
+
+#include <Packages/Kurt/Dataflow/Modules/Visualization/GridVolVis.h>
+
+#include <Core/Containers/Array1.h>
+#include <Dataflow/Network/Module.h>
+#include <Core/Datatypes/ColorMap.h>
+#include <Dataflow/Ports/ColorMapPort.h>
+#include <Dataflow/Ports/GeometryPort.h>
+#include <Dataflow/Ports/FieldPort.h>
+#include <Core/Datatypes/Field.h>
+#include <Core/Geom/GeomTriangles.h>
+
+#include <Core/Malloc/Allocator.h>
+#include <Core/GuiInterface/GuiVar.h>
+#include <Core/Thread/CrowdMonitor.h>
+
+#include <Dataflow/Widgets/PointWidget.h>
+#include <iostream>
+#ifdef __sgi
+#include <ios>
+#endif
+#include <algorithm>
+#include <Core/Datatypes/VolumeUtils.h>
+
+using std::hex;
+using std::dec;
+
+namespace Kurt {
+
+using SCIRun::postMessage;
+using SCIRun::Field;
+
+static string control_name("Control Widget");
+			 
+extern "C" Module* make_GridVolVis( const string& id)
+{
+  return new GridVolVis(id);
+}
+
+
+GridVolVis::GridVolVis(const string& id)
+  : Module("GridVolVis", id, Filter, "Visualization", "Kurt"),
+    tex(0),
+    num_slices("num_slices", id, this),
+    render_style("render_style", id, this),
+    alpha_scale("alpha_scale", id, this),
+    interp_mode("interp_mode", id, this),
+    volren(0)
+{
+}
+
+GridVolVis::~GridVolVis()
+{
+
+}
+
+void GridVolVis::execute(void)
+{
+  static FieldHandle old_tex = 0;
+  static ColorMapHandle old_cmap = 0;
+
+  infield = (FieldIPort *)get_iport("Texture Field");
+  incolormap = (ColorMapIPort *)get_iport("Color Map");
+  ogeom = (GeometryOPort *)get_oport("Geometry");
+
+  if (!infield) {
+    postMessage("Unable to initialize "+name+"'s iport\n");
+    return;
+  }
+  if (!incolormap) {
+    postMessage("Unable to initialize "+name+"'s iport\n");
+    return;
+  }
+  if (!ogeom) {
+    postMessage("Unable to initialize "+name+"'s oport\n");
+    return;
+  }
+
+  if (!infield->get(tex)) {
+    return;
+  }
+  else if (!tex.get_rep()) {
+    return;
+  }
+  
+  ColorMapHandle cmap;
+  if( !incolormap->get(cmap)){
+    return;
+  }
+
+  //AuditAllocator(default_allocator);
+  if( !volren ){
+    volren = new VolumeRenderer(0x123456, tex, cmap);
+    if( tex->data_at() == Field::CELL ){
+      volren->SetInterp(false);
+      interp_mode.set(0);
+      cerr<<"Need to initialize volren\n";
+      old_cmap = cmap;
+      old_tex = tex;
+    }
+    ogeom->delAll();
+    ogeom->addObj( volren, "GridVolVis TransParent");
+    
+  } else {
+    if( tex.get_rep() != old_tex.get_rep() ){
+      volren->SetVol( tex );
+      old_tex = tex;
+    }
+    if( cmap.get_rep() != old_cmap.get_rep() ){
+      volren->SetColorMap( cmap );
+      old_cmap = cmap;
+    }
+    cerr<<"Initialized\n";
+  }
+ 
+  //AuditAllocator(default_allocator);
+  volren->SetInterp( bool(interp_mode.get()));
+  //AuditAllocator(default_allocator);
+
+  switch( render_style.get() ) {
+  case 0:
+    volren->over_op();
+    break;
+  case 1:
+    volren->mip();
+    break;
+  case 2:
+    volren->attenuate();
+  }
+  
+  //AuditAllocator(default_allocator);
+  volren->SetNSlices( num_slices.get() );
+  volren->SetSliceAlpha( alpha_scale.get() );
+  //AuditAllocator(default_allocator);
+  ogeom->flushViews();				  
+  //AuditAllocator(default_allocator);
+}
+
+} // End namespace Kurt
+
+
+
