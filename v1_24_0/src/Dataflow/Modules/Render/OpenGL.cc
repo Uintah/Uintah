@@ -986,9 +986,9 @@ OpenGL::redraw_frame()
       fps=animate_num_frames_;
     //int fps_whole=(int)fps;
     //int fps_hund=(int)((fps-fps_whole)*100);
-    ostringstream str;
+    //ostringstream str;
     // str << view_window_->id << " setFrameRate "<<fps_whole<<"."<< fps_hund;
-    gui_->execute(str.str());
+    //gui_->execute(str.str());
     view_window_->set_current_time(animate_time_end_);
   }
   else
