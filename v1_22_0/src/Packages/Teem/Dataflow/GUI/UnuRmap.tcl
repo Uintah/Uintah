@@ -79,7 +79,7 @@ itcl_class Teem_UnuNtoZ_UnuRmap {
         checkbutton $w.f.options.rescale \
 	    -text "Rescale to the Map Domain" \
 	    -variable $this-rescale
-        pack $w.f.options.rescale -side top -expand yes -fill x
+        pack $w.f.options.rescale -side top -anchor nw 
 
 	frame $w.f.options.min -relief groove -borderwidth 2
 	pack $w.f.options.min -side top -expand yes -fill x
@@ -95,10 +95,6 @@ itcl_class Teem_UnuNtoZ_UnuRmap {
 
 	frame $w.f.options.max -relief groove -borderwidth 2
 	pack $w.f.options.max -side top -expand yes -fill x
-
-        iwidgets::entryfield $w.f.options.max.v -labeltext "Max:" \
-	    -textvariable $this-max
-        pack $w.f.options.max.v -side top -expand yes -fill x
 
         iwidgets::entryfield $w.f.options.max.v -labeltext "Max:" \
 	    -textvariable $this-max
