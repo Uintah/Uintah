@@ -376,7 +376,10 @@ proc createModulesMenu { subnet } {
 	    foreach mod $ModuleMenu(${pack}_${cat}_modules) {
 		$canvas.modulesMenu.$cat add command \
 		    -label "$ModuleMenu($mod)" \
-		    -command "global Subnet; set Subnet(Loading) $subnet; addModuleAtMouse \"$ModuleMenu($pack)\" \"$ModuleMenu($cat)\" \"$ModuleMenu($mod)\"; set Subnet(Loading) 0"
+		    -command "global Subnet
+                              set Subnet(Loading) $subnet
+                              addModuleAtMouse \"$ModuleMenu($pack)\" \"$ModuleMenu($cat)\" \"$ModuleMenu($mod)\"
+                              set Subnet(Loading) 0"
 	    }
 	}
     }
@@ -395,7 +398,10 @@ proc createModulesMenu { subnet } {
 	    set name [join [lrange [split [lindex [split $file "/"] end] "."] 0 end-1] "."]
 	    $canvas.modulesMenu.subnet add command \
 		-label "$name" \
-		-command "loadSubnet $subnet {$file}"
+		-command "global Subnet
+                          set Subnet(Loading) $subnet
+                          loadSubnet {$file}
+                          set SubnetLoading 0"
 	}
     }
 	
