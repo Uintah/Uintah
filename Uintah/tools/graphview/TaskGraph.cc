@@ -110,11 +110,16 @@ TaskGraph::TaskGraph(DOM_Document xmlDoc)
     string target;
     get(node, "source", source);
     get(node, "target", target);
-    
-    Edge* edge = m_taskMap[source]->addDependency(m_taskMap[target]);
-    if (edge) {
-      m_edges.push_back(edge);
-      m_edgeMap[source + "->" + target] = edge;
+    Task* sourceTask = m_taskMap[source];
+    if (sourceTask != NULL) {
+      Edge* edge = sourceTask->addDependency(m_taskMap[target]);
+      if (edge) {
+	m_edges.push_back(edge);
+	m_edgeMap[source + "->" + target] = edge;
+      }
+    }
+    else {
+      cerr << "ERROR: Undefined task, '" << source << "'" << endl;
     }
   }
   cout << "Processed " << m_tasks.size() << " nodes and "
