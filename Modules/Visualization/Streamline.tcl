@@ -61,7 +61,7 @@ proc uiStreamline {modid} {
 	-command $n
     pack $w.f.alg.euler $w.f.alg.rk4 $w.f.alg.sf -side top -anchor w
 
-    global stepsize
+    global stepsize,$modid
     set stepsize,$modid 0.1
     fscale $w.f.stepsize -variable stepsize,$modid -digits 3 \
 	-from 0.0 -to 1.0 -label "Step size:" \
@@ -69,7 +69,7 @@ proc uiStreamline {modid} {
 	-activeforeground SteelBlue2 -orient horizontal
     pack $w.f.stepsize -fill x -pady 2
 
-    global maxsteps
+    global maxsteps,$modid
     set maxsteps,$modid 100
     fscale $w.f.maxsteps -variable maxsteps,$modid \
 	-from 0 -to 1000 -label "Maximum steps:" \

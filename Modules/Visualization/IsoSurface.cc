@@ -41,6 +41,8 @@ class IsoSurface : public Module {
     GeometryOPort* ogeom;
     int abort_flag;
 
+    TCLint emit_surface;
+
     int have_seedpoint;
     Point seed_point;
     int need_seed;
