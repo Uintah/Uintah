@@ -4,7 +4,7 @@
 
 #include <Classlib/Stack.cc>
 
-class MaterialProp;
+class Material;
 
-typedef Stack<MaterialProp*> _dummy1_;
+typedef Stack<Material*> _dummy1_;
 

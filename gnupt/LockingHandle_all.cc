@@ -2,12 +2,12 @@
 #pragma implementation "LockingHandle.h"
 
 #include <Classlib/LockingHandle.cc>
-#include <ContourSet.h>
-#include <Matrix.h>
-#include <Mesh.h>
-#include <ScalarField.h>
-#include <Surface.h>
-#include <VectorField.h>
+#include <Datatypes/ContourSet.h>
+#include <Datatypes/Matrix.h>
+#include <Datatypes/Mesh.h>
+#include <Datatypes/ScalarField.h>
+#include <Datatypes/Surface.h>
+#include <Datatypes/VectorField.h>
 
 typedef LockingHandle<ContourSet> _dummy1_;
 typedef LockingHandle<ScalarField> _dummy2_;

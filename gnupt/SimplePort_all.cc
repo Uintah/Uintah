@@ -1,13 +1,13 @@
 
 #pragma implementation "SimplePort.h"
 
-#include <SimplePort.cc>
-#include <ContourSet.h>
-#include <Matrix.h>
-#include <Mesh.h>
-#include <ScalarField.h>
-#include <Surface.h>
-#include <VectorField.h>
+#include <Datatypes/SimplePort.cc>
+#include <Datatypes/ContourSet.h>
+#include <Datatypes/Matrix.h>
+#include <Datatypes/Mesh.h>
+#include <Datatypes/ScalarField.h>
+#include <Datatypes/Surface.h>
+#include <Datatypes/VectorField.h>
 
 typedef SimpleIPort<ContourSetHandle> _dummy1_;
 typedef SimpleOPort<ContourSetHandle> _dummy2_;
