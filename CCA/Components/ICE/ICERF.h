@@ -36,7 +36,9 @@ using namespace SCIRun;
       
       virtual void scheduleInitialize(const LevelP& level, 
                                       SchedulerP&);
-      
+
+      virtual void restartInitialize();
+            
       virtual void scheduleComputeStableTimestep(const LevelP&,
                                                 SchedulerP&);
       
@@ -194,16 +196,6 @@ using namespace SCIRun;
                
       void setBC(CCVariable<double>& press_CC, const CCVariable<double>& rho,
                const std::string& type, const Patch* p, const int mat_id);
-               
-      void setBC(CCVariable<double>& press_CC, 
-                StaticArray<constCCVariable<double> >& rho_micro_CC,
-                StaticArray<constCCVariable<double> >& rho_CC,
-                StaticArray<constCCVariable<double> >& vol_frac_CC,
-                StaticArray<constCCVariable<Vector> >& vel_CC,
-                DataWarehouse* old_dw,
-                const string& kind, 
-                const Patch* patch, 
-                const int mat_id);
 
       void setBC(CCVariable<Vector>& variable,const std::string& type,
 		 const Patch* p, const int mat_id);
@@ -244,18 +236,28 @@ using namespace SCIRun;
                         const MaterialSubset* matls,  
                         DataWarehouse* old_dw,
                         DataWarehouse* new_dw);  
-                         
-      void backoutGCPressFromVelFC(const Patch* patch,
-                                Patch::FaceType face,
-                                DataWarehouse* old_dw,
-                                CCVariable<double>& press_CC, 
-                          const StaticArray<constCCVariable<double> >& rho_micro_CC,
-                          const StaticArray<constCCVariable<double> >& rho_CC,
-                          const StaticArray<constCCVariable<double> >& vol_frac_CC,
-                          const StaticArray<constCCVariable<Vector> >& vel_CC);
-                             
+                                                      
       void getExchangeCoefficients( DenseMatrix& K,
-                                    DenseMatrix& H );  
+                                    DenseMatrix& H ); 
+
+      void matrixInverse(  int numMatls,
+                           DenseMatrix& a,
+                           DenseMatrix& aInverse);
+                          
+      void matrixSolver( int numMatls,
+                         DenseMatrix& a, 
+                         vector<double>& b, 
+                         vector<double>& X  );
+                         
+      void multiplyMatrixAndVector( int numMatls,
+                                    DenseMatrix& a, 
+                                    vector<double>& b, 
+                                    vector<double>& X  );
+                                                             
+      double conditionNumber( const int numMatls,
+                              const DenseMatrix& a);
+
+
                                         
       // Debugging switches
       bool switchDebugInitialize;
@@ -290,54 +292,13 @@ using namespace SCIRun;
 			       CCVariable<eflux>& OFE,
 			       CCVariable<cflux>& OFC);
       
-      void outflowVolCentroid(const SFCXVariable<double>& uvel_CC,
-			      const SFCYVariable<double>& vvel_CC,
-			      const SFCZVariable<double>& wvel_CC,
-			      const double& delT, const Vector& dx,
-			      CCVariable<fflux>& r_out_x,
-			      CCVariable<fflux>& r_out_y,
-			      CCVariable<fflux>& r_out_z,
-			      CCVariable<eflux>& r_out_x_CF,
-			      CCVariable<eflux>& r_out_y_CF,
-			      CCVariable<eflux>& r_out_z_CF);
-      
-      void advectQFirst(const CCVariable<double>& q_CC,
+      template<class T> void advectQFirst(const CCVariable<T>& q_CC,
 			const Patch* patch,
 			const CCVariable<fflux>& OFS,
 			const CCVariable<eflux>& OFE,
 			const CCVariable<cflux>& OFC,
-			CCVariable<double>& q_advected);
-      
-      void advectQFirst(const CCVariable<Vector>& q_CC,
-			const Patch* patch,
-			const CCVariable<fflux>& OFS,
-			const CCVariable<eflux>& OFE,
-			const CCVariable<cflux>& OFC,
-			CCVariable<Vector>& q_advected);
+			CCVariable<T>& q_advected);
 
-      void qOutfluxFirst(const CCVariable<double>& q_CC,const Patch* patch,
-			 CCVariable<fflux>& q_out,
-			 CCVariable<eflux>& q_out_EF,
-			 CCVariable<cflux>& q_out_CF);
-      
-      
-      void qInfluxFirst(const CCVariable<fflux>& q_out,
-		        const CCVariable<eflux>& q_out_EF,
-		        const CCVariable<cflux>& q_out_CF, 
-		        const Patch* patch,
-		        CCVariable<fflux>& q_in,
-		        CCVariable<eflux>& q_in_EF,
-		        CCVariable<cflux>& q_in_CF);
-
-      void qOutfluxSecond(CCVariable<fflux>& OFS,
-			  CCVariable<fflux>& IFS,
-			  CCVariable<fflux>& r_out_x,
-			  CCVariable<fflux>& r_out_y,
-			  CCVariable<fflux>& r_out_z,
-			  CCVariable<eflux>& r_out_x_CF,
-			  CCVariable<eflux>& r_out_y_CF,
-			  CCVariable<eflux>& r_out_z_CF,
-			  const Vector& dx);
 
       void computeTauX_Components( const Patch* patch,
                           const CCVariable<Vector>& vel_CC,
@@ -427,8 +388,8 @@ using namespace SCIRun;
 
 #define RIGHT_BK            8               /* edge along right back of cell*/
 #define RIGHT_FR            9               /* edge along right front of cell  */
-#define LEFT_FR             10              /* edge along left front of cell*/
-#define LEFT_BK             11              /* edge alone left back of cell  */
+#define LEFT_BK             10              /* edge alone left back of cell  */
+#define LEFT_FR             11              /* edge along left front of cell*/
      
             //__________________________________
             //   C O R N E R   F L U X E S

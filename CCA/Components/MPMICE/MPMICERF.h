@@ -67,6 +67,8 @@ public:
   virtual void scheduleInitialize(const LevelP& level,
 				  SchedulerP&);
 
+  virtual void restartInitialize();
+
   //////////
   // Insert Documentation Here:
   virtual void scheduleComputeStableTimestep(const LevelP& level,
@@ -79,16 +81,13 @@ public:
                             
   void scheduleInterpolateNCToCC_0(SchedulerP&, 
                                   const PatchSet*,
+                                  const MaterialSubset*,
 				      const MaterialSet*);
 
-  /*
-  void scheduleInterpolateVelIncFCToNC(SchedulerP&, 
-                                      const PatchSet*,
-				          const MaterialSet*);
-  */
   
   void scheduleInterpolateNCToCC(SchedulerP&, 
                                 const PatchSet*,
+                                const MaterialSubset*,
 				    const MaterialSet*);
 
   void scheduleCCMomExchange(SchedulerP&, 
@@ -131,6 +130,7 @@ public:
                                     const PatchSet*,
                                     const MaterialSubset*,
                                     const MaterialSubset*,
+                                    const MaterialSubset*,
 				        const MaterialSet*);
 
   void scheduleHEChemistry(SchedulerP&, 
@@ -157,14 +157,6 @@ public:
 			   const MaterialSubset* matls,
                            DataWarehouse* old_dw,
                            DataWarehouse* new_dw);
-
-  /*
-  void interpolateVelIncFCToNC(const ProcessorGroup*,
-                               const PatchSubset* patch,
-			       const MaterialSubset* matls,
-                               DataWarehouse* old_dw,
-                               DataWarehouse* new_dw);
-  */
   
   void interpolateNCToCC(const ProcessorGroup*,
                          const PatchSubset* patch,
