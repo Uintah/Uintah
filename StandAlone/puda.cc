@@ -103,6 +103,150 @@ string makeFileName(string raydatadir, string variable_file, string time_file,
   return raydatafile;
 }
 
+// get the volume average particle data
+void getVolAvPart(DataArchive* da, unsigned short flag) {
+
+  // Check the available variables - should have at least p.volume 
+  // and p.stress/p.strain and print variable names
+  vector<string> vars;
+  vector<const Uintah::TypeDescription*> types;
+  da->queryVariables(vars, types);
+  ASSERTEQ(vars.size(), types.size());
+  cout << "There are " << vars.size() << " variables:\n";
+
+  bool gotVol = false;
+  bool gotVar = false;
+  for(unsigned int v=0;v<vars.size();v++){
+    std::string var = vars[v];
+    cout << "\t" << var ;
+    if (var == "p.volume") gotVol = true;
+    switch(flag) {
+    case 1:
+      if (var == "p.stress") gotVar = true;
+      break;
+    case 2:
+      if (var == "p.strain") gotVar = true;
+      break;
+    default:
+      cerr << "\n **Error** getVolAvPart : Wrong flag " << flag << " passed." << endl; 
+      exit(1);
+    }
+  }
+  cout << endl;
+  if (!gotVol) {
+    cerr << "\n **Error** getVolAvPart : DataArchiver does not contain particle volume data." << endl;
+    exit(1);
+  }
+  switch(flag) {
+  case 1:
+    if (!gotVar) {
+      cerr << "\n **Error** getVolAvPart : DataArchiver does not contain particle stress data." << endl;
+      exit(1);
+    }
+    break;
+  case 2:
+    if (!gotVar) {
+      cerr << "\n **Error** getVolAvPart : DataArchiver does not contain particle strain data." << endl;
+      exit(1);
+    }
+    break;
+  default:
+    cerr << "\n **Error** getVolAvPart : Wrong flag " << flag << " passed." << endl; 
+    exit(1);
+  }
+      
+  // Now that the variables have been found, get the data for all available time steps 
+  // from the data archive
+  vector<int> index;
+  vector<double> times;
+  da->queryTimesteps(index, times);
+  ASSERTEQ(index.size(), times.size());
+  cout << "There are " << index.size() << " timesteps:\n";
+      
+  unsigned long time_step_lower = 0;
+  unsigned long time_step_upper = times.size() - 1 ;
+      
+  // Loop thru all time steps and store the volume and variable (stress/strain)
+  for(unsigned long t=time_step_lower;t<=time_step_upper;t++){
+    double time = times[t];
+    //cout << "time = " << time << "\n";
+    GridP grid = da->queryGrid(time);
+
+    //vector<ShareAssignParticleVariable<double> > volumeVector;
+    //vector<ShareAssignParticleVariable<Matrix3> > sigepsVector;
+    vector<double> volumeVector;
+    vector<Matrix3> sigepsVector;
+    double totVol = 0.0;
+
+    // Loop thru all the levels
+    for(int l=0;l<grid->numLevels();l++){
+      LevelP level = grid->getLevel(l);
+
+      // Loop thru all the patches
+      for(Level::const_patchIterator iter = level->patchesBegin(); iter != level->patchesEnd(); iter++){
+	const Patch* patch = *iter;
+	//cout << "\t\tPatch: " << patch->getID() << "\n";
+
+	// Loop thru all the variables 
+	for(int v=0;v<(int)vars.size();v++){
+	  std::string var = vars[v];
+	  const Uintah::TypeDescription* td = types[v];
+	  //cout << "\tVariable: " << var << ", type " << td->getName() << "\n";
+
+	  // Check if the variable is a ParticleVariable
+	  if(td->getType() == Uintah::TypeDescription::ParticleVariable) { 
+
+	    // loop thru all the materials
+	    ConsecutiveRangeSet matls = da->queryMaterials(var, patch, time);
+	    for(ConsecutiveRangeSet::iterator matlIter = matls.begin(); matlIter != matls.end(); matlIter++){
+	      int matl = *matlIter;
+	      //cout << "\t\t\tMaterial: " << matl << "\n";
+
+	      // Find the name of the variable
+	      if (var == "p.volume") {
+		ParticleVariable<double> value;
+		da->query(value, var, matl, patch, time);
+		ParticleSubset* pset = value.getParticleSubset();
+		if(pset->numParticles() > 0){
+		  for(ParticleSubset::iterator iter = pset->begin();iter != pset->end(); iter++){
+                    volumeVector.push_back(value[*iter]);
+                    totVol += value[*iter];
+		  }
+		}
+	      } 
+	      else if (var == "p.stress") {
+		ParticleVariable<Matrix3> value;
+		da->query(value, var, matl, patch, time);
+		ParticleSubset* pset = value.getParticleSubset();
+		if(pset->numParticles() > 0){
+		  for(ParticleSubset::iterator iter = pset->begin();iter != pset->end(); iter++){
+                    sigepsVector.push_back(value[*iter]);
+		  }
+		}
+	      } // end of var compare if
+	    } // end of material loop
+	  } // end of ParticleVariable if
+	} // end of variable loop
+      } // end of patch loop
+    } // end of level loop
+
+    // Now that the volume vector and variable vector are available just
+    // do a weighted average
+    ASSERTEQ(volumeVector.size(), sigepsVector.size());
+    Matrix3 avVar;
+    cout << "Size of vector = " << volumeVector.size() << endl;
+    for (unsigned int ii = 0; ii < volumeVector.size() ; ++ii) {
+      avVar += ((sigepsVector[ii]*volumeVector[ii])/totVol);
+    }
+    for (int ii = 1; ii < 4; ++ii) {
+      for (int jj = 1; jj < 4; ++jj) {
+	cout << avVar(ii,jj) << "  " ;
+      }
+      cout << endl;
+    }
+  } // end of time step loop
+}
+
 void usage(const std::string& badarg, const std::string& progname)
 {
     if(badarg != "")
@@ -116,6 +260,8 @@ void usage(const std::string& badarg, const std::string& progname)
     cerr << "  -varsummary\n";
     cerr << "  -asci\n";
     cerr << "  -cell_stresses\n";
+    cerr << "  -av_part_stress\n";
+    cerr << "  -av_part_strain\n";
     cerr << "  -rtdata [output directory]\n";
     cerr << "  -PTvar\n";
     cerr << "  -ptonly (prints out only the point location\n";
@@ -146,6 +292,8 @@ int main(int argc, char** argv)
   bool do_varsummary=false;
   bool do_asci=false;
   bool do_cell_stresses=false;
+  bool do_av_part_stress = false;
+  bool do_av_part_strain = false;
   bool do_rtdata = false;
   bool do_NCvar_double = false;
   bool do_NCvar_point = false;
@@ -160,8 +308,8 @@ int main(int argc, char** argv)
   bool do_patch = false;
   bool do_material = false;
   bool do_verbose = false;
-  unsigned long time_step_lower;
-  unsigned long time_step_upper;
+  unsigned long time_step_lower = 0;
+  unsigned long time_step_upper = 1;
   bool tslow_set = false;
   bool tsup_set = false;
   string filebase;
@@ -186,6 +334,10 @@ int main(int argc, char** argv)
       do_asci=true;
     } else if(s == "-cell_stresses"){
       do_cell_stresses=true;
+    } else if(s == "-av_part_stress"){
+      do_av_part_stress=true;
+    } else if(s == "-av_part_strain"){
+      do_av_part_strain=true;
     } else if(s == "-rtdata") {
       do_rtdata = true;
       if (++i < argc) {
@@ -298,6 +450,16 @@ int main(int argc, char** argv)
       for(int i=0;i<(int)vars.size();i++){
 	cout << vars[i] << ": " << types[i]->getName() << '\n';
       }
+    }
+    if (do_av_part_stress) {
+       unsigned short flag = 1;
+       cout << "\t Volume average stress = " << endl;
+       getVolAvPart(da, flag);
+    }
+    if (do_av_part_strain) {
+       unsigned short flag = 2;
+       cout << "\t Volume average strain = " << endl;
+       getVolAvPart(da, flag);
     }
     //______________________________________________________________________
     //              V A R S U M M A R Y   O P T I O N
@@ -1289,7 +1451,7 @@ int main(int argc, char** argv)
 			// addfile to filelist
 			fprintf(filelist,"%s\n",raydatafile.c_str());
 			// get the data and write it out
-			double min, max;
+			double min = 0.0, max = 0.0;
 			NCVariable<double> value;
 			da->query(value, var, matl, patch, time);
 			IntVector dim(value.getHighIndex()-value.getLowIndex());
@@ -1359,7 +1521,7 @@ int main(int argc, char** argv)
 			// addfile to filelist
 			fprintf(filelist,"%s\n",raydatafile.c_str());
 			// get the data and write it out
-			double min, max;
+			double min = 0.0, max = 0.0;
 			CCVariable<double> value;
 			da->query(value, var, matl, patch, time);
 			IntVector dim(value.getHighIndex()-value.getLowIndex());
