@@ -18,7 +18,7 @@
 #include <GL/glu.h>
 #include <GL/glx.h>
 
-#include <Core/2d/Drawable.h>
+#include <Core/2d/DrawObj.h>
 #include <Core/Datatypes/Datatype.h>
 #include <Core/Containers/Array1.h>
 #include <Core/Malloc/Allocator.h>
@@ -35,10 +35,10 @@ namespace SCIRun {
 
 struct ObjInfo {
   string name_;
-  Drawable *obj_;
+  DrawObj *obj_;
   bool mapped_;
 
-  ObjInfo( const string &name, Drawable *d);
+  ObjInfo( const string &name, DrawObj *d);
   ~ObjInfo() { if (obj_) delete obj_; }
 
   void draw() { obj_->draw(); }
@@ -46,7 +46,7 @@ struct ObjInfo {
   void set_id( const string & );
 };
 
-class Graph : public TclObj, public Drawable {
+class Graph : public TclObj, public DrawObj {
 private:
   ObjInfo *obj_;
   OpenGLWindow *ogl_;
@@ -56,7 +56,7 @@ public:
   Graph( const string & );
   virtual ~Graph() {}
 
-  void add( const string &, Drawable *);
+  void add( const string &, DrawObj *);
   virtual void tcl_command(TCLArgs&, void*);
   virtual void set_window( const string &);
   void update();

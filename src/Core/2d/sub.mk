@@ -22,10 +22,10 @@ include $(SCIRUN_SCRIPTS)/smallso_prologue.mk
 SRCDIR   := Core/2d
 
 SRCS     += $(SRCDIR)/Point2d.cc \
-	$(SRCDIR)/Drawable.cc \
+	$(SRCDIR)/DrawObj.cc \
 	$(SRCDIR)/BBox2d.cc \
 	$(SRCDIR)/Diagram.cc \
-	$(SRCDIR)/Hairline.cc \
+	$(SRCDIR)/HairObj.cc \
 	$(SRCDIR)/Polyline.cc \
 	$(SRCDIR)/OpenGLWindow.cc \
 	$(SRCDIR)/OpenGL.cc \

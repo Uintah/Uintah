@@ -38,7 +38,7 @@ using std::ostringstream;
 
 #include <Core/Malloc/Allocator.h>
 #include <Core/2d/Diagram.h>
-#include <Core/2d/Hairline.h>
+#include <Core/2d/HairObj.h>
 #include <Core/2d/BBox2d.h>
 #include <Core/2d/OpenGLWindow.h>
 
@@ -49,10 +49,10 @@ Persistent* make_Diagram()
   return scinew Diagram;
 }
 
-PersistentTypeID Diagram::type_id("diagram", "Drawable", make_Diagram);
+PersistentTypeID Diagram::type_id("diagram", "DrawObj", make_Diagram);
 
 Diagram::Diagram( const string &name)
-  : TclObj( "Diagram"), Drawable(name)
+  : TclObj( "Diagram"), DrawObj(name)
 {
   select_mode_ = 2;
   scale_mode_ = 1;
@@ -67,7 +67,7 @@ Diagram::~Diagram()
 }
 
 void
-Diagram::add( Drawable *d )
+Diagram::add( DrawObj *d )
 {
   graph_.add(d);
   if ( window() != "" ) {
@@ -151,7 +151,7 @@ Diagram::tcl_command(TCLArgs& args, void* userdata)
       get_bounds( b1 );
       b2.extend( Point2d( b1.min().x(), 0 ) );
       b2.extend( Point2d( b1.max().x(), 1 ) );
-      add_widget( scinew Hairline( b2, "Hairline") );
+      add_widget( scinew HairObj( b2, "HairObj") );
       redraw();
     }
     else {
@@ -257,7 +257,7 @@ void
 Diagram::io(Piostream& stream)
 {
   stream.begin_class("Diagram", DIAGRAM_VERSION);
-  Drawable::io(stream);
+  DrawObj::io(stream);
   stream.end_class();
 }
 

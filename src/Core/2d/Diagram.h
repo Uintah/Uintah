@@ -34,14 +34,14 @@
 #include <Core/GuiInterface/GuiVar.h>
 #include <Core/GuiInterface/TclObj.h>
 #include <Core/Containers/Array1.h>
-#include <Core/2d/Drawable.h>
+#include <Core/2d/DrawObj.h>
 #include <Core/2d/Widget.h>
 
 namespace SCIRun {
   
-class SCICORESHARE Diagram : public TclObj, public Drawable {
+class SCICORESHARE Diagram : public TclObj, public DrawObj {
 private:
-  Array1<Drawable *> graph_;
+  Array1<DrawObj *> graph_;
   Array1<Widget *> widget_;
 
   BBox2d graphs_bounds_;
@@ -63,7 +63,7 @@ public:
   Diagram( const string &name="" );
   virtual ~Diagram();
 
-  void add( Drawable * );
+  void add( DrawObj * );
   void add_widget( Widget *);
   void redraw() { if ( parent() ) parent()->need_redraw(); }
   virtual void reset_bbox();

@@ -39,7 +39,7 @@ Persistent* make_Axes()
   return scinew Axes;
 }
  
-PersistentTypeID Axes::type_id("axes", "Drawable", make_Axes);
+PersistentTypeID Axes::type_id("axes", "DrawObj", make_Axes);
 
 Axes::~Axes()
 {

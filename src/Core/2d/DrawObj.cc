@@ -15,9 +15,8 @@
   University of Utah. All Rights Reserved.
 */
 
-
 /*
- *  Polyline.h: Displayable 2D object
+ *  DrawObj.cc: Displayable 2D object
  *
  *  Written by:
  *   Yarden Livnat
@@ -28,45 +27,44 @@
  *  Copyright (C) 2001 SCI Group
  */
 
-#ifndef SCI_Polyline_h
-#define SCI_Polyline_h 
-
-#include <Core/Geom/Color.h>
-#include <Core/Containers/Array1.h>
+#include <Core/Malloc/Allocator.h>
 #include <Core/2d/DrawObj.h>
 
+#include <iostream>
+using std::cerr;
+using std::endl;
+
 namespace SCIRun {
-  
-class SCICORESHARE Polyline : public DrawObj {
-private:
-  Array1<double> data_;
-  double min_, max_;
-  Color color;
 
-public:
-  Polyline( const string &name="") : DrawObj(name) {} 
-  Polyline( int i );
-  Polyline( const Array1<double> &, const string &name="" );
-  virtual ~Polyline();
+PersistentTypeID DrawObj::type_id("DrawObj", "Datatype", 0);
 
-  void add( double );
-  void clear() { data_.remove_all(); }
-  void set_color( const Color &);
-  //virtual void reset_bbox();
-  virtual void get_bounds(BBox2d&);
+DrawObj::DrawObj( const string &name) 
+  : name_(name), enabled_(true), parent_(0), ogl_(0)
+{
+  lock_ = scinew Mutex( name.c_str() );
+}
 
-  // For OpenGL
-#ifdef SCI_OPENGL
-  virtual void draw();
-#endif
-  static PersistentTypeID type_id;
 
-  virtual void io(Piostream&);    
+DrawObj::~DrawObj()
+{
+}
 
-};
+void DrawObj::reset_bbox()
+{
+  // Nothing to do, by default.
+}
 
-void Pio(Piostream&, Polyline*&);
+void DrawObj::io(Piostream&)
+{
+  // Nothing for now...
+}
 
-} // namespace SCIRun
+void Pio( Piostream & stream, DrawObj *& obj )
+{
+  Persistent* tmp=obj;
+  stream.io(tmp, DrawObj::type_id);
+  if(stream.reading())
+    obj=(DrawObj*)tmp;
+}
 
-#endif // SCI_Polyline_h
+} // End namespace SCIRun

@@ -34,13 +34,13 @@
 
 #include <Core/Geom/Color.h>
 #include <Core/Containers/Array1.h>
-#include <Core/2d/Drawable.h>
+#include <Core/2d/DrawObj.h>
 #include <Core/share/share.h>
 #include <Core/2d/glprintf.h>
  
 namespace SCIRun {
 
-class SCICORESHARE Axes : public Drawable {
+class SCICORESHARE Axes : public DrawObj {
 private:
 
   int num_v_tics;
@@ -50,8 +50,8 @@ private:
   
 public:
 
-  Axes(const string &name="") : Drawable(name), initialized(false) {}
-  Axes(int h_tics, int v_tics, const string &name="") : Drawable(name),
+  Axes(const string &name="") : DrawObj(name), initialized(false) {}
+  Axes(int h_tics, int v_tics, const string &name="") : DrawObj(name),
     initialized(false)
   { num_v_tics = v_tics; num_h_tics = h_tics; }
   

@@ -12,61 +12,58 @@
   
   The Original Source Code was developed by the University of Utah.
   Portions created by UNIVERSITY are Copyright (C) 2001, 1994 
-  University of Utah. All Rights Reserved.
+  University of Utah. All Rightsget_iports(name Reserved.
 */
 
 
 /*
- *  Polyline.h: Displayable 2D object
+ *  HairObj.h: Displayable 2D object
  *
  *  Written by:
  *   Yarden Livnat
  *   Department of Computer Science
  *   University of Utah
- *   July 2001
+ *   Aug 2001
  *
  *  Copyright (C) 2001 SCI Group
  */
 
-#ifndef SCI_Polyline_h
-#define SCI_Polyline_h 
+#ifndef SCI_HairObj_h
+#define SCI_HairObj_h 
 
-#include <Core/Geom/Color.h>
-#include <Core/Containers/Array1.h>
-#include <Core/2d/DrawObj.h>
+#include <Core/2d/Widget.h>
 
 namespace SCIRun {
   
-class SCICORESHARE Polyline : public DrawObj {
+class SCICORESHARE HairObj :  public Widget {
 private:
-  Array1<double> data_;
-  double min_, max_;
-  Color color;
+  double from_, to_;
+  double pos_;
 
+  double proj[16], model[16];
+  int viewport[4];
 public:
-  Polyline( const string &name="") : DrawObj(name) {} 
-  Polyline( int i );
-  Polyline( const Array1<double> &, const string &name="" );
-  virtual ~Polyline();
+  
+  HairObj() {}
+  HairObj( const BBox2d &, const string &name="hairline" );
+  virtual ~HairObj();
 
-  void add( double );
-  void clear() { data_.remove_all(); }
-  void set_color( const Color &);
-  //virtual void reset_bbox();
-  virtual void get_bounds(BBox2d&);
+  virtual void select( double x, double y, int b );
+  virtual void move( double x, double y, int b );
+  virtual void release( double x, double y, int b );
 
   // For OpenGL
 #ifdef SCI_OPENGL
   virtual void draw();
 #endif
   static PersistentTypeID type_id;
-
+  
   virtual void io(Piostream&);    
-
+  
 };
 
-void Pio(Piostream&, Polyline*&);
+void Pio(Piostream&, HairObj*&);
 
 } // namespace SCIRun
 
-#endif // SCI_Polyline_h
+#endif // SCI_HairObj_h

@@ -44,11 +44,11 @@ Persistent* make_Polyline()
   return scinew Polyline;
 }
 
-PersistentTypeID Polyline::type_id("polyline", "Drawable", make_Polyline);
+PersistentTypeID Polyline::type_id("polyline", "DrawObj", make_Polyline);
 
 
 Polyline::Polyline( const Array1<double> &data, const string &name )
-  : Drawable(name), data_(data) 
+  : DrawObj(name), data_(data) 
 {
   if ( data_.size() > 0 ) {
     min_ = max_ = data_[0];
@@ -109,7 +109,7 @@ void
 Polyline::io(Piostream& stream)
 {
   stream.begin_class("Polyline", POLYLINE_VERSION);
-  Drawable::io(stream);
+  DrawObj::io(stream);
   Pio(stream, data_);
   Pio(stream, min_);
   Pio(stream, max_);
