@@ -74,7 +74,7 @@ proc makeSciButtonPanel { parent close_window this args } {
   frame $parent.btnBox.separator -width 2 -relief sunken -borderwidth 2
   pack  $parent.btnBox.separator -fill y -padx $outside_pad -pady $outside_pad -side left
 
-  button $parent.btnBox.highlight -width 10 -text "Find" -command "fadeinIcon [$this modname]"
+  button $parent.btnBox.highlight -width 10 -text "Find" -command "fadeinIcon [$this modname] 1 1"
   pack   $parent.btnBox.highlight -padx $outside_pad -pady $outside_pad -side left
   Tooltip $parent.btnBox.highlight "Highlights (on the Network Editor) the\nmodule that corresponds to this GUI"
 
