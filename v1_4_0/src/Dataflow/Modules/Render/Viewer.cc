@@ -218,20 +218,8 @@ int Viewer::process_event(int block)
 	    for(unsigned int i=0;i<viewwindow.size();i++){
 		ViewWindow* r=viewwindow[i];
 		if(r->id == rmsg->rid){
-                 r->current_renderer->saveImage(rmsg->filename, rmsg->format);
-		    break;
-		}
-	    }
-	}
-	break;
-    case MessageTypes::ViewWindowDumpHiResImage:
-	{
-	    ViewerMessage* rmsg=(ViewerMessage*)msg;
-	    for(int i=0;i<viewwindow.size();i++){
-		ViewWindow* r=viewwindow[i];
-		if(r->id == rmsg->rid){
-                 r->current_renderer->saveHiResImage(rmsg->filename,
-						     rmsg->format);
+                 r->current_renderer->saveImage(rmsg->filename, rmsg->format, 
+						rmsg->resx,rmsg->resy);
 		    break;
 		}
 	    }
@@ -504,10 +492,15 @@ ViewerMessage::ViewerMessage(MessageTypes::MessageType type,
 
 //----------------------------------------------------------------------
 ViewerMessage::ViewerMessage(MessageTypes::MessageType type,
-			     const string& rid, const string& filename,
-			     const string& format)
+			     const string& rid,
+			     const string& filename,
+			     const string& format,
+			     const string& resx_string,
+			     const string& resy_string)
 : MessageBase(type), rid(rid), filename(filename), format(format)
 {
+  resx = atoi(resx_string.c_str());
+  resy = atoi(resy_string.c_str());
 }
 
 //----------------------------------------------------------------------
