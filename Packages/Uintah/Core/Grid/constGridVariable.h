@@ -2,7 +2,7 @@
 #define UINTAH_HOMEBREW_CONSTGRIDVARIABLE_H
 
 #include <Packages/Uintah/Core/Grid/constVariable.h>
-#include <Packages/Uintah/Core/Grid/Array3Window.h>
+#include <Packages/Uintah/Core/Grid/Array3.h>
 #include <Core/Geometry/IntVector.h>
 #include <Core/Util/Assert.h>
 
@@ -71,6 +71,9 @@ WARNING
     inline const T* getPointer() const {
       return rep_.getPointer();
     }
+
+    operator const Array3<T>&() const
+    { return rep_; }
 
     void print(std::ostream& out) const
     { rep_.print(out); }
