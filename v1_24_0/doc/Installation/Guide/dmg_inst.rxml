@@ -89,7 +89,7 @@ DEALINGS IN THE SOFTWARE.
 	  <para>
 	    <filename>SCIRun-OSX-bin.<!--%= doc.version
 	    %-->.tar.gz</filename> or
-	    <filename>SCIRunFusion-OSX-bin.<!--%= doc.version
+	    <filename>SCIRunWithFusion-OSX-bin.<!--%= doc.version
 	    %-->.tar.gz</filename>
 	  </para>
 	</listitem>
@@ -126,9 +126,9 @@ DEALINGS IN THE SOFTWARE.
 sudo sh -c 'gunzip -c SCIRun-OSX-bin.<!--%= doc.version %-->.tar.gz \
  | (cd /usr/local &amp;&amp; tar xf -)'
       </literallayout>
-      or the following if installing SCIRunFusion:
+      or the following if installing SCIRunWithFusion:
       <literallayout class="monospaced">
-sudo sh -c 'gunzip -c SCIRunFusion-OSX-bin.<!--%= doc.version %-->.tar.gz \
+sudo sh -c 'gunzip -c SCIRunWithFusion-OSX-bin.<!--%= doc.version %-->.tar.gz \
  | (cd /usr/local &amp;&amp; tar xf -)'
       </literallayout>
       SCIRun and it's PowerApps are found in
