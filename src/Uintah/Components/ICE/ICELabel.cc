@@ -33,12 +33,8 @@ ICELabel::ICELabel()
      scinew VarLabel("cv_CC",         CCVariable<double>::getTypeDescription());
     rho_micro_CCLabel = 
      scinew VarLabel("rho_micro_CC",  CCVariable<double>::getTypeDescription());
-    rho_micro_equil_CCLabel = 
-      scinew VarLabel("rho_micro_equil_CC",  CCVariable<double>::getTypeDescription());
     speedSound_CCLabel = 
      scinew VarLabel("speedSound_CC", CCVariable<double>::getTypeDescription());
-    speedSound_equiv_CCLabel = 
-     scinew VarLabel("speedSound_equiv_CC", CCVariable<double>::getTypeDescription());
     div_velfc_CCLabel = 
      scinew VarLabel("div_velfc_CC",  CCVariable<double>::getTypeDescription());
     vol_frac_CCLabel = 
@@ -110,7 +106,6 @@ ICELabel::~ICELabel()
     delete temp_CCLabel;
     delete vel_CCLabel;
     delete speedSound_CCLabel;
-    delete speedSound_equiv_CCLabel;
     delete cv_CCLabel;
     delete rho_micro_CCLabel;
     delete div_velfc_CCLabel;
@@ -143,6 +138,10 @@ ICELabel::~ICELabel()
     delete delTLabel;
 }
 // $Log$
+// Revision 1.25  2001/01/13 01:42:10  harman
+// - eliminated speedSound_equiv_CCLabel
+// - eliminated rho_micro_equil_CClabel
+//
 // Revision 1.24  2001/01/10 00:47:18  harman
 // ICE.cc ICELabel.h ICELabel.cc ICE.h
 // -changed how vol_frac is computed in actuallyStep1b

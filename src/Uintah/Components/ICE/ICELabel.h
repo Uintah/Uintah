@@ -22,12 +22,10 @@ namespace Uintah {
     const VarLabel* press_equil_CCLabel;
     const VarLabel* delPress_CCLabel;
     const VarLabel* rho_micro_CCLabel;
-    const VarLabel* rho_micro_equil_CCLabel;
     const VarLabel* rho_CCLabel;
     const VarLabel* temp_CCLabel;
     const VarLabel* vel_CCLabel;
     const VarLabel* speedSound_CCLabel;
-    const VarLabel* speedSound_equiv_CCLabel;
     const VarLabel* cv_CCLabel;
     const VarLabel* div_velfc_CCLabel;
     const VarLabel* vol_frac_CCLabel;
@@ -66,6 +64,10 @@ namespace Uintah {
 
 #endif
 // $Log$
+// Revision 1.23  2001/01/13 01:42:10  harman
+// - eliminated speedSound_equiv_CCLabel
+// - eliminated rho_micro_equil_CClabel
+//
 // Revision 1.22  2001/01/10 00:47:18  harman
 // ICE.cc ICELabel.h ICELabel.cc ICE.h
 // -changed how vol_frac is computed in actuallyStep1b
