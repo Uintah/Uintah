@@ -403,7 +403,7 @@ public:
     get_point(p0,ra[0]);
     get_point(p1,ra[1]);
     get_point(p2,ra[3]);
-    get_point(p3,ra[4]
+    get_point(p3,ra[4]);
     Vector v0 = p1-p0;
     Vector v1 = p2-p0;
     Vector v2 = p3-p0;
