@@ -189,8 +189,10 @@ int Viewer::process_event()
 	  ((lighting_.lights)[rmsg->lightNo])->on = rmsg->on;
 	  if( rmsg->on ){
 	    if(DirectionalLight *dl = dynamic_cast<DirectionalLight *>
-		((lighting_.lights)[rmsg->lightNo]))
+	       ((lighting_.lights)[rmsg->lightNo])) {
 	      dl->move( rmsg->lightDir );
+	      dl->setColor( rmsg->lightColor );
+	    }
 	  }
 	  r->need_redraw = 1;
 	  break;
@@ -517,8 +519,9 @@ ViewerMessage::ViewerMessage(MessageTypes::MessageType type,
 
 ViewerMessage::ViewerMessage(MessageTypes::MessageType type,
 			     const string& rid, int lightNo, 
-			     bool on, const Vector& dir)
-  : MessageBase(type), rid(rid), lightDir(dir), lightNo(lightNo), on(on)
+			     bool on, const Vector& dir,
+			     const Color& color)
+  : MessageBase(type), rid(rid), lightDir(dir), lightColor(color), lightNo(lightNo), on(on)
 {}
 
 

@@ -308,6 +308,8 @@ public:
   GuiView view;
   View homeview;
 
+  GuiString lightColors;        // Colors for lights
+  GuiString lightVectors;       // Viewing hemisphere, light direction vectors
 				// Background Color
   GuiColor bgcolor;
 

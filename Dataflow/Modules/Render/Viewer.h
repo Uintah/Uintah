@@ -102,6 +102,7 @@ public:
   int nframes;
   double framerate;
   Vector lightDir;
+  Color lightColor;
   int lightNo;
   bool on;
 
@@ -109,7 +110,8 @@ public:
   ViewerMessage(const string& rid, double tbeg, double tend,
 		int nframes, double framerate);
   ViewerMessage(MessageTypes::MessageType,
-		const string& rid, int lightNo, bool on, const Vector& dir);
+		const string& rid, int lightNo, bool on, 
+		const Vector& dir, const Color& color);
   ViewerMessage(MessageTypes::MessageType,
 		const string& rid, const string& filename);
   ViewerMessage(MessageTypes::MessageType,
