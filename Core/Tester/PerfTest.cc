@@ -79,7 +79,7 @@ bool PerfTest::do_test()
 	else if(MINTIME/dt > MULFACTOR)
 	    max*=MULFACTOR;
 	else
-	    max*=MINTIME/dt*1.2;
+	    max=(int)(max*MINTIME/dt*1.2);
 	count=0;
 	if(dt==0)
 	    cout << '\r';
@@ -116,6 +116,9 @@ void PerfTest::time(struct timeb* t)
 
 //
 // $Log$
+// Revision 1.4  2000/09/25 19:48:27  sparker
+// Quiet warnings under g++
+//
 // Revision 1.3  1999/10/07 02:08:05  sparker
 // use standard iostreams and complex type
 //
