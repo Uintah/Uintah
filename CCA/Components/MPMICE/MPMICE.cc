@@ -65,7 +65,6 @@ void MPMICE::problemSetup(const ProblemSpecP& prob_spec, GridP& grid,
   
   d_mpm->setMPMLabel(Mlb);
   d_mpm->setWithICE();
-  if(d_analyze) d_mpm->setAnalyze(d_analyze);
   d_mpm->problemSetup(prob_spec, grid, d_sharedState);
   
   d_ice->setICELabel(Ilb);
@@ -199,11 +198,6 @@ void MPMICE::scheduleTimeAdvance(double, double,
 
   d_mpm->scheduleCarryForwardVariables(           sched, patches, mpm_matls);
   d_ice->scheduleAdvectAndAdvanceInTime(          sched, patches, ice_matls);
-
-  //The next line is used for data analyze, please do not move.  --tan
-  if(d_analyze) {
-    d_analyze->performAnalyze(sched, patches, mpm_matls);
-  }
 
   sched->scheduleParticleRelocation(level,
 				    Mlb->pXLabel_preReloc, 

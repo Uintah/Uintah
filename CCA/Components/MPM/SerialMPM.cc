@@ -75,9 +75,6 @@ SerialMPM::~SerialMPM()
 void SerialMPM::problemSetup(const ProblemSpecP& prob_spec, GridP& grid,
 			     SimulationStateP& sharedState)
 {
-   //The next line is used for data analyze
-   if(d_analyze) d_analyze->problemSetup(prob_spec, grid, sharedState);
-
    d_sharedState = sharedState;
 
    MPMPhysicalBCFactory::create(prob_spec);
@@ -224,9 +221,6 @@ void SerialMPM::scheduleTimeAdvance(double , double ,
   }
   scheduleCarryForwardVariables(          sched, patches, matls);
 
-  //The next line is used for data analyze, please do not move.  --tan
-  if(d_analyze) d_analyze->performAnalyze(sched, patches, matls);
-    
   sched->scheduleParticleRelocation(level, lb->pXLabel_preReloc, 
 				    lb->d_particleState_preReloc,
 				    lb->pXLabel, lb->d_particleState, matls);
