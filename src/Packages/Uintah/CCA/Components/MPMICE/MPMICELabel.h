@@ -27,6 +27,10 @@ namespace Uintah {
       const VarLabel* velInc_NCLabel;
       const VarLabel* burnedMassCCLabel;
       const VarLabel* releasedHeatCCLabel;
+      const VarLabel* scratchLabel;         // to vis intermediate quantities
+      const VarLabel* scratch1Label;
+      const VarLabel* scratch2Label;
+      const VarLabel* scratch3Label; 
       const VarLabel* NC_CCweightLabel;
     };
 
