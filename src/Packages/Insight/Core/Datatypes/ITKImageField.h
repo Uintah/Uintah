@@ -346,9 +346,9 @@ class ITKImageField : public GenericField< ImageMesh, ITKFData2d<Data> >
 {
 public:
   ITKImageField();
-  ITKImageField(Field::data_location data_at);
-  ITKImageField(ImageMeshHandle mesh, Field::data_location data_at);
-  ITKImageField(ImageMeshHandle mesh, Field::data_location data_at, itk::Object* img);
+  ITKImageField(int order);
+  ITKImageField(ImageMeshHandle mesh, int order);
+  ITKImageField(ImageMeshHandle mesh, int order, itk::Object* img);
   virtual ITKImageField<Data> *clone() const;
   virtual ~ITKImageField();
 
@@ -381,8 +381,8 @@ ITKImageField<Data>::ITKImageField()
 
 
 template <class Data>
-ITKImageField<Data>::ITKImageField(Field::data_location data_at)
-  : GenericField<ImageMesh, ITKFData2d<Data> >(data_at)
+ITKImageField<Data>::ITKImageField(int order)
+  : GenericField<ImageMesh, ITKFData2d<Data> >(order)
 {
   // need to set image
   image_set_ = false;
@@ -391,8 +391,8 @@ ITKImageField<Data>::ITKImageField(Field::data_location data_at)
 
 template <class Data>
 ITKImageField<Data>::ITKImageField(ImageMeshHandle mesh,
-			     Field::data_location data_at)
-  : GenericField<ImageMesh, ITKFData2d<Data> >(mesh, data_at)
+			     int order)
+  : GenericField<ImageMesh, ITKFData2d<Data> >(mesh, order)
 {
   // need to set image
   image_set_ = false;
@@ -400,8 +400,8 @@ ITKImageField<Data>::ITKImageField(ImageMeshHandle mesh,
 
 template <class Data>
 ITKImageField<Data>::ITKImageField(ImageMeshHandle mesh,
-			     Field::data_location data_at, itk::Object* img)
-  : GenericField<ImageMesh, ITKFData2d<Data> >(mesh, data_at)
+			     int order, itk::Object* img)
+  : GenericField<ImageMesh, ITKFData2d<Data> >(mesh, order)
 {
   this->SetImage(img);
 }

@@ -421,9 +421,9 @@ public:
   typedef LatVolMesh mesh_type;
 
   ITKLatVolField();
-  ITKLatVolField(Field::data_location data_at);
-  ITKLatVolField(LatVolMeshHandle mesh, Field::data_location data_at);
-  ITKLatVolField(LatVolMeshHandle mesh, Field::data_location data_at, itk::Object* img);
+  ITKLatVolField(int order);
+  ITKLatVolField(LatVolMeshHandle mesh, int order);
+  ITKLatVolField(LatVolMeshHandle mesh, int order, itk::Object* img);
   virtual ITKLatVolField<Data> *clone() const;
   virtual ~ITKLatVolField();
 
@@ -458,8 +458,8 @@ ITKLatVolField<Data>::ITKLatVolField()
 
 
 template <class Data>
-ITKLatVolField<Data>::ITKLatVolField(Field::data_location data_at)
-  : GenericField<LatVolMesh, ITKFData3d<Data> >(data_at)
+ITKLatVolField<Data>::ITKLatVolField(int order)
+  : GenericField<LatVolMesh, ITKFData3d<Data> >(order)
 {
   // need to set image
   image_set_ = false;
@@ -468,8 +468,8 @@ ITKLatVolField<Data>::ITKLatVolField(Field::data_location data_at)
 
 template <class Data>
 ITKLatVolField<Data>::ITKLatVolField(LatVolMeshHandle mesh,
-			     Field::data_location data_at)
-  : GenericField<LatVolMesh, ITKFData3d<Data> >(mesh, data_at)
+			     int order)
+  : GenericField<LatVolMesh, ITKFData3d<Data> >(mesh, order)
 {
   // need to set image
   image_set_ = false;
@@ -477,8 +477,8 @@ ITKLatVolField<Data>::ITKLatVolField(LatVolMeshHandle mesh,
 
 template <class Data>
 ITKLatVolField<Data>::ITKLatVolField(LatVolMeshHandle mesh,
-			     Field::data_location data_at, itk::Object* img)
-  : GenericField<LatVolMesh, ITKFData3d<Data> >(mesh, data_at)
+			     int order, itk::Object* img)
+  : GenericField<LatVolMesh, ITKFData3d<Data> >(mesh, order)
 {
   this->SetImage(img);
 }
@@ -637,7 +637,7 @@ bool ITKLatVolField<Data>::get_gradient(Vector &g, const Point &p)
     // for now we only know how to do this for fields with scalars at the nodes
     if (query_scalar_interface().get_rep())
     {
-      if( data_at() == Field::NODE)
+      if( basis_order() == 1)
       {
 	mesh_handle_type mesh = get_typed_mesh();
 	const Point r = mesh->get_transform().unproject(p);
