@@ -36,6 +36,7 @@ public:
 			double spec_coeff = 100, double reflectance = 0);
   virtual ~PhongColorMapMaterial();
 
+  virtual void io(SCIRun::Piostream &stream) { ASSERTFAIL("not implemented"); }
   // This function is used by some shadow routines to determine intersections
   // for shadow feelers.  Because we need the HitInfo to determine the
   // opacity, we should always return 1.

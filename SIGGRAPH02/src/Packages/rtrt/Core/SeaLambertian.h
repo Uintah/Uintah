@@ -9,15 +9,16 @@
 namespace rtrt {
 
 class SeaLambertianMaterial : public Material {
-    Color R;
-    TimeVaryingCheapCaustics *caustics;
+  Color R;
+  TimeVaryingCheapCaustics *caustics;
 public:
-    SeaLambertianMaterial(const Color& R, TimeVaryingCheapCaustics *caustics);
-    virtual ~SeaLambertianMaterial();
-    virtual void shade(Color& result, const Ray& ray,
-		       const HitInfo& hit, int depth,
-		       double atten, const Color& accumcolor,
-		       Context* cx);
+  SeaLambertianMaterial(const Color& R, TimeVaryingCheapCaustics *caustics);
+  virtual ~SeaLambertianMaterial();
+  virtual void io(SCIRun::Piostream &stream) { ASSERTFAIL("not implemented"); }
+  virtual void shade(Color& result, const Ray& ray,
+		     const HitInfo& hit, int depth,
+		     double atten, const Color& accumcolor,
+		     Context* cx);
 };
 
 } // end namespace rtrt

@@ -35,7 +35,7 @@ class PortalMaterial : public Material
     : Material(), p_(p), u_(u), v_(v), attached_(false) 
     { portal_.load_basis(p_,u_,v_,Cross(u_,v_)); }
   virtual ~PortalMaterial() {}
-
+  virtual void io(SCIRun::Piostream &stream) { ASSERTFAIL("not implemented"); }
   virtual void shade(Color& result, const Ray& ray,
 		     const HitInfo& hit, int depth, 
 		     double atten, const Color& accumcolor,
