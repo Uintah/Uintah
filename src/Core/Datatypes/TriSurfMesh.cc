@@ -305,15 +305,6 @@ TriSurfMesh::get_neighbors(Node::array_type &array, Node::index_type idx) const
 
 
 
-static double
-distance2(const Point &p0, const Point &p1)
-{
-  const double dx = p0.x() - p1.x();
-  const double dy = p0.y() - p1.y();
-  const double dz = p0.z() - p1.z();
-  return dx * dx + dy * dy + dz * dz;
-}
-
 
 bool
 TriSurfMesh::locate(Node::index_type &loc, const Point &p) const
@@ -322,21 +313,22 @@ TriSurfMesh::locate(Node::index_type &loc, const Point &p) const
   begin(ni);
   end(nie);
 
-  loc = *ni;
+
   if (ni == nie)
   {
     return false;
   }
 
-  double min_dist = distance2(p, points_[*ni]);
+  double min_dist = (p - points_[*ni]).length2();
   loc = *ni;
   ++ni;
 
   while (ni != nie)
   {
-    const double dist = distance2(p, points_[*ni]);
+    const double dist = (p - points_[*ni]).length2();
     if (dist < min_dist)
     {
+      min_dist = dist;
       loc = *ni;
     }
     ++ni;
@@ -934,7 +926,7 @@ TriSurfMesh::Node::index_type
 TriSurfMesh::add_find_point(const Point &p, double err)
 {
   Node::index_type i;
-  if (locate(i, p) && distance2(points_[i], p) < err)
+  if (locate(i, p) && (p - points_[i]).length2() < err)
   {
     return i;
   }
