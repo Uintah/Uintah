@@ -8,6 +8,7 @@
 #include <Remote/Tools/Util/Assert.h>
 
 #include <iostream>
+#include <string.h>
 #include <strings.h>
 using namespace std;
 

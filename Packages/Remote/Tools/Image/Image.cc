@@ -8,11 +8,11 @@
 #include <Remote/Tools/Util/Assert.h>
 #include <Remote/Tools/Util/Utils.h>
 
+#include <stdio.h>
 /*
 #ifdef SCI_USE_TIFF
 #include <tiffio.h>
 #endif
-#include <stdio.h>
 
 #ifdef SCI_USE_JPEG
 extern "C" {
