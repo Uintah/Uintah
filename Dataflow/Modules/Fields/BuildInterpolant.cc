@@ -48,56 +48,29 @@ using std::vector;
 using std::pair;
 
 
-#if 0
-template <> const string find_type_name(TetVolMesh::node_index *)
-{ return "unknown"; }
-
-template <> const string find_type_name(TetVolMesh::edge_index *)
-{ return "unknown"; }
-
-template <> const string find_type_name(TetVolMesh::face_index *)
-{ return "unknown"; }
-
-template <> const string find_type_name(TetVolMesh::cell_index *)
-{ return "unknown"; }
-
-template <> const string find_type_name(LatVolMesh::node_index *)
-{ return "unknown"; }
-
-template <> const string find_type_name(LatVolMesh::edge_index *)
-{ return "unknown"; }
-
-template <> const string find_type_name(LatVolMesh::face_index *)
-{ return "unknown"; }
-
-template <> const string find_type_name(LatVolMesh::cell_index *)
-{ return "unknown"; }
-
-#endif
-
 template <> const string find_type_name(vector<pair<TetVolMesh::node_index, double> > *)
-{ return "unknown"; }
+{ return "vector<pair<TetVolMesh::node_index"; }
 
 template <> const string find_type_name(vector<pair<TetVolMesh::edge_index, double> > *)
-{ return "unknown"; }
+{ return "vector<pair<TetVolMesh::edge_index"; }
 
 template <> const string find_type_name(vector<pair<TetVolMesh::face_index, double> > *)
-{ return "unknown"; }
+{ return "vector<pair<TetVolMesh::face_index"; }
 
 template <> const string find_type_name(vector<pair<TetVolMesh::cell_index, double> > *)
-{ return "unknown"; }
+{ return "vector<pair<TetVolMesh::cell_index"; }
 
 template <> const string find_type_name(vector<pair<LatVolMesh::node_index, double> > *)
-{ return "unknown"; }
+{ return "vector<pair<LatVolMesh::node_index"; }
 
 template <> const string find_type_name(vector<pair<LatVolMesh::edge_index, double> > *)
-{ return "unknown"; }
+{ return "vector<pair<LatVolMesh::edge_index"; }
 
 template <> const string find_type_name(vector<pair<LatVolMesh::face_index, double> > *)
-{ return "unknown"; }
+{ return "vector<pair<LatVolMesh::face_index"; }
 
 template <> const string find_type_name(vector<pair<LatVolMesh::cell_index, double> > *)
-{ return "unknown"; }
+{ return "vector<pair<LatVolMesh::cell_index"; }
 
 void Pio(Piostream &, TetVolMesh::node_index) {}
 void Pio(Piostream &, TetVolMesh::edge_index) {}
