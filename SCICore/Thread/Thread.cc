@@ -52,7 +52,7 @@ Thread::~Thread()
         d_runner->d_my_thread=0;
         delete d_runner;
     }
-    free(name);
+    free(const_cast<char *>(d_threadname));
 }
 
 Thread::Thread(ThreadGroup* g, const char* name)
@@ -304,6 +304,9 @@ Thread::getStateString(ThreadState state)
 
 //
 // $Log$
+// Revision 1.11  1999/09/03 20:20:48  dmw
+// fixed desctructor
+//
 // Revision 1.10  1999/09/03 19:52:53  sparker
 // strdup thread names instead of reyling on them to be static
 //
