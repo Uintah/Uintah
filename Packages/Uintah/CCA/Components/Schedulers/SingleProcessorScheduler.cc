@@ -73,8 +73,10 @@ SingleProcessorScheduler::actuallyCompile()
 void
 SingleProcessorScheduler::execute()
 {
+  cerr << "RANDY: SingleProcessorScheduler::execute() BGN" << endl;
   if(dts_ == 0){
     cerr << "SingleProcessorScheduler skipping execute, no tasks\n";
+    cerr << "RANDY: SingleProcessorScheduler::execute() END" << endl;
     return;
   }
   int ntasks = dts_->numTasks();
@@ -106,7 +108,11 @@ SingleProcessorScheduler::execute()
     dbg << "\n";
   }
 
+  cerr << "RANDY: SingleProcessorScheduler::execute() Oren 1" << endl;
+
   makeTaskGraphDoc( dts_ );
+
+  cerr << "RANDY: SingleProcessorScheduler::execute() Oren 2" << endl;
 
   dts_->initializeScrubs(dws);
 
@@ -116,12 +122,14 @@ SingleProcessorScheduler::execute()
 #endif    
     double start = Time::currentSeconds();
     DetailedTask* task = dts_->getTask( i );
-    if(dbg.active())
-      dbg << "Running task: " << task->getTask()->getName() << "\n";
+    //    if(dbg.active())
+      cerr << "Running task: " << task->getTask()->getName() << "\n";
     task->doit(d_myworld, dws, plain_old_dws);
-    if(dbg.active())
-      dbg << "calling done\n";
+    //    if(dbg.active())
+      cerr << "calling done\n";
     task->done(dws);
+
+  cerr << "RANDY: SingleProcessorScheduler::execute() Oren 3" << endl;
 
     double delT = Time::currentSeconds()-start;
     long long flop_count = 0;
@@ -140,6 +148,7 @@ SingleProcessorScheduler::execute()
     emitNode( task, start, delT, delT, flop_count );
   }
   finalizeTimestep();
+    cerr << "RANDY: SingleProcessorScheduler::execute() END" << endl;
 }
 
 void

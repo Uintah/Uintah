@@ -45,12 +45,15 @@ SimpleScheduler::verifyChecksum()
 void
 SimpleScheduler::actuallyCompile()
 {
+  cerr << "RANDY: SimpleScheduler::actuallyCompile() BGN" << endl;
   graph.topologicalSort(tasks);
+  cerr << "RANDY: SimpleScheduler::actuallyCompile() END" << endl;
 }
 
 void
 SimpleScheduler::execute()
 {
+  cerr << "RANDY: SimpleScheduler::execute() BGN" << endl;
   int ntasks = (int)tasks.size();
   if(ntasks == 0){
     cerr << "WARNING: Scheduler executed, but no tasks\n";
@@ -82,6 +85,7 @@ SimpleScheduler::execute()
   }
 
   finalizeTimestep();
+  cerr << "RANDY: SimpleScheduler::execute() END" << endl;
 }
 
 void
