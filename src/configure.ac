@@ -401,7 +401,12 @@ SCI_ARG_WITH(ftgl,
   [with_ftgl="$withval"
    sci_required_ftgl=yes],
   [with_ftgl=""])
-
+SCI_ARG_WITH(scisock,
+  AC_HELP_STRING(--with-scisock=DIR,
+                 Use the SCISock installation in DIR),
+  [with_scisock="$withval"
+   sci_required_scisock=yes],
+  [with_scisock=""])
 
 
 SCI_ARG_ENABLE(verbosity,
@@ -2083,6 +2088,34 @@ fi
 AC_SUBST(MPEGE_LIB_FLAG)
 AC_SUBST(MPEGE_LIB_DIR_FLAG)
 AC_SUBST(DEF_MPEG)
+
+
+##  --  search for SCISock  -------------------------------------------------
+
+_sci_optional=optional
+if test "$with_scisock"; then
+  _sci_lib="$with_scisock/lib"
+  _sci_optional=specific
+else
+  _sci_lib="$sci_thirdparty_libs"
+fi
+
+SCI_TRY_LINK(SCISOCK,SCISock library,,,scisock unp,$_sci_lib,,,$_sci_optional)
+
+if test "$HAVE_SCISOCK" = "yes"; then
+  DEF_MPEG="#define HAVE_SCISOCK 1"
+fi
+
+if test "$with_scisock" && test ! "$DEF_SCISOCK"; then
+  echo
+  AC_MSG_ERROR(One or more of the SCISOCK components is missing.)
+  echo
+fi
+
+AC_SUBST(SCISOCK_LIB_FLAG)
+AC_SUBST(SCISOCK_LIB_DIR_FLAG)
+AC_SUBST(DEF_SCISOCK)
+AC_SUBST(INC_SCISOCK_H)
 
 ##  --  search for ImageMagick --------------------------------------
 
