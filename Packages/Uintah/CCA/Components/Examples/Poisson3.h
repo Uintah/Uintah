@@ -58,14 +58,23 @@ WARNING
     virtual void scheduleTimeAdvance(const LevelP& level, SchedulerP&);
 
     // New functions
-    void scheduleRefine(LevelP& coarseLevel, LevelP& fineLevel, SchedulerP& sched);
+    virtual void scheduleRefine(LevelP& coarseLevel, LevelP& fineLevel, SchedulerP& sched);
     void refine(const ProcessorGroup* pg,
                 const PatchSubset* finePatches, 
 		const MaterialSubset* matls,
                 DataWarehouse* coarseDW, 
                 DataWarehouse* fineDW,
                 LevelP coarseLevel);
-    void scheduleCoarsen(LevelP& coarseLevel, LevelP& fineLevel, SchedulerP& sched);
+
+    virtual void scheduleRefineInterface(LevelP& coarseLevel, LevelP& fineLevel, SchedulerP& scheduler);
+    void Poisson3::refineInterface(const ProcessorGroup*,
+				   const PatchSubset* finePatches, 
+				   const MaterialSubset* matls,
+				   DataWarehouse* fineDW, 
+				   DataWarehouse* coarseDW,
+				   LevelP coarseLevel);
+
+    virtual void scheduleCoarsen(LevelP& coarseLevel, LevelP& fineLevel, SchedulerP& sched);
     void coarsen(const ProcessorGroup* pg,
 	         const PatchSubset* finePatches, 
 		 const MaterialSubset* matls,
