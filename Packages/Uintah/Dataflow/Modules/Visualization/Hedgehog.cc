@@ -538,6 +538,7 @@ void Hedgehog::tcl_command(TCLArgs& args, void* userdata)
 bool  
 Hedgehog::interpolate(FieldHandle vfld, const Point& p, Vector& val)
 {
+#if 0
   const string field_type = vfld->get_type_name(0);
   const string type = vfld->get_type_name(1);
   if( field_type == "LevelField"){
@@ -565,12 +566,15 @@ Hedgehog::interpolate(FieldHandle vfld, const Point& p, Vector& val)
     }    
     return false;
   }
+#endif
+  return false;
 }
 
 
 bool  
 Hedgehog::interpolate(FieldHandle sfld, const Point& p, double& val)
 {
+#if 0
   const string field_type = sfld->get_type_name(0);
   const string type = sfld->get_type_name(1);
   if( sfld->get_type_name(0) == "LevelField" ){
@@ -637,6 +641,8 @@ Hedgehog::interpolate(FieldHandle sfld, const Point& p, double& val)
   } else {
     return false;
   }
+#endif
+  return false;
 }
 
 } // End namespace Uintah
