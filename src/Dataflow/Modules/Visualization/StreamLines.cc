@@ -112,7 +112,7 @@ StreamLines::~StreamLines()
 
 
 //! interpolate using the generic linear interpolator
-static bool
+static inline bool
 interpolate(const VectorFieldInterfaceHandle &vfi, const Point &p, Vector &v)
 {
   return vfi->interpolate(v, p) && (v.safe_normalize() > 0.0);
