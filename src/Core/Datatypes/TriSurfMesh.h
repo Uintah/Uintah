@@ -44,20 +44,6 @@ using std::vector;
 
 class SCICORESHARE TriSurfMesh : public MeshBase
 {
-private:
-
-  struct IntIter
-  {
-    int val;
-
-    IntIter(int i) : val(i) {}
-
-    operator int const &() const { return val; }
-    int operator *() { return val; };
-    int operator ++() { return val++; };
-    int operator ++(int) { int tmp = val; val++; return tmp; }
-  };
-
 public:
 
   typedef int                         index_type;
