@@ -11,9 +11,7 @@
 #endif
 #include <Packages/rtrt/Core/HVolumeBrickColor.h>
 #include <Packages/rtrt/Core/HVolumeMaterial.h>
-#  ifdef USE_STF
-#  include <Packages/rtrt/Core/ScalarTransform1D.h>
-#  endif
+#include <Packages/rtrt/Core/ScalarTransform1D.h>
 #include <Packages/rtrt/Core/Light.h>
 #include <Packages/rtrt/Core/LambertianMaterial.h>
 #include <Packages/rtrt/Core/Rect.h>
@@ -33,7 +31,6 @@
 #include <math.h>
 #include <string.h>
 #include <stdlib.h>
-//#include <Core/Math/MinMax.h>
 
 using namespace rtrt;
 using SCIRun::Thread;
@@ -164,37 +161,20 @@ Scene* make_scene(int argc, char* argv[], int nworkers)
 
   // set up variables for the transparent materials
   Array1<VolumeDpy*> dpys(num_non_trans);
-#ifdef USE_STF
   for (int n = 0; n < num_non_trans; n++) {
     dpys[n]=new VolumeDpy(0.5);
   }
   ScalarTransform1D<float,Material*> *temp_to_material = new
     ScalarTransform1D<float,Material*>(matls);
-#else
-  Array1<HVolumeTransferFunct*> transfer(num_non_trans);
-  for (int n = 0; n < num_non_trans; n++) {
-    transfer[n] = new HVolumeTransferFunct(&matls[0], matls.size());
-    dpys[n]=new VolumeDpy(0.5);
-  }
-#endif
   
   // set up variables for the non transparent materials
   Array1<VolumeDpy*> dpys_trans(num_trans);
-#ifdef USE_STF
   for (int n = 0; n < num_trans; n++) {
     dpys_trans[n]=new VolumeDpy(0.5);
   }
   ScalarTransform1D<float,Material*> *temp_to_trans_material = new
     ScalarTransform1D<float,Material*>(trans_matls);
   float min_temp, max_temp;
-#else
-  Array1<HVolumeTransferFunct*> transfer_trans(num_trans);
-  for (int n = 0; n < num_trans; n++) {
-    transfer_trans[n] = new HVolumeTransferFunct(&trans_matls[0],
-						 trans_matls.size());
-    dpys_trans[n]=new VolumeDpy(0.5);
-  }
-#endif  
   Object* obj;
   TimeObj* group = new TimeObj(rate);
   obj=group;
@@ -217,9 +197,8 @@ Scene* make_scene(int argc, char* argv[], int nworkers)
       unsigned int datai;
       for(datai = 0; datai < num; datai++)
 	temp_in >> data[datai];
-      cout << "num = "<< num<<", datai = "<<datai<<endl;
+
       // opaque materials
-#ifdef USE_STF
       ScalarTransform1D<float,float> *rho_to_temp = new ScalarTransform1D<float,float>(data);
       rho_to_temp->scale(min_rho,max_rho);
       for (int n = 0; n < num_non_trans; n++) {
@@ -244,18 +223,6 @@ Scene* make_scene(int argc, char* argv[], int nworkers)
 	min_temp = Min(min_temp,min);
 	max_temp = Max(max_temp,max);
       }
-#else
-      for (int n = 0; n < num_non_trans; n++) {
-	hvol_matl[n] = (Material*)new HVolumeMaterial(dpys[n], data, min_rho,
-						   max_rho, transfer[n]);
-      }
-      // transparent materials
-      for (int n = 0; n < num_trans; n++) {
-	hvol_matl_trans[n] =
-	  (Material*)new HVolumeMaterial(dpys_trans[n], data, min_rho,
-					 max_rho, transfer_trans[n]);
-      }
-#endif
     } else {
       cerr << "Temperature file( "<< temp_file << " not found\n";
       for (int n = 0; n < num_non_trans; n++)
@@ -287,7 +254,6 @@ Scene* make_scene(int argc, char* argv[], int nworkers)
 
   // Start up the thread to handle the slider
   // Also need to get the scale for the transfer functions
-#ifdef USE_STF
   cerr << "Scaling by:min_temp = "<<min_temp<<", max_temp = "<<max_temp<<endl;
   temp_to_material->scale(min_temp,max_temp);
   temp_to_trans_material->scale(min_temp,max_temp);
@@ -298,17 +264,6 @@ Scene* make_scene(int argc, char* argv[], int nworkers)
   for (int n = 0; n < num_trans; n++) {
     new Thread(dpys_trans[n], "Volume GUI thread2");
   }
-#else
-  // compute_min_max should be called after being attached to every material
-  for (int n = 0; n < num_non_trans; n++) {
-    transfer[n]->compute_min_max();
-    new Thread(dpys[n], "Volume GUI thread");
-  }
-  for (int n = 0; n < num_trans; n++) {
-    transfer_trans[n]->compute_min_max();
-    new Thread(dpys_trans[n], "Volume GUI thread2");
-  }
-#endif
 	
   
   if(xyslice || xzslice || yzslice){
