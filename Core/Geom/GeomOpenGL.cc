@@ -1212,7 +1212,7 @@ GeomCylinders::draw(DrawInfoOpenGL* di, Material* matl, double)
       glBindTexture(GL_TEXTURE_1D, di->cmtexture_);
     }
 
-    const bool coloring = colors_.size() == points_.size();
+    const bool coloring = colors_.size() == points_.size() * 4;
 
     float tabx[40];
     float taby[40];
@@ -1257,9 +1257,7 @@ GeomCylinders::draw(DrawInfoOpenGL* di, Material* matl, double)
 	glNormal3f(tabx[k%nu_], taby[k%nu_], 0.0);
 	if (coloring)
 	{
-	  glColor3f(colors_[i]->diffuse.r(),
-		    colors_[i]->diffuse.g(),
-		    colors_[i]->diffuse.b());
+	  glColor3ubv(&(colors_[i*4]));
 	}
 	if (texturing)
 	{
@@ -1269,9 +1267,7 @@ GeomCylinders::draw(DrawInfoOpenGL* di, Material* matl, double)
 
 	if (coloring)
 	{
-	  glColor3f(colors_[i+1]->diffuse.r(),
-		    colors_[i+1]->diffuse.g(),
-		    colors_[i+1]->diffuse.b());
+	  glColor3ubv(&(colors_[(i+1)*4]));
 	}
 	if (texturing)
 	{
@@ -1311,7 +1307,7 @@ GeomCappedCylinders::draw(DrawInfoOpenGL* di, Material* matl, double)
       glBindTexture(GL_TEXTURE_1D, di->cmtexture_);
     }
 
-    const bool coloring = colors_.size() == points_.size();
+    const bool coloring = colors_.size() == points_.size() * 4;
     const bool use_local_radii = radii_.size() == points_.size()/2;
 
     float tabx[40];
@@ -1366,9 +1362,7 @@ GeomCappedCylinders::draw(DrawInfoOpenGL* di, Material* matl, double)
 	glNormal3f(tabx[k%nu_], taby[k%nu_], 0.0);
 	if (coloring)
 	{
-	  glColor3f(colors_[i]->diffuse.r(),
-		    colors_[i]->diffuse.g(),
-		    colors_[i]->diffuse.b());
+	  glColor3ubv(&(colors_[i*4]));
 	}
 	if (texturing)
 	{
@@ -1378,9 +1372,7 @@ GeomCappedCylinders::draw(DrawInfoOpenGL* di, Material* matl, double)
 
 	if (coloring)
 	{
-	  glColor3f(colors_[i+1]->diffuse.r(),
-		    colors_[i+1]->diffuse.g(),
-		    colors_[i+1]->diffuse.b());
+	  glColor3ubv(&(colors_[(i+1)*4]));
 	}
 	if (texturing)
 	{
@@ -1393,9 +1385,7 @@ GeomCappedCylinders::draw(DrawInfoOpenGL* di, Material* matl, double)
       // Bottom cap
       if (coloring)
       {
-	glColor3f(colors_[i]->diffuse.r(),
-		  colors_[i]->diffuse.g(),
-		  colors_[i]->diffuse.b());
+	glColor3ubv(&(colors_[i*4]));
       }
       if (texturing)
       {
@@ -1413,9 +1403,7 @@ GeomCappedCylinders::draw(DrawInfoOpenGL* di, Material* matl, double)
       // Top cap
       if (coloring)
       {
-	glColor3f(colors_[i+1]->diffuse.r(),
-		  colors_[i+1]->diffuse.g(),
-		  colors_[i+1]->diffuse.b());
+	glColor3ubv(&(colors_[(i+1)*4]));
       }
       if (texturing)
       {
