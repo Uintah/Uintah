@@ -1,11 +1,12 @@
-#include <Core/Geometry/IntVector.h>
 #include <Core/Containers/RangeTree.h>
+#include <Core/Geometry/IntVector.h>
 #include <Core/Malloc/Allocator.h>
 
 #include <Packages/Uintah/Core/Grid/Patch.h>
 #include <Packages/Uintah/Core/Grid/Level.h>
 
 namespace Uintah {
+  using namespace SCIRun;
 
 /**************************************
 
@@ -73,10 +74,10 @@ private:
       d_centerTimes2 = patch->getNodeLowIndex() + patch->getNodeHighIndex();
     }
     
-    int operator[](int i)
+    int operator[](int i) const
     { return d_centerTimes2[i]; }
-    
-    const Patch* getPatch()
+
+    const Patch* getPatch() const
     { return d_patch; }
   private:
     const Patch* d_patch;
