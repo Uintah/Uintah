@@ -12,7 +12,10 @@ SRCS     += \
 	$(SRCDIR)/TensorFieldExtractor.cc \
 	$(SRCDIR)/ParticleFieldExtractor.cc \
 	$(SRCDIR)/RescaleColorMapForParticles.cc \
-	$(SRCDIR)/ParticleVis.cc #\
+	$(SRCDIR)/ParticleVis.cc \
+	$(SRCDIR)/RescaleColorMap.cc \
+	$(SRCDIR)/GLTextureBuilder.cc \
+	$(SRCDIR)/Isosurface.cc #\
 #	$(SRCDIR)/NodeHedgehog.cc \
 #	$(SRCDIR)/EigenEvaluator.cc \
 #	$(SRCDIR)/ParticleEigenEvaluator.cc \
@@ -20,7 +23,8 @@ SRCS     += \
 #	$(SRCDIR)/TensorParticlesOperator.cc
 
 PSELIBS := \
-	Dataflow/Network Dataflow/Ports Core/Datatypes \
+	Dataflow/Network Dataflow/Ports \
+	Dataflow/Modules/Visualization Core/Datatypes \
         Core/Thread Core/Persistent Core/Exceptions \
         Core/GuiInterface Core/Containers Core/Datatypes \
         Core/Geom \

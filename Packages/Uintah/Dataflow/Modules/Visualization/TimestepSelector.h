@@ -66,7 +66,7 @@ private:
   GuiString tcl_status;
 
   GuiInt animate;
-
+  GuiInt anisleep;
   GuiInt time;
   GuiDouble timeval;
 

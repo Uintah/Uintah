@@ -8,6 +8,7 @@
 #include <iostream> 
 #include <sstream>
 #include <string>
+#include <unistd.h>
 
 using std::cerr;
 using std::endl;
@@ -29,6 +30,7 @@ TimestepSelector::TimestepSelector(const string& id)
     time("time", id, this),
     timeval("timeval", id, this),
     animate("animate",id, this),
+    anisleep("anisleep", id, this),
     archiveH(0)
 { 
   //////////// Initialization code goes here
@@ -101,6 +103,7 @@ void TimestepSelector::execute()
        time.set( idx );
        handle->SetTimestep( idx );
        out->send_intermediate( handle );
+       sleep(unsigned( anisleep.get()));
        reset_vars();
      }
      animate.set(0);
