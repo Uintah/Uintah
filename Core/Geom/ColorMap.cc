@@ -30,6 +30,7 @@
 
 #include <Core/Geom/ColorMap.h>
 #include <Core/Malloc/Allocator.h>
+#include <Core/Persistent/PersistentSTL.h>
 #include <iostream>
 #include <algorithm>
 

@@ -169,9 +169,7 @@ void TexCuttingPlanes::execute(void)
 
   //AuditAllocator(default_allocator);
   if( !volren_ ){
-    volren_ = scinew GLVolumeRenderer(0x12345676,
-				  tex_,
-				  cmap);
+    volren_ = scinew GLVolumeRenderer(tex_, cmap);
 
     volren_->SetControlPoint(tex_->get_field_transform().unproject(control_widget_->ReferencePoint()));
     volren_->SetInterp( bool(interp_mode_.get()));

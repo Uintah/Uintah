@@ -862,7 +862,7 @@ SCIRexRenderer::make_render_windows(FieldHandle tex_,
       textures.push_back( texture );
       // Now build renderer and add it to the windows
       GLVolumeRenderer *vr;
-      vr = new GLVolumeRenderer( 0x12345676, texture, cmap_);
+      vr = new GLVolumeRenderer( texture, cmap_);
       vr->DrawFullRes();
       vr->SetNSlices( slices_ );
       vr->SetSliceAlpha( slice_alpha_ );

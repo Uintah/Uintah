@@ -51,10 +51,10 @@ class GLVolumeRenderer : public GeomObj
 {
 public:
 
-  GLVolumeRenderer(int id);
-
-  GLVolumeRenderer(int id, GLTexture3DHandle tex,
-		   ColorMapHandle map);
+  GLVolumeRenderer();
+  GLVolumeRenderer(GLTexture3DHandle tex, ColorMapHandle map);
+  GLVolumeRenderer(const GLVolumeRenderer&);
+  ~GLVolumeRenderer();
 
   void SetNSlices(int s) { slices_ = s;}
   void SetSliceAlpha( double as){ slice_alpha_ = as;}
@@ -110,8 +110,6 @@ public:
 
   void SetInterp( bool i) { interp_ = i; }
 
-  GLVolumeRenderer(const GLVolumeRenderer&);
-  ~GLVolumeRenderer();
 
 
 #ifdef SCI_OPENGL
@@ -160,6 +158,7 @@ public:
   double phi0() const { return phi0_; }
   double phi1() const { return phi1_; }
   bool draw_cyl() const { return draw_cyl_; }
+
 private:
   int                   slices_;
   GLTexture3DHandle     tex_;

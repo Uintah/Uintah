@@ -49,21 +49,15 @@ class GeomEllipsoid : public GeomSphere {
 public:
     double m_tensor_matrix[16];
     double mev;
-    GeomEllipsoid(){};
+
+    GeomEllipsoid();
     GeomEllipsoid(const Point& point, double radius, int inu, int inv,
-		  double* matrix, double mev, int index = 0x123456)
-      : GeomSphere(point, radius, inu, inv, index), mev(mev)
-      {
-	for (short y = 0; y < 16; y++)
-          m_tensor_matrix[y] = matrix[y]; 
-	
-      };
+		  double* matrix, double mev);
 
     virtual void draw(DrawInfoOpenGL*, Material*, double time);
 
-    virtual ~GeomEllipsoid(){};
+    virtual ~GeomEllipsoid();
     virtual void get_bounds(BBox&);
-    //virtual void get_bounds(BSphere&);
 
     static PersistentTypeID type_id;
 };

@@ -48,40 +48,63 @@ static int lock_pool_hash(GeomObj *ptr)
   return (int)((k^(3*GEOM_LOCK_POOL_SIZE+1))%GEOM_LOCK_POOL_SIZE);
 }   
 
-GeomObj::GeomObj(int id) :
+GeomObj::GeomObj() :
   ref_cnt(0),
   lock(*(lock_pool.getMutex(lock_pool_hash(this)))),
-  id(id),
-  _id(0x1234567,0x1234567,0x1234567)
+  id_int_(0x1234567),
+  id_intvector_(0x1234567,0x1234567,0x1234567),
+  id_longlong_(0x123456789ABCDEF)
 {
 }
 
-GeomObj::GeomObj(IntVector i) :
+
+GeomObj::GeomObj(const GeomObj&obj) :
   ref_cnt(0),
   lock(*(lock_pool.getMutex(lock_pool_hash(this)))),
-  id( 0x1234567 ),
-  _id(i)
-{
-}
-
-GeomObj::GeomObj(int id_int, IntVector i) :
-  ref_cnt(0),
-  lock(*(lock_pool.getMutex(lock_pool_hash(this)))),
-  id( id_int ),
-  _id(i)
-{
-}
-
-GeomObj::GeomObj(const GeomObj&) :
-  ref_cnt(0),
-  lock(*(lock_pool.getMutex(lock_pool_hash(this))))
-  // TODO: id and _id uninitialized.
+  id_int_(obj.id_int_),
+  id_intvector_(obj.id_intvector_),
+  id_longlong_(obj.id_longlong_)
 {
 }
 
 GeomObj::~GeomObj()
 {
 }
+
+
+bool
+GeomObj::getId( int& id )
+{
+  if ( id_int_ == 0x1234567)
+    return false;
+  else {
+    id = id_int_;
+    return true;
+  }
+}
+
+bool
+GeomObj::getId( IntVector& id )
+{
+  if ( id_intvector_ == IntVector(0x1234567,0x1234567,0x1234567) )
+    return false;
+  else {
+    id = id_intvector_;
+    return true;
+  }
+}
+
+bool
+GeomObj::getId( long long& id )
+{
+  if ( id_longlong_ == (long long)(0x123456789ABCDEF))
+    return false;
+  else {
+    id = id_longlong_;
+    return true;
+  }
+}
+
 
 void GeomObj::get_triangles( Array1<float> &)
 {

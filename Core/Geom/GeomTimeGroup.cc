@@ -31,9 +31,8 @@
 #include <Core/Geom/GeomTimeGroup.h>
 #include <Core/Containers/Array2.h>
 #include <Core/Malloc/Allocator.h>
+#include <Core/Persistent/PersistentSTL.h>
 #include <iostream>
-using std::cerr;
-using std::ostream;
 #ifdef _WIN32
 #include <float.h>
 #define MAXDOUBLE DBL_MAX
@@ -42,6 +41,9 @@ using std::ostream;
 #endif
 
 namespace SCIRun {
+
+using std::cerr;
+using std::ostream;
 
 static Persistent* make_GeomTimeGroup()
 {

@@ -30,10 +30,11 @@
 #include <Core/Geom/GeomContainer.h>
 
 #include <iostream>
+namespace SCIRun {
+
 using std::cerr;
 using std::endl;
-
-namespace SCIRun {
+using std::ostream;
 
 PersistentTypeID GeomContainer::type_id("GeomContainer", "GeomObj", 0);
 

@@ -30,7 +30,31 @@ Persistent* make_GeomEllipsoid()
 
 PersistentTypeID GeomEllipsoid::type_id("GeomEllipsoid", "GeomSphere", make_GeomEllipsoid);
 
-void GeomEllipsoid::get_bounds(BBox& bb)
+
+
+GeomEllipsoid::GeomEllipsoid()
+{
+}
+
+GeomEllipsoid::GeomEllipsoid(const Point& point, double radius,
+			     int inu, int inv,
+			     double* matrix, double mev) :
+  GeomSphere(point, radius, inu, inv),
+  mev(mev)
+{
+  for (int y = 0; y < 16; y++)
+  {
+    m_tensor_matrix[y] = matrix[y]; 
+  }
+}
+
+
+GeomEllipsoid::~GeomEllipsoid()
+{
+}
+
+void
+GeomEllipsoid::get_bounds(BBox& bb)
 {
     bb.extend(cen, mev);
 }

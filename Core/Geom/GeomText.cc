@@ -34,10 +34,12 @@
 #include <Core/Geometry/Point.h>
 #include <Core/Geom/GeomSave.h>
 #include <Core/Geom/GeomText.h>
+#include <Core/Persistent/PersistentSTL.h>
 #include <iostream>
-using std::ostream;
 
 namespace SCIRun {
+
+using std::ostream;
 
 static Persistent* make_GeomText()
 {
