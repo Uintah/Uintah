@@ -229,8 +229,8 @@ cout<<"bbbbbbbbbbbbb"<<c<<" "<<vol_frac[c]<<endl;
              double normalZ = gradRhoZ/absGradRho;
 
             MaxNormal = abs(normalX);
-            MaxNormal = std::max(MaxNormal,abs(normalY));
-            MaxNormal = std::max(MaxNormal,abs(normalZ));
+            MaxNormal = std::max(MaxNormal,fabs(normalY));
+            MaxNormal = std::max(MaxNormal,fabs(normalZ));
             if (MaxNormal == abs(normalX)){
 //              normalX = normalX/abs(normalX);
 //          normalY = 0.0;
