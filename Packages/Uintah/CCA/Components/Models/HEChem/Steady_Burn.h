@@ -89,6 +89,10 @@ WARNING
    virtual void scheduleTestConservation(SchedulerP&,
                                          const PatchSet* patches,
                                          const ModelInfo* mi);
+
+   virtual void setMPMLabel(MPMLabel* MLB);
+
+
   private:    
     void computeModelSources(const ProcessorGroup*, const PatchSubset*,
 			     const MaterialSubset*, DataWarehouse*, 
@@ -117,6 +121,8 @@ WARNING
 
     const VarLabel* onSurfaceLabel;   // diagnostic labels
     const VarLabel* surfaceTempLabel;
+    const VarLabel* PartBulkTempLabel;
+    const VarLabel* PartBulkTempLabel_preReloc;
 
     ProblemSpecP params;
     const Material* matl0;
