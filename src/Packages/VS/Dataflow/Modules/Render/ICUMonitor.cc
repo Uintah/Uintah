@@ -246,6 +246,7 @@ private:
   static unsigned int	pow2(const unsigned int);
   void 			setTimeLabel();
   void 			addMarkersToMenu();
+  void			setConfigFromData();
   void 			setNameAndDateAndTime();
   void                  save_image(int x, int y,const string& fname,
 				   const string &ftype);
@@ -1109,14 +1110,19 @@ ICUMonitor::addMarkersToMenu()
 
   for (unsigned int c = 0; c < data_->nproperties(); c++) {
      string name = data_->get_property_name(c);
-     //data_->get_property(name, value);
-     data_->get_property(name, val);
+     // only look at MRKR_<name> values here
+     if(string(name, 0, 5) == "MRKR_")
+     {
+       //data_->get_property(name, value);
+       data_->get_property(name, val);
  
-     stringstream ss(val);
-     ss >> value;
+       stringstream ss(val);
+       ss >> value;
 
-     keys.insert(value);
-     tmpmkrs[value] = name;
+       keys.insert(value);
+       // strip off "MRKR_" from name
+       tmpmkrs[value] = string(name, 5, name.size()-5);
+     }
   }
 
   markers_.clear();
@@ -1128,6 +1134,188 @@ ICUMonitor::addMarkersToMenu()
       gui->execute(id + " setMarkers {" + tmpmkrs[*iter] + "}");
   }
 }
+
+void 
+ICUMonitor::setConfigFromData()
+{
+  string value;
+  int intValue, idxDigits;
+  float floatValue;
+
+  for (unsigned int c = 0; c < data_->nproperties(); c++) {
+     string name = data_->get_property_name(c);
+     // only look at DSPY_<name> values here
+     if(string(name, 0, 5) == "DSPY_")
+     {
+       //data_->get_property(name, value);
+       data_->get_property(name, value);
+       // convert value string to various types
+       stringstream ss(value);
+       ss >> intValue;
+       ss >> floatValue;
+       // strip off "DSPY_"
+       string ICUvarName = string(name, 5, name.size()-5);
+
+       if(ICUvarName ==  "plot_count")
+       { // set gui int plot count
+           gui_plot_count_.set(intValue);
+           if(intValue < 10) idxDigits = 1;
+           else if(intValue < 100) idxDigits = 2;
+       }
+       if(string(ICUvarName, 0, 9) ==  "nw_label-")
+       {
+           // get gui var index
+           string labelIndexStr = string(ICUvarName, 9, idxDigits);
+           int i;
+           i = atoi(labelIndexStr.c_str());
+           // set label string value
+           gui_nw_label_[i]->set(value);
+       }
+       if(string(ICUvarName, 0, 9) ==  "sw_label-")
+       {
+           // get gui var index
+           string labelIndexStr = string(ICUvarName, 9, idxDigits);
+           int i;
+           i = atoi(labelIndexStr.c_str());
+           // set label string value
+           gui_sw_label_[i]->set(value);
+       }
+       if(string(ICUvarName, 0, 14) ==  "min_ref_label-")
+       {
+           // get gui var index
+           string labelIndexStr = string(ICUvarName, 15, idxDigits);
+           int i;
+           i = atoi(labelIndexStr.c_str());
+           // set label string value
+           gui_min_ref_label_[i]->set(value);
+       }
+       if(string(ICUvarName, 0, 14) ==  "max_ref_label-")
+       {
+           // get gui var index
+           string labelIndexStr = string(ICUvarName, 15, idxDigits);
+           int i;
+           i = atoi(labelIndexStr.c_str());
+           // set label string value
+           gui_max_ref_label_[i]->set(value);
+       }
+       if(string(ICUvarName, 0, 6) ==  "label-")
+       {
+           // get gui var index
+           string labelIndexStr = string(ICUvarName, 6, idxDigits);
+           int i;
+           i = atoi(labelIndexStr.c_str());
+           // set label string value
+           gui_label_[i]->set(value);
+       }
+       if(string(ICUvarName, 0, 15) ==  "aux_data_label-")
+       {
+           // get gui var index
+           string labelIndexStr = string(ICUvarName, 15, idxDigits);
+           int i;
+           i = atoi(labelIndexStr.c_str());
+           // set label string value
+           gui_aux_data_label_[i]->set(value);
+       }
+       if(string(ICUvarName, 0, 4) ==  "min-")
+       {
+           // get gui var index
+           string labelIndexStr = string(ICUvarName, 4, idxDigits);
+           int i;
+           i = atoi(labelIndexStr.c_str());
+           // set plot min float value
+           gui_min_[i]->set(floatValue);
+       }
+       if(string(ICUvarName, 0, 4) ==  "max-")
+       {
+           // get gui var index
+           string labelIndexStr = string(ICUvarName, 4, idxDigits);
+           int i;
+           i = atoi(labelIndexStr.c_str());
+           // set plot min float value
+           gui_max_[i]->set(floatValue);
+       }
+       if(string(ICUvarName, 0, 4) ==  "idx-")
+       {
+           // get gui var index
+           string labelIndexStr = string(ICUvarName, 4, idxDigits);
+           int i;
+           i = atoi(labelIndexStr.c_str());
+           // set plot idx int value
+           gui_idx_[i]->set(intValue);
+       }
+       if(string(ICUvarName, 0, 4) ==  "snd-")
+       {
+           // get gui var index
+           string labelIndexStr = string(ICUvarName, 4, idxDigits);
+           int i;
+           i = atoi(labelIndexStr.c_str());
+           // set plot snd int value
+           gui_snd_[i]->set(intValue);
+       }
+       if(string(ICUvarName, 0, 6) ==  "clamp-")
+       {
+           // get gui var index
+           string labelIndexStr = string(ICUvarName, 6, idxDigits);
+           int i;
+           i = atoi(labelIndexStr.c_str());
+           // set plot clamp int value
+           gui_clamp_[i]->set(intValue);
+       }
+       if(string(ICUvarName, 0, 6) ==  "lines-")
+       {
+           // get gui var index
+           string labelIndexStr = string(ICUvarName, 6, idxDigits);
+           int i;
+           i = atoi(labelIndexStr.c_str());
+           // set plot lines int value
+           gui_lines_[i]->set(intValue);
+       }
+       if(string(ICUvarName, 0, 7) ==  "auxidx-")
+       {
+           // get gui var index
+           string labelIndexStr = string(ICUvarName, 7, idxDigits);
+           int i;
+           i = atoi(labelIndexStr.c_str());
+           // set plot auxidx int value
+           gui_auxidx_[i]->set(intValue);
+       }
+       if(string(ICUvarName, 0, 14) ==  "draw_aux_data-")
+       {
+           // get gui var index
+           string labelIndexStr = string(ICUvarName, 14, idxDigits);
+           int i;
+           i = atoi(labelIndexStr.c_str());
+           // set plot draw_aux_data int value
+           gui_draw_aux_data_[i]->set(intValue);
+       }
+       // plot_color is of the form plot_color-0-[r|g|b]
+       if(string(ICUvarName, 0, 11) ==  "plot_color-")
+       {
+           // get gui var index
+           string labelIndexStr = string(ICUvarName, 11, idxDigits);
+           int i;
+           i = atoi(labelIndexStr.c_str());
+           string primaryStr = string(ICUvarName, 11+idxDigits, 1);
+           char colorChar;
+           colorChar = primaryStr.c_str()[0];
+           // set plot plot color float value
+           switch(colorChar)
+           {
+             case 'r':
+               gui_red_[i]->set(floatValue);
+               break;
+             case 'g':
+               gui_green_[i]->set(floatValue);
+               break;
+             case 'b':
+               gui_blue_[i]->set(floatValue);
+               break;
+           } // end switch(colorChar)
+       } // end if(string(ICUvarName, 0, 11) ==  "plot_color-")
+     } // end if(string(name, 0, 5) == "DSPY_")
+  } // end for ( c from  0 to data_->nproperties()-1 )
+
+} // end setConfigFromData()
 
 void 
 ICUMonitor::setNameAndDateAndTime()
@@ -1196,6 +1384,8 @@ ICUMonitor::execute()
     gui_sample_rate_.set(1/data_->nrrd->axis[0].spacing);
 
   addMarkersToMenu();
+
+  setConfigFromData();
 
   setNameAndDateAndTime();
 
