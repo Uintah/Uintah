@@ -150,11 +150,11 @@ void ImpMPM::scheduleInitialize(const LevelP& level,
   t->computes(lb->pParticleIDLabel);
   t->computes(lb->pDeformationMeasureLabel);
   t->computes(lb->pStressLabel);
-  t->computes(d_sharedState->get_delt_label());
   t->computes(lb->pCellNAPIDLabel);
   t->computes(lb->bElBarLabel);
   t->computes(lb->dispIncQNorm0);
   t->computes(lb->dispIncNormMax);
+  t->computes(d_sharedState->get_delt_label());
 
   LoadBalancer* loadbal = sched->getLoadBalancer();
   d_perproc_patches = loadbal->createPerProcessorPatchSet(level,d_myworld);
@@ -493,9 +493,11 @@ void ImpMPM::iterate(const ProcessorGroup*,
   bool dispInc = false;
   bool dispIncQ = false;
 
-  if (dispIncNorm/(dispIncNormMax + 1e-100) <= d_conv_crit_disp)
+  if ((dispIncNorm/(dispIncNormMax + 1e-100) <= d_conv_crit_disp) &&
+      (dispIncNorm/(dispIncNormMax + 1e-100) != 0.0))
     dispInc = true;
-  if (dispIncQNorm/(dispIncQNorm0 + 1e-100) <= d_conv_crit_energy)
+  if ((dispIncQNorm/(dispIncQNorm0 + 1e-100) <= d_conv_crit_energy) &&
+      (dispIncQNorm/(dispIncQNorm0 + 1e-100) != 0.0))
     dispIncQ = true;
 
   // Get all of the required particle data that is in the old_dw and put it 
@@ -579,9 +581,11 @@ void ImpMPM::iterate(const ProcessorGroup*,
          << dispIncNorm/(dispIncNormMax + 1.e-100) << "\n";
     cerr << "dispIncQNorm/dispIncQNorm0 = "
          << dispIncQNorm/(dispIncQNorm0 + 1.e-100) << "\n";
-    if (dispIncNorm/(dispIncNormMax + 1e-100) <= d_conv_crit_disp)
+    if ((dispIncNorm/(dispIncNormMax + 1e-100) <= d_conv_crit_disp) &&
+        (dispIncNorm/(dispIncNormMax + 1e-100) != 0.0))
       dispInc = true;
-    if (dispIncQNorm/(dispIncQNorm0 + 1e-100) <= d_conv_crit_energy)
+    if ((dispIncQNorm/(dispIncQNorm0 + 1e-100) <= d_conv_crit_energy) &&
+        (dispIncQNorm/(dispIncQNorm0 + 1e-100) != 0.0))
       dispIncQ = true;
     subsched->advanceDataWarehouse(grid);
   }
@@ -1052,13 +1056,13 @@ void ImpMPM::applyBoundaryConditions(const ProcessorGroup*,
 	    // Determine if the node is a corner node
 	    bool corner = false;
 	    bool edge = false;
-	    if (n == IntVector(low.x(),low.y(),low.z())) corner = true;
-	    else if (n == IntVector(low.x(),low.y(),high.z())) corner = true;
-	    else if (n == IntVector(low.x(),high.y(),low.z())) corner = true;
-	    else if (n == IntVector(low.x(),high.y(),high.z())) corner = true;
-	    else if (n == IntVector(high.x(),low.y(),low.z())) corner = true;
-	    else if (n == IntVector(high.x(),low.y(),high.z())) corner = true;
-	    else if (n == IntVector(high.x(),high.y(),low.z())) corner = true;
+	    if (n == IntVector(low.x(),low.y(),low.z()))         corner = true;
+	    else if (n == IntVector(low.x(),low.y(),high.z()))   corner = true;
+	    else if (n == IntVector(low.x(),high.y(),low.z()))   corner = true;
+	    else if (n == IntVector(low.x(),high.y(),high.z()))  corner = true;
+	    else if (n == IntVector(high.x(),low.y(),low.z()))   corner = true;
+	    else if (n == IntVector(high.x(),low.y(),high.z()))  corner = true;
+	    else if (n == IntVector(high.x(),high.y(),low.z()))  corner = true;
 	    else if (n == IntVector(high.x(),high.y(),high.z())) corner = true;
 
 	    // Set all dofs to be 1, -> component values won't float.
@@ -1097,23 +1101,23 @@ void ImpMPM::applyBoundaryConditions(const ProcessorGroup*,
 		if (n.z() > low.z() && n.z() < high.z() && n.x() == high.x() 
 		    &&  n.y() == high.y()) DOF = IntVector(1,1,0);
 	      }
-	      if (DOF != IntVector(0,0,0)) edge = true;
+              if (DOF != IntVector(0,0,0)) edge = true;
 	    }
 	    
 	    // Determine if the node is a face node
 	    if (corner == false && edge == false ) {
-	      if (face == Patch::xminus && DOF == IntVector(0,0,0)) 
-		DOF = IntVector(1,0,0);
-	      if (face == Patch::xplus && DOF == IntVector(0,0,0)) 
-		DOF = IntVector(1,0,0);
-	      if (face == Patch::yminus && DOF == IntVector(0,0,0)) 
-		DOF = IntVector(0,1,0);
-	      if (face == Patch::yplus && DOF == IntVector(0,0,0)) 
-		DOF = IntVector(0,1,0);
-	      if (face == Patch::zminus && DOF == IntVector(0,0,0)) 
-		DOF = IntVector(0,0,1);
-	      if (face == Patch::zplus && DOF == IntVector(0,0,0)) 
-		DOF = IntVector(0,0,1);
+              if (face == Patch::xminus && DOF == IntVector(0,0,0)) 
+                DOF = IntVector(1,0,0);
+              if (face == Patch::xplus  && DOF == IntVector(0,0,0)) 
+                DOF = IntVector(1,0,0);
+              if (face == Patch::yminus && DOF == IntVector(0,0,0)) 
+                DOF = IntVector(0,1,0);
+              if (face == Patch::yplus  && DOF == IntVector(0,0,0)) 
+                DOF = IntVector(0,1,0);
+              if (face == Patch::zminus && DOF == IntVector(0,0,0)) 
+                DOF = IntVector(0,0,1);
+              if (face == Patch::zplus  && DOF == IntVector(0,0,0)) 
+                DOF = IntVector(0,0,1);
 	    }
 	    int dof[3];
 	    int l2g_node_num = l2g[n];
@@ -1247,8 +1251,7 @@ void ImpMPM::formStiffnessMatrix(const ProcessorGroup*,
       if (recursion) {
 	DataWarehouse* parent_new_dw = 
 	  new_dw->getOtherDataWarehouse(Task::ParentNewDW);
-	parent_new_dw->get(gmass, lb->gMassLabel,matlindex,patch,
-			   Ghost::None,0);
+	parent_new_dw->get(gmass, lb->gMassLabel,matlindex,patch,Ghost::None,0);
 	DataWarehouse* parent_old_dw =
 	  new_dw->getOtherDataWarehouse(Task::ParentOldDW);
 	parent_old_dw->get(dt,d_sharedState->get_delt_label());
@@ -1374,9 +1377,10 @@ void ImpMPM::formQ(const ProcessorGroup*, const PatchSubset* patches,
 
     delt_vartype dt;
 
-    int matlindex = 0;
+    int dwi = 0;
+    Ghost::GhostType  gnone = Ghost::None;
 
-    constNCVariable<Vector> externalForce, internalForce;
+    constNCVariable<Vector> extForce, intForce;
     constNCVariable<Vector> dispNew,velocity,accel;
     constNCVariable<double> mass;
     if (recursion) {
@@ -1384,30 +1388,21 @@ void ImpMPM::formQ(const ProcessorGroup*, const PatchSubset* patches,
 	new_dw->getOtherDataWarehouse(Task::ParentNewDW);
       DataWarehouse* parent_old_dw = 
 	new_dw->getOtherDataWarehouse(Task::ParentOldDW);
-      parent_old_dw->get(dt,d_sharedState->get_delt_label());
-      new_dw->get(internalForce,lb->gInternalForceLabel,matlindex,patch,
-		  Ghost::None,0);
-      parent_new_dw->get(externalForce,lb->gExternalForceLabel,matlindex,patch,
-			 Ghost::None,0);
-      old_dw->get(dispNew,lb->dispNewLabel,matlindex,patch,Ghost::None,0);
-      parent_new_dw->get(velocity,lb->gVelocityOldLabel,matlindex,patch,
-		  Ghost::None,0);
-      parent_new_dw->get(accel,lb->gAccelerationLabel,matlindex,patch,
-		Ghost::None,0);
-      parent_new_dw->get(mass,lb->gMassLabel,matlindex,patch,Ghost::None,0);
 
-      
+      parent_old_dw->get(dt,d_sharedState->get_delt_label());
+      new_dw->get(       intForce,   lb->gInternalForceLabel,dwi,patch,gnone,0);
+      old_dw->get(       dispNew,    lb->dispNewLabel,       dwi,patch,gnone,0);
+      parent_new_dw->get(extForce,   lb->gExternalForceLabel,dwi,patch,gnone,0);
+      parent_new_dw->get(velocity,   lb->gVelocityOldLabel,  dwi,patch,gnone,0);
+      parent_new_dw->get(accel,      lb->gAccelerationLabel, dwi,patch,gnone,0);
+      parent_new_dw->get(mass,       lb->gMassLabel,         dwi,patch,gnone,0);
     } else {
-      new_dw->get(internalForce,lb->gInternalForceLabel,matlindex,patch,
-		  Ghost::None,0);
-      new_dw->get(externalForce,lb->gExternalForceLabel,matlindex,patch,
-		  Ghost::None,0);
-      new_dw->get(dispNew,lb->dispNewLabel,matlindex,patch,Ghost::None,0);
-      new_dw->get(velocity,lb->gVelocityLabel,matlindex,patch,
-		  Ghost::None,0);
-      new_dw->get(accel,lb->gAccelerationLabel,matlindex,patch,
-		Ghost::None,0);
-      new_dw->get(mass,lb->gMassLabel,matlindex,patch,Ghost::None,0);
+      new_dw->get(intForce,          lb->gInternalForceLabel,dwi,patch,gnone,0);
+      new_dw->get(extForce,          lb->gExternalForceLabel,dwi,patch,gnone,0);
+      new_dw->get(dispNew,           lb->dispNewLabel,       dwi,patch,gnone,0);
+      new_dw->get(velocity,          lb->gVelocityLabel,     dwi,patch,gnone,0);
+      new_dw->get(accel,             lb->gAccelerationLabel, dwi,patch,gnone,0);
+      new_dw->get(mass,              lb->gMassLabel,         dwi,patch,gnone,0);
       old_dw->get(dt, d_sharedState->get_delt_label());
     }
     double fodts = 4./(dt*dt);
@@ -1423,9 +1418,9 @@ void ImpMPM::formQ(const ProcessorGroup*, const PatchSubset* patches,
       dof[2] = l2g_node_num+2;
 
       double v[3];
-      v[0] = externalForce[n].x() + internalForce[n].x();
-      v[1] = externalForce[n].y() + internalForce[n].y();
-      v[2] = externalForce[n].z() + internalForce[n].z();
+      v[0] = extForce[n].x() + intForce[n].x();
+      v[1] = extForce[n].y() + intForce[n].y();
+      v[2] = extForce[n].z() + intForce[n].z();
       
       // temp2 = M*a^(k-1)(t+dt)
       if (dynamic) {
@@ -1655,31 +1650,26 @@ void ImpMPM::updateGridKinematics(const ProcessorGroup*,
       }
 
       if (recursion) {
-       for (NodeIterator iter = patch->getNodeIterator();!iter.done();iter++){
-	 IntVector n = *iter;
-         dispNew[n]  = dispNew_old[n] + dispInc[n];
-         velocity[n] = dispNew[n]*(2./dt) - oneifdyn*velocity_old[n];
-       }
-      } else {
-       for (NodeIterator iter = patch->getNodeIterator();!iter.done();iter++){
-	 IntVector n = *iter;
-         dispNew[n] += dispInc[n];
-         velocity[n] = dispNew[n]*(2./dt) - oneifdyn*velocity[n];
-       }
+        dispNew.copyData(dispNew_old);
+      }
+      if(m==0){  // don't do the rigid_body matl. for now
+        for (NodeIterator iter = patch->getNodeIterator();!iter.done();iter++){
+          IntVector n = *iter;
+          dispNew[n] += dispInc[n];
+          velocity[n] = dispNew[n]*(2./dt) - oneifdyn*velocity_old[n];
+        }
       }
       if(d_rigid_body){
         for (NodeIterator iter = patch->getNodeIterator();!iter.done();iter++){
 	  IntVector n = *iter;
           if(!compare(mass_rig[n],0.)){
             dispNew[n]  = velocity_rig[n]*dt;
-            velocity[n] = velocity_rig[n];
+            velocity[n] = dispNew[n]*(2./dt) - oneifdyn*velocity_old[n];
           } // if mass
         } // for
       } // if d_rigid_body
-
     }
   }
-
 }
 
 void ImpMPM::checkConvergence(const ProcessorGroup*,
@@ -1727,7 +1717,7 @@ void ImpMPM::checkConvergence(const ProcessorGroup*,
 
       double dispIncQNorm0,dispIncNormMax;
       sum_vartype dispIncQNorm0_var,dispIncNormMax_var;
-      old_dw->get(dispIncQNorm0_var,lb->dispIncQNorm0);
+      old_dw->get(dispIncQNorm0_var, lb->dispIncQNorm0);
       old_dw->get(dispIncNormMax_var,lb->dispIncNormMax);
 
       dispIncQNorm0 = dispIncQNorm0_var;
@@ -1904,38 +1894,36 @@ void ImpMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
 	  acc       += gacceleration[ni[k]]   * S[k];
 	}
 	
-          // Update the particle's position and velocity
-          pxnew[idx]           = px[idx] + disp;
-          pvelocitynew[idx] = pvelocity[idx] 
-                            + (pacceleration[idx]+acc)*(.5* delT);
-    
-	  paccNew[idx] = acc;
-//	  cerr << "position = " << pxnew[idx] << "\n";
-//	  cerr << "acceleration = " << paccNew[idx] << "\n";
-          double rho;
-	  if(pvolume[idx] > 0.){
+        // Update the particle's position and velocity
+        pxnew[idx]           = px[idx] + disp;
+        pvelocitynew[idx] = pvelocity[idx] 
+                          + (pacceleration[idx]+acc)*(.5* delT);
+
+        paccNew[idx] = acc;
+        double rho;
+        if(pvolume[idx] > 0.){
 	    rho = pmass[idx]/pvolume[idx];
-	  }
-	  else{
-	    rho = rho_init;
-	  }
-          pmassNew[idx]        = pmass[idx];
-          pvolumeNew[idx]      = pmassNew[idx]/rho;
-	  newpvolumeold[idx] = pvolumeold[idx];
-
-	  if(pmassNew[idx] <= 3.e-15){
-	    delete_particles->addParticle(idx);
-	    pvelocitynew[idx] = Vector(0.,0.,0);
-	    pxnew[idx] = px[idx];
-	  }
-
-          ke += .5*pmass[idx]*pvelocitynew[idx].length2();
-	  CMX = CMX + (pxnew[idx]*pmass[idx]).asVector();
-	  CMV += pvelocitynew[idx]*pmass[idx];
-          massLost += (pmass[idx] - pmassNew[idx]);
         }
-      
-           
+         else{
+           rho = rho_init;
+        }
+        pmassNew[idx]        = pmass[idx];
+        pvolumeNew[idx]      = pmassNew[idx]/rho;
+        newpvolumeold[idx] = pvolumeold[idx];
+
+        if(pmassNew[idx] <= 3.e-15){
+          delete_particles->addParticle(idx);
+          pvelocitynew[idx] = Vector(0.,0.,0);
+          pxnew[idx] = px[idx];
+        }
+
+        ke += .5*pmass[idx]*pvelocitynew[idx].length2();
+        CMX = CMX + (pxnew[idx]*pmass[idx]).asVector();
+        CMV += pvelocitynew[idx]*pmass[idx];
+        massLost += (pmass[idx] - pmassNew[idx]);
+      }
+
+
       new_dw->deleteParticles(delete_particles);
       
       constParticleVariable<long64> pids;
