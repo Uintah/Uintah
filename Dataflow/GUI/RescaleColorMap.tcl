@@ -75,8 +75,9 @@ itcl_class SCIRun_Visualization_RescaleColorMap {
 	bind $w.f3.e1 <Return> "$this-c needexecute"
 	bind $w.f3.e2 <Return> "$this-c needexecute"
 
+	button $w.execute -text Execute -command "$this-c needexecute"
 	button $w.close -text Close -command "destroy $w"
-	pack $w.close -side bottom -expand yes -fill x
+	pack $w.execute $w.close -side left  -padx 5 -expand 1 -fill x
 
 	if { [set $this-isFixed] } {
 	    $w.f2.b select
@@ -97,8 +98,6 @@ itcl_class SCIRun_Visualization_RescaleColorMap {
 	$w.f3.e1 configure -state disabled -foreground $color
 	$w.f3.l2 configure -foreground $color
 	$w.f3.e2 configure -state disabled -foreground $color
-
-	$this-c needexecute
     }
 
     method fixedScale { } {
