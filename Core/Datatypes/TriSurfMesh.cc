@@ -368,7 +368,6 @@ TriSurfMesh::compute_normals()
     get_point(p1, nodes[0]);
     get_point(p2, nodes[1]);
     get_point(p3, nodes[2]);
-
     // build table of faces that touch each node
     node_in_faces[nodes[0]].push_back(*iter);
     node_in_faces[nodes[1]].push_back(*iter);
@@ -381,14 +380,13 @@ TriSurfMesh::compute_normals()
 //    cerr << "normal mag: " << n.length() << endl;
     ++iter;
   }  
-
   //Averaging the normals.
   vector<vector<face_index> >::iterator nif_iter = node_in_faces.begin();
   int i = 0;
   while (nif_iter != node_in_faces.end()) {
     const vector<face_index> &v = *nif_iter;
     vector<face_index>::const_iterator fiter = v.begin();
-    Vector ave;
+    Vector ave(0.L,0.L,0.L);
     while(fiter != v.end()) {
       ave += face_normals[*fiter];
       ++fiter;

@@ -19,10 +19,10 @@
  *  FieldBoundary.cc:  Build a surface field from a volume field
  *
  *  Written by:
- *   Peter-Pike Sloan and David Weinstein
+ *   Martin Cole
  *   Department of Computer Science
  *   University of Utah
- *   July 1998
+ *   March 2001
  *
  *  Copyright (C) 1998 SCI Group
  */
@@ -65,15 +65,12 @@ private:
   //! Input should be a volume field.
   FieldIPort*              infield_;
   int                      infield_gen_;
-  //! Scene graph output.
-  GeometryOPort*           viewer_;
+
   //! TriSurf field output.
   FieldOPort*              osurf_;
   
   //! Handle on the generated surface.
   FieldHandle             *tri_fh_;
-  GeomTriangles           *geom_tris_;
-  int                      tris_id_;
 };
 
 extern "C" Module* make_FieldBoundary(const string& id)
@@ -84,15 +81,12 @@ extern "C" Module* make_FieldBoundary(const string& id)
 FieldBoundary::FieldBoundary(const string& id) : 
   Module("FieldBoundary", id, Filter, "Fields", "SCIRun"),
   infield_gen_(-1),
-  tri_fh_(scinew FieldHandle(scinew TriSurf<double>)),
-  geom_tris_(0),
-  tris_id_(0)
+  tri_fh_(scinew FieldHandle(scinew TriSurf<double>))
 {
   // Create the input port
   infield_ = scinew FieldIPort(this, "Field", FieldIPort::Atomic);
   add_iport(infield_);
-  viewer_ = scinew GeometryOPort(this, "Geometry", GeometryIPort::Atomic);
-  add_oport(viewer_);
+
   osurf_ = scinew FieldOPort(this, "TriSurf", FieldIPort::Atomic);
   add_oport(osurf_);
 }
@@ -154,8 +148,6 @@ FieldBoundary::boundary(const Msh *mesh)
   TriSurfMesh::node_index node_idx[3];
 
   TriSurfMeshHandle tmesh = scinew TriSurfMesh;
-  if (geom_tris_) delete geom_tris_;
-  geom_tris_ = scinew GeomTriangles;  
   // Walk all the cells in the mesh.
   Point center;
   typename Msh::cell_iterator citer = mesh->cell_begin();
@@ -212,10 +204,6 @@ FieldBoundary::boundary(const Msh *mesh)
   }
   TriSurf<double> *ts = scinew TriSurf<double>(tmesh, Field::NODE);
 
-  if (tris_id_) viewer_->delObj(tris_id_);
-  tris_id_ = viewer_->addObj(geom_tris_, "Boundary Surface");
-  viewer_->flushViews();
-  
   if (tri_fh_) delete tri_fh_;
   tri_fh_ = scinew FieldHandle(ts);
 }
