@@ -18,7 +18,7 @@
        <initTime>           0.0         </initTime>
        <delt_min>           0.0         </delt_min>
        <delt_max>           1.0         </delt_max>
-       <delt_init>          1.0e-3      </delt_init>
+       <delt_init>          1.0e-4      </delt_init>
        <max_delt_increase>  2.0        </max_delt_increase>
        <timestep_multiplier>1.0         </timestep_multiplier>
    </Time>
@@ -125,7 +125,7 @@
     <!--____________________________________________________________________-->
    <DataArchiver>
       <filebase>hotJet_2D.uda</filebase>
-       <outputInterval> 0.01  </outputInterval>
+       <outputInterval> 0.0  </outputInterval>
       <save label="press_equil_CC"/>
       <save label="vol_frac_CC"/>
       <save label="delP_Dilatate"/>
@@ -144,20 +144,12 @@
      <dbg_EndIndex>        [0,0,0]    </dbg_EndIndex>
      <dbg_SigFigs>         3          </dbg_SigFigs>
      <dbg_Matls>        [0]           </dbg_Matls>
-     <!--
-     <debug label = "switchDebugInitialize"/>
-     <debug label = "switchDebug_EQ_RF_press"/>
-     <debug label = "switchDebug_vel_FC"/>
-     <debug label = "switchDebug_explicit_press"/>
-     <debug label = "switchDebugMomentumExchange_CC"/>
-     <debug label = "switchDebug_advance_advect"/> 
-     -->
    </Debug>
     <!--____________________________________________________________________-->
     <!--    I  C  E     P  A  R  A  M  E  T  E  R  S                        -->
     <!--____________________________________________________________________-->
     <CFD>
-       <cfl>0.75</cfl>
+       <cfl>0.2</cfl>
        <ICE>
         <max_iteration_equilibration> 50 </max_iteration_equilibration>
         <advection type = "FirstOrderCE" />
@@ -170,9 +162,9 @@
         
         <ImplicitSolver>
            <max_outer_iterations>      20    </max_outer_iterations>
-           <outer_iteration_tolerance> 1e-13 </outer_iteration_tolerance>
+           <outer_iteration_tolerance> 1e-8 </outer_iteration_tolerance>
 	    <Parameters>
-	       <tolerance>1.e-13    </tolerance> 
+	       <tolerance>1.e-16    </tolerance> 
 	       <norm>     LInfinity  </norm>
 	       <criteria> Absolute   </criteria>
 	    </Parameters>
