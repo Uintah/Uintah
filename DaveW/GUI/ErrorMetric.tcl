@@ -54,7 +54,7 @@ itcl_class DaveW_FEM_ErrorMetric {
         button $w.top.reset -text "Clear Graphs" -command "$this clear_graphs"
         pack $w.top.method $w.top.reset -side top
         frame $w.rms -relief groove -borderwidth 2
-        blt_graph $w.rms.g -height 200 \
+        blt::graph $w.rms.g -height 200 \
                 -plotbackground #CCCCFF
         $w.rms.g element create RMS -data "1 0" -foreground black
         $w.rms.g yaxis configure -title "RMS Error" -logscale true
