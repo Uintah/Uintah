@@ -3,6 +3,7 @@
 #include <Packages/Uintah/Core/Grid/CellIterator.h>
 #include <Packages/Uintah/Core/Grid/VarLabel.h>
 #include <Packages/Uintah/Core/Grid/Patch.h>
+#include <Packages/Uintah/Core/Grid/Level.h>
 #include <Packages/Uintah/Core/Exceptions/OutFluxVolume.h>
 #include <Packages/Uintah/Core/Disclosure/TypeDescription.h>
 
@@ -68,6 +69,7 @@ SecondOrderAdvector::inFluxOutFluxVolume( const SFCXVariable<double>& uvel_FC,
                                           DataWarehouse* new_dw)
 
 {
+
   Vector dx = patch->dCell();
 
   double vol = dx.x()*dx.y()*dx.z();
@@ -83,7 +85,7 @@ SecondOrderAdvector::inFluxOutFluxVolume( const SFCXVariable<double>& uvel_FC,
   // the computational footprint by one cell in ghostCells
   CellIterator iter = patch->getExtraCellIterator();
   CellIterator iterPlusGhost = patch->addGhostCell_Iter(iter,1);
-
+  
   bool error = false;
   for(CellIterator iter = iterPlusGhost; !iter.done(); iter++) {  
     const IntVector& c = *iter;
@@ -112,6 +114,7 @@ SecondOrderAdvector::inFluxOutFluxVolume( const SFCXVariable<double>& uvel_FC,
     ofs.d_fflux[LEFT]  = delX_left  * delY_Z_tmp;
     ofs.d_fflux[FRONT] = delZ_front * delX_Y_tmp;
     ofs.d_fflux[BACK]  = delZ_back  * delX_Y_tmp; 
+    
     //__________________________________
     //  Bullet proofing
     //!
@@ -248,6 +251,7 @@ void SecondOrderAdvector::advectSlabs( CCVariable<facedata<T> >& q_OAFS,
                                   F save_q_FC)  // function is passed in
   
 {
+
                                   //  W A R N I N G
   Vector dx = patch->dCell();    // assumes equal cell spacing             
   double invvol = 1.0/(dx.x() * dx.y() * dx.z());     
@@ -275,6 +279,7 @@ void SecondOrderAdvector::advectSlabs( CCVariable<facedata<T> >& q_OAFS,
     }  
     q_advected[c] = sum_q_face_flux*invvol;
     
+
     //__________________________________
     //  inline function to compute q_FC 
     save_q_FC(c, q_XFC, q_YFC, q_ZFC, faceVol, q_face_flux, q_CC);
@@ -288,7 +293,7 @@ SecondOrderAdvector::qAverageFlux( const CCVariable<T>& q_CC,
                                    CCVariable<facedata<T> >& q_OAFS )
   
 {
-
+  const Level* level=patch->getLevel();
   Vector dx = patch->dCell();
   Vector inv_2del;
   inv_2del.x(1.0/(2.0 * dx.x()) );
@@ -314,6 +319,27 @@ SecondOrderAdvector::qAverageFlux( const CCVariable<T>& q_CC,
       }
     } 
   }
+  //__________________________________
+  // On Fine level patches set q_OAFS = q_CC in the 
+  // extra cells of that patch
+  // IS THIS THE RIGHT THING TO DO????
+  if (level->getIndex() > 0 ) {
+    for(Patch::FaceType face = Patch::startFace;
+      face <= Patch::endFace; face=Patch::nextFace(face)){
+      
+      for(CellIterator iter = patch->getFaceCellIterator(face); 
+          !iter.done(); iter++) {
+        const IntVector& c = *iter; 
+        T Q_CC = q_CC[c];
+
+        facedata<T>& oafs = q_OAFS[c];
+        for (int face = TOP; face <= BACK; face ++){
+          oafs.d_data[face] = Q_CC;
+        }
+      }
+    }
+  }
+  
    
   //__________________________________
   //  At patch boundaries you need to extend
@@ -327,10 +353,10 @@ SecondOrderAdvector::qAverageFlux( const CCVariable<T>& q_CC,
     T grad_x, grad_y, grad_z, gradlim;
     gradQ( q_CC, c, inv_2del, grad_x, grad_y, grad_z);
     gradientLimiter( q_CC, c, dx_2, gradlim, grad_x, grad_y, grad_z); 
-    
+
     T q_grad_X = gradlim * grad_x;
     T q_grad_Y = gradlim * grad_y;
-    T q_grad_Z = gradlim * grad_z;
+    T q_grad_Z = gradlim * grad_z;    
     
     T Q_CC = q_CC[c];
     //__________________________________
