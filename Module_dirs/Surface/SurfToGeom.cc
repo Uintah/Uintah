@@ -28,10 +28,7 @@
 #include <Geom/Group.h>
 #include <Geom/Tri.h>
 #include <Geom/VCTri.h>
-
-
-//// HACK!
-#include <stdio.h>
+#include <TCL/TCLvar.h>
 
 
 class SurfToGeom : public Module {
@@ -40,6 +37,9 @@ class SurfToGeom : public Module {
     ColormapIPort* icmap;
     GeometryOPort* ogeom;
 
+    TCLdouble range_min;
+    TCLdouble range_max;
+    double old_smin, old_smax;
     int have_sf, have_cm;
 
     void surf_to_geom(const SurfaceHandle&, GeomGroup*);
@@ -62,7 +62,8 @@ static RegisterModule db2("Visualization", "SurfToGeom",
 static RegisterModule db3("Dave", "SurfToGeom", make_SurfToGeom);
 
 SurfToGeom::SurfToGeom(const clString& id)
-: Module("SurfToGeom", id, Filter)
+: Module("SurfToGeom", id, Filter), range_min("range_min", id, this),
+  range_max("range_max", id, this)
 {
     // Create the input port
     isurface=new SurfaceIPort(this, "Surface", SurfaceIPort::Atomic);
@@ -73,10 +74,12 @@ SurfToGeom::SurfToGeom(const clString& id)
     add_iport(icmap);
     ogeom=new GeometryOPort(this, "Geometry", GeometryIPort::Atomic);
     add_oport(ogeom);
+    old_smin=old_smax=0;
 }
 
 SurfToGeom::SurfToGeom(const SurfToGeom&copy, int deep)
-: Module(copy, deep)
+: Module(copy, deep), range_min("range_min", id, this),
+  range_max("range_max", id, this)
 {
     NOT_FINISHED("SurfToGeom::SurfToGeom");
 }
@@ -103,6 +106,14 @@ void SurfToGeom::execute()
     int have_sf=ifield->get(sfield);
     double smin, smax;
     sfield->get_minmax(smin, smax);
+    if(old_smin != smin || old_smax != smax){
+	range_min.set(smin);
+	range_max.set(smax);
+	old_smin=smin;
+	old_smax=smax;
+    }
+    smin=range_min.get();
+    smax=range_max.get();
 
     GeomGroup* group = new GeomGroup;
     TriSurface* ts=surf->getTriSurface();
