@@ -29,7 +29,6 @@
 #include <Geom/Pick.h>
 #include <Geom/PointLight.h>
 #include <Geom/Polyline.h>
-#include <Geom/PortManager.h>
 #include <Geom/Pt.h>
 #include <Geom/RenderMode.h>
 #include <Geom/Sphere.h>
