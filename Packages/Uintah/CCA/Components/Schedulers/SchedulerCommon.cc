@@ -73,6 +73,7 @@ SchedulerCommon::makeTaskGraphDoc(const DetailedTasks*/* dt*/, int rank)
   if (!m_outPort->wasOutputTimestep())
     return;
   
+  // make sure to release this DOMDocument after finishing emitting the nodes
   m_graphDoc = ProblemSpec::createDocument("Uintah_TaskGraph");
   
   ProblemSpecP meta = m_graphDoc->appendChild("Meta");
@@ -81,28 +82,13 @@ SchedulerCommon::makeTaskGraphDoc(const DetailedTasks*/* dt*/, int rank)
   meta->appendElement("date", ctime(&t));
   
   m_nodes = m_graphDoc->appendChild("Nodes");
-  m_graphDoc->appendChild(m_nodes);
+  //m_graphDoc->appendChild(m_nodes);
   
   ProblemSpecP edgesElement = m_graphDoc->appendChild("Edges");
   
   if (dts_) {
     dts_->emitEdges(edgesElement, rank);
   }
-  
-  if (m_outPort->wasOutputTimestep()) {
-    string timestep_dir(m_outPort->getLastTimestepOutputLocation());
-    
-    ostringstream fname;
-    fname << "/taskgraph_" << setw(5) << setfill('0') << rank << ".xml";
-    string file_name(timestep_dir + fname.str());
-    ofstream graphfile(file_name.c_str());
-    if (!graphfile) {
-      cerr << "SchedulerCommon::emitEdges(): unable to open output file!\n";
-      return;   // dependency dump failure shouldn't be fatal to anything else
-    }
-    graphfile << m_graphDoc << "\n";
-  }
-  m_graphDoc->releaseDocument();
 }
 
 bool
@@ -110,7 +96,8 @@ SchedulerCommon::useInternalDeps()
 {
   // keep track of internal dependencies only if it will emit
   // the taskgraphs (by default).
-  return emit_taskgraph;
+  // return emit_taskgraph;
+  return false;
 }
 
 void
@@ -125,7 +112,7 @@ SchedulerCommon::emitNode( const DetailedTask* task,
         return;
     
     ProblemSpecP node = m_nodes->appendChild("node");
-    m_nodes->appendChild(node);
+    //m_nodes->appendChild(node);
 
     node->appendElement("name", task->getName());
     node->appendElement("start", start);
@@ -155,6 +142,8 @@ SchedulerCommon::finalizeNodes(int process /* = 0*/)
     }
     
     m_graphDoc->releaseDocument();
+    m_graphDoc = NULL;
+    m_nodes = NULL;
 }
 
 void
@@ -272,6 +261,7 @@ SchedulerCommon::advanceDataWarehouse(const GridP& grid)
     for(int i=numOldDWs;i<(int)dws.size();i++)
       dws[i]=scinew OnDemandDataWarehouse(d_myworld, this, d_generation++,
 					  grid);
+    //dws[0].get_rep()->printAll();
   }
 }
 
@@ -417,7 +407,7 @@ bool SchedulerCommon::isNewDW(int idx) const
 void
 SchedulerCommon::finalizeTimestep()
 {
-  finalizeNodes();
+  finalizeNodes(d_myworld->myrank());
   for(unsigned int i=numOldDWs;i<dws.size();i++)
     dws[i]->finalize();
 }
