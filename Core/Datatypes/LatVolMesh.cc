@@ -13,7 +13,6 @@
  */
 
 #include <Core/Datatypes/LatVolMesh.h>
-#include <Core/Math/MinMax.h>
 
 
 namespace SCIRun {
@@ -25,11 +24,12 @@ PersistentTypeID LatVolMesh::type_id("LatVolMesh", "MeshBase", maker);
 Persistent *
 LatVolMesh::maker()
 {
-  return new LatVolMesh(0, 0, 0, Point(0, 0, 0), Point(1, 1, 1));
+  return new LatVolMesh(1, 1, 1, Point(0, 0, 0), Point(1, 1, 1));
 }
 
 
-LatVolMesh::LatVolMesh(int x, int y, int z, Point &min, Point &max)
+LatVolMesh::LatVolMesh(unsigned x, unsigned y, unsigned z, 
+		       Point &min, Point &max)
   : nx_(x),
     ny_(y),
     nz_(z),
@@ -64,7 +64,7 @@ LatVolMesh::get_bounding_box() const
 }
 
 
-void
+inline void
 LatVolMesh::unlocate(Point &result, const Point &p) const
 {
   result = p;
@@ -146,38 +146,20 @@ LatVolMesh::get_nodes(node_array &, face_index) const
 inline void 
 LatVolMesh::get_nodes(node_array &array, cell_index idx) const
 {
-  // NOTE: this code assumes that index_type is actually unsigned
+  unsigned nxny = nx*ny;
+  node_index a;
 
-  index_type x,y,z;
-  index_type nxnya = (nx_-1)*(ny_-1);
-  index_type nxnyb = nx_*ny_;
-  index_type div;
-  index_type mod;
-  index_type a,b,c,d;
- 
-  // decompose the cell_index into it's xyz components
-  mod = idx%nxnya;
-  x = mod%(nx_-1);
-  y = mod/(nx_-1);
-  z = idx/nxnya;
-
-  // convert from cell_index space to node_index space
-  a = x+y*nx_+z*nxnyb;
-
-  // compute some neighbor node_indeces
-  b = a+nx_;
-  c = a+nxnyb;
-  d = a+nxnyb+nx_;
-
-  // return the node_indeces 
+  // return the node_indexex  in this cell
+  a.x_ = idx.x_; a.y_ = idx.y_; a.z_ = idx.z_;
   array[0] = a;
-  array[1] = a+1;
-  array[2] = b;
-  array[3] = b+1;
-  array[4] = c;
-  array[5] = c+1;
-  array[6] = d;
-  array[7] = d+1;
+  array[1] = array[0]; array[1].x_+=1;
+  array[2] = array[0]; array[2].y_+=1;
+  array[3] = array[0]; array[3].x_+=1; array[3].y_+=1;
+
+  array[4] = array[0]; array[4].z_+=1;
+  array[5] = array[1]; array[5].z_+=1;
+  array[6] = array[2]; array[6].z_+=1;
+  array[7] = array[3]; array[7].z_+=1;
 }
 
 inline void 
@@ -233,19 +215,7 @@ LatVolMesh::get_neighbor(cell_index &, face_index) const
 inline void 
 LatVolMesh::get_center(Point &result, node_index idx) const
 {
-  // NOTE: this code assumes that index_type is actually unsigned
-
-  index_type x,y,z;
-  index_type nxny = nx_*ny_;
-  index_type div;
-  index_type mod;
   double xgap,ygap,zgap;
- 
-  // decompose the node_index into it's xyz components
-  mod = idx%nxny;
-  x = (mod)%nx_;
-  y = (mod)/nx_;
-  z = idx/nxny;
 
   // compute the distance between slices
   xgap = (max_.x()-min_.x())/(nx_-1);
@@ -253,9 +223,9 @@ LatVolMesh::get_center(Point &result, node_index idx) const
   zgap = (max_.z()-min_.z())/(nz_-1);
   
   // return the node_index converted to object space
-  result.x(min_.x()+x*xgap);
-  result.y(min_.y()+y*ygap);
-  result.z(min_.z()+z*zgap);
+  result.x(min_.x()+idx.x_*xgap);
+  result.y(min_.y()+idx.y_*ygap);
+  result.z(min_.z()+idx.z_*zgap);
 }
 
 inline void 
@@ -278,8 +248,8 @@ LatVolMesh::get_center(Point &result, cell_index idx) const
   get_nodes(nodes,idx);
 
   // convert the min and max nodes of the cell into object space points
-  get_center(min,nodes[0]);
-  get_center(max,nodes[7]);
+  get_point(min,nodes[0]);
+  get_point(max,nodes[7]);
 
   // return the point half way between min and max
   result.x(min.x()+(max.x()-min.x())*.5);
@@ -326,11 +296,8 @@ LatVolMesh::locate_face(face_index &, const Point &, double[4]) const
 inline void 
 LatVolMesh::locate_cell(cell_index &cell, const Point &p, double[8] w) const
 {
-  // NOTE: this code assumes index_type is actually unsigned
-  
   double xgap,ygap,zgap;
   Point min,max;
-  index_type x,y,z;
   double fx,fy,fz;
 
   // compute the distance between slices
@@ -343,10 +310,10 @@ LatVolMesh::locate_cell(cell_index &cell, const Point &p, double[8] w) const
   fy = 1000./ygap;
   fz = 1000./zgap;
 
-  // compute the xyz components of the cell_index
-  x = (index_type)(p.x()/xgap);
-  y = (index_type)(p.y()/ygap);
-  z = (index_type)(p.z()/zgap);
+  // compute the cell_index (divide and truncate)
+  cell.x_ = (unsigned)(p.x()/xgap);
+  cell.y_ = (unsigned)(p.y()/ygap);
+  cell.z_ = (unsigned)(p.z()/zgap);
 
   // compute the min and max Points of the cell
   min.x(x*xgap);
@@ -365,9 +332,6 @@ LatVolMesh::locate_cell(cell_index &cell, const Point &p, double[8] w) const
   w[5] = (p.x()-min.x())*fx*(max.y()-p.y())*fy*(p.z()-min.z())*fz*.001;
   w[6] = (max.x()-p.x())*fx*(p.y()-min.y())*fy*(p.z()-min.z())*fz*.001;
   w[7] = (p.x()-min.x())*fx*(p.y()-min.y())*fy*(p.z()-min.z())*fz*.001;
-  
-  // return the cell_index
-  cell = x + y*(nx_-1) + z*(nx_-1)*(ny_-1);
 }
 
 #define LATVOLMESH_VERSION 1
