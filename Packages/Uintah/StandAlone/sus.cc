@@ -20,6 +20,7 @@
 #include <Packages/Uintah/CCA/Components/ICE/ICE.h>
 #include <Packages/Uintah/CCA/Components/MPMICE/MPMICE.h>
 #include <Packages/Uintah/CCA/Components/MPMArches/MPMArches.h>
+#include <Packages/Uintah/CCA/Components/Schedulers/SimpleScheduler.h>
 #include <Packages/Uintah/CCA/Components/Schedulers/SingleProcessorScheduler.h>
 #include <Packages/Uintah/CCA/Components/Schedulers/MPIScheduler.h>
 #include <Packages/Uintah/CCA/Components/Schedulers/MixedScheduler.h>
@@ -44,11 +45,12 @@
 #include <string>
 #include <vector>
 
+
 using namespace SCIRun;
 using namespace Uintah;
 using namespace std;
 
-void quit( const std::string & msg = "" )
+static void quit( const std::string & msg = "" )
 {
   if( msg != "" )
     {
@@ -58,7 +60,7 @@ void quit( const std::string & msg = "" )
   exit( 1 );
 }
 
-void usage( const std::string & message,
+static void usage( const std::string & message,
 	    const std::string& badarg,
 	    const std::string& progname)
 {
@@ -90,7 +92,6 @@ int main(int argc, char** argv)
      * Initialize MPI
      */
     Uintah::Parallel::initializeManager(argc, argv);
-
     #ifdef USE_VAMPIR
     VTsetup();
     #endif
@@ -178,7 +179,7 @@ int main(int argc, char** argv)
     if(scheduler == ""){
        if(Uintah::Parallel::usingMPI()){
 	  scheduler="MPIScheduler"; // Default for parallel runs
-	  loadbalancer="RoundRobinLoadBalancer";
+	  loadbalancer="SimpleLoadBalancer";
 	  Uintah::Parallel::noThreading();
        } else {
 	  scheduler="SingleProcessorScheduler"; // Default for serial runs
@@ -266,40 +267,48 @@ int main(int argc, char** argv)
 	}
 
 	// Scheduler
+	Scheduler* sch;
 	if(scheduler == "SingleProcessorScheduler"){
 	   SingleProcessorScheduler* sched = 
 	      scinew SingleProcessorScheduler(world, output);
 	   sim->attachPort("scheduler", sched);
 	   sched->attachPort("load balancer", bal);
-	   if (emit_graphs) sched->doEmitTaskGraphDocs();
+	   sch=sched;
+	} else if(scheduler == "SimpleScheduler"){
+	   SimpleScheduler* sched = 
+	      scinew SimpleScheduler(world, output);
+	   sim->attachPort("scheduler", sched);
+	   sched->attachPort("load balancer", bal);
+	   sch=sched;
 	} else if(scheduler == "MPIScheduler"){
 	   MPIScheduler* sched =
 	      scinew MPIScheduler(world, output);
 	   sim->attachPort("scheduler", sched);
 	   sched->attachPort("load balancer", bal);
-	   if (emit_graphs) sched->doEmitTaskGraphDocs();
-	/*
+	   sch=sched;
 	} else if(scheduler == "MixedScheduler"){
-	   if( numThreads > 0 ){
-	     if( Uintah::Parallel::getMaxThreads() == 1 ){
-	       Uintah::Parallel::setMaxThreads( numThreads );
-	     }
-	   }
-	   MixedScheduler* sched =
-	      scinew MixedScheduler(world, output);
-	   sim->attachPort("scheduler", sched);
-	   sched->attachPort("load balancer", bal);
-*/
+	  if( numThreads > 0 ){
+	    if( Uintah::Parallel::getMaxThreads() == 1 ){
+	      Uintah::Parallel::setMaxThreads( numThreads );
+	    }
+	  }
+	  MixedScheduler* sched =
+	    scinew MixedScheduler(world, output);
+	  sim->attachPort("scheduler", sched);
+	  sched->attachPort("load balancer", bal);
+	  sch=sched;
 	} else if(scheduler == "NullScheduler"){
 	   NullScheduler* sched =
 	      scinew NullScheduler(world, output);
 	   sim->attachPort("scheduler", sched);
 	   sched->attachPort("load balancer", bal);
-	   if (emit_graphs) sched->doEmitTaskGraphDocs();
+	   sch=sched;
 	} else {
 	   quit( "Unknown scheduler: " + scheduler );
 	}
-	  
+	sch->addReference();
+	if (emit_graphs) sch->doEmitTaskGraphDocs();
+
 	/*
 	 * Start the simulation controller
 	 */
@@ -318,14 +327,15 @@ int main(int argc, char** argv)
 	}
 	sim->run();
 
-    delete sim;
-    delete reader;
     delete mpm;
     delete cfd;
     delete mpmcfd;
     delete output;
     delete bal;
-    //    delete sched;
+    delete sim;
+    delete reader;
+    sch->removeReference();
+    delete sch;
     } catch (Exception& e) {
 	cerr << "Caught exception: " << e.message() << '\n';
 	if(e.stackTrace())
@@ -347,6 +357,9 @@ int main(int argc, char** argv)
 	thrownException = true;
     }
 
+    // Shutdown XML crap
+    XMLPlatformUtils::Terminate();
+
     /*
      * Finalize MPI
      */
@@ -356,4 +369,3 @@ int main(int argc, char** argv)
       Thread::exitAll(1);
     }
 }
-
