@@ -42,6 +42,7 @@ itcl_class SCIRun_DataIO_MatrixReader {
     }
 
     method set_defaults {} {
+	global $this-types
 	global $this-filetype
     }
 
@@ -64,12 +65,11 @@ itcl_class SCIRun_DataIO_MatrixReader {
 	set defext ".mat"
 	set title "Open matrix file"
 	
-	# file types to appers in filter box
-	set types {
-	    {{Matrix}          {.mat} }
-	    {{All Files}       {.*}   }
-	}
 	
+	# Unwrap $this-types into a list.
+	set tmp1 [set $this-types]
+	set tmp2 [eval "set tmp3 $tmp1"]
+
 	######################################################
 	
 	makeOpenFilebox \
@@ -79,9 +79,10 @@ itcl_class SCIRun_DataIO_MatrixReader {
 		-command "$this-c needexecute; wm withdraw $w" \
 		-cancel "wm withdraw $w" \
 		-title $title \
-		-filetypes $types \
+	        -filetypes $tmp2 \
 		-initialdir $initdir \
-		-defaultextension $defext
+		-defaultextension $defext \
+	        -selectedfiletype $this-filetype
 
 	moveToCursor $w	
     }

@@ -49,10 +49,10 @@ template class GenericReader<FieldHandle>;
 
 class FieldReader : public GenericReader<FieldHandle> {
 protected:
-  virtual bool call_importer(const string &filename);
-
   GuiString gui_types_;
   GuiString gui_filetype_;
+
+  virtual bool call_importer(const string &filename);
 
 public:
   FieldReader(GuiContext* ctx);

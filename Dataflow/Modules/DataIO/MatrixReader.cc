@@ -49,30 +49,79 @@ template class GenericReader<MatrixHandle>;
 
 class MatrixReader : public GenericReader<MatrixHandle> {
 protected:
+  GuiString gui_types_;
+  GuiString gui_filetype_;
+
   virtual bool call_importer(const string &filename);
 
 public:
   MatrixReader(GuiContext* ctx);
+
+  virtual void execute();
 };
 
 DECLARE_MAKER(MatrixReader)
 MatrixReader::MatrixReader(GuiContext* ctx)
-  : GenericReader<MatrixHandle>("MatrixReader", ctx, "DataIO", "SCIRun")
+  : GenericReader<MatrixHandle>("MatrixReader", ctx, "DataIO", "SCIRun"),
+    gui_types_(ctx->subVar("types")),
+    gui_filetype_(ctx->subVar("filetype"))
 {
+  MatrixIEPluginManager mgr;
+  vector<string> importers;
+  mgr.get_importer_list(importers);
+  
+  string importtypes = "{";
+  importtypes += "{{SCIRun Matrix File} {.fld} } ";
+  importtypes += "{{SCIRun Matrix Any} {.*} } ";
+
+  for (unsigned int i = 0; i < importers.size(); i++)
+  {
+    MatrixIEPlugin *pl = mgr.get_plugin(importers[i]);
+    if (pl->fileextension != "")
+    {
+      importtypes += "{{" + importers[i] + "} {" + pl->fileextension + "} } ";
+    }
+    else
+    {
+      importtypes += "{{" + importers[i] + "} {.*} } ";
+    }
+  }
+
+  importtypes += "}";
+
+  gui_types_.set(importtypes);
 }
 
 
 bool
 MatrixReader::call_importer(const string &filename)
 {
+  const string ftpre = gui_filetype_.get();
+  const string::size_type loc = ftpre.find(" (");
+  const string ft = ftpre.substr(0, loc);
+  
   MatrixIEPluginManager mgr;
-  MatrixIEPlugin *pl = mgr.get_plugin("SomePlugin");
+  MatrixIEPlugin *pl = mgr.get_plugin(ft);
   if (pl)
   {
     handle_ = pl->filereader(this, filename.c_str());
     return handle_.get_rep();
   }
   return false;
+}
+
+
+void
+MatrixReader::execute()
+{
+  const string ftpre = gui_filetype_.get();
+  const string::size_type loc = ftpre.find(" (");
+  const string ft = ftpre.substr(0, loc);
+
+  importing_ = !(ft == "" ||
+		 ft == "SCIRun Matrix File" ||
+		 ft == "SCIRun Matrix Any");
+  GenericReader<MatrixHandle>::execute();
 }
 
 

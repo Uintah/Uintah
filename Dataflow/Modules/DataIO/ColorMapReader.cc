@@ -49,31 +49,80 @@ template class GenericReader<ColorMapHandle>;
 
 class ColorMapReader : public GenericReader<ColorMapHandle> {
 protected:
+  GuiString gui_types_;
+  GuiString gui_filetype_;
+
   virtual bool call_importer(const string &filename);
 
 public:
   ColorMapReader(GuiContext* ctx);
+
+  virtual void execute();
 };
 
 DECLARE_MAKER(ColorMapReader)
 
 ColorMapReader::ColorMapReader(GuiContext* ctx)
-  : GenericReader<ColorMapHandle>("ColorMapReader", ctx, "DataIO", "SCIRun")
+  : GenericReader<ColorMapHandle>("ColorMapReader", ctx, "DataIO", "SCIRun"),
+    gui_types_(ctx->subVar("types")),
+    gui_filetype_(ctx->subVar("filetype"))
 {
+  ColorMapIEPluginManager mgr;
+  vector<string> importers;
+  mgr.get_importer_list(importers);
+  
+  string importtypes = "{";
+  importtypes += "{{SCIRun Colormap File} {.fld} } ";
+  importtypes += "{{SCIRun Colormap Any} {.*} } ";
+
+  for (unsigned int i = 0; i < importers.size(); i++)
+  {
+    ColorMapIEPlugin *pl = mgr.get_plugin(importers[i]);
+    if (pl->fileextension != "")
+    {
+      importtypes += "{{" + importers[i] + "} {" + pl->fileextension + "} } ";
+    }
+    else
+    {
+      importtypes += "{{" + importers[i] + "} {.*} } ";
+    }
+  }
+
+  importtypes += "}";
+
+  gui_types_.set(importtypes);
 }
 
 
 bool
 ColorMapReader::call_importer(const string &filename)
 {
+  const string ftpre = gui_filetype_.get();
+  const string::size_type loc = ftpre.find(" (");
+  const string ft = ftpre.substr(0, loc);
+  
   ColorMapIEPluginManager mgr;
-  ColorMapIEPlugin *pl = mgr.get_plugin("SomePlugin");
+  ColorMapIEPlugin *pl = mgr.get_plugin(ft);
   if (pl)
   {
     handle_ = pl->filereader(this, filename.c_str());
     return handle_.get_rep();
   }
   return false;
+}
+
+
+void
+ColorMapReader::execute()
+{
+  const string ftpre = gui_filetype_.get();
+  const string::size_type loc = ftpre.find(" (");
+  const string ft = ftpre.substr(0, loc);
+
+  importing_ = !(ft == "" ||
+		 ft == "SCIRun Colormap File" ||
+		 ft == "SCIRun Colormap Any");
+  GenericReader<ColorMapHandle>::execute();
 }
 
 
