@@ -119,6 +119,7 @@ FieldSlicer::~FieldSlicer(){
 }
 
 void FieldSlicer::execute(){
+  update_state(NeedData);
 
   bool updateAll    = false;
   bool updateField  = false;
@@ -199,11 +200,15 @@ void FieldSlicer::execute(){
       jdim_ != jDim_.get() ||
       kdim_ != kDim_.get() )
   {
-    // Dims has callback on it, so it must be set it after i j k.
+    // Dims has callback on it, so it must be set it after i, j, and k.
     iDim_.set(idim_);
     jDim_.set(jdim_);
     kDim_.set(kdim_);
     Dims_.set(dims);
+
+    ostringstream str;
+    str << id << " set_size 0 0 0";
+    gui->execute(str.str().c_str());
 
     updateAll = true;
   }
