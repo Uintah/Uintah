@@ -36,7 +36,7 @@ class MultiMaterial : public Material {
     material_stack_.resize(0);
   }
 
-  unsigned push_back(Material *m, double percent)
+  unsigned insert(Material *m, double percent)
   {
     material_stack_.push_back(new MatPercent(m,percent));
     return material_stack_.size();
