@@ -2,10 +2,14 @@
 #include "WorkQueue.h"
 #include "Thread.h"
 #include <iostream.h>
+#ifdef __sgi
 extern "C" {
 #include <sys/pmo.h>
 #include <fetchop.h>
 }
+#else
+#include "AtomicCounter.h"
+#endif
 #include <stdio.h>
 
 /*
@@ -14,15 +18,25 @@ extern "C" {
  * Initially, assignments are relatively large, and will get smaller
  * towards the end in an effort to equalize the total effort.
  */
+#ifdef __sgi
 static fetchop_reservoir_t reservoir;
+#endif
 
 struct WorkQueue_private {
     WorkQueue_private();
+#ifdef __sgi
     fetchop_var_t* pvar;
+#else
+    AtomicCounter counter;
+#endif
 };
 
 WorkQueue_private::WorkQueue_private()
+#ifndef __sgi
+    : counter("workqueue assignment")
+#endif
 {
+#ifdef __sgi
     if(!reservoir){
 	reservoir=fetchop_init(USE_DEFAULT_PM, 10);
 	if(!reservoir){
@@ -36,10 +50,17 @@ WorkQueue_private::WorkQueue_private()
 	Thread::niceAbort();
     }
     storeop_store(pvar, 0);
+#else
+    counter.set(0);
+#endif
 }
 
 void WorkQueue::init() {
+#ifdef __sgi
     storeop_store(priv->pvar, 0);
+#else
+    priv->counter.set(0);
+#endif
     if(totalAssignments==0){
 	nassignments=0;
 	return;
@@ -127,14 +148,20 @@ WorkQueue& WorkQueue::operator=(const WorkQueue& copy)
 
 WorkQueue::~WorkQueue()
 {
+#ifdef __sgi
     fetchop_free(reservoir, priv->pvar);
+#endif
     if(priv)
 	delete priv;
 }
 
 bool WorkQueue::nextAssignment(int& start, int& end)
 {
+#ifdef __sgi
     fetchop_var_t i=fetchop_increment(priv->pvar);
+#else
+    int i=priv->counter++;
+#endif
     if(i >= nassignments)
 	return false;
     start=assignments[i];

@@ -49,3 +49,8 @@ int AtomicCounter::operator--(int) {
     return ret;
 }
 
+void AtomicCounter::set(int v) {
+    lock.lock();
+    value=v;
+    lock.unlock();
+}

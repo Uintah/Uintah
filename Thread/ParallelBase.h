@@ -38,10 +38,10 @@ protected:
     //<i>No documentation provided</i>
     virtual ~ParallelBase() ;
     friend class Thread;
+public:
     //////////
     //<i>No documentation Provided</i>
     virtual void run(int proc)=0;
-public:
 };
 
 #endif

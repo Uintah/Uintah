@@ -60,6 +60,7 @@ static pthread_mutex_t sched_lock;
 static pthread_mutex_t pool_mutex[N_POOLMUTEX];
 static pthread_key_t thread_key;
 static struct timeval start_time;
+static sem_t main_sema;
 
 static void lock_scheduler() {
     if(pthread_mutex_lock(&sched_lock)){
@@ -275,7 +276,18 @@ Thread* Thread::currentThread() {
 }
 
 double Thread::secondsPerTick() { NF;return 0; }
-void Thread::join() { NF }
+
+void Thread::join() {
+    Thread* us=Thread::currentThread();
+    int os=push_bstack(us->priv, STATE_JOINING, threadname);
+    if(sem_wait(&priv->done) != 0){
+	perror("sem_wait");
+	Thread::niceAbort();
+    }
+    pop_bstack(us->priv, os);
+    detach();
+}
+
 void Thread::profile(FILE*, FILE*) { NF }
 int Thread::numProcessors() {
     return 1;
@@ -284,12 +296,22 @@ int Thread::numProcessors() {
 void Thread_shutdown(Thread* thread) {
     Thread_private* priv=thread->priv;
 
-    if(sem_wait(&priv->done) != 0){
-	perror("sem_wait");
+    if(sem_post(&priv->done) != 0){
+	perror("sem_post");
 	Thread::niceAbort();
     }
 
     delete thread;
+
+    // Wait to be deleted...
+    if(sem_wait(&priv->delete_ready) == -1) {
+	perror("sem_wait");
+	Thread::niceAbort();
+    }
+
+    // Allow this thread to run anywhere...
+    if(thread->cpu != -1)
+	thread->migrate(-1);
 
     priv->thread=0;
     lock_scheduler();
@@ -305,6 +327,13 @@ void Thread_shutdown(Thread* thread) {
     nactive--;
     unlock_scheduler();
     Thread::check_exit();
+    if(priv->threadid == 0){
+	priv->state=STATE_PROGRAM_EXIT;
+	if(sem_wait(&main_sema) == -1){
+	    perror("sem_wait");
+	    Thread::niceAbort();
+	}
+    }
 }
 
 void Thread_run(Thread* t) {
@@ -345,6 +374,7 @@ void Thread::os_start(bool) {
     priv->detached=0;
 
     priv->thread=this;
+    priv->threadid=0;
     lock_scheduler();
     if(pthread_create(&priv->threadid, NULL, run_threads, priv) != 0){
 	perror("pthread_create");
@@ -450,6 +480,10 @@ void Thread::initialize() {
 	perror("sem_init");
 	Thread::niceAbort();
     }
+    if(sem_init(&main_sema, 0, 0) != 0){
+	perror("sem_init");
+	Thread::niceAbort();
+    }
     lock_scheduler();
     active[nactive]=mainthread->priv;
     nactive++;
@@ -489,3 +523,12 @@ void Thread::waitFor(SysClock time) {
 void RealtimeThread::frameYield() { NF }
 void RealtimeThread::frameReady() { NF }
 void RealtimeThread::frameSchedule(int, RealtimeThread*) { NF }
+
+void Thread::yield() {
+    sched_yield();
+}
+
+void Thread::migrate(int proc)
+{
+    // Nothing for now...
+}

@@ -74,6 +74,7 @@ public:
     //////////
         //Decrement the counter and return the old value
     int operator--(int) ;
+    void set(int);
 };
 
 #endif

@@ -290,6 +290,7 @@ public:
     //Mark the end of a selection that could block.  <i>restore</i> was returned from a previous
     //invocation of the above <b>couldBlock</b>.
     static void couldBlock(int restore);
+    static void yield();
 
     //////////
     //<i>No documentation provided</i>
