@@ -1,3 +1,11 @@
+
+//Port to SCIRun(1) scheduler interface
+interface DataflowScheduler extends sci.cca.Port
+{
+  bool toggleOnOffScheduling();
+  void do_scheduling();
+};
+
 //abstract interface 
 interface StringPort extends sci.cca.Port
 {
