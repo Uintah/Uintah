@@ -22,7 +22,7 @@ using namespace Uintah;
  Function:  printData--
  Purpose:  Print to stderr a cell-centered, single material
 _______________________________________________________________________ */
-void    ICE::printData(const Patch* patch, int include_GC,
+void    ICE::printData(const Patch* patch, int include_EC,
         const string&    message1,         /* message1                     */
         const string&    message2,         /* message to user              */
         const CCVariable<double>& q_CC)
@@ -37,27 +37,22 @@ void    ICE::printData(const Patch* patch, int include_GC,
     
     IntVector low, high; 
 
+    if (include_EC == 1)  { 
+      low   = patch->getCellLowIndex();
+      high  = patch->getCellHighIndex();
+    }
+    if (include_EC == 0) {
+      low   = patch->getInteriorCellLowIndex();
+      high  = patch->getInteriorCellHighIndex();
+    }
+    adjust_dbg_indices( d_dbgBeginIndx, d_dbgEndIndx, low, high); 
+         
     cerr << "______________________________________________\n";
     cerr << "$" << message1 << "\n";
     cerr << "$" << message2 << "\n";
 
-    if (include_GC == 1)  { 
-      low   = patch->getCellLowIndex();
-      high  = patch->getCellHighIndex();
-    }
-    if (include_GC == 0) {
-      low   = patch->getInteriorCellLowIndex();
-      high  = patch->getInteriorCellHighIndex();
-    }
-    if (d_dbgBeginIndx != IntVector(0,0,0)) {
-      low = d_dbgBeginIndx;
-    }
-    if (d_dbgEndIndx != IntVector(0,0,0) ) {
-      high = d_dbgEndIndx;
-    } 
-
     cerr.setf(ios::scientific,ios::floatfield);
-    cerr.precision(5);  
+    cerr.precision(10);  
     for(int k = low.z(); k < high.z(); k++)  {
       for(int j = low.y(); j < high.y(); j++) {
         for(int i = low.x(); i < high.x(); i++) {
@@ -81,7 +76,7 @@ void    ICE::printData(const Patch* patch, int include_GC,
  Function:  printData--
  Purpose:  Print to stderr a cell-centered, single material
 _______________________________________________________________________ */
-void    ICE::printData(const Patch* patch, int include_GC,
+void    ICE::printData(const Patch* patch, int include_EC,
         const string&    message1,       /* message1                     */
         const string&    message2,       /* message to user              */
         const CCVariable<int>& q_CC)
@@ -94,25 +89,21 @@ void    ICE::printData(const Patch* patch, int include_GC,
        d_dbgTime >= d_dbgNextDumpTime) {
     d_dbgOldTime = d_dbgTime;      
     IntVector low, high; 
-
-    cerr << "______________________________________________\n";
-    cerr << "$" << message1 << "\n";
-    cerr << "$" << message2 << "\n";
-
-    if (include_GC == 1)  { 
+    
+    if (include_EC == 1)  { 
       low   = patch->getCellLowIndex();
       high  = patch->getCellHighIndex();
     }
-    if (include_GC == 0) {
+    if (include_EC == 0) {
       low   = patch->getInteriorCellLowIndex();
       high  = patch->getInteriorCellHighIndex();
     }
-    if (d_dbgBeginIndx != IntVector(0,0,0) ) {
-      low = d_dbgBeginIndx;
-    }
-    if (d_dbgEndIndx != IntVector(0,0,0) ) {
-      high = d_dbgEndIndx;
-    } 
+    adjust_dbg_indices( d_dbgBeginIndx, d_dbgEndIndx, low, high); 
+    
+    
+    cerr << "______________________________________________\n";
+    cerr << "$" << message1 << "\n";
+    cerr << "$" << message2 << "\n";
     for(int k = low.z(); k < high.z(); k++)  {
       for(int j = low.y(); j < high.y(); j++) {
         for(int i = low.x(); i < high.x(); i++) {
@@ -134,7 +125,7 @@ void    ICE::printData(const Patch* patch, int include_GC,
  Function:  printVector--
  Purpose:  Print to stderr a cell-centered, single material
 _______________________________________________________________________ */
-void    ICE::printVector(const Patch* patch, int include_GC,
+void    ICE::printVector(const Patch* patch, int include_EC,
         const string&    message1,       /* message1                     */
         const string&    message2,       /* message to user              */
         int     component,              /*  x = 0,y = 1, z = 1          */
@@ -150,26 +141,22 @@ void    ICE::printVector(const Patch* patch, int include_GC,
     d_dbgOldTime = d_dbgTime;      
     IntVector low, high; 
 
-    cerr << "______________________________________________\n";
-    cerr << "$" << message1 << "\n";
-    cerr << "$" << message2 << "\n";
-
-    if (include_GC == 1)  { 
+    if (include_EC == 1)  { 
       low   = patch->getCellLowIndex();
       high  = patch->getCellHighIndex();
     }
-    if (include_GC == 0) {
+    if (include_EC == 0) {
       low   = patch->getInteriorCellLowIndex();
       high  = patch->getInteriorCellHighIndex();
     }
-    if (d_dbgBeginIndx != IntVector(0,0,0) ) {
-      low = d_dbgBeginIndx;
-    }
-    if (d_dbgEndIndx != IntVector(0,0,0) ) {
-      high = d_dbgEndIndx;
-    } 
+    adjust_dbg_indices( d_dbgBeginIndx, d_dbgEndIndx, low, high); 
+    
+    
     cerr.setf(ios::scientific,ios::floatfield);
-    cerr.precision(5);  
+    cerr.precision(10);  
+    cerr << "______________________________________________\n";
+    cerr << "$" << message1 << "\n";
+    cerr << "$" << message2 << "\n";
     for(int k = low.z(); k < high.z(); k++)  {
       for(int j = low.y(); j < high.y(); j++) {
         for(int i = low.x(); i < high.x(); i++) {
@@ -194,7 +181,7 @@ void    ICE::printVector(const Patch* patch, int include_GC,
  Function:  printData_FC--
  Purpose:  Print left face
 _______________________________________________________________________ */
-void    ICE::printData_FC(const Patch* patch, int include_GC,
+void    ICE::printData_FC(const Patch* patch, int include_EC,
         const string&    message1,        /* message1                     */
         const string&    message2,        /* message to user              */
         const SFCXVariable<double>& q_FC)
@@ -208,26 +195,22 @@ void    ICE::printData_FC(const Patch* patch, int include_GC,
     d_dbgOldTime = d_dbgTime;
     IntVector low, high; 
 
-    cerr << "______________________________________________\n";
-    cerr << "$" << message1 << "\n";
-    cerr << "$" << message2 << "\n";
-
-    if (include_GC == 1)  { 
+    if (include_EC == 1)  { 
       low   = patch->getSFCXLowIndex();
       high  = patch->getSFCXHighIndex();
     }
-    if (include_GC == 0) {
+    if (include_EC == 0) {
       low   = patch->getInteriorCellLowIndex();
       high  = patch->getInteriorCellHighIndex();
     }
-    if (d_dbgBeginIndx != IntVector(0,0,0) ) {
-      low = d_dbgBeginIndx;
-    }
-    if (d_dbgEndIndx != IntVector(0,0,0) ) {
-      high = d_dbgEndIndx;
-    } 
+    adjust_dbg_indices( d_dbgBeginIndx, d_dbgEndIndx, low, high); 
+     
+     
     cerr.setf(ios::scientific,ios::floatfield);
-    cerr.precision(5);  
+    cerr.precision(10); 
+    cerr << "______________________________________________\n";
+    cerr << "$" << message1 << "\n";
+    cerr << "$" << message2 << "\n"; 
     for(int k = low.z(); k < high.z(); k++)  {
       for(int j = low.y(); j < high.y(); j++) {
       //for(int j = high.y()-1; j >= low.y(); j--) {
@@ -251,7 +234,7 @@ void    ICE::printData_FC(const Patch* patch, int include_GC,
  Function:  printData_FC--
  Purpose:   Prints bottom Face
 _______________________________________________________________________ */
-void    ICE::printData_FC(const Patch* patch, int include_GC,
+void    ICE::printData_FC(const Patch* patch, int include_EC,
         const string&    message1,         /* message1                     */
         const string&    message2,         /* message to user              */
         const SFCYVariable<double>& q_FC)
@@ -265,26 +248,22 @@ void    ICE::printData_FC(const Patch* patch, int include_GC,
     d_dbgOldTime = d_dbgTime;      
     IntVector low, high; 
 
-    cerr << "______________________________________________\n";
-    cerr << "$" << message1 << "\n";
-    cerr << "$" << message2 << "\n";
-
-    if (include_GC == 1)  { 
+    if (include_EC == 1)  { 
       low   = patch->getSFCYLowIndex();
       high  = patch->getSFCYHighIndex();
     }
-    if (include_GC == 0) {
+    if (include_EC == 0) {
       low   = patch->getInteriorCellLowIndex();
       high  = patch->getInteriorCellHighIndex();
     }
-    if (d_dbgBeginIndx != IntVector(0,0,0) ) {
-      low = d_dbgBeginIndx;
-    }
-    if (d_dbgEndIndx != IntVector(0,0,0) ) {
-      high = d_dbgEndIndx;
-    } 
+    adjust_dbg_indices( d_dbgBeginIndx, d_dbgEndIndx, low, high); 
+    
+    
     cerr.setf(ios::scientific,ios::floatfield);
     cerr.precision(5);
+    cerr << "______________________________________________\n";
+    cerr << "$" << message1 << "\n";
+    cerr << "$" << message2 << "\n";
     for(int k = low.z(); k < high.z(); k++)  {
       for(int j = low.y(); j < high.y(); j++) {
       //for(int j = high.y()-1; j >= low.y(); j--) {
@@ -307,9 +286,9 @@ void    ICE::printData_FC(const Patch* patch, int include_GC,
 /* 
  ======================================================================*
  Function:  printData_FC--
- Purpose:  Piints back face
+ Purpose:  Prints back face
 _______________________________________________________________________ */
-void    ICE::printData_FC(const Patch* patch, int include_GC,
+void    ICE::printData_FC(const Patch* patch, int include_EC,
         const string&    message1,        /* message1                     */
         const string&    message2,        /* message to user              */
         const SFCZVariable<double>& q_FC)
@@ -324,26 +303,22 @@ void    ICE::printData_FC(const Patch* patch, int include_GC,
     d_dbgOldTime = d_dbgTime;      
     IntVector low, high; 
 
-    cerr << "______________________________________________\n";
-    cerr << "$" << message1 << "\n";
-    cerr << "$" << message2 << "\n";
-
-    if (include_GC == 1)  { 
+    if (include_EC == 1)  { 
       low   = patch->getSFCZLowIndex();
       high  = patch->getSFCZHighIndex();
     }
-    if (include_GC == 0) {
+    if (include_EC == 0) {
       low   = patch->getInteriorCellLowIndex();
       high  = patch->getInteriorCellHighIndex();
     }
-    if (d_dbgBeginIndx != IntVector(0,0,0) ) {
-      low = d_dbgBeginIndx;
-    }
-    if (d_dbgEndIndx != IntVector(0,0,0) ) {
-      high = d_dbgEndIndx;
-    } 
+    
+    adjust_dbg_indices( d_dbgBeginIndx, d_dbgEndIndx, low, high); 
+    
     cerr.setf(ios::scientific,ios::floatfield);
-    cerr.precision(5);   
+    cerr.precision(10);   
+    cerr << "______________________________________________\n";
+    cerr << "$" << message1 << "\n";
+    cerr << "$" << message2 << "\n";
     for(int k = low.z(); k < high.z(); k++)  {
       for(int j = low.y(); j < high.y(); j++) {
       //for(int j = high.y()-1; j >= low.y(); j--) {
@@ -365,10 +340,49 @@ void    ICE::printData_FC(const Patch* patch, int include_GC,
 
 /* 
  ======================================================================*
+ Function:  adjust_dbg_indices--
+ Purpose:  tweak what the user has specified for d_dbgBegin and end 
+ indices for multipatch problems
+_______________________________________________________________________ */
+void  ICE::adjust_dbg_indices( const IntVector d_dbgBeginIndx,
+                                const IntVector d_dbgEndIndx,  
+                                IntVector& low,                 
+                                IntVector& high)                
+{
+  //__________________________________                            
+  // for multipatch problems you need                             
+  // further restrict the indicies                                
+  if (d_dbgBeginIndx != IntVector(0,0,0)){                        
+    IntVector c = d_dbgBeginIndx;                                 
+    for (int dir = 0; dir < 3; dir ++) {  // examine each indice  
+      if (c(dir) >= low(dir) &&  c(dir) <= high(dir)) {           
+        low(dir) = c(dir);                                        
+      } else if (c(dir) < low(dir)) {                             
+        low(dir) = low(dir);                                      
+      } else if (c(dir) > high(dir) ) {                           
+        low(dir) = high(dir);                                     
+      }                                                           
+    }                                                             
+  }                                                               
+   if (d_dbgEndIndx != IntVector(0,0,0)){                         
+    IntVector c = d_dbgEndIndx;                                   
+    for (int dir = 0; dir < 3; dir ++) {  // examine each indice  
+      if (c(dir) >= low(dir) &&  c(dir) <= high(dir)) {           
+        high(dir) = c(dir);                                       
+      } else if (c(dir) < low(dir)) {                             
+        high(dir) = low(dir);                                     
+      } else if (c(dir) > high(dir) ) {                           
+        high(dir) = high(dir);                                    
+      }                                                           
+    }                                                             
+  }                                                               
+}
+/* 
+ ======================================================================*
  Function:  readData--
  Purpose:  Print to stderr a cell-centered, single material
 _______________________________________________________________________ */
-void    ICE::readData(const Patch* patch, int include_GC,
+void    ICE::readData(const Patch* patch, int include_EC,
         const string&    filename,        /* message1                     */
         const string&    var_name,        /* var_name              */
         CCVariable<double>& q_CC)
@@ -390,11 +404,11 @@ void    ICE::readData(const Patch* patch, int include_GC,
   if (var_name != text)
     throw UnknownVariable("You're trying to read in apples and orangs " + var_name + " " +  text,"");
   
-  if (include_GC == 1)  { 
+  if (include_EC == 1)  { 
     lowIndex = patch->getCellLowIndex();
     hiIndex  = patch->getCellHighIndex();
   }
-  if (include_GC == 0) {
+  if (include_EC == 0) {
     lowIndex = patch->getInteriorCellLowIndex();
     hiIndex  = patch->getInteriorCellHighIndex();
   }
