@@ -79,6 +79,7 @@ public:
                             
   void scheduleInterpolateNCToCC_0(SchedulerP&, 
                                   const PatchSet*,
+                                  const MaterialSubset*,
 				      const MaterialSet*);
 
   /*
@@ -89,6 +90,7 @@ public:
   
   void scheduleInterpolateNCToCC(SchedulerP&, 
                                 const PatchSet*,
+                                const MaterialSubset*,
 				    const MaterialSet*);
 
   void scheduleCCMomExchange(SchedulerP&, 
@@ -122,6 +124,7 @@ public:
 
   void scheduleInterpolatePAndGradP(SchedulerP&, 
                                     const PatchSet*,
+                                    const MaterialSubset*,
                                     const MaterialSubset*,
                                     const MaterialSubset*,
 				        const MaterialSet*);
