@@ -22,10 +22,12 @@
 #include <Dataflow/Ports/FieldPort.h>
 #include <Core/Malloc/Allocator.h>
 #include <Dataflow/Modules/Fields/ChangeFieldDataType.h>
+#include <Core/Thread/Mutex.h>
 
 namespace BioPSE {
 
 using namespace SCIRun;
+
 
 class ForwardMagneticField : public Module {
 public:
@@ -78,7 +80,10 @@ public:
 
   CalcFMField() :
     np_(-1),
-    interp_value_(0)
+    count_(0),
+    interp_value_(0), 
+    interp_lock_("ForwardMagneticField lock"),
+    cur_density_lock_("ForwardMagneticField lock")
   {}
   
   
@@ -99,18 +104,21 @@ private:
   typedef typename PointField::mesh_type::Node::iterator PFieldNIter;
   typedef typename PointField::mesh_type::Node::index_type PFieldNIndex;
 
-  void interpolate(int proc, Point p, Vector value, int num_threads);
+  void interpolate(int proc, Point p);
 
-  pair<EFieldCIter, EFieldCIter> get_parallel_iter(ElecField *fld, 
-						   int proc, int np);
+  void get_parallel_iter(ElecField *fld, int np);
 
   int                                                     np_;
+  int                                                     count_;
   Vector                                                  interp_value_;
   map<typename ElecField::mesh_type::Cell::index_type, Vector> current_density_;
+
   ElecField                                               *efld_;
   CondField                                               *ctfld_;
   vector<pair<string, Tensor> >                            tens_;
   vector<pair<EFieldCIter, EFieldCIter> >                  piters_;
+  Mutex                                                    interp_lock_;
+  Mutex                                                    cur_density_lock_;
 };
 
 //! Assume that the value_type for the input fields are Vector.
@@ -175,33 +183,36 @@ CalcFMField<ElecField, CondField, PointField>::calc_forward_magnetic_field(
   PFieldNIter iter, end;
   mesh->begin(iter);
   mesh->end(end);
-  
+  typename PointField::mesh_type::Node::size_type det_sz;
+  mesh->size(det_sz);
+  count_ = 0;
   // iterate over the detectors.
   while (iter != end) {
     // finish loop iteration.
 
     PFieldNIndex ind = *iter;
     ++iter;
-
+    cerr << "Detector number" << count_ << endl;
+    //    mod->update_progress(count_, det_sz);    
     Vector mag_field;
     Point  pt;
     mesh->get_center(pt, ind);
-    
-    // switch to parallel2 mag_field arg unused in interp FIX_ME
-    cerr << "Number of Processors Used: " << np <<endl;
-    
+    // init parallel iterators
+    get_parallel_iter(efld_, np);
+
     // init the interp val to 0 
     interp_value_ = Vector(0,0,0);
-    Thread::parallel(Parallel3<AlgoType, Point, Vector, int>(this, 
-						     &AlgoType::interpolate, 
-						     pt, mag_field, np), 
+   
+    Thread::parallel(Parallel1<AlgoType, Point>(this, &AlgoType::interpolate, 
+						pt), 
 		     np, true);
+    
+    count_++;
     mag_field = interp_value_;
-
-    //interpolate(efield, pt, mag_field, sigma, np);
+    // cout << "interp_value_: " << interp_value_ << endl;
 
     Vector normal;
-    normal = detfld->value(ind);
+    normal = Point(0,0,0) - pt;//detfld->value(ind);
     // start of B(P) stuff
 
     PFieldNIter dip_iter, dip_end;
@@ -250,11 +261,9 @@ mag_mult(vector<double> matrix, Vector elemField) {
 
 
 template <class ElecField, class CondField, class PointField>
-pair<typename CalcFMField<ElecField, CondField, PointField>::EFieldCIter, 
-     typename CalcFMField<ElecField, CondField, PointField>::EFieldCIter>
+void
 CalcFMField<ElecField, CondField, PointField>::get_parallel_iter(
 							      ElecField *fld,
-							      int proc, 
 							      int np)
 {
   if (np_ != np) {
@@ -264,13 +273,13 @@ CalcFMField<ElecField, CondField, PointField>::get_parallel_iter(
     EFieldCIter iter, end;
     mesh->begin(iter);
     mesh->end(end);
-    cout << "begin end total: " << (unsigned)(*iter) << ", " 
-	     << (unsigned)(*end) << endl;
+    //    cout << "begin end total: " << (unsigned)(*iter) << ", " 
+    //	 << (unsigned)(*end) << endl;
     typename ElecField::mesh_type::Cell::size_type sz;
     mesh->size(sz);
     int chunk_sz = sz / np;
-    cout << "chunk_size: " << chunk_sz 
-	 << " mesh size: " << sz << endl;
+    //cout << "chunk_size: " << chunk_sz 
+    //	 << " mesh size: " << sz << endl;
     int i = 0;
     pair<EFieldCIter, EFieldCIter> iter_set;
     iter_set.first = iter;
@@ -293,15 +302,12 @@ CalcFMField<ElecField, CondField, PointField>::get_parallel_iter(
     // make sure last chunk is end.
     piters_[np-1].second = end;
   }
-  return piters_[proc];
 }  
 
 template <class ElecField, class CondField, class PointField>
 void
 CalcFMField<ElecField, CondField, PointField>::interpolate(int proc, 
-							   Point p, 
-							   Vector value, 
-							   int np)
+							   Point p)  
 {
 
   typename ElecField::mesh_handle_type mesh = efld_->get_typed_mesh();
@@ -310,10 +316,14 @@ CalcFMField<ElecField, CondField, PointField>::interpolate(int proc,
   
   bool outside = ! mesh->locate(inside_cell, p);
   EFieldCIter iter;
-  pair<EFieldCIter, EFieldCIter> iters = get_parallel_iter(efld_, proc, np);
-  cout << "interp begin end pair: " << (unsigned)(*iters.first) << ", " 
-       << (unsigned)(*iters.second) << endl;
-
+  pair<EFieldCIter, EFieldCIter> iters = piters_[proc];
+  interp_lock_.lock();
+  /* cout << "begin end for proc: " << proc << ": " << (unsigned)(*iters.first) 
+       << ", " << (unsigned)(*iters.second) << endl;
+  cout << "size is: " << (unsigned)(*iters.second) - (unsigned)(*iters.first) 
+       << endl;
+  */
+  interp_lock_.unlock();
   iter = iters.first;
   while (iter != iters.second) {
     typename ElecField::mesh_type::Cell::index_type cur_cell = *iter;
@@ -324,21 +334,20 @@ CalcFMField<ElecField, CondField, PointField>::interpolate(int proc,
       Point centroid;
       mesh->get_center(centroid, cur_cell);
 
-      if (current_density_[cur_cell] != Vector()) {
+      if (count_ == 0) {
 	Vector elemField;
-
+	
 	// sanity check?
 	efld_->value(elemField, cur_cell);
 	int material = -1;
 	ctfld_->value(material, cur_cell);
 	Vector condElect = tens_[material].second * -1 * elemField; 
 
-	//lock
+	cur_density_lock_.lock();
 	current_density_[cur_cell] = condElect;
-	//unlock
-      }
+	cur_density_lock_.unlock();
+       }
     
-		  
       Vector radius = p - centroid;
       
       Vector valueJXR = Cross(current_density_[cur_cell], radius);
@@ -346,9 +355,10 @@ CalcFMField<ElecField, CondField, PointField>::interpolate(int proc,
       
       Vector tmp = ((valueJXR / (length * length * length)) * 
 		    mesh->get_volume(cur_cell));
-      //lock
+
+      interp_lock_.lock();    
       interp_value_ += tmp;
-      //unlock
+      interp_lock_.unlock();
     }
   }
 }
