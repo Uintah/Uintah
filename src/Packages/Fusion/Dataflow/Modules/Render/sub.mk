@@ -22,7 +22,7 @@ PSELIBS := Core/Datatypes Dataflow/Network Dataflow/Ports \
         Core/Geom Core/Datatypes Core/Geometry \
         Core/TkExtensions
 
-LIBS := $(TCLMATRIX_LIBRARY) $(TK_LIBRARY) $(GL_LIBRARY) $(M_LIBRARY)
+LIBS := $(TCLMATRIX_LIBRARY) $(TK_LIBRARY) $(PLPLOT_LIBRARY) $(GL_LIBRARY) $(M_LIBRARY)
 
 include $(SCIRUN_SCRIPTS)/smallso_epilogue.mk
 
