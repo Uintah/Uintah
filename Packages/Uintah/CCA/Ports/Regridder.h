@@ -59,7 +59,7 @@ WARNING
     virtual bool isAdaptive() = 0;
 
     //! Create a new Grid
-    virtual Grid* regrid(Grid* oldGrid, SchedulerP sched) = 0;
+    virtual Grid* regrid(Grid* oldGrid, SchedulerP sched, const ProblemSpecP& ups) = 0;
   private:
     Regridder(const Regridder&);
     Regridder& operator=(const Regridder&);
