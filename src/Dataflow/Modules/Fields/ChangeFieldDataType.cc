@@ -157,7 +157,7 @@ ChangeFieldDataType::execute()
 
   // Copy over the field data
   const bool both_scalar_p =
-    ef->query_scalar_interface() && fh->query_scalar_interface();
+    ef->query_scalar_interface(this) && fh->query_scalar_interface(this);
   if (both_scalar_p || same_value_type_p)
   {
     const TypeDescription *fdst_td = ef->get_type_description();
@@ -171,7 +171,7 @@ ChangeFieldDataType::execute()
   }
   
 
-  ScalarFieldInterface* sfi = ef->query_scalar_interface();
+  ScalarFieldInterface* sfi = ef->query_scalar_interface(this);
   if (sfi)
   {
     ef->freeze();

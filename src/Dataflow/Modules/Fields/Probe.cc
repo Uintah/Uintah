@@ -308,10 +308,10 @@ Probe::execute()
   PointCloudMesh::Node::index_type pcindex = mesh->add_point(location);
   FieldHandle ofield;
   std::ostringstream valstr;
-  ScalarFieldInterface *sfi = ifieldhandle->query_scalar_interface();
-  VectorFieldInterface *vfi = ifieldhandle->query_vector_interface();
-  TensorFieldInterface *tfi = ifieldhandle->query_tensor_interface();
-  if (sfi)
+  ScalarFieldInterface *sfi = 0;
+  VectorFieldInterface *vfi = 0;
+  TensorFieldInterface *tfi = 0;
+  if ((sfi = ifieldhandle->query_scalar_interface(this)))
   {
     double result;
     if (!sfi->interpolate(result, location))
@@ -324,7 +324,7 @@ Probe::execute()
     field->set_value(result, pcindex);
     ofield = field;
   }
-  else if (vfi)
+  else if ((vfi = ifieldhandle->query_vector_interface(this)))
   {
     Vector result;
     if (!vfi->interpolate(result, location))
@@ -337,7 +337,7 @@ Probe::execute()
     field->set_value(result, pcindex);
     ofield = field;
   }
-  else if (tfi)
+  else if ((tfi = ifieldhandle->query_tensor_interface(this)))
   {
     Tensor result;
     if (!tfi->interpolate(result, location))
