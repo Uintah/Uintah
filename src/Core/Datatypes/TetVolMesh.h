@@ -109,7 +109,7 @@ public:
     //! A fucntor that returns a boolean indicating weather two
     //! edges indices share the same nodes, and thus the same edge in space
     //! Used as a template parameter to STL containers typedef'd below
-    struct eqEdge : binary_function<index_type, index_type, bool>
+    struct eqEdge : public binary_function<index_type, index_type, bool>
     {
     private:
       const vector<under_type> &cells_;
@@ -162,7 +162,7 @@ public:
   {				
     typedef FaceIndex<under_type>       index_type;
     
-    struct eqFace : binary_function<index_type, index_type, bool>
+    struct eqFace : public binary_function<index_type, index_type, bool>
     {
     private:
       const vector<under_type> &cells_;
