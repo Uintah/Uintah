@@ -42,10 +42,10 @@ using namespace SCIRun;
 	 None,
 	 AroundNodes,
 	 AroundCells,
-	 AroundXFaces,
-	 AroundYFaces,
-	 AroundZFaces,
-	 AroundAllFaces,
+	 AroundFacesX,
+	 AroundFacesY,
+	 AroundFacesZ,
+	 AroundFaces,
 	 numGhostTypes // 7
       };
 
