@@ -483,8 +483,11 @@ compare(MaterialParticleVarData& data2, ParticleVariable<T>* value1,
       if (name_ != "p.particleID") {
 	ASSERT(getParticleID(i) == data2.getParticleID(i));
       }
-      cerr << "DIFFERENCE on particle id= 0x" << hex << setfill('0') << setw(16) << getParticleID(i) <<
-	endl;
+      cerr << "DIFFERENCE on particle id= " << getParticleID(i) << endl;
+      IntVector origin((getParticleID(i) >> 16) & 0xffff,
+		       (getParticleID(i) >> 32) & 0xffff,
+		       (getParticleID(i) >> 48) & 0xffff);
+      cerr << "(Originating from " << origin << ")\n";
       const Patch* patch1 = getPatch(i);
       const Patch* patch2 = data2.getPatch(i);
       displayProblemLocation(name_, matl, patch1, patch2, time1);  
