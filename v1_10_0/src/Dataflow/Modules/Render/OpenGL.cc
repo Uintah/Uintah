@@ -250,7 +250,6 @@ OpenGL::redraw_loop()
   double newtime=0;
   for(;;)
   {
-    if (dead_) return;
     int nreply=0;
     if(viewwindow->inertia_mode)
     {
@@ -288,6 +287,7 @@ OpenGL::redraw_loop()
       {
 	if (r == 86)
 	{
+	  throttle.stop();
 	  return;
 	}
 	else if (r == DO_PICK)
@@ -360,6 +360,7 @@ OpenGL::redraw_loop()
 	int r=send_mb.receive();
 	if (r == 86)
 	{
+	  throttle.stop();
 	  return;
 	}
 	else if (r == DO_PICK)
