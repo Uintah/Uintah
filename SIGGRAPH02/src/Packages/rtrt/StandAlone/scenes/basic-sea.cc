@@ -90,7 +90,7 @@ Scene* make_scene(int argc, char* argv[], int /*nworkers*/)
   Group *craters = new Group;
   Group *rock_tower = new Group;
 
-  TimeVaryingCheapCaustics* tvcc= new TimeVaryingCheapCaustics("caustics/caust%d.pgm", 32,
+  TimeVaryingCheapCaustics* tvcc= new TimeVaryingCheapCaustics("/usr/sci/date/Geometry/textures/caustics/caust%d.pgm", 32,
 	                                                        Point(0,0,6), Vector(1,0,0), Vector(0,1,0),
 							        Color(0.5,0.5,0.5), 0.1, .3);// last should be .6
   
@@ -418,7 +418,7 @@ Scene* make_scene(int argc, char* argv[], int /*nworkers*/)
   // ocean floor
   
   // add a plane for the ocean floor base
-  all_tubes->add(new Heightfield<BrickArray2<float>, Array2<HMCell<float> > >(tan, "ocean_floor", 3, 8));
+  all_tubes->add(new Heightfield<BrickArray2<float>, Array2<HMCell<float> > >(tan, "/usr/sci/data/Geometry/models/ocean_floor", 3, 8));
   all_tubes->add(east_tube);
 
   all_tubes->add(new Rect(tan, Point(-100, 0, -1.5), Vector(50, 0, 0), Vector(0, 150, 0)));  
