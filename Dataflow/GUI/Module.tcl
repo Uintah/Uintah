@@ -507,11 +507,18 @@ itcl_class Module {
     method light_module { } {
 	global maincanvas
 	setColorAndTitle $maincanvas "\#f0e68c" "COMPILING"
+
+        if {[winfo exists .standalone]} {
+	    app indicate_dynamic_compile [modname] "start"
+	}
     }
 
     method reset_module_color { } {
 	global maincanvas
 	setColorAndTitle $maincanvas grey75
+        if {[winfo exists .standalone]} {
+	    app indicate_dynamic_compile [modname] "stop"
+	}
     }
 	
     method update_msg_state {} { 
@@ -539,7 +546,7 @@ itcl_class Module {
 	place $modframe.ff.msg.indicator -relheight 1 -anchor nw 
 
 	if {[winfo exists .standalone]} {
-                app indicate_error
+	    app indicate_error [modname] $msg_state
 	}
 	
     }
@@ -1031,6 +1038,7 @@ proc computeDist {x1 y1 x2 y2} {
 }
 
 proc moduleStartDrag {maincanvas modid x y toggleOnly} {
+    puts $modid
     global ignoreModuleMove 
     set ignoreModuleMove 0
 
