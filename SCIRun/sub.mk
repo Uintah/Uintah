@@ -30,7 +30,8 @@ SRCS     += \
 	$(SRCDIR)/SCIRunErrorHandler.cc \
 	$(SRCDIR)/PortInstance.cc \
 	$(SRCDIR)/PortInstanceIterator.cc\
-	$(SRCDIR)/CCACommunicator.cc
+	$(SRCDIR)/CCACommunicator.cc \
+	$(SRCDIR)/SCIRunLoader.cc 
 
 SUBDIRS := $(SRCDIR)/CCA $(SRCDIR)/Dataflow $(SRCDIR)/Internal
 ifeq ($(HAVE_BABEL),yes)
