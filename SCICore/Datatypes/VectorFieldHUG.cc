@@ -150,6 +150,7 @@ void VectorFieldHUG::get_boundary_lines(Array1<Point>& lines)
 
 void VectorFieldHUG::io(Piostream& stream)
 {
+#ifndef _WIN32
     using SCICore::PersistentSpace::Pio;
     using SCICore::Containers::Pio;
 
@@ -166,6 +167,7 @@ void VectorFieldHUG::io(Piostream& stream)
     // Do the data.
     
     Pio(stream, data);
+#endif
 }
 
 
@@ -174,6 +176,11 @@ void VectorFieldHUG::io(Piostream& stream)
 
 //
 // $Log$
+// Revision 1.5  1999/09/23 01:07:07  moulding
+// #ifndef'ed out the io functions, in win32, for these datatypes.  They are
+// causing problems with Pio and namespaces in VC++.  Sooner or later these have
+// to actually get fixed
+//
 // Revision 1.4  1999/08/25 03:48:45  sparker
 // Changed SCICore/CoreDatatypes to SCICore/Datatypes
 // Changed PSECore/CommonDatatypes to PSECore/Datatypes

@@ -125,8 +125,10 @@ VectorFieldOcean::VectorFieldOcean(const clString& filename, const clString& dep
 
 VectorFieldOcean::~VectorFieldOcean()
 {
+#ifndef _WIN32
   munmap((MMAP_TYPE)data, 1280*896*20*2*sizeof(float));
   munmap((MMAP_TYPE)depth, 1280*896*sizeof(int));
+#endif
 }
 
 void VectorFieldOcean::locate(const Point& p, int& ix, int& iy, int& iz)
@@ -266,6 +268,11 @@ void VectorFieldOcean::get_boundary_lines(Array1<Point>&)
 
 //
 // $Log$
+// Revision 1.6  1999/09/23 01:07:07  moulding
+// #ifndef'ed out the io functions, in win32, for these datatypes.  They are
+// causing problems with Pio and namespaces in VC++.  Sooner or later these have
+// to actually get fixed
+//
 // Revision 1.5  1999/09/04 06:01:45  sparker
 // Updates to .h files, to minimize #includes
 // removed .icc files (yeah!)
