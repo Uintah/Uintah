@@ -70,3 +70,7 @@ include $(SCIRUN_SCRIPTS)/program.mk
 PROGRAM := $(SRCDIR)/GenerateMPMData
 SRCS := $(SRCDIR)/GenerateMPMData.cc
 include $(SCIRUN_SCRIPTS)/program.mk
+
+PROGRAM := $(SRCDIR)/OrientFaces
+SRCS := $(SRCDIR)/OrientFaces.cc
+include $(SCIRUN_SCRIPTS)/program.mk

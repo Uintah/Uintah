@@ -251,7 +251,12 @@ public:
   //! swap the shared edge between 2 faces, if they share an edge.
   bool swap_shared_edge(Face::index_type, Face::index_type);
   bool remove_face(Face::index_type);
-  void orient(Face::index_type);  
+  //! walk all the faces, enforcing consistent face orientations.
+  void orient_faces();  
+  //! flip the orientaion of all the faces 
+  //! orient could make all faces face inward...
+  void flip_faces();
+  void flip_face(Face::index_type face);
   void add_triangle(const Point &p0, const Point &p1, const Point &p2);
   Elem::index_type add_elem(Node::array_type a);
   void node_reserve(size_t s) { points_.reserve(s); }
@@ -270,6 +275,8 @@ public:
   const Point &point(Node::index_type i) { return points_[i]; }
 
 private:
+  void         walk_face_orient(Face::index_type face, vector<bool> &tested);
+
   void			compute_normals();
   void			compute_node_neighbors();  
   void			compute_edges();
