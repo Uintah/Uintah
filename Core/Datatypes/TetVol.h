@@ -112,6 +112,15 @@ template <> ScalarFieldInterface*
 TetVol<short>::query_scalar_interface() const;
 
 template <> ScalarFieldInterface*
+TetVol<char>::query_scalar_interface() const;
+
+template <> ScalarFieldInterface *
+TetVol<unsigned int>::query_scalar_interface() const;
+
+template <> ScalarFieldInterface*
+TetVol<unsigned short>::query_scalar_interface() const;
+
+template <> ScalarFieldInterface*
 TetVol<unsigned char>::query_scalar_interface() const;
 
 template <class T>

@@ -14,6 +14,9 @@ template class GenericField<TetVolMesh, vector<double> >;
 template class GenericField<TetVolMesh, vector<float> >;
 template class GenericField<TetVolMesh, vector<int> >;
 template class GenericField<TetVolMesh, vector<short> >;
+template class GenericField<TetVolMesh, vector<char> >;
+template class GenericField<TetVolMesh, vector<unsigned int> >;
+template class GenericField<TetVolMesh, vector<unsigned short> >;
 template class GenericField<TetVolMesh, vector<unsigned char> >;
 
 template class TetVol<Tensor>;
@@ -22,6 +25,9 @@ template class TetVol<double>;
 template class TetVol<float>;
 template class TetVol<int>;
 template class TetVol<short>;
+template class TetVol<char>;
+template class TetVol<unsigned int>;
+template class TetVol<unsigned short>;
 template class TetVol<unsigned char>;
 
 const TypeDescription* get_type_description(TetVol<Tensor> *);
@@ -30,6 +36,9 @@ const TypeDescription* get_type_description(TetVol<double> *);
 const TypeDescription* get_type_description(TetVol<float> *);
 const TypeDescription* get_type_description(TetVol<int> *);
 const TypeDescription* get_type_description(TetVol<short> *);
+const TypeDescription* get_type_description(TetVol<char> *);
+const TypeDescription* get_type_description(TetVol<unsigned int> *);
+const TypeDescription* get_type_description(TetVol<unsigned short> *);
 const TypeDescription* get_type_description(TetVol<unsigned char> *);
 
 template class MaskedTetVol<Tensor>;
@@ -38,6 +47,9 @@ template class MaskedTetVol<double>;
 template class MaskedTetVol<float>;
 template class MaskedTetVol<int>;
 template class MaskedTetVol<short>;
+template class MaskedTetVol<char>;
+template class MaskedTetVol<unsigned int>;
+template class MaskedTetVol<unsigned short>;
 template class MaskedTetVol<unsigned char>;
 
 const TypeDescription* get_type_description(MaskedTetVol<Tensor> *);
@@ -46,6 +58,9 @@ const TypeDescription* get_type_description(MaskedTetVol<double> *);
 const TypeDescription* get_type_description(MaskedTetVol<float> *);
 const TypeDescription* get_type_description(MaskedTetVol<int> *);
 const TypeDescription* get_type_description(MaskedTetVol<short> *);
+const TypeDescription* get_type_description(MaskedTetVol<char> *);
+const TypeDescription* get_type_description(MaskedTetVol<unsigned int> *);
+const TypeDescription* get_type_description(MaskedTetVol<unsigned short> *);
 const TypeDescription* get_type_description(MaskedTetVol<unsigned char> *);
 
 
@@ -92,6 +107,27 @@ ScalarFieldInterface *
 TetVol<short>::query_scalar_interface() const
 {
   return scinew SFInterface<TetVol<short> >(this);
+}
+
+template <>
+ScalarFieldInterface *
+TetVol<char>::query_scalar_interface() const
+{
+  return scinew SFInterface<TetVol<char> >(this);
+}
+
+template <>
+ScalarFieldInterface *
+TetVol<unsigned int>::query_scalar_interface() const
+{
+  return scinew SFInterface<TetVol<unsigned int> >(this);
+}
+
+template <>
+ScalarFieldInterface *
+TetVol<unsigned short>::query_scalar_interface() const
+{
+  return scinew SFInterface<TetVol<unsigned short> >(this);
 }
 
 template <>

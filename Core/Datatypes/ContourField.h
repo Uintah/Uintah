@@ -150,6 +150,15 @@ template <> ScalarFieldInterface*
 ContourField<short>::query_scalar_interface() const;
 
 template <> ScalarFieldInterface*
+ContourField<char>::query_scalar_interface() const;
+
+template <> ScalarFieldInterface *
+ContourField<unsigned int>::query_scalar_interface() const;
+
+template <> ScalarFieldInterface*
+ContourField<unsigned short>::query_scalar_interface() const;
+
+template <> ScalarFieldInterface*
 ContourField<unsigned char>::query_scalar_interface() const;
 
 template <class T>

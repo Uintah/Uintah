@@ -154,6 +154,15 @@ template <> ScalarFieldInterface*
 TriSurf<short>::query_scalar_interface() const;
 
 template <> ScalarFieldInterface*
+TriSurf<char>::query_scalar_interface() const;
+
+template <> ScalarFieldInterface *
+TriSurf<unsigned int>::query_scalar_interface() const;
+
+template <> ScalarFieldInterface*
+TriSurf<unsigned short>::query_scalar_interface() const;
+
+template <> ScalarFieldInterface*
 TriSurf<unsigned char>::query_scalar_interface() const;
 
 template <class T>
