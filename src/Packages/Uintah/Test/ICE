@@ -7,7 +7,7 @@ TESTS = [   ("advect", "advect.ups", "", 1, "ALL"),	\
             ("rieman_sm", "rieman_sm.ups", "", 1, "ALL"),     \
             ("hotBlob2mat", "hotBlob2mat.ups", "", 1, "ALL"),     \
             ("hotBlob2mat_sym", "hotBlob2mat_sym.ups", "", 1, "ALL"),     \
-            ("impHotBlob", "impHotBlob.ups", "-solver hypre", 1, "ALL"),     \
+            ("impHotBlob", "impHotBlob.ups", "", 1, "ALL"),     \
             ("hotBlob8patch", "hotBlob2mat8patch.ups", "", 8, "ALL"),     \
     	]
 
