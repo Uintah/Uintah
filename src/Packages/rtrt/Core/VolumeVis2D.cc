@@ -622,7 +622,7 @@ void VolumeVis2D::shade(Color& result, const Ray& ray,
   }
 
   if (opacity < RAY_TERMINATION_THRESHOLD) {
-    if (vsp->coe == OverwroteTMax ) {
+    if (cutplane_active && vsp->coe == OverwroteTMax ) {
       Voxel2D<float> value;
       lookup_value( p, value );
       float sample_opacity;
