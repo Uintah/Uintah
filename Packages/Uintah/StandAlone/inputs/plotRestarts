@@ -19,12 +19,17 @@ if ( !(-e $out) ) then
 endif 
 unalias rm
 #__________________________________
+# remove your droppings and make a copy of the output file
+rm -f gp .data .plotStats_tmp
+cp $out .plotStats_tmp
+
+#__________________________________
 # extract the data
 echo "Now extracting the data"
-grep elap $out | cut -d"=" -f4 | cut -d "," -f1 >& .elapsedTime
-grep elap $out | cut -d"=" -f2 | cut -d"," -f1 >& .physicalTime
-grep delT $out | cut -d"=" -f3 | cut -d"," -f1 >& .delT
-grep Restarting $out | cut -d"," -f1 | cut -d" " -f4 >& .restartTime
+grep elap .plotStats_tmp | cut -d"=" -f4 | cut -d "," -f1 >& .elapsedTime
+grep elap .plotStats_tmp | cut -d"=" -f2 | cut -d"," -f1 |cut -d" " -f1 >& .physicalTime
+grep delT .plotStats_tmp | cut -d"=" -f3 | cut -d"," -f1 >& .delT
+grep Restarting .plotStats_tmp | cut -d"," -f1 | cut -d" " -f4 >& .restartTime
 sdiff .physicalTime .restartTime >& .tmp
 sed s/"                                                  <"/""/ .tmp | sed s/"                                                  "/""/>&.tmp2
 paste -d "  " .elapsedTime .delT .tmp2>& .data
@@ -47,5 +52,5 @@ gnuplot gp
 
 #__________________________________
 # cleanup
-rm -f gp .data
+rm -f gp .data .plotStats_tmp
 exit(1)
