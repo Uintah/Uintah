@@ -21,6 +21,7 @@ public:
   virtual ~GridVolRen(){}
   void SetColorMap( unsigned char *cmap ){
     cmap_ = cmap; }
+  void SetNewBricks(bool nv) { newbricks_ = nv; }
   void SetInterp( bool interp) {interp_ = interp; }
   void SetControlPoint( const Point& p){ controlPoint = p; }
   void SetX(bool b){ if(b){drawView = false;} drawX = b; }
@@ -48,9 +49,10 @@ protected:
   void drawWireFrame(const Brick& brick);
 
   GLuint* trexName;
+  vector<GLuint> textureNames;
   unsigned char *reload_;
   unsigned char *cmap_;
-  bool interp_;
+  bool interp_, newbricks_;
   Point controlPoint;
   bool drawX, drawY, drawZ, drawView;
 

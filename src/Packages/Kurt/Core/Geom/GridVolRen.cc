@@ -21,7 +21,7 @@ using SCIRun::Cross;
 
 
 GridVolRen::GridVolRen()
-  : reload_((unsigned char *)1), cmap_(0), interp_(true),
+  : reload_((unsigned char *)1), cmap_(0), interp_(true), newbricks_(false),
     drawX(false),
     drawY(false),
     drawZ(false),
@@ -31,6 +31,11 @@ GridVolRen::GridVolRen()
 
 void GridVolRen::draw(const BrickGrid& bg, int slices )
 {
+  if( newbricks_ ){
+    glDeleteTextures( textureNames.size(), &(textureNames[0]));
+    textureNames.clear();
+    newbricks_ = false;
+  }
   Ray viewRay;
   computeView(viewRay);
   SliceTable st(bg.min_, bg.max_, viewRay, slices, 0);
@@ -198,9 +203,10 @@ void
 GridVolRen::loadTexture(Brick& brick)
 {
   if( !brick.texName() || reload_ ) {
-    if( !brick.texName() )
+    if( !brick.texName() ){
       glGenTextures(1, brick.texNameP());
-
+      textureNames.push_back( brick.texName() );
+    }
     glBindTexture(GL_TEXTURE_3D_EXT, brick.texName());
 
     if( interp_ ){
