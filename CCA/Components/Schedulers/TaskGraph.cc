@@ -883,7 +883,6 @@ TaskGraph::createDetailedDependencies(DetailedTasks* dt, LoadBalancer* lb,
     DetailedTask* task = dt->getTask(i);
     if(task->task->getType() == Task::Reduction) {
       // only internal dependencies need to be generated for reductions
-#if 0
       for (Task::Dependency* req = task->task->getRequires();
 	   req != 0; req = req->next) {
 	DetailedTask* creator;
@@ -896,14 +895,14 @@ TaskGraph::createDetailedDependencies(DetailedTasks* dt, LoadBalancer* lb,
 	      const Patch* patch = patches->get(i);
 	      int matl = matls->get(m);
 	      bool didFind = ct.findcomp(req, patch, matl, creator, comp);
-	      if(!didFind) {
-		cerr << "Failure finding " << *req << " for " 
-		     << task->getTask()->getName() << endl; 
-		throw InternalError("Failed to find comp for dep!");
-	      }
-	      if(task->getAssignedResourceIndex() == 
-		 creator->getAssignedResourceIndex()) {
-		task->addInternalDependency(creator);
+	      if (didFind) {
+		// it may not find it if it isn't in the local part of
+		// the taskgraph, in which case we don't need to worry
+		// about it anyways.
+		if(task->getAssignedResourceIndex() == 
+		   creator->getAssignedResourceIndex()) {
+		  task->addInternalDependency(creator);
+		}
 	      }
 	    }
 	  }
@@ -911,7 +910,6 @@ TaskGraph::createDetailedDependencies(DetailedTasks* dt, LoadBalancer* lb,
 	else
 	  throw InternalError("TaskGraph::createDetailedDependencies, reduction task dependency not supported without patches and materials");
       }
-#endif
       continue;
     }
 
