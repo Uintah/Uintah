@@ -1023,7 +1023,9 @@ void setBC(CCVariable<double>& variable, const string& kind,
        bool massFractionBC = false;   // check for massFraction BC
        string::size_type pos1 = kind.find ("massFraction");
        string::size_type pos2 = kind.find ("scalar");
-       if ( pos1 != std::string::npos || pos2 !=  std::string::npos){
+       string::size_type pos3 = kind.find ("mixtureFraction");
+       if ( pos1 != std::string::npos || pos2 !=  std::string::npos
+	    || pos3 != std::string::npos){
          massFractionBC = true;
        }
        if (massFractionBC) {
