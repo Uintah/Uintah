@@ -75,6 +75,7 @@ public:
   virtual void mesh_detach();
 
   virtual bool is_scalar() const;
+  virtual unsigned int data_size() const;
 
   virtual const TypeDescription *order_type_description() const;
 
@@ -286,6 +287,32 @@ GenericField<Mesh, FData>::is_scalar() const
 {
   return ::SCIRun::is_scalar<value_type>();
 }
+
+
+template <class Mesh, class FData>
+unsigned int
+GenericField<Mesh, FData>::data_size() const
+{
+  switch (basis_order())
+  {
+  case -1:
+    return 0;
+    
+  case 0:
+    {
+      typename mesh_type::Elem::size_type s;
+      mesh_->size(s);
+      return (unsigned int)s;
+    }
+  default:
+    {
+      typename mesh_type::Node::size_type s;
+      mesh_->size(s);
+      return (unsigned int)s;
+    }
+  }
+}
+
 
 // Turn off warning for CHECKARRAYBOUNDS
 #if defined(__sgi) && !defined(__GNUC__) && (_MIPS_SIM != _MIPS_SIM_ABI32)
