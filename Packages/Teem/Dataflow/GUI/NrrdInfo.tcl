@@ -204,9 +204,6 @@ itcl_class Teem_NrrdData_NrrdInfo {
 	
 	makeSciButtonPanel $w $w $this
 	moveToCursor $w
-
-	makeSciButtonPanel $w $w $this
-	moveToCursor $w
     }
 
 
