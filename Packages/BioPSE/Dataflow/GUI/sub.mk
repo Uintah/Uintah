@@ -36,6 +36,7 @@ $(SRCDIR)/tclIndex: \
 	$(SRCDIR)/SetupFEMatrix.tcl\
 	$(SRCDIR)/ShowDipoles.tcl\
 	$(SRCDIR)/ShowLeads.tcl\
+	$(SRCDIR)/Tikhonov.tcl\
 	$(SRCDIR)/RawToDenseMatrix.tcl\
 #[INSERT NEW TCL FILE HERE]
 
