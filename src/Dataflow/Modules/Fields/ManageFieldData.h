@@ -277,9 +277,9 @@ ManageFieldDataAlgoMeshVector<MSRC, FOUT>::execute(MeshHandle mesh,
     typename MSRC::Node::iterator eiter; imesh->end(eiter);
     while (iter != eiter)
     {
-      Vector v(imatrix->get(index, 0),
-	       imatrix->get(index, 1),
-	       imatrix->get(index, 2));
+      Vector v(matrix->get(index, 0),
+	       matrix->get(index, 1),
+	       matrix->get(index, 2));
       ofield->set_value(v, *iter);
       index++;
       ++iter;
@@ -293,9 +293,9 @@ ManageFieldDataAlgoMeshVector<MSRC, FOUT>::execute(MeshHandle mesh,
     typename MSRC::Edge::iterator eiter; imesh->end(eiter);
     while (iter != eiter)
     {
-      Vector v(imatrix->get(index, 0),
-	       imatrix->get(index, 1),
-	       imatrix->get(index, 2));
+      Vector v(matrix->get(index, 0),
+	       matrix->get(index, 1),
+	       matrix->get(index, 2));
       ofield->set_value(v, *iter);
       index++;
       ++iter;
@@ -309,9 +309,9 @@ ManageFieldDataAlgoMeshVector<MSRC, FOUT>::execute(MeshHandle mesh,
     typename MSRC::Face::iterator eiter; imesh->end(eiter);
     while (iter != eiter)
     {
-      Vector v(imatrix->get(index, 0),
-	       imatrix->get(index, 1),
-	       imatrix->get(index, 2));
+      Vector v(matrix->get(index, 0),
+	       matrix->get(index, 1),
+	       matrix->get(index, 2));
       ofield->set_value(v, *iter);
       index++;
       ++iter;
@@ -325,9 +325,9 @@ ManageFieldDataAlgoMeshVector<MSRC, FOUT>::execute(MeshHandle mesh,
     typename MSRC::Cell::iterator eiter; imesh->end(eiter);
     while (iter != eiter)
     {
-      Vector v(imatrix->get(index, 0),
-	       imatrix->get(index, 1),
-	       imatrix->get(index, 2));
+      Vector v(matrix->get(index, 0),
+	       matrix->get(index, 1),
+	       matrix->get(index, 2));
       ofield->set_value(v, *iter);
       index++;
       ++iter;
@@ -378,17 +378,17 @@ ManageFieldDataAlgoMeshTensor<MSRC, FOUT>::execute(MeshHandle mesh,
     while (iter != eiter)
     {
       Tensor v;
-      v.mat_[0][0] = imatrix->get(index, 0);
-      v.mat_[0][1] = imatrix->get(index, 1);
-      v.mat_[0][2] = imatrix->get(index, 2);
+      v.mat_[0][0] = matrix->get(index, 0);
+      v.mat_[0][1] = matrix->get(index, 1);
+      v.mat_[0][2] = matrix->get(index, 2);
 
-      v.mat_[1][0] = imatrix->get(index, 3);
-      v.mat_[1][1] = imatrix->get(index, 4);
-      v.mat_[1][2] = imatrix->get(index, 5);
+      v.mat_[1][0] = matrix->get(index, 3);
+      v.mat_[1][1] = matrix->get(index, 4);
+      v.mat_[1][2] = matrix->get(index, 5);
 
-      v.mat_[2][0] = imatrix->get(index, 6);
-      v.mat_[2][1] = imatrix->get(index, 7);
-      v.mat_[2][2] = imatrix->get(index, 8);
+      v.mat_[2][0] = matrix->get(index, 6);
+      v.mat_[2][1] = matrix->get(index, 7);
+      v.mat_[2][2] = matrix->get(index, 8);
       ofield->set_value(v, *iter);
       index++;
       ++iter;
@@ -403,17 +403,17 @@ ManageFieldDataAlgoMeshTensor<MSRC, FOUT>::execute(MeshHandle mesh,
     while (iter != eiter)
     {
       Tensor v;
-      v.mat_[0][0] = imatrix->get(index, 0);
-      v.mat_[0][1] = imatrix->get(index, 1);
-      v.mat_[0][2] = imatrix->get(index, 2);
+      v.mat_[0][0] = matrix->get(index, 0);
+      v.mat_[0][1] = matrix->get(index, 1);
+      v.mat_[0][2] = matrix->get(index, 2);
 
-      v.mat_[1][0] = imatrix->get(index, 3);
-      v.mat_[1][1] = imatrix->get(index, 4);
-      v.mat_[1][2] = imatrix->get(index, 5);
+      v.mat_[1][0] = matrix->get(index, 3);
+      v.mat_[1][1] = matrix->get(index, 4);
+      v.mat_[1][2] = matrix->get(index, 5);
 
-      v.mat_[2][0] = imatrix->get(index, 6);
-      v.mat_[2][1] = imatrix->get(index, 7);
-      v.mat_[2][2] = imatrix->get(index, 8);
+      v.mat_[2][0] = matrix->get(index, 6);
+      v.mat_[2][1] = matrix->get(index, 7);
+      v.mat_[2][2] = matrix->get(index, 8);
       ofield->set_value(v, *iter);
       index++;
       ++iter;
@@ -428,17 +428,17 @@ ManageFieldDataAlgoMeshTensor<MSRC, FOUT>::execute(MeshHandle mesh,
     while (iter != eiter)
     {
       Tensor v;
-      v.mat_[0][0] = imatrix->get(index, 0);
-      v.mat_[0][1] = imatrix->get(index, 1);
-      v.mat_[0][2] = imatrix->get(index, 2);
+      v.mat_[0][0] = matrix->get(index, 0);
+      v.mat_[0][1] = matrix->get(index, 1);
+      v.mat_[0][2] = matrix->get(index, 2);
 
-      v.mat_[1][0] = imatrix->get(index, 3);
-      v.mat_[1][1] = imatrix->get(index, 4);
-      v.mat_[1][2] = imatrix->get(index, 5);
+      v.mat_[1][0] = matrix->get(index, 3);
+      v.mat_[1][1] = matrix->get(index, 4);
+      v.mat_[1][2] = matrix->get(index, 5);
 
-      v.mat_[2][0] = imatrix->get(index, 6);
-      v.mat_[2][1] = imatrix->get(index, 7);
-      v.mat_[2][2] = imatrix->get(index, 8);
+      v.mat_[2][0] = matrix->get(index, 6);
+      v.mat_[2][1] = matrix->get(index, 7);
+      v.mat_[2][2] = matrix->get(index, 8);
       ofield->set_value(v, *iter);
       index++;
       ++iter;
@@ -453,17 +453,17 @@ ManageFieldDataAlgoMeshTensor<MSRC, FOUT>::execute(MeshHandle mesh,
     while (iter != eiter)
     {
       Tensor v;
-      v.mat_[0][0] = imatrix->get(index, 0);
-      v.mat_[0][1] = imatrix->get(index, 1);
-      v.mat_[0][2] = imatrix->get(index, 2);
+      v.mat_[0][0] = matrix->get(index, 0);
+      v.mat_[0][1] = matrix->get(index, 1);
+      v.mat_[0][2] = matrix->get(index, 2);
 
-      v.mat_[1][0] = imatrix->get(index, 3);
-      v.mat_[1][1] = imatrix->get(index, 4);
-      v.mat_[1][2] = imatrix->get(index, 5);
+      v.mat_[1][0] = matrix->get(index, 3);
+      v.mat_[1][1] = matrix->get(index, 4);
+      v.mat_[1][2] = matrix->get(index, 5);
 
-      v.mat_[2][0] = imatrix->get(index, 6);
-      v.mat_[2][1] = imatrix->get(index, 7);
-      v.mat_[2][2] = imatrix->get(index, 8);
+      v.mat_[2][0] = matrix->get(index, 6);
+      v.mat_[2][1] = matrix->get(index, 7);
+      v.mat_[2][2] = matrix->get(index, 8);
       ofield->set_value(v, *iter);
       index++;
       ++iter;
