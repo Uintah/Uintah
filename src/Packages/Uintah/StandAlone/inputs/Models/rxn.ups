@@ -13,15 +13,15 @@
     <!--      T  I  M  E     V  A  R  I  A  B  L  E  S                      -->
     <!--____________________________________________________________________-->
    <Time>
-       <maxTime>            1          </maxTime>
+       <maxTime>            .2          </maxTime>
        <initTime>           0.0        </initTime>
        <delt_min>           0.0        </delt_min>
        <delt_max>           1.e-2      </delt_max>
-       <delt_init>          1.0e-5     </delt_init>
+       <delt_init>          1.0e-7     </delt_init>
 	<max_delt_increase>  0.5        </max_delt_increase>	
 	<max_initial_delt>   1.e-4      </max_initial_delt>
        <timestep_multiplier>0.8        </timestep_multiplier>
-       <max_iterations>     500         </max_iterations>
+       <max_iterations>     5000         </max_iterations>
    </Time>
    
     <!--____________________________________________________________________-->
@@ -121,7 +121,7 @@
               <extraCells>   [1,1,1]      </extraCells>
               <patches>      [1,1,1]      </patches>
            </Box>
-           <spacing>         [1,1,0.5]           </spacing>
+           <spacing>         [.2,.2,0.5]           </spacing>
        </Level>
     </Grid>
    
@@ -212,7 +212,7 @@
            <burn type = "null" />
            <EOS type = "ideal_gas">                     </EOS>
            <viscosity>                  0.0             </viscosity>
-           <thermal_conductivity>       .70             </thermal_conductivity>
+           <thermal_conductivity>       70             </thermal_conductivity>
            <specific_heat>              1293.908298567086          </specific_heat>
            <speed_of_sound>             376             </speed_of_sound>
            <gamma>                      1.240786866259094             </gamma>
@@ -262,7 +262,7 @@
                     <min>       [ -1.0, -1.0, -1.0 ]       </min>
                     <max>       [ 7.0, 7.0, 7.0 ]       </max>
                 </box>
-		<massFraction>0.2</massFraction>
+		<massFraction>0.4</massFraction>
            </geom_object>
 	</stream>
 	<stream name="CH4">
@@ -271,7 +271,7 @@
                     <min>       [ -1.0, -1.0, -1.0 ]       </min>
                     <max>       [ 7.0, 7.0, 7.0 ]       </max>
                 </box>
-		<massFraction>0.1</massFraction>
+		<massFraction>0.2</massFraction>
            </geom_object>
 	</stream>
 	<stream name="N2">
@@ -280,7 +280,7 @@
                     <min>       [ -1.0, -1.0, -1.0 ]       </min>
                     <max>       [ 7.0, 7.0, 7.0 ]       </max>
                 </box>
-		<massFraction>0.7</massFraction>
+		<massFraction>0.4</massFraction>
            </geom_object>
 	</stream>
 
