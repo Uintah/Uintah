@@ -98,7 +98,7 @@ PrismNrrdConverter::execute(){
   NrrdDataHandle nHandle;
 
   // Assume a range of ports even though only two are needed for the
-  // grid and data.
+  // grid and one for the data.
   port_range_type range = get_iports("Input Nrrd");
 
   if (range.first == range.second)
@@ -206,7 +206,7 @@ PrismNrrdConverter::execute(){
   }
 
   // Make sure a dataset for the connection list has been selected.
-  if(  pointData_.get() == connectData_.get() ) {
+  if( pointData_.get() == connectData_.get() ) {
     warning( "Point and connection datasets can not be the same." );
     return;
   }
@@ -262,8 +262,8 @@ PrismNrrdConverter::execute(){
       
     CompileInfoHandle ci_mesh =
       PrismNrrdConverterMeshAlgo::get_compile_info(mtd,
-						  pHandle->nrrd->type,
-						  cHandle->nrrd->type);
+						   pHandle->nrrd->type,
+						   cHandle->nrrd->type);
 
     Handle<PrismNrrdConverterMeshAlgo> algo_mesh;
       

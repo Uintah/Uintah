@@ -129,7 +129,7 @@ public:
 template< class FIELD, class NTYPE >
 void
 PrismNrrdConverterFieldAlgoScalar<FIELD, NTYPE>::execute(FieldHandle fHandle,
-					   NrrdDataHandle nHandle)
+							 NrrdDataHandle nHandle)
 {
   FIELD *ifield = (FIELD *) fHandle.get_rep();
   typename FIELD::mesh_handle_type imesh = ifield->get_typed_mesh();
