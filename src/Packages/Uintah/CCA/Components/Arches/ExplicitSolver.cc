@@ -562,6 +562,7 @@ ExplicitSolver::sched_interpolateFromFCToCC(SchedulerP& sched,
 
   if (timelabels->integrator_step_number == TimeIntegratorStepNumber::First) {
   tsk->computes(d_lab->d_newCCVelocityLabel);
+  tsk->computes(d_lab->d_newCCVelMagLabel);
   tsk->computes(d_lab->d_newCCUVelocityLabel);
   tsk->computes(d_lab->d_newCCVVelocityLabel);
   tsk->computes(d_lab->d_newCCWVelocityLabel);
@@ -569,6 +570,7 @@ ExplicitSolver::sched_interpolateFromFCToCC(SchedulerP& sched,
   }
   else {
   tsk->modifies(d_lab->d_newCCVelocityLabel);
+  tsk->modifies(d_lab->d_newCCVelMagLabel);
   tsk->modifies(d_lab->d_newCCUVelocityLabel);
   tsk->modifies(d_lab->d_newCCVVelocityLabel);
   tsk->modifies(d_lab->d_newCCWVelocityLabel);
@@ -611,6 +613,7 @@ ExplicitSolver::interpolateFromFCToCC(const ProcessorGroup* ,
     constSFCYVariable<double> newVVel;
     constSFCZVariable<double> newWVel;
     CCVariable<Vector> newCCVel;
+    CCVariable<double> newCCVelMag;
     CCVariable<double> newCCUVel;
     CCVariable<double> newCCVVel;
     CCVariable<double> newCCWVel;
@@ -681,6 +684,8 @@ ExplicitSolver::interpolateFromFCToCC(const ProcessorGroup* ,
     if (timelabels->integrator_step_number == TimeIntegratorStepNumber::First) {
     new_dw->allocateAndPut(newCCVel, d_lab->d_newCCVelocityLabel,
 			   matlIndex, patch);
+    new_dw->allocateAndPut(newCCVelMag, d_lab->d_newCCVelMagLabel,
+			   matlIndex, patch);
     new_dw->allocateAndPut(newCCUVel, d_lab->d_newCCUVelocityLabel,
 			   matlIndex, patch);
     new_dw->allocateAndPut(newCCVVel, d_lab->d_newCCVVelocityLabel,
@@ -692,6 +697,8 @@ ExplicitSolver::interpolateFromFCToCC(const ProcessorGroup* ,
     }
     else {
     new_dw->getModifiable(newCCVel, d_lab->d_newCCVelocityLabel,
+			   matlIndex, patch);
+    new_dw->getModifiable(newCCVelMag, d_lab->d_newCCVelMagLabel,
 			   matlIndex, patch);
     new_dw->getModifiable(newCCUVel, d_lab->d_newCCUVelocityLabel,
 			   matlIndex, patch);
@@ -730,6 +737,7 @@ ExplicitSolver::interpolateFromFCToCC(const ProcessorGroup* ,
 	  newCCUVel[idx] = new_u;
 	  newCCVVel[idx] = new_v;
 	  newCCWVel[idx] = new_w;
+          newCCVelMag[idx] = sqrt(new_u*new_u+new_v*new_v+new_w*new_w);
           kineticEnergy[idx] = (new_u*new_u+new_v*new_v+new_w*new_w)/2.0;
 	  total_kin_energy += kineticEnergy[idx];
 	}

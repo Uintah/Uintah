@@ -208,6 +208,8 @@ ArchesLabel::ArchesLabel()
 				CCVariable<Vector>::getTypeDescription() );
   d_newCCVelocityLabel = VarLabel::create("newCCVelocity",
 				CCVariable<Vector>::getTypeDescription() );
+  d_newCCVelMagLabel = VarLabel::create("newCCVelMagnitude",
+				CCVariable<double>::getTypeDescription() );
   d_newCCUVelocityLabel = VarLabel::create("newCCUVelocity",
 				CCVariable<double>::getTypeDescription() );
   d_newCCVVelocityLabel = VarLabel::create("newCCVVelocity",
@@ -551,6 +553,7 @@ ArchesLabel::~ArchesLabel()
   VarLabel::destroy(d_DWMBLMLabel);
   VarLabel::destroy(d_oldCCVelocityLabel);
   VarLabel::destroy(d_newCCVelocityLabel);
+  VarLabel::destroy(d_newCCVelMagLabel);
   VarLabel::destroy(d_newCCUVelocityLabel);
   VarLabel::destroy(d_newCCVVelocityLabel);
   VarLabel::destroy(d_newCCWVelocityLabel);
