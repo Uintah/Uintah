@@ -106,6 +106,14 @@ void SimulationController::run()
    
    if(ups->getNodeName() != "Uintah_specification")
       throw ProblemSetupException("Input file is not a Uintah specification");
+
+   bool log_dw_mem=false;
+   ProblemSpecP debug = ups->findBlock("debug");
+   if(debug){
+     ProblemSpecP log_mem = debug->findBlock("logmemory");
+     if(log_mem)
+       log_dw_mem=true;
+   }
    
    Output* output = dynamic_cast<Output*>(getPort("output"));
    output->problemSetup(ups);
@@ -310,6 +318,10 @@ void SimulationController::run()
 	  cout << " (max)";
 	}
 	cout << endl;
+
+	if(log_dw_mem){
+	  scheduler->logMemoryUse();
+	}
 
 #ifdef OUTPUT_AVG_ELAPSED_WALLTIME
 	if (n > 1) // ignore first set of elapsed times
