@@ -260,8 +260,19 @@ void FieldToNrrd::execute()
     return;
   }
 
-  Point minP = lvm->get_min();
-  Point maxP = lvm->get_max();
+  {
+    // Check for simple scale/translate matrix.
+    double td[16];
+    lvm->get_transform().get(td);
+    if ((td[1] + td[2] + td[4] + td[6] + td[8] + td[9]) > 1.0e-3)
+    {
+      cerr << "NOT A STRICTLY SCALE/TRANSLATE MATRIX, WILL NOT WORK.\n";
+    }
+  }
+
+  BBox bbox = lvm->get_bounding_box();
+  Point minP = bbox.min();
+  Point maxP = bbox.max();
 
   ScalarFieldInterface *sfi = field->query_scalar_interface();
   if (sfi)

@@ -300,26 +300,19 @@ public:
 
   LatVolMesh()
     : min_x_(0), min_y_(0), min_z_(0),
-      nx_(1),ny_(1),nz_(1),min_(Point(0,0,0)),max_(Point(1,1,1))
-    {  Vector p = max_-min_; cell_volume_ = (p.x()/(nx_-1))*(p.y()/(ny_-1))*(p.z()/(nz_-1));}
+      nx_(1), ny_(1), nz_(1) {}
   LatVolMesh(unsigned x, unsigned y, unsigned z,
-	     const Point &min, const Point &max)
-    : min_x_(0), min_y_(0), min_z_(0),
-      nx_(x), ny_(y), nz_(z), min_(min),max_(max)
-    {  Vector p = max_-min_; cell_volume_ = (p.x()/(nx_-1))*(p.y()/(ny_-1))*(p.z()/(nz_-1));}
-  LatVolMesh( LatVolMesh* mh,
-	      unsigned mx, unsigned my, unsigned mz,
-	      unsigned x, unsigned y, unsigned z)
+	     const Point &min, const Point &max);
+  LatVolMesh(LatVolMesh* mh,
+	     unsigned mx, unsigned my, unsigned mz,
+	     unsigned x, unsigned y, unsigned z)
     : min_x_(mx), min_y_(my), min_z_(mz),
-      nx_(x), ny_(y), nz_(z), min_(mh->min_),max_(mh->max_)
-    {  Vector p = max_-min_; cell_volume_ = (p.x()/(nx_-1))*(p.y()/(ny_-1))*(p.z()/(nz_-1));}
+      nx_(x), ny_(y), nz_(z) {}
   LatVolMesh(const LatVolMesh &copy)
     : min_x_(copy.min_x_), min_y_(copy.min_y_), min_z_(copy.min_z_),
-      nx_(copy.get_nx()),ny_(copy.get_ny()),nz_(copy.get_nz()),
-      min_(copy.get_min()),max_(copy.get_max()) {}
+      nx_(copy.get_nx()),ny_(copy.get_ny()),nz_(copy.get_nz()) {}
   virtual LatVolMesh *clone() { return new LatVolMesh(*this); }
-  virtual ~LatVolMesh()
-    {  Vector p = max_-min_; cell_volume_ = (p.x()/(nx_-1))*(p.y()/(ny_-1))*(p.z()/(nz_-1));}
+  virtual ~LatVolMesh() {}
 
   void begin(Node::iterator &) const;
   void begin(Edge::iterator &) const;
@@ -340,25 +333,19 @@ public:
   unsigned get_nx() const { return nx_; }
   unsigned get_ny() const { return ny_; }
   unsigned get_nz() const { return nz_; }
-  Point get_min() const { return min_; }
-  Point get_max() const { return max_; }
-  Vector diagonal() const { return max_-min_; }
   virtual BBox get_bounding_box() const;
   virtual void transform(Transform &t);
-  double get_volume(const Cell::index_type &) { return cell_volume_; }
+  double get_volume(const Cell::index_type &) { return 0; }
   double get_area(const Face::index_type &) { return 0; }
-  double get_element_size(const Elem::index_type &) { return cell_volume_; }
+  double get_element_size(const Elem::index_type &) {  return 0; }
 
   //! set the mesh statistics
   void set_min_x(unsigned x) {min_x_ = x; }
   void set_min_y(unsigned y) {min_y_ = y; }
   void set_min_z(unsigned z) {min_z_ = z; }
-  void set_nx(unsigned x) { nx_ = x; Vector v = max_-min_; cell_volume_ = (v.x()/(nx_-1))*(v.y()/(ny_-1))*(v.z()/(nz_-1));}
-  void set_ny(unsigned y) { ny_ = y; Vector v = max_-min_; cell_volume_ = (v.x()/(nx_-1))*(v.y()/(ny_-1))*(v.z()/(nz_-1));}
-  void set_nz(unsigned z) { nz_ = z; Vector v = max_-min_; cell_volume_ = (v.x()/(nx_-1))*(v.y()/(ny_-1))*(v.z()/(nz_-1));}
-  void set_min(Point p) { min_ = p; Vector v = max_-min_; cell_volume_ = (v.x()/(nx_-1))*(v.y()/(ny_-1))*(v.z()/(nz_-1));}
-  void set_max(Point p) { max_ = p; Vector v = max_-min_; cell_volume_ = (v.x()/(nx_-1))*(v.y()/(ny_-1))*(v.z()/(nz_-1));}
-
+  void set_nx(unsigned x) { nx_ = x; }
+  void set_ny(unsigned y) { ny_ = y; }
+  void set_nz(unsigned z) { nz_ = z; }
 
   //! get the child elements of the given index
   void get_nodes(Node::array_type &, Edge::index_type) const {}
@@ -372,12 +359,12 @@ public:
   unsigned get_edges(Edge::array_type &, Node::index_type) const { return 0; }
   unsigned get_faces(Face::array_type &, Node::index_type) const { return 0; }
   unsigned get_faces(Face::array_type &, Edge::index_type) const { return 0; }
-  unsigned get_cells(Cell::array_type &, Node::index_type) const { return 0; }
-  unsigned get_cells(Cell::array_type &, Edge::index_type) const { return 0; }
-  unsigned get_cells(Cell::array_type &, Face::index_type) const { return 0; }
+  unsigned get_cells(Cell::array_type &, Node::index_type) { return 0; }
+  unsigned get_cells(Cell::array_type &, Edge::index_type) { return 0; }
+  unsigned get_cells(Cell::array_type &, Face::index_type) { return 0; }
 
   //! return all cell_indecies that overlap the BBox in arr.
-  void get_cells(Cell::array_type &arr, const BBox &box) const;
+  void get_cells(Cell::array_type &arr, const BBox &box);
 
   //! similar to get_cells() with Face::index_type argument, but
   //  returns the "other" cell if it exists, not all that exist
@@ -391,10 +378,10 @@ public:
   void get_center(Point &, Face::index_type) const {}
   void get_center(Point &, Cell::index_type) const;
 
-  bool locate(Node::index_type &, const Point &) const;
+  bool locate(Node::index_type &, const Point &);
   bool locate(Edge::index_type &, const Point &) const { return false; }
   bool locate(Face::index_type &, const Point &) const { return false; }
-  bool locate(Cell::index_type &, const Point &) const;
+  bool locate(Cell::index_type &, const Point &);
 
   void get_weights(const Point &p, Node::array_type &l, vector<double> &w);
   void get_weights(const Point &, Edge::array_type &, vector<double> &) {ASSERTFAIL("LatVolMesh::get_weights for edges isn't supported");}
@@ -416,6 +403,9 @@ public:
 
   virtual const TypeDescription *get_type_description() const;
 
+  // Unsafe due to non-constness of unproject.
+  Transform &get_transform() { return transform_; }
+
 private:
 
   //! the min_Node::index_type ( incase this is a subLattice )
@@ -425,10 +415,12 @@ private:
   unsigned nx_, ny_, nz_;
 
   //! the object space extents of a LatVolMesh
-  Point min_, max_;
+  //Point min_, max_;
 
   //! volume of each cell
-  double cell_volume_;
+  //double cell_volume_;
+
+  Transform transform_;
 
   // returns a LatVolMesh
   static Persistent *maker() { return new LatVolMesh(); }

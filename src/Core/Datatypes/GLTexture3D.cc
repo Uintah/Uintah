@@ -138,9 +138,19 @@ GLTexture3D::GLTexture3D(FieldHandle texfld, double &min, double &max,
     Z_ = mesh->get_nz();
   }    
 
+  {
+    // Check for simple scale/translate matrix.
+    double td[16];
+    mesh->get_transform().get(td);
+    if ((td[1] + td[2] + td[4] + td[6] + td[8] + td[9]) > 1.0e-3)
+    {
+      cerr << "NOT A STRICTLY SCALE/TRANSLATE MATRIX, WILL NOT WORK.\n";
+    }
+  }
 
-  minP_ = mesh->get_min();
-  maxP_ = mesh->get_max();
+  BBox bbox = mesh->get_bounding_box();
+  minP_ = bbox.min();
+  maxP_ = bbox.max();
   cerr <<"X_, Y_, Z_ = "<<X_<<", "<<Y_<<", "<<Z_<<endl;
   cerr << "use_minmax = "<<use_minmax<<"  min="<<min<<" max="<<max<<"\n";
   cerr << "    fieldminmax: min="<<minmax.first<<" max="<<minmax.second<<"\n";
