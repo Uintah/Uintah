@@ -51,30 +51,39 @@ public:
 
   ~LatticeGeom();
 
-  virtual string getInfo();
 
-  inline int getSizeX() {return d_nx;};
-  inline int getSizeY() {return d_ny;};
-  inline int getSizeZ() {return d_nz;};
-		    
   virtual void resize(int x);
   virtual void resize(int x, int y);
   virtual void resize(int x, int y, int z);
 
+  // This transform can be directly manipulated.  updateTransform()
+  // must be called after to flush the changes to the scaled transform.
+  Transform &getUnscaledTransform() { return d_prescale; }
+  void updateTransform();  // flushes d_prescale -> d_transform
+
+
+  inline int getDim() { return d_dim; }
+  inline int getSizeX() { return d_nx; }
+  inline int getSizeY() { return d_ny; }
+  inline int getSizeZ() { return d_nz; }
   virtual void setBoundingBox(BBox &box);
-  const Transform &trans() { return d_trans; }
 
-  //////////
-  // Return the point relative to the min in the bounding box
-  virtual Point getPoint(int i, int j = 0, int k = 0);
+  // Return the transform from attribute space to world space.
+  const Transform &getTransform() { return d_transform; }
 
-  virtual void transform(const Point &p, Point &r);
-  virtual void itransform(const Point &p, Point &r);
 
+  // Transform from attribute space to world space.
   inline void ftransform(const Point &p, Point &r);
+  virtual void transform(const Point &p, Point &r);
+  virtual Point getPoint(int i, int j = 0, int k = 0);
+  
+  // Transform from world space to attribute space.
   inline void fitransform(const Point &p, Point &r);
+  virtual void itransform(const Point &p, Point &r);
+  //virtual bool locate(const Point& p, int&, int&, int&);
+  
 
-
+  // TODO: This needs to be tested.
   template <class T>
   void interp(DiscreteAttrib<T> *att, const Point &p, T &out);
 
@@ -82,27 +91,27 @@ public:
   void finterp(A *att, const Point &p, T &out);
 
   
-  /////////
-  // Return the indexes of the node defining the cell containing p which
-  // is closest to the orgin
-  //virtual bool locate(const Point& p, int&, int&, int&);
-
-  // Persistent representation...
-  virtual void io(Piostream&);
-  static PersistentTypeID type_id;
-
   inline int clampi(int i);
   inline int clampj(int j);
   inline int clampk(int k);
 
+
+  // Persistent representation.
+  virtual void io(Piostream&);
+  static PersistentTypeID type_id;
+
+  virtual string getInfo();
+
 protected:
+
   virtual bool computeBoundingBox();
   
   // Number of grid lines in each axis.
   int d_dim;
   int d_nx, d_ny, d_nz;
 
-  Transform d_trans;
+  Transform d_transform;
+  Transform d_prescale;
 };
 
 
@@ -111,13 +120,13 @@ protected:
 void
 LatticeGeom::ftransform(const Point &p, Point &r)
 {
-  r = d_trans.project(p);
+  r = d_transform.project(p);
 }
 
 void
 LatticeGeom::fitransform(const Point &p, Point &r)
 {
-  r = d_trans.unproject(p);
+  r = d_transform.unproject(p);
 }
 
 
