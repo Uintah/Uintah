@@ -48,7 +48,7 @@ set redoList ""
 
 global HelpText
 set HelpText(Module) "L - Select\nR - Menu"
-set HelpText(Connection) "L - Highlight\nM - Connect
+set HelpText(Connection) "L - Highlight\nM - Connect"
 set HelpText(Notes) "L - Edit\nM - Hide"
 
 itcl_class Module {
