@@ -39,7 +39,7 @@ ConstitutiveModel* ConstitutiveModelFactory::create(ProblemSpecP& ps,
      if (integrator == "explicit")
       return(scinew CompNeoHook(child,lb,n8or27));
      else if (integrator == "implicit") 
-      return(scinew CompNeoHookImplicit(child,lb,n8or27));
+       return(scinew CompNeoHookImplicit(child,lb,n8or27));
    }
       
    else if (mat_type ==  "ideal_gas")
