@@ -1,6 +1,6 @@
-catch {rename SCIRun_FEM_ApplyFEMCurrentSource ""}
+catch {rename BioPSE_Forward_ApplyFEMCurrentSource ""}
 
-itcl_class SCIRun_FEM_ApplyFEMCurrentSource {
+itcl_class BioPSE_Forward_ApplyFEMCurrentSource {
     inherit Module
     constructor {config} {
 	set name ApplyFEMCurrentSource

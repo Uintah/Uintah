@@ -5,13 +5,11 @@ SRCDIR := Dataflow/GUI
 ALLTARGETS := $(ALLTARGETS) $(SRCDIR)/tclIndex
 
 $(SRCDIR)/tclIndex: \
-	$(SRCDIR)/ApplyFEMCurrentSource.tcl \
 	$(SRCDIR)/ArrowWidget.tcl \
 	$(SRCDIR)/BaseWidget.tcl \
 	$(SRCDIR)/Binop.tcl \
 	$(SRCDIR)/BldTransform.tcl \
 	$(SRCDIR)/BoxWidget.tcl \
-	$(SRCDIR)/BuildFEMatrix.tcl \
 	$(SRCDIR)/CastField.tcl \
 	$(SRCDIR)/ChangeCellType.tcl \
 	$(SRCDIR)/ColorMapReader.tcl \

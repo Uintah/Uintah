@@ -25,6 +25,7 @@
 #include <Core/Datatypes/SparseRowMatrix.h>
 #include <Core/Datatypes/SymSparseRowMatrix.h>
 #include <Packages/BioPSE/Core/Datatypes/NeumannBC.h>
+#include <Packages/BioPSE/Core/Datatypes/TypeName.h>
 #include <Core/Containers/Array1.h>
 
 #include <Core/Geometry/IntVector.h>

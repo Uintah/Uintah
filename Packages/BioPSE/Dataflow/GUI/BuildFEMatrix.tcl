@@ -8,7 +8,9 @@
  #  Copyright (C) 1996 SCI Group
  ##
 
-itcl_class SCIRun_FEM_BuildFEMatrix {
+catch {rename BioPSE_Forward_BuildFEMatrix ""}
+
+itcl_class BioPSE_Forward_BuildFEMatrix {
     inherit Module
     constructor {config} {
         set name BuildFEMatrix

@@ -20,7 +20,9 @@
 #include <iostream>
 using std::cerr;
 
-namespace SCIRun {
+namespace BioPSE {
+
+using namespace SCIRun;
 
 class ApplyFEMCurrentSource : public Module {
   MeshIPort* inmesh;
@@ -219,4 +221,4 @@ void ApplyFEMCurrentSource::execute()
     oidx->send(ColumnMatrixHandle(idxvec));
   }
 }
-} // End namespace SCIRun
+} // End namespace BioPSE

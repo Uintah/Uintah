@@ -13,7 +13,6 @@ SUBDIRS := \
 	$(SRCDIR)/DataIO\
 	$(SRCDIR)/Fields\
 	$(SRCDIR)/Math\
-	$(SRCDIR)/NumApprox\
 	$(SRCDIR)/Render\
 	$(SRCDIR)/SIP\
         $(SRCDIR)/Visualization\
