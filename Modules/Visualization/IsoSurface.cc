@@ -34,8 +34,10 @@
 #include <Geom/Sphere.h>
 #include <Geom/Tri.h>
 #include <Geometry/Point.h>
+#include <Geometry/Plane.h>
 #include <TCL/TCLvar.h>
 #include <iostream.h>
+#include <Datatypes/TriSurface.h>
 
 class IsoSurface : public Module {
     ScalarFieldIPort* infield;
@@ -44,7 +46,7 @@ class IsoSurface : public Module {
     GeometryOPort* ogeom;
     SurfaceOPort* osurf;
     int abort_flag;
-
+    TriSurface* surf;
     TCLint emit_surface;
 
     int have_seedpoint;
@@ -80,6 +82,8 @@ class IsoSurface : public Module {
     void iso_tetrahedra(ScalarFieldUG*, double, GeomGroup*);
 
     void find_seed_from_value(const ScalarFieldHandle&);
+    void order_and_add_points(const Point &p1, const Point &p2, 
+			      const Point &p3, const Point &v1, double val);
 
     virtual void geom_moved(int, double, const Vector&, void*);
     Point ov[9];
@@ -118,7 +122,7 @@ static clString widget_name("IsoSurface Widget");
 static clString surface_name("IsoSurface");
 
 IsoSurface::IsoSurface(const clString& id)
-: Module("IsoSurface", id, Filter), emit_surface("emit_surface", id, this)
+: Module("IsoSurface", id, Filter), emit_surface("emit_surface.get()", id, this)
 {
     // Create the input ports
     infield=new ScalarFieldIPort(this, "Field", ScalarFieldIPort::Atomic);
@@ -171,7 +175,7 @@ IsoSurface::IsoSurface(const clString& id)
 }
 
 IsoSurface::IsoSurface(const IsoSurface& copy, int deep)
-: Module(copy, deep), emit_surface("emit_surface", id, this)
+: Module(copy, deep), emit_surface("emit_surface.get()", id, this)
 {
     NOT_FINISHED("IsoSurface::IsoSurface");
 }
@@ -275,6 +279,8 @@ void IsoSurface::execute()
 	widget_disc->adjust();
     }
     GeomGroup* group=new GeomGroup;
+    if (emit_surface.get())
+	surf=new TriSurface;
     group->set_matl(matl);
     ScalarFieldRG* regular_grid=field->getRG();
     ScalarFieldUG* unstructured_grid=field->getUG();
@@ -297,11 +303,40 @@ void IsoSurface::execute()
 
     if(group->size() == 0){
 	delete group;
+	if (emit_surface.get())
+	    delete surf;
 	isosurface_id=0;
     } else {
 	isosurface_id=ogeom->addObj(group, surface_name);
+	if (emit_surface.get()) {
+	    osurf->send(surf);
+	    emit_surface.set(0);
+	}
     }
 }
+
+
+// Given the points p1,p2,p3 and a point v1 that lies in front of the plane
+// and it's implicit value, we calculate the whether the point is in front
+// of or beind the plane that p1,p2,p3 define, and make sure that val has
+// the apropriate sign (i.e. the points are cw --> negative val is outside.
+// finally we "cautiously-add" the correctly directed triangle to surf.
+ 
+void IsoSurface::order_and_add_points(const Point &p1, const Point &p2, 
+				      const Point &p3, const Point &v1,
+				      double val) {
+
+    if (Plane(p1,p2,p3).eval_point(v1)*val >= 0)	// is the order right?
+	surf->cautious_add_triangle(p1,p2,p3,1);
+    else	
+	surf->cautious_add_triangle(p2,p1,p3,1);
+}
+
+
+//The isosurface code needs to be able to create clockwise ordered triangles for it to be useful to me.  Clearly we have the information to judge which side of any triangle we generate is inside -- the side which has positive values.   
+ 
+//My first thought was to generate a point off the centroid, just a tad away from the face in the direction of the triangle's normal.  Then, get the "value" of the point (in the field), if it's negative, switch the ordering.
+
 
 int IsoSurface::iso_cube(int i, int j, int k, double isoval,
 			 GeomGroup* group, ScalarFieldRG* field)
@@ -344,6 +379,8 @@ int IsoSurface::iso_cube(int i, int j, int k, double isoval,
 	    Point p2(Interpolate(v[1], v[5], val[1]/(val[1]-val[5])));
 	    Point p3(Interpolate(v[1], v[4], val[1]/(val[1]-val[4])));
 	    group->add(new GeomTri(p1, p2, p3));
+	    if (emit_surface.get())
+		order_and_add_points(p1,p2,p3,v[1],val[1]);
 	}
 	break;
     case 2:
@@ -352,8 +389,12 @@ int IsoSurface::iso_cube(int i, int j, int k, double isoval,
 	    Point p2(Interpolate(v[2], v[6], val[2]/(val[2]-val[6])));
 	    Point p3(Interpolate(v[2], v[3], val[2]/(val[2]-val[3])));
 	    group->add(new GeomTri(p1, p2, p3));
+	    if (emit_surface.get())
+		order_and_add_points(p1,p2,p3,v[1],val[1]);
 	    Point p4(Interpolate(v[1], v[4], val[1]/(val[1]-val[4])));
 	    group->add(new GeomTri(p3, p4, p1));
+	    if (emit_surface.get())
+		order_and_add_points(p3,p4,p1,v[1],val[1]);
 	}
 	break;
     case 3:
@@ -362,10 +403,14 @@ int IsoSurface::iso_cube(int i, int j, int k, double isoval,
 	    Point p2(Interpolate(v[1], v[5], val[1]/(val[1]-val[5])));
 	    Point p3(Interpolate(v[1], v[4], val[1]/(val[1]-val[4])));
 	    group->add(new GeomTri(p1, p2, p3));
+	    if (emit_surface.get())
+		order_and_add_points(p1,p2,p3,v[1],val[1]);
 	    Point p4(Interpolate(v[3], v[2], val[3]/(val[3]-val[2])));
 	    Point p5(Interpolate(v[3], v[7], val[3]/(val[3]-val[7])));
 	    Point p6(Interpolate(v[3], v[4], val[3]/(val[3]-val[4])));
 	    group->add(new GeomTri(p4, p5, p6));
+	    if (emit_surface.get())
+		order_and_add_points(p4,p5,p6,v[3],val[3]);
 	}
 	break;
     case 4:
@@ -374,10 +419,14 @@ int IsoSurface::iso_cube(int i, int j, int k, double isoval,
 	    Point p2(Interpolate(v[1], v[5], val[1]/(val[1]-val[5])));
 	    Point p3(Interpolate(v[1], v[4], val[1]/(val[1]-val[4])));
 	    group->add(new GeomTri(p1, p2, p3));
+	    if (emit_surface.get())
+		order_and_add_points(p1,p2,p3,v[1],val[1]);
 	    Point p4(Interpolate(v[7], v[3], val[7]/(val[7]-val[3])));
 	    Point p5(Interpolate(v[7], v[8], val[7]/(val[7]-val[8])));
 	    Point p6(Interpolate(v[7], v[6], val[7]/(val[7]-val[6])));
 	    group->add(new GeomTri(p4, p5, p6));
+	    if (emit_surface.get())
+		order_and_add_points(p4,p5,p6,v[7],val[7]);
 	}
 	break;
     case 5:
@@ -386,10 +435,16 @@ int IsoSurface::iso_cube(int i, int j, int k, double isoval,
 	    Point p2(Interpolate(v[2], v[3], val[2]/(val[2]-val[3])));
 	    Point p3(Interpolate(v[5], v[1], val[5]/(val[5]-val[1])));
 	    group->add(new GeomTri(p1, p2, p3));
+	    if (emit_surface.get())
+		order_and_add_points(p1,p2,p3,v[2],val[2]);
 	    Point p4(Interpolate(v[5], v[8], val[5]/(val[5]-val[8])));
 	    group->add(new GeomTri(p4, p3, p2));
+	    if (emit_surface.get())
+		order_and_add_points(p4,p3,p2,v[2],val[2]);
 	    Point p5(Interpolate(v[6], v[7], val[6]/(val[6]-val[7])));
 	    group->add(new GeomTri(p5, p4, p2));
+	    if (emit_surface.get())
+		order_and_add_points(p5,p4,p2,v[2],val[2]);
 	}
 	break;
     case 6:
@@ -398,12 +453,18 @@ int IsoSurface::iso_cube(int i, int j, int k, double isoval,
 	    Point p2(Interpolate(v[2], v[6], val[2]/(val[2]-val[6])));
 	    Point p3(Interpolate(v[2], v[3], val[2]/(val[2]-val[3])));
 	    group->add(new GeomTri(p1, p2, p3));
+	    if (emit_surface.get())
+		order_and_add_points(p1,p2,p3,v[1],val[1]);
 	    Point p4(Interpolate(v[1], v[4], val[1]/(val[1]-val[4])));
 	    group->add(new GeomTri(p3, p4, p1));
+	    if (emit_surface.get())
+		order_and_add_points(p3,p4,p1,v[1],val[1]);
 	    Point p5(Interpolate(v[7], v[3], val[7]/(val[7]-val[3])));
 	    Point p6(Interpolate(v[7], v[8], val[7]/(val[7]-val[8])));
 	    Point p7(Interpolate(v[7], v[6], val[7]/(val[7]-val[6])));
 	    group->add(new GeomTri(p5, p6, p7));
+	    if (emit_surface.get())
+		order_and_add_points(p5,p6,p7,v[7],val[7]);
 	}
 	break;
     case 7:
@@ -412,14 +473,20 @@ int IsoSurface::iso_cube(int i, int j, int k, double isoval,
 	    Point p2(Interpolate(v[2], v[3], val[2]/(val[2]-val[3])));
 	    Point p3(Interpolate(v[2], v[6], val[2]/(val[2]-val[6])));
 	    group->add(new GeomTri(p1, p2, p3));
+	    if (emit_surface.get())
+		order_and_add_points(p1,p2,p3,v[2],val[2]);
 	    Point p4(Interpolate(v[4], v[1], val[4]/(val[4]-val[1])));
 	    Point p5(Interpolate(v[4], v[3], val[4]/(val[4]-val[3])));
 	    Point p6(Interpolate(v[4], v[8], val[4]/(val[4]-val[8])));
 	    group->add(new GeomTri(p4, p5, p6));
+	    if (emit_surface.get())
+		order_and_add_points(p4,p5,p6,v[4],val[4]);
 	    Point p7(Interpolate(v[7], v[8], val[7]/(val[7]-val[8])));
 	    Point p8(Interpolate(v[7], v[6], val[7]/(val[7]-val[6])));
 	    Point p9(Interpolate(v[7], v[3], val[7]/(val[7]-val[3])));
 	    group->add(new GeomTri(p7, p8, p9));
+	    if (emit_surface.get())
+		order_and_add_points(p7,p8,p9,v[7],val[7]);
 	}
 	break;
     case 8:
@@ -428,8 +495,12 @@ int IsoSurface::iso_cube(int i, int j, int k, double isoval,
 	    Point p2(Interpolate(v[2], v[3], val[2]/(val[2]-val[3])));
 	    Point p3(Interpolate(v[6], v[7], val[6]/(val[6]-val[7])));
 	    group->add(new GeomTri(p1, p2, p3));
+	    if (emit_surface.get())
+		order_and_add_points(p1,p2,p3,v[1],val[1]);
 	    Point p4(Interpolate(v[5], v[8], val[5]/(val[5]-val[8])));
 	    group->add(new GeomTri(p4, p1, p3));
+	    if (emit_surface.get())
+		order_and_add_points(p4,p1,p3,v[1],val[1]);
 	}
 	break;
     case 9:
@@ -438,12 +509,20 @@ int IsoSurface::iso_cube(int i, int j, int k, double isoval,
 	    Point p2(Interpolate(v[6], v[2], val[6]/(val[6]-val[2])));
 	    Point p3(Interpolate(v[6], v[7], val[6]/(val[6]-val[7])));
 	    group->add(new GeomTri(p1, p2, p3));
+	    if (emit_surface.get())
+		order_and_add_points(p1,p2,p3,v[5],val[5]);
 	    Point p4(Interpolate(v[8], v[7], val[8]/(val[8]-val[7])));
 	    group->add(new GeomTri(p1, p3, p4));
+	    if (emit_surface.get())
+		order_and_add_points(p1,p3,p4,v[5],val[5]);
 	    Point p5(Interpolate(v[1], v[4], val[1]/(val[1]-val[4])));
 	    group->add(new GeomTri(p1, p4, p5));
+	    if (emit_surface.get())
+		order_and_add_points(p1,p4,p5,v[5],val[5]);
 	    Point p6(Interpolate(v[8], v[4], val[8]/(val[8]-val[4])));
 	    group->add(new GeomTri(p5, p4, p6));
+	    if (emit_surface.get())
+		order_and_add_points(p5,p4,p6,v[5],val[5]);
 	}
 	break;
     case 10:
@@ -452,14 +531,22 @@ int IsoSurface::iso_cube(int i, int j, int k, double isoval,
 	    Point p2(Interpolate(v[4], v[3], val[4]/(val[4]-val[3])));
 	    Point p3(Interpolate(v[1], v[5], val[1]/(val[1]-val[5])));
 	    group->add(new GeomTri(p1, p2, p3));
+	    if (emit_surface.get())
+		order_and_add_points(p1,p2,p3,v[1],val[1]);
 	    Point p4(Interpolate(v[4], v[8], val[4]/(val[4]-val[8])));
 	    group->add(new GeomTri(p2, p4, p3));
+	    if (emit_surface.get())
+		order_and_add_points(p2,p4,p3,v[1],val[1]);
 	    Point p5(Interpolate(v[6], v[2], val[6]/(val[6]-val[2])));
 	    Point p6(Interpolate(v[6], v[5], val[6]/(val[6]-val[5])));
 	    Point p7(Interpolate(v[7], v[3], val[7]/(val[7]-val[3])));
 	    group->add(new GeomTri(p5, p6, p7));
+	    if (emit_surface.get())
+		order_and_add_points(p5,p6,p7,v[6],val[6]);
 	    Point p8(Interpolate(v[7], v[8], val[7]/(val[7]-val[8])));
 	    group->add(new GeomTri(p2, p8, p3));
+	    if (emit_surface.get())
+		order_and_add_points(p2,p8,p3,v[6],val[6]);
 	}
 	break;
     case 11:
@@ -468,12 +555,20 @@ int IsoSurface::iso_cube(int i, int j, int k, double isoval,
 	    Point p2(Interpolate(v[6], v[2], val[6]/(val[6]-val[2])));
 	    Point p3(Interpolate(v[7], v[3], val[7]/(val[7]-val[3])));
 	    group->add(new GeomTri(p1, p2, p3));
+	    if (emit_surface.get())
+		order_and_add_points(p1,p2,p3,v[5],val[5]);
 	    Point p4(Interpolate(v[5], v[8], val[5]/(val[5]-val[8])));
 	    group->add(new GeomTri(p1, p3, p4));
+	    if (emit_surface.get())
+		order_and_add_points(p1,p3,p4,v[5],val[5]);
 	    Point p5(Interpolate(v[1], v[4], val[1]/(val[1]-val[4])));
 	    group->add(new GeomTri(p1, p4, p5));
+	    if (emit_surface.get())
+		order_and_add_points(p1,p4,p5,v[5],val[5]);
 	    Point p6(Interpolate(v[7], v[8], val[7]/(val[7]-val[8])));
 	    group->add(new GeomTri(p4, p3, p6));
+	    if (emit_surface.get())
+		order_and_add_points(p4,p3,p6,v[5],val[5]);
 	}
 	break;
     case 12:
@@ -482,14 +577,22 @@ int IsoSurface::iso_cube(int i, int j, int k, double isoval,
 	    Point p2(Interpolate(v[2], v[3], val[2]/(val[2]-val[3])));
 	    Point p3(Interpolate(v[5], v[1], val[5]/(val[5]-val[1])));
 	    group->add(new GeomTri(p1, p2, p3));
+	    if (emit_surface.get())
+		order_and_add_points(p1,p2,p3,v[5],val[5]);
 	    Point p4(Interpolate(v[5], v[8], val[5]/(val[5]-val[8])));
 	    group->add(new GeomTri(p3, p2, p4));
+	    if (emit_surface.get())
+		order_and_add_points(p3,p2,p4,v[5],val[5]);
 	    Point p5(Interpolate(v[6], v[7], val[6]/(val[6]-val[7])));
-	    group->add(new GeomTri(p5, p2, p5));
+	    group->add(new GeomTri(p4, p2, p5));
+	    if (emit_surface.get())
+		order_and_add_points(p4,p2,p5,v[5],val[5]);
 	    Point p6(Interpolate(v[4], v[1], val[4]/(val[4]-val[1])));
 	    Point p7(Interpolate(v[4], v[3], val[4]/(val[4]-val[3])));
 	    Point p8(Interpolate(v[4], v[8], val[4]/(val[4]-val[8])));
 	    group->add(new GeomTri(p6, p7, p8));
+	    if (emit_surface.get())
+		order_and_add_points(p6,p7,p8,v[4],val[4]);
 	}
 	break;
     case 13:
@@ -498,18 +601,26 @@ int IsoSurface::iso_cube(int i, int j, int k, double isoval,
 	    Point p2(Interpolate(v[1], v[5], val[1]/(val[1]-val[5])));
 	    Point p3(Interpolate(v[1], v[4], val[1]/(val[1]-val[4])));
 	    group->add(new GeomTri(p1, p2, p3));
+	    if (emit_surface.get())
+		order_and_add_points(p1,p2,p3,v[1],val[1]);
 	    Point p4(Interpolate(v[3], v[2], val[3]/(val[3]-val[2])));
 	    Point p5(Interpolate(v[3], v[7], val[3]/(val[3]-val[7])));
 	    Point p6(Interpolate(v[3], v[4], val[3]/(val[3]-val[4])));
 	    group->add(new GeomTri(p4, p5, p6));
+	    if (emit_surface.get())
+		order_and_add_points(p4,p5,p6,v[3],val[3]);
 	    Point p7(Interpolate(v[6], v[2], val[6]/(val[6]-val[2])));
 	    Point p8(Interpolate(v[6], v[7], val[6]/(val[6]-val[7])));
 	    Point p9(Interpolate(v[6], v[5], val[6]/(val[6]-val[5])));
 	    group->add(new GeomTri(p7, p8, p9));
+	    if (emit_surface.get())
+		order_and_add_points(p7,p8,p9,v[6],val[6]);
 	    Point p10(Interpolate(v[8], v[5], val[8]/(val[8]-val[5])));
 	    Point p11(Interpolate(v[8], v[7], val[8]/(val[8]-val[7])));
 	    Point p12(Interpolate(v[8], v[4], val[8]/(val[8]-val[4])));
 	    group->add(new GeomTri(p10, p11, p12));
+	    if (emit_surface.get())
+		order_and_add_points(p10,p11,p12,v[8],val[8]);
 	}
 	break;
     case 14:
@@ -518,12 +629,20 @@ int IsoSurface::iso_cube(int i, int j, int k, double isoval,
 	    Point p2(Interpolate(v[2], v[3], val[2]/(val[2]-val[3])));
 	    Point p3(Interpolate(v[6], v[7], val[6]/(val[6]-val[7])));
 	    group->add(new GeomTri(p1, p2, p3));
+	    if (emit_surface.get())
+		order_and_add_points(p1,p2,p3,v[5],val[5]);
 	    Point p4(Interpolate(v[8], v[4], val[8]/(val[8]-val[4])));
 	    group->add(new GeomTri(p1, p3, p4));
+	    if (emit_surface.get())
+		order_and_add_points(p1,p3,p4,v[5],val[5]);
 	    Point p5(Interpolate(v[5], v[1], val[5]/(val[5]-val[1])));
 	    group->add(new GeomTri(p1, p4, p5));
+	    if (emit_surface.get())
+		order_and_add_points(p1,p4,p5,v[5],val[5]);
 	    Point p6(Interpolate(v[8], v[7], val[8]/(val[8]-val[7])));
 	    group->add(new GeomTri(p3, p6, p4));
+	    if (emit_surface.get())
+		order_and_add_points(p3,p6,p4,v[5],val[5]);
 	}
 	break;
     default:
