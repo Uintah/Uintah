@@ -26,7 +26,7 @@
               <lower>         [ 0.0,   0.0,   0.0]         </lower>
               <upper>         [ 0.0001,0.0025,0.0001]</upper>
                 <extraCells>  [1,1,1]               </extraCells>
-              <patches>       [1,2,1]               </patches>
+              <patches>       [1,1,1]               </patches>
               <resolution>    [1,100,1]            </resolution>
            </Box>
        </Level>
@@ -40,30 +40,30 @@
         </BCType>
       </Face>
       <Face side = "y-">
-        <BCType id = "0" var = "Neumann" label = "Pressure">
+        <BCType id = "0" var = "Neumann"    label = "Pressure">
                               <value> 0.0   </value>
         </BCType>
-        <BCType id = "all" var = "Dirichlet" label = "Velocity">
+        <BCType id = "all" var = "Dirichlet"label = "Velocity">
                               <value> [0.,0.,0.] </value>
         </BCType>
-        <BCType id = "all" var = "Neumann" label = "Temperature">
+        <BCType id = "all" var = "Neumann"  label = "Temperature">
                               <value> 0.0  </value>
         </BCType>
-        <BCType id = "all" var = "Neumann" label = "Density">
+        <BCType id = "all" var = "Neumann"  label = "Density">
                               <value> 0.0  </value>
         </BCType>
       </Face>                  
       <Face side = "y+">
-        <BCType id = "0" var = "Neumann" label = "Pressure">
+        <BCType id = "0" var = "Neumann"    label = "Pressure">
                               <value> 0.0   </value>
         </BCType>
-        <BCType id = "all" var = "Neumann" label = "Velocity">
+        <BCType id = "all" var = "Neumann"  label = "Velocity">
                               <value> [0.,0.,0.] </value>
         </BCType>
-        <BCType id = "all" var = "Neumann" label = "Temperature">
+        <BCType id = "all" var = "Neumann"  label = "Temperature">
                               <value> 0.0  </value>
         </BCType>
-        <BCType id = "all" var = "Neumann" label = "Density">
+        <BCType id = "all" var = "Neumann"  label = "Density">
                               <value> 0.0  </value>
         </BCType>
       </Face>
@@ -119,16 +119,6 @@
      <dbg_GnuPlot>         true       </dbg_GnuPlot> 
      <debug label = "switchDebug_EQ_RF_press"/> 
      <debug label = "switchDebug_advance_advect"/>   
-     <!--
-     <debug label = "switchDebugInitialize"/>
-     <debug label = "switchDebug_vel_FC"/>           
-     <debug label = "switchDebug_explicit_press"/>   
-     <debug label = "switchDebug_PressFC"/>          
-     <debug label = "switchDebugLagrangianValues"/> 
-     <debug label = "switchDebugMomentumExchange_CC"/> 
-     <debug label = "switchDebugSource_Sink"/>       
-     <debug label = "switchDebug_advance_advect"/>  
-     -->
    </Debug>
     <!--____________________________________________________________________-->
     <!--    I  C  E     P  A  R  A  M  E  T  E  R  S                        -->
@@ -154,18 +144,18 @@
     </PhysicalConstants>
     <!--____________________________________________________________________-->
     <!--    MATERIAL PROPERTIES INITIAL CONDITIONS                          -->
-    <!-- changed K from 0.5e-7 to 0.5e-6 -->
     <!--____________________________________________________________________-->
 
     <MaterialProperties>
        <MPM>
          <material name = " Piston Piston">
                 <burn type = "null"/>
-                <density>                  1.9e6         </density>
+                <EOS type = "ideal_gas">                 </EOS>
+                <density>                  1.9e8         </density>
                 <constitutive_model type = "comp_neo_hook_plastic">
-                  <bulk_modulus>           10.2e6        </bulk_modulus>
-                  <shear_modulus>          7.2e6         </shear_modulus>
-                  <yield_stress>           .27e6         </yield_stress>
+                  <bulk_modulus>           10.2e8        </bulk_modulus>
+                  <shear_modulus>          7.2e8         </shear_modulus>
+                  <yield_stress>           .27e8         </yield_stress>
                   <hardening_modulus>      0.1e4         </hardening_modulus>
                   <alpha>                  0.0           </alpha>
                 </constitutive_model>
@@ -237,9 +227,9 @@
 
        <exchange_properties>
          <exchange_coefficients>
-                          <!--  [0-1,   0-2,     1-2]  -->
-              <momentum>       [1e15,   1e15,    1e15]     </momentum>
-              <heat>           [ 0.001, 0.001,   0.001]     </heat>
+                          <!--  [0-1,  0-2, 1-2]  -->
+              <momentum>       [1e15, 1e15, 1e15]     </momentum>
+              <heat>           [   1,    1,    1]     </heat>
           </exchange_coefficients>
           <mass_exchange>               false          </mass_exchange>
        </exchange_properties>
