@@ -21,7 +21,6 @@ Contact* ContactFactory::create(const ProblemSpecP& ps, SimulationStateP &ss)
 	child = child->findNextBlock("contact")) {
       std::string con_type;
       child->require("type",con_type);
-      cerr << "con_type = " << con_type << std::endl;
     
       if (con_type == "null")
 	 return(scinew NullContact(child,ss));
