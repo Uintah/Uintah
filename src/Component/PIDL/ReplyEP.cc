@@ -18,6 +18,7 @@
 #include <SCICore/Util/NotFinished.h>
 #include <globus_nexus.h>
 #include <vector>
+#include <iostream>
 
 using Component::PIDL::ReplyEP;
 using SCICore::Thread::Mutex;
@@ -26,8 +27,8 @@ static Mutex mutex("ReplyEP pool lock");
 static std::vector<ReplyEP*> pool;
 
 void ReplyEP::reply_handler(globus_nexus_endpoint_t* ep,
-					   globus_nexus_buffer_t* buffer,
-					   globus_bool_t)
+			    globus_nexus_buffer_t* buffer,
+			    globus_bool_t)
 {
     globus_nexus_buffer_save(buffer);
     void* p=globus_nexus_endpoint_get_user_pointer(ep);
@@ -101,8 +102,7 @@ void ReplyEP::release(ReplyEP* r)
 
 void ReplyEP::get_startpoint(globus_nexus_startpoint_t* spp)
 {
-    if(int gerr=globus_nexus_startpoint_copy(spp, &d_sp))
-	throw GlobusError("bind_startpoint", gerr);
+    *spp=d_sp;
 }
 
 globus_nexus_buffer_t ReplyEP::wait()
@@ -110,8 +110,12 @@ globus_nexus_buffer_t ReplyEP::wait()
     d_sema.down();
     return d_bufferHandoff;
 }
+
 //
 // $Log$
+// Revision 1.3  1999/09/17 05:08:10  sparker
+// Implemented component model to work with sidl code generator
+//
 // Revision 1.2  1999/08/31 08:59:02  sparker
 // Configuration and other updates for globus
 // First import of beginnings of new component library

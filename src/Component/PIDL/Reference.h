@@ -15,30 +15,30 @@
 #ifndef Component_PIDL_Reference_h
 #define Component_PIDL_Reference_h
 
-#include <Component/PIDL/TypeSignature.h>
+#include <globus_nexus.h>
 
 namespace Component {
     namespace PIDL {
-	struct Startpoint;
-	class URL;	
-
-	class Reference {
-	public:
+	struct Reference {
 	    Reference();
 	    Reference(const Reference&);
-	    Reference(const URL&);
 	    Reference& operator=(const Reference&);
 	    ~Reference();
-	protected:
-	    friend class ProxyBase;
-	    Startpoint* d_startpoint;
+	    int getVtableBase() const;
+
+	    globus_nexus_startpoint_t d_sp;
+	    int d_vtable_base;
 	};
     }
 }
 
 #endif
+
 //
 // $Log$
+// Revision 1.2  1999/09/17 05:08:09  sparker
+// Implemented component model to work with sidl code generator
+//
 // Revision 1.1  1999/08/30 17:39:48  sparker
 // Updates to configure script:
 //  rebuild configure if configure.in changes (Bug #35)

@@ -14,11 +14,13 @@
 
 #include <Component/PIDL/Object.h>
 
-#include <Component/PIDL/Dispatch.h>
 #include <Component/PIDL/GlobusError.h>
 #include <Component/PIDL/InvalidReference.h>
 #include <Component/PIDL/PIDL.h>
+#include <Component/PIDL/Reference.h>
 #include <Component/PIDL/ServerContext.h>
+#include <Component/PIDL/TypeInfo.h>
+#include <Component/PIDL/TypeInfo_internal.h>
 #include <Component/PIDL/URL.h>
 #include <Component/PIDL/Wharehouse.h>
 #include <SCICore/Exceptions/InternalError.h>
@@ -33,21 +35,30 @@ static void unknown_handler(globus_nexus_endpoint_t* endpoint,
 			    globus_nexus_buffer_t* buffer,
 			    int handler_id)
 {
+    cerr << "handler_id=" << handler_id << '\n';
     NOT_FINISHED("unknown handler");
 }
 
-Object_interface::Object_interface(const TypeInfo* typeinfo,
-						  Dispatch* dispatch,
-						  void* ptr)
+Object_interface::Object_interface()
+    : d_serverContext(0)
 {
+}
+
+void Object_interface::initializeServer(const TypeInfo* typeinfo, void* ptr)
+{
+    if(d_serverContext){
+	globus_nexus_endpoint_set_user_pointer(&d_serverContext->d_endpoint, ptr);
+	d_serverContext->d_typeinfo=typeinfo;
+	
+    }
     d_serverContext=new ServerContext;
     d_serverContext->d_typeinfo=typeinfo;
     globus_nexus_endpointattr_t attr;
     if(int gerr=globus_nexus_endpointattr_init(&attr))
 	throw GlobusError("endpointattr_init", gerr);
     if(int gerr=globus_nexus_endpointattr_set_handler_table(&attr,
-							    dispatch->table,
-							    dispatch->tableSize))
+							    typeinfo->d_priv->table,
+							    typeinfo->d_priv->tableSize))
 	throw GlobusError("endpointattr_set_handler_table", gerr);
     if(int gerr=globus_nexus_endpointattr_set_unknown_handler(&attr,
 							      unknown_handler,
@@ -62,11 +73,6 @@ Object_interface::Object_interface(const TypeInfo* typeinfo,
 
     Wharehouse* wharehouse=PIDL::getWharehouse();
     d_serverContext->d_objid=wharehouse->registerObject(this);
-}
-
-Object_interface::Object_interface()
-{
-    d_serverContext=0;
 }
 
 Object_interface::~Object_interface()
@@ -94,8 +100,22 @@ URL Object_interface::getURL() const
     }
 }
 
+void Object_interface::_getReference(Reference& ref, bool copy) const
+{
+    if(!d_serverContext)
+	throw SCICore::Exceptions::InternalError("Object_interface::getReference called for a non-server object");
+    if(!copy){
+	throw SCICore::Exceptions::InternalError("Object_interface::getReference called with copy=false");
+    }
+    if(int gerr=globus_nexus_startpoint_bind(&ref.d_sp, &d_serverContext->d_endpoint))
+	throw GlobusError("startpoint_bind", gerr);
+}
+
 //
 // $Log$
+// Revision 1.3  1999/09/17 05:08:08  sparker
+// Implemented component model to work with sidl code generator
+//
 // Revision 1.2  1999/08/31 08:59:01  sparker
 // Configuration and other updates for globus
 // First import of beginnings of new component library

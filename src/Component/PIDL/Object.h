@@ -15,11 +15,9 @@
 #ifndef Component_PIDL_Object_h
 #define Component_PIDL_Object_h
 
-#include <Component/PIDL/TypeSignature.h>
-
 namespace Component {
     namespace PIDL {
-	class Dispatch;
+	class Reference;
 	class ServerContext;
 	class TypeInfo;
 	class URL;
@@ -28,22 +26,29 @@ namespace Component {
 	public:
 	    virtual ~Object_interface();
 	    URL getURL() const;
+
+	    virtual void _getReference(Reference&, bool copy) const;
 	protected:
-	    Object_interface(const TypeInfo* typeinfo,
-			     Dispatch* dispatch,
-			     void* ptr);
 	    Object_interface();
+	    void initializeServer(const TypeInfo* typeinfo, void* ptr);
+	private:
 	    friend class Wharehouse;
 	    ServerContext* d_serverContext;
-	private:
+
+	    Object_interface(const Object_interface&);
+	    Object_interface& operator=(const Object_interface&);
 	};
 	typedef Object_interface* Object;
     }
 }
 
 #endif
+
 //
 // $Log$
+// Revision 1.2  1999/09/17 05:08:08  sparker
+// Implemented component model to work with sidl code generator
+//
 // Revision 1.1  1999/08/30 17:39:46  sparker
 // Updates to configure script:
 //  rebuild configure if configure.in changes (Bug #35)

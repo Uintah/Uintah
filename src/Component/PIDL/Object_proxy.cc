@@ -13,20 +13,46 @@
  */
 
 #include <Component/PIDL/Object_proxy.h>
+#include <Component/PIDL/GlobusError.h>
+#include <Component/PIDL/TypeInfo.h>
+#include <Component/PIDL/URL.h>
+#include <string>
 
+using Component::PIDL::GlobusError;
 using Component::PIDL::Object_proxy;
+using Component::PIDL::TypeInfo;
 
 Object_proxy::Object_proxy(const Reference& ref)
     : ProxyBase(ref)
 {
 }
 
+Object_proxy::Object_proxy(const URL& url)
+    : ProxyBase(Reference())
+{
+    std::string s(url.getString());
+    d_ref.d_vtable_base=TypeInfo::vtable_methods_start;
+    char* str=const_cast<char*>(s.c_str());
+    if(int gerr=globus_nexus_attach(str, &d_ref.d_sp)){
+	d_ref.d_vtable_base=TypeInfo::vtable_invalid;
+	throw GlobusError("nexus_attach", gerr);
+    }
+}
+
 Object_proxy::~Object_proxy()
 {
+    if(d_ref.d_vtable_base != TypeInfo::vtable_invalid){
+	if(int gerr=globus_nexus_startpoint_destroy_and_notify(&d_ref.d_sp)){
+	    throw GlobusError("nexus_startpoint_destroy_and_notify", gerr);
+	}
+    }
 }
 
 //
 // $Log$
+// Revision 1.3  1999/09/17 05:08:08  sparker
+// Implemented component model to work with sidl code generator
+//
 // Revision 1.2  1999/08/31 08:59:01  sparker
 // Configuration and other updates for globus
 // First import of beginnings of new component library

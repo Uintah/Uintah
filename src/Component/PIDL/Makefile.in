@@ -4,10 +4,10 @@ OBJTOP   = ../..
 
 GLOBUS_INCLUDE = @GLOBUS_INCLUDE@
 
-SRCS     = Dispatch.cc GlobusError.cc InvalidReference.cc \
+SRCS     = GlobusError.cc InvalidReference.cc \
 	   MalformedURL.cc Object.cc Object_proxy.cc PIDL.cc \
-	   ProxyBase.cc Reference.cc ReplyEP.cc URL.cc \
-	   Wharehouse.cc
+	   ProxyBase.cc Reference.cc ReplyEP.cc TypeInfo.cc \
+	   TypeInfo_internal.cc URL.cc Wharehouse.cc
 
 INCLUDES = -I$(SRCTOP) -I$(OBJTOP) $(GLOBUS_INCLUDE)
 

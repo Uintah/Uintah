@@ -33,8 +33,12 @@ namespace Component {
 }
 
 #endif
+
 //
 // $Log$
+// Revision 1.3  1999/09/17 05:08:07  sparker
+// Implemented component model to work with sidl code generator
+//
 // Revision 1.2  1999/08/31 08:59:00  sparker
 // Configuration and other updates for globus
 // First import of beginnings of new component library
