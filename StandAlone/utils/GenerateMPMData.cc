@@ -32,6 +32,7 @@
 #include <Core/Datatypes/Field.h>
 #include <Core/Persistent/Pstreams.h>
 #include <Core/Datatypes/TetVolField.h>
+#include <Core/Geometry/BBox.h>
 #include <iostream>
 #include <fstream>
 #include <iomanip>
@@ -51,7 +52,10 @@ template<class Fld>
 void
 write_MPM(FieldHandle& field_h, const string &outdir)
 {
+
   Fld *ifield = (Fld *) field_h.get_rep();
+  typename Fld::mesh_handle_type mesh = ifield->get_typed_mesh();
+
   bool have_files = false;
   vector<pair<string, Tensor> > field_tensors;
   if (ifield->get_property("conductivity_table", field_tensors)) {
@@ -64,23 +68,39 @@ write_MPM(FieldHandle& field_h, const string &outdir)
     }    
   }
 
-  typename Fld::mesh_handle_type mesh = ifield->get_typed_mesh();
-    
-  typename Fld::mesh_type::Cell::iterator iter, end;
-  mesh->begin( iter );
-  mesh->end( end );
-  while (iter != end) {
-    double vol = mesh->get_volume(*iter);
-    Point c;
-    mesh->get_center(c, *iter);
-    int val = ifield->value(*iter);
-    ++iter;
-    ofstream* str = (*files)[val];
-    (*str) << setprecision (9) <<c.x() << " " << c.y() << " " << c.z() 
-	   << " " << vol << endl;
-  }
-}
+  const double max_vol_s = .5L;
+  BBox bbox = field_h->mesh()->get_bounding_box();
+  Point minb, maxb;
+  minb = bbox.min();
+  maxb = bbox.max();
 
+  int sizex = (int)(round(maxb.x() - minb.x()) / max_vol_s);
+  int sizey = (int)(round(maxb.y() - minb.y()) / max_vol_s);
+  int sizez = (int)(round(maxb.z() - minb.z()) / max_vol_s);
+  
+  LatVolMesh *cntrl = new LatVolMesh(sizex, sizey, sizez, minb, maxb);
+  double vol = cntrl->get_volume(LatVolMesh::Cell::index_type(cntrl,0,0,0));
+  LatVolMesh::Cell::iterator iter, end;
+  cntrl->begin( iter );
+  cntrl->end( end );
+  int count = 0;
+  
+  while (iter != end) {
+    Point c;
+    cntrl->get_center(c, *iter);
+    ++iter; count++;
+    typename Fld::mesh_type::Cell::index_type ci;
+    if (mesh->locate(ci, c)) {
+      int val = ifield->value(ci);
+      ofstream* str = (*files)[val];
+      (*str) << setprecision (9) <<c.x() << " " << c.y() << " " << c.z() 
+	     << " " << vol << endl;
+    }
+    
+    if (count % ((int)(sizex*sizey*sizez*0.01)) == 0) { cout << "."; }
+  }    
+  cout << endl;
+}
 
 
 
