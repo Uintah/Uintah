@@ -903,9 +903,11 @@ OnDemandDataWarehouse::get(NCVariableBase& var, const VarLabel* label,
       IntVector dn = highIndex-lowIndex;
       long wantnodes = dn.x()*dn.y()*dn.z();
       //      ASSERTEQ(wantnodes, totalNodes);
-      if(wantnodes!=totalNodes){
-	  cerr << "Warning:  wantnodes != totalNodes " << endl;
-      }
+//      if(wantnodes!=totalNodes){
+	// This ASSERT or this warning are invoked even when trying
+	// to do pefectly legitimate things.
+	//  cerr << "Warning:  wantnodes != totalNodes " << endl;
+//      }
    }
   d_lock.readUnlock();
 }
