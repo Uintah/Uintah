@@ -47,6 +47,9 @@ void MakeDefaultAllocator();
 
 void PrintTag(void*);
 
+  const char* AllocatorSetDefaultTagMalloc(const char* tag);
+  const char* AllocatorSetDefaultTagNew(const char* tag);
+
 Allocator* DefaultAllocator();
 void GetGlobalStats(Allocator*,
 		    size_t& nalloc, size_t& sizealloc,

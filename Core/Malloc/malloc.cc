@@ -60,13 +60,23 @@ void* valloc(size_t) THROWCLAUSE;
 
 using namespace SCIRun;
 
+static const char* default_tag = "Unknown - malloc";
+namespace SCIRun {
+const char* AllocatorSetDefaultTagMalloc(const char* tag)
+{
+  const char* old = default_tag;
+  default_tag=tag;
+  return old;
+}
+}
+
 #ifndef DISABLE_SCI_MALLOC
 
 void* malloc(size_t size) THROWCLAUSE
 {
     if(!default_allocator)
 	MakeDefaultAllocator();
-    return default_allocator->alloc(size, "Unknown - malloc");
+    return default_allocator->alloc(size, default_tag);
 }
 
 void free(void* ptr) THROWCLAUSE
