@@ -43,7 +43,7 @@ Scene* make_scene(int /*argc*/, char* /*argv*/[], int /*nworkers*/)
    ImageMaterial* bookcoverimg = 
        new ImageMaterial(1,
 #if INSCILAB
-                         "/usr/sci/projects/rtrt/textures/i3d97.smaller.gamma",
+                         "/usr/sci/data/Geometry/textures/i3d97.smaller.gamma",
 #else
                          "/home/moulding/i3d97.smaller.gamma",
 #endif

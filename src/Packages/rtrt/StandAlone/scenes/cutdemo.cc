@@ -121,38 +121,38 @@ Scene* make_scene(int argc, char* argv[], int nworkers)
   Material* bodymat=new LambertianMaterial(Color(0.5,0.5,0.5));
   CutPlaneDpy* cpdpy=new CutPlaneDpy(Vector(0,1,0), Point(-8,8,2));
   //this should point to a directory with a map.cmp file
-  ColorMap *cmap = new ColorMap("/usr/sci/projects/rtrt/volumes/vol_cmap");
+  ColorMap *cmap = new ColorMap("/usr/sci/data/Geometry/volumes/vol_cmap");
   Material *cutmat = new CutMaterial(bodymat, cmap, cpdpy);
   CutGroup *cut = new CutGroup(cpdpy);
   CutVolumeDpy* cvdpy = new CutVolumeDpy(100.5, cmap);
 
   //these should point to a directory where vfem16_*.hdr places the body around -8,8,2
   HVolumeBrick16* slc0=new HVolumeBrick16(cutmat, cvdpy,
-					  "/usr/sci/projects/rtrt/volumes/vfem16_0",
+					  "/usr/sci/data/Geometry/volumes/vfem16_0",
 					  3, nworkers);
   
   HVolumeBrick16* slc1=new HVolumeBrick16(cutmat, cvdpy,
-					  "/usr/sci/projects/rtrt/volumes/vfem16_1",
+					  "/usr/sci/data/Geometry/volumes/vfem16_1",
 					  3, nworkers);
   
   HVolumeBrick16* slc2=new HVolumeBrick16(cutmat, cvdpy,
-					  "/usr/sci/projects/rtrt/volumes/vfem16_2",
+					  "/usr/sci/data/Geometry/volumes/vfem16_2",
 					  3, nworkers);
   
   HVolumeBrick16* slc3=new HVolumeBrick16(cutmat, cvdpy,
-					  "/usr/sci/projects/rtrt/volumes/vfem16_3",
+					  "/usr/sci/data/Geometry/volumes/vfem16_3",
 					  3, nworkers);
   
   HVolumeBrick16* slc4=new HVolumeBrick16(cutmat, cvdpy,
-					  "/usr/sci/projects/rtrt/volumes/vfem16_4",
+					  "/usr/sci/data/Geometry/volumes/vfem16_4",
 					  3, nworkers);
   
   HVolumeBrick16* slc5=new HVolumeBrick16(cutmat, cvdpy,
-					  "/usr/sci/projects/rtrt/volumes/vfem16_5",
+					  "/usr/sci/data/Geometry/volumes/vfem16_5",
 					  3, nworkers);
 
   HVolumeBrick16* slc6=new HVolumeBrick16(cutmat, cvdpy,
-					  "/usr/sci/projects/rtrt/volumes/vfem16_6",
+					  "/usr/sci/data/Geometry/volumes/vfem16_6",
 					  3, nworkers);
   cut->add(slc0);
   cut->add(slc1);

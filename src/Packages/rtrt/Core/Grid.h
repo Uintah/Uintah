@@ -65,17 +65,17 @@ inline void Grid::calc_se(const BBox& obj_bbox, const BBox& bbox,
 			  int& sx, int& sy, int& sz,
 			  int& ex, int& ey, int& ez)
 {
-    cerr << "obbx min " << obj_bbox.min() << endl;
-    cerr << "obbx max " << obj_bbox.max() << endl;
-    cerr << "bbx min " << bbox.min() << endl;
-    cerr << "bbx max " << bbox.max() << endl;
-    cerr << "diag " << diag << endl;
-    cerr << "nx, ny, nz " << nx << ", " << ny << ", " << nz << endl;
+//    cerr << "obbx min " << obj_bbox.min() << endl;
+//    cerr << "obbx max " << obj_bbox.max() << endl;
+//    cerr << "bbx min " << bbox.min() << endl;
+//    cerr << "bbx max " << bbox.max() << endl;
+//    cerr << "diag " << diag << endl;
+//    cerr << "nx, ny, nz " << nx << ", " << ny << ", " << nz << endl;
     
     Vector s((obj_bbox.min()-bbox.min())/diag);
-    cerr << "s " << s << endl;
+//    cerr << "s " << s << endl;
     Vector e((obj_bbox.max()-bbox.min())/diag);
-    cerr << "s " << s << endl;
+//    cerr << "s " << s << endl;
     sx=(int)(s.x()*nx);
     sy=(int)(s.y()*ny);
     sz=(int)(s.z()*nz);
