@@ -25,7 +25,7 @@ if(length(which('transport'))==0)
  [t,r]=strtok(fliplr(which('mlabengine')),'/') ;
  engdir=fliplr(r);
  cd(engdir);
- mex transport.c ../../../src/Packages/MatlabInterface/Core/Util/bring.c
+ mex transport.c ../../../../../src/Packages/MatlabInterface/Core/Util/bring.c
  cd(curdir);
 end
 
