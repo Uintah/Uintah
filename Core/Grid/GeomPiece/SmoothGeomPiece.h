@@ -85,6 +85,11 @@ namespace Uintah {
     vector<Vector>* getForces();
 
     //////////////////////////////////////////////////////////////////////
+    /*! Returns the vector containing the set of particle fiber directions */
+    //////////////////////////////////////////////////////////////////////
+    vector<Vector>* getFiberDirs();
+
+    //////////////////////////////////////////////////////////////////////
     /*! Deletes the vector containing the set of particle locations */
     //////////////////////////////////////////////////////////////////////
     void deletePoints();
@@ -115,6 +120,7 @@ namespace Uintah {
     vector<Point> d_points;
     vector<double> d_volume;
     vector<Vector> d_forces;
+    vector<Vector> d_fiberdirs;
     double d_dx;
   };
 } // End namespace Uintah
