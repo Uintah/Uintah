@@ -95,13 +95,11 @@ void MPMICE::problemSetup(const ProblemSpecP& prob_spec, GridP& grid,
   }
   d_ice->attachPort("output", dataArchiver);
   
-/*`==========TESTING==========*/
   SolverInterface* solver = dynamic_cast<SolverInterface*>(getPort("solver"));
   if(!solver){
     throw InternalError("ICE needs a solver component to work");
   }
   d_ice->attachPort("solver", solver); 
-/*==========TESTING==========`*/
   d_ice->setICELabel(Ilb);
   d_ice->problemSetup(prob_spec, grid, d_sharedState);
   //__________________________________
@@ -278,15 +276,7 @@ MPMICE::scheduleTimeAdvance(const LevelP& level, SchedulerP& sched, int , int )
                                                                   mpm_matls_sub,
                                                                   all_matls);
   }
-  d_ice->scheduleComputeVel_FC(                   sched, patches, ice_matls_sub,
-                                                                  mpm_matls_sub,
-                                                                  press_matl,
-                                                                  all_matls,
-                                                                  false);
-                                                               
-  d_ice->scheduleAddExchangeContributionToFCVel(  sched, patches, all_matls,
-                                                                  false);
-
+  
   d_ice->scheduleComputeTempFC(                   sched, patches, ice_matls_sub,  
                                                                   mpm_matls_sub,  
                                                                   all_matls);
@@ -295,11 +285,34 @@ MPMICE::scheduleTimeAdvance(const LevelP& level, SchedulerP& sched, int , int )
                                                                   prod_sub,
                                                                   press_matl,
                                                                   all_matls);
-                                                                   
-  d_ice->scheduleComputeDelPressAndUpdatePressCC( sched, patches, press_matl,
+  if(d_ice->d_impICE) {        //  I M P L I C I T                                           
+    d_ice->scheduleImplicitPressureSolve(         sched, level,   patches,       
+                                                                  one_matl,      
+                                                                  press_matl,    
+                                                                  ice_matls_sub,  
+                                                                  mpm_matls_sub, 
+                                                                  all_matls);
+                                                           
+    d_ice->scheduleComputeDel_P(                  sched,  level,  patches,  
+                                                                  one_matl,
+                                                                  press_matl,
+                                                                  all_matls);
+  }                           //  IMPLICIT AND EXPLICIT
+  d_ice->scheduleComputeVel_FC(                 sched, patches,   ice_matls_sub,
+                                                                  mpm_matls_sub,
+                                                                  press_matl,
+                                                                  all_matls,
+                                                                  false);
+                                                               
+  d_ice->scheduleAddExchangeContributionToFCVel(sched, patches,   all_matls,
+                                                                  false);
+                                                                  
+  if(!(d_ice->d_impICE)){       //  E X P L I C I T                                                         
+    d_ice->scheduleComputeDelPressAndUpdatePressCC(sched,patches, press_matl,
                                                                   ice_matls_sub,
                                                                   mpm_matls_sub,
                                                                   all_matls);
+  } 
   
   d_mpm->scheduleExMomInterpolated(               sched, patches, mpm_matls);
   d_mpm->scheduleComputeStressTensor(             sched, patches, mpm_matls);
