@@ -184,7 +184,9 @@ OpenGLCmd(clientData, interp, argc, argv)
     Tk_Window tkwin;
     int attributes[50];
     int idx=0;
-	int tempid;
+#ifdef _WIN32    
+        int tempid;
+#endif
 
     if (argc < 2) {
 	Tcl_AppendResult(interp, "wrong # args:  should be \"",

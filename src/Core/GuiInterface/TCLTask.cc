@@ -73,7 +73,7 @@ namespace SCIRun {
 static Mutex tlock("TCL task lock");
 static Thread* owner;
 static int lock_count;
-static Thread* tcl_task_id;
+//static Thread* tcl_task_id;
 
 static void do_lock()
 {
@@ -153,7 +153,7 @@ void wait_func(void* thatp)
 void
 TCLTask::run()
 {
-    tcl_task_id=Thread::self();
+    //tcl_task_id=Thread::self();
 
     // Acquire the lock before we go into the Tcl/Tk main loop.
     // From now on, it will only get unlocked when the GUI blocks.
