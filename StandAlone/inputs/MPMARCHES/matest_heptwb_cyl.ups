@@ -454,6 +454,8 @@
 
 	<fluidThermalConductivity>0.03</fluidThermalConductivity>
 	<heatExchange>true</heatExchange>
+	<turbulentPrandtNo>0.7</turbulentPrandtNo>
+	<fluidHeatCapacity>1007.</fluidHeatCapacity>
 
     </Multimaterial>
 
