@@ -413,11 +413,13 @@ Gui::drawBackground()
 
   backgroundTex->reset( GL_FLOAT, &((*(activeGui->backgroundImage_))(0,0)) );
   backgroundTexQuad->draw();
+#if 0   // this was for two-screen mode for the demo at SIGGRAPH
   // the following prevents flickering on the second channel
   glViewport(1280,0,1280,1024);
   backgroundTexQuad->draw();
   // reset the viewport after the flickering is fixed
   glViewport(0, 0, 1280, 1024);
+#endif
 }
 
 void
