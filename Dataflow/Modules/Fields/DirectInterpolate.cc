@@ -59,29 +59,43 @@ using std::pair;
 
 class DirectInterpolate : public Module
 {
-  FieldIPort *src_port;
-  FieldIPort *dst_port;
-  FieldOPort *ofp; 
-  GuiString  interpolation_basis_;
-  GuiInt     map_source_to_single_dest_;
-  GuiInt     exhaustive_search_;
-  GuiDouble  exhaustive_search_max_dist_;
-  GuiInt     np_;
-
 public:
   DirectInterpolate(GuiContext* ctx);
   virtual ~DirectInterpolate();
   virtual void execute();
+
+private:
+  GuiString  gInterpolation_basis_;
+  GuiInt     gMap_source_to_single_dest_;
+  GuiInt     gExhaustive_search_;
+  GuiDouble  gExhaustive_search_max_dist_;
+  GuiInt     gNp_;
+
+  std::string  interpolation_basis_;
+  int     map_source_to_single_dest_;
+  int     exhaustive_search_;
+  double  exhaustive_search_max_dist_;
+  int     np_;
+
+  FieldHandle fHandle_;
+
+  int sfGeneration_;
+  int dfGeneration_;
+
+  bool error_;
 };
 
 DECLARE_MAKER(DirectInterpolate)
 DirectInterpolate::DirectInterpolate(GuiContext* ctx) : 
   Module("DirectInterpolate", ctx, Filter, "FieldsData", "SCIRun"),
-  interpolation_basis_(ctx->subVar("interpolation_basis")),
-  map_source_to_single_dest_(ctx->subVar("map_source_to_single_dest")),
-  exhaustive_search_(ctx->subVar("exhaustive_search")),
-  exhaustive_search_max_dist_(ctx->subVar("exhaustive_search_max_dist")),
-  np_(ctx->subVar("np"))
+  gInterpolation_basis_(ctx->subVar("interpolation_basis")),
+  gMap_source_to_single_dest_(ctx->subVar("map_source_to_single_dest")),
+  gExhaustive_search_(ctx->subVar("exhaustive_search")),
+  gExhaustive_search_max_dist_(ctx->subVar("exhaustive_search_max_dist")),
+  gNp_(ctx->subVar("np")),
+  sfGeneration_(-1),
+  dfGeneration_(-1),
+  error_(false)
 {
 }
 
@@ -92,58 +106,112 @@ DirectInterpolate::~DirectInterpolate()
 void
 DirectInterpolate::execute()
 {
-  dst_port = (FieldIPort *)get_iport("Destination");
-  FieldHandle fdst_h;
+  update_state(NeedData);
 
-  if (!dst_port) {
-    error("Unable to initialize iport 'Destination'.");
-    return;
-  }
-  if (!(dst_port->get(fdst_h) && fdst_h.get_rep()))
-  {
-    return;
-  }
-  if (fdst_h->basis_order() == -1)
-  {
-    warning("No data basis in destination to interpolate to.");
-    return;
-  }
-
-  src_port = (FieldIPort *)get_iport("Source");
-  FieldHandle fsrc_h;
-  if(!src_port) {
+  FieldIPort * sfield_port = (FieldIPort *)get_iport("Source");
+  FieldHandle sfHandle;
+  if(!sfield_port) {
     error("Unable to initialize iport 'Source'.");
     return;
   }
-  if (!(src_port->get(fsrc_h) && fsrc_h.get_rep()))
-  {
+  if (!(sfield_port->get(sfHandle) && sfHandle.get_rep())) {
+    error( "NoSource field handle or representation" );
     return;
   }
-  if (!fsrc_h->basis_order() == -1)
-  {
+  if (!sfHandle->basis_order() == -1) {
     warning("No data basis in Source field to interpolate from.");
     return;
   }
 
-  CompileInfoHandle ci =
-    DirectInterpAlgo::get_compile_info(fsrc_h->get_type_description(),
-				       fsrc_h->order_type_description(),
-				       fdst_h->get_type_description(),
-				       fdst_h->order_type_description());
-  Handle<DirectInterpAlgo> algo;
-  if (!module_dynamic_compile(ci, algo)) return;
+  FieldIPort *dfield_port = (FieldIPort *)get_iport("Destination");
+  FieldHandle dfHandle;
 
-  ofp = (FieldOPort *)get_oport("Interpolant");
-  if(!ofp) {
-    error("Unable to initialize oport 'Interpolant'.");
+  if (!dfield_port) {
+    error("Unable to initialize iport 'Destination'.");
     return;
   }
-  fsrc_h->mesh()->synchronize(Mesh::LOCATE_E);
-  ofp->send(algo->execute(fsrc_h, fdst_h->mesh(), fdst_h->basis_order(),
-			  interpolation_basis_.get(),
-			  map_source_to_single_dest_.get(),
-			  exhaustive_search_.get(),
-			  exhaustive_search_max_dist_.get(), np_.get()));
+  if (!(dfield_port->get(dfHandle) && dfHandle.get_rep())) {
+    error( "No Destination field handle or representation" );
+    return;
+  }
+  if (dfHandle->basis_order() == -1) {
+    warning("No data basis in destination to interpolate to.");
+    return;
+  }
+
+  bool update = false;
+
+  // Check to see if the source field has changed.
+  if( sfGeneration_ != sfHandle->generation ) {
+    sfGeneration_ = sfHandle->generation;
+    update = true;
+  }
+
+  // Check to see if the destination field has changed.
+  if( dfGeneration_ != dfHandle->generation ) {
+    dfGeneration_ = dfHandle->generation;
+    update = true;
+  }
+
+  std::string interpolation_basis = gInterpolation_basis_.get();
+  int map_source_to_single_dest = gMap_source_to_single_dest_.get();
+  int exhaustive_search = gExhaustive_search_.get();
+  double exhaustive_search_max_dist = gExhaustive_search_max_dist_.get();
+  int np = gNp_.get();
+  
+  if( interpolation_basis_ != interpolation_basis ||
+      map_source_to_single_dest_  != map_source_to_single_dest  ||
+      exhaustive_search_ != exhaustive_search ||
+      exhaustive_search_max_dist_     != exhaustive_search_max_dist ||
+      np_        != np ) {
+
+    interpolation_basis_ = interpolation_basis;
+    map_source_to_single_dest_  = map_source_to_single_dest;
+    exhaustive_search_ = exhaustive_search;
+    exhaustive_search_max_dist_     = exhaustive_search_max_dist;
+    np_        = np;
+
+    update = true;
+  }
+
+  if( !fHandle_.get_rep() ||
+      update ||
+      error_ ) {
+
+    error_ = false;
+
+    CompileInfoHandle ci =
+      DirectInterpAlgo::get_compile_info(sfHandle->get_type_description(),
+					 sfHandle->order_type_description(),
+					 dfHandle->get_type_description(),
+					 dfHandle->order_type_description());
+
+    Handle<DirectInterpAlgo> algo;
+    if (!module_dynamic_compile(ci, algo)) return;
+
+    sfHandle->mesh()->synchronize(Mesh::LOCATE_E);
+
+    fHandle_ = algo->execute(sfHandle, dfHandle->mesh(),
+			     dfHandle->basis_order(),
+			     interpolation_basis_,
+			     map_source_to_single_dest_,
+			     exhaustive_search_,
+			     exhaustive_search_max_dist_, np_);
+  }
+
+  // Get a handle to the output field port.
+  if( fHandle_.get_rep() ) {
+    FieldOPort *ofield_port = 
+      (FieldOPort *) get_oport("Interpolant");
+
+    if (!ofield_port) {
+      error("Unable to initialize "+name+"'s oport\n");
+      return;
+    }
+
+    // Send the data downstream
+    ofield_port->send( fHandle_ );
+  }
 }
 
 CompileInfoHandle

@@ -62,43 +62,47 @@ public:
   virtual void execute();
 
 private:
-  // data members
+  GuiDouble                     gStepsize_;
+  GuiDouble                     gTolerance_;
+  GuiInt                        gMaxsteps_;
+  GuiInt                        gDirection_;
+  GuiInt                        gColor_;
+  GuiInt                        gRemove_Colinear_;
+  GuiInt                        gMethod_;
+  GuiInt                        gNp_;
 
-  FieldIPort                    *vfport_;
-  FieldIPort                    *sfport_;
-  FieldOPort                    *oport_;
+  double tolerance_;
+  double stepsize_;
+  int maxsteps_;
+  int direction_;
+  int color_;
+  int remove_colinear_;
+  int method_;
+  int np_;
 
-  FieldHandle                   vfhandle_;
-  FieldHandle                   sfhandle_;
-  FieldHandle                   ohandle_;
+  FieldHandle fHandle_;
 
-  Field                         *vf_;  // vector field
-  Field                         *sf_;  // seed point field
+  int vfGeneration_;
+  int sfGeneration_;
 
-  GuiDouble                     stepsize_;
-  GuiDouble                     tolerance_;
-  GuiInt                        maxsteps_;
-  GuiInt                        direction_;
-  GuiInt                        color_;
-  GuiInt                        remove_colinear_;
-  GuiInt                        method_;
-  GuiInt                        np_;
+  bool error_;
 };
 
 DECLARE_MAKER(StreamLines)
 
 StreamLines::StreamLines(GuiContext* ctx) : 
   Module("StreamLines", ctx, Source, "Visualization", "SCIRun"),
-  vf_(0),
-  sf_(0),
-  stepsize_(ctx->subVar("stepsize")),
-  tolerance_(ctx->subVar("tolerance")),
-  maxsteps_(ctx->subVar("maxsteps")),
-  direction_(ctx->subVar("direction")),
-  color_(ctx->subVar("color")),
-  remove_colinear_(ctx->subVar("remove-colinear")),
-  method_(ctx->subVar("method")),
-  np_(ctx->subVar("np"))
+  gStepsize_(ctx->subVar("stepsize")),
+  gTolerance_(ctx->subVar("tolerance")),
+  gMaxsteps_(ctx->subVar("maxsteps")),
+  gDirection_(ctx->subVar("direction")),
+  gColor_(ctx->subVar("color")),
+  gRemove_Colinear_(ctx->subVar("remove-colinear")),
+  gMethod_(ctx->subVar("method")),
+  gNp_(ctx->subVar("np")),
+  vfGeneration_(-1),
+  sfGeneration_(-1),
+  error_(0)
 {
 }
 
@@ -420,91 +424,149 @@ StreamLinesAccAlgo::RayPlaneIntersection(const Point &p, const Vector &dir,
 void
 StreamLines::execute()
 {
-  vfport_ = (FieldIPort*)get_iport("Flow field");
-  sfport_ = (FieldIPort*)get_iport("Seeds");
-  oport_=(FieldOPort*)get_oport("Streamlines");
+  update_state(NeedData);
+
+  FieldIPort* vfport = (FieldIPort*)get_iport("Flow field");
+  FieldHandle vfHandle;
+  Field *vField;  // vector field
   
   //must find vector field input port
-  if (!vfport_) {
+  if (!vfport) {
     error("Unable to initialize iport 'Flow field'.");
     return;
   }
    
-
-  // must find seed field input port
-  if (!sfport_) {
-    error("Unable to initialize iport 'Seeds'.");
-    return;
-  }
-
-  // must find output port
-  if (!oport_) {
-    error("Unable to initialize oport 'Streamlines'.");
-    return;
-  }
-  
   // the vector field input is required
-  if (!vfport_->get(vfhandle_) || !(vf_ = vfhandle_.get_rep())) {
+  if (!vfport->get(vfHandle) || !(vField = vfHandle.get_rep())) {
+    error( "No Vector field handle or representation" );
     return;
   }
   
   // Check that the flow field input is a vector field.
-  VectorFieldInterfaceHandle vfi = vf_->query_vector_interface(this);
+  VectorFieldInterfaceHandle vfi = vField->query_vector_interface(this);
   if (!vfi.get_rep()) {
-    error("FlowField is not a Vector field.  Exiting.");
+    error("FlowField is not a Vector field.");
+    return;
+  }
+
+
+  FieldIPort* sfport = (FieldIPort*)get_iport("Seeds");
+  FieldHandle sfHandle;
+  Field *sField;  // seed point field
+
+  // must find seed field input port
+  if (!sfport) {
+    error("Unable to initialize iport 'Seeds'.");
     return;
   }
 
   // the seed field input is required
-  if (!sfport_->get(sfhandle_) || !(sf_ = sfhandle_.get_rep()))
-    return;
-
-  tolerance_.reset();
-  double tolerance = tolerance_.get();
-  stepsize_.reset();
-  double stepsize = stepsize_.get();
-  maxsteps_.reset();
-  int maxsteps = maxsteps_.get();
-  direction_.reset();
-  int direction = direction_.get();
-  color_.reset();
-  int color = color_.get();
-
-  if (method_.get() == 5 && vfhandle_->basis_order() != 0)
-  {
-    error("The Cell Walk method only works for cell centered FlowFields.");
+  if (!sfport->get(sfHandle) || !(sField = sfHandle.get_rep())) {
+    error( "No Seed field handle or representation" );
     return;
   }
 
-  const TypeDescription *smtd = sf_->mesh()->get_type_description();
-  const TypeDescription *sltd = sf_->order_type_description();
-  if (method_.get() != 5)
-  {
-    CompileInfoHandle ci = StreamLinesAlgo::get_compile_info(smtd, sltd); 
-    Handle<StreamLinesAlgo> algo;
-    if (!module_dynamic_compile(ci, algo)) return;
-    vf_->mesh()->synchronize(Mesh::LOCATE_E);
+  bool update = false;
 
-    oport_->send(algo->execute(sf_->mesh(), vfi,
-			       tolerance, stepsize, maxsteps, direction, color,
-			       remove_colinear_.get(),
-			       method_.get(), CLAMP(np_.get(), 1, 256)));
+  // Check to see if the input field has changed.
+  if( vfGeneration_ != vfHandle->generation )
+  {
+    vfGeneration_ = vfHandle->generation;
+    update = true;
   }
-  else
-  {
-    const TypeDescription *vtd = vfhandle_->get_type_description();
-    CompileInfoHandle aci =
-      StreamLinesAccAlgo::get_compile_info(smtd, sltd, vtd);
-    Handle<StreamLinesAccAlgo> accalgo;
-    if (!module_dynamic_compile(aci, accalgo)) return;
-    vf_->mesh()->synchronize(Mesh::LOCATE_E);
 
-    oport_->send(accalgo->execute(sf_->mesh(), vfhandle_, maxsteps,
+  // Check to see if the input field has changed.
+  if( sfGeneration_ != sfHandle->generation )
+  {
+    sfGeneration_ = sfHandle->generation;
+    update = true;
+  }
+
+  double tolerance = gTolerance_.get();
+  double stepsize = gStepsize_.get();
+  int maxsteps = gMaxsteps_.get();
+  int direction = gDirection_.get();
+  int color = gColor_.get();
+  int remove_colinear = gRemove_Colinear_.get();
+  int method = gMethod_.get();
+  int np = gNp_.get();
+  
+  if( tolerance_ != tolerance ||
+      stepsize_  != stepsize  ||
+      maxsteps_  != maxsteps  ||
+      direction_ != direction ||
+      color_     != color ||
+      remove_colinear_ != remove_colinear  ||
+      method_    != method  ||
+      np_        != np ) {
+
+    tolerance_ = tolerance;
+    stepsize_  = stepsize;
+    maxsteps_  = maxsteps;
+    direction_ = direction;
+    color_     = color;
+    remove_colinear_ = remove_colinear;
+    method_    = method;
+    np_        = np;
+
+    update = true;
+  }
+
+  if( !fHandle_.get_rep() ||
+      update ||
+      error_ ) {
+
+    error_ = false;
+
+    const TypeDescription *smtd = sField->mesh()->get_type_description();
+    const TypeDescription *sltd = sField->order_type_description();
+
+    if (method_ == 5 ) {
+
+      if( vfHandle->basis_order() != 0) {
+	error("The Cell Walk method only works for cell centered FlowFields.");
+	error_ = true;
+	return;
+      }
+
+      const TypeDescription *vtd = vfHandle->get_type_description();
+      CompileInfoHandle aci =
+	StreamLinesAccAlgo::get_compile_info(smtd, sltd, vtd);
+      Handle<StreamLinesAccAlgo> accalgo;
+      if (!module_dynamic_compile(aci, accalgo)) return;
+      vField->mesh()->synchronize(Mesh::LOCATE_E);
+      
+      fHandle_ = accalgo->execute(sField->mesh(), vfHandle, maxsteps,
 				  direction, color,
-				  remove_colinear_.get()));
+				  remove_colinear_);
+    } else {
+      CompileInfoHandle ci = StreamLinesAlgo::get_compile_info(smtd, sltd); 
+      Handle<StreamLinesAlgo> algo;
+      if (!module_dynamic_compile(ci, algo)) return;
+      vField->mesh()->synchronize(Mesh::LOCATE_E);
+      
+      fHandle_ = algo->execute(sField->mesh(), vfi,
+			       tolerance, stepsize, maxsteps,
+			       direction, color,
+			       remove_colinear_,
+			       method_, CLAMP(np_, 1, 256));
+    }
+  }
+   
+  // Get a handle to the output field port.
+  if( fHandle_.get_rep() ) {
+    FieldOPort *ofield_port = 
+      (FieldOPort *) get_oport("Streamlines");
+
+    if (!ofield_port) {
+      error("Unable to initialize "+name+"'s oport\n");
+      return;
+    }
+
+    // Send the data downstream
+    ofield_port->send( fHandle_ );
   }
 }
-
 
 CompileInfoHandle
 StreamLinesAlgo::get_compile_info(const TypeDescription *msrc,
