@@ -187,7 +187,8 @@ ManageFieldData::execute()
     }
     CompileInfoHandle ci_mesh =
       ManageFieldDataAlgoMesh::
-      get_compile_info(ifieldhandle->get_type_description(), matrix_svt_flag);
+      get_compile_info(ifieldhandle->get_type_description(),
+		       matrix_svt_flag, svt_flag);
     Handle<ManageFieldDataAlgoMesh> algo_mesh;
     if (!module_dynamic_compile(ci_mesh, algo_mesh)) return;
 
@@ -262,7 +263,7 @@ ManageFieldDataAlgoField::get_compile_info(const TypeDescription *fsrc,
 
 CompileInfoHandle
 ManageFieldDataAlgoMesh::get_compile_info(const TypeDescription *fsrc,
-					  int svt_flag)
+					  int svt_flag, int svt2)
 {
   // Use cc_to_h if this is in the .cc file, otherwise just __FILE__
   static const string include_path(TypeDescription::cc_to_h(__FILE__));
@@ -290,6 +291,11 @@ ManageFieldDataAlgoMesh::get_compile_info(const TypeDescription *fsrc,
 
   string::size_type loc = fsrc->get_name().find_first_of("<");
   string fout = fsrc->get_name().substr(0, loc) + "<" + extension2 + "> ";
+  if (svt_flag == 0 && svt2 == 0)
+  {
+    // Preserve file type if is scalar field.
+    fout = fsrc->get_name();
+  }
 
   CompileInfo *rval = 
     scinew CompileInfo(base_class_name + extension + "." +
