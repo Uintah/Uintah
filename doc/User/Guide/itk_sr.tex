@@ -746,7 +746,7 @@ LevelSet segmentation filters---the user can visualize the
 segmentation process in real-time.
 
 Usually data are sent only when a calculation is complete.  When
-allowed, an output port will send data every $n_th$ iteration of a
+allowed, an output port will send data every $n^{th}$ iteration of a
 calculation.
 
 The \xmlstarttag{outputs} element contains one or more
@@ -785,11 +785,11 @@ that determines if the output will generate intermediate data; and a
 text entry widget specifying the number of iterations between
 sends of intermediate data.
 
-For an example see:
+For an example see sci_ThresholdSegmentationLevelSetImageFilter.xml in
+the directory:
 
 \begin{alltt}
-  src/Packages/Insight/Dataflow/Modules/Filters/XML/\
-sci_ThresholdSegmentationLevelSetImageFilter.xml
+  src/Packages/Insight/Dataflow/Modules/Filters/XML
 \end{alltt}
 
 \subsubsection{Element \xmlstarttag{includes}}
