@@ -1,8 +1,6 @@
 #include "TensorFieldOperator.h"
 #include <math.h>
 #include <Core/Malloc/Allocator.h>
-#include <Packages/Uintah/Core/Datatypes/LevelField.h>
-#include <Packages/Uintah/Core/Datatypes/LevelMesh.h>
 #include <Core/Datatypes/LatVolMesh.h>
 #include <Core/Datatypes/LatticeVol.h>
 #include <Core/Geometry/BBox.h>
@@ -53,8 +51,8 @@ void TensorFieldOperator::execute(void) {
 
     
   LatticeVol<double>  *scalarField = 0;  
-  if( LevelField<Matrix3> *tensorField =
-      dynamic_cast<LevelField<Matrix3>*>(hTF.get_rep())) {
+  if( LatticeVol<Matrix3> *tensorField =
+      dynamic_cast<LatticeVol<Matrix3>*>(hTF.get_rep())) {
 
     scalarField = scinew LatticeVol<double>(hTF->data_at());
 

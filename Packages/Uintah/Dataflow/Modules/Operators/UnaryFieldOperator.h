@@ -5,8 +5,7 @@
 #include <Core/Geometry/IntVector.h>
 #include <Core/Thread/Thread.h>
 #include <Core/Thread/Semaphore.h>
-#include <Packages/Uintah/Core/Grid/ShareAssignArray3.h>
-
+#include <Packages/Uintah/Core/Disclosure/TypeUtils.h>
 
 namespace Uintah {
 using namespace SCIRun;
@@ -64,48 +63,25 @@ void UnaryFieldOperator::computeScalars(Field* field,
   typename ScalarField::mesh_handle_type smh =
     scalarField->get_typed_mesh();
  
-  if( field->get_type_name(0) != "LevelField"){
-    if( field->data_at() == Field::CELL){
-      typename Field::mesh_type::Cell::iterator it; mh->begin(it);
-      typename Field::mesh_type::Cell::iterator end; mh->end(end);
-      typename ScalarField::mesh_type::Cell::iterator s_it; smh->begin(s_it);
-      for( ; it != end; ++it, ++s_it){
-	scalarField->fdata()[*s_it] = op(field->fdata()[*it]);
-      }
-    } else {
-      typename Field::mesh_type::Node::iterator it; mh->begin(it);
-      typename Field::mesh_type::Node::iterator end; mh->end(end);
-      typename ScalarField::mesh_type::Node::iterator s_it; smh->begin(s_it);
-      
-      for( ; it != end; ++it, ++s_it){
-	scalarField->fdata()[*s_it] = op(field->fdata()[*it]);
-      }
-    }  
-  } else {
-    int max_workers = Max(Thread::numProcessors()/3, 4);
-    Semaphore* thread_sema = scinew Semaphore( "scalar operator semaphore",
-					       max_workers); 
-    typedef typename Field::value_type Data;
-    vector<ShareAssignArray3<Data> >& data = field->fdata();
-    vector<ShareAssignArray3<Data> >::iterator it = data.begin();
-    vector<ShareAssignArray3<Data> >::iterator end = data.end();
-    IntVector offset( (*it).getLowIndex() );
-    for(;it != end; ++it) {
-      thread_sema->down();
-      Thread *thrd = 
-	scinew Thread(
-		      scinew OperatorThread< Data, ScalarField, Op >
-		      ( *it, scalarField, offset, op, thread_sema ),
-		      "scalar operator worker");
-      thrd->detach();
+  if( field->data_at() == Field::CELL){
+    typename Field::mesh_type::Cell::iterator it; mh->begin(it);
+    typename Field::mesh_type::Cell::iterator end; mh->end(end);
+    typename ScalarField::mesh_type::Cell::iterator s_it; smh->begin(s_it);
+    for( ; it != end; ++it, ++s_it){
+      scalarField->fdata()[*s_it] = op(field->fdata()[*it]);
     }
-    thread_sema->down(max_workers);
-    if(thread_sema) delete thread_sema;
-  }
+  } else {
+    typename Field::mesh_type::Node::iterator it; mh->begin(it);
+    typename Field::mesh_type::Node::iterator end; mh->end(end);
+    typename ScalarField::mesh_type::Node::iterator s_it; smh->begin(s_it);
+    
+    for( ; it != end; ++it, ++s_it){
+      scalarField->fdata()[*s_it] = op(field->fdata()[*it]);
+    }
+  }  
 }
 
-}
-
+} // End namespace Uintah
 #endif // __OPERATORS_UNARYFIELDOPERATOR_H__
 
 

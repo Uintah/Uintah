@@ -2,11 +2,10 @@
 #include "ScalarOperatorFunctors.h"
 #include <math.h>
 #include <Core/Malloc/Allocator.h>
-#include <Packages/Uintah/Core/Datatypes/LevelField.h>
-#include <Packages/Uintah/Core/Datatypes/LevelMesh.h>
 #include <Core/Datatypes/LatVolMesh.h>
 #include <Core/Datatypes/LatticeVol.h>
 #include <Core/Geometry/BBox.h>
+#include <Packages/Uintah/Core/Disclosure/TypeUtils.h>
 #include <iostream>
 //#include <SCICore/Math/Mat.h>
 using std::cerr;
@@ -41,7 +40,7 @@ void ScalarFieldAverage::execute(void) {
     return;
   } else if ( hTF->get_type_name(1) != "double" &&
 	      hTF->get_type_name(1) != "float" &&
-	      hTF->get_type_name(1) != "long"){
+	      hTF->get_type_name(1) != "long64"){
     std::cerr<<"Input is not a Scalar field.  type = "<<
       hTF->get_type_name(1)<<"\n";
     return;
@@ -96,18 +95,18 @@ void ScalarFieldAverage::execute(void) {
 
 void ScalarFieldAverage::fillField( FieldHandle fh )
 {
-  if( LevelField<double> *inField =
-      dynamic_cast<LevelField<double>*>(fh.get_rep())) {
+  if( LatticeVol<double> *inField =
+      dynamic_cast<LatticeVol<double>*>(fh.get_rep())) {
     initField( inField, aveField);
     computeScalars( inField, aveField, NoOp() ); 
     computeAverages( inField, aveField); 
-  } else if( LevelField<float> *inField =
-      dynamic_cast<LevelField<float>*>(fh.get_rep())) {
+  } else if( LatticeVol<float> *inField =
+      dynamic_cast<LatticeVol<float>*>(fh.get_rep())) {
     initField( inField, aveField);
     computeScalars( inField, aveField, NoOp() ); 
     computeAverages( inField, aveField); 
-  } else if( LevelField<long> *inField =
-      dynamic_cast<LevelField<long>*>(fh.get_rep())) {
+  } else if( LatticeVol<long64> *inField =
+      dynamic_cast<LatticeVol<long64>*>(fh.get_rep())) {
     initField( inField, aveField);
     computeScalars( inField, aveField, NoOp() ); 
     computeAverages( inField, aveField); 
@@ -116,14 +115,14 @@ void ScalarFieldAverage::fillField( FieldHandle fh )
 
 void ScalarFieldAverage::averageField( FieldHandle fh)
 {
-  if( LevelField<double> *inField =
-      dynamic_cast<LevelField<double>*>(fh.get_rep())) {
+  if( LatticeVol<double> *inField =
+      dynamic_cast<LatticeVol<double>*>(fh.get_rep())) {
     computeAverages( inField, aveField); 
-  } else if( LevelField<float> *inField =
-      dynamic_cast<LevelField<float>*>(fh.get_rep())) {
+  } else if( LatticeVol<float> *inField =
+      dynamic_cast<LatticeVol<float>*>(fh.get_rep())) {
     computeAverages( inField, aveField); 
-  } else if( LevelField<long> *inField =
-      dynamic_cast<LevelField<long>*>(fh.get_rep())) {
+  } else if( LatticeVol<long64> *inField =
+      dynamic_cast<LatticeVol<long64>*>(fh.get_rep())) {
     computeAverages( inField, aveField); 
   }
 }
