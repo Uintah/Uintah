@@ -171,7 +171,8 @@ DEALINGS IN THE SOFTWARE.
         relative to each other in 3-space.
       </para>
     </section><!-- end:Viewer Layout -->    
-    <section><title>The 2D Viewers</title>
+    <section id="sec.2dviewers">
+      <title>The 2D Viewers</title>
       <para>
         The remaining viewer windows display 2D images of the individual
         slice planes and can be used to change the location of the slice planes
@@ -505,7 +506,7 @@ DEALINGS IN THE SOFTWARE.
 	      volume rendering.
 	    </para>
 	    <para>
-	      The Edit Transfer Function Window shows a histogram <xref linkend="fig.hist"/>
+	      The Edit Transfer Function Window shows a histogram <xref linkend="fig.histo"/>
 	      of the data values contained in the dataset.
 	    </para>
 	    <figure id="fig.histo"><title>Histogram of values in dataset</title>
