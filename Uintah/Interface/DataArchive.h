@@ -5,6 +5,8 @@
 #include <Uintah/Grid/NCVariable.h>
 #include <Uintah/Grid/GridP.h>
 #include <SCICore/Thread/Mutex.h>
+#include <SCICore/Thread/Time.h>
+#include <SCICore/Util/DebugStream.h>
 #include <string>
 #include <vector>
 
@@ -20,10 +22,15 @@
 #ifdef __sgi
 #pragma reset woff 1375
 #endif
+#include <fcntl.h>
+#include <unistd.h>
 
 namespace Uintah {
    class Patch;
    using SCICore::Thread::Mutex;
+   using SCICore::Thread::Time;
+   using namespace PSECore::XMLUtil;
+   using SCICore::Util::DebugStream;
    
    /**************************************
      
@@ -171,12 +178,138 @@ private:
 
    DOM_Node findVariable(const string& name, const Patch* patch,
 			 int matl, double time, XMLURL& url);
+
+   static DebugStream dbg;
 };
+
+template<class T>
+void DataArchive::query( ParticleVariable< T >& var, const std::string& name,
+			 int matlIndex,	const Patch* patch, double time )
+{
+   double tstart = Time::currentSeconds();
+   XMLURL url;
+   DOM_Node vnode = findVariable(name, patch, matlIndex, time, url);
+   if(vnode == 0){
+      cerr << "VARIABLE NOT FOUND: " << name << ", index " << matlIndex << ", patch " << patch->getID() << ", time " << time << '\n';
+      throw InternalError("Variable not found");
+   }
+   DOM_NamedNodeMap attributes = vnode.getAttributes();
+   DOM_Node typenode = attributes.getNamedItem("type");
+   if(typenode == 0)
+      throw InternalError("Variable doesn't have a type");
+   string type = toString(typenode.getNodeValue());
+   const TypeDescription* td = TypeDescription::lookupType(type);
+   ASSERT(td == ParticleVariable<T>::getTypeDescription());
+   int numParticles;
+   if(!get(vnode, "numParticles", numParticles))
+      throw InternalError("Cannot get numParticles");
+   ParticleSubset* psubset = scinew ParticleSubset(scinew ParticleSet(numParticles),
+						   true, matlIndex, patch);
+   var.allocate(psubset);
+   long start;
+   if(!get(vnode, "start", start))
+      throw InternalError("Cannot get start");
+   long end;
+   if(!get(vnode, "end", end))
+      throw InternalError("Cannot get end");
+   string filename;
+   if(!get(vnode, "filename", filename))
+      throw InternalError("Cannot get filename");
+   XMLURL dataurl(url, filename.c_str());
+   if(dataurl.getProtocol() != XMLURL::File)
+      throw InternalError(string("Cannot read over: ")
+			  +toString(dataurl.getProtocolName()));
+   string datafile(toString(dataurl.getPath()));
+
+   int fd = open(datafile.c_str(), O_RDONLY);
+   if(fd == -1)
+      throw ErrnoException("DataArchive::query (open call)", errno);
+   off64_t ls = lseek64(fd, start, SEEK_SET);
+   if(ls == -1)
+      throw ErrnoException("DataArchive::query (lseek64 call)", errno);
+
+   InputContext ic(fd, start);
+   var.read(ic);
+   ASSERTEQ(end, ic.cur);
+   int s = close(fd);
+   if(s == -1)
+      throw ErrnoException("DataArchive::query (read call)", errno);
+   dbg << "DataArchive::query(ParticleVariable) completed in " << Time::currentSeconds()-tstart << " seconds\n";
+}
+   
+template<class T>
+void DataArchive::query(ParticleVariable< T >& var, const std::string& name,
+			int matlIndex, particleId id,
+			double min, double max)
+{
+   cerr << "DataArchive::query not finished\n";
+}
+
+template<class T>
+void DataArchive::query( NCVariable< T >& var, const std::string& name,
+			 int matlIndex, const Patch* patch, double time )
+{
+   double tstart = Time::currentSeconds();
+   XMLURL url;
+   DOM_Node vnode = findVariable(name, patch, matlIndex, time, url);
+   if(vnode == 0){
+      cerr << "VARIABLE NOT FOUND: " << name << ", index " << matlIndex << ", patch " << patch->getID() << ", time " << time << '\n';
+      throw InternalError("Variable not found");
+   }
+   DOM_NamedNodeMap attributes = vnode.getAttributes();
+   DOM_Node typenode = attributes.getNamedItem("type");
+   if(typenode == 0)
+      throw InternalError("Variable doesn't have a type");
+   string type = toString(typenode.getNodeValue());
+   const TypeDescription* td = TypeDescription::lookupType(type);
+   ASSERT(td == NCVariable<T>::getTypeDescription());
+   var.allocate(patch->getNodeLowIndex(), patch->getNodeHighIndex());
+   long start;
+   if(!get(vnode, "start", start))
+      throw InternalError("Cannot get start");
+   long end;
+   if(!get(vnode, "end", end))
+      throw InternalError("Cannot get end");
+   string filename;
+   if(!get(vnode, "filename", filename))
+      throw InternalError("Cannot get filename");
+   XMLURL dataurl(url, filename.c_str());
+   if(dataurl.getProtocol() != XMLURL::File)
+      throw InternalError(string("Cannot read over: ")
+			  +toString(dataurl.getProtocolName()));
+   string datafile(toString(dataurl.getPath()));
+
+   int fd = open(datafile.c_str(), O_RDONLY);
+   if(fd == -1)
+      throw ErrnoException("DataArchive::query (open call)", errno);
+   off64_t ls = lseek64(fd, start, SEEK_SET);
+   if(ls == -1)
+      throw ErrnoException("DataArchive::query (lseek64 call)", errno);
+
+   InputContext ic(fd, start);
+   var.read(ic);
+   ASSERTEQ(end, ic.cur);
+   int s = close(fd);
+   if(s == -1)
+      throw ErrnoException("DataArchive::query (read call)", errno);
+   dbg << "DataArchive::query(NCVariable) completed in " << Time::currentSeconds()-tstart << " seconds\n";
+}
+
+template<class T>
+void DataArchive::query( NCVariable< T >&, const std::string& name, int matlIndex,
+			const IntVector& index,
+			double min, double max)
+{
+   cerr << "DataArchive::query not finished\n";
+}
 
 } // end namespace Uintah
 
 //
 // $Log$
+// Revision 1.7  2000/06/27 18:28:35  bigler
+// Steve did some fixing up and moving around
+//
 // Revision 1.6  2000/06/15 21:57:22  sparker
 // Added multi-patch support (bugzilla #107)
 // Changed interface to datawarehouse for particle data
