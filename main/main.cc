@@ -27,6 +27,7 @@
  *  Copyright (C) 1999 U of U
  */
 
+#include <sci_defs.h>
 #include <Dataflow/Network/Network.h>
 #include <Dataflow/Network/NetworkEditor.h>
 #include <Dataflow/Network/PackageDB.h>
@@ -34,23 +35,17 @@
 #include <Core/GuiInterface/TCLTask.h>
 #include <Core/GuiInterface/TCLInterface.h>
 #include <Core/Thread/Thread.h>
-#include <Core/Util/sci_system.h>
-#include <Core/Util/RCParse.h>
+#include <Core/Util/scirun_env.h>
+#include <sys/stat.h>
+
 #if defined(__APPLE__)
 #  include <Core/Datatypes/MacForceLoad.h>
 #endif
-
-#include <sci_defs.h>
 
 #include <iostream>
 using std::cerr;
 using std::cout;
 using std::endl;
-
-#include <sys/types.h>
-#include <sys/stat.h>
-#include <fcntl.h>
-#include <unistd.h>
 
 #ifdef _WIN32
 #include <afxwin.h>
@@ -62,19 +57,6 @@ using std::endl;
 
 using namespace SCIRun;
 
-
-namespace SCIRun {
-extern env_map scirunrc;             // contents of .scirunrc
-}
-
-#ifndef PSECORETCL
-#error You must set PSECORETCL to the Dataflow/Tcl path
-#endif
-
-#ifndef SCICORETCL
-#error You must set SCICORETCL to the Core/Tcl path
-#endif
-
 #ifndef LOAD_PACKAGE
 #error You must set a LOAD_PACKAGE or life is pretty dull
 #endif
@@ -82,7 +64,6 @@ extern env_map scirunrc;             // contents of .scirunrc
 #ifndef ITCL_WIDGETS
 #error You must set ITCL_WIDGETS to the iwidgets/scripts path
 #endif
-
 
 static bool execute_flag = false;
 
@@ -166,6 +147,8 @@ public:
 };
 
 
+
+
 int
 main(int argc, char *argv[] )
 {
@@ -175,10 +158,6 @@ main(int argc, char *argv[] )
   macForceLoad(); // Attempting to force load (and thus instantiation of
 	          // static constructors) Core/Datatypes;
 #endif
-
-  // determine if we are loading an app
-  char* app = 0;
-  app = strstr(argv[startnetno],".app");
 
   // Start up TCL...
   TCLTask* tcl_task = new TCLTask(1, argv);  // Discard argv on Tk side.
@@ -190,25 +169,21 @@ main(int argc, char *argv[] )
   GuiInterface* gui = new TCLInterface();
 
   // Set up the TCL environment to find core components
-  string result;
-  gui->eval("global PSECoreTCL CoreTCL",result);
-  gui->eval("set DataflowTCL "PSECORETCL,result);
-  gui->eval("set CoreTCL "SCICORETCL,result);
-  gui->eval("set SCIRUN_SRCDIR "SCIRUN_SRCDIR,result);
-  gui->eval("set SCIRUN_OBJDIR "SCIRUN_OBJDIR,result);
-  gui->eval("lappend auto_path "SCICORETCL,result);
-  gui->eval("lappend auto_path "PSECORETCL,result);
-  gui->eval("lappend auto_path "ITCL_WIDGETS,result);
-  gui->eval("global scirun2", result);
-  gui->eval("set scirun2 0", result);
+  const string DataflowTCLpath = SCIRUN_SRCDIR+string("/Dataflow/GUI");
+  const string CoreTCLpath = SCIRUN_SRCDIR+string("/Core/GUI");
+  gui->execute("global CoreTCL SCIRUN_SRCDIR SCIRUN_OBJDIR scirun2");
+  gui->execute("set CoreTCL "+CoreTCLpath);
+  gui->execute("set SCIRUN_SRCDIR "SCIRUN_SRCDIR);
+  gui->execute("set SCIRUN_OBJDIR "SCIRUN_OBJDIR);
+  gui->execute("set scirun2 0");
+  gui->execute("lappend auto_path "+CoreTCLpath);
+  gui->execute("lappend auto_path "+DataflowTCLpath);
+  gui->execute("lappend auto_path "ITCL_WIDGETS);
 
   // Create initial network
   packageDB = new PackageDB(gui);
-
   Network* net=new Network();
-
   Scheduler* sched_task=new Scheduler(net);
-
   new NetworkEditor(net, gui);
 
   // Activate the scheduler.  Arguments and return
@@ -217,91 +192,17 @@ main(int argc, char *argv[] )
   t2->setDaemon(true);
   t2->detach();
 
-  {
-    ostringstream str;
-    
-    bool foundrc=false;
-    str << "Parsing .scirunrc... ";
-  
-    // check the local directory
-    foundrc = RCParse(".scirunrc",SCIRun::scirunrc);
-    if (foundrc)
-      str << "./.scirunrc" << endl;
-
-    // check the BUILD_DIR
-    if (!foundrc) {
-      foundrc = RCParse((string(OBJTOP) + "/.scirunrc").c_str(),
-			SCIRun::scirunrc);
-      if (foundrc)
-	str << OBJTOP << "/.scirunrc" << endl;
-    }
-
-    // check the user's home directory
-    if (!foundrc) {
-      char* HOME = getenv("HOME");
-  
-      if (HOME) {
-	string home(HOME);
-	home += "/.scirunrc";
-	foundrc = RCParse(home.c_str(),SCIRun::scirunrc);
-	if (foundrc)
-	  str << home << endl;
-      }
-    }
-
-    // check the INSTALL_DIR
-    if (!foundrc) {
-      foundrc = RCParse((string(SRCTOP) + "/.scirunrc").c_str(),
-			SCIRun::scirunrc);
-      if (foundrc)
-	str << SRCTOP << "/.scirunrc" << endl;
-    }
-
-    // Since the dot file is optional report only if it was found.
-    if( foundrc )
-    {
-      cout << str.str();
-    }
-    else
-    {
-      // check to make sure home directory is writeable.
-      char* HOME = getenv("HOME");
-      if (HOME)
-      {
-	string homerc = string(HOME) + "/.scirunrc";
-	int fd;
-	if ((fd = creat(homerc.c_str(), S_IREAD | S_IWRITE)) != -1)
-	{
-	  close(fd);
-	  unlink(homerc.c_str());
-
-	  string tclresult;
-	  gui->eval("licenseDialog 1", result);
-	  if (result == "cancel")
-	  {
-	    Thread::exitAll(1);
-	  }
-	  else if (result == "accept")
-	  {
-	    if ((fd = creat(homerc.c_str(), S_IREAD | S_IWRITE)) != -1)
-	    {
-	      close(fd);
-	    }
-	  }
-	}
-      }	  
-    }
-  }
+  parse_scirunrc(gui);
 
   // set splash to be main one unless later changed due to a standalone
   packageDB->setSplashPath("main/scisplash.ppm");
 
-  // wait for the main window to display before continuing the startup.
-  // if loading an app, don't wait
-
-  if(!app) {
-    gui->eval("wm deiconify .", result);
-    gui->eval("tkwait visibility .top.globalViewFrame.canvas",result);
+  // determine if we are loading an app
+  if(!strstr(argv[startnetno],".app")) {
+    // wait for the main window to display before continuing the startup.
+    // if loading an app, don't wait    
+    gui->execute("wm deiconify .");
+    gui->execute("tkwait visibility .top.globalViewFrame.canvas");
   } else {
     // set that we are loading an app
     packageDB->setLoadingApp(true);
@@ -314,25 +215,22 @@ main(int argc, char *argv[] )
   // load the packages
   packageDB->loadPackage();
   
+
   // Check the dynamic compilation directory for validity
+  string result;
   gui->eval("getOnTheFlyLibsDir",result);
-  string envarstr = "SCIRUN_ON_THE_FLY_LIBS_DIR=" + result;
-  char *envar = scinew char[envarstr.size()+1];
-  memcpy(envar, envarstr.c_str(), envarstr.size());
-  envar[envarstr.size()] = '\0';
-  putenv(envar);
+  sci_putenv("SCIRUN_ON_THE_FLY_LIBS_DIR",result,gui);
 
   // Activate "File" menu sub-menus once packages are all loaded.
   gui->execute("activate_file_submenus");
 
   if (startnetno)
   {
-    string command = string( "loadnet {" ) + argv[startnetno] + string("}");
-    gui->eval(command.c_str(), result);
+    gui->execute(string("loadnet {")+argv[startnetno]+string("}"));
 
     if (execute_flag || getenv("SCI_REGRESSION_TESTING"))
     {
-      gui->eval("netedit scheduleall", result);
+      gui->execute("netedit scheduleall");
     }
   }
 
