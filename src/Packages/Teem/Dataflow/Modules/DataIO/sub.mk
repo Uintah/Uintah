@@ -24,7 +24,8 @@
 
 include $(SCIRUN_SCRIPTS)/smallso_prologue.mk
 
-INCLUDES += $(HDF5_INCLUDE)
+INCLUDES += $(TEEM_INCLUDE) $(HDF5_INCLUDE)
+
 
 SRCDIR   := Packages/Teem/Dataflow/Modules/DataIO
 
