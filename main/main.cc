@@ -65,9 +65,10 @@ int global_argc;
 char** global_argv;
 
 namespace SCIRun {
-env_map scirunrc;              // contents of .scirunrc are stored here.
-string SCIRUN_SRCTOP(SRCTOP);  // = INSTALL_DIR/SCIRun/src
-string SCIRUN_OBJTOP(OBJTOP);  // = BUILD_DIR
+env_map scirunrc;                            // contents of .scirunrc
+string SCIRUN_SRCTOP(SRCTOP);                // = INSTALL_DIR/SCIRun/src
+string SCIRUN_OBJTOP(OBJTOP);                // = BUILD_DIR
+string DEFAULT_LOAD_PACKAGE(DEF_LOAD_PACK);  // configured packages
 }
 
 #ifndef PSECORETCL
@@ -78,7 +79,7 @@ string SCIRUN_OBJTOP(OBJTOP);  // = BUILD_DIR
 #error You must set SCICORETCL to the Core/Tcl path
 #endif
 
-#ifndef DEFAULT_PACKAGE_PATH
+#ifndef DEF_LOAD_PACK
 #error You must set a DEFAULT_PACKAGE_PATH or life is pretty dull
 #endif
 
@@ -146,13 +147,9 @@ int main(int argc, char** argv)
   // wait for the main window to display before continuing the startup.
   TCL::eval("tkwait visibility .top.globalViewFrame.canvas",result);
 
-  // Load in the default packages
-  //if(getenv("PACKAGE_PATH")!=NULL)
-  env_iter PACKAGE_PATH = scirunrc.find(string("PACKAGE_PATH"));
-  if (PACKAGE_PATH!=scirunrc.end())
-    packageDB.loadPackage((*PACKAGE_PATH).second.c_str());
-  else
-    packageDB.loadPackage(DEFAULT_PACKAGE_PATH);
+
+  // load the packages
+  packageDB.loadPackage();
     
 
   // Now activate the TCL event loop

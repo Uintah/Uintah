@@ -81,9 +81,9 @@ for i in $package; do
  PACKAGE_DIRS=$PACKAGE_DIRS" Packages/$i"
 done
 
-PACKAGE_PATH="\$(SRCTOP_ABS)"
+LOAD_PACKAGE="SCIRun"
 for i in $package; do
- PACKAGE_PATH=$PACKAGE_PATH,"\$(SRCTOP_ABS)/Packages/$i"
+ LOAD_PACKAGE=$LOAD_PACKAGE,"$i"
 done
 
 ##-- check for user supplied tcl paths --------------------------------------
@@ -117,7 +117,7 @@ else
 fi
 
 AC_SUBST(PACKAGE_DIRS)
-AC_SUBST(PACKAGE_PATH)
+AC_SUBST(LOAD_PACKAGE)
 AC_SUBST(EXENAME)
 
 ##-- check for supplied xerces path ------------------------------------------
