@@ -1417,41 +1417,14 @@ void ICE::addExchangeContributionToFCVel(const ProcessorGroup*,
     // Extract the momentum exchange coefficients
     vector<double> b(numMatls);
     DenseMatrix beta(numMatls,numMatls),a(numMatls,numMatls);
-    DenseMatrix K(numMatls,numMatls);
+
+    DenseMatrix K(numMatls,numMatls), junk(numMatls,numMatls);
+
     beta.zero();
     a.zero();
     K.zero();
-
-    // Fill in the exchange matrix with the vector of exchange coefficients.
-    // The vector of exchange coefficients only contains the upper triagonal
-    // matrix
-
-    // Check if the # of coefficients = # of upper triangular terms needed
-    int num_coeff = ((numMatls)*(numMatls) - numMatls)/2;
-    vector<double>::iterator it = d_K_mom.begin();
-
-    if (num_coeff == (int)d_K_mom.size() ) {
-      // Fill in the upper triangular matrix
-      for (int i = 0; i < numMatls; i++ )  {
-      	for (int j = i + 1; j < numMatls; j++) {
-	  K[i][j] = K[j][i] = *it++;
-	}
-      }
-    } else if (2*num_coeff == (int)d_K_mom.size() ) {
-      // Fill in the whole matrix but skip the diagonal terms
-      for (int i = 0; i < numMatls; i++ )  {
-	for (int j = 0; j < numMatls; j++) {
-	  if (i == j) continue;
-	  K[i][j] = *it++;
-	}
-      }
-    } else {
-      cerr << "Number of exchange components don't match " << endl;
-      abort();
-    }
+    getExchangeCoefficients( K, junk);
     
-  
-
     for(int m = 0; m < numMatls; m++) {
       Material* matl = d_sharedState->getMaterial( m );
       int indx = matl->getDWIndex();
@@ -2442,6 +2415,7 @@ void ICE::addExchangeToMomentumAndEnergy(const ProcessorGroup*,
     K.zero();
     H.zero();
     a.zero();
+    getExchangeCoefficients(K, H);
 
     for(int m = 0; m < numMatls; m++)  {
       ICEMaterial* matl = d_sharedState->getICEMaterial( m );
@@ -2460,41 +2434,7 @@ void ICE::addExchangeToMomentumAndEnergy(const ProcessorGroup*,
       new_dw->allocate( vel_CC[m],     lb->vel_CCLabel,         indx, patch);
       new_dw->allocate( Temp_CC[m],    lb->temp_CCLabel,        indx, patch);
       cv[m] = matl->getSpecificHeat();
-    }
-
-    // Fill in the exchange matrix with the vector of exchange coefficients.
-    // The vector of exchange coefficients only contains the upper triagonal
-    // matrix
-
-    // Check if the # of coefficients = # of upper triangular terms needed
-    int num_coeff = ((numMatls)*(numMatls) - numMatls)/2;
-
-    vector<double>::iterator it=d_K_mom.begin(),it1=d_K_heat.begin();
-
-    if (num_coeff == (int)d_K_mom.size() && num_coeff==(int)d_K_heat.size()) {
-      // Fill in the upper triangular matrix
-      for (int i = 0; i < numMatls; i++ )  {
-	for (int j = i + 1; j < numMatls; j++) {
-	  K[i][j] = K[j][i] = *it++;
-	  H[i][j] = H[j][i] = *it1++;
-	}
-      }
-    } else if (2*num_coeff==(int)d_K_mom.size() && 
-	       2*num_coeff == (int)d_K_heat.size()){
-      // Fill in the whole matrix but skip the diagonal terms
-      for (int i = 0; i < numMatls; i++ )  {
-	for (int j = 0; j < numMatls; j++) {
-	  if (i == j) continue;
-	  K[i][j] = *it++;
-	  H[i][j] = *it1++;
-	}
-      }
-    } else {
-      cerr << "Number of exchange components don't match " << endl;
-      abort();
-    }
-
-    
+    }  
 
     //__________________________________
     // Convert vars. flux -> primitive 
@@ -3655,7 +3595,7 @@ void   ICE::backoutGCPressFromVelFC(const Patch* patch,
   double tmp, beta;
   delt_vartype delT;
   old_dw->get(delT, d_sharedState->get_delt_label());
-  DenseMatrix K(numICEMatls,numICEMatls);
+  DenseMatrix K(numICEMatls,numICEMatls), junk(numICEMatls,numICEMatls);
   K.zero();
   
   vector<CCVariable<double> > vel_FC(numICEMatls);
@@ -3666,32 +3606,8 @@ void   ICE::backoutGCPressFromVelFC(const Patch* patch,
     vel_FC[m].initialize(0.0);
   }
 
-  //__________________________________
-  //  Grab the exchange coefficient
-  // Check if the # of coefficients = # of upper triangular terms needed
-  int num_coeff = ((numMatls)*(numMatls) - numMatls)/2;
-  vector<double>::iterator it = d_K_mom.begin();
-
-  if (num_coeff == (int)d_K_mom.size() ) {
-    // Fill in the upper triangular matrix
-    for (int i = 0; i < numMatls; i++ )  {
-     for (int j = i + 1; j < numMatls; j++) {
-	K[i][j] = K[j][i] = *it++;
-     }
-    }
-  } else if (2*num_coeff == (int)d_K_mom.size() ) {
-    // Fill in the whole matrix but skip the diagonal terms
-    for (int i = 0; i < numMatls; i++ )  {
-     for (int j = 0; j < numMatls; j++) {
-	if (i == j) continue;
-	K[i][j] = *it++;
-     }
-    }
-  } else {
-    cerr << "Number of exchange components don't match " << endl;
-    abort();
-  }
-    
+  getExchangeCoefficients(K, junk);
+   
 //__________________________________
 //  For each wall
 //  - convert the vectors into a doubles, vel_CC into vel_FC
@@ -3813,7 +3729,45 @@ void   ICE::backoutGCPressFromVelFC(const Patch* patch,
 }
 
 
+/*---------------------------------------------------------------------
+ Function~  ICE::getExchangeCoefficients--
+ ---------------------------------------------------------------------  */
+void ICE::getExchangeCoefficients( DenseMatrix& K,
+                                   DenseMatrix& H  )
+{
+  int numMatls  = d_sharedState->getNumMatls();
+    // Fill in the exchange matrix with the vector of exchange coefficients.
+   // The vector of exchange coefficients only contains the upper triagonal
+   // matrix
 
+   // Check if the # of coefficients = # of upper triangular terms needed
+   int num_coeff = ((numMatls)*(numMatls) - numMatls)/2;
+
+   vector<double>::iterator it=d_K_mom.begin(),it1=d_K_heat.begin();
+
+   if (num_coeff == (int)d_K_mom.size() && num_coeff==(int)d_K_heat.size()) {
+     // Fill in the upper triangular matrix
+     for (int i = 0; i < numMatls; i++ )  {
+      for (int j = i + 1; j < numMatls; j++) {
+        K[i][j] = K[j][i] = *it++;
+        H[i][j] = H[j][i] = *it1++;
+      }
+     }
+   } else if (2*num_coeff==(int)d_K_mom.size() && 
+	      2*num_coeff == (int)d_K_heat.size()){
+     // Fill in the whole matrix but skip the diagonal terms
+     for (int i = 0; i < numMatls; i++ )  {
+      for (int j = 0; j < numMatls; j++) {
+        if (i == j) continue;
+        K[i][j] = *it++;
+        H[i][j] = *it1++;
+      }
+     }
+   } else {
+     cerr << "Number of exchange components don't match " << endl;
+     abort();
+   }
+}
 
 
 
