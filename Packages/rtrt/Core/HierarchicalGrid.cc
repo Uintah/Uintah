@@ -38,9 +38,9 @@ HierarchicalGrid::HierarchicalGrid( Object* obj, int nsides,
     // cerr << "Min objects L1 = " << _minObjects1 << " Min objects L2 = " << _minObjects2 << endl;
     if( level == 1 )
 	HierarchicalGrid::L1counter++;
-    if( level == 2 )
+    else if( level == 2 )
 	HierarchicalGrid::L2counter++;
-    if( level == 3 )
+    else if( level == 3 )
 	HierarchicalGrid::L3counter++;
     else 
 	cerr << "Error: We should not be building a hierarchy at level " << level << endl;
