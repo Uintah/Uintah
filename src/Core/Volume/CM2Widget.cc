@@ -1655,18 +1655,40 @@ PaintCM2Widget::clone()
   return new PaintCM2Widget(*this);
 }
 
+void
+PaintCM2Widget::set_shadeType(int type) 
+{ 
+  if (shadeType_ == type) return;
+  shadeType_ = type; 
+  dirty_ = true; 
+}
+
+void
+PaintCM2Widget::set_color(const Color &c) 
+{ 
+  if (color_ == c) return;
+  color_ = c;
+  dirty_ = true; 
+}
+
 
 void
 PaintCM2Widget::rasterize(CM2ShaderFactory& factory, bool faux, 
 			  Pbuffer* pbuffer)
 {
   if(!onState_) return;
-  if (dirty_) {
+  if (dirty_ || faux != faux_) {
     pixels_.initialize(0.0);
     rasterize(pixels_, faux);
     dirty_ = false;
   }
-  glEnable(GL_BLEND);
+  GLint blend, src, dst;
+  glGetIntegerv(GL_BLEND, &blend);
+  glGetIntegerv(GL_BLEND_SRC, &src);
+  glGetIntegerv(GL_BLEND_DST, &dst);
+  
+  if (!blend)
+    glEnable(GL_BLEND);
   glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
   glRasterPos2i(0,0);
@@ -1675,7 +1697,7 @@ PaintCM2Widget::rasterize(CM2ShaderFactory& factory, bool faux,
   glGetIntegerv(GL_VIEWPORT, vp);
   GLfloat xscale = float(vp[2])/float(pixels_.dim1());
   GLfloat yscale = float(vp[3])/float(pixels_.dim2());
-  //  cerr << "XScale: " << xscale << "   YScale: " << yscale << std::endl;
+
   glPixelZoom(xscale-0.001, yscale-0.001); //STUPID OPENGL DOESNT LIKE 2.0, 1.0!
   glPixelStorei(GL_UNPACK_ROW_LENGTH, 0);
   glPixelStorei(GL_UNPACK_IMAGE_HEIGHT, 0);
@@ -1683,7 +1705,10 @@ PaintCM2Widget::rasterize(CM2ShaderFactory& factory, bool faux,
   glDrawPixels(pixels_.dim1(), pixels_.dim2(), 
 	       GL_RGBA, GL_FLOAT, &pixels_(0,0,0));
   glPixelZoom(1.0, 1.0);
-  glDisable(GL_BLEND);
+  glBlendFunc(src, dst);
+  if (!blend)
+    glDisable(GL_BLEND);
+    
   CHECK_OPENGL_ERROR("paintcm2widget rasterize end")
 }
 
@@ -1697,6 +1722,32 @@ PaintCM2Widget::draw_point(Array3<float> &data, int x0, int y0) {
 
 void
 PaintCM2Widget::splat(Array3<float> &data, int x0, int y0) {
+  const int wid = 5;
+  float r,g,b,a;
+  r = color_.r();
+  g = color_.g();
+  b = color_.b();
+  a = alpha_;
+
+  for (int y = y0-wid; y <= y0+wid; ++y)
+    if (y >= y && y < data.dim2()) {
+      
+      if (shadeType_ != CM2_SHADE_FLAT)
+	a = Max(data(x0, y, 3),
+		float(alpha_*(wid-fabs(float(y-y0)))/wid));
+      data(x0,y,3) = a;
+      if (faux_) {
+	data(x0, y, 0) = r*a;
+	data(x0, y, 1) = g*a;
+	data(x0, y, 2) = b*a;
+      } else {
+	data(x0, y, 0) = r;
+	data(x0, y, 1) = g;
+	data(x0, y, 2) = b;
+      }
+    }
+  return;
+  
   for (int y = y0-3; y <= y0+3; ++y)
     if (y >= 0 && y < data.dim2())
       for (int x = x0-3; x <= x0+3; ++x)
@@ -1769,22 +1820,44 @@ PaintCM2Widget::line(Array3<float> &data, int x0, int y0, int x1, int y1)
 
 
 void
-PaintCM2Widget::rasterize(Array3<float>& array, bool /*faux*/)
+PaintCM2Widget::rasterize(Array3<float>& array, bool faux)
 {
   if(!onState_) return;
+  faux_ = faux;
   Segments::iterator siter = segments_.begin();
   Segments::iterator send = segments_.end();
   while (siter != send) {
     Segment &seg = *siter;
     ++siter;
-    Coordinate &p1 = seg.first;
-    Coordinate &p2 = seg.second;
     line(array,
-	 Floor(p1.second*array.dim1()), 
-	 Floor(p1.first*array.dim2()),
-	 Floor(p2.second*array.dim1()),
-	 Floor(p2.first*array.dim2()));
+	 Floor(seg.first.second*array.dim1()), 
+	 Floor(seg.first.first*array.dim2()),
+	 Floor(seg.second.second*array.dim1()),
+	 Floor(seg.second.first*array.dim2()));
   }
+}
+
+
+void
+PaintCM2Widget::set_value_range(double min, double scale)
+{
+  if ((fabs(value_min_ - min) > 0.001) || 
+      (fabs(value_scale_ - scale) > 0.001)) 
+    dirty_ = true;
+
+  const double offset = (value_min_ - min) / scale;
+  const double scale_factor = value_scale_ / scale;
+
+  Segments::iterator siter = segments_.begin();
+  const Segments::iterator send = segments_.end();
+  while (siter != send) {
+    siter->first.first = siter->first.first * scale_factor + offset;
+    siter->second.first = siter->second.first * scale_factor + offset;
+    ++siter;
+  }
+  value_min_ = min;
+  value_scale_ = scale;
+
 }
 
 
