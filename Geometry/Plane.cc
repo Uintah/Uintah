@@ -15,30 +15,38 @@
 #include <Geometry/Point.h>
 #include <Geometry/Vector.h>
 
-Plane::Plane(double a, double b, double c, double d)
-: a(a), b(b), c(c), d(d) {
-}
-
 Plane::Plane(const Plane &copy)
-: a(copy.a), b(copy.b), c(copy.c), d(copy.d) {
+: n(copy.n), d(copy.d)
+{
 }
 
 Plane::Plane(const Point &p1, const Point &p2, const Point &p3) {
     Vector v1(p2-p1);
     Vector v2(p2-p3);
-    Vector n(Cross(v2,v1));
-    a=n.x(); b=n.y(); c=n.z();
-    d=-(p1.x()*a+p1.y()*b+p1.z()*c);
+    n=Cross(v2,v1);
+    n.normalize();
+    d=-Dot(p1, n);
 }
 
 Plane::~Plane() {
 }
 
 void Plane::flip() {
-    a=-a; b=-b; c=-c; c=-d;
+   n.x(-n.x());
+   n.y(-n.y());
+   n.z(-n.z());
 }
 
 double Plane::eval_point(const Point &p) {
-    return (p.x()*a+p.y()*b+p.z()*c+d);
+    return Dot(p, n)+d;
 }
 
+Point Plane::project(const Point& p)
+{
+   return p-n*(d+Dot(p,n));
+}
+
+Vector Plane::normal()
+{
+   return n;
+}

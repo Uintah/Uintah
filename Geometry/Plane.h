@@ -14,16 +14,19 @@
 #define SCI_project_Plane_h 1
 
 #include <Geometry/Point.h>
+#include <Geometry/Vector.h>
 
 class Plane {
+   Vector n;
+   double d;
 public:
-    double a,b,c,d;
     Plane(const Plane &copy);
     Plane(const Point &p1, const Point &p2, const Point &p3);
-    Plane(double a, double b, double c, double d);
     ~Plane();
     double eval_point(const Point &p);
     void flip();
+    Point project(const Point& p);
+   Vector normal();
 };
 
 #endif
