@@ -21,12 +21,12 @@ SendState::~SendState()
 }
 
 ParticleSubset*
-SendState::find_sendset(int dest, const Patch* patch, int matlIndex, 
+SendState::find_sendset(int dest, const Patch* patch, int matlIndex,
                         Ghost::GhostType gt /*=Ghost::None*/,
-                        int numgc /*=0*/) const
+                        int numgc /*=0*/, int dwid /* =0 */) const
 {
   maptype::const_iterator iter = 
-    sendSubsets.find( make_pair( PSPatchMatlGhost(patch, matlIndex, gt, numgc), dest ) );
+    sendSubsets.find( make_pair( PSPatchMatlGhost(patch, matlIndex, gt, numgc, dwid), dest) );
   if(iter == sendSubsets.end())
     return 0;
   return iter->second;
@@ -35,13 +35,13 @@ SendState::find_sendset(int dest, const Patch* patch, int matlIndex,
 void
 SendState::add_sendset(ParticleSubset* sendset, int dest, const Patch* patch, 
                        int matlIndex, Ghost::GhostType gt /*=Ghost::None*/,
-                       int numgc /*=0*/)
+                       int numgc /*=0*/, int dwid /*=0*/)
 {
   maptype::iterator iter = 
-    sendSubsets.find(make_pair(PSPatchMatlGhost(patch,matlIndex,gt,numgc),dest));
+    sendSubsets.find(make_pair(PSPatchMatlGhost(patch,matlIndex,gt,numgc,dwid), dest));
   if(iter != sendSubsets.end())
     SCI_THROW(InternalError("sendSubset already exists"));
-  sendSubsets[make_pair(PSPatchMatlGhost(patch, matlIndex, gt, numgc), dest)]=sendset;
+  sendSubsets[make_pair(PSPatchMatlGhost(patch, matlIndex, gt, numgc, dwid), dest)]=sendset;
 }
 
 void SendState::print() 
