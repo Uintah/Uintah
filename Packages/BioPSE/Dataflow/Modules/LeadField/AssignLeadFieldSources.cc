@@ -213,8 +213,8 @@ AssignLeadFieldSources::execute()
   PointCloudField<Vector> *pc2 = scinew PointCloudField<Vector>(pcm2H, 1);
   pc2->fdata()=vecs2;
 
-  for (i=0; i<nsize; i++) 
-    ofield2->fdata()[i]=node_sums[i]/node_refs[i];
+  for (unsigned int ui=0; ui<nsize; ui++) 
+    ofield2->fdata()[ui]=node_sums[ui]/node_refs[ui];
 
   ofp->send(FieldHandle(ofield));
   ofp2->send(FieldHandle(ofield2));
