@@ -23,6 +23,7 @@ do_mpm=0
 do_ice=0
 do_mpmice=0
 do_impm=0
+do_smpm=0
 do_arches=0
 do_mpmarches=0
 do_examples=0
@@ -41,6 +42,7 @@ usage () {
     echo "  -e             run the example tests"
     echo "  -m             run the mpm tests"
     echo "  -ma            run the mpmarches tests"
+    echo "  -sm            run the smpm tests"
     echo "  -i             run the ice tests"
     echo "  -mi            run the mpmice tests"
     echo "  -im            run the implicit mpm tests"
@@ -81,6 +83,9 @@ for arg in $*; do
 	-ma)
 	    echo; echo "Running the mpmarches tests . . ."
 	    do_mpmarches=1;;
+	-sm)
+	    echo; echo "Running the smpm tests . . ."
+	    do_smpm=1;;
 	-mi)
 	    echo; echo "Running the mpmice tests . . ."
 	    do_mpmice=1;;
@@ -113,10 +118,11 @@ fi
 mpm_test_cases="disks2mat4patch heatcond2mat inclined_plane_sphere const_test_hypo const_test_nh const_test_cmr const_test_nhp const_test_vs test_corrug_plate test_cyl_pene_no_ero test_cyl_pene_hypo_jc_ero test_gurson_beckerdrucker_mts"
 ice_test_cases="advect rieman_sm hotBlob2mat hotBlob2mat_sym hotBlob2mat8patch"
 mpmice_test_cases="advect massX thermx thermx8patch guni2dRT TRWnoz"
+smpm_test_cases="test_plane_shell_punch test_sphere_shell_compress"
 impm_test_cases="4disks_2d.1mat billet.static"
-arches_test_cases="methane_explicit_table"
+arches_test_cases="methane_explicit_table methane8patch_ups"
 mpmarches_test_cases="matest_heptwb_cyl"
-examples_test_cases="poisson1"
+examples_test_cases="poisson1 poisson2"
 
 # Check if the applications sus and compare_uda are available
 
@@ -252,6 +258,35 @@ impm_test () {
     done
 }
 
+smpm_test () {
+    echo; echo "Testing $smpm_test_cases"
+    
+    for n in $smpm_test_cases; do
+	echo; echo "Running sus -smpm $INPUTS/SMPM/$n.ups"
+	uda=`grep filebase $INPUTS/SMPM/$n.ups | sed s/\<//g | sed s/filebase//g | sed s/\>//g  | sed 's/^[ ^t]*//'  `
+	sus -smpm $INPUTS/SMPM/$n.ups &> $n.out
+	success=`grep "successfully" $n.out`
+	if test -n "$success";
+	    then 
+	    echo $success
+	else
+	    echo; echo "FAILURE running sus . . ."
+	    continue;
+	fi
+	udadir=$n
+	echo "compare_uda $test_dir/$DIR/SMPM/$udadir/$uda $uda &> $n.compare"
+	compare_uda $test_dir/$DIR/SMPM/$udadir/$uda $uda &> $n.compare
+	compare=`grep "passed" $n.compare`
+	if test -n "$compare";
+	    then
+	    echo $compare
+	else
+	    echo; echo "FAILURE running compare_uda . . ."
+	fi
+    done
+}
+
+
 ice_test () {
     echo; echo "Testing $ice_test_cases"
     
@@ -380,6 +415,7 @@ if test -n "$ALL"; then
     echo; echo "Running all the tests (Using $test_dir)"
     mpm_test;
     ice_test;
+    smpm_test;
     mpmice_test;
     arches_test;
     mpmarches_test;
@@ -403,6 +439,10 @@ fi
 
 if test $do_mpmice -eq 1; then
     mpmice_test
+fi
+
+if test $do_smpm -eq 1; then
+    smpm_test
 fi
 
 if test $do_impm -eq 1; then
