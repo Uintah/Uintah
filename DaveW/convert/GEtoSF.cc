@@ -79,12 +79,9 @@ int read_legend(FILE **fpp) {
     table.resize(num_structures);
     OKflag &= fscanf(fp, "%d", &default_matl);
     for (int i=0; i<num_structures; i++) {
-	table[i]=default_matl;
+	table[i]=0;
     }
-    while(!feof(fp)) {
-	if (fscanf(fp, "%d %d", &struc, &matl)==2)
-	    table[struc]=matl;
-    }
+
     return OKflag;
 }
 
@@ -125,7 +122,8 @@ void read_seg_images(char *path) {
 		// change this so that instead of storing the data in the 
 		// sf field, we are just counting how many times we see each 
 		// data value
-		sf_c->grid(x+padn,y+padn,j+padn)=(char)table[i1]+'0';
+		table[i1]++;
+		//sf_c->grid(x+padn,y+padn,j+padn)=(char)table[i1]+'0';
 	    }	
 	}
 	fclose(fp);
@@ -190,18 +188,21 @@ void read_mri_images(char *path) {
 }
 
 void write_seg_field() {
-    char outname[100];
-    sprintf(outname, "%s.c_sfrg", out);
-    printf("Writing file: %s\n", outname);
-    TextPiostream stream(outname, Piostream::Write);
-    ScalarFieldHandle sh=sf_c;
-    sh->set_raw(1);
-    Pio(stream, sh);
+  //    char outname[100];
+  // sprintf(outname, "%s.c_sfrg", out);
+  // printf("Writing file: %s\n", outname);
+  // TextPiostream stream(outname, Piostream::Write);
+  // ScalarFieldHandle sh=sf_c;
+  // sh->set_raw(1);
+  // Pio(stream, sh);
+  for (int i=0; i<table.size(); i++) {
+    if (table[i]!=0) printf("%d %d \n", i, table[i]);
+    }
 }
 
 void write_mri_field() {
     char outname[100];
-    sprintf(outname, "%s.sfrg", out);
+    sprintf(outname, a"%s.sfrg", out);
     printf("Writing file: %s\n", outname);
     TextPiostream stream(outname, Piostream::Write);
     ScalarFieldHandle sh=sf;
