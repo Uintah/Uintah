@@ -392,7 +392,7 @@ void PackageDB::loadPackage(bool resolve)
   {
     gui->execute("toplevel .loading; "
 		 "wm geometry .loading 504x482+135+170; "
-		 "wm title .loading {SCIRun Splash Screen}; "
+		 "wm title .loading {Welcome to SCIRun}; "
 		 "update idletasks");
     gui->execute("image create photo ::img::splash -file \"" +
 		 string(SCIRUN_SRCTOP) + "/main/scisplash.ppm\"; "
