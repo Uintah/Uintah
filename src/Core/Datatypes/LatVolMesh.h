@@ -59,9 +59,14 @@ public:
       if (mesh_ == 0) 
 	return i_*j_*k_; 
       else 
-	return i_ + mesh_->get_ni() * (j_ + mesh_->get_nj() * k_);
+	return i_ + ni()*j_ + ni()*nj()*k_;;
     }
     
+    // Make sure mesh_ is valid before calling these convience accessors
+    unsigned ni() const { ASSERT(mesh_); return mesh_->get_ni(); }
+    unsigned nj() const { ASSERT(mesh_); return mesh_->get_nj(); }
+    unsigned nk() const { ASSERT(mesh_); return mesh_->get_nk(); }
+
     unsigned i_, j_, k_;
 
     // Needs to be here so we can compute a sensible index.
@@ -73,6 +78,14 @@ public:
     CellIndex() : LatIndex() {}
     CellIndex(const LatVolMesh *m, unsigned i, unsigned j, unsigned k)
       : LatIndex(m, i,j,k) {}
+
+    operator unsigned() const { 
+      if (mesh_ == 0) 
+	return i_*j_*k_; 
+      else 
+	return i_ + (ni()-1)*j_ + (ni()-1)*(nj()-1)*k_;;
+    }
+
     friend void Pio(Piostream&, CellIndex&);
     friend const TypeDescription* get_type_description(CellIndex *);
     friend const string find_type_name(CellIndex *);
@@ -175,13 +188,20 @@ public:
 
     const CellIndex &operator *() const { return (const CellIndex&)(*this); }
 
+    operator unsigned() const { 
+      if (mesh_ == 0) 
+	return i_*j_*k_; 
+      else 
+	return i_ + (ni()-1)*j_ + (ni()-1)*(nj()-1)*k_;;
+    }
+
     CellIter &operator++()
     {
       i_++;
-      if (i_ >= mesh_->min_i_+mesh_->get_ni()-1) {
+      if (i_ >= mesh_->min_i_+ni()-1) {
 	i_ = mesh_->min_i_;
 	j_++;
-	if (j_ >= mesh_->min_j_+mesh_->get_nj()-1) {
+	if (j_ >= mesh_->min_j_+nj()-1) {
 	  j_ = mesh_->min_j_;
 	  k_++;
 	}
