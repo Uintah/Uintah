@@ -53,12 +53,16 @@ public:
 		   ColorMapHandle map);
 
 
-  void SetVectorField( FieldHandle vfh ){ 
-    mutex.lock(); this->vfh_ = vfh; init(); mutex.unlock();}
-  void SetColorMap( ColorMapHandle map){
-    mutex.lock(); this->_cmapH = map; cmapHasChanged = true;
-    mutex.unlock(); }
+  void SetVectorField( FieldHandle vfh );
+  
+  // tries to keep going with a new vector field.  If the new field is
+  // incompatable with the old one then the effective call is to
+  // SetVectorField().
+  void ChangeVectorField( FieldHandle new_vfh );
+  void SetColorMap( ColorMapHandle map);
 
+  void ResetStreams();
+  
   void Pause( bool p){ _pause = p; }
   void Normals( bool n) {_normalsOn = n; }
   void SetLineWidth( int w){ _linewidth = w; }
@@ -117,6 +121,7 @@ private:
   void newStreamer(int whichStreamer);
   void RungeKutta(Point& x, double h);
   void init();
+  void initColorMap();
   static const double FADE;
   static const int MAXN;
 
