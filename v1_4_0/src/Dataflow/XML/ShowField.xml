@@ -219,6 +219,29 @@
     <parameter>
       <widget>button</widget>
       <datatype>none</datatype>
+      <label>Calculate Defaults</label>
+      <description>
+	<p>This button will trigger the module to calculate reasonable scale
+           values for the various scale sliders (Nodes, Edges, Vectors) based
+           on the bounding box of the module.</p>
+      </description>
+    </parameter>
+    <parameter>
+      <widget>radio button</widget>
+      <datatype>none</datatype>
+      <label>Execute Policy</label>
+      <description>
+	<p>Choices are "Interactively update" and "Execute button only".  
+           The default is interactive, which means that anytime you change a 
+           value in the gui, the display changes are sent downstream. If you 
+           choose execute button only, then you can change all the values in 
+           gui, but they will not be sent downstream until you hit the 
+           execute button.</p>
+      </description>
+    </parameter>
+    <parameter>
+      <widget>button</widget>
+      <datatype>none</datatype>
       <label>Excecute</label>
       <description>
 	<p>Force the module to execute.</p>
