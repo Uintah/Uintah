@@ -42007,8 +42007,6 @@ if test -e $freetype_bin/freetype-config; then
 echo "${ECHO_T}Using $freetype_bin/freetype-config to set freetype variables." >&6
 
     includes=`$freetype_bin/freetype-config --cflags`
-    FREETYPE_LIB_FLAG=`$freetype_bin/freetype-config --libs`
-
 
 ##
 ## SCI_TRY_LINK (FREETYPE):  freetype library and headers
@@ -42046,7 +42044,7 @@ echo "${ECHO_T}Using $freetype_bin/freetype-config to set freetype variables." >
 ## arg 2 : freetype library and headers
 ## arg 3 : ft2build.h
 ## arg 4 : $_sci_inc
-## arg 5 : $FREETYPE_LIB_FLAG
+## arg 5 : freetype
 ## arg 6 : $_sci_lib
 ## arg 7 : $includes
 ## arg 8 : <Can't expand it here as it may be multiple lines and cause sh problems.>
@@ -42129,10 +42127,10 @@ done
 
 ### Take care of arg 5 (the list of libs)
 
-if test -n "$FREETYPE_LIB_FLAG"; then
+if test -n "freetype"; then
 
    found_framework=no
-   for lib in "" $FREETYPE_LIB_FLAG; do
+   for lib in "" freetype; do
 
       if test -z "$lib"; then
          # SGI sh needs the "" in the for statement... so skip it here.
@@ -42455,7 +42453,7 @@ echo "$as_me: error: Specifically requested FREETYPE include file '$_sci_inc/$i'
     fi
   done
   # Make sure the exact libraries were found
-  for i in "" $FREETYPE_LIB_FLAG; do
+  for i in "" freetype; do
     if test -z "$i"; then
        continue
     fi
