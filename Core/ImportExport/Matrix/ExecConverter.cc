@@ -42,12 +42,11 @@
 // Use a standalone converter to do the matrix conversion into a
 // temporary file, then read in that file.
 
-#include <sci_defs/environment_defs.h>
-
 #include <Core/ImportExport/Matrix/MatrixIEPlugin.h>
 #include <Core/Persistent/Pstreams.h>
 #include <Core/Containers/StringUtil.h>
 #include <Core/Util/sci_system.h>
+#include <Core/Util/Environment.h>
 #include <iostream>
 #include <fstream>
 #include <sstream>
@@ -224,8 +223,9 @@ Exec_writer(ProgressReporter *pr,
 MatrixHandle
 TextColumnMatrix_reader(ProgressReporter *pr, const char *filename)
 {
+  ASSERT(sci_getenv("SCIRUN_OBJDIR"));
   const string command =
-    string(SCIRUN_OBJDIR) + "/StandAlone/convert/" +
+    string(sci_getenv("SCIRUN_OBJDIR")) + "/StandAlone/convert/" +
     "TextToColumnMatrix %f %t";
   return Exec_reader(pr, filename, command);
 }
@@ -234,8 +234,9 @@ bool
 TextColumnMatrix_writer(ProgressReporter *pr,
 			MatrixHandle matrix, const char *filename)
 {
+  ASSERT(sci_getenv("SCIRUN_OBJDIR"));
   const string command =
-    string(SCIRUN_OBJDIR) + "/StandAlone/convert/" +
+    string(sci_getenv("SCIRUN_OBJDIR")) + "/StandAlone/convert/" +
     "ColumnMatrixToText %f %t";
   return Exec_writer(pr, matrix, filename, command);
 }
@@ -254,8 +255,9 @@ TextColumnMatrix_plugin("TextColumnMatrix",
 static MatrixHandle
 TextDenseMatrix_reader(ProgressReporter *pr, const char *filename)
 {
+  ASSERT(sci_getenv("SCIRUN_OBJDIR"));
   const string command =
-    string(SCIRUN_OBJDIR) + "/StandAlone/convert/" +
+    string(sci_getenv("SCIRUN_OBJDIR")) + "/StandAlone/convert/" +
     "TextToDenseMatrix %f %t";
   return Exec_reader(pr, filename, command);
 }
@@ -264,8 +266,9 @@ static bool
 TextDenseMatrix_writer(ProgressReporter *pr,
 		       MatrixHandle matrix, const char *filename)
 {
+  ASSERT(sci_getenv("SCIRUN_OBJDIR"));
   const string command =
-    string(SCIRUN_OBJDIR) + "/StandAlone/convert/" +
+    string(sci_getenv("SCIRUN_OBJDIR")) + "/StandAlone/convert/" +
     "DenseMatrixToText %f %t";
   return Exec_writer(pr, matrix, filename, command);
 }
@@ -282,8 +285,9 @@ TextDenseMatrix_plugin("TextDenseMatrix",
 static MatrixHandle
 TextSparseRowMatrix_reader(ProgressReporter *pr, const char *filename)
 {
+  ASSERT(sci_getenv("SCIRUN_OBJDIR"));
   const string command =
-    string(SCIRUN_OBJDIR) + "/StandAlone/convert/" +
+    string(sci_getenv("SCIRUN_OBJDIR")) + "/StandAlone/convert/" +
     "TextToSparseRowMatrix %f %t";
   return Exec_reader(pr, filename, command);
 }
@@ -292,8 +296,9 @@ static bool
 TextSparseRowMatrix_writer(ProgressReporter *pr,
 			   MatrixHandle matrix, const char *filename)
 {
+  ASSERT(sci_getenv("SCIRUN_OBJDIR"));
   const string command =
-    string(SCIRUN_OBJDIR) + "/StandAlone/convert/" +
+    string(sci_getenv("SCIRUN_OBJDIR")) + "/StandAlone/convert/" +
     "SparseRowMatrixToText %f %t";
   return Exec_writer(pr, matrix, filename, command);
 }

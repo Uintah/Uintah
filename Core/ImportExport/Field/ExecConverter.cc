@@ -42,12 +42,11 @@
 // Use a standalone converter to do the field conversion into a
 // temporary file, then read in that file.
 
-#include <sci_defs/environment_defs.h>
-
 #include <Core/ImportExport/Field/FieldIEPlugin.h>
 #include <Core/Persistent/Pstreams.h>
 #include <Core/Containers/StringUtil.h>
 #include <Core/Util/sci_system.h>
+#include <Core/Util/Environment.h>
 #include <iostream>
 #include <fstream>
 #include <sstream>
@@ -55,7 +54,6 @@
 
 using namespace std;
 using namespace SCIRun;
-
 
 static void
 Exec_setup_command(const char *cfilename, const string &precommand,
@@ -221,8 +219,9 @@ Exec_writer(ProgressReporter *pr,
 static FieldHandle
 TextCurveField_reader(ProgressReporter *pr, const char *filename)
 {
+  ASSERT(sci_getenv("SCIRUN_OBJDIR"));
   const string command =
-    string(SCIRUN_OBJDIR) + "/StandAlone/convert/" +
+    string(sci_getenv("SCIRUN_OBJDIR")) + "/StandAlone/convert/" +
     "TextToCurveField %e.pts %e.edge %t -binOutput";
   return Exec_reader(pr, filename, command);
 }
@@ -231,8 +230,9 @@ static bool
 TextCurveField_writer(ProgressReporter *pr,
 		      FieldHandle field, const char *filename)
 {
+  ASSERT(sci_getenv("SCIRUN_OBJDIR"));
   const string command =
-    string(SCIRUN_OBJDIR) + "/StandAlone/convert/" +
+    string(sci_getenv("SCIRUN_OBJDIR")) + "/StandAlone/convert/" +
     "CurveFieldToText %t %e.pts %e.edge";
   return Exec_writer(pr, field, filename, command);
 }
@@ -249,8 +249,9 @@ TextCurveField_plugin("TextCurveField",
 static FieldHandle
 TextHexVolField_reader(ProgressReporter *pr, const char *filename)
 {
+  ASSERT(sci_getenv("SCIRUN_OBJDIR"));
   const string command =
-    string(SCIRUN_OBJDIR) + "/StandAlone/convert/" +
+    string(sci_getenv("SCIRUN_OBJDIR")) + "/StandAlone/convert/" +
     "TextToHexVolField %e.pts %e.hex %t -binOutput";
   return Exec_reader(pr, filename, command);
 }
@@ -259,8 +260,9 @@ static bool
 TextHexVolField_writer(ProgressReporter *pr,
 		       FieldHandle field, const char *filename)
 {
+  ASSERT(sci_getenv("SCIRUN_OBJDIR"));
   const string command =
-    string(SCIRUN_OBJDIR) + "/StandAlone/convert/" +
+    string(sci_getenv("SCIRUN_OBJDIR")) + "/StandAlone/convert/" +
     "HexVolFieldToText %t %e.pts %e.hex";
   return Exec_writer(pr, field, filename, command);
 }
@@ -277,8 +279,9 @@ TextHexVolField_plugin("TextHexVolField",
 static FieldHandle
 TextQuadSurfField_reader(ProgressReporter *pr, const char *filename)
 {
+  ASSERT(sci_getenv("SCIRUN_OBJDIR"));
   const string command =
-    string(SCIRUN_OBJDIR) + "/StandAlone/convert/" +
+    string(sci_getenv("SCIRUN_OBJDIR")) + "/StandAlone/convert/" +
     "TextToQuadSurfField %e.pts %e.quad %t -binOutput";
   return Exec_reader(pr, filename, command);
 }
@@ -287,8 +290,9 @@ static bool
 TextQuadSurfField_writer(ProgressReporter *pr,
 			 FieldHandle field, const char *filename)
 {
+  ASSERT(sci_getenv("SCIRUN_OBJDIR"));
   const string command =
-    string(SCIRUN_OBJDIR) + "/StandAlone/convert/" +
+    string(sci_getenv("SCIRUN_OBJDIR")) + "/StandAlone/convert/" +
     "QuadSurfFieldToText %t %e.pts %e.quad";
   return Exec_writer(pr, field, filename, command);
 }
@@ -305,8 +309,9 @@ TextQuadSurfField_plugin("TextQuadSurfField",
 static FieldHandle
 TextTetVolField_reader(ProgressReporter *pr, const char *filename)
 {
+  ASSERT(sci_getenv("SCIRUN_OBJDIR"));
   const string command =
-    string(SCIRUN_OBJDIR) + "/StandAlone/convert/" +
+    string(sci_getenv("SCIRUN_OBJDIR")) + "/StandAlone/convert/" +
     "TextToTetVolField %e.pts %e.tet %t -binOutput";
   return Exec_reader(pr, filename, command);
 }
@@ -315,8 +320,9 @@ static bool
 TextTetVolField_writer(ProgressReporter *pr,
 		       FieldHandle field, const char *filename)
 {
+  ASSERT(sci_getenv("SCIRUN_OBJDIR"));
   const string command =
-    string(SCIRUN_OBJDIR) + "/StandAlone/convert/" +
+    string(sci_getenv("SCIRUN_OBJDIR")) + "/StandAlone/convert/" +
     "TetVolFieldToText %t %e.pts %e.tet";
   return Exec_writer(pr, field, filename, command);
 }
@@ -333,8 +339,9 @@ TextTetVolField_plugin("TextTetVolField",
 static FieldHandle
 TextTriSurfField_reader(ProgressReporter *pr, const char *filename)
 {
+  ASSERT(sci_getenv("SCIRUN_OBJDIR"));
   const string command =
-    string(SCIRUN_OBJDIR) + "/StandAlone/convert/" +
+    string(sci_getenv("SCIRUN_OBJDIR")) + "/StandAlone/convert/" +
     "TextToTriSurfField %e.pts %e.fac %t -binOutput";
   return Exec_reader(pr, filename, command);
 }
@@ -343,8 +350,9 @@ static bool
 TextTriSurfField_writer(ProgressReporter *pr,
 			FieldHandle field, const char *filename)
 {
+  ASSERT(sci_getenv("SCIRUN_OBJDIR"));
   const string command =
-    string(SCIRUN_OBJDIR) + "/StandAlone/convert/" +
+    string(sci_getenv("SCIRUN_OBJDIR")) + "/StandAlone/convert/" +
     "TriSurfFieldToText %t %e.pts %e.fac";
   return Exec_writer(pr, field, filename, command);
 }
@@ -362,8 +370,9 @@ TextTriSurfField_plugin("TextTriSurfField",
 static FieldHandle
 TextPointCloudField_reader(ProgressReporter *pr, const char *filename)
 {
+  ASSERT(sci_getenv("SCIRUN_OBJDIR"));
   const string command =
-    string(SCIRUN_OBJDIR) + "/StandAlone/convert/" +
+    string(sci_getenv("SCIRUN_OBJDIR")) + "/StandAlone/convert/" +
     "TextToPointCloudField %f %t -binOutput";
   return Exec_reader(pr, filename, command);
 }
@@ -372,8 +381,9 @@ static bool
 TextPointCloudField_writer(ProgressReporter *pr,
 			   FieldHandle field, const char *filename)
 {
+  ASSERT(sci_getenv("SCIRUN_OBJDIR"));
   const string command =
-    string(SCIRUN_OBJDIR) + "/StandAlone/convert/" +
+    string(sci_getenv("SCIRUN_OBJDIR")) + "/StandAlone/convert/" +
     "PointCloudFieldToText %t %f";
   return Exec_writer(pr, field, filename, command);
 }
@@ -389,8 +399,9 @@ TextPointCloudField_plugin("TextPointCloudField",
 static FieldHandle
 TextStructCurveField_reader(ProgressReporter *pr, const char *filename)
 {
+  ASSERT(sci_getenv("SCIRUN_OBJDIR"));
   const string command =
-    string(SCIRUN_OBJDIR) + "/StandAlone/convert/" +
+    string(sci_getenv("SCIRUN_OBJDIR")) + "/StandAlone/convert/" +
     "TextToStructCurveField %f %t -binOutput";
   return Exec_reader(pr, filename, command);
 }
@@ -399,8 +410,9 @@ static bool
 TextStructCurveField_writer(ProgressReporter *pr,
 			    FieldHandle field, const char *filename)
 {
+  ASSERT(sci_getenv("SCIRUN_OBJDIR"));
   const string command =
-    string(SCIRUN_OBJDIR) + "/StandAlone/convert/" +
+    string(sci_getenv("SCIRUN_OBJDIR")) + "/StandAlone/convert/" +
     "StructCurveFieldToText %t %f";
   return Exec_writer(pr, field, filename, command);
 }
@@ -416,8 +428,9 @@ TextStructCurveField_plugin("TextStructCurveField",
 static FieldHandle
 TextStructHexVolField_reader(ProgressReporter *pr, const char *filename)
 {
+  ASSERT(sci_getenv("SCIRUN_OBJDIR"));
   const string command =
-    string(SCIRUN_OBJDIR) + "/StandAlone/convert/" +
+    string(sci_getenv("SCIRUN_OBJDIR")) + "/StandAlone/convert/" +
     "TextToStructHexVolField %f %t -binOutput";
   return Exec_reader(pr, filename, command);
 }
@@ -426,8 +439,9 @@ static bool
 TextStructHexVolField_writer(ProgressReporter *pr,
 			     FieldHandle field, const char *filename)
 {
+  ASSERT(sci_getenv("SCIRUN_OBJDIR"));
   const string command =
-    string(SCIRUN_OBJDIR) + "/StandAlone/convert/" +
+    string(sci_getenv("SCIRUN_OBJDIR")) + "/StandAlone/convert/" +
     "StructHexVolFieldToText %t %f";
   return Exec_writer(pr, field, filename, command);
 }
@@ -442,8 +456,9 @@ TextStructHexVolField_plugin("TextStructHexVolField",
 static FieldHandle
 TextStructQuadSurfField_reader(ProgressReporter *pr, const char *filename)
 {
+  ASSERT(sci_getenv("SCIRUN_OBJDIR"));
   const string command =
-    string(SCIRUN_OBJDIR) + "/StandAlone/convert/" +
+    string(sci_getenv("SCIRUN_OBJDIR")) + "/StandAlone/convert/" +
     "TextToStructQuadSurfField %f %t -binOutput";
   return Exec_reader(pr, filename, command);
 }
@@ -452,8 +467,9 @@ static bool
 TextStructQuadSurfField_writer(ProgressReporter *pr,
 			       FieldHandle field, const char *filename)
 {
+  ASSERT(sci_getenv("SCIRUN_OBJDIR"));
   const string command =
-    string(SCIRUN_OBJDIR) + "/StandAlone/convert/" +
+    string(sci_getenv("SCIRUN_OBJDIR")) + "/StandAlone/convert/" +
     "StructQuadSurfFieldToText %t %f";
   return Exec_writer(pr, field, filename, command);
 }
@@ -470,8 +486,9 @@ TextStructQuadSurfField_plugin("TextStructQuadSurfField",
 static FieldHandle
 VTKtoTriSurfFieldswap_reader(ProgressReporter *pr, const char *filename)
 {
+  ASSERT(sci_getenv("SCIRUN_OBJDIR"));
   const string command =
-    string(SCIRUN_OBJDIR) + "/StandAlone/convert/" +
+    string(sci_getenv("SCIRUN_OBJDIR")) + "/StandAlone/convert/" +
     "VTKtoTriSurfField %f %t -swap_endian -bin_out";
   return Exec_reader(pr, filename, command);
 }
@@ -486,8 +503,9 @@ VTKtoTriSurfFieldswap_plugin("VTKtoTriSurfField-swap",
 static FieldHandle
 VTKtoTriSurfField_reader(ProgressReporter *pr, const char *filename)
 {
+  ASSERT(sci_getenv("SCIRUN_OBJDIR"));
   const string command =
-    string(SCIRUN_OBJDIR) + "/StandAlone/convert/" +
+    string(sci_getenv("SCIRUN_OBJDIR")) + "/StandAlone/convert/" +
     "VTKtoTriSurfField %f %t -_endian -bin_out";
   return Exec_reader(pr, filename, command);
 }

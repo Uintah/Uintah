@@ -28,10 +28,9 @@
 
 
 // soloader.cpp written by Chris Moulding 11/98
-
-#include <sci_defs/environment_defs.h>
-
+#include <Core/Util/Assert.h>
 #include <Core/Util/soloader.h>
+#include <Core/Util/Environment.h>
 #include <sgi_stl_warnings_off.h>
 #include <iostream>
 #include <string>
@@ -45,7 +44,9 @@ void* GetLibrarySymbolAddress(const char* libname, const char* symbolname)
 #ifdef _WIN32
   LibraryHandle = LoadLibrary(libname);
 #elif defined(__APPLE__)
-  string name = string(SCIRUN_OBJDIR "/lib/")+libname;
+  ASSERT(SCIRun::sci_getenv("SCIRUN_OBJDIR"));
+  string name = string(SCIRun::sci_getenv("SCIRUN_OBJDIR")) + "/lib/" + 
+    string(libname);
   LibraryHandle = dlopen(name.c_str(), RTLD_LAZY|RTLD_GLOBAL);
 
   if( LibraryHandle == 0 ) { 
@@ -85,8 +86,10 @@ LIBRARY_HANDLE GetLibraryHandle(const char* libname)
   string name;
   if ( libname[0] == '/' )
     name = libname;
-  else
-    name = string(SCIRUN_OBJDIR "/lib/") + libname;
+  else {
+    ASSERT(SCIRun::sci_getenv("SCIRUN_OBJDIR"));
+    name = string(SCIRun::sci_getenv("SCIRUN_OBJDIR"))+"/lib/"+string(libname);
+  }
 
   LIBRARY_HANDLE lh;
   lh = dlopen(name.c_str(), RTLD_LAZY|RTLD_GLOBAL);
