@@ -10,6 +10,8 @@ a:active {color:#AA00AA}
 
 p {margin-left:90px; margin-right:80px; font-family:"serif"}
 
+beginpage {page-break-before:always}
+
 .toc {list-style-type:"upper-roman"; font-family:"serif"; margin-left:60px; margin-right:60px}
 
 .subtoc {list-style-type:disc; font-family:"serif"}
