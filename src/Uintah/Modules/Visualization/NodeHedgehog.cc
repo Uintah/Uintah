@@ -4,12 +4,12 @@
  *  NodeHedgehog.cc:  
  *
  *  Written by:
- *   Steven G. Parker
+ *   James Bigler & Steven G. Parker 
  *   Department of Computer Science
  *   University of Utah
- *   June 1995
+ *   June 2000
  *
- *  Copyright (C) 1995 SCI Group
+ *  Copyright (C) 2000 SCI Group
  */
 
 #include <SCICore/Containers/Array1.h>
@@ -32,6 +32,7 @@
 #include <Uintah/Grid/Level.h>
 #include <Uintah/Grid/Patch.h>
 #include <Uintah/Grid/NodeIterator.h>
+#include <Uintah/Grid/CellIterator.h>
 #include <Uintah/Datatypes/ArchivePort.h>
 #include <Uintah/Datatypes/Archive.h>
 
@@ -124,6 +125,15 @@ class NodeHedgehog : public Module {
   //
   // getGrid -
   GridP getGrid();
+
+  // GROUP: Private Function:
+  //////////////////////
+  //
+  // add_arrow -
+  void add_arrow(VectorFieldHandle vfield, ScalarFieldHandle ssfield,
+		 int have_sfield, int exhaustive, ColorMapHandle cmap,
+		 double lenscale, GeomArrows* arrows, Point p);
+
   TCLdouble length_scale;
   TCLdouble width_scale;
   TCLdouble head_length;
@@ -132,6 +142,7 @@ class NodeHedgehog : public Module {
   TCLint drawcylinders;
   TCLint skip_node;
   TCLdouble shaft_rad;
+  TCLint var_orientation; // whether node center or cell centered
   MaterialHandle outcolor;
   int grid_id;
   int need_find2d;
@@ -205,7 +216,8 @@ NodeHedgehog::NodeHedgehog(const clString& id)
   drawcylinders("drawcylinders", id, this),
   skip_node("skip_node", id, this),
   shaft_rad("shaft_rad", id, this),
-  exhaustive_flag("exhaustive_flag", id, this)
+  exhaustive_flag("exhaustive_flag", id, this),
+  var_orientation("var_orientation",id,this)
 {
   // Create the input ports
   // grid
@@ -248,6 +260,35 @@ NodeHedgehog::NodeHedgehog(const clString& id)
 
 NodeHedgehog::~NodeHedgehog()
 {
+}
+
+void
+NodeHedgehog::add_arrow(VectorFieldHandle vfield, ScalarFieldHandle ssfield,
+			int have_sfield, int exhaustive, ColorMapHandle cmap,
+			double lenscale, GeomArrows* arrows, Point p) {
+  Vector vv;
+  int ii = 0;
+  if (vfield->interpolate( p, vv, ii, exhaustive)){
+    if(have_sfield) {
+      // get the color from cmap for p 	    
+      MaterialHandle matl;
+      double sval;
+      if (ssfield->interpolate( p, sval, ii, exhaustive))
+	matl = cmap->lookup( sval);
+      else {
+	matl = outcolor;
+      }
+      
+      if(vv.length2()*lenscale > 1.e-3) {
+	arrows->add(p, vv*lenscale, matl, matl, matl);
+      }
+    }
+    else {
+      if(vv.length2()*lenscale > 1.e-3) {
+	arrows->add(p, vv*lenscale);
+      }
+    }
+  }
 }
 
 void NodeHedgehog::execute()
@@ -399,34 +440,28 @@ void NodeHedgehog::execute()
     // for each patch in the level
     for(iter=level->patchesBegin(); iter != level->patchesEnd(); iter++){
       Patch* patch = *iter;
-      //------------------------------------
-      // for each node in the patch
-      for(NodeIterator iter = patch->getNodeIterator(boundaryRegion); !iter.done(); iter+=skip){
-	Point p = patch->nodePosition(*iter);
-	Vector vv;
-	int ii = 0;
-	if (vfield->interpolate( p, vv, ii, exhaustive)){
-	  if(have_sfield) {
-	    // get the color from cmap for p 	    
-	    MaterialHandle matl;
-	    double sval;
-	    if (ssfield->interpolate( p, sval, ii, exhaustive))
-	      matl = cmap->lookup( sval);
-	    else {
-	      matl = outcolor;
-	    }
 
-	    if(vv.length2()*lenscale > 1.e-3) {
-	      arrows->add(p, vv*lenscale, matl, matl, matl);
-	    }
-	  }
-	  else {
-	    if(vv.length2()*lenscale > 1.e-3) {
-	      arrows->add(p, vv*lenscale);
-	    }
-	  }
+
+      switch (var_orientation.get()) {
+      case 0: //NC_VARIABLE
+	//------------------------------------
+	// for each node in the patch
+	for(NodeIterator iter = patch->getNodeIterator(boundaryRegion); !iter.done(); iter+=skip){
+	  Point p = patch->nodePosition(*iter);
+	  add_arrow(vfield, ssfield, have_sfield, exhaustive, cmap,
+		    lenscale, arrows, p);
+	} // end for loop
+	break;
+      case 1: // CC_VARIABLE
+	for(CellIterator iter = patch->getCellIterator(boundaryRegion); !iter.done(); iter+=skip){
+	  Point p = patch->cellPosition(*iter);
+	  add_arrow(vfield, ssfield, have_sfield, exhaustive, cmap,
+		    lenscale, arrows, p);
 	}
-      }
+	break;
+      case 2: // FC_VARIABLE
+	break;
+      } // end switch
     }
   }
 
@@ -483,6 +518,9 @@ void NodeHedgehog::tcl_command(TCLArgs& args, void* userdata)
 
 //
 // $Log$
+// Revision 1.5  2000/08/30 18:47:06  bigler
+// Added Cell centered viewing of vector fields.
+//
 // Revision 1.4  2000/08/09 03:18:09  jas
 // Changed new to scinew and added deletes to some of the destructors.
 //
