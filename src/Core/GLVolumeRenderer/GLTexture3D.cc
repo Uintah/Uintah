@@ -26,6 +26,14 @@
    DEALINGS IN THE SOFTWARE.
 */
 
+#include <sci_defs/ogl_defs.h>
+
+#if defined( HAVE_GLEW )
+#include <GL/glew.h>
+#else
+#include <GL/gl.h>
+#include <GL/glu.h>
+#endif
 
 #include <Core/GLVolumeRenderer/GLTexture3D.h>
 #include <Core/Datatypes/FieldInterface.h>
@@ -41,13 +49,6 @@
 #include <Core/Thread/ThreadGroup.h>
 #include <Core/Util/DynamicCompilation.h>
 #include <Core/Algorithms/GLVolumeRenderer/GLTexture3DBuilder.h>
-
-#if defined( HAVE_GLEW )
-#include <GL/glew.h>
-#else
-#include <GL/gl.h>
-#include <GL/glu.h>
-#endif
 
 #include <iostream>
 #include <string>

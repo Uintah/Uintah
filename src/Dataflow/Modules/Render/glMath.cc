@@ -26,10 +26,17 @@
    DEALINGS IN THE SOFTWARE.
 */
 
+#include <sci_defs/ogl_defs.h>
 
+#if defined( HAVE_GLEW )
+#include <GL/glew.h>
+#else
+#include <GL/gl.h>
+#endif
+
+#include <Dataflow/Modules/Render/glMath.h>
 
 #include <math.h>
-#include "glMath.h"
 
 /* 4x4 unit matrix. */
 

@@ -30,6 +30,8 @@
 #ifndef GLVOLRENSTATE_H
 #define GLVOLRENSTATE_H
 
+#include <sci_defs/ogl_defs.h>
+
 #if defined(HAVE_GLEW)
 #include <GL/glew.h>
 #else
@@ -149,7 +151,6 @@ public:
   ~FragmentProgramARB ();
   void init( const char* str, bool isFileName );
 
-  
   bool created();
   void create ();
   void update ();

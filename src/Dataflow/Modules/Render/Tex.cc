@@ -39,6 +39,14 @@
  *  Copyright (C) 199? SCI Group
  */
 
+#include <sci_defs/ogl_defs.h>
+
+#if defined( HAVE_GLEW )
+#include <GL/glew.h>
+#else
+#include <GL/gl.h>
+#endif
+
 #include <Dataflow/Modules/Render/Tex.h>
 
 #include <Core/Malloc/Allocator.h>
@@ -50,11 +58,6 @@
 #include <iostream>
 using std::cerr;
 using std::ostream;
-#if defined( HAVE_GLEW )
-#include <GL/glew.h>
-#else
-#include <GL/gl.h>
-#endif
 
 #define USELUMIALPH 1
 

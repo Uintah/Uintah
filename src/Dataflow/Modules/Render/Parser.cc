@@ -42,17 +42,24 @@
  *------------------------------------------------------------------*/
 
 
+#include <sci_defs/ogl_defs.h>
+
+#if defined( HAVE_GLEW )
+#include <GL/glew.h>
+#else
+#include <GL/gl.h>
+#endif
+
+#include <Dataflow/Modules/Render/BaWGL.h>
+
 #include <iostream>
+#include <fstream>
+#include <stdio.h>
+#include <string.h>
+
 using std::cerr;
 using std::endl;
-
-#include <fstream>
 using namespace std;
-
-#include <stdio.h>
-
-#include <string.h>
-#include <Dataflow/Modules/Render/BaWGL.h>
 
 const int TOKENSIZE = 1024;
 

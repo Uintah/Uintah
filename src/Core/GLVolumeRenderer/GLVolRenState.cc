@@ -50,6 +50,7 @@
 #include <Core/GLVolumeRenderer/GLTexture3D.h>
 #include <Core/GLVolumeRenderer/Brick.h>
 #include <Core/Geom/GeomOpenGL.h>
+
 #include <vector>
 #include <stdlib.h>
 #include <iostream>
@@ -555,7 +556,7 @@ GLVolRenState::drawWireFrame(const Brick& brick)
 }
 
 
-#if defined(GL_ARB_fragment_program)  && defined(__APPLE__)
+#if defined(GL_ARB_fragment_program) && defined(__APPLE__)
 FragmentProgramARB::FragmentProgramARB (const char* str, bool isFileName)
   : mId(0), mBuffer(0), mLength(0), mFile(0)
 {

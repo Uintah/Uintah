@@ -40,8 +40,8 @@
  *  Copyright (C) 2003 SCI Group
  */
 
-#include <sci_defs/ogl_defs.h>
 #include <sci_defs/chromium_defs.h>
+#include <sci_defs/ogl_defs.h>
 
 #if defined(HAVE_GLEW)
 #include <GL/glew.h>
