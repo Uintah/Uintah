@@ -57,7 +57,9 @@ public:
   GuiDouble		outputsizex_;
   GuiDouble		outputsizey_;
   GuiDouble		outputsizez_;
-  GuiInt		cdataminmax_;   // minmax checkbox
+  GuiInt		useoutputcenter_;   // center checkbox
+  GuiInt		useoutputsize_;   // size checkbox
+  GuiInt		useoutputminmax_;   // minmax checkbox
 
   CrowdMonitor		widget_lock_;
   BoxWidget *		box_;
@@ -71,11 +73,9 @@ public:
 
   void clear_vals();
   void update_input_attributes(FieldHandle);
-  bool check_types(FieldHandle);
   void build_widget(FieldHandle);
 
   virtual void execute();
-  virtual void tcl_command(GuiArgs&, void*);
   virtual void widget_moved(bool);
 };
 
@@ -85,13 +85,15 @@ ChangeFieldBounds::ChangeFieldBounds(GuiContext* ctx)
   : Module("ChangeFieldBounds", ctx, Source, "Fields", "SCIRun"),
     outputdatamin_(ctx->subVar("outputdatamin")),
     outputdatamax_(ctx->subVar("outputdatamax")),
-    outputcenterx_(ctx->subVar("outputcx")),
-    outputcentery_(ctx->subVar("outputcy")),
-    outputcenterz_(ctx->subVar("outputcz")),
+    outputcenterx_(ctx->subVar("outputcenterx")),
+    outputcentery_(ctx->subVar("outputcentery")),
+    outputcenterz_(ctx->subVar("outputcenterz")),
     outputsizex_(ctx->subVar("outputsizex")),
     outputsizey_(ctx->subVar("outputsizey")),
     outputsizez_(ctx->subVar("outputsizez")),
-    cdataminmax_(ctx->subVar("cdataminmax")),
+    useoutputcenter_(ctx->subVar("useoutputcenter")),
+    useoutputsize_(ctx->subVar("useoutputsize")),
+    useoutputminmax_(ctx->subVar("useoutputminmax")),
     widget_lock_("ChangeFieldBounds widget lock"),
     generation_(-1),
     widgetid_(0),
@@ -123,9 +125,9 @@ ChangeFieldBounds::clear_vals()
 {
   gui->execute(string("set ")+id+"-inputdatamin \"---\"");
   gui->execute(string("set ")+id+"-inputdatamax \"---\"");
-  gui->execute(string("set ")+id+"-inputcx \"---\"");
-  gui->execute(string("set ")+id+"-inputcy \"---\"");
-  gui->execute(string("set ")+id+"-inputcz \"---\"");
+  gui->execute(string("set ")+id+"-inputcenterx \"---\"");
+  gui->execute(string("set ")+id+"-inputcentery \"---\"");
+  gui->execute(string("set ")+id+"-inputcenterz \"---\"");
   gui->execute(string("set ")+id+"-inputsizex \"---\"");
   gui->execute(string("set ")+id+"-inputsizey \"---\"");
   gui->execute(string("set ")+id+"-inputsizez \"---\"");
@@ -149,9 +151,9 @@ ChangeFieldBounds::update_input_attributes(FieldHandle f)
   size = bbox.diagonal();
   center = bbox.center();
 
-  gui->execute(string("set ")+id+"-inputcx "+to_string(center.x()));
-  gui->execute(string("set ")+id+"-inputcy "+to_string(center.y()));
-  gui->execute(string("set ")+id+"-inputcz "+to_string(center.z()));
+  gui->execute(string("set ")+id+"-inputcenterx "+to_string(center.x()));
+  gui->execute(string("set ")+id+"-inputcentery "+to_string(center.y()));
+  gui->execute(string("set ")+id+"-inputcenterz "+to_string(center.z()));
   gui->execute(string("set ")+id+"-inputsizex "+to_string(size.x()));
   gui->execute(string("set ")+id+"-inputsizey "+to_string(size.y()));
   gui->execute(string("set ")+id+"-inputsizez "+to_string(size.z()));
@@ -166,9 +168,7 @@ ChangeFieldBounds::update_input_attributes(FieldHandle f)
     gui->execute(string("set ")+id+"-inputdatamax \"--- N/A ---\"");
   }
 
-
   gui->execute(id+" update_multifields");
-  gui->execute(id+" copy_attributes; update idletasks");
 }
 
 
@@ -230,7 +230,7 @@ ChangeFieldBounds::build_widget(FieldHandle f)
 
   box_->SetScale(l2norm * 0.015);
   box_->SetPosition(center, right, down, in);
-  
+
   GeomGroup *widget_group = scinew GeomGroup;
   widget_group->add(box_->GetWidget());
 
@@ -319,17 +319,40 @@ ChangeFieldBounds::execute()
     field_initial_transform_.pre_translate(center.asVector());
   }
 
-  if (0)//(!cgeom_.get())
-  {
-    // no changes, just send the original through (it may be nothing!)
-    oport->send(fh);
-    remark("Passing field from input port to output port unchanged.");
-    return;
+  if (useoutputsize_.get() || useoutputcenter_.get()) {
+    Point center, right, down, in;
+    outputcenterx_.reset(); outputcentery_.reset(); outputcenterz_.reset();
+    outputsizex_.reset(); outputsizey_.reset(); outputsizez_.reset();
+    if (outputsizex_.get() <= 0 || 
+	outputsizey_.get() <= 0 || 
+	outputsizez_.get() <= 0) {
+      error("Degenerate BBox requested.");
+      return;                    // degenerate 
+    }
+    Vector sizex, sizey, sizez;
+    box_->GetPosition(center,right,down,in);
+    if (useoutputsize_.get()) {
+      sizex=Vector(outputsizex_.get(),0,0);
+      sizey=Vector(0,outputsizey_.get(),0);
+      sizez=Vector(0,0,outputsizez_.get());
+    } else {
+      sizex=(right-center)*2;
+      sizey=(down-center)*2;
+      sizez=(in-center)*2;
+    }
+    if (useoutputcenter_.get()) {
+      center = Point(outputcenterx_.get(),
+		     outputcentery_.get(),
+		     outputcenterz_.get());
+    }
+    right = Point(center + sizex/2.);
+    down = Point(center + sizey/2.);
+    in = Point(center + sizez/2.);
+    box_->SetPosition(center,right,down,in);
   }
 
-
   // Setup data transform.
-  bool transform_p = cdataminmax_.get();
+  bool transform_p = useoutputminmax_.get();
   double scale = 1.0;
   double translate = 0.0;
   if (transform_p)
@@ -371,7 +394,6 @@ ChangeFieldBounds::execute()
     gui->execute(id + " set_state Executing 0");
     algo->execute(fh, ef, scale, translate);
   }
-  
 
   // Transform the mesh if necessary.
   // Translate * Rotate * Scale.
@@ -413,36 +435,6 @@ ChangeFieldBounds::execute()
 }
 
     
-void ChangeFieldBounds::tcl_command(GuiArgs& args, void* userdata)
-{
-  if(args.count() < 2){
-    args.error("ChangeFieldBounds needs a minor command");
-    return;
-  }
- 
-  if (args[1] == "execute" || args[1] == "update_widget") {
-    Point center, right, down, in;
-    outputcenterx_.reset(); outputcentery_.reset(); outputcenterz_.reset();
-    outputsizex_.reset(); outputsizey_.reset(); outputsizez_.reset();
-    if (outputsizex_.get() <= 0 || outputsizey_.get() <= 0 || outputsizez_.get() <= 0) {
-      error("Degenerate BBox requested.");
-      widget_moved(true);           // force values back to widget settings
-      return;                    // degenerate 
-    }
-    Vector sizex(outputsizex_.get(),0,0);
-    Vector sizey(0,outputsizey_.get(),0);
-    Vector sizez(0,0,outputsizez_.get());
-    center = Point(outputcenterx_.get(),outputcentery_.get(),outputcenterz_.get());
-    right = Point(center + sizex/2.);
-    down = Point(center + sizey/2.);
-    in = Point(center + sizez/2.);
-    box_->SetPosition(center,right,down,in);
-    want_to_execute();
-  } else {
-    Module::tcl_command(args, userdata);
-  }
-}
-
 void ChangeFieldBounds::widget_moved(bool last)
 {
   if (last) {
@@ -509,6 +501,4 @@ ChangeFieldBoundsAlgoCopy::get_compile_info(const TypeDescription *fsrctd,
 }
 
 
-} // End namespace Moulding
-
-
+} // End namespace SCIRun
