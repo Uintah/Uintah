@@ -62,8 +62,7 @@ DEALINGS IN THE SOFTWARE.
     <note>
       <para>
 	<itemizedlist>
-	  <!--%= doc.ifP(Doc::Linux) {%Q{-->
-	  <listitem>
+	  <listitem os="linux">
 	    <para>
 	      The &sr; <acronym>RPM</acronym> distribution does
 	      <emphasis>not</emphasis> include support for
@@ -72,7 +71,6 @@ DEALINGS IN THE SOFTWARE.
 	      distribution.
 	    </para>
 	  </listitem>
-	  <!--}} %-->
 	  <listitem>
 	    <para>
 	      &sr;  supports only the uniprocessor build of
@@ -82,8 +80,7 @@ DEALINGS IN THE SOFTWARE.
 	      architecture.
 	    </para>
 	  </listitem>
-	  <!--%= doc.ifNotP(Doc::OSX) {%Q{-->
-	  <listitem>
+	  <listitem os="linux;irix">
 	    <para>
 	      <acronym>BLAS</acronym> or <acronym>ATLAS</acronym> and
 	      <acronym>LAPACK</acronym> libraries must be installed
@@ -95,7 +92,6 @@ DEALINGS IN THE SOFTWARE.
 	      installation instructions.
 	    </para>
 	  </listitem>
-	  <!--}} %-->
 	  <listitem>
 	    <para>
 	      <acronym>PETSc</acronym> must be installed before
@@ -132,7 +128,8 @@ DEALINGS IN THE SOFTWARE.
 	<listitem>
 	  <para>
 	    Browser download:
-	    <literallayout class="monospaced"> <ulink url="ftp://ftp.mcs.anl.gov/pub/petsc/petsc.tar.gz">ftp://ftp.mcs.anl.gov/pub/petsc/software_old/v2.1.6.petsc.tar.gz</ulink>
+	    <literallayout class="monospaced">
+<ulink url="ftp://ftp.mcs.anl.gov/pub/petsc/petsc.tar.gz">ftp://ftp.mcs.anl.gov/pub/petsc/software_old/v2.1.6.petsc.tar.gz</ulink>
 	    </literallayout>
 	  </para>
 	</listitem>
@@ -187,33 +184,27 @@ setenv PETSC_DIR `pwd`
 	  <para>
 	    Choose system type and optimization level:
 	    <literallayout class="monospaced">
-<!--%= doc.ifP(Doc::Linux) {%Q{-->
-make PETSC_ARCH=linux BOPT=O_c++
-<!--}} %-->
-<!--%= doc.ifP(Doc::OSX) {%Q{-->
-make PETSC_ARCH=macx BOPT=O_c++
-<!--}} %-->
-<!--%= doc.ifP(Doc::Irix) {%Q{-->
-make PETSC_ARCH=<replaceable>os-type</replaceable> BOPT=O_c++
-<!--}} %-->
+<phrase os="linux">make PETSC_ARCH=linux BOPT=O_c++</phrase>
+<phrase os="osx">make PETSC_ARCH=macx BOPT=O_c++</phrase>
+<phrase os="irix">make PETSC_ARCH=<replaceable>os-type</replaceable> BOPT=O_c++</phrase>
 	    </literallayout>
-	    <!--%= doc.ifP(Doc::Irix) {%Q{-->
+	    <phrase os="irix">
 	    where <replaceable>os-type</replaceable> is one of
 	    <literal>IRIX</literal> (for a 32-bit
 	    Irix build) or <literal>IRIX64</literal> (for a 64 bit Irix build).
-	    <!--}} %-->
+	    </phrase>
 	  </para>
 	</listitem>
 	<listitem>
-	  <para>
+	  <para os="osx" class="monospaced">
 	    Configure <acronym>PETSc</acronym>:
-	    <!--%= doc.ifP(Doc::OSX) {%Q{-->
-	    <literallayout class="monospaced">
+	    <literallayout>
 ./config/configure.py --with-mpi=0
 	    </literallayout>
-	    <!--}} %-->
-	    <!--%= doc.ifNotP(Doc::OSX) {%Q{-->
-	    <literallayout class="monospaced">
+	  </para>
+	  <para os="linux;irix">
+	    Configure <acronym>PETSc</acronym>:
+	    <literallayout os="linux;irix" class="monospaced">
 ./config/configure.py --with-mpi=0 --with-blas-lapack-dir=<replaceable>blas-lapack-lib-path</replaceable>
 	    </literallayout>
 	    for example:
@@ -223,7 +214,6 @@ make PETSC_ARCH=<replaceable>os-type</replaceable> BOPT=O_c++
 	    Option <option>--with-blas-lapack-dir</option> applies if
 	    <acronym>ATLAS</acronym> (rather than
 	    <acronym>BLAS</acronym>) is used.
-	    <!--}} %-->
 	  </para>
 	</listitem>
 	<listitem>
@@ -256,8 +246,7 @@ make test
 	  </para>
 	</listitem>
       </varlistentry>
-      <!--%= doc.ifNotP(Doc::OSX) {%Q{-->
-      <varlistentry>
+      <varlistentry os="linux;irix">
 	<term><option>--with-blas=<replaceable>path-to-blas-libs</replaceable></option></term>
 	<listitem>
 	  <para>Specifies the path to the <acronym>BLAS</acronym> libraries.
@@ -283,7 +272,6 @@ make test
 	  installed.</para>
 	</listitem>
       </varlistentry>
-      <!--}} %-->
     </variablelist>
     </para>
     <para>Here is an example &sr;  <command>configure</command> command:
@@ -291,14 +279,10 @@ make test
 ../src/configure \
 --enable-package="BioPSE MatlabInterface Teem" \
 --with-unipetsc=/usr/local/petsc \
-<!--%= doc.ifNotP(Doc::OSX) {%Q{-->
---with-thirdparty=/usr/local/&sr;/Thirdparty/1.22.0/Irix/CC-32bit \
+<phrase os="linux;irix">--with-thirdparty=/usr/local/&sr;/Thirdparty/1.22.0/Irix/CC-32bit \
 --with-blas=/usr/local/lib \
---with-lapack=/usr/local/lib
-<!--}} %-->
-<!--%= doc.ifP(Doc::OSX) {%Q{-->
---with-thirdparty=/usr/local/&sr;/Thirdparty_osx
-<!--}} %-->
+--with-lapack=/usr/local/lib</phrase>
+<phrase os="osx">--with-thirdparty=/usr/local/&sr;/Thirdparty_osx</phrase>
     </literallayout></para>
   </section>
 

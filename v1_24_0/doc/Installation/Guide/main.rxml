@@ -40,16 +40,16 @@
 %-->
 
 <article id="article.main">
-<title>&sr; Installation Guide for &pf;</title>
-<subtitle>(v. <!--%= doc.edition %-->)</subtitle>
-&intro;
-<!--%= doc.ifP(Doc::Linux) {%Q{-->&rpm_inst;<!--}} %-->
-<!--%= doc.ifP(Doc::OSX) {%Q{-->&dmg_inst;<!--}} %-->
-&source_inst;
-&preparing;
-&starting;
-&help;
-&opt_inst_appendix;
-&multi_builds;
-&cvs;
+  <title>&sr; Installation Guide for &pf;</title>
+  <subtitle>(v. <!--%= doc.edition %-->)</subtitle>
+  &intro;
+  &rpm_inst;
+  &dmg_inst;
+  &source_inst;
+  &preparing;
+  &starting;
+  &help;
+  &opt_inst_appendix;
+  &multi_builds;
+  &cvs;
 </article>

@@ -44,12 +44,10 @@ DEALINGS IN THE SOFTWARE.
   supports HDF5 versions 1.6.x.</para>
   <note>
     <itemizedlist>
-      <!--% doc.ifP(Doc::Linux) {%Q{-->
-      <listitem>
+      <listitem os="linux">
 	<para>The &sr; RPMs include support for HDF5 and the HDF5
 	libraries are distributed with the &sr; RPMs.</para>
       </listitem>
-      <!--}} %-->
       <listitem>
 	<para>HDF5 must be installed before building &sr;</para>
       </listitem>

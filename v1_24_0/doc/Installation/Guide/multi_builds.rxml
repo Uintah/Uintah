@@ -37,31 +37,31 @@
     shared volume then Linux, 32 bit and 64 bit Irix, and Mac OSX
     versions can be built as follows:
     <literallayout class="monospaced">
-      mkdir &sr;/linux
-      mkdir &sr;/irix32
-      mkdir &sr;/irix64
-      mkdir &sr;/osx
+mkdir &sr;/linux
+mkdir &sr;/irix32
+mkdir &sr;/irix64
+mkdir &sr;/osx
     </literallayout>
     After logging onto the Linux machine:
     <literallayout class="monospaced">
-      cd &sr;/linux
-      ../src/configure <replaceable>options</replaceable>
-      make -j <replaceable>N</replaceable>
+cd &sr;/linux
+../src/configure <replaceable>options</replaceable>
+make -j <replaceable>N</replaceable>
     </literallayout>
     Then from the Irix machine(s):
     <literallayout class="monospaced">
-      cd &sr;/irix32
-      ../src/configure <replaceable>options</replaceable>
-      make -j <replaceable>N</replaceable>
-      cd &sr;/irix64
-      ../src/configure --enable-64bit <replaceable>options</replaceable>
-      make -j <replaceable>N</replaceable>
+cd &sr;/irix32
+../src/configure <replaceable>options</replaceable>
+make -j <replaceable>N</replaceable>
+cd &sr;/irix64
+../src/configure --enable-64bit <replaceable>options</replaceable>
+make -j <replaceable>N</replaceable>
     </literallayout>
     and the &osx; platform(s):
     <literallayout class="monospaced">
-      cd &sr;/osx
-      ../src/configure <replaceable>options</replaceable> CC=gcc CXX=g++
-      make -j <replaceable>N</replaceable>
+cd &sr;/osx
+../src/configure <replaceable>options</replaceable> CC=gcc CXX=g++
+make -j <replaceable>N</replaceable>
     </literallayout>
   </para>  
 </appendix>

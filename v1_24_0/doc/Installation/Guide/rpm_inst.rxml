@@ -26,7 +26,7 @@ FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 DEALINGS IN THE SOFTWARE.
 -->
 
-<section id="sec.rpminst">
+<section os="linux" id="sec.rpminst">
   <title id="title.rpminst">Installation from RPMs</title>
 
   <section>
@@ -146,7 +146,7 @@ rpm -ivh &sr;-<replaceable>x.x.x</replaceable>-<replaceable>system</replaceable>
     <para>
       &sr; can be removed using the <command>rpm</command> command:
       <literallayout class="monospaced">
-	rpm -e &sr;
+rpm -e &sr;
       </literallayout>
       Read  <xref
       linkend="sec.prepare"/> before
@@ -164,11 +164,11 @@ rpm -ivh &sr;-<replaceable>x.x.x</replaceable>-<replaceable>system</replaceable>
     <para>
       Become root:
       <literallayout class="monospaced">
-	su -
+su -
       </literallayout>
       and type:
       <literallayout class="monospaced">
-	gunzip -c SCIRunData.<replaceable>x.x.x</replaceable>.tar.gz | (cd /usr/local &amp;&amp; tar xf -)
+gunzip -c SCIRunData.<replaceable>x.x.x</replaceable>.tar.gz | (cd /usr/local &amp;&amp; tar xf -)
       </literallayout>
       This will create <filename>/usr/local/&sr;Data</filename>, the
       sample data sets directory.  Type <command>exit</command> to leave the
@@ -187,7 +187,7 @@ rpm -ivh &sr;-<replaceable>x.x.x</replaceable>-<replaceable>system</replaceable>
       <command>cd</command> to the directory containing the compressed
       documentation tarball and type:
       <literallayout class="monospaced">
-	gunzip -c SCIRunDocs.<replaceable>x.x.x</replaceable>.tar.gz | (cd /usr/local &amp;&amp; tar xf -)
+gunzip -c SCIRunDocs.<replaceable>x.x.x</replaceable>.tar.gz | (cd /usr/local &amp;&amp; tar xf -)
       </literallayout>
       This will create <filename>/usr/local/&sr;Docs.<replaceable>x.x.x</replaceable></filename>, the
       &sr; documentation directory. Type <command>exit</command> to leave the

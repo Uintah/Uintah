@@ -81,7 +81,7 @@ mkdir &sr;/<replaceable>build-dir</replaceable>
 cd &sr;/<replaceable>build-dir</replaceable>
 
 ../src/configure --with-thirdparty=<replaceable>third-party-dir</replaceable> \
---enable-package="<replaceable>package-name1 package-name2 &hellip;</replaceable>"<!--%= extraOptions %-->
+--enable-package="<replaceable>package-name1 package-name2 &hellip;</replaceable>"
 	</literallayout>
 	in which case &sr; is built in the directory
 	<filename>&sr;/<replaceable>build-dir</replaceable></filename>.
@@ -91,15 +91,13 @@ cd &sr;/<replaceable>build-dir</replaceable>
 	<filename>bin</filename> or a name that reflects the machine
 	architecture.
       </para>
-      <para>
-	<!--%= doc.ifNotP(Doc::OSX) {%Q{-->
+      <para os="irix;linux">
 	Above, replace <replaceable>third-party-dir</replaceable> by
 	the path provided by the third-party installation script.
-	<!--}} %-->
-	<!--%= doc.ifP(Doc::OSX) {%Q{-->
+      </para>
+      <para os="osx">
 	Above, replace <replaceable>third-party-dir</replaceable> by  the path
 	given to the third-party installation script.
-	<!--}} %-->
       </para>
       <para>
 	Replace "<replaceable>package-name1 package-name2
@@ -109,25 +107,23 @@ cd &sr;/<replaceable>build-dir</replaceable>
 	<literallayout class="monospaced">
 ../src/configure \
 <!--%= withThirdParty %--> \
---enable-package="BioPSE MatlabInterface" <!--%= extraOptions %-->
+--enable-package="BioPSE MatlabInterface"
 	</literallayout>
 	Use option <option>--with-unipetsc</option> to add support for
 	<acronym>PETSc</acronym>.
-	<!--%= doc.ifP(Doc::OSX) {%Q{-->
-	Options <option>--with-lapack</option> and
+	<phrase os="linux;irix">Options <option>--with-lapack</option> and
 	<option>--with-blas</option> must be used if the
 	<acronym>BLAS</acronym> and <acronym>LAPACK</acronym> libraries are
 	not in <filename>/usr/lib</filename> (<xref
-	linkend="sec.petsc_sr_config"/> describes these options).
-	<!--}} %-->
+	linkend="sec.petsc_sr_config"/> describes these options).</phrase>
 	For example:
 	<literallayout class="monospaced">
 ../src/configure \
 <!--%= withThirdParty %--> \
 --enable-package="BioPSE MatlabInterface" \
---with-unipetsc=/usr/local/petsc<!--%= doc.ifNotP(Doc::OSX) {%Q{--> \\
---with-blas=/usr/local/lib \\
---with-lapack=/usr/local/lib <!--}} %-->
+--with-unipetsc=/usr/local/petsc<phrase os="linux;irix"> \
+--with-blas=/usr/local/lib \
+--with-lapack=/usr/local/lib</phrase>
 	</literallayout>
 	Use option <option>--with-insight</option> to add support for
 	Insight.  Packages Teem and Insight must also be enabled when using
@@ -136,7 +132,7 @@ cd &sr;/<replaceable>build-dir</replaceable>
 ../src/configure \
 <!--%= withThirdParty %--> \
 --enable-package="BioPSE Teem Insight" \
---with-insight=/usr/local/lib/InsightToolkit <!--%= extraOptions %-->
+--with-insight=/usr/local/lib/InsightToolkit
 	</literallayout>
 	Use option <option>--with-hdf5</option> to add HDF5 support.
 	Use option <option>--with-mdplus</option> to add MDSplus
@@ -145,8 +141,8 @@ cd &sr;/<replaceable>build-dir</replaceable>
 ../src/configure \
 <!--%= withThirdParty %--> \
 --enable-package="BioPSE Teem DataIO" \
---with-hdf5=/usr/local/hdf5<!--%= doc.ifNotP(Doc::Irix) {%Q{-->\\
---with-mdsplus=/usr/local/mdsplus<!--}} %--><!--%= extraOptions %-->
+--with-hdf5=/usr/local/hdf5<phrase os="linux;osx"> \
+--with-mdsplus=/usr/local/mdsplus</phrase>
 	</literallayout>
       </para>
 

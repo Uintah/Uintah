@@ -29,7 +29,7 @@ DEALINGS IN THE SOFTWARE.
 <!--% require(ENV["TREETOP"] + "/doc/Utilities/Publish/srdoc.rb") %-->
 <!--% doc = Doc.create(Doc::DocBook) %-->
 
-<section id="sec.blas_lapack_inst">
+<section os="linux;irix" id="sec.blas_lapack_inst">
   <title id="title.blas_lapack_inst">
     <acronym>BLAS</acronym> (or <acronym>ATLAS</acronym>), and
     <acronym>LAPACK</acronym> Installation
@@ -49,16 +49,13 @@ DEALINGS IN THE SOFTWARE.
   </para>
 
   <para>
-    <acronym>BLAS</acronym> and <acronym>LAPACK</acronym> is
-    installed from
-    <!--% doc.ifP(Doc::Linux) {%Q{-->
-    <link linkend="sec.blas_lapack_rpm"><acronym>RPM</acronym>'s</link>.
-    <!--}} %-->
-    <!--% doc.ifNotP(Doc::Linux) {%Q{-->
-    a combined
-    <acronym>BLAS</acronym> and <acronym>LAPACK</acronym> <link
-    linkend="sec.blas_lapack_source">source distribution</link>.
-    <!--}} %-->
+    <acronym>BLAS</acronym> and <acronym>LAPACK</acronym> are
+    installed from <link os="linux"
+    linkend="sec.blas_lapack_rpm"><acronym>RPM</acronym>'s</link>
+    <phrase os="irix">a combined <acronym>BLAS</acronym> and
+    <acronym>LAPACK</acronym> <link
+    linkend="sec.blas_lapack_source">source
+    distribution</link></phrase>.
   </para>
 
   <para>
@@ -71,8 +68,7 @@ DEALINGS IN THE SOFTWARE.
     code distribution</link>.
   </para>
 
-  <!--% doc.ifP(Doc::Linux) {%Q{-->
-  <section id="sec.blas_lapack_rpm">
+  <section os="linux" id="sec.blas_lapack_rpm">
     <title id="title.blas_lapack_rpm"><acronym>RPM</acronym>s</title>
     <para>
       Root privileges are needed to install the
@@ -104,10 +100,8 @@ rpm -ivh lapack-3_0-2_i386.rpm
       Type <command>exit</command> to leave the root account.
     </para>
   </section>
-  <!--}} %-->
 
-  <!--% doc.ifNotP(Doc::Linux) {%Q{-->
-  <section id="sec.blas_lapack_source">
+  <section os="irix" id="sec.blas_lapack_source">
     <title id="title.blas_lapack_source">Source Code</title>
 
     <para>
@@ -147,7 +141,6 @@ make
       </orderedlist>
     </para>
   </section>
-  <!--}} %-->
 
   <section id="sec.atlas_source">
     <title id="title.atlas_source"><acronym>ATLAS</acronym></title>
