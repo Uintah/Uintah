@@ -714,6 +714,16 @@ Volvis2DDpy::attach( VolumeVis2D *volume ) {
 bool
 Volvis2DDpy::skip_alpha( Voxel2D<float> v1, Voxel2D<float> v2,
 			 Voxel2D<float> v3, Voxel2D<float> v4 ) {
+  if( v1.v() < current_vmin || v1.v() > current_vmax ||
+      v1.g() < current_gmin || v1.g() > current_gmax ||
+      v2.v() < current_vmin || v2.v() > current_vmax ||
+      v2.g() < current_gmin || v2.g() > current_gmax ||
+      v3.v() < current_vmin || v3.v() > current_vmax ||
+      v3.g() < current_gmin || v3.g() > current_gmax ||
+      v4.v() < current_vmin || v4.v() > current_vmax ||
+      v4.g() < current_gmin || v4.g() > current_gmax )
+    return true;
+
   int x_index = (int)((v1.v()-current_vmin)*text_x_convert);
   int y_index = (int)((v1.g()-current_gmin)*text_y_convert);
   if( transTexture1->textArray[y_index][x_index][3] == 0.0f ) {
