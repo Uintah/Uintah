@@ -53,10 +53,13 @@ double JWL::computeRhoMicro(double press, double gamma,
 
     delta = -(f/df_drho);
     rhoM+=delta;
-    if(count>100){
+    rhoM=fabs(rhoM);
+    if(count>=100){
       cout << "JWL::computeRhoMicro not converging." << endl;
-      cout << "delta = " << delta << " rhoM = " << rhoM << endl;
+      cout << "delta = " << delta << " rhoM = " << rhoM << " f = " << f << " df_drho = " << df_drho << endl;
+      exit(1);
     }
+    count++;
   }
   return rhoM;
   
