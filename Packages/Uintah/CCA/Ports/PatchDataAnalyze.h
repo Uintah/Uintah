@@ -45,10 +45,9 @@ WARNING
                         GridP& grid,
 			SimulationStateP& state) = 0;
       
-      virtual void performAnalyze(
-				  SchedulerP&,
-				  const PatchSet* patches,
-				  const MaterialSet* matls) = 0;
+      virtual void performAnalyze(SchedulerP& sched,
+                         const PatchSet* patches,
+			 const MaterialSet* matls) = 0;
    private:
    };
 } // End namespace Uintah
