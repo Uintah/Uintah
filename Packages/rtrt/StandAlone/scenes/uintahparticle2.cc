@@ -840,6 +840,7 @@ Scene* make_scene(int argc, char* argv[], int nworkers)
       if (debug) cerr << "Started timestep\n";
 
       sphere_data.remove_all();
+      int patch_count = non_empty_patches;
       
       double time = times[t];
       GridP grid = da->queryGrid(time);
@@ -1021,7 +1022,7 @@ Scene* make_scene(int argc, char* argv[], int nworkers)
 		    patchdata.position_y = position_y;
 		    patchdata.position_z = position_z;
 
-		    if (non_empty_patches > 0) non_empty_patches--;
+		    if (patch_count > 0) patch_count--;
 		  }
 		break;
 		case Uintah::TypeDescription::Vector:
@@ -1116,8 +1117,8 @@ Scene* make_scene(int argc, char* argv[], int nworkers)
 	  patchdata.deleteme();
 #endif // ifdef USE_UINTAHPARTICLE_THREADS
 	      
-	  if (non_empty_patches > 0) non_empty_patches--;
-	  if (non_empty_patches == 0) {
+	  if (patch_count > 0) patch_count--;
+	  if (patch_count == 0) {
 	    cerr << "Only processing partial number of patches\n";
 	    break;
 	  }
@@ -1128,17 +1129,18 @@ Scene* make_scene(int argc, char* argv[], int nworkers)
       if (debug) cerr << "Finished level\n";
       } // end for(level)
       AuditDefaultAllocator();	  
-      cout << "Adding timestep.\n";
       //Material* matl0=new Phong(Color(0,0,0), Color(.2,.2,.2), Color(.3,.3,.3), 10, .5);
       //timeblock2->add(new Sphere(matl0,::Point(t,t,t),1));
       //alltime->add(timeblock2);
       thread_sema->down(rtrt::Min(nworkers,5));
-      if( thread_sema ) delete thread_sema;
+      cout << "Adding timestep.\n";
       GridSpheres* obj = create_GridSpheres(sphere_data,colordata,
 					    gridcellsize,griddepth);
+      thread_sema->up(rtrt::Min(nworkers,5));
       display->attach(obj);
       alltime->add((Object*)obj);
     } // end timestep
+    if( thread_sema ) delete thread_sema;
     all->add(alltime);
     AuditDefaultAllocator();	  
     if (debug) cerr << "Finished timestep\n";
@@ -1160,7 +1162,8 @@ Scene* make_scene(int argc, char* argv[], int nworkers)
   rtrt::Plane groundplane (rtrt::Point(-500, 300, 0), rtrt::Vector(7, -3, 2));
   Camera cam(rtrt::Point(0,0,400),rtrt::Point(0,0,0),rtrt::Vector(0,1,0),60.0);
   double bgscale=0.5;
-  Color bgcolor(bgscale*108/255., bgscale*166/255., bgscale*205/255.);
+  Color bgcolor(1.,1.,1.);
+  //Color bgcolor(bgscale*108/255., bgscale*166/255., bgscale*205/255.);
   double ambient_scale=1.0;
   Color cup(0.9, 0.7, 0.3);
   Color cdown(0.0, 0.0, 0.2);
