@@ -12,6 +12,8 @@
 namespace Uintah {
    class VarLabel;
    namespace MPM {
+   
+     class Fracture;
 
 /**************************************
 
@@ -147,6 +149,7 @@ WARNING
 	 
 	 SimulationStateP d_sharedState;
 	 Contact*         d_contactModel;
+	 Fracture*        d_fractureModel;
 	 
 	 const VarLabel* deltLabel;
 	 
@@ -168,7 +171,7 @@ WARNING
 	 const VarLabel* gMomExedVelocityStarLabel;
 	 const VarLabel* gExternalForceLabel;
 	 const VarLabel* gInternalForceLabel;
-	 const VarLabel* gSelfContactLabel; //for fracture
+	 const VarLabel* cSelfContactLabel; //for fracture, CCVariable
 	 
       };
       
@@ -177,6 +180,9 @@ WARNING
    
 //
 // $Log$
+// Revision 1.23  2000/05/10 05:01:48  tan
+// linked to farcture model.
+//
 // Revision 1.22  2000/05/08 17:04:04  tan
 // Added grid VarLabel selfContactLabel
 //
