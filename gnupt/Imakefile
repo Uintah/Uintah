@@ -4,13 +4,13 @@
 OBJS = AVLTree_String.o  \
 	Array1_all.o  Array2_all.o  Array3_all.o  \
 	DBCallback_all.o Handle_all.o  HashTable_all.o  \
-	HashTable_String.o  LockingHandle_all.o  \
+	HashTable_Mesh.o  HashTable_String.o  LockingHandle_all.o  \
 	Mailbox_all.o  Queue_all.o  \
 	SimplePort_all.o  Stack_all.o
 SRCS = AVLTree_String.cc \
 	Array1_all.cc Array2_all.cc Array3_all.cc \
 	DBCallback_all.cc Handle_all.cc HashTable_all.cc  \
-	HashTable_String.cc LockingHandle_all.cc \
+	HashTable_Mesh.cc HashTable_String.cc LockingHandle_all.cc \
 	Mailbox_all.cc Queue_all.cc \
 	SimplePort_all.cc Stack_all.cc
 

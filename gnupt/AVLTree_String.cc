@@ -5,6 +5,7 @@
 #include <Classlib/String.h>
 
 class Arg_base;
+class DebugSwitch;
 class Module;
 class Renderer;
 class GeomObj;
@@ -16,7 +17,7 @@ typedef TreeLink<clString, void*> _dummy3_;
 typedef TreeLink<clString, int> _dummy4_;
 typedef TreeLink<clString, Renderer* (*)()> _dummy5_;
 typedef TreeLink<double, GeomObj*> _dummy6_;
-typedef TreeLink<clString, Array1<clString>*> _dummy7_;
+typedef TreeLink<clString, Array1<DebugSwitch*>*> _dummy7_;
 
 typedef AVLTreeIter<clString, Arg_base*> _dummy10_;
 typedef AVLTree<clString, Arg_base*> _dummy11_;
@@ -36,8 +37,8 @@ typedef AVLTree<clString, Renderer* (*)()> _dummy51_;
 typedef AVLTreeIter<double, GeomObj* > _dummy60_;
 typedef AVLTree<double, GeomObj* > _dummy61_;
 
-typedef AVLTreeIter<clString, Array1<clString>*> _dummy70_;
-typedef AVLTree<clString, Array1<clString>*> _dummy71_;
+typedef AVLTreeIter<clString, Array1<DebugSwitch*>*> _dummy70_;
+typedef AVLTree<clString, Array1<DebugSwitch*>*> _dummy71_;
 
 #if 0
 typedef TreeLink<clString, ModuleSubCategory*> _dummy7_;
