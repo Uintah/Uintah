@@ -230,6 +230,7 @@ public:
   Array1<Object*>   &  getObjectsOfInterest() { return objectsOfInterest_; }
   Array1<Object*>   &  getAnimateObjects() { return animateObjects_; }
   Array1<Object*>   &  getDynBBoxObjs() { return dynamicBBoxObjects_; }
+  Array1<Material*> &  getAnimateMaterials() { return animateMaterials_; }
   Array1<DpyBase*>  &  getDisplays() { return displays; }
   Array1<DpyBase*>  &  getAuxDisplays() { return aux_displays; }
   Array1<Material*> &  getMaterials() { return materials; }
@@ -311,6 +312,12 @@ public:
   void addObjectOfInterest( Object * obj, bool animate = false, bool remakebbox = false );
   void addObjectOfInterest( const string& name, Object * obj, bool animate = false, bool remakebbox = false );
 
+  // These functions follow the model of animated object.
+  void addAnimateMaterial( Material *material);
+  void addGuiMaterial( Material *material, bool animate = true );
+  void addGuiMaterial( const string& name, Material *material,
+		       bool animate = true );
+  
   void attach_display(DpyBase *dpy);
   void attach_auxiliary_display(DpyBase *dpy);
   void hide_auxiliary_displays();
@@ -371,7 +378,11 @@ private:
 
   // Objects that, when they have their animate() function called, must recompute bbox
   Array1<Object*> dynamicBBoxObjects_;
-  
+
+  // Objects that will have their animate() function called:
+  Array1<Material*> animateMaterials_;
+  Array1<Material*> guiMaterials_;
+
   Camera* camera0;
   Camera* camera1;
   Image* image0;

@@ -488,6 +488,40 @@ Scene::addObjectOfInterest( const string& name, Object * obj, bool animate, bool
   addObjectOfInterest(obj, animate, redobbox);
 }
 
+void Scene::addAnimateMaterial( Material* mat ) {
+  animateMaterials_.add( mat );
+}
+
+void Scene::addGuiMaterial( Material* mat, bool animate) {
+  if( Names::hasName(mat) == false) {
+    // Create a name for the material
+    Names::nameMaterialWithUnique(mat);
+  }
+  // We have guaranteed that there is a name, so add it to the list of
+  // gui materials.
+  guiMaterials_.add( mat );
+
+  // Now if we need to animate the material, we must make sure that it
+  // is in the list of animated material.  However, we don't want to
+  // add the material in twice, so we need to check to see if it is in
+  // there first.
+  if (animate) {
+    // Check to see if the material has already been been added
+    int i = 0;
+    for(; i < animateMaterials_.size(); i++)
+      if (animateMaterials_[i] == mat)
+	break;
+    // mat was not found, so add it.
+    if (i >= animateMaterials_.size())
+      animateMaterials_.add(mat);
+  }
+}
+
+void Scene::addGuiMaterial( const string& name, Material* mat, bool animate ) {
+  Names::nameMaterial(name, mat);
+  addGuiMaterial(mat, animate);
+}
+
 // For adding single route names
 void
 Scene::addRouteName( const string & filename, const string & room )
