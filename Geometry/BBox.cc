@@ -269,68 +269,13 @@ BBoxSide::ChangeBBoxSide( Point a, Point b, Point c, Point d )
 int
 BBoxSide::Intersect( Point s, Vector v, Point& hit )
 {
-  int i, j;
-  Vector r[3][3];
-
-  if (  pl.Intersect( s, v, hit ) )  // line intersects plane
+  if ( pl.Intersect( s, v, hit ) )
     {
-      for ( j = 0; j < 2; j++ )
-	for ( i = 0; i < 3; i++ )
-	  {
-	    r[j][i] = Cross( hit - pts[j][i], perimeter[j][i] );
-	  }
-
-      // if the point lies on the line connecting 2 coordinates,
-      // then draw yourself a picture and check what i'm doing here
-
-      for ( j = 0; j < 2; j++ )
-	for ( i = 0; i < 3; i++ )
-	  if ( r[j][i].IsNull() )
-	    {
-
-	      if ( ( hit - pts[j][i] ).IsNull() ) // hit the corner
-		{
-//		  cerr << "!";
-		  return 1;
-		}
-	      
-	      if ( ( hit - pts[j][(i+1)%3] ).IsNull() ) // hit the corner
-		{
-//		  cerr << "!";
-		  return 1;
-		}
-
-	      r[j][(i+1) % 3].normalize();
-	      r[j][(i+2) % 3].normalize();
-
-	      // if both are positive, or both are negative, then
-	      // the hit point lies on the boundary of the BBoxSide
-	      
-	      if ( ( r[j][(i+1) % 3] + r[j][(i+2) % 3] ).IsNull() )
-		return 0;
-	      else
-		  return 1;
-	    }
-
-      // normalize each cross product
-      // then, add the normal in order to determine whether
-      // each of the cross products pointed in the same direction
-      
-      for ( j = 0; j < 2; j++ )
-	for( i = 0; i < 3; i++ )
-	  {
-	    r[j][i].normalize();
-	    r[j][i] = r[j][i] + pl.normal();
-	  }
-
-      for ( j = 0; j < 2; j++ )
-      if ( ( r[j][0].IsNull() && r[j][1].IsNull() &&
-	    r[j][2].IsNull() )     ||
-	   ( ! r[j][0].IsNull() && ! r[j][1].IsNull() &&
-	   ! r[j][2].IsNull() ) )
-	  return 1;
+      if ( Dot( hit - pts[0][0], perimeter[0][0] ) >= 0 &&
+	  Dot( hit - pts[0][1], perimeter[0][1] ) >= 0 &&
+	  Dot( hit - pts[0][2], perimeter[1][0] ) >= 0 &&
+	  Dot( hit - pts[1][1], perimeter[1][1] ) >= 0 )
+	return 1;
     }
-
   return 0;
 }
-
