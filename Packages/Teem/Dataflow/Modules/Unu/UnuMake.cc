@@ -22,7 +22,7 @@
  *   Darby Van Uitert
  *   February 2004
  *
- */
+ */  
 
 #include <Dataflow/Network/Module.h>
 #include <Core/Malloc/Allocator.h>
@@ -30,6 +30,11 @@
 #include <Core/GuiInterface/GuiVar.h>
 
 #include <Teem/Dataflow/Ports/NrrdPort.h>
+
+/* bad Gordon */
+extern "C" {
+  int _nrrdReadNrrdParse_keyvalue(Nrrd *nrrd, NrrdIO *io, int useBiff);
+}
 
 namespace SCITeem {
 
@@ -68,6 +73,12 @@ private:
   GuiInt          byte_skip_;
   GuiString       endian_;
   GuiString       encoding_;
+  GuiString       key1_;
+  GuiString       key2_;
+  GuiString       key3_;
+  GuiString       val1_;
+  GuiString       val2_;
+  GuiString       val3_;
 
   NrrdData*       nout_;
   NrrdIO*         nio_;
@@ -109,6 +120,12 @@ UnuMake::UnuMake(GuiContext* ctx)
     byte_skip_(ctx->subVar("byte_skip")),
     endian_(ctx->subVar("endian")),
     encoding_(ctx->subVar("encoding")),
+    key1_(ctx->subVar("key1")),
+    key2_(ctx->subVar("key2")),
+    key3_(ctx->subVar("key3")),
+    val1_(ctx->subVar("val1")),
+    val2_(ctx->subVar("val2")),
+    val3_(ctx->subVar("val3")),
     read_handle_(0),
     send_handle_(0),
     old_filemodification_(0),
@@ -201,7 +218,7 @@ void UnuMake::read_file_and_create_nrrd() {
   }
   nout_ = scinew NrrdData();
   nio_ = nrrdIONew();
-  nrrdIOInit(nio_);
+
   
   // Reset guivars
   write_header_.reset();
@@ -209,25 +226,26 @@ void UnuMake::read_file_and_create_nrrd() {
   line_skip_.reset();
   byte_skip_.reset();
   
-  if (data_type_.get() == "char") {
+  string data_type = data_type_.get();
+  if (data_type == "char") {
     nout_->nrrd->type = nrrdTypeChar;
-  } else if (data_type_.get() == "unsigned char") {
+  } else if (data_type == "unsigned char") {
     nout_->nrrd->type = nrrdTypeUChar;
-  } else if (data_type_.get() == "short") {
+  } else if (data_type == "short") {
     nout_->nrrd->type = nrrdTypeShort;
-  } else if (data_type_.get() == "unsigned short") {
+  } else if (data_type == "unsigned short") {
     nout_->nrrd->type = nrrdTypeUShort;
-  } else if (data_type_.get() == "int") {
+  } else if (data_type == "int") {
     nout_->nrrd->type = nrrdTypeInt;
-  } else if (data_type_.get() == "unsigned int") {
+  } else if (data_type == "unsigned int") {
     nout_->nrrd->type = nrrdTypeUInt;
-  } else if (data_type_.get() == "long long") {
+  } else if (data_type == "long long") {
     nout_->nrrd->type = nrrdTypeLLong;
-  } else if (data_type_.get() == "unsigned long long") {
+  } else if (data_type == "unsigned long long") {
     nout_->nrrd->type = nrrdTypeULLong;
-  } else if (data_type_.get() == "float") {
+  } else if (data_type == "float") {
     nout_->nrrd->type = nrrdTypeFloat;
-  } else if (data_type_.get() == "double") {
+  } else if (data_type == "double") {
     nout_->nrrd->type = nrrdTypeDouble;
   } else {
     error("Unkown data type");
@@ -252,55 +270,128 @@ void UnuMake::read_file_and_create_nrrd() {
   }
   
   nout_->nrrd->content = airStrdup(content_.get().c_str());
+
+  // Key/Value pairs
+  string t_key = airOneLinify((char*)key1_.get().c_str());
+  string t_val = airOneLinify((char*)val1_.get().c_str());
+  if (t_key != "" && t_val != "") {
+    string temp = "\"" + t_key + ":=" + t_val + "\"";
+    nio_->line = (char*)temp.c_str();
+    if(_nrrdReadNrrdParse_keyvalue(nout_->nrrd, nio_, AIR_TRUE)) {
+      string err = biffGetDone(NRRD);
+      error(err);
+      nio_->line = NULL;
+    }
+    nio_->line = NULL;
+  }
+
+  t_key = airOneLinify((char*)key2_.get().c_str());
+  t_val = airOneLinify((char*)val2_.get().c_str());
+  if (t_key != "" && t_val != "") {
+    string temp = "\"" + t_key + ":=" + t_val + "\"";
+    nio_->line = (char*)temp.c_str();
+    if(_nrrdReadNrrdParse_keyvalue(nout_->nrrd, nio_, AIR_TRUE)) {
+      string err = biffGetDone(NRRD);
+      error(err);
+      nio_->line = NULL;
+    }
+    nio_->line = NULL;
+  }
+
+  t_key = airOneLinify((char*)key3_.get().c_str());
+  t_val = airOneLinify((char*)val3_.get().c_str());
+  if (t_key != "" && t_val != "") {
+    string temp = "\"" + t_key + ":=" + t_val + "\"";
+    nio_->line = (char*)temp.c_str();
+    if(_nrrdReadNrrdParse_keyvalue(nout_->nrrd, nio_, AIR_TRUE)) {
+      string err = biffGetDone(NRRD);
+      error(err);
+      nio_->line = NULL;
+    }
+    nio_->line = NULL;
+  }
+
+  // Case for generating a header
+  if(write_header_.get()) {
+    nio_->lineSkip = line_skip_.get();
+    nio_->byteSkip = byte_skip_.get();
+
+    string encoding = encoding_.get();
+    if (encoding == "Raw") {
+      nio_->encoding = nrrdEncodingArray[1];
+    } else if (encoding == "ASCII") {
+      nio_->encoding = nrrdEncodingArray[2];
+    } else if (encoding == "Hex") {
+      nio_->encoding = nrrdEncodingArray[3];
+    } else if (encoding == "Gzip") {
+      nio_->encoding = nrrdEncodingArray[4];
+    } else if (encoding == "Bzip2") {
+      nio_->encoding = nrrdEncodingArray[5];
+    }  else {
+      error("Non-existant encoding type");
+      return;
+    }
+
+    nio_->dataFN = airStrdup(filename_.get().c_str());
+
+    nio_->detachedHeader = AIR_TRUE;
+    nio_->skipData = AIR_TRUE;
+
+    if (endian_.get() == "little") {
+      nio_->endian = airEndianLittle;
+    } else {
+      nio_->endian = airEndianBig;
+    }
+
+    FILE* fileOut;
+    if(header_filename_.get() == "") {
+      remark("No header filename spcified.  Attempting to write header in directory of original data file.");
+      string out = filename_.get() + ".nhdr";
+      if (!(fileOut = airFopen(out.c_str(),stdout, "wb"))) {
+	error("Error opening header file for writing.");
+	return;
+      } else {
+	nrrdFormatNRRD->write(fileOut, nout_->nrrd, nio_);
+	AIR_FCLOSE(fileOut);
+      }
+    } else {
+      if (!(fileOut = airFopen(header_filename_.get().c_str(),stdout, "wb"))) {
+	error("Error opening header file for writing.");
+	return;
+      } else {
+	nrrdFormatNRRD->write(fileOut, nout_->nrrd, nio_);
+	AIR_FCLOSE(fileOut);
+      }
+    }
+  } 
+
+  // All ready written header so reset as if we
+  // haven't written it out and still need to
+  // read the data
+  nio_->detachedHeader = AIR_FALSE;
+  nio_->skipData = AIR_FALSE;
+
+  nrrdIOInit(nio_);
   nio_->lineSkip = line_skip_.get();
   nio_->byteSkip = byte_skip_.get();
 
-  if (encoding_.get() == "Raw") {
+  string encoding = encoding_.get();
+  if (encoding == "Raw") {
     nio_->encoding = nrrdEncodingArray[1];
-  } else if (encoding_.get() == "ASCII") {
+  } else if (encoding == "ASCII") {
     nio_->encoding = nrrdEncodingArray[2];
-  } else if (encoding_.get() == "Hex") {
+  } else if (encoding == "Hex") {
     nio_->encoding = nrrdEncodingArray[3];
-  } else if (encoding_.get() == "Gzip") {
+  } else if (encoding == "Gzip") {
     nio_->encoding = nrrdEncodingArray[4];
-  } else if (encoding_.get() == "Bzip2") {
+  } else if (encoding == "Bzip2") {
     nio_->encoding = nrrdEncodingArray[5];
   }  else {
     error("Non-existant encoding type");
     return;
   }
 
-  if (endian_.get() == "little") {
-    nio_->endian = airEndianLittle;
-  } else {
-    nio_->endian = airEndianBig;
-  }
-
-  // Case for generating a header
-  if(write_header_.get()) {
-    nio_->dataFN = airStrdup(filename_.get().c_str());
-    nio_->detachedHeader = AIR_TRUE;
-
-    FILE* fileOut;
-    if(header_filename_.get() == "") {
-      remark("No header filename spcified.  Attempting to write header in directory of original data file.");
-      string out = filename_.get() + ".nhdr";
-      if ((fileOut = airFopen(out.c_str(),stdout, "wb"))) {
-	nrrdFormatNRRD->write(fileOut, nout_->nrrd, nio_);
-      } else {
-	error("Error opening header file for writing.");
-	return;
-      }
-    } else {
-      if ((fileOut = airFopen(header_filename_.get().c_str(),stdout, "wb"))) {
-	nrrdFormatNRRD->write(fileOut, nout_->nrrd, nio_);
-      } else {
-	error("Error opening header file for writing.");
-	return;
-      }
-    }
-  } 
-
+  
   // Assume only reading in a single file
   if(!(nio_->dataFile = airFopen(filename_.get().c_str(), stdin, "rb") )) {
     error("Couldn't open file " + filename_.get() + " for reading.");
@@ -324,6 +415,8 @@ void UnuMake::read_file_and_create_nrrd() {
     error(err);
     AIR_FCLOSE(nio_->dataFile);
     return;
+  } else {
+    cerr << "Read data ok.\n";
   }
 
   AIR_FCLOSE(nio_->dataFile);
@@ -339,6 +432,7 @@ void UnuMake::read_file_and_create_nrrd() {
   // Display the nrrd info for the
   // user to select a tuple axis
   get_nrrd_info(read_handle_);
+  
 }
 
 int UnuMake::parse_gui_vars() {
