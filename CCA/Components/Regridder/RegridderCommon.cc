@@ -144,6 +144,8 @@ void RegridderCommon::problemSetup(const ProblemSpecP& params,
   // get level0 resolution
   IntVector low, high;
   level0->findCellIndexRange(low, high);
+  cout << "RegridderCommon::problemSetup()  low = " << low << endl;
+  cout << "RegridderCommon::problemSetup() high = " << high << endl;
   d_cellNum[0] = high-low;
   const Patch* patch = level0->selectPatchForCellIndex(IntVector(0,0,0));
   d_patchSize[0] = patch->getHighIndex() - patch->getLowIndex();
@@ -436,4 +438,13 @@ void RegridderCommon::Dilate( CCVariable<int>& flaggedCells, CCVariable<int>& di
   }
 
   cout << "RegridderCommon::Dilate() END" << endl;
+}
+
+void RegridderCommon::Dilate2(const ProcessorGroup*,
+			      const PatchSubset* patches,
+			      const MaterialSubset* ,
+			      DataWarehouse* old_dw,
+			      DataWarehouse* new_dw)
+{
+
 }
