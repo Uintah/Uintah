@@ -103,6 +103,8 @@ Grid::problemSetup(const ProblemSpecP& params, const ProcessorGroup *pg)
       // resolution is used on a problem with more than one patch,
       // the resulting grid spacing must be consistent.
       Point anchor(MAXDOUBLE, MAXDOUBLE, MAXDOUBLE);
+      Point highPoint(MINDOUBLE, MINDOUBLE, MINDOUBLE);
+
       Vector spacing;
       bool have_levelspacing=false;
 
@@ -119,6 +121,7 @@ Grid::problemSetup(const ProblemSpecP& params, const ProcessorGroup *pg)
         Point upper;
         box_ps->require("upper", upper);
         anchor=Min(lower, anchor);
+        highPoint=Max(upper, highPoint);
 
         IntVector resolution;
         if(box_ps->get("resolution", resolution)){
@@ -144,81 +147,78 @@ Grid::problemSetup(const ProblemSpecP& params, const ProcessorGroup *pg)
         throw ProblemSetupException("Box resolution is not specified");
 
       LevelP level = addLevel(anchor, spacing);
-      
+      IntVector anchorCell(level->getCellIndex(anchor));
+      IntVector highPointCell(level->getCellIndex(highPoint));
 
       // second pass - set up patches and cells
       for(ProblemSpecP box_ps = level_ps->findBlock("Box");
          box_ps != 0; box_ps = box_ps->findNextBlock("Box")){
-       Point lower;
-       box_ps->require("lower", lower);
-       Point upper;
-       box_ps->require("upper", upper);
-       
-       IntVector lowCell = level->getCellIndex(lower+Vector(1.e-6,1.e-6,1.e-6));
-       IntVector highCell = level->getCellIndex(upper+Vector(1.e-6,1.e-6,1.e-6));
-       Point lower2 = level->getNodePosition(lowCell);
-       Point upper2 = level->getNodePosition(highCell);
-       double diff_lower = (lower2-lower).length();
-       double diff_upper = (upper2-upper).length();
-       if(diff_lower > 1.e-6) {
-         cerr << "lower=" << lower << '\n';
-         cerr << "lowCell =" << lowCell << '\n';
-         cerr << "highCell =" << highCell << '\n';
-         cerr << "lower2=" << lower2 << '\n';
-         cerr << "diff=" << diff_lower << '\n';
-
-         throw ProblemSetupException("Box lower corner does not coincide with grid");
-       }
-       if(diff_upper > 1.e-6){
-         cerr << "upper=" << upper << '\n';
-         cerr << "lowCell =" << lowCell << '\n';
-         cerr << "highCell =" << highCell << '\n';
-         cerr << "upper2=" << upper2 << '\n';
-         cerr << "diff=" << diff_upper << '\n';
-         throw ProblemSetupException("Box upper corner does not coincide with grid");
-       }
-       // Determine the interior cell limits.  For no extraCells, the limits
-       // will be the same.  For extraCells, the interior cells will have
-       // different limits so that we can develop a CellIterator that will
-       // use only the interior cells instead of including the extraCell
-       // limits.
-       IntVector extraCells;
-       box_ps->getWithDefault("extraCells", extraCells, IntVector(0,0,0));
-       level->setExtraCells(extraCells);
-       
-       IntVector resolution(highCell-lowCell);
-       if(resolution.x() < 1 || resolution.y() < 1 || resolution.z() < 1)
-         throw ProblemSetupException("Degenerate patch");
-       
-       IntVector patches;
-       if(box_ps->get("patches", patches)){
-         level->setPatchDistributionHint(patches);
-         if (pg->size() > 1 &&
-             (patches.x() * patches.y() * patches.z() < pg->size()))
-           throw ProblemSetupException("Number of patches must >= the number of processes in an mpi run");
-         for(int i=0;i<patches.x();i++){
-           for(int j=0;j<patches.y();j++){
-             for(int k=0;k<patches.z();k++){
+        Point lower;
+        box_ps->require("lower", lower);
+        Point upper;
+        box_ps->require("upper", upper);
+        
+        IntVector lowCell = level->getCellIndex(lower+Vector(1.e-6,1.e-6,1.e-6));
+        IntVector highCell = level->getCellIndex(upper+Vector(1.e-6,1.e-6,1.e-6));
+        Point lower2 = level->getNodePosition(lowCell);
+        Point upper2 = level->getNodePosition(highCell);
+        double diff_lower = (lower2-lower).length();
+        double diff_upper = (upper2-upper).length();
+        if(diff_lower > 1.e-6) {
+          cerr << "lower=" << lower << '\n';
+          cerr << "lowCell =" << lowCell << '\n';
+          cerr << "highCell =" << highCell << '\n';
+          cerr << "lower2=" << lower2 << '\n';
+          cerr << "diff=" << diff_lower << '\n';
+          
+          throw ProblemSetupException("Box lower corner does not coincide with grid");
+        }
+        if(diff_upper > 1.e-6){
+          cerr << "upper=" << upper << '\n';
+          cerr << "lowCell =" << lowCell << '\n';
+          cerr << "highCell =" << highCell << '\n';
+          cerr << "upper2=" << upper2 << '\n';
+          cerr << "diff=" << diff_upper << '\n';
+          throw ProblemSetupException("Box upper corner does not coincide with grid");
+        }
+        // Determine the interior cell limits.  For no extraCells, the limits
+        // will be the same.  For extraCells, the interior cells will have
+        // different limits so that we can develop a CellIterator that will
+        // use only the interior cells instead of including the extraCell
+        // limits.
+        IntVector extraCells;
+        box_ps->getWithDefault("extraCells", extraCells, IntVector(0,0,0));
+        level->setExtraCells(extraCells);
+        
+        IntVector resolution(highCell-lowCell);
+        if(resolution.x() < 1 || resolution.y() < 1 || resolution.z() < 1)
+          throw ProblemSetupException("Degenerate patch");
+        
+        IntVector patches;
+        box_ps->getWithDefault("patches", patches,IntVector(1,1,1));
+        level->setPatchDistributionHint(patches);
+        if (pg->size() > 1 &&
+            (patches.x() * patches.y() * patches.z() < pg->size()))
+          throw ProblemSetupException("Number of patches must >= the number of processes in an mpi run");
+        for(int i=0;i<patches.x();i++){
+          for(int j=0;j<patches.y();j++){
+            for(int k=0;k<patches.z();k++){
               IntVector startcell = resolution*IntVector(i,j,k)/patches+lowCell;
               IntVector endcell = resolution*IntVector(i+1,j+1,k+1)/patches+lowCell;
               IntVector inStartCell(startcell);
               IntVector inEndCell(endcell);
-              startcell -= IntVector(i == 0? extraCells.x():0,
-                                   j == 0? extraCells.y():0,
-                                   k == 0? extraCells.z():0);
-              endcell += IntVector(i == patches.x()-1? extraCells.x():0,
-                                 j == patches.y()-1? extraCells.y():0,
-                                 k == patches.z()-1? extraCells.z():0);
+              startcell -= IntVector(startcell.x() == anchorCell.x() ? extraCells.x():0,
+                                     startcell.y() == anchorCell.y() ? extraCells.y():0,
+                                     startcell.z() == anchorCell.z() ? extraCells.z():0);
+              endcell += IntVector(endcell.x() == highPointCell.x() ? extraCells.x():0,
+                                   endcell.y() == highPointCell.y() ? extraCells.y():0,
+                                   endcell.z() == highPointCell.z() ? extraCells.z():0);
               Patch* p = level->addPatch(startcell, endcell,
-                                      inStartCell, inEndCell);
+                                         inStartCell, inEndCell);
               p->setLayoutHint(IntVector(i,j,k));
-             }
-           }
-         }
-       } else {
-         // actually create the patch
-         level->addPatch(lowCell, highCell, lowCell+extraCells, highCell-extraCells);
-       }
+            }
+          }
+        }
       }
 
       IntVector periodicBoundaries;
