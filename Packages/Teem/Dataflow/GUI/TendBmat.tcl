@@ -32,6 +32,16 @@ itcl_class Teem_Tend_TendBmat {
 
     }
 
+    method update_text {} {
+	set w .ui[modname]
+	set $this-gradient_list [$w.f.options.gradient_list get 1.0 end]
+    }
+
+    method send_text {} {
+	$this update_text
+	$this-c needexecute
+    }
+
     method ui {} {
         set w .ui[modname]
         if {[winfo exists $w]} {
@@ -47,7 +57,15 @@ itcl_class Teem_Tend_TendBmat {
 	frame $w.f.options
 	pack $w.f.options -side top -expand yes
 
-        iwidgets::entryfield $w.f.options.gradient_list -labeltext "gradient_list:" -textvariable $this-gradient_list
+
+
+	option add *textBackground white	
+	iwidgets::scrolledtext $w.f.options.gradient_list -vscrollmode dynamic \
+		-labeltext "List of gradients. example: (one gradient per line) 0.5645 0.32324 0.4432454"
+	set cmmd "$this send_text"
+	bind $w.f.options.gradient_list <Leave> "$this update_text"
+	catch {$w.f.options.gradient_list insert end [set $this-gradient_list]}
+
         pack $w.f.options.gradient_list -side top -expand yes -fill x
 
 	button $w.f.b -text "Execute" -command "$this-c needexecute"

@@ -108,6 +108,7 @@ void do_tensor(Tensor &t, void *&ptr)
   t.mat_[1][2] = (*p);
   ++p;
   t.mat_[2][2] = (*p);
+  ++p; // skip 7th valid metric.
   ++p;
 }
 

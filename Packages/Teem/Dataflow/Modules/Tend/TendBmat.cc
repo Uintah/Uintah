@@ -21,6 +21,7 @@
 #include <Core/Malloc/Allocator.h>
 #include <Core/GuiInterface/GuiVar.h>
 #include <Teem/Dataflow/Ports/NrrdPort.h>
+#include <teem/ten.h>
 
 #include <sstream>
 #include <iostream>
@@ -38,6 +39,9 @@ public:
   virtual void execute();
 
 private:
+  // Create a memory for a new nrrd, that is arranged 3 x n;
+  bool extract_gradients(vector<double> &);
+
   NrrdIPort*      inrrd_;
   NrrdOPort*      onrrd_;
 
@@ -55,6 +59,31 @@ TendBmat::TendBmat(SCIRun::GuiContext *ctx) :
 TendBmat::~TendBmat() {
 }
 
+
+// Create a memory for a new nrrd, that is arranged 3 x n;
+bool
+TendBmat::extract_gradients(vector<double> &d)
+{
+  istringstream str(gradient_list_.get().c_str());
+  while (true)
+  {
+    double tmp;
+    str >> tmp;
+    if (!str.eof() && !str.fail()) {
+      d.push_back(tmp);
+    }
+    else {
+      break;
+    }
+  }
+  if (d.size() % 3 != 0) {
+    error("Error: Number of input values must be divisible by 3");
+    return false;
+  }
+  return true;
+}
+
+
 void 
 TendBmat::execute()
 {
@@ -71,19 +100,45 @@ TendBmat::execute()
     error("Unable to initialize oport 'Nrrd'.");
     return;
   }
-  if (!inrrd_->get(nrrd_handle))
-    return;
+  //if (!inrrd_->get(nrrd_handle))
+  //return;
 
-  if (!nrrd_handle.get_rep()) {
-    error("Empty input Nrrd.");
+  //if (!nrrd_handle.get_rep()) {
+  //error("Empty input Nrrd.");
+  //return;
+  //}
+  
+  reset_vars();
+  vector<double> *mat = new vector<double>;
+  if (! extract_gradients(*mat)) {
+    error("Please adjust your input in the gui to represent a 3 x N set.");
     return;
   }
 
-  Nrrd *nin = nrrd_handle->nrrd;
+  Nrrd *nin = nrrdNew();
+  nrrdWrap(nin, &(*mat)[0], nrrdTypeDouble, 2, 3, (*mat).size() / 3);
+  
+  Nrrd *nout = nrrdNew();
+  if (tenBMatrix(nout, nin)) {
+    char *err = biffGetDone(TEN);
+    error(string("Error making aniso volume: ") + err);
+    free(err);
+    return;
+  }
+  
 
-  error("This module is a stub.  Implement me.");
+  Nrrd *ntup = nrrdNew();
+  nrrdAxesInsert(ntup, nout, 0);
+  ntup->axis[0].label = strdup("BMat:Scalar");
+  ntup->axis[1].label = strdup("tensor components");
+  ntup->axis[2].label = strdup("n");
+  nrrdNuke(nout);
+  nrrdNix(nin);
+  delete mat;
 
-  //onrrd_->send(NrrdDataHandle(nrrd_joined));
+  NrrdData *nrrd = scinew NrrdData;
+  nrrd->nrrd = ntup;
+  onrrd_->send(NrrdDataHandle(nrrd));
 }
 
 } // End namespace SCITeem

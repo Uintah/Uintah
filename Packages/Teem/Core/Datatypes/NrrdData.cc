@@ -268,12 +268,12 @@ NrrdData::get_tuple_index_info(int tmin, int tmax, int &min, int &max) const
     
     string &s = elems[i];
     int inc = 0;
-    if (s.find(string("Scalar")) <= tup.size() - 1) {
+    if (s.find(string("Scalar")) <= s.size() - 1) {
       inc = 1;
-    } else if (s.find(string("Vector")) <= tup.size() - 1) {
+    } else if (s.find(string("Vector")) <= s.size() - 1) {
       inc = 3;
-    } else if (s.find(string("Tensor")) <= tup.size() - 1) {
-      inc = 6;
+    } else if (s.find(string("Tensor")) <= s.size() - 1) {
+      inc = 7;
     }
     if (tmin > i) min+=inc;
     if (tmax > i) max+=inc;
@@ -330,6 +330,10 @@ void NrrdData::io(Piostream& stream) {
   stream.end_class();
 }
 
+template <>
+unsigned int get_nrrd_type<Tensor>() {
+  return nrrdTypeFloat;
+}
 
 template <>
 unsigned int get_nrrd_type<char>() {

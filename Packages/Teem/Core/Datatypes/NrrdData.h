@@ -133,6 +133,9 @@ unsigned int get_nrrd_type<unsigned long long>();
 template <>
 unsigned int get_nrrd_type<float>();
 
+template <>
+unsigned int get_nrrd_type<Tensor>();
+
 template <class T>
 unsigned int get_nrrd_type() {
   return nrrdTypeDouble;

@@ -21,6 +21,7 @@
 #include <Core/Malloc/Allocator.h>
 #include <Core/GuiInterface/GuiVar.h>
 #include <Teem/Dataflow/Ports/NrrdPort.h>
+#include <teem/ten.h>
 
 #include <sstream>
 #include <iostream>
@@ -38,6 +39,8 @@ public:
   virtual void execute();
 
 private:
+  bool extract_gradients(vector<double> &d);
+
   NrrdIPort*      inrrd_;
   NrrdOPort*      onrrd_;
 
@@ -49,7 +52,8 @@ private:
   GuiInt       cc_analysis_;
   GuiDouble    fitting_;
   GuiString    kernel_;
-  GuiInt       base_;
+  GuiDouble    sigma_;
+  GuiDouble    extent_;
 };
 
 DECLARE_MAKER(TendEpireg)
@@ -64,12 +68,39 @@ TendEpireg::TendEpireg(SCIRun::GuiContext *ctx) :
   cc_analysis_(ctx->subVar("cc_analysis")),
   fitting_(ctx->subVar("fitting")),
   kernel_(ctx->subVar("kernel")),
-  base_(ctx->subVar("base"))
+  sigma_(ctx->subVar("sigma")),
+  extent_(ctx->subVar("extent"))
 {
 }
 
 TendEpireg::~TendEpireg() {
 }
+
+
+
+// Create a memory for a new nrrd, that is arranged 3 x n;
+bool
+TendEpireg::extract_gradients(vector<double> &d)
+{
+  istringstream str(gradient_list_.get().c_str());
+  while (true)
+  {
+    double tmp;
+    str >> tmp;
+    if (!str.eof() && !str.fail()) {
+      d.push_back(tmp);
+    }
+    else {
+      break;
+    }
+  }
+  if (d.size() % 3 != 0) {
+    error("Error: Number of input values must be divisible by 3");
+    return false;
+  }
+  return true;
+}
+
 
 void 
 TendEpireg::execute()
@@ -95,11 +126,65 @@ TendEpireg::execute()
     return;
   }
 
+  reset_vars();
+  vector<double> *mat = new vector<double>;
+  if (! extract_gradients(*mat)) {
+    error("Please adjust your input in the gui to represent a 3 x N set.");
+    return;
+  }
+
+  Nrrd *ngrad = nrrdNew();
+  nrrdWrap(ngrad, &(*mat)[0], nrrdTypeDouble, 2, 3, (*mat).size() / 3);
+ 
+
   Nrrd *nin = nrrd_handle->nrrd;
 
-  error("This module is a stub.  Implement me.");
 
-  //onrrd_->send(NrrdDataHandle(nrrd_joined));
+  NrrdKernel *kern;
+  double p[NRRD_KERNEL_PARMS_NUM];
+  memset(p, 0, NRRD_KERNEL_PARMS_NUM * sizeof(double));
+  p[0] = 1.0;
+  if (kernel_.get() == "box") {
+    kern = nrrdKernelBox;
+  } else if (kernel_.get() == "tent") {
+    kern = nrrdKernelTent;
+  } else if (kernel_.get() == "gaussian") { 
+    kern = nrrdKernelGaussian; 
+    p[1] = sigma_.get(); 
+    p[2] = extent_.get(); 
+  } else if (kernel_.get() == "cubicCR") { 
+    kern = nrrdKernelBCCubic; 
+    p[1] = 0; 
+    p[2] = 0.5; 
+  } else if (kernel_.get() == "cubicBS") { 
+    kern = nrrdKernelBCCubic; 
+    p[1] = 1; 
+    p[2] = 0; 
+  } else  { // default is quartic
+    kern = nrrdKernelAQuartic; 
+    p[1] = 0.0834; 
+  }
+
+  Nrrd *nout = nrrdNew();
+  if (tenEpiRegister4D(nout, nin, ngrad, reference_.get(),
+		       blur_x_.get(), blur_y_.get(), fitting_.get(), 
+		       threshold_.get(), cc_analysis_.get(),
+		       kern, p, 0, 0)) {
+    char *err = biffGetDone(TEN);
+    error(string("Error in epireg: ") + err);
+    free(err);
+    return;
+  }
+      
+
+  nrrdNuke(ngrad);
+  delete mat;
+
+  NrrdData *output = scinew NrrdData;
+  output->nrrd = nout;
+  output->copy_sci_data(*nrrd_handle.get_rep());
+  output->nrrd->axis[0].label = strdup(nin->axis[0].label);
+  onrrd_->send(NrrdDataHandle(output));
 }
 
 } // End namespace SCITeem

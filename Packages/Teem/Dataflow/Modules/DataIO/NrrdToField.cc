@@ -267,7 +267,7 @@ NrrdToField::create_scanline_field(NrrdDataHandle &nrd)
     }
 
     break;
-  case 5: // Tensor
+  case 6: // Tensor
     if (n->axis[1].center == nrrdCenterCell) {
       fh = new ScanlineField<Tensor>(mh, Field::EDGE);
       ScanlineMesh::Edge::iterator iter, end;
@@ -478,7 +478,7 @@ NrrdToField::create_image_field(NrrdDataHandle &nrd)
       fill_data((ImageField<Vector>*)fh.get_rep(), n, iter, end);
     }
     break;
-  case 5: // Tensor
+  case 6: // Tensor
     if (n->axis[1].center == nrrdCenterCell) {
       fh = new ImageField<Tensor>(mh, Field::FACE);
       ImageMesh::Face::iterator iter, end;
@@ -690,7 +690,7 @@ NrrdToField::create_latvol_field(NrrdDataHandle &nrd)
       fill_data((LatVolField<Vector>*)fh.get_rep(), n, iter, end);
     }
     break;
-  case 5: // Tensor
+  case 6: // Tensor
     if (n->axis[1].center == nrrdCenterCell) {
       fh = new LatVolField<Tensor>(mh, Field::CELL);
       LatVolMesh::Cell::iterator iter, end;
@@ -787,7 +787,7 @@ void NrrdToField::execute()
     CompileInfoHandle ci = ConvertToFieldBase::get_compile_info(td);
     Handle<ConvertToFieldBase> algo;
     if ((module_dynamic_compile(ci, algo)) && 
-	(algo->convert_to_field(fh, ninH->nrrd, ofield_handle))) 
+	(algo->convert_to_field(fh, ninH, ofield_handle))) 
     {
       remark("Creating a Field from original mesh in input nrrd");
       dim_based_convert = false;
