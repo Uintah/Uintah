@@ -425,7 +425,7 @@ void
 StreamLines::execute()
 {
   update_state(NeedData);
-
+ 
   FieldIPort* vfport = (FieldIPort*)get_iport("Flow field");
   FieldHandle vfHandle;
   Field *vField;  // vector field
@@ -516,6 +516,8 @@ StreamLines::execute()
       update ||
       error_ ) {
 
+    update_state(JustStarted);
+
     error_ = false;
 
     const TypeDescription *smtd = sField->mesh()->get_type_description();
@@ -538,7 +540,7 @@ StreamLines::execute()
       
       fHandle_ = accalgo->execute(sField->mesh(), vfHandle, maxsteps,
 				  direction, color,
-				  remove_colinear_);
+				  remove_colinear);
     } else {
       CompileInfoHandle ci = StreamLinesAlgo::get_compile_info(smtd, sltd); 
       Handle<StreamLinesAlgo> algo;
@@ -548,9 +550,11 @@ StreamLines::execute()
       fHandle_ = algo->execute(sField->mesh(), vfi,
 			       tolerance, stepsize, maxsteps,
 			       direction, color,
-			       remove_colinear_,
-			       method_, CLAMP(np_, 1, 256));
+			       remove_colinear,
+			       method, CLAMP(np, 1, 256));
     }
+
+    update_state(Completed);
   }
    
   // Get a handle to the output field port.
