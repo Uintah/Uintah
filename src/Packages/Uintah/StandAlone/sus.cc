@@ -44,8 +44,8 @@
 #include <vector>
 
 using namespace SCIRun;
-using namespace std;
 using namespace Uintah;
+using namespace std;
 
 void quit( const std::string & msg = "" )
 {
@@ -102,6 +102,10 @@ int main(int argc, char** argv)
     bool   do_mpm=false;
     bool   do_arches=false;
     bool   do_ice=false;
+    bool   restart=false;
+    int    restartTimestep = -1;
+    string restartFromDir;
+    bool   restartRemoveOldDir=false;
     int    numThreads = 0;
     string filename;
     string scheduler;
@@ -140,7 +144,17 @@ int main(int argc, char** argv)
 	} else if(s.substr(0,3) == "-p4") {
 	   // mpich - skip the rest
 	   break;
-	} else {
+	} else if(s == "-restart") {
+	   restart=true;
+	} else if(s == "-nocopy") {
+	   restartRemoveOldDir = true;
+	} else if(s == "-copy") { // default anyway, but that's fine
+	   restartRemoveOldDir = false;
+	} else if(s == "-t") {
+           if (i < argc-1)
+	      restartTimestep = atoi(argv[++i]);
+	}
+	else {
 	    if(filename!="")
 		usage("", s, argv[0]);
 	    else
@@ -245,6 +259,7 @@ int main(int argc, char** argv)
 	      scinew MPIScheduler(world, output);
 	   sim->attachPort("scheduler", sched);
 	   sched->attachPort("load balancer", bal);
+/*
 	} else if(scheduler == "MixedScheduler"){
 	   if( numThreads > 0 ){
 	     if( Uintah::Parallel::getMaxThreads() == 1 ){
@@ -255,6 +270,7 @@ int main(int argc, char** argv)
 	      scinew MixedScheduler(world, output);
 	   sim->attachPort("scheduler", sched);
 	   sched->attachPort("load balancer", bal);
+*/
 	} else if(scheduler == "NullScheduler"){
 	   NullScheduler* sched =
 	      scinew NullScheduler(world, output);
@@ -276,6 +292,10 @@ int main(int argc, char** argv)
 	  sleep( sleepTime );
 	}
 
+	if (restart) {
+	  sim->doRestart(restartFromDir, restartTimestep,
+			 restartRemoveOldDir);
+	}
 	sim->run();
 
     delete sim;
@@ -290,16 +310,18 @@ int main(int argc, char** argv)
 	cerr << "Caught exception: " << e.message() << '\n';
 	if(e.stackTrace())
 	   cerr << "Stack trace: " << e.stackTrace() << '\n';
-	Uintah::Parallel::finalizeManager(Uintah::Parallel::Abort);
-	abort();
+	// Dd: I believe that these cause error messages
+	// to be lost when the program dies...
+	//Uintah::Parallel::finalizeManager(Uintah::Parallel::Abort);
+	//abort();
     } catch (std::exception e){
         cerr << "Caught std exception: " << e.what() << '\n';
-	Uintah::Parallel::finalizeManager(Uintah::Parallel::Abort);
-	abort();       
+	//Uintah::Parallel::finalizeManager(Uintah::Parallel::Abort);
+	//abort();       
     } catch(...){
 	cerr << "Caught unknown exception\n";
-	Uintah::Parallel::finalizeManager(Uintah::Parallel::Abort);
-	abort();
+	//Uintah::Parallel::finalizeManager(Uintah::Parallel::Abort);
+	//abort();
     }
 
     /*

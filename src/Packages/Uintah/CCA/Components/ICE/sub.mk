@@ -3,9 +3,11 @@ include $(SRCTOP)/scripts/smallso_prologue.mk
 
 SRCDIR   := Packages/Uintah/CCA/Components/ICE
 
-SRCS	+= $(SRCDIR)/ICE.cc \
-	$(SRCDIR)/ICELabel.cc \
-	$(SRCDIR)/ICEMaterial.cc $(SRCDIR)/GeometryObject2.cc
+SRCS	+= \
+	$(SRCDIR)/ICE.cc         \
+	$(SRCDIR)/ICELabel.cc    \
+	$(SRCDIR)/ICEMaterial.cc \
+	$(SRCDIR)/GeometryObject2.cc
 
 SUBDIRS := $(SRCDIR)/EOS 
  

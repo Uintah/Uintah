@@ -27,9 +27,9 @@ HypoElastic::HypoElastic(ProblemSpecP& ps)
   ps->require("G",d_initialData.G);
   ps->require("K",d_initialData.K);
 
-  p_statedata_label = scinew VarLabel("p.statedata",
+  p_statedata_label = scinew VarLabel("p.statedata_hypo",
                                 ParticleVariable<StateData>::getTypeDescription());
-  p_statedata_label_preReloc = scinew VarLabel("p.statedata+",
+  p_statedata_label_preReloc = scinew VarLabel("p.statedata_hypo+",
                                 ParticleVariable<StateData>::getTypeDescription());
 }
 
@@ -117,7 +117,6 @@ void HypoElastic::computeStableTimestep(const Patch* patch,
     }
     WaveSpeed = dx/WaveSpeed;
     double delT_new = WaveSpeed.minComponent();
-//    new_dw->put(delt_vartype(delT_new), lb->delTAfterConstitutiveModelLabel);
     new_dw->put(delt_vartype(delT_new), lb->delTLabel);
 }
 
@@ -126,8 +125,10 @@ void HypoElastic::computeStressTensor(const Patch* patch,
                                         DataWarehouseP& old_dw,
                                         DataWarehouseP& new_dw)
 {
+  //
   //  FIX  To do:  Read in table for vres
   //               Obtain and modify particle temperature (deg K)
+  //
   Matrix3 velGrad,deformationGradientInc,Identity,zero(0.),One(1.);
   double J,se=0.;
   double c_dil=0.0,Jinc;
@@ -250,7 +251,7 @@ void HypoElastic::computeStressTensor(const Patch* patch,
 
   WaveSpeed = dx/WaveSpeed;
   double delT_new = WaveSpeed.minComponent();
-  new_dw->put(delt_vartype(delT_new),lb->delTAfterConstitutiveModelLabel);
+  new_dw->put(delt_vartype(delT_new),lb->delTLabel);
   new_dw->put(pstress, lb->pStressAfterStrainRateLabel);
   new_dw->put(deformationGradient, lb->pDeformationMeasureLabel_preReloc);
 
@@ -262,14 +263,6 @@ void HypoElastic::computeStressTensor(const Patch* patch,
   // Store deformed volume
   new_dw->put(pvolume,lb->pVolumeDeformedLabel);
 }
-
-//double HypoElastic::computeStrainEnergy(const Patch* patch,
-//                                        const MPMMaterial* matl,
-//                                        DataWarehouseP& new_dw)
-//{
-//  double se=0;
-//  return se;
-//}
 
 void HypoElastic::addComputesAndRequires(Task* task,
 					 const MPMMaterial* matl,
@@ -322,6 +315,7 @@ void HypoElastic::addComputesAndRequiresForCrackSurfaceContact(
 #endif
 
 namespace Uintah {
+
 static MPI_Datatype makeMPI_CMData()
 {
    ASSERTEQ(sizeof(HypoElastic::StateData), sizeof(double)*2);
@@ -335,10 +329,13 @@ const TypeDescription* fun_getTypeDescription(HypoElastic::StateData*)
 {
    static TypeDescription* td = 0;
    if(!td){
-      td = scinew TypeDescription(TypeDescription::Other,
-			       "HypoElastic::StateData", true, &makeMPI_CMData);
+      td = scinew
+	TypeDescription(TypeDescription::Other,
+			"HypoElastic::StateData", true, &makeMPI_CMData);
    }
    return td;
-} // End namespace Uintah
 }
+
+} // End namespace Uintah
+
 

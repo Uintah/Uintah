@@ -48,6 +48,8 @@ MPMLabel::MPMLabel()
   pNewlyBrokenSurfaceNormalLabel = scinew VarLabel("p.newlyBrokenSurfaceNormal",
 			ParticleVariable<Vector>::getTypeDescription());
 
+  pXXLabel = scinew VarLabel("p.positionXX",
+			ParticleVariable<Point>::getTypeDescription());
   
   //PermanentParticleState
   pStressLabel = scinew VarLabel( "p.stress",
@@ -89,7 +91,7 @@ MPMLabel::MPMLabel()
   pIsBrokenLabel = scinew VarLabel( "p.isBroken",
 			ParticleVariable<int>::getTypeDescription() );
 
-  pCrackSurfaceNormalLabel = scinew VarLabel( "p.crackSurfaceNormal",
+  pCrackNormalLabel = scinew VarLabel( "p.crackNormal",
 			ParticleVariable<Vector>::getTypeDescription() );
 
   pCrackSurfaceContactForceLabel = scinew VarLabel("p.crackSurfaceContactForce",
@@ -153,7 +155,7 @@ MPMLabel::MPMLabel()
   pIsBrokenLabel_preReloc = scinew VarLabel( "p.isBroken+",
 			ParticleVariable<int>::getTypeDescription() );
 
-  pCrackSurfaceNormalLabel_preReloc = scinew VarLabel( "p.crackSurfaceNormal+",
+  pCrackNormalLabel_preReloc = scinew VarLabel( "p.crackNormal+",
 			ParticleVariable<Vector>::getTypeDescription() );
 
   pCrackSurfaceContactForceLabel_preReloc = scinew VarLabel("p.crackSurfaceContactForce+",
@@ -208,6 +210,12 @@ MPMLabel::MPMLabel()
   
   gSelfContactLabel = scinew VarLabel( "g.selfContact",
 			NCVariable<bool>::getTypeDescription() );
+
+  gCrackNormalLabel = scinew VarLabel( "g.crackNormal",
+			NCVariable<Vector>::getTypeDescription() );
+
+  gTensileStrengthLabel = scinew VarLabel( "g.tensileStrength",
+			NCVariable<double>::getTypeDescription() );
   
   gTemperatureLabel = scinew VarLabel("g.temperature",
 			NCVariable<double>::getTypeDescription());
@@ -249,24 +257,8 @@ MPMLabel::MPMLabel()
   // Cell centered variables
   cBurnedMassLabel = scinew VarLabel( "c.burnedMass",
 			CCVariable<double>::getTypeDescription() );
-  cVelocityLabel = scinew VarLabel( "c.velocity",
-			CCVariable<Vector>::getTypeDescription() );
-  cMassLabel = scinew VarLabel( "c.mass",
-			CCVariable<double>::getTypeDescription() );
 
   // Reduction variables
-
-  delTAfterConstitutiveModelLabel = scinew VarLabel( 
-    "delTAfterConstitutiveModel", 
-    delt_vartype::getTypeDescription() );
-
-  delTAfterFractureLabel = scinew VarLabel( "delTAfterFracture", 
-    delt_vartype::getTypeDescription() );
-
-  delTAfterCrackSurfaceContactLabel = scinew VarLabel( 
-    "delTAfterCrackSurafceContact", 
-    delt_vartype::getTypeDescription() );
-
   delTLabel = scinew VarLabel( "delT", delt_vartype::getTypeDescription() );
 
   StrainEnergyLabel = scinew VarLabel( "StrainEnergy",
@@ -277,6 +269,9 @@ MPMLabel::MPMLabel()
 
   TotalMassLabel = scinew VarLabel( "TotalMass",
 				 sum_vartype::getTypeDescription() );
+
+  NTractionZMinusLabel = scinew VarLabel( "NTractionZMinus",
+			sum_vartype::getTypeDescription() );
 
   CenterOfMassPositionLabel = scinew VarLabel( "CenterOfMassPosition",
 				 sumvec_vartype::getTypeDescription() );
@@ -307,6 +302,8 @@ MPMLabel::~MPMLabel()
   
   delete pStrainEnergyLabel;
   delete pNewlyBrokenSurfaceNormalLabel;
+  
+  delete pXXLabel;
 
   //PermanentParticleState
   delete pStressLabel;
@@ -322,7 +319,7 @@ MPMLabel::~MPMLabel()
   delete pExternalHeatRateLabel;
   delete pSurfLabel;
   delete pIsBrokenLabel;
-  delete pCrackSurfaceNormalLabel;
+  delete pCrackNormalLabel;
   delete pCrackSurfaceContactForceLabel;
   delete pTensileStrengthLabel;
   delete pEnergyReleaseRateLabel;
@@ -343,7 +340,7 @@ MPMLabel::~MPMLabel()
   delete pExternalHeatRateLabel_preReloc;
   delete pSurfLabel_preReloc;
   delete pIsBrokenLabel_preReloc;
-  delete pCrackSurfaceNormalLabel_preReloc;
+  delete pCrackNormalLabel_preReloc;
   delete pCrackSurfaceContactForceLabel_preReloc;
   delete pTensileStrengthLabel_preReloc;
   delete pEnergyReleaseRateLabel_preReloc;
@@ -364,6 +361,8 @@ MPMLabel::~MPMLabel()
   delete gStressLabel;
   delete gSurfNormLabel;
   delete gSelfContactLabel;
+  delete gCrackNormalLabel;
+  delete gTensileStrengthLabel;
   delete gTemperatureLabel;
   delete gTemperatureStarLabel;
   delete gTemperatureRateLabel;
@@ -371,17 +370,13 @@ MPMLabel::~MPMLabel()
   delete gExternalHeatRateLabel;
   delete gThermalContactHeatExchangeRateLabel;
   delete cBurnedMassLabel;
-  delete cVelocityLabel;
-  delete cMassLabel;
 
-  delete delTAfterConstitutiveModelLabel;
-  delete delTAfterFractureLabel;
-  delete delTAfterCrackSurfaceContactLabel;
   delete delTLabel;
 
   delete StrainEnergyLabel;
   delete KineticEnergyLabel;
   delete TotalMassLabel;
+  delete NTractionZMinusLabel;
   delete CenterOfMassPositionLabel;
   delete CenterOfMassVelocityLabel;
   delete ppNAPIDLabel;
@@ -404,4 +399,3 @@ void MPMLabel::registerPermanentParticleState(int i,
   d_particleState_preReloc[i].push_back(preReloc_label);
   
 }
-

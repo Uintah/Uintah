@@ -310,13 +310,8 @@ using namespace SCIRun;
 #define FR   8
 #define FL   9
 #define bR   10
-} // End namespace Uintah
 #define bL   11
 
+} // End namespace Uintah
+
 #endif
-
-
-
-
-
-

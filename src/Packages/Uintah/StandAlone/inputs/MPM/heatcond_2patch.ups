@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="iso-8859-1"?>
-<!-- <!DOCTYPE Packages/Uintah_specification SYSTEM "input.dtd"> -->
+<!-- <!DOCTYPE Uintah_specification SYSTEM "input.dtd"> -->
 
 <!-- @version: Updated 7/31/00 -->
 
-<Packages/Uintah_specification>
+<Uintah_specification>
 
    <Meta>
 	<title>Heat conduction problem</title>
@@ -93,4 +93,4 @@
 	</MPM>
     </PhysicalBC>
     
-</Packages/Uintah_specification>
+</Uintah_specification>

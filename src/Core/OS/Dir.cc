@@ -1,6 +1,7 @@
 
 #include <Core/OS/Dir.h>
 #include <Core/Exceptions/ErrnoException.h>
+#include <Core/Exceptions/InternalError.h>
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <errno.h>
@@ -40,10 +41,27 @@ Dir& Dir::operator=(const Dir& copy)
 
 void Dir::remove()
 {
-    int code = rmdir(d_name.c_str());
-    if (code != 0)
-    	throw ErrnoException("Dir::remove (rmdir call)", errno);
-    return;
+  int code = rmdir(d_name.c_str());
+  if (code != 0)
+    throw ErrnoException("Dir::remove (rmdir call)", errno);
+  return;
+}
+
+void Dir::forceRemove()
+{
+   int code = system((string("rm -f -r ") + d_name).c_str());
+   if (code != 0)
+      throw InternalError(string("Dir::remove failed to remove: ") + d_name);
+   return;
+}
+
+void Dir::remove(const string& filename)
+{
+   string filepath = d_name + "/" + filename;
+   int code = system((string("rm -f ") + filepath).c_str());
+   if (code != 0)
+      throw InternalError(string("Dir::remove failed to remove: ") + filepath);
+   return;
 }
 
 Dir Dir::createSubdir(const string& sub)
@@ -56,3 +74,38 @@ Dir Dir::getSubdir(const string& sub)
    // This should probably do more
    return Dir(d_name+"/"+sub);
 }
+
+void Dir::copy(Dir& destDir)
+{
+   int code = system((string("cp -r ") + d_name + " " + destDir.d_name).c_str());
+   if (code != 0)
+      throw InternalError(string("Dir::copy failed to copy: ") + d_name);
+   return;
+}
+
+void Dir::move(Dir& destDir)
+{
+   int code = system((string("mv ") + d_name + " " + destDir.d_name).c_str());
+   if (code != 0)
+      throw InternalError(string("Dir::move failed to move: ") + d_name);
+   return;
+}
+
+void Dir::copy(const std::string& filename, Dir& destDir)
+{
+   string filepath = d_name + "/" + filename;
+   int code =system((string("cp ") + filepath + " " + destDir.d_name).c_str());
+   if (code != 0)
+      throw InternalError(string("Dir::copy failed to copy: ") + filepath);
+   return;
+}
+
+void Dir::move(const std::string& filename, Dir& destDir)
+{
+   string filepath = d_name + "/" + filename;
+   int code =system((string("mv ") + filepath + " " + destDir.d_name).c_str());
+   if (code != 0)
+      throw InternalError(string("Dir::move failed to move: ") + filepath);
+   return;
+}
+

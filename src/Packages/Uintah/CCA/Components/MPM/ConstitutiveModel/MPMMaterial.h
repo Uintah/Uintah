@@ -133,6 +133,7 @@ WARNING
 	 MPMMaterial(const MPMMaterial &mpmm);
 	 MPMMaterial& operator=(const MPMMaterial &mpmm);
       };
+
 } // End namespace Uintah
 
 #endif // __MPM_MATERIAL_H__
