@@ -54,7 +54,7 @@ class SimpleMaterial;
     WARNING
       
 ****************************************/
-    
+
 class SimulationState : public RefCounted {
 public:
   SimulationState(ProblemSpecP &ps);
@@ -64,6 +64,9 @@ public:
   }
   const VarLabel* get_refineFlag_label() const {
     return refineFlag_label;
+  }
+  const VarLabel* get_oldRefineFlag_label() const {
+    return oldRefineFlag_label;
   }
   const VarLabel* get_refinePatchFlag_label() const {
     return refinePatchFlag_label;
@@ -146,6 +149,7 @@ private:
       
   const VarLabel* delt_label;
   const VarLabel* refineFlag_label;
+  const VarLabel* oldRefineFlag_label;
   const VarLabel* refinePatchFlag_label;
 
   std::vector<Material*>       matls;
