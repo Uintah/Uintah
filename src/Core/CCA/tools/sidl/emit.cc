@@ -1059,7 +1059,7 @@ void CI::emit_proxyclass(EmitState& e)
   }
     
   e.proxy << "\n";
-  e.proxy << leader2 << "virtual void createSubset(int ssize);\n";   
+  e.proxy << leader2 << "virtual void createSubset(int localsize, int remotesize);\n";   
 
   if (doRedistribution) {
     e.proxy << '\n';  
@@ -1122,7 +1122,7 @@ void CI::emit_header(EmitState& e)
   }
 
   e.decl << "\n";
-  e.decl << leader2 << "virtual void createSubset(int ssize);\n";   
+  e.decl << leader2 << "virtual void createSubset(int localsize, int remotesize);\n";   
 
   if (doRedistribution) {
     e.decl << '\n';  
@@ -1174,9 +1174,8 @@ void CI::emit_interface(EmitState& e)
   }
 
   e.out << "// subsetting method\n";
-  e.out << "void " << fn << "::createSubset(int ssize)\n"; 
+  e.out << "void " << fn << "::createSubset(int localsize, int remotesize)\n"; 
   e.out << "{\n";
-  e.out << "  ::SCIRun::Object::createSubset(ssize);\n";
   e.out << "}\n\n";
 
   e.out << fn << "::" << cn << "(bool initServer)\n";
@@ -1282,9 +1281,9 @@ void CI::emit_proxy(EmitState& e)
   }
 
   e.out << "\n// subsetting proxy method\n";
-  e.out << "void " << fn << "::createSubset(int ssize)\n"; 
+  e.out << "void " << fn << "::createSubset(int localsize, int remotesize)\n"; 
   e.out << "{\n";
-  e.out << "  _proxycreateSubset(ssize);\n";
+  e.out << "  _proxycreateSubset(localsize, remotesize);\n";
   e.out << "}\n\n";
 
   // Emit setCallerDistribution proxy
