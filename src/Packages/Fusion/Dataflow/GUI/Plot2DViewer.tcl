@@ -235,10 +235,10 @@ itcl_class Fusion_Render_Plot2DViewer {
 	global $this-dims-$plt
 	global $this-style-$plt
 
-	$this-c add_GUIVar "dims-$plt"
-	$this-c add_GUIVar "style-$plt"
-	$this-c add_GUIVar "altitude-$plt"
-	$this-c add_GUIVar "azimuth-$plt"
+	$this-c add_GUIVar "dims-$plt" 2
+	$this-c add_GUIVar "style-$plt" 0 
+	$this-c add_GUIVar "altitude-$plt" 60
+	$this-c add_GUIVar "azimuth-$plt" 120
 
  	set $this-dims-$plt 2
  	set $this-style-$plt 0
@@ -323,16 +323,20 @@ itcl_class Fusion_Render_Plot2DViewer {
 
 	for {set plt 0} {$plt < [set $this-nPlots]} {incr plt} {
 
-	    global data-$plt
-
-	    set w [set data-$plt]
-
-	    for {set dat $ndata} {$dat < [set $this-nData]} {incr dat} {
+	    set w .ui[modname]
+ 	    if [ expr [winfo exists $w] ] {
 		
-		pack forget $w.data$dat
+		global data-$plt
 
-		$this-c remove_GUIVar "slice-$plt-$dat"
-		destroy  $w.data$dat
+		set w [set data-$plt]
+
+		for {set dat $ndata} {$dat < [set $this-nData]} {incr dat} {
+		
+		    pack forget $w.data$dat
+
+		    $this-c remove_GUIVar "slice-$plt-$dat"
+		    destroy  $w.data$dat
+		}
 	    }
 	}
 
@@ -342,9 +346,9 @@ itcl_class Fusion_Render_Plot2DViewer {
     method add_data { dat idim jdim kdim } {
 	for {set i 0} {$i < [set $this-nPlots]} {incr i} {
 
-	    $this-c add_GUIVar "idim-$dat"
-	    $this-c add_GUIVar "jdim-$dat"
-	    $this-c add_GUIVar "kdim-$dat"
+	    $this-c add_GUIVar "idim-$dat" $idim
+	    $this-c add_GUIVar "jdim-$dat" $jdim
+	    $this-c add_GUIVar "kdim-$dat" $kdim
 
 	    global $this-idim-$dat
 	    global $this-jdim-$dat
@@ -360,24 +364,22 @@ itcl_class Fusion_Render_Plot2DViewer {
 
     method add_datum { plt dat start stop } {
 	    
-	global $this-active-$plt-$dat
-
-	global $this-slice-$plt-$dat
-	global $this-slice2-$plt-$dat
-
-	set $this-active-$plt-$dat 0
-
-	set $this-slice-$plt-$dat 0
-	set $this-slice2-$plt-$dat "0"
-
 	# Reset all of the slider values to the index values.
 	set w .ui[modname]
 	if [ expr [winfo exists $w] ] {
 		
 	    global data-$plt
 
-	    $this-c add_GUIVar "active-$plt-$dat"
-	    $this-c add_GUIVar "slice-$plt-$dat"
+	    $this-c add_GUIVar "active-$plt-$dat" 0
+	    $this-c add_GUIVar "slice-$plt-$dat" 0
+
+	    global $this-active-$plt-$dat
+	    global $this-slice-$plt-$dat
+	    global $this-slice2-$plt-$dat
+	    
+	    set $this-active-$plt-$dat 0
+	    set $this-slice-$plt-$dat 0
+	    set $this-slice2-$plt-$dat "0"
 
 	    set w [set data-$plt]
 
@@ -619,6 +621,9 @@ itcl_class Fusion_Render_Plot2DViewer {
 
 			set col [expr ([v $i $j]-[set $this-zmin])*$cOffset]
 
+			if { 1.0 < $col } { set col 1.0 }
+			if { $col < 0.0 } { set col 0.0 }
+
 			$w cmd plcol1 $col
 # Plot a symbol 
 			$w cmd plpoin 1 xPt yPt 1
@@ -654,6 +659,9 @@ itcl_class Fusion_Render_Plot2DViewer {
 			yPoly 4 = [y $i1 $j1]
 
 			set col [expr ([v $i $j]-[set $this-zmin])*$cOffset]
+
+			if { 1.0 < $col } { set col 1.0 }
+			if { $col < 0.0 } { set col 0.0 }
 
 			$w cmd plcol1 $col
 
@@ -753,6 +761,9 @@ itcl_class Fusion_Render_Plot2DViewer {
 
 			set col [expr ([z $i $j]-[set $this-zmin])*$cOffset]
 
+			if { 1.0 < $col } { set col 1.0 }
+			if { $col < 0.0 } { set col 0.0 }
+
 			$w cmd plcol1 $col
 			$w cmd plpoin3 1 xPt yPt zPt 1
 		    }
@@ -794,6 +805,9 @@ itcl_class Fusion_Render_Plot2DViewer {
 			zPoly 4 = [z $i1 $j1]
 
 			set col [expr ([z $i $j]-[set $this-zmin])*$cOffset]
+
+			if { 1.0 < $col } { set col 1.0 }
+			if { $col < 0.0 } { set col 0.0 }
 
 			$w cmd plcol1 $col
 			
