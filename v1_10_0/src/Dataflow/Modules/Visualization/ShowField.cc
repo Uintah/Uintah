@@ -259,41 +259,6 @@ ShowField::ShowField(GuiContext* ctx) :
 
 ShowField::~ShowField()
 {
-  bool changed_visibility = false;
-  if (node_id_)
-  {
-    ogeom_->delObj(node_id_);
-    changed_visibility = true;
-    node_id_ = 0;
-  }
-  if (edge_id_)
-  {
-    ogeom_->delObj(edge_id_);
-    changed_visibility = true;
-    edge_id_ = 0;
-  }
-  if (face_id_)
-  {
-    ogeom_->delObj(face_id_);
-    changed_visibility = true;
-    face_id_ = 0;
-  }
-  if (data_id_)
-  {
-    ogeom_->delObj(data_id_);
-    changed_visibility = true;
-    data_id_ = 0;
-  }
-  if (text_id_)
-  {
-    ogeom_->delObj(text_id_);
-    changed_visibility = true;
-    text_id_ = 0;
-  }
-  if (changed_visibility)
-  {
-    ogeom_->flushViews();
-  }
 }
 
 
