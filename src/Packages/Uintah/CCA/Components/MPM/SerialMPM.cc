@@ -746,7 +746,7 @@ void SerialMPM::interpolateParticlesToGrid(const ProcessorGroup*,
   	    patch->findCellAndWeights(px[idx], ni, S);
           }
           else if(d_8or27==27){
-  	    patch->findCellAndWeights27(px[idx], ni, S);
+  	    patch->findCellAndWeights27(px[idx], ni, S, psize[idx]);
           }
 
           total_mom += pvelocity[idx]*pmass[idx];
@@ -936,7 +936,8 @@ void SerialMPM::computeInternalForce(const ProcessorGroup*,
              patch->findCellAndWeightsAndShapeDerivatives(px[idx], ni, S,  d_S);
            }
            else if(d_8or27==27){
-             patch->findCellAndWeightsAndShapeDerivatives27(px[idx], ni, S,d_S);
+             patch->findCellAndWeightsAndShapeDerivatives27(px[idx], ni, S,d_S,
+                                                            psize[idx]);
            }
 
           for (int k = 0; k < d_8or27; k++){
@@ -1074,7 +1075,7 @@ void SerialMPM::computeInternalHeatRate(const ProcessorGroup*,
             patch->findCellAndShapeDerivatives(px[idx], ni, d_S);
          }
          else if(d_8or27==27){
-            patch->findCellAndShapeDerivatives27(px[idx], ni, d_S);
+            patch->findCellAndShapeDerivatives27(px[idx], ni, d_S, psize[idx]);
          }
 
 	 pTemperatureGradient[idx] = Vector(0.0,0.0,0.0);
@@ -1096,7 +1097,7 @@ void SerialMPM::computeInternalHeatRate(const ProcessorGroup*,
             patch->findCellAndShapeDerivatives(px[idx], ni, d_S);
          }
          else if(d_8or27==27){
-            patch->findCellAndShapeDerivatives27(px[idx], ni, d_S);
+            patch->findCellAndShapeDerivatives27(px[idx], ni, d_S, psize[idx]);
          }
 
          for (int k = 0; k < d_8or27; k++){
@@ -1624,7 +1625,8 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
             patch->findCellAndWeightsAndShapeDerivatives(px[idx], ni, S, d_S);
           }
           else if(d_8or27==27){
-            patch->findCellAndWeightsAndShapeDerivatives27(px[idx], ni, S, d_S);
+            patch->findCellAndWeightsAndShapeDerivatives27(px[idx], ni, S, d_S,
+                                                           psize[idx]);
           }
 
           vel = Vector(0.0,0.0,0.0);

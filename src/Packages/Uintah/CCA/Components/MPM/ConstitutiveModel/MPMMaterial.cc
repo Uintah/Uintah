@@ -294,7 +294,7 @@ particleIndex MPMMaterial::createParticles(GeometryObject* obj,
 				   ParticleVariable<double>& mass,
 				   ParticleVariable<double>& volume,
 				   ParticleVariable<double>& temperature,
-				   ParticleVariable<Vector>& size,
+				   ParticleVariable<Vector>& psize,
 				   ParticleVariable<long64>& particleID,
 				   CCVariable<short int>& cellNAPID,
 				   const Patch* patch)
@@ -309,6 +309,10 @@ particleIndex MPMMaterial::createParticles(GeometryObject* obj,
    IntVector ppc = obj->getNumParticlesPerCell();
    Vector dxpp = patch->dCell()/obj->getNumParticlesPerCell();
    Vector dcorner = dxpp*0.5;
+   // Size as a fraction of the cell size
+   Vector size(1./((double) ppc.x()),
+               1./((double) ppc.y()),
+               1./((double) ppc.z()));
 
    particleIndex count = 0;
      for(CellIterator iter = patch->getCellIterator(); !iter.done(); iter++){
@@ -337,7 +341,7 @@ particleIndex MPMMaterial::createParticles(GeometryObject* obj,
 		  pexternalforce[start+count]=Vector(0,0,0); // for now
 		  short int& myCellNAPID = cellNAPID[cell_idx];
 		  particleID[start+count] = cellID | (long64)myCellNAPID;
-                  size[start+count] = dxpp;
+                  psize[start+count] = size;
 		  ASSERT(myCellNAPID < 0x7fff);
 		  myCellNAPID++;
 		  count++;
@@ -357,7 +361,7 @@ particleIndex MPMMaterial::createParticles(GeometryObject* obj,
 				   ParticleVariable<double>& mass,
 				   ParticleVariable<double>& volume,
 				   ParticleVariable<double>& temperature,
-				   ParticleVariable<Vector>& size,
+				   ParticleVariable<Vector>& psize,
 				   ParticleVariable<long64>& particleID,
 				   CCVariable<short int>& cellNAPID,
 				   const Patch* patch,
@@ -375,13 +379,17 @@ particleIndex MPMMaterial::createParticles(GeometryObject* obj,
    IntVector ppc = obj->getNumParticlesPerCell();
    Vector dxpp = patch->dCell()/obj->getNumParticlesPerCell();
    Vector dcorner = dxpp*0.5;
+   // Size as a fraction of the cell size
+   Vector size(1./((double) ppc.x()),
+               1./((double) ppc.y()),
+               1./((double) ppc.z()));
 
    particleIndex count = 0;
    SphereMembraneGeometryPiece* SMGP =
                               dynamic_cast<SphereMembraneGeometryPiece*>(piece);
    if(SMGP){
         int numP = SMGP->createParticles(patch, position, volume,
-                                         ptang1, ptang2, pnorm, start);
+                                         ptang1, ptang2, pnorm, psize, start);
         for(int idx=0;idx<(start+numP);idx++){
             velocity[start+idx]=obj->getInitialVelocity();
             temperature[start+idx]=obj->getInitialTemperature();
@@ -428,7 +436,7 @@ particleIndex MPMMaterial::createParticles(GeometryObject* obj,
 		  mass[start+count]=d_density * volume[start+count];
 		  // Determine if particle is on the surface
 		  pexternalforce[start+count]=Vector(0,0,0); // for now
-                  size[start+count] = dxpp;
+                  psize[start+count] = size;
                   ptang1[start+count] = Vector(1,0,0);
                   ptang2[start+count] = Vector(0,0,1);
                   pnorm[start+count]  = Vector(0,1,0);

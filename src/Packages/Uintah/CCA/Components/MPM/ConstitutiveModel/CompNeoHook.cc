@@ -164,8 +164,8 @@ void CompNeoHook::computeStressTensor(const PatchSubset* patches,
     new_dw->get(gvelocity,           lb->gVelocityLabel, matlindex,patch,
             Ghost::AroundCells, 1);
     old_dw->get(delT, lb->delTLabel);
+    constParticleVariable<Vector> psize;
     if(d_8or27==27){
-      constParticleVariable<Vector> psize;
       old_dw->get(psize,             lb->pSizeLabel,                  pset);
     }
 
@@ -191,7 +191,7 @@ void CompNeoHook::computeStressTensor(const PatchSubset* patches,
           patch->findCellAndShapeDerivatives(px[idx], ni, d_S);
         }
         else if(d_8or27==27){
-          patch->findCellAndShapeDerivatives27(px[idx], ni, d_S);
+          patch->findCellAndShapeDerivatives27(px[idx], ni, d_S,psize[idx]);
         }
 
        for(int k = 0; k < d_8or27; k++) {

@@ -751,8 +751,8 @@ void MPMICE::interpolatePAndGradP(const ProcessorGroup*,
       ParticleSubset* pset = old_dw->getParticleSubset(dwindex, patch);
       ParticleVariable<double> pPressure;
       constParticleVariable<Point> px;
+      constParticleVariable<Vector> psize;
       if(d_8or27==27){
-        constParticleVariable<Vector> psize;
         old_dw->get(psize,        Mlb->pSizeLabel,          pset);
       }
 
@@ -770,7 +770,7 @@ void MPMICE::interpolatePAndGradP(const ProcessorGroup*,
           patch->findCellAndWeights(px[idx], ni, S);
         }
         else if(d_8or27==27){
-          patch->findCellAndWeights27(px[idx], ni, S);
+          patch->findCellAndWeights27(px[idx], ni, S,psize[idx]);
         }
         for (int k = 0; k < d_8or27; k++) {
           press += pressNC[ni[k]] * S[k];

@@ -218,8 +218,8 @@ void FrictionContact::exMomInterpolated(const ProcessorGroup*,
       gstress[m].initialize(Matrix3(0.0));
       
       // Next, interpolate the stress to the grid
+      constParticleVariable<Vector> psize;
       if(d_8or27==MAX_BASIS){
-        constParticleVariable<Vector> psize;
         old_dw->get(psize, lb->pSizeLabel, pset);
       }
 
@@ -234,7 +234,7 @@ void FrictionContact::exMomInterpolated(const ProcessorGroup*,
             patch->findCellAndWeights(px[idx], ni, S);
          }
          else if(d_8or27==27){
-            patch->findCellAndWeights27(px[idx], ni, S);
+            patch->findCellAndWeights27(px[idx], ni, S, psize[idx]);
          }
          // Add each particles contribution to the local mass & velocity
          // Must use the node indices
