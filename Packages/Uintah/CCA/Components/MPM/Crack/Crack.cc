@@ -277,9 +277,9 @@ void Crack::CrackDiscretization(const ProcessorGroup*,
           cmax[m]=Max(cmax[m],cx[m][i]);
         }
 
-        // Smooth crack-front and get tangential vector for crack propagation
-        if(d_doCrackPropagation!="false")
-          SmoothCrackFrontAndGetTangentialVector(m);
+        // Smooth crack-front and get tangential vector 
+        if(d_calFractParameters!="false" || d_doCrackPropagation!="false")
+        SmoothCrackFrontAndGetTangentialVector(m);
 
         // Get the average length of crack front segments 
         cs0[m]=0.;
@@ -1807,7 +1807,7 @@ void Crack::CalculateFractureParameters(const ProcessorGroup*,
                     double f2ForJx=0.,f2ForJy=0.;
                     double rho=mpm_matl->getInitialDensity();
                     for(int j=0; j<count;j++) {
-                      // Zero components in z direction if plate state
+                      // Zero components in z direction for plane state
                       Vector dgx=Vector(dg[j](1,1),dg[j](2,1),0./*dg[j](3,1)*/);
                       Vector dgy=Vector(dg[j](1,2),dg[j](2,2),0./*dg[j](3,2)*/);
                       Vector vgx=Vector(vg[j](1,1),vg[j](2,1),0./*vg[j](3,1)*/);
@@ -2825,9 +2825,9 @@ void Crack::UpdateCrackExtentAndNormals(const ProcessorGroup*,
         }
       } // End of loop over ncfSegs 
 
-      // Smooth crack-front and get tangential vectors for crack propagation
-      if(d_doCrackPropagation!="false")
-        SmoothCrackFrontAndGetTangentialVector(m);
+      // Smooth crack-front and get tangential vectors
+      if(d_calFractParameters!="false" || d_doCrackPropagation!="false")
+      SmoothCrackFrontAndGetTangentialVector(m);
 
     } // End of loop over matls
   } // End of loop patches
