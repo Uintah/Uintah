@@ -1,15 +1,18 @@
 
 #include <Packages/Uintah/CCA/Components/Schedulers/DetailedTasks.h>
-#include <Packages/Uintah/Core/Grid/DetailedTask.h>
+#include <Packages/Uintah/CCA/Components/Schedulers/TaskGraph.h>
 #include <Packages/Uintah/Core/Parallel/ProcessorGroup.h>
 #include <Core/Util/NotFinished.h>
 #include <Core/Util/DebugStream.h>
+#include <Core/Util/FancyAssert.h>
 
 using namespace Uintah;
 
 static DebugStream dbg("TaskGraph", false);
 
-DetailedTasks::DetailedTasks(const ProcessorGroup* pg)
+DetailedTasks::DetailedTasks(const ProcessorGroup* pg,
+			     const TaskGraph* taskgraph)
+  : taskgraph(taskgraph)
 {
   int nproc = pg->size();
   stasks.resize(nproc);
@@ -81,7 +84,8 @@ DetailedTasks::getInitialRequires()
 void
 DetailedTasks::computeLocalTasks(int me)
 {
-  ASSERT(localtasks.size() == 0);
+  if(localtasks.size() != 0)
+    return;
   for(int i=0;i<(int)tasks.size();i++){
     DetailedTask* task = tasks[i];
     if(task->getAssignedResourceIndex() == me
@@ -93,7 +97,7 @@ DetailedTasks::computeLocalTasks(int me)
 DetailedTask::DetailedTask(Task* task, const PatchSubset* patches,
 			   const MaterialSubset* matls)
   : task(task), patches(patches), matls(matls), req_head(0),
-    comp_head(0), resourceIndex(-1)
+    comp_head(0), scrublist(0), resourceIndex(-1)
 {
   if(patches)
     patches->addReference();
@@ -107,6 +111,12 @@ DetailedTask::~DetailedTask()
     delete patches;
   if(matls && matls->removeReference())
     delete matls;
+  ScrubItem* p = scrublist;
+  while(p){
+    ScrubItem* next=p->next;
+    delete p;
+    p=next;
+  }
 }
 
 void DetailedTask::doit(const ProcessorGroup* pg, DataWarehouse* old_dw,
@@ -260,3 +270,56 @@ ostream& operator<<(ostream& out, const DetailedDep& dep)
   return out;
 }
 
+void DetailedTask::addScrub(const VarLabel* var, Task::WhichDW dw)
+{
+  scrublist=scinew ScrubItem(scrublist, var, dw);
+}
+
+void DetailedTasks::createScrublists(bool init_timestep)
+{
+  const set<const VarLabel*>& initreqs = taskgraph->getInitialRequires();
+  ASSERT(localtasks.size() != 0 || tasks.size() == 0);
+  // Create scrub lists
+  typedef map<const VarLabel*, DetailedTask*, VarLabel::Compare> ScrubMap;
+  ScrubMap oldmap, newmap;
+  for(int i=0;i<localtasks.size();i++){
+    DetailedTask* dtask = localtasks[i];
+    const Task* task = dtask->getTask();
+    for(const Task::Dependency* req = task->getRequires();
+	req != 0; req=req->next){
+      if(req->dw == Task::OldDW){
+	// Go ahead and scrub.  Replace an older one if necessary
+	oldmap[req->var]=dtask;
+      } else {
+	// Only scrub if it is not part of the original requires and
+	// This is not an initialization timestep
+	if(!init_timestep && initreqs.find(req->var) == initreqs.end()){
+	  newmap[req->var]=dtask;
+	}
+      }
+    }
+  }
+  for(int i=0;i<localtasks.size();i++){
+    DetailedTask* dtask = localtasks[i];
+    const Task* task = dtask->getTask();
+    for(const Task::Dependency* comp = task->getComputes();
+	comp != 0; comp=comp->next){
+      ASSERTEQ(comp->dw, Task::NewDW);
+      if(!init_timestep && initreqs.find(comp->var) == initreqs.end()
+	 && newmap.find(comp->var) == newmap.end()){
+	// Only scrub if it is not part of the original requires and
+	// This is not timestep 0
+	newmap[comp->var]=dtask;
+	cerr << "Warning: Variable " << comp->var->getName() << " computed by " << dtask->getTask()->getName() << " and never used\n";
+      }
+    }
+  }
+  for(ScrubMap::iterator iter = oldmap.begin();iter!= oldmap.end();iter++){
+    DetailedTask* dt = iter->second;
+    dt->addScrub(iter->first, Task::OldDW);
+  }
+  for(ScrubMap::iterator iter = newmap.begin();iter!= newmap.end();iter++){
+    DetailedTask* dt = iter->second;
+    dt->addScrub(iter->first, Task::NewDW);
+  }
+}

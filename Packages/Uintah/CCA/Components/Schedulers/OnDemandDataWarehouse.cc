@@ -16,8 +16,8 @@
 #include <Packages/Uintah/Core/Grid/ParticleVariable.h>
 #include <Packages/Uintah/Core/Grid/Level.h>
 #include <Packages/Uintah/Core/Grid/Patch.h>
-#include <Packages/Uintah/Core/Grid/ScatterGatherBase.h>
 #include <Packages/Uintah/Core/Grid/Task.h>
+#include <Packages/Uintah/Core/Grid/BufferInfo.h>
 #include <Packages/Uintah/CCA/Ports/Scheduler.h>
 #include <Packages/Uintah/Core/Parallel/ProcessorGroup.h>
 #include <Core/Malloc/Allocator.h>
@@ -191,8 +191,11 @@ OnDemandDataWarehouse::sendMPI(SendState& ss, DependencyBatch* batch,
 	ss.add_sendset(patch, matlIndex, dest, sendset);
       }
 	
-      if(sendset->numParticles() > 0)
+      if(sendset->numParticles() > 0){
 	 var->getMPIBuffer(buffer, sendset);
+	 buffer.addSendlist(var->getRefCounted());
+	 buffer.addSendlist(var->getParticleSubset());
+      }
     }
     break;
   case TypeDescription::NCVariable:
@@ -202,6 +205,7 @@ OnDemandDataWarehouse::sendMPI(SendState& ss, DependencyBatch* batch,
 			      "in sendMPI");
       NCVariableBase* var = d_ncDB.get(label, matlIndex, patch);
       var->getMPIBuffer(buffer, dep->low, dep->high);
+      buffer.addSendlist(var->getRefCounted());
     }
     break;
   case TypeDescription::CCVariable:
@@ -211,6 +215,7 @@ OnDemandDataWarehouse::sendMPI(SendState& ss, DependencyBatch* batch,
 			      "in sendMPI");
       CCVariableBase* var = d_ccDB.get(label, matlIndex, patch);
       var->getMPIBuffer(buffer, dep->low, dep->high);
+      buffer.addSendlist(var->getRefCounted());
     }
     break;
   case TypeDescription::SFCXVariable:
@@ -220,6 +225,7 @@ OnDemandDataWarehouse::sendMPI(SendState& ss, DependencyBatch* batch,
 			      "in sendMPI");
       SFCXVariableBase* var = d_sfcxDB.get(label, matlIndex, patch);
       var->getMPIBuffer(buffer, dep->low, dep->high);
+      buffer.addSendlist(var->getRefCounted());
     }
     break;
   case TypeDescription::SFCYVariable:
@@ -229,6 +235,7 @@ OnDemandDataWarehouse::sendMPI(SendState& ss, DependencyBatch* batch,
 			      "in sendMPI");
       SFCYVariableBase* var = d_sfcyDB.get(label, matlIndex, patch);
       var->getMPIBuffer(buffer, dep->low, dep->high);
+      buffer.addSendlist(var->getRefCounted());
     }
     break;
   case TypeDescription::SFCZVariable:
@@ -238,13 +245,9 @@ OnDemandDataWarehouse::sendMPI(SendState& ss, DependencyBatch* batch,
 			      "in sendMPI");
       SFCZVariableBase* var = d_sfczDB.get(label, matlIndex, patch);
       var->getMPIBuffer(buffer, dep->low, dep->high);
+      buffer.addSendlist(var->getRefCounted());
     }
     break;
-  case TypeDescription::ScatterGatherVariable:
-    {
-      cerr << "SEND SGVAR NOTDONE\n";
-      throw InternalError( "SEND SGVAR NOTDONE" );
-    }
   default:
     throw InternalError("sendMPI not implemented for "+label->getFullName(matlIndex, patch));
   } // end switch( label->getType() );
@@ -363,11 +366,6 @@ OnDemandDataWarehouse::recvMPI(BufferInfo& buffer,
       d_sfczDB.put(label, matlIndex, patch, var, false);
     }
     break;
-  case TypeDescription::ScatterGatherVariable:
-    {
-      cerr << "RECV SGVAR NOTDONE\n";
-      throw InternalError( "RECV SGVAR NOTDONE" );
-    }
   default:
     throw InternalError("recvMPI not implemented for "+label->getFullName(matlIndex, patch));
   } // end switch( label->getType() );
@@ -1345,40 +1343,40 @@ void OnDemandDataWarehouse::print(ostream& intout, const VarLabel* label,
 }
 
 void
-OnDemandDataWarehouse::scatter(ScatterGatherBase* var, const Patch* from,
-			       const Patch* to)
-{
-  d_lock.readLock();
-
-   pair<const Patch*, const Patch*> idx(from, to);
-   if(d_sgDB.find(idx) != d_sgDB.end())
-      throw InternalError("scatter variable already exists");
-#if DAV_DEBUG
-   cerr << "putting in (" << from->getID() << ", " << to->getID() << ")\n";
-#endif
-   d_sgDB[idx]=var;
-
-  d_lock.readUnlock();
-}
-
-ScatterGatherBase*
-OnDemandDataWarehouse::gather(const Patch* from, const Patch* to)
-{
-  d_lock.readLock();
-   pair<const Patch*, const Patch*> idx(from, to);
-   map<pair<const Patch*, const Patch*>, ScatterGatherBase*>::iterator iter
-       = d_sgDB.find(idx);
-   if(iter == d_sgDB.end()){
-      cerr << "gather: could not find (" << from->getID() << ", " << to->getID() << ")\n";
-      throw UnknownVariable("scatter/gather", from,
-			    -1, " to patch "+to->toString());
-   }
-  d_lock.readUnlock();
-   return iter->second;
-}
-
-void
 OnDemandDataWarehouse::deleteParticles(ParticleSubset* /*delset*/)
 {
    // Not implemented
+}
+
+void
+OnDemandDataWarehouse::scrub(const VarLabel* var)
+{
+  switch(var->typeDescription()->getType()){
+  case TypeDescription::NCVariable:
+    d_ncDB.scrub(var);
+    break;
+  case TypeDescription::CCVariable:
+    d_ccDB.scrub(var);
+    break;
+  case TypeDescription::SFCXVariable:
+    d_sfcxDB.scrub(var);
+    break;
+  case TypeDescription::SFCYVariable:
+    d_sfcyDB.scrub(var);
+    break;
+  case TypeDescription::SFCZVariable:
+    d_sfczDB.scrub(var);
+    break;
+  case TypeDescription::ParticleVariable:
+    d_particleDB.scrub(var);
+    break;
+  case TypeDescription::PerPatch:
+    d_perpatchDB.scrub(var);
+    break;
+  case TypeDescription::ReductionVariable:
+    d_reductionDB.scrub(var);
+    break;
+  default:
+    throw InternalError("Scrubbing variable of unknown type: "+var->getName());
+  }
 }

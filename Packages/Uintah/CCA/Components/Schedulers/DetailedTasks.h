@@ -51,6 +51,15 @@ namespace Uintah {
     DependencyBatch& operator=(const DependencyBatch&);
   };
 
+  struct ScrubItem {
+    ScrubItem* next;
+    const VarLabel* var;
+    Task::WhichDW dw;
+    ScrubItem(ScrubItem* next, const VarLabel* var, Task::WhichDW dw)
+      : next(next), var(var), dw(dw)
+    {}
+  };
+
   class DetailedTask {
   public:
     DetailedTask(Task* task, const PatchSubset* patches,
@@ -82,9 +91,13 @@ namespace Uintah {
     DependencyBatch* getComputes() {
       return comp_head;
     }
+    const ScrubItem* getScrublist() const {
+      return scrublist;
+    }
 
     void addRequires(DependencyBatch*);
     void addComputes(DependencyBatch*);
+    void addScrub(const VarLabel* var, Task::WhichDW dw);
 
   protected:
     friend class TaskGraph;
@@ -95,6 +108,7 @@ namespace Uintah {
     const MaterialSubset* matls;
     DependencyBatch* req_head;
     DependencyBatch* comp_head;
+    ScrubItem* scrublist;
     int resourceIndex;
 
     DetailedTask(const Task&);
@@ -103,7 +117,7 @@ namespace Uintah {
 
   class DetailedTasks {
   public:
-    DetailedTasks(const ProcessorGroup* pg);
+    DetailedTasks(const ProcessorGroup* pg, const TaskGraph* taskgraph);
     ~DetailedTasks();
 
     void add(DetailedTask* task);
@@ -138,11 +152,13 @@ namespace Uintah {
     DetailedTask* localTask(int idx) {
       return localtasks[idx];
     }
+    void createScrublists(bool init_timestep);
   private:
     vector<DetailedTask*> tasks;
 #if 0
     vector<DetailedReq*> initreqs;
 #endif
+    const TaskGraph* taskgraph;
     vector<Task*> stasks;
     vector<DetailedTask*> localtasks;
     vector<DependencyBatch*> batches;

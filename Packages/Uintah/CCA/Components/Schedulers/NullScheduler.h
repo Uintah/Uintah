@@ -50,7 +50,7 @@ WARNING
       
       //////////
       // Insert Documentation Here:
-     virtual void compile( const ProcessorGroup * pc );
+     virtual void compile( const ProcessorGroup * pc, bool init_timestep );
       
       //////////
       // Insert Documentation Here:

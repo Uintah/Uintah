@@ -3,6 +3,7 @@
 #define UINTAH_HOMEBREW_MIXEDSCHEDULER_H
 
 #include <Packages/Uintah/CCA/Components/Schedulers/SchedulerCommon.h>
+#include <Packages/Uintah/CCA/Components/Schedulers/Relocate.h>
 #include <Packages/Uintah/CCA/Components/Schedulers/MessageLog.h>
 #include <Packages/Uintah/CCA/Components/Schedulers/ThreadPool.h>
 #include <Packages/Uintah/CCA/Ports/DataWarehouseP.h>
@@ -63,7 +64,7 @@ WARNING
       
       //////////
       // Insert Documentation Here:
-     virtual void compile( const ProcessorGroup * pc );
+     virtual void compile( const ProcessorGroup * pc, bool init_timestep );
      virtual void execute( const ProcessorGroup * pc );
       
       //////////
@@ -77,14 +78,6 @@ WARNING
 
 
    private:
-      void scatterParticles(const ProcessorGroup*,
-			    const Patch* patch,
-			    DataWarehouseP& old_dw,
-			    DataWarehouseP& new_dw);
-      void gatherParticles(const ProcessorGroup*,
-			   const Patch* patch,
-			   DataWarehouseP& old_dw,
-			   DataWarehouseP& new_dw);
       void displayTaskGraph( vector<Task*> & graph );
 
       void verifyChecksum( vector<Task*> & tasks, int me );
@@ -123,13 +116,7 @@ WARNING
 				vector<MPI_Request>    & send_ids,
 				bool                     sendData = true );
 #endif
-
-      const VarLabel* reloc_old_posLabel;
-      vector<vector<const VarLabel*> > reloc_old_labels;
-      const VarLabel* reloc_new_posLabel;
-      vector<vector<const VarLabel*> > reloc_new_labels;
-      const MaterialSet* reloc_matls;
-      const VarLabel* scatterGatherVariable;
+     MPIRelocate reloc;
 
       MixedScheduler(const MixedScheduler&);
       MixedScheduler& operator=(const MixedScheduler&);

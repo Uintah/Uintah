@@ -2,7 +2,6 @@
 
 #include <Packages/Uintah/CCA/Components/Schedulers/SimpleLoadBalancer.h>
 #include <Packages/Uintah/CCA/Components/Schedulers/DetailedTasks.h>
-#include <Packages/Uintah/Core/Grid/DetailedTask.h>
 #include <Packages/Uintah/Core/Parallel/Parallel.h>
 #include <Packages/Uintah/Core/Parallel/ProcessorGroup.h>
 #include <Packages/Uintah/Core/Grid/Patch.h>

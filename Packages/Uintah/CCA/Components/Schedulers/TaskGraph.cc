@@ -8,14 +8,14 @@
 #include <Packages/Uintah/Core/Grid/Patch.h>
 #include <Packages/Uintah/Core/Grid/Task.h>
 #include <Packages/Uintah/Core/Grid/TypeDescription.h>
-#include <Packages/Uintah/Core/Grid/DetailedTask.h>
 
 #include <Core/Containers/FastHashTable.h>
 #include <Core/Exceptions/InternalError.h>
 #include <Core/Malloc/Allocator.h>
 #include <Core/Util/DebugStream.h>
-#include <Dataflow/XMLUtil/XMLUtil.h>
+#include <Core/Util/FancyAssert.h>
 #include <Core/Util/NotFinished.h>
+#include <Dataflow/XMLUtil/XMLUtil.h>
 
 #include <algorithm>
 #include <fstream>
@@ -215,21 +215,19 @@ TaskGraph::setupTaskConnections()
     }
     d_allcomps.insert(actype::value_type(p, dep));
   }
-
-  // Gather a list of requirements
-  const Task::reqType& reqs = task->getRequires();
-  for(Task::reqType::const_iterator dep = reqs.begin();
-      dep != reqs.end(); dep++){
-    if(!dep->d_dw->isFinalized()){
-      TaskProduct p(dep->d_patch, dep->d_matlIndex, dep->d_var);
-      d_allreqs.insert(artype::value_type(p, dep));
-    }
-    else
-      d_initreqs.push_back(dep);
-  }
 #else
    NOT_FINISHED("new task stuff (addTask - skip)");
 #endif
+
+  // Gather a list of requirements
+  for( iter=d_tasks.begin(); iter != d_tasks.end(); iter++ ) {
+    Task* task = *iter;
+    for(Task::Dependency* req = task->getRequires();
+	req != 0; req=req->next){
+      if(req->dw == Task::OldDW)
+	d_initreqs.insert(req->var);
+    }
+  }
 
   // Connect the tasks together using the computes/requires info
   // Also do a type check
@@ -440,7 +438,7 @@ TaskGraph::createDetailedTask(DetailedTasks* tasks, Task* task,
 DetailedTasks*
 TaskGraph::createDetailedTasks(const ProcessorGroup* pg)
 {
-  DetailedTasks* dt = scinew DetailedTasks(pg);
+  DetailedTasks* dt = scinew DetailedTasks(pg, this);
   vector<Task*> sorted_tasks;
   topologicalSort(sorted_tasks);
 
