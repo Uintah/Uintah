@@ -25,6 +25,9 @@
 #include <Core/Malloc/Allocator.h>
 #include <Core/GuiInterface/GuiVar.h>
 #include <Core/Thread/CrowdMonitor.h>
+#include <Core/Thread/Thread.h>
+#include <Core/Thread/Semaphore.h>
+#include <Core/Thread/Mutex.h>
 #include <Packages/Uintah/Core/Grid/Box.h>
 #include <Packages/Uintah/Core/Grid/GridP.h>
 #include <Packages/Uintah/Core/Grid/Grid.h>
@@ -55,7 +58,9 @@ using std::vector;
 namespace Uintah {
 
 using namespace SCIRun;
-
+class NodeHedgehogWorker;
+#define USE_HOG_THREADS
+  
 /**************************************
 CLASS
    NodeHedgehog
@@ -124,16 +129,18 @@ class NodeHedgehog : public Module {
   // add_arrow -
   void add_arrow(Vector vv, FieldHandle ssfield,
 		 int have_sfield, ColorMapHandle cmap,
-		 double lenscale, GeomArrows* arrows, Point p);
+		 double lenscale, double minlen, double maxlen,
+		 GeomArrows* arrows, Point p);
 
   GuiDouble length_scale;
+  GuiDouble min_crop_length;
+  GuiDouble max_crop_length;
   GuiDouble width_scale;
   GuiDouble head_length;
   GuiString type;
   GuiInt drawcylinders;
   GuiInt skip_node;
   GuiDouble shaft_rad;
-  GuiInt var_orientation; // whether node center or cell centered
   MaterialHandle outcolor;
   int grid_id;
   int need_find2d;
@@ -146,6 +153,10 @@ class NodeHedgehog : public Module {
   GuiDouble max_vector_y;
   GuiDouble max_vector_z;
   GuiDouble max_vector_length;
+
+  Mutex add_arrows;
+
+  friend class NodeHedgehogWorker;
 public:
  
   // GROUP:  Constructors:
@@ -175,6 +186,120 @@ public:
   // used to get the values.
   bool interpolate(FieldHandle f, const Point& p, Vector& val);
   bool interpolate(FieldHandle f, const Point& p, double& val);
+};
+  
+class NodeHedgehogWorker: public Runnable {
+public:
+  NodeHedgehogWorker(Patch *patch, LevelField<Vector> *field,
+		     FieldHandle ssfield,
+		     bool have_sfield, ColorMapHandle cmap,
+		     Box boundaryRegion,
+		     NodeHedgehog *hog, GeomGroup *arrow_group,
+		     double *max_length, Vector* max_vector,
+		     Mutex *amutex, Semaphore *sema):
+    patch(patch), field(field), ssfield(ssfield), have_sfield(have_sfield),
+    cmap(cmap), boundaryRegion(boundaryRegion), hog(hog),
+    arrow_group(arrow_group),
+    max_length(max_length), max_vector(max_vector), amutex(amutex), sema(sema),
+    my_max_length(0), my_max_vector(0,0,0)
+  {
+    arrows = scinew GeomArrows(hog->width_scale.get(),
+			       1.0 - hog->head_length.get(),
+			       hog->drawcylinders.get(),
+			       hog->shaft_rad.get() );
+  }
+  
+  void run() {
+    // extract the vectors and add them to arrows
+    int skip = hog->skip_node.get();
+    if (skip < 1)
+      skip = 1;
+    if( field->data_at() == Field::NODE) {
+      //------------------------------------
+      // for each node in the patch
+      for(NodeIterator iter = patch->getNodeIterator(boundaryRegion); !iter.done(); iter+=skip){
+	IntVector idx = *iter;
+	Point p = patch->nodePosition(idx);
+	Vector vv = field->fdata().get_data_by_patch_and_index(patch, idx);
+	add_arrow(vv, p, hog->length_scale.get());
+      } // end for loop
+    } else if( field->data_at() == Field::CELL) {
+      for(CellIterator iter = patch->getCellIterator(boundaryRegion); !iter.done(); iter+=skip){
+	IntVector idx = *iter;
+	Point p = patch->cellPosition(idx);
+	Vector vv = field->fdata().get_data_by_patch_and_index(patch, idx);
+	add_arrow(vv, p, hog->length_scale.get());
+      } // end for loop
+    } // end if NODE
+
+    // now add the arrows to arrow_group and update the max_length
+    // and max_vector
+    amutex->lock();
+    //    cerr << "NodeHedgehogWorker is about to add the goods\n";
+    if (my_max_length > *max_length) {
+      *max_length = my_max_length;
+      *max_vector = my_max_vector;
+    }
+    arrow_group->add((GeomObj*)arrows);
+    amutex->unlock();
+    sema->up();
+  }
+private:
+  // passed in
+  Patch *patch;
+  LevelField<Vector> *field;
+  FieldHandle ssfield;
+  bool have_sfield;
+  ColorMapHandle cmap;
+  Box boundaryRegion;
+  NodeHedgehog *hog;
+  GeomGroup *arrow_group;
+  double *max_length;
+  Vector *max_vector;
+  Mutex *amutex;
+  Semaphore *sema;
+
+  // local to thread
+  double my_max_length;
+  Vector my_max_vector;
+  GeomArrows *arrows;
+
+  // functions
+  void add_arrow(Vector vv, Point p, double lenscale) {
+    double length = vv.length();
+    // crop the vector based on it's length
+    // we only want to check against max_crop_length if it's greater than 0
+    if (hog->max_crop_length.get() > 0)
+      if (length > hog->max_crop_length.get())
+	return;
+    if (length < hog->min_crop_length.get())
+      return;
+
+    // calculate the maximum based on vectors not cropped
+    if (length > my_max_length) {
+      my_max_length = length;
+      my_max_vector = vv;
+    }
+    if (length*lenscale < 1.e-3)
+      return;
+
+    if(have_sfield) {
+      // get the color from cmap for p 	    
+      MaterialHandle matl;
+      double sval;
+      if (hog->interpolate( ssfield, p, sval))
+	matl = cmap->lookup( sval);
+      else {
+	matl = hog->outcolor;
+      }
+      
+      arrows->add(p, vv*lenscale, matl, matl, matl);
+    }
+    else {
+      arrows->add(p, vv*lenscale);
+    }
+  } // end add_arrow
+  
 };
   
 static string module_name("NodeHedgehog");
@@ -207,18 +332,20 @@ NodeHedgehog::NodeHedgehog(const string& id)
 : Module("NodeHedgehog", id, Filter, "Visualization", "Uintah"),
   widget_lock("NodeHedgehog widget lock"),
   length_scale("length_scale", id, this),
+  min_crop_length("min_crop_length",id,this),
+  max_crop_length("max_crop_length",id,this),
   width_scale("width_scale", id, this),
   head_length("head_length", id, this),
   type("type", id, this),
   drawcylinders("drawcylinders", id, this),
   skip_node("skip_node", id, this),
   shaft_rad("shaft_rad", id, this),
-  var_orientation("var_orientation",id,this),
   max_vector(0,0,0), max_length(0),
   max_vector_x("max_vector_x", id, this),
   max_vector_y("max_vector_y", id, this),
   max_vector_z("max_vector_z", id, this),
-  max_vector_length("max_vector_length", id, this)
+  max_vector_length("max_vector_length", id, this),
+  add_arrows("NodeHedgehog add_arrows mutex")
 {
   init = 1;
   float INIT(.1);
@@ -241,9 +368,18 @@ NodeHedgehog::~NodeHedgehog()
 void
 NodeHedgehog::add_arrow(Vector vv, FieldHandle ssfield,
 			int have_sfield, ColorMapHandle cmap,
-			double lenscale, GeomArrows* arrows, Point p) {
+			double lenscale, double minlen, double maxlen,
+			GeomArrows* arrows, Point p) {
   
   double length = vv.length();
+  // crop the vector based on it's length
+  // we only want to check against max_crop_length if it's greater than 0
+  if (maxlen > 0)
+      if (length > maxlen)
+	return;
+    if (length < minlen)
+      return;
+
   if (length > max_length) {
     max_length = length;
     max_vector = vv;
@@ -406,9 +542,11 @@ void NodeHedgehog::execute()
   // because skip is used for the interator increment
   // it must be 1 or more otherwise you enter an
   // infinite loop (and that really sucks for performance)
+#ifndef USE_HOG_THREADS
   int skip = skip_node.get();
   if (skip < 1)
     skip = 1;
+#endif
   // get the position of the frame widget and determine
   // the boundaries
   Point center, R, D, I;
@@ -432,12 +570,12 @@ void NodeHedgehog::execute()
   lower = Min(temp1,lower);
   Box boundaryRegion(lower,upper);
   
-  // create the grid for the cutting plane
-  double lenscale = length_scale.get();
-  double widscale = width_scale.get();
-  double headlen = head_length.get();
-  GeomArrows* arrows = scinew GeomArrows(widscale, 1.0-headlen, drawcylinders.get(), shaft_rad.get() );
-
+  // create the group for the arrows to be added to
+#ifdef USE_HOG_THREADS
+  GeomGroup *arrows = scinew GeomGroup;
+#else
+  GeomArrows* arrows = scinew GeomArrows(width_scale.get(), 1.0-head_length.get(), drawcylinders.get(), shaft_rad.get() );
+#endif
   // loop over all the nodes in the graph taking the position
   // of the node and determining the vector value.
   int numLevels = grid->numLevels();
@@ -452,13 +590,35 @@ void NodeHedgehog::execute()
     LevelP level = grid->getLevel(l);
 
     Level::const_patchIterator iter;
+#ifdef USE_HOG_THREADS
+    // set up the worker thread stuff
+    int max_workers = Max(Thread::numProcessors()/2, 8);
+    Semaphore* thread_sema = scinew Semaphore( "nodehedge semahpore",
+					       max_workers);
+#endif
     //---------------------------------------
     // for each patch in the level
     for(iter=level->patchesBegin(); iter != level->patchesEnd(); iter++){
       Patch* patch = *iter;
 
+#ifdef USE_HOG_THREADS
+      thread_sema->down();
+      Thread *thrd = scinew Thread(scinew NodeHedgehogWorker(patch,
+							     fld,
+							     ssfield,
+							     have_sfield,
+							     cmap,
+							     boundaryRegion,
+							     this,
+							     arrows,
+							     &max_length,
+							     &max_vector,
+							     &add_arrows,
+							     thread_sema),
+				   "nodehedgehogworker");
+      thrd->detach();
+#else      
       if( fld->data_at() == Field::NODE) {
-	var_orientation.set(0);
 	//------------------------------------
 	// for each node in the patch
 	for(NodeIterator iter = patch->getNodeIterator(boundaryRegion); !iter.done(); iter+=skip){
@@ -466,19 +626,25 @@ void NodeHedgehog::execute()
 	  Point p = patch->nodePosition(idx);
 	  Vector vv = fld->fdata().get_data_by_patch_and_index(patch, idx);
 	  add_arrow(vv, ssfield, have_sfield, cmap,
-		    lenscale, arrows, p);
+		    length_scale.get(), min_crop_length.get(),
+		    max_crop_length.get(), arrows, p);
 	} // end for loop
       } else if( fld->data_at() == Field::CELL) {
-	var_orientation.set(1);
 	for(CellIterator iter = patch->getCellIterator(boundaryRegion); !iter.done(); iter+=skip){
 	  IntVector idx = *iter;
 	  Point p = patch->cellPosition(idx);
 	  Vector vv = fld->fdata().get_data_by_patch_and_index(patch, idx);
 	  add_arrow(vv, ssfield, have_sfield, cmap,
-		    lenscale, arrows, p);
+		    length_scale.get(), min_crop_length.get(),
+		    max_crop_length.get(), arrows, p);
 	} // end for loop
       } // end if NODE
+#endif
     } // end for each patch
+#ifdef USE_HOG_THREADS
+    thread_sema->down(max_workers);
+    if( thread_sema ) delete thread_sema;
+#endif
   } // end for each level
 
   // delete the old grid/cutting plane
@@ -562,14 +728,14 @@ NodeHedgehog::interpolate(FieldHandle vfld, const Point& p, Vector& val)
     }    
     return false;
   }
-  return false;
+  //  return false;
 }
 
 
 bool  
 NodeHedgehog::interpolate(FieldHandle sfld, const Point& p, double& val)
 {
-  const string field_type = sfld->get_type_name(0);
+  //  const string field_type = sfld->get_type_name(0);
   const string type = sfld->get_type_name(1);
   if( sfld->get_type_name(0) == "LevelField" ){
     if (type == "double") {
@@ -605,6 +771,7 @@ NodeHedgehog::interpolate(FieldHandle sfld, const Point& p, double& val)
     if( sfi = sfld->query_scalar_interface()){
       return sfi->interpolate( val, p);
     }
+    return false;
   } else {
     return false;
   }
