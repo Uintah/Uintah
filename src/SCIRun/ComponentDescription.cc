@@ -39,7 +39,8 @@
  */
 
 #include <SCIRun/ComponentDescription.h>
-using namespace SCIRun;
+
+namespace SCIRun {
 
 ComponentDescription::ComponentDescription()
 {
@@ -55,3 +56,5 @@ ComponentDescription::getLoaderName() const
   //for the local loaders, the loader name is "";
   return "";
 }
+
+} // end namespace SCIRun

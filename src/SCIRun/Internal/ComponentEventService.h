@@ -47,20 +47,44 @@
 #include <vector>
 
 namespace SCIRun {
-  class SCIRunFramework;
-  class ComponentEventService : public sci::cca::ports::ComponentEventService, public InternalComponentInstance {
-  public:
-    virtual ~ComponentEventService();
-    static InternalComponentInstance* create(SCIRunFramework* fwk,
-					     const std::string& name);
-    sci::cca::Port::pointer getService(const std::string&);
+class SCIRunFramework;
 
-    virtual void addComponentEventListener(sci::cca::ports::ComponentEventType type,
-					   const sci::cca::ports::ComponentEventListener::pointer& l,
-					   bool playInitialEvents);
-    virtual void removeComponentEventListener(sci::cca::ports::ComponentEventType type,
-					      const sci::cca::ports::ComponentEventListener::pointer& l);
-    virtual void moveComponent(const sci::cca::ComponentID::pointer& id, int x, int y);
+
+/**
+ * \class ComponentEventService
+ *
+ * The component event service is a CCA port that is used to register command objects
+ * (analogous to callback methods) with events broadcast from 
+
+ *mplementation of a command/observer pattern.  Thi
+ *
+ */
+class ComponentEventService : public sci::cca::ports::ComponentEventService,
+                              public InternalComponentInstance
+{
+public:
+  virtual ~ComponentEventService();
+
+  /** Factory method for allocating new ComponentEventService objects.  Returns
+      a smart pointer to the newly allocated object registered in the framework
+      \em fwk with the instance name \em name. */
+  static InternalComponentInstance* create(SCIRunFramework* fwk,
+					     const std::string& name);
+
+  /** ? */
+  sci::cca::Port::pointer getService(const std::string&);
+
+  /** ? */
+  virtual void addComponentEventListener(sci::cca::ports::ComponentEventType type,
+                     const sci::cca::ports::ComponentEventListener::pointer& l,
+                                         bool playInitialEvents);
+  
+  /** ? */
+  virtual void
+  removeComponentEventListener(sci::cca::ports::ComponentEventType type,
+                               const sci::cca::ports::ComponentEventListener::pointer& l);
+  
+  virtual void moveComponent(const sci::cca::ComponentID::pointer& id, int x, int y);
   private:
 
     struct Listener {
