@@ -189,6 +189,14 @@ SamplePlane::execute()
   ImageMeshHandle imagemesh = scinew ImageMesh(sizex, sizey, minb, maxb);
 
   int basis_order;
+  if (data_at_.get() == "Nodes") basis_order = 1;
+  else if (data_at_.get() == "Faces") basis_order = 0;
+  else if (data_at_.get() == "None") basis_order = -1;
+  else {
+    error("Unsupported data_at location " + data_at_.get() + ".");
+    return;
+  }
+
   if (data_at_.get() == "Faces") basis_order = 0;
   else basis_order = 1;
 

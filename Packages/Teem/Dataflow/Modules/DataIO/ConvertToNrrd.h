@@ -296,13 +296,26 @@ ConvertToNrrd<Fld>::convert_to_nrrd(FieldHandle ifh, NrrdDataHandle &pointsH,
 	m->size(size);
 	sz = size;
       }
-    break;
+      break;
     case 0:
       {
-	typename Fld::mesh_type::Cell::size_type size;
-	m->synchronize(Mesh::CELLS_E);
-	m->size(size);
-	sz = size;
+	if (mesh->dimensionality() == 1) {
+	  typename Fld::mesh_type::Edge::size_type size;
+	  m->synchronize(Mesh::NODES_E);
+	  m->size(size);
+	  sz = size;
+	} else if (mesh->dimensionality() == 2) {
+	  typename Fld::mesh_type::Face::size_type size;
+	  m->synchronize(Mesh::NODES_E);
+	  m->size(size);
+	  sz = size;
+	} else if (mesh->dimensionality() == 3) {
+	  typename Fld::mesh_type::Cell::size_type size;
+	  m->synchronize(Mesh::CELLS_E);
+	  m->size(size);
+	  sz = size;
+	}
+
       }
       break;
     default:

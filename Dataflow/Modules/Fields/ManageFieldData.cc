@@ -113,27 +113,32 @@ ManageFieldData::execute()
   }
 
   // Compute output matrix.
-
-  CompileInfoHandle ci_field =
-    ManageFieldDataAlgoField::
-    get_compile_info(ifieldhandle->get_type_description(), svt_flag);
-  Handle<ManageFieldDataAlgoField> algo_field;
-  if (!DynamicCompilation::compile(ci_field, algo_field, true, this))
+  if (ifieldhandle->basis_order() == -1)
   {
-    warning("Unable to extract data from input field, no output matrix created.");
+    remark("Input field contains no data, no output matrix created.");
   }
   else
   {
-    MatrixOPort *omp = (MatrixOPort *)get_oport("Output Matrix");
-    if (!omp) {
-      error("Unable to initialize oport 'Output Matrix'.");
+    CompileInfoHandle ci_field =
+      ManageFieldDataAlgoField::
+      get_compile_info(ifieldhandle->get_type_description(), svt_flag);
+    Handle<ManageFieldDataAlgoField> algo_field;
+    if (!DynamicCompilation::compile(ci_field, algo_field, true, this))
+    {
+      warning("Unable to extract data from input field, no output matrix created.");
     }
     else
     {
-      omp->send(algo_field->execute(ifieldhandle, datasize));
+      MatrixOPort *omp = (MatrixOPort *)get_oport("Output Matrix");
+      if (!omp) {
+	error("Unable to initialize oport 'Output Matrix'.");
+      }
+      else
+      {
+	omp->send(algo_field->execute(ifieldhandle, datasize));
+      }
     }
   }
-  
 
   // Compute output field.
   FieldHandle result_field;

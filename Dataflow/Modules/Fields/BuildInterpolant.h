@@ -226,9 +226,18 @@ BuildInterpAlgoT<MSRC, LSRC, MDST, LDST, FOUT>::parallel_execute(int proc,
   FOUT *out_field = dynamic_cast<FOUT *>(out_fieldH.get_rep());
 
   if (proc == 0) {
-    if (basis_order == 0) src_mesh->synchronize(Mesh::CELLS_E);
-    else src_mesh->synchronize(Mesh::NODES_E);
+    if (basis_order > 0) {
+      src_mesh->synchronize(Mesh::NODES_E);
+    }
+    else if (basis_order == 0 && src_mesh->dimensionality() == 3) {
+      src_mesh->synchronize(Mesh::CELLS_E);
+    } else if (basis_order == 0 && src_mesh->dimensionality() == 2) {
+      src_mesh->synchronize(Mesh::FACES_E);
+    } else if (basis_order == 0 && src_mesh->dimensionality() == 1) {
+      src_mesh->synchronize(Mesh::EDGES_E);
+    }
   }
+
   d->barrier.wait(np);
   int count=0;
 

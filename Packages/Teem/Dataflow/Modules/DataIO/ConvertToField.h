@@ -216,9 +216,19 @@ ConvertToField<Fld>::convert_to_field(SCIRun::FieldHandle fld,
     break;
     case 0:
       {
-	typename Fld::mesh_type::Cell::size_type sz;
-	mesh->size(sz);
-	dims.push_back(sz);
+	if (mesh->dimensionality() == 1) {
+	  typename Fld::mesh_type::Edge::size_type sz;
+	  mesh->size(sz);
+	  dims.push_back(sz);
+	} else if (mesh->dimensionality() == 2) {
+	  typename Fld::mesh_type::Face::size_type sz;
+	  mesh->size(sz);
+	  dims.push_back(sz);
+	} else if (mesh->dimensionality() == 3) {
+	  typename Fld::mesh_type::Cell::size_type sz;
+	  mesh->size(sz);
+	  dims.push_back(sz);
+	}
       }
     break;
     default:
@@ -313,16 +323,28 @@ ConvertToField<Fld>::convert_to_field(SCIRun::FieldHandle fld,
   break;
   case 0:
     {
-      typename Fld::mesh_type::Cell::iterator iter, end;
-      mesh->begin(iter);
-      mesh->end(end);
-      fill_data((Fld*)out.get_rep(), inrrd, iter, end);
+      if (mesh->dimensionality() == 1) {
+	typename Fld::mesh_type::Edge::iterator iter, end;
+	mesh->begin(iter);
+	mesh->end(end);
+	fill_data((Fld*)out.get_rep(), inrrd, iter, end);	
+      } else if (mesh->dimensionality() == 2) {
+	typename Fld::mesh_type::Face::iterator iter, end;
+	mesh->begin(iter);
+	mesh->end(end);
+	fill_data((Fld*)out.get_rep(), inrrd, iter, end);	
+      } else if (mesh->dimensionality() == 3) {
+	typename Fld::mesh_type::Cell::iterator iter, end;
+	mesh->begin(iter);
+	mesh->end(end);
+	fill_data((Fld*)out.get_rep(), inrrd, iter, end);
+      }
     }
-  break;
+    break;
   default:
     return false;
   }
-
+  
   return true;
 }
 
@@ -353,14 +375,24 @@ ConvertToFieldEigen<Fld>::convert_to_field(SCIRun::FieldHandle fld,
 	mesh->size(sz);
 	dims.push_back(sz);
       }
-    break;
+      break;
     case 0:
       {
-	typename Fld::mesh_type::Cell::size_type sz;
-	mesh->size(sz);
-	dims.push_back(sz);
+	if (mesh->dimensionality() == 1) {
+	  typename Fld::mesh_type::Edge::size_type sz;
+	  mesh->size(sz);
+	  dims.push_back(sz);
+	} else if (mesh->dimensionality() == 2) {
+	  typename Fld::mesh_type::Face::size_type sz;
+	  mesh->size(sz);
+	  dims.push_back(sz);
+	} else if (mesh->dimensionality() == 3) {
+	  typename Fld::mesh_type::Cell::size_type sz;
+	  mesh->size(sz);
+	  dims.push_back(sz);
+	}
       }
-    break;
+      break;
     default:
       return false;
     }
@@ -431,15 +463,27 @@ ConvertToFieldEigen<Fld>::convert_to_field(SCIRun::FieldHandle fld,
       mesh->end(end);
       fill_eigen_data((Fld*)out.get_rep(), inrrd, iter, end);
     }
-  break;
+    break;
   case 0:
     {
-      typename Fld::mesh_type::Cell::iterator iter, end;
-      mesh->begin(iter);
-      mesh->end(end);
-      fill_eigen_data((Fld*)out.get_rep(), inrrd, iter, end);
+      if (mesh->dimensionality() == 1) {
+	typename Fld::mesh_type::Edge::iterator iter, end;
+	mesh->begin(iter);
+	mesh->end(end);
+	fill_eigen_data((Fld*)out.get_rep(), inrrd, iter, end);
+      } else if (mesh->dimensionality() == 2) {
+	typename Fld::mesh_type::Face::iterator iter, end;
+	mesh->begin(iter);
+	mesh->end(end);
+	fill_eigen_data((Fld*)out.get_rep(), inrrd, iter, end);
+      } else if (mesh->dimensionality() == 3) {
+	typename Fld::mesh_type::Cell::iterator iter, end;
+	mesh->begin(iter);
+	mesh->end(end);
+	fill_eigen_data((Fld*)out.get_rep(), inrrd, iter, end);	  
+      }
     }
-  break;
+    break;
   default:
     return false;
   }

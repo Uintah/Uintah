@@ -170,20 +170,29 @@ ChangeFieldDataType::execute()
   update_state(Executing);
   outputfield_ = create_algo->execute(fh);
 
-  const TypeDescription *fdst_td = outputfield_->get_type_description();
-  CompileInfoHandle copy_ci =
-    ChangeFieldDataTypeAlgoCopy::get_compile_info(fsrc_td, fdst_td);
-  Handle<ChangeFieldDataTypeAlgoCopy> copy_algo;
-
-  if (new_data_type == "Vector" && 
-      fh->query_scalar_interface(this).get_rep() ||
-      !DynamicCompilation::compile(copy_ci, copy_algo, true, this))
+  if (fh->basis_order() != -1)
   {
-    warning("Unable to convert the old data from " + old_data_type +
-	    " to " + new_data_type + ", no data transfered.");
+    const TypeDescription *fdst_td = outputfield_->get_type_description();
+    CompileInfoHandle copy_ci =
+      ChangeFieldDataTypeAlgoCopy::get_compile_info(fsrc_td, fdst_td);
+    Handle<ChangeFieldDataTypeAlgoCopy> copy_algo;
+    
+    if (new_data_type == "Vector" && 
+	fh->query_scalar_interface(this).get_rep() ||
+	!DynamicCompilation::compile(copy_ci, copy_algo, true, this))
+    {
+      warning("Unable to convert the old data from " + old_data_type +
+	      " to " + new_data_type + ", no data transfered.");
+    }
+    else
+    {
+      remark("Copying " + old_data_type + " data into " + new_data_type +
+	     " may result in a loss of precision.");
+      update_state(Executing);
+      copy_algo->execute(fh, outputfield_);
+    }
   }
-
-
+    
   oport->send(outputfield_);
 }
 

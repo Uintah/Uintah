@@ -82,6 +82,8 @@ AttractNormalsAlgoT<MSRC, FLOC, FDST>::execute(FieldHandle field_h,
 					       AttractorHandle attr)
 {
   MSRC *mesh = static_cast<MSRC *>(field_h->mesh().get_rep());
+  int order = field_h->basis_order();
+  if (order == -1) { order = 1; }
   FDST *fdst = scinew FDST(mesh, 1);
 
   typename FLOC::iterator bi, ei;

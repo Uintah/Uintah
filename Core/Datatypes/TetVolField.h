@@ -90,12 +90,20 @@ template <class T>
 TetVolField<T>::TetVolField(int order)
   : GenericField<TetVolMesh, vector<T> >(order)
 {
+  ASSERTMSG((! (order == 0 && mesh_->dimensionality() == 1)), 
+	    "TetVolField does NOT currently support data at edges."); 
+  ASSERTMSG((! (order == 0 && mesh_->dimensionality() == 2)), 
+	    "TetVolField does NOT currently support data at faces."); 
 }
 
 template <class T>
 TetVolField<T>::TetVolField(TetVolMeshHandle mesh, int order)
   : GenericField<TetVolMesh, vector<T> >(mesh, order)
 {
+  ASSERTMSG((! (order == 0 && mesh_->dimensionality() == 1)), 
+	    "TetVolField does NOT currently support data at edges."); 
+  ASSERTMSG((! (order == 0 && mesh_->dimensionality() == 2)), 
+	    "TetVolField does NOT currently support data at faces."); 
 }
 
 template <class T>

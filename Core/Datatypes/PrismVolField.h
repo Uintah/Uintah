@@ -89,12 +89,20 @@ template <class T>
 PrismVolField<T>::PrismVolField(int order)
   : GenericField<PrismVolMesh, vector<T> >(order)
 {
+  ASSERTMSG((! (order == 0 && mesh_->dimensionality() == 1)), 
+	    "PrismVolField does NOT currently support data at edges."); 
+  ASSERTMSG((! (order == 0 && mesh_->dimensionality() == 2)), 
+	    "PrismVolField does NOT currently support data at faces."); 
 }
 
 template <class T>
 PrismVolField<T>::PrismVolField(PrismVolMeshHandle mesh, int order)
   : GenericField<PrismVolMesh, vector<T> >(mesh, order)
 {
+  ASSERTMSG((! (order == 0 && mesh_->dimensionality() == 1)), 
+	    "PrismVolField does NOT currently support data at edges."); 
+  ASSERTMSG((! (order == 0 && mesh_->dimensionality() == 2)), 
+	    "PrismVolField does NOT currently support data at faces."); 
 }
 
 template <class T>

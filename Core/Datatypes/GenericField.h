@@ -153,20 +153,24 @@ GenericField<Mesh, FData>::resize_fdata()
     mesh_->size(ssize);
     fdata().resize(ssize);
   } 
-  if (basis_order() == 0 && mesh_->dimensionality() == 2)
+  else if (basis_order() == 0 && mesh_->dimensionality() == 2)
   {
     typename mesh_type::Face::size_type ssize;
     mesh_->synchronize(Mesh::FACES_E);
     mesh_->size(ssize);
     fdata().resize(ssize);
   } 
-  if (basis_order() == 0 && mesh_->dimensionality() == 1)
+  else if (basis_order() == 0 && mesh_->dimensionality() == 1)
   {
     typename mesh_type::Edge::size_type ssize;
     mesh_->synchronize(Mesh::EDGES_E);
     mesh_->size(ssize);
     fdata().resize(ssize);
   } 
+  else if (basis_order() == -1)
+  {
+    // do nothing (really, we want to resize to zero)
+  }
   else
   {
     typename mesh_type::Node::size_type ssize;
@@ -216,7 +220,7 @@ GenericField<Mesh, FData>::GenericField() :
   mesh_(mesh_handle_type(scinew mesh_type())),
   fdata_(0) //workaround for default variable bug on sgi.
 {
-  if (mesh_.get_rep())
+  if (basis_order() != -1 && mesh_.get_rep())
   {
     resize_fdata();
   }
@@ -228,7 +232,7 @@ GenericField<Mesh, FData>::GenericField(int order) :
   mesh_(mesh_handle_type(scinew mesh_type())),
   fdata_(0) //workaround for default variable bug on sgi.
 {
-  if (mesh_.get_rep())
+  if (basis_order() != -1 && mesh_.get_rep())
   { 
     resize_fdata();
   }
@@ -241,7 +245,7 @@ GenericField<Mesh, FData>::GenericField(mesh_handle_type mesh,
   mesh_(mesh),
   fdata_(0) //workaround for default variable bug on sgi.
 {
-  if (mesh_.get_rep())
+  if (basis_order() != -1 && mesh_.get_rep())
   {
     resize_fdata();
   }

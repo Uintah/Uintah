@@ -96,6 +96,11 @@ TransformData3::execute()
     return;
   }
 
+  if (ifieldhandle0->basis_order() == -1)
+  {
+    error("Field 0 contains no data to transform.");
+    return;
+  }
 
   FieldIPort *ifp1 = (FieldIPort *)get_iport("Input Field 1");
   FieldHandle ifieldhandle1;
@@ -109,6 +114,11 @@ TransformData3::execute()
     return;
   }
 
+  if (ifieldhandle1->basis_order() == -1)
+  {
+    error("Field 1 contains no data to transform.");
+    return;
+  }
 
   FieldIPort *ifp2 = (FieldIPort *)get_iport("Input Field 2");
   FieldHandle ifieldhandle2;
@@ -119,6 +129,12 @@ TransformData3::execute()
   if (!(ifp2->get(ifieldhandle2) && ifieldhandle2.get_rep()))
   {
     error("Input field 2 is empty.");
+    return;
+  }
+
+  if (ifieldhandle2->basis_order() == -1)
+  {
+    error("Field 2 contains no data to transform.");
     return;
   }
 

@@ -218,7 +218,7 @@ main(int argc, char **argv) {
   }
   cerr << "done adding elements.\n";
 
-  HexVolField<double> *hv = scinew HexVolField<double>(hvm, 0);
+  HexVolField<double> *hv = scinew HexVolField<double>(hvm, -1);
   FieldHandle hvH(hv);
   
   if (binOutput) {

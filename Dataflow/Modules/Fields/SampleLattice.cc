@@ -134,6 +134,13 @@ SampleLattice::execute()
   LatVolMeshHandle mesh = scinew LatVolMesh(sizex, sizey, sizez, minb, maxb);
 
   int basis_order;
+  if (data_at_.get() == "Nodes") basis_order = 1;
+  else if (data_at_.get() == "Cells") basis_order = 0;
+  else if (data_at_.get() == "None") basis_order = -1;
+  else {
+    error("Unsupported data_at location " + data_at_.get() + ".");
+    return;
+  }
   if (data_at_.get() == "Cells") basis_order = 0;
   else basis_order = 1;
 
@@ -142,36 +149,43 @@ SampleLattice::execute()
   if (datatype == SCALAR)
   {
     LatVolField<double> *lvf = scinew LatVolField<double>(mesh, basis_order);
-    LatVolField<double>::fdata_type::iterator itr = lvf->fdata().begin();
-    while (itr != lvf->fdata().end())
+    if (basis_order != -1)
     {
-      *itr = 0.0;
-      ++itr;
-    }    
+      LatVolField<double>::fdata_type::iterator itr = lvf->fdata().begin();
+      while (itr != lvf->fdata().end())
+      {
+	*itr = 0.0;
+	++itr;
+      }    
+    }
     ofh = lvf;
   } 
   else if (datatype == VECTOR)
   {
     LatVolField<Vector> *lvf = scinew LatVolField<Vector>(mesh, basis_order);
-    LatVolField<Vector>::fdata_type::iterator itr = lvf->fdata().begin();
-    while (itr != lvf->fdata().end())
+    if (basis_order != -1)
     {
-      *itr = Vector(0.0, 0.0, 0.0);
-      ++itr;
+      LatVolField<Vector>::fdata_type::iterator itr = lvf->fdata().begin();
+      while (itr != lvf->fdata().end())
+      {
+	*itr = Vector(0.0, 0.0, 0.0);
+	++itr;
+      }
     }
-  
     ofh = lvf;
   }				    
   else // if (datatype == TENSOR)	    
   {				    
     LatVolField<Tensor> *lvf = scinew LatVolField<Tensor>(mesh, basis_order);
-    LatVolField<Tensor>::fdata_type::iterator itr = lvf->fdata().begin();
-    while (itr != lvf->fdata().end())
+    if (basis_order != -1)
     {
-      *itr = Tensor(0.0);
-      ++itr;
+      LatVolField<Tensor>::fdata_type::iterator itr = lvf->fdata().begin();
+      while (itr != lvf->fdata().end())
+      {
+	*itr = Tensor(0.0);
+	++itr;
+      }
     }
-
     ofh = lvf;
   }				    
 

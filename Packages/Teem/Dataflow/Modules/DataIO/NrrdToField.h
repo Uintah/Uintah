@@ -1077,14 +1077,24 @@ NrrdToFieldTestMesh<Fld>::execute(SCIRun::FieldHandle fld,
 	mesh->size(sz);
 	dims.push_back(sz);
       }
-    break;
+      break;
     case 0:
       {
-	typename Fld::mesh_type::Cell::size_type sz;
-	mesh->size(sz);
-	dims.push_back(sz);
+	if (mesh->dimensionality() == 1) {
+	  typename Fld::mesh_type::Edge::size_type sz;
+	  mesh->size(sz);
+	  dims.push_back(sz);
+	} else if (mesh->dimensionality() == 2) {
+	  typename Fld::mesh_type::Face::size_type sz;
+	  mesh->size(sz);
+	  dims.push_back(sz);
+	} else if (mesh->dimensionality() == 3) {
+	  typename Fld::mesh_type::Cell::size_type sz;
+	  mesh->size(sz);
+	  dims.push_back(sz);
+	}
       }
-    break;
+      break;
     default:
       cerr << "Location of data not defined.  Assuming at Nodes\n";
       typename Fld::mesh_type::Node::size_type sz;

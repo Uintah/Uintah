@@ -200,7 +200,7 @@ main(int argc, char **argv) {
   }
   cerr << "done adding elements.\n";
 
-  TriSurfField<double> *ts = scinew TriSurfField<double>(tsm, 0);
+  TriSurfField<double> *ts = scinew TriSurfField<double>(tsm, -1);
   FieldHandle tsH(ts);
   
   if (binOutput) {

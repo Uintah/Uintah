@@ -103,6 +103,11 @@ DirectInterpolate::execute()
   {
     return;
   }
+  if (fdst_h->basis_order() == -1)
+  {
+    warning("No data basis in destination to interpolate to.");
+    return;
+  }
 
   src_port = (FieldIPort *)get_iport("Source");
   FieldHandle fsrc_h;
@@ -112,6 +117,11 @@ DirectInterpolate::execute()
   }
   if (!(src_port->get(fsrc_h) && fsrc_h.get_rep()))
   {
+    return;
+  }
+  if (!fsrc_h->basis_order() == -1)
+  {
+    warning("No data basis in Source field to interpolate from.");
     return;
   }
 
