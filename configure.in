@@ -726,12 +726,14 @@ AC_SUBST(LEXLIB)
 
 AC_OUTPUT(Makefile \
 	  sci_defs.h \
-	  scripts/createTclIndex \
 	      , echo timestamp > stamp-h
          )
 
 #
 # $Log$
+# Revision 1.66  2000/09/04 06:20:03  moulding
+# fixed execute permissions for createTclIndex
+#
 # Revision 1.65  2000/09/03 23:47:17  moulding
 # added stuff to allow executables to be assigned as well as libraries for the --with-tcl configure option
 #
