@@ -478,8 +478,8 @@ template<class T>
 
   template<class T>
   bool
-  ParticleVariable<T>::emitRLE(ostream& out, const IntVector& l,
-			       const IntVector& h, DOMElement* varnode)
+  ParticleVariable<T>::emitRLE(ostream& out, const IntVector& /*l*/,
+			       const IntVector& /*h*/, DOMElement* varnode)
   {
     const TypeDescription* td = fun_getTypeDescription((T*)0);
     if (findNode("numParticles", varnode) == 0) {

@@ -577,7 +577,7 @@ ProblemSpecP ProblemSpec::getOptional(const std::string& name,
     if (found_node->getNodeType() == DOMNode::ELEMENT_NODE) {
       // We have an element node and attributes
       DOMNamedNodeMap* attr = found_node->getAttributes();
-      int num_attr = attr->getLength();
+      unsigned long num_attr = attr->getLength();
       if (num_attr >= 1)
 	attr_node = attr->item(0);
       else 
@@ -610,9 +610,9 @@ void ProblemSpec::getAttributes(map<string,string>& attributes)
 {
 
   DOMNamedNodeMap* attr = d_node->getAttributes();
-  int num_attr = attr->getLength();
+  unsigned long num_attr = attr->getLength();
 
-  for (int i = 0; i<num_attr; i++) {
+  for (unsigned long i = 0; i<num_attr; i++) {
     const char* attrName = to_char_ptr(attr->item(i)->getNodeName());
     string name(attrName);
     const char* attrValue = to_char_ptr(attr->item(i)->getNodeValue());
