@@ -30,8 +30,11 @@ public:
   void init( const Framework & );
 
   // export services
-  virtual bool connect( const ComponentID &, const string &, 
-			const ComponentID &, const string &);
+  virtual bool connect( const ComponentID & user,
+			const string      & use_port, 
+			const ComponentID & provider, 
+			const string      & provide_port);
+
   virtual bool disconnect( const ComponentID &, const string &, 
 			   const ComponentID &, const string &);
   virtual bool exportAs( const ComponentID &, const string &, const string &);
