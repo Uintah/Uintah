@@ -38,7 +38,6 @@
 #include <Dataflow/Network/Module.h>
 #include <iostream>
 using std::cerr;
-using std::endl;
 
 namespace SCIRun {
 
@@ -252,7 +251,7 @@ PathPoint::geom_moved( const Vector& delta, Index pick, const BState& )
     UpVar.SetDelta(delta);
     break;
   default:
-    cerr << "Unknown case in PathPoint::geom_moved" << endl;
+    cerr << "Unknown case in PathPoint::geom_moved\n";
     break;
   }
 }
