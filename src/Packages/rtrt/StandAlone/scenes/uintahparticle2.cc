@@ -24,6 +24,7 @@
 #include <Packages/rtrt/Core/Sphere.h>
 #include <Packages/rtrt/Core/SelectableGroup.h>
 #include <Packages/rtrt/Core/Array1.h>
+#include <Packages/rtrt/Core/BBox.h>
 #if 0
 #undef Exception
 #undef SCI_ASSERTION_LEVEL
@@ -190,15 +191,31 @@ void get_material_cmap(rtrt::Array1<Material*> &matls, char *file) {
 
   float r = 0;
   infile >> r;
+  float max = r;
   do {
     // slurp up the colors
     float g = 0;
     float b = 0;
     infile >> g >> b;
+    if (r > max)
+      max = r;
+    if (g > max)
+      max = g;
+    if (b > max)
+      max = b;
     colors.add(Color(r,g,b));
-    cout << "Added: "<<colors[colors.size()-1]<<endl;
+    //    cout << "Added: "<<colors[colors.size()-1]<<endl;
     infile >> r;
   } while(infile);
+
+  if (max > 1) {
+    cerr << "Renormalizing colors for range of 0 to 255\n";
+    float inv255 = 1.0f/255.0f;
+    for(int i = 0; i < colors.size(); i++) {
+      colors[i] = colors[i] * inv255;
+      //      cout << "colors["<<i<<"] = "<<colors[i]<<endl;
+    }
+  }
 
   // Now to create the color map
   ScalarTransform1D<int, Color> cmap(colors);
@@ -323,7 +340,7 @@ void append_spheres(rtrt::Array1<SphereData> &data_group,
       MaterialData pos_y = patchdata.position_y.material_set[matind];
       MaterialData pos_z = patchdata.position_z.material_set[matind];
       int matl = pos_x.material_number;
-      for(unsigned int partind = 0; partind < num_parts; partind++) {
+      for(long partind = 0; partind < num_parts; partind++) {
 	*p++ = pos_x.data[partind];
 	*p++ = pos_y.data[partind];
 	*p++ = pos_z.data[partind];
@@ -518,12 +535,12 @@ public:
     Matrix3 one; one.Identity();
     
     // for all vars in one timestep in one patch
-    for(int v=0;v<vars->size();v++){
+    for(unsigned int v=0;v<vars->size();v++){
       std::string var = (*vars)[v];
       if (var_include->size() > 0) {
 	// Only do this check if the size of var_include is > 0.
 	bool var_is_found = false;
-	for(int s=0; s<var_include->size(); s++)
+	for(unsigned int s=0; s<var_include->size(); s++)
 	  if ((*var_include)[s] == var) {
 	    var_is_found = true;
 	    break;
@@ -767,7 +784,7 @@ public:
 		   do_verbose, radius, radius_factor);
     patchdata.deleteme();
     amutex->lock();
-    for(unsigned int i = 0; i < sphere_data.size(); i++) {
+    for(int i = 0; i < sphere_data.size(); i++) {
       sphere_data_all->add(sphere_data[i]);
     }
     cerr << "Read Patch(" << patch->getID() << ")\n";
@@ -1286,10 +1303,8 @@ Scene* make_scene(int argc, char* argv[], int nworkers)
   
   rtrt::Plane groundplane (rtrt::Point(-500, 300, 0), rtrt::Vector(7, -3, 2));
   Camera cam(rtrt::Point(0,0,400),rtrt::Point(0,0,0),rtrt::Vector(0,1,0),60.0);
-  double bgscale=0.5;
   Color bgcolor(1.,1.,1.);
-  //Color bgcolor(bgscale*108/255., bgscale*166/255., bgscale*205/255.);
-  double ambient_scale=1.0;
+  double ambient_scale=0.7;
   Color cup(0.9, 0.7, 0.3);
   Color cdown(0.0, 0.0, 0.2);
 
@@ -1298,7 +1313,13 @@ Scene* make_scene(int argc, char* argv[], int nworkers)
 			 ambient_scale);
 
   // Add all the lights.
-  Light *light = new Light(rtrt::Point(500,-300,300), Color(.8,.8,.8), 0);
+  rtrt::BBox bounds;
+  all->compute_bounds(bounds, 0);
+  // Take the corners and then extend one of them
+  Point light_loc = bounds.max() + (bounds.max()-bounds.min())*0.2;
+  
+  Light *light = new Light(light_loc, Color(.8, .8, .8),
+			   (bounds.max()-bounds.min()).length()*0.01);
   light->name_ = "Main Light";
   scene->add_light(light);
 
