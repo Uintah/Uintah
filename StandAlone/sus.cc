@@ -351,6 +351,16 @@ main( int argc, char** argv )
      * Create the components
      */
     try {
+
+	char * st = getenv( "INITIAL_SLEEP_TIME" );
+	if( st != 0 ){
+	  int sleepTime = atoi( st );
+	  cerr << "SLEEPING FOR " << sleepTime 
+	       << " SECONDS TO ALLOW DEBUGGER ATTACHMENT\n";
+	  cerr << "PID is " << getpid() << "\n";
+	  sleep( sleepTime );
+	}
+
 	const ProcessorGroup* world = Uintah::Parallel::getRootProcessorGroup();
 	SimulationController* ctl;
 	if(do_AMR)
@@ -478,15 +488,6 @@ main( int argc, char** argv )
 	/*
 	 * Start the simulation controller
 	 */
-
-	char * st = getenv( "INITIAL_SLEEP_TIME" );
-	if( st != 0 ){
-	  int sleepTime = atoi( st );
-	  cerr << "SLEEPING FOR " << sleepTime 
-	       << " SECONDS TO ALLOW DEBUGGER ATTACHMENT\n";
-	  cerr << "PID is " << getpid() << "\n";
-	  sleep( sleepTime );
-	}
 
 	if (restart) {
 	  ctl->doRestart(udaDir, restartTimestep,
