@@ -157,5 +157,11 @@ cerr << "Adding node " << node << endl;
 	mesh->remove_delaunay(onn+7, 0);
     }
     mesh->pack_all();
+    double vol=0;
+    cerr << "There are " << mesh->elems.size() << " elements" << endl;
+    for(i=0;i<mesh->elems.size();i++){
+	vol+=mesh->elems[i]->volume();
+    }
+    cerr << "Total volume: " << vol << endl;
     oport->send(mesh);
 }
