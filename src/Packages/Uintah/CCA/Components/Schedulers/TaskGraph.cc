@@ -39,6 +39,7 @@ extern DebugStream mixedDebug;
 
 #define DAV_DEBUG 0
 
+
 TaskGraph::TaskGraph(SchedulerCommon* sc, const ProcessorGroup* pg)
   : sc(sc), d_myworld(pg)
 {
@@ -117,14 +118,12 @@ TaskGraph::overlaps(Task::Dependency* comp, Task::Dependency* req) const
 
 // setupTaskConnections also adds Reduction Tasks to the graph...
 void
-TaskGraph::setupTaskConnections()
+TaskGraph::setupTaskConnections(GraphSortInfoMap& sortinfo)
 {
   vector<Task*>::iterator iter;
   // Initialize variables on the tasks
   for( iter=d_tasks.begin(); iter != d_tasks.end(); iter++ ) {
-    Task* task = *iter;
-    task->visited=false;
-    task->sorted=false;
+    sortinfo[*iter] = GraphSortInfo();
   }    
   if (edges.size() > 0) {
     return; // already been done
@@ -168,6 +167,8 @@ TaskGraph::setupTaskConnections()
 	  taskname << "Reduction: " << comp->var->getName() 
 		   << ", level " << levelidx << ", dw " << dw;
 	  Task* newtask = scinew Task(taskname.str(), Task::Reduction);
+
+          sortinfo[newtask] = GraphSortInfo();
 
 	  int dwmap[Task::TotalDWs];
 	  for(int i=0;i<Task::TotalDWs;i++)
@@ -230,23 +231,24 @@ TaskGraph::setupTaskConnections()
     Task* task = *iter;
     if(dbg.active())
       dbg << d_myworld->myrank() << "   Looking at dependencies for task: " << *task << '\n';
-    addDependencyEdges(task, task->getRequires(), comps, false);
-    addDependencyEdges(task, task->getModifies(), comps, true);
+    addDependencyEdges(task, sortinfo, task->getRequires(), comps, false);
+    addDependencyEdges(task, sortinfo, task->getModifies(), comps, true);
     // Used here just to warn if a modifies comes before its computes
     // in the order that tasks were added to the graph.
-    task->visited = true;
+    sortinfo.find(task)->second.visited = true;
   }
 
   // Initialize variables on the tasks
-  for( iter=d_tasks.begin(); iter != d_tasks.end(); iter++ ) {
-    Task* task = *iter;
-    task->visited=false;
-    task->sorted=false;
+  GraphSortInfoMap::iterator sort_iter;
+  for( sort_iter=sortinfo.begin(); sort_iter != sortinfo.end(); sort_iter++ ) {
+    sort_iter->second.visited=false;
+    sort_iter->second.sorted=false;
   }
 } // end setupTaskConnections()
 
-void TaskGraph::addDependencyEdges(Task* task, Task::Dependency* req,
-				  CompMap& comps, bool modifies)
+void TaskGraph::addDependencyEdges(Task* task, GraphSortInfoMap& sortinfo,
+                                   Task::Dependency* req,
+                                   CompMap& comps, bool modifies)
 {
   for(; req != 0; req=req->next){
     if (dbg.active())
@@ -317,7 +319,7 @@ void TaskGraph::addDependencyEdges(Task* task, Task::Dependency* req,
 	  req->addComp(edge);
 	  comp->addReq(edge);
 	  
-	  if (!edge->comp->task->visited &&
+	  if (!sortinfo.find(edge->comp->task)->second.visited &&
 	      !edge->comp->task->isReductionTask()) {
 	    cerr << "\nWARNING: A task, '" << task->getName() << "', that ";
 	    if (modifies)
@@ -397,12 +399,14 @@ void TaskGraph::addDependencyEdges(Task* task, Task::Dependency* req,
 }
 
 void
-TaskGraph::processTask(Task* task, vector<Task*>& sortedTasks) const
+TaskGraph::processTask(Task* task, vector<Task*>& sortedTasks,
+                       GraphSortInfoMap& sortinfo) const
 {
   if(dbg.active())
     dbg << d_myworld->myrank() << " Looking at task: " << task->getName() << '\n';
 
-  if(task->visited){
+  GraphSortInfo& gsi = sortinfo.find(task)->second;
+  if(gsi.visited){
     ostringstream error;
     error << "Cycle detected in task graph: already did\n\t"
 	  << task->getName();
@@ -410,21 +414,22 @@ TaskGraph::processTask(Task* task, vector<Task*>& sortedTasks) const
     SCI_THROW(InternalError(error.str()));
   }
 
-  task->visited=true;
+  gsi.visited = true;
    
-  processDependencies(task, task->getRequires(), sortedTasks);
-  processDependencies(task, task->getModifies(), sortedTasks);
+  processDependencies(task, task->getRequires(), sortedTasks, sortinfo);
+  processDependencies(task, task->getModifies(), sortedTasks, sortinfo);
 
   // All prerequisites are done - add this task to the list
   sortedTasks.push_back(task);
-  task->sorted=true;
+  gsi.sorted=true;
   if(dbg.active())
     dbg << d_myworld->myrank() << " Sorted task: " << task->getName() << '\n';
 } // end processTask()
 
 
 void TaskGraph::processDependencies(Task* task, Task::Dependency* req,
-				    vector<Task*>& sortedTasks) const
+				    vector<Task*>& sortedTasks,
+                                    GraphSortInfoMap& sortinfo) const
 
 {
   for(; req != 0; req=req->next){
@@ -434,8 +439,9 @@ void TaskGraph::processDependencies(Task* task, Task::Dependency* req,
       Task::Edge* edge = req->comp_head;
       for (;edge != 0; edge = edge->compNext){
 	Task* vtask = edge->comp->task;
-	if(!vtask->sorted){
-	  if(vtask->visited){
+        GraphSortInfo& gsi = sortinfo.find(vtask)->second;
+	if(!gsi.sorted){
+	  if(gsi.visited){
 	    ostringstream error;
 	    error << "Cycle detected in task graph: trying to do\n\t"
 		  << task->getName();
@@ -446,7 +452,7 @@ void TaskGraph::processDependencies(Task* task, Task::Dependency* req,
 	    error << "\n";
 	    SCI_THROW(InternalError(error.str()));
 	  }
-	  processTask(vtask, sortedTasks);
+	  processTask(vtask, sortedTasks, sortinfo);
 	}
       }
     }
@@ -456,8 +462,9 @@ void TaskGraph::processDependencies(Task* task, Task::Dependency* req,
 void
 TaskGraph::nullSort( vector<Task*>& tasks )
 {
+  GraphSortInfoMap sortinfo;
   // setupTaskConnections also creates the reduction tasks...
-  setupTaskConnections();
+  setupTaskConnections(sortinfo);
 
   vector<Task*>::iterator iter;
 
@@ -474,19 +481,22 @@ TaskGraph::nullSort( vector<Task*>& tasks )
 void
 TaskGraph::topologicalSort(vector<Task*>& sortedTasks)
 {
-  setupTaskConnections();
+  GraphSortInfoMap sortinfo;
+
+  setupTaskConnections(sortinfo);
 
   for(vector<Task*>::iterator iter=d_tasks.begin();
       iter != d_tasks.end(); iter++ ) {
     Task* task = *iter;
-    if(!task->sorted){
-      processTask(task, sortedTasks);
+    if(!sortinfo.find(task)->second.sorted){
+      processTask(task, sortedTasks, sortinfo);
     }
   }
   int n=0;
   for(vector<Task*>::iterator iter = sortedTasks.begin();
-      iter != sortedTasks.end(); iter++)
-    (*iter)->sortedOrder = n++;
+      iter != sortedTasks.end(); iter++) {
+    (*iter)->setSortedOrder(n++);
+  }
 }
 
 void
@@ -547,8 +557,8 @@ TaskGraph::createDetailedTasks( LoadBalancer* lb, bool useInternalDeps )
   GridP grid;
   for(int i=0;grid == 0 && i<(int)sorted_tasks.size();i++){
     Task* task = sorted_tasks[i];
-    const PatchSet* ps = task->patch_set;
-    if(ps && task->matl_set){
+    const PatchSet* ps = task->getPatchSet();
+    if(ps && task->getMaterialSet()){
       for(int p=0;grid == 0 && p<ps->size();p++){
 	const PatchSubset* pss = ps->getSubset(p);
 	for(int s=0;grid == 0 && s<pss->size();s++){
@@ -565,8 +575,8 @@ TaskGraph::createDetailedTasks( LoadBalancer* lb, bool useInternalDeps )
   DetailedTasks* dt = scinew DetailedTasks(sc, d_myworld, this, useInternalDeps );
   for(int i=0;i<(int)sorted_tasks.size();i++){
     Task* task = sorted_tasks[i];
-    const PatchSet* ps = task->patch_set;
-    const MaterialSet* ms = task->matl_set;
+    const PatchSet* ps = task->getPatchSet();
+    const MaterialSet* ms = task->getMaterialSet();
     if(ps && ms){
       for(int p=0;p<ps->size();p++){
 	const PatchSubset* pss = ps->getSubset(p);
@@ -953,7 +963,7 @@ TaskGraph::createDetailedDependencies(DetailedTasks* dt,
 		    ++reqTaskIter) {
 		  DetailedTask* prevReqTask = *reqTaskIter;
 		  if(prevReqTask->task == task->task){
-		    if(!task->task->d_hasSubScheduler) {
+		    if(!task->task->getHasSubScheduler()) {
 		      cerr << "\n\n\nWARNING - task that requires with Ghost cells *and* modifies may not be correct\n";
                       dbg << d_myworld->myrank() << " Task that requires with ghost cells and modifies\n";
                     }
