@@ -76,7 +76,7 @@ TransformScalarData::execute()
     return;
   }
   
-  if (ifieldhandle->query_scalar_interface() == 0)
+  if (ifieldhandle->query_scalar_interface(this) == 0)
   {
     error("This module only works on scalar fields.");
     return;

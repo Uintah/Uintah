@@ -109,14 +109,17 @@ RescaleColorMap::execute()
       FieldHandle field;
       if (ifield->get(field) && field.get_rep()) {
 
-	ScalarFieldInterface *sfi = field->query_scalar_interface();
-	VectorFieldInterface *vfi = field->query_vector_interface();
+	ScalarFieldInterface *sfi;
+	VectorFieldInterface *vfi;
 	string units;
 	if (field->get_property("units", units))
 	  cmap->units=units;
-	if (sfi) {
+	if ((sfi = field->query_scalar_interface(this)))
+	{
 	  sfi->compute_min_max(minmax_.first, minmax_.second);
-	} else if (vfi) {
+	}
+	else if ((vfi = field->query_vector_interface(this)))
+	{
 	  // get minmax of the vector field.
 	  static pair<Vector, Vector> minmax;
 	  if ( !field->get_property("minmax", minmax)) {

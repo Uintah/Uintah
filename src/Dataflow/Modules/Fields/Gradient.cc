@@ -82,7 +82,7 @@ Gradient::execute()
     return;
   }
 
-  if (!fieldin->query_scalar_interface())
+  if (!fieldin->query_scalar_interface(this))
   {
     error( "Only availible for Scalar data." );
     return;

@@ -270,7 +270,7 @@ ModifyConductivities::execute()
   {
     //remark("Using identity conductivity tensors.");
     created_p = true;
-    ScalarFieldInterface *sfi = field->query_scalar_interface();
+    ScalarFieldInterface *sfi = field->query_scalar_interface(this);
     double maxval;
     if (sfi)
     {

@@ -117,11 +117,11 @@ SamplePlane::execute()
   else
   {
     datatype = SCALAR;
-    if (ifieldhandle->query_vector_interface())
+    if (ifieldhandle->query_vector_interface(this))
     {
       datatype = TENSOR;
     }
-    else if (ifieldhandle->query_tensor_interface())
+    else if (ifieldhandle->query_tensor_interface(this))
     {
       datatype = VECTOR;
     }

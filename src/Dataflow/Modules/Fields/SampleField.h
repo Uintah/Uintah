@@ -27,7 +27,7 @@
 #include <Core/Math/MusilRNG.h>
 #include <Core/Datatypes/PointCloudField.h>
 #include <Core/Datatypes/FieldInterface.h>
-#include <Dataflow/Network/Module.h>
+#include <Core/Util/ModuleReporter.h>
 #include <algorithm>
 
 namespace SCIRun {
@@ -36,7 +36,7 @@ class SampleFieldRandomAlgo : public DynamicAlgoBase
 {
 public:
 
-  virtual FieldHandle execute(Module *mod,
+  virtual FieldHandle execute(ModuleReporter *mod,
 			      FieldHandle field, unsigned int num_seeds,
 			      int rng_seed, const string &dist, int clamp) = 0;
 
@@ -67,7 +67,7 @@ private:
 
 public:
 
-  virtual FieldHandle execute(Module *mod,
+  virtual FieldHandle execute(ModuleReporter *mod,
 			      FieldHandle field, unsigned int num_seeds,
 			      int rng_seed, const string &dist, int clamp);
 };
@@ -156,7 +156,7 @@ SampleFieldRandomAlgoT<Mesh>::build_weight_table(Mesh *mesh,
 
 template <class Mesh>
 FieldHandle
-SampleFieldRandomAlgoT<Mesh>::execute(Module *mod,
+SampleFieldRandomAlgoT<Mesh>::execute(ModuleReporter *mod,
 				      FieldHandle field,
 				      unsigned int num_seeds,
 				      int rng_seed,
@@ -171,8 +171,8 @@ SampleFieldRandomAlgoT<Mesh>::execute(Module *mod,
     return 0;
   }
 
-  ScalarFieldInterface *sfi = field->query_scalar_interface();
-  VectorFieldInterface *vfi = field->query_vector_interface();
+  ScalarFieldInterface *sfi = 0;
+  VectorFieldInterface *vfi = 0;
   mode_e distmode = IMPUNI;
   if (dist == "impscat")
   {
@@ -186,7 +186,9 @@ SampleFieldRandomAlgoT<Mesh>::execute(Module *mod,
   {
     distmode = UNISCAT;
   }
-  if (sfi || vfi || distmode == UNIUNI || distmode == UNISCAT)
+  if (distmode == UNIUNI || distmode == UNISCAT ||
+      (sfi = field->query_scalar_interface(mod)) ||
+      (vfi = field->query_vector_interface(mod)))
   {
     if (!build_weight_table(mesh, sfi, vfi, table, distmode))
     {
