@@ -30,9 +30,9 @@ For complete installation instructions see <xref linkend="ch.inst"/>.
 </para>
 
 <para>&sr; may be <link linkend="sec.rpm_inst_qs">installed from
-RPMs</link> (for Mandrake 9 and Red Hat 8 systems only) or from <link
-linkend="sec.tarball_inst_qs">source code tarballs</link> (for Linux
-and SGI).</para>
+<acronym>RPM</acronym>s</link> (for Mandrake 9 and Red Hat 8 systems
+only) or from <link linkend="sec.tarball_inst_qs">source code
+tarballs</link> (for Linux and SGI).</para>
 
 </section>
 
@@ -43,9 +43,9 @@ and SGI).</para>
 <title>Introduction</title>
 
 <para>
-You must have root privileges to install &sr;.  Ask your system
-administrator to perform the installation if you don't have access to
-the superuser account.
+Root privileges are required to install &sr;.  The system
+administrator can perform the installation if you don't have root
+privileges.
 </para>
 
 <para>
@@ -57,7 +57,7 @@ The following procedure installs &sr; in
 RPM installation consists of the following steps:
 <orderedlist>
 <listitem>
-<para>Downloading the &sr; rpm distribution, sample data sets, and
+<para>Downloading the &sr; RPM distribution, sample data sets, and
 documentation.</para>
 </listitem>
 <listitem>
@@ -86,11 +86,11 @@ archive</ulink> page download the following files:
 <itemizedlist>
 <listitem>
 <para>
-The &sr; rpm, either
+The &sr; RPM, either
 <filename>&sr;-<replaceable>x.x.x</replaceable>-mdk9.0.i586.rpm</filename>
-for Mandrake 9 systems or or
+for Mandrake 9 systems or
 <filename>&sr;-<replaceable>x.x.x</replaceable>-rh8.0.i386.rpm</filename>
-for Redhad 8 systems.
+for Redhat 8 systems.
 </para>
 </listitem>
 <listitem>
@@ -101,7 +101,7 @@ for Redhad 8 systems.
 </listitem>
 <listitem>
 <para>
-&sr;'s documention,
+&sr;'s documentation,
 <filename>docs.<replaceable>x.x.x</replaceable>.tar.gz</filename>
 </para>
 </listitem>
@@ -133,7 +133,7 @@ linkend="sec.preparing_qs"/> before starting &sr;</para>
 <section>
 <title>Installing &sr;'s Sample Data Sets</title>
 <para>
-Unpack &sr;'s sample data sets in
+Install &sr;'s sample data sets in
 <filename>/usr/local</filename>.  Become root and type
 <literallayout class="monospaced">
 gunzip -c DataSets.<replaceable>x.x.x</replaceable>.tar.gz | (cd /usr/local &amp;&amp; tar xf -)
@@ -147,7 +147,7 @@ the sample data sets directory.
 <title>Installing &sr;'s Documentation</title>
 <para>
 
-Unpack &sr;'s documentation to
+Install &sr;'s documentation to
 <filename>/usr/local</filename>.  Become root and type
 <literallayout class="monospaced">
 gunzip -c docs.<replaceable>x.x.x</replaceable>.tar.gz | (cd /usr/local &amp;&amp; tar xf -)
@@ -156,7 +156,7 @@ This will create <filename>/usr/local/&sr;Docs</filename>,
 &sr;'s documentation directory.
 </para>
 <para>
-Point your browser at
+Point a browser at
 <filename>/usr/local/&sr;Docs/doc/index.html</filename> to view &sr;'s
 online documentation.
 </para>
@@ -197,11 +197,11 @@ third party software, and sample data sets.</para>
 linkend="sec.preparing_qs"/> before starting &sr;</para>
 
 <note>
-<para>If you are building
-&sr; for the Itanium architecture you must use the GNU compiler
-collection (gcc).  And you must set the values of the environment
-variables <envar>CFLAGS</envar> and <envar>CXXFFLAGS</envar> as
-follows before building &sr; and its third party libraries:
+<para>If building &sr; for the Itanium architecture the GNU compiler
+collection (gcc) must be used.  You must also set the values of the
+environment variables <envar>CFLAGS</envar> and
+<envar>CXXFFLAGS</envar> as follows before building &sr; and its third
+party libraries:
 <programlisting>
 setenv CFLAGS fPIC
 setenv CXXFLAGS fPIC
@@ -400,13 +400,13 @@ Run &sr;'s configure script.  Do this from a sub-directory of
 <filename>&sr;/src</filename>) as follows:
 
 <literallayout class="monospaced">
-mkdir &sr;/<replaceable>dir</replaceable>
-cd &sr;/<replaceable>dir</replaceable>
+mkdir &sr;/<replaceable>build-dir</replaceable>
+cd &sr;/<replaceable>build-dir</replaceable>
 ../src/configure --with-thirdparty=<replaceable>third-party-dir</replaceable> \ 
 --enable-package="<replaceable>package-name1 package-name2 &hellip;</replaceable>"
 </literallayout>
 &sr; will be built in the directory
-<filename>&sr;/<replaceable>dir</replaceable></filename>.  Above,
+<filename>&sr;/<replaceable>build-dir</replaceable></filename>.  Above,
 <replaceable>third-party-dir</replaceable> is replaced by the name of
 the third party software installation directory and
 "<replaceable>package-name1 package-name2 &hellip;</replaceable>" is
@@ -430,7 +430,7 @@ or
 <literallayout class="monospaced">
 make -j <replaceable>N</replaceable>
 </literallayout>
-if your machine has <replaceable>N</replaceable> available
+if the machine has <replaceable>N</replaceable> available
 processors.  This will produce a <command>scirun</command>
 executable. 
 </para>
@@ -449,8 +449,8 @@ linkend="sec.preparing_qs"/> before starting &sr;</para>
 
 <section id="sec.preparing_qs">
 <title id="title.preparing_qs">Preparing &sr;</title> 
-<para>Before starting &sr; you should
-initialize 2 environment variables:
+<para>Before starting &sr; initialize
+the following two environment variables:
 <variablelist>
 
 <varlistentry>
@@ -490,25 +490,29 @@ SCIRUN_ON_THE_FLY_LIBS_DIR=<replaceable>/path/to/</replaceable>&sr;_otf
 </para>
 <para>
 When working with &sr;'s <ulink
-url="../../User/Tutorial/index.html">tutorial</ulink> you must set the
-value of <envar>SCIRUN_DATA</envar> to point to the sample data sets
-directory, <filename>/usr/local/&sr;Data</filename> and
-<envar>SCIRUN_DATASET</envar> must point to one of the directories
+url="../../User/Tutorial/index.html">tutorial</ulink>  the
+value of <envar>SCIRUN_DATA</envar> must refer to the sample data sets
+directory, <filename>/usr/local/&sr;Data</filename> and the value of
+<envar>SCIRUN_DATASET</envar> must refer to one of the directories
 within <filename>&sr;Data</filename>,
-e.g. <filename>utahtorso</filename>.  Assuming you have installed the data
-sets in <filename>/usr/local</filename> and that you wish to use the
-<filename>utahtorso</filename> data set you would do this:
+e.g. <filename>utahtorso</filename>.  
+</para>
+<para>
+Assuming the data
+set directory is installed in <filename>/usr/local</filename> and the
+<filename>utahtorso</filename> data set is the desired one then
+<envar>SCIRUN_DATA</envar> and <envar>SCIRUN_DATASET</envar> should be
+set as follows. For <quote>Bourne</quote>-type shells:
 <literallayout class="monospaced">
 SCIRUN_DATA=/usr/local/&sr;Data
 SCIRUN_DATASET=utahtorso
 export SCIRUN_DATA SCIRUN_DATASET
 </literallayout>
-for <quote>Bourne</quote>-type shells, and
+For <quote>C shell</quote>-type shells:
 <literallayout class="monospaced">
 setenv SCIRUN_DATA /usr/local/&sr;Data
 setenv SCIRUN_DATASET utahtorso
 </literallayout>
-for <quote>C shell</quote>-type shells. 
 </para>
 </listitem>
 </varlistentry>
@@ -523,18 +527,19 @@ for <quote>C shell</quote>-type shells.
 linkend="sec.preparing_qs"/></para>
 
 <para>
-If you installed &sr; from its rpm you can test its installation by
-typing <command>/usr/local/&sr;/bin/scirun</command>.</para>
+&sr; can be started from its <acronym>RPM</acronym>installation by
+typing <command>/usr/local/&sr;/bin/scirun</command>.
+</para>
 
-<para>If you built &sr; from its source code tarballs then you
-can test its installation by <command>cd</command>ing to its build
+<para>&sr; can be started from its source code installation
+by <command>cd</command>ing to its build
 directory and typing
 <command>./scirun</command>.
 </para>
 
 <para>
-After starting &sr; you should see it's network editor window and
-the &sr; shell prompt.  See <xref endterm="title.help"
+After starting &sr; it's network editor window and
+shell prompt should appear.  See <xref endterm="title.help"
 linkend="sec.help"/> if problems occur.
 </para>
 
