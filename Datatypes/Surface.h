@@ -18,8 +18,8 @@
 #include <Classlib/Array1.h>
 #include <Classlib/LockingHandle.h>
 #include <Classlib/String.h>
+#include <Geometry/Point.h>
 
-class Point;
 class TriSurface;
 class Grid;
 class Surface;
@@ -29,6 +29,7 @@ class Surface : public Datatype {
 protected:
     enum Representation {
 	TriSurf,
+	Other,
     };
     Surface(Representation);
 private:
@@ -54,6 +55,8 @@ public:
     virtual void construct_grid()=0;
     virtual void destroy_grid();
     TriSurface* getTriSurface();
+
+    virtual void get_surfpoints(Array1<Point>&)=0;
 
     // Persistent representation...
     virtual void io(Piostream&);
