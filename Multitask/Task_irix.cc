@@ -11,6 +11,11 @@
  *  Copyright (C) 1994 SCI Group
  */
 
+/* Irix 6.1 hacks */
+#define _XOPEN4UX 1
+typedef unsigned int useconds_t;
+typedef int __sigargs;
+
 #include <Multitask/Task.h>
 #include <Multitask/ITC.h>
 #include <Malloc/Allocator.h>
@@ -28,6 +33,7 @@
 #include <signal.h>
 #include <string.h>
 #include <ucontext.h>
+#include <sys/time.h>
 
 #define DEFAULT_STACK_LENGTH 64*1024
 #define INITIAL_STACK_LENGTH 16*1024
@@ -109,6 +115,11 @@ static void makestack(TaskPrivate* priv)
     }
     // Now unmap the bottom part of it...
     priv->redlen=DEFAULT_STACK_LENGTH-INITIAL_STACK_LENGTH;
+    if(getenv("SCI_CATCH_SIGNALS")){
+	priv->redlen=DEFAULT_STACK_LENGTH-INITIAL_STACK_LENGTH;
+    } else {
+	priv->redlen=pagesize;
+    }
     priv->sp=(char*)priv->stackbot+priv->stacklen-1;
     if(mprotect(priv->stackbot, priv->redlen, PROT_NONE) == -1){
 	perror("mprotect");
@@ -495,22 +506,24 @@ void Task::initialize(char* pn)
 
     // For SIGILL, SIGABRT, SIGBUS, SIGSEGV, 
     // prompt the user for a core dump...
-    action.sa_handler=(SIG_PF)handle_abort_signals;
-    if(sigaction(SIGILL, &action, NULL) == -1){
-	perror("sigaction");
-	exit(-1);
-    }
-    if(sigaction(SIGABRT, &action, NULL) == -1){
-	perror("sigaction");
-	exit(-1);
-    }
-    if(sigaction(SIGBUS, &action, NULL) == -1){
-	perror("sigaction");
-	exit(-1);
-    }
-    if(sigaction(SIGSEGV, &action, NULL) == -1){
-	perror("sigaction");
-	exit(-1);
+    if(getenv("SCI_CATCH_SIGNALS")){
+	action.sa_handler=(SIG_PF)handle_abort_signals;
+	if(sigaction(SIGILL, &action, NULL) == -1){
+	    perror("sigaction");
+	    exit(-1);
+	}
+	if(sigaction(SIGABRT, &action, NULL) == -1){
+	    perror("sigaction");
+	    exit(-1);
+	}
+	if(sigaction(SIGBUS, &action, NULL) == -1){
+	    perror("sigaction");
+	    exit(-1);
+	}
+	if(sigaction(SIGSEGV, &action, NULL) == -1){
+	    perror("sigaction");
+	    exit(-1);
+	}
     }
 }
 

@@ -11,7 +11,7 @@
 #define TASK_IMPLEMENTATION_CC Task_irix.cc
 LOCKS = lock.o
 
-#ifdef SCI_IRIX6
+#if defined(SCI_IRIX6) && defined(SCI_64BIT)
 ASOPT = -mips4
 #else
 ASOPT = -mips2
