@@ -90,17 +90,41 @@ namespace Uintah {
     // destructor
     virtual ~ViscoScram();
 
-    // compute stable timestep for this patch
+    /*! Computes and requires for initialization of history variables */
+    virtual void addInitialComputesAndRequires(Task* task,
+                                               const MPMMaterial* matl,
+                                               const PatchSet* patches) const;
+
+    /*! initialize  each particle's constitutive model data */
+    virtual void initializeCMData(const Patch* patch,
+                                  const MPMMaterial* matl,
+                                  DataWarehouse* new_dw);
+
+    /*! compute stable timestep for this patch */
     virtual void computeStableTimestep(const Patch* patch,
                                        const MPMMaterial* matl,
                                        DataWarehouse* new_dw);
 
-    // compute stress at each particle in the patch
+    /*! Set up data required by and computed in computeStressTensor */
+    virtual void addComputesAndRequires(Task* task,
+                                        const MPMMaterial* matl,
+                                        const PatchSet* patches) const;
+
+    /*! Set up data required by and computed in computeStressTensor 
+        for implicit methods */
+    virtual void addComputesAndRequires(Task* task,
+                                        const MPMMaterial* matl,
+                                        const PatchSet* patches,
+                                        const bool recursion) const;
+
+    /*! compute stress at each particle in the patch */
     virtual void computeStressTensor(const PatchSubset* patches,
                                      const MPMMaterial* matl,
                                      DataWarehouse* old_dw,
                                      DataWarehouse* new_dw);
 
+    /*! compute stress at each particle in the patch for implicit 
+        methods */
     virtual void computeStressTensor(const PatchSubset* ,
                                      const MPMMaterial* ,
                                      DataWarehouse* ,
@@ -114,57 +138,48 @@ namespace Uintah {
     {
     }
 
-    // carry forward CM data for RigidMPM
+    /*! carry forward CM data (computed in computeStressTensor) for RigidMPM */
     virtual void carryForward(const PatchSubset* patches,
                               const MPMMaterial* matl,
                               DataWarehouse* old_dw,
                               DataWarehouse* new_dw);
 
-    virtual void addInitialComputesAndRequires(Task* task,
-                                               const MPMMaterial* matl,
-                                               const PatchSet* patches) const;
-
-    // initialize  each particle's constitutive model data
-    virtual void initializeCMData(const Patch* patch,
-                                  const MPMMaterial* matl,
-                                  DataWarehouse* new_dw);
-
-    virtual void addComputesAndRequires(Task* task,
-                                        const MPMMaterial* matl,
-                                        const PatchSet* patches) const;
-
-    virtual void addComputesAndRequires(Task* task,
-                                        const MPMMaterial* matl,
-                                        const PatchSet* patches,
-                                        const bool recursion) const;
-
+    /*! Set up data required in the particle conversion process */
     virtual void allocateCMDataAddRequires(Task* task, const MPMMaterial* matl,
                                            const PatchSet* patch, 
                                            MPMLabel* lb) const;
 
+    /*! Copy data from the delset to the addset in the particle 
+        conversion process */
     virtual void allocateCMDataAdd(DataWarehouse* new_dw,
                                    ParticleSubset* subset,
         map<const VarLabel*, ParticleVariableBase*>* newState,
                                    ParticleSubset* delset,
                                    DataWarehouse* old_dw);
 
+    /*! Add the particle data that have to be saved at the end of each 
+        timestep */
     virtual void addParticleState(std::vector<const VarLabel*>& from,
                                   std::vector<const VarLabel*>& to);
 
 
+    /*! Used by MPMICE for pressure equilibriation */
     virtual double computeRhoMicroCM(double pressure,
                                      const double p_ref,
                                      const MPMMaterial* matl);
 
+    /*! Used by MPMICE for pressure equilibriation */
     virtual void computePressEOSCM(double rho_m, double& press_eos,
                                    double p_ref,
                                    double& dp_drho, double& ss_new,
                                    const MPMMaterial* matl);
 
+    /*! Used by MPMICE for pressure equilibriation */
     virtual double getCompressibility();
 
   };
 
+  /*! Set up type for StateData */
   const Uintah::TypeDescription* fun_getTypeDescription(ViscoScram::StateData*);
 
 } // End namespace Uintah
