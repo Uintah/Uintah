@@ -27,10 +27,6 @@ PSELIBS := Core/Datatypes Core/Util Core/Containers Core/Persistent \
 endif
 LIBS := $(XML_LIBRARY) -lm
 
-PROGRAM := $(SRCDIR)/BugProgram
-SRCS := $(SRCDIR)/BugProgram.cc
-include $(SCIRUN_SCRIPTS)/program.mk
-
 PROGRAM := $(SRCDIR)/CVRTItoTetVolDirichlet
 SRCS := $(SRCDIR)/CVRTItoTetVolDirichlet.cc
 include $(SCIRUN_SCRIPTS)/program.mk
@@ -105,8 +101,4 @@ include $(SCIRUN_SCRIPTS)/program.mk
 
 PROGRAM := $(SRCDIR)/RawToTriSurf
 SRCS := $(SRCDIR)/RawToTriSurf.cc
-include $(SCIRUN_SCRIPTS)/program.mk
-
-PROGRAM := $(SRCDIR)/SingleTet
-SRCS := $(SRCDIR)/SingleTet.cc
 include $(SCIRUN_SCRIPTS)/program.mk

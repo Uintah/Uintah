@@ -130,6 +130,8 @@ main(int argc, char **argv) {
   }
   cerr << "done adding points.\n";
 
+  tvm->compute_nodes();
+
   int ntets;
   if (!tetsCountHeader) ntets = getNumNonEmptyLines(tetsName);
   ifstream tetsstream(tetsName);

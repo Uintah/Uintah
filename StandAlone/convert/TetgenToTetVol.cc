@@ -97,6 +97,7 @@ main(int argc, char **argv) {
     tvm->add_point(Point(x,y,z));
   }
   fclose(f);
+  tvm->compute_nodes();
 
   sprintf(fname, "%s.1.ele", argv[1]);
   f=fopen(fname, "rt");
