@@ -1949,12 +1949,10 @@ void SimpleCFD::applyProjection(const ProcessorGroup*,
 				DataWarehouse* old_dw, DataWarehouse* new_dw,
 				const VarLabel* pressure)
 {
-  cerr << "RANDY: SimpleCFD::applyProjection() BGN" << endl;
   //const Level* level = getLevel(patches);
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
     cout_doing << "Doing applyProjection patch " << patch->getID()<< "\t\t\t SimpleCFD" << '\n';
-    cerr << "RANDY: Doing projection on patch with ID = " << patch->getID() << endl;
     
     for(int m = 0;m<matls->size();m++){
       int matl = matls->get(m);
@@ -2149,7 +2147,6 @@ void SimpleCFD::applyProjection(const ProcessorGroup*,
 #endif
     }
   }
-  cerr << "RANDY: SimpleCFD::applyProjection() END" << endl;
 }
 //______________________________________________________________________
 //           A D V E C T     S C A L A R S
