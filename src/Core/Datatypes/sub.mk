@@ -31,6 +31,7 @@ SRCS += $(SRCDIR)/ColorMap.cc		    	\
         $(SRCDIR)/FieldSet.cc		    	\
         $(SRCDIR)/GenFunction.cc	    	\
         $(SRCDIR)/Geom.c          	    	\
+	$(SRCDIR)/HexVolMesh.cc			\
         $(SRCDIR)/Image.cc		    	\
         $(SRCDIR)/ImageMesh.cc		    	\
 	$(SRCDIR)/LatVolMesh.cc 		\
