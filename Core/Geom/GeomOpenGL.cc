@@ -244,7 +244,15 @@ DrawInfoOpenGL::reset()
 
 DrawInfoOpenGL::~DrawInfoOpenGL()
 {
-  gluDeleteQuadric(qobj);
+  //gluDeleteQuadric(qobj);
+  
+  map<GeomDL *, pair<unsigned int, unsigned int> >::iterator loc;
+  loc = dl_map_.begin();
+  while (loc != dl_map_.end())
+  {
+    (*loc).first->dl_unregister(this);
+    ++loc;
+  }
 }
 
 void
@@ -344,6 +352,72 @@ DrawInfoOpenGL::set_matl(Material* matl)
   current_matl=matl;
 }
 
+
+bool
+DrawInfoOpenGL::dl_lookup(GeomDL *obj, unsigned int &state, unsigned int &dl)
+{
+  map<GeomDL *, pair<unsigned int, unsigned int> >::iterator loc;
+  loc = dl_map_.find(obj);
+  if (loc != dl_map_.end())
+  {
+    dl = (*loc).second.first;
+    state = (*loc).second.second;
+    return true;
+  }
+  return false;
+}
+
+
+bool
+DrawInfoOpenGL::dl_addnew(GeomDL *obj, unsigned int state, unsigned int &dl)
+{
+  if (!dl_freelist_.empty())
+  {
+    dl = dl_freelist_.front();
+    dl_freelist_.pop_front();
+  }
+  else
+  {
+    dl = glGenLists(1);
+  }
+  if (dl)
+  {
+    dl_map_[obj] = pair<unsigned int, unsigned int>(dl, state);
+    obj->dl_register(this);
+    return true;
+  }
+  return false;
+}
+
+
+bool
+DrawInfoOpenGL::dl_update(GeomDL *obj, unsigned int state)
+{
+  map<GeomDL *, pair<unsigned int, unsigned int> >::iterator loc;
+  loc = dl_map_.find(obj);
+  if (loc != dl_map_.end())
+  {
+    (*loc).second.second = state;
+    return true;
+  }
+  return false;
+}
+
+
+bool
+DrawInfoOpenGL::dl_remove(GeomDL *obj)
+{
+  map<GeomDL *, pair<unsigned int, unsigned int> >::iterator loc;
+  loc = dl_map_.find(obj);
+  if (loc != dl_map_.end())
+  {
+    dl_freelist_.push_front((*loc).second.first);
+    dl_map_.erase(loc);
+    return true;
+  }
+  return false;
+}
+
 // this is for transparent rendering stuff...
 
 void
@@ -404,7 +478,6 @@ void GeomArrows::draw(DrawInfoOpenGL* di, Material* matl, double)
 
   // Draw shafts - they are the same for all draw types....
   double shaft_scale=headlength;
-  //cout << "Current shaft scale = " << shaft_scale << endl;
 
   // if we're not drawing cylinders, draw lines
   if( drawcylinders == 0 ) {
@@ -826,12 +899,14 @@ void GeomArrows::draw(DrawInfoOpenGL* di, Material* matl, double)
   }
 }
 
+
 GeomDL::~GeomDL()
 {
-  if (display_list_)
+  list<DrawInfoOpenGL *>::iterator itr = drawinfo_.begin();
+  while (itr != drawinfo_.end())
   {
-    glDeleteLists(display_list_, 1);
-    display_list_ = 0;
+    (*itr)->dl_remove(this);
+    ++itr;
   }
 }
 
@@ -839,10 +914,13 @@ GeomDL::~GeomDL()
 void GeomDL::reset_bbox()
 {
   GeomContainer::reset_bbox();
-  if (display_list_)
+
+  // Update all display lists to bad state, forces redraw.
+  list<DrawInfoOpenGL *>::iterator itr = drawinfo_.begin();
+  while (itr != drawinfo_.end())
   {
-    glDeleteLists(display_list_, 1);
-    display_list_ = 0;
+    (*itr)->dl_update(this, 0xffffffff);
+    ++itr;
   }
 }
 
@@ -853,59 +931,61 @@ void GeomDL::draw(DrawInfoOpenGL* di, Material *m, double time)
 
   if ( !pre_draw(di, m, 0) ) return;
 
-#if 1
-  // Disable display lists until they are associated with the
-  // correct contexts rather than with the objects.  Delete
-  // does not work as the context is not correct when the object
-  // is destroyed.  Also, the lists are not shared among contexts
-  // if there are multiple viewers.
-  child_->draw(di, m, time);
-#else
-  if ( di->dl ) 
+  if ( !di->dl ) 
   {
     child_->draw(di,m,time);  // do not use display list
   }
   else
   {
-    // do we need a new dl ?
-    if ( display_list_ == 0 ||
-	 type_  != di->get_drawtype() ||
-	 lighting_ != di->lighting ) 
+    // Compute current state.
+    const unsigned int current_state =
+      (di->get_drawtype() << 1) | di->lighting;
+    
+    unsigned int state, display_list;
+    if (di->dl_lookup(this, state, display_list))
     {
-      type_ = di->get_drawtype();
-      lighting_ = di->lighting; 
-      const int pre_polycount = di->polycount; // remember poly count
-      
-      // do we need to allocate a dl ?
-      if ( !display_list_ )
+      if (state != current_state)
       {
-	display_list_ = glGenLists(1);
-	if ( !display_list_ )
-	{
-	  child_->draw(di,m,time);  // do not use display list
-	  post_draw(di);
-	  return;
-	}
-      }
+	di->dl_update(this, current_state);
 
+	const int pre_polycount = di->polycount; // remember poly count
+	
+	// Fill in the display list.
+	// Don't use COMPILE_AND_EXECUTE as it is slower (NVidia linux).
+	glNewList(display_list, GL_COMPILE);
+	child_->draw(di,m,time);
+	glEndList();
+	glCallList(display_list); 
+
+	// Update poly count;
+	polygons_ = di->polycount - pre_polycount;
+      } 
+      else
+      {
+	// Display the child using the display_list.
+	glCallList(display_list);
+	di->polycount += polygons_;
+      }
+    }
+    else if (di->dl_addnew(this, current_state, display_list))
+    {
+      const int pre_polycount = di->polycount; // remember poly count
+	
       // Fill in the display list.
-      // Don't use COMPILE_AND_EXECUTE as it makes a slower dl (NVidia linux).
-      glNewList( display_list_,  GL_COMPILE);
+      // Don't use COMPILE_AND_EXECUTE as it is slower (NVidia linux).
+      glNewList(display_list, GL_COMPILE);
       child_->draw(di,m,time);
       glEndList();
-      glCallList(display_list_); 
+      glCallList(display_list);
 
       // Update poly count;
       polygons_ = di->polycount - pre_polycount;
-    } 
+    }
     else
     {
-      // display the child using the dl
-      glCallList(display_list_);
-      di->polycount += polygons_;
+      child_->draw(di,m,time);  // Do not use display list.
     }
   }
-#endif
 
   post_draw(di);
 }

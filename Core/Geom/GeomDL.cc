@@ -45,25 +45,40 @@ PersistentTypeID GeomDL::type_id("GeomDL", "GeomObj",
 
 
 GeomDL::GeomDL(GeomHandle obj)
-  : GeomContainer(obj), display_list_(0)
+  : GeomContainer(obj)
 {
 }
 
 GeomDL::GeomDL(const GeomDL &copy)
-  : GeomContainer(copy), display_list_(0)
+  : GeomContainer(copy)
 {
 }
 
 
-GeomObj* GeomDL::clone()
+GeomObj*
+GeomDL::clone()
 {
   return scinew GeomDL(*this);
+}
+
+
+void
+GeomDL::dl_register(DrawInfoOpenGL *info)
+{
+  drawinfo_.push_back(info);
+}
+
+void
+GeomDL::dl_unregister(DrawInfoOpenGL *info)
+{
+  drawinfo_.erase(std::remove(drawinfo_.begin(), drawinfo_.end(), info),
+		  drawinfo_.end());
 }
 
 #define GEOMDL_VERSION 1
 
 void
- GeomDL::io(Piostream& stream)
+GeomDL::io(Piostream& stream)
 {
 
   /*int version=*/ stream.begin_class("GeomDL", GEOMDL_VERSION);
