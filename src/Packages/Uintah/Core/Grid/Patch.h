@@ -173,6 +173,8 @@ WARNING
        return d_inHighIndex;
      }
 
+     void setExtraIndices(const IntVector& l, const IntVector& h);
+
      // required for fortran interface
      IntVector getSFCXFORTLowIndex() const;
      IntVector getSFCXFORTHighIndex() const;

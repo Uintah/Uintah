@@ -31,6 +31,7 @@ Level::Level(Grid* grid, const Point& anchor, const Vector& dcell)
   d_rangeTree = NULL;
 #endif
   d_finalized=false;
+  d_extraCells = IntVector(0,0,0);
 }
 
 Level::~Level()
@@ -80,23 +81,26 @@ Level::patchIterator Level::patchesEnd()
     return d_patches.end();
 }
 
-Patch* Level::addPatch(const IntVector& lowIndex, const IntVector& highIndex,
-		       const IntVector& extraLowIndex, 
-		       const IntVector& extraHighIndex)
+Patch* Level::addPatch(const IntVector& lowIndex, 
+		       const IntVector& highIndex,
+		       const IntVector& inLowIndex, 
+		       const IntVector& inHighIndex)
 {
-    Patch* r = scinew Patch(this, lowIndex, highIndex,extraLowIndex,
-			    extraHighIndex);
+    Patch* r = scinew Patch(this, lowIndex,highIndex,inLowIndex, 
+			    inHighIndex);
     d_patches.push_back(r);
     return r;
 }
 
-Patch* Level::addPatch(const IntVector& lowIndex, const IntVector& highIndex,
-		       const IntVector& extraLowIndex, 
-		       const IntVector& extraHighIndex,
+Patch* Level::addPatch(const IntVector& lowIndex, 
+		       const IntVector& highIndex,
+		       const IntVector& inLowIndex, 
+		       const IntVector& inHighIndex,
 		       int ID)
 {
-    Patch* r = scinew Patch(this, lowIndex, highIndex, extraLowIndex,
-			    extraHighIndex,ID);
+ 
+    Patch* r = scinew Patch(this, lowIndex,highIndex,inLowIndex, 
+			    inHighIndex,ID);
     d_patches.push_back(r);
     return r;
 }
@@ -131,8 +135,8 @@ void Level::performConsistencyCheck() const
     for(int j=i+1;j<(int)d_patches.size();j++){
       Patch* r2 = d_patches[j];
       if(r1->getBox().overlaps(r2->getBox())){
-	cerr << "r1: " << r1 << '\n';
-	cerr << "r2: " << r2 << '\n';
+	cerr << "r1: " << *r1 << '\n';
+	cerr << "r2: " << *r2 << '\n';
 	throw InvalidGrid("Two patches overlap");
       }
     }
@@ -175,6 +179,11 @@ long Level::totalCells() const
   return total;
 }
 
+void Level::setExtraCells(const IntVector& ec)
+{
+  d_extraCells = ec;
+}
+
 GridP Level::getGrid() const
 {
    return grid;
@@ -212,7 +221,7 @@ void Level::selectPatches(const IntVector& low, const IntVector& high,
       IntVector l=Max(patch->getCellLowIndex(), low);
       IntVector u=Min(patch->getCellHighIndex(), high);
       if(u.x() > l.x() && u.y() > l.y() && u.z() > l.z())
-	 neighbors.push_back(*iter);
+	neighbors.push_back(*iter);
    }
 #else
 #ifdef SELECT_GRID
@@ -383,6 +392,34 @@ void Level::finalizeLevel()
     }
   }
   
+  // There is a possibility that the extraLow and extraHigh indices
+  // for a patch are incorrectly determined for unequal number of cells
+  // per patch.  This is meant to correct these problems by using the
+  // above info about Patch::Neighbor to determine the extra indices.
+
+  for(iter=d_patches.begin(), ii = 0;
+      iter != d_patches.end(); iter++, ii++){
+    Patch* patch = *iter;
+   
+    IntVector low = patch->getInteriorCellLowIndex();
+    IntVector high = patch->getInteriorCellHighIndex();
+    low -= 
+      IntVector(patch->getBCType(Patch::xminus) == 
+		Patch::Neighbor?0:d_extraCells.x(),
+		patch->getBCType(Patch::yminus) == 
+		Patch::Neighbor?0:d_extraCells.y(),
+		patch->getBCType(Patch::zminus) == 
+		Patch::Neighbor?0:d_extraCells.z());
+
+    high += IntVector(patch->getBCType(Patch::xplus) == 
+		      Patch::Neighbor?0:d_extraCells.x(),
+		      patch->getBCType(Patch::yplus) == 
+		      Patch::Neighbor?0:d_extraCells.y(),
+		      patch->getBCType(Patch::zplus) == 
+		      Patch::Neighbor?0:d_extraCells.z());
+
+    patch->setExtraIndices(low,high);
+  }
   d_finalized=true;
 }
 

@@ -29,7 +29,7 @@ Patch::Patch(const Level* level,
       d_inLowIndex(inLowIndex), d_inHighIndex(inHighIndex),
       d_id( id ), d_level_index(-1)
 {
-  if(d_id == -1){
+   if(d_id == -1){
     d_id = ids++;
 
     if(patches.find(d_id) != patches.end()){
@@ -290,16 +290,13 @@ Patch::getFace(FaceType face, int offset, IntVector& l, IntVector& h) const
 {
    l=getCellLowIndex();
    h=getCellHighIndex();
-   //   std::cout << "cell low index = " << l << " hi index = " << h << endl;
    switch(face){
    case xminus:
       l.x(l.x()-offset);
       h.x(l.x()+2-offset);
       break;
    case xplus:
-     //      l.x(h.x()-1+offset);
       l.x(h.x()-1+offset);
-      //      h.x(h.x()+offset);
       h.x(h.x()+offset);
       break;
    case yminus:
@@ -307,9 +304,7 @@ Patch::getFace(FaceType face, int offset, IntVector& l, IntVector& h) const
       h.y(l.y()+2-offset);
       break;
    case yplus:
-     //      l.y(h.y()-1+offset);
       l.y(h.y()-1+offset);
-      //      h.y(h.y()+offset);
       h.y(h.y()+offset);
       break;
    case zminus:
@@ -317,9 +312,7 @@ Patch::getFace(FaceType face, int offset, IntVector& l, IntVector& h) const
       h.z(l.z()+2-offset);
       break;
    case zplus:
-     //      l.z(h.z()-1+offset);
       l.z(h.z()-1+offset);
-      //      h.z(h.z()+offset);
       h.z(h.z()+offset);
       break;
    default:
@@ -338,6 +331,12 @@ Patch::toString() const
 	   box.upper().x(), box.upper().y(), box.upper().z() );
 
   return string( str );
+}
+
+void Patch::setExtraIndices(const IntVector& l, const IntVector& h)
+{
+  d_lowIndex = l;
+  d_highIndex = h;
 }
 
 CellIterator
@@ -582,6 +581,7 @@ void Patch::computeVariableExtents(VariableBasis basis, Ghost::GhostType gtype,
     IntVector l(d_lowIndex);
     IntVector h(d_highIndex);
     IntVector g(numGhostCells, numGhostCells, numGhostCells);
+    
     switch(basis){
     case CellBased:
 	switch(gtype){
