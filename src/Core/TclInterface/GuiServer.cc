@@ -24,12 +24,14 @@
 #include <SCICore/Containers/Array1.h>
 #include <SCICore/TclInterface/TCLTask.h>
 #include <unistd.h>
-#include <string.h>
+#include <string>
 #include <sys/types.h>
 #include <tcl.h>
 #include <tk.h>
+#include <iostream>
+using namespace std;
 
-//#define DEBUG 1
+#define DEBUG 0
 extern "C" Tcl_Interp* the_interp;
 
 namespace SCICore {
@@ -65,7 +67,7 @@ cerr <<"GuiServer::getClients() opened listen_socket = "<< listen_socket<<endl;
 
     for (;;) {
 
-#ifdef DEBUG
+#if DEBUG
 cerr << "GuiServer::getClients() before execute of select(), readfds = "
      << readfds << endl;
 #endif
@@ -76,7 +78,7 @@ int s =
 #endif
     select (maxfd + 1, &readfds, 0, 0, 0);
 
-#ifdef DEBUG
+#if DEBUG
 cerr << "GuiServer::getClients() select() returned" << s << "sockets ready, ";
 cerr << "readfds = " << readfds << endl;
 cerr << "GuiServer::getClients() clients.size() = " << clients.size() << endl;
@@ -200,6 +202,10 @@ cerr << "GuiServer::getValue(): string = " << msg->un.tstring << endl;
 
 //
 // $Log$
+// Revision 1.7  2000/08/02 21:56:02  jas
+// Added missing iostream and changed some debugging so that fd_set would
+// not be printed out.
+//
 // Revision 1.6  1999/09/08 02:26:55  sparker
 // Various #include cleanups
 //
