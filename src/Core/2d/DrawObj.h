@@ -43,6 +43,7 @@
 #ifndef SCI_Drawable_h
 #define SCI_Drawable_h 
 
+#include <sci_defs/ogl_defs.h>
 #include <Core/Datatypes/Color.h>
 #include <Core/Containers/Array1.h>
 #include <Core/2d/BBox2d.h>
