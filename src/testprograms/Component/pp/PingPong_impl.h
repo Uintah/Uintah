@@ -31,7 +31,7 @@
 #ifndef PingPong_PingPong_impl_h
 #define PingPong_PingPong_impl_h
 
-#include <testprograms/Component/pingpong/PingPong_sidl.h>
+#include <testprograms/Component/pp/PingPong_sidl.h>
 
 namespace PingPong_ns {
 

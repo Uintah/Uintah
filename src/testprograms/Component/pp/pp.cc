@@ -17,13 +17,13 @@
 
 
 /*
- *  pingpong.cc
+ *  pp.cc
  *
  *  Written by:
- *   Steven G. Parker
+ *   Keming Zhang 
  *   Department of Computer Science
  *   University of Utah
- *   July 1999
+ *   May, 2003
  *
  *  Copyright (C) 1999 U of U
  */
@@ -35,7 +35,7 @@
 
 #include <Core/CCA/Component/PIDL/MalformedURL.h>
 
-#include <testprograms/Component/pingpong/PingPong_impl.h>
+#include <testprograms/Component/pp/PingPong_impl.h>
 #include <Core/Thread/Time.h>
 
 using namespace std;
@@ -84,32 +84,30 @@ int main(int argc, char* argv[])
       if(server) {
 	PingPong_impl::pointer pp=PingPong_impl::pointer(new PingPong_impl);
 	pp->addReference();
-	cerr << "Waiting for pingpong connections...\n";
-	ofstream f("pingpong.url");
+	cerr << "Waiting for pp connections...\n";
+	ofstream f("pp.url");
 	std::string s;
 	f<<pp->getURL().getString();
 	f.close();
-	//pp->stop();
       } 
 
       else if(client){
-	ifstream f("pingpong.url");
+	ifstream f("pp.url");
 	std::string s;
 	f>>s;
 	f.close();
-	//Object::pointer obj=
+	Object::pointer obj=
 	  PIDL::objectFrom(s);
-	//cerr << "Object_from completed\n";
-	/*	
+	cerr << "Object_from completed\n";
 	PingPong::pointer pp=pidl_cast<PingPong::pointer>(obj);
-	//cerr << "pidl_cast completed\n";
+	cerr << "pidl_cast completed\n";
 	if(pp.isNull()){
 	  cerr << "pp_isnull\n";
 	  abort();
 	}
 
 	int i=1999;
-	//cerr << "Calling pingpong....\n";
+	cerr << "Calling pingpong....\n";
 	int j=pp->pingpong(i);
 	if(i!=j){
 	  cerr << "BAD data: " << i << " vs. " << j << '\n';
@@ -117,10 +115,10 @@ int main(int argc, char* argv[])
 	else{
 	  cerr << "Successful\n";
 	}
-	*/
+	
       }
       else if(stop){
-	ifstream f("pingpong.url");
+	ifstream f("pp.url");
 	std::string s;
 	f>>s;
 	f.close();
@@ -132,7 +130,7 @@ int main(int argc, char* argv[])
 	  cerr << "pp_isnull\n";
 	  abort();
 	}
-	cerr << "Calling pingpong.stop()....\n";
+	cerr << "Calling pp.stop()....\n";
 	pp->stop();
       }
       else if(test){
@@ -152,14 +150,14 @@ int main(int argc, char* argv[])
       PIDL::finalize();
 
     } catch(const MalformedURL& e) {
-	cerr << "pingpong.cc: Caught MalformedURL exception:\n";
+	cerr << "pp.cc: Caught MalformedURL exception:\n";
 	cerr << e.message() << '\n';
     } catch(const InternalError &e) {
 	cerr << "Caught unexpected exception!\n";
 	cerr << e.message() << '\n';
 	abort();
     } catch(const Exception& e) {
-	cerr << "pingpong.cc: Caught exception:\n";
+	cerr << "pp.cc: Caught exception:\n";
 	cerr << e.message() << '\n';
 	abort();
     } catch(...) {

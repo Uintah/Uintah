@@ -28,7 +28,7 @@
  *  Copyright (C) 1999 SCI Group
  */
 
-#include <testprograms/Component/pingpong/PingPong_impl.h>
+#include <testprograms/Component/pp/PingPong_impl.h>
 #include <Core/Util/NotFinished.h>
 
 #include <sys/types.h>
