@@ -12,7 +12,7 @@
  */
 
 #include <Core/Datatypes/FieldSet.h>
-
+#include <Core/Persistent/PersistentSTL.h>
 
 namespace SCIRun {
 
