@@ -115,7 +115,7 @@ Object* TypeInfo::pidl_cast(Object* obj) const
       //Marshal flag which informs handler that
       // this message is CALLNORET
       ::SCIRun::callType _flag = ::SCIRun::CALLNORET;
-      message->marshalInt(&(int)_flag);
+      message->marshalInt((int*)&_flag);
       //Marshal the sessionID and number of actual calls from this proxy
       ::std::string _sessionID = p->getProxyUUID();
       message->marshalChar(const_cast<char*>(_sessionID.c_str()), 64);
