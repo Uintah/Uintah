@@ -26,13 +26,14 @@ EquationOfState* EquationOfStateFactory::create(ProblemSpecP& ps)
     
     if (mat_type == "ideal_gas") 
       return(scinew IdealGas(child));
-
+#if 0   // Turn off harlow and stiff gas until everything with ideal
+        // gas is working. Todd
     else if (mat_type == "harlow") 
       return(scinew Harlow(child));
     
     else if (mat_type == "stiff_gas") 
       return(scinew StiffGas(child));
-    
+#endif    
     else
       throw ProblemSetupException("Unknown EOS Type R ("+mat_type+")");
 
