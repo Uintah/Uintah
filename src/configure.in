@@ -822,47 +822,47 @@ AC_SUBST(XML_LIB_FLAG)
 AC_SUBST(XML_INCLUDE_DIR)
 
 
-##-- Find Nrrd ------------------------------------------------------
+##-- Find Teem ------------------------------------------------------
 
-nrrd_pkg="no"
+teem_pkg="no"
 for i in $package; do
-  if test "$i" = "Nrrd" ; then
-    nrrd_pkg="yes"
+  if test "$i" = "Teem" ; then
+    teem_pkg="yes"
     if test -e "$thirdparty/include/nrrd.h" ; then
-      NRRD_PREFIX=$thirdparty
+      TEEM_PREFIX=$thirdparty
     fi
   fi
 done
 
-if test "${nrrd_pkg}" = "yes" ; then
-  if test "${with_nrrd+set}" = set; then
-    withval="$with_nrrd"
+if test "${teem_pkg}" = "yes" ; then
+  if test "${with_teem+set}" = set; then
+    withval="$with_teem"
     if test "$withval" != "yes" ; then
       if test -e "${withval}/include/nrrd.h"; then
-        NRRD_PREFIX="$withval"
+        TEEM_PREFIX="$withval"
       else
         echo "\n*** Error - could not find ${withval}/include/nrrd.h\n"
-        nrrd_pkg="no"
+        teem_pkg="no"
       fi
     else
-      echo "Remark: ignoring pathless with-nrrd flag"
+      echo "Remark: ignoring pathless with-teem flag"
     fi
   fi
 fi
 
-if test "${nrrd_pkg}" = "yes" ; then
-  echo -n "checking for nrrd... "
-  if test "$NRRD_PREFIX" ; then
-    NRRD_INCLUDE="-I${NRRD_PREFIX}/include"
-    NRRD_LIB_DIR="${NRRD_PREFIX}/lib"
-    echo "${NRRD_PREFIX}"
+if test "${teem_pkg}" = "yes" ; then
+  echo -n "checking for teem... "
+  if test "$TEEM_PREFIX" ; then
+    TEEM_INCLUDE="-I${TEEM_PREFIX}/include"
+    TEEM_LIB_DIR="${TEEM_PREFIX}/lib"
+    echo "${TEEM_PREFIX}"
   else
     echo "no"
   fi
 fi
 
-AC_SUBST(NRRD_INCLUDE)
-AC_SUBST(NRRD_LIB_DIR)
+AC_SUBST(TEEM_INCLUDE)
+AC_SUBST(TEEM_LIB_DIR)
 
 
 ##-- Find MPEG ---------------------------------------------------------------
