@@ -27,7 +27,8 @@
 #include <unistd.h>
 #endif
 #include <stdlib.h>	// needed for atoi
-
+#include <iostream>
+using namespace std;
 namespace SCICore {
 namespace TclInterface {
 
@@ -108,6 +109,10 @@ GuiManager::putConnection (int sock)
 
 //
 // $Log$
+// Revision 1.4  2000/08/02 21:56:02  jas
+// Added missing iostream and changed some debugging so that fd_set would
+// not be printed out.
+//
 // Revision 1.3  1999/08/28 17:54:51  sparker
 // Integrated new Thread library
 //
