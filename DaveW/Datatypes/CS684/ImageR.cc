@@ -22,6 +22,7 @@
 #include <SCICore/Util/NotFinished.h>
 
 #include <iostream.h>
+#include <stdlib.h>
 
 namespace DaveW {
 namespace Datatypes {
@@ -365,6 +366,10 @@ void ImageRM::io(Piostream& stream) {
 
 //
 // $Log$
+// Revision 1.5  1999/09/04 06:01:38  sparker
+// Updates to .h files, to minimize #includes
+// removed .icc files (yeah!)
+//
 // Revision 1.4  1999/08/25 03:35:47  sparker
 // *** empty log message ***
 //

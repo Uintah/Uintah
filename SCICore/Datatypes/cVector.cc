@@ -13,6 +13,7 @@
  */
 
 #include <SCICore/Datatypes/cVector.h>
+#include <fstream.h>
 
 namespace SCICore {
 namespace Datatypes {
@@ -233,6 +234,10 @@ void cVector::io(Piostream&) {
 
 //
 // $Log$
+// Revision 1.4  1999/09/04 06:01:46  sparker
+// Updates to .h files, to minimize #includes
+// removed .icc files (yeah!)
+//
 // Revision 1.3  1999/08/25 03:48:48  sparker
 // Changed SCICore/CoreDatatypes to SCICore/Datatypes
 // Changed PSECore/CommonDatatypes to PSECore/Datatypes

@@ -19,7 +19,7 @@
 #include <SCICore/TclInterface/TCL.h>
 #include <SCICore/TclInterface/TCLTask.h>
 #include <SCICore/TclInterface/TCLvar.h>
-
+#include <iostream.h>
 #include <tcl.h>
 #include <tk.h>
 #include <stdlib.h>
@@ -455,6 +455,10 @@ void TCL::set_tclvar(const clString& base, const clString& name,
 
 //
 // $Log$
+// Revision 1.7  1999/09/04 06:01:55  sparker
+// Updates to .h files, to minimize #includes
+// removed .icc files (yeah!)
+//
 // Revision 1.6  1999/08/28 17:54:52  sparker
 // Integrated new Thread library
 //

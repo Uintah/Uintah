@@ -57,6 +57,7 @@ hook up user interface buttons
 #include <SCICore/Geometry/Point.h>
 #include <SCICore/Malloc/Allocator.h>
 #include <SCICore/Math/MinMax.h>
+#include <SCICore/Math/MiscMath.h>
 #include <SCICore/Thread/Parallel.h>
 #include <SCICore/Thread/Thread.h>
 #include <PSECore/Widgets/GaugeWidget.h>
@@ -2039,6 +2040,10 @@ void SLSourceInfo::pick_source(const clString& sname,
 
 //
 // $Log$
+// Revision 1.7  1999/09/04 06:01:40  sparker
+// Updates to .h files, to minimize #includes
+// removed .icc files (yeah!)
+//
 // Revision 1.6  1999/08/29 00:46:48  sparker
 // Integrated new thread library
 // using statement tweaks to compile with both MipsPRO and g++

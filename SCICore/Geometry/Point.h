@@ -15,11 +15,7 @@
 #define Geometry_Point_h 1
 
 #include <SCICore/share/share.h>
-
-#include <SCICore/Util/Assert.h>
-#include <SCICore/Tester/RigorousTest.h>
-#include <SCICore/Persistent/Persistent.h>
-#include <SCICore/Containers/String.h>
+#include <SCICore/Math/MinMax.h>
 
 #ifdef KCC
 #include <iosfwd.h>  // Forward declarations for KCC C++ I/O routines
@@ -29,6 +25,16 @@ class istream;
 #endif
 
 namespace SCICore {
+    namespace Containers {
+	class clString;
+    }
+    namespace PersistentSpace {
+	class Piostream;
+    }
+    namespace Tester {
+	class RigorousTest;
+    }
+    
 namespace Geometry {
 
 using SCICore::Containers::clString;
@@ -39,14 +45,8 @@ class Vector;
 
 class SCICORESHARE Point {
     double _x,_y,_z;
-#if SCI_ASSERTION_LEVEL >= 4
-    int uninit;
-#endif
 public:
     inline Point(double x, double y, double z): _x(x), _y(y), _z(z)
-#if SCI_ASSERTION_LEVEL >= 4
-	, uninit(0)
-#endif
 	    {}
     Point(double, double, double, double);
     inline Point(const Point&);
@@ -110,19 +110,165 @@ SCICORESHARE istream& operator>>(istream& os, Point& p);
 } // End namespace Geometry
 } // End namespace SCICore
 
+// This cannot be above due to circular dependencies
 #include <SCICore/Geometry/Vector.h>
-#include <SCICore/Math/MinMax.h>
 
 namespace SCICore {
 namespace Geometry {
 
-#include "Point.icc"
+inline Point::Point(const Point& p)
+{
+    _x=p._x;
+    _y=p._y;
+    _z=p._z;
+}
+
+inline Point::Point()
+{
+}
+
+inline Point& Point::operator=(const Point& p)
+{
+    _x=p._x;
+    _y=p._y;
+    _z=p._z;
+    return *this;
+}
+
+inline Vector Point::operator-(const Point& p) const
+{
+    return Vector(_x-p._x, _y-p._y, _z-p._z);
+}
+
+inline Point Point::operator-() const
+{
+    return Point(-_x, -_y, -_z);
+}
+
+inline Point Point::operator-(const Vector& v) const
+{
+    return Point(_x-v._x, _y-v._y, _z-v._z);
+}
+
+inline Point& Point::operator-=(const Vector& v)
+{
+    _x-=v._x;
+    _y-=v._y;
+    _z-=v._z;
+    return *this;
+}
+
+inline Point Point::operator+(const Vector& v) const
+{
+    return Point(_x+v._x, _y+v._y, _z+v._z);
+}
+
+inline Point Point::operator*(double d) const
+{
+    return Point(_x*d, _y*d, _z*d);
+}
+
+inline Point& Point::operator*=(const double d)
+{
+    _x*=d;_y*=d;_z*=d;
+    return *this;
+}
+
+inline Point& Point::operator+=(const Vector& v)
+{
+    _x+=v._x;
+    _y+=v._y;
+    _z+=v._z;
+    return *this;
+}
+
+inline Point& Point::operator/=(const double d)
+{
+    _x/=d;
+    _y/=d;
+    _z/=d;
+    return *this;
+}
+
+inline Point Point::operator/(const double d) const
+{
+    return Point(_x/d,_y/d,_z/d);
+}
+
+inline void Point::x(const double d)
+{
+    _x=d;
+}
+
+inline double Point::x() const
+{
+    return _x;
+}
+
+inline void Point::y(const double d)
+{
+    _y=d;
+}
+
+inline double Point::y() const
+{
+    return _y;
+}
+
+inline void Point::z(const double d)
+{
+    _z=d;
+}
+
+inline double Point::z() const
+{
+    return _z;
+}
+
+inline Vector Point::vector() const
+{
+    return Vector(_x,_y,_z);
+}
+
+inline Point Min(const Point& p1, const Point& p2)
+{
+  using SCICore::Math::Min;
+
+  double x=Min(p1._x, p2._x);
+  double y=Min(p1._y, p2._y);
+  double z=Min(p1._z, p2._z);
+  return Point(x,y,z);
+}
+
+inline Point Max(const Point& p1, const Point& p2)
+{
+  using SCICore::Math::Max;
+
+  double x=Max(p1._x, p2._x);
+  double y=Max(p1._y, p2._y);
+  double z=Max(p1._z, p2._z);
+  return Point(x,y,z);
+}
+
+inline double Dot(const Point& p, const Vector& v)
+{
+    return p._x*v._x+p._y*v._y+p._z*v._z;
+}
+
+inline double Dot(const Point& p1, const Point& p2)
+{
+    return p1._x*p2._x+p1._y*p2._y+p1._z*p2._z;
+}
 
 } // End namespace Geometry
 } // End namespace SCICore
 
 //
 // $Log$
+// Revision 1.3  1999/09/04 06:01:52  sparker
+// Updates to .h files, to minimize #includes
+// removed .icc files (yeah!)
+//
 // Revision 1.2  1999/08/17 06:39:28  sparker
 // Merged in modifications from PSECore to make this the new "blessed"
 // version of SCIRun/Uintah.

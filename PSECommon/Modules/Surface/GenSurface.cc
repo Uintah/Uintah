@@ -23,6 +23,7 @@
 #include <SCICore/Geom/GeomSphere.h>
 #include <SCICore/Geom/TCLGeom.h>
 #include <SCICore/Geometry/Point.h>
+#include <SCICore/Math/MiscMath.h>
 #include <SCICore/Malloc/Allocator.h>
 #include <SCICore/TclInterface/TCLvar.h>
 #include <PSECore/Widgets/GaugeWidget.h>
@@ -335,6 +336,10 @@ void GenSurface::widget_moved(int last)
 
 //
 // $Log$
+// Revision 1.7  1999/09/04 06:01:39  sparker
+// Updates to .h files, to minimize #includes
+// removed .icc files (yeah!)
+//
 // Revision 1.6  1999/08/29 00:46:44  sparker
 // Integrated new thread library
 // using statement tweaks to compile with both MipsPRO and g++

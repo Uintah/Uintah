@@ -13,6 +13,7 @@
  */
 
 #include <SCICore/Datatypes/cDMatrix.h>
+#include <fstream.h>
 
 namespace SCICore {
 namespace Datatypes {
@@ -273,6 +274,10 @@ void cDMatrix::mult(cVector& V,cVector& tmp){
 
 //
 // $Log$
+// Revision 1.4  1999/09/04 06:01:45  sparker
+// Updates to .h files, to minimize #includes
+// removed .icc files (yeah!)
+//
 // Revision 1.3  1999/08/25 03:48:47  sparker
 // Changed SCICore/CoreDatatypes to SCICore/Datatypes
 // Changed PSECore/CommonDatatypes to PSECore/Datatypes

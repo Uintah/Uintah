@@ -17,7 +17,7 @@
 #ifndef _WIN32
 #include <unistd.h>
 #endif
-#include <stdio.h> // ??? How else to get size_t defined?
+#include <stdlib.h>
 
 namespace SCICore {
 namespace Malloc {
@@ -67,6 +67,10 @@ void* operator new[](size_t, SCICore::Malloc::Allocator*, char*);
 
 //
 // $Log$
+// Revision 1.3  1999/09/04 06:01:54  sparker
+// Updates to .h files, to minimize #includes
+// removed .icc files (yeah!)
+//
 // Revision 1.2  1999/08/17 06:39:31  sparker
 // Merged in modifications from PSECore to make this the new "blessed"
 // version of SCIRun/Uintah.

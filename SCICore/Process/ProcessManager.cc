@@ -15,9 +15,11 @@
 #include <SCICore/Util/NotFinished.h>
 
 using std::string;
+using SCICore::Process::ProcessManager;
 
-void SCICore::Process::ProcessManager::start_process(const string& command,
-						     const string& resourceSpec) {
+void ProcessManager::start_process(const string& command,
+				   const string& resourceSpec)
+{
     NOT_FINISHED("ProcessManager::start_process");
 }
 

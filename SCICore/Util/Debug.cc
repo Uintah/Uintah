@@ -13,6 +13,7 @@
 #include <SCICore/Util/Debug.h>
 #include <SCICore/Malloc/Allocator.h>
 #include <iostream.h>
+#include <stdlib.h>
 #include <string.h>
 
 namespace SCICore {
@@ -94,6 +95,10 @@ ostream& operator<<(ostream& str, DebugSwitch& db)
 
 //
 // $Log$
+// Revision 1.3  1999/09/04 06:01:56  sparker
+// Updates to .h files, to minimize #includes
+// removed .icc files (yeah!)
+//
 // Revision 1.2  1999/08/17 06:39:55  sparker
 // Merged in modifications from PSECore to make this the new "blessed"
 // version of SCIRun/Uintah.

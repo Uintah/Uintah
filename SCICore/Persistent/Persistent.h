@@ -15,10 +15,7 @@
 #define SCI_project_Persistent_h 1
 
 #include <SCICore/share/share.h>
-
-#include <fstream.h>
-
-//forwardDeclare(class SCICore::Containers::clString;)
+class ifstream;
 
 namespace SCICore {
 namespace Containers {

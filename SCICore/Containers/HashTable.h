@@ -250,7 +250,6 @@ template<class Key, class Data> class HashKey {
 #include <SCICore/Containers/String.h>
 #include <SCICore/Util/Assert.h>
 #include <SCICore/Malloc/Allocator.h>
-#include <SCICore/Tester/RigorousTest.h>
 
 namespace SCICore {
 namespace Containers {
@@ -547,6 +546,10 @@ void Pio(Piostream& stream, HashTable<Key, Data>& t)
 
 //
 // $Log$
+// Revision 1.9  1999/09/04 06:01:42  sparker
+// Updates to .h files, to minimize #includes
+// removed .icc files (yeah!)
+//
 // Revision 1.8  1999/08/30 20:19:26  sparker
 // Updates to compile with -LANG:std on SGI
 // Other linux/irix porting oscillations

@@ -25,6 +25,7 @@
 #include <SCICore/Geom/GeomCylinder.h>
 #include <SCICore/Geom/Material.h>
 #include <SCICore/Malloc/Allocator.h>
+#include <SCICore/Math/MiscMath.h>
 #include <SCICore/TclInterface/TCLvar.h>
 
 #include <PSECore/Dataflow/Module.h>
@@ -286,6 +287,10 @@ PSECore::Dataflow::Module*
 
 //
 // $Log$
+// Revision 1.6  1999/09/04 06:01:57  sparker
+// Updates to .h files, to minimize #includes
+// removed .icc files (yeah!)
+//
 // Revision 1.5  1999/08/25 03:49:05  sparker
 // Changed SCICore/CoreDatatypes to SCICore/Datatypes
 // Changed PSECore/CommonDatatypes to PSECore/Datatypes

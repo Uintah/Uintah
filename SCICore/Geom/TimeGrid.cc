@@ -16,6 +16,7 @@
 #include <SCICore/Containers/String.h>
 #include <SCICore/Geometry/BBox.h>
 #include <SCICore/Malloc/Allocator.h>
+#include <iostream.h>
 
 namespace SCICore {
 namespace GeomSpace {
@@ -145,6 +146,10 @@ bool TimeGrid::saveobj(ostream&, const clString&, GeomSave*)
 
 //
 // $Log$
+// Revision 1.5  1999/09/04 06:01:50  sparker
+// Updates to .h files, to minimize #includes
+// removed .icc files (yeah!)
+//
 // Revision 1.4  1999/08/19 23:18:07  sparker
 // Removed a bunch of #include <SCICore/Util/NotFinished.h> statements
 // from files that did not need them.

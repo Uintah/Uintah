@@ -16,6 +16,7 @@
 #include <SCICore/Util/NotFinished.h>
 #include <SCICore/Malloc/Allocator.h>
 #include <SCICore/Geom/GeomGrid.h>
+#include <SCICore/Math/MiscMath.h>
 #ifndef _WIN32
 #include <sys/mman.h>
 #endif
@@ -265,6 +266,10 @@ void VectorFieldOcean::get_boundary_lines(Array1<Point>&)
 
 //
 // $Log$
+// Revision 1.5  1999/09/04 06:01:45  sparker
+// Updates to .h files, to minimize #includes
+// removed .icc files (yeah!)
+//
 // Revision 1.4  1999/08/25 03:48:45  sparker
 // Changed SCICore/CoreDatatypes to SCICore/Datatypes
 // Changed PSECore/CommonDatatypes to PSECore/Datatypes

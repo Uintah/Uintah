@@ -12,8 +12,6 @@
  *  Copyright (C) 199? SCI Group
  */
 
-#if 1
-
 #include <SCICore/Geometry/Point.h>
 #include <SCICore/Geometry/Vector.h>
 #include <SCICore/Util/Assert.h>
@@ -21,6 +19,7 @@
 #include <SCICore/Containers/String.h>
 #include <SCICore/Math/MinMax.h>
 #include <SCICore/Math/MiscMath.h>
+#include <SCICore/Tester/RigorousTest.h>
 #include <iostream.h>
 #include <stdio.h>
 
@@ -70,9 +69,6 @@ Point::Point(double x, double y, double z, double w)
 	_y=y/w;
 	_z=z/w;
     }
-#if SCI_ASSERTION_LEVEL >= 4
-    uninit=0;
-#endif
 }
 
 Point AffineCombination(const Point& p1, double w1,
@@ -108,7 +104,6 @@ ostream& operator<<( ostream& os, const Point& p )
    return os;
 }
 
-#if 1 
 istream& operator>>( istream& is, Point& v)
 {
     double x, y, z;
@@ -117,7 +112,6 @@ istream& operator>>( istream& is, Point& v)
   v=Point(x,y,z);
   return is;
 }
-#endif
 
 int
 Point::Overlap( double a, double b, double e )
@@ -488,6 +482,10 @@ void Pio(Piostream& stream, Point& p)
 
 //
 // $Log$
+// Revision 1.4  1999/09/04 06:01:52  sparker
+// Updates to .h files, to minimize #includes
+// removed .icc files (yeah!)
+//
 // Revision 1.3  1999/08/23 06:30:37  sparker
 // Linux port
 // Added X11 configuration options
@@ -508,5 +506,4 @@ void Pio(Piostream& stream, Point& p)
 //
 //
 
-#endif
 

@@ -66,6 +66,7 @@
 #include <SCICore/Geom/Sticky.h>
 #include <SCICore/Geom/Color.h>
 #include <SCICore/Math/MinMax.h>
+#include <SCICore/Math/MiscMath.h>
 #include <SCICore/Math/Trig.h>
 #include <SCICore/Math/TrigTable.h>
 #include <SCICore/Geometry/Plane.h>
@@ -4100,6 +4101,10 @@ void GeomSticky::draw(DrawInfoOpenGL* di, Material* matl, double t) {
 
 //
 // $Log$
+// Revision 1.6  1999/09/04 06:01:49  sparker
+// Updates to .h files, to minimize #includes
+// removed .icc files (yeah!)
+//
 // Revision 1.5  1999/08/28 17:54:41  sparker
 // Integrated new Thread library
 //
