@@ -63,9 +63,12 @@ WARNING
 			      const IntVector& highIndex) = 0;
       virtual void emit(OutputContext&) = 0;
       virtual void* getBasePointer() = 0;
-      void getMPIBuffer(void*& buf, int& count, MPI_Datatype& datatype);
+      void getMPIBuffer(void*& buf, int& count,
+			MPI_Datatype& datatype, bool& free_datatype,
+			const IntVector& low, const IntVector& high);
       virtual const TypeDescription* virtualGetTypeDescription() const = 0;
-      virtual void getSizes(IntVector& low, IntVector& high, IntVector& siz) const = 0;
+      virtual void getSizes(IntVector& low, IntVector& high,
+			    IntVector& siz, IntVector& strides) const = 0;
    protected:
       NCVariableBase(const NCVariableBase&);
       NCVariableBase();
@@ -78,6 +81,12 @@ WARNING
 
 //
 // $Log$
+// Revision 1.8  2000/12/10 09:06:17  sparker
+// Merge from csafe_risky1
+//
+// Revision 1.7.4.1  2000/09/29 06:12:29  sparker
+// Added support for sending data along patch edges
+//
 // Revision 1.7  2000/07/27 22:39:50  sparker
 // Implemented MPIScheduler
 // Added associated support

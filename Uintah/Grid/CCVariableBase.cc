@@ -16,6 +16,33 @@ CCVariableBase::CCVariableBase()
 }
 
 void CCVariableBase::getMPIBuffer(void*& buf, int& count,
+				  MPI_Datatype& datatype, bool& free_datatype,
+				  const IntVector& low, const IntVector& high)
+{
+   const TypeDescription* td = virtualGetTypeDescription()->getSubType();
+   MPI_Datatype basetype=td->getMPIType();
+   IntVector l, h, s, strides;
+   getSizes(l, h, s, strides);
+
+   IntVector off = low-l;
+   char* startbuf = (char*)getBasePointer();
+   startbuf += strides.x()*off.x()+strides.y()*off.y()+strides.z()*off.z();
+   buf = startbuf;
+   IntVector d = high-low;
+   MPI_Datatype type1d;
+   MPI_Type_hvector(d.x(), 1, strides.x(), basetype, &type1d);
+   using namespace std;
+   MPI_Datatype type2d;
+   MPI_Type_hvector(d.y(), 1, strides.y(), type1d, &type2d);
+   MPI_Type_free(&type1d);
+   MPI_Type_hvector(d.z(), 1, strides.z(), type2d, &datatype);
+   MPI_Type_free(&type2d);
+   MPI_Type_commit(&datatype);
+   free_datatype=true;
+   count=1;
+}
+
+void CCVariableBase::getMPIBuffer(void*& buf, int& count,
 				  MPI_Datatype& datatype)
 {
    buf = getBasePointer();
@@ -31,6 +58,12 @@ void CCVariableBase::getMPIBuffer(void*& buf, int& count,
 
 //
 // $Log$
+// Revision 1.3  2000/12/10 09:06:16  sparker
+// Merge from csafe_risky1
+//
+// Revision 1.2.4.1  2000/10/20 02:06:37  rawat
+// modified cell centered and staggered variables to optimize communication
+//
 // Revision 1.2  2000/09/25 14:41:31  rawat
 // added mpi support for cell centered and staggered cell variables
 //

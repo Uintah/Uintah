@@ -15,6 +15,7 @@ SRCS     += $(SRCDIR)/Array3Index.cc $(SRCDIR)/Box.cc \
 	$(SRCDIR)/Grid.cc $(SRCDIR)/XFCVariableBase.cc \
 	$(SRCDIR)/YFCVariableBase.cc $(SRCDIR)/ZFCVariableBase.cc \
 	$(SRCDIR)/Level.cc $(SRCDIR)/Material.cc \
+	$(SRCDIR)/PatchRangeTree.cc \
 	$(SRCDIR)/NCVariableBase.cc $(SRCDIR)/ParticleSet.cc \
 	$(SRCDIR)/ParticleSubset.cc $(SRCDIR)/ParticleVariableBase.cc \
 	$(SRCDIR)/ReductionVariableBase.cc \
@@ -52,6 +53,9 @@ include $(SRCTOP)/scripts/smallso_epilogue.mk
 
 #
 # $Log$
+# Revision 1.28  2000/12/10 09:06:18  sparker
+# Merge from csafe_risky1
+#
 # Revision 1.27  2000/11/28 03:47:26  jas
 # Added FCVariables for the specific faces X,Y,and Z.
 #
@@ -62,6 +66,15 @@ include $(SRCTOP)/scripts/smallso_epilogue.mk
 #
 # Revision 1.25  2000/10/26 23:27:20  jas
 # Added Density Boundary Conditions needed for ICE.
+#
+# Revision 1.24  2000/10/18 03:46:46  jas
+# Added pressure boundary conditions.
+#
+# Revision 1.23.4.2  2000/10/25 20:35:23  witzel
+# Added PatchRangeTree
+#
+# Revision 1.23.4.1  2000/10/19 05:18:04  sparker
+# Merge changes from main branch into csafe_risky1
 #
 # Revision 1.24  2000/10/18 03:46:46  jas
 # Added pressure boundary conditions.

@@ -38,20 +38,25 @@ namespace Uintah {
 
    class Box {
    public:
-      Box();
-      ~Box();
-      Box(const Box&);
-      Box& operator=(const Box&);
+      inline Box() {}
+      inline ~Box() {}
 
-#if 0
-      inline void set( int lx, int ly, int lz,
-		       int ux, int uy, int uz ) {
-	d_lower.x( lx ); d_lower.y( ly ); d_lower.z( lz );
-	d_upper.x( ux ); d_upper.y( uy ); d_upper.z( uz );
+      inline Box(const Box& copy)
+	 : d_lower(copy.d_lower), d_upper(copy.d_upper)
+      {
       }
-#endif
-     
-      Box(const Point& lower, const Point& upper);
+
+      inline Box(const Point& lower, const Point& upper)
+	 : d_lower(lower), d_upper(upper)
+      {
+      }
+
+      inline Box& operator=(const Box& copy)
+      {
+	 d_lower = copy.d_lower;
+	 d_upper = copy.d_upper;
+	 return *this;
+      }
 
       bool overlaps(const Box&, double epsilon=1.e-6) const;
       bool contains(const Point& p) const {
@@ -85,6 +90,12 @@ std::ostream& operator<<(std::ostream& out, const Uintah::Box& b);
 
 //
 // $Log$
+// Revision 1.8  2000/12/10 09:06:16  sparker
+// Merge from csafe_risky1
+//
+// Revision 1.7.4.1  2000/10/10 05:28:07  sparker
+// Added support for NullScheduler (used for profiling taskgraph overhead)
+//
 // Revision 1.7  2000/06/15 21:57:15  sparker
 // Added multi-patch support (bugzilla #107)
 // Changed interface to datawarehouse for particle data

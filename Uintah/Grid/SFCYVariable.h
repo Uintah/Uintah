@@ -84,6 +84,9 @@ class SFCYVariable : public Array3<T>, public SFCYVariableBase {
      virtual const TypeDescription* virtualGetTypeDescription() const;
      virtual void getSizes(IntVector& low, IntVector& high,
 			   IntVector& siz) const;
+     virtual void getSizes(IntVector& low, IntVector& high,
+			   IntVector& siz, IntVector& strides) const;
+
      // Replace the values on the indicated face with value
      void fillFace(Patch::FaceType face, const T& value)
        { 
@@ -439,13 +442,33 @@ class SFCYVariable : public Array3<T>, public SFCYVariableBase {
        high = getHighIndex();
        siz = size();
      }
+   template<class T>
+      void
+      SFCYVariable<T>::getSizes(IntVector& low, IntVector& high, IntVector& siz,
+			      IntVector& strides) const
+      {
+	 low=getLowIndex();
+	 high=getHighIndex();
+	 siz=size();
+	 strides = IntVector(sizeof(T), (int)(sizeof(T)*siz.x()),
+			     (int)(sizeof(T)*siz.y()*siz.x()));
+      }
 
 } // end namespace Uintah
 
 //
 // $Log$
+// Revision 1.10  2000/12/10 09:06:17  sparker
+// Merge from csafe_risky1
+//
 // Revision 1.9  2000/12/05 16:05:48  jas
 // Added BC fillFace and other BC related things needed for ICE.
+//
+// Revision 1.7.4.2  2000/10/20 02:06:37  rawat
+// modified cell centered and staggered variables to optimize communication
+//
+// Revision 1.7.4.1  2000/10/19 05:18:03  sparker
+// Merge changes from main branch into csafe_risky1
 //
 // Revision 1.8  2000/10/12 20:05:37  sparker
 // Removed print statement from FCVariable

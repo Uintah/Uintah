@@ -710,12 +710,21 @@ void  DataArchiver::initSaveLabels(SchedulerP& sched)
 
 //
 // $Log$
+// Revision 1.24  2000/12/10 09:06:02  sparker
+// Merge from csafe_risky1
+//
 // Revision 1.23  2000/12/07 01:27:29  witzel
 // Added some changes I forgot to make pertaining saving reduction variables
 // (creating outputReduction task).
 //
 // Revision 1.22  2000/12/06 23:59:40  witzel
 // Added variable save functionality via the DataArchiver problem spec
+//
+// Revision 1.20.2.2  2000/10/19 05:17:36  sparker
+// Merge changes from main branch into csafe_risky1
+//
+// Revision 1.20.2.1  2000/09/29 06:10:21  sparker
+// Redo warning fix made after branch
 //
 // Revision 1.21  2000/09/29 05:41:57  sparker
 // Quiet g++ warnings

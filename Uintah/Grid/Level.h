@@ -12,8 +12,17 @@
 #include <SCICore/Geometry/IntVector.h>
 #include <Uintah/Interface/ProblemSpec.h>
 #include <Uintah/Interface/ProblemSpecP.h>
+#include <Uintah/Grid/fixedvector.h>
+
 #include <string>
 #include <vector>
+
+#define SELECT_GRID
+//#define SELECT_RANGETREE
+
+#ifdef SELECT_RANGETREE
+class PatchRangeTree;
+#endif
 
 namespace Uintah {
 
@@ -59,6 +68,7 @@ WARNING
       Level(Grid* grid, const Point& anchor, const Vector& dcell);
       virtual ~Level();
       
+      void setPatchDistributionHint(const IntVector& patchDistribution);
       typedef std::vector<Patch*>::iterator patchIterator;
       typedef std::vector<Patch*>::const_iterator const_patchIterator;
       const_patchIterator patchesBegin() const;
@@ -111,8 +121,11 @@ WARNING
 
       Box getBox(const IntVector&, const IntVector&) const;
 
+      static const int MAX_PATCH_SELECT = 32;
+      typedef fixedvector<const Patch*, MAX_PATCH_SELECT> selectType;
+
       void selectPatches(const IntVector&, const IntVector&,
-			 std::vector<const Patch*>&) const;
+			 selectType&) const;
 
       bool containsPoint(const Point&) const;
    private:
@@ -120,18 +133,46 @@ WARNING
       Level& operator=(const Level&);
       
       std::vector<Patch*> d_patches;
+     
       Grid* grid;
       Point d_anchor;
       Vector d_dcell;
       bool d_finalized;
+      IntVector d_patchDistribution;
+
+#ifdef SELECT_GRID
+      IntVector d_idxLow;
+      IntVector d_idxHigh;
+      IntVector d_idxSize;
+      IntVector d_gridSize;
+      vector<int> d_gridStarts;
+      vector<Patch*> d_gridPatches;
+#else
+#ifdef SELECT_RANGETREE
+      PatchRangeTree* d_rangeTree;
+#endif
+#endif
    };
    
 } // end namespace Uintah
 
 //
 // $Log$
+// Revision 1.23  2000/12/10 09:06:16  sparker
+// Merge from csafe_risky1
+//
 // Revision 1.22  2000/11/14 03:53:33  jas
 // Implemented getExtraCellIterator.
+//
+// Revision 1.21.4.3  2000/10/25 20:36:31  witzel
+// Added RangeTree option for selectPatches implementation.
+//
+// Revision 1.21.4.2  2000/10/10 05:28:08  sparker
+// Added support for NullScheduler (used for profiling taskgraph overhead)
+//
+// Revision 1.21.4.1  2000/10/07 06:10:36  sparker
+// Optimized implementation of Level::selectPatches
+// Cured g++ warnings
 //
 // Revision 1.21  2000/09/25 20:37:42  sparker
 // Quiet g++ compiler warnings

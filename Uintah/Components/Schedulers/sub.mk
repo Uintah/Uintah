@@ -10,8 +10,10 @@ SRCDIR   := Uintah/Components/Schedulers
 SRCS += $(SRCDIR)/templates.cc \
 	$(SRCDIR)/MixedScheduler.cc \
 	$(SRCDIR)/MPIScheduler.cc $(SRCDIR)/MessageLog.cc \
+	$(SRCDIR)/NullScheduler.cc \
 	$(SRCDIR)/OnDemandDataWarehouse.cc \
 	$(SRCDIR)/RoundRobinLoadBalancer.cc \
+	$(SRCDIR)/SendState.cc \
 	$(SRCDIR)/SimpleLoadBalancer.cc \
 	$(SRCDIR)/SingleProcessorScheduler.cc \
 	$(SRCDIR)/SingleProcessorLoadBalancer.cc \
@@ -20,12 +22,24 @@ SRCS += $(SRCDIR)/templates.cc \
 
 PSELIBS := Uintah/Grid Uintah/Interface SCICore/Thread Uintah/Parallel \
 	Uintah/Exceptions SCICore/Exceptions SCICore/Util PSECore/XMLUtil
-LIBS := $(XML_LIBRARY) -lmpi
+LIBS := $(XML_LIBRARY) $(MPI_LIBRARY) $(VAMPIR_LIBRARY)
 
 include $(SRCTOP)/scripts/smallso_epilogue.mk
 
 #
 # $Log$
+# Revision 1.13  2000/12/10 09:06:12  sparker
+# Merge from csafe_risky1
+#
+# Revision 1.12.4.3  2000/10/10 05:28:04  sparker
+# Added support for NullScheduler (used for profiling taskgraph overhead)
+#
+# Revision 1.12.4.2  2000/10/06 23:57:54  witzel
+# Added vampir support.
+#
+# Revision 1.12.4.1  2000/10/02 15:02:45  sparker
+# Send only boundary particles
+#
 # Revision 1.12  2000/09/26 18:50:54  dav
 # added MixedScheduler.cc
 #

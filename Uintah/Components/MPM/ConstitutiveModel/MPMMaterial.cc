@@ -233,7 +233,7 @@ void MPMMaterial::createParticles(particleIndex numParticles,
             lower.y()<= position[pIdx].y() && position[pIdx].y() <= upper.y() &&
             lower.z()<= position[pIdx].z() && position[pIdx].z() <= upper.z() ){
                pexternalforce[pIdx] = bc->getForceDensity() * pmass[pIdx];
-               cout << pexternalforce[pIdx] << endl;
+               //cout << pexternalforce[pIdx] << endl;
          }
        }
      }
@@ -430,11 +430,17 @@ double MPMMaterial::getHeatTransferCoefficient() const
 
 
 // $Log$
+// Revision 1.55  2000/12/10 09:06:07  sparker
+// Merge from csafe_risky1
+//
 // Revision 1.54  2000/12/10 06:42:29  tan
 // Modifications on fracture contact computations.
 //
 // Revision 1.53  2000/11/22 01:40:59  guilkey
 // Moved forward declaration of GeometryPiece
+//
+// Revision 1.51.4.1  2000/10/17 00:59:17  sparker
+// Commented out print statement of externalforce
 //
 // Revision 1.51  2000/09/25 20:23:19  sparker
 // Quiet g++ warnings

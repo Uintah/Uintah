@@ -169,11 +169,11 @@ PressureSolver::sched_buildLinearMatrix(const LevelP& level,
       tsk->requires(new_dw, d_lab->d_viscosityINLabel, matlIndex, patch, 
 		    Ghost::AroundCells, numGhostCells);
       tsk->requires(new_dw, d_lab->d_uVelocitySIVBCLabel, matlIndex, patch, 
-		    Ghost::AroundCells, numGhostCells);
+		    Ghost::AroundCells, numGhostCells+1);
       tsk->requires(new_dw, d_lab->d_vVelocitySIVBCLabel, matlIndex, patch, 
-		    Ghost::AroundCells, numGhostCells);
+		    Ghost::AroundCells, numGhostCells+1);
       tsk->requires(new_dw, d_lab->d_wVelocitySIVBCLabel, matlIndex, patch, 
-		    Ghost::AroundCells, numGhostCells);
+		    Ghost::AroundCells, numGhostCells+1);
 
       /// requires convection coeff because of the nodal
       // differencing
@@ -875,6 +875,17 @@ PressureSolver::normPressure(const ProcessorGroup*,
 
 //
 // $Log$
+// Revision 1.64  2000/12/10 09:06:01  sparker
+// Merge from csafe_risky1
+//
+// Revision 1.52.4.2  2000/10/20 04:41:57  sparker
+// Temporarily require 2 ghost cells for all *VelocitySIVBCLabel's, due
+//  to limitation in risky scheduler.  Put this back when the scheduler
+//  gets fixed ASV.
+//
+// Revision 1.52.4.1  2000/10/19 05:17:29  sparker
+// Merge changes from main branch into csafe_risky1
+//
 // Revision 1.63  2000/10/14 17:11:05  sparker
 // Changed PerPatch<CellInformation*> to PerPatch<CellInformationP>
 // to get rid of memory leak

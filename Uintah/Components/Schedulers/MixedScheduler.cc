@@ -8,6 +8,7 @@
 #include <SCICore/Malloc/Allocator.h>
 
 #include <Uintah/Components/Schedulers/OnDemandDataWarehouse.h>
+#include <Uintah/Components/Schedulers/SendState.h>
 #include <Uintah/Grid/Patch.h>
 #include <Uintah/Grid/ParticleVariable.h>
 #include <Uintah/Grid/ScatterGatherBase.h>
@@ -153,14 +154,11 @@ MixedScheduler::sendParticleSets( vector<Task*> & tasks,
       if(task->getType() != Task::Normal)
 	 continue;
 
-      const vector<Task::Dependency*>& reqs = task->getRequires();
+      const Task::reqType& reqs = task->getRequires();
 
       // Run through all the data that this task requires...
-      for(vector<Task::Dependency*>::const_iterator iter = reqs.begin();
-	  iter != reqs.end(); iter++){
-
-	 Task::Dependency* dep = *iter;
-
+      for(Task::reqType::const_iterator dep = reqs.begin();
+	  dep != reqs.end(); dep++){
 	 // If this is a PraticleVariable
 	 if( dep->d_dw->isFinalized() && dep->d_patch &&
 	     dep->d_var->typeDescription()->getType() 
@@ -227,14 +225,11 @@ MixedScheduler::recvParticleSets( vector<Task*> & tasks, int me )
     if(task->getType() != Task::Normal)
       continue;
 
-    const vector<Task::Dependency*>& reqs = task->getRequires();
+    const Task::reqType& reqs = task->getRequires();
 
-    vector<Task::Dependency*>::const_iterator iter;
+    Task::reqType::const_iterator dep;
     // Run through all the data that this task requires...
-    for( iter = reqs.begin(); iter != reqs.end(); iter++ ){
-
-      Task::Dependency* dep = *iter;
-
+    for( dep = reqs.begin(); dep != reqs.end(); dep++ ){
 #if DAV_DEBUG
       cerr << "Considering: " << *dep << ", DW isfinalized: " 
 	   << dep->d_dw->isFinalized() << ", var type: " 
@@ -309,7 +304,7 @@ MixedScheduler::createDepencyList( DataWarehouseP & old_dw,
   for( iter = tasks.begin(); iter != tasks.end(); iter++ ){
 
     Task * task = *iter;
-    const vector<Task::Dependency*>& reqs = task->getRequires();
+    const Task::reqType& reqs = task->getRequires();
 
 #if DAV_DEBUG
     cerr << "Task is-> " << *task << "\n";
@@ -324,13 +319,10 @@ MixedScheduler::createDepencyList( DataWarehouseP & old_dw,
     }
 
     // Run through all the dependencies required by this task
-    for(vector<Task::Dependency*>::const_iterator reqIter = reqs.begin();
-	reqIter != reqs.end(); reqIter++){
-      
-      Task::Dependency* dep = *reqIter;
-
+    for(Task::reqType::const_iterator dep = reqs.begin();
+	dep != reqs.end(); dep++){
       OnDemandDataWarehouse* dw =
-	dynamic_cast<OnDemandDataWarehouse*>(dep->d_dw.get_rep());
+	dynamic_cast<OnDemandDataWarehouse*>(dep->d_dw);
 
       // If this data is already in the current DataWarehouse,
       // then don't add it to the dependency list...
@@ -430,7 +422,7 @@ This stuff is wrong...
 #endif
   // Really need to sort Reduction Tasks so that they can't block each
   // other out...  for now I am just GOING WITH A BLIND HACK... sigh.
-  int numReductionTasks = reductionTasks.size();
+  int numReductionTasks = (int)reductionTasks.size();
   if( numReductionTasks > 1 ){
     const Task * tempTask = reductionTasks[ numReductionTasks - 1 ];
     reductionTasks[ numReductionTasks-1 ] = reductionTasks[ numReductionTasks-2 ];
@@ -451,8 +443,9 @@ void
 MixedScheduler::makeAllRecvRequests( vector<Task*>       & tasks, 
 				   int                   me,
 				   DataWarehouseP      & old_dw,
-				   DataWarehouseP      & new_dw )
+				   DataWarehouseP      & /*new_dw */)
 {
+   SendState ss;
   vector<DependData> invalidDependencies;
 
   // Must be called before I start making recv calls, as the recv
@@ -500,15 +493,15 @@ MixedScheduler::makeAllRecvRequests( vector<Task*>       & tasks,
 	  MPI_Request requestid;
 
 	  OnDemandDataWarehouse* dw =
-		dynamic_cast<OnDemandDataWarehouse*>(need->d_dw.get_rep());
+		dynamic_cast<OnDemandDataWarehouse*>(need->d_dw);
 #if DAV_DEBUG
 	  cerrLock->lock();
 	  cerr << "Request to (eventually) recv MPI data for: " << *need << "\n";
 	  cerrLock->unlock();
 #endif
 	  int size;
-	  dw->recvMPI(old_dw, need->d_var, need->d_matlIndex,
-		      need->d_patch, d_myworld,
+	  dw->recvMPI(ss, old_dw, need->d_var, need->d_matlIndex,
+		      need->d_patch, d_myworld, need,
 		      MPI_ANY_SOURCE,
 		      need->d_serialNumber, &size, &requestid);
 	  if(size != -1){
@@ -641,9 +634,9 @@ MixedScheduler::execute(const ProcessorGroup * pc,
   cerrLock->unlock();
 #endif
 
-  numRequests = recv_ids.size();
+  numRequests = (int)recv_ids.size();
 
-  int numTasks = tasks.size();
+  int numTasks = (int)tasks.size();
   int numTasksDone = 0;
 
 #if DAV_DEBUG
@@ -709,8 +702,8 @@ MixedScheduler::execute(const ProcessorGroup * pc,
 	numTasksDone++;
 	continue;
       }
-      vector<DependData> & data = taskToDeps[ taskData ];
 #if DAV_DEBUG
+      vector<DependData> & data = taskToDeps[ taskData ];
       cerrLock->lock();
       //      if( tasks.size() == 1 ){
 
@@ -777,11 +770,11 @@ MixedScheduler::execute(const ProcessorGroup * pc,
 #if DAV_DEBUG
             cerr << "Running reduction task: " << *task << "\n";
 #endif
-            const vector<Task::Dependency*>& comps = task->getComputes();
+            const Task::compType& comps = task->getComputes();
             ASSERTEQ(comps.size(), 1);
-            const Task::Dependency* dep = comps[0];
+            const Task::Dependency* dep = &comps[0];
             OnDemandDataWarehouse* dw = 
-              dynamic_cast<OnDemandDataWarehouse*>(dep->d_dw.get_rep());
+              dynamic_cast<OnDemandDataWarehouse*>(dep->d_dw);
             dw->reduceMPI(dep->d_var, dep->d_matlIndex, d_myworld);
 #if DAV_DEBUG
             cerr << "reduceMPI finished\n";
@@ -841,7 +834,7 @@ MixedScheduler::execute(const ProcessorGroup * pc,
       //if task generated data that other processors need, send data out,
       // record fact that this data has been generated so that other
       // tasks that this processor is responsible for can be run
-      const vector<Task::Dependency*>& comps = task->getComputes();
+      const Task::compType& comps = task->getComputes();
 
       dependenciesSatisfied( comps, me, send_ids );
     } // end for taskIter => All Completed Tasks.
@@ -905,9 +898,9 @@ MixedScheduler::execute(const ProcessorGroup * pc,
 #if DAV_DEBUG
       cerr << "Run: " << *task << "\n";
 #endif
-      const vector<Task::Dependency*>& comps = task->getComputes();
+      const Task::compType& comps = task->getComputes();
       ASSERTEQ(comps.size(), 1);
-      Task::Dependency* cmp = comps[0];
+      const Task::Dependency* cmp = &comps[0];
       vector<const Task::Dependency*> reqs;
       d_graph.getRequiresForComputes(cmp, reqs);
                
@@ -936,11 +929,11 @@ MixedScheduler::execute(const ProcessorGroup * pc,
 #if DAV_DEBUG
       cerr << "Run: " << *task << "\n";
 #endif
-      const vector<Task::Dependency*>& reqs = task->getRequires();
+      const Task::reqType& reqs = task->getRequires();
       sgargs.dest.resize(reqs.size());
       sgargs.tags.resize(reqs.size());
       for(int r=0;r<(int)reqs.size();r++){
-	Task::Dependency* req = reqs[r];
+	const Task::Dependency* req = &reqs[r];
 	const Task::Dependency* cmp = d_graph.getComputesForRequires(req);
 	sgargs.dest[r] = cmp->d_task->getAssignedResourceIndex();
 	sgargs.tags[r] = req->d_serialNumber;
@@ -969,6 +962,7 @@ void
 MixedScheduler::sendInitialData( vector<Task*> & tasks,
                                int             me )
 {
+   SendState ss; // SHOULD BE PASSED IN! - Steve
 #if DAV_DEBUG
   cerr << "Initial DW Data Send\n";
 #endif
@@ -985,10 +979,9 @@ MixedScheduler::sendInitialData( vector<Task*> & tasks,
     if(task->getType() != Task::Normal)
       continue;
 
-    const vector<Task::Dependency*>& reqs = task->getRequires();
-    for(vector<Task::Dependency*>::const_iterator iter = reqs.begin();
-        iter != reqs.end(); iter++){
-      Task::Dependency* dep = *iter;
+    const Task::reqType& reqs = task->getRequires();
+    for(Task::reqType::const_iterator dep = reqs.begin();
+        dep != reqs.end(); dep++){
       if(dep->d_dw->isFinalized() && dep->d_patch){
         if(dep->d_dw->exists(dep->d_var, dep->d_matlIndex, dep->d_patch)){
           VarDestType ddest(dep->d_var,
@@ -997,7 +990,7 @@ MixedScheduler::sendInitialData( vector<Task*> & tasks,
                             task->getAssignedResourceIndex());
           if(varsent.find(ddest) == varsent.end()){
             OnDemandDataWarehouse* dw = 
-                     dynamic_cast<OnDemandDataWarehouse*>(dep->d_dw.get_rep());
+                     dynamic_cast<OnDemandDataWarehouse*>(dep->d_dw);
             if(!dw)
               throw InternalError("Wrong Datawarehouse?");
             MPI_Request requestid;
@@ -1008,8 +1001,8 @@ MixedScheduler::sendInitialData( vector<Task*> & tasks,
                  << dep->d_task->getAssignedResourceIndex() << '\n';
 #endif
 	    int size;
-            dw->sendMPI(dep->d_var, dep->d_matlIndex,
-                        dep->d_patch, d_myworld,
+            dw->sendMPI(ss, dep->d_var, dep->d_matlIndex,
+                        dep->d_patch, d_myworld, dep,
                         dep->d_task->getAssignedResourceIndex(),
                         dep->d_serialNumber, &size, &requestid);
 	    if(size != -1){
@@ -1035,6 +1028,7 @@ MixedScheduler::recvInitialData( vector<Task*>  & tasks,
                                DataWarehouseP & old_dw,
                                int              me )
 {
+   SendState ss; // SHOULD BE PASSED IN! - Steve
 #if DAV_DEBUG
   cerr << "start: recvInitialData\n";
 #endif
@@ -1050,10 +1044,9 @@ MixedScheduler::recvInitialData( vector<Task*>  & tasks,
       if(task->getType() != Task::Normal)
          continue;
 
-      const vector<Task::Dependency*>& reqs = task->getRequires();
-      for(vector<Task::Dependency*>::const_iterator iter = reqs.begin();
-          iter != reqs.end(); iter++){
-         Task::Dependency* dep = *iter;
+      const Task::reqType& reqs = task->getRequires();
+      for(Task::reqType::const_iterator dep = reqs.begin();
+          dep != reqs.end(); dep++){
 #if DAV_DEBUG
          cerr << "Looking at dep: " << *dep << '\n';
 #endif
@@ -1066,7 +1059,7 @@ MixedScheduler::recvInitialData( vector<Task*>  & tasks,
                cerr << "Variable does not exist\n";
 #endif
                OnDemandDataWarehouse* dw = 
-                     dynamic_cast<OnDemandDataWarehouse*>(dep->d_dw.get_rep());
+                     dynamic_cast<OnDemandDataWarehouse*>(dep->d_dw);
                if(!dw)
                   throw InternalError("Wrong Datawarehouse?");
                MPI_Request requestid;
@@ -1077,8 +1070,8 @@ MixedScheduler::recvInitialData( vector<Task*>  & tasks,
 		    << dep->d_serialNumber << '\n';
 #endif
 	       int size;
-               dw->recvMPI(old_dw, dep->d_var, dep->d_matlIndex,
-                           dep->d_patch, d_myworld,
+               dw->recvMPI(ss, old_dw, dep->d_var, dep->d_matlIndex,
+                           dep->d_patch, d_myworld, dep,
                            MPI_ANY_SOURCE,
                            dep->d_serialNumber, &size, &requestid);
 	       if(size != -1){
@@ -1156,7 +1149,7 @@ MixedScheduler::scheduleParticleRelocation(
       // Particles are only allowed to be one cell out
       IntVector l = patch->getCellLowIndex()-IntVector(1,1,1);
       IntVector h = patch->getCellHighIndex()+IntVector(1,1,1);
-      std::vector<const Patch*> neighbors;
+      Level::selectType neighbors;
       level->selectPatches(l, h, neighbors);
       for(int i=0;i<(int)neighbors.size();i++)
          t2->requires(new_dw, scatterGatherVariable, 0, neighbors[i], Ghost::None);
@@ -1192,7 +1185,7 @@ MixedScheduler::scatterParticles(const ProcessorGroup* pc,
    // Particles are only allowed to be one cell out
    IntVector l = patch->getCellLowIndex()-IntVector(1,1,1);
    IntVector h = patch->getCellHighIndex()+IntVector(1,1,1);
-   vector<const Patch*> neighbors;
+   Level::selectType neighbors;
    level->selectPatches(l, h, neighbors);
 
    vector<MPIScatterRecord*> sr(neighbors.size());
@@ -1326,7 +1319,7 @@ MixedScheduler::gatherParticles(const ProcessorGroup* pc,
    // Particles are only allowed to be one cell out
    IntVector l = patch->getCellLowIndex()-IntVector(1,1,1);
    IntVector h = patch->getCellHighIndex()+IntVector(1,1,1);
-   vector<const Patch*> neighbors;
+   Level::selectType neighbors;
    level->selectPatches(l, h, neighbors);
 
    vector<MPIScatterRecord*> sr;
@@ -1477,28 +1470,28 @@ MixedScheduler::displayTaskGraph( vector<Task*> & taskGraph )
 	iter != taskGraph.end(); iter++){
       cerr << "\n" << **iter 
 	   << "\n  REQUIRES:\n";
-      const vector<Task::Dependency*>& reqs = (*iter)->getRequires();
-      for(vector<Task::Dependency*>::const_iterator riter = reqs.begin();
+      const Task::reqType& reqs = (*iter)->getRequires();
+      for(Task::reqType::const_iterator riter = reqs.begin();
 	  riter != reqs.end(); riter++){
-	cerr << "     " << *((*riter)->d_var) << "		P: ";
-	if( (*riter)->d_patch )
-	  cerr << (*riter)->d_patch->getID();
+	cerr << "     " << *(riter->d_var) << "		P: ";
+	if( riter->d_patch )
+	  cerr << riter->d_patch->getID();
 	else
 	  cerr << "?";
-	cerr << " MI: " << (*riter)->d_matlIndex << "\n";
+	cerr << " MI: " << riter->d_matlIndex << "\n";
       }
 
       cerr << "\n  COMPUTES:\n";
-      const vector<Task::Dependency*>& comps = (*iter)->getComputes();
+      const Task::compType& comps = (*iter)->getComputes();
       
-      for(vector<Task::Dependency*>::const_iterator riter = comps.begin();
+      for(Task::compType::const_iterator riter = comps.begin();
 	  riter != comps.end(); riter++){
-	cerr << "     " << *((*riter)->d_var) << "		P: ";
-	if( (*riter)->d_patch )
-	  cerr << (*riter)->d_patch->getID();
+	cerr << "     " << *(riter->d_var) << "		P: ";
+	if( riter->d_patch )
+	  cerr << riter->d_patch->getID();
 	else
 	  cerr << "?";
-	cerr << " MI: " << (*riter)->d_matlIndex << "\n";
+	cerr << " MI: " << riter->d_matlIndex << "\n";
       }
     }
     cerr << "End: Tasks in Task List:\n";
@@ -1508,11 +1501,10 @@ MixedScheduler::displayTaskGraph( vector<Task*> & taskGraph )
 const Task::Dependency *
 findRequirement( const Task::Dependency * comp, Task * task )
 {
-  const vector<Task::Dependency*>& reqs = task->getRequires();
+  const Task::reqType& reqs = task->getRequires();
 
-  for(vector<Task::Dependency*>::const_iterator riter = reqs.begin(); riter != reqs.end();
-      riter++){
-    const Task::Dependency * req = *riter;
+  for(Task::reqType::const_iterator req = reqs.begin(); req != reqs.end();
+      req++){
     if( ( req->d_dw == comp->d_dw ) &&
 	( req->d_var->getName() == comp->d_var->getName() ) &&
 	( req->d_matlIndex == comp->d_matlIndex ) &&
@@ -1531,6 +1523,7 @@ MixedScheduler::dependencySatisfied( const Task::Dependency * comp,
 				   vector<MPI_Request> & send_ids,
 				   bool sendData )
 {
+   SendState ss; // SHOULD BE PASSED IN! - Steve
     DependData		    d( comp );
     vector<Task *>	    tasks = depToTasks[ d ];
     vector<Task*>::iterator taskIter;
@@ -1592,7 +1585,7 @@ MixedScheduler::dependencySatisfied( const Task::Dependency * comp,
 	  }
 
 	  OnDemandDataWarehouse* dw = 
-		    dynamic_cast<OnDemandDataWarehouse*>(comp->d_dw.get_rep());
+		    dynamic_cast<OnDemandDataWarehouse*>(comp->d_dw);
 	  if(!dw)
 	    throw InternalError("Wrong Datawarehouse?");
 
@@ -1610,8 +1603,8 @@ MixedScheduler::dependencySatisfied( const Task::Dependency * comp,
 	  cerrLock->unlock();
 #endif
 	  int size;
-	  dw->sendMPI(req->d_var, req->d_matlIndex,
-		      req->d_patch, d_myworld,
+	  dw->sendMPI(ss, req->d_var, req->d_matlIndex,
+		      req->d_patch, d_myworld, req,
 		      req->d_task->getAssignedResourceIndex(),
 		      req->d_serialNumber, &size, &requestid);
 
@@ -1665,7 +1658,7 @@ MixedScheduler::dependencySatisfied( const Task::Dependency * comp,
 }  // end dependencySatisfied()
 
 void
-MixedScheduler::dependenciesSatisfied( const vector<Task::Dependency*> & comps,
+MixedScheduler::dependenciesSatisfied( const Task::compType & comps,
 				     int me,
 				     vector<MPI_Request> & send_ids,
 				     bool sendData )
@@ -1674,9 +1667,8 @@ MixedScheduler::dependenciesSatisfied( const vector<Task::Dependency*> & comps,
   cerr << "There were " << comps.size() << " computed dependencies.\n";
 #endif
 
-  vector<Task::Dependency*>::const_iterator iter;
-  for( iter = comps.begin(); iter != comps.end(); iter++ ) {
-    const Task::Dependency* cmp = *iter;
+  Task::compType::const_iterator cmp;
+  for( cmp = comps.begin(); cmp != comps.end(); cmp++ ) {
     dependencySatisfied( cmp, me, send_ids, sendData );
   }
 }
@@ -1697,8 +1689,21 @@ MixedScheduler::releaseLoadBalancer()
 
 //
 // $Log$
+// Revision 1.7  2000/12/10 09:06:10  sparker
+// Merge from csafe_risky1
+//
 // Revision 1.6  2000/12/06 23:57:38  witzel
 // Added material index to reduceMPI call
+//
+// Revision 1.5.2.3  2000/10/10 05:28:03  sparker
+// Added support for NullScheduler (used for profiling taskgraph overhead)
+//
+// Revision 1.5.2.2  2000/10/02 15:02:45  sparker
+// Send only boundary particles
+//
+// Revision 1.5.2.1  2000/09/29 06:09:54  sparker
+// g++ warnings
+// Support for sending only patch edges
 //
 // Revision 1.5  2000/09/28 23:16:45  jas
 // Added (int) for anything returning the size of a STL component.  Added

@@ -5,31 +5,6 @@
 using namespace Uintah;
 using namespace std;
 
-Box::Box()
-{
-}
-
-Box::~Box()
-{
-}
-
-Box::Box(const Box& copy)
-  : d_lower(copy.d_lower), d_upper(copy.d_upper)
-{
-}
-
-Box::Box(const Point& lower, const Point& upper)
-  : d_lower(lower), d_upper(upper)
-{
-}
-
-Box& Box::operator=(const Box& copy)
-{
-  d_lower = copy.d_lower;
-  d_upper = copy.d_upper;
-  return *this;
-}
-
 bool Box::overlaps(const Box& otherbox, double epsilon) const
 {
   if(d_lower.x()+epsilon > otherbox.d_upper.x() || d_upper.x() < otherbox.d_lower.x()+epsilon)
@@ -49,6 +24,12 @@ ostream& operator<<(ostream& out, const Box& b)
 
 //
 // $Log$
+// Revision 1.3  2000/12/10 09:06:16  sparker
+// Merge from csafe_risky1
+//
+// Revision 1.2.2.1  2000/10/10 05:28:07  sparker
+// Added support for NullScheduler (used for profiling taskgraph overhead)
+//
 // Revision 1.2  2000/04/26 06:48:46  sparker
 // Streamlined namespaces
 //

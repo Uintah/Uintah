@@ -270,7 +270,7 @@ void SimulationController::run()
       scheduleComputeStableTimestep(level, scheduler, new_dw, cfd, mpm, mpmcfd,
 									 md);
       scheduler->execute(d_myworld, old_dw, new_dw);
-      
+
       old_dw = new_dw;
    }
 }
@@ -336,7 +336,7 @@ void SimulationController::problemSetup(const ProblemSpecP& params,
 	box_ps->require("upper", upper);
 	
 	IntVector lowCell = level->getCellIndex(lower);
-	IntVector highCell = level->getCellIndex(upper);
+	IntVector highCell = level->getCellIndex(upper+Vector(1.e-6,1.e-6,1.e-6));
 	Point lower2 = level->getNodePosition(lowCell);
 	Point upper2 = level->getNodePosition(highCell);
 	double diff_lower = (lower2-lower).length();
@@ -373,6 +373,7 @@ void SimulationController::problemSetup(const ProblemSpecP& params,
 	IntVector patches;
 	IntVector inLowIndex,inHighIndex;
 	if(box_ps->get("patches", patches)){
+	   level->setPatchDistributionHint(patches);
 	  for(int i=0;i<patches.x();i++){
 	    for(int j=0;j<patches.y();j++){
 	      for(int k=0;k<patches.z();k++){
@@ -564,6 +565,9 @@ void SimulationController::scheduleTimeAdvance(double t, double delt,
 
 //
 // $Log$
+// Revision 1.51  2000/12/10 09:06:15  sparker
+// Merge from csafe_risky1
+//
 // Revision 1.50  2000/12/01 23:01:46  guilkey
 // Adding stuff for coupled MPM and CFD.
 //
@@ -574,6 +578,24 @@ void SimulationController::scheduleTimeAdvance(double t, double delt,
 // Added code to output average ellapsed wall clock times between
 // time steps to a file "avg_elapsed_walltime.txt" if the
 // OUTPUT_AVG_ELAPSED_WALLTIME macro is defined.
+//
+// Revision 1.47.4.5  2000/11/02 00:10:08  witzel
+// Don't output date/time for OUTPUT_AVG_ELAPSED_WALLTIME -- not needed
+//
+// Revision 1.47.4.4  2000/11/01 21:25:48  witzel
+// changed OUTPUT_AVE_ELLAPSED_WALLTIME to OUTPUT_AVG_ELAPSED_WALLTIME
+//
+// Revision 1.47.4.3  2000/11/01 02:03:27  witzel
+// Added code to output average ellapsed wall clock times between
+// time steps to a file "ave_ellapsed_walltime.txt" if the
+// OUTPUT_AVE_ELLAPSED_WALLTIME macro is defined.
+//
+// Revision 1.47.4.2  2000/10/10 05:28:06  sparker
+// Added support for NullScheduler (used for profiling taskgraph overhead)
+//
+// Revision 1.47.4.1  2000/10/07 06:12:14  sparker
+// Try to fix rounding errors for cell upper index
+// set a hint for the level's number of patches in each direction
 //
 // Revision 1.47  2000/09/26 21:26:36  witzel
 // Make only process zero call printStatistics() and write messages in

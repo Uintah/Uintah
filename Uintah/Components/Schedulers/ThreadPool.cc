@@ -1,5 +1,6 @@
-/* REFERENCED */
-static char *id="@(#) $Id$";
+//
+// $Id$
+//
 
 #include <Uintah/Components/Schedulers/ThreadPool.h>
 
@@ -9,6 +10,7 @@ static char *id="@(#) $Id$";
 
 #include <iostream>
 #include <stdio.h>
+
 using std::cerr;
 
 using namespace Uintah;
@@ -44,7 +46,7 @@ Worker::assignTask( Task * task, const ProcessorGroup * pg )
 void
 Worker::run()
 {
-  while( 1 ){
+   for(;;){
     d_ready->lock();
 
     double beginTime = Time::currentSeconds();
@@ -217,6 +219,19 @@ ThreadPool::getFinishedTasks( vector<Task *> & finishedTasks )
 
 //
 // $Log$
+// Revision 1.5  2000/12/10 09:06:12  sparker
+// Merge from csafe_risky1
+//
+// Revision 1.3.2.3  2000/10/19 05:17:56  sparker
+// Merge changes from main branch into csafe_risky1
+//
+// Revision 1.3.2.2  2000/10/10 05:28:04  sparker
+// Added support for NullScheduler (used for profiling taskgraph overhead)
+//
+// Revision 1.3.2.1  2000/09/29 06:09:55  sparker
+// g++ warnings
+// Support for sending only patch edges
+//
 // Revision 1.4  2000/10/10 18:27:02  dav
 // added support to track time/usage of threads
 //

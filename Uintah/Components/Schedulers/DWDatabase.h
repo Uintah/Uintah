@@ -246,7 +246,7 @@ void DWDatabase<VarType>::put(const VarLabel* label, int matlIndex,
    PatchRecord* rr = patchiter->second;
       
    if(matlIndex >= (int)rr->vars.size()){
-      unsigned long oldSize = rr->vars.size();
+      int oldSize = (int)rr->vars.size();
       rr->vars.resize(matlIndex+1);
       for(unsigned long i=oldSize;i<matlIndex;i++)
 	 rr->vars[i]=0;
@@ -311,7 +311,8 @@ void DWDatabase<VarType>::get(const VarLabel* label, int matlIndex,
 			      const Patch* patch,
 			      VarType& var) const
 {
-   var.copyPointer(*get(label, matlIndex, patch));
+   VarType* tmp = get(label, matlIndex, patch);
+   var.copyPointer(*tmp);
 }
 
 template<class VarType>
@@ -366,12 +367,25 @@ void DWDatabase<VarType>::print(std::ostream& out)
 
 //
 // $Log$
+// Revision 1.20  2000/12/10 09:06:10  sparker
+// Merge from csafe_risky1
+//
 // Revision 1.19  2000/12/07 01:22:59  witzel
 // Fixed some logic in the put method (for global variables).
 //
 // Revision 1.18  2000/12/06 23:48:52  witzel
 // Added "globals" data member for variables used for all materials
 // (specified by matlIndex = -1 and patch = NULL)
+//
+// Revision 1.16.2.3  2000/10/19 05:17:55  sparker
+// Merge changes from main branch into csafe_risky1
+//
+// Revision 1.16.2.2  2000/10/10 05:28:03  sparker
+// Added support for NullScheduler (used for profiling taskgraph overhead)
+//
+// Revision 1.16.2.1  2000/09/29 06:09:54  sparker
+// g++ warnings
+// Support for sending only patch edges
 //
 // Revision 1.17  2000/10/13 20:46:39  sparker
 // Clean out foreign variables at finalize time

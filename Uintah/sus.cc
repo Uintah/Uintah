@@ -1,4 +1,3 @@
-/* REFERENCED */
 //static char *id="$Id$";
 
 /*
@@ -24,6 +23,7 @@
 #include <Uintah/Components/Schedulers/SingleProcessorScheduler.h>
 #include <Uintah/Components/Schedulers/MPIScheduler.h>
 #include <Uintah/Components/Schedulers/MixedScheduler.h>
+#include <Uintah/Components/Schedulers/NullScheduler.h>
 #include <Uintah/Components/Schedulers/SingleProcessorLoadBalancer.h>
 #include <Uintah/Components/Schedulers/RoundRobinLoadBalancer.h>
 #include <Uintah/Components/Schedulers/SimpleLoadBalancer.h>
@@ -31,6 +31,10 @@
 #include <Uintah/Interface/DataWarehouse.h>
 #include <Uintah/Parallel/ProcessorGroup.h>
 #include <SCICore/Exceptions/Exception.h>
+
+#ifdef USE_VAMPIR
+#include <Uintah/Parallel/Vampir.h>
+#endif
 
 #if HAVE_FPSETMASK
 #include <ieeefp.h>
@@ -84,6 +88,10 @@ int main(int argc, char** argv)
      * Initialize MPI
      */
     Parallel::initializeManager(argc, argv);
+
+    #ifdef USE_VAMPIR
+    VTsetup();
+    #endif
 
 #if HAVE_FPSETMASK
     fpsetmask(FP_X_OFL|FP_X_DZ|FP_X_INV);
@@ -164,12 +172,6 @@ int main(int argc, char** argv)
     }
     if(do_ice && do_arches){
 	usage( "ICE and Arches do not work together", "", argv[0]);
-    }
-    if(do_ice && numThreads>0){
-	usage( "ICE doesn't support threads yet", "", argv[0]);
-    }
-    if(do_arches && numThreads>0){
-	usage( "Arches doesn't do threads yet", "", argv[0]);
     }
 
     if(!(do_ice || do_arches || do_mpm)){
@@ -254,8 +256,13 @@ int main(int argc, char** argv)
 	      scinew MixedScheduler(world, output);
 	   sim->attachPort("scheduler", sched);
 	   sched->attachPort("load balancer", bal);
+	} else if(scheduler == "NullScheduler"){
+	   NullScheduler* sched =
+	      scinew NullScheduler(world, output);
+	   sim->attachPort("scheduler", sched);
+	   sched->attachPort("load balancer", bal);
 	} else {
-	   quit( "Unknown schduler: " + scheduler );
+	   quit( "Unknown scheduler: " + scheduler );
 	}
 
 	/*
@@ -304,9 +311,24 @@ int main(int argc, char** argv)
 
 //
 // $Log$
+// Revision 1.32  2000/12/10 09:05:59  sparker
+// Merge from csafe_risky1
+//
 // Revision 1.31  2000/12/01 22:59:16  guilkey
 // Adding code to allow MPM to work with a CFD code, specifics are directed
 // towards ICE, but most work is generic for either ICE or Arches.
+//
+// Revision 1.25.2.4  2000/10/19 05:17:25  sparker
+// Merge changes from main branch into csafe_risky1
+//
+// Revision 1.25.2.3  2000/10/17 19:44:05  dav
+// mixed scheduler updates
+//
+// Revision 1.25.2.2  2000/10/10 05:28:01  sparker
+// Added support for NullScheduler (used for profiling taskgraph overhead)
+//
+// Revision 1.25.2.1  2000/10/06 23:59:41  witzel
+// Added VTsetup call for vampir trace initialization.
 //
 // Revision 1.30  2000/10/04 20:21:18  jas
 // Changed ICE() to ICE(world).
