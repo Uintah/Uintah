@@ -42,7 +42,7 @@ WARNING
 
       //////////
       // Insert Documentation Here:
-      static void initializeManager(int argc, char** argv);
+      static void initializeManager(int& argc, char**& argv);
       
       //////////
       // Insert Documentation Here:
@@ -68,6 +68,9 @@ WARNING
 
 //
 // $Log$
+// Revision 1.7  2000/09/25 18:13:51  sparker
+// Correctly handle mpich
+//
 // Revision 1.6  2000/07/27 22:39:54  sparker
 // Implemented MPIScheduler
 // Added associated support
