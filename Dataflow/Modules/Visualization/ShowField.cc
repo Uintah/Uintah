@@ -101,6 +101,7 @@ class ShowField : public Module
   //! holds options for how to visualize nodes.
   GuiString                node_display_type_;
   GuiString                edge_display_type_;
+  GuiString                active_tab_; //! for saving nets state
   GuiDouble                node_scale_;
   GuiDouble                edge_scale_;
   GuiInt                   showProgress_;
@@ -114,11 +115,7 @@ public:
   ShowField(const string& id);
   virtual ~ShowField();
   virtual void execute();
-
-
-
   virtual void tcl_command(TCLArgs& args, void* userdata);
-
 };
 
 ShowField::ShowField(const string& id) : 
@@ -145,6 +142,7 @@ ShowField::ShowField(const string& id) :
   def_mat_handle_(scinew Material(Color(0.5, 0.5, 0.5))),
   node_display_type_("node_display_type", id, this),
   edge_display_type_("edge_display_type", id, this),
+  active_tab_("active_tab", id, this),
   node_scale_("node_scale", id, this),
   edge_scale_("edge_scale", id, this),
   showProgress_("show_progress", id, this),
