@@ -8,7 +8,7 @@
    </Meta>
 
    <Time>
-	<maxTime>.25</maxTime>
+	<maxTime>.05</maxTime>
 	<initTime>0.0</initTime>
 	<delt_min>2.e-6</delt_min>
 	<delt_max>2.e-3</delt_max>
@@ -16,7 +16,7 @@
    </Time>
    <DataArchiver>
         <filebase>const_test_hypo.uda</filebase>
-	<outputInterval>.05</outputInterval>
+	<outputInterval>.01</outputInterval>
         <save label = "BndyForce_zminus"/>
         <save label = "BndyForce_zplus"/>
         <save label = "BndyContactArea_zminus"/>
@@ -33,7 +33,7 @@
 	<save label = "p.stress"/>
 	<save label = "g.mass"/>
 	<save label = "g.stressFS"/>
-	<checkpoint cycle = "2" interval = "0.1"/>
+	<checkpoint cycle = "2" interval = "0.01"/>
    </DataArchiver>
 
     <MPM>
