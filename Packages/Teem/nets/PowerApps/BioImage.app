@@ -220,7 +220,7 @@ class BioImageApp {
 	} else {
 	    if {$which == $error_module} {
 		set error_module ""
-		puts "FIX ME implement indicate_error"
+		#puts "FIX ME implement indicate_error"
 		change_indicator_labels "Visualizing..."
 		change_indicate_val 0
 	    }
@@ -269,16 +269,30 @@ class BioImageApp {
 		global $mods(ViewImage)-axial-viewport0-axis
 		global $mods(ViewImage)-sagittal-viewport0-axis
 		global $mods(ViewImage)-coronal-viewport0-axis
+		global $mods(ViewImage)-axial-viewport0-clut_ww
+		global $mods(ViewImage)-sagittal-viewport0-clut_ww
+		global $mods(ViewImage)-coronal-viewport0-clut_ww
+		global $mods(ViewImage)-axial-viewport0-clut_wl
+		global $mods(ViewImage)-sagittal-viewport0-clut_wl
+		global $mods(ViewImage)-coronal-viewport0-clut_wl
 
 		set $mods(ViewImage)-axial-viewport0-axis 2
 		set $mods(ViewImage)-sagittal-viewport0-axis 0
 		set $mods(ViewImage)-coronal-viewport0-axis 1
 
-		global $mods(ViewImage)-nrrd1-flip_y
-		set $mods(ViewImage)-nrrd1-flip_y 1
+		set $mods(ViewImage)-axial-viewport0-clut_ww 221
+		set $mods(ViewImage)-sagittal-viewport0-clut_ww 221
+		set $mods(ViewImage)-coronal-viewport0-clut_ww 221
 
-		global $mods(ViewImage)-nrrd1-flip_z
-		set $mods(ViewImage)-nrrd1-flip_z 1
+		set $mods(ViewImage)-axial-viewport0-clut_wl 137
+		set $mods(ViewImage)-sagittal-viewport0-clut_wl 137
+		set $mods(ViewImage)-coronal-viewport0-clut_wl 137
+
+# 		global $mods(ViewImage)-nrrd1-flip_y
+# 		set $mods(ViewImage)-nrrd1-flip_y 1
+
+# 		global $mods(ViewImage)-nrrd1-flip_z
+# 		set $mods(ViewImage)-nrrd1-flip_z 1
 		
                 $mods(ViewImage)-c rebind .standalone.viewers.topbot.pane0.childsite.lr.pane1.childsite.axial
                 $mods(ViewImage)-c rebind .standalone.viewers.topbot.pane1.childsite.lr.pane0.childsite.sagittal
@@ -395,7 +409,7 @@ class BioImageApp {
 
 		    if {$loading} {
 			set loading 0
-			puts "FIX ME change_indicate_val - labels"
+			#puts "FIX ME change_indicate_val - labels"
 			change_indicator_labels "Visualizing..."
 		    }
 		} elseif {$executing_modules < 0} {
@@ -406,7 +420,7 @@ class BioImageApp {
 
 		    if {$loading} {
 			set loading 0
-			puts "FIX ME change_indicate_val - labels"
+			#puts "FIX ME change_indicate_val - labels"
 			change_indicator_labels "Visualizing..."
 		    }
 
@@ -595,12 +609,12 @@ class BioImageApp {
  	    -from 0 -to 20 \
  	    -orient horizontal -showvalue false \
  	    -length 110 \
-	    -variable $mods(ViewImage)-axial-viewport0-slice \
-	    -command "$mods(ViewImage)-c rebind .standalone.viewers.topbot.pane0.childsite.lr.pane1.childsite.axial"
-	
+	    -variable $mods(ViewImage)-axial-viewport0-slice
 
 	label $topr.modes.slice.l -textvariable $mods(ViewImage)-axial-viewport0-slice
  	pack $topr.modes.slice.s $topr.modes.slice.l -side left -anchor n -padx 0
+
+        bind $topr.modes.slice.s <ButtonRelease> "$mods(ViewImage)-c rebind .standalone.viewers.topbot.pane0.childsite.lr.pane1.childsite.axial"
 
 	radiobutton $topr.modes.mip -text "MIP Mode" \
 	    -variable $mods(ViewImage)-axial-viewport0-mode -value 1 \
@@ -626,11 +640,11 @@ class BioImageApp {
  	    -from 0 -to 254 \
  	    -orient horizontal -showvalue false \
  	    -length 110 \
-	    -variable $mods(ViewImage)-sagittal-viewport0-slice \
-	    -command  "$mods(ViewImage)-c rebind .standalone.viewers.topbot.pane1.childsite.lr.pane0.childsite.sagittal"
-	
+	    -variable $mods(ViewImage)-sagittal-viewport0-slice
 	label $botl.modes.slice.l -textvariable $mods(ViewImage)-sagittal-viewport0-slice
  	pack $botl.modes.slice.s $botl.modes.slice.l -side left -anchor n -padx 0
+
+        bind $botl.modes.slice.s <ButtonRelease> "$mods(ViewImage)-c rebind .standalone.viewers.topbot.pane1.childsite.lr.pane0.childsite.sagittal"
 
 	radiobutton $botl.modes.mip -text "MIP Mode" \
 	    -variable $mods(ViewImage)-sagittal-viewport0-mode -value 1 \
@@ -656,11 +670,11 @@ class BioImageApp {
  	    -from 0 -to 254 \
  	    -orient horizontal -showvalue false \
  	    -length 110 \
-	    -variable $mods(ViewImage)-coronal-viewport0-slice \
-	    -command "$mods(ViewImage)-c rebind .standalone.viewers.topbot.pane1.childsite.lr.pane1.childsite.coronal"
-
+	    -variable $mods(ViewImage)-coronal-viewport0-slice
 	label $botr.modes.slice.l -textvariable $mods(ViewImage)-coronal-viewport0-slice
  	pack $botr.modes.slice.s $botr.modes.slice.l -side left -anchor n -padx 0
+
+        bind $botr.modes.slice.s <ButtonRelease> "$mods(ViewImage)-c rebind .standalone.viewers.topbot.pane1.childsite.lr.pane1.childsite.coronal"
 
 	radiobutton $botr.modes.mip -text "MIP Mode" \
 	    -variable $mods(ViewImage)-coronal-viewport0-mode -value 1 \
@@ -915,8 +929,9 @@ class BioImageApp {
 
 	    # set some ui parameters
 	    global $m1-filename
-	    set $m1-filename $data_dir/volume/CThead.nhdr
+#	    set $m1-filename $data_dir/volume/CThead.nhdr
 	    #set $m1-filename "/home/darbyb/work/data/TR0600-TE020.nhdr"
+	    set $m1-filename $data_dir/mrca2_t1_or-fixed.nhdr
 
 	    global $m8-nbits
 	    set $m8-nbits {8}
@@ -951,20 +966,22 @@ class BioImageApp {
 #	    global $m14-3-color-r $m14-3-color-g $m14-3-color-b $m14-3-color-a
 	    global $m14-state-0 $m14-state-1 $m14-state-2 $m14-state-3
 	    global $m14-marker
+
+	    # CHANGE THESE VARS FOR TRANSFER FUNCTION 
 	    set $m14-faux {1}
 	    set $m14-histo {0.5}
 	    set $m14-name-0 {Generic}
 	    set $m14-0-color-r {1.0}
 	    set $m14-0-color-g {1.0}
 	    set $m14-0-color-b {0.7}
-	    set $m14-0-color-a {0.709999978542}
-	    set $m14-state-0 {r 0 0.123047 0.117188 0.208985 0.199219 0.25}
+	    set $m14-0-color-a {0.560000002384}
+	    set $m14-state-0 {r 0 0.0957033 0.214844 0.324219 0.187501 0.25}
 	    set $m14-name-1 {Generic}
 	    set $m14-1-color-r {0.5}
 	    set $m14-1-color-g {0.0}
 	    set $m14-1-color-b {0.0}
 	    set $m14-1-color-a {1.0}
-	    set $m14-state-1 {r 0 0.398438 0.109375 0.185547 0.152344 0.25}
+	    set $m14-state-1 {r 0 0.732422 0.101562 0.259766 0.132812 0.25}
 	    set $m14-marker {end}
 
 
@@ -973,7 +990,6 @@ class BioImageApp {
 	    global $m15-diffuse $m15-specular
 	    global $m15-shine
             global $m15-adaptive
-	    set $m15-sw_raster {1}
 	    set $m15-alpha_scale {-0.554}
 	    set $m15-shading {1}
 	    set $m15-ambient {0.5}
@@ -1013,6 +1029,9 @@ class BioImageApp {
 
             global $m27-mapType planes_mapType
 	    set $m27-mapType $planes_mapType
+	    global $m27-positionList $m27-nodeList
+	    set $m27-positionList {{0 0} {440 0}}
+	    set $m27-nodeList {514 795}
 
 	    global $m28-isoval
 	    set $m28-isoval 710
@@ -1291,8 +1310,7 @@ class BioImageApp {
                #set vis_frame_tab2 $vis.tnb	    
             }
 
-	    set page [$v.tnb add -label "Planes" \
-			  -command "puts \"FIX ME: change vis type tabs\""]
+	    set page [$v.tnb add -label "Planes"]
 
 
 	    global show_plane_x show_plane_y show_plane_z
@@ -1422,8 +1440,7 @@ class BioImageApp {
 
 
             #######
-	    set page [$v.tnb add -label "Isosurface" \
-			  -command "puts \"FIX ME: change vis type tabs\""]
+            set page [$v.tnb add -label "Isosurface"]
 
             global show_iso
 	    checkbutton $page.toggle -text "Show Isosurface" \
@@ -1567,8 +1584,8 @@ class BioImageApp {
 
 
             #######
-	    set page [$v.tnb add -label "Volume Rendering" \
-			  -command "puts \"FIX ME: change vis type tabs\""]
+            set page [$v.tnb add -label "Volume Rendering"]
+
 
 
             global show_volume_ren
@@ -2701,7 +2718,7 @@ class BioImageApp {
 
     method update_kernel { num } {
 	set UnuResample [lindex [lindex $filters($num) $modules] 0]
-puts [set UnuResample]
+
         global [set UnuResample]-filtertype
 
         set f [set [set UnuResample]-filtertype]
@@ -2956,7 +2973,7 @@ puts [set UnuResample]
 
             set loading_ui 0
 
-            puts "FIX ME: highlight last valid filter and change eye"
+
             $this change_current $current
             global eye
             $this change_eye $eye
@@ -2979,7 +2996,7 @@ puts [set UnuResample]
     # Methods to turn on/off planes
     method toggle_show_plane_x {} {
 	global mods show_plane_x
-        puts "FIX ME: implement toggle_show_plane_x"
+        #puts "FIX ME: implement toggle_show_plane_x"
         tk_messageBox -message "Toggling planes not implemented yet" -type ok -icon info -parent .standalone
         set show_plane_x 0
         return
@@ -2987,7 +3004,7 @@ puts [set UnuResample]
 
     method toggle_show_plane_y {} {
 	global mods show_plane_y
-        puts "FIX ME: implement toggle_show_plane_y"
+        #puts "FIX ME: implement toggle_show_plane_y"
         tk_messageBox -message "Toggling planes not implemented yet" -type ok -icon info -parent .standalone
         set show_plane_y 0
         return
@@ -2995,7 +3012,7 @@ puts [set UnuResample]
 
     method toggle_show_plane_z {} {
 	global mods show_plane_z
-        puts "FIX ME: implement toggle_show_plane_z"
+        #puts "FIX ME: implement toggle_show_plane_z"
         tk_messageBox -message "Toggling planes not implemented yet" -type ok -icon info -parent .standalone
         set show_plane_z 0
         return
@@ -3003,7 +3020,7 @@ puts [set UnuResample]
 
     method toggle_show_guidelines {} {
          global mods show_guidelines
-         puts "FIX ME: implement toggle_show_guidelines"
+         #puts "FIX ME: implement toggle_show_guidelines"
          global $mods(ViewImage)-show_guidelines
          set $mods(ViewImage)-show_guidelines $show_guidelines
   }
@@ -3033,12 +3050,12 @@ puts [set UnuResample]
 
     method toggle_show_vol_ren {} {
 	global mods show_vol_ren
-        puts "FIX ME: implement toggle_show_vol_ren"
+        #puts "FIX ME: implement toggle_show_vol_ren"
     }
 
     method toggle_show_iso {} {
 	global mods show_iso mods
-        puts "FIX ME: implement toggle_show_iso"
+        #puts "FIX ME: implement toggle_show_iso"
 
         set Isosurface [lindex [lindex $filters(0) $modules] 27]
         #set conn "[set Isosurface] 1 $mods(Viewer) 1"
