@@ -15,7 +15,7 @@
 ///////////////////////////////
 Parser::Parser()
 {
-
+  path_to_insight_package_ = "";
 }
 
 
@@ -34,7 +34,7 @@ DOMNode* Parser::read_input_file(string filename)
   try {
     XMLPlatformUtils::Initialize();
     XercesDOMParser* parser = new XercesDOMParser;
-    parser->setDoValidation(false);
+    parser->setDoValidation(true);
     // Parse the input file
     parser->parse(filename.c_str());
     DOMDocument* doc = parser->adoptDocument();
@@ -78,8 +78,11 @@ void Parser::resolve_includes(DOMNode* root)
 	  char* attrName = XMLString::transcode(attr->item(i)->getNodeName());
 	  char* attrValue = XMLString::transcode(attr->item(i)->getNodeValue());
 	  if(strcmp(attrName,"href")==0) {
+	    string file = this->get_path_to_insight_package();
+	    file += attrValue;
+	    std::cout << "HREF= " << file << std::endl;
 	    // open the file, read it, and replace the index node
-	    DOMNode* include = this->read_input_file(attrValue);
+	    DOMNode* include = this->read_input_file( file.c_str() );
 	    DOMNode* to_insert = child->getOwnerDocument()->importNode(include, true);
 	    //root->insertBefore(to_insert, child);
 	    root->appendChild(to_insert);
@@ -294,4 +297,14 @@ void Parser::output_content(ostream& out,  string chars )
       break;
     }
   }
+}
+
+void Parser::set_path_to_insight_package(string f)
+{
+  path_to_insight_package_ = f;
+}
+
+string Parser::get_path_to_insight_package( void )
+{
+  return path_to_insight_package_;
 }

@@ -19,6 +19,9 @@ int main(int argc, const char* argv[])
   if(argc == 4) {
 
     Generator* gen = new Generator();
+    string path = argv[1];
+    path += "/";
+    gen->set_path_to_insight_package( path );
     string cc_xsl_file = argv[1];
     cc_xsl_file += "/Core/CodeGenerator/XSL/SCIRun_generateCC.xsl";
     gen->set_cc_xsl_file(cc_xsl_file);

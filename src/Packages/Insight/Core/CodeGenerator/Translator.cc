@@ -62,10 +62,11 @@ void Translator::set_xml_xsl(string f)
   xml_xsl_ = f;
 }
 
-string Translator::set_xml_xsl()
+string Translator::get_xml_xsl()
 {
   return xml_xsl_;
 }
+
 
 ////////////////////////////
 // generate
