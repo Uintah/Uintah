@@ -19,7 +19,7 @@ $(SRCDIR)/tclIndex: $(SRCDIR)/ChemVis.tcl $(SRCDIR)/PartToGeom.tcl \
 	$(SRCDIR)/ParticleFieldExtractor.tcl \
 	$(SRCDIR)/RescaleColorMapForParticles.tcl $(SRCDIR)/ParticleVis.tcl \
 	$(SRCDIR)/NodeHedgehog.tcl $(SRCDIR)/ArchiveReader.tcl \
-	$(SRCDIR)/GridVisualizer.tcl
+	$(SRCDIR)/GridVisualizer.tcl $(SRCDIR)/EigenEvaluator.tcl
 	$(SRCTOP)/scripts/createTclIndex $(SRCTOP)/Uintah/GUI
 
 
@@ -27,6 +27,9 @@ CLEANPROGS := $(CLEANPROGS) $(SRCDIR)/tclIndex
 
 #
 # $Log$
+# Revision 1.7  2000/08/22 22:24:53  witzel
+# Added EigenEvaluator.tcl
+#
 # Revision 1.6  2000/08/14 17:31:15  bigler
 # Added GridVisualizer UI code
 #
