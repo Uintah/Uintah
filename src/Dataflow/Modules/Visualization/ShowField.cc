@@ -395,6 +395,8 @@ ShowField::execute()
   normalize_vectors_.reset();
   if (renderer_.get_rep())
   {
+    if (use_normals_.get()) fld_handle->mesh()->synchronize(Mesh::NORMALS_E);
+
     renderer_->set_mat_map(&idx_mats_);
     renderer_->render(fld_handle, 
 		      do_nodes, do_edges, do_faces, do_data,
