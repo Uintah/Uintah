@@ -24,6 +24,7 @@
 
 #include <Core/Util/TypeDescription.h>
 #include <Core/Util/DynamicLoader.h>
+#include <Dataflow/Network/Module.h>
 #include <Core/Datatypes/LatVolField.h>
 #include <Core/Datatypes/ImageField.h>
 #include <Core/Datatypes/ScanlineField.h>
@@ -36,7 +37,7 @@ namespace SCIRun {
 class UnstructureAlgo : public DynamicAlgoBase
 {
 public:
-  virtual FieldHandle execute(FieldHandle src) = 0;
+  virtual FieldHandle execute(Module *module, FieldHandle src) = 0;
 
   //! support the dynamically compiled algorithm concept
   static CompileInfo *get_compile_info(const TypeDescription *fsrc,
@@ -49,7 +50,7 @@ class UnstructureAlgoT : public UnstructureAlgo
 {
 public:
   //! virtual interface. 
-  virtual FieldHandle execute(FieldHandle src);
+  virtual FieldHandle execute(Module *module, FieldHandle src);
 };
 
 
@@ -104,7 +105,7 @@ struct SpecialUnstructuredEqual
 
 template <class FSRC, class FDST>
 FieldHandle
-UnstructureAlgoT<FSRC, FDST>::execute(FieldHandle field_h)
+UnstructureAlgoT<FSRC, FDST>::execute(Module *module, FieldHandle field_h)
 {
   FSRC *ifield = dynamic_cast<FSRC *>(field_h.get_rep());
   typename FSRC::mesh_handle_type mesh = ifield->get_typed_mesh();
@@ -191,7 +192,7 @@ UnstructureAlgoT<FSRC, FDST>::execute(FieldHandle field_h)
   }
   else
   {
-    cout << "Unable to copy data at this data locations, use DirectInterp.\n";
+    module->warning("Unable to copy data at these data locations.");
   }
 
   return ofield;

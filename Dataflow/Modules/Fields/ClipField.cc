@@ -315,15 +315,15 @@ ClipField::execute()
     FieldHandle ofield = 0;
     if (clip_location_.get() == "nodeone")
     {
-      ofield = algo->execute_node(ifieldhandle, clipper, true);
+      ofield = algo->execute_node(this, ifieldhandle, clipper, true);
     }
     else if (clip_location_.get() == "nodeall")
     {
-      ofield = algo->execute_node(ifieldhandle, clipper, false);
+      ofield = algo->execute_node(this, ifieldhandle, clipper, false);
     }
     else // 'cell' and default
     {
-      ofield = algo->execute_cell(ifieldhandle, clipper);
+      ofield = algo->execute_cell(this, ifieldhandle, clipper);
     }
 
     FieldOPort *ofield_port = (FieldOPort *)get_oport("Output Field");

@@ -25,6 +25,7 @@
 #include <Core/Util/TypeDescription.h>
 #include <Core/Util/DynamicLoader.h>
 #include <Core/Datatypes/Clipper.h>
+#include <Dataflow/Network/Module.h>
 #include <sci_hash_map.h>
 #include <algorithm>
 
@@ -33,9 +34,11 @@ namespace SCIRun {
 class ClipFieldAlgo : public DynamicAlgoBase
 {
 public:
-  virtual FieldHandle execute_cell(FieldHandle fieldh,
+  virtual FieldHandle execute_cell(Module *m,
+				   FieldHandle fieldh,
 				   ClipperHandle clipper) = 0;
-  virtual FieldHandle execute_node(FieldHandle fieldh, ClipperHandle clipper,
+  virtual FieldHandle execute_node(Module *m,
+				   FieldHandle fieldh, ClipperHandle clipper,
 				   bool any_inside_p) = 0;
 
   //! support the dynamically compiled algorithm concept
@@ -48,15 +51,18 @@ class ClipFieldAlgoT : public ClipFieldAlgo
 {
 public:
   //! virtual interface. 
-  virtual FieldHandle execute_cell(FieldHandle fieldh, ClipperHandle clipper);
-  virtual FieldHandle execute_node(FieldHandle fieldh, ClipperHandle clipper,
+  virtual FieldHandle execute_cell(Module *m,
+				   FieldHandle fieldh, ClipperHandle clipper);
+  virtual FieldHandle execute_node(Module *m,
+				   FieldHandle fieldh, ClipperHandle clipper,
 				   bool any_inside_p);
 };
 
 
 template <class FIELD>
 FieldHandle
-ClipFieldAlgoT<FIELD>::execute_cell(FieldHandle fieldh, ClipperHandle clipper)
+ClipFieldAlgoT<FIELD>::execute_cell(Module *mod,
+				    FieldHandle fieldh, ClipperHandle clipper)
 {
   typename FIELD::mesh_type *mesh =
     dynamic_cast<typename FIELD::mesh_type *>(fieldh->mesh().get_rep());
@@ -140,7 +146,7 @@ ClipFieldAlgoT<FIELD>::execute_cell(FieldHandle fieldh, ClipperHandle clipper)
   }
   else
   {
-    cout << "Unable to copy data at this data locations, use DirectInterp.\n";
+    mod->warning("Unable to copy data at this data locations.");
   }
 
   return ofield;
@@ -150,7 +156,8 @@ ClipFieldAlgoT<FIELD>::execute_cell(FieldHandle fieldh, ClipperHandle clipper)
 
 template <class FIELD>
 FieldHandle
-ClipFieldAlgoT<FIELD>::execute_node(FieldHandle fieldh, ClipperHandle clipper,
+ClipFieldAlgoT<FIELD>::execute_node(Module *mod,
+				    FieldHandle fieldh, ClipperHandle clipper,
 				    bool any_inside_p)
 {
   typename FIELD::mesh_type *mesh =
@@ -257,7 +264,7 @@ ClipFieldAlgoT<FIELD>::execute_node(FieldHandle fieldh, ClipperHandle clipper,
   }
   else
   {
-    cout << "Unable to copy data at this data locations, use DirectInterp.\n";
+    mod->warning("Unable to copy data at this data locations.");
   }
 
   return ofield;
