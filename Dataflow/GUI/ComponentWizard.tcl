@@ -35,8 +35,8 @@ proc ComponentWizard { {window .componentWizard} } {
 	    destroy $w
     }
 
-    set MAIN_WIDTH 7
-    set MAIN_HEIGHT 7
+    set MAIN_WIDTH 5
+    set MAIN_HEIGHT 6.25
     set WIDTH [expr $MAIN_WIDTH - .2]
     set HEIGHT [expr $MAIN_HEIGHT - .7]
     set PAD .1
@@ -87,12 +87,12 @@ proc ComponentWizard { {window .componentWizard} } {
 }
 
 proc make_io_gui_pane {p d} {
-    set PAD .1
+    set PAD .05
     set PADi [concat $PAD i]
     global $d
 
     canvas $p.c -relief sunken -borderwidth 3 -background #038
-    place $p.c -x .25i -y .25i -width 5i -height 3.5i
+    place $p.c -x .125i -y .125i -width 3.25i -height 2.75i
 
     if [info exists ${d}(hasgui)] {
     } else {
@@ -104,12 +104,12 @@ proc make_io_gui_pane {p d} {
     }
     checkbutton $p.hasgui -text "Has GUI" -variable ${d}(hasgui) \
         -command "eval gui $p.c \[set ${d}(hasgui)\]"
-    place $p.hasgui -x .25i -y 3.95i -width 1i -height .33i
+    place $p.hasgui -x .25i -y 3i -width 1i -height .33i
     global ${d}.dynamicport
     checkbutton $p.dynamicport -text "Last port is dynamic" -variable ${d}(dynamicport)
-    place $p.dynamicport -x 1.5i -y 3.95i -width 2i -height .33i
+    place $p.dynamicport -x 1.3i -y 3i -width 2i -height .33i
 
-    make_icon $p.c 2.5i 1.75i [set ${d}(hasgui)] $d
+    make_icon $p.c 1.5i 1.375i [set ${d}(hasgui)] $d
 
     frame $p.cmds
     
@@ -118,6 +118,14 @@ proc make_io_gui_pane {p d} {
         -command "eval add_port $modframe i $d"
     button $p.cmds.add_oport -text "Add Output Port" \
         -command "eval add_port $modframe o $d"
+    button $p.cmds.add_ifile -text "Add Input File" \
+        -command ""
+    button $p.cmds.add_ofile -text "Add Output File" \
+        -command ""
+    button $p.cmds.add_idev -text "Add Input Device" \
+        -command ""
+    button $p.cmds.add_odev -text "Add Output Device" \
+        -command ""
     
     if [info exists ${d}(iports)] {
     } else {
@@ -137,9 +145,17 @@ proc make_io_gui_pane {p d} {
     create_text_entry $uiinfo "GUI Info:" $d uiinfo
 
     pack $p.cmds.add_iport -padx $PADi -pady $PADi \
-        -ipadx $PADi -ipady $PADi -expand yes -side top -anchor nw -fill x
+        -ipady $PADi -expand yes -side top -anchor nw -fill x
     pack $p.cmds.add_oport -padx $PADi -pady $PADi \
-        -ipadx $PADi -ipady $PADi -expand yes -side top -anchor nw -fill x
+        -ipady $PADi -expand yes -side top -anchor nw -fill x
+    pack $p.cmds.add_ifile -padx $PADi -pady $PADi \
+        -ipady $PADi -expand yes -side top -anchor nw -fill x
+    pack $p.cmds.add_ofile -padx $PADi -pady $PADi \
+        -ipady $PADi -expand yes -side top -anchor nw -fill x
+    pack $p.cmds.add_idev -padx $PADi -pady $PADi \
+        -ipady $PADi -expand yes -side top -anchor nw -fill x
+    pack $p.cmds.add_odev -padx $PADi -pady $PADi \
+        -ipady $PADi -expand yes -side top -anchor nw -fill x
 
     pack $guidescript -fill x -side bottom -anchor sw \
         -padx $PADi 
@@ -225,7 +241,7 @@ proc create_clb_entry {f label prompt array index} {
             $clb.listbox insert end $entry
         }
     }
-    pack $clb -side top -anchor n -fill both -expand yes
+    pack $clb -side top -anchor n -fill x -expand yes
 }
 
 proc create_text_entry {f label array index} {
