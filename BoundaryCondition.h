@@ -182,6 +182,20 @@ public:
 	return d_fixTemp;
       }      
 
+      ////////////////////////////////////////////////////////////////////////
+      // sets boolean for cut cells
+      void setCutCells(bool cutCells)
+	{
+	  d_cutCells = cutCells;
+	}
+
+      ////////////////////////////////////////////////////////////////////////
+      // Access function for d_cutCells (multimaterial)
+
+      inline bool getCutCells() const{
+	return d_cutCells;
+      }      
+
       inline bool getCarbonBalance() const{
 	return d_carbon_balance;
       }      
@@ -754,6 +768,7 @@ private:
       double MM_CUTOFF_VOID_FRAC;
       bool d_calcEnergyExchange;
       bool d_fixTemp;
+      bool d_cutCells;
 
       // used for calculating wall boundary conditions
       PhysicalConstants* d_physicalConsts;
