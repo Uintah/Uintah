@@ -80,6 +80,7 @@ if [ $failed == "0" ]; then
     ln -s "$BUILDROOT" "${BUILD_DIR}/last_successful.lock"
 fi
 
+cd "$BUILDROOT"
 cleanup
 
 exit $failed
