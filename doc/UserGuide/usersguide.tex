@@ -20,22 +20,25 @@
 \begin{document}
 
 \input{srugmacros}
+
 \begin{rawhtml}
-
-<!-- *************************************************************** -->
-<!-- *************** STANDARD SCI RESEARCH HEADER ****************** -->
-<!-- *************************************************************** -->
-<center><img
-SRC="http://www.sci.utah.edu/research/images/research_header_sm.gif"
-usemap="#head-links" height="46" width="600" border="0"></center>
-<map name="head-links">
-        <area shape="rect" coords="491,15,567,32"
-href="http://www.sci.utah.edu/research/research.html">
-        <area shape="rect" coords="31,9,95,36" href="http://www.sci.utah.edu">
+<!-- ******************** DOCUMENTATION HEADER ********************* -->
+<div class="banner-margins">
+<table border="0" cellspacing="0" cellpadding="0" width="100%" height="91">
+<tr>
+<td align="center" width="%100" background="images/banner_top_fill.jpg">
+<img src="../../images/banner_top.jpg" width="744" height="91" border="0" usemap="#banner" /></td>
+<map name="banner">
+<area href="http://www.sci.utah.edu" alt="Home" coords="92,62,186,83" />
+<area href="http://software.sci.utah.edu" alt="Software" coords="193,61,289,83" />
+<area href="../../../doc/" alt="Documentation" coords="296,62,437,83" />
+<area href="./" alt="User Guide" coords="449,62,544,83" />
+<area href="../../TechnicalGuide/TOC.html" alt="Technical Guide" coords="550,62,692,83" />
 </map>
-<!-- *************************************************************** -->
-<!-- *************************************************************** -->
-
+</tr>
+</table>
+</div>
+<!-- ****************** END DOCUMENTATION HEADER ******************* -->
 \end{rawhtml}
 
 % The title page
@@ -67,4 +70,5 @@ href="http://www.sci.utah.edu/research/research.html">
 \bibliographystyle{unsrt}
 \newpage
 \printindex
+
 \end{document}
