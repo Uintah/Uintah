@@ -19,8 +19,6 @@
 #include <Packages/Uintah/Core/Grid/SimulationStateP.h>
 #include <Packages/Uintah/Core/Grid/Patch.h>
 
-#define MNM 10   // maximum number of materials
-
 namespace Uintah {
 using namespace SCIRun;
 using std::vector;
@@ -175,8 +173,8 @@ class Crack
      int NJ;                        // rJ = NJ*min_dCell
      double rJ;                     // NJ = rJ/min_dCell
      int mS;                        // matID of saving J-integral
-     double delta;                  // Ratio of crack increment of every time to cell-size
-     bool d_useSecondTerm;          // If use the second term to calculate J-integral
+     double rdadx;                  // Ratio of crack increment of every time to cell-size
+     bool d_useVolumeIntegral;      // If use the second term to calculate J-integral
 
      string d_calFractParameters;   // Flag if calculating fracture parameters
      string d_doCrackPropagation;   // Flag if doing crack propagation
@@ -185,72 +183,68 @@ class Crack
      short doCrackPropagation;      // Flag if doing crack propagation at this step
 
      // Data members of cracks
-     string crackType[MNM];         // Crack contact type
-     double c_mu[MNM];              // Frcition coefficients
-     double separateVol[MNM];       // Critical separate volume
-     double contactVol[MNM];        // Critical contact volume
+     vector<string> crackType;         // Crack contact type
+     vector<double> cmu;               // Crack surface frcition coefficients
+     vector<double> separateVol;       // Critical separate volume
+     vector<double> contactVol;        // Critical contact volume
 
      // Crack geometry
-       // Quadrilateral segments of cracks
-     vector<vector<Point> > rectangles[MNM];
-       // Resolution of quadrilateral cracks in 1-2 & 2-3 directions 
-     vector<int>  rectN12[MNM],rectN23[MNM];       
-       // Sides at crack front
-     vector<vector<short> > rectCrackSidesAtFront[MNM];
+     // Quadrilateral segments of cracks
+     vector<vector<vector<Point> > > rectangles;
+     // Resolutions of quad cracks along p1-p2 and p2-p3 
+     vector<vector<int> >  rectN12,rectN23;       
+     // Sides at crack front
+     vector<vector<vector<short> > > rectCrackSidesAtFront;
      
-       // Trianglular segements of cracks 
-     vector<vector<Point> > triangles[MNM];
-       // Resolution of triangular cracks in all sides 
-     vector<int>  triNCells[MNM];
-       // Sides at crack front
-     vector<vector<short> > triCrackSidesAtFront[MNM];
+     // Trianglular segements of cracks 
+     vector<vector<vector<Point> > > triangles;
+     // Resolution of triangular cracks in all sides 
+     vector<vector<int> > triNCells;
+     // Sides at crack front
+     vector<vector<vector<short> > > triCrackSidesAtFront;
 
-       // Arc segements of cracks
-     vector<vector<Point> > arcs[MNM];
-       // Resolution of arc cracks on circumference
-     vector<int>  arcNCells[MNM];
-       // Crack front segment ID
-     vector<int> arcCrkFrtSegID[MNM];
+     // Arc segements of cracks
+     vector<vector<vector<Point> > > arcs;
+     // Resolution of arc cracks on circumference
+     vector<vector<int> > arcNCells;
+     // Crack front segment ID
+     vector<vector<int> > arcCrkFrtSegID;
 
-       // Elliptical segments of cracks
-     vector<vector<Point> > ellipses[MNM];
-       // Resolution of arc cracks on circumference
-     vector<int>  ellipseNCells[MNM];
-       // Crack front segment ID
-     vector<int> ellipseCrkFrtSegID[MNM];
+     // Elliptical segments of cracks
+     vector<vector<vector<Point> > > ellipses;
+     // Resolution of arc cracks on circumference
+     vector<vector<int> > ellipseNCells;
+     // Crack front segment ID
+     vector<vector<int> > ellipseCrkFrtSegID;
 
-       // Partial elliptical segments of cracks
-     vector<vector<Point> > pellipses[MNM];
-       // Resolution of partial elliptic cracks on circumference 
-     vector<int>  pellipseNCells[MNM];
-       // Crack front segment ID
-     vector<int> pellipseCrkFrtSegID[MNM];
-       // Extent of partial elliptic cracks
-     vector<string> pellipseExtent[MNM];
+     // Partial elliptical segments of cracks
+     vector<vector<vector<Point> > > pellipses;
+     // Resolution of partial elliptic cracks on circumference 
+     vector<vector<int> > pellipseNCells;
+     // Crack front segment ID
+     vector<vector<int> > pellipseCrkFrtSegID;
+     // Extent of partial elliptic cracks
+     vector<vector<string> > pellipseExtent;
 
-       // Crack extent
-     Point cmin[MNM],cmax[MNM];  
+     // Crack extent
+     vector<Point> cmin,cmax;  
 
      // Crack data after mesh  
-     int               cnumElems[MNM];      // Number of carck elements
-     int               cnumNodes[MNM];      // Number of crack points
-     int               cnumFrontSegs[MNM];  // Number of segments at crack front
-     double            cDELT0[MNM];         // Average length of crack front segments
-     vector<Point>     cx[MNM];             // Crack node position
-     vector<IntVector> cElemNodes[MNM];     // Nodes of crack elements
-     vector<Vector>    cElemNorm[MNM];      // Crack element normals
-     vector<int>       cfSegNodes[MNM];     // Crack front segment nodes
-     vector<int>       cfSegNodesT[MNM];    // Crack front nodes after propagation 
-     vector<Point>     cfSegPts[MNM];       // Crack front points after propagation
-     vector<Vector>    cfSegV3[MNM];        // Tangential direction of crack-front
-     vector<Vector>    cfSegNorms[MNM];     // Crack front segment normals
-     vector<Vector>    cfSegJ[MNM];         // J integral of crack front segments
-     vector<Vector>    cfSegK[MNM];         // SIF of crack front segments
-     vector<int>       cnset[MNM][128];     // Crack node subset for each patch
-     vector<int>       cfnset[MNM][128];    // Crack-front node index subset for each patch 
-     vector<int>       cfsset[MNM][128];    // Crack-front seg subset for each patch
-     vector<short>     cfSegNodesInMat[MNM];// Flag if crack front nodes inside material
-     vector<short>     cfSegCenterInMat[MNM]; // Flag if crack-front seg center in mat
+     vector<double>               cs0;        // Average length of crack-front elems
+     vector<vector<Point> >        cx;        // Crack node position
+     vector<vector<IntVector> >    ce;        // Nodes of crack elems
+     vector<vector<int> >  cfSegNodes;        // Crack-front elem nodes
+     vector<vector<int> > cfSegNodesT;        // Crack-front nodes after propagation 
+     vector<vector<Point> > cfSegPtsT;        // Crack-front points after propagation
+     vector<vector<Vector> >  cfSegV3;        // Tangential vectors of crack-front nodes
+     vector<vector<Vector> >  cfSegV2;        // Crack-front elem out-of-plane normals
+     vector<vector<Vector> >   cfSegJ;        // J-integral of crack-front elems
+     vector<vector<Vector> >   cfSegK;        // SIF of crack-front elems
+     vector<vector<short> > cfSegNodesInMat;  // Flag if crack-front nodes inside material
+     vector<vector<short> > cfSegCenterInMat; // Flag if crack-front seg center in mat
+     vector<vector<vector<int> > > cnset;     // Crack-node subset for each patch
+     vector<vector<vector<int> > > cfnset;    // Crack-front-node index subset for each patch
+     vector<vector<vector<int> > > cfsset;    // Crack-front seg subset for each patch
 
      // --- private methods ---  
 
@@ -259,29 +253,26 @@ class Crack
      // Calculate normal of a triangle
      Vector TriangleNormal(const Point&,const Point&,const Point&);
      // Detect if particle and node in same side of a plane
-     short Location(const Point&,const Point&,
-                       const Point&,const Point&,const Point&);
+     short Location(const Point&,const Point&,const Point&,const Point&,const Point&);
      // Compute signed volume of a tetrahedron
      double Volume(const Point&,const Point&,const Point&,const Point&);
      // A private function
      IntVector CellOffset(const Point&, const Point&, Vector);
      // Detect if a line is in another line
-     short TwoLinesDuplicate(const Point&,const Point&,const Point&,
-                                                       const Point&);
+     short TwoLinesDuplicate(const Point&,const Point&,const Point&,const Point&);
      // Direction consines of two points
      Vector TwoPtsDirCos(const Point&,const Point&);
      // Find the equation of a plane with three points on it
      void FindPlaneEquation(const Point&,const Point&,const Point&,
                             double&,double&,double&,double&);
      // Detect if a point is within a triangle
-     short PointInTriangle(const Point&,const Point&, 
-                          const Point&,const Point&); 
+     short PointInTriangle(const Point&,const Point&,const Point&,const Point&); 
      // Find parameters of J-patch circle
-     void FindJPathCircle(const Point&,const Vector&,
-              const Vector&,const Vector&,double []);
+     void FindJPathCircle(const Point&,const Vector&,const Vector&,
+                          const Vector&,double []);
      // Find intersection between J-patch and crack plane
-     bool FindIntersectionOfJPathAndCrackPlane(const int&,
-                   const double& r,const double [],Point&); 
+     bool FindIntersectionOfJPathAndCrackPlane(const int&,const double& r,
+                                               const double [],Point&); 
      // Find the segment(s) connected by the node
      void FindSegsFromNode(const int&,const int&, int []);
      // Detect if a node is within or around the real global grid
@@ -307,10 +298,9 @@ class Crack
      void DiscretizeEllipticCracks(const int&,int&);
      void DiscretizePartialEllipticCracks(const int&,int&);
      void OutputCrackPlaneMesh(const int&);
-     void CheckCrackFrontSegments(const int&);
 
-     // Calculate crack-front tangential direction 
-     short GetCrackFrontTangentialVector(const int&);
+     // Smooth crack-front and get tangential direction 
+     short SmoothCrackFrontAndGetTangentialVector(const int&);
      
      // Cubic spline fitting
      short CubicSpline(const int& n, const int& m, const int& n1,
