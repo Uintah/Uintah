@@ -303,7 +303,7 @@ public:
       nx_(1), ny_(1), nz_(1) {}
   LatVolMesh(unsigned x, unsigned y, unsigned z,
 	     const Point &min, const Point &max);
-  LatVolMesh(LatVolMesh* mh,
+  LatVolMesh(LatVolMesh* /* mh */,  // FIXME: Is this constructor broken?
 	     unsigned mx, unsigned my, unsigned mz,
 	     unsigned x, unsigned y, unsigned z)
     : min_x_(mx), min_y_(my), min_z_(mz),
