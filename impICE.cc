@@ -33,6 +33,7 @@ void ICE::scheduleSetupMatrix(  SchedulerP& sched,
   Task* t;
   Ghost::GhostType  gac = Ghost::AroundCells;  
   Ghost::GhostType  gn  = Ghost::None;
+  Task::DomainSpec oims = Task::OutOfDomain;  //outside of ice matlSet.
    
   //__________________________________
   //  Form the matrix
@@ -45,9 +46,9 @@ void ICE::scheduleSetupMatrix(  SchedulerP& sched,
   t->requires( Task::NewDW,       lb->vol_fracX_FCLabel,  gac,1);  
   t->requires( Task::NewDW,       lb->vol_fracY_FCLabel,  gac,1);  
   t->requires( Task::NewDW,       lb->vol_fracZ_FCLabel,  gac,1);  
-  t->requires( Task::NewDW,       lb->betaLabel,          one_matl,  gn,0);  
+  t->requires( Task::NewDW,       lb->betaLabel, one_matl,oims,gn,0);  
 
-  t->computes(lb->matrixLabel,  one_matl);
+  t->computes(lb->matrixLabel,  one_matl, oims);
   sched->addTask(t, patches, all_matls);                     
 }
 
@@ -63,6 +64,7 @@ void ICE::scheduleSetupRHS(  SchedulerP& sched,
   Task* t;
   Ghost::GhostType  gac = Ghost::AroundCells;  
   Ghost::GhostType  gn  = Ghost::None;
+  Task::DomainSpec oims = Task::OutOfDomain;  //outside of ice matlSet.
  
   cout_doing << "ICE::scheduleSetupRHS" << endl;
   t = scinew Task("ICE::setupRHS", this, &ICE::setupRHS);
@@ -73,22 +75,22 @@ void ICE::scheduleSetupRHS(  SchedulerP& sched,
   if(d_models.size() > 0){  
     t->requires(Task::ParentNewDW, lb->modelMass_srcLabel,           gn,0);
   } 
-  t->requires( Task::ParentNewDW, lb->press_equil_CCLabel,press_matl,gn,0); 
+  t->requires( Task::ParentNewDW, lb->press_equil_CCLabel,press_matl,oims,gn,0); 
   t->requires( Task::ParentNewDW, lb->sp_vol_CCLabel,                gn,0);
   t->requires( Task::ParentNewDW, lb->speedSound_CCLabel,            gn,0);
   t->requires( Task::ParentNewDW, lb->vol_frac_CCLabel,              gac,2); 
   t->requires( Task::NewDW,       lb->uvel_FCMELabel,                gac,2);
   t->requires( Task::NewDW,       lb->vvel_FCMELabel,                gac,2);
   t->requires( Task::NewDW,       lb->wvel_FCMELabel,                gac,2);
-  t->requires( Task::OldDW,       lb->press_CCLabel,      press_matl,gn,0);
+  t->requires( Task::OldDW,       lb->press_CCLabel,      press_matl,oims,gn,0);
 
   t->computes(lb->vol_fracX_FCLabel);
   t->computes(lb->vol_fracY_FCLabel);
   t->computes(lb->vol_fracZ_FCLabel);
-  t->computes(lb->term2Label,        one_matl);
-  t->computes(lb->rhsLabel,          one_matl);
-  t->computes(lb->initialGuessLabel, one_matl);
-  t->computes(lb->betaLabel,         one_matl);
+  t->computes(lb->term2Label,        one_matl,oims);
+  t->computes(lb->rhsLabel,          one_matl,oims);
+  t->computes(lb->initialGuessLabel, one_matl,oims);
+  t->computes(lb->betaLabel,         one_matl,oims);
   t->computes(lb->max_RHSLabel);
   
   sched->addTask(t, patches, all_matls);                     
@@ -107,13 +109,13 @@ void ICE::scheduleUpdatePressure(  SchedulerP& sched,
 {
   Task* t;
   Ghost::GhostType  gn  = Ghost::None;
-   
+  Task::DomainSpec oims = Task::OutOfDomain;  //outside of ice matlSet. 
   //__________________________________
   // update the pressure
   cout_doing << "ICE::scheduleUpdatePressure" << endl;
   t = scinew Task("ICE::updatePressure", this, &ICE::updatePressure);
-  t->requires(Task::OldDW,         lb->press_CCLabel,        press_matl,  gn);
-  t->requires(Task::NewDW,         lb->imp_delPLabel,        press_matl,  gn);
+  t->requires(Task::OldDW,         lb->press_CCLabel,        press_matl,oims,gn);
+  t->requires(Task::NewDW,         lb->imp_delPLabel,        press_matl,oims,gn);
 
   if(d_usingLODI) {
     t->requires(Task::ParentNewDW,   lb->gammaLabel,        ice_matls, gn);
@@ -123,7 +125,7 @@ void ICE::scheduleUpdatePressure(  SchedulerP& sched,
     t->requires(Task::ParentNewDW,   lb->f_theta_CCLabel,              gn);
   }
 
-  t->computes(lb->press_CCLabel,      press_matl); 
+  t->computes(lb->press_CCLabel,      press_matl,oims); 
   sched->addTask(t, patches, all_matls);                 
 } 
 
@@ -148,14 +150,15 @@ void ICE::scheduleImplicitVel_FC(SchedulerP& sched,
               this, &ICE::computeVel_FC, recursion);
   }
            
-  Ghost::GhostType  gac = Ghost::AroundCells;                      
+  Ghost::GhostType  gac = Ghost::AroundCells;
+  Task::DomainSpec oims = Task::OutOfDomain;  //outside of ice matlSet.               
   t->requires(Task::ParentOldDW,lb->delTLabel);
 
   t->requires(Task::ParentNewDW,lb->sp_vol_CCLabel,    /*all_matls*/ gac,1);
   t->requires(Task::ParentNewDW,lb->rho_CCLabel,       /*all_matls*/ gac,1);
   t->requires(Task::ParentOldDW,lb->vel_CCLabel,         ice_matls,  gac,1);
   t->requires(Task::ParentNewDW,lb->vel_CCLabel,         mpm_matls,  gac,1); 
-  t->requires(Task::OldDW,      lb->press_CCLabel,       press_matl, gac,1);
+  t->requires(Task::OldDW,      lb->press_CCLabel,       press_matl, oims, gac,1);
 
   t->computes(lb->uvel_FCLabel);
   t->computes(lb->vvel_FCLabel);
@@ -196,20 +199,21 @@ void ICE::scheduleComputeDel_P(  SchedulerP& sched,
 {
   Task* t;
   Ghost::GhostType  gn  = Ghost::None;
+  Task::DomainSpec oims = Task::OutOfDomain;  //outside of ice matlSet.
   //__________________________________
   // update the pressure
   cout_doing << "ICE::scheduleComputeDel_P" << endl;
   t = scinew Task("ICE::scheduleComputeDel_P", this, &ICE::computeDel_P);
 
-  t->requires(Task::NewDW, lb->press_equil_CCLabel,  press_matl,  gn);
-  t->requires(Task::NewDW, lb->rho_CCLabel,                       gn);
-  t->requires(Task::NewDW, lb->press_CCLabel,        press_matl,  gn);      
-  t->requires(Task::NewDW, lb->betaLabel,            one_matl,    gn);      
-  t->requires(Task::NewDW, lb->term2Label,           one_matl,    gn);      
+  t->requires(Task::NewDW, lb->press_equil_CCLabel,  press_matl, oims, gn);
+  t->requires(Task::NewDW, lb->press_CCLabel,        press_matl, oims, gn);      
+  t->requires(Task::NewDW, lb->betaLabel,            one_matl,   oims, gn);      
+  t->requires(Task::NewDW, lb->term2Label,           one_matl,   oims, gn);
+  t->requires(Task::NewDW, lb->rho_CCLabel,                       gn);    
 
-  t->computes(lb->delP_DilatateLabel, press_matl);
-  t->computes(lb->delP_MassXLabel,    press_matl);
-  t->computes(lb->sum_rho_CCLabel,    one_matl);  
+  t->computes(lb->delP_DilatateLabel, press_matl,oims);
+  t->computes(lb->delP_MassXLabel,    press_matl,oims);
+  t->computes(lb->sum_rho_CCLabel,    one_matl,  oims);  
   
   sched->addTask(t, patches, all_matls);                 
 } 
@@ -234,6 +238,7 @@ void ICE::scheduleImplicitPressureSolve(  SchedulerP& sched,
   t->hasSubScheduler();
   Ghost::GhostType  gac = Ghost::AroundCells;  
   Ghost::GhostType  gn  = Ghost::None;
+  Task::DomainSpec oims = Task::OutOfDomain;  //outside of ice matlSet.
   //__________________________________
   // The computes and requires when you're looking up 
   // from implicitPressure solve
@@ -244,7 +249,7 @@ void ICE::scheduleImplicitPressureSolve(  SchedulerP& sched,
   t->requires( Task::OldDW, lb->delTLabel);    
   t->requires( Task::NewDW, lb->vol_frac_CCLabel,   gac,2); 
   t->requires( Task::NewDW, lb->sp_vol_CCLabel,     gac,1);
-  t->requires( Task::NewDW, lb->press_equil_CCLabel, press_matl,  gac,1);
+  t->requires( Task::NewDW, lb->press_equil_CCLabel, press_matl, oims,gac,1);
 
   //__________________________________
   // SetupRHS
@@ -255,8 +260,8 @@ void ICE::scheduleImplicitPressureSolve(  SchedulerP& sched,
    
   //__________________________________
   // Update Pressure
-  t->requires( Task::NewDW, lb->rho_CCLabel,                 gac,1);            
-  t->requires( Task::NewDW, lb->press_CCLabel,   press_matl, gac,1);  
+  t->requires( Task::NewDW, lb->rho_CCLabel,                       gac,1);            
+  t->requires( Task::NewDW, lb->press_CCLabel,   press_matl, oims, gac,1);  
 
   if(d_usingLODI) {
     t->requires(Task::NewDW,   lb->gammaLabel,        ice_matls, gn);
@@ -270,9 +275,9 @@ void ICE::scheduleImplicitPressureSolve(  SchedulerP& sched,
   t->requires(Task::OldDW,lb->vel_CCLabel,       ice_matls,  gac,1);    
   t->requires(Task::NewDW,lb->vel_CCLabel,       mpm_matls,  gac,1);   
 
-  t->modifies(lb->press_CCLabel,  press_matl);     
-  t->computes(lb->betaLabel,      one_matl);       
-  t->computes(lb->term2Label,     one_matl);       
+  t->modifies(lb->press_CCLabel,  press_matl,oims);     
+  t->computes(lb->betaLabel,      one_matl,oims);       
+  t->computes(lb->term2Label,     one_matl,oims);       
   
   LoadBalancer* loadBal = sched->getLoadBalancer();
   const PatchSet* perproc_patches =  
