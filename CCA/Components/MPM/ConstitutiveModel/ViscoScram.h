@@ -6,7 +6,7 @@
 //    Features:
 //      Usage:
 
-#ifndef __VISCROSCRAM_CONSTITUTIVE_MODEL_H__
+#ifndef __VISCOSCRAM_CONSTITUTIVE_MODEL_H__
 #define __VISCOSCRAM_CONSTITUTIVE_MODEL_H__
 
 #include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/ConstitutiveModel.h>
