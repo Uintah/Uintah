@@ -46,6 +46,7 @@ using namespace PSECore::Dataflow;
 using namespace PSECore::Datatypes;
 using namespace SCICore::TclInterface;
 
+
 class ScalarFieldExtractor : public Module { 
   
 public: 
