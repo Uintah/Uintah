@@ -53,18 +53,18 @@ MatrixHandle transport(int wordy, int flag, const char *hport, MatrixHandle mh)
    if(wordy>0) fprintf(stderr,"Sparse receive operation\n");
 
    int nnz=lbuf;
-   int *rows=scinew int(nr+1);
+   int *rows=scinew int(nc+1);
    int *cols=scinew int(nnz);
    db=scinew double(nnz);
 
    bring(wordy, 1, hport, nnz*4, (char*)cols);
-   bring(wordy, 1, hport, (nr+1)*4, (char*)rows);
+   bring(wordy, 1, hport, (nc+1)*4, (char*)rows);
    bring(wordy, 1, hport, nnz*8, (char*)db);
 
    if(endi!=endian())
    {
      endiswap(nnz*8, (char*)db, 8);
-     endiswap((nr+1)*4, (char*)rows, 4);
+     endiswap((nc+1)*4, (char*)rows, 4);
      endiswap(nnz*4, (char*)cols, 4);
    }
 
@@ -125,9 +125,10 @@ MatrixHandle transport(int wordy, int flag, const char *hport, MatrixHandle mh)
   if(smatr!=NULL) 
   {
     if(wordy>0) fprintf(stderr,"Send sparse row matrix\n");
+    smatr = smatr->transpose();
 
-    nr=smatr->nrows();
-    nc=smatr->ncols();
+    nr=smatr->ncols();
+    nc=smatr->nrows();
     int *rows=smatr->get_row();
     int *cols=smatr->get_col();
     db=smatr->get_val();
@@ -137,7 +138,7 @@ MatrixHandle transport(int wordy, int flag, const char *hport, MatrixHandle mh)
     {
      int k;
      printf("Send sparse nr nc nnz: %i %i %i\n",nr,nc,nnz);
-     printf("rows:"); for(k=0;k<nr+1;k++) printf(" %i",rows[k]); printf("\n");
+     printf("rows:"); for(k=0;k<nc+1;k++) printf(" %i",rows[k]); printf("\n");
      printf("cols:"); for(k=0;k<nnz;k++) printf(" %i",cols[k]); printf("\n");
      printf("db  :"); for(k=0;k<nnz;k++) printf(" %g",db[k]); printf("\n");
     }
@@ -147,8 +148,9 @@ MatrixHandle transport(int wordy, int flag, const char *hport, MatrixHandle mh)
 
     if(bring(wordy-2, 2, hport, nnz*4, (char*)cols)==NULL)
        fprintf(stderr,"Not enough memory on receiving side");
-    bring(wordy-2, 2, hport, (nr+1)*4, (char*)rows);
+    bring(wordy-2, 2, hport, (nc+1)*4, (char*)rows);
     bring(wordy-2, 2, hport, nnz*8, (char*)db);
+    delete smatr;
     return mh;
   }
 
