@@ -30,6 +30,11 @@ HypoElastic::HypoElastic(ProblemSpecP& ps, MPMLabel* Mlb, int n8or27)
   ps->require("G",d_initialData.G);
   ps->require("K",d_initialData.K);
   d_8or27 = n8or27;
+  if(d_8or27==8){
+    NGN=1;
+  } else if(d_8or27==27){
+    NGN=2;
+  }
 }
 
 HypoElastic::~HypoElastic()
@@ -137,14 +142,15 @@ void HypoElastic::computeStressTensor(const PatchSubset* patches,
     ParticleVariable<Matrix3> deformationGradient_new;
     constParticleVariable<double> pmass, pvolume, ptemperature;
     ParticleVariable<double> pvolume_deformed;
-    constParticleVariable<Vector> pvelocity;
+    constParticleVariable<Vector> pvelocity, psize;
     constNCVariable<Vector> gvelocity;
     delt_vartype delT;
-    constParticleVariable<Vector> psize;
-    if(d_8or27==27){
-      old_dw->get(psize,             lb->pSizeLabel,                  pset);
-    }
 
+    Ghost::GhostType  gac   = Ghost::AroundCells;
+
+    if(d_8or27==27){
+      old_dw->get(psize,             lb->pSizeLabel,               pset);
+    }
     old_dw->get(px,                  lb->pXLabel,                  pset);
     old_dw->get(pstress,             lb->pStressLabel,             pset);
     old_dw->get(pmass,               lb->pMassLabel,               pset);
@@ -153,7 +159,7 @@ void HypoElastic::computeStressTensor(const PatchSubset* patches,
     old_dw->get(ptemperature,        lb->pTemperatureLabel,        pset);
     old_dw->get(deformationGradient, lb->pDeformationMeasureLabel, pset);
 
-    new_dw->get(gvelocity,lb->gVelocityLabel, dwi,patch, Ghost::AroundCells, 1);
+    new_dw->get(gvelocity,lb->gVelocityLabel, dwi,patch, gac, NGN);
 
     old_dw->get(delT, lb->delTLabel);
 
@@ -162,11 +168,7 @@ void HypoElastic::computeStressTensor(const PatchSubset* patches,
     new_dw->allocateAndPut(deformationGradient_new,
                                    lb->pDeformationMeasureLabel_preReloc, pset);
  
-    constParticleVariable<int> pConnectivity;
-    ParticleVariable<Vector> pRotationRate;
-    ParticleVariable<double> pStrainEnergy;
-
-    double G = d_initialData.G;
+    double G    = d_initialData.G;
     double bulk = d_initialData.K;
 
     for(ParticleSubset::iterator iter = pset->begin();
@@ -200,7 +202,8 @@ void HypoElastic::computeStressTensor(const PatchSubset* patches,
 
       // This is the (updated) Cauchy stress
 
-      pstress_new[idx] = pstress[idx] + (DPrime*2.*G + Identity*bulk*D.Trace())*delT;
+      pstress_new[idx] = pstress[idx] + 
+                                   (DPrime*2.*G + Identity*bulk*D.Trace())*delT;
 
       // Compute the deformation gradient increment using the time_step
       // velocity gradient
@@ -232,15 +235,8 @@ void HypoElastic::computeStressTensor(const PatchSubset* patches,
       se += e;		   
 
       // Compute wave speed at each particle, store the maximum
-
       Vector pvelocity_idx = pvelocity[idx];
-      if(pmass[idx] > 0){
-        c_dil = sqrt((bulk + 4.*G/3.)*pvolume_deformed[idx]/pmass[idx]);
-      }
-      else{
-        c_dil = 0.0;
-        pvelocity_idx = Vector(0.0,0.0,0.0);
-      }
+      c_dil = sqrt((bulk + 4.*G/3.)*pvolume_deformed[idx]/pmass[idx]);
       WaveSpeed=Vector(Max(c_dil+fabs(pvelocity_idx.x()),WaveSpeed.x()),
 		       Max(c_dil+fabs(pvelocity_idx.y()),WaveSpeed.y()),
 		       Max(c_dil+fabs(pvelocity_idx.z()),WaveSpeed.z()));
@@ -264,21 +260,21 @@ void HypoElastic::addComputesAndRequires(Task* task,
 					 const MPMMaterial* matl,
 					 const PatchSet* ) const
 {
+  Ghost::GhostType  gac   = Ghost::AroundCells;
   const MaterialSubset* matlset = matl->thisMaterial();
   task->requires(Task::OldDW, lb->delTLabel);
-  task->requires(Task::OldDW, lb->pXLabel,           matlset, Ghost::None);
-  task->requires(Task::OldDW, lb->pMassLabel,        matlset, Ghost::None);
-  task->requires(Task::OldDW, lb->pStressLabel,      matlset, Ghost::None);
-  task->requires(Task::OldDW, lb->pVolumeLabel,      matlset, Ghost::None);
-  task->requires(Task::OldDW, lb->pVelocityLabel, matlset, Ghost::None);
-  task->requires(Task::OldDW, lb->pTemperatureLabel, matlset, Ghost::None);
+  task->requires(Task::OldDW, lb->pXLabel,                 matlset,Ghost::None);
+  task->requires(Task::OldDW, lb->pMassLabel,              matlset,Ghost::None);
+  task->requires(Task::OldDW, lb->pStressLabel,            matlset,Ghost::None);
+  task->requires(Task::OldDW, lb->pVolumeLabel,            matlset,Ghost::None);
+  task->requires(Task::OldDW, lb->pVelocityLabel,          matlset,Ghost::None);
+  task->requires(Task::OldDW, lb->pTemperatureLabel,       matlset,Ghost::None);
   task->requires(Task::OldDW, lb->pDeformationMeasureLabel,matlset,Ghost::None);
-  task->requires(Task::NewDW, lb->gVelocityLabel,    matlset,
-                  Ghost::AroundCells, 1);
-
   if(d_8or27==27){
-    task->requires(Task::OldDW, lb->pSizeLabel,      matlset, Ghost::None);
+    task->requires(Task::OldDW, lb->pSizeLabel,            matlset,Ghost::None);
   }
+  task->requires(Task::NewDW, lb->gVelocityLabel,          matlset,gac, NGN);
+
 
   task->computes(lb->pStressLabel_preReloc,             matlset);
   task->computes(lb->pDeformationMeasureLabel_preReloc, matlset);

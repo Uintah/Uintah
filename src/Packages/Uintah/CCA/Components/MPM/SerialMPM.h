@@ -261,8 +261,9 @@ private:
   double           d_nextOutputTime;
   double           d_outputInterval;
   double           d_SMALL_NUM_MPM;
-  int              d_8or27;  // Number of nodes that particles interact with
-  int              d_NGC;    // Number of ghost cells of data needed.
+  int              d_8or27;  // Number of nodes a particle can interact with
+  int              NGP;      // Number of ghost particles needed.
+  int              NGN;      // Number of ghost nodes     needed.
 
   vector<MPMPhysicalBC*> d_physicalBCs;
   bool             d_fracture;

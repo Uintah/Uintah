@@ -32,6 +32,11 @@ CompNeoHook::CompNeoHook(ProblemSpecP& ps,  MPMLabel* Mlb, int n8or27)
   ps->require("shear_modulus",d_initialData.Shear);
 
   d_8or27 = n8or27;
+  if(d_8or27==8){
+    NGN=1;
+  } else if(d_8or27==27){
+    NGN=2;
+  }
 
 }
 
@@ -151,27 +156,24 @@ void CompNeoHook::computeStressTensor(const PatchSubset* patches,
     ParticleVariable<double> pvolume_deformed;
     constParticleVariable<Vector> pvelocity;
     constNCVariable<Vector> gvelocity;
+    constParticleVariable<Vector> psize;
     delt_vartype delT;
-
-    old_dw->get(px,                  lb->pXLabel,                         pset);
-    old_dw->get(pmass,               lb->pMassLabel,                      pset);
-    old_dw->get(pvelocity,           lb->pVelocityLabel,                  pset);
-    old_dw->get(deformationGradient, lb->pDeformationMeasureLabel,        pset);
+ 
+    Ghost::GhostType  gac   = Ghost::AroundCells;
+    old_dw->get(px,                          lb->pXLabel,                 pset);
+    old_dw->get(pmass,                       lb->pMassLabel,              pset);
+    old_dw->get(pvelocity,                   lb->pVelocityLabel,          pset);
+    old_dw->get(deformationGradient,         lb->pDeformationMeasureLabel,pset);
+    if(d_8or27==27){
+      old_dw->get(psize,                     lb->pSizeLabel,              pset);
+    }
     new_dw->allocateAndPut(pstress,          lb->pStressLabel_preReloc,   pset);
     new_dw->allocateAndPut(pvolume_deformed, lb->pVolumeDeformedLabel,    pset);
     new_dw->allocateAndPut(deformationGradient_new,
                                    lb->pDeformationMeasureLabel_preReloc, pset);
 
-    new_dw->get(gvelocity,lb->gVelocityLabel, dwi,patch, Ghost::AroundCells, 1);
+    new_dw->get(gvelocity,lb->gVelocityLabel, dwi, patch, gac, NGN);
     old_dw->get(delT, lb->delTLabel);
-    constParticleVariable<Vector> psize;
-    if(d_8or27==27){
-      old_dw->get(psize,             lb->pSizeLabel,                  pset);
-    }
-
-    constParticleVariable<int> pConnectivity;
-    ParticleVariable<Vector> pRotationRate;
-    ParticleVariable<double> pStrainEnergy;
 
     double shear = d_initialData.Shear;
     double bulk  = d_initialData.Bulk;
@@ -240,13 +242,7 @@ void CompNeoHook::computeStressTensor(const PatchSubset* patches,
       se += e;
 
       Vector pvelocity_idx = pvelocity[idx];
-      if(pmass[idx] > 0){
-        c_dil = sqrt((bulk + 4.*shear/3.)*pvolume_deformed[idx]/pmass[idx]);
-      }
-      else{
-        c_dil = 0.0;
-        pvelocity_idx = Vector(0.0,0.0,0.0);
-      }
+      c_dil = sqrt((bulk + 4.*shear/3.)*pvolume_deformed[idx]/pmass[idx]);
       WaveSpeed=Vector(Max(c_dil+fabs(pvelocity_idx.x()),WaveSpeed.x()),
   		       Max(c_dil+fabs(pvelocity_idx.y()),WaveSpeed.y()),
 		       Max(c_dil+fabs(pvelocity_idx.z()),WaveSpeed.z()));
@@ -717,18 +713,19 @@ void CompNeoHook::addComputesAndRequires(Task* task,
 					  const PatchSet*) const
 {
     const MaterialSubset* matlset = matl->thisMaterial();
-    task->requires(Task::OldDW, lb->pXLabel,      matlset, Ghost::None);
-    task->requires(Task::OldDW, lb->pMassLabel,   matlset, Ghost::None);
-    task->requires(Task::OldDW, lb->pVelocityLabel, matlset, Ghost::None);
-    task->requires(Task::OldDW, lb->pDeformationMeasureLabel,
-						  matlset, Ghost::None);
-    task->requires(Task::NewDW,lb->gVelocityLabel,matlset,Ghost::AroundCells,1);
+    Ghost::GhostType  gac   = Ghost::AroundCells;
+    task->requires(Task::OldDW,  lb->pXLabel,        matlset, Ghost::None);
+    task->requires(Task::OldDW,  lb->pMassLabel,     matlset, Ghost::None);
+    task->requires(Task::OldDW,  lb->pVelocityLabel, matlset, Ghost::None);
+    task->requires(Task::OldDW,  lb->pDeformationMeasureLabel,
+						     matlset, Ghost::None);
+    if(d_8or27==27){
+      task->requires(Task::OldDW,lb->pSizeLabel,     matlset, Ghost::None);
+    }
+    task->requires(Task::NewDW,lb->gVelocityLabel,   matlset, gac, NGN);
 
     task->requires(Task::OldDW, lb->delTLabel);
 
-    if(d_8or27==27){
-      task->requires(Task::OldDW, lb->pSizeLabel,      matlset, Ghost::None);
-    }
 
     task->computes(lb->pStressLabel_preReloc,             matlset);
     task->computes(lb->pDeformationMeasureLabel_preReloc, matlset);

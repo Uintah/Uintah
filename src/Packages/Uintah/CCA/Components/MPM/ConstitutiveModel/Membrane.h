@@ -33,7 +33,6 @@ namespace Uintah {
          // copy constructor
          Membrane(const Membrane &cm);
          Membrane& operator=(const Membrane &cm);
-         int d_8or27;
 
       public:
          // constructors

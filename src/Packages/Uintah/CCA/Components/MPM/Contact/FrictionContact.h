@@ -59,6 +59,8 @@ WARNING
          // Nodal volume fraction that must occur before contact is applied
          double d_vol_const;
          int d_8or27;
+         int NGP;
+         int NGN;
 
       public:
 	 // Constructor
