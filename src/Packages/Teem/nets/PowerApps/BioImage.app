@@ -433,13 +433,13 @@ class BioImageApp {
   	        set min [expr $wl-$ww/2]
 	        set max [expr $wl+$ww/2]
 
-# 		set UnuQuantize [lindex [lindex $filters(0) $modules] 7] 
+ 		set NrrdSetupTexture [lindex [lindex $filters(0) $modules] 10] 
  		set UnuJhisto [lindex [lindex $filters(0) $modules] 21] 
-# 		global [set UnuQuantize]-maxf [set UnuQuantize]-minf
-# 		global [set UnuJhisto]-maxs [set UnuJhisto]-mins
+ 		global [set NrrdSetupTexture]-maxf [set NrrdSetupTexture]-minf
+ 		global [set UnuJhisto]-maxs [set UnuJhisto]-mins
 
-# 		set [set UnuQuantize]-maxf $max
-# 		set [set UnuQuantize]-minf $min
+ 		set [set NrrdSetupTexture]-maxf $max
+ 		set [set NrrdSetupTexture]-minf $min
  		set [set UnuJhisto]-maxs "$max nan"
  		set [set UnuJhisto]-mins "$min nan"
 
@@ -1017,16 +1017,16 @@ class BioImageApp {
 		set vol_width $ww
 		set vol_level $wl
 		
- 		# Update the UnuQuantize min/max and the 
+ 		# Update the NrrdSetupTexture min/max and the 
  		# UnuJhisto axis 0 mins/maxs
-# 		set UnuQuantize [lindex [lindex $filters(0) $modules] 7] 
+ 		set NrrdSetupTexture [lindex [lindex $filters(0) $modules] 10] 
  		set UnuJhisto [lindex [lindex $filters(0) $modules] 21] 
 		
-# 		global [set UnuQuantize]-maxf [set UnuQuantize]-minf
-# 		global [set UnuJhisto]-maxs [set UnuJhisto]-mins
+ 		global [set NrrdSetupTexture]-maxf [set NrrdSetupTexture]-minf
+ 		global [set UnuJhisto]-maxs [set UnuJhisto]-mins
 		
-# 		set [set UnuQuantize]-maxf $max
-# 		set [set UnuQuantize]-minf $min
+ 		set [set NrrdSetupTexture]-maxf $max
+ 		set [set NrrdSetupTexture]-minf $min
 		
  		set [set UnuJhisto]-maxs "$max nan"
  		set [set UnuJhisto]-mins "$min nan"
@@ -1034,8 +1034,8 @@ class BioImageApp {
 		# execute modules if volume rendering enabled
 		global show_vol_ren
 		if {$show_vol_ren == 1} {
-#		    [set UnuQuantize]-c needexecute
-		    [set UnuJhisto]-c needexecute
+		    [set NrrdSetupTexture]-c needexecute
+#		    [set UnuJhisto]-c needexecute
 		}
  	    }
 
@@ -1329,6 +1329,8 @@ class BioImageApp {
 	    setGlobal $m9-useinputmax 1
 
 	    setGlobal $m11-valuesonly {0}
+	    setGlobal $m11-useinputmin {0}
+	    setGlobal $m11-useinputmax {0}
 
 #	    setGlobal $m11-nbits {8}
 #	    setGlobal $m11-useinputmin 1
@@ -3467,19 +3469,19 @@ class BioImageApp {
      }
 
      method change_volume_window_width_and_level { val } {
-	 # Change UnuJhisto and UnuQuantize values
+	 # Change UnuJhisto and NrrdSetupTexture values
 	 global vol_width vol_level
 	 
 	 set min [expr $vol_level-$vol_width/2]
 	 set max [expr $vol_level+$vol_width/2]
 	 
-#	 set UnuQuantize [lindex [lindex $filters(0) $modules] 7] 
+	 set NrrdSetupTexture [lindex [lindex $filters(0) $modules] 10] 
          set UnuJhisto [lindex [lindex $filters(0) $modules] 21] 
-#         global [set UnuQuantize]-maxf [set UnuQuantize]-minf
-#  	 global [set UnuJhisto]-maxs [set UnuJhisto]-mins
+         global [set NrrdSetupTexture]-maxf [set NrrdSetupTexture]-minf
+  	 global [set UnuJhisto]-maxs [set UnuJhisto]-mins
 
-#  	 set [set UnuQuantize]-maxf $max
-#      	 set [set UnuQuantize]-minf $min
+  	 set [set NrrdSetupTexture]-maxf $max
+      	 set [set NrrdSetupTexture]-minf $min
        	 set [set UnuJhisto]-maxs "$max nan"
        	 set [set UnuJhisto]-mins "$min nan"
 
@@ -3502,10 +3504,10 @@ class BioImageApp {
      	# execute modules if volume rendering enabled
  	global show_vol_ren
  	if {$show_vol_ren == 1} {
-#   	    set UnuQuantize [lindex [lindex $filters(0) $modules] 7] 
+   	    set NrrdSetupTexture [lindex [lindex $filters(0) $modules] 10] 
             set UnuJhisto [lindex [lindex $filters(0) $modules] 21] 
-# 	    [set UnuQuantize]-c needexecute
-            [set UnuJhisto]-c needexecute
+ 	    [set NrrdSetupTexture]-c needexecute
+#            [set UnuJhisto]-c needexecute
          }
      }
 
@@ -3514,10 +3516,10 @@ class BioImageApp {
 	 # and level only if they are linked
 	 global link_winlevel show_vol_ren 
 	 if {$link_winlevel == 1 && $show_vol_ren == 1} {
-#   	    set UnuQuantize [lindex [lindex $filters(0) $modules] 7] 
+   	    set NrrdSetupTexture [lindex [lindex $filters(0) $modules] 10] 
             set UnuJhisto [lindex [lindex $filters(0) $modules] 21] 
-# 	    [set UnuQuantize]-c needexecute
-            [set UnuJhisto]-c needexecute
+ 	    [set NrrdSetupTexture]-c needexecute
+#            [set UnuJhisto]-c needexecute
 	 }
      }
 
