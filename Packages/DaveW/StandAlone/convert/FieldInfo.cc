@@ -56,11 +56,13 @@ main(int argc, char **argv) {
   if (handle->get_type_name(0) == "TetVol") {
     MeshHandle mbH = handle->mesh();
     TetVolMesh *tvm = dynamic_cast<TetVolMesh *>(mbH.get_rep());
-    Array1<Tensor> cond_table;
-    if (handle->get("conductivity_table", cond_table)) {
+    vector<pair<string, Tensor> > cond_table;
+    if (handle->get("conductivity_table", cond_table))
+    {
       cerr << "Conductivities: \n";
       for (int i=0; i<cond_table.size(); i++) {
-	cerr << "  cond value "<<i<<":  "<<cond_table[i].mat_[0][0]<<"\n";
+	cerr << "  cond value "<< i "(" << cond_table[i].first << ") : " <<
+	  cond_table[i].second.mat_[0][0] << "\n";
       }
     }
     TetVolMesh::Node::size_type nsize;

@@ -111,7 +111,7 @@ void FDMtoFEM::execute() {
     return;
   }
     
-  Array1<Tensor> *conds = scinew Array1<Tensor>;
+  vector<pair<string, Tensor> > *conds = scinew vector<pair<string, Tensor> >;
   if (ifdmH->get_type_name(1) == "Tensor" ||
       (ifdmH->get_type_name(1) == "unsigned_char" && 
        ifdmH->get("conductivity_table", *conds))) {
@@ -225,7 +225,8 @@ void FDMtoFEM::execute() {
       TetVolMesh::Cell::iterator ci_tet_end; tvm->end(ci_tet_end);
       int count=0;
       while (ci_tet != ci_tet_end) {
-	conds->add(lv->fdata()[*ci]);
+	conds->push_back(pair<string, Tensor>(to_string((int)*ci_tet),
+					      lv->fdata()[*ci]));
 	for (int i=0; i<5; i++, ++ci_tet) {
 	  tv->fdata()[*ci_tet]=count;
 	}

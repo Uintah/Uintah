@@ -234,8 +234,8 @@ void ApplyFEMCurrentSource::execute()
   } else {  // electrode sources
     FieldHandle hInterp;
     iportInterp_->get(hInterp);
-    int sourceNode = Max(sourceNodeTCL_.get(), 0);
-    int sinkNode = Max(sinkNodeTCL_.get(), 0);
+    unsigned int sourceNode = Max(sourceNodeTCL_.get(), 0);
+    unsigned int sinkNode = Max(sinkNodeTCL_.get(), 0);
       
     if (hInterp.get_rep()) {
       PointCloud<vector<pair<TetVolMesh::Node::index_type, double> > >* interp = dynamic_cast<PointCloud<vector<pair<TetVolMesh::Node::index_type, double> > > *>(hInterp.get_rep());

@@ -40,7 +40,7 @@ using namespace SCIRun;
 // -- it's private, no occasional object creation
 BuildFEMatrix::BuildFEMatrix(TetVolIntHandle hField,
 			     DirichletBC&  dirBC,
-			     Array1<Tensor>& tens,
+			     vector<pair<string, Tensor> >& tens,
 			     MatrixHandle& hA, 
 			     MatrixHandle& hRhs,
 			     int np):
@@ -63,7 +63,7 @@ BuildFEMatrix::~BuildFEMatrix(){}
 
 bool BuildFEMatrix::build_FEMatrix(TetVolIntHandle hField,
 				   DirichletBC& dirBC,
-				   Array1<Tensor>& tens,
+				   vector<pair<string, Tensor> >& tens,
 				   MatrixHandle& hA, 
 				   MatrixHandle& hRhs)
   //------------------------------------------------
@@ -80,7 +80,8 @@ bool BuildFEMatrix::build_FEMatrix(TetVolIntHandle hField,
   hA = 0;
   hRhs = 0;
 
-  BuildFEMatrixHandle hMaker = new BuildFEMatrix(hField, dirBC, tens, hA, hRhs, np);
+  BuildFEMatrixHandle hMaker =
+    new BuildFEMatrix(hField, dirBC, tens, hA, hRhs, np);
   cerr << "SetupFEMatrix: number of threads being used = " << np << endl;
 
   Thread::parallel(Parallel<BuildFEMatrix>(hMaker.get_rep(), 
@@ -265,7 +266,7 @@ void BuildFEMatrix::build_local_matrix(double lcl_a[4][4], TetVolMesh::Cell::ind
  
   int  ind = hField_->value(c_ind);
 
-  double (&el_cond)[3][3] = tens_[ind].mat_;
+  double (&el_cond)[3][3] = tens_[ind].second.mat_;
  
   if(fabs(vol) < 1.e-10){
     for(int i = 0; i<4; i++)
