@@ -36,10 +36,14 @@
 
 namespace SCIRun {
 
+struct TetMCBase {
+  virtual ~TetMCBase() {}
+  static const string& get_h_file_path();
+};
 //! A Macrching Cube tesselator for a tetrahedral cell     
 
 template<class Field>
-class TetMC
+class TetMC : public TetMCBase
 {
 public:
   typedef Field                                  field_type;
