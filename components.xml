@@ -233,6 +233,22 @@ Level 6: Magenta</documentation>
       <creationFunction>make_InPlaneEigenEvaluator</creationFunction>
     </implementation>
   </dataflow-component>
+  <dataflow-component name="ParticleInPlaneEigenEvaluator">
+    <meta>
+      <authors>
+        <author>Wayne Witzel</author>
+      </authors>
+      <version-date>October 2000</version-date>
+      <version>1.0</version>
+      <description>No description available</description>
+    </meta>
+    <inputs>TensorParticles</inputs>
+    <outputs>ScalarParticles</outputs>
+    <parameters>int</parameters>
+    <implementation>
+      <creationFunction>make_ParticleInPlaneEigenEvaluator</creationFunction>
+    </implementation>
+  </dataflow-component>
   <dataflow-component name="TensorElementExtractor">
     <meta>
       <authors>
