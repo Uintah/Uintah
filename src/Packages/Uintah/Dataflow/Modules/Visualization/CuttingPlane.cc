@@ -23,6 +23,7 @@
 #include <Core/Geom/GeomGroup.h>
 #include <Core/Geom/GeomLine.h>
 #include <Core/Geom/Material.h>
+#include <Core/Geom/GeomTransform.h>
 #include <Core/Geometry/Point.h>
 #include <Core/Math/MinMax.h>
 #include <Core/Math/MiscMath.h>
@@ -102,6 +103,9 @@ class CuttingPlane : public Module {
    GuiInt fullRezGUI;
    GuiInt exhaustiveGUI;
    MaterialHandle outcolor;
+  GuiDouble xt;
+  GuiDouble yt;
+  GuiDouble zt;
    int grid_id;
    string msg;
 public:
@@ -167,10 +171,11 @@ CuttingPlane::CuttingPlane(const string& id) :
   num_contours("num_contours", id, this), 
   offset("offset", id, this), scale("scale", id, this), 
   where("where", id, this),
-  need_find("need_find",id,this),
+   need_find("need_find",id,this),
   localMinMaxGUI("localMinMaxGUI", id, this), 
   fullRezGUI("fullRezGUI", id, this),
-  exhaustiveGUI("exhaustiveGUI", id, this)
+  exhaustiveGUI("exhaustiveGUI", id, this),
+  xt("xt", id, this), yt("yt", id, this), zt("zt", id, this)
 {
     float INIT(.1);
 
@@ -226,14 +231,26 @@ void CuttingPlane::execute()
     cmapmin=(int)cmap->getMin();
     cmapmax=(int)cmap->getMax();
 
-    if (init == 1) 
+    if (init == 1 || need_find.get() != find) 
     {
-	init = 0;
-	GeomObj *w = widget->GetWidget() ;
-	widget_id = ogeom->addObj( w, widget_name, &widget_lock );
-	widget->Connect( ogeom );
-	widget->SetRatioR( 0.4 );
-	widget->SetRatioD( 0.4 );
+      init = 0;
+      GeomObj *w = widget->GetWidget() ;
+      Transform t;  t.post_translate( Vector( xt.get(), yt.get(), zt.get()));
+      GeomTransform *gt =
+	scinew GeomTransform( w, t);
+      widget_id = ogeom->addObj( gt, widget_name, &widget_lock );
+      widget->Connect( ogeom );
+      widget->SetRatioR( 0.4 );
+      widget->SetRatioD( 0.4 );
+    } else if (need_find.get() != find){
+      if (widget_id != 0) {
+	ogeom->delObj( widget_id );
+      }
+      GeomObj *w = widget->GetWidget() ;
+      Transform t;  t.post_translate( Vector( xt.get(), yt.get(), zt.get()));
+      GeomTransform *gt =
+	scinew GeomTransform( w, t);
+      widget_id = ogeom->addObj( gt, widget_name, &widget_lock );
     }
     if (need_find.get() != find)
     {
@@ -461,9 +478,11 @@ void CuttingPlane::execute()
 	if (old_grid_id != 0) {
 	  ogeom->delObj( old_grid_id );
 	}
-	grid_id = ogeom->addObj(grid, "Cutting Plane");
+	Transform t; t.post_translate( Vector(xt.get(), yt.get(), zt.get()));
+	GeomTransform *gt =
+	  scinew GeomTransform( grid, t);
+	grid_id = ogeom->addObj(gt, "Cutting Plane");
 	old_grid_id = grid_id;
-	
       }
 
     else
@@ -627,7 +646,10 @@ void CuttingPlane::execute()
 	      ogeom->delObj( old_grid_id );
 
 	    }
-	    grid_id =  ogeom->addObj( cs, "Contour Plane");
+	    Transform t; t.post_translate( Vector(xt.get(), yt.get(), zt.get()));
+	    GeomTransform *gt =
+	      scinew GeomTransform( cs, t);
+	    grid_id = ogeom->addObj(gt, "Contour Plane");
 	    old_grid_id = grid_id;
 		      
 	}
