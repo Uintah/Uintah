@@ -4,6 +4,7 @@
 
 #include <Packages/Uintah/CCA/Components/ICE/Advection/Advector.h>
 #include <Packages/Uintah/CCA/Components/ICE/LODI2.h>
+#include <Packages/Uintah/CCA/Components/ICE/BoundaryCond.h>
 #include <Packages/Uintah/CCA/Components/ICE/Turbulence.h>
 #include <Packages/Uintah/CCA/Ports/ModelInterface.h>
 #include <Packages/Uintah/CCA/Ports/Output.h>
@@ -730,7 +731,6 @@ namespace Uintah {
       Output* dataArchiver;
       double d_SMALL_NUM; 
       double d_TINY_RHO;
-      double d_pressure;
       double d_initialDt;
       double d_CFL;
       double d_delT_knob;
@@ -751,19 +751,18 @@ namespace Uintah {
       int d_dbgSigFigs;
       
       //__________________________________
-      // needed by LODI      
-      bool d_usingLODI;
-      Lodi_variable_basket* d_Lodi_variable_basket;
-      
-      bool d_usingNG_hack;
+      // Misc
+      customBC_var_basket* d_customBC_var_basket;
       
       Advector* d_advector;
       bool d_useCompatibleFluxes;
       Turbulence* d_turbulence;
       std::string d_delT_scheme;
       
-     // exchange coefficients -- off diagonal terms
+      // exchange coefficients
       vector<double> d_K_mom, d_K_heat;
+      
+      // convective ht model
       bool d_convective;
       int d_conv_fluid_matlindex;
       int d_conv_solid_matlindex;
