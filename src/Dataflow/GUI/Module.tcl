@@ -789,13 +789,13 @@ itcl_class Module {
 	set temp_spacing [expr $port_spacing+1]
 	set num_ports $ports
 	set mod_width [winfo width $maincanvas.module[modname] ]
-
+	
 	#initialize all values first time through
 	if {$original_title_size == 0} {
-	    set original_title_size [winfo width $maincanvas.module[modname].ff.title]
 	    set font_pixel_width [font measure $modname_font\
 		    "ABCDEFGHIJKLMNOPQRSTUVWXYZ abcdefghijklmnopqrstuvwxyz"]
 	    set font_pixel_width [expr $font_pixel_width/53.0]
+	    set original_title_size [expr $font_pixel_width*[string length $name]]
 	}
 	
 	# determine if it needs more room
