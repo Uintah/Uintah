@@ -14,7 +14,7 @@ all:: sci_config.h
 include $(OBJTOP)/scripts/recurse.mk
 
 _cleanHere::
-	rm -f uintah scirun davew
+	rm -f @EXENAME@
 
 _distcleanHere::
 	rm -f config.h so_locations
