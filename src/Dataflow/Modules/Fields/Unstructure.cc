@@ -124,7 +124,7 @@ Unstructure::execute()
 	error("Could not get algorithm.");
 	return;
       }
-      ofieldhandle_ = algo->execute(ifieldhandle);
+      ofieldhandle_ = algo->execute(this, ifieldhandle);
 
       if (ofieldhandle_.get_rep())
       {

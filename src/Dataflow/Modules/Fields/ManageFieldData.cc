@@ -169,7 +169,8 @@ ManageFieldData::execute()
       error("Could not get mesh algorithm.");
       return;
     }
-    result_field = algo_mesh->execute(ifieldhandle->mesh(), imatrixhandle);
+    result_field =
+      algo_mesh->execute(this, ifieldhandle->mesh(), imatrixhandle);
   }
 
   string units;

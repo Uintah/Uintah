@@ -24,8 +24,8 @@
 
 #include <Core/Util/TypeDescription.h>
 #include <Core/Util/DynamicLoader.h>
-//#include <Core/Datatypes/Field.h>
 #include <Core/Datatypes/TriSurfField.h>
+#include <Dataflow/Network/Module.h>
 
 namespace SCIRun {
 
@@ -150,7 +150,8 @@ FieldBoundaryAlgoAuxT<Msh>::execute(const MeshHandle mesh_untyped,
 class FieldBoundaryAlgo : public DynamicAlgoBase
 {
 public:
-  virtual void execute(const MeshHandle mesh, FieldHandle &bndry, FieldHandle &intrp) = 0;
+  virtual void execute(Module *m, const MeshHandle mesh,
+		       FieldHandle &bndry, FieldHandle &intrp) = 0;
 
   //! support the dynamically compiled algorithm concept
   static CompileInfo *get_compile_info(const TypeDescription *mesh);
@@ -162,19 +163,20 @@ class FieldBoundaryAlgoT : public FieldBoundaryAlgo
 {
 public:
   //! virtual interface. 
-  virtual void execute(const MeshHandle mesh, FieldHandle &boundary, FieldHandle &interp);
+  virtual void execute(Module *m, const MeshHandle mesh,
+		       FieldHandle &boundary, FieldHandle &interp);
 };
 
 
 template <class Msh>
 void 
-FieldBoundaryAlgoT<Msh>::execute(const MeshHandle mesh,
+FieldBoundaryAlgoT<Msh>::execute(Module *mod, const MeshHandle mesh,
 				 FieldHandle &boundary, FieldHandle &interp)
 {
   if (get_type_description((typename Msh::Elem *)0)->get_name() !=
       get_type_description((typename Msh::Cell *)0)->get_name())
   {
-    cout << "Boundary module only works on volumes\n";
+    mod->error("Boundary module only works on volumes.");
     return;
   }
   else
@@ -184,7 +186,7 @@ FieldBoundaryAlgoT<Msh>::execute(const MeshHandle mesh,
     DynamicAlgoHandle algo_handle;
     if (! DynamicLoader::scirun_loader().get(*ci, algo_handle))
     {
-      cout << "Could not compile algorithm." << std::endl;
+      mod->error("Could not compile algorithm.");
       return;
     }
     
@@ -194,7 +196,7 @@ FieldBoundaryAlgoT<Msh>::execute(const MeshHandle mesh,
 
     if (algo == 0)
     {
-      cout << "Could not get algorithm." << std::endl;
+      mod->error("Could not get algorithm.");
       return;
     }
     algo->execute(mesh, boundary, interp);

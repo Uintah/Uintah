@@ -26,6 +26,7 @@
 #include <Core/Util/DynamicLoader.h>
 #include <Core/Datatypes/ColumnMatrix.h>
 #include <Core/Datatypes/DenseMatrix.h>
+#include <Dataflow/Network/Module.h>
 #include <Core/Geometry/Tensor.h>
 
 
@@ -158,7 +159,7 @@ ManageFieldDataAlgoFieldTensor<Fld, Loc>::execute(FieldHandle ifield_h)
 class ManageFieldDataAlgoMesh : public DynamicAlgoBase
 {
 public:
-  virtual FieldHandle execute(MeshHandle src, MatrixHandle mat) = 0;
+  virtual FieldHandle execute(Module *m, MeshHandle src, MatrixHandle mat) = 0;
 
   //! support the dynamically compiled algorithm concept
   static CompileInfo *get_compile_info(const TypeDescription *msrc,
@@ -172,13 +173,14 @@ class ManageFieldDataAlgoMeshScalar : public ManageFieldDataAlgoMesh
 {
 public:
   //! virtual interface. 
-  virtual FieldHandle execute(MeshHandle src, MatrixHandle mat);
+  virtual FieldHandle execute(Module *m, MeshHandle src, MatrixHandle mat);
 };
 
 
 template <class MSRC, class FOUT>
 FieldHandle
-ManageFieldDataAlgoMeshScalar<MSRC, FOUT>::execute(MeshHandle mesh,
+ManageFieldDataAlgoMeshScalar<MSRC, FOUT>::execute(Module *mod,
+						   MeshHandle mesh,
 						   MatrixHandle matrix)
 {
   MSRC *imesh = dynamic_cast<MSRC *>(mesh.get_rep());
@@ -291,9 +293,9 @@ ManageFieldDataAlgoMeshScalar<MSRC, FOUT>::execute(MeshHandle mesh,
   }
   else
   {
-    cout << "Matrix datasize does not match field geometry.\n";
-    cout << "Matrix size : " << rows << " " << columns << '\n';
-    cout << "Field size : " << nsize << " " <<  esize <<
+    mod->warning("Matrix datasize does not match field geometry.");
+    mod->msgStream_ << "Matrix size : " << rows << " " << columns << '\n';
+    mod->msgStream_ << "Field size : " << nsize << " " <<  esize <<
       " " << fsize << " " << csize << '\n';
     return 0;
   }
@@ -308,12 +310,13 @@ class ManageFieldDataAlgoMeshVector : public ManageFieldDataAlgoMesh
 {
 public:
   //! virtual interface. 
-  virtual FieldHandle execute(MeshHandle src, MatrixHandle mat);
+  virtual FieldHandle execute(Module *m, MeshHandle src, MatrixHandle mat);
 };
 
 template <class MSRC, class FOUT>
 FieldHandle
-ManageFieldDataAlgoMeshVector<MSRC, FOUT>::execute(MeshHandle mesh,
+ManageFieldDataAlgoMeshVector<MSRC, FOUT>::execute(Module *mod,
+						   MeshHandle mesh,
 						   MatrixHandle matrix)
 {
   MSRC *imesh = dynamic_cast<MSRC *>(mesh.get_rep());
@@ -458,9 +461,9 @@ ManageFieldDataAlgoMeshVector<MSRC, FOUT>::execute(MeshHandle mesh,
   }
   else
   {
-    cout << "Matrix datasize does not match field geometry.\n";
-    cout << "Matrix size : " << rows << " " << columns << '\n';
-    cout << "Field size : " << nsize << " " <<  esize <<
+    mod->warning("Matrix datasize does not match field geometry.");
+    mod->msgStream_ << "Matrix size : " << rows << " " << columns << '\n';
+    mod->msgStream_ << "Field size : " << nsize << " " <<  esize <<
       " " << fsize << " " << csize << '\n';
     return 0;
   }
@@ -475,13 +478,14 @@ class ManageFieldDataAlgoMeshTensor : public ManageFieldDataAlgoMesh
 {
 public:
   //! virtual interface. 
-  virtual FieldHandle execute(MeshHandle src, MatrixHandle mat);
+  virtual FieldHandle execute(Module *m, MeshHandle src, MatrixHandle mat);
 };
 
 
 template <class MSRC, class FOUT>
 FieldHandle
-ManageFieldDataAlgoMeshTensor<MSRC, FOUT>::execute(MeshHandle mesh,
+ManageFieldDataAlgoMeshTensor<MSRC, FOUT>::execute(Module *mod,
+						   MeshHandle mesh,
 						   MatrixHandle matrix)
 {
   MSRC *imesh = dynamic_cast<MSRC *>(mesh.get_rep());
@@ -698,9 +702,9 @@ ManageFieldDataAlgoMeshTensor<MSRC, FOUT>::execute(MeshHandle mesh,
   }
   else
   {
-    cout << "Matrix datasize does not match field geometry.\n";
-    cout << "Matrix size : " << rows << " " << columns << '\n';
-    cout << "Field size : " << nsize << " " <<  esize <<
+    mod->warning("Matrix datasize does not match field geometry.");
+    mod->msgStream_ << "Matrix size : " << rows << " " << columns << '\n';
+    mod->msgStream_ << "Field size : " << nsize << " " <<  esize <<
       " " << fsize << " " << csize << '\n';
     return 0;
   }

@@ -116,7 +116,7 @@ FieldBoundary::execute()
       error("Could not get algorithm.");
       return;
     }
-    algo->execute(mesh, tri_fh_, interp_fh_);
+    algo->execute(this, mesh, tri_fh_, interp_fh_);
   }
   osurf_->send(tri_fh_);
   ointerp_->send(interp_fh_);
