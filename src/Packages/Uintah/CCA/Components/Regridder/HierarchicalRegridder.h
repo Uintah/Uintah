@@ -37,11 +37,11 @@ WARNING
   //! Takes care of AMR Regridding, using a hierarchical algorithm
   class HierarchicalRegridder : public RegridderCommon {
   public:
-    HierarchicalRegridder(ProcessorGroup* pg);
+    HierarchicalRegridder(const ProcessorGroup* pg);
     virtual ~HierarchicalRegridder();
 
     //! Create a new Grid
-    virtual Grid* regrid(Grid* oldGrid, SchedulerP sched) = 0;
+    virtual Grid* regrid(Grid* oldGrid, SchedulerP sched);
   };
 
 } // End namespace Uintah

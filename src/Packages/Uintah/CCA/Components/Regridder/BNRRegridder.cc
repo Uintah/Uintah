@@ -3,7 +3,7 @@
 
 using namespace Uintah;
 
-BNRRegridder::BNRRegridder(ProcessorGroup* pg) : RegridderCommon(pg)
+BNRRegridder::BNRRegridder(const ProcessorGroup* pg) : RegridderCommon(pg)
 {
 
 }
