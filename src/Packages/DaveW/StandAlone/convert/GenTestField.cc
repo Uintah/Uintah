@@ -42,8 +42,8 @@ int main(int argc, char **argv) {
   LatticeVol<double> *lv = scinew LatticeVol<double>(lvm, Field::NODE);
   FieldHandle fh = lv;
   
-  LatVolMesh::Node::iterator niter; lvm->begin(niter);
-  LatVolMesh::Node::iterator niter_end; lvm->end(niter_end);
+  LatVolMesh::Node::iterator niter = lvm->tbegin((LatVolMesh::Node::iterator *) 0);
+  LatVolMesh::Node::iterator niter_end = lvm->tend((LatVolMesh::Node::iterator *) 0);
   while (niter != niter_end) {
     lv->fdata()[*niter] = getVal(niter.i_, niter.j_, niter.k_, ni, nj, nk);
     ++niter;

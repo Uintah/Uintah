@@ -48,13 +48,13 @@ main(int argc, char **argv) {
     return 0;
   }
   TriSurfMeshHandle tsm = ts->get_typed_mesh();
-  TriSurfMesh::Face::size_type fsize;  tsm->size(fsize);
-  if (!(unsigned int)fsize)) {
+  TriSurfMesh::Face::size_type fsize = tsm->tsize((TriSurfMesh::Face::size_type *) 0);
+  if (!(unsigned int)fsize) {
     cerr << "Error -- input surface has no faces.\n";
     return 0;
   }
 
-  TriSurfMesh::Node::size_type nsize;  tsm->size(nsize);
+  TriSurfMesh::Node::size_type nsize = tsm->tsize((TriSurfMesh::Node::size_type *) 0);
   cerr << "Input surface has "<<((unsigned int)nsize)<<" points and "
        << ((unsigned int)fsize) <<" faces.\n";
 
