@@ -5,6 +5,9 @@
 #   been created with Varlabel::create are also destroyed.  This
 #   is useful in finding memory leaks.
 #   usage;    mem_leak_checkVarLabels <Arches/ICE/MPMICE/MPMLabels.cc>
+#
+#  NOTE: This script need gnu grep to work.  Simply
+#  setenv GNUGREP <path to gnu grep>
 #_____________________________________________________________________.
 
 set file = $argv
@@ -13,7 +16,13 @@ if ($#argv != 1) then
   exit(1)
 endif
 
-set GNUGREP   = /usr/freeware/bin/grep
+set test = `printenv GNUGREP`
+if ( $test == ""  ) then
+  echo " you need to set the path to gnu grep"
+  echo " setenv GNUGREP <path to gnu grep> "
+  exit(1)
+endif
+
 set varLabels = (`grep "Label.*=" $file| cut -d= -f1`)
 echo "I'm examing the following variables \n "
 
