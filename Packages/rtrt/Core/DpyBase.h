@@ -84,6 +84,7 @@ protected:
 
 
   string window_name;
+  char *cwindow_name;
   int window_mode;
   Display *dpy;
   Window win;

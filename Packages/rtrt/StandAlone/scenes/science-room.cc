@@ -470,12 +470,10 @@ Scene* make_scene(int argc, char* argv[], int nworkers)
   scene->attach_auxiliary_display(gcvdpy);
   scene->attach_auxiliary_display(cpdpy);
 
-  /*
   vcvdpy->setName("Visible Female Volume");
   hcvdpy->setName("Brain Volume");
   gcvdpy->setName("Geological Volume");
   cpdpy->setName("Cutting Plane");
-  */
 
   scene->attach_display(vcvdpy);
   (new Thread(vcvdpy, "VFEM Volume Dpy"))->detach();
