@@ -7,23 +7,20 @@
  *
  */
 
-#include <PSECore/Dataflow/Module.h>
-#include <SCICore/Malloc/Allocator.h>
-#include <SCICore/Datatypes/Field.h>
-#include <PSECore/Datatypes/FieldPort.h>
-#include <SCICore/Datatypes/VField.h>
-#include <SCICore/Datatypes/GenVField.h>
-#include <SCICore/Datatypes/LatticeGeom.h>
-#include <SCICore/Datatypes/FlatAttrib.h>
+#include <Dataflow/Network/Module.h>
+#include <Core/Malloc/Allocator.h>
+#include <Core/Datatypes/Field.h>
+#include <Dataflow/Ports/FieldPort.h>
+#include <Core/Datatypes/VField.h>
+#include <Core/Datatypes/GenVField.h>
+#include <Core/Datatypes/LatticeGeom.h>
+#include <Core/Datatypes/FlatAttrib.h>
 
-#include <Moulding/share/share.h>
+#include <Packages/Moulding/share/share.h>
 
 namespace Moulding {
-namespace Modules {
 
-using namespace PSECore::Dataflow;
-using namespace SCICore::Datatypes;
-using namespace PSECore::Datatypes;
+using namespace SCIRun;
 
 class MouldingSHARE GenField : public Module {
 public:
@@ -58,7 +55,7 @@ void GenField::execute()
   // create an example 3D field of Vectors, which is 64^3
   // and has extents equal to [-3.15,3.15]x[-3.15,3.15]x[-3.15,3.15]
   int x,y,z;
-  x = y = z = 16;        // number of samples in each dimension
+  x = y = z = 64;        // number of samples in each dimension
   double b = 3.15;   
   Point start(-b,-b,-b); // extents of the geometry.
   Point end(b,b,b);
@@ -92,7 +89,6 @@ void GenField::tcl_command(TCLArgs& args, void* userdata)
   Module::tcl_command(args, userdata);
 }
 
-} // End namespace Modules
 } // End namespace Moulding
 
 

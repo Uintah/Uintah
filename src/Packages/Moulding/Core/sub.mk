@@ -4,9 +4,10 @@ include $(OBJTOP_ABS)/scripts/largeso_prologue.mk
 
 SRCDIR := Packages/Moulding/Core
 SUBDIRS := \
-	$(SRCDIR)/Algorithms \
-	$(SRCDIR)/Datatypes \
-	$(SRCDIR)/ThirdParty \
+	$(SRCDIR)/Datatypes\
+#	$(SRCDIR)/Algorithms \
+#	$(SRCDIR)/Datatypes \
+#	$(SRCDIR)/ThirdParty \
 
 include $(OBJTOP_ABS)/scripts/recurse.mk
 
