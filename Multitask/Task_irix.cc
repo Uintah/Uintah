@@ -31,7 +31,7 @@
 #include <sys/time.h>
 
 #define DEFAULT_STACK_LENGTH 64*1024
-#define INITIAL_STACK_LENGTH 16*1024
+#define INITIAL_STACK_LENGTH 48*1024
 #define DEFAULT_SIGNAL_STACK_LENGTH 16*1024
 
 #define NOT_FINISHED(what) cerr << what << ": Not Finished " << __FILE__ << " (line " << __LINE__ << ") " << endl
