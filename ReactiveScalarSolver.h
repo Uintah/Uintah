@@ -161,6 +161,7 @@ private:
       // physical constants
       PhysicalConstants* d_physicalConsts;
       int d_conv_scheme;
+      int d_limiter_type;
       bool d_dynScalarModel;
       double d_turbPrNo;
 
