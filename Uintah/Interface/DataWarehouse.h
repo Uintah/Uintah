@@ -86,6 +86,19 @@ WARNING
       virtual void put(const NCVariableBase&, const VarLabel*,
 		       int matlIndex, const Region*) = 0;
       
+      //tan 2000/5/10:
+      //  CCVariable is needed for DataWarehouse allocate(). I put the base 
+      //  class of CCVariable, DataItem
+      //  here, the code can be compiled, but need fit in for virtual functions
+      //  here.
+      //
+      virtual void allocate(DataItem&, const VarLabel*,
+			    int matlIndex, const Region*) = 0;
+      virtual void get(DataItem&, const VarLabel*,
+		       int matlIndex, const Region*, int numGhostCells) const = 0;
+      virtual void put(const DataItem&, const VarLabel*,
+		       int matlIndex, const Region*) = 0;
+     
       //////////
       // Insert Documentation Here:
       virtual void carryForward(const DataWarehouseP& from) = 0;
@@ -120,6 +133,10 @@ WARNING
 
 //
 // $Log$
+// Revision 1.20  2000/05/10 20:28:55  tan
+// CCVariable is needed.  Virtual functions allocate, get and put are
+// set here to make the compilation work.
+//
 // Revision 1.19  2000/05/10 20:03:05  sparker
 // Added support for ghost cells on node variables and particle variables
 //  (work for 1 patch but not debugged for multiple)
