@@ -143,7 +143,7 @@ void GenComponent(component_node* n, char* packname, char* psepath)
 	  packname,packname,
 	  packname,n->name,n->name,n->name,
 	  packname,n->name,n->name,n->name,
-	  n->name,n->name,n->name,n->name,
+	  n->name,n->name,n->category,packname,n->name,n->name,
 	  n->name,n->name,packname);
   fclose(file);
   delete[] filename;

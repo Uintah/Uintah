@@ -40,7 +40,7 @@ char component_skeleton[] = \
 "}\n"
 "\n"
 "%s::%s(const clString& id)\n" /* component name, component name */
-"  : Module(\"%s\", id, Source)\n" /* component name */
+"  : Module(\"%s\", id, Source, \"%s\", \"%s\")\n" /* comp, cat, pack */
 "{\n"
 "}\n"
 "\n"
