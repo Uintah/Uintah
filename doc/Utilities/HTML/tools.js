@@ -199,8 +199,9 @@ Latex2HTMLDocument.prototype.postContent = function() {
   Document.prototype.postContent();
 }
 
-// Tutorial documents?
-// ...
+/*
+  A few utilites used mainly to hide IEs misbehaviors.
+*/
 
 // Set a node's class attribute value.
 function setClassAttribute(node, value) {
@@ -209,10 +210,30 @@ function setClassAttribute(node, value) {
 
 // Return a node's class attribute value.
 function getClassAttribute(node) {
-  attrNode = node.attributes.getNamedItem("class");
-  var result = attrNode == null ? null : attrNode.nodeValue;
+  return getAttrValue(node, "class");
+}
+
+// A wrapper around node.attributes.getNamedItem - The standard
+// specifies returning a null result if an attribute does not exist
+// and standard conforming browsers (Mozilla, Safari) do so.  But not
+// our friend I.E.  It returns "".
+function getAttrNode(node, attrName) {
+  var result = null;
+  var attrNode = node.attributes.getNamedItem(attrName);
+  if (attrNode == null || attrNode.nodeValue == "")
+    result = null;
+  else
+    result = attrNode;
   return result;
 }
+
+// Return the value of a node's attribute or null if the attribute
+// does not exist.
+function getAttrValue(node, attrName) {
+  var attrNode = getAttrNode(node, attrName);
+  return attrNode == null ? null : attrNode.nodeValue;
+}
+
 
 /*
   Traversal code
@@ -280,6 +301,11 @@ Visitor.prototype.next = function() {
 /*
   Code for constructing context-based tables of contents.  See 
   http://www.cvrti.utah.edu/js/doc/toc-doc.html for documentation.
+*/
+
+/*
+  Code for constructing context-based tables of contents.  See file
+  toc-doc.html for use instructions.
 */
 
 // Constructor.
@@ -455,38 +481,39 @@ Toc.prototype.compileTocSpec = function(tocSpec) {
 
   // Compile rules
   this.ruleList = new Array(ruleStrings.length);
-  for (i=0; i< ruleStrings.length; ++i)
+  for (i=0; i< ruleStrings.length; ++i) {
     this.ruleList[i] = this.compileRule(ruleStrings[i]);
+  }
 }
 
 // Return true if node matches spec, false otherwise.
 Toc.prototype.matchRule = function(node, spec) {
   if (node.nodeName == spec.tag) {
-    var attr;
+      var attrValue;
     switch (spec.decor) {
       // Rule expects no decoration.
       case null:
 // Omit check of presence of id because an id may be used to create an anchor
 // and we don't want to miss TOCing elements with id anchors.
-// 	attr = node.attributes.getNamedItem("id");
-// 	if (attr != null)
+// 	attrValue = getAttrValue("id");
+// 	if (attrValue != null)
 // 	  return false;
-	attr = node.attributes.getNamedItem("class");
-	if (attr != null)
+	attrValue = getAttrValue(node, "class");
+	if (attrValue != null)
 	  return false;
 	break;
       // Rule expects id
       case '#':
-	attr = node.attributes.getNamedItem("id");
-	if ((attr == null) && (spec.decorValue == '-'))
+	attrValue = getAttrValue(node, "id");
+	if ((attrValue == null) && (spec.decorValue == '-'))
 	  return true;
-	if ((attr == null) || (attr.nodeValue != spec.decorValue))
+	if ((attrValue == null) || (attrValue != spec.decorValue))
 	  return false;
 	break;
       // Rule expects class
       case '.':
-	attr = node.attributes.getNamedItem("class");
-	if ((attr == null) || (attr.nodeValue != spec.decorValue))
+	attrValue = getAttrValue(node, "class");
+	if ((attrValue == null) || (attrValue != spec.decorValue))
 	  return false;
 	break;
     }
