@@ -88,7 +88,7 @@ set $m2-notes {TetVolField specifying the electrode positions (no cells).
 }
 set $m2-show_status 1
 set $m2-pid 13053
-set $m2-filename $env(SCIRUN_DATA)/sphere.electrodes.fld
+set $m2-filename $env(SCIRUN_DATA)/sphere-electrodes.pc.fld
 set $m3-notes {Build the element-centered leadfield matrix for the input finite element mesh (port 1) and electrode
 interpolant Field (port 2).  We set the last electrode to ground, and iteratively pair it with
 each of the other electrodes.  For each pairing, we build a right-hand-side column matrix 
