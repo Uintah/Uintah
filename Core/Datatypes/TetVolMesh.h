@@ -182,6 +182,7 @@ private:
     Face() {
       nodes_[0] = -1;
       nodes_[1] = -1;
+      nodes_[2] = -1;
       cells_[0] = -1;
       cells_[1] = -1;
     }
