@@ -59,16 +59,6 @@ public:
     MaskedLatIndex() : i_(0), j_(0), k_(0), mesh_(0) {}
     MaskedLatIndex(const MaskedLatVolMesh *m, unsigned i, unsigned j, 
 		   unsigned k) : i_(i), j_(j), k_(k), mesh_(m) {}
-
-    bool operator ==(const MaskedLatIndex &a) const
-    {
-      return i_ == a.i_ && j_ == a.j_ && k_ == a.k_ && mesh_ == a.mesh_;
-    }
-
-    bool operator !=(const MaskedLatIndex &a) const
-    {
-      return !(*this == a);
-    }
         
     unsigned i_, j_, k_;
 
@@ -89,6 +79,17 @@ public:
 	return i_ + (mesh_->ni_-1)*j_ + (mesh_->ni_-1)*(mesh_->nj_-1)*k_;
     }
 
+    bool operator ==(const CellIndex &a) const
+    {
+      return i_ == a.i_ && j_ == a.j_ && k_ == a.k_ && mesh_ == a.mesh_;
+    }
+
+    bool operator !=(const CellIndex &a) const
+    {
+      return !(*this == a);
+    }
+
+
     static string type_name(int i=-1) 
     { ASSERT(i<1); return "MaskedLatVolMesh::CellIndex"; }
     friend void Pio(Piostream&, CellIndex&);
@@ -108,6 +109,17 @@ public:
       else 
 	return i_ + mesh_->ni_*j_ + mesh_->ni_*mesh_->nj_*k_;
     }
+
+    bool operator ==(const MaskedLatIndex &a) const
+    {
+      return i_ == a.i_ && j_ == a.j_ && k_ == a.k_ && mesh_ == a.mesh_;
+    }
+
+    bool operator !=(const MaskedLatIndex &a) const
+    {
+      return !(*this == a);
+    }
+
 
     static string type_name(int i=-1) 
     { ASSERT(i<1); return "MaskedLatVolMesh::NodeIndex"; }
@@ -142,7 +154,19 @@ public:
 	}
       return 0;
     }
+
+    bool operator ==(const EdgeIndex &a) const
+    {
+      return (i_ == a.i_ && j_ == a.j_ && k_ == a.k_ && 
+	      mesh_ == a.mesh_ && dir_ == a.dir_);
+    }
+
+    bool operator !=(const EdgeIndex &a) const
+    {
+      return !(*this == a);
+    }
     
+
     static string type_name(int i=-1) 
     { ASSERT(i<1); return "MaskedLatVolMesh::EdgeIndex"; }
     friend void Pio(Piostream&, EdgeIndex&);
@@ -176,6 +200,17 @@ public:
 	  break;
 	}
       return 0;
+    }
+
+    bool operator ==(const FaceIndex &a) const
+    {
+      return (i_ == a.i_ && j_ == a.j_ && k_ == a.k_ && 
+	      mesh_ == a.mesh_ && dir_ == a.dir_);
+    }
+
+    bool operator !=(const FaceIndex &a) const
+    {
+      return !(*this == a);
     }
 
     static string type_name(int i=-1) 
@@ -263,7 +298,7 @@ public:
     NodeIter &operator++()
     {
       do next(); while (!mesh_->check_valid(*this) && 
-			(k_ < (mesh_->min_i_+mesh_->ni_)));
+			(k_ < (mesh_->min_k_+mesh_->nk_)));
       return *this;
     }
 

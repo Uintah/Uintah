@@ -85,7 +85,7 @@ void
 MaskedLatVolMesh::end(MaskedLatVolMesh::Node::iterator &itr) const
 {
   itr = Node::iterator(this, min_i_, min_j_, min_k_ + nk_);
-  if (!check_valid(itr)) { --itr; itr.next(); }  
+  //  if (!check_valid(itr)) { --itr; itr.next(); }  
 }
 
 void
@@ -126,8 +126,8 @@ MaskedLatVolMesh::begin(MaskedLatVolMesh::Edge::iterator &itr) const
 void
 MaskedLatVolMesh::end(MaskedLatVolMesh::Edge::iterator &itr) const
 {
-  itr = Edge::iterator(this, min_i_+ni_-1, min_j_+nj_-1, min_k_+nk_-1,2);
-  if (!check_valid(itr)) { --itr; itr.next(); }
+  itr = Edge::iterator(this, min_i_, min_j_, min_k_,3);
+  //  if (!check_valid(itr)) { --itr; itr.next(); }
 }
 
 void
@@ -146,8 +146,8 @@ MaskedLatVolMesh::begin(MaskedLatVolMesh::Face::iterator &itr) const
 void
 MaskedLatVolMesh::end(MaskedLatVolMesh::Face::iterator &itr) const
 {
-  itr = Face::iterator(this, min_i_+ni_-2, min_j_+nj_-1, min_k_+nk_-2,2);
-  if (!check_valid(itr)) { --itr; itr.next(); }
+  itr = Face::iterator(this, min_i_, min_j_, min_k_,3);
+  //  if (!check_valid(itr)) { --itr; itr.next(); }
 }
 
 void
