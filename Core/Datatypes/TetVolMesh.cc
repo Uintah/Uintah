@@ -1475,104 +1475,114 @@ TetVolMesh::bisect_element(const Cell::index_type cell)
 {
   synchronize(FACE_NEIGHBORS_E | EDGE_NEIGHBORS_E);
   int edge, face;
-  vector<Edge::array_type> edge_neighbors(6);
+  vector<Edge::array_type> edge_nbrs(6);
   Node::array_type nodes;
   get_nodes(nodes,cell);
+  // Loop through edges and create new nodes at center
   for (edge = 0; edge < 6; ++edge)
   {
     Point p;
     get_center(p, Edge::index_type(cell*6+edge));
     nodes.push_back(add_point(p));
+    // Get all other tets that share an edge with this tet
     pair<Edge::HalfEdgeSet::iterator, Edge::HalfEdgeSet::iterator> range =
       all_edges_.equal_range(cell*6+edge);
-    edge_neighbors[edge].insert(edge_neighbors[edge].end(), range.first, range.second);
+    edge_nbrs[edge].insert(edge_nbrs[edge].end(), range.first, range.second);
   }
 
-  Face::array_type face_neighbors(4);
+  // Get all other tets that share a face with this tet
+  Face::array_type face_nbrs(4);
   for (face = 0; face < 4; ++face)
-    get_neighbor(face_neighbors[face], Face::index_type(cell*4+face));
+    get_neighbor(face_nbrs[face], Face::index_type(cell*4+face));
 
+  // This is used below to weed out tets that have already been split
   set<Cell::index_type> done;
   done.insert(cell);
+  
+  // Vector of all tets that have been modified or added
+  Cell::array_type tets;
+  
+  // Perform an 8:1 split on this tet
+  tets.push_back(mod_tet(cell,nodes[4],nodes[6],nodes[5],nodes[0]));
+  tets.push_back(add_tet(nodes[4], nodes[7], nodes[9], nodes[1]));
+  tets.push_back(add_tet(nodes[7], nodes[5], nodes[8], nodes[2]));
+  tets.push_back(add_tet(nodes[6], nodes[8], nodes[9], nodes[3]));
+  tets.push_back(add_tet(nodes[4], nodes[9], nodes[8], nodes[6]));
+  tets.push_back(add_tet(nodes[4], nodes[8], nodes[5], nodes[6]));
+  tets.push_back(add_tet(nodes[4], nodes[5], nodes[8], nodes[7]));
+  tets.push_back(add_tet(nodes[4], nodes[8], nodes[9], nodes[7]));
 
-  Cell::array_type tets(8);
-  tets[0] = mod_tet(cell,nodes[4],nodes[6],nodes[5],nodes[0]);
-  tets[1] = add_tet(nodes[4], nodes[7], nodes[9], nodes[1]);
-  tets[2] = add_tet(nodes[7], nodes[5], nodes[8], nodes[2]);
-  tets[3] = add_tet(nodes[6], nodes[8], nodes[9], nodes[3]);
-  tets[4] = add_tet(nodes[4], nodes[9], nodes[8], nodes[6]);
-  tets[5] = add_tet(nodes[4], nodes[8], nodes[5], nodes[6]);
-  tets[6] = add_tet(nodes[4], nodes[5], nodes[8], nodes[7]);
-  tets[7] = add_tet(nodes[4], nodes[8], nodes[9], nodes[7]);
-
-  if (face_neighbors[0] != -1)
+  // Perform a 4:1 split on tet sharing face 0
+  if (face_nbrs[0] != -1)
   {
-    Node::index_type opp = cells_[face_neighbors[0]];
-    mod_tet(face_neighbors[0]/4,nodes[7],nodes[8],nodes[9],opp);
-    add_tet(nodes[7],nodes[2],nodes[8],opp);
-    add_tet(nodes[8],nodes[3],nodes[9],opp);
-    add_tet(nodes[9],nodes[1],nodes[7],opp);
-    done.insert(face_neighbors[0]/4);
+    Node::index_type opp = cells_[face_nbrs[0]];
+    tets.push_back(mod_tet(face_nbrs[0]/4,nodes[7],nodes[8],nodes[9],opp));
+    tets.push_back(add_tet(nodes[7],nodes[2],nodes[8],opp));
+    tets.push_back(add_tet(nodes[8],nodes[3],nodes[9],opp));
+    tets.push_back(add_tet(nodes[9],nodes[1],nodes[7],opp));
+    done.insert(face_nbrs[0]/4);
   }
-
-  if (face_neighbors[1] != -1)
+  // Perform a 4:1 split on tet sharing face 1
+  if (face_nbrs[1] != -1)
   {
-    Node::index_type opp = cells_[face_neighbors[1]];
-    mod_tet(face_neighbors[1]/4,nodes[5],nodes[6],nodes[8],opp);
-    add_tet(nodes[5],nodes[0],nodes[6],opp);
-    add_tet(nodes[6],nodes[3],nodes[8],opp);
-    add_tet(nodes[8],nodes[2],nodes[5],opp);
-    done.insert(face_neighbors[1]/4);
+    Node::index_type opp = cells_[face_nbrs[1]];
+    tets.push_back(mod_tet(face_nbrs[1]/4,nodes[5],nodes[6],nodes[8],opp));
+    tets.push_back(add_tet(nodes[5],nodes[0],nodes[6],opp));
+    tets.push_back(add_tet(nodes[6],nodes[3],nodes[8],opp));
+    tets.push_back(add_tet(nodes[8],nodes[2],nodes[5],opp));
+    done.insert(face_nbrs[1]/4);
   }
-
-  if (face_neighbors[2] != -1)
+  // Perform a 4:1 split on tet sharing face 2
+  if (face_nbrs[2] != -1)
   {
-    Node::index_type opp = cells_[face_neighbors[2]];
-    mod_tet(face_neighbors[2]/4,nodes[4],nodes[9],nodes[6],opp);
-    add_tet(nodes[4],nodes[1],nodes[9],opp);
-    add_tet(nodes[9],nodes[3],nodes[6],opp);
-    add_tet(nodes[6],nodes[0],nodes[4],opp);
-    done.insert(face_neighbors[2]/4);
+    Node::index_type opp = cells_[face_nbrs[2]];
+    tets.push_back(mod_tet(face_nbrs[2]/4,nodes[4],nodes[9],nodes[6],opp));
+    tets.push_back(add_tet(nodes[4],nodes[1],nodes[9],opp));
+    tets.push_back(add_tet(nodes[9],nodes[3],nodes[6],opp));
+    tets.push_back(add_tet(nodes[6],nodes[0],nodes[4],opp));
+    done.insert(face_nbrs[2]/4);
   }
-
-  if (face_neighbors[3] != -1)
+  // Perform a 4:1 split on tet sharing face 3
+  if (face_nbrs[3] != -1)
   {
-    Node::index_type opp = cells_[face_neighbors[3]];
-    mod_tet(face_neighbors[3]/4,nodes[4],nodes[5],nodes[7],opp);
-    add_tet(nodes[4],nodes[0],nodes[5],opp);
-    add_tet(nodes[5],nodes[2],nodes[7],opp);
-    add_tet(nodes[7],nodes[1],nodes[4],opp);
-    done.insert(face_neighbors[3]/4);
+    Node::index_type opp = cells_[face_nbrs[3]];
+    tets.push_back(mod_tet(face_nbrs[3]/4,nodes[4],nodes[5],nodes[7],opp));
+    tets.push_back(add_tet(nodes[4],nodes[0],nodes[5],opp));
+    tets.push_back(add_tet(nodes[5],nodes[2],nodes[7],opp));
+    tets.push_back(add_tet(nodes[7],nodes[1],nodes[4],opp));
+    done.insert(face_nbrs[3]/4);
   }
-
-#if 0
+		   
+  // Search every tet that shares an edge with the one we just split 8:1
+  // If it hasnt been split 4:1 (because it shared a face) split it 2:1
   for (edge = 0; edge < 6; ++edge)
   {
-    for (unsigned shared = 0; shared < edge_neighbors[edge].size(); ++shared)
-      if (done.find(edge_neighbors[edge][shared]/6) == done.end())
+    for (unsigned shared = 0; shared < edge_nbrs[edge].size(); ++shared)
+    {
+      // Edge index of tet that shares an edge
+      Edge::index_type nedge = edge_nbrs[edge][shared];
+      Cell::index_type ntet = nedge/6;
+      // Check to only split tets that havent been split already
+      if (done.find(ntet) == done.end())
       {	
-	Edge::index_type nedge = edge_neighbors[edge][shared];
-	Cell::index_type ntet = nedge/6;
-	Edge::index_type oedge;
-	switch(nedge % 6)
-	{
-	case 0: oedge = 4; break;
-	case 1: oedge = 5; break;
-	case 2: oedge = 3; break;
-	case 3: oedge = 2; break;
-	case 4: oedge = 0; break;
-	default:
-	case 5: oedge = 1; break;
-	}
+	// Opposite edge index.  Opposite tet edges are: 0 & 4, 1 & 5, 2 & 3
+	Edge::index_type oedge = (ntet*6+nedge%6+
+				  (nedge%6>2?-1:1)*((nedge%6)/2==1?1:4));
+	// Cell Indices of Tet that only shares one edge with tet we split 8:1
 	pair<Node::index_type, Node::index_type> nnodes = Edge::edgei(nedge);
 	pair<Node::index_type, Node::index_type> onodes = Edge::edgei(oedge);
-	orient(mod_tet(ntet,nodes[4+edge], nnodes.first, onodes.first, onodes.second));
-	orient(add_tet(nodes[4+edge], nnodes.second, onodes.second, onodes.first));
+	// Perform the 2:1 split
+	tets.push_back(add_tet(nodes[4+edge], cells_[nnodes.first], 
+			       cells_[onodes.second], cells_[onodes.first]));
+	orient(tets.back());
+	tets.push_back(mod_tet(ntet,nodes[4+edge], cells_[nnodes.second], 
+			       cells_[onodes.second], cells_[onodes.first]));
+	orient(tets.back());
+	// dont think is necessasary, but make sure tet doesnt get split again
 	done.insert(ntet);
       }
-  }
-#endif
-  
+    }
+  }  
 }
 
 
