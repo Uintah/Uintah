@@ -21,6 +21,7 @@
 
 class ScalarFieldRG;
 class ScalarFieldUG;
+class ScalarFieldRGchar;
 class ScalarField;
 typedef LockingHandle<ScalarField> ScalarFieldHandle;
 
@@ -39,6 +40,7 @@ protected:
 protected:
     enum Representation {
 	RegularGrid,
+	RegularGridChar,
 	UnstructuredGrid,
     };
     ScalarField(Representation);
@@ -50,6 +52,7 @@ public:
 
     ScalarFieldRG* getRG();
     ScalarFieldUG* getUG();
+    ScalarFieldRGchar* getRGChar();
     void get_minmax(double&, double&);
     void get_bounds(Point&, Point&);
     double longest_dimension();

@@ -41,6 +41,14 @@ ScalarFieldUG* ScalarField::getUG()
 	return 0;
 }
 
+ScalarFieldRGchar* ScalarField::getRGChar()
+{
+    if(rep==RegularGridChar)
+	return (ScalarFieldRGchar*)this;
+    else
+	return 0;
+}
+
 void ScalarField::get_minmax(double& min, double& max)
 {
     if(!have_minmax){
