@@ -190,9 +190,10 @@ void NrrdReader::execute()
     Nrrd *pn = nrrdNew();
     handle_->nrrd->axis[handle_->nrrd->dim].size = 1;
     handle_->nrrd->dim += 1;
-    int perm[handle_->nrrd->dim];
-    perm[0] = handle_->nrrd->dim - 1; 
-    for(int i = 1; i < handle_->nrrd->dim; i++) {
+    int sz = handle_->nrrd->dim;
+    int perm[sz];
+    perm[0] = sz - 1; 
+    for(int i = 1; i < sz; i++) {
       perm[i] = i - 1;
     }
     if (nrrdPermuteAxes(pn, handle_->nrrd, perm)){
