@@ -10,7 +10,7 @@ namespace Uintah {
    class Task;
    class Patch;
    class VarLabel;
-   namespace ICE {
+   namespace ICESpace {
       class ICEMaterial;
 
 /**************************************
@@ -73,6 +73,9 @@ WARNING
 #endif  // __EQUATION_OF_STATE_H__
 
 // $Log$
+// Revision 1.2  2000/10/04 20:17:51  jas
+// Change namespace ICE to ICESpace.
+//
 // Revision 1.1  2000/10/04 19:26:14  guilkey
 // Initial commit of some classes to help mainline ICE.
 //

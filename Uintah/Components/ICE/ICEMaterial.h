@@ -8,6 +8,7 @@
 #include <Uintah/Grid/PerPatch.h>
 #include <vector>
 #include <Uintah/Components/ICE/ICELabel.h>
+#include <Uintah/Components/ICE/EquationOfState.h>
 
 namespace SCICore {
    namespace Geometry {
@@ -19,7 +20,7 @@ namespace SCICore {
 namespace Uintah {
    class Patch;
    class VarLabel;
-   namespace ICE {
+   namespace ICESpace {
       using SCICore::Geometry::Point;
       using SCICore::Geometry::Vector;
       
@@ -60,7 +61,7 @@ WARNING
 	 
 	 //////////
 	 // Return correct EOS model pointer for this material
-//	 EquationOfState * getEOS() const;
+	 EquationOfState * getEOS() const;
 
          //for HeatConductionModel
          double getThermalConductivity() const;
@@ -75,6 +76,7 @@ WARNING
 	 double d_density;
          double d_thermalConductivity;
          double d_specificHeat;
+	 double d_heatTransferCoefficient;
          
 	 ICELabel* lb;
 
@@ -90,6 +92,9 @@ WARNING
 #endif // __ICE_MATERIAL_H__
 
 // $Log$
+// Revision 1.2  2000/10/04 20:17:52  jas
+// Change namespace ICE to ICESpace.
+//
 // Revision 1.1  2000/10/04 19:26:14  guilkey
 // Initial commit of some classes to help mainline ICE.
 //
