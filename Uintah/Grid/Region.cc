@@ -221,14 +221,15 @@ void Region::performConsistencyCheck() const
     throw InvalidGrid("Degenerate region");
 }
 
-int
-Region::getBCType(int face) const
+Region::BCType 
+Region::getBCType(Region::FaceType face) const
 {
   // Put in code to return whether the face is a symmetry plane,
   // a fixed boundary, borders a neighboring region or none
   // The value of face ranges from 0-5.
 
-  return 0;
+  return None;
+
 
 }
 
@@ -292,6 +293,9 @@ void Region::setNeighbor(const IntVector& n, const Region* neighbor)
 
 //
 // $Log$
+// Revision 1.16  2000/05/09 03:24:39  jas
+// Added some enums for grid boundary conditions.
+//
 // Revision 1.15  2000/05/07 06:02:12  sparker
 // Added beginnings of multiple patch support and real dependencies
 //  for the scheduler
