@@ -74,6 +74,8 @@ WARNING
     
     virtual DataWarehouse* get_old_dw() = 0;
     virtual DataWarehouse* get_new_dw() = 0;
+
+    virtual void logMemoryUse() = 0;
       
     //////////
     // Insert Documentation Here:

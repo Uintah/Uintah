@@ -51,6 +51,8 @@ WARNING
 				MPI_Datatype& datatype, MPI_Op& op) = 0;
       virtual const TypeDescription* virtualGetTypeDescription() const = 0;
       virtual RefCounted* getRefCounted();
+      virtual void getSizeInfo(string& elems, unsigned long& totsize,
+			       void*& ptr) const = 0;
    protected:
       ReductionVariableBase(const ReductionVariableBase&);
       ReductionVariableBase();

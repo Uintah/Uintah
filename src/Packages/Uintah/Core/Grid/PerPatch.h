@@ -57,6 +57,12 @@ WARNING
       void setData(const T&);
       virtual PerPatchBase* clone() const;
       PerPatch<T>& operator=(const PerPatch<T>& copy);
+      virtual void getSizeInfo(string& elems, unsigned long& totsize,
+			       void*& ptr) const {
+	elems="1";
+	totsize=sizeof(T);
+	ptr=(void*)&value;
+      }
    private:
       T value;
    };
