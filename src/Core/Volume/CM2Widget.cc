@@ -181,6 +181,7 @@ RectangleCM2Widget::io(Piostream &stream)
   const int version = 
     stream.begin_class("RectangleCM2Widget", RECTANGLECM2WIDGET_VERSION);
 
+  normalize();
   // Originally used "Pio(stream, (int)type_);", but this did not
   // compile on the SGI, so needed to do it this way.
   int tmp = (int)type_;
@@ -209,6 +210,7 @@ RectangleCM2Widget::io(Piostream &stream)
   }
 
   stream.end_class();
+  un_normalize();
 }
 
 RectangleCM2Widget::RectangleCM2Widget() : 
@@ -785,7 +787,8 @@ TriangleCM2Widget::io(Piostream &stream)
 {
   const int version = 
     stream.begin_class("TriangleCM2Widget", TRIANGLECM2WIDGET_VERSION);
-  
+
+  normalize();
   Pio(stream, base_);
   Pio(stream, top_x_);
   Pio(stream, top_y_);
@@ -805,6 +808,7 @@ TriangleCM2Widget::io(Piostream &stream)
   }
     
   stream.end_class();
+  un_normalize();
 }
 
 TriangleCM2Widget::TriangleCM2Widget() : 
