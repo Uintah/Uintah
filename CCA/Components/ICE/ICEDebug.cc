@@ -19,17 +19,71 @@ using std::cerr;
 using namespace SCIRun;
 using namespace Uintah;
 
-/* 
- ======================================================================*
- Function:  printData--
- Purpose:  Print to stderr a cell-centered, single material
+/*_______________________________________________________________________ 
+ Function:  printData--  convience function
 _______________________________________________________________________ */
 void    ICE::printData( int matl,
                         const Patch* patch, 
                         int include_EC,
                         const string&    message1,        
                         const string&    message2,       
+                        const CCVariable<int>& q_CC)
+{
+  printData_driver<CCVariable<int> >
+        (matl, patch, include_EC, message1, message2, q_CC);
+}
+void    ICE::printData( int matl,
+                        const Patch* patch, 
+                        int include_EC,
+                        const string&    message1,        
+                        const string&    message2,       
                         const CCVariable<double>& q_CC)
+{
+  printData_driver<CCVariable<double> >
+        (matl, patch, include_EC, message1, message2, q_CC);
+}
+void    ICE::printData_FC(int matl,
+                          const Patch* patch, 
+                          int include_EC,
+                          const string&    message1,      
+                          const string&    message2,  
+                          const SFCXVariable<double>& q_FC)
+{
+  printData_driver< SFCXVariable<double> >
+          (matl, patch, include_EC, message1, message2, q_FC);
+}
+void    ICE::printData_FC(int matl,
+                          const Patch* patch, 
+                          int include_EC,
+                          const string&    message1,      
+                          const string&    message2,  
+                          const SFCYVariable<double>& q_FC)
+{
+  printData_driver< SFCYVariable<double> >
+          (matl, patch, include_EC, message1, message2, q_FC);
+}
+void    ICE::printData_FC(int matl,
+                          const Patch* patch, 
+                          int include_EC,
+                          const string&    message1,      
+                          const string&    message2,  
+                          const SFCZVariable<double>& q_FC)
+{
+  printData_driver< SFCZVariable<double> >
+          (matl, patch, include_EC, message1, message2, q_FC);
+}
+
+
+/*_______________________________________________________________________
+ Function:  printData_driver-- this does the actual work
+_______________________________________________________________________ */
+template<class T>
+void    ICE::printData_driver( int matl,
+                               const Patch* patch, 
+                               int include_EC,
+                               const string&    message1,        
+                               const string&    message2,       
+                               const T& q_CC)
 {
   //__________________________________
   // Limit when we dump
@@ -44,7 +98,12 @@ void    ICE::printData( int matl,
     
   d_dbgTime= dataArchiver->getCurrentTime();
     
-  if ( levelIndx == d_dbgLevel    &&
+  bool onRightLevel = false;
+  if(levelIndx == d_dbgLevel || d_dbgLevel == -9) {
+    onRightLevel = true;
+  }
+  
+  if ( onRightLevel     &&
        dumpThisMatl == true        &&
        d_dbgTime >= d_dbgStartTime && 
        d_dbgTime <= d_dbgStopTime  &&
@@ -91,7 +150,7 @@ void    ICE::printData( int matl,
     if (d_dbgGnuPlot) {
       FILE *fp;
       string path;
-      createDirs(message1, path);
+      createDirs(patch, message1, path);
         
       string filename = path + "/" + message2;
       fp = fopen(filename.c_str(), "w");
@@ -118,105 +177,7 @@ void    ICE::printData( int matl,
   }
 }
 
-/* 
- ======================================================================*
- Function:  printData--
- Purpose:  Print to stderr a cell-centered, single material
-_______________________________________________________________________ */
-void    ICE::printData(int matl,
-                       const Patch* patch,                
-                       int include_EC,                    
-                       const string&    message1,         
-                       const string&    message2,         
-                       const CCVariable<int>& q_CC)       
-{
-  //__________________________________
-  // Limit when we dump
-  bool dumpThisMatl = false;
-  for (int m = 0; m<(int) d_dbgMatls.size(); m++) {
-    if (matl == d_dbgMatls[m]) {
-      dumpThisMatl = true;
-    }
-  } 
-  
-  d_dbgTime= dataArchiver->getCurrentTime();  
-  const Level* level = patch->getLevel();
-  int levelIndx = level->getIndex();
-  
-  if ( levelIndx == d_dbgLevel    &&
-       dumpThisMatl == true        &&
-       d_dbgTime >= d_dbgStartTime && 
-       d_dbgTime <= d_dbgStopTime  &&
-       d_dbgTime >= d_dbgNextDumpTime) {
-
-    // only after 0 timestep
-    if (dataArchiver->getCurrentTime() > 0 ){ 
-      d_dbgOldTime = d_dbgTime;      
-    }
-         
-    IntVector low, high; 
-    
-    adjust_dbg_indices( include_EC, patch, d_dbgBeginIndx, d_dbgEndIndx, 
-                        low, high);
-    
-    //__________________________________
-    // spew to stderr
-    if ( d_dbgGnuPlot== false && 
-        high.x() > low.x() && high.y() > low.y() && high.z() > low.z() ) {      
-      cerr << "____________________________________________L-"<<levelIndx<<"\n";
-      cerr << "$" << message1 << "\n";
-      cerr << "$" << message2 << "\n";
-
-      cerr.setf(ios::scientific,ios::floatfield);
-      cerr.precision(d_dbgSigFigs);
-      for(int k = low.z(); k < high.z(); k++)  {
-        for(int j = low.y(); j < high.y(); j++) {
-          for(int i = low.x(); i < high.x(); i++) {
-           IntVector idx(i, j, k);
-           cerr << "[" << i << "," << j << "," << k << "]~ " 
-                << q_CC[idx] << " ";
-
-           /*  cerr << "\n"; */
-          }
-         cerr << "\n";
-        }
-        cerr << "\n";
-      }
-      cerr << " ______________________________________________\n";
-      cerr.setf(ios::scientific ,ios::floatfield);
-    }
-    //__________________________________
-    //  spew to gnuPlot data files
-    if (d_dbgGnuPlot) {
-      FILE *fp;
-      string path;
-      createDirs(message1, path);
-        
-      string filename = path + "/" + message2;
-      fp = fopen(filename.c_str(), "w");
-      double x, dx;
-      find_gnuplot_origin_And_dx(patch, low, high, &dx, &x);
-      
-      for(int k = low.z(); k < high.z(); k++)  {
-        for(int j = low.y(); j < high.y(); j++) {
-          for(int i = low.x(); i < high.x(); i++) {
-            IntVector idx(i, j, k);
-            fprintf(fp, "%16.15E %i\n", x+=dx, q_CC[idx]);
-          }
-        }
-      }
-      fclose(fp);
-    } // gnuplot
-  }  // time to dump
-  //__________________________________
-  //  bullet proof
-  if (d_dbgMatls.size() == 0){
-    throw ProblemSetupException(
-          "P R I N T  D A T A: You must specify at least 1 matl in d_dbgMatls");
-  }
-}
-/* 
- ======================================================================*
+/*_______________________________________________________________________
  Function:  printVector--
  Purpose:  Print to stderr a cell-centered, single material
 _______________________________________________________________________ */
@@ -241,12 +202,17 @@ void    ICE::printVector(int matl,
   int levelIndx = level->getIndex();
   d_dbgTime= dataArchiver->getCurrentTime();  
   
-  if ( levelIndx == d_dbgLevel     &&
+  bool onRightLevel = false;
+  if(levelIndx == d_dbgLevel || d_dbgLevel == -9) {
+    onRightLevel = true;
+  }
+  
+  if ( onRightLevel     &&
        dumpThisMatl == true        &&
        d_dbgTime >= d_dbgStartTime && 
        d_dbgTime <= d_dbgStopTime  &&
        d_dbgTime >= d_dbgNextDumpTime) {
-
+       
     // only after 0 timestep
     if (dataArchiver->getCurrentTime() > 0 ){ 
       d_dbgOldTime = d_dbgTime;      
@@ -258,8 +224,6 @@ void    ICE::printVector(int matl,
                         low, high); 
     
     string var_name;
- 
-    
     for (int dir = 0; dir < 3 ; dir ++ ) { 
       if (dir == 0 ) {
         var_name="X_" + message2;
@@ -270,6 +234,7 @@ void    ICE::printVector(int matl,
       if (dir == 2 ) {
         var_name="Z_" + message2;
       }
+
       //__________________________________
       // spew to stderr
       if ( d_dbgGnuPlot== false && 
@@ -302,7 +267,7 @@ void    ICE::printVector(int matl,
       if (d_dbgGnuPlot) {
         FILE *fp;
         string path;
-        createDirs(message1, path);
+        createDirs(patch, message1, path);
 
         string filename = path + "/" + var_name;
         fp = fopen(filename.c_str(), "w");
@@ -329,297 +294,7 @@ void    ICE::printVector(int matl,
   }
 }
 
-
-/* 
- ======================================================================*
- Function:  printData_FC--
- Purpose:  Print left face
-_______________________________________________________________________ */
-void    ICE::printData_FC(int matl,
-                          const Patch* patch, 
-                          int include_EC,
-                          const string&    message1,      
-                          const string&    message2,  
-                          const SFCXVariable<double>& q_FC)
-{
-  //__________________________________
-  // Limit when we dump
-  bool dumpThisMatl = false;
-  for (int m = 0; m<(int) d_dbgMatls.size(); m++) {
-    if (matl == d_dbgMatls[m]) {
-      dumpThisMatl = true;
-    }
-  } 
-  const Level* level = patch->getLevel();
-  int levelIndx = level->getIndex();
-  d_dbgTime= dataArchiver->getCurrentTime();  
-  
-  if ( levelIndx  == d_dbgLevel   &&
-       dumpThisMatl == true        &&
-       d_dbgTime >= d_dbgStartTime && 
-       d_dbgTime <= d_dbgStopTime  &&
-       d_dbgTime >= d_dbgNextDumpTime) {
-
-    // only after 0 timestep
-    if (dataArchiver->getCurrentTime() > 0 ){ 
-      d_dbgOldTime = d_dbgTime;      
-    }
-    
-    IntVector low, high; 
-
-    adjust_dbg_indices( include_EC, patch, d_dbgBeginIndx, d_dbgEndIndx, 
-                        low, high); 
-
-    //__________________________________
-    // spew to stderr
-    if ( d_dbgGnuPlot== false && 
-        high.x() > low.x() && high.y() > low.y() && high.z() > low.z() ) {  
-    
-      cerr.setf(ios::scientific,ios::floatfield);
-      cerr.precision(d_dbgSigFigs); 
-      cerr << "____________________________________________L-"<<levelIndx<<"\n";
-      cerr << "$" << message1 << "\n";
-      cerr << "$" << message2 << "\n"; 
-      for(int k = low.z(); k < high.z(); k++)  {
-        for(int j = low.y(); j < high.y(); j++) {
-          for(int i = low.x(); i < high.x(); i++) {
-           IntVector idx(i, j, k);
-           cerr << "[" << i << "," << j << "," << k << "]~ " <<
-             q_FC[idx] << "  ";
-
-           /* cerr <<"\n"; */
-          }
-          cerr << "\n";
-        }
-        cerr <<"\n";
-      }
-      cerr << " ______________________________________________\n";
-      cerr.setf(ios::scientific, ios::floatfield);
-    }
-    //__________________________________
-    //  spew to gnuPlot data files
-    if (d_dbgGnuPlot) {
-      FILE *fp;
-      string path;
-      createDirs(message1, path);
-
-      string filename = path + "/" + message2;
-      fp = fopen(filename.c_str(), "w");
-      double x, dx;
-      find_gnuplot_origin_And_dx(patch, low, high, &dx, &x);
-
-      for(int k = low.z(); k < high.z(); k++)  {
-        for(int j = low.y(); j < high.y(); j++) {
-          for(int i = low.x(); i < high.x(); i++) {
-            IntVector idx(i, j, k);
-            fprintf(fp, "%16.15E %16.15E\n", x+=dx, q_FC[idx]);
-          }
-        }
-      }
-      fclose(fp);
-    } // gnuplot
-  }  // time to dump
-  //__________________________________
-  //  bullet proof
-  if (d_dbgMatls.size() == 0){
-    throw ProblemSetupException(
-          "P R I N T  D A T A: You must specify at least 1 matl in d_dbgMatls");
-  }
-}
-/* 
- ======================================================================*
- Function:  printData_FC--
- Purpose:   Prints bottom Face
-_______________________________________________________________________ */
-void    ICE::printData_FC(int matl,
-                          const Patch* patch, 
-                          int include_EC,
-                          const string&    message1,        
-                          const string&    message2,  
-                          const SFCYVariable<double>& q_FC)
-{
-  //__________________________________
-  // Limit when we dump
-  bool dumpThisMatl = false;
-  for (int m = 0; m<(int) d_dbgMatls.size(); m++) {
-    if (matl == d_dbgMatls[m]) {
-      dumpThisMatl = true;
-    }
-  } 
-  const Level* level = patch->getLevel();
-  int levelIndx = level->getIndex();
-  d_dbgTime= dataArchiver->getCurrentTime();  
-  
-  if ( levelIndx == d_dbgLevel     &&
-       dumpThisMatl == true        &&
-       d_dbgTime >= d_dbgStartTime && 
-       d_dbgTime <= d_dbgStopTime  &&
-       d_dbgTime >= d_dbgNextDumpTime) {
-       
-    // only after 0 timestep
-    if (dataArchiver->getCurrentTime() > 0 ){ 
-      d_dbgOldTime = d_dbgTime;      
-    }
-          
-    IntVector low, high; 
-
-    adjust_dbg_indices( include_EC, patch, d_dbgBeginIndx, d_dbgEndIndx, 
-                        low, high);
-    //__________________________________
-    // spew to stderr
-    if ( d_dbgGnuPlot== false && 
-        high.x() > low.x() && high.y() > low.y() && high.z() > low.z() ) {  
-      cerr.setf(ios::scientific,ios::floatfield);
-      cerr.precision(d_dbgSigFigs);
-      cerr << "____________________________________________L-"<<levelIndx<<"\n";
-      cerr << "$" << message1 << "\n";
-      cerr << "$" << message2 << "\n";
-      for(int k = low.z(); k < high.z(); k++)  {
-        for(int j = low.y(); j < high.y(); j++) {
-          for(int i = low.x(); i < high.x(); i++) {
-           IntVector idx(i, j, k);
-           cerr << "[" << i << "," << j << "," << k << "]~ " <<  
-             q_FC[idx] << "  ";
-
-           /*  cerr << "\n"; */
-          }
-          cerr << "\n";
-        }
-        cerr << "\n";
-      }
-      cerr << " ______________________________________________\n";
-      cerr.setf(ios::scientific, ios::floatfield);
-    }
-    //__________________________________
-    //  spew to gnuPlot data files
-    if (d_dbgGnuPlot) {
-      FILE *fp;
-      string path;
-      createDirs(message1, path);
-
-      string filename = path + "/" + message2;
-      fp = fopen(filename.c_str(), "w");
-      double x, dx;
-      find_gnuplot_origin_And_dx(patch, low, high, &dx, &x);
-
-      for(int k = low.z(); k < high.z(); k++)  {
-        for(int j = low.y(); j < high.y(); j++) {
-          for(int i = low.x(); i < high.x(); i++) {
-            IntVector idx(i, j, k);
-            fprintf(fp, "%16.15E %16.15E\n", x+=dx, q_FC[idx]);
-          }
-        }
-      }
-      fclose(fp);
-    } // gnuplot
-  } // time to dump
-  //__________________________________
-  //  bullet proof
-  if (d_dbgMatls.size() == 0){
-    throw ProblemSetupException(
-          "P R I N T  D A T A: You must specify at least 1 matl in d_dbgMatls");
-  }
-}
-
-/* 
- ======================================================================*
- Function:  printData_FC--
- Purpose:  Prints back face
-_______________________________________________________________________ */
-void    ICE::printData_FC(int matl,
-                          const Patch* patch, 
-                          int include_EC,
-                          const string&    message1,        
-                          const string&    message2,       
-                          const SFCZVariable<double>& q_FC)
-{
-
-  //__________________________________
-  // Limit when we dump
-  bool dumpThisMatl = false;
-  for (int m = 0; m<(int) d_dbgMatls.size(); m++) {
-    if (matl == d_dbgMatls[m]) {
-      dumpThisMatl = true;
-    }
-  } 
-  
-  const Level* level = patch->getLevel();
-  int levelIndx = level->getIndex();
-  d_dbgTime= dataArchiver->getCurrentTime();
-    
-  if ( levelIndx == d_dbgLevel     &&
-       dumpThisMatl == true        &&
-       d_dbgTime >= d_dbgStartTime && 
-       d_dbgTime <= d_dbgStopTime  &&
-       d_dbgTime >= d_dbgNextDumpTime) {
-
-    // only after 0 timestep
-    if (dataArchiver->getCurrentTime() > 0 ){ 
-      d_dbgOldTime = d_dbgTime;      
-    }
-         
-    IntVector low, high; 
-    
-    adjust_dbg_indices( include_EC, patch, d_dbgBeginIndx, d_dbgEndIndx, 
-                        low, high);
-    //__________________________________
-    // spew to stderr
-    if ( d_dbgGnuPlot== false && 
-        high.x() > low.x() && high.y() > low.y() && high.z() > low.z() ) {   
-      cerr.setf(ios::scientific,ios::floatfield);
-      cerr.precision(d_dbgSigFigs);   
-      cerr << "____________________________________________L-"<<levelIndx<<"\n";
-      cerr << "$" << message1 << "\n";
-      cerr << "$" << message2 << "\n";
-      for(int k = low.z(); k < high.z(); k++)  {
-        for(int j = low.y(); j < high.y(); j++) {
-          for(int i = low.x(); i < high.x(); i++) {
-           IntVector idx(i, j, k);
-           cerr << "[" << i << "," << j << "," << k << "]~ " << 
-             q_FC[idx] << "  ";
-
-           /*  cerr << "\n"; */
-          }
-         cerr << "\n";
-        }
-        cerr << "\n";
-      }
-      cerr << " ______________________________________________\n";
-      cerr.setf(ios::scientific, ios::floatfield);
-    }
-    //__________________________________
-    //  spew to gnuPlot data files
-    if (d_dbgGnuPlot) {
-      FILE *fp;
-      string path;
-      createDirs(message1, path);
-
-      string filename = path + "/" + message2;
-      fp = fopen(filename.c_str(), "w");
-      double x, dx;
-      find_gnuplot_origin_And_dx(patch, low, high, &dx, &x);
-
-      for(int k = low.z(); k < high.z(); k++)  {
-        for(int j = low.y(); j < high.y(); j++) {
-          for(int i = low.x(); i < high.x(); i++) {
-            IntVector idx(i, j, k);
-            fprintf(fp, "%16.15E %16.15E\n", x+=dx, q_FC[idx]);
-          }
-        }
-      }
-      fclose(fp);
-    } // gnuplot
-  }  // time to dump
-  //__________________________________
-  //  bullet proof
-  if (d_dbgMatls.size() == 0){
-    throw ProblemSetupException(
-          "P R I N T  D A T A: You must specify at least 1 matl in d_dbgMatls");
-  }
-}
-
-/* 
- ======================================================================*
+/*_______________________________________________________________________
  Function:  printStencil--
 _______________________________________________________________________ */
 void    ICE::printStencil( int /*matl*/,
@@ -633,7 +308,12 @@ void    ICE::printStencil( int /*matl*/,
   int levelIndx = level->getIndex();
   d_dbgTime= dataArchiver->getCurrentTime();
     
-  if ( levelIndx == d_dbgLevel &&
+  bool onRightLevel = false;
+  if(levelIndx == d_dbgLevel || d_dbgLevel == -9) {
+    onRightLevel = true;
+  }
+  
+  if ( onRightLevel     &&
        d_dbgTime >= d_dbgStartTime && 
        d_dbgTime <= d_dbgStopTime  &&
        d_dbgTime >= d_dbgNextDumpTime) {
@@ -675,8 +355,7 @@ void    ICE::printStencil( int /*matl*/,
     cerr.setf(ios::scientific ,ios::floatfield);
   } 
 }
-/* 
- ======================================================================*
+/*_______________________________________________________________________
  Function:  adjust_dbg_indices--
  Purpose:  tweak what the user has specified for d_dbgBegin and end 
  indices for multipatch problems
@@ -684,12 +363,13 @@ _______________________________________________________________________ */
 void  ICE::adjust_dbg_indices(  const int include_EC,
                                 const Patch* patch,
                                 const IntVector d_dbgBeginIndx,
-                                const IntVector d_dbgEndIndx,  
+                                const IntVector d_dbgEndIndx,
                                 IntVector& low,                 
                                 IntVector& high)                
 {
   //__________________________________
   // 
+  IntVector lo, hi;
   if (include_EC == 1)  { 
     low   = patch->getCellLowIndex();
     high  = patch->getCellHighIndex();
@@ -700,17 +380,30 @@ void  ICE::adjust_dbg_indices(  const int include_EC,
   }
 
 #if 0 
-  if (d_dbgGnuPlot){                  // ignore extra cell specification
+  if (d_dbgGnuPlowt){                  // ignore extra cell specification
     low  = d_dbgBeginIndx;
     high = d_dbgEndIndx;
   }
 #endif
-
+  const Level* level = patch->getLevel();
+  const int levelIndx = level->getIndex();
+  IntVector refineRatio(level->getRefinementRatio());
+  //__________________________________
+  //  for multilevel problems we need
+  // to adjust what the user input
+  IntVector beginIndx = d_dbgBeginIndx;
+  IntVector endIndx   = d_dbgEndIndx;
+  if ( levelIndx > 0 ) {
+    IntVector numLevels(levelIndx,levelIndx,levelIndx);
+    beginIndx =beginIndx* refineRatio * numLevels;
+    endIndx   =endIndx  * refineRatio * numLevels;
+  } 
+  
   //__________________________________                            
-  // for multipatch problems you need                             
-  // further restrict the indicies                                
-  if (d_dbgBeginIndx != IntVector(0,0,0)){                        
-    IntVector c = d_dbgBeginIndx;                                 
+  // for multipatch & multilevel problems you need                             
+  // further restrict the indicies                    
+  if (beginIndx!= IntVector(0,0,0)){                        
+    IntVector c = beginIndx;                                 
     for (int dir = 0; dir < 3; dir ++) {  // examine each indice  
       if (c(dir) >= low(dir) &&  c(dir) <= high(dir)) {           
         low(dir) = c(dir);                                        
@@ -721,8 +414,8 @@ void  ICE::adjust_dbg_indices(  const int include_EC,
       }                                                           
     }                                                             
   }                                                               
-   if (d_dbgEndIndx != IntVector(0,0,0)){                         
-    IntVector c = d_dbgEndIndx;                                   
+   if (endIndx != IntVector(0,0,0)){                         
+    IntVector c = endIndx;                                   
     for (int dir = 0; dir < 3; dir ++) {  // examine each indice  
       if (c(dir) >= low(dir) &&  c(dir) <= high(dir)) {           
         high(dir) = c(dir);                                       
@@ -730,12 +423,11 @@ void  ICE::adjust_dbg_indices(  const int include_EC,
         high(dir) = low(dir);                                     
       } else if (c(dir) > high(dir) ) {                           
         high(dir) = high(dir);                                    
-      }                                                           
+      }                                                          
     }                                                             
   }                                                               
 }
-/* 
- ======================================================================*
+/*_______________________________________________________________________
  Function:  readData--
  Purpose:  Print to stderr a cell-centered, single material
 _______________________________________________________________________ */
@@ -805,15 +497,16 @@ void    ICE::readData(const Patch* patch, int include_EC,
   fp >> text;
 }
 
-/* 
- ======================================================================
+/*_______________________________________________________________________
  Function~  createDirs:
  Purpose~   generate a bunch of directories based on desc and is used by
             the gnuPlot option.  For example, if desc = 
             BOT_Lagrangian_spVolRF_Mat_0_patch_0 then the dir structure
             would be ./BOT_Lagrangian_spVolRF/patch_0/matl_0
  _______________________________________________________________________ */
-void ICE::createDirs( const string& desc, string& path) 
+void ICE::createDirs( const Patch* patch,
+                      const string& desc,
+                       string& path) 
 {
   string::size_type pos  = desc.find ( "Mat" );
   string::size_type pos2 = desc.find ( "patch" );
@@ -837,8 +530,11 @@ void ICE::createDirs( const string& desc, string& path)
   }
   
   
-  ostringstream DW;
+  ostringstream DW, levelIndex;
   DW << dataArchiver->getCurrentTimestep();
+  const Level* level = patch->getLevel();
+  levelIndex << "L-"<<level->getIndex();
+  
   //__________________________________
   // parse desc into dirName, matl and patch
   if (pos == string::npos ){  // if Mat isn't in the desc
@@ -867,26 +563,50 @@ void ICE::createDirs( const string& desc, string& path)
   path = udaDir + "/" + dirName + "/" + DW.str();
   mkdir( path.c_str(), 0777 );
   
-  path = udaDir + "/" + dirName + "/" + DW.str() + "/" + patchDir;
+  path = udaDir + "/" + dirName + "/" + DW.str() + "/" + levelIndex.str();
+  mkdir( path.c_str(), 0777 );
+  
+  path = udaDir + "/" + dirName + "/" + DW.str() + "/" + levelIndex.str()
+         + "/" + patchDir;
   mkdir( path.c_str(), 0777 );
   
   if (matDir != "") { 
-    path = udaDir + "/" + dirName + "/" + DW.str() + "/" + 
-           patchDir + "/" + matDir ;
+    path = udaDir + "/" + dirName + "/" + DW.str() + "/" + levelIndex.str() 
+            + "/" + patchDir + "/" + matDir ;
     mkdir( path.c_str(), 0777 );
   }
 }
-/* 
- ======================================================================
+/*_______________________________________________________________________
  Function~  find_gnuplot_origin_And_dx:
  Purpose~   Find principle direction the associated dx and the origin
  _______________________________________________________________________ */
 void ICE::find_gnuplot_origin_And_dx(const Patch* patch, 
-                                     const IntVector low, 
-                                     const IntVector high,
+                                     IntVector& low, 
+                                     IntVector& high,
                                      double *dx,
                                      double *origin)
 {
+   //__________________________________
+  //  for multilevel problems adjust the user input
+  // Just a 1 to low on all non-principal dirs.
+  const Level* level = patch->getLevel();
+  int levelIndx = level->getIndex();
+  IntVector refineRatio(level->getRefinementRatio());
+  IntVector numLevels(levelIndx,levelIndx,levelIndx);
+  IntVector numCells(numLevels * refineRatio );
+
+  if ( levelIndx > 0 ) {
+    if (high.x() - low.x() == numCells.x() ) {
+      high.x(low.x() + 1);
+    }
+    if (high.y() - low.y() == numCells.y()) {
+      high.y(low.y() + 1);
+    }
+    if (high.z() - low.z() ==  numCells.z()) {
+      high.z(low.z() + 1);
+    }
+  } 
+  
   int test=0;
   Vector  dx_org = patch->dCell();
   //__________________________________
