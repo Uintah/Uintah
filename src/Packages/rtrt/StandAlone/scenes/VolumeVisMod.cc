@@ -60,19 +60,19 @@ void get_material(Array1<Color> &matls, Array1<AlphaPos> &alphas) {
 void get_material2(Array1<Color> &matls, Array1<AlphaPos> &alphas) {
 
   float div = 1.0/255;
-  matls.add(Color(255, 255, 255) * div);
-  matls.add(Color(255, 255, 180) * div);
-  matls.add(Color(255, 247, 120) * div);   
-  matls.add(Color(255, 228, 80) * div);
-  matls.add(Color(255, 204, 55) * div);   
-  matls.add(Color(255, 163, 20) * div);
-  matls.add(Color(255, 120, 0) * div);   
-  matls.add(Color(230, 71, 0) * div);
-  matls.add(Color(200, 41, 0) * div);   
-  matls.add(Color(153, 18, 0) * div);
-  matls.add(Color(102, 2, 0) * div);   
-  matls.add(Color(52, 0, 0) * div);
   matls.add(Color(0, 0, 0) * div);
+  matls.add(Color(52, 0, 0) * div);
+  matls.add(Color(102, 2, 0) * div);   
+  matls.add(Color(153, 18, 0) * div);
+  matls.add(Color(200, 41, 0) * div);   
+  matls.add(Color(230, 71, 0) * div);
+  matls.add(Color(255, 120, 0) * div);   
+  matls.add(Color(255, 163, 20) * div);
+  matls.add(Color(255, 204, 55) * div);   
+  matls.add(Color(255, 228, 80) * div);
+  matls.add(Color(255, 247, 120) * div);   
+  matls.add(Color(255, 255, 180) * div);
+  matls.add(Color(255, 255, 255) * div);
 
 
   alphas.add(AlphaPos(0       , 0));  // pos 0
