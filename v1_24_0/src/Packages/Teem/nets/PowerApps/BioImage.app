@@ -89,7 +89,6 @@ set close_img [image create photo -file ${image_dir}/powerapp-close.ppm]
 set insertimg [image create photo -file ${image_dir}/powerapp-insertbar.ppm]
 set orientimg [image create photo -file ${image_dir}/OrientationsCube.ppm]
 
-
 setProgressText "Loading BioImage Application, Please Wait..."
 
 #######################################################
@@ -2954,7 +2953,7 @@ class BioImageApp {
 	set choose [$this determine_choose_port]
 
 	# add modules
-	set m1 [addModuleAtPosition "Teem" "UnuNtoZ" "UnuResample" 100 [expr 10 * $num_filters + 500] ]
+	set m1 [add_filter_mod Teem UnuNtoZ UnuResample]
 	
 	# add connection to Choose module and new module
 	set ChooseNrrd [lindex [lindex $filters(0) $modules] $load_choose_vis]
@@ -2964,8 +2963,8 @@ class BioImageApp {
 	addConnection $m1 0 $ChooseNrrd $choose
 
 	set row $grid_rows
-	# if inserting, disconnect current to current's next and connect current
-	# to new and new to current's next
+	# if inserting, disconnect current to current's next and
+	# connect current to new and new to current's next
 	set insert 0
 	if {[lindex $filters($which) $next_index] != "end"} {
             set insert 1
@@ -2985,20 +2984,19 @@ class BioImageApp {
 	}
 
         # add to filters array
-        set filters($num_filters) [list resample [list $m1] [list $m1 0] [list $m1 0] $which [lindex $filters($which) $next_index] $choose $row 1 "Resample - Unknown"]
+        set filters($num_filters) \
+	    [list resample [list $m1] [list $m1 0] [list $m1 0] $which \
+		 [lindex $filters($which) $next_index] $choose $row 1 \
+		 "Resample - Unknown"]
 
 
 	# Make current frame regular
 	set p $which.f$which
-	$history0.$p configure -background grey75 -foreground black -borderwidth 2
-	$history1.$p configure -background grey75 -foreground black -borderwidth 2
-
-        set f0 [add_Resample_UI $history0 $row $num_filters]
-        set f1 [add_Resample_UI $history1 $row $num_filters]
-
-        # Add insert bar
-        $this add_insert_bar $f0 $num_filters
-        $this add_insert_bar $f1 $num_filters
+	foreach h "$history0 $history1" {
+	    $h.$p configure -background grey75 -foreground black -borderwidth 2
+	    set f [add_Resample_UI $h $row $num_filters]
+	    $this add_insert_bar $f $num_filters
+	}
 
         if {!$insert} {
 	    $attachedPFr.f.p.sf justify bottom
@@ -3006,7 +3004,8 @@ class BioImageApp {
 	}
 
 	# update vars
-	set filters($which) [lreplace $filters($which) $next_index $next_index $num_filters]
+	set filters($which) \
+	    [lreplace $filters($which) $next_index $next_index $num_filters]
 
         #change_current $num_filters
 
@@ -3042,8 +3041,8 @@ class BioImageApp {
 	set choose [$this determine_choose_port]
 
 	# add modules
-	set m1 [addModuleAtPosition "Teem" "UnuAtoM" "UnuCrop" 100 [expr 10 * $num_filters + 500] ]
-	set m2 [addModuleAtPosition "Teem" "NrrdData" "NrrdInfo" 300 [expr 10 * $num_filters + 500] ]
+	set m1 [add_filter_mod Teem UnuAtoM UnuCrop 0 0]
+	set m2 [add_filter_mod Teem NrrdData NrrdInfo 1 0]
 	
 	# add connection to Choose module and new module
 	set ChooseNrrd [lindex [lindex $filters(0) $modules] $load_choose_vis]
@@ -3054,8 +3053,8 @@ class BioImageApp {
 	addConnection $m1 0 $ChooseNrrd $choose
 
 	set row $grid_rows
-	# if inserting, disconnect current to current's next and connect current
-	# to new and new to current's next
+	# if inserting, disconnect current to current's next 
+	# and connect current to new and new to current's next
 	set insert 0
 	if {[lindex $filters($which) $next_index] != "end"} {
             set insert 1
@@ -3075,19 +3074,19 @@ class BioImageApp {
 	}
 
         # add to filters array
-        set filters($num_filters) [list crop [list $m1 $m2] [list $m1 0] [list $m1 0] $which [lindex $filters($which) $next_index] $choose $row 1 "Crop - Unknown" [list 0 0 0] 0 [list 0 0 0 0 0 0]]
+        set filters($num_filters) \
+	    [list crop [list $m1 $m2] [list $m1 0] [list $m1 0] $which \
+		 [lindex $filters($which) $next_index] $choose $row 1 \
+		 "Crop - Unknown" [list 0 0 0] 0 [list 0 0 0 0 0 0]]
+
 
 	# Make current frame regular
 	set p $which.f$which
-	$history0.$p configure -background grey75 -foreground black -borderwidth 2
-	$history1.$p configure -background grey75 -foreground black -borderwidth 2
-
-        set f0 [add_Crop_UI $history0 $row $num_filters]
-        set f1 [add_Crop_UI $history1 $row $num_filters]
-
-        # Add insert bar
-        $this add_insert_bar $f0 $num_filters
-        $this add_insert_bar $f1 $num_filters
+	foreach h "$history0 $history1" {
+	    $h.$p configure -background grey75 -foreground black -borderwidth 2
+	    set f [add_Crop_UI $h $row $num_filters]
+	    $this add_insert_bar $f $num_filters
+	}
 
         # update crop values to be actual bounds (not M) if available
         global $m1-maxAxis0
@@ -3108,7 +3107,8 @@ class BioImageApp {
 	}
 
 	# update vars
-	set filters($which) [lreplace $filters($which) $next_index $next_index $num_filters]
+	set filters($which) \
+	    [lreplace $filters($which) $next_index $next_index $num_filters]
 
 	set num_filters [expr $num_filters + 1]
 	set grid_rows [expr $grid_rows + 1]
@@ -3148,7 +3148,7 @@ class BioImageApp {
 	set choose [$this determine_choose_port]
 
 	# add modules
-	set m1 [addModuleAtPosition "Teem" "UnuAtoM" "UnuCmedian" 100 [expr 10 * $num_filters + 500] ]
+	set m1 [add_filter_mod Teem UnuAtoM UnuCmedian]
 	
 	# add connection to Choose module and new module
 	set ChooseNrrd [lindex [lindex $filters(0) $modules] $load_choose_vis]
@@ -3159,8 +3159,8 @@ class BioImageApp {
 	addConnection $m1 0 $ChooseNrrd $choose
 
 	set row $grid_rows
-	# if inserting, disconnect current to current's next and connect current
-	# to new and new to current's next
+	# if inserting, disconnect current to current's next
+	# and connect current to new and new to current's next
 	set insert 0
 	if {[lindex $filters($which) $next_index] != "end"} {
             set insert 1
@@ -3180,19 +3180,18 @@ class BioImageApp {
 	}
 
         # add to filters array
-        set filters($num_filters) [list cmedian [list $m1] [list $m1 0] [list $m1 0] $which [lindex $filters($which) $next_index] $choose $row 1 "Median Filtering - Unknown"]
+        set filters($num_filters) \
+	    [list cmedian [list $m1] [list $m1 0] [list $m1 0] $which \
+		 [lindex $filters($which) $next_index] $choose $row 1 \
+		 "Median Filtering - Unknown"]
 
 	# Make current frame regular
 	set p $which.f$which
-	$history0.$p configure -background grey75 -foreground black -borderwidth 2
-	$history1.$p configure -background grey75 -foreground black -borderwidth 2
-
-        set f0 [add_Cmedian_UI $history0 $row $num_filters]
-        set f1 [add_Cmedian_UI $history1 $row $num_filters]
-
-        # Add insert bar
-        $this add_insert_bar $f0 $num_filters
-        $this add_insert_bar $f1 $num_filters
+	foreach h "$history0 $history1" {
+	    $h.$p configure -background grey75 -foreground black -borderwidth 2
+	    set f [add_Cmedian_UI $h $row $num_filters]
+	    $this add_insert_bar $f $num_filters
+	}
 
         if {!$insert} {
 	    $attachedPFr.f.p.sf justify bottom
@@ -3200,7 +3199,8 @@ class BioImageApp {
 	}
 
 	# update vars
-	set filters($which) [lreplace $filters($which) $next_index $next_index $num_filters]
+	set filters($which) \
+	    [lreplace $filters($which) $next_index $next_index $num_filters]
 
 	set num_filters [expr $num_filters + 1]
 	set grid_rows [expr $grid_rows + 1]
@@ -3235,11 +3235,10 @@ class BioImageApp {
 	set choose [$this determine_choose_port]
 
 	# add modules
-	set m1 [addModuleAtPosition "Teem" "UnuAtoM" "UnuHeq"  200 [expr 10 * $num_filters + 400] ]
-	set m2 [addModuleAtPosition "Teem" "UnuNtoZ" "UnuQuantize"  200 [expr 10 * $num_filters + 600] ]
-	set m3 [addModuleAtPosition "Teem" "Converters" "NrrdToField"  100 [expr 10 * $num_filters + 400] ]
-        set m4 [addModuleAtPosition "SCIRun" "FieldsOther" "ScalarFieldStats"  100 [expr 10 * $num_filters + 600] ]
-
+	set m1 [add_filter_mod Teem UnuAtoM UnuHeq 0 0]	
+	set m2 [add_filter_mod Teem UnuNtoZ UnuQuantize 0 1]	
+	set m3 [add_filter_mod Teem Converters NrrdToField 1 0]
+	set m4 [add_filter_mod SCIRun FieldsOther ScalarFieldStats 1 1]
 	
 	# add connection to Choose module and new module
 	set ChooseNrrd [lindex [lindex $filters(0) $modules] $load_choose_vis]
@@ -3251,10 +3250,9 @@ class BioImageApp {
 	addConnection $m1 0 $m2 0
 	addConnection $m2 0 $ChooseNrrd $choose
 
-        global $mods(ViewSlices)-min
-        global $mods(ViewSlices)-max
-        set min [set $mods(ViewSlices)-min]
-        set max [set $mods(ViewSlices)-max]
+	upvar \#0 $mods(ViewSlices)-min vmin $mods(ViewSlices)-max vmax
+        set min $vmin
+        set max $vmax
 
         if {$min == -1 && $max == -1} {
 	    # min/max haven't been set becuase it hasn't executed yet
@@ -3262,27 +3260,25 @@ class BioImageApp {
 	    set max 255
 	}
 
-        global $m4-setdata
-        set $m4-setdata 1
+        setGlobal $m4-setdata 1
         global $m4-args
-        trace variable $m4-args w "$this update_histo_graph_callback $num_filters"
+        trace variable $m4-args w \
+	    "$this update_histo_graph_callback $num_filters"
 
-        global $m1-bins
-        set $m1-bins 3000
+        setGlobal $m1-bins 3000
 
-        global $m2-nbits $m2-minf $m2-maxf $m2-useinputmin $m2-useinputmax
-        set $m2-nbits 8
-        set $m2-minf $min
-        set $m2-maxf $max
-        set $m2-useinputmin 1
-        set $m2-useinputmax 1
+        setGlobal $m2-nbits 8
+        setGlobal $m2-minf $min
+        setGlobal $m2-maxf $max
+        setGlobal $m2-useinputmin 1
+        setGlobal $m2-useinputmax 1
 
 
 	set row $grid_rows
-	# if inserting, disconnect current to current's next and connect current
-	# to new and new to current's next
+	# if inserting, disconnect current to current's next and 
+	# connect current to new and new to current's next
 	set insert 0
-	if {[lindex $filters($which) $next_index] != "end"} {
+	if { [lindex $filters($which) $next_index] != "end" } {
             set insert 1
 	    set n [lindex $filters($which) $next_index] 
 	    set next_mod [lindex [lindex $filters($n) $input] 0]
@@ -3300,38 +3296,38 @@ class BioImageApp {
 	}
 
         # add to filters array
-        set filters($num_filters) [list histo [list $m1 $m2 $m3 $m4] [list $m1 0] [list $m1 0] $which [lindex $filters($which) $next_index] $choose $row 1 "Histo - Unknown"]
+        set filters($num_filters) \
+	    [list histo [list $m1 $m2 $m3 $m4] [list $m1 0] [list $m2 0] \
+		 $which [lindex $filters($which) $next_index] $choose $row 1 \
+		 "Histo - Unknown"]
 
 	# Make current frame regular
 	set p $which.f$which
-	$history0.$p configure -background grey75 -foreground black -borderwidth 2
-	$history1.$p configure -background grey75 -foreground black -borderwidth 2
-
-        set f0 [add_Histo_UI $history0 $row $num_filters]
-        set f1 [add_Histo_UI $history1 $row $num_filters]
-
-
-        # Add insert bar
-        $this add_insert_bar $f0 $num_filters
-        $this add_insert_bar $f1 $num_filters
-
+	foreach h "$history0 $history1" {
+	    $h.$p configure -background grey75 -foreground black -borderwidth 2
+	    set f [add_Histo_UI $h $row $num_filters]
+	    $this add_insert_bar $f $num_filters
+	}
+	    
         if {!$insert} {
 	    $attachedPFr.f.p.sf justify bottom
 	    $detachedPFr.f.p.sf justify bottom
 	}
 
 	# update vars
-	set filters($which) [lreplace $filters($which) $next_index $next_index $num_filters]
+	set filters($which) \
+	    [lreplace $filters($which) $next_index $next_index $num_filters]
 
-	set num_filters [expr $num_filters + 1]
-	set grid_rows [expr $grid_rows + 1]
+	incr num_filters
+	incr grid_rows
 
         # execute histogram part so that is visible to user
-        if {$has_executed} {
+        if { $has_executed } {
 	    $m4-c needexecute
 	}
 
-        change_indicator_labels "Press Update to Perform Histogram Equalization..."
+        change_indicator_labels \
+	    "Press Update to Perform Histogram Equalization..."
 
 	$this enable_update [expr $which+1]
     }
@@ -4965,6 +4961,15 @@ class BioImageApp {
         }
     }
 
+    method add_filter_mod { cat pack mod { xoff 0 } { yoff 0 } } {
+	setGlobal inserting 1
+	setGlobal insertOffset "0 0"
+	set x [expr  500 + $num_filters *  20 + ($xoff * 200)]
+	set y [expr  000 + $num_filters * 160 + ($yoff *  80)]
+	set mod [addModuleAtPosition $cat $pack $mod $x $y]
+	setGlobal inserting 0
+	return $mod
+    }
 
     # Application placing and size
     variable notebook_width
