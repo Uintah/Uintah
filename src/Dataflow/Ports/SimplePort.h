@@ -207,7 +207,7 @@ SimpleOPort<T>::detach(Connection *conn)
     SimplePortComm<T>* msg = scinew SimplePortComm<T>(0);
     ((SimpleIPort<T>*)conn->iport)->mailbox.send(msg);
   }
-  sent_something_ = true;
+  //sent_something_ = true;  // Only sent something on the one port.
   OPort::detach(conn);
 }
 
