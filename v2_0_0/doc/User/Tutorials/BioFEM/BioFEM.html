@@ -59,7 +59,15 @@ intent of this program is to demonstrate wrapping the BioPSE Tutorial
 example up as a Power Application.
 
 <P>
-TODO: Describe what FEM is here.
+
+This application solves the forward problem for bioelectric fields.
+Three inputs are given: a volume with conductivities specified for
+each element, a set of dipoles, and a set of electrodes to act as
+sensors.  The forward problem is to compute the voltages that would be
+seen in the volume given the dipoles.  In particular one would like to
+compute what the electic field would be like at the given electrodes
+such that the results could be comparable with actual values recorded
+via ECG or EKG.
 
 
 <H2><A NAME="section_2"> Section 2 -- Getting Started </H2>
@@ -145,7 +153,18 @@ filenames are correct.
 
 <BR><H2><A NAME="section_3"> Section 3: Loading Data </H2>
 
-TODO: About data sets.
+For this application it is recommended that SCIRun datasets are to be
+used.  You can make your own that would mirror the ones used for each
+dataset.  There are five files used.  There is a tetrahedral field of
+indexed tensors that determine the conductivity model.  There is a
+dipole field that just contains a small point cloud of vectors that
+are to be used as the original dipole source.  There is a point cloud
+of electrodes around the outside of the model that the results are
+mapped onto.  And finally there is a settings file that controls the
+default visualization settings for that particular model, including
+where to place the camera and what sizes to draw the various objects
+with.
+
 <P>
 Once the File entries are pointing to the correct data locations,
 press the Execute button at the bottom of the pane to load the data
@@ -162,12 +181,13 @@ positive voltages are red.
 
 After the dataset is selected some computation is done to solve the
 forward problem and then the results are visualized.  This may take
-several minutes during which time the Progress indicator will indicate
+several minutes during which time the Progress Indicator will indicate
 that the system is busy and what it is doing.  The first result that
 should appear is the outer shell of the volume in a translucent grey.
 You can begin interacting with the visualization at any time, but
 waiting for the progress to be "Completed" (green) is more useful as
 that is when everything will be visible.
+
 
 <BR><H3><A NAME="section_4_1"> 4.1 Rendering Window </H3>
 
@@ -177,8 +197,7 @@ pressing the AutoView button to move the rendered geometry into the
 middle of the window.  The Autoview button is located on the Viewer
 Options tab, but can also be invoked by pressing Ctrl-V while the
 mouse is in the Rendering window.  The controls for navigating within
-the Rendering window are the same as for the SCIRun ViewWindow
-(http://software.sci.utah.edu/doc/User/Guide/usersguide/srug5.html#sec:viewer)
+the Rendering window are the same as for the SCIRun <a href="http://software.sci.utah.edu/doc/User/Guide/usersguide/srug6.html#sec:viewer">ViewWindow</a>
 though the full control pane normally found at the bottom of the
 ViewWindow has been replaced with the most frequently used subset of
 those controls and is now located on the Viewer Options tab.
@@ -192,17 +211,16 @@ Within the Vis Options tab of the Visualization pane, there are four categories 
 <B>Figure 5: Default Visualization.</b>
 </CENTER>
 
+
 <BR><H3><A NAME="section_4_2"> 4.2 IsoSurface Visualization </H3>
 
-Selecting the IsoSurface tab reveals the options for generating an
-isosurface from the DT volume.  As shown in <A
-HREF="#figure_6">Figure 6</A> you can:
-
-<UL> 
-   <LI> Choose whether or not to show the isosurface. </LI>
-   <LI> Selcted an isovalue. </LI>
-   <LI> Enable or disable rendering faces with interpolated normals for smoother renderings.</LI>
-</UL>
+An isopotential surface is the surface through the volume with a
+constant voltage value.  BioFEM allows you to draw one of these
+IsoSurfaces with a user selected voltage value.  The default value
+drawn is at 0.0.  An additional option is available to draw the surface
+with smoothing turned on or off.  Smoothing makes for a nicer
+IsoSurface appearance but also hides more of the underlying mesh from
+the user.
 
 <A NAME="figure_6">
 <BR><BR>
@@ -211,7 +229,33 @@ HREF="#figure_6">Figure 6</A> you can:
 <B>Figure 6: Isosurface Visualization.</b>
 </CENTER>
 
+
 <BR><H3><A NAME="section_4_3"> 4.3 StreamLines Visualization </H3>
+
+The second set of visualization options are for the streamlines.  The
+streamlines are virtual traces of the paths particles would take along
+the voltage gradients if they were seeded along the points in the rake
+widget.  They generally go from one side of the dipole to the rake and
+then end at the other side of the dipole.  There is a slider bar on
+the GUI for selecting how many streamline seed points the rake widget
+should contain.  There is also an option for selecting between a fast
+and slow streamline computation method.  The fast method walks the
+mesh directly and is accurate to within the constraints of how the
+model is segmented.  The slower computation method interpolates
+between the different cells in the mesh and can thus walk over
+discontinuities better and makes for a smoother streamline appearance.
+
+<P>
+
+The Rake Widget found in the ViewWindow is the primary means of
+controlling where the streamlines will be drawn.  The will all pass
+through that widget at evenly spaced increments.  The rake can be
+controlled by holding the Shift Key down and using the mouse to select
+and drag it's various parts.  The grey bar controls moving the rake
+around horizontally or vertically.  The blue balls at the ends of the
+rake can be used to rotate it, and the green stubs at the very ends
+can be used to resize the widget.  The streamlines are redrawn
+automatically every time the rake is moved.
 
 <A NAME="figure_7">
 <BR><BR>
@@ -220,32 +264,17 @@ HREF="#figure_6">Figure 6</A> you can:
 <B>Figure 7: Streamlines Visualization.</b>
 </CENTER>
 
+
 <BR><H3><A NAME="section_4_4"> 4.4 Electrodes Visualization </H3>
 
-As with the tensor glyphs, you can select seed locations and
-colorization options for rendering fibers within the brain.  A variety
-of these options are shown in <A HREF="#figure_14">Figure 14</A>, <A
-HREF="#Figure_15"> Figure 15, and <A HREF="#figure_16">Figure 16</A>.
-Additionally, you can set a number of parameters that control the
-fiber tracing algorithm.  These parameters include:
+One of the files read into the simulation is a set of electrode
+positions on the outside portion of the mesh.  In a medical situation
+these would correspond with where the net of sensors would be placed
+for measuring the voltage values on the outside of the torso.  After
+the simulation is run the voltage values are interpolated onto the
+sensor net as they would be measured in a real setting.  There is an
+option to turn the display of these electrodes on or off.
 
-<UL>
-  <LI> Algorithm: trace along the major eigenvector or using the
-       tensorlines algorithm; choose a step size, as well as whether
-       to use Euler or RK4 (fourth-order Runge-Kutta) integration.
-
-  <LI> Sampling Kernel: when querying tensor values between discrete
-       sample locations, the interpolation kernel to be used (Tent,
-       Catmull-Rom, or B-Spline).
-
-  <LI> Stopping Criteria: choose a set of criteria which can be
-       evaluated to determine whether to terminate a fiber.  If any of
-       the criteria are true, the fiber will terminate.  These
-       criteria include: exceeding a specified maximum fiber length,
-       exceeding a maximum number of steps, and entering a region of
-       the volume which falls below a specified anisotropy threshold
-       (either Linear Anisotropy or Fractional Anisotropy).
-</UL>
 
 <A NAME="figure_8">
 <BR><BR>
@@ -255,6 +284,12 @@ fiber tracing algorithm.  These parameters include:
 </CENTER>
 
 <BR><H3><A NAME="section_4_5"> 4.5 ColorMap Selection </H3>
+
+This option simply allows the user to select from one of a few
+different color maps to determine how the voltage values will be
+colored.  <A HREF="#figure_9">Figure 9</A> shows the results of the
+utahtorso-lowres model colored with the Red-to-Blue colormap selected
+rather than the default Inverse Rainbow coloring.
 
 <A NAME="figure_9">
 <BR><BR>
