@@ -3,6 +3,16 @@
 # $Id$
 #
 
+# *** NOTE ***
+# 
+# Do not remove or modify the comment line:
+#
+# #[INSERT NEW ?????? HERE]
+#
+# It is required by the module maker to properly edit this file.
+# if you want to edit this file by hand, see the "Create A New Module"
+# documentation on how to do it correctly.
+
 include $(SRCTOP)/scripts/smallso_prologue.mk
 
 SRCDIR   := PSECommon/Modules/Example
@@ -19,6 +29,10 @@ include $(SRCTOP)/scripts/smallso_epilogue.mk
 
 #
 # $Log$
+# Revision 1.4  2000/06/08 22:46:24  moulding
+# Added a comment note about not messing with the module maker comment lines,
+# and how to edit this file by hand.
+#
 # Revision 1.3  2000/06/07 00:11:34  moulding
 # made some modifications that will allow the module make to edit and add
 # to this file

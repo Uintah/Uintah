@@ -3,6 +3,16 @@
 # $Id$
 #
 
+# *** NOTE ***
+# 
+# Do not remove or modify the comment line:
+#
+# #[INSERT NEW ?????? HERE]
+#
+# It is required by the module maker to properly edit this file.
+# if you want to edit this file by hand, see the "Create A New Module"
+# documentation on how to do it correctly.
+
 include $(SRCTOP)/scripts/smallso_prologue.mk
 
 SRCDIR   := PSECommon/Modules/Salmon
@@ -42,6 +52,10 @@ include $(SRCTOP)/scripts/smallso_epilogue.mk
 
 #
 # $Log$
+# Revision 1.6  2000/06/08 22:46:29  moulding
+# Added a comment note about not messing with the module maker comment lines,
+# and how to edit this file by hand.
+#
 # Revision 1.5  2000/06/08 20:32:01  kuzimmer
 #  modified sub.mk so that linux will compile: you need to load new configure.in
 #
