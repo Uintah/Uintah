@@ -82,7 +82,7 @@ Diagram::redraw()
 
 
 void
-Diagram::add( Polyline *d )
+Diagram::add( DrawObj *d )
 {
   poly_.add(d);
   active_.add(true);
@@ -109,7 +109,7 @@ void
 Diagram::reset_bbox()
 {
   graphs_bounds_.reset();
-  Array1<Polyline*> active;
+  Array1<DrawObj*> active;
   get_active(active);
   int length = active.size();
   for (int i=0; i<length; ++i)
@@ -388,7 +388,7 @@ Diagram::pan_end( int x, int y, int button )
 }
 
 void
-Diagram::get_active( Array1<Polyline *> &poly )
+Diagram::get_active( Array1<DrawObj *> &poly )
 {
   poly.resize( 0 );
 

@@ -122,7 +122,7 @@ HistObj::at( double v )
   if ( v < ref_min_  || v > ref_max_ ) 
     val = 0;
   else {
-    int pos (bins_ * (v-ref_min_)/ (ref_max_ - ref_min_) );
+    int pos ((int)(bins_ * (v-ref_min_)/ (ref_max_ - ref_min_)) );
     if ( pos == data_.size() ) 
       pos--;
     val = data_[pos];

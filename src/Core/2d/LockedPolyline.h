@@ -42,7 +42,7 @@ class SCICORESHARE LockedPolyline : public Polyline {
 public:
   LockedPolyline( const string &name="") : Polyline(name) {} 
   LockedPolyline( int i );
-  LockedPolyline( const Array1<double> &, const string &name="" );
+  LockedPolyline( const vector<double> &, const string &name="" );
   virtual ~LockedPolyline();
 
   double at(double);

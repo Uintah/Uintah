@@ -108,21 +108,20 @@ ParametricPolyline::compute_minmax()
   }
 }
 
-
 void
 ParametricPolyline::set_color( const Color &c )
 {
   color_ = c;
 }
 
-string
-ParametricPolyline::tcl_color()
+void
+ParametricPolyline::add(const vector<double>& v)
 {
-  char buffer[10];
-  sprintf( buffer, "#%02x%02x%02x", 
-	   int(color_.r()*255), int(color_.g()*255), int(color_.b()*255));
-  buffer[7] = '\0';
-  return string(buffer);
+  for (unsigned i=0; i<v.size()-2; i+=3) 
+    data_.insert(pair<double, 
+      pair<double,double> >(v[i],pair<double,double>(v[i+1],v[i+2])));
+
+  compute_minmax();
 }
 
 void
@@ -150,7 +149,7 @@ ParametricPolyline::add( double t, double x, double y)
   }
 
   data_.insert(pair<double, 
-	            pair<double,double> >(t, pair<double,double>(x,y)));
+                    pair<double,double> >(t,pair<double,double>(x,y)));
 }
 
 bool

@@ -34,6 +34,7 @@
 #include <Core/GuiInterface/GuiVar.h>
 #include <Core/Containers/Array1.h>
 #include <Core/2d/DrawGui.h>
+#include <Core/2d/DrawObj.h>
 #include <Core/2d/Widget.h>
 #include <stack>
 
@@ -41,7 +42,6 @@ using std::stack;
 
 namespace SCIRun {
   
-class Polyline;
 class ScrolledOpenGLWindow;
 
 class SCICORESHARE Diagram : public DrawGui {
@@ -49,7 +49,7 @@ private:
   ScrolledOpenGLWindow *ogl_;
 
   Array1<bool> active_;
-  Array1<Polyline *> poly_;
+  Array1<DrawObj *> poly_;
   Array1<Widget *> widget_;
 
   stack<int> zoom_stack_;
@@ -75,7 +75,7 @@ public:
   Diagram( const string &name="" );
   virtual ~Diagram();
 
-  void add( Polyline * );
+  void add( DrawObj * );
   int add_widget( Widget *);
   void redraw();
   void update() { if (parent() ) parent()->need_redraw(); }
@@ -87,7 +87,7 @@ public:
   virtual void set_windows( const string &menu, const string &tb,
 			    const string &ui, const string &ogl);
 
-  void get_active( Array1<Polyline *> &);
+  void get_active( Array1<DrawObj *> &);
   //! the following two convert from [0-1] to world space coordinates
   double x_get_at( double );
   double y_get_at( double );

@@ -35,6 +35,7 @@
 #include <Core/Util/Signals.h>
 #include <Core/Parts/Part.h>
 #include <Core/Parts/PartInterface.h>
+#include <Core/2d/DrawObj.h>
 
 namespace SCIRun {
   
@@ -48,10 +49,10 @@ public:
   virtual ~GraphPart();
 
   void set_num_lines( int );
-  void add_values( vector<double> &);
+  void add_values( unsigned , const vector<double> &);
 
-  Signal1< int > reset;
-  Signal1< vector<double> & > new_values;
+  Signal1< const vector<DrawObj*> & > reset;
+  Signal2< unsigned, const vector<double> & > new_values;
 };
 
 } // namespace SCIRun

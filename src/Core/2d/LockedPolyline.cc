@@ -51,7 +51,7 @@ PersistentTypeID LockedPolyline::type_id("LockedPolyline",
 					 make_LockedPolyline);
 
 
-LockedPolyline::LockedPolyline( const Array1<double> &data, const string &name)
+LockedPolyline::LockedPolyline( const vector<double> &data, const string &name)
   : Polyline( data, name )
 {
 }
