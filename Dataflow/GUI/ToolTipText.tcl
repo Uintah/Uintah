@@ -36,6 +36,16 @@ proc loadToolTipText {} {
        License...       \tDisplays SCIRun's User License.} ]
 
     set ToolTipText(PackageMenus) "This menu allows you to create modules from this Package.  The modules are grouped by category."
+
+
+    set ToolTipText(VCRrewind) "Jump to first frame"
+    set ToolTipText(VCRstepback) "Step back one frame"
+    set ToolTipText(VCRpause) "Stop"
+    set ToolTipText(VCRplay) "Play"
+    set ToolTipText(VCRstepforward) "Step forward one frame"
+    set ToolTipText(VCRfastforward) "Jump to last frame"
+    
+    
 }
 
   
