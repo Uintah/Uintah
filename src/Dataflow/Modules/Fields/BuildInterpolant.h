@@ -55,14 +55,14 @@ public:
 
 private:
   double find_closest(typename LSRC::index_type &index,
-		      MSRC *mesh, const Point &p);
+		      MSRC *mesh, const Point &p) const;
 };
 
 
 
 template <class MSRC, class LSRC, class MDST, class LDST, class FOUT>
 double
-BuildInterpAlgoT<MSRC, LSRC, MDST, LDST, FOUT>::find_closest(typename LSRC::index_type &index, MSRC *mesh, const Point &p)
+BuildInterpAlgoT<MSRC, LSRC, MDST, LDST, FOUT>::find_closest(typename LSRC::index_type &index, MSRC *mesh, const Point &p) const
 {
   double mindist = DBL_MAX;
   
@@ -94,8 +94,8 @@ BuildInterpAlgoT<MSRC, LSRC, MDST, LDST, FOUT>::execute(MeshHandle src_meshH, Me
   FOUT *ofield = scinew FOUT(dst_mesh, loc);
 
   // FIXME:  Just synchronize needed elements.
-  src_mesh->synchronize(ALL_ELEMENTS_E);
-  dst_mesh->synchronize(ALL_ELEMENTS_E);
+  src_mesh->synchronize(Mesh::ALL_ELEMENTS_E);
+  dst_mesh->synchronize(Mesh::ALL_ELEMENTS_E);
   
   typename LDST::iterator itr, end_itr;
   dst_mesh->begin(itr);
@@ -110,11 +110,13 @@ BuildInterpAlgoT<MSRC, LSRC, MDST, LDST, FOUT>::execute(MeshHandle src_meshH, Me
     dst_mesh->get_center(p, *itr);
     vector<pair<typename LSRC::index_type, double> > v;
 
+    bool failed = true;
     if (interp)
     {
       src_mesh->get_weights(p, locs, weights);
       if (weights.size() > 0)
       {
+	failed = false;
 	for (unsigned int i = 0; i < locs.size(); i++)
 	{
 	  v.push_back(pair<typename LSRC::index_type, double>
@@ -122,7 +124,7 @@ BuildInterpAlgoT<MSRC, LSRC, MDST, LDST, FOUT>::execute(MeshHandle src_meshH, Me
 	}
       }
     }
-    else if (closest)
+    if (closest && failed)
     {
       typename LSRC::index_type index;
       if (find_closest(index, src_mesh, p) < dist)
