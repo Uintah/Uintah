@@ -2,6 +2,7 @@
 #define UINTAH_HOMEBREW_ARRAY3DATA_H
 
 #include "RefCounted.h"
+#include <SCICore/Util/Assert.h>
 
 /**************************************
 
@@ -126,6 +127,9 @@ namespace Uintah {
 
 //
 // $Log$
+// Revision 1.7  2000/05/05 04:10:04  guilkey
+// Added an include file to fix a compilation problem.  Thanks Steve.
+//
 // Revision 1.6  2000/04/26 06:48:46  sparker
 // Streamlined namespaces
 //
