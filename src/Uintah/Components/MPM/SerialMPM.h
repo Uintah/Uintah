@@ -3,6 +3,9 @@
 
 #include <Uintah/Interface/DataWarehouseP.h>
 #include <Uintah/Interface/MPMInterface.h>
+#include <Uintah/Grid/ProblemSpecP.h>
+#include <Uintah/Grid/GridP.h>
+#include <Uintah/Grid/LevelP.h>
 
 namespace Uintah {
 
@@ -18,10 +21,12 @@ namespace Components {
 
 using Uintah::Interface::MPMInterface;
 using Uintah::Interface::DataWarehouseP;
+using Uintah::Interface::SchedulerP;
 using Uintah::Parallel::ProcessorContext;
 using Uintah::Grid::Region;
 using Uintah::Grid::LevelP;
-using Uintah::Grid::SchedulerP;
+using Uintah::Grid::ProblemSpecP;
+using Uintah::Grid::GridP;
 
 /**************************************
 
@@ -123,7 +128,11 @@ private:
 } // end namespace Components
 } // end namespace Uintah
 
+//
 // $Log$
+// Revision 1.6  2000/03/17 21:01:50  dav
+// namespace mods
+//
 // Revision 1.5  2000/03/17 09:29:32  sparker
 // New makefile scheme: sub.mk instead of Makefile.in
 // Use XML-based files for module repository

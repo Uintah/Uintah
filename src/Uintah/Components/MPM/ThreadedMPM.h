@@ -1,10 +1,48 @@
-
-#ifndef UINTAH_HOMEBREW_ThreadedMPM_H
-#define UINTAH_HOMEBREW_ThreadedMPM_H
+#ifndef UINTAH_HOMEBREW_THREADEDMPM_H
+#define UINTAH_HOMEBREW_THREADEDMPM_H
 
 #include <Uintah/Interface/MPMInterface.h>
-class ProcessorContext;
-class Region;
+
+namespace Uintah {
+
+namespace Parallel {
+  class ProcessorContext;
+}
+
+namespace Grid {
+  class Region;
+}
+
+namespace Components {
+
+/**************************************
+
+CLASS
+   ThreadedMPM
+   
+   Short description...
+
+GENERAL INFORMATION
+
+   ThreadedMPM.h
+
+   Steven G. Parker
+   Department of Computer Science
+   University of Utah
+
+   Center for the Simulation of Accidental Fires and Explosions (C-SAFE)
+  
+   Copyright (C) 2000 SCI Group
+
+KEYWORDS
+   MPM_Threaded
+
+DESCRIPTION
+   Long description...
+  
+WARNING
+  
+****************************************/
 
 class ThreadedMPM : public MPMInterface {
 public:
@@ -55,5 +93,15 @@ private:
     ThreadedMPM(const ThreadedMPM&);
     ThreadedMPM& operator=(const ThreadedMPM&);
 };
+
+} // end namespace Components
+} // end namespace Uintah
+
+//
+// $Log$
+// Revision 1.3  2000/03/17 21:01:51  dav
+// namespace mods
+//
+//
 
 #endif

@@ -1,4 +1,4 @@
-
+/* REFERENCED */
 //static char *id="$Id$;
 
 /*
@@ -22,13 +22,25 @@
 #include <Uintah/Components/ICE/ICE.h>
 #include <Uintah/Components/Schedulers/BrainDamagedScheduler.h>
 #include <SCICore/Exceptions/Exception.h>
-using SCICore::Exceptions::Exception;
+
 #include <iostream>
-using std::cerr;
 #include <string>
-using std::string;
 #include <vector>
+
+using SCICore::Exceptions::Exception;
+using std::cerr;
+using std::string;
 using std::vector;
+
+using Uintah::Parallel::Parallel;
+using Uintah::Components::SimulationController;
+using Uintah::Components::SerialMPM;
+using Uintah::Components::ThreadedMPM;
+using Uintah::Components::Arches;
+using Uintah::Components::ICE;
+using Uintah::Components::BrainDamagedScheduler;
+using Uintah::Interface::MPMInterface;
+using Uintah::Interface::CFDInterface;
 
 void usage(const std::string& badarg, const std::string& progname)
 {
@@ -156,6 +168,9 @@ int main(int argc, char** argv)
 
 //
 // $Log$
+// Revision 1.2  2000/03/17 21:01:02  dav
+// namespace mods
+//
 // Revision 1.1  2000/02/27 07:48:34  sparker
 // Homebrew code all compiles now
 // First step toward PSE integration
