@@ -60,9 +60,9 @@ set netedit_savefile ""
 global NetworkChanged
 set NetworkChanged 0
 
+# Make sure version stays in sync with main/main.cc
 global SCIRun_version
-set SCIRun_version v1.20
-
+set SCIRun_version v1.20.1
 
 
 proc makeNetworkEditor {} {
