@@ -10,6 +10,7 @@
 #include <Packages/Uintah/CCA/Components/Arches/CellInformationP.h>
 #include <Packages/Uintah/CCA/Components/Arches/CellInformation.h>
 #include <Packages/Uintah/CCA/Components/Arches/ArchesLabel.h>
+#include <Packages/Uintah/CCA/Components/Arches/BoundaryCondition.h>
 #include <Packages/Uintah/CCA/Ports/DataWarehouse.h>
 #include <Packages/Uintah/CCA/Ports/LoadBalancer.h>
 #include <Packages/Uintah/CCA/Ports/Scheduler.h>
@@ -35,8 +36,10 @@ using namespace SCIRun;
 // ****************************************************************************
 // Default constructor for Filter
 // ****************************************************************************
-Filter::Filter(const ArchesLabel* label, const ProcessorGroup* myworld) :
-  d_myworld(myworld), d_lab(label)
+Filter::Filter(const ArchesLabel* label,
+	       BoundaryCondition* bndryCondition,
+	       const ProcessorGroup* myworld) :
+  d_myworld(myworld), d_lab(label), d_boundaryCondition(bndryCondition)
 {
   d_perproc_patches= 0;
   d_matrixInitialize = false;
@@ -89,6 +92,7 @@ Filter::sched_buildFilterMatrix(const LevelP& level,
 			  &Filter::buildFilterMatrix);
   // Requires
   // coefficient for the variable for which solve is invoked
+
   sched->addTask(tsk, d_perproc_patches, matls);
 }
 
@@ -125,6 +129,7 @@ Filter::matrixCreate(const PatchSet* allpatches,
     const PatchSubset* patches = allpatches->getSubset(s);
     for(int p=0;p<patches->size();p++){
       const Patch* patch = patches->get(p);
+
       // #ifdef notincludeBdry
 #if 1
       IntVector plowIndex = patch->getCellFORTLowIndex();
@@ -257,7 +262,8 @@ Filter::matrixCreate(const PatchSet* allpatches,
 void 
 Filter::setFilterMatrix(const ProcessorGroup* ,
 			const Patch* patch,
-			CellInformation* cellinfo)
+			CellInformation* cellinfo,
+			constCCVariable<int>& cellType )
 {
 #ifdef ARCHES_PETSC_DEBUG
    cerr << "in setFilterMatrix on patch: " << patch->getID() << '\n';
@@ -317,9 +323,22 @@ Filter::setFilterMatrix(const ProcessorGroup* ,
 		   (1.0-0.5*abs(ii))*
 		   (1.0-0.5*abs(jj))*(1.0-0.5*abs(kk));
 		 col[count] = l2g[filterCell];  //ab
-		 if (col[count] != -1234) // not on the boundary
+		 // not on the boundary
+		 if ((col[count] != -1234)&&
+		     (cellType[filterCell] == d_boundaryCondition->getFlowId())) {
 		   totalVol += vol;
-		 value[count] = vol;
+		   value[count] = vol;
+		 }
+		 else {
+		   if ((cellType[currCell] != d_boundaryCondition->getFlowId())&&
+		       (filterCell == currCell)) {
+		     totalVol = vol;
+		     value[count] = vol;
+		   }
+		   else 
+		     value[count] = 0;
+		 }
+		     
 		 count++;
 	       }
 	     }
@@ -327,14 +346,6 @@ Filter::setFilterMatrix(const ProcessorGroup* ,
 	   for (int ii = 0; ii < d_nz; ii++)
 	     value[ii] /= totalVol;
 	   int row = l2g[IntVector(colX,colY,colZ)];
-#if 0
-	   cerr << "row" << "=" << row << endl;
-	   cerr << "l2g" << currCell << "=" << l2g[currCell] << endl; 
-	   for (int ii = 0; ii < d_nz; ii++) {
-	     cerr << "value" << ii << "=" << value[ii] << endl;
-	     cerr << "col" << ii << "=" << col[ii] << endl;
-	   }
-#endif
 	   
 	   ierr = MatSetValues(A,1,&row,d_nz,col,value,INSERT_VALUES);
 	   if(ierr)

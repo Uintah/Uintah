@@ -88,6 +88,9 @@ DynamicProcedure::sched_computeTurbSubmodel(const LevelP& level,
   Task* tsk = scinew Task("DynamicProcedure::computeTurbSubmodel",
 			  this,
 			  &DynamicProcedure::computeTurbSubmodel);
+  tsk->requires(Task::NewDW, d_lab->d_cellTypeLabel, 
+		Ghost::AroundCells, Arches::ONEGHOSTCELL);
+
   
   sched->addTask(tsk, patches, matls);
 
@@ -105,7 +108,10 @@ DynamicProcedure::computeTurbSubmodel(const ProcessorGroup* pg,
   for (int p = 0; p < patches->size(); p++) {
     const Patch* patch = patches->get(p);
     int archIndex = 0; // only one arches material
-    int matlIndex = d_lab->d_sharedState->getArchesMaterial(archIndex)->getDWIndex(); 
+    int matlIndex = d_lab->d_sharedState->getArchesMaterial(archIndex)->getDWIndex();
+    constCCVariable<int> cellType;
+    new_dw->get(cellType, d_lab->d_cellTypeLabel,
+		matlIndex, patch, Ghost::AroundCells, Arches::ONEGHOSTCELL);
     PerPatch<CellInformationP> cellInfoP;
     if (new_dw->exists(d_lab->d_cellInfoLabel, matlIndex, patch)) 
       new_dw->get(cellInfoP, d_lab->d_cellInfoLabel, matlIndex, patch);
@@ -114,7 +120,7 @@ DynamicProcedure::computeTurbSubmodel(const ProcessorGroup* pg,
       new_dw->put(cellInfoP, d_lab->d_cellInfoLabel, matlIndex, patch);
     }
     CellInformation* cellinfo = cellInfoP.get().get_rep();
-    d_filter->setFilterMatrix(pg, patch, cellinfo);
+    d_filter->setFilterMatrix(pg, patch, cellinfo, cellType);
   }
 #endif
 }
@@ -2133,9 +2139,11 @@ DynamicProcedure::reComputeSmagCoeff(const ProcessorGroup* pc,
       for (int colY = indexLow.y(); colY <= indexHigh.y(); colY ++) {
 	for (int colX = indexLow.x(); colX <= indexHigh.x(); colX ++) {
 	  IntVector currCell(colX, colY, colZ);
-
-	  double value = factor*factor*MLHatI[currCell]/MMHatI[currCell];
-	  if (MMHatI[currCell] < 1.0e-20) value = 0.0;
+	  double value;
+	  if (MMHatI[currCell] < 1.0e-20)
+	    value = 0.0;
+	  else
+	    value = factor*factor*MLHatI[currCell]/MMHatI[currCell];
 	  tempCs[currCell] = value;
 	}
       }
@@ -2177,10 +2185,13 @@ DynamicProcedure::reComputeSmagCoeff(const ProcessorGroup* pc,
 	  //     calculate the effective viscosity
 
 	  //     handle the case where we divide by zero
+	  double value;
+	  if (MMHatI[currCell] < 1.0e-20) 
+	    value = 0.0;	  
+	  else
+	    value = factor*factor*MLHatI[currCell]/MMHatI[currCell];
 
-	  double value = factor*factor*MLHatI[currCell]/MMHatI[currCell];
-	  if (MMHatI[currCell] < 1.0e-20) value = 0.0;
-	  else if (value > 100.0) value = 100.0;
+	  if (value > 100.0) value = 100.0;
 	  tempCs[currCell] = sqrt(value);
 	}
       }
