@@ -26,14 +26,8 @@
 #include <Datatypes/ScalarFieldPort.h>
 #include <Datatypes/SurfacePort.h>
 #include <Datatypes/TriSurface.h>
-#include <Geom/Cone.h>
-#include <Geom/Cylinder.h>
-#include <Geom/Disc.h>
-#include <Geom/Geom.h>
 #include <Geom/Group.h>
 #include <Geom/Material.h>
-#include <Geom/Pick.h>
-#include <Geom/Sphere.h>
 #include <Geom/Tri.h>
 #include <Geometry/Point.h>
 #include <Geometry/Plane.h>
@@ -41,6 +35,7 @@
 #include <Math/Expon.h>
 #include <Math/MiscMath.h>
 #include <TCL/TCLvar.h>
+#include <Widgets/ArrowWidget.h>
 #include <iostream.h>
 #include <strstream.h>
 
@@ -60,16 +55,6 @@ class IsoSurface : public Module {
 
     TriSurface* surf;
 
-    GeomGroup* widget;
-    GeomSphere* widget_sphere;
-    GeomCylinder* widget_cylinder;
-    GeomCone* widget_cone;
-    GeomDisc* widget_disc;
-    GeomPick* shaft_pick;
-    GeomPick* sphere_pick;
-    double widget_scale;
-
-    int widget_id;
     int isosurface_id;
     int need_seed;
 
@@ -80,8 +65,6 @@ class IsoSurface : public Module {
     int sp;
     TCLint show_progress;
 
-    MaterialHandle widget_matl;
-    MaterialHandle widget_highlight_matl;
     MaterialHandle matl;
 
     int iso_cube(int, int, int, double, GeomGroup*, ScalarFieldRG*);
@@ -96,7 +79,14 @@ class IsoSurface : public Module {
     void order_and_add_points(const Point &p1, const Point &p2, 
 			      const Point &p3, const Point &v1, double val);
 
-    virtual void geom_moved(GeomPick*, int, double, const Vector&, void*);
+    virtual void widget_moved(int last);
+    CrowdMonitor widget_lock;
+    int widget_id;
+    ArrowWidget* widget;
+
+    int need_find;
+
+    int init;
     Point ov[9];
     Point v[9];
 public:
@@ -129,7 +119,7 @@ static Module* make_IsoSurface(const clString& id)
 static RegisterModule db1("Fields", "IsoSurface", make_IsoSurface);
 static RegisterModule db2("Visualization", "IsoSurface", make_IsoSurface);
 
-static clString widget_name("IsoSurface Widget");
+static clString module_name("IsoSurface");
 static clString surface_name("IsoSurface");
 
 IsoSurface::IsoSurface(const clString& id)
@@ -156,17 +146,17 @@ IsoSurface::IsoSurface(const clString& id)
     isoval.set(1);
     need_seed=1;
 
-    widget_matl=scinew Material(Color(0,0,0), Color(0,0,.6),
-			     Color(.5,.5,.5), 20);
-    widget_highlight_matl=scinew Material(Color(0,0,0), Color(.7,.7,.7),
-				       Color(0,0,.6), 20);
     matl=scinew Material(Color(0,0,0), Color(.6,0,0),
 		      Color(.5,0,0), 20);
-    widget=0;
     isosurface_id=0;
 
     old_min=old_max=0;
     old_bmin=old_bmax=Point(0,0,0);
+
+    float INIT(.1);
+    widget = scinew ArrowWidget(this, &widget_lock, INIT);
+    need_find=1;
+    init=1;
 }
 
 IsoSurface::IsoSurface(const IsoSurface& copy, int deep)
@@ -199,6 +189,13 @@ void IsoSurface::execute()
     int have_colorfield=incolorfield->get(colorfield);
     ColormapHandle cmap;
     int have_colormap=incolormap->get(cmap);
+
+    if(init == 1){
+	init=0;
+	widget_id = ogeom->addObj(widget->GetWidget(), module_name, &widget_lock);
+	widget->Connect(ogeom);
+    }
+	
     double min, max;
     field->get_minmax(min, max);
     if(min != old_min || max != old_max){
@@ -225,86 +222,36 @@ void IsoSurface::execute()
     }
     sp=show_progress.get();
     if(do_3dwidget.get()){
-	widget_scale=0.05*field->longest_dimension();
-	if(!widget){
-	    Point min, max;
-	    field->get_bounds(min, max);
-	    Point sp(Interpolate(min, max, 0.5));
-	    seed_point.set(sp);
-	    widget_sphere=scinew GeomSphere(sp, 1*widget_scale);
-	    Vector grad(field->gradient(sp));
-	    if(grad.length2() < 1.e-4){
-		// Just the point...
-		widget_scale=0.00001;
-		grad=Vector(0,0,1);
-	    } else {
-		grad.normalize();
-	    }
-	    Point cyl_top(sp+grad*(2*widget_scale));
-	    widget_cylinder=scinew GeomCylinder(sp, cyl_top,
-					     0.5*widget_scale);
-	    Point cone_top(cyl_top+grad*(1.0*widget_scale));
-	    widget_cone=scinew GeomCone(cyl_top, cone_top,
-				     0.75*widget_scale, 0);
-	    widget_disc=scinew GeomDisc(cyl_top, -grad,
-				     0.75*widget_scale);
-	    GeomGroup* shaft=scinew GeomGroup;
-	    shaft->add(widget_cylinder);
-	    shaft->add(widget_cone);
-	    shaft->add(widget_disc);
-	    shaft_pick=scinew GeomPick(shaft, this, grad);
-	    shaft_pick->set_highlight(widget_highlight_matl);
-	    Vector v1, v2;
-	    grad.find_orthogonal(v1, v2);
-	    sphere_pick=scinew GeomPick(shaft, this, grad, v1, v2);
-	    widget=scinew GeomGroup;
-	    widget->add(shaft_pick);
-	    widget->add(sphere_pick);
-	    GeomMaterial* matl=scinew GeomMaterial(widget, widget_matl);
-	    widget_id=ogeom->addObj(matl, widget_name);
+	double widget_scale=0.05*field->longest_dimension();
+	
+
+//	Point sp(seed_point.get());
+//	widget_sphere->cen=sp;
+//	widget_sphere->rad=1*widget_scale;
+	if(need_find != 0){
+	    Point sp(Interpolate(bmin, bmax, 0.5));
+	    widget->SetPosition(sp);
+	    widget->SetScale(widget_scale);
+	    need_find=0;
 	}
-	Point sp(seed_point.get());
-	widget_sphere->cen=sp;
-	widget_sphere->rad=1*widget_scale;
-	widget_sphere->adjust();
+	Point sp(widget->GetPosition());
 	Vector grad(field->gradient(sp));
-	if(grad.length2() < 1.e-6){
-	    // Just the point...
-	    widget_scale=0.00001;
-	    grad=Vector(0,0,1);
-	    sphere_pick->set_principal(Vector(1,0,0),
-				       Vector(0,1,0),
-				       Vector(0,0,1));
-	} else {
+	if(grad.length2() > 0)
 	    grad.normalize();
-	    Vector v1, v2;
-	    grad.find_orthogonal(v1, v2);
-	    sphere_pick->set_principal(grad, v1, v2);
-	    shaft_pick->set_principal(grad);
-	}
-	Point cyl_top(sp+grad*(2*widget_scale));
-	widget_cylinder->bottom=sp;
-	widget_cylinder->top=cyl_top;
-	widget_cylinder->rad=0.5*widget_scale;
-	widget_cylinder->adjust();
-	Point cone_top(cyl_top+grad*(1.0*widget_scale));
-	widget_cone->bottom=cyl_top;
-	widget_cone->top=cone_top;
-	widget_cone->bot_rad=0.75*widget_scale;
-	widget_cone->top_rad=0;
-	widget_cone->adjust();
-	widget_disc->cen=cyl_top;
-	widget_disc->n=-grad;
-	widget_disc->rad=0.75*widget_scale;
-	widget_disc->adjust();
-	widget->reset_bbox();
+	widget->SetDirection(grad);
     }
     double iv=isoval.get();
+    Point sp;
     if(have_seedpoint.get()){
-	Point sp(seed_point.get());
+	if(do_3dwidget.get()){
+	    sp=widget->GetPosition();
+	} else {
+	    sp=seed_point.get();
+	}
 	if(!field->interpolate(sp, iv)){
 	    iv=min;
 	}
+	cerr << "at p=" << sp << ", iv=" << iv << endl;
     }
 
     GeomGroup* group=scinew GeomGroup;
@@ -343,7 +290,6 @@ void IsoSurface::execute()
 				 spacing);
 	}	
 	if(have_seedpoint.get()){
-	    Point sp(seed_point.get());
 	    iso_reg_grid(regular_grid, sp, group);
 	} else {
 	    iso_reg_grid(regular_grid, iv, group);
@@ -1047,10 +993,9 @@ void IsoSurface::find_seed_from_value(const ScalarFieldHandle& /*field*/)
 #endif
 }
 
-void IsoSurface::geom_moved(GeomPick*, int, double, const Vector& delta, void*)
+void IsoSurface::widget_moved(int last)
 {
-    seed_point.set(seed_point.get()+delta);
-    if(!abort_flag){
+    if(last && !abort_flag){
 	abort_flag=1;
 	want_to_execute();
     }
