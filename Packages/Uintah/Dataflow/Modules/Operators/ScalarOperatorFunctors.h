@@ -16,8 +16,8 @@ struct NaturalLogOp
   NaturalLogOp(){}
 
   template<class T>
-  inline double operator()(const T& s)
-  { return log((double)s); }
+  inline T operator()(const T& s)
+  { return (T)log((double)s); }
   
 };
 
@@ -25,16 +25,16 @@ struct ExponentialOp
 {
   ExponentialOp() {}
   template<class T>
-  inline double operator()(const T&  s)
-  { return exp((double)s); }
+  inline T operator()(const T&  s)
+  { return (T)exp((double)s); }
 };
 
 struct NoOp
 {
   NoOp() {}
   template <class T>
-  inline double operator()( const T& s )
-  { return double(s); }
+  inline T operator()( const T& s )
+  { return s; }
 };
 
 // Binary Operators
@@ -54,7 +54,7 @@ struct SubOp
 {
   SubOp() {}
   template <class T>
-  inline double operator()(const T& s1, const T& s2 )
+  inline T operator()(const T& s1, const T& s2 )
   { return s1 - s2; }
 };
 
@@ -62,7 +62,7 @@ struct MultOp
 {
   MultOp() {}
   template <class T>
-  inline double operator()(const T& s1, const T& s2 )
+  inline T operator()(const T& s1, const T& s2 )
   { return s1 * s2; }
 };
 
@@ -70,7 +70,7 @@ struct DivOp
 {
   DivOp() {}
   template <class T>
-  inline double operator()(const T& s1, const T& s2 )
+  inline T operator()(const T& s1, const T& s2 )
   { return s1 / s2; }
 };
 
@@ -78,7 +78,7 @@ struct ScaleOp
 {
   ScaleOp() {}
   template <class T>
-  inline double operator()(const T& s1, const double s2 )
+  inline T operator()(const T& s1, const double s2 )
   { return s1 * s2; }
 };
 
@@ -86,8 +86,8 @@ struct AverageOp
 {
   AverageOp() {}
   template <class T>
-  inline double operator()(const T& s1, const T& s2 )
-  { return (s1 + s2)/2.0; }
+  inline T operator()(const T& s1, const T& s2 )
+  { return (s1 + s2)/(T)2.0; }
 };
 
 
