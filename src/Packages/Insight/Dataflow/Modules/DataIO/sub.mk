@@ -1,3 +1,21 @@
+#
+#  The contents of this file are subject to the University of Utah Public
+#  License (the "License"); you may not use this file except in compliance
+#  with the License.
+#  
+#  Software distributed under the License is distributed on an "AS IS"
+#  basis, WITHOUT WARRANTY OF ANY KIND, either express or implied. See the
+#  License for the specific language governing rights and limitations under
+#  the License.
+#  
+#  The Original Source Code is SCIRun, released March 12, 2001.
+#  
+#  The Original Source Code was developed by the University of Utah.
+#  Portions created by UNIVERSITY are Copyright (C) 2001, 1994 
+#  University of Utah. All Rights Reserved.
+#
+
+
 # *** NOTE ***
 #
 # Do not remove or modify the comment line:
@@ -14,13 +32,14 @@ INCLUDES += $(INSIGHT_INCLUDE)
 SRCDIR   := Packages/Insight/Dataflow/Modules/DataIO
 
 SRCS     += \
-	$(SRCDIR)/ImageFileReader.cc\
 	$(SRCDIR)/ImageFileWriter.cc\
 	$(SRCDIR)/ImageReaderUChar2D.cc \
+	$(SRCDIR)/ImageReaderUChar3D.cc \
 	$(SRCDIR)/Switch.cc\
 	$(SRCDIR)/ImageReaderFloat2D.cc\
 	$(SRCDIR)/ImageReaderFloat3D.cc\
 	$(SRCDIR)/ImageReaderUShort2D.cc\
+	$(SRCDIR)/ImageReaderUShort3D.cc\
 #[INSERT NEW CODE FILE HERE]
 
 PSELIBS := Packages/Insight/Core/Datatypes Dataflow/Network \
