@@ -82,15 +82,19 @@ int main(int argc, char* argv[])
 
 
     SSIDL::array1<int> arr;
+    
+    MPI_Init(&argc,&argv);
+
+    int mpi_size, mpi_rank;
+    MPI_Comm_size(MPI_COMM_WORLD,&mpi_size);
+    MPI_Comm_rank(MPI_COMM_WORLD,&mpi_rank);
 
     int myrank = 0;
     int mysize = 0;
     int arrsize, sta, fin;
 
     try {
-        PIDL::initialize();
-        
-        MPI_Init(&argc,&argv);
+        PIDL::initialize(mpi_rank, mpi_size);
 
 	bool client=false;
 	bool server=false;

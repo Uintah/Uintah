@@ -84,7 +84,7 @@ PingPong_impl::setService(const Service::pointer &svc)
       URLs.push_back(url);
       cerr<<"port URLs["<<i<<"]="<<url<<endl;
     }
-    Object::pointer obj=PIDL::objectFrom(URLs,mysize,myrank);
+    Object::pointer obj=PIDL::objectFrom(URLs,1,myrank);
     Port::pointer port=pidl_cast<Port::pointer>(obj);
     svc->testPort(port);
     delete buf;

@@ -130,7 +130,8 @@ int main(int argc, char* argv[])
 	    usage(argv[0]);
 
 	if(server) {
-	  PingPong_impl* pp=new PingPong_impl;
+	  PingPong::pointer pp(new PingPong_impl);
+	  pp->addReference();
 
           //Set up server's requirement of the distribution array 
 	  Index* dr[1];  
