@@ -226,3 +226,10 @@ void TestModel::scheduleErrorEstimate(const LevelP&,
 {
   // Not implemented yet
 }
+//__________________________________
+void TestModel::scheduleTestConservation(SchedulerP&,
+                                         const PatchSet*,
+                                         const ModelInfo*)
+{
+  // Not implemented yet
+}

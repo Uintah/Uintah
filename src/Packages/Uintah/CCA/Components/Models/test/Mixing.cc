@@ -317,3 +317,10 @@ void Mixing::scheduleErrorEstimate(const LevelP&,
 {
   // Not implemented yet
 }
+//__________________________________
+void Mixing::scheduleTestConservation(SchedulerP&,
+                                      const PatchSet*,
+                                      const ModelInfo*)
+{
+  // Not implemented yet
+}
