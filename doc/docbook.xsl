@@ -41,11 +41,19 @@
 </xsl:template>
 
 <xsl:template match="computeroutput">
-  <div class="box"><xsl:apply-templates/></div>
+  <div class="box">
+    <font color="blue">
+      <pre class="example"><xsl:apply-templates/></pre>
+    </font>
+  </div>
 </xsl:template>
 
 <xsl:template match="term">
   <b><i><font color="darkgreen"><xsl:value-of select="."/></font></i></b>
+</xsl:template>
+
+<xsl:template match="emphasis">
+  <b><xsl:apply-templates/></b>
 </xsl:template>
 
 <xsl:template match="ulink">
@@ -138,18 +146,24 @@
 <!-- *************************************************************** -->
 <!-- *************************************************************** -->
 
+<!-- ******* identify *this* source document -->
+<xsl:variable name="source">
+  <xsl:value-of select="/book/bookinfo/title"/>
+</xsl:variable>
 
 <xsl:if test="$cont=0">
 
 <!-- ********** Table of Contents ********* -->
 
 <p class="title">
-  <xsl:value-of select="./bookinfo/title" />
+  <xsl:value-of select="./title" />
 </p>
 
 <p class="subtitle">
-  <xsl:value-of select="./bookinfo/subtitle" />
+  <xsl:value-of select="./subtitle" />
 </p>
+
+<hr size="1"/>
 
 <xsl:for-each select="./preface">
   <xsl:for-each select="./para">
@@ -157,9 +171,17 @@
   </xsl:for-each>
 </xsl:for-each>
 
+<hr size="1"/>
+
 <xsl:for-each select="./chapter">
+  <xsl:variable name="chapnum"><xsl:number/></xsl:variable>
   <p class="head">
-    <xsl:value-of select="./title" />
+    <a>
+      <xsl:attribute name="href">
+        <xsl:value-of select="concat($source,'?dir=2&amp;cont=',$chapnum)"/>
+      </xsl:attribute>  
+      <xsl:value-of select="./title" />
+    </a>
   </p>
   <p class="firstpara">
     <xsl:value-of select="./sect1/para" />
