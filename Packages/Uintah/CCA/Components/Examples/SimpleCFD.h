@@ -113,7 +113,8 @@ WARNING
 			       SolverInterface* solver,
 			       const VarLabel* pressure,
 			       const VarLabel* pressure_matrix,
-			       const VarLabel* pressure_rhs);
+			       const VarLabel* pressure_rhs,
+                               bool usePressureAsGuess=true);
   private:
     void scheduleDiffuseScalar(SchedulerP& sched, const LevelP& level,
 			       const string& name,
