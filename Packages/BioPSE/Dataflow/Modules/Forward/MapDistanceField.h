@@ -96,13 +96,13 @@ execute(FieldHandle fsrcH, MeshHandle mdstH, Field::data_location loc_dst)
       val = val * val;
       if (val < 1.0e-3) { val = 1.0e-3; }
 
-      typename LSRC::array_type array;
+      typename FSRC::mesh_type::Node::array_type array;
       msrc->get_nodes(array, *citr);
 
       Point cloc1, cloc2;
       msrc->get_center(cloc1, array[0]);
       msrc->get_center(cloc2, array[1]);
-      const double tmp = distance_to_line2(location, cloc1, cloc2) * val;
+      const double tmp = distance_to_line2(location, cloc1, cloc2) / val;
       if (tmp < dist)
       {
 	dist = tmp;
