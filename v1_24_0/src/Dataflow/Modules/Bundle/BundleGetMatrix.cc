@@ -115,6 +115,14 @@ BundleGetMatrix::execute()
       return;
     }
 
+
+  if (handle.get_rep() == 0)
+    {   
+      warning("Empty bundle connected to the input port");
+      return;
+    }
+
+
   int nummatrixs = handle->numMatrices();
   for (int p = 0; p < nummatrixs; p++)
     {

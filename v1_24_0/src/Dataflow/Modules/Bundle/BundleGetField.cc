@@ -112,6 +112,13 @@ BundleGetField::execute()
       return;
     }
 
+  if (handle.get_rep() == 0)
+    {   
+      warning("Empty bundle connected to the input port");
+      return;
+    }
+
+
   int numfields = handle->numFields();
   for (int p = 0; p < numfields; p++)
     {

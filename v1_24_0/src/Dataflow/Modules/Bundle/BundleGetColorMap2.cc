@@ -106,6 +106,13 @@ BundleGetColorMap2::execute()
       return;
     }
 
+
+  if (handle.get_rep() == 0)
+    {   
+      warning("Empty bundle connected to the input port");
+      return;
+    }
+
   int numColormap2s = handle->numColormap2s();
   for (int p = 0; p < numColormap2s; p++)
     {
