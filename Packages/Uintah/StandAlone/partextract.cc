@@ -371,29 +371,35 @@ getParticleStrains(DataArchive* da, int mat, string flag) {
 
                       if (doTrue) {
 
-                        // Find the eigenvalues of the stretch
-                        Vector lambda; Matrix3 direction;
-                        stretch.eigen(lambda, direction);
+			// Compute the left Cauchy-Green tensor
+			Matrix3 C = deformGrad.Transpose()*deformGrad;
+
+                        // Find the eigenvalues of C
+                        Vector Lambda; Matrix3 direction;
+                        C.eigen(Lambda, direction);
+
+			// Find the stretches
+			Vector lambda;
+                        for (int ii =0; ii < 3; ++ii) lambda[ii] = sqrt(Lambda[ii]);
 
                         //cerr << "True Strain = ";
                         cout << time << " " << patchIndex << " " << matl ;
                         for (int ii = 0; ii < 3; ++ii) {
-                          double strain = lambda[ii] - 1.0;
+                          double strain = (lambda[ii] - 1.0)/lambda[ii];
                           cout << " " << strain ;
                         }
                         cout << endl;
                       } else if (doEquiv) {
                         Matrix3 I; I.Identity();
-                        Matrix3 E = (deformGrad.Transpose()*deformGrad - I)*0.5;
-                        double equiv_strain = E.Norm();
+                        Matrix3 E = (deformGrad.Transpose()*deformGrad-I)*0.5;
+                        double equiv_strain = sqrt(E.NormSquared()/1.5);
                         cout << time << " " << patchIndex << " " << matl ;
                         cout << " " << equiv_strain ;
                         cout << endl;
                       } else if (doLagrange) {
                         Matrix3 I; I.Identity();
-                        Matrix3 F = deformGrad;
-                        Matrix3 FT = F.Transpose();
-                        Matrix3 E = (FT*F - I)*0.5;
+                        Matrix3 C = deformGrad.Transpose()*deformGrad;
+                        Matrix3 E = (C - I)*0.5;
                         cout.setf(ios::scientific,ios::floatfield);
                         cout.precision(4);
                         cout << time << " " << patchIndex << " " << matl
@@ -403,11 +409,11 @@ getParticleStrains(DataArchive* da, int mat, string flag) {
                         cout << " " << E(0,1);
                         cout << endl;
                       } else if (doEuler) {
-                        // Calculate the Almansi-Hamel strain tensor
-                        Matrix3 Finv = deformGrad.Inverse();
-                        Matrix3 FTinv = Finv.Transpose();
                         Matrix3 I; I.Identity();
-                        Matrix3 e = (I - FTinv*Finv)*0.5;
+                        // Calculate the Almansi-Hamel strain tensor
+			Matrix3 b = deformGrad*deformGrad.Transpose();
+                        Matrix3 binv = b.Inverse();
+                        Matrix3 e = (I - binv)*0.5;
                         cout.setf(ios::scientific,ios::floatfield);
                         cout.precision(4);
                         cout << time << " " << patchIndex << " " << matl
@@ -611,22 +617,20 @@ getParticleStresses(DataArchive* da, int mat, string flag) {
                       stressVector.push_back(value[*iter]);
                     } else {
                       Matrix3 stress = value[*iter];
-                      double sig11 = stress(0,0);
-                      double sig12 = stress(0,1);
-                      double sig13 = stress(0,2);
-                      double sig22 = stress(1,1);
-                      double sig23 = stress(1,2);
-                      double sig33 = stress(2,2);
                       if (doEquiv) {
-                        double s12 = sig11 - sig22;
-                        double s23 = sig22 - sig33;
-                        double s31 = sig33 - sig11;
-                        double sigeff = sqrt(0.5*(s12*s12 + s23*s23 + s31*s31 + 
-                                                  6.0*(sig12*sig12 + sig23*sig23 + 
-                                                       sig13*sig13)));
+                        Matrix3 I; I.Identity();
+		        Matrix3 s = stress - I*stress.Trace()/3.0;
+			double sigeff = sqrt(1.5*s.NormSquared());
+			double sigeff_1 = sqrt(1.5*stress.NormSquared());
                         cout << time << " " << patchIndex << " " << matl ;
-                        cout << " " << sigeff << endl; 
+                        cout << " " << sigeff << " " << sigeff_1 << endl; 
                       } else {
+                        double sig11 = stress(0,0);
+                        double sig12 = stress(0,1);
+                        double sig13 = stress(0,2);
+                        double sig22 = stress(1,1);
+                        double sig23 = stress(1,2);
+                        double sig33 = stress(2,2);
                         cout << time << " " << patchIndex << " " << matl ;
                         cout << " " << sig11 << " " << sig22 << " " << sig33 
                              << " " << sig23 << " " << sig13 << " " << sig12 
