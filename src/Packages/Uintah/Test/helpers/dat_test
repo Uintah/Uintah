@@ -57,8 +57,8 @@ if [ -d "$TEST_UDADIR" ]; then
 
 
     testdat=`ls -1 *.dat | head -n 1`
-    abs_error_allowable=1e-3
-    rel_error_allowable=1e-2
+    abs_error_allowable=1e-10
+    rel_error_allowable=1e-8
     compare_dat_files $abs_error_allowable $rel_error_allowable $TEST_UDADIR/ $COMPARE_UDADIR/ *.dat > $TMPDIR/compare_dat_files.msg 2>&1
     retval=$?
 
