@@ -20,11 +20,8 @@ using SCIRun::Mutex;
 using SCIRun::Thread;
 using namespace std;
 
-namespace rtrt {
-  extern Mutex xlock;
-} // end namespace rtrt
-
-Hist2DDpy::Hist2DDpy()
+Hist2DDpy::Hist2DDpy(): DpyBase("Hist2DDpy", SingleBuffered),
+			need_hist(true), redraw_isoval(false)
 {
   xres=300;
   yres=300;
@@ -32,9 +29,12 @@ Hist2DDpy::Hist2DDpy()
   have_line=false;
   have_p=false;
   clip=new_clip=false;
+  use_perp = new_use_perp = true;
 }
 
-Hist2DDpy::Hist2DDpy(float a, float b, float c)
+Hist2DDpy::Hist2DDpy(float a, float b, float c):
+  DpyBase("Hist2DDpy", SingleBuffered),
+  need_hist(true), redraw_isoval(false)
 {
   xres=500;
   yres=500;
@@ -45,6 +45,7 @@ Hist2DDpy::Hist2DDpy(float a, float b, float c)
   isoline.c=c;
   have_p=false;
   clip=new_clip=false;
+  use_perp = new_use_perp = true;
 }
 
 Hist2DDpy::~Hist2DDpy()
@@ -100,8 +101,7 @@ void Hist2DDpy::attach(VolumeVGBase* vol)
   vols.add(vol);
 }
 
-void Hist2DDpy::run()
-{
+void Hist2DDpy::init() {
   // Compute the global minmax
   if(vols.size()==0)
     exit(0);
@@ -127,87 +127,43 @@ void Hist2DDpy::run()
   if(!have_p)
     set_p();
 
-  xlock.lock();
-  // Open an OpenGL window
-  Display* dpy=XOpenDisplay(NULL);
-  if(!dpy){
-    cerr << "Cannot open display\n";
-    Thread::exitAll(1);
-  }
-  int error, event;
-  if ( !glXQueryExtension( dpy, &error, &event) ) {
-    cerr << "GL extension NOT available!\n";
-    XCloseDisplay(dpy);
-    dpy=0;
-    Thread::exitAll(1);
-  }
-  int screen=DefaultScreen(dpy);
+  // Ok, figure out where the center is
+  cx = vdatamin+0.5f*(vdatamax-vdatamin);
+  cy = gdatamin+0.5f*(gdatamax-gdatamin);
 
-  char* criteria="sb, max rgb";
-  if(!visPixelFormat(criteria)){
-    cerr << "Error setting pixel format for visinfo\n";
-    cerr << "Syntax error in criteria: " << criteria << '\n';
-    Thread::exitAll(1);
-  }
-  int nvinfo;
-  XVisualInfo* vi=visGetGLXVisualInfo(dpy, screen, &nvinfo);
-  if(!vi || nvinfo == 0){
-    cerr << "Error matching OpenGL Visual: " << criteria << '\n';
-    Thread::exitAll(1);
-  }
-  Colormap cmap = XCreateColormap(dpy, RootWindow(dpy, screen),
-				  vi->visual, AllocNone);
-  XSetWindowAttributes atts;
-  int flags=CWColormap|CWEventMask|CWBackPixmap|CWBorderPixel;
-  atts.background_pixmap = None;
-  atts.border_pixmap = None;
-  atts.border_pixel = 0;
-  atts.colormap=cmap;
-  atts.event_mask=StructureNotifyMask|ExposureMask|ButtonPressMask|ButtonReleaseMask|ButtonMotionMask|KeyPressMask;
-  Window win=XCreateWindow(dpy, RootWindow(dpy, screen),
-			   0, 0, xres, yres, 0, vi->depth,
-			   InputOutput, vi->visual, flags, &atts);
-  char* p="Volume histogram";
-  XTextProperty tp;
-  XStringListToTextProperty(&p, 1, &tp);
-  XSizeHints sh;
-  sh.flags = USSize;
-  XSetWMProperties(dpy, win, &tp, &tp, 0, 0, &sh, 0, 0);
+  px0 = cx;
+  py0 = cy;
 
-  XMapWindow(dpy, win);
-
-  GLXContext cx=glXCreateContext(dpy, vi, NULL, True);
-  if(!glXMakeCurrent(dpy, win, cx)){
-    cerr << "glXMakeCurrent failed!\n";
-  }
+  set_line();
+  ix = px1;
+  iy = py1;
+  float dx = (gdatamax-gdatamin)/xres;
+  float dy = (vdatamax-vdatamin)/yres;
+  float ratio = dx*dx/dy/dy;
+  compute_perp(new_isoline, new_perp_line, ix, iy, ratio);
+  
   glShadeModel(GL_FLAT);
-  for(;;){
-    XEvent e;
-    XNextEvent(dpy, &e);
-    if(e.type == MapNotify)
-      break;
-  }
-  XFontStruct* fontInfo = XLoadQueryFont(dpy, 
-					 "-adobe-helvetica-bold-r-normal--17-120-100-100-p-88-iso8859-1");
-  if (fontInfo == NULL) {
-    cerr << "no font found\n";
-    Thread::exitAll(1);
-  }
-  Font id = fontInfo->fid;
-  unsigned int first = fontInfo->min_char_or_byte2;
-  unsigned int last = fontInfo->max_char_or_byte2;
-  GLuint fontbase = glGenLists((GLuint) last+1);
-  if (fontbase == 0) {
-    printf ("out of display lists\n");
-    exit (0);
-  }
-  glXUseXFont(id, first, last-first+1, fontbase+first);
-    
+}
 
-  bool need_hist=true;
-  bool redraw=true;
-  bool redraw_isoval=false;
-  xlock.unlock();
+// Computes the line perpendicular to l1 at (x,y) and stores it in l2.
+// It turns out that this is the nice general approach, but we need to have
+// some kind of ration of x to y, since that ratio will not always be one
+void Hist2DDpy::compute_perp(ImplicitLine &l1, ImplicitLine &l2,
+			     const float x, const float y, const float ratio) {
+  l2.a = -l1.b * ratio;
+  l2.b =  l1.a;
+  l2.c = -(l2.a * x + l2.b * y);
+  //  cout << "l1 = ["<<l1.a<<", "<<l1.b<<", "<<l1.c<<"]\n";
+  //  cout << "l2 = ["<<l2.a<<", "<<l2.b<<", "<<l2.c<<"]\n";
+  //  cout << "x = "<<x<<", y = "<<y<<endl;
+}
+
+void Hist2DDpy::run()
+{
+  open_display();
+  
+  init();
+  
   for(;;){
     if(need_hist){
       need_hist=false;
@@ -241,46 +197,77 @@ void Hist2DDpy::run()
 	  redraw=true;
 	}
 	break;
-      case ButtonPress:
-	switch(e.xbutton.button){
-	case Button1:
-	  move(e.xbutton.x, e.xbutton.y, Press);
-	  redraw_isoval=true;
-	  break;
-	case Button2:
-	  break;
-	case Button3:
-	  break;
+      case ButtonRelease:
+	{
+	  MouseButton button = MouseButton1;
+	  switch(e.xbutton.button){
+	  case Button1:
+	    button = MouseButton1;
+	    break;
+	  case Button2:
+	    button = MouseButton2;
+	    break;
+	  case Button3:
+	    button = MouseButton3;
+	    break;
+	  }
+	  button_released(button, e.xbutton.x, e.xbutton.y);
 	}
 	break;
-      case ButtonRelease:
-	switch(e.xbutton.button){
-	case Button1:
-	  move(e.xbutton.x, e.xbutton.y, Release);
-	  redraw_isoval=true;
-	  break;
-	case Button2:
-	  break;
-	case Button3:
-	  break;
+      case ButtonPress:
+	{
+	  MouseButton button = MouseButton1;
+	  switch(e.xbutton.button){
+	  case Button1:
+	    button = MouseButton1;
+	    break;
+	  case Button2:
+	    button = MouseButton2;
+	    break;
+	  case Button3:
+	    button = MouseButton3;
+	    break;
+	  }
+	  button_pressed(button, e.xbutton.x, e.xbutton.y);
 	}
 	break;
       case MotionNotify:
-	switch(e.xmotion.state&(Button1Mask|Button2Mask|Button3Mask)){
-	case Button1Mask:
-	  move(e.xbutton.x, e.xbutton.y, Motion);
-	  redraw_isoval=true;
-	  break;
-	case Button2Mask:
-	  break;
-	case Button3Mask:
-	  break;
+	{
+	  MouseButton button = MouseButton1;
+	  switch(e.xmotion.state&(Button1Mask|Button2Mask|Button3Mask)) {
+	  case Button1Mask:
+	    button = MouseButton1;
+	    break;
+	  case Button2Mask:
+	    button = MouseButton2;
+	    break;
+	  case Button3Mask:
+	    button = MouseButton3;
+	    break;
+	  }
+	  button_motion(button, e.xbutton.x, e.xbutton.y);
 	}
 	break;
       case KeyPress:
 	switch(XKeycodeToKeysym(dpy, e.xkey.keycode, 0)){
 	case XK_space:
 	  new_clip=!new_clip;
+	  break;
+	case XK_P:
+	case XK_p:
+	  new_use_perp = !new_use_perp;
+	  if (new_use_perp) {
+	    px0 = cx;
+	    py0 = cy;
+	    set_line();
+	    ix = px1;
+	    iy = py1;
+	    float dx = (gdatamax-gdatamin)/xres;
+	    float dy = (vdatamax-vdatamin)/yres;
+	    float ratio = dx*dx/dy/dy;
+	    compute_perp(new_isoline, new_perp_line, ix, iy, ratio);
+	    redraw_isoval=true;
+	  }
 	  break;
 	}
 	break;
@@ -289,19 +276,6 @@ void Hist2DDpy::run()
       } // event switch
     } // while there are events
   } // for(;;)
-}
-
-static void printString(GLuint fontbase, double x, double y,
-			char *s, const Color& c)
-{
-  glColor3f(c.red(), c.green(), c.blue());
-
-  glRasterPos2d(x,y);
-  /*glBitmap(0, 0, x, y, 1, 1, 0);*/
-  glPushAttrib (GL_LIST_BIT);
-  glListBase(fontbase);
-  glCallLists((int)strlen(s), GL_UNSIGNED_BYTE, (GLubyte *)s);
-  glPopAttrib ();
 }
 
 void Hist2DDpy::compute_hist(unsigned int fid)
@@ -377,15 +351,6 @@ void Hist2DDpy::compute_hist(unsigned int fid)
   cerr << "Done building histogram: max=" << max << "\n";
 }
     
-static int calc_width(XFontStruct* font_struct, char* str)
-{
-  XCharStruct overall;
-  int ascent, descent;
-  int dir;
-  XTextExtents(font_struct, str, (int)strlen(str), &dir, &ascent, &descent, &overall);
-  return overall.width;
-}
-
 void Hist2DDpy::draw_hist(unsigned int fid, XFontStruct* font_struct,
 			  bool redraw_isoval)
 {
@@ -421,35 +386,6 @@ void Hist2DDpy::draw_hist(unsigned int fid, XFontStruct* font_struct,
     */
   }
 	
-  float x0, y0, x1, y1;
-  if(new_clip){
-    if(Abs(new_isoline.a) > Abs(new_isoline.b)){
-      // Find y (g) intersections
-      float a=new_isoline.a;
-      float b=new_isoline.b;
-      float c=new_isoline.c;
-      x0=-(b*gdatamin+c)/a;
-      y0=gdatamin;
-      x1=-(b*gdatamax+c)/a;
-      y1=gdatamax;
-    } else {
-      // Find x (v) intersections
-      float a=new_isoline.a;
-      float b=new_isoline.b;
-      float c=new_isoline.c;
-      y0=-(a*vdatamin+c)/b;
-      x0=vdatamin;
-      y1=-(a*vdatamax+c)/b;
-      x1=vdatamax;
-    }
-  } else {
-    x0=px0;
-    x1=px1;
-    y0=py0;
-    y1=py1;
-  }
-
-    
   glViewport(0, 0, xres, yres);
   glMatrixMode(GL_PROJECTION);
   glLoadIdentity();
@@ -462,12 +398,14 @@ void Hist2DDpy::draw_hist(unsigned int fid, XFontStruct* font_struct,
   glClear(GL_COLOR_BUFFER_BIT);
 
   glColor3f(0,0,.8);
-  glBegin(GL_LINES);
-  glVertex2f(x0, y0);
-  glVertex2f(x1, y1);
-  glEnd();
+  if (new_clip)
+    draw_isoline(new_isoline, vdatamin, gdatamin, vdatamax, gdatamax);
+  else
+    draw_isoline(new_isoline, px0, py0, px1, py1);
 
-
+  if (new_use_perp)
+    draw_isoline(new_perp_line, vdatamin, gdatamin, vdatamax, gdatamax);
+  
   glPointSize(8.0);
   glBegin(GL_POINTS);
   glVertex2f(px0, py0);
@@ -481,48 +419,110 @@ void Hist2DDpy::draw_hist(unsigned int fid, XFontStruct* font_struct,
   }
 }
 
-void Hist2DDpy::move(int x, int y, BTN what)
-{
-  y=yres-y;
-  if(what == Release)
-    return;
-
-  if(what == Press){
-    float xx0=(px0-vdatamin)*xres/(vdatamax-vdatamin);
-    float xx1=(px1-vdatamin)*xres/(vdatamax-vdatamin);
-    float yy0=(py0-gdatamin)*yres/(gdatamax-gdatamin);
-    float yy1=(py1-gdatamin)*yres/(gdatamax-gdatamin);
-
-    float dist0=Abs(xx0-x)+Abs(yy0-y);
-    float dist1=Abs(xx1-x)+Abs(yy1-y);
-
-    if(dist0 < dist1)
-      whichp=0;
-    else
-      whichp=1;
+void Hist2DDpy::draw_isoline(ImplicitLine &line,
+			     float xmin, float ymin,
+			     float xmax, float ymax) {
+  float x0, y0, x1, y1;
+  float a=line.a;
+  float b=line.b;
+  float c=line.c;
+  //  cout << "a = "<<a<<", b = "<<b<<", c = "<<c<<endl;
+  if(Abs(a) > Abs(b)){
+    //    cout << "Abs(a) > Abs(b)\n";
+    // Find y (g) intersections
+    x0=-(b*ymin+c)/a;
+    y0=ymin;
+    x1=-(b*ymax+c)/a;
+    y1=ymax;
   } else {
-    float xn=float(x)/xres;
-    float xval=vdatamin+xn*(vdatamax-vdatamin);
-    float yn=float(y)/yres;
-    float yval=gdatamin+yn*(gdatamax-gdatamin);
-    if(whichp == 0){
-      px0=xval;
-      py0=yval;
-    } else {
-      px1=xval;
-      py1=yval;
-    }
-    set_line();
+    //    cout << "Abs(a) <= Abs(b)\n";
+    // Find x (v) intersections
+    y0=-(a*xmin+c)/b;
+    x0=xmin;
+    y1=-(a*xmax+c)/b;
+    x1=xmax;
   }
+  //  cout << "min("<<x0<<", "<<y0<<"), max("<<x1<<", "<<y1<<")\n";
+  
+  glBegin(GL_LINES);
+  glVertex2f(x0, y0);
+  glVertex2f(x1, y1);
+  glEnd();
+}
+
+void Hist2DDpy::button_pressed(MouseButton button, const int x, const int y) {
+  float xx0=(px0-vdatamin)*xres/(vdatamax-vdatamin);
+  float xx1=(px1-vdatamin)*xres/(vdatamax-vdatamin);
+  float yy0=(py0-gdatamin)*yres/(gdatamax-gdatamin);
+  float yy1=(py1-gdatamin)*yres/(gdatamax-gdatamin);
+  
+  float dist0=Abs(xx0-x)+Abs(yy0-yres+y);
+  float dist1=Abs(xx1-x)+Abs(yy1-yres+y);
+
+  if(dist0 < dist1)
+    whichp=0;
+  else
+    whichp=1;
+  if (new_use_perp)
+    whichp=1;
+  redraw_isoval=true;
+}
+
+void Hist2DDpy::button_released(MouseButton button, const int x, const int y) {
+  redraw_isoval=true;
+}
+
+void Hist2DDpy::button_motion(MouseButton button, const int x, const int y) {
+  float xn=float(x)/xres;
+  float xval=vdatamin+xn*(vdatamax-vdatamin);
+  float yn=float(yres-y)/yres;
+  float yval=gdatamin+yn*(gdatamax-gdatamin);
+  if(whichp == 0){
+    px0=xval;
+    py0=yval;
+  } else {
+    px1=xval;
+    py1=yval;
+  }
+  set_line();
+  if (new_use_perp) {
+    ix = px1;
+    iy = py1;
+    float dx = (gdatamax-gdatamin)/xres;
+    float dy = (vdatamax-vdatamin)/yres;
+    float ratio = dx*dx/dy/dy;
+    compute_perp(new_isoline, new_perp_line, ix, iy, ratio);
+  }
+  redraw_isoval=true;
 }
 
 void Hist2DDpy::animate(bool& changed)
 {
-  if(isoline != new_isoline || clip != new_clip || new_clipline != clipline){
-    isoline=new_isoline;
-    clip=new_clip;
-    clipline=new_clipline;
-    changed=true;
+  if (new_use_perp) {
+    // Ok, this is a hack and should be fixed once this is verified
+    if(isoline != new_perp_line ||
+       clip != new_clip ||
+       clipline != new_clipline ||
+       use_perp != new_use_perp)
+      {
+	isoline=new_perp_line;
+	clip=new_clip;
+	clipline=new_clipline;
+	use_perp = new_use_perp;
+	changed=true;
+      }
+  } else {
+    if(isoline != new_isoline ||
+       clip != new_clip ||
+       clipline != new_clipline ||
+       use_perp != new_use_perp)
+      {
+	isoline=new_isoline;
+	clip=new_clip;
+	clipline=new_clipline;
+	use_perp = new_use_perp;
+	changed=true;
+      }
   }
 }
 
