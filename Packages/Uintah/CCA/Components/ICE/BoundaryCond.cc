@@ -6,12 +6,12 @@
 #include <Packages/Uintah/Core/Grid/Grid.h>
 #include <Packages/Uintah/Core/Grid/Level.h>
 #include <Packages/Uintah/Core/Grid/Patch.h>
-#include <Packages/Uintah/Core/Variables/PerPatch.h>
+#include <Packages/Uintah/Core/Grid/Variables/PerPatch.h>
 #include <Packages/Uintah/Core/Grid/SimulationState.h>
 #include <Packages/Uintah/Core/Grid/Task.h>
-#include <Packages/Uintah/Core/Variables/VarTypes.h>
-#include <Packages/Uintah/Core/Variables/CellIterator.h>
-#include <Packages/Uintah/Core/BoundaryConditions/fillFace.h>
+#include <Packages/Uintah/Core/Grid/Variables/VarTypes.h>
+#include <Packages/Uintah/Core/Grid/Variables/CellIterator.h>
+#include <Packages/Uintah/Core/Grid/BoundaryConditions/fillFace.h>
 
 #include <typeinfo>
 #include <Core/Util/DebugStream.h>

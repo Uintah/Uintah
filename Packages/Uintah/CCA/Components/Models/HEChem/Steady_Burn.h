@@ -3,9 +3,9 @@
 #define Packages_Uintah_CCA_Components_Examples_Steady_Burn_h
 
 #include <Packages/Uintah/CCA/Ports/ModelInterface.h>
-#include <Packages/Uintah/Core/Variables/ComputeSet.h>
+#include <Packages/Uintah/Core/Grid/Variables/ComputeSet.h>
 
-#include <Packages/Uintah/Core/Variables/NCVariable.h>
+#include <Packages/Uintah/Core/Grid/Variables/NCVariable.h>
 
 namespace Uintah {
   class ICELabel;

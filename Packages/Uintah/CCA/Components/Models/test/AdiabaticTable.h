@@ -3,9 +3,9 @@
 #define Packages_Uintah_CCA_Components_Examples_AdiabaticTable_h
 #include <Packages/Uintah/CCA/Ports/ModelInterface.h>
 
-#include <Packages/Uintah/Core/Variables/ComputeSet.h>
-#include <Packages/Uintah/Core/Variables/CCVariable.h>
-#include <Packages/Uintah/Core/Variables/VarTypes.h>
+#include <Packages/Uintah/Core/Grid/Variables/ComputeSet.h>
+#include <Packages/Uintah/Core/Grid/Variables/CCVariable.h>
+#include <Packages/Uintah/Core/Grid/Variables/VarTypes.h>
 #include <vector>
 
 namespace Uintah {

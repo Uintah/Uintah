@@ -1,11 +1,15 @@
 #ifndef _CONSERVATIONTEST_H
 #define _CONSERVATIONTEST_H
 
-#include <Packages/Uintah/Core/Variables/CCVariable.h>
-#include <Packages/Uintah/Core/Variables/SFCXVariable.h>
-#include <Packages/Uintah/Core/Variables/SFCYVariable.h>
-#include <Packages/Uintah/Core/Variables/SFCZVariable.h>
-#include <Packages/Uintah/Core/Variables/CellIterator.h>
+#include <Packages/Uintah/Core/Grid/Variables/CCVariable.h>
+#include <Packages/Uintah/Core/Grid/Variables/SFCXVariable.h>
+#include <Packages/Uintah/Core/Grid/Variables/SFCYVariable.h>
+#include <Packages/Uintah/Core/Grid/Variables/SFCZVariable.h>
+#include <Packages/Uintah/Core/Grid/Variables/CCVariable.h>
+#include <Packages/Uintah/Core/Grid/Variables/SFCXVariable.h>
+#include <Packages/Uintah/Core/Grid/Variables/SFCYVariable.h>
+#include <Packages/Uintah/Core/Grid/Variables/SFCZVariable.h>
+#include <Packages/Uintah/Core/Grid/Variables/CellIterator.h>
 #include <Packages/Uintah/Core/Grid/Patch.h>
 
 namespace Uintah {

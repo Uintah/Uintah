@@ -3,10 +3,10 @@
 
 #include <Packages/Uintah/CCA/Components/ICE/Advection/Advector.h>
 #include <Packages/Uintah/CCA/Components/ICE/Advection/SecondOrderBase.h>
-#include <Packages/Uintah/Core/Variables/CCVariable.h>
-#include <Packages/Uintah/Core/Variables/SFCXVariable.h>
-#include <Packages/Uintah/Core/Variables/SFCYVariable.h>
-#include <Packages/Uintah/Core/Variables/SFCZVariable.h>
+#include <Packages/Uintah/Core/Grid/Variables/CCVariable.h>
+#include <Packages/Uintah/Core/Grid/Variables/SFCXVariable.h>
+#include <Packages/Uintah/Core/Grid/Variables/SFCYVariable.h>
+#include <Packages/Uintah/Core/Grid/Variables/SFCZVariable.h>
 #include <Packages/Uintah/CCA/Ports/DataWarehouse.h>
 #include <Core/Containers/StaticArray.h>
 

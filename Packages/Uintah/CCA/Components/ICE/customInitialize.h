@@ -1,7 +1,7 @@
 #ifndef _CUSTOMINITIALIZE_H
 #define _CUSTOMINITIALIZE_H
 
-#include <Packages/Uintah/Core/Variables/CCVariable.h>
+#include <Packages/Uintah/Core/Grid/Variables/CCVariable.h>
 #include <Packages/Uintah/Core/Grid/Patch.h>
 
 namespace Uintah {

@@ -12,6 +12,7 @@ PSELIBS := \
 	Packages/Uintah/Core/DataArchive \
 	Packages/Uintah/Core/Parallel    \
 	Packages/Uintah/Core/Grid        \
+	Packages/Uintah/Core/Util        \
 	Packages/Uintah/Core/Disclosure  \
 	Packages/Uintah/Core/Exceptions  \
 	Packages/Uintah/Core/ProblemSpec \

@@ -2,17 +2,17 @@
 #ifndef Packages_Uintah_CCA_Components_Examples_SimpleCFD_h
 #define Packages_Uintah_CCA_Components_Examples_SimpleCFD_h
 
-#include <Packages/Uintah/Core/Variables/Stencil7.h>
+#include <Packages/Uintah/Core/Grid/Variables/Stencil7.h>
 #include <Packages/Uintah/CCA/Components/Examples/BoundaryConditions.h>
 #include <Packages/Uintah/CCA/Components/Examples/RegionDB.h>
 #include <Packages/Uintah/Core/Parallel/UintahParallelComponent.h>
 #include <Packages/Uintah/CCA/Ports/SimulationInterface.h>
-#include <Packages/Uintah/Core/Variables/ComputeSet.h>
-#include <Packages/Uintah/Core/Variables/CCVariable.h>
-#include <Packages/Uintah/Core/Variables/NCVariable.h>
-#include <Packages/Uintah/Core/Variables/SFCXVariable.h>
-#include <Packages/Uintah/Core/Variables/SFCYVariable.h>
-#include <Packages/Uintah/Core/Variables/SFCZVariable.h>
+#include <Packages/Uintah/Core/Grid/Variables/ComputeSet.h>
+#include <Packages/Uintah/Core/Grid/Variables/CCVariable.h>
+#include <Packages/Uintah/Core/Grid/Variables/NCVariable.h>
+#include <Packages/Uintah/Core/Grid/Variables/SFCXVariable.h>
+#include <Packages/Uintah/Core/Grid/Variables/SFCYVariable.h>
+#include <Packages/Uintah/Core/Grid/Variables/SFCZVariable.h>
 #include <Packages/Uintah/Core/Grid/Task.h>
 #include <Core/Geometry/IntVector.h>
 

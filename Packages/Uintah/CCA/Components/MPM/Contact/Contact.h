@@ -1,7 +1,7 @@
 #ifndef __CONTACT_H__
 #define __CONTACT_H__
 
-#include <Packages/Uintah/Core/Variables/ComputeSet.h>
+#include <Packages/Uintah/Core/Grid/Variables/ComputeSet.h>
 
 #include <math.h>
 

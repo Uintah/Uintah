@@ -1,7 +1,7 @@
 #ifndef __JWLC_H__
 #define __JWLC_H__
 
-#include <Packages/Uintah/Core/Variables/CCVariable.h>
+#include <Packages/Uintah/Core/Grid/Variables/CCVariable.h>
 #include "EquationOfState.h"
 
 namespace Uintah {
