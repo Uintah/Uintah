@@ -9,7 +9,7 @@
 #include <Packages/rtrt/Core/PortalParallelogram.h>
 #include <Packages/rtrt/Core/UVCylinder.h>
 #include <Packages/rtrt/Core/UVCylinderArc.h>
-#include <Packages/rtrt/Core/Rect.h>
+#include <Packages/rtrt/Core/Disc.h>
 
 #include <Packages/rtrt/Core/Group.h>
 #include <Packages/rtrt/Core/Camera.h>
@@ -34,7 +34,7 @@ using namespace std;
 #define SYSTEM_SIZE_SCALE      1.438848E-5/*1.438848E-6*/
 #define SYSTEM_DISTANCE_SCALE  6.76E-9/*3.382080E-9*/
 #define SYSTEM_TIME_SCALE1     .4
-#define SYSTEM_TIME_SCALE2     .02
+#define SYSTEM_TIME_SCALE2     .01
 #define FLIP_IMAGES            true
 #if 0
 #define IMAGEDIR      "/home/moulding/images/"
@@ -64,14 +64,14 @@ typedef struct {
 satellite_data table[] = {
     
   { 695000, 0, 25.38, 0, 0, 0, 0, 
-    0, 0, 0, "sunmap" },
+    0, 0, 0, "sol" },
   
   { 6378, 1.496E8, .99727, 365.26, .0167, 23.45, 0,
     0, 0, 0, "earth" },
   
   { 1737.4, 384400*50, 27.32166, 27.32166, .0549, 1.5424, 5.1454,
     1, 0, 0, "luna" },
-  
+
   { 2439.7, 5.791E7, 58.65, 87.97, .2056, 0, 7.004, 
     0, 0, 0, "mercury" },
   
@@ -158,7 +158,7 @@ Scene *make_scene(int /*argc*/, char* /*argv*/[], int /*nworkers*/)
   TileImageMaterial *matl1 = 
     new TileImageMaterial(IMAGEDIR"holowall.ppm",
                           4,Color(.5,.5,.5),0,0,0,true);
-  matl1->SetScale(3,3);
+  matl1->SetScale(.03,.03);
 
   // objects
   double radius;
@@ -187,11 +187,11 @@ Scene *make_scene(int /*argc*/, char* /*argv*/[], int /*nworkers*/)
   uvcylarc2->set_arc((DOORWIDTH)*M_PI,(.5-DOORWIDTH)*M_PI);
   uvcylarc3->set_arc((.5+DOORWIDTH)*M_PI,(2-DOORWIDTH)*M_PI);
 
-  Rect* floor = new Rect(matl1,Point(ROOMCENTER,0),Vector(ROOMRADIUS,0,0),
-                         Vector(0,ROOMRADIUS,0));
-  Rect* ceiling = new Rect(matl1,Point(ROOMCENTER,ROOMHEIGHT),
-                           Vector(ROOMRADIUS,0,0),
-                           Vector(0,ROOMRADIUS,0));
+  Disc* floor = new Disc(matl1,Point(ROOMCENTER,0), Vector(0,0,1),
+                         ROOMRADIUS);
+
+  Disc* ceiling = new Disc(matl1,Point(ROOMCENTER,ROOMHEIGHT), Vector(0,0,1),
+                           ROOMRADIUS);
 
   solar_system->add( uvcylarc0 );
   solar_system->add( uvcylarc1 );
@@ -199,37 +199,18 @@ Scene *make_scene(int /*argc*/, char* /*argv*/[], int /*nworkers*/)
   solar_system->add( uvcylarc3 );
   solar_system->add( uvcyl0 );
   solar_system->add( uvcyl1 );
-  solar_system->add( floor );
   solar_system->add( ceiling );
-
-
-  // test portals
-#if 1
-  PortalParallelogram *portal1 = 
-      new PortalParallelogram(Point(-3,-4,16),
-                              Vector(6,0,0),
-                              Vector(0,8,0));
-
-  PortalParallelogram *portal2 = 
-      new PortalParallelogram(Point(4,-4,16),
-                              Vector(0,0,-6),
-                              Vector(0,8,0));
-
-  PortalParallelogram::attach(portal1,portal2);
-  solar_system->add(portal1);
-  solar_system->add(portal2);
-#endif
+  solar_system->add( floor );
 
   // build the sun but don't add it to the scene 
   // (represented later as a light in the scene)
-  Satellite *sol = new Satellite(table[0].name_, sol_m, Point(ROOMCENTER,
-                                                              ROOMHEIGHT/2.), 
-                                 .01);
+  Satellite *sol = new Satellite(table[0].name_, white, 
+                                 Point(ROOMCENTER, ROOMHEIGHT/2.), .01);
 
   radius = table[1].radius_*SYSTEM_SIZE_SCALE;
   orb_radius = table[1].orb_radius_*SYSTEM_DISTANCE_SCALE;
-  cerr << "radius = " << radius << endl;
-  cerr << "orb radius = " << orb_radius << endl;
+  cerr << "earth radius = " << radius << endl;
+  cerr << "earth orb radius = " << orb_radius << endl;
   Satellite *earth = new Satellite(table[1].name_, earth_m, 
                                    Point(orb_radius,0,0), radius);
 
@@ -259,17 +240,17 @@ Scene *make_scene(int /*argc*/, char* /*argv*/[], int /*nworkers*/)
     radius = table[loop].radius_*SYSTEM_SIZE_SCALE;
     orb_radius = table[loop].orb_radius_*SYSTEM_DISTANCE_SCALE;
 
-    cerr << "radius = " << radius << endl;
-    cerr << "orb radius = " << orb_radius << endl;
-    
     Satellite *newsat = new Satellite(table[loop].name_,
                                       newmat, Point(orb_radius,0,0), 
                                       radius, 0);
     table[loop].self_ = newsat;
     
+    cerr << newsat->get_name() << " radius = " << radius << endl;
+    cerr << newsat->get_name() << " orb radius = " << orb_radius << endl;
+    newsat->set_orb_radius(orb_radius);
     newsat->set_parent(table[table[loop].parent_].self_);
     cerr << "satellite " << newsat->get_name() << " parent = " 
-         << table[table[loop].parent_].self_ << endl;
+         << newsat->get_parent() << endl;
     newsat->set_rev_speed(1./table[loop].rot_speed_*SYSTEM_TIME_SCALE1);
     newsat->set_orb_speed(1./table[loop].orb_speed_*SYSTEM_TIME_SCALE2);
     newsat->set_up(Vector(sin(table[loop].tilt_),0,cos(table[loop].tilt_)));
@@ -280,8 +261,8 @@ Scene *make_scene(int /*argc*/, char* /*argv*/[], int /*nworkers*/)
   }
 
   // add the light (the sun, as mentioned above)
-  Light2 *light = new Light2(sol_m, Color(1,1,1), Point(ROOMCENTER,
-                                                        ROOMHEIGHT/2.), .2);
+  Light2 *light = new Light2(sol_m, Color(1,1,1), 
+                             Point(ROOMCENTER, ROOMHEIGHT/2.), .2,2);
   scene->add_light( light );
   scene->addObjectOfInterest(light->getSphere(),true);
 
