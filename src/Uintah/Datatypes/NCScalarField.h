@@ -56,6 +56,7 @@ public:
 //   const NCVariable<T>& var(int i){ return _vars[i];}
 private:
   vector< NCVariable<T> > _vars;
+  vector< Patch* > _patches;
   GridP _grid;
   LevelP _level;
   string _varname;

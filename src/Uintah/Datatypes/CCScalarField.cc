@@ -75,14 +75,24 @@ void CCScalarField<T>::computeHighLowIndices()
 template <class T>
 T CCScalarField<T>::grid(int i, int j, int k)
 {
+  static const Patch* patch = 0;
+  static int ii = 0;
   IntVector id(i,j,k);
   id = low + id;
-  int ii = 0;
-  for(Level::const_patchIterator r = _level->patchesBegin();
-      r != _level->patchesEnd(); r++, ii++){
-      if( (*r)->containsCell( id ) )
+
+  if( patch !=0 && patch->containsNode(id)) {
+    return _vars[ii][id];
+  } else {
+    ii = 0;
+    for(Level::const_patchIterator r = _level->patchesBegin();
+	r != _level->patchesEnd(); r++, ii++){
+      if( (*r)->containsCell( id ) ){
+	patch = (*r);
 	return _vars[ii][id];
+      }
+    }
   }
+  patch = 0;
   return 0;
 }
 
