@@ -16,6 +16,9 @@
 #include <assert.h>
 #include <iosfwd>
 
+#include <stdio.h> // temporary for +=
+#include <stdlib.h> // temporary for +=
+
 class Matrix3 {
  private:
   // data areas
@@ -57,7 +60,9 @@ class Matrix3 {
   inline Matrix3 operator / (const double value);
 
   // modify by adding right hand side
-  inline void operator += (const Matrix3 &m3);
+  inline void operator += (const Matrix3 &m3) { 
+    printf("Matrix3.h: += is broken, fix it\n"); exit(1); 
+  }
 
   // modify by subtracting right hand side
   inline void operator -= (const Matrix3 &m3);
@@ -351,6 +356,9 @@ inline SCICore::Geometry::Vector operator*(const SCICore::Geometry::Vector& v, c
 #endif  // __MATRIX3_H__
 
 // $Log$
+// Revision 1.2  2000/05/05 06:55:04  dav
+// put in dummy code for Matrix3 += operator so everything would compile
+//
 // Revision 1.1  2000/03/14 22:12:43  jas
 // Initial creation of the utility directory that has old matrix routines
 // that will eventually be replaced by the PSE library.
