@@ -291,7 +291,7 @@ bool ImageToNrrd::run2( itk::Object* obj1)
 
 void ImageToNrrd::execute() {
   inport1_ = (ITKDatatypeIPort *)get_iport("InputImage");
-  onrrd_ = (NrrdOPort *)get_oport("OutputNrrd");
+  onrrd_ = (NrrdOPort *)get_oport("OutputNrrd");  
   
   if (!inport1_) {
     error("Unable to initialize iport 'InputImage'.");
@@ -301,7 +301,10 @@ void ImageToNrrd::execute() {
     error("Unable to initialize oport 'OutputNrrd'.");
     return;
   }
-  if(!inport1_->get(inhandle1_))
+
+  inport1_->get(inhandle1_);
+  
+  if(!inhandle1_.get_rep())
     return;
   
   // get input
