@@ -405,7 +405,8 @@ public:
 
   // Unsafe due to non-constness of unproject.
   Transform &get_transform() { return transform_; }
-  Transform &set_transform(const Transform &trans) { transform_ = trans; }
+  Transform &set_transform(const Transform &trans) 
+  { transform_ = trans; return transform_; }
 
 private:
 
