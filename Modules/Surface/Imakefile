@@ -1,6 +1,8 @@
 
 #include <config/sci.cf>
 
+#ifdef SCI_DIR_Modules_Surface
+
 OBJS = ContoursToSurf.o  GenSurface.o  SurfToGeom.o
 SRCS = ContoursToSurf.cc GenSurface.cc SurfToGeom.cc
 
@@ -8,3 +10,8 @@ LIBNAME = Surface
 
 SCIDependTarget($(SRCS))
 SCIObjLibraryTarget($(LIBNAME),$(OBJS))
+
+#else
+all:
+depend:
+#endif

@@ -1,6 +1,8 @@
 
 #include <config/sci.cf>
 
+#ifdef SCI_DIR_Modules_Visualization
+
 OBJS = FrameTest.o  GenColormap.o  Hedgehog.o  \
 	IsoSurface.o  Streamline.o  Streamsurf.o
 SRCS = FrameTest.cc GenColormap.cc Hedgehog.cc \
@@ -10,3 +12,8 @@ LIBNAME = Visualization
 
 SCIDependTarget($(SRCS))
 SCIObjLibraryTarget($(LIBNAME),$(OBJS))
+
+#else
+all:
+depend:
+#endif

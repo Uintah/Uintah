@@ -16,12 +16,14 @@
 #include <TCL/TCL.h>
 
 #include <iostream.h>
-#include <tcl/tcl7.3/tcl.h>
-#include <tcl/tk3.6/tk.h>
+#include <tcl/tcl/tcl.h>
+#include <tcl/tk/tk.h>
 
 extern "C" int tkMain(int argc, char** argv);
 extern "C" void Tk_FirstPrompt();
 extern Tcl_Interp* the_interp;
+typedef void (Tcl_LockProc)();
+extern "C" void Tcl_SetLock(Tcl_LockProc*, Tcl_LockProc*);
 
 static Mutex* tlock=0;
 static Task* owner;

@@ -13,44 +13,44 @@ proc uiMeshView {modid} {
 	set n "$modid needexecute "
 
 	global numLevels,$modid
-	fscale $w.f.numLevels -variable numLevels,$modid -from 0 -to 10 \
+	scale $w.f.numLevels -variable numLevels,$modid -from 0 -to 10 \
 		-label "Number of Levels" -command $n \
 		-orient horizontal
 	pack $w.f.numLevels -side top -fill x
 
 	global seedTet,$modid
-	fscale $w.f.seedTet -variable seedTet,$modid -from 0 -to 1 -command $n \
+	scale $w.f.seedTet -variable seedTet,$modid -from 0 -to 1 -command $n \
 		-orient horizontal -label "Starting Tetrahedron"
 	pack $w.f.seedTet -side top -fill x
 
 	
 	global clipX,$modid
-	fscale $w.f.clipX -variable clipX,$modid -from -1 -to 1 \
+	scale $w.f.clipX -variable clipX,$modid -from -1 -to 1 \
 		-orient horizontal -command $n -label X
 	pack $w.f.clipX -side top -fill x
 
 	global clipNX,$modid
-	fscale $w.f.clipNX -variable clipNX,$modid -from -1 -to 1 \
+	scale $w.f.clipNX -variable clipNX,$modid -from -1 -to 1 \
 		-orient horizontal -command $n -label "Negative X"
 	pack $w.f.clipNX -side top -fill x
 
 	global clipY,$modid
-	fscale $w.f.clipY -variable clipY,$modid -from -1 -to 1 \
+	scale $w.f.clipY -variable clipY,$modid -from -1 -to 1 \
 		-orient horizontal -command $n -label Y
 	pack $w.f.clipY -side top -fill x
 
 	global clipNY,$modid
-	fscale $w.f.clipNY -variable clipNY,$modid -from -1 -to 1 \
+	scale $w.f.clipNY -variable clipNY,$modid -from -1 -to 1 \
 		-orient horizontal -command $n -label "Negative Y"
 	pack $w.f.clipNY -side top -fill x
 
 	global clipZ,$modid
-	fscale $w.f.clipZ -variable clipZ,$modid -from -1 -to 1 \
+	scale $w.f.clipZ -variable clipZ,$modid -from -1 -to 1 \
 		-orient horizontal -command $n -label Z
 	pack $w.f.clipZ -side top -fill x
 
 	global clipNZ,$modid
-	fscale $w.f.clipNZ -variable clipNZ,$modid -from -1 -to 1 \
+	scale $w.f.clipNZ -variable clipNZ,$modid -from -1 -to 1 \
 		-orient horizontal -command $n -label "Negative Z"
 	pack $w.f.clipNZ -side top -fill x
 

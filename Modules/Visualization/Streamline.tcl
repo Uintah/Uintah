@@ -41,7 +41,7 @@ proc uiStreamline {modid} {
 
     global lineradius,$modid
     set lineradius,$modid .25
-    fscale $w.f.lineradius -variable lineradius,$modid -digits 3 \
+    scale $w.f.lineradius -variable lineradius,$modid -digits 3 \
 	-from 0.0 -to 5.0 -label "Line/Ribbon Scale:" \
 	-resolution .01 -showvalue true -tickinterval .2 \
 	-orient horizontal
@@ -67,7 +67,7 @@ proc uiStreamline {modid} {
     global stepsize,$modid
 
     set stepsize,$modid 0.02
-    fscale $w.f.stepsize -variable stepsize,$modid -digits 3 \
+    scale $w.f.stepsize -variable stepsize,$modid -digits 3 \
 	-from -2.0 -to 2.0 -label "Step size:" \
 	-resolution .01 -showvalue true -tickinterval 2 \
 	-orient horizontal
@@ -75,7 +75,7 @@ proc uiStreamline {modid} {
 
     global maxsteps,$modid
     set maxsteps,$modid 50
-    fscale $w.f.maxsteps -variable maxsteps,$modid \
+    scale $w.f.maxsteps -variable maxsteps,$modid \
 	-from 0 -to 1000 -label "Maximum steps:" \
 	-showvalue true -tickinterval 200 \
 	-orient horizontal
@@ -83,15 +83,15 @@ proc uiStreamline {modid} {
 
 #    global widget_scale,$modid
 #    set widget_scale,$modid 1
-#    fscale $w.f
+#    scale $w.f
 
 
     global range_min,$modid
-    fscale $w.f.min -variable range_min,$modid -digits 4 \
+    scale $w.f.min -variable range_min,$modid -digits 4 \
 	    -from -2.0 -to 2.0 -label "Color min:" \
 	    -resolution .01 -showvalue true \
 	    -orient horizontal
-    fscale $w.f.max -variable range_max,$modid -digits 4 \
+    scale $w.f.max -variable range_max,$modid -digits 4 \
 	    -from -2.0 -to 2.0 -label "Color max:" \
 	    -resolution .01 -showvalue true \
 	    -orient horizontal

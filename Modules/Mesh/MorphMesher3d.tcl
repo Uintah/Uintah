@@ -14,7 +14,7 @@ proc uiMorphMesher3d {modid} {
     global num_layers,$modid
     set num_layers,$modid 4
     label $w.f.num_layers.label -text "Number of mesh layers: "
-    fscale $w.f.num_layers.scale -variable num_layers,$modid \
+    scale $w.f.num_layers.scale -variable num_layers,$modid \
         -from 1 -to 9 -command "$modid needexecute "\
         -showvalue true -tickinterval 1 \
         -orient horizontal

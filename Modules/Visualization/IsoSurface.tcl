@@ -30,7 +30,7 @@ proc uiIsoSurface {modid} {
 	    $w.f.seedpoint.seedpoint $w.f.seedpoint.w3d -side left
 
     global isoval,$modid
-    fscale $w.f.isoval -variable isoval,$modid -digits 4 \
+    scale $w.f.isoval -variable isoval,$modid -digits 4 \
 	    -from 0.0 -to 1.0 -label "IsoValue:" \
 	    -resolution 0 -showvalue true \
 	    -orient horizontal \

@@ -26,8 +26,8 @@
 #include <TCL/TCLTask.h>
 
 #include <X11/Xlib.h>
-#include <tcl/tcl7.3/tcl.h>
-#include <tcl/tk3.6/tk.h>
+#include <tcl/tcl/tcl.h>
+#include <tcl/tk/tk.h>
 #include <stdlib.h>
 #include <strstream.h>
 
@@ -125,6 +125,8 @@ void X11::setup_window()
     int sr=6;
     int sg=6;
     int sb=6;
+    NOT_FINISHED("Color allocation!");
+#if 0
     while(1){
 	int failed=0;
 	ncolors=sr*sg*sb;
@@ -139,8 +141,8 @@ void X11::setup_window()
 		    pref.green=j*65535/(sg-1);
 		    pref.blue=k*65535/(sb-1);
 		    pref.flags = DoRed|DoGreen|DoBlue;
-		    XColor* c=Tk_GetColorByValue2(the_interp, tkwin,
-						  Tk_Colormap(tkwin), &pref);
+//		    XColor* c=Tk_GetColorByValue2(the_interp, tkwin,
+//						  Tk_Colormap(tkwin), &pref);
 		    if(!c){
 			failed=1;
 		    } else {
@@ -169,6 +171,7 @@ void X11::setup_window()
 	    break;
 	}
     }
+#endif
     drawinfo->red_max=sr-1;
     drawinfo->green_max=sg-1;
     drawinfo->blue_max=sb-1;

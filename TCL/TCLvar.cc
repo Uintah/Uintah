@@ -18,7 +18,7 @@
 #include <Geometry/Point.h>
 #include <Geometry/Vector.h>
 
-#include <tcl/tcl7.3/tcl.h>
+#include <tcl/tcl/tcl.h>
 #include <iostream.h>
 
 extern Tcl_Interp* the_interp;

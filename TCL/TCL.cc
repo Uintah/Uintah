@@ -19,7 +19,7 @@
 #include <TCL/TCLTask.h>
 #include <TCL/TCLvar.h>
 
-#include <tcl/tcl7.3/tcl.h>
+#include <tcl/tcl/tcl.h>
 #include <stdlib.h>
 #include <string.h>
 

@@ -1,6 +1,8 @@
 
 #include <config/sci.cf>
 
+#ifdef SCI_DIR_Modules_Mesh
+
 OBJS = Delaunay.o  ExtractMeshSF.o  GenerateMesh.o  \
 	InsertDelaunay.o  MakeScalarField.o  \
 	MeshToGeom.o  MeshView.o  MorphMesher3d.o
@@ -12,3 +14,8 @@ LIBNAME = Mesh
 
 SCIDependTarget($(SRCS))
 SCIObjLibraryTarget($(LIBNAME),$(OBJS))
+
+#else
+all:
+depend:
+#endif

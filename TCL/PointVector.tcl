@@ -3,19 +3,19 @@ proc makePoint {w title name command} {
     frame $w -relief groove -borderwidth 2
     label $w.label -text $title
     pack $w.label -side top
-    fscale $w.x -orient horizontal -variable x,$name \
+    scale $w.x -orient horizontal -variable x,$name \
 	    -from -10 -to 10 -label "X:" \
 	    -showvalue true -tickinterval 5 \
 	    -resolution 0 -digits 3 \
 	    -command $command
     pack $w.x -side top -expand yes -fill x
-    fscale $w.y -orient horizontal -variable y,$name \
+    scale $w.y -orient horizontal -variable y,$name \
 	    -from -10 -to 10 -label "Y:" \
 	    -showvalue true -tickinterval 5 \
 	    -resolution 0 -digits 3 \
 	    -command $command
     pack $w.y -side top -expand yes -fill x
-    fscale $w.z -orient horizontal -variable z,$name \
+    scale $w.z -orient horizontal -variable z,$name \
 	    -from -10 -to 10 -label "Z:" \
 	    -showvalue true -tickinterval 5 \
 	    -resolution 0 -digits 3 \
@@ -61,19 +61,19 @@ proc makeNormalVector {w title name command} {
     trace variable x,$name w "updateNormalVector x,$name, y,$name z,$name"
     trace variable y,$name w "updateNormalVector y,$name, z,$name x,$name"
     trace variable z,$name w "updateNormalVector z,$name, x,$name y,$name"
-    fscale $w.x -orient horizontal -variable x,$name \
+    scale $w.x -orient horizontal -variable x,$name \
 	    -from -1 -to 1 -label "X:" \
 	    -showvalue true -tickinterval 1 \
 	    -resolution 0 -digits 3 \
 	    -command $command
     pack $w.x -side top -expand yes -fill x
-    fscale $w.y -orient horizontal -variable y,$name \
+    scale $w.y -orient horizontal -variable y,$name \
 	    -from -1 -to 1 -label "Y:" \
 	    -showvalue true -tickinterval 1 \
 	    -resolution 0 -digits 3 \
 	    -command $command
     pack $w.y -side top -expand yes -fill x
-    fscale $w.z -orient horizontal -variable z,$name \
+    scale $w.z -orient horizontal -variable z,$name \
 	    -from -1 -to 1 -label "Z:" \
 	    -showvalue true -tickinterval 1 \
 	    -resolution 0 -digits 3 \

@@ -12,11 +12,11 @@ proc uiSurfToGeom {modid} {
     set n "$modid needexecute "
 
     global range_min,$modid
-    fscale $w.f.min -variable range_min,$modid -digits 4 \
+    scale $w.f.min -variable range_min,$modid -digits 4 \
 	    -from 0.0 -to 90 -label "Color min:" \
 	    -resolution .01 -showvalue true \
 	    -orient horizontal
-    fscale $w.f.max -variable range_max,$modid -digits 4 \
+    scale $w.f.max -variable range_max,$modid -digits 4 \
 	    -from 0.0 -to 90 -label "Color max:" \
 	    -resolution .01 -showvalue true \
 	    -orient horizontal

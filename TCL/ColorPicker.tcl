@@ -12,13 +12,13 @@ proc makeColorPicker {w var command cancel} {
 
     frame $picks.rgb -relief groove -borderwidth 4
     set rgb $picks.rgb
-    fscale $rgb.s1 -label Red -from 0.0 -to 1.0 -length 6c -showvalue true \
+    scale $rgb.s1 -label Red -from 0.0 -to 1.0 -length 6c -showvalue true \
 	    -orient horizontal -resolution .01 \
 	    -digits 3 -variable r,$w
-    fscale $rgb.s2 -label Green -from 0.0 -to 1.0 -length 6c -showvalue true \
+    scale $rgb.s2 -label Green -from 0.0 -to 1.0 -length 6c -showvalue true \
 	    -orient horizontal -resolution .01 \
 	    -digits 3 -variable g,$w
-    fscale $rgb.s3 -label Blue -from 0.0 -to 1.0 -length 6c -showvalue true \
+    scale $rgb.s3 -label Blue -from 0.0 -to 1.0 -length 6c -showvalue true \
 	    -orient horizontal -resolution .01 \
 	    -digits 3 -variable b,$w
     pack $rgb.s1 -in $picks.rgb -side top -padx 2 -pady 2 -anchor nw -fill y
@@ -27,13 +27,13 @@ proc makeColorPicker {w var command cancel} {
 
     frame $picks.hsv -relief groove -borderwidth 4 
     set hsv $picks.hsv
-    fscale $hsv.s1 -label Hue -from 0.0 -to 360.0 -length 6c -showvalue true \
+    scale $hsv.s1 -label Hue -from 0.0 -to 360.0 -length 6c -showvalue true \
 	    -orient horizontal -resolution .01 \
 	    -digits 3 -variable h,$w
-    fscale $hsv.s2 -label Saturation -from 0.0 -to 1.0 -length 6c -showvalue true \
+    scale $hsv.s2 -label Saturation -from 0.0 -to 1.0 -length 6c -showvalue true \
 	    -orient horizontal -resolution .01 \
 	    -digits 3 -variable s,$w
-    fscale $hsv.s3 -label Value -from 0.0 -to 1.0 -length 6c -showvalue true \
+    scale $hsv.s3 -label Value -from 0.0 -to 1.0 -length 6c -showvalue true \
 	    -orient horizontal -resolution .01 \
 	    -digits 3 -variable v,$w
     pack $hsv.s1 -in $picks.hsv -side top -padx 2 -pady 2 -anchor nw -fill y

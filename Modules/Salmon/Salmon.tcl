@@ -220,7 +220,7 @@ proc makeViewPopup {rid} {
     global fov,$view
     frame $w.f -relief groove -borderwidth 2
     pack $w.f
-    fscale $w.f.fov -orient horizontal -variable fov,$view \
+    scale $w.f.fov -orient horizontal -variable fov,$view \
 	    -from 0 -to 180 -label "Field of View:" \
 	    -showvalue true -tickinterval 30 \
 	    -digits 3 \

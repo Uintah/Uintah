@@ -24,8 +24,8 @@
 #include <Geom/Light.h>
 #include <Math/Trig.h>
 #include <TCL/TCLTask.h>
-#include <tcl/tcl7.3/tcl.h>
-#include <tcl/tk3.6/tk.h>
+#include <tcl/tcl/tcl.h>
+#include <tcl/tk/tk.h>
 #include <GL/gl.h>
 #include <GL/glu.h>
 #include <GL/glx.h>
