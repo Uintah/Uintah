@@ -1,7 +1,28 @@
 
+#define IHaveSubdirs
 #include <config/sci.cf>
 
 SUBDIRS = FieldReader IsoSurface Salmon \
 	SoundInput SoundFilter SoundMixer SoundOutput SoundReader
 
 SCISubdirs($(SUBDIRS))
+
+all:: modules.o
+
+MODULES = FieldReader/FieldReader.o \
+	IsoSurface/IsoSurface.o \
+	Salmon/Salmon.o \
+	SoundInput/SoundInput.o \
+	SoundFilter/SoundFilter.o \
+	SoundMixer/SoundMixer.o \
+	SoundOutput/SoundOutput.o \
+	SoundReader/SoundReader.o
+
+$(MODULES):
+	@echo "Making in "`dirname $<`
+	@cd `dirname $<` && make
+
+modules.o: $(MODULES)
+	ld -r -o modules.o $(MODULES)
+
+
