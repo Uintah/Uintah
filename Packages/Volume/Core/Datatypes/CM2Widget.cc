@@ -374,7 +374,7 @@ TriangleCM2Widget::move (int obj, int ix, int iy, int w, int h)
   case 4:
     top_x_ = last_x_ + x - pick_ix_ / (double)w;
     top_y_ = last_y_ + y - pick_iy_ / (double)h;
-    width_ = last_width_;
+    width_ = last_width_ * top_y_ / last_y_;
     break;
   }
 }
