@@ -281,6 +281,10 @@ void RegridderCommon::GetFlaggedCells ( const GridP& oldGrid, int levelIdx, Data
   d_dilatedCellsCreated[levelIdx]->rewindow( minIdx, maxIdx );
   d_dilatedCellsDeleted[levelIdx]->rewindow( minIdx, maxIdx );
 
+  d_flaggedCells[levelIdx]->initialize(0);
+  d_dilatedCellsCreated[levelIdx]->initialize(0);
+  d_dilatedCellsDeleted[levelIdx]->initialize(0);
+
   cout << "Min = " << minIdx << endl;
   cout << "Max = " << maxIdx << endl;
 
