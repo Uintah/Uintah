@@ -62,6 +62,11 @@ extern "C" {
 #include <string>
 #include <unistd.h>
 
+//#define __ia64__
+#ifdef __ia64__
+#  include <ia64intrin.h>
+#endif
+
 #if defined(_AIX)
 
 #  include <sys/mman.h>
@@ -83,6 +88,7 @@ extern "C" {
 #  define SEM_TRYLOCK(sem)           sem_trywait((*sem))
 #  define SEM_INIT_SUCCESS(val)      ((val) != (sem_t *)SEM_FAILED)
 #  define SEM_DESTROY(sem)           sem_close((*sem))
+
 
 sem_t* SEM_INIT( const char *name, int shared, unsigned int val )
 {
@@ -156,8 +162,10 @@ typedef void (*SIG_HANDLER_T)(int);
  *
  */
 
-#include <Core/Thread/AtomicCounter_default.cc>
+#ifndef __ia64__
 #include <Core/Thread/Barrier_default.cc>
+#include <Core/Thread/AtomicCounter_default.cc>
+#endif
 #include <Core/Thread/CrowdMonitor_default.cc>
 
 using SCIRun::ConditionVariable;
@@ -1166,3 +1174,152 @@ ConditionVariable::conditionBroadcast()
     throw ThreadError(std::string("pthread_cond_broadcast: ")
 		      +strerror(errno));
 }
+
+#ifdef __ia64__
+
+using SCIRun::Barrier;
+
+namespace SCIRun {
+  struct Barrier_private {
+    Barrier_private();
+    
+    //  long long amo_val;
+    char pad0[128];
+    unsigned __int64 amo_val;
+    char pad1[128];
+    volatile int flag;
+    char pad2[128];
+  };
+}
+
+using SCIRun::Barrier_private;
+
+Barrier_private::Barrier_private()
+{
+  flag=0;
+  amo_val = 0;
+}   
+
+Barrier::Barrier(const char* name)
+  : name_(name)
+{
+  if(!Thread::isInitialized()){
+    if(getenv("THREAD_SHOWINIT"))
+      fprintf(stderr, "Barrier: %s\n", name);
+    Thread::initialize();
+  }
+  priv_=new Barrier_private;
+}
+
+Barrier::~Barrier()
+{
+  delete priv_;
+  priv_=0;
+}
+
+void
+Barrier::wait(int n)
+{
+  Thread_private* p=Thread::self()->priv_;
+  int oldstate=Thread::push_bstack(p, Thread::BLOCK_BARRIER, name_);
+  int gen=priv_->flag;
+  unsigned __int64 val=__fetchadd8_acq(&(priv_->amo_val),1);
+  if(val == n-1){
+    priv_->amo_val = 0;
+    priv_->flag++;
+  }
+  while(priv_->flag==gen)
+    /* spin */ ;
+  Thread::pop_bstack(p, oldstate);
+}
+
+using SCIRun::AtomicCounter;
+
+namespace SCIRun {
+  struct AtomicCounter_private {
+    AtomicCounter_private();
+    
+    // These variables used only for non fectchop implementation
+    //  long long amo_val;
+    char pad0[128];
+    unsigned __int64 amo_val;
+    char pad1[128];
+  };
+}
+
+using SCIRun::AtomicCounter_private;
+
+AtomicCounter_private::AtomicCounter_private()
+{
+}
+
+AtomicCounter::AtomicCounter(const char* name)
+  : name_(name)
+{
+  if(!Thread::isInitialized()){
+    if(getenv("THREAD_SHOWINIT"))
+      fprintf(stderr, "AtomicCounter: %s\n", name);
+    Thread::initialize();
+  }
+  priv_=new AtomicCounter_private;
+  priv_->amo_val = 0;
+}
+
+AtomicCounter::AtomicCounter(const char* name, int value)
+  : name_(name)
+{
+  if(!Thread::isInitialized()) {
+    if(getenv("THREAD_SHOWINIT"))
+      fprintf(stderr, "AtomicCounter: %s\n", name);
+    Thread::initialize();
+  }
+  priv_=new AtomicCounter_private;
+  priv_->amo_val = value;
+}
+
+AtomicCounter::~AtomicCounter()
+{
+  delete priv_;
+  priv_=0;
+}
+
+AtomicCounter::operator int() const
+{
+  return priv_->amo_val;
+}
+
+int
+AtomicCounter::operator++()
+{
+  unsigned __int64 val=__fetchadd8_acq(&(priv_->amo_val),1);
+  return (int)val;
+}
+
+int
+AtomicCounter::operator++(int)
+{
+  unsigned __int64 val=__fetchadd8_acq(&(priv_->amo_val),1);
+  return (int)val-1;
+}
+
+int
+AtomicCounter::operator--()
+{
+  unsigned __int64 val=__fetchadd8_acq(&(priv_->amo_val),-1);
+  return (int)val;
+}
+
+int
+AtomicCounter::operator--(int)
+{
+  unsigned __int64 val=__fetchadd8_acq(&(priv_->amo_val),-1);
+  return (int)val+1;
+}
+
+void
+AtomicCounter::set(int v)
+{
+  priv_->amo_val = v;
+}
+
+#endif // end #ifdef __ia64__
