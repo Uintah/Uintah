@@ -37,7 +37,7 @@ using namespace SCICore::Containers;
 
 
 MPWrite::MPWrite(clString fname, int mode): os(fname(), mode ),
-  state( Closed ), currentGrid(None),
+  state( Closed ), currentGrid(NoGrid),
   headerWritten( false ), svCount(0), vvCount(0)
 {
   if (!(os.good())) {
@@ -124,7 +124,7 @@ MPWrite::printCurrentState(ostream& out)
     cs += "Particles";
     break;
   default:
-    cs += "None";
+    cs += "NoGrid";
   }
   out<< "Current state is "<<cs<<".";
 }
@@ -165,11 +165,11 @@ MPWrite::BeginGrid( clString name,
     while( vv >> inbuf ) vVars.add( clString(inbuf) );
 
 
-    cerr<<"In BeginGrid with type = " <<type<<endl;
+//    cerr<<"In BeginGrid with type = " <<type<<endl;
     if( type == "NC_i") currentGrid = NC_i;
     else if( type == "CC_i") currentGrid = CC_i;
     else if( type == "FC_i") currentGrid = FC_i;
-    else currentGrid = None;
+    else currentGrid = NoGrid;
 
     state = Grid;
     
@@ -205,11 +205,11 @@ MPWrite::BeginGrid( clString name,
     while( sv >> inbuf ) sVars.add( clString(inbuf) );
     while( vv >> inbuf ) vVars.add( clString(inbuf) );
 
-    cerr<<"In BeginGrid with type = " <<type<<endl;
+//    cerr<<"In BeginGrid with type = " <<type<<endl;
     if( type == "NC") currentGrid = NC;
     else if( type == "CC") currentGrid = CC;
     else if( type == "FC") currentGrid = FC;
-    else currentGrid = None;
+    else currentGrid = NoGrid;
 
     state = Grid;
     
@@ -229,14 +229,14 @@ MPWrite::AddSVarToGrid( clString name,  // variable name check
     cerr<<"Error: no more scalar values can be added.\n";
     return 0;
   }
-  cerr<<"svCount = "<<svCount<<" and sVars["<< svCount <<
-    "] = "<< sVars[svCount]<<endl;
+//  cerr<<"svCount = "<<svCount<<" and sVars["<< svCount <<
+//    "] = "<< sVars[svCount]<<endl;
   if( name != sVars[ svCount ] ) {
     cerr<<"Error: you need to add values for "<< sVars[svCount]<<" first.\n";
     return 0;
   } 
 
-  cerr<<"currentGrid = "<<currentGrid<<endl;
+//  cerr<<"currentGrid = "<<currentGrid<<endl;
   if( ScalarFieldRG* sfrg = dynamic_cast <ScalarFieldRG*> (var)){
     if( currentGrid == NC){
       svCount++;
@@ -416,13 +416,13 @@ MPWrite::BeginParticles( clString name,
 			 clString scalarVars,
 			 clString vectorVars)
 {
-  cerr<<"State = "<<state<<endl;
+//  cerr<<"State = "<<state<<endl;
   // This will not allow you to add more than N Particles.
   if( !headerWritten ){
     cerr<<"Error:  You must first write out a header\n";
     return 0;
   } else if( state == Open ) {
-    cerr << "PARTICLES  "<<name<<" "<<N<<endl;
+//    cerr << "PARTICLES  "<<name<<" "<<N<<endl;
     os << "PARTICLES  "<<name<<" "<<N<<endl;
     os <<scalarVars<<endl;
     os <<vectorVars<<endl;
@@ -457,11 +457,11 @@ MPWrite::AddParticle( Point p, // position
     cerr<<endl;
     return 0;
   }
-  if( scalars.size() != sVars.size() ){
+  if( scalars.size() != psVars.size() ){
     cerr<<"Error: scalar array does not correspond with scalar vars.\n";
     return 0;
   }
-  if( vectors.size() != vVars.size() ){
+  if( vectors.size() != pvVars.size() ){
     cerr<<"Error: vector array does not correspond with vector vars.\n";
     return 0;
   }
