@@ -269,7 +269,7 @@ Scene* make_scene(int argc, char* argv[], int nworkers)
     Color cup(1, 0, 0);
     Color cdown(0, 0, 0.2);
 
-    Plane groundplane ( Point(0, 0, 0), Vector(0, -1, 0) );
+    rtrt::Plane groundplane ( Point(0, 0, 0), Vector(0, -1, 0) );
     Scene* scene=new Scene(obj, cam,
 			   bgcolor, cdown, cup, groundplane,
 			   ambient_scale);

@@ -3,14 +3,15 @@
 #include <Packages/rtrt/Core/Camera.h>
 #include <Packages/rtrt/Core/Light.h>
 #include <Packages/rtrt/Core/Scene.h>
-#include <Packages/rtrt/Core/Point.h>
-#include <Packages/rtrt/Core/Vector.h>
-#include <Packages/rtrt/Core/Transform.h>
+#include <Core/Geometry/Point.h>
+#include <Core/Geometry/Vector.h>
+#include <Core/Geometry/Transform.h>
 #include <Packages/rtrt/Core/Group.h>
 #include <Packages/rtrt/Core/Sphere.h>
 #include <Packages/rtrt/Core/Rect.h>
 #include <Packages/rtrt/Core/MetalMaterial.h>
 #include <Packages/rtrt/Core/LambertianMaterial.h>
+#include <Packages/rtrt/Core/Phong.h>
 #include <Packages/rtrt/Core/CoupledMaterial.h>
 #include <Packages/rtrt/Core/DielectricMaterial.h>
 #include <Packages/rtrt/Core/Checker.h>
@@ -95,7 +96,8 @@ static Object* make_obj(int size)
     Group* world=new Group();
     Vector objset[9];
     create_dirs(objset);
-    Material* matl0=new LambertianMaterial (Color(.4,.4,.4));
+    //    Material* matl0=new LambertianMaterial (Color(.4,.4,.4));
+    Material* matl0=new Phong(Color(0.32,0.32,0.32), Color(0.32,0.32,0.32), Color(0.32,0.32,0.32), 40, 0);
     create_objs(world, Point(0,0,.5), BV_RADIUS/2.0, Vector(0,0,1),
 		size, objset, matl0);
 
@@ -161,7 +163,7 @@ Scene* make_scene(int argc, char* argv[], int /*nworkers*/)
     Color cup(0.1, 0.3, 0.8);
 
 
-    Plane groundplane ( Point(0, 0, 0), Vector(0, 0, 3) );
+    rtrt::Plane groundplane ( Point(0, 0, 0), Vector(0, 0, 3) );
     Scene* scene=new Scene(obj, cam,
 			   bgcolor, cdown, cup, groundplane,
 			   ambient_scale);
