@@ -28,6 +28,11 @@ namespace Uintah {
 		  const Patch* patch, string dependency, string accessType);
      DeniedAccess(const DeniedAccess& copy);
      virtual ~DeniedAccess() {}
+
+     static string
+     makeMessage(const VarLabel* label, const Task* task, int matlIndex,
+		 const Patch* patch, string dependency, string accessType);
+     
      virtual const char* message() const;
      virtual const char* type() const;
    protected:

@@ -27,6 +27,10 @@ namespace Uintah {
 			 const VarLabel* actualLabel);
      IncorrectAllocation(const IncorrectAllocation& copy);
      virtual ~IncorrectAllocation() {}
+
+     static string makeMessage(const VarLabel* expectedLabel,
+			       const VarLabel* actualLabel);
+     
      virtual const char* message() const;
      virtual const char* type() const;
    protected:
