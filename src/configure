@@ -38927,7 +38927,7 @@ if test -a "$dir/lib/InsightToolkit/ITKConfig.cmake"; then
 
 else
   echo
-  { echo "configure: error: Insight instalation not found." 1>&2; exit 1; }
+  echo "$ac_t""not found." 1>&6
   echo
 fi
 
