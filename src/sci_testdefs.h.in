@@ -56,20 +56,14 @@
 #define MPIPP_H
 
 /* paths for alternate compilation directories */
-#define MATH_MANIP_SRC "@abs_conftop_dir@/@top_srcdir@/Dataflow/Modules/Math/Manip"
-#define MATH_MANIP_OBJ "@abs_conftop_dir@/Dataflow/Modules/Math/Manip"
-#define FIELD_MANIP_SRC "@abs_conftop_dir@/@top_srcdir@/Dataflow/Modules/Fields/Manip"
-#define FIELD_MAMIP_OBJ "@abs_conftop_dir@/Dataflow/Modules/Fields/Manip"
-#define ON_THE_FLY_SRC "@abs_conftop_dir@/@top_srcdir@/on-the-fly-libs"
-#define ON_THE_FLY_OBJ "@abs_conftop_dir@/on-the-fly-libs"
 #define SCIRUN_SRCDIR "@abs_srcdir@"
 #define SCIRUN_OBJDIR "@abs_conftop_dir@"
+
 #define LOAD_PACKAGE "@LOAD_PACKAGE@"
 
 #define PSECORETCL "@abs_srcdir@/Dataflow/GUI"
 #define SCICORETCL "@abs_srcdir@/Core/GUI"
 #define ITCL_WIDGETS "@LIB_DIR_ITCL@/iwidgets/scripts"
-#define DEF_LOAD_PACK "@LOAD_PACKAGE@"
 #define SRCTOP "@abs_srcdir@"
 #define OBJTOP "@abs_conftop_dir@"
 
