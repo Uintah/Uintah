@@ -144,7 +144,7 @@ void AMRSimulationController::run()
    scheduler->initialize(1, 1);
    scheduler->advanceDataWarehouse(grid);
    // for dynamic lb's, set up initial patch config
-   lb->dynamicReallocation(grid, scheduler); 
+   lb->possiblyDynamicallyReallocate(grid); 
 
    double t;
 
@@ -375,7 +375,6 @@ void AMRSimulationController::run()
        
        scheduler->initialize(1, totalFine);
        scheduler->fillDataWarehouses(grid);
-       lb->dynamicReallocation(grid, scheduler); 
 
        // Set up new DWs, DW mappings.
        scheduler->clearMappings();
