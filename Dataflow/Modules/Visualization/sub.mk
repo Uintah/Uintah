@@ -37,7 +37,7 @@ SRCS     += \
 	$(SRCDIR)/StreamLines.cc\
 	$(SRCDIR)/TexCuttingPlanes.cc\
 	$(SRCDIR)/TextureVolVis.cc\
-	$(SRCDIR)/Isosurface.cc\
+#	$(SRCDIR)/Isosurface.cc\
 [INSERT NEW CODE FILE HERE]
 
 
