@@ -58,7 +58,7 @@ itcl_class SCIRun_Visualization_GenStandardColorMaps {
 	set $this-mapType 3
 	set $this-resolution 256
 	set $this-realres 256
-	set $this-minRes 12
+	set $this-minRes 2
 	set exposed 0
 	set colorMap {}
 	set selected -1
@@ -73,19 +73,39 @@ itcl_class SCIRun_Visualization_GenStandardColorMaps {
 	    { "Gray" { { 0 0 0 } { 255 255 255 } } }
 	    { "Inverse Gray" { { 255 255 255 } { 0 0 0 }}}
 	    { "Rainbow" {
-		{ 255 0 0}  { 255 102 0}
-		{ 255 204 0}  { 255 234 0}
-		{ 204 255 0}  { 102 255 0}
-		{ 0 255 0}    { 0 255 102}
-		{ 0 255 204}  { 0 204 255}
-		{ 0 102 255}  { 0 0 255}}}
+		{120 15 0} {156 23 0}
+		{182 33 0} {212 45 0}
+		{234 60 0} {247 77 0}
+		{253 96 1} {255 115 2}
+		{255 137 3} {253 158 5}
+		{247 179 8} {236 197 11}
+		{220 214 15} {201 228 21}
+		{179 239 30} {150 248 41}
+		{120 255 55} {91 255 70}
+		{63 246 90} {44 235 110}
+		{30 223 132} {21 207 156}
+		{15 188 182} {11 168 210}
+		{9 146 238} {5 123 247}
+		{3 100 237} {1 80 220}
+		{0 62 200} {0 46 178}
+		{0 33 156} {0 23 130}}}
 	    { "Inverse Rainbow" {
-		{ 0 0 255}   { 0 102 255}
-		{ 0 204 255}  { 0 255 204}
-		{ 0 255 102}  { 0 255 0}
-		{ 102 255 0}  { 204 255 0}
-		{ 255 234 0}  { 255 204 0}
-		{ 255 102 0}  { 255 0 0} }}
+		{0 23 130} {0 33 156}
+		{0 46 178} {0 62 200}
+		{1 80 220} {3 100 237}
+		{5 123 247} {9 146 238}
+		{11 168 210} {15 188 182}
+		{21 207 156} {30 223 132}
+		{44 235 110} {63 246 90}
+		{91 255 70} {120 255 55}
+		{150 248 41} {179 239 30}
+		{201 228 21} {220 214 15}
+		{236 197 11} {247 179 8}
+		{253 158 5} {255 137 3}
+		{255 115 2} {253 96 1}
+		{247 77 0} {234 60 0}
+		{212 45 0} {182 33 0}
+		{156 23 0} {120 15 0}}}
 	    { "Darkhue" {
 		{ 0  0  0 }  { 0 28 39 }
 		{ 0 30 55 }  { 0 15 74 }
@@ -271,15 +291,15 @@ itcl_class SCIRun_Visualization_GenStandardColorMaps {
 	set $this-realres [set $this-resolution]
     }
     method change {} {
-	global $this-minRes
-	global $this-mapType
+#	global $this-minRes
+#	global $this-mapType
 
-	set w .ui[modname]
+#	set w .ui[modname]
 
-	set mtype [set $this-mapType]
-	set mres [llength [lindex [lindex $colorMaps $mtype] 1]]
-	set $this-minRes $mres
-	$w.f3.s2 configure -from $mres
+#	set mtype [set $this-mapType]
+#	set mres [llength [lindex [lindex $colorMaps $mtype] 1]]
+#	set $this-minRes $mres
+#	$w.f3.s2 configure -from $mres
 
 	$this update
 	$this-c needexecute
@@ -497,9 +517,9 @@ itcl_class SCIRun_Visualization_GenStandardColorMaps {
 	if { [set $this-resolution] > [set $this-realres] } {
 	      set $this-resolution [set $this-realres]
 	}
-	if { [set $this-resolution] < $n } {
-	    set $this-resolution $n
-	}
+#	if { [set $this-resolution] < $n } {
+#	    set $this-resolution $n
+#	}
 	set m [set $this-resolution]
 
 	set frac [expr ($n-1)/double($m-1)]
