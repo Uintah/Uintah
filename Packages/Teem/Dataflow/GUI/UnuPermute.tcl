@@ -104,13 +104,13 @@ itcl_class Teem_Unu_UnuPermute {
         frame $w.f
 
 	if {[set $this-dim] == 0} {
-	    label $w.f.axisf.t -text "Need to Execute to know the number of Axes."
-	    pack $w.f.axisf.t
+	    label $w.f.t -text "Need to Execute to know the number of Axes."
+	    pack $w.f.t
 	} else {
 	    init_axes 
 	}
 
-	pack $w.f.axisf -side top -expand 1 -fill x
+	pack $w.f -side top -anchor nw -padx 3 -pady 3
 
         makeSciButtonPanel $w $w $this
 	moveToCursor $w
