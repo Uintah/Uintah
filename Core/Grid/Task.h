@@ -653,7 +653,7 @@ WARNING
     }
 
   template <class T>
-  inline const ComputeSubset<T>* Task::Dependency::
+  inline constHandle< ComputeSubset<T> > Task::Dependency::
   getComputeSubsetUnderDomain(string domString, Task::DomainSpec dom,
 			      const ComputeSubset<T>* subset,
 			      const ComputeSubset<T>* domainSubset)
