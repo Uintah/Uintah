@@ -19,21 +19,26 @@
 #include <Geometry/BSphere.h>
 #include <Malloc/Allocator.h>
 
+#include <stdio.h>
+
 #define true 1
 
 Persistent* make_GeomArrows()
 {
-    return scinew GeomArrows(0,0);
+    return scinew GeomArrows(0,0,0);
 }
 
 PersistentTypeID GeomArrows::type_id("GeomArrows", "GeomObj", make_GeomArrows);
 
-GeomArrows::GeomArrows(double headwidth, double headlength)
+GeomArrows::GeomArrows(double headwidth, double headlength, int cyl, double r)
 : headwidth(headwidth), headlength(headlength)
 {
-    shaft_matls.add(new Material(Color(0,0,0), Color(1,0,0), Color(.6, .6, .6), 10));
-    head_matls.add(new Material(Color(0,0,0), Color(0,0,1), Color(.6, .6, .6), 10));
-    back_matls.add(new Material(Color(0,0,0), Color(1,0,0), Color(.6, .6, .6), 10));
+    shaft_matls.add(new Material(Color(0,0,0), Color(.6, .6, .6), Color(.6, .6, .6), 10));
+    head_matls.add(new Material(Color(0,0,0), Color(1,1,1), Color(.6, .6, .6), 10));
+    back_matls.add(new Material(Color(0,0,0), Color(.6, .6, .6), Color(.6, .6, .6), 10));
+    // in case you want the shaft drawn with cylinders instead of lines
+    drawcylinders = cyl;
+    rad = r;
 }
 
 GeomArrows::GeomArrows(const GeomArrows& copy)

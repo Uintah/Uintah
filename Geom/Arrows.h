@@ -23,14 +23,16 @@
 class GeomArrows : public GeomObj {
     double headwidth;
     double headlength;
+    double rad;
     Array1<MaterialHandle> shaft_matls;
     Array1<MaterialHandle> back_matls;
     Array1<MaterialHandle> head_matls;
     Array1<Point> positions;
     Array1<Vector> directions;
     Array1<Vector> v1, v2;
+    int drawcylinders;
 public:
-    GeomArrows(double headwidth, double headlength=0.7);
+    GeomArrows(double headwidth, double headlength=0.7, int cyl=0, double r=0);
     GeomArrows(const GeomArrows&);
     virtual ~GeomArrows();
 
