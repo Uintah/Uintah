@@ -1837,6 +1837,7 @@ class BioTensorApp {
         set indicatorL2 ""
         set indicate 0
         set cycle 0
+	set darby 0
         set i_width 300
         set i_height 20
         set stripes 10
@@ -1944,9 +1945,13 @@ class BioTensorApp {
 	##########################
 	# General
 	global tips
-	set tips(Indicator) "Indicates progress of\napplication. Click when\nred to view errors"
+	set tips(IndicatorBar) \
+	    "Indicates the status of\napplication. Click when\nred to view error\nmessages"
+	set tips(IndicatorLabel) \
+	    "Indicates the current event"
 
 	# Data Acquisition Tab
+	set tips(DataTab) "Select to access\nparameters for\nData Acquisition\nstep"
         set tips(Execute-DataAcquisition) "Select to execute the\nData Acquisition step"
 	set tips(Next-DataAcquisition) "Select to proceed to\nthe Registration step"
 
@@ -1989,7 +1994,7 @@ class BioTensorApp {
         disableModule $mods(TendEpireg) 1
 	disableModule $mods(UnuJoin) 1
         disableModule $mods(ChooseNrrd-ToReg) 1
-        disableModule $mods(RescaleColorMap2) 1
+        #disableModule $mods(RescaleColorMap2) 1
   
         # Building Diffusion Tensors
         disableModule $mods(NrrdReader-BMatrix) 1
@@ -1997,29 +2002,29 @@ class BioTensorApp {
 	disableModule $mods(ChooseNrrd-DT) 1
 
         # Planes
-        disableModule $mods(QuadToTri-X) 1
-        disableModule $mods(QuadToTri-Y) 1
-        disableModule $mods(QuadToTri-Z) 1
+        #disableModule $mods(QuadToTri-X) 1
+        #disableModule $mods(QuadToTri-Y) 1
+        #disableModule $mods(QuadToTri-Z) 1
         #disableModule $mods(RescaleColorMap-ColorPlanes) 1
 
         # Isosurface
-        disableModule $mods(DirectInterpolate-Isosurface) 1
+        #disableModule $mods(DirectInterpolate-Isosurface) 1
         #disableModule $mods(RescaleColorMap-Isosurface) 1
 
 
         # Glyphs
-        disableModule $mods(NrrdToField-GlyphSeeds) 1
-        disableModule $mods(Probe-GlyphSeeds) 1
-        disableModule $mods(SampleField-GlyphSeeds) 1
+        #disableModule $mods(NrrdToField-GlyphSeeds) 1
+        #disableModule $mods(Probe-GlyphSeeds) 1
+        #disableModule $mods(SampleField-GlyphSeeds) 1
         ##disableModule $mods(DirectInterpolate-GlyphSeeds) 1
  	##disableModule $mods(ChooseField-Glyphs) 1
 	#disableModule $mods(RescaleColorMap-Glyphs) 1
 
 	# Fibers
-        disableModule $mods(Probe-FiberSeeds) 1
-        disableModule $mods(SampleField-FiberSeeds) 1
-        disableModule $mods(DirectInterpolate-FiberSeeds) 1
- 	disableModule $mods(ChooseField-Fibers) 1
+        #disableModule $mods(Probe-FiberSeeds) 1
+        #disableModule $mods(SampleField-FiberSeeds) 1
+        #disableModule $mods(DirectInterpolate-FiberSeeds) 1
+ 	#disableModule $mods(ChooseField-Fibers) 1
 	#disableModule $mods(RescaleColorMap-Fibers) 1
 	
     }
@@ -2185,6 +2190,7 @@ class BioTensorApp {
 	    pack $process.tnb -side top -anchor n 
 	    
             set step_tab [$process.tnb add -label "Data" -command "$this change_processing_tab Data"]
+
 	    
             if {$case == 0} {
                 set proc_tab1 $process.tnb
@@ -2219,7 +2225,8 @@ class BioTensorApp {
                 set data_tab1 $step_tab.tnb
             } else {
                 set data_tab2 $step_tab.tnb
-            }
+            }	      
+	    
 	    
             ### Nrrd
             set page [$step_tab.tnb add -label "Nrrd" -command {app configure_readers Nrrd}]
@@ -2748,6 +2755,7 @@ class BioTensorApp {
 		set indicator2 $process.indicator.canvas
 		set indicatorL2 $process.indicatorL
             }
+	    Tooltip $process.indicatorL $tips(IndicatorLabel)
 	    
             construct_indicator $process.indicator.canvas
 	    
@@ -3500,6 +3508,7 @@ class BioTensorApp {
 	    set data_completed 0
 	    set reg_completed 0
 	    set dt_completed 0
+	    change_indicator_labels "Data Acquisition..."
 	}	
     }
 
@@ -3525,10 +3534,40 @@ class BioTensorApp {
     }
     
     method show_help {} {
-	tk_messageBox -message "Please refer to the online BioTensor Tutorial\nhttp://software.sci.utah.edu/doc/User/BioTensorTutorial" -type ok -icon info -parent .standalone
+	#tk_messageBox -message "Please refer to the online BioTensor Tutorial\nhttp://software.sci.utah.edu/doc/User/BioTensorTutorial" -type ok -icon info -parent .standalone
+
+	global SCIRUN_SRCDIR
+	
+	if {[winfo exists .splash]} {
+	    wm deiconify .splash
+	    raise .splash
+	    return;
+	}
+	
+	# CHANGE FILENAME HERE
+	set filename [file join $SCIRUN_SRCDIR main scisplash.ppm]
+	image create photo ::img::splash -file "$filename"
+	toplevel .splash
+	
+	wm protocol .splash WM_DELETE_WINDOW "wm withdraw .splash"
+	
+	wm title .splash {Welcome to SCIRun}
+	label .splash.splash -image ::img::splash
+	pack .splash.splash
+
+	wm geometry .splash 504x480+135+170
+	label .splash.m1 -text "Please refer to the online BioTensor Tutorial"
+	label .splash.m2 -text "http://software.sci.utah.edu/doc/User/BioTensorTutorial" 
+	pack .splash.m1 .splash.m2 -anchor n
+
+	button .splash.ok -text " OK " -command "wm withdraw .splash"
+	pack .splash.ok -side bottom -padx 5 -pady 5 -fill none
+	
+	update idletasks
     }
     
     method show_about {} {
+	puts "FIX ME: Insert BioTensor Intro here..."
 	tk_messageBox -message "BioTensor About Box" -type ok -icon info -parent .standalone
     }
     
@@ -3541,7 +3580,7 @@ class BioTensorApp {
     method indicate_dynamic_compile { which mode } {
 	if {$mode == "start"} {
 	    #change_indicate_val 1
-	    change_indicator_labels "Dynamically Compiling Code..."
+	    #change_indicator_labels "Dynamically Compiling Code..."
         } else {
 # 	    if {$dt_completed} {
 # 		change_indicator_labels "Visualization..."
@@ -3558,7 +3597,6 @@ class BioTensorApp {
     
     
     method update_progress { which state } {
-	#puts $state
 	global mods
 	global $mods(ShowField-Isosurface)-faces-on
 	global $mods(ShowField-Glyphs)-tensors-on
@@ -3571,48 +3609,66 @@ class BioTensorApp {
 	    change_indicate_val 1
 	} elseif {$which == $mods(ChooseNrrd1) && $state == "Completed"} {
 	    change_indicate_val 2
+	    set data_completed 1	
+	} elseif {$which == $mods(ShowField-Orig) && $state == "JustStarted"} {
+	    change_indicate_val 1
 	} elseif {$which == $mods(ShowField-Orig) && $state == "Completed"} {
+	    change_indicate_val 2
+	    
 	    configure_variance_tabs
-
-	    after 100
+	    
 	    # Bring images into view
-	    $mods(Viewer)-ViewWindow_0-c autoview
-	    global $mods(Viewer)-ViewWindow_0-pos 
-	    set $mods(Viewer)-ViewWindow_0-pos "z0_y0"
-	    $mods(Viewer)-ViewWindow_0-c Views
+	    global $mods(ShowField-Orig)-faces-on
+	    if {[set $mods(ShowField-Orig)-faces-on] == 1} {
+		after 100 "$mods(Viewer)-ViewWindow_0-c autoview; global $mods(Viewer)-ViewWindow_0-pos; set $mods(Viewer)-ViewWindow_0-pos \"z0_y0\"; $mods(Viewer)-ViewWindow_0-c Views;"
+	    }
 	} elseif {$which == $mods(TendEpireg) && $state == "JustStarted"} {
-	    change_indicator_labels "Registration..."
+	    if {$data_completed} {
+		change_indicator_labels "Registration..."
+	    }
 	    change_indicate_val 1
 	} elseif {$which == $mods(TendEpireg) && $state == "Completed"} {
 	    change_indicate_val 2
+	    set reg_completed 1
+
 	    # activate next button
 	    $reg_tab1.last.ne configure -state normal \
 		-foreground black -background $next_color
 	    $reg_tab2.last.ne configure -state normal \
 		-foreground black -background $next_color
-
-	    if {$reg_completed} {
+	    
+#	    if {$reg_completed} {
 		activate_dt
-	    }
+#	    }
+	} elseif {$which == $mods(ShowField-Reg) && $state == "JustStarted"} {
+	    change_indicate_val 1
 	} elseif {$which == $mods(ShowField-Reg) && $state == "Completed"} {
+	    change_indicate_val 2
+	    
 	    configure_variance_tabs
-
-	    after 100
+	    
 	    # Bring images into view
-	    $mods(Viewer)-ViewWindow_0-c autoview
-	    global $mods(Viewer)-ViewWindow_0-pos 
-	    set $mods(Viewer)-ViewWindow_0-pos "z0_y0"
-	    $mods(Viewer)-ViewWindow_0-c Views
+	    global $mods(ShowField-Reg)-faces-on
+	    if {[set $mods(ShowField-Reg)-faces-on] == 1} {
+		after 100 "$mods(Viewer)-ViewWindow_0-c autoview; global $mods(Viewer)-ViewWindow_0-pos; set $mods(Viewer)-ViewWindow_0-pos \"z0_y0\"; $mods(Viewer)-ViewWindow_0-c Views"
+	    }
         } elseif {$which == $mods(TendEstim) && $state == "JustStarted"} {
-	    change_indicator_labels "Building Diffusion Tensors..."
+	    if {$reg_completed} {
+		change_indicator_labels "Building Diffusion Tensors..."
+	    }
 	    change_indicate_val 1
 	} elseif {$which == $mods(TendEstim) && $state == "Completed"} {
-	    if {$dt_completed} {
-		activate_vis
-	    }
-	    
 	    change_indicate_val 2
+	    set dt_completed 1
+
+#	    if {$dt_completed} {
+		activate_vis
+#	    }
+	} elseif {$which == $mods(NrrdInfo1) && $state == "JustStarted"} {
+	    change_indicate_val 1
 	} elseif {$which == $mods(NrrdInfo1) && $state == "Completed"} {
+	    change_indicate_val 2
+	    
 	    global $mods(NrrdInfo1)-size1
 	    
             global data_mode
@@ -3621,11 +3677,11 @@ class BioTensorApp {
 		global $mods(NrrdInfo1)-size1
 		global $mods(NrrdInfo1)-size2
 		global $mods(NrrdInfo1)-size3
-
+		
 		global $mods(NrrdInfo1)-spacing1
 		global $mods(NrrdInfo1)-spacing2
 		global $mods(NrrdInfo1)-spacing3
-
+		
 		global $mods(NrrdInfo1)-min1
 		global $mods(NrrdInfo1)-min2
 		global $mods(NrrdInfo1)-min3
@@ -3638,21 +3694,21 @@ class BioTensorApp {
 		set spacing_x [set $mods(NrrdInfo1)-spacing1]
 		set spacing_y [set $mods(NrrdInfo1)-spacing2]
 		set spacing_z [set $mods(NrrdInfo1)-spacing3]
-
+		
 		set min_x [set $mods(NrrdInfo1)-min1]
 		set min_y [set $mods(NrrdInfo1)-min2]
 		set min_z [set $mods(NrrdInfo1)-min3]
-
+		
 		if {$data_mode == "DWI"} {
 		    # new data has been loaded, configure
 		    # the vis tabs and sync their values
-
+		    
 		    sync_variance_tabs
 		    sync_planes_tabs
 		    sync_isosurface_tabs
 		    sync_glyphs_tabs
 		    sync_fibers_tabs
-
+		    
 		    configure_sample_planes
 		    
 		    # reconfigure registration reference image slider
@@ -3663,53 +3719,82 @@ class BioTensorApp {
 		    sync_isosurface_tabs
 		    sync_glyphs_tabs
 		    sync_fibers_tabs
-
+		    
 		    configure_sample_planes
-
+		    
 		    set data_completed 1
 		    set reg_completed 1
 		    set dt_completed 1
 		    activate_vis
 		}
 	    }
-        } elseif {$which == $mods(SamplePlane-X) && $state == "JustStarted" && $show_plane_x == 1} {
-	    change_indicator_labels "Visualization..."
+# 	} elseif {$which == $mods(SamplePlane-X) && $state == "JustStarted"} {
+#  	    #change_indicator_labels "Visualization..."
+#  	    change_indicate_val 1
+# 	} elseif {$which == $mods(SamplePlane-X) && $state == "Completed"} {
+#  	    change_indicate_val 2
+ 	} elseif {$which == $mods(ShowField-X) && $state == "JustStarted"} {
 	    change_indicate_val 1
-	} elseif {$which == $mods(ShowField-X) && $state == "Completed" && $show_plane_x == 1} {
+ 	} elseif {$which == $mods(ShowField-X) && $state == "Completed"} {
+ 	    change_indicate_val 2
+#  	} elseif {$which == $mods(SamplePlane-Y) && $state == "JustStarted"} {
+#  	    #change_indicator_labels "Visualization..."
+#  	    change_indicate_val 1
+#  	} elseif {$which == $mods(SamplePlane-Y) && $state == "Completed"} {
+#  	    change_indicate_val 2
+ 	} elseif {$which == $mods(ShowField-Y) && $state == "JustStarted"} {
+	    change_indicate_val 1
+ 	} elseif {$which == $mods(ShowField-Y) && $state == "Completed"} {
+ 	    change_indicate_val 2
+#  	} elseif {$which == $mods(SamplePlane-Z) && $state == "JustStarted"} {
+#  	    #change_indicator_labels "Visualization..."
+#  	    change_indicate_val 1
+#  	} elseif {$which == $mods(SamplePlane-Z) && $state == "Completed"} {
+# 	    change_indicate_val 2
+ 	} elseif {$which == $mods(ShowField-Z) && $state == "JustStarted"} {
+	    change_indicate_val 1
+ 	} elseif {$which == $mods(ShowField-Z) && $state == "Completed"} {
+ 	    change_indicate_val 2
+# 	} elseif {$which == $mods(Isosurface) && $state == "JustStarted"} {
+# 	    #change_indicator_labels "Visualization..."
+# 	    change_indicate_val 1
+# 	} elseif {$which == $mods(Isosurface) && $state == "Completed"} {
+# 	    change_indicate_val 2
+	} elseif {$which == $mods(ShowField-Isosurface) && $state == "JustStarted"} {
+	    #change_indicator_labels "Visualization..."
+	    change_indicate_val 1
+	} elseif {$which == $mods(ShowField-Isosurface) && $state == "Completed"} {
 	    change_indicate_val 2
-	} elseif {$which == $mods(SamplePlane-Y) && $state == "JustStarted" && $show_plane_y == 1} {
-	    change_indicator_labels "Visualization..."
+# 	} elseif {$which == $mods(ChooseField-GlyphSeeds) && $state == "JustStarted"} {
+# 	    #change_indicator_labels "Visualization..."
+# 	    change_indicate_val 1
+# 	} elseif {$which == $mods(ChooseField-GlyphSeeds) && $state == "Completed"} {
+# 	    change_indicate_val 2
+	} elseif {$which == $mods(ShowField-Glyphs) && $state == "JustStarted"}  {
 	    change_indicate_val 1
-	} elseif {$which == $mods(ShowField-Y) && $state == "Completed" && $show_plane_y == 1} {
+	} elseif {$which == $mods(ShowField-Glyphs) && $state == "Completed"} {
 	    change_indicate_val 2
-	} elseif {$which == $mods(SamplePlane-Z) && $state == "JustStarted" && $show_plane_z == 1} {
-	    change_indicator_labels "Visualization..."
+# 	} elseif {$which == $mods(ChooseField-FiberSeeds) && $state == "JustStarted"} {
+# 	    #change_indicator_labels "Visualization..."
+# 	    change_indicate_val 1
+# 	} elseif {$which == $mods(ChooseField-FiberSeeds) && $state == "Completed"} {
+# 	    change_indicate_val 2
+	} elseif {$which == $mods(ShowField-Fibers) && $state == "JustStarted"} {
 	    change_indicate_val 1
-	} elseif {$which == $mods(ShowField-Z) && $state == "Completed" && $show_plane_z == 1} {
-	    change_indicate_val 2
-	} elseif {$which == $mods(Isosurface) && $state == "JustStarted" && [set $mods(ShowField-Isosurface)-faces-on] == 1} {
-	    change_indicator_labels "Visualization..."
-	    change_indicate_val 1
-	} elseif {$which == $mods(ShowField-Isosurface) && $state == "Completed" && [set $mods(ShowField-Isosurface)-faces-on] == 1} {
-	    change_indicate_val 2
-	} elseif {$which == $mods(ChooseField-GlyphSeeds) && $state == "JustStarted" && [set $mods(ShowField-Glyphs)-tensors-on]} {
-	    change_indicator_labels "Visualization..."
-	    change_indicate_val 1
-	} elseif {$which == $mods(ShowField-Glyphs) && $state == "Completed" && [set $mods(ShowField-Glyphs)-tensors-on]} {
-	    change_indicate_val 2
-	} elseif {$which == $mods(ChooseField-FiberSeeds) && $state == "JustStarted" && [set $mods(ShowField-Fibers)-edges-on]} {
-	    change_indicator_labels "Visualization..."
-	    change_indicate_val 1
-	} elseif {$which == $mods(ShowField-Fibers) && $state == "Completed" && [set $mods(ShowField-Fibers)-edges-on]} {
+	} elseif {$which == $mods(ShowField-Fibers) && $state == "Completed"} { 
 	    change_indicate_val 2
 	} elseif {$which == $mods(SampleField-GlyphSeeds) && $state == "Completed" && ![set $mods(ShowField-Glyphs)-tensors-on]} {
-	    after 100 "uplevel \#0 set \"\{$mods(Viewer)-ViewWindow_0-StreamLines rake (7)\}\" 0; $mods(Viewer)-ViewWindow_0-c redraw"
+	    after 100 \
+		"uplevel \#0 set \"\{$mods(Viewer)-ViewWindow_0-StreamLines rake (7)\}\" 0; $mods(Viewer)-ViewWindow_0-c redraw"
 	} elseif {$which == $mods(Probe-GlyphSeeds) && $state == "Completed" && ![set $mods(ShowField-Glyphs)-tensors-on]} {
-	    after 100 "uplevel \#0 set \"\{$mods(Viewer)-ViewWindow_0-Probe Selection Widget (8)\}\" 0; $mods(Viewer)-ViewWindow_0-c redraw"
+	    after 100 \
+		"uplevel \#0 set \"\{$mods(Viewer)-ViewWindow_0-Probe Selection Widget (8)\}\" 0; $mods(Viewer)-ViewWindow_0-c redraw"
 	} elseif {$which == $mods(SampleField-FiberSeeds) && $state == "Completed" && ![set $mods(ShowField-Fibers)-edges-on]} {
-	    after 100 "uplevel \#0 set \"\{$mods(Viewer)-ViewWindow_0-StreamLines rake (12)\}\" 0; $mods(Viewer)-ViewWindow_0-c redraw"
+	    after 100 \
+		"uplevel \#0 set \"\{$mods(Viewer)-ViewWindow_0-StreamLines rake (12)\}\" 0; $mods(Viewer)-ViewWindow_0-c redraw"
 	} elseif {$which == $mods(Probe-FiberSeeds) && $state == "Completed" && ![set $mods(ShowField-Fibers)-edges-on]} {
-	    after 100 "uplevel \#0 set \"\{$mods(Viewer)-ViewWindow_0-Probe Selection Widget (11)\}\" 0; $mods(Viewer)-ViewWindow_0-c redraw"
+	    after 100 \
+		"uplevel \#0 set \"\{$mods(Viewer)-ViewWindow_0-Probe Selection Widget (11)\}\" 0; $mods(Viewer)-ViewWindow_0-c redraw"
 	} 
     }
 
@@ -3792,7 +3877,7 @@ class BioTensorApp {
 	}
 
 	$mods(ChooseNrrd1)-c needexecute
-	set data_completed 1	
+
 	activate_registration
 
 	# enable Next button
@@ -4070,7 +4155,7 @@ class BioTensorApp {
 	    disableModule $mods(TendEpireg) 0
 	    disableModule $mods(UnuJoin) 0
 	    disableModule $mods(ChooseNrrd-ToReg) 0
-	    disableModule $mods(RescaleColorMap2) 0
+	    #disableModule $mods(RescaleColorMap2) 0
 		
 	    # activate reg variance checkbutton
 	    $variance_tab1.reg configure -state normal
@@ -4079,7 +4164,6 @@ class BioTensorApp {
 	    # execute
 	    $mods(TendEpireg)-c needexecute
 
-	    set reg_completed 1
 	} else {
 	    set answer [tk_messageBox -message \
 			    "Please load a text file containing the gradients by clicking \"Load Gradients\"" -type ok -icon info -parent .standalone]
@@ -4241,9 +4325,7 @@ class BioTensorApp {
 	
 	# execute
 	$mods(ChooseNrrd-ToSmooth)-c needexecute
-	
-	set dt_completed 1
-	
+		
 	view_Vis
     }
 
@@ -4494,10 +4576,11 @@ class BioTensorApp {
             # view planes tab
             $vis_tab1 view "Planes"
             $vis_tab2 view "Planes"
-        } else {
-            set answer [tk_messageBox -message \
-                 "Please finish constructing the Diffusion Tensors." -type ok -icon info -parent .standalone]
-        }
+        } 
+# 	else {
+#             set answer [tk_messageBox -message \
+#                  "Please finish constructing the Diffusion Tensors." -type ok -icon info -parent .standalone]
+#         }
     }
 
 
@@ -4513,26 +4596,29 @@ class BioTensorApp {
 	set $mods(ShowField-Reg)-faces-on 0
 	$mods(ShowField-Orig)-c toggle_display_faces
 	$mods(ShowField-Reg)-c toggle_display_faces
+
+	$mods(ChooseField-FiberSeeds)-c needexecute
+	$mods(ChooseField-GlyphSeeds)-c needexecute
 	
 	# enable glyph modules but turn off stuff in viewer
-	disableModule $mods(NrrdToField-GlyphSeeds) 0
-	disableModule $mods(Probe-GlyphSeeds) 0
-	disableModule $mods(SampleField-GlyphSeeds) 0
+	#disableModule $mods(NrrdToField-GlyphSeeds) 0
+	#disableModule $mods(Probe-GlyphSeeds) 0
+	#disableModule $mods(SampleField-GlyphSeeds) 0
 	#disableModule $mods(DirectInterpolate-GlyphSeeds) 0
 	#disableModule $mods(ChooseField-Glyphs) 0
-	$mods(Probe-GlyphSeeds)-c needexecute
+	#$mods(Probe-GlyphSeeds)-c needexecute
 	
 	# enable fiber modules but turn off stuff in viewer
-	disableModule $mods(Probe-FiberSeeds) 0
-	disableModule $mods(SampleField-FiberSeeds) 0
-	disableModule $mods(DirectInterpolate-FiberSeeds) 0
-	disableModule $mods(ChooseField-Fibers) 0
-	$mods(Probe-FiberSeeds)-c needexecute
+	#disableModule $mods(Probe-FiberSeeds) 0
+	#disableModule $mods(SampleField-FiberSeeds) 0
+	#disableModule $mods(DirectInterpolate-FiberSeeds) 0
+	#disableModule $mods(ChooseField-Fibers) 0
+	#$mods(Probe-FiberSeeds)-c needexecute
 	
-	$mods(Viewer)-ViewWindow_0-c autoview
-	global $mods(Viewer)-ViewWindow_0-pos
-	set $mods(Viewer)-ViewWindow_0-pos "z0_y0"
-	$mods(Viewer)-ViewWindow_0-c Views
+	#$mods(Viewer)-ViewWindow_0-c autoview
+	#global $mods(Viewer)-ViewWindow_0-pos
+	#set $mods(Viewer)-ViewWindow_0-pos "z0_y0"
+	#$mods(Viewer)-ViewWindow_0-c Views
 	
 	uplevel \#0 set "\{$mods(Viewer)-ViewWindow_0-Probe Selection Widget (8)\}" 0
 	uplevel \#0 set "\{$mods(Viewer)-ViewWindow_0-StreamLines rake (7)\}" 0
@@ -5290,18 +5376,18 @@ class BioTensorApp {
 
        if {$clip_to_isosurface == 1} {
 	# enable Unstructure modules and change ChooseField port to 1
-        disableModule $mods(QuadToTri-X) 0
-        disableModule $mods(QuadToTri-Y) 0
-        disableModule $mods(QuadToTri-Z) 0
+        #disableModule $mods(QuadToTri-X) 0
+        #disableModule $mods(QuadToTri-Y) 0
+        #disableModule $mods(QuadToTri-Z) 0
  
         set $mods(ChooseField-X)-port-index 1
         set $mods(ChooseField-Y)-port-index 1
         set $mods(ChooseField-Z)-port-index 1
        } else {
 	# disable Unstructure modules and change ChooseField port to 0
-        disableModule $mods(QuadToTri-X) 1
-        disableModule $mods(QuadToTri-Y) 1
-        disableModule $mods(QuadToTri-Z) 1
+        #disableModule $mods(QuadToTri-X) 1
+        #disableModule $mods(QuadToTri-Y) 1
+        #disableModule $mods(QuadToTri-Z) 1
  
         set $mods(ChooseField-X)-port-index 0
         set $mods(ChooseField-Y)-port-index 0
@@ -5841,9 +5927,9 @@ class BioTensorApp {
        global $mods(ShowField-Isosurface)-faces-on
  
 	if {[set $mods(ShowField-Isosurface)-faces-on] == 1} {
-	    disableModule $mods(DirectInterpolate-Isosurface) 0
+	    #disableModule $mods(DirectInterpolate-Isosurface) 0
 	} else {
-	    disableModule $mods(DirectInterpolate-Isosurface) 1
+	    #disableModule $mods(DirectInterpolate-Isosurface) 1
 	}
 	
 	configure_isosurface_tabs
@@ -5872,7 +5958,7 @@ class BioTensorApp {
 	
 	set which [$w.color get]
 
-	disableModule $mods(ChooseField-Isosurface) 0
+	#disableModule $mods(ChooseField-Isosurface) 0
 	
         if {$which == "Principle Eigenvector"} {
 	    $isosurface_tab1.isocolor.childsite.select.colorFrame.set_color configure -state disabled
@@ -7457,7 +7543,6 @@ class BioTensorApp {
 	     }
 
              $mods(DirectInterpolate-Glyphs)-c needexecute
-             #puts "FIX ME: Maybe this should be a directinterpolate module??"
          } elseif {$color == "fiber_color"} {
              # set the default color for ShowField
              global mods
@@ -7473,7 +7558,6 @@ class BioTensorApp {
 	     }
 	     
              $mods(DirectInterpolate-Fibers)-c needexecute
-             #puts "FIX ME: Maybe this should be a directinterpolate module??"
          }
 
     }
@@ -7641,7 +7725,7 @@ class BioTensorApp {
 		    set reg_completed 1
 		    disableModule $mods(ChooseNrrd-ToReg) 0
 		    # NOT SURE ABOUT THIS RESCALE
-		    disableModule $mods(RescaleColorMap2) 0
+		    #disableModule $mods(RescaleColorMap2) 0
 		    disableModule $mods(TendEpireg) 1
 		    disableModule $mods(UnuJoin) 1
 		    $mods(ChooseNrrd-ToReg)-c needexecute
@@ -7828,18 +7912,45 @@ class BioTensorApp {
 	   0 0 $i_width $i_height -fill $c -outline $c -tags res
        
        bind $canvas <ButtonPress> {app display_module_error}
-       Tooltip $canvas $tips(Indicator)
+
+       Tooltip $canvas $tips(IndicatorBar)
    }
     
     
     method change_indicate_val { v } {
+	# only change an error state if it has been cleared (error_module empty)
+	# it will be changed by the indicate_error method when fixed
 	if {$indicate != 3 || $error_module == ""} {
-	    # only change an error state if it has been cleared (error_module empty)
-	    # it will be changed by the indicate_error method when fixed
 
-	    # only change indicator if progress isn't running
-	    set indicate $v
-	    change_indicator
+	    if {$v == 3} {
+		# Error
+		set cycle 0
+		set indicate 3
+		change_indicator
+	    } elseif {$v == 0} {
+		# Reset
+		set cycle 0
+		set indicate 0
+		change_indicator
+	    } elseif {$v == 1} {
+		# Start
+		set darby [expr $darby + 1]
+		set indicate 1
+		change_indicator
+	    } elseif {$v == 2} {
+		# Complete
+		set darby [expr $darby - 1]
+		if {$darby == 0} {
+		    # only change indicator if progress isn't running
+		    set indicate 2
+		    change_indicator
+		} elseif {$darby < 0} {
+		    # something wasn't caught, reset
+		    set darby 0
+		    set indicate 2
+		    change_indicator
+		}
+	    }
 	}
     }
     
@@ -7910,6 +8021,7 @@ class BioTensorApp {
     variable indicatorL2
     variable indicate
     variable cycle
+    variable darby
     variable i_width
     variable i_height
     variable stripes
