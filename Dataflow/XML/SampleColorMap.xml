@@ -24,7 +24,7 @@
 <component name="SampleColorMap" category="Visualization">
   <overview>
     <authors>
-      <author>Steven G. Parker</author>
+      <author>Kurt Zimmerman</author>
     </authors>
     <summary>SampleColorMap allows the user to select a point in the colormap to determine which color a value corresponds.
     </summary>
@@ -41,7 +41,7 @@
     </inputs>
   </io>
   <gui>
-    <img>../Modules/Visualization/doc/SampleColormapUI.jpg</img>
+    <img></img>
   </gui>
   <testing>
   </testing>
