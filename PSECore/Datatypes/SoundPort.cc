@@ -18,6 +18,7 @@
 #include <SCICore/Containers/String.h>
 #include <PSECore/Dataflow/Connection.h>
 #include <PSECore/Dataflow/Port.h>
+#include <PSECore/Dataflow/Module.h>
 #include <SCICore/Malloc/Allocator.h>
 
 #include <iostream>
@@ -248,6 +249,9 @@ void SoundOPort::resend(Connection*)
 
 //
 // $Log$
+// Revision 1.8  1999/11/12 00:57:33  dmw
+// had to include Module.h
+//
 // Revision 1.7  1999/11/11 19:56:37  dmw
 // added show_status check for GeometryPort and SoundPort
 //
