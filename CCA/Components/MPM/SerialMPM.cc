@@ -50,6 +50,11 @@ using namespace SCIRun;
 
 using namespace std;
 
+/*`====================*/ 
+//#define DOING    
+#undef DOING
+/*====================`*/
+
 // From ThreadPool.cc:  Used for syncing cerr'ing so it is easier to read.
 extern Mutex cerrLock;
 
@@ -212,6 +217,7 @@ void SerialMPM::scheduleTimeAdvance(double , double ,
   scheduleIntegrateAcceleration(          sched, patches, matls);
   // scheduleIntegrateTemperatureRate(    sched, patches, matls);
   scheduleExMomIntegrated(                sched, patches, matls);
+  scheduleSetGridBoundaryConditions(      sched, patches, matls);
   scheduleInterpolateToParticlesAndUpdate(sched, patches, matls);
 
   if(d_fracture) {
@@ -569,6 +575,24 @@ void SerialMPM::scheduleExMomIntegrated(SchedulerP& sched,
   sched->addTask(t, patches, matls);
 }
 
+void SerialMPM::scheduleSetGridBoundaryConditions(SchedulerP& sched,
+						       const PatchSet* patches,
+						       const MaterialSet* matls)
+
+{
+  Task* t=scinew Task("SerialMPM::setGridBoundaryConditions",
+		    this, &SerialMPM::setGridBoundaryConditions);
+                  
+  const MaterialSubset* mss = matls->getUnion();
+  t->requires(Task::OldDW, d_sharedState->get_delt_label() );
+  
+  t->modifies(             lb->gAccelerationLabel,     mss);
+  t->modifies(             lb->gVelocityStarLabel,     mss);
+  t->modifies(             lb->gTemperatureRateLabel,  mss);
+  t->requires(Task::NewDW, lb->gTemperatureNoBCLabel,  Ghost::AroundCells,1);
+  sched->addTask(t, patches, matls);
+}
+
 void SerialMPM::scheduleInterpolateToParticlesAndUpdate(SchedulerP& sched,
 						       const PatchSet* patches,
 						       const MaterialSet* matls)
@@ -761,7 +785,10 @@ void SerialMPM::actuallyInitialize(const ProcessorGroup*,
   particleIndex totalParticles=0;
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
-
+  #ifdef DOING
+    cout <<"Doing actuallyInitialize on patch " << patch->getID()
+         <<"\t\t\t MPM"<< endl;
+  #endif
     CCVariable<short int> cellNAPID;
     if(new_dw->exists(lb->pCellNAPIDLabel, 0, patch))
       new_dw->get(cellNAPID,lb->pCellNAPIDLabel, 0, patch, Ghost::None, 0);
@@ -812,6 +839,9 @@ void SerialMPM::computeConnectivity(
 		   DataWarehouse* old_dw,
 		   DataWarehouse* new_dw)
 {
+#ifdef DOING
+  cout <<"computeConnectivity " <<"\t\t\t\t MPM"<< endl;
+#endif
   int numMatls = d_sharedState->getNumMPMMatls();
 
   for(int m = 0; m < numMatls; m++) {
@@ -829,7 +859,10 @@ void SerialMPM::interpolateParticlesToGrid(const ProcessorGroup*,
 {
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
-
+  #ifdef DOING
+    cout <<"Doing interpolateParticlesToGrid on patch " << patch->getID()
+         <<"\t\t MPM"<< endl;
+  #endif
     int numMatls = d_sharedState->getNumMPMMatls();
 
     NCVariable<double> gmassglobal;
@@ -979,10 +1012,8 @@ void SerialMPM::interpolateParticlesToGrid(const ProcessorGroup*,
       }
 
       // Apply grid boundary conditions to the velocity before storing the data
+      IntVector offset =  IntVector(0,0,0);
 
-      IntVector offset = 
-	patch->getInteriorCellLowIndex() - patch->getCellLowIndex();
-      // cout << "offset = " << offset << endl;
       for(Patch::FaceType face = Patch::startFace;
 	face <= Patch::endFace; face=Patch::nextFace(face)){
         BoundCondBase *vel_bcs, *temp_bcs, *sym_bcs;
@@ -997,17 +1028,17 @@ void SerialMPM::interpolateParticlesToGrid(const ProcessorGroup*,
 	    VelocityBoundCond* bc = dynamic_cast<VelocityBoundCond*>(vel_bcs);
 	    if (bc->getKind() == "Dirichlet") {
 	      //cout << "Velocity bc value = " << bc->getValue() << endl;
-	      gvelocity.fillFace(face,bc->getValue(),offset);
+	      gvelocity.fillFace(patch, face,bc->getValue(),offset);
 	    }
 	  }
 	  if (sym_bcs != 0) {
-	     gvelocity.fillFaceNormal(face,offset);
+	     gvelocity.fillFaceNormal(patch, face,offset);
 	  }
 	  if (temp_bcs != 0) {
             TemperatureBoundCond* bc =
 	      dynamic_cast<TemperatureBoundCond*>(temp_bcs);
             if (bc->getKind() == "Dirichlet") {
-              gTemperature.fillFace(face,bc->getValue(),offset);
+              gTemperature.fillFace(patch, face,bc->getValue(),offset);
 	    }
 	  }
       }
@@ -1036,6 +1067,9 @@ void SerialMPM::computeStressTensor(const ProcessorGroup*,
 				    DataWarehouse* old_dw,
 				    DataWarehouse* new_dw)
 {
+ #ifdef DOING
+   cout <<"Doint computeStressTensor " <<"\t\t\t\t MPM"<< endl;
+ #endif
    for(int m = 0; m < d_sharedState->getNumMPMMatls(); m++){
       MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial(m);
       ConstitutiveModel* cm = mpm_matl->getConstitutiveModel();
@@ -1051,7 +1085,10 @@ void SerialMPM::setPositions( const ProcessorGroup*,
 {
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
-
+  #ifdef DOING
+    cout <<"Doing setPositions " << patch->getID()
+         <<"\t\t\t\t MPM"<< endl;
+  #endif
     for(int m = 0; m < d_sharedState->getNumMPMMatls(); m++){
       MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial(m);
       int matlindex = mpm_matl->getDWIndex();
@@ -1081,7 +1118,10 @@ void SerialMPM::computeInternalForce(const ProcessorGroup*,
 {
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
-
+  #ifdef DOING
+    cout <<"Doing computeInternalForce on patch " << patch->getID()
+         <<"\t\t\t MPM"<< endl;
+  #endif
     Vector dx = patch->dCell();
     double oodx[3];
     oodx[0] = 1.0/dx.x();
@@ -1211,11 +1251,8 @@ void SerialMPM::computeInternalForce(const ProcessorGroup*,
         gstress[*iter] /= gmass[*iter];
     }
 
-    IntVector offset = 
-	patch->getInteriorCellLowIndex() - patch->getCellLowIndex();
-    IntVector low = gstress.getLowIndex() + offset;
-    IntVector hi  = gstress.getHighIndex() - offset;
-
+    IntVector low = patch-> getInteriorNodeLowIndex();
+    IntVector hi  = patch-> getInteriorNodeHighIndex();
     for(Patch::FaceType face = Patch::startFace;
         face <= Patch::endFace; face=Patch::nextFace(face)){
 
@@ -1267,7 +1304,10 @@ void SerialMPM::computeInternalHeatRate(const ProcessorGroup*,
 {
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
-
+  #ifdef DOING
+    cout <<"Doing computeInternalHeatRate on patch " << patch->getID()
+         <<"\t\t MPM"<< endl;
+  #endif
     Vector dx = patch->dCell();
     double oodx[3];
     oodx[0] = 1.0/dx.x();
@@ -1355,7 +1395,10 @@ void SerialMPM::solveEquationsMotion(const ProcessorGroup*,
 {
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
-
+  #ifdef DOING
+    cout <<"Doing solveEquationsMotion on patch " << patch->getID()
+         <<"\t\t\t MPM"<< endl;
+  #endif
     Vector gravity = d_sharedState->getGravity();
     delt_vartype delT;
     old_dw->get(delT, d_sharedState->get_delt_label() );
@@ -1422,7 +1465,10 @@ void SerialMPM::solveHeatEquations(const ProcessorGroup*,
 {
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
-
+  #ifdef DOING
+    cout <<"Doing solveHeatEquations on patch " << patch->getID()
+         <<"\t\t\t MPM"<< endl;
+  #endif
     for(int m = 0; m < d_sharedState->getNumMPMMatls(); m++){
       MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial( m );
       int dwindex = mpm_matl->getDWIndex();
@@ -1457,11 +1503,9 @@ void SerialMPM::solveHeatEquations(const ProcessorGroup*,
                        dynamic_cast<TemperatureBoundCond*>(temp_bcs);
             if (bc->getKind() == "Neumann"){
 	      double value = bc->getValue();
-	      IntVector offset = 
-		patch->getInteriorCellLowIndex() - patch->getCellLowIndex();
-              IntVector low = internalHeatRate.getLowIndex() + offset;
-              IntVector hi = internalHeatRate.getHighIndex() - offset;
-	     
+
+             IntVector low = patch->getInteriorNodeLowIndex();
+             IntVector hi  = patch->getInteriorNodeHighIndex();     
               if(face==Patch::xplus || face==Patch::xminus){
                 int I;
                 if(face==Patch::xminus){ I=low.x(); }
@@ -1527,7 +1571,10 @@ void SerialMPM::integrateAcceleration(const ProcessorGroup*,
 {
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
-
+  #ifdef DOING
+    cout <<"Doing integrateAcceleration on patch " << patch->getID()
+         <<"\t\t\t MPM"<< endl;
+  #endif
     for(int m = 0; m < d_sharedState->getNumMPMMatls(); m++){
       MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial( m );
       int dwindex = mpm_matl->getDWIndex();
@@ -1565,7 +1612,10 @@ void SerialMPM::integrateTemperatureRate(const ProcessorGroup*,
 {
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
-
+  #ifdef DOING
+    cout <<"Doing integrateTemperatureRate on patch " << patch->getID()
+         << "\t\t MPM"<< endl;
+  #endif
     for(int m = 0; m < d_sharedState->getNumMPMMatls(); m++){
       MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial( m );
       int dwindex = mpm_matl->getDWIndex();
@@ -1594,7 +1644,7 @@ void SerialMPM::integrateTemperatureRate(const ProcessorGroup*,
   }
 }
 
-void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
+void SerialMPM::setGridBoundaryConditions(const ProcessorGroup*,
 						const PatchSubset* patches,
 						const MaterialSubset* ,
 						DataWarehouse* old_dw,
@@ -1602,7 +1652,126 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
 {
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
+  #ifdef DOING
+    cout <<"Doing setGridBoundaryConditions on patch " << patch->getID()
+         <<"\t\t MPM"<< endl;
+  #endif
+    int numMPMMatls=d_sharedState->getNumMPMMatls();
+    
+    for(int m = 0; m < numMPMMatls; m++){
+      MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial( m );
+      int dwindex = mpm_matl->getDWIndex();
+      NCVariable<Vector> gvelocity_star, gacceleration;
+      NCVariable<double> gTemperatureRate, gTemperatureNoBC;
+      
+      delt_vartype delT;            
+                      
+      new_dw->get(gacceleration,    lb->gAccelerationLabel,
+		       dwindex, patch, Ghost::None, 0);
+      new_dw->get(gvelocity_star,   lb->gVelocityStarLabel,
+			dwindex, patch, Ghost::None, 0);
+      new_dw->get(gTemperatureRate, lb->gTemperatureRateLabel,
+			dwindex, patch, Ghost::None, 0);
+      new_dw->get(gTemperatureNoBC, lb->gTemperatureNoBCLabel,
+			dwindex, patch, Ghost::None, 0);
+     // Apply grid boundary conditions to the velocity_star and
+      // acceleration before interpolating back to the particles
+      IntVector offset(0,0,0);
+      for(Patch::FaceType face = Patch::startFace;
+	  face <= Patch::endFace; face=Patch::nextFace(face)){
+        BoundCondBase *vel_bcs, *temp_bcs, *sym_bcs;
+        if (patch->getBCType(face) == Patch::None) {
+	   vel_bcs  = patch->getBCValues(dwindex,"Velocity",face);
+	   temp_bcs = patch->getBCValues(dwindex,"Temperature",face);
+	   sym_bcs  = patch->getBCValues(dwindex,"Symmetric",face);
+        } else
+          continue;
+         //__________________________________
+         // Velocity and Acceleration
+	  if (vel_bcs != 0) {
+	    VelocityBoundCond* bc = 
+	      dynamic_cast<VelocityBoundCond*>(vel_bcs);
+	    //cout << "Velocity bc value = " << bc->getValue() << endl;
+	    if (bc->getKind() == "Dirichlet") {
+	      gvelocity_star.fillFace(patch, face,bc->getValue(),offset);
+	      gacceleration.fillFace( patch, face,Vector(0.0,0.0,0.0),offset);
+	    }
+	  }
+	  if (sym_bcs != 0) {
+	     gvelocity_star.fillFaceNormal(patch, face,offset);
+	     gacceleration.fillFaceNormal( patch, face,offset);
+	  }
+         //__________________________________
+         // Temperature BC
+	  if (temp_bcs != 0) {
+	    TemperatureBoundCond* bc = 
+	      dynamic_cast<TemperatureBoundCond*>(temp_bcs);
+	    if (bc->getKind() == "Dirichlet") {
+	      //cout << "Temperature bc value = " << bc->getValue() << endl;
+              
+            IntVector low = patch->getInteriorNodeLowIndex();
+            IntVector hi  = patch->getInteriorNodeHighIndex();
+	     double boundTemp = bc->getValue();
+	     if(face==Patch::xplus || face==Patch::xminus){
+		int I;
+		if(face==Patch::xminus){ I=low.x(); }
+		if(face==Patch::xplus){  I=hi.x()-1; }
+		for (int j = low.y(); j<hi.y(); j++) { 
+		  for (int k = low.z(); k<hi.z(); k++) {
+		    gTemperatureRate[IntVector(I,j,k)] +=
+		      (boundTemp - gTemperatureNoBC[IntVector(I,j,k)])/delT;
+		  }
+		}
+	     }
+	     if(face==Patch::yplus || face==Patch::yminus){
+	       int J;
+	       if(face==Patch::yminus){ J=low.y(); }
+	       if(face==Patch::yplus){  J=hi.y()-1; }
+	       for (int i = low.x(); i<hi.x(); i++) {
+		  for (int k = low.z(); k<hi.z(); k++) {
+		    gTemperatureRate[IntVector(i,J,k)] +=
+		      (boundTemp - gTemperatureNoBC[IntVector(i,J,k)])/delT;
+		  }
+	       }
+	     }
+	     if(face==Patch::zplus || face==Patch::zminus){
+	       int K;
+	       if(face==Patch::zminus){ K=low.z(); }
+	       if(face==Patch::zplus){  K=hi.z()-1; }
+	       for (int i = low.x(); i<hi.x(); i++) {
+		  for (int j = low.y(); j<hi.y(); j++) {
+		    gTemperatureRate[IntVector(i,j,K)] +=
+		      (boundTemp - gTemperatureNoBC[IntVector(i,j,K)])/delT;
+		  }
+	       }
+	     }
+	   }  // if(dirichlet)
+	   if (bc->getKind() == "Neumann") {
+	      //cout << "bc value = " << bc->getValue() << endl;
+	   }
+	 }  //if(temp_bc}
+      }  // patch face loop
+      new_dw->modify(gTemperatureRate, lb->gTemperatureRateLabel, dwindex, patch);
+      new_dw->modify(gvelocity_star,   lb->gVelocityStarLabel,    dwindex, patch);
+      new_dw->modify(gacceleration,    lb->gAccelerationLabel,    dwindex, patch);   
+    } // matl loop
+  }  // patch loop
+}
 
+
+void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
+						const PatchSubset* patches,
+						const MaterialSubset* ,
+						DataWarehouse* old_dw,
+						DataWarehouse* new_dw)
+{
+
+  for(int p=0;p<patches->size();p++){
+    const Patch* patch = patches->get(p);
+  #ifdef DOING
+    cout <<"Doing interpolateToParticlesAndUpdate on patch " << patch->getID()
+         <<"\t MPM"<< endl;
+  #endif
     // Performs the interpolation from the cell vertices of the grid
     // acceleration and velocity to the particles to update their
     // velocity and position respectively
@@ -1658,7 +1827,6 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
 			dwindex, patch, Ghost::AroundCells, 1);
       new_dw->get(gTemperatureNoBC, lb->gTemperatureNoBCLabel,
 			dwindex, patch, Ghost::AroundCells, 1);
-
       if(d_with_ice){
         new_dw->get(dTdt, lb->dTdt_NCLabel, dwindex,patch,Ghost::AroundCells,1);
         new_dw->get(massBurnFraction, lb->massBurnFractionLabel,
@@ -1676,82 +1844,6 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
 
       double Cp=mpm_matl->getSpecificHeat();
       double rho_init=mpm_matl->getInitialDensity();
-
-      // Apply grid boundary conditions to the velocity_star and
-      // acceleration before interpolating back to the particles
-      IntVector offset = 
-	patch->getInteriorCellLowIndex() - patch->getCellLowIndex();
-      for(Patch::FaceType face = Patch::startFace;
-	  face <= Patch::endFace; face=Patch::nextFace(face)){
-        BoundCondBase *vel_bcs, *temp_bcs, *sym_bcs;
-        if (patch->getBCType(face) == Patch::None) {
-	   vel_bcs  = patch->getBCValues(dwindex,"Velocity",face);
-	   temp_bcs = patch->getBCValues(dwindex,"Temperature",face);
-	   sym_bcs  = patch->getBCValues(dwindex,"Symmetric",face);
-        } else
-          continue;
-
-	if (vel_bcs != 0) {
-	    VelocityBoundCond* bc = 
-	      dynamic_cast<VelocityBoundCond*>(vel_bcs);
-	    //cout << "Velocity bc value = " << bc->getValue() << endl;
-	    if (bc->getKind() == "Dirichlet") {
-	      gvelocity_star.fillFace(face,bc->getValue(),offset);
-	      gacceleration.fillFace(face,Vector(0.0,0.0,0.0),offset);
-	    }
-	  }
-	  if (sym_bcs != 0) {
-	     gvelocity_star.fillFaceNormal(face,offset);
-	     gacceleration.fillFaceNormal(face,offset);
-	  }
-	  if (temp_bcs != 0) {
-	    TemperatureBoundCond* bc = 
-	      dynamic_cast<TemperatureBoundCond*>(temp_bcs);
-	    if (bc->getKind() == "Dirichlet") {
-	      //cout << "Temperature bc value = " << bc->getValue() << endl;
-	      IntVector low = gTemperature.getLowIndex() + offset;
-	      IntVector hi = gTemperature.getHighIndex() - offset;
-	      double boundTemp = bc->getValue();
-	      if(face==Patch::xplus || face==Patch::xminus){
-		int I;
-		if(face==Patch::xminus){ I=low.x(); }
-		if(face==Patch::xplus){ I=hi.x()-1; }
-		for (int j = low.y(); j<hi.y(); j++) { 
-		  for (int k = low.z(); k<hi.z(); k++) {
-		    gTemperatureRate[IntVector(I,j,k)] +=
-		      (boundTemp - gTemperatureNoBC[IntVector(I,j,k)])/delT;
-		  }
-		}
-	      }
-	      if(face==Patch::yplus || face==Patch::yminus){
-		int J;
-		if(face==Patch::yminus){ J=low.y(); }
-		if(face==Patch::yplus){ J=hi.y()-1; }
-		for (int i = low.x(); i<hi.x(); i++) {
-		  for (int k = low.z(); k<hi.z(); k++) {
-		    gTemperatureRate[IntVector(i,J,k)] +=
-		      (boundTemp - gTemperatureNoBC[IntVector(i,J,k)])/delT;
-		  }
-		}
-	      }
-	      if(face==Patch::zplus || face==Patch::zminus){
-		int K;
-		if(face==Patch::zminus){ K=low.z(); }
-		if(face==Patch::zplus){ K=hi.z()-1; }
-		for (int i = low.x(); i<hi.x(); i++) {
-		  for (int j = low.y(); j<hi.y(); j++) {
-		    gTemperatureRate[IntVector(i,j,K)] +=
-		      (boundTemp - gTemperatureNoBC[IntVector(i,j,K)])/delT;
-		  }
-		}
-	      }
-	    }
-	    if (bc->getKind() == "Neumann") {
-	      //cout << "bc value = " << bc->getValue() << endl;
-	    }
-	  }
-	
-      }
 
       IntVector ni[8];
     
@@ -1847,6 +1939,7 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
           pxnew[idx]           = px[idx] + vel * delT;
           pvelocitynew[idx]    = pvelocity[idx] + acc * delT;
           pTemperatureNew[idx] = pTemperature[idx] + tempRate * delT;
+    
           double rho;
 	  if(pvolume[idx] > 0.){
 	    rho = pmass[idx]/pvolume[idx];
@@ -1870,7 +1963,7 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
           massLost += (pmass[idx] - pmassNew[idx]);
         }
       }
-
+      
       // Store the new result
       new_dw->put(pxnew,           lb->pXLabel_preReloc);
       new_dw->put(pvelocitynew,    lb->pVelocityLabel_afterUpdate);
@@ -1902,6 +1995,9 @@ void SerialMPM::computeCrackExtension(
 		   DataWarehouse* old_dw,
 		   DataWarehouse* new_dw)
 {
+#ifdef DOING
+  cout <<"Doing computeCrackExtension "<<"\t\t\t\t MPM"<< endl;
+#endif
   int numMatls = d_sharedState->getNumMPMMatls();
 
   for(int m = 0; m < numMatls; m++) {
@@ -1918,6 +2014,9 @@ void SerialMPM::computeFracture(
 		   DataWarehouse* old_dw,
 		   DataWarehouse* new_dw)
 {
+#ifdef DOING
+  cout <<"Doing computeFracture "<<"\t\t\t\t MPM"<< endl;
+#endif
   int numMatls = d_sharedState->getNumMPMMatls();
 
   for(int m = 0; m < numMatls; m++) {
@@ -1934,6 +2033,9 @@ void SerialMPM::computeBoundaryContact(
 		   DataWarehouse* old_dw,
 		   DataWarehouse* new_dw)
 {
+#ifdef DOING
+  cout <<"Doing computeBoundaryContact "<<"\t\t\t\t MPM"<< endl;
+#endif
   int numMatls = d_sharedState->getNumMPMMatls();
 
   for(int m = 0; m < numMatls; m++) {
@@ -1951,7 +2053,10 @@ void SerialMPM::carryForwardVariables( const ProcessorGroup*,
 {
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
-
+  #ifdef DOING
+    cout <<"Doing carryForwardVariables on patch " << patch->getID()
+         <<"\t\t\t MPM"<< endl;
+  #endif
     for(int m = 0; m < d_sharedState->getNumMPMMatls(); m++){
       MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial(m);
       int matlindex = mpm_matl->getDWIndex();
