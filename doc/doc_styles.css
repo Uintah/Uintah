@@ -1,4 +1,6 @@
-body {background-color:#EEEEEE; text-color:#000000; font-family:"times"; margin-left:2em; margin-right:2em}
+body {background-color:#CCCCCC; text-color:#000000; font-family:"times"; margin-left:1em; margin-right:1em}
+
+div.banner-margins {margin-left:-2em; margin-right:-2em}
 
 a:link {color:#AA0000}
 
@@ -70,3 +72,4 @@ div {page-break-inside:avoid}
 	margin-left: 50px;
 	margin-right: 50px;
         page-break-inside:avoid}
+
