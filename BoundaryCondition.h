@@ -262,6 +262,13 @@ public:
 				  const Patch* patch,
 				  CellInformation* cellinfo,
 				  ArchesVariables* vars);
+
+      void calculateVelocityPred_mm(const ProcessorGroup*,
+				    const Patch* patch,
+				    double delta_t,
+				    int index,
+				    CellInformation* cellinfo,
+				    ArchesVariables* vars);
 			
 private:
 

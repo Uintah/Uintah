@@ -67,6 +67,7 @@ using namespace SCIRun;
 #include <Packages/Uintah/CCA/Components/Arches/fortran/addpressuregrad_fort.h>
 #include <Packages/Uintah/CCA/Components/Arches/fortran/mmbcvelocity_fort.h>
 #include <Packages/Uintah/CCA/Components/Arches/fortran/mmwallbc_fort.h>
+#include <Packages/Uintah/CCA/Components/Arches/fortran/mm_computevel_fort.h>
 
 //****************************************************************************
 // Constructor for BoundaryCondition
@@ -2758,4 +2759,92 @@ BoundaryCondition::FlowOutlet::problemSetup(ProblemSpecP& params)
     streamMixturefraction.d_mixVarVariance.push_back(mixfracvar);
   }
 }
+
+void
+BoundaryCondition::calculateVelocityPred_mm(const ProcessorGroup* ,
+					    const Patch* patch,
+					    double delta_t,
+					    int index,
+					    CellInformation* cellinfo,
+					    ArchesVariables* vars)
+{
+  
+  int ioff, joff, koff;
+  IntVector idxLoU;
+  IntVector idxHiU;
+
+  switch(index) {
+
+  case Arches::XDIR:
+
+    idxLoU = patch->getSFCXFORTLowIndex();
+    idxHiU = patch->getSFCXFORTHighIndex();
+    ioff = 1; joff = 0; koff = 0;
+
+    fort_mm_computevel(
+		      vars->uVelRhoHat,
+		      vars->pressure,
+		      vars->density,
+		      vars->old_density,
+		      vars->voidFraction,
+		      cellinfo->dxpw,
+		      delta_t, 
+		      ioff, joff, koff,
+		      vars->cellType,
+		      idxLoU, idxHiU,
+		      d_mmWallID);
+
+    break;
+
+  case Arches::YDIR:
+
+    idxLoU = patch->getSFCYFORTLowIndex();
+    idxHiU = patch->getSFCYFORTHighIndex();
+    ioff = 0; joff = 1; koff = 0;
+
+    fort_mm_computevel(
+		      vars->vVelRhoHat,
+		      vars->pressure,
+		      vars->density,
+		      vars->old_density,
+		      vars->voidFraction,
+		      cellinfo->dyps,
+		      delta_t, 
+		      ioff, joff, koff,
+		      vars->cellType,
+		      idxLoU, idxHiU,
+		      d_mmWallID);
+
+    break;
+
+  case Arches::ZDIR:
+
+    idxLoU = patch->getSFCZFORTLowIndex();
+    idxHiU = patch->getSFCZFORTHighIndex();
+
+    ioff = 0; joff = 0; koff = 1;
+
+    fort_mm_computevel(
+		      vars->wVelRhoHat,
+		      vars->pressure,
+		      vars->density,
+		      vars->old_density,
+		      vars->voidFraction,
+		      cellinfo->dzpb,
+		      delta_t, 
+		      ioff, joff, koff,
+		      vars->cellType,
+		      idxLoU, idxHiU,
+		      d_mmWallID);
+
+    break;
+
+  default:
+
+    throw InvalidValue("Invalid index in Source::calcVelSrc");
+
+  }
+
+}
+
 
