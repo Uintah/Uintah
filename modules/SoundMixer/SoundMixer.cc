@@ -77,6 +77,17 @@ void SoundMixer::execute()
 	}
     }
 
+    // If any of the inputs are stereo, then the output will be
+    // in stereo
+    int stereo=0;
+    for(i=0;i<ni;i++){
+	if(portinfo[i]->isound->is_stereo()){
+	    stereo=1;
+	    break;
+	}
+    }
+    osound->set_stereo(stereo);
+
     // If any of the protocols are atomic, then we can figure
     // out the maximum number of samples.  Otherwise, we make
     // a random guess as 10X the sampling rate
@@ -118,13 +129,6 @@ void SoundMixer::execute()
 	    }
 	    sum+=gain*sample;
 	}
-	// Temporay code - filter...
-	bsum-=buf[nb];
-	buf[nb++]=sum;
-	bsum+=sum;
-	if(nb>=bs)nb=0;
-	sum=bsum/(double)bs;
-
 	if(nend != ni){
 	    sum*=overall_gain;
 	    osound->put_sample(sum);

@@ -64,6 +64,14 @@ void SoundReader::execute()
 	return;
     }
     long nchannels=AFgetchannels(afile, AF_DEFAULT_TRACK);
+    if(nchannels==1){
+	osound->set_stereo(0);
+    } else if(nchannels==2){
+	osound->set_stereo(1);
+    } else {
+	error("Four channel mode not supported\n");
+	return;
+    }
     // Setup the sampling rate...
     double rate=AFgetrate(afile, AF_DEFAULT_TRACK);
     osound->set_sample_rate(rate);
@@ -100,10 +108,9 @@ void SoundReader::execute()
 		done=1;
 	    } else {
 		signed char* p=sampc;
-		for(int i=0;i<status;i++){
-		    double s=0;
-		    for(int j=0;j<nchannels;j++)
-			s+=double(*p++)*mx;
+		long ns=status*nchannels;
+		for(int i=0;i<ns;i++){
+		    double s=double(*p++)*mx;
 		    osound->put_sample(s);
 		}
 		sample+=status;
@@ -124,10 +131,9 @@ void SoundReader::execute()
 		done=1;
 	    } else {
 		short* p=samps;
-		for(int i=0;i<status;i++){
-		    double s=0;
-		    for(int j=0;j<nchannels;j++)
-			s+=double(*p++)*mx;
+		long ns=status*nchannels;
+		for(int i=0;i<ns;i++){
+		    double s=double(*p++)*mx;
 		    osound->put_sample(s);
 		}
 		sample+=status;
@@ -148,11 +154,9 @@ void SoundReader::execute()
 		done=1;
 	    } else {
 		long* p=sampl;
-		cerr << "status=" << status << ", mx=" << mx << endl;
-		for(int i=0;i<status;i++){
-		    double s=0;
-		    for(int j=0;j<nchannels;j++)
-			s+=double(*p++)*mx;
+		long ns=status*nchannels;
+		for(int i=0;i<ns;i++){
+		    double s=double(*p++)*mx;
 		    osound->put_sample(s);
 		}
 		sample+=status;
