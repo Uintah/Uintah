@@ -22,8 +22,9 @@
 <section>
 <title>Introduction</title>
 
-<para>This is a brief explanation of how we're using CVS at Northeastern
-University to manage our local &sr; software development. </para>
+<para>The following is a brief description of Northeastern
+University's use of CVS to manage local &sr; software
+development.</para>
 
 <para>We are treating SCI Institute as a software vendor and using
 CVS's built-in capability to track third-party sources in parallel
