@@ -352,14 +352,17 @@ int main(int argc, char** argv)
 	    
 	    cout << "\t\tPatch: " << patch->getID() << "\n";
 
-	    if (patch->getBox().lower() != patch2->getBox().lower() ||
-		patch->getBox().upper() != patch2->getBox().upper()) {
+	    if (!compare(patch->getBox().lower(), patch2->getBox().lower(),
+			 tolerance) ||
+		!compare(patch->getBox().upper(), patch2->getBox().upper(),
+			 tolerance)) {
 	      cerr << "Inconsistent patch bounds on patch " << patch->getID()
 		   << " at time " << time << endl;
 	      cerr << filebase1 << " has bounds " << patch->getBox().lower()
 		   << " - " << patch->getBox().upper() << ".\n";
 	      cerr << filebase2 << " has bounds " << patch2->getBox().lower()
 		   << " - " << patch2->getBox().upper() << ".\n";
+	      cerr << "Difference is: " << patch->getBox().lower() - patch2->getBox().lower() << " - " << patch->getBox().upper() - patch2->getBox().upper() << endl;
 	      abort_uncomparable();  
 	    }
 	    
