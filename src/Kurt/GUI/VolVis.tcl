@@ -17,7 +17,11 @@ itcl_class Kurt_VolVis_VolVis {
 	global $this-avail_tex
 	set $this-avail_tex 2
 	global $this-max_brick_dim
-	set $this-max_brick_dim 32
+	set $this-max_brick_dim 16
+	global $this-debug
+	set $this-debug 0
+	global $this-level
+	set $this-level 0
     }
     method ui {} {
 	set w .ui[modname]
@@ -61,31 +65,14 @@ itcl_class Kurt_VolVis_VolVis {
 	global $this-max_brick_dim
 	frame $w.f.dimframe -relief groove -border 2
 	label $w.f.dimframe.l -text "Max brick dimension"
-	radiobutton $w.f.dimframe.brickdim4 -text 4 -relief flat \
-	    -variable $this-max_brick_dim -value 4 \
-	    -command "$this SetDim $this-max_brick_dim"
-	radiobutton $w.f.dimframe.brickdim8 -text 8 -relief flat \
-	    -variable $this-max_brick_dim -value 8 \
-	    -command "$this SetDim $this-max_brick_dim"
-	radiobutton $w.f.dimframe.brickdim16 -text 16 -relief flat \
-	    -variable $this-max_brick_dim -value 16 \
-	    -command "$this SetDim $this-max_brick_dim"
-	radiobutton $w.f.dimframe.brickdim32 -text 32 -relief flat \
-	    -variable $this-max_brick_dim -value 32 \
-	    -command "$this SetDim $this-max_brick_dim"
-	radiobutton $w.f.dimframe.brickdim64 -text 64 -relief flat \
-	    -variable $this-max_brick_dim -value 64 \
-	    -command "$this SetDim $this-max_brick_dim"
-	radiobutton $w.f.dimframe.brickdim128 -text 128 -relief flat \
-	    -variable $this-max_brick_dim -value 128 \
-	    -command "$this SetDim $this-max_brick_dim"
-
 	pack $w.f.dimframe -side top -padx 2 -pady 2 -fill both
-	pack $w.f.dimframe.l -side top
-	pack $w.f.dimframe.brickdim4 $w.f.dimframe.brickdim8 \
-	    $w.f.dimframe.brickdim16 $w.f.dimframe.brickdim32 \
-	    $w.f.dimframe.brickdim64 $w.f.dimframe.brickdim128 \
-	    -side left -padx 2 -fill x
+	pack $w.f.dimframe.l -side top -fill x
+
+	global $this-level
+	frame $w.f.levelframe -relief groove -border 2
+	label $w.f.levelframe.l -text "Max render level"
+	pack $w.f.levelframe -side top -padx 2 -pady 2 -fill both
+	pack $w.f.levelframe.l -side top -fill x
 
 	global $this-slice_transp
 	scale $w.f.stransp -variable $this-slice_transp \
@@ -100,6 +87,9 @@ itcl_class Kurt_VolVis_VolVis {
 		-showvalue true -orient horizontal
 	pack $w.f.stransp $w.f.availtex -side top -fill x
 
+	checkbutton $w.f.debug -text debug -relief raised \
+	    -variable $this-debug -offvalue 0 -onvalue 1
+	pack $w.f.debug -side top -fill x
 	# clear button for dave...
 
 	button $w.f.clear -text "Clear" -command "$this-c Clear"
@@ -129,6 +119,48 @@ itcl_class Kurt_VolVis_VolVis {
 	button $w.f.exec -text "Execute" -command $n
 	pack $w.f.exec -side top -fill x
     }
+
+
+    method SetDims { val } {
+	global $this-max_brick_dim
+	set w .ui[modname]
+
+	if {[winfo exists $w.f.dimframe.f]} {
+	    destroy $w.f.dimframe.f
+	}
+
+	frame $w.f.dimframe.f -relief flat
+	pack $w.f.dimframe.f -side top -fill x
+	set f $w.f.dimframe.f
+	for {set i 4} {$i <= $val} { set i [expr $i * 2]} {
+	    radiobutton $f.brickdim$i -text $i -relief flat \
+		-variable $this-max_brick_dim -value $i
+	    pack $f.brickdim$i -side left -padx 2 -fill x
+	}
+    }
+    method SetLevels { val } {
+	global $this-level
+	set w .ui[modname]
+
+	
+	if {[winfo exists $w.f.levelframe.f]} {
+	    destroy $w.f.levelframe.f
+	}
+
+	if { $val == 0 } {
+	    return
+	}
+	frame $w.f.levelframe.f -relief flat
+	pack $w.f.levelframe.f -side top -fill x
+	set f $w.f.levelframe.f
+	scale $f.s -from 0 -to $val -tickinterval 1 \
+	    -variable $this-level -orient horizontal
+	pack $f.s -fill x
+	
+    }
+
+
+
     method DoScale {var val} {
 	$this-c Set $var $val
     }
