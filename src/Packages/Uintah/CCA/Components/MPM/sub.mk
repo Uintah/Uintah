@@ -13,7 +13,6 @@ SUBDIRS := $(SRCDIR)/ConstitutiveModel $(SRCDIR)/Contact \
 	$(SRCDIR)/HeatConduction \
 	$(SRCDIR)/Fracture \
 	$(SRCDIR)/ThermalContact \
-	$(SRCDIR)/Burn \
 	$(SRCDIR)/GeometrySpecification \
 	$(SRCDIR)/PhysicalBC \
 	$(SRCDIR)/Util
