@@ -114,7 +114,7 @@ void Worker::run()
   int np = scene->get_rtrt_engine()->np;
   
 #if 1
-  int rendering_scene=0;
+  rendering_scene=0;
   int showing_scene=1;
   
   // make them from -1 to 1

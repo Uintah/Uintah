@@ -649,8 +649,11 @@ main(int argc, char* argv[])
 
   Gui * gui = new Gui;
 
+
+
   Gui::setActiveGui( gui );
   gui->setDpy( dpy );
+
 
   // Initialize GLUT and GLUI stuff.
   printf("start glut inits\n");

@@ -24,7 +24,7 @@ public:
   enum Mode {
     Tile,
     Clamp,
-    None
+    Nothing
   };
 protected:
 

@@ -118,7 +118,7 @@ void ImageMaterial::shade(Color& result, const Ray& ray,
     double u=uv.u()*uscale;
     double v=uv.v()*vscale;
     switch(umode){
-    case None:
+    case Nothing:
 	if(u<0 || u>1){
 	    diffuse=outcolor;
 	    goto skip;
@@ -138,7 +138,7 @@ void ImageMaterial::shade(Color& result, const Ray& ray,
 	    u=0;
     };
     switch(vmode){
-    case None:
+    case Nothing:
 	if(v<0 || v>1){
 	    diffuse=outcolor;
 	    goto skip;

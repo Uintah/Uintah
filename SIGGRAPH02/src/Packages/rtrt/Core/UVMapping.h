@@ -14,6 +14,7 @@ class UVMapping;
 }
 namespace SCIRun {
 class Point;
+class Vector;
 void Pio(Piostream&, rtrt::UVMapping*&);
 }
 
