@@ -23,6 +23,11 @@ using SCICore::Geometry::Vector;
 
 CompMooneyRivlin::CompMooneyRivlin(ProblemSpecP& ps)
 {
+  const DOM_Node root_node = ps->getNode().getOwnerDocument();
+  ProblemSpecP root_ps = scinew ProblemSpec(root_node);
+  ProblemSpecP time_ps= root_ps->findBlock("Uintah_specification")->findBlock("Time");
+  time_ps->require("timestep_multiplier",d_fudge);
+
   ps->require("he_constant_1",d_initialData.C1);
   ps->require("he_constant_2",d_initialData.C2);
   ps->require("he_constant_3",d_initialData.C3);
@@ -347,6 +352,10 @@ const TypeDescription* fun_getTypeDescription(CompMooneyRivlin::CMData*)
 }
 
 // $Log$
+// Revision 1.40  2000/06/09 21:02:39  jas
+// Added code to get the fudge factor directly into the constitutive model
+// inititialization.
+//
 // Revision 1.39  2000/06/08 16:50:51  guilkey
 // Changed some of the dependencies to account for what goes on in
 // the burn models.

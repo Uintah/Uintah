@@ -23,6 +23,11 @@ using SCICore::Geometry::Vector;
 
 CompNeoHookPlas::CompNeoHookPlas(ProblemSpecP& ps)
 {
+  const DOM_Node root_node = ps->getNode().getOwnerDocument();
+  ProblemSpecP root_ps = scinew ProblemSpec(root_node);
+  ProblemSpecP time_ps= root_ps->findBlock("Uintah_specification")->findBlock("Time");
+  time_ps->require("timestep_multiplier",d_fudge);
+
   ps->require("bulk_modulus",d_initialData.Bulk);
   ps->require("shear_modulus",d_initialData.Shear);
   ps->require("yield_stress",d_initialData.FlowStress);
@@ -403,6 +408,10 @@ const TypeDescription* fun_getTypeDescription(CompNeoHookPlas::CMData*)
 }
 
 // $Log$
+// Revision 1.24  2000/06/09 21:07:33  jas
+// Added code to get the fudge factor directly into the constitutive model
+// inititialization.
+//
 // Revision 1.23  2000/06/08 22:00:29  bard
 // Added Time Step control to reflect finite deformations and material velocities.
 // Removed fudge factors.

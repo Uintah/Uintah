@@ -46,7 +46,10 @@ HyperElasticDamage::HyperElasticDamage(ProblemSpecP& ps)
 {
   // Constructor
   // Initialize deformationGradient
-
+  const DOM_Node root_node = ps->getNode().getOwnerDocument();
+  ProblemSpecP root_ps = scinew ProblemSpec(root_node);
+  ProblemSpecP time_ps= root_ps->findBlock("Uintah_specification")->findBlock("Time");
+  time_ps->require("timestep_multiplier",d_fudge);
 
   ps->require("bulk_modulus",d_Bulk);
   ps->require("shear_modulus",d_Shear);
@@ -422,6 +425,10 @@ int HyperElasticDamage::getSize() const
 
 //
 // $Log$
+// Revision 1.10  2000/06/09 21:07:33  jas
+// Added code to get the fudge factor directly into the constitutive model
+// inititialization.
+//
 // Revision 1.9  2000/05/30 20:19:04  sparker
 // Changed new to scinew to help track down memory leaks
 // Changed region to patch
