@@ -37,7 +37,7 @@ public:
   //! Persistent I/O.
   static  SCIRun::PersistentTypeID type_id;
   virtual void io(SCIRun::Piostream &stream);
-  friend void SCIRun::Pio(SCIRun::Piostream&, Sphere*&);
+  friend void SCIRun::Pio(SCIRun::Piostream&, rtrt::Sphere*&);
   
   virtual void intersect(Ray& ray, HitInfo& hit, DepthStats* st,
 			 PerProcessorContext* cx);
