@@ -53,9 +53,9 @@ Volvis2DDpy::loadCleanTexture( void )
   for( int i = 0; i < textureHeight; i++ )
     for( int j = 0; j < textureWidth; j++ )
       {
-	transTexture->textArray[i][j][0] = 0.0;
-	transTexture->textArray[i][j][1] = 0.0;
-	transTexture->textArray[i][j][2] = 0.0;
+//  	transTexture->textArray[i][j][0] = 0.0;
+//  	transTexture->textArray[i][j][1] = 0.0;
+//  	transTexture->textArray[i][j][2] = 0.0;
 	transTexture->textArray[i][j][3] = 0.0;
       } // for()
 } // loadCleanTexture()
@@ -126,14 +126,14 @@ Volvis2DDpy::cycleWidgets( int type )
   float color[3];
   float *params[numWidgetParams];
   widgets[widgets.size()-1]->returnParams( params );
-  color[0] = *params[4];
-  color[1] = *params[5];
-  color[2] = *params[6];
-  alpha = *params[7];
   left = *params[0];
   top = *params[1];
   width = *params[2];
   height = *params[3];
+  color[0] = *params[4];
+  color[1] = *params[5];
+  color[2] = *params[6];
+  alpha = *params[7];
   opac_x = *params[8];
   opac_y = *params[9];
   opac_off = *params[10];
@@ -184,10 +184,7 @@ Volvis2DDpy::bindWidgetTextures( void )
   //printf( "In bindWidgetTextures\n" );
   for( int i = 0; i < widgets.size(); i++ )
     widgets[i]->paintTransFunc( transTexture->textArray, textureWidth, textureHeight );
-  //  glBindTexture( GL_TEXTURE_2D, transFuncTextName );
   redraw = true;
-  //glTexSubImage2D( GL_TEXTURE_2D, 0, 0, 0, textureWidth, textureHeight, GL_RGBA, GL_FLOAT,
-  //	   transTexture->textArray );
 } // bindWidgetTextures()
 
 
@@ -214,11 +211,11 @@ void
 Volvis2DDpy::prioritizeWidgets( void )
 {
   //printf( "Inside prioritizeWidgets\n" );
-  if (pickedIndex < 0)  // if no widget was selected
+  if ( pickedIndex < 0 )  // if no widget was selected
     return;
 
   Widget *temp = widgets[pickedIndex];                  // makes a copy of the picked widget
-  for( int j = pickedIndex; j < widgets.size()-1; j++ ) // effectively slides down all widgets between
+  for( int j = pickedIndex; j < widgets.size(); j++ ) // effectively slides down all widgets between
     widgets[j] = widgets[j+1];                          //  picked and last indeces by one slot
   widgets[widgets.size()-1] = temp;                     // moves picked widget into vector's last index
   pickedIndex = widgets.size()-1;
@@ -232,11 +229,13 @@ Volvis2DDpy::processHits( GLint hits, GLuint buffer[] )
 {
   //printf( "In processHits\n" );
   GLuint *ptr;
-  //printf( "hits = %d\n", hits );
   ptr = (GLuint *) buffer;
-  ptr += (hits-1)*4;   // advance to record of widget drawn last ("on top")
-  ptr += 3;            // advance to selected widget's name
-  pickedIndex = *ptr-1;
+  if( hits != 0 )
+    {
+      ptr += (hits-1)*4;   // advance to record of widget drawn last ("on top")
+      ptr += 3;            // advance to selected widget's name
+      pickedIndex = *ptr-1;
+    }
 } // processHits()
 
 
@@ -367,7 +366,7 @@ Volvis2DDpy::key_pressed(unsigned long key)
       close_display();
       exit(0);
       break;
-      // case XK_esc
+      // case XK_Escape
       case XK_Delete:
       if( widgets.size() != 0 )
 	{
@@ -377,7 +376,7 @@ Volvis2DDpy::key_pressed(unsigned long key)
 	  redraw = true;
 	} // if
       break;
-      // case XK_delete
+      // case XK_Delete
     } // switch()
 } // key_pressed()
 
@@ -403,12 +402,12 @@ Volvis2DDpy::button_pressed(MouseButton button, const int x, const int y)
 	  [(int)(x/x_pixel_width/500.0f*(float)textureWidth)][3] );*/
   switch( button )
     {
-      /*    case MouseButton1:	
+    case MouseButton1:	
       pickShape( button, x, y );
       if( pickedIndex >= 0 )
 	{
 	  printf( "%d\n", widgets.size() );
-	  //widgets[pickedIndex]->changeColor( 0.0, 0.6, 0.85 );
+	  widgets[pickedIndex]->changeColor( 0.0, 0.6, 0.85 );
 	  if( pickedIndex > 0 )
 	    widgets[pickedIndex-1]->changeColor( 0.85, 0.6, 0.6 );
 	} // if
@@ -421,7 +420,7 @@ Volvis2DDpy::button_pressed(MouseButton button, const int x, const int y)
 	  widgets[pickedIndex]->drawFlag = 6;
 	  redraw = true;
 	} // else if
-	break;*/
+      break;
       // case MouseButton1
     case MouseButton2:
       addWidget( x, y );
@@ -521,7 +520,7 @@ Volvis2DDpy::lookup( Voxel2D<float> voxel, Color &color, float &alpha )
  
 
 
-// sets window resolution before any other calls are made
+// sets window resolution and initializes textures before any other calls are made
 Volvis2DDpy::Volvis2DDpy( float t_inc ):DpyBase("Volvis2DDpy"),
   t_inc(t_inc), vmin(MAXFLOAT), vmax(-MAXFLOAT), gmin(MAXFLOAT), gmax(-MAXFLOAT)
 {
@@ -531,5 +530,7 @@ Volvis2DDpy::Volvis2DDpy( float t_inc ):DpyBase("Volvis2DDpy"),
   set_resolution( 500, 250 );
 } // Volvis2DDpy()
 
-void Volvis2DDpy::animate(bool &/*changed*/) {
+void Volvis2DDpy::animate(bool &/*changed*/) 
+{
+  
 }
