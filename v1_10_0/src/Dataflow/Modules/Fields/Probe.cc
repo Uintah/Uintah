@@ -344,7 +344,7 @@ Probe::execute()
   ScalarFieldInterface *sfi = 0;
   VectorFieldInterface *vfi = 0;
   TensorFieldInterface *tfi = 0;
-  if (!input_field_p)
+  if (!input_field_p || ifieldhandle->data_at() == Field::NONE)
   {
     valstr << 0;
     PointCloudField<double> *field =

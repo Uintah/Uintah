@@ -89,6 +89,11 @@ SelectField::execute()
   {
     return;
   }
+  if (!ifieldhandle->query_scalar_interface(this))
+  {
+    error("This module only works on scalar fields.");
+    return;
+  }
 
   bool forward_p = false;
 

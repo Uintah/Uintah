@@ -70,7 +70,7 @@ class Isosurface : public Module {
   double     prev_max_;
   int        last_generation_;
 
-  void new_field(FieldHandle field);
+  bool new_field(FieldHandle field);
 
 public:
   Isosurface(GuiContext* ctx);

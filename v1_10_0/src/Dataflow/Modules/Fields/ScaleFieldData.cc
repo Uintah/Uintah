@@ -79,6 +79,11 @@ ScaleFieldData::execute()
     error("Input field is empty.");
     return;
   }
+  if (ifieldhandle->data_at() == Field::NONE)
+  {
+    error("This module only supports fields containing data.");
+    return;
+  }
 
   MatrixIPort *imatrix_port = (MatrixIPort *)get_iport("Input Matrix");
   MatrixHandle imatrix;
