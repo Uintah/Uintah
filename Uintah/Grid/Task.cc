@@ -147,10 +147,10 @@ Task::computes(const DataWarehouseP& ds, const VarLabel* var)
 
 void
 Task::computes(const DataWarehouseP& ds, const VarLabel* var, int matlIndex,
-	       const Patch*)
+	       const Patch* patch)
 {
    ASSERT(ds.get_rep() != 0);
-   d_comps.push_back(scinew Dependency(ds, var, matlIndex, d_patch, this));
+   d_comps.push_back(scinew Dependency(ds, var, matlIndex, patch, this));
 }
 
 void
@@ -252,6 +252,9 @@ operator << (ostream &out, const Task::TaskType & tt)
 
 //
 // $Log$
+// Revision 1.22  2000/09/25 17:30:07  sparker
+// Use correct patch for computes
+//
 // Revision 1.21  2000/09/25 16:24:17  sparker
 // Added a displayAll method to Task
 //
