@@ -205,7 +205,7 @@ Gui::Gui() :
   soundsWindowVisible(false), triggersWindowVisible(false),
   mainWindowVisible(true),
   enableSounds_(false),
-  mouseDown_(0), rightButtonMenuActive_(true), beQuiet_(true),
+  mouseDown_(0), rightButtonMenuActive_(false), beQuiet_(true),
   displayRStats_(false), displayPStats_(false),
   lightsOn_(true), lightsBeingRendered_(false),
   lightList(NULL),
@@ -2250,7 +2250,8 @@ Gui::createMenus( int winId, bool soundOn /* = false */,
   glutAddMenuEntry( "----------------", -1);
   glutAddMenuEntry( "Quit [q]", QUIT_MENU_ID );
   //glutAddSubMenu("Texture mode", modemenu);
-  glutAttachMenu(GLUT_RIGHT_BUTTON);
+  if( activeGui->rightButtonMenuActive_ )
+    glutAttachMenu(GLUT_RIGHT_BUTTON);
 
   // Build GLUI Windows
   activeGui->mainWindow = GLUI_Master.create_glui( "RTRT Controls",
