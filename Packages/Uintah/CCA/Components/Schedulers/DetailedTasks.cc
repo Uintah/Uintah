@@ -277,7 +277,7 @@ void DetailedTask::addScrub(const VarLabel* var, Task::WhichDW dw)
 
 void DetailedTasks::createScrublists(bool init_timestep)
 {
-  const set<const VarLabel*>& initreqs = taskgraph->getInitialRequires();
+  const set<const VarLabel*, VarLabel::Compare>& initreqs = taskgraph->getInitialRequires();
   ASSERT(localtasks.size() != 0 || tasks.size() == 0);
   // Create scrub lists
   typedef map<const VarLabel*, DetailedTask*, VarLabel::Compare> ScrubMap;
@@ -287,6 +287,9 @@ void DetailedTasks::createScrublists(bool init_timestep)
     const Task* task = dtask->getTask();
     for(const Task::Dependency* req = task->getRequires();
 	req != 0; req=req->next){
+      if(req->var->typeDescription()->getType() ==
+	 TypeDescription::ReductionVariable)
+	continue;
       if(req->dw == Task::OldDW){
 	// Go ahead and scrub.  Replace an older one if necessary
 	oldmap[req->var]=dtask;
@@ -294,9 +297,7 @@ void DetailedTasks::createScrublists(bool init_timestep)
 	// Only scrub if it is not part of the original requires and
 	// This is not an initialization timestep
 	if(!init_timestep && initreqs.find(req->var) == initreqs.end()){
-	  if(!dtask->getTask()->isReductionTask()){
-	    newmap[req->var]=dtask;
-	  }
+	  newmap[req->var]=dtask;
 	}
       }
     }
@@ -306,15 +307,16 @@ void DetailedTasks::createScrublists(bool init_timestep)
     const Task* task = dtask->getTask();
     for(const Task::Dependency* comp = task->getComputes();
 	comp != 0; comp=comp->next){
+      if(comp->var->typeDescription()->getType() ==
+	 TypeDescription::ReductionVariable)
+	continue;
       ASSERTEQ(comp->dw, Task::NewDW);
       if(!init_timestep && initreqs.find(comp->var) == initreqs.end()
 	 && newmap.find(comp->var) == newmap.end()){
 	// Only scrub if it is not part of the original requires and
 	// This is not timestep 0
-	if(!dtask->getTask()->isReductionTask()){
-	  newmap[comp->var]=dtask;
-	  cerr << "Warning: Variable " << comp->var->getName() << " computed by " << dtask->getTask()->getName() << " and never used\n";
-	}
+	newmap[comp->var]=dtask;
+	cerr << "Warning: Variable " << comp->var->getName() << " computed by " << dtask->getTask()->getName() << " and never used\n";
       }
     }
   }

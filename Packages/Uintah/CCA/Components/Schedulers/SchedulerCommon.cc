@@ -266,7 +266,7 @@ Scheduler::VarLabelMaterialMap* SchedulerCommon::makeVarLabelMaterialMap()
   return graph.makeVarLabelMaterialMap();
 }
      
-const set<const VarLabel*>& SchedulerCommon::getInitialRequires()
+const set<const VarLabel*, VarLabel::Compare>& SchedulerCommon::getInitialRequires()
 {
   return graph.getInitialRequires();
 }
