@@ -523,7 +523,7 @@ void* Allocator::alloc(size_t size, const char* tag)
     }
 
     if(trace_out)
-	fprintf(trace_out, "A %08x %d (%s)\n", (unsigned)d, size, tag);
+	fprintf(trace_out, "A %p %d (%s)\n", d, size, tag);
 
     return (void*)d;
 }
@@ -661,7 +661,7 @@ void* Allocator::alloc_big(size_t size, const char* tag)
     }
 
     if(trace_out)
-	fprintf(trace_out, "A %08x %d (%s)\n", (unsigned)d, size, tag);
+	fprintf(trace_out, "A %p %d (%s)\n",d, size, tag);
 
     return (void*)d;
 }
@@ -704,7 +704,8 @@ void* Allocator::realloc(void* dobj, size_t newsize)
 		*p++=i;
 	}
 	if(trace_out)
-	    fprintf(trace_out, "R %08x %d %08x %d (%s)\n", (unsigned)dobj, oldsize, (unsigned)dobj, newsize, oldobj->tag);
+	    fprintf(trace_out, "R %p %d %p %d (%s)\n", dobj, oldsize, 
+		    dobj, newsize, oldobj->tag);
 
 	return dobj;
     }
@@ -717,7 +718,8 @@ void* Allocator::realloc(void* dobj, size_t newsize)
     bcopy(dobj, nobj, minsize);
     free(dobj);
     if(trace_out)
-	fprintf(trace_out, "R %08x %d %08x %d (%s)\n", (unsigned)dobj, oldsize, (unsigned)nobj, newsize, oldobj->tag);
+	fprintf(trace_out, "R %p %d %p %d (%s)\n", dobj,
+		oldsize, nobj, newsize, oldobj->tag);
 
     return nobj;
 }
@@ -768,7 +770,7 @@ void Allocator::free(void* dobj)
 
     // Make sure that it is still intact...
     if(trace_out)
-	fprintf(trace_out, "F %08x %d (%s)\n", (unsigned)dobj, obj->reqsize, obj->tag);
+	fprintf(trace_out, "F %p %d (%s)\n", dobj, obj->reqsize, obj->tag);
 
     if(!lazy)
 	audit(obj, OBJFREEING);
@@ -1036,10 +1038,11 @@ void PrintTag(void* dobj)
     fprintf(stderr, "tag %p: allocated by: %s\n", obj, obj->tag);
     fprintf(stderr, "requested object size: %d bytes\n", obj->reqsize);
     fprintf(stderr, "maximum bin size: %d bytes\n", obj->bin->maxsize);
-    fprintf(stderr, "range of object: %x - %x\n", (unsigned)dobj, (unsigned)dobj+obj->reqsize);
+    fprintf(stderr, "range of object: %p - %x\n", dobj,
+	    (unsigned long)dobj+obj->reqsize);
     fprintf(stderr, "range of object with overhead and sentinels: %p - %p\n",
 	    obj, obj+OVERHEAD);
-    fprintf(stderr, "range of hunk: %x - %x\n", (unsigned)obj->hunk->data, (unsigned)obj->hunk->data+obj->hunk->len);
+    fprintf(stderr, "range of hunk: %x - %x\n", (unsigned long)obj->hunk->data, (unsigned long)obj->hunk->data+obj->hunk->len);
     fprintf(stderr, "pre-sentinels: %x %x\n",
 	    sent1->first_word, sent1->second_word);
     if(sent1->first_word == SENT_VAL_FREE && sent1->second_word == SENT_VAL_FREE){
