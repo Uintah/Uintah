@@ -593,8 +593,15 @@ itcl_class ViewWindow {
 	init_frame $detachedFr.f "Double-click here to attach - - - - - - - - - - - - - - - - - - - - -"
 	init_frame $msframe.f "Double-click here to detach - - - - - - - - - - - - - - - - - - - - -"
 	# End initialization of attachment
-
-	switchvisual
+        
+        # This after statement works around a synchronization problem
+        # on Apple and Linux.  On Apple the graphics system can
+        # completely lock up if you open a view window on an already
+        # running network.  On newer Linux systems we get a crash on
+        # exit if the viewer is opened from within a command line
+        # network.
+        #switchvisual
+	after 500 "$this switchvisual"
 
 	$this-c startup
 	
