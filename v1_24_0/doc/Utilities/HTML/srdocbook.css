@@ -143,13 +143,17 @@ div.table p.title {
 /* Note titles */
 div.note h3.title { 
   border: 0px none;
-  font-size: 100%;
+  font-size: 110%;
+  color: black;
+  text-align: left;
 }
 
 /* Tip titles */
 div.tip h3.title { 
   border: 0px none;
-  font-size: 100%;
+  font-size: 110%;
+  color: black;
+  text-align: left;
 }
 
 .screen {
