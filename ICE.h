@@ -217,6 +217,12 @@ using namespace SCIRun;
                               const MaterialSubset* matls,
                               DataWarehouse*, 
                               DataWarehouse* new_dw);
+                              
+      void initializeSubTask_hydrostaticAdj(const ProcessorGroup*, 
+                                     const PatchSubset*,
+                                     const MaterialSubset*,
+                                     DataWarehouse*, 
+                                     DataWarehouse* new_dw);
       
       void actuallyComputeStableTimestep(const ProcessorGroup*, 
                                         const PatchSubset* patch,  
