@@ -32,7 +32,6 @@
 
 #include <Core/Volume/CM2Widget.h>
 #include <Core/Geom/ShaderProgramARB.h>
-//#include <Core/Volume/CM2Shader.h>
 #include <Core/Volume/Pbuffer.h>
 #include <Core/Volume/Utils.h>
 #include <Core/Math/MinMax.h>
@@ -56,37 +55,17 @@ using namespace SCIRun;
 
 PersistentTypeID CM2Widget::type_id("CM2Widget", "Datatype", 0);
 
-#if 0
-#define CM2WIDGET_VERSION 1
-
-void
-CM2Widget::io(Piostream &stream)
-{
-  ASSERTFAIL("SHOULD BE CALLING SUBCLASS VERSION DIRECTLY");
-  const int version = stream.begin_class("CM2Widget", CM2WIDGET_VERSION);
-  
-  stream.end_class();
-}
-#endif
-
 CM2Widget::CM2Widget()
   : name_("default"),  
-    line_color_(0.75, 0.75, 0.75),
-    line_alpha_(1.0),
-    selected_color_(1.0, 0.0, 0.0),
-    selected_alpha_(1.0),
-    thin_line_width_(0.75),
-    thick_line_width_(2.0),
-    point_size_(7.0),
     color_(1.0, 1.0, 1.0),
     alpha_(0.8),
     selected_(0),
     shadeType_(CM2_SHADE_REGULAR),
     onState_(1),
-    value_min_(0.0),
-    value_scale_(1.0)
+    faux_(true),
+    value_range_(0.0, -1.0)
+    
 {
-
   // Generates a bright random color
   while (fabs(color_[0] - color_[1]) + 
 	 fabs(color_[0] - color_[2]) + 
@@ -102,313 +81,21 @@ CM2Widget::~CM2Widget()
 
 CM2Widget::CM2Widget(CM2Widget& copy)
   : name_(copy.name_),
-    line_color_(copy.line_color_),
-    line_alpha_(copy.line_alpha_),
-    selected_color_(copy.selected_color_),
-    selected_alpha_(copy.selected_alpha_),
-    thin_line_width_(copy.thin_line_width_),
-    thick_line_width_(copy.thick_line_width_),
-    point_size_(copy.point_size_),
     color_(copy.color_),
     alpha_(copy.alpha_),
     selected_(copy.selected_),
     shadeType_(copy.shadeType_),
     onState_(copy.onState_),
-    value_min_(copy.value_min_),
-    value_scale_(copy.value_scale_)
+    faux_(copy.faux_)
 {}
 
 void
-CM2Widget::set_alpha(float a)
-{
-  alpha_ = Clamp((double)a, 0.0, 1.0);
+CM2Widget::set_value_range(range_t range) {
+  const bool recompute = (value_range_.first > value_range_.second);
+  value_range_ = range;
+  if (recompute) un_normalize();
 }
 
-int
-CM2Widget::get_shadeType()
-{
-    return shadeType_;
-}
-
-void
-CM2Widget::set_shadeType(int type)
-{
-    //ASSERT(type >= 0 && type <= 3);
-    shadeType_ = type;
-}
-
-int
-CM2Widget::get_onState()
-{
-    return onState_;
-}
-
-void
-CM2Widget::set_onState(int state)
-{
-    onState_ = state;
-}
-
-void
-TriangleCM2Widget::set_value_range(double min, double scale)
-{
-  const double offset = min - value_min_;
-  base_ = (base_ * value_scale_ - offset) / scale;
-  top_x_ = (top_x_ * value_scale_) / scale;
-  width_ = width_ * value_scale_ / scale;
-  value_min_ = min;
-  value_scale_ = scale;
-}
-
-static Persistent* TriangleCM2Widget_maker()
-{
-  return scinew TriangleCM2Widget;
-}
-
-PersistentTypeID TriangleCM2Widget::type_id("TriangleCM2Widget", "CM2Widget",
-					    TriangleCM2Widget_maker);
-
-#define TRIANGLECM2WIDGET_VERSION 2
-
-void
-TriangleCM2Widget::io(Piostream &stream)
-{
-  const int version = 
-    stream.begin_class("TriangleCM2Widget", TRIANGLECM2WIDGET_VERSION);
-  
-  Pio(stream, base_);
-  Pio(stream, top_x_);
-  Pio(stream, top_y_);
-  Pio(stream, width_);
-  Pio(stream, bottom_);
-  Pio(stream, shadeType_);
-  Pio(stream, onState_);
-  Pio(stream, color_);
-  Pio(stream, alpha_);
-  if (version == 2) {
-    Pio(stream, name_);
-    Pio(stream, value_min_);
-    Pio(stream, value_scale_);
-  }
-    
-  stream.end_class();
-}
-
-TriangleCM2Widget::TriangleCM2Widget() : 
-  CM2Widget(),
-  base_(0.5), 
-  top_x_(0.15), 
-  top_y_(0.5), 
-  width_(0.25), 
-  bottom_(0.5)
-{
-  base_ = 0.1+drand48()*0.8;
-  top_x_ = -0.1 + drand48()*0.2;
-  top_y_ = 0.2 + drand48()*0.8;
-  width_ = 0.1 + drand48()*0.4;
-  bottom_ = drand48()*0.4+0.2;
-  name_ = "Triangle";
-}
-
-TriangleCM2Widget::TriangleCM2Widget(float base, float top_x, float top_y,
-                                     float width, float bottom) : 
-  CM2Widget(),
-  base_(base), 
-  top_x_(top_x), 
-  top_y_(top_y), 
-  width_(width), 
-  bottom_(bottom)
-{}
-
-TriangleCM2Widget::~TriangleCM2Widget()
-{}
-
-TriangleCM2Widget::TriangleCM2Widget(TriangleCM2Widget& copy) : 
-  CM2Widget(copy),
-  base_(copy.base_),
-  top_x_(copy.top_x_),
-  top_y_(copy.top_y_),
-  width_(copy.width_),
-  bottom_(copy.bottom_),
-  last_x_(copy.last_x_),
-  last_y_(copy.last_y_),
-  last_width_(copy.last_width_),
-  pick_ix_(copy.pick_ix_),
-  pick_iy_(copy.pick_iy_)
-{}
-
-CM2Widget*
-TriangleCM2Widget::clone()
-{
-  return new TriangleCM2Widget(*this);
-}
-
-void
-TriangleCM2Widget::rasterize(CM2ShaderFactory& factory, bool faux, 
-			     Pbuffer* pbuffer)
-{
-  if(!onState_) return;
-  
-  CM2BlendType blend = CM2_BLEND_RASTER;
-  if(pbuffer) {
-    if(pbuffer->need_shader())
-      blend = CM2_BLEND_FRAGMENT_NV;
-    else
-      blend = CM2_BLEND_FRAGMENT_ATI;
-  }
-
-  FragmentProgramARB* shader = factory.shader(CM2_SHADER_TRIANGLE, shadeType_, 
-					      faux, blend);
-
-  if(shader) {
-    if(!shader->valid()) {
-      shader->create();
-    }
-    
-    GLdouble modelview[16];
-    glGetDoublev(GL_MODELVIEW_MATRIX, modelview);
-    double panx = (modelview[12]+1.0)/2.0;
-    double pany = (modelview[13]+1.0)/2.0;
-    double scalex = (modelview[0])/2.0;
-    double scaley = (modelview[5])/2.0;
-
-    shader->bind();
-    shader->setLocalParam(0, color_.r(), color_.g(), color_.b(), alpha_);
-    shader->setLocalParam(1, base_*scalex+panx, 
-			  scalex*(base_+top_x_)+panx,
-			  top_y_*scaley+pany, pany);
-    shader->setLocalParam(2, width_*scalex, bottom_, pany, 0.0);
-
-    GLint vp[4];
-    glGetIntegerv(GL_VIEWPORT, vp);
-    shader->setLocalParam(3, 1.0/vp[2], 1.0/vp[3], pany, pany);
-    if(pbuffer)
-      shader->setLocalParam(4, 1.0/pbuffer->width(), 1.0/pbuffer->height(), 
-			    0.0, 0.0);
-    
-    glBegin(GL_TRIANGLES);
-    {
-      glVertex2f(base_, 0.0);
-      glVertex2f(base_+top_x_+width_/2, top_y_);
-      glVertex2f(base_+top_x_-width_/2, top_y_);
-    }
-    glEnd();
-    shader->release();
-  }
-}
-
-void
-TriangleCM2Widget::rasterize(Array3<float>& array, bool faux)
-{
-  if(!onState_) return;
-
-  if(array.dim3() != 4) return;
-  int size_x = array.dim2();
-  int size_y = array.dim1();
-  float top_left = top_x_ - fabs(width_)/2;
-  float top_right = top_x_ + fabs(width_)/2;
-  int lb = (int)(bottom_*top_y_*size_y);
-  int le = (int)(top_y_*size_y);
-  int ilb = Clamp(lb, 0, size_y-1);
-  int ile = Clamp(le, 0, size_y-1);
-  if (shadeType_ == CM2_SHADE_FLAT) 
-  {
-    for(int i=ilb; i<=ile; i++) {
-      float fb = (i/(float)le)*top_left + base_;
-      float fe = (i/(float)le)*top_right + base_;
-//      float fm = (i/(float)le)*top_x_ + base_;
-      int rb = (int)(fb*size_x);
-      int re = (int)(fe*size_x);
-      int jrb = Clamp(rb, 0, size_x-1);
-      int jre = Clamp(re, 0, size_x-1);
-      
-      for(int j=jrb; j<jre; j++) {
-        array(i,j,0) = Clamp((float)color_.r(), 0.0f, 1.0f);
-        array(i,j,1) = Clamp((float)color_.g(), 0.0f, 1.0f);
-        array(i,j,2) = Clamp((float)color_.b(), 0.0f, 1.0f);
-        array(i,j,3) = Clamp(alpha_, 0.0f, 1.0f);
-      }
-    }
-  }
-
-  if(faux) {
-    for(int i=ilb; i<=ile; i++) {
-      float fb = (i/(float)le)*top_left + base_;
-      float fe = (i/(float)le)*top_right + base_;
-      float fm = (i/(float)le)*top_x_ + base_;
-      int rb = (int)(fb*size_x);
-      int re = (int)(fe*size_x);
-      int rm = (int)(fm*size_x);
-      int jrb = Clamp(rb, 0, size_x-1);
-      int jre = Clamp(re, 0, size_x-1);
-      int jrm = Clamp(rm, 0, size_x-1);
-      float da = alpha_/(rm-rb);
-      float dr = color_.r()/(rm-rb);
-      float dg = color_.g()/(rm-rb);
-      float db = color_.b()/(rm-rb);
-      float a = alpha_ - abs(rm-jrm+1)*da;
-      float r = color_.r() - abs(rm-jrm+1)*dr;
-      float g = color_.g() - abs(rm-jrm+1)*dg;
-      float b = color_.b() - abs(rm-jrm+1)*db;
-      for(int j=jrm-1; j>=jrb; j--, a-=da, r-=dr, b-=db, g-=dg) {
-        array(i,j,0) = Clamp(array(i,j,0)*(1-a) + r, 0.0f, 1.0f);
-        array(i,j,1) = Clamp(array(i,j,1)*(1-a) + g, 0.0f, 1.0f);
-        array(i,j,2) = Clamp(array(i,j,2)*(1-a) + b, 0.0f, 1.0f);
-        array(i,j,3) = Clamp(array(i,j,3)*(1-a) + a, 0.0f, 1.0f);
-      }
-      da = alpha_/(re-rm);
-      dr = color_.r()/(re-rm);
-      dg = color_.g()/(re-rm);
-      db = color_.b()/(re-rm);
-      a = alpha_ - abs(rm-jrm)*da;
-      r = color_.r() - abs(rm-jrm)*dr;
-      g = color_.g() - abs(rm-jrm)*dg;
-      b = color_.b() - abs(rm-jrm)*db;
-      for (int j=jrm; j<=jre; j++, a-=da, r-=dr, b-=db, g-=dg)
-      {
-        array(i,j,0) = array(i,j,0)*(1-a) + r;
-        array(i,j,1) = array(i,j,1)*(1-a) + g;
-        array(i,j,2) = array(i,j,2)*(1-a) + b;
-        array(i,j,3) = array(i,j,3)*(1-a) + a;
-      }
-    }
-  } else {
-    for(int i=ilb; i<=ile; i++) {
-      float fb = (i/(float)le)*top_left + base_;
-      float fe = (i/(float)le)*top_right + base_;
-      float fm = (i/(float)le)*top_x_ + base_;
-      int rb = (int)(fb*size_x);
-      int re = (int)(fe*size_x);
-      int rm = (int)(fm*size_x);
-      int jrb = Clamp(rb, 0, size_x-1);
-      int jre = Clamp(re, 0, size_x-1);
-      int jrm = Clamp(rm, 0, size_x-1);
-      float da = alpha_/(rm-rb);
-      float a = alpha_ - abs(rm-jrm+1)*da;
-      for(int j=jrm-1; j>=jrb; j--, a-=da) {
-        array(i,j,0) = Clamp(array(i,j,0)*(1.0f-a) + (float)color_.r(), 
-			     0.0f, 1.0f);
-        array(i,j,1) = Clamp(array(i,j,1)*(1.0f-a) + (float)color_.g(), 
-			     0.0f, 1.0f);
-        array(i,j,2) = Clamp(array(i,j,2)*(1.0f-a) + (float)color_.b(), 
-			     0.0f, 1.0f);
-        array(i,j,3) = Clamp(array(i,j,3)*(1.0f-a) + a, 0.0f, 1.0f);
-      }
-      da = alpha_/(re-rm);
-      a = alpha_ - abs(rm-jrm)*da;
-      for (int j=jrm; j<=jre; j++, a-=da)
-      {
-        array(i,j,0) = Clamp(array(i,j,0)*(1.0f-a) + (float)color_.r(), 
-			     0.0f, 1.0f);
-        array(i,j,1) = Clamp(array(i,j,1)*(1.0f-a) + (float)color_.g(), 
-			     0.0f, 1.0f);
-        array(i,j,2) = Clamp(array(i,j,2)*(1.0f-a) + (float)color_.b(), 
-			     0.0f, 1.0f);
-        array(i,j,3) = Clamp(array(i,j,3)*(1.0f-a) + a, 0.0f, 1.0f);
-      }
-    }
-  }
-}
 
 void
 CM2Widget::draw_thick_gl_line(double x1, double y1, double x2, double y2,
@@ -418,14 +105,12 @@ CM2Widget::draw_thick_gl_line(double x1, double y1, double x2, double y2,
   glEnable(GL_BLEND);
   glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
-#if 1
   glLineWidth(5.0);
   glColor4d(0.0, 0.0, 0.0, 1.0);
   glBegin(GL_LINES);
   glVertex2d(x1,y1);
   glVertex2d(x2,y2);
   glEnd();
-#endif
 
   glLineWidth(3.0);
   glColor4d(r,g,b,1.0);
@@ -456,13 +141,11 @@ CM2Widget::draw_thick_gl_point(double x1, double y1,
 
   glEnable(GL_POINT_SMOOTH);
 
-#if 1
   glPointSize(7.0);
   glColor4d(0.0, 0.0, 0.0, 1.0);
   glBegin(GL_POINTS);
     glVertex2f(x1, y1);
   glEnd();
-#endif
 
   glPointSize(5.0);
   glColor4d(r,g,b,1.0);
@@ -479,334 +162,7 @@ CM2Widget::draw_thick_gl_point(double x1, double y1,
   glDisable(GL_BLEND);
   glDisable(GL_POINT_SMOOTH);
 }
-  
 
-
-
-void
-TriangleCM2Widget::draw()
-{
-  if(!onState_) return;
-
-  const float b_x = bottom_*top_x_ + base_;
-  const float b_y = bottom_*top_y_;
-  const float w = bottom_*width_;
-
-  double r = 0.5, g = 0.5, b = 0.5;
-  if (selected_) {
-    r = 0.8; g = 0.7; b = 0.1;
-  }
-  draw_thick_gl_line(b_x-w/2, b_y, b_x+w/2, b_y, r,g,b);
-  draw_thick_gl_line(base_+top_x_-width_/2, top_y_,
-		     base_+top_x_+width_/2, top_y_,  r, g, b);
-  draw_thick_gl_line(base_, 0.0, base_+top_x_-width_/2, top_y_, r,g,b);
-  draw_thick_gl_line(base_, 0.0, base_+top_x_+width_/2, top_y_, r,g,b);
-
-  if (selected_) {
-    r = 0.9; g = 0.6; b = 0.4;
-  }
-
-  draw_thick_gl_point(base_, 0.0, r,g,b);
-  draw_thick_gl_point(b_x-w/2, b_y,r,g,b);
-  draw_thick_gl_point(b_x+w/2, b_y,r,g,b);
-  draw_thick_gl_point(base_+top_x_-width_/2, top_y_,r,g,b);
-  draw_thick_gl_point(base_+top_x_+width_/2, top_y_,r,g,b);
-
-  return;
-
-  //GLdouble blue[4] = { 0.1, 0.4, 1.0, 0.8 };
-  //GLdouble green[4] = { 0.5, 1.0, 0.1, 0.7 };
-  //GLdouble lt_green[4] = { 0.5, 1.0, 0.1, 0.4 };
-  //GLdouble red[4] = { 0.8, 0.2, 0.4, 0.9 };
-  GLdouble grey[4] = { 0.6, 0.6, 0.6, 0.6 }; 
-  GLdouble white[4] = { 1.0, 1.0, 1.0, 1.0 }; 
-  GLdouble black[4] = { 0.0, 0.0, 0.0, 1.0 }; 
-  GLdouble yellow[4] = { 1.0, 0.76, 0.1, 1.0 };
-
-  glEnable(GL_BLEND);
-  glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-
-		      
-  glEnable(GL_LINE_SMOOTH);
-  glLineWidth(thin_line_width_);
-  glBegin(GL_LINES);
-  {
-    selectcolor(1);
-    glVertex2f(base_, 0.0);
-    glVertex2f(base_+top_x_-width_/2, top_y_);
-    glVertex2f(base_, 0.0);
-    glVertex2f(base_+top_x_+width_/2, top_y_);
-  }
-  glEnd();
-
-  glLineWidth(5.0);
-  glColor4dv(black);
-  glBegin(GL_LINES);
-  {
-    //selectcolor(4);
-    glVertex2f(base_+top_x_-width_/2, top_y_);
-    glVertex2f(base_+top_x_+width_/2, top_y_);
-  }
-  glEnd();
-
-  glLineWidth(3.0);
-  glColor4dv(grey);
-  glBegin(GL_LINES);
-  {
-    //selectcolor(4);
-    glVertex2f(base_+top_x_-width_/2, top_y_);
-    glVertex2f(base_+top_x_+width_/2, top_y_);
-  }
-  glEnd();
-
-  glLineWidth(1.0);
-  glColor4dv(white);
-  glBegin(GL_LINES);
-  {
-    //selectcolor(4);
-    glVertex2f(base_+top_x_-width_/2, top_y_);
-    glVertex2f(base_+top_x_+width_/2, top_y_);
-  }
-  glEnd();
-
-
-  glLineWidth(thin_line_width_);
-  glBegin(GL_LINES);
-  {
-    selectcolor(1);
-    glVertex2f(b_x-w/2, b_y);
-    glVertex2f(b_x+w/2, b_y);
-  }
-  glEnd();
-  glDisable(GL_LINE_SMOOTH);
-
-  glEnable(GL_POINT_SMOOTH);
-  glPointSize(8.0);
-  glColor4dv(black);
-  glBegin(GL_POINTS);
-  {
-    //    selectcolor(2);
-    glVertex2f(base_+top_x_+width_/2, top_y_);
-    //    selectcolor(3);
-    glVertex2f(b_x-w/2, b_y);
-  }
-  glEnd();
-
-
-  glPointSize(6.0);
-  glColor4dv(yellow);
-  glBegin(GL_POINTS);
-  {
-    //    selectcolor(2);
-    glVertex2f(base_+top_x_+width_/2, top_y_);
-    //    selectcolor(3);
-    glVertex2f(b_x-w/2, b_y);
-  }
-  glEnd();
-
-
-  glDisable(GL_POINT_SMOOTH);
-  glDisable(GL_BLEND);
-}
-
-
-int
-TriangleCM2Widget::pick1 (int ix, int iy, int sw, int sh)
-{
-  last_x_ = top_x_;
-  last_y_ = top_y_;
-  pick_ix_ = ix;
-  pick_iy_ = iy;
-  last_width_ = width_;
-
-  const double x = ix / (double)sw;
-  const double y = iy / (double)sh;
-  const double xeps = point_size_ / sw * 0.5;
-  const double yeps = point_size_ / sh * 0.5;
-  const double yleps = thick_line_width_ / sh;
-
-  const float b_x = bottom_*top_x_ + base_;
-  const float b_y = bottom_*top_y_;
-  const float w = bottom_*width_;
-
-  const double top_right_x = base_ + top_x_ + width_/2;
-  const double top_left_x = base_ + top_x_ - width_/2;
-
-  // upper right corner
-  if (fabs(x - top_right_x) < xeps && fabs(y - top_y_) < yeps)
-    return 2; 
-
-  // upper left corner
-  if (fabs(x - top_left_x) < xeps && fabs(y - top_y_) < yeps)
-  {
-    return 6; 
-  }
-
-  // middle left corner
-  const double bot_left_x = b_x - w/2;
-  const double bot_right_x = b_x + w/2;
-  if (fabs(x - bot_left_x) < xeps && fabs(y - b_y) < yeps)
-    return 3;
-
-  // middle right corner
-  if (fabs(x - bot_right_x) < xeps && fabs(y - b_y) < yeps)
-    return 8; 
-
-
-  // top bar
-  if (fabs(y - top_y_) < yleps &&
-      x > Min(top_right_x, top_left_x) && x < Max(top_right_x, top_left_x))
-    return 4; 
-
-  // bottom bar
-  if (fabs(y - b_y) < yleps &&
-      x > Min(bot_left_x, bot_right_x) && x < Max(bot_left_x, bot_right_x))
-    return 7;
-  
-  return 0;
-}
-
-
-int
-TriangleCM2Widget::pick2 (int ix, int iy, int sw, int sh, int m)
-{
-  const double x = ix / (double)sw;
-  const double y = iy / (double)sh;
-
-  const double x1top = top_x_ + width_ * 0.5;
-  const double x2top = top_x_ - width_ * 0.5;
-  const double x1 = base_ + x1top * (y / top_y_);
-  const double x2 = base_ + x2top * (y / top_y_);
-  if (y < top_y_ &&
-      x > Min(x1, x2) && x < Max(x1, x2))
-  {
-    last_x_ = base_;
-    pick_ix_ = ix;
-    pick_iy_ = iy; // modified only.
-    last_hsv_ = HSVColor(color_);  // modified only
-    return m?5:1;
-  }
-  
-  return 0;
-}
-
-
-string
-TriangleCM2Widget::tk_cursorname(int obj)
-{
-  switch (obj) {
-  case 0: return string("left_ptr"); break;
-  case 1: return string("sb_h_double_arrow"); break;
-  case 2: return string("fleur"); break;
-  case 3: return string("sb_v_double_arrow"); break;
-  case 4: return string("fleur"); break;
-  case 5: return string("left_ptr"); break;
-  case 6: return string("fleur"); break;
-  case 7: return string("sb_v_double_arrow"); break;
-  case 8: return string("sb_v_double_arrow"); break;
-  default: break;
-  }
-  return string("left_ptr");
-}
-    
-    
-
-
-void
-TriangleCM2Widget::move (int ix, int iy, int w, int h)
-{
-  const double x = ix / (double)w;
-  const double y = iy / (double)h;
-  
-  switch (selected_)
-  {
-  case 1:
-    base_ = last_x_ + x - pick_ix_ / (double)w;
-    break;
-
-  case 2:
-    width_ = (x - top_x_ - base_) * 2.0;
-    top_y_ = last_y_ + y - pick_iy_ / (double)h;
-    break;
-
-  case 3:
-    bottom_ = Clamp(y / top_y_, 0.0, 1.0);
-    break;
-
-  case 4:
-    top_x_ = last_x_ + x - pick_ix_ / (double)w;
-    top_y_ = last_y_ + y - pick_iy_ / (double)h;
-    width_ = last_width_ * top_y_ / last_y_;
-    break;
-    
-  case 5:
-    {
-      // Hue controls on x axis
-      const double hdelta = x - pick_ix_ / (double)w;
-      double hue = last_hsv_[0] + hdelta * 360.0 * 2.0;
-      while (hue < 0.0) hue += 360.0;
-      while (hue > 360.0) hue -= 360;
-
-      // Saturation controls on y axis
-      const double sdelta = y - pick_iy_ / (double)h;
-      double sat = Clamp(last_hsv_[1] - sdelta * 2.0, 0.0, 1.0);
-
-      HSVColor hsv(hue, sat, last_hsv_.val());
-      color_ = Color(hsv);
-    }
-    break;
-  case 6:
-    width_ = (x - top_x_ - base_) * 2.0;
-    top_y_ = last_y_ + y - pick_iy_ / (double)h;
-    break;
-
-  case 7:
-    bottom_ = Clamp(y / top_y_, 0.0, 1.0);
-    break;
-
-  case 8:
-    bottom_ = Clamp(y / top_y_, 0.0, 1.0);
-    break;
-
-  default:
-    break;
-  }
-}
-
-
-void
-TriangleCM2Widget::release (int /*x*/, int /*y*/, 
-                            int /*w*/, int /*h*/)
-{
-  // Don't need to do anything here.
-}
-
-
-string
-TriangleCM2Widget::tcl_pickle()
-{
-  ostringstream s;
-  s << "t ";
-  s << base_ << " ";
-  s << top_x_ << " ";
-  s << top_y_ << " ";
-  s << width_ << " ";
-  s << bottom_;
-  return s.str();
-}
-
-void
-TriangleCM2Widget::tcl_unpickle(const string &p)
-{
-  istringstream s(p);
-  char c;
-  s >> c;
-  s >> base_;
-  s >> top_x_;
-  s >> top_y_;
-  s >> width_;
-  s >> bottom_;
-}
 
 
 static Persistent* RectangleCM2Widget_maker()
@@ -845,8 +201,11 @@ RectangleCM2Widget::io(Piostream &stream)
   Pio(stream, alpha_);
   if (version == 2) {
     Pio(stream, name_);
-    Pio(stream, value_min_);
-    Pio(stream, value_scale_);
+    double temp;
+    Pio(stream, temp);
+    Pio(stream, temp);
+    value_range_.first = 0.0;
+    value_range_.second = -1.0;
   }
 
   stream.end_class();
@@ -859,7 +218,11 @@ RectangleCM2Widget::RectangleCM2Widget() :
   left_y_(0.5),
   width_(0.25), 
   height_(0.25),
-  offset_(0.25)
+  offset_(0.25),
+  last_x_(0),
+  last_y_(0),
+  pick_ix_(0),
+  pick_iy_(0)
 {
   left_x_ = drand48()*0.9;
   left_y_ = drand48()*0.9;
@@ -878,7 +241,12 @@ RectangleCM2Widget::RectangleCM2Widget(CM2RectangleType type, float left_x,
   left_y_(left_y), 
   width_(width), 
   height_(height),
-  offset_(offset)
+  offset_(offset),
+  last_x_(0),
+  last_y_(0),
+  pick_ix_(0),
+  pick_iy_(0)
+
 {
   name_ = "Rectangle";
 }
@@ -907,73 +275,80 @@ RectangleCM2Widget::clone()
 }
 
 void
-RectangleCM2Widget::rasterize(CM2ShaderFactory& factory, bool faux, 
+RectangleCM2Widget::rasterize(CM2ShaderFactory& factory, 
 			      Pbuffer* pbuffer)
 {
-  if(!onState_) return;
+  if (!onState_) return;
  
   CM2BlendType blend = CM2_BLEND_RASTER;
-  if(pbuffer) {
+  if (pbuffer) {
     if(pbuffer->need_shader())
       blend = CM2_BLEND_FRAGMENT_NV;
     else
       blend = CM2_BLEND_FRAGMENT_ATI;
   }
   CM2ShaderType type = CM2_SHADER_RECTANGLE_1D;
-  if(type_ == CM2_RECTANGLE_ELLIPSOID)
+  if (type_ == CM2_RECTANGLE_ELLIPSOID)
     type = CM2_SHADER_RECTANGLE_ELLIPSOID;
-  FragmentProgramARB* shader = factory.shader(type, shadeType_, faux, blend);
+  FragmentProgramARB* shader = factory.shader(type, shadeType_, faux_, blend);
 
-  if(shader) {
-    if(!shader->valid()) {
-      shader->create();
-    }
-
-    
-    GLdouble modelview[16];
-    glGetDoublev(GL_MODELVIEW_MATRIX, modelview);
-    double panx = (modelview[12]+1.0)/2.0;
-    double pany = (modelview[13]+1.0)/2.0;
-    double scalex = (modelview[0])/2.0;
-    double scaley = (modelview[5])/2.0;
-
-
-    shader->bind();
-    shader->setLocalParam(0, color_.r(), color_.g(), color_.b(), alpha_);
-    shader->setLocalParam(1, left_x_*scalex+panx, left_y_*scaley+pany, width_*scalex, height_*scaley);
-    if(offset_ < std::numeric_limits<float>::epsilon())
-      shader->setLocalParam(2, offset_, 0.0, 1.0, 0.0);
-    else if((1.0-offset_) < std::numeric_limits<float>::epsilon())
-      shader->setLocalParam(2, offset_, 1.0, 0.0, 0.0);
-    else
-      shader->setLocalParam(2, offset_, 1/offset_, 1/(1-offset_), 0.0);
-
-    GLint vp[4];
-    glGetIntegerv(GL_VIEWPORT, vp);
-    shader->setLocalParam(3, 1.0/vp[2], 1.0/vp[3], 0.0, 0.0);
-    if(pbuffer)
-      shader->setLocalParam(4, 1.0/pbuffer->width(), 1.0/pbuffer->height(), 
-			    0.0, 0.0);
+  if (!shader) return;
   
-
-    glBegin(GL_QUADS);
-    {
-      glVertex2f(left_x_, left_y_);
-      glVertex2f(left_x_+width_, left_y_);
-      glVertex2f(left_x_+width_, left_y_+height_);
-      glVertex2f(left_x_, left_y_+height_);
-    }
-    glEnd();
-    shader->release();
+  if(!shader->valid()) {
+    shader->create();
   }
+ 
+  normalize();
+    
+  GLdouble modelview[16];
+  glGetDoublev(GL_MODELVIEW_MATRIX, modelview);
+  double panx = (modelview[12]+1.0)/2.0;
+  double pany = (modelview[13]+1.0)/2.0;
+  double scalex = (modelview[0])/2.0;
+  double scaley = (modelview[5])/2.0;
+  double left_x = left_x_*scalex+panx;
+  double left_y = left_y_*scaley+pany;
+  double width = width_*scalex;
+  double height = height_*scaley;
+    
+  
+  shader->bind();
+  shader->setLocalParam(0, color_.r(), color_.g(), color_.b(), alpha_);
+  shader->setLocalParam(1, left_x, left_y, width, height);
+
+  if(offset_ < std::numeric_limits<float>::epsilon())
+    shader->setLocalParam(2, offset_, 0.0, 1.0, 0.0);
+  else if((1.0-offset_) < std::numeric_limits<float>::epsilon())
+    shader->setLocalParam(2, offset_, 1.0, 0.0, 0.0);
+  else
+    shader->setLocalParam(2, offset_, 1/offset_, 1/(1-offset_), 0.0);
+  
+  GLint vp[4];
+  glGetIntegerv(GL_VIEWPORT, vp);
+  shader->setLocalParam(3, 1.0/vp[2], 1.0/vp[3], 0.0, 0.0);
+  if(pbuffer)
+    shader->setLocalParam(4, 1.0/pbuffer->width(), 1.0/pbuffer->height(), 
+			  0.0, 0.0);
+  
+  
+  glBegin(GL_QUADS);
+  {
+    glVertex2f(left_x_, left_y_);
+    glVertex2f(left_x_+width_, left_y_);
+    glVertex2f(left_x_+width_, left_y_+height_);
+    glVertex2f(left_x_, left_y_+height_);
+  }
+  glEnd();
+  un_normalize();
+  shader->release();
 }
 
 void
-RectangleCM2Widget::rasterize(Array3<float>& array, bool faux)
+RectangleCM2Widget::rasterize(Array3<float>& array)
 {
   if(!onState_) return;
-
   if(array.dim3() != 4) return;
+  normalize();
   int size_x = array.dim2();
   int size_y = array.dim1();
   float left = left_x_;
@@ -1004,9 +379,9 @@ RectangleCM2Widget::rasterize(Array3<float>& array, bool faux)
           float w = 1-2*sqrt(x*x+y*y)/size_y;
           if (w < 0) w = 0;
           float a = alpha_*w;
-          float r = faux ? color_.r()*w : color_.r();
-          float g = faux ? color_.r()*w : color_.g();
-          float b = faux ? color_.r()*w : color_.b();
+          float r = faux_ ? color_.r()*w : color_.r();
+          float g = faux_ ? color_.r()*w : color_.g();
+          float b = faux_ ? color_.r()*w : color_.b();
           array(i,j,0) = Clamp(array(i,j,0)*(1.0f-a) + r, 0.0f, 1.0f);
           array(i,j,1) = Clamp(array(i,j,1)*(1.0f-a) + g, 0.0f, 1.0f);
           array(i,j,2) = Clamp(array(i,j,2)*(1.0f-a) + b, 0.0f, 1.0f);
@@ -1026,7 +401,7 @@ RectangleCM2Widget::rasterize(Array3<float>& array, bool faux)
             array(i,j,3) = Clamp(alpha_, 0.0f, 1.0f);
           }
         }
-      } else if(faux) {
+      } else if (faux_) {
         float da = ra <= rb+1 ? 0.0 : alpha_/(ra-rb-1);
         float dr = ra <= rb+1 ? 0.0 : color_.r()/(ra-rb-1);
         float dg = ra <= rb+1 ? 0.0 : color_.g()/(ra-rb-1);
@@ -1095,23 +470,8 @@ RectangleCM2Widget::rasterize(Array3<float>& array, bool faux)
   default:
     break;
   }
+  un_normalize();
 }
-
-
-void
-CM2Widget::selectcolor(int obj)
-{
-  if (selected_ == obj)
-  {
-    glColor4f(selected_color_.r(), selected_color_.g(),
-	      selected_color_.b(), selected_alpha_);
-  }
-  else
-  {
-    glColor4f(line_color_.r(), line_color_.g(), line_color_.b(), line_alpha_);
-  }
-}
-
 
 void
 RectangleCM2Widget::draw()
@@ -1122,6 +482,7 @@ RectangleCM2Widget::draw()
   if (selected_) {
     r = 0.9; g = 0.8; b = 0.1;
   }
+  normalize();
   draw_thick_gl_line(left_x_, left_y_, left_x_+width_, left_y_, r,g,b);
   draw_thick_gl_line(left_x_, left_y_+height_, left_x_+width_, left_y_+height_,
 		     r,g,b);
@@ -1139,49 +500,7 @@ RectangleCM2Widget::draw()
   draw_thick_gl_point(left_x_, left_y_+height_,r,g,b);
   draw_thick_gl_point(left_x_+width_, left_y_+height_,r,g,b);
   draw_thick_gl_point(left_x_+offset_*width_, left_y_+height_*0.5,r,g,b);
-
-  return;
-
-
- glEnable(GL_BLEND);
-  glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-  
-  selectcolor(1);
-
-  glEnable(GL_LINE_SMOOTH);
-  glLineWidth(thin_line_width_);
-  glBegin(GL_LINES);
-  {
-    glVertex2f(left_x_, left_y_);
-    glVertex2f(left_x_+width_, left_y_);
-    glVertex2f(left_x_+width_, left_y_);
-    glVertex2f(left_x_+width_, left_y_+height_);
-    glVertex2f(left_x_, left_y_);
-    glVertex2f(left_x_, left_y_+height_);
-    glVertex2f(left_x_, left_y_+height_);
-    glVertex2f(left_x_+width_, left_y_+height_);
-  }
-  glEnd();
-  glDisable(GL_LINE_SMOOTH);
-
-  glEnable(GL_POINT_SMOOTH);
-  glPointSize(point_size_);
-  glBegin(GL_POINTS);
-  {
-    selectcolor(2);
-    glVertex2f(left_x_, left_y_);
-    selectcolor(3);
-    glVertex2f(left_x_+width_, left_y_);
-    selectcolor(4);
-    glVertex2f(left_x_+width_, left_y_+height_);
-    selectcolor(5);
-    glVertex2f(left_x_, left_y_+height_);
-    selectcolor(6);
-    glVertex2f(left_x_+offset_*width_, left_y_+height_*0.5);
-  }
-  glEnd();
-  glDisable(GL_POINT_SMOOTH);
-  glDisable(GL_BLEND);
+  un_normalize();
 }
 
 
@@ -1211,11 +530,14 @@ RectangleCM2Widget::tk_cursorname(int obj)
 int
 RectangleCM2Widget::pick1 (int ix, int iy, int w, int h)
 {
+  //todo
+  double point_size_ = 5.0;
+  normalize();
   last_x_ = left_x_;
   last_y_ = left_y_;
   pick_ix_ = ix;
   pick_iy_ = iy;
-
+  int ret_val = 0;
   const double x = ix / (double)w;
   const double y = iy / (double)h;
   const double xeps = point_size_ / w * 0.5;
@@ -1226,24 +548,19 @@ RectangleCM2Widget::pick1 (int ix, int iy, int w, int h)
   double bottom = fabs(y - left_y_);
   double top = fabs(y - left_y_ - height_);
 
-  if (left < xeps && bottom < yeps) return 2;
+  if (left < xeps && bottom < yeps) ret_val = 2;
+  else if (right < xeps && bottom < yeps) ret_val = 3;
+  else if (right < xeps && top < yeps) ret_val = 4;
+  else if (left < xeps && top < yeps) ret_val = 5;
+  else if (fabs(x - left_x_ - offset_ * width_) < xeps &&
+	   fabs(y - left_y_ - height_ * 0.5) < yeps) ret_val = 6;
+  else if (left < xeps && y > left_y_ && y < (left_y_+height_)) ret_val = 8;
+  else if (right < xeps && y > left_y_ && y < (left_y_+height_)) ret_val = 9;
+  else if (x > left_x_ && x < (left_x_+width_) && bottom < yeps) ret_val = 10;
+  else if (x > left_x_ && x < (left_x_+width_) && top < yeps) ret_val = 11;
 
-  if (right < xeps && bottom < yeps) return 3;
-
-  if (right < xeps && top < yeps) return 4;
-
-  if (left < xeps && top < yeps) return 5;
-
-  if (fabs(x - left_x_ - offset_ * width_) < xeps &&
-      fabs(y - left_y_ - height_ * 0.5) < yeps)
-    return 6;
-
-  if (left < xeps && y > left_y_ && y < (left_y_+height_)) return 8;
-  if (right < xeps && y > left_y_ && y < (left_y_+height_)) return 9;
-  if (x > left_x_ && x < (left_x_+width_) && bottom < yeps) return 10;
-  if (x > left_x_ && x < (left_x_+width_) && top < yeps) return 11;
-
-  return 0;
+  un_normalize();
+  return ret_val;
 }
 
 
@@ -1252,7 +569,8 @@ RectangleCM2Widget::pick2 (int ix, int iy, int w, int h, int m)
 {
   const double x = ix / (double)w;
   const double y = iy / (double)h;
-
+  int ret_val = 0;
+  normalize();
   if (x > Min(left_x_, left_x_ + width_) &&
       x < Max(left_x_, left_x_ + width_) &&
       y > Min(left_y_, left_y_ + height_) &&
@@ -1263,10 +581,10 @@ RectangleCM2Widget::pick2 (int ix, int iy, int w, int h, int m)
     pick_ix_ = ix;
     pick_iy_ = iy;
     last_hsv_ = HSVColor(color_);
-    return m?7:1;
+    ret_val =  m?7:1;
   }
-
-  return 0;
+  un_normalize();
+  return ret_val;
 }
 
 
@@ -1275,7 +593,7 @@ RectangleCM2Widget::move (int ix, int iy, int w, int h)
 {
   const double x = ix / (double)w;
   const double y = iy / (double)h;
-  
+  normalize();
   switch (selected_)
   {
   case 1:
@@ -1374,6 +692,7 @@ RectangleCM2Widget::move (int ix, int iy, int w, int h)
     default: break;
     }
   }  
+  un_normalize();
 }
 
 
@@ -1381,6 +700,7 @@ void
 RectangleCM2Widget::release (int /*x*/, int /*y*/,
                              int /*w*/, int /*h*/)
 {
+  normalize();
   if (width_ < 0.0) {
     left_x_ += width_;
     width_ *= -1.0;
@@ -1390,20 +710,9 @@ RectangleCM2Widget::release (int /*x*/, int /*y*/,
     left_y_ += height_;
     height_ *= -1.0;
   }
-
+  un_normalize();
   // Don't need to do anything here.
 }
-
-void
-RectangleCM2Widget::set_value_range(double min, double scale)
-{
-  const double offset = min - value_min_;
-  left_x_ = (left_x_ * value_scale_ - offset) / scale;
-  width_ = width_ * value_scale_ / scale;
-  value_min_ = min;
-  value_scale_ = scale;
-}
-
 
 
 string
@@ -1437,6 +746,532 @@ RectangleCM2Widget::tcl_unpickle(const string &p)
 }
 
 
+void
+RectangleCM2Widget::normalize()
+{
+  if (value_range_.first > value_range_.second) return;
+  const float offset = -value_range_.first;
+  const float scale = 1.0/(value_range_.second-value_range_.first);
+
+  left_x_ = (left_x_ + offset) * scale;
+  width_ = width_ * scale;
+}
+
+
+void
+RectangleCM2Widget::un_normalize()
+{
+  if (value_range_.first > value_range_.second) return;
+  const float offset = -value_range_.first;
+  const float scale = 1.0/(value_range_.second-value_range_.first);
+  
+  left_x_ = left_x_/scale - offset;
+  width_ = width_/scale;
+}
+
+
+static Persistent* TriangleCM2Widget_maker()
+{
+  return scinew TriangleCM2Widget;
+}
+
+PersistentTypeID TriangleCM2Widget::type_id("TriangleCM2Widget", "CM2Widget",
+					    TriangleCM2Widget_maker);
+
+#define TRIANGLECM2WIDGET_VERSION 2
+
+void
+TriangleCM2Widget::io(Piostream &stream)
+{
+  const int version = 
+    stream.begin_class("TriangleCM2Widget", TRIANGLECM2WIDGET_VERSION);
+  
+  Pio(stream, base_);
+  Pio(stream, top_x_);
+  Pio(stream, top_y_);
+  Pio(stream, width_);
+  Pio(stream, bottom_);
+  Pio(stream, shadeType_);
+  Pio(stream, onState_);
+  Pio(stream, color_);
+  Pio(stream, alpha_);
+  if (version == 2) {
+    Pio(stream, name_);
+    double temp;
+    Pio(stream, temp);
+    Pio(stream, temp);
+    value_range_.first = 0.0;
+    value_range_.second = -1.0;
+  }
+    
+  stream.end_class();
+}
+
+TriangleCM2Widget::TriangleCM2Widget() : 
+  CM2Widget(),
+  base_(0.5), 
+  top_x_(0.15), 
+  top_y_(0.5), 
+  width_(0.25), 
+  bottom_(0.5)
+{
+  base_ = 0.1+drand48()*0.8;
+  top_x_ = -0.1 + drand48()*0.2;
+  top_y_ = 0.2 + drand48()*0.8;
+  width_ = 0.1 + drand48()*0.4;
+  bottom_ = drand48()*0.4+0.2;
+  name_ = "Triangle";
+}
+
+TriangleCM2Widget::TriangleCM2Widget(float base, float top_x, float top_y,
+                                     float width, float bottom) : 
+  CM2Widget(),
+  base_(base), 
+  top_x_(top_x), 
+  top_y_(top_y), 
+  width_(width), 
+  bottom_(bottom)
+{}
+
+TriangleCM2Widget::~TriangleCM2Widget()
+{}
+
+TriangleCM2Widget::TriangleCM2Widget(TriangleCM2Widget& copy) : 
+  CM2Widget(copy),
+  base_(copy.base_),
+  top_x_(copy.top_x_),
+  top_y_(copy.top_y_),
+  width_(copy.width_),
+  bottom_(copy.bottom_),
+  last_x_(copy.last_x_),
+  last_y_(copy.last_y_),
+  last_width_(copy.last_width_),
+  pick_ix_(copy.pick_ix_),
+  pick_iy_(copy.pick_iy_)
+{}
+
+CM2Widget*
+TriangleCM2Widget::clone()
+{
+  return new TriangleCM2Widget(*this);
+}
+
+void
+TriangleCM2Widget::rasterize(CM2ShaderFactory& factory, 
+			     Pbuffer* pbuffer)
+{
+  if(!onState_) return;
+
+  CM2BlendType blend = CM2_BLEND_RASTER;
+  if(pbuffer) {
+    if(pbuffer->need_shader())
+      blend = CM2_BLEND_FRAGMENT_NV;
+    else
+      blend = CM2_BLEND_FRAGMENT_ATI;
+  }
+
+  FragmentProgramARB* shader = 
+    factory.shader(CM2_SHADER_TRIANGLE, shadeType_, faux_, blend);
+
+  if (!shader) return;
+  
+  if(!shader->valid()) shader->create();
+    
+  GLdouble modelview[16];
+  glGetDoublev(GL_MODELVIEW_MATRIX, modelview);
+  double panx = (modelview[12]+1.0)/2.0;
+  double pany = (modelview[13]+1.0)/2.0;
+  double scalex = (modelview[0])/2.0;
+  double scaley = (modelview[5])/2.0;
+  normalize();  
+  shader->bind();
+  shader->setLocalParam(0, color_.r(), color_.g(), color_.b(), alpha_);
+  shader->setLocalParam(1, base_*scalex+panx, 
+			scalex*(base_+top_x_)+panx,
+			top_y_*scaley+pany, pany);
+  shader->setLocalParam(2, width_*scalex, bottom_, pany, 0.0);
+  
+  GLint vp[4];
+  glGetIntegerv(GL_VIEWPORT, vp);
+  shader->setLocalParam(3, 1.0/vp[2], 1.0/vp[3], pany, pany);
+  if(pbuffer)
+    shader->setLocalParam(4, 1.0/pbuffer->width(), 1.0/pbuffer->height(), 
+			  0.0, 0.0);
+  
+  glBegin(GL_TRIANGLES);
+  {
+    glVertex2f(base_, 0.0);
+    glVertex2f(base_+top_x_+width_/2, top_y_);
+    glVertex2f(base_+top_x_-width_/2, top_y_);
+  }
+  glEnd();
+  shader->release();
+  un_normalize();
+}
+
+void
+TriangleCM2Widget::rasterize(Array3<float>& array)
+{
+  if(!onState_) return;
+  if(array.dim3() != 4) return;
+  normalize();
+  int size_x = array.dim2();
+  int size_y = array.dim1();
+  float top_left = top_x_ - fabs(width_)/2;
+  float top_right = top_x_ + fabs(width_)/2;
+  int lb = (int)(bottom_*top_y_*size_y);
+  int le = (int)(top_y_*size_y);
+  int ilb = Clamp(lb, 0, size_y-1);
+  int ile = Clamp(le, 0, size_y-1);
+  if (shadeType_ == CM2_SHADE_FLAT) 
+  {
+    for(int i=ilb; i<=ile; i++) {
+      float fb = (i/(float)le)*top_left + base_;
+      float fe = (i/(float)le)*top_right + base_;
+//      float fm = (i/(float)le)*top_x_ + base_;
+      int rb = (int)(fb*size_x);
+      int re = (int)(fe*size_x);
+      int jrb = Clamp(rb, 0, size_x-1);
+      int jre = Clamp(re, 0, size_x-1);
+      
+      for(int j=jrb; j<jre; j++) {
+        array(i,j,0) = Clamp((float)color_.r(), 0.0f, 1.0f);
+        array(i,j,1) = Clamp((float)color_.g(), 0.0f, 1.0f);
+        array(i,j,2) = Clamp((float)color_.b(), 0.0f, 1.0f);
+        array(i,j,3) = Clamp(alpha_, 0.0f, 1.0f);
+      }
+    }
+  }
+
+  if (faux_) {
+    for(int i=ilb; i<=ile; i++) {
+      float fb = (i/(float)le)*top_left + base_;
+      float fe = (i/(float)le)*top_right + base_;
+      float fm = (i/(float)le)*top_x_ + base_;
+      int rb = (int)(fb*size_x);
+      int re = (int)(fe*size_x);
+      int rm = (int)(fm*size_x);
+      int jrb = Clamp(rb, 0, size_x-1);
+      int jre = Clamp(re, 0, size_x-1);
+      int jrm = Clamp(rm, 0, size_x-1);
+      float da = alpha_/(rm-rb);
+      float dr = color_.r()/(rm-rb);
+      float dg = color_.g()/(rm-rb);
+      float db = color_.b()/(rm-rb);
+      float a = alpha_ - abs(rm-jrm+1)*da;
+      float r = color_.r() - abs(rm-jrm+1)*dr;
+      float g = color_.g() - abs(rm-jrm+1)*dg;
+      float b = color_.b() - abs(rm-jrm+1)*db;
+      for(int j=jrm-1; j>=jrb; j--, a-=da, r-=dr, b-=db, g-=dg) {
+        array(i,j,0) = Clamp(array(i,j,0)*(1-a) + r, 0.0f, 1.0f);
+        array(i,j,1) = Clamp(array(i,j,1)*(1-a) + g, 0.0f, 1.0f);
+        array(i,j,2) = Clamp(array(i,j,2)*(1-a) + b, 0.0f, 1.0f);
+        array(i,j,3) = Clamp(array(i,j,3)*(1-a) + a, 0.0f, 1.0f);
+      }
+      da = alpha_/(re-rm);
+      dr = color_.r()/(re-rm);
+      dg = color_.g()/(re-rm);
+      db = color_.b()/(re-rm);
+      a = alpha_ - abs(rm-jrm)*da;
+      r = color_.r() - abs(rm-jrm)*dr;
+      g = color_.g() - abs(rm-jrm)*dg;
+      b = color_.b() - abs(rm-jrm)*db;
+      for (int j=jrm; j<=jre; j++, a-=da, r-=dr, b-=db, g-=dg)
+      {
+        array(i,j,0) = array(i,j,0)*(1-a) + r;
+        array(i,j,1) = array(i,j,1)*(1-a) + g;
+        array(i,j,2) = array(i,j,2)*(1-a) + b;
+        array(i,j,3) = array(i,j,3)*(1-a) + a;
+      }
+    }
+  } else {
+    for(int i=ilb; i<=ile; i++) {
+      float fb = (i/(float)le)*top_left + base_;
+      float fe = (i/(float)le)*top_right + base_;
+      float fm = (i/(float)le)*top_x_ + base_;
+      int rb = (int)(fb*size_x);
+      int re = (int)(fe*size_x);
+      int rm = (int)(fm*size_x);
+      int jrb = Clamp(rb, 0, size_x-1);
+      int jre = Clamp(re, 0, size_x-1);
+      int jrm = Clamp(rm, 0, size_x-1);
+      float da = alpha_/(rm-rb);
+      float a = alpha_ - abs(rm-jrm+1)*da;
+      for(int j=jrm-1; j>=jrb; j--, a-=da) {
+        array(i,j,0) = Clamp(array(i,j,0)*(1.0f-a) + (float)color_.r(), 
+			     0.0f, 1.0f);
+        array(i,j,1) = Clamp(array(i,j,1)*(1.0f-a) + (float)color_.g(), 
+			     0.0f, 1.0f);
+        array(i,j,2) = Clamp(array(i,j,2)*(1.0f-a) + (float)color_.b(), 
+			     0.0f, 1.0f);
+        array(i,j,3) = Clamp(array(i,j,3)*(1.0f-a) + a, 0.0f, 1.0f);
+      }
+      da = alpha_/(re-rm);
+      a = alpha_ - abs(rm-jrm)*da;
+      for (int j=jrm; j<=jre; j++, a-=da)
+      {
+        array(i,j,0) = Clamp(array(i,j,0)*(1.0f-a) + (float)color_.r(), 
+			     0.0f, 1.0f);
+        array(i,j,1) = Clamp(array(i,j,1)*(1.0f-a) + (float)color_.g(), 
+			     0.0f, 1.0f);
+        array(i,j,2) = Clamp(array(i,j,2)*(1.0f-a) + (float)color_.b(), 
+			     0.0f, 1.0f);
+        array(i,j,3) = Clamp(array(i,j,3)*(1.0f-a) + a, 0.0f, 1.0f);
+      }
+    }
+  }
+  un_normalize();
+}
+
+
+void
+TriangleCM2Widget::draw()
+{
+  if(!onState_) return;
+  normalize();
+  const float b_x = bottom_*top_x_ + base_;
+  const float b_y = bottom_*top_y_;
+  const float w = bottom_*width_;
+
+  double r = 0.5, g = 0.5, b = 0.5;
+  if (selected_) {
+    r = 0.8; g = 0.7; b = 0.1;
+  }
+  draw_thick_gl_line(b_x-w/2, b_y, b_x+w/2, b_y, r,g,b);
+  draw_thick_gl_line(base_+top_x_-width_/2, top_y_,
+		     base_+top_x_+width_/2, top_y_,  r, g, b);
+  draw_thick_gl_line(base_, 0.0, base_+top_x_-width_/2, top_y_, r,g,b);
+  draw_thick_gl_line(base_, 0.0, base_+top_x_+width_/2, top_y_, r,g,b);
+
+  if (selected_) {
+    r = 0.9; g = 0.6; b = 0.4;
+  }
+
+  draw_thick_gl_point(base_, 0.0, r,g,b);
+  draw_thick_gl_point(b_x-w/2, b_y,r,g,b);
+  draw_thick_gl_point(b_x+w/2, b_y,r,g,b);
+  draw_thick_gl_point(base_+top_x_-width_/2, top_y_,r,g,b);
+  draw_thick_gl_point(base_+top_x_+width_/2, top_y_,r,g,b);
+  un_normalize();
+}
+
+
+int
+TriangleCM2Widget::pick1 (int ix, int iy, int sw, int sh)
+{
+  int ret_val = 0;
+  normalize();
+  //todo
+  double point_size_ = 5.0;
+  double thick_line_width_ = 5.0;
+  last_x_ = top_x_;
+  last_y_ = top_y_;
+  pick_ix_ = ix;
+  pick_iy_ = iy;
+  last_width_ = width_;
+
+  const double x = ix / (double)sw;
+  const double y = iy / (double)sh;
+  const double xeps = point_size_ / sw * 0.5;
+  const double yeps = point_size_ / sh * 0.5;
+  const double yleps = thick_line_width_ / sh;
+  const float b_x = bottom_*top_x_ + base_;
+  const float b_y = bottom_*top_y_;
+  const float w = bottom_*width_;
+  const double top_right_x = base_ + top_x_ + width_/2;
+  const double top_left_x = base_ + top_x_ - width_/2;
+  const double bot_left_x = b_x - w/2;
+  const double bot_right_x = b_x + w/2;
+
+
+  // upper right corner
+  if (fabs(x - top_right_x) < xeps && fabs(y - top_y_) < yeps) ret_val = 2; 
+  // upper left corner
+  else if (fabs(x - top_left_x) < xeps && fabs(y - top_y_) < yeps) ret_val = 6;
+  // middle left corner
+  else if (fabs(x - bot_left_x) < xeps && fabs(y - b_y) < yeps) ret_val = 3;
+  // middle right corner
+  else if (fabs(x - bot_right_x) < xeps && fabs(y - b_y) < yeps) ret_val = 8; 
+  // top bar
+  else if (fabs(y - top_y_) < yleps && x > Min(top_right_x, top_left_x) && 
+	   x < Max(top_right_x, top_left_x)) ret_val = 4; 
+  // bottom bar
+  else if (fabs(y - b_y) < yleps && x > Min(bot_left_x, bot_right_x) && 
+	   x < Max(bot_left_x, bot_right_x)) ret_val = 7;
+  un_normalize();
+  return ret_val;
+}
+
+
+int
+TriangleCM2Widget::pick2 (int ix, int iy, int sw, int sh, int m)
+{
+  normalize();
+  const double x = ix / (double)sw;
+  const double y = iy / (double)sh;
+  const double x1top = top_x_ + width_ * 0.5;
+  const double x2top = top_x_ - width_ * 0.5;
+  const double x1 = base_ + x1top * (y / top_y_);
+  const double x2 = base_ + x2top * (y / top_y_);
+  int ret_val = 0;
+  if (y < top_y_ && x > Min(x1, x2) && x < Max(x1, x2))
+  {
+    last_x_ = base_;
+    pick_ix_ = ix;
+    pick_iy_ = iy; // modified only.
+    last_hsv_ = HSVColor(color_);  // modified only
+    ret_val = m?5:1;
+  }
+  un_normalize();
+  return ret_val;
+}
+
+
+string
+TriangleCM2Widget::tk_cursorname(int obj)
+{
+  switch (obj) {
+  case 0: return string("left_ptr"); break;
+  case 1: return string("sb_h_double_arrow"); break;
+  case 2: return string("fleur"); break;
+  case 3: return string("sb_v_double_arrow"); break;
+  case 4: return string("fleur"); break;
+  case 5: return string("left_ptr"); break;
+  case 6: return string("fleur"); break;
+  case 7: return string("sb_v_double_arrow"); break;
+  case 8: return string("sb_v_double_arrow"); break;
+  default: break;
+  }
+  return string("left_ptr");
+}
+    
+    
+
+
+void
+TriangleCM2Widget::move (int ix, int iy, int w, int h)
+{
+  const double x = ix / (double)w;
+  const double y = iy / (double)h;
+  normalize();
+  switch (selected_)
+  {
+  case 1:
+    base_ = last_x_ + x - pick_ix_ / (double)w;
+    break;
+
+  case 2:
+    width_ = (x - top_x_ - base_) * 2.0;
+    top_y_ = last_y_ + y - pick_iy_ / (double)h;
+    break;
+
+  case 3:
+    bottom_ = Clamp(y / top_y_, 0.0, 1.0);
+    break;
+
+  case 4:
+    top_x_ = last_x_ + x - pick_ix_ / (double)w;
+    top_y_ = last_y_ + y - pick_iy_ / (double)h;
+    width_ = last_width_ * top_y_ / last_y_;
+    break;
+    
+  case 5:
+    {
+      // Hue controls on x axis
+      const double hdelta = x - pick_ix_ / (double)w;
+      double hue = last_hsv_[0] + hdelta * 360.0 * 2.0;
+      while (hue < 0.0) hue += 360.0;
+      while (hue > 360.0) hue -= 360;
+
+      // Saturation controls on y axis
+      const double sdelta = y - pick_iy_ / (double)h;
+      double sat = Clamp(last_hsv_[1] - sdelta * 2.0, 0.0, 1.0);
+
+      HSVColor hsv(hue, sat, last_hsv_.val());
+      color_ = Color(hsv);
+    }
+    break;
+  case 6:
+    width_ = (x - top_x_ - base_) * 2.0;
+    top_y_ = last_y_ + y - pick_iy_ / (double)h;
+    break;
+
+  case 7:
+    bottom_ = Clamp(y / top_y_, 0.0, 1.0);
+    break;
+
+  case 8:
+    bottom_ = Clamp(y / top_y_, 0.0, 1.0);
+    break;
+
+  default:
+    break;
+  }
+  un_normalize();
+}
+
+
+void
+TriangleCM2Widget::release (int /*x*/, int /*y*/, 
+                            int /*w*/, int /*h*/)
+{
+  // Don't need to do anything here.
+}
+
+
+string
+TriangleCM2Widget::tcl_pickle()
+{
+  ostringstream s;
+  s << "t ";
+  s << base_ << " ";
+  s << top_x_ << " ";
+  s << top_y_ << " ";
+  s << width_ << " ";
+  s << bottom_;
+  return s.str();
+}
+
+void
+TriangleCM2Widget::tcl_unpickle(const string &p)
+{
+  istringstream s(p);
+  char c;
+  s >> c;
+  s >> base_;
+  s >> top_x_;
+  s >> top_y_;
+  s >> width_;
+  s >> bottom_;
+}
+
+
+void
+TriangleCM2Widget::normalize()
+{
+  if (value_range_.first > value_range_.second) return;
+  const float offset = -value_range_.first;
+  const float scale = 1.0/(value_range_.second-value_range_.first);
+
+  base_ = (base_ + offset) * scale;
+  top_x_ = top_x_ * scale;
+  width_ = width_ * scale;
+}
+
+
+void
+TriangleCM2Widget::un_normalize()
+{
+  if (value_range_.first > value_range_.second) return;
+  const float offset = -value_range_.first;
+  const float scale = 1.0/(value_range_.second-value_range_.first);
+  
+  base_ = base_/scale - offset;
+  top_x_ = top_x_/scale;
+  width_ = width_/scale;
+}
+
+
 // Image --
 #define IMAGECM2WIDGET_VERSION 1
 
@@ -1448,15 +1283,11 @@ static Persistent* ImageCM2Widget_maker()
 PersistentTypeID ImageCM2Widget::type_id("ImageCM2Widget", "CM2Widget",
 					 ImageCM2Widget_maker);
 
-#define IMAGECM2WIDGET_VERSION 1
-
 void
 ImageCM2Widget::io(Piostream &stream)
 {
   stream.begin_class("ImageCM2Widget", IMAGECM2WIDGET_VERSION);
-  
   Pio(stream, pixels_);
-
   stream.end_class();
 }
 
@@ -1488,8 +1319,7 @@ ImageCM2Widget::clone()
 const float trans = 1.0/255.0;
 
 void
-ImageCM2Widget::rasterize(CM2ShaderFactory& /*factory*/, bool /*faux*/, 
-			  Pbuffer* pbuffer)
+ImageCM2Widget::rasterize(CM2ShaderFactory& /*factory*/, Pbuffer* pbuffer)
 {
   CHECK_OPENGL_ERROR("ImageCM2Widget::rasterize - - start")
   //assume images draw first.
@@ -1596,7 +1426,7 @@ ImageCM2Widget::resize(int width, int height)
 }
 
 void
-ImageCM2Widget::rasterize(Array3<float>& array, bool /*faux*/)
+ImageCM2Widget::rasterize(Array3<float>& array)
 {
   if (! pixels_.get_rep()) return;
   ASSERT(pixels_->nrrd->type == nrrdTypeFloat);
@@ -1627,13 +1457,11 @@ ImageCM2Widget::rasterize(Array3<float>& array, bool /*faux*/)
   }
 }
 
-
 void
 ImageCM2Widget::draw()
 {
   // no widget controls to draw.
 }
-
 
 
 
@@ -1647,8 +1475,6 @@ static Persistent* PaintCM2Widget_maker()
 PersistentTypeID PaintCM2Widget::type_id("PaintCM2Widget", "CM2Widget",
 					 PaintCM2Widget_maker);
 
-#define PAINTCM2WIDGET_VERSION 1
-
 void
 PaintCM2Widget::io(Piostream &stream)
 {
@@ -1656,15 +1482,13 @@ PaintCM2Widget::io(Piostream &stream)
   
   Pio(stream, strokes_);
   Pio(stream, name_);
-  dirty_ = true;
   stream.end_class();
 }
 
 PaintCM2Widget::PaintCM2Widget() : 
   CM2Widget(),
   strokes_(),
-  pixels_(256, 256, 4),
-  dirty_(false)
+  pixels_(256, 256, 4)
 {
   name_ = "Paint";
   pixels_.initialize(0.0);
@@ -1675,8 +1499,7 @@ PaintCM2Widget::~PaintCM2Widget()
 
 PaintCM2Widget::PaintCM2Widget(PaintCM2Widget& copy) : 
   CM2Widget(copy),
-  strokes_(copy.strokes_),
-  dirty_(copy.dirty_)
+  strokes_(copy.strokes_)
 {
   pixels_.copy(copy.pixels_);
 }
@@ -1688,25 +1511,7 @@ PaintCM2Widget::clone()
 }
 
 void
-PaintCM2Widget::set_shadeType(int type) 
-{ 
-  if (shadeType_ == type) return;
-  shadeType_ = type; 
-  dirty_ = true; 
-}
-
-void
-PaintCM2Widget::set_color(const Color &c) 
-{ 
-  if (color_ == c) return;
-  color_ = c;
-  dirty_ = true; 
-}
-
-
-void
-PaintCM2Widget::rasterize(CM2ShaderFactory& factory, bool faux, 
-			  Pbuffer* pbuffer)
+PaintCM2Widget::rasterize(CM2ShaderFactory& factory, Pbuffer* pbuffer)
 {
   if(!onState_) return;
 
@@ -1718,75 +1523,75 @@ PaintCM2Widget::rasterize(CM2ShaderFactory& factory, bool faux,
       blend = CM2_BLEND_FRAGMENT_ATI;
   }
 
-  FragmentProgramARB* shader = factory.shader(CM2_SHADER_PAINT, shadeType_, 
-					      faux, blend);
-  if(shader) {
-    if(!shader->valid()) {
-      shader->create();
-    }
-    
-    GLdouble modelview[16];
-    glGetDoublev(GL_MODELVIEW_MATRIX, modelview);
-    //    double panx = (modelview[12]+1.0)/2.0;
-    double pany = (modelview[13]+1.0)/2.0;
-    //double scalex = (modelview[0])/2.0;
-    //double scaley = (modelview[5])/2.0;
+  FragmentProgramARB* shader = 
+    factory.shader(CM2_SHADER_PAINT, shadeType_, faux_, blend);
+  if (!shader) return;
 
-    GLint vp[4];
-    glGetIntegerv(GL_VIEWPORT, vp);
+  if(!shader->valid()) {
+    shader->create();
+  }
     
-    shader->bind();
-    shader->setLocalParam(0, color_.r(), color_.g(), color_.b(), alpha_);
-    shader->setLocalParam(3, 1.0/vp[2], 1.0/vp[3], pany, pany);
-    if(pbuffer)
-      shader->setLocalParam(4, 1.0/pbuffer->width(), 1.0/pbuffer->height(), 
-			    0.0, 0.0);
-    double halfx = 1/35.0;
-
-    GLdouble mid[4] = { color_.r(), color_.g(), color_.b(), alpha_ };
-    GLdouble edg[4] = { color_.r(), color_.g(), color_.b(), 0 };
-    glShadeModel(GL_SMOOTH);    
-    for (unsigned int s = 0; s < strokes_.size(); ++s)
+  GLdouble modelview[16];
+  glGetDoublev(GL_MODELVIEW_MATRIX, modelview);
+  //    double panx = (modelview[12]+1.0)/2.0;
+  double pany = (modelview[13]+1.0)/2.0;
+  //double scalex = (modelview[0])/2.0;
+  //double scaley = (modelview[5])/2.0;
+  
+  GLint vp[4];
+  glGetIntegerv(GL_VIEWPORT, vp);
+  
+  shader->bind();
+  shader->setLocalParam(0, color_.r(), color_.g(), color_.b(), alpha_);
+  shader->setLocalParam(3, 1.0/vp[2], 1.0/vp[3], pany, pany);
+  if(pbuffer)
+    shader->setLocalParam(4, 1.0/pbuffer->width(), 1.0/pbuffer->height(), 
+			  0.0, 0.0);
+  double halfx = 1/35.0;
+  
+  GLdouble mid[4] = { color_.r(), color_.g(), color_.b(), alpha_ };
+  GLdouble edg[4] = { color_.r(), color_.g(), color_.b(), 0 };
+  glShadeModel(GL_SMOOTH);    
+  for (unsigned int s = 0; s < strokes_.size(); ++s)
+  {
+    const unsigned int coordinates = strokes_[s].size();
+    for (unsigned c = 1; c < coordinates; ++c)
     {
-      const unsigned int coordinates = strokes_[s].size();
-      for (unsigned c = 1; c < coordinates; ++c)
-      {
-	glBegin(GL_QUADS);
-	glColor4dv(edg);
-	glVertex2d(strokes_[s][c-1].first-halfx, strokes_[s][c-1].second);
-	
-	glColor4dv(mid);
-	glVertex2d(strokes_[s][c-1].first, strokes_[s][c-1].second);
-	
-	glColor4dv(mid);
-	glVertex2d(strokes_[s][c].first, strokes_[s][c].second);
-	
-	glColor4dv(edg);
-	glVertex2d(strokes_[s][c].first-halfx, strokes_[s][c].second);
-	
-	
-	glColor4dv(mid);
-	glVertex2d(strokes_[s][c-1].first, strokes_[s][c-1].second);
-	
-	glColor4dv(edg);
-	glVertex2d(strokes_[s][c-1].first+halfx, strokes_[s][c-1].second);
-	
-	glColor4dv(edg);
-	glVertex2d(strokes_[s][c].first+halfx, strokes_[s][c].second);
-	
-	glColor4dv(mid);
-	glVertex2d(strokes_[s][c].first, strokes_[s][c].second);
-	glEnd();
-	if (pbuffer && (s < strokes_.size()-1)) {
-	  pbuffer->release();
-	  pbuffer->swapBuffers();
-	  pbuffer->bind();
-	}
+      glBegin(GL_QUADS);
+      glColor4dv(edg);
+      glVertex2d(strokes_[s][c-1].first-halfx, strokes_[s][c-1].second);
+      
+      glColor4dv(mid);
+      glVertex2d(strokes_[s][c-1].first, strokes_[s][c-1].second);
+      
+      glColor4dv(mid);
+      glVertex2d(strokes_[s][c].first, strokes_[s][c].second);
+      
+      glColor4dv(edg);
+      glVertex2d(strokes_[s][c].first-halfx, strokes_[s][c].second);
+      
+      
+      glColor4dv(mid);
+      glVertex2d(strokes_[s][c-1].first, strokes_[s][c-1].second);
+      
+      glColor4dv(edg);
+      glVertex2d(strokes_[s][c-1].first+halfx, strokes_[s][c-1].second);
+      
+      glColor4dv(edg);
+      glVertex2d(strokes_[s][c].first+halfx, strokes_[s][c].second);
+      
+      glColor4dv(mid);
+      glVertex2d(strokes_[s][c].first, strokes_[s][c].second);
+      glEnd();
+      if (pbuffer && (s < strokes_.size()-1)) {
+	pbuffer->release();
+	pbuffer->swapBuffers();
+	pbuffer->bind();
       }
     }
-    glShadeModel(GL_FLAT);
-    shader->release();
   }
+  glShadeModel(GL_FLAT);
+  shader->release();
   
   CHECK_OPENGL_ERROR("paintcm2widget rasterize end");
 }
@@ -1889,13 +1694,11 @@ PaintCM2Widget::line(Array3<float> &data, int x0, int y0, int x1, int y1, bool f
   }
 }
 
-
-
 void
-PaintCM2Widget::rasterize(Array3<float>& array, bool faux)
+PaintCM2Widget::rasterize(Array3<float>& array)
 {
   if(!onState_) return;
-  faux_ = faux;
+
   for (unsigned int s = 0; s < strokes_.size(); ++s)
   {
     const unsigned int coordinates = strokes_[s].size();
@@ -1914,14 +1717,13 @@ PaintCM2Widget::rasterize(Array3<float>& array, bool faux)
   }
 }
 
-
-void
-PaintCM2Widget::set_value_range(double min, double scale)
-{
 #if 0
+void
+PaintCM2Widget::set_value_range(range_t &)
+{
+
   if ((fabs(value_min_ - min) > 0.001) || 
       (fabs(value_scale_ - scale) > 0.001)) 
-    dirty_ = true;
 
   const double offset = (value_min_ - min) / scale;
   const double scale_factor = value_scale_ / scale;
@@ -1935,8 +1737,9 @@ PaintCM2Widget::set_value_range(double min, double scale)
   }
   value_min_ = min;
   value_scale_ = scale;
-#endif
+
 }
+#endif
 
 
 void
@@ -1963,7 +1766,6 @@ PaintCM2Widget::add_coordinate(const Coordinate &coordinate)
       coordinate.second == strokes_.back().back().second) return;
       
   strokes_.back().push_back(coordinate);
-  dirty_ = true;
 }
 
 
@@ -1973,6 +1775,15 @@ PaintCM2Widget::pop_stroke()
 {
   if (strokes_.empty()) return false;
   strokes_.pop_back();
-  dirty_ = true;
   return true;
 }
+
+
+
+void
+PaintCM2Widget::normalize()
+{}
+
+void
+PaintCM2Widget::un_normalize()
+{}
