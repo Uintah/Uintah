@@ -48,6 +48,8 @@ WARNING
 	 EquationOfState();
 	 virtual ~EquationOfState();
 	 
+
+	 
 	 //////////
 	 // Create space in data warehouse for CM data
 	 virtual void initializeEOSData(const Patch* patch,
@@ -61,22 +63,32 @@ WARNING
 					       DataWarehouseP& old_dw,
 					       DataWarehouseP& new_dw) const=0;
 
-	 // C&R for compute equilibration pressure 
-	 virtual void addComputesAndRequiresCEB(Task* task,
-					        const ICEMaterial* matl,
-					        const Patch* patch,
-					        DataWarehouseP& old_dw,
-					        DataWarehouseP& new_dw) const=0;
-
          virtual void computeSpeedSound(const Patch* patch,
                                  const ICEMaterial* matl,
                                  DataWarehouseP& old_dw,
                                  DataWarehouseP& new_dw) = 0;
 
-         virtual void computeEquilibrationPressure(const Patch* patch,
-	                                           const ICEMaterial* matl,
-                 	                           DataWarehouseP& old_dw,
-                                 	           DataWarehouseP& new_dw) = 0;
+         virtual void computeRhoMicro(const Patch* patch,
+				      const ICEMaterial* matl,
+				      DataWarehouseP& old_dw,
+				      DataWarehouseP& new_dw) = 0;
+
+	 // Per cell
+	 virtual double computeRhoMicro(double& ,double& ) = 0;
+
+	 virtual double computePressEOS(double&, double&) = 0;
+
+	 
+	 // Per patch
+         virtual void computePressEOS(const Patch* patch,
+				      const ICEMaterial* matl,
+				      DataWarehouseP& old_dw,
+				      DataWarehouseP& new_dw) = 0;
+
+	 void computeSpeedSoundMM(const Patch* patch,
+				  const ICEMaterial* matl,
+				  DataWarehouseP& old_dw,
+				  DataWarehouseP& new_dw);
 
 
         protected:
@@ -89,6 +101,9 @@ WARNING
 #endif  // __EQUATION_OF_STATE_H__
 
 // $Log$
+// Revision 1.2  2000/10/10 20:35:12  jas
+// Move some stuff around.
+//
 // Revision 1.1  2000/10/06 04:02:16  jas
 // Move into a separate EOS directory.
 //

@@ -117,10 +117,10 @@ void ICE::scheduleTimeAdvance(double t, double dt,
 
       const Patch* patch=*iter;
 
-      // Step 1
+      // Step 1a
       {
-	Task* t = scinew Task("ICE::step1",patch, old_dw, new_dw,this,
-			       &ICE::actuallyStep1);
+	Task* t = scinew Task("ICE::step1a",patch, old_dw, new_dw,this,
+			       &ICE::actuallyStep1a);
 	for (int m = 0; m < numMatls; m++) {
             Material* matl = d_sharedState->getMaterial(m);
             ICEMaterial* ice_matl = dynamic_cast<ICEMaterial*>(matl);
@@ -128,9 +128,38 @@ void ICE::scheduleTimeAdvance(double t, double dt,
                EquationOfState* eos = ice_matl->getEOS();
 	       // Compute the speed of sound
                eos->addComputesAndRequiresSS(t,ice_matl,patch,old_dw,new_dw);
-	       // Compute the equilibration pressure
-               eos->addComputesAndRequiresCEB(t,ice_matl,patch,old_dw,new_dw);
             }
+	}
+	sched->addTask(t);
+      }
+
+      // Step 1b
+      {
+	Task* t = scinew Task("ICE::step1b",patch, old_dw, new_dw,this,
+			       &ICE::actuallyStep1b);
+
+	for (int m = 0; m < numMatls; m++) {
+	  Material* matl = d_sharedState->getMaterial(m);
+	  ICEMaterial* ice_matl = dynamic_cast<ICEMaterial*>(matl);
+	  if(ice_matl){
+	    t->requires(old_dw,lb->vol_frac_CCLabel,
+			matl->getDWIndex(),patch,Ghost::None);
+	    t->requires(old_dw,lb->rho_CCLabel,
+			matl->getDWIndex(),patch,Ghost::None);
+	    t->requires(old_dw,lb->rho_micro_CCLabel,
+			matl->getDWIndex(),patch,Ghost::None);
+	    t->requires(old_dw,lb->temp_CCLabel,
+			matl->getDWIndex(),patch,Ghost::None);
+	    t->requires(old_dw,lb->cv_CCLabel,
+			matl->getDWIndex(),patch,Ghost::None);
+	    t->requires(new_dw,lb->speedSound_CCLabel,
+			matl->getDWIndex(),patch,Ghost::None);
+	    t->requires(old_dw,lb->press_CCLabel,
+			matl->getDWIndex(),patch,Ghost::None);
+	    
+	    t->computes(new_dw,lb->press_CCLabel,matl->getDWIndex(), patch);
+
+	  }
 	}
 	sched->addTask(t);
       }
@@ -230,13 +259,13 @@ void ICE::actuallyComputeStableTimestep(const ProcessorGroup*,
 }
 
 
-void ICE::actuallyStep1(const ProcessorGroup*,
+void ICE::actuallyStep1a(const ProcessorGroup*,
 		   const Patch* patch,
 		   DataWarehouseP& old_dw,
 		   DataWarehouseP& new_dw)
 {
 
-  cout << "Doing actually step1" << endl;
+  cout << "Doing actually step1a" << endl;
 
   int numMatls = d_sharedState->getNumMatls();
 
@@ -248,9 +277,53 @@ void ICE::actuallyStep1(const ProcessorGroup*,
     if (ice_matl) {
       EquationOfState* eos = ice_matl->getEOS();
       eos->computeSpeedSound(patch,ice_matl,old_dw,new_dw);
-      eos->computeEquilibrationPressure(patch,ice_matl,old_dw,new_dw);
     }
   }
+
+}
+
+void ICE::actuallyStep1b(const ProcessorGroup*,
+		   const Patch* patch,
+		   DataWarehouseP& old_dw,
+		   DataWarehouseP& new_dw)
+{
+
+  cout << "Doing actually step1b" << endl;
+
+  int numMatls = d_sharedState->getNumMatls();
+
+  // Compute the equilibration pressure for all materials
+#if 0
+  int vfindex = matl->getVFIndex();
+
+  CCVariable<double> vol_frac;
+  CCVariable<double> rho;
+  CCVariable<double> rho_micro_old,rho_micro_new;
+  CCVariable<double> temp;
+  CCVariable<double> cv;
+  CCVariable<double> speedSound;
+  CCVariable<double> press;
+
+  double gamma = matl->getGamma();
+
+  old_dw->get(vol_frac,lb->vol_frac_CCLabel, vfindex,patch,Ghost::None, 0);
+  old_dw->get(rho,lb->rho_CCLabel, vfindex,patch,Ghost::None, 0); 
+  old_dw->get(rho_micro_old,lb->rho_micro_CCLabel, vfindex,patch,Ghost::None, 0); 
+  old_dw->get(temp,lb->temp_CCLabel, vfindex,patch,Ghost::None, 0); 
+  old_dw->get(cv, lb->cv_CCLabel, vfindex,patch,Ghost::None, 0); 
+  new_dw->get(speedSound,lb->speedSound_CCLabel,vfindex,patch,Ghost::None, 0); 
+  old_dw->get(press,lb->press_CCLabel,vfindex,patch,Ghost::None, 0); 
+
+  new_dw->allocate(press,lb->press_CCLabel,vfindex,patch);
+  new_dw->allocate(rho_micro_new,lb->rho_micro_CCLabel,vfindex,patch);
+
+ for(CellIterator iter = patch->getCellIterator(); !iter.done(); iter++){
+   rho_micro_new[*iter] = press[*iter]/(gamma - 1.)*cv[*iter]*temp[*iter];
+   double v_f = rho[*iter]/rho_micro_new[*iter];
+
+   }
+
+#endif
 
 }
 
@@ -330,6 +403,9 @@ void ICE::actuallyStep6and7(const ProcessorGroup*,
 
 //
 // $Log$
+// Revision 1.28  2000/10/10 20:35:07  jas
+// Move some stuff around.
+//
 // Revision 1.27  2000/10/09 22:37:01  jas
 // Cleaned up labels and added more computes and requires for EOS.
 //
