@@ -96,7 +96,7 @@ NrrdGradient::execute()
   size[0]=nin->dim;
 
   // Allocate the nrrd's data, set the size of each axis
-  nrrdAlloc(nout, nrrdTypeDouble, nin->dim+1, size);
+  nrrdAlloc_nva(nout, nrrdTypeDouble, nin->dim+1, size);
 
   // Set axis info for (new) axis 0
   if (nin->dim == 2) nout->axis[0].kind=nrrdKind2Vector;
