@@ -30,7 +30,7 @@
 using std::cerr;
 using std::endl;
 
-#define PINVAL 1
+#define PINVAL 0
 
 namespace PSECommon {
 namespace Modules {
@@ -45,8 +45,9 @@ using SCICore::Thread::Thread;
 
 class BuildFEMatrix : public Module {
     MeshIPort* inmesh;
-    MatrixOPort * outmatrix;
+    ColumnMatrixIPort* refnodeport;
     ColumnMatrixOPort* rhsoport;
+    MatrixOPort * outmatrix;
     void build_local_matrix(Element*, double lcl[4][4],
 			    const MeshHandle&);
     void add_lcl_gbl(Matrix&, double lcl[4][4],
@@ -70,6 +71,8 @@ class BuildFEMatrix : public Module {
     MatrixHandle gbl_matrixH;
     ColumnMatrixHandle rhsH;
     int gen;
+    clString lastBCFlag;
+    int refnode;
 public:
     void parallel(int);
     BuildFEMatrix(const clString& id);
@@ -90,6 +93,9 @@ BuildFEMatrix::BuildFEMatrix(const clString& id)
     // Create the input port
     inmesh = scinew MeshIPort(this, "Mesh", MeshIPort::Atomic);
     add_iport(inmesh);
+    refnodeport=scinew 
+	ColumnMatrixIPort(this, "RefNode", ColumnMatrixIPort::Atomic);
+    add_iport(refnodeport);
 
     // Create the output ports
     outmatrix=scinew MatrixOPort(this, "FEM Matrix", MatrixIPort::Atomic);
@@ -115,7 +121,7 @@ void BuildFEMatrix::parallel(int proc)
     Array1<int> mycols(0, 15*ndof);
     for(i=start_node;i<end_node;i++){
 	rows[r++]=mycols.size();
-	if((mesh->nodes[i]->bc && DirSub) || (i==0 && PinZero)) {
+	if((mesh->nodes[i]->bc && DirSub) || (i==refnode && PinZero)) {
 	    mycols.add(i); // Just a diagonal term
 	} else {
 	    mesh->add_node_neighbors(i, mycols, DirSub);
@@ -183,12 +189,12 @@ void BuildFEMatrix::parallel(int proc)
 	}
     }
     for(i=start_node;i<end_node;i++){
-	if((mesh->nodes[i]->bc && DirSub) || (PinZero && i==0)){
+	if((mesh->nodes[i]->bc && DirSub) || (PinZero && i==refnode)){
 	    // This is just a dummy entry...
 //	    (*gbl_matrix)[i][i]=1;
 	    int id=rows[i];
 	    a[id]=1;
-	    if (i==0 && PinZero)
+	    if (i==refnode && PinZero)
 	      (*rhs)[i]=PINVAL;
 	    else
 	      (*rhs)[i]=mesh->nodes[i]->bc->value;
@@ -201,7 +207,8 @@ void BuildFEMatrix::execute()
      MeshHandle mesh;
      if(!inmesh->get(mesh))
 	  return;
-     if (mesh->generation == gen && gbl_matrixH.get_rep() && rhsH.get_rep()) {
+     if (mesh->generation == gen && gbl_matrixH.get_rep() && rhsH.get_rep() &&
+	 lastBCFlag == BCFlag.get()) {
 	 outmatrix->send(gbl_matrixH);
 	 rhsoport->send(rhsH);
 	 return;
@@ -216,10 +223,18 @@ void BuildFEMatrix::execute()
      if (np>10) np=5;
      colidx.resize(np+1);
 
+     refnode=0;
+     ColumnMatrixHandle refnodeH;
+     if (refnodeport->get(refnodeH)&&refnodeH.get_rep()&&refnodeH->nrows()>0){
+	 refnode=(*refnodeH.get_rep())[0];
+     }
+
      DirSub=PinZero=0;
      if (BCFlag.get() == "DirSub") DirSub=1;
      else if (BCFlag.get() == "PinZero") PinZero=1;
-  
+     lastBCFlag=BCFlag.get();
+     if (PinZero) cerr << "BuildFEM: pinning node "<<refnode<<" to zero.\n";
+
      Thread::parallel(Parallel<BuildFEMatrix>(this, &BuildFEMatrix::parallel),
 		      np, true);
 
@@ -330,13 +345,13 @@ void BuildFEMatrix::add_lcl_gbl(Matrix& gbl_a, double lcl_a[4][4],
      {	  
 	  int ii = mesh->elems[el]->n[i];
 	  NodeHandle& n1=mesh->nodes[ii];
-	  if (!((n1->bc && DirSub) || (ii==0 && PinZero))) {
+	  if (!((n1->bc && DirSub) || (ii==refnode && PinZero))) {
 	      for (int j=0; j<4; j++) {
 		  int jj = mesh->elems[el]->n[j];
 		  NodeHandle& n2=mesh->nodes[jj];
 		  if (n2->bc && DirSub){
 		      rhs[ii] -= n2->bc->value*lcl_a[i][j];
-		  } else if (jj==0 && PinZero){
+		  } else if (jj==refnode && PinZero){
 		      rhs[ii] -= PINVAL*lcl_a[i][j];
 		  } else {
 		      gbl_a[ii][jj] += lcl_a[i][j];
@@ -360,13 +375,13 @@ void BuildFEMatrix::add_lcl_gbl(Matrix& gbl_a, double lcl_a[4][4],
 	  int ii = mesh->elems[el]->n[i];
 	  if(ii >= s && ii < e){
 	      NodeHandle& n1=mesh->nodes[ii];
-	      if ((!n1->bc || !DirSub) && (ii!=0 || !PinZero)) {
+	      if ((!n1->bc || !DirSub) && (ii!=refnode || !PinZero)) {
 		  for (int j=0; j<4; j++) {
 		      int jj = mesh->elems[el]->n[j];
 		      NodeHandle& n2=mesh->nodes[jj];
 		      if (n2->bc && DirSub){
 			  rhs[ii] -= n2->bc->value*lcl_a[i][j];
-		      } else if (jj==0 && PinZero){
+		      } else if (jj==refnode && PinZero){
 			  rhs[ii] -= PINVAL*lcl_a[i][j];
 		      } else {
 			  gbl_a[ii][jj] += lcl_a[i][j];
@@ -382,6 +397,9 @@ void BuildFEMatrix::add_lcl_gbl(Matrix& gbl_a, double lcl_a[4][4],
 
 //
 // $Log$
+// Revision 1.8  1999/12/11 05:44:50  dmw
+// added support for reference electrode
+//
 // Revision 1.7  1999/10/07 02:06:45  sparker
 // use standard iostreams and complex type
 //
