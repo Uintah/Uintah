@@ -65,18 +65,18 @@ component_node* CreateComponentNode(int type)
     n->gui->parameters = new map<int,parameter_node*>;
     n->testingplans = new map<int,plan_node*>;
     break;
-  case 2: /* name only */
+  case 2: /* name and category only */
     n->name = NOT_SET;
-    n->category = NULL;
+    n->category = NOT_SET;
     n->overview = NULL;
     n->implementation = NULL;
     n->io = NULL;
     n->gui = NULL;
     n->testingplans = NULL;
     break;
-  case 3: /* name and ports */
+  case 3: /* name, category and ports */
     n->name = NOT_SET;
-    n->category = NULL;
+    n->category = NOT_SET;
     n->overview = NULL;
     n->implementation = NULL;
     n->io = new io_node;
@@ -675,6 +675,8 @@ void ProcessComponentNode(const DOM_Node& d, component_node* n)
       n->category = name.getNodeValue().transcode();
     }
   }
+
+  //cout << "processing " << n->category << "::" << n->name << endl;
   
   for (DOM_Node child = d.getFirstChild();
        child!=0;
