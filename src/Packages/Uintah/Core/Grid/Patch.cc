@@ -977,7 +977,10 @@ Patch::getExtraCellIterator(const IntVector gc) const
   return CellIterator(getCellLowIndex()-gc, getCellHighIndex()+gc);
 }
 
-//__________________________________
+//______________________________________________________________________
+//       I C E  /  M P M I C E   I T E R A T O R S
+//
+//  For SFCXFace Variables
 //  Iterates over all interior facing cell faces
 CellIterator
 Patch::getSFCXIterator(const int offset) const
@@ -993,7 +996,8 @@ Patch::getSFCXIterator(const int offset) const
 		   getBCType(Patch::zplus) ==Neighbor?0:0);
   return CellIterator(low, hi);
 }
-
+//__________________________________
+//  Iterates over all interior facing cell faces
 CellIterator
 Patch::getSFCYIterator(const int offset) const
 {
@@ -1008,7 +1012,8 @@ Patch::getSFCYIterator(const int offset) const
 		   getBCType(Patch::zplus) ==Neighbor?0:0);
   return CellIterator(low, hi);
 }
-
+//__________________________________
+//  Iterates over all interior facing cell faces
 CellIterator
 Patch::getSFCZIterator(const int offset) const
 {
@@ -1024,6 +1029,9 @@ Patch::getSFCZIterator(const int offset) const
   return CellIterator(low, hi);
 }
 
+//__________________________________
+// Selects which iterator to use
+//  based on direction
 CellIterator
 Patch::getSFCIterator(const int dir, const int offset) const
 {
@@ -1037,14 +1045,12 @@ Patch::getSFCIterator(const int dir, const int offset) const
     SCI_THROW(InternalError("Patch::getSFCIterator: dir must be 0, 1, or 2"));
   }
 } 
-
+//__________________________________
+//  Iterate over the GhostCells on a particular face
+// if domain == plusEdgeCells this includes the edge and corner cells.
 CellIterator    
 Patch::getFaceCellIterator(const FaceType& face, const string& domain) const
 { 
-  // Iterate over the GhostCells on a particular face
-  // if domain == plusEdgeCells this includes the edge and corner cells.
-  // T.Harman
-  
   IntVector lowPt  = d_inLowIndex;
   IntVector highPt = d_inHighIndex;
   int offset = 0;
@@ -1091,6 +1097,31 @@ Patch::getFaceCellIterator(const FaceType& face, const string& domain) const
   } 
   return CellIterator(lowPt, highPt);
 }
+
+
+//__________________________________
+//   Expands the cell iterator (hi_lo)
+//  into the (nCells) ghost cells for each patch
+CellIterator    
+Patch::addGhostCell_Iter(CellIterator hi_lo, const int nCells) const                                        
+{
+  IntVector low,hi; 
+  low = hi_lo.begin();
+  hi  = hi_lo.end();
+  IntVector ll(low);
+  IntVector hh(hi);
+  ll -= IntVector(getBCType(Patch::xminus) == Neighbor?nCells:0,
+		    getBCType(Patch::yminus) == Neighbor?nCells:0,  
+		    getBCType(Patch::zminus) == Neighbor?nCells:0); 
+
+  hh += IntVector(getBCType(Patch::xplus) == Neighbor?nCells:0,
+		    getBCType(Patch::yplus) == Neighbor?nCells:0,
+		    getBCType(Patch::zplus) == Neighbor?nCells:0);
+  
+   return  CellIterator(ll,hh);
+} 
+
+//______________________________________________________________________
 
 
 Box Patch::getGhostBox(const IntVector& lowOffset,
