@@ -69,20 +69,20 @@ DESCRIPTION
 
 	private:
 	    struct data {
-		double d_d;
+		double d_;
 	    };
 	    struct joinArray {
-		data d_d;
+		data d_;
 		// Assumes 128 bytes in a cache line...
-		char d_filler[128-sizeof(data)];
+		char filler_[128-sizeof(data)];
 	    };
 	    struct pdata {
-		int d_buf;
-		char d_filler[128-sizeof(int)];	
+		int buf_;
+		char filler_[128-sizeof(int)];	
 	    };
-	    joinArray* d_join[2];
-	    pdata* d_p;
-	    int d_array_size;
+	    joinArray* join_[2];
+	    pdata* p_;
+	    int array_size_;
 	    void collectiveResize(int proc, int numThreads);
 
 	    // Cannot copy them

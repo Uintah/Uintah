@@ -32,10 +32,10 @@ TCLstrbuff::TCLstrbuff(const clString& name, const clString& id, TCL* tcl):
 {
   TCLTask::lock();
   
-  d_buff = Tcl_Alloc(d_bSize=256);
-  *d_buff='\0';
+  buff_ = Tcl_Alloc(bSize_=256);
+  *buff_='\0';
   
-  if ( Tcl_LinkVar(the_interp, const_cast<char *>(varname()), (char*)&d_buff, TCL_LINK_STRING | TCL_LINK_READ_ONLY)!=TCL_OK){
+  if ( Tcl_LinkVar(the_interp, const_cast<char *>(varname()), (char*)&buff_, TCL_LINK_STRING | TCL_LINK_READ_ONLY)!=TCL_OK){
     cout << "Not possible to link tcl var" << std::endl;
   }
   
@@ -45,7 +45,7 @@ TCLstrbuff::TCLstrbuff(const clString& name, const clString& id, TCL* tcl):
 TCLstrbuff::~TCLstrbuff(){
   Tcl_UnlinkVar(the_interp, const_cast<char *>(varname()));
   Tcl_UnsetVar(the_interp, const_cast<char*>(varname()), TCL_GLOBAL_ONLY);
-  Tcl_Free(d_buff);
+  Tcl_Free(buff_);
 }
 
 //////////
@@ -61,10 +61,10 @@ TCLstrbuff& TCLstrbuff::flush(){
   TCLTask::lock();
 
   const int n = tellp();
-  if (n>d_bSize)
-    d_buff = Tcl_Realloc(d_buff, d_bSize = n);
+  if (n>bSize_)
+    buff_ = Tcl_Realloc(buff_, bSize_ = n);
   
-  strcpy(d_buff, ostringstream::str().c_str()); 
+  strcpy(buff_, ostringstream::str().c_str()); 
   Tcl_UpdateLinkedVar(the_interp, const_cast<char*>(varname())); 
   TCLTask::unlock();
   

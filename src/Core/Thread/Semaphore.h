@@ -70,8 +70,8 @@ public:
   bool tryDown();
 
 private:
-  Semaphore_private* d_priv;
-  const char* d_name;
+  Semaphore_private* priv_;
+  const char* name_;
 
   // Cannot copy them
   Semaphore(const Semaphore&);

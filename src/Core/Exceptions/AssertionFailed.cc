@@ -23,23 +23,23 @@ AssertionFailed::AssertionFailed(const char* message,
 				 int lineno)
 {
     size_t len = strlen(message)+strlen(file)+100;
-    d_message = (char*)malloc(len);
-    sprintf(d_message, "%s (file: %s, line: %d)", message, file, lineno);
+    message_ = (char*)malloc(len);
+    sprintf(message_, "%s (file: %s, line: %d)", message, file, lineno);
 }
 
 AssertionFailed::AssertionFailed(const AssertionFailed& copy)
-    : d_message(strdup(copy.d_message))
+    : message_(strdup(copy.message_))
 {
 }
 
 AssertionFailed::~AssertionFailed()
 {
-    free(d_message);
+    free(message_);
 }
 
 const char* AssertionFailed::message() const
 {
-    return d_message;
+    return message_;
 }
 
 const char* AssertionFailed::type() const

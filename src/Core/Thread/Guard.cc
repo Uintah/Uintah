@@ -19,28 +19,28 @@ namespace SCIRun {
 //using Guard;
 
 Guard::Guard(Mutex* mutex)
-    : d_mutex(mutex), d_monitor(0)
+    : mutex_(mutex), monitor_(0)
 {
-    d_mutex->lock();
+  mutex_->lock();
 }
 
 Guard::Guard(CrowdMonitor* crowd_monitor, Which action) 
-    : d_mutex(0), d_monitor(crowd_monitor), d_action(action)
+    : mutex_(0), monitor_(crowd_monitor), action_(action)
 {
-    if(d_action==Read)
-        d_monitor->readLock();
+    if(action_ == Read)
+        monitor_->readLock();
     else
-        d_monitor->writeLock();
+        monitor_->writeLock();
 }
 
 Guard::~Guard()
 {
-    if(d_mutex)
-        d_mutex->unlock();
-    else if(d_action==Read)
-        d_monitor->readUnlock();
+    if (mutex_)
+        mutex_->unlock();
+    else if(action_==Read)
+        monitor_->readUnlock();
     else
-        d_monitor->writeUnlock();
+        monitor_->writeUnlock();
 }
 
 

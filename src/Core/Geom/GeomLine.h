@@ -26,7 +26,7 @@ namespace SCIRun {
 class SCICORESHARE GeomLine : public GeomObj {
 public:
   Point p1, p2;
-  float d_lineWidth;
+  float lineWidth_;
 
   GeomLine(const Point& p1, const Point& p2);
   GeomLine(const GeomLine&);

@@ -19,18 +19,18 @@ namespace SCIRun {
 SimpleReducer::SimpleReducer(const char* name)
     : Barrier(name)
 {
-    d_array_size=-1;
-    d_p=0;
-    d_join[0]=0;
-    d_join[1]=0;
+    array_size_=-1;
+    p_=0;
+    join_[0]=0;
+    join_[1]=0;
 }
 
 SimpleReducer::~SimpleReducer()
 {
-    if(d_p){
-	delete[] d_join[0];
-	delete[] d_join[1];
-	delete[] d_p;
+    if(p_){
+	delete[] join_[0];
+	delete[] join_[1];
+	delete[] p_;
     }
 }
 
@@ -43,17 +43,17 @@ SimpleReducer::collectiveResize(int proc, int n)
     // or they will skip down too soon...
     wait(n);
     if(proc==0){
-	if(d_p){
-	    delete[] d_join[0];
-	    delete[] d_join[1];
-	    delete[] d_p;
+	if(p_){
+	    delete[] join_[0];
+	    delete[] join_[1];
+	    delete[] p_;
 	}
-        d_join[0]=new joinArray[n];
-        d_join[1]=new joinArray[n];
-        d_p=new pdata[n];
+        join_[0]=new joinArray[n];
+        join_[1]=new joinArray[n];
+        p_=new pdata[n];
         for(int i=0;i<n;i++)
-	    d_p[i].d_buf=0;
-        d_array_size=n;
+	    p_[i].buf_=0;
+        array_size_=n;
     }
     wait(n);
 }
@@ -61,59 +61,59 @@ SimpleReducer::collectiveResize(int proc, int n)
 double
 SimpleReducer::sum(int proc, int n, double mysum)
 {
-    if(n != d_array_size){
+    if(n != array_size_){
         collectiveResize(proc, n);
     }
 
-    int buf=d_p[proc].d_buf;
-    d_p[proc].d_buf=1-buf;
+    int buf=p_[proc].buf_;
+    p_[proc].buf_=1-buf;
 
-    joinArray* j=d_join[buf];
-    j[proc].d_d.d_d=mysum;
+    joinArray* j=join_[buf];
+    j[proc].d_.d_=mysum;
     wait(n);
     double sum=0;
     for(int i=0;i<n;i++)
-        sum+=j[i].d_d.d_d;
+        sum+=j[i].d_.d_;
     return sum;
 }
 
 double
 SimpleReducer::max(int proc, int n, double mymax)
 {
-    if(n != d_array_size){
+    if(n != array_size_){
         collectiveResize(proc, n);
     }
 
-    int buf=d_p[proc].d_buf;
-    d_p[proc].d_buf=1-buf;
+    int buf=p_[proc].buf_;
+    p_[proc].buf_=1-buf;
 
-    joinArray* j=d_join[buf];
-    j[proc].d_d.d_d=mymax;
+    joinArray* j=join_[buf];
+    j[proc].d_.d_=mymax;
     Barrier::wait(n);
-    double gmax=j[0].d_d.d_d;
+    double gmax=j[0].d_.d_;
     for(int i=1;i<n;i++)
-        if(j[i].d_d.d_d > gmax)
-	    gmax=j[i].d_d.d_d;
+        if(j[i].d_.d_ > gmax)
+	    gmax=j[i].d_.d_;
     return gmax;
 }
 
 double
 SimpleReducer::min(int proc, int n, double mymin)
 {
-    if(n != d_array_size){
+    if(n != array_size_){
         collectiveResize(proc, n);
     }
 
-    int buf=d_p[proc].d_buf;
-    d_p[proc].d_buf=1-buf;
+    int buf=p_[proc].buf_;
+    p_[proc].buf_=1-buf;
 
-    joinArray* j=d_join[buf];
-    j[proc].d_d.d_d=mymin;
+    joinArray* j=join_[buf];
+    j[proc].d_.d_=mymin;
     Barrier::wait(n);
-    double gmin=j[0].d_d.d_d;
+    double gmin=j[0].d_.d_;
     for(int i=1;i<n;i++)
-        if(j[i].d_d.d_d < gmin)
-	    gmin=j[i].d_d.d_d;
+        if(j[i].d_.d_ < gmin)
+	    gmin=j[i].d_.d_;
     return gmin;
 }
 

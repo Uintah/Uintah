@@ -42,31 +42,31 @@ Barrier_private::~Barrier_private()
 }
 
 Barrier::Barrier(const char* name)
-    : d_name(name)
+    : name_(name)
 {
-    d_priv=new Barrier_private;
+    priv_=new Barrier_private;
 }
 
 Barrier::~Barrier()
 {
-    delete d_priv;
+    delete priv_;
 }
 
 void
 Barrier::wait(int n)
 {
-    int oldstate=Thread::couldBlock(d_name);
-    d_priv->mutex.lock();
-    ConditionVariable& cond=d_priv->cc?d_priv->cond0:d_priv->cond1;
-    d_priv->nwait++;
-    if(d_priv->nwait == n){
+    int oldstate=Thread::couldBlock(name_);
+    priv_->mutex.lock();
+    ConditionVariable& cond=priv_->cc?priv_->cond0:priv_->cond1;
+    priv_->nwait++;
+    if(priv_->nwait == n){
 	// Wake everybody up...
-	d_priv->nwait=0;
-	d_priv->cc=1-d_priv->cc;
+	priv_->nwait=0;
+	priv_->cc=1-priv_->cc;
 	cond.conditionBroadcast();
     } else {
-	cond.wait(d_priv->mutex);
+	cond.wait(priv_->mutex);
     }
-    d_priv->mutex.unlock();
+    priv_->mutex.unlock();
     Thread::couldBlockDone(oldstate);
 }

@@ -95,17 +95,17 @@ public:
   int numItems() const;
 
 private:
-  const char* d_name;
-  Mutex d_mutex;
-  std::vector<Item> d_ring_buffer;
-  int d_head;
-  int d_len;
-  int d_max;
-  ConditionVariable d_empty;
-  ConditionVariable d_full;
-  Semaphore d_rendezvous;
-  int d_send_wait;
-  int d_recv_wait;
+  const char* name_;
+  Mutex mutex_;
+  std::vector<Item> ring_buffer_;
+  int head_;
+  int len_;
+  int max_;
+  ConditionVariable empty_;
+  ConditionVariable full_;
+  Semaphore rendezvous_;
+  int send_wait_;
+  int recv_wait_;
   inline int ringNext(int inc);
 
   // Cannot copy them
@@ -117,20 +117,20 @@ template<class Item> inline
 int
 Mailbox<Item>::ringNext(int inc)
 {
-    return d_max==0?0:((d_head+inc)%d_max);
+    return max_==0?0:((head_+inc)%max_);
 }
 
 template<class Item>
 Mailbox<Item>::Mailbox(const char* name, int size)
-    : d_name(name), d_mutex("Mailbox lock"), d_ring_buffer(size==0?1:size),
-      d_empty("Mailbox empty condition"), d_full("Mailbox full condition"),
-      d_rendezvous("Mailbox rendezvous semaphore", 0)
+    : name_(name), mutex_("Mailbox lock"), ring_buffer_(size==0?1:size),
+      empty_("Mailbox empty condition"), full_("Mailbox full condition"),
+      rendezvous_("Mailbox rendezvous semaphore", 0)
 {
-    d_head=0;
-    d_len=0;
-    d_send_wait=0;
-    d_recv_wait=0;
-    d_max=size;
+    head_=0;
+    len_=0;
+    send_wait_=0;
+    recv_wait_=0;
+    max_=size;
 }
 
 template<class Item>
@@ -142,22 +142,22 @@ template<class Item>
 void
 Mailbox<Item>::send(const Item& msg)
 {
-    int s=Thread::couldBlock(d_name);
-    d_mutex.lock();
+    int s=Thread::couldBlock(name_);
+    mutex_.lock();
     // See if the message buffer is full...
-    int rmax=d_max==0?1:d_max;
-    while(d_len == rmax){
-        d_send_wait++;
-        d_full.wait(d_mutex);
-        d_send_wait--;
+    int rmax=max_==0?1:max_;
+    while(len_ == rmax){
+        send_wait_++;
+        full_.wait(mutex_);
+        send_wait_--;
     }
-    d_ring_buffer[ringNext(d_len)]=msg;
-    d_len++;
-    if(d_recv_wait)
-        d_empty.conditionSignal();
-    d_mutex.unlock();
-    if(d_max==0)
-        d_rendezvous.down();
+    ring_buffer_[ringNext(len_)]=msg;
+    len_++;
+    if(recv_wait_)
+        empty_.conditionSignal();
+    mutex_.unlock();
+    if(max_==0)
+        rendezvous_.down();
     Thread::couldBlockDone(s);
 }
 
@@ -165,26 +165,26 @@ template<class Item>
 bool
 Mailbox<Item>::trySend(const Item& msg)
 {
-    d_mutex.lock();
+    mutex_.lock();
     // See if the message buffer is full...
-    int rmax=d_max==0?1:d_max;
-    if(d_len == rmax){
-        d_mutex.unlock();
+    int rmax=max_==0?1:max_;
+    if(len_ == rmax){
+        mutex_.unlock();
         return false;
     }
-    if(d_max == 0 && d_recv_wait==0){
+    if(max_ == 0 && recv_wait_==0){
         // No receivers waiting, so rendezvous will fail. Return now.
-        d_mutex.unlock();
+        mutex_.unlock();
         return false;
     }
 
-    d_ring_buffer[ringNext(d_len)]=msg;
-    d_len++;
-    if(d_recv_wait)
-        d_empty.conditionSignal();
-    d_mutex.unlock();
-    if(d_max==0)
-        d_rendezvous.down();  // Won't block for long, since a receiver
+    ring_buffer_[ringNext(len_)]=msg;
+    len_++;
+    if(recv_wait_)
+        empty_.conditionSignal();
+    mutex_.unlock();
+    if(max_==0)
+        rendezvous_.down();  // Won't block for long, since a receiver
                             // will wake us up
     return true;
 }
@@ -193,21 +193,21 @@ template<class Item>
 Item
 Mailbox<Item>::receive()
 {
-    int s=Thread::couldBlock(d_name);
-    d_mutex.lock();
-    while(d_len == 0){
-        d_recv_wait++;
-        d_empty.wait(d_mutex);
-        d_recv_wait--;
+    int s=Thread::couldBlock(name_);
+    mutex_.lock();
+    while(len_ == 0){
+        recv_wait_++;
+        empty_.wait(mutex_);
+        recv_wait_--;
     }
-    Item val=d_ring_buffer[d_head];
-    d_head=ringNext(1);
-    d_len--;
-    if(d_send_wait)
-        d_full.conditionSignal();
-    d_mutex.unlock();
-    if(d_max==0)
-        d_rendezvous.up();
+    Item val=ring_buffer_[head_];
+    head_=ringNext(1);
+    len_--;
+    if(send_wait_)
+        full_.conditionSignal();
+    mutex_.unlock();
+    if(max_==0)
+        rendezvous_.up();
     Thread::couldBlockDone(s);
     return val;
 }
@@ -216,19 +216,19 @@ template<class Item>
 bool
 Mailbox<Item>::tryReceive(Item& item)
 {
-    d_mutex.lock();
-    if(d_len == 0){
-        d_mutex.unlock();
+    mutex_.lock();
+    if(len_ == 0){
+        mutex_.unlock();
         return false;
     }
-    item=d_ring_buffer[d_head];
-    d_head=ringNext(1);
-    d_len--;
-    if(d_send_wait)
-        d_full.conditionSignal();
-    d_mutex.unlock();
-    if(d_max==0)
-        d_rendezvous.up();
+    item=ring_buffer_[head_];
+    head_=ringNext(1);
+    len_--;
+    if(send_wait_)
+        full_.conditionSignal();
+    mutex_.unlock();
+    if(max_==0)
+        rendezvous_.up();
     return true;
 }
 
@@ -236,14 +236,14 @@ template<class Item>
 int
 Mailbox<Item>::size() const
 {
-    return d_max;
+    return max_;
 } // End namespace SCIRun
 
 template<class Item>
 int
 Mailbox<Item>::numItems() const
 {
-    return d_len;
+    return len_;
 }
 
 } // End namespace SCIRun

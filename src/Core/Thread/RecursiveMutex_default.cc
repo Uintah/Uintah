@@ -36,37 +36,37 @@ RecursiveMutex_private::~RecursiveMutex_private()
 }
 
 RecursiveMutex::RecursiveMutex(const char* name)
-  : d_name(name)
+  : name_(name)
 {
-  d_priv=new RecursiveMutex_private(name);
+  priv_=new RecursiveMutex_private(name);
 }
 
 RecursiveMutex::~RecursiveMutex()
 {
-  delete d_priv;
+  delete priv_;
 }
 
 void
 RecursiveMutex::lock()
 {
-  int oldstate=Thread::couldBlock(d_name);
+  int oldstate=Thread::couldBlock(name_);
   Thread* me=Thread::self();
-  if(d_priv->owner == me){
-    d_priv->lock_count++;
+  if(priv_->owner == me){
+    priv_->lock_count++;
     return;
   }
-  d_priv->mylock.lock();
-  d_priv->owner=me;
-  d_priv->lock_count=1;
+  priv_->mylock.lock();
+  priv_->owner=me;
+  priv_->lock_count=1;
   Thread::couldBlockDone(oldstate);
 }
 
 void
 RecursiveMutex::unlock()
 {
-  if(--d_priv->lock_count == 0){
-    d_priv->owner=0;
-    d_priv->mylock.unlock();
+  if(--priv_->lock_count == 0){
+    priv_->owner=0;
+    priv_->mylock.unlock();
   }
 }
 

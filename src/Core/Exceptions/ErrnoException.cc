@@ -19,18 +19,18 @@ namespace SCIRun {
 using namespace std;
 
 ErrnoException::ErrnoException(const std::string& message, int err)
-   : d_errno(err)
+   : errno_(err)
 {
    ostringstream str;
    const char* s = strerror(err);
    if(!s)
       s="(none)";
    str << message << " (errno=" << err << ": " << s << ")";
-   d_message = str.str();
+   message_ = str.str();
 }
 
 ErrnoException::ErrnoException(const ErrnoException& copy)
-   : d_message(copy.d_message), d_errno(copy.d_errno)
+   : message_(copy.message_), errno_(copy.errno_)
 {
 }
 
@@ -40,7 +40,7 @@ ErrnoException::~ErrnoException()
 
 const char* ErrnoException::message() const
 {
-   return d_message.c_str();
+   return message_.c_str();
 }
 
 const char* ErrnoException::type() const
@@ -50,7 +50,7 @@ const char* ErrnoException::type() const
 
 int ErrnoException::getErrno() const
 {
-   return d_errno;
+   return errno_;
 }
 
 } // End namespace SCIRun

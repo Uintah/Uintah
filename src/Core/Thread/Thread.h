@@ -241,22 +241,22 @@ DESCRIPTION
 	    friend class Semaphore;
 	    friend class Thread_private;
 	    
-	    Runnable* d_runner;
-	    const char* d_threadname;
-	    ThreadGroup* d_group;
-	    unsigned long d_stacksize;
-	    bool d_daemon;
-	    bool d_detached;
-	    bool d_activated;
+	    Runnable* runner_;
+	    const char* threadname_;
+	    ThreadGroup* group_;
+	    unsigned long stacksize_;
+	    bool daemon_;
+	    bool detached_;
+	    bool activated_;
 	    void os_start(bool stopped);
 	    static void initialize();
 	    Thread(ThreadGroup* g, const char* name);
 
 	public:
 	    static void checkExit();
-	    int d_cpu;
+	    int cpu_;
 	    ~Thread();
-	    Thread_private* d_priv;
+	    Thread_private* priv_;
 	    void run_body();	    	    
 	    enum ThreadState {
 		STARTUP,

@@ -90,8 +90,8 @@ public:
   void conditionBroadcast();
 
 private:
-  const char* d_name;
-  ConditionVariable_private* d_priv;
+  const char* name_;
+  ConditionVariable_private* priv_;
 
   // Cannot copy them
   ConditionVariable(const ConditionVariable&);

@@ -52,7 +52,7 @@ GeomLine::GeomLine(const Point& p1, const Point& p2) :
   GeomObj(), 
   p1(p1), 
   p2(p2),
-  d_lineWidth(1.0)
+  lineWidth_(1.0)
 {
 }
 
@@ -60,7 +60,7 @@ GeomLine::GeomLine(const GeomLine& copy) :
   GeomObj(), 
   p1(copy.p1), 
   p2(copy.p2),
-  d_lineWidth(1.0)
+  lineWidth_(1.0)
 {
 }
 
@@ -81,7 +81,7 @@ void GeomLine::get_bounds(BBox& bb)
 void
 GeomLine::setLineWidth(float val) 
 {
-  d_lineWidth = val;
+  lineWidth_ = val;
 }
 
 #define GEOMLINE_VERSION 1

@@ -32,7 +32,7 @@ public:
   virtual const char* type() const;
 protected:
 private:
-  char* d_message;
+  char* message_;
   AssertionFailed& operator=(const AssertionFailed&);
 };
 } // End namespace SCIRun

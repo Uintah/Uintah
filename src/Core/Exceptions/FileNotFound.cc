@@ -15,12 +15,12 @@
 namespace SCIRun {
 
 FileNotFound::FileNotFound(const std::string& message)
-    : d_message(message)
+    : message_(message)
 {
 }
 
 FileNotFound::FileNotFound(const FileNotFound& copy)
-    : d_message(copy.d_message)
+    : message_(copy.message_)
 {
 }
 
@@ -30,7 +30,7 @@ FileNotFound::~FileNotFound()
 
 const char* FileNotFound::message() const
 {
-    return d_message.c_str();
+    return message_.c_str();
 }
 
 const char* FileNotFound::type() const

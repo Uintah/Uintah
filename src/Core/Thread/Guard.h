@@ -67,9 +67,9 @@ public:
   // Release the lock acquired by the constructor.
   ~Guard();
 private:
-  Mutex* d_mutex;
-  CrowdMonitor* d_monitor;
-  Which d_action;
+  Mutex* mutex_;
+  CrowdMonitor* monitor_;
+  Which action_;
 
   // Cannot copy them
   Guard(const Guard&);

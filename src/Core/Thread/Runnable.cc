@@ -19,12 +19,12 @@ namespace SCIRun {
 
 Runnable::Runnable()
 {
-    d_my_thread=0;
+    my_thread_=0;
 }
 
 Runnable::~Runnable()
 {
-    if(d_my_thread){
+    if(my_thread_){
 	throw ThreadError("Runnable is being destroyed while thread is still running\n");
     }
 }

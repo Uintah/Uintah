@@ -64,8 +64,8 @@ public:
 
 protected:
 private:
-  Barrier_private* d_priv;
-  const char* d_name;
+  Barrier_private* priv_;
+  const char* name_;
 
   // Cannot copy them
   Barrier(const Barrier&);

@@ -138,7 +138,7 @@ unlock_scheduler()
 void
 Thread_shutdown(Thread* thread, bool actually_exit)
 {
-  Thread_private* priv=thread->d_priv;
+  Thread_private* priv=thread->priv_;
   int pid=getpid();
 
   if(usvsema(priv->done) == -1)
@@ -152,7 +152,7 @@ Thread_shutdown(Thread* thread, bool actually_exit)
 			+strerror(errno));
   }
   // Allow this thread to run anywhere...
-  if(thread->d_cpu != -1)
+  if(thread->cpu_ != -1)
     thread->migrate(-1);
 
   delete thread;
@@ -308,15 +308,15 @@ Thread::initialize()
 
   ThreadGroup::s_default_group=new ThreadGroup("default group", 0);
   Thread* mainthread=new Thread(ThreadGroup::s_default_group, "main");
-  mainthread->d_priv=new Thread_private;
-  mainthread->d_priv->pid=main_pid;
-  mainthread->d_priv->thread=mainthread;
-  mainthread->d_priv->state=RUNNING;
-  mainthread->d_priv->bstacksize=0;
-  mainthread->d_priv->done=usnewsema(arena, 0);
-  mainthread->d_priv->delete_ready=0;
+  mainthread->priv_=new Thread_private;
+  mainthread->priv_->pid=main_pid;
+  mainthread->priv_->thread=mainthread;
+  mainthread->priv_->state=RUNNING;
+  mainthread->priv_->bstacksize=0;
+  mainthread->priv_->done=usnewsema(arena, 0);
+  mainthread->priv_->delete_ready=0;
   lock_scheduler();
-  active[nactive]=mainthread->d_priv;
+  active[nactive]=mainthread->priv_;
   nactive++;
   unlock_scheduler();
 
@@ -412,45 +412,45 @@ Thread::os_start(bool stopped)
   lock_scheduler();
   if(nidle){
     nidle--;
-    d_priv=idle[nidle];
+    priv_=idle[nidle];
   } else {
-    d_priv=new Thread_private;
-    d_priv->stacklen=d_stacksize;
-    d_priv->stackbot=(caddr_t)mmap(0, d_priv->stacklen, PROT_READ|PROT_WRITE,
+    priv_=new Thread_private;
+    priv_->stacklen=stacksize_;
+    priv_->stackbot=(caddr_t)mmap(0, priv_->stacklen, PROT_READ|PROT_WRITE,
 				   MAP_PRIVATE, devzero_fd, 0);
-    d_priv->sp=d_priv->stackbot+d_priv->stacklen-1;
-    if((long)d_priv->sp == -1)
+    priv_->sp=priv_->stackbot+priv_->stacklen-1;
+    if((long)priv_->sp == -1)
       throw ThreadError(std::string("Not enough memory for thread stack")
 			+strerror(errno));
-    d_priv->startup=usnewsema(arena, 0);
-    d_priv->done=usnewsema(arena, 0);
-    d_priv->delete_ready=usnewsema(arena, 0);
-    d_priv->state=STARTUP;
-    d_priv->bstacksize=0;
-    d_priv->pid=sprocsp(run_threads, PR_SALL, d_priv, d_priv->sp, d_priv->stacklen);
-    if(d_priv->pid == -1)
+    priv_->startup=usnewsema(arena, 0);
+    priv_->done=usnewsema(arena, 0);
+    priv_->delete_ready=usnewsema(arena, 0);
+    priv_->state=STARTUP;
+    priv_->bstacksize=0;
+    priv_->pid=sprocsp(run_threads, PR_SALL, priv_, priv_->sp, priv_->stacklen);
+    if(priv_->pid == -1)
       throw ThreadError(std::string("Cannot start new thread")
 			+strerror(errno));
   }
-  d_priv->thread=this;
-  active[nactive]=d_priv;
+  priv_->thread=this;
+  active[nactive]=priv_;
   nactive++;
   unlock_scheduler();
   if(stopped){
-    if(blockproc(d_priv->pid) != 0)
+    if(blockproc(priv_->pid) != 0)
       throw ThreadError(std::string("blockproc returned error: ")
 			+strerror(errno));
   }
   /* The thread is waiting to be started, release it... */
-  if(usvsema(d_priv->startup) == -1)
-    throw ThreadError(std::string("usvsema failed on d_priv->startup")
+  if(usvsema(priv_->startup) == -1)
+    throw ThreadError(std::string("usvsema failed on priv_->startup")
 		      +strerror(errno));
 }
 
 void
 Thread::stop()
 {
-  if(blockproc(d_priv->pid) != 0)
+  if(blockproc(priv_->pid) != 0)
     throw ThreadError(std::string("blockproc returned error: ")
 		      +strerror(errno));
 }
@@ -458,7 +458,7 @@ Thread::stop()
 void
 Thread::resume()
 {
-  if(unblockproc(d_priv->pid) != 0)
+  if(unblockproc(priv_->pid) != 0)
     throw ThreadError(std::string("unblockproc returned error: ")
 		      +strerror(errno));
 }
@@ -466,24 +466,24 @@ Thread::resume()
 void
 Thread::detach()
 {
-  if(d_detached)
+  if(detached_)
     throw ThreadError(std::string("Thread detached when already detached"));
-  if(usvsema(d_priv->delete_ready) == -1)
+  if(usvsema(priv_->delete_ready) == -1)
     throw ThreadError(std::string("usvsema returned error: ")
 		      +strerror(errno));
-  d_detached=true;
+  detached_=true;
 }
 
 void
 Thread::join()
 {
   Thread* us=Thread::self();
-  int os=push_bstack(us->d_priv, JOINING, d_threadname);
-  if(uspsema(d_priv->done) == -1)
+  int os=push_bstack(us->priv_, JOINING, threadname_);
+  if(uspsema(priv_->done) == -1)
     throw ThreadError(std::string("uspsema returned error: ")
 		      +strerror(errno));
 
-  pop_bstack(us->d_priv, os);
+  pop_bstack(us->priv_, os);
   detach();
 }
 
@@ -522,7 +522,7 @@ Thread::pop_bstack(Thread_private* p, int oldstate)
 int
 Thread::get_thread_id()
 {
-  return d_priv->pid;
+  return priv_->pid;
 }
 
 /*
@@ -726,35 +726,35 @@ void
 Thread::migrate(int proc)
 {
   if(proc==-1){
-    if(sysmp(MP_RUNANYWHERE_PID, d_priv->pid) == -1)
+    if(sysmp(MP_RUNANYWHERE_PID, priv_->pid) == -1)
       throw ThreadError(std::string("sysmp(MP_RUNANYWHERE_PID) failed")
 			+strerror(errno));
   } else {
-    if(sysmp(MP_MUSTRUN_PID, proc, d_priv->pid) == -1)
+    if(sysmp(MP_MUSTRUN_PID, proc, priv_->pid) == -1)
       throw ThreadError(std::string("sysmp(_MP_MUSTRUN_PID) failed")
 			+strerror(errno));
   }
-  d_cpu=proc;
+  cpu_=proc;
 }
 
 /*
  * Mutex implementation
  */
 Mutex::Mutex(const char* name)
-  : d_name(name)
+  : name_(name)
 {
   if(!initialized){
     Thread::initialize();
   }
-  d_priv=(Mutex_private*)usnewlock(arena);
-  if(!d_priv)
+  priv_=(Mutex_private*)usnewlock(arena);
+  if(!priv_)
     throw ThreadError(std::string("usnewlock failed")
 		      +strerror(errno));
 }
 
 Mutex::~Mutex()
 {
-  usfreelock((ulock_t)d_priv, arena);
+  usfreelock((ulock_t)priv_, arena);
 }
 
 void
@@ -764,10 +764,10 @@ Mutex::lock()
   int os;
   Thread_private* p=0;
   if(t){
-    p=t->d_priv;
-    os=Thread::push_bstack(p, Thread::BLOCK_MUTEX, d_name);
+    p=t->priv_;
+    os=Thread::push_bstack(p, Thread::BLOCK_MUTEX, name_);
   }
-  if(ussetlock((ulock_t)d_priv) == -1)
+  if(ussetlock((ulock_t)priv_) == -1)
     throw ThreadError(std::string("ussetlock failed")
 		      +strerror(errno));
   if(t)
@@ -777,7 +777,7 @@ Mutex::lock()
 bool
 Mutex::tryLock()
 {
-  int st=uscsetlock((ulock_t)d_priv, 100);
+  int st=uscsetlock((ulock_t)priv_, 100);
   if(st==-1)
     throw ThreadError(std::string("uscsetlock failed")
 		      +strerror(errno));
@@ -787,7 +787,7 @@ Mutex::tryLock()
 void
 Mutex::unlock()
 {
-  if(usunsetlock((ulock_t)d_priv) == -1)
+  if(usunsetlock((ulock_t)priv_) == -1)
     throw ThreadError(std::string("usunsetlock failed")
 		      +strerror(errno));
 }
@@ -797,30 +797,30 @@ Mutex::unlock()
  */
 
 Semaphore::Semaphore(const char* name, int count)
-  : d_name(name)
+  : name_(name)
 {
   if(!initialized){
     Thread::initialize();
   }
-  d_priv=(Semaphore_private*)usnewsema(arena, count);
-  if(!d_priv)
+  priv_=(Semaphore_private*)usnewsema(arena, count);
+  if(!priv_)
     throw ThreadError(std::string("usnewsema failed")
 		      +strerror(errno));
 }
 
 Semaphore::~Semaphore()
 {
-  if(d_priv)
-    usfreesema((usema_t*)d_priv, arena);
+  if(priv_)
+    usfreesema((usema_t*)priv_, arena);
 }
 
 void
 Semaphore::down(int count)
 {
-  Thread_private* p=Thread::self()->d_priv;
-  int oldstate=Thread::push_bstack(p, Thread::BLOCK_SEMAPHORE, d_name);
+  Thread_private* p=Thread::self()->priv_;
+  int oldstate=Thread::push_bstack(p, Thread::BLOCK_SEMAPHORE, name_);
   for(int i=0;i<count;i++){
-    if(uspsema((usema_t*)d_priv) == -1)
+    if(uspsema((usema_t*)priv_) == -1)
       throw ThreadError(std::string("uspsema failed")
 			+strerror(errno));
   }
@@ -830,7 +830,7 @@ Semaphore::down(int count)
 bool
 Semaphore::tryDown()
 {
-  int stry=uscpsema((usema_t*)d_priv);
+  int stry=uscpsema((usema_t*)priv_);
   if(stry == -1)
     throw ThreadError(std::string("uscpsema failed")
 		      +strerror(errno));
@@ -842,7 +842,7 @@ void
 Semaphore::up(int count)
 {
   for(int i=0;i<count;i++){
-    if(usvsema((usema_t*)d_priv) == -1)
+    if(usvsema((usema_t*)priv_) == -1)
       throw ThreadError(std::string("usvsema failed")
 			+strerror(errno));
   }
@@ -890,58 +890,58 @@ Barrier_private::Barrier_private()
 }   
 
 Barrier::Barrier(const char* name)
-  : d_name(name)
+  : name_(name)
 {
   if(!initialized){
     Thread::initialize();
   }
-  d_priv=new Barrier_private;
+  priv_=new Barrier_private;
 }
 
 Barrier::~Barrier()
 {
   if (nprocessors > 1) {
     if(use_fetchop){
-      //	    fprintf(stderr, "***Alloc free: %p\n", d_priv->pvar);
-      //	    atomic_free_variable(reservoir, d_priv->pvar);
+      //	    fprintf(stderr, "***Alloc free: %p\n", priv_->pvar);
+      //	    atomic_free_variable(reservoir, priv_->pvar);
     } else {
-      free_barrier(d_priv->barrier);
+      free_barrier(priv_->barrier);
     }
   }
-  delete d_priv;
+  delete priv_;
 }
 
 void
 Barrier::wait(int n)
 {
-  Thread_private* p=Thread::self()->d_priv;
-  int oldstate=Thread::push_bstack(p, Thread::BLOCK_BARRIER, d_name);
+  Thread_private* p=Thread::self()->priv_;
+  int oldstate=Thread::push_bstack(p, Thread::BLOCK_BARRIER, name_);
   if(nprocessors > 1){
     if(use_fetchop){
-      int gen=d_priv->flag;
-      atomic_var_t val=atomic_fetch_and_increment(d_priv->pvar);
+      int gen=priv_->flag;
+      atomic_var_t val=atomic_fetch_and_increment(priv_->pvar);
       if(val == n-1){
-	storeop_store(d_priv->pvar, 0);
-	d_priv->flag++;
+	storeop_store(priv_->pvar, 0);
+	priv_->flag++;
       }
-      while(d_priv->flag==gen)
+      while(priv_->flag==gen)
 	/* spin */ ;
     } else {
-      barrier(d_priv->barrier, n);
+      barrier(priv_->barrier, n);
     }
   } else {
-    d_priv->mutex.lock();
-    ConditionVariable& cond=d_priv->cc?d_priv->cond0:d_priv->cond1;
-    d_priv->nwait++;
-    if(d_priv->nwait == n){
+    priv_->mutex.lock();
+    ConditionVariable& cond=priv_->cc?priv_->cond0:priv_->cond1;
+    priv_->nwait++;
+    if(priv_->nwait == n){
       // Wake everybody up...
-      d_priv->nwait=0;
-      d_priv->cc=1-d_priv->cc;
+      priv_->nwait=0;
+      priv_->cc=1-priv_->cc;
       cond.conditionBroadcast();
     } else {
-      cond.wait(d_priv->mutex);
+      cond.wait(priv_->mutex);
     }
-    d_priv->mutex.unlock();
+    priv_->mutex.unlock();
   }
   Thread::pop_bstack(p, oldstate);
 }
@@ -960,58 +960,58 @@ AtomicCounter_private::AtomicCounter_private()
 }
 
 AtomicCounter::AtomicCounter(const char* name)
-  : d_name(name)
+  : name_(name)
 {
   if(!initialized){
     Thread::initialize();
   }
   if(use_fetchop){
-    d_priv=(AtomicCounter_private*)atomic_alloc_variable(reservoir, 0);
-    // 	fprintf(stderr, "***Alloc atomcounter: %p\n", d_priv);
-    if(!d_priv)
+    priv_=(AtomicCounter_private*)atomic_alloc_variable(reservoir, 0);
+    // 	fprintf(stderr, "***Alloc atomcounter: %p\n", priv_);
+    if(!priv_)
       throw ThreadError(std::string("fetchop_alloc failed")
 			+strerror(errno));
   } else {
-    d_priv=new AtomicCounter_private;
-    d_priv->value=0;
+    priv_=new AtomicCounter_private;
+    priv_->value=0;
   }
 }
 
 AtomicCounter::AtomicCounter(const char* name, int value)
-  : d_name(name)
+  : name_(name)
 {
   if(!initialized){
     Thread::initialize();
   }
   if(use_fetchop){
-    d_priv=(AtomicCounter_private*)atomic_alloc_variable(reservoir, 0);
-    // 	fprintf(stderr, "***Alloc atomcounter: %p\n", d_priv);
-    if(!d_priv)
+    priv_=(AtomicCounter_private*)atomic_alloc_variable(reservoir, 0);
+    // 	fprintf(stderr, "***Alloc atomcounter: %p\n", priv_);
+    if(!priv_)
       throw ThreadError(std::string("fetchop_alloc failed")
 			+strerror(errno));
-    atomic_store((atomic_var_t*)d_priv, value);
+    atomic_store((atomic_var_t*)priv_, value);
   } else {
-    d_priv=new AtomicCounter_private;
-    d_priv->value=value;
+    priv_=new AtomicCounter_private;
+    priv_->value=value;
   }
 }
 
 AtomicCounter::~AtomicCounter()
 {
   if(use_fetchop){
-    // 	fprintf(stderr, "***Alloc free: %p\n", d_priv);
-    //	atomic_free_variable(reservoir, (atomic_var_t*)d_priv);
+    // 	fprintf(stderr, "***Alloc free: %p\n", priv_);
+    //	atomic_free_variable(reservoir, (atomic_var_t*)priv_);
   } else {
-    delete d_priv;
+    delete priv_;
   }
 }
 
 AtomicCounter::operator int() const
 {
   if(use_fetchop){
-    return (int)atomic_load((atomic_var_t*)d_priv);
+    return (int)atomic_load((atomic_var_t*)priv_);
   } else {
-    return d_priv->value;
+    return priv_->value;
   }
 }
 
@@ -1021,12 +1021,12 @@ AtomicCounter::operator++()
   if(use_fetchop){
     // We do not use the couldBlock/couldBlockDone pairs here because
     // they are so fast (microsecond), and never block...
-    return (int)atomic_fetch_and_increment((atomic_var_t*)d_priv)+1;
+    return (int)atomic_fetch_and_increment((atomic_var_t*)priv_)+1;
   } else {
-    int oldstate=Thread::couldBlock(d_name);
-    d_priv->lock.lock();
-    int ret=++d_priv->value;
-    d_priv->lock.unlock();
+    int oldstate=Thread::couldBlock(name_);
+    priv_->lock.lock();
+    int ret=++priv_->value;
+    priv_->lock.unlock();
     Thread::couldBlockDone(oldstate);
     return ret;
   }
@@ -1036,12 +1036,12 @@ int
 AtomicCounter::operator++(int)
 {
   if(use_fetchop){
-    return (int)atomic_fetch_and_increment((atomic_var_t*)d_priv);
+    return (int)atomic_fetch_and_increment((atomic_var_t*)priv_);
   } else {
-    int oldstate=Thread::couldBlock(d_name);
-    d_priv->lock.lock();
-    int ret=d_priv->value++;
-    d_priv->lock.unlock();
+    int oldstate=Thread::couldBlock(name_);
+    priv_->lock.lock();
+    int ret=priv_->value++;
+    priv_->lock.unlock();
     Thread::couldBlockDone(oldstate);
     return ret;
   }
@@ -1051,12 +1051,12 @@ int
 AtomicCounter::operator--()
 {
   if(use_fetchop){
-    return (int)atomic_fetch_and_decrement((atomic_var_t*)d_priv)-1;
+    return (int)atomic_fetch_and_decrement((atomic_var_t*)priv_)-1;
   } else {
-    int oldstate=Thread::couldBlock(d_name);
-    d_priv->lock.lock();
-    int ret=--d_priv->value;	
-    d_priv->lock.unlock();
+    int oldstate=Thread::couldBlock(name_);
+    priv_->lock.lock();
+    int ret=--priv_->value;	
+    priv_->lock.unlock();
     Thread::couldBlockDone(oldstate);
     return ret;
   }
@@ -1066,12 +1066,12 @@ int
 AtomicCounter::operator--(int)
 {
   if(use_fetchop){
-    return (int)atomic_fetch_and_increment((atomic_var_t*)d_priv);
+    return (int)atomic_fetch_and_increment((atomic_var_t*)priv_);
   } else {
-    int oldstate=Thread::couldBlock(d_name);
-    d_priv->lock.lock();
-    int ret=d_priv->value--;
-    d_priv->lock.unlock();
+    int oldstate=Thread::couldBlock(name_);
+    priv_->lock.lock();
+    int ret=priv_->value--;
+    priv_->lock.unlock();
     Thread::couldBlockDone(oldstate);
     return ret;
   }
@@ -1081,12 +1081,12 @@ void
 AtomicCounter::set(int v)
 {
   if(use_fetchop){
-    atomic_store((atomic_var_t*)d_priv, v);
+    atomic_store((atomic_var_t*)priv_, v);
   } else {
-    int oldstate=Thread::couldBlock(d_name);
-    d_priv->lock.lock();
-    d_priv->value=v;
-    d_priv->lock.unlock();
+    int oldstate=Thread::couldBlock(name_);
+    priv_->lock.lock();
+    priv_->value=v;
+    priv_->lock.unlock();
     Thread::couldBlockDone(oldstate);
   }
 }
@@ -1098,42 +1098,42 @@ struct ConditionVariable_private {
 };
 
 ConditionVariable::ConditionVariable(const char* name)
-  : d_name(name)
+  : name_(name)
 {
-d_priv=new ConditionVariable_private();
-d_priv->num_waiters=0;
-d_priv->pollsema=false;
-d_priv->semaphore=usnewsema(arena, 0);
-if(!d_priv->semaphore)
+priv_=new ConditionVariable_private();
+priv_->num_waiters=0;
+priv_->pollsema=false;
+priv_->semaphore=usnewsema(arena, 0);
+if(!priv_->semaphore)
   throw ThreadError(std::string("usnewsema failed")
     +strerror(errno));
 }
 
 ConditionVariable::~ConditionVariable()
 {
-  if(d_priv->semaphore){
-    if(d_priv->pollsema)
-      usfreepollsema(d_priv->semaphore, arena);
+  if(priv_->semaphore){
+    if(priv_->pollsema)
+      usfreepollsema(priv_->semaphore, arena);
     else
-      usfreesema(d_priv->semaphore, arena);
+      usfreesema(priv_->semaphore, arena);
   }
-  delete d_priv;
+  delete priv_;
 }
 
 void
 ConditionVariable::wait(Mutex& m)
 {
-  if(d_priv->pollsema){
+  if(priv_->pollsema){
     if(!timedWait(m, 0)){
       throw ThreadError("timedWait with infinite timeout didn't wait");
     }
   } else {
-    d_priv->num_waiters++;
+    priv_->num_waiters++;
     m.unlock();
-    Thread_private* p=Thread::self()->d_priv;
-    int oldstate=Thread::push_bstack(p, Thread::BLOCK_CONDITIONVARIABLE, d_name);
+    Thread_private* p=Thread::self()->priv_;
+    int oldstate=Thread::push_bstack(p, Thread::BLOCK_CONDITIONVARIABLE, name_);
     // Block until woken up by signal or broadcast
-    if(uspsema(d_priv->semaphore) == -1)
+    if(uspsema(priv_->semaphore) == -1)
       throw ThreadError(std::string("uspsema failed")
 			+strerror(errno));
     Thread::couldBlockDone(oldstate);
@@ -1148,42 +1148,42 @@ ConditionVariable::wait(Mutex& m)
 bool
 ConditionVariable::timedWait(Mutex& m, const struct timespec* abstime)
 {
-  if(!d_priv->pollsema){
+  if(!priv_->pollsema){
     // Convert to a pollable semaphore...
-    if(d_priv->num_waiters){
+    if(priv_->num_waiters){
       // There would be much code for this case, so I hope it
       // never happens.
       throw ThreadError("Cannot convert to timedWait/pollable semaphore if regular wait is in effect");
     } else {
-      usfreesema(d_priv->semaphore, arena);
-      d_priv->pollsema=true;
-      d_priv->semaphore=usnewpollsema(arena, 0);
-      if(!d_priv->semaphore)
+      usfreesema(priv_->semaphore, arena);
+      priv_->pollsema=true;
+      priv_->semaphore=usnewpollsema(arena, 0);
+      if(!priv_->semaphore)
 	throw ThreadError(std::string("usnewpollsema failed")
 			  +strerror(errno));
     }
   }
 
-  d_priv->num_waiters++;
+  priv_->num_waiters++;
 
   /*
    * Open the file descriptor before we unlock the mutex because
    * it is required for the conditionSignal to call usvsema.
    */
-  int pollfd = usopenpollsema(d_priv->semaphore, S_IRWXU);
+  int pollfd = usopenpollsema(priv_->semaphore, S_IRWXU);
   if(pollfd == -1)
     throw ThreadError(std::string("usopenpollsema failed")
 		      +strerror(errno));
 
   m.unlock();
 
-  Thread_private* p=Thread::self()->d_priv;
-  int oldstate=Thread::push_bstack(p, Thread::BLOCK_CONDITIONVARIABLE, d_name);
+  Thread_private* p=Thread::self()->priv_;
+  int oldstate=Thread::push_bstack(p, Thread::BLOCK_CONDITIONVARIABLE, name_);
 
   // Block until woken up by signal or broadcast or timed out
   bool success;
 
-  int ss = uspsema(d_priv->semaphore);
+  int ss = uspsema(priv_->semaphore);
   if(ss == -1){
     throw ThreadError(std::string("uspsema failed")
 		      +strerror(errno));
@@ -1242,7 +1242,7 @@ ConditionVariable::timedWait(Mutex& m, const struct timespec* abstime)
   m.lock();
   if(!success){
     // v the semaphore so that the next p will work
-    if(usvsema(d_priv->semaphore) == -1)
+    if(usvsema(priv_->semaphore) == -1)
       throw ThreadError(std::string("usvsema failed")
 			+strerror(errno));
     fd_set fds;
@@ -1262,7 +1262,7 @@ ConditionVariable::timedWait(Mutex& m, const struct timespec* abstime)
       // Got it
     }
   }
-  if(usclosepollsema(d_priv->semaphore) != 0)
+  if(usclosepollsema(priv_->semaphore) != 0)
     throw ThreadError(std::string("usclosepollsema failed")
 		      +strerror(errno));
   Thread::couldBlockDone(oldstate);
@@ -1272,9 +1272,9 @@ ConditionVariable::timedWait(Mutex& m, const struct timespec* abstime)
 void
 ConditionVariable::conditionSignal()
 {
-  if(d_priv->num_waiters > 0){
-    d_priv->num_waiters--;
-    if(usvsema(d_priv->semaphore) == -1)
+  if(priv_->num_waiters > 0){
+    priv_->num_waiters--;
+    if(usvsema(priv_->semaphore) == -1)
       throw ThreadError(std::string("usvsema failed")
 			+strerror(errno));
   }
@@ -1283,9 +1283,9 @@ ConditionVariable::conditionSignal()
 void
 ConditionVariable::conditionBroadcast()
 {
-  while(d_priv->num_waiters > 0){
-    d_priv->num_waiters--;
-    if(usvsema(d_priv->semaphore) == -1)
+  while(priv_->num_waiters > 0){
+    priv_->num_waiters--;
+    if(usvsema(priv_->semaphore) == -1)
       throw ThreadError(std::string("usvsema failed")
 			+strerror(errno));
   }

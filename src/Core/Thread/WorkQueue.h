@@ -71,14 +71,14 @@ DESCRIPTION
 	    bool nextAssignment(int& start, int& end);
 	    
 	private:
-	    const char* d_name;
-	    int d_num_threads;
-	    int d_total_assignments;
-	    int d_granularity;
-	    std::vector<int> d_assignments;
-	    AtomicCounter d_current_assignment;
-	    bool d_done;
-	    bool d_dynamic;
+	    const char* name_;
+	    int num_threads_;
+	    int total_assignments_;
+	    int granularity_;
+	    std::vector<int> assignments_;
+	    AtomicCounter current_assignment_;
+	    bool done_;
+	    bool dynamic_;
 	    
 	    void fill();
 

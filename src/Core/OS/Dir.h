@@ -59,11 +59,11 @@ namespace SCIRun {
       Dir getSubdir(const std::string& name);
 
       std::string getName() const {
-	 return d_name;
+	 return name_;
       }
    private:
 
-      std::string d_name;
+      std::string name_;
    };
 } // End namespace SCIRun
 

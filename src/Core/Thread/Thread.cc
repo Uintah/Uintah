@@ -51,30 +51,30 @@ public:
 
 Thread::~Thread()
 {
-    if(d_runner){
-        d_runner->d_my_thread=0;
-        delete d_runner;
+    if(runner_){
+        runner_->my_thread_=0;
+        delete runner_;
     }
-    free(const_cast<char *>(d_threadname));
+    free(const_cast<char *>(threadname_));
 }
 
 Thread::Thread(ThreadGroup* g, const char* name)
 {
-    d_group=g;
+    group_=g;
     g->addme(this);
-    d_threadname=strdup(name);
-    d_daemon=false;
-    d_detached=false;
-    d_runner=0;
-    d_cpu=-1;
-    d_stacksize=THREAD_DEFAULT_STACKSIZE;
+    threadname_=strdup(name);
+    daemon_=false;
+    detached_=false;
+    runner_=0;
+    cpu_=-1;
+    stacksize_=THREAD_DEFAULT_STACKSIZE;
 }
 
 void
 Thread::run_body()
 {
     try {
-	d_runner->run();
+	runner_->run();
     } catch(const ThreadError& e){
 	fprintf(stderr, "Caught unhandled Thread error:\n%s\n",
 		e.message());
@@ -91,32 +91,32 @@ Thread::run_body()
 
 Thread::Thread(Runnable* runner, const char* name,
 	       ThreadGroup* group, ActiveState state)
-    : d_runner(runner), d_threadname(strdup(name)), d_group(group)
+    : runner_(runner), threadname_(strdup(name)), group_(group)
 {
-    if(d_group == 0){
+    if(group_ == 0){
         if(!ThreadGroup::s_default_group)
 	    Thread::initialize();
-        d_group=ThreadGroup::s_default_group;
+        group_=ThreadGroup::s_default_group;
     }
 
-    d_runner->d_my_thread=this;
-    d_group->addme(this);
-    d_daemon=false;
-    d_cpu=-1;
-    d_detached=false;
-    d_stacksize=THREAD_DEFAULT_STACKSIZE;
+    runner_->my_thread_=this;
+    group_->addme(this);
+    daemon_=false;
+    cpu_=-1;
+    detached_=false;
+    stacksize_=THREAD_DEFAULT_STACKSIZE;
     switch(state){
     case Activated:
 	os_start(false);
-	d_activated=true;
+	activated_=true;
 	break;
     case Stopped:
 	os_start(true);
-	d_activated=true;
+	activated_=true;
 	break;
     case NotActivated:
-	d_activated=false;
-	d_priv=0;
+	activated_=false;
+	priv_=0;
 	break;
     }
 }
@@ -124,47 +124,47 @@ Thread::Thread(Runnable* runner, const char* name,
 void
 Thread::activate(bool stopped)
 {
-    if(d_activated)
+    if(activated_)
 	throw ThreadError("Thread is already activated");
-    d_activated=true;
+    activated_=true;
     os_start(stopped);
 }
 
 ThreadGroup*
 Thread::getThreadGroup()
 {
-    return d_group;
+    return group_;
 }
 
 Runnable*
 Thread::getRunnable()
 {
-    return d_runner;
+    return runner_;
 }
 
 void
 Thread::setDaemon(bool to)
 {
-    d_daemon=to;
+    daemon_=to;
     checkExit();
 }
 
 bool
 Thread::isDaemon() const
 {
-    return d_daemon;
+    return daemon_;
 }
 
 bool
 Thread::isDetached() const
 {
-    return d_detached;
+    return detached_;
 }
 
 const char*
 Thread::getThreadName() const
 {
-    return d_threadname;
+    return threadname_;
 }
 
 ThreadGroup*
@@ -175,7 +175,7 @@ Thread::parallel(const ParallelBase& helper, int nthreads,
   if(!block){
     // Extra synchronization to make sure that helper doesn't
     // get destroyed before the threads actually start
-    helper.d_wait=new Semaphore("Thread::parallel startup wait", 0);
+    helper.wait_=new Semaphore("Thread::parallel startup wait", 0);
   }
   for(int i=0;i<nthreads;i++){
     char buf[50];
@@ -190,8 +190,8 @@ Thread::parallel(const ParallelBase& helper, int nthreads,
     delete newgroup;
     return 0;
   } else {
-    helper.d_wait->down(nthreads);
-    delete helper.d_wait;
+    helper.wait_->down(nthreads);
+    delete helper.wait_;
     newgroup->detach();
   }
   return newgroup;
@@ -228,7 +228,7 @@ Thread::niceAbort()
   print_threads();
   fprintf(stderr, "\n");
   fprintf(stderr, "Abort signalled by pid: %d\n", getpid());
-  fprintf(stderr, "Occured for thread:\n \"%s\"", s->d_threadname);
+  fprintf(stderr, "Occured for thread:\n \"%s\"", s->threadname_);
 	
   for (;;) {
     if (strcasecmp(smode, "ask") == 0) {
@@ -299,29 +299,29 @@ Thread::niceAbort()
 int
 Thread::couldBlock(const char* why)
 {
-  Thread_private* p=Thread::self()->d_priv;
+  Thread_private* p=Thread::self()->priv_;
   return push_bstack(p, BLOCK_ANY, why);
 }
 
 void
 Thread::couldBlockDone(int restore)
 {
-  Thread_private* p=Thread::self()->d_priv;
+  Thread_private* p=Thread::self()->priv_;
   pop_bstack(p, restore);
 }
 
 unsigned long
 Thread::getStackSize() const
 {
-  return d_stacksize;
+  return stacksize_;
 }
 
 void
 Thread::setStackSize(unsigned long stacksize)
 {
-  if(d_activated)
+  if(activated_)
     throw ThreadError("Cannot change stack size on a running thread");
-  d_stacksize=stacksize;
+  stacksize_=stacksize;
 }
 
 /*

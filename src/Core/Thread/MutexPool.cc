@@ -16,47 +16,47 @@ namespace SCIRun {
 
 
 MutexPool::MutexPool(const char* name, int size)
-    :  d_nextID("MutexPool ID lock"), d_size(size)
+    :  nextID_("MutexPool ID lock"), size_(size)
 {
     // Mutex has no default CTOR so we must allocate them
     // indepdently.
-    d_pool=new Mutex*[d_size];
-    for(int i=0;i<d_size;i++)
-	d_pool[i]=new Mutex(name);
+    pool_=new Mutex*[size_];
+    for(int i=0;i<size_;i++)
+	pool_[i]=new Mutex(name);
 }
 
 MutexPool::~MutexPool()
 {
-    for(int i=0;i<d_size;i++)
-	delete d_pool[i];
-    delete[] d_pool;
+    for(int i=0;i<size_;i++)
+	delete pool_[i];
+    delete[] pool_;
 }
 
 int MutexPool::nextIndex()
 {
     for(;;) {
-	int next=d_nextID++;
-	if(next < d_size)
+	int next=nextID_++;
+	if(next < size_)
 	    return next;
 	// The above is atomic, but if it exceeds size, we need to
 	// reset it.
-	d_nextID.set(0);
+	nextID_.set(0);
     }
 }
 
 Mutex* MutexPool::getMutex(int idx)
 {
-    return d_pool[idx];
+    return pool_[idx];
 }
 
 void MutexPool::lockMutex(int idx)
 {
-    d_pool[idx]->lock();
+    pool_[idx]->lock();
 }
 
 void MutexPool::unlockMutex(int idx)
 {
-    d_pool[idx]->unlock();
+    pool_[idx]->unlock();
 }
 
 

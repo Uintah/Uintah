@@ -41,7 +41,7 @@ public:
 protected:
   ParallelBase();
   virtual ~ParallelBase();
-  mutable Semaphore* d_wait; // This may be modified by Thread::parallel
+  mutable Semaphore* wait_; // This may be modified by Thread::parallel
   friend class Thread;
 
 private:

@@ -17,7 +17,7 @@
 #define private public
 #define protected public
 #include <Core/Thread/Thread.h>
-#include <Core/Thread/Mutex.h> // So ConditionVariable can get to Mutex::d_priv
+#include <Core/Thread/Mutex.h> // So ConditionVariable can get to Mutex::priv_
 #undef private
 #undef protected
 #include <Core/Thread/Thread.h>
@@ -142,7 +142,7 @@ static
 void
 Thread_shutdown(Thread* thread)
 {
-   Thread_private* priv=thread->d_priv;
+   Thread_private* priv=thread->priv_;
 
    if(sem_post(&priv->done) != 0)
       throw ThreadError(std::string("sem_post failed")
@@ -157,7 +157,7 @@ Thread_shutdown(Thread* thread)
 			   +strerror(errno));
 
    // Allow this thread to run anywhere...
-   if(thread->d_cpu != -1)
+   if(thread->cpu_ != -1)
       thread->migrate(-1);
 
    priv->thread=0;
@@ -219,11 +219,11 @@ void
 Thread::join()
 {
     Thread* us=Thread::self();
-    int os=push_bstack(us->d_priv, JOINING, d_threadname);
-    if(sem_wait(&d_priv->done) != 0)
+    int os=push_bstack(us->priv_, JOINING, threadname_);
+    if(sem_wait(&priv_->done) != 0)
 	throw ThreadError(std::string("sem_wait failed")
 			  +strerror(errno));
-    pop_bstack(us->d_priv, os);
+    pop_bstack(us->priv_, os);
     detach();
 }
 
@@ -263,33 +263,33 @@ Thread::os_start(bool stopped)
     if(!initialized)
       Thread::initialize();
 
-    d_priv=new Thread_private;
+    priv_=new Thread_private;
 
-    if(sem_init(&d_priv->done, 0, 0) != 0)
+    if(sem_init(&priv_->done, 0, 0) != 0)
 	throw ThreadError(std::string("sem_init failed")
 			  +strerror(errno));
-    if(sem_init(&d_priv->delete_ready, 0, 0) != 0)
+    if(sem_init(&priv_->delete_ready, 0, 0) != 0)
 	throw ThreadError(std::string("sem_init failed")
 			  +strerror(errno));
-    d_priv->state=STARTUP;
-    d_priv->bstacksize=0;
+    priv_->state=STARTUP;
+    priv_->bstacksize=0;
     
-    d_priv->thread=this;
-    d_priv->threadid=0;
+    priv_->thread=this;
+    priv_->threadid=0;
 
-    if(sem_init(&d_priv->block_sema, 0, stopped?0:1))
+    if(sem_init(&priv_->block_sema, 0, stopped?0:1))
 	throw ThreadError(std::string("sem_init failed")
 			  +strerror(errno));
 
     lock_scheduler();
 		pthread_attr_t attr;
 		pthread_attr_init(&attr);
-		pthread_attr_setstacksize(&attr, d_stacksize);
+		pthread_attr_setstacksize(&attr, stacksize_);
 		
-    if(pthread_create(&d_priv->threadid, &attr, run_threads, d_priv) != 0)
+    if(pthread_create(&priv_->threadid, &attr, run_threads, priv_) != 0)
 	throw ThreadError(std::string("pthread_create failed")
 			  +strerror(errno));
-    active[numActive]=d_priv;
+    active[numActive]=priv_;
     numActive++;
     unlock_scheduler();
 }
@@ -298,16 +298,16 @@ void
 Thread::stop()
 {
     lock_scheduler();
-    if(sem_trywait(&d_priv->block_sema) != 0){
+    if(sem_trywait(&priv_->block_sema) != 0){
 	if(errno != EAGAIN)
 	    throw ThreadError(std::string("sem_trywait: ")
 			      +strerror(errno));
 	if(this == self()) {
-	    if(sem_wait(&d_priv->block_sema) != 0)
+	    if(sem_wait(&priv_->block_sema) != 0)
 		throw ThreadError(std::string("sem_wait: ")
 				  +strerror(errno));
 	} else {
-	    pthread_kill(d_priv->threadid, SIGUSR1);
+	    pthread_kill(priv_->threadid, SIGUSR1);
 	}
     }
     unlock_scheduler();
@@ -317,7 +317,7 @@ void
 Thread::resume()
 {
     lock_scheduler();
-    if(sem_post(&d_priv->block_sema) != 0)
+    if(sem_post(&priv_->block_sema) != 0)
 	throw ThreadError(std::string("sem_post: ")
 			  +strerror(errno));
     unlock_scheduler();
@@ -326,11 +326,11 @@ Thread::resume()
 void
 Thread::detach()
 {
-    if(sem_post(&d_priv->delete_ready) != 0)
+    if(sem_post(&priv_->delete_ready) != 0)
 	throw ThreadError(std::string("sem_post failed")
 			  +strerror(errno));
-    d_detached=true;
-    if(pthread_detach(d_priv->threadid) != 0)
+    detached_=true;
+    if(pthread_detach(priv_->threadid) != 0)
 	throw ThreadError(std::string("pthread_detach failed")
 			  +strerror(errno));
 }
@@ -378,7 +378,7 @@ handle_abort_signals(int sig, struct sigcontext ctx)
 int
 Thread::get_thread_id()
 {
-    return d_priv->threadid;
+    return priv_->threadid;
 }
 
 void
@@ -447,7 +447,7 @@ void
 handle_siguser1(int)
 {
     Thread* self=Thread::self();
-    if(sem_wait(&self->d_priv->block_sema) != 0)
+    if(sem_wait(&self->priv_->block_sema) != 0)
 	throw ThreadError(std::string("sem_wait: ")
 			  +strerror(errno));
 }
@@ -530,17 +530,17 @@ Thread::initialize()
     initialized=true;
     ThreadGroup::s_default_group=new ThreadGroup("default group", 0);
     Thread* mainthread=new Thread(ThreadGroup::s_default_group, "main");
-    mainthread->d_priv=new Thread_private;
-    mainthread->d_priv->thread=mainthread;
-    mainthread->d_priv->state=RUNNING;
-    mainthread->d_priv->bstacksize=0;
+    mainthread->priv_=new Thread_private;
+    mainthread->priv_->thread=mainthread;
+    mainthread->priv_->state=RUNNING;
+    mainthread->priv_->bstacksize=0;
     if(pthread_setspecific(thread_key, mainthread) != 0)
 	throw ThreadError(std::string("pthread_setspecific failed")
 			  +strerror(errno));
-    if(sem_init(&mainthread->d_priv->done, 0, 0) != 0)
+    if(sem_init(&mainthread->priv_->done, 0, 0) != 0)
 	throw ThreadError(std::string("sem_init failed")
 			  +strerror(errno));
-    if(sem_init(&mainthread->d_priv->delete_ready, 0, 0) != 0)
+    if(sem_init(&mainthread->priv_->delete_ready, 0, 0) != 0)
 	throw ThreadError(std::string("sem_init failed")
 			  +strerror(errno));
     if(sem_init(&main_sema, 0, 0) != 0)
@@ -550,7 +550,7 @@ Thread::initialize()
 	throw ThreadError(std::string("sem_init failed")
 			  +strerror(errno));
     lock_scheduler();
-    active[numActive]=mainthread->d_priv;
+    active[numActive]=mainthread->priv_;
     numActive++;
     unlock_scheduler();
     if(!getenv("THREAD_NO_CATCH_SIGNALS"))
@@ -578,7 +578,7 @@ struct Mutex_private {
 }
 
 Mutex::Mutex(const char* name)
-    : d_name(name)
+    : name_(name)
 {
   
   if(!initialized)
@@ -588,27 +588,27 @@ Mutex::Mutex(const char* name)
     fprintf(stderr, "WARNING: creation of null mutex\n");
   }
   
-  d_priv=new Mutex_private;
-  if(pthread_mutex_init(&d_priv->mutex, NULL) != 0)
+  priv_=new Mutex_private;
+  if(pthread_mutex_init(&priv_->mutex, NULL) != 0)
     throw ThreadError(std::string("pthread_mutex_init: ")
 		      +strerror(errno));		
 }
 
 Mutex::~Mutex()
 {
-  pthread_mutex_unlock(&d_priv->mutex);
-  if(pthread_mutex_destroy(&d_priv->mutex) != 0) {
+  pthread_mutex_unlock(&priv_->mutex);
+  if(pthread_mutex_destroy(&priv_->mutex) != 0) {
     std::cerr << "pthread_mutex_destroy() failed!!" << endl;
 	throw ThreadError(std::string("pthread_mutex_destroy: ")
 			  +strerror(errno));
   }
-    delete d_priv;
+    delete priv_;
 }
 
 void
 Mutex::unlock()
 {
-   int status = pthread_mutex_unlock(&d_priv->mutex);
+   int status = pthread_mutex_unlock(&priv_->mutex);
    if(status != 0){
       fprintf(stderr, "unlock failed, status=%d (%s)\n", status, strerror(status));
       throw ThreadError(std::string("pthread_mutex_unlock: ")
@@ -623,10 +623,10 @@ Mutex::lock()
     int oldstate=-1;
     Thread_private* p=0;
     if(t){
-				p=t->d_priv;
-				oldstate=Thread::push_bstack(p, Thread::BLOCK_MUTEX, d_name);
+				p=t->priv_;
+				oldstate=Thread::push_bstack(p, Thread::BLOCK_MUTEX, name_);
     }
-    int status = pthread_mutex_lock(&d_priv->mutex);
+    int status = pthread_mutex_lock(&priv_->mutex);
     if(status != 0){
 				fprintf(stderr, "lock failed, status=%d (%s)\n", status, strerror(status));
 				throw ThreadError(std::string("pthread_mutex_lock: ")
@@ -640,7 +640,7 @@ Mutex::lock()
 bool
 Mutex::tryLock()
 {
-    if(pthread_mutex_trylock(&d_priv->mutex) != 0){
+    if(pthread_mutex_trylock(&priv_->mutex) != 0){
 	if(errno == EAGAIN || errno == EINTR)
 	    return false;
 	throw ThreadError(std::string("pthread_mutex_trylock: ")
@@ -656,11 +656,11 @@ struct RecursiveMutex_private {
 }
 
 RecursiveMutex::RecursiveMutex(const char* name)
-    : d_name(name)
+    : name_(name)
 {
    if(!initialized)
 	Thread::initialize();
-    d_priv=new RecursiveMutex_private;
+    priv_=new RecursiveMutex_private;
     pthread_mutexattr_t attr;
     if(pthread_mutexattr_init(&attr) != 0)
 	throw ThreadError(std::string("pthread_mutexattr_init: ")
@@ -668,7 +668,7 @@ RecursiveMutex::RecursiveMutex(const char* name)
     if(pthread_mutexattr_settype(&attr, PTHREAD_MUTEX_RECURSIVE_NP) != 0)
 	throw ThreadError(std::string("pthread_mutexattr_setkind_np: ")
 			  +strerror(errno));
-    if(pthread_mutex_init(&d_priv->mutex, &attr) != 0)
+    if(pthread_mutex_init(&priv_->mutex, &attr) != 0)
 	throw ThreadError(std::string("pthread_mutex_init: ")
 			  +strerror(errno));
     if(pthread_mutexattr_destroy(&attr) != 0)
@@ -678,17 +678,17 @@ RecursiveMutex::RecursiveMutex(const char* name)
 
 RecursiveMutex::~RecursiveMutex()
 {
-  pthread_mutex_unlock(&d_priv->mutex);
-    if(pthread_mutex_destroy(&d_priv->mutex) != 0)
+  pthread_mutex_unlock(&priv_->mutex);
+    if(pthread_mutex_destroy(&priv_->mutex) != 0)
 	throw ThreadError(std::string("pthread_mutex_destroy: ")
 			  +strerror(errno));
-    delete d_priv;
+    delete priv_;
 }
 
 void
 RecursiveMutex::unlock()
 {
-    if(pthread_mutex_unlock(&d_priv->mutex) != 0)
+    if(pthread_mutex_unlock(&priv_->mutex) != 0)
 	throw ThreadError(std::string("pthread_mutex_unlock: ")
 			  +strerror(errno));
 }
@@ -696,9 +696,9 @@ RecursiveMutex::unlock()
 void
 RecursiveMutex::lock()
 {
-    Thread_private* p=Thread::self()->d_priv;
-    int oldstate=Thread::push_bstack(p, Thread::BLOCK_ANY, d_name);
-    if(pthread_mutex_lock(&d_priv->mutex) != 0)
+    Thread_private* p=Thread::self()->priv_;
+    int oldstate=Thread::push_bstack(p, Thread::BLOCK_ANY, name_);
+    if(pthread_mutex_lock(&priv_->mutex) != 0)
 	throw ThreadError(std::string("pthread_mutex_lock: ")
 			  +strerror(errno));
     Thread::pop_bstack(p, oldstate);
@@ -711,12 +711,12 @@ struct Semaphore_private {
 }
 
 Semaphore::Semaphore(const char* name, int value)
-    : d_name(name)
+    : name_(name)
 {
   if(!initialized)
     Thread::initialize();    
-  d_priv=new Semaphore_private;
-  if(sem_init(&d_priv->sem, 0, value) != 0)
+  priv_=new Semaphore_private;
+  if(sem_init(&priv_->sem, 0, value) != 0)
     throw ThreadError(std::string("sem_init: ")
 		      +strerror(errno));
 }
@@ -724,23 +724,23 @@ Semaphore::Semaphore(const char* name, int value)
 Semaphore::~Semaphore()
 {
   int val;
-  sem_getvalue(&d_priv->sem,&val);
+  sem_getvalue(&priv_->sem,&val);
   while(val<=0) {
-    sem_post(&d_priv->sem);
-    sem_getvalue(&d_priv->sem,&val);
+    sem_post(&priv_->sem);
+    sem_getvalue(&priv_->sem,&val);
   }
-  if(sem_destroy(&d_priv->sem) != 0)
+  if(sem_destroy(&priv_->sem) != 0)
     throw ThreadError(std::string("sem_destroy: ")
 		      +strerror(errno));
   
-  delete d_priv;
+  delete priv_;
 }
 
 void
 Semaphore::up(int count)
 {
     for(int i=0;i<count;i++){
-	if(sem_post(&d_priv->sem) != 0)
+	if(sem_post(&priv_->sem) != 0)
 	    throw ThreadError(std::string("sem_post: ")
 			      +strerror(errno));
     }
@@ -749,10 +749,10 @@ Semaphore::up(int count)
 void
 Semaphore::down(int count)
 {
-    Thread_private* p=Thread::self()->d_priv;
-    int oldstate=Thread::push_bstack(p, Thread::BLOCK_SEMAPHORE, d_name);
+    Thread_private* p=Thread::self()->priv_;
+    int oldstate=Thread::push_bstack(p, Thread::BLOCK_SEMAPHORE, name_);
     for(int i=0;i<count;i++){
-	if(sem_wait(&d_priv->sem) != 0)
+	if(sem_wait(&priv_->sem) != 0)
 	    throw ThreadError(std::string("sem_wait: ")
 			      +strerror(errno));
     }
@@ -762,7 +762,7 @@ Semaphore::down(int count)
 bool
 Semaphore::tryDown()
 {
-    if(sem_trywait(&d_priv->sem) != 0){
+    if(sem_trywait(&priv_->sem) != 0){
 	if(errno == EAGAIN)
 	    return false;
 	throw ThreadError(std::string("sem_trywait: ")
@@ -778,20 +778,20 @@ struct ConditionVariable_private {
 }
 
 ConditionVariable::ConditionVariable(const char* name)
-    : d_name(name)
+    : name_(name)
 {
   if(!initialized)
     Thread::initialize();
-  d_priv=new ConditionVariable_private;
-  if(pthread_cond_init(&d_priv->cond, 0) != 0)
+  priv_=new ConditionVariable_private;
+  if(pthread_cond_init(&priv_->cond, 0) != 0)
     throw ThreadError(std::string("pthread_cond_init: ")
 		      +strerror(errno));
 }
 
 ConditionVariable::~ConditionVariable()
 {
-  pthread_cond_broadcast(&d_priv->cond);
-    if(pthread_cond_destroy(&d_priv->cond) != 0)
+  pthread_cond_broadcast(&priv_->cond);
+    if(pthread_cond_destroy(&priv_->cond) != 0)
 	throw ThreadError(std::string("pthread_cond_destroy: ")
 			  +strerror(errno));
 }
@@ -799,9 +799,9 @@ ConditionVariable::~ConditionVariable()
 void
 ConditionVariable::wait(Mutex& m)
 {
-    Thread_private* p=Thread::self()->d_priv;
-    int oldstate=Thread::push_bstack(p, Thread::BLOCK_ANY, d_name);
-    if(pthread_cond_wait(&d_priv->cond, &m.d_priv->mutex) != 0)
+    Thread_private* p=Thread::self()->priv_;
+    int oldstate=Thread::push_bstack(p, Thread::BLOCK_ANY, name_);
+    if(pthread_cond_wait(&priv_->cond, &m.priv_->mutex) != 0)
 	throw ThreadError(std::string("pthread_cond_wait: ")
 			  +strerror(errno));
     Thread::pop_bstack(p, oldstate);
@@ -810,11 +810,11 @@ ConditionVariable::wait(Mutex& m)
 bool
 ConditionVariable::timedWait(Mutex& m, const struct timespec* abstime)
 {
-    Thread_private* p=Thread::self()->d_priv;
-    int oldstate=Thread::push_bstack(p, Thread::BLOCK_ANY, d_name);
+    Thread_private* p=Thread::self()->priv_;
+    int oldstate=Thread::push_bstack(p, Thread::BLOCK_ANY, name_);
     bool success;
     if(abstime){
-	int err=pthread_cond_timedwait(&d_priv->cond, &m.d_priv->mutex,
+	int err=pthread_cond_timedwait(&priv_->cond, &m.priv_->mutex,
 				       abstime);
 	if(err != 0){
 	    if(err == ETIMEDOUT)
@@ -826,7 +826,7 @@ ConditionVariable::timedWait(Mutex& m, const struct timespec* abstime)
 	    success=true;
 	}
     } else {
-	if(pthread_cond_wait(&d_priv->cond, &m.d_priv->mutex) != 0)
+	if(pthread_cond_wait(&priv_->cond, &m.priv_->mutex) != 0)
 	    throw ThreadError(std::string("pthread_cond_wait: ")
 			      +strerror(errno));
 	success=true;
@@ -838,7 +838,7 @@ ConditionVariable::timedWait(Mutex& m, const struct timespec* abstime)
 void
 ConditionVariable::conditionSignal()
 {
-    if(pthread_cond_signal(&d_priv->cond) != 0)
+    if(pthread_cond_signal(&priv_->cond) != 0)
 	throw ThreadError(std::string("pthread_cond_signal: ")
 
 			  +strerror(errno));
@@ -847,7 +847,7 @@ ConditionVariable::conditionSignal()
 void
 ConditionVariable::conditionBroadcast()
 {
-    if(pthread_cond_broadcast(&d_priv->cond) != 0)
+    if(pthread_cond_broadcast(&priv_->cond) != 0)
 	throw ThreadError(std::string("pthread_cond_broadcast: ")
 			  +strerror(errno));
 }
