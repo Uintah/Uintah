@@ -65,10 +65,9 @@ void assign_cw(int vector_index) {
     min=distance;
     my_cluster=j;
   }
-	
+
   cluster_idx[vector_index]=my_cluster;
 }
-
 
 class ClusterParallel {
 public:
@@ -78,9 +77,52 @@ public:
       for(int vector_index = start; vector_index < end; vector_index++)
 	assign_cw(vector_index);
   }
+
 };
 
 ClusterParallel cp;
+
+int write_results(float *codebook, int *idx,
+		  const char *cb_filename, const char* idx_filename) {
+  char *me = "write_results";
+  char *err;
+  // Write out codebook
+  Nrrd *nout = nrrdNew();
+  if (nrrdWrap(nout, codebook, nrrdTypeFloat, 2, num_dims, num_cwords) ||
+      nrrdSave(cb_filename, nout, 0)) {
+    err = biffGet(NRRD);
+    fprintf(stderr, "%s: Error wrapping or saving codebook:\n%s", me, err);
+    biffDone(NRRD);
+    nrrdNuke(nout);
+    free(err);
+    return 1;
+  } else {
+    cout << "Wrote codebook to "<<cb_filename<<"\n";
+  }
+
+  // Write out the index file
+  if (nrrdWrap(nout, idx, nrrdTypeInt, 1, num_vecs) ||
+      nrrdSave(idx_filename, nout, 0)) {
+    err = biffGet(NRRD);
+    fprintf(stderr, "%s: Error wrapping or saving index file:\n%s", me, err);
+    biffDone(NRRD);
+    nrrdNuke(nout);
+    free(err);
+    return 1;
+  } else {
+    cout << "Wrote index file to "<<idx_filename<<"\n";
+  }
+  
+  return 0;
+}
+
+int write_results(float *codebook, int *idx, int index) {
+  char buf1[100];
+  char buf2[100];
+  sprintf(buf1, "cb%05d.nhdr", index);
+  sprintf(buf2, "idx%05d.nhdr", index);
+  return write_results(codebook, idx, buf1, buf2);
+}
 
 int main(int argc, char *argv[]) {
   char *me = argv[0];
@@ -92,6 +134,7 @@ int main(int argc, char *argv[]) {
   int max_iteration = 100;
   int seed=12;
   int np = 1;
+  int write_intermediate = false;
 
   for (int i=1;i<argc;i++) {
     if (strcmp(argv[i], "-i")==0) {
@@ -118,6 +161,8 @@ int main(int argc, char *argv[]) {
       max_iteration=atoi(argv[++i]);
     } else if (strcmp(argv[i], "--search")==0) {
       cout<<"using "<<search_type<<" for codebook search"<<endl;
+    } else if (strcmp(argv[i], "-wi")==0) {
+      write_intermediate = true;
     } else {
       if (strcmp(argv[i], "--help")!=0)
 	cerr<<"unrecognized option \""<<argv[i]<<"\""<<endl;
@@ -135,6 +180,7 @@ int main(int argc, char *argv[]) {
       cerr<<"    -thresh <float>       termination threshold (1e-5)"<<endl;
       cerr<<"    -niters <int>         maximum number of iterations (100)"<<endl;
       cerr<<"    -seed <int>           random number seed (12)"<<endl;
+      cerr<<"    -wi                   write out intermediate results after each iteration (false)"<<endl;
       cerr<<"    --search              print codebook search method"<<endl;
       cerr<<"    --help                print this message and exit"<<endl;
       exit(1);
@@ -200,11 +246,12 @@ int main(int argc, char *argv[]) {
   vec=(float*)nvec->data;
   cluster_idx=new int[num_vecs];
   ir_idx=new int[num_vecs];
+  int next_ir_idx = 0;
 
   // randomly choose the initial codewords
   for (int i=0;i<num_vecs;i++)
     ir_idx[i] = i;
-  
+
   for (int i=0;i<num_vecs;i++) {
     // pick an index to swap
     int r_idx = rand()%num_vecs;
@@ -216,8 +263,13 @@ int main(int argc, char *argv[]) {
   for (int i=0;i<num_cwords;i++)
     for (int j=0;j<num_dims;j++)
       current_cw[i*num_dims+j] = vec[ir_idx[i]*num_dims+j];
+  next_ir_idx = num_cwords;
 
+  //write_results(current_cw, ir_idx, "cb-init.nrrd", "cb-asign.nrrd");
+  
   // cluster the vectors around the codewords
+  cout << "Starting codebook iteration\n";
+
   bool done=false;
   bool first=true;
   unsigned int iteration=0;
@@ -225,8 +277,6 @@ int main(int argc, char *argv[]) {
 
   do {
     // output a status message
-    cout<<"Beginning iteration "<<iteration<<endl;
-    
     if (np > 1) {
       work.refill(num_vecs, np);
 
@@ -238,6 +288,9 @@ int main(int argc, char *argv[]) {
     }
     
     // compute the mean vector of each cluster
+    double ave_dist = 0;
+    float max_dist = 0;
+    done=true;
     for (int i=0;i<num_cwords;i++) {
       for (int k=0;k<num_dims;k++) {
 	tmp_mean[k] = 0;
@@ -253,41 +306,58 @@ int main(int argc, char *argv[]) {
 	}
       }
 
+      if (count == 0) {
+	// No vectors map to this code word.  This is caused by a
+	// duplication of code words in the codebook.
+	cerr << "count == 0 at codeword["<<i<<"]\n";
+
+	// Assign another random code word
+	for (int k=0;k<num_dims;k++) 
+	  current_cw[i*num_dims+k] = vec[ir_idx[next_ir_idx]*num_dims+k];
+
+	next_ir_idx++;
+	if (next_ir_idx >= num_vecs) {
+	  // Check to make sure the next time we use next_ir_idx, we
+	  // will not get ourselves into trouble.
+	  cerr << "Looped over next_ir_idx.\n";
+	  next_ir_idx = 0;
+	}
+
+	// Don't need to compute the average, so go on.
+	continue;
+      }
+      
       // update codewords
-      done=true;
       for (int k=0;k<num_dims;k++) {
 	prev_cw[i*num_dims+k]=current_cw[i*num_dims+k];
+	if (count == 0) {
+	}
 	current_cw[i*num_dims+k]=tmp_mean[k]/(float)count;
 	
 	// compute the difference between iterations
 	if (!first) {
-	  done&=((current_cw[i*num_dims+k]-prev_cw[i*num_dims+k])<thresh);
+	  float dist = (current_cw[i*num_dims+k]-prev_cw[i*num_dims+k]);
+	  ave_dist += dist;
+	  if (dist > max_dist)
+	    max_dist = dist;
+	  done &= (dist<thresh);;
 	} else {
 	  first=false;
 	  done=false;
 	}
       }
     }
+    cout<<"Finished iteration "<<iteration;
+    cout << ", ave_dist = "<<ave_dist/(num_cwords*num_dims)<<", max_dist = "<<max_dist<<endl;
 
+    if (write_intermediate) {
+      write_results(current_cw, cluster_idx, iteration);
+    }
+    
     iteration++;
   } while (!done && iteration < max_iteration);
 
-  // Write out codebook
-  Nrrd *nout = nrrdNew();
-  if (nrrdWrap(nout, current_cw, nrrdTypeFloat, 2, num_dims, num_cwords) ||
-      nrrdSave(cw_outfilename, nout, 0)) {
-    err = biffGet(NRRD);
-    fprintf(stderr, "%s: Error wrapping or saving codebook:\n%s", me, err);
-    exit(2);
-  }
-
-  // Write out the index file
-  if (nrrdWrap(nout, cluster_idx, nrrdTypeInt, 1, num_vecs) ||
-      nrrdSave(idx_outfilename, nout, 0)) {
-    err = biffGet(NRRD);
-    fprintf(stderr, "%s: Error wrapping or saving index file:\n%s", me, err);
-    exit(2);
-  }
+  write_results(current_cw, cluster_idx, cw_outfilename, idx_outfilename);
   
   // delete allocated memory
   nrrdNuke(nvec);
