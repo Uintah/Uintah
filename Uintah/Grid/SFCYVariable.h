@@ -277,9 +277,9 @@ class SFCYVariable : public Array3<T>, public SFCYVariableBase {
       SFCYVariable<T>::allocate(const IntVector& lowIndex,
 			      const IntVector& highIndex)
       {
-	 if(getWindow())
-	    throw InternalError("Allocating an SFCYvariable that "
-				"is apparently already allocated!");
+	if(getWindow())
+	  throw InternalError("Allocating an SFCYvariable that "
+			      "is apparently already allocated!");
 	 resize(lowIndex, highIndex);
       }
    template<class T>
@@ -362,6 +362,9 @@ class SFCYVariable : public Array3<T>, public SFCYVariableBase {
 
 //
 // $Log$
+// Revision 1.4  2000/09/22 22:06:16  rawat
+// fixed some bugs in staggered variables call
+//
 // Revision 1.3  2000/08/08 01:32:47  jas
 // Changed new to scinew and eliminated some(minor) memory leaks in the scheduler
 // stuff.

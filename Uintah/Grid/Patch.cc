@@ -403,9 +403,9 @@ IntVector Patch::getCellFORTHighIndex() const
 // numGC = number of ghost cells
 IntVector Patch::getGhostCellLowIndex(const int numGC) const
 {  IntVector h(d_lowIndex-
-	       IntVector(getBCType(xplus) == Neighbor?numGC:0,
-			 getBCType(yplus) == Neighbor?numGC:0,
-			 getBCType(zplus) == Neighbor?numGC:0));
+	       IntVector(getBCType(xminus) == Neighbor?numGC:0,
+			 getBCType(yminus) == Neighbor?numGC:0,
+			 getBCType(zminus) == Neighbor?numGC:0));
    return h;
 }
 
@@ -420,9 +420,9 @@ IntVector Patch::getGhostCellHighIndex(const int numGC) const
 // numGC = number of ghost cells
 IntVector Patch::getGhostSFCXLowIndex(const int numGC) const
 {  IntVector h(d_lowIndex-
-	       IntVector(getBCType(xplus) == Neighbor?numGC:0,
-			 getBCType(yplus) == Neighbor?numGC:0,
-			 getBCType(zplus) == Neighbor?numGC:0));
+	       IntVector(getBCType(xminus) == Neighbor?numGC:0,
+			 getBCType(yminus) == Neighbor?numGC:0,
+			 getBCType(zminus) == Neighbor?numGC:0));
    return h;
 }
 
@@ -437,9 +437,9 @@ IntVector Patch::getGhostSFCXHighIndex(const int numGC) const
 // numGC = number of ghost cells
 IntVector Patch::getGhostSFCYLowIndex(const int numGC) const
 {  IntVector h(d_lowIndex-
-	       IntVector(getBCType(xplus) == Neighbor?numGC:0,
-			 getBCType(yplus) == Neighbor?numGC:0,
-			 getBCType(zplus) == Neighbor?numGC:0));
+	       IntVector(getBCType(xminus) == Neighbor?numGC:0,
+			 getBCType(yminus) == Neighbor?numGC:0,
+			 getBCType(zminus) == Neighbor?numGC:0));
    return h;
 }
 
@@ -454,9 +454,9 @@ IntVector Patch::getGhostSFCYHighIndex(const int numGC) const
 // numGC = number of ghost cells
 IntVector Patch::getGhostSFCZLowIndex(const int numGC) const
 {  IntVector h(d_lowIndex-
-	       IntVector(getBCType(xplus) == Neighbor?numGC:0,
-			 getBCType(yplus) == Neighbor?numGC:0,
-			 getBCType(zplus) == Neighbor?numGC:0));
+	       IntVector(getBCType(xminus) == Neighbor?numGC:0,
+			 getBCType(yminus) == Neighbor?numGC:0,
+			 getBCType(zminus) == Neighbor?numGC:0));
    return h;
 }
 
@@ -470,6 +470,9 @@ IntVector Patch::getGhostSFCZHighIndex(const int numGC) const
 
 //
 // $Log$
+// Revision 1.20  2000/09/22 22:06:16  rawat
+// fixed some bugs in staggered variables call
+//
 // Revision 1.19  2000/08/23 22:32:07  dav
 // changed output operator to use a reference, and not a pointer to a patch
 //
