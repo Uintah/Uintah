@@ -2607,36 +2607,36 @@ ViewSlices::handle_gui_motion(GuiArgs &args) {
     }
   }
 
-  if (!panning_ && !zooming_) 
-  {
-    if (state & BUTTON_1_E && painting_ && 
-	inside_window && (inside_window->mode_ == normal_e)) { 
-      do_paint(*inside_window);
-    } else if ((state & BUTTON_1_E) && crop_ && inside_window && pick_) {
-      crop_draw_bbox_ = update_crop_bbox(*inside_window, pick_, X, Y);
-      crop_pick_boxes_ = compute_crop_pick_boxes(*inside_window,
-						 crop_draw_bbox_);
-      update_crop_bbox_to_gui();
-    } else if (inside_window && probe_()) {
-      inside_window->viewport_->make_current();
-      setup_gl_view(*inside_window);
-      cursor_ = screen_to_world(*inside_window, x, y);
-      inside_window->viewport_->release();
-      
-      for_each(&ViewSlices::set_probe);
-    } else if (window_level_) {
+  if (panning_ || zooming_) return;
+
+  const bool button1 = state & BUTTON_1_E;
+  if (button1 && !crop_ && painting_ && 
+      inside_window && (inside_window->mode_ == normal_e)) { 
+    do_paint(*inside_window);
+  } else if (button1 && crop_ && inside_window && pick_) {
+    crop_draw_bbox_ = update_crop_bbox(*inside_window, pick_, X, Y);
+    crop_pick_boxes_ = compute_crop_pick_boxes(*inside_window,
+					       crop_draw_bbox_);
+    update_crop_bbox_to_gui();
+  } else if (inside_window && probe_()) {
+    inside_window->viewport_->make_current();
+    setup_gl_view(*inside_window);
+    cursor_ = screen_to_world(*inside_window, x, y);
+    inside_window->viewport_->release();
+    
+    for_each(&ViewSlices::set_probe);
+  } else if (window_level_) {
       //      WindowLayouts::iterator liter = layouts_.begin();
-      const double diagonal = 
-	sqrt(double(layout.opengl_->width()*layout.opengl_->width()) +
-	     double(layout.opengl_->height()*layout.opengl_->height()));
-      const double scale = (max_ - min_)/(2*diagonal);
-      clut_ww_ = Max(0.0,original_ww_ + (X - pick_x_)*scale);
-      clut_wl_ = Clamp(original_wl_ + (pick_y_ - Y)*scale, min_, max_);
-      for_each(&ViewSlices::rebind_slice);
-      for (int axis = 0; axis < 3; ++axis)
-	if (mip_slices_[axis])
-	  rebind_slice(*mip_slices_[axis]);
-    }
+    const double diagonal = 
+      sqrt(double(layout.opengl_->width()*layout.opengl_->width()) +
+	   double(layout.opengl_->height()*layout.opengl_->height()));
+    const double scale = (max_ - min_)/(2*diagonal);
+    clut_ww_ = Max(0.0,original_ww_ + (X - pick_x_)*scale);
+    clut_wl_ = Clamp(original_wl_ + (pick_y_ - Y)*scale, min_, max_);
+    for_each(&ViewSlices::rebind_slice);
+    for (int axis = 0; axis < 3; ++axis)
+      if (mip_slices_[axis])
+	rebind_slice(*mip_slices_[axis]);
   }
   redraw_all();
 }
@@ -2678,7 +2678,7 @@ ViewSlices::handle_gui_button_release(GuiArgs &args) {
       crop_bbox_ = crop_draw_bbox_;
       pick_ = 0;
     }
-    if (painting_) { 
+    if (!crop_ && painting_) { 
       painting_ = 2;
       want_to_execute();
     }
@@ -2719,7 +2719,7 @@ ViewSlices::handle_gui_button(GuiArgs &args) {
 	continue;
       }
 
-      if (int(painting_) && (window.mode_ == normal_e) && paint_widget_) { 
+      if (!crop_ && painting_ && paint_widget_ && (window.mode_==normal_e)) { 
 	paint_widget_->add_stroke();
 	do_paint(window); 
 	continue;
