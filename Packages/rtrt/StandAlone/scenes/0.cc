@@ -7,6 +7,9 @@
 #include <Core/Geometry/Vector.h>
 #include <Core/Geometry/Transform.h>
 #include <Packages/rtrt/Core/Group.h>
+#include <Packages/rtrt/Core/CutPlane.h>
+#include <Packages/rtrt/Core/PlaneDpy.h>
+#include <Core/Thread/Thread.h>
 #include <Packages/rtrt/Core/Sphere.h>
 #include <Packages/rtrt/Core/Rect.h>
 #include <Packages/rtrt/Core/MetalMaterial.h>
@@ -20,6 +23,8 @@
 #include <string.h>
 
 using namespace rtrt;
+
+using SCIRun::Thread;
 
 static const double SCALE = 1./3.;
 static const double BV_RADIUS = 1.0;
@@ -84,11 +89,22 @@ static void create_objs(Group* group, const Point& center,
 static void make_box(Group* group, Material* matl,
 	      const Point& corner, const Vector& x, const Vector& y, const Vector& z)
 {
-    group->add(new Rect(matl, corner+x+z, x, z));
-    group->add(new Rect(matl, corner+x+y*2+z, z, x));
-    group->add(new Rect(matl, corner+y+z, y, z));
-    group->add(new Rect(matl, corner+x*2+y+z, z, y));
-    group->add(new Rect(matl, corner+x+y+z*2, x, y));
+  //Group *boxgroup = new Group();
+  group->add(new Rect(matl, corner+x+z, x, z));
+  group->add(new Rect(matl, corner+x+y*2+z, z, x));
+  group->add(new Rect(matl, corner+y+z, y, z));
+  group->add(new Rect(matl, corner+x*2+y+z, z, y));
+  group->add(new Rect(matl, corner+x+y+z*2, x, y));
+  //group->add(boxgroup);
+
+  //CutPlane *cut = new CutPlane(boxgroup, Point(0,0,0), Vector(1,0,0));
+  
+
+  //PlaneDpy* pdpy=new PlaneDpy(Vector(1,0,0), Point(0,0,0));
+  //CutPlane *cut = new CutPlane(boxgroup, pdpy);
+  //new Thread(pdpy, "CutPlane GUI thread");
+  
+  //group->add(cut);
 }
 
 static Object* make_obj(int size)

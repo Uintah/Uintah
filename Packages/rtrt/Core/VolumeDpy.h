@@ -13,13 +13,14 @@ using SCIRun::Runnable;
 class VolumeBase;
 
 class VolumeDpy : public DpyBase {
+ protected:
   Array1<VolumeBase*> vols;
   int* hist;
   int histmax;
   float datamin, datamax;
   
   void compute_hist();
-  void draw_hist(bool redraw_hist);
+  virtual void draw_hist(bool redraw_hist);
 
   virtual void init();
   

@@ -106,8 +106,14 @@ SRCS += $(SRCDIR)/Worker.cc \
 	$(SRCDIR)/TimeCycleMaterial.cc \
 	$(SRCDIR)/pcube.c \
 	$(SRCDIR)/fpcube.c \
-	$(SRCDIR)/BrickArray2.cc \
 	$(SRCDIR)/templates.cc \
+	$(SRCDIR)/BrickArray2.cc \
+	$(SRCDIR)/SelectableGroup.cc \
+	$(SRCDIR)/CutGroup.cc \
+	$(SRCDIR)/CutMaterial.cc \
+	$(SRCDIR)/CutVolumeDpy.cc \
+	$(SRCDIR)/CutPlaneDpy.cc \
+	$(SRCDIR)/ColorMap.cc
 
 SUBDIRS := $(SRCDIR)/Shadows
 include $(SRCTOP)/scripts/recurse.mk

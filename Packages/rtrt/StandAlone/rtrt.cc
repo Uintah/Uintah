@@ -358,6 +358,7 @@ int main(int argc, char* argv[])
 	      Array1<Object*> prims;	
 	      scene->get_object()->collect_prims(prims);
 	      gridcellsize = (int)ceil(pow(prims.size(),1./3.));
+	      cerr << "PS " << prims.size() << " GSS " << gridcellsize << endl;
 	  }
 	  scene->set_object(new Grid(scene->get_object(), gridcellsize));
       } else if(use_bv==4){

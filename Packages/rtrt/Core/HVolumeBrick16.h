@@ -53,6 +53,16 @@ protected:
 	       const Vector& cellcorner, const Vector& celldir,
 	       const Ray& ray, HitInfo& hit,
 	       DepthStats* st, PerProcessorContext* ppc);
+
+    //used with cutting planes to color an interior point
+    bool interior_value_sublevels(double &ret_val,
+				  const Point & where,
+				  int depth,
+				  int ix, int iy, int iz,
+				  const Vector &cellcorner,
+				  double ixs, double iys, double izs,
+				  bool dbgprint=false);
+    
 public:
     HVolumeBrick16(Material* matl, VolumeDpy* dpy,
 		   char* filebase, int depth, int np);
@@ -75,6 +85,8 @@ public:
     inline int get_nz() {
 	return nz;
     }
+    //used with cutting planes to color the interior
+    bool interior_value(double& ret_val, const Ray &r, const double t);
 };
 
 } // end namespace rtrt
