@@ -13,7 +13,9 @@ static const int    NLOCKS=123;
 static       Mutex* locks[NLOCKS];
 static       bool   initialized = false;
 
-static AtomicCounter nextIndex("RefCounted nextIndex count");
+static AtomicCounter nextIndex("RefCounted nextIndex count", 0);
+#include <iostream>
+using namespace std;
 
 RefCounted::RefCounted()
     : d_refCount(0)
@@ -25,6 +27,7 @@ RefCounted::RefCounted()
 	initialized=true;
     }
     d_lockIndex = (nextIndex++)%NLOCKS;
+    ASSERT(d_lockIndex >= 0);
 }
 
 RefCounted::~RefCounted()
@@ -50,6 +53,9 @@ bool RefCounted::removeReference()
 
 //
 // $Log$
+// Revision 1.6  2000/06/22 21:56:30  sparker
+// Changed variable read/write to fortran order
+//
 // Revision 1.5  2000/05/30 20:19:33  sparker
 // Changed new to scinew to help track down memory leaks
 // Changed region to patch

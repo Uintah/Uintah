@@ -296,10 +296,10 @@ class NCVariable : public Array3<T>, public NCVariableBase {
 	    // This could be optimized...
 	    IntVector l(getLowIndex());
 	    IntVector h(getHighIndex());
-	    for(int x=l.x();x<h.x();x++){
+	    for(int z=l.z();z<h.z();z++){
 	       for(int y=l.y();y<h.y();y++){
-		  size_t size = sizeof(T)*(h.z()-l.z());
-		  ssize_t s=write(oc.fd, &(*this)[IntVector(x,y,l.z())], size);
+		  size_t size = sizeof(T)*(h.x()-l.x());
+		  ssize_t s=write(oc.fd, &(*this)[IntVector(l.x(),y,z)], size);
 		  if(size != s)
 		     throw ErrnoException("NCVariable::emit (write call)", errno);
 		  oc.cur+=size;
@@ -319,10 +319,10 @@ class NCVariable : public Array3<T>, public NCVariableBase {
 	    // This could be optimized...
 	    IntVector l(getLowIndex());
 	    IntVector h(getHighIndex());
-	    for(int x=l.x();x<h.x();x++){
+	    for(int z=l.z();z<h.z();z++){
 	       for(int y=l.y();y<h.y();y++){
-		  size_t size = sizeof(T)*(h.z()-l.z());
-		  ssize_t s=::read(oc.fd, &(*this)[IntVector(x,y,l.z())], size);
+		  size_t size = sizeof(T)*(h.x()-l.x());
+		  ssize_t s=::read(oc.fd, &(*this)[IntVector(l.x(),y,z)], size);
 		  if(size != s)
 		     throw ErrnoException("NCVariable::emit (write call)", errno);
 		  oc.cur+=size;
@@ -336,6 +336,9 @@ class NCVariable : public Array3<T>, public NCVariableBase {
 
 //
 // $Log$
+// Revision 1.25  2000/06/22 21:56:30  sparker
+// Changed variable read/write to fortran order
+//
 // Revision 1.24  2000/05/30 20:19:29  sparker
 // Changed new to scinew to help track down memory leaks
 // Changed region to patch
