@@ -15,7 +15,6 @@
 #include <SCICore/Geometry/BBox.h>
 #include <SCICore/Geometry/Vector.h>
 #include <SCICore/Util/Assert.h>
-#include <SCICore/Exceptions/Exceptions.h>
 #include <SCICore/Math/MinMax.h>
 #include <SCICore/Math/MiscMath.h>
 #include <SCICore/Persistent/Persistent.h>
@@ -532,6 +531,10 @@ void Pio(Piostream & stream, BBox & box) {
 
 //
 // $Log$
+// Revision 1.4  2000/03/23 10:29:21  sparker
+// Use new exceptions/ASSERT macros
+// Fixed compiler warnings
+//
 // Revision 1.3  1999/09/04 06:01:52  sparker
 // Updates to .h files, to minimize #includes
 // removed .icc files (yeah!)

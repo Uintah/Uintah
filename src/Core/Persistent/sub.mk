@@ -10,12 +10,16 @@ SRCDIR   := SCICore/Persistent
 SRCS     += $(SRCDIR)/Persistent.cc $(SRCDIR)/Pstreams.cc
 
 PSELIBS := SCICore/Containers
-LIBS := 
+LIBS := -lz
 
 include $(SRCTOP)/scripts/smallso_epilogue.mk
 
 #
 # $Log$
+# Revision 1.3  2000/03/23 10:29:23  sparker
+# Use new exceptions/ASSERT macros
+# Fixed compiler warnings
+#
 # Revision 1.2  2000/03/20 19:37:46  sparker
 # Added VPATH support
 #

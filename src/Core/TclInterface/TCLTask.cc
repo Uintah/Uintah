@@ -12,7 +12,6 @@
  *  Copyright (C) 1994 SCI Group
  */
 
-#include <SCICore/Exceptions/Exceptions.h>
 #include <SCICore/TclInterface/TCLTask.h>
 #include <SCICore/TclInterface/TCL.h>
 #include <SCICore/Thread/Mutex.h>
@@ -212,6 +211,10 @@ Thread* TCLTask::get_owner()
 
 //
 // $Log$
+// Revision 1.7  2000/03/23 10:29:25  sparker
+// Use new exceptions/ASSERT macros
+// Fixed compiler warnings
+//
 // Revision 1.6  1999/10/07 02:08:03  sparker
 // use standard iostreams and complex type
 //
