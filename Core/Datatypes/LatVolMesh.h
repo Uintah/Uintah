@@ -268,9 +268,11 @@ public:
     typedef vector<index_type> array_type;
   };
   
-  typedef Cell::index_type elem_index;
-  typedef Cell::iterator   elem_iterator;
-  typedef Cell::size_type  elem_size_type;
+  typedef Cell Elem;
+
+  //typedef Cell::index_type elem_index;
+  //typedef Cell::iterator   elem_iterator;
+  //typedef Cell::size_type  elem_size_type;
 
   typedef vector<double>      weight_array;
 
@@ -303,7 +305,7 @@ public:
     {  Vector p = max_-min_; cell_volume_ = (p.x()/(nx_-1))*(p.y()/(ny_-1))*(p.z()/(nz_-1));}
 
   Node::index_type  node(unsigned i, unsigned j, unsigned k) const
-    { return Node::index_type(i, j, k); }
+  { return Node::index_type(i, j, k); }
   Node::iterator  node_begin() const 
   { return Node::iterator(this, min_x_, min_y_, min_z_); }
   Node::iterator  node_end() const 
@@ -327,9 +329,9 @@ public:
   Cell::size_type cells_size() const 
   { return Cell::size_type(nx_-1, ny_-1,nz_-1); }
 
-  elem_iterator elem_begin() const { return cell_begin(); }
-  elem_iterator elem_end() const { return cell_end(); }
-  elem_size_type elems_size() const { return cells_size(); }
+  Elem::iterator elem_begin() const { return cell_begin(); }
+  Elem::iterator elem_end() const { return cell_end(); }
+  Elem::size_type elems_size() const { return cells_size(); }
 
   //! get the mesh statistics
   unsigned get_nx() const { return nx_; }
@@ -339,9 +341,9 @@ public:
   Point get_max() const { return max_; }
   Vector diagonal() const { return max_-min_; }
   virtual BBox get_bounding_box() const;
-  double get_volume(Cell::index_type &) { return cell_volume_; }
-  double get_area(Face::index_type &) { return 0; }
-  double get_element_size(Cell::index_type &) { return cell_volume_; }
+  double get_volume(const Cell::index_type &) { return cell_volume_; }
+  double get_area(const Face::index_type &) { return 0; }
+  double get_element_size(const Cell::index_type &) { return cell_volume_; }
 
   //! set the mesh statistics
   void set_min_x(unsigned x) {min_x_ = x; }
@@ -395,28 +397,7 @@ public:
   void get_normal(Vector &/* result */, Node::index_type /* index */) const
   { ASSERTFAIL("not implemented") }
 
-  void get_random_point(Point &p, const elem_index &ei) const {
-    static MusilRNG rng(1249);
-    Node::array_type ra;
-    get_nodes(ra,ei);
-    Point p0,p1,p2,p3;
-    get_point(p0,ra[0]);
-    get_point(p1,ra[1]);
-    get_point(p2,ra[3]);
-    get_point(p3,ra[4]);
-    Vector v0 = p1-p0;
-    Vector v1 = p2-p0;
-    Vector v2 = p3-p0;
-    double t = rng()*v0.length2();
-    double u = rng()*v1.length2();
-    double v = rng()*v2.length2();
-    if ( (t+u+v)>1 ) {
-      t = 1.-t;
-      u = 1.-u;
-      v = 1.-v;
-    }
-    p = p0+(v0*t)+(v1*u)+(v2*v);
-  }
+  void get_random_point(Point &p, const Cell::index_type &ei) const;
   
   virtual void io(Piostream&);
   static PersistentTypeID type_id;

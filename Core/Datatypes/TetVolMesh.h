@@ -78,8 +78,10 @@ public:
     typedef vector<index_type>          array_type;
   };
 
-  typedef Cell::index_type                  elem_index;
-  typedef Cell::iterator               elem_iterator;
+  typedef Cell Elem;
+
+  //typedef Cell::index_type                  elem_index;
+  //typedef Cell::iterator               elem_iterator;
 
   typedef vector<double>     weight_array;
 
@@ -103,8 +105,8 @@ public:
   Cell::iterator  cell_begin() const;
   Cell::iterator  cell_end() const;
   Cell::size_type cells_size() const { return cells_.size() >> 2; }
-  elem_iterator elem_begin() const { return cell_begin(); }
-  elem_iterator elem_end() const {return cell_end(); }
+  Elem::iterator elem_begin() const { return cell_begin(); }
+  Elem::iterator elem_end() const {return cell_end(); }
   under_type    elems_size() const { return cells_size(); }
 
   void get_nodes(Node::array_type &array, Edge::index_type idx) const;
@@ -137,37 +139,17 @@ public:
   void set_point(const Point &point, Node::index_type index)
   { points_[index] = point; }
 
-  double get_volume(Cell::index_type &ci) {
+  double get_volume(const Cell::index_type &ci) {
     Node::array_type ra; 
     get_nodes(ra,ci);
     return (Cross(Cross(ra[1]-ra[0],ra[2]-ra[0]),ra[3]-ra[0])).length2()*
       0.1666666666666666;
   }
-  double get_area(Face::index_type &) { return 0; }
-  double get_element_size(Cell::index_type &ci) { return get_volume(ci); }
+  double get_area(const Face::index_type &) { return 0; }
+  double get_element_size(const Cell::index_type &ci) 
+  { return get_volume(ci); }
   
-  void get_random_point(Point &p, const elem_index &ei) const {
-    static MusilRNG rng(1249);
-    Node::array_type ra;
-    get_nodes(ra,ei);
-    Point p0,p1,p2,p3;
-    get_point(p0,ra[0]);
-    get_point(p1,ra[1]);
-    get_point(p2,ra[2]);
-    get_point(p3,ra[3]);
-    Vector v0 = ra[1]-ra[0];
-    Vector v1 = ra[2]-ra[0];
-    Vector v2 = ra[3]-ra[0];
-    double t = rng()*v0.length2();
-    double u = rng()*v1.length2();
-    double v = rng()*v2.length2();
-    if ( (t+u+v)>1 ) {
-      t = 1.-t;
-      u = 1.-u;
-      v = 1.-v;
-    }
-    p = p0+(v0*t)+(v1*u)+(v2*v);
-  }
+  void get_random_point(Point &p, const Cell::index_type &ei) const;
 
   //! the double return val is the volume of the tet.
   double get_gradient_basis(Cell::index_type ci, Vector& g0, Vector& g1, 

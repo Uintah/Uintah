@@ -63,6 +63,26 @@ TriSurfMesh::~TriSurfMesh()
 }
 
 
+void TriSurfMesh::get_random_point(Point &p, const Face::index_type &ei) const 
+{
+  static MusilRNG rng(1249);
+  Node::array_type ra;
+  get_nodes(ra,ei);
+  Point p0,p1,p2;
+  get_point(p0,ra[0]);
+  get_point(p1,ra[1]);
+  get_point(p2,ra[2]);
+  Vector v0 = ra[1]-ra[0];
+  Vector v1 = ra[2]-ra[0];
+  double t = rng()*v0.length2();
+  double u = rng()*v1.length2();
+  if ( (t+u)>1 ) {
+    t = 1.-t;
+    u = 1.-u;
+  }
+  p = p0+(v0*t)+(v1*u);
+}
+
 BBox
 TriSurfMesh::get_bounding_box() const
 {
@@ -125,13 +145,13 @@ TriSurfMesh::cell_end() const
   return 0;
 }
 
-TriSurfMesh::elem_iterator
+TriSurfMesh::Elem::iterator
 TriSurfMesh::elem_begin() const
 {
   return face_begin();
 }
 
-TriSurfMesh::elem_iterator
+TriSurfMesh::Elem::iterator
 TriSurfMesh::elem_end() const
 {
   return face_end();
