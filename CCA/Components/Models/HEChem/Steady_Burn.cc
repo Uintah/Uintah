@@ -554,4 +554,11 @@ double Steady_Burn::computeMassTransferRate(double Ts, double To, double Kc, dou
   return Mr;
 }
 
+//______________________________________________________________________
+//
+void Steady_Burn::scheduleErrorEstimate(const LevelP&,
+                                         SchedulerP&)
+{
+  // Not implemented yet
+}
 

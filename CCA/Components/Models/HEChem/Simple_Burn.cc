@@ -393,3 +393,10 @@ void Simple_Burn::computeSpecificHeat(CCVariable<double>&,
 {
   //do nothing
 }
+//______________________________________________________________________
+//
+void Simple_Burn::scheduleErrorEstimate(const LevelP&,
+                                        SchedulerP&)
+{
+  // Not implemented yet
+}
