@@ -948,13 +948,17 @@ vector<int> HDF5DataReader::getDatasetDims( string filename,
 }
 
 #ifdef HAVE_HDF5
+
+static string HDF5Attribute_error_msg;
+
 herr_t add_attribute(hid_t group_id, const char * aname, void* op_data) {
   herr_t status = 0;
 
   hid_t attr_id = H5Aopen_name(group_id, aname);
 
   if (attr_id < 0) {
-    cerr << "Unable to open attribute \"" << aname << "\"" << endl;
+    HDF5Attribute_error_msg =
+      string("Unable to open attribute \"") + aname + "\"";
     status = -1;
   } else {
 
@@ -962,7 +966,7 @@ herr_t add_attribute(hid_t group_id, const char * aname, void* op_data) {
     hid_t file_space_id = H5Aget_space( attr_id );
 
     if( file_space_id < 0 ) {
-      cerr << "Unable to open data " << endl;
+      HDF5Attribute_error_msg = "Unable to open data ";
       return -1;
     }
     
@@ -974,7 +978,7 @@ herr_t add_attribute(hid_t group_id, const char * aname, void* op_data) {
       if(H5Tis_variable_str(type_id)) {                    
 	mem_type_id = H5Tcopy(H5T_C_S1);                        
 	H5Tset_size(mem_type_id, H5T_VARIABLE);                 
-      } else {                                      
+      } else {
 	mem_type_id = H5Tcopy(type_id);
 	H5Tset_cset(mem_type_id, H5T_CSET_ASCII);
       }
@@ -1001,7 +1005,7 @@ herr_t add_attribute(hid_t group_id, const char * aname, void* op_data) {
 	mem_type_id = H5T_NATIVE_DOUBLE;
 
       } else {
-	cerr << "Undefined HDF5 float" << endl;
+	HDF5Attribute_error_msg = "Undefined HDF5 float";
 	return -1;
       }
       break;
@@ -1009,7 +1013,7 @@ herr_t add_attribute(hid_t group_id, const char * aname, void* op_data) {
 	return status;
       break;
     default:
-      cerr << "Unknown or unsupported HDF5 data type" << endl;
+      HDF5Attribute_error_msg = "Unknown or unsupported HDF5 data type";
       return -1;
     }
     
@@ -1022,7 +1026,7 @@ herr_t add_attribute(hid_t group_id, const char * aname, void* op_data) {
     int ndim = H5Sget_simple_extent_dims(file_space_id, dims, NULL);
 
     if( ndim != ndims ) {
-      cerr << "Data dimensions not match." << endl;
+      HDF5Attribute_error_msg = "Data dimensions not match.";
       return -1;
     }
 
@@ -1042,14 +1046,14 @@ herr_t add_attribute(hid_t group_id, const char * aname, void* op_data) {
     char *data = new char[size+1];
 
     if( data == NULL ) {
-      cerr << "Can not allocate enough memory for the data" << endl;
+      HDF5Attribute_error_msg = "Can not allocate enough memory for the data";
       return -1;
     }
 
     status = H5Aread(attr_id, mem_type_id, data);
 
     if( status < 0 ) {
-      cerr << "Can not read data" << endl;
+      HDF5Attribute_error_msg = "Can not read data";
       return status;
     }
 
@@ -1444,7 +1448,9 @@ NrrdDataHandle HDF5DataReader::readDataset( string filename,
   delete count;
 
   // Add the attributs from the dataset.
-  H5Aiterate(ds_id, NULL, add_attribute, nout);
+  if( H5Aiterate(ds_id, NULL, add_attribute, nout) < 0 ) {
+    error( HDF5Attribute_error_msg );
+  }
 
   std::string parent = group;
 
@@ -1456,8 +1462,9 @@ NrrdDataHandle HDF5DataReader::readDataset( string filename,
     /* Open the group in the file. */
     if( p_id < 0 ) {
       error( "Error opening group. " );
+    } else if( H5Aiterate(p_id, NULL, add_attribute, nout) < 0 ) {
+      error( HDF5Attribute_error_msg );
     } else {
-      H5Aiterate(p_id, NULL, add_attribute, nout);
 
       /* Terminate access to the group. */ 
       if( (status = H5Gclose(p_id)) < 0 )
@@ -1477,8 +1484,9 @@ NrrdDataHandle HDF5DataReader::readDataset( string filename,
   /* Open the group in the file. */
   if( p_id < 0 ) {
     error( "Error opening group. " );
+  } else if( H5Aiterate(p_id, NULL, add_attribute, nout) < 0 ) {
+    error( HDF5Attribute_error_msg );
   } else {
-    H5Aiterate(p_id, NULL, add_attribute, nout);
     
     /* Terminate access to the group. */ 
     if( (status = H5Gclose(p_id)) < 0 )
@@ -1501,8 +1509,6 @@ NrrdDataHandle HDF5DataReader::readDataset( string filename,
   /* Terminate access to the file. */ 
   if( (status = H5Fclose(file_id)) < 0 )
     error( "Can not close file space." );
-
-
 
   return NrrdDataHandle(nout);
 #else
