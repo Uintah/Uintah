@@ -48,8 +48,7 @@ ProxyBase::ProxyBase()
 ProxyBase::ProxyBase(const Reference& ref)
 : proxy_uuid("NONENONENONENONENONENONENONENONENONE")
 { 
-  assert(false);
-  //rm.insertReference(&ref);
+  rm.insertReference( ((Reference*)&ref)->clone());
 }
 
 ProxyBase::ProxyBase(Reference *ref)
