@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 <!DOCTYPE book PUBLIC "-//OASIS//DTD DocBook XML V4.1//EN" 
-"../../Utilities/XML/DocBook/docbookx.dtd" 
+"../../Utilities/XML/Docbook_dtd/docbookx.dtd" 
 [
 <!ENTITY edition  SYSTEM "../../edition.xml">
 <!ENTITY p1c1 SYSTEM "p1c1.xml">
