@@ -49,14 +49,11 @@ static Dir makeVersionedDir(const std::string nameBase);
 static DebugStream dbg("DataArchiver", false);
 static DOM_Document loadDocument(std::string xmlName);
 
-DataArchiver* DataArchiver::theDataArchiver;
-
 DataArchiver::DataArchiver(const ProcessorGroup* myworld)
   : UintahParallelComponent(myworld),
     d_outputLock("DataArchiver output lock"),
     d_outputReductionLock("DataArchiver reduction output lock")
 {
-  theDataArchiver = this;
   d_wasOutputTimestep = false;
   d_wasCheckpointTimestep = false;
   d_currentTime=-1;
