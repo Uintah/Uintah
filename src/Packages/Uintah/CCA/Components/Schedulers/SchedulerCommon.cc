@@ -545,13 +545,13 @@ SchedulerCommon::copyDataToNewGrid(const ProcessorGroup*, const PatchSubset* pat
           switch(label->typeDescription()->getType()){
           case TypeDescription::NCVariable:
             {
-              if(!oldDataWarehouse->d_ncDB.exists(label, matl, oldPatch))
+              if(!oldDataWarehouse->exists(label, matl, oldPatch))
                 SCI_THROW(UnknownVariable(label->getName(), oldDataWarehouse->getID(), oldPatch, matl,
                                           "in copyDataTo NCVariable"));
               NCVariableBase* v = oldDataWarehouse->d_ncDB.get(label, matl, oldPatch);
               
-              if ( !newDataWarehouse->d_ncDB.exists(label, matl, newPatch) ) {
-                NCVariableBase* newVariable = v->cloneType();
+              if ( !newDataWarehouse->exists(label, matl, newPatch) ) {
+                NCVariableBase* newVariable = dynamic_cast<NCVariableBase*>(v->cloneType());
                 newVariable->rewindow( newLowIndex, newHighIndex );
                 newVariable->copyPatch( v, copyLowIndex, copyHighIndex );
                 newDataWarehouse->d_ncDB.put(label, matl, newPatch, newVariable, false);
@@ -565,17 +565,13 @@ SchedulerCommon::copyDataToNewGrid(const ProcessorGroup*, const PatchSubset* pat
             break;
           case TypeDescription::CCVariable:
             {
-              if(!oldDataWarehouse->d_ccDB.exists(label, matl, oldPatch)) {
-                cout << d_myworld->myrank() << "  ERROR copying to patch " << newPatch->getID() << endl;
-                cout << d_myworld->myrank() << " cli " << copyLowIndex << " chi " << copyHighIndex << endl;
-                
+              if(!oldDataWarehouse->exists(label, matl, oldPatch))
                 SCI_THROW(UnknownVariable(label->getName(), oldDataWarehouse->getID(), oldPatch, matl,
-                                          "in copyDataTo CCVariable"));
-              }
+                                          "in copyDataTo NCVariable"));
               CCVariableBase* v = oldDataWarehouse->d_ccDB.get(label, matl, oldPatch);
               
-              if ( !newDataWarehouse->d_ccDB.exists(label, matl, newPatch) ) {
-                CCVariableBase* newVariable = v->cloneType();
+              if ( !newDataWarehouse->exists(label, matl, newPatch) ) {
+                CCVariableBase* newVariable = dynamic_cast<CCVariableBase*>(v->cloneType());
                 newVariable->rewindow( newLowIndex, newHighIndex );
                 newVariable->copyPatch( v, copyLowIndex, copyHighIndex );
                 newDataWarehouse->d_ccDB.put(label, matl, newPatch, newVariable, false);
@@ -589,13 +585,13 @@ SchedulerCommon::copyDataToNewGrid(const ProcessorGroup*, const PatchSubset* pat
             break;
           case TypeDescription::SFCXVariable:
             {
-              if(!oldDataWarehouse->d_sfcxDB.exists(label, matl, oldPatch))
+              if(!oldDataWarehouse->exists(label, matl, oldPatch))
                 SCI_THROW(UnknownVariable(label->getName(), oldDataWarehouse->getID(), oldPatch, matl,
-                                          "in copyDataTo SFCXVariable"));
-              
+                                          "in copyDataTo NCVariable"));
               SFCXVariableBase* v = oldDataWarehouse->d_sfcxDB.get(label, matl, oldPatch);
-              if ( !newDataWarehouse->d_sfcxDB.exists(label, matl, newPatch) ) {
-                SFCXVariableBase* newVariable = v->cloneType();
+              
+              if ( !newDataWarehouse->exists(label, matl, newPatch) ) {
+                SFCXVariableBase* newVariable = dynamic_cast<SFCXVariableBase*>(v->cloneType());
                 newVariable->rewindow( newLowIndex, newHighIndex );
                 newVariable->copyPatch( v, copyLowIndex, copyHighIndex );
                 newDataWarehouse->d_sfcxDB.put(label, matl, newPatch, newVariable, false);
@@ -609,13 +605,13 @@ SchedulerCommon::copyDataToNewGrid(const ProcessorGroup*, const PatchSubset* pat
             break;
           case TypeDescription::SFCYVariable:
             {
-              if(!oldDataWarehouse->d_sfcyDB.exists(label, matl, oldPatch))
+              if(!oldDataWarehouse->exists(label, matl, oldPatch))
                 SCI_THROW(UnknownVariable(label->getName(), oldDataWarehouse->getID(), oldPatch, matl,
-                                          "in copyDataTo SFCYVariable"));
-              
+                                          "in copyDataTo NCVariable"));
               SFCYVariableBase* v = oldDataWarehouse->d_sfcyDB.get(label, matl, oldPatch);
-              if ( !newDataWarehouse->d_sfcyDB.exists(label, matl, newPatch) ) {
-                SFCYVariableBase* newVariable = v->cloneType();
+              
+              if ( !newDataWarehouse->exists(label, matl, newPatch) ) {
+                SFCYVariableBase* newVariable = dynamic_cast<SFCYVariableBase*>(v->cloneType());
                 newVariable->rewindow( newLowIndex, newHighIndex );
                 newVariable->copyPatch( v, copyLowIndex, copyHighIndex );
                 newDataWarehouse->d_sfcyDB.put(label, matl, newPatch, newVariable, false);
@@ -629,19 +625,18 @@ SchedulerCommon::copyDataToNewGrid(const ProcessorGroup*, const PatchSubset* pat
             break;
           case TypeDescription::SFCZVariable:
             {
-              if(!oldDataWarehouse->d_sfczDB.exists(label, matl, oldPatch))
+              if(!oldDataWarehouse->exists(label, matl, oldPatch))
                 SCI_THROW(UnknownVariable(label->getName(), oldDataWarehouse->getID(), oldPatch, matl,
-                                          "in copyDataTo SFCZVariable"));
-              
+                                          "in copyDataTo NCVariable"));
               SFCZVariableBase* v = oldDataWarehouse->d_sfczDB.get(label, matl, oldPatch);
               
-              if ( !newDataWarehouse->d_sfczDB.exists(label, matl, newPatch) ) {
-                SFCZVariableBase* newVariable = v->cloneType();
+              if ( !newDataWarehouse->exists(label, matl, newPatch) ) {
+                SFCZVariableBase* newVariable = dynamic_cast<SFCZVariableBase*>(v->cloneType());
                 newVariable->rewindow( newLowIndex, newHighIndex );
                 newVariable->copyPatch( v, copyLowIndex, copyHighIndex );
                 newDataWarehouse->d_sfczDB.put(label, matl, newPatch, newVariable, false);
               } else {
-                SFCZVariableBase* newVariable = newDataWarehouse->d_sfczDB.get(label, matl, newPatch );
+                GridVariable* newVariable = newDataWarehouse->d_sfczDB.get(label, matl, newPatch );
                 // make sure it exists in the right region (it might be ghost data)
                 newVariable->rewindow(Min(copyLowIndex, newVariable->getLow()), Max(copyHighIndex, newVariable->getHigh()));
                 newVariable->copyPatch( v, copyLowIndex, copyHighIndex );
