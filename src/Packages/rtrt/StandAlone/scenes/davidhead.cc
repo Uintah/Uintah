@@ -63,7 +63,11 @@ Scene* make_scene(int argc, char* argv[])
   //Material *flat_white = new LambertianMaterial(Color(0,0,1));
 
   //GridTris* david = new GridTris(flat_white, 100, 0);
-  GridTris* david = new GridTris(matl0, cells, depth);
+  char newfile[1000];
+  strncpy(newfile, file, strlen(file)-4);
+  string newfileS = string(newfile)+"-grid";
+  GridTris* david = new GridTris(matl0, cells, depth,
+                                 newfileS);
   Point dav_ped_top(-14,-20,1);
 
   read_ply(file,david);
