@@ -71,9 +71,12 @@ inline double the_time() {
 #endif
 
 template <class Type>
-inline Type clamp(const Type a,const Type b,const Type c) { return a > b ? (a < 
-c ? a : c) : b ; }
-inline int  Sign (double a)             { return a > 0 ? 1 : a < 0 ? -1 : 0; }
+inline Type clamp(const Type a,const Type b,const Type c) 
+{ 
+  return a > b ? (a < c ? a : c) : b ; 
+}
+
+inline int  Sign (double a) { return a > 0 ? 1 : a < 0 ? -1 : 0; }
 
 namespace SCIRun {
 class GeomObj;
@@ -272,12 +275,12 @@ public:
   void unicam_zoom(int X, int Y);
   void unicam_pan(int X, int Y);
 
-  void   ShowFocusSphere();
-  void   HideFocusSphere();
-  Point  GetPointUnderCursor( int x, int y );
+  void ShowFocusSphere();
+  void HideFocusSphere();
+  Point GetPointUnderCursor( int x, int y );
 
-  void   MyTranslateCamera(Vector offset);
-  void   MyRotateCamera   (Point  center,
+  void MyTranslateCamera(Vector offset);
+  void MyRotateCamera   (Point  center,
                            Vector axis,
                            double angle);
   Vector CameraToWorld(Vector v);

@@ -90,7 +90,8 @@ ViewWindow::ViewWindow(Viewer* s, const string& id)
   : Part(s, id, "ViewWindow" ),
     manager(s),
     pos("pos", id, this),
-    caxes("caxes", id, this),iaxes("iaxes", id, this), 
+    caxes("caxes", id, this),
+    iaxes("iaxes", id, this), 
     doingMovie(false),
     makeMPEG(false),
     curFrame(0),
@@ -110,13 +111,11 @@ ViewWindow::ViewWindow(Viewer* s, const string& id)
     drawimg("drawimg", id, this),
     saveprefix("saveprefix", id, this)
 {
-  cerr << "new viewwindow " << id << endl;
   inertia_mode=0;
   bgcolor.set(Color(0,0,0));
 
   view.set(homeview);
 
-  //tcl_add_command(id+"-c");
   current_renderer=0;
   maxtag=0;
   mouse_obj=0;
@@ -127,7 +126,7 @@ ViewWindow::ViewWindow(Viewer* s, const string& id)
   // --  BAWGL -- 
   viewwindow_objs.add( createGenAxes() );     
   viewwindow_objs_draw.add(1);              
-//  viewwindow_objs_draw[0] = 1;
+  //  viewwindow_objs_draw[0] = 1;
   // XXX - UniCam addition:
   // initialize focus sphere for UniCam
   // the focus sphere is a sphere object -- let's color it blue.
@@ -152,6 +151,7 @@ ViewWindow::ViewWindow(Viewer* s, const string& id)
 
 string ViewWindow::set_id(const string& new_id)
 {
+  cerr << "ViewWindow::set_id " << new_id << endl;
   string old_id=id;
   id=new_id;
   return old_id;
@@ -159,6 +159,7 @@ string ViewWindow::set_id(const string& new_id)
 
 void ViewWindow::itemAdded(GeomViewerItem* si)
 {
+  cerr << "VW:item added" << endl;
   ObjTag* vis;
     
   viter = visible.find(si->name);
@@ -236,23 +237,23 @@ void ViewWindow::get_bounds(BBox& bbox)
   bbox.reset();
 
   GeomIndexedGroup::IterIntGeomObj iter = manager->ports.getIter();
-    
+  
   for ( ; iter.first != iter.second; iter.first++) {
-	
+    
     GeomIndexedGroup::IterIntGeomObj serIter =
       ((GeomViewerPort*)((*iter.first).second))->getIter();
-
-				// items in the scen are all
-				// GeomViewerItem's...
+    
+    // items in the scen are all
+    // GeomViewerItem's...
     for ( ; serIter.first != serIter.second; serIter.first++) {
       GeomViewerItem *si=(GeomViewerItem*)((*serIter.first).second);
-	    
-				// Look up the name to see if it
-				// should be drawn...
+      
+      // Look up the name to see if it
+      // should be drawn...
       ObjTag* vis;
-	    
+      
       viter = visible.find(si->name);
-	    
+      
       if (viter != visible.end()) { // if found
 	vis = (*viter).second;
 	if (vis->visible->get()) {
@@ -268,7 +269,7 @@ void ViewWindow::get_bounds(BBox& bbox)
       }
     }
   }
-
+  
   // XXX - START - ASF ADDED FOR UNICAM
   //   cerr << "viewwindow_objs.size() = " << viewwindow_objs.size() << endl;
   //int objs_size = viewwindow_objs.size();

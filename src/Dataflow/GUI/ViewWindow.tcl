@@ -16,11 +16,14 @@
 #
 
 
+
 itcl::class ViewWindow {
     inherit PartGui
 
     public variable viewer
-    
+    public variable w
+    public variable renderer
+
     # parameters to hold current state of detachable part
     protected variable IsAttached 
     protected variable IsDisplayed
@@ -41,52 +44,57 @@ itcl::class ViewWindow {
     public variable caxes 1
     
     # Need to initialize the background color
-    public variable bgcolor-r 0
-    public variable bgcolor-g 0
-    public variable bgcolor-b 0
+    public variable bgcolor_r 0
+    public variable bgcolor_g 0
+    public variable bgcolor_b 0
     
     public variable sbase 1.0
     public variable sr 1
     public variable do_stereo 0
 
 
-    variable global-light 1
-    variable global-fog 0
-    variable global-psize 1
-    variable global-type Gouraud
-    variable global-debug 0
-    variable global-clip 0
-    variable global-cull 0
-    variable global-dl 0
-    variable global-movie 0
-    variable global-movieName movie
-    variable global-movieFrame 0
-    variable global-resize 0
-    variable x-resize 640
-    variable y-resize 512
+    variable global_light 1
+    variable global_fog 0
+    variable global_psize 1
+    variable global_type Gouraud
+    variable global_debug 0
+    variable global_clip 0
+    variable global_cull 0
+    variable global_dl 0
+    variable global_movie 0
+    variable global_movieName movie
+    variable global_movieFrame 0
+    variable global_resize 0
+    variable x_resize 640
+    variable y_resize 512
     variable do_bawgl 0
     variable tracker_state 0
-    variable do_stereo
-    variable sbase
-    variable sr
 	
     destructor {
     }
 
     constructor {} {
-	set w .ui[modname]
-	toplevel $w
+    }
+
+    method set-window { win } {
+	# for now assume the viewer is global
+	global global_viewer
+	set viewer $global_viewer
+
+	# set window
+	set w $win
 	bind $w <Destroy> "$this killWindow %W" 
 	wm title $w "ViewWindow"
 	wm iconname $w "ViewWindow"
 	wm minsize $w 100 100
 
+	# add menus
 	frame $w.menu -relief raised -borderwidth 3
 	pack $w.menu -fill x
 	menubutton $w.menu.renderer -text "Renderer" -underline 0 \
-		-menu $w.menu.renderer.menu
+	    -menu $w.menu.renderer.menu
 	menu $w.menu.renderer.menu
-
+	
 	# Get the list of supported renderers for the pulldown
 	set r [$viewer-c listrenderers]
 	
@@ -101,29 +109,29 @@ itcl::class ViewWindow {
 	}
 	frame $w.wframe -borderwidth 3 -relief sunken
 	pack $w.wframe -expand yes -fill both -padx 4 -pady 4
-
+	
 	set width 640
 	set height 512
 	set wcommand [$this-c setrenderer $renderer $w.wframe.draw \
 			  $width $height]
-
+	
 	foreach i $r {
 	    $w.menu.renderer.menu add radio -label $i \
 		-variable [scope renderer] -value $i \
 		-command "$this switchRenderer $i"
 	}
 	menubutton $w.menu.edit -text "Edit" -underline 0 \
-		-menu $w.menu.edit.menu
+	    -menu $w.menu.edit.menu
 	menu $w.menu.edit.menu
 	$w.menu.edit.menu add command -label "View/Camera..." -underline 0 \
-		-command "$this makeViewPopup"
+	    -command "$this makeViewPopup"
 	$w.menu.edit.menu add command -label "Background..." -underline 0 \
-		-command "$this makeBackgroundPopup"
+	    -command "$this makeBackgroundPopup"
 	$w.menu.edit.menu add command -label "Clipping Planes..." \
 	    -underline 0 -command "$this makeClipPopup"
 	$w.menu.edit.menu add command -label "Point Size..." -underline 0 \
-		-command "$this makePointSizePopup"
-
+	    -command "$this makePointSizePopup"
+	
 	menubutton $w.menu.visual -text "Visual" -underline 0 \
 	    -menu $w.menu.visual.menu
 	menu $w.menu.visual.menu
@@ -136,9 +144,9 @@ itcl::class ViewWindow {
 		-command "$this switchvisual $i"
 	    incr i
 	}
-
+	
 	pack $w.menu.visual -side left
-
+	
 	# Create Dialbox and attach to it
 	Dialbox $w.dialbox "Viewer - Translate/Scale"
 	$w.dialbox unbounded_dial 0 "Translate X" 0.0 1.0 "$this translate x"
@@ -148,7 +156,7 @@ itcl::class ViewWindow {
 	$w.dialbox wrapped_dial 3 "Rotate Y" 0.0 0.0 360.0 1.0 "$this rotate y"
 	$w.dialbox wrapped_dial 5 "Rotate Z" 0.0 0.0 360.0 1.0 "$this rotate z"
 	$w.dialbox bounded_dial 6 "Scale" 1.0 [expr 1.0/1000.0] 1000.0 1.0 "$this scale"
-	
+
 	# Create Dialbox2 and attach to it
 	Dialbox $w.dialbox2 "Viewer - Camera"
 	$w.dialbox2 bounded_dial 0 "Zoom" 0.0 0.0 1000.0 100.0 "$this zoom"
@@ -168,20 +176,19 @@ itcl::class ViewWindow {
 	pack $w.bframe.pf.perf3 -side top -anchor n
 
 	canvas $w.bframe.mousemode -width 200 -height 70 \
-		-relief groove -borderwidth 2
+	    -relief groove -borderwidth 2
 	pack $w.bframe.mousemode -side left -fill y -pady 2 -padx 2
-	global $w.bframe.mousemode.text
 	set mouseModeText $w.bframe.mousemode.text
 	$w.bframe.mousemode create text 35 40 -tag mouseModeText \
-		-text " Current Mouse Mode " \
-		-anchor w
-
+	    -text " Current Mouse Mode " \
+	    -anchor w
+	
 	frame $w.bframe.v1
 	pack $w.bframe.v1 -side left
 	button $w.bframe.v1.autoview -text "Autoview" \
 	    -command "$this-c autoview"
 	pack $w.bframe.v1.autoview -fill x -pady 2 -padx 2
-
+	
 	frame $w.bframe.v1.views             
 	pack $w.bframe.v1.views -side left -anchor nw -fill x -expand 1
 	
@@ -190,94 +197,94 @@ itcl::class ViewWindow {
 	
 	menu $w.bframe.v1.views.def.m
 	$w.bframe.v1.views.def.m add cascade -label "Look down +X Axis" \
-		-menu $w.bframe.v1.views.def.m.posx
+	    -menu $w.bframe.v1.views.def.m.posx
 	$w.bframe.v1.views.def.m add cascade -label "Look down +Y Axis" \
-		-menu $w.bframe.v1.views.def.m.posy
+	    -menu $w.bframe.v1.views.def.m.posy
         $w.bframe.v1.views.def.m add cascade -label "Look down +Z Axis" \
-		-menu $w.bframe.v1.views.def.m.posz
+	    -menu $w.bframe.v1.views.def.m.posz
 	$w.bframe.v1.views.def.m add separator
 	$w.bframe.v1.views.def.m add cascade -label "Look down -X Axis" \
-		-menu $w.bframe.v1.views.def.m.negx
+	    -menu $w.bframe.v1.views.def.m.negx
 	$w.bframe.v1.views.def.m add cascade -label "Look down -Y Axis" \
-		-menu $w.bframe.v1.views.def.m.negy
+	    -menu $w.bframe.v1.views.def.m.negy
         $w.bframe.v1.views.def.m add cascade -label "Look down -Z Axis" \
-		-menu $w.bframe.v1.views.def.m.negz
-
+	    -menu $w.bframe.v1.views.def.m.negz
+	
 	pack $w.bframe.v1.views.def -side left -pady 2 -padx 2 -fill x
-
+	
 	menu $w.bframe.v1.views.def.m.posx
 	$w.bframe.v1.views.def.m.posx add radiobutton -label "Up vector +Y" \
-		-variable $this-pos -value x1_y1 -command "$this-c Views"
+	    -variable [scope pos] -value x1_y1 -command "$this-c Views"
 	$w.bframe.v1.views.def.m.posx add radiobutton -label "Up vector -Y" \
-		-variable $this-pos -value x1_y0 -command "$this-c Views"
+	    -variable [scope pos] -value x1_y0 -command "$this-c Views"
 	$w.bframe.v1.views.def.m.posx add radiobutton -label "Up vector +Z" \
-		-variable $this-pos -value x1_z1 -command "$this-c Views"
+	    -variable [scope pos] -value x1_z1 -command "$this-c Views"
 	$w.bframe.v1.views.def.m.posx add radiobutton -label "Up vector -Z" \
-		-variable $this-pos -value x1_z0 -command "$this-c Views"
-
+	    -variable [scope pos] -value x1_z0 -command "$this-c Views"
+	
 	menu $w.bframe.v1.views.def.m.posy
 	$w.bframe.v1.views.def.m.posy add radiobutton -label "Up vector +X" \
-		-variable $this-pos -value y1_x1 -command "$this-c Views" 
+	    -variable [scope pos] -value y1_x1 -command "$this-c Views" 
 	$w.bframe.v1.views.def.m.posy add radiobutton -label "Up vector -X" \
-		-variable $this-pos -value y1_x0 -command "$this-c Views"
+	    -variable [scope pos] -value y1_x0 -command "$this-c Views"
 	$w.bframe.v1.views.def.m.posy add radiobutton -label "Up vector +Z" \
-		-variable $this-pos -value y1_z1 -command "$this-c Views"
+	    -variable [scope pos] -value y1_z1 -command "$this-c Views"
 	$w.bframe.v1.views.def.m.posy add radiobutton -label "Up vector -Z" \
-		-variable $this-pos -value y1_z0 -command "$this-c Views"
-
+	    -variable [scope pos] -value y1_z0 -command "$this-c Views"
+	
 	menu $w.bframe.v1.views.def.m.posz
 	$w.bframe.v1.views.def.m.posz add radiobutton -label "Up vector +X" \
-		-variable $this-pos -value z1_x1 -command "$this-c Views" 
+	    -variable [scope pos] -value z1_x1 -command "$this-c Views" 
 	$w.bframe.v1.views.def.m.posz add radiobutton -label "Up vector -X" \
-		-variable $this-pos -value z1_x0 -command "$this-c Views"
+	    -variable [scope pos] -value z1_x0 -command "$this-c Views"
 	$w.bframe.v1.views.def.m.posz add radiobutton -label "Up vector +Y" \
-		-variable $this-pos -value z1_y1 -command "$this-c Views"
+	    -variable [scope pos] -value z1_y1 -command "$this-c Views"
 	$w.bframe.v1.views.def.m.posz add radiobutton -label "Up vector -Y" \
-		-variable $this-pos -value z1_y0 -command "$this-c Views"
-
+	    -variable [scope pos] -value z1_y0 -command "$this-c Views"
+	
 	menu $w.bframe.v1.views.def.m.negx
 	$w.bframe.v1.views.def.m.negx add radiobutton -label "Up vector +Y" \
-		-variable $this-pos -value x0_y1 -command "$this-c Views"
+	    -variable [scope pos] -value x0_y1 -command "$this-c Views"
 	$w.bframe.v1.views.def.m.negx add radiobutton -label "Up vector -Y" \
-		-variable $this-pos -value x0_y0 -command "$this-c Views"
+	    -variable [scope pos] -value x0_y0 -command "$this-c Views"
 	$w.bframe.v1.views.def.m.negx add radiobutton -label "Up vector +Z" \
-		-variable $this-pos -value x0_z1 -command "$this-c Views"
+	    -variable [scope pos] -value x0_z1 -command "$this-c Views"
 	$w.bframe.v1.views.def.m.negx add radiobutton -label "Up vector -Z" \
-		-variable $this-pos -value x0_z0 -command "$this-c Views"
-
+	    -variable [scope pos] -value x0_z0 -command "$this-c Views"
+	
 	menu $w.bframe.v1.views.def.m.negy
 	$w.bframe.v1.views.def.m.negy add radiobutton -label "Up vector +X" \
-		-variable $this-pos -value y0_x1 -command "$this-c Views" 
+	    -variable [scope pos] -value y0_x1 -command "$this-c Views" 
 	$w.bframe.v1.views.def.m.negy add radiobutton -label "Up vector -X" \
-		-variable $this-pos -value y0_x0 -command "$this-c Views"
+	    -variable [scope pos] -value y0_x0 -command "$this-c Views"
 	$w.bframe.v1.views.def.m.negy add radiobutton -label "Up vector +Z" \
-		-variable $this-pos -value y0_z1 -command "$this-c Views"
+	    -variable [scope pos] -value y0_z1 -command "$this-c Views"
 	$w.bframe.v1.views.def.m.negy add radiobutton -label "Up vector -Z" \
-		-variable $this-pos -value y0_z0 -command "$this-c Views"
-
+	    -variable [scope pos] -value y0_z0 -command "$this-c Views"
+	
 	menu $w.bframe.v1.views.def.m.negz
 	$w.bframe.v1.views.def.m.negz add radiobutton -label "Up vector +X" \
-		-variable $this-pos -value z0_x1 -command "$this-c Views" 
+	    -variable [scope pos] -value z0_x1 -command "$this-c Views" 
 	$w.bframe.v1.views.def.m.negz add radiobutton -label "Up vector -X" \
-		-variable $this-pos -value z0_x0 -command "$this-c Views"
+	    -variable [scope pos] -value z0_x0 -command "$this-c Views"
 	$w.bframe.v1.views.def.m.negz add radiobutton -label "Up vector +Y" \
-		-variable $this-pos -value z0_y1 -command "$this-c Views"
+	    -variable [scope pos] -value z0_y1 -command "$this-c Views"
 	$w.bframe.v1.views.def.m.negz add radiobutton -label "Up vector -Y" \
-		-variable $this-pos -value z0_y0 -command "$this-c Views"
-
+	    -variable [scope pos] -value z0_y0 -command "$this-c Views"
+	
 	frame $w.bframe.v2
 	pack $w.bframe.v2 -side left -padx 2 -pady 2
 	button $w.bframe.v2.sethome -text "Set Home View" -padx 2 \
-		-command "$this-c sethome"
+	    -command "$this-c sethome"
 	pack $w.bframe.v2.sethome -fill x -pady 2
 	button $w.bframe.v2.gohome -text "Go home" -command "$this-c gohome"
 	pack $w.bframe.v2.gohome -fill x -pady 2
 	
 	button $w.bframe.more -text "+" -padx 3 \
-		-font "-Adobe-Helvetica-bold-R-Normal-*-12-75-*" \
-		-command "$this addMFrame $w"
+	    -font "-Adobe-Helvetica-bold-R-Normal-*-12-75-*" \
+	    -command "$this addMFrame $w"
 	pack $w.bframe.more -pady 2 -padx 2 -anchor se -side right
-
+	
 	# AS: initialization of attachment
 	toplevel $w.detached
 	frame $w.detached.f
@@ -285,17 +292,17 @@ itcl::class ViewWindow {
 	
 	wm title $w.detached "VIEWWINDOW settings"
 	update
-
+	
 	wm sizefrom  $w.detached user
 	wm positionfrom  $w.detached user
-
+	
 	wm protocol $w.detached WM_DELETE_WINDOW "$this removeMFrame $w"
 	wm withdraw $w.detached
 	
 	frame $w.mframe
 	frame $w.mframe.f
 	pack $w.mframe.f -side top -fill x
-
+	
 	set IsAttached 1
 	set IsDisplayed 0
 	
@@ -305,17 +312,20 @@ itcl::class ViewWindow {
 	set attachedFr $w.mframe
 	init_frame $detachedFr.f $det_msg
 	init_frame $attachedFr.f $att_msg
-
+	
 	# AS: end initialization of attachment
-
+	
+	puts "switchvisual"
 	switchvisual 0
+	puts "startup"
 	$this-c startup
+	puts "done"
     }
-
+    
     method bindEvents {w} {
 	bind $w <Expose> "$this-c redraw"
 	bind $w <Configure> "$this-c redraw"
-
+	
 	bind $w <ButtonPress-1> "$this-c mtranslate start %x %y"
 	bind $w <Button1-Motion> "$this-c mtranslate move %x %y"
 	bind $w <ButtonRelease-1> "$this-c mtranslate end %x %y"
@@ -325,7 +335,7 @@ itcl::class ViewWindow {
 	bind $w <ButtonPress-3> "$this-c mscale start %x %y"
 	bind $w <Button3-Motion> "$this-c mscale move %x %y"
 	bind $w <ButtonRelease-3> "$this-c mscale end %x %y"
-
+	
 	bind $w <Control-ButtonPress-1> "$this-c mdolly start %x %y"
 	bind $w <Control-Button1-Motion> "$this-c mdolly move %x %y"
 	bind $w <Control-ButtonRelease-1> "$this-c mdolly end %x %y"
@@ -355,16 +365,15 @@ itcl::class ViewWindow {
 	bind $w <Lock-ButtonRelease-2> "$this-c mpick end %x %y %s %b"
 	bind $w <Lock-ButtonRelease-3> "$this-c mpick end %x %y %s %b"
     }
-
+    
     method killWindow { vw } {
-        set w .ui[modname]
 	if {"$vw"=="$w"} {
 	    $this-c killwindow
 	}
     }
-
+    
     method removeMFrame {w} {
-
+	
 	if { $IsAttached!=0 } {
 	    pack forget $attachedFr
 	    append geom [winfo width $w] x [expr [winfo height $w]-[winfo height $w.mframe]]
@@ -379,7 +388,7 @@ itcl::class ViewWindow {
     }
     
     method addMFrame {w} {
-
+	
 	if { $IsAttached!=0} {
 	    pack $attachedFr -anchor w -side top -after $w.bframe
 	    append geom [expr [winfo width $w]>[winfo width $w.mframe] ?[winfo width $w]:[winfo width $w.mframe]] x [expr [winfo height $w]+[winfo reqheight $w.mframe]]
@@ -393,7 +402,7 @@ itcl::class ViewWindow {
     }
     
     method init_frame {m msg} {
-#	if { [winfo exists $m] } {
+	#	if { [winfo exists $m] } 
 	puts "Initializing frame ... "
 	
 	set r "$this-c redraw"
@@ -407,62 +416,62 @@ itcl::class ViewWindow {
 	frame $m.eframe
 	
 	checkbutton $m.eframe.light -text Lighting \
-	    -variable [scope global-light] \
+	    -variable [scope global_light] \
 	    -command "$this-c redraw"
-	    checkbutton $m.eframe.fog -text Fog -variable [scope global-fog] \
+	checkbutton $m.eframe.fog -text Fog -variable [scope global_fog] \
 	    -command "$this-c redraw"
-	    checkbutton $m.eframe.bbox -text BBox \
-	    -variable [scope global-debug] \
+	checkbutton $m.eframe.bbox -text BBox \
+	    -variable [scope global_debug] \
 	    -command "$this-c redraw"
 	checkbutton $m.eframe.clip -text "Use Clip" \
-	    -variable [scope global-clip] \
+	    -variable [scope global_clip] \
 	    -command "$this-c redraw"
 	checkbutton $m.eframe.cull -text "Back Cull" \
-	    -variable [scope global-cull] \
+	    -variable [scope global_cull] \
 	    -command "$this-c redraw"
 	checkbutton $m.eframe.dl -text "Display List" \
-	    -variable [scope global-dl] -command "$this-c redraw"
+	    -variable [scope global_dl] -command "$this-c redraw"
 	
 	pack $m.eframe -anchor w -padx 2 -side left
 	pack  $m.eframe.light $m.eframe.fog $m.eframe.bbox $m.eframe.clip \
-		$m.eframe.cull $m.eframe.dl -in $m.eframe -side top -anchor w
-
+	    $m.eframe.cull $m.eframe.dl -in $m.eframe -side top -anchor w
+	
         frame $m.eframe.f -relief groove -borderwidth 2
         pack $m.eframe.f -side top -anchor w
         label $m.eframe.f.l -text "Record Movie as:"
         pack $m.eframe.f.l -side top 
 	checkbutton $m.eframe.f.resize -text "Resize: " \
-	    -variable [scope global-resize] \
+	    -variable [scope global_resize] \
 	    -offvalue 0 -onvalue 1 -command "$this resize; $this-c redraw"
-	    entry $m.eframe.f.e1 -textvariable [scope x-resize] -width 4
+	entry $m.eframe.f.e1 -textvariable [scope x_resize] -width 4
 	label $m.eframe.f.x -text x
-	    entry $m.eframe.f.e2 -textvariable [scope y-resize] -width 4
+	entry $m.eframe.f.e2 -textvariable [scope y_resize] -width 4
         radiobutton $m.eframe.f.none -text "Stop Recording" \
-            -variable [scope global-movie] -value 0 -command "$this-c redraw"
+            -variable [scope global_movie] -value 0 -command "$this-c redraw"
 	radiobutton $m.eframe.f.raw -text "Raw Frames" \
-            -variable [scope global-movie] -value 1 -command "$this-c redraw"
-	if { [sc$this-c have_mpeg] } {
+            -variable [scope global_movie] -value 1 -command "$this-c redraw"
+#	if { [$this-c have_mpeg] } {
+#	    radiobutton $m.eframe.f.mpeg -text "Mpeg" \
+\#		-variable [scope global_movie] -value 2 \
+\#		-command "$this-c redraw"
+#	} else {
 	    radiobutton $m.eframe.f.mpeg -text "Mpeg" \
-		-variable [scope global-movie] -value 2 \
-		-command "$this-c redraw"
-	} else {
-	    radiobutton $m.eframe.f.mpeg -text "Mpeg" \
-		-variable [scope global-movie] -value 2 \
+		-variable [scope global_movie] -value 2 \
 		-state disabled -disabledforeground "" \
 		-command "$this-c redraw"
-	}
+#	}
 	entry $m.eframe.f.moviebase -relief sunken -width 12 \
-	    -textvariable [scope global-movieName]
+	    -textvariable [scope global_movieName]
         pack $m.eframe.f.none $m.eframe.f.raw $m.eframe.f.mpeg \
             -side top  -anchor w
         pack $m.eframe.f.moviebase -side top -anchor w -padx 2 -pady 2
-	pack $m.eframe.f.resize $m.eframe.f.e1 \ 
+	pack $m.eframe.f.resize $m.eframe.f.e1 \
 	    $m.eframe.f.x $m.eframe.f.e2 -side left  -anchor w
-
-	make_labeled_radio $m.shade "Shading:" $r top global-type \
-		{Wire Flat Gouraud}
+	
+	make_labeled_radio $m.shade "Shading:" $r top global_type \
+	    {Wire Flat Gouraud}
 	pack $m.shade -in $m.eframe -side top -anchor w
-
+	
 	frame $m.objlist -relief groove -borderwidth 2
 	pack $m.objlist -side left -padx 2 -pady 2 -fill y
 	label $m.objlist.title -text "Objects:"
@@ -476,29 +485,29 @@ itcl::class ViewWindow {
 	frame $m.objlist.canvas.frame -relief sunken -borderwidth 2
 	pack $m.objlist.canvas.frame
 	$m.objlist.canvas create window 0 1 -window $m.objlist.canvas.frame \
-		-anchor nw
+	    -anchor nw
 	
 	scrollbar $m.objlist.scroll -relief sunken \
-		-command "$m.objlist.canvas yview"
+	    -command "$m.objlist.canvas yview"
 	pack $m.objlist.scroll -fill y -side right -padx 2 -pady 2
 	
         checkbutton $m.caxes -text "Show Axes" \
 	    -variable [scope caxes] -onvalue 1 -offvalue 0 \
 	    -command "$this-c centerGenAxes; $this-c redraw"
 	pack $m.caxes -side top
-
+	
 	checkbutton $m.stereo -text "Stereo" -variable [scope do_stereo] \
-		-command "$this-c redraw"
+	    -command "$this-c redraw"
 	pack $m.stereo -side top
 	
 	scale $m.sbase -variable [scope sbase] -length 100 -from 0.1 -to 4 \
-		-resolution 0.05 -orient horizontal -label "Fusion Scale:" \
-		-command "$this-c redraw"
+	    -resolution 0.05 -orient horizontal -label "Fusion Scale:" \
+	    -command "$this-c redraw"
 	pack $m.sbase -side top
-
+	
 	bind $m.eframe.f.e1 <Return> "$this resize"
 	bind $m.eframe.f.e2 <Return> "$this resize"
-	if {$global-resize == 0} {
+	if {$global_resize == 0} {
 	    set color "#505050"
 	    $m.eframe.f.x configure -foreground $color
 	    $m.eframe.f.e1 configure -state disabled -foreground $color
@@ -506,12 +515,13 @@ itcl::class ViewWindow {
 	}
     }
 
+    # yarden fixed
+    
     method resize { } {
-	set w .ui[modname]
-	if { [set $this-global-resize] == 0 } {
+	if { $global_resize == 0 } {
 	    wm geometry $w "="
 	    pack configure $w.wframe -expand yes -fill both
-
+	    
 	    set color "#505050"
 	    if { $IsAttached == 1 } {
 		set m $w.mframe.f
@@ -527,8 +537,8 @@ itcl::class ViewWindow {
 	} else {
 	    if { $IsAttached == 1 } { $this switch_frames }
 	    set m $w.detached.f
-	    set xsize $x-resize
-	    set ysize $y-resize
+	    set xsize $x_resize
+	    set ysize $y_resize
 	    set size "$xsize\x$ysize"
 	    set xsize [expr $xsize + 14]
 	    set ysize [expr $ysize + 123]
@@ -542,8 +552,9 @@ itcl::class ViewWindow {
 	}
     }
 
+    #yarden not fixed
+
     method switch_frames {} {
-	set w .ui[modname]
 	if {$IsDisplayed!=0} {
 	    
 	    # handling main window resizing by hand
@@ -566,9 +577,8 @@ itcl::class ViewWindow {
 	    update
 	}
     }
-
+    
     method switchRenderer {renderer} {
-	set w .ui[modname]
 	set width [winfo width $w.wframe.draw]
 	set height [winfo height $w.wframe.draw]
 	destroy $w.wframe.draw
@@ -578,16 +588,14 @@ itcl::class ViewWindow {
 	bindEvents $w.wframe.draw
 	pack $w.wframe.draw -expand yes -fill both
     }
-
+    
     method updatePerf {p1 p2 p3} {
-	set w .ui[modname]
 	$w.bframe.pf.perf1 configure -text $p1
 	$w.bframe.pf.perf2 configure -text $p2
 	$w.bframe.pf.perf3 configure -text $p3
     }
 
     method switchvisual {idx} {
-	set w .ui[modname]
 	if {[winfo exists $w.wframe.draw]} {
 	    destroy $w.wframe.draw
 	}
@@ -597,12 +605,11 @@ itcl::class ViewWindow {
 	    pack $w.wframe.draw -expand yes -fill both
 	}
     }	
-
-#
-#   yarden: not fixed 
+    
+    #
+    #   yarden: not fixed 
     method bench {bench} {
         upvar #0 $bench b
-        set w .ui[modname]
         puts $w
         if {$b == 1} {
             if {[winfo exists $w.wframe.draw]} {
@@ -634,60 +641,57 @@ itcl::class ViewWindow {
             }
         }
     }
-
+    
     method makeViewPopup {} {
-	set w .view[modname]
-	toplevel $w
-	wm title $w "View"
-	wm iconname $w view
-	wm minsize $w 100 100
+	set wv .view[modname]
+	toplevel $wv
+	wm title $wv "View"
+	wm iconname $wv view
+	wm minsize $wv 100 100
 	set c "$this-c redraw "
-	set view $this-view
-	makePoint $w.eyep "Eye Point" $view-eyep $c
-	pack $w.eyep -side left -expand yes -fill x
-	makePoint $w.lookat "Look at Point" $view-lookat $c
-	pack $w.lookat -side left -expand yes -fill x
-	makeNormalVector $w.up "Up Vector" $view-up $c
-	pack $w.up -side left -expand yes -fill x
-	global $view-fov
-	frame $w.f -relief groove -borderwidth 2
-	pack $w.f
-	scale $w.f.fov -orient horizontal -variable $view-fov \
-		-from 0 -to 180 -label "Field of View:" \
-		-showvalue true -tickinterval 90 \
-		-digits 3 \
-		-command $c
-	pack $w.f.fov -expand yes -fill x
-#  	entry $w.f.fove -textvariable $view-fov
-#  	pack $w.f.fove -side top -expand yes -fill x
-#  	bind $w.f.fove <Return> "$command $view-fov"
+	makePoint $wv.eyep "Eye Point" $view-eyep $c
+	pack $wv.eyep -side left -expand yes -fill x
+	makePoint $wv.lookat "Look at Point" $view-lookat $c
+	pack $wv.lookat -side left -expand yes -fill x
+	makeNormalVector $wv.up "Up Vector" $view-up $c
+	pack $wv.up -side left -expand yes -fill x
+	frame $wv.f -relief groove -borderwidth 2
+	pack $wv.f
+	scale $wv.f.fov -orient horizontal -variable [scope $view-fov] \
+	    -from 0 -to 180 -label "Field of View:" \
+	    -showvalue true -tickinterval 90 \
+	    -digits 3 \
+	    -command $c
+	pack $wv.f.fov -expand yes -fill x
+	#  	entry $w.f.fove -textvariable $view-fov
+	#  	pack $w.f.fove -side top -expand yes -fill x
+	#  	bind $w.f.fove <Return> "$command $view-fov"
     }
-
+    
     method makeBackgroundPopup {} {
-	set w .bg[modname]
-	toplevel $w
-	wm title $w "Background"
-	wm iconname $w background
-	wm minsize $w 100 100
+	set wbg .bg[modname]
+	toplevel $wbg
+	wm title $wbg "Background"
+	wm iconname $wbg background
+	wm minsize $wbg 100 100
 	set c "$this-c redraw "
-	makeColorPicker $w $this-bgcolor $c ""
+	makeColorPicker $wbg bgcolor $c ""
     }
-
-#
-# yarden: fixed
+    
+    #
+    # yarden: fixed
     method updateMode {msg} {
 	global .ui[modname].bframe.mousemode
-	set mouseModeText .ui[modname].bframe.mousemode
+	set mouseModeText $w.bframe.mousemode
 	$mouseModeText itemconfigure mouseModeText -text $msg
     }   
-
+    
     method addObject {objid name} {
 	addObjectToFrame $objid $name $detachedFr
 	addObjectToFrame $objid $name $attachedFr
     }
-
+    
     method addObjectToFrame {objid name frame} {
-	set w .ui[modname]
 	set m $frame.f
 	frame  $m.objlist.canvas.frame.objt$objid
 	checkbutton $m.objlist.canvas.frame.obj$objid -text $name \
@@ -696,23 +700,23 @@ itcl::class ViewWindow {
 	set newframeheight [winfo reqheight $m.objlist.canvas.frame.obj$objid]
 	
 	set menun $m.objlist.canvas.frame.menu$objid.menu
-
+	
 	menubutton $m.objlist.canvas.frame.menu$objid -text Shading \
-		-relief raised -menu $menun
+	    -relief raised -menu $menun
 	menu $menun
 	$menun add checkbutton -label Lighting -variable [scope $objid-light] \
-		-command "$this-c redraw"
+	    -command "$this-c redraw"
 	$menun add checkbutton -label BBox -variable [scope $objid-debug] \
-		-command "$this-c redraw"
+	    -command "$this-c redraw"
 	$menun add checkbutton -label Fog -variable [scope $objid-fog] \
-		-command "$this-c redraw"
+	    -command "$this-c redraw"
 	$menun add checkbutton -label "Use Clip" -variable [scope $objid-clip]\
-		-command "$this-c redraw"
+	    -command "$this-c redraw"
 	$menun add checkbutton -label "Back Cull" \
 	    -variable [scope $objid-cull] -command "$this-c redraw"
 	$menun add checkbutton -label "Display List" \
 	    -variable [scope $objid-dl] -command "$this-c redraw"
-
+	
 	set $objid-type Default
 	set $objid-light 1
 	set $objid-fog 0
@@ -720,10 +724,10 @@ itcl::class ViewWindow {
 	set $objid-clip 0
 	set $objid-cull 0
 	set $objid-dl 0
-
+	
 	set menuvar  $m.objlist.canvas.frame.menu2_$objid
 	set menup [tk_optionMenu $menuvar $objid-type Wire Flat Gouraud Default]
-
+	
 	$menup entryconfigure 0 -command "[$menup entrycget 0 -command] ; $this-c redraw"
 	$menup entryconfigure 1 -command "[$menup entrycget 1 -command] ; $this-c redraw"
 	$menup entryconfigure 2 -command "[$menup entrycget 2 -command] ; $this-c redraw"
@@ -735,41 +739,39 @@ itcl::class ViewWindow {
 	set width [winfo width $m.objlist.canvas.frame]
 	#set height [winfo height $m.objlist.canvas.frame]
 	set height [lindex [$m.objlist.canvas cget -scrollregion] end]
-
+	
 	incr height [expr $newframeheight+20]
-
+	
 	$m.objlist.canvas configure -scrollregion "0 0 $width $height"
-
+	
 	set view [$m.objlist.canvas yview]
 	$m.objlist.scroll set [lindex $view 0] [lindex $view 1]
     }
-
+    
     method addObject2 {objid} {
 	addObjectToFrame_2 $objid $detachedFr
 	addObjectToFrame_2 $objid $attachedFr
     }
     
     method addObjectToFrame_2 {objid frame} {
-	set w .ui[modname]
 	set m $frame.f
 	pack $m.objlist.canvas.frame.objt$objid -side top -anchor w
 	pack $m.objlist.canvas.frame.obj$objid  $m.objlist.canvas.frame.menu$objid $m.objlist.canvas.frame.menu2_$objid -in $m.objlist.canvas.frame.objt$objid -side left -anchor w
     }
     
-
+    
     method removeObject {objid} {
 	removeObjectFromFrame $objid $detachedFr
 	removeObjectFromFrame $objid $attachedFr
     }
-
+    
     method removeObjectFromFrame {objid frame} {
-	set w .ui[modname]
 	set m $frame.f
 	pack forget $m.objlist.canvas.frame.objt$objid
     }
-
-#
-#   yarden: not fixed
+    
+    #
+    #   yarden: not fixed
     method makePointSizePopup {} {
 	set w .psize[modname]
 	if {[winfo exists $w]} {
@@ -779,17 +781,17 @@ itcl::class ViewWindow {
 	toplevel $w
 	wm title $w "Point Size"
 	wm minsize $w 250 100 
-
+	
 	frame $w.f
 	global $this-global-psize
 	scale $w.f.scale -command "$this-c redraw" -variable \
-		$this-global-psize -orient horizontal -from 1 -to 5 \
-		-resolution .1 -showvalue true -tickinterval 1 -digits 0 \
-		-label "Pixel Size:"
+	    $this-global-psize -orient horizontal -from 1 -to 5 \
+	    -resolution .1 -showvalue true -tickinterval 1 -digits 0 \
+	    -label "Pixel Size:"
 	pack $w.f.scale -fill x -expand 1
 	pack $w.f -fill x -expand 1
     }	
-
+    
     method makeClipPopup {} {
 	set w .clip[modname]
 	if {[winfo exists $w]} {
@@ -800,10 +802,10 @@ itcl::class ViewWindow {
 	wm title $w "Clipping Planes"
 	wm minsize $w 200 100 
 	set clip $this-clip
-
+	
 	global $clip-num
 	set $clip-num 6
-
+	
 	global $clip-normal-x
 	global $clip-normal-y
 	global $clip-normal-z
@@ -814,11 +816,11 @@ itcl::class ViewWindow {
 	set $clip-normal-x 1.0
 	set $clip-normal-y 0.0
 	set $clip-normal-z 0.0
-
+	
 	for {set i 1} {$i <= [set $clip-num]} {incr i 1} {
 	    set mod $i
-
-
+	    
+	    
 	    global $clip-normal-x-$mod
 	    global $clip-normal-y-$mod
 	    global $clip-normal-z-$mod
@@ -834,22 +836,22 @@ itcl::class ViewWindow {
 	global $clip-selected
 	set $clip-selected 1
 	set menup [tk_optionMenu $w.which $clip-selected 1 2 3 4 5 6]
-
+	
 	for {set i 0}  {$i < [set $clip-num]} {incr i 1} {
 	    $menup entryconfigure $i -command "[$menup entrycget $i -command] ; $this useClip"
 	}
 	
 	pack $w.which
 	checkbutton $w.visibile -text "Visible" -relief flat \
-		-variable "$clip-visible" -command "$this setClip ; $this-c redraw"
+	    -variable "$clip-visible" -command "$this setClip ; $this-c redraw"
 	pack $w.visibile
-
+	
 	makePlane $w.normal "Plane Normal" $clip-normal $c
 	pack $w.normal -side left -expand yes -fill x
 	frame $w.f -relief groove -borderwidth 2
 	pack $w.f -expand yes -fill x
     }
-
+    
     method useClip {} {
 	set clip $this-clip
 	global $clip-normal-x
@@ -859,20 +861,20 @@ itcl::class ViewWindow {
 	global $clip-visible
 	global $clip-selected
 	set cs [set $clip-selected]
-
+	
 	global $clip-normal-x-$cs
 	global $clip-normal-y-$cs
 	global $clip-normal-z-$cs
 	global $clip-normal-d-$cs
 	global $clip-visible-$cs
-
+	
 	set $clip-normal-x [set $clip-normal-x-$cs]
 	set $clip-normal-y [set $clip-normal-y-$cs]
 	set $clip-normal-z [set $clip-normal-z-$cs]
 	.clip[modname].normal.e newvalue [set $clip-normal-d-$cs]
 	set $clip-visible [set $clip-visible-$cs]
     }
-
+    
     method setClip {} {
 	set clip $this-clip
 	global $clip-normal-x
@@ -1012,7 +1014,7 @@ itcl::class ViewWindow {
     }
     method rplay {} {
 	global $this-current_time $this-tbeg $this-tend \
-		$this-framerate $this-totframes
+	    $this-framerate $this-totframes
 	set ctime [set $this-current_time]
 	set tbeg [set $this-tbeg]
 	set tend [set $this-tend]
@@ -1025,10 +1027,10 @@ itcl::class ViewWindow {
 	set nframes [expr ($ctime-$tbeg)/($tend-$tbeg)*$totframes]
 	$this-c anim_redraw $ctime $tbeg $nframes $framerate
     }
-
+    
     method play {} {
 	global $this-current_time $this-tbeg $this-tend \
-		$this-framerate $this-totframes
+	    $this-framerate $this-totframes
 	set ctime [set $this-current_time]
 	set tbeg [set $this-tbeg]
 	set tend [set $this-tend]
@@ -1060,19 +1062,19 @@ itcl::class ViewWindow {
     method crap {} {
 	make_labeled_radio $w.sw "Animation:" "$this-c redraw" \
 		left $this-do_animation \
-		{ {On 1} {Off 0} }
+	    { {On 1} {Off 0} }
 	scale $w.anim.tbeg -orient horizontal -variable $this-tbeg \
-		-from 0 -to 30 -label "Begin Time:" \
-		-showvalue true -tickinterval 10
+	    -from 0 -to 30 -label "Begin Time:" \
+	    -showvalue true -tickinterval 10
 	scale $w.anim.tend -orient horizontal -variable $this-tend \
-		-from 0 -to 30 -label "End Time:" \
-		-showvalue true -tickinterval 10
+	    -from 0 -to 30 -label "End Time:" \
+	    -showvalue true -tickinterval 10
 	scale $w.anim.nsteps -orient horizontal -variable $this-ntimesteps \
-		-from 0 -to 100 -label "Timesteps:" \
-		-showvalue true -tickinterval 20
+	    -from 0 -to 100 -label "Timesteps:" \
+	    -showvalue true -tickinterval 20
 	scale $w.anim.atime -orient horizontal -variable $this-animation_time \
-		-from 0 -to 10 -label "Time:" \
-		-showvalue true -tickinterval 2
+	    -from 0 -to 10 -label "Time:" \
+	    -showvalue true -tickinterval 2
 	button $w.anim.go -text "Go" -command "$this-c redraw"
     }
     method translate {axis amt} {
@@ -1096,22 +1098,22 @@ itcl::class ViewWindow {
     method fov {amt} {
 	puts "fov by $amt"
     }
-
+    
     method makeSaveObjectsPopup {} {
 	toplevel .ui[modname]-save
 	global $this-saveobjfile $this-saveformat
 	set $this-saveobjfile "out.geom"
 	makeFilebox .ui[modname]-save $this-saveobjfile \
-		"$this doSaveObjects" "destroy .ui[modname]-save"
+	    "$this doSaveObjects" "destroy .ui[modname]-save"
 	set ex .ui[modname]-save.f.extra
 	radiobutton $ex.geomb -variable $this-saveformat \
-		-text "Dataflow geom object file (Binary)" -value "scirun_binary"
+	    -text "Dataflow geom object file (Binary)" -value "scirun_binary"
 	radiobutton $ex.geoma -variable $this-saveformat \
-		-text "Dataflow geom object file (ASCII)" -value "scirun_ascii"
+	    -text "Dataflow geom object file (ASCII)" -value "scirun_ascii"
 	radiobutton $ex.vrml -variable $this-saveformat \
-		-text "VRML file" -value "vrml"
+	    -text "VRML file" -value "vrml"
 	radiobutton $ex.rib -variable $this-saveformat \
-		-text "RenderMan RIB file" -value "rib"
+	    -text "RenderMan RIB file" -value "rib"
 	$ex.geomb select
 	pack $ex.geomb $ex.geoma $ex.vrml $ex.rib -side top -anchor w
     }
@@ -1137,13 +1139,13 @@ itcl::class ViewWindow {
 	if { $sgi == 1 || $sgi == 2 } {
 	    radiobutton $ex.rgb -variable $this-saveType \
 		-text "SGI RGB File" -value "rgb" \
-	    -command "$this changeName $w rgb"
+		-command "$this changeName $w rgb"
 	    radiobutton $ex.ppm -variable $this-saveType \
 		-text "PPM File" -value "ppm" \
-	    -command "$this changeName $w ppm"
+		-command "$this changeName $w ppm"
 	    radiobutton $ex.jpg -variable $this-saveType \
 		-text "JPEG File" -value "jpg" \
-	    -command "$this changeName $w jpg"
+		-command "$this changeName $w jpg"
 	} else {
 	    radiobutton $ex.rgb -variable $this-saveType \
 		-text "SGI RGB File" -value "rgb" \
@@ -1156,7 +1158,7 @@ itcl::class ViewWindow {
 		-text "JPEG File" -value "jpg" \
 		-state disabled -disabledforeground ""
 	}
-
+	
 	if { [set $this-saveType] == "rgb" } { 
 	    $ex.rgb select 
 	} elseif { [set $this-saveType] == "ppm" } {
@@ -1167,8 +1169,8 @@ itcl::class ViewWindow {
 	pack $ex.rgb $ex.ppm $ex.jpg -side top -anchor w
     }
 
-#
-# yarden: fixed
+    #
+    # yarden: fixed
     method changeName { w type} {
 	set name [split $saveFile .]
 	set newname [lreplace $name end end $type]

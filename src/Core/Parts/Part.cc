@@ -81,6 +81,7 @@ Part::add_child( Part *child )
 {
   cerr << "Part add child " << child->name() << endl;
   children_.push_back(child);
+  has_child ( child->get_port() );
 }
 
 
