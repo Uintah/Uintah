@@ -293,6 +293,10 @@ void SimulationController::run()
 	}
       }
 
+      // put the current time into the shared state so other components
+      // can access it
+      sharedState->setElapsedTime(t);
+
       scheduler->initialize();
 
       /* I THINK THIS SHOULD BE null_dw, NOT old_dw... Dd: */
