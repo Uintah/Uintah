@@ -190,6 +190,8 @@ void SurfToGeom::execute()
 	            Color(clr_r.get(), clr_g.get(), clr_b.get()),
 		    Color(.2,.2,.2), 20));
 
+//	HACK for 3ICIPE
+//    ogeom->delAll();
 
     if (ss) {
 	cerr << "We don't use ScalarTriSurfaces any more -- use a TriSurface\n";
@@ -289,6 +291,8 @@ void SurfToGeom::execute()
 			    } else {
 				mat1=black;
 			    }
+//			    HACKS FOR 3ICIPE
+//			    ogeom->addObj(scinew GeomMaterial(scinew GeomSphere(ts->points[i], radius, res, res), mat1), clString("Node"+to_string(i)));
 			    spheres->add(scinew GeomMaterial(scinew GeomSphere(ts->points[i], radius, res, res), mat1));
 			    if (ts->normType==TriSurface::PointType && 
 				ts->normals.size()>i) {
@@ -626,6 +630,7 @@ void SurfToGeom::execute()
 	ngroup->add(spheres);
     if (ptsGroup && ptsGroup->pts.size())
 	ngroup->add(ptsGroup);
+//    HACK FOR 3ICIPE
     ogeom->delAll();
     if (ngroup->size()) 
 	ogeom->addObj(scinew GeomMaterial(ngroup, mpick), surf->name);
