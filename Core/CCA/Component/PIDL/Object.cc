@@ -47,6 +47,7 @@ Object::initializeServer(const TypeInfo* typeinfo, void* ptr, EpChannel* epc)
     d_serverContext->d_endpoint_active=false;
     d_serverContext->d_objptr=this;
     d_serverContext->d_objid=-1;
+    d_serverContext->d_sched = 0;
   } else if(d_serverContext->d_endpoint_active){
     throw InternalError("Server reinitialized while endpoint already active?");
   } else if(d_serverContext->d_objptr != this){
@@ -73,8 +74,9 @@ Object::~Object()
       d_serverContext->chan->closeConnection(); 
     }
     delete d_serverContext->chan;
+    if(d_serverContext->d_sched)
+      delete d_serverContext->d_sched;
     delete d_serverContext;
-    delete d_serverContext->d_sched;
   }
 }
 
