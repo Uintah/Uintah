@@ -61,7 +61,7 @@ public:
     enum BoundaryType {
 	DirichletExpression,
 	DirichletData,
-	None
+	Other
     };
     clString boundary_expr;
     BoundaryType boundary_type;
