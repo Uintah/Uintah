@@ -16,7 +16,7 @@
 #
 
 itcl_class SCIRun_Visualization_GenStandardColorMaps { 
-    inherit Module 
+    inherit ModuleGui 
     protected exposed
     protected colorMaps
     protected colorMap

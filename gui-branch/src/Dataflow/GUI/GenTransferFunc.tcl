@@ -17,7 +17,7 @@
 
 
 itcl_class SCIRun_Visualization_GenTransferFunc {
-    inherit Module
+    inherit ModuleGui
     constructor {config} {
 	set name GenTransferFunc
 	set_defaults

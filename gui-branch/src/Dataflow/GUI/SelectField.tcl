@@ -16,7 +16,7 @@
 #
 
 itcl_class SCIRun_Fields_SelectField {
-    inherit Module
+    inherit ModuleGui
     constructor {config} {
         set name SelectField
 

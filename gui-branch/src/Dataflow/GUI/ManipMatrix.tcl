@@ -17,7 +17,7 @@
 
 
 itcl_class SCIRun_Math_ManipMatrix {
-    inherit Module
+    inherit ModuleGui
     constructor {config} {
 	global editor
 	set editor emacs

@@ -18,7 +18,7 @@
 #catch {rename Viewer ""} 
 
 itcl_class SCIRun_Render_Viewer {
-    inherit Module
+    inherit ModuleGui
 
     # List of ViewWindow children of this Viewer
     protected viewwindow

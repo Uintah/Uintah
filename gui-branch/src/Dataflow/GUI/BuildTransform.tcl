@@ -18,7 +18,7 @@
 catch {rename BuildTransform ""}
 
 itcl_class SCIRun_Math_BuildTransform {
-    inherit Module
+    inherit ModuleGui
     constructor {config} {
 	set name BuildTransform
 	set_defaults

@@ -1,78 +1,45 @@
-itcl_class SCIRun_Fields_EditField {
-    inherit Module
-    constructor {config} {
+itcl::class SCIRun_Fields_EditField {
+    inherit ModuleGui
+
+    # the width of the first column of the data display
+    public variable firstwidth 12
+    
+    # these won't be saved 
+    public variable fldname "---"
+    public variable typename "---"
+    public variable datamin "---"
+    public variable datamax "---"
+    public variable numnodes "---"
+    public variable numelems "---"
+    public variable dataat "---"
+    public variable cx "---"
+    public variable cy "---"
+    public variable cz "---"
+    public variable sizex "---"
+    public variable sizey "---"
+    public variable sizez "---"
+    
+    # these will be saved
+    public variable fldname2 ""
+    public variable typename2 "--- No typename ---"
+    public variable datamin2 0
+    public variable datamax2 0
+    public variable dataat2 "Nodes"
+    public variable cfldname 0
+    public variable ctypename 0
+    public variable cdataminmax 0
+    public variable cgeom 0
+    public variable cnumelems 0
+    public variable cdataat 0
+    public variable cx2 0
+    public variable cy2 0
+    public variable cz2 0
+    public variable sizex2 0
+    public variable sizey2 0
+    public variable sizez2 0
+    
+    constructor {} {
         set name EditField
-        set_defaults
-    }
-
-    method set_defaults {} {
-	# the width of the first column of the data display
-	global $this-firstwidth
-	set $this-firstwidth 12
-
-	# these won't be saved 
-	global $this-fldname
-	global $this-typename
-	global $this-datamin
-	global $this-datamax
-	global $this-numnodes
-	global $this-numelems
-	global $this-dataat
-        global $this-cx
-        global $this-cy
-        global $this-cz
-        global $this-sizex
-        global $this-sizey
-        global $this-sizez
-	set $this-fldname "---"
-	set $this-typename "---"
-	set $this-datamin "---"
-	set $this-datamax "---"
-	set $this-numnodes "---"
-	set $this-numelems "---"
-	set $this-dataat "---"
-        set $this-cx "---"
-        set $this-cy "---"
-        set $this-cz "---"
-        set $this-sizex "---"
-        set $this-sizey "---"
-        set $this-sizez "---"
-
-	# these will be saved
-	global $this-fldname2
-	global $this-typename2
-	global $this-datamin2
-	global $this-datamax2
-	global $this-dataat2
-	global $this-cfldname
-	global $this-ctypename
-	global $this-cdataminmax
-        global $this-cgeom
-	global $this-cnumelems
-	global $this-cdataat
-        global $this-cx2
-        global $this-cy2
-        global $this-cz2
-        global $this-sizex2
-        global $this-sizey2
-        global $this-sizez2
-	set $this-fldname2 ""
-	set $this-typename2 "--- No typename ---"
-	set $this-datamin2 0
-	set $this-datamax2 0
-	set $this-dataat2 "Nodes"
-	set $this-cfldname 0
-	set $this-ctypename 0
-	set $this-cdataminmax 0
-        set $this-cgeom 0
-	set $this-cnumelems 0
-	set $this-cdataat 0
-        set $this-cx2 0
-        set $this-cy2 0
-        set $this-cz2 0
-        set $this-sizex2 0
-        set $this-sizey2 0
-        set $this-sizez2 0
     }
 
     method ui {} {
@@ -92,17 +59,15 @@ itcl_class SCIRun_Fields_EditField {
 	pack $w.att 
 	set att [$w.att childsite]
 	
-	labelpair $att.l1 "Name" $this-fldname
-	labelpair $att.l2 "Typename" $this-typename
-        labelpairmulti $att.l3 "Center (x,y,z)" "[set $this-cx], \
-                               [set $this-cy], [set $this-cz]"
-        labelpairmulti $att.l4 "Size (x,y,z)" "[set $this-sizex], \
-                               [set $this-sizey] [set $this-sizez]" 
-	labelpairmulti $att.l5 "Data min,max" "[set $this-datamin], \
-		                          [set $this-datamax]"
-	labelpair $att.l7 "# Nodes" $this-numnodes
-	labelpair $att.l8 "# Elements" $this-numelems
-	labelpair $att.l9 "Data at" $this-dataat
+	labelpair $att.l1 "Name" fldname
+	labelpair $att.l2 "Typename" typename
+        labelpairmulti $att.l3 "Center (x,y,z)" "$cx, $cy, $cz"
+        labelpairmulti $att.l4 "Size (x,y,z)" "$sizex, $sizey $sizez" 
+	labelpairmulti $att.l5 "Data min,max" "$datamin, \
+		                          $datamax"
+	labelpair $att.l7 "# Nodes" numnodes
+	labelpair $att.l8 "# Elements" numelems
+	labelpair $att.l9 "Data at" dataat
 	pack $att.l1 $att.l2 $att.l3 $att.l4 $att.l5 \
 	     $att.l7 $att.l8 $att.l9 -side top 
 
@@ -116,18 +81,18 @@ itcl_class SCIRun_Fields_EditField {
 	pack $w.edit 
 	set edit [$w.edit childsite]
 	
-	labelentry $edit.l1 "Name" $this-fldname2 $this-cfldname
+	labelentry $edit.l1 "Name" fldname2 cfldname
 	labelcombo $edit.l2 "Typename" \
-		   "[possible_typenames [set $this-typename2]]" \
-                   $this-typename2 $this-ctypename
-        labelentry3 $edit.l3 "Center (x,y,z)" $this-cx2 $this-cy2 $this-cz2 \
-                    $this-cgeom "$this-c update_widget"
-        labelentry3 $edit.l4 "Size (x,y,z)" $this-sizex2 $this-sizey2 \
-                    $this-sizez2 $this-cgeom "$this-c update_widget"
-	labelentry2 $edit.l5 "Data min,max" $this-datamin2 $this-datamax2 \
-		    $this-cdataminmax
+		   "[possible_typenames $typename2]" \
+                   typename2 ctypename
+        labelentry3 $edit.l3 "Center (x,y,z)" cx2 cy2 cz2 \
+                    cgeom "$this-c update_widget"
+        labelentry3 $edit.l4 "Size (x,y,z)" sizex2 sizey2 \
+                    sizez2 cgeom "$this-c update_widget"
+	labelentry2 $edit.l5 "Data min,max" datamin2 datamax2 \
+		    cdataminmax
 	labelcombo $edit.l9 "Data at" {Nodes Edges Faces Cells} \
-		   $this-dataat2 $this-cdataat
+		   dataat2 cdataat
 	pack $edit.l1 $edit.l2 $edit.l5 \
 	     $edit.l9 -side top 
 
@@ -144,20 +109,18 @@ itcl_class SCIRun_Fields_EditField {
 	    return
 	}
 	set att [$w.att childsite]
-	$att.l3.l2 configure -text "[set $this-cx], [set $this-cy], \
-		                  [set $this-cz]"
-	$att.l4.l2 configure -text "[set $this-sizex], [set $this-sizey], \
-		                  [set $this-sizez]"
-	$att.l5.l2 configure -text "[set $this-datamin], [set $this-datamax]"
+	$att.l3.l2 configure -text "$cx, $cy, $cz"
+	$att.l4.l2 configure -text "$sizex, $sizey, $sizez"
+	$att.l5.l2 configure -text "$datamin, $datamax"
     }
 
-    method labelpair { win text1 text2 } {
+    method labelpair { win text1 var } {
 	frame $win 
 	pack $win -side top -padx 5
-	label $win.l1 -text $text1 -width [set $this-firstwidth] \
+	label $win.l1 -text $text1 -width $firstwidth \
 		      -anchor w -just left
 	label $win.colon  -text ":" -width 2 -anchor w -just left 
-	label $win.l2 -textvar $text2 -width 40 -anchor w -just left \
+	label $win.l2 -textvar [scope $var] -width 40 -anchor w -just left \
 		-fore darkred
 	pack $win.l1 $win.colon $win.l2 -side left
     } 
@@ -165,7 +128,7 @@ itcl_class SCIRun_Fields_EditField {
     method labelpairmulti { win text1 text2 } {
 	frame $win 
 	pack $win -side top -padx 5
-	label $win.l1 -text $text1 -width [set $this-firstwidth] \
+	label $win.l1 -text $text1 -width $firstwidth \
 		      -anchor w -just left
 	label $win.colon  -text ":" -width 2 -anchor w -just left 
 	label $win.l2 -text $text2 -width 40 -anchor w -just left \
@@ -176,8 +139,8 @@ itcl_class SCIRun_Fields_EditField {
     method labelentry { win text1 text2 var } {
 	frame $win 
 	pack $win -side top -padx 5
-	checkbutton $win.b -var $var
-	label $win.l1 -text $text1 -width [set $this-firstwidth] \
+	checkbutton $win.b -var [scope $var]
+	label $win.l1 -text $text1 -width $firstwidth \
 		      -anchor w -just left
 	label $win.colon  -text ":" -width 2 -anchor w -just left 
 	entry $win.l2 -width 40 -just left \
@@ -189,8 +152,8 @@ itcl_class SCIRun_Fields_EditField {
     method labelentry2 { win text1 text2 text3 var } {
 	frame $win 
 	pack $win -side top -padx 5
-	checkbutton $win.b -var $var
-	label $win.l1 -text $text1 -width [set $this-firstwidth] \
+	checkbutton $win.b -var [scope $var]
+	label $win.l1 -text $text1 -width $firstwidth \
 		      -anchor w -just left
 	label $win.colon  -text ":" -width 2 -anchor w -just left 
 	entry $win.l2 -width 10 -just left \
@@ -205,8 +168,8 @@ itcl_class SCIRun_Fields_EditField {
     method labelentry3 { win text1 text2 text3 text4 var func} {
 	frame $win 
 	pack $win -side top -padx 5
-	checkbutton $win.b -var $var
-	label $win.l1 -text $text1 -width [set $this-firstwidth] \
+	checkbutton $win.b -var [scope $var]
+	label $win.l1 -text $text1 -width $firstwidth \
 		      -anchor w -just left
 	label $win.colon  -text ":" -width 2 -anchor w -just left 
 	entry $win.l2 -width 10 -just left \
@@ -227,12 +190,12 @@ itcl_class SCIRun_Fields_EditField {
     method labelcombo { win text1 arglist var var2} {
 	frame $win 
 	pack $win -side top -padx 5
-	checkbutton $win.b -var $var2
-	label $win.l1 -text $text1 -width [set $this-firstwidth] \
+	checkbutton $win.b -var [scope $var2]
+	label $win.l1 -text $text1 -width $firstwidth \
 		      -anchor w -just left
 	label $win.colon  -text ":" -width 2 -anchor w -just left
 	iwidgets::optionmenu $win.c -foreground darkred \
-		-command " $this comboget $win.c $var "
+	    -command " $this comboget $win.c $var "
 
 	set i 0
 	set found 0
@@ -261,7 +224,7 @@ itcl_class SCIRun_Fields_EditField {
     method comboget { win var } {
 	if {![winfo exists $win]} {
 	    return
-	}
+	} 
 	if { "$var"!="[$win get]" } {
 	    set $var [$win get]
 	}
@@ -270,12 +233,12 @@ itcl_class SCIRun_Fields_EditField {
     method labeloption { win text1 text2 text3 var var2} {
 	frame $win 
 	pack $win -side top -padx 5
-	checkbutton $win.b -var $var2
-	label $win.l1 -text $text1 -width [set $this-firstwidth] \
+	checkbutton $win.b -var [scope $var2]
+	label $win.l1 -text $text1 -width $firstwidth \
                       -anchor w -just left
 	label $win.colon  -text ":" -width 2 -anchor w -just left 
-	radiobutton $win.l2 -text $text2 -var $var -val $text2 -fore darkred
-	radiobutton $win.l3 -text $text3 -var $var -val $text3 -fore darkred
+	radiobutton $win.l2 -text $text2 -var [scope $var] -val $text2 -fore darkred
+	radiobutton $win.l3 -text $text3 -var [scope $var] -val $text3 -fore darkred
 	label $win.l4 -width 40
 	pack $win.b $win.l1 $win.colon -side left
         pack $win.l2 $win.l3 $win.l4 -side left
@@ -288,32 +251,32 @@ itcl_class SCIRun_Fields_EditField {
 	}
 	set att [$w.att childsite]
 	set edit [$w.edit childsite]
-        if {"[set $this-cfldname]"!="1"} {
-	  if {"[set $this-fldname]"!="--- Name Not Assigned ---"} {
-	    set $this-fldname2 [set $this-fldname]
+        if {"$cfldname"!="1"} {
+	  if {"$fldname"!="--- Name Not Assigned ---"} {
+	    set fldname2 $fldname
 	  } else {
-	    set $this-fldname2 ""
+	    set fldname2 ""
 	  }
         }
-        if {"[set $this-cdataat]"!="1"} {
+        if {"$cdataat"!="1"} {
 	  config_labelcombo $edit.l9 {Nodes Edges Faces Cells} \
-            [set $this-dataat]
+            $dataat
         }
-        if {"[set $this-cdataminmax]"!="1"} {
-	  set $this-datamin2 [set $this-datamin]
-	  set $this-datamax2 [set $this-datamax]
+        if {"$cdataminmax"!="1"} {
+	  set datamin2 $datamin
+	  set datamax2 $datamax
         }
-        if {"[set $this-cgeom]"!="1"} {
-          set $this-cx2 [set $this-cx]
-          set $this-cy2 [set $this-cy]
-          set $this-cz2 [set $this-cz]
-          set $this-sizex2 [set $this-sizex]
-          set $this-sizey2 [set $this-sizey]
-          set $this-sizez2 [set $this-sizez]
+        if {"$cgeom"!="1"} {
+          set cx2 $cx
+          set cy2 $cy
+          set cz2 $cz
+          set sizex2 $sizex
+          set sizey2 $sizey
+          set sizez2 $sizez
         }
-        if {"[set $this-typename]"!="1"} {
+        if {"$typename"!="1"} {
 	  config_labelcombo $edit.l2 [possible_typenames \
-            [set $this-typename]] [set $this-typename]
+            $typename] $typename
         }
     }
 

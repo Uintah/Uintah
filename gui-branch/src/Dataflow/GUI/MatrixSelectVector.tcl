@@ -16,7 +16,7 @@
 #
 
 itcl_class SCIRun_Math_MatrixSelectVector {
-    inherit Module 
+    inherit ModuleGui 
 
     constructor {config} {
         set name MatrixSelectVector

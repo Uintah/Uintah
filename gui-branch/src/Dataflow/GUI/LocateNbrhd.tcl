@@ -29,7 +29,7 @@
 catch {rename LocateNbrhd ""}
 
 itcl_class SCIRun_Fields_LocateNbrhd {
-    inherit Module
+    inherit ModuleGui
     constructor {config} {
         set name LocateNbrhd
         set_defaults

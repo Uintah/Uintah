@@ -16,7 +16,7 @@
 #
 
 itcl_class SCIRun_Visualization_RescaleColorMap { 
-    inherit Module 
+    inherit ModuleGui 
 
     protected  bVar
     constructor {config} { 

@@ -23,7 +23,7 @@
 catch {rename SCIRun_DataIO_MatrixReader ""}
 
 itcl_class SCIRun_DataIO_MatrixReader {
-    inherit Module
+    inherit ModuleGui
     constructor {config} {
 	set name MatrixReader
 	set_defaults

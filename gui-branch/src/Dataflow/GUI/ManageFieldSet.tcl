@@ -16,7 +16,7 @@
 #
 
 itcl_class SCIRun_Fields_ManageFieldSet {
-    inherit Module
+    inherit ModuleGui
     constructor {config} {
         set name ManageFieldSet
         set_defaults

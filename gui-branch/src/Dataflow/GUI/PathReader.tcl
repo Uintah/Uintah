@@ -23,7 +23,7 @@
 catch {rename SCIRun_DataIO_PathReader ""}
 
 itcl_class SCIRun_DataIO_PathReader {
-    inherit Module
+    inherit ModuleGui
     constructor {config} {
 	set name PathReader
 	set_defaults

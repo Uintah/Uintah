@@ -18,7 +18,7 @@
 package require Iwidgets 3.0  
 
 itcl_class SCIRun_Visualization_ShowField {
-    inherit Module
+    inherit ModuleGui
     constructor {config} {
 	set name ShowField
 	set_defaults

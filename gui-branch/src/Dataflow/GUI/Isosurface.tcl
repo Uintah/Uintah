@@ -20,61 +20,40 @@ catch {rename Isosurface ""}
 
 package require Iwidgets 3.0   
 
-itcl_class SCIRun_Visualization_Isosurface {
-    inherit Module
-    
-    constructor {config} {
+itcl::class SCIRun_Visualization_Isosurface {
+    inherit ModuleGui
+
+    public variable isoval      0
+    public variable isoval_min  0
+    public variable isoval_max  4095
+    public variable continuous  0
+    public variable extract_from_new_field 0
+    public variable algorithm   0
+    public variable type        ""
+    public variable gen         0
+    public variable build_trisurf 0
+    public variable np          1
+    public variable active_tab  "MC"
+    public variable update_type {or release}
+    public variable opt
+
+    # SAGE vars
+    public variable visibility   0
+    public variable value        1
+    public variable scan         1
+    public variable bbox         1
+    public variable cutoff_depth 8
+    public variable reduce       1
+    public variable all          0
+    public variable rebuild      0
+    public variable min_size     1
+    public variable poll         0
+
+    constructor {} {
 	set name Isosurface
-	set_defaults
-    }
-    
-    method set_defaults {} {
-	global $this-isoval-min 
-	global $this-isoval-max 
-	global $this-continuous
-	global $this-extract-from-new-field
-	global $this-algorithm
-	global $this-type
-	global $this-gen
-	global $this-build_trisurf
-	global $this-np
-	global $this-active_tab
-	global $this-update_type
 
-	set $this-isoval-min 0
-	set $this-isoval-max 4095
-	set $this-continuous 0
-	set $this-extract-from-new-field 0
-	set $this-algorithm 0
-	set $this-type ""
-	set $this-gen 0
-	set $this-build_trisurf 0
-	set $this-np 1
-	set $this-active_tab "MC"
-	set $this-update_type "on release"
-	trace variable $this-active_tab w "$this switch_to_active_tab"
-	trace variable $this-update_type w "$this set_update_type"
-
-	# SAGE vars
-	global $this-visibility $this-value $this-scan
-	global $this-bbox
-	global $this-cutoff_depth 
-	global $this-reduce
-	global $this-all
-	global $this-rebuild
-	global $this-min_size
-	global $this-poll
-
-	set $this-visiblilty 0
-	set $this-value 1
-	set $this-scan 1
-	set $this-bbox 1
-	set $this-reduce 1
-	set $this-all 0
-	set $this-rebuild 0
-	set $this-min_size 1
-	set $this-poll 0
-
+	trace variable [scope active_tab] w "$this switch_to_active_tab"
+	trace variable [scope update_type] w "$this set_update_type"
     }
 
     method switch_to_active_tab {name1 name2 op} {
@@ -82,7 +61,7 @@ itcl_class SCIRun_Visualization_Isosurface {
 	set window .ui[modname]
 	if {[winfo exists $window]} {
 	    set mf [$window.f.meth childsite]
-	    $mf.tabs view [set $this-active_tab]
+	    $mf.tabs view $active_tab
 	}
     }
 
@@ -99,33 +78,30 @@ itcl_class SCIRun_Visualization_Isosurface {
 	set n "$this-c needexecute "
 	
 	scale $w.f.isoval -label "Iso Value:" \
-		-variable $this-isoval \
-		-from [set $this-isoval-min] -to [set $this-isoval-max] \
-		-length 5c \
-		-showvalue true \
-		-orient horizontal  \
-		-digits 5 \
-		-resolution 0.001 \
-		-command "$this change_isoval"
+	    -variable [scope isoval] \
+	    -from $isoval_min -to $isoval_max \
+	    -length 5c \
+	    -showvalue true \
+	    -orient horizontal  \
+	    -digits 5 \
+	    -resolution 0.001 \
+	    -command "$this change_isoval"
 
 	bind $w.f.isoval <ButtonRelease> "$this set-isoval"
 	
 	button $w.f.extract -text "Extract" -command "$this-c needexecute"
 	pack $w.f.isoval  -fill x
 	pack $w.f.extract
-
+	
 	#  Info
 	
-	global $this-type
-	global $this-gen
-
 	iwidgets::labeledframe $w.f.info -labelpos nw -labeltext "Info"
 	set info [$w.f.info childsite]
 	
 	label $info.type_label -text "File Type: " 
-	label $info.type -text [set $this-type]
+	label $info.type -text $type
 	label $info.gen_label -text "Generation: "
-	label $info.gen -text [set $this-gen]
+	label $info.gen -text $gen
 
 	pack $info.type_label $info.type $info.gen_label $info.gen -side left
 	pack $w.f.info -side top -anchor w
@@ -136,24 +112,23 @@ itcl_class SCIRun_Visualization_Isosurface {
 	set opt [$w.f.opt childsite]
 	
 	iwidgets::optionmenu $opt.update -labeltext "Update:" \
-		-labelpos w -command "$this update-type $opt.update"
+	    -labelpos w -command "$this update-type $opt.update"
 	
-	$opt.update insert end "on release" Manual Auto
-	$opt.update select [set $this-update_type]
+	$opt.update insert end {on release} Manual Auto
+	$opt.update select Manual
+#$update_type
 
-	global $this-update
-	set $this-update $opt.update
+	set update $opt.update
 
-	global $this-build_trisurf
 	checkbutton $opt.buildsurf -text "Build TriSurf" \
-		-variable $this-build_trisurf
+	    -variable [scope build_trisurf]
 
 	checkbutton $opt.aefnf -text "Auto Extract from New Field" \
-		-relief flat -variable $this-extract-from-new-field 
+	    -relief flat -variable [scope extract_from_new_field]
 
 	pack $opt.update $opt.aefnf $opt.buildsurf -side top -anchor w
 	pack $w.f.opt -side top -anchor w
-
+	
 
 	#  Methods
 	iwidgets::labeledframe $w.f.meth -labelpos nw -labeltext "Methods"
@@ -168,59 +143,51 @@ itcl_class SCIRun_Visualization_Isosurface {
 	set alg [$mf.tabs add -label "MC" -command "$this select-alg 0"]
 	
         scale $alg.np -label "np:" \
-		-variable $this-np \
-		-from 1 -to 8 \
-		-showvalue true \
-		-orient horizontal
+	    -variable [scope np] \
+	    -from 1 -to 8 \
+	    -showvalue true \
+	    -orient horizontal
 	
         pack $alg.np -side left -fill x
-
+	
 	set alg [$mf.tabs add -label "NOISE"  -command "$this select-alg 1"]
 
-	$mf.tabs view [set $this-active_tab]
+	$mf.tabs view $active_tab
 	$mf.tabs configure -tabpos "n"
 
-	
 	pack $mf.tabs -side top
 	pack $w.f.meth -side top
     }
 
     method change_isoval { n } {
-	global $this-continuous
-	
-	if { [set $this-continuous] == 1.0 } {
+	if { $continuous == 1.0 } {
 	    eval "$this-c needexecute"
 	}
     }
     
     method set-isoval {} {
-	global $this-update
-
-	set type [[set $this-update] get]
+	set type [$opt.update get]
 	if { $type == "on release" } {
 	    eval "$this-c needexecute"
 	}
     }
     
     method orient { tab page { val 4 }} {
-	global $page
-	global $tab
+#	global $page
+#	global $tab
 	
 	$tab.tabs configure -tabpos [$page.orient get]
     }
 
     method select-alg { alg } {
-	global $this-algorithm
-	global $this-active_tab
-
 	if { $alg == 0 } {
-	    set $this-active_tab "MC"
+	    set active_tab "MC"
 	} else {
-	    set $this-active_tab "NOISE"
+	    set active_tab "NOISE"
 	}
-	if { [set $this-algorithm] != $alg } {
-	    set $this-algorithm $alg
-	    if { [set $this-continuous] == 1.0 } {
+	if { $algorithm != $alg } {
+	    set algorithm $alg
+	    if { $continuous == 1.0 } {
 		eval "$this-c needexecute"
 	    }
 	}
@@ -231,35 +198,28 @@ itcl_class SCIRun_Visualization_Isosurface {
 	puts stdout $name1
 	puts stdout $name2
 	puts stdout $op
-	puts stdout [set $this-update_type]
+	puts stdout $update_type
 	set window .ui[modname]
 	if {[winfo exists $window]} {
 	    set opt [$window.f.opt childsite]
-	    $opt.update select [set $this-update_type]
+	    $opt.update select $update_type
 	}
     }
 
     method update-type { w } {
-	global $w
-	global $this-continuous
-	global $this-update_type
-
-	set $this-update_type [$w get]
-	puts "update to $this-update_type current is [set $this-continuous]"
-	if { [set $this-update_type] == "Auto" } {
-	    set $this-continuous 1
+	set update_type [$w get]
+	puts "update to update_type current is $continuous"
+	if { $update_type == "Auto" } {
+	    set continuous 1
 	} else {
-	    set $this-continuous 0
+	    set continuous 0
 	}
     }
+    
 
-
-    method set_info { type generation } {
-	global $this-type
-	global $this-gen
-
-	set $this-type $type
-	set $this-gen $generation
+    method set_info { type_ generation } {
+	set type $type_
+	set gen $generation
 
 	set w .ui[modname]    
 	if [ expr [winfo exists $w] ] {
@@ -273,9 +233,8 @@ itcl_class SCIRun_Visualization_Isosurface {
     method set_minmax {min max} {
 	set w .ui[modname]
 
-	global $this-isoval-min $this-isoval-max
-	set $this-isoval-min $min
-	set $this-isoval-max $max
+	set isoval_min $min
+	set isoval_max $max
 	if [ expr [winfo exists $w] ] {
 	    $w.f.isoval configure -from $min -to $max
 	}

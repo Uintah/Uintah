@@ -24,7 +24,7 @@
 #  Copyright (C) 1995 SCI Group
 
 itcl_class SCIRun_Visualization_ShowWidgets {
-    inherit Module
+    inherit ModuleGui
     constructor {config} {
 	set name ShowWidgets
 	set_defaults
