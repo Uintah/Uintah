@@ -134,8 +134,8 @@ SCIRUN_RCFILE_VERSION = 1.24.0.1
 
 
 ### SCIRUN_NET_SUBSTITUTE_DATADIR = [boolean]
-#   If true, module filename variables will be automatically substitute
-#   SCIRUN_DATADIR and SCIRUN_DATASET in saved .net files.
+#   If true, module filename variables will be automatically substituted for
+#   'SCIRUN_DATADIR' and 'SCIRUN_DATASET' in saved .net files.
 # SCIRUN_NET_SUBSTITUTE_DATADIR = false
 
 
