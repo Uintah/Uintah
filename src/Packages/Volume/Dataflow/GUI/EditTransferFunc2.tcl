@@ -94,10 +94,10 @@ itcl_class Volume_Visualization_EditTransferFunc2 {
 		    set $this-$i-color-g 0.5
 		}
 		if { [catch { set t [set $this-$i-color-b]}] } {
-		    set $this-$i-color-b 0.5
+		    set $this-$i-color-b 1.0
 		}
 		if { [catch { set t [set $this-$i-color-a]}] } {
-		    set $this-$i-color-a 0.6
+		    set $this-$i-color-a 0.7
 		}
 
 		if {![winfo exists $widgets.e-$i]} {
@@ -111,10 +111,7 @@ itcl_class Volume_Visualization_EditTransferFunc2 {
 		    button $widgets.e-$i.color -width 8 \
 			-command $cmmd \
 			-background [format #%04x%04x%04x $ir $ig $ib]
-		    entry $widgets.e-$i.opacity \
-			-textvariable $this-$i-color-a -width 8
 		    pack $widgets.e-$i.name $widgets.e-$i.color \
-			$widgets.e-$i.opacity \
 			-side left
 		    pack $widgets.e-$i 
 		}
@@ -145,10 +142,8 @@ itcl_class Volume_Visualization_EditTransferFunc2 {
 	label $w.title.name -text "Widget Name" \
 	    -width 16 -relief groove
 	label $w.title.color -text "Color" -width 8 -relief groove
-	label $w.title.opacity -text "Opacity" -width 8 -relief groove
 	label $w.title.empty -text "" -width 3
-	pack $w.title.name $w.title.color $w.title.opacity \
-	    $w.title.empty \
+	pack $w.title.name $w.title.color $w.title.empty \
 	    -side left 
 
 	frame $w.controls

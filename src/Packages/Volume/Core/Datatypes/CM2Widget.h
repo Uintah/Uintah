@@ -34,6 +34,7 @@
 
 #include <Core/Containers/Array3.h>
 #include <Core/Datatypes/Color.h>
+#include <string>
 
 namespace Volume {
 
@@ -57,6 +58,9 @@ public:
   virtual int pick2 (int x, int y, int w, int h) = 0;
   virtual void move (int obj, int x, int y, int w, int h) = 0;
   virtual void release (int obj, int x, int y, int w, int h) = 0;
+
+  virtual std::string tcl_pickle() = 0;
+  virtual void tcl_unpickle(const std::string &p) = 0;
 
   void select(int obj) { selected_ = obj; }
   void unselect_all() { selected_ = 0; }
@@ -134,7 +138,10 @@ public:
   virtual int pick2 (int x, int y, int w, int h);
   virtual void move (int obj, int x, int y, int w, int h);
   virtual void release (int obj, int x, int y, int w, int h);
-  
+
+  virtual std::string tcl_pickle();
+  virtual void tcl_unpickle(const std::string &p);
+
 protected:
   float base_;
   float top_x_, top_y_;
@@ -168,6 +175,9 @@ public:
   virtual void move (int obj, int x, int y, int w, int h);
   virtual void release (int obj, int x, int y, int w, int h);
   
+  virtual std::string tcl_pickle();
+  virtual void tcl_unpickle(const std::string &p);
+
 protected:
   int type_;
   float left_x_, left_y_;
