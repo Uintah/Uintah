@@ -217,6 +217,22 @@ void NexusEpMessage::destroyMessage() {
   }
 }
 
+int NexusEpMessage::getRecvBufferCopy(void* buf)
+{
+}
+
+int NexusEpMessage::getSendBufferCopy(void* buf)
+{
+}
+
+void NexusEpMessage::setRecvBuffer(void* buf, int len)
+{
+}
+
+void NexusEpMessage::setSendBuffer(void* buf, int len)
+{
+}
+
 
 
 

@@ -49,6 +49,17 @@ namespace SCIRun {
     // Broadcast a message from root to all other parallel processes
     // Returns success or failure..
     virtual int broadcast(int root, char* bytestream, int length) = 0;
+
+    /////////////////
+    // Send an asynchronous  message to a parallel process
+    // specified by rank number. Returns success or failure.
+    virtual int async_send(int rank, char* bytestream, int length) = 0;
+    
+    /////////////////
+    // Receive an asynchronous message from a parallel process
+    // specified by rank number. Returns success or failure..
+    virtual int async_receive(int rank, char* bytestream, int length) = 0;
+    
   };
 }
 

@@ -54,6 +54,11 @@ namespace SCIRun {
     // get the object from the EP that this SP is associated.
     void* getLocalObj();
 
+    int getRecvBufferCopy(void* buf);
+    int getSendBufferCopy(void* buf);
+    void setRecvBuffer(void* buf, int len);
+    void setSendBuffer(void* buf, int len);
+
     void createMessage();
     void marshalInt(const int *i, int size = 1);
     void marshalSpChannel(SpChannel* channel);
@@ -74,15 +79,20 @@ namespace SCIRun {
     void unmarshalSpChannel(SpChannel* channel);
     void destroyMessage();
 
+
+    ////////////////
+    // Buffer for original message
+    globus_nexus_buffer_t* _buffer;
+
+    ///////////////
+    // Size of the current message
+    int msgsize;
+
   private:
 
     /////////////////
     // Reply endpoint to facilitate receiving a reply
     ReplyEP* _reply;
-
-    ////////////////
-    // Buffer for original message
-    globus_nexus_buffer_t* _buffer;
 
     ////////////////
     // Beffer in which to store the reply
@@ -92,10 +102,6 @@ namespace SCIRun {
     // Startpoint which we marshal together with the
     // message in order to recieve a reply.
     globus_nexus_startpoint_t _reply_sp;
-
-    ///////////////
-    // Size of the current message
-    int msgsize;
 
     ///////////////
     // Original startpoint associated with this

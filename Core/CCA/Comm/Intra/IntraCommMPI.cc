@@ -16,10 +16,7 @@
 */
 
 #include <Core/CCA/Comm/Intra/IntraCommMPI.h>
-
-#include <sci_config.h> // For MPIPP_H on SGI
-#include <mpi.h>
-
+#include <iostream>
 using namespace SCIRun;
 
 IntraCommMPI::IntraCommMPI()
@@ -63,5 +60,28 @@ int IntraCommMPI::broadcast(int root, char* bytestream, int length)
     return 0;
   else
     return -1;
+}
+
+int IntraCommMPI::async_send(int rank, char* bytestream, int length)
+{ 
+  int ret;
+  MPI_Request req;
+  ret = MPI_Isend((void *)bytestream, length, MPI_BYTE, rank, 13, MPI_COMM_WORLD, &req);
+
+  if(ret == MPI_SUCCESS)
+    return 0;
+  else
+    return -1;
+}
+
+int IntraCommMPI::async_receive(int rank, char* bytestream, int length)
+{
+  int flag;
+
+  MPI_Iprobe(rank,13,MPI_COMM_WORLD,&flag,MPI_STATUS_IGNORE);
+  if(flag)
+    MPI_Recv((void *)bytestream, length, MPI_BYTE, rank, 13, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+
+  return flag; 
 }
 

@@ -223,6 +223,22 @@ void SocketMessage::destroyMessage() {
   delete this;
 }
 
+int SocketMessage::getRecvBufferCopy(void* buf)
+{
+}
+
+int SocketMessage::getSendBufferCopy(void* buf)
+{
+}
+
+void SocketMessage::setRecvBuffer(void* buf, int len)
+{
+}
+
+void SocketMessage::setSendBuffer(void* buf, int len)
+{
+}
+
 
 //private methods
 void 
