@@ -12437,6 +12437,225 @@ fi
 
 
 
+##  --  search for png --------------------------------------
+
+
+if test "$with_png"; then
+  _sci_lib="$with_png/lib"
+else
+  _sci_lib="$sci_thirdparty_dir"
+fi
+
+for i in $_sci_lib; do
+  if test ! -d "$i"; then
+    continue
+  fi
+
+  #this is where the lib actually lives
+  if test ! -d "$i/lib"; then
+    continue
+  fi
+
+
+
+## arguments mean:
+## arg 1 : variable base name i.e. MATH
+## arg 2 : checking message
+## arg 3 : includes that arg 6 needs to compile
+## arg 4 : include paths -I
+## arg 5 : list of libs to link against -l
+## arg 6 : lib paths -L
+## arg 7 : extra link flags
+## arg 8 : body of code to compile. can be empty
+## arg 9 : optional or not-optional required argument
+##
+## after execution of macro, the following will be defined:
+##      Variable            Value
+##      --------            -----
+##      LIB_DIR_PNG        => lib path
+##      PNG_LIB_DIR_FLAG   => all the -L's
+##      PNG_LIB_FLAG       => all the -l's
+##      HAVE_PNG           => yes or no
+##      INC_PNG_H          => all the -I's
+##      HAVE_PNG_H         => yes or no
+
+
+
+echo "$as_me:$LINENO: checking for optional png library and headers" >&5
+echo $ECHO_N "checking for optional png library and headers... $ECHO_C" >&6
+_sci_savelibs=$LIBS
+_sci_saveldflags=$LDFLAGS
+_sci_savecflags=$CFLAGS
+_sci_savecxxflags=$CXXFLAGS
+
+_sci_includes=
+
+for i in $i/include; do
+  # make sure it exists
+  if test -d $i; then
+    if test -z "$_sci_includes"; then
+      _sci_includes=-I$i
+    else
+      _sci_includes="$_sci_includes -I$i"
+    fi
+  fi
+done
+
+
+for i in png; do
+  if test -z "$_sci_libs"; then
+    _sci_libs=-l$i
+  else
+    _sci_libs="$_sci_libs -l$i"
+  fi
+done
+
+_sci_lib_path=
+
+for i in $i/lib; do
+  # make sure it exists
+  if test -d $i; then
+    if test -z "$_sci_lib_path"; then
+      _sci_lib_path="$LDRUN_PREFIX$i -L$i"
+    else
+      _sci_lib_path="$_sci_lib_path $LDRUN_PREFIX$i -L$i"
+    fi
+  fi
+done
+
+CFLAGS="$_sci_includes $CFLAGS"
+CXXFLAGS="$_sci_includes $CXXFLAGS"
+LDFLAGS="$_sci_lib_path $LDFLAGS"
+LIBS="$_sci_libs  $LIBS"
+
+cat >conftest.$ac_ext <<_ACEOF
+#line $LINENO "configure"
+#include "confdefs.h"
+
+  #include <png.h>
+
+#ifdef F77_DUMMY_MAIN
+#  ifdef __cplusplus
+     extern "C"
+#  endif
+   int F77_DUMMY_MAIN() { return 1; }
+#endif
+int
+main ()
+{
+
+  ;
+  return 0;
+}
+_ACEOF
+rm -f conftest.$ac_objext conftest$ac_exeext
+if { (eval echo "$as_me:$LINENO: \"$ac_link\"") >&5
+  (eval $ac_link) 2>&5
+  ac_status=$?
+  echo "$as_me:$LINENO: \$? = $ac_status" >&5
+  (exit $ac_status); } &&
+         { ac_try='test -s conftest$ac_exeext'
+  { (eval echo "$as_me:$LINENO: \"$ac_try\"") >&5
+  (eval $ac_try) 2>&5
+  ac_status=$?
+  echo "$as_me:$LINENO: \$? = $ac_status" >&5
+  (exit $ac_status); }; }; then
+
+eval LIB_DIR_PNG='"$i/lib"'
+eval PNG_LIB_DIR_FLAG='"$_sci_lib_path"'
+eval PNG_LIB_FLAG='"$_sci_libs"'
+eval HAVE_PNG="yes"
+eval INC_PNG_H='"$_sci_includes"'
+eval HAVE_PNG_H="yes"
+echo "$as_me:$LINENO: result: yes" >&5
+echo "${ECHO_T}yes" >&6
+
+else
+  echo "$as_me: failed program was:" >&5
+cat conftest.$ac_ext >&5
+
+eval LIB_DIR_PNG=''
+eval PNG_LIB_DIR_FLAG=''
+eval PNG_LIB_FLAG=''
+eval HAVE_PNG="no"
+eval INC_PNG_H=''
+eval HAVE_PNG_H="no"
+echo "$as_me:$LINENO: result: not found" >&5
+echo "${ECHO_T}not found" >&6
+if test "optional" =  "not-optional"; then
+
+## SCI_MSG_ERROR
+if test -z "$debugging"; then
+  { echo "$as_me:$LINENO: WARNING:
+    Adding '--enable-verbosity' to configure line
+    _may_ give more information about what is breaking.
+    IF YOU KNOW WHAT YOU ARE DOING, TRY THIS:
+    Digging through the config.log file is your best option
+    for determining what went wrong.  Search for the specific lib/file
+    that configured failed to find.  There should be a compile line
+    and source code near that check.  If you cut the source code into
+    a test.cc and then use the compile line to compile it, the true
+    error most likely will show up.
+  " >&5
+echo "$as_me: WARNING:
+    Adding '--enable-verbosity' to configure line
+    _may_ give more information about what is breaking.
+    IF YOU KNOW WHAT YOU ARE DOING, TRY THIS:
+    Digging through the config.log file is your best option
+    for determining what went wrong.  Search for the specific lib/file
+    that configured failed to find.  There should be a compile line
+    and source code near that check.  If you cut the source code into
+    a test.cc and then use the compile line to compile it, the true
+    error most likely will show up.
+  " >&2;}
+fi
+
+{ { echo "$as_me:$LINENO: error: Test for required PNG failed.
+    To see the failed compile information, look in config.log,
+    search for PNG. Please install the relevant libraries
+     or specify the correct paths and try to configure again." >&5
+echo "$as_me: error: Test for required PNG failed.
+    To see the failed compile information, look in config.log,
+    search for PNG. Please install the relevant libraries
+     or specify the correct paths and try to configure again." >&2;}
+   { (exit 1); exit 1; }; }
+
+fi
+
+fi
+rm -f conftest.$ac_objext conftest$ac_exeext conftest.$ac_ext
+
+#restore variables
+CFLAGS=$_sci_savecflags
+CXXFLAGS=$_sci_savecxxflags
+LDFLAGS=$_sci_saveldflags
+LIBS=$_sci_savelibs
+_sci_lib_path=''
+_sci_libs=''
+_sci_includes=''
+
+
+
+  if test "$HAVE_PNG"; then
+    DEF_PNG="#define HAVE_PNG 1"
+    break
+  fi
+done
+
+if test "$with_png" && test ! "$DEF_PNG"; then
+  echo
+  { { echo "$as_me:$LINENO: error: One or more of the png components is missing." >&5
+echo "$as_me: error: One or more of the png components is missing." >&2;}
+   { (exit 1); exit 1; }; }
+  echo
+fi
+
+
+
+
+
+
+
 ##  --  search for gzopen (and related)  ----------------------------------
 
 if test "$with_zlib"; then
@@ -21557,6 +21776,10 @@ s,@MAGICK_EXTRA_LIB_FLAG@,$MAGICK_EXTRA_LIB_FLAG,;t t
 s,@MAGICK_EXTRA_LIB_DIR_FLAG@,$MAGICK_EXTRA_LIB_DIR_FLAG,;t t
 s,@INC_MAGICK_H@,$INC_MAGICK_H,;t t
 s,@DEF_MAGICK@,$DEF_MAGICK,;t t
+s,@PNG_LIB_FLAG@,$PNG_LIB_FLAG,;t t
+s,@PNG_LIB_DIR_FLAG@,$PNG_LIB_DIR_FLAG,;t t
+s,@INC_PNG_H@,$INC_PNG_H,;t t
+s,@DEF_PNG@,$DEF_PNG,;t t
 s,@Z_LIB_FLAG@,$Z_LIB_FLAG,;t t
 s,@Z_LIB_DIR_FLAG@,$Z_LIB_DIR_FLAG,;t t
 s,@INC_Z_H@,$INC_Z_H,;t t
