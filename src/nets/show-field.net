@@ -156,7 +156,7 @@ set $m6-dist {impuni}
 set $m6-whichtab {Widget}
 set $m7-notes {}
 set $m7-show_status 1
-set $m7-nodes-on 1
+set $m7-nodes-on 0
 set $m7-edges-on 1
 set $m7-faces-on 0
 set $m7-vectors-on 0
@@ -166,7 +166,7 @@ set $m7-def-color-g 0.5
 set $m7-def-color-b 0.5
 set $m7-node_display_type {Spheres}
 set $m7-edge_display_type {Cylinders}
-set $m7-active_tab {Nodes}
+set $m7-active_tab {Edges}
 set $m7-node_scale [expr 0.007 * ${global-scale}]
 set $m7-edge_scale [expr 0.007 * ${global-scale}]
 set $m7-resolution 6
