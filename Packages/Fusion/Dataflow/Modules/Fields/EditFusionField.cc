@@ -34,9 +34,6 @@
 #include <Core/GuiInterface/GuiVar.h>
 
 #include <Dataflow/Ports/FieldPort.h>
-#include <Dataflow/Ports/MatrixPort.h>
-
-#include <Core/Datatypes/DenseMatrix.h>
 
 #include <Core/Datatypes/HexVolMesh.h>
 #include <Core/Datatypes/HexVolField.h>
@@ -94,10 +91,8 @@ private:
   int reduce_;
 
   FieldHandle  fHandle_;
-  MatrixHandle mHandle_;
 
   int fGeneration_;
-  int mGeneration_;
 };
 
 extern "C" FusionSHARE Module* make_EditFusionField(const string& id) {
@@ -143,9 +138,7 @@ EditFusionField::EditFusionField(const string& id)
 
     reduce_( false ),
 
-    fGeneration_(-1),
-    mGeneration_(-1)
-
+    fGeneration_(-1)
 {
 }
 
@@ -156,17 +149,14 @@ void EditFusionField::execute(){
 
   bool updateAll    = false;
   bool updateField  = false;
-  bool updateMatrix = false;
 
   FieldHandle fHandle;
-  MatrixHandle mHandle;
 
+  Field *hvfInput;
   HexVolMesh *hvmInput;
-  Matrix* matInput;
 
   // Get a handle to the input field port.
-  FieldIPort* ifield_port =
-    (FieldIPort *)	get_iport("Input Field");
+  FieldIPort* ifield_port = (FieldIPort *) get_iport("Input Field");
 
   if (!ifield_port) {
     error( "Unable to initialize "+name+"'s iport" );
@@ -174,53 +164,24 @@ void EditFusionField::execute(){
   }
 
   // The field input is required.
-  if (!ifield_port->get(fHandle) || !(fHandle.get_rep()) ||
+  if (!ifield_port->get(fHandle) ||
+      !(hvfInput = fHandle.get_rep()) ||
       !(hvmInput = (HexVolMesh*) fHandle->mesh().get_rep())) {
     error( "No handle or representation" );
     return;
   }
 
 
-  // Get a handle to the input matrix port.
-  MatrixIPort* imatrix_port =
-    (MatrixIPort *)	get_iport("Input Matrix");
-
-  if (!imatrix_port) {
-    error( "Unable to initialize "+name+"'s iport" );
-    return;
-  }
-
-  // The matrix input is required when a node reduction is checked.
-  if (!imatrix_port->get(mHandle) || !(matInput = mHandle.get_rep()) ) {
-
-    // Only an error when reducing the data.
-    if( reduce_ ) {
-      error( "No handle or representation" );
-      return;
-    }
-  }
-
   // Check to see if the input field has changed.
   if( fGeneration_ != fHandle->generation ) {
-    fGeneration_  = fHandle->generation;
+    fGeneration_ = fHandle->generation;
 
     cout << "EditFusionField - New Field Data." << endl;
 
     updateField = true;
   }
 
-  // Check to see if the input matrix has changed.
-  if( reduce_ &&
-      mGeneration_ != mHandle->generation ) {
-    mGeneration_  = mHandle->generation;
 
-    cout << "EditFusionField - New Matrix Data." << endl;
-
-    updateMatrix = true;
-  }
-
-
-  // Get the dimensions of the mesh.
   if( !hvmInput->get_property( "I Dim", idim_ ) ||
       !hvmInput->get_property( "J Dim", jdim_ ) ||
       !hvmInput->get_property( "K Dim", kdim_ ) ) {
@@ -238,13 +199,6 @@ void EditFusionField::execute(){
     return;
   }
 
-  // Make sure they match the number of points in the matrix.
-  if( reduce_ && matInput ) {
-    if( npts != matInput->nrows() ) {
-      error( "Mesh dimensions do not match matrix size." );
-      return;
-    }
-  }
 
   if( reduce_ != reducePts_.get() ) {
     reduce_  = reducePts_.get();
@@ -305,6 +259,7 @@ void EditFusionField::execute(){
 
     HexVolMesh *hvm = scinew HexVolMesh;
 
+    //  Only store the nodes being used in the mesh.
     if( reduce_ ) {
 
       // Create the new Hex Vol Mesh.
@@ -397,6 +352,104 @@ void EditFusionField::execute(){
       hvm->set_property( "J Dim", jend, false );
       hvm->set_property( "K Dim", kend, false );
 
+
+      // Now after the mesh has been created, create the field and put the
+      // data into the field.
+
+      HexVolField<double> *hvfD = NULL;
+      HexVolField<Vector> *hvfV = NULL;
+
+      // Editing a Scalar HexVolField.
+      if( (hvfD = dynamic_cast<HexVolField<double> *>(hvfInput)) ) {
+	HexVolField<double> *hvf =
+	  scinew HexVolField<double>(HexVolMeshHandle(hvm), Field::NODE);
+
+	fHandle_ = FieldHandle( hvf );
+	HexVolField<double>::fdata_type::iterator out = hvf->fdata().begin();
+
+	ijdim = idim_ * jdim_;
+	iend=0; jend=0; kend=0;
+
+	// First reduce the data down.
+	for( k=kstart_; k<kend_+kskip_; k+=kskip_ ) { 
+
+	  k0 = k % kdim_;
+
+	  // Check for overlap.
+	  if( k-kskip_ <= kstart_+kdim_ && kstart_+kdim_ <= k )
+	    k0 = kstart_;
+
+	  for( j=jstart_; j<jend_+jskip_; j+=jskip_ ) {
+ 
+	    j0 = j % jdim_;
+
+	    // Check for overlap.
+	    if( j-jskip_ <= jstart_+jdim_ && jstart_+jdim_ <= j )
+	      j0 = jstart_;
+
+	    for( i=istart_; i<iend_+iskip_; i+=iskip_ ) { 
+
+	      i0 = i;
+
+	      if( i0 > idim_ - 1 )
+		i0 = idim_ - 1;
+
+	      index = i0 + j0 * idim_ + k0 * ijdim;
+
+	      *out = hvfD->fdata()[index];
+	      out++;
+	    }
+	  }
+	}
+      }
+
+      // Editing a Vector HexVolField.
+      else if( (hvfV = dynamic_cast<HexVolField<Vector> *>(hvfInput)) ) {
+	HexVolField<Vector> *hvf =
+	  scinew HexVolField<Vector>(HexVolMeshHandle(hvm), Field::NODE);
+
+	fHandle_ = FieldHandle( hvf );
+	HexVolField<Vector>::fdata_type::iterator out = hvf->fdata().begin();
+
+	ijdim = idim_ * jdim_;
+
+	// First reduce the data down.
+	for( k=kstart_; k<kend_+kskip_; k+=kskip_ ) { 
+
+	  k0 = k % kdim_;
+
+	  // Check for overlap.
+	  if( k-kskip_ <= kstart_+kdim_ && kstart_+kdim_ <= k )
+	    k0 = kstart_;
+
+	  for( j=jstart_; j<jend_+jskip_; j+=jskip_ ) {
+ 
+	    j0 = j % jdim_;
+
+	    // Check for overlap.
+	    if( j-jskip_ <= jstart_+jdim_ && jstart_+jdim_ <= j )
+	      j0 = jstart_;
+
+	    for( i=istart_; i<iend_+iskip_; i+=iskip_ ) { 
+
+	      i0 = i;
+
+	      if( i0 > idim_ - 1 )
+		i0 = idim_ - 1;
+
+	      index = i0 + j0 * idim_ + k0 * ijdim;
+
+	      *out = hvfV->fdata()[index];
+	      out++;
+	    }
+	  }
+	}
+      }
+      else {
+	error( "Only availible for HexVol Scalar and Vector data" );
+	return;
+      }
+
       cout << "EditFusionField - Reducing " << iend << " " << jend << " " << kend << endl;
     }
     else
@@ -404,7 +457,6 @@ void EditFusionField::execute(){
       // transfer all the points from the old mesh to the new mesh.
       for( int i=0; i<npts; i++ )
 	hvm->add_point( hvmInput->point( i ) );
-
 
       // Create the new Hex Vol Mesh.
       HexVolMesh::Node::array_type nnodes(8);
@@ -461,105 +513,60 @@ void EditFusionField::execute(){
       hvm->set_property( "I Dim", idim_, false );
       hvm->set_property( "J Dim", jdim_, false );
       hvm->set_property( "K Dim", kdim_, false );
+
+      // Now after the mesh has been created, create the field.
+    
+      HexVolField<Vector> *hvfV = NULL;
+      HexVolField<double> *hvfD = NULL;
+
+      if( (hvfV = dynamic_cast<HexVolField<Vector> *>(hvfInput)) ) {
+	HexVolField<Vector> *hvf =
+	  scinew HexVolField<Vector>(HexVolMeshHandle(hvm), Field::NODE);
+
+	fHandle_ = FieldHandle( hvf );
+
+	HexVolField<Vector>::fdata_type::iterator  in = hvfV->fdata().begin();
+	HexVolField<Vector>::fdata_type::iterator out = hvf->fdata().begin();
+	HexVolField<Vector>::fdata_type::iterator end = hvfV->fdata().end();
+
+	while (in != end) {
+	  *out = *in;
+	  ++in; ++out;
+	}
+      }
+
+      else if( (hvfD = dynamic_cast<HexVolField<double> *>(hvfInput)) ) {
+	HexVolField<double> *hvf =
+	  scinew HexVolField<double>(HexVolMeshHandle(hvm), Field::NODE);
+
+	fHandle_ = FieldHandle( hvf );
+
+	HexVolField<double>::fdata_type::iterator  in = hvfD->fdata().begin();
+	HexVolField<double>::fdata_type::iterator out = hvf->fdata().begin();
+	HexVolField<double>::fdata_type::iterator end = hvfD->fdata().end();
+
+	while (in != end) {
+	  *out = *in;
+	  ++in; ++out;
+	}
+      }
     }
-
-    // Now after the mesh has been created, create the field.
-    HexVolField<double> *hvf =
-      scinew HexVolField<double>(HexVolMeshHandle(hvm), Field::NODE);
-
-    fHandle_ = FieldHandle( hvf );
   }
 
   // Get a handle to the output field port.
-  FieldOPort *ofield_port = 
-    (FieldOPort *) get_oport("Output Field");
+  if( fHandle_.get_rep() )
+  {
+    FieldOPort *ofield_port =
+      (FieldOPort *) get_oport("Output Field");
 
-  if (!ofield_port) {
-    error("Unable to initialize "+name+"'s oport\n");
-    return;
-  }
-
-  // Send the data downstream
-  ofield_port->send( fHandle_ );
-
-
-  // If no data or a changed recreate the mesh.
-  if( !mHandle_.get_rep() || updateAll || updateMatrix ) {
-
-    if( reduce_ ) {
-
-      ((HexVolMesh*) fHandle_->mesh().get_rep())->size( npts );
-
-      int nRows = npts;
-      int nCols = matInput->ncols();
-
-      cout << "EditFusionField - Reducing " << nRows << "  " << nCols << endl;
-
-      DenseMatrix *matrix = scinew DenseMatrix(nRows,nCols);
-
-      int ijdim = idim_ * jdim_;
-
-      int i,  j,  k;
-      int i0, j0, k0;
-
-      int row, col, index = 0;
-
-      //  Reduce the rows down.
-      for( k=kstart_; k<kend_+kskip_; k+=kskip_ ) { 
-
-	k0 = k % kdim_;
-
-	// Check for overlap.
-	if( k-kskip_ <= kstart_+kdim_ && kstart_+kdim_ <= k )
-	  k0 = kstart_;
-
-	for( j=jstart_; j<jend_+jskip_; j+=jskip_ ) {
- 
-	  j0 = j % jdim_;
-
-	  // Check for overlap.
-	  if( j-jskip_ <= jstart_+jdim_ && jstart_+jdim_ <= j )
-	    j0 = jstart_;
-
-	  for( i=istart_; i<iend_+iskip_; i+=iskip_ ) { 
-
-	    i0 = i;
-
-	    if( i0 > idim_ - 1 )
-	      i0 = idim_ - 1;
-
-	    row = i0 + j0 * idim_ + k0 * ijdim;
-			
-	    for( col=0; col<nCols; col++ )
-	      matrix->put( index, col,
-			   matInput->get( row, col ) );
-
-	    index++;
-	  }
-	}	
-      }
-
-      mHandle_ = MatrixHandle( matrix );
-
-      cout << "Reducing " << index << endl;
+    if (!ofield_port) {
+      error("Unable to initialize "+name+"'s oport\n");
+      return;
     }
-    else {
-      mHandle_ = mHandle;
-    }
+
+    // Send the data downstream
+    ofield_port->send( fHandle_ );
   }
-
-  // Get a handle to the output matrix port.
-  MatrixOPort *omatrix_port = 
-    (MatrixOPort *) get_oport("Output Matrix");
-
-  if (!omatrix_port) {
-    error("Unable to initialize "+name+"'s oport\n");
-    return;
-  }
-
-  // Send the data downstream
-  omatrix_port->send( mHandle_ );
-
 }
 
 void EditFusionField::tcl_command(TCLArgs& args, void* userdata)

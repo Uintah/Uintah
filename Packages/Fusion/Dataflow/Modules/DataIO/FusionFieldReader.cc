@@ -32,10 +32,6 @@
 #include <Core/Malloc/Allocator.h>
 
 #include <Dataflow/Ports/FieldPort.h>
-#include <Dataflow/Ports/MatrixPort.h>
-
-#include <Core/Datatypes/DenseMatrix.h>
-#include <Core/Datatypes/ColumnMatrix.h>
 
 #include <Core/Datatypes/HexVolMesh.h>
 #include <Core/Datatypes/HexVolField.h>
@@ -63,10 +59,9 @@ private:
   string old_filename_;
   time_t old_filemodification_;
 
-  FieldHandle  fHandle_;
-  MatrixHandle mbHandle_;
-  MatrixHandle mvHandle_;
-  MatrixHandle mpHandle_;
+  FieldHandle bHandle_;
+  FieldHandle vHandle_;
+  FieldHandle pHandle_;
 };
 
 extern "C" FusionSHARE Module* make_FusionFieldReader(const string& id) {
@@ -117,7 +112,9 @@ void FusionFieldReader::execute(){
   time_t new_filemodification = buf.st_mtime;
 #endif
 
-  if( !fHandle_.get_rep() ||
+  if( !pHandle_.get_rep() ||
+      !bHandle_.get_rep() ||
+      !vHandle_.get_rep() ||
       new_filename         != old_filename_ || 
       new_filemodification != old_filemodification_)
   {
@@ -270,25 +267,25 @@ void FusionFieldReader::execute(){
 
     cout << "FusionFieldReader - " << idim << "  " << jdim << "  " << kdim << endl;
 
-    // Create the grid, and scalar and vector data matrices.
+    // Create the grid, and scalar and vector data storage.
     HexVolMesh *hvm = scinew HexVolMesh;
 
-    DenseMatrix  *bMatrix = NULL;
-    DenseMatrix  *vMatrix = NULL;
-    ColumnMatrix *pMatrix = NULL;
+    Vector *bVector = NULL;
+    Vector *vVector = NULL;
+    double *pValues = NULL;
 
     if( readOrder[BFIELD_XYZ    ] > -1 ||
 	readOrder[BFIELD_R_PHI_Z] > -1 ||
 	readOrder[BFIELD_R_Z_PHI] > -1 )
-      bMatrix = scinew DenseMatrix(idim*jdim*kdim,3);
+      bVector = scinew Vector[idim*jdim*kdim];
 
     if( readOrder[VFIELD_XYZ    ] > -1 ||
 	readOrder[VFIELD_R_PHI_Z] > -1 ||
 	readOrder[VFIELD_R_Z_PHI] > -1 )
-      vMatrix = scinew DenseMatrix(idim*jdim*kdim,3);
+      vVector = scinew Vector[idim*jdim*kdim];
 
     if( readOrder[PRESSURE] > -1 )
-      pMatrix = scinew ColumnMatrix(idim*jdim*kdim);
+      pValues = scinew double[idim*jdim*kdim];
 
 
     // Read the data.
@@ -374,9 +371,7 @@ void FusionFieldReader::execute(){
 	    yVal = data[index+1];
 	    zVal = data[index+2];
 
-	    bMatrix->put(cc, 0, xVal);
-	    bMatrix->put(cc, 1, yVal);
-	    bMatrix->put(cc, 2, zVal);
+	    bVector[cc] = Vector( xVal, yVal, zVal);
 	  }
 	  else if( readOrder[BFIELD_R_PHI_Z] > -1 ) {
 
@@ -390,9 +385,7 @@ void FusionFieldReader::execute(){
 		data[index+1] * cos(phi );
 	      zVal =  data[index+2];
 
-	      bMatrix->put(cc, 0, xVal);
-	      bMatrix->put(cc, 1, yVal);
-	      bMatrix->put(cc, 2, zVal);
+	      bVector[cc] = Vector( xVal, yVal, zVal);
 	    }
 	  }
 
@@ -408,9 +401,7 @@ void FusionFieldReader::execute(){
 		data[index+2] * cos(phi );
 	      zVal =  data[index+1];
 
-	      bMatrix->put(cc, 0, xVal);
-	      bMatrix->put(cc, 1, yVal);
-	      bMatrix->put(cc, 2, zVal);
+	      bVector[cc] = Vector( xVal, yVal, zVal);
 	    }
 	  }
 
@@ -423,9 +414,7 @@ void FusionFieldReader::execute(){
 	    yVal = data[index+1];
 	    zVal = data[index+2];
 
-	    vMatrix->put(cc, 0, xVal);
-	    vMatrix->put(cc, 1, yVal);
-	    vMatrix->put(cc, 2, zVal);
+	    vVector[cc] = Vector( xVal, yVal, zVal);
 	  }
 	  else if( readOrder[VFIELD_R_PHI_Z] > -1 ) {
 
@@ -440,9 +429,7 @@ void FusionFieldReader::execute(){
 		data[index+1] * cos(phi);
 	      zVal =  data[index+2];
 
-	      vMatrix->put(cc, 0, xVal);
-	      vMatrix->put(cc, 1, yVal);
-	      vMatrix->put(cc, 2, zVal);
+	      vVector[cc] = Vector( xVal, yVal, zVal);
 	    }
 	  }
 
@@ -459,9 +446,7 @@ void FusionFieldReader::execute(){
 		data[index+2] * cos(phi);
 	      zVal =  data[index+1];
 
-	      vMatrix->put(cc, 0, xVal);
-	      vMatrix->put(cc, 1, yVal);
-	      vMatrix->put(cc, 2, zVal);
+	      vVector[cc] = Vector( xVal, yVal, zVal);
 	    }
 	  }
 
@@ -472,7 +457,7 @@ void FusionFieldReader::execute(){
 
 	    pVal = data[index];
 
-	    pMatrix->put(cc, 0, pVal);
+	    pValues[cc] = pVal;
 	  }
 
 	  cc++;
@@ -541,20 +526,60 @@ void FusionFieldReader::execute(){
       }
     }
 
-    // Now after the mesh has been created, create the field.
-    HexVolField<double> *hvf =
-      scinew HexVolField<double>(HexVolMeshHandle(hvm), Field::NODE);
-
     hvm->set_property( "I Dim", idim, false );
     hvm->set_property( "J Dim", jdim, false );
     hvm->set_property( "K Dim", kdim, false );
 
+    int ijkdim = idim * jdim * kdim;
 
-    fHandle_  = FieldHandle( hvf );
+    // Now after the mesh has been created, create the field and put the
+    // data into the field.
+    if( pValues ) {
+      HexVolField<double> *hvfP =
+	scinew HexVolField<double>(HexVolMeshHandle(hvm), Field::NODE);
 
-    if( bMatrix ) mbHandle_ = MatrixHandle( bMatrix );
-    if( vMatrix ) mvHandle_ = MatrixHandle( vMatrix );
-    if( pMatrix ) mpHandle_ = MatrixHandle( pMatrix );
+      pHandle_ = FieldHandle( hvfP );
+
+      // Add the data to the field.
+      HexVolField<double>::fdata_type::iterator outP = hvfP->fdata().begin();
+
+      for( int i=0; i<ijkdim; i++ ) {
+	*outP = pValues[i];
+	outP++;
+      }
+    }
+
+
+    if( bVector ) {
+      HexVolField<Vector> *hvfB =
+	scinew HexVolField<Vector>(HexVolMeshHandle(hvm), Field::NODE);
+
+      bHandle_ = FieldHandle( hvfB );
+
+      // Add the data to the field.
+      HexVolField<Vector>::fdata_type::iterator outB = hvfB->fdata().begin();
+
+      for( int i=0; i<ijkdim; i++ ) {
+	*outB = bVector[i];
+	outB++;
+      }
+    }
+
+
+    if( vVector ) {
+      HexVolField<Vector> *hvfV =
+	scinew HexVolField<Vector>(HexVolMeshHandle(hvm), Field::NODE);
+    
+      vHandle_ = FieldHandle( hvfV );
+
+      // Add the data to the field.
+      HexVolField<Vector>::fdata_type::iterator outV = hvfV->fdata().begin();
+
+      for( int i=0; i<ijkdim; i++ ) {
+	*outV = vVector[i];
+	outV++;
+      }
+    }
   }
   else
   {
@@ -562,10 +587,11 @@ void FusionFieldReader::execute(){
   }
 
 
-  // Get a handle to the output field port.
+  // Get a handle to the output pressure field port.
+  if( pHandle_.get_rep() )
   {
-    FieldOPort *ofield_port = 
-      (FieldOPort *) get_oport("Output Grid Field");
+    FieldOPort *ofield_port =
+      (FieldOPort *) get_oport("Output Pressure Field");
 
     if (!ofield_port) {
       error("Unable to initialize "+name+"'s oport\n");
@@ -573,53 +599,37 @@ void FusionFieldReader::execute(){
     }
 
     // Send the data downstream
-    ofield_port->send( fHandle_ );
+    ofield_port->send( pHandle_ );
   }
 
-
-  // Get a handle to the output pressure matrix port.
-  if( mpHandle_.get_rep() )
+  // Get a handle to the output B Field field port.
+  if( bHandle_.get_rep() )
   {
-    MatrixOPort *omatrix_port =
-      (MatrixOPort *) get_oport("Output Pressure Scalar");
+    FieldOPort *ofield_port =
+      (FieldOPort *)get_oport("Output B Field");
 
-    if (!omatrix_port) {
+    if (!ofield_port) {
       error("Unable to initialize "+name+"'s oport\n");
       return;
     }
 
     // Send the data downstream
-    omatrix_port->send( mpHandle_ );
+    ofield_port->send( bHandle_ );
   }
 
-  // Get a handle to the output B Field matrix port.
-  if( mbHandle_.get_rep() )
+  // Get a handle to the output V Field field port.
+  if( vHandle_.get_rep() )
   {
-    MatrixOPort *omatrix_port =
-      (MatrixOPort *)get_oport("Output B Field Vector");
+    FieldOPort *ofield_port =
+      (FieldOPort *) get_oport("Output V Field");
 
-    if (!omatrix_port) {
+    if (!ofield_port) {
       error("Unable to initialize "+name+"'s oport\n");
       return;
     }
 
     // Send the data downstream
-    omatrix_port->send( mbHandle_ );
-  }
-
-  // Get a handle to the output V Field matrix port.
-  if( mvHandle_.get_rep() )
-  {
-    MatrixOPort *omatrix_port =
-      (MatrixOPort *) get_oport("Output V Field Vector");
-
-    if (!omatrix_port) {
-      error("Unable to initialize "+name+"'s oport\n");
-      return;
-    }
-
-    // Send the data downstream
-    omatrix_port->send( mvHandle_ );
+    ofield_port->send( vHandle_ );
   }
 }
 
