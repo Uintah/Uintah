@@ -269,10 +269,8 @@ OnDemandDataWarehouse::carryForward(const DataWarehouseP& fromp)
       for(Level::const_regionIterator iter = level->regionsBegin();
 	  iter != level->regionsEnd(); iter++){
 	 const Region* region = *iter;
-	 ParticleVariable<Point> pos;
-	 from->d_particleDB.get(d_positionLabel, 0, region, pos);
 
-	 d_particleDB.put(d_positionLabel, 0, region, pos, false);
+	 d_particleDB.copyAll(from->d_particleDB, d_positionLabel, region);
       }
    }
 }
@@ -351,6 +349,9 @@ DataWarehouseMpiHandler::run()
 
 //
 // $Log$
+// Revision 1.18  2000/05/06 03:54:10  sparker
+// Fixed multi-material carryForward
+//
 // Revision 1.17  2000/05/05 06:42:43  dav
 // Added some _hopefully_ good code mods as I work to get the MPI stuff to work.
 //

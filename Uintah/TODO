@@ -1,19 +1,11 @@
 
-Fix Datawarehouse get/put functions
 Nix DataItem?
-Finish MPM initialization
-MPM problem setup
 Particle IDs
 Region -> Patch/Box
-Particle initialization - how?
-get MPM working
 semi-consistent struct printou
-really slow creating particles for 10x10x10 patches
-
 
 Region contains point
 Pass const Matrix3& in const. models.
-2 pass particle creation
 profile parallel version - look for serial bottlenecks (free?)
 Time with normal malloc vs. my malloc
 free grids from old time-steps
@@ -32,20 +24,12 @@ Wrong ProcessorContext sent into serial codes - should be nthreads=1
 0.001 0.001 0.001	- about 100m
 
 
-
-
-Non-zero values in ip2g
-
-
-
 MIND CONST
 
 Completely define the Task dependency descriptions
 
 Convert ICE to use scheduler
 What aboute face centered variables - ask Todd.
-implement BDmapper
-implement simple parallel mappers.
 Threaded ICE
 ImperativeScheduler
 constHandle?
@@ -57,18 +41,8 @@ constHandle?
 4. Parallelism
   - Nthreads per processor in Parallel class
 
-6. File format
-  - problem
-  - resource spec
-
 7. PSE integration
   - sort out handles/RefCounted
-  - sort out exceptions
-  - namespaces
-
-Problem setup:
- - simple
- - complex
 
 cfd/mpm interface
 ICE
@@ -77,11 +51,6 @@ Parallelism (threads)
 MPI
 ParallelContext
 other stuff...
-
-Input file:
-
-
-
 
 Optimization:
 totaltime = 0.00002, dx=0.01
