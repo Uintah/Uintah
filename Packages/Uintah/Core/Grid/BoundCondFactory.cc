@@ -72,6 +72,7 @@ void BoundCondFactory::create(const ProblemSpecP& ps,BCData& objs)
      
      else if (bc_attr["label"] == "Pressure" &&
              (bc_attr["var"]   == "Neumann"  ||
+              bc_attr["var"]   == "LODI" ||
               bc_attr["var"]   == "Dirichlet") ) {
        BoundCondBase* bc = scinew PressureBoundCond(child,bc_attr["var"]);
        objs.setBCValues(mat_id,bc);
