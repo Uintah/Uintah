@@ -44,7 +44,7 @@ SRCS     += \
 	$(SRCDIR)/SampleLattice.cc\
 	$(SRCDIR)/ScalarFieldStats.cc\
 	$(SRCDIR)/ScaleFieldData.cc\
-	$(SRCDIR)/SeedField.cc\
+	$(SRCDIR)/SampleField.cc\
 	$(SRCDIR)/SelectField.cc\
 	$(SRCDIR)/TransformField.cc\
 	$(SRCDIR)/TetVolCellToNode.cc\
