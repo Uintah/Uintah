@@ -11,14 +11,14 @@ set runDate " Sat  Oct 7 19100"
 global runTime
 set runTime " 16:35:33"
 
-set m0 [addModuleAtPosition "SCIRun" "Visualization" "TextureVolVis" 261 237]
-set m1 [addModuleAtPosition "SCIRun" "Visualization" "GLTextureBuilder" 261 126]
-set m2 [addModuleAtPosition "SCIRun" "DataIO" "FieldReader" 261 50]
-set m3 [addModuleAtPosition "SCIRun" "Render" "Viewer" 243 343]
-set m4 [addModuleAtPosition "SCIRun" "Visualization" "TexCuttingPlanes" 417 237]
-set m5 [addModuleAtPosition "SCIRun" "Visualization" "GenStandardColorMaps" 436 146]
-set m6 [addModuleAtPosition "SCIRun" "Render" "EditPath" 103 238]
-set m7 [addModuleAtPosition "SCIRun" "DataIO" "PathReader" 103 156]
+set m0 [addModuleAtPosition "SCIRun" "Visualization" "TextureVolVis" 240 249]
+set m1 [addModuleAtPosition "SCIRun" "Visualization" "GLTextureBuilder" 240 138]
+set m2 [addModuleAtPosition "SCIRun" "DataIO" "FieldReader" 240 62]
+set m3 [addModuleAtPosition "SCIRun" "Render" "Viewer" 222 355]
+set m4 [addModuleAtPosition "SCIRun" "Visualization" "TexCuttingPlanes" 396 249]
+set m5 [addModuleAtPosition "SCIRun" "Visualization" "GenStandardColorMaps" 415 158]
+set m6 [addModuleAtPosition "SCIRun" "Render" "EditPath" 82 250]
+set m7 [addModuleAtPosition "SCIRun" "DataIO" "PathReader" 82 168]
 
 addConnection $m1 0 $m0 0
 addConnection $m2 0 $m1 0
@@ -32,6 +32,7 @@ addConnection $m4 0 $m3 2
 
 set $m0-notes {}
 set $m0-show_status 1
+set $m0-pid 13973
 set $m0-num_slices 64
 set $m0-draw_mode 0
 set $m0-render_style 0
@@ -39,15 +40,18 @@ set $m0-alpha_scale 0
 set $m0-interp_mode 1
 set $m1-notes {}
 set $m1-show_status 1
+set $m1-pid 13972
 set $m1-max_brick_dim 128
 set $m1-min 0
 set $m1-max 251
 set $m1-isFixed 0
 set $m2-notes {}
 set $m2-show_status 1
+set $m2-pid 13982
 set $m2-filename {/home/sci/data22/dmw/hep//HCG-250.sfrg}
 set $m3-notes {}
 set $m3-show_status 1
+set $m3-pid -2147483647
 $m3 ui
 set $m3-ViewWindow_0-pos {}
 set $m3-ViewWindow_0-caxes 1
@@ -100,8 +104,10 @@ set $m3-ViewWindow_0-sr 1
 set $m3-ViewWindow_0-do_bawgl 0
 set $m3-ViewWindow_0-drawimg -2147483647
 set $m3-ViewWindow_0-saveprefix {}
+set $m3-ViewWindow_0-Crosshair (1) 1
 set $m4-notes {}
 set $m4-show_status 1
+set $m4-pid 13984
 set $m4-drawX 0
 set $m4-drawY 0
 set $m4-drawZ 0
@@ -109,6 +115,7 @@ set $m4-drawView 0
 set $m4-interp_mode 1
 set $m5-notes {}
 set $m5-show_status 1
+set $m5-pid 13985
 set $m5-tcl_status {Calling GenStandardColorMaps!}
 set $m5-positionList {{0 40} {28 40} {50 40} {87 40} {131 40} {231 0} {467 0} {565 40}}
 set $m5-nodeList {20 21 22 23 24 25 26 27}
@@ -119,6 +126,7 @@ set $m5-minRes 2
 set $m5-resolution 19
 set $m6-notes {}
 set $m6-show_status 1
+set $m6-pid 13980
 set $m6-tcl_num_views 22
 set $m6-tcl_is_looped 1
 set $m6-tcl_is_backed 0
@@ -139,6 +147,7 @@ set $m6-tcl_stop 1
 set $m6-tcl_info {Editing existing path}
 set $m7-notes {}
 set $m7-show_status 1
+set $m7-pid 13987
 set $m7-filename {/local/sci/raid0/dmw/hep/path4.dat}
 $m0 ui
 $m1 ui

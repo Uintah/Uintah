@@ -38,15 +38,15 @@ if {[llength [array get env SCIRUN_DATA]] == 0} {
    return
 }
 
-set m0 [addModuleAtPosition "SCIRun" "DataIO" "FieldReader" 128 8]
-set m1 [addModuleAtPosition "SCIRun" "Render" "Viewer" 304 484]
-set m2 [addModuleAtPosition "SCIRun" "Visualization" "ShowField" 128 392]
-set m3 [addModuleAtPosition "SCIRun" "Visualization" "GenStandardColorMaps" 271 95]
-set m4 [addModuleAtPosition "SCIRun" "Visualization" "Isosurface" 322 366]
-set m5 [addModuleAtPosition "SCIRun" "Visualization" "StreamLines" 493 268]
-set m6 [addModuleAtPosition "SCIRun" "Fields" "SeedField" 511 166]
-set m7 [addModuleAtPosition "SCIRun" "Visualization" "ShowField" 540 403]
-set m8 [addModuleAtPosition "SCIRun" "Fields" "Gradient" 493 88]
+set m0 [addModuleAtPosition "SCIRun" "DataIO" "FieldReader" 8 8]
+set m1 [addModuleAtPosition "SCIRun" "Render" "Viewer" 184 484]
+set m2 [addModuleAtPosition "SCIRun" "Visualization" "ShowField" 8 392]
+set m3 [addModuleAtPosition "SCIRun" "Visualization" "GenStandardColorMaps" 151 95]
+set m4 [addModuleAtPosition "SCIRun" "Visualization" "Isosurface" 202 366]
+set m5 [addModuleAtPosition "SCIRun" "Visualization" "StreamLines" 373 268]
+set m6 [addModuleAtPosition "SCIRun" "Fields" "SeedField" 391 166]
+set m7 [addModuleAtPosition "SCIRun" "Visualization" "ShowField" 420 403]
+set m8 [addModuleAtPosition "SCIRun" "Fields" "Gradient" 373 88]
 
 addConnection $m3 0 $m2 2
 addConnection $m0 0 $m2 0
