@@ -63,6 +63,13 @@ performance at the cost of some setup time and space.
 Isocontours are generated for the surface input fields, and
 Isosurfaces are generated for the volume input fields.
       </p>
+      <p>
+        As of Febuary 2003 this module can handle scalar fields that
+        contain cell centered data.  If the data is located at the
+        cells, then the surfaces are created along the appropriate
+        cell faces rather than using interpolated values from the
+        nodes.
+      <p>
     </description>
   </overview>
   <io>
