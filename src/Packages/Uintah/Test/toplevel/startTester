@@ -15,6 +15,7 @@ DEFAULT_REMAKE_LOG_TO="kuzimmer@cs.utah.edu, bigler@cs.utah.edu, witzel@cs.utah.
 PARALLELISM=0
 VERBOSE="no"
 WEEKLY="0"
+MONTHLYBACKUP="no"
 
 # test OS, if Linux or IRIX, set appropriate compiler env. vars, else, abort
 if [ "$OS" == "IRIX64" -o "$OS" == "IRIX" ]; then
@@ -74,6 +75,9 @@ while [ "$#" -gt 0 ]; do
 
     -weekly)
         WEEKLY="1"
+        ;;
+    -monthlybackup)
+        MONTHLYBACKUP="1"
         ;;
      -help)
 	show_help=1
@@ -175,11 +179,15 @@ else
 
     BUILDROOT="${BUILD_DIR}/SCIRun.${ID}"
     if [ -d "$BUILDROOT" ]; then
-	ID=`date +%m%d%y_%H`
-	BUILDROOT="${BUILD_DIR}/SCIRun.${ID}"
+
+# don\t just set the ID directly, we have two different possibilities for ID
+	NID=`date +_%H`
+	ID="${ID}${NID}"
+	BUILDROOT="${BUILDROOT}${NID}"
 	if [ -d "$BUILDROOT" ]; then
-	    ID=`date +%m%d%y_%H%M`
-	    BUILDROOT="${BUILD_DIR}/SCIRun.${ID}"
+	    NID=`date +%M`
+	    ID="${ID}${NID}"
+	    BUILDROOT="${BUILDROOT}${NID}"
 	    if [ -d "$BUILDROOT" ]; then
 		echo "SCIRun.${ID} dir already exists"
 		exit -1
@@ -241,6 +249,25 @@ else
     fi
 fi
 
+# set a lock once a month for six months
+if [ "$USE_TREE" == "new" -a "$USE_PREVTREE" == "no" -a `date +%d` == "01" -a "$MONTHLYBACKUP" == "1" -a "$WEEKLY" == "0" ]; then
+    if [ -L "5_month.lock" ]; then
+	mv -f "${BUILD_DIR}/5_month.lock" "${BUILD_DIR}/6_month.lock"
+    fi
+    if [ -L "4_month.lock" ]; then
+	mv -f "${BUILD_DIR}/4_month.lock" "${BUILD_DIR}/5_month.lock"
+    fi
+    if [ -L "3_month.lock" ]; then
+	mv -f "${BUILD_DIR}/3_month.lock" "${BUILD_DIR}/4_month.lock"
+    fi
+    if [ -L "2_month.lock" ]; then
+	mv -f "${BUILD_DIR}/2_month.lock" "${BUILD_DIR}/3_month.lock"
+    fi
+    if [ -L "1_month.lock" ]; then
+	mv -f "${BUILD_DIR}/1_month.lock" "${BUILD_DIR}/2_month.lock"
+    fi
+    ln -s "$BUILDROOT" "${BUILD_DIR}/1_month.lock" 
+fi
 # set configure command options based on architecture
 if [ "$OS" == "IRIX64" -o "$OS" == "IRIX" ]; then
 	DBG_CONFIGURE="'--enable-package=Uintah' '--enable-debug' '--enable-64bit' '--with-petsc=/usr/sci/projects/Uintah/Thirdparty/1.0.0/IRIX64/MIPSpro-7.3.1.3m-64bit/petsc-2.1.1'"
@@ -251,8 +278,13 @@ else
 fi
 
 # where the webpage will be, and init webpage
-HTMLLOG=/usr/sci/www/worthen/tester/"$OS"/SCIRun.${ID}
-WEBLOG=http://www.sci.utah.edu/~worthen/tester/"$OS"/SCIRun.${ID}
+if [ "$WEEKLY" == "0" ]; then
+    HTMLLOG=/usr/sci/www/worthen/tester/"$OS"/SCIRun.${ID}
+    WEBLOG=http://www.sci.utah.edu/~worthen/tester/"$OS"/SCIRun.${ID}
+else
+    HTMLLOG=/usr/sci/www/worthen/tester/"$OS"/Weekly/SCIRun.${ID}
+    WEBLOG=http://www.sci.utah.edu/~worthen/tester/"$OS"/Weekly/SCIRun.${ID}
+fi
 
 rm -f $HTMLLOG
 TITLE=`date`
