@@ -163,6 +163,7 @@ void
 PDFMixingModel::computeProps(const InletStream& inStream,
 			     Stream& outStream)
 {
+  //  cout<<"in computeProps" << endl;
   // convert inStream to array
   std::vector<double> mixRxnVar(d_tableDimension);  
   std::vector<double> normVar(d_tableDimension);
@@ -207,6 +208,8 @@ PDFMixingModel::computeProps(const InletStream& inStream,
     mixRxnVar[0] = normEnthalpy;
   }
     outStream = getProps(mixRxnVar);
+    //    cout << "PDF::returned from getProps" << endl;
+    //    outStream.print(cout, d_rxnModel->getChemkinInterface());
 #if 0
   //Normalize reaction variables
   if (d_numRxnVars > 0) {
@@ -227,6 +230,7 @@ Stream
 PDFMixingModel::tableLookUp(int* tableKeyIndex) {
   Stream stateSpaceVars;
   vector<double> vec_stateSpaceVars;
+  //  cout << tableKeyIndex[0] << " " << tableKeyIndex[1] << " " << tableKeyIndex[2] << endl;
   if (!(d_mixTable->Lookup(tableKeyIndex, vec_stateSpaceVars))) 
     {
       // call to integrator

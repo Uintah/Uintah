@@ -99,6 +99,7 @@ Arches::problemSetup(const ProblemSpecP& params,
   d_props = scinew Properties(d_lab, d_MAlab, d_reactingFlow, d_calcEnthalpy);
   d_props->problemSetup(db);
   d_nofScalars = d_props->getNumMixVars();
+  d_nofScalarStats = d_props->getNumMixStatVars();
 
   // read turbulence mode
   // read turbulence model
@@ -204,6 +205,10 @@ Arches::sched_paramInit(const LevelP& level,
     tsk->computes(d_lab->d_pressureINLabel);
     for (int ii = 0; ii < d_nofScalars; ii++) 
       tsk->computes(d_lab->d_scalarINLabel); // only work for 1 scalar
+    for (int ii = 0; ii < d_nofScalarStats; ii++) {
+      tsk->computes(d_lab->d_scalarVarINLabel); // only work for 1 scalarStat
+      tsk->computes(d_lab->d_scalarVarSPLabel); // only work for 1 scalarStat
+    }
     if (d_calcEnthalpy)
       tsk->computes(d_lab->d_enthalpyINLabel); 
     tsk->computes(d_lab->d_densityINLabel);
@@ -346,6 +351,8 @@ Arches::paramInit(const ProcessorGroup* ,
     CCVariable<double> wVelocityCC;
     CCVariable<double> pressure;
     StaticArray< CCVariable<double> > scalar(d_nofScalars);
+    StaticArray< CCVariable<double> > scalarVar(d_nofScalarStats);
+    StaticArray< CCVariable<double> > scalarVar_new(d_nofScalarStats);
     CCVariable<double> enthalpy;
     CCVariable<double> density;
     CCVariable<double> viscosity;
@@ -368,6 +375,10 @@ Arches::paramInit(const ProcessorGroup* ,
     // will only work for one scalar
     for (int ii = 0; ii < d_nofScalars; ii++) {
       new_dw->allocate(scalar[ii], d_lab->d_scalarINLabel, matlIndex, patch);
+    }
+    for (int ii = 0; ii < d_nofScalarStats; ii++) {
+      new_dw->allocate(scalarVar[ii], d_lab->d_scalarVarINLabel, matlIndex, patch);
+      new_dw->allocate(scalarVar_new[ii], d_lab->d_scalarVarSPLabel, matlIndex, patch);
     }
     if (d_calcEnthalpy) {
       new_dw->allocate(enthalpy, d_lab->d_enthalpyINLabel, matlIndex, patch);
@@ -406,6 +417,12 @@ Arches::paramInit(const ProcessorGroup* ,
       double scalVal = 0.0;
       fort_initscal(idxLo, idxHi, scalar[ii], scalVal);
     }
+    for (int ii = 0; ii < d_nofScalarStats; ii++) {
+      double scalVal = 0.0;
+      fort_initscal(idxLo, idxHi, scalarVar[ii], scalVal);
+      fort_initscal(idxLo, idxHi, scalarVar_new[ii], scalVal);
+    }
+
     new_dw->put(uVelocityCC, d_lab->d_newCCUVelocityLabel, matlIndex, patch);
     new_dw->put(vVelocityCC, d_lab->d_newCCVVelocityLabel, matlIndex, patch);
     new_dw->put(wVelocityCC, d_lab->d_newCCWVelocityLabel, matlIndex, patch);
@@ -416,6 +433,10 @@ Arches::paramInit(const ProcessorGroup* ,
     new_dw->put(pressure, d_lab->d_pressureINLabel, matlIndex, patch);
     for (int ii = 0; ii < d_nofScalars; ii++) {
       new_dw->put(scalar[ii], d_lab->d_scalarINLabel, matlIndex, patch);
+    }
+    for (int ii = 0; ii < d_nofScalarStats; ii++) {
+      new_dw->put(scalarVar[ii], d_lab->d_scalarVarINLabel, matlIndex, patch);
+      new_dw->put(scalarVar_new[ii], d_lab->d_scalarVarSPLabel, matlIndex, patch);
     }
     if (d_calcEnthalpy)
       new_dw->put(enthalpy, d_lab->d_enthalpyINLabel, matlIndex, patch);
