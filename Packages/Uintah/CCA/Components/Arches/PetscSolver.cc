@@ -50,6 +50,7 @@ PetscSolver::PetscSolver(const ProcessorGroup* myworld)
 // ****************************************************************************
 PetscSolver::~PetscSolver()
 {
+ finalizeSolver();
 }
 
 // ****************************************************************************
@@ -68,15 +69,24 @@ PetscSolver::problemSetup(const ProblemSpecP& params)
   if (d_pcType == "ilu")
     db->require("fill",d_fill);
   db->require("ksptype",d_kspType);
-  int argc = 2;
+//  int argc = 2;
+  int argc = 4;
   char** argv;
   argv = new char*[2];
   argv[0] = "PetscSolver::problemSetup";
   //argv[1] = "-on_error_attach_debugger";
   argv[1] = "-no_signal_handler";
+  argv[2] = "-log_exclude_actions";
+  argv[3] = "-log_exclude_objects";
   int ierr = PetscInitialize(&argc, &argv, PETSC_NULL, PETSC_NULL);
   if(ierr)
     throw PetscError(ierr, "PetscInitialize");
+//  ierr = PetscOptionsSetValue("-log_exclude_actions", "");
+//  if(ierr)
+//    throw PetscError(ierr, "PetscExcludeActions");
+//  ierr = PetscOptionsSetValue("-log_exclude_objects", "");
+//  if(ierr)
+//    throw PetscError(ierr, "PetscExcludeObjects");
 }
 
 
@@ -435,8 +445,14 @@ PetscSolver::setPressMatrix(const ProcessorGroup* ,
 	  vecvalueb = vars->pressNonlinearSrc[IntVector(colX,colY,colZ)];
 	  vecvaluex = vars->pressure[IntVector(colX, colY, colZ)];
 	  int row = l2g[IntVector(colX, colY, colZ)];	  
-	  VecSetValue(d_b, row, vecvalueb, INSERT_VALUES);
-	  VecSetValue(d_x, row, vecvaluex, INSERT_VALUES);
+//	  VecSetValue(d_b, row, vecvalueb, INSERT_VALUES);
+	  ierr = VecSetValue(d_b, row, vecvalueb, INSERT_VALUES);
+	  if(ierr)
+	    throw PetscError(ierr, "VecSetValue");
+//	  VecSetValue(d_x, row, vecvaluex, INSERT_VALUES);
+	  ierr = VecSetValue(d_x, row, vecvaluex, INSERT_VALUES);
+	  if(ierr)
+	    throw PetscError(ierr, "VecSetValue");
 	}
       }
     }
@@ -576,6 +592,7 @@ PetscSolver::pressLinearSolve()
   ierr = PCNullSpaceDestroy(nullsp);
 #endif
   ierr = KSPSetInitialGuessNonzero(ksp, PETSC_TRUE);
+  // ierr = KSPSetInitialGuessNonzero(ksp);
   if(ierr)
     throw PetscError(ierr, "KSPSetInitialGuessNonzero");
   
@@ -694,6 +711,10 @@ PetscSolver::pressLisolve(const ProcessorGroup*,
 // Shutdown PETSc
 void PetscSolver::finalizeSolver()
 {
+// The following is to enable PETSc memory logging
+//  int ierrd = PetscTrDump(NULL);
+//  if(ierrd)
+//    throw PetscError(ierrd, "PetscTrDump");
   int ierr = PetscFinalize();
   if(ierr)
     throw PetscError(ierr, "PetscFinalize");
