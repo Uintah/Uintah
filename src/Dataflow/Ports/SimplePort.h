@@ -141,10 +141,10 @@ template<class T>
 void SimpleIPort<T>::finish()
 {
     if(!recvd && nconnections() > 0){
-	if (module->show_status) turn_on(Finishing);
+	if (module->show_stat) turn_on(Finishing);
 	SimplePortComm<T>* msg=mailbox.receive();
 	delete msg;
-	if (module->show_status) turn_off();
+	if (module->show_stat) turn_off();
     }
 }
 
@@ -172,7 +172,7 @@ void SimpleOPort<T>::finish()
 
     if(!sent_something && nconnections() > 0){
 	// Tell them that we didn't send anything...
-	if (module->show_status) turn_on(Finishing);
+	if (module->show_stat) turn_on(Finishing);
 	for(int i=0;i<nconnections();i++){
 #if 0
 	    if(connections[i]->demand){
@@ -188,7 +188,7 @@ void SimpleOPort<T>::finish()
 #ifdef DEBUG
 	cerr << "Exiting SimpleOPort<T>::finish()\n";
 #endif
-	if (module->show_status) turn_off();
+	if (module->show_stat) turn_off();
     }
 }
 
@@ -212,7 +212,7 @@ void SimpleOPort<T>::send(const T& data)
 #endif
 
     // change oport state and colors on screen
-    if (module->show_status) turn_on();
+    if (module->show_stat) turn_on();
 
     for (int i = 0; i < nconnections(); i++) {
 	if (connections[i]->isRemote()) {
@@ -247,7 +247,7 @@ void SimpleOPort<T>::send(const T& data)
     cerr << "Exiting SimpleOPort<T>::send (data)\n";
 #endif
 
-    if (module->show_status) turn_off();
+    if (module->show_stat) turn_off();
 }
 
 template<class T>
@@ -256,13 +256,13 @@ void SimpleOPort<T>::send_intermediate(const T& data)
     handle=data;
     if(nconnections() == 0)
 	return;
-    if (module->show_status) turn_on();
+    if (module->show_stat) turn_on();
     module->multisend(this);
     for(int i=0;i<nconnections();i++){
 	SimplePortComm<T>* msg=new SimplePortComm<T>(data);
 	((SimpleIPort<T>*)connections[i]->iport)->mailbox.send(msg);
     }
-    if (module->show_status) turn_off();
+    if (module->show_stat) turn_off();
 }
 
 template<class T>
@@ -276,7 +276,7 @@ int SimpleIPort<T>::get(T& data)
 
     if(nconnections()==0)
 	return 0;
-    if (module->show_status) turn_on();
+    if (module->show_stat) turn_on();
 
 #if 0
     // Send the demand token...
@@ -305,7 +305,7 @@ int SimpleIPort<T>::get(T& data)
 #ifdef DEBUG
  	cerr << "SimpleIPort<T>::get (data) read data from socket\n";
 #endif
-	if (module->show_status) turn_off();
+	if (module->show_stat) turn_off();
 	return 1;
     } else {
 
@@ -318,14 +318,14 @@ int SimpleIPort<T>::get(T& data)
 #ifdef DEBUG
 	    cerr << "SimpleIPort<T>::get (data) has data\n";
 #endif
-            if (module->show_status) turn_off();
+            if (module->show_stat) turn_off();
             return 1;
         } else {
 #ifdef DEBUG
 	    cerr << "SimpleIPort<T>::get (data) mailbox has no data\n";
 #endif
             delete comm;
-            if (module->show_status) turn_off();
+            if (module->show_stat) turn_off();
             return 0;
         }
     }
@@ -341,7 +341,7 @@ int SimpleIPort<T>::special_get(T& data)
 
     if(nconnections()==0)
 	return 0;
-    if (module->show_status) turn_on();
+    if (module->show_stat) turn_on();
 #if 0
     // Send the demand token...
     Connection* conn=connections[0];
@@ -385,11 +385,11 @@ int SimpleIPort<T>::special_get(T& data)
     if(comm->have_data){
        data=comm->data;
        delete comm;
-       if (module->show_status) turn_off();
+       if (module->show_stat) turn_off();
        return 1;
    } else {
        delete comm;
-       if (module->show_status) turn_off();
+       if (module->show_stat) turn_off();
        return 0;
    }
 }
@@ -406,14 +406,14 @@ int SimpleOPort<T>::have_data()
 template<class T>
 void SimpleOPort<T>::resend(Connection* conn)
 {
-    if (module->show_status) turn_on();
+    if (module->show_stat) turn_on();
     for(int i=0;i<nconnections();i++){
 	if(connections[i] == conn){
 	    SimplePortComm<T>* msg=new SimplePortComm<T>(handle);
 	    ((SimpleIPort<T>*)connections[i]->iport)->mailbox.send(msg);
 	}
     }
-    if (module->show_status) turn_off();
+    if (module->show_stat) turn_off();
 }
 
 template<class T>
@@ -433,6 +433,9 @@ SimplePortComm<T>::SimplePortComm(const T& data)
 
 //
 // $Log$
+// Revision 1.10  1999/12/07 02:53:34  dmw
+// made show_status variable persistent with network maps
+//
 // Revision 1.9  1999/11/17 23:17:42  moulding
 // added using SCICore::Datatypes::*Handle; to help the vc++ compiler
 // and added <iostream> and using std::cerr and using std::endl (to SimplePort.h)
