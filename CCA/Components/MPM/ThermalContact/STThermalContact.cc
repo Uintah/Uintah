@@ -5,6 +5,7 @@
 #include <Packages/Uintah/CCA/Ports/DataWarehouse.h>
 #include <Packages/Uintah/Core/Grid/NodeIterator.h>
 #include <Packages/Uintah/Core/Grid/Task.h>
+#include <Core/Containers/StaticArray.h>
 #include <vector>
 
 using namespace Uintah;
@@ -31,9 +32,9 @@ void STThermalContact::computeHeatExchange(const ProcessorGroup*,
 
     int numMatls = d_sharedState->getNumMPMMatls();
 
-    std::vector<NCVariable<double> > gmass(numMatls);
-    std::vector<NCVariable<double> > gTemperature(numMatls);
-    std::vector<NCVariable<double> > thermalContactHeatExchangeRate(numMatls);
+    StaticArray<NCVariable<double> > gmass(numMatls);
+    StaticArray<NCVariable<double> > gTemperature(numMatls);
+    StaticArray<NCVariable<double> > thermalContactHeatExchangeRate(numMatls);
 
     delt_vartype delT;
     old_dw->get(delT, lb->delTLabel);
