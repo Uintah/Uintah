@@ -38,9 +38,11 @@ itcl_class BioPSE_Modeling_ModifyConductivities {
     method set_defaults {} {
 	global $this-num-entries
 	global $this-use-gui-values
+        global $this-force-gui-update
 
 	set $this-num-entries 0
 	set $this-use-gui-values 0
+        set $this-force-gui-update 0
     }
 
     method create_entries {} {
@@ -169,11 +171,15 @@ itcl_class BioPSE_Modeling_ModifyConductivities {
 	checkbutton $w.guivals -text "Use GUI Values (if possible)" \
 	    -variable $this-use-gui-values
 
+	checkbutton $w.frc -text "Force GUI Update (slow with many entries)" \
+	    -variable $this-force-gui-update -command "$this-c reset_gui"
+
 	frame $w.controls
 
 	pack $w.title  -fill x
 	pack $w.tensors -side top -fill both -expand yes
 	pack $w.guivals -anchor w -padx 10
+	pack $w.frc -anchor w -padx 10
 	pack $w.controls -fill x 
 
 	makeSciButtonPanel $w $w $this "\"Reset\" \"$this-c reset_gui\" \"\""
