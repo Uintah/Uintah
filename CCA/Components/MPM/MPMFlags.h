@@ -23,8 +23,15 @@ namespace Uintah {
 
   public:
 
+    enum IntegratorType {
+      Explicit,
+      Implicit,
+      Fracture
+    };
+
     int         d_8or27;// Number of nodes a particle can interact with
     std::string d_integrator_type; // Explicit or implicit time integration
+    IntegratorType d_integrator;
 
     bool        d_artificial_viscosity; // Turn artificial viscosity on/off
     bool        d_accStrainEnergy; // Flag for accumulating strain energy

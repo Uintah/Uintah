@@ -14,6 +14,7 @@ MPMFlags::MPMFlags()
 {
   d_8or27 = 8;
   d_integrator_type = "explicit";
+  d_integrator = Explicit;
 
   d_artificial_viscosity = false;
   d_artificialViscCoeff1 = 0.2;
@@ -42,6 +43,15 @@ MPMFlags::~MPMFlags()
 void
 MPMFlags::readMPMFlags(ProblemSpecP& ps)
 {
+  ps->get("time_integrator", d_integrator_type);
+  if (d_integrator_type == "implicit") 
+    d_integrator = Implicit;
+  else if (d_integrator_type == "fracture") {
+    d_integrator = Fracture;
+    d_fracture = true;
+  }
+  else 
+    d_integrator = Explicit;
   ps->get("nodes8or27", d_8or27);
   ps->get("withColor",  d_with_color);
   ps->get("artificial_damping_coeff", d_artificialDampCoeff);
@@ -69,6 +79,7 @@ MPMFlags::readMPMFlags(ProblemSpecP& ps)
   dbg << "---------------------------------------------------------\n";
   dbg << "MPM Flags " << endl;
   dbg << "---------------------------------------------------------\n";
+  dbg << " Time Integration            = " << d_integrator_type << endl;
   dbg << " Nodes for interpolation     = " << d_8or27 << endl;
   dbg << " With Color                  = " << d_with_color << endl;
   dbg << " Artificial Damping Coeff    = " << d_artificialDampCoeff << endl;

@@ -106,36 +106,36 @@ void ImpMPM::problemSetup(const ProblemSpecP& prob_spec, GridP& /*grid*/,
 
    string integrator_type;
    if (mpm_ps) {
-     mpm_ps->get("time_integrator",flags->d_integrator_type);
+
+     // Read all MPM flags (look in MPMFlags.cc)
+     flags->readMPMFlags(mpm_ps);
+     if (flags->d_integrator_type != "implicit")
+       throw ProblemSetupException("Can't use explicit integration with -impm");
+
      mpm_ps->get("do_grid_reset",  d_doGridReset);
      mpm_ps->get("ForceBC_force_increment_factor",flags->d_forceIncrementFactor);
      mpm_ps->get("use_load_curves", flags->d_useLoadCurves);
-     if (flags->d_integrator_type == "implicit"){
-       d_integrator = Implicit;
-       mpm_ps->get("convergence_criteria_disp",  d_conv_crit_disp);
-       mpm_ps->get("convergence_criteria_energy",d_conv_crit_energy);
-       mpm_ps->get("dynamic",d_dynamic);
-       mpm_ps->getWithDefault("iters_before_timestep_restart",
+     d_integrator = Implicit;
+     mpm_ps->get("convergence_criteria_disp",  d_conv_crit_disp);
+     mpm_ps->get("convergence_criteria_energy",d_conv_crit_energy);
+     mpm_ps->get("dynamic",d_dynamic);
+     mpm_ps->getWithDefault("iters_before_timestep_restart",
                                d_max_num_iterations, 25);
-       mpm_ps->getWithDefault("num_iters_to_decrease_delT",
+     mpm_ps->getWithDefault("num_iters_to_decrease_delT",
                                d_num_iters_to_decrease_delT, 12);
-       mpm_ps->getWithDefault("num_iters_to_increase_delT",
+     mpm_ps->getWithDefault("num_iters_to_increase_delT",
                                d_num_iters_to_increase_delT, 4);
-       mpm_ps->getWithDefault("delT_decrease_factor",
+     mpm_ps->getWithDefault("delT_decrease_factor",
                                d_delT_decrease_factor, .6);
-       mpm_ps->getWithDefault("delT_increase_factor",
+     mpm_ps->getWithDefault("delT_increase_factor",
                                d_delT_increase_factor, 2);
-     }
-     else{
-      throw ProblemSetupException("Can't use explicit integration with -impm");
-     }
 
-    std::vector<std::string> bndy_face_txt_list;
-    mpm_ps->get("boundary_traction_faces", bndy_face_txt_list);
+     std::vector<std::string> bndy_face_txt_list;
+     mpm_ps->get("boundary_traction_faces", bndy_face_txt_list);
                                                                                 
-    // convert text representation of face into FaceType
-    std::vector<std::string>::const_iterator ftit;
-    for(ftit=bndy_face_txt_list.begin(); ftit!=bndy_face_txt_list.end();ftit++){
+     // convert text representation of face into FaceType
+     std::vector<std::string>::const_iterator ftit;
+     for(ftit=bndy_face_txt_list.begin(); ftit!=bndy_face_txt_list.end();ftit++){
         Patch::FaceType face = Patch::invalidFace;
         for(Patch::FaceType ft=Patch::startFace;ft<=Patch::endFace;
                                                 ft=Patch::nextFace(ft)) {
@@ -147,7 +147,7 @@ void ImpMPM::problemSetup(const ProblemSpecP& prob_spec, GridP& /*grid*/,
           std::cerr << "warning: ignoring unknown face '" 
                     << *ftit<< "'" << std::endl;
         }
-    }
+     }
    }
 
    //Search for the MaterialProperties block and then get the MPM section
