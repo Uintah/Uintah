@@ -2538,22 +2538,6 @@ void PatchBasedDataWarehouse3::restartTimestep()
   restart=true;
 }
 
-namespace Uintah {
-  int getDB_ID(const Patch* patch) {
-    if(!patch)
-      return -1;
-    //ASSERT(!patch->isVirtual());
-    if(patch->isVirtual())
-      patch = patch->getRealPatch();
-    return patch->getID();
-  }
-  int getDB_ID(const Level* level) {
-    if(!level)
-      return -1;
-    return level->getIndex();
-  }
-}
-
 void PatchBasedDataWarehouse3::getVarLabelMatlLevelTriples( vector<VarLabelMatl<Level> >& vars ) const
 {
   d_levelDB.getVarLabelMatlTriples(vars);
