@@ -542,8 +542,10 @@ TetVolMesh::locate(cell_index &cell, const Point &p) const
     }
     ++iter;
   }
-  cell = *iter;
-  cerr << "locate cell done. returning: " << found_p << endl << endl;
+
+  if (found_p)
+    cell = *iter;
+
   return found_p;
 }
 
