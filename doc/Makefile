@@ -15,54 +15,47 @@
 #  University of Utah. All Rights Reserved.
 #
 
-.PHONY: faqs user developer installation clean veryclean
+.PHONY: tar products
 
-MAKE = make
-FINALTARGET = SCIRunDocs.tar.gz
+TAR = SCIRunDocs.tar
+TARBALL = ${TAR}.gz
+PRODUCTS = FAQBook Installation User Developer
 
-default: $(FINALTARGET)
+$(TARBALL): tar
+	-rm -f ${TARBALL}
+	gzip ${TAR}
 
-$(FINALTARGET): SCIRunDocs.tar
-	rm -f SCIRunDocs.tar.gz
-	gzip SCIRunDocs.tar
+tar: products
+	-rm -f SCIRunDocs.tar
+	cd ..; tar cvf doc/SCIRunDocs.tar \
+		doc/index.html \
+		doc/.htaccess \
+		doc/User/index.html \
+		doc/User/Guide/usersguide \
+		doc/User/Guide/Figures \
+		doc/User/Tutorial \
+		doc/User/Guide/usersguide.ps.gz \
+		doc/User/Guide/usersguide2.ps.gz \
+		doc/Developer/index.html \
+                doc/Developer/Guide/*.html \
+		doc/Installation/index.html \
+                doc/Installation/Guide/*.html \
+		doc/FAQBook/*.html \
+                doc/Utilities/HTML/doc_styles.css \
+		doc/Utilities/Figures
 
-SCIRunDocs.tar: Utilities/HTML/doc_styles.css index.html faqs developer installation user
-	rm -f SCIRunDocs.tar
-	cd .. && tar cvf doc/SCIRunDocs.tar doc/User/Guide/usersguide \
-                   doc/User/Guide/index.html \
-		   doc/User/Guide/figures doc/User/Guide/tutorial \
-		   doc/User/Guide/usersguide.ps.gz \
-		   doc/User/Guide/usersguide.pdf \
-                   doc/Developer/Guide/*.html \
-                   doc/Installation/Guide/*.html \
-                   doc/FAQBook/*.html \
-                   doc/Utilites/HTML/doc_styles.css doc/index.html doc/Figures doc/.htaccess
 
+products:
+	for p in ${PRODUCTS} ; do cd $$p; ${MAKE}; cd ..; done
 
-faqs:
-	cd faqs && $(MAKE)
-
-developer:
-	cd Developer && $(MAKE)
-
-installation:
-	cd Installation && $(MAKE)
-
-user:
-	cd User && $(MAKE)
+define rmtgz
+-rm -f SCIRunDocs.tar.gz; rm -f SCIRunDocs.tar
+endef
 
 clean:
-	rm -f SCIRunDocs.tar.gz
-	rm -f SCIRunDocs.tar
-	cd Installation && $(MAKE) clean
-	cd Developer && $(MAKE) clean
-	cd User && $(MAKE) clean
-	cd faqs && $(MAKE) clean
+	${rmtgz}
+	for p in ${PRODUCTS} ; do cd $$p; ${MAKE} clean; cd ..; done
 
 veryclean:
-	rm -f SCIRunDocs.tar.gz
-	rm -f SCIRunDocs.tar
-	cd Installation && $(MAKE) veryclean
-	cd Developer && $(MAKE) veryclean
-	cd User && $(MAKE) veryclean
-	cd faqs && $(MAKE) veryclean
+	${rmtgz}
+	for p in ${PRODUCTS} ; do cd $$p; ${MAKE} veryclean; cd ..; done

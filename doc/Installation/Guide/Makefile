@@ -41,7 +41,7 @@ TOC.html printable.html: ${STYLESHEET} ${BOOK}
 	${xmltohtml}
 
 clean: 
-	rm *~
+	-rm *~
 
 veryclean: clean
-	rm -f $(HTMLNAMES)
+	-rm -f $(HTMLNAMES)

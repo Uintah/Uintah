@@ -25,7 +25,7 @@
 BASENAMES   = $(shell ls -1 p?c?.xml | sed 's,.xml,,g') TOC printable
 HTMLNAMES  = $(patsubst %,%.html,$(BASENAMES))
 BOOK = DeveloperGuide.xml
-STYLESHEET =../../Utilities/XML/docbook-xsl/html/docbook.xsl
+STYLESHEET =../../Utilities/XML/docbook.xsl
 
 define xmltohtml
 java org.apache.xalan.xslt.Process -IN ${BOOK} -XSL ${STYLESHEET} \
@@ -41,7 +41,7 @@ TOC.html printable.html: ${STYLESHEET} ${BOOK}
 	${xmltohtml}
 
 clean: 
-	rm *~
+	-rm *~
 
 veryclean: clean
-	rm -f $(HTMLNAMES)
+	-rm -f $(HTMLNAMES)

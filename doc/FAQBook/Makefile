@@ -31,11 +31,11 @@ DEVFAQ=../Developer/FAQ/faq.xml
 FAQS=${INSTFAQ} ${USERFAQ} ${DEVFAQ}
 DIRLEVEL=1
 
-all: faqbook.html faq1.html faq2.html faq3.html printable.html
+all: index.html faq1.html faq2.html faq3.html printable.html
 
-faqbook.html: ${FAQBOOK} ${FAQS} ${STYLESHEET}
+index.html: ${FAQBOOK} ${FAQS} ${STYLESHEET}
 	java org.apache.xalan.xslt.Process -IN ${FAQBOOK} -XSL ${STYLESHEET} \
-	-OUT faqbook.html -PARAM dir ${DIRLEVEL} -PARAM cont 0 -HTML
+	-OUT index.html -PARAM dir ${DIRLEVEL} -PARAM cont 0 -HTML
 
 faq1.html: ${INSTFAQ} ${STYLESHEET}
 	java org.apache.xalan.xslt.Process -IN ${FAQBOOK} -XSL ${STYLESHEET} \
