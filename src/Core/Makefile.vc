@@ -9,7 +9,7 @@ EXENAME =
 
 OBJS = Containers\Sort.odll Containers\String.odll Containers\PQueue.odll\
 	   Containers\TrivialAllocator.odll Containers\BitArray1.odll\
-	   Datatypes\ContourSet.odll Datatypes\TriSurface.odll\
+	   Datatypes\TriSurface.odll\
 	   Datatypes\BasicSurfaces.odll Datatypes\Boolean.odll\
 	   Datatypes\ColorMap.odll Datatypes\ColumnMatrix.odll\
 	   Datatypes\Datatype.odll Datatypes\DenseMatrix.odll\
