@@ -48,9 +48,9 @@ proc ComponentWizard { {window .componentWizard} } {
     global time_font
     
     toplevel $w -width [concat $MAIN_WIDTH i] -height [concat $MAIN_HEIGHT i]
-    wm geometry $w 505x642+228+102
+    #wm geometry $w 505x642+228+102
     wm title $w "Component Wizard"
-    wm resizable $w 0 0
+    #wm resizable $w 0 0
 
     iwidgets::tabnotebook $w.tabs -width [concat $WIDTH i]\
 	                  -height [concat $HEIGHT i] -backdrop [$w cget -background]
