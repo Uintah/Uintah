@@ -43,7 +43,7 @@ class VarLabel;
     virtual ~HierarchicalRegridder();
 
     //! Create a new Grid
-    virtual Grid* regrid(Grid* oldGrid, SchedulerP sched, const ProblemSpecP& ups);
+    virtual Grid* regrid(Grid* oldGrid, SchedulerP& sched, const ProblemSpecP& ups);
 
   private:
     void MarkPatches( const GridP& origGrid, int levelIdx  ); 
