@@ -29,7 +29,7 @@ using namespace rtrt;
 // creation of new triangle widget
 TriWidget::TriWidget( float x, float y, float w, float h, float c[3], float a )
 {
-  //printf( "In TriWidget creation\n" );
+  // printf( "In TriWidget creation\n" );
   type = 0;
   drawFlag = 0;
   width = w;
@@ -63,7 +63,7 @@ TriWidget::TriWidget( float x, float y, float w, float h, float c[3], float a )
 TriWidget::TriWidget( float x, float y, float w, float h, float c[3], float a, 
 		      float o_x, float o_y, float o_s, Texture<GLfloat> *t )
 {
-  //printf( "In TriWidget replacement\n" );
+  // printf( "In TriWidget replacement\n" );
   drawFlag = 0;
   type = 0;
   width = w;
@@ -96,7 +96,7 @@ TriWidget::TriWidget( float x, float y, float w, float h, float c[3], float a,
 void
 TriWidget::draw( void )
 {
-  //printf( "In TriWidget::draw\n" );
+  // printf( "In TriWidget::draw\n" );
   glBegin( GL_LINES );
     glColor3fv( color );
     glVertex2f( upperLeftVertex[0], upperLeftVertex[1] );  // left side
@@ -123,7 +123,7 @@ TriWidget::draw( void )
 void
 TriWidget::translate( float dx, float dy )
 {
-  //printf( "In TriWidget::translate\n" );
+  // printf( "In TriWidget::translate\n" );
   // quicker operation if x and y translation both keep widget inside window
   if( upperLeftVertex[0]+dx > 0.0 && upperRightVertex[0]+dx < 500.0 &&
       lowerVertex[0]+dx > 0.0 && lowerVertex[0]+dx < 500.0 &&
@@ -194,7 +194,7 @@ TriWidget::translate( float dx, float dy )
 void 
 TriWidget::adjustShear( float dx, float dy )
 { 
-  //printf( "In TriWidget::adjustShear\n" );
+  // printf( "In TriWidget::adjustShear\n" );
   // ratio of distances from the lowerBound and upperBound to the bottom tip
   float fractionalHeight = (midRightVertex[1]-lowerVertex[1])/(upperRightVertex[1]-lowerVertex[1]);
 
@@ -260,7 +260,7 @@ TriWidget::adjustShear( float dx, float dy )
 void 
 TriWidget::adjustWidth( float dx, float dy )
 {
-  //printf( "In TriWidget::adjustWidth\n" );
+  // printf( "In TriWidget::adjustWidth\n" );
   // if the adjustment doesn't cause part of the widget to fall outside its window
   if( upperLeftVertex[0]-dx+10 < upperRightVertex[0]+dx && 
       upperLeftVertex[0]-dx > 0.0 && upperRightVertex[0]+dx < 500.0 )
@@ -290,7 +290,7 @@ TriWidget::adjustWidth( float dx, float dy )
 void 
 TriWidget::adjustLowerBound( float dx, float dy )
 {
-  //printf( "In TriWidget::adjustLowerBound\n" );
+  // printf( "In TriWidget::adjustLowerBound\n" );
   // slope of the right side of the widget
   float m = (upperRightVertex[1]-lowerVertex[1])/(upperRightVertex[0]-lowerVertex[0]);
   // ratio of distances from the lowerBound and upperBound to the bottom tip
@@ -327,7 +327,7 @@ TriWidget::adjustLowerBound( float dx, float dy )
 void
 TriWidget::adjustOpacity( float dx, float dy )
 {
-  //printf( "In TriWidget::adjustOpacity\n" );
+  // printf( "In TriWidget::adjustOpacity\n" );
   // if the opacityStar's position adjustment will keep it on the shearBar
   if( opac_x+dx > upperLeftVertex[0] && opac_x+dx < upperRightVertex[0] )
     {
@@ -345,7 +345,7 @@ void
 TriWidget::manipulate( float x, float dx, float y, float dy )
 {
   printf( "x = %g, y = %g\n", x, y );
-  //printf( "In TriWidget::manipulate\n" );
+  // printf( "In TriWidget::manipulate\n" );
   // the following block of if statements allow for continuous manipulation
   //  without conducting parameter checks every time (quicker)
   if( drawFlag == 1)
@@ -414,7 +414,7 @@ TriWidget::manipulate( float x, float dx, float y, float dy )
 void 
 TriWidget::paintTransFunc( GLfloat texture_dest[textureHeight][textureWidth][4], float w, float h )
 {
-  //printf( "In TriWidget::paintTransFunc\n" );
+  // printf( "In TriWidget::paintTransFunc\n" );
   int x, y;
   int startx, starty, endx, endy;
   float frontx, rearx;
@@ -457,7 +457,7 @@ TriWidget::paintTransFunc( GLfloat texture_dest[textureHeight][textureWidth][4],
 bool
 TriWidget::insideWidget( int x, int y )
 {
-  //printf( "In TriWidget::insideWidget\n" );
+  // printf( "In TriWidget::insideWidget\n" );
   // ratio of distances of y-coordinate in question and upperBound from bottom tip
   float fractionalHeight = ((250-y)-lowerVertex[1])/(upperLeftVertex[1]-lowerVertex[1]);
   if( (250-y) > lowerVertex[1]+5 && (250-y) < upperLeftVertex[1]-5 &&
@@ -474,7 +474,7 @@ TriWidget::insideWidget( int x, int y )
 void
 TriWidget::returnParams( float *p[10] )
 {
-  //printf( "In TriWidget::returnParams\n" );
+  // printf( "In TriWidget::returnParams\n" );
   p[0] = &upperLeftVertex[0];
   p[1] = &upperLeftVertex[1];
   p[2] = &width;
@@ -511,7 +511,7 @@ TriWidget::changeColor( float r, float g, float b )
 void
 TriWidget::invertColor( float color[3] )
 {
-  //printf( "In TriWidget::invertColor\n" );
+  // printf( "In TriWidget::invertColor\n" );
   return;
 } // invertColor()
 
@@ -524,7 +524,7 @@ TriWidget::invertColor( float color[3] )
 RectWidget::RectWidget( float x, float y, float w, float h, float c[3], float a, 
 			int t, float o_x, float o_y, float o_s, Texture<GLfloat> *text )
 {
-  //printf( "In RectWidget replacement\n" );
+  // printf( "In RectWidget replacement\n" );
   drawFlag = 0;
   width = w;
   height = h;
@@ -570,7 +570,7 @@ RectWidget::RectWidget( float x, float y, float w, float h, float c[3], float a,
 void 
 RectWidget::draw( void )
 {
-  //printf( "In RectWidget::draw\n" );
+  // printf( "In RectWidget::draw\n" );
   glBegin( GL_LINE_LOOP );
     glColor3fv( color );
     glVertex2f( upperLeftVertex[0], upperLeftVertex[1] );
@@ -592,7 +592,7 @@ RectWidget::draw( void )
 void 
 RectWidget::translate( float dx, float dy )
 {
-  //printf( "In RectWidget::translate\n" );
+  // printf( "In RectWidget::translate\n" );
   // if x and y translations will keep this widget inside its window,
   //  then a faster computation can be undertaken
   if(upperLeftVertex[0]+dx > 0.0 && lowerRightVertex[0]+dx < 500.0 &&
@@ -651,7 +651,7 @@ RectWidget::translate( float dx, float dy )
 void 
 RectWidget::resize( float dx, float dy )
 {
-  //printf( "In RectWidget::resize\n" );
+  // printf( "In RectWidget::resize\n" );
   // fractional distance of focusStar across this widget's length from left to right
   float frac_dist = (focus_x-upperLeftVertex[0])/(lowerRightVertex[0]-upperLeftVertex[0]);
   // restricts width to positive values
@@ -688,7 +688,7 @@ RectWidget::resize( float dx, float dy )
 void
 RectWidget::adjustFocus( float dx, float dy )
 {
-  //printf( "In RectWidget::adjustFocus\n" );
+  // printf( "In RectWidget::adjustFocus\n" );
   if( focus_x + dx > upperLeftVertex[0] && focus_x + dx < lowerRightVertex[0] )
     {
       focus_x += dx;
@@ -707,7 +707,7 @@ RectWidget::adjustFocus( float dx, float dy )
 void
 RectWidget::adjustOpacity( float dx, float dy )
 {
-  //printf( "In RectWidget::adjustOpacity\n" );
+  // printf( "In RectWidget::adjustOpacity\n" );
   // if opacityStar remains inside translateBar
   if( opac_x+dx < lowerRightVertex[0] && opac_x+dx > upperLeftVertex[0] )
     {
@@ -724,7 +724,7 @@ RectWidget::adjustOpacity( float dx, float dy )
 void 
 RectWidget::manipulate( float x, float dx, float y, float dy )
 {
-  //printf( "In RectWidget::manipulate\n" );
+  // printf( "In RectWidget::manipulate\n" );
   // the following block of if statements allow for continuous manipulation
   //  without conducting parameter checks every time (quicker)
   if( drawFlag == 1 )
@@ -784,7 +784,7 @@ RectWidget::manipulate( float x, float dx, float y, float dy )
 void
 RectWidget::invertColor( float color[3] )
 {
-  //printf( "In RectWidget::invertColor\n" );
+  // printf( "In RectWidget::invertColor\n" );
   focusStar->invertColor( color );
 } // invertColor()
 
@@ -794,7 +794,7 @@ RectWidget::invertColor( float color[3] )
 void
 RectWidget::paintTransFunc( GLfloat texture_dest[textureHeight][textureWidth][4], float w, float h )
 {
-  //printf( "In RectWidget::paintTransFunc\n" );
+  // printf( "In RectWidget::paintTransFunc\n" );
   int x, y;
   int startx, starty, endx, endy;
   startx = (int)(upperLeftVertex[0] * textureWidth/500.0f);
@@ -863,7 +863,7 @@ bool
 RectWidget::insideWidget( int x, int y )
 {
   y = 250-y;
-  //printf( "In RectWidget::insideWidget\n" );
+  // printf( "In RectWidget::insideWidget\n" );
   if( x > upperLeftVertex[0]+5 && x < lowerRightVertex[0]-5 && (x > opac_x+4 || x < opac_x-4) &&
       y > lowerRightVertex[1]+5 && y < upperLeftVertex[1]-5 && (y > opac_y+4 || y < opac_y-4) )
     return true;
@@ -877,7 +877,7 @@ RectWidget::insideWidget( int x, int y )
 void
 RectWidget::returnParams( float *p[10] )
 {
-  //printf( "In RectWidget::returnParams\n" );
+  // printf( "In RectWidget::returnParams\n" );
   p[0] = &upperLeftVertex[0];
   p[1] = &upperLeftVertex[1];
   p[2] = &width;
