@@ -30,13 +30,14 @@
 
 #include <Core/CCA/Component/PIDL/MxNScheduleEntry.h>
 #include <Core/Thread/Thread.h>
+#include <assert.h>
 using namespace SCIRun;   
 
 MxNScheduleEntry::MxNScheduleEntry(std::string n, sched_t st)
   : name(n), scht(st), recv_sema("getCompleteArray Wait", 0), 
     arr_wait_sema("getArrayWait Semaphore", 0), meta_sema("allMetadataReceived Wait", 0), 
     arr_mutex("Distribution Array Pointer lock"), recv_mutex("Receieved Flag lock"),
-    allowArraySet(true)
+    allowArraySet(true), madeSched(false)
 
 {
 }
@@ -50,15 +51,11 @@ MxNScheduleEntry::~MxNScheduleEntry()
 void MxNScheduleEntry::addCallerRep(MxNArrayRep* arr_rep)
 {
   if(scht == callee) {
-    //Check if a representation with the same rank exists and
-    //erase it if that is the case
+    //Check if a representation with the same rank exists 
     int myrank = arr_rep->getRank();
     descriptorList::iterator iter = caller_rep.begin();
-    for(unsigned int i=0; i < caller_rep.size(); i++, iter++) {
-      if(myrank == (*iter)->getRank()) {
-	caller_rep.erase(iter);
-      }
-    }
+    for(unsigned int i=0; i < caller_rep.size(); i++, iter++) 
+      assert(myrank != (*iter)->getRank());
   }
   caller_rep.push_back(arr_rep);
 }
@@ -94,6 +91,27 @@ MxNArrayRep* MxNScheduleEntry::getCalleeRep(unsigned int index)
     return NULL;
 }
 
+descriptorList MxNScheduleEntry::makeSchedule()
+{
+  assert(scht == caller);
+
+  if(madeSched) return sched;
+
+  //Create the schedule 
+  MxNArrayRep* i_rep;
+  MxNArrayRep* this_rep = caller_rep[0];
+  for(unsigned int i=0; i < callee_rep.size() ;i++)  {
+    i_rep = callee_rep[i];
+    assert(i_rep->getDimNum() == this_rep->getDimNum());
+    //Determine an intersect
+    if(this_rep->isIntersect(i_rep))
+      sched.push_back(this_rep->Intersect(i_rep));
+    //Set flag to indicate that schedule is now created
+    madeSched = true;
+  }
+  return sched;
+}	
+
 void* MxNScheduleEntry::getArray()
 {
   //If it is okay to set this array, we return NULL
@@ -113,6 +131,8 @@ void* MxNScheduleEntry::getArrayWait()
 
 void MxNScheduleEntry::setArray(void** a_ptr)
 {
+  assert(scht == callee);
+
   //Make sure all the meta data arrived
   meta_sema.down();
   //set array
@@ -132,6 +152,8 @@ void MxNScheduleEntry::setArray(void** a_ptr)
 
 void MxNScheduleEntry::setNewArray(void** a_ptr)
 {
+  assert(scht == callee);
+
   //Make sure all the meta data arrived
   meta_sema.down();
   //set array
@@ -149,54 +171,55 @@ void MxNScheduleEntry::setNewArray(void** a_ptr)
 void* MxNScheduleEntry::waitCompleteArray()
 {
   descriptorList rl;
-  if (scht == callee) {
-    //Wait for all meta data communications to finish
-    meta_sema.down();
+ 
+  assert(scht == callee); 
 
-    //Determine which redistribution requests we are waiting for
-    for(unsigned int i=0; i < caller_rep.size(); i++) {
-      if (callee_rep[0]->isIntersect(caller_rep[i]))
-	  rl.push_back(caller_rep[i]);
+  //Wait for all meta data communications to finish
+  meta_sema.down();
+  
+  //Determine which redistribution requests we are waiting for
+  for(unsigned int i=0; i < caller_rep.size(); i++) {
+    if (callee_rep[0]->isIntersect(caller_rep[i]))
+      rl.push_back(caller_rep[i]);
+  }
+  //Return NULL if there is no redistribution
+  if (rl.size() == 0) {
+    int** temp_ptr = new int*;
+    (*temp_ptr) = NULL;
+    arr_ptr = (void*) temp_ptr; 
+    //Reset variables  
+    while (arr_wait_sema.tryDown());
+    allowArraySet = true;
+    meta_sema.up((int) (2*caller_rep.size()));
+    //**************
+    return arr_ptr;
+  }
+  
+  //Wait until all of those requests are received
+  descriptorList::iterator iter;
+  for(int i=0; i < (int)rl.size(); iter++, i++) {
+    if(i == 0) iter = rl.begin();
+    recv_mutex.lock();
+    bool recv_flag = (*iter)->received;
+    recv_mutex.unlock();
+    if (recv_flag == false) {
+      ::std::cout << "rank=" << i << " of " << rl.size() << " is not here yet\n";
+      recv_sema.down();
+      i=-1; //Next loop iteration will increment it to 0
     }
-    //Return NULL if there is no redistribution
-    if (rl.size() == 0) {
-      int** temp_ptr = new int*;
-      (*temp_ptr) = NULL;
-      arr_ptr = (void*) temp_ptr; 
-      //Reset variables  
-      while (arr_wait_sema.tryDown());
-      allowArraySet = true;
-      meta_sema.up((int) (2*caller_rep.size()));
-      //**************
-      return arr_ptr;
-    }
-
-    //Wait until all of those requests are received
-    descriptorList::iterator iter;
-    for(int i=0; i < (int)rl.size(); iter++, i++) {
-      if(i == 0) iter = rl.begin();
-      recv_mutex.lock();
-      bool recv_flag = (*iter)->received;
-      recv_mutex.unlock();
-      if (recv_flag == false) {
-	::std::cout << "rank=" << i << " of " << rl.size() << " is not here yet\n";
-	recv_sema.down();
-	i=-1; //Next loop iteration will increment it to 0
-      }
-      else {
+    else {
 	::std::cout <<  "rank=" << i << " of " << rl.size() << " is here\n";
-      }
-    } 
-    ::std::cout << "All redistribution have arrived...\n";
-    //Mark all of them as not received to get ready for next time
-    iter = rl.begin();
-    for(unsigned int i=0; i < rl.size(); iter++, i++) {
-      recv_mutex.lock();
-      (*iter)->received = false;
-      recv_mutex.unlock();
     }
-  }  
-
+  } 
+  ::std::cout << "All redistribution have arrived...\n";
+  //Mark all of them as not received to get ready for next time
+  iter = rl.begin();
+  for(unsigned int i=0; i < rl.size(); iter++, i++) {
+    recv_mutex.lock();
+    (*iter)->received = false;
+    recv_mutex.unlock();
+  }
+ 
   //Reset variables  
   while (arr_wait_sema.tryDown());
   allowArraySet = true;
@@ -207,38 +230,38 @@ void* MxNScheduleEntry::waitCompleteArray()
 
 void MxNScheduleEntry::reportMetaRecvDone(int size)
 {
-  if (scht == callee) {
-    //::std::cout << "Meta " << caller_rep.size() << " of " << size << "\n"; 
-    if (size == static_cast<int>(caller_rep.size())) { 
-      //One the metadata is here, we don't want anyone
-      //to wait for the meta_sema so we raise it 
-      //(also perpertually raise it in each redistribution)
-      meta_sema.up((int) 4*caller_rep.size());
-      ::std::cout << "UP Meta semaphore\n";
-    }
-  }  
+  assert(scht == callee);
+
+  //::std::cout << "Meta " << caller_rep.size() << " of " << size << "\n"; 
+  if (size == static_cast<int>(caller_rep.size())) { 
+    //One the metadata is here, we don't want anyone
+    //to wait for the meta_sema so we raise it 
+    //(also perpertually raise it in each redistribution)
+    meta_sema.up((int) 4*caller_rep.size());
+    ::std::cout << "UP Meta semaphore\n";
+  }
 }
 
 void MxNScheduleEntry::doReceive(int rank)
 {
-  if (scht == callee) {
-    //Find the proper arr. representation and mark it is received
-    for(unsigned int i=0; i < caller_rep.size(); i++) {
-      if (caller_rep[i]->getRank() == rank) {
-	::std::cout << "received dist rank=" << i << "\n";
-	//If we have already received this, something is happening
-	//out of order, so we yield until things sort out.
-	while(caller_rep[i]->received) {
-          recv_sema.up();
-      	  Thread::yield();
-        }
-  	recv_mutex.lock();
-	caller_rep[i]->received = true;
-	recv_mutex.unlock();
+  assert(scht == callee); 
+
+  //Find the proper arr. representation and mark it is received
+  for(unsigned int i=0; i < caller_rep.size(); i++) {
+    if (caller_rep[i]->getRank() == rank) {
+      ::std::cout << "received dist rank=" << i << "\n";
+      //If we have already received this, something is happening
+      //out of order, so we yield until things sort out.
+      while(caller_rep[i]->received) {
 	recv_sema.up();
+	Thread::yield();
       }
-    }    
-  }
+      recv_mutex.lock();
+      caller_rep[i]->received = true;
+      recv_mutex.unlock();
+      recv_sema.up();
+    }
+  }    
 }
 
 void MxNScheduleEntry::print(std::ostream& dbg)

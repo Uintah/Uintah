@@ -2284,8 +2284,7 @@ void NamedType::emit_unmarshal(EmitState& e, const string& arg,
 	e.out << leader2 << "//Collect redistributions of out arguments:\n";
 	e.out << leader2 << "if (1) { //Hack to prevent variable shadowing of _rl_out and _this_rep\n";
 	e.out << leader2 << "SCIRun::descriptorList _rl_out = d_sched->getRedistributionReps(\"" << distarr->getName() << "\");\n";
-	e.out << leader2 << "SCIRun::MxNArrayRep* _this_rep = d_sched->callerGetCallerRep(\"" 
-	      << distarr->getName() << "\");\n";
+	e.out << leader2 << "SCIRun::MxNArrayRep* _this_rep = d_sched->callerGetCallerRep(\"" << distarr->getName() << "\");\n";
 	e.out << leader2 << "for(int i = 0; i < (int)_rl_out.size(); i++) {\n";
 	e.out << leader2 << "  SCIRun::Message* message = _rl_out[i]->getReference()->chan->getMessage();\n";
 	//string dimname=arg+"_mdim";
@@ -2301,8 +2300,7 @@ void NamedType::emit_unmarshal(EmitState& e, const string& arg,
 	e.out << leader2 << "  int rank = _rm->getRank();\n";
 	e.out << leader2 << "  message->marshalInt(&rank);\n";
 	e.out << leader2 << "  //Intersect and create distribution representation\n";
-	e.out << leader2 << "  SCIRun::MxNArrayRep* _meta_arr_rep = _this_rep->Intersect(_rl_out[i]);\n"; 
-	e.out << leader2 << "  ::SSIDL::array2< int> _meta_arr = _meta_arr_rep->getArray();\n";
+	e.out << leader2 << "  ::SSIDL::array2< int> _meta_arr = _rl_out[i]->getArray();\n";
 	e.out << leader2 << "  //Marshal distribution representation array\n";
 	e.out << leader2 << "  int _rep_mdim[2];\n";
 	e.out << leader2 << "  _rep_mdim[0]=_meta_arr.size1();\n";
@@ -2337,7 +2335,6 @@ void NamedType::emit_unmarshal(EmitState& e, const string& arg,
         e.out.pop_leader(ttleader);
 	e.out << leader2 << "}\n";
 	e.out.pop_leader(templeader); 
-	e.out << leader2 << "  delete _meta_arr_rep;\n"; 
 	e.out << leader2 << "}\n";   
 	e.out << leader2 << "}\n";
 
@@ -2554,8 +2551,7 @@ void NamedType::emit_marshal(EmitState& e, const string& arg,
 	e.out << leader2 << "  int rank = _rm->getRank();\n";
 	e.out << leader2 << "  message->marshalInt(&rank);\n";
 	e.out << leader2 << "  //Intersect and create distribution representation\n";
-	e.out << leader2 << "  SCIRun::MxNArrayRep* _meta_arr_rep = this_rep->Intersect(rl[i]);\n"; 
-	e.out << leader2 << "  ::SSIDL::array2< int> _meta_arr = _meta_arr_rep->getArray();\n";
+	e.out << leader2 << "  ::SSIDL::array2< int> _meta_arr = rl[i]->getArray();\n";
 	e.out << leader2 << "  //Marshal distribution representation array\n";
 	e.out << leader2 << "  int _rep_mdim[2];\n";
 	e.out << leader2 << "  _rep_mdim[0]=_meta_arr.size1();\n";
@@ -2586,7 +2582,6 @@ void NamedType::emit_marshal(EmitState& e, const string& arg,
         e.out.pop_leader(ttleader);
 	e.out << leader2 << "}\n";
 	e.out.pop_leader(templeader);   
-	e.out << leader2 << "  delete _meta_arr_rep;\n"; 
 	e.out << leader2 << "  int _handler=rl[i]->getReference()->getVtableBase()+" << handler << ";\n";
 	e.out << leader2 << "  message->sendMessage(_handler);\n";
 	e.out << leader2 << "  message->destroyMessage();\n";

@@ -153,27 +153,10 @@ void MxNScheduler::reportMetaRecvDone(std::string distname, int size)
 descriptorList MxNScheduler::getRedistributionReps(std::string distname)
 {
   descriptorList rl;
-  MxNArrayRep* callee_rep;
-  MxNArrayRep* this_rep;
   
   schedList::iterator iter = entries.find(distname);
-  if ((iter != entries.end())&&(((*iter).second)->isCaller())) {
-    this_rep = ((*iter).second)->getCallerRep(0);
-    for(int i=0; ; i++) {
-      callee_rep = ((*iter).second)->getCalleeRep(i);
-      if (callee_rep == NULL) {
-	return rl;
-      }
-      else if (callee_rep->getDimNum() != this_rep->getDimNum()) {
-	continue;
-      }
-      else {
-	//Determine which redistribution requests need this array
-	if (this_rep->isIntersect(callee_rep))
-	  rl.push_back(callee_rep);
-      }
-    }
-  }
+  if ((iter != entries.end())&&(iter->second->isCaller())) 
+    return iter->second->makeSchedule();
   else 
     return rl;
 }
