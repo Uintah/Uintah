@@ -424,7 +424,7 @@ itcl_class SCIRun_WordList_Sort {
         All SCIRun packages have the same basic directory structure:
       </para>
 
-      <figure name="pdts" imga="../images/pdts.gif" 
+      <figure name="pdts" imga="Figures/pdts.gif" 
               capa="the basic package directory tree structure."/>
       
 <!--
@@ -457,7 +457,7 @@ PACKAGE_NAME ===+= Core ======+= Datatypes
         one or more modules: 
       </para>
           
-      <figure name="msts" imga="../images/msts.gif"
+      <figure name="msts" imga="Figures/msts.gif"
               capa="The basic Modules directory tree structure"/>
       
 
@@ -700,9 +700,9 @@ SRCS     += \
       </para>
 
       <figure name="cw" 
-        imga="../images/ComponentWizard.gif" 
+        imga="Figures/ComponentWizard.gif" 
         capa="The Component Wizard with a blank module" 
-        imgb="../images/ComponentWizard2.gif" 
+        imgb="Figures/ComponentWizard2.gif" 
         capb="Building the Sort module"/><beginpage/>
 
       <para>
@@ -716,7 +716,7 @@ SRCS     += \
       </para>
 
       <figure name="ep" 
-        imga="../images/EditPort.gif" 
+        imga="Figures/EditPort.gif" 
         capa="Editing the input port of the sort module"/>
       
       <para>
