@@ -51,6 +51,13 @@ SerialMPM::problemSetup(const ProblemSpecP& params,
 		     GridP&,
 		     SimulationStateP& sharedState)
 {
+  printf("-----------------------------------\n");
+  printf(" Y O U ' R E   R U N N I N G   F A K E   M P M \n");
+  printf("  The last person to check in Uintah/StandAlone/sub.mk \n");
+  printf("  probably checked it in after it had been tweaked to compile \n");
+  printf("  fakeMPMICE. \n");
+  printf("-----------------------------------\n");
+  exit(1);
 }
 
 void 
@@ -235,6 +242,13 @@ MPMArches::problemSetup(const ProblemSpecP& params,
 		     GridP&,
 		     SimulationStateP& sharedState)
 {
+  printf("-----------------------------------\n");
+  printf(" Y O U ' R E   R U N N I N G   F A K E M P M A R C H E S \n");
+  printf("  The last person to check in Uintah/StandAlone/sub.mk \n");
+  printf("  probably checked it in after it had been tweaked to compile \n");
+  printf("  fakeMPMArches. \n");
+  printf("-----------------------------------\n");
+  exit(1);
 }
 
 void 
@@ -328,6 +342,13 @@ ICE::problemSetup(const ProblemSpecP& params,
 		     GridP&,
 		     SimulationStateP& sharedState)
 {
+  printf("-----------------------------------\n");
+  printf(" Y O U ' R E   R U N N I N G   F A K E I C E \n");
+  printf("  The last person to check in Uintah/StandAlone/sub.mk \n");
+  printf("  probably checked it in after it had been tweaked to compile \n");
+  printf("  fakeICE. \n");
+  printf("-----------------------------------\n");
+  exit(1);
 }
 
 void 
@@ -419,6 +440,13 @@ MPMICE::problemSetup(const ProblemSpecP& params,
 		     GridP&,
 		     SimulationStateP& sharedState)
 {
+  printf("-----------------------------------\n");
+  printf(" Y O U ' R E   R U N N I N G   F A K E M P M I C E \n");
+  printf("  The last person to check in Uintah/StandAlone/sub.mk \n");
+  printf("  probably checked it in after it had been tweaked to compile \n");
+  printf("  fakeMPM_ICE. \n");
+  printf("-----------------------------------\n");
+  exit(1);
 }
 
 void 
