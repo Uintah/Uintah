@@ -1624,10 +1624,34 @@ OpenGL::pick_draw_obj(Viewer* viewer, ViewWindow*, GeomHandle obj)
 
 
 void
-OpenGL::redraw_obj(Viewer* viewer, ViewWindow* viewwindow, GeomHandle obj)
+OpenGL::redraw_obj(Viewer* viewer, ViewWindow* viewwindow, GeomHandle obj, bool sticky)
 {
   drawinfo->viewwindow = viewwindow;
-  obj->draw(drawinfo, viewer->default_material_.get_rep(), current_time);
+  if( !sticky){
+    obj->draw(drawinfo, viewer->default_material_.get_rep(), current_time);
+  } else {
+    int ii = 0;
+    // Disable clipping planes for sticky objects.
+    vector<bool> cliplist(6, false);
+    for (ii = 0; ii < 6; ii++)
+    {
+      if (glIsEnabled((GLenum)(GL_CLIP_PLANE0+ii)))
+      {
+	glDisable((GLenum)(GL_CLIP_PLANE0+ii));
+	cliplist[ii] = true;
+      }
+    }
+    obj->draw(drawinfo, viewer->default_material_.get_rep(), current_time);
+    
+    // Reenable clipping planes.
+    for (ii = 0; ii < 6; ii++)
+    {
+      if (cliplist[ii])
+      {
+	glEnable((GLenum)(GL_CLIP_PLANE0+ii));
+      }
+    }
+  }
 }
 
 
