@@ -1,6 +1,8 @@
 #include "SphereGeometryObject.h"
 #include <SCICore/Geometry/Vector.h>
 #include "GeometryObjectFactory.h"
+#include <Uintah/Grid/Box.h>
+#include <Uintah/Interface/ProblemSpec.h>
 
 using namespace Uintah::Components;
 using SCICore::Geometry::Vector;
@@ -57,6 +59,9 @@ GeometryObject* SphereGeometryObject::readParameters(ProblemSpecP &ps)
 
 
 // $Log$
+// Revision 1.3  2000/04/20 18:56:23  sparker
+// Updates to MPM
+//
 // Revision 1.2  2000/04/20 15:09:26  jas
 // Added factory methods for GeometryObjects.
 //

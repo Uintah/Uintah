@@ -7,26 +7,42 @@
 //     
 
 #include "CompMooneyRivlin.h"
+#include <Uintah/Grid/Region.h>
+#include <Uintah/Interface/DataWarehouse.h>
+#include <Uintah/Grid/NCVariable.h>
+#include <Uintah/Grid/ParticleSet.h>
+#include <Uintah/Grid/ParticleVariable.h>
+#include <Uintah/Grid/ReductionVariable.h>
+#include <Uintah/Grid/VarLabel.h>
+#include <SCICore/Math/MinMax.h>
+#include <Uintah/Components/MPM/Util/Matrix3.h>
+#include <Uintah/Components/MPM/ConstitutiveModel/MPMMaterial.h>
 #include <iostream>
 using std::cerr;
+using namespace Uintah::Grid;
 using namespace Uintah::Components;
+using namespace Uintah::Interface;
+using SCICore::Math::Min;
+using SCICore::Math::Max;
 using SCICore::Geometry::Vector;
 
-CompMooneyRivlin::CompMooneyRivlin(const Region* region,
-				   const MPMMaterial* matl,
-				   const DataWarehouseP& old_dw,
-				   DataWarehouseP& new_dw)
+CompMooneyRivlin::CompMooneyRivlin(const Region* /*region*/,
+				   const MPMMaterial* /*matl*/)
 {
-  // Constructor
-  // Create storage in datawarehouse for data fields
-  // needed for model parameters
-
-#ifdef WONT_COMPILE_YET
-  int matlindex = matl->getDWIndex();
-
-  ParticleVariable<CMData> cmdata;
-  dw->get(cmdata,"p.cmdata", matlindex, region, 0);
-#endif
+   // Constructor
+   px_label = new VarLabel("p.x", ParticleVariable<Point>::getTypeDescription());
+   p_deformationMeasure_label = new VarLabel("p.deformationMeasure",
+					     ParticleVariable<Matrix3>::getTypeDescription());
+   p_stress_label = new VarLabel("p.stress",
+				 ParticleVariable<Matrix3>::getTypeDescription());
+   p_mass_label = new VarLabel("p.mass",
+			       ParticleVariable<double>::getTypeDescription());
+   p_volume_label = new VarLabel("p.volume",
+				 ParticleVariable<double>::getTypeDescription());
+   g_velocity_label = new VarLabel("g.velocity",
+				   NCVariable<Vector>::getTypeDescription());
+   p_cmdata_label = new VarLabel("p.cmdata",
+				 ParticleVariable<CMData>::getTypeDescription());
 }
 
 CompMooneyRivlin::~CompMooneyRivlin()
@@ -34,9 +50,9 @@ CompMooneyRivlin::~CompMooneyRivlin()
   // Destructor
 }
 
-void CompMooneyRivlin::initializeCMData(const Region* region,
-					const MPMMaterial* matl,
-					DataWarehouseP& new_dw)
+void CompMooneyRivlin::initializeCMData(const Region* /*region*/,
+					const MPMMaterial* /*matl*/,
+					DataWarehouseP& /*new_dw*/)
 {
   // Put stuff in here to initialize each particle's
   // constitutive model parameters and deformationMeasure
@@ -48,50 +64,49 @@ void CompMooneyRivlin::computeStressTensor(const Region* region,
                                            const DataWarehouseP& old_dw,
                                            DataWarehouseP& new_dw)
 {
-#ifdef WONT_COMPILE_YET
   Matrix3 Identity,deformationGradientInc,B,velGrad;
   double invar1,invar3,J,w1,w2,w3,i3w3,w1pi1w2;
   Identity.Identity();
   double WaveSpeed = 0.0,c_dil = 0.0,c_rot = 0.0;
 
   Vector dx = region->dCell();
-  double oodx[3] { 1.0/dx.x(),1.0/dx.y(),1.0/dx.z() };
+  double oodx[3] = {1./dx.x(), 1./dx.y(), 1./dx.z()};
 
   int matlindex = matl->getDWIndex();
 
   // Create array for the particle position
   ParticleVariable<Vector> px;
-  old_dw->get(px, "p.x", matlindex, region, 0);
+  old_dw->get(px, px_label, matlindex, region, 0);
   // Create array for the particle deformation
   ParticleVariable<Matrix3> deformationGradient;
-  old_dw->get(deformationGradient, "p.deformationMeasure", matlindex, region, 0);
+  old_dw->get(deformationGradient, p_deformationMeasure_label, matlindex, region, 0);
 
   // Create array for the particle stress
-  ParticleVariable<Matrix3> stress;
-  new_dw->get(stress, "p.stress", matlindex, region, 0);
+  ParticleVariable<Matrix3> pstress;
+  new_dw->get(pstress, p_stress_label, matlindex, region, 0);
 
   // Retrieve the array of constitutive parameters
   ParticleVariable<CMData> cmdata;
-  new_dw->get(cmdata, "p.cmdata", matlindex, region, 0);
-  ParticleVariable<Matrix3> pmass;
-  old_dw->get(pmass, "p.mass", matlindex, region, 0);
-  ParticleVariable<Matrix3> pvolume;
-  old_dw->get(pvolume, "p.volume", matlindex, region, 0);
+  new_dw->get(cmdata, p_cmdata_label, matlindex, region, 0);
+  ParticleVariable<double> pmass;
+  old_dw->get(pmass, p_mass_label, matlindex, region, 0);
+  ParticleVariable<double> pvolume;
+  old_dw->get(pvolume, p_volume_label, matlindex, region, 0);
 
   NCVariable<Vector> gvelocity;
-  new_dw->get(gvelocity, "g.velocity", matlindex,region, 0);
-  SoleVariable<double> delt;
-  old_dw->get(delt, "delt");
+  new_dw->get(gvelocity, g_velocity_label, matlindex,region, 0);
+  ReductionVariable<double> delt;
+  old_dw->get(delt, delt_label);
 
   ParticleSubset* pset = px.getParticleSubset();
   ASSERT(pset == pstress.getParticleSubset());
-  ASSERT(pset == pdeformationMeasure.getParticleSubset());
+  ASSERT(pset == deformationGradient.getParticleSubset());
   ASSERT(pset == pmass.getParticleSubset());
   ASSERT(pset == pvolume.getParticleSubset());
 
   for(ParticleSubset::iterator iter = pset->begin();
      iter != pset->end(); iter++){
-     ParticleSet::index idx = *iter;
+     particleIndex idx = *iter;
 
      velGrad.set(0.0);
      // Get the node indices that surround the cell
@@ -116,7 +131,7 @@ void CompMooneyRivlin::computeStressTensor(const Region* region,
       deformationGradientInc = velGrad * delt + Identity;
 
       // Update the deformation gradient tensor to its time n+1 value.
-      deformationGradient[idx] = deformationGradientInc * deformationGradient;
+      deformationGradient[idx] = deformationGradientInc * deformationGradient[idx];
 
       // Actually calculate the stress from the n+1 deformation gradient.
 
@@ -125,7 +140,7 @@ void CompMooneyRivlin::computeStressTensor(const Region* region,
 
       // Compute the invariants
       invar1 = B.Trace();
-      J = deformationGradient.Determinant();
+      J = deformationGradient[idx].Determinant();
       invar3 = J*J;
 
       double C1 = cmdata[idx].C1;
@@ -141,27 +156,24 @@ void CompMooneyRivlin::computeStressTensor(const Region* region,
       w1pi1w2 = w1 + invar1*w2;
       i3w3 = invar3*w3;
 
-      stress[idx]=(B*w1pi1w2 - (B*B)*w2 + Identity*i3w3)*2.0/J;
+      pstress[idx]=(B*w1pi1w2 - (B*B)*w2 + Identity*i3w3)*2.0/J;
 
       // Compute wave speed at each particle, store the maximum
-      double mu,PR,lambda;
-      mu = 2.*(C1[idx] + C2[idx]);
-      PR = (2.*C1[idx] + 5.*C2[idx] + 2.*C4[idx])/
-		(4.*C4[idx] + 5.*C1[idx] + 11.*C2[idx]);
-      lambda = 2.*mu*(1.+PR)/(3.*(1.-2.*PR)) - (2./3.)*mu;
+      double mu = 2.*(C1 + C2);
+      double PR = (2.*C1 + 5.*C2 + 2.*C4)/
+		(4.*C4 + 5.*C1 + 11.*C2);
+      double lambda = 2.*mu*(1.+PR)/(3.*(1.-2.*PR)) - (2./3.)*mu;
       c_dil = Max(c_dil,(lambda + 2.*mu)*pvolume[idx]/pmass[idx]);
       c_rot = Max(c_rot, mu*pvolume[idx]/pmass[idx]);
     }
     WaveSpeed = sqrt(Max(c_rot,c_dil));
-    new_dw->put(SoleVariable<double>(MaxWaveSpeed),
-				"WaveSpeed", DataWarehouse::Max);
+    double delt_new = Min(dx.x(), dx.y(), dx.z())/WaveSpeed;
+    new_dw->put(ReductionVariable<double>(delt_new),
+		delt_label);
 
-    new_dw->put(stress, "p.stress", matlindex, region, 0);
-    new_dw->put(deformationGradient, "p.deformationMeasure",
-						matlindex, region, 0);
-#else
-    cerr << "CompMooneyRivlin::computeStressTensor not finished\n";
-#endif
+    new_dw->put(pstress, p_stress_label, matlindex, region);
+    new_dw->put(deformationGradient, p_deformationMeasure_label,
+		matlindex, region);
 }
 
 double CompMooneyRivlin::computeStrainEnergy(const Region* region,
@@ -189,7 +201,7 @@ double CompMooneyRivlin::computeStrainEnergy(const Region* region,
 
   for(ParticleSubset::iterator iter = pset->begin();
      iter != pset->end(); iter++){
-     ParticleSet::index idx = *iter;
+     particleIndex idx = *iter;
 
      double C1 = cmdata[idx].C1;
      double C2 = cmdata[idx].C2;
@@ -265,6 +277,9 @@ ConstitutiveModel* CompMooneyRivlin::create(double *p_array)
 }
 
 // $Log$
+// Revision 1.8  2000/04/20 18:56:18  sparker
+// Updates to MPM
+//
 // Revision 1.7  2000/04/19 05:26:03  sparker
 // Implemented new problemSetup/initialization phases
 // Simplified DataWarehouse interface (not finished yet)

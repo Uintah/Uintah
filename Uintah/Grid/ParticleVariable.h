@@ -1,7 +1,7 @@
 #ifndef UINTAH_HOMEBREW_PARTICLEVARIABLE_H
 #define UINTAH_HOMEBREW_PARTICLEVARIABLE_H
 
-#include <Uintah/Grid/DataItem.h>
+#include <Uintah/Grid/ParticleVariableBase.h>
 #include <Uintah/Exceptions/TypeMismatchException.h>
 #include <Uintah/Grid/ParticleData.h>
 #include <Uintah/Grid/ParticleSubset.h>
@@ -42,7 +42,7 @@ WARNING
 ****************************************/
 
 template<class T>
-class ParticleVariable : public DataItem {
+class ParticleVariable : public ParticleVariableBase {
 public:
     ParticleVariable();
     virtual ~ParticleVariable();
@@ -67,10 +67,6 @@ public:
     ParticleSubset* getParticleSubset() const {
 	return d_pset;
     }
-
-    //////////
-    // Insert Documentation Here:
-    virtual void get(DataItem&) const;
 
     //////////
     // Insert Documentation Here:
@@ -136,16 +132,6 @@ ParticleVariable<T>::ParticleVariable(ParticleSubset* pset)
 }
 
 template<class T>
-void
-ParticleVariable<T>::get(DataItem& copy) const
-{
-    ParticleVariable<T>* ref = dynamic_cast<ParticleVariable<T>*>(&copy);
-    if(!ref)
-	throw TypeMismatchException("ParticleVariable<T>");
-    *ref = *this;
-}
-
-template<class T>
 ParticleVariable<T>*
 ParticleVariable<T>::clone() const
 {
@@ -200,6 +186,9 @@ ParticleVariable<T>::allocate(const Region*)
 
 //
 // $Log$
+// Revision 1.5  2000/04/20 18:56:30  sparker
+// Updates to MPM
+//
 // Revision 1.4  2000/03/21 02:22:57  dav
 // few more updates to make it compile including moving Array3 stuff out of namespace as I do not know where it should be
 //

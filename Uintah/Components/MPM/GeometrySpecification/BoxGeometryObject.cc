@@ -1,20 +1,19 @@
 #include "BoxGeometryObject.h"
-#include <SCICore/Math/MinMax.h>
 #include "GeometryObjectFactory.h"
+#include <Uintah/Interface/ProblemSpec.h>
 #include <SCICore/Geometry/Point.h>
-
-using SCICore::Math::Min;
-using SCICore::Math::Max;
-using SCICore::Geometry::Point;
+using SCICore::Geometry::Min;
+using SCICore::Geometry::Max;
+#include <string>
 
 using namespace Uintah::Components;
 
-
-BoxGeometryObject::BoxGeometryObject() {}
-
-BoxGeometryObject::BoxGeometryObject(Point lo,Point up) :
-  d_box(lo,up)
+BoxGeometryObject::BoxGeometryObject(ProblemSpecP& ps)
 {
+   Point min, max;
+  ps->require("min",min);
+  ps->require("max",max);  
+  d_box=Box(min,max);
 }
 
 BoxGeometryObject::~BoxGeometryObject()
@@ -37,19 +36,10 @@ Box BoxGeometryObject::getBoundingBox() const
   return d_box;
 }
 
-GeometryObject* BoxGeometryObject::readParameters(ProblemSpecP &ps)
-{
-  Point min,max;
-  ps->require("min",min);
-  ps->require("max",max);
-  
-  // Not getting the resolution yet!
-
-  return (new BoxGeometryObject(min,max));
-
-}
-
 // $Log$
+// Revision 1.3  2000/04/20 18:56:20  sparker
+// Updates to MPM
+//
 // Revision 1.2  2000/04/20 15:09:25  jas
 // Added factory methods for GeometryObjects.
 //

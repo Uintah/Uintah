@@ -15,33 +15,33 @@ using Uintah::Interface::SchedulerP;
 using Uintah::Interface::ProblemSpecP;
 using Uintah::Grid::LevelP;
 using Uintah::Grid::GridP;
-using Uintah::Grid::VarLabel;
+using Uintah::Grid::SimulationStateP;
 
 class ICE : public CFDInterface {
 public:
-    ICE();
-    virtual ~ICE();
-
-    virtual void problemSetup(const ProblemSpecP& params, GridP& grid);
+   ICE();
+   virtual ~ICE();
+   
+   virtual void problemSetup(const ProblemSpecP& params, GridP& grid,
+			     const SimulationStateP&);
    virtual void scheduleInitialize(const LevelP& level,
 				   SchedulerP&,
 				   DataWarehouseP&);
-	 
-    virtual void scheduleComputeStableTimestep(const LevelP&,
-					       SchedulerP&,
-					       const VarLabel*,
-					       DataWarehouseP&);
-    void actuallyComputeStableTimestep(const ProcessorContext*,
-				       const Region* region,
-				       const DataWarehouseP&,
-				       DataWarehouseP&);
-    virtual void scheduleTimeAdvance(double t, double dt, const LevelP&, SchedulerP&,
-			  const DataWarehouseP&, DataWarehouseP&);
-    void actuallyTimeStep(const ProcessorContext*,
-			  const Region* region,
-			  const DataWarehouseP&,
-			  DataWarehouseP&);
-
+   
+   virtual void scheduleComputeStableTimestep(const LevelP&,
+					      SchedulerP&,
+					      DataWarehouseP&);
+   void actuallyComputeStableTimestep(const ProcessorContext*,
+				      const Region* region,
+				      const DataWarehouseP&,
+				      DataWarehouseP&);
+   virtual void scheduleTimeAdvance(double t, double dt, const LevelP&, SchedulerP&,
+				    const DataWarehouseP&, DataWarehouseP&);
+   void actuallyTimeStep(const ProcessorContext*,
+			 const Region* region,
+			 const DataWarehouseP&,
+			 DataWarehouseP&);
+   
 private:
     // These two will go away SOON - a really bad habit, won't work in parallel, blah blah blah
     double cheat_t, cheat_delt;

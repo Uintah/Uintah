@@ -36,8 +36,20 @@ OnDemandDataWarehouse::~OnDemandDataWarehouse()
 
 void OnDemandDataWarehouse::get(ReductionVariableBase&, const VarLabel*) const
 {
+#if 0
+    dbType::const_iterator iter = d_reductions.find(name);
+    if(iter == d_data.end())
+	throw UnknownVariable("Variable not found: "+name);
+    DataRecord* dr = iter->second;
+    if(dr->region != 0)
+	throw InternalError("Region not allowed here");
+    if(dr->td != td)
+	throw TypeMismatchException("Type mismatch");
+    dr->di->get(result);
+#endif
    cerr << "OnDemandDataWarehouse::get not finished\n";
 }
+
 #if 0
 void
 OnDemandDataWarehouse::getBroadcastData(DataItem& result,
@@ -210,6 +222,9 @@ OnDemandDataWarehouse::DataRecord::DataRecord(DataItem* di,
 
 //
 // $Log$
+// Revision 1.8  2000/04/20 18:56:26  sparker
+// Updates to MPM
+//
 // Revision 1.7  2000/04/19 21:20:03  dav
 // more MPI stuff
 //

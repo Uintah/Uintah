@@ -49,15 +49,15 @@ public:
     ThreadedMPM();
     virtual ~ThreadedMPM();
 
-    virtual void problemSetup(const ProblemSpecP& params, GridP& grid,
-			      DataWarehouseP&);
+   virtual void problemSetup(const ProblemSpecP& params, GridP& grid,
+			     const SimulationStateP&);
+
    virtual void scheduleInitialize(const LevelP& level,
 				   SchedulerP&,
 				   DataWarehouseP&);
 	 
     virtual void scheduleComputeStableTimestep(const LevelP& level,
 					       SchedulerP&,
-					       const VarLabel*,
 					       DataWarehouseP&);
     virtual void timeStep(double t, double dt,
 			  const LevelP& level, SchedulerP&,
@@ -105,6 +105,9 @@ private:
 
 //
 // $Log$
+// Revision 1.5  2000/04/20 18:56:16  sparker
+// Updates to MPM
+//
 // Revision 1.4  2000/04/19 05:26:01  sparker
 // Implemented new problemSetup/initialization phases
 // Simplified DataWarehouse interface (not finished yet)

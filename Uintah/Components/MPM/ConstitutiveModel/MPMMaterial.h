@@ -4,7 +4,11 @@
 #include <Uintah/Interface/DataWarehouseP.h>
 #include <Uintah/Grid/Material.h>
 
+namespace Uintah {
+  namespace Components {
+    
 class ConstitutiveModel;
+using Uintah::Grid::Material;
 
 /**************************************
 
@@ -57,9 +61,15 @@ private:
 
 };
 
+  } // end namespace Components
+} // end namespace Uintah
+
 #endif // __MPM_MATERIAL_H__
 
 // $Log$
+// Revision 1.4  2000/04/20 18:56:18  sparker
+// Updates to MPM
+//
 // Revision 1.3  2000/04/14 02:19:42  jas
 // Now using the ProblemSpec for input.
 //

@@ -96,7 +96,8 @@ ICE::~ICE()
 #endif
 }
 
-void ICE::problemSetup(const ProblemSpecP& params, GridP& grid)
+void ICE::problemSetup(const ProblemSpecP& params, GridP& grid,
+		       const SimulationStateP&)
 {
 #if 0
 audit();
@@ -223,7 +224,6 @@ void ICE::scheduleInitialize(const LevelP& level,
 
 void ICE::scheduleComputeStableTimestep(const LevelP& level,
 					SchedulerP& sched,
-					const VarLabel*,
 					DataWarehouseP& dw)
 {
 #if 0

@@ -45,6 +45,7 @@ void SmagorinskyModel::sched_computeTurbSubmodel(const LevelP& level,
 						 const DataWarehouseP& old_dw,
 						 DataWarehouseP& new_dw)
 {
+#ifdef WONT_COMPILE_YET
   for(Level::const_regionIterator iter=level->regionsBegin();
       iter != level->regionsEnd(); iter++){
     const Region* region=*iter;
@@ -64,6 +65,7 @@ void SmagorinskyModel::sched_computeTurbSubmodel(const LevelP& level,
     }
 
   }
+#endif
 }
 
 

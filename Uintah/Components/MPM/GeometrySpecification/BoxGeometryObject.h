@@ -15,15 +15,11 @@ class BoxGeometryObject : public GeometryObject {
 
  public:
 
-  BoxGeometryObject();
-  BoxGeometryObject(Point lower, Point upper);
+  BoxGeometryObject(ProblemSpecP&);
   virtual ~BoxGeometryObject();
 
   virtual bool inside(const Point &p) const;
   virtual Box getBoundingBox() const;
-
-  virtual GeometryObject* readParameters(ProblemSpecP &ps);
-  
  private:
   Box d_box;
 
@@ -35,6 +31,9 @@ class BoxGeometryObject : public GeometryObject {
 #endif // __BOX_GEOMTRY_OBJECT_H__
 
 // $Log$
+// Revision 1.3  2000/04/20 18:56:20  sparker
+// Updates to MPM
+//
 // Revision 1.2  2000/04/20 15:09:25  jas
 // Added factory methods for GeometryObjects.
 //

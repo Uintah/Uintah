@@ -3,13 +3,13 @@
 
 #include <Uintah/Components/MPM/GeometrySpecification/GeometryObject.h>
 #include <Uintah/Components/MPM/BoundCond.h>
-#include <Uintah/Components/MPM/GeometrySpecification/Material.h>
 #include <SCICore/Geometry/Vector.h>
 #include <SCICore/Geometry/Point.h>
 #include <string>
 #include <vector>
 #include <Uintah/Interface/ProblemSpec.h>
 #include <Uintah/Interface/ProblemSpecP.h>
+#include <Uintah/Grid/SimulationStateP.h>
 
 namespace Uintah {
     namespace Grid {
@@ -25,6 +25,8 @@ using SCICore::Geometry::Vector;
 using SCICore::Geometry::Point;
 using Uintah::Interface::ProblemSpec;
 using Uintah::Interface::ProblemSpecP;
+using Uintah::Grid::GridP;
+using Uintah::Grid::SimulationStateP;
 
 class Problem {
   
@@ -33,21 +35,16 @@ class Problem {
   ~Problem();
   
     
-  void preProcessor(Uintah::Interface::ProblemSpecP prob_spec,
-		    Uintah::Grid::GridP &grid);
+  void preProcessor(const ProblemSpecP& prob_spec, GridP& grid,
+		    const SimulationStateP& sharedState);
   void createParticles(const Uintah::Grid::Region* region, 
 		       Uintah::Interface::DataWarehouseP&);
    
-  int  getNumMaterial() const;
   int getNumObjects() const;
   std::vector<GeometryObject>* getObjects();
  
 
  private:
-  int d_num_material; //
-  std::vector<Material *> d_materials;   //
-  int  d_num_objects;  //
-  std::vector<GeometryObject> d_objects;
   int d_num_bcs;      // number of boundary conditions;
   std::vector<BoundCond>  d_bcs;          // boundary conditions
 
@@ -59,6 +56,9 @@ class Problem {
 #endif // __PROBLEM_H__
 
 // $Log$
+// Revision 1.7  2000/04/20 18:56:22  sparker
+// Updates to MPM
+//
 // Revision 1.6  2000/04/19 05:26:08  sparker
 // Implemented new problemSetup/initialization phases
 // Simplified DataWarehouse interface (not finished yet)

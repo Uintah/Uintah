@@ -6,7 +6,7 @@
 SRCDIR   := Uintah/Components/MPM/GeometrySpecification
 
 SRCS     += $(SRCDIR)/GeometryGrid.cc $(SRCDIR)/GeometryObject.cc \
-	$(SRCDIR)/GeometryPiece.cc $(SRCDIR)/Material.cc \
+	$(SRCDIR)/GeometryPiece.cc \
 	$(SRCDIR)/Problem.cc $(SRCDIR)/BoxGeometryPiece.cc \
 	$(SRCDIR)/CylinderGeometryPiece.cc $(SRCDIR)/TriGeometryPiece.cc \
 	$(SRCDIR)/SphereGeometryPiece.cc  $(SRCDIR)/BoxGeometryObject.cc \
@@ -21,6 +21,9 @@ SRCS     += $(SRCDIR)/GeometryGrid.cc $(SRCDIR)/GeometryObject.cc \
 
 #
 # $Log$
+# Revision 1.5  2000/04/20 18:56:23  sparker
+# Updates to MPM
+#
 # Revision 1.4  2000/04/20 15:09:27  jas
 # Added factory methods for GeometryObjects.
 #

@@ -9,9 +9,13 @@
 #include <Uintah/Interface/DataWarehouseP.h>
 
 namespace Uintah {
+   namespace Grid {
+      class VarLabel;
+   }
 namespace Components {
 
     using Uintah::Interface::DataWarehouseP;
+    using Uintah::Grid::VarLabel;
 
 /**************************************
 
@@ -61,9 +65,7 @@ class CompMooneyRivlin : public ConstitutiveModel {
  public:
   // constructor
   CompMooneyRivlin(const Region* region,
-                   const MPMMaterial* matl,
-                   const DataWarehouseP& old_dw,
-                   DataWarehouseP& new_dw);
+                   const MPMMaterial* matl);
 
   // destructor 
   virtual ~CompMooneyRivlin();
@@ -102,6 +104,14 @@ class CompMooneyRivlin : public ConstitutiveModel {
   // class function to create a new object from parameters
   static ConstitutiveModel* create(double *p_array);
 
+   const VarLabel* px_label;
+   const VarLabel* p_deformationMeasure_label;
+   const VarLabel* p_stress_label;
+   const VarLabel* p_mass_label;
+   const VarLabel* p_volume_label;
+   const VarLabel* g_velocity_label;
+   const VarLabel* delt_label;
+   const VarLabel* p_cmdata_label;
 };
 
 }
@@ -110,6 +120,9 @@ class CompMooneyRivlin : public ConstitutiveModel {
 #endif  // __COMPMOONRIV_CONSTITUTIVE_MODEL_H__ 
 
 // $Log$
+// Revision 1.9  2000/04/20 18:56:18  sparker
+// Updates to MPM
+//
 // Revision 1.8  2000/04/19 05:26:03  sparker
 // Implemented new problemSetup/initialization phases
 // Simplified DataWarehouse interface (not finished yet)

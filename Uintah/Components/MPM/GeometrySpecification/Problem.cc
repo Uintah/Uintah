@@ -1,19 +1,19 @@
 #include "Problem.h"
 #include "GeometryGrid.h"
 #include <Uintah/Components/MPM/BoundCond.h>
-#include "Material.h"
 #include <iostream>
 #include <Uintah/Interface/ProblemSpec.h>
 #include <Uintah/Interface/ProblemSpecP.h>
 #include <SCICore/Geometry/Point.h>
 #include <Uintah/Interface/DataWarehouse.h>
+#include <Uintah/Components/MPM/ConstitutiveModel/MPMMaterial.h>
+#include <Uintah/Components/MPM/GeometrySpecification/GeometryObjectFactory.h>
 #include <Uintah/Grid/GridP.h>
 
 using Uintah::Interface::DataWarehouseP;
 using Uintah::Grid::GridP;
-
-
-
+using Uintah::Grid::Region;
+using Uintah::Grid::SimulationStateP;
 using Uintah::Interface::ProblemSpec;
 using Uintah::Interface::ProblemSpecP;
 using SCICore::Geometry::Point;
@@ -28,24 +28,16 @@ using std::cout;
 using namespace Uintah::Components;
 
 Problem::Problem()
-  : d_num_material(0),
-    d_num_objects(0),
-    d_num_bcs(0)
+  : d_num_bcs(0)
 {
 }
 
 Problem::~Problem()
 {
-  
-  for(int i = 0; i < d_materials.size(); i++)
-    {
-      delete d_materials[i];
-    }
 }
 
-
-void Problem::preProcessor(Uintah::Interface::ProblemSpecP prob_spec,
-			   Uintah::Grid::GridP& grid)
+void Problem::preProcessor(const ProblemSpecP& prob_spec, GridP& grid,
+			   const SimulationStateP& sharedState)
 {
   int n;
   int obj, piece, surf;
@@ -66,42 +58,34 @@ void Problem::preProcessor(Uintah::Interface::ProblemSpecP prob_spec,
   
   for (ProblemSpecP ps = mpm_mat_ps->findBlock("material"); ps != 0;
        ps = ps->findNextBlock("material") ) {
-    d_num_material++;
     // Extract out the type of constitutive model and the 
     // associated parameters
 
-    Material *mat = new Material;
-    mat->addMaterial(ps);
-    d_materials.push_back(mat);
-    
     std::string material_type;
     ps->require("material_type", material_type);
     cerr << "material_type is " <<  material_type << endl;
 
-    // Extract out the GeometryObject (and all of the GeometryPieces)
-    ProblemSpecP geom_obj_ps = ps->findBlock("geom_object");
-
     // Loop through all of the pieces in this geometry object
 
     int piece_num = 0;
-    for (ProblemSpecP geom_piece_ps = geom_obj_ps->findBlock("geom_piece");
-	 geom_piece_ps != 0; 
-	 geom_piece_ps = geom_piece_ps->findNextBlock("geom_piece") ) {
-      piece_num++;
-      cerr << "piece: " << piece_num << '\n';
-      IntVector res;
-      geom_piece_ps->require("res",res);
-      cerr << piece_num << ": res: " << res << '\n';
-      
-      GeometryObject geom_obj;
+    for (ProblemSpecP geom_obj_ps = geom_obj_ps->findBlock("geom_object");
+	 geom_obj_ps != 0; 
+	 geom_obj_ps = geom_obj_ps->findNextBlock("geom_object") ) {
 
-      geom_obj.setObjInfo(piece_num,lo, hi,dx,res);
-      geom_obj.addPieces(geom_piece_ps);
-      d_objects.push_back(geom_obj);
-      
+       GeometryObject* obj = GeometryObjectFactory::create(geom_obj_ps);
 
+       piece_num++;
+       cerr << "piece: " << piece_num << '\n';
+       IntVector res;
+       geom_obj_ps->require("res",res);
+       cerr << piece_num << ": res: " << res << '\n';
     }
 
+    cerr << "MPM Material creation not done\n";
+#if 0
+    MPMMaterial *mat = new MPMMaterial;
+#endif
+    
   }                                                                
       
 
@@ -131,9 +115,8 @@ void Problem::preProcessor(Uintah::Interface::ProblemSpecP prob_spec,
 #endif 
 }
 
-
-void Problem::createParticles(const Uintah::Grid::Region* region, 
-			      Uintah::Interface::DataWarehouseP& dw)
+#if 0
+void Problem::createParticles(const Region* region, DataWarehouseP& dw)
 {
   for (int i = 0; i < d_objects.size(); i++)
     {
@@ -143,27 +126,12 @@ void Problem::createParticles(const Uintah::Grid::Region* region,
 #endif
     }
 }
-
-
-int Problem::getNumMaterial() const
-{
-  return(d_materials.size());
-}
-
-
-int Problem::getNumObjects() const
-{
-   return(d_objects.size());
-}
-
-vector<GeometryObject> * Problem::getObjects()
-{
-    return(&d_objects);
-}
-
-
+#endif
 
 // $Log$
+// Revision 1.9  2000/04/20 18:56:22  sparker
+// Updates to MPM
+//
 // Revision 1.8  2000/04/20 15:09:26  jas
 // Added factory methods for GeometryObjects.
 //

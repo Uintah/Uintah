@@ -11,6 +11,7 @@ static char *id="@(#) $Id$";
 #include <Uintah/Grid/Level.h>
 #include <Uintah/Grid/SimulationTime.h>
 #include <Uintah/Grid/ReductionVariable.h>
+#include <Uintah/Grid/SimulationState.h>
 #include <Uintah/Grid/SoleVariable.h>
 #include <Uintah/Grid/VarLabel.h>
 #include <Uintah/Interface/CFDInterface.h>
@@ -37,6 +38,8 @@ using Uintah::Grid::Grid;
 using Uintah::Grid::Level;
 using Uintah::Grid::SimulationTime;
 using Uintah::Grid::ReductionVariable;
+using Uintah::Grid::SimulationState;
+using Uintah::Grid::SimulationStateP;
 using Uintah::Grid::SoleVariable;
 using Uintah::Interface::CFDInterface;
 using Uintah::Interface::MPMInterface;
@@ -53,7 +56,6 @@ SimulationController::SimulationController( int MpiRank, int MpiProcesses ) :
   UintahParallelComponent( MpiRank, MpiProcesses )
 {
    restarting=false;
-   delt_label=new VarLabel("delt", ReductionVariable<double>::getTypeDescription());
 }
 
 SimulationController::~SimulationController()
@@ -90,15 +92,17 @@ void SimulationController::run()
    grid->performConsistencyCheck();
    // Print out meta data
    grid->printStatistics();
+
+   SimulationStateP sharedState = new SimulationState;
    
    // Initialize the CFD and/or MPM components
    CFDInterface* cfd = dynamic_cast<CFDInterface*>(getPort("cfd"));
    if(cfd)
-      cfd->problemSetup(ups, grid);
+      cfd->problemSetup(ups, grid, sharedState);
    
    MPMInterface* mpm = dynamic_cast<MPMInterface*>(getPort("mpm"));
    if(mpm)
-      mpm->problemSetup(ups, grid);
+      mpm->problemSetup(ups, grid, sharedState);
    
    Scheduler* sched = dynamic_cast<Scheduler*>(getPort("scheduler"));
    SchedulerP scheduler(sched);
@@ -128,7 +132,7 @@ void SimulationController::run()
    double t = timeinfo.initTime;
    
    scheduleComputeStableTimestep(level, scheduler, old_ds,
-				 delt_label, cfd, mpm);
+				 cfd, mpm);
    
    ProcessorContext* pc = ProcessorContext::getRootContext();
    scheduler->execute(pc);
@@ -139,7 +143,7 @@ void SimulationController::run()
       double wallTime = Time::currentSeconds() - start_time;
 
       ReductionVariable<double> delt_var;
-      old_ds->get(delt_var, delt_label);
+      old_ds->get(delt_var, sharedState->get_delt_label());
       double delt = delt_var;
 
       if(delt < timeinfo.delt_min){
@@ -165,9 +169,8 @@ void SimulationController::run()
       t += delt;
       
       // Begin next time step...
-      scheduleComputeStableTimestep(level, scheduler, new_ds,
-				    delt_label, cfd, mpm);
-      scheduler->addTarget(delt_label);
+      scheduleComputeStableTimestep(level, scheduler, new_ds, cfd, mpm);
+      scheduler->addTarget(sharedState->get_delt_label());
       scheduler->execute(pc);
       
       old_ds = new_ds;
@@ -257,14 +260,13 @@ void SimulationController::scheduleInitialize(LevelP& level,
 void SimulationController::scheduleComputeStableTimestep(LevelP& level,
 							 SchedulerP& sched,
 							 DataWarehouseP& new_ds,
-							 const VarLabel* delt_label,
 							 CFDInterface* cfd,
 							 MPMInterface* mpm)
 {
    if(cfd)
-      cfd->scheduleComputeStableTimestep(level, sched, delt_label, new_ds);
+      cfd->scheduleComputeStableTimestep(level, sched, new_ds);
    if(mpm)
-      mpm->scheduleComputeStableTimestep(level, sched, delt_label, new_ds);
+      mpm->scheduleComputeStableTimestep(level, sched, new_ds);
 }
 
 void SimulationController::scheduleTimeAdvance(double t, double delt,
@@ -382,6 +384,9 @@ void SimulationController::scheduleTimeAdvance(double t, double delt,
 
 //
 // $Log$
+// Revision 1.10  2000/04/20 18:56:28  sparker
+// Updates to MPM
+//
 // Revision 1.9  2000/04/19 20:59:25  dav
 // adding MPI support
 //

@@ -137,6 +137,7 @@ void BoundaryCondition::sched_setInletVelocityBC(const LevelP& level,
 						 const DataWarehouseP& old_dw,
 						 DataWarehouseP& new_dw)
 {
+#ifdef WONT_COMPILE_YET
   for(Level::const_regionIterator iter=level->regionsBegin();
       iter != level->regionsEnd(); iter++){
     const Region* region=*iter;
@@ -151,6 +152,7 @@ void BoundaryCondition::sched_setInletVelocityBC(const LevelP& level,
       sched->addTask(tsk);
     }
   }
+#endif
 }
 
 
@@ -192,6 +194,7 @@ void BoundaryCondition::sched_computePressureBC(const LevelP& level,
 						const DataWarehouseP& old_dw,
 						DataWarehouseP& new_dw)
 {
+#ifdef WONT_COMPILE_YET
   for(Level::const_regionIterator iter=level->regionsBegin();
       iter != level->regionsEnd(); iter++){
     const Region* region=*iter;
@@ -210,6 +213,7 @@ void BoundaryCondition::sched_computePressureBC(const LevelP& level,
       sched->addTask(tsk);
     }
   }
+#endif
 }
 
 
@@ -243,6 +247,7 @@ void BoundaryCondition::sched_velocityBC(const int index,
 					 const DataWarehouseP& old_dw,
 					 DataWarehouseP& new_dw)
 {
+#ifdef WONT_COMPILE_YET
   for(Level::const_regionIterator iter=level->regionsBegin();
       iter != level->regionsEnd(); iter++){
     const Region* region=*iter;
@@ -307,6 +312,7 @@ void BoundaryCondition::sched_velocityBC(const int index,
     }
 
   }
+#endif
 }
 
 void BoundaryCondition::velocityBC(const ProcessorContext* pc,

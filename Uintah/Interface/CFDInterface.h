@@ -5,19 +5,17 @@
 #include <Uintah/Interface/DataWarehouseP.h>
 #include <Uintah/Grid/GridP.h>
 #include <Uintah/Grid/LevelP.h>
+#include <Uintah/Grid/SimulationStateP.h>
 #include <Uintah/Interface/SchedulerP.h>
 #include <Uintah/Interface/ProblemSpecP.h>
 
 namespace Uintah {
-   namespace Grid {
-      class VarLabel;
-   }
    namespace Interface {
     
       using Uintah::Parallel::UintahParallelPort;
       using Uintah::Grid::LevelP;
       using Uintah::Grid::GridP;
-      using Uintah::Grid::VarLabel;
+      using Uintah::Grid::SimulationStateP;
       
       /**************************************
 	
@@ -55,13 +53,13 @@ namespace Uintah {
 	 
 	 //////////
 	 // Insert Documentation Here:
-	 virtual void problemSetup(const ProblemSpecP& params, GridP& grid) = 0;
+	 virtual void problemSetup(const ProblemSpecP& params, GridP& grid,
+				   const SimulationStateP& state) = 0;
 	 
 	 //////////
 	 // Insert Documentation Here:
 	 virtual void scheduleComputeStableTimestep(const LevelP& level,
 						    SchedulerP&,
-						    const VarLabel*,
 						    DataWarehouseP&) = 0;
 	 
 	 //////////
@@ -85,6 +83,9 @@ namespace Uintah {
 
 //
 // $Log$
+// Revision 1.10  2000/04/20 18:56:35  sparker
+// Updates to MPM
+//
 // Revision 1.9  2000/04/19 05:26:17  sparker
 // Implemented new problemSetup/initialization phases
 // Simplified DataWarehouse interface (not finished yet)

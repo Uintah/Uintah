@@ -10,10 +10,6 @@
 
 namespace Uintah {
 
-namespace Grid {
-  class VarLabel;
-}
-
 namespace Interface {
   class CFDInterface;
   class MPMInterface;
@@ -25,7 +21,6 @@ using Uintah::Parallel::UintahParallelComponent;
 using Uintah::Interface::ProblemSpecP;
 using Uintah::Grid::LevelP;
 using Uintah::Grid::GridP;
-using Uintah::Grid::VarLabel;
 using Uintah::Interface::SchedulerP;
 using Uintah::Interface::DataWarehouseP;
 using Uintah::Interface::MPMInterface;
@@ -73,7 +68,7 @@ private:
 			  DataWarehouseP&,
 			  CFDInterface*, MPMInterface*);
   void scheduleComputeStableTimestep(LevelP&, SchedulerP&,
-				     DataWarehouseP&, const VarLabel*,
+				     DataWarehouseP&,
 				     CFDInterface*, MPMInterface*);
   void scheduleTimeAdvance(double t, double delt, LevelP&, SchedulerP&,
 			   const DataWarehouseP&, DataWarehouseP&,
@@ -83,7 +78,6 @@ private:
   SimulationController& operator=(const SimulationController&);
 
   bool restarting;
-  const VarLabel* delt_label;
 };
       
 } // end namespace Components
@@ -91,6 +85,9 @@ private:
 
 //
 // $Log$
+// Revision 1.8  2000/04/20 18:56:28  sparker
+// Updates to MPM
+//
 // Revision 1.7  2000/04/19 20:59:25  dav
 // adding MPI support
 //

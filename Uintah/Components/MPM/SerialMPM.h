@@ -16,6 +16,7 @@ namespace Parallel {
 
 namespace Grid {
   class Region;
+  class VarLabel;
 }
 
 namespace Components {
@@ -27,6 +28,7 @@ using Uintah::Parallel::ProcessorContext;
 using Uintah::Parallel::UintahParallelComponent;
 using Uintah::Grid::Region;
 using Uintah::Grid::LevelP;
+using Uintah::Grid::SimulationStateP;
 using Uintah::Interface::ProblemSpecP;
 using Uintah::Grid::GridP;
 using Uintah::Grid::VarLabel;
@@ -62,75 +64,86 @@ WARNING
 
 class SerialMPM : public UintahParallelComponent, public MPMInterface {
 public:
-    SerialMPM( int MpiRank, int MpiProcesses );
-    virtual ~SerialMPM();
+   SerialMPM( int MpiRank, int MpiProcesses );
+   virtual ~SerialMPM();
 
-    //////////
-    // Insert Documentation Here:
-    virtual void problemSetup(const ProblemSpecP& params, GridP& grid);
+   //////////
+   // Insert Documentation Here:
+   virtual void problemSetup(const ProblemSpecP& params, GridP& grid,
+			     const SimulationStateP&);
 
    virtual void scheduleInitialize(const LevelP& level,
 				   SchedulerP&,
 				   DataWarehouseP&);
 	 
-    //////////
-    // Insert Documentation Here:
-    virtual void scheduleComputeStableTimestep(const LevelP& level,
-					       SchedulerP&,
-					       const VarLabel*,
-					       DataWarehouseP&);
-
-    //////////
-    // Insert Documentation Here:
-    virtual void scheduleTimeAdvance(double t, double dt,
-				     const LevelP& level, SchedulerP&,
-				     const DataWarehouseP&, DataWarehouseP&);
+   //////////
+   // Insert Documentation Here:
+   virtual void scheduleComputeStableTimestep(const LevelP& level,
+					      SchedulerP&,
+					      DataWarehouseP&);
+   
+   //////////
+   // Insert Documentation Here:
+   virtual void scheduleTimeAdvance(double t, double dt,
+				    const LevelP& level, SchedulerP&,
+				    const DataWarehouseP&, DataWarehouseP&);
 private:
-    //////////
-    // Insert Documentation Here:
-    void actuallyComputeStableTimestep(const ProcessorContext*,
-				       const Region* region,
-				       const DataWarehouseP&,
-				       DataWarehouseP&);
-    //////////
-    // Insert Documentation Here:
-    void interpolateParticlesToGrid(const ProcessorContext*,
-				    const Region* region,
-				    const DataWarehouseP&,
-				    DataWarehouseP&);
-    //////////
-    // Insert Documentation Here:
-    void computeStressTensor(const ProcessorContext*,
+   //////////
+   // Insert Documentation Here:
+   void actuallyInitialize(const ProcessorContext*,
+			   const Region* region,
+			   const DataWarehouseP&,
+			   DataWarehouseP&);
+   //////////
+   // Insert Documentation Here:
+   void actuallyComputeStableTimestep(const ProcessorContext*,
+				      const Region* region,
+				      const DataWarehouseP&,
+				      DataWarehouseP&);
+   //////////
+   // Insert Documentation Here:
+   void interpolateParticlesToGrid(const ProcessorContext*,
+				   const Region* region,
+				   const DataWarehouseP&,
+				   DataWarehouseP&);
+   //////////
+   // Insert Documentation Here:
+   void computeStressTensor(const ProcessorContext*,
+			    const Region* region,
+			    const DataWarehouseP&,
+			    DataWarehouseP&);
+   //////////
+   // Insert Documentation Here:
+   void computeInternalForce(const ProcessorContext*,
 			     const Region* region,
 			     const DataWarehouseP&,
 			     DataWarehouseP&);
-    //////////
-    // Insert Documentation Here:
-    void computeInternalForce(const ProcessorContext*,
+   //////////
+   // Insert Documentation Here:
+   void solveEquationsMotion(const ProcessorContext*,
+			     const Region* region,
+			     const DataWarehouseP&,
+			     DataWarehouseP&);
+   //////////
+   // Insert Documentation Here:
+   void integrateAcceleration(const ProcessorContext*,
 			      const Region* region,
 			      const DataWarehouseP&,
 			      DataWarehouseP&);
-    //////////
-    // Insert Documentation Here:
-    void solveEquationsMotion(const ProcessorContext*,
-			      const Region* region,
-			      const DataWarehouseP&,
-			      DataWarehouseP&);
-    //////////
-    // Insert Documentation Here:
-    void integrateAcceleration(const ProcessorContext*,
-			       const Region* region,
-			       const DataWarehouseP&,
-			       DataWarehouseP&);
-    //////////
-    // Insert Documentation Here:
-    void interpolateToParticlesAndUpdate(const ProcessorContext*,
-					 const Region* region,
-					 const DataWarehouseP&,
-					 DataWarehouseP&);
+   //////////
+   // Insert Documentation Here:
+   void interpolateToParticlesAndUpdate(const ProcessorContext*,
+					const Region* region,
+					const DataWarehouseP&,
+					DataWarehouseP&);
+   
+   SerialMPM(const SerialMPM&);
+   SerialMPM& operator=(const SerialMPM&);
 
-    SerialMPM(const SerialMPM&);
-    SerialMPM& operator=(const SerialMPM&);
+   SimulationStateP d_sharedState;
+   const VarLabel* g_velocity_label;
+   const VarLabel* p_deformationMeasure_label;
+   const VarLabel* p_stress_label;
 };
 
 } // end namespace Components
@@ -138,6 +151,9 @@ private:
 
 //
 // $Log$
+// Revision 1.11  2000/04/20 18:56:16  sparker
+// Updates to MPM
+//
 // Revision 1.10  2000/04/19 22:38:16  dav
 // Make SerialMPM a UintahParallelComponent
 //

@@ -118,7 +118,7 @@ private:
     SCICore::Thread::SimpleReducer* d_reducer;
 
     std::vector<TaskRecord*>        d_tasks;
-    std::vector<std::string>        d_targets;
+    std::vector<const VarLabel*>    d_targets;
 
     SCICore::Thread::ThreadPool*    d_pool;
     int                             d_numThreads;
@@ -129,6 +129,9 @@ private:
 
 //
 // $Log$
+// Revision 1.6  2000/04/20 18:56:26  sparker
+// Updates to MPM
+//
 // Revision 1.5  2000/04/19 21:20:02  dav
 // more MPI stuff
 //
