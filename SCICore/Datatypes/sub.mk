@@ -31,7 +31,8 @@ SRCS += $(GENSRCS) $(SRCDIR)/TriSurface.cc $(SRCDIR)/BasicSurfaces.cc \
 	$(SRCDIR)/VoidStar.cc $(SRCDIR)/cDMatrix.cc \
 	$(SRCDIR)/cMatrix.cc $(SRCDIR)/cSMatrix.cc $(SRCDIR)/cVector.cc \
 	$(SRCDIR)/SurfTree.cc $(SRCDIR)/ScalarFieldRGCC.cc \
-	$(SRCDIR)/VectorFieldRGCC.cc $(SRCDIR)/templates.cc
+	$(SRCDIR)/VectorFieldRGCC.cc $(SRCDIR)/templates.cc \
+     	$(SRCDIR)/Path.cc
 
 $(SRCDIR)/ScalarFieldRG.h: $(SRCDIR)/ScalarFieldRGTYPE.h
 	sed -e 's/RGTYPE/RG/g' -e 's/TYPE/double/g' < $< > $@
@@ -97,6 +98,9 @@ clean::
 
 #
 # $Log$
+# Revision 1.7  2000/07/19 06:39:38  samsonov
+# Path datatype moved form DaveW
+#
 # Revision 1.6  2000/07/17 18:33:38  dmw
 # deleted ushort and added it to sub.mk
 #
