@@ -18,13 +18,13 @@
   University of Utah. All Rights Reserved.
 -->
 
-<component name="ImageReaderFloat2D" category="DataIO">
+<component name="ColorImageReaderUChar3D" category="DataIO">
   <overview>
     <authors>
     </authors>
     <summary>
     </summary>
-    <description>This module uses the itk::ImageFileReader to read in a 2D Image as floats.  See the <ulink url="http://www.itk.org">ITK web site</ulink> for detailed information on this filter.
+    <description>This module uses the itk::ImageFileReader to read in a 3D Color Image as unsigned chars.  See the <ulink url="http://www.itk.org">ITK web site</ulink> for detailed information on this filter.
   </description>
   </overview>
   <implementation>
@@ -34,7 +34,7 @@
     </inputs>
     <outputs>
       <port>
-        <name>Image1</name>
+        <name>Image</name>
         <datatype>Insight::ITKDatatype</datatype>
       </port>
     </outputs>
