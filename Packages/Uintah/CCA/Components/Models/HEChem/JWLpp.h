@@ -29,7 +29,7 @@ KEYWORDS
    JWL++ "Reactive Flow Model"
 
 DESCRIPTION
-   Model for detontation of HE based on "JWL++:  A Simple Reactive
+   Model for detonation of HE based on "JWL++:  A Simple Reactive
    Flow Code Package for Detonation", P.Clark Souers, Steve Anderson,
    James Mercer, Estella McGuire and Peter Vitello, Propellants,
    Explosives, Pyrotechnics, 25, 54-58, 2000.
