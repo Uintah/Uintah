@@ -9,6 +9,7 @@ SRCS	+= \
         $(SRCDIR)/ICEDebug.cc \
 	$(SRCDIR)/ICELabel.cc    \
 	$(SRCDIR)/ICEMaterial.cc \
+	$(SRCDIR)/BoundaryCond.cc \
 	$(SRCDIR)/GeometryObject2.cc \
  	$(SRCDIR)/MathToolbox.cc \
 
