@@ -315,47 +315,55 @@ void ICE::scheduleTimeAdvance(const LevelP& level,
   const MaterialSubset* ice_matls_sub = ice_matls->getUnion();
   const MaterialSubset* mpm_matls_sub = mpm_matls->getUnion();
 
-  
-  scheduleComputeEquilibrationPressure(sched, patches, press_matl,
-                                                       all_matls);
-
-  scheduleComputeFCPressDiff(          sched, patches, ice_matls_sub,
-                                                       mpm_matls_sub,
-                                                       press_matl,
-                                                       all_matls);
+#if 0  
+  scheduleComputeEquilibrationPressure(   sched, patches, press_matl,
+                                                          all_matls);
+#endif
+  scheduleComputeNonEquilibrationPressure(sched, patches, ice_matls_sub,
+                                                          press_matl,
+                                                          all_matls);
+                                                          
+  scheduleComputeFCPressDiff(             sched, patches, ice_matls_sub,
+                                                          mpm_matls_sub,
+                                                          press_matl,
+                                                          all_matls);
                                                                   
-  scheduleComputeFaceCenteredVelocities(sched, patches, ice_matls_sub,
-                                                        mpm_matls_sub,
-                                                        press_matl, 
-                                                        all_matls);
+  scheduleComputeFaceCenteredVelocities(  sched, patches, ice_matls_sub,
+                                                          mpm_matls_sub,
+                                                          press_matl,
+                                                          all_matls);
 
-  scheduleAddExchangeContributionToFCVel(sched, patches, all_matls);    
+  scheduleAddExchangeContributionToFCVel( sched, patches, all_matls);    
 
-  scheduleMassExchange(sched, patches, all_matls);
+  scheduleMassExchange(                   sched, patches, all_matls);
 
   scheduleComputeDelPressAndUpdatePressCC(sched, patches, press_matl,
                                                           ice_matls_sub, 
                                                           mpm_matls_sub,
                                                           all_matls);
 
-  scheduleComputePressFC(sched, patches, press_matl,
-                                        all_matls);
+  scheduleComputePressFC(                 sched, patches, press_matl,
+                                                          all_matls);
 
-  scheduleAccumulateMomentumSourceSinks(sched, patches, press_matl,
-                                        ice_matls_sub, all_matls);
+  scheduleAccumulateMomentumSourceSinks(  sched, patches, press_matl,
+                                                          ice_matls_sub,    
+                                                          all_matls);
 
-  scheduleAccumulateEnergySourceSinks(sched, patches, press_matl,
-                                                      all_matls);
+  scheduleAccumulateEnergySourceSinks(    sched, patches, press_matl,
+                                                          all_matls);
 
-  scheduleComputeLagrangianValues(sched, patches,   mpm_matls_sub,
-                                                    all_matls);
+  scheduleComputeLagrangianValues(        sched, patches, mpm_matls_sub,
+                                                          all_matls);
 
-  scheduleAddExchangeToMomentumAndEnergy(sched, patches, all_matls);
-
-  scheduleAdvectAndAdvanceInTime(sched, patches, all_matls);
+  scheduleAddExchangeToMomentumAndEnergy( sched, patches, all_matls);
+  
+  scheduleComputeLagrangianSpecificVolume(sched, patches, press_matl,
+								  all_matls);
+  scheduleAdvectAndAdvanceInTime(         sched, patches, all_matls);
   
   if(switchTestConservation) {
-    schedulePrintConservedQuantities(sched, patches, press_matl,all_matls); 
+    schedulePrintConservedQuantities(     sched, patches, press_matl,
+                                                          all_matls); 
   }
   
 }
@@ -400,10 +408,11 @@ void ICE::scheduleComputeNonEquilibrationPressure(SchedulerP& sched,
   Task* t = scinew Task("ICE::computeNonEquilibrationPressure",
                      this, &ICE::computeNonEquilibrationPressure);
 
-  t->requires(Task::OldDW,lb->press_CCLabel, press_matl, Ghost::None);
-  t->requires(Task::OldDW,lb->temp_CCLabel,  ice_matls,  Ghost::None);
-  t->requires(Task::OldDW,lb->mass_CCLabel,  ice_matls,  Ghost::None);
-  t->requires(Task::OldDW,lb->sp_vol_CCLabel,ice_matls,  Ghost::None);
+  t->requires(Task::OldDW,lb->press_CCLabel,         press_matl, Ghost::None);
+  t->requires(Task::OldDW,lb->rho_CC_top_cycleLabel, ice_matls,  Ghost::None);
+  t->requires(Task::OldDW,lb->temp_CCLabel,          ice_matls,  Ghost::None);
+  t->requires(Task::OldDW,lb->mass_CCLabel,          ice_matls,  Ghost::None);
+  t->requires(Task::OldDW,lb->sp_vol_CCLabel,        ice_matls,  Ghost::None);
 
 
   t->computes(lb->speedSound_CCLabel);
@@ -582,7 +591,8 @@ void ICE::scheduleComputePressFC(SchedulerP& sched,
   cout_doing << "ICE::scheduleComputePressFC" << endl;                   
   Task* task = scinew Task("ICE::computePressFC",
                      this, &ICE::computePressFC);
-
+ 
+  task->requires(Task::OldDW, lb->delTLabel);
   task->requires(Task::NewDW,lb->rho_CCLabel,             Ghost::AroundCells,1);
   task->requires(Task::NewDW,lb->press_CCLabel,press_matl,Ghost::AroundCells,1);
   
@@ -693,7 +703,9 @@ void ICE::scheduleComputeLagrangianValues(SchedulerP& sched,
  
   sched->addTask(task, patches, ice_matls);
 }
-
+/* ---------------------------------------------------------------------
+ Function~  ICE:: scheduleComputeLagrangianSpecificVolume--
+_____________________________________________________________________*/
 void ICE::scheduleComputeLagrangianSpecificVolume(SchedulerP& sched,
                                                const PatchSet* patches,
                                                const MaterialSubset* press_matl,
@@ -702,7 +714,7 @@ void ICE::scheduleComputeLagrangianSpecificVolume(SchedulerP& sched,
   cout_doing << "ICE::scheduleComputeLagrangianSpecificVolume" << endl;
   Task* task = scinew Task("ICE::computeLagrangianSpecificVolume",
                       this,&ICE::computeLagrangianSpecificVolume);
-
+  task->requires(Task::OldDW, lb->delTLabel);
   task->requires(Task::NewDW, lb->rho_CCLabel,                  Ghost::None);
   task->requires(Task::NewDW, lb->rho_micro_CCLabel,            Ghost::None);
   task->requires(Task::NewDW, lb->press_CCLabel,     press_matl,Ghost::None);
@@ -734,9 +746,11 @@ void ICE::scheduleAddExchangeToMomentumAndEnergy(SchedulerP& sched,
   task->requires(Task::NewDW, lb->int_eng_L_CCLabel,Ghost::None);
   task->requires(Task::NewDW, lb->vol_frac_CCLabel, Ghost::None);
   task->requires(Task::NewDW, lb->rho_micro_CCLabel,Ghost::None);
+  task->requires(Task::OldDW, lb->temp_CCLabel,     Ghost::None);
  
   task->computes(lb->mom_L_ME_CCLabel);
   task->computes(lb->int_eng_L_ME_CCLabel);
+  task->computes(lb->Tdot_CCLabel);
   
   sched->addTask(task, patches, matls);
 }
@@ -1300,13 +1314,9 @@ void ICE::computeNonEquilibrationPressure(const ProcessorGroup*,
     cout_doing<<"Doing computeNonEquilibrationPressure on patch "
               << patch->getID() <<"\t\t MPMICE" << endl;
 
-    double    tmp;
+    double tmp;
     int numMatls = d_sharedState->getNumICEMatls();
-
-    Vector dx       = patch->dCell(); 
-    double cell_vol = dx.x()*dx.y()*dx.z();
-
-    StaticArray<double> delVol_frac(numMatls),press_eos(numMatls);
+    
     StaticArray<double> dp_drho(numMatls),dp_de(numMatls);
     StaticArray<double> mat_volume(numMatls);
     StaticArray<double> mat_mass(numMatls);
@@ -1314,15 +1324,15 @@ void ICE::computeNonEquilibrationPressure(const ProcessorGroup*,
     StaticArray<double> compressibility(numMatls);
     StaticArray<CCVariable<double> > vol_frac(numMatls);
     StaticArray<CCVariable<double> > rho_micro(numMatls);
-    StaticArray<CCVariable<double> > rho_CC(numMatls);
+    StaticArray<CCVariable<double> > rho_CC_new(numMatls);    
     StaticArray<CCVariable<double> > speedSound_new(numMatls);
-    StaticArray<CCVariable<double> > speedSound(numMatls);
     StaticArray<CCVariable<double> > f_theta(numMatls);
     StaticArray<CCVariable<double> > matl_press(numMatls);
 
+    StaticArray<constCCVariable<double> > rho_CC(numMatls);
     StaticArray<constCCVariable<double> > Temp(numMatls);
     StaticArray<constCCVariable<double> > sp_vol_CC(numMatls);
-    StaticArray<constCCVariable<double> > mat_vol(numMatls);
+
     StaticArray<constCCVariable<double> > mass_CC(numMatls);
     constCCVariable<double> press;
     CCVariable<double> press_new; 
@@ -1335,10 +1345,12 @@ void ICE::computeNonEquilibrationPressure(const ProcessorGroup*,
       int indx = matl->getDWIndex();
       old_dw->get(Temp[m],   lb->temp_CCLabel,  indx,patch,Ghost::None,0);
       old_dw->get(mass_CC[m],lb->mass_CCLabel,  indx,patch,Ghost::None,0);
+       old_dw->get(rho_CC[m],lb->rho_CC_top_cycleLabel,
+                                                indx,patch,Ghost::None,0);
       old_dw->get(sp_vol_CC[m],
                              lb->sp_vol_CCLabel,indx,patch,Ghost::None,0);
       
-      new_dw->allocate(rho_CC[m],    lb->rho_CCLabel,       indx, patch);
+      new_dw->allocate(rho_CC_new[m],lb->rho_CCLabel,       indx, patch);
       new_dw->allocate(vol_frac[m],  lb->vol_frac_CCLabel,  indx, patch);
       new_dw->allocate(f_theta[m],   lb->f_theta_CCLabel,   indx, patch);
       new_dw->allocate(matl_press[m],lb->matl_press_CCLabel,indx, patch);
@@ -1362,17 +1374,16 @@ void ICE::computeNonEquilibrationPressure(const ProcessorGroup*,
 	 double gamma   = ice_matl->getGamma(); 
 	 ice_matl->getEOS()->computePressEOS(rho_micro[m][*iter],gamma,
 					     cv[m],Temp[m][*iter],
-					     press_eos[m],dp_drho[m],dp_de[m]);
+					     matl_press[m][*iter],dp_drho[m],dp_de[m]);
 
 	 compressibility[m]=
-		      ice_matl->getEOS()->getCompressibility(press_eos[m]);
+		      ice_matl->getEOS()->getCompressibility(matl_press[m][*iter]);
 
 	 mat_volume[m] = mass_CC[m][*iter] * sp_vol_CC[m][*iter];
 
 	 tmp = dp_drho[m] + dp_de[m] * 
-	   (press_eos[m]/(rho_micro[m][*iter]*rho_micro[m][*iter]));               
+	   (matl_press[m][*iter]/(rho_micro[m][*iter]*rho_micro[m][*iter]));               
 
-	 matl_press[m][*iter] = press_eos[m];
         total_mat_vol += mat_volume[m];
         speedSound_new[m][*iter] = sqrt(tmp);
        } 
@@ -1381,16 +1392,13 @@ void ICE::computeNonEquilibrationPressure(const ProcessorGroup*,
        double f_theta_denom = 0.0;
        for (int m = 0; m < numMatls; m++) {
          vol_frac[m][*iter] = mat_volume[m]/total_mat_vol;
-         rho_CC[m][*iter]   = vol_frac[m][*iter]*rho_micro[m][*iter];
-	 f_theta_denom += vol_frac[m][*iter]*compressibility[m];
+	  f_theta_denom += vol_frac[m][*iter]*compressibility[m];
        }
        //__________________________________
        // Compute press_new, mat_mass, rho_CC
        for (int m = 0; m < numMatls; m++) {
-	f_theta[m][*iter] = vol_frac[m][*iter]*compressibility[m]/f_theta_denom;
-	press_new[*iter] += f_theta[m][*iter]*matl_press[m][*iter];
-	mat_mass[m]       = mass_CC[m][*iter];
-	rho_CC[m][*iter]  = mat_mass[m]/cell_vol;
+	 f_theta[m][*iter] = vol_frac[m][*iter]*compressibility[m]/f_theta_denom;
+	 press_new[*iter] += f_theta[m][*iter]*matl_press[m][*iter];
        }
     } // for(CellIterator...)
 
@@ -1399,22 +1407,24 @@ void ICE::computeNonEquilibrationPressure(const ProcessorGroup*,
     for (int m = 0; m < numMatls; m++)   {
       Material* matl = d_sharedState->getMaterial( m );
       int indx = matl->getDWIndex();
-      setBC(rho_CC[m],   "Density" ,patch, indx);
       setBC(matl_press[m],rho_micro[SURROUND_MAT],"Pressure",patch,indx);
     }  
     setBC(press_new, rho_micro[SURROUND_MAT], "Pressure",patch,0);
-
     //__________________________________
-    //    Put all matls into new dw
+    // carry rho_cc forward 
+    // In MPMICE was compute rho_CC_new and 
+    // therefore need the machinery here
+    //__________________________________
     for (int m = 0; m < numMatls; m++)   {
       Material* matl = d_sharedState->getMaterial( m );
       int indx = matl->getDWIndex();
+      rho_CC_new[m].copyData(rho_CC[m]);
       new_dw->put( vol_frac[m],      lb->vol_frac_CCLabel,   indx, patch);
       new_dw->put( f_theta[m],       lb->f_theta_CCLabel,    indx, patch);
       new_dw->put( matl_press[m],    lb->matl_press_CCLabel, indx, patch);
       new_dw->put( speedSound_new[m],lb->speedSound_CCLabel, indx, patch);
       new_dw->put( rho_micro[m],     lb->rho_micro_CCLabel,  indx, patch);
-      new_dw->put( rho_CC[m],        lb->rho_CCLabel,        indx, patch);
+      new_dw->put( rho_CC_new[m],    lb->rho_CCLabel,        indx, patch);
     }
     new_dw->put(press_new,lb->press_equil_CCLabel,0,patch);
 
@@ -2866,7 +2876,10 @@ void ICE::computeLagrangianValues(const ProcessorGroup*,
     }  // end numALLMatl loop
   }  // patch loop
 }
-
+/* ---------------------------------------------------------------------
+ Function~  ICE::computeLagrangianSpecificVolume--
+ Computes 
+ ---------------------------------------------------------------------  */
 void ICE::computeLagrangianSpecificVolume(const ProcessorGroup*,  
 					  const PatchSubset* patches,
 		                          const MaterialSubset* /*matls*/,
@@ -2876,7 +2889,7 @@ void ICE::computeLagrangianSpecificVolume(const ProcessorGroup*,
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
 
-    cout_doing << "Doing Lagrangian mass, momentum and energy on patch " <<
+    cout_doing << "Doing computeLagrangianSpecificVolume " <<
       patch->getID() << "\t ICE" << endl;
 
     delt_vartype delT;
@@ -3010,17 +3023,18 @@ void ICE::addExchangeToMomentumAndEnergy(const ProcessorGroup*,
     double  tmp;
     delt_vartype delT;
     old_dw->get(delT, d_sharedState->get_delt_label());
-
-    StaticArray<constCCVariable<double> > mass_L(numMatls);
     StaticArray<CCVariable<double> > Temp_CC(numMatls);
+    StaticArray<CCVariable<Vector> > vel_CC(numMatls);
+    StaticArray<CCVariable<Vector> > mom_L_ME(numMatls);
+    StaticArray<CCVariable<double> > int_eng_L_ME(numMatls);
+    StaticArray<CCVariable<double> > Tdot(numMatls);
+    StaticArray<constCCVariable<double> > mass_L(numMatls);
     StaticArray<constCCVariable<double> > int_eng_L(numMatls);
     StaticArray<constCCVariable<double> > vol_frac_CC(numMatls);
     StaticArray<constCCVariable<double> > rho_micro_CC(numMatls);
-    StaticArray<CCVariable<double> > int_eng_L_ME(numMatls);
     StaticArray<constCCVariable<Vector> > mom_L(numMatls);
-    StaticArray<CCVariable<Vector> > vel_CC(numMatls);
-    StaticArray<CCVariable<Vector> > mom_L_ME(numMatls);
-
+    StaticArray<constCCVariable<double> > old_temp(numMatls);
+    
     vector<double> b(numMatls);
     vector<double> cv(numMatls);
     vector<double> X(numMatls);
@@ -3044,12 +3058,15 @@ void ICE::addExchangeToMomentumAndEnergy(const ProcessorGroup*,
       new_dw->get(vol_frac_CC[m], lb->vol_frac_CCLabel,indx,patch, 
 		  Ghost::None,0);
       new_dw->get(rho_micro_CC[m],lb->rho_micro_CCLabel,indx,patch,
-		  Ghost::None,0);           
+		  Ghost::None,0);
+      old_dw->get(old_temp[m],    lb->temp_CCLabel,    indx,patch,
+	         Ghost::None,0);           
 
       new_dw->allocate( mom_L_ME[m],   lb->mom_L_ME_CCLabel,    indx, patch);
       new_dw->allocate(int_eng_L_ME[m],lb->int_eng_L_ME_CCLabel,indx, patch);
       new_dw->allocate( vel_CC[m],     lb->vel_CCLabel,         indx, patch);
       new_dw->allocate( Temp_CC[m],    lb->temp_CCLabel,        indx, patch);
+      new_dw->allocate( Tdot[m],       lb->Tdot_CCLabel,        indx, patch);
       mom_L_ME[m].initialize(Vector(0.0, 0.0, 0.0));
       int_eng_L_ME[m].initialize(0.0);
       vel_CC[m].initialize(Vector(0.0, 0.0, 0.0));
@@ -3183,6 +3200,7 @@ void ICE::addExchangeToMomentumAndEnergy(const ProcessorGroup*,
       for (int m = 0; m < numMatls; m++) {
         int_eng_L_ME[m][*iter] = Temp_CC[m][*iter] * cv[m] * mass_L[m][*iter];
         mom_L_ME[m][*iter]     = vel_CC[m][*iter] * mass_L[m][*iter];
+        Tdot[m][*iter]         = (Temp_CC[m][*iter] - old_temp[m][*iter])/delT;
       }  
     } 
 
@@ -3191,6 +3209,7 @@ void ICE::addExchangeToMomentumAndEnergy(const ProcessorGroup*,
       int indx = matl->getDWIndex();
       new_dw->put(mom_L_ME[m],    lb->mom_L_ME_CCLabel,    indx, patch);
       new_dw->put(int_eng_L_ME[m],lb->int_eng_L_ME_CCLabel,indx, patch);
+      new_dw->put(Tdot[m],        lb->Tdot_CCLabel,        indx, patch);
     }
   }  // patch loop
 }
