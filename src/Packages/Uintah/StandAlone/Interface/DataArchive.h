@@ -318,7 +318,11 @@ void DataArchive::query( ParticleVariable< T >& var, const std::string& name,
    int fd = open(datafile.c_str(), O_RDONLY);
    if(fd == -1)
       throw ErrnoException("DataArchive::query (open call)", errno);
+#ifdef __sgi
    off64_t ls = lseek64(fd, start, SEEK_SET);
+#else
+   off_t ls = lseek(fd, start, SEEK_SET);
+#endif
    if(ls == -1)
       throw ErrnoException("DataArchive::query (lseek64 call)", errno);
 
@@ -376,7 +380,11 @@ void DataArchive::query( NCVariable< T >& var, const std::string& name,
    int fd = open(datafile.c_str(), O_RDONLY);
    if(fd == -1)
       throw ErrnoException("DataArchive::query (open call)", errno);
+#ifdef __sgi
    off64_t ls = lseek64(fd, start, SEEK_SET);
+#else
+   off_t ls = lseek(fd, start, SEEK_SET);
+#endif
    if(ls == -1)
       throw ErrnoException("DataArchive::query (lseek64 call)", errno);
 
@@ -434,7 +442,11 @@ void DataArchive::query( CCVariable< T >& var, const std::string& name,
    int fd = open(datafile.c_str(), O_RDONLY);
    if(fd == -1)
       throw ErrnoException("DataArchive::query (open call)", errno);
+#ifdef __sgi
    off64_t ls = lseek64(fd, start, SEEK_SET);
+#else
+   off_t ls = lseek(fd, start, SEEK_SET);
+#endif
    if(ls == -1)
       throw ErrnoException("DataArchive::query (lseek64 call)", errno);
 
@@ -543,6 +555,9 @@ void DataArchive::query(std::vector<T>& values, const std::string& name,
 
 //
 // $Log$
+// Revision 1.12  2000/09/25 18:13:09  sparker
+// Do not use 64 bit lseek64 except on SGI
+//
 // Revision 1.11  2000/09/15 22:08:34  witzel
 // Changed the variable hash map structure so that it only parses data xml
 // files for a timestep after that timestep has be queried (instead of
