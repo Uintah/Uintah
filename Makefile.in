@@ -282,9 +282,9 @@ $(MAKEFILEDIRS):
 $(CREATETCLINDEX): $(CREATETCLINDEX).in $(OBJTOP)/Makefile
 	@echo creating scripts/createTclIndex
 	-@sed -e 's,ITCLSH,$(ITCLSH),g' \
-             -e 's,TCL_INIT_DIR,$(TCL_INIT_DIR),g' \
-             -e 's,ITCL_INIT_DIR,$(ITCL_INIT_DIR),g' \
-            $(CREATETCLINDEX).in > $(CREATETCLINDEX)
+              -e 's,ITCL_INIT_DIR,$(ITCL_INIT_DIR),g' \
+	      -e 's,TCL_INIT_DIR,$(TCL_INIT_DIR),g' \
+              $(CREATETCLINDEX).in > $(CREATETCLINDEX)
 	-@chmod a+x $(CREATETCLINDEX)
 
 $(LIBDIR):
