@@ -23,6 +23,7 @@ SRCDIR   := Core/Algorithms/Geometry
 
 SRCS     += \
         $(SRCDIR)/CoregPts.cc \
+        $(SRCDIR)/SurfaceLaplacian.cc \
 
 PSELIBS := Core/Datatypes Core/Containers Core/Thread \
 	Core/Exceptions Core/Geometry Core/Util Core/Math
