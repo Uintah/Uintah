@@ -88,6 +88,12 @@ JohnsonCookPlastic::updatePlastic(const particleIndex idx, const double& )
   pPlasticStrain_new[idx] = pPlasticStrain_new[idx];
 }
 
+double
+JohnsonCookPlastic::getUpdatedPlasticStrain(const particleIndex idx)
+{
+  return pPlasticStrain_new[idx];
+}
+
 double 
 JohnsonCookPlastic::computeFlowStress(const Matrix3& rateOfDeformation,
                                       const double& temperature,

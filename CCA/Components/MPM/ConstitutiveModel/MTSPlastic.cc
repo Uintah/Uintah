@@ -41,12 +41,18 @@ MTSPlastic::MTSPlastic(ProblemSpecP& ps)
 	ParticleVariable<double>::getTypeDescription());
   pMTSLabel_preReloc = VarLabel::create("p.mtStress+",
 	ParticleVariable<double>::getTypeDescription());
+  pPlasticStrainLabel = VarLabel::create("p.plasticStrain",
+			ParticleVariable<double>::getTypeDescription());
+  pPlasticStrainLabel_preReloc = VarLabel::create("p.plasticStrain+",
+			ParticleVariable<double>::getTypeDescription());
 }
 	 
 MTSPlastic::~MTSPlastic()
 {
   VarLabel::destroy(pMTSLabel);
   VarLabel::destroy(pMTSLabel_preReloc);
+  VarLabel::destroy(pPlasticStrainLabel);
+  VarLabel::destroy(pPlasticStrainLabel_preReloc);
 }
 	 
 void 
@@ -56,6 +62,7 @@ MTSPlastic::addInitialComputesAndRequires(Task* task,
 {
   const MaterialSubset* matlset = matl->thisMaterial();
   task->computes(pMTSLabel, matlset);
+  task->computes(pPlasticStrainLabel, matlset);
 }
 
 void 
@@ -66,6 +73,8 @@ MTSPlastic::addComputesAndRequires(Task* task,
   const MaterialSubset* matlset = matl->thisMaterial();
   task->requires(Task::OldDW, pMTSLabel, matlset,Ghost::None);
   task->computes(pMTSLabel_preReloc, matlset);
+  task->requires(Task::OldDW, pPlasticStrainLabel, matlset,Ghost::None);
+  task->computes(pPlasticStrainLabel_preReloc, matlset);
 }
 
 void 
@@ -74,6 +83,8 @@ MTSPlastic::addParticleState(std::vector<const VarLabel*>& from,
 {
   from.push_back(pMTSLabel);
   to.push_back(pMTSLabel_preReloc);
+  from.push_back(pPlasticStrainLabel);
+  to.push_back(pPlasticStrainLabel_preReloc);
 }
 
 void 
@@ -81,8 +92,12 @@ MTSPlastic::initializeInternalVars(ParticleSubset* pset,
 				   DataWarehouse* new_dw)
 {
   new_dw->allocateAndPut(pMTS_new, pMTSLabel, pset);
+  new_dw->allocateAndPut(pPlasticStrain_new, pPlasticStrainLabel, pset);
   ParticleSubset::iterator iter = pset->begin();
-  for(;iter != pset->end(); iter++) pMTS_new[*iter] = 0.0;
+  for(;iter != pset->end(); iter++) {
+    pMTS_new[*iter] = 0.0;
+    pPlasticStrain_new[*iter] = 0.0;
+  }
 }
 
 void 
@@ -90,6 +105,7 @@ MTSPlastic::getInternalVars(ParticleSubset* pset,
 			    DataWarehouse* old_dw) 
 {
   old_dw->get(pMTS, pMTSLabel, pset);
+  old_dw->get(pPlasticStrain, pPlasticStrainLabel, pset);
 }
 
 void 
@@ -97,18 +113,27 @@ MTSPlastic::allocateAndPutInternalVars(ParticleSubset* pset,
 				       DataWarehouse* new_dw) 
 {
   new_dw->allocateAndPut(pMTS_new, pMTSLabel_preReloc, pset);
+  new_dw->allocateAndPut(pPlasticStrain_new, pPlasticStrainLabel_preReloc,pset);
 }
 
 void
 MTSPlastic::updateElastic(const particleIndex idx)
 {
   pMTS_new[idx] = pMTS[idx];
+  pPlasticStrain_new[idx] = pPlasticStrain[idx];
 }
 
 void
 MTSPlastic::updatePlastic(const particleIndex idx, const double& )
 {
   pMTS_new[idx] = pMTS_new[idx];
+  pPlasticStrain_new[idx] = pPlasticStrain_new[idx];
+}
+
+double
+MTSPlastic::getUpdatedPlasticStrain(const particleIndex idx)
+{
+  return pPlasticStrain_new[idx];
 }
 
 double 
@@ -145,7 +170,12 @@ MTSPlastic::computeFlowStress(const Matrix3& rateOfDeformation,
 
   // Calculate strain rate and incremental strain
   double edot = sqrt(rateOfDeformation.NormSquared()/1.5);
-  if (edot < 0.00001) return 0.0;
+  if (edot < 0.00001) {
+    pPlasticStrain_new[idx] = pPlasticStrain[idx];
+    return 0.0;
+  } else {
+    pPlasticStrain_new[idx] = pPlasticStrain[idx] + edot*delT;
+  }
 
   double delEps = edot*delT;
   //cout << "edot = " << edot << " delEps = " << delEps << endl;

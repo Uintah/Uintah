@@ -18,21 +18,22 @@ SRCS     += \
 	$(SRCDIR)/IdealGasMP.cc               	\
 	$(SRCDIR)/Membrane.cc 			\
 	$(SRCDIR)/ShellMaterial.cc 			\
-	$(SRCDIR)/DamageModel.cc \
-	$(SRCDIR)/DamageModelFactory.cc \
-	$(SRCDIR)/DefaultHypoElasticEOS.cc \
-	$(SRCDIR)/DefaultHyperElasticEOS.cc \
-	$(SRCDIR)/MPMEquationOfState.cc \
-	$(SRCDIR)/MPMEquationOfStateFactory.cc \
 	$(SRCDIR)/HypoElasticPlastic.cc \
 	$(SRCDIR)/HyperElasticPlastic.cc \
-	$(SRCDIR)/IsoHardeningPlastic.cc \
+	$(SRCDIR)/DamageModel.cc \
+	$(SRCDIR)/DamageModelFactory.cc \
 	$(SRCDIR)/JohnsonCookDamage.cc \
-	$(SRCDIR)/JohnsonCookPlastic.cc \
+	$(SRCDIR)/HancockMacKenzieDamage.cc \
+	$(SRCDIR)/MPMEquationOfState.cc \
+	$(SRCDIR)/MPMEquationOfStateFactory.cc \
+	$(SRCDIR)/DefaultHypoElasticEOS.cc \
+	$(SRCDIR)/DefaultHyperElasticEOS.cc \
 	$(SRCDIR)/MieGruneisenEOS.cc \
-	$(SRCDIR)/MTSPlastic.cc \
 	$(SRCDIR)/PlasticityModel.cc \
 	$(SRCDIR)/PlasticityModelFactory.cc \
+	$(SRCDIR)/IsoHardeningPlastic.cc \
+	$(SRCDIR)/JohnsonCookPlastic.cc \
+	$(SRCDIR)/MTSPlastic.cc \
 	$(SRCDIR)/YieldCondition.cc \
 	$(SRCDIR)/YieldConditionFactory.cc \
 	$(SRCDIR)/GursonYield.cc \

@@ -7,52 +7,51 @@
 
 namespace Uintah {
 
-/**************************************
+  /////////////////////////////////////////////////////////////////////////////
+  /*!
+    \class DamageModel
+    \brief Abstract base class for damage models   
+    \author Biswajit Banerjee \n
+    C-SAFE and Department of Mechanical Engineering \n
+    University of Utah \n
+    Copyright (C) 2002 University of Utah
+  */
+  /////////////////////////////////////////////////////////////////////////////
 
-CLASS
-   DamageModel
-   
-   Short description...
-
-GENERAL INFORMATION
-
-   DamageModel.h
-
-   Biswajit Banerjee
-   Department of Mechanical Enegineering
-   University of Utah
-
-   Center for the Simulation of Accidental Fires and Explosions (C-SAFE)
-  
-   Copyright (C) 2002 McMurtry Container Dynamics Group
-
-KEYWORDS
-   Damage_Model
-
-DESCRIPTION
-   Long description...
-  
-WARNING
-  
-****************************************/
-
-      class DamageModel {
-      public:
+  class DamageModel {
+  public:
 	 
-	 DamageModel();
-	 virtual ~DamageModel();
+    DamageModel();
+    virtual ~DamageModel();
 	 
-	 //////////
-	 // Calculate the scalar damage parameter 
-	 virtual double computeScalarDamage(const Matrix3& rateOfDeformation,
-                                            const Matrix3& stress,
-                                            const double& temperature,
-                                            const double& delT,
-                                            const MPMMaterial* matl,
-                                            const double& tolerance,
-                                            const double& damage_old) = 0;
+    //////////////////////////////////////////////////////////////////////////
+    /*! 
+      Initialize the damage parameter in the calling function
+    */
+    //////////////////////////////////////////////////////////////////////////
+    virtual double initialize() = 0;
 
-      };
+    //////////////////////////////////////////////////////////////////////////
+    /*! 
+      Determine if damage has crossed cut off
+    */
+    //////////////////////////////////////////////////////////////////////////
+    virtual bool hasFailed(double damage) = 0;
+    
+    //////////////////////////////////////////////////////////////////////////
+    /*! 
+      Calculate the scalar damage parameter 
+    */
+    //////////////////////////////////////////////////////////////////////////
+    virtual double computeScalarDamage(const Matrix3& rateOfDeformation,
+				       const Matrix3& stress,
+				       const double& temperature,
+				       const double& delT,
+				       const MPMMaterial* matl,
+				       const double& tolerance,
+				       const double& damage_old) = 0;
+
+  };
 } // End namespace Uintah
       
 

@@ -131,9 +131,13 @@ namespace Uintah {
 
     constParticleVariable<double> pMTS;
     ParticleVariable<double> pMTS_new;
+    constParticleVariable<double> pPlasticStrain;
+    ParticleVariable<double> pPlasticStrain_new;
 
     const VarLabel* pMTSLabel; // For MTS model
     const VarLabel* pMTSLabel_preReloc; // For MTS model
+    const VarLabel* pPlasticStrainLabel; // For MTS model
+    const VarLabel* pPlasticStrainLabel_preReloc; // For MTS model
 
   private:
 
@@ -176,6 +180,8 @@ namespace Uintah {
     virtual void updateElastic(const particleIndex idx);
 
     virtual void updatePlastic(const particleIndex idx, const double& delGamma);
+
+    double getUpdatedPlasticStrain(const particleIndex idx);
 
     // compute the flow stress
     virtual double computeFlowStress(const Matrix3& rateOfDeformation,

@@ -17,52 +17,48 @@
 
 namespace Uintah {
 
-/**************************************
+  /////////////////////////////////////////////////////////////////////////////
+  /*!
+    \class HypoElasticPlastic
+    \brief High-strain rate Hypo-Elastic Plastic Constitutive Model
+    \author Biswajit Banerjee \n
+    C-SAFE and Department of Mechanical Engineering \n
+    University of Utah \n
+    Copyright (C) 2002 University of Utah
 
-CLASS
-   HypoElasticPlastic
-   
-   General Hypo-Elastic Plastic Constitutive Model
+    The rate of deformation and stress is rotated to material configuration 
+    before the updated values are calculated.  The left stretch and rotation 
+    are updated incrementatlly to get the deformation gradient.
 
-GENERAL INFORMATION
+    Needs :
+    1) Isotropic elastic moduli.
+    2) Flow rule in the form of a Plasticity Model.
+    3) Yield condition.
+    4) Stability condition.
+    5) Damage model.
 
-   HypoElasticPlastic.h
-
-   Biswajit Banerjee
-   Department of Mechanical Engineering
-   University of Utah
-
-   Center for the Simulation of Accidental Fires and Explosions (C-SAFE)
-  
-   Copyright (C) 2002 University of Utah
-
-KEYWORDS
-   Hypo-elastic Plastic, Viscoplasticity
-
-DESCRIPTION
-   
-   The rate of deformation and stress is rotated to material configuration before
-   the updated values are calculated.  The left stretch and rotation are updated
-   incrementatlly to get the deformation gradient.
-
-   The flow rule can be any appropriate flow rule that is determined by a derived
-   class, for example, 1) Johnson-Cook 2) Bammann 3) MTS
-
-WARNING
-  
-   Only isotropic materials, von-Mises plasticity, associated flow rule,
-   high strain rate.
-
-****************************************/
+    \warning Only isotropic materials, von-Mises type yield conditions, 
+    associated flow rule, high strain rate.
+  */
+  /////////////////////////////////////////////////////////////////////////////
 
   class HypoElasticPlastic : public ConstitutiveModel {
 
   public:
     // Create datatype for storing model parameters
     struct CMData {
-      double Bulk;
-      double Shear;
+      double Bulk;    /*< Bulk modulus */
+      double Shear;   /*< Shear Modulus */
     };	 
+
+    // Create datatype for storing porosity parameters
+    struct PorosityData {
+      double f0;     /*< Initial porosity */
+      double fc;     /*< Critical porosity */
+      double fn;     /*< Volume fraction of void nucleating particles */
+      double en;     /*< Mean strain for nucleation */
+      double sn;     /*< Standard deviation of strain for nucleation */
+    };
 
     const VarLabel* pLeftStretchLabel;  // For Hypoelastic-plasticity
     const VarLabel* pLeftStretchLabel_preReloc;  // For Hypoelastic-plasticity
@@ -70,20 +66,23 @@ WARNING
     const VarLabel* pRotationLabel_preReloc;  // For Hypoelastic-plasticity
     const VarLabel* pDamageLabel;  // For Hypoelastic-plasticity
     const VarLabel* pDamageLabel_preReloc;  // For Hypoelastic-plasticity
+    const VarLabel* pPorosityLabel;  // For Hypoelastic-plasticity
+    const VarLabel* pPorosityLabel_preReloc;  // For Hypoelastic-plasticity
     const VarLabel* pPlasticTempLabel;  // For Hypoelastic-plasticity
     const VarLabel* pPlasticTempLabel_preReloc;  // For Hypoelastic-plasticity
 
   private:
 
-    CMData d_initialData;
-
+    CMData       d_initialData;
+    PorosityData d_porosity;
+    
     double d_tol;
-    double d_damageCutOff;
-    bool d_useModifiedEOS;
-    YieldCondition* d_yield;
-    StabilityCheck* d_stable;
-    PlasticityModel* d_plasticity;
-    DamageModel* d_damage;
+    bool   d_useModifiedEOS;
+
+    YieldCondition*     d_yield;
+    StabilityCheck*     d_stable;
+    PlasticityModel*    d_plasticity;
+    DamageModel*        d_damage;
     MPMEquationOfState* d_eos;
 	 
     // Prevent copying of this class
@@ -146,9 +145,9 @@ WARNING
 					const bool recursion) const;
 
     virtual void computeStressTensorWithErosion(const PatchSubset* patches,
-				const MPMMaterial* matl,
-				DataWarehouse* old_dw,
-				DataWarehouse* new_dw);
+						const MPMMaterial* matl,
+						DataWarehouse* old_dw,
+						DataWarehouse* new_dw);
 
     /////////
     // Sockets for MPM-ICE
@@ -199,11 +198,43 @@ WARNING
 				  const Matrix3& tensorW);
 
     /*! Compute the elastic tangent modulus tensor for isotropic
-        materials */
+      materials */
     void computeElasticTangentModulus(double bulk,
                                       double shear,
                                       TangentModulusTensor& Ce);
 
+    /*! \brief Compute Porosity.
+      
+    The evolution of porosity is given by \n
+    \f$
+    \dot{f} = \dot{f}_{nucl} + \dot{f}_{grow}
+    \f$ \n
+    where
+    \f$
+    \dot{f}_{grow} = (1-f) D^p_{kk}
+    \f$ \n
+    \f$ D^p_{kk} = Tr(D^p) \f$, and \f$ D^p \f$ is the rate of plastic
+    deformation, and, \n
+    \f$
+    \dot{f}_{nucl} = A \dot{\epsilon}^p
+    \f$  \n
+    with 
+    \f$
+    A = f_n/(s_n \sqrt{2\pi}) \exp [-1/2 (\epsilon^p - \epsilon_n)^2/s_n^2]
+    \f$\n
+    \f$ f_n \f$ is the volume fraction of void nucleating particles , 
+    \f$ \epsilon_n \f$ is the mean of the normal distribution of nucleation
+    strains, and \f$ s_n \f$ is the standard deviation of the distribution.
+   
+    References:
+    1) Ramaswamy, S. and Aravas, N., 1998, Comput. Methods Appl. Mech. Engrg.,
+    163, 33-53.
+    2) Bernauer, G. and Brocks, W., 2002, Fatigue Fract. Engng. Mater. Struct.,
+    25, 363-384.
+    */
+    double updatePorosity(const Matrix3& rateOfDeform,
+                          double delT, double oldPorosity,
+                          double plasticStrain);
   };
 
 } // End namespace Uintah
