@@ -1765,6 +1765,7 @@ fi
 AC_PROG_LEX
 
 LEX_LIB_FLAG="$LEXLIB"
+AC_SUBST(LEX_LIB_FLAG)
 
 if test "$pkg_uintah" = "yes" ; then
   AC_CHECK_PROG(PERL, perl, perl, 
