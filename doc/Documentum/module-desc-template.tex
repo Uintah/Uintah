@@ -24,22 +24,24 @@
 % o Cite references with the \cite command. Put citations in
 %   a bib file and send along with this file.
 %
-% o Please include at least one image of tk GUI. Provide 
-%   an EPS version and a web friendly version (e.g., jpeg or gif).
+% o Please include at least one image of your module's GUI. Provide 
+%   either an JPG or GIF version.  Note that an EPS version is needed but
+%   it will be generated automatically from the JPG or GIF figure when it
+%   is needed. 
 %
 % o Including images:  Create a figure command for each figure using the
 %   template below.  Copy the template (make a copy of the template
 %   for each figure) and uncomment only the first '%' in each line.
-%   Then replace bracketed text with appropriate values.  Here is the
+%   Then replace angle-bracketed text with appropriate values.  Here is the
 %   template: 
 % 
 %%begin{latexonly}
 %  \newcommand{\<figure command name>}%
-%  {\centerline{\includegraphics[options]{<path to eps file>}}}
+%  {\centerline{\includegraphics[options]{\ModuleRefFigName{<figure-name>.eps}}}}
 %%end{latexonly}
 %\begin{htmlonly}
 %  \newcommand{\<figure command name (same as above)>}{%
-%  \htmladdimg[options]{<path to jpg file>}}
+%  \htmladdimg[options]{\ModuleRefFigName{<figure-name.jpg-or-gif>}}}
 %\end{htmlonly}
 %
 %   Where in the ``latexonly'' part, ``options'' is a list of key-value pair
@@ -51,6 +53,11 @@
 %   In the ``htmlonly'' part ``options'' is a list options such as ``align'',
 %   ``width'', ``height'', and ``alt''.  See ``The Latex Web Companion'' for
 %   details.
+%
+%   Where <figure-name>.eps and <figure-name.jpg-or-gif> should be
+%   replaced by the names of your figures.
+%   Note that figure names must be enclosed in the
+%   \ModuleRefFigName command.
 %   
 %   Now to actually create figures enclose each figure command as follows:
 %
@@ -91,8 +98,8 @@ Summary here.
 
 % How to use the module.  Describe connections upstream and downstream
 % and how to use the GUI.  If desired, Walk the user through an example.
-% Please include at least one image of tk GUI. Provide 
-% an EPS version and a web-friendly version (e.g., jpeg or gif).
+% Please include at least one image of your module's GUI in either a JPG or
+% GIF version.
 % See the note above that explains how to include images.
 \ModuleRefUse
 Describe use here.
