@@ -5,7 +5,7 @@
 <xsl:output method="xml" indent="yes"/>
 
 
-<!-- ********* GLOBALS ********* -->
+<!-- =============== GLOBALS =============== -->
 <xsl:variable name="sci-name">
   <xsl:value-of select="/filter/filter-sci/@name"/>
 </xsl:variable>
@@ -22,24 +22,9 @@
   <xsl:value-of select="/filter/filter-itk/templated/base"/>
 </xsl:variable>
 
-
-
-<!-- SKIP INFORMATION FROM SCIRUN and GUI XML FILES -->
-<xsl:template match="filter-sci">
-</xsl:template>
-
-<xsl:template match="filter-gui">
-</xsl:template>
-
-<xsl:template match="filter-sci">
-</xsl:template>
-
-<xsl:template match="define-gui">
-</xsl:template>
-
-
-<!-- NEW ITK FILTER -->
+<!-- ============== FILTER-ITK ============== -->
 <xsl:template match="filter-itk">
+<xsl:call-template name="copyright"/>
 <xsl:call-template name="header"/>
 <xsl:element name="component">
 <xsl:attribute name="name"><xsl:value-of select="$sci-name"/></xsl:attribute>
@@ -61,7 +46,22 @@
 </xsl:template>
 
 
-<!-- INPUT PORTS -->
+<!-- SKIP INFORMATION FROM SCIRUN and GUI XML FILES -->
+<xsl:template match="filter-sci">
+</xsl:template>
+
+<xsl:template match="filter-gui">
+</xsl:template>
+
+<xsl:template match="filter-sci">
+</xsl:template>
+
+<xsl:template match="define-gui">
+</xsl:template>
+
+
+
+<!-- ============= INPUTS ============== -->
 <xsl:template match="inputs"><xsl:text>
     </xsl:text><xsl:element name="inputs">
 <xsl:attribute name="lastportdynamic">no</xsl:attribute>
@@ -77,13 +77,13 @@
       </xsl:text>
  <xsl:element name="port"><xsl:text>
         </xsl:text><xsl:element name="name"><xsl:value-of select="name"/></xsl:element><xsl:text>
-        </xsl:text><xsl:element name="datatype"><xsl:value-of select="$package"/><xsl:text>::</xsl:text><xsl:value-of select="/filter/filter-sci/instantiations/instance/type[@name=$type-name]/datatype"/></xsl:element><xsl:text>
+        </xsl:text><xsl:element name="datatype"><!-- hard coded datatype -->Insight::ITKDatatype</xsl:element><xsl:text>
       </xsl:text>
     </xsl:element>
 </xsl:template>
 
 
-<!-- OUTPUT PORTS -->
+<!-- ================ OUTPUTS ================= -->
 <xsl:template match="outputs">
 <xsl:text>  </xsl:text><xsl:element name="outputs">
 <xsl:apply-templates select="output"/><xsl:text>
@@ -96,7 +96,7 @@
       </xsl:text>
  <xsl:element name="port"><xsl:text>
         </xsl:text><xsl:element name="name"><xsl:value-of select="name"/></xsl:element><xsl:text>
-        </xsl:text><xsl:element name="datatype"><xsl:value-of select="$package"/><xsl:text>::</xsl:text><xsl:value-of select="/filter/filter-sci/instantiations/instance/type[@name=$type-name]/datatype"/></xsl:element><xsl:text>
+        </xsl:text><xsl:element name="datatype"><!-- hard coded datatype -->Insight::ITKDatatype</xsl:element><xsl:text>
       </xsl:text>
     </xsl:element>
 </xsl:template>
@@ -104,12 +104,33 @@
 
 
 
-<!-- ******************* HELPER FUNCTIONS ********************  -->
+<!-- ============ HELPER FUNCTIONS ================== -->
 <!--header info -->
 <xsl:template name="header">
 <xsl:text disable-output-escaping="yes">&lt;!DOCTYPE component SYSTEM &quot;../../../../../doc/Utilities/XML/component.dtd&quot;&gt;
 &lt;?xml-stylesheet href=&quot;../../../../../doc/Utilities/XML/package-component.xsl&quot;type=&quot;text/xsl&quot;?&gt;
 &lt;?cocoon-process type=&quot;xslt&quot;?&gt;
+</xsl:text>
+</xsl:template>
+
+<!-- copyright -->
+<xsl:template name="copyright">
+<xsl:text disable-output-escaping="yes">&lt;!--
+  The contents of this file are subject to the University of Utah Public
+  License (the "License"); you may not use this file except in compliance
+  with the License.
+  
+  Software distributed under the License is distributed on an "AS IS"
+  basis, WITHOUT WARRANTY OF ANY KIND, either express or implied. See the
+  License for the specific language governing rights and limitations under
+  the License.
+  
+  The Original Source Code is SCIRun, released March 12, 2001.
+  
+  The Original Source Code was developed by the University of Utah.
+  Portions created by UNIVERSITY are Copyright (C) 2001, 1994 
+  University of Utah. All Rights Reserved.
+--&gt;
 </xsl:text>
 </xsl:template>
 

@@ -5,7 +5,7 @@
 
 
 
-<!-- ********* GLOBALS ********* -->
+<!-- ============= GLOBALS =============== -->
 <xsl:variable name="root-name">
   <xsl:value-of select="/filter/@name"/>
 </xsl:variable>
@@ -27,8 +27,8 @@
 
 
 
-<!-- ********* MAIN *********-->
-<xsl:template match="filter">
+<!-- ================ FILTER ============= -->
+<xsl:template match="/filter">
 <xsl:call-template name="header" />
 <xsl:call-template name="includes" />
 namespace <xsl:value-of select="$package"/> 
@@ -51,7 +51,8 @@ DECLARE_MAKER(<xsl:value-of select="/filter/filter-sci/@name"/>)
 
 
 
-<!-- ********** HELPER FUNCTIONS ********** -->
+<!-- ============= HELPER FUNCTIONS ============ -->
+
 <!-- ====== HEADER ====== -->
 <xsl:template name="header">
 <xsl:call-template name="output_copyright" />
@@ -147,7 +148,6 @@ public:
 </xsl:if>
 </xsl:for-each><xsl:text> &gt; 
   bool run( </xsl:text>
-<!-- HERE -->
 <xsl:for-each select="/filter/filter-itk/inputs/input">
 <xsl:variable name="import"><xsl:value-of select="@import"/></xsl:variable>
 <xsl:choose>
@@ -199,19 +199,12 @@ GuiDouble </xsl:otherwise>
   <xsl:when test="$import = 'yes'">
   <xsl:variable name="import_filter"><xsl:value-of select="value"/></xsl:variable>
   <xsl:variable name="import_port"><xsl:value-of select="port"/></xsl:variable>
-  <xsl:variable name="import_type"><xsl:value-of select="/filter/filter-itk/filter[@name=$import_filter]/filter-itk/inputs/input[@num=$import_port]/value"/></xsl:variable>
-<xsl:value-of select="/filter/filter-itk/filter[@name=$import_filter]/filter-sci/instantiations/instance/type[@name=$import_type]/datatype"/>
-<xsl:text>IPort* </xsl:text><xsl:value-of select="$iport"/><xsl:text>_;
-  </xsl:text>
-<xsl:value-of select="/filter/filter-itk/filter[@name=$import_filter]/filter-sci/instantiations/instance/type[@name=$import_type]/datatype"/>
-<xsl:text>Handle </xsl:text><xsl:value-of select="$ihandle"/>_;
+  <xsl:variable name="import_type"><xsl:value-of select="/filter/filter-itk/filter[@name=$import_filter]/filter-itk/inputs/input[@num=$import_port]/value"/></xsl:variable><!-- hard coded datatype --><xsl:text>  </xsl:text>ITKDatatype<xsl:text>IPort* </xsl:text><xsl:value-of select="$iport"/><xsl:text>_;
+  </xsl:text><!-- hard coded datatype --><xsl:text>ITKDatatypeHandle </xsl:text><xsl:value-of select="$ihandle"/>_;
   </xsl:when>
   <xsl:otherwise>
-<xsl:value-of select="/filter/filter-sci/instantiations/instance/type[@name=$type-name]/datatype"/>
-<xsl:text>IPort* </xsl:text><xsl:value-of select="$iport"/><xsl:text>_;
-  </xsl:text>
-<xsl:value-of select="/filter/filter-sci/instantiations/instance/type[@name=$type-name]/datatype"/>
-<xsl:text>Handle </xsl:text><xsl:value-of select="$ihandle"/>_;
+<!-- hard coded datatype --><xsl:text>ITKDatatypeIPort* </xsl:text><xsl:value-of select="$iport"/><xsl:text>_;
+  </xsl:text><!-- hard coded datatype --><xsl:text>ITKDatatypeHandle </xsl:text><xsl:value-of select="$ihandle"/>_;
   </xsl:otherwise>
 </xsl:choose>
 
@@ -231,23 +224,17 @@ GuiDouble </xsl:otherwise>
   <xsl:variable name="import_filter"><xsl:value-of select="value"/></xsl:variable>
   <xsl:variable name="import_port"><xsl:value-of select="port"/></xsl:variable>
   <xsl:variable name="import_type"><xsl:value-of select="/filter/filter-itk/filter[@name=$import_filter]/filter-itk/outputs/output[@num=$import_port]/value"/></xsl:variable>
-<xsl:value-of select="/filter/filter-itk/filter[@name=$import_filter]/filter-sci/instantiations/instance/type[@name=$import_type]/datatype"/>
-<xsl:text>IPort* </xsl:text><xsl:value-of select="$oport"/><xsl:text>_;
-  </xsl:text>
-<xsl:value-of select="/filter/filter-itk/filter[@name=$import_filter]/filter-sci/instantiations/instance/type[@name=$import_type]/datatype"/>
-<xsl:text>Handle </xsl:text><xsl:value-of select="$ohandle"/>_;
+<!-- hard coded datatype --><xsl:text>ITKDatatypeIPort* </xsl:text><xsl:value-of select="$oport"/><xsl:text>_;
+  </xsl:text><!-- hard coded datatype --><xsl:text>ITKDatatypeHandle </xsl:text><xsl:value-of select="$ohandle"/>_;
   </xsl:when>
   <xsl:otherwise>
-<xsl:value-of select="/filter/filter-sci/instantiations/instance/type[@name=$type-name]/datatype"/>
-<xsl:text>OPort* </xsl:text><xsl:value-of select="$oport"/><xsl:text>_;
-  </xsl:text>
-<xsl:value-of select="/filter/filter-sci/instantiations/instance/type[@name=$type-name]/datatype"/>
-<xsl:text>Handle </xsl:text><xsl:value-of select="$ohandle"/><xsl:text>_;
+<!-- hard coded datatype --><xsl:text>ITKDatatypeOPort* </xsl:text><xsl:value-of select="$oport"/><xsl:text>_;
+  </xsl:text><!-- hard coded datatype --><xsl:text>ITKDatatypeHandle </xsl:text><xsl:value-of select="$ohandle"/><xsl:text>_;
 
   </xsl:text>
   </xsl:otherwise>
 </xsl:choose>
-<xsl:value-of select="/filter/filter-sci/instantiations/instance/type[@name=$type-name]/datatype"/>* out<xsl:value-of select="@num"/>_;<xsl:text>
+<!-- hard coded datatype --><xsl:text>ITKDatatype* out</xsl:text><xsl:value-of select="@num"/>_;<xsl:text>
   </xsl:text>
 </xsl:for-each>
 </xsl:template>
@@ -305,7 +292,6 @@ bool </xsl:text><xsl:value-of select="$sci-name"/><xsl:text>::run( </xsl:text>
 </xsl:otherwise>
 </xsl:choose>
   <xsl:variable name="optional"><xsl:value-of select="@optional"/></xsl:variable>
-<!-- HERE ? -->
   <xsl:choose>
   <xsl:when test="$optional = 'yes'">
   if( inport<xsl:value-of select="@num"/>_has_data_ ) {
@@ -340,7 +326,6 @@ bool </xsl:text><xsl:value-of select="$sci-name"/><xsl:text>::run( </xsl:text>
 <xsl:text>   
   // set inputs 
 </xsl:text>
-<!-- HERE -->
   <xsl:for-each select="/filter/filter-itk/inputs/input">
   filter-><xsl:value-of select="call"/>( data<xsl:value-of select="@num"/> );
    </xsl:for-each>
@@ -358,7 +343,7 @@ bool </xsl:text><xsl:value-of select="$sci-name"/><xsl:text>::run( </xsl:text>
   // get filter output
   <xsl:for-each select="/filter/filter-itk/outputs/output">
   <xsl:variable name="name"><xsl:value-of select="value"/></xsl:variable>
-  <xsl:variable name="output"><xsl:value-of select="/filter/filter-sci/instantiations/instance/type[@name=$name]/datatype"/></xsl:variable>
+  <xsl:variable name="output"><!-- hard coded datatype -->ITKDatatype</xsl:variable>
   out<xsl:value-of select="@num"/>_->data_ = filter-><xsl:value-of select="call"/>();
   outhandle<xsl:value-of select="@num"/>_ = out<xsl:value-of select="@num"/>_; 
   </xsl:for-each>
@@ -389,19 +374,16 @@ bool </xsl:text><xsl:value-of select="$sci-name"/><xsl:text>::run( </xsl:text>
 <xsl:text>
 {
 </xsl:text>
-<!-- HERE -->
 <xsl:for-each select="/filter/filter-itk/inputs/input">
   <xsl:variable name="optional"><xsl:value-of select="@optional"/></xsl:variable>
   <xsl:choose>
   <xsl:when test="$optional = 'yes'">  inport<xsl:value-of select="@num"/>_has_data_ = false;  </xsl:when>
   <xsl:otherwise>
 </xsl:otherwise>
-</xsl:choose>
-</xsl:for-each>
+</xsl:choose></xsl:for-each>
 <xsl:for-each select="/filter/filter-itk/outputs/output">
 <xsl:variable name="type-name"><xsl:value-of select="value"/></xsl:variable>
-  out<xsl:value-of select="@num"/>_ = scinew <xsl:value-of select="/filter/filter-sci//instantiations/instance/type[@name=$type-name]/datatype"/>;
-</xsl:for-each>
+  out<xsl:value-of select="@num"/>_ = scinew <!-- hard coded datatype -->ITKDatatype;</xsl:for-each>
 <xsl:text>
 }
 
@@ -431,12 +413,11 @@ bool </xsl:text><xsl:value-of select="$sci-name"/><xsl:text>::run( </xsl:text>
 {
   // check input ports
 </xsl:text>
-<!-- HERE -->
 <xsl:for-each select="/filter/filter-itk/inputs/input">
 <xsl:variable name="type-name"><xsl:value-of select="value"/></xsl:variable>
 <xsl:variable name="iport">inport<xsl:value-of select="@num"/>_</xsl:variable>
 <xsl:variable name="ihandle">inhandle<xsl:value-of select="@num"/>_</xsl:variable>
-<xsl:variable name="port-type"><xsl:value-of select="/filter/filter-sci/instantiations/instance/type[@name=$type-name]/datatype"/><xsl:text>IPort</xsl:text></xsl:variable>
+<xsl:variable name="port-type"><!-- hard coded datatype -->ITKDatatype<xsl:text>IPort</xsl:text></xsl:variable>
 <xsl:variable name="optional"><xsl:value-of select="@optional"/></xsl:variable>
 
 <xsl:text>  </xsl:text><xsl:value-of select="$iport"/><xsl:text> = (</xsl:text>
@@ -479,7 +460,7 @@ bool </xsl:text><xsl:value-of select="$sci-name"/><xsl:text>::run( </xsl:text>
 <xsl:variable name="type-name"><xsl:value-of select="value"/></xsl:variable>
 <xsl:variable name="oport">outport<xsl:value-of select="@num"/>_</xsl:variable>
 <xsl:variable name="ohandle">outhandle<xsl:value-of select="@num"/>_</xsl:variable>
-<xsl:variable name="port-type"><xsl:value-of select="/filter/filter-sci/instantiations/instance/type[@name=$type-name]/datatype"/><xsl:text>OPort</xsl:text></xsl:variable>
+<xsl:variable name="port-type"><!-- hard coded datatype -->ITKDatatype<xsl:text>OPort</xsl:text></xsl:variable>
 
 <xsl:text>  </xsl:text><xsl:value-of select="$oport"/><xsl:text> = (</xsl:text>
 <xsl:value-of select="$port-type"/><xsl:text> *)get_oport(&quot;</xsl:text><xsl:value-of select="name"/><xsl:text>&quot;);
@@ -493,7 +474,6 @@ bool </xsl:text><xsl:value-of select="$sci-name"/><xsl:text>::run( </xsl:text>
 <xsl:text>
   // get input
   </xsl:text>
-<!-- HERE -->
 <xsl:for-each select="/filter/filter-itk/inputs/input">
 <xsl:variable name="ihandle">inhandle<xsl:value-of select="@num"/>_</xsl:variable>
 <xsl:variable name="optional"><xsl:value-of select="@optional"/></xsl:variable>
@@ -509,9 +489,28 @@ bool </xsl:text><xsl:value-of select="$sci-name"/><xsl:text>::run( </xsl:text>
   </xsl:otherwise>
 </xsl:choose>
 </xsl:for-each>
+<xsl:variable name="defaults"><xsl:value-of select="/filter/filter-sci/instantiations/@use-defaults"/></xsl:variable>
 <xsl:text>
   // can we operate on it?
   if(0) { }</xsl:text>
+  <xsl:choose>
+    <xsl:when test="$defaults = 'yes'">
+<xsl:for-each select="/filter/filter-itk/templated/defaults"><xsl:text>
+  else if(run&lt; </xsl:text>
+  <xsl:for-each select="default">
+  <xsl:value-of select="."/><xsl:if test="position() &lt; last()">
+<xsl:text>, </xsl:text>
+</xsl:if>
+    </xsl:for-each>
+<xsl:text> &gt;( </xsl:text>
+<xsl:for-each select="/filter/filter-itk/inputs/input">data<xsl:value-of select="@num"/>
+<xsl:if test="position() &lt; last()">
+<xsl:text>, </xsl:text>
+</xsl:if></xsl:for-each>
+    <xsl:text> )) {} </xsl:text>
+</xsl:for-each>
+    </xsl:when>
+    <xsl:otherwise>
   <xsl:for-each select="/filter/filter-sci/instantiations/instance">
   <xsl:variable name="num"><xsl:value-of select="@num"/></xsl:variable>
   <xsl:text> 
@@ -532,7 +531,10 @@ bool </xsl:text><xsl:value-of select="$sci-name"/><xsl:text>::run( </xsl:text>
 <xsl:for-each select="/filter/filter-itk/inputs/input">data<xsl:value-of select="@num"/>
 <xsl:if test="position() &lt; last()">
 <xsl:text>, </xsl:text>
-</xsl:if></xsl:for-each><xsl:text> )) { }</xsl:text></xsl:for-each><xsl:text>
+</xsl:if></xsl:for-each><xsl:text> )) { }</xsl:text></xsl:for-each>
+</xsl:otherwise>
+</xsl:choose>
+<xsl:text>
   else {
     // error
     error(&quot;Incorrect input type&quot;);
