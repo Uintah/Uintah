@@ -209,7 +209,6 @@ case $host in
      PLATFORM_LDFLAGS="-ldl"
      TRACEBACK_LIB=""
      IMAGE_LIBS=""
-     echo "checking for sstream"
      AC_CHECK_HEADER(sstream, SSTREAM_COMPAT="no", SSTREAM_COMPAT="yes")
            ;;
   *)
@@ -344,8 +343,9 @@ AC_SUBST(MAKE_PARALLELISM)
 
 ##-- Find TCL ----------------------------------------------------------------
 
-echo -n "Looking for Pre-built TCL 8... "
+echo -n "checking for Tcl 8.X... "
 
+# try the user supplied path first
 if test "$tcl" ; then
   unset cfsh
   cfsh="$tcl/lib/tclConfig.sh"
@@ -354,16 +354,28 @@ if test "$tcl" ; then
   fi
 fi
 
-#if test -z "$TCL_VERSION" ; then
-#unset Wish80
-#if Wish80="`type tclsh8.0 | sed 's/^.* //'`" ; then
-#  unset cfsh
-#  cfsh="`dirname $Wish80`/../lib/tclConfig.sh"
-#  if test -f $cfsh ; then
-#    . $cfsh
-#  fi
-#fi
-#fi
+# if not found try the SCI group default (we're lazy ;)
+if test -z "$TCL_MAJOR_VERSION" ; then
+  unset cfsh
+  cfsh="/res/sci/data1/itcltk-8.3.2/lib/tclConfig.sh"
+  if test -f $cfsh ; then
+    . $cfsh
+  fi
+fi
+
+# if still not found try some standard locations
+if test -z "$TCL_MAJOR_VERSION" ; then
+  unset cfsh
+  cfsh="/usr/lib/tclConfig.sh"
+  if test -f $cfsh ; then
+    . $cfsh
+  else
+    cfsh="/usr/local/lib/tclConfig.sh"
+    if test -f $cfsh ; then
+      . $cfsh
+    fi
+  fi
+fi
 
 if test "$TCL_MAJOR_VERSION" = "8" ; then
   # TCL_PREFIX set by tclConfig.sh
@@ -390,6 +402,17 @@ else
   exit 1
 fi
 
+# These are headers we need to build our custom widgets.
+if test ! -d "$TCL_SRC_DIR/generic" ||
+   test ! -f "$TCL_SRC_DIR/generic/tcl.h" ||
+   test ! -f "$TCL_SRC_DIR/generic/tclPort.h" ||
+   test ! -f "$TCL_SRC_DIR/generic/tclMath.h" ||
+   test ! -f "$TCL_SRC_DIR/generic/tclInt.h"; then
+  echo "Couldn't find the necessary Tcl include files."
+  echo "The full Tcl source is required.  exiting."
+  exit 1
+fi
+
 AC_SUBST(TCL_INCLUDE_DIR)
 AC_SUBST(TCL_SRC_DIR)
 AC_SUBST(TCL_LIB_DIR)
@@ -398,14 +421,13 @@ AC_SUBST(TCL_INIT_DIR)
 
 ##-- Find Tk -----------------------------------------------------------------
 
-echo -n "Looking for Pre-built Tk 8... "
+echo -n "checking for Tk 8.X... "
 
 if test "$tk" ; then
   unset cfsh
   cfsh="$tk/lib/tkConfig.sh"
   if test -f $cfsh ; then
     . $cfsh
-    echo -n --with-tk gives $TK_VERSION$TK_PATCH_LEVEL
   fi
 elif test "$tcl" ; then
   unset cfsh
@@ -415,16 +437,28 @@ elif test "$tcl" ; then
   fi
 fi
 
-#if test -z "$TK_VERSION" ; then
-#unset Wish80
-#if Wish80="`type wish8.0 | sed 's/^.* //'`" ; then
-#  unset cfsh
-#  cfsh="`dirname $Wish80`/../lib/tkConfig.sh"
-#  if test -f $cfsh ; then
-#    . $cfsh
-#  fi
-#fi
-#fi
+# if not found try the SCI group default (we're lazy ;)
+if test -z "$TK_MAJOR_VERSION" ; then
+  unset cfsh
+  cfsh="/res/sci/data1/itcltk-8.3.2/lib/tkConfig.sh"
+  if test -f $cfsh ; then
+    . $cfsh
+  fi
+fi
+
+# if still not found try some standard locations
+if test -z "$TK_MAJOR_VERSION" ; then
+  unset cfsh
+  cfsh="/usr/lib/tkConfig.sh"
+  if test -f $cfsh ; then
+    . $cfsh
+  else
+    cfsh="/usr/local/lib/tkConfig.sh"
+    if test -f $cfsh ; then
+      . $cfsh
+    fi
+  fi
+fi
 
 if test "$TK_MAJOR_VERSION" = "8" ; then
   # TK_PREFIX set by tclConfig.sh
@@ -456,6 +490,16 @@ else
   exit 1
 fi
 
+# These are headers we need to build our custom widgets.
+if test ! -d "$TK_SRC_DIR/generic" ||
+   test ! -f "$TK_SRC_DIR/generic/tk.h" ||
+   test ! -f "$TK_SRC_DIR/generic/tk3d.h" ||
+   test ! -f "$TK_SRC_DIR/generic/tkPort.h" ; then
+  echo "Couldn't find the necessary Tk include files."
+  echo "The full Tk source is required.  exiting."
+  exit 1
+fi
+
 AC_SUBST(TK_INCLUDE_DIR)
 AC_SUBST(TK_SRC_DIR)
 AC_SUBST(TK_LIB_DIR)
@@ -465,7 +509,7 @@ AC_SUBST(TK_VERSION)
 
 ##-- Find iTcl ---------------------------------------------------------------
 
-echo -n "Looking for Pre-built iTcl and iTk 3... "
+echo -n "checking for [[incr Tcl/Tk]] 3.X... "
 
 if test "$BUILDING_TK" = "" ; then
 
@@ -473,19 +517,19 @@ if test "$itcl" ; then
   unset cfsh
   cfsh="$itcl/lib/itclConfig.sh"
   if test -f $cfsh ; then
-    . $cfsh
-    ITCL_PREFIX=$itcl
+    . $cfsh;
+    ITCL_PREFIX="$itcl"
   fi
   cfsh="$itcl/lib/itkConfig.sh"
   if test -f $cfsh ; then
     . $cfsh
   fi
 elif test "$tcl" ; then
- unset cfsh
+  unset cfsh
   cfsh="$tcl/lib/itclConfig.sh"
   if test -f $cfsh ; then
-    . $cfsh
-    ITCL_PREFIX=$tcl
+    . $cfsh;
+    ITCL_PREFIX="$tcl"
   fi
   cfsh="$tcl/lib/itkConfig.sh"
   if test -f $cfsh ; then
@@ -493,17 +537,44 @@ elif test "$tcl" ; then
   fi
 fi
 
-#if test -z "$ITCL_VERSION" ; then
-#  unset Wish80
-#  if sh="`type itkwish3.0 | sed 's/^.* //'`" ; then
-#    unset cfsh
-#    shdir="`dirname $sh`"
-#    cfsh="$shdir/../lib/itkConfig.sh"
-#    if test -f $cfsh ; then
-#      . $cfsh
-#    fi
-#  fi
-#fi
+# if not found try the SCI group default (we're lazy ;)
+if test -z "$ITCL_MAJOR_VERSION" ; then
+  unset cfsh
+  cfsh="/res/sci/data1/itcltk-8.3.2/lib/itclConfig.sh"
+  if test -f $cfsh ; then
+    . $cfsh
+    ITCL_PREFIX="/res/sci/data1/itcltk-8.3.2"
+  fi
+  cfsh="/res/sci/data1/itcltk-8.3.2/lib/itkConfig.sh"
+  if test -f $cfsh ; then
+    . $cfsh
+  fi
+fi
+
+# if still not found try some standard locations
+if test -z "$ITCL_MAJOR_VERSION" ; then
+  unset cfsh
+  cfsh="/usr/lib/itclConfig.sh"
+  if test -f $cfsh ; then
+    . $cfsh
+    ITCL_PREFIX="/usr"
+  else
+    cfsh="/usr/local/lib/itclConfig.sh"
+    if test -f $cfsh ; then
+      . $cfsh
+      ITCL_PREFIX="/usr/local"
+    fi
+  fi
+  cfsh="/usr/lib/itkConfig.sh"
+  if test -f $cfsh ; then
+    . $cfsh
+  else
+    cfsh="/usr/local/lib/itkConfig.sh"
+    if test -f $cfsh ; then
+      . $cfsh
+    fi
+  fi
+fi
 
 fi # end BUILDING_TK
 
@@ -520,11 +591,9 @@ if test "$ITCL_MAJOR_VERSION" = "3" ; then
   ITK_LIB_DIR="${ITCL_PREFIX}/lib"
   ITCL_BIN_DIR="${ITCL_PREFIX}/bin"
   ITCLSH="${ITCL_BIN_DIR}/itclsh${ITCL_VERSION}"
-#  ITCL_LIB_FLAG="-litk3.1 -litcl3.1"
   ITCL_WIDGETS="${ITCL_LIB_DIR}/iwidgets/scripts"
   ITCL_INIT_DIR="${ITCL_LIB_DIR}/itcl${ITCL_VERSION}"
-  #echo -L$ITCL_PREFIX $ITCL_LIB_FLAG
-  echo ${ITCL_LIB_SPEC}
+  echo "${ITCL_LIB_SPEC} -l`basename $ITK_LIB_FILE | sed -e 's,lib,,g' -e 's,.so,,g'`"
 else
   if test -z "$ITCL_VERSION" ; then
     echo "not found -- must build"
@@ -535,7 +604,13 @@ else
   exit 1
 fi
 
-  
+if test ! -d "$ITCL_SRC_DIR/generic" ||
+   test ! -f "$ITCL_SRC_DIR/generic/itcl.h" ||
+   test ! -f "$ITK_SRC_DIR/generic/itk.h" ; then
+  echo "Couldn't find the [[incr Tcl/Tk]] include files.  exiting."
+  exit 1
+fi
+
 AC_SUBST(ITCLSH)
 AC_SUBST(ITCL_INCLUDE_DIR)
 AC_SUBST(ITCL_LIB_DIR)
@@ -551,26 +626,32 @@ AC_SUBST(ITK_LIB_DIR)
 AC_SUBST(ITK_LIB_SPEC)
 
 ##-- Find BLT ---------------------------------------------------------------
-echo -n "Looking for Pre-built blt 2.4... "
+echo -n "checking for BLT 2.4x... "
 
 if test "$blt" ; then
-  BLT_PREFIX=$blt
+  if test -e $blt/lib/libBLT24.so; then
+    BLT_PREFIX=$blt
+  fi
 elif test "$tcl" ; then
-  BLT_PREFIX=$tcl
+  if test -e $tcl/lib/libBLT24.so; then
+    BLT_PREFIX=$tcl
+  fi
 fi
 
 if test -z "$BLT_PREFIX" ; then
-if sh="`type bltwish24 | sed 's/^.* //'`" ; then
-  shdir="`dirname $sh`"
-  BLT_PREFIX="`cd $shdir/.. ; pwd`"
-fi
+  if test -e /res/sci/data1/itcltk-8.3.2/lib/libBLT24.so; then
+    BLT_PREFIX=/res/sci/data1/itcltk-8.3.2
+  elif test -e /usr/lib/libBLT24.so; then
+    BLT_PREFIX=/usr
+  elif test -e /usr/local/lib/libBLT24.so; then
+    BLT_PREFIX=/usr/local
+  fi
 fi
 
 if test "$BLT_PREFIX" ; then
   BLT_INCLUDE_DIR="${BLT_PREFIX}/include"
   BLT_LIB_DIR="${BLT_PREFIX}/lib"
   BLT_LIB_FLAG="-lBLT24"
-  #echo -L$BLT_PREFIX $BLT_LIB_FLAG
   echo -L$BLT_LIB_DIR $BLT_LIB_FLAG
 else
   echo "not found -- must build"
@@ -578,16 +659,35 @@ else
   exit 1
 fi
 
+if test ! -d "$BLT_INCLUDE_DIR" ||
+   test ! -f "$BLT_INCLUDE_DIR/blt.h" ; then
+  echo "Couldn't find the BLT include file.  exiting."
+  exit 1
+fi
+
 AC_SUBST(BLT_INCLUDE_DIR)
 AC_SUBST(BLT_LIB_DIR)
 AC_SUBST(BLT_LIB_FLAG)
 
-##-- Find Xerces-c  ------------------------------------------------------
+##-- Find Xerces-C  ------------------------------------------------------
 
-echo -n "Looking for Pre-built Xerces-c... "
+echo -n "checking for Xerces-C 1.X... "
+
+# this stuff breaks if there is more than one version of xerces-c in
+# the same directory.
 
 if test "$xerces"; then
-  XML_LIB_DIR=$xerces
+  case $host in
+  *-irix*)
+    if test "$is_64bit" = "yes" ; then
+      XML_LIB_DIR=$xerces/lib64
+    else
+      XML_LIB_DIR=$xerces/lib32
+    fi
+  ;;
+  *)
+    XML_LIB_DIR=$xerces/lib
+  esac
 fi
 
 if test -z "$XML_LIB_DIR"; then
@@ -619,13 +719,6 @@ if test -z "$XML_LIB_DIR"; then
       fi
     fi
     ;;
-  *linux*)
-    if test -e /usr/lib/libxerces-c1_?.so; then
-      XML_LIB_DIR="/usr/lib"
-    elif test -e /usr/local/lib/libxerces-c1_?.so; then
-      XML_LIB_DIR="/usr/local/lib"
-    fi
-    ;;
   *)
     if test -e /usr/lib/libxerces-c1_?.so; then
       XML_LIB_DIR="/usr/lib"
@@ -637,14 +730,39 @@ if test -z "$XML_LIB_DIR"; then
 fi
 
 if test -z "$XML_LIB_DIR"; then
-  echo "Couldn't find libxerces-c1_?.so.  exiting."
+  echo "Couldn't find a Xerces-C library.  exiting."
   exit 1
 fi
 
-XML_INCLUDE_DIR=$XML_LIB_DIR/../include
+if (test $xerces -a
+    test -d "$xerces/include/util" &&
+    test -d "$xerces/include/sax" &&
+    test -d "$xerces/include/dom" &&
+    test -d "$xerces/include/parsers") ; then
+  XML_INCLUDE_DIR="$xerces/include"
+elif (test -d "/res/sci/data6/sparker/xerces-c/include/util" &&
+      test -d "/res/sci/data6/sparker/xerces-c/include/sax" &&
+      test -d "/res/sci/data6/sparker/xerces-c/include/dom" &&
+      test -d "/res/sci/data6/sparkerxerces-c/include/parsers") ; then
+  XML_INCLUDE_DIR="/res/sci/data6/sparker/xerces-c/include"
+elif (test -d "/usr/include/util" &&
+      test -d "/usr/include/sax" &&
+      test -d "/usr/include/dom" &&
+      test -d "/usr/include/parsers") ; then
+  XML_INCLUDE_DIR="/usr/include"
+elif (test -d "/usr/local/include/util" &&
+      test -d "/usr/local/include/sax" &&
+      test -d "/usr/local/include/dom" &&
+      test -d "/usr/local/include/parsers") ; then
+  XML_INCLUDE_DIR="/usr/local/include"
+else
+  echo "Couldn't find the Xerces-C headers.  exiting."
+  exit 1
+fi
 
-XML_LIB_FLAG="-l`basename $XML_LIB_DIR/libxerces-c1_?.so |\
-	      sed -e's,lib,,g' -e 's,.so,,g'`"
+XML_LIB_FLAG="`ls -1 $XML_LIB_DIR/libxerces-c1_?.so |\
+	      sort -r | head -n 1 |  sed -e's,lib,,g' -e 's,.so,,g'`"
+XML_LIB_FLAG="-l`basename $XML_LIB_FLAG`"
 
 echo "-L$XML_LIB_DIR $XML_LIB_FLAG"
 
@@ -691,13 +809,13 @@ elif test -e /usr/X11R6/include/GL; then
   GL_INCLUDE_DIR="/usr/X11R6/include"
 fi
 
-if test -c /usr/lib/libGL.so; then
+if test -e /usr/lib/libGL.so; then
   GL_LIB_DIR="/usr/lib"
 elif test -e /usr/X11R6/lib/libGL.so; then
   GL_LIB_DIR="/usr/X11R6/lib"
 fi
 
-if test "$GL_INCLUDE_DIR" = ""; then
+if test -z "$GL_INCLUDE_DIR"; then
   echo "couldn't find the location of the GL headers."
   echo "by standard convention, they should be in /usr/include/GL"
   echo ""
