@@ -41,8 +41,6 @@ using std::vector;
       const VarLabel* pStress_ve_dLabel;
       const VarLabel* pStress_e_vLabel;
       const VarLabel* pStress_e_dLabel;
-      const VarLabel* pCrackRadiusLabel;
-      const VarLabel* pCrackRadiusLabel_preReloc;
       const VarLabel* pVolumeLabel;
       const VarLabel* pVolumeLabel_preReloc;
       const VarLabel* pMassLabel;
