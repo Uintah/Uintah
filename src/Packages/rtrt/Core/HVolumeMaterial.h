@@ -17,10 +17,10 @@ namespace rtrt {
   class Worker;
   class VolumeDpy;
   
-  class HVolumeColor;
+  class HVolumeMaterial;
   
 class HVolumeTransferFunct {
-  Array1<HVolumeColor*> colors;
+  Array1<HVolumeMaterial*> colors;
   Material** matls;
   int nmatls;
   
@@ -33,14 +33,14 @@ public:
   
   Material* index(const float val);
   
-  void add(HVolumeColor *hvcolor);
+  void add(HVolumeMaterial *hvcolor);
   
-  // this must be called after all the HVolumeColor's have been added
+  // this must be called after all the HVolumeMaterial's have been added
   // and before rendering starts.
   void compute_min_max();
 };
   
-class HVolumeColor: public Material {
+class HVolumeMaterial: public Material {
   VolumeDpy *vdpy;
   Material** matls;
   float datamin, datamax;
@@ -50,9 +50,9 @@ class HVolumeColor: public Material {
   HVolumeTransferFunct *transfer;
   
 public:
-  HVolumeColor(VolumeDpy *dpy, Array1<float> indata, float datamin,
-	       float datamax, HVolumeTransferFunct *trans);
-  virtual ~HVolumeColor() {}
+  HVolumeMaterial(VolumeDpy *dpy, Array1<float> indata, float datamin,
+		  float datamax, HVolumeTransferFunct *trans);
+  virtual ~HVolumeMaterial() {}
   
   virtual void shade(Color& result, const Ray& ray,
 		     const HitInfo& hit, int depth,
