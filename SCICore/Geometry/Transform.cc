@@ -41,6 +41,10 @@ Transform::Transform(const Transform& copy)
     inverse_valid=copy.inverse_valid;
 }
 
+Transform::Transform(const Point& p, const Vector& i, const Vector& j, const Vector& k){
+  load_frame(p, i, j, k);
+}
+
 Transform::~Transform()
 {
 }
@@ -600,6 +604,9 @@ Transform& Transform::operator=(const Transform& copy)
 
 //
 // $Log$
+// Revision 1.6  2000/07/27 05:23:23  samsonov
+// Added implementation of Transform(const Point&, const Vector&, const Vector&, const Vector&)
+//
 // Revision 1.5  2000/03/13 05:05:12  dmw
 // Added Transform::permute for swapping axes, and fixed compute_imat
 //
