@@ -2,7 +2,7 @@
 #include <Core/Malloc/Allocator.h>
 #include <Core/Util/Endian.h>
 #include <Core/Util/FancyAssert.h>
-
+#include <iostream>
 using namespace Uintah;
 
 Advector::Advector()
@@ -171,8 +171,6 @@ Advector::~Advector()
 {
 }
 
-
-
 //______________________________________________________________________
 //
 #if defined(__sgi) && !defined(__GNUC__) && (_MIPS_SIM != _MIPS_SIM_ABI32)
@@ -182,7 +180,25 @@ Advector::~Advector()
 //______________________________________________________________________
 //  
 namespace Uintah {
+  //__________________________________
+  void  warning_restartTimestep( const IntVector c,
+                                 const double total_fluxout,
+                                 const double vol,
+                                 const int indx,
+                                 DataWarehouse* new_dw)
+  {
+    cout << " WARNING: ICE Advection operator \n "
+         << " Influx_outflux error detected, cell "<< c
+         << ", total_outflux (" << total_fluxout<< ") > vol (" << vol << ")"
+         << " matl indx "<< indx << endl;
+    cout << " The timestep is now going to be restarted \n " << endl;
 
+    new_dw->abortTimestep();
+    new_dw->restartTimestep();
+    return;
+  }
+  
+  //__________________________________
   static MPI_Datatype makeMPI_fflux()
   {
     ASSERTEQ(sizeof(fflux), sizeof(double)*6);
