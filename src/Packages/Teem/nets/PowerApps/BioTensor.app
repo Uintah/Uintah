@@ -1521,7 +1521,7 @@ set $m127-min {0}
 set $m127-max {1}
 set $m127-makeSymmetric {0}
 set $m128-notes {}
-set $m128-evec {major}
+set $m128-evec {2}
 set $m128-aniso_metric {tenAniso_FA}
 set $m128-background {0.0}
 set $m128-gray {0.5}
