@@ -323,7 +323,8 @@ HypoElasticImplicit::computeStressTensor(const PatchSubset* patches,
     double se = 0.0;
     const Patch* patch = patches->get(pp);
     Matrix3 dispGrad,deformationGradientInc,Identity,zero(0.),One(1.);
-    double c_dil=0.0,Jinc;
+//    double c_dil=0.0
+    double Jinc;
     double onethird = (1.0/3.0);
 
     Identity.Identity();
@@ -343,8 +344,6 @@ HypoElasticImplicit::computeStressTensor(const PatchSubset* patches,
     constParticleVariable<Vector> pvelocity;
     constNCVariable<Vector> dispNew;
     delt_vartype delT;
-
-    Ghost::GhostType  gac   = Ghost::AroundCells;
 
     old_dw->get(px,                  lb->pXLabel,                  pset);
     old_dw->get(pstress,             lb->pStressLabel,             pset);
@@ -462,7 +461,6 @@ void HypoElasticImplicit::addComputesAndRequires(Task* task,
 						 const MPMMaterial* matl,
 						 const PatchSet*) const
 {
-  Ghost::GhostType  gac   = Ghost::AroundCells;
   const MaterialSubset* matlset = matl->thisMaterial();
   task->requires(Task::OldDW, lb->delTLabel);
   task->requires(Task::OldDW, lb->pXLabel,                 matlset,Ghost::None);

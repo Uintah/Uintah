@@ -679,7 +679,6 @@ void ImpMPM::iterate(const ProcessorGroup*,
     const Patch* patch = patches->get(p);
     cout_doing <<"Doing iterate on patch " << patch->getID()
 	       <<"\t\t\t\t IMPM"<< "\n" << "\n";
-    Ghost::GhostType  gnone = Ghost::None;
     for(int m = 0; m < d_sharedState->getNumMPMMatls(); m++){
       MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial( m );
       int matl = mpm_matl->getDWIndex();
@@ -1833,7 +1832,7 @@ void ImpMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
       ParticleSubset* pset = old_dw->getParticleSubset(dwindex, patch);
 
       ParticleSubset* delete_particles = scinew ParticleSubset
-	(pset->getParticleSet(),false,dwindex,patch);
+	(pset->getParticleSet(),false,dwindex,patch, 0);
     
       old_dw->get(px,                    lb->pXLabel,                    pset);
       old_dw->get(pmass,                 lb->pMassLabel,                 pset);

@@ -265,7 +265,7 @@ OnDemandDataWarehouse::sendMPI(SendState& ss, DependencyBatch* batch,
         ParticleSubset* pset = var->getParticleSubset();
         ssLock.lock();  // Dd: ??
         sendset = scinew ParticleSubset(pset->getParticleSet(),
-                                        false, -1, 0);
+                                        false, -1, 0, 0);
         ssLock.unlock();  // Dd: ??
         constParticleVariable<Point> pos;
         old_dw->get(pos, pos_var, pset);
@@ -643,7 +643,7 @@ OnDemandDataWarehouse::createParticleSubset(particleIndex numParticles,
 
    ParticleSet* pset = scinew ParticleSet(numParticles);
    ParticleSubset* psubset = 
-                       scinew ParticleSubset(pset, true, matlIndex, patch);
+                       scinew ParticleSubset(pset, true, matlIndex, patch, 0);
 
    psetDBType::key_type key(matlIndex, patch);
    if(d_psetDB.find(key) != d_psetDB.end())
@@ -754,8 +754,9 @@ OnDemandDataWarehouse::getParticleSubset(int matlIndex, const Patch* patch,
       constParticleVariable<Point> pos;
       get(pos, pos_var, pset);
       
+      particleIndex sizeHint = neighbor == patch? pset->numParticles():0;
       ParticleSubset* subset = 
-        scinew ParticleSubset(pset->getParticleSet(), false, -1, 0);
+        scinew ParticleSubset(pset->getParticleSet(), false, -1, 0, sizeHint);
       for(ParticleSubset::iterator iter = pset->begin();
           iter != pset->end(); iter++){
         particleIndex idx = *iter;

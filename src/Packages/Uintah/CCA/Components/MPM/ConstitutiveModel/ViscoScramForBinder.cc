@@ -236,8 +236,8 @@ ViscoScramForBinder::computeStressTensor(const PatchSubset* patches,
   int B2 = d_initialData.constantB2_RelaxTime;
   double mm = d_initialData.powerValue_Crack;
   double vmax = d_initialData.maxGrowthRate_Crack;
-  double K0 = d_initialData.stressIntensityF_Crack;
-  double mu_s = d_initialData.frictionCoeff_Crack;
+//  double K0 = d_initialData.stressIntensityF_Crack;
+//  double mu_s = d_initialData.frictionCoeff_Crack;
    
   // Data required from and computed for DW
   constParticleVariable<double>  pMass;
@@ -410,9 +410,9 @@ ViscoScramForBinder::computeStressTensor(const PatchSubset* patches,
 	double sigma = sqrt(sigPrime.NormSquared() - compflag*(3*p*p));
 
 	// Modification to include friction on crack faces
-	double xmup   = (1 + compflag)*
-                        sqrt(45.0/(2.0*(3.0 - 2.0*mu_s*mu_s)))*mu_s;
-	double a      = xmup*p*sqrt(pCrackRadius[idx]);
+//	double xmup   = (1 + compflag)*
+//                        sqrt(45.0/(2.0*(3.0 - 2.0*mu_s*mu_s)))*mu_s;
+//	double a      = xmup*p*sqrt(pCrackRadius[idx]);
 //	double b      = 1.0 + a/K0;
 //	double termm  = sqrt(1.0 + (M_PI*a*b)/K0);
 
