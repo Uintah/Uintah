@@ -88,4 +88,24 @@
   </io>
   <testing>
   </testing>
+<nets>
+<net id="ApplyInterpolant">
+<title>ApplyInterpolant Regression Test</title>
+
+<p>Build an interpolant from an input field onto a plane, and then use
+ApplyInterpolant to apply the data from the input field back to the
+interpolant field.</p>
+
+<p>Note that the same thing could be done by replacing both
+<modref package="SCIRun" name="BuildInterpolant"/> and ApplyInterpolant with a <modref package="SCIRun" name="DirectInterpolate"/> module.
+ApplyInterpolate was meant primarily to be used in conjunction with
+loops and time dependent data, such that the interpolant field could
+be computed once and then applied multiple times.</p>
+
+<p>See also <modref package="SCIRun" name="BuildInterpolant"/>, <modref package="SCIRun" name="DirectInterpolate"/>, <modref package="SCIRun" name="ApplyInterpMatrix"/>.</p>
+
+<p>This network can be found at src/nets/Modules/FieldsData/ApplyInterpolant.net.</p>
+
+</net>
+</nets>
 </component>

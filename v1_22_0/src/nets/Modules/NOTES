@@ -42,7 +42,7 @@ the input field.
 
 FieldsCreate/ClipField-widget.net
 
-In this netowrk the ClipField module widget is used to select a chunk
+In this network the ClipField module widget is used to select a chunk
 of the input field for extraction.  Further editing could be done by
 hand.
 
