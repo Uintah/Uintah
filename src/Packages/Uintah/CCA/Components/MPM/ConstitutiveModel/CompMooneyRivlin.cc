@@ -10,6 +10,7 @@
 #include <Packages/Uintah/Core/Grid/VarLabel.h>
 #include <Packages/Uintah/Core/Grid/NodeIterator.h>
 #include <Core/Math/MinMax.h>
+#include <Core/Util/NotFinished.h>
 #include <Packages/Uintah/CCA/Components/MPM/Util/Matrix3.h>
 #include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/MPMMaterial.h>
 #include <Packages/Uintah/Core/Grid/VarTypes.h>
@@ -42,7 +43,7 @@ CompMooneyRivlin::~CompMooneyRivlin()
 
 void CompMooneyRivlin::initializeCMData(const Patch* patch,
 					const MPMMaterial* matl,
-					DataWarehouseP& new_dw)
+					DataWarehouse* new_dw)
 {
    // Put stuff in here to initialize each particle's
    // constitutive model parameters and deformationMeasure
@@ -67,7 +68,7 @@ void CompMooneyRivlin::initializeCMData(const Patch* patch,
 
 void CompMooneyRivlin::computeStableTimestep(const Patch* patch,
 					     const MPMMaterial* matl,
-					     DataWarehouseP& new_dw)
+					     DataWarehouse* new_dw)
 {
    // This is only called for the initial timestep - all other timesteps
    // are computed as a side-effect of computeStressTensor
@@ -107,115 +108,117 @@ void CompMooneyRivlin::computeStableTimestep(const Patch* patch,
     new_dw->put(delt_vartype(delT_new), lb->delTLabel);
 }
 
-void CompMooneyRivlin::computeStressTensor(const Patch* patch,
+void CompMooneyRivlin::computeStressTensor(const PatchSubset* patches,
                                            const MPMMaterial* matl,
-                                           DataWarehouseP& old_dw,
-                                           DataWarehouseP& new_dw)
+                                           DataWarehouse* old_dw,
+                                           DataWarehouse* new_dw)
 {
-  Matrix3 Identity,deformationGradientInc,B,velGrad;
-  double invar1,invar2,invar3,J,w1,w2,w3,i3w3,w1pi1w2;
-  Identity.Identity();
-  double c_dil = 0.0,se=0.0,Jinc;
-  Vector WaveSpeed(1.e-12,1.e-12,1.e-12);
+  for(int p=0;p<patches->size();p++){
+    const Patch* patch = patches->get(p);
+    Matrix3 Identity,deformationGradientInc,B,velGrad;
+    double invar1,invar2,invar3,J,w1,w2,w3,i3w3,w1pi1w2;
+    Identity.Identity();
+    double c_dil = 0.0,se=0.0,Jinc;
+    Vector WaveSpeed(1.e-12,1.e-12,1.e-12);
 
-  Vector dx = patch->dCell();
-  double oodx[3] = {1./dx.x(), 1./dx.y(), 1./dx.z()};
+    Vector dx = patch->dCell();
+    double oodx[3] = {1./dx.x(), 1./dx.y(), 1./dx.z()};
 
-  int matlindex = matl->getDWIndex();
+    int matlindex = matl->getDWIndex();
 
-  // Create array for the particle position
-  ParticleSubset* pset = old_dw->getParticleSubset(matlindex, patch);
-  ParticleVariable<Point> px;
-  old_dw->get(px, lb->pXLabel, pset);
-  // Create array for the particle deformation
-  ParticleVariable<Matrix3> deformationGradient;
-  old_dw->get(deformationGradient, lb->pDeformationMeasureLabel, pset);
+    // Create array for the particle position
+    ParticleSubset* pset = old_dw->getParticleSubset(matlindex, patch);
+    ParticleVariable<Point> px;
+    old_dw->get(px, lb->pXLabel, pset);
+    // Create array for the particle deformation
+    ParticleVariable<Matrix3> deformationGradient;
+    old_dw->get(deformationGradient, lb->pDeformationMeasureLabel, pset);
 
-  // Create array for the particle stress
-  ParticleVariable<Matrix3> pstress;
+    // Create array for the particle stress
+    ParticleVariable<Matrix3> pstress;
   
-  old_dw->get(pstress, lb->pStressLabel, pset);
+    old_dw->get(pstress, lb->pStressLabel, pset);
 
-  // Retrieve the array of constitutive parameters
-  ParticleVariable<double> pmass;
-  old_dw->get(pmass, lb->pMassLabel, pset);
-  ParticleVariable<double> pvolume;
-  old_dw->get(pvolume, lb->pVolumeLabel, pset);
-  ParticleVariable<Vector> pvelocity;
-  old_dw->get(pvelocity, lb->pVelocityLabel, pset);
+    // Retrieve the array of constitutive parameters
+    ParticleVariable<double> pmass;
+    old_dw->get(pmass, lb->pMassLabel, pset);
+    ParticleVariable<double> pvolume;
+    old_dw->get(pvolume, lb->pVolumeLabel, pset);
+    ParticleVariable<Vector> pvelocity;
+    old_dw->get(pvelocity, lb->pVelocityLabel, pset);
   
-  NCVariable<Vector> gvelocity;
+    NCVariable<Vector> gvelocity;
 
-  new_dw->get(gvelocity, lb->gMomExedVelocityLabel, matlindex,patch,
-	      Ghost::AroundCells, 1);
-  delt_vartype delT;
-  old_dw->get(delT, lb->delTLabel);
+    new_dw->get(gvelocity, lb->gMomExedVelocityLabel, matlindex,patch,
+		Ghost::AroundCells, 1);
+    delt_vartype delT;
+    old_dw->get(delT, lb->delTLabel);
 
-  ParticleVariable<int> pConnectivity;
-  ParticleVariable<Vector> pRotationRate;
-  ParticleVariable<double> pStrainEnergy;
-  if(matl->getFractureModel()) {
-    new_dw->get(pConnectivity, lb->pConnectivityLabel, pset);
-    new_dw->allocate(pRotationRate, lb->pRotationRateLabel, pset);
-    new_dw->allocate(pStrainEnergy, lb->pStrainEnergyLabel, pset);
-  }
+    ParticleVariable<int> pConnectivity;
+    ParticleVariable<Vector> pRotationRate;
+    ParticleVariable<double> pStrainEnergy;
+    if(matl->getFractureModel()) {
+      new_dw->get(pConnectivity, lb->pConnectivityLabel, pset);
+      new_dw->allocate(pRotationRate, lb->pRotationRateLabel, pset);
+      new_dw->allocate(pStrainEnergy, lb->pStrainEnergyLabel, pset);
+    }
 
-  double C1 = d_initialData.C1;
-  double C2 = d_initialData.C2;
-  double C3 = .5*C1 + C2;
-  double PR = d_initialData.PR;
-  double C4 = .5*(C1*(5.*PR-2) + C2*(11.*PR-5)) / (1. - 2.*PR);
+    double C1 = d_initialData.C1;
+    double C2 = d_initialData.C2;
+    double C3 = .5*C1 + C2;
+    double PR = d_initialData.PR;
+    double C4 = .5*(C1*(5.*PR-2) + C2*(11.*PR-5)) / (1. - 2.*PR);
 
-  for(ParticleSubset::iterator iter = pset->begin();
-     iter != pset->end(); iter++){
-     particleIndex idx = *iter;
+    for(ParticleSubset::iterator iter = pset->begin();
+	iter != pset->end(); iter++){
+      particleIndex idx = *iter;
 
-     velGrad.set(0.0);
+      velGrad.set(0.0);
      
-     // Get the node indices that surround the cell
-     IntVector ni[8];
-     Vector d_S[8];
+      // Get the node indices that surround the cell
+      IntVector ni[8];
+      Vector d_S[8];
 
-     patch->findCellAndShapeDerivatives(px[idx], ni, d_S);
+      patch->findCellAndShapeDerivatives(px[idx], ni, d_S);
      
-     if(matl->getFractureModel()) {
-       //ratation rate: (omega1,omega2,omega3)
-       double omega1 = 0;
-       double omega2 = 0;
-       double omega3 = 0;
+      if(matl->getFractureModel()) {
+	//ratation rate: (omega1,omega2,omega3)
+	double omega1 = 0;
+	double omega2 = 0;
+	double omega3 = 0;
 
-       Connectivity connectivity(pConnectivity[idx]);
-       int conn[8];
-       connectivity.getInfo(conn);
-       connectivity.modifyShapeDerivatives(conn,d_S,Connectivity::connect);
-
-       for(int k = 0; k < 8; k++) {
-	    Vector& gvel = gvelocity[ni[k]];
-	    for (int j = 0; j<3; j++){
-	       for (int i = 0; i<3; i++) {
-	          velGrad(i+1,j+1) += gvel(i) * d_S[k](j) * oodx[j];		  
-	       }
-	    }
-
-	    //rotation rate computation, required for fracture
-	    //NOTE!!! gvel(0) = gvel.x() !!!
-	    omega1 += gvel(2) * d_S[k](1) * oodx[1] - gvel(1) * d_S[k](2) * oodx[2];
-	    omega2 += gvel(0) * d_S[k](2) * oodx[2] - gvel(2) * d_S[k](0) * oodx[0];
-	    omega3 += gvel(1) * d_S[k](0) * oodx[0] - gvel(0) * d_S[k](1) * oodx[1];
-       }
-       pRotationRate[idx] = Vector(omega1/2,omega2/2,omega3/2);
-     }
-     else {
-       for(int k = 0; k < 8; k++) {
+	Connectivity connectivity(pConnectivity[idx]);
+	int conn[8];
+	connectivity.getInfo(conn);
+	connectivity.modifyShapeDerivatives(conn,d_S,Connectivity::connect);
+	
+	for(int k = 0; k < 8; k++) {
 	  Vector& gvel = gvelocity[ni[k]];
 	  for (int j = 0; j<3; j++){
-	     for (int i = 0; i<3; i++) {
-	        velGrad(i+1,j+1) += gvel(i) * d_S[k](j) * oodx[j];		  
-	     }
+	    for (int i = 0; i<3; i++) {
+	      velGrad(i+1,j+1) += gvel(i) * d_S[k](j) * oodx[j];		  
+	    }
+	  }
+
+	  //rotation rate computation, required for fracture
+	  //NOTE!!! gvel(0) = gvel.x() !!!
+	  omega1 += gvel(2) * d_S[k](1) * oodx[1] - gvel(1) * d_S[k](2) * oodx[2];
+	  omega2 += gvel(0) * d_S[k](2) * oodx[2] - gvel(2) * d_S[k](0) * oodx[0];
+	  omega3 += gvel(1) * d_S[k](0) * oodx[0] - gvel(0) * d_S[k](1) * oodx[1];
+	}
+	pRotationRate[idx] = Vector(omega1/2,omega2/2,omega3/2);
+      }
+      else {
+	for(int k = 0; k < 8; k++) {
+	  Vector& gvel = gvelocity[ni[k]];
+	  for (int j = 0; j<3; j++){
+	    for (int i = 0; i<3; i++) {
+	      velGrad(i+1,j+1) += gvel(i) * d_S[k](j) * oodx[j];		  
+	    }
 	  }
         }
-     }
-
+      }
+      
       // Compute the deformation gradient increment using the time_step
       // velocity gradient
       // F_n^np1 = dudx * dt + Identity
@@ -289,6 +292,7 @@ void CompMooneyRivlin::computeStressTensor(const Patch* patch,
     new_dw->put(sum_vartype(se), lb->StrainEnergyLabel);
 
     new_dw->put(pvolume, lb->pVolumeDeformedLabel);
+  }
 }
 
 void CompMooneyRivlin::addParticleState(std::vector<const VarLabel*>& from,
@@ -298,33 +302,31 @@ void CompMooneyRivlin::addParticleState(std::vector<const VarLabel*>& from,
 
 void CompMooneyRivlin::addComputesAndRequires(Task* task,
 					      const MPMMaterial* matl,
-					      const Patch* patch,
-					      DataWarehouseP& old_dw,
-					      DataWarehouseP& new_dw) const
+					      const PatchSet* patches) const
 {
-   int idx = matl->getDWIndex();
+  const MaterialSubset* matlset = matl->thisMaterial();
+  task->requires(Task::OldDW, lb->pXLabel, matlset, Ghost::None);
+  task->requires(Task::OldDW, lb->pDeformationMeasureLabel, matlset, Ghost::None);
+  task->requires(Task::OldDW, lb->pMassLabel,   matlset, Ghost::None);
+  task->requires(Task::OldDW, lb->pVolumeLabel, matlset, Ghost::None);
+  task->requires(Task::OldDW, lb->pStressLabel, matlset, Ghost::None);
+  task->requires(Task::NewDW, lb->gMomExedVelocityLabel, matlset,
+		 Ghost::AroundCells, 1);
+  task->requires(Task::OldDW, lb->delTLabel);
 
-   task->requires(old_dw, lb->pXLabel, idx, patch, Ghost::None);
-   task->requires(old_dw, lb->pDeformationMeasureLabel, idx, patch, Ghost::None);
-   task->requires(old_dw, lb->pMassLabel,   idx,  patch, Ghost::None);
-   task->requires(old_dw, lb->pVolumeLabel, idx,  patch, Ghost::None);
+  task->computes(lb->pStressAfterStrainRateLabel,       matlset);
+  task->computes(lb->pDeformationMeasureLabel_preReloc, matlset);
+  task->computes(lb->pVolumeDeformedLabel,              matlset);
    
-   task->requires(old_dw, lb->pStressLabel, idx,  patch, Ghost::None);
-   //task->requires(old_dw, lb->pVelocityLabel, idx,  patch, Ghost::None);
-   
-   task->requires(new_dw, lb->gMomExedVelocityLabel, idx, patch,
-						Ghost::AroundCells, 1);
-   task->requires(old_dw, lb->delTLabel);
-
-   task->computes(new_dw, lb->pStressAfterStrainRateLabel,       idx, patch);
-   task->computes(new_dw, lb->pDeformationMeasureLabel_preReloc, idx, patch);
-   task->computes(new_dw, lb->pVolumeDeformedLabel,              idx, patch);
-   
-   if(matl->getFractureModel()) {
-      task->requires(new_dw, lb->pConnectivityLabel, idx, patch, Ghost::None);
-      task->computes(new_dw, lb->pRotationRateLabel, idx, patch);
-      task->computes(new_dw, lb->pStrainEnergyLabel, idx, patch);
-   }
+#if 0
+  if(matl->getFractureModel()) {
+    task->requires(Task::NewDW, lb->pVisibilityLabel,   matlset, Ghost::None);
+    task->computes(lb->pRotationRateLabel, matlset);
+    task->computes(lb->pStrainEnergyLabel, matlset);
+  }
+#else
+  NOT_FINISHED("New task stuff (fracture)");
+#endif
 }
 
 #ifdef __sgi

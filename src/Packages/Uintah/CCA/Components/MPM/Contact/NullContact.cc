@@ -22,6 +22,7 @@
 #include <Packages/Uintah/Core/Grid/Task.h>
 #include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/MPMMaterial.h>
 #include <Packages/Uintah/CCA/Components/MPM/MPMLabel.h>
+#include <Core/Util/NotFinished.h>
 using namespace Uintah;
 
 NullContact::NullContact(ProblemSpecP& ps, SimulationStateP& d_sS)
@@ -44,84 +45,76 @@ NullContact::~NullContact()
 
 void NullContact::initializeContact(const Patch* /*patch*/,
                                     int /*vfindex*/,
-                                    DataWarehouseP& /*new_dw*/)
+                                    DataWarehouse* /*new_dw*/)
 {
 
 }
 
 void NullContact::exMomInterpolated(const ProcessorGroup*,
-				    const Patch* patch,
-				    DataWarehouseP& /*old_dw*/,
-				    DataWarehouseP& new_dw)
+				    const PatchSubset* patches,
+				    const MaterialSubset* matls,
+				    DataWarehouse* /*old_dw*/,
+				    DataWarehouse* new_dw)
 {
+  for(int p=0;p<patches->size();p++){
+    const Patch* patch = patches->get(p);
+    for(int m=0;m<matls->size();m++){
 
-  //  All this does is carry forward the array from gVelocityLabel
-  //  to gMomExedVelocityLabel
+      //  All this does is carry forward the array from gVelocityLabel
+      //  to gMomExedVelocityLabel
 
-  int numMatls = d_sharedState->getNumMPMMatls();
-
-  // Retrieve necessary data from DataWarehouse
-  vector<NCVariable<Vector> > gvelocity(numMatls);
-  for(int m = 0; m < numMatls; m++){
-    MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial( m );
-    int dwi = mpm_matl->getDWIndex();
-    new_dw->get(gvelocity[m], lb->gVelocityLabel, dwi, patch, Ghost::None, 0);
-
-    new_dw->put(gvelocity[m], lb->gMomExedVelocityLabel, dwi, patch);
+      // Retrieve necessary data from DataWarehouse
+      NCVariable<Vector> gvelocity;
+      MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial( m );
+      int dwi = mpm_matl->getDWIndex();
+      new_dw->get(gvelocity, lb->gVelocityLabel, dwi, patch, Ghost::None, 0);
+      new_dw->put(gvelocity, lb->gMomExedVelocityLabel, dwi, patch);
+    }
   }
-
 }
 
 void NullContact::exMomIntegrated(const ProcessorGroup*,
-				  const Patch* patch,
-                                  DataWarehouseP& /*old_dw*/,
-                                  DataWarehouseP& new_dw)
+				    const PatchSubset* patches,
+				    const MaterialSubset* matls,
+				    DataWarehouse* /*old_dw*/,
+				    DataWarehouse* new_dw)
 {
+  for(int p=0;p<patches->size();p++){
+    const Patch* patch = patches->get(p);
+    for(int m=0;m<matls->size();m++){
 
-  //  All this does is carry forward the array from gVelocityStarLabel
-  //  and gAccelerationLabel to gMomExedVelocityStarLabel and 
-  //  gMomExedAccelerationLabel respectively
+      //  All this does is carry forward the array from gVelocityStarLabel
+      //  and gAccelerationLabel to gMomExedVelocityStarLabel and 
+      //  gMomExedAccelerationLabel respectively
 
-  int numMatls = d_sharedState->getNumMPMMatls();
+      NCVariable<Vector> gv_star;
+      NCVariable<Vector> gacc;
+      MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial( m );
+      int dwi = mpm_matl->getDWIndex();
+      new_dw->get(gv_star, lb->gVelocityStarLabel, dwi, patch, Ghost::None, 0);
+      new_dw->get(gacc,    lb->gAccelerationLabel, dwi, patch, Ghost::None, 0);
 
-  vector<NCVariable<Vector> > gv_star(numMatls);
-  vector<NCVariable<Vector> > gacc(numMatls);
-  for(int m = 0; m < numMatls; m++){
-    MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial( m );
-   int dwi = mpm_matl->getDWIndex();
-   new_dw->get(gv_star[m], lb->gVelocityStarLabel, dwi, patch, Ghost::None, 0);
-   new_dw->get(gacc[m],    lb->gAccelerationLabel, dwi, patch, Ghost::None, 0);
-
-    new_dw->put(gv_star[m], lb->gMomExedVelocityStarLabel, dwi, patch);
-    new_dw->put(gacc[m],    lb->gMomExedAccelerationLabel, dwi, patch);
+      new_dw->put(gv_star, lb->gMomExedVelocityStarLabel, dwi, patch);
+      new_dw->put(gacc,    lb->gMomExedAccelerationLabel, dwi, patch);
+    }
   }
-
 }
 
 void NullContact::addComputesAndRequiresInterpolated( Task* t,
-                                             const MPMMaterial* matl,
-                                             const Patch* patch,
-                                             DataWarehouseP& /*old_dw*/,
-                                             DataWarehouseP& new_dw) const
+						const PatchSet* patches,
+						const MaterialSet* matls) const
 {
-  int idx = matl->getDWIndex();
-  t->requires( new_dw, lb->gVelocityLabel, idx, patch, Ghost::None);
-
-  t->computes( new_dw, lb->gMomExedVelocityLabel, idx, patch );
-
+  t->requires( Task::NewDW, lb->gVelocityLabel,Ghost::None);
+  t->computes( lb->gMomExedVelocityLabel);
 }
 
 void NullContact::addComputesAndRequiresIntegrated( Task* t,
-                                             const MPMMaterial* matl,
-                                             const Patch* patch,
-                                             DataWarehouseP& /*old_dw*/,
-                                             DataWarehouseP& new_dw) const
+					     const PatchSet* patches,
+					     const MaterialSet* matls) const
 {
-  int idx = matl->getDWIndex();
-  t->requires(new_dw, lb->gVelocityStarLabel, idx, patch, Ghost::None);
-  t->requires(new_dw, lb->gAccelerationLabel, idx, patch, Ghost::None);
+  t->requires(Task::NewDW, lb->gVelocityStarLabel, Ghost::None);
+  t->requires(Task::NewDW, lb->gAccelerationLabel, Ghost::None);
 
-  t->computes( new_dw, lb->gMomExedVelocityStarLabel, idx, patch);
-  t->computes( new_dw, lb->gMomExedAccelerationLabel, idx, patch);
-
+  t->computes( lb->gMomExedVelocityStarLabel);
+  t->computes( lb->gMomExedAccelerationLabel);
 }

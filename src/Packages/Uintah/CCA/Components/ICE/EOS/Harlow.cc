@@ -23,7 +23,6 @@ double Harlow::getGasConstant() const
   return d_gas_constant;
 }
 
-
 //__________________________________
 //
 double Harlow::computeRhoMicro(double& press, double& gamma,

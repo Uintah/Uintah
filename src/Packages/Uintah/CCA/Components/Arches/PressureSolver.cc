@@ -25,6 +25,7 @@
 #include <Packages/Uintah/Core/Parallel/ProcessorGroup.h>
 #include <Packages/Uintah/CCA/Components/Arches/Arches.h>
 #include <Packages/Uintah/CCA/Components/Arches/ArchesFort.h>
+#include <Core/Util/NotFinished.h>
 
 using namespace Uintah;
 using namespace std;
@@ -92,6 +93,7 @@ void PressureSolver::solve(const LevelP& level,
 			   DataWarehouseP& new_dw,
 			   double time, double delta_t)
 {
+#if 0
   //computes stencil coefficients and source terms
   // require : old_dw -> pressureSPBC, densityCP, viscosityCTS, [u,v,w]VelocitySPBC
   //           new_dw -> pressureSPBC, densityCP, viscosityCTS, [u,v,w]VelocitySIVBC
@@ -122,18 +124,20 @@ void PressureSolver::solve(const LevelP& level,
   // compute :
   //sched_normPressure(level, sched, new_dw, matrix_dw);
   
+#else
+  NOT_FINISHED("new task stuff");
+#endif
 }
 
 //****************************************************************************
 // Schedule build of linear matrix
 //****************************************************************************
 void 
-PressureSolver::sched_buildLinearMatrix(const LevelP& level,
-					SchedulerP& sched,
-					DataWarehouseP& old_dw,
-					DataWarehouseP& new_dw,
+PressureSolver::sched_buildLinearMatrix(SchedulerP& sched, const PatchSet* patches,
+					const MaterialSet* matls,
 					double delta_t)
 {
+#if 0
   for(Level::const_patchIterator iter=level->patchesBegin();
       iter != level->patchesEnd(); iter++){
     const Patch* patch=*iter;
@@ -283,6 +287,9 @@ PressureSolver::sched_buildLinearMatrix(const LevelP& level,
     }
 
   }
+#else
+  NOT_FINISHED("new task stuff");
+#endif
   }
 
 
@@ -290,11 +297,10 @@ PressureSolver::sched_buildLinearMatrix(const LevelP& level,
 // Schedule solver for linear matrix
 //****************************************************************************
 void 
-PressureSolver::sched_pressureLinearSolve(const LevelP& level,
-					  SchedulerP& sched,
-					  DataWarehouseP& old_dw,
-					  DataWarehouseP& new_dw)
+PressureSolver::sched_pressureLinearSolve(SchedulerP& sched, const PatchSet* patches,
+					  const MaterialSet* matls)
 {
+#if 0
 #if 0
   for(Level::const_patchIterator iter=level->patchesBegin();
       iter != level->patchesEnd(); iter++){
@@ -375,6 +381,9 @@ PressureSolver::sched_pressureLinearSolve(const LevelP& level,
 #endif
      }
   sched->releaseLoadBalancer();
+#endif
+#else
+  NOT_FINISHED("new task stuff");
 #endif
 }
 

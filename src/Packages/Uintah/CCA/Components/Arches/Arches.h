@@ -91,29 +91,23 @@ public:
       ///////////////////////////////////////////////////////////////////////
       // Schedule initialization
       virtual void scheduleInitialize(const LevelP& level,
-				      SchedulerP&,
-				      DataWarehouseP&);
+				      SchedulerP&);
 	 
       ///////////////////////////////////////////////////////////////////////
       // Schedule parameter initialization
-      virtual void sched_paramInit(const LevelP& level,
-				   SchedulerP&,
-				   DataWarehouseP& old_dw,
-				   DataWarehouseP& new_dw);
+      virtual void sched_paramInit(SchedulerP&, const PatchSet* patches,
+				   const MaterialSet* matls);
       
       ///////////////////////////////////////////////////////////////////////
       // Schedule Compute if Stable time step
       virtual void scheduleComputeStableTimestep(const LevelP& level,
-						 SchedulerP&,
-						 DataWarehouseP&);
+						 SchedulerP&);
 
       ///////////////////////////////////////////////////////////////////////
       // Schedule time advance
       virtual void scheduleTimeAdvance(double t, double dt,
 				       const LevelP& level, 
-				       SchedulerP&,
-				       DataWarehouseP&, 
-				       DataWarehouseP&);
+				       SchedulerP&);
 
 
       // for multimaterial

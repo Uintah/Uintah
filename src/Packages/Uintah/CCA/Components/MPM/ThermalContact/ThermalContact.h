@@ -58,19 +58,18 @@ public:
   ~ThermalContact();
 
   void computeHeatExchange(const ProcessorGroup*,
-                           const Patch* patch,
-                           DataWarehouseP& old_dw,
-                           DataWarehouseP& new_dw);
+                           const PatchSubset* patch,
+                           const MaterialSubset* patch,
+                           DataWarehouse* old_dw,
+                           DataWarehouse* new_dw);
 	 
   void initializeThermalContact(const Patch* patch,
 				int vfindex,
-				DataWarehouseP& new_dw);
+				DataWarehouse* new_dw);
 
   void addComputesAndRequires(Task* task,
-                              const MPMMaterial* matl,
-                              const Patch* patch,
-                              DataWarehouseP& old_dw,
-                              DataWarehouseP& new_dw) const;
+                              const PatchSet* patches,
+			      const MaterialSet* matls) const;
 
 private:
   SimulationStateP d_sharedState;

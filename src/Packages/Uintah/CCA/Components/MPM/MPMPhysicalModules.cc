@@ -27,4 +27,9 @@ void MPMPhysicalModules::build(const ProblemSpecP& prob_spec,
      sharedState);
 }
 
-
+void MPMPhysicalModules::kill()
+{
+  delete contactModel;
+  delete heatConductionModel;
+  delete thermalContactModel;
+}

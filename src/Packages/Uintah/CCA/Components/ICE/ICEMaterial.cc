@@ -15,6 +15,7 @@
 #include <Packages/Uintah/CCA/Components/ICE/EOS/EquationOfStateFactory.h>
 #include <Packages/Uintah/CCA/Components/MPMICE/Combustion/BurnFactory.h>
 #include <Packages/Uintah/CCA/Components/MPMICE/Combustion/Burn.h>
+#include <Core/Util/NotFinished.h>
 
 #define SMALL_NUM 1.0e-100
 using namespace std;
@@ -38,7 +39,12 @@ ICEMaterial::ICEMaterial(ProblemSpecP& ps)
    if(!d_eos)
       throw ParameterNotFound("No EOS");
    
+#if 0
    d_burn = BurnFactory::create(ps);
+#else
+   d_burn = 0;
+   NOT_FINISHED("BurnFactory::create");
+#endif
 
 
    // Step 2 -- get the general material properties
@@ -166,7 +172,7 @@ void ICEMaterial::initializeCells(CCVariable<double>& rho_micro,
 				  CCVariable<Vector>& vel_CC,
                               CCVariable<double>& press_CC,
                               int numMatls,
-				  const Patch* patch,DataWarehouseP& new_dw)
+				  const Patch* patch,DataWarehouse* new_dw)
 {
   CCVariable<int> IveBeenHere;
   new_dw->allocate(IveBeenHere,lb->IveBeenHereLabel, 0,patch);

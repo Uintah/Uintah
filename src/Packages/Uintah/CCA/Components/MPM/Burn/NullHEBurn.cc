@@ -14,6 +14,7 @@
 #include <Packages/Uintah/Core/Grid/Task.h>
 #include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/MPMMaterial.h>
 #include <Packages/Uintah/CCA/Components/MPM/MPMLabel.h>
+#include <Core/Util/NotFinished.h>
 
 using namespace Uintah;
 
@@ -33,7 +34,7 @@ NullHEBurn::~NullHEBurn()
 
 void NullHEBurn::initializeBurnModelData(const Patch* patch,
                                          const MPMMaterial* matl,
-                                         DataWarehouseP& new_dw)
+                                         DataWarehouse* new_dw)
 {
   // Nothing to be done
 
@@ -46,38 +47,35 @@ bool NullHEBurn::getBurns() const
 
 void NullHEBurn::addComputesAndRequires(Task* task,
                                         const MPMMaterial* matl,
-                                        const Patch* patch,
-                                        DataWarehouseP& old_dw,
-                                        DataWarehouseP& new_dw) const
+                                        const PatchSet* patches) const
 {
-  task->requires(old_dw, lb->pMassLabel, matl->getDWIndex(),
-                                patch, Ghost::None);
+  task->requires(Task::OldDW, lb->pMassLabel, matl->thisMaterial(),
+		 Ghost::None);
+  task->requires(Task::NewDW, lb->pVolumeDeformedLabel, matl->thisMaterial(),
+		 Ghost::None);
   
-  task->requires(new_dw, lb->pVolumeDeformedLabel, matl->getDWIndex(),
-                                patch, Ghost::None);
-  
-  task->computes(new_dw, lb->pMassLabel_preReloc,matl->getDWIndex(),patch);
-
-  task->computes(new_dw, lb->pVolumeLabel_preReloc,matl->getDWIndex(),patch);
+  task->computes(lb->pMassLabel_preReloc,matl->thisMaterial());
+  task->computes(lb->pVolumeLabel_preReloc, matl->thisMaterial());
 }
 
-void NullHEBurn::computeMassRate(const Patch* patch,
+void NullHEBurn::computeMassRate(const PatchSubset* patches,
 				 const MPMMaterial* matl,
-				 DataWarehouseP& old_dw,
-				 DataWarehouseP& new_dw)
+				 DataWarehouse* old_dw,
+				 DataWarehouse* new_dw)
 {
+  for(int p=0;p<patches->size();p++){
+    const Patch* patch = patches->get(p);
     //int matlindex = matl->getDWIndex();
-  //  const MPMLabel* lb = MPMLabel::getLabels();
+    //  const MPMLabel* lb = MPMLabel::getLabels();
 
-  // Carry the mass and volume forward
-  ParticleSubset* pset = old_dw->getParticleSubset(matl->getDWIndex(), patch);
-  ParticleVariable<double> pmass;
-  old_dw->get(pmass, lb->pMassLabel, pset);
-  ParticleVariable<double> pvolume;
-  new_dw->get(pvolume, lb->pVolumeDeformedLabel, pset);
+    // Carry the mass and volume forward
+    ParticleSubset* pset = old_dw->getParticleSubset(matl->getDWIndex(), patch);
+    ParticleVariable<double> pmass;
+    old_dw->get(pmass, lb->pMassLabel, pset);
+    ParticleVariable<double> pvolume;
+    new_dw->get(pvolume, lb->pVolumeDeformedLabel, pset);
 
-  new_dw->put(pmass,lb->pMassLabel_preReloc);
-  new_dw->put(pvolume,lb->pVolumeLabel_preReloc);
-
+    new_dw->put(pmass,lb->pMassLabel_preReloc);
+    new_dw->put(pvolume,lb->pVolumeLabel_preReloc);
+  }
 }
-

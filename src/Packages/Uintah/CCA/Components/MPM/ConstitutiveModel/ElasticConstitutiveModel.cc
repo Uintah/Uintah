@@ -267,17 +267,17 @@ void ElasticConstitutiveModel::computeStressIncrement()
 }
 #endif
 
-void ElasticConstitutiveModel::computeStressTensor(const Patch* /*patch*/,
+void ElasticConstitutiveModel::computeStressTensor(const PatchSubset* /*patches*/,
 						   const MPMMaterial* /*matl*/,
-						   DataWarehouseP& /*new_dw*/,
-						   DataWarehouseP& /*old_dw*/)
+						   DataWarehouse* /*new_dw*/,
+						   DataWarehouse* /*old_dw*/)
 {
   cerr << "computeStressTensor not finished\n";
 }
 
 double ElasticConstitutiveModel::computeStrainEnergy(const Patch* /*patch*/,
 						     const MPMMaterial* /*matl*/,
-						     DataWarehouseP& /*new_dw*/)
+						     DataWarehouse* /*new_dw*/)
 {
   cerr << "computeStrainEnergy not finished\n";
   return -1;
@@ -285,7 +285,7 @@ double ElasticConstitutiveModel::computeStrainEnergy(const Patch* /*patch*/,
 
 void ElasticConstitutiveModel::initializeCMData(const Patch* patch,
 						const MPMMaterial* matl,
-						DataWarehouseP& new_dw)
+						DataWarehouse* new_dw)
 {
   //   const MPMLabel* lb = MPMLabel::getLabels();
    ParticleSubset* pset = new_dw->getParticleSubset(matl->getDWIndex(), patch);
@@ -355,9 +355,7 @@ void ElasticConstitutiveModel::computeStressTensor
 
 void ElasticConstitutiveModel::addComputesAndRequires(Task* task,
 						      const MPMMaterial* /*matl*/,
-						      const Patch* patch,
-						      DataWarehouseP& /*old_dw*/,
-						      DataWarehouseP& /*new_dw*/) const
+						      const PatchSet* patches) const;
 {
    cerr << "ElasticConsitutive::addComputesAndRequires needs to be filled in\n";
 }

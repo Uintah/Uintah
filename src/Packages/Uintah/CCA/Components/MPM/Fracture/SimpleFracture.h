@@ -30,23 +30,23 @@ public:
 
   void   initializeFractureModelData(const Patch* patch,
                             const MPMMaterial* matl,
-                            DataWarehouseP& new_dw);
+                            DataWarehouse* new_dw);
 
   void   computeNodeVisibility(
                   const Patch* patch,
                   MPMMaterial* mpm_matl, 
-		  DataWarehouseP& old_dw, 
-		  DataWarehouseP& new_dw);
+		  DataWarehouse* old_dw, 
+		  DataWarehouse* new_dw);
 
   void   crackGrow(const Patch* patch,
                   MPMMaterial* mpm_matl, 
-		  DataWarehouseP& old_dw, 
-		  DataWarehouseP& new_dw);
+		  DataWarehouse* old_dw, 
+		  DataWarehouse* new_dw);
 
   void   stressRelease(const Patch* patch,
                   MPMMaterial* mpm_matl, 
-		  DataWarehouseP& old_dw, 
-		  DataWarehouseP& new_dw);
+		  DataWarehouse* old_dw, 
+		  DataWarehouse* new_dw);
 
          SimpleFracture(ProblemSpecP& ps);
 };

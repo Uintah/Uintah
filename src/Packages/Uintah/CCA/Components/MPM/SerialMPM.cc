@@ -1,4 +1,4 @@
-#include <Packages/Uintah/CCA/Components/MPM/SerialMPM.h>
+#include <Packages/Uintah/CCA/Components/MPM/SerialMPM.h> // 
 #include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/MPMMaterial.h>
 #include <Packages/Uintah/CCA/Components/MPM/MPMLabel.h>
 #include <Packages/Uintah/CCA/Components/MPM/Burn/HEBurn.h>
@@ -39,6 +39,7 @@
 #include <Core/Geometry/Vector.h>
 #include <Core/Geometry/Point.h>
 #include <Core/Math/MinMax.h>
+#include <Core/Util/NotFinished.h>
 
 #include <iostream>
 #include <fstream>
@@ -60,6 +61,8 @@ SerialMPM::SerialMPM(const ProcessorGroup* myworld) :
 
 SerialMPM::~SerialMPM()
 {
+  delete lb;
+  MPMPhysicalModules::kill();
 }
 
 void SerialMPM::problemSetup(const ProblemSpecP& prob_spec, GridP& grid,
@@ -87,7 +90,7 @@ void SerialMPM::problemSetup(const ProblemSpecP& prob_spec, GridP& grid,
 
   for (ProblemSpecP ps = mpm_mat_ps->findBlock("material"); ps != 0;
        ps = ps->findNextBlock("material") ) {
-     MPMMaterial *mat = scinew MPMMaterial(ps);
+     MPMMaterial *mat = scinew MPMMaterial(ps, lb);
      //register as an MPM material
      sharedState->registerMPMMaterial(mat);
   }
@@ -146,50 +149,33 @@ void SerialMPM::problemSetup(const ProblemSpecP& prob_spec, GridP& grid,
      mpm_matl->getConstitutiveModel()->addParticleState(lb->d_particleState[m],
 					lb->d_particleState_preReloc[m]);
    }
-   cerr << "SerialMPM::problemSetup passed.\n";
 }
 
 void SerialMPM::scheduleInitialize(const LevelP& level,
-				   SchedulerP& sched,
-				   DataWarehouseP& dw)
+				   SchedulerP& sched)
 {
-   Level::const_patchIterator iter;
-
-   int numMatls = d_sharedState->getNumMPMMatls();
-
-   for(iter=level->patchesBegin(); iter != level->patchesEnd(); iter++){
-
-     const Patch* patch=*iter;
-     {
-	 Task* t = scinew Task("SerialMPM::actuallyInitialize", patch, dw, dw,
-			       this, &SerialMPM::actuallyInitialize);
-	 for(int m = 0; m < numMatls; m++){
-           MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial(m);
-           int idx = mpm_matl->getDWIndex();
-	   t->computes(dw, lb->pXLabel,             idx, patch);
-	   t->computes(dw, lb->pMassLabel,          idx, patch);
-	   t->computes(dw, lb->pVolumeLabel,        idx, patch);
-	   t->computes(dw, lb->pTemperatureLabel,   idx, patch);
-	   t->computes(dw, lb->pVelocityLabel,      idx, patch);
-	   t->computes(dw, lb->pExternalForceLabel, idx, patch);
-	   t->computes(dw, lb->pParticleIDLabel,    idx, patch);
-	   if(d_fracture){
-	      t->computes(dw, lb->pIsBrokenLabel,           idx, patch);
-	      t->computes(dw, lb->pCrackNormal1Label,       idx, patch);
-	      t->computes(dw, lb->pCrackNormal2Label,       idx, patch);
-	      t->computes(dw, lb->pCrackNormal3Label,       idx, patch);
-	      t->computes(dw, lb->pToughnessLabel,          idx, patch);
-	   }
-	 }
-	 t->computes(dw, d_sharedState->get_delt_label());
-	 sched->addTask(t);
-     }
-   }
+  Task* t = scinew Task("SerialMPM::actuallyInitialize",
+			this, &SerialMPM::actuallyInitialize);
+  t->computes(lb->pXLabel);
+  t->computes(lb->pMassLabel);
+  t->computes(lb->pVolumeLabel);
+  t->computes(lb->pTemperatureLabel);
+  t->computes(lb->pVelocityLabel);
+  t->computes(lb->pExternalForceLabel);
+  t->computes(lb->pParticleIDLabel);
+  if(d_fracture){
+    t->computes(lb->pIsBrokenLabel);
+    t->computes(lb->pCrackNormal1Label);
+    t->computes(lb->pCrackNormal2Label);
+    t->computes(lb->pCrackNormal3Label);
+    t->computes(lb->pToughnessLabel);
+  }
+  t->computes(d_sharedState->get_delt_label());
+  sched->addTask(t, level->eachPatch(), d_sharedState->allMPMMaterials());
 }
 
 void SerialMPM::scheduleComputeStableTimestep(const LevelP&,
-					      SchedulerP&,
-					      DataWarehouseP&)
+					      SchedulerP&)
 {
    // Nothing to do here - delt is computed as a by-product of the
    // consitutive model
@@ -197,60 +183,53 @@ void SerialMPM::scheduleComputeStableTimestep(const LevelP&,
 
 void SerialMPM::scheduleTimeAdvance(double , double ,
 				    const LevelP&         level,
-				    SchedulerP&     sched,
-				    DataWarehouseP& old_dw, 
-				    DataWarehouseP& new_dw)
+				    SchedulerP&     sched)
 {
-   for(Level::const_patchIterator iter=level->patchesBegin();
-       iter != level->patchesEnd(); iter++){
+  const PatchSet* patches = level->eachPatch();
+  const MaterialSet* matls = d_sharedState->allMPMMaterials();
 
-      const Patch* patch=*iter;
-    
-      //The next line is used for data analyze, please do not move.  --tan
-      if(d_analyze) d_analyze->performAnalyze(patch, sched, old_dw, new_dw);
+  //The next line is used for data analyze, please do not move.  --tan
+  if(d_analyze) d_analyze->performAnalyze(sched, patches, matls);
 
-      if(d_fracture) {
-         scheduleSetPositions(patch,sched,old_dw,new_dw);
-	 scheduleComputeBoundaryContact(patch,sched,old_dw,new_dw);
-         scheduleComputeConnectivity(patch,sched,old_dw,new_dw);
-      }
-      scheduleInterpolateParticlesToGrid(patch,sched,old_dw,new_dw);
+  if(d_fracture) {
+    scheduleSetPositions(sched, patches, matls);
+    scheduleComputeBoundaryContact(sched, patches, matls);
+    scheduleComputeConnectivity(sched, patches, matls);
+  }
+  scheduleInterpolateParticlesToGrid(sched, patches, matls);
       
-      if (MPMPhysicalModules::thermalContactModel) {
-         scheduleComputeHeatExchange(patch,sched,old_dw,new_dw);
-      }
-      scheduleExMomInterpolated(patch,sched,old_dw,new_dw);
-      scheduleComputeStressTensor(patch,sched,old_dw,new_dw);
-      scheduleComputeInternalForce(patch,sched,old_dw,new_dw);
-      scheduleComputeInternalHeatRate(patch,sched,old_dw,new_dw);
-      scheduleSolveEquationsMotion(patch,sched,old_dw,new_dw);
-      scheduleSolveHeatEquations(patch,sched,old_dw,new_dw);
-      scheduleIntegrateAcceleration(patch,sched,old_dw,new_dw);
-//      scheduleIntegrateTemperatureRate(patch,sched,old_dw,new_dw);
-      scheduleExMomIntegrated(patch,sched,old_dw,new_dw);
-      scheduleInterpolateToParticlesAndUpdate(patch,sched,old_dw,new_dw);
-      scheduleComputeMassRate(patch,sched,old_dw,new_dw);
+  if (MPMPhysicalModules::thermalContactModel) {
+    scheduleComputeHeatExchange(sched, patches, matls);
+  }
+  scheduleExMomInterpolated(sched, patches, matls);
+  scheduleComputeStressTensor(sched, patches, matls);
+  scheduleComputeInternalForce(sched, patches, matls);
+  scheduleComputeInternalHeatRate(sched, patches, matls);
+  scheduleSolveEquationsMotion(sched, patches, matls);
+  scheduleSolveHeatEquations(sched, patches, matls);
+  scheduleIntegrateAcceleration(sched, patches, matls);
+  //      scheduleIntegrateTemperatureRate(sched, patches, matls);
+  scheduleExMomIntegrated(sched, patches, matls);
+  scheduleInterpolateToParticlesAndUpdate(sched, patches, matls);
+  scheduleComputeMassRate(sched, patches, matls);
 
-      if(d_fracture) {
-         scheduleComputeFracture(patch,sched,old_dw,new_dw);
-      }
-      scheduleCarryForwardVariables(patch,sched,old_dw,new_dw);
-    }
+  if(d_fracture) {
+    scheduleComputeFracture(sched, patches, matls);
+  }
+  scheduleCarryForwardVariables(sched, patches, matls);
     
-   int numMatls = d_sharedState->getNumMPMMatls();
-
-   sched->scheduleParticleRelocation(level, old_dw, new_dw,
-				     lb->pXLabel_preReloc, 
-				     lb->d_particleState_preReloc,
-				     lb->pXLabel, lb->d_particleState,
-				     numMatls);
+  sched->scheduleParticleRelocation(level,
+				    lb->pXLabel_preReloc, 
+				    lb->d_particleState_preReloc,
+				    lb->pXLabel, lb->d_particleState,
+				    matls);
 }
 
-void SerialMPM::scheduleSetPositions(const Patch* patch,
-					      SchedulerP& sched,
-					      DataWarehouseP& old_dw,
-					      DataWarehouseP& new_dw)
+void SerialMPM::scheduleSetPositions(SchedulerP& sched,
+				     const PatchSet* patches,
+				     const MaterialSet* matls)
 {
+#if 0
   int numMatls = d_sharedState->getNumMPMMatls();
   Task* t = scinew Task( "SerialMPM::setPositions",
 			  patch, old_dw, new_dw,
@@ -258,17 +237,20 @@ void SerialMPM::scheduleSetPositions(const Patch* patch,
   for(int m = 0; m < numMatls; m++){
     MPMMaterial* matl = d_sharedState->getMPMMaterial(m);
     int idx = matl->getDWIndex();
-    t->requires(old_dw, lb->pXLabel, idx, patch, Ghost::None);
-    t->computes(new_dw, lb->pXXLabel, idx, patch);
+    t->requires(Task::OldDW, lb->pXLabel, idx, patch, Ghost::None);
+    t->computes(lb->pXXLabel);
   }
-  sched->addTask(t);
+  sched->addTask(t, patches, matls);
+#else
+  NOT_FINISHED("SerialMPM::scheduleSetPositions");
+#endif
 }
 
-void SerialMPM::scheduleComputeBoundaryContact(const Patch* patch,
-                                               SchedulerP& sched,
-					       DataWarehouseP& old_dw,
-					       DataWarehouseP& new_dw)
+void SerialMPM::scheduleComputeBoundaryContact(SchedulerP& sched,
+					       const PatchSet* patches,
+					       const MaterialSet* matls)
 {
+#if 0
  /*
   * computeBoundaryContact
   *   in(P.X, P.VOLUME, P.NEWISBROKEN, P.NEWCRACKSURFACENORMAL)
@@ -283,31 +265,34 @@ void SerialMPM::scheduleComputeBoundaryContact(const Patch* patch,
   for(int m = 0; m < numMatls; m++){
     MPMMaterial* matl = d_sharedState->getMPMMaterial(m);
     int idx = matl->getDWIndex();
-    t->requires(old_dw, lb->pXLabel,
+    t->requires(Task::OldDW, lb->pXLabel,
         idx, patch, Ghost::AroundCells, 1);
-    t->requires(old_dw, lb->pCrackNormal1Label,
+    t->requires(Task::OldDW, lb->pCrackNormal1Label,
 	idx, patch, Ghost::AroundCells, 1);
-    t->requires(old_dw, lb->pCrackNormal2Label,
+    t->requires(Task::OldDW, lb->pCrackNormal2Label,
 	idx, patch, Ghost::AroundCells, 1);
-    t->requires(old_dw, lb->pCrackNormal3Label,
+    t->requires(Task::OldDW, lb->pCrackNormal3Label,
 	idx, patch, Ghost::AroundCells, 1);
-    t->requires(old_dw, lb->pIsBrokenLabel,
+    t->requires(Task::OldDW, lb->pIsBrokenLabel,
         idx, patch, Ghost::AroundCells, 1);
-    t->requires(old_dw, lb->pVolumeLabel,
+    t->requires(Task::OldDW, lb->pVolumeLabel,
         idx, patch, Ghost::AroundCells, 1);
 
-    t->requires(new_dw, lb->pXXLabel, idx, patch, Ghost::None);
+    t->requires(Task::NewDW, lb->pXXLabel, idx, patch, Ghost::None);
 
-    t->computes(new_dw, lb->pContactNormalLabel, idx, patch);
+    t->computes(lb->pContactNormalLabel);
   }
-  sched->addTask(t);
+  sched->addTask(t, patches, matls);
+#else
+  NOT_FINISHED("SerialMPM::scheduleSetPositions");
+#endif
 }
 
-void SerialMPM::scheduleComputeConnectivity(const Patch* patch,
-					      SchedulerP& sched,
-					      DataWarehouseP& old_dw,
-					      DataWarehouseP& new_dw)
+void SerialMPM::scheduleComputeConnectivity(SchedulerP& sched,
+					    const PatchSet* patches,
+					    const MaterialSet* matls)
 {
+#if 0
  /*
   * computeConnectivity
   *   in(P.X, P.VOLUME, P.ISBROKEN, P.CRACKSURFACENORMAL)
@@ -323,29 +308,31 @@ void SerialMPM::scheduleComputeConnectivity(const Patch* patch,
   for(int m = 0; m < numMatls; m++){
     MPMMaterial* matl = d_sharedState->getMPMMaterial(m);
     int idx = matl->getDWIndex();
-    t->requires(old_dw, lb->pXLabel,        idx, patch, Ghost::AroundCells, 1);
-    t->requires(new_dw, lb->pXXLabel,       idx, patch, Ghost::None);
-    t->requires(old_dw, lb->pVolumeLabel,   idx, patch, Ghost::AroundCells, 1);
-    t->requires(old_dw, lb->pIsBrokenLabel, 
+    t->requires(Task::OldDW, lb->pXLabel,        idx, patch, Ghost::AroundCells, 1);
+    t->requires(Task::NewDW, lb->pXXLabel,       idx, patch, Ghost::None);
+    t->requires(Task::OldDW, lb->pVolumeLabel,   idx, patch, Ghost::AroundCells, 1);
+    t->requires(Task::OldDW, lb->pIsBrokenLabel, 
        idx, patch, Ghost::AroundCells, 1);
-    t->requires(old_dw, lb->pCrackNormal1Label,
+    t->requires(Task::OldDW, lb->pCrackNormal1Label,
        idx, patch, Ghost::AroundCells, 1);
-    t->requires(old_dw, lb->pCrackNormal2Label,
+    t->requires(Task::OldDW, lb->pCrackNormal2Label,
        idx, patch, Ghost::AroundCells, 1);
-    t->requires(old_dw, lb->pCrackNormal3Label,
+    t->requires(Task::OldDW, lb->pCrackNormal3Label,
        idx, patch, Ghost::AroundCells, 1);
-    t->requires(new_dw, lb->pContactNormalLabel,
+    t->requires(Task::NewDW, lb->pContactNormalLabel,
        idx, patch, Ghost::AroundCells, 1);
 
-    t->computes(new_dw, lb->pConnectivityLabel, idx, patch);
+    t->computes(lb->pConnectivityLabel);
   }
-  sched->addTask(t);
+  sched->addTask(t, patches, matls);
+#else
+  NOT_FINISHED("SerialMPM::scheduleSetPositions");
+#endif
 }
 
-void SerialMPM::scheduleInterpolateParticlesToGrid(const Patch* patch,
-						   SchedulerP& sched,
-						   DataWarehouseP& old_dw,
-						   DataWarehouseP& new_dw)
+void SerialMPM::scheduleInterpolateParticlesToGrid(SchedulerP& sched,
+						   const PatchSet* patches,
+						   const MaterialSet* matls)
 {
   /* interpolateParticlesToGrid
    *   in(P.MASS, P.VELOCITY, P.NAT_X)
@@ -354,49 +341,46 @@ void SerialMPM::scheduleInterpolateParticlesToGrid(const Patch* patch,
    *   out(G.MASS, G.VELOCITY) */
 
 
-  int numMatls = d_sharedState->getNumMPMMatls();
   Task* t = scinew Task("SerialMPM::interpolateParticlesToGrid",
-		    patch, old_dw, new_dw,
-		    this,&SerialMPM::interpolateParticlesToGrid);
-  for(int m = 0; m < numMatls; m++){
-    MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial(m);
-    int idx = mpm_matl->getDWIndex();
-    t->requires(old_dw, lb->pMassLabel,         idx,patch,Ghost::AroundNodes,1);
-    t->requires(old_dw, lb->pVolumeLabel,       idx,patch,Ghost::AroundNodes,1);
-    
-    t->requires(old_dw, lb->pVelocityLabel,     idx,patch,Ghost::AroundNodes,1);
-    t->requires(old_dw, lb->pXLabel,            idx,patch,Ghost::AroundNodes,1);
-    t->requires(old_dw, lb->pExternalForceLabel,idx,patch,Ghost::AroundNodes,1);
-    t->requires(old_dw, lb->pTemperatureLabel,  idx,patch,Ghost::AroundNodes,1);
-//    t->requires(old_dw, lb->pExternalHeatRateLabel,
-//						idx,patch,Ghost::AroundNodes,1);
+			this,&SerialMPM::interpolateParticlesToGrid);
+  t->requires(Task::OldDW, lb->pMassLabel,           Ghost::AroundNodes,1);
+  t->requires(Task::OldDW, lb->pVolumeLabel,       Ghost::AroundNodes,1);
+  
+  t->requires(Task::OldDW, lb->pVelocityLabel,     Ghost::AroundNodes,1);
+  t->requires(Task::OldDW, lb->pXLabel,            Ghost::AroundNodes,1);
+  t->requires(Task::OldDW, lb->pExternalForceLabel,Ghost::AroundNodes,1);
+  t->requires(Task::OldDW, lb->pTemperatureLabel,  Ghost::AroundNodes,1);
+//    t->requires(Task::OldDW, lb->pExternalHeatRateLabel,
+//						Ghost::AroundNodes,1);
 
-    t->computes(new_dw, lb->gMassLabel,            idx, patch);
-    t->computes(new_dw, lb->gVolumeLabel,          idx, patch);
-    t->computes(new_dw, lb->gVelocityLabel,        idx, patch);
-    t->computes(new_dw, lb->gExternalForceLabel,   idx, patch);
-    t->computes(new_dw, lb->gTemperatureLabel,     idx, patch);
-    t->computes(new_dw, lb->gTemperatureNoBCLabel, idx, patch);
-    t->computes(new_dw, lb->gExternalHeatRateLabel,idx, patch);
+  t->computes(lb->gMassLabel);
+  t->computes(lb->gVolumeLabel);
+  t->computes(lb->gVelocityLabel);
+  t->computes(lb->gExternalForceLabel);
+  t->computes(lb->gTemperatureLabel);
+  t->computes(lb->gTemperatureNoBCLabel);
+  t->computes(lb->gExternalHeatRateLabel);
 
-    if(mpm_matl->getFractureModel()) {
-       t->requires(new_dw,lb->pContactNormalLabel,idx, patch,
+#if 0
+  if(mpm_matl->getFractureModel()) {
+    t->requires(Task::NewDW,lb->pContactNormalLabel,
 		Ghost::AroundNodes, 1 );
-       t->requires(new_dw, lb->pConnectivityLabel, idx, patch,
+    t->requires(Task::NewDW, lb->pConnectivityLabel,
 		Ghost::AroundNodes, 1 );
-       t->computes(new_dw, lb->gMassContactLabel,  idx, patch);
-    }
+    t->computes(lb->gMassContactLabel);
   }
+#else
+  NOT_FINISHED("new task stuff (fracture)");
+#endif
      
-  t->computes(new_dw, lb->gMassLabel,            numMatls, patch);
-  t->computes(new_dw, lb->TotalMassLabel);
-  sched->addTask(t);
+  t->computes(lb->gMassLabel);
+  t->computes(lb->TotalMassLabel);
+  sched->addTask(t, patches, matls);
 }
 
-void SerialMPM::scheduleComputeHeatExchange(const Patch* patch,
-					    SchedulerP& sched,
-					    DataWarehouseP& old_dw,
-					    DataWarehouseP& new_dw)
+void SerialMPM::scheduleComputeHeatExchange(SchedulerP& sched,
+					    const PatchSet* patches,
+					    const MaterialSet* matls)
 {
  /* computeHeatExchange
   *   in(G.MASS, G.TEMPERATURE, G.EXTERNAL_HEAT_RATE)
@@ -406,64 +390,50 @@ void SerialMPM::scheduleComputeHeatExchange(const Patch* patch,
   *   out(G.EXTERNAL_HEAT_RATE) */
 
 
-  int numMatls = d_sharedState->getNumMPMMatls();
   Task* t = scinew Task("ThermalContact::computeHeatExchange",
-		        patch, old_dw, new_dw,
 		        MPMPhysicalModules::thermalContactModel,
 		        &ThermalContact::computeHeatExchange);
 
-  for(int m = 0; m < numMatls; m++){
-    MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial(m);
-    MPMPhysicalModules::thermalContactModel->addComputesAndRequires(
-					 t, mpm_matl, patch, old_dw, new_dw);
-  }
-  sched->addTask(t);
+  MPMPhysicalModules::thermalContactModel->addComputesAndRequires(t, patches,
+								  matls);
+  sched->addTask(t, patches, matls);
 }
 
-void SerialMPM::scheduleExMomInterpolated(const Patch* patch,
-					  SchedulerP& sched,
-					  DataWarehouseP& old_dw,
-					  DataWarehouseP& new_dw)
+void SerialMPM::scheduleExMomInterpolated(SchedulerP& sched,
+					  const PatchSet* patches,
+					  const MaterialSet* matls)
 {
   Task* t = scinew Task("Contact::exMomInterpolated",
-		    patch, old_dw, new_dw,
 		    MPMPhysicalModules::contactModel,
 		    &Contact::exMomInterpolated);
 
-  int numMatls = d_sharedState->getNumMPMMatls();
-  for(int m = 0; m < numMatls; m++){
-	MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial(m);
-	MPMPhysicalModules::contactModel->
-	addComputesAndRequiresInterpolated(t, mpm_matl, patch, old_dw, new_dw);
-  }
-  sched->addTask(t);
+  MPMPhysicalModules::contactModel->
+    addComputesAndRequiresInterpolated(t, patches, matls);
+  sched->addTask(t, patches, matls);
 }
 
-void SerialMPM::scheduleComputeStressTensor(const Patch* patch,
-					    SchedulerP& sched,
-					    DataWarehouseP& old_dw,
-					    DataWarehouseP& new_dw)
+void SerialMPM::scheduleComputeStressTensor(SchedulerP& sched,
+					    const PatchSet* patches,
+					    const MaterialSet* matls)
 {
   int numMatls = d_sharedState->getNumMPMMatls();
   Task* t = scinew Task("SerialMPM::computeStressTensor",
-		    patch, old_dw, new_dw,
 		    this, &SerialMPM::computeStressTensor);
   for(int m = 0; m < numMatls; m++){
     MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial(m);
     ConstitutiveModel* cm = mpm_matl->getConstitutiveModel();
-    cm->addComputesAndRequires(t, mpm_matl, patch, old_dw, new_dw);
+    cm->addComputesAndRequires(t, mpm_matl, patches);
   }
 	 
-  t->computes(new_dw, d_sharedState->get_delt_label());
-  t->computes(new_dw, lb->StrainEnergyLabel);
+  t->computes(d_sharedState->get_delt_label());
+  t->computes(lb->StrainEnergyLabel);
 
-  sched->addTask(t);
+  sched->addTask(t, patches, matls);
 }
 
-void SerialMPM::scheduleComputeInternalForce(const Patch* patch,
-					     SchedulerP& sched,
-					     DataWarehouseP& old_dw,
-					     DataWarehouseP& new_dw)
+void SerialMPM::scheduleComputeInternalForce(SchedulerP& sched,
+					     const PatchSet* patches,
+					     const MaterialSet* matls)
 {
  /*
   * computeInternalForce
@@ -477,46 +447,42 @@ void SerialMPM::scheduleComputeInternalForce(const Patch* patch,
   int numALLMatls = d_sharedState->getNumMatls();
 
   Task* t = scinew Task("SerialMPM::computeInternalForce",
-		    patch, old_dw, new_dw,
 		    this, &SerialMPM::computeInternalForce);
 
-  t->requires( new_dw, lb->gMassLabel, numMPMMatls, patch, Ghost::None);
-  for(int m = 0; m < numMPMMatls; m++){
-    MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial(m);
-    int idx = mpm_matl->getDWIndex();
-	    
-    t->requires( new_dw, lb->pStressAfterStrainRateLabel, idx, patch,
-			 Ghost::AroundNodes, 1);
-    t->requires( new_dw, lb->pVolumeDeformedLabel, idx, patch,
-			 Ghost::AroundNodes, 1);
-    t->requires( old_dw, lb->pMassLabel, idx, patch, Ghost::AroundNodes, 1);
-    t->requires( new_dw, lb->gMassLabel, idx, patch, Ghost::None);
+  t->requires(Task::NewDW, lb->gMassLabel, Ghost::None);
+  t->requires(Task::NewDW, lb->pStressAfterStrainRateLabel,
+	      Ghost::AroundNodes, 1);
+  t->requires(Task::NewDW, lb->pVolumeDeformedLabel,
+	      Ghost::AroundNodes, 1);
+  t->requires(Task::OldDW, lb->pMassLabel, Ghost::AroundNodes, 1);
+  t->requires(Task::NewDW, lb->gMassLabel, Ghost::None);
 
-    if(numMPMMatls!=numALLMatls){
-      t->requires(new_dw, lb->pPressureLabel, idx, patch,Ghost::AroundNodes, 1);
-    }
-
-    if(mpm_matl->getFractureModel()) {
-       t->requires(new_dw, lb->pConnectivityLabel, idx, patch,
-			Ghost::AroundNodes, 1 );
-       t->requires(new_dw, lb->pContactNormalLabel, idx, patch,
-			Ghost::AroundNodes, 1 );
-    }
-
-    t->computes(new_dw, lb->gInternalForceLabel,       idx, patch);
-    t->computes(new_dw, lb->gStressForSavingLabel,     idx, patch);
+  if(numMPMMatls!=numALLMatls){
+    t->requires(Task::NewDW, lb->pPressureLabel, Ghost::AroundNodes, 1);
   }
-  t->computes(new_dw, lb->NTractionZMinusLabel);
-  t->computes(new_dw, lb->gStressForSavingLabel, numMPMMatls, patch);
 
+#if 0
+  if(mpm_matl->getFractureModel()) {
+    t->requires(Task::NewDW, lb->pConnectivityLabel,
+		Ghost::AroundNodes, 1 );
+    t->requires(Task::NewDW, lb->pContactNormalLabel,
+		Ghost::AroundNodes, 1 );
+  }
+#else
+  NOT_FINISHED("fracture requires");
+#endif
 
-  sched->addTask(t);
+  t->computes(lb->gInternalForceLabel);
+  t->computes(lb->gStressForSavingLabel);
+  t->computes(lb->NTractionZMinusLabel);
+  t->computes(lb->gStressForSavingLabel);
+
+  sched->addTask(t, patches, matls);
 }
 
-void SerialMPM::scheduleComputeInternalHeatRate(const Patch* patch,
-					        SchedulerP& sched,
-					        DataWarehouseP& old_dw,
-					        DataWarehouseP& new_dw)
+void SerialMPM::scheduleComputeInternalHeatRate(SchedulerP& sched,
+						const PatchSet* patches,
+						const MaterialSet* matls)
 {  
   /*
    * computeInternalHeatRate
@@ -525,168 +491,150 @@ void SerialMPM::scheduleComputeInternalHeatRate(const Patch* patch,
    *   P.TEMPERATUREGRADIENT and the gradients of the shape functions)
    * out(G.INTERNALHEATRATE) */
 
-  int numMatls = d_sharedState->getNumMPMMatls();
   Task* t = scinew Task("SerialMPM::computeInternalHeatRate",
-		    patch, old_dw, new_dw,
-		    this, &SerialMPM::computeInternalHeatRate);
+			this, &SerialMPM::computeInternalHeatRate);
 
-  for(int m = 0; m < numMatls; m++){
-    MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial(m);
-    int idx = mpm_matl->getDWIndex();
+  t->requires(Task::OldDW, lb->pXLabel, Ghost::AroundNodes, 1);
+  t->requires(Task::NewDW, lb->pVolumeDeformedLabel, Ghost::AroundNodes, 1);
+  t->requires(Task::NewDW, lb->gTemperatureLabel, Ghost::AroundCells, 2);
 
-    t->requires(old_dw, lb->pXLabel, idx, patch, Ghost::AroundNodes, 1);
-    t->requires(new_dw, lb->pVolumeDeformedLabel,
-				     idx, patch, Ghost::AroundNodes, 1);
-    t->requires( new_dw, lb->gTemperatureLabel,
-				     idx, patch, Ghost::AroundCells, 2);
-
-    if(mpm_matl->getFractureModel()) {
-      t->requires(new_dw,lb->pConnectivityLabel,idx,patch,Ghost::AroundNodes,1);
-    }
-
-    t->computes( new_dw, lb->gInternalHeatRateLabel, idx, patch );
+#if 0
+  if(mpm_matl->getFractureModel()) {
+    t->requires(Task::NewDW,lb->pConnectivityLabel,Ghost::AroundNodes,1);
   }
+#else
+  NOT_FINISHED("fracture requires");
+#endif
 
-  sched->addTask(t);
+  t->computes(lb->gInternalHeatRateLabel);
+  sched->addTask(t, patches, matls);
 }
 
-void SerialMPM::scheduleSolveEquationsMotion(const Patch* patch,
-					     SchedulerP& sched,
-					     DataWarehouseP& old_dw,
-					     DataWarehouseP& new_dw)
+void SerialMPM::scheduleSolveEquationsMotion(SchedulerP& sched,
+					     const PatchSet* patches,
+					     const MaterialSet* matls)
 {
   /* solveEquationsMotion
    *   in(G.MASS, G.F_INTERNAL)
    *   operation(acceleration = f/m)
    *   out(G.ACCELERATION) */
 
-  int numMatls = d_sharedState->getNumMPMMatls();
   Task* t = scinew Task("SerialMPM::solveEquationsMotion",
-		    patch, old_dw, new_dw,
 		    this, &SerialMPM::solveEquationsMotion);
 
+#if 0
+  int numMatls = d_sharedState->getNumMPMMatls();
   for(int m = 0; m < numMatls; m++){
     MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial(m);
     int idx = mpm_matl->getDWIndex();
     
     if(mpm_matl->getFractureModel())
-      t->requires( new_dw, lb->gMassContactLabel,   idx, patch, Ghost::None);
+      t->requires(Task::NewDW, lb->gMassContactLabel,   Ghost::None);
     else
-      t->requires( new_dw, lb->gMassLabel,          idx, patch, Ghost::None);
+      t->requires(Task::NewDW, lb->gMassLabel,          Ghost::None);
+  }
+#else
+  NOT_FINISHED("fracture requires");
+  t->requires(Task::NewDW, lb->gMassLabel,          Ghost::None);
+#endif
       
-    t->requires( new_dw, lb->gInternalForceLabel, idx, patch, Ghost::None);
-    t->requires( new_dw, lb->gExternalForceLabel, idx, patch, Ghost::None);
-    if(d_sharedState->getNumMatls() != d_sharedState->getNumMPMMatls()){
-        t->requires( new_dw, lb->gradPressNCLabel,idx, patch, Ghost::None);
-    }
-
-    t->computes( new_dw, lb->gAccelerationLabel,  idx, patch);
+  t->requires(Task::NewDW, lb->gInternalForceLabel, Ghost::None);
+  t->requires(Task::NewDW, lb->gExternalForceLabel, Ghost::None);
+  if(d_sharedState->getNumMatls() != d_sharedState->getNumMPMMatls()){
+    t->requires(Task::NewDW, lb->gradPressNCLabel,Ghost::None);
   }
 
-  sched->addTask(t);
+  t->computes(lb->gAccelerationLabel);
+  sched->addTask(t, patches, matls);
 }
 
-void SerialMPM::scheduleSolveHeatEquations(const Patch* patch,
-					   SchedulerP& sched,
-					   DataWarehouseP& old_dw,
-					   DataWarehouseP& new_dw)
+void SerialMPM::scheduleSolveHeatEquations(SchedulerP& sched,
+					   const PatchSet* patches,
+					   const MaterialSet* matls)
 {
   /* solveHeatEquations
    *   in(G.MASS, G.INTERNALHEATRATE, G.EXTERNALHEATRATE)
    *   out(G.TEMPERATURERATE) */
 
-  int numMatls = d_sharedState->getNumMPMMatls();
   Task* t = scinew Task("SerialMPM::solveHeatEquations",
-			    patch, old_dw, new_dw,
 			    this, &SerialMPM::solveHeatEquations);
 
+#if 0
   for(int m = 0; m < numMatls; m++){
     MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial(m);
     int idx = mpm_matl->getDWIndex();
 
     if(mpm_matl->getFractureModel())
-      t->requires( new_dw, lb->gMassContactLabel,   idx, patch, Ghost::None);
+      t->requires(Task::NewDW, lb->gMassContactLabel,   Ghost::None);
     else
-      t->requires( new_dw, lb->gMassLabel,          idx, patch, Ghost::None);
-
-    t->requires( new_dw, lb->gVolumeLabel,           idx, patch, Ghost::None);
-    t->requires( new_dw, lb->gInternalHeatRateLabel, idx, patch, Ghost::None);
-    t->requires( new_dw, lb->gExternalHeatRateLabel, idx, patch, Ghost::None);
-
-    if(MPMPhysicalModules::thermalContactModel) {
-       t->requires(new_dw, lb->gThermalContactHeatExchangeRateLabel,
-						     idx, patch, Ghost::None);
-    }
-		
-    t->computes( new_dw, lb->gTemperatureRateLabel, idx, patch);
+      t->requires(Task::NewDW, lb->gMassLabel,          Ghost::None);
   }
+#else
+  NOT_FINISHED("fracture requires");
+  t->requires(Task::NewDW, lb->gMassLabel,          Ghost::None);
+#endif
 
-  sched->addTask(t);
+  t->requires(Task::NewDW, lb->gVolumeLabel,           Ghost::None);
+  t->requires(Task::NewDW, lb->gInternalHeatRateLabel, Ghost::None);
+  t->requires(Task::NewDW, lb->gExternalHeatRateLabel, Ghost::None);
+
+  if(MPMPhysicalModules::thermalContactModel) {
+    t->requires(Task::NewDW, lb->gThermalContactHeatExchangeRateLabel,
+		Ghost::None);
+  }
+		
+  t->computes(lb->gTemperatureRateLabel);
+
+  sched->addTask(t, patches, matls);
 }
 
-void SerialMPM::scheduleIntegrateAcceleration(const Patch* patch,
-					      SchedulerP& sched,
-					      DataWarehouseP& old_dw,
-					      DataWarehouseP& new_dw)
+void SerialMPM::scheduleIntegrateAcceleration(SchedulerP& sched,
+					      const PatchSet* patches,
+					      const MaterialSet* matls)
 {
   /* integrateAcceleration
    *   in(G.ACCELERATION, G.VELOCITY)
    *   operation(v* = v + a*dt)
    *   out(G.VELOCITY_STAR) */
 
-  int numMatls = d_sharedState->getNumMPMMatls();
   Task* t = scinew Task("SerialMPM::integrateAcceleration",
-			    patch, old_dw, new_dw,
 			    this, &SerialMPM::integrateAcceleration);
 
-  t->requires(old_dw, d_sharedState->get_delt_label() );
+  t->requires(Task::OldDW, d_sharedState->get_delt_label() );
 
-  for(int m = 0; m < numMatls; m++){
-    MPMMaterial* matl = d_sharedState->getMPMMaterial(m);
-    int idx = matl->getDWIndex();
-    t->requires(new_dw, lb->gAccelerationLabel,    idx, patch, Ghost::None);
-    t->requires(new_dw, lb->gMomExedVelocityLabel, idx, patch, Ghost::None);
+  t->requires(Task::NewDW, lb->gAccelerationLabel,    Ghost::None);
+  t->requires(Task::NewDW, lb->gMomExedVelocityLabel, Ghost::None);
 
-    t->computes(new_dw, lb->gVelocityStarLabel, idx, patch );
-  }
-		     
-  sched->addTask(t);
+  t->computes(lb->gVelocityStarLabel);
+
+  sched->addTask(t, patches, matls);
 }
 
-void SerialMPM::scheduleIntegrateTemperatureRate(const Patch* patch,
-					         SchedulerP& sched,
-					         DataWarehouseP& old_dw,
-					         DataWarehouseP& new_dw)
+void SerialMPM::scheduleIntegrateTemperatureRate(SchedulerP& sched,
+						 const PatchSet* patches,
+						 const MaterialSet* matls)
 {
   /* integrateTemperatureRate
    *   in(G.TEMPERATURE, G.TEMPERATURERATE)
    *   operation(t* = t + t_rate * dt)
    *   out(G.TEMPERATURE_STAR) */
 
-  int numMatls = d_sharedState->getNumMPMMatls();
   Task* t = scinew Task("SerialMPM::integrateTemperatureRate",
-		    patch, old_dw, new_dw,
 		    this, &SerialMPM::integrateTemperatureRate);
 
-  t->requires( old_dw, d_sharedState->get_delt_label() );
+  t->requires(Task::OldDW, d_sharedState->get_delt_label() );
 
-  for(int m = 0; m < numMatls; m++) {
-    MPMMaterial* matl = d_sharedState->getMPMMaterial(m);
-    int idx = matl->getDWIndex();
-
-    t->requires( new_dw, lb->gTemperatureLabel,     idx, patch, Ghost::None);
-    t->requires( new_dw, lb->gTemperatureRateLabel, idx, patch, Ghost::None);
+  t->requires(Task::NewDW, lb->gTemperatureLabel,     Ghost::None);
+  t->requires(Task::NewDW, lb->gTemperatureRateLabel, Ghost::None);
 		     
-    t->computes( new_dw, lb->gTemperatureStarLabel, idx, patch );
-  }
+  t->computes(lb->gTemperatureStarLabel);
 		     
-  sched->addTask(t);
+  sched->addTask(t, patches, matls);
 }
 
-void SerialMPM::scheduleExMomIntegrated(const Patch* patch,
-				        SchedulerP& sched,
-				        DataWarehouseP& old_dw,
-				        DataWarehouseP& new_dw)
+void SerialMPM::scheduleExMomIntegrated(SchedulerP& sched,
+					const PatchSet* patches,
+					const MaterialSet* matls)
 {
   /* exMomIntegrated
    *   in(G.MASS, G.VELOCITY_STAR, G.ACCELERATION)
@@ -695,24 +643,18 @@ void SerialMPM::scheduleExMomIntegrated(const Patch* patch,
    *		  the others according to specific rules)
    *   out(G.VELOCITY_STAR, G.ACCELERATION) */
 
-  int numMatls = d_sharedState->getNumMPMMatls();
   Task* t = scinew Task("Contact::exMomIntegrated",
-		   patch, old_dw, new_dw,
 		   MPMPhysicalModules::contactModel,
 		   &Contact::exMomIntegrated);
-  for(int m = 0; m < numMatls; m++){
-    MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial(m);
-    MPMPhysicalModules::contactModel->addComputesAndRequiresIntegrated(
-					t, mpm_matl, patch, old_dw, new_dw);
-  }
-
-  sched->addTask(t);
+  MPMPhysicalModules::contactModel->addComputesAndRequiresIntegrated(t,
+								     patches,
+								     matls);
+  sched->addTask(t, patches, matls);
 }
 
-void SerialMPM::scheduleInterpolateToParticlesAndUpdate(const Patch* patch,
-						        SchedulerP& sched,
-						        DataWarehouseP& old_dw,
-						        DataWarehouseP& new_dw)
+void SerialMPM::scheduleInterpolateToParticlesAndUpdate(SchedulerP& sched,
+							const PatchSet* patches,
+							const MaterialSet* matls)
 
 {
  /*
@@ -725,58 +667,56 @@ void SerialMPM::scheduleInterpolateToParticlesAndUpdate(const Patch* patch,
   int numMPMMatls = d_sharedState->getNumMPMMatls();
   int numALLMatls = d_sharedState->getNumMatls();
   Task* t=scinew Task("SerialMPM::interpolateToParticlesAndUpdate",
-		    patch, old_dw, new_dw,
 		    this, &SerialMPM::interpolateToParticlesAndUpdate);
 
 
-  t->requires(old_dw, d_sharedState->get_delt_label() );
+  t->requires(Task::OldDW, d_sharedState->get_delt_label() );
 
-  for(int m = 0; m < numMPMMatls; m++){
-    MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial(m);
-    int idx = mpm_matl->getDWIndex();
-    t->requires(new_dw, lb->gMomExedAccelerationLabel,idx, patch,
-			Ghost::AroundCells, 1);
-    t->requires(new_dw, lb->gMomExedVelocityStarLabel,idx, patch,
-			Ghost::AroundCells, 1);
-    t->requires(new_dw, lb->gTemperatureRateLabel,    idx, patch,
-			Ghost::AroundCells, 1);
-    t->requires(new_dw, lb->gTemperatureLabel,        idx, patch,
-			Ghost::AroundCells, 1);
-    t->requires(new_dw, lb->gTemperatureNoBCLabel,    idx, patch,
-			Ghost::AroundCells, 1);
-    t->requires(old_dw, lb->pXLabel,              idx, patch, Ghost::None);
-    t->requires(old_dw, lb->pExternalForceLabel,  idx, patch, Ghost::None);
-    t->requires(old_dw, lb->pMassLabel,           idx, patch, Ghost::None);
-    t->requires(old_dw, lb->pParticleIDLabel,     idx, patch, Ghost::None);
-    t->requires(old_dw, lb->pTemperatureLabel,    idx, patch, Ghost::None);
-    t->requires(old_dw, lb->pVelocityLabel,       idx, patch, Ghost::None);
-
-    if(numMPMMatls!=numALLMatls){
-      t->requires(new_dw, lb->dTdt_NCLabel, idx, patch, Ghost::AroundCells,1);
-    }
-
-    if(mpm_matl->getFractureModel()) {
-       t->requires(new_dw, lb->pConnectivityLabel,    idx, patch, Ghost::None);
-       t->requires(new_dw, lb->pContactNormalLabel,   idx, patch, Ghost::None);
-    }
-
-    t->computes(new_dw, lb->pVelocityLabel_preReloc,            idx, patch);
-    t->computes(new_dw, lb->pXLabel_preReloc,                   idx, patch);
-    t->computes(new_dw, lb->pExternalForceLabel_preReloc,       idx, patch);
-    t->computes(new_dw, lb->pParticleIDLabel_preReloc,          idx, patch);
-    t->computes(new_dw, lb->pTemperatureLabel_preReloc,         idx, patch);
+  t->requires(Task::NewDW, lb->gMomExedAccelerationLabel,
+	      Ghost::AroundCells, 1);
+  t->requires(Task::NewDW, lb->gMomExedVelocityStarLabel,
+	      Ghost::AroundCells, 1);
+  t->requires(Task::NewDW, lb->gTemperatureRateLabel,
+	      Ghost::AroundCells, 1);
+  t->requires(Task::NewDW, lb->gTemperatureLabel,
+	      Ghost::AroundCells, 1);
+  t->requires(Task::NewDW, lb->gTemperatureNoBCLabel,
+	      Ghost::AroundCells, 1);
+  t->requires(Task::OldDW, lb->pXLabel,              Ghost::None);
+  t->requires(Task::OldDW, lb->pExternalForceLabel,  Ghost::None);
+  t->requires(Task::OldDW, lb->pMassLabel,           Ghost::None);
+  t->requires(Task::OldDW, lb->pParticleIDLabel,     Ghost::None);
+  t->requires(Task::OldDW, lb->pTemperatureLabel,    Ghost::None);
+  t->requires(Task::OldDW, lb->pVelocityLabel,       Ghost::None);
+  
+  if(numMPMMatls!=numALLMatls){
+    t->requires(Task::NewDW, lb->dTdt_NCLabel, Ghost::AroundCells,1);
   }
 
-  t->computes(new_dw, lb->KineticEnergyLabel);
-  t->computes(new_dw, lb->CenterOfMassPositionLabel);
-  t->computes(new_dw, lb->CenterOfMassVelocityLabel);
-  sched->addTask(t);
+#if 0
+  if(mpm_matl->getFractureModel()) {
+    t->requires(Task::NewDW, lb->pConnectivityLabel,    Ghost::None);
+    t->requires(Task::NewDW, lb->pContactNormalLabel,   Ghost::None);
+  }
+#else
+  NOT_FINISHED("fracture requires");
+#endif
+
+  t->computes(lb->pVelocityLabel_preReloc);
+  t->computes(lb->pXLabel_preReloc);
+  t->computes(lb->pExternalForceLabel_preReloc);
+  t->computes(lb->pParticleIDLabel_preReloc);
+  t->computes(lb->pTemperatureLabel_preReloc);
+
+  t->computes(lb->KineticEnergyLabel);
+  t->computes(lb->CenterOfMassPositionLabel);
+  t->computes(lb->CenterOfMassVelocityLabel);
+  sched->addTask(t, patches, matls);
 }
 
-void SerialMPM::scheduleComputeMassRate(const Patch* patch,
-				        SchedulerP& sched,
-				        DataWarehouseP& old_dw,
-				        DataWarehouseP& new_dw)
+void SerialMPM::scheduleComputeMassRate(SchedulerP& sched,
+					const PatchSet* patches,
+					const MaterialSet* matls)
 {
  /* computeMassRate
   * in(P.TEMPERATURE_RATE)
@@ -787,23 +727,21 @@ void SerialMPM::scheduleComputeMassRate(const Patch* patch,
 
   int numMatls = d_sharedState->getNumMPMMatls();
   Task *t = scinew Task("SerialMPM::computeMassRate",
-                         patch, old_dw, new_dw,
                          this, &SerialMPM::computeMassRate);
   for(int m = 0; m < numMatls; m++){
     MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial(m);
     HEBurn* heb = mpm_matl->getHEBurnModel();
-    heb->addComputesAndRequires(t, mpm_matl, patch, old_dw, new_dw);
+    heb->addComputesAndRequires(t, mpm_matl, patches);
     if(!d_burns){
       d_burns=heb->getBurns();
     }
   }
-  sched->addTask(t);
+  sched->addTask(t, patches, matls);
 }
 
-void SerialMPM::scheduleComputeFracture(const Patch* patch,
-					      SchedulerP& sched,
-					      DataWarehouseP& old_dw,
-					      DataWarehouseP& new_dw)
+void SerialMPM::scheduleComputeFracture(SchedulerP& sched,
+					const PatchSet* patches,
+					const MaterialSet* matls)
 {
  /*
   * computeFracture
@@ -812,47 +750,40 @@ void SerialMPM::scheduleComputeFracture(const Patch* patch,
   *   related nodes)
   * out(P.VISIBILITY) */
 
-  int numMatls = d_sharedState->getNumMPMMatls();
   Task* t = scinew Task( "SerialMPM::computeFracture",
-			  patch, old_dw, new_dw,
 			  this,&SerialMPM::computeFracture);
 
-  t->requires(old_dw, d_sharedState->get_delt_label() );
+  t->requires(Task::OldDW, d_sharedState->get_delt_label() );
 
-  for(int m = 0; m < numMatls; m++){
-    MPMMaterial* matl = d_sharedState->getMPMMaterial(m);
-    int idx = matl->getDWIndex();
-    t->requires(old_dw, lb->pXLabel,        idx, patch, Ghost::AroundCells, 1);
-    t->requires(old_dw, lb->pIsBrokenLabel, idx, patch, Ghost::AroundCells, 1);
-    t->requires(old_dw, lb->pCrackNormal1Label, idx, patch, Ghost::AroundCells, 1);
-    t->requires(old_dw, lb->pCrackNormal2Label, idx, patch, Ghost::AroundCells, 1);
-    t->requires(old_dw, lb->pCrackNormal3Label, idx, patch, Ghost::AroundCells, 1);
+  t->requires(Task::OldDW, lb->pXLabel,        Ghost::AroundCells, 1);
+  t->requires(Task::OldDW, lb->pIsBrokenLabel, Ghost::AroundCells, 1);
+  t->requires(Task::OldDW, lb->pCrackNormal1Label, Ghost::AroundCells, 1);
+  t->requires(Task::OldDW, lb->pCrackNormal2Label, Ghost::AroundCells, 1);
+  t->requires(Task::OldDW, lb->pCrackNormal3Label, Ghost::AroundCells, 1);
 
-    t->requires(new_dw, lb->pXXLabel,       idx, patch, Ghost::None);
-    t->requires(old_dw, lb->pVolumeLabel,   idx, patch, Ghost::None);
-    t->requires(new_dw, lb->pStressAfterStrainRateLabel, idx, patch, Ghost::None);
-    t->requires(new_dw, lb->pStrainEnergyLabel, idx, patch, Ghost::None);
-    t->requires(old_dw, lb->pToughnessLabel, idx, patch, Ghost::None);
-    t->requires(new_dw, lb->pRotationRateLabel, idx, patch, Ghost::None);
-    t->requires(new_dw, lb->pConnectivityLabel, idx, patch, Ghost::None);
+  t->requires(Task::NewDW, lb->pXXLabel,       Ghost::None);
+  t->requires(Task::OldDW, lb->pVolumeLabel,   Ghost::None);
+  t->requires(Task::NewDW, lb->pStressAfterStrainRateLabel, Ghost::None);
+  t->requires(Task::NewDW, lb->pStrainEnergyLabel, Ghost::None);
+  t->requires(Task::OldDW, lb->pToughnessLabel, Ghost::None);
+  t->requires(Task::NewDW, lb->pRotationRateLabel, Ghost::None);
+  t->requires(Task::NewDW, lb->pConnectivityLabel, Ghost::None);
 
-    t->requires(new_dw, lb->gStressForSavingLabel, idx, patch,
-			Ghost::AroundCells, 1);
+  t->requires(Task::NewDW, lb->gStressForSavingLabel,
+	      Ghost::AroundCells, 1);
 
-    t->computes(new_dw, lb->pStressAfterFractureReleaseLabel, idx, patch);
-    t->computes(new_dw, lb->pIsBrokenLabel_preReloc, idx, patch);
-    t->computes(new_dw, lb->pCrackNormal1Label_preReloc, idx, patch);
-    t->computes(new_dw, lb->pCrackNormal2Label_preReloc, idx, patch);
-    t->computes(new_dw, lb->pCrackNormal3Label_preReloc, idx, patch);
-    t->computes(new_dw, lb->pToughnessLabel_preReloc, idx, patch);
-  }
-  sched->addTask(t);
+  t->computes(lb->pStressAfterFractureReleaseLabel);
+  t->computes(lb->pIsBrokenLabel_preReloc);
+  t->computes(lb->pCrackNormal1Label_preReloc);
+  t->computes(lb->pCrackNormal2Label_preReloc);
+  t->computes(lb->pCrackNormal3Label_preReloc);
+  t->computes(lb->pToughnessLabel_preReloc);
+  sched->addTask(t, patches, matls);
 }
 
-void SerialMPM::scheduleCarryForwardVariables(const Patch* patch,
-					      SchedulerP& sched,
-					      DataWarehouseP& old_dw,
-					      DataWarehouseP& new_dw)
+void SerialMPM::scheduleCarryForwardVariables(SchedulerP& sched,
+					      const PatchSet* patches,
+					      const MaterialSet* matls)
 {
   /* carryForwardVariables
    * in(p.x,p.stressBeforeFractureRelease,p.isNewlyBroken,
@@ -861,41 +792,48 @@ void SerialMPM::scheduleCarryForwardVariables(const Patch* patch,
    *   if the microcrack will initiate and/or grow)
    * out(p.stress) */
 
-  int numMatls = d_sharedState->getNumMPMMatls();
   Task* t = scinew Task("SerialMPM::carryForwardVariables",
-		         patch, old_dw, new_dw,
 		         this,&SerialMPM::carryForwardVariables);
 
+#if 0
+  int numMatls = d_sharedState->getNumMPMMatls();
   for(int m = 0; m < numMatls; m++) {
     MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial(m);
     int idx = mpm_matl->getDWIndex();
 
     if(d_fracture) {
-      t->requires( new_dw, lb->pStressAfterFractureReleaseLabel,
-		idx, patch, Ghost::None);
+      t->requires(Task::NewDW, lb->pStressAfterFractureReleaseLabel,
+		Ghost::None);
     }
     else {
-      t->requires( new_dw, lb->pStressAfterStrainRateLabel,
-		idx, patch, Ghost::None);			 
+      t->requires(Task::NewDW, lb->pStressAfterStrainRateLabel,
+		Ghost::None);			 
     }
-
-    t->computes(new_dw, lb->pStressLabel_preReloc,   idx, patch);
   }
-  sched->addTask(t);
+#else
+  NOT_FINISHED("fracture requires");
+  t->requires(Task::NewDW, lb->pStressAfterStrainRateLabel,
+	      Ghost::None);			 
+#endif
+  t->computes(lb->pStressLabel_preReloc);
+  sched->addTask(t, patches, matls);
 }
 
 void SerialMPM::actuallyInitialize(const ProcessorGroup*,
-				   const Patch* patch,
-				   DataWarehouseP& /* old_dw */,
-				   DataWarehouseP& new_dw)
+				   const PatchSubset* patches,
+				   const MaterialSubset* matls,
+				   DataWarehouse*,
+				   DataWarehouse* new_dw)
 {
-  int numMatls = d_sharedState->getNumMPMMatls();
+  for(int p=0;p<patches->size();p++){
+    const Patch* patch = patches->get(p);
 
   PerPatch<long> NAPID(0);
   if(new_dw->exists(lb->ppNAPIDLabel, 0, patch))
       new_dw->get(NAPID,lb->ppNAPIDLabel, 0, patch);
 
-  for(int m = 0; m < numMatls; m++){
+    for(int m=0;m<matls->size();m++){
+      NOT_FINISHED("not quite right - mapping of matls, use matls->get()");
     MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial( m );
        particleIndex numParticles = mpm_matl->countParticles(patch);
 
@@ -919,36 +857,43 @@ void SerialMPM::actuallyInitialize(const ProcessorGroup*,
   }
 
   new_dw->put(NAPID, lb->ppNAPIDLabel, 0, patch);
+  }
 }
 
 
 void SerialMPM::actuallyComputeStableTimestep(const ProcessorGroup*,
-					      const Patch*,
-					      DataWarehouseP&,
-					      DataWarehouseP&)
+					      const PatchSubset* patches,
+					      const MaterialSubset* matls,
+					      DataWarehouse*,
+					      DataWarehouse*)
 {
 }
 
 void SerialMPM::computeConnectivity(
                    const ProcessorGroup*,
-		   const Patch* patch,
-		   DataWarehouseP& old_dw,
-		   DataWarehouseP& new_dw)
+		   const PatchSubset* patches,
+		   const MaterialSubset* matls,
+		   DataWarehouse* old_dw,
+		   DataWarehouse* new_dw)
 {
   int numMatls = d_sharedState->getNumMPMMatls();
 
   for(int m = 0; m < numMatls; m++) {
     MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial( m );
     mpm_matl->getFractureModel()->computeConnectivity(
-	  patch, mpm_matl, old_dw, new_dw);
+	  patches, mpm_matl, old_dw, new_dw);
   }
 }
 
 void SerialMPM::interpolateParticlesToGrid(const ProcessorGroup*,
-					   const Patch* patch,
-					   DataWarehouseP& old_dw,
-					   DataWarehouseP& new_dw)
+					   const PatchSubset* patches,
+					   const MaterialSubset* matls,
+					   DataWarehouse* old_dw,
+					   DataWarehouse* new_dw)
 {
+  for(int p=0;p<patches->size();p++){
+    const Patch* patch = patches->get(p);
+
   static Vector zero(0.,0.,0.);
   
   int numMatls = d_sharedState->getNumMPMMatls();
@@ -1169,37 +1114,44 @@ void SerialMPM::interpolateParticlesToGrid(const ProcessorGroup*,
       }
   }
   new_dw->put(totalgmass,         lb->gMassLabel,          numALLMatls, patch);
+  }
 }
 
 void SerialMPM::computeStressTensor(const ProcessorGroup*,
-				    const Patch* patch,
-				    DataWarehouseP& old_dw,
-				    DataWarehouseP& new_dw)
+				    const PatchSubset* patches,
+				    const MaterialSubset* matls,
+				    DataWarehouse* old_dw,
+				    DataWarehouse* new_dw)
 {
    for(int m = 0; m < d_sharedState->getNumMPMMatls(); m++){
       MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial(m);
       ConstitutiveModel* cm = mpm_matl->getConstitutiveModel();
-      cm->computeStressTensor(patch, mpm_matl, old_dw, new_dw);
+      cm->computeStressTensor(patches, mpm_matl, old_dw, new_dw);
    }
 }
 
 void SerialMPM::computeMassRate(const ProcessorGroup*,
-			 	const Patch* patch,
-				DataWarehouseP& old_dw,
-				DataWarehouseP& new_dw)
+			 	const PatchSubset* patches,
+				const MaterialSubset* matls,
+				DataWarehouse* old_dw,
+				DataWarehouse* new_dw)
 {
    for(int m = 0; m < d_sharedState->getNumMPMMatls(); m++){
       MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial(m);
       HEBurn* heb = mpm_matl->getHEBurnModel();
-      heb->computeMassRate(patch, mpm_matl, old_dw, new_dw);
+      heb->computeMassRate(patches, mpm_matl, old_dw, new_dw);
    }
 }
 
 void SerialMPM::setPositions( const ProcessorGroup*,
-				    const Patch* patch,
-				    DataWarehouseP& old_dw,
-				    DataWarehouseP& new_dw)
+			      const PatchSubset* patches,
+			      const MaterialSubset* matls,
+			      DataWarehouse* old_dw,
+			      DataWarehouse* new_dw)
 {
+  for(int p=0;p<patches->size();p++){
+    const Patch* patch = patches->get(p);
+
   for(int m = 0; m < d_sharedState->getNumMPMMatls(); m++){
     MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial(m);
     int matlindex = mpm_matl->getDWIndex();
@@ -1220,13 +1172,18 @@ void SerialMPM::setPositions( const ProcessorGroup*,
 
     new_dw->put(pXX, lb->pXXLabel);
   }
+  }
 }
 	    
 void SerialMPM::computeInternalForce(const ProcessorGroup*,
-				     const Patch* patch,
-				     DataWarehouseP& old_dw,
-				     DataWarehouseP& new_dw)
+				     const PatchSubset* patches,
+				     const MaterialSubset* matls,
+				     DataWarehouse* old_dw,
+				     DataWarehouse* new_dw)
 {
+  for(int p=0;p<patches->size();p++){
+    const Patch* patch = patches->get(p);
+
   static Vector zero(0.,0.,0.);
 
   Vector dx = patch->dCell();
@@ -1425,13 +1382,18 @@ void SerialMPM::computeInternalForce(const ProcessorGroup*,
     gstressglobal[*iter] /= gmassglobal[*iter];
   }
   new_dw->put(gstressglobal,  lb->gStressForSavingLabel, numALLMatls, patch);
+  }
 }
 
 void SerialMPM::computeInternalHeatRate(const ProcessorGroup*,
-				        const Patch* patch,
-				        DataWarehouseP& old_dw,
-				        DataWarehouseP& new_dw)
+				        const PatchSubset* patches,
+					const MaterialSubset* matls,
+				        DataWarehouse* old_dw,
+				        DataWarehouse* new_dw)
 {
+  for(int p=0;p<patches->size();p++){
+    const Patch* patch = patches->get(p);
+
   Vector dx = patch->dCell();
   double oodx[3];
   oodx[0] = 1.0/dx.x();
@@ -1508,14 +1470,19 @@ void SerialMPM::computeInternalHeatRate(const ProcessorGroup*,
       new_dw->put(internalHeatRate, lb->gInternalHeatRateLabel,
 							matlindex, patch);
   }
+  }
 }
 
 
 void SerialMPM::solveEquationsMotion(const ProcessorGroup*,
-				     const Patch* patch,
-				     DataWarehouseP& old_dw,
-				     DataWarehouseP& new_dw)
+				     const PatchSubset* patches,
+				     const MaterialSubset* matls,
+				     DataWarehouse* old_dw,
+				     DataWarehouse* new_dw)
 {
+  for(int p=0;p<patches->size();p++){
+    const Patch* patch = patches->get(p);
+
   Vector zero(0.,0.,0.);
   Vector gravity = d_sharedState->getGravity();
   delt_vartype delT;
@@ -1564,13 +1531,18 @@ void SerialMPM::solveEquationsMotion(const ProcessorGroup*,
       // Put the result in the datawarehouse
       new_dw->put(acceleration, lb->gAccelerationLabel, matlindex, patch);
   }
+  }
 }
 
 void SerialMPM::solveHeatEquations(const ProcessorGroup*,
-				     const Patch* patch,
-				     DataWarehouseP& /*old_dw*/,
-				     DataWarehouseP& new_dw)
+				   const PatchSubset* patches,
+				   const MaterialSubset* matls,
+				   DataWarehouse* /*old_dw*/,
+				   DataWarehouse* new_dw)
 {
+  for(int p=0;p<patches->size();p++){
+    const Patch* patch = patches->get(p);
+
   for(int m = 0; m < d_sharedState->getNumMPMMatls(); m++){
     MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial( m );
       int dwindex = mpm_matl->getDWIndex();
@@ -1670,14 +1642,19 @@ void SerialMPM::solveHeatEquations(const ProcessorGroup*,
       // Put the result in the datawarehouse
       new_dw->put(temperatureRate, lb->gTemperatureRateLabel, dwindex, patch);
   }
+  }
 }
 
 
 void SerialMPM::integrateAcceleration(const ProcessorGroup*,
-				      const Patch* patch,
-				      DataWarehouseP& old_dw,
-				      DataWarehouseP& new_dw)
+				      const PatchSubset* patches,
+				      const MaterialSubset* matls,
+				      DataWarehouse* old_dw,
+				      DataWarehouse* new_dw)
 {
+  for(int p=0;p<patches->size();p++){
+    const Patch* patch = patches->get(p);
+
 
   for(int m = 0; m < d_sharedState->getNumMPMMatls(); m++){
     MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial( m );
@@ -1706,13 +1683,18 @@ void SerialMPM::integrateAcceleration(const ProcessorGroup*,
       // Put the result in the datawarehouse
       new_dw->put( velocity_star, lb->gVelocityStarLabel, dwindex, patch);
   }
+  }
 }
 
 void SerialMPM::integrateTemperatureRate(const ProcessorGroup*,
-				      const Patch* patch,
-				      DataWarehouseP& old_dw,
-				      DataWarehouseP& new_dw)
+					 const PatchSubset* patches,
+					 const MaterialSubset* matls,
+					 DataWarehouse* old_dw,
+					 DataWarehouse* new_dw)
 {
+  for(int p=0;p<patches->size();p++){
+    const Patch* patch = patches->get(p);
+
   for(int m = 0; m < d_sharedState->getNumMPMMatls(); m++){
     MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial( m );
       int dwindex = mpm_matl->getDWIndex();
@@ -1738,6 +1720,7 @@ void SerialMPM::integrateTemperatureRate(const ProcessorGroup*,
 
       new_dw->put( temperatureStar, lb->gTemperatureStarLabel, dwindex, patch );
   }
+  }
 }
 
 
@@ -1747,10 +1730,14 @@ void SerialMPM::setAnalyze(PatchDataAnalyze* analyze)
 }
 
 void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
-						const Patch* patch,
-						DataWarehouseP& old_dw,
-						DataWarehouseP& new_dw)
+						const PatchSubset* patches,
+						const MaterialSubset* matls,
+						DataWarehouse* old_dw,
+						DataWarehouse* new_dw)
 {
+  for(int p=0;p<patches->size();p++){
+    const Patch* patch = patches->get(p);
+
   // Performs the interpolation from the cell vertices of the grid
   // acceleration and velocity to the particles to update their
   // velocity and position respectively
@@ -2031,43 +2018,50 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
 //  cout << "Solid momentum after advection = " << CMV << endl;
 
 //  cout << "THERMAL ENERGY " << thermal_energy << endl;
+  }
 }
 
 void SerialMPM::computeFracture(
                    const ProcessorGroup*,
-		   const Patch* patch,
-		   DataWarehouseP& old_dw,
-		   DataWarehouseP& new_dw)
+		   const PatchSubset* patches,
+		   const MaterialSubset* matls,
+		   DataWarehouse* old_dw,
+		   DataWarehouse* new_dw)
 {
   int numMatls = d_sharedState->getNumMPMMatls();
 
   for(int m = 0; m < numMatls; m++) {
     MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial( m );
     mpm_matl->getFractureModel()->computeFracture(
-	  patch, mpm_matl, old_dw, new_dw);
+	  patches, mpm_matl, old_dw, new_dw);
   }
 }
 
 void SerialMPM::computeBoundaryContact(
                    const ProcessorGroup*,
-		   const Patch* patch,
-		   DataWarehouseP& old_dw,
-		   DataWarehouseP& new_dw)
+		   const PatchSubset* patches,
+		   const MaterialSubset* matls,
+		   DataWarehouse* old_dw,
+		   DataWarehouse* new_dw)
 {
   int numMatls = d_sharedState->getNumMPMMatls();
 
   for(int m = 0; m < numMatls; m++) {
     MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial( m );
     mpm_matl->getFractureModel()->
-       computeBoundaryContact(patch, mpm_matl, old_dw, new_dw);
+       computeBoundaryContact(patches, mpm_matl, old_dw, new_dw);
   }
 }
 
 void SerialMPM::carryForwardVariables( const ProcessorGroup*,
-				    const Patch* patch,
-				    DataWarehouseP& old_dw,
-				    DataWarehouseP& new_dw)
+				       const PatchSubset* patches,
+				       const MaterialSubset* matls,
+				       DataWarehouse* old_dw,
+				       DataWarehouse* new_dw)
 {
+  for(int p=0;p<patches->size();p++){
+    const Patch* patch = patches->get(p);
+
    for(int m = 0; m < d_sharedState->getNumMPMMatls(); m++){
     MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial(m);
     int matlindex = mpm_matl->getDWIndex();
@@ -2084,5 +2078,6 @@ void SerialMPM::carryForwardVariables( const ProcessorGroup*,
     }
 
     new_dw->put(pStress, lb->pStressLabel_preReloc);
+  }
   }
 }

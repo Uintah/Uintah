@@ -62,10 +62,10 @@ WARNING
 
 	  bool isBurnable();
 
-          virtual void computeMassRate(const Patch* patch,
+          virtual void computeMassRate(const PatchSubset* patch,
 				       const MPMMaterial* matl,
-				       DataWarehouseP& old_dw,
-				       DataWarehouseP& new_dw) = 0;
+				       DataWarehouse* old_dw,
+				       DataWarehouse* new_dw) = 0;
 
 
          //////////
@@ -75,13 +75,11 @@ WARNING
 
           virtual void initializeBurnModelData(const Patch* patch,
                                                const MPMMaterial* matl,
-                                               DataWarehouseP& new_dw) = 0;
+                                               DataWarehouse* new_dw) = 0;
 
           virtual void addComputesAndRequires(Task* task,
 					      const MPMMaterial* matl,
-					      const Patch* patch,
-					      DataWarehouseP& old_dw,
-					      DataWarehouseP& new_dw) const = 0;
+					      const PatchSet* patch) const = 0;
 
        protected:
 	  bool d_burnable;

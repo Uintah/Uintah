@@ -60,30 +60,28 @@ WARNING
 
 	 // Basic contact methods
 	 virtual void exMomInterpolated(const ProcessorGroup*,
-					const Patch* patch,
-					DataWarehouseP& old_dw,
-					DataWarehouseP& new_dw) = 0;
+					const PatchSubset* patches,
+					const MaterialSubset* matls,
+					DataWarehouse* old_dw,
+					DataWarehouse* new_dw) = 0;
 	 
 	 virtual void exMomIntegrated(const ProcessorGroup*,
-				      const Patch* patch,
-				      DataWarehouseP& old_dw,
-				      DataWarehouseP& new_dw) = 0;
+				      const PatchSubset* patches,
+				      const MaterialSubset* matls,
+				      DataWarehouse* old_dw,
+				      DataWarehouse* new_dw) = 0;
 
 	 virtual void initializeContact(const Patch* patch,
 					int vfindex,
-					DataWarehouseP& new_dw) = 0;
+					DataWarehouse* new_dw) = 0;
 
          virtual void addComputesAndRequiresInterpolated(Task* task,
-                                             const MPMMaterial* matl,
-                                             const Patch* patch,
-                                             DataWarehouseP& old_dw,
-                                             DataWarehouseP& new_dw) const = 0;
+					   const PatchSet* patches,
+					   const MaterialSet* matls) const = 0;
 	 
          virtual void addComputesAndRequiresIntegrated(Task* task,
-                                             const MPMMaterial* matl,
-                                             const Patch* patch,
-                                             DataWarehouseP& old_dw,
-                                             DataWarehouseP& new_dw) const = 0;
+					   const PatchSet* patches,
+					   const MaterialSet* matls) const = 0;
 
 
          // VarLabels common to all contact models go here

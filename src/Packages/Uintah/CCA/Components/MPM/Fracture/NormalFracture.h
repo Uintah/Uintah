@@ -30,25 +30,25 @@ public:
 
   void   initializeFractureModelData(const Patch* patch,
                             const MPMMaterial* matl,
-                            DataWarehouseP& new_dw);
+                            DataWarehouse* new_dw);
 
   void   computeBoundaryContact(
-                  const Patch* patch,
+                  const PatchSubset* patch,
                   MPMMaterial* mpm_matl, 
-		  DataWarehouseP& old_dw, 
-		  DataWarehouseP& new_dw);
+		  DataWarehouse* old_dw, 
+		  DataWarehouse* new_dw);
 
   void   computeConnectivity(
-                  const Patch* patch,
+                  const PatchSubset* patch,
                   MPMMaterial* mpm_matl, 
-		  DataWarehouseP& old_dw, 
-		  DataWarehouseP& new_dw);
+		  DataWarehouse* old_dw, 
+		  DataWarehouse* new_dw);
 
   void   computeFracture(
-                  const Patch* patch,
+                  const PatchSubset* patch,
                   MPMMaterial* mpm_matl, 
-		  DataWarehouseP& old_dw, 
-		  DataWarehouseP& new_dw);
+		  DataWarehouse* old_dw, 
+		  DataWarehouse* new_dw);
 
          NormalFracture(ProblemSpecP& ps);
 	~NormalFracture();
