@@ -14,11 +14,10 @@ itcl_class Uintah_Visualization_GridVisualizer {
     inherit Module
 
     protected var_list ""
-    protected mat_list ""
+    protected mat_lists {}
     protected type_list ""
     protected var_val_list {}
     protected time_list {}
-    protected num_materials 0
     protected num_colors 240
 
     protected matrix_types {"Determinant" "Trace" "Norm"}
@@ -187,8 +186,9 @@ itcl_class Uintah_Visualization_GridVisualizer {
 	}
     }
     # called when SelAll or SelNone is evoked from the top level
-    method mat_sel { var_root number val type} {
-	for {set j 0} { $j < $number} {incr j} {
+    method mat_sel { var_root mat_list val type} {
+	for {set i 0} { $i < [llength $mat_list] } {incr i} {
+	    set j [lindex $mat_list $i]
 	    set tail "_$j"
 	    switch $type {
 		"matrix3" {
@@ -205,20 +205,21 @@ itcl_class Uintah_Visualization_GridVisualizer {
     }	
     # creates the material selection menu
     # it generates sub menus for matrix3 and vector types
-    method make_mat_menu {w mat i type} {
-	set fname "$w.mat$i"
+    method make_mat_menu {w mat_list var_id type} {
+	set fname "$w.mat$var"
 	menubutton $fname -text "Material" \
 		-menu $fname.list -relief groove
 	pack $fname -side right -padx 2 -pady 2
 	
 	menu $fname.list
-	set var_o $i
+	set var_o $var_id
 	append var_o "_o[set $this-var_orientation]"
 	$fname.list add command -label "Sel All" \
-		-command "$this mat_sel $this-matvar_$var_o $mat 1 $type"
+		-command "$this mat_sel $this-matvar_$var_o {$mat_list} 1 $type"
 	$fname.list add command -label "Sel None" \
-		-command "$this mat_sel $this-matvar_$var_o $mat 0 $type"
-	for {set j 0} { $j < $mat} {incr j} {
+		-command "$this mat_sel $this-matvar_$var_o {$mat_list} 0 $type"
+	for {set i 0} { $i < [llength $mat_list]} {incr i} {
+	    set j [lindex $mat_list $i]
 	    set var $var_o
 	    append var "_$j"
 #	    puts "***var = $var"
@@ -263,14 +264,15 @@ itcl_class Uintah_Visualization_GridVisualizer {
 	    }
 	}
     }
-    method graphbutton {name var_index num_mat type} {
+    method graphbutton {name var_index mat_list type} {
 	set val_list {}
 	set num_vals 0
 	set var_root $this-matvar_$var_index
 	append var_root "_o[set $this-var_orientation]"
 #	puts "var_root = $var_root"
 	# loop over all the materials	
-	for {set j 0} { $j < $num_mat} {incr j} {
+	for {set i 0} { $i < [llength $mat_list]} {incr i} {
+	    set j [lindex $mat_list $i]
 	    set mat_root $var_root
 	    append mat_root "_$j"
 	    switch $type {
@@ -316,7 +318,7 @@ itcl_class Uintah_Visualization_GridVisualizer {
 	    eval $call
 	}
     }
-    method addVar {w name mat type i} {
+    method addVar {w name mat_list type i} {
 	set fname "$w.var$i"
 	frame $fname
 	pack $fname -side top -fill x -padx 2 -pady 2
@@ -324,23 +326,21 @@ itcl_class Uintah_Visualization_GridVisualizer {
 	label $fname.label -text "$name"
 	pack $fname.label -side left -padx 2 -pady 2
 
-	button $fname.button -text "Graph" -command "$this graphbutton $name $i $mat $type"
+	button $fname.button -text "Graph" -command "$this graphbutton $name $i {$mat_list} $type"
 	pack $fname.button -side right -padx 2 -pady 2
 
-	if {$mat > $num_materials} {
-	    set num_materials $mat
-#	    puts "num_materials is now $num_materials"
-	}
-
-	make_mat_menu $fname $mat $i $type
+	make_mat_menu $fname $mat_list $i $type
     }
     method setVar_list { args } {
 	set var_list $args
 	puts "var_list is now $var_list"
     }
-    method setMat_list { args } {
+    method clearMat_list {} {
+	set mat_lists {}
+    }
+    method appendMat_list { args } {
 	set mat_list $args
-	puts "mat_list is now $mat_list"
+	lappend mat_lists $mat_list
     }
     method setType_list { args } {
 	set type_list $args
@@ -354,9 +354,9 @@ itcl_class Uintah_Visualization_GridVisualizer {
 #	    puts "var_list length [llength $var_list]"
 	    for {set i 0} { $i < [llength $var_list] } { incr i } {
 		set newvar [lindex $var_list $i]
-		set newmat [lindex $mat_list $i]
+		set newmat_list [lindex $mat_lists $i]
 		set newtype [lindex $type_list $i]
-		addVar $w.vars $newvar $newmat $newtype $i
+		addVar $w.vars $newvar $newmat_list $newtype $i
 	    }
 	}
     }

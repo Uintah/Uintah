@@ -43,7 +43,8 @@ LOG
 #include <Uintah/Grid/GridP.h>
 #include <Uintah/Grid/Level.h>
 #include <Uintah/Grid/Patch.h>
- 
+#include <SCICore/Containers/ConsecutiveRangeSet.h>
+
 
 #include <iostream> 
 #include <sstream>
@@ -143,7 +144,7 @@ void VectorFieldExtractor::setVars()
   GridP grid = archive.queryGrid(times[0]);
   LevelP level = grid->getLevel( 0 );
   Patch* r = *(level->patchesBegin());
-  int nMatls = archive.queryNumMaterials(sVar.get()(), r, times[0]);
+  ConsecutiveRangeSet matls= archive.queryMaterials(sVar.get()(), r, times[0]);
 
   clString visible;
   TCL::eval(id + " isVisible", visible);
@@ -152,7 +153,7 @@ void VectorFieldExtractor::setVars()
     TCL::execute(id + " build");
     
     TCL::execute(id + " buildMaterials " 
-		 + to_string(nMatls) );
+		 + matls.expandedString().c_str());
 
     TCL::execute(id + " setVectors " + sNames.c_str());
     TCL::execute(id + " buildVarList");

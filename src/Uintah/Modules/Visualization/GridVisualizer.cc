@@ -328,9 +328,10 @@ void GridVisualizer::setVars(GridP grid) {
   archive->queryVariables(names, types);
 
   string varNames("");
-  string matls("");
   string type_list("");
   const Patch* patch = *(grid->getLevel(0)->patchesBegin());
+
+  TCL::execute(id + " clearMat_list ");
   
   for(int i = 0; i< (int)names.size(); i++) {
     switch (types[i]->getType()) {
@@ -338,9 +339,7 @@ void GridVisualizer::setVars(GridP grid) {
       if (var_orientation.get() == NC_VAR) {
 	varNames += " ";
 	varNames += names[i];
-	ostringstream mat;
-	mat << " " << archive->queryNumMaterials(names[i], patch, time);
-	matls += mat.str();
+	TCL::execute(id + " appendMat_list " + archive->queryMaterials(names[i], patch, time).expandedString().c_str());
 	add_type(type_list,types[i]->getSubType());
       }
       break;
@@ -348,18 +347,17 @@ void GridVisualizer::setVars(GridP grid) {
       if (var_orientation.get() == CC_VAR) {
 	varNames += " ";
 	varNames += names[i];
-	ostringstream mat;
-	mat << " " << archive->queryNumMaterials(names[i], patch, time);
-	matls += mat.str();
+	TCL::execute(id + " appendMat_list " + archive->queryMaterials(names[i], patch, time).expandedString().c_str());
 	add_type(type_list,types[i]->getSubType());
       }
       break;
     }
+
+    
   }
 
   cerr << "varNames = " << varNames << endl;
   TCL::execute(id + " setVar_list " + varNames.c_str());
-  TCL::execute(id + " setMat_list " + matls.c_str());  
   TCL::execute(id + " setType_list " + type_list.c_str());  
 }
 
@@ -910,6 +908,9 @@ void GridVisualizer::geom_pick(GeomPick* pick, void* userdata, GeomObj* picked) 
 
 //
 // $Log$
+// Revision 1.10  2001/01/27 00:32:44  witzel
+// Added support letting different variables exist for different material sets
+//
 // Revision 1.9  2000/12/22 00:15:38  jas
 // Remove X,Y,Z FCVariable and fix some g++ warnings.
 //

@@ -37,7 +37,8 @@ LOG
 #include <Uintah/Datatypes/VectorParticlesPort.h>
 #include <Uintah/Datatypes/TensorParticlesPort.h>
 #include <PSECore/Dataflow/Module.h> 
-#include <SCICore/TclInterface/TCLvar.h> 
+#include <SCICore/TclInterface/TCLvar.h>
+#include <SCICore/Containers/ConsecutiveRangeSet.h>
 #include <string>
 #include <vector>
 
@@ -86,15 +87,11 @@ public:
 protected:
   
 private:
-
   TCLstring tcl_status;
 
   TCLstring psVar;
   TCLstring pvVar;
   TCLstring ptVar;
-
-  TCLint pNMaterials;
-
 
   ArchiveIPort *in;
   VectorParticlesOPort *pvout;
@@ -105,13 +102,39 @@ private:
   std::string positionName;
   std::string particleIDs;
 
-  ArchiveHandle archive;
+  struct VarInfo
+  {
+     VarInfo()
+	: name(""), matls() {}
+     VarInfo(std::string name, ConsecutiveRangeSet matls)
+	: name(name), matls(matls), wasShown(false) { }
+     VarInfo& operator=(const VarInfo& v)
+     { name = v.name; matls = v.matls; return *this; }
+     std::string name;
+     ConsecutiveRangeSet matls;
+     bool wasShown;
+  };
+  std::list<VarInfo> scalarVars;
+  std::list<VarInfo> vectorVars;
+  std::list<VarInfo> tensorVars;
+  std::list<VarInfo> pointVars;
+  VarInfo particleIDVar;
+
+  ArchiveHandle archiveH;
   void add_type(string &type_list, const TypeDescription *subtype);
   void setVars(ArchiveHandle ar);
+  void showVarsForMatls();
+  std::string getVarsForMaterials(std::list<VarInfo>& vars,
+				  const ConsecutiveRangeSet& matls,
+				  bool& needToUpdate);
   void buildData(DataArchive& archive, double time,
 		 ScalarParticles*& sp,
 		 VectorParticles*& vp,
 		 TensorParticles*& tp);
+
+  void addGraphingVars(long particleID, const list<VarInfo> &vars,
+		       string type);
+   
   //  void graph(string varname, vector<string> mat_list, string particleID);
 
   vector< double > times;
@@ -119,6 +142,7 @@ private:
   vector< string > names;
   vector< const TypeDescription *> types;
   double time;
+  int num_materials;
 
   string vector_to_string(vector< int > data);
   string vector_to_string(vector< string > data);

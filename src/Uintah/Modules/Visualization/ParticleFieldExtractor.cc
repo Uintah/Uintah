@@ -79,8 +79,8 @@ ParticleFieldExtractor::ParticleFieldExtractor(const clString& id)
     psVar("psVar", id, this),
     pvVar("pvVar", id, this),
     ptVar("ptVar", id, this),
-    pNMaterials("pNMaterials", id, this),
-    archive(0), positionName(""), particleIDs("")
+    archiveH(0), positionName(""), particleIDs(""),
+    num_materials(0)
 { 
   //////////// Initialization code goes here
   // Create Ports
@@ -112,7 +112,7 @@ void ParticleFieldExtractor::add_type(string &type_list,
 {
   switch ( subtype->getType() ) {
   case TypeDescription::double_type:
-    type_list += " scaler";
+    type_list += " scalar";
     break;
   case TypeDescription::Vector:
     type_list += " vector";
@@ -138,12 +138,18 @@ void ParticleFieldExtractor::setVars(ArchiveHandle ar)
   vector< double > times;
   vector< int > indices;
   archive.queryTimesteps( indices, times );
+  GridP grid = archive.queryGrid(times[0]);
+  LevelP level = grid->getLevel( 0 );
+  Patch* r = *(level->patchesBegin());
 
-  string spNames("");
-  string vpNames("");
-  string tpNames("");
-  string type_list("");
-  string name_list("");
+  //string type_list("");
+  //string name_list("");
+  scalarVars.clear();
+  vectorVars.clear();
+  tensorVars.clear();
+  pointVars.clear();
+  particleIDVar = VarInfo();
+  
   //  string ptNames;
   
   // reset the vars
@@ -158,8 +164,12 @@ void ParticleFieldExtractor::setVars(ArchiveHandle ar)
     td = types[i];
     if(td->getType() ==  TypeDescription::ParticleVariable){
       const TypeDescription* subtype = td->getSubType();
+      ConsecutiveRangeSet matls = archive.queryMaterials(names[i], r,
+							 times[0]);
       switch ( subtype->getType() ) {
       case TypeDescription::double_type:
+        scalarVars.push_back(VarInfo(names[i], matls));
+	 /*
 	spNames += " ";
 	spNames += names[i];
 	if( psVar.get() == "" ){ psVar.set( names[i].c_str() ); }
@@ -167,8 +177,11 @@ void ParticleFieldExtractor::setVars(ArchiveHandle ar)
 	add_type(type_list,types[i]->getSubType());
 	name_list += " ";
 	name_list += names[i];
+	 */
 	break;
       case  TypeDescription::Vector:
+        vectorVars.push_back(VarInfo(names[i], matls));
+	 /*
 	vpNames += " ";
 	vpNames += names[i];
 	if( pvVar.get() == "" ){ pvVar.set( names[i].c_str() ); }
@@ -176,8 +189,11 @@ void ParticleFieldExtractor::setVars(ArchiveHandle ar)
 	add_type(type_list,types[i]->getSubType());
 	name_list += " ";
 	name_list += names[i];
+	 */
 	break;
       case  TypeDescription::Matrix3:
+	tensorVars.push_back(VarInfo(names[i], matls));
+	 /*
 	tpNames += " ";
 	tpNames += names[i];
 	if( ptVar.get() == "" ){ ptVar.set( names[i].c_str() ); }
@@ -185,15 +201,13 @@ void ParticleFieldExtractor::setVars(ArchiveHandle ar)
 	add_type(type_list,types[i]->getSubType());
 	name_list += " ";
 	name_list += names[i];
+	 */
 	break;
       case  TypeDescription::Point:
-	positionName = names[i];
+        pointVars.push_back(VarInfo(names[i], matls));
 	break;
       case TypeDescription::long_type:
-	if( names[i] == "p.particleID" )
-	  particleIDs = names[i];
-	else
-	  particleIDs = "";
+	particleIDVar = VarInfo(names[i], matls);
       default:
 	cerr<<"Unknown particle type\n";
       }// else { Tensor,Other}
@@ -201,32 +215,102 @@ void ParticleFieldExtractor::setVars(ArchiveHandle ar)
   }
   
   // get the number of materials for the NC & particle Variables
-  GridP grid = archive.queryGrid(times[0]);
-  LevelP level = grid->getLevel( 0 );
-  Patch* r = *(level->patchesBegin());
-  int numpsMatls = archive.queryNumMaterials(psVar.get()(), r, times[0]);
-  
+  num_materials = archive.queryNumMaterials(r, times[0]);
+  cerr << "Number of Materials " << num_materials << endl;
+
   clString visible;
   TCL::eval(id + " isVisible", visible);
   if( visible == "1"){
-    TCL::execute(id + " destroyFrames");
-    TCL::execute(id + " build");
-    
-    TCL::execute(id + " buildPMaterials " + to_string(numpsMatls));
-    pNMaterials.set(numpsMatls);
-    
-    TCL::execute(id + " setParticleScalars " + spNames.c_str());
-    TCL::execute(id + " setParticleVectors " + vpNames.c_str());
-    TCL::execute(id + " setParticleTensors " + tpNames.c_str());
-    TCL::execute(id + " buildVarList");
-    TCL::execute(id + " setVar_list " + name_list.c_str());
-    TCL::execute(id + " setType_list " + type_list.c_str());  
-    TCL::execute("update idletasks");
-    reset_vars();
+     TCL::execute(id + " destroyFrames");
+     TCL::execute(id + " build");
+     TCL::execute(id + " buildPMaterials " + to_string(num_materials));
+     TCL::execute(id + " buildVarList");    
   }
 }
 
+void ParticleFieldExtractor::showVarsForMatls()
+{
+  ConsecutiveRangeSet onMaterials;
+  for (int matl = 0; matl < num_materials; matl++) {
+     clString result;
+     eval(id + " isOn p" + to_string(matl), result);
+     if ( result == "0")
+	continue;
+     onMaterials.addInOrder(matl);
+  }
 
+  bool needToUpdate = false;
+  string spNames = getVarsForMaterials(scalarVars, onMaterials, needToUpdate);
+  string vpNames = getVarsForMaterials(vectorVars, onMaterials, needToUpdate);
+  string tpNames = getVarsForMaterials(tensorVars, onMaterials, needToUpdate);
+
+  if (needToUpdate) {
+    clString visible;
+    TCL::eval(id + " isVisible", visible);
+    if( visible == "1"){
+      TCL::execute(id + " clearVariables");
+      TCL::execute(id + " setParticleScalars " + spNames.c_str());
+      TCL::execute(id + " setParticleVectors " + vpNames.c_str());
+      TCL::execute(id + " setParticleTensors " + tpNames.c_str());
+      TCL::execute(id + " buildVarList");    
+      TCL::execute("update idletasks");
+      reset_vars(); // ?? what is this for?
+    }
+  }
+
+  list<VarInfo>::iterator iter;
+  positionName = "";
+  for (iter = pointVars.begin(); iter != pointVars.end(); iter++) {
+     if (onMaterials.intersected((*iter).matls).size() == onMaterials.size()) {
+	positionName = (*iter).name;
+	break;
+     }
+  }
+  particleIDs = "";
+  if (onMaterials.intersected(particleIDVar.matls).size()
+      == onMaterials.size()) {
+     particleIDs = particleIDVar.name;
+  }
+}
+
+string
+ParticleFieldExtractor::getVarsForMaterials(list<VarInfo>& vars,
+					    const ConsecutiveRangeSet& matls,
+					    bool& needToUpdate)
+{
+  string names = "";
+  list<VarInfo>::iterator iter;
+  for (iter = vars.begin(); iter != vars.end(); iter++) {
+     if (matls.intersected((*iter).matls).size() == matls.size()) {
+	names += string(" ") + (*iter).name;
+	if (!(*iter).wasShown) {
+	   needToUpdate = true;
+	   (*iter).wasShown = true;
+	}
+     }
+     else if ((*iter).wasShown) {
+	needToUpdate = true;
+	(*iter).wasShown = false;
+     }
+  }
+
+  return names;
+}
+
+void ParticleFieldExtractor::addGraphingVars(long particleID,
+					     const list<VarInfo>& vars,
+					     string type)
+{
+  list<VarInfo>::const_iterator iter;
+  int i = 0;
+  for (iter = vars.begin(); iter != vars.end(); iter++, i++) {
+     ostringstream call;
+     call << id << " addGraphingVar " << particleID << " " << (*iter).name <<
+	" {" << (*iter).matls.expandedString() << "} " << type <<
+	" " << i;
+     TCL::execute(call.str().c_str());
+  }
+}
 
 void ParticleFieldExtractor::callback(long particleID)
 {
@@ -236,8 +320,10 @@ void ParticleFieldExtractor::callback(long particleID)
   ostringstream call;
   call << id << " create_part_graph_window " << particleID;
   TCL::execute(call.str().c_str());
-
-
+  addGraphingVars(particleID, scalarVars, "scalar");
+  addGraphingVars(particleID, vectorVars, "vector");
+  addGraphingVars(particleID, tensorVars, "matrix3");
+  
 //   if( this->archive.get_rep() == 0 ) return;
 
 //   DataArchive& archive = *((*(this->archive.get_rep()))());
@@ -323,24 +409,23 @@ void ParticleFieldExtractor::execute()
      return;
    }
    
-   cerr << "Calling setVars\n";
-   if ( handle.get_rep() != archive.get_rep() ) {
+
+   if ( handle.get_rep() != archiveH.get_rep() ) {
      
-     if (archive.get_rep()  == 0 ){
+     if (archiveH.get_rep()  == 0 ){
        clString visible;
        TCL::eval(id + " isVisible", visible);
        if( visible == "0" ){
 	 TCL::execute(id + " buildTopLevel");
        }
      }
+     cerr << "Calling setVars\n";
      setVars( handle );
-     archive = handle;
-   }       
+     cerr << "done with setVars\n";
+     archiveH = handle;
+   }
+   showVarsForMatls();
      
-   cerr << "done with setVars\n";
-
-
-
    DataArchive& archive = *((*(handle.get_rep()))());
    ScalarParticles* sp = 0;
    VectorParticles* vp = 0;
@@ -396,9 +481,9 @@ ParticleFieldExtractor::buildData(DataArchive& archive, double time,
     ParticleVariable< Point  > pvp;
     ParticleVariable< long > pvi;
      
-    int numMatls = archive.queryNumMaterials(positionName, *r, time);
+    
     //int numMatls = 29;
-    for(int matl=0;matl<numMatls;matl++){
+    for(int matl = 0; matl < num_materials; matl++) {
       clString result;
       eval(id + " isOn p" + to_string(matl), result);
       if ( result == "0")
@@ -530,7 +615,7 @@ void ParticleFieldExtractor::graph(string varname, vector<string> mat_list,
     if (names[i] == varname)
       td = types[i];
   
-  DataArchive& archive = *((*(this->archive.get_rep()))());
+  DataArchive& archive = *((*(this->archiveH.get_rep()))());
   vector< int > indices;
   times.clear();
   archive.queryTimesteps( indices, times );

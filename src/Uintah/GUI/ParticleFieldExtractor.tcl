@@ -40,16 +40,13 @@ itcl_class Uintah_Visualization_ParticleFieldExtractor {
     protected pf ""
 
 ################################################
-    protected var_list ""
-# mat_list is not used because all variables are assumed to have 
-# num_materials materials.
-#    protected mat_list ""
-    protected type_list ""
     protected var_val_list {}
     protected graph_data_names ""
     protected time_list {}
     protected num_materials 0
     protected num_colors 240
+
+    protected graph_window ""
 
     protected matrix_types {"Determinant" "Trace" "Norm"}
     protected vector_types {"length" "length2" "x" "y" "z"}
@@ -179,11 +176,23 @@ itcl_class Uintah_Visualization_ParticleFieldExtractor {
 	set w .ui[modname] 
 
 	destroy $pf
-	set pNameList ""
 	set psVarList ""
 	set pvVarList ""
 	set ptVarList ""
 	set pf ""
+    }
+
+    method clearVariables {} {
+	set w .ui[modname] 
+
+	set parent $w.f
+	destroy $parent.f0.1
+	set psVarList ""
+	set pvVarList ""
+	set ptVarList ""
+	frame $parent.f0.1 -relief flat -borderwidth 2
+	pack $parent.f0.1 -side top -expand yes -fill both -padx 2
+	buildControlFrame $parent.f0.1
     }
 
     method setParticleScalars { args } {
@@ -233,6 +242,23 @@ itcl_class Uintah_Visualization_ParticleFieldExtractor {
 	set vv ""
 	set c "$this-c needexecute"
 	puts "... buildControlFrame $pf.1"
+
+	if { [set $this-psVar] != ""  } {
+	    if { [lsearch $psVarList [set $this-psVar]] == -1 } {
+		set $this-psVar ""
+	    }
+	}
+	if { [set $this-pvVar] != ""  } {
+	    if { [lsearch $pvVarList [set $this-pvVar]] == -1 } {
+		set $this-pvVar ""
+	    }
+	}
+	if { [set $this-ptVar] != ""  } {
+	    if { [lsearch $ptVarList [set $this-ptVar]] == -1 } {
+		set $this-ptVar ""
+	    }
+	}
+
 	#set varlist [split $pvVarList]
 	for {set i 0} { $i < [llength $psVarList] } { incr i } {
 	    set newvar [lindex $psVarList $i]
@@ -316,40 +342,27 @@ itcl_class Uintah_Visualization_ParticleFieldExtractor {
 
 #################################################################3
     method create_part_graph_window { part_id } {
-	# var_list,mat_list(or num_materials), and time_list should
-	# be initialized by this point
+	# time_list should be initialized by this point
 	# part_id must not have any periods in it
 
-        set w .ui[modname]$part_id
+        set graph_window .ui[modname]$part_id
 
 	#$this setVar_list "p.mass" "p.stress" "p.cheese"
 	#$this setMat_list 3 3 3
 	#$this setTime_list 0 1 2 3 4
 	
-        if {[winfo exists $w]} { 
-	    wm deiconify $w
-            raise $w 
+        if {[winfo exists $graph_window]} { 
+	    wm deiconify $graph_window
+            raise $graph_window
         } else { 
 	    # build the window
-	    toplevel $w
-	    $this buildVarFrame $w $part_id
-
-	    wm deiconify $w
-            raise $w 
+	    toplevel $graph_window
+	    wm deiconify $graph_window
+            raise $graph_window
 	}
-    }
-    method setVar_list { args } {
-	set var_list $args
-	puts "var_list is now $var_list"
-    }
-    method setMat_list { args } {
-	puts "Warning setMat_list has not effect!!"
-#	set mat_list $args
-#	puts "mat_list is now $mat_list"
-    }
-    method setType_list { args } {
-	set type_list $args
-	puts "type_list is now $type_list"
+	if {![winfo exists $graph_window.vars]} {
+	    destroy $graph_window.vars
+	}
     }
     method setTime_list { args } {
 	set time_list $args
@@ -406,20 +419,6 @@ itcl_class Uintah_Visualization_ParticleFieldExtractor {
 	return $c
     }
 ###############################################################################
-    method buildVarFrame {w part_id} {
-	if {[llength $var_list] > 0} {
-	    frame $w.vars -borderwidth 3 -relief ridge
-	    pack $w.vars -side top -fill x -padx 2 -pady 2
-	    
-#	    puts "var_list length [llength $var_list]"
-	    for {set i 0} { $i < [llength $var_list] } { incr i } {
-		set newvar [lindex $var_list $i]
-#		set newmat [lindex $mat_list $i]
-		set newtype [lindex $type_list $i]
-		addVar $w.vars $part_id $newvar $num_materials $newtype $i
-	    }
-	}
-    }
     # this sets all the variables, var_root_j, with val
     method mat_sel_sub { var_root number val} {
 	for {set j 0} { $j < $number} {incr j} {
@@ -428,8 +427,9 @@ itcl_class Uintah_Visualization_ParticleFieldExtractor {
 	}
     }
     # called when SelAll or SelNone is evoked from the top level
-    method mat_sel { var_root number val type} {
-	for {set j 0} { $j < $number} {incr j} {
+    method mat_sel { var_root mat_list val type} {
+	for {set i 0} { $i < [llength $mat_list] } {incr i} {
+	    set j [lindex $mat_list $i]
 	    set tail "_$j"
 	    switch $type {
 		"matrix3" {
@@ -438,7 +438,7 @@ itcl_class Uintah_Visualization_ParticleFieldExtractor {
 		"vector" {
 		    mat_sel_sub $var_root$tail $num_v_type $val
 		}
-		"scaler" {
+		"scalar" {
 		    set $var_root$tail $val
 		}
 	    }
@@ -452,21 +452,21 @@ itcl_class Uintah_Visualization_ParticleFieldExtractor {
     # mat - number of materials
     # i - index of variable
     # type - type of variable
-    method make_mat_menu {w part_id mat i type} {
-	set fname "$w.mat$i"
+    method make_mat_menu {w part_id mat_list var_id type} {
+	set fname "$w.mat$var_id"
 	menubutton $fname -text "Material" \
 		-menu $fname.list -relief groove
 	pack $fname -side right -padx 2 -pady 2
 	
 	menu $fname.list
-	set var_id $i
 #	puts "var_id = $var_id"
 	append var_id "_id$part_id"
 	$fname.list add command -label "Sel All" \
-		-command "$this mat_sel $this-matvar_$var_id $mat 1 $type"
+		-command "$this mat_sel $this-matvar_$var_id {$mat_list} 1 $type"
 	$fname.list add command -label "Sel None" \
-		-command "$this mat_sel $this-matvar_$var_id $mat 0 $type"
-	for {set j 0} { $j < $mat} {incr j} {
+		-command "$this mat_sel $this-matvar_$var_id {$mat_list} 0 $type"
+	for {set i 0} { $i < [llength $mat_list] } {incr i} {
+	    set j [lindex $mat_list $i]
 	    set var $var_id
 	    append var "_$j"
 #	    puts "var = $var"
@@ -506,7 +506,7 @@ itcl_class Uintah_Visualization_ParticleFieldExtractor {
 			    -label [lindex $vector_types $k]
 #		    puts "actual variable = $this-matvar_$var2"
 		}
-	    } elseif {$type == "scaler"} {
+	    } elseif {$type == "scalar"} {
 		$fname.list add checkbutton \
 			-variable $this-matvar_$var \
 			-label "Mat $j"
@@ -514,14 +514,16 @@ itcl_class Uintah_Visualization_ParticleFieldExtractor {
 	    }
 	}
     }
-    method graphbutton {part_id name var_index num_mat type} {
+    method graphbutton {part_id name var_index mat_list type} {
+	puts "Starting graph button with materials: $mat_list"
 	set val_list {}
 	set num_vals 0
 	set var_root $this-matvar_$var_index
 	append var_root "_id$part_id"
 #	puts "var_root = $var_root"
 	# loop over all the materials	
-	for {set j 0} { $j < $num_mat} {incr j} {
+	for {set i 0} { $i < [llength $mat_list] } {incr i} {
+	    set j [lindex $mat_list $i]
 	    set mat_root $var_root
 	    append mat_root "_$j"
 	    switch $type {
@@ -543,7 +545,7 @@ itcl_class Uintah_Visualization_ParticleFieldExtractor {
 			}
 		    }
 		}
-		"scaler" {
+		"scalar" {
 		    if {[set $mat_root] != 0} {
 			lappend val_list "$j" "invalid"
 			incr num_vals
@@ -563,34 +565,38 @@ itcl_class Uintah_Visualization_ParticleFieldExtractor {
 		set insert [lindex $val_list $i]
 		append call " $insert"
 	    }
-#	    puts "call =  $call"
+	    puts "call =  $call"
 	    eval $call
 	}
     }
-    # w - the window parent
+    # graph_window must be set prior to calling addGraphingVar
+    #   (via create_part_graph_window)
     # part_id - particle id pertaining to the variable
     # name - name of the variable to be added
-    # mat - index into the matierial list
+    # mat_list - list of materials valid for the variable
     # type - the type of the variable
     # i - variable index
-    method addVar {w part_id name mat type i} {
-	set fname "$w.var$i"
-#	puts "addVar: fname = $fname"
-	frame $fname
-	pack $fname -side top -fill x -padx 2 -pady 2
+    method addGraphingVar {part_id name mat_list type i} {
+	if {[winfo exists $graph_window]} {
+	    if {![winfo exists $graph_window.vars]} {
+		frame $graph_window.vars -borderwidth 3 -relief ridge
+		pack $graph_window.vars -side top -fill x -padx 2 -pady 2
+	    }
+	    set varid "$type$i"
+	    set fname "$graph_window.$varid"
 
-	label $fname.label -text "$name"
-	pack $fname.label -side left -padx 2 -pady 2
+	    #puts "addVar: fname = $fname"
+	    frame $fname
+	    pack $fname -side top -fill x -padx 2 -pady 2
 
-	button $fname.button -text "Graph" -command "$this graphbutton $part_id $name $i $mat $type"
-	pack $fname.button -side right -padx 2 -pady 2
+	    label $fname.label -text "$name"
+	    pack $fname.label -side left -padx 2 -pady 2
+	    
+	    button $fname.button -text "Graph" -command "$this graphbutton $part_id $name $varid $mat_list $type"
+	    pack $fname.button -side right -padx 2 -pady 2
 
-	if {$mat > $num_materials} {
-	    set num_materials $mat
-#	    puts "num_materials is now $num_materials"
+	    make_mat_menu $fname $part_id $mat_list $varid $type
 	}
-
-	make_mat_menu $fname $part_id $mat $i $type
     }
     method graph_data { id var args } {
 	set w .graph[modname]$graph_id
