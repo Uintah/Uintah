@@ -22,15 +22,10 @@
   <overview>
     <authors>
     </authors>
-    <summary>Modify attributes of a nrrd for all axes. The only attributes which are set are the label, minimum and maximum values, and the spacing.
+    <summary>Modify attributes of a nrrd for a given axis. The only attributes which are set are the label, kind, minimum and maximum values, and the spacing.
     </summary>
     <description>
-    <p>To get valid values in the gui the module must execute. After 
-first execution, the user interface has correct values, and will 
-produce the identical nrrd as was input. For future executions, this
-module will output an nrrd similar to the input nrrd but with the
-label, minimum and maximum values, and spacing attrigutes corresponding
-to those entered in the gui.</p>
+    <p>The values given in the UI will be set to be the corresponding values of the new nrrd.</p>
     </description>
   </overview>
   <implementation>
