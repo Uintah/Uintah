@@ -158,7 +158,7 @@ bool ParticleLoadBalancer::assignPatchesParticle(const GridP& grid)
   MPI_Type_contiguous(3, MPI_INT, &particletype);
   MPI_Type_commit(&particletype);
 
-  MPI_Allgatherv(&particleList[0],particleList.size(),particletype,
+  MPI_Allgatherv(&particleList[0],(int)particleList.size(),particletype,
 	      &allParticles[0], &recvcounts[0], &displs[0], particletype,
 	      d_myworld->getComm());
 
@@ -470,7 +470,7 @@ bool ParticleLoadBalancer::assignPatchesRandom(const GridP&)
   srand(seed);
 
   int numProcs = d_myworld->size();
-  int numPatches = d_processorAssignment.size();
+  int numPatches = (int)d_processorAssignment.size();
 
   vector<int> proc_record(numProcs,0);
   int max_ppp = numPatches / numProcs;

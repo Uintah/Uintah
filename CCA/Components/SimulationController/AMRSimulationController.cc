@@ -622,7 +622,7 @@ AMRSimulationController::needRecompile(double time, double delt,
 void
 AMRSimulationController::initializeErrorEstimate(const ProcessorGroup*,
 						 const PatchSubset* patches,
-						 const MaterialSubset* matls,
+						 const MaterialSubset* /*matls*/,
 						 DataWarehouse*,
 						 DataWarehouse* new_dw,
 						 SimulationStateP sharedState)

@@ -44,7 +44,8 @@ RegridderCommon::~RegridderCommon()
   rdbg << "RegridderCommon::~RegridderCommon() END" << endl;
 }
 
-bool RegridderCommon::needRecompile(double time, double delt, const GridP& grid)
+bool
+RegridderCommon::needRecompile(double /*time*/, double /*delt*/, const GridP& /*grid*/)
 {
   rdbg << "RegridderCommon::needRecompile() BGN" << endl;
   bool retval = d_newGrid;
@@ -495,7 +496,7 @@ void RegridderCommon::Dilate( CCVariable<int>& flaggedCells, CCVariable<int>& di
 void RegridderCommon::Dilate2(const ProcessorGroup*,
 			      const PatchSubset* patches,
 			      const MaterialSubset* ,
-			      DataWarehouse* old_dw,
+			      DataWarehouse* /*old_dw*/,
 			      DataWarehouse* new_dw, DilationType type, DataWarehouse* get_dw)
 {
   rdbg << "RegridderCommon::Dilate2() BGN" << endl;
