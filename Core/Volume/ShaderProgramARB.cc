@@ -144,7 +144,7 @@ ShaderProgramARB::create()
       mSupported = true;
     }
     bool fail = !mSupported;
-#if !defined(CORRECT_OGL_HDRS)
+#if !defined(CORRECT_OGLEXT_HDRS)
     fail = fail
       || (glGenProgramsARB = (PFNGLGENPROGRAMSARBPROC)getProcAddress("glGenProgramsARB")) == 0;
     fail = fail
