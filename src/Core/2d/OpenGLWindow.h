@@ -45,6 +45,7 @@
 #include <sgi_stl_warnings_on.h>
 
 #include <sci_gl.h>
+#include <sci_glu.h>
 #include <sci_glx.h>
 
 #include <Core/2d/Drawable.h>

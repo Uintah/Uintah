@@ -36,8 +36,6 @@
  */
 
 
-#include <sci_gl.h>
-
 #include <tcl.h>
 #include <tk.h>
 
