@@ -15,10 +15,9 @@
 #include <Datatypes/ScalarFieldRG.h>
 #include <Datatypes/ScalarFieldPort.h>
 #include <Datatypes/GeometryPort.h>
+#include <Datatypes/ColormapPort.h>
 
-#include <Geom/Color.h>
-
-
+#include <Geometry/BBox.h>
 #include <Geom/View.h>
 #include <Geom/TCLView.h>
 #include <Geom/TCLGeom.h>
@@ -44,11 +43,58 @@
 #include <iostream.h>
 #include <stdlib.h>
 #include <string.h>
-
 #include <Classlib/Timer.h>
 
-#include <Modules/Visualization/LevoyVis.h>
+#include <Multitask/Mailbox.h>
+#include <Multitask/Task.h>
+#include <Multitask/ITC.h>
+
+#include <Math/Trig.h>
+
+#include <Modules/Visualization/FastRender.h>
 #include "kuswik.h"
+
+
+#define NEWSCALARFIELD   1
+#define NEWVIEW          2
+#define NEWTRANSFERMAP   3
+#define NEWRASTER        4
+#define NEWSTEP          5
+#define NEWINVALIDSCALARFIELD   6
+#define NEWBACKGROUND    7
+#define NEWLINEARATTENUATION 8
+#define NEWCOLORMAP      9
+
+#define VTABLE_SIZE      2000
+
+#define VIEW_PORT_SIZE 600
+#define CANVAS_WIDTH 200
+#define TABLE_SIZE 2000
+
+
+typedef void (*FR) ( double, double, double, double, double, double, double,
+		    double *, double *, double *, double *, double, double,
+		    double, double, double, double ***grid, double, double, double,
+		    int, int, int, double, double, double, double,
+		    double *, double *, double * );
+
+class RenderingThread;
+class VolVis;
+
+
+class RenderingThread : public Task
+{
+public:
+  VolVis *v;
+  RenderingThread( VolVis * voldata );
+  int body( int );
+};
+
+
+RenderingThread::RenderingThread( VolVis *voldata ) : Task( "VVRenderLoop" )
+{
+  v = voldata;
+}
 
 
 // TEMP! make the parallel fnc pretty by not duplicating the same
@@ -57,7 +103,7 @@
 // the initial view data
 
 const ExtendedView ehomeview
-(Point(0.6, 2.6, 0.6), Point(0.6, 0.6, 0.6), Vector(1.,0.,0.), 30, 100, 100,
+(Point(0.6, 0.5, -0.7), Point(0.5, 0.5, 0.5), Vector(0.,1.,0.), 60, 100, 100,
  Color(0.,0.,0.));
 
 // tcl interpreter corresponding to this module
@@ -68,6 +114,7 @@ extern Tcl_Interp* the_interp;
 
 extern "C" GLXContext OpenGLGetContext(Tcl_Interp*, char*);
 
+//typedef Mailbox<SimplePortComm<int>*> SMail;
 
 /**************************************************************
  *
@@ -83,122 +130,93 @@ class VolVis : public Module {
   GeometryOPort* ogeom;
 
   // scalar field input port, provides the 3D image data
-  
   ScalarFieldIPort *iport;
 
   // handle to the scalar field
-  
   ScalarFieldHandle homeSFHandle;
 
-  // remember last generation of scalar field
+  // PETE
+  ColormapHandle cmap;
 
+  // remember last generation of scalar field
   int homeSFgeneration;
   
   // the size in pixels of output window
-  
   double x_pixel_size;
   double y_pixel_size;
 
   
-  // EXP! try the extended view stuff
-
+  // try the extended view stuff
   TCLExtendedView iEView;
-
-  // EXP!!!
-
   ExtendedView myview;
 
   // min and max scalar values
-
   TCLdouble minSV, maxSV;
-
   double min, max;
 
   // a list of {x,y}positions {x=scalar value, y=opacity}
   // associated with the nodes of "Opacity map" widget
-  
   TCLstring Xarray, Yarray;
   TCLstring Rsv, Rop;
   TCLstring Gsv, Gop;
   TCLstring Bsv, Bop;
 
   // projection type
-
   TCLint projection;
+  TCLint Petes;
 
   // parallel or single processor
-
   TCLint iProc;
   
   // background color
-  
   Color bgColor;
 
   // arrays with scalar value -- opacity mapping
-  
-  Array1<double> Opacity[4];
-  Array1<double> ScalarVal[4];
+  Array1<double> AssociatedVals[4];
+  Array1<double> ScalarVals[4];
   
   // the image is stored in this 2d-array.  it contains
   // pixel values arranged in the order row then column
-
   Array2<CharColor> Image;
 
 
 
   // points to the display
-
   Display* dpy;
 
+  Window   win;
 
   
   // mutex to prevent problems related to changes of the
   // Image array
-
   Mutex imagelock;
-
+  Mutex donelock;
 
   // number of processors is necessary for proper division
   // of data during parallel processing
-
   int procCount;
 
   // pointer to the levoy structure
-  
-  Levoy calc;
+//  Levoy calc;
 
   // specifies the number of separate slices processed by
   // each of the processors
-
   TCLint intervalCount;
 
-  // The following variables will be supplied by Salmon
-  // if the Salmon module is connected to this VolVis module.
   
-  // SalmonView  = camera info for the scene,
-  // DepthBuffer = distance from the eye to some pt in space,
-  // ColorBuffer = RGB(A?) background color for each pixel.
-
-  View SalmonView;
-
-  Array2<double> DepthBuffer;
-  Array2<Color>  ColorBuffer;
-  
-
   // the variable that tells me that the ui is open
-  
   TCLint uiopen;
+
+  int already_open;
 
 
   // if Salmon is connected to VolVis, the user can chose to:
   //    &* not use any of the data provided by Salmon
   //    &* use just the view information
   //    &* use all the information: view, z, and rgb values
-
   TCLint salmonData;
 
   // allow the user to specify the step size for Levoy's algorithm
-
   TCLint stepSize;
   
   //
@@ -209,12 +227,96 @@ class VolVis : public Module {
   
   int makeCurrent();
 
+#if 0  
   int Validate ( ScalarFieldRG **homeSFRGrid );
+#endif  
 
   // place the {x,y}positions supplied by tcl-lists
   // into the arrays.
-
   void UpdateTransferFncArray( clString x, clString y, int index );
+
+  const int numMsg=100;
+  
+  //  SMail msgs;
+  Mailbox<int> msgs;
+
+  RenderingThread *rt;
+  
+  void XRasterChanged( clString a );
+  void StepSizeChanged( clString a );
+  void TransferMapChanged();
+
+  ScalarFieldRG * homeSFRGrid;
+  int stepcount;
+
+  // stuff for the transfer map
+  int SVMultiplier;
+  double *SVOpacity;
+  double *SVR;
+  double *SVG;
+  double *SVB;
+  
+  double *SVOpacitysave;
+  double *SVRsave;
+  double *SVGsave;
+  double *SVBsave;
+  
+  Array1<double> Slopes[4];
+
+  unsigned int mask;
+  int whiteFlag;
+  BBox box;
+  Point bmin, bmax;
+  
+  Vector homeRay;
+  Vector rayIncrementU, rayIncrementV;
+  double rayStep;
+
+  int nx, ny, nz;
+  Vector diagonal;
+  double diagx, diagy, diagz;
+  
+  
+  double DetermineRayStepSize ( int steps );
+  void CalculateRayIncrements ();
+  void CreateTransferTables();
+  void ScalarFieldChanged();
+  void UTArrays();
+
+  void ViewChanged( clString a );
+  unsigned int FindMask( unsigned int seq );
+
+  unsigned int ONE;
+  int xres, yres;
+  int width;
+
+  Point eye;
+
+  unsigned int global_start_seq, global_seq, new_seq;
+  int done;
+  int xmiddle, ymiddle;
+
+  int xresChanged, yresChanged, stepcountChanged;
+  ScalarFieldRG * data;
+  
+  Color newbg;
+  void RBackgroundChanged( clString a );
+  void GBackgroundChanged( clString a );
+  void BBackgroundChanged( clString a );
+
+  View newview;
+
+  FR CastRay;
+
+  double mbgr, mbgg, mbgb;
+  double newLinearA, LinAtten;
+
+  void LinearAChanged( clString a );
+  ColormapIPort* incolormap;
+
+  void ReadTransfermap();
+
+  int jelly;
 
 public:
 
@@ -247,6 +349,8 @@ public:
   void redraw_all();
   
   void parallel(int proc);
+
+  void RenderLoop();
 };
 
 
@@ -290,6 +394,7 @@ VolVis::VolVis(const clString& id)
   minSV("minSV", id, this),
   maxSV("maxSV", id, this),
   projection("project", id, this),
+  Petes("pcmap", id, this),
   iProc("processors", id, this),
   intervalCount("intervalCount", id, this),
   Rsv("Rsv", id, this),
@@ -311,32 +416,82 @@ VolVis::VolVis(const clString& id)
   iport = scinew ScalarFieldIPort(this, "RGScalarField", ScalarFieldIPort::Atomic);
   add_iport(iport);
 
+  incolormap=scinew  
+    ColormapIPort(this, "Color Map", ColormapIPort::Atomic);
+  
+  add_iport(incolormap);
+					
   // Create the output port
   ogeom = scinew GeometryOPort(this, "Geometry", GeometryIPort::Atomic);
   add_oport(ogeom);
 
   // initialize the view to home view
-
   iEView.set( ehomeview );
+  myview = ehomeview;
+
+  eye = myview.eyep();
+  homeRay = myview.lookat() - eye;
+  homeRay.normalize();
+  CalculateRayIncrements();
+  rayStep = 1.0; // just for kicks, it will have to be recalculated
+  stepcount = 8;
+  
 
   // initialize a few variables used by OpenGL
-  
   x_pixel_size = 1;
   y_pixel_size = 1;
 
+  
   homeSFgeneration = -1;
 
   // initialize this image in order to prevent seg faults
   // by OpenGL when redrawing the screen with uninitialized
   // (size of 0,0) array of pixels
 
-  Image.newsize(100,100);
+  Image.newsize(600,600);
   Image.initialize( myview.bg() );
 
   iEView.bg.set( BLACK );
 
-  max = 110;
-  min = 1;
+  min = 1; max = 110;
+  already_open = 0;
+  homeSFRGrid = NULL;
+  rt = NULL;
+  SVMultiplier = 1.0;
+  mask = 0x3500;
+  whiteFlag = 1;
+  bmin.x( 0.0 );
+  bmin.y( 0.0 );
+  bmin.z( 0.0 );
+  bmax.x( 1.0 );
+  bmax.y( 1.0 );
+  bmax.z( 1.0 );
+  diagonal.x( 1.0 );
+  diagonal.y( 1.0 );
+  diagonal.z( 1.0 );
+  diagx = diagy = diagz = 1.0;
+  nx = ny = nz = 100;
+  ONE = 0x0001;
+  xres = yres = 100;
+  xresChanged = yresChanged = 100;
+  mbgr = mbgg = mbgb = 0.0;
+  
+  // create and activate the rendering thread
+  rt = new RenderingThread( this );
+  rt->activate( 0 );
+  cerr << "Activated the thread\n";
+
+  CastRay = &BasicVolRender;
+  LinAtten = 1;
+
+  SVOpacitysave = new double[VTABLE_SIZE];
+  SVRsave = new double[VTABLE_SIZE];
+  SVGsave = new double[VTABLE_SIZE];
+  SVBsave = new double[VTABLE_SIZE];
+  SVOpacity = SVOpacitysave;
+  SVR = SVRsave;
+  SVG = SVGsave;
+  SVB = SVBsave;
 }
 
 
@@ -353,6 +508,7 @@ VolVis::VolVis(const VolVis& copy, int deep)
   maxSV("maxSV", id, this),
   minSV("minSV", id, this),
   projection("project", id, this),
+  Petes("pcmap", id, this),
   iProc("processors", id, this),
   intervalCount("intervalCount", id, this),
   Rsv("Rsv", id, this),
@@ -414,103 +570,136 @@ do_parallel(void* obj, int proc)
 
 
 
-
-
-/**************************************************************
- *
- *
- *
- **************************************************************/
-
 void
 VolVis::parallel( int proc )
 {
-  int i;
+  int i,j;
+  int seq = global_seq;
+  double r, g, b;
+  Vector rayToTrace;
+  Point beg;
+  int row, col;
 
-  // calculate the number of image columns to be processed
-  // by one processor in one session.
-  
-  int interval = myview.xres() / procCount / intervalCount.get();
-
-  if ( projection.get() )
-    { // for a perspective projection do the following:
-
-      if ( proc != procCount - 1 )
-	for ( i = 0; i < intervalCount.get(); i++ )
-	  calc.PerspectiveTrace( interval * ( proc + procCount * i ),
-				 interval * ( proc + 1 + procCount * i ) );
-      
+  for ( i = 0; i < proc; i++ )
+    {
+      // compute the next sequence element
+      if ( (ONE & seq) == ONE )
+	seq = (seq>>1) ^ ( mask );
       else
-	{ // the last processor must take care of the remaining
-	  // columns because interval is an integer
-	  
-	  for ( i = 0; i < intervalCount.get()-1; i++ )
-	    calc.PerspectiveTrace( interval * ( proc + procCount * i ),
-				   interval * ( proc + 1 + procCount * i ) );
+	seq = seq>>1;
 
-	  calc.PerspectiveTrace(interval * ( proc + procCount *
-					     ( intervalCount.get() - 1 ) ),
-				 myview.xres() );
+      if ( seq == global_start_seq )
+	{
+	  done = 1;
+	  return;
 	}
     }
-}
 
-
-
-/**************************************************************
- *
- * make sure that the scalar field handle points to valid
- * data.  initialize some variables.
- *
- **************************************************************/
-
-int
-VolVis::Validate ( ScalarFieldRG **homeSFRGrid )
-{
-  cerr << "Welcome to Validate\n";
-  
-  // get the scalar field handle
-  
-  if ( ! iport->get(homeSFHandle) )
-    cerr << "\n\n\n\n\n\n\n\niport->get the handle returned FALSE\n\n\n\n\n\n\n\n\n\n";
-
-  // Make sure this is a valid scalar field
-
-  if ( ! homeSFHandle.get_rep() )
+  for ( i = 0; i < 2000; i++ )
     {
-      cerr << "bailed on getting the representation\n";
-      return 0;
-    }
-
-  // make sure scalar field is a regular grid
-  
-  if ( ( (*homeSFRGrid) = homeSFHandle->getRG()) == 0)
-    {
-      cerr << "bailed because it is not a regular grid\n";
-      return 0;
-    }
-
-  if ( homeSFgeneration != homeSFHandle->generation )
-    {
-      // remember the generation
+      row = seq / xres;
+      col = seq % xres;
       
-      homeSFgeneration = homeSFHandle->generation;
+      if ( row < yres )
+	{
+	  // CAST A RAY
+	  
+	  rayToTrace = homeRay;
+	  rayToTrace += rayIncrementU * ( col - xmiddle );
+	  rayToTrace += rayIncrementV * ( row - ymiddle );
+	  rayToTrace.normalize();
+	  
+	  // make the ray the length of the step
+	  rayToTrace *= rayStep;
+	  
+	  // must add the offset(to put the image in the middle)
+	  
+	  if ( box.Intersect( eye, rayToTrace, beg ) )
+	    {
+	      (*CastRay)( rayToTrace.x(), rayToTrace.y(),
+			 rayToTrace.z(), rayStep, beg.x(),
+			 beg.y(), beg.z(), SVOpacity,
+			 SVR, SVG, SVB, min,
+			 SVMultiplier, box.min().x(),
+			 box.min().y(), box.min().z(),
+			 homeSFRGrid->grid.get_dataptr(),
+			 mbgr, mbgg, mbgb, nx, ny, nz,
+			 diagx, diagy, diagz, LinAtten,
+			 &r, &g, &b );
+	      
+	      Image( row, col ).red   = (unsigned char)(r*255.0);
+	      Image( row, col ).green = (unsigned char)(g*255.0);
+	      Image( row, col ).blue  = (unsigned char)(b*255.0);
+	    }
+	  else
+	    {
+	      Image( row, col ).red   = (unsigned char)(mbgr*255.0);
+	      Image( row, col ).green = (unsigned char)(mbgg*255.0);
+	      Image( row, col ).blue  = (unsigned char)(mbgb*255.0);
+	    }
+	}
 
-      // get the min, max values of the new field
+      for ( j = 0; j < procCount; j++ )
+	{
+	  // compute the next sequence element
+	  if ( (ONE & seq) == ONE )
+	    seq = (seq>>1) ^ ( mask );
+	  else
+	    seq = seq>>1;
 
-
-      (*homeSFRGrid)->get_minmax( min, max );
-
-      // set the tcl/tk min and max scalar values
-
-      minSV.set( min );
-      maxSV.set( max );
+	  if ( seq == global_start_seq )
+	    {
+	      done = 1;
+	      return;
+	    }
+	}
     }
-  
-  return 1;
+
+      row = seq / xres;
+      col = seq % xres;
+      
+      if ( row < yres )
+	{
+	  // CAST A RAY
+	  
+	  rayToTrace = homeRay;
+	  rayToTrace += rayIncrementU * ( col - xmiddle );
+	  rayToTrace += rayIncrementV * ( row - ymiddle );
+	  rayToTrace.normalize();
+	  
+	  // make the ray the length of the step
+	  rayToTrace *= rayStep;
+	  
+	  // must add the offset(to put the image in the middle)
+	  
+	  if ( box.Intersect( eye, rayToTrace, beg ) )
+	    {
+	      (*CastRay)( rayToTrace.x(), rayToTrace.y(),
+			 rayToTrace.z(), rayStep, beg.x(),
+			 beg.y(), beg.z(), SVOpacity,
+			 SVR, SVG, SVB, min,
+			 SVMultiplier, box.min().x(),
+			 box.min().y(), box.min().z(),
+			 homeSFRGrid->grid.get_dataptr(),
+			 mbgr, mbgg, mbgb, nx, ny, nz,
+			 diagx, diagy, diagz, LinAtten,
+			 &r, &g, &b );
+	      
+	      Image( row, col ).red   = (unsigned char)(r*255.0);
+	      Image( row, col ).green = (unsigned char)(g*255.0);
+	      Image( row, col ).blue  = (unsigned char)(b*255.0);
+	    }
+	  else
+	    {
+	      Image( row, col ).red   = (unsigned char)(mbgr*255.0);
+	      Image( row, col ).green = (unsigned char)(mbgg*255.0);
+	      Image( row, col ).blue  = (unsigned char)(mbgb*255.0);
+	    }
+	}
+
+  if ( proc == procCount - 1 )
+    new_seq = seq;
 }
-
-
 
 /**************************************************************
  *
@@ -522,18 +711,18 @@ VolVis::Validate ( ScalarFieldRG **homeSFRGrid )
 void
 VolVis::UpdateTransferFncArray( clString x, clString y, int index )
 {
-  cerr << "Welcome to UpdateTransferFncArray\n";
-
   int NodeCount;
   int i, len, position;
-  char * array;
+  
+  char *array = new char[4000];
+  
   char * suppl = new char[CANVAS_WIDTH*4+1];
   char * form = new char[64];
 
   // clear the scalar value and opacity arrays
 
-  Opacity[index].remove_all();
-  ScalarVal[index].remove_all();
+  AssociatedVals[index].remove_all();
+  ScalarVals[index].remove_all();
 
   // read in an integer and store the rest of the string
   // in suppl
@@ -547,7 +736,7 @@ VolVis::UpdateTransferFncArray( clString x, clString y, int index )
   
   /* read in the x-position */
 
-  array = x();
+  strcpy( array, x());
   NodeCount = 0;
   len   = 1;
 
@@ -568,15 +757,17 @@ VolVis::UpdateTransferFncArray( clString x, clString y, int index )
 	for ( i = len - 1; i >= 0; i-- )
 	  suppl[i] = '\0';
 
-      ScalarVal[index].add( 1.0 * position / CANVAS_WIDTH *
+      ScalarVals[index].add( 1.0 * position / CANVAS_WIDTH *
 			   ( max - min ) + min );
 
 //      cerr << index << " it is: " << 1.0 * position / CANVAS_WIDTH * (max-min) + min << endl;
     }
 
+//  cerr << "The string is: " << x();
+
   /* read in the y-position */
 
-  array = y();
+  strcpy( array, y());
   NodeCount = 0;
   len   = 1;
 
@@ -598,10 +789,10 @@ VolVis::UpdateTransferFncArray( clString x, clString y, int index )
 
       // in tcl, the y value increases as one moves down
 
-      Opacity[index].add( 1.0 * ( CANVAS_WIDTH - position )
+      AssociatedVals[index].add( 1.0 * ( CANVAS_WIDTH - position )
 			 / ( CANVAS_WIDTH ) );
     }
-
+//  cerr << "\nThe other string is " << y() << endl;
 }
 
 
@@ -616,18 +807,18 @@ VolVis::UpdateTransferFncArray( clString x, clString y, int index )
 int
 VolVis::makeCurrent()
 {
-  cerr << "Made current in " << Task::self()->get_name() << endl;
+//  cerr << "Made current in " << Task::self()->get_name() << endl;
 
   // several variables used in this function
   
   Tk_Window tkwin;
-  Window win;
+
   GLXContext cx;
 
 
   // lock a mutex
   TCLTask::lock();
-
+  
   // associate this with the "USER INTERFACE" button
   clString myname(clString(".ui")+id+".gl.gl");
 
@@ -697,14 +888,16 @@ VolVis::makeCurrent()
 void
 VolVis::redraw_all()
 {
-  cerr << "Welcome to redraw_all\n";
+//  cerr << "Welcome to redraw_all\n";
 
-  if ( ! uiopen.get() )
-    return;
+//  if ( ! uiopen.get() )
+//    return;
   
   if ( ! makeCurrent() )
       return;
 
+  glDrawBuffer(GL_BACK);
+  
   // clear the GLwindow to background color
 
   glClearColor( myview.bg().r(), myview.bg().g(), myview.bg().b(), 0 );
@@ -717,7 +910,7 @@ VolVis::redraw_all()
   if (! homeSFHandle.get_rep())
     {
       glFlush();
-      cerr << "Made uncurrent #2\n";
+//      cerr << "Made uncurrent #2\n";
       glXMakeCurrent(dpy, None, NULL);
       TCLTask::unlock();
       return;
@@ -725,7 +918,7 @@ VolVis::redraw_all()
 
   // lock because Image will be used
 
-  imagelock.lock();
+//  imagelock.lock();
 
   // initialize some OpenGL variables
 
@@ -733,9 +926,9 @@ VolVis::redraw_all()
   
   // set pixelsize based on other stuff...
 
-  int scale_int = Image.dim2();
-  if (Image.dim1() > scale_int)
-    scale_int = Image.dim1();
+  int scale_int = yres;
+  if (xres > scale_int)
+    scale_int = xres;
 
   float zoom = VIEW_PORT_SIZE*1.0/scale_int;
 
@@ -745,7 +938,7 @@ VolVis::redraw_all()
 
   glPixelZoom(x_pixel_size, y_pixel_size);
 
-  printf("%lf %lf : %lf : %d\n",x_pixel_size,y_pixel_size,zoom,scale_int);
+//  printf("%lf %lf : %lf : %d\n",x_pixel_size,y_pixel_size,zoom,scale_int);
   
   glRasterPos2i( 0, 599 );
   //      glRasterPos2i( x_pixel_size, y_pixel_size * (Image.dim1()+1) );
@@ -759,18 +952,59 @@ VolVis::redraw_all()
   
   glDrawPixels( Image.dim2(), Image.dim1(), GL_RGB, GL_UNSIGNED_BYTE, pixels );
 
-  imagelock.unlock();
-
+  cerr << "in the swap buffer\n";
+  glXSwapBuffers(dpy,win);
+  
+//  imagelock.unlock();
+  
   int errcode;
   while((errcode=glGetError()) != GL_NO_ERROR){
     cerr << "plot_matrices got an error from GL: " << (char*)gluErrorString(errcode) << endl;
   }
 
-  cerr << "Made uncurrent..." << endl;
+//  cerr << "Made uncurrent..." << endl;
   glXMakeCurrent(dpy, None, NULL);
 
   TCLTask::unlock();
-}	    
+
+
+}
+
+
+void
+VolVis::RBackgroundChanged( clString a )
+{
+  double d;
+  a.get_double( d );
+
+  newbg.r( d );
+
+  msgs.send( NEWBACKGROUND );
+}
+
+
+void
+VolVis::GBackgroundChanged( clString a )
+{
+  double d;
+  a.get_double( d );
+
+  newbg.g( d );
+
+  msgs.send( NEWBACKGROUND );
+}
+
+
+void
+VolVis::BBackgroundChanged( clString a )
+{
+  double d;
+  a.get_double( d );
+
+  newbg.b( d );
+
+  msgs.send( NEWBACKGROUND );
+}
 
 
 
@@ -781,130 +1015,55 @@ VolVis::redraw_all()
  **************************************************************/
 
 void
+VolVis::ScalarFieldChanged()
+{
+      // send a message about the new scalar field only if you can
+      // retrieve a handle to it
+      if ( ! iport->get( homeSFHandle ) )
+	{
+	  msgs.send( NEWINVALIDSCALARFIELD );
+	  return;
+	}
+      
+      // make sure this is a valid scalar field
+      if ( ! homeSFHandle.get_rep() )
+	{
+	  msgs.send( NEWINVALIDSCALARFIELD );
+	  return;
+	}
+
+      // make sure this is a valid regular grid
+      if ( ( data = homeSFHandle->getRG() ) )
+	msgs.send( NEWSCALARFIELD );
+      else
+	msgs.send( NEWINVALIDSCALARFIELD );
+
+    }
+      
+void
 VolVis::execute()
 {
-  WallClockTimer watch;
-  
-  // make sure TCL variables are updated
-  ScalarFieldRG *homeSFRGrid;
+  if ( already_open )
+    ScalarFieldChanged();
 
-  // execute if the input ports are valid and if it is necessary
-  // to execute
-  if ( ! Validate( &homeSFRGrid ) )
-    return;
-
-  // update the values from TCL interface
-  reset_vars();
-
-  // continue if UI is open
-  if ( ! uiopen.get() )
-    return;
-  
-  // get data from transfer map and make sure these changes
-  // are reflected in the TCL variables
-  TCL::execute(id+" get_data");
-  reset_vars();
-  
-
-  // retrieve the scalar value-opacity/rgb values, and store them
-  // in arrays
-  UpdateTransferFncArray( Xarray.get(), Yarray.get(), 0 );
-  UpdateTransferFncArray( Rsv.get(), Rop.get(), 1 );
-  UpdateTransferFncArray( Gsv.get(), Gop.get(), 2 );
-  UpdateTransferFncArray( Bsv.get(), Bop.get(), 3 );
-
-  // if connected to a Salmon module, retrieve Salmon geometry info
-  // and store it in a LevoyS type structure
-  // otherwise, use the Levoy structure
-  GeometryData* data=ogeom->getData(0, GEOM_ALLDATA);
-
-  // update myview information, but make sure that the variables
-  // such as bg color and raster size cannot be accessed by redraw
-  // at the same time
-  imagelock.lock();
-            myview = iEView.get();
-  imagelock.unlock();
-
-#if 0  
+  if ( jelly )
     {
-      calc = new LevoyS( homeSFRGrid, ScalarVal, Opacity );
-      ((LevoyS*)calc)->SetUp( data, stepSize.get() );
-    }
-#endif
-  
-  if ( data == NULL )
-    calc.SetUp( homeSFRGrid, ScalarVal, Opacity, myview, stepSize.get() );
-
-  watch.start();
-
-  if ( intervalCount.get() != 0 && iProc.get() )
-    {
-      procCount = Task::nprocessors();
-      Task::multiprocess(procCount, do_parallel, this);
-    }
-  else
-    calc.TraceRays( projection.get() );
-
-  watch.stop();
-
-  cerr << "my watch reports: " << watch.time() << "units of time\n";
-
-  // lock it because the Image array will be modified
-  imagelock.lock();
-
-            // copies the image array
-            Image = calc.Image;
-
-#if 0  
-  /* THE MOST AWESOME DEBUGGING TECHNIQUE */
-  
-  int loop;
-
-  int d1, d2;
-  d1 = Image.dim1() - 1;
-  d2 = Image.dim2();
-  
-  for ( loop = 0; loop < d2; loop++ )
-    {
-      Image(0, loop).red = 255;
-      Image(0, loop).green = 0;
-      Image(0, loop).blue = 0;
+      incolormap->get( cmap );
+      cerr<<"jeller\n";
+      if ( cmap.get_rep() )
+	msgs.send( NEWCOLORMAP );
       
-      Image(d1, loop).red = 255;
-      Image(d1, loop).green = 0;
-      Image(d1, loop).blue = 0;
+      jelly = 0;
     }
-  
-  int pool;
-  d1++; d2--;
-  
-  for ( pool = 0; pool < d1; pool++ )
-    {
-      Image(pool, 0).red = 0;
-      Image(pool, 0).green = 0;
-      Image(pool, 0).blue = 255;
-      
-      Image(pool, d2).red = 0;
-      Image(pool, d2).green = 0;
-      Image(pool, d2).blue = 255;
-    }
-  
-  /* END OF THE MOST AWESOME DEBUGGING TECHNIQUE */
-#endif  
-  
-  // the Image array has been modified, it is now safe to let
-  // go of the thread
-  imagelock.unlock();
-
-
-  // TEMP: execute a tcl command (what does this do???)
-  update_progress(0.5);
-
-  TCL::execute(id+" redraw_when_idle");
+  return;
 }
 
 
-
+void
+VolVis::ReadTransfermap()
+{
+  msgs.send( NEWTRANSFERMAP );
+}
 
 /**************************************************************
  *
@@ -927,6 +1086,685 @@ VolVis::tcl_command(TCLArgs& args, void* userdata)
   }
   else if ( args[1] == "wanna_exec" )
       want_to_execute();
+  else if ( args[1] == "XRasterChanged" )
+    XRasterChanged( args[2] );
+  else if ( args[1] == "TMChanged" )
+    TransferMapChanged();
+  else if ( args[1] == "SSChanged" )
+    StepSizeChanged( args[2] );
+  else if ( args[1] == "UIOpen" )
+    UTArrays();
+  else if ( args[1] == "ControlButtonChanged" )
+    {
+      reset_vars();
+      ViewChanged( args[1] );
+    }
+  else if ( args[1] == "ViewChanged" )
+    ViewChanged( args[2] );
+  else if ( args[1] == "RBackgroundChanged" )
+    RBackgroundChanged( args[2] );
+  else if ( args[1] == "GBackgroundChanged" )
+    GBackgroundChanged( args[2] );
+  else if ( args[1] == "BBackgroundChanged" )
+    BBackgroundChanged( args[2] );
+  else if ( args[1] == "LinearAChanged" )
+    LinearAChanged( args[2] );
+  else if ( args[1] == "ReadColormap" )
+    {
+      cerr << "JOYOUOUOU\n";
+      jelly = 1;
+      want_to_execute();
+    }
+  else if ( args[1] == "ReadTransfermap" )
+    ReadTransfermap();
   else
     Module::tcl_command(args, userdata);
 }
+
+void
+VolVis::UTArrays()
+{
+      int i,j;
+      reset_vars();
+      already_open = 1;
+
+      imagelock.lock();
+      // retrieve the scalar value-opacity/rgb values, and store them
+      // in arrays
+      UpdateTransferFncArray( Xarray.get(), Yarray.get(), 0 );
+      UpdateTransferFncArray( Rsv.get(), Rop.get(), 1 );
+      UpdateTransferFncArray( Gsv.get(), Gop.get(), 2 );
+      UpdateTransferFncArray( Bsv.get(), Bop.get(), 3 );
+
+      for ( i = 0; i < 4; i++ )
+	Slopes[i].remove_all();
+      
+      // calculate slopes between consecutive opacity values
+      for ( i = 0; i < 4; i++ )
+	Slopes[i].add( 0. );
+      
+      for ( i = 0; i < 4; i++ )
+	for ( j = 1; j < ScalarVals[i].size(); j++ )
+	  Slopes[i].add( ( AssociatedVals[i][j] - AssociatedVals[i][j-1] ) /
+			( ScalarVals[i][j] - ScalarVals[i][j-1] ) );
+
+//      cerr << "\n The following is the slopes array:\n";
+      for ( i = 0; i < Slopes[0].size(); i++ )
+//	cerr << i << ": " << Slopes[0][i] << endl;
+      
+      
+      // if the rgb are at 1 for every scalar value, set the
+      // whiteFlag to be true, otherwise it is false
+      whiteFlag = TRUE;
+      
+      for ( i = 1; i < 4; i++ )
+	{
+	  if ( AssociatedVals[i].size() != 2 )
+	    {
+	      whiteFlag = FALSE;
+	      break;
+	    }
+	  if ( AssociatedVals[i][0] != 1. || AssociatedVals[i][1] != 1. )
+	    {
+	      whiteFlag = FALSE;
+	      break;
+	    }
+	}
+      imagelock.unlock();
+}
+
+void
+VolVis::XRasterChanged( clString a )
+{
+//  int r, mult;
+//  a.get_int(r);
+
+  a.get_int( xresChanged );
+
+//  myview.xres( r );
+//  xres = r;
+
+  msgs.send( NEWRASTER );
+}
+
+unsigned int
+VolVis::FindMask( unsigned int seq )
+{
+  unsigned int mult;
+
+  imagelock.lock();
+  mult = myview.yres() * myview.xres() -1;
+  mult = mult >> 14;
+  width = 14;
+  while ( mult != 0 )
+    {
+      mult = mult>>1;
+      width++;
+    }
+  switch( width )
+    {
+    case 14:
+      mask = 0x3500;
+      seq = 0x3fff & seq;
+      break;
+    case 15:
+      mask = 0x6000;
+      seq = 0x7fff & seq;
+      break;
+    case 16:
+      mask = 0xB400;
+      seq = 0xffff & seq;
+      break;
+    case 17:
+      mask = 0x00012000;
+      seq = 0x0001ffff & seq;
+      break;
+    case 18:
+      mask = 0x00020400;
+      seq = 0x0003ffff & seq;
+      break;
+    case 19:
+      mask = 0x00072000;
+      seq = 0x0007ffff & seq;
+      break;
+    case 20:
+      mask = 0x00090000;
+      break;
+    }
+  
+  imagelock.unlock();
+
+  return seq;
+}
+    
+void
+VolVis::LinearAChanged( clString a )
+{
+  a.get_double( newLinearA );
+  msgs.send( NEWLINEARATTENUATION );
+}
+
+void
+VolVis::TransferMapChanged()
+{
+  int i, j;
+  
+  msgs.send( NEWTRANSFERMAP );
+}
+
+void
+VolVis::StepSizeChanged( clString a )
+{
+  int r;
+  a.get_int(r);
+  stepcountChanged = r;
+  
+  msgs.send( NEWSTEP );
+}
+
+
+void
+VolVis::ViewChanged( clString a )
+{
+  // if connected to a Salmon module, retrieve Salmon geometry info
+  // and store it in a LevoyS type structure
+  // otherwise, use the Levoy structure
+  if ( salmonData.get() )
+    {
+      GeometryData *v = ogeom->getData(0, GEOM_VIEW);
+      if ( v != NULL )
+	{
+	  newview = *(v->view);
+#if 0	  
+	  ExtendedView joy( *(v->view), myview.xres(), myview.yres(), myview.bg() );
+	  imagelock.lock();
+	  myview = joy;
+	  imagelock.unlock();
+#endif	  
+	}
+      else
+	cerr << "Invalid view from Salmon\n";
+    }
+  else
+    {
+      reset_vars();
+      newview = (View) iEView.get();
+#if 0      
+      reset_vars();
+      imagelock.lock();
+      myview = iEView.get();
+      imagelock.unlock();
+#endif      
+    }
+
+  msgs.send( NEWVIEW );
+}
+
+void
+VolVis::RenderLoop( )
+{
+  int msg;
+  int i;
+  done = 1;
+  int row, col;
+  unsigned int seq, start_seq;
+
+  WallClockTimer watch;
+  watch.start();
+  
+  int NewRaster = 0;
+  int NewView   = 0;
+  int NewScalarField = 0;
+  int NewTransferMap = 0;
+  int InvalidScalarField = 1;
+  int NewBackground = 0;
+  int NewColormap = 0;
+
+  double oneover255 = 1.0 / 255;
+  Vector rayToTrace;
+  Point beg;
+
+  double r, g, b;
+    
+  col = 1;
+  row = 0;
+  xmiddle = ymiddle = 50;
+  seq = 0x0001;
+
+  while ( 1 )
+    {
+      msg = -1;
+      
+      if ( done )
+	msg = msgs.receive();
+      else
+	msgs.try_receive( msg );
+      
+      while ( msg != -1 )
+	{
+	  /* do the swich here, update variables */
+	  switch( msg )
+	    {
+	    case NEWSCALARFIELD:
+	      {
+		// cerr <<"Got SF\n";
+		InvalidScalarField = 0;
+		NewScalarField = 1;
+		break;
+	      }
+	    case NEWVIEW:
+	      {
+		// cerr <<"Got view\n";
+		NewView = 1;
+		break;
+	      }
+	    case NEWTRANSFERMAP:
+	      {
+		// cerr <<"Got trans\n";
+		NewTransferMap = 1;
+		break;
+	      }
+	    case NEWRASTER:
+	      {
+		NewRaster = 1;
+		//cerr <<"Got rast " << myview.xres() << " " << myview.yres() << endl;
+		break;
+	      }
+	    case NEWSTEP:
+	      {
+		//cerr <<"Got new step size\n";
+		rayStep /= stepcount;
+		rayStep *= stepcountChanged;
+		stepcount = stepcountChanged;
+		break;
+	      }
+	    case NEWINVALIDSCALARFIELD:
+	      {
+		InvalidScalarField = 1;
+		break;
+	      }
+	      
+	    case NEWBACKGROUND:
+	      {
+		NewBackground = 1;
+		break;
+	      }
+
+	    case NEWLINEARATTENUATION:
+	      {
+		LinAtten = newLinearA;
+		break;
+	      }
+	    case NEWCOLORMAP:
+	      {
+		NewColormap = 1;
+		break;
+	      }
+	    }
+	  
+	  // memorize the starting sequence but make sure it's
+	  // within the bounds for that mask (right now i'm doing
+	  // this for mask of width 14
+
+	  start_seq = seq;
+	  // set the global variables
+	  global_start_seq = start_seq;
+	  global_seq = seq;
+	  
+	  done = 0;
+	  watch.clear();
+	  
+	  msg = -1;
+	  msgs.try_receive( msg );
+	}
+
+      if ( NewTransferMap )
+	{
+	  UTArrays();
+
+	  CreateTransferTables();
+	  NewTransferMap = 0;
+	  
+	  if ( whiteFlag )
+	    CastRay = &BasicVolRender;
+	  else
+	    CastRay = &ColorVolRender;
+	}
+
+      if ( NewColormap )
+	{
+	  SVR = cmap->rawRed;
+	  SVG = cmap->rawGreen;
+	  SVB = cmap->rawBlue;
+	  SVOpacity = cmap->rawAlpha;
+
+	  cerr << "getting a new colormap\n";
+	  CastRay = &ColorVolRender;
+	  NewColormap = 0;
+	}
+      
+      if ( NewScalarField )
+	{
+	  homeSFRGrid = data;
+	  homeSFRGrid->get_minmax( min, max );
+	  minSV.set( min );
+	  maxSV.set( max );
+
+	  // reset the bbox, the voxel counts, and the diagonal
+	  homeSFRGrid->get_bounds( bmin, bmax );
+	  box.reset();
+	  box.extend( bmin );
+	  box.extend( bmax );
+//	  cerr << "\n\nPREPARING FOR INTERSECTION WITH " << myview.eyep() << endl;
+	  box.PrepareIntersect( myview.eyep() );
+	  
+	  diagonal = bmax - bmin;
+	  diagx = diagonal.x();
+	  diagy = diagonal.y();
+	  diagz = diagonal.z();
+
+	  nx = homeSFRGrid->nx;
+	  ny = homeSFRGrid->ny;
+	  nz = homeSFRGrid->nz;
+
+	  rayStep = DetermineRayStepSize( stepcount );
+	  at();
+	  CreateTransferTables();
+	  at();
+	  NewScalarField = 0;
+	}
+      
+      if ( NewBackground )
+	{
+	  myview.bg( newbg * oneover255 );
+	  mbgr = myview.bg().r();
+	  mbgg = myview.bg().g();
+	  mbgb = myview.bg().b();
+	  
+	  NewBackground = 0;
+	}
+	
+      if ( NewRaster )
+	{
+	  xres = xresChanged;
+	  yres = xresChanged;
+	  myview.xres( xres );
+	  myview.yres( yres );
+
+
+	  // clear the GLwindow to background color
+	  
+//	  glClearColor( myview.bg().r(), myview.bg().g(), myview.bg().b(), 0 );
+  
+//	  glClear(GL_COLOR_BUFFER_BIT);
+
+
+//	  cerr << "got a new raster: " << xres << "  " << yres << endl;
+	  
+	  xmiddle = xres / 2;
+	  ymiddle = yres / 2;
+  
+	  seq = FindMask( seq );
+	  start_seq = seq;
+	  
+	  CalculateRayIncrements();
+
+	  NewRaster = 0;
+
+	  //OPENGL	  Image.newsize( xres, yres );
+	}
+
+      if ( NewView )
+	{
+	  ExtendedView joy( newview, xres, xres, myview.bg() );
+	  myview = joy;
+	  
+	  eye = myview.eyep();
+	  homeRay = myview.lookat() - eye;
+	  homeRay.normalize();
+	  CalculateRayIncrements();
+	  
+	  box.PrepareIntersect( myview.eyep() );
+
+	  Image.initialize( myview.bg() );
+  
+	  NewView = 0;
+	}
+
+      // if rdata valid, render a bunch of rays
+      if ( ! InvalidScalarField )
+	{
+	  if ( iProc.get() )
+	    {
+	      procCount = Task::nprocessors();
+	      Task::multiprocess(procCount, do_parallel, this);
+
+	      if ( done )
+		cerr << "Parallel reports " << watch.time();
+
+	      global_seq = new_seq;
+
+	      redraw_all();
+	    }
+	  else
+	    {
+	      imagelock.lock();
+	      for ( i = 0; i < 5000; i++ )
+		{
+		  row = seq / xres;
+		  col = seq % xres;
+		  
+		  if ( row < yres )
+		    {
+		      // CAST A RAY
+
+		      rayToTrace = homeRay;
+		      rayToTrace += rayIncrementU * ( col - xmiddle );
+		      rayToTrace += rayIncrementV * ( row - ymiddle );
+		      rayToTrace.normalize();
+
+		      // make the ray the length of the step
+		      rayToTrace *= rayStep;
+
+		      // must add the offset(to put the image in the middle)
+		      
+		      if ( box.Intersect( eye, rayToTrace, beg ) )
+			{
+			  (*CastRay)( rayToTrace.x(), rayToTrace.y(),
+				  rayToTrace.z(), rayStep,
+				     beg.x(),
+				     beg.y(), beg.z(), SVOpacity, SVR,
+				     SVG, SVB, min,
+				     SVMultiplier, box.min().x(),
+				     box.min().y(), box.min().z(),
+				     homeSFRGrid->grid.get_dataptr(),
+				     mbgr, mbgg, mbgb,
+				     nx, ny, nz,
+				     diagx, diagy, diagz, LinAtten,
+				     &r, &g, &b );
+			  
+			  Image( row, col ).red   = (unsigned char)(r*255.0);
+			  Image( row, col ).green = (unsigned char)(g*255.0);
+			  Image( row, col ).blue  = (unsigned char)(b*255.0);
+			}
+		      else
+			{
+			  Image( row, col ).red   = (unsigned char)(mbgr*255.0);
+			  Image( row, col ).green = (unsigned char)(mbgg*255.0);
+			  Image( row, col ).blue  = (unsigned char)(mbgb*255.0);
+			}
+		    }
+		  
+		  // compute the next sequence element
+		  if ( (ONE & seq) == ONE )
+		    seq = (seq>>1) ^ ( mask );
+		  else
+		    seq = seq>>1;
+
+		  if ( seq == start_seq )
+		    {
+		      done = 1;
+		      cerr << "The timer reports: " << watch.time() << endl;
+		      break;
+		    }
+		}
+	      imagelock.unlock();
+
+	      // STEVE : i wanted to redraw only when idle, but i failed
+	      // because there was some kind of a dead lock somewhere.
+	      // so, i'm just redrawing on the fly (it looks horrible,
+	      // but what can i do?
+//	      update_progress(0.5);
+//	      TCL::execute(id+" redraw_when_idle");
+	      redraw_all();
+	    }
+	}
+      else
+	{
+	  cerr << "The grid is invalid\n";
+	  done = 1;
+	}
+    }
+}
+
+int
+RenderingThread::body( int i )
+{
+  v->RenderLoop();
+  return 1;
+}
+
+
+void
+VolVis::CreateTransferTables()
+{
+  int i,j,k;
+  int beg, end;
+  int counter;
+
+  // make sure these point to local data
+  SVR = SVRsave;
+  SVG = SVGsave;
+  SVB = SVBsave;
+  SVOpacity = SVOpacitysave;
+  
+  // scalar value multiplier which scales the SV appropriately
+  // for array access
+  SVMultiplier = ( VTABLE_SIZE - 1 ) / ( max - min );
+
+  at();
+  j = 0;
+  counter = 0;
+  SVOpacity[counter++] = AssociatedVals[j][0];
+  
+  for ( i = 0; i < ScalarVals[j].size() - 1; i++ )
+    {
+      beg = int( ScalarVals[j][i] * SVMultiplier ) + 1;
+      end = int( ScalarVals[j][i+1] * SVMultiplier );
+      
+      for( k = beg; k <= end; k++ )
+	SVOpacity[counter++] = ( Slopes[j][i+1] * ( k - beg ) /
+				SVMultiplier + AssociatedVals[j][i] );
+    }
+
+  at();
+  j = 1;
+  counter = 0;
+  SVR[counter++] = AssociatedVals[j][0];
+  
+  for ( i = 0; i < ScalarVals[j].size() - 1; i++ )
+    {
+      beg = int( ScalarVals[j][i] * SVMultiplier ) + 1;
+      end = int( ScalarVals[j][i+1] * SVMultiplier );
+      
+      for( k = beg; k <= end; k++ )
+	SVR[counter++] = ( Slopes[j][i+1] * ( k - beg ) /
+			  SVMultiplier + AssociatedVals[j][i] );
+    }
+
+  at();
+  j = 2;
+  counter = 0;
+  SVG[counter++] = AssociatedVals[j][0];
+  
+  for ( i = 0; i < ScalarVals[j].size() - 1; i++ )
+    {
+      beg = int( ScalarVals[j][i] * SVMultiplier ) + 1;
+      end = int( ScalarVals[j][i+1] * SVMultiplier );
+      
+      for( k = beg; k <= end; k++ )
+	SVG[counter++] = ( Slopes[j][i+1] * ( k - beg ) /
+			  SVMultiplier + AssociatedVals[j][i] );
+    }
+
+  at();
+  j = 3;
+  counter = 0;
+  SVB[counter++] = AssociatedVals[j][0];
+  
+  for ( i = 0; i < ScalarVals[j].size() - 1; i++ )
+    {
+      beg = int( ScalarVals[j][i] * SVMultiplier ) + 1;
+      end = int( ScalarVals[j][i+1] * SVMultiplier );
+      
+      for( k = beg; k <= end; k++ )
+	SVB[counter++] = ( Slopes[j][i+1] * ( k - beg ) /
+			  SVMultiplier + AssociatedVals[j][i] );
+    }
+
+  at();
+  if ( counter > VTABLE_SIZE )
+    {
+      cerr << "NOT GOOD AT ALL\n";
+      ASSERT( counter == VTABLE_SIZE );
+    }
+}
+
+/**************************************************************************
+ *
+ * attempts to determine the most appropriate interval which is used
+ * to step through the volume.
+ *
+ **************************************************************************/
+
+double
+VolVis::DetermineRayStepSize ( int steps )
+{
+  double small[3];
+  double result;
+  
+  // calculate a step size that is about the length of one voxel
+  small[0] = ( box.max().x() - box.min().x() ) / nx;
+  small[1] = ( box.max().y() - box.min().y() ) / ny;
+  small[2] = ( box.max().z() - box.min().z() ) / nz;
+
+  // set rayStep to the smallest of the step sizes
+  if ( small[0] < small[1] )
+    if ( small[0] < small[2] )
+      result = small[0];
+    else
+      result = small[2];
+  else if ( small[1] < small[2] )
+    result = small[1];
+  else
+    result = small[2];
+
+  return( steps * result );
+}
+
+void
+VolVis::CalculateRayIncrements ()
+{
+  imagelock.lock();
+  myview.get_normalized_viewplane( rayIncrementU, rayIncrementV );
+
+  double aspect = double( myview.xres() ) / double( myview.yres() );
+  double fovy=RtoD(2*Atan(aspect*Tan(DtoR(myview.fov()/2.))));
+  
+  double lengthY = 2 * tan( DtoR( fovy / 2 ) );
+
+  rayIncrementV *= lengthY / myview.yres();
+  rayIncrementU *= lengthY / myview.yres();
+  imagelock.unlock();
+}
+
