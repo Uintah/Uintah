@@ -14,17 +14,17 @@
 #define SCI_project_SpanPort_h 1
 
 #include <PSECore/Datatypes/SimplePort.h>
-#include <PSECore/Datatypes/SpanTree.h>
+#include <PSECore/Datatypes/SpanSpace.h>
 
 namespace PSECore {
-namespace Datatypes {
-
-using namespace SCICore::Datatypes;
-
-typedef SimpleIPort<SpanForestHandle> SpanForestIPort;
-typedef SimpleOPort<SpanForestHandle> SpanForestOPort;
-
-} // End namespace Datatypes
+  namespace Datatypes {
+    
+    using namespace SCICore::Datatypes;
+    
+    typedef SimpleIPort<SpanUniverseHandle> SpanUniverseIPort;
+    typedef SimpleOPort<SpanUniverseHandle> SpanUniverseOPort;
+    
+  } // End namespace Datatypes
 } // End namespace PSECore
 
 #endif
