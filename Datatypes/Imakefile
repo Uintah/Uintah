@@ -7,7 +7,8 @@ OBJS = BasicSurfaces.o  Colormap.o  ColormapPort.o  ColumnMatrix.o  \
 	ColumnMatrixPort.o  ContourSet.o  ContourSetPort.o  \
 	Datatype.o  DenseMatrix.o  \
 	GeometryPort.o  \
-	Matrix.o  MatrixPort.o  Mesh.o  MeshPort.o  ScalarField.o  \
+	Matrix.o  MatrixPort.o  Mesh.o  MeshPort.o  \
+	MultiMesh.o  MultiMeshPort.o  ScalarField.o  \
 	ScalarFieldPort.o  ScalarFieldRG.o  ScalarFieldUG.o  \
 	SoundPort.o  Surface.o  SurfacePort.o  SymSparseRowMatrix.o \
 	TriSurface.o  \
@@ -17,7 +18,8 @@ SRCS = BasicSurfaces.cc Colormap.cc ColormapPort.cc ColumnMatrix.cc \
 	ColumnMatrixPort.cc ContourSet.cc ContourSetPort.cc \
 	Datatype.cc DenseMatrix.cc \
 	GeometryPort.cc \
-	Matrix.cc MatrixPort.cc Mesh.cc MeshPort.cc ScalarField.cc \
+	Matrix.cc MatrixPort.cc Mesh.cc MeshPort.cc \
+	MultiMesh.cc MultiMeshPort.cc ScalarField.cc \
 	ScalarFieldPort.cc ScalarFieldRG.cc ScalarFieldUG.cc \
 	SoundPort.cc Surface.cc SurfacePort.cc SymSparseRowMatrix.cc \
 	TriSurface.cc \

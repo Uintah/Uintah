@@ -17,6 +17,19 @@
 #include <Geometry/Grid.h>
 #include <Math/MiscMath.h>
 #include <Geometry/BBox.h>
+#include <Classlib/TrivialAllocator.h>
+
+static TrivialAllocator TSElement_alloc(sizeof(TSElement));
+
+void* TSElement::operator new(size_t)
+{
+    return TSElement_alloc.alloc();
+}
+
+void TSElement::operator delete(void* rp, size_t)
+{
+    TSElement_alloc.free(rp);
+}
 
 static Persistent* make_TriSurface()
 {
@@ -111,22 +124,21 @@ int TriSurface::get_closest_vertex_id(const Point &p1, const Point &p2,
 }
 
 int TriSurface::find_or_add(const Point &p) {
-    if (grid==0) {
-	ASSERT("Can't run TriSurface::find_or_add() w/o a grid\n");
+    if (pntHash==0) {
+	points.add(p);
+	return(points.size()-1);
     }
-    Array1<int> *el=grid->get_members(p);
-    if (el) {
-	for (int i=0; i<el->size(); i++) {
-	    if ((points[elements[(*el)[i]]->i1]-p).length2() < .000000001)
-		return elements[(*el)[i]]->i1;
-	    if ((points[elements[(*el)[i]]->i2]-p).length2() < .000000001)
-		return elements[(*el)[i]]->i2;
-	    if ((points[elements[(*el)[i]]->i3]-p).length2() < .000000001)
-		return elements[(*el)[i]]->i3;
-	}
+    int oldId;
+    int val=(Round((p.z()-hash_min.z())/resolution)*hash_y+
+	     Round((p.y()-hash_min.y())/resolution))*hash_x+
+		 Round((p.x()-hash_min.x())/resolution);
+    if (pntHash->lookup(val, oldId)) {
+	return oldId;
+    } else {
+	pntHash->insert(val, points.size());
+	points.add(p);	
+	return(points.size()-1);
     }
-    points.add(p);
-    return (points.size()-1);
 }
 
 int TriSurface::cautious_add_triangle(const Point &p1, const Point &p2, 
@@ -180,6 +192,24 @@ void TriSurface::construct_grid(int xdim, int ydim, int zdim,
 			   points[elements[i]->i2], points[elements[i]->i3]);
 }
 
+void TriSurface::construct_hash(int xdim, int ydim, const Point &p, double res) {
+    xdim/=res;
+    ydim/=res;
+    hash_x = xdim;
+    hash_y = ydim;
+    hash_min = p;
+    resolution = res;
+    if (pntHash) {
+	delete pntHash;
+    }
+    pntHash = new HashTable<int, int>;
+    for (int i=0; i<points.size(); i++) {
+	int val=(Round((points[i].z()-p.z())/res)*ydim+
+		 Round((points[i].y()-p.y())/res))*xdim+
+		     Round((points[i].x()-p.x())/res);
+	pntHash->insert(val, i);
+    }
+}
 
 // Method to find the distance from a point to the surface.  the algorithm
 // goes like this:

@@ -59,7 +59,6 @@ public:
     virtual void get_surfpoints(Array1<Point>&);
     virtual void construct_grid(int, int, int, const Point &, double);
     virtual void construct_grid();
-
     // Persistent representation...
     virtual void io(Piostream&);
     static PersistentTypeID type_id;

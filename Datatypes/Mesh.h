@@ -44,7 +44,10 @@ struct Element {
 
 void Pio(Piostream&, Element*&);
 
-struct Node {
+struct Node;
+typedef LockingHandle<Node> NodeHandle;
+
+struct Node : public Datatype {
     Point p;
     Node(const Point&);
     Array1<int> elems;
@@ -58,11 +61,12 @@ struct Node {
     NodeType nodetype;
     double value;
     Node(const Node&);
+    virtual ~Node();
+    virtual void io(Piostream&);
+    static PersistentTypeID type_id;
     void* operator new(size_t);
     void operator delete(void*, size_t);
 };
-
-void Pio(Piostream&, Node*&);
 
 struct Face {
     int n[3];
@@ -76,7 +80,7 @@ typedef LockingHandle<Mesh> MeshHandle;
 
 class Mesh : public Datatype {
 public:
-    Array1<Node*> nodes;
+    Array1<NodeHandle> nodes;
     Array1<Element*> elems;
     Array1<Array1<double> > cond_tensors;
     int have_all_neighbors;

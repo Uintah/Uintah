@@ -18,12 +18,15 @@
 
 #include <Classlib/Array1.h>
 #include <Geometry/Point.h>
+#include <stdlib.h> // For size_t
 
 struct TSElement {
     int i1; 
     int i2; 
     int i3;
     inline TSElement(int i1, int i2, int i3):i1(i1), i2(i2), i3(i3){}
+    void* operator new(size_t);
+    void operator delete(void*, size_t);
 };
 
 void Pio(Piostream&, TSElement*&);
@@ -53,6 +56,7 @@ public:
     virtual void construct_grid();
     virtual void get_surfpoints(Array1<Point>&);
     virtual int inside(const Point& p);
+    virtual void construct_hash(int, int, const Point &, double);
     void add_point(const Point& p);
     int add_triangle(int i1, int i2, int i3, int cw=0);
     void remove_triangle(int i);

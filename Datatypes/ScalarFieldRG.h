@@ -27,7 +27,7 @@ public:
     void locate(const Point&, int&, int&, int&);
 
     void resize(int, int, int);
-    void set_minmax(const Point &min, const Point &max);
+    void set_bounds(const Point &min, const Point &max);
     ScalarFieldRG();
     ScalarFieldRG(const ScalarFieldRG&);
     virtual ~ScalarFieldRG();

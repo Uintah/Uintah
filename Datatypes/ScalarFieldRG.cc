@@ -49,7 +49,7 @@ void ScalarFieldRG::resize(int x, int y, int z) {
     grid.newsize(x,y,z);
 }
 
-void ScalarFieldRG::set_minmax(const Point &min, const Point &max) {
+void ScalarFieldRG::set_bounds(const Point &min, const Point &max) {
     bmin=min;
     bmax=max;
 }

@@ -17,13 +17,14 @@
 PersistentTypeID Surface::type_id("Surface", "Datatype", 0);
 
 Surface::Surface(Representation rep, int closed)
-: rep(rep), closed(closed), grid(0)
+: rep(rep), grid(0), closed(closed), pntHash(0)
 {
 }
 
 Surface::~Surface()
 {
     destroy_grid();
+    destroy_hash();
 }
 
 Surface::Surface(const Surface& copy)
@@ -35,6 +36,10 @@ Surface::Surface(const Surface& copy)
 void Surface::destroy_grid()
 {
     if (grid) delete grid;
+}
+
+void Surface::destroy_hash() {
+    if (pntHash) delete pntHash;
 }
 
 #define SURFACE_VERSION 2

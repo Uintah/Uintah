@@ -17,6 +17,7 @@
 #include <Datatypes/Datatype.h>
 #include <Classlib/Array1.h>
 #include <Classlib/LockingHandle.h>
+#include <Classlib/HashTable.h>
 #include <Classlib/String.h>
 #include <Geometry/Point.h>
 
@@ -35,9 +36,14 @@ protected:
 private:
     Representation rep;
 public:
+    int hash_x;
+    int hash_y;
+    Point hash_min;
+    double resolution;
     int closed;
     clString name;
     Grid *grid;
+    HashTable<int, int> *pntHash;
     enum Boundary_type {
 	Interior,
 	Exterior,
@@ -55,6 +61,7 @@ public:
     virtual void construct_grid(int, int, int, const Point &, double)=0;
     virtual void construct_grid()=0;
     virtual void destroy_grid();
+    virtual void destroy_hash();
     TriSurface* getTriSurface();
 
     virtual void get_surfpoints(Array1<Point>&)=0;
