@@ -20,6 +20,7 @@
 #include <Core/Thread/Mutex.h>
 #include <Core/Math/MinMax.h>
 #include <Core/Geometry/Point.h>
+#include <Packages/Uintah/Core/Grid/Box.h>
 #include <Packages/Uintah/Core/Disclosure/TypeDescription.h>
 #include <Core/Geometry/Vector.h>
 #include <Core/OS/Dir.h>

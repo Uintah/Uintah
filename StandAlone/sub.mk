@@ -7,14 +7,14 @@ SUBDIRS := $(SRCDIR)/tools
 include $(SCIRUN_SCRIPTS)/recurse.mk
 
 SRCS := $(SRCDIR)/sus.cc
-ifneq ($(CC_DEPEND_REGEN),-MD)
 
+#ifneq ($(CC_DEPEND_REGEN),-MD)
 # Arches doesn't work under g++ yet
 ARCHES := Packages/Uintah/CCA/Components/Arches \
 	Packages/Uintah/CCA/Components/MPMArches
-else
-SRCS := $(SRCS) $(SRCDIR)/FakeArches.cc
-endif
+#else
+#SRCS := $(SRCS) $(SRCDIR)/FakeArches.cc
+#endif
 
 PROGRAM := Packages/Uintah/StandAlone/sus
 ifeq ($(LARGESOS),yes)
@@ -41,7 +41,7 @@ else
 	Core/Util
 
 endif
-LIBS := $(XML_LIBRARY) $(TAU_LIBRARY) $(MPI_LIBRARY) $(GL_LIBS)
+LIBS := $(XML_LIBRARY) $(TAU_LIBRARY) $(MPI_LIBRARY) $(GL_LIBS) $(FLIBS)
 
 include $(SCIRUN_SCRIPTS)/program.mk
 
