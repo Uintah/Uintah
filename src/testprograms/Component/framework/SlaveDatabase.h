@@ -13,7 +13,7 @@
 
 #include <Core/Exceptions/InternalError.h>
 
-#include <Core/CCA/Component/CIA/array.h>
+#include <Core/CCA/Component/SIDL/array.h>
 
 #include <string>
 
@@ -21,7 +21,7 @@ namespace dav {
 
 using namespace SCIRun;
 using std::string;
-using CIA::array1;
+using SIDL::array1;
 
 class SlaveInfo {
   

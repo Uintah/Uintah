@@ -6,7 +6,7 @@
 #include <iostream>
 #include <assert.h>
 #include <Core/CCA/Component/PIDL/MxNScheduler.h>
-#include <Core/CCA/Component/CIA/array.h>
+#include <Core/CCA/Component/SIDL/array.h>
 using namespace SCIRun;
 using namespace std;
 

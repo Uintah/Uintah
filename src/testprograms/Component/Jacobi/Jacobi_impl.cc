@@ -60,15 +60,15 @@ Jacobi_impl::~Jacobi_impl()
 {
 }
 
-int Jacobi_impl::solveHeatEquation(CIA::array2<double>& arr, double top, double bottom,
+int Jacobi_impl::solveHeatEquation(SIDL::array2<double>& arr, double top, double bottom,
 				   double left, double right)
 {
   int        size;                    /* Actual Number of PEs       */
   int        rank;                    /* My PE number               */
   int        nstop;                   /* Interation Stop Parameter  */
 
-  CIA::array2<double> t;  
-  CIA::array2<double> told;           /* Temp. Arrays: Old & New */
+  SIDL::array2<double> t;  
+  SIDL::array2<double> told;           /* Temp. Arrays: Old & New */
   double     dt;                      /* Delta t */
   double     dtg    ;                 /* Delta t global */
   int        i, j, k, l;

@@ -22,7 +22,7 @@ SRCDIR := testprograms/Component/LUFactor
 ifeq ($(LARGESOS),yes)
 PSELIBS := Core
 else
-PSELIBS := Core/CCA/Component/CIA Core/CCA/Component/PIDL Core/Thread \
+PSELIBS := Core/CCA/Component/SIDL Core/CCA/Component/PIDL Core/Thread \
 	Core/Exceptions Core/globus_threads Core/CCA/Component/Comm
 endif
 LIBS := $(MPI_LIBRARY) 

@@ -58,7 +58,7 @@ void usage(char* progname)
     exit(1);
 }
 
-void generate(CIA::array2<double>& A){
+void generate(SIDL::array2<double>& A){
   unsigned int i, j;
   
   for( i=0; i<SIZE; i++ )       
@@ -74,7 +74,7 @@ int main(int argc, char* argv[])
     using LUFactor_ns::LUFactor_impl;
     using LUFactor_ns::LUFactor;
 
-    CIA::array2<double> A;
+    SIDL::array2<double> A;
     A.resize(SIZE,SIZE); 
 
     int myrank = 0;
