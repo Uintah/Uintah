@@ -319,6 +319,8 @@ itcl_class BaseViewWindow {
 
     method updateMode {args} {}
     method updatePerf {args} {}
+    method removeObject {args} {}
+    method addObject2 {args} {}
 }
 
 
