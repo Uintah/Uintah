@@ -51,14 +51,15 @@ itcl_class SCIRun_Render_Viewer {
     method makeViewWindowID {} {
 	set nextrid 0
 	set id $this-ViewWindow_$nextrid
-	while {[::info commands $id] != ""} {
+	while { [string length [::info commands $id]] } {
 	    incr nextrid
-	    set id $this-ViewWindow_$nextrid	    
+	    set id $this-ViewWindow_$nextrid
 	}
 	return $id
     }
 
     method addViewer { { old_vw "" } } {
+	set i 0
 	set rid [makeViewWindowID]
 	$this-c addviewwindow $rid
 	ViewWindow $rid -viewer $this 
@@ -176,12 +177,6 @@ itcl_class BaseViewWindow {
 
 	initGlobal $this-trackViewWindow0 1
 
-        # CollabVis code begin
-        if { [set $this-have_collab_vis] } {
-	    initGlobal $this-view_server 0
-        }
-        # CollabVis code end
-
 	setGlobal $this-global-light 1
 	setGlobal $this-global-fog 0
 	setGlobal $this-global-type Gouraud
@@ -257,13 +252,13 @@ itcl_class BaseViewWindow {
     }
 
     method addObject {objid name} {
-	setGlobal "$this-$objid-type" Default
-	setGlobal "$this-$objid-light" 1
-	setGlobal "$this-$objid-fog" 0
-	setGlobal "$this-$objid-debug" 0
-	setGlobal "$this-$objid-clip" 1
-	setGlobal "$this-$objid-cull" 0
-	setGlobal "$this-$objid-dl" 0
+	initGlobal "$this-$objid-type" Default
+	initGlobal "$this-$objid-light" 1
+	initGlobal "$this-$objid-fog" 0
+	initGlobal "$this-$objid-debug" 0
+	initGlobal "$this-$objid-clip" 1
+	initGlobal "$this-$objid-cull" 0
+	initGlobal "$this-$objid-dl" 0
     }
 
 	
@@ -320,7 +315,6 @@ itcl_class BaseViewWindow {
     method updateMode {args} {}
     method updatePerf {args} {}
     method removeObject {args} {}
-    method addObject2 {args} {}
 }
 
 
@@ -731,15 +725,6 @@ itcl_class ViewWindow {
 	pack $m.objlist.canvas -side top -padx 2 -pady 2 -fill both -expand yes
 	pack $m.objlist.xscroll -fill x -side top  -padx 2 -pady 2
 	
-        # CollabVis code begin
-        if {[set $this-have_collab_vis]} {
-	    checkbutton $m.view_server -text "Remote" -variable \
-                $this-view_server -onvalue 2 -offvalue 0 \
-                -command "$this-c doServer"
-	    pack $m.view_server -side top
-        }
-	# CollabVis code end
-
 	# Show Axes Check Button
         checkbutton $m.caxes -text "Show Axes" -variable $this-caxes \
 	    -onvalue 1 -offvalue 0 \
@@ -749,8 +734,7 @@ itcl_class ViewWindow {
 
 	# Orientation Axes Checkbutton
         checkbutton $m.raxes -text "Orientation" -variable $this-raxes \
-	    -onvalue 1 -offvalue 0 \
-	    -command "$this-c rotateGenAxes; $this-c redraw"
+	    -onvalue 1 -offvalue 0 -command "$this-c redraw"
 	Tooltip $m.raxes \
 	    "Toggles on/off the orientation axes displayed in\n" \
 	    "the upper right corner of the viewer window."
@@ -950,7 +934,21 @@ itcl_class ViewWindow {
     method addObjectToFrame {objid name frame} {
 	set w .ui[modname]
 	set m $frame.f
-	frame  $m.objlist.canvas.frame.objt$objid
+	# if the object frame exists already, assume it was pack
+	# forgotten by removeObject, just pack it again to whow it
+	if { [winfo exists $m.objlist.canvas.frame.objt$objid] } {
+	    pack $m.objlist.canvas.frame.objt$objid \
+		-side top -anchor w -fill x -expand y
+	    # I think the next two lines are un-necessary
+	    pack $m.objlist.canvas.frame.obj$objid  \
+		-in $m.objlist.canvas.frame.objt$objid -side left
+	    pack $m.objlist.canvas.frame.menu$objid \
+		-in $m.objlist.canvas.frame.objt$objid -side right \
+		-padx 1 -pady 1
+	    return
+	}
+
+	frame $m.objlist.canvas.frame.objt$objid
 	checkbutton $m.objlist.canvas.frame.obj$objid -text $name \
 		-relief flat -variable "$this-$name" -command "$this-c redraw"
 	
@@ -1012,22 +1010,6 @@ itcl_class ViewWindow {
 	$m.objlist.yscroll set [lindex $view 0] [lindex $view 1]
     }
 
-    method addObject2 {objid} {
-	addObjectToFrame_2 $objid $detachedFr
-	addObjectToFrame_2 $objid [$attachedFr childsite]
-    }
-    
-    method addObjectToFrame_2 {objid frame} {
-	set w .ui[modname]
-	set m $frame.f
-	pack $m.objlist.canvas.frame.objt$objid \
-	    -side top -anchor w -fill x -expand y
-	pack $m.objlist.canvas.frame.obj$objid  \
-	    -in $m.objlist.canvas.frame.objt$objid -side left
-	pack $m.objlist.canvas.frame.menu$objid \
-	    -in $m.objlist.canvas.frame.objt$objid -side right -padx 1 -pady 1
-    }
-    
     method removeObject {objid} {
 	removeObjectFromFrame $objid $detachedFr
 	removeObjectFromFrame $objid [$attachedFr childsite]
