@@ -2,6 +2,7 @@
 #include <Core/Geometry/Point.h>
 #include <Packages/Uintah/Core/Grid/Box.h>
 #include <Packages/Uintah/Core/Grid/BoundCondFactory.h>
+#include <Core/Malloc/Allocator.h>
 
 using namespace SCIRun;
 using namespace Uintah;
@@ -52,7 +53,7 @@ SideBCData& SideBCData::operator=(const SideBCData& rhs)
 
 SideBCData* SideBCData::clone()
 {
-  return new SideBCData(*this);
+  return scinew SideBCData(*this);
 
 }
 void SideBCData::addBCData(BCData& bc)

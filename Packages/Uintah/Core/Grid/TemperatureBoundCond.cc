@@ -1,5 +1,6 @@
 #include <Packages/Uintah/Core/Grid/TemperatureBoundCond.h>
 #include <Packages/Uintah/Core/ProblemSpec/ProblemSpec.h>
+#include <Core/Malloc/Allocator.h>
 
 using namespace Uintah;
 
@@ -16,5 +17,5 @@ TemperatureBoundCond::~TemperatureBoundCond()
 
 TemperatureBoundCond* TemperatureBoundCond::clone()
 {
-  return new TemperatureBoundCond(*this);
+  return scinew TemperatureBoundCond(*this);
 }

@@ -10,6 +10,7 @@
 #include <Packages/Uintah/Core/Grid/UnionBCData.h>
 #include <Packages/Uintah/Core/Grid/DifferenceBCData.h>
 #include <Packages/Uintah/Core/Grid/BCData.h>
+#include <Core/Malloc/Allocator.h>
 using namespace std;
 using namespace Uintah;
 #include <iostream>
@@ -55,7 +56,7 @@ BCGeomBase* BCReader::createBoundaryConditionFace(ProblemSpecP& face_ps,
   BCGeomBase* bcGeom;
   if (values.find("side") != values.end()) {
     fc = values["side"];
-    bcGeom = new SideBCData();
+    bcGeom = scinew SideBCData();
   }
   // Do the circle case:
   if (values.find("circle") != values.end()) {
@@ -68,7 +69,7 @@ BCGeomBase* BCReader::createBoundaryConditionFace(ProblemSpecP& face_ps,
     radius_stream >> r;
     origin_stream >> o[0] >> o[1] >> o[2];
     Point p(o[0],o[1],o[2]);
-    bcGeom = new CircleBCData(p,r);
+    bcGeom = scinew CircleBCData(p,r);
   }
   // Do the rectangle case:
   if (values.find("rectangle") != values.end()) {
@@ -80,7 +81,7 @@ BCGeomBase* BCReader::createBoundaryConditionFace(ProblemSpecP& face_ps,
     low_stream >> lower[0] >> lower[1] >> lower[2];
     up_stream >> upper[0] >> upper[1] >> upper[2];
     Point l(lower[0],lower[1],lower[2]),u(upper[0],upper[1],upper[2]);
-    bcGeom = new RectangleBCData(l,u);
+    bcGeom = scinew RectangleBCData(l,u);
   }
 #ifdef PRINT
   cout << "Face = " << fc << endl;      
@@ -324,7 +325,7 @@ void BCReader::combineBCS()
 	  
 	  // Create a unionbcdata for all the remaining bcs and remove the 
 	  // sidebcdata.  
-	  UnionBCData* union_bc = new UnionBCData();
+	  UnionBCData* union_bc = scinew UnionBCData();
 	  union_bc->child = bcd_itr->second;
 	  vector<BCGeomBase*>::iterator itr, new_end = 
 	    remove_if(union_bc->child.begin(),
@@ -350,7 +351,7 @@ void BCReader::combineBCS()
 	  
 	  // Create a differencebcdata for the side and the unionbc
 	  DifferenceBCData* difference_bc = 
-	    new DifferenceBCData(side_bc,union_bc);
+	    scinew DifferenceBCData(side_bc,union_bc);
 	  rearranged.addBCData(mat_id,difference_bc->clone());
 	  
 	  // Take the individual bcs and add them to the rearranged list.
