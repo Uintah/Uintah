@@ -10,6 +10,7 @@
 #include <Uintah/Components/MPM/Contact/Contact.h>
 #include <SCICore/Geometry/Vector.h>
 #include <Uintah/Components/MPM/MPMLabel.h>
+#include <Uintah/Components/MPM/PhysicalBC/MPMPhysicalBC.h>
 
 using SCICore::Geometry::Vector;
 
@@ -197,6 +198,8 @@ protected:
   SimulationStateP d_sharedState;
   MPMLabel* lb;
   bool             d_burns;
+
+  vector<MPMPhysicalBC*> d_physicalBCs;
 };
       
 } // end namespace MPM
@@ -204,6 +207,10 @@ protected:
    
 //
 // $Log$
+// Revision 1.48  2000/08/07 00:37:33  tan
+// Added MPMPhysicalBC class to handle all kinds of physical boundary conditions
+// in MPM.  Current implemented force boundary conditions.
+//
 // Revision 1.47  2000/07/17 23:30:49  tan
 // Fixed some problems in MPM heat conduction.
 //
