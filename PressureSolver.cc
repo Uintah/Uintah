@@ -503,11 +503,9 @@ PressureSolver::sched_pressureLinearSolve(const LevelP& level,
 
   const Patch* d_pressRefPatch = level->selectPatch(d_pressRef);
   if(!d_pressRefPatch){
-    cerr << "d_pressRef=" << d_pressRef << '\n';
     for(Level::const_patchIterator iter=level->patchesBegin();
 	iter != level->patchesEnd(); iter++){
       const Patch* patch=*iter;
-      cerr << *patch << '\n';
       if(patch->containsCell(d_pressRef))
 	d_pressRefPatch = patch;
     }
@@ -1232,10 +1230,9 @@ PressureSolver::pressureLinearSolve (const ProcessorGroup* pc,
 // ****************************************************************************
 void 
 PressureSolver::normPressure(const ProcessorGroup*,
-			     const Patch* /*patch*/,
-			     ArchesVariables* /*vars*/)
+			     const Patch* patch,
+			     ArchesVariables* vars)
 {
-#if 0
   IntVector domLo = vars->pressure.getFortLowIndex();
   IntVector domHi = vars->pressure.getFortHighIndex();
   IntVector idxLo = patch->getCellFORTLowIndex();
@@ -1259,7 +1256,6 @@ PressureSolver::normPressure(const ProcessorGroup*,
       cerr << endl;
     }
   }
-#endif
 #endif
 }  
 
