@@ -417,6 +417,8 @@ void ICE::scheduleInitialize(const LevelP& level,SchedulerP& sched)
   MaterialSubset* press_matl = scinew MaterialSubset();
   press_matl->add(0);
   press_matl->addReference();
+  Task::DomainSpec oims = Task::OutOfDomain;  //outside of ice matlSet.
+  
   t->computes(lb->vel_CCLabel);
   t->computes(lb->rho_CCLabel); 
   t->computes(lb->temp_CCLabel);
@@ -428,8 +430,8 @@ void ICE::scheduleInitialize(const LevelP& level,SchedulerP& sched)
   t->computes(lb->viscosityLabel);
   t->computes(lb->gammaLabel);
   t->computes(lb->specific_heatLabel);
-  t->computes(lb->press_CCLabel, press_matl);
-  t->computes(lb->imp_delPLabel, press_matl); 
+  t->computes(lb->press_CCLabel, press_matl, oims);
+  t->computes(lb->imp_delPLabel, press_matl, oims); 
   
   sched->addTask(t, level->eachPatch(), d_sharedState->allICEMaterials());
 
@@ -461,7 +463,7 @@ void ICE::scheduleInitialize(const LevelP& level,SchedulerP& sched)
    
     t2->modifies(lb->rho_micro_CCLabel);
     t2->modifies(lb->temp_CCLabel);
-    t2->modifies(lb->press_CCLabel, press_matl); 
+    t2->modifies(lb->press_CCLabel, press_matl, oims); 
 
     sched->addTask(t2, level->eachPatch(), ice_matls);
   }
@@ -713,23 +715,25 @@ void ICE::scheduleComputePressure(SchedulerP& sched,
                      this, &ICE::computeEquilibrationPressure);
   }         
                         // EQ & RATE FORM
-  t->requires(Task::OldDW,lb->press_CCLabel, press_matl, Ghost::None);
-  t->requires(Task::OldDW,lb->rho_CCLabel,               Ghost::None);
-  t->requires(Task::OldDW,lb->temp_CCLabel,              Ghost::None); 
-  t->requires(Task::OldDW,lb->sp_vol_CCLabel,            Ghost::None);
-  t->requires(Task::NewDW,lb->gammaLabel,                Ghost::None);
-  t->requires(Task::NewDW,lb->specific_heatLabel,        Ghost::None);
+  Task::DomainSpec oims = Task::OutOfDomain;  //outside of ice matlSet.
+  Ghost::GhostType  gn = Ghost::None;
+  t->requires(Task::OldDW,lb->press_CCLabel, press_matl, oims, gn);
+  t->requires(Task::OldDW,lb->rho_CCLabel,               gn);
+  t->requires(Task::OldDW,lb->temp_CCLabel,              gn); 
+  t->requires(Task::OldDW,lb->sp_vol_CCLabel,            gn);
+  t->requires(Task::NewDW,lb->gammaLabel,                gn);
+  t->requires(Task::NewDW,lb->specific_heatLabel,        gn);
   
   t->computes(lb->f_theta_CCLabel); 
   t->computes(lb->speedSound_CCLabel);
   t->computes(lb->vol_frac_CCLabel);
   t->computes(lb->sp_vol_CCLabel);
   t->computes(lb->rho_CCLabel);
-  t->computes(lb->press_equil_CCLabel, press_matl);
-  t->computes(lb->press_CCLabel,       press_matl);  // needed by implicit
+  t->computes(lb->press_equil_CCLabel, press_matl, oims);
+  t->computes(lb->press_CCLabel,       press_matl, oims);  // needed by implicit
 
   if (d_RateForm) {     // RATE FORM
-    t->computes(lb->matl_press_CCLabel);
+    t->computes(lb->matl_press_CCLabel, press_matl,oims);
   }
     
   sched->addTask(t, patches, ice_matls);
@@ -781,9 +785,10 @@ void ICE::scheduleComputeVel_FC(SchedulerP& sched,
               this, &ICE::computeVel_FC, recursion);
   }
                       // EQ  & RATE FORM 
-  Ghost::GhostType  gac = Ghost::AroundCells;                      
+  Ghost::GhostType  gac = Ghost::AroundCells;
+  Task::DomainSpec oims = Task::OutOfDomain;  //outside of ice matlSet.                      
 //  t->requires(Task::OldDW, lb->delTLabel);    For AMR
-  t->requires(Task::NewDW,lb->press_CCLabel,       press_matl, gac,1);
+  t->requires(Task::NewDW,lb->press_CCLabel,       press_matl, oims, gac,1);
   t->requires(Task::NewDW,lb->sp_vol_CCLabel,    /*all_matls*/ gac,1);
   t->requires(Task::NewDW,lb->rho_CCLabel,       /*all_matls*/ gac,1);
   t->requires(Task::OldDW,lb->vel_CCLabel,         ice_matls,  gac,1);
@@ -878,9 +883,9 @@ void ICE::scheduleComputeDelPressAndUpdatePressCC(SchedulerP& sched,
                             this, &ICE::computeDelPressAndUpdatePressCC);
   Ghost::GhostType  gac = Ghost::AroundCells;
   Ghost::GhostType  gn = Ghost::None;  
+  Task::DomainSpec oims = Task::OutOfDomain;  //outside of ice matlSet.
 //  task->requires( Task::OldDW, lb->delTLabel);    FOR AMR
-  task->requires( Task::NewDW, lb->press_equil_CCLabel,
-                                          press_matl,  gn);
+  task->requires( Task::NewDW, lb->press_equil_CCLabel,press_matl, oims, gn );
   task->requires( Task::NewDW, lb->vol_frac_CCLabel,   gac,2);
   task->requires( Task::NewDW, lb->uvel_FCMELabel,     gac,2);
   task->requires( Task::NewDW, lb->vvel_FCMELabel,     gac,2);
@@ -902,12 +907,12 @@ void ICE::scheduleComputeDelPressAndUpdatePressCC(SchedulerP& sched,
     task->requires(Task::NewDW, lb->f_theta_CCLabel,             gn);
   }
   
-  task->modifies(lb->press_CCLabel,        press_matl);
-  task->computes(lb->delP_DilatateLabel,   press_matl);
-  task->computes(lb->delP_MassXLabel,      press_matl);
-  task->computes(lb->term2Label,           press_matl);
-  task->computes(lb->term3Label,           press_matl);
-  task->computes(lb->sum_rho_CCLabel,      press_matl);  // only one mat subset
+  task->modifies(lb->press_CCLabel,        press_matl, oims);
+  task->computes(lb->delP_DilatateLabel,   press_matl, oims);
+  task->computes(lb->delP_MassXLabel,      press_matl, oims);
+  task->computes(lb->term2Label,           press_matl, oims);
+  task->computes(lb->term3Label,           press_matl, oims);
+  task->computes(lb->sum_rho_CCLabel,      press_matl, oims);  // only one mat subset
   
   sched->addTask(task, patches, matls);
 }
@@ -925,12 +930,13 @@ void ICE::scheduleComputePressFC(SchedulerP& sched,
                      this, &ICE::computePressFC);
                      
   Ghost::GhostType  gac = Ghost::AroundCells;
-  task->requires(Task::NewDW,lb->press_CCLabel,   press_matl,gac,1);
-  task->requires(Task::NewDW,lb->sum_rho_CCLabel, press_matl,gac,1);
+  Task::DomainSpec oims = Task::OutOfDomain;  //outside of ice matlSet.
+  task->requires(Task::NewDW,lb->press_CCLabel,   press_matl,oims, gac,1);
+  task->requires(Task::NewDW,lb->sum_rho_CCLabel, press_matl,oims, gac,1);
 
-  task->computes(lb->pressX_FCLabel, press_matl);
-  task->computes(lb->pressY_FCLabel, press_matl);
-  task->computes(lb->pressZ_FCLabel, press_matl);
+  task->computes(lb->pressX_FCLabel, press_matl, oims);
+  task->computes(lb->pressY_FCLabel, press_matl, oims);
+  task->computes(lb->pressZ_FCLabel, press_matl, oims);
 
   sched->addTask(task, patches, matls);
 }
@@ -970,9 +976,11 @@ ICE::scheduleAccumulateMomentumSourceSinks(SchedulerP& sched,
                        // EQ  & RATE FORM     
 //  t->requires(Task::OldDW, lb->delTLabel);  FOR AMR
   Ghost::GhostType  gac = Ghost::AroundCells;
-  t->requires(Task::NewDW,lb->pressX_FCLabel,   press_matl,    gac, 1);
-  t->requires(Task::NewDW,lb->pressY_FCLabel,   press_matl,    gac, 1);
-  t->requires(Task::NewDW,lb->pressZ_FCLabel,   press_matl,    gac, 1);
+  Task::DomainSpec oims = Task::OutOfDomain;  //outside of ice matlSet.
+  
+  t->requires(Task::NewDW,lb->pressX_FCLabel,   press_matl,    oims, gac, 1);
+  t->requires(Task::NewDW,lb->pressY_FCLabel,   press_matl,    oims, gac, 1);
+  t->requires(Task::NewDW,lb->pressZ_FCLabel,   press_matl,    oims, gac, 1);
   t->requires(Task::NewDW,lb->viscosityLabel,   ice_matls_sub, gac, 2);
   t->requires(Task::OldDW,lb->vel_CCLabel,      ice_matls_sub, gac, 2);
   t->requires(Task::NewDW,lb->sp_vol_CCLabel,   ice_matls_sub, gac, 2);
@@ -1018,9 +1026,10 @@ void ICE::scheduleAccumulateEnergySourceSinks(SchedulerP& sched,
               this, &ICE::accumulateEnergySourceSinks_RF);
   }
   Ghost::GhostType  gac = Ghost::AroundCells;
-  Ghost::GhostType  gn  = Ghost::None;  
+  Ghost::GhostType  gn  = Ghost::None;
+  Task::DomainSpec oims = Task::OutOfDomain;  //outside of ice matlSet.
 //  t->requires(Task::OldDW, lb->delTLabel);  FOR AMR
-  t->requires(Task::NewDW, lb->press_CCLabel,     press_matl,gn);
+  t->requires(Task::NewDW, lb->press_CCLabel,     press_matl,oims, gn);
   t->requires(Task::NewDW, lb->speedSound_CCLabel,           gn);
   t->requires(Task::OldDW, lb->temp_CCLabel,      ice_matls, gac,1);
   t->requires(Task::NewDW, lb->thermalCondLabel,  ice_matls, gac,1);
@@ -1028,16 +1037,16 @@ void ICE::scheduleAccumulateEnergySourceSinks(SchedulerP& sched,
   t->requires(Task::NewDW, lb->sp_vol_CCLabel,               gac,1);
 
   if (d_EqForm) {       //EQ FORM
-    t->requires(Task::NewDW, lb->delP_DilatateLabel,press_matl,gn);
+    t->requires(Task::NewDW, lb->delP_DilatateLabel,press_matl,oims, gn);
     t->requires(Task::NewDW, lb->vol_frac_CCLabel,             gn);
   }
   if (d_RateForm) {     //RATE FORM
     t->requires(Task::NewDW, lb->f_theta_CCLabel,            gn,0);
     t->requires(Task::OldDW, lb->vel_CCLabel,     ice_matls, gn,0);    
     t->requires(Task::NewDW, lb->vel_CCLabel,     mpm_matls, gn,0);    
-    t->requires(Task::NewDW, lb->pressX_FCLabel,  press_matl,gac,1);
-    t->requires(Task::NewDW, lb->pressY_FCLabel,  press_matl,gac,1);
-    t->requires(Task::NewDW, lb->pressZ_FCLabel,  press_matl,gac,1);
+    t->requires(Task::NewDW, lb->pressX_FCLabel,  press_matl,oims, gac,1);
+    t->requires(Task::NewDW, lb->pressY_FCLabel,  press_matl,oims, gac,1);
+    t->requires(Task::NewDW, lb->pressZ_FCLabel,  press_matl,oims, gac,1);
     t->requires(Task::NewDW, lb->uvel_FCMELabel,             gac,1);
     t->requires(Task::NewDW, lb->vvel_FCMELabel,             gac,1);
     t->requires(Task::NewDW, lb->wvel_FCMELabel,             gac,1);
@@ -1107,7 +1116,8 @@ void ICE::scheduleComputeLagrangianSpecificVolume(SchedulerP& sched,
   }
 
   Ghost::GhostType  gn  = Ghost::None;  
-  Ghost::GhostType  gac = Ghost::AroundCells;       
+  Ghost::GhostType  gac = Ghost::AroundCells;
+  Task::DomainSpec oims = Task::OutOfDomain;  //outside of ice matlSet.
 
 //  t->requires(Task::OldDW, lb->delTLabel);  for AMR                         
   t->requires(Task::NewDW, lb->rho_CCLabel,               gn);
@@ -1125,7 +1135,7 @@ void ICE::scheduleComputeLagrangianSpecificVolume(SchedulerP& sched,
   if (d_EqForm) {           // EQ FORM
     t->requires(Task::NewDW, lb->speedSound_CCLabel,           gn);
     t->requires(Task::NewDW, lb->specific_heatLabel,ice_matls, gn);
-    t->requires(Task::NewDW, lb->delP_DilatateLabel,press_matl,gn);
+    t->requires(Task::NewDW, lb->delP_DilatateLabel,press_matl,oims,gn);
   }
   if(d_models.size() > 0){
     t->requires(Task::NewDW, lb->modelVol_srcLabel,    gn);
@@ -1158,7 +1168,8 @@ void ICE::scheduleAddExchangeToMomentumAndEnergy(SchedulerP& sched,
                   this, &ICE::addExchangeToMomentumAndEnergy);
   }
 
-  Ghost::GhostType  gn  = Ghost::None; 
+  Ghost::GhostType  gn  = Ghost::None;
+  Task::DomainSpec oims = Task::OutOfDomain;  //outside of ice matlSet.
 //  t->requires(Task::OldDW, d_sharedState->get_delt_label()); for AMR
  
 /*`==========TESTING==========*/
@@ -1183,7 +1194,7 @@ void ICE::scheduleAddExchangeToMomentumAndEnergy(SchedulerP& sched,
     t->requires(Task::NewDW, lb->sp_vol_CCLabel,          gn);      
     t->requires(Task::NewDW, lb->rho_CCLabel,             gn);      
     t->requires(Task::NewDW, lb->speedSound_CCLabel,      gn);        
-    t->requires(Task::NewDW, lb->press_CCLabel,     press_matl, gn);
+    t->requires(Task::NewDW, lb->press_CCLabel,     press_matl, gn, oims);
     t->requires(Task::OldDW, lb->vel_CCLabel,       ice_matls,  gn); 
   }
 
@@ -1209,7 +1220,9 @@ void ICE::scheduleAdvectAndAdvanceInTime(SchedulerP& sched,
                                     const MaterialSet* ice_matls)
 {
   Ghost::GhostType  gac  = Ghost::AroundCells; 
-  Ghost::GhostType  gn   = Ghost::None; 
+  Ghost::GhostType  gn   = Ghost::None;
+  Task::DomainSpec oims = Task::OutOfDomain;  //outside of ice matlSet.
+  
   cout_doing << "ICE::scheduleAdvectAndAdvanceInTime" << endl;
   Task* task = scinew Task("ICE::advectAndAdvanceInTime",
                      this, &ICE::advectAndAdvanceInTime);
@@ -1231,7 +1244,7 @@ void ICE::scheduleAdvectAndAdvanceInTime(SchedulerP& sched,
     task->requires(Task::OldDW, lb->rho_CCLabel,       gac, 1);       
     task->requires(Task::OldDW, lb->vel_CCLabel,       gac, 1);   
     task->requires(Task::OldDW, lb->vol_frac_CCLabel,  gac, 2);
-    task->requires(Task::OldDW, lb->press_CCLabel,    press_matl, gac, 2);
+    task->requires(Task::OldDW, lb->press_CCLabel,    press_matl,oims,gac, 2);
   }
   task->modifies(lb->rho_CCLabel);
   task->modifies(lb->sp_vol_CCLabel);
