@@ -1407,7 +1407,7 @@ void Method::emit_proxy(EmitState& e, const string& fn,
     e.out << leader2 << "::SCIRun::callType _flag;\n";
     e.out << leader2 << "::SCIRun::Message* save_callonly_msg = NULL;\n";
     if(throws_clause)
-      e.out << leader2 << "::std::vector <::SCIRun::Message* > save_callnoret_msg;\n";
+      e.out << leader2 << "::std::vector < ::SCIRun::Message*> save_callnoret_msg;\n";
   }
 
   if(reply_required()){
@@ -1716,7 +1716,7 @@ e.out << leader2 << "//::std::cout << \"CALLONLY sending _sessionID = '\" << _se
       for(vector<ScopedName*>::const_iterator iter=thlist.begin();iter != thlist.end();iter++, cnt++){
 	::std::string name = (*iter)->cppfullname();
 	e.out << leader2 << "      case " << cnt << ":\n";
-	e.out << leader2 << "        _unmarshal_exception<" << name << ", " << name << "_proxy>(message);\n";
+	e.out << leader2 << "        _unmarshal_exception<" << name << ", " << name << "_proxy>(*iter);\n";
 	e.out << leader2 << "        break;\n";
       }
       e.out << leader2 << "      }\n";
