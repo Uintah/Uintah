@@ -186,9 +186,10 @@ int main(int argc, char* argv[])
 	abort();
     }
     PIDL::serveObjects();
+    PIDL::finalize();
 
     MPI_Finalize();
-
+    
     return 0;
 }
 

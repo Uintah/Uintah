@@ -118,6 +118,9 @@ int LUFactor_impl::LUFactorize(const SSIDL::array2<double>& A)
       printf("%7.2f",A[l][k]);
     }
   }
+  printf("\nDone\n");
+  fflush(stdout);
+
 #endif
   
  
