@@ -56,10 +56,8 @@ MPMMaterial::MPMMaterial(ProblemSpecP& ps)
 
    ps->require("density",d_density);
    
-   if( MPMPhysicalModules::heatConductionModel ) {
-     ps->require("thermal_conductivity",d_thermalConductivity);
-     ps->require("specific_heat",d_specificHeat);
-   }
+   ps->require("thermal_conductivity",d_thermalConductivity);
+   ps->require("specific_heat",d_specificHeat);
 
    if( MPMPhysicalModules::thermalContactModel ) {
 //     ps->require("heat_transfer_coefficient",d_heatTransferCoefficient);
@@ -162,23 +160,21 @@ void MPMMaterial::createParticles(particleIndex numParticles,
 				pissurf,ptemperature,pparticleID,NAPID,patch);
    }
 
-   if(MPMPhysicalModules::heatConductionModel) {
-     particleIndex partclesNum = start;
+   particleIndex partclesNum = start;
 
-     ParticleVariable<Vector> ptemperatureGradient;
-     new_dw->allocate(ptemperatureGradient, lb->pTemperatureGradientLabel, subset);
+   ParticleVariable<Vector> ptemperatureGradient;
+   new_dw->allocate(ptemperatureGradient, lb->pTemperatureGradientLabel, subset);
 
-     ParticleVariable<double> pexternalHeatRate;
-     new_dw->allocate(pexternalHeatRate, lb->pExternalHeatRateLabel, subset);
+   ParticleVariable<double> pexternalHeatRate;
+   new_dw->allocate(pexternalHeatRate, lb->pExternalHeatRateLabel, subset);
 
-     for(particleIndex pIdx=0;pIdx<partclesNum;++pIdx) {
-       ptemperatureGradient[pIdx] = Vector(0.,0.,0.);
-       pexternalHeatRate[pIdx] = 0.;
-     }
-
-     new_dw->put(ptemperatureGradient, lb->pTemperatureGradientLabel);
-     new_dw->put(pexternalHeatRate, lb->pExternalHeatRateLabel);
+   for(particleIndex pIdx=0;pIdx<partclesNum;++pIdx) {
+     ptemperatureGradient[pIdx] = Vector(0.,0.,0.);
+     pexternalHeatRate[pIdx] = 0.;
    }
+
+   new_dw->put(ptemperatureGradient, lb->pTemperatureGradientLabel);
+   new_dw->put(pexternalHeatRate, lb->pExternalHeatRateLabel);
 
    new_dw->put(position, lb->pXLabel);
    new_dw->put(pvelocity, lb->pVelocityLabel);
@@ -337,6 +333,10 @@ double MPMMaterial::getHeatTransferCoefficient() const
 
 
 // $Log$
+// Revision 1.42  2000/08/04 16:51:36  tan
+// The "if(MPMPhysicalModules::heatConductionModel)" is removed.  Simulations
+// are thermal-mechanical.
+//
 // Revision 1.41  2000/07/25 19:10:26  guilkey
 // Changed code relating to particle combustion as well as the
 // heat conduction.
