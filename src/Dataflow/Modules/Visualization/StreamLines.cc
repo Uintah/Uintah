@@ -58,8 +58,6 @@ public:
 
   virtual void execute();
 
-  virtual void tcl_command(TCLArgs&, void*);
-
 private:
   // data members
 
@@ -294,21 +292,6 @@ void StreamLines::execute()
   cf->resize_fdata();
   cf->freeze();
   oport_->send(cf);
-}
-
-
-void StreamLines::tcl_command(TCLArgs& args, void* userdata)
-{
-  if(args.count() < 2){
-    args.error("StreamLines needs a minor command");
-    return;
-  }
- 
-  if (args[1] == "execute") {
-    want_to_execute();
-  } else {
-    Module::tcl_command(args, userdata);
-  }
 }
 
 
