@@ -20,24 +20,16 @@
 //    Date   : July 2002
 
 
-#include <Core/Util/DynamicCompilation.h>
 #include <Dataflow/Network/Module.h>
-#include <Core/Malloc/Allocator.h>
-#include <Core/Datatypes/FieldInterface.h>
-#include <Dataflow/share/share.h>
-
-#include <Core/Containers/Handle.h>
 #include <Dataflow/Ports/FieldPort.h>
+#include <Dataflow/Ports/MatrixPort.h>
 #include <Dataflow/Modules/Fields/ChangeFieldDataAt.h>
-#include <Dataflow/Network/NetworkEditor.h>
 #include <Core/Containers/StringUtil.h>
 #include <map>
 #include <iostream>
 
 namespace SCIRun {
 
-using std::endl;
-using std::pair;
 
 class PSECORESHARE ChangeFieldDataAt : public Module {
 public:
@@ -129,9 +121,16 @@ ChangeFieldDataAt::execute()
   }
 
   // The output port is required.
-  FieldOPort *oport = (FieldOPort*)get_oport("Output Field");
-  if (!oport) {
+  FieldOPort *ofport = (FieldOPort*)get_oport("Output Field");
+  if (!ofport) {
     error("Unable to initialize oport 'Output Field'.");
+    return;
+  }
+
+  // The output port is required.
+  MatrixOPort *omport = (MatrixOPort*)get_oport("Interpolant");
+  if (!omport) {
+    error("Unable to initialize oport 'Interpolant'.");
     return;
   }
 
@@ -161,15 +160,17 @@ ChangeFieldDataAt::execute()
   if (dataat == fh->data_at())
   {
     // No changes, just send the original through (it may be nothing!).
-    oport->send(fh);
     remark("Passing field from input port to output port unchanged.");
+    warning("Interpolant for that location combination is not yet supported.");
+    ofport->send(fh);
+    omport->send(0);
     return;
   }
 
   // Create a field identical to the input, except for the edits.
-  const TypeDescription *fsrc_td = fh->get_type_description();
-  CompileInfoHandle ci = ChangeFieldDataAtAlgoCreate::get_compile_info
-    (fsrc_td, fh->get_type_description()->get_name());
+  const TypeDescription *fsrctd = fh->get_type_description();
+  CompileInfoHandle ci =
+    ChangeFieldDataAtAlgoCreate::get_compile_info(fsrctd);
   Handle<ChangeFieldDataAtAlgoCreate> algo;
   if (!DynamicCompilation::compile(ci, algo, this)) return;
 
@@ -177,14 +178,26 @@ ChangeFieldDataAt::execute()
   MatrixHandle interpolant(0);
   FieldHandle ef(algo->execute(this, fh, dataat, interpolant));
 
-  oport->send(ef);
+  if (interpolant.get_rep() == 0)
+  {
+    if (omport->nconnections() > 0)
+    {
+      error("Interpolant for that location combination is not supported.");
+    }
+    else
+    {
+      remark("Interpolant for that location combination is not supported.");
+    }
+  }
+
+  ofport->send(ef);
+  omport->send(interpolant);
 }
 
     
 
 CompileInfoHandle
-ChangeFieldDataAtAlgoCreate::get_compile_info(const TypeDescription *field_td,
-					      const string &fdstname)
+ChangeFieldDataAtAlgoCreate::get_compile_info(const TypeDescription *field_td)
 {
   // Use cc_to_h if this is in the .cc file, otherwise just __FILE__
   static const string include_path(TypeDescription::cc_to_h(__FILE__));
@@ -193,11 +206,10 @@ ChangeFieldDataAtAlgoCreate::get_compile_info(const TypeDescription *field_td,
 
   CompileInfo *rval = 
     scinew CompileInfo(template_class + "." +
-		       field_td->get_filename() + "." +
-		       to_filename(fdstname) + ".",
+		       field_td->get_filename() + ".",
 		       base_class_name, 
 		       template_class,
-                       field_td->get_name() + "," + fdstname + " ");
+                       field_td->get_name());
 
   // Add in the include path to compile this obj
   rval->add_include(include_path);
