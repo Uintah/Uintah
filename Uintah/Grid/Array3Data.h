@@ -50,6 +50,25 @@ namespace Uintah {
 	 CHECKARRAYBOUNDS(idx.z(), 0, d_size.z());
 	 return d_data3[idx.x()][idx.y()][idx.z()];
       }
+
+      ///////////////////////////////////////////////////////////////////////
+      //
+      // Return pointer to the data 
+      // (**WARNING**not complete implementation)
+      //
+      inline T* getPointer() {
+	return d_data;
+      }
+      
+      ///////////////////////////////////////////////////////////////////////
+      //
+      // Return const pointer to the data 
+      // (**WARNING**not complete implementation)
+      //
+      inline const T* getPointer() const {
+	return d_data;
+      }
+
    private:
       T*    d_data;
       T***  d_data3;
@@ -117,6 +136,9 @@ namespace Uintah {
 
 //
 // $Log$
+// Revision 1.11  2000/06/11 04:05:06  bbanerje
+// Added first cut of getPointer() needed for fortran calls.
+//
 // Revision 1.10  2000/05/31 17:21:54  guilkey
 // Changed a few scinews to news to fix some wacky error.
 //
