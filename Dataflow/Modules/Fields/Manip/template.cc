@@ -8,11 +8,14 @@ using namespace std;
 
 extern "C" {
 
-void execute(vector<FieldHandle>& in, vector<FieldHandle>& out)
+void execute(const vector<FieldHandle>& in, vector<FieldHandle>& out)
 {
-  cout << "hey I was called" << endl;
-  static FieldHandle f;
-  return f;
+   enum { number_of_outputs = 1 }   //TODO: replace with the right number
+   out.resize( number_of_outputs );
+
+   //TODO: implement your manipulation
+
+   cout << "FieldManip has been executed" << endl; 
 }
 
 }
