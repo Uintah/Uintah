@@ -102,7 +102,7 @@ class ViewImage : public Module
     BUTTON_1_E	= 256,
     BUTTON_2_E  = 512,
     BUTTON_3_E  = 1024
-  } Tk_Button_State_e;
+  };
 
   enum DisplayMode_e {
     normal_e,
@@ -190,7 +190,9 @@ class ViewImage : public Module
     int			colormap_generation_;
     int			colormap_size_;
 
-
+    GLdouble		gl_modelview_matrix_[16];
+    GLdouble		gl_projection_matrix_[16];
+    GLint		gl_viewport_[4];
   };
   typedef vector<SliceWindow *>	SliceWindows;
 
@@ -780,7 +782,9 @@ ViewImage::setup_gl_view(SliceWindow &window)
   glMatrixMode(GL_PROJECTION);
   glLoadIdentity();
 
-
+  glGetDoublev(GL_MODELVIEW_MATRIX, window.gl_modelview_matrix_);
+  glGetDoublev(GL_PROJECTION_MATRIX, window.gl_projection_matrix_);
+  glGetIntegerv(GL_VIEWPORT, window.gl_viewport_);
 
   double hwid = (window.viewport_->width()/(*window.zoom_/100.0))/2;
   double hhei = (window.viewport_->height()/(*window.zoom_/100.0))/2;
@@ -790,6 +794,8 @@ ViewImage::setup_gl_view(SliceWindow &window)
 
   glOrtho(cx - hwid, cx + hwid, cy - hhei, cy + hhei,
 	  -max_slice_[axis]*scale_[axis], max_slice_[axis]*scale_[axis]);
+
+  glGetDoublev(GL_PROJECTION_MATRIX, window.gl_projection_matrix_);
 
   here = 0;
 
@@ -1407,19 +1413,14 @@ ViewImage::zoom_out(SliceWindow &window)
 Point
 ViewImage::screen_to_world(SliceWindow &window, 
 			   unsigned int x, unsigned int y) {
-  GLdouble model[16];
-  GLdouble proj[16];
-  GLint	   view[4];
   GLdouble xyz[3];
-  window.viewport_->make_current();
-  setup_gl_view(window);
-  glGetDoublev(GL_MODELVIEW_MATRIX,model);
-  glGetDoublev(GL_PROJECTION_MATRIX,proj);
-  glGetIntegerv(GL_VIEWPORT, view);
   gluUnProject(double(x), double(y), double(window.slice_[window.axis_]),
-	       model, proj, view, xyz+0, xyz+1, xyz+2);
-  window.viewport_->release();
+	       window.gl_modelview_matrix_, 
+	       window.gl_projection_matrix_,
+	       window.gl_viewport_,
+	       xyz+0, xyz+1, xyz+2);
   xyz[window.axis_] = double(window.slice_[window.axis_])*scale_[window.axis_];
+
   return Point(xyz[0], xyz[1], xyz[2]);
 }
   
