@@ -32,7 +32,7 @@
 #define SCI_Geom_IndexedGroup_h 1
 
 #include <Core/Containers/Array1.h>
-#include <map.h>
+#include <map>
 
 #include <Core/Geom/GeomObj.h>
 #include <Core/Geometry/BBox.h>
