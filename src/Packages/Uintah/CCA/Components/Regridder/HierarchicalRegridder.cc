@@ -17,6 +17,8 @@ extern DebugStream dilate_dbg;
 
 HierarchicalRegridder::HierarchicalRegridder(const ProcessorGroup* pg) : RegridderCommon(pg)
 {
+  rdbg << "HierarchicalRegridder::HierarchicalRegridder() BGN" << endl;
+
   patchCells = VarLabel::create("PatchCells",
                              CCVariable<int>::getTypeDescription());
   dilatedCellsCreation  = VarLabel::create("DilatedCellsCreation",
@@ -27,15 +29,20 @@ HierarchicalRegridder::HierarchicalRegridder(const ProcessorGroup* pg) : Regridd
                              CCVariable<int>::getTypeDescription());
   activePatches = VarLabel::create("activePatches",
                              CCVariable<int>::getTypeDescription());
+
+  rdbg << "HierarchicalRegridder::HierarchicalRegridder() END" << endl;
 }
 
 HierarchicalRegridder::~HierarchicalRegridder()
 {
-
+  rdbg << "HierarchicalRegridder::~HierarchicalRegridder() BGN" << endl;
+  rdbg << "HierarchicalRegridder::~HierarchicalRegridder() END" << endl;
 }
 
 Grid* HierarchicalRegridder::regrid(Grid* oldGrid, SchedulerP& scheduler, const ProblemSpecP& ups)
 {
+  rdbg << "HierarchicalRegridder::regrid() BGN" << endl;
+
   ProblemSpecP grid_ps = ups->findBlock("Grid");
   if (!grid_ps) {
     throw InternalError("HierarchicalRegridder::regrid() Grid section of UPS file not found!");
@@ -137,9 +144,9 @@ Grid* HierarchicalRegridder::regrid(Grid* oldGrid, SchedulerP& scheduler, const 
   d_numCreated.resize(d_maxLevels);
   d_numDeleted.resize(d_maxLevels);
 
-  rdbg << "HierarchicalRegridder::regrid() HERE 1" << endl;
-
   for (levelIdx = 0; levelIdx < oldGrid->numLevels() && levelIdx < d_maxLevels-1; levelIdx++) {
+    rdbg << "HierarchicalRegridder::regrid() Level = " << levelIdx << endl;
+
     d_numCreated[levelIdx] = 0;
     d_numDeleted[levelIdx] = 0;
 
@@ -151,8 +158,6 @@ Grid* HierarchicalRegridder::regrid(Grid* oldGrid, SchedulerP& scheduler, const 
   }
 
 #endif
-
-  rdbg << "HierarchicalRegridder::regrid() HERE 2" << endl;
 
   Grid* newGrid = scinew Grid();
 
@@ -227,6 +232,7 @@ Grid* HierarchicalRegridder::regrid(Grid* oldGrid, SchedulerP& scheduler, const 
     delete newGrid;
     return oldGrid;
   }
+
   return newGrid;
 }
 
@@ -244,11 +250,9 @@ void HierarchicalRegridder::MarkPatches( const GridP& oldGrid, int levelIdx  )
     IntVector startCell = patch->getCellLowIndex();
     IntVector endCell = patch->getCellHighIndex();
     IntVector latticeIdx = StartCellToLattice( startCell, levelIdx );
-    IntVector realPatchSize = endCell - startCell + IntVector(1,1,1);
+    IntVector realPatchSize = endCell - startCell; // + IntVector(1,1,1); // RNJ this is incorrect maybe?
     IntVector realSubPatchNum = realPatchSize / subPatchSize;
 
-    rdbg << "MarkPatches() realSubPatchNum = " << realSubPatchNum << endl;
-    
     for (CellIterator iter(IntVector(0,0,0), realSubPatchNum); !iter.done(); iter++) {
       IntVector idx(*iter);
       IntVector startCellSubPatch = startCell + idx * subPatchSize;
@@ -256,15 +260,19 @@ void HierarchicalRegridder::MarkPatches( const GridP& oldGrid, int levelIdx  )
       IntVector latticeStartIdx = latticeIdx * d_latticeRefinementRatio[levelIdx] + idx;
       IntVector latticeEndIdx = latticeStartIdx + IntVector(1,1,1);
       
-      rdbg << "MarkPatches() idx = " << idx << endl;
+      rdbg << "MarkPatches() startCell         = " << startCell         << endl;
+      rdbg << "MarkPatches() endCell           = " << endCell           << endl;
+      rdbg << "MarkPatches() latticeIdx        = " << latticeIdx        << endl;
+      rdbg << "MarkPatches() realPatchSize     = " << realPatchSize     << endl;
+      rdbg << "MarkPatches() realSubPatchNum   = " << realSubPatchNum   << endl;
+      rdbg << "MarkPatches() currentIdx        = " << idx               << endl;
       rdbg << "MarkPatches() startCellSubPatch = " << startCellSubPatch << endl;
-      rdbg << "MarkPatches() endCellSubPatch = " << endCellSubPatch << endl;
+      rdbg << "MarkPatches() endCellSubPatch   = " << endCellSubPatch   << endl;
 
       if (flaggedCellsExist(*d_dilatedCellsCreated[levelIdx], startCellSubPatch, endCellSubPatch)) {
         rdbg << "Marking Active [ " << levelIdx+1 << " ]: " << latticeStartIdx << endl;
         (*d_patchActive[levelIdx+1])[latticeStartIdx] = 1;
-      }
-      else if (!flaggedCellsExist(*d_dilatedCellsDeleted[levelIdx], startCellSubPatch, endCellSubPatch)) {
+      } else if (!flaggedCellsExist(*d_dilatedCellsDeleted[levelIdx], startCellSubPatch, endCellSubPatch)) {
         // Do we need to check for flagged cells in the children?
         IntVector childLatticeStartIdx = latticeStartIdx;
         IntVector childLatticeEndIdx = latticeEndIdx;
@@ -282,6 +290,8 @@ void HierarchicalRegridder::MarkPatches( const GridP& oldGrid, int levelIdx  )
       }
     }
   }
+
+  rdbg << "HierarchicalRegridder::MarkPatches() END" << endl;
 }
 
 void HierarchicalRegridder::ExtendPatches( const GridP& oldGrid, int levelIdx  )
@@ -299,38 +309,53 @@ void HierarchicalRegridder::ExtendPatches( const GridP& oldGrid, int levelIdx  )
     patchCells.initialize(0);
     CCVariable<int> dilatedPatchCells;
     dilatedPatchCells.rewindow(d_flaggedCells[parentLevelIdx]->getLowIndex(), d_flaggedCells[parentLevelIdx]->getHighIndex());
-    if (dilate_dbg.active()) {
+    if ( rdbg.active() ) {
       
-      dilate_dbg << endl << "  ACTIVE PATCHES  " << endl;
+      rdbg << endl << "  ACTIVE PATCHES  " << endl;
       rdbg << d_patchNum[childLevelIdx] << endl;
       for (CellIterator iter(IntVector(0,0,0), d_patchNum[childLevelIdx]); !iter.done(); iter++) {
         IntVector idx(*iter);
         if ((*d_patchActive[childLevelIdx])[idx]) {
-          dilate_dbg << idx << " ACTIVE " << endl;
+          rdbg << idx << " ACTIVE " << endl;
         }
       }
     }
 
-
     // Loop over child level patches and fill the corresponding parent level patches with PatchCell flags, then dilate
-    rdbg << d_patchNum[childLevelIdx] << endl;
+    rdbg << "Size of total lattice on level " << childLevelIdx << " = " << d_patchNum[childLevelIdx] << endl;
     for (CellIterator iter(IntVector(0,0,0), d_patchNum[childLevelIdx]); !iter.done(); iter++) {
       IntVector idx(*iter);
       if ((*d_patchActive[childLevelIdx])[idx]) { // only if Fine patch exists
         rdbg << "Marking child patch at: [ " << childLevelIdx << " ]: " << idx << endl;
+	IntVector parentIdx       = idx / d_latticeRefinementRatio[parentLevelIdx];
         IntVector startCell       = idx * d_patchSize[childLevelIdx];
         IntVector endCell         = (idx + IntVector(1,1,1)) * d_patchSize[childLevelIdx] - IntVector(1,1,1);
-        
         IntVector parentStartCell = startCell / d_cellRefinementRatio[parentLevelIdx];
         IntVector parentEndCell   = endCell / d_cellRefinementRatio[parentLevelIdx];
-        if (idx.x() == d_patchNum[parentLevelIdx](0)-1) parentEndCell(0) = d_cellNum[parentLevelIdx](0)-1;
-        if (idx.y() == d_patchNum[parentLevelIdx](1)-1) parentEndCell(1) = d_cellNum[parentLevelIdx](1)-1;
-        if (idx.z() == d_patchNum[parentLevelIdx](2)-1) parentEndCell(2) = d_cellNum[parentLevelIdx](2)-1;
+
+	rdbg << "HierarchicalRegridder::ExtendPatches() idx             = " << idx << endl;
+	rdbg << "HierarchicalRegridder::ExtendPatches() parentIdx       = " << parentIdx << endl;
+	rdbg << "HierarchicalRegridder::ExtendPatches() d_patchSize[ch] = " << d_patchSize[childLevelIdx] << endl;
+	rdbg << "HierarchicalRegridder::ExtendPatches() d_cellRefine[p] = " << d_cellRefinementRatio[parentLevelIdx] << endl;
+	rdbg << "HierarchicalRegridder::ExtendPatches() startCell       = " << startCell       << endl;
+	rdbg << "HierarchicalRegridder::ExtendPatches() endtCell        = " << endCell         << endl;
+	rdbg << "HierarchicalRegridder::ExtendPatches() parentStartCell = " << parentStartCell << endl;
+	rdbg << "HierarchicalRegridder::ExtendPatches() parentEndCell   = " << parentEndCell   << endl;
+
+        if (parentIdx.x() == d_patchNum[parentLevelIdx](0)-1) parentEndCell(0) = d_cellNum[parentLevelIdx](0)-1;
+        if (parentIdx.y() == d_patchNum[parentLevelIdx](1)-1) parentEndCell(1) = d_cellNum[parentLevelIdx](1)-1;
+        if (parentIdx.z() == d_patchNum[parentLevelIdx](2)-1) parentEndCell(2) = d_cellNum[parentLevelIdx](2)-1;
+
+	rdbg << "HierarchicalRegridder::ExtendPatches() new_parentStartCell = " << parentStartCell << endl;
+	rdbg << "HierarchicalRegridder::ExtendPatches() new_parentEndCell   = " << parentEndCell   << endl;
+
         // parentEndCell             = Min(parentEndCell, d_cellNum[parentLevelIdx]);
-        rdbg << " SC: " << startCell << " EC: " << endCell << " PSC: " << parentStartCell << " pec " << parentEndCell << endl;
+
+	rdbg << "HierarchicalRegridder::ExtendPatches() Before Cell Iterator" << endl;
         for (CellIterator parent_iter(parentStartCell, parentEndCell); !parent_iter.done(); parent_iter++) {
           patchCells[*parent_iter] = 1;
         }
+	rdbg << "HierarchicalRegridder::ExtendPatches() After Cell Iterator" << endl;
         rdbg << "Done Marking child patch at: " << idx << endl;
       }
       else
@@ -374,7 +399,7 @@ void HierarchicalRegridder::MarkPatches2(const ProcessorGroup*,
                                          DataWarehouse* old_dw,
                                          DataWarehouse* new_dw)
 {
-  cout << "MP2\n";
+  rdbg << "MP2\n";
 }
 void HierarchicalRegridder::ExtendPatches2(const ProcessorGroup*,
                                            const PatchSubset* patches,
@@ -382,6 +407,6 @@ void HierarchicalRegridder::ExtendPatches2(const ProcessorGroup*,
                                            DataWarehouse* old_dw,
                                            DataWarehouse* new_dw)
 {
-  cout << "EP2\n";
+  rdbg << "EP2\n";
 
 }
