@@ -33,9 +33,9 @@
 #      October 2000
 #      based on standard TCL tkfbox.tcl source
 #
-#	Modified by:
-#	   Elisha Hughes
-#	   December 2004
+#       Modified by:
+#          Elisha Hughes
+#          December 2004
 
 #
 # NOTE: If you use makeOpenFilebox or makeSaveFilebox and these
@@ -78,6 +78,17 @@
 #  However, if the save dialog is the main UI window, then the module UI
 #  function takes care of raising it for you.
 #
+#  Other useful information:
+#         -allowMultipleFiles <module (ie: $this)>   <- Turns on the multiple file reader tab
+#
+#  NOTE: For a module to allowMultipleFiles, it needs to implement two functions:
+#
+#               method handleMultipleFiles { { filesList "" } { delay -1 } }
+#
+#               method setMultipleFilePlayMode { mode }
+#
+#        Valid 'mode's are 'stop', 'fforward', 'rewind', 'stepb', 'step', and 'play'.  
+#        See FieldReader.tcl for an example.
 
 proc makeOpenFilebox {args} {
     biopseFDialog $args
@@ -91,27 +102,27 @@ proc makeSaveFilebox {args} {
 # procedures to call from readers/writers
 
 # tkfbox.tcl --
-#	Implements the "TK" standard file selection dialog box. This
-#	dialog box is used on the Unix platforms whenever the tk_strictMotif
-#	flag is not set.
-#	The "TK" standard file selection dialog box is similar to the
-#	file selection dialog box on Win95(TM). The user can navigate
-#	the directories by clicking on the folder icons or by
-#	selectinf the "Directory" option menu. The user can select
-#	files by clicking on the file icons or by entering a filename
-#	in the "Filename:" entry.
+#       Implements the "TK" standard file selection dialog box. This
+#       dialog box is used on the Unix platforms whenever the tk_strictMotif
+#       flag is not set.
+#       The "TK" standard file selection dialog box is similar to the
+#       file selection dialog box on Win95(TM). The user can navigate
+#       the directories by clicking on the folder icons or by
+#       selectinf the "Directory" option menu. The user can select
+#       files by clicking on the file icons or by entering a filename
+#       in the "Filename:" entry.
 # Copyright (c) 1994-1996 Sun Microsystems, Inc.
 # See the file "license.terms" for information on usage and redistribution
 # of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 
 #----------------------------------------------------------------------
-#		      I C O N   L I S T
+#                     I C O N   L I S T
 # This is a pseudo-widget that implements the icon list inside the 
 # biopseFDialog dialog box.
 #----------------------------------------------------------------------
 
 # biopseIconList --
-#	Creates an IconList widget.
+#       Creates an IconList widget.
 proc biopseIconList {w args} {
     upvar #0 $w data
 
@@ -120,15 +131,15 @@ proc biopseIconList {w args} {
 }
 
 # biopseIconList_Config --
-#	Configure the widget variables of IconList, according to the command
-#	line arguments.
+#       Configure the widget variables of IconList, according to the command
+#       line arguments.
 proc biopseIconList_Config {w argList} {
     upvar #0 $w data
 
     # 1: the configuration specs
     set specs {
-	{-browsecmd "" "" ""}
-	{-command "" "" ""}
+        {-browsecmd "" "" ""}
+        {-command "" "" ""}
     }
 
     # 2: parse the arguments
@@ -136,17 +147,17 @@ proc biopseIconList_Config {w argList} {
 }
 
 # biopseIconList_Create --
-#	Creates an IconList widget by assembling a canvas widget and a
-#	scrollbar widget. Sets all the bindings necessary for the IconList's
-#	operations.
+#       Creates an IconList widget by assembling a canvas widget and a
+#       scrollbar widget. Sets all the bindings necessary for the IconList's
+#       operations.
 proc biopseIconList_Create {w} {
     upvar #0 $w data
 
     frame $w
     set data(sbar)   [scrollbar $w.sbar -orient horizontal \
-	-highlightthickness 0 -takefocus 0]
+        -highlightthickness 0 -takefocus 0]
     set data(canvas) [canvas $w.canvas -bd 2 -relief sunken \
-	-width 400 -height 120 -takefocus 1]
+        -width 400 -height 120 -takefocus 1]
     pack $data(sbar) -side bottom -fill x -padx 2
     pack $data(canvas) -expand yes -fill both
 
@@ -193,7 +204,7 @@ proc biopseIconList_Create {w} {
 # itself as an "after" command so that the window continues to scroll until
 # the mouse moves back into the window or the mouse button is released.
 # Arguments:
-# w -		The IconList window.
+# w -           The IconList window.
 proc biopseIconList_AutoScan {w} {
     upvar #0 $w data
     global biopsePriv
@@ -203,18 +214,18 @@ proc biopseIconList_AutoScan {w} {
     set y $biopsePriv(y)
 
     if {$data(noScroll)} {
-	return
+        return
     }
     if {$x >= [winfo width $data(canvas)]} {
-	$data(canvas) xview scroll 1 units
+        $data(canvas) xview scroll 1 units
     } elseif {$x < 0} {
-	$data(canvas) xview scroll -1 units
+        $data(canvas) xview scroll -1 units
     } elseif {$y >= [winfo height $data(canvas)]} {
-	# do nothing
+        # do nothing
     } elseif {$y < 0} {
-	# do nothing
+        # do nothing
     } else {
-	return
+        return
     }
 
     biopseIconList_Motion1 $w $x $y
@@ -251,27 +262,27 @@ proc biopseIconList_Add {w image text} {
 
     set iTag [$data(canvas) create image 0 0 -image $image -anchor nw]
     set tTag [$data(canvas) create text  0 0 -text  $text  -anchor nw \
-	-font $data(font)]
+        -font $data(font)]
     set rTag [$data(canvas) create rect  0 0 0 0 -fill "" -outline ""]
     
     set b [$data(canvas) bbox $iTag]
     set iW [expr {[lindex $b 2]-[lindex $b 0]}]
     set iH [expr {[lindex $b 3]-[lindex $b 1]}]
     if {$data(maxIW) < $iW} {
-	set data(maxIW) $iW
+        set data(maxIW) $iW
     }
     if {$data(maxIH) < $iH} {
-	set data(maxIH) $iH
+        set data(maxIH) $iH
     }
     
     set b [$data(canvas) bbox $tTag]
     set tW [expr {[lindex $b 2]-[lindex $b 0]}]
     set tH [expr {[lindex $b 3]-[lindex $b 1]}]
     if {$data(maxTW) < $tW} {
-	set data(maxTW) $tW
+        set data(maxTW) $tW
     }
     if {$data(maxTH) < $tH} {
-	set data(maxTH) $tH
+        set data(maxTH) $tH
     }
     
     lappend data(list) [list $iTag $tTag $rTag $iW $iH $tW $tH $data(numItems)]
@@ -285,19 +296,19 @@ proc biopseIconList_Arrange {w} {
     upvar #0 $w data
 
     if {![info exists data(list)]} {
-	if {[info exists data(canvas)] && [winfo exists $data(canvas)]} {
-	    set data(noScroll) 1
-	    $data(sbar) config -command ""
-	}
-	return
+        if {[info exists data(canvas)] && [winfo exists $data(canvas)]} {
+            set data(noScroll) 1
+            $data(sbar) config -command ""
+        }
+        return
     }
 
     set W [winfo width  $data(canvas)]
     set H [winfo height $data(canvas)]
     set pad [expr {[$data(canvas) cget -highlightthickness] + \
-	    [$data(canvas) cget -bd]}]
+            [$data(canvas) cget -bd]}]
     if {$pad < 2} {
-	set pad 2
+        set pad 2
     }
 
     incr W -[expr {$pad*2}]
@@ -305,9 +316,9 @@ proc biopseIconList_Arrange {w} {
 
     set dx [expr {$data(maxIW) + $data(maxTW) + 8}]
     if {$data(maxTH) > $data(maxIH)} {
-	set dy $data(maxTH)
+        set dy $data(maxTH)
     } else {
-	set dy $data(maxIH)
+        set dy $data(maxIH)
     }
     incr dy 2
     set shift [expr {$data(maxIW) + 4}]
@@ -316,55 +327,55 @@ proc biopseIconList_Arrange {w} {
     set y [expr {$pad * 1}] ; # Why * 1 ?
     set usedColumn 0
     foreach sublist $data(list) {
-	set usedColumn 1
-	set iTag [lindex $sublist 0]
-	set tTag [lindex $sublist 1]
-	set rTag [lindex $sublist 2]
-	set iW   [lindex $sublist 3]
-	set iH   [lindex $sublist 4]
-	set tW   [lindex $sublist 5]
-	set tH   [lindex $sublist 6]
+        set usedColumn 1
+        set iTag [lindex $sublist 0]
+        set tTag [lindex $sublist 1]
+        set rTag [lindex $sublist 2]
+        set iW   [lindex $sublist 3]
+        set iH   [lindex $sublist 4]
+        set tW   [lindex $sublist 5]
+        set tH   [lindex $sublist 6]
 
-	set i_dy [expr {($dy - $iH)/2}]
-	set t_dy [expr {($dy - $tH)/2}]
+        set i_dy [expr {($dy - $iH)/2}]
+        set t_dy [expr {($dy - $tH)/2}]
 
-	$data(canvas) coords $iTag $x                    [expr {$y + $i_dy}]
-	$data(canvas) coords $tTag [expr {$x + $shift}]  [expr {$y + $t_dy}]
-	$data(canvas) coords $tTag [expr {$x + $shift}]  [expr {$y + $t_dy}]
-	$data(canvas) coords $rTag $x $y [expr {$x+$dx}] [expr {$y+$dy}]
+        $data(canvas) coords $iTag $x                    [expr {$y + $i_dy}]
+        $data(canvas) coords $tTag [expr {$x + $shift}]  [expr {$y + $t_dy}]
+        $data(canvas) coords $tTag [expr {$x + $shift}]  [expr {$y + $t_dy}]
+        $data(canvas) coords $rTag $x $y [expr {$x+$dx}] [expr {$y+$dy}]
 
-	incr y $dy
-	if {($y + $dy) > $H} {
-	    set y [expr {$pad * 1}] ; # *1 ?
-	    incr x $dx
-	    set usedColumn 0
-	}
+        incr y $dy
+        if {($y + $dy) > $H} {
+            set y [expr {$pad * 1}] ; # *1 ?
+            incr x $dx
+            set usedColumn 0
+        }
     }
 
     if {$usedColumn} {
-	set sW [expr {$x + $dx}]
+        set sW [expr {$x + $dx}]
     } else {
-	set sW $x
+        set sW $x
     }
 
     if {$sW < $W} {
-	$data(canvas) config -scrollregion "$pad $pad $sW $H"
-	$data(sbar) config -command ""
-	$data(canvas) xview moveto 0
-	set data(noScroll) 1
+        $data(canvas) config -scrollregion "$pad $pad $sW $H"
+        $data(sbar) config -command ""
+        $data(canvas) xview moveto 0
+        set data(noScroll) 1
     } else {
-	$data(canvas) config -scrollregion "$pad $pad $sW $H"
-	$data(sbar) config -command "$data(canvas) xview"
-	set data(noScroll) 0
+        $data(canvas) config -scrollregion "$pad $pad $sW $H"
+        $data(sbar) config -command "$data(canvas) xview"
+        set data(noScroll) 0
     }
 
     set data(itemsPerColumn) [expr {($H-$pad)/$dy}]
     if {$data(itemsPerColumn) < 1} {
-	set data(itemsPerColumn) 1
+        set data(itemsPerColumn) 1
     }
 
     if {$data(curItem) != {}} {
-	biopseIconList_Select $w [lindex [lindex $data(list) $data(curItem)] 2] 0
+        biopseIconList_Select $w [lindex [lindex $data(list) $data(curItem)] 2] 0
     }
 }
 
@@ -374,33 +385,33 @@ proc biopseIconList_Invoke {w} {
     upvar #0 $w data
 
     if {[string compare $data(-command) ""] && [info exists data(selected)]} {
-	eval $data(-command)
+        eval $data(-command)
     }
 }
 
 # biopseIconList_See --
-#	If the item is not (completely) visible, scroll the canvas so that
-#	it becomes visible.
+#       If the item is not (completely) visible, scroll the canvas so that
+#       it becomes visible.
 proc biopseIconList_See {w rTag} {
     upvar #0 $w data
     upvar #0 $w:itemList itemList
 
     if {$data(noScroll)} {
-	return
+        return
     }
     set sRegion [$data(canvas) cget -scrollregion]
     if {![string compare $sRegion {}]} {
-	return
+        return
     }
 
     if {![info exists itemList($rTag)]} {
-	return
+        return
     }
 
 
     set bbox [$data(canvas) bbox $rTag]
     set pad [expr {[$data(canvas) cget -highlightthickness] + \
-	    [$data(canvas) cget -bd]}]
+            [$data(canvas) cget -bd]}]
 
     set x1 [lindex $bbox 0]
     set x2 [lindex $bbox 2]
@@ -415,16 +426,16 @@ proc biopseIconList_See {w rTag} {
 
     # check if out of the right edge
     if {($x2 - $dispX) >= $cW} {
-	set dispX [expr {$x2 - $cW}]
+        set dispX [expr {$x2 - $cW}]
     }
     # check if out of the left edge
     if {($x1 - $dispX) < 0} {
-	set dispX $x1
+        set dispX $x1
     }
 
     if {$oldDispX != $dispX} {
-	set fraction [expr {double($dispX)/double($scrollW)}]
-	$data(canvas) xview moveto $fraction
+        set fraction [expr {double($dispX)/double($scrollW)}]
+        $data(canvas) xview moveto $fraction
     }
 }
 
@@ -432,7 +443,7 @@ proc biopseIconList_SelectAtXY {w x y} {
     upvar #0 $w data
 
     biopseIconList_Select $w [$data(canvas) find closest \
-	[$data(canvas) canvasx $x] [$data(canvas) canvasy $y]]
+        [$data(canvas) canvasx $x] [$data(canvas) canvasy $y]]
 }
 
 proc biopseIconList_Select {w rTag {callBrowse 1}} {
@@ -440,7 +451,7 @@ proc biopseIconList_Select {w rTag {callBrowse 1}} {
     upvar #0 $w:itemList itemList
 
     if {![info exists itemList($rTag)]} {
-	return
+        return
     }
     set iTag   [lindex $itemList($rTag) 0]
     set tTag   [lindex $itemList($rTag) 1]
@@ -449,7 +460,7 @@ proc biopseIconList_Select {w rTag {callBrowse 1}} {
 
     if {![info exists data(rect)]} {
         set data(rect) [$data(canvas) create rect 0 0 0 0 \
-	    -fill #a0a0ff -outline #a0a0ff]
+            -fill #a0a0ff -outline #a0a0ff]
     }
     $data(canvas) lower $data(rect)
     set bbox [$data(canvas) bbox $tTag]
@@ -459,9 +470,9 @@ proc biopseIconList_Select {w rTag {callBrowse 1}} {
     set data(selected) $text
     
     if {$callBrowse} {
-	if {[string compare $data(-browsecmd) ""]} {
-	    eval $data(-browsecmd) [list $text]
-	}
+        if {[string compare $data(-browsecmd) ""]} {
+            eval $data(-browsecmd) [list $text]
+        }
     }
 }
 
@@ -469,11 +480,11 @@ proc biopseIconList_Unselect {w} {
     upvar #0 $w data
 
     if {[info exists data(rect)]} {
-	$data(canvas) delete $data(rect)
-	unset data(rect)
+        $data(canvas) delete $data(rect)
+        unset data(rect)
     }
     if {[info exists data(selected)]} {
-	unset data(selected)
+        unset data(selected)
     }
     set data(curItem)  {}
 }
@@ -483,9 +494,9 @@ proc biopseIconList_Get {w} {
     upvar #0 $w data
 
     if {[info exists data(selected)]} {
-	return $data(selected)
+        return $data(selected)
     } else {
-	return ""
+        return ""
     }
 }
 
@@ -510,7 +521,7 @@ proc biopseIconList_Double1 {w x y} {
     upvar #0 $w data
 
     if {$data(curItem) != {}} {
-	biopseIconList_Invoke $w
+        biopseIconList_Invoke $w
     }
 }
 
@@ -530,84 +541,84 @@ proc biopseIconList_FocusIn {w} {
     upvar #0 $w data
 
     if {![info exists data(list)]} {
-	return
+        return
     }
 
     if {$data(curItem) == {}} {
-	set rTag [lindex [lindex $data(list) 0] 2]
-	biopseIconList_Select $w $rTag
+        set rTag [lindex [lindex $data(list) 0] 2]
+        biopseIconList_Select $w $rTag
     }
 }
 
 # biopseIconList_UpDown --
 # Moves the active element up or down by one element
 # Arguments:
-# w -		The IconList widget.
-# amount -	+1 to move down one item, -1 to move back one item.
+# w -           The IconList widget.
+# amount -      +1 to move down one item, -1 to move back one item.
 proc biopseIconList_UpDown {w amount} {
     upvar #0 $w data
 
     if {![info exists data(list)]} {
-	return
+        return
     }
 
     if {$data(curItem) == {}} {
-	set rTag [lindex [lindex $data(list) 0] 2]
+        set rTag [lindex [lindex $data(list) 0] 2]
     } else {
-	set oldRTag [lindex [lindex $data(list) $data(curItem)] 2]
-	set rTag [lindex [lindex $data(list) [expr {$data(curItem)+$amount}]] 2]
-	if {![string compare $rTag ""]} {
-	    set rTag $oldRTag
-	}
+        set oldRTag [lindex [lindex $data(list) $data(curItem)] 2]
+        set rTag [lindex [lindex $data(list) [expr {$data(curItem)+$amount}]] 2]
+        if {![string compare $rTag ""]} {
+            set rTag $oldRTag
+        }
     }
 
     if {[string compare $rTag ""]} {
-	biopseIconList_Select $w $rTag
-	biopseIconList_See $w $rTag
+        biopseIconList_Select $w $rTag
+        biopseIconList_See $w $rTag
     }
 }
 
 # biopseIconList_LeftRight --
 # Moves the active element left or right by one column
 # Arguments:
-# w -		The IconList widget.
-# amount -	+1 to move right one column, -1 to move left one column.
+# w -           The IconList widget.
+# amount -      +1 to move right one column, -1 to move left one column.
 proc biopseIconList_LeftRight {w amount} {
     upvar #0 $w data
 
     if {![info exists data(list)]} {
-	return
+        return
     }
     if {$data(curItem) == {}} {
-	set rTag [lindex [lindex $data(list) 0] 2]
+        set rTag [lindex [lindex $data(list) 0] 2]
     } else {
-	set oldRTag [lindex [lindex $data(list) $data(curItem)] 2]
-	set newItem [expr {$data(curItem)+($amount*$data(itemsPerColumn))}]
-	set rTag [lindex [lindex $data(list) $newItem] 2]
-	if {![string compare $rTag ""]} {
-	    set rTag $oldRTag
-	}
+        set oldRTag [lindex [lindex $data(list) $data(curItem)] 2]
+        set newItem [expr {$data(curItem)+($amount*$data(itemsPerColumn))}]
+        set rTag [lindex [lindex $data(list) $newItem] 2]
+        if {![string compare $rTag ""]} {
+            set rTag $oldRTag
+        }
     }
 
     if {[string compare $rTag ""]} {
-	biopseIconList_Select $w $rTag
-	biopseIconList_See $w $rTag
+        biopseIconList_Select $w $rTag
+        biopseIconList_See $w $rTag
     }
 }
 
 #----------------------------------------------------------------------
-#		Accelerator key bindings
+#               Accelerator key bindings
 #----------------------------------------------------------------------
 
 # biopseIconList_KeyPress --
-#	Gets called when user enters an arbitrary key in the listbox.
+#       Gets called when user enters an arbitrary key in the listbox.
 proc biopseIconList_KeyPress {w key} {
     global biopsePriv
 
     append biopsePriv(ILAccel,$w) $key
     biopseIconList_Goto $w $biopsePriv(ILAccel,$w)
     catch {
-	after cancel $biopsePriv(ILAccel,$w,afterId)
+        after cancel $biopsePriv(ILAccel,$w,afterId)
     }
     set biopsePriv(ILAccel,$w,afterId) [after 500 biopseIconList_Reset $w]
 }
@@ -618,17 +629,17 @@ proc biopseIconList_Goto {w text} {
     global biopsePriv
     
     if {![info exists data(list)]} {
-	return
+        return
     }
 
     if {[string length $text] == 0} {
-	return
+        return
     }
 
     if {$data(curItem) == {} || $data(curItem) == 0} {
-	set start  0
+        set start  0
     } else {
-	set start  $data(curItem)
+        set start  $data(curItem)
     }
 
     set text [string tolower $text]
@@ -641,24 +652,24 @@ proc biopseIconList_Goto {w text} {
     # Search forward until we find a filename whose prefix is an exact match
     # with $text
     while 1 {
-	set sub [string range $textList($i) 0 $len0]
-	if {[string compare $text $sub] == 0} {
-	    set theIndex $i
-	    break
-	}
-	incr i
-	if {$i == $data(numItems)} {
-	    set i 0
-	}
-	if {$i == $start} {
-	    break
-	}
+        set sub [string range $textList($i) 0 $len0]
+        if {[string compare $text $sub] == 0} {
+            set theIndex $i
+            break
+        }
+        incr i
+        if {$i == $data(numItems)} {
+            set i 0
+        }
+        if {$i == $start} {
+            break
+        }
     }
 
     if {$theIndex > -1} {
-	set rTag [lindex [lindex $data(list) $theIndex] 2]
-	biopseIconList_Select $w $rTag 0
-	biopseIconList_See $w $rTag
+        set rTag [lindex [lindex $data(list) $theIndex] 2]
+        biopseIconList_Select $w $rTag 0
+        biopseIconList_See $w $rTag
     }
 }
 
@@ -669,13 +680,13 @@ proc biopseIconList_Reset {w} {
 }
 
 #----------------------------------------------------------------------
-#		      F I L E   D I A L O G
+#                     F I L E   D I A L O G
 #----------------------------------------------------------------------
 
 # biopseFDialog --
-#	Implements the BIOPSE file selection dialog. This dialog is used when
-#	the tk_strictMotif flag is set to false. This procedure shouldn't
-#	be called directly. Call tk_getOpenFile or tk_getSaveFile instead.
+#       Implements the BIOPSE file selection dialog. This dialog is used when
+#       the tk_strictMotif flag is set to false. This procedure shouldn't
+#       be called directly. Call tk_getOpenFile or tk_getSaveFile instead.
 #proc biopseFDialog {filename command cancel args} {
 proc biopseFDialog {argstring} {
     
@@ -684,15 +695,15 @@ proc biopseFDialog {argstring} {
     if { $par_loc < 0 } { 
        set w .
     } else {
-	set w [lindex $argstring [expr $par_loc + 1]]
+        set w [lindex $argstring [expr $par_loc + 1]]
     }
 
     upvar #0 $w data
 
     if {![string compare [lindex [info level -1] 0] makeOpenFilebox]} {
-	set type open
+        set type open
     } else {
-	set type save
+        set type save
     }
 
     biopseFDialog_Config $w $type $argstring
@@ -700,20 +711,20 @@ proc biopseFDialog {argstring} {
 
     # 5. Initialize the file types menu
     if {$data(-filetypes) != {}} {
-	$data(typeMenu) delete 0 end
-	foreach type $data(-filetypes) {
-	    set title  [lindex $type 0]
-	    set filter [lindex $type 1]
-	    $data(typeMenu) add command -label $title \
-		-command [list biopseFDialog_SetFilter $w $type]
-	}
-	biopseFDialog_SetFilter $w [lindex $data(-filetypes) 0]
-	$data(typeMenuBtn) config -state normal
-	$data(typeMenuLab) config -state normal
+        $data(typeMenu) delete 0 end
+        foreach type $data(-filetypes) {
+            set title  [lindex $type 0]
+            set filter [lindex $type 1]
+            $data(typeMenu) add command -label $title \
+                -command [list biopseFDialog_SetFilter $w $type]
+        }
+        biopseFDialog_SetFilter $w [lindex $data(-filetypes) 0]
+        $data(typeMenuBtn) config -state normal
+        $data(typeMenuLab) config -state normal
     } else {
-	set data(filter) "*"
-	$data(typeMenuBtn) config -state disabled -takefocus 0
-	$data(typeMenuLab) config -state disabled
+        set data(filter) "*"
+        $data(typeMenuBtn) config -state disabled -takefocus 0
+        $data(typeMenuLab) config -state disabled
     }
 
     biopseFDialog_UpdateWhenIdle $w
@@ -745,9 +756,9 @@ proc biopseFDialog {argstring} {
     wm withdraw $w
     update idletasks
     set x [expr {[winfo screenwidth $w]/2 - [winfo reqwidth $w]/2 \
-	    - [winfo vrootx [winfo parent $w]]}]
+            - [winfo vrootx [winfo parent $w]]}]
     set y [expr {[winfo screenheight $w]/2 - [winfo reqheight $w]/2 \
-	    - [winfo vrooty [winfo parent $w]]}]
+            - [winfo vrooty [winfo parent $w]]}]
     wm geom $w [winfo reqwidth $w]x[winfo reqheight $w]+$x+$y
     wm title $w $data(-title)
 
@@ -756,7 +767,7 @@ proc biopseFDialog {argstring} {
     set oldFocus [focus]
     set oldGrab [grab current $w]
     if {$oldGrab != ""} {
-	set grabStatus [grab status $oldGrab]
+        set grabStatus [grab status $oldGrab]
     }
 
     grab $w
@@ -777,89 +788,92 @@ proc biopseFDialog {argstring} {
 }
 
 # biopseFDialog_Config --
-#	Configures the BIOPSE filedialog according to the argument list
+#       Configures the BIOPSE filedialog according to the argument list
 proc biopseFDialog_Config {w type argList} {
     upvar #0 $w data
 
     set data(type) $type
 
-    
     # 1: the configuration specs
     if {![string compare $type "open"]} {
-	# options for Open-boxes
-	set specs {
-	    {-filetypes "" "" ""}
-	    {-initialdir "" "" ""}
-	    {-parent "" "" "."}
-	    {-title "" "" ""}
-	    {-command "" "" ""}
-	    {-filevar "" "" ""}
-	    {-cancel "" "" ""}
-	    {-setcmd "" "" ""}
-	    {-defaultextension "" "" ""}
-	    {-selectedfiletype "" "" ""}
-	}
-	set data(-initialfile) ""
+        # options for Open-boxes
+        set specs {
+            {-filetypes "" "" ""}
+            {-initialdir "" "" ""}
+            {-parent "" "" "."}
+            {-title "" "" ""}
+            {-command "" "" ""}
+            {-filevar "" "" ""}
+            {-cancel "" "" ""}
+            {-setcmd "" "" ""}
+            {-defaultextension "" "" ""}
+            {-selectedfiletype "" "" ""}
+            {-allowMultipleFiles "" "" ""}
+        }
+        set data(-initialfile) ""
     } else {
-	# options for Save-boxes
-	set specs {
-	    {-defaultextension "" "" ""}
-	    {-filetypes "" "" ""}
-	    {-initialdir "" "" ""}
-	    {-initialfile "" "" ""}
-	    {-parent "" "" "."}
-	    {-title "" "" ""}
-	    {-command "" "" ""}
-	    {-filevar "" "" ""}
-	    {-cancel "" "" ""}
-	    {-setcmd "" "" ""}
-	    {-formatvar "" "" ""}
-	    {-formats "" "" ""}
-	    {-splitvar "" "" ""}
-	    {-imgwidth "" "" ""}
-	    {-imgheight "" "" ""}
-	    {-confirmvar "" "" ""}
-		{-incrementvar "" "" ""}
-		{-currentvar "" "" ""}
-	    {-selectedfiletype "" "" ""}
-	}
+        # options for Save-boxes
+        set specs {
+            {-defaultextension "" "" ""}
+            {-filetypes "" "" ""}
+            {-initialdir "" "" ""}
+            {-initialfile "" "" ""}
+            {-parent "" "" "."}
+            {-title "" "" ""}
+            {-command "" "" ""}
+            {-filevar "" "" ""}
+            {-cancel "" "" ""}
+            {-setcmd "" "" ""}
+            {-formatvar "" "" ""}
+            {-formats "" "" ""}
+            {-splitvar "" "" ""}
+            {-imgwidth "" "" ""}
+            {-imgheight "" "" ""}
+            {-confirmvar "" "" ""}
+                {-incrementvar "" "" ""}
+                {-currentvar "" "" ""}
+            {-selectedfiletype "" "" ""}
+            {-allowMultipleFiles "" "" ""}
+        }
     }
 
     # 2: default values depending on the type of the dialog
     if {![info exists data(selectPath)]} {
-	# first time the dialog has been popped up
-	set data(selectPath) [pwd]
-	set data(selectFile) ""
+        # first time the dialog has been popped up
+        set data(selectPath) [pwd]
+        set data(selectFile) ""
     }
 
     # 3: parse the arguments
     tclParseConfigSpec $w $specs "" $argList
 
     if {![string compare $data(-title) ""]} {
-	if {![string compare $type "open"]} {
-	    # set data(-title) "Open"
-	} else {
-	    # set data(-title) "Save As"
-	}
+        if {![string compare $type "open"]} {
+            # set data(-title) "Open"
+        } else {
+            # set data(-title) "Save As"
+            # Do not allow for saving "multiple files"
+            set $data(-allowMultipleFiles) ""
+        }
     }
     
     # 4.a: setting initial file to the filevar contents, if it is specified
     if { [info exists $data(-filevar)]} {
 
         set tmp [set $data(-filevar)]
-	if { $tmp != "" } {
+        if { $tmp != "" } {
             # If the filevar is set to anything, use it... (even if the file
             # does not exist.)
-	    set data(-initialdir) [file dirname $tmp]
-	    set data(-initialfile) [file tail $tmp]
-	}
+            set data(-initialdir) [file dirname $tmp]
+            set data(-initialfile) [file tail $tmp]
+        }
     }
     
     # 4.b: set the default directory and selection according to the -initial
     #    settings
     if { $data(-initialdir) != "" } {
 
-	if {[file isdirectory $data(-initialdir)]} {
+        if {[file isdirectory $data(-initialdir)]} {
             set data(selectPath) [glob $data(-initialdir)]
             # Convert the initialdir to an absolute path name. 
             set old [pwd]
@@ -877,7 +891,7 @@ proc biopseFDialog_Config {w type argList} {
     set data(-filetypes) [tkFDGetFileTypes $data(-filetypes)]
 
     if {![winfo exists $data(-parent)]} {
-	error "bad window path name \"$data(-parent)\""
+        error "bad window path name \"$data(-parent)\""
     }
 }
 
@@ -900,7 +914,7 @@ proc biopseFDialog_Create {w} {
 
     set data(upBtn) [button $f1.up]
     if {![info exists biopsePriv(updirImage)]} {
-	set biopsePriv(updirImage) [image create bitmap -data {
+        set biopsePriv(updirImage) [image create bitmap -data {
 #define updir_width 28
 #define updir_height 16
 static char updir_bits[] = {
@@ -921,13 +935,89 @@ static char updir_bits[] = {
 
     # data(icons): the IconList that list the files and directories.
     set data(icons) [biopseIconList $w.icons \
-	-browsecmd "biopseFDialog_ListBrowse $w" \
-	-command   "biopseFDialog_SetCmd $w"]
+        -browsecmd "biopseFDialog_ListBrowse $w" \
+        -command   "biopseFDialog_SetCmd $w"]
 
-    # f2: the frame with the OK button and the "file name" field
-    set f2 [frame $w.f2 -bd 0]
-    label $f2.lab -text "File name:" -anchor e -width 14 -under 5 -pady 0
-    set data(ent) [entry $f2.ent]
+    if { $data(-allowMultipleFiles) != "" } {
+        iwidgets::tabnotebook $w.tabs -raiseselect true -tabpos n -backdrop gray
+        # sd = Single Data, md = Multiple Data
+        set sd_tab [$w.tabs add -label "Single File"]
+        set md_tab [$w.tabs add -label "Time Series"]
+        
+        $w.tabs view 0
+
+        # sd_tab: the tab with the "file name" lab/entry.
+        label $sd_tab.lab -text "File name:" -anchor e -width 14 -under 5 -pady 0
+        set data(ent) [entry $sd_tab.ent]
+
+        # md_tab: the tab for inputing multiple files
+
+        ## Frame for VCR Buttons
+        frame $md_tab.vcr -relief groove -borderwidth 2
+        ## Frame for file base, and delay
+        frame $md_tab.f1
+        ## Frame for current file.
+        frame $md_tab.f2
+
+        label $md_tab.f1.lab -text "File base:" -anchor e -width 10 -pady 0
+        set data(md_ent) [entry $md_tab.f1.ent]
+        label $md_tab.f1.delay_lab -text "Delay:" -anchor e -width 8 -pady 0
+        set data(md_delay) [entry $md_tab.f1.delay_ent]
+
+        if { [info exists $data(-filevar)]} {
+            label $md_tab.f2.current_file_lab -text "Current File:" -anchor e -width 10 -pady 0
+            entry $md_tab.f2.current_file_ent -textvariable  $data(-filevar)
+        }
+
+        TooltipMultiWidget "$md_tab.f1.ent $md_tab.f1.lab" "Select first file in series."
+        TooltipMultiWidget "$md_tab.f1.delay_ent $md_tab.f1.delay_lab" "Milliseconds between each file being read in."
+
+        # load the VCR button bitmaps
+        set image_dir [netedit getenv SCIRUN_SRCDIR]/pixmaps
+        set rewind   [image create photo -file ${image_dir}/rewind-icon.ppm]
+        set stepb    [image create photo -file ${image_dir}/step-back-icon.ppm]
+        set pause    [image create photo -file ${image_dir}/pause-icon.ppm]
+        set play     [image create photo -file ${image_dir}/play-icon.ppm]
+        set stepf    [image create photo -file ${image_dir}/step-forward-icon.ppm]
+        set fforward [image create photo -file ${image_dir}/fast-forward-icon.ppm]
+
+        # Create and pack the VCR buttons frame
+        button $md_tab.vcr.rewind -image $rewind \
+            -command "$data(-allowMultipleFiles) setMultipleFilePlayMode rewind;\
+                      $data(-allowMultipleFiles) handleMultipleFiles"
+        button $md_tab.vcr.stepb -image $stepb \
+            -command "$data(-allowMultipleFiles) setMultipleFilePlayMode stepb;\
+                      $data(-allowMultipleFiles) handleMultipleFiles"
+        button $md_tab.vcr.pause -image $pause \
+            -command "$data(-allowMultipleFiles) setMultipleFilePlayMode stop;\
+                      $data(-allowMultipleFiles) handleMultipleFiles"
+        button $md_tab.vcr.play  -image $play  \
+            -command "$data(-allowMultipleFiles) setMultipleFilePlayMode play;\
+                      $data(-allowMultipleFiles) handleMultipleFiles"
+        button $md_tab.vcr.stepf -image $stepf \
+            -command "$data(-allowMultipleFiles) setMultipleFilePlayMode step;\
+                      $data(-allowMultipleFiles) handleMultipleFiles"
+        button $md_tab.vcr.fforward -image $fforward \
+            -command "$data(-allowMultipleFiles) setMultipleFilePlayMode fforward;\
+                      $data(-allowMultipleFiles) handleMultipleFiles"
+
+        global ToolTipText
+        Tooltip $md_tab.vcr.rewind $ToolTipText(VCRrewind)
+        Tooltip $md_tab.vcr.stepb $ToolTipText(VCRstepback)
+        Tooltip $md_tab.vcr.pause $ToolTipText(VCRpause)
+        Tooltip $md_tab.vcr.play $ToolTipText(VCRplay)
+        Tooltip $md_tab.vcr.stepf $ToolTipText(VCRstepforward)
+        Tooltip $md_tab.vcr.fforward $ToolTipText(VCRfastforward)
+
+        pack $md_tab.vcr.rewind $md_tab.vcr.stepb $md_tab.vcr.pause \
+            $md_tab.vcr.play $md_tab.vcr.stepf $md_tab.vcr.fforward -side left -fill both -expand 1
+
+    } else {
+       # sd_tab, in the case of single file reading only, is actually a frame.
+       set sd_tab [frame $w.f2 -bd 0]
+       label $sd_tab.lab -text "File name:" -anchor e -width 14 -under 5 -pady 0
+       set data(ent) [entry $sd_tab.ent]
+    }
 
     # The font to use for the icons. The default Canvas font on Unix
     # is just deviant.
@@ -948,40 +1038,40 @@ static char updir_bits[] = {
     # bindtags)
 
     set data(typeMenuLab) [button $f3.lab -text "Files of type:" \
-	-anchor e -width 14 -under 9 \
-	-bd [$f2.lab cget -bd] \
-	-highlightthickness [$f2.lab cget -highlightthickness] \
-	-relief [$f2.lab cget -relief] \
-	-padx [$f2.lab cget -padx] \
-	-pady [$f2.lab cget -pady]]
+        -anchor e -width 14 -under 9 \
+        -bd [$sd_tab.lab cget -bd] \
+        -highlightthickness [$sd_tab.lab cget -highlightthickness] \
+        -relief [$sd_tab.lab cget -relief] \
+        -padx [$sd_tab.lab cget -padx] \
+        -pady [$sd_tab.lab cget -pady]]
     bindtags $data(typeMenuLab) [list $data(typeMenuLab) Label \
-	    [winfo toplevel $data(typeMenuLab)] all]
+            [winfo toplevel $data(typeMenuLab)] all]
 
     set data(typeMenuBtn) [menubutton $f3.menu -indicatoron 1 -menu $f3.menu.m]
     set data(typeMenu) [menu $data(typeMenuBtn).m -tearoff 0]
     $data(typeMenuBtn) config -takefocus 1 -highlightthickness 2 \
-	-relief raised -bd 2 -anchor w
+        -relief raised -bd 2 -anchor w
 
    # the setBtn is created after the typeMenu so that the keyboard traversal
     # is in the right order
     # Ok, Execute, Cancel, and Find (optional) at bottom
     set f7 [frame $w.f7]
     if { [string length $data(-setcmd)] } {
-	set data(setBtn)     [button $f7.ok     -text Set     -under 0 -width 10 \
-				  -default active -pady 3]
-	Tooltip $f7.ok "Set the filename and dimiss\nthe UI without executing"
+        set data(setBtn)     [button $f7.ok     -text Set     -under 0 -width 10 \
+                                  -default active -pady 3]
+        Tooltip $f7.ok "Set the filename and dimiss\nthe UI without executing"
     }
 
     set data(executeBtn) [button $f7.execute -text Execute -under 0 -width 10\
-			      -default normal -pady 3]
+                              -default normal -pady 3]
     # For the viewer Save Image window, have it say Save instead of Execute
     if {[string first "ViewWindow" $w] != -1} {
-	$data(executeBtn) config -text "Save"
+        $data(executeBtn) config -text "Save"
     } 
     Tooltip $f7.execute "Set the filename, execute\nthe module, and dismiss\nthe UI"
 
     set data(cancelBtn) [button $f7.cancel -text Cancel -under 0 -width 10\
-				 -default normal -pady 3]
+                                 -default normal -pady 3]
     Tooltip $f7.cancel "Dismiss the UI without\nsetting the filename"
 
     # only include a find button if this dialog has the form
@@ -990,83 +1080,83 @@ static char updir_bits[] = {
     global Subnet
     set have_find [array get Subnet $mod]
     if {[llength $have_find] > 0} {
-	set data(findBtn) [button $f7.find   -text Find   -under 0  -width 10 \
-			       -default normal -pady 3]	
-	Tooltip $f7.find "Highlights (on the Network Editor) the\nmodule that corresponds to this GUI"	  
+        set data(findBtn) [button $f7.find   -text Find   -under 0  -width 10 \
+                               -default normal -pady 3] 
+        Tooltip $f7.find "Highlights (on the Network Editor) the\nmodule that corresponds to this GUI"    
     }
 
     # pack the widgets in f7
     if {[llength $have_find] > 0} {
-	pack $data(findBtn) -side right -padx 4 -anchor e -fill x -expand 0
+        pack $data(findBtn) -side right -padx 4 -anchor e -fill x -expand 0
     }
     pack $data(cancelBtn) -side right -padx 4 -anchor e -fill x -expand 0
     pack $data(executeBtn) -side right -padx 4 -anchor e -fill x -expand 0
     if { [string length $data(-setcmd)] } {
-	pack $data(setBtn) -side right -padx 4 -anchor e -fill x -expand 0
+        pack $data(setBtn) -side right -padx 4 -anchor e -fill x -expand 0
     }
 
     pack $f7 -side bottom -anchor s 
 
     # creating additional widgets for Save-dialog box
     if {![string compare $data(type) save]} {
-	set data(formatMenuLab) [button $f4.lab -text "Format:" \
-		-anchor e -width 14 -under 9 \
-		-bd [$f2.lab cget -bd] \
-		-highlightthickness [$f2.lab cget -highlightthickness] \
-		-relief [$f2.lab cget -relief] \
-		-padx [$f2.lab cget -padx] \
-		-pady [$f2.lab cget -pady]]
+        set data(formatMenuLab) [button $f4.lab -text "Format:" \
+                -anchor e -width 14 -under 9 \
+                -bd [$sd_tab.lab cget -bd] \
+                -highlightthickness [$sd_tab.lab cget -highlightthickness] \
+                -relief [$sd_tab.lab cget -relief] \
+                -padx [$sd_tab.lab cget -padx] \
+                -pady [$sd_tab.lab cget -pady]]
 
-	set data(formatMenuBtn) [menubutton $f4.menu -indicatoron 1 -menu $f4.menu.m]
-	set data(formatMenu) [menu $data(formatMenuBtn).m -tearoff 0]
+        set data(formatMenuBtn) [menubutton $f4.menu -indicatoron 1 -menu $f4.menu.m]
+        set data(formatMenu) [menu $data(formatMenuBtn).m -tearoff 0]
 
         set formats $data(-formats)
         if {[llength $formats] == 0} {
-	    set formats {ASCII Binary}
+            set formats {ASCII Binary}
         }
         if {[lindex $formats 0] == "None"} {
-	    set formats {ASCII Binary}
-	    $data(formatMenuLab) configure -state disabled
+            set formats {ASCII Binary}
+            $data(formatMenuLab) configure -state disabled
             $data(formatMenuBtn) configure -state disabled
         }
         foreach f $formats {
-	    $data(formatMenu) add command -label $f \
+            $data(formatMenu) add command -label $f \
                 -command "biopseFDialog_SetFormat $w $f"
 
             if { [string compare [set $data(-formatvar)] $f] == 0} {
                 biopseFDialog_SetFormat $w $f
             }
         }
-		
-	# creating 'Increment' and 'Current index' widgets
-	if {$data(-incrementvar) != ""} {
-		set f8 [frame $w.f8 -bd 0]
-		label $f8.lab -text "" -width 15 -anchor e
-	#add a current index label and entry
-		label $f8.current_label -text "Current index: " \
-			-foreground grey64
-		entry $f8.entry -text $data(-currentvar) \
-			-foreground grey64
-	# add an increment checkbutton
-		checkbutton $f8.button  -text "Increment " \
-			-variable $data(-incrementvar) \
-			-command "toggle_Current $w"
-	#pack these widgets
+                
+        # creating 'Increment' and 'Current index' widgets
+        if {$data(-incrementvar) != ""} {
+                set f8 [frame $w.f8 -bd 0]
+                label $f8.lab -text "" -width 15 -anchor e
+        #add a current index label and entry
+                label $f8.current_label -text "Current index: " \
+                        -foreground grey64
+                entry $f8.entry -text $data(-currentvar) \
+                        -foreground grey64
+        # add an increment checkbutton
+                checkbutton $f8.button  -text "Increment " \
+                        -variable $data(-incrementvar) \
+                        -command "toggle_Current $w"
+        #pack these widgets
             pack $f8.lab -side left -padx 2
             pack $f8.button -side left -padx 2
-			pack $f8.current_label -side left -padx 2
-			pack $f8.entry -side left -padx 2 -expand true
+                        pack $f8.current_label -side left -padx 2
+                        pack $f8.entry -side left -padx 2 -expand true
             pack $f8 -side bottom -fill x -pady 4
-			
-			toggle_Current $w
-		}
+                        
+                        toggle_Current $w
+                }
 
-	# setting flag if the file to be split
-	if  { ![string compare [set data(-splitvar)] ""] } {
-	    set data(is_split) 0
-	} else {
-	    set data(is_split) 1
-	}
+        # setting flag if the file to be split
+        if  { ![string compare [set data(-splitvar)] ""] } {
+            set data(is_split) 0
+        } else {
+            set data(is_split) 1
+        }
 
         if {$data(-confirmvar) != ""} {
             set f6 [frame $w.f6 -bd 0]
@@ -1077,7 +1167,7 @@ static char updir_bits[] = {
             pack $f6.button -side left -padx 2
             pack $f6 -side bottom -fill x -pady 4
         }
-	    
+            
 
         if {$data(-imgwidth) != ""} {
             set f5 [frame $w.f5 -bd 0]
@@ -1091,32 +1181,47 @@ static char updir_bits[] = {
             pack $f5 -side bottom -fill x -pady 4
         }
 
-	$data(formatMenuBtn) config -takefocus 1 -highlightthickness 2 \
-	-relief raised -bd 2 -anchor w
-	set data(splitBtn) [checkbutton $f4.split -text Split -disabledforeground "" \
-		-onvalue 1 -offvalue 0 -width 5 -pady 2]
-	pack $data(splitBtn) -side right -padx 4 -anchor w
+        $data(formatMenuBtn) config -takefocus 1 -highlightthickness 2 \
+        -relief raised -bd 2 -anchor w
+        set data(splitBtn) [checkbutton $f4.split -text Split -disabledforeground "" \
+                -onvalue 1 -offvalue 0 -width 5 -pady 2]
+        pack $data(splitBtn) -side right -padx 4 -anchor w
 
-	if { [set data(is_split)] } {	    
-	    $data(splitBtn) configure -state normal
-	    $data(splitBtn) configure -variable $data(-splitvar)
-	    if { [set $data(-splitvar)]!=0 } {
-		$data(splitBtn) select
-	    } else {
-		$data(splitBtn) deselect
-	    }
-	} else {
-	    $data(splitBtn) configure -state disabled
-	}
+        if { [set data(is_split)] } {       
+            $data(splitBtn) configure -state normal
+            $data(splitBtn) configure -variable $data(-splitvar)
+            if { [set $data(-splitvar)]!=0 } {
+                $data(splitBtn) select
+            } else {
+                $data(splitBtn) deselect
+            }
+        } else {
+            $data(splitBtn) configure -state disabled
+        }
 
-	pack $f4.lab -side left -padx 4
-	pack $data(formatMenuBtn) -expand yes -fill x -side right
+        pack $f4.lab -side left -padx 4
+        pack $data(formatMenuBtn) -expand yes -fill x -side right
     }
 
-    # pack the widgets in f2 and f3
-    pack $f2.lab -side left -padx 4
-    pack $f2.ent -expand yes -fill x -padx 2 -pady 0
+    # pack the widgets in sd_tab and md_tab
+    pack $sd_tab.lab -side left -padx 4
+    pack $sd_tab.ent -expand yes -fill x -padx 2 -pady 0
     
+    if { $data(-allowMultipleFiles) != "" } {
+        pack $md_tab.vcr -fill x -padx 8 -pady 4
+        pack $md_tab.f1 -fill x -expand y
+        pack $md_tab.f2 -fill x -expand y
+        pack $md_tab.f1.lab $md_tab.f1.ent -side left -fill x -padx 4 -pady 0
+        pack $md_tab.f1.delay_lab $md_tab.f1.delay_ent -side left -fill x -padx 4 -pady 0
+        if { [info exists $data(-filevar)]} {
+            # Back both the label and entry on the same line...
+            pack $md_tab.f2.current_file_lab $md_tab.f2.current_file_ent -side left -fill x -padx 4 -pady 0
+            # ... but allow the entry to expand
+            pack $md_tab.f2.current_file_ent -expand y
+        }
+        puts "here: $md_tab"
+    }
+
     pack $data(typeMenuLab) -side left -padx 4
     pack $data(typeMenuBtn) -expand yes -fill x -side right
 
@@ -1125,7 +1230,11 @@ static char updir_bits[] = {
     pack $f1 -side top -fill x -pady 4
     pack $f4 -side bottom -fill x -pady 2
     pack $f3 -side bottom -fill x
-    pack $f2 -side bottom -fill x
+    if { $data(-allowMultipleFiles) != "" } {
+       pack $w.tabs -side bottom -fill x
+    } else {
+       pack $sd_tab -side bottom -fill x
+    }
     pack $data(icons) -expand yes -fill both -padx 4 -pady 1
 
     # Set up the event handlers
@@ -1133,22 +1242,22 @@ static char updir_bits[] = {
     
     $data(upBtn)     config -command "biopseFDialog_UpDirCmd $w"
     if { [string length $data(-setcmd)] } {
-	$data(setBtn)     config -command "biopseFDialog_SetCmd $w set"
+        $data(setBtn)     config -command "biopseFDialog_SetCmd $w set"
     }
     $data(executeBtn) config -command "biopseFDialog_SetCmd $w execute"
     $data(cancelBtn) config -command "biopseFDialog_CancelCmd $w"
     # $data(refreshBtn) config -command "biopseFDialog_RefreshCmd $w"
     if {[llength $have_find] > 0} {
-	$data(findBtn) config -command "biopseFDialog_FindCmd $w"
+        $data(findBtn) config -command "biopseFDialog_FindCmd $w"
     }
 
     trace variable data(selectPath) w "biopseFDialog_SetPath $w"
 
     bind $w <Alt-d> "focus $data(dirMenuBtn)"
     bind $w <Alt-t> [format {
-	if {"[%s cget -state]" == "normal"} {
-	    focus %s
-	}
+        if {"[%s cget -state]" == "normal"} {
+            focus %s
+        }
     } $data(typeMenuBtn) $data(typeMenuBtn)]
     bind $w <Alt-n> "focus $data(ent)"
     bind $w <KeyPress-Escape> "tkButtonInvoke $data(cancelBtn)"
@@ -1165,32 +1274,32 @@ static char updir_bits[] = {
 }
 
 # toggle_Current --
-#	Greys out the 'Current index:' label and entry whenever the 'Increment'
-#	button is unchecked.
+#       Greys out the 'Current index:' label and entry whenever the 'Increment'
+#       button is unchecked.
 proc toggle_Current {w} {
-	upvar #0 $w data
-	global $w.f8
-	if {[set $data(-incrementvar)]} {
-		$w.f8.current_label configure -foreground black
-		$w.f8.entry configure -foreground black
-	} else {
-		$w.f8.current_label configure -foreground grey64
-		$w.f8.entry configure -foreground grey64
-	}
+        upvar #0 $w data
+        global $w.f8
+        if {[set $data(-incrementvar)]} {
+                $w.f8.current_label configure -foreground black
+                $w.f8.entry configure -foreground black
+        } else {
+                $w.f8.current_label configure -foreground grey64
+                $w.f8.entry configure -foreground grey64
+        }
 }
 
 # biopseFDialog_UpdateWhenIdle --
-#	Creates an idle event handler which updates the dialog in idle
-#	time. This is important because loading the directory may take a long
-#	time and we don't want to load the same directory for multiple times
-#	due to multiple concurrent events.
+#       Creates an idle event handler which updates the dialog in idle
+#       time. This is important because loading the directory may take a long
+#       time and we don't want to load the same directory for multiple times
+#       due to multiple concurrent events.
 proc biopseFDialog_UpdateWhenIdle {w} {
     upvar #0 $w data
 
     if {[info exists data(updateId)]} {
-	return
+        return
     } else {
-	set data(updateId) [after idle biopseFDialog_Update $w]
+        set data(updateId) [after idle biopseFDialog_Update $w]
     }
 }
 
@@ -1205,8 +1314,8 @@ proc biopseFDialog_Mapped {w} {
     # only call if it isn't all ready running though which
     # is indicated by biopse_ID($w) not being equal to -1
     if {[info exists biopse_ID] && [info exists biopse_ID($w)] && \
-	    $biopse_ID($w) == -1} {
-	biopseFDialog_UpdateDirectory $w
+            $biopse_ID($w) == -1} {
+        biopseFDialog_UpdateDirectory $w
     } 
 }
 
@@ -1219,8 +1328,8 @@ proc biopseFDialog_Unmapped {w} {
     # only end script if the biopse_ID($w) has a valid value
     # which indicates it is running
     if {$biopse_ID($w) != -1} {
-	after cancel $biopse_ID($w)
-	set biopse_ID($w) -1
+        after cancel $biopse_ID($w)
+        set biopse_ID($w) -1
     } 
 }
 
@@ -1246,14 +1355,14 @@ proc biopseFDialog_UpdateDirectory {w} {
 }
 
 # biopseFDialog_Update --
-#	Loads the files and directories into the IconList widget. Also
-#	sets up the directory option menu for quick access to parent
-#	directories.
+#       Loads the files and directories into the IconList widget. Also
+#       sets up the directory option menu for quick access to parent
+#       directories.
 proc biopseFDialog_Update {w} {
     # This proc may be called within an idle handler. Make sure that the
     # window has not been destroyed before this proc is called
     if {![winfo exists $w] || [string compare [winfo class $w] TkFDialog]} {
-	return
+        return
     }
 
     upvar #0 $w data
@@ -1268,10 +1377,10 @@ proc biopseFDialog_Update {w} {
     catch {unset data(updateId)}
 
     if {![info exists biopsePriv(folderImage)]} {
-	set biopsePriv(folderImage) [image create photo -data {
+        set biopsePriv(folderImage) [image create photo -data {
 R0lGODlhEAAMAKEAAAD//wAAAPD/gAAAACH5BAEAAAAALAAAAAAQAAwAAAIghINhyycvVFsB
 QtmS3rjaH1Hg141WaT5ouprt2HHcUgAAOw==}]
-	set biopsePriv(fileImage)   [image create photo -data {
+        set biopsePriv(fileImage)   [image create photo -data {
 R0lGODlhDAAMAKEAALLA3AAAAP//8wAAACH5BAEAAAAALAAAAAAMAAwAAAIgRI4Ha+IfWHsO
 rSASvJTGhnhcV3EJlo3kh53ltF5nAhQAOw==}]
     }
@@ -1280,17 +1389,17 @@ rSASvJTGhnhcV3EJlo3kh53ltF5nAhQAOw==}]
 
     set appPWD [pwd]
     if {[catch {
-	cd $data(selectPath)
+        cd $data(selectPath)
     }]} {
-	# We cannot change directory to $data(selectPath). $data(selectPath)
-	# should have been checked before biopseFDialog_Update is called, so
-	# we normally won't come to here. Anyways, give an error and abort
-	# action.
-	tk_messageBox -type ok -parent $data(-parent) -message \
-	    "Cannot change to the directory \"$data(selectPath)\".\nPermission denied."\
-	    -icon warning
-	cd $appPWD
-	return
+        # We cannot change directory to $data(selectPath). $data(selectPath)
+        # should have been checked before biopseFDialog_Update is called, so
+        # we normally won't come to here. Anyways, give an error and abort
+        # action.
+        tk_messageBox -type ok -parent $data(-parent) -message \
+            "Cannot change to the directory \"$data(selectPath)\".\nPermission denied."\
+            -icon warning
+        cd $appPWD
+        return
     }
 
     # Turn on the busy cursor. BUG?? We haven't disabled X events, though,
@@ -1305,36 +1414,36 @@ rSASvJTGhnhcV3EJlo3kh53ltF5nAhQAOw==}]
 
     # Make the dir list
     foreach f [lsort -dictionary [glob -nocomplain .* *]] {
-	if {![string compare $f .]} {
-	    continue
-	}
-	if {![string compare $f ..]} {
-	    continue
-	}
-	if {[file isdir ./$f]} {
-	    if {![info exists hasDoneDir($f)]} {
-		biopseIconList_Add $data(icons) $folder $f
-		set hasDoneDir($f) 1
-	    }
-	}
+        if {![string compare $f .]} {
+            continue
+        }
+        if {![string compare $f ..]} {
+            continue
+        }
+        if {[file isdir ./$f]} {
+            if {![info exists hasDoneDir($f)]} {
+                biopseIconList_Add $data(icons) $folder $f
+                set hasDoneDir($f) 1
+            }
+        }
     }
     # Make the file list
     if {![string compare $data(filter) *]} {
-	set files [lsort -dictionary \
-	    [glob -nocomplain .* *]]
+        set files [lsort -dictionary \
+            [glob -nocomplain .* *]]
     } else {
-	set files [lsort -dictionary \
-	    [eval glob -nocomplain $data(filter)]]
+        set files [lsort -dictionary \
+            [eval glob -nocomplain $data(filter)]]
     }
 
     set top 0
     foreach f $files {
-	if {![file isdir ./$f]} {
-	    if {![info exists hasDoneFile($f)]} {
-		biopseIconList_Add $data(icons) $file $f
-		set hasDoneFile($f) 1
-	    }
-	}
+        if {![file isdir ./$f]} {
+            if {![info exists hasDoneFile($f)]} {
+                biopseIconList_Add $data(icons) $file $f
+                set hasDoneFile($f) 1
+            }
+        }
     }
 
     biopseIconList_Arrange $data(icons)
@@ -1343,14 +1452,14 @@ rSASvJTGhnhcV3EJlo3kh53ltF5nAhQAOw==}]
     set list ""
     set dir ""
     foreach subdir [file split $data(selectPath)] {
-	set dir [file join $dir $subdir]
-	lappend list $dir
+        set dir [file join $dir $subdir]
+        lappend list $dir
     }
 
     $data(dirMenu) delete 0 end
     set var [format %s(selectPath) $w]
     foreach path $list {
-	$data(dirMenu) add command -label $path -command [list set $var $path]
+        $data(dirMenu) add command -label $path -command [list set $var $path]
     }
 
     # Add any of the additional default directories
@@ -1361,27 +1470,27 @@ rSASvJTGhnhcV3EJlo3kh53ltF5nAhQAOw==}]
     $data(dirMenu) add separator 
 
     if { [string length [netedit getenv SCIRUN_DATA]] } {
-	lappend defaultdirs [netedit getenv SCIRUN_DATA]
+        lappend defaultdirs [netedit getenv SCIRUN_DATA]
     }
 
     # MY_SCIRUN_DATA (might change)
     if { [string length [netedit getenv SCIRUN_MYDATA_DIR]] } {
-	lappend defaultdirs [netedit getenv SCIRUN_MYDATA_DIR]
+        lappend defaultdirs [netedit getenv SCIRUN_MYDATA_DIR]
     }
     
     # PWD
     lappend defaultdirs $appPWD
     
     foreach path $defaultdirs {
- 	# some environment variables have multiple
- 	# paths separated by ':'
- 	foreach p [split $path :] {
- 	    # If there is a slash at the end, remove it
-	    set p [file nativename $p]
- 	    if {[lsearch -exact $list $p] == -1} {
- 		$data(dirMenu) add command -label $p -command [list set $var $p]
- 	    }
- 	}
+        # some environment variables have multiple
+        # paths separated by ':'
+        foreach p [split $path :] {
+            # If there is a slash at the end, remove it
+            set p [file nativename $p]
+            if {[lsearch -exact $list $p] == -1} {
+                $data(dirMenu) add command -label $p -command [list set $var $p]
+            }
+        }
      }
 
     # Restore the PWD to the application's PWD
@@ -1393,7 +1502,7 @@ rSASvJTGhnhcV3EJlo3kh53ltF5nAhQAOw==}]
 }
 
 # biopseFDialog_SetPathSilently --
-# 	Sets data(selectPath) without invoking the trace procedure
+#       Sets data(selectPath) without invoking the trace procedure
 proc biopseFDialog_SetPathSilently {w path} {
     upvar #0 $w data
     
@@ -1406,8 +1515,8 @@ proc biopseFDialog_SetPathSilently {w path} {
 # This proc gets called whenever data(selectPath) is set
 proc biopseFDialog_SetPath {w name1 name2 op} {
     if {[winfo exists $w]} {
-	upvar #0 $w data
-	biopseFDialog_UpdateWhenIdle $w
+        upvar #0 $w data
+        biopseFDialog_UpdateWhenIdle $w
     }
 }
 
@@ -1438,29 +1547,29 @@ proc biopseFDialog_SetFormat { w format } {
 
 
 # biopseFDialogResolveFile --
-#	Interpret the user's text input in a file selection dialog.
-#	Performs:
-#	(1) ~ substitution
-#	(2) resolve all instances of . and ..
-#	(3) check for non-existent files/directories
-#	(4) check for chdir permissions
+#       Interpret the user's text input in a file selection dialog.
+#       Performs:
+#       (1) ~ substitution
+#       (2) resolve all instances of . and ..
+#       (3) check for non-existent files/directories
+#       (4) check for chdir permissions
 # Arguments:
-#	context:  the current directory you are in
-#	text:	  the text entered by the user
-#	defaultext: the default extension to add to files with no extension
+#       context:  the current directory you are in
+#       text:     the text entered by the user
+#       defaultext: the default extension to add to files with no extension
 # Return vaue:
-#	[list $flag $directory $file]
-#	 flag = OK	: valid input
-#	      = PATTERN	: valid directory/pattern
-#	      = PATH	: the directory does not exist
-#	      = FILE	: the directory exists but the file doesn't
-#			  exist
-#	      = CHDIR	: Cannot change to the directory
-#	      = ERROR	: Invalid entry
-#	 directory      : valid only if flag = OK or PATTERN or FILE
-#	 file           : valid only if flag = OK or PATTERN
-#	directory may not be the same as context, because text may contain
-#	a subdirectory name
+#       [list $flag $directory $file]
+#        flag = OK      : valid input
+#             = PATTERN : valid directory/pattern
+#             = PATH    : the directory does not exist
+#             = FILE    : the directory exists but the file doesn't
+#                         exist
+#             = CHDIR   : Cannot change to the directory
+#             = ERROR   : Invalid entry
+#        directory      : valid only if flag = OK or PATTERN or FILE
+#        file           : valid only if flag = OK or PATTERN
+#       directory may not be the same as context, because text may contain
+#       a subdirectory name
 proc biopseFDialogResolveFile {context text defaultext} {
 
     set appPWD [pwd]
@@ -1469,68 +1578,68 @@ proc biopseFDialogResolveFile {context text defaultext} {
 
     # DMW: directories have their final / lopped off by "file join"
     if {[file isdirectory $path] && [string index $path end] != "/" && \
-	    [string equal [file join $text] [file join $path]]} {
-	set path $path/
+            [string equal [file join $text] [file join $path]]} {
+        set path $path/
     }
 
     # Only consider adding default extension if the file is not a directory
     if {![file isdirectory $path]} {
       # DMW: added second comparison so we can specify a directory
       if {[file ext $path] == "" && [string index $path end] != "/"} {
-	set path "$path$defaultext"
+        set path "$path$defaultext"
       }
     }
 
     if {[catch {file exists $path}]} {
-	# This "if" block can be safely removed if the following code
-	# stop generating errors.
-	#	file exists ~nonsuchuser
-	return [list ERROR $path ""]
+        # This "if" block can be safely removed if the following code
+        # stop generating errors.
+        #       file exists ~nonsuchuser
+        return [list ERROR $path ""]
     }
 
     if {[file exists $path]} {
-	if {[file isdirectory $path]} {
-	    if {[catch {
-		cd $path
-	    }]} {
-		return [list CHDIR $path ""]
-	    }
-	    set directory [pwd]
-	    set file ""
-	    set flag OK
-	    cd $appPWD
-	} else {
-	    if {[catch {
-		cd [file dirname $path]
-	    }]} {
-		return [list CHDIR [file dirname $path] ""]
-	    }
-	    set directory [pwd]
-	    set file [file tail $path]
-	    set flag OK
-	    cd $appPWD
-	}
+        if {[file isdirectory $path]} {
+            if {[catch {
+                cd $path
+            }]} {
+                return [list CHDIR $path ""]
+            }
+            set directory [pwd]
+            set file ""
+            set flag OK
+            cd $appPWD
+        } else {
+            if {[catch {
+                cd [file dirname $path]
+            }]} {
+                return [list CHDIR [file dirname $path] ""]
+            }
+            set directory [pwd]
+            set file [file tail $path]
+            set flag OK
+            cd $appPWD
+        }
     } else {
-	set dirname [file dirname $path]
-	if {[file exists $dirname]} {
-	    if {[catch {
-		cd $dirname
-	    }]} {
-		return [list CHDIR $dirname ""]
-	    }
-	    set directory [pwd]
-	    set file [file tail $path]
-	    if {[regexp {[*]|[?]} $file]} {
-		set flag PATTERN
-	    } else {
-		set flag FILE
-	    }
-	    cd $appPWD
-	} else {
-	    set directory $dirname
-	    set file [file tail $path]
-	    set flag PATH
-	}
+        set dirname [file dirname $path]
+        if {[file exists $dirname]} {
+            if {[catch {
+                cd $dirname
+            }]} {
+                return [list CHDIR $dirname ""]
+            }
+            set directory [pwd]
+            set file [file tail $path]
+            if {[regexp {[*]|[?]} $file]} {
+                set flag PATTERN
+            } else {
+                set flag FILE
+            }
+            cd $appPWD
+        } else {
+            set directory $dirname
+            set file [file tail $path]
+            set flag PATH
+        }
     }
 
     return [list $flag $directory $file]
@@ -1544,19 +1653,19 @@ proc biopseFDialog_EntFocusIn {w} {
     upvar #0 $w data
 
     if {[string compare [$data(ent) get] ""]} {
-	$data(ent) selection from 0
-	$data(ent) selection to   end
-	$data(ent) icursor end
+        $data(ent) selection from 0
+        $data(ent) selection to   end
+        $data(ent) icursor end
     } else {
-	$data(ent) selection clear
+        $data(ent) selection clear
     }
 
     biopseIconList_Unselect $data(icons)
 
     if {![string compare $data(type) open]} {
-	# $data(setBtn) config -text "Open"
+        # $data(setBtn) config -text "Open"
     } else {
-	# $data(setBtn) config -text "Save"
+        # $data(setBtn) config -text "Save"
     }
 }
 
@@ -1573,64 +1682,64 @@ proc biopseFDialog_ActivateEnt {w {whichBtn execute}} {
 
     set text [string trim [$data(ent) get]]
     set list [biopseFDialogResolveFile $data(selectPath) $text \
-		  $data(-defaultextension)]
+                  $data(-defaultextension)]
     set flag [lindex $list 0]
     set path [lindex $list 1]
     set file [lindex $list 2]
 
     switch -- $flag {
-	OK {
-	    if {![string compare $file ""]} {
-		# user has entered an existing (sub)directory
-		set data(selectPath) $path
-		$data(ent) delete 0 end
-	    } else {
-		biopseFDialog_SetPathSilently $w $path
-		set data(selectFile) $file
+        OK {
+            if {![string compare $file ""]} {
+                # user has entered an existing (sub)directory
+                set data(selectPath) $path
+                $data(ent) delete 0 end
+            } else {
+                biopseFDialog_SetPathSilently $w $path
+                set data(selectFile) $file
 
-		biopseFDialog_Done $w "" $whichBtn
-	    }
-	}
-	PATTERN {
-	    set data(selectPath) $path
-	    set data(filter) $file
-	}
-	FILE {
-	    if {![string compare $data(type) open]} {
-		tk_messageBox -icon warning -type ok -parent $data(-parent) \
-		    -message "File \"[file join $path $file]\" does not exist."
-		$data(ent) select from 0
-		$data(ent) select to   end
-		$data(ent) icursor end
-	    } else {
-		biopseFDialog_SetPathSilently $w $path
-		set data(selectFile) $file
-		biopseFDialog_Done $w
-	    }
-	}
-	PATH {
-	    tk_messageBox -icon warning -type ok -parent $data(-parent) \
-		-message "Directory \"$path\" does not exist."
-	    $data(ent) select from 0
-	    $data(ent) select to   end
-	    $data(ent) icursor end
-	}
-	CHDIR {
-	    tk_messageBox -type ok -parent $data(-parent) -message \
-	       "Cannot change to the directory \"$path\".\nPermission denied."\
-		-icon warning
-	    $data(ent) select from 0
-	    $data(ent) select to   end
-	    $data(ent) icursor end
-	}
-	ERROR {
-	    tk_messageBox -type ok -parent $data(-parent) -message \
-	       "Invalid file name \"$path\"."\
-		-icon warning
-	    $data(ent) select from 0
-	    $data(ent) select to   end
-	    $data(ent) icursor end
-	}
+                biopseFDialog_Done $w "" $whichBtn
+            }
+        }
+        PATTERN {
+            set data(selectPath) $path
+            set data(filter) $file
+        }
+        FILE {
+            if {![string compare $data(type) open]} {
+                tk_messageBox -icon warning -type ok -parent $data(-parent) \
+                    -message "File \"[file join $path $file]\" does not exist."
+                $data(ent) select from 0
+                $data(ent) select to   end
+                $data(ent) icursor end
+            } else {
+                biopseFDialog_SetPathSilently $w $path
+                set data(selectFile) $file
+                biopseFDialog_Done $w
+            }
+        }
+        PATH {
+            tk_messageBox -icon warning -type ok -parent $data(-parent) \
+                -message "Directory \"$path\" does not exist."
+            $data(ent) select from 0
+            $data(ent) select to   end
+            $data(ent) icursor end
+        }
+        CHDIR {
+            tk_messageBox -type ok -parent $data(-parent) -message \
+               "Cannot change to the directory \"$path\".\nPermission denied."\
+                -icon warning
+            $data(ent) select from 0
+            $data(ent) select to   end
+            $data(ent) icursor end
+        }
+        ERROR {
+            tk_messageBox -type ok -parent $data(-parent) -message \
+               "Invalid file name \"$path\"."\
+                -icon warning
+            $data(ent) select from 0
+            $data(ent) select to   end
+            $data(ent) icursor end
+        }
     }
 }
 
@@ -1639,7 +1748,7 @@ proc biopseFDialog_InvokeBtn {w key} {
     upvar #0 $w data
 
     if {![string compare [$data(setBtn) cget -text] $key]} {
-	tkButtonInvoke $data(setBtn)
+        tkButtonInvoke $data(setBtn)
     }
 }
 
@@ -1649,9 +1758,9 @@ proc biopseFDialog_UpDirCmd {w} {
     global biopse_ID
 
     if { $data(selectPath) != "/" } {
-	set data(selectPath) [file dirname $data(selectPath)]
+        set data(selectPath) [file dirname $data(selectPath)]
         # Cancel the scheduled update and update right now.
-	after cancel $biopse_ID($w)
+        after cancel $biopse_ID($w)
         biopseFDialog_UpdateDirectory $w
     }
 }
@@ -1660,9 +1769,9 @@ proc biopseFDialog_UpDirCmd {w} {
 # if the filename begins with ~
 proc biopseFDialog_JoinFile {path file} {
     if {[string match {~*} $file] && [file exists $path/$file]} {
-	return [file join $path ./$file]
+        return [file join $path ./$file]
     } else {
-	return [file join $path $file]
+        return [file join $path $file]
     }
 }
 
@@ -1671,15 +1780,15 @@ proc biopseFDialog_JoinFile {path file} {
 # Gets called when user presses the "Set" button
 proc biopseFDialog_SetCmd {w {whichBtn execute}} {
     upvar #0 $w data
-	
+        
     set text [biopseIconList_Get $data(icons)]
 
     if {[string compare $text ""]} {
-	set file [biopseFDialog_JoinFile $data(selectPath) $text]
-	if {[file isdirectory $file]} {
-	    biopseFDialog_ListInvoke $w $text
-	   # return
-	}
+        set file [biopseFDialog_JoinFile $data(selectPath) $text]
+        if {[file isdirectory $file]} {
+            biopseFDialog_ListInvoke $w $text
+           # return
+        }
     }
 
     biopseFDialog_ActivateEnt $w $whichBtn
@@ -1713,7 +1822,7 @@ proc biopseFDialog_FindCmd {w} {
     global Subnet
     set list [array get Subnet $mod]
     if {[llength $list] > 0} {
-	fadeinIcon $mod 1 1
+        fadeinIcon $mod 1 1
     }
     
 }
@@ -1724,21 +1833,26 @@ proc biopseFDialog_ListBrowse {w text} {
     upvar #0 $w data
 
     if {$text == ""} {
-	return
+        return
     }
 
     set file [biopseFDialog_JoinFile $data(selectPath) $text]
     if {![file isdirectory $file]} {
-	$data(ent) delete 0 end
-	$data(ent) insert 0 $text
+        $data(ent) delete 0 end
+        $data(ent) insert 0 $text
 
-	if {![string compare $data(type) open]} {
-	    # $data(setBtn) config -text "Open"
-	} else {
-	    # $data(setBtn) config -text "Save"
-	}
+        if { $data(-allowMultipleFiles) != "" } {
+           $data(md_ent) delete 0 end
+           $data(md_ent) insert 0 $text
+        }
+
+        if {![string compare $data(type) open]} {
+            # $data(setBtn) config -text "Open"
+        } else {
+            # $data(setBtn) config -text "Save"
+        }
     } else {
-	# $data(setBtn) config -text "Open"
+        # $data(setBtn) config -text "Open"
     }
 }
 
@@ -1748,67 +1862,107 @@ proc biopseFDialog_ListInvoke {w text} {
     upvar #0 $w data
 
     if {$text == ""} {
-	return
+        return
     }
 
     set file [biopseFDialog_JoinFile $data(selectPath) $text]
 
     if {[file isdirectory $file]} {
-	set appPWD [pwd]
-	if {[catch {cd $file}]} {
-	    tk_messageBox -type ok -parent $data(-parent) -message \
-	       "Cannot change to the directory \"$file\".\nPermission denied."\
-		-icon warning
-	} else {
-	    cd $appPWD
-	    set data(selectPath) $file
-	}
+        set appPWD [pwd]
+        if {[catch {cd $file}]} {
+            tk_messageBox -type ok -parent $data(-parent) -message \
+               "Cannot change to the directory \"$file\".\nPermission denied."\
+                -icon warning
+        } else {
+            cd $appPWD
+            set data(selectPath) $file
+        }
     } else {
-	set data(selectFile) $file
-	biopseFDialog_Done $w
+        set data(selectFile) $file
+        biopseFDialog_Done $w
     }
 }
 
 # biopseFDialog_Done --
-#	Gets called when user has input a valid filename.  Pops up a
-#	dialog box to confirm selection when necessary. Sets the
-#	biopsePriv(selectFilePath) variable, which will break the "tkwait"
-#	loop in biopseFDialog and return the selected filename to the
-#	script that calls biopse_getOpenFile or biopse_getSaveFile
+#       Gets called when user has input a valid filename.  Pops up a
+#       dialog box to confirm selection when necessary. Sets the
+#       biopsePriv(selectFilePath) variable, which will break the "tkwait"
+#       loop in biopseFDialog and return the selected filename to the
+#       script that calls biopse_getOpenFile or biopse_getSaveFile
 proc biopseFDialog_Done {w {selectFilePath ""} {whichBtn execute}} {
     upvar #0 $w data
     global biopsePriv
 
     if {![string compare $selectFilePath ""]} {
-	set selectFilePath [biopseFDialog_JoinFile $data(selectPath) \
-		$data(selectFile)]
-	set biopsePriv(selectFile)     $data(selectFile)
-	set biopsePriv(selectPath)     $data(selectPath)
+        set selectFilePath [biopseFDialog_JoinFile $data(selectPath) \
+                $data(selectFile)]
+        set biopsePriv(selectFile)     $data(selectFile)
+        set biopsePriv(selectPath)     $data(selectPath)
 
-	set confirm 1
-	if { [info exists data(-confirmvar)] &&
-	     [string length $data(-confirmvar)] } {
-	    set confirm 0
-	}
-	
-	if {$confirm && 
-	    [file exists $selectFilePath] && 
-	    ![string compare $data(type) save]} {
-		set reply [tk_messageBox -icon warning -type yesno\
-			-parent $data(-parent) -message "File\
-			\"$selectFilePath\" already exists.\nDo\
-			you want to overwrite it?"]
-	    if {![string compare $reply "no"]} {
-		return
-	    }
-	}
+        set confirm 1
+        if { [info exists data(-confirmvar)] &&
+             [string length $data(-confirmvar)] } {
+            set confirm 0
+        }
+        
+        if {$confirm && 
+            [file exists $selectFilePath] && 
+            ![string compare $data(type) save]} {
+                set reply [tk_messageBox -icon warning -type yesno\
+                        -parent $data(-parent) -message "File\
+                        \"$selectFilePath\" already exists.\nDo\
+                        you want to overwrite it?"]
+            if {![string compare $reply "no"]} {
+                return
+            }
+        }
     }
     
     # AS: final steps before returning: setting filename variable and executing command
     set $data(-filevar) $selectFilePath
     if {$whichBtn == "set"} {
-	eval $data(-setcmd)
+        eval $data(-setcmd)
     } else {
-	eval $data(-command)
+        
+        if { $data(-allowMultipleFiles) != "" && [$w.tabs view] == 1 } {
+
+            # If allowing multiple files and in multi file mode...
+            puts "multi file handling... skipping given command"
+
+
+            # WARNING THIS SPLIT IS BROKEN.. doesn't do the correct thing if dir has a number in it!!!!!
+            set parts [split $selectFilePath 0123456789]
+
+
+            puts "parts is $parts"
+            set base [lindex $parts 0]
+            set ext [lindex $parts end]
+
+            puts "working with $base ... $ext"
+
+            set fileList [lsort [glob -nocomplain $base*$ext]]
+            puts "looking at: $fileList"
+
+            puts "this is $data(-allowMultipleFiles)"
+
+            set position [lsearch $fileList $selectFilePath]
+            if { $position != 0 } {
+                # If the selected file was not the first file in the list, then
+                # trim off all files up to and including the selected file.
+                set fileList [lrange $fileList $position end]
+                puts "USING this list: $fileList"
+            }
+
+            set delay [$data(md_delay) get]
+            puts "delay is $delay"
+
+            # Should get delay from this var: $md_tab.delay_ent
+            $data(-allowMultipleFiles) setMultipleFilePlayMode "play"
+            $data(-allowMultipleFiles) handleMultipleFiles "$fileList" $delay
+
+        } else {
+            # In single file mode...
+            eval $data(-command)
+        }
     }
 }
