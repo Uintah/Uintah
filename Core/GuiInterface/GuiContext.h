@@ -64,7 +64,7 @@ class GuiContext {
     void set(int value);
     void setSub(const std::string& name, int value);
     void reset();
-    void emit(std::ostream& out, const std::string& midx);
+    void emit(std::ostream& out, const std::string& prefix);
 
     GuiInterface* getInterface();
     std::string getfullname();
