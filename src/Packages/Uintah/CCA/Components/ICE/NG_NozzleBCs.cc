@@ -209,7 +209,7 @@ Uintah::p2_p1_ratio( double  gamma,
   p2_p1 =  p4_p1 - p2_p1_guess * pow( (1.0 + gamma_ratio2 * boxed_quantity), exponent);
   //_________________________
   // Bulletproofing
-  if (isnan(p2_p1) != 0 || isinf(p2_p1)) {
+  if (finite(p2_p1) == 0) {
     cout << " p4_p1 " << p4_p1 << " p2_p1_guess " << p2_p1_guess
          << " boxed_quantity "<< boxed_quantity
          << " exponent " << exponent
@@ -327,7 +327,7 @@ Uintah::Solve_Riemann_problem(
     
     //____________________
     // bullet proofing
-    if(isnan(p2_p1) != 0|| isinf(p2_p1) != 0){
+    if(finite(p2_p1) == 0){
       cout << " ---------------------------ERROR" << endl;
       cout << " p4/p1 " << p4_p1 << " p4 " << p4 << " p1 " << p1 << endl;
       cout << " p2_p1_guess0 " << p2_p1_guess0 << " p2_p1_guess00 " << p2_p1_guess00 << endl;

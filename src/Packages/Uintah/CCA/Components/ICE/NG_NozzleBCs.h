@@ -193,8 +193,7 @@ void setNGC_Nozzle_BC(const Patch* patch,
         double u1   = ng->vel_CC[adj].x();
         ng->c = c;     // cell index    
 
-        if (p1 <=0 || rho1 <= 0 || isnan(p1) != 0 || isnan(rho1) != 0 || 
-            isinf(p1) != 0 || isinf(rho1) != 0 ){
+        if (p1 <=0 || rho1 <= 0 || finite(p1) == 0 || finite(rho1) == 0){
           cout << " c " << c << " adj " << adj << " p1 " << p1 
                << " rho1 " << rho1 << endl;
           throw InternalError(" setNGC_Nozzle_BC: one of initial conditions (p1, rho1) = 0");
