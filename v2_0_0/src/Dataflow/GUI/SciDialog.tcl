@@ -122,7 +122,7 @@ proc createSciDialog { args } {
 	  set size [string length $btnName]
 	  if { $size < $minBtnSize } { set size $minBtnSize }
 	  button .sci_dialog.btnBox.b1 -text $btnName -width $size -command {set ::sci_dialog_result 1 }
-	  pack .sci_dialog.btnBox.b1 -side left -padx $outside_pad -pady $outside_pad
+	  pack .sci_dialog.btnBox.b1 -side left -padx $outside_pad -pady $outside_pad -expand 1
 	  set buttonSpecified true
       } elseif { $argName == "-button2" } {
 	  incr arg
@@ -130,7 +130,7 @@ proc createSciDialog { args } {
 	  set size [string length $btnName]
 	  if { $size < $minBtnSize } { set size $minBtnSize }
 	  button .sci_dialog.btnBox.b2 -text $btnName -width $size -command {set ::sci_dialog_result 2 }
-	  pack .sci_dialog.btnBox.b2 -side left -padx $outside_pad -pady $outside_pad
+	  pack .sci_dialog.btnBox.b2 -side left -padx $outside_pad -pady $outside_pad -expand 1
 	  set buttonSpecified true
       } elseif { $argName == "-button3" } {
 	  incr arg
@@ -138,7 +138,7 @@ proc createSciDialog { args } {
 	  set size [string length $btnName]
 	  if { $size < $minBtnSize } { set size $minBtnSize }
 	  button .sci_dialog.btnBox.b3 -text $btnName -width $size -command {set ::sci_dialog_result 3 }
-	  pack .sci_dialog.btnBox.b3 -side left -padx $outside_pad -pady $outside_pad
+	  pack .sci_dialog.btnBox.b3 -side left -padx $outside_pad -pady $outside_pad -expand 1
 	  set buttonSpecified true
       } elseif { $argName == "-parent" } {
 	  incr arg
@@ -199,7 +199,7 @@ proc createSciDialog { args } {
   frame .sci_dialog.separator -height 2 -relief sunken -borderwidth 2
   pack .sci_dialog.separator -fill x
 
-  pack .sci_dialog.btnBox -anchor e
+  pack .sci_dialog.btnBox -anchor e -fill x
 
   wm title .sci_dialog $title
 
