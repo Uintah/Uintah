@@ -82,20 +82,21 @@ macImportExportForceLoad()
   extern FieldHandle TextPointCloudString_reader(ProgressReporter *pr, const char *filename);
   extern bool TextPointCloudString_writer(ProgressReporter *pr,
                                           FieldHandle field, const char *filename);
-  FieldIEPlugin TextPointCloudString_plugin("TextPointCloudString",
-                                            ".pcs.txt", "",
-                                            TextPointCloudString_reader,
-                                            TextPointCloudString_writer);
 
-  MatrixIEPlugin TextColumnMatrix_plugin("TextColumnMatrix",
-                                         "", "",
-                                         TextColumnMatrix_reader,
-                                         TextColumnMatrix_writer);
+  static FieldIEPlugin TextPointCloudString_plugin("TextPointCloudString",
+                                                   ".pcs.txt", "",
+                                                   TextPointCloudString_reader,
+                                                   TextPointCloudString_writer);
+  
+  static MatrixIEPlugin TextColumnMatrix_plugin("TextColumnMatrix",
+                                                "", "",
+                                                TextColumnMatrix_reader,
+                                                TextColumnMatrix_writer);
 
-  ColorMapIEPlugin TextColorMap_plugin("TextColorMap",
-                                       "", "",
-                                       TextColorMap_reader,
-                                       TextColorMap_writer);
+  static ColorMapIEPlugin TextColorMap_plugin("TextColorMap",
+                                              "", "",
+                                              TextColorMap_reader,
+                                              TextColorMap_writer);
 }
 #endif
 
