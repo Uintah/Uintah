@@ -26,6 +26,7 @@
  *
  */
 
+#include <sci_config.h> // For MPIPP_H on SGI
 #include<mpi.h>
 #include <CCA/Components/PWorld/PWorld.h>
 #include <iostream>
