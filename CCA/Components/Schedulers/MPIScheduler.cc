@@ -160,6 +160,8 @@ MPIScheduler::compile(const ProcessorGroup* pg, bool init_timestep)
   dbg << "MPIScheduler finished compile\n";
 }
 
+#ifdef USE_TAU_PROFILING
+
 map<string,int> taskname_to_id_map;
 int unique_id = 9999;
 
@@ -181,7 +183,7 @@ create_tau_mapping( const string & taskname )
       return (unique_id - 1);
     }
 }
-
+#endif
 
 void
 MPIScheduler::execute(const ProcessorGroup * pg )
@@ -311,8 +313,10 @@ MPIScheduler::execute(const ProcessorGroup * pg )
 	printTask(dbg, task);
 	dbg << '\n';
 
+#ifdef USE_TAU_PROFILING
 	int id;
 	id = create_tau_mapping( task->getTask()->getName() );
+#endif
 
   TAU_MAPPING_OBJECT(tautimer)
   TAU_MAPPING_LINK(tautimer, (TauGroup_t)id);  // EXTERNAL ASSOCIATION
@@ -321,9 +325,12 @@ MPIScheduler::execute(const ProcessorGroup * pg )
 
   TAU_PROFILE_START(doittimer);
 
+  TAU_MAPPING_PROFILE_START(doitprofiler,0);
+
 	double taskstart = Time::currentSeconds();
 	task->doit(pg, dw[Task::OldDW], dw[Task::NewDW]);
 	double sendstart = Time::currentSeconds();
+  TAU_MAPPING_PROFILE_STOP(0);
 
   TAU_PROFILE_STOP(doittimer);
 	
