@@ -112,4 +112,8 @@ ReferenceMgr* ProxyBase::_proxyGetReferenceMgr()
   return proxy_uuid;
 }
 
+void ProxyBase::createSubset(int ssize)
+{
+  ::std::cerr << "MORE PICKOOO\n";
+}
 

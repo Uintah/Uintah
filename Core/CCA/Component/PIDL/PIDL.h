@@ -75,11 +75,11 @@ DESCRIPTION
 
     //////////
     // Create a base Object class from the given URL array
-    static Object::pointer objectFrom(const int urlc, const URL urlv[], int mysize, int myrank);
+    static Object::pointer objectFrom(const int urlc, const URL urlv[], int mysize = 1, int myrank = 0);
       
     //////////
     // Create a base Object class from the given URL vector
-    static Object::pointer objectFrom(const std::vector<URL>& urlv, int mysize, int myrank);
+    static Object::pointer objectFrom(const std::vector<URL>& urlv, int mysize = 1, int myrank = 0);
 
     //////////
     // Create a base Object class from the given Reference

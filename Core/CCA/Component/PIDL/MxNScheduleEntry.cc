@@ -183,9 +183,11 @@ void* MxNScheduleEntry::waitCompleteArray()
 void MxNScheduleEntry::reportMetaRecvDone(int size)
 {
   if (scht == callee) {
-    ::std::cout << "Meta " << caller_rep.size() << " of " << size << "\n"; 
-    if (size == static_cast<int>(caller_rep.size())) 
+    //::std::cout << "Meta " << caller_rep.size() << " of " << size << "\n"; 
+    if (size == static_cast<int>(caller_rep.size())) { 
       meta_sema.up(2);
+      ::std::cout << "UP Meta semaphore\n";
+    }
   }  
 }
 
