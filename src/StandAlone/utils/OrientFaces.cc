@@ -32,9 +32,12 @@
 #include <Core/Datatypes/TriSurfField.h>
 #include <Core/Persistent/Pstreams.h>
 
+#include <sgi_stl_warnings_off.h>
 #include <iostream>
 #include <fstream>
-#include <cstdlib>
+#include <sgi_stl_warnings_off.h>
+
+#include <stdlib.h>
 
 using std::cerr;
 using std::ifstream;
