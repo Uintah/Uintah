@@ -15,7 +15,13 @@
 #include <typeinfo>
 using namespace Uintah;
 namespace Uintah {
-  
+  //__________________________________
+  // This struct contains user inputs that are needed
+  struct Lodi_user_inputs{
+    double press_infinity;
+    double sigma;
+  };
+    
   //__________________________________
   // This struct contains the additional variables
   // required to apply the Lodi Temperature, density and velocity BC.
@@ -34,7 +40,8 @@ namespace Uintah {
     CCVariable<Vector> nu;               
     StaticArray<CCVariable<Vector> > di; 
     double delT;
-    bool setLodiBcs;           
+    bool setLodiBcs; 
+    Lodi_user_inputs* user_inputs;           
   };
   //__________________________________
   // This struct contains the additional variables
@@ -64,7 +71,8 @@ namespace Uintah {
                              DataWarehouse* old_dw,
                              DataWarehouse* new_dw);
 
-  bool using_LODI_BC(const ProblemSpecP& prob_spec);                                                
+  bool read_LODI_BC_inputs(const ProblemSpecP& prob_spec,
+                           Lodi_user_inputs* Lodi_user_inputs);                                                
   
   bool is_LODI_face(const Patch* patch,
                   Patch::FaceType face,
