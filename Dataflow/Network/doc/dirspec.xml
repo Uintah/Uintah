@@ -68,17 +68,19 @@
     </para>
 
     <para>
-      The development of a new module or port requires a working knowledge
-      of C++ programming, and may require knowledge of Tcl/Tk
-      scripting as well.
+      The rest of this guide explains how to develop new SCIRun
+      dataflow elements, and explains how to use powerful tools such
+      as 3D widgets, threads, etc. in SCIRun.  Development within
+      SCIRun requires a working knowledge of C++ programming, Unix
+      file systems etc.  knowledge of Tcl/Tk scripting will be useful.
     </para>
   </sect1>
 
   <sect1>
-    <title>Developing with SCIRun</title>
+    <title>Developing new SCIRun dataflow elements</title>
 
     <sect2>
-      <title>Module</title>
+      <title>Creating new modules</title>
 
       <para>
         From the most abstract perspective, a module is one or more
@@ -203,7 +205,7 @@ public:
 
   // constructor (with appropriate initializers)
   Sort(const string&amp; id) :
-    Module("Sort", id, Source),
+    Module("Sort", id, Source, "WordList", "SCIRun"),
     algo_("alg_to_use", id, this),
     iport_(0),
     oport_(0),
@@ -384,14 +386,14 @@ itcl_class SCIRun_WordList_Sort {
 
       <para>
         Now that we have all the files needed for a new module, we
-        need a place to put them all.  All SCIRun modules are
-        are members of groups - categories and packages - which are
+        need a place to put them.  All SCIRun modules are
+        members of groups - categories and packages - which are
         directory structures for organizing modules.  These directory
         structures are converted to .so libraries at build time by
         compiling and linking the files within them.  Packages,
         categories and the modules inside them are only usable by
         SCIRun in their .so form, so let's put the Sort module into a
-        category and a package. 
+        category and a package, and convert it to a .so library file. 
       </para>
 
       <para>
@@ -515,8 +517,51 @@ SRCDIR   := Dataflow/Modules/WordList
 SRCS     += \
 #[INSERT NEW CODE FILE HERE]
  
+PSELIBS := Dataflow/Network Dataflow/Ports \
+        Core/Datatypes Core/GuiInterface \
+        Core/Persistent Core/Util \
+        Core/TkExtensions
  
+LIBS := -lm
  
+include $(SCIRUN_SCRIPTS)/smallso_epilogue.mk
+      </computeroutput>
+
+      <para>
+        All we have to do is add the category directory to the first
+        sub.mk file, just before the #[INSERT ... HERE] comment:
+      </para>
+
+      <computeroutput>
+ 
+SRCDIR := Dataflow/Modules
+ 
+SUBDIRS := \
+        $(SRCDIR)/DataIO\
+        $(SRCDIR)/Fields\
+        $(SRCDIR)/Math\
+        $(SRCDIR)/Render\
+        $(SRCDIR)/Visualization\
+        $(SRCDIR)/WordList\
+#[INSERT NEW CATEGORY DIR HERE]
+ 
+include $(SCIRUN_SCRIPTS)/recurse.mk
+      </computeroutput>
+
+      <para>
+        and then add the .cc file to the second sub.mk file, again
+        just before the #[INSERT ... HERE] comment:
+      </para>
+
+      <computeroutput>
+ 
+include $(SCIRUN_SCRIPTS)/smallso_prologue.mk
+ 
+SRCDIR   := Dataflow/Modules/WordList
+ 
+SRCS     += \
+         $(SRCDIR)/Sort.cc\
+#[INSERT NEW CODE FILE HERE]
  
 PSELIBS := Dataflow/Network Dataflow/Ports \
         Core/Datatypes Core/GuiInterface \
@@ -527,6 +572,109 @@ LIBS := -lm
  
 include $(SCIRUN_SCRIPTS)/smallso_epilogue.mk
       </computeroutput>
+
+      <para>
+        Now we can build the newly created Sort module by
+        issuing a make command in the build directory.  After
+        that we can run SCIRun and use the new module:
+      </para>
+
+      <computeroutput>
+
+cd <term>BUILD_DIR</term>
+gmake
+      </computeroutput>
+
+      <para>
+        Some important aspects of developing a new module that we've
+        glossed over are all the conventions used.  We already know
+        that each of the module files (.cc, .xml and .tcl) must all
+        have the same base name (i.e. the name of the module), but there
+        are others as well.  Make sure that the name of the package,
+        category and module are spelled exactly the same, including
+        case, in each of the files, .cc, .xml, and .tcl, respectively:
+      </para>
+
+      <computeroutput>
+
+...
+Module("Sort", id, Source, "WordList", "SCIRun"),
+...
+      </computeroutput>
+
+      <computeroutput>
+
+...
+&lt;component name="Sort" category="WordList">
+...
+      </computeroutput>
+
+      <computeroutput>
+
+...
+itcl_class SCIRun_WordList_Sort { 
+...
+      </computeroutput>
+
+      <para>
+        After editing sub.mk files, make sure that each of the entries
+        in the SUBDIRS or SRCS are followed by a backslash-endline pair,
+        and that the #[INSERT ... HERE] line isn't changed (other than 
+        moved down a line) or been removed:
+      </para>
+
+      <computeroutput>
+
+SUBDIRS := \
+        $(SRCDIR)/DataIO\
+        $(SRCDIR)/Fields\
+        $(SRCDIR)/Math\
+        $(SRCDIR)/Render\
+        $(SRCDIR)/Visualization\
+        $(SRCDIR)/WordList\
+#[INSERT NEW CATEGORY DIR HERE]
+      </computeroutput>
+
+      <computeroutput>
+
+SRCS     += \
+         $(SRCDIR)/Sort.cc\
+#[INSERT NEW CODE FILE HERE]
+      </computeroutput>
+    </sect2>
+
+    <sect2>
+      <title>Creating new modules semi-automatically</title>
+
+      <para>
+        Until you become a seasoned SCIRun developer, all the work
+        discussed above will seem too daunting to get started with
+        development.  For this reason SCIRun comes with the Component
+        Wizard - a tool for automatically generating all the files
+        needed to start a new module from scratch.  It even edits
+        the makefile system to add the new module.
+      </para>
+   
+      <para>
+        The Component Wizard has a visual interface in which you
+        graphically construct the module you wish to create.  Once you
+        are finished, the Component Wizard uses the information
+        gathered to automatically create skeletons of all the needed
+        files, which are fully ready to be built.  All that's left to
+        do is fill in the execute function and design a GUI.
+      </para>
+
+      <para>
+        Access the Component Wizard from the main SCIRun menu,
+        File->New->Module:
+      </para>
+
+      <figure file="../images/research_menuheader.jpg" caption="The Component Wizard"/>
+
+      <figure file="../images/research_header_sm.gif" caption="The blah"/>
+      <para>
+        The Component Wizard
+      </para>
 
     </sect2>
 
