@@ -137,6 +137,10 @@
         <name>Geometry</name>
 	<datatype>SCIRun::Geometry</datatype>
       </port>
+      <port>
+        <name>Interpolant</name>
+	<datatype>SCIRun::Matrix</datatype>
+      </port>
     </outputs>
   </io>
   <gui>

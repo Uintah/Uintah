@@ -50,6 +50,13 @@ NoiseAlg::get_field()
 }
 
 
+MatrixHandle
+NoiseAlg::get_interpolant()
+{
+  return interpolant_;
+}
+
+
 CompileInfoHandle
 NoiseAlg::get_compile_info(const TypeDescription *td,
 			   bool cell_centered_p,

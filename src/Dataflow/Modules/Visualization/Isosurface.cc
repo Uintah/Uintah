@@ -296,10 +296,20 @@ Isosurface::execute()
     }
   }
 
-  const bool bf = gui_build_field_.get();
-  const bool bg = gui_build_geom_.get();
+  // Decide if an interpolant will be computed for the output field.
+  MatrixOPort *ointerp = (MatrixOPort *)get_oport("Interpolant");
+  if (!ointerp)
+  {
+    error("Unable to initialize oport 'Interpolant'.");
+    return;
+  }
+  const bool bfield  = gui_build_field_.get();             // build field
+  const bool bgeom   = gui_build_geom_.get();              // build geometry
+  const bool binterp = bfield && ointerp->nconnections();  // build interpolant
+
   vector<GeomHandle > geometries;
   vector<FieldHandle> fields;
+  vector<MatrixHandle> interpolants;
   const TypeDescription *td = field->get_type_description();
   switch (gui_use_algorithm_.get()) {
   case 0:  // Marching Cubes
@@ -318,11 +328,15 @@ Isosurface::execute()
       mc_alg->set_field( field.get_rep() );
       for (unsigned int iv=0; iv<isovals.size(); iv++)
       {
-	mc_alg->search( isovals[iv], bf, bg );
+	mc_alg->search( isovals[iv], bfield, bgeom );
 	geometries.push_back( mc_alg->get_geom() );
 	for (int i = 0 ; i < np; i++)
 	{
 	  fields.push_back( mc_alg->get_field(i) );
+	  if (binterp)
+	  {
+	    interpolants.push_back( mc_alg->get_interpolant(i) );
+	  }
 	}
       }
       mc_alg->release();
@@ -346,8 +360,12 @@ Isosurface::execute()
       }
       for (unsigned int iv=0; iv<isovals.size(); iv++)
       {
-	geometries.push_back(noise_alg->search(isovals[iv], bf, bg));
+	geometries.push_back(noise_alg->search(isovals[iv], bfield, bgeom));
 	fields.push_back(noise_alg->get_field());
+	if (binterp)
+	{
+	  interpolants.push_back(noise_alg->get_interpolant());
+	}
       }
       noise_alg->release();
     }
@@ -396,7 +414,7 @@ Isosurface::execute()
     geom_id_ = 0;
     geomflush = true;
   }
-  if (bg)
+  if (bgeom)
   {
     // Merged send_results.
     GeomGroup *geom = scinew GeomGroup;;
@@ -437,7 +455,7 @@ Isosurface::execute()
   }
 
   // Output surface.
-  if (bf && fields.size() && fields[0].get_rep())
+  if (bfield && fields.size() && fields[0].get_rep())
   {
     FieldOPort *osurf = (FieldOPort *)get_oport("Surface");
     if (!osurf)
@@ -487,6 +505,28 @@ Isosurface::execute()
       else
       {
 	osurf->send(fields[0]);
+      }
+    }
+
+    // Send the interpolant along.
+    if (binterp)
+    {
+      if (interpolants[0].get_rep())
+      {
+	if (interpolants.size() == 1)
+	{
+	  ointerp->send(interpolants[0]);
+	}
+	else
+	{
+	  // TODO: Package them up via diagonal append.
+	  warning("Interpolant doesn't append multi-surface output yet.\n");
+	  ointerp->send(0);
+	}
+      }
+      else
+      {
+	warning("Interpolant not computed for this input field type and data location.");
       }
     }
   }

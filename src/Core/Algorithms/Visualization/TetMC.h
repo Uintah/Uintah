@@ -32,8 +32,9 @@
 
 #include <Core/Geometry/Point.h>
 #include <Core/Geom/GeomTriangles.h>
-#include <Core/Datatypes/Field.h>
 #include <Core/Datatypes/TriSurfField.h>
+#include <Core/Datatypes/SparseRowMatrix.h>
+#include <sci_hash_map.h>
 
 namespace SCIRun {
 
@@ -59,11 +60,54 @@ private:
   mesh_handle_type mesh_;
   GeomFastTriangles *triangles_;
   TriSurfMeshHandle trisurf_;
-  map<long int, TriSurfMesh::Node::index_type> vertex_map_;
-  vector<long int> node_vector_;
+  //map<long int, TriSurfMesh::Node::index_type> vertex_map_;
   int nnodes_;
-  TriSurfMesh::Node::index_type find_or_add_edgepoint(int, int, const Point &);
-  TriSurfMesh::Node::index_type find_or_add_nodepoint(node_index_type &);
+
+  struct edgepair_t
+  {
+    unsigned int first;
+    unsigned int second;
+    double dfirst;
+  };
+
+  struct edgepairequal
+  {
+    bool operator()(const edgepair_t &a, const edgepair_t &b) const
+    {
+      return a.first == b.first && a.second == b.second;
+    }
+  };
+
+#ifdef HAVE_HASH_MAP
+  struct edgepairhash
+  {
+    unsigned int operator()(const edgepair_t &a) const
+    {
+      hash<unsigned int> h;
+      return h(a.first ^ a.second);
+    }
+  };
+
+  typedef hash_map<edgepair_t,
+		   TriSurfMesh::Node::index_type,
+		   edgepairhash,
+		   edgepairequal> edge_hash_type;
+#else
+  typedef map<edgepair_t,
+	      TriSurfMesh::Node::index_type,
+	      edgepairequal> edge_hash_type;
+#endif
+
+  edge_hash_type   edge_map_;  // Unique edge cuts when surfacing node data
+  vector<long int> node_map_;  // Unique nodes when surfacing cell data.
+
+  TriSurfMesh::Node::index_type find_or_add_edgepoint(int n0, int n1,
+						      double d0,
+						      const Point &p);
+  TriSurfMesh::Node::index_type find_or_add_nodepoint(node_index_type &n0);
+
+  void extract_n( cell_index_type, double );
+  void extract_c( cell_index_type, double );
 
 public:
   TetMC( Field *field ) : field_(field), mesh_(field->get_typed_mesh()),
@@ -71,11 +115,10 @@ public:
   virtual ~TetMC();
 	
   void extract( cell_index_type, double );
-  void extract_n( cell_index_type, double );
-  void extract_c( cell_index_type, double );
   void reset( int, bool build_field, bool build_geom );
   GeomHandle get_geom() { return triangles_; }
   FieldHandle get_field(double val);
+  MatrixHandle get_interpolant();
 };
   
 
@@ -88,7 +131,7 @@ TetMC<Field>::~TetMC()
 template<class Field>
 void TetMC<Field>::reset( int n, bool build_field, bool build_geom )
 {
-  vertex_map_.clear();
+  edge_map_.clear();
   typename Field::mesh_type::Node::size_type nsize;
   mesh_->size(nsize);
   nnodes_ = nsize;
@@ -97,7 +140,7 @@ void TetMC<Field>::reset( int n, bool build_field, bool build_geom )
   {
     mesh_->synchronize(Mesh::FACES_E);
     mesh_->synchronize(Mesh::FACE_NEIGHBORS_E);
-    if (build_field) { node_vector_ = vector<long int>(nsize, -1); }
+    if (build_field) { node_map_ = vector<long int>(nsize, -1); }
   }
 
   triangles_ = 0;
@@ -116,32 +159,36 @@ void TetMC<Field>::reset( int n, bool build_field, bool build_geom )
 
 template<class Field>
 TriSurfMesh::Node::index_type
-TetMC<Field>::find_or_add_edgepoint(int n0, int n1, const Point &p) 
+TetMC<Field>::find_or_add_edgepoint(int u0, int u1, double d0, const Point &p) 
 {
-  map<long int, TriSurfMesh::Node::index_type>::iterator node_iter;
-  TriSurfMesh::Node::index_type node_idx;
-  long int key = (n0 < n1) ? n0*nnodes_+n1 : n1*nnodes_+n0;
-  node_iter = vertex_map_.find(key);
-  if (node_iter == vertex_map_.end()) { // first time to see this node
-    node_idx = trisurf_->add_point(p);
-    vertex_map_[key] = node_idx;
-  } else {
-    node_idx = (*node_iter).second;
+  edgepair_t np;
+  if (u0 < u1)  { np.first = u0; np.second = u1; np.dfirst = d0; }
+  else { np.first = u1; np.second = u0; np.dfirst = 1.0 - d0; }
+  const typename edge_hash_type::iterator loc = edge_map_.find(np);
+  if (loc == edge_map_.end())
+  {
+    const TriSurfMesh::Node::index_type nodeindex = trisurf_->add_point(p);
+    edge_map_[np] = nodeindex;
+    return nodeindex;
   }
-  return node_idx;
+  else
+  {
+    return (*loc).second;
+  }
 }
+
 
 template<class Field>
 TriSurfMesh::Node::index_type
 TetMC<Field>::find_or_add_nodepoint(node_index_type &tet_node_idx) {
   TriSurfMesh::Node::index_type surf_node_idx;
-  long int i = node_vector_[(long int)(tet_node_idx)];
+  long int i = node_map_[(long int)(tet_node_idx)];
   if (i != -1) surf_node_idx = (TriSurfMesh::Node::index_type) i;
   else {
     Point p;
     mesh_->get_point(p, tet_node_idx);
     surf_node_idx = trisurf_->add_point(p);
-    node_vector_[(long int)tet_node_idx] = (long int)surf_node_idx;
+    node_map_[(long int)tet_node_idx] = (long int)surf_node_idx;
   }
   return surf_node_idx;
 }
@@ -251,10 +298,13 @@ void TetMC<Field>::extract_n( cell_index_type cell, double v )
       int i = order[code][1];
       int j = order[code][2];
       int k = order[code][3];
-      
-      Point p1(Interpolate( p[o],p[i],(v-value[o])/double(value[i]-value[o])));
-      Point p2(Interpolate( p[o],p[j],(v-value[o])/double(value[j]-value[o])));
-      Point p3(Interpolate( p[o],p[k],(v-value[o])/double(value[k]-value[o])));
+
+      const double v1 = (v-value[o])/double(value[i]-value[o]);
+      const double v2 = (v-value[o])/double(value[j]-value[o]);
+      const double v3 = (v-value[o])/double(value[k]-value[o]);
+      const Point p1(Interpolate( p[o],p[i], v1));
+      const Point p2(Interpolate( p[o],p[j], v2));
+      const Point p3(Interpolate( p[o],p[k], v3));
 
       if (triangles_)
       {
@@ -263,9 +313,9 @@ void TetMC<Field>::extract_n( cell_index_type cell, double v )
       if (trisurf_.get_rep())
       {
 	TriSurfMesh::Node::index_type i1, i2, i3;
-	i1 = find_or_add_edgepoint(node[o], node[i], p1);
-	i2 = find_or_add_edgepoint(node[o], node[j], p2);
-	i3 = find_or_add_edgepoint(node[o], node[k], p3);
+	i1 = find_or_add_edgepoint(node[o], node[i], v1, p1);
+	i2 = find_or_add_edgepoint(node[o], node[j], v2, p2);
+	i3 = find_or_add_edgepoint(node[o], node[k], v3, p3);
 	trisurf_->add_triangle(i1, i2, i3);
       }
     }
@@ -273,16 +323,18 @@ void TetMC<Field>::extract_n( cell_index_type cell, double v )
   case 2: 
     {
       // make order triangles
-      int o = order[code][0];
-      int i = order[code][1];
-      int j = order[code][2];
-      int k = order[code][3];
-      
-      Point p1(Interpolate( p[o],p[i],(v-value[o])/double(value[i]-value[o])));
-      Point p2(Interpolate( p[o],p[j],(v-value[o])/double(value[j]-value[o])));
-      Point p3(Interpolate( p[k],p[j],(v-value[k])/double(value[j]-value[k])));
-      
-      Point p4(Interpolate( p[k],p[i],(v-value[k])/double(value[i]-value[k])));
+      const int o = order[code][0];
+      const int i = order[code][1];
+      const int j = order[code][2];
+      const int k = order[code][3];
+      const double v1 = (v-value[o])/double(value[i]-value[o]);
+      const double v2 = (v-value[o])/double(value[j]-value[o]);
+      const double v3 = (v-value[k])/double(value[j]-value[k]);
+      const double v4 = (v-value[k])/double(value[i]-value[k]);
+      const Point p1(Interpolate( p[o],p[i], v1));
+      const Point p2(Interpolate( p[o],p[j], v2));
+      const Point p3(Interpolate( p[k],p[j], v3));
+      const Point p4(Interpolate( p[k],p[i], v4));
 
       if (triangles_)
       {
@@ -292,10 +344,10 @@ void TetMC<Field>::extract_n( cell_index_type cell, double v )
       if (trisurf_.get_rep())
       {
 	TriSurfMesh::Node::index_type i1, i2, i3, i4;
-	i1 = find_or_add_edgepoint(node[o], node[i], p1);
-	i2 = find_or_add_edgepoint(node[o], node[j], p2);
-	i3 = find_or_add_edgepoint(node[k], node[j], p3);
-	i4 = find_or_add_edgepoint(node[k], node[i], p4);
+	i1 = find_or_add_edgepoint(node[o], node[i], v1, p1);
+	i2 = find_or_add_edgepoint(node[o], node[j], v2, p2);
+	i3 = find_or_add_edgepoint(node[k], node[j], v3, p3);
+	i4 = find_or_add_edgepoint(node[k], node[i], v4, p4);
 	trisurf_->add_triangle(i1, i2, i3);
 	trisurf_->add_triangle(i1, i3, i4);
       }
@@ -321,6 +373,45 @@ TetMC<Field>::get_field(double value)
     while (iter != fld->fdata().end()) { (*iter)=value; ++iter; }
   }
   return fld;
+}
+
+
+template<class Field>
+MatrixHandle
+TetMC<Field>::get_interpolant()
+{
+  if (field_->data_at() == Field::NODE)
+  {
+    const int nrows = edge_map_.size();
+    const int ncols = nnodes_;
+    int *rr = scinew int[nrows+1];
+    int *cc = scinew int[nrows*2];
+    double *dd = scinew double[nrows*2];
+
+    typename edge_hash_type::iterator eiter = edge_map_.begin();
+    while (eiter != edge_map_.end())
+    {
+      const int ei = (*eiter).second;
+
+      cc[ei * 2 + 0] = (*eiter).first.first;
+      cc[ei * 2 + 1] = (*eiter).first.second;
+      dd[ei * 2 + 0] = 1.0 - (*eiter).first.dfirst;
+      dd[ei * 2 + 1] = (*eiter).first.dfirst;
+      
+      ++eiter;
+    }
+
+    for (int i = 0; i <= nrows; i++)
+    {
+      rr[i] = i * 2;
+    }
+
+    return scinew SparseRowMatrix(nrows, ncols, rr, cc, nrows*2, dd);
+  }
+  else
+  {
+    return 0;
+  }
 }
 
      
