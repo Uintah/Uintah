@@ -145,6 +145,18 @@ public:
 				const MaterialSet* matls,
 			        const TimeIntegratorLabel* timelabels);
 
+      void sched_getDensityGuess(SchedulerP&, const PatchSet* patches,
+				const MaterialSet* matls,
+			        const TimeIntegratorLabel* timelabels);
+
+      void sched_updateDensityGuess(SchedulerP&, const PatchSet* patches,
+				const MaterialSet* matls,
+			        const TimeIntegratorLabel* timelabels);
+
+      void sched_syncRhoF(SchedulerP&, const PatchSet* patches,
+				const MaterialSet* matls,
+			        const TimeIntegratorLabel* timelabels);
+
   
 protected :
 
@@ -207,6 +219,27 @@ private:
 			const TimeIntegratorLabel* timelabels);
       
       void saveTempCopies(const ProcessorGroup*,
+			  const PatchSubset* patches,
+			  const MaterialSubset* matls,
+			  DataWarehouse* old_dw,
+			  DataWarehouse* new_dw,
+			  const TimeIntegratorLabel* timelabels);
+
+      void getDensityGuess(const ProcessorGroup*,
+			  const PatchSubset* patches,
+			  const MaterialSubset* matls,
+			  DataWarehouse* old_dw,
+			  DataWarehouse* new_dw,
+			  const TimeIntegratorLabel* timelabels);
+
+      void updateDensityGuess(const ProcessorGroup*,
+			  const PatchSubset* patches,
+			  const MaterialSubset* matls,
+			  DataWarehouse* old_dw,
+			  DataWarehouse* new_dw,
+			  const TimeIntegratorLabel* timelabels);
+
+      void syncRhoF(const ProcessorGroup*,
 			  const PatchSubset* patches,
 			  const MaterialSubset* matls,
 			  DataWarehouse* old_dw,

@@ -97,7 +97,7 @@ namespace Uintah {
 	    use_old_values = true;
 	    recursion = true;
             time_multiplier = 1.0;
-	    factor_old = 1.0;
+	    factor_old = 0.0;
 	    factor_new = 1.0;
 	    factor_divide = 1.0;
 	    maxabsu_in = lab->d_maxAbsU_label;
@@ -125,7 +125,7 @@ namespace Uintah {
 	    use_old_values = true;
 	    recursion = false;
             time_multiplier = 1.0;
-	    factor_old = 1.0;
+	    factor_old = 0.0;
 	    factor_new = 1.0;
 	    factor_divide = 1.0;
 	    maxabsu_in = lab->d_maxAbsU_label;
@@ -153,7 +153,7 @@ namespace Uintah {
 	    use_old_values = true;
 	    recursion = false;
             time_multiplier = 1.0;
-	    factor_old = 1.0;
+	    factor_old = 0.0;
 	    factor_new = 1.0;
 	    factor_divide = 1.0;
 	    maxabsu_in = lab->d_maxAbsU_label;
@@ -181,7 +181,7 @@ namespace Uintah {
 	    use_old_values = true;
 	    recursion = false;
             time_multiplier = 0.5;
-	    factor_old = 1.0;
+	    factor_old = 0.0;
 	    factor_new = 1.0;
 	    factor_divide = 1.0;
 	    maxabsu_in = lab->d_maxAbsU_label;
@@ -237,7 +237,7 @@ namespace Uintah {
 	    use_old_values = true;
 	    recursion = false;
             time_multiplier = 1.0;
-	    factor_old = 1.0;
+	    factor_old = 0.0;
 	    factor_new = 1.0;
 	    factor_divide = 1.0;
 	    maxabsu_in = lab->d_maxAbsUPred_label;
@@ -321,7 +321,7 @@ namespace Uintah {
 	    use_old_values = true;
 	    recursion = false;
             time_multiplier = 1.0;
-	    factor_old = 1.0;
+	    factor_old = 0.0;
 	    factor_new = 1.0;
 	    factor_divide = 1.0;
 	    maxabsu_in = lab->d_maxAbsU_label;
@@ -349,7 +349,7 @@ namespace Uintah {
 	    use_old_values = true;
 	    recursion = false;
             time_multiplier = 1.0;
-	    factor_old = 1.0;
+	    factor_old = 0.0;
 	    factor_new = 1.0;
 	    factor_divide = 1.0;
 	    maxabsu_in = lab->d_maxAbsUPred_label;
@@ -377,7 +377,7 @@ namespace Uintah {
 	    use_old_values = true;
 	    recursion = false;
             time_multiplier = 1.0;
-	    factor_old = 1.0;
+	    factor_old = 0.0;
 	    factor_new = 1.0;
 	    factor_divide = 1.0;
 	    maxabsu_in = lab->d_maxAbsUInterm_label;

@@ -72,6 +72,7 @@ namespace Uintah {
       const VarLabel* d_enthalpyRes;
 
       const VarLabel* d_densityCPLabel;
+      const VarLabel* d_densityGuessLabel;
       const VarLabel* d_densityTempLabel;
       const VarLabel* d_densityOldOldLabel;
 
