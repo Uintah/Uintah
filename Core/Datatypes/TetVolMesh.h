@@ -63,7 +63,7 @@ public:
   index_type    edges_size() const { return edges_.size(); }
   face_iterator face_begin() const;
   face_iterator face_end() const;
-  //index_type    faces_size() const { return faces_.size(); }
+  index_type    faces_size() const { return faces_.size(); }
   cell_iterator cell_begin() const;
   cell_iterator cell_end() const;
   index_type    cells_size() const { return cells_.size() >> 2; }
