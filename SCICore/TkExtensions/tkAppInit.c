@@ -110,7 +110,7 @@ tkMain(argc, argv, nwait_func, nwait_func_data)
     void (*nwait_func)(void*);
     void* nwait_func_data;
 {
-	printf("Starting tkMain { sci\\tkAppInit.c } \n");
+	printf("Starting tkMain { %s } \n",__FILE__);
     wait_func=nwait_func;
     wait_func_data=nwait_func_data;
 #ifdef _WIN32
@@ -159,7 +159,7 @@ Tcl_AppInit(interp)
 #endif
   /* Dd: End */
 
-  printf("Starting Tcl_AppInit { sci\\tkAppInit.c }\n");
+  printf("Starting Tcl_AppInit { %s }\n",__FILE__);
 
     the_interp=interp;
 
@@ -182,11 +182,16 @@ printf("main = %p\n", main);
 #endif
   /* Dd: End */
 
+    printf("Initializing the tcl packages: ");
 
+    printf("tcl, ");
     if (Tcl_Init(interp) == TCL_ERROR) {
+      printf("Tcl_Init() failed\n");
 	return TCL_ERROR;
     }
+    printf("tk, ");
     if (Tk_Init(interp) == TCL_ERROR) {
+      printf("Tk_Init() failed\n");
 	return TCL_ERROR;
     }
     Tcl_StaticPackage(interp, "Tk", Tk_Init, Tk_SafeInit);
@@ -223,19 +228,27 @@ printf("main = %p\n", main);
      *
      * where "Mod" is the name of the module.
      */
+    printf("itcl, ");
     if (Itcl_Init(interp) == TCL_ERROR) {
+      printf("Itcl_Init() failed\n");
         return TCL_ERROR;
     }
+    printf("itk, ");
     if (Itk_Init(interp) == TCL_ERROR) {
+      printf("Itk_Init() failed\n");
         return TCL_ERROR;
     }
+    printf("blt\n");
     if (Blt_Init(interp) == TCL_ERROR) {
+      printf("Blt_Init() failed\n");
 	return TCL_ERROR;
     }
 
     Tcl_StaticPackage(interp, "Itcl", Itcl_Init, Itcl_SafeInit);
     Tcl_StaticPackage(interp, "Itk", Itk_Init, (Tcl_PackageInitProc *) NULL);
     Tcl_StaticPackage(interp, "BLT", Blt_Init, Blt_SafeInit);
+
+    printf("Finished initializing tcl packages.\n");
 
     /*
      *  This is itkwish, so import all [incr Tcl] commands by
@@ -311,3 +324,4 @@ printf("main = %p\n", main);
     (*wait_func)(wait_func_data);
     return TCL_OK;
 }
+
