@@ -73,7 +73,11 @@ WARNING
    virtual void scheduleModifyThermoTransportProperties(SchedulerP&,
                                                 const LevelP&,
                                                 const MaterialSet*);
-
+                                                
+   virtual void computeSpecificHeat(CCVariable<double>&,
+                                    const Patch*,
+                                    DataWarehouse*,
+                                    const int);
   private:
     ICELabel* lb;
                                                 
@@ -135,7 +139,15 @@ WARNING
     Scalar* d_scalar;
     double d_rho_air;
     double d_rho_fuel;
-    double d_cp;
+    double d_cv_air;
+    double d_cv_fuel;
+    double d_R_air;
+    double d_R_fuel;
+    double d_thermalCond_air;
+    double d_thermalCond_fuel;
+    double d_viscosity_air;
+    double d_viscosity_fuel;
+    
     SimulationStateP sharedState;
   };
 }
