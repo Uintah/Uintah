@@ -1312,6 +1312,23 @@
     </implementation>
   </dataflow-component>
 
+  <dataflow-component name="ScalarFieldProbe">
+    <meta>
+      <authors>
+        <author>samsonov</author>
+      </authors>
+      <version-date>[TODAYS DATE HERE]</version-date>
+      <version>1.0</version>
+      <description>No description available</description>
+    </meta>
+    <inputs></inputs>
+    <outputs></outputs>
+    <parameters></parameters>
+    <implementation>
+      <creationFunction>make_ScalarFieldProbe</creationFunction>
+    </implementation>
+  </dataflow-component>
+
   <!-- INSERT NEW Fields COMPONENT HERE -->
   </scirun-library>
   <scirun-library category="Writers">

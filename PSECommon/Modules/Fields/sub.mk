@@ -35,6 +35,7 @@ SRCS     += \
 	$(SRCDIR)/TrainSeg2.cc\
 	$(SRCDIR)/TrainSegment.cc\
 	$(SRCDIR)/TransformField.cc\
+	$(SRCDIR)/ScalarFieldProbe.cc\
 #[INSERT NEW MODULE HERE]
 
 PSELIBS := PSECore/Dataflow PSECore/Datatypes PSECore/Widgets \
@@ -47,6 +48,9 @@ include $(SRCTOP)/scripts/smallso_epilogue.mk
 
 #
 # $Log$
+# Revision 1.5  2000/06/16 04:17:06  samsonov
+# *** empty log message ***
+#
 # Revision 1.4  2000/06/08 22:46:26  moulding
 # Added a comment note about not messing with the module maker comment lines,
 # and how to edit this file by hand.
