@@ -1230,12 +1230,10 @@ void ICE::computeLagrangianSpecificVolumeRF(const ProcessorGroup*,
     for(int m = 0; m < numALLMatls; m++) {
       Material* matl = d_sharedState->getMaterial( m );
       int indx = matl->getDWIndex();
-      CCVariable<double> spec_vol_L, spec_vol_source;
-      new_dw->allocateAndPut(spec_vol_L,     lb->spec_vol_L_CCLabel,     
-                                                            indx,patch);
-      new_dw->allocateAndPut(spec_vol_source,lb->spec_vol_source_CCLabel,
-                                                            indx,patch);
-      spec_vol_source.initialize(0.);
+      CCVariable<double> sp_vol_L, sp_vol_src;
+      new_dw->allocateAndPut(sp_vol_L,  lb->sp_vol_L_CCLabel,   indx,patch);
+      new_dw->allocateAndPut(sp_vol_src,lb->sp_vol_src_CCLabel, indx,patch);
+      sp_vol_src.initialize(0.);
       
       new_dw->get(sp_vol_CC,  lb->sp_vol_CCLabel,     indx,patch,gn, 0); 
       new_dw->get(rho_CC,     lb->rho_CCLabel,        indx,patch,gn, 0); 
@@ -1243,16 +1241,16 @@ void ICE::computeLagrangianSpecificVolumeRF(const ProcessorGroup*,
       new_dw->get(sp_vol_comb,lb->created_vol_CCLabel,indx,patch,gn, 0); 
 
       //__________________________________
-      //  compute spec_vol_L * mass
+      //  compute sp_vol_L * mass
       for(CellIterator iter=patch->getExtraCellIterator();!iter.done();iter++){
         IntVector c = *iter;
-        spec_vol_L[c] = (rho_CC[c] * vol)*sp_vol_CC[c];
+        sp_vol_L[c] = (rho_CC[c] * vol)*sp_vol_CC[c];
       }
       //  Set Neumann = 0 if symmetric Boundary conditions
-      setBC(spec_vol_L, "set_if_sym_BC",patch, d_sharedState, indx, new_dw);
+      setBC(sp_vol_L, "set_if_sym_BC",patch, d_sharedState, indx, new_dw);
       
       //__________________________________
-      //  add the sources to spec_vol_L
+      //  add the sources to sp_vol_L
       for(CellIterator iter=patch->getCellIterator();!iter.done();iter++){
         IntVector c = *iter;
         
@@ -1298,17 +1296,17 @@ void ICE::computeLagrangianSpecificVolumeRF(const ProcessorGroup*,
                                    
         // This is actually mass * sp_vol
         double src = term1 + if_mpm_matl_ignore[m] * term2;
-        spec_vol_L[c]     += src + sp_vol_comb[c]; 
-        spec_vol_source[c] = src/(rho_CC[c] * vol);
+        sp_vol_L[c]  += src + sp_vol_comb[c]; 
+        sp_vol_src[c] = src/(rho_CC[c] * vol);
         
 /*`==========TESTING==========*/
 //    do we really want this?  -Todd        
-        spec_vol_L[c] = max(spec_vol_L[c], d_TINY_RHO * vol * sp_vol_CC[c]);
+        sp_vol_L[c] = max(sp_vol_L[c], d_TINY_RHO * vol * sp_vol_CC[c]);
 /*==========TESTING==========`*/ 
      }
 
       //  Set Neumann = 0 if symmetric Boundary conditions
-      setBC(spec_vol_L, "set_if_sym_BC",patch, d_sharedState, indx, new_dw); 
+      setBC(sp_vol_L, "set_if_sym_BC",patch, d_sharedState, indx, new_dw); 
 
       //---- P R I N T   D A T A ------ 
       if (switchDebugLagrangianSpecificVol ) {
@@ -1321,22 +1319,22 @@ void ICE::computeLagrangianSpecificVolumeRF(const ProcessorGroup*,
         printData(indx, patch,1, desc.str(), "Tdot",          Tdot[m]);
         printData(indx, patch,1, desc.str(), "f_theta",       f_theta);
         printData(indx, patch,1, desc.str(), "sum_therm_exp", sum_therm_exp);
-        printData(indx, patch,1, desc.str(), "spec_vol_source",spec_vol_source);
-        printData(indx, patch,1, desc.str(), "spec_vol_L",     spec_vol_L);
+        printData(indx, patch,1, desc.str(), "sp_vol_src",   sp_vol_src);
+        printData(indx, patch,1, desc.str(), "sp_vol_L",     sp_vol_L);
       }
       //____ B U L L E T   P R O O F I N G----
       IntVector neg_cell;
-      if (!areAllValuesPositive(spec_vol_L, neg_cell)) {
+      if (!areAllValuesPositive(sp_vol_L, neg_cell)) {
         cout << "matl            "<< indx << endl;
         cout << "sum_thermal_exp "<< sum_therm_exp[neg_cell] << endl;
-        cout << "spec_vol_source "<< spec_vol_source[neg_cell] << endl;
+        cout << "sp_vol_src      "<< sp_vol_src[neg_cell] << endl;
         cout << "sp_vol_comb     "<< sp_vol_comb[neg_cell] << endl;
-        cout << "mass sp_vol_L    "<< spec_vol_L[neg_cell] << endl;
+        cout << "mass sp_vol_L    "<< sp_vol_L[neg_cell] << endl;
         cout << "mass sp_vol_L_old"
              << (rho_CC[neg_cell]*vol*sp_vol_CC[neg_cell]) << endl;
         ostringstream warn;
         warn<<"ERROR ICE::computeLagrangianSpecificVolumeRF, mat "<<indx
-            << " cell " <<neg_cell << " spec_vol_L is negative\n";
+            << " cell " <<neg_cell << " sp_vol_L is negative\n";
         throw InvalidValue(warn.str());
      } 
     }  // end numALLMatl loop
