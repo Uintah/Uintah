@@ -10,6 +10,7 @@
 #include <SCICore/Geometry/IntVector.h>
 
 #include <Uintah/Components/Schedulers/OnDemandDataWarehouse.h>
+#include <Uintah/Components/Schedulers/SendState.h>
 #include <Uintah/Exceptions/TypeMismatchException.h>
 #include <Uintah/Exceptions/UnknownVariable.h>
 #include <Uintah/Grid/VarLabel.h>
@@ -35,6 +36,7 @@ using SCICore::Geometry::Point;
 
 using namespace Uintah;
 
+#define PARTICLESET_TAG		0x1000000
 #define DAV_DEBUG 0
 
 // From ThreadPool.cc:  Used for syncing cerr'ing so it is easier to read.
@@ -122,8 +124,44 @@ OnDemandDataWarehouse::exists(const VarLabel* label, int matlIndex,
    }
 }
 
+
+void OnDemandDataWarehouse::sendParticleSubset(SendState& ss,
+					       ParticleSubset* pset,
+					       const VarLabel* pos_var,
+					       const Task::Dependency* dep,
+					       const Patch* toPatch,
+					       const ProcessorGroup* world,
+					       int* size)
+
+{
+   ParticleSubset* sendset = scinew ParticleSubset(pset->getParticleSet(),
+						   false, -1, 0);
+   ParticleVariable<Point> pos;
+   DataWarehouse* dw = dep->d_dw.get_rep();
+   dw->get(pos, pos_var, pset);
+   Box box=pset->getPatch()->getLevel()->getBox(dep->d_lowIndex,
+						dep->d_highIndex);
+   for(ParticleSubset::iterator iter = pset->begin();
+       iter != pset->end(); iter++){
+      particleIndex idx = *iter;
+      if(box.contains(pos[idx]))
+	 sendset->addParticle(idx);
+   }
+   int toProc = dep->d_task->getAssignedResourceIndex();
+   ss.d_sendSubsets[pair<const Patch*, int>(dep->d_patch, toProc)]=sendset;
+
+   int numParticles = sendset->numParticles();
+   //cerr << world->myrank() << " Sending pset size of " << numParticles << " instead of " << pset->numParticles() << ", dw=" << getID() << '\n';
+
+   ASSERT(dep->d_serialNumber >= 0);
+   MPI_Bsend(&numParticles, 1, MPI_INT, toProc,
+	     PARTICLESET_TAG|dep->d_serialNumber, world->getComm());
+   MPI_Pack_size(1, MPI_INT, world->getComm(), size);
+}
+
 void
-OnDemandDataWarehouse::sendMPI(const VarLabel* label, int matlIndex,
+OnDemandDataWarehouse::sendMPI(SendState& ss,
+			       const VarLabel* label, int matlIndex,
 			       const Patch* patch, const ProcessorGroup* world,
 			       const Task::Dependency* dep, int dest,
 			       int tag, int* size, MPI_Request* requestid)
@@ -160,18 +198,32 @@ OnDemandDataWarehouse::sendMPI(const VarLabel* label, int matlIndex,
    }
    if(d_particleDB.exists(label, matlIndex, patch)){
       ParticleVariableBase* var = d_particleDB.get(label, matlIndex, patch);
-      ParticleSubset* pset = var->getParticleSubset();
-      if(pset->numParticles() == 0){
+
+      map<pair<const Patch*, int>, ParticleSubset*>::iterator iter = 
+      	 ss.d_sendSubsets.find(pair<const Patch*, int>(patch, dest));
+      if(iter == ss.d_sendSubsets.end()){
+	 cerr << "patch=" << patch << '\n';
+	 cerr << world->myrank() << " From patch: " << patch->getID() << " to processor: " << dest << '\n';
+	 cerr << "size=" << ss.d_sendSubsets.size() << '\n';
+	 cerr << "dw=" << getID() << '\n';
+	 throw InternalError("Cannot find particle sendset");
+      }
+      ParticleSubset* sendset = iter->second;
+
+      if(sendset->numParticles() == 0){
 	 *size=-1;
       } else {
 	 void* buf;
 	 int count;
 	 MPI_Datatype datatype;
-	 var->getMPIBuffer(buf, count, datatype);
+	 bool free_datatype = false;
+	 var->getMPIBuffer(buf, count, datatype, free_datatype, sendset);
 	 MPI_Isend(buf, count, datatype, dest, tag, world->getComm(), requestid);
 	 //cerr << "ISend Particle: buf=" << buf << ", count=" << count << ", dest=" << dest << ", tag=" << tag << ", comm=" << world->getComm() << ", req=" << requestid << '\n';
 	 // This is just FYI for the caller
 	 MPI_Pack_size(count, datatype, world->getComm(), size);
+	 if(free_datatype)
+	    MPI_Type_free(&datatype);
       }
   d_lock.readUnlock();
       return;
@@ -251,7 +303,7 @@ OnDemandDataWarehouse::sendMPI(const VarLabel* label, int matlIndex,
 }
 
 void
-OnDemandDataWarehouse::recvMPI(DataWarehouseP& old_dw,
+OnDemandDataWarehouse::recvMPI(SendState& ss, DataWarehouseP& old_dw,
 			       const VarLabel* label, int matlIndex,
 			       const Patch* patch, const ProcessorGroup* world,
 			       const Task::Dependency* dep, int src,
@@ -280,10 +332,13 @@ OnDemandDataWarehouse::recvMPI(DataWarehouseP& old_dw,
 	    void* buf;
 	    int count;
 	    MPI_Datatype datatype;
-	    var->getMPIBuffer(buf, count, datatype);
+	    bool free_datatype=false;
+	    var->getMPIBuffer(buf, count, datatype, free_datatype, pset);
 	    MPI_Irecv(buf, count, datatype, src, tag, world->getComm(), requestid);
 	    // This is just FYI for the caller
 	    MPI_Pack_size(count, datatype, world->getComm(), size);
+	    if(free_datatype)
+	       MPI_Type_free(&datatype);
 	 }
 	 d_particleDB.put(label, matlIndex, patch, var, false);
       }
@@ -1409,6 +1464,9 @@ OnDemandDataWarehouse::deleteParticles(ParticleSubset* delset)
 
 //
 // $Log$
+// Revision 1.52.4.2  2000/10/02 15:02:45  sparker
+// Send only boundary particles
+//
 // Revision 1.52.4.1  2000/09/29 06:09:55  sparker
 // g++ warnings
 // Support for sending only patch edges

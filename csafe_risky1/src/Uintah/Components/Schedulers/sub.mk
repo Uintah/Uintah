@@ -12,6 +12,7 @@ SRCS += $(SRCDIR)/templates.cc \
 	$(SRCDIR)/MPIScheduler.cc $(SRCDIR)/MessageLog.cc \
 	$(SRCDIR)/OnDemandDataWarehouse.cc \
 	$(SRCDIR)/RoundRobinLoadBalancer.cc \
+	$(SRCDIR)/SendState.cc \
 	$(SRCDIR)/SimpleLoadBalancer.cc \
 	$(SRCDIR)/SingleProcessorScheduler.cc \
 	$(SRCDIR)/SingleProcessorLoadBalancer.cc \
@@ -20,12 +21,15 @@ SRCS += $(SRCDIR)/templates.cc \
 
 PSELIBS := Uintah/Grid Uintah/Interface SCICore/Thread Uintah/Parallel \
 	Uintah/Exceptions SCICore/Exceptions SCICore/Util PSECore/XMLUtil
-LIBS := $(XML_LIBRARY) -lmpi
+LIBS := $(XML_LIBRARY) $(MPI_LIBRARY)
 
 include $(SRCTOP)/scripts/smallso_epilogue.mk
 
 #
 # $Log$
+# Revision 1.12.4.1  2000/10/02 15:02:45  sparker
+# Send only boundary particles
+#
 # Revision 1.12  2000/09/26 18:50:54  dav
 # added MixedScheduler.cc
 #
