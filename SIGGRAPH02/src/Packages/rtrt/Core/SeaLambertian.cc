@@ -22,7 +22,7 @@ PersistentTypeID SeaLambertianMaterial::type_id("SeaLambertianMaterial", "Materi
 
 SeaLambertianMaterial::SeaLambertianMaterial(const Color& R, 
 					     TimeVaryingCheapCaustics *caustics)
-  : R(R), caustics(caustics)
+  : Object(this), R(R), caustics(caustics)
 {
 }
 
@@ -79,12 +79,31 @@ void SeaLambertianMaterial::shade(Color& result, const Ray& ray,
 		      MAXDOUBLE, shadowfactor, depth, cx) )
     {
       double cos_theta=Dot(light_dir,normal);
-      result += caustics->GetCausticColor( hitpos, 
-					   SCIRun::Time::currentSeconds() ) * 
+      result += caustics->GetCausticColor( hitpos, currentTime ) * 
 	(cos_theta*shadowfactor);
     }
   }
 
+}
+
+void SeaLambertianMaterial::intersect(Ray&, HitInfo&, DepthStats*,
+				      PerProcessorContext*)
+{
+  cerr << "SeaLambertianMaterial should not be added to scene!\n";
+}
+
+Vector SeaLambertianMaterial::normal(const Point&, const HitInfo&)
+{
+  return Vector(0,0,0);
+}
+void SeaLambertianMaterial::animate(double t, bool& changed)
+{
+  currentTime=t;
+  changed=true;
+}
+
+void SeaLambertianMaterial::compute_bounds(BBox&, double)
+{
 }
 
 const int SEALAMBERTIAN_VERSION = 1;
