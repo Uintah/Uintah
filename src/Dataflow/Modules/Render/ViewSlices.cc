@@ -195,7 +195,6 @@ class ViewSlices : public Module
     NrrdSlices		slices_;
 
     NrrdSlices		paint_slices_;
-    NrrdSlices		new_paint_slices_;
 
     UIint		slice_num_;
     UIint		axis_;
@@ -778,8 +777,8 @@ ViewSlices::real_draw_all()
 
       window.viewport_->make_current();
       window.viewport_->clear();
-      GL_ERROR();
       setup_gl_view(window);
+      GL_ERROR();
 
       if (window.cursor_moved_)
       {
@@ -787,11 +786,11 @@ ViewSlices::real_draw_all()
 	cursor_ = screen_to_world(window, window.mouse_x_, window.mouse_y_);
 	window.cursor_moved_ = false;
       }
-	
 
       for (unsigned int s = 0; s < window.slices_.size(); ++s)
 	if (window.slices_[s])
 	  draw_slice(window, *window.slices_[s]);
+
       draw_guide_lines(window, cursor_.x(), cursor_.y(), cursor_.z());
       draw_slice_lines(window);
       
@@ -806,9 +805,7 @@ ViewSlices::real_draw_all()
 
       draw_all_labels(window);
       GL_ERROR();
-
       window.viewport_->release();
-
     }
   }
 
@@ -2047,7 +2044,11 @@ ViewSlices::draw_slice(SliceWindow &window, NrrdSlice &slice)
   glColor4f(0.5, 0.5, 0.5, 0.5);//opacity, opacity, opacity, opacity);
     //glColor4fv(ones);
   glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-  if (painting_ && window.paint_slices_.size() && window.paint_slices_[window.axis_]) {
+  if (int(painting_) && (window.mode_ == normal_e) &&
+      window.paint_slices_.size() && 
+      window.paint_slices_[window.axis_]) {
+    if (window.paint_slices_[window.axis_]->slice_num_ != window.slice_num_())
+      fill_paint_slices(window);
     NrrdSlice &paint = *window.paint_slices_[window.axis_];
 
     const bool bound = glIsTexture(paint.tex_name_);
@@ -2255,8 +2256,10 @@ ViewSlices::extract_slice(NrrdSlice &slice, int axis, int slice_num)
   ASSERT(slice.volume_);
   ASSERT(slice.volume_->nrrd_.get_rep());
 
+
   slice.do_lock();
 
+  slice_num = Clamp(slice_num, 0, max_slice_[axis]);
   slice.nrrd_ = 0;
   slice.nrrd_ = scinew NrrdData;
   slice.nrrd_->nrrd = nrrdNew();
@@ -2294,7 +2297,6 @@ ViewSlices::extract_slice(NrrdSlice &slice, int axis, int slice_num)
       free(err);
     }
   } else {
-    slice_num = Clamp(slice_num, 0, max_slice_[axis]);
     cur_slice_[axis] = slice_num;
     slab_width_[axis] = 1;
     if (nrrdSlice(temp1->nrrd, slice.volume_->nrrd_->nrrd, axis, slice_num)) {
@@ -2481,9 +2483,6 @@ ViewSlices::prev_slice(SliceWindow &window)
     window.slice_num_--;
   window.cursor_moved_ = true;
   extract_window_slices(window);
-  if (painting_()) 
-    fill_paint_slices(window);
-
   redraw_all();
 }
 
@@ -2498,8 +2497,6 @@ ViewSlices::next_slice(SliceWindow &window)
     window.slice_num_++;
   window.cursor_moved_ = true;
   extract_window_slices(window);
-  if (painting_()) 
-    fill_paint_slices(window);
   redraw_all();
 }
 
@@ -2783,7 +2780,8 @@ ViewSlices::handle_gui_motion(GuiArgs &args) {
 
   if (!panning_ && !zooming_) 
   {
-    if (state & BUTTON_1_E && painting_ && inside_window) { 
+    if (state & BUTTON_1_E && painting_ && 
+	inside_window && (inside_window->mode_ == normal_e)) { 
       do_paint(*inside_window);
     } else if ((state & BUTTON_1_E) && crop_ && inside_window && pick_) {
       crop_draw_bbox_ = update_crop_bbox(*inside_window, pick_, X, Y);
@@ -3016,7 +3014,7 @@ ViewSlices::handle_gui_button(GuiArgs &args) {
 	continue;
       }
 
-      if (painting_) { 
+      if (int(painting_) && (window.mode_ == normal_e)) { 
 	last_cursor_ = cursor_;
 	if (paint_widget_) {
 	  paint_widget_->add_stroke();
@@ -3344,9 +3342,9 @@ ViewSlices::fill_all_paint_slices() {
 void
 ViewSlices::fill_paint_slices(SliceWindow &window) {
   if (!gradient_.get_rep() || !cm2_.get_rep()) return;
-
+  
   rasterize_colormap2();
-
+  cerr << "Filling Paint\n";
   unsigned int a;
   if (!window.paint_slices_.size()) {
     for (a = 0; a < 3; ++a) {
@@ -3361,28 +3359,17 @@ ViewSlices::fill_paint_slices(SliceWindow &window) {
     }
   }
 
-  if (!window.new_paint_slices_.size()) {
-    for (a = 0; a < 3; ++a) {
-      window.new_paint_slices_.push_back
-	(scinew NrrdSlice(a, window.slice_num_(), 0));
-      window.new_paint_slices_.back()->nrrd_ = scinew NrrdData;
-      window.new_paint_slices_.back()->nrrd_->nrrd = nrrdNew();
-      window.new_paint_slices_.back()->nrrd_->nrrd->data = 0;
-      
-    }
-  }
-
   int wid, hei;
   unsigned int y_ax = y_axis(window);
   unsigned int x_ax = x_axis(window);
   unsigned int z = window.slice_num_();
   for (a = 0; a < 3; ++a) {
     if (a != (unsigned int)window.axis_) continue;
-    NrrdDataHandle &paint = window.paint_slices_[a]->nrrd_;
-    NrrdDataHandle &newpaint = window.new_paint_slices_[a]->nrrd_;
-
-    wid = window.paint_slices_[a]->tex_wid_;
-    hei = window.paint_slices_[a]->tex_hei_;
+    NrrdSlice &slice = *window.paint_slices_[a];
+    NrrdDataHandle &paint = slice.nrrd_;
+    
+    wid = slice.tex_wid_;
+    hei = slice.tex_hei_;
     if (paint->nrrd && 
 	!paint->nrrd->data &&
 	paint->nrrd->dim >= 2 &&
@@ -3392,29 +3379,15 @@ ViewSlices::fill_paint_slices(SliceWindow &window) {
       paint->nrrd->data = 0;
     }
 
-    if (newpaint->nrrd && 
-	!paint->nrrd->data &&
-	newpaint->nrrd->dim >= 2 &&
-	(wid != newpaint->nrrd->axis[0].size ||
-	 hei != newpaint->nrrd->axis[1].size)) {
-      nrrdNuke(newpaint->nrrd);
-      newpaint->nrrd->data = 0;
-    }
-	
-    window.paint_slices_[a]->tex_dirty_ = true;
+    slice.tex_dirty_ = true;
+    slice.slice_num_ = window.slice_num_;
 
     if (!paint->nrrd->data) {
       nrrdAlloc(paint->nrrd, nrrdTypeFloat, 3, 4, wid, hei);
     }
 
-    if (!newpaint->nrrd->data) {
-      nrrdAlloc(newpaint->nrrd, nrrdTypeFloat, 3, 4, wid, hei);
-    }
-
-    //    unsigned char *graddata = (unsigned char *)gradient_->data;
-    float *paintdata =  (float *)window.paint_slices_[a]->nrrd_->nrrd->data;
-    
-    //    memset(paintdata, sizeof(float)*wid*hei*4, 0);
+    float *paintdata =  (float *)slice.nrrd_->nrrd->data;
+    memset(paintdata, sizeof(float)*wid*hei*4, 0);
     double val, grad;
     int cval;
     int pos;
@@ -3436,13 +3409,14 @@ ViewSlices::fill_paint_slices(SliceWindow &window) {
 	  memcpy(paintdata+pos, 
 		 &cm2_buffer_(Round(grad), cval, 0), 
 		 4*sizeof(float));
+#if 0
 	else {
 	  paintdata[pos+0] = 0.0;
 	  paintdata[pos+1] = 0.0;
 	  paintdata[pos+2] = 0.0;
 	  paintdata[pos+3] = 0.0;
 	}
-
+#endif
       }
     }
   }
