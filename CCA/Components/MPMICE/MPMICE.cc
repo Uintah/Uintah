@@ -2,6 +2,7 @@
 #include <Packages/Uintah/CCA/Components/MPMICE/MPMICE.h>
 #include <Packages/Uintah/CCA/Components/MPMICE/MPMICELabel.h>
 #include <Packages/Uintah/CCA/Components/MPM/SerialMPM.h>
+#include <Packages/Uintah/CCA/Components/MPM/RigidMPM.h>
 #include <Packages/Uintah/CCA/Components/HETransformation/Burn.h>
 #include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/ConstitutiveModel.h>
 #include <Packages/Uintah/CCA/Components/MPM/ThermalContact/ThermalContact.h>
@@ -43,13 +44,20 @@ static DebugStream cout_doing("MPMICE_DOING_COUT", false);
 //#define FAKE_BURN_MODEL
 #undef FAKE_BURN_MODEL
 
+#undef RIGID_MPM
+//#define RIGID_MPM
+
 MPMICE::MPMICE(const ProcessorGroup* myworld)
   : UintahParallelComponent(myworld)
 {
   Mlb  = scinew MPMLabel();
   Ilb  = scinew ICELabel();
   MIlb = scinew MPMICELabel();
+#ifdef RIGID_MPM
+  d_mpm      = scinew RigidMPM(myworld);
+#else
   d_mpm      = scinew SerialMPM(myworld);
+#endif
   d_ice      = scinew ICE(myworld);
   d_SMALL_NUM = d_ice->d_SMALL_NUM; 
   d_TINY_RHO  = d_ice->d_TINY_RHO;
@@ -1264,9 +1272,13 @@ void MPMICE::interpolateCCToNC(const ProcessorGroup*,
         for(int in=0;in<8;in++){
           dvdt_tmp  = (mom_L_ME_CC[cIdx[in]] - old_mom_L_CC[cIdx[in]])
                     / (mass_L_CC[cIdx[in]] * delT); 
-                    
+#ifdef RIGID_MPM
+//        gvelocity[*iter]     +=  dvdt_tmp*.125*delT;
+//        gacceleration[*iter] +=  dvdt_tmp*.125;
+#else
           gvelocity[*iter]     +=  dvdt_tmp*.125*delT;
           gacceleration[*iter] +=  dvdt_tmp*.125;
+#endif
           gSp_vol_src[*iter]   +=  (sp_vol_src[cIdx[in]]/delT) * 0.125;
         }
       }    
