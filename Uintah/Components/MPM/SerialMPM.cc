@@ -657,6 +657,7 @@ void SerialMPM::solveEquationsMotion(const ProcessorContext*,
 				     DataWarehouseP& new_dw)
 {
   Vector zero(0.,0.,0.);
+  Vector gravity;
 
   // This needs the datawarehouse to allow indexing by velocity
   // field for the grid data
@@ -673,6 +674,15 @@ void SerialMPM::solveEquationsMotion(const ProcessorContext*,
       NCVariable<Vector> internalforce;
       NCVariable<Vector> externalforce;
 
+#if 0
+      if(vfindex==0){
+	gravity=Vector(0.0,0.0,0.0);
+      }
+      else{
+	gravity=Vector(0.0,0.0,-980.0);
+      }
+#endif
+
       new_dw->get(mass,          gMassLabel, vfindex, region, 0);
       new_dw->get(internalforce, gInternalForceLabel, vfindex, region, 0);
       new_dw->get(externalforce, gExternalForceLabel, vfindex, region, 0);
@@ -684,9 +694,9 @@ void SerialMPM::solveEquationsMotion(const ProcessorContext*,
       // Do the computation of a = F/m for nodes where m!=0.0
       for(NodeIterator iter = region->getNodeIterator(); !iter.done(); iter++){
 	if(mass[*iter]>0.0){
-//          cerr << "Internal Force = " << internalforce[*iter] << '\n';
 	  acceleration[*iter] =
-		 (internalforce[*iter] + externalforce[*iter])/ mass[*iter];
+		 (internalforce[*iter] + externalforce[*iter])/ mass[*iter]
+		 + gravity;
 	}
 	else{
 	  acceleration[*iter] = zero;
@@ -751,6 +761,7 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorContext*,
   // velocity and position respectively
   Vector vel(0.0,0.0,0.0);
   Vector acc(0.0,0.0,0.0);
+  double ke=0;
 
   // This needs the datawarehouse to allow indexing by material
 
@@ -808,7 +819,6 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorContext*,
       ParticleSubset* pset = px.getParticleSubset();
       ASSERT(pset == pvelocity.getParticleSubset());
 
-      double ke=0;
       for(ParticleSubset::iterator iter = pset->begin();
           iter != pset->end(); iter++){
 	 particleIndex idx = *iter;
@@ -839,14 +849,10 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorContext*,
 
       }
 
-      static ofstream tmpout("tmp.out");
-      static int ts=0;
-      tmpout << ts << " " << ke << std::endl;
 #if 0
       static ofstream tmpout2("tmp2.out");
       tmpout2 << ts << " " << px[0] << std::endl;
 #endif
-      ts++;
 
       // Store the new result
       new_dw->put(px,        pXLabel, matlindex, region);
@@ -862,6 +868,11 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorContext*,
       new_dw->put(pexternalforce, pExternalForceLabel, matlindex, region);
     }
   }
+
+  static ofstream tmpout("tmp.out");
+  static int ts=0;
+  tmpout << ts << " " << ke << std::endl;
+  ts++;
 }
 
 void SerialMPM::crackGrow(const ProcessorContext*,
@@ -873,6 +884,10 @@ void SerialMPM::crackGrow(const ProcessorContext*,
 
 
 // $Log$
+// Revision 1.47  2000/05/09 21:33:02  guilkey
+// Added gravity to the acceleration.  Currently hardwired, I need a little
+// help seeing how to get it out of the ProblemSpec.
+//
 // Revision 1.46  2000/05/09 03:27:55  jas
 // Using the enums for boundary conditions hack.
 //
