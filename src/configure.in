@@ -486,9 +486,12 @@ if test "$enable_parallel" = "yes"; then
   parallel_output="
 	        SCICore/globus_threads/Makefile \
 	      Component/Makefile \
+	        Component/CIA/Makefile \
 	        Component/PIDL/Makefile \
 	        tools/sidl/Makefile 
 		testprograms/Component/Makefile \
+		  testprograms/Component/mitest/Makefile \
+		  testprograms/Component/objects/Makefile \
 		  testprograms/Component/pingpong/Makefile \
 		"
   BUILD_PARALLEL="yes"
