@@ -36,10 +36,14 @@ bool global_remote = false;
 Module::Module(const clString& name, const clString& id,
 	       SchedClass sched_class)
 : state(NeedData), helper(0), have_own_dispatch(0), mailbox(100),
-  name(name), abort_flag(0), need_execute(0), sched_class(sched_class),
+  name(name), abort_flag(0), need_execute(0),
+  sched_class(sched_class),
   id(id), progress(0), handle(0), remote(0), skeleton(0),
   notes("notes", id, this)
 {
+  packageName="error: unset package name";
+  categoryName="error: unset category name";
+  moduleName="error: unset module name";
 }
 
 Module::Module(const Module& copy, int)
@@ -443,6 +447,9 @@ void Module::multisend(OPort* p1, OPort* p2)
 
 //
 // $Log$
+// Revision 1.2  1999/07/30 17:12:28  kuzimmer
+// Fixed Saving and loading
+//
 // Revision 1.1  1999/07/27 16:55:57  mcq
 // Initial commit
 //
