@@ -161,6 +161,7 @@ static string widget_name("CuttingPlane Widget");
 CuttingPlane::CuttingPlane(GuiContext* ctx) :
   Module("CuttingPlane", ctx, Filter, "Visualization", "Uintah"),
   widget_lock("Cutting plane widget lock"),
+  widget_id(0),
   cutting_plane_type(ctx->subVar("cutting_plane_type")),
   num_contours(ctx->subVar("num_contours")), 
   offset(ctx->subVar("offset")), scale(ctx->subVar("scale")), 
@@ -169,12 +170,12 @@ CuttingPlane::CuttingPlane(GuiContext* ctx) :
   localMinMaxGUI(ctx->subVar("localMinMaxGUI")), 
   fullRezGUI(ctx->subVar("fullRezGUI")),
   exhaustiveGUI(ctx->subVar("exhaustiveGUI")),
-  xt(ctx->subVar("xt")), yt(ctx->subVar("yt")), zt(ctx->subVar("zt"))
+  xt(ctx->subVar("xt")), yt(ctx->subVar("yt")), zt(ctx->subVar("zt")),
+  grid_id(0)
 {
     float INIT(.1);
 
     widget = scinew FrameWidget(this, &widget_lock, INIT, true);
-    grid_id=0;
 
     need_find.set(1);
     
@@ -230,6 +231,9 @@ void CuttingPlane::execute()
 
     if (init == 1 || need_find.get() != find) 
     {
+//       if (widget_id != 0) {
+// 	ogeom->delObj( widget_id );
+//       }
       init = 0;
       GeomObj *w = widget->GetWidget() ;
       Transform t;  t.post_translate( Vector( xt.get(), yt.get(), zt.get()));
@@ -372,7 +376,8 @@ void CuttingPlane::execute()
       int most=Max(Max(nx, ny), nz);
       u_num=v_num=most;
     }
-    //    cout << "u fac = " << u_fac << "\nv fac = " << v_fac << endl;
+//         cout << "u fac = " << u_fac << "\nv fac = " << v_fac << endl;
+//         cout << "u num = " << u_num << "\nv num = " << v_num << endl;
     
     int localMinMax=localMinMaxGUI.get();
 
@@ -425,6 +430,11 @@ void CuttingPlane::execute()
 	    invrange=(cmapmax-cmapmin)/(maxval-minval);
 	}
 
+	
+	ScalarFieldInterface *sfi = 0;
+	if( field->get_type_name(0) == "LatVolField")
+	  sfi = field->query_scalar_interface();
+	
 	for (i = 0; i < u_num; i++)
 	  for (j = 0; j < v_num; j++) {
 	    Point p = corner + u * ((double) i/(u_num-1)) + 
@@ -436,7 +446,8 @@ void CuttingPlane::execute()
 // 	    if (sfield->interpolate( p, sval, ix) 
 // 		|| (ix=0) || 
 // 		sfield->interpolate( p, sval, ix, EPS, EPS, exhaustive)) {
-	    if( interpolate( field, p, sval) ){
+	    if( sfi->interpolate( sval, p)){
+// 		interpolate( field, p, sval) ){
 		if (localMinMax)	// use local min/max to scale
 		    sval=(sval-minval)*invrange+cmapmin;
 		matl = cmap->lookup( sval);
