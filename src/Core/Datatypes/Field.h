@@ -84,9 +84,7 @@ public:
   virtual const GeomHandle getGeom() const;
 
   //////////
-  // Adds attribute to the field
-  // Returns order number of the attribute in the field or -1 if the attribute was not registred
-  // TODO: checking needed if the attribute is in correspondence with geometry
+  // Adds attribute to the field and sets current attribute name to its name
   void addAttribute(const AttribHandle&);
   
   //////////

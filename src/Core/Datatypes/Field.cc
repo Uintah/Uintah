@@ -102,6 +102,7 @@ void Field::addAttribute(const AttribHandle& hAttrib){
   AttribMap::const_iterator ii=d_attribHandles.find(aName);
   if (ii==d_attribHandles.end()){
     d_attribHandles[aName]=hAttrib;
+    d_currAttrib = aName;
   }
 }
 
