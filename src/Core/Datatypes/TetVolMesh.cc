@@ -1492,7 +1492,7 @@ TetVolMesh::bisect_element(const Cell::index_type cell)
   for (face = 0; face < 4; ++face)
     get_neighbor(face_neighbors[face], Face::index_type(cell*4+face));
 
-  set<unsigned> done;
+  set<Cell::index_type> done;
   done.insert(cell);
 
   Cell::array_type tets(8);
