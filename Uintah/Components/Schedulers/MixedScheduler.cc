@@ -19,6 +19,9 @@
 
 #include <set>
 #include <map>
+#ifdef __aix
+#include <algorithm>
+#endif
 
 using namespace Uintah;
 using SCICore::Thread::Time;
@@ -1694,6 +1697,9 @@ MixedScheduler::releaseLoadBalancer()
 
 //
 // $Log$
+// Revision 1.4  2000/09/28 20:23:21  bigler
+// Addind #include <algorithm> for aix
+//
 // Revision 1.3  2000/09/28 02:15:51  dav
 // updates due to not sending 0 particles
 //
