@@ -17,7 +17,8 @@ SRCS     += $(SRCDIR)/SerialMPM.cc \
 	$(SRCDIR)/ShellMPM.cc \
 	$(SRCDIR)/PetscSolver.cc \
 	$(SRCDIR)/SimpleSolver.cc \
-	$(SRCDIR)/MPMBoundCond.cc
+	$(SRCDIR)/MPMBoundCond.cc \
+	$(SRCDIR)/MPMFlags.cc 
 #	$(SRCDIR)/MPMAlgorithm.cc \
 #	$(SRCDIR)/MPMDriver.cc \
 #	$(SRCDIR)/Implicit.cc \
