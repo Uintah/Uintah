@@ -14,6 +14,7 @@ INCLUDES += $(INSIGHT_INCLUDE)
 SRCDIR   := Packages/Insight/Core/Datatypes
 
 SRCS     += $(SRCDIR)/ITKDatatype.cc \
+	$(SRCDIR)ITKLatVolField.h \
 
 #[INSERT NEW CODE FILE HERE]
 
