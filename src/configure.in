@@ -477,6 +477,7 @@ if test "$ITCL_VERSION" = "3.0" ; then
   fi
   ITCL_INCLUDE_DIR="${ITCL_PREFIX}/include"
   ITCL_LIB_DIR="${ITCL_PREFIX}/lib"
+  ITCL_BIN_DIR="${ITCL_PREFIX}/bin"
   ITCL_LIB_FLAG="-litk3.0 -litcl3.0"
   ITCL_WIDGETS="${ITCL_LIB_DIR}/iwidgets/scripts"
 
@@ -494,39 +495,10 @@ fi
 
 AC_SUBST(ITCL_INCLUDE_DIR)
 AC_SUBST(ITCL_LIB_DIR)
+AC_SUBST(ITCL_BIN_DIR)
 AC_SUBST(ITCL_LIB_FLAG)
 AC_SUBST(ITCL_WIDGETS)
 
-##-- Find Nektar--------------------------------------------------------------
-
-AC_ARG_WITH(with_nektar,
-	[  --with-nektar=DIR		Use the nektar installation in DIR],
-	[with_nektar="$withval"],
-	[with_nektar=${with_nektar='no'}])
-
-
-if ! test "${with_nektar}" = "no"; then
-  NEKTAR_PREFIX=${with_nektar}
-  NEKTAR_INCLUDE_DIR="${NEKTAR_PREFIX}/include"
-  NEKTAR_LIB_DIR="${NEKTAR_PREFIX}/lib"
-  NEKTAR_LIB_FLAG="-lhybridopt -lvec"
-  echo "with Nektar at ${NEKTAR_PREFIX}"
-fi
-
-AC_SUBST(NEKTAR_INCLUDE_DIR)
-AC_SUBST(NEKTAR_LIB_DIR)
-AC_SUBST(NEKTAR_LIB_FLAG)
-
-
-##-- Find etags ------------------------------------------------------------
-
-AC_PATH_PROG(ETAGS, etags, notfound)
-if test "$ETAGS" = "notfound" ; then
-  echo "\tetags not found"
-else
-  echo "\tFound etags at " $ETAGS
-fi
- 
 ##-- Find BLT ---------------------------------------------------------------
 echo -n "Looking for Pre-built blt2.4... "
 
@@ -559,14 +531,49 @@ AC_SUBST(BLT_INCLUDE_DIR)
 AC_SUBST(BLT_LIB_DIR)
 AC_SUBST(BLT_LIB_FLAG)
 
-##-- Find location of GL headers --------------------------------------------
+##-- Find Nektar--------------------------------------------------------------
 
-echo -n "Looking for location of GL headers... "
+AC_ARG_WITH(with_nektar,
+	[  --with-nektar=DIR		Use the nektar installation in DIR],
+	[with_nektar="$withval"],
+	[with_nektar=${with_nektar='no'}])
+
+
+if ! test "${with_nektar}" = "no"; then
+  NEKTAR_PREFIX=${with_nektar}
+  NEKTAR_INCLUDE_DIR="${NEKTAR_PREFIX}/include"
+  NEKTAR_LIB_DIR="${NEKTAR_PREFIX}/lib"
+  NEKTAR_LIB_FLAG="-lhybridopt -lvec"
+  echo "with Nektar at ${NEKTAR_PREFIX}"
+fi
+
+AC_SUBST(NEKTAR_INCLUDE_DIR)
+AC_SUBST(NEKTAR_LIB_DIR)
+AC_SUBST(NEKTAR_LIB_FLAG)
+
+
+##-- Find etags ------------------------------------------------------------
+
+AC_PATH_PROG(ETAGS, etags, notfound)
+if test "$ETAGS" = "notfound" ; then
+  echo "\tetags not found"
+fi
+ 
+
+##-- Find location of OpenGL -----------------------------------------------
+
+echo -n "checking for OpenGL... "
 
 if test -e /usr/include/GL; then
   GL_INCLUDE_DIR="/usr/include"
 elif test -e /usr/X11R6/include/GL; then
   GL_INCLUDE_DIR="/usr/X11R6/include"
+fi
+
+if test -c /usr/lib/libGL.so; then
+  GL_LIB_DIR="/usr/lib"
+elif test -e /usr/X11R6/lib/libGL.so; then
+  GL_LIB_DIR="/usr/X11R6/lib"
 fi
 
 if test "$GL_INCLUDE_DIR" = ""; then
@@ -575,17 +582,12 @@ if test "$GL_INCLUDE_DIR" = ""; then
   echo ""
   exit 1
 else
-  echo $GL_INCLUDE_DIR/GL
+  echo libraries $GL_LIB_DIR, headers $GL_INCLUDE_DIR/GL
 fi
 
 AC_SUBST(GL_INCLUDE_DIR)
+AC_SUBST(GL_LIB_DIR)
 
-##-- Find etags ------------------------------------------------------------
-
-AC_PATH_PROG(ETAGS, etags, notfound)
-if test "$ETAGS" = "notfound" ; then
-  echo "\tetags not found"
-fi
 
 ##-- Check for option to build new parallel (distributed memory) SCIRun ------
 
@@ -724,12 +726,17 @@ AC_SUBST(LEXLIB)
 
 AC_OUTPUT(Makefile \
 	  sci_defs.h \
+	  scripts/createTclIndex \
 	      , echo timestamp > stamp-h
          )
 
 #
 # $Log$
+# Revision 1.65  2000/09/03 23:47:17  moulding
+# added stuff to allow executables to be assigned as well as libraries for the --with-tcl configure option
+#
 # Revision 1.64  2000/08/10 15:22:55  kirby
+#
 # nektar fixes
 #
 # Revision 1.63  2000/08/10 14:29:34  jehall
