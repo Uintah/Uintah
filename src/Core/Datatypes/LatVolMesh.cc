@@ -543,7 +543,7 @@ const string find_type_name(LatVolMesh::CellIndex *)
   return name;
 }
 
-#define LATVOLMESH_VERSION 2
+#define LATVOLMESH_VERSION 3
 
 void
 LatVolMesh::io(Piostream& stream)
@@ -568,6 +568,8 @@ LatVolMesh::io(Piostream& stream)
     transform_.pre_scale(max - min);
     transform_.pre_translate(Vector(min));
     transform_.compute_imat();
+  } else if (version < 3 && stream.reading() ) {
+    Pio_old(stream, transform_);
   }
   else
   {

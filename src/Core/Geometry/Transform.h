@@ -18,22 +18,24 @@
 #ifndef Geometry_Transform_h
 #define Geometry_Transform_h 1
 
+#include <Core/Persistent/Persistent.h>
 #include <Core/share/share.h>
 #include <string>
 
 namespace SCIRun {
 
-  class Vector;
-  class Point;
-  class Quaternion;
-  class Piostream;
-  class Plane;
-  class Transform;
-  class TypeDescription;
-  
-void SCICORESHARE Pio(Piostream&, Transform&);
+class Vector;
+class Point;
+class Quaternion;
+class Piostream;
+class Plane;
+class Transform;
+class TypeDescription;
 
-class SCICORESHARE Transform {
+void Pio_old(Piostream&, Transform&);
+void Pio(Piostream&, Transform*&);
+
+class SCICORESHARE Transform : public Persistent {
   double mat[4][4];
   double imat[4][4];
   int inverse_valid;
@@ -59,6 +61,13 @@ public:
   Transform& operator=(const Transform&);
   ~Transform();
   Transform(const Point&, const Vector&, const Vector&, const Vector&);
+
+
+  //! Persistent I/O.
+  static PersistentTypeID type_id;
+  virtual void io(Piostream &stream);
+  friend void Pio_old(Piostream&, Transform&);
+  friend void Pio(Piostream&, Transform*&);
 
   void load_frame(const Point&,const Vector&, const Vector&, const Vector&);
 
@@ -107,14 +116,13 @@ public:
   void compute_imat();
   void invert();
   bool inv_valid()
-    {
-      return inverse_valid;
-    }
+  {
+    return inverse_valid;
+  }
 
   //! support dynamic compilation
   static const std::string& get_h_file_path();
 
-  friend void SCICORESHARE Pio(Piostream&, Transform&);
 };
 
 const TypeDescription* get_type_description(Transform*);

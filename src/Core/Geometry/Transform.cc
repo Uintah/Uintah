@@ -41,6 +41,14 @@ using std::endl;
 
 namespace SCIRun {
 
+Persistent* transform_maker() {
+  return new Transform();
+}
+
+// initialize the static member type_id
+PersistentTypeID Transform::type_id("Transform", "Persistent", 
+				    transform_maker);
+
 Transform::Transform()
 {
   load_identity();
@@ -767,19 +775,43 @@ Transform& Transform::operator=(const Transform& copy)
   return *this;
 }
 
-void SCICORESHARE Pio(Piostream& stream, Transform& trans){
+const int TRANSFORM_VERSION = 1;
+
+void 
+Transform::io(Piostream& stream) {
   
-  stream.begin_cheap_delim();
- 
+  stream.begin_class("Transform", TRANSFORM_VERSION);
   for (int i=0; i<4; i++)
     for (int j=0; j<4; j++){
-      Pio(stream, trans.mat[i][j]);
-      Pio(stream, trans.imat[i][j]);
+      Pio(stream, mat[i][j]);
+      Pio(stream, imat[i][j]);
     }
  
-  Pio(stream, trans.inverse_valid);
+  Pio(stream, inverse_valid);
+  
+  stream.end_class();
+}
+
+void Pio_old(Piostream& stream, Transform& obj) {
+  stream.begin_cheap_delim();
+  for (int i=0; i<4; i++)
+    for (int j=0; j<4; j++){
+      Pio(stream, obj.mat[i][j]);
+      Pio(stream, obj.imat[i][j]);
+    }
+ 
+  Pio(stream, obj.inverse_valid);
   
   stream.end_cheap_delim();
+}
+
+void Pio(Piostream& stream, Transform*& obj)
+{
+  SCIRun::Persistent* pobj=obj;
+  stream.io(pobj, Transform::type_id);
+  if(stream.reading()) {
+    obj=(Transform*)pobj;
+  }
 }
 
 const string& 
