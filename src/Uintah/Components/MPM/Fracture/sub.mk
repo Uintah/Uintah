@@ -9,10 +9,14 @@ SRCS     += $(SRCDIR)/Fracture.cc \
 	$(SRCDIR)/FractureFactory.cc \
 	$(SRCDIR)/Lattice.cc \
 	$(SRCDIR)/Cell.cc \
-	$(SRCDIR)/ParticlesNeighbor.cc
+	$(SRCDIR)/ParticlesNeighbor.cc \
+	$(SRCDIR)/CellsNeighbor.cc
 
 #
 # $Log$
+# Revision 1.8  2000/06/06 00:07:26  tan
+# Created class CellsNeighbor to handle cells neighbor computation.
+#
 # Revision 1.7  2000/06/05 21:20:03  tan
 # Added class ParticlesNeighbor to handle neighbor particles searching.
 #
