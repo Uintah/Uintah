@@ -72,7 +72,7 @@ void ConfigureElectrode::execute() {
   double voltage = voltage_.get();
   string active = active_.get();
 
-  CurveMesh::Node::iterator ni, ne;
+  CurveMesh::Node::iterator ni;
   elecFld->get_typed_mesh()->begin(ni);
   elecFld->fdata()[*ni]=voltage;
 
