@@ -19,7 +19,6 @@
 #include <Packages/Uintah/Core/Grid/SimulationStateP.h>
 
 #define MNM 10   // maximum number of materials
-#define MNP 1000 // maximum number of crack points
 
 namespace Uintah {
 using namespace SCIRun;
@@ -140,34 +139,36 @@ class Crack
      int NGP;
      int NGN;
 
-     // Data members for cracks
-     Point cmin[MNM],cmax[MNM];       //crack extent
-     int numElems[MNM];               //number of carck elements    
-     int numPts[MNM];                 //number of crack points
-     double c_mu[MNM];                //Frcition coefficients
-     double separateVol[MNM];         //critical separate volume
-     double contactVol[MNM];          //critical contact volume
-     string crackType[MNM];           //crack contact type
-     Point cx[MNM][MNP];              //crack position
-     short moved[MNM][MNP];           //if crack point moved
-     IntVector cElemNodes[MNM][MNP];  //crack nodes
-     Vector cElemNorm[MNM][MNP];      //crack element normals     
- 
+     // member data of cracks
+     string crackType[MNM];                //crack contact type
+     double c_mu[MNM];                     //Frcition coefficients
+     double separateVol[MNM];              //critical separate volume
+     double contactVol[MNM];               //critical contact volume
+
      //crack geometry
      //quadrilateral segments of cracks
-     vector<vector<Point> > allRects[MNM];
- 
-     //resolution of quadrilateral cracks in 12 direstion 
-     vector<int>  allN12[MNM];       
-     
-     //resolution of quadrilateral cracks in 23 direction 
-     vector<int>  allN23[MNM];       
+     vector<vector<Point> > rectangles[MNM];
+     //resolution of quadrilateral cracks in 1-2 & 2-3 directions 
+     vector<int>  rectN12[MNM],rectN23[MNM];       
+     //sides at crack front
+     vector<vector<short> > rectCrackSidesAtFront[MNM];
      
      //trianglular segements of cracks 
-     vector<vector<Point> > allTris[MNM];
-
+     vector<vector<Point> > triangles[MNM];
      //resolution of triangular cracks in all sides 
-     vector<int>  allNCell[MNM];
+     vector<int>  triNCells[MNM];
+     //sides at crack front
+     vector<vector<short> > triCrackSidesAtFront[MNM];
+     Point cmin[MNM],cmax[MNM];            //crack extent
+
+     // crack data after mesh  
+     vector<Point> cx[MNM];                //crack node position
+     int cnumElems[MNM];                   //number of carck elements
+     int cnumNodes[MNM];                   //number of crack points
+     vector<IntVector> cElemNodes[MNM];    //nodes of crack elements
+     vector<Vector> cElemNorm[MNM];        //crack element normals
+     vector<Point> cFrontSegPoints[MNM];   //crack front segments
+     vector<short> moved[MNM];             //if crack points moved
 
      // private methods  
      // Calculate normal of a triangle
@@ -179,6 +180,8 @@ class Crack
      double Volume(const Point&,const Point&,const Point&,const Point&);
      // a private function
      IntVector CellOffset(const Point&, const Point&, Vector);
+     // detect if a line is in another line
+     short TwoLinesDuplicate(const Point&,const Point&,const Point&,const Point&);
 
  protected:
      
