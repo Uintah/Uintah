@@ -46,7 +46,7 @@ conductivities.
 
 Technical note: The current density vector field J is the product of sigma and -del V.
 The minus sign is added in ComputeCurrent, so the electric field input should be
-positive (which is the unmodified output of the Gradient module).</p>
+positive (which is the unmodified output of the <modref package="SCIRun" name="Gradient"/> module).</p>
     </description>
   </overview>
   <io>
