@@ -58,7 +58,15 @@ class SampleField : public Module
   bool           firsttime_;
   int            widgetid_;
   Point          endpoint0_,endpoint1_;
-  double         widgetscale_;
+
+  GuiInt    endpoints_;
+  GuiDouble endpoint0x_;
+  GuiDouble endpoint0y_;
+  GuiDouble endpoint0z_;
+  GuiDouble endpoint1x_;
+  GuiDouble endpoint1y_;
+  GuiDouble endpoint1z_;
+  GuiDouble widgetscale_;
 
   GuiInt maxSeeds_;
   GuiInt numSeeds_;
@@ -90,6 +98,16 @@ extern "C" Module* make_SampleField(const string& id) {
 
 SampleField::SampleField(const string& id)
   : Module("SampleField", id, Filter, "Fields", "SCIRun"),
+
+    endpoints_ ("endpoints",  id, this),
+    endpoint0x_("endpoint0x", id, this),
+    endpoint0y_("endpoint0y", id, this),
+    endpoint0z_("endpoint0z", id, this),
+    endpoint1x_("endpoint1x", id, this),
+    endpoint1y_("endpoint1y", id, this),
+    endpoint1z_("endpoint1z", id, this),
+    widgetscale_ ("widgetscale",  id, this),
+
     maxSeeds_("maxseeds", id, this),
     numSeeds_("numseeds", id, this),
     rngSeed_("rngseed", id, this),
@@ -106,6 +124,7 @@ SampleField::SampleField(const string& id)
   rake_ = 0;
 
   firsttime_ = true;
+  endpoints_.set( 0 );
 }
 
 
@@ -119,7 +138,17 @@ SampleField::widget_moved(int i)
 {
   if (i == 1)
   {
-    if (rake_) rake_->GetEndpoints(endpoint0_,endpoint1_);
+    if (rake_) {
+      rake_->GetEndpoints(endpoint0_,endpoint1_);
+
+      endpoint0x_.set( endpoint0_.x() );
+      endpoint0y_.set( endpoint0_.y() );
+      endpoint0z_.set( endpoint0_.z() );
+      endpoint1x_.set( endpoint1_.x() );
+      endpoint1y_.set( endpoint1_.y() );
+      endpoint1z_.set( endpoint1_.z() );
+    }
+
     autoexec_.reset();
     if (autoexec_.get())
     {
@@ -140,31 +169,39 @@ SampleField::generate_widget_seeds(Field *field)
 
   if (firsttime_) {
     firsttime_ = false;
-    Point center(min.x()+(max.x()-min.x())/2.,
-		 min.y()+(max.y()-min.y())/2.,
-		 min.z()+(max.z()-min.z())/2.);
 
-    double x  = max.x()-min.x();
-    double x2 = x*x;
-    double y  = max.y()-min.y();
-    double y2 = y*y;
-    double z  = max.z()-min.z();
-    double z2 = z*z;
+    if(!endpoints_.get()) {
+      Point center(min.x()+(max.x()-min.x())/2.,
+		   min.y()+(max.y()-min.y())/2.,
+		   min.z()+(max.z()-min.z())/2.);
+
+      double x  = max.x()-min.x();
+      double x2 = x*x;
+      double y  = max.y()-min.y();
+      double y2 = y*y;
+      double z  = max.z()-min.z();
+      double z2 = z*z;
   
-    quarterl2norm = sqrt(x2+y2+z2)/4.;
-    widgetscale_ = quarterl2norm*.06;// this size seems empirically good
+      quarterl2norm = sqrt(x2+y2+z2)/4.;
+      widgetscale_.set( quarterl2norm*.06 );// this size seems empirically good
 
-    endpoint0_ = Point(center.x()-quarterl2norm,
-		       center.y()-quarterl2norm/3,
-		       center.z()-quarterl2norm/4);
-    endpoint1_ = Point(center.x()+quarterl2norm,
-		       center.y()+quarterl2norm/2,
-		       center.z()+quarterl2norm/3);
+      endpoint0x_.set( center.x()-quarterl2norm   );
+      endpoint0y_.set( center.y()-quarterl2norm/3 );
+      endpoint0z_.set( center.z()-quarterl2norm/4 );
+      endpoint1x_.set( center.x()+quarterl2norm   );
+      endpoint1y_.set( center.y()+quarterl2norm/2 );
+      endpoint1z_.set( center.z()+quarterl2norm/3 );
+
+      endpoints_.set( 1 );
+    }
+
+    endpoint0_ = Point( endpoint0x_.get(),endpoint0y_.get(),endpoint0z_.get() ); 
+    endpoint1_ = Point( endpoint1x_.get(),endpoint1y_.get(),endpoint1z_.get() ); 
   }
 
   if (!rake_)
   {
-    rake_ = scinew GaugeWidget(this, &widget_lock_, widgetscale_, false);
+    rake_ = scinew GaugeWidget(this, &widget_lock_, widgetscale_.get(), false);
     rake_->SetEndpoints(endpoint0_,endpoint1_);
     GeomGroup *widget_group = scinew GeomGroup;
     widget_group->add(rake_->GetWidget());
