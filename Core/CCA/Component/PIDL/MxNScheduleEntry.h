@@ -37,6 +37,8 @@
 #include <Core/Thread/Mutex.h>
 #include <Core/CCA/Component/PIDL/MxNArrayRep.h>
 
+#define DEBUG_THE_SEMAS
+
 /**************************************
 				       
   CLASS
@@ -205,6 +207,14 @@ namespace SCIRun {
     ///////
     // Used to determine whether we should let the array pointer to be set
     bool allowArraySet;
+
+#ifdef DEBUG_THE_SEMAS
+    int recv_sema_count;
+    int arr_wait_sema_count;
+    int meta_sema_count;
+    void printSemaCounts();
+#endif
+
   };
 } // End namespace SCIRun
 
