@@ -82,23 +82,27 @@ itcl_class Teem_DataIO_NrrdReader {
 	
 	# file types to appers in filter box
 	set types {
-            {{Nrrd Files}         {.nhdr .nrrd}   }
+            {{Nrrd Files}         {.nhdr .nrrd .nd}   }
 	    {{NrrdData File}      {.nd}           }
 	    {{All Files}          {.*}            }
 	}
 	
 	######################################################
-	
-	return \
-	    [makeOpenFilebox \
-		 -parent $w \
-		 -filevar $this-filename \
-		 -command "set $this-axis \"\";$this-c read_nrrd; wm withdraw $w" \
-		 -cancel "wm withdraw $w" \
-		 -title $title \
-		 -filetypes $types \
-		 -initialdir $initdir \
-		 -defaultextension $defext]
+
+	makeOpenFilebox \
+	    -parent $w \
+	    -filevar $this-filename \
+	    -command "set $this-axis \"\";$this-c read_nrrd; wm withdraw $w" \
+	    -cancel "wm withdraw $w" \
+	    -title $title \
+	    -filetypes $types \
+	    -initialdir $initdir \
+	    -defaultextension $defext
+
+	moveToCursor $w
+	wm deiconify $w
+
+	return $w
     }
 
     method update_type {om} {
