@@ -602,6 +602,73 @@ namespace Uintah {
       const VarLabel* d_sootFVINPredLabel;
       // reactive scalar source term from properties
       const VarLabel* d_reactscalarSRCINPredLabel;
+      
+      // runge-kutta 3d order scalar labels
+      const VarLabel* d_scalCoefIntermLabel;
+      const VarLabel* d_scalNonLinSrcIntermLabel;
+      const VarLabel* d_scalarIntermLabel;
+      const VarLabel* d_scalConvCoefIntermLabel;
+      const VarLabel* d_scalDiffCoefIntermLabel;
+      const VarLabel* d_scalLinSrcIntermLabel;
+      const VarLabel* d_scalarTempLabel;
+      
+      // runge-kutta 3d order enthalpy labels
+      const VarLabel* d_enthCoefIntermLabel;
+      const VarLabel* d_enthNonLinSrcIntermLabel;
+      const VarLabel* d_enthalpyIntermLabel;
+      const VarLabel* d_enthConvCoefIntermLabel;
+      const VarLabel* d_enthDiffCoefIntermLabel;
+      const VarLabel* d_enthLinSrcIntermLabel;
+      const VarLabel* d_enthalpyTempLabel;
+
+      // runge-kutta 3d order reactscalar labels
+      const VarLabel* d_reactscalCoefIntermLabel;
+      const VarLabel* d_reactscalNonLinSrcIntermLabel;
+      const VarLabel* d_reactscalarIntermLabel;
+      const VarLabel* d_reactscalConvCoefIntermLabel;
+      const VarLabel* d_reactscalLinSrcIntermLabel;
+      const VarLabel* d_reactscalarTempLabel;
+      
+      // runge-kutta 3d order properties labels
+      const VarLabel* d_densityIntermLabel;     
+      const VarLabel* d_viscosityIntermLabel;
+      const VarLabel* d_drhodfIntermLabel;
+      const VarLabel* d_tempINIntermLabel;
+      const VarLabel* d_co2INIntermLabel; 
+      const VarLabel* d_enthalpyRXNIntermLabel; 
+      const VarLabel* d_reactscalarSRCINIntermLabel; 
+      const VarLabel* d_absorpINIntermLabel; 
+      const VarLabel* d_sootFVINIntermLabel; 
+      
+      // runge-kutta 3d order pressure and momentum labels
+      const VarLabel* d_uVelCoefPBLMIntermLabel;
+      const VarLabel* d_uVelConvCoefPBLMIntermLabel;
+      const VarLabel* d_uVelLinSrcPBLMIntermLabel;
+      const VarLabel* d_uVelNonLinSrcPBLMIntermLabel;
+      const VarLabel* d_vVelCoefPBLMIntermLabel;
+      const VarLabel* d_vVelConvCoefPBLMIntermLabel;
+      const VarLabel* d_vVelLinSrcPBLMIntermLabel;
+      const VarLabel* d_vVelNonLinSrcPBLMIntermLabel;
+      const VarLabel* d_wVelCoefPBLMIntermLabel;
+      const VarLabel* d_wVelConvCoefPBLMIntermLabel;
+      const VarLabel* d_wVelLinSrcPBLMIntermLabel;
+      const VarLabel* d_wVelNonLinSrcPBLMIntermLabel;
+      const VarLabel* d_uVelRhoHatIntermLabel;
+      const VarLabel* d_vVelRhoHatIntermLabel;
+      const VarLabel* d_wVelRhoHatIntermLabel;
+      const VarLabel* d_pressureIntermLabel;
+      const VarLabel* d_presCoefIntermLabel;
+      const VarLabel* d_presLinSrcIntermLabel;
+      const VarLabel* d_presNonLinSrcIntermLabel;
+      const VarLabel* d_uVelTempLabel;
+      const VarLabel* d_vVelTempLabel;
+      const VarLabel* d_wVelTempLabel;
+      const VarLabel* d_uVelocityIntermLabel;
+      const VarLabel* d_vVelocityIntermLabel;
+      const VarLabel* d_wVelocityIntermLabel;
+//      const VarLabel* d_velocityDivergenceLabel;
+//      const VarLabel* d_velocityDivergenceBCLabel;
+ 
     }; // End class ArchesLabel
 } // End namespace Uintah
 

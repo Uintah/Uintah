@@ -91,6 +91,9 @@ public:
       void sched_computePropsPred(SchedulerP&, const PatchSet* patches,
 				  const MaterialSet* matls);
 
+      void sched_computePropsInterm(SchedulerP&, const PatchSet* patches,
+				  const MaterialSet* matls);
+
       ///////////////////////////////////////////////////////////////////////
       // Schedule the computation of density reference array here
 
@@ -145,6 +148,12 @@ private:
 			  DataWarehouse* new_dw);
 
       void computePropsPred(const ProcessorGroup*,
+			    const PatchSubset* patches,
+			    const MaterialSubset* matls,
+			    DataWarehouse* old_dw,
+			    DataWarehouse* new_dw);
+
+      void computePropsInterm(const ProcessorGroup*,
 			    const PatchSubset* patches,
 			    const MaterialSubset* matls,
 			    DataWarehouse* old_dw,

@@ -112,7 +112,8 @@ C     East AND/OR West WALLS
 C--------------------------------------------------------------------
       DO 310 K = kst, kend
         DO 300 J = jst, jend
-           IF (PCELL(iEndGhost, J, K).EQ.PBCFLD) THEN
+           IF ((PCELL(iEndGhost, J, K).EQ.PBCFLD).or.
+     $          (PCELL(iEndGhost, J, K).EQ.outletfld)) THEN
               UU(iEndGhost+1,J,K) = UU(iEndGhost,J,K)
 c              AE(iend,J,K) = 2.0*TINY
           END IF
@@ -129,12 +130,12 @@ C--------------------------------------------------------------------
           IF ((PCELL(I,jEndGhost, K).EQ.PBCFLD).AND.
      $        (VV(I,jEndGhost+1,K).GT.0.0)) THEN
              UU(I,jEndGhost,K) = UU(I,jend,K)
-c             AN(I,jend,K) = 2.0*TINY
+             AN(I,jend,K) = 2.0*TINY
           END IF
           IF (PCELL(I,jBegGhost,K).EQ.PBCFLD.AND.
      $         VV(I,jBegGhost,K).LT.0.0) THEN
             UU(I,jBegGhost, K) = UU(I,jst,K)
-c            AS(I,jst,K) = 2.0*TINY
+            AS(I,jst,K) = 2.0*TINY
             END IF
   400   CONTINUE
   410 CONTINUE
@@ -148,12 +149,12 @@ C--------------------------------------------------------------------
           IF ((PCELL(I,J,kEndGhost).EQ.PBCFLD).AND.
      $        (WW(I,J,kEndGhost+1).GT.0.0)) THEN
              UU(I,J,kEndGhost) = UU(I,J,kend)
-c             AT(I,J,kend) = 2.0*TINY
+             AT(I,J,kend) = 2.0*TINY
           END IF
           IF (PCELL(I,J,kBegGhost).EQ.PBCFLD.AND.
      $         WW(I,J,kBegGhost).LT.0.0) THEN
             UU(I,J,kBegGhost) = UU(I,J,kst)
-c            AB(I,J,kst) = 2.0*TINY
+            AB(I,J,kst) = 2.0*TINY
             END IF
   500   CONTINUE
   510 CONTINUE

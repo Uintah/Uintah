@@ -83,6 +83,10 @@ public:
 						 const PatchSet* patches,
 						 const MaterialSet* matls);
 
+      virtual void sched_computeTurbSubmodelInterm(SchedulerP&, 
+						 const PatchSet* patches,
+						 const MaterialSet* matls);
+
 
       // GROUP: Schedule Action :
       ///////////////////////////////////////////////////////////////////////
@@ -154,6 +158,12 @@ private:
 				 DataWarehouse* new_dw);
  
       void computeTurbSubmodelPred(const ProcessorGroup*,
+				   const PatchSubset* patches,
+				   const MaterialSubset* matls,
+				   DataWarehouse* old_dw,
+				   DataWarehouse* new_dw);
+
+      void computeTurbSubmodelInterm(const ProcessorGroup*,
 				   const PatchSubset* patches,
 				   const MaterialSubset* matls,
 				   DataWarehouse* old_dw,

@@ -196,11 +196,13 @@ int ExplicitSolver::nonlinearSolve(const LevelP& level,
 
   if (d_enthalpySolve)
     d_enthalpySolver->solvePred(sched, patches, matls);
-#ifdef correctorstep
-  d_props->sched_computePropsPred(sched, patches, matls);
-#else
-  d_props->sched_reComputeProps(sched, patches, matls);
-#endif
+
+  #ifdef correctorstep
+    d_props->sched_computePropsPred(sched, patches, matls);
+  #else
+    d_props->sched_reComputeProps(sched, patches, matls);
+  #endif
+
   // linearizes and solves pressure eqn
   // require : pressureIN, densityIN, viscosityIN,
   //           [u,v,w]VelocitySIVBC (new_dw)
@@ -226,50 +228,101 @@ int ExplicitSolver::nonlinearSolve(const LevelP& level,
   for (int index = 1; index <= Arches::NDIM; ++index) {
     d_momSolver->solvePred(sched, patches, matls, index);
   }
-#ifdef correctorstep
-  d_turbModel->sched_computeTurbSubmodelPred(sched, patches, matls);
-  // corrected step
-  for (int index = 0;index < nofScalars; index ++) {
-    // in this case we're only solving for one scalar...but
-    // the same subroutine can be used to solve multiple scalars
-    d_scalarSolver->solveCorr(sched, patches, matls, index);
-  }
-  if (d_enthalpySolve)
-    d_enthalpySolver->solveCorr(sched, patches, matls);
-  // same as corrector
-  d_props->sched_reComputeProps(sched, patches, matls);
-  // linearizes and solves pressure eqn
-  // require : pressureIN, densityIN, viscosityIN,
-  //           [u,v,w]VelocitySIVBC (new_dw)
-  //           [u,v,w]VelocitySPBC, densityCP (old_dw)
-  // compute : [u,v,w]VelConvCoefPBLM, [u,v,w]VelCoefPBLM, 
-  //           [u,v,w]VelLinSrcPBLM, [u,v,w]VelNonLinSrcPBLM, (matrix_dw)
-  //           presResidualPS, presCoefPBLM, presNonLinSrcPBLM,(matrix_dw)
-  //           pressurePS (new_dw)
-  // first computes, hatted velocities and then computes the pressure 
-  // poisson equation
-  d_pressSolver->solveCorr(level, sched);
-  // Momentum solver
-  // require : pressureSPBC, [u,v,w]VelocityCPBC, densityIN, 
-  // viscosityIN (new_dw)
-  //           [u,v,w]VelocitySPBC, densityCP (old_dw)
-  // compute : [u,v,w]VelCoefPBLM, [u,v,w]VelConvCoefPBLM
-  //           [u,v,w]VelLinSrcPBLM, [u,v,w]VelNonLinSrcPBLM
-  //           [u,v,w]VelResidualMS, [u,v,w]VelCoefMS, 
-  //           [u,v,w]VelNonLinSrcMS, [u,v,w]VelLinSrcMS,
-  //           [u,v,w]VelocitySPBC
   
-  // project velocities using the projection step
-  for (int index = 1; index <= Arches::NDIM; ++index) {
-    d_momSolver->solveCorr(sched, patches, matls, index);
-  }
-  // if external boundary then recompute velocities using new pressure
-  // and puts them in nonlinear_dw
-  // require : densityCP, pressurePS, [u,v,w]VelocitySIVBC
-  // compute : [u,v,w]VelocityCPBC, pressureSPBC
+  #ifdef correctorstep
+    d_turbModel->sched_computeTurbSubmodelPred(sched, patches, matls);
+  #else
+    d_turbModel->sched_reComputeTurbSubmodel(sched, patches, matls);
+  #endif
+
+  #ifdef Runge_Kutta_3d
+    // intermediate step for 3d order Runge-Kutta method
+    for (int index = 0;index < nofScalars; index ++) {
+      // in this case we're only solving for one scalar...but
+      // the same subroutine can be used to solve multiple scalars
+      d_scalarSolver->solveInterm(sched, patches, matls, index);
+    }
+    if (d_enthalpySolve)
+      d_enthalpySolver->solveInterm(sched, patches, matls);
+    // same as corrector
+    // Underrelaxation for density is done with initial density, not with
+    // density from the previous substep
+    d_props->sched_computePropsInterm(sched, patches, matls);
+    // linearizes and solves pressure eqn
+    // require : pressureIN, densityIN, viscosityIN,
+    //           [u,v,w]VelocitySIVBC (new_dw)
+    //           [u,v,w]VelocitySPBC, densityCP (old_dw)
+    // compute : [u,v,w]VelConvCoefPBLM, [u,v,w]VelCoefPBLM, 
+    //           [u,v,w]VelLinSrcPBLM, [u,v,w]VelNonLinSrcPBLM, (matrix_dw)
+    //           presResidualPS, presCoefPBLM, presNonLinSrcPBLM,(matrix_dw)
+    //           pressurePS (new_dw)
+    // first computes, hatted velocities and then computes the pressure 
+    // poisson equation
+    d_pressSolver->solveInterm(level, sched);
+    // Momentum solver
+    // require : pressureSPBC, [u,v,w]VelocityCPBC, densityIN, 
+    // viscosityIN (new_dw)
+    //           [u,v,w]VelocitySPBC, densityCP (old_dw)
+    // compute : [u,v,w]VelCoefPBLM, [u,v,w]VelConvCoefPBLM
+    //           [u,v,w]VelLinSrcPBLM, [u,v,w]VelNonLinSrcPBLM
+    //           [u,v,w]VelResidualMS, [u,v,w]VelCoefMS, 
+    //           [u,v,w]VelNonLinSrcMS, [u,v,w]VelLinSrcMS,
+    //           [u,v,w]VelocitySPBC
   
-#endif
-  d_turbModel->sched_reComputeTurbSubmodel(sched, patches, matls);
+    // project velocities using the projection step
+    for (int index = 1; index <= Arches::NDIM; ++index) {
+      d_momSolver->solveInterm(sched, patches, matls, index);
+    }
+  
+    d_turbModel->sched_computeTurbSubmodelInterm(sched, patches, matls);
+  #endif
+
+  #ifdef correctorstep
+    // corrected step
+    for (int index = 0;index < nofScalars; index ++) {
+      // in this case we're only solving for one scalar...but
+      // the same subroutine can be used to solve multiple scalars
+      d_scalarSolver->solveCorr(sched, patches, matls, index);
+    }
+    if (d_enthalpySolve)
+      d_enthalpySolver->solveCorr(sched, patches, matls);
+    // same as corrector
+    // Underrelaxation for density is done with initial density, not with
+    // density from the previous substep
+    d_props->sched_reComputeProps(sched, patches, matls);
+    // linearizes and solves pressure eqn
+    // require : pressureIN, densityIN, viscosityIN,
+    //           [u,v,w]VelocitySIVBC (new_dw)
+    //           [u,v,w]VelocitySPBC, densityCP (old_dw)
+    // compute : [u,v,w]VelConvCoefPBLM, [u,v,w]VelCoefPBLM, 
+    //           [u,v,w]VelLinSrcPBLM, [u,v,w]VelNonLinSrcPBLM, (matrix_dw)
+    //           presResidualPS, presCoefPBLM, presNonLinSrcPBLM,(matrix_dw)
+    //           pressurePS (new_dw)
+    // first computes, hatted velocities and then computes the pressure 
+    // poisson equation
+    d_pressSolver->solveCorr(level, sched);
+    // Momentum solver
+    // require : pressureSPBC, [u,v,w]VelocityCPBC, densityIN, 
+    // viscosityIN (new_dw)
+    //           [u,v,w]VelocitySPBC, densityCP (old_dw)
+    // compute : [u,v,w]VelCoefPBLM, [u,v,w]VelConvCoefPBLM
+    //           [u,v,w]VelLinSrcPBLM, [u,v,w]VelNonLinSrcPBLM
+    //           [u,v,w]VelResidualMS, [u,v,w]VelCoefMS, 
+    //           [u,v,w]VelNonLinSrcMS, [u,v,w]VelLinSrcMS,
+    //           [u,v,w]VelocitySPBC
+  
+    // project velocities using the projection step
+    for (int index = 1; index <= Arches::NDIM; ++index) {
+      d_momSolver->solveCorr(sched, patches, matls, index);
+    }
+    // if external boundary then recompute velocities using new pressure
+    // and puts them in nonlinear_dw
+    // require : densityCP, pressurePS, [u,v,w]VelocitySIVBC
+    // compute : [u,v,w]VelocityCPBC, pressureSPBC
+  
+    d_turbModel->sched_reComputeTurbSubmodel(sched, patches, matls);
+  #endif
+  
  
   // Schedule an interpolation of the face centered velocity data 
   // to a cell centered vector for used by the viz tools

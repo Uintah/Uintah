@@ -124,6 +124,20 @@ public:
       void sched_enthalpyLinearSolveCorr(SchedulerP&, const PatchSet* patches,
 					 const MaterialSet* matls);
 
+      void solveInterm(SchedulerP& sched,
+		 const PatchSet* patches,
+		     const MaterialSet* matls);
+   
+      ///////////////////////////////////////////////////////////////////////
+      // Schedule Build of linearized matrix
+      void sched_buildLinearMatrixInterm(SchedulerP&, const PatchSet* patches,
+				       const MaterialSet* matls);
+
+      ///////////////////////////////////////////////////////////////////////
+      // Schedule Linear Solve for Enthalpy[index]
+      void sched_enthalpyLinearSolveInterm(SchedulerP&, const PatchSet* patches,
+					 const MaterialSet* matls);
+
 protected:
 
 private:
@@ -181,6 +195,22 @@ private:
       //    [in] 
       //        add documentation here
       void enthalpyLinearSolveCorr(const ProcessorGroup* pc,
+			     const PatchSubset* patches,
+			     const MaterialSubset* /*matls*/,
+			     DataWarehouse* old_dw,
+				   DataWarehouse* new_dw);
+  
+      void buildLinearMatrixInterm(const ProcessorGroup* pc,
+			     const PatchSubset* patches,
+			     const MaterialSubset* /*matls*/,
+			     DataWarehouse* old_dw,
+				 DataWarehouse* new_dw);
+
+      ///////////////////////////////////////////////////////////////////////
+      // Actually Solver the Linear System for Enthalpy[index]
+      //    [in] 
+      //        add documentation here
+      void enthalpyLinearSolveInterm(const ProcessorGroup* pc,
 			     const PatchSubset* patches,
 			     const MaterialSubset* /*matls*/,
 			     DataWarehouse* old_dw,
