@@ -37,6 +37,7 @@
 namespace SCIRun {
 
   using std::cerr;
+  using std::endl;
 
 PartManagerGui::PartManagerGui( const string &name, const string &script)
   : PartGui( name, script )
