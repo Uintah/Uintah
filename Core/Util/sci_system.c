@@ -1,20 +1,3 @@
-/*
-  The contents of this file are subject to the University of Utah Public
-  License (the "License"); you may not use this file except in compliance
-  with the License.
-  
-  Software distributed under the License is distributed on an "AS IS"
-  basis, WITHOUT WARRANTY OF ANY KIND, either express or implied. See the
-  License for the specific language governing rights and limitations under
-  the License.
-  
-  The Original Source Code is SCIRun, released March 12, 2001.
-  
-  The Original Source Code was developed by the University of Utah.
-  Portions created by UNIVERSITY are Copyright (C) 2001, 1994 
-  University of Utah. All Rights Reserved.
-*/
-
 /* Copyright (C) 1991-1999, 2000 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
 
@@ -33,7 +16,7 @@
    write to the Free Software Foundation, Inc., 59 Temple Place - Suite 330,
    Boston, MA 02111-1307, USA.  */
 
-#ifndef __sgi  // This file is for linux only.
+#ifndef __sgi  /* This file is for linux only. */
 
 #include <stddef.h>
 #include <stdlib.h>
@@ -43,39 +26,41 @@
 #include <sys/types.h>
 #include <errno.h>
 
-// This file is straight out of the glibc-2.2.1 distribution, with the 
-// exception that I've made some very minor changes: commented out some
-// code, slightly modified other code and added some code.  Each instance
-// of change is delimited with "// - cm <change-type>".
-//
-// The reason for doing this is as a work around for the "fork/exec in pthread
-// environment" bug introduced in the 2.1.2 and 2.1.3 releases of glibc 
-// (in Linux).  The work around is to force the use of the symbol "__fork" 
-// inside the libpthreads.so library rather than the symbol "fork" in the
-// libc.so library.
-//
-// - Chris Moulding
+/*
+ This file is straight out of the glibc-2.2.1 distribution, with the 
+ exception that I've made some very minor changes: commented out some
+ code, slightly modified other code and added some code.  Each instance
+ of change is delimited with "/ * - cm <change-type> ... - cm * /".
 
-// - cm commented
-//#ifndef	HAVE_GNU_LD
-//#define	__environ	environ
-//#endif
-// - cm
+ The reason for doing this is as a work around for the "fork/exec in pthread
+ environment" bug introduced in the 2.1.2 and 2.1.3 releases of glibc 
+ (in Linux).  The work around is to force the use of the symbol "__fork" 
+ inside the libpthreads.so library rather than the symbol "fork" in the
+ libc.so library.
 
-// - cm added
+ - Chris Moulding */
+
+/* - cm commented out
+#ifndef	HAVE_GNU_LD 
+#define	__environ	environ
+#endif
+   - cm
+*/
+
+/* - cm added */
 pid_t __fork(void);
-// - cm
+/* - cm */
 
 #define	SHELL_PATH	"/bin/sh"	/* Path of the shell.  */
 #define	SHELL_NAME	"sh"		/* Name to give it.  */
 
 /* Execute LINE as a shell command, returning its status.  */
-// - cm modified
-//int
-//__libc_system (const char *line)
+/* - cm modified */
+/*int
+  __libc_system (const char *line)*/
 int
 sci_system(const char *line)
-// - cm
+/* - cm */
 {
   int status, save;
   pid_t pid;
@@ -99,10 +84,10 @@ sci_system(const char *line)
     {
       save = errno;
       (void) __sigaction (SIGINT, &intr, (struct sigaction *) NULL);
-      // - cm modified
-      //__set_errno (save);
+      /* - cm modified 
+        __set_errno (save); */
       errno = save;
-      // - cm
+      /* - cm */
       return -1;
     }
 
@@ -116,32 +101,32 @@ sci_system(const char *line)
   __sigemptyset (&block);
   __sigaddset (&block, SIGCHLD);
   save = errno;
-  // - cm modified
-  //if (__sigprocmask (SIG_BLOCK, &block, &omask) < 0)
+  /* - cm modified
+     if (__sigprocmask (SIG_BLOCK, &block, &omask) < 0) */
   if (sigprocmask (SIG_BLOCK, &block, &omask) < 0)
-  // - cm
+  /* - cm */
     {
       if (errno == ENOSYS)
-	// - cm modified
-	//__set_errno (save);
+	/* - cm modified
+	   __set_errno (save); */
 	errno = save;
-        // - cm
+        /* - cm */
       else
 	{
 	  save = errno;
 	  (void) __sigaction (SIGINT, &intr, (struct sigaction *) NULL);
 	  (void) __sigaction (SIGQUIT, &quit, (struct sigaction *) NULL);
-	  // - cm changed
-	  //__set_errno (save);
+	  /* - cm modified
+	     __set_errno (save); */
 	  errno = save;
-	  // - cm
+	  /* - cm */
 	  return -1;
 	}
     }
-// - cm modified
-//# define UNBLOCK __sigprocmask (SIG_SETMASK, &omask, (sigset_t *) NULL)
+/* - cm modified
+   # define UNBLOCK __sigprocmask (SIG_SETMASK, &omask, (sigset_t *) NULL) */
 #define UNBLOCK sigprocmask (SIG_SETMASK, &omask, (sigset_t *) NULL)
-// - cm
+/* - cm */
 #else
 # define UNBLOCK 0
 #endif
@@ -162,10 +147,10 @@ sci_system(const char *line)
       (void) UNBLOCK;
 
       /* Exec the shell.  */
-      // - cm modified
-      //(void) __execve (SHELL_PATH, (char *const *) new_argv, __environ);
+      /* - cm modified
+	 (void) __execve (SHELL_PATH, (char *const *) new_argv, __environ); */
       (void) execve (SHELL_PATH, (char *const *) new_argv, __environ);
-      // - cm
+      /* - cm */
       _exit (127);
     }
   else if (pid < (pid_t) 0)
@@ -178,10 +163,10 @@ sci_system(const char *line)
       pid_t child;
       do
 	{
-	  // - cm modified
-	  //child = __wait (&status);
+	  /* - cm modified
+	     child = __wait (&status); */
 	  child = wait (&status);
-	  // -cm
+	  /* - cm */
 	  if (child <= -1 && errno != EINTR)
 	    {
 	      status = -1;
@@ -195,10 +180,10 @@ sci_system(const char *line)
       int n;
 
       do
-	// - cm modified
-	//n = __waitpid (pid, &status, 0);
+	/* - cm modified
+	   n = __waitpid (pid, &status, 0); */
 	n = waitpid (pid, &status, 0);
-        // - cm
+        /* - cm */
       while (n == -1 && errno == EINTR);
 
       if (n != pid)
@@ -212,18 +197,18 @@ sci_system(const char *line)
        UNBLOCK) != 0)
     {
       if (errno == ENOSYS)
-	// - cm modified
-	//__set_errno (save);
+      /* - cm modified
+	__set_errno (save); */
 	errno = save;
-        // - cm 
+      /* - cm */
       else
 	return -1;
     }
 
   return status;
 }
-// -cm commented
-//weak_alias (__libc_system, system)
-// -cm
+/* -cm commented
+  weak_alias (__libc_system, system)
+   -cm */
 
-#endif
+#endif /* for linux only */
