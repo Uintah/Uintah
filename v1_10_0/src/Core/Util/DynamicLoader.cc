@@ -214,14 +214,15 @@ DynamicLoader::compile_and_store(const CompileInfo &info, bool maybe_compile_p,
   LIBRARY_HANDLE so = 0;
   struct stat buf;
   if (stat(full_so.c_str(), &buf) == 0) {
-    compile_so(info, serr); // make sure
-    so = GetLibraryHandle(full_so.c_str());
+    if (compile_so(info, serr)) { // make sure
+      so = GetLibraryHandle(full_so.c_str());
+    }
   } else {
     // the lib does not exist.  
     create_cc(info, false, serr);
-    compile_so(info, serr);
-    so = GetLibraryHandle(full_so.c_str());
-
+    if (compile_so(info, serr)) { 
+      so = GetLibraryHandle(full_so.c_str());
+    }
     if (maybe_compile_p && so == 0)
     {
       create_cc(info, true, serr);
