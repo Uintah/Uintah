@@ -952,7 +952,8 @@ bool Matlab::load_output_matrices()
 			}
 			
 			MatrixHandle handle;
-			translate_.mlArrayTOsciMatrix(ma,handle,static_cast<SCIRun::Module *>(this));
+            std::string info;
+			if (translate_.sciMatrixCompatible(ma,info,static_cast<SCIRun::Module *>(this))) translate_.mlArrayTOsciMatrix(ma,handle,static_cast<SCIRun::Module *>(this));
 			matrix_oport_[p]->send(handle);
 		}
 
@@ -988,7 +989,8 @@ bool Matlab::load_output_matrices()
 			}
 			
 			FieldHandle handle;
-			translate_.mlArrayTOsciField(ma,handle,static_cast<SCIRun::Module *>(this));
+            std::string info;
+			if (translate_.sciFieldCompatible(ma,info,static_cast<SCIRun::Module *>(this))) translate_.mlArrayTOsciField(ma,handle,static_cast<SCIRun::Module *>(this));
 			field_oport_[p]->send(handle);
 		}
 
@@ -1023,7 +1025,8 @@ bool Matlab::load_output_matrices()
 			}
 			
 			NrrdDataHandle handle;
-			translate_.mlArrayTOsciNrrdData(ma,handle,static_cast<SCIRun::Module *>(this));
+            std::string info;
+			if (translate_.sciNrrdDataCompatible(ma,info,static_cast<SCIRun::Module *>(this))) translate_.mlArrayTOsciNrrdData(ma,handle,static_cast<SCIRun::Module *>(this));
 			nrrd_oport_[p]->send(handle);
 		}
 
