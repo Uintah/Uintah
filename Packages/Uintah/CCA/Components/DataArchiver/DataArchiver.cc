@@ -128,6 +128,7 @@ void DataArchiver::problemSetup(const ProblemSpecP& params)
    d_checkpointInterval = 0.0;
    d_checkpointTimestepInterval = 0;
    d_checkpointWalltimeStart = 0;
+   d_checkpointWalltimeInterval = 0;
    d_checkpointCycle = 2; /* 2 is the smallest number that is safe
 			     (always keeping an older copy for backup) */
    ProblemSpecP checkpoint = p->findBlock("checkpoint");
@@ -160,7 +161,7 @@ void DataArchiver::problemSetup(const ProblemSpecP& params)
      throw ProblemSetupException("<checkpoint walltimeStart must have a corresponding walltimeInterval");
 
    // set walltimeStart to walltimeInterval if not specified
-   if (d_checkpointWalltimeInterval > 0 && d_checkpointWalltimeStart == 0)
+   if (d_checkpointWalltimeInterval != 0 && d_checkpointWalltimeStart == 0)
      d_checkpointWalltimeStart = d_checkpointWalltimeInterval;
    
    d_currentTimestep = 0;
