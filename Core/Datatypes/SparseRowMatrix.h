@@ -68,6 +68,8 @@ public:
     virtual int* get_row(){return rows;}
     virtual int* get_col(){return columns;}
   int get_nnz() { return nnz; }
+  
+  virtual SparseRowMatrix* clone();
     // Persistent representation...
     virtual void io(Piostream&);
     static PersistentTypeID type_id;

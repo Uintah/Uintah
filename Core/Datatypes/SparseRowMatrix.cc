@@ -22,6 +22,7 @@
 using std::cerr;
 using std::endl;
 #include <stdio.h>
+#include <memory.h>
 
 namespace SCIRun {
 
@@ -31,6 +32,10 @@ static Persistent* maker()
 }
 
 PersistentTypeID SparseRowMatrix::type_id("SparseRowMatrix", "Matrix", maker);
+
+SparseRowMatrix* SparseRowMatrix::clone(){
+  return scinew SparseRowMatrix(*this);
+}
 
 SparseRowMatrix::SparseRowMatrix()
 : Matrix(Matrix::symmetric, Matrix::sparse), nnrows(0), nncols(0), a(0),
@@ -72,6 +77,23 @@ SparseRowMatrix::SparseRowMatrix(int nnrows, int nncols,
   nncols(nncols), rows(rows), columns(columns), nnz(nnz)
 {
     a=scinew double[nnz];
+}
+
+SparseRowMatrix::SparseRowMatrix(const SparseRowMatrix& copy)
+  :Matrix(copy),
+   nnrows(copy.nnrows),
+   nncols(copy.nncols),
+   nnz(copy.nnz),
+   dummy(copy.dummy),
+   minVal(copy.minVal),
+   maxVal(copy.maxVal)
+{
+  rows = scinew int[nnrows];
+  columns = scinew int[nncols];
+  a = scinew double[nnz];
+  memcpy(a, copy.a, sizeof(double)*nnz);
+  memcpy(rows, copy.rows, sizeof(int)*nnrows);
+  memcpy(columns, copy.columns, sizeof(int)*nncols);
 }
 
 void
