@@ -1,3 +1,6 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE dir SYSTEM "dirspec.dtd">
+
 <!--
   The contents of this file are subject to the University of Utah Public
   License (the "License"); you may not use this file except in compliance
@@ -14,9 +17,6 @@
   Portions created by UNIVERSITY are Copyright (C) 2001, 1994 
   University of Utah. All Rights Reserved.
 -->
-
-<?xml version="1.0" encoding="UTF-8" ?>
-<!DOCTYPE dir SYSTEM "dirspec.dtd">
 
 <dir name="Core/Persistent">
 
