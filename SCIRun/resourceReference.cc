@@ -92,11 +92,12 @@ sci::cca::Component::pointer resourceReference::createInstance(const std::string
   
   SSIDL::array1<std::string> comURLs1;
   vector<URL> comURLs;
-  sci::cca::Loader::pointer ploader=resourceReference::getPtrToAll();
+  /*
+    sci::cca::Loader::pointer ploader=resourceReference::getPtrToAll();
 
   //Inform everyone else of my distribution
   //(this is in correspondence with the instantiate() call)
-  /*
+  
   Index** dr = new Index* [1];
   dr[0] = new Index(0, URLs.size()-1, 1);  //first, last, stride
   MxNArrayRep* arrr = new MxNArrayRep(1,dr);

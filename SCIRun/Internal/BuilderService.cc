@@ -145,8 +145,10 @@ SSIDL::array1<std::string> BuilderService::getProvidedPortNames(const sci::cca::
 {
   SSIDL::array1<std::string> result;
   ComponentInstance *ci=framework->lookupComponent(cid->getInstanceName());
+  cerr<<"Component: "<<cid->getInstanceName()<<endl;
   for(PortInstanceIterator* iter = ci->getPorts(); !iter->done(); iter->next()){
     PortInstance* port = iter->get();
+    cerr<<"port: "<<port->getType()<<"|"<<port->getModel()<<"|"<<port->getUniqueName()<<"|"<<port->portType()<<"(PortInstance::To="<<PortInstance::To<<")"<<endl;
     if(port->portType() == PortInstance::To)
       result.push_back(port->getUniqueName());
   }
@@ -251,6 +253,8 @@ SSIDL::array1<std::string>  BuilderService::getCompatiblePortList(
   }
   ComponentInstance* comp1=framework->lookupComponent(cid1->name);
   ComponentInstance* comp2=framework->lookupComponent(cid2->name);
+
+  cerr<<"Component: "<<cid2->getInstanceName()<<endl;
   PortInstance* pr1=comp1->getPortInstance(port1);
   if(!pr1)
     throw CCAException("Unknown port");
@@ -260,6 +264,9 @@ SSIDL::array1<std::string>  BuilderService::getCompatiblePortList(
   for(PortInstanceIterator* iter = comp2->getPorts(); !iter->done();
       iter->next()){
     PortInstance* pr2 = iter->get();
+    cerr<<"port: "<<pr2->getType()<<"|"<<pr2->getModel()<<"|"<<pr2->getUniqueName()<<"|"<<pr2->portType()<<"(PortInstance::To="<<PortInstance::To<<")"<<endl;
+
+
     if(pr1->canConnectTo(pr2))
       availablePorts.push_back(pr2->getUniqueName());
   }  

@@ -39,7 +39,7 @@ namespace SCIRun {
   class CCAPortInstance : public PortInstance {
   public:
     enum PortType {
-      Uses, Provides
+      Uses=0, Provides=1
     };
     CCAPortInstance(const std::string& portname, const std::string& classname,
 		    const sci::cca::TypeMap::pointer& properties,

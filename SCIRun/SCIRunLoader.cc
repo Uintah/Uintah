@@ -81,6 +81,9 @@ SCIRunLoader::SCIRunLoader(const string &loaderName,  const string & frameworkUR
 int SCIRunLoader::createInstance(const string& componentName, const string& componentType, std::string &componentURL) {
 
   //TODO: assume type is always good?
+
+  cerr<<"SCIRunLoader::getRefCount()="<<getRefCount()<<endl;
+
   
   string lastname=componentType.substr(componentType.find('.')+1);  
   string so_name("lib/libCCA_Components_");
