@@ -271,61 +271,59 @@ void Crack::RecollectCrackFrontSegments(const ProcessorGroup*,
         } // End of loop over crack-front segs
         delete [] copyData;
 
-        // If all crack-front segs dead, the material is broken.
-        if(cfSegNodes[m].size()/2<=0 && pid==0) {
-         cout << "   !!! Material " << m
-              << " is broken. Program terminated." << endl;
-         exit(1);
-        }
-  
-        // Seek the start crack point (sIdx), re-arrange crack-front nodes 
-        int node0=cfSegNodes[m][0];
-        int segs[2];
-        FindSegsFromNode(m,node0,segs);
+	if(cfSegNodes[m].size()>0) { // New crack front is still in material
+          // Seek the start crack point (sIdx), re-arrange crack-front nodes 
+          int node0=cfSegNodes[m][0];
+          int segs[2];
+          FindSegsFromNode(m,node0,segs);
 
-        if(segs[R]>=0) {
-          int numNodes=(int)cfSegNodes[m].size();
-          int sIdx=0;
-          for(int i=0; i<numNodes; i++) {
-            int segsT[2];
-            FindSegsFromNode(m,cfSegNodes[m][i],segsT);
-            if(segsT[R]<0) {sIdx=i; break;}
+          if(segs[R]>=0) {
+            int numNodes=(int)cfSegNodes[m].size();
+            int sIdx=0;
+            for(int i=0; i<numNodes; i++) {
+              int segsT[2];
+              FindSegsFromNode(m,cfSegNodes[m][i],segsT);
+              if(segsT[R]<0) {sIdx=i; break;}
+            }
+
+            int* copyData =new int[numNodes];
+            int rIdx=2*segs[R]+1;
+            for(int i=0; i<numNodes; i++) {
+              int oldIdx=sIdx+i;
+              if(oldIdx>rIdx) oldIdx-=(rIdx+1);
+              copyData[i]=cfSegNodes[m][oldIdx];
+            }
+
+            for(int i=0; i<numNodes; i++) {
+              cfSegNodes[m][i]=copyData[i];
+            }      
+
+            delete [] copyData;
           }
-
-          int* copyData =new int[numNodes];
-          int rIdx=2*segs[R]+1;
-          for(int i=0; i<numNodes; i++) {
-            int oldIdx=sIdx+i;
-            if(oldIdx>rIdx) oldIdx-=(rIdx+1);
-            copyData[i]=cfSegNodes[m][oldIdx];
-          }
-
-          for(int i=0; i<numNodes; i++) {
-            cfSegNodes[m][i]=copyData[i];
-          }      
-
-          delete [] copyData;
-        }
-
-        /* Task 3: Get previous index, and minimum & maximum indexes 
-           for crack-front nodes
-        */
-        FindCrackFrontNodeIndexes(m);
+       
+          /* Task 3: Get previous index, and minimum & maximum indexes 
+             for crack-front nodes
+          */
+          FindCrackFrontNodeIndexes(m);
     
-        /* Task 4: Calculate normals, tangential normals and binormals
-        */         
-        if(smoothCrackFront) { // Smooth crack front with cubic-spline
-          short smoothSuccessfully=SmoothCrackFrontAndCalculateNormals(m);
-          if(!smoothSuccessfully) {
-          //  if(pid==0)
-          //    cout << " ! Crack-front normals are obtained "
-          //         << "by raw crack-front points." << endl;
+          /* Task 4: Calculate normals, tangential normals and binormals
+          */         
+          if(smoothCrackFront) { // Smooth crack front with cubic-spline
+            short smoothSuccessfully=SmoothCrackFrontAndCalculateNormals(m);
+            if(!smoothSuccessfully) {
+            //  if(pid==0)
+            //    cout << " ! Crack-front normals are obtained "
+            //         << "by raw crack-front points." << endl;
+            }
           }
-        }
-        else { // Calculate crack-front normals directly
-          CalculateCrackFrontNormals(m);
-        }
-   
+          else { // Calculate crack-front normals directly
+            CalculateCrackFrontNormals(m);
+          }
+        } // End if(cfSegNodes[m].size()>0)
+	else { // Crack has penetrated the material
+          // If all crack-front segs dead, the material is broken.
+	  if(pid==0) cout << "   !!! Material " << m << " is broken. " << endl;
+	}	
       } // End of if(d_doCrackPropagation!="false")
 
       // Save crack elems, crack points and crack-front nodes
@@ -334,7 +332,6 @@ void Crack::RecollectCrackFrontSegments(const ProcessorGroup*,
         int curTimeStep=d_sharedState->getCurrentTopLevelTimeStep();
         if(pid==0) OutputCrackGeometry(m,curTimeStep);
       }
-
     } // End of loop over matls
   } // End of loop over patches
 }
