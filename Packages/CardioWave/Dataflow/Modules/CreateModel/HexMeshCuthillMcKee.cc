@@ -161,7 +161,10 @@ HexMeshCuthillMcKee::execute()
     HexVolMesh::Node::array_type neighbors;
     hvmesh->get_neighbors(neighbors, *nbi);
     for (unsigned int i = 0; i < neighbors.size(); i++) {
-      bw = abs(*nbi - (int)neighbors[i]);
+	
+	  // Iterator has to cast to a known format
+	  // otherwise the compiler may get lost
+      bw = abs(static_cast<int>(*nbi) - (int)neighbors[i]);
       if (bw > max_half_bw) max_half_bw = bw;
       node_nbrs[*nbi].push_back((int)neighbors[i]);
     }
@@ -294,7 +297,11 @@ HexMeshCuthillMcKee::execute()
     HexVolMesh::Node::array_type neighbors;
     bwmesh->get_neighbors(neighbors, *nbi);
     for (unsigned int i = 0; i < neighbors.size(); i++) {
-      new_bw = abs(*nbi - (int)neighbors[i]);
+		// Again to resolve problems iterator has to be casted
+		// The iterator is a number but has only a ++ operator
+		// asigned, hence it cannot be used without casting
+	
+      new_bw = abs(static_cast<int>(*nbi) - (int)neighbors[i]);
       if (new_bw > new_max_half_bw) new_max_half_bw = new_bw;
     }    
     ++nbi;
