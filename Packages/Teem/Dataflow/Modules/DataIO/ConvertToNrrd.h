@@ -54,8 +54,9 @@ class ConvertToNrrdBase : public DynamicAlgoBase
 {
 public:
   virtual bool convert_to_nrrd(SCIRun::FieldHandle, NrrdDataHandle &pointsH,
-					 NrrdDataHandle &connectH, NrrdDataHandle &dataH,
-					 string &) = 0;
+			       NrrdDataHandle &connectH, NrrdDataHandle &dataH,
+			       bool compute_points_p, bool compute_connects_p,
+			       bool compute_data_p, const string &) = 0;
   virtual ~ConvertToNrrdBase();
 
   static const string& get_h_file_path();
@@ -84,8 +85,9 @@ class ConvertToNrrd : public ConvertToNrrdBase
 public:
   //! virtual interface.
   virtual bool convert_to_nrrd(SCIRun::FieldHandle, NrrdDataHandle &pointsH,
-					 NrrdDataHandle &connectH, NrrdDataHandle &dataH,
-					 string &);
+			       NrrdDataHandle &connectH, NrrdDataHandle &dataH,
+			       bool compute_points_p, bool compute_connects_p,
+			       bool compute_data_p, const string &);
 };
 
 
@@ -123,7 +125,8 @@ void*
 get_raw_data_ptr<FData2d<unsigned short> >(FData2d<unsigned short> &, int);
 
 template <>
-void* get_raw_data_ptr<FData2d<int> >(FData2d<int> &, int);
+void* 
+get_raw_data_ptr<FData2d<int> >(FData2d<int> &, int);
 
 template <>
 void* 
@@ -170,7 +173,8 @@ void*
 get_raw_data_ptr<FData3d<unsigned short> >(FData3d<unsigned short> &, int);
 
 template <>
-void* get_raw_data_ptr<FData3d<int> >(FData3d<int> &, int);
+void* 
+get_raw_data_ptr<FData3d<int> >(FData3d<int> &, int);
 
 template <>
 void* 
@@ -235,15 +239,17 @@ void* get_raw_data_ptr(Fdata &data, int pad) {
 template <class Fld>
 bool
 ConvertToNrrd<Fld>::convert_to_nrrd(FieldHandle ifh, NrrdDataHandle &pointsH,
-				    NrrdDataHandle &connectH, NrrdDataHandle &dataH,
-				    string &label)
+				    NrrdDataHandle &connectH,
+				    NrrdDataHandle &dataH,
+				    bool compute_points_p,
+				    bool compute_connects_p,
+				    bool compute_data_p,
+				    const string &label)
 {
   typedef typename Fld::value_type val_t;
   Fld *f = dynamic_cast<Fld*>(ifh.get_rep());
 
   ASSERT(f != 0);
-
-  // FIX ME : ASSUME FIELD HAS DATA
 
   typename Fld::mesh_handle_type m = f->get_typed_mesh(); 
 
@@ -251,7 +257,6 @@ ConvertToNrrd<Fld>::convert_to_nrrd(FieldHandle ifh, NrrdDataHandle &pointsH,
   const string vec("Vector");
   const string ten("Tensor");
 
-  bool has_data = true;
   NrrdData *ndata = 0;
   NrrdData *npoints = 0;
   NrrdData *nconnect = 0;
@@ -318,91 +323,87 @@ ConvertToNrrd<Fld>::convert_to_nrrd(FieldHandle ifh, NrrdDataHandle &pointsH,
       }
       break;
     default:
-      has_data = false;
+      compute_data_p = false; // No data to compute.
     }
     dims.push_back(sz); 
 
     with_spacing = false;
   }
 
-  // create the Points and Connections Nrrds
-  // FIX ME : FINISH CASE STATEMENTS
-  npoints = scinew NrrdData();
   nconnect = scinew NrrdData();
 
-  switch(f->basis_order()) {
-  case 0:
-  case 1:
-    {
-      switch(dims.size()) {
-      case 1:
-	nrrdAlloc(npoints->nrrd, nrrdTypeDouble, 2, 3, dims[0]);
-	break;
-      case 2:
-	nrrdAlloc(npoints->nrrd, nrrdTypeDouble, 3, 3, dims[0], dims[1]);
-	break;
-      case 3:
-	nrrdAlloc(npoints->nrrd, nrrdTypeDouble, 4, 3, dims[0], dims[1], dims[2]);
-	break;
-      }
-
-      typename Fld::mesh_type::Node::iterator iter, end;
-      m->begin(iter);
-      m->end(end);
-      double *data = (double*)npoints->nrrd->data;
-      while(iter != end) {
-	Point p;
-	m->get_point(p,*iter);
-	data[0] = p.x();
-	data[1] = p.y();
-	data[2] = p.z();
-	data += 3;
-	++iter;
-      }
-
-      typename Fld::mesh_type::Elem::iterator iter2, end2;
-      m->begin(iter2);
-      m->end(end2);
-
-      typename Fld::mesh_type::Node::array_type array;
-      typename Fld::mesh_type::Elem::size_type nelems;  
-      
-      // get the number of elements and number of points per element
-      // and allocate the nrrd
-      m->size(nelems);
-      m->get_nodes(array ,*iter2);
-      if (array.size() == 1) 
-	nrrdAlloc(nconnect->nrrd, nrrdTypeInt, 1, (int)nelems);
-      else
-	nrrdAlloc(nconnect->nrrd, nrrdTypeInt, 2, array.size(), (int)nelems);
-
-      int* data2 = (int*)nconnect->nrrd->data;
-
-      while(iter2 != end2) {
-	m->get_nodes(array ,*iter2);
-	
-	// copy into nrrd
-	int i = 0;
-	for(i=0; i<(int)array.size(); i++) {
-	  data2[i] = array[i];
-	}	
-	data2 += i;
-	++iter2;
-      }
+  if (compute_points_p)
+  {
+    npoints = scinew NrrdData();
+    switch(dims.size()) {
+    case 1:
+      nrrdAlloc(npoints->nrrd, nrrdTypeDouble, 2, 3, dims[0]);
+      break;
+    case 2:
+      nrrdAlloc(npoints->nrrd, nrrdTypeDouble, 3, 3, dims[0], dims[1]);
+      break;
+    case 3:
+      nrrdAlloc(npoints->nrrd, nrrdTypeDouble, 4, 3, dims[0], dims[1], dims[2]);
+      break;
     }
-    break;
-  default:
-    return false;
+
+    typename Fld::mesh_type::Node::iterator iter, end;
+    m->begin(iter);
+    m->end(end);
+    double *data = (double*)npoints->nrrd->data;
+    while(iter != end) {
+      Point p;
+      m->get_point(p,*iter);
+      data[0] = p.x();
+      data[1] = p.y();
+      data[2] = p.z();
+      data += 3;
+      ++iter;
+    }
   }
+
+  if (compute_connects_p)
+  {
+    typename Fld::mesh_type::Elem::iterator iter2, end2;
+    m->begin(iter2);
+    m->end(end2);
+
+    typename Fld::mesh_type::Node::array_type array;
+    typename Fld::mesh_type::Elem::size_type nelems;  
+      
+    // get the number of elements and number of points per element
+    // and allocate the nrrd
+    m->size(nelems);
+    m->get_nodes(array ,*iter2);
+    if (array.size() == 1) 
+      nrrdAlloc(nconnect->nrrd, nrrdTypeInt, 1, (int)nelems);
+    else
+      nrrdAlloc(nconnect->nrrd, nrrdTypeInt, 2, array.size(), (int)nelems);
+
+    int* data2 = (int*)nconnect->nrrd->data;
+
+    while(iter2 != end2) {
+      m->get_nodes(array ,*iter2);
+	
+      // copy into nrrd
+      int i = 0;
+      for(i=0; i<(int)array.size(); i++) {
+	data2[i] = array[i];
+      }	
+      data2 += i;
+      ++iter2;
+    }
+  }
+
   pointsH = npoints;
   connectH = nconnect;
 
-  
   // if vector/tensor data push to end of dims vector
   if (pad_data > 0) { dims.push_back(pad_data); }
 
   // create the Data Nrrd
-  if (has_data) {
+  if (compute_data_p)
+  {
     ndata = scinew NrrdData(pad_data);
     // switch based on the dims size because that is the size
     // of nrrd to create
