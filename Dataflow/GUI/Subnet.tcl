@@ -792,34 +792,25 @@ proc isaDefaultValue { var } {
     return [string equal $default_value $val]
 }
 
-proc writeSubnets { file subnet_id } {
+
+
+proc writeSubnets { file subnet_ids } {
     global Subnet SubnetScripts
-
-    set allsubnets ""
-    set modules $Subnet(Subnet${subnet_id}_Modules)
-    while { [llength $modules] } {
-	set more_modules ""
-	foreach module $modules {
-	    if { [isaSubnetIcon $module] } {
-		set id $Subnet(${module}_num) 
-		lappend allsubnets $id
-		foreach submod $Subnet(Subnet${id}_Modules) {
-		    lappend more_modules $submod
-		}
-		set SubnetScripts($Subnet(Subnet${id}_Name)) [genSubnetScript $id]
-	    }
-	}
-	set modules $more_modules
-    }
-
     set alreadyWritten ""
-    foreach subnet_id $allsubnets {
-	set name $Subnet(Subnet${id}_Name)
-	if { ([lsearch $alreadyWritten $name] == -1) && \
-		 [info exists SubnetScripts($name)] } {
-	    lappend alreadyWritten $name
+    while { [llength $subnet_ids] } {
+	set id [popFront subnet_ids]
+	foreach module $Subnet(Subnet${id}_Modules) {
+	    if { ![isaSubnetIcon $module] } continue
+	    set sub_id $Subnet(${module}_num)
+	    set subname $Subnet(Subnet${sub_id}_Name)	    
+	    if { [lsearch $alreadyWritten $subname] != -1 } continue
+	    
+	    lappend subnet_ids $sub_id
+	    lappend alreadyWritten $subname
+
+	    set SubnetScripts($subname) [genSubnetScript $sub_id]
 	    puts -nonewline $file "addSubnetToDatabase \{"
-	    puts -nonewline $file $SubnetScripts($name)
+	    puts -nonewline $file $SubnetScripts($subname)
 	    puts $file "\}\n"
 	}
     }
@@ -840,20 +831,29 @@ proc scripted_ModuleInstance { args } {
  #   puts "scripted_ModuleInstance: $args"
 }
 
+proc scripted_sourceSettingsFile { args } {
+    renameSourceCommand
+}
+
 proc addSubnetToDatabase { script } {
     global SubnetScripts
     rename addModuleAtPosition real_addModuleAtPosition
     rename addConnection real_addConnection
+    rename sourceSettingsFile real_sourceSettingsFile
     rename scripted_addModuleAtPosition addModuleAtPosition
     rename scripted_addConnection addConnection
+    rename scripted_sourceSettingsFile sourceSettingsFile
     eval $script
     if { [info exists Name] && ![info exists name] } { set name $Name }
     if { ![info exists name] } { set name Unknown }
     set SubnetScripts($name) $script
     rename addModuleAtPosition scripted_addModuleAtPosition 
     rename addConnection scripted_addConnection
+    rename sourceSettingsFile scripted_sourceSettingsFile
     rename real_addModuleAtPosition addModuleAtPosition 
     rename real_addConnection addConnection 
+    rename real_sourceSettingsFile sourceSettingsFile
+    resetSourceCommand
 }
 
 
@@ -996,6 +996,13 @@ proc genSubnetScript { subnet { tab "__auto__" }  } {
 		    set tmpval [subDATADIRandDATASET $val]
 		    append script "${tab}set \$m$i-${var} \"${tmpval}\"\n"
 		} else {
+		    if { ![string is double $val] } {
+			set failed [catch "set num [format %e $val]"]
+			if { !$failed } {
+			    append script "${tab}set \$m$i-${var} \{${num}\}\n"
+			    continue
+			}
+		    }
 		    append script "${tab}set \$m$i-${var} \{${val}\}\n"
 		}
 	    }
@@ -1091,6 +1098,3 @@ proc loadSubnetScriptsFromDisk { } {
 	addSubnetToDatabase $script
     }
 }
-
-	
-	
