@@ -397,7 +397,7 @@ Thread::exitAll(int code)
 	      done=false;
 	  }
 	}
-	pthread_yield();
+	sched_yield();
       }
       if(!numtries){
 	for(int i=0;i<numActive;i++){
