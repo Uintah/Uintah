@@ -6,8 +6,11 @@
 namespace Yarden {
   namespace Datatypes {
 
-volatile iotimer_t counter_value, *iotimer_addr;
 unsigned int cycleval;
+
+#ifdef __sgi
+
+volatile iotimer_t counter_value, *iotimer_addr;
 
 
 void
@@ -48,6 +51,15 @@ PrintTime(iotimer_t s, iotimer_t e, char *txt)
   printf("%s %lf %lf\n", txt,diff*(cycleval*1.0)*1E-12,
 	 1.0/( diff*(cycleval*1.0)*1E-12));
 }
+
+#else
+
+void init_clock() 
+{
+  cycleval = 1000;
+}
+
+#endif
 
 } // Datatype namespace
 } // Yarden namespace
