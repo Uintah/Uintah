@@ -576,8 +576,10 @@ void MPMICE::scheduleHEChemistry(SchedulerP& sched,
   t->computes( Ilb->created_vol_CCLabel);
   t->computes( Ilb->mom_comb_CCLabel);
   t->computes(MIlb->burnedMassCCLabel);
-  t->computes(MIlb->onSurfaceLabel,     one_matl);
-  t->computes(MIlb->surfaceTempLabel,   react_matls);
+  if(d_ice->d_massExchange) {// only compute diagnostic if there is a reaction
+    t->computes(MIlb->onSurfaceLabel,     one_matl);
+    t->computes(MIlb->surfaceTempLabel,   react_matls);
+  }
 
   sched->addTask(t, patches, all_matls);
 }
