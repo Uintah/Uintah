@@ -44,12 +44,15 @@ void usage(char *me, const char *unknown = 0) {
   }
   
   // Print out the usage
-  printf("-input  <filename>   input nrrd, channels as fastest axis (null)\n");
-  printf("-output <filename>   basename of output nrrds (\"pca\")\n");
-  printf("-numbases <int>      number of basis textures to use (0)\n");
-  printf("-simple              use the LAPACK simple driver (false)\n");
-  printf("-v                   print verbose status messages (false)\n");
-  printf("-vv <int>            verbosity level (0)\n");
+  printf("usage:  %s [options]\n", me);
+  printf("options:\n");
+  printf("  -i <filename>     input nrrd, channels as fastest axis (null)\n");
+  printf("  -o <filename>     basename of output nrrds (\"pca\")\n");
+  printf("  -numbases <int>   number of basis textures to use (0)\n");
+  printf("  -saveall          write mean and transform to files (false)\n");
+  printf("  -simple           use the LAPACK simple driver (false)\n");
+  printf("  -nrrd             use .nrrd extension (false)\n");
+  printf("  -v <int>          set verbosity level (0)\n");
 
   if (unknown)
     exit(1);
@@ -60,10 +63,10 @@ int main(int argc, char *argv[]) {
   char *err;
   char *infilename = 0;
   char *outfilename_base = "pca";
-  // -1 defaults to all
   int num_bases = 0;
-  int num_channels;
+  bool saveall = false;
   bool use_simple = false;
+  char *nrrd_ext = ".nhdr";
   int verbose = 0;
 
   if (argc < 2) {
@@ -77,13 +80,15 @@ int main(int argc, char *argv[]) {
       infilename = argv[++i];
     } else if (arg == "-output" || arg == "-o") {
       outfilename_base = argv[++i];
-    } else if (arg == "-numbases" ) {
+    } else if (arg == "-numbases") {
       num_bases = atoi(argv[++i]);
+    } else if (arg == "-saveall") {
+      saveall = true;
     } else if (arg == "-simple") {
       use_simple = true;
+    } else if (arg == "-nrrd") {
+      nrrd_ext = ".nrrd";
     } else if (arg == "-v" ) {
-      verbose++;
-    } else if (arg == "-vv" ) {
       verbose = atoi(argv[++i]);
     } else {
       usage(me, arg.c_str());
@@ -106,7 +111,7 @@ int main(int argc, char *argv[]) {
     exit(2);
   }
   
-  num_channels = nin->axis[0].size;
+  int num_channels = nin->axis[0].size;
 
   // Determine the number of eigen thingies to use
   if (num_bases < 1)
@@ -114,27 +119,28 @@ int main(int argc, char *argv[]) {
     num_bases = num_channels;
   // Check to make sure we haven't overstepped the max
   if (num_bases > num_channels) {
-    cerr << "You have specified too many basis for the number of channels ("<<num_bases<<").  Clamping to "<< num_channels<<".\n";
+    cerr << "You have specified too many basis for the number of channels ("
+	 <<num_bases<<").  Clamping to "<< num_channels<<".\n";
     num_bases = num_channels;
   }
 
   // convert the type to floats if you need to
   if (nin->type != nrrdTypeFloat) {
-    cerr << "Converting type from ";
+    cout << "Converting type from ";
     switch(nin->type) {
-    case nrrdTypeUnknown: cerr << "nrrdTypeUnknown"; break;
-    case nrrdTypeChar: cerr << "nrrdTypeChar"; break;
-    case nrrdTypeUChar: cerr << "nrrdTypeUChar"; break;
-    case nrrdTypeShort: cerr << "nrrdTypeShort"; break;
-    case nrrdTypeUShort: cerr << "nrrdTypeUShort"; break;
-    case nrrdTypeInt: cerr << "nrrdTypeInt"; break;
-    case nrrdTypeUInt: cerr << "nrrdTypeUInt"; break;
-    case nrrdTypeLLong: cerr << "nrrdTypeLLong"; break;
-    case nrrdTypeULLong: cerr << "nrrdTypeULLong"; break;
-    case nrrdTypeDouble: cerr << "nrrdTypeDouble"; break;
-    default: cerr << "Unknown!!";
+    case nrrdTypeUnknown: cout << "nrrdTypeUnknown"; break;
+    case nrrdTypeChar: cout << "nrrdTypeChar"; break;
+    case nrrdTypeUChar: cout << "nrrdTypeUChar"; break;
+    case nrrdTypeShort: cout << "nrrdTypeShort"; break;
+    case nrrdTypeUShort: cout << "nrrdTypeUShort"; break;
+    case nrrdTypeInt: cout << "nrrdTypeInt"; break;
+    case nrrdTypeUInt: cout << "nrrdTypeUInt"; break;
+    case nrrdTypeLLong: cout << "nrrdTypeLLong"; break;
+    case nrrdTypeULLong: cout << "nrrdTypeULLong"; break;
+    case nrrdTypeDouble: cout << "nrrdTypeDouble"; break;
+    default: cout << "Unknown!!";
     }
-    cerr << " to nrrdTypeFloat\n";
+    cout << " to nrrdTypeFloat\n";
     Nrrd *new_n = nrrdNew();
     if (nrrdConvert(new_n, nin, nrrdTypeFloat)) {
       err = biffGet(NRRD);
@@ -165,15 +171,18 @@ int main(int argc, char *argv[]) {
   // Free meanY
   meanY=nrrdNuke(meanY);
   
-  // Write out the mean value
-  string meanname(string(outfilename_base) + "-mean.nhdr");
-  if (nrrdSave(meanname.c_str(), mean, 0)) {
-    err = biffGet(NRRD);
-    fprintf(stderr, "%s: trouble saving to %s: %s\n", me, meanname.c_str(), err);
-    exit(2);
+  // Write out the mean value, if necessary
+  if (saveall) {
+    string meanname(string(outfilename_base) + "-mean" + string(nrrd_ext));
+    if (nrrdSave(meanname.c_str(), mean, 0)) {
+      err = biffGet(NRRD);
+      fprintf(stderr, "%s: trouble saving to %s: %s\n", me, meanname.c_str(), err);
+      exit(2);
+    }
+    
+    if (verbose)
+      cout << "Wrote out mean to "<<meanname<<"\n";
   }
-  
-  if (verbose) cout << "Wrote out mean to "<<meanname<<"\n";
   
   // Allocate our covariance matrix
   Nrrd *cov = nrrdNew();
@@ -184,6 +193,9 @@ int main(int argc, char *argv[]) {
       exit(2);
     }
     
+  if (verbose)
+    cout << "Computing covariance matrix" << endl;
+  
   // loop over each pixel to compute cov(x,y)
   int height = nin->axis[2].size;
   int width = nin->axis[1].size;
@@ -203,7 +215,7 @@ int main(int argc, char *argv[]) {
   }
 
   if (verbose)
-    cout << "Done computing first part of covariance matrix.\n";
+    cout << "Done computing covariance matrix" << endl;
   
   if (verbose > 10) {
     float *cov_data = (float*)(cov->data);
@@ -230,7 +242,8 @@ int main(int argc, char *argv[]) {
     }
   }
 
-  if (verbose) cout << "After minus mean\n";
+  if (verbose)
+    cout << "Subtracted mean value" << endl;
 
   if (verbose > 10)
   {
@@ -363,8 +376,8 @@ int main(int argc, char *argv[]) {
     cout<<"Recovered "<<(recovered_var/total_var)*100.0<<"% of the "
 	<<"variance with "<<num_bases<<" basis textures"<<endl;
   } else {
-    // XXX - how to account for the total, now that we only solve
-    //       for num_bases eigenvalues/vectors?
+    // XXX - how to account for the total variance, now that we only solve
+    //       for num_bases of the eigenvalues/vectors?
     for (int i=0; i<num_bases; i++) {
       recovered_var+=eval[i];
     }
@@ -426,20 +439,23 @@ int main(int argc, char *argv[]) {
   }
   
   if (verbose)
-    cout << "Done filling transfer matrix.\n";
+    cout << "Done filling the transformation matrix" << endl;
   
   // Compute our basis textures
-  Nrrd *basesTextures = nrrdNew();
-  if (nrrdAlloc(basesTextures, nrrdTypeFloat, 3, num_bases, width, height)) {
+  if ( verbose)
+    cout << "Computing " << num_bases << " basis textures" << endl;
+  
+  Nrrd *bases = nrrdNew();
+  if (nrrdAlloc(bases, nrrdTypeFloat, 3, num_bases, width, height)) {
     err = biffGet(NRRD);
     fprintf(stderr, "%s: error allocating bases textures :\n%s", me, err);
     exit(0);
   }
   
-  nrrdAxisInfoSet(basesTextures, nrrdAxisInfoLabel, "bases", "width", "height");
+  nrrdAxisInfoSet(bases, nrrdAxisInfoLabel, "bases", "width", "height");
   
   {
-    float *btdata = (float*)(basesTextures->data);
+    float *btdata = (float*)(bases->data);
     float *data = (float*)(nin->data);
     for (int y=0; y < height; y++) {
       for (int x = 0; x < width; x++ ) {
@@ -451,7 +467,6 @@ int main(int argc, char *argv[]) {
 	
 	// Now do transform * data
 	float *tdata = (float*)(transform->data);
-	
 	for(int c = 0; c < num_bases; c++)
 	  for(int r = 0; r < num_channels; r++)
 	    {
@@ -462,43 +477,56 @@ int main(int argc, char *argv[]) {
       }
     }
   }
-  
+
   // Free input nrrd and mean
   nin = nrrdNuke(nin);
   mean = nrrdNuke(mean);
+
+  if (verbose)
+    cout << "Basis textures complete" << endl;
   
   // Write out the basis textures
-  string basisname(string(outfilename_base) + "-bases.nhdr");
-  if (nrrdSave(basisname.c_str(), basesTextures, 0)) {
+  string basesname(string(outfilename_base) + "-bases" + string(nrrd_ext));
+  if (nrrdSave(basesname.c_str(), bases, 0)) {
     err = biffGet(NRRD);
-    fprintf(stderr, "%s: trouble saving to %s: %s\n", me, basisname.c_str(), err);
+    fprintf(stderr, "%s: trouble saving to %s: %s\n", me, basesname.c_str(), err);
     exit(2);
   }
 
-  // Free bases textures
-  basesTextures = nrrdNuke(basesTextures);
+  if (verbose)
+    cout << "Wrote basis textures to " << basesname << endl;
 
-  // Write out the transformation matrix
-  Nrrd *newTrans=nrrdNew();
-  int axes[2] = {1,0};
-  if (nrrdAxesPermute(newTrans, transform, axes)) {
-    err = biffGetDone(NRRD);
-    fprintf(stderr, "%s: error permuting the transformation matrix:\n%s", me, err);
-    exit(2);
-  }
+  // Free basis textures
+  bases = nrrdNuke(bases);
 
-  // Free old transform
-  transform = nrrdNuke(transform);
-  
-  string transname(string(outfilename_base) + "-transform.nhdr");
-  if (nrrdSave(transname.c_str(), newTrans, 0)) {
-    err = biffGet(NRRD);
-    fprintf(stderr, "%s: trouble saving to %s: %s\n", me, transname.c_str(), err);
-    exit(2);
-  }
-
-  // Free new transform
-  newTrans = nrrdNuke(newTrans);
+  // Write out the transformation matrix, if necessary
+  if (saveall) {
+    // Permute tranformation matrix axes
+    Nrrd *newTrans=nrrdNew();
+    int axes[2] = {1,0};
+    if (nrrdAxesPermute(newTrans, transform, axes)) {
+      err = biffGetDone(NRRD);
+      fprintf(stderr, "%s: error permuting the transformation matrix:\n%s", me, err);
+      exit(2);
+    }
     
+    // Free old transform
+    transform = nrrdNuke(transform);
+
+    // Write out the new tranformation matrix
+    string transname(string(outfilename_base) + "-transform" + string(nrrd_ext));
+    if (nrrdSave(transname.c_str(), newTrans, 0)) {
+      err = biffGet(NRRD);
+      fprintf(stderr, "%s: trouble saving to %s: %s\n", me, transname.c_str(), err);
+      exit(2);
+    }
+    
+    if (verbose)
+      cout << "Wrote transform matrix to " << transname << endl;
+
+    // Free new transform
+    newTrans = nrrdNuke(newTrans);
+  }
+  
   return 0;
 }
