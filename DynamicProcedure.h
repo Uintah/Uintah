@@ -68,15 +68,6 @@ public:
 
       // GROUP: Schedule Action :
       ///////////////////////////////////////////////////////////////////////
-      // Schedule the computation of Turbulence Model data
-      //    [in] 
-      //        data User data needed for solve 
-
-      virtual void sched_computeTurbSubmodel(const LevelP&, 
-					     SchedulerP&, const PatchSet* patches,
-					     const MaterialSet* matls);
-
-      ///////////////////////////////////////////////////////////////////////
       // Schedule the recomputation of Turbulence Model data
       //    [in] 
       //        data User data needed for solve 
@@ -121,40 +112,6 @@ private:
       DynamicProcedure();
 
       // GROUP: Action Methods (private)  :
-      ///////////////////////////////////////////////////////////////////////
-      // Petsc filter initialization
-      //    [in] 
-      //        documentation here
-      void initFilter(const ProcessorGroup*,
-		      const PatchSubset* patches,
-		      const MaterialSubset* matls,
-		      DataWarehouse* old_dw,
-		      DataWarehouse* new_dw);
-
-
-      ///////////////////////////////////////////////////////////////////////
-      // Actually Calculate the Turbulence sub model
-      //    [in] 
-      //        documentation here
-      void computeTurbSubmodel(const ProcessorGroup*,
-			       const PatchSubset* patches,
-			       const MaterialSubset* matls,
-			       DataWarehouse* old_dw,
-			       DataWarehouse* new_dw);
- 
-      void computeFilterValues(const ProcessorGroup*,
-			       const PatchSubset* patches,
-			       const MaterialSubset* matls,
-			       DataWarehouse* old_dw,
-			       DataWarehouse* new_dw);
- 
-      void computeSmagCoeff(const ProcessorGroup*,
-			    const PatchSubset* patches,
-			    const MaterialSubset* matls,
-			    DataWarehouse* old_dw,
-			    DataWarehouse* new_dw);
-
-
 
 
       ///////////////////////////////////////////////////////////////////////

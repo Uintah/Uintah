@@ -83,10 +83,13 @@ public:
 
       // GROUP: Schedule Action :
       ///////////////////////////////////////////////////////////////////////
-      // Schedule the computation of proprties
+      // Schedule the recomputation of proprties
 
-      void sched_computeProps(SchedulerP&, const PatchSet* patches,
-			      const MaterialSet* matls);
+      void sched_reComputeProps(SchedulerP&, const PatchSet* patches,
+				const MaterialSet* matls,
+				const TimeIntegratorLabel* timelabels,
+			        bool modify_density, bool initialize);
+
 
       ///////////////////////////////////////////////////////////////////////
       // Schedule the computation of proprties for the first actual time 
@@ -94,15 +97,6 @@ public:
 
       void sched_computePropsFirst_mm(SchedulerP&, const PatchSet* patches,
 				      const MaterialSet* matls);
-
-      ///////////////////////////////////////////////////////////////////////
-      // Schedule the recomputation of proprties
-
-      void sched_reComputeProps(SchedulerP&, const PatchSet* patches,
-				const MaterialSet* matls,
-				const TimeIntegratorLabel* timelabels,
-			        bool modify_density);
-
 
       ///////////////////////////////////////////////////////////////////////
       // Schedule the computation of density reference array here
@@ -162,15 +156,6 @@ private:
 
       // GROUP: Actual Action Methods :
       ///////////////////////////////////////////////////////////////////////
-      // Carry out actual computation of properties
-
-      void computeProps(const ProcessorGroup*,
-			const PatchSubset* patches,
-			const MaterialSubset* matls,
-			DataWarehouse* old_dw,
-			DataWarehouse* new_dw);
-
-      ///////////////////////////////////////////////////////////////////////
       // Carry out actual recomputation of properties
 
       void reComputeProps(const ProcessorGroup*,
@@ -179,7 +164,7 @@ private:
 			  DataWarehouse* old_dw,
 			  DataWarehouse* new_dw,
 			  const TimeIntegratorLabel* timelabels,
-			  bool modify_density);
+			  bool modify_density, bool initialize);
 
       ///////////////////////////////////////////////////////////////////////
       // Carry out actual computation of properties for the first actual

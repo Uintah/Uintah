@@ -284,18 +284,19 @@ int ExplicitSolver::nonlinearSolve(const LevelP& level,
     }
 
 //    d_props->sched_reComputeProps(sched, patches, matls,
-//				  d_timeIntegratorLabels[curr_level], false);
+//		d_timeIntegratorLabels[curr_level], false, false);
 //    sched_syncRhoF(sched, patches, matls, d_timeIntegratorLabels[curr_level]);
 //    sched_updateDensityGuess(sched, patches, matls,
 //			   	      d_timeIntegratorLabels[curr_level]);
 //    d_timeIntegratorLabels[curr_level]->integrator_step_number = TimeIntegratorStepNumber::Second;
 //    d_props->sched_reComputeProps(sched, patches, matls,
-//				  d_timeIntegratorLabels[curr_level], false);
+//		d_timeIntegratorLabels[curr_level], false, false);
 //    sched_syncRhoF(sched, patches, matls, d_timeIntegratorLabels[curr_level]);
 //    sched_updateDensityGuess(sched, patches, matls,
 //			   	      d_timeIntegratorLabels[curr_level]);
     d_props->sched_reComputeProps(sched, patches, matls,
-				  d_timeIntegratorLabels[curr_level], true);
+				  d_timeIntegratorLabels[curr_level],
+				  true, false);
     // Solve for Thermal NOx 
     if (d_thermalNOxSolve) {
                   d_thermalNOxSolver->solve(sched, patches, matls,
@@ -329,7 +330,8 @@ int ExplicitSolver::nonlinearSolve(const LevelP& level,
 					    d_timeIntegratorLabels[curr_level]);
       }
       d_props->sched_reComputeProps(sched, patches, matls,
-				    d_timeIntegratorLabels[curr_level], false);
+				    d_timeIntegratorLabels[curr_level],
+				    false, false);
       //sched_syncRhoF(sched, patches, matls, d_timeIntegratorLabels[curr_level]);
       d_momSolver->sched_averageRKHatVelocities(sched, patches, matls,
 					    d_timeIntegratorLabels[curr_level]);
@@ -364,6 +366,10 @@ int ExplicitSolver::nonlinearSolve(const LevelP& level,
 
     sched_printTotalKE(sched, patches, matls,
 		       d_timeIntegratorLabels[curr_level]);
+    if ((curr_level==0)&&(!((d_timeIntegratorType == "RK2")||(d_timeIntegratorType == "BEEmulation")))) {
+       sched_saveFECopies(sched, patches, matls,
+			   	      d_timeIntegratorLabels[curr_level]);
+    }
   }
 
   // print information at probes provided in input file
@@ -2457,6 +2463,77 @@ ExplicitSolver::syncRhoF(const ProcessorGroup*,
 	  }
         }
       }
+    }
+  }
+}
+//****************************************************************************
+// Schedule saving of FE copies of variables
+//****************************************************************************
+void 
+ExplicitSolver::sched_saveFECopies(SchedulerP& sched, const PatchSet* patches,
+				  const MaterialSet* matls,
+			   	  const TimeIntegratorLabel* timelabels)
+{
+  string taskname =  "ExplicitSolver::saveFECopies" +
+		     timelabels->integrator_step_name;
+  Task* tsk = scinew Task(taskname, this,
+			  &ExplicitSolver::saveFECopies,
+			  timelabels);
+
+  tsk->requires(Task::NewDW, d_lab->d_scalarSPLabel, Ghost::None,
+		Arches::ZEROGHOSTCELLS);
+  if (d_reactingScalarSolve)
+    tsk->requires(Task::NewDW, d_lab->d_reactscalarSPLabel, 
+		  Ghost::None, Arches::ZEROGHOSTCELLS);
+  if (d_enthalpySolve)
+    tsk->requires(Task::NewDW, d_lab->d_enthalpySPLabel, 
+		  Ghost::None, Arches::ZEROGHOSTCELLS);
+ 
+  tsk->computes(d_lab->d_scalarFELabel);
+  if (d_reactingScalarSolve)
+    tsk->computes(d_lab->d_reactscalarFELabel);
+  if (d_enthalpySolve)
+    tsk->computes(d_lab->d_enthalpyFELabel);
+
+  sched->addTask(tsk, patches, matls);
+}
+//****************************************************************************
+// Actually save temp copies here
+//****************************************************************************
+void 
+ExplicitSolver::saveFECopies(const ProcessorGroup*,
+			   const PatchSubset* patches,
+			   const MaterialSubset*,
+			   DataWarehouse*,
+			   DataWarehouse* new_dw,
+			   const TimeIntegratorLabel*)
+{
+  for (int p = 0; p < patches->size(); p++) {
+
+    const Patch* patch = patches->get(p);
+    int archIndex = 0; // only one arches material
+    int matlIndex = d_lab->d_sharedState->
+		     getArchesMaterial(archIndex)->getDWIndex(); 
+
+    CCVariable<double> temp_scalar;
+    CCVariable<double> temp_reactscalar;
+    CCVariable<double> temp_enthalpy;
+
+    new_dw->allocateAndPut(temp_scalar, d_lab->d_scalarFELabel,
+			  matlIndex, patch);
+    new_dw->copyOut(temp_scalar, d_lab->d_scalarSPLabel,
+		     matlIndex, patch);
+    if (d_reactingScalarSolve) {
+    new_dw->allocateAndPut(temp_reactscalar, d_lab->d_reactscalarFELabel,
+			  matlIndex, patch);
+    new_dw->copyOut(temp_reactscalar, d_lab->d_reactscalarSPLabel,
+		     matlIndex, patch);
+    }
+    if (d_enthalpySolve) {
+    new_dw->allocateAndPut(temp_enthalpy, d_lab->d_enthalpyFELabel,
+			  matlIndex, patch);
+    new_dw->copyOut(temp_enthalpy, d_lab->d_enthalpySPLabel,
+		     matlIndex, patch);
     }
   }
 }

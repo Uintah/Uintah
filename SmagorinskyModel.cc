@@ -81,42 +81,6 @@ SmagorinskyModel::problemSetup(const ProblemSpecP& params)
 }
 
 //****************************************************************************
-// Schedule compute 
-//****************************************************************************
-void 
-SmagorinskyModel::sched_computeTurbSubmodel(const LevelP&,
-					    SchedulerP& sched, const PatchSet* patches,
-					    const MaterialSet* matls)
-{
-  Task* tsk = scinew Task("SmagorinskyModel::TurbSubmodel",
-			  this,
-			  &SmagorinskyModel::computeTurbSubmodel);
-
-  
-  // Requires
-  tsk->requires(Task::NewDW, d_lab->d_densityCPLabel, Ghost::None,
-		Arches::ZEROGHOSTCELLS);
-  tsk->requires(Task::NewDW, d_lab->d_uVelocitySPBCLabel, 
-		Ghost::AroundFaces,
-		Arches::ONEGHOSTCELL);
-  tsk->requires(Task::NewDW, d_lab->d_vVelocitySPBCLabel,
-		Ghost::AroundFaces,
-		Arches::ONEGHOSTCELL);
-  tsk->requires(Task::NewDW, d_lab->d_wVelocitySPBCLabel,
-		Ghost::AroundFaces,
-		Arches::ONEGHOSTCELL);
-  tsk->requires(Task::NewDW, d_lab->d_cellTypeLabel, 
-		Ghost::AroundCells, Arches::ONEGHOSTCELL);
-
-
-      // Computes
-  tsk->modifies(d_lab->d_viscosityCTSLabel);
-
-  sched->addTask(tsk, patches, matls);
-
-}
-
-//****************************************************************************
 // Schedule recomputation of the turbulence sub model 
 //****************************************************************************
 void 
@@ -154,183 +118,6 @@ SmagorinskyModel::sched_reComputeTurbSubmodel(SchedulerP& sched,
   sched->addTask(tsk, patches, matls);
 }
 
-//****************************************************************************
-// Actual compute 
-//****************************************************************************
-void 
-SmagorinskyModel::computeTurbSubmodel(const ProcessorGroup*,
-				      const PatchSubset* patches,
-				      const MaterialSubset*,
-				      DataWarehouse*,
-				      DataWarehouse* new_dw)
-{
-  for (int p = 0; p < patches->size(); p++) {
-    const Patch* patch = patches->get(p);
-    int archIndex = 0; // only one arches material
-    int matlIndex = d_lab->d_sharedState->getArchesMaterial(archIndex)->getDWIndex(); 
-//    double time = d_lab->d_sharedState->getElapsedTime();
-    // Variables
-    constSFCXVariable<double> uVelocity;
-    constSFCYVariable<double> vVelocity;
-    constSFCZVariable<double> wVelocity;
-    constCCVariable<double> density;
-    CCVariable<double> viscosity;
-    constCCVariable<int> cellType;
-
-    // Get the velocity, density and viscosity from the old data warehouse
-    
-    new_dw->getModifiable(viscosity, d_lab->d_viscosityCTSLabel, matlIndex, patch);
-    new_dw->get(uVelocity, d_lab->d_uVelocitySPBCLabel, matlIndex, patch,
-		Ghost::AroundFaces, Arches::ONEGHOSTCELL);
-    new_dw->get(vVelocity, d_lab->d_vVelocitySPBCLabel, matlIndex, patch, 
-		Ghost::AroundFaces, Arches::ONEGHOSTCELL);
-    new_dw->get(wVelocity, d_lab->d_wVelocitySPBCLabel, matlIndex, patch, 
-		Ghost::AroundFaces, Arches::ONEGHOSTCELL);
-    new_dw->get(density, d_lab->d_densityCPLabel, matlIndex, patch,
-		Ghost::None, Arches::ZEROGHOSTCELLS);
-    new_dw->get(cellType, d_lab->d_cellTypeLabel, matlIndex, patch,
-		  Ghost::AroundCells, Arches::ONEGHOSTCELL);
-
-
-    PerPatch<CellInformationP> cellinfop;
-    //if (old_dw->exists(d_cellInfoLabel, patch)) {
-    if (new_dw->exists(d_lab->d_cellInfoLabel, matlIndex, patch)) {
-      new_dw->get(cellinfop, d_lab->d_cellInfoLabel, matlIndex, patch);
-    } else {
-      cellinfop.setData(scinew CellInformation(patch));
-      new_dw->put(cellinfop, d_lab->d_cellInfoLabel, matlIndex, patch);
-    }
-    //  old_dw->get(cellinfop, d_lab->d_cellInfoLabel, matlIndex, patch);
-    //} else {
-    //  cellinfop.setData(scinew CellInformation(patch));
-    //  old_dw->put(cellinfop, d_cellInfoLabel, matlIndex, patch);
-    //}
-    CellInformation* cellinfo = cellinfop.get().get_rep();
-    
-    // Get the patch details
-    IntVector lowIndex = patch->getCellFORTLowIndex();
-    IntVector highIndex = patch->getCellFORTHighIndex();
-
-    // get physical constants
-    double mol_viscos; // molecular viscosity
-    mol_viscos = d_physicalConsts->getMolecularViscosity();
-    double CF = d_CF;
-#if 0
-    if (time < 0.5 ) 
-      CF *= (time+ 0.0001);
-#endif
-    fort_smagmodel(uVelocity, vVelocity, wVelocity, density, viscosity,
-		   lowIndex, highIndex,
-		   cellinfo->sew, cellinfo->sns, cellinfo->stb,
-		   mol_viscos, CF, d_factorMesh, d_filterl);
-
-    // boundary conditions
-    bool xminus = patch->getBCType(Patch::xminus) != Patch::Neighbor;
-    bool xplus =  patch->getBCType(Patch::xplus) != Patch::Neighbor;
-    bool yminus = patch->getBCType(Patch::yminus) != Patch::Neighbor;
-    bool yplus =  patch->getBCType(Patch::yplus) != Patch::Neighbor;
-    bool zminus = patch->getBCType(Patch::zminus) != Patch::Neighbor;
-    bool zplus =  patch->getBCType(Patch::zplus) != Patch::Neighbor;
-    int wall_celltypeval = d_boundaryCondition->wallCellType();
-    if (xminus) {
-      int colX = lowIndex.x();
-      for (int colZ = lowIndex.z(); colZ <=  highIndex.z(); colZ ++) {
-	for (int colY = lowIndex.y(); colY <=  highIndex.y(); colY ++) {
-	  IntVector currCell(colX-1, colY, colZ);
-	  if (cellType[currCell] != wall_celltypeval)
-	    viscosity[currCell] = viscosity[IntVector(colX,colY,colZ)];
-	}
-      }
-    }
-    if (xplus) {
-      int colX =  highIndex.x();
-      for (int colZ = lowIndex.z(); colZ <=  highIndex.z(); colZ ++) {
-	for (int colY = lowIndex.y(); colY <=  highIndex.y(); colY ++) {
-	  IntVector currCell(colX+1, colY, colZ);
-	  if (cellType[currCell] != wall_celltypeval)
-	    viscosity[currCell] = viscosity[IntVector(colX,colY,colZ)];
-	}
-      }
-    }
-    if (yminus) {
-      int colY = lowIndex.y();
-      for (int colZ = lowIndex.z(); colZ <=  highIndex.z(); colZ ++) {
-	for (int colX = lowIndex.x(); colX <=  highIndex.x(); colX ++) {
-	  IntVector currCell(colX, colY-1, colZ);
-	  if (cellType[currCell] != wall_celltypeval)
-	    viscosity[currCell] = viscosity[IntVector(colX,colY,colZ)];
-	}
-      }
-    }
-    if (yplus) {
-      int colY =  highIndex.y();
-      for (int colZ = lowIndex.z(); colZ <=  highIndex.z(); colZ ++) {
-	for (int colX = lowIndex.x(); colX <=  highIndex.x(); colX ++) {
-	  IntVector currCell(colX, colY+1, colZ);
-	  if (cellType[currCell] != wall_celltypeval)
-	    viscosity[currCell] = viscosity[IntVector(colX,colY,colZ)];
-	}
-      }
-    }
-    if (zminus) {
-      int colZ = lowIndex.z();
-      for (int colY = lowIndex.y(); colY <=  highIndex.y(); colY ++) {
-	for (int colX = lowIndex.x(); colX <=  highIndex.x(); colX ++) {
-	  IntVector currCell(colX, colY, colZ-1);
-	  if (cellType[currCell] != wall_celltypeval)
-	    viscosity[currCell] = viscosity[IntVector(colX,colY,colZ)];
-	}
-      }
-    }
-    if (zplus) {
-      int colZ =  highIndex.z();
-      for (int colY = lowIndex.y(); colY <=  highIndex.y(); colY ++) {
-	for (int colX = lowIndex.x(); colX <=  highIndex.x(); colX ++) {
-	  IntVector currCell(colX, colY, colZ+1);
-	  if (cellType[currCell] != wall_celltypeval)
-	    viscosity[currCell] = viscosity[IntVector(colX,colY,colZ)];
-	}
-      }
-    }
-
-#ifdef multimaterialform
-    if (d_mmInterface) {
-      IntVector indexLow = patch->getCellLowIndex();
-      IntVector indexHigh = patch->getCellHighIndex();
-      MultiMaterialVars* mmVars = d_mmInterface->getMMVars();
-      for (int colZ = indexLow.z(); colZ < indexHigh.z(); colZ ++) {
-	for (int colY = indexLow.y(); colY < indexHigh.y(); colY ++) {
-	  for (int colX = indexLow.x(); colX < indexHigh.x(); colX ++) {
-	    // Store current cell
-	    IntVector currCell(colX, colY, colZ);
-	    viscosity[currCell] *=  mmVars->voidFraction[currCell];
-	  }
-	}
-      }
-    }
-#endif
-
-#ifdef ARCHES_DEBUG
-      // Testing if correct values have been put
-      cerr << " AFTER COMPUTE TURBULENCE SUBMODEL " << endl;
-      for (int ii = domLoVis.x(); ii <= domHiVis.x(); ii++) {
-	cerr << "Viscosity for ii = " << ii << endl;
-	for (int jj = domLoVis.y(); jj <= domHiVis.y(); jj++) {
-	  for (int kk = domLoVis.z(); kk <= domHiVis.z(); kk++) {
-	    cerr.width(10);
-	    cerr << viscosity[IntVector(ii,jj,kk)] << " " ; 
-	  }
-	  cerr << endl;
-	}
-      }
-#endif
-      // Create the new viscosity variable to write the result to 
-      // and allocate space in the new data warehouse for this variable
-      // Put the calculated viscosityvalue into the new data warehouse
-      // allocateAndPut instead:
-      /* new_dw->put(viscosity, d_lab->d_viscosityCTSLabel, matlIndex, patch); */;
-  }
-}
 
 //****************************************************************************
 // Actual recompute 
@@ -421,6 +208,8 @@ SmagorinskyModel::reComputeTurbSubmodel(const ProcessorGroup*,
 	  IntVector currCell(colX-1, colY, colZ);
 	  if (cellType[currCell] != wall_celltypeval)
 	    viscosity[currCell] = viscosity[IntVector(colX,colY,colZ)];
+//	    viscosity[currCell] = viscosity[IntVector(colX,colY,colZ)]
+//		    *density[currCell]/density[IntVector(colX,colY,colZ)];
 	}
       }
     }
@@ -431,6 +220,8 @@ SmagorinskyModel::reComputeTurbSubmodel(const ProcessorGroup*,
 	  IntVector currCell(colX+1, colY, colZ);
 	  if (cellType[currCell] != wall_celltypeval)
 	    viscosity[currCell] = viscosity[IntVector(colX,colY,colZ)];
+//	    viscosity[currCell] = viscosity[IntVector(colX,colY,colZ)]
+//		    *density[currCell]/density[IntVector(colX,colY,colZ)];
 	}
       }
     }
@@ -441,6 +232,8 @@ SmagorinskyModel::reComputeTurbSubmodel(const ProcessorGroup*,
 	  IntVector currCell(colX, colY-1, colZ);
 	  if (cellType[currCell] != wall_celltypeval)
 	    viscosity[currCell] = viscosity[IntVector(colX,colY,colZ)];
+//	    viscosity[currCell] = viscosity[IntVector(colX,colY,colZ)]
+//		    *density[currCell]/density[IntVector(colX,colY,colZ)];
 	}
       }
     }
@@ -451,6 +244,8 @@ SmagorinskyModel::reComputeTurbSubmodel(const ProcessorGroup*,
 	  IntVector currCell(colX, colY+1, colZ);
 	  if (cellType[currCell] != wall_celltypeval)
 	    viscosity[currCell] = viscosity[IntVector(colX,colY,colZ)];
+//	    viscosity[currCell] = viscosity[IntVector(colX,colY,colZ)]
+//		    *density[currCell]/density[IntVector(colX,colY,colZ)];
 	}
       }
     }
@@ -461,6 +256,8 @@ SmagorinskyModel::reComputeTurbSubmodel(const ProcessorGroup*,
 	  IntVector currCell(colX, colY, colZ-1);
 	  if (cellType[currCell] != wall_celltypeval)
 	    viscosity[currCell] = viscosity[IntVector(colX,colY,colZ)];
+//	    viscosity[currCell] = viscosity[IntVector(colX,colY,colZ)]
+//		    *density[currCell]/density[IntVector(colX,colY,colZ)];
 	}
       }
     }
@@ -471,6 +268,8 @@ SmagorinskyModel::reComputeTurbSubmodel(const ProcessorGroup*,
 	  IntVector currCell(colX, colY, colZ+1);
 	  if (cellType[currCell] != wall_celltypeval)
 	    viscosity[currCell] = viscosity[IntVector(colX,colY,colZ)];
+//	    viscosity[currCell] = viscosity[IntVector(colX,colY,colZ)]
+//		    *density[currCell]/density[IntVector(colX,colY,colZ)];
 	}
       }
     }
