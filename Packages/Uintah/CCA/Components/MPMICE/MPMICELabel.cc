@@ -67,6 +67,11 @@ MPMICELabel::MPMICELabel()
     wvel_FCMELabel       =
      scinew VarLabel("wvel_FCME", SFCZVariable<double>::getTypeDescription() );
 
+  velInc_CCLabel      = scinew VarLabel("velIncCC",
+			CCVariable<Vector>::getTypeDescription());
+  velInc_NCLabel      = scinew VarLabel("velIncNC",
+			NCVariable<Vector>::getTypeDescription());
+
 } 
 
 MPMICELabel::~MPMICELabel()
@@ -96,4 +101,7 @@ MPMICELabel::~MPMICELabel()
   delete uvel_FCMELabel;
   delete vvel_FCMELabel;
   delete wvel_FCMELabel;
+
+  delete velInc_CCLabel;
+  delete velInc_NCLabel;
 }
