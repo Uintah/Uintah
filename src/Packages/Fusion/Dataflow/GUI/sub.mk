@@ -18,8 +18,8 @@ $(SRCDIR)/tclIndex: \
 	$(SRCDIR)/FusionFieldSetReader.tcl\
 	$(SRCDIR)/NIMRODNrrdConverter.tcl\
 	$(SRCDIR)/PPPLNrrdConverter.tcl\
+	$(SRCDIR)/PrismNrrdConverter.tcl\
 	$(SRCDIR)/MDSPlusFieldReader.tcl\
-	$(SRCDIR)/MDSPlusDataReader.tcl\
 	$(SRCDIR)/Plot2DViewer.tcl\
 	#$(SRCDIR)/ReactionDiffusion.tcl\
 #[INSERT NEW TCL FILE HERE]
