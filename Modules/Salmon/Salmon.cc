@@ -20,8 +20,10 @@
 #include <Dataflow/HelpUI.h>
 #include <Dataflow/ModuleHelper.h>
 #include <Dataflow/ModuleList.h>
+#include <Datatypes/GeometryComm.h>
 #include <Devices/DBContext.h>
 #include <Geom/Geom.h>
+#include <Geom/HeadLight.h>
 #include <iostream.h>
 
 static Module* make_Salmon(const clString& id)
@@ -35,6 +37,8 @@ static RegisterModule db2("Dave", "Salmon", make_Salmon);
 Salmon::Salmon(const clString& id)
 : Module("Salmon", id, Sink), max_portno(0)
 {
+    // Add a headlight
+    lighting.lights.add(new HeadLight(Color(1,1,1)));
     // Create the input port
     add_iport(new GeometryIPort(this, "Geometry", GeometryIPort::Atomic));
     default_matl=new Material(Color(.1,.1,.1), Color(.6,0,0),
@@ -57,8 +61,8 @@ void Salmon::do_execute()
     while(1){
 	if(mailbox.nitems() == 0){
 	    // See if anything needs to be redrawn...
-	    for(int i=0;i<topRoe.size();i++)
-		topRoe[i]->redraw_if_needed(0);
+	    for(int i=0;i<roe.size();i++)
+		roe[i]->redraw_if_needed();
 	}
 	busy_bit=0;
 	MessageBase* msg=mailbox.receive();
@@ -81,6 +85,18 @@ void Salmon::do_execute()
 		    Roe* r=roe[i];
 		    if(r->id == rmsg->rid){
 			r->redraw();
+			break;
+		    }
+		}
+	    }
+	    break;
+	case MessageTypes::RoeMouse:
+	    {
+		RoeMouseMessage* rmsg=(RoeMouseMessage*)msg;
+		for(int i=0;i<roe.size();i++){
+		    Roe* r=roe[i];
+		    if(r->id == rmsg->rid){
+			(r->*(rmsg->handler))(rmsg->action, rmsg->x, rmsg->y);
 			break;
 		    }
 		}
@@ -136,7 +152,7 @@ void Salmon::initPort(Mailbox<GeomReply>* reply)
 void Salmon::flushViews()
 {
     for (int i=0; i<topRoe.size(); i++) {
-	topRoe[i]->redraw_if_needed(1);
+	topRoe[i]->redraw();
     }
 }
 

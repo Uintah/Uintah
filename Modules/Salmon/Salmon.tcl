@@ -95,9 +95,10 @@ proc makeRoe {salmon rid} {
     pack $w.bframe.v -side left
     button $w.bframe.v.autoview -text "Autoview"
     pack $w.bframe.v.autoview -fill x -pady 2
-    button $w.bframe.v.sethome -text "Set Home View" -padx 2
+    button $w.bframe.v.sethome -text "Set Home View" -padx 2 \
+	    -command "$rid sethome"
     pack $w.bframe.v.sethome -fill x -pady 2
-    button $w.bframe.v.gohome -text "Go home"
+    button $w.bframe.v.gohome -text "Go home" -command "$rid gohome"
     pack $w.bframe.v.gohome -fill x -pady 2
 
     button $w.bframe.more -text "+" -padx 3 \
@@ -112,8 +113,24 @@ proc makeRoe {salmon rid} {
     set height 500
     set wcommand [$rid setrenderer $renderer $w.wframe.draw $width $height]
     eval $wcommand
+    bindEvents $w.wframe.draw $rid
     pack $w.wframe.draw -expand yes -fill both
-    bind $w.wframe.draw <Expose> "$rid redraw"
+}
+
+proc bindEvents {w rid} {
+    bind $w <Expose> "$rid redraw"
+    bind $w <ButtonPress-1> "$rid mtranslate start %x %y"
+    bind $w <Button1-Motion> "$rid mtranslate move %x %y"
+    bind $w <ButtonRelease-1> "$rid mtranslate end %x %y"
+    bind $w <ButtonPress-2> "$rid mrotate start %x %y"
+    bind $w <Button2-Motion> "$rid mrotate move %x %y"
+    bind $w <ButtonRelease-2> "$rid mrotate end %x %y"
+    bind $w <ButtonPress-3> "$rid mscale start %x %y"
+    bind $w <Button3-Motion> "$rid mscale move %x %y"
+    bind $w <ButtonRelease-3> "$rid mscale end %x %y"
+    bind $w <Shift-ButtonPress-1> "$rid mscale start %x %y"
+    bind $w <Shift-Button1-Motion> "$rid mscale move %x %y"
+    bind $w <Shift-ButtonRelease-1> "$rid mscale end %x %y"
 }
 
 proc removeMFrame {w rid} {
@@ -124,20 +141,24 @@ proc removeMFrame {w rid} {
 }
 
 proc addMFrame {w rid} {
+    set r "$rid redraw"
     $w.bframe.more configure -command "removeMFrame $w rid" -text "-"
     set m $w.mframe.f
     frame $m.shade -borderwidth 2 -relief groove
     pack $m.shade -anchor w -padx 2 -side left
-    label $m.shade.title -text "Shading:" -anchor w -relief flat
+    label $m.shade.title -text "Shading:" -anchor w -relief flat 
     pack $m.shade.title -fill x -padx 2
-    radiobutton $m.shade.wire -text "Wire" -anchor w -relief flat
+    radiobutton $m.shade.wire -text "Wire" -anchor w -relief flat \
+	    -variable shading,$rid -command $r
     pack $m.shade.wire -fill x -padx 2
-    radiobutton $m.shade.flat -text "Flat" -anchor w -relief flat
+    radiobutton $m.shade.flat -text "Flat" -anchor w -relief flat \
+	    -variable shading,$rid -command $r
     pack $m.shade.flat -fill x -padx 2
     radiobutton $m.shade.gouraud -text "Gouraud" -anchor w -relief flat \
-	    -padx 2
+	    -padx 2 -variable shading,$rid -command $r
     pack $m.shade.gouraud -fill x -padx 2
-    radiobutton $m.shade.phong -text "Phong" -anchor w -relief flat
+    radiobutton $m.shade.phong -text "Phong" -anchor w -relief flat \
+	    -variable shading,$rid -command $r
     pack $m.shade.phong -fill x -padx 2
     $m.shade.gouraud select
 
@@ -161,7 +182,7 @@ proc switchRenderer {rid renderer} {
     destroy $w.wframe.draw
     set wcommand [$rid setrenderer $renderer $w.wframe.draw $width $height]
     eval $wcommand
-    bind $w.wframe.draw <Expose> "$rid redraw"
+    bindEvents $w.wframe.draw $rid
     pack $w.wframe.draw -expand yes -fill both
 }
 
@@ -186,11 +207,10 @@ proc makeViewPopup {rid} {
     makeNormalVector $w.up "Up Vector" up,$view $c
     pack $w.up -side left -expand yes -fill x
     global fov,$view
-    set fov,$view 45
     frame $w.f -relief groove -borderwidth 2
     pack $w.f
     fscale $w.f.fov -orient horizontal -variable fov,$view \
-	    -from 0 -to 90 -label "Field of View:" \
+	    -from 0 -to 180 -label "Field of View:" \
 	    -showvalue true -tickinterval 30 \
 	    -activeforeground SteelBlue2 -digits 3 \
 	    -command $c

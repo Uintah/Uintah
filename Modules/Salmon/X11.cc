@@ -9,6 +9,7 @@
 #include <Geometry/Transform.h>
 #include <Geom/Geom.h>
 #include <Geom/GeomX11.h>
+#include <Math/Trig.h>
 #include <TCL/TCLTask.h>
 
 #include <X11/Xlib.h>
@@ -62,6 +63,8 @@ clString X11::create_window(const clString& name,
 			    const clString& height)
 {
     windowname=name;
+    width.get_int(xres);
+    height.get_int(yres);
     return "canvas "+name+" -width "+width+" -height "+height+" -background black";
 }
 
@@ -90,22 +93,25 @@ void X11::setup_window()
     }
 
 
-    int s=4;
+    int sr=8;
+    int sg=8;
+    int sb=8;
     while(1){
 	int failed=0;
-	ncolors=s*s*s;
+	ncolors=sr*sg*sb;
 	tkcolors=new XColor*[ncolors];
 	int idx=0;
-	for(int i=0;i<s && !failed;i++){
-	    for(int j=0;j<s && !failed;j++){
-		for(int k=0;k<s && !failed;k++){
+	cerr << sr << "x" << sg << "x" << sb << endl;
+	for(int i=0;i<sr && !failed;i++){
+	    for(int j=0;j<sg && !failed;j++){
+		for(int k=0;k<sb && !failed;k++){
 		    XColor pref;
-		    pref.red=i*65535/(s-1);
-		    pref.green=j*65535/(s-1);
-		    pref.blue=k*65535/(s-1);
+		    pref.red=i*65535/(sr-1);
+		    pref.green=j*65535/(sg-1);
+		    pref.blue=k*65535/(sb-1);
 		    pref.flags = DoRed|DoGreen|DoBlue;
-		    XColor* c=Tk_GetColorByValue(the_interp, tkwin,
-						 Tk_Colormap(tkwin), &pref);
+		    XColor* c=Tk_GetColorByValue2(the_interp, tkwin,
+						  Tk_Colormap(tkwin), &pref);
 		    if(!c){
 			failed=1;
 		    } else {
@@ -118,7 +124,14 @@ void X11::setup_window()
 	    for (int i=0;i<idx;i++)
 		Tk_FreeColor(tkcolors[i]);
 	    delete[] tkcolors;
-	    if(--s == 1){
+	    if(sr == sg && sr == sb){
+		sb--;
+	    } else if(sr == sg){
+		sg--;
+	    } else {
+		sr--;
+	    }
+	    if(sb == 0){
 		tkcolors=0;
 		cerr << "Cannot allocate enough colors to survive!\n";
 		exit(-1);
@@ -127,11 +140,11 @@ void X11::setup_window()
 	    break;
 	}
     }
-    drawinfo->red_max=s-1;
-    drawinfo->green_max=s-1;
-    drawinfo->blue_max=s-1;
-    drawinfo->red_mult=s*s;
-    drawinfo->green_mult=s;
+    drawinfo->red_max=sr-1;
+    drawinfo->green_max=sg-1;
+    drawinfo->blue_max=sb-1;
+    drawinfo->red_mult=sg*sb;
+    drawinfo->green_mult=sb;
     drawinfo->colors=new unsigned long[ncolors];
     for(int i=0;i<ncolors;i++)
 	drawinfo->colors[i]=tkcolors[i]->pixel;
@@ -157,39 +170,50 @@ void X11::redraw(Salmon* salmon, Roe* roe)
     }
     int npolys=free.size()+dontfree.size();
 
-    double t[16];
-    t[0]=4000; t[1]=0;   t[2]=0;   t[3]=-1900;
-    t[4]=0;   t[5]=4000; t[6]=0;   t[7]=-1750;
-    t[8]=0;   t[9]=0;   t[10]=4000;t[11]=-2000;
-    t[12]=0;  t[13]=0;  t[14]=0;  t[15]=1.0;
-    Transform transform;
-    transform.set(t);
-    drawinfo->transform=&transform;
-    drawinfo->current_matl=salmon->default_matl.get_rep();
-    drawinfo->current_lit=1;
-    drawinfo->view=roe->view.get();
-    NOT_FINISHED("Light source selection");
-    drawinfo->lighting=salmon->lighting;
-    AVLTree<double, GeomObj*> objs;
-    for(int i=0;i<free.size();i++){
-	GeomObj* obj=free[i];
-	objs.insert(obj->depth(drawinfo), obj);
-    }
-    for(i=0;i<dontfree.size();i++){
-	GeomObj* obj=dontfree[i];
-	objs.insert(obj->depth(drawinfo), obj);
-    }
+    View view(roe->view.get());
 
-    AVLTreeIter<double, GeomObj*> iter(&objs);
-    TCLTask::lock();
-    XClearWindow(drawinfo->dpy, drawinfo->win);
-    for(iter.first();iter.ok();++iter){
-	GeomObj* obj=iter.get_data();
-	obj->draw(drawinfo);
-    }
-    TCLTask::unlock();
-    for(i=0;i<free.size();i++){
-	delete free[i];
+    // Compute znear and zfar...
+    double znear;
+    double zfar;
+    if(compute_depth(roe, view, znear, zfar)){
+	znear=1.0;
+	zfar=2.0;
+	Transform trans;
+	trans.load_identity();
+	trans.perspective(view.eyep, view.lookat,
+			  view.up, view.fov,
+			  znear, zfar, xres, yres);
+	drawinfo->transform=&trans;
+	drawinfo->current_matl=salmon->default_matl.get_rep();
+	drawinfo->current_lit=1;
+	drawinfo->view=view;
+	NOT_FINISHED("Light source selection");
+	drawinfo->lighting=salmon->lighting;
+	AVLTree<double, GeomObj*> objs;
+	for(int i=0;i<free.size();i++){
+	    GeomObj* obj=free[i];
+	    objs.insert(obj->depth(drawinfo), obj);
+	}
+	for(i=0;i<dontfree.size();i++){
+	    GeomObj* obj=dontfree[i];
+	    objs.insert(obj->depth(drawinfo), obj);
+	}
+
+	AVLTreeIter<double, GeomObj*> iter(&objs);
+	TCLTask::lock();
+	XClearWindow(drawinfo->dpy, drawinfo->win);
+	for(iter.first();iter.ok();++iter){
+	    GeomObj* obj=iter.get_data();
+	    obj->draw(drawinfo);
+	}
+	TCLTask::unlock();
+	for(i=0;i<free.size();i++){
+	    delete free[i];
+	}
+    } else {
+	TCLTask::lock();
+	XClearWindow(drawinfo->dpy, drawinfo->win);
+	TCLTask::unlock();
     }
     timer.stop();
     clString perf1(to_string(npolys)+" polygons in "+to_string(timer.time())+" seconds");

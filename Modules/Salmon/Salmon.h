@@ -14,6 +14,7 @@
 #define SCI_project_module_Salmon_h
 
 #include <Dataflow/Module.h>
+#include <Comm/MessageBase.h>
 #include <Classlib/Array1.h>
 #include <Classlib/HashTable.h>
 #include <Datatypes/GeometryPort.h>
@@ -21,6 +22,7 @@
 #include <Geom/Lighting.h>
 #include <Multitask/ITC.h>
 
+class GeomReply;
 class Roe;
 
 class Salmon : public Module {
