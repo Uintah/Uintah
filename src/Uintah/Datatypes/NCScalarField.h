@@ -181,7 +181,7 @@ ScalarField*  NCScalarField<T>::clone()
 template<class T>
 void NCScalarField<T>::compute_minmax()
 {
-  T min = T(MAXSHORT), max = T(-MAXSHORT);
+  T min = T(MAXDOUBLE), max = T(-MAXDOUBLE);
   int i = 0;
   for(Level::const_patchIterator r = _level->patchesBegin();
 	      r != _level->patchesEnd(); r++, i++ ){
