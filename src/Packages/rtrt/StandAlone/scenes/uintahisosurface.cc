@@ -1,5 +1,5 @@
 
-#define USE_HVBRICK 1
+//#define USE_HVBRICK 1
 
 // now for the SCI stuff
 #include <Core/Thread/Thread.h>
@@ -109,6 +109,10 @@ Scene* make_scene(int argc, char* argv[], int nworkers)
 	cerr << " -depth\n";
 	cerr << " -timesteplow [int]\n";
 	cerr << " -timestephigh [int]\n";
+	cerr << " -var [name of variable]\n";
+	cerr << " -mat [material index]\n";
+	cerr << " -debug (prints out extra debugging information)\n";
+	cerr << " -v (be extra chatty)\n";
 	return 0;
       }
       file=argv[i];
@@ -129,7 +133,7 @@ Scene* make_scene(int argc, char* argv[], int nworkers)
   }
 
   Color surf(.50000, 0.0, 0.00);
-  Material* matl0=new Phong( surf*0.6, surf*0.6, 100, .4);
+  Material* matl0=new Phong( surf*0.6, surf*0.6, 40);
   VolumeDpy* dpy=new VolumeDpy();
 
   TimeObj* timeobj1=new TimeObj(rate);
@@ -154,6 +158,7 @@ Scene* make_scene(int argc, char* argv[], int nworkers)
     }
     if (!var_found) {
       cerr << "Variable \"" << var << "\" was not found.\n";
+      cerr << "If a variable name was not specified try -var [name].\n";
       cerr << "Aborting!!\n";
       exit(-1);
       //      var = vars[0];
@@ -231,6 +236,7 @@ Scene* make_scene(int argc, char* argv[], int nworkers)
 	      cerr << "Using the material " << mat_num << ".\n";
 	    }
 	  }
+	  cout << "Extracting data for material "<<mat_num<<".\n";
 	  const Uintah::TypeDescription* td = types[var_index];
 	  const Uintah::TypeDescription* subtype = td->getSubType();
 	  IntVector dim;
@@ -301,7 +307,7 @@ Scene* make_scene(int argc, char* argv[], int nworkers)
 		      data_ptr[data_index] = temp_data[data_index];
 		    // clean up memory
 		    delete[] temp_data;
-#if 1
+#if 0
 		    for (int x = 0; x < dim.x(); x++)
 		      for (int y = 0; y < dim.y(); y++)
 			for (int z = 0; z < dim.z(); z++)
@@ -311,7 +317,7 @@ Scene* make_scene(int argc, char* argv[], int nworkers)
 #ifdef USE_HVBRICK
 			    data[z + y*dim.z() + x * (dim.z()*dim.y())] = val;
 #else
-			    data(x,y,z) = ;
+			    data(x,y,z) = val;
 #endif
 			  }	
 		    data_max = (dim.x()-1) * (dim.y()-1) * (dim.z()-1);
@@ -338,24 +344,109 @@ Scene* make_scene(int argc, char* argv[], int nworkers)
 	      }
 	      break;
 	    default:
-	      cerr << "NC variable of unknown type: " << subtype->getType() << '\n';
+	      cerr << "CC variable of unknown type: " << subtype->getType() << '\n';
 	      break;
 	    } // end subtyp
 	    break;
 	  case Uintah::TypeDescription::NCVariable:
+	    switch(subtype->getType()){
+	    case Uintah::TypeDescription::double_type:
+	      {
+		// get the data
+		NCVariable<double> value;
+		da->query(value, var, mat_num, patch, time);
+		dim = IntVector(value.getHighIndex()-value.getLowIndex());
+		if(dim.x() && dim.y() && dim.z()){
+#ifdef USE_HVBRICK
+		  data = new float[dim.x()*dim.y()*dim.z()];
+#else
+		  data.resize(dim.x(), dim.y(), dim.z());
+		  float* data_ptr = data.get_dataptr();
+		  int data_size = dim.z() * dim.y() * dim.x();
+		  cerr << "dim=" << dim << '\n';
+		  cerr << "data_size = " << data_size << endl;
+#endif
+		  NodeIterator iter = patch->getNodeIterator();
+		  data_min = data_max = value[*iter];
+		  int data_index = 0;
+		  for(;!iter.done(); iter++){
+		    //IntVector idx=*iter;
+		    //cerr << "idx = " << idx << endl;
+		    //		    int data_index=idx.z()+idx.y()*dim.z()+idx.x()*dim.z()*dim.y();
+		    //int data_index=idx.x()+idx.y()*dim.x()+idx.z()*dim.x()*dim.y();
+		    data_min = SCIRun::Min(data_min, value[*iter]);
+		    data_max = SCIRun::Max(data_max, value[*iter]);
+#ifdef USE_HVBRICK
+		    data[data_index] = (float)value[*iter];
+#else
+		    data_ptr[data_index] = (float)value[*iter];
+		    if (data_index >= data_size)
+		      cerr << "Went over. data_index = " << data_index << endl;
+#endif
+		    data_index++;
+		  }
+#if 0
+		  // reorder the data
+		  {
+		    int size = dim.x()*dim.y()*dim.z();
+		    float* temp_data = new float[size];
+#ifdef USE_HVBRICK
+		    float* data_ptr = data;
+#else
+		    float* data_ptr = data.get_dataptr();
+#endif
+		    data_index = 0;
+		    int new_index;
+		    for (int z = 0; z < dim.z(); z++)
+		      for (int y = 0; y < dim.y(); y++)
+			for (int x = 0; x < dim.x(); x++)
+			  {
+			    new_index = z + y*dim.z() + x * (dim.z()*dim.y());
+			    temp_data[new_index] = data_ptr[data_index++];
+			  }
+		    // copy the data back
+		    for (data_index = 0; data_index < size; data_index++)
+		      data_ptr[data_index] = temp_data[data_index];
+		    // clean up memory
+		    delete[] temp_data;
+#if 0
+		    for (int x = 0; x < dim.x(); x++)
+		      for (int y = 0; y < dim.y(); y++)
+			for (int z = 0; z < dim.z(); z++)
+			  {
+			    //float val = (float) x + y + z;
+			    float val = (float) x * y * z;
+#ifdef USE_HVBRICK
+			    data[z + y*dim.z() + x * (dim.z()*dim.y())] = val;
+#else
+			    data(x,y,z) = val;
+#endif
+			  }	
+		    data_max = (dim.x()-1) * (dim.y()-1) * (dim.z()-1);
+		    //data_max = dim.x() + dim.y() + dim.z() - 3;
+		    data_min = 0;
+#endif
+		  } // end reorder data
+#endif
+		}
+	      } // end subtype = double
+	    } // end switch subtype
 	    break;
 	  case Uintah::TypeDescription::Matrix3:
+	    cerr << "NCVariable currently not supported\n";
 	    break;
 	  case Uintah::TypeDescription::ParticleVariable:
 	  case Uintah::TypeDescription::ReductionVariable:
 	  case Uintah::TypeDescription::Unknown:
 	  case Uintah::TypeDescription::Other:
+	    cerr << "This typedescription currently not supported\n";
 	    // currently not implemented
 	    break;
 	  default:
 	    cerr << "Variable (" << var << ") is of unknown type: " << td->getType() << '\n';
 	    break;
 	  } // end switch(td->getType())
+	  if (debug) { cerr << "dim = "<<dim<<"\n"; }
 	  if (dim.x() && dim.y() && dim.z()) {
 	    SCIRun::Point b_min = patch->getBox().lower();
 	    SCIRun::Point b_max = patch->getBox().upper();
@@ -387,6 +478,7 @@ Scene* make_scene(int argc, char* argv[], int nworkers)
 	       (float)data_max,
 	       data);
 #endif
+	    if (debug) cerr << "adding hvol to timeblock\n";
 	    timeblock->add(hvol);
 	  } // end if (dim.x() && dim.y() && dim.z())
 	  if (debug) cerr << "Finished processdata\n";
@@ -457,7 +549,11 @@ Scene* make_scene(int argc, char* argv[], int nworkers)
   Scene* scene=new Scene(group, cam,
 			 bgcolor, groundcolor*averagelight, bgcolor,
 			 groundplane, ambient_scale);
-  scene->add_light(new Light(rtrt::Point(5,-3,3), Color(1,1,.8)*2, 0));
+  scene->attach_display(dpy);
+  scene->addObjectOfInterest(group,true);
+  Light* light0 = new Light(rtrt::Point(5,-3,3), Color(1,1,.8)*2, 0);
+  light0->name_ = "light 0";
+  scene->add_light(light0);
   scene->set_background_ptr( new LinearBackground(Color(0.2, 0.4, 0.9),
 						  Color(0.0,0.0,0.0),
 						  rtrt::Vector(1, 0, 0)) );
