@@ -47,6 +47,8 @@ using std::string;
 class SCICORESHARE ImageMesh : public Mesh
 {
 public:
+  struct ImageIndex;
+  friend struct ImageIndex;
 
   struct ImageIndex
   {
@@ -70,8 +72,6 @@ public:
 
     const ImageMesh *mesh_;
   };
-
-  friend struct ImageIndex; // needed by the gcc-2.95.3 compiler
 
   struct IFaceIndex : public ImageIndex
   {
