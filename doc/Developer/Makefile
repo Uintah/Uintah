@@ -18,7 +18,7 @@
 # Makefile for Developer directory.
 .PHONY: products
 
-PRODUCTS = Guide Modules CodeViews 
+PRODUCTS = Guide FAQ Modules CodeViews 
 
 default: index.html products
 
