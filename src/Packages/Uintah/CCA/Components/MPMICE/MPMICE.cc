@@ -25,6 +25,9 @@
 #include <stdio.h>
 #include <Core/Util/DebugStream.h>
 
+#define JOHN_BCS
+//#undef JOHN_BCS
+
 
 using namespace Uintah;
 using namespace SCIRun;
@@ -721,11 +724,27 @@ void MPMICE::actuallyInitialize(const ProcessorGroup*,
       mpm_matl->initializeCCVariables(rho_micro,   rho_CC,
                                       Temp_CC,     vel_CC,  
                                       numALL_matls,patch);  
-
+#ifdef JOHN_BCS
+      setBCJohn(rho_CC,    "Density",      patch, d_sharedState, indx);    
+#else
       setBC(rho_CC,    "Density",      patch, d_sharedState, indx);    
+#endif
+
+#ifdef JOHN_BCS
+      setBCJohn(rho_micro, "Density",      patch, d_sharedState, indx);    
+#else
       setBC(rho_micro, "Density",      patch, d_sharedState, indx);    
+#endif
+#ifdef JOHN_BCS
+      setBCJohn(Temp_CC,   "Temperature",  patch, d_sharedState, indx);    
+#else
       setBC(Temp_CC,   "Temperature",  patch, d_sharedState, indx);    
+#endif
+#ifdef JOHN_BCS
+      setBCJohn(vel_CC,    "Velocity",     patch, indx);                   
+#else
       setBC(vel_CC,    "Velocity",     patch, indx);                   
+#endif
       for (CellIterator iter = patch->getExtraCellIterator();
                                                         !iter.done();iter++){
         IntVector c = *iter;
@@ -1002,13 +1021,37 @@ void MPMICE::interpolateNCToCC_0(const ProcessorGroup*,
         rho_CC[c]    = cmass[c]/cell_vol;
       }
       //  Set BC's
+#ifdef JOHN_BCS
+      setBCJohn(Temp_CC, "Temperature",patch, d_sharedState, indx);
+#else
       setBC(Temp_CC, "Temperature",patch, d_sharedState, indx);
+#endif
+#ifdef JOHN_BCS
+      setBCJohn(rho_CC,  "Density",    patch, d_sharedState, indx);
+#else
       setBC(rho_CC,  "Density",    patch, d_sharedState, indx);
+#endif
+#ifdef JOHN_BCS
+      setBCJohn(vel_CC,  "Velocity",   patch, indx);
+#else
       setBC(vel_CC,  "Velocity",   patch, indx);
+#endif
       //  Set if symmetric Boundary conditions
+#ifdef JOHN_BCS
+      setBCJohn(cmass,    "set_if_sym_BC",patch, d_sharedState, indx);
+#else
       setBC(cmass,    "set_if_sym_BC",patch, d_sharedState, indx);
+#endif
+#ifdef JOHN_BCS
+      setBCJohn(cvolume,  "set_if_sym_BC",patch, d_sharedState, indx);
+#else
       setBC(cvolume,  "set_if_sym_BC",patch, d_sharedState, indx);
+#endif
+#ifdef JOHN_BCS
+      setBCJohn(sp_vol_CC,"set_if_sym_BC",patch, d_sharedState, indx); 
+#else
       setBC(sp_vol_CC,"set_if_sym_BC",patch, d_sharedState, indx); 
+#endif
       
      //---- P R I N T   D A T A ------
      if(switchDebug_InterpolateNCToCC_0) {
@@ -1178,9 +1221,21 @@ void MPMICE::computeLagrangianValuesMPM(const ProcessorGroup*,
        
        //__________________________________
        //  Set Boundary conditions
+#ifdef JOHN_BCS
+       setBCJohn(cmomentum, "set_if_sym_BC",patch, indx);
+#else
        setBC(cmomentum, "set_if_sym_BC",patch, indx);
+#endif
+#ifdef JOHN_BCS
+       setBCJohn(int_eng_L, "set_if_sym_BC",patch, d_sharedState, indx);
+#else
        setBC(int_eng_L, "set_if_sym_BC",patch, d_sharedState, indx);
+#endif
+#ifdef JOHN_BCS
+       setBCJohn(rho_CC,    "Density",      patch, d_sharedState, indx);  
+#else
        setBC(rho_CC,    "Density",      patch, d_sharedState, indx);  
+#endif
 
       //---- P R I N T   D A T A ------ 
       if(d_ice->switchDebugLagrangianValues) {
@@ -1664,8 +1719,13 @@ void MPMICE::computeEquilibrationPressure(const ProcessorGroup*,
     //__________________________________
     // update Boundary conditions
     // make copy of press for implicit calc.    
+#ifdef JOHN_BCS
+    setBCJohn(press_new,rho_micro[SURROUND_MAT],
+          "rho_micro", "Pressure", patch, d_sharedState, 0, new_dw);
+#else
     setBC(press_new,rho_micro[SURROUND_MAT],
           "rho_micro", "Pressure", patch, d_sharedState, 0, new_dw);
+#endif
     press_copy.copyData(press_new);   
      
     //__________________________________
@@ -2138,9 +2198,17 @@ void MPMICE::HEChemistry(const ProcessorGroup*,
       Material* matl = d_sharedState->getMaterial( m );
       int indx = matl->getDWIndex();
       ICEMaterial* ice_matl = dynamic_cast<ICEMaterial*>(matl);
+#ifdef JOHN_BCS
+      setBCJohn(burnedMass[m], "set_if_sym_BC",patch, d_sharedState, indx);
+#else
       setBC(burnedMass[m], "set_if_sym_BC",patch, d_sharedState, indx);
+#endif
       if (ice_matl && (ice_matl->getRxProduct() == Material::product)) {
+#ifdef JOHN_BCS
+        setBCJohn(sumBurnedMass, "set_if_sym_BC",patch, d_sharedState, indx);
+#else
         setBC(sumBurnedMass, "set_if_sym_BC",patch, d_sharedState, indx);
+#endif
       }
     }
     //---- P R I N T   D A T A ------ 
