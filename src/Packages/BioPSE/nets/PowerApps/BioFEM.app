@@ -155,6 +155,18 @@ if {[file exists $DATADIR/$DATASET/$DATASET-electrodes.pcd.fld]} {
 set $m13-nodes-on {1}
 set $m13-edges-on {0}
 set $m13-faces-on {0}
+set $m13-text-on {0}
+set $m13-text-color-r {1.0}
+set $m13-text-color-g {1.0}
+set $m13-text-color-b {1.0}
+set $m13-text-fontsize {1}
+set $m13-text-precision {3}
+set $m13-text-render_locations {0}
+set $m13-text-show-data {1}
+set $m13-text-show-nodes {0}
+set $m13-text-show-edges {0}
+set $m13-text-show-faces {0}
+set $m13-text-show-cells {0}
 set $m13-node_display_type {Spheres}
 set $m13-node_scale [expr 0.03 * ${global-scale}]
 set $m13-resolution {7}
@@ -969,12 +981,19 @@ class BioFEMApp {
     method build_electrodes_tab { f } {
 	global mods
 	global $mods(ShowField-Electrodes)-nodes-on
+	global $mods(ShowField-Electrodes)-text-on
 
 	if {![winfo exists $f.show]} {
 	    checkbutton $f.show -text "Show Electrodes" \
 		-variable $mods(ShowField-Electrodes)-nodes-on \
 		-command "$mods(ShowField-Electrodes)-c toggle_display_nodes"
 	    pack $f.show -side top -anchor nw -padx 3 -pady 3
+
+	    checkbutton $f.text -text "Show Values as Text" \
+		-variable $mods(ShowField-Electrodes)-text-on \
+		-command "$mods(ShowField-Electrodes)-c toggle_display_text"
+
+	    pack $f.text -side top -anchor nw -padx 3 -pady 3
 	}
     }
 
