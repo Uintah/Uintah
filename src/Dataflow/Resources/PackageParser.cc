@@ -35,8 +35,7 @@ PackageParser::endElement (const XMLCh* const uri,
 			   const XMLCh* const qname)
 {
   string tag ( XMLString::transcode(localname) );
-
-  if ( tag == "module" )
+  if ( tag == "module" ) 
     module_parser_->parse( package_->path_ + "/" + data_ + ".xml" );
   else if ( tag == "port" ) 
     port_parser_->parse( package_->path_ + "/" + data_ + ".xml" );

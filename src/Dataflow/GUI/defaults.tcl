@@ -40,8 +40,7 @@ option add *selector red
 option add *font "-Adobe-Helvetica-bold-R-Normal--*-120-75-*"
 option add *highlightThickness 0
 
-#set blt_library $env(TOP)/src/3rdParty/tcl/blt2.4h/library
-source $DataflowTCL/platformSpecific.tcl
+source $UITCL/platformSpecific.tcl
 
 
 

@@ -42,7 +42,6 @@ ModuleParser::startElement( const XMLCh * const uri,
     info_->libs_.push_back( package_->lib_path_+"_Modules_"+ cat + ".so" );
 
     info_->id_ = package_->name_+ "_" + cat+"_" + info_->name_;
-    //cerr << "Module " << info_->id_ << endl;
     resources_->modules_[info_->id_] = info_;
   }
   else if ( tag == "inputs" ) {
@@ -68,7 +67,7 @@ ModuleParser::endElement (const XMLCh* const uri,
 			  const XMLCh* const qname)
 {
   string tag ( XMLString::transcode(localname) );
-
+  
   switch (mode_.top()) {
   case IoMode:
     if ( tag == "name" ) 
@@ -93,7 +92,7 @@ ModuleParser::endElement (const XMLCh* const uri,
       info_->libs_.push_back( package_->lib_path_+".so"); 
     }
     break;
-  }      
+  }  
 }
 
 } // namespace SCIRun
