@@ -223,7 +223,7 @@ void SiReInput::execute()
 
     cerr << "c->s.NPasses="<<c->s.NPasses<<"\n";
     cerr << "c->s.PassIdx="<<c->s.PassIdx<<"\n";
-    int p=((int)pow(2,c->s.NPasses-c->s.PassIdx-1))*c->s.ShrinkFactor;
+    int p=((int)pow(2.,c->s.NPasses-c->s.PassIdx-1))*c->s.ShrinkFactor;
     cerr << "p="<<p<<"\n";
     c->s.NRead /= p;
     c->s.NPhase /= p;
@@ -294,6 +294,10 @@ void SiReInput::execute()
 
 //
 // $Log$
+// Revision 1.3  1999/08/30 20:19:21  sparker
+// Updates to compile with -LANG:std on SGI
+// Other linux/irix porting oscillations
+//
 // Revision 1.2  1999/08/25 03:47:42  sparker
 // Changed SCICore/CoreDatatypes to SCICore/Datatypes
 // Changed PSECore/CommonDatatypes to PSECore/Datatypes

@@ -23,6 +23,11 @@ namespace Containers {
 using namespace SCICore::PersistentSpace;
 
 template<class T> class FLPQueue;
+template<class T> class FLPQueueNode;
+template<class T>
+void Pio(Piostream& stream, Containers::FLPQueueNode<T>& n);
+template<class T>
+void Pio(Piostream& stream, Containers::FLPQueue<T>& n);
 
 template<class T> class FLPQueueNode {
   T item;
@@ -261,6 +266,10 @@ void Pio(Piostream& stream, Containers::FLPQueueNode<T>& n)
 
 //
 // $Log$
+// Revision 1.5  1999/08/30 20:19:26  sparker
+// Updates to compile with -LANG:std on SGI
+// Other linux/irix porting oscillations
+//
 // Revision 1.4  1999/08/19 05:30:54  sparker
 // Configuration updates:
 //  - renamed config.h to sci_config.h

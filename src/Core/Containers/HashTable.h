@@ -107,6 +107,10 @@ WARNING
 ****************************************/
 
 
+template <class Key, class Data>
+class HashTable;
+template <class Key, class Data>
+void Pio(Piostream& stream, HashTable<Key, Data>& t);
 
 // The hashtable itself
 template<class Key, class Data> class HashTable {
@@ -543,6 +547,10 @@ void Pio(Piostream& stream, HashTable<Key, Data>& t)
 
 //
 // $Log$
+// Revision 1.8  1999/08/30 20:19:26  sparker
+// Updates to compile with -LANG:std on SGI
+// Other linux/irix porting oscillations
+//
 // Revision 1.7  1999/08/28 17:54:34  sparker
 // Integrated new Thread library
 //

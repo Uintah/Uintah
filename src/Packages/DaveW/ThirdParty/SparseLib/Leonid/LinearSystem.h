@@ -173,7 +173,7 @@ LinearSystem<Data_Type>::LinearSystem(MatrixTridiag<Data_Type> &AA,MatrixDense<D
 }
 
 //-----------------------------------------------------------------------------
-void LinearSystem<double>::solve(){
+template<> void LinearSystem<double>::solve(){
   
   if (!strcmp(matrix_type,"dense")){
     
@@ -315,7 +315,7 @@ void LinearSystem<Data_Type>:: print(){
 }
 
 //----------------------------------------------------------------------------
-void LinearSystem<double>:: info(){
+template<> void LinearSystem<double>:: info(){
 
   char *solver;
   if(!strcmp(matrix_type,"dense"))

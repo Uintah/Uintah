@@ -24,6 +24,13 @@ using SCICore::PersistentSpace::Piostream;
 using SCICore::PersistentSpace::PersistentTypeID;
 
 template<class T>
+class LockArray3;
+template<class T>
+void Pio(Piostream& stream, SCICore::Datatypes::LockArray3<T>& data);
+template<class T>
+void Pio(Piostream& stream, SCICore::Datatypes::LockArray3<T>*& data);
+
+template<class T>
 class LockArray3:public Datatype {
     T*** objs;
     int dm1;
@@ -230,6 +237,10 @@ void Pio(Piostream& stream, SCICore::Datatypes::LockArray3<T>*& data) {
 
 //
 // $Log$
+// Revision 1.5  1999/08/30 20:19:27  sparker
+// Updates to compile with -LANG:std on SGI
+// Other linux/irix porting oscillations
+//
 // Revision 1.4  1999/08/25 03:48:34  sparker
 // Changed SCICore/CoreDatatypes to SCICore/Datatypes
 // Changed PSECore/CommonDatatypes to PSECore/Datatypes
