@@ -9,11 +9,30 @@
 
 #include <PSECore/Dataflow/ComponentNode.h>
 #include <PSECore/XMLUtil/XMLUtil.h>
+#include <PSECore/Dataflow/PackageDBHandler.h>
+#include <PSECore/Dataflow/StrX.h>
+#include <PSECore/Dataflow/NetworkEditor.h>
 
 #include <iostream>
 #include <fstream>
 #include <strstream>
 #include <stdlib.h>
+#include <SCICore/Containers/String.h>
+#include <SCICore/TclInterface/TCL.h>
+#include <SCICore/TclInterface/TCLvar.h>
+#ifdef __sgi
+#define IRIX
+#pragma set woff 1375
+#endif
+#include <util/PlatformUtils.hpp>
+#include <sax/SAXException.hpp>
+#include <sax/SAXParseException.hpp>
+#include <parsers/DOMParser.hpp>
+#include <dom/DOM_NamedNodeMap.hpp>
+#include <sax/ErrorHandler.hpp>
+#ifdef __sgi
+#pragma reset woff 1375
+#endif
 
 using std::map;
 using std::cout;
@@ -153,7 +172,6 @@ void DestroyDeviceNode(device_node* n)
 
 void DestroyIoNode(io_node* n)
 {
-  char_iter i;
   inport_iter i2;
   outport_iter i3;
   file_iter i4;
@@ -830,7 +848,6 @@ void WriteOutportNodeToStream(outport_node* n, std::ofstream& o)
 
 void WriteIoNodeToStream(io_node* n, std::ofstream& o)
 {
-  char_iter i;
   file_iter i2;
   inport_iter i5;
   outport_iter i6;
@@ -913,7 +930,6 @@ void WriteParameterNodeToStream(parameter_node* n, std::ofstream& o)
 
 void WriteGuiNodeToStream(gui_node* n, std::ofstream& o)
 {
-  char_iter i;
   param_iter i2;
 
   o << "  <gui>" << endl;
@@ -1024,6 +1040,47 @@ void WriteComponentNodeToFile(component_node* n, const char* filename)
     o << "</component>" << endl;
   
   o << endl;
+}
+
+void ReadComponentNodeFromFile(component_node* n, const char* filename)
+{
+  // Initialize the XML4C system
+  try {
+    XMLPlatformUtils::Initialize();
+  } catch (const XMLException& toCatch) {
+    std::cerr << "Error during initialization! :\n"
+	 << StrX(toCatch.getMessage()) << endl;
+    return;
+  }
+
+  // Instantiate the DOM parser.
+  DOMParser parser;
+  parser.setDoValidation(false);
+  
+  PackageDBHandler handler;
+  parser.setErrorHandler(&handler);
+  
+  try {
+    parser.parse(filename);
+  }  catch (const XMLException& toCatch) {
+    postMessage(clString("Error during parsing: '")+
+		filename+"'\nException message is:  "+
+		xmlto_string(toCatch.getMessage()));
+    handler.foundError=true;
+  }
+  
+  if(handler.foundError){
+    TCL::execute("tk_dialog .errorPopup"
+		 " {Parse Error}"
+		 " {Error parsing package file,"
+		 " see message window for more information} error 0 Ok");
+  }
+
+  DOM_Document doc = parser.getDocument();
+  DOM_NodeList list = doc.getElementsByTagName("component");
+  int nlist = list.getLength();
+  for (int i=0;i<nlist;i++)
+    ProcessComponentNode(list.item(i),n);
 }
 
 } // Dataflow
