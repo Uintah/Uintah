@@ -45,12 +45,14 @@ public:
   virtual ScalarFieldInterface* query_scalar_interface() const;
   virtual VectorFieldInterface* query_vector_interface() const;
   virtual TensorFieldInterface* query_tensor_interface() const;
- 
-  static const string type_name(int n = -1);
-  virtual const string get_type_name(int n = -1) const;
+
+  //! Persistent IO
   static PersistentTypeID type_id;
   virtual void io(Piostream &stream);
-  virtual const TypeDescription* get_type_description() const;
+
+  static const string type_name(int n = -1);
+  virtual const string get_type_name(int n = -1) const { return type_name(n); }
+  virtual const TypeDescription* get_type_description(int n = -1) const;
 
 private:
   static Persistent* maker();
@@ -79,28 +81,6 @@ PointCloudField<Data>::io(Piostream &stream)
   GenericField<PointCloudMesh, vector<Data> >::io(stream);
   stream.end_class();                                                         
 }
-
-
-template <class Data>
-const string
-PointCloudField<Data>::type_name(int n)
-{
-  ASSERT((n >= -1) && n <= 1);
-  if (n == -1)
-  {
-    static const string name = type_name(0) + FTNS + type_name(1) + FTNE;
-    return name;
-
-  }
-  else if (n == 0)
-  {
-    return "PointCloudField";
-  }
-  else
-  {
-    return find_type_name((Data *)0);
-  }
-} 
 
 template <class Data>
 PointCloudField<Data>::PointCloudField()
@@ -191,34 +171,52 @@ PointCloudField<T>::query_tensor_interface() const
 }
 
 template <class Data>
-const string 
-PointCloudField<Data>::get_type_name(int n = -1) const
+const string
+PointCloudField<Data>::type_name(int n)
 {
-  return type_name(n);
-}
+  ASSERT((n >= -1) && n <= 1);
+  if (n == -1)
+  {
+    static const string name = type_name(0) + FTNS + type_name(1) + FTNE;
+    return name;
 
-template <class T>
-const TypeDescription* 
-get_type_description(PointCloudField<T>*)
+  }
+  else if (n == 0)
+  {
+    return "PointCloudField";
+  }
+  else
+  {
+    return find_type_name((Data *)0);
+  }
+} 
+
+template <class T> 
+const TypeDescription*
+PointCloudField<T>::get_type_description(int n) const
 {
-  static TypeDescription* td = 0;
-  static string name("PointCloudField");
+  ASSERT((n >= -1) && n <= 1);
+
+  TypeDescription* td = 0;
+  static string name( type_name(0) );
   static string namesp("SCIRun");
   static string path(__FILE__);
+
   if(!td){
-    const TypeDescription *sub = SCIRun::get_type_description((T*)0);
-    TypeDescription::td_vec *subs = scinew TypeDescription::td_vec(1);
-    (*subs)[0] = sub;
-    td = scinew TypeDescription(name, subs, path, namesp);
+    if (n == -1) {
+      const TypeDescription *sub = SCIRun::get_type_description((T*)0);
+      TypeDescription::td_vec *subs = scinew TypeDescription::td_vec(1);
+      (*subs)[0] = sub;
+      td = scinew TypeDescription(name, subs, path, namesp);
+    }
+    else if(n == 0) {
+      td = scinew TypeDescription(name, 0, path, namesp);
+    }
+    else {
+      td = (TypeDescription *) SCIRun::get_type_description((T*)0);
+    }
   }
   return td;
-}
-
-template <class T>
-const TypeDescription* 
-PointCloudField<T>::get_type_description() const 
-{
-  return SCIRun::get_type_description((PointCloudField<T>*)0);
 }
 
 } // end namespace SCIRun

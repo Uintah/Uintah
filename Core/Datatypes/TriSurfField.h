@@ -54,11 +54,13 @@ public:
   virtual VectorFieldInterface* query_vector_interface() const;
   virtual TensorFieldInterface* query_tensor_interface() const;
 
-  void    io(Piostream &stream);
-  static  PersistentTypeID type_id;
+  //! Persistent IO
+  static PersistentTypeID type_id;
   static const string type_name(int n = -1);
-  virtual const string get_type_name(int n = -1) const;
-  virtual const TypeDescription* get_type_description() const;
+
+  virtual const string get_type_name(int n = -1) const { return type_name(n); }
+  virtual const TypeDescription* get_type_description(int n = -1) const;
+  virtual void io(Piostream &stream);
 
 private:
   static Persistent *maker();
@@ -90,7 +92,6 @@ TriSurfField<T>::io(Piostream& stream)
   stream.end_class();
 }
 
-
 template <class T> 
 const string 
 TriSurfField<T>::type_name(int n)
@@ -109,6 +110,34 @@ TriSurfField<T>::type_name(int n)
   {
     return find_type_name((T *)0);
   }
+}
+
+template <class T> 
+const TypeDescription*
+TriSurfField<T>::get_type_description(int n) const
+{
+  ASSERT((n >= -1) && n <= 1);
+
+  TypeDescription* td = 0;
+  static string name( type_name(0) );
+  static string namesp("SCIRun");
+  static string path(__FILE__);
+
+  if(!td){
+    if (n == -1) {
+      const TypeDescription *sub = SCIRun::get_type_description((T*)0);
+      TypeDescription::td_vec *subs = scinew TypeDescription::td_vec(1);
+      (*subs)[0] = sub;
+      td = scinew TypeDescription(name, subs, path, namesp);
+    }
+    else if(n == 0) {
+      td = scinew TypeDescription(name, 0, path, namesp);
+    }
+    else {
+      td = (TypeDescription *) SCIRun::get_type_description((T*)0);
+    }
+  }
+  return td;
 }
 
 template <class T>
@@ -192,38 +221,6 @@ TensorFieldInterface*
 TriSurfField<T>::query_tensor_interface() const
 {
   return 0;
-}
-
-
-template <class T>
-const string 
-TriSurfField<T>::get_type_name(int n = -1) const
-{
-  return type_name(n);
-}
-
-template <class T>
-const TypeDescription* 
-get_type_description(TriSurfField<T>*)
-{
-  static TypeDescription* td = 0;
-  static string name("TriSurfField");
-  static string namesp("SCIRun");
-  static string path(__FILE__);
-  if(!td){
-    const TypeDescription *sub = SCIRun::get_type_description((T*)0);
-    TypeDescription::td_vec *subs = scinew TypeDescription::td_vec(1);
-    (*subs)[0] = sub;
-    td = scinew TypeDescription(name, subs, path, namesp);
-  }
-  return td;
-}
-
-template <class T>
-const TypeDescription* 
-TriSurfField<T>::get_type_description() const 
-{
-  return SCIRun::get_type_description((TriSurfField<T>*)0);
 }
 
 } // end namespace SCIRun

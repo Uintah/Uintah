@@ -55,11 +55,12 @@ public:
   virtual TensorFieldInterface* query_tensor_interface() const;
 
   //! Persistent IO
-  void    io(Piostream &stream);
-  static  PersistentTypeID type_id;
+  static PersistentTypeID type_id;
+  virtual void io(Piostream &stream);
+
   static const string type_name(int n = -1);
-  virtual const string get_type_name(int n = -1) const;
-  virtual const TypeDescription* get_type_description() const;
+  virtual const string get_type_name(int n = -1) const { return type_name(n); }
+  virtual const TypeDescription* get_type_description(int n = -1) const;
 
   // StructHexVolField specific methods.
   bool get_gradient(Vector &, Point &);
@@ -202,36 +203,32 @@ StructHexVolField<T>::type_name(int n)
   }
 }
 
-
 template <class T> 
-const string
-StructHexVolField<T>::get_type_name(int n) const
+const TypeDescription*
+StructHexVolField<T>::get_type_description(int n) const
 {
-  return type_name(n);
-}
+  ASSERT((n >= -1) && n <= 1);
 
-template <class T>
-const TypeDescription* 
-get_type_description(StructHexVolField<T>*)
-{
-  static TypeDescription* td = 0;
-  static string name("StructHexVolField");
+  TypeDescription* td = 0;
+  static string name( type_name(0) );
   static string namesp("SCIRun");
   static string path(__FILE__);
+
   if(!td){
-    const TypeDescription *sub = SCIRun::get_type_description((T*)0);
-    TypeDescription::td_vec *subs = scinew TypeDescription::td_vec(1);
-    (*subs)[0] = sub;
-    td = scinew TypeDescription(name, subs, path, namesp);
+    if (n == -1) {
+      const TypeDescription *sub = SCIRun::get_type_description((T*)0);
+      TypeDescription::td_vec *subs = scinew TypeDescription::td_vec(1);
+      (*subs)[0] = sub;
+      td = scinew TypeDescription(name, subs, path, namesp);
+    }
+    else if(n == 0) {
+      td = scinew TypeDescription(name, 0, path, namesp);
+    }
+    else {
+      td = (TypeDescription *) SCIRun::get_type_description((T*)0);
+    }
   }
   return td;
-}
-
-template <class T>
-const TypeDescription* 
-StructHexVolField<T>::get_type_description() const 
-{
-  return SCIRun::get_type_description((StructHexVolField<T>*)0);
 }
 
 //! compute the gradient g, at point p

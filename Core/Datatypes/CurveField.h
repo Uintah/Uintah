@@ -32,26 +32,28 @@ namespace SCIRun {
 
 using std::string;
 
-template <class Data>
-class CurveField: public GenericField< CurveMesh, vector<Data> >
+template <class T>
+class CurveField: public GenericField< CurveMesh, vector<T> >
 {
 public:
 
   CurveField();
   CurveField(Field::data_location data_at);
   CurveField(CurveMeshHandle mesh, Field::data_location data_at);
-  virtual CurveField<Data> *clone() const;
+  virtual CurveField<T> *clone() const;
   virtual ~CurveField();
 
   virtual ScalarFieldInterface* query_scalar_interface() const;
   virtual VectorFieldInterface* query_vector_interface() const;
   virtual TensorFieldInterface* query_tensor_interface() const;
 
-  static const string type_name(int n = -1);
-  virtual const string get_type_name(int n = -1) const;
+  //! Persistent IO
   static PersistentTypeID type_id;
   virtual void io(Piostream &stream);
-  virtual const TypeDescription* get_type_description() const;
+
+  static const string type_name(int n = -1);
+  virtual const string get_type_name(int n = -1) const { return type_name(n); }
+  virtual const TypeDescription* get_type_description(int n = -1) const;
 
 private:
   static Persistent* maker();
@@ -59,82 +61,60 @@ private:
 
 #define CURVE_FIELD_VERSION 1
 
-template <class Data>
+template <class T>
 Persistent*
-CurveField<Data>::maker()
+CurveField<T>::maker()
 {
-  return scinew CurveField<Data>;
+  return scinew CurveField<T>;
 }
 
-template <class Data>
+template <class T>
 PersistentTypeID
-CurveField<Data>::type_id(type_name(-1),
-		GenericField<CurveMesh, vector<Data> >::type_name(-1),
+CurveField<T>::type_id(type_name(-1),
+		GenericField<CurveMesh, vector<T> >::type_name(-1),
                 maker);
 
-template <class Data>
+template <class T>
 void
-CurveField<Data>::io(Piostream &stream)
+CurveField<T>::io(Piostream &stream)
 {
   /*int version=*/stream.begin_class(type_name(-1), CURVE_FIELD_VERSION);
-  GenericField<CurveMesh, vector<Data> >::io(stream);
+  GenericField<CurveMesh, vector<T> >::io(stream);
   stream.end_class();
 }
 
 
-template <class Data>
-const string
-CurveField<Data>::type_name(int n)
-{
-  ASSERT((n >= -1) && n <= 1);
-  if (n == -1)
-  {
-    static const string name = type_name(0) + FTNS + type_name(1) + FTNE;
-    return name;
-
-  }
-  else if (n == 0)
-  {
-    return "CurveField";
-  }
-  else
-  {
-    return find_type_name((Data *)0);
-  }
-}
-
-
-template <class Data>
-CurveField<Data>::CurveField()
-  : GenericField<CurveMesh, vector<Data> >()
+template <class T>
+CurveField<T>::CurveField()
+  : GenericField<CurveMesh, vector<T> >()
 {
 }
 
 
-template <class Data>
-CurveField<Data>::CurveField(Field::data_location data_at)
-  : GenericField<CurveMesh, vector<Data> >(data_at)
+template <class T>
+CurveField<T>::CurveField(Field::data_location data_at)
+  : GenericField<CurveMesh, vector<T> >(data_at)
 {
 }
 
 
-template <class Data>
-CurveField<Data>::CurveField(CurveMeshHandle mesh,
+template <class T>
+CurveField<T>::CurveField(CurveMeshHandle mesh,
 				 Field::data_location data_at)
-  : GenericField<CurveMesh, vector<Data> >(mesh, data_at)
+  : GenericField<CurveMesh, vector<T> >(mesh, data_at)
 {
 }
 
-template <class Data>
-CurveField<Data>::~CurveField()
+template <class T>
+CurveField<T>::~CurveField()
 {
 }
 
-template <class Data>
-CurveField<Data> *
-CurveField<Data>::clone() const
+template <class T>
+CurveField<T> *
+CurveField<T>::clone() const
 {
-  return new CurveField<Data>(*this);
+  return new CurveField<T>(*this);
 }
 
 template <> ScalarFieldInterface *
@@ -190,34 +170,69 @@ CurveField<T>::query_tensor_interface() const
   return 0;
 }
 
-template <class Data>
+template <class T>
 const string
-CurveField<Data>::get_type_name(int n = -1) const
+CurveField<T>::type_name(int n)
 {
-  return type_name(n);
+  ASSERT((n >= -1) && n <= 1);
+  if (n == -1)
+  {
+    static const string name = type_name(0) + FTNS + type_name(1) + FTNE;
+    return name;
+
+  }
+  else if (n == 0)
+  {
+    return "CurveField";
+  }
+  else
+  {
+    return find_type_name((T *)0);
+  }
 }
 
-template <class T>
-const TypeDescription* 
-get_type_description(CurveField<T>*)
+template <class T> 
+const TypeDescription*
+CurveField<T>::get_type_description(int n) const
 {
-  static TypeDescription* td = 0;
+  ASSERT((n >= -1) && n <= 1);
+
+  TypeDescription* td = 0;
+  static string name( type_name(0) );
+  static string namesp("SCIRun");
+  static string path(__FILE__);
+
   if(!td){
-    const TypeDescription *sub = SCIRun::get_type_description((T*)0);
-    TypeDescription::td_vec *subs = scinew TypeDescription::td_vec(1);
-    (*subs)[0] = sub;
-    td = scinew TypeDescription("CurveField", subs, __FILE__, "SCIRun");
+    if (n == -1) {
+      const TypeDescription *sub = SCIRun::get_type_description((T*)0);
+      TypeDescription::td_vec *subs = scinew TypeDescription::td_vec(1);
+      (*subs)[0] = sub;
+      td = scinew TypeDescription(name, subs, path, namesp);
+    }
+    else if(n == 0) {
+      td = scinew TypeDescription(name, 0, path, namesp);
+    }
+    else {
+      td = (TypeDescription *) SCIRun::get_type_description((T*)0);
+    }
   }
   return td;
-}
-
-template <class T>
-const TypeDescription* 
-CurveField<T>::get_type_description() const 
-{
-  return SCIRun::get_type_description((CurveField<T>*)0);
 }
 
 } // end namespace SCIRun
 
 #endif // Datatypes_CurveField_h
+
+
+
+
+
+
+
+
+
+
+
+
+
+

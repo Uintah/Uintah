@@ -84,8 +84,6 @@ public:
   bool value(T &val, typename TetVolMesh::Cell::index_type i) const
   { if (!mask_[i]) return false; val = fdata()[i]; return true; }
 
-  void    io(Piostream &stream);
-
   void initialize_mask(char masked) {
     for (vector<char>::iterator c = mask_.begin(); c != mask_.end(); ++c) *c=masked;
   }
@@ -122,10 +120,14 @@ public:
     TetVolField<T>::resize_fdata();
   }
 
-  static  PersistentTypeID type_id;
+  //! Persistent IO
+  static PersistentTypeID type_id;
+  virtual void io(Piostream &stream);
+
   static const string type_name(int n = -1);
   virtual const string get_type_name(int n = -1) const { return type_name(n); }
-  virtual const TypeDescription* get_type_description() const;
+  virtual const TypeDescription* get_type_description(int n = -1) const;
+
 private:
   static Persistent *maker();
 };
@@ -179,26 +181,32 @@ MaskedTetVolField<T>::type_name(int n)
   }
 }
 
-
-template <class T>
-const TypeDescription* 
-get_type_description(MaskedTetVolField<T>*)
+template <class T> 
+const TypeDescription*
+MaskedTetVolField<T>::get_type_description(int n) const
 {
-  static TypeDescription* mtv_td = 0;
-  if(!mtv_td){
-    const TypeDescription *sub = SCIRun::get_type_description((T*)0);
-    TypeDescription::td_vec *subs = scinew TypeDescription::td_vec(1);
-    (*subs)[0] = sub;
-    mtv_td = scinew TypeDescription("MaskedTetVolField", subs, __FILE__, "SCIRun");
+  ASSERT((n >= -1) && n <= 1);
+
+  TypeDescription* td = 0;
+  static string name( type_name(0) );
+  static string namesp("SCIRun");
+  static string path(__FILE__);
+
+  if(!td){
+    if (n == -1) {
+      const TypeDescription *sub = SCIRun::get_type_description((T*)0);
+      TypeDescription::td_vec *subs = scinew TypeDescription::td_vec(1);
+      (*subs)[0] = sub;
+      td = scinew TypeDescription(name, subs, path, namesp);
+    }
+    else if(n == 0) {
+      td = scinew TypeDescription(name, 0, path, namesp);
+    }
+    else {
+      td = (TypeDescription *) SCIRun::get_type_description((T*)0);
+    }
   }
-  return mtv_td;
-}
-
-template <class T>
-const TypeDescription* 
-MaskedTetVolField<T>::get_type_description() const 
-{
-  return SCIRun::get_type_description((MaskedTetVolField<T>*)0);
+  return td;
 }
 
 } // end namespace SCIRun
