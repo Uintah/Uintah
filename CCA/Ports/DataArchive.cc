@@ -418,7 +418,7 @@ DataArchive::findPatchAndIndex(GridP grid, Patch*& patch, particleIndex& idx,
 
 void
 DataArchive::restartInitialize(int& timestep, const GridP& grid,
-			       DataWarehouse* dw, double* pTime)
+			       DataWarehouse* dw, double* pTime, double* pDelt)
 {
   vector<int> indices;
   vector<double> times;
@@ -451,6 +451,10 @@ DataArchive::restartInitialize(int& timestep, const GridP& grid,
   PatchHashMaps patchMap;
   patchMap.init(d_tsurl[i], d_tstop[i], d_processor, d_numProcessors);
 
+  DOM_Node timeBlock = findNode("Time", d_tstop[i]);
+  if (!get(timeBlock, "delt", *pDelt))
+    *pDelt = 0;
+  
   // iterator through all patch, initializing on each patch
   // (perhaps not the most efficient, but this is only initialization)
   for (i = 0; i < (unsigned int)grid->numLevels(); i++) {
