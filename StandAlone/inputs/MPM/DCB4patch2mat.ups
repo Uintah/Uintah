@@ -1,6 +1,6 @@
 <?xml version='1.0' encoding='ISO-8859-1' ?>
 <!-- <!DOCTYPE Uintah_specification SYSTEM "input.dtd"> -->
-<!-- @version: Updated 8/4/03-->
+<!-- @version: Updated 1/9/04-->
 <Uintah_specification>
 
    <Meta>
@@ -37,9 +37,10 @@
 	<nodes8or27>8</nodes8or27>
         <artificial_damping_coeff>0.005</artificial_damping_coeff>
         <calculate_fracture_parameters>every_time_step</calculate_fracture_parameters>
+        <useVolumeIntegral>false</useVolumeIntegral>
+        <J_radius>0.005</J_radius>
         <save_J_matID>1</save_J_matID>
         <save_J_crkFrtSegID>0</save_J_crkFrtSegID>
-        <J_radius>0.005</J_radius>
         <do_crack_propagation>false</do_crack_propagation>
     </MPM>
 
