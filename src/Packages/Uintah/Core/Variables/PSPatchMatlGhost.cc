@@ -9,7 +9,10 @@ bool PSPatchMatlGhost::operator<(const PSPatchMatlGhost& other) const
   if (matl_ == other.matl_)
     if (patch_ == other.patch_)
       if (gt_ == other.gt_)
-        return numGhostCells_ < other.numGhostCells_;
+        if (numGhostCells_ == other.numGhostCells_)
+          return dwid_ < other.dwid_;
+        else
+          return numGhostCells_ < other.numGhostCells_;
       else
         return gt_ < other.gt_;
     else
