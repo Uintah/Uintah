@@ -173,7 +173,7 @@ public:
 			       DataWarehouseP& new_dw, 
 			       ArchesVariables* vars,
 			       const ArchesLabel* lab);
-   virtual void pressLinearSolve();
+   virtual bool pressLinearSolve();
    virtual void copyPressSoln(const Patch* patch, ArchesVariables* vars);
    virtual void destroyMatrix();
 

@@ -80,6 +80,15 @@ public:
 					       DataWarehouseP& old_dw,
 					       DataWarehouseP& new_dw);
 
+      // GROUP: Schedule Action :
+      ///////////////////////////////////////////////////////////////////////
+      // Schedule the computation of Turbulence Model data
+      //    [in] 
+      //        data User data needed for solve 
+      virtual void sched_computeScalarVariance(const LevelP&, 
+					       SchedulerP& sched,
+					       DataWarehouseP& old_dw,
+					       DataWarehouseP& new_dw);
       // GROUP: Access Methods :
       ///////////////////////////////////////////////////////////////////////
       // Get the molecular viscosity
@@ -134,6 +143,15 @@ private:
 				 const Patch* patch,
 				 DataWarehouseP& old_dw,
 				 DataWarehouseP& new_dw);
+      ///////////////////////////////////////////////////////////////////////
+      // Actually Calculate the subgrid scale variance
+      //    [in] 
+      //        documentation here
+      void computeScalarVariance(const ProcessorGroup*,
+				 const Patch* patch,
+				 DataWarehouseP& old_dw,
+				 DataWarehouseP& new_dw);
+
 
 private:
 
@@ -141,7 +159,7 @@ private:
       double d_CF; //model constant
       double d_factorMesh; // lengthscale = fac_mesh*meshsize
       double d_filterl; // prescribed filter length scale
-
+      double d_CFVar; // model constant for mixture fraction variance
       // const VarLabel* variables 
       const ArchesLabel* d_lab;
 

@@ -554,49 +554,15 @@ BoundaryCondition::calcPressureBC(const ProcessorGroup* ,
 #ifdef ARCHES_BC_DEBUG
   // Testing if correct values have been put
   cerr << " After CALPBC : " << endl;
-  for (int ii = domLoScalar.x(); ii <= domHiScalar.x(); ii++) {
-    cerr << "Pressure for ii = " << ii << endl;
-    for (int jj = domLoScalar.y(); jj <= domHiScalar.y(); jj++) {
-      for (int kk = domLoScalar.z(); kk <= domHiScalar.z(); kk++) {
-	cerr.width(10);
-	cerr << pressure[IntVector(ii,jj,kk)] << " " ; 
-      }
-      cerr << endl;
-    }
-  }
+  cerr << "Print Pressure : " << endl;
+  pressure.print(cerr);
   cerr << " After CALPBC : " << endl;
-  for (int ii = domLoU.x(); ii <= domHiU.x(); ii++) {
-    cerr << "U velocity for ii = " << ii << endl;
-    for (int jj = domLoU.y(); jj <= domHiU.y(); jj++) {
-      for (int kk = domLoU.z(); kk <= domHiU.z(); kk++) {
-	cerr.width(10);
-	cerr << uVelocity[IntVector(ii,jj,kk)] << " " ; 
-      }
-      cerr << endl;
-    }
-  }
-  cerr << " After CALPBC : " << endl;
-  for (int ii = domLoV.x(); ii <= domHiV.x(); ii++) {
-    cerr << "V velocity for ii = " << ii << endl;
-    for (int jj = domLoV.y(); jj <= domHiV.y(); jj++) {
-      for (int kk = domLoV.z(); kk <= domHiV.z(); kk++) {
-	cerr.width(10);
-	cerr << vVelocity[IntVector(ii,jj,kk)] << " " ; 
-      }
-      cerr << endl;
-    }
-  }
-  cerr << " After CALPBC : " << endl;
-  for (int ii = domLoW.x(); ii <= domHiW.x(); ii++) {
-    cerr << "W velocity for ii = " << ii << endl;
-    for (int jj = domLoW.y(); jj <= domHiW.y(); jj++) {
-      for (int kk = domLoW.z(); kk <= domHiW.z(); kk++) {
-	cerr.width(10);
-	cerr << wVelocity[IntVector(ii,jj,kk)] << " " ; 
-      }
-      cerr << endl;
-    }
-  }
+  cerr << "Print U velocity : " << endl;
+  uVelocity.print(cerr);
+  cerr << "Print V velocity : " << endl;
+  vVelocity.print(cerr);
+  cerr << "Print W velocity : " << endl;
+  wVelocity.print(cerr);
 #endif
 
 } 
@@ -624,8 +590,9 @@ BoundaryCondition::sched_setInletVelocityBC(const LevelP& level,
       // This task requires densityCP, [u,v,w]VelocitySP from new_dw
       tsk->requires(old_dw, d_lab->d_cellTypeLabel, matlIndex, patch, Ghost::None,
 		    numGhostCells);
-      tsk->requires(new_dw, d_lab->d_densityINLabel, matlIndex, patch, Ghost::None,
-		    numGhostCells);
+      // changes to make it work for the task graph
+      tsk->requires(new_dw, d_lab->d_densityINLabel, matlIndex, patch, 
+		    Ghost::AroundCells, numGhostCells+2);
       tsk->requires(new_dw, d_lab->d_uVelocityINLabel, matlIndex, patch, Ghost::None,
 		    numGhostCells);
       tsk->requires(new_dw, d_lab->d_vVelocityINLabel, matlIndex, patch, Ghost::None,
@@ -665,16 +632,17 @@ BoundaryCondition::sched_recomputePressureBC(const LevelP& level,
       tsk->requires(old_dw, d_lab->d_cellTypeLabel, matlIndex, patch,
 		    Ghost::None, numGhostCells);
       // This task requires celltype, new density, pressure and velocity
-      tsk->requires(new_dw, d_lab->d_densityINLabel, matlIndex, patch, Ghost::None,
-		    numGhostCells);
+      tsk->requires(new_dw, d_lab->d_densityINLabel, matlIndex, patch, Ghost::AroundCells,
+		    numGhostCells+2);
       tsk->requires(new_dw, d_lab->d_pressurePSLabel, matlIndex, patch, Ghost::None,
 		    numGhostCells);
+      // changes to make it work for the task graph
       tsk->requires(new_dw, d_lab->d_uVelocitySIVBCLabel, matlIndex, patch, 
-		    Ghost::None, numGhostCells+1);
+		    Ghost::AroundCells, numGhostCells+2);
       tsk->requires(new_dw, d_lab->d_vVelocitySIVBCLabel, matlIndex, patch, 
-		    Ghost::None, numGhostCells+1);
+		    Ghost::AroundCells, numGhostCells+2);
       tsk->requires(new_dw, d_lab->d_wVelocitySIVBCLabel, matlIndex, patch, 
-		    Ghost::None, numGhostCells+1);
+		    Ghost::AroundCells, numGhostCells+2);
       for (int ii = 0; ii < d_nofScalars; ii++)
 	tsk->requires(new_dw, d_lab->d_scalarINLabel, ii, patch,
 		      Ghost::None, numGhostCells);
@@ -714,7 +682,8 @@ BoundaryCondition::sched_calculateArea(const LevelP& level,
       int numGhostCells = 0;
       tsk->requires(old_dw, d_lab->d_cellTypeLabel, matlIndex, patch, Ghost::None,
 		    numGhostCells);
-      tsk->computes(old_dw, d_lab->d_cellInfoLabel, matlIndex, patch);
+      // ***warning checkpointing
+      //      tsk->computes(old_dw, d_lab->d_cellInfoLabel, matlIndex, patch);
       for (int ii = 0; ii < d_numInlets; ii++) {
 	// make it simple by adding matlindex for reduction vars
 	tsk->computes(old_dw, d_flowInlets[ii].d_area_label);
@@ -902,115 +871,26 @@ BoundaryCondition::uVelocityBC(DataWarehouseP& new_dw,
 
 #ifdef ARCHES_BC_DEBUG
   cerr << "AFTER UVELBC_FORT" << endl;
-  for (int ii = domLoU.x(); ii <= domHiU.x(); ii++) {
-    cerr << "U velocity for ii = " << ii << endl;
-    for (int jj = domLoU.y(); jj <= domHiU.y(); jj++) {
-      for (int kk = domLoU.z(); kk <= domHiU.z(); kk++) {
-	cerr.width(10);
-	cerr << vars->uVelocity[IntVector(ii,jj,kk)] << " " ; 
-      }
-      cerr << endl;
-    }
-  }
-  cerr << "AFTER UVELBC_FORT" << endl;
-  for (int ii = domLoU.x(); ii <= domHiU.x(); ii++) {
-    cerr << "AP for U velocity for ii = " << ii << endl;
-    for (int jj = domLoU.y(); jj <= domHiU.y(); jj++) {
-      for (int kk = domLoU.z(); kk <= domHiU.z(); kk++) {
-	cerr.width(10);
-	cerr << (vars->uVelocityCoeff[Arches::AP])[IntVector(ii,jj,kk)] << " " ; 
-      }
-      cerr << endl;
-    }
-  }
-  cerr << "AFTER UVELBC_FORT" << endl;
-  for (int ii = domLoU.x(); ii <= domHiU.x(); ii++) {
-    cerr << "AE for U velocity for ii = " << ii << endl;
-    for (int jj = domLoU.y(); jj <= domHiU.y(); jj++) {
-      for (int kk = domLoU.z(); kk <= domHiU.z(); kk++) {
-	cerr.width(10);
-	cerr << (vars->uVelocityCoeff[Arches::AE])[IntVector(ii,jj,kk)] << " " ; 
-      }
-      cerr << endl;
-    }
-  }
-  cerr << "AFTER UVELBC_FORT" << endl;
-  for (int ii = domLoU.x(); ii <= domHiU.x(); ii++) {
-    cerr << "AW for U velocity for ii = " << ii << endl;
-    for (int jj = domLoU.y(); jj <= domHiU.y(); jj++) {
-      for (int kk = domLoU.z(); kk <= domHiU.z(); kk++) {
-	cerr.width(10);
-	cerr << (vars->uVelocityCoeff[Arches::AW])[IntVector(ii,jj,kk)] << " " ; 
-      }
-      cerr << endl;
-    }
-  }
-  cerr << "AFTER UVELBC_FORT" << endl;
-  for (int ii = domLoU.x(); ii <= domHiU.x(); ii++) {
-    cerr << "AN for U velocity for ii = " << ii << endl;
-    for (int jj = domLoU.y(); jj <= domHiU.y(); jj++) {
-      for (int kk = domLoU.z(); kk <= domHiU.z(); kk++) {
-	cerr.width(10);
-	cerr << (vars->uVelocityCoeff[Arches::AN])[IntVector(ii,jj,kk)] << " " ; 
-      }
-      cerr << endl;
-    }
-  }
-  cerr << "AFTER UVELBC_FORT" << endl;
-  for (int ii = domLoU.x(); ii <= domHiU.x(); ii++) {
-    cerr << "AS for U velocity for ii = " << ii << endl;
-    for (int jj = domLoU.y(); jj <= domHiU.y(); jj++) {
-      for (int kk = domLoU.z(); kk <= domHiU.z(); kk++) {
-	cerr.width(10);
-	cerr << (vars->uVelocityCoeff[Arches::AS])[IntVector(ii,jj,kk)] << " " ; 
-      }
-      cerr << endl;
-    }
-  }
-  cerr << "AFTER UVELBC_FORT" << endl;
-  for (int ii = domLoU.x(); ii <= domHiU.x(); ii++) {
-    cerr << "AT for U velocity for ii = " << ii << endl;
-    for (int jj = domLoU.y(); jj <= domHiU.y(); jj++) {
-      for (int kk = domLoU.z(); kk <= domHiU.z(); kk++) {
-	cerr.width(10);
-	cerr << (vars->uVelocityCoeff[Arches::AT])[IntVector(ii,jj,kk)] << " " ; 
-      }
-      cerr << endl;
-    }
-  }
-  cerr << "AFTER UVELBC_FORT" << endl;
-  for (int ii = domLoU.x(); ii <= domHiU.x(); ii++) {
-    cerr << "AB for U velocity for ii = " << ii << endl;
-    for (int jj = domLoU.y(); jj <= domHiU.y(); jj++) {
-      for (int kk = domLoU.z(); kk <= domHiU.z(); kk++) {
-	cerr.width(10);
-	cerr << (vars->uVelocityCoeff[Arches::AB])[IntVector(ii,jj,kk)] << " " ; 
-      }
-      cerr << endl;
-    }
-  }
-  cerr << "AFTER UVELBC_FORT" << endl;
-  for (int ii = domLoU.x(); ii <= domHiU.x(); ii++) {
-    cerr << "SU for U velocity for ii = " << ii << endl;
-    for (int jj = domLoU.y(); jj <= domHiU.y(); jj++) {
-      for (int kk = domLoU.z(); kk <= domHiU.z(); kk++) {
-	cerr.width(10);
-	cerr << vars->uVelNonlinearSrc[IntVector(ii,jj,kk)] << " " ; 
-      }
-      cerr << endl;
-    }
-  }
-  cerr << "AFTER UVELBC_FORT" << endl;
-  for (int ii = domLoU.x(); ii <= domHiU.x(); ii++) {
-    cerr << "SP for U velocity for ii = " << ii << endl;
-    for (int jj = domLoU.y(); jj <= domHiU.y(); jj++) {
-      for (int kk = domLoU.z(); kk <= domHiU.z(); kk++) {
-	cerr.width(10);
-	cerr << vars->uVelLinearSrc[IntVector(ii,jj,kk)] << " " ; 
-      }
-      cerr << endl;
-    }
-  }
+  cerr << "Print UVel" << endl;
+  vars->uVelocity.print(cerr);
+  cerr << "Print UAP" << endl;
+  vars->uVelocityCoeff[Arches::AP].print(cerr);
+  cerr << "Print UAW" << endl;
+  vars->uVelocityCoeff[Arches::AW].print(cerr);
+  cerr << "Print UAE" << endl;
+  vars->uVelocityCoeff[Arches::AE].print(cerr);
+  cerr << "Print UAN" << endl;
+  vars->uVelocityCoeff[Arches::AN].print(cerr);
+  cerr << "Print UAS" << endl;
+  vars->uVelocityCoeff[Arches::AS].print(cerr);
+  cerr << "Print UAT" << endl;
+  vars->uVelocityCoeff[Arches::AT].print(cerr);
+  cerr << "Print UAB" << endl;
+  vars->uVelocityCoeff[Arches::AB].print(cerr);
+  cerr << "Print SU for U velocity: " << endl;
+  vars->uVelNonlinearSrc.print(cerr);
+  cerr << "Print SP for U velocity for:" << endl;
+  vars->uVelLinearSrc.print(cerr);
 #endif
 
 }
@@ -1093,115 +973,26 @@ BoundaryCondition::vVelocityBC(DataWarehouseP& new_dw,
 
 #ifdef ARCHES_BC_DEBUG
   cerr << "AFTER VVELBC_FORT" << endl;
-  for (int ii = domLoV.x(); ii <= domHiV.x(); ii++) {
-    cerr << "V velocity for ii = " << ii << endl;
-    for (int jj = domLoV.y(); jj <= domHiV.y(); jj++) {
-      for (int kk = domLoV.z(); kk <= domHiV.z(); kk++) {
-	cerr.width(10);
-	cerr << vars->vVelocity[IntVector(ii,jj,kk)] << " " ; 
-      }
-      cerr << endl;
-    }
-  }
-  cerr << "AFTER VVELBC_FORT" << endl;
-  for (int ii = domLoV.x(); ii <= domHiV.x(); ii++) {
-    cerr << "AP for V velocity for ii = " << ii << endl;
-    for (int jj = domLoV.y(); jj <= domHiV.y(); jj++) {
-      for (int kk = domLoV.z(); kk <= domHiV.z(); kk++) {
-	cerr.width(10);
-	cerr << (vars->vVelocityCoeff[Arches::AP])[IntVector(ii,jj,kk)] << " " ; 
-      }
-      cerr << endl;
-    }
-  }
-  cerr << "AFTER VVELBC_FORT" << endl;
-  for (int ii = domLoV.x(); ii <= domHiV.x(); ii++) {
-    cerr << "AE for V velocity for ii = " << ii << endl;
-    for (int jj = domLoV.y(); jj <= domHiV.y(); jj++) {
-      for (int kk = domLoV.z(); kk <= domHiV.z(); kk++) {
-	cerr.width(10);
-	cerr << (vars->vVelocityCoeff[Arches::AE])[IntVector(ii,jj,kk)] << " " ; 
-      }
-      cerr << endl;
-    }
-  }
-  cerr << "AFTER VVELBC_FORT" << endl;
-  for (int ii = domLoV.x(); ii <= domHiV.x(); ii++) {
-    cerr << "AW for V velocity for ii = " << ii << endl;
-    for (int jj = domLoV.y(); jj <= domHiV.y(); jj++) {
-      for (int kk = domLoV.z(); kk <= domHiV.z(); kk++) {
-	cerr.width(10);
-	cerr << (vars->vVelocityCoeff[Arches::AW])[IntVector(ii,jj,kk)] << " " ; 
-      }
-      cerr << endl;
-    }
-  }
-  cerr << "AFTER VVELBC_FORT" << endl;
-  for (int ii = domLoV.x(); ii <= domHiV.x(); ii++) {
-    cerr << "AN for V velocity for ii = " << ii << endl;
-    for (int jj = domLoV.y(); jj <= domHiV.y(); jj++) {
-      for (int kk = domLoV.z(); kk <= domHiV.z(); kk++) {
-	cerr.width(10);
-	cerr << (vars->vVelocityCoeff[Arches::AN])[IntVector(ii,jj,kk)] << " " ; 
-      }
-      cerr << endl;
-    }
-  }
-  cerr << "AFTER VVELBC_FORT" << endl;
-  for (int ii = domLoV.x(); ii <= domHiV.x(); ii++) {
-    cerr << "AS for V velocity for ii = " << ii << endl;
-    for (int jj = domLoV.y(); jj <= domHiV.y(); jj++) {
-      for (int kk = domLoV.z(); kk <= domHiV.z(); kk++) {
-	cerr.width(10);
-	cerr << (vars->vVelocityCoeff[Arches::AS])[IntVector(ii,jj,kk)] << " " ; 
-      }
-      cerr << endl;
-    }
-  }
-  cerr << "AFTER VVELBC_FORT" << endl;
-  for (int ii = domLoV.x(); ii <= domHiV.x(); ii++) {
-    cerr << "AT for V velocity for ii = " << ii << endl;
-    for (int jj = domLoV.y(); jj <= domHiV.y(); jj++) {
-      for (int kk = domLoV.z(); kk <= domHiV.z(); kk++) {
-	cerr.width(10);
-	cerr << (vars->vVelocityCoeff[Arches::AT])[IntVector(ii,jj,kk)] << " " ; 
-      }
-      cerr << endl;
-    }
-  }
-  cerr << "AFTER VVELBC_FORT" << endl;
-  for (int ii = domLoV.x(); ii <= domHiV.x(); ii++) {
-    cerr << "AB for V velocity for ii = " << ii << endl;
-    for (int jj = domLoV.y(); jj <= domHiV.y(); jj++) {
-      for (int kk = domLoV.z(); kk <= domHiV.z(); kk++) {
-	cerr.width(10);
-	cerr << (vars->vVelocityCoeff[Arches::AB])[IntVector(ii,jj,kk)] << " " ; 
-      }
-      cerr << endl;
-    }
-  }
-  cerr << "AFTER VVELBC_FORT" << endl;
-  for (int ii = domLoV.x(); ii <= domHiV.x(); ii++) {
-    cerr << "SU for V velocity for ii = " << ii << endl;
-    for (int jj = domLoV.y(); jj <= domHiV.y(); jj++) {
-      for (int kk = domLoV.z(); kk <= domHiV.z(); kk++) {
-	cerr.width(10);
-	cerr << vars->vVelNonlinearSrc[IntVector(ii,jj,kk)] << " " ; 
-      }
-      cerr << endl;
-    }
-  }
-  cerr << "AFTER VVELBC_FORT" << endl;
-  for (int ii = domLoV.x(); ii <= domHiV.x(); ii++) {
-    cerr << "SP for V velocity for ii = " << ii << endl;
-    for (int jj = domLoV.y(); jj <= domHiV.y(); jj++) {
-      for (int kk = domLoV.z(); kk <= domHiV.z(); kk++) {
-	cerr.width(10);
-	cerr << vars->vVelLinearSrc[IntVector(ii,jj,kk)] << " " ; 
-      }
-      cerr << endl;
-    }
-  }
+  cerr << "Print VVel" << endl;
+  vars->vVelocity.print(cerr);
+  cerr << "Print VAP" << endl;
+  vars->vVelocityCoeff[Arches::AP].print(cerr);
+  cerr << "Print VAW" << endl;
+  vars->vVelocityCoeff[Arches::AW].print(cerr);
+  cerr << "Print VAE" << endl;
+  vars->vVelocityCoeff[Arches::AE].print(cerr);
+  cerr << "Print VAN" << endl;
+  vars->vVelocityCoeff[Arches::AN].print(cerr);
+  cerr << "Print VAS" << endl;
+  vars->vVelocityCoeff[Arches::AS].print(cerr);
+  cerr << "Print VAT" << endl;
+  vars->vVelocityCoeff[Arches::AT].print(cerr);
+  cerr << "Print VAB" << endl;
+  vars->vVelocityCoeff[Arches::AB].print(cerr);
+  cerr << "Print SU for V velocity: " << endl;
+  vars->vVelNonlinearSrc.print(cerr);
+  cerr << "Print SP for V velocity for:" << endl;
+  vars->vVelLinearSrc.print(cerr);
 #endif
 
 }
@@ -1282,115 +1073,26 @@ BoundaryCondition::wVelocityBC(DataWarehouseP& new_dw,
 
 #ifdef ARCHES_BC_DEBUG
   cerr << "AFTER WVELBC_FORT" << endl;
-  for (int ii = domLoW.x(); ii <= domHiW.x(); ii++) {
-    cerr << "W velocity for ii = " << ii << endl;
-    for (int jj = domLoW.y(); jj <= domHiW.y(); jj++) {
-      for (int kk = domLoW.z(); kk <= domHiW.z(); kk++) {
-	cerr.width(10);
-	cerr << vars->wVelocity[IntVector(ii,jj,kk)] << " " ; 
-      }
-      cerr << endl;
-    }
-  }
-  cerr << "AFTER WVELBC_FORT" << endl;
-  for (int ii = domLoW.x(); ii <= domHiW.x(); ii++) {
-    cerr << "AP for W velocity for ii = " << ii << endl;
-    for (int jj = domLoW.y(); jj <= domHiW.y(); jj++) {
-      for (int kk = domLoW.z(); kk <= domHiW.z(); kk++) {
-	cerr.width(10);
-	cerr << (vars->wVelocityCoeff[Arches::AP])[IntVector(ii,jj,kk)] << " " ; 
-      }
-      cerr << endl;
-    }
-  }
-  cerr << "AFTER WVELBC_FORT" << endl;
-  for (int ii = domLoW.x(); ii <= domHiW.x(); ii++) {
-    cerr << "AE for W velocity for ii = " << ii << endl;
-    for (int jj = domLoW.y(); jj <= domHiW.y(); jj++) {
-      for (int kk = domLoW.z(); kk <= domHiW.z(); kk++) {
-	cerr.width(10);
-	cerr << (vars->wVelocityCoeff[Arches::AE])[IntVector(ii,jj,kk)] << " " ; 
-      }
-      cerr << endl;
-    }
-  }
-  cerr << "AFTER WVELBC_FORT" << endl;
-  for (int ii = domLoW.x(); ii <= domHiW.x(); ii++) {
-    cerr << "AW for W velocity for ii = " << ii << endl;
-    for (int jj = domLoW.y(); jj <= domHiW.y(); jj++) {
-      for (int kk = domLoW.z(); kk <= domHiW.z(); kk++) {
-	cerr.width(10);
-	cerr << (vars->wVelocityCoeff[Arches::AW])[IntVector(ii,jj,kk)] << " " ; 
-      }
-      cerr << endl;
-    }
-  }
-  cerr << "AFTER WVELBC_FORT" << endl;
-  for (int ii = domLoW.x(); ii <= domHiW.x(); ii++) {
-    cerr << "AN for W velocity for ii = " << ii << endl;
-    for (int jj = domLoW.y(); jj <= domHiW.y(); jj++) {
-      for (int kk = domLoW.z(); kk <= domHiW.z(); kk++) {
-	cerr.width(10);
-	cerr << (vars->wVelocityCoeff[Arches::AN])[IntVector(ii,jj,kk)] << " " ; 
-      }
-      cerr << endl;
-    }
-  }
-  cerr << "AFTER WVELBC_FORT" << endl;
-  for (int ii = domLoW.x(); ii <= domHiW.x(); ii++) {
-    cerr << "AS for W velocity for ii = " << ii << endl;
-    for (int jj = domLoW.y(); jj <= domHiW.y(); jj++) {
-      for (int kk = domLoW.z(); kk <= domHiW.z(); kk++) {
-	cerr.width(10);
-	cerr << (vars->wVelocityCoeff[Arches::AS])[IntVector(ii,jj,kk)] << " " ; 
-      }
-      cerr << endl;
-    }
-  }
-  cerr << "AFTER WVELBC_FORT" << endl;
-  for (int ii = domLoW.x(); ii <= domHiW.x(); ii++) {
-    cerr << "AT for W velocity for ii = " << ii << endl;
-    for (int jj = domLoW.y(); jj <= domHiW.y(); jj++) {
-      for (int kk = domLoW.z(); kk <= domHiW.z(); kk++) {
-	cerr.width(10);
-	cerr << (vars->wVelocityCoeff[Arches::AT])[IntVector(ii,jj,kk)] << " " ; 
-      }
-      cerr << endl;
-    }
-  }
-  cerr << "AFTER WVELBC_FORT" << endl;
-  for (int ii = domLoW.x(); ii <= domHiW.x(); ii++) {
-    cerr << "AB for W velocity for ii = " << ii << endl;
-    for (int jj = domLoW.y(); jj <= domHiW.y(); jj++) {
-      for (int kk = domLoW.z(); kk <= domHiW.z(); kk++) {
-	cerr.width(10);
-	cerr << (vars->wVelocityCoeff[Arches::AB])[IntVector(ii,jj,kk)] << " " ; 
-      }
-      cerr << endl;
-    }
-  }
-  cerr << "AFTER WVELBC_FORT" << endl;
-  for (int ii = domLoW.x(); ii <= domHiW.x(); ii++) {
-    cerr << "SU for W velocity for ii = " << ii << endl;
-    for (int jj = domLoW.y(); jj <= domHiW.y(); jj++) {
-      for (int kk = domLoW.z(); kk <= domHiW.z(); kk++) {
-	cerr.width(10);
-	cerr << vars->wVelNonlinearSrc[IntVector(ii,jj,kk)] << " " ; 
-      }
-      cerr << endl;
-    }
-  }
-  cerr << "AFTER WVELBC_FORT" << endl;
-  for (int ii = domLoW.x(); ii <= domHiW.x(); ii++) {
-    cerr << "SP for W velocity for ii = " << ii << endl;
-    for (int jj = domLoW.y(); jj <= domHiW.y(); jj++) {
-      for (int kk = domLoW.z(); kk <= domHiW.z(); kk++) {
-	cerr.width(10);
-	cerr << vars->wVelLinearSrc[IntVector(ii,jj,kk)] << " " ; 
-      }
-      cerr << endl;
-    }
-  }
+  cerr << "Print WVel" << endl;
+  vars->wVelocity.print(cerr);
+  cerr << "Print WAP" << endl;
+  vars->wVelocityCoeff[Arches::AP].print(cerr);
+  cerr << "Print WAW" << endl;
+  vars->wVelocityCoeff[Arches::AW].print(cerr);
+  cerr << "Print WAE" << endl;
+  vars->wVelocityCoeff[Arches::AE].print(cerr);
+  cerr << "Print WAN" << endl;
+  vars->wVelocityCoeff[Arches::AN].print(cerr);
+  cerr << "Print WAS" << endl;
+  vars->wVelocityCoeff[Arches::AS].print(cerr);
+  cerr << "Print WAT" << endl;
+  vars->wVelocityCoeff[Arches::AT].print(cerr);
+  cerr << "Print WAB" << endl;
+  vars->wVelocityCoeff[Arches::AB].print(cerr);
+  cerr << "Print SU for W velocity: " << endl;
+  vars->wVelNonlinearSrc.print(cerr);
+  cerr << "Print SP for W velocity for:" << endl;
+  vars->wVelLinearSrc.print(cerr);
 #endif
 
 }
@@ -1456,104 +1158,26 @@ BoundaryCondition::pressureBC(const ProcessorGroup*,
 
 #ifdef ARCHES_BC_DEBUG
   cerr << "AFTER FORT_PRESSBC" << endl;
-  for (int ii = domLo.x(); ii <= domHi.x(); ii++) {
-    cerr << "Pressure for ii = " << ii << endl;
-    for (int jj = domLo.y(); jj <= domHi.y(); jj++) {
-      for (int kk = domLo.z(); kk <= domHi.z(); kk++) {
-	cerr.width(10);
-	cerr << vars->pressure[IntVector(ii,jj,kk)] << " " ; 
-      }
-      cerr << endl;
-    }
-  }
-  cerr << "AFTER FORT_PRESSBC" << endl;
-  for (int ii = domLo.x(); ii <= domHi.x(); ii++) {
-    cerr << "AE for Pressure for ii = " << ii << endl;
-    for (int jj = domLo.y(); jj <= domHi.y(); jj++) {
-      for (int kk = domLo.z(); kk <= domHi.z(); kk++) {
-	cerr.width(10);
-	cerr << (vars->pressCoeff[Arches::AE])[IntVector(ii,jj,kk)] << " " ; 
-      }
-      cerr << endl;
-    }
-  }
-  cerr << "AFTER FORT_PRESSBC" << endl;
-  for (int ii = domLo.x(); ii <= domHi.x(); ii++) {
-    cerr << "AW for Pressure for ii = " << ii << endl;
-    for (int jj = domLo.y(); jj <= domHi.y(); jj++) {
-      for (int kk = domLo.z(); kk <= domHi.z(); kk++) {
-	cerr.width(10);
-	cerr << (vars->pressCoeff[Arches::AW])[IntVector(ii,jj,kk)] << " " ; 
-      }
-      cerr << endl;
-    }
-  }
-  cerr << "AFTER FORT_PRESSBC" << endl;
-  for (int ii = domLo.x(); ii <= domHi.x(); ii++) {
-    cerr << "AN for Pressure for ii = " << ii << endl;
-    for (int jj = domLo.y(); jj <= domHi.y(); jj++) {
-      for (int kk = domLo.z(); kk <= domHi.z(); kk++) {
-	cerr.width(10);
-	cerr << (vars->pressCoeff[Arches::AN])[IntVector(ii,jj,kk)] << " " ; 
-      }
-      cerr << endl;
-    }
-  }
-  cerr << "AFTER FORT_PRESSBC" << endl;
-  for (int ii = domLo.x(); ii <= domHi.x(); ii++) {
-    cerr << "AS for Pressure for ii = " << ii << endl;
-    for (int jj = domLo.y(); jj <= domHi.y(); jj++) {
-      for (int kk = domLo.z(); kk <= domHi.z(); kk++) {
-	cerr.width(10);
-	cerr << (vars->pressCoeff[Arches::AS])[IntVector(ii,jj,kk)] << " " ; 
-      }
-      cerr << endl;
-    }
-  }
-  cerr << "AFTER FORT_PRESSBC" << endl;
-  for (int ii = domLo.x(); ii <= domHi.x(); ii++) {
-    cerr << "AT for Pressure for ii = " << ii << endl;
-    for (int jj = domLo.y(); jj <= domHi.y(); jj++) {
-      for (int kk = domLo.z(); kk <= domHi.z(); kk++) {
-	cerr.width(10);
-	cerr << (vars->pressCoeff[Arches::AT])[IntVector(ii,jj,kk)] << " " ; 
-      }
-      cerr << endl;
-    }
-  }
-  cerr << "AFTER FORT_PRESSBC" << endl;
-  for (int ii = domLo.x(); ii <= domHi.x(); ii++) {
-    cerr << "AB for Pressure for ii = " << ii << endl;
-    for (int jj = domLo.y(); jj <= domHi.y(); jj++) {
-      for (int kk = domLo.z(); kk <= domHi.z(); kk++) {
-	cerr.width(10);
-	cerr << (vars->pressCoeff[Arches::AB])[IntVector(ii,jj,kk)] << " " ; 
-      }
-      cerr << endl;
-    }
-  }
-  cerr << "AFTER FORT_PRESSBC" << endl;
-  for (int ii = domLo.x(); ii <= domHi.x(); ii++) {
-    cerr << "SU for Pressure for ii = " << ii << endl;
-    for (int jj = domLo.y(); jj <= domHi.y(); jj++) {
-      for (int kk = domLo.z(); kk <= domHi.z(); kk++) {
-	cerr.width(10);
-	cerr << vars->pressNonlinearSrc[IntVector(ii,jj,kk)] << " " ; 
-      }
-      cerr << endl;
-    }
-  }
-  cerr << "AFTER FORT_PRESSBC" << endl;
-  for (int ii = domLo.x(); ii <= domHi.x(); ii++) {
-    cerr << "SP for Pressure for ii = " << ii << endl;
-    for (int jj = domLo.y(); jj <= domHi.y(); jj++) {
-      for (int kk = domLo.z(); kk <= domHi.z(); kk++) {
-	cerr.width(10);
-	cerr << vars->pressLinearSrc[IntVector(ii,jj,kk)] << " " ; 
-      }
-      cerr << endl;
-    }
-  }
+  cerr << "Print Pressure" << endl;
+  vars->pressure.print(cerr);
+  cerr << "Print PAP" << endl;
+  vars->pressCoeff[Arches::AP].print(cerr);
+  cerr << "Print PAW" << endl;
+  vars->pressCoeff[Arches::AW].print(cerr);
+  cerr << "Print PAE" << endl;
+  vars->pressCoeff[Arches::AE].print(cerr);
+  cerr << "Print PAN" << endl;
+  vars->pressCoeff[Arches::AN].print(cerr);
+  cerr << "Print PAS" << endl;
+  vars->pressCoeff[Arches::AS].print(cerr);
+  cerr << "Print PAT" << endl;
+  vars->pressCoeff[Arches::AT].print(cerr);
+  cerr << "Print PAB" << endl;
+  vars->pressCoeff[Arches::AB].print(cerr);
+  cerr << "Print SU for Pressure: " << endl;
+  vars->pressNonlinearSrc.print(cerr);
+  cerr << "Print SP for Pressure for:" << endl;
+  vars->pressLinearSrc.print(cerr);
 #endif
 }
 
@@ -1632,104 +1256,10 @@ BoundaryCondition::scalarBC(const ProcessorGroup*,
 
 #ifdef ARCHES_BC_DEBUG
   cerr << "AFTER FORT_SCALARBC" << endl;
-  for (int ii = domLo.x(); ii <= domHi.x(); ii++) {
-    cerr << "Scalar " << index << " for ii = " << ii << endl;
-    for (int jj = domLo.y(); jj <= domHi.y(); jj++) {
-      for (int kk = domLo.z(); kk <= domHi.z(); kk++) {
-	cerr.width(10);
-	cerr << vars->scalar[IntVector(ii,jj,kk)] << " " ; 
-      }
-      cerr << endl;
-    }
-  }
-  cerr << "AFTER FORT_SCALARBC" << endl;
-  for (int ii = domLo.x(); ii <= domHi.x(); ii++) {
-    cerr << "AE for Scalar " << index << " for ii = " << ii << endl;
-    for (int jj = domLo.y(); jj <= domHi.y(); jj++) {
-      for (int kk = domLo.z(); kk <= domHi.z(); kk++) {
-	cerr.width(10);
-	cerr << (vars->scalarCoeff[Arches::AE])[IntVector(ii,jj,kk)] << " " ; 
-      }
-      cerr << endl;
-    }
-  }
-  cerr << "AFTER FORT_SCALARBC" << endl;
-  for (int ii = domLo.x(); ii <= domHi.x(); ii++) {
-    cerr << "AW for Scalar " << index << " for ii = " << ii << endl;
-    for (int jj = domLo.y(); jj <= domHi.y(); jj++) {
-      for (int kk = domLo.z(); kk <= domHi.z(); kk++) {
-	cerr.width(10);
-	cerr << (vars->scalarCoeff[Arches::AW])[IntVector(ii,jj,kk)] << " " ; 
-      }
-      cerr << endl;
-    }
-  }
-  cerr << "AFTER FORT_SCALARBC" << endl;
-  for (int ii = domLo.x(); ii <= domHi.x(); ii++) {
-    cerr << "AN for Scalar " << index << " for ii = " << ii << endl;
-    for (int jj = domLo.y(); jj <= domHi.y(); jj++) {
-      for (int kk = domLo.z(); kk <= domHi.z(); kk++) {
-	cerr.width(10);
-	cerr << (vars->scalarCoeff[Arches::AN])[IntVector(ii,jj,kk)] << " " ; 
-      }
-      cerr << endl;
-    }
-  }
-  cerr << "AFTER FORT_SCALARBC" << endl;
-  for (int ii = domLo.x(); ii <= domHi.x(); ii++) {
-    cerr << "AS for Scalar " << index << " for ii = " << ii << endl;
-    for (int jj = domLo.y(); jj <= domHi.y(); jj++) {
-      for (int kk = domLo.z(); kk <= domHi.z(); kk++) {
-	cerr.width(10);
-	cerr << (vars->scalarCoeff[Arches::AS])[IntVector(ii,jj,kk)] << " " ; 
-      }
-      cerr << endl;
-    }
-  }
-  cerr << "AFTER FORT_SCALARBC" << endl;
-  for (int ii = domLo.x(); ii <= domHi.x(); ii++) {
-    cerr << "AT for Scalar " << index << " for ii = " << ii << endl;
-    for (int jj = domLo.y(); jj <= domHi.y(); jj++) {
-      for (int kk = domLo.z(); kk <= domHi.z(); kk++) {
-	cerr.width(10);
-	cerr << (vars->scalarCoeff[Arches::AT])[IntVector(ii,jj,kk)] << " " ; 
-      }
-      cerr << endl;
-    }
-  }
-  cerr << "AFTER FORT_SCALARBC" << endl;
-  for (int ii = domLo.x(); ii <= domHi.x(); ii++) {
-    cerr << "AB for Scalar " << index << " for ii = " << ii << endl;
-    for (int jj = domLo.y(); jj <= domHi.y(); jj++) {
-      for (int kk = domLo.z(); kk <= domHi.z(); kk++) {
-	cerr.width(10);
-	cerr << (vars->scalarCoeff[Arches::AB])[IntVector(ii,jj,kk)] << " " ; 
-      }
-      cerr << endl;
-    }
-  }
-  cerr << "AFTER FORT_SCALARBC" << endl;
-  for (int ii = domLo.x(); ii <= domHi.x(); ii++) {
-    cerr << "SU for Scalar " << index << " for ii = " << ii << endl;
-    for (int jj = domLo.y(); jj <= domHi.y(); jj++) {
-      for (int kk = domLo.z(); kk <= domHi.z(); kk++) {
-	cerr.width(10);
-	cerr << vars->scalarNonlinearSrc[IntVector(ii,jj,kk)] << " " ; 
-      }
-      cerr << endl;
-    }
-  }
-  cerr << "AFTER FORT_SCALARBC" << endl;
-  for (int ii = domLo.x(); ii <= domHi.x(); ii++) {
-    cerr << "SP for Scalar " << index << " for ii = " << ii << endl;
-    for (int jj = domLo.y(); jj <= domHi.y(); jj++) {
-      for (int kk = domLo.z(); kk <= domHi.z(); kk++) {
-	cerr.width(10);
-	cerr << vars->scalarLinearSrc[IntVector(ii,jj,kk)] << " " ; 
-      }
-      cerr << endl;
-    }
-  }
+  cerr << "Print Scalar" << endl;
+  vars->scalar.print(cerr);
+  cerr << "Print scalar coeff, AE:" << endl;
+  vars->scalarCoeff[Arches::AE].print(cerr);
 #endif
 }
 

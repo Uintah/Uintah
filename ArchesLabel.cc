@@ -173,6 +173,13 @@ ArchesLabel::ArchesLabel()
 
   d_scalarCPBCLabel = scinew VarLabel("scalarCPBC",
 				      CCVariable<double>::getTypeDescription() );
+
+  // scalar variance
+  d_scalarVarINLabel = scinew VarLabel("scalarVarIN", 
+				       CCVariable<double>::getTypeDescription() );
+
+  d_scalarVarSPLabel = scinew VarLabel("scalarVarSP", 
+				       CCVariable<double>::getTypeDescription() );
   // Scalar Coef
   d_scalCoefSBLMLabel = scinew VarLabel("scalCoefSBLM",
 				   CCVariable<double>::getTypeDescription() );

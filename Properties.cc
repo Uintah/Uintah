@@ -121,8 +121,9 @@ Properties::sched_reComputeProps(const LevelP& level,
       int numGhostCells = 0;
       int matlIndex = 0;
       // requires scalars
-      tsk->requires(new_dw, d_lab->d_densityINLabel, matlIndex, patch, Ghost::None,
-		    numGhostCells);
+      tsk->requires(new_dw, d_lab->d_densityINLabel, matlIndex, patch, 
+		    Ghost::AroundCells,
+		    numGhostCells+2);
       for (int ii = 0; ii < d_numMixingVars; ii++) 
 	tsk->requires(new_dw, d_lab->d_scalarSPLabel, ii, patch, Ghost::None,
 			 numGhostCells);
@@ -156,6 +157,12 @@ Properties::computeProps(const ProcessorGroup*,
   for (int ii = 0; ii < d_numMixingVars; ii++)
     old_dw->get(scalar[ii], d_lab->d_scalarSPLabel, ii, patch, Ghost::None,
 		nofGhostCells);
+  // get multimaterial vars
+#ifdef multimaterialform
+  MultiMaterialVars* mmVars = 0;
+  if (d_mmInterface) 
+    mmVars = d_mmInterface->getMMVars();
+#endif
 
   //CCVariable<double> new_density;
   //new_dw->allocate(new_density, d_densityCPLabel, matlIndex, patch);
@@ -187,6 +194,10 @@ Properties::computeProps(const ProcessorGroup*,
 	Stream outStream;
 	d_mixingModel->computeProps(inStream, outStream);
 	double local_den = outStream.getDensity();
+#ifdef multimaterialform
+	if (d_mmInterface) 
+	  local_den *= mmVars->voidFraction[currCell];
+#endif
 	if (d_bc == 0)
 	  throw InvalidValue("BoundaryCondition pointer not assigned");
 	if (cellType[currCell] != d_bc->wallCellType()) 
@@ -247,6 +258,11 @@ Properties::reComputeProps(const ProcessorGroup*,
     new_dw->get(scalar[ii], d_lab->d_scalarSPLabel, ii, patch, Ghost::None,
 		nofGhostCells);
 
+#ifdef multimaterialform
+  MultiMaterialVars* mmVars = 0;
+  if (d_mmInterface) 
+    mmVars = d_mmInterface->getMMVars();
+#endif
   //CCVariable<double> new_density;
   //new_dw->allocate(new_density, d_densityCPLabel, matlIndex, patch);
   IntVector indexLow = patch->getCellLowIndex();
@@ -274,13 +290,11 @@ Properties::reComputeProps(const ProcessorGroup*,
 	Stream outStream;
 	d_mixingModel->computeProps(inStream, outStream);
 	double local_den = outStream.getDensity();
-#if 0
-	if (multimaterial) {
-	  double theta = d_multiInterface->getVoidFraction();
-	  local_den *= theta;
-	}
-	
+#ifdef multimaterialform
+	if (d_mmInterface) 
+	  local_den *= mmVars->voidFraction[currCell];
 #endif
+	
 	density[IntVector(colX, colY, colZ)] = d_denUnderrelax*local_den +
                  	  (1.0-d_denUnderrelax)*density[IntVector(colX, colY, colZ)];
       }
@@ -305,9 +319,7 @@ Properties::reComputeProps(const ProcessorGroup*,
 #endif
   if (patch->containsCell(d_denRef)) {
     double den_ref = density[d_denRef];
-#ifdef ARCHES_PRES_DEBUG
     cerr << "density_ref " << den_ref << endl;
-#endif
     new_dw->put(sum_vartype(den_ref),d_lab->d_refDensity_label);
   }
   else

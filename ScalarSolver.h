@@ -148,6 +148,11 @@ private:
 
       // const VarLabel* (required)
       const ArchesLabel* d_lab;
+#ifdef multimaterialform
+      // set the values in problem setup
+      MultiMaterialInterface* d_mmInterface;
+      MultiMaterialSGSModel* d_mmSGSModel;
+#endif
 
 
 }; // End class ScalarSolver
