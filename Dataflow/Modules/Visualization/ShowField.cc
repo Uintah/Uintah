@@ -556,9 +556,6 @@ ShowField::execute()
     color_map_changed = true;
     color_map_generation_ = color_map_.get_rep()?color_map_->generation:-1;
     // Colormap was added or went away.
-    nodes_dirty_ = true;
-    edges_dirty_ = true;
-    faces_dirty_ = true;
     text_dirty_ = true;
     data_dirty_ = true;
   }
@@ -670,7 +667,7 @@ ShowField::execute()
   }
 
   // Cleanup.
-  if (do_nodes) {
+  if (do_nodes || color_map_changed) {
     nodes_dirty_ = false;
     if (renderer_.get_rep() && nodes_on_.get()) {
       const char *name = nodes_transparency_.get()?"Transparent Nodes":"Nodes";
@@ -683,7 +680,7 @@ ShowField::execute()
       node_id_ = ogeom_->addObj(geom, fname + name);
     }
   }
-  if (do_edges) {
+  if (do_edges || color_map_changed) {
     edges_dirty_ = false;
     if (renderer_.get_rep() && edges_on_.get()) {
       const char *name = edges_transparency_.get()?"Transparent Edges":"Edges";
@@ -695,7 +692,7 @@ ShowField::execute()
       edge_id_ = ogeom_->addObj(geom, fname + name);
     }
   }
-  if (do_faces) {
+  if (do_faces || color_map_changed) {
     faces_dirty_ = false;
     if (renderer_.get_rep() && faces_on_.get()) 
     {
@@ -705,7 +702,7 @@ ShowField::execute()
 	scinew GeomMaterial(renderer_->face_switch_, def_material_);
       GeomHandle geom =
 	scinew GeomSwitch(scinew GeomColorMap(gmat, color_map_));
-      face_id_ = ogeom_->addObj(geom, fname +name);
+      face_id_ = ogeom_->addObj(geom, fname + name);
     }
   }  
   if (do_data)
