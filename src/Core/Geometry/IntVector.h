@@ -140,6 +140,9 @@ public:
   inline int* get_pointer() {
     return value_;
   }
+  inline Vector asVector() const {
+    return Vector(value_[0], value_[1], value_[2]);
+  }
   friend inline Vector operator*(const Vector&, const IntVector&);
   friend inline Vector operator*(const IntVector&, const Vector&);
 private:
