@@ -387,7 +387,12 @@ class BioImageApp {
 	    change_indicator_labels "Performing Median/Mode Filtering..."
 	} elseif {[string first "UnuCmedian" $which 0] != -1 && $state == "Completed"} {
 	    change_indicate_val 2
-	} 
+	} elseif {[string first "ScalarFieldStats" $which] != -1 && $state == "JustStarted"} {
+	    change_indicate_val 1
+	    change_indicator_labels "Building Histogram..."
+	} elseif {[string first "ScalarFieldStats" $which] != -1 && $state == "Completed"} {
+	    change_indicate_val 2
+	}
     }
     
     method change_indicate_val { v } {
@@ -1226,14 +1231,14 @@ class BioImageApp {
 		      -command "$this configure_readers Dicom"]
 	
 	button $page.load -text "Dicom Loader" \
-	    -command "puts \"Fix opening Dicom UI\""
+	    -command "$this dicom_ui"
 	
 	pack $page.load -side top -anchor n \
 	    -padx 3 -pady 10 -ipadx 2 -ipady 2
 	
 	### Analyze
 	set page [$data.ui.tnb add -label "Analyze" \
-		      -command "$this configure_readers Analyze"]
+		      -command "$this analyze_ui"]
 	
 	button $page.load -text "Analyze Loader" \
 	    -command "puts \"Fix opening Analyze UI\""
@@ -1300,6 +1305,26 @@ class BioImageApp {
 	grid config $w.sentry -row 1 -column 4 -sticky "n"
 	
     }
+
+    method dicom_ui { } {
+	set m [lindex [lindex $filters(0) $modules] 1]
+	$m initialize_ui
+
+	if {[winfo exists .ui$m]} {
+	    # disable execute button 
+	    .ui$m.buttonPanel.btnBox.execute configure -state disabled
+	}
+    }
+
+    method analyze_ui { } {
+	set m [lindex [lindex $filters(0) $modules] 2]
+	$m initialize_ui
+	if {[winfo exists .ui$m]} {
+	    # disable execute button 
+	    .ui$m.buttonPanel.btnBox.execute configure -state disabled
+	}
+    }
+
 
     ### update_orientations
     #################################################
@@ -2274,14 +2299,34 @@ class BioImageApp {
 	set choose [$this determine_choose_port]
 
 	# add modules
-	set m1 [addModuleAtPosition "Teem" "UnuAtoM" "UnuHeq" 100 [expr 10 * $num_filters + 500] ]
+	set m1 [addModuleAtPosition "Teem" "UnuAtoM" "UnuHeq"  200 [expr 10 * $num_filters + 400] ]
+	set m2 [addModuleAtPosition "Teem" "UnuNtoZ" "UnuQuantize"  200 [expr 10 * $num_filters + 600] ]
+	set m3 [addModuleAtPosition "Teem" "Converters" "NrrdToField"  100 [expr 10 * $num_filters + 400] ]
+        set m4 [addModuleAtPosition "SCIRun" "FieldsOther" "ScalarFieldStats"  100 [expr 10 * $num_filters + 600] ]
+
 	
 	# add connection to Choose module and new module
 	set ChooseNrrd [lindex [lindex $filters(0) $modules] $load_choose_vis]
 	set output_mod [lindex [lindex $filters($current) $output] 0]
 	set output_port [lindex [lindex $filters($current) $output] 1]
+	addConnection $output_mod $output_port $m3 2
+	addConnection $m3 0 $m4 0
 	addConnection $output_mod $output_port $m1 0
-	addConnection $m1 0 $ChooseNrrd $choose
+	addConnection $m1 0 $m2 0
+	addConnection $m2 0 $ChooseNrrd $choose
+
+        global $m4-args
+        trace variable $m4-args w "$this update_histo_graph_callback $num_filters"
+
+        global $m1-bins
+        set $m1-bins 256
+
+        global $m2-bits $m4-minf $m4-maxf $m4-useinputmin $m4-useinputmax
+        set $m2-bits 8
+        set $m2-minf 0
+        set $m2-maxf 256
+        set $m2-useinputmin 1
+        set $m2-useinputmax 1
 
 	set row $grid_rows
 	# if inserting, disconnect current to current's next and connect current
@@ -2305,7 +2350,7 @@ class BioImageApp {
 	}
 
         # add to filters array
-        set filters($num_filters) [list histo [list $m1] [list $m1 0] [list $m1 0] $current [lindex $filters($current) $next_index] $choose $row 1]
+        set filters($num_filters) [list histo [list $m1 $m2 $m3 $m4] [list $m1 0] [list $m1 0] $current [lindex $filters($current) $next_index] $choose $row 1]
 
 	# Make current frame regular
 	set p f$current
@@ -2332,6 +2377,94 @@ class BioImageApp {
 
 	set num_filters [expr $num_filters + 1]
 	set grid_rows [expr $grid_rows + 1]
+
+        # execute histogram part so that is visible to user
+        if {$has_executed} {
+	    $m4-c needexecute
+	}
+    }
+
+
+    ############################
+    ### update_histo_graph_callback
+    ############################
+    # Called when the ScalarFieldStats updates the graph
+    # so we can update ours
+    method update_histo_graph_callback {i varname varele varop} {
+
+	global mods
+        set ScalarFieldStats [lindex [lindex $filters($i) $modules] 3]
+        global [set ScalarFieldStats]-min [set ScalarFieldStats]-max
+
+	global [set ScalarFieldStats]-args
+        global [set ScalarFieldStats]-nmin
+        global [set ScalarFieldStats]-nmax
+
+	set nmin [set [set ScalarFieldStats]-nmin]
+	set nmax [set [set ScalarFieldStats]-nmax]
+	set args [set [set ScalarFieldStats]-args]
+
+	if {$args == "?"} {
+	    return
+	}
+        
+        # for some reason the other graph will only work if I set temp 
+        # instead of using the $i value 
+	set temp $i
+
+ 	set graph $history1.f$i.childsite.ui.histo.childsite.graph
+
+         if { ($nmax - $nmin) > 1000 || ($nmax - $nmin) < 1e-3 } {
+             $graph axis configure y -logscale yes
+         } else {
+             $graph axis configure y -logscale no
+         }
+
+         set min [set [set ScalarFieldStats]-min]
+         set max [set [set ScalarFieldStats]-max]
+         set xvector {}
+         set yvector {}
+         set yvector [concat $yvector $args]
+         set frac [expr double(1.0/[llength $yvector])]
+
+         $graph configure -barwidth $frac
+         $graph axis configure x -min $min -max $max -subdivisions 4 -loose 1
+
+         for {set i 0} { $i < [llength $yvector] } {incr i} {
+             set val [expr $min + $i*$frac*($max-$min)]
+             lappend xvector $val
+         }
+        
+          if { [$graph element exists "h"] == 1 } {
+              $graph element delete "h"
+          }
+
+          $graph element create "h" -xdata $xvector -ydata $yvector
+
+# 	## other window
+  	 set graph $history0.f$temp.childsite.ui.histo.childsite.graph
+
+          if { ($nmax - $nmin) > 1000 || ($nmax - $nmin) < 1e-3 } {
+              $graph axis configure y -logscale yes
+          } else {
+              $graph axis configure y -logscale no
+          }
+
+
+          $graph configure -barwidth $frac
+          $graph axis configure x -min $min -max $max -subdivisions 4 -loose 1
+
+          for {set i 0} { $i < [llength $yvector] } {incr i} {
+              set val [expr $min + $i*$frac*($max-$min)]
+              lappend xvector $val
+          }
+        
+           if { [$graph element exists "h"] == 1 } {
+               $graph element delete "h"
+           }
+
+           $graph element create "h" -xdata $xvector -ydata $yvector
+
     }
 
     method print_filters {} {
@@ -2568,7 +2701,6 @@ class BioImageApp {
 	radiobutton $history.eye$which -text "" \
 	    -variable eye -value $which \
 	    -command "$this change_eye $which"
-	Tooltip $history.eye$which "Select to change current view\nof 3D and 2D window"
 
 	grid config $history.eye$which -column 0 -row $row -sticky "nw"
 
@@ -2591,10 +2723,8 @@ class BioImageApp {
 	    -anchor nw \
 	    -command "$this change_visibility $which" \
 	    -relief flat
-	Tooltip $w.expand.b "Click to hide/show the Histogram UI"
 	label $w.expand.l -text "Histogram - Unknown" -width $label_width \
 	    -anchor nw
-	Tooltip $w.expand.l "Right click to edit label"
 	pack $w.expand.b $w.expand.l -side left -anchor nw 
 
 	bind $w.expand.l <ButtonPress-1> "$this change_current $which"
@@ -2603,12 +2733,33 @@ class BioImageApp {
 	frame $w.ui
 	pack $w.ui -side top -anchor nw -expand yes -fill x
 	
+
         set UnuHeq  [lindex [lindex $filters($which) $modules] 0]
-	global [set UnuHeq]-bins
+        set UnuQuantize [lindex [lindex $filters($which) $modules] 1]
+        set ScalarFieldStats [lindex [lindex $filters($which) $modules] 3]
+
+        ### Historgram
+        iwidgets::labeledframe $w.ui.histo \
+            -labelpos nw -labeltext "Histogram"
+ 	pack $w.ui.histo -side top -fill x -anchor n -expand 1
+
+ 	set histo [$w.ui.histo childsite]
+
+        global [set ScalarFieldStats]-min
+	global [set ScalarFieldStats]-max
+	global [set ScalarFieldStats]-nbuckets
+
+	frame $histo.row1
+	pack $histo.row1 -side top
+
+	blt::barchart $histo.graph -title "" \
+	    -height [expr [set [set ScalarFieldStats]-nbuckets]*3/5.0] \
+	    -width 200 -plotbackground gray80
+        pack $histo.graph
+
 	global [set UnuHeq]-amount
       
         if {!$loading_ui} {
-	    set [set UnuHeq]-bins 3000
    	    set [set UnuHeq]-amount 1.0
         }
 
@@ -2619,9 +2770,38 @@ class BioImageApp {
 	    -orient horizontal \
 	    -resolution 0.01
 	pack $w.ui.amount -side top -anchor nw -expand yes -fill x
+
+        global [set UnuQuantize]-minf [set UnuQuantize]-maxf
+        global [set UnuQuantize]-useinputmin [set UnuQuantize]-useinputmax
+
+        frame $w.ui.min -relief groove -borderwidth 2
+	pack $w.ui.min -side top -expand yes -fill x
+
+        iwidgets::entryfield $w.ui.min.v -labeltext "Min:" \
+	    -textvariable [set UnuQuantize]-minf
+        pack $w.ui.min.v -side top -expand yes -fill x
+
+        checkbutton $w.ui.min.useinputmin \
+	    -text "Use lowest value of input nrrd as min" \
+	    -variable [set UnuQuantize]-useinputmin
+        pack $w.ui.min.useinputmin -side top -expand yes -fill x
+
+
+	frame $w.ui.max -relief groove -borderwidth 2
+	pack $w.ui.max -side top -expand yes -fill x
+
+        iwidgets::entryfield $w.ui.max.v -labeltext "Max:" \
+	    -textvariable [set UnuQuantize]-maxf
+        pack $w.ui.max.v -side top -expand yes -fill x
+
+        checkbutton $w.ui.max.useinputmax \
+	    -text "Use highest value of input nrrd as max" \
+	    -variable [set UnuQuantize]-useinputmax
+        pack $w.ui.max.useinputmax -side top -expand yes -fill x
 	
 	bind $w.ui.amount <ButtonPress-1> "$this change_current $which"
     }
+
 
     method determine_choose_port {} {
 	global Subnet
