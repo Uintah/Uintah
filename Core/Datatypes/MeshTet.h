@@ -36,6 +36,7 @@ private:
     operator int const &() const { return val; }
     int operator *() { return val; };
     int operator ++() { return val++; };
+    int operator ++(int) { int tmp = val; val++; return tmp; }
   };
 
 public:
