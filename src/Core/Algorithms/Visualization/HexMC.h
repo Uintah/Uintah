@@ -63,7 +63,7 @@ private:
   TriSurfMeshHandle trisurf_;
   map<long int, TriSurfMesh::Node::index_type> vertex_map_;
   int nx_, ny_, nz_;
-  TriSurfMesh::Node::index_type find_or_add_edgepoint(node_index_type, node_index_type, Point);
+  TriSurfMesh::Node::index_type find_or_add_edgepoint(node_index_type, node_index_type, const Point &);
 
 public:
   HexMC( Field *field ) : field_(field), mesh_(field->get_typed_mesh()) {}
@@ -100,7 +100,8 @@ void HexMC<Field>::reset( int n, bool build_trisurf )
 
 template<class Field>
 TriSurfMesh::Node::index_type
-HexMC<Field>::find_or_add_edgepoint(node_index_type n0, node_index_type n1, Point p) {
+HexMC<Field>::find_or_add_edgepoint(node_index_type n0, node_index_type n1, const Point &p)
+{
   map<long int, TriSurfMesh::Node::index_type>::iterator node_iter;
   long int key0 = 
     (long int) n0.i_ + nx_ * ((long int) n0.j_ + (ny_ * (long int) n0.k_));
