@@ -414,7 +414,8 @@ EOF
           if test "$_CHECK_PATH_" = ""; then
              AC_MSG_RESULT(yes)
           else
-             if test -f "$_CHECK_PATH_/lib$2.a" -o -f "$_CHECK_PATH_/lib$2.so"; then
+             if test -f "$_CHECK_PATH_/lib$2.a" -o -f "$_CHECK_PATH_/lib$2.so" \
+	                 -o -f "$_CHECK_PATH_/lib$2.dylib"; then
                 AC_MSG_RESULT($_CHECK_PATH_)
              else
                 # Even though the compilation was successful,
@@ -1291,6 +1292,11 @@ case $host in
   *-dec*)
     NUM_CPUS=1
     ;;
+  *-darwin*)
+    echo "Darwin"
+    NUM_CPUS=2
+    HAVE_OSX="yes"
+    ;;
   *-aix*)
     NUM_CPUS=4
     ;;
@@ -1301,6 +1307,8 @@ case $host in
     NUM_CPUS="1"
     ;;
 esac
+
+AC_SUBST(HAVE_OSX)
 
 AC_MSG_CHECKING(physical processor count)
 if test -z "$NUM_CPUS"; then
@@ -1343,7 +1351,20 @@ fi
 TIME_IMPL=Time_unix.cc
 TEMPLATE_TAG=
 TEMPLATE_BOX="<>"
-SO_OR_ARCHIVE_EXTENSION=so
+
+case $host in
+     *-darwin*)
+	SO_OR_ARCHIVE_EXTENSION=dylib
+	;;
+     *-aix*)
+        # On AIX, don't automatically generate .so's.  Make .a's and then
+        # later we will make .so's from them.
+	SO_OR_ARCHIVE_EXTENSION=a
+	;;
+     *)
+	SO_OR_ARCHIVE_EXTENSION=so 
+        ;;
+esac
 
 ASSERTION_LEVEL=$enable_assertion_level
 
@@ -1571,8 +1592,8 @@ case $host in
       sed "s+VERBOSE_CC+${CXX}+g;" < ${srcdir}/scripts/cc.in > scripts/CC
       chmod 755 scripts/cc scripts/CC
 
-      CC="scripts/cc"
-      CXX="scripts/CC"
+      CC="$(OBJTOP)/scripts/cc"
+      CXX="$(OBJTOP)/scripts/CC"
     else
       AC_MSG_RESULT(no)
     fi
@@ -1642,7 +1663,11 @@ case $host in
     CXXCPP="$CXX -c"
 
     ;;
-
+  *-darwin*)
+    LDRUN_PREFIX="-L"
+    CFLAGS="$CFLAGS -fno-common -dynamic -fcoalesce-templates -Wno-long-double -I/sw/include -L/sw/lib"
+    SOFLAGS="-dynamiclib -init __ZNSt8ios_base4InitC4Ev osx/osx_init.o -multiply_defined suppress ${SOFLAGS}"
+    ;;
   *)
     #
     # put '_' at end and two '_'s if there is a '_' in name. 
@@ -2099,6 +2124,13 @@ case $host in
        F_LIB_FLAG="$FOR_LIB_FLAG"
     fi
     ;;
+  *-darwin*)
+    # OSX Library Check
+    SCI_CHECK_LIB(/sw/lib,g2c,main,,,optional)
+    if test "$HAVE_LIB_G2C"; then
+       F_LIB_FLAG="$G2C_LIB_FLAG"
+    fi
+    ;;
   *)
     SCI_CHECK_LIB(,F77,main,,,optional)
     if test "$HAVE_LIB_F77"; then
@@ -2382,12 +2414,20 @@ AC_SUBST(DL_LIB_DIR_FLAG)
 
 ##  --  required standard headers
 SCI_CHECK_HEADERS(,stdio.h stdlib.h stddef.h stdarg.h string.h limits.h \
-   errno.h fcntl.h float.h values.h memory.h unistd.h netdb.h \
-   ctype.h signal.h locale.h malloc.h dirent.h assert.h sys/select.h \
+   errno.h fcntl.h float.h memory.h unistd.h netdb.h \
+   ctype.h signal.h locale.h dirent.h assert.h sys/select.h \
    sys/types.h sys/time.h sys/stat.h sys/socket.h sys/timeb.h \
    sys/mman.h sys/param.h sys/ioctl.h sys/resource.h sys/wait.h \
    sys/utsname.h rpc/types.h netinet/in.h,,,not-optional)
 
+case $host in
+  *-darwin*)
+	;;
+  *)
+	SCI_CHECK_HEADERS(,values.h malloc.h,,,non-optional)
+	;;
+esac
+ 
 SCI_CHECK_HEADERS(,inttypes.h stdint.h,,,optional)
 
 ##  --  required STL headers 
@@ -2451,7 +2491,8 @@ if test -f "$LIB_DIR_TK/tkConfig.sh"; then
 else
    AC_MSG_ERROR($LIB_DIR_TK/tkConfig.sh does not exist!)
 fi
-SCI_CHECK_HEADERS($TK_SRC_DIR/generic, tk.h tk3d.h tkPort.h,$INC_TCL_H,,not-optional)
+
+SCI_CHECK_HEADERS($TK_SRC_DIR/generic, tk.h tk3d.h tkPort.h,$INC_TCL_H $INC_X11_XLIB_H,,not-optional)
 
 AC_SUBST(TK_LIB_FLAG)
 AC_SUBST(TK_LIB_DIR_FLAG)
@@ -2468,7 +2509,7 @@ AC_SUBST(INC_ITCL_H)
 
 
 SCI_CHECK_LIB($dirs,itk,main, $ITCL_LIB_DIR_FLAG -litcl $TK_LIB_DIR_FLAG -ltk $TCL_LIB_DIR_FLAG -ltcl,,not-optional)
-SCI_CHECK_HEADERS($LIB_DIR_ITK/../include,itk.h,$INC_ITCL_H $INC_TK_H $INC_TCL_H,,not-optional)
+SCI_CHECK_HEADERS($LIB_DIR_ITK/../include,itk.h,$INC_ITCL_H $INC_TK_H $INC_TCL_H $INC_X11_XLIB_H,,not-optional)
 
 AC_SUBST(ITK_LIB_FLAG)
 AC_SUBST(ITK_LIB_DIR_FLAG)
@@ -3388,6 +3429,9 @@ case $host in
     ;;
   *-aix*)
     PETSC_ARCH=rs6000_sp
+    ;;
+  *-darwin*)
+    PETSC_ARCH=ppc
     ;;
   *)
     PETSC_ARCH=""
