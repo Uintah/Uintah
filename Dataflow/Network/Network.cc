@@ -15,7 +15,7 @@
   University of Utah. All Rights Reserved.
 */
 
-
+ 
 /*
  *  Network.cc: The core of dataflow...
  *
@@ -52,7 +52,7 @@ Network::Network()
   : the_lock("Network lock"), sched(0)
 {
 }
-
+ 
 Network::~Network()
 {
 }
