@@ -31,6 +31,7 @@
 #include <Packages/rtrt/Core/Scene.h>
 #include <Packages/rtrt/Core/rtrt.h>
 #include <Packages/rtrt/Dataflow/Ports/ScenePort.h>
+#include <GL/glut.h>
 #include <dlfcn.h>
 #include <iostream>
 #include <stdio.h>
