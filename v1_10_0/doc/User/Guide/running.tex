@@ -57,22 +57,23 @@ for you.
 \end{figure}
 
 
-Typing \keyboard{scirun} with no arguments starts up \sr{} with a blank \sr{}
-window as shown in Figure~\ref{fig:srwindow}.  The main features of this
-window are discussed in \secref{Anatomy of the Main
-  Window}{sec:windowanatomy}.
+The \command{scirun} command may take 1 argument, which is the name of
+a \dfn{\sr{} network file}.  (these files use a \filename{.net}
+extension).  These files hold previously defined \sr{} networks.
+\sr{} will load the specified network.  Network files are discussed in
+a later section.
 
-The \command{scirun} command may take 1 argument
-which is the name of a \sr{} \dfn{network} \index{network} file (these
-files use a \filename{.net} extension).  These files hold previously
-defined \sr{} networks.  \sr{} will load the specified network.  Network
-files are discussed in a later section.
+Typing \keyboard{scirun} with no arguments (argument is the name of a
+\sr{}\dfn{network}\index{network} file) starts up \sr{} with a blank
+\sr{} window as shown in Figure~\ref{fig:srwindow}
+(Section~\ref{sec:windowanatomy} discusses the main features of this
+window).
 
-\sr{} may encounter errors during start up.  These will be displayed in
+\sr{} may encounter errors during start up.  Errors will be displayed in
 \sr{}'s error frame (see Figure~\ref{fig:srwindow}).  These errors
 should be \htmladdnormallink{reported}{\bugsurl} to the \sr{} development
-team.  \latexonly{See \secref{Reporting Bugs}{sec:bugs} for information on
-  reporting bugs.}
+team (See \secref{Reporting Bugs}{sec:bugs} for information on
+reporting bugs).
 
 \subsection{Anatomy of the Main Window}
 \label{sec:windowanatomy}
@@ -91,7 +92,7 @@ Figure~\ref{fig:srwindow}):
 
     \begin{description}
       \menuitemdesc{Save} Saves the network to a file (See \hyperref{this
-        section}{Section~}{}{sec:savenet}). 
+        section}{Section~}{}{sec:savenet}).
 
       \menuitemdesc{Save As...} Saves a network to a new file (See
       \hyperref{this section}{Section~}{}{sec:savenet}).
@@ -105,17 +106,17 @@ Figure~\ref{fig:srwindow}):
       
       \menuitemdesc{Clear} Removes all modules and connections from
       the NetEdit frame (See \hyperref{this
-        section}{Section~}{}{sec:clearnet}).
+        section}{Section~}{}{sec:clearnetwork}).
       
-      \menuitemdesc{New} This sub-menu contains items of interest to
+      \menuitemdesc{New} Contains items of interest to
       developers only.
       
-      \menuitemdesc{Add Info} Use this item to add network specific
+      \menuitemdesc{Add Info} Adds network specific
       notes to the current network.  Notes should be used to document
       the purpose of the network (See \hyperref{this
         section}{Section~}{}{sec:docnetwork}).
     
-      \menuitemdesc{Quit} Quits \sr{}.
+      \menuitemdesc{Quit} quits \sr{}
     \end{description}
   \end{description}
   
@@ -123,63 +124,60 @@ Figure~\ref{fig:srwindow}):
     \menudesc{SCIRun} The \menu{SCIRun} menu is used to create modules
     (from the \sr{} package) for use in the net edit frame.
 
-    This menu is
-    composed of sub-menus. Each sub-menu corresponds to a \dfn{category}
+    This menu is composed of sub-menus. Each sub-menu corresponds to
+     a \dfn{category}
     \index{category} within the \sr{} package.  A category is a group of
     related modules.  Each menu item in a category sub-menu creates a
     specific module and places it in the NetEdit frame.  
-
-    The NetEdit frame
-    pop-up menu (activated by pressing the right mouse button when the
-    mouse pointer is in the NetEdit frame) also provides access to the
-    \menu{\sr{}} and \menu{\biopse{}} (and possibly other) package menus.  An
-    overview of the contents of the \sr{} package is given in \secref{The
-      \biopse{} Package}{sec:biopsepackage}.
+    
+    The NetEdit frame pop-up menu (activated by pressing the right
+    mouse button when the mouse pointer is in the NetEdit frame) also
+    provides access to the \menu{\sr{}} and \menu{\biopse{}} (and
+    possibly other) package menus (\secref{The
+      \biopse{}Package}{sec:biopsepackage} has an overview of the
+    \sr{} package).
   \end{description}
 
   \begin{description}
     \menudesc{BioPSE} The \menu{BioPSE} menu is used to create modules
     (from the \biopse package) for use in the NetEdit frame.  It
-    consists of category sub-menus and module menu items.  An overview
-    of the contents of the \biopse{} package is given in \secref{The
-      SCIRun Package}{sec:srpackage}.
+    consists of category sub-menus and module menu items 
+    ( \secref{The SCIRun Package}{sec:srpackage} has an overview of the \biopse{}package).
   \end{description}
 
   \begin{description}
     \descitem{...}  There may be other package menus if other packages
-    have been installed.  They too will consist of category sub-menus
+    have been installed.  They they will also have category sub-menus
     and module menu items.
   \end{description}
   
   \descitem{Global View Frame} The Global View Frame is located in the
   upper left corner of the main window (see
-  Figure~\ref{fig:srwindow}). It is used to navigate complex networks.
-  The use of the Globla View Frame is described in \secref{Navigating
-    a Network}{sec:navnetwork}.
+  Figure~\ref{fig:srwindow}). It is used to navigate complex networks
+  ( \secref{Navigating a Network}{sec:navnetwork} describes the use of the Global View Frame).
   
   \descitem{Error Frame} Errors during program startup are displayed
-  in the Error Frame.  It is located in the upper right corner of the
+  in the Error Frame.  The Error Frame is located in the upper right corner of the
   main window(see Figure~\ref{fig:srwindow}).  Errors on startup may
   mean that \sr{} has been installed incorrectly or has been installed
-  from a buggy distribution.  Please report \hyperref{report}{(see
-    Section~}{)}{sec:bugs} these errors.
+  from a buggy distribution.  Please report these errors (\hyperref{report}{(see
+    Section~}{)}{sec:bugs}).
   
   \descitem{NetEdit Frame} The NetEdit Frame occupies the bottom of
   the main window(see Figure~\ref{fig:srwindow}).  It is used to build
-  and execute networks.  \secref{Building Networks}{sec:workwithnets}
-  discusses the use of this frame.
+  and execute networks ( \secref{Building Networks}{sec:workwithnets}
+  discusses the use of this frame).
 
 \end{description}
 
 \subsection{The Terminal Window}
 \label{sec:termwinapp}
 
-After starting, \sr{} will also run a shell-like application in the
+After starting, \sr{} will run a shell-like application in the
 terminal window called the \dfn{\sr{} shell}.  The \sr{} shell displays the
-prompt \screen{scirun\ra}.  This program is actually a modified \dfna{Tool
-  Command Language}{TCL} shell program and it is possible to type in
-\acronym{TCL}'ish \sr{} commands at the prompt. The use of this shell
-is described in \hyperref{a later section}{Section~}{}{sec:termapp}.
+prompt \screen{scirun\ra}.  This program is  a modified \dfna{Tool
+  Command Language}{TCL} shell program. It is possible to type
+\acronym{TCL}'ish \sr{} commands at the prompt ( \hyperref{a later section}{Section~}{}{sec:termapp} describes use of this shell).
 
 
 \subsection{Environment Variables}
@@ -196,17 +194,17 @@ optional.
 \begin{description}
   \envitem{SCIRUN\_ON\_THE\_FLY\_LIBS\_DIR}
   \envvar{SCIRUN\_ON\_THE\_FLY\_LIBS\_DIR} specifies the location of
-  dynamically generated code.  See \secref{Dynamic
-    Compilation}{sec:dyncomp} for details on the meaning and use of
-  this variable.
+  dynamically generated code (see \secref{Dynamic
+  Compilation}{sec:dyncomp} for details on the meaning and use of
+  this variable).
   
   \descitem{\envvar{SCIRUN\_DATA} \& \envvar{SCIRUN\_DATASET}}  These
   two variables specify the complete path to a \sr{} \dfn{data set}.
-  A data set is a collection of \sr{} type data like fields,
+  A data set is a collection of \sr{} type data  fields,
   matricies, \etc{} that are stored in a directory and are used in
   \sr{} networks.
 
-  \envvar{SCIRUN\_DATA} specifies a directory which contains a
+  \envvar{SCIRUN\_DATA} specifies a directory that contains a
   collection of data set directories.  \envvar{SCIRUN\_DATA} is used in
   conjunction with \envvar{SCIRUN\_DATASET} to specify the full path of
   a data set.  \envvar{SCIRUN\_DATASET} specifies a specific data set
@@ -218,38 +216,37 @@ optional.
   sample data were installed).  \envvar{SCIRUN\_DATASET} could then be
   set to \filename{utahtorso} to specify the Utah Torso data set.
   
-  \envitem{DISPLAY} If \sr{} is executed remotely then the value of
+  \envitem{DISPLAY} If \sr{} is executed remotely, then the value of
   the \envvar{DISPLAY} variable (as set on the remote machine) must be
   set correctly and the remote machine must be allowed to talk to the
   local X11 server.
   
-  For telnet-like (unencrypted) connections to a remote machine
-  you may set \envvar{DISPLAY} as follows:
+  For telnet-like (unencrypted) connections to a remote machine,
+ set \envvar{DISPLAY} as follows:
+
+for a sh-style shell
 
 \begin{verbatim}
   export DISPLAY=local-ip-addres:0.0
 \end{verbatim}
   
-  for an sh-style shell. And like this:
+for a csh-style shell
 
 \begin{verbatim}
   setenv DISPLAY local-ip-addres:0.0
 \end{verbatim}
 
-  for a csh-style shell.
-
   When connecting to a remote machine using ssh, \envvar{DISPLAY} is
-  normally set automatically (depending on how ssh has been
+  usually set automatically (depending on how ssh has been
   configured).  However, this results in poor display performance
   because of encryption activity on the connection.  To increase
-  performance you may override the value of \envvar{DISPLAY} provided
-  by ssh.  Simply set \envvar{DISPLAY} as
+  performance, override the value of \envvar{DISPLAY} provided
+  by ssh by setting  \envvar{DISPLAY} as
   shown above.  Note that this technique defeats the encryption
   protection on the X11 connection.
 
-  You will need to grant the remote machine permission to display on
-  your local machine if you are using a telnet-like connection or if
-  you are overriding the value of \envvar{DISPLAY} provided by ssh.
+  The remote machine needs permission to display on
+  a local machine if the user is using a telnet-like connection or overriding the value of   \envvar{DISPLAY} provided by ssh.
   Use the \command{xhost} command on the local machine to do
   this:
 
@@ -258,24 +255,20 @@ optional.
 \end{verbatim}
   
   \envitem{LOAD\_PACKAGE} A comma seperated list of package names that
-  \sr{} will load.
+  \sr{} load.
   
-  This overrides the packages specified at configure time.  Note
-  that this will not cause packages not specifed at configure time
-  to magically compile and load though!  The package must already be
-  compiled.  Whitespace is not tolerated after commas.
+\sr{} loads these packages instead of packages specified at configure time. Each package on the list must have been previously compiled.
   
-  Its value defaults to the list of packages given to the
   \option{\-\-enable-package} option at configure time.
   
   \envitem{PACKAGE\_SRC\_PATH} A colon separated list of paths to
-  root(s) of package source trees.  The path
+  package source trees.  The path
   \directory{\ptext{build\_dir}/Packages} is implicitly part of this
-  list.  Note that \ptext{build\_dir} is the directory in which the
-  \command{configure} and \command{make} commands were run.
+  list.  \ptext{build\_dir} is the directory in which the
+  \command{configure} and \command{make} command was run.
   
   \sr{} searches this path list to find XML description files and
-  user interface code corresponding to the list of packages
+  user interface code corresponding to packages
   specified in \envvar{LOAD\_PACKAGE}.
   
   It's value defaults to \directory{\ptext{build\_dir}/Packages}.
@@ -284,10 +277,10 @@ optional.
   separated list of paths to package libraries.
   
   \sr{} searches this path list to find package libraries
-  which correspond to the list of packages specified in
+  that correspond to the packages specified in
   \envvar{LOAD\_PACKAGE}.
   
-  It default value is \directory{\ptext{build\_dir}/lib}.
+  Default value is \directory{\ptext{build\_dir}/lib}.
 
   
 \end{description}
@@ -295,19 +288,19 @@ optional.
 \subsection{\sr{}'s Initialization File---\filename{.scirunrc}}
 \label{sec:scirunrc}
 
-One of the first thing \sr{} does when it starts up is to look for and
-load the content of the file \filename{.scirunrc}.  \sr{} searches for
+When \sr{} starts up, it looks for and
+loads the content of the file \filename{.scirunrc}.  \sr{} searches for
 \filename{.scirunrc} in this order:
 
 \begin{enumerate}
-\item The current working directory.
-\item The root of \sr's build directory.
-\item Your home directory.
-\item The root of \sr's source code directory.
+\item The current working directory
+\item The root of \sr's build directory
+\item Your home directory
+\item The root of \sr's source code directory
 \end{enumerate}
 
 This file may contain assignment of values to variables and variable
-substitution, for example
+substitution, for example,
 
 \begin{verbatim}
 HOME=/home/sci/me
@@ -320,22 +313,22 @@ variables declared earlier in the file may be expanded.
 The following variables are understood by \sr{} and may be set in
 \filename{.scirunrc}: \envvar{SCIRUN\_ON\_THE\_FLY\_LIBS\_DIR},
 \envvar{LOAD\_PACKAGE}, \envvar{PACKAGE\_SRC\_PATH},
-\envvar{PACKAGE\_LIB\_PATH}.
+\envvar{PACKAGE\_LIB\_PATH}
 
-\secref{Dynamic Compilation}{sec:dyncomp} explains the meaning and use
+(\secref{Dynamic Compilation}{sec:dyncomp} explains the meaning and use
 of \envvar{SCIRUN\_ON\_THE\_FLY\_LIBS\_DIR}.  See \hyperref{the
   previous section}{Section~}{}{sec:environ}
-for the meanings of the other variables.
+for the meanings of  other variables).
 
 \subsection{Dynamic Compilation}
 \label{sec:dyncomp}
 
-Before executing \sr{} you should be aware of a feature called
-\dfn{Dynamic Compilation}.
+Before executing \sr{},  be aware of the
+\dfn{Dynamic Compilation} feature.
 
-Dynamic compilition is a technique used by \sr{} that discovers and
-generates code for the data types and algorithms used by modules in
-your networks.  This is done at runtime and is done once for each new
+Dynamic compilition is a technique used by \sr{} to discover and
+generate code for the data types and algorithms used by modules in
+networks.  This is done at runtime and once for each new
 data type and algorithm encountered.  This technique provides a number
 of benefits not discussed here (see the publication 
 \htmladdnormallinkfoot{\etitle{Dynamic
@@ -343,60 +336,56 @@ of benefits not discussed here (see the publication
 for details).
 
 By default, code generated by dynamic compilation is stored in the
-directory \directory{\ptext{build\_dir}/on-the-fly-libs} (where
-\ptext{build\_dir} is the directory in which \sr{} was built).  The
-location of dynamically generated code can be changed (and doing so
+directory \directory{\ptext{build\_dir}/on-the-fly-libs} 
+(\ptext{build\_dir} is the directory in which \sr{} was built).  The
+location of dynamically generated code can be changed (doing so
 provides a number of benefits---see below) by setting the value of the
 environment variable \envvar{SCI\_ON\_THE\_FLY\_LIBS\_DIR} to the
 desired directory. For example:
+
+for Bourne-like shells (sh, ksh, bash, etc,)
 
 \begin{verbatim}
 SCIRUN_ON_THE_FLY_LIBS_DIR=$HOME/on-the-fly-libs
 export SCIRUN_ON_THE_FLY_LIBS_DIR
 \end{verbatim}
 
-for Bourne-like shells (sh, ksh, bash, etc.) or
+for csh-like shells
 
 \begin{verbatim}
 setenv SCIRUN_ON_THE_FLY_LIBS_DIR $HOME/on-the-fly-libs
 \end{verbatim}
 
-for csh-like shells.
-
-It can also be changed by setting the value of this variable in
-your \filename{.scirunrc}
-file. Your \filename{.scirunrc} file would contain, for example:
+SCIRUN\_ON\_THE\_FLY\_LIBS\_DIR can be set in the user's
+\filename{.scirunrc} file.
 
 \begin{verbatim}
 SCIRUN_ON_THE_FLY_LIBS_DIR=/home/me/on-the-fly-libs
 \end{verbatim}
 
-Your \filename{.scirunrc} file is read by \sr{} at startup.
-
-Customizing the value of this variable for each \sr{} user has
-the following benefits:
+Setting a unique value of SCIRUN\_ON\_THE\_FLY\_LIBS\_DIR for each
+\sr{} user has the following benefits:
 
 \begin{itemize}
-\item It allows multiple users to run the same instance of \sr{} (at
-  the same time) without worrying about dynamic compilation conflicts.
+\item Allows multiple users to run the same instance of \sr{} without the worry of  dynamic compilation conflicts.
   For example, by specifying an \filename{on-the-fly-libs}
   directory in their home directory, a user can run the same shared
   \sr{} installed in \directory{/usr/local} that another user
   is already running.
 
-\item It allows a \directory{/usr/local} installation of \sr{}
-  to be secure by not requiring that
-  \directory{/usr/local/.../on-the-fly-libs} be writable by
-  all (which is considered a potential security risk).
+\item Allows a \directory{/usr/local} installation of \sr{}
+  to be secure because it does not require
+  \directory{/usr/local/.../on-the-fly-libs} to be writable by
+  all (a potential security risk).
 
-\item It allows greater debugging and multiple build support by
+\item Allows greater debugging and multiple build support by
   allowing the user to change dynamically compiled code locations
   between instances of \sr{}.
 
 \end{itemize}
 
 Dynamic compilition will cause a delay the first time a module is
-executed.  The module will turn a different color while it is being
+executed.  The module will change color while it is being
 compiled.
 
 \subsection{Exiting \sr{}}
@@ -404,8 +393,8 @@ compiled.
 
 Exit \sr{} by selecting the \menuitem{Quit} item from the \menu{File} menu
 
-Don't press \keyboard{control-c} to exit \sr{}.  Doing this will drop
-you into a debugger which is probably not what you want to do.
+Do not press \keyboard{control-c} to exit \sr{}.  Doing this will drop
+you into a debugger.
 
 
 %%% Local Variables: 

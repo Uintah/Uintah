@@ -33,17 +33,17 @@ connects modules to form a network.
 \subsection{Creating a Module}
 \label{sec:creatingmodules}
 
-To create a module select its name from one of the package (\eg{} \sr)
+To create a module, select its name from one of the package (\eg{} \sr)
 menus' category sub-menus.  The package menus may be accessed from the
-main window's menu bar and from the NetEdit frame's pop-up menu. You
-may activate the NetEdit frame's pop-up menu by clicking mouse button
+main window's menu bar and from the NetEdit frame's pop-up menu. 
+Activate the NetEdit frame's pop-up menu by clicking mouse button
 3 while the mouse pointer is in the NetEdit frame (but not over a
 module or connection).  The pop-up menu contains a list of category
 sub-menus from the \sr{} package and other installed packages.  And
 each category sub-menu provides access to the modules within the
 category.
 
-After creating a module its graphic representation will be created and
+After creating a module, its graphic representation will be created and
 placed in the NetEdit frame.
 
 \subsection{Anatomy of a Module}
@@ -60,8 +60,8 @@ placed in the NetEdit frame.
   {../Figures/modgraphic-1.gif}}
 \end{htmlonly}
 
-All modules are represented similarly by a graphic within the NetEdit frame.
-See Figure~\ref{fig:modgraphic}. This graphical ``front end'' is the same
+All modules are represented similarly by a graphic within the NetEdit frame
+(see Figure~\ref{fig:modgraphic}). This graphical ``front end'' is the same
 for all modules and consists of the following elements:
 
 \begin{figure}[htb]
@@ -107,14 +107,14 @@ for all modules and consists of the following elements:
   
   \descitem{UI button} Pressing the \button{UI} button displays the
   module's control dialog. Some modules have no such dialog. Some have
-  very simple dialogs.  Some have very complex dialogs which allow
+  simple dialogs and some have complex dialogs that allow
   elaborate control over the module.  Figure~\ref{fig:moddialog} shows
   the control dialog for \module{Show Field} module.
   
   \descitem{Progress bar} Shows the module's progress.  As the module
-  works towards completion of its task, the Progress bar is filled
-  with first red, then yellow, and then green.  When the Progress bar
-  is all green the module is done.
+  works toward completion of its task, the progress bar is filled
+  with red, then yellow, then green.  When the Progress bar
+  is green, the module is done.
   
   \descitem{Timer} Displays the amount of CPU time the module has
   consumed.  Located to the left of the progress bar.
@@ -122,7 +122,7 @@ for all modules and consists of the following elements:
   \descitem{Message Indicator} Shows the presence of messages in a
   module's log.  Colors represent message types.  Blue is for
   ``remarks'' (informational messages) and yellow is for ``warnings''
-  (your attention is needed!).  Click the indicator to display the
+  (your attention is needed).  Click the indicator to display the
   module's log.
 
 \descitem{Pop-up Menu} Pressing mouse button 3 while the mouse
@@ -131,13 +131,13 @@ for all modules and consists of the following elements:
   \begin{description}
     \menuitemdesc{::Package\_Category\_Name\_Instance} This item is a
     label (not a selectable item).  It provides the module's name and
-    the category and package to which to module belongs.  The Instance
-    part is a unique number which distinguishes multiple instances of
-    the same module.
+    the category and package to which the module belongs.  The
+    ``Instance'' part is a unique number which distinguishes multiple
+    instances of the same module.
 
     \menuitemdesc{Execute} Tells the module to
-    execute (or re-execute).  Depending on the state of its input and
-    output ports this will cause other modules in the network to
+    execute (or re-execute).  The state of its input and
+    output ports will cause other modules in the network to
     ``fire'' (execute) also..
 
     \menuitemdesc{Help} Displays the module's help window.
@@ -154,7 +154,7 @@ for all modules and consists of the following elements:
     
     \menuitemdesc{Show Status} This item is a toggle button which
     turns off/on the display of the progress indicator.  Turning off
-    the progress indicator can help speed up the execution of complex
+    the progress indicator can speed up the execution of complex
     networks.
   \end{description}
 \end{description}
@@ -171,17 +171,17 @@ To make a connection, position the mouse pointer over a module's input
 (output) port.  Then press button 2 and drag the the mouse pointer towards
 another module's output (input) port.
 
-When button 2 is first pressed the program shows all valid connections as
-black lines.  It also draws one red colored connection which is the
-connection that will be made if you stop the drag by releasing 
+When button 2 is first pressed, the program shows all valid connections as
+black lines.  It also draws one red colored connection, which is the
+connection made if  the drag is stopped by releasing 
 button 2.
 
 Make the connection by releasing button 2 when the pointer is over
 the desired destination port or when the red colored connection is the
-desired one.  The connection will be drawn using the color
+desired connection.  The connection will be drawn using the color
 corresponding to the connection's data type.
 
-You may connect a module's output port to the input ports of 1 or more
+Users may connect a module's output port to the input ports of 1 or more
 modules by repeating the procedure just described.
 
 \subsection{Setting Module Properties}
@@ -222,8 +222,8 @@ coordinated fashion. The coordinated execution of modules is managed by
 Note that some modules may need to be compiled before they are
 executed (see \secref{Dynamic Compilation}{sec:dyncomp}).  Compilation
 will delay execution of the network.  This delay occurs only one time
-(per module).  After a module has been compiled it need not be
-compiled again.  The modules will turn a different color while they
+(per module).  After a module has been compiled, it does not need to be
+compiled again.  The modules will change color while they
 are being compiled.
 
 
@@ -239,24 +239,23 @@ on the list.  Once the scheduler determines which modules must be
 executed, it executes them (in parallel where possible).
 
 Network execution is mostly transparent.  That is, the events that trigger
-module execution will usually be generated automatically while you work
-(\eg by changing a module's property).  Sometimes though you must manually
+module execution will usually be generated automatically. Sometimes, however, the user must manually
 generate a triggering event by choosing the \menuitem{Execute} item from a
 module's pop-up menu.
 
 \subsubsection{Details}
 
 Each module executes in its own thread and blocks (waits) until its upstream
-modules can supply it with data.  After a module completes its computation
+modules can supply it with data.  After a module completes its computation,
 it sends its results to its downstream modules.  This completes a module's
-execution cycle.  Its next chance to receive data from its input ports
+execution cycle.  The module's next chance to receive data from its input ports
 and send data to its output ports will not arise until some event
 causes it to be put on the scheduler's execution list again.  
 
 This behavior prevents modules from computing in an iterative fashion,
 sending intermediate results to their downstream modules.  This is because
 downstream modules cannot receive these results until they are in their
-execution cycle.  They would need to be executed each time the
+execution cycle.   Downstream modules would need to be executed each time the
 upstream module posts an intermediate result.
 
 
@@ -267,7 +266,7 @@ data to their output ports in a special way.  They use a method called
 \icode{send\_intermediate} to send the results of each iteration.  When
 this method is used the scheduler (re)executes downstream modules each time
 the upstream module posts its next result.  Downstream modules are
-therefore able to receive the results of each iteration as soon as the
+able to receive the results of each iteration as soon as the
 upstream module sends them.
 
 Modules \module{SolveMatrix} and \module{MatrixSelectVector} (from the
@@ -276,8 +275,7 @@ that compute iteratively using the \icode{send\_intermediate} method.
 
 \subsubsection{Feedback Loops}
 
-Some modules are designed to be used in feedback loops (and if fact,
-they can only be used this way).  Their output ports may be connected
+Some modules are designed to be used exclusively in feedback loops. Their output ports may be connected
 directly or indirectly to their input ports.  These modules also use the
 \icode{send\_intermediate} method.
 
@@ -309,21 +307,21 @@ over a module.  Then add modules to the group by pressing (and holding
 down) the \keyboard{control} key while you click on modules with button 2.
 \end{enumerate}
 
-Selected modules will be drawn in a slightly darker shade of grey.
+Selected modules will be drawn in a darker shade of grey.
 
-You may mix selection methods---you may always add modules to the group by
+Users may mix selection methods and  add modules to the group by
 pressing the control key while making selections using the above methods.
-If you don't press the control key then the previous group will be
+If  the control key is not pressed, then the previous group will be
 forgotten and a new one will be created.
 
 \subsection{Moving Module(s)}
 \label{sec:movemod}
 
-Modules may be moved around in the NetEdit frame.  To move a module simply
+Modules may be moved in the NetEdit frame.  To move a module,
 press button 1 while the pointer is over a module and drag the module to
 its new location.
 
-Multiple modules may be moved at one time.  To do this first
+Multiple modules can be moved at one time.  To do this,
 \hyperref{select}{select (see Section~}{)}{sec:selectmods} 1 or more
 modules. Then press button 1 while the pointer is over any one of the
 modules in the selected group and drag the modules to their new location.
@@ -335,20 +333,20 @@ modules in the selected group and drag the modules to their new location.
 Delete a module by selecting the \menuitem{Destroy} menu item from the
 module's pop-up menu.
 
-Multiple modules may be deleted at one time.  To do this first
+Multiple modules can be deleted at one time.  To do this,
 \hyperref{select}{select (see Section~}{)}{sec:selectmods} 1 or more
-modules. Then choose, from the pop-up menu of any one of the modules in the
-selected group, the \menuitem{Destroy Selected} item.
+modules. Then choose  \menuitem{Destroy Selected} from the module's pop-up menu.
+ 
 
 
 \subsection{Documenting a Module's Use}
 \label{sec:docmodule}
 
-It is often useful to document the purpose of a module within a network.
-Each module maintains a note pad for this purpose.  You may edit the
+It is useful to document the purpose of a module within a network.
+Each module maintains a note pad for this purpose.  Edit the
 module's note pad by selecting \menuitem{Notes} from the module's
-pop-up menu.  This will display the module's note pad editor.  This 
-editor allows you to write notes on the use of the
+pop-up menu.  This will display the module's note pad editor.  The 
+editor allows the user to write notes on the use of the
 module within the context of its network.
 
 \subsection{Viewing a Module's Log}
@@ -359,12 +357,12 @@ other types of messages to its log.  To view this log select the
 \menuitem{Show Log} item from the module's pop-up menu.
 
 \subsection{Documenting a Network}
-\label{sec:}
+\label{sec:docnetwork}
 
-It is useful to document the purpose of a network.  You may use a network's
-note pad for this purpose.  To edit the network's note pad select the
+It is useful to document the purpose of a network.  A network's
+note pad can be used for this purpose.  To edit the network's note pad select the
 \menuitem{Add Info} item from the main window's \menu{File} menu.  This
-will display the network's note pad editor.  This editor allows you
+will display the network's note pad editor.  The editor allows the user
 to write notes on the purpose and use of the network.
 
 
@@ -372,48 +370,48 @@ to write notes on the purpose and use of the network.
 \label{sec:savenet}
 
 \sr{} can save networks to files.  Network files have an extension of
-\filename{.net} (although in the past they have also had .sr and .uin
+\filename{.net} (in the past they have also had .sr and .uin
 extensions).  
 
-To save a network select the \menuitem{Save} item from the main window's
-\menu{File} menu.  A file browser dialog will prompt you for the
-name (and location) of the network file.
+To save a network, select the \menuitem{Save} item from the main window's
+\menu{File} menu.  A file browser dialog will prompt for the
+name and location of the network file.
 
-If you make changes to an existing network then \menuitem{Save} will
-save your changes to the existing net file.
+If  changes are made to an existing network,  \menuitem{Save} will
+save changes made to an existing net file.
 
-You may save an existing network under a new name using the
+An existing network can be saved under a new name using the
 \menuitem{Save As...} menu item.  A file browser dialog will prompt
-you for the new name of the network file.  Subsequent uses of
+for the new name of the network file.  Subsequent uses of
 \menuitem{Save} will save changes to the newly created file.
 
-Network files are actually \dfna{Tool Command Language}{TCL} scripts.
-These files may be edited although the reasons for doing so are beyond
+Network files are  \dfna{Tool Command Language}{TCL} scripts.
+These files may be edited, however the reasons for doing so are beyond
 the scope of this guide.
 
 \subsection{Loading a Network}
 \label{sec:opennet}
 
-To load a network file select the \menuitem{Load} item from the main
-window's \menu{File} menu.   A file browser dialog will prompt you for the
-name (and location) of the network file.
+To load a network file, select the \menuitem{Load} item from the main
+window's \menu{File} menu.   A file browser dialog will prompt for the
+name and location of the network file.
 
 Note that loading a network file adds the network to an existing network in
-the NetEdit frame possibly overlapping the networks.
+the NetEdit frame, possibly overlapping the networks.
 
 \subsection{Inserting a Network}
 \label{sec:insertnetwork}
 
-In order to avoid merging networks, the user may select the
+To avoid merging networks, select the
 \menuitem{Insert} item from the main window's \menu{File} menu. This
 option allows the user to place one \sr{} network next to another,
-avoiding overlap.  A file browser dialog prompts the user for the name (and
-location) of the network file.
+avoiding overlap.  A file browser dialog prompts the user for the name and
+location of the network file.
 
-The new network will be inserted into the upper left corner of the NetEdit
-frame.  If a network of modules already exists in the NetEdit frame, the
-Insert option places a new network to the immediate right of that existing
-network. 
+The new network will be inserted into the upper left corner of the
+NetEdit frame.  If a network of modules already exists in the NetEdit
+frame, the \menuitem{Insert} command places a new network to the
+immediate right of that existing network.
 
 \subsection{Clearing a Network}
 \label{sec:clearnetwork}
@@ -426,14 +424,14 @@ to proceed with or cancel the clearing operation.
 \subsection{Navigating a Network}
 \label{sec:navnetwork}
 
-A complex network may not be entirely visible in the NetEdit frame.  You may
-use the NetEdit frame's scroll bars to bring other parts of a network into
-view.  Or you may use the navigation tool to view complex networks.
+A complex network may not be entirely visible in the NetEdit frame.
+The NetEdit frame's scroll bars can be used to bring other parts of a network into
+view.  Or use the network view tool to view complex networks.
 
-The Global Frame shows the entire ``network world.''  The small
-rectangular region (outlined in black) within the  is the
-network view tool and it is a window on the network world.  The
-position of the view tool determines the part of the network that is
+The Global View Frame shows the entire ``network world.''  The small
+rectangular region (outlined in black) within the Global View Frame is the
+network view tool and is a window on the network world. The
+position of the view tool determines the part of the network 
 visible in the NetEdit frame.  To view other parts of the network, press
 button 1 while the pointer is anywhere in the Global View Frame -- this will
 move the tool to the location of the pointer --  then drag the tool to the
@@ -444,13 +442,13 @@ new location.
 \label{sec:termapp}
 
 After starting, \sr{} will run a shell-like application in the terminal
-window called the \dfn{\sr{} shell}.  It displays the prompt
+window. This shell displays the prompt
 \screen{scirun\ra} in the terminal window.  This program is a
 \dfna{Tool Command Language}{TCL} shell program that has been extended with
 \sr{} specific commands.
 
-It possible to type \tcl{} \sr{} commands at the prompt.  For
-instance, to load a network file you may type \keyboard{source
+It is possible to type \tcl{} \sr{} commands at the prompt.  For
+instance, to load a network type \keyboard{source
   \ptext{network file name}}.  This has the same effect as the \menu{File}
 menu's \menuitem{Load} command.
 
