@@ -3858,30 +3858,36 @@ class BioTensorApp {
 	    if {$data_mode == "B0DWI"} {
 		global $mods(UnuPermute)-dim
 
-		set temp0 [set $mods(UnuPermute)-axis0]
-		unset $mods(UnuPermute)-axis0
+		if {[info exists $mods(UnuPermute)-axis0]} {
+		    set temp0 [set $mods(UnuPermute)-axis0]
+		    unset $mods(UnuPermute)-axis0
 
-		set temp1 [set $mods(UnuPermute)-axis1]
-		unset $mods(UnuPermute)-axis1
+		    global $mods(UnuPermute)-axis0
+		    set $mods(UnuPermute)-axis0 $temp0
+		}
 
-		set temp2 [set $mods(UnuPermute)-axis2]
-		unset $mods(UnuPermute)-axis2
+		if {[info exists $mods(UnuPermute)-axis1]} {
+		    set temp1 [set $mods(UnuPermute)-axis1]
+		    unset $mods(UnuPermute)-axis1
+		    global $mods(UnuPermute)-axis1
+		    set $mods(UnuPermute)-axis1 $temp1
+		}
 
-		global $mods(UnuPermute)-axis0
-		set $mods(UnuPermute)-axis0 $temp0
-
-		global $mods(UnuPermute)-axis1
-		set $mods(UnuPermute)-axis1 $temp1
-
-		global $mods(UnuPermute)-axis2
-		set $mods(UnuPermute)-axis2 $temp2
+		if {[info exists $mods(UnuPermute)-axis2]} {
+		    set temp2 [set $mods(UnuPermute)-axis2]
+		    unset $mods(UnuPermute)-axis2
+		    global $mods(UnuPermute)-axis2
+		    set $mods(UnuPermute)-axis2 $temp2
+		}
 
 		if {[set $mods(UnuPermute)-dim] == 4} {
-		    set temp3 [set $mods(UnuPermute)-axis3]
-		    unset $mods(UnuPermute)-axis3
-
-		    global $mods(UnuPermute)-axis3
-		    set $mods(UnuPermute)-axis3 $temp3
+		    set temp3 3
+		    if {[info exists $mods(UnuPermute)-axis3]} {
+			set temp3 [set $mods(UnuPermute)-axis3]
+			unset $mods(UnuPermute)-axis3
+			global $mods(UnuPermute)-axis3
+			set $mods(UnuPermute)-axis3 $temp3
+		    }
 		}
 	    }
 
