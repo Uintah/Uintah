@@ -29,7 +29,7 @@ c*********************************************************************
      $     domLoUng(2):domHiUng(2), 
      &     domLoUng(3):domHiUng(3))
       integer domLo(3), domHi(3)
-      double precision PCELL(domLo(1):domHi(1), domLo(2):domHi(2), 
+      integer PCELL(domLo(1):domHi(1), domLo(2):domHi(2), 
      &     domLo(3):domHi(3))
       integer ioff, joff, koff
       integer mmwallid
