@@ -36,8 +36,9 @@ VolumeVisDpy::VolumeVisDpy(Array1<Color> &matls, Array1<AlphaPos> &alphas,
 			   int ncolors, float t_inc, char *in_file):
   DpyBase("VolumeVis GUI"), histmax(0), in_file(in_file), data_min(MAXFLOAT),
   data_max(-MAXFLOAT), original_t_inc(0.01), current_t_inc(t_inc), 
-  colors_index(matls), t_inc(t_inc), alpha_list(alphas), ncolors(ncolors), 
-  nalphas(ncolors), new_fast_render_mode(true), fast_render_mode(true)
+  colors_index(matls), alpha_list(alphas), ncolors(ncolors), 
+  nalphas(ncolors), new_fast_render_mode(true), t_inc(t_inc),
+  fast_render_mode(true)
 {
   set_resolution(500,500);
   nhist = xres;
