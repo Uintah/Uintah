@@ -342,11 +342,6 @@ itcl_class SCIRun_Visualization_EditTransferFunc2 {
         file delete "$path/$basename.gif"
         file delete "$path/$basename.ppm.xff"
 
-        set curdir [pwd]
-        cd $path
-        set swatchlist [glob "*.gif"]
-        cd $curdir
-        
         set w .ui[modname]
         if {[winfo exists $w.swatchpicker]} {
             set f [$w.swatchpicker childsite]
