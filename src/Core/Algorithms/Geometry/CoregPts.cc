@@ -161,7 +161,7 @@ int CoregPtsAnalytic::computeTrans() {
   // into their "canonical" position -- triangles centered at the origin,
   // and lying in the xy plane.
 
-  double ra[3], rp[3], theta[i];  
+  double ra[3], rp[3], theta[3];  
   Point a[3], p[3];
 
   for (i=0; i<3; i++) {
