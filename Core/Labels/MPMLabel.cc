@@ -509,6 +509,11 @@ MPMLabel::MPMLabel()
   pInitialNormalLabel_preReloc = VarLabel::create("p.normal0+",
                      ParticleVariable<Vector>::getTypeDescription());
 
+  pTypeLabel = VarLabel::create("p.type",
+                     ParticleVariable<int>::getTypeDescription());
+  pTypeLabel_preReloc = VarLabel::create("p.type+",
+                     ParticleVariable<int>::getTypeDescription());
+
   gNormalRotRateLabel = VarLabel::create( "g.normalRotRate",
 		     NCVariable<Vector>::getTypeDescription());
   gNormalRotMomentLabel = VarLabel::create( "g.normalRotMoment",
@@ -709,6 +714,9 @@ MPMLabel::~MPMLabel()
   VarLabel::destroy(pInitialThickBotLabel_preReloc);
   VarLabel::destroy(pNormalLabel_preReloc);
   VarLabel::destroy(pInitialNormalLabel_preReloc);
+
+  VarLabel::destroy(pTypeLabel);
+  VarLabel::destroy(pTypeLabel_preReloc);
 
   VarLabel::destroy(gNormalRotRateLabel); 
   VarLabel::destroy(gNormalRotMomentLabel); 

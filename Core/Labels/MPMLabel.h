@@ -215,6 +215,8 @@ using std::vector;
       const VarLabel* pInitialThickBotLabel_preReloc;
       const VarLabel* pNormalLabel_preReloc;
       const VarLabel* pInitialNormalLabel_preReloc;
+      const VarLabel* pTypeLabel;
+      const VarLabel* pTypeLabel_preReloc;
 
       const VarLabel* gNormalRotRateLabel; 
       const VarLabel* gNormalRotMomentLabel; 
