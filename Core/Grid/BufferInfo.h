@@ -11,19 +11,25 @@ namespace Uintah {
   class RefCounted;
   class ProcessorGroup;
 
-  struct Sendlist {
-    Sendlist* next;
-    RefCounted* obj;
+  class AfterCommunicationHandler {
+  public:
+    virtual void finishedCommunication(const ProcessorGroup*) = 0;
+  };
+
+  class Sendlist : public AfterCommunicationHandler {
+  public:
     Sendlist(Sendlist* next, RefCounted* obj)
       : next(next), obj(obj)
     {}
+    ~Sendlist();
+    Sendlist* next;
+    RefCounted* obj;
 
     // Sendlist is to be an AfterCommuncationHandler object for the
     // MPI_CommunicationRecord template in MPIScheduler.cc.  The only task
     // it needs to do to handle finished send requests is simply get deleted.
-    void finishedCommunication(const ProcessorGroup*) {}
+    virtual void finishedCommunication(const ProcessorGroup*) {}
 
-    ~Sendlist();
   };
 
   class  BufferInfo {
