@@ -85,9 +85,7 @@ TK_VERSION     := @TK_VERSION@
 TK_LIB_DIR     := @LIBTK@
 TK_LIB_FLAG    := -ltk
 
-ITCLSH         := @ITCL_BIN_DIR@/itclsh3.1
 ITCL_LIB_DIR   := @LIBITCL@
-ITCL_BIN_DIR   := @ITCL_BIN_DIR@
 ITCL_LIB_FLAG  := -litcl
 ITCL_INIT_DIR  := $(ITCL_LIB_DIR)/itcl3.1
 ITCL_WIDGETS   := $(ITCL_LIB_DIR)/iwidgets/scripts
