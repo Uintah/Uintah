@@ -30,7 +30,6 @@
 //    Author : Martin Cole
 //    Date   : Mon May 21 10:57:38 2001
 
-#include <sci_defs/environment_defs.h>
 #include <sci_defs/compile_defs.h>
 
 #include <Core/Util/DynamicLoader.h>
@@ -73,7 +72,6 @@ using namespace std;
 
 DynamicLoader *DynamicLoader::scirun_loader_ = 0;
 Mutex DynamicLoader::scirun_loader_init_lock_("SCIRun loader init lock");
-string DynamicLoader::otf_dir_ = string(SCIRUN_OBJDIR) + "/on-the-fly-libs";
 
 CompileInfo::CompileInfo(const string &fn, const string &bcn, 
 			 const string &tcn, const string &tcdec) :
@@ -132,9 +130,6 @@ DynamicLoader::DynamicLoader() :
   compilation_cond_("DynamicLoader: waits for compilation to finish."),
   map_lock_("DynamicLoader: controls mutable access to the map.")
 {
-  const char *env = sci_getenv("SCIRUN_ON_THE_FLY_LIBS_DIR"); 
-  if (env)
-    otf_dir_ = string(env);
   map_lock_.lock();
   algo_map_.clear();
   map_lock_.unlock();
@@ -243,8 +238,7 @@ DynamicLoader::compile_and_store(const CompileInfo &info, bool maybe_compile_p,
   if (!do_compile && !wait_for_current_compile(info.filename_)) return false;
 
   // Try to load a dynamic library that is already compiled
-  string full_so = otf_dir_ + string("/") + 
-    info.filename_ + ext;
+  string full_so = otf_dir() + string("/") + info.filename_ + ext;
 
   LIBRARY_HANDLE so = 0;
   struct stat buf;
@@ -308,7 +302,7 @@ DynamicLoader::compile_and_store(const CompileInfo &info, bool maybe_compile_p,
 bool 
 DynamicLoader::compile_so(const CompileInfo &info, ostream &serr)
 {
-  string command = ("cd " + otf_dir_ + "; " + MAKE_COMMAND + " " +
+  string command = ("cd " + otf_dir() + "; " + MAKE_COMMAND + " " + 
 		    info.filename_ + ext);
 
   serr << "DynamicLoader - Executing: " << command << endl;
@@ -335,7 +329,7 @@ DynamicLoader::compile_so(const CompileInfo &info, ostream &serr)
 	 << "command was '" << command << "'\n";
     result = false;
   }
-  pipe = fopen((otf_dir_+"/" + info.filename_ + "log").c_str(), "r");
+  pipe = fopen(string(otf_dir() + "/" + info.filename_ + "log").c_str(), "r");
 #endif
 
   char buffer[256];
@@ -364,7 +358,7 @@ DynamicLoader::cleanup_failed_compile(CompileInfoHandle info)
 {
   if (sci_getenv_p("SCIRUN_NOCLEANUPCOMPILE")) { return; }
 
-  const string base = otf_dir_ + "/" + info->filename_;
+  const string base = otf_dir() + "/" + info->filename_;
 
   const string full_cc = base + "cc";
   unlink(full_cc.c_str());
@@ -394,7 +388,7 @@ DynamicLoader::create_cc(const CompileInfo &info, bool empty, ostream &serr)
   const string STD_STR("std::");
 
   // Try to open the file for writing.
-  string full = otf_dir_ + "/" + info.filename_ + "cc";
+  string full = otf_dir() + "/" + info.filename_ + "cc";
   ofstream fstr(full.c_str());
 
   if (!fstr) {
@@ -416,6 +410,8 @@ DynamicLoader::create_cc(const CompileInfo &info, bool empty, ostream &serr)
     ++iter;
   }
 
+  ASSERT(sci_getenv("SCIRUN_SRCDIR"));
+  const std::string srcdir(sci_getenv("SCIRUN_SRCDIR"));
   // generate other includes
   iter = info.includes_.begin();
   while (iter != info.includes_.end()) { 
@@ -423,9 +419,9 @@ DynamicLoader::create_cc(const CompileInfo &info, bool empty, ostream &serr)
 
     if (!((s.substr(0, 5) == STD_STR) || s == "builtin"))
     {
-      string::size_type loc = s.find(SCIRUN_SRCDIR);
+      string::size_type loc = s.find(srcdir);
       if( loc != string::npos ) {
-	string::size_type endloc = loc+string(SCIRUN_SRCDIR).size()+1;
+	string::size_type endloc = loc+srcdir.size()+1;
 	fstr << "#include <" << s.substr(endloc) << ">\n";
       } else {
 	fstr << "#include \"" << s << "\"\n";
@@ -515,6 +511,12 @@ DynamicLoader::maybe_get(const CompileInfo &ci, DynamicAlgoHandle &algo)
 	  (compile_and_store(ci, true, log) && fetch(ci, algo)));
 }
 
+string
+DynamicLoader::otf_dir() {
+  ASSERT(sci_getenv("SCIRUN_ON_THE_FLY_LIBS_DIR"));
+  return string(sci_getenv("SCIRUN_ON_THE_FLY_LIBS_DIR"));
+}
+	 
 
 
 } // End namespace SCIRun
