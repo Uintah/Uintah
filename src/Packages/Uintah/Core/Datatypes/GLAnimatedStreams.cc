@@ -25,8 +25,6 @@ const int MAX_ITERS = 500;		// the max. # of iterations of a
 				// solution
 int STREAMER_LENGTH = 50;
 
-  static bool do_rungekutta = true;
-  
 const double RMAX = (double)(((int)RAND_MAX) + 1);
 inline double dRANDOM() {
   return ((((double)rand()) + 0.5) / RMAX);
@@ -36,9 +34,8 @@ inline double dRANDOM() {
 GLAnimatedStreams::GLAnimatedStreams(int id) 
   : GeomObj( id ), mutex("GLAnimatedStreams Mutex"),
     vfh_(0), _cmapH(0), _pause(false), _normalsOn(false), _lighting(false),
-    _stepsize(0.1), fx(0), tail(0), head(0), _numStreams(0),
-    _linewidth(2), flow(0), _iterations(1), _inv_iter_per_step(1),
-    _normal_method(STREAM_LIGHT_WIRE), _iter_method(STREAM_USE_STEP_SIZE),
+    _use_dt(false), _stepsize(0.1), fx(0), tail(0), head(0), _numStreams(0),
+    _linewidth(2), flow(0), _delta_T(-1), _normal_method(STREAM_LIGHT_WIRE),
     _usesWidget(false), widgetLocation(0,0,0)
 {
 
@@ -51,9 +48,8 @@ GLAnimatedStreams::GLAnimatedStreams(int id,
 				   ColorMapHandle map)
   : GeomObj( id ),  mutex("GLAnimatedStreams Mutex"),
     vfh_(vfh), _cmapH(map), _pause(false), _normalsOn(false), _lighting(false),
-    _stepsize(0.1), fx(0), tail(0), head(0), _numStreams(0),
-    _linewidth(2), flow(0), _iterations(1), _inv_iter_per_step(1),
-    _normal_method(STREAM_LIGHT_WIRE), _iter_method(STREAM_USE_STEP_SIZE),
+    _use_dt(false), _stepsize(0.1), fx(0), tail(0), head(0), _numStreams(0),
+    _linewidth(2), flow(0), _delta_T(-1), _normal_method(STREAM_LIGHT_WIRE),
     _usesWidget(false), widgetLocation(0,0,0)
 {
   init();
@@ -64,9 +60,9 @@ GLAnimatedStreams::GLAnimatedStreams(const GLAnimatedStreams& copy)
     vfh_(copy.vfh_), _cmapH(copy._cmapH), fx(copy.fx),
     head(copy.head), tail(copy.tail), _numStreams(copy._numStreams),
     _pause(copy._pause), _normalsOn(copy._normalsOn),
-    _lighting(copy._lighting), _linewidth(copy._linewidth), flow(copy.flow),
-    _iterations(copy._iterations), _inv_iter_per_step(copy._inv_iter_per_step),
-    _normal_method(copy._normal_method), _iter_method(STREAM_USE_STEP_SIZE),
+    _lighting(copy._lighting), _use_dt(copy._use_dt),
+    _linewidth(copy._linewidth), flow(copy.flow), _delta_T(copy._delta_T), 
+    _normal_method(copy._normal_method),
     _usesWidget(copy._usesWidget), widgetLocation(copy.widgetLocation)
 {
   
@@ -313,11 +309,10 @@ GLAnimatedStreams::saveobj(std::ostream&, const string&, GeomSave*)
 				// by one step
 void
 GLAnimatedStreams::RungeKutta(Point& x, double h) {
-  cerr << "(h = " << h << ")";
+  //  cerr << "(h = " << h << ")";
   Vector m1,m2,m3,m4;
   Point  x1,x2,x3;
   double h2 = h/2.0;
-  //int i;  <- Not used (Dd)
   interpolate(vfh_, x,m1);
   x1 = x + m1*h2;
   interpolate(vfh_, x1,m2);
@@ -346,7 +341,6 @@ GLAnimatedStreams::newStreamer(int whichStreamer)
   // if we are using a widget then we want to choose a point near
   // the widget to start the stream.  This uses a simple rejection
   // test to determine the usability of the sample.
-  //  if( _usesWidget && 
   if( bb.inside(widgetLocation)){
     double r = std::min(max.x() - min.x(),
 			std::min(max.y() - min.y(), max.z() - min.z()));
@@ -450,12 +444,15 @@ void GLAnimatedStreams::AdvanceStreams(int start, int end) {
 
   // if you are not using the iteration step method you should only go through
   // this loop once.
-  if (_iter_method == STREAM_USE_STEP_SIZE)
-    _iterations = 1;
-  cerr << "_inv_iter_per_step = " << _inv_iter_per_step << endl;
+  double iterations;
+  if (!_use_dt || _stepsize >= _delta_T) {
+    iterations = 1;
+  } else {
+    iterations = _delta_T / _stepsize;
+  }
   // iter starts at how many interations to do and goes to 0
   // iter can be used as a fraction when it's < 1 (it's still > 0, though)
-  for (double iter = _iterations; iter > 0; iter--) {
+  for (double iter = iterations; iter > 0; iter--) {
     cerr << "iter = " << iter << endl;
     for (int i = start; i < end; i++) {
 	
@@ -463,28 +460,20 @@ void GLAnimatedStreams::AdvanceStreams(int start, int end) {
       Vector tangent;
       interpolate(vfh_, fx[i],tangent);
       // compute the next location
-      if (do_rungekutta) {
-	switch (_iter_method) {
-	case STREAM_USE_STEP_SIZE:
-	  {
-	    RungeKutta(fx[i], _stepsize);
-	    //cerr << "Using step size\n";
-	  } break;
-	case STREAM_USE_ITER_PER_SEC:
-	  {
-	    if (iter >= 1)
-	      RungeKutta(fx[i], _inv_iter_per_step);
-	    else
-	      RungeKutta(fx[i], _inv_iter_per_step * iter);
-	    //cerr << "Using iter_per_sec\n";
-	  } break;
-	} // end switch (_iter_method)
+      if (!_use_dt) {
+	RungeKutta(fx[i], _stepsize);
+	//cerr << "Using step size\n";
       } else {
-	if (iter >= 1)
-	  fx[i] += tangent * _inv_iter_per_step;
-	else
-	  fx[i] += tangent * _inv_iter_per_step * iter;
+	if (_stepsize >= _delta_T) {
+	  RungeKutta(fx[i], _delta_T);
+	} else {
+	  if (iter >= 1)
+	    RungeKutta(fx[i], _stepsize);
+	  else
+	    RungeKutta(fx[i], _stepsize * iter);
+	}
       }
+
       if( !bounds.inside(fx[i]) )
 	head[i]->counter = MAX_ITERS;
       
@@ -497,12 +486,6 @@ void GLAnimatedStreams::AdvanceStreams(int start, int end) {
 	
 	head[i]->position = fx[i];
 	head[i]->tangent = tangent;
-#if 0
-	if (do_rungekutta)
-	  head[i]->tangent = head[i]->position - tempNode->position;
-	else
-	  head[i]->tangent = tangent;
-#endif
 
 	// compute the normal
 	switch (_normal_method) {
