@@ -770,6 +770,7 @@ void ICE::createDirs( const string& desc, string& path)
          << " Make sure you're dumping out at least one timestep in the input file";
     throw ProblemSetupException(warn.str());
   }
+  closedir(check);
   
   ostringstream DW;
   DW << dataArchiver->getCurrentTimestep();
