@@ -48,15 +48,26 @@ WARNING
   };
   class ModelInfo {
   public:
-    ModelInfo(const VarLabel* delt, const VarLabel* mass_source,
-	      const VarLabel* momentum_source, const VarLabel* energy_source,
-	      const VarLabel* density, const VarLabel* velocity,
-	      const VarLabel* temperature, const VarLabel* pressure)
-      : delT_Label(delt), mass_source_CCLabel(mass_source),
-      momentum_source_CCLabel(momentum_source),
-      energy_source_CCLabel(energy_source),
-      density_CCLabel(density), velocity_CCLabel(velocity),
-      temperature_CCLabel(temperature), pressure_CCLabel(pressure)
+    ModelInfo(const VarLabel* delt, 
+             const VarLabel* mass_source,
+	      const VarLabel* momentum_source, 
+             const VarLabel* energy_source,
+             const VarLabel* sp_vol_source,
+	      const VarLabel* density, 
+             const VarLabel* velocity,
+	      const VarLabel* temperature, 
+             const VarLabel* pressure,
+             const VarLabel* specificVol)
+      : delT_Label(delt), 
+        mass_source_CCLabel(mass_source),
+        momentum_source_CCLabel(momentum_source),
+        energy_source_CCLabel(energy_source),
+        sp_vol_source_CCLabel(sp_vol_source),
+        density_CCLabel(density), 
+        velocity_CCLabel(velocity),
+        temperature_CCLabel(temperature), 
+        pressure_CCLabel(pressure),
+        sp_vol_CCLabel(specificVol)
       {
       }
     const VarLabel* delT_Label;
@@ -64,11 +75,13 @@ WARNING
     const VarLabel* mass_source_CCLabel;
     const VarLabel* momentum_source_CCLabel;
     const VarLabel* energy_source_CCLabel;
+    const VarLabel* sp_vol_source_CCLabel;
 
     const VarLabel* density_CCLabel;
     const VarLabel* velocity_CCLabel;
     const VarLabel* temperature_CCLabel;
     const VarLabel* pressure_CCLabel;
+    const VarLabel* sp_vol_CCLabel;
   private:
     ModelInfo(const ModelInfo&);
     ModelInfo& operator=(const ModelInfo&);
