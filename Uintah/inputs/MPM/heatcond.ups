@@ -81,9 +81,9 @@
 	    </contact>
 
             <heat_conduction>
-              <thermal_conductivity>1.0</thermal_conductivity>
-              <specific_heat>5</specific_heat>
-              <heat_transfer_coefficient>0.2</heat_transfer_coefficient>
+              <thermal_conductivity>237</thermal_conductivity>
+              <specific_heat>903</specific_heat>
+              <heat_transfer_coefficient>111</heat_transfer_coefficient>
             </heat_conduction>
 	    
 	</MPM>
