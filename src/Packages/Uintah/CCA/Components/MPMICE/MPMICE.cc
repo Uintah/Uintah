@@ -44,8 +44,6 @@ static DebugStream cout_doing("MPMICE_DOING_COUT", false);
 #undef SHELL_MPM
 //#define SHELL_MPM
 
-#undef DUCT_TAPE
-
 MPMICE::MPMICE(const ProcessorGroup* myworld)
   : UintahParallelComponent(myworld)
 {
@@ -193,13 +191,6 @@ void MPMICE::scheduleInitialize(const LevelP& level,
   t->computes(Ilb->sp_vol_CCLabel);
   t->computes(Ilb->speedSound_CCLabel); 
   t->computes(MIlb->NC_CCweightLabel, one_matl);
-  
-#if DUCT_TAPE
-  //______ D U C T   T A P E__________
-  //  WSB1 burn model
-  t->computes(MIlb->TempGradLabel);
-  t->computes(MIlb->aveSurfTempLabel);
-#endif
     
   sched->addTask(t, level->eachPatch(), d_sharedState->allMPMMaterials());
 
@@ -711,20 +702,8 @@ void MPMICE::actuallyInitialize(const ProcessorGroup*,
         d_ice->printData(indx, patch,  1, desc.str(), "sp_vol_CC",   sp_vol_CC);
         d_ice->printData(indx, patch,  1, desc.str(), "Temp_CC",     Temp_CC);
         d_ice->printVector(indx, patch,1, desc.str(), "vel_CC", 0,   vel_CC);
-      }
-      
-#if DUCT_TAPE
-      //______ D U C T   T A P E__________
-      //  WSB1 burn model
-      CCVariable<double>TempGrad, aveSurfTemp;
-      new_dw->allocateAndPut(TempGrad,   MIlb->TempGradLabel,   indx,patch);
-      new_dw->allocateAndPut(aveSurfTemp,MIlb->aveSurfTempLabel,indx,patch);  
-      TempGrad.initialize(0.0);
-      aveSurfTemp.initialize(0.0);
-#endif
-                    
+      }             
     }  // num_MPM_matls loop 
-
   } // Patch loop
 }
 
