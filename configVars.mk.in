@@ -53,10 +53,15 @@ LIBDIR := lib/
 else
 LIBDIR := $(OBJTOP_ABS)/lib/
 endif
-LIBDIR_ABS    := $(shell mkdir -p $(LIBDIR); cd $(LIBDIR) ; pwd)
+
+# squash any output from noisy environments, we just want the pwd output
+LIBDIR_ABS    := $(shell mkdir -p $(LIBDIR) > /dev/null; cd $(LIBDIR)\
+	           > /dev/null; pwd) 
 
 SCIRUN_LIBDIR := $(LIBDIR)
-SCIRUN_LIBDIR_ABS := $(shell cd $(SCIRUN_LIBDIR); pwd)
+
+# squash any output from noisy environments, we just want the pwd output
+SCIRUN_LIBDIR_ABS := $(shell cd $(SCIRUN_LIBDIR) > /dev/null; pwd)
 
 VPATH := $(SRCTOP)
 
