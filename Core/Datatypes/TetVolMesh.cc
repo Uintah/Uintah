@@ -16,6 +16,8 @@
 
 namespace SCIRun {
 
+using std::for_each;
+
 Persistent* make_TetVolMesh() {
   return scinew TetVolMesh;
 }
@@ -501,6 +503,20 @@ TetVolMesh::inside4_p(int i, const Point &p) const
   return true;
 }
 
+//! given the four scalars (doubles) at the nodes, compute the gradient
+//! over the element containing p
+bool
+TetVolMesh::get_gradient(const Point &p, Vector &g, double s0, double s1,
+			 double s2, double s3)
+{
+  Vector g0, g1, g2, g3;
+  cell_index ci;
+  if (!locate(ci, p)) return false;
+  /* double vol = */ get_gradient_basis(ci, g0, g1, g2, g3);
+  g = Vector(g0*s0 + g1*s1 + g2*s2 + g3*s3);
+  return true;
+}
+
 //! return the volume of the tet.
 double 
 TetVolMesh::get_gradient_basis(cell_index ci, Vector& g0, Vector& g1, 
@@ -551,6 +567,136 @@ TetVolMesh::get_gradient_basis(cell_index ci, Vector& g0, Vector& g1,
 
   double vol=(1./iV6)/6.0;
   return(vol);
+}
+
+TetVolMesh::node_index
+TetVolMesh::add_find_point(const Point &p, double err)
+{
+  node_index i;
+  if (locate(i, p) && distance2(points_[i], p) < err)
+  {
+    return i;
+  }
+  else
+  {
+    points_.push_back(p);
+    return points_.size() - 1;
+  }
+}
+
+
+void
+TetVolMesh::add_tet(node_index a, node_index b, node_index c, node_index d)
+{
+  cells_.push_back(a);
+  cells_.push_back(b);
+  cells_.push_back(c);
+  cells_.push_back(d);
+}
+
+
+void
+TetVolMesh::connect(double err)
+{
+  // Collapse point set by err.
+  // TODO: average in stead of first found for new point?
+  vector<Point> points(points_);
+  vector<int> mapping(points_.size());
+  vector<Point>::size_type i; 
+  points_.clear();
+  for (i = 0; i < points.size(); i++)
+  {
+    mapping[i] = add_find_point(points[i], err);
+  }
+
+  // Repair faces.
+  for (i=0; i < cells_.size(); i++)
+  {
+    cells_[i] = mapping[i];
+  }
+  
+  // TODO: Remove all degenerate cells here.
+
+  // TODO: fix forward/backward facing problems.
+
+  // TODO: Find neighbors
+  vector<list<int> > edgemap(points_.size());
+  for (i=0; i< cells_.size(); i++)
+  {
+    edgemap[cells_[i]].push_back(i);
+  }
+
+#if 0
+  for (i=0; i<edgemap.size(); i++)
+  {
+    list<int>::iterator li1 = edgemap[i].begin();
+
+    while (li1 != edgemap[i].end())
+    {
+      int e1 = *li1;
+      li1++;
+
+      list<int>::iterator li2 = li1;
+      while (li2 != edgemap[i].end())
+      {
+	int e2 = *li2;
+	li2++;
+	
+	if ( faces_[next(e1)] == faces_[prev(e2)])
+	{
+	  neighbors_[e1] = e2;
+	  neighbors_[e2] = e1;
+	}
+      }
+    }
+  }
+#endif
+
+  // Remove unused points.
+  // Reuse mapping array, edgemap array.
+  vector<Point> dups(points_);
+  points_.clear();
+  
+  for (i=0; i<dups.size(); i++)
+  {
+    if(edgemap[i].begin() != edgemap[i].end())
+    {
+      points_.push_back(dups[i]);
+      mapping[i] = points_.size() - 1;
+    }
+  }
+
+  // Repair faces.
+  for (i=0; i < cells_.size(); i++)
+  {
+    cells_[i] = mapping[i];
+  }
+}
+
+
+TetVolMesh::node_index
+TetVolMesh::add_point(const Point &p)
+{
+  points_.push_back(p);
+  return points_.size() - 1;
+}
+
+
+void
+TetVolMesh::add_tet(const Point &p0, const Point &p1, const Point &p2,
+		    const Point &p3)
+{
+  add_tet(add_find_point(p0), add_find_point(p1), add_find_point(p2),
+	  add_find_point(p3));
+}
+
+void
+TetVolMesh::add_tet_unconnected(const Point &p0,
+				const Point &p1,
+				const Point &p2,
+				const Point &p3)
+{
+  add_tet(add_point(p0), add_point(p1), add_point(p2), add_point(p3));
 }
 
 
