@@ -41,6 +41,7 @@
 #define SCI_OK_TO_INCLUDE_SCI_ENVIRONMENT_DEFS_H
 #include <sci_defs/environment_defs.h>
 
+#include <stdio.h>
 #include <unistd.h>
 #include <sys/param.h>
 
