@@ -1,5 +1,5 @@
 # silly comment to see if my new cvs_cui commit code works or not...
-
+# nothing interesting
 itcl_class Coregister {
     inherit Module
     constructor {config} {
