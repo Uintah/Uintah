@@ -1372,8 +1372,14 @@ ViewWindow::tcl_command(GuiArgs& args, void*)
     // We need to dispatch this one to the  remote thread We use an ID string
     // instead of a pointer in case this viewwindow gets killed by the time the
     // redraw message gets dispatched.
+
+    // TODO: Pointer works as well as tag, just need to verify it's
+    // still valid. - MIKE
+    // TODO: Make mailbox send that discards redundant messages.
     if(!viewer_->mailbox.trySend(scinew ViewerMessage(id_)))
-      cerr << "Redraw event dropped, mailbox full!\n";
+    {
+      //cerr << "Redraw event dropped, mailbox full!\n";
+    }
   } else if(args[1] == "anim_redraw"){
     // We need to dispatch this one to the remote thread We use an ID string
     // instead of a pointer in case this viewwindow gets killed by the time the
