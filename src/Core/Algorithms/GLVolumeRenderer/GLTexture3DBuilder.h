@@ -41,6 +41,7 @@
 #include <Core/Geometry/BBox.h>
 #include <Core/Containers/Octree.h>
 #include <Core/Thread/ThreadGroup.h>
+#include <Core/Thread/Thread.h>
 #include <Core/Thread/Mutex.h>
 #include <Core/Thread/Runnable.h>
 #include <sgi_stl_warnings_off.h>
