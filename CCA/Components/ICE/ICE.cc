@@ -79,6 +79,8 @@ ICE::ICE(const ProcessorGroup* myworld)
   d_add_delP_Dilatate = true; 
   d_add_heat          = false;
   d_impICE            = false;
+  d_delT_knob         = 1.0;
+  d_delT_scheme       = "aggressive";
 
   d_dbgVar1      = 0;     //inputs for debugging
   d_dbgVar2      = 0;
@@ -248,12 +250,31 @@ void ICE::problemSetup(const ProblemSpecP& prob_spec, GridP& /**/,
   // Pull out implicit solver parameters
   ProblemSpecP impSolver = cfd_ice_ps->findBlock("ImplicitSolver");
   if (impSolver) {
+    d_delT_knob = 0.5;      // default value when running implicit
     solver_parameters = solver->readParameters(impSolver, "implicitPressure");
     impSolver->require("max_outer_iterations",      d_max_iter_implicit);
     impSolver->require("outer_iteration_tolerance", d_outer_iter_tolerance);
     d_impICE = true; 
   }
     
+  //__________________________________
+  // Pull out TimeStepControl data
+  ProblemSpecP tsc_ps = cfd_ice_ps->findBlock("TimeStepControl");
+  if (tsc_ps ) {
+    tsc_ps ->require("Scheme_for_delT_calc", d_delT_scheme);
+    tsc_ps ->require("knob_for_speedSound",  d_delT_knob);
+    
+    if (d_delT_scheme != "conservative" && d_delT_scheme != "aggressive") {
+     string warn="ERROR:\n Scheme_for_delT_calc:  must specify either aggressive or conservative";
+     throw ProblemSetupException(warn);
+    }
+    if (d_delT_knob< 0.0 || d_delT_knob > 1.0) {
+     string warn="ERROR:\n knob_for_speedSound:  must be between 0 and 1";
+     throw ProblemSetupException(warn);
+    }
+  } 
+  cout_norm << "Scheme for calculating delT: " << d_delT_scheme<< endl;
+  cout_norm << "Limiter on speed of sound inside delT calc.: " << d_delT_knob<< endl;    
   //__________________________________
   // Pull out from Time section
   d_initialDt = 10000.0;
@@ -268,10 +289,10 @@ void ICE::problemSetup(const ProblemSpecP& prob_spec, GridP& /**/,
   ProblemSpecP ice_mat_ps   = mat_ps->findBlock("ICE");  
 
   for (ProblemSpecP ps = ice_mat_ps->findBlock("material"); ps != 0;
-       ps = ps->findNextBlock("material") ) {
+    ps = ps->findNextBlock("material") ) {
     // Extract out the type of EOS and the associated parameters
-     ICEMaterial *mat = scinew ICEMaterial(ps);
-     sharedState->registerICEMaterial(mat);
+    ICEMaterial *mat = scinew ICEMaterial(ps);
+    sharedState->registerICEMaterial(mat);
   }     
   cout_norm << "Pulled out InitialConditions block of the input file" << endl;
 
@@ -1037,11 +1058,11 @@ void ICE::actuallyComputeStableTimestep(const ProcessorGroup*,
       new_dw->get(speedSound, lb->speedSound_CCLabel, indx,patch,gac, 1);
       new_dw->get(vel_CC,     lb->vel_CCLabel,        indx,patch,gac, 1);
       new_dw->get(sp_vol_CC,  lb->sp_vol_CCLabel,     indx,patch,gn,  0);
-        
-      if (!d_impICE) {     //   E X P L I C I T
+
+     if (d_delT_scheme == "aggressive") {     //      A G G R E S S I V E
         for(CellIterator iter=patch->getCellIterator(); !iter.done(); iter++){
           IntVector c = *iter;
-          double speed_Sound = speedSound[c];
+          double speed_Sound = d_delT_knob * speedSound[c];
           double A = d_CFL*delX/(speed_Sound + 
                                        fabs(vel_CC[c].x())+d_SMALL_NUM);
           double B = d_CFL*delY/(speed_Sound + 
@@ -1051,11 +1072,12 @@ void ICE::actuallyComputeStableTimestep(const ProcessorGroup*,
           delt_CFL = std::min(A, delt_CFL);
           delt_CFL = std::min(B, delt_CFL);
           delt_CFL = std::min(C, delt_CFL);
-        } 
+        }
+//      cout << "  Aggressive delT Based on currant number "<< delt_CFL << endl; 
       } 
-//    cout << " delT Based on currant number "<< delt_CFL << endl;
 
-      if (d_impICE) {    //    I M P L I C I T
+
+      if (d_delT_scheme == "conservative") {  //      C O N S E R V A T I V E
         //__________________________________
         // Use a characteristic velocity
         // to compute a sweptvolume. The
@@ -1071,9 +1093,7 @@ void ICE::actuallyComputeStableTimestep(const ProcessorGroup*,
         faceArea[2] = dx.x() * dx.y();        // Z
 
         double vol = dx.x() * dx.y() * dx.z();  
-  /*`==========TESTING==========*/
-        double one_Zero = 0.0;  
-  /*==========TESTING==========`*/
+
         delt_CFL = 1000.0; 
         for(CellIterator iter=patch->getCellIterator(); !iter.done(); iter++){
           double sumSwept_Vol = 0.0;
@@ -1096,9 +1116,11 @@ void ICE::actuallyComputeStableTimestep(const ProcessorGroup*,
             double relative_vel_R = abs(vel_R - vel_C);
             double relative_vel_L = abs(vel_L - vel_C);
 
-            double characteristicVel_R = vel_FC_R + one_Zero * speedSound 
+            double characteristicVel_R = vel_FC_R 
+                                       + d_delT_knob * speedSound 
                                        + relative_vel_R; 
-            double characteristicVel_L = vel_FC_L + one_Zero * speedSound 
+            double characteristicVel_L = vel_FC_L 
+                                       + d_delT_knob * speedSound 
                                        + relative_vel_L;
 
             double sweptVol_R = abs(characteristicVel_R) * faceArea[dir];
@@ -1109,8 +1131,9 @@ void ICE::actuallyComputeStableTimestep(const ProcessorGroup*,
           double delt_tmp = d_CFL *vol/(sumSwept_Vol + d_SMALL_NUM);
           delt_CFL = std::min(delt_CFL, delt_tmp);
         }  // iter loop
-      }  // implicit loop
-//      cout << "delT based on swept volumes "<< delt_CFL<<endl;
+//      cout << " Conservative delT based on swept volumes "<< delt_CFL<<endl;
+      }  
+
       
       //__________________________________
       // stability constraint due to heat conduction
@@ -1130,8 +1153,7 @@ void ICE::actuallyComputeStableTimestep(const ProcessorGroup*,
           }
         }  //
       }  // ice_matl
-    }  // matl loop
-    
+    }  // matl loop   
 //    cout << "delT based on conduction "<< delt_cond<<endl;
     
     delt = std::min(delt_CFL, delt_cond);
