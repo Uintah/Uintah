@@ -68,6 +68,7 @@ MPIScheduler::MPIScheduler( const ProcessorGroup * myworld,
   ss_ = 0;
   rs_ = 0;
   reloc_new_posLabel_=0;
+  d_logTimes = 0;
 }
 
 
