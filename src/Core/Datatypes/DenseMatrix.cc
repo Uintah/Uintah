@@ -55,7 +55,7 @@ DenseMatrix* DenseMatrix::clone(){
 
 //! constructors
 DenseMatrix::DenseMatrix()
-  : Matrix(Matrix::non_symmetric, Matrix::dense), 
+  : Matrix(Matrix::NON_SYMMETRIC, Matrix::DENSE), 
   nc(0), 
   nr(0), 
   data(0),
@@ -64,7 +64,7 @@ DenseMatrix::DenseMatrix()
 }
 
 DenseMatrix::DenseMatrix(int r, int c)
-  : Matrix(Matrix::non_symmetric, Matrix::dense)
+  : Matrix(Matrix::NON_SYMMETRIC, Matrix::DENSE)
 {
   ASSERT(r>0);
   ASSERT(c>0);
@@ -80,7 +80,7 @@ DenseMatrix::DenseMatrix(int r, int c)
 }
 
 DenseMatrix::DenseMatrix(const DenseMatrix& m)
-  : Matrix(Matrix::non_symmetric, Matrix::dense)
+  : Matrix(Matrix::NON_SYMMETRIC, Matrix::DENSE)
 {
   nc=m.nc;
   nr=m.nr;
@@ -134,12 +134,12 @@ void DenseMatrix::put(int r, int c, const double& d)
 {
   ASSERTRANGE(r, 0, nr);
   ASSERTRANGE(c, 0, nc);
-  extremaCurrent=0;
+  extremaCurrent_ = false;
   data[r][c]=d;
 }
 
 double DenseMatrix::minValue() {
-  if (extremaCurrent)
+  if (extremaCurrent_)
     return minVal;
   minVal=maxVal=data[0][0];
   for (int r=0; r<nr; r++) {
@@ -150,12 +150,12 @@ double DenseMatrix::minValue() {
 	maxVal = data[r][c];
     }
   }
-  extremaCurrent=1;
+  extremaCurrent_ = true;
   return minVal;
 }
 
 double DenseMatrix::maxValue() {
-  if (extremaCurrent)
+  if (extremaCurrent_)
     return maxVal;
   minVal=maxVal=data[0][0];
   for (int r=0; r<nr; r++) {
@@ -166,7 +166,7 @@ double DenseMatrix::maxValue() {
 	maxVal = data[r][c];
     }
   }
-  extremaCurrent=1;
+  extremaCurrent_=true;
   return maxVal;
 }
 
@@ -202,7 +202,7 @@ void DenseMatrix::zero()
       row[c]=0.0;
     }
   }
-  extremaCurrent=0;
+  extremaCurrent_=false;
 }
 
 int DenseMatrix::solve(ColumnMatrix& sol)
@@ -469,27 +469,27 @@ void DenseMatrix::io(Piostream& stream)
   int split;
   if (stream.reading()) {
     if (version > 2) {
-      Pio(stream, separate_raw);
-      if (separate_raw) {
-	Pio(stream, raw_filename);
-	FILE *f=fopen(raw_filename(), "r");
+      Pio(stream, separate_raw_);
+      if (separate_raw_) {
+	Pio(stream, raw_filename_);
+	FILE *f=fopen(raw_filename_.c_str(), "r");
 	fread(data[0], sizeof(double), nr*nc, f);
 	fclose(f);
       }
     } else {
-      separate_raw=0;
+      separate_raw_ = false;
     }
-    split=separate_raw;
+    split = separate_raw_;
   } else {	// writing
-    clString filename = raw_filename;
-    split=separate_raw;
+    string filename = raw_filename_;
+    split = separate_raw_;
     if (split) {
       if (filename == "") {
 	if (stream.file_name()) {
 	  char *tmp=strdup(stream.file_name());
 	  char *dot = strrchr( tmp, '.' );
 	  if (!dot ) dot = strrchr( tmp, 0);
-	  filename = stream.file_name.substr(0,dot-tmp)+clString(".raw");
+	  filename = string(stream.file_name.substr(0,dot-tmp)()) + ".raw";
 	  delete tmp;
 	} else split=0;
       }
@@ -497,7 +497,7 @@ void DenseMatrix::io(Piostream& stream)
     Pio(stream, split);
     if (split) {
       Pio(stream, filename);
-      FILE *f=fopen(filename(), "w");
+      FILE *f = fopen(filename.c_str(), "w");
       fwrite(data[0], sizeof(double), nr*nc, f);
       fclose(f);
     }
