@@ -1270,7 +1270,9 @@ void MPMICE::computeEquilibrationPressure(const ProcessorGroup*,
     vector<CCVariable<double> > mat_vol(numALLMatls);
     vector<CCVariable<double> > mass_CC(numALLMatls);
     CCVariable<double> press, press_new;
-
+/**/  CCVariable<double> delPress_tmp;
+/**/  new_dw->allocate(delPress_tmp,
+                               Ilb->press_CCLabel, 0,patch); 
     old_dw->get(press,         Ilb->press_CCLabel, 0,patch,Ghost::None, 0); 
     new_dw->allocate(press_new,Ilb->press_CCLabel, 0,patch);
 
@@ -1548,6 +1550,8 @@ void MPMICE::computeEquilibrationPressure(const ProcessorGroup*,
          converged = true;
       }   // end of converged
 
+/**/  delPress_tmp[*iter] = delPress;
+
       test_max_iter = std::max(test_max_iter, count);
 
       //__________________________________
@@ -1627,6 +1631,7 @@ void MPMICE::computeEquilibrationPressure(const ProcessorGroup*,
   //---- P R I N T   D A T A ------
     if(d_ice -> switchDebug_equilibration_press)  { 
       d_ice->printData( patch, 1, "BOTTOM", "Press_CC_equil", press_new);
+      d_ice->printData( patch, 1, "BOTTOM", "delPress",       delPress_tmp);
    #if 0                 
       for (int m = 0; m < numALLMatls; m++)  {
          Material* matl = d_sharedState->getMaterial( m );
