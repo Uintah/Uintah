@@ -11,6 +11,7 @@ namespace rtrt {
   using namespace SCIRun;
   
 class Ray;
+class Stealth;
 
 class Camera {
     friend class Dpy;
@@ -49,6 +50,8 @@ public:
     Vector get_up() const;
     void getParams(Point& origin, Vector& lookdir,
 		   Vector& up, double& fov);
+
+    void updatePosition( const Stealth & stealth );
 };
 
 } // end namespace rtrt

@@ -6,6 +6,8 @@
 #include <Core/Thread/Mutex.h>
 #include <Core/Thread/Barrier.h>
 
+#include <X11/Xlib.h>
+
 namespace rtrt {
 
 using SCIRun::Barrier;
@@ -47,8 +49,11 @@ class Dpy : public Runnable {
   bool display_frames; // whether or not to display the rendering
   
   void get_input();         // some common code for frameless vs. not frameless
-  
-  
+
+  // case statement for keypresses
+  void handle_keypress( unsigned long key ); 
+  // case statement for mouse press events
+  void handle_mouse_press( XEvent & e ); 
   
 public:
   Dpy(Scene* scene, char* criteria1, char* criteria2,

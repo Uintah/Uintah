@@ -1,6 +1,8 @@
 
 #include <Packages/rtrt/Core/Camera.h>
 #include <Packages/rtrt/Core/Ray.h>
+#include <Packages/rtrt/Core/Stealth.h>
+#include <Core/Geometry/Transform.h>
 #include <iostream>
 
 using namespace rtrt;
@@ -73,8 +75,10 @@ void Camera::setup()
 	cerr << "Ambiguous up direciton...\n";
     }
     v.normalize();
+
     u=Cross(v, direction);
     u.normalize();
+
     double height=2.0*dist*tan(fov*0.5*M_PI/180.);
     u*=height;
     double width=2.0*dist*tan(fov*0.5*M_PI/180.);
@@ -132,5 +136,52 @@ void Camera::getParams(Point& origin, Vector& direction,
     direction=this->direction;
     up=u;
     vfov=fov;
+}
+
+void
+Camera::updatePosition( const Stealth & stealth )
+{
+  Vector forward( direction );
+  Vector theUp( u );
+  Vector side( v );
+
+  forward.normalize();
+  theUp.normalize();
+  side.normalize();
+
+  eye += forward * stealth.getSpeed(0);
+  eye += side    * stealth.getSpeed(1);
+  eye += theUp    * stealth.getSpeed(2);
+
+  double speed;
+
+  // Pitching
+  if( ( speed = stealth.getSpeed(3) ) != 0 )
+    {
+      // Seems that the Point(0,0,0) doesn't do anything. 
+      Transform t;
+      t.post_translate( Vector(eye) );
+      t.post_rotate( speed/20, side );
+      t.post_translate( Vector(-eye) );
+      lookat = t.project( lookat );
+      setup();
+    }
+
+  // Rotating
+  if( ( speed = stealth.getSpeed(4) ) != 0 )
+    {
+      // Keeps you from pitching up or down completely!
+      if( Dot( forward, up ) < .9 || Dot( forward, up ) > -.9 )
+	{
+	  // Seems that the Point(0,0,0) doesn't do anything. 
+	  Transform t;
+	  t.post_translate( Vector(eye) );
+	  t.post_rotate( -speed/20, theUp );
+	  t.post_translate( Vector(-eye) );
+	  lookat = t.project( lookat );
+	  setup();
+	}
+    }
+
 }
 
