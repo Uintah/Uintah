@@ -10,19 +10,21 @@
 namespace rtrt {
 
 class TexturedTri : public Object, public UVMapping {
-    Vector v0, v1;  // the 2D basis for this triangle's geometry
-    Vector v0v1;    // v0 cross v1
-    double dv0,dv1; // length of above basis vectors
-    Vector t0,t1;   // the 2D basis for this triangle's UV mapping
-    double dt0,dt1; // length of the above basis vectors
-    Point p1, p2, p3;
-    Vector n;
+    Vector ngu,ngv;   // the normalized 2D basis for this triangle's
+                      // object space
+    Vector ngungv;    // ngu cross ngv
+    double lngu,lngv; // length of the above basis vectors
+    Vector ntu,ntv;   // the normalized 2D basis for this triangle's
+                      // texture space
+    double lntu,lntv; // length of the above basis vectors
+    Point p1, p2, p3; // object space vertices
+    Point t1, t2, t3; // texture vertices (map to p1, p2, and p3 respectively)
+    Vector n;         // the normal vector
     double d;
     Vector e1p, e2p, e3p;
     Vector e1, e2, e3;
     double e1l, e2l, e3l;
     bool bad;
-    Point tv1,tv2,tv3; // texture vertices (map to p1, p2, and p3 respectively)
 public:
     inline bool isbad() {
 	return bad;

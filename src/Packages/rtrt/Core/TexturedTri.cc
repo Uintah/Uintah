@@ -17,14 +17,12 @@ TexturedTri::TexturedTri(Material* matl, const Point& p1, const Point& p2,
 	 const Point& p3)
     : Object(matl, this), p1(p1), p2(p2), p3(p3)
 {
-    v0 = p2-p1;
-    v1 = p3-p1;
-    dv0 = v0.length();
-    dv1 = v1.length();
-    //Vector v1(p2-p1);
-    //Vector v2(p3-p1);
-    v0v1 = Cross(v0,v1);
-    n=v0v1;
+    ngu = p2-p1;
+    ngv = p3-p1;
+    ngungv = Cross(ngu,ngv);
+    lngu = ngu.length();
+    lngv = ngv.length();
+    n=ngungv;
 #if 1
     double l = n.length2();
     if (l > 1.e-16) {
@@ -66,28 +64,30 @@ TexturedTri::set_texcoords(const Point& tx1,
                            const Point& tx2,
                            const Point& tx3)
 {
-  tv1 = tx1;
-  tv2 = tx2;
-  tv3 = tx3;
+  t1 = tx1;
+  t2 = tx2;
+  t3 = tx3;
 
-  t0 = tx2-tx1;
-  t1 = tx3-tx1;
-  dt0 = t0.length();
-  dt1 = t1.length();
+  ntu = tx2-tx1;
+  ntv = tx3-tx1;
+  lntu = ntu.length2();
+  lntv = ntv.length2();
+  if (lntu<=0 || lntv<-0) {
+    cerr << "naughty texture coordinates!" << endl;
+    cerr << "t1: " << t1.x() << ", " << t1.y() << ", " << t1.z() << endl;
+    cerr << "t2: " << t2.x() << ", " << t2.y() << ", " << t2.z() << endl;
+    cerr << "t3: " << t3.x() << ", " << t3.y() << ", " << t3.z() << endl;
+  } else {
+    lntu = sqrt(lntu);
+    lntv = sqrt(lntv);
+  }
 }
 
 void 
 TexturedTri::uv(UV& uv, const Point& p, const HitInfo& hit)
 {
-  Vector v(p-p1);
-  Vector nv0 = v0;
-  Vector nv1 = v1;
-  nv0.normalize();
-  nv1.normalize();
-  double uu=(Dot(nv0, v)/(dv0));
-  double vv=(Dot(nv1, v)/(dv1));
-
-  Point tp = tv1+((t0*uu)+(t1*vv));
+  Point tp = t1+((ntu*((double*)hit.scratchpad)[1])+
+                 (ntv*((double*)hit.scratchpad)[0]));
 
   uv.set(tp.x(),tp.y());
 }
@@ -98,23 +98,26 @@ void TexturedTri::intersect(const Ray& ray, HitInfo& hit, DepthStats* st,
 		    PerProcessorContext*)
 {
     st->tri_isect++;
-    //Vector e1(p2-p1);
-    //Vector e2(p3-p1);
+    Vector e1(p2-p1);
+    Vector e2(p3-p1);
     Vector dir(ray.direction());
     Vector o(p1-ray.origin());
 
-    //Vector e1e2(Cross(v0, v1));
-    double det=Dot(v0v1, dir);
+    Vector e1e2(Cross(e1, e2));
+    double det=Dot(e1e2, dir);
     if(det>1.e-9 || det < -1.e-9){
 	double idet=1./det;
 
 	Vector DX(Cross(dir, o));
-	double A=-Dot(DX, v1)*idet;
+	double A=-Dot(DX, e2)*idet;
 	if(A>0.0 && A<1.0){
-	    double B=Dot(DX, v0)*idet;
+	    double B=Dot(DX, e1)*idet;
 	    if(B>0.0 && A+B<1.0){
-		double t=Dot(v0v1, o)*idet;
-		hit.hit(this, t);
+		double t=Dot(e1e2, o)*idet;
+		if (hit.hit(this, t)) {
+                  ((double*)hit.scratchpad)[0]=B;
+                  ((double*)hit.scratchpad)[1]=A;
+                }
 		st->tri_hit++;
 	    }
 	}
