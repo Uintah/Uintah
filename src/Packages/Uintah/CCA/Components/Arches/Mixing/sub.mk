@@ -15,7 +15,8 @@ SRCS     += $(SRCDIR)/MixingModel.cc $(SRCDIR)/ColdflowMixingModel.cc  \
 		$(SRCDIR)/ILDMReactionModel.cc \
                 $(SRCDIR)/Common.cc \
 		$(SRCDIR)/Stream.cc $(SRCDIR)/InletStream.cc \
-		$(SRCDIR)/ChemkinInterface.cc 
+		$(SRCDIR)/ChemkinInterface.cc \
+		$(SRCDIR)/ILDMReactionModel.cc 
 
 SUBDIRS := $(SRCDIR)/fortran
 include $(SCIRUN_SCRIPTS)/recurse.mk

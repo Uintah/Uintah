@@ -23,6 +23,7 @@
 #include <float.h>
 #include <stdio.h>
 #include <Core/Util/DebugStream.h>
+#include <Packages/Uintah/CCA/Components/ICE/MathToolbox.h>
 
 using namespace Uintah;
 using namespace SCIRun;
@@ -1147,7 +1148,7 @@ void MPMICE::doCCMomExchange(const ProcessorGroup*,
          a[m][m] +=  beta[m][n];
         }
       }
-      d_ice->matrixInverse(numALLMatls, a, a_inverse);
+      matrixInverse(numALLMatls, a, a_inverse);
       
       //     X - M O M E N T U M  --  F O R M   R H S   (b)
       for(int m = 0; m < numALLMatls; m++) {
@@ -1159,7 +1160,7 @@ void MPMICE::doCCMomExchange(const ProcessorGroup*,
       //     S O L V E
       //  - Add exchange contribution to orig value     
       vector<double> X(numALLMatls);
-      d_ice->multiplyMatrixAndVector(numALLMatls,a_inverse,b,X);
+      multiplyMatrixAndVector(numALLMatls,a_inverse,b,X);
       for(int m = 0; m < numALLMatls; m++) {
          vel_CC[m][c].x( vel_CC[m][c].x() + X[m] );
          dvdt_CC[m][c].x( X[m]/delT );
@@ -1175,7 +1176,7 @@ void MPMICE::doCCMomExchange(const ProcessorGroup*,
 
       //     S O L V E
       //  - Add exchange contribution to orig value
-      d_ice->multiplyMatrixAndVector(numALLMatls,a_inverse,b,X);
+      multiplyMatrixAndVector(numALLMatls,a_inverse,b,X);
       for(int m = 0; m < numALLMatls; m++)  {
          vel_CC[m][c].y( vel_CC[m][c].y() + X[m] );
          dvdt_CC[m][c].y( X[m]/delT );
@@ -1191,7 +1192,7 @@ void MPMICE::doCCMomExchange(const ProcessorGroup*,
 
       //     S O L V E
       //  - Add exchange contribution to orig value
-      d_ice->multiplyMatrixAndVector(numALLMatls,a_inverse,b,X);
+      multiplyMatrixAndVector(numALLMatls,a_inverse,b,X);
       for(int m = 0; m < numALLMatls; m++)  {
          vel_CC[m][c].z( vel_CC[m][c].z() + X[m] );
          dvdt_CC[m][c].z( X[m]/delT );
@@ -1223,7 +1224,7 @@ void MPMICE::doCCMomExchange(const ProcessorGroup*,
         }
       }
       //     S O L V E, Add exchange contribution to orig value
-      d_ice->matrixSolver(numALLMatls,a,b,X);
+      matrixSolver(numALLMatls,a,b,X);
       for(int m = 0; m < numALLMatls; m++) {
         Temp_CC[m][c] = Temp_CC[m][c] + X[m];
         dTdt_CC[m][c] = X[m]/delT;

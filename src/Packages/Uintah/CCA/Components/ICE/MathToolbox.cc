@@ -1,14 +1,15 @@
-#include <Packages/Uintah/CCA/Components/ICE/ICE.h>
+#include <Packages/Uintah/CCA/Components/ICE/MathToolbox.h>
+#include <Core/Datatypes/DenseMatrix.h>
 
 using namespace SCIRun;
 using namespace Uintah;
 /*---------------------------------------------------------------------
- Function~  ICE::matrixInverse--
+ Function~  MathToolbox::matrixInverse--
  Reference~  Computes the inverse of a matrix
  ---------------------------------------------------------------------  */
-void ICE::matrixInverse( int numMatls,
-                         DenseMatrix& a,
-                         DenseMatrix& a_inverse)
+namespace Uintah {
+
+void matrixInverse(int numMatls, DenseMatrix& a, DenseMatrix& a_inverse)
 {
   if (numMatls == 1) {
     a_inverse[0][0] = 1./a[0][0];
@@ -112,13 +113,10 @@ void ICE::matrixInverse( int numMatls,
   }
 }
 /*---------------------------------------------------------------------
- Function~  ICE::MatrixMultiplication--
+ Function~  MatrixMultiplication--
  Reference~  This multiplies matrix (a) and vector (b) and returns X
  ---------------------------------------------------------------------  */
- void ICE::multiplyMatrixAndVector( int numMatls,
-                                    DenseMatrix& a, 
-                                    vector<double>& b, 
-                                    vector<double>& X  )
+ void multiplyMatrixAndVector(int numMatls, DenseMatrix& a, vector<double>& b, vector<double>& X  )
 {
   for (int row=0; row<numMatls; row++) {
     X[row] = 0.0;
@@ -128,11 +126,10 @@ void ICE::matrixInverse( int numMatls,
   }
 }
 /*---------------------------------------------------------------------
- Function~  ICE::conditionNumber--
+ Function~  conditionNumber--
  Reference~  Computes the condition number of a matrix
  ---------------------------------------------------------------------  */
-double ICE::conditionNumber( const int numMatls,
-                           const DenseMatrix& a)
+double conditionNumber(const int numMatls, const DenseMatrix& a)
 {
                          
    //   Check for ill-conditioned system
@@ -159,13 +156,10 @@ double ICE::conditionNumber( const int numMatls,
    return  max_row_sum_a * max_row_sum_a_invert;
  }   
 /*---------------------------------------------------------------------
- Function~  ICE::matrixSolver--
+ Function~  matrixSolver--
  Reference~  Mathematica provided the code
  ---------------------------------------------------------------------  */
-void ICE::matrixSolver( int numMatls,
-                        DenseMatrix& a, 
-                        vector<double>& b, 
-                        vector<double>& X  )
+void matrixSolver(int numMatls, DenseMatrix& a, vector<double>& b, vector<double>& X  )
 {
   if (numMatls == 1) {
     X[0] = b[0]/a[0][0];
@@ -289,4 +283,6 @@ void ICE::matrixSolver( int numMatls,
     a.solve(b);
     X = b;
   }
+}
+
 }

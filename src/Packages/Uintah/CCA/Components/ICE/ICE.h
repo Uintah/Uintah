@@ -290,25 +290,6 @@ using namespace SCIRun;
       void getExchangeCoefficients( DenseMatrix& K,
                                     DenseMatrix& H ); 
 
-      void matrixInverse(  int numMatls,
-                           DenseMatrix& a,
-                           DenseMatrix& aInverse);
-                          
-      void matrixSolver( int numMatls,
-                         DenseMatrix& a, 
-                         vector<double>& b, 
-                         vector<double>& X  );
-                         
-      void multiplyMatrixAndVector( int numMatls,
-                                    DenseMatrix& a, 
-                                    vector<double>& b, 
-                                    vector<double>& X  );
-                                                             
-      double conditionNumber( const int numMatls,
-                              const DenseMatrix& a);
-
-
-                                        
       // Debugging switches
       bool switchDebugInitialize;
       bool switchDebug_equilibration_press;
