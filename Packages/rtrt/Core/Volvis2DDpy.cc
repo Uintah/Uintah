@@ -507,9 +507,7 @@ Volvis2DDpy::button_motion(MouseButton button, const int x, const int y) {
     else if( pickedIndex >= 0 ) {
       if( widgets[pickedIndex]->type == 3 )
 	return;
-      widgets[pickedIndex]->transText->colormap( (int)(x/x_pixel_width), 
-						 (int)((300.0-y)/y_pixel_width),
-						 x-old_x, old_y-y );
+      widgets[pickedIndex]->transText->colormap( x-old_x, old_y-y );
       if( widgets[pickedIndex]->type != 0 )
 	widgets[pickedIndex]->invertColor();
     } // if()
