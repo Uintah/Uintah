@@ -380,7 +380,7 @@ void DataArchiver::restartSetup(Dir& restartFromDir, int startTimestep,
       copySection(checkpointsFromDir, d_checkpointsDir, "variables");
       copySection(checkpointsFromDir, d_checkpointsDir, "globals");
       if (removeOldDir)
-	 restartFromDir.forceRemove();
+	 restartFromDir.forceRemove(false);
    }
    else if (d_writeMeta) {
      // just add <restart from = ".." timestep = ".."> tag.
@@ -620,7 +620,7 @@ void DataArchiver::copyDatFiles(Dir& fromDir, Dir& toDir, int startTimestep,
 	 datFile.close();
 
 	 if (removeOld) 
-	    fromDir.remove(href);
+	    fromDir.remove(href, false);
 	 
 	 variable = variable->findNextBlock("variable");
       }
@@ -796,7 +796,7 @@ void DataArchiver::beginOutputTimestep( double time, double delt,
 	
 	// remove out-dated checkpoint directory
 	Dir expiredDir(d_checkpointTimestepDirs.front());
-	expiredDir.forceRemove();
+	expiredDir.forceRemove(false);
       }
       d_checkpointTimestepDirs.pop_front();
     }
