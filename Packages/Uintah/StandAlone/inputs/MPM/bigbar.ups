@@ -29,6 +29,7 @@
 
     <PhysicalConstants>
 	<gravity>[0,0,0]</gravity>
+	<reference_pressure>101325.0</reference_pressure>
 	<ideal_gas_constant>1.0</ideal_gas_constant>
 	<pressure>1.0</pressure>
 	<viscosity>0.3</viscosity>
