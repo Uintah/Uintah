@@ -54,6 +54,12 @@ using std::pair;
       virtual void problemSetup(const ProblemSpecP& params);
 
       //////////
+      // This function will set up the output for the simulation.  As part
+      // of this it will output the input.xml and index.xml in the uda
+      // directory.  Call after calling all problemSetups.
+      virtual void initializeOutput(const ProblemSpecP& params);
+
+      //////////
       // Call this when restarting from a checkpoint after calling
       // problemSetup.  This will copy timestep directories and dat
       // files up to the specified timestep from restartFromDir if
