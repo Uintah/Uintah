@@ -26,6 +26,7 @@ itcl_class SCIRun_Fields_FieldMeasures {
 	global $this-zFlag
 	global $this-sizeFlag
 	global $this-valenceFlag
+	global $this-lengthFlag
 	global $this-aspectRatioFlag
 	global $this-elemSizeFlag
 
@@ -33,12 +34,13 @@ itcl_class SCIRun_Fields_FieldMeasures {
     }
 
     method set_defaults {} {
-	set $this-nodeBased 1
+	set $this-nodeBased node
 	set $this-xFlag 1
 	set $this-yFlag 0
 	set $this-zFlag 0
 	set $this-sizeFlag 0
 	set $this-valenceFlag 0
+	set $this-lengthFlag 0
 	set $this-aspectRatioFlag 0
 	set $this-elemSizeFlag 0
     }
@@ -54,11 +56,13 @@ itcl_class SCIRun_Fields_FieldMeasures {
 	frame $w.which -relief groove -borderwidth 2
 	label $w.which.l -text "Measure Locations"
 	radiobutton $w.which.node -text "Nodes" \
-		-variable $this-nodeBased -value 1
+		-var $this-nodeBased -value node
+	radiobutton $w.which.edge -text "Edges" \
+		-var $this-nodeBased -value edge
 	radiobutton $w.which.element -text "Elements" \
-		-variable $this-nodeBased -value 0
+		-var $this-nodeBased -value element
 	pack $w.which.l -side top
-	pack $w.which.node $w.which.element -anchor nw
+	pack $w.which.node $w.which.edge $w.which.element -anchor nw
 
 	frame $w.general -relief groove -borderwidth 2
 	label $w.general.l -text "General Measures"
@@ -74,15 +78,21 @@ itcl_class SCIRun_Fields_FieldMeasures {
 	pack $w.node.l -side top
 	pack $w.node.valence -anchor nw
 
+	frame $w.edge -relief groove -borderwidth 2
+	label $w.edge.l -text "Edge Measures"
+	checkbutton $w.edge.length -text "Length" -variable $this-lengthFlag
+	pack $w.edge.l -side top
+	pack $w.edge.length -anchor nw
+
 	frame $w.elem -relief groove -borderwidth 2
 	label $w.elem.l -text "Element Measures"
 	checkbutton $w.elem.aspect -text "Aspect Ratio" \
 		-variable $this-aspectRatioFlag
 	checkbutton $w.elem.size -text "Size (e.g. volume)" \
-		-variable $this-elementSizeFlag
+		-variable $this-elemSizeFlag
 	pack $w.elem.l -side top
 	pack $w.elem.aspect $w.elem.size -anchor nw
 
-	pack $w.which $w.general $w.node $w.elem -side top -fill x -expand 1
+	pack $w.which $w.general $w.node $w.edge $w.elem -side top -fill x -expand 1
     }
 }
