@@ -739,7 +739,7 @@ void DataArchiver::createIndexXML(Dir& dir)
 void DataArchiver::finalizeTimestep(double time, double delt,
 				    const GridP& grid, SchedulerP& sched,
                                     bool recompile /*=false*/,
-                                    int addMaterial /*=0*/)
+                                    bool addMaterial /*=0*/)
 {
   //this function should get called exactly once per timestep
 
@@ -754,7 +754,7 @@ void DataArchiver::finalizeTimestep(double time, double delt,
   // some changes here - we need to redo this if we add a material, or if we schedule output
   // on the initialization timestep (because there will be new computes on subsequent timestep)
   // - BJW
-  if (((delt != 0 || d_outputInitTimestep) && !wereSavesAndCheckpointsInitialized) || addMaterial !=0) {
+  if (((delt != 0 || d_outputInitTimestep) && !wereSavesAndCheckpointsInitialized) || addMaterial != false) {
       /* skip the initialization timestep (normally, anyway) for this
          because it needs all computes to be set
          to find the save labels */
