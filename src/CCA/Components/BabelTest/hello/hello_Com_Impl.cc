@@ -3,21 +3,20 @@
 // Symbol:        hello.Com-v1.0
 // Symbol Type:   class
 // Babel Version: 0.7.4
-// SIDL Created:  20030305 18:51:18 MST
-// Generated:     20030305 18:51:24 MST
+// SIDL Created:  20030227 01:34:06 MST
+// Generated:     20030227 01:34:08 MST
 // Description:   Server-side implementation for hello.Com
 // 
 // WARNING: Automatically generated; only changes within splicers preserved
 // 
 // babel-version = 0.7.4
-// source-line   = 10
-// source-url    = file:/home/sci/kzhang/SCIRun/src/CCA/Components/BabelTest/hello/hello.sidl
+// source-line   = 14
+// source-url    = file:/home/kzhang/SCIRun/src/Babel/Components/hello/hello.sidl
 // 
 #include "hello_Com_Impl.hh"
 
 // DO-NOT-DELETE splicer.begin(hello.Com._includes)
 // Put additional includes or other arbitrary code here...
-#include "govcca.hh"
 #include "hello.hh"
 // DO-NOT-DELETE splicer.end(hello.Com._includes)
 
@@ -39,28 +38,26 @@ void hello::Com_impl::_dtor() {
 
 // user defined non-static methods:
 /**
- * Obtain Services handle, through which the component communicates with the
- * framework. This is the one method that every CCA Component must implement. 
+ * Obtain Services handle, through which the 
+ * component communicates with the framework. 
+ * This is the one method that every CCA Component
+ * must implement. 
  */
 void
 hello::Com_impl::setServices (
-  /*in*/ ::govcca::Services svc ) 
+  /*in*/ ::gov::cca::Services services ) 
 throw () 
 {
   // DO-NOT-DELETE splicer.begin(hello.Com.setServices)
-  this->svc=svc;
+  svc=services;
   hello::GoPort goPort=hello::GoPort::_create();
   goPort.setService(svc);
-  svc.addProvidesPort(goPort,"babel.go","gov.cca.GoPort",0);
-  svc.registerUsesPort("idport","gov.cca.IDPort",0);
+  svc.addProvidesPort(goPort,"go","gov.cca.ports.GoPort",0);
+  svc.registerUsesPort("idport","gov.cca.ports.IDPort",0);
   // DO-NOT-DELETE splicer.end(hello.Com.setServices)
 }
 
 
 // DO-NOT-DELETE splicer.begin(hello.Com._misc)
-extern "C" govcca::Component make_Babel_hello()
-{
-  return hello::Com::_create();
-}
 // DO-NOT-DELETE splicer.end(hello.Com._misc)
 

@@ -4,10 +4,14 @@ version hello 1.0;
 
 package hello{
 
-  class GoPort implements-all govcca.GoPort{
-	void setService(in govcca.Services svc);
+  class GoPort implements-all gov.cca.ports.GoPort{
+	void setService(in gov.cca.Services svc);
   };
-  class Com implements-all govcca.Component{
+
+  class dummyPort implements-all gov.cca.ports.IDPort{
+  };
+
+  class Com implements-all gov.cca.Component{
 	
   };
 
