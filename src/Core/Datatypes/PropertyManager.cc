@@ -86,14 +86,17 @@ PropertyManager::PropertyManager() :
 {
 }
 
-
+// PropertyManagers are created thawed.  Only non transient data is copied.
 PropertyManager::PropertyManager(const PropertyManager &copy) :
-  size_(copy.size_),
-  frozen_(copy.frozen_)
+  size_(0),
+  frozen_(false)
 {
   map_type::const_iterator pi = copy.properties_.begin();
   while (pi != copy.properties_.end()) {
-    properties_[pi->first]=pi->second->copy();
+    if (! pi->second->transient()) {
+      properties_[pi->first]=pi->second->copy();
+      ++size_;
+    }
     ++pi;
   }
 }
@@ -112,11 +115,11 @@ PropertyManager::~PropertyManager()
 void
 PropertyManager::thaw()
 {
-  lock.lock();
-  // Call detach on the mesh before thawing.  Assert that has happened.
+  // Assert that detach has been called on any handles to this PropertyManager.
   ASSERT(ref_cnt <= 1);
   // Clean up properties.
   clear_transient();
+  lock.lock();
   frozen_ = false;
   lock.unlock();
 }
