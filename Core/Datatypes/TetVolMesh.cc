@@ -428,18 +428,18 @@ TetVolMesh::get_center(Point &p, face_index idx) const
 void 
 TetVolMesh::get_center(Point &p, cell_index idx) const
 {
-  const double s = 1./5.;
+  const double s = .25L;
   node_array arr;
   get_nodes(arr, idx);
-  Point p1, p2, p3, p4;
+  Point p1, p2, p3;
   get_point(p, arr[0]);
   get_point(p1, arr[1]);
   get_point(p2, arr[2]);
   get_point(p3, arr[3]);
-  get_point(p4, arr[4]);
+
 
   p = ((Vector(p) + Vector(p1) + Vector(p2) + 
-	Vector(p3) + Vector(p4)) * s).asPoint();
+	Vector(p3)) * s).asPoint();
 }
 
 static double
