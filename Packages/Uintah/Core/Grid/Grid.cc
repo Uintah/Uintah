@@ -148,7 +148,7 @@ Grid::problemSetup(const ProblemSpecP& params, const ProcessorGroup *pg)
 
       LevelP level = addLevel(anchor, spacing);
       IntVector anchorCell(level->getCellIndex(anchor));
-      IntVector highPointCell(level->getCellIndex(highPoint));
+      IntVector highPointCell(level->getCellIndex(highPoint + Vector(1.e-6,1.e-6,1.e-6)));
 
       // second pass - set up patches and cells
       for(ProblemSpecP box_ps = level_ps->findBlock("Box");
@@ -191,15 +191,14 @@ Grid::problemSetup(const ProblemSpecP& params, const ProcessorGroup *pg)
         level->setExtraCells(extraCells);
         
         IntVector resolution(highCell-lowCell);
-        if(resolution.x() < 1 || resolution.y() < 1 || resolution.z() < 1)
+        if(resolution.x() < 1 || resolution.y() < 1 || resolution.z() < 1) {
+          cerr << "highCell: " << highCell << " lowCell: " << lowCell << '\n';
           throw ProblemSetupException("Degenerate patch");
+        }
         
         IntVector patches;
         box_ps->getWithDefault("patches", patches,IntVector(1,1,1));
         level->setPatchDistributionHint(patches);
-        if (pg->size() > 1 &&
-            (patches.x() * patches.y() * patches.z() < pg->size()))
-          throw ProblemSetupException("Number of patches must >= the number of processes in an mpi run");
         for(int i=0;i<patches.x();i++){
           for(int j=0;j<patches.y();j++){
             for(int k=0;k<patches.z();k++){
@@ -220,7 +219,11 @@ Grid::problemSetup(const ProblemSpecP& params, const ProcessorGroup *pg)
           }
         }
       }
-
+      if (pg->size() > 1 &&
+          (level->numPatches() < pg->size())) {
+        throw ProblemSetupException("Number of patches must >= the number of processes in an mpi run");
+      }
+      
       IntVector periodicBoundaries;
       if(level_ps->get("periodic", periodicBoundaries)){
        level->finalizeLevel(periodicBoundaries.x() != 0,
