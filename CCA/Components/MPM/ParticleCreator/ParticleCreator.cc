@@ -82,6 +82,9 @@ ParticleCreator::createParticles(MPMMaterial* matl,
       for (itr = points->begin(); itr != points->end(); ++itr) {
 	if (b2.contains(*itr)) {
 	  position[start+count] = (*itr);
+#ifdef FRACTURE
+          pdisp[start+count] = Vector(0.,0.,0.);
+#endif
 	  if (volumes->empty())
 	    pvolume[start+count]=dxpp.x()*dxpp.y()*dxpp.z();
 	  else
@@ -141,6 +144,9 @@ ParticleCreator::createParticles(MPMMaterial* matl,
 	      if(piece->inside(p)){
                 particleIndex pidx = start+count; 
 		position[pidx]=p;
+#ifdef FRACTURE
+                pdisp[start+count] = Vector(0.,0.,0.);
+#endif
 		pvolume[pidx]=dxpp.x()*dxpp.y()*dxpp.z();
 		pvelocity[pidx]=(*obj)->getInitialVelocity();
 		ptemperature[pidx]=(*obj)->getInitialTemperature();
@@ -271,7 +277,9 @@ ParticleCreator::allocateVariables(particleIndex numParticles,
   if (d_useLoadCurves) {
     new_dw->allocateAndPut(pLoadCurveID,   lb->pLoadCurveIDLabel,   subset); 
   }
-
+#ifdef FRACTURE
+  new_dw->allocateAndPut(pdisp,          lb->pDispLabel,          subset);
+#endif
   return subset;
 
 }
@@ -346,6 +354,11 @@ ParticleCreator::countParticles(GeometryObject* obj, const Patch* patch) const
 void ParticleCreator::registerPermanentParticleState(MPMMaterial* matl,
 						     MPMLabel* lb)
 {
+#ifdef FRACTURE
+  particle_state.push_back(lb->pDispLabel);
+  particle_state_preReloc.push_back(lb->pDispLabel_preReloc);
+#endif
+
   particle_state.push_back(lb->pVelocityLabel);
   particle_state_preReloc.push_back(lb->pVelocityLabel_preReloc);
 
