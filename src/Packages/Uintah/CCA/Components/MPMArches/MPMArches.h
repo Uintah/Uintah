@@ -35,9 +35,7 @@ WARNING
 #include <Packages/Uintah/Core/Grid/GridP.h>
 #include <Packages/Uintah/Core/Grid/LevelP.h>
 #include <Packages/Uintah/CCA/Ports/DataWarehouseP.h>
-#include <Packages/Uintah/CCA/Ports/MPMCFDInterface.h>
-#include <Packages/Uintah/CCA/Ports/MPMInterface.h>
-#include <Packages/Uintah/CCA/Ports/CFDInterface.h>
+#include <Packages/Uintah/CCA/Ports/SimulationInterface.h>
 
 #include <Packages/Uintah/CCA/Components/MPM/Contact/Contact.h>
 #include <Packages/Uintah/CCA/Components/MPM/SerialMPM.h>
@@ -51,7 +49,7 @@ namespace Uintah {
 using namespace SCIRun;
 
 
-class MPMArches : public UintahParallelComponent, public MPMCFDInterface {
+class MPMArches : public UintahParallelComponent, public SimulationInterface {
 public:
   MPMArches(const ProcessorGroup* myworld);
   virtual ~MPMArches();

@@ -15,10 +15,8 @@
 #include <Packages/Uintah/Core/Grid/SimulationState.h>
 #include <Packages/Uintah/Core/Grid/SoleVariable.h>
 #include <Packages/Uintah/Core/Grid/VarLabel.h>
-#include <Packages/Uintah/CCA/Ports/CFDInterface.h>
+#include <Packages/Uintah/CCA/Ports/SimulationInterface.h>
 #include <Packages/Uintah/CCA/Ports/DataWarehouse.h>
-#include <Packages/Uintah/CCA/Ports/MPMInterface.h>
-#include <Packages/Uintah/CCA/Ports/MPMCFDInterface.h>
 #include <Packages/Uintah/CCA/Ports/Output.h>
 #include <Packages/Uintah/Core/ProblemSpec/ProblemSpec.h>
 #include <Packages/Uintah/CCA/Ports/ProblemSpecInterface.h>
@@ -137,19 +135,10 @@ void SimulationController::run()
    SimulationStateP sharedState = scinew SimulationState(ups);
    
    // Initialize the CFD and/or MPM components
-   CFDInterface* cfd       = dynamic_cast<CFDInterface*>(getPort("cfd"));
-   MPMInterface* mpm       = dynamic_cast<MPMInterface*>(getPort("mpm"));
-   MPMCFDInterface* mpmcfd = dynamic_cast<MPMCFDInterface*>(getPort("mpmcfd"));
-   if(cfd && !mpmcfd)
-      cfd->problemSetup(ups, grid, sharedState);
-   
-   if(mpm && !mpmcfd)
-      mpm->problemSetup(ups, grid, sharedState);
-
-   if(mpmcfd) {
-      sharedState->d_mpm_cfd=true;
-      mpmcfd->problemSetup(ups, grid, sharedState);
-   }
+   SimulationInterface* sim = dynamic_cast<SimulationInterface*>(getPort("sim"));
+   if(!sim)
+     throw InternalError("No simulation component");
+   sim->problemSetup(ups, grid, sharedState);
 
    // Finalize the shared state/materials
    sharedState->finalizeMaterials();
@@ -190,7 +179,7 @@ void SimulationController::run()
       // Initialize the CFD and/or MPM data
       for(int i=0;i<grid->numLevels();i++){
 	 LevelP level = grid->getLevel(i);
-	 scheduleInitialize(level, scheduler, cfd, mpm, mpmcfd);
+	 sim->scheduleInitialize(level, scheduler);
       }
    }
    
@@ -205,7 +194,7 @@ void SimulationController::run()
    double start_time = Time::currentSeconds();
    if (!d_restarting){
      t = timeinfo.initTime;
-     scheduleComputeStableTimestep(level,scheduler, cfd, mpm, mpmcfd );
+     sim->scheduleComputeStableTimestep(level,scheduler);
    }
    
    if(output)
@@ -331,22 +320,20 @@ void SimulationController::run()
       // put the current time into the shared state so other components
       // can access it
       sharedState->setElapsedTime(t);
-      if(need_recompile(t, delt, level, cfd, mpm, mpmcfd, output) || first){
+      if(need_recompile(t, delt, level, sim, output) || first){
 	first=false;
 	if(d_myworld->myrank() == 0)
 	  cout << "Compiling taskgraph...";
 	double start = Time::currentSeconds();
 	scheduler->initialize();
 
-	scheduleTimeAdvance(level, scheduler,
-			    cfd, mpm, mpmcfd);
+	sim->scheduleTimeAdvance(level, scheduler);
 
 	if(output)
 	  output->finalizeTimestep(t, delt, level, scheduler);
       
 	// Begin next time step...
-	scheduleComputeStableTimestep(level, scheduler, cfd, mpm, mpmcfd);
-	
+	sim->scheduleComputeStableTimestep(level, scheduler);
 	scheduler->compile(d_myworld, false);
 
 	double dt=Time::currentSeconds()-start;
@@ -493,66 +480,10 @@ void SimulationController::problemSetup(const ProblemSpecP& params,
    }
 }
 
-void SimulationController::scheduleInitialize(LevelP& level,
-					      SchedulerP& sched,
-					      CFDInterface* cfd,
-					      MPMInterface* mpm,
-					      MPMCFDInterface* mpmcfd)
-{
-  if(mpmcfd){
-    mpmcfd->scheduleInitialize(level, sched);
-  }
-  else {
-    if(cfd) {
-      cfd->scheduleInitialize(level, sched);
-    }
-    if(mpm) {
-      mpm->scheduleInitialize(level, sched);
-    }
-  }
-}
-
-void SimulationController::scheduleComputeStableTimestep(LevelP& level,
-							SchedulerP& sched,
-							CFDInterface* cfd,
-							MPMInterface* mpm,
-							MPMCFDInterface* mpmcfd)
-{
-  if(mpmcfd){
-    mpmcfd->scheduleComputeStableTimestep(level, sched);
-  }
-  else {
-     if(cfd)
-        cfd->scheduleComputeStableTimestep(level, sched);
-     if(mpm)
-        mpm->scheduleComputeStableTimestep(level, sched);
-   }
-}
-
-void SimulationController::scheduleTimeAdvance(LevelP& level,
-					       SchedulerP& sched,
-					       CFDInterface* cfd,
-					       MPMInterface* mpm,
-					       MPMCFDInterface* mpmcfd)
-{
-  // Temporary - when cfd/mpm are coupled this will need help
-  if(mpmcfd){
-      mpmcfd->scheduleTimeAdvance(level, sched);
-  }
-  else {
-   if(cfd)
-     cfd->scheduleTimeAdvance(level, sched);
-   if(mpm)
-      mpm->scheduleTimeAdvance(level, sched);
-  }
-      
-}
-
 bool
 SimulationController::need_recompile(double time, double delt,
-				     const LevelP& level, CFDInterface* cfd,
-				     MPMInterface* mpm,
-				     MPMCFDInterface* mpmcfd,
+				     const LevelP& level,
+				     SimulationInterface* /*sim*/,
 				     Output* output)
 {
   // Currently, nothing but output can request a recompile.  This

@@ -8,11 +8,7 @@
 #include <Packages/Uintah/Core/Grid/NCVariable.h>
 
 #include <Packages/Uintah/CCA/Ports/DataWarehouseP.h>
-#include <Packages/Uintah/CCA/Ports/MPMCFDInterface.h>
-#include <Packages/Uintah/CCA/Ports/MPMInterface.h>
-#include <Packages/Uintah/CCA/Ports/CFDInterface.h>
-#include <Packages/Uintah/CCA/Ports/Output.h>
-
+#include <Packages/Uintah/CCA/Ports/SimulationInterface.h>
 
 #include <Packages/Uintah/CCA/Components/MPM/Contact/Contact.h>
 #include <Packages/Uintah/CCA/Components/MPM/MPMLabel.h>
@@ -25,6 +21,7 @@
 #include <Core/Geometry/Vector.h>
 
 namespace Uintah {
+  class Output;
 
 using namespace SCIRun;
 
@@ -57,7 +54,7 @@ WARNING
   
 ****************************************/
 
-class MPMICE : public UintahParallelComponent, public MPMCFDInterface {
+class MPMICE : public UintahParallelComponent, public SimulationInterface {
 public:
   MPMICE(const ProcessorGroup* myworld);
   virtual ~MPMICE();
