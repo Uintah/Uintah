@@ -50,6 +50,7 @@ SRCS     += \
 	$(SRCDIR)/LinAlgBinary.cc\
 	$(SRCDIR)/LinAlgUnary.cc\
 	$(SRCDIR)/LinearAlgebra.cc\
+        $(SRCDIR)/MatrixInfo.cc\
         $(SRCDIR)/MatrixSelectVector.cc\
         $(SRCDIR)/MinNormLeastSq.cc\
 	$(SRCDIR)/SolveMatrix.cc\
