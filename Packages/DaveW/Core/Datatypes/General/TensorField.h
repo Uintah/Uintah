@@ -39,7 +39,7 @@ public:
 
 
     TensorField(int in_slices, int in_width, int in_height); /*Default Constructor*/
-    TensorField(int in_slices, int in_width, int in_height, float *data);
+    TensorField(int in_slices, int in_width, int in_height, float *data, int just_tensors=0);
     TensorField(const TensorField&); /*Deep Copy Constructor*/
 
     virtual ~TensorField(); /*Destructor*/
@@ -62,6 +62,9 @@ public:
 
 //
 // $Log$
+// Revision 1.2  2000/03/10 07:42:27  dmw
+// added a just_tensors flag to the constructor so evecs and evals dont have to be provided
+//
 // Revision 1.1  1999/09/01 05:27:37  dmw
 // more DaveW datatypes...
 //
