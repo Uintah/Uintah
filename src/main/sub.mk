@@ -37,7 +37,7 @@ ifeq ($(LARGESOS),yes)
   PSELIBS := Dataflow Core
 else
   PSELIBS := Dataflow/Network Core/Containers Core/GuiInterface \
-	Core/Thread Core/Exceptions Core/Util Core/TkExtensions Core/Util/Comm
+	Core/Thread Core/Exceptions Core/Util Core/TkExtensions Core/Comm
   ifeq ($(OS_NAME),Darwin)
     PSELIBS += Core/Datatypes Core/ImportExport
   endif
