@@ -16,12 +16,12 @@ namespace Uintah {
       virtual ProblemSpecP readInputFile();
 
       // replaces <include> tag with xml file tree
-      static void resolveIncludes(ProblemSpecP params);
+      void resolveIncludes(ProblemSpecP params);
    private:
       ProblemSpecReader(const ProblemSpecReader&);
       ProblemSpecReader& operator=(const ProblemSpecReader&);
       
-      std::string filename;
+      std::string d_filename;
    };
 } // End namespace Uintah
 

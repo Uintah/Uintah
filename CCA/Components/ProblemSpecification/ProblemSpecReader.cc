@@ -21,7 +21,7 @@ using namespace Uintah;
 using namespace SCIRun;
 
 ProblemSpecReader::ProblemSpecReader(const std::string& filename)
-    : filename(filename)
+    : d_filename(filename)
 {
 }
 
@@ -49,10 +49,10 @@ ProblemSpecP ProblemSpecReader::readInputFile()
     // Parse the input file
     // No exceptions just yet, need to add
     
-    parser->parse(filename.c_str());
+    parser->parse(d_filename.c_str());
     
     if(handler.foundError){
-      throw ProblemSetupException("Error reading file: "+filename);
+      throw ProblemSetupException("Error reading file: "+d_filename);
     }
     
     // Adopt the Node so we can delete the parser but keep the document
@@ -80,7 +80,7 @@ ProblemSpecP ProblemSpecReader::readInputFile()
     delete [] ch;
     throw ProblemSetupException(ex);
   }
-  string test1 = filename.substr(filename.length()-3,3);
+  string test1 = d_filename.substr(d_filename.length()-3,3);
   if (test1 == "ups")
     resolveIncludes(prob_spec);
   return prob_spec;
@@ -88,6 +88,18 @@ ProblemSpecP ProblemSpecReader::readInputFile()
 
 void ProblemSpecReader::resolveIncludes(ProblemSpecP params)
 {
+  // find the directory the current file was in, and if the includes are 
+  // not an absolute path, have them for relative to that directory
+  string directory = d_filename;
+  int i;
+  for (i = directory.length()-1; i >= 0; i--) {
+    //strip off characters after last /
+    if (directory[i] == '/')
+      break;
+  }
+
+  directory = directory.substr(0,i+1);
+
   ProblemSpecP child = params->getFirstChild();
   while (child != 0) {
     if (child->getNodeType() == DOMNode::ELEMENT_NODE) {
@@ -97,6 +109,10 @@ void ProblemSpecReader::resolveIncludes(ProblemSpecP params)
 	map<string, string> attributes;
 	child->getAttributes(attributes);
 	string href = attributes["href"];
+
+	// not absolute path, append href to directory
+	if (href[0] != '/')
+	  href = directory + href;
 	if (href == "")
 	  throw ProblemSetupException("No href attributes in include tag");
 	
