@@ -43,9 +43,8 @@ public:
   Data *begin() { return &(*this)(0,0,0); }
   Data *end() { return &((*this)(dim1()-1,dim2()-1,dim3()-1))+1; }
     
-  FData3d():Array3<Data>(){}
-  FData3d(const FData3d& data) :
-    Array3<Data>(data) {} 
+  FData3d():Array3<Data>() {}
+  FData3d(const FData3d& data) : Array3<Data>(data) {} 
   virtual ~FData3d(){}
   
   const value_type &operator[](typename LatVolMesh::cell_index idx) const 
@@ -108,6 +107,7 @@ public:
     GenericField<LatVolMesh, FData3d<Data> >(data_at) {}
   LatticeVol(LatVolMeshHandle mesh, Field::data_location data_at) : 
     GenericField<LatVolMesh, FData3d<Data> >(mesh, data_at) {}
+  virtual Field *clone() { return new LatticeVol(*this); }
   
   virtual ~LatticeVol(){}
 
