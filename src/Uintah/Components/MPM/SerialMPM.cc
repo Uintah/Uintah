@@ -942,21 +942,22 @@ void SerialMPM::interpolateParticlesToGrid(const ProcessorGroup*,
 
       // Apply grid boundary conditions to the velocity
       // before storing the data
-      
+
+      //      cout << "Patch id = " << patch->getID() << endl;
       for(Patch::FaceType face = Patch::startFace;
-	face < Patch::endFace; face=Patch::nextFace(face)){
+	face <= Patch::endFace; face=Patch::nextFace(face)){
 	vector<BoundCond* > bcs;
 	bcs = patch->getBCValues(face);
 	//cout << "number of bcs on face " << face << " = " 
-	//    << bcs.size() << endl;
+	//	     << bcs.size() << endl;
 
 	for (int i = 0; i<(int)bcs.size(); i++ ) {
 	  string bcs_type = bcs[i]->getType();
 	  if (bcs_type == "Kinematic") {
 	    KinematicBoundCond* bc = 
 	      dynamic_cast<KinematicBoundCond*>(bcs[i]);
-	    //  cout << "bc value = " << bc->getVelocity() << endl;
-	     gvelocity.fillFace(face,bc->getVelocity());
+	    //	    cout << "bc value = " << bc->getVelocity() << endl;
+	    gvelocity.fillFace(face,bc->getVelocity());
 	  }
 	  if (bcs_type == "Symmetric") {
 	    SymmetryBoundCond* bc = dynamic_cast<SymmetryBoundCond*>(bcs[i]);
@@ -1452,7 +1453,7 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
       // Apply grid boundary conditions to the velocity_star and
       // acceleration before interpolating back to the particles
       for(Patch::FaceType face = Patch::startFace;
-	face < Patch::endFace; face=Patch::nextFace(face)){
+	face <= Patch::endFace; face=Patch::nextFace(face)){
 	vector<BoundCond* > bcs;
 	bcs = patch->getBCValues(face);
 	//cout << "number of bcs on face " << face << " = " 
@@ -1664,6 +1665,9 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
 }
 
 // $Log$
+// Revision 1.109  2000/08/02 03:28:45  jas
+// Fixed grid bc problems.
+//
 // Revision 1.108  2000/07/28 22:45:13  jas
 // particle relocation now uses separate var labels for each material.
 // Addd <iostream> for ReductionVariable.  Commented out protected: in
