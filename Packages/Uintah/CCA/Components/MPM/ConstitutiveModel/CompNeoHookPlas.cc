@@ -329,16 +329,6 @@ void CompNeoHookPlas::computeStressTensor(const PatchSubset* patches,
     WaveSpeed = dx/WaveSpeed;
     double delT_new = WaveSpeed.minComponent();
 
-    delt_vartype doMech;
-    old_dw->get(doMech, lb->doMechLabel);
-
-    if(doMech < 0.){
-	delT_new = WaveSpeed.minComponent();
-    }
-    else{
-	delT_new = 100.0;
-    }
-
     new_dw->put(delt_vartype(delT_new), lb->delTLabel);
     new_dw->put(sum_vartype(se),        lb->StrainEnergyLabel);
   }
@@ -370,7 +360,6 @@ void CompNeoHookPlas::addComputesAndRequires(Task* task,
   }
   task->requires(Task::NewDW, lb->gVelocityLabel,          matlset,gac, NGN);
   task->requires(Task::OldDW, lb->delTLabel);
-  task->requires(Task::OldDW, lb->doMechLabel);
 
   task->computes(lb->pStressLabel_preReloc,             matlset);
   task->computes(lb->pDeformationMeasureLabel_preReloc, matlset);
