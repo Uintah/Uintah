@@ -20,12 +20,16 @@ static char *id="@(#) $Id$";
 #include <Uintah/Interface/DataWarehouse.h>
 #include <Uintah/Components/MPM/ConstitutiveModel/MPMMaterial.h>
 #include <vector>
+#include <iostream>
+#include <fstream>
+
 using namespace Uintah::MPM;
 using SCICore::Geometry::Vector;
 using SCICore::Geometry::IntVector;
 using std::vector;
 using std::string;
 
+using namespace std;
 
 FrictionContact::FrictionContact(ProblemSpecP& ps,
 				 SimulationStateP& d_sS)
@@ -126,6 +130,8 @@ void FrictionContact::exMomIntegrated(const ProcessorContext*,
   Vector Dvdt;
   double centerOfMassMass;
   IntVector onex(1,0,0), oney(0,1,0), onez(0,0,1);
+  typedef IntVector IV;
+  Vector dx = region->dCell();
 
   int numMatls = d_sharedState->getNumMatls();
   int NVFs = d_sharedState->getNumVelFields();
@@ -142,6 +148,8 @@ void FrictionContact::exMomIntegrated(const ProcessorContext*,
   vector<NCVariable<Vector> > gvelocity_star(NVFs);
   vector<NCVariable<Vector> > gacceleration(NVFs);
 
+  Vector surnor;
+
   // First, calculate the gradient of the mass everywhere
   // normalize it, and stick it in surfNorm
   NCVariable<Vector> gsurfnorm;
@@ -149,23 +157,118 @@ void FrictionContact::exMomIntegrated(const ProcessorContext*,
     Material* matl = d_sharedState->getMaterial( m );
     MPMMaterial* mpm_matl = dynamic_cast<MPMMaterial*>(matl);
     if(mpm_matl){
-      int vfindex = matl->getVFIndex();
-      new_dw->get(gmass[vfindex], gMassLabel,vfindex , region, 0);
-      new_dw->allocate(gsurfnorm, gSurfNormLabel, vfindex, region);
+      int vfi = matl->getVFIndex();
+      new_dw->get(gmass[vfi], gMassLabel,vfi , region, 0);
+      new_dw->allocate(gsurfnorm, gSurfNormLabel, vfi, region);
 
-      for(NodeIterator iter = region->getNodeIterator(); !iter.done(); iter++){
-	// Stick calculation of gsurfnorm here
-        // WARNING  This assumes dx=dy=dz.  This will be fixed eventually.
-	gsurfnorm[*iter] = Vector(
-		gmass[vfindex][*iter+onex] - gmass[vfindex][*iter-onex], 
-		gmass[vfindex][*iter+oney] - gmass[vfindex][*iter-oney], 
-		gmass[vfindex][*iter+onez] - gmass[vfindex][*iter-onez]);
+//      IntVector lowi(gsurfnorm.getLowIndex());
+//      IntVector highi(gsurfnorm.getHighIndex());
+      IntVector lowi(0,0,0);
+      IntVector highi(20,20,3);
+
+      cerr << "Low = " << lowi << endl;
+      cerr << "High = " << highi << endl;
+
+      for(int i = lowi.x()+1; i < highi.x(); i++){
+        for(int j = lowi.y()+1; j < highi.y(); j++){
+          for(int k = lowi.z()+1; k < highi.z(); k++){
+             // WARNING  This assumes dx=dy=dz.  This will be fixed eventually.
+//	     gsurfnorm[IntVector(i,j,k)] = Vector(
+	     surnor = Vector(
+	        -(gmass[vfi][IV(i+1,j,k)] - gmass[vfi][IV(i-1,j,k)])/dx.x(),
+         	-(gmass[vfi][IV(i,j+1,k)] - gmass[vfi][IV(i,j-1,k)])/dx.y(), 
+	        -(gmass[vfi][IV(i,j,k+1)] - gmass[vfi][IV(i,j,k-1)])/dx.z()); 
+		double length = surnor.length();
+		if(length>0.0){
+	    	 gsurfnorm[IntVector(i,j,k)] = surnor/length;;
+		}
+          }
+        }
       }
-      new_dw->put(gsurfnorm, gSurfNormLabel, vfindex, region);
+
+      new_dw->put(gsurfnorm, gSurfNormLabel, vfi, region);
 
     }
   }
 
+  IntVector lowi(0,0,0);
+  IntVector highi(20,20,3);
+  ofstream tfile("tecplotfile");
+  int I=21,J=21,K=4;
+  static int ts=0;
+  tfile << "TITLE = \"Time Step # " << ts <<"\"," << endl;
+  tfile << "VARIABLES = X,Y,Z,SNX,SNY,SNZ" << endl;
+  tfile << "ZONE T=\"GRID\", I=" << I <<", J="<< J <<" K="<< K;
+  tfile <<", F=BLOCK" << endl;
+  new_dw->get(gsurfnorm, gSurfNormLabel, 0, region,0);
+  int n=0;
+  for(int k = lowi.z(); k <= highi.z(); k++){
+    for(int j = lowi.y(); j <= highi.y(); j++){
+      for(int i = lowi.x(); i <= highi.x(); i++){
+	  tfile << i*dx.x() << " ";
+	  n++;
+	  if((n % 20) == 0){ tfile << endl; }
+     }
+    }
+  }
+  cout << n << endl;
+  tfile << endl;
+  n = 0;
+  for(int k = lowi.z(); k <= highi.z(); k++){
+    for(int j = lowi.y(); j <= highi.y(); j++){
+      for(int i = lowi.x(); i <= highi.x(); i++){
+	  tfile << j*dx.y() << " ";
+	  n++;
+	  if((n % 20) == 0){ tfile << endl; }
+      }
+    }
+  }
+  tfile << endl;
+  n = 0;
+  for(int k = lowi.z(); k <= highi.z(); k++){
+    for(int j = lowi.y(); j <= highi.y(); j++){
+      for(int i = lowi.x(); i <= highi.x(); i++){
+	  tfile << k*dx.z() << " ";
+	  n++;
+	  if((n % 20) == 0){ tfile << endl; }
+      }
+    }
+  }
+  tfile << endl;
+  n = 0;
+  for(int k = lowi.z(); k <= highi.z(); k++){
+    for(int j = lowi.y(); j <= highi.y(); j++){
+      for(int i = lowi.x(); i <= highi.x(); i++){
+        tfile << gsurfnorm[IntVector(i,j,k)].x() << " " ;
+        n++;
+        if((n % 20) == 0){ tfile << endl; }
+      }
+    }
+  }
+  tfile << endl;
+  n = 0;
+  for(int k = lowi.z(); k <= highi.z(); k++){
+    for(int j = lowi.y(); j <= highi.y(); j++){
+      for(int i = lowi.x(); i <= highi.x(); i++){
+        tfile << gsurfnorm[IntVector(i,j,k)].y() << " " ;
+        n++;
+        if((n % 20) == 0){ tfile << endl; }
+      }
+    }
+  }
+  tfile << endl;
+  n = 0;
+  for(int k = lowi.z(); k <= highi.z(); k++){
+    for(int j = lowi.y(); j <= highi.y(); j++){
+      for(int i = lowi.x(); i <= highi.x(); i++){
+        tfile << gsurfnorm[IntVector(i,j,k)].z() << " " ;
+        n++;
+        if((n % 20) == 0){ tfile << endl; }
+      }
+    }
+  }
+  tfile << endl;
+ 
   // Next, interpolate the stress to the grid
   for(int m = 0; m < numMatls; m++){
     Material* matl = d_sharedState->getMaterial( m );
@@ -200,29 +303,29 @@ void FrictionContact::exMomIntegrated(const ProcessorContext*,
              gstress[ni[k]] += pstress[idx] * S[k];
          }
       }
-//      new_dw->put(gstress, gStressLabel, vfindex, region);
+      new_dw->put(gstress, gStressLabel, vfindex, region);
 
     }
   }
 
-  // Finally, compute the normal component of the traction
+  // Compute the normal component of the traction
   for(int m = 0; m < numMatls; m++){
     Material* matl = d_sharedState->getMaterial( m );
     MPMMaterial* mpm_matl = dynamic_cast<MPMMaterial*>(matl);
     if(mpm_matl){
       int vfindex = matl->getVFIndex();
       NCVariable<Matrix3>      gstress;
-      NCVariable<Vector>       gtraction;
+      NCVariable<double>       gtraction;
       NCVariable<Vector>       gsurfnorm;
       new_dw->get(gstress, gStressLabel, vfindex, region,0);
       new_dw->get(gsurfnorm, gSurfNormLabel, vfindex, region,0);
       new_dw->allocate(gtraction, gTractionLabel, vfindex, region);
 
-      //Compute traction here.  In the morning, when I'm not
-      //about to pass out from hunger.
+      for(NodeIterator iter = region->getNodeIterator(); !iter.done(); iter++){
+	gtraction[*iter]=SCICore::Geometry::Dot(gsurfnorm[*iter]*gstress[*iter],gsurfnorm[*iter]);
+      }
 
       new_dw->put(gtraction, gTractionLabel, vfindex, region);
-
     }
   }
 
@@ -273,6 +376,10 @@ void FrictionContact::exMomIntegrated(const ProcessorContext*,
 }
 
 // $Log$
+// Revision 1.9  2000/05/05 19:32:00  guilkey
+// Implemented more of FrictionContact.  Fixed some problems, put in
+// some code to write tecplot files :(  .
+//
 // Revision 1.8  2000/05/05 04:09:08  guilkey
 // Uncommented the code which previously wouldn't compile.
 //
