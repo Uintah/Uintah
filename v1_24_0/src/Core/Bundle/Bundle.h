@@ -35,7 +35,7 @@
 #include <Core/Datatypes/Datatype.h>
 #include <Core/Datatypes/Field.h>
 #include <Core/Geom/ColorMap.h>
-#include <Core/Volume/ColorMap2.h>
+#include <Core/Volume/Colormap2.h>
 #include <Core/Geom/Path.h>
 #include <Core/Datatypes/Matrix.h>
 #include <Core/Datatypes/NrrdData.h>
