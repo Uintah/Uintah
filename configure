@@ -7957,7 +7957,8 @@ echo "${ECHO_T}Thirdparty library directory $SCI_THIRDPARTY_LIB_DIR" >&6
 ## SCI_SUBST_THIRDPARTY_DIR:
 ##
 ## arguments mean:
-## arg 1 : This variable will be replaced with $(SCIRUN_THIRDPARTY_DIR) wherever it matches
+## arg 1 : This variable will searched for the substring of the expansion of $sci_thirdparty_dir
+## and that substring will be replaced with $(SCIRUN_THIRDPARTY_DIR)
 ##
   _new_path=${INC_SCI_THIRDPARTY_H}
   _fulldir=`cd ${sci_thirdparty_dir}; pwd`
@@ -7970,7 +7971,8 @@ echo "${ECHO_T}Thirdparty library directory $SCI_THIRDPARTY_LIB_DIR" >&6
 ## SCI_SUBST_THIRDPARTY_DIR:
 ##
 ## arguments mean:
-## arg 1 : This variable will be replaced with $(SCIRUN_THIRDPARTY_DIR) wherever it matches
+## arg 1 : This variable will searched for the substring of the expansion of $sci_thirdparty_dir
+## and that substring will be replaced with $(SCIRUN_THIRDPARTY_DIR)
 ##
   _new_path=${SCI_THIRDPARTY_LIB_DIR_FLAG}
   _fulldir=`cd ${sci_thirdparty_dir}; pwd`
@@ -15005,7 +15007,8 @@ _sci_includes=''
 ## SCI_SUBST_THIRDPARTY_DIR:
 ##
 ## arguments mean:
-## arg 1 : This variable will be replaced with $(SCIRUN_THIRDPARTY_DIR) wherever it matches
+## arg 1 : This variable will searched for the substring of the expansion of $sci_thirdparty_dir
+## and that substring will be replaced with $(SCIRUN_THIRDPARTY_DIR)
 ##
   _new_path=${LIB_DIR_TCL}
   _fulldir=`cd ${sci_thirdparty_dir}; pwd`
@@ -15018,7 +15021,8 @@ _sci_includes=''
 ## SCI_SUBST_THIRDPARTY_DIR:
 ##
 ## arguments mean:
-## arg 1 : This variable will be replaced with $(SCIRUN_THIRDPARTY_DIR) wherever it matches
+## arg 1 : This variable will searched for the substring of the expansion of $sci_thirdparty_dir
+## and that substring will be replaced with $(SCIRUN_THIRDPARTY_DIR)
 ##
   _new_path=${TCL_LIB_DIR_FLAG}
   _fulldir=`cd ${sci_thirdparty_dir}; pwd`
@@ -15031,7 +15035,8 @@ _sci_includes=''
 ## SCI_SUBST_THIRDPARTY_DIR:
 ##
 ## arguments mean:
-## arg 1 : This variable will be replaced with $(SCIRUN_THIRDPARTY_DIR) wherever it matches
+## arg 1 : This variable will searched for the substring of the expansion of $sci_thirdparty_dir
+## and that substring will be replaced with $(SCIRUN_THIRDPARTY_DIR)
 ##
   _new_path=${INC_TCL_H}
   _fulldir=`cd ${sci_thirdparty_dir}; pwd`
@@ -15529,7 +15534,8 @@ _sci_includes=''
 ## SCI_SUBST_THIRDPARTY_DIR:
 ##
 ## arguments mean:
-## arg 1 : This variable will be replaced with $(SCIRUN_THIRDPARTY_DIR) wherever it matches
+## arg 1 : This variable will searched for the substring of the expansion of $sci_thirdparty_dir
+## and that substring will be replaced with $(SCIRUN_THIRDPARTY_DIR)
 ##
   _new_path=${TK_LIB_DIR_FLAG}
   _fulldir=`cd ${sci_thirdparty_dir}; pwd`
@@ -15542,7 +15548,8 @@ _sci_includes=''
 ## SCI_SUBST_THIRDPARTY_DIR:
 ##
 ## arguments mean:
-## arg 1 : This variable will be replaced with $(SCIRUN_THIRDPARTY_DIR) wherever it matches
+## arg 1 : This variable will searched for the substring of the expansion of $sci_thirdparty_dir
+## and that substring will be replaced with $(SCIRUN_THIRDPARTY_DIR)
 ##
   _new_path=${INC_TK_H}
   _fulldir=`cd ${sci_thirdparty_dir}; pwd`
@@ -16033,7 +16040,8 @@ _sci_includes=''
 ## SCI_SUBST_THIRDPARTY_DIR:
 ##
 ## arguments mean:
-## arg 1 : This variable will be replaced with $(SCIRUN_THIRDPARTY_DIR) wherever it matches
+## arg 1 : This variable will searched for the substring of the expansion of $sci_thirdparty_dir
+## and that substring will be replaced with $(SCIRUN_THIRDPARTY_DIR)
 ##
   _new_path=${LIB_DIR_ITCL}
   _fulldir=`cd ${sci_thirdparty_dir}; pwd`
@@ -16046,7 +16054,8 @@ _sci_includes=''
 ## SCI_SUBST_THIRDPARTY_DIR:
 ##
 ## arguments mean:
-## arg 1 : This variable will be replaced with $(SCIRUN_THIRDPARTY_DIR) wherever it matches
+## arg 1 : This variable will searched for the substring of the expansion of $sci_thirdparty_dir
+## and that substring will be replaced with $(SCIRUN_THIRDPARTY_DIR)
 ##
   _new_path=${ITCL_LIB_DIR_FLAG_H}
   _fulldir=`cd ${sci_thirdparty_dir}; pwd`
@@ -16059,7 +16068,8 @@ _sci_includes=''
 ## SCI_SUBST_THIRDPARTY_DIR:
 ##
 ## arguments mean:
-## arg 1 : This variable will be replaced with $(SCIRUN_THIRDPARTY_DIR) wherever it matches
+## arg 1 : This variable will searched for the substring of the expansion of $sci_thirdparty_dir
+## and that substring will be replaced with $(SCIRUN_THIRDPARTY_DIR)
 ##
   _new_path=${INC_ITCL_H}
   _fulldir=`cd ${sci_thirdparty_dir}; pwd`
@@ -16551,7 +16561,8 @@ _sci_includes=''
 ## SCI_SUBST_THIRDPARTY_DIR:
 ##
 ## arguments mean:
-## arg 1 : This variable will be replaced with $(SCIRUN_THIRDPARTY_DIR) wherever it matches
+## arg 1 : This variable will searched for the substring of the expansion of $sci_thirdparty_dir
+## and that substring will be replaced with $(SCIRUN_THIRDPARTY_DIR)
 ##
   _new_path=${ITK_LIB_DIR_FLAG_H}
   _fulldir=`cd ${sci_thirdparty_dir}; pwd`
@@ -16564,7 +16575,8 @@ _sci_includes=''
 ## SCI_SUBST_THIRDPARTY_DIR:
 ##
 ## arguments mean:
-## arg 1 : This variable will be replaced with $(SCIRUN_THIRDPARTY_DIR) wherever it matches
+## arg 1 : This variable will searched for the substring of the expansion of $sci_thirdparty_dir
+## and that substring will be replaced with $(SCIRUN_THIRDPARTY_DIR)
 ##
   _new_path=${INC_ITK_H}
   _fulldir=`cd ${sci_thirdparty_dir}; pwd`
@@ -17055,7 +17067,8 @@ _sci_includes=''
 ## SCI_SUBST_THIRDPARTY_DIR:
 ##
 ## arguments mean:
-## arg 1 : This variable will be replaced with $(SCIRUN_THIRDPARTY_DIR) wherever it matches
+## arg 1 : This variable will searched for the substring of the expansion of $sci_thirdparty_dir
+## and that substring will be replaced with $(SCIRUN_THIRDPARTY_DIR)
 ##
   _new_path=${BLT_LIB_DIR_FLAG}
   _fulldir=`cd ${sci_thirdparty_dir}; pwd`
@@ -17068,7 +17081,8 @@ _sci_includes=''
 ## SCI_SUBST_THIRDPARTY_DIR:
 ##
 ## arguments mean:
-## arg 1 : This variable will be replaced with $(SCIRUN_THIRDPARTY_DIR) wherever it matches
+## arg 1 : This variable will searched for the substring of the expansion of $sci_thirdparty_dir
+## and that substring will be replaced with $(SCIRUN_THIRDPARTY_DIR)
 ##
   _new_path=${INC_BLT_H}
   _fulldir=`cd ${sci_thirdparty_dir}; pwd`
@@ -17769,7 +17783,8 @@ _sci_includes=''
 ## SCI_SUBST_THIRDPARTY_DIR:
 ##
 ## arguments mean:
-## arg 1 : This variable will be replaced with $(SCIRUN_THIRDPARTY_DIR) wherever it matches
+## arg 1 : This variable will searched for the substring of the expansion of $sci_thirdparty_dir
+## and that substring will be replaced with $(SCIRUN_THIRDPARTY_DIR)
 ##
   _new_path=${XERCES_C_LIB_DIR_FLAG}
   _fulldir=`cd ${sci_thirdparty_dir}; pwd`
@@ -17782,7 +17797,8 @@ _sci_includes=''
 ## SCI_SUBST_THIRDPARTY_DIR:
 ##
 ## arguments mean:
-## arg 1 : This variable will be replaced with $(SCIRUN_THIRDPARTY_DIR) wherever it matches
+## arg 1 : This variable will searched for the substring of the expansion of $sci_thirdparty_dir
+## and that substring will be replaced with $(SCIRUN_THIRDPARTY_DIR)
 ##
   _new_path=${INC_XERCES_C_H}
   _fulldir=`cd ${sci_thirdparty_dir}; pwd`
@@ -21703,7 +21719,8 @@ fi
 ## SCI_SUBST_THIRDPARTY_DIR:
 ##
 ## arguments mean:
-## arg 1 : This variable will be replaced with $(SCIRUN_THIRDPARTY_DIR) wherever it matches
+## arg 1 : This variable will searched for the substring of the expansion of $sci_thirdparty_dir
+## and that substring will be replaced with $(SCIRUN_THIRDPARTY_DIR)
 ##
   _new_path=${MPEGE_LIB_DIR_FLAG}
   _fulldir=`cd ${sci_thirdparty_dir}; pwd`
@@ -22288,7 +22305,8 @@ fi
 ## SCI_SUBST_THIRDPARTY_DIR:
 ##
 ## arguments mean:
-## arg 1 : This variable will be replaced with $(SCIRUN_THIRDPARTY_DIR) wherever it matches
+## arg 1 : This variable will searched for the substring of the expansion of $sci_thirdparty_dir
+## and that substring will be replaced with $(SCIRUN_THIRDPARTY_DIR)
 ##
   _new_path=${MAGICK_LIB_DIR_FLAG}
   _fulldir=`cd ${sci_thirdparty_dir}; pwd`
@@ -22301,7 +22319,8 @@ fi
 ## SCI_SUBST_THIRDPARTY_DIR:
 ##
 ## arguments mean:
-## arg 1 : This variable will be replaced with $(SCIRUN_THIRDPARTY_DIR) wherever it matches
+## arg 1 : This variable will searched for the substring of the expansion of $sci_thirdparty_dir
+## and that substring will be replaced with $(SCIRUN_THIRDPARTY_DIR)
 ##
   _new_path=${INC_MAGICK_H}
   _fulldir=`cd ${sci_thirdparty_dir}; pwd`
@@ -40900,8 +40919,9 @@ sci_defs_files="$sci_defs_files include/sci_defs/audio_testdefs.h"
 
 ##  --  search for teem  -------------------------------------------------
 
-# Default values:
-_sci_optional=required
+# Default values: (Really required, but need to give info to user if fails.)
+#                 (See below.)
+_sci_optional=optional
 _sci_lib="$sci_thirdparty_lib"
 _sci_inc="$sci_thirdparty_include"
 
@@ -40999,7 +41019,7 @@ fi
 ##
 ## arg 1 : TEEM
 ## arg 2 : teem library and headers
-## arg 3 : teem/nrrd.h
+## arg 3 : teem/nrrd.h teem/ten.h
 ## arg 4 : $_sci_inc
 ## arg 5 : teem $PNG_LIB_FLAG $Z_LIB_FLAG -lm
 ## arg 6 : $_sci_lib $PNG_LIB_DIR_FLAG $Z_LIB_DIR_FLAG
@@ -41233,7 +41253,7 @@ LIBS="$_sci_libs  $LIBS"
 __extern_c="no"
 __sci_pound_includes=""
 
-for inc in "" teem/nrrd.h; do
+for inc in "" teem/nrrd.h teem/ten.h; do
     if test "$inc" = "extern_C"; then
        __sci_pound_includes="extern \"C\" {"
        __extern_c=yes
@@ -41263,6 +41283,10 @@ $__sci_pound_includes
 int
 main ()
 {
+
+float a[3], b[9], c[7];
+tenEigensolve_f(a,b,c);
+
 
   ;
   return 0;
@@ -41401,7 +41425,7 @@ rm -f conftest.err conftest.$ac_objext \
 if test "$_sci_optional" = "specific"; then
 #echo specific
   # Make sure the exact includes were found
-  for i in "" teem/nrrd.h; do
+  for i in "" teem/nrrd.h teem/ten.h; do
 #echo looking for $_sci_inc/$i
     if test ! -e $_sci_inc/$i; then
      { { echo "$as_me:$LINENO: error: Specificly requested TEEM include file '$_sci_inc/$i' was not found" >&5
@@ -41438,11 +41462,22 @@ _sci_includes=''
 
 if test "$HAVE_TEEM" = "yes"; then
    DEF_TEEM="#define HAVE_TEEM 1"
-fi
-
-if test "$with_teem" && test ! "$DEF_TEEM"; then
-  echo
-  { { echo "$as_me:$LINENO: error: One or more of the TEEM components is missing." >&5
+else
+   { echo "$as_me:$LINENO: WARNING: Teem thirdparty library check failed.  This most likely" >&5
+echo "$as_me: WARNING: Teem thirdparty library check failed.  This most likely" >&2;}
+   { echo "$as_me:$LINENO: WARNING: means one of two things.  1. Could not find the teem" >&5
+echo "$as_me: WARNING: means one of two things.  1. Could not find the teem" >&2;}
+   { echo "$as_me:$LINENO: WARNING: thirdparty library files.  or 2. Your teem thirdparty" >&5
+echo "$as_me: WARNING: thirdparty library files.  or 2. Your teem thirdparty" >&2;}
+   { echo "$as_me:$LINENO: WARNING: is too old.  Look in config.log for more information." >&5
+echo "$as_me: WARNING: is too old.  Look in config.log for more information." >&2;}
+   { echo "$as_me:$LINENO: WARNING: If the error message is something like:" >&5
+echo "$as_me: WARNING: If the error message is something like:" >&2;}
+   { echo "$as_me:$LINENO: WARNING: \`tenEigensolve_f' undeclared then you most likely" >&5
+echo "$as_me: WARNING: \`tenEigensolve_f' undeclared then you most likely" >&2;}
+   { echo "$as_me:$LINENO: WARNING: have too old of a thirdparty." >&5
+echo "$as_me: WARNING: have too old of a thirdparty." >&2;}
+   { { echo "$as_me:$LINENO: error: One or more of the TEEM components is missing." >&5
 echo "$as_me: error: One or more of the TEEM components is missing." >&2;}
    { (exit 1); exit 1; }; }
 fi
@@ -41452,7 +41487,8 @@ fi
 ## SCI_SUBST_THIRDPARTY_DIR:
 ##
 ## arguments mean:
-## arg 1 : This variable will be replaced with $(SCIRUN_THIRDPARTY_DIR) wherever it matches
+## arg 1 : This variable will searched for the substring of the expansion of $sci_thirdparty_dir
+## and that substring will be replaced with $(SCIRUN_THIRDPARTY_DIR)
 ##
   _new_path=${TEEM_LIB_DIR_FLAG}
   _fulldir=`cd ${sci_thirdparty_dir}; pwd`
@@ -41465,7 +41501,8 @@ fi
 ## SCI_SUBST_THIRDPARTY_DIR:
 ##
 ## arguments mean:
-## arg 1 : This variable will be replaced with $(SCIRUN_THIRDPARTY_DIR) wherever it matches
+## arg 1 : This variable will searched for the substring of the expansion of $sci_thirdparty_dir
+## and that substring will be replaced with $(SCIRUN_THIRDPARTY_DIR)
 ##
   _new_path=${INC_TEEM_H}
   _fulldir=`cd ${sci_thirdparty_dir}; pwd`

@@ -3264,8 +3264,9 @@ sci_defs_files="$sci_defs_files include/sci_defs/audio_testdefs.h"
 
 ##  --  search for teem  -------------------------------------------------
 
-# Default values:
-_sci_optional=required
+# Default values: (Really required, but need to give info to user if fails.)
+#                 (See below.)
+_sci_optional=optional
 _sci_lib="$sci_thirdparty_lib"
 _sci_inc="$sci_thirdparty_include"
 
@@ -3294,15 +3295,23 @@ if test _sci_optional != "optional" && test -n "$result" && test "$HAVE_PNG" != 
    AC_MSG_ERROR(Please fix this problem and then configure again.)
 fi
 
-SCI_TRY_LINK(TEEM,teem library and headers,teem/nrrd.h,$_sci_inc,teem $PNG_LIB_FLAG $Z_LIB_FLAG -lm,$_sci_lib $PNG_LIB_DIR_FLAG $Z_LIB_DIR_FLAG,,,$_sci_optional)
+SCI_TRY_LINK(TEEM,teem library and headers,teem/nrrd.h teem/ten.h,$_sci_inc,teem $PNG_LIB_FLAG $Z_LIB_FLAG -lm,$_sci_lib $PNG_LIB_DIR_FLAG $Z_LIB_DIR_FLAG,,[
+float a[3], b[9], c[7];
+tenEigensolve_f(a,b,c);
+]
+,$_sci_optional)
 
 if test "$HAVE_TEEM" = "yes"; then
    DEF_TEEM="#define HAVE_TEEM 1"
-fi
-
-if test "$with_teem" && test ! "$DEF_TEEM"; then
-  echo
-  AC_MSG_ERROR(One or more of the TEEM components is missing.)
+else
+   AC_MSG_WARN(Teem thirdparty library check failed.  This most likely)
+   AC_MSG_WARN(means one of two things.  1. Could not find the teem)
+   AC_MSG_WARN(thirdparty library files.  or 2. Your teem thirdparty)
+   AC_MSG_WARN(is too old.  Look in config.log for more information.)
+   AC_MSG_WARN(If the error message is something like:)
+   AC_MSG_WARN(`tenEigensolve_f' undeclared then you most likely)
+   AC_MSG_WARN(have too old of a thirdparty.)
+   AC_MSG_ERROR(One or more of the TEEM components is missing.)   
 fi
 
 SCI_SUBST_THIRDPARTY_DIR(TEEM_LIB_DIR_FLAG)
