@@ -5,6 +5,7 @@
 #include <Packages/Uintah/CCA/Ports/DataWarehouse.h>
 #include <Packages/Uintah/Core/Grid/NodeIterator.h>
 #include <Packages/Uintah/Core/Grid/Task.h>
+#include <Packages/Uintah/Core/Grid/VarTypes.h>
 #include <Core/Containers/StaticArray.h>
 #include <vector>
 

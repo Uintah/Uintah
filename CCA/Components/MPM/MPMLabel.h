@@ -2,12 +2,12 @@
 #define UINTAH_HOMEBREW_MPMLABEL_H
 
 
-#include <Packages/Uintah/Core/Grid/VarLabel.h>
 #include <vector>
 
 namespace Uintah {
 
 using std::vector;
+  class VarLabel;
 
     class MPMLabel {
     public:

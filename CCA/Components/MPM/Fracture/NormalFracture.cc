@@ -232,7 +232,6 @@ void NormalFracture::computeConnectivity(
       patch->findCell(pX_p[pIdx_p],cellIdx);
       particles.clear();
       particles.buildIn(cellIdx,lattice);
-      int particlesNumber = particles.size();
 
       IntVector nodeIdx[8];
       patch->findNodesFromCell(cellIdx,nodeIdx);
