@@ -165,6 +165,7 @@ public:
   string		movie_name_;
 
   TkOpenGLContext *	tk_gl_context_;
+  TkOpenGLContext *	old_tk_gl_context_;
   string		myname_;
 
 private:
@@ -194,7 +195,7 @@ private:
   Runnable *		helper_;
   Thread *		helper_thread_;
 
-  Tk_Window		tkwin_;
+
   Viewer*		viewer_;
   ViewWindow*		view_window_;
   DrawInfoOpenGL*	drawinfo_;
