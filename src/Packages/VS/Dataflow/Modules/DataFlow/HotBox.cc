@@ -246,7 +246,7 @@ void
   }
 
   // if the selection source is from the HotBox UI -- ignore the probe
-  char *selectName;
+  char selectName[256];
 
   if(selectionSource == "fromHotBoxUI")
   {
@@ -254,10 +254,12 @@ void
     // clear selection source
     selectionsource_.set("fromProbe");
   }
+  else if(anatomytable->get_anatomyname(labelIndexVal) != 0)
+    strcpy(selectName, anatomytable->get_anatomyname(labelIndexVal));
   else
-    selectName = anatomytable->get_anatomyname(labelIndexVal);
+    strcpy(selectName, "");
 
-  if(selectName != 0)
+  if(strlen(selectName) != 0)
     cout << "VS/HotBox: selected '" << selectName << "'" << endl;
   else
     remark("Selected [NULL]");
@@ -284,6 +286,7 @@ void
   // we now have the anatomy name corresponding to the label value at the voxel
   if(dataSource == VS_DATASOURCE_OQAFMA)
   {
+    fprintf(stderr, "dataSource = OQAFMA\n");
     ns1__processStruQLResponse resultStruQL;
     ServiceInterfaceSoapBinding ws;
     // build the query to send to OQAFMA
@@ -292,6 +295,7 @@ void
     p2 += "\", X->\"part\"+->Y, Y->\":NAME\"->Parts CREATE The";
     p2 += selectName;
     p2 += "(Parts)";
+    cout << "OQAFMA query: " <<  p2  << endl;
     // launch a query via OQAFMA/Protege C function calls
     if (ws.ns1__processStruQL(p2, resultStruQL) != SOAP_OK)
     {
@@ -313,8 +317,9 @@ void
     // }
 
   } // end if(dataSource == VS_DATASOURCE_OQAFMA)
-  else
+  else // dataSource == FILES
   {
+    fprintf(stderr, "dataSource = FILES[%d]\n", dataSource);
     // use fixed Adjacency Map files
     if(!adjacencytable->get_num_names())
     { // adjacency data has not been read
