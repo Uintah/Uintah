@@ -231,6 +231,15 @@ VolumeRenderer::draw_volume()
     glGetDoublev(GL_MODELVIEW_MATRIX, mv);
     glGetDoublev(GL_PROJECTION_MATRIX, pr);
 
+    GLfloat fstart, fend, fcolor[4];
+    // Copy the fog state to the new context.
+    if (use_fog)
+    {
+      glGetFloatv(GL_FOG_START, &fstart);
+      glGetFloatv(GL_FOG_END, &fend);
+      glGetFloatv(GL_FOG_COLOR, fcolor);
+    }
+
     blend_buffer_->activate();
     glDrawBuffer(GL_FRONT);
     float* cc = clear_color;
@@ -243,6 +252,14 @@ VolumeRenderer::draw_volume()
     glLoadMatrixd(pr);
     glMatrixMode(GL_MODELVIEW);
     glLoadMatrixd(mv);
+
+    if (use_fog)
+    {
+      glFogi(GL_FOG_MODE, GL_LINEAR);
+      glFogf(GL_FOG_START, fstart);
+      glFogf(GL_FOG_END, fend);
+      glFogfv(GL_FOG_COLOR, fcolor);
+    }
   }
   
   glColor4f(1.0, 1.0, 1.0, 1.0);
@@ -285,7 +302,8 @@ VolumeRenderer::draw_volume()
       }
     }
   }
-  shader = vol_shader_factory_->shader(use_cmap2 ? 2 : 1, nb0, use_shading, false,
+  shader = vol_shader_factory_->shader(use_cmap2 ? 2 : 1, nb0,
+				       use_shading, false,
                                        use_fog, blend_mode);
   if(shader) {
     if(!shader->valid()) {
