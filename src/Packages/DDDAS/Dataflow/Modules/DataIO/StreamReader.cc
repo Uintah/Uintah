@@ -345,6 +345,8 @@ StreamReader::execute()
     return;
   }
 
+  final_buffer_ = 0;
+
   // Create two threads, one that reads and caches away the data.
   // Another that checks for a complete mesh status, and sends it downstream.
 
@@ -354,6 +356,12 @@ StreamReader::execute()
   Runnable * p = new ProcessorThread( this );
   Thread * proc_thread =  new Thread( p, "processor" );
 
+  if( final_buffer_ != 0 )
+  {
+    cout << "(StreamReader::execute) Freeing memory from final_buffer_\n";
+    delete [] final_buffer_;
+    final_buffer_ = 0;
+  }
 }
 
 /*===========================================================================*/
@@ -556,17 +564,29 @@ StreamReader::process_stream()
     // that the reader has buffered enough data for processing.
     stream_cond_.wait(buffer_lock_);
 
+    cout << "(StreamReader::process_stream) Got the hand-off\n";
+
     // We got the hand-off from the reader, so now we begin processing the 
     // buffer data
+
+    // Make sure the final_buffer_ was allocated
+    if( final_buffer_ == 0 )
+    {
+      return;
+    }
 
     // Convert buffer to input stream since a stream is easier to parse
     string str = (const char *) final_buffer_;
     istringstream input( str, istringstream::in );
 
+    cout << "(StreamReader::process_stream) Initialized input\n";
+
     // Deallocate final buffer memory
-    if( final_buffer_ != 0 )
+    if( final_buffer_ != 0 ) // Just double check
     {
+      cout << "(StreamReader::process_stream) Freeing mem from final_buffer_\n";
       delete [] final_buffer_;
+      final_buffer_ = 0;
     }
 
     // Grab the first string in the input stream
@@ -639,8 +659,11 @@ StreamReader::read_stream()
 
     // Continually read small chunks off of the stream until the first header
     // is found
+
+    // Set up the array of header strings to look for
     int num_headers = 1;
-    string headers[1] = {"solution"};
+    string headers[num_headers];
+    headers[0] = "solution";
     string header_name = "NONE";
     int nread = 0;
 
@@ -1125,8 +1148,11 @@ StreamReader::process_mesh( istringstream& input )
   }
 
   // Deallocate array
-  delete [] sol_pts;
-
+  if( sol_pts != 0 )
+  {
+    delete [] sol_pts;
+    sol_pts = 0;
+  }
 }
 
 /*===========================================================================*/
