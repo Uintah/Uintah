@@ -789,7 +789,7 @@ HexVolMesh::locate(Cell::index_type &cell, const Point &p)
     return true;
   }
 
-  if ( (!synchronized_) & LOCATE_E) // I hope I got the () right.
+  if (!(synchronized_ & LOCATE_E))
     synchronize(LOCATE_E);
   ASSERT(grid_.get_rep());
 
