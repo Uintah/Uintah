@@ -123,7 +123,8 @@ void Simple_Burn::activateModel(GridP&, SimulationStateP& sharedState,
                                                                               
   //__________________________________
   //  REdefine the materialSet
-  delete mymatls;
+  if(mymatls->removeReference())
+    delete mymatls;
   vector<int> m_tmp(2);
   m_tmp[0] = matl0->getDWIndex();
   m_tmp[1] = matl1->getDWIndex();
@@ -141,7 +142,7 @@ void Simple_Burn::activateModel(GridP&, SimulationStateP& sharedState,
     m[1] = m_tmp[1];
     mymatls->addAll(m);
   }
-//  mymatls->addReference();
+  mymatls->addReference();
 }
 //______________________________________________________________________
 //     
