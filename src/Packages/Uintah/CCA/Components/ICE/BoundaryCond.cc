@@ -14,6 +14,7 @@
 #include <typeinfo>
 #include <Core/Util/DebugStream.h>
 #include <Core/Exceptions/InternalError.h>
+#include <Core/Math/MiscMath.h>
 
  // setenv SCI_DEBUG "ICE_BC_DBG:+,ICE_BC_DOING:+"
 static DebugStream BC_dbg(  "ICE_BC_DBG", false);
@@ -1425,9 +1426,7 @@ void setBC(SFCZVariable<double>& variable, const  string& kind,
             for Density
  ---------------------------------------------------------------------  */
 void setBCDensityLODI(CCVariable<double>& rho_CC,
-                const CCVariable<double>& d1_x,                       
-                const CCVariable<double>& d1_y,                       
-                const CCVariable<double>& d1_z,                       
+                StaticArray<CCVariable<Vector> >& di,                       
                 const CCVariable<double>& nux,
                 const CCVariable<double>& nuy,
                 const CCVariable<double>& nuz,
@@ -1461,7 +1460,7 @@ void setBCDensityLODI(CCVariable<double>& rho_CC,
     }
  
     if(rho_new_bcs != 0 && rho_new_bcs->getKind() == "LODI"){ 
-      fillFaceDensityLODI(rho_CC, d1_x, d1_y, d1_z,
+      fillFaceDensityLODI(rho_CC, di,
                           nux, nuy, nuz, rho_tmp, vel,  
                           face, delT, dx); 
     }
@@ -1514,18 +1513,7 @@ void setBCDensityLODI(CCVariable<double>& rho_CC,
             for momentum equations
  ---------------------------------------------------------------------  */
 void setBCVelLODI(CCVariable<Vector>& vel_CC,
-            const CCVariable<double>& d1_x, 
-            const CCVariable<double>& d3_x, 
-            const CCVariable<double>& d4_x, 
-            const CCVariable<double>& d5_x,
-            const CCVariable<double>& d1_y,  
-            const CCVariable<double>& d3_y, 
-            const CCVariable<double>& d4_y, 
-            const CCVariable<double>& d5_y,
-            const CCVariable<double>& d1_z,  
-            const CCVariable<double>& d3_z, 
-            const CCVariable<double>& d4_z, 
-            const CCVariable<double>& d5_z,
+            StaticArray<CCVariable<Vector> >& di,
             const CCVariable<double>& nux,
             const CCVariable<double>& nuy,
             const CCVariable<double>& nuz,
@@ -1559,10 +1547,7 @@ void setBCVelLODI(CCVariable<Vector>& vel_CC,
       continue;
     } 
     if (vel_new_bcs != 0 && kind == "Velocity" && vel_new_bcs->getKind() == "LODI") {
-      fillFaceVelLODI(vel_CC, 
-                      d1_x, d3_x, d4_x, d5_x,
-                      d1_y, d3_y, d4_y, d5_y,
-                      d1_z, d3_z, d4_z, d5_z,
+      fillFaceVelLODI(vel_CC,di, 
                       nux, nuy, nuz, rho_tmp, p, vel,  
                       face, delT, dx);
     }
@@ -1618,21 +1603,7 @@ void setBCVelLODI(CCVariable<Vector>& vel_CC,
             for temperature
  ---------------------------------------------------------------------  */
  void setBCTempLODI(CCVariable<double>& temp_CC,
-              const CCVariable<double>& d1_x, 
-              const CCVariable<double>& d2_x, 
-              const CCVariable<double>& d3_x, 
-              const CCVariable<double>& d4_x, 
-              const CCVariable<double>& d5_x,
-              const CCVariable<double>& d1_y, 
-              const CCVariable<double>& d2_y, 
-              const CCVariable<double>& d3_y, 
-              const CCVariable<double>& d4_y, 
-              const CCVariable<double>& d5_y,
-              const CCVariable<double>& d1_z, 
-              const CCVariable<double>& d2_z, 
-              const CCVariable<double>& d3_z, 
-              const CCVariable<double>& d4_z, 
-              const CCVariable<double>& d5_z,
+              StaticArray<CCVariable<Vector> >& di,
               const CCVariable<double>& e,
               const CCVariable<double>& rho_CC,
               const CCVariable<double>& nux,
@@ -1670,10 +1641,7 @@ void setBCVelLODI(CCVariable<Vector>& vel_CC,
     }
 
     if (temp_new_bcs != 0 && temp_new_bcs->getKind() == "LODI") {
-       fillFaceTempLODI(temp_CC, 
-                        d1_x, d2_x, d3_x, d4_x, d5_x, 
-                        d1_y, d2_y, d3_y, d4_y, d5_y,
-                        d1_z, d2_z, d3_z, d4_z, d5_z, 
+       fillFaceTempLODI(temp_CC, di,
                         e, rho_CC, nux, nuy, nuz, rho_tmp, 
                         p, vel, face, delT, cv, gamma,
                         dx);
@@ -1717,866 +1685,129 @@ void setBCVelLODI(CCVariable<Vector>& vel_CC,
 /*==========TESTING==========`*/ 
     } 
   } 
-/*________________________________________________________________
- Function~ computeDiFirstOrder--                L   O   D   I
- Purpose~  Compute amplitudes of characteristic waves using First-order 
-           upwind difference and the di's which are necessary to calculate 
-           convection terms at boundary cells in the dircetion 
-           across the boundary.  
-__________________________________________________________________*/
-void computeDiFirstOrder(const Vector& n, 
-                         double& d1, 
-                         double& d2,
-	                  double& d3,
-                         double& d4, 
-                         double& d5, 
-                         const double& rho1,
-                         const double& rho2, 
-                         const double& p1, 
-                         const double& p2, 
-                         const double& c, 
-                         const Vector& vel1, 
-                         const Vector& vel2, 
-                         const double& vel_cross_bound, 
-                         const double& dx) 
-{     
-  double d_SMALL_NUM = 1.0e-100;
-  //________________________________________________________
-  double drho_dx,dp_dx,du_dx,dv_dx,dw_dx,L1= 0,L2=0,L3=0,L4=0,L5=0;
-  drho_dx = (rho1 - rho2)/dx;
-  dp_dx   = (  p1 - p2  )/dx;
-  du_dx   = (vel1.x() - vel2.x())/dx;
-  dv_dx   = (vel1.y() - vel2.y())/dx;
-  dw_dx   = (vel1.z() - vel2.z())/dx;
 
-  //Due to numerical noice , we filter them out by hard coding
-  if(fabs(drho_dx) < 1.0e-10) drho_dx = 0.0;
-  if(fabs(dp_dx) < 1.0e-10) dp_dx = 0.0;
-  if(fabs(du_dx) < 1.0e-10) du_dx = 0.0;
-  if(fabs(dv_dx) < 1.0e-10) dv_dx = 0.0;
-  if(fabs(dw_dx) < 1.0e-10) dw_dx = 0.0;
-//       cout.setf(ios::scientific,ios::floatfield);
-//      cout.precision(16);
-//       cout << "d_rho,dp,du,dv,dw = " << drho_dx << "," << dp_dx << ","; 
-//       cout << du_dx << "," << dv_dx << "," << dw_dx << "," << endl;
-
-  //__________________________________
-  // L1 Wave Amplitude
-  double L1_sign;
-  if (n.x() != 0.0) {
-    L1_sign =      n.x() * (vel_cross_bound - c)/
-                     (fabs(vel_cross_bound - c) + d_SMALL_NUM);
-    if(L1_sign > 0) {      // outgoing waves
-      if(n.x() > 0.0) {
-        L1 = (vel_cross_bound - c) * (dp_dx - rho1 * c * du_dx);
-      }
-      if(n.x() < 0.0) {
-        L1 = (vel_cross_bound - c) * (dp_dx - rho2 * c * du_dx);
-      }
-    } else {               // incomming waves
-      L1 = 0.0;
-    }
-  }
-
-  if (n.y() != 0.0) {
-    L1_sign = n.y() * (vel_cross_bound - c)/
-                 (fabs(vel_cross_bound - c) + d_SMALL_NUM);
-    if(L1_sign > 0) {      // outgoing waves
-      if(n.y() > 0.0){ 
-        L1 = (vel_cross_bound - c) * (dp_dx - rho1 * c * dv_dx);
-      }
-      if(n.y() < 0.0) L1 = (vel_cross_bound - c) *
-                           (dp_dx - rho2 * c * dv_dx);
-      } else {               // incomming waves
-       L1 = 0.0;
-    }
-  }
-
-  if (n.z() != 0.0) {
-    L1_sign =      n.z() * (vel_cross_bound - c)/
-                    (fabs(vel_cross_bound - c) + d_SMALL_NUM);
-    if(L1_sign > 0) {      // outgoing waves
-      if(n.z() > 0.0){ 
-        L1 = (vel_cross_bound - c) * (dp_dx - rho1 * c * dw_dx);
-      }
-      if(n.z() < 0.0){ 
-        L1 = (vel_cross_bound - c) * (dp_dx - rho2 * c * dw_dx);
-      }
-    } else {               // incomming waves
-      L1 = 0.0;
-    }
-  }
-  //__________________________________
-  // L2, 3, 4 Wave Amplitude
-  double L234_sign;
-
-  if(n.x() != 0.0) {
-    L234_sign = n.x() * vel_cross_bound
-               / (fabs(vel_cross_bound) + d_SMALL_NUM);
-    if(L234_sign > 0) {     // outgoing waves
-      L2 = vel_cross_bound * (c * c * drho_dx - dp_dx);
-      L3 = vel_cross_bound * dv_dx;
-      L4 = vel_cross_bound * dw_dx;
-     } else {               // incomming waves
-      L2 = 0.0;
-      L3 = 0.0;
-      L4 = 0.0;
-    }
-  }
-
-  if(n.y() != 0.0) {
-    L234_sign = n.y() * vel_cross_bound
-               / (fabs(vel_cross_bound) + d_SMALL_NUM);
-    if(L234_sign > 0) {     // outgoing waves
-      L2 = vel_cross_bound * (c * c * drho_dx - dp_dx);
-      L3 = vel_cross_bound * du_dx;
-      L4 = vel_cross_bound * dw_dx;
-     } else {               // incoming waves
-      L2 = 0.0;
-      L3 = 0.0;
-      L4 = 0.0;
-    }
-  }
-
-  if(n.z() != 0.0) {
-    L234_sign = n.z() * vel_cross_bound
-               / (fabs(vel_cross_bound) + d_SMALL_NUM);
-    if(L234_sign > 0) {     // outgoing waves
-      L2 = vel_cross_bound * (c * c * drho_dx - dp_dx);
-      L3 = vel_cross_bound * du_dx;
-      L4 = vel_cross_bound * dv_dx;
-     } else {               // incoming waves
-      L2 = 0.0;
-      L3 = 0.0;
-      L4 = 0.0;
-    }
-  }
-
-  //__________________________________
-  // L5 Wave Amplitude
-  double L5_sign;
-  if(n.x() != 0.0){
-    L5_sign =      n.x() * (vel_cross_bound + c)/
-                     (fabs(vel_cross_bound + c) + d_SMALL_NUM);
-    if(L5_sign > 0) {      // outgoing wave
-      if(n.x() > 0.0){
-        L5 = (vel_cross_bound + c) * (dp_dx + rho1 * c * du_dx);
-      }
-      if(n.x() < 0.0){  
-        L5 = (vel_cross_bound + c) * (dp_dx + rho2 * c * du_dx);
-      }
-    } else {               // incoming waves
-      L5 = 0.0;
-    }
-  }
-
-  if(n.y() != 0.0){
-    L5_sign =      n.y() * (vel_cross_bound + c)/
-                     (fabs(vel_cross_bound + c) + d_SMALL_NUM);
-    if(L5_sign > 0) {      // outgoing wave
-      if(n.y() > 0.0){
-        L5 = (vel_cross_bound + c) * (dp_dx + rho1 * c * dv_dx);
-      }
-      if(n.y() < 0.0){
-        L5 = (vel_cross_bound + c) * (dp_dx + rho2 * c * dv_dx);
-      }
-    } else {               // incoming waves
-       L5 = 0.0;
-    }
-  }
-
-  if(n.z() != 0.0){
-   L5_sign = n.z() * (vel_cross_bound + c)/
-                     (fabs(vel_cross_bound + c) + d_SMALL_NUM);
-    if(L5_sign > 0) {      // outgoing wave
-      if(n.z() > 0.0){
-        L5 = (vel_cross_bound + c) * (dp_dx + rho1 * c * dw_dx);
-      }
-      if(n.z() < 0.0){ 
-        L5 = (vel_cross_bound + c) * (dp_dx + rho2 * c * dw_dx);
-      }
-    } else {               // incoming waves
-      L5 = 0.0;
-    }
-  }
-
-  //__________________________________
-  // Compute d1-5
-  d1 = (L2 + 0.5 * (L1 + L5))/c/c;
-  d2 = 0.5 * (L5 + L1);
-  if(std::max(n.x(), std::max(n.y(), n.z())) > 0.0) {
-    d3 = 0.5 * (L5 - L1)/rho1/c;
-  }
-  if(std::min(n.x(), std::min(n.y(), n.z())) < 0.0) {
-    d3 = 0.5 * (L5 - L1)/rho2/c;
-  }
-  d4 = L3;
-  d5 = L4;
-}
-
-/*________________________________________________________________
- Function~ computeDiSecondOrder--
- Purpose~  Compute amplitudes of characteristic waves using second-order 
-           upwind difference and the di's which are necessary to calculate 
-           convection terms at boundary cells in the dircetion 
-           across the boundary.  
-__________________________________________________________________*/
-void computeDiSecondOrder(const Vector& n, 
-                          double& d1, 
-                          double& d2, 
-                          double& d3, 
-                          double& d4, 
-                          double& d5, 
-                          const double& rho1, 
-                          const double& rho2, 
-                          const double& rho3, 
-	                   const double& p1, 
-                          const double& p2, 
-                          const double& p3, 
-                          const double& c, 
-                          const Vector& vel1, 
-                          const Vector& vel2, 
-                          const Vector& vel3, 
-                          const double& vel_cross_bound, 
-                          const double& dx) 
-{       
-  double d_SMALL_NUM = 1.0e-100;
-  double faceNormal = 0;
-  if(n.x() != 0.0)faceNormal = n.x(); 
-  if(n.y() != 0.0)faceNormal = n.y(); 
-  if(n.z() != 0.0)faceNormal = n.z(); 
-  //________________________________________________________
-  double drho_dx,dp_dx,du_dx,dv_dx,dw_dx,L1=0,L2=0,L3=0,L4=0,L5=0;
-  drho_dx = 0.5 * faceNormal * (3.0 * rho1 - 4.0 * rho2 + rho3)/dx;
-  dp_dx   = 0.5 * faceNormal * (3.0 *   p1 - 4.0 *   p2 + p3)/dx;
-  du_dx   = 0.5 * faceNormal * (3.0 * vel1.x() - 4.0 * vel2.x() + vel3.x())/dx;
-  dv_dx   = 0.5 * faceNormal * (3.0 * vel1.y() - 4.0 * vel2.y() + vel3.y())/dx;
-  dw_dx   = 0.5 * faceNormal * (3.0 * vel1.z() - 4.0 * vel2.z() + vel3.z())/dx;
-  //__________________________________________________________
-  //Due to numerical noice , we filter them out by hard coding
-  if(fabs(drho_dx) < 1.0e-10) drho_dx = 0.0;
-  if(fabs(dp_dx) < 1.0e-10) dp_dx = 0.0;
-  if(fabs(du_dx) < 1.0e-10) du_dx = 0.0;
-  if(fabs(dv_dx) < 1.0e-10) dv_dx = 0.0;
-  if(fabs(dw_dx) < 1.0e-10) dw_dx = 0.0;
-//        cout.setf(ios::scientific,ios::floatfield);
-//        cout.precision(16);
-//        cout << "d_rho,dp,du,dv,dw = " << drho_dx << "," << dp_dx << ","; 
-//        cout << du_dx << "," << dv_dx << "," << dw_dx << endl;
-  //__________________________________
-  // L1 Wave Amplitude
-  double L1_sign;
-  if (n.x() != 0.0) {
-    L1_sign =  n.x() * (vel_cross_bound - c)/
-                     (fabs(vel_cross_bound - c) + d_SMALL_NUM);
-    if(L1_sign > 0) {      // outgoing waves
-      L1 = (vel_cross_bound - c) * (dp_dx - rho1 * c * du_dx);
-    } else {               // incomming waves
-      L1 = 0.0;
-    }
-  }
-
-  if (n.y() != 0.0) {
-    L1_sign =  n.y() * (vel_cross_bound - c)/
-                     (fabs(vel_cross_bound - c) + d_SMALL_NUM);
-    if(L1_sign > 0) {      // outgoing waves
-      L1 = (vel_cross_bound - c) * (dp_dx - rho1 * c * dv_dx);
-    } else {               // incomming waves
-      L1 = 0.0;
-    }
-  }
-
-  if (n.z() != 0.0) {
-    L1_sign = n.z() * (vel_cross_bound - c)/
-                     (fabs(vel_cross_bound - c) + d_SMALL_NUM);
-    if(L1_sign > 0) {      // outgoing waves
-      L1 = (vel_cross_bound - c) * (dp_dx - rho1 * c * dw_dx);
-    } else {               // incomming waves
-      L1 = 0.0;
-    }
-  }
-   //__________________________________
-   // L2, 3, 4 Wave Amplitude
-   double L234_sign;
-
-  if(n.x() != 0.0) {
-    L234_sign = n.x() * vel_cross_bound
-               / (fabs(vel_cross_bound) + d_SMALL_NUM);
-    if(L234_sign > 0) {     // outgoing waves
-      L2 = vel_cross_bound * (c * c * drho_dx - dp_dx);
-      L3 = vel_cross_bound * dv_dx;
-      L4 = vel_cross_bound * dw_dx;
-     } else {               // incomming waves
-      L2 = 0.0;
-      L3 = 0.0;
-      L4 = 0.0;
-    }
-  }
-
-  if(n.y() != 0.0) {
-    L234_sign = n.y() * vel_cross_bound
-               / (fabs(vel_cross_bound) + d_SMALL_NUM);
-    if(L234_sign > 0) {     // outgoing waves
-      L2 = vel_cross_bound * (c * c * drho_dx - dp_dx);
-      L3 = vel_cross_bound * du_dx;
-      L4 = vel_cross_bound * dw_dx;
-     } else {               // incomming waves
-      L2 = 0.0;
-      L3 = 0.0;
-      L4 = 0.0;
-    }
-  }
-
-  if(n.z() != 0.0) {
-    L234_sign = n.z() * vel_cross_bound
-               / (fabs(vel_cross_bound) + d_SMALL_NUM);
-    if(L234_sign > 0) {     // outgoing waves
-      L2 = vel_cross_bound * (c * c * drho_dx - dp_dx);
-      L3 = vel_cross_bound * du_dx;
-      L4 = vel_cross_bound * dv_dx;
-     } else {               // incomming waves
-      L2 = 0.0;
-      L3 = 0.0;
-      L4 = 0.0;
-    }
-  }
-
-   //__________________________________
-   // L5 Wave Amplitude
-  double L5_sign;
-  if(n.x() != 0.0){
-    L5_sign =  n.x() * (vel_cross_bound + c)/
-               (fabs(vel_cross_bound + c) + d_SMALL_NUM);
-    if(L5_sign > 0) {      // outgoing wave
-      L5 = (vel_cross_bound + c) * (dp_dx + rho1 * c * du_dx);
-    } else {               // incomming waves
-      L5 = 0.0;
-    }
-  }
-
-  if(n.y() != 0.0){
-    L5_sign =  n.y() * (vel_cross_bound + c)/
-               (fabs(vel_cross_bound + c) + d_SMALL_NUM);
-    if(L5_sign > 0) {      // outgoing wave
-       L5 = (vel_cross_bound + c) * (dp_dx + rho1 * c * dv_dx);
-    } else {               // incomming waves
-      L5 = 0.0;
-    }
-  }
-
-  if(n.z() != 0.0){
-    L5_sign = n.z() * (vel_cross_bound + c)/
-                     (fabs(vel_cross_bound + c) + d_SMALL_NUM);
-    if(L5_sign > 0) {      // outgoing wave
-      L5 = (vel_cross_bound + c) * (dp_dx + rho1 * c * dw_dx);
-    } else {               // incomming waves
-      L5 = 0.0;
-    }
-  }
-
-   //__________________________________
-   // Compute d1-5
-   d1 = (L2 + 0.5 * (L1 + L5))/c/c;
-   d2 = 0.5 * (L5 + L1);
-   d3 = 0.5 * (L5 - L1)/rho1/c;
-   d4 = L3;
-   d5 = L4;
-}
 
 /*__________________________________________________________________
- Function~ computeLODIFirstOrder--              L   O   D   I
+ Function~ computeDi--              L   O   D   I
  Purpose~  compute Di's at the boundary cells using upwind first-order 
            differenceing scheme
 ____________________________________________________________________*/
-void computeLODIFirstOrder(CCVariable<double>& d1_x, 
-                           CCVariable<double>& d2_x, 
-                           CCVariable<double>& d3_x, 
-                           CCVariable<double>& d4_x, 
-                           CCVariable<double>& d5_x,
-                           CCVariable<double>& d1_y, 
-                           CCVariable<double>& d2_y, 
-                           CCVariable<double>& d3_y, 
-                           CCVariable<double>& d4_y, 
-                           CCVariable<double>& d5_y,
-                           CCVariable<double>& d1_z, 
-                           CCVariable<double>& d2_z, 
-                           CCVariable<double>& d3_z, 
-                           CCVariable<double>& d4_z, 
-                           CCVariable<double>& d5_z,
-                           constCCVariable<double>& rho_tmp,  
-                           const CCVariable<double>& p, 
-                           constCCVariable<Vector>& vel, 
-                           constCCVariable<double>& c, 
-                           const Patch* patch,
-                           const int mat_id)
+void computeDi(StaticArray<CCVariable<Vector> >& d,
+               constCCVariable<double>& rho,              
+               const CCVariable<double>& press,                   
+               constCCVariable<Vector>& vel,                  
+               constCCVariable<double>& speedSound_,                    
+               const Patch* patch,                            
+               const int mat_id)                              
 {
     BC_doing << "LODI computeLODIFirstOrder "<< endl;
-    IntVector low = p.getLowIndex();
-    IntVector hi  = p.getHighIndex();
     Vector dx = patch->dCell();
-    int hi_x = hi.x() - 1;
-    int hi_y = hi.y() - 1;
-    int hi_z = hi.z() - 1;
-    double d1, d2, d3, d4, d5, vel_cross_bound, delta;
-    double  rhoR, rhoL, pR, pL, cSpeed;
-    double  rhoT, rhoB, pT, pB;
-    double  rhoF, rhoBK, pF, pBK;
-    Vector velR, velL,velT, velB, velF, velBK, n;
     
+    vector<IntVector> R_Offset(6);
+    R_Offset[Patch::xminus] = IntVector(1,0,0);  // right cell offset
+    R_Offset[Patch::xplus]  = IntVector(0,0,0);
+    R_Offset[Patch::yminus] = IntVector(0,1,0);
+    R_Offset[Patch::yplus]  = IntVector(0,0,0);
+    R_Offset[Patch::zminus] = IntVector(0,0,1);
+    R_Offset[Patch::zplus]  = IntVector(0,0,0);
+    
+    vector<IntVector> L_Offset(6);
+    L_Offset[Patch::xminus] = IntVector(0, 0, 0);   // left cell offset
+    L_Offset[Patch::xplus]  = IntVector(-1,0, 0);
+    L_Offset[Patch::yminus] = IntVector(0, 0, 0);
+    L_Offset[Patch::yplus]  = IntVector(0,-1, 0);
+    L_Offset[Patch::zminus] = IntVector(0, 0, 0);
+    L_Offset[Patch::zplus]  = IntVector(0, 0, -1);
+    
+    vector<IntVector> gradientDir(6);
+    gradientDir[Patch::xminus] = IntVector(0, 1, 2);
+    gradientDir[Patch::xplus]  = IntVector(0, 1, 2);
+    gradientDir[Patch::yminus] = IntVector(1, 0, 2);
+    gradientDir[Patch::yplus]  = IntVector(1, 0, 2);
+    gradientDir[Patch::zminus] = IntVector(2, 0, 1);
+    gradientDir[Patch::zplus]  = IntVector(2, 0, 1);    
+  
+ /*`==========TESTING==========*/
+ // TO DO: ONLY COMPUTE DI ON LODI FACES NOT ALL FACES
+/*==========TESTING==========`*/    
     for(Patch::FaceType face = Patch::startFace; face <= Patch::endFace;
         face=Patch::nextFace(face)){
-    switch (face) { // switch:1
-      case Patch::xplus:{
-        //_____________________________________
-        //Compute Di at xplus plane
-        delta = dx.x();
-        n = Vector(1.0, 0.0, 0.0);
-          for(int j = low.y(); j <= hi_y; j++) {
-            for (int k = low.z(); k <= hi_z; k++) {
-            IntVector r  =  IntVector(hi_x,  j, k);
-            IntVector l  =  IntVector(hi_x-1,j, k);
-            rhoR = rho_tmp[r];
-            rhoL = rho_tmp[l];
-            pR   = p[r];
-            pL   = p[l];
-            cSpeed = c[r];
-            velR = vel[r];
-            velL = vel[l];
-            vel_cross_bound = velR.x();
 
-            computeDiFirstOrder(n, d1, d2, d3, d4, d5, rhoR, rhoL, 
-                                pR, pL, cSpeed, velR, velL, vel_cross_bound, delta);
-            d1_x[r] = d1;
-            d2_x[r] = d2;
-            d3_x[r] = d3;
-            d4_x[r] = d4;
-            d5_x[r] = d5;
-          }
-        }
-      }
-      break;
-      case Patch::xminus:{ 
-        //_____________________________________
-        //Compute Di at xminus plane
-        n = Vector(-1.0, 0.0, 0.0);
-        delta =  dx.x();
+      //_____________________________________
+      //Compute Di at xplus plane
+      int dir0 = gradientDir[face][0];
+      int dir1 = gradientDir[face][1];
+      int dir2 = gradientDir[face][2];        
+      double delta = dx[dir0];
+
+      IntVector normal = patch->faceDirection(face);
+      double norm = (double)normal[dir0];
+
+      for(CellIterator iter=patch->getFaceCellIterator(face, "plusEdgeCells"); 
+          !iter.done();iter++) {
+        IntVector c = *iter;
+        IntVector r = c + R_Offset[face];
+        IntVector l = c + L_Offset[face];
+
+        double speedSound = speedSound_[c];
+        double speedSoundsqr = speedSound * speedSound;
+        double vel_bndry = vel[c][dir0];
+
+        double drho_dx = (rho[r] - rho[l])/delta;
+        double dp_dx   = (press[r] - press[l])/delta;
+        Vector dVel_dx = (vel[r] - vel[l])/(delta);
         
-        for(int j = low.y(); j <= hi_y; j++) {
-          for (int k = low.z(); k <= hi_z; k++) {
-            IntVector r     =  IntVector(low.x()+1,  j, k);
-            IntVector l     =  IntVector(low.x(),j, k);
-            rhoR            =  rho_tmp[r];
-            rhoL            =  rho_tmp[l];
-            pR              =  p[r];
-            pL              =  p[l];
-            cSpeed          =  c[l];
-            velR            =  vel[r];
-            velL            =  vel[l];
-            vel_cross_bound =  velL.x();
-            
-            computeDiFirstOrder(n, d1, d2, d3, d4, d5, rhoR, rhoL, 
-                                pR, pL, cSpeed, velR, velL, vel_cross_bound, delta);
-            d1_x[l] = d1;
-            d2_x[l] = d2;
-            d3_x[l] = d3;
-            d4_x[l] = d4;
-            d5_x[l] = d5; 
-          }
-        }
-      }
-      break;
-      case Patch::yplus:{ 
-        //_____________________________________
-        //Compute Di at yplus plane
-        n = Vector(0.0, 1.0, 0.0);
-        delta           = dx.y();
-        
-        for(int i = low.x(); i<= hi_x; i++) {
-          for (int k = low.z(); k <= hi_z; k++) {
-            IntVector t     = IntVector(i, hi_y,   k);
-            IntVector b     = IntVector(i, hi_y-1, k);
-            
-            rhoT            = rho_tmp[t];
-            rhoB            = rho_tmp[b];
-            pT              = p[t];
-            pB              = p[b];
-            cSpeed          = c[t];
-            velT            = vel[t];
-            velB            = vel[b];
-            vel_cross_bound = velT.y();
-            
-            computeDiFirstOrder(n, d1, d2, d3, d4, d5, rhoT, rhoB, 
-                                pT, pB, cSpeed, velT, velB, vel_cross_bound, delta);
-            d1_y[t] = d1;
-            d2_y[t] = d2;
-            d3_y[t] = d3;
-            d4_y[t] = d4;
-            d5_y[t] = d5;
-          }
-        }
-      }
-      break;
-      case Patch::yminus:{ 
-        //_____________________________________
-        //Compute Di at yminus plane
-        delta   = dx.y();
-        n = Vector(0.0, -1.0, 0.0);
-        
-        for(int i = low.x(); i<= hi_x; i++) {
-          for (int k = low.z(); k <= hi_z; k++) {
-            IntVector t = IntVector(i, low.y()+1, k);
-            IntVector b = IntVector(i, low.y(), k);    
-            rhoT    = rho_tmp[t];
-            rhoB    = rho_tmp[b];
-            pT      = p[t];
-            pB      = p[b];
-            cSpeed  = c[b];
-            velT    = vel[t];
-            velB    = vel[b];
-            vel_cross_bound = velB.y();
-            
-            computeDiFirstOrder(n, d1, d2, d3, d4, d5, rhoT, rhoB, 
-                                pT, pB, cSpeed, velT, velB, vel_cross_bound, delta);
-            d1_y[b] = d1;
-            d2_y[b] = d2;
-            d3_y[b] = d3;
-            d4_y[b] = d4;
-            d5_y[b] = d5;
-          }
-        }
-      }
-      break;
-      case Patch::zplus:{
-        //_____________________________________
-        //Compute Di at zplus plane
-        n = Vector(0.0, 0.0, 1.0);
-        delta   = dx.z();
-        
-        for(int i = low.x(); i <= hi_x; i++) {
-          for (int j = low.y(); j <= hi_y; j++) {
-            IntVector f  = IntVector(i, j, hi_z);
-            IntVector bk = IntVector(i, j, hi_z-1);
-            rhoF    = rho_tmp[f];
-            rhoBK   = rho_tmp[bk];
-            pF      = p[f];
-            pBK     = p[bk];
-            cSpeed  = c[f];
-            velF    = vel[f];
-            velBK   = vel[bk];
-            vel_cross_bound = velF.z();
-            
-            computeDiFirstOrder(n, d1, d2, d3, d4, d5, rhoF, rhoBK, 
-                                pF, pBK, cSpeed, velF, velBK, vel_cross_bound, delta);
-            d1_z[f] = d1;
-            d2_z[f] = d2;
-            d3_z[f] = d3;
-            d4_z[f] = d4;
-            d5_z[f] = d5;
-          }
-        }
-      }
-      break;
-      case Patch::zminus:{
-        //_____________________________________
-        //Compute Di at zminus plane
-        n = Vector(0.0, 0.0, -1.0);
-        delta   = dx.z();
-        
-        for(int i = low.x(); i <= hi_x; i++) {
-          for (int j = low.y(); j <= hi_y; j++) {
-            IntVector f  = IntVector(i, j, low.z()+1);
-            IntVector bk = IntVector(i, j, low.z());
-            rhoF    = rho_tmp[f];
-            rhoBK   = rho_tmp[bk];
-            pF      = p[f];
-            pBK     = p[bk];
-            cSpeed  = c[bk];
-            velF    = vel[f];
-            velBK   = vel[bk];
-            vel_cross_bound = velBK.z();
-            
-            computeDiFirstOrder(n, d1, d2, d3, d4, d5, rhoF, rhoBK, 
-                                pF, pBK, cSpeed, velF, velBK, vel_cross_bound, delta);
-            d1_z[bk] = d1;
-            d2_z[bk] = d2;
-            d3_z[bk] = d3;
-            d4_z[bk] = d4;
-            d5_z[bk] = d5;
-          }
-        }
-      }
-      break;
- 
-      default:
-      break;
-    }
+        //Due to numerical noice , we filter them out by hard coding
+        //    
+        if(fabs(drho_dx) < 1.0e-10) drho_dx = 0.0;
+        if(fabs(dp_dx) < 1.0e-10)   dp_dx = 0.0;
+        if(fabs(dVel_dx[dir0]) < 1.0e-10) dVel_dx[dir0]=0.0;
+        if(fabs(dVel_dx[dir1]) < 1.0e-10) dVel_dx[dir1]=0.0;
+        if(fabs(dVel_dx[dir2]) < 1.0e-10) dVel_dx[dir2]=0.0;
+
+        //__________________________________
+        // L1 Wave Amplitude
+        int L1_sign;
+        double L1 = 0;
+        L1_sign = Sign(norm * (vel_bndry - speedSound));
+        if(L1_sign > 0) {       // outgoing waves
+          L1 = (vel_bndry - speedSound) 
+             * (dp_dx - rho[c] * speedSound * dVel_dx[dir0]);
+        } 
+        //__________________________________
+        // L2, 3, 4 Wave Amplitude
+        int L234_sign;
+        double L2=0, L3=0, L4=0;
+        L234_sign = Sign(norm * vel_bndry);
+        if(L234_sign > 0) {     // outgoing waves
+          L2 = vel_bndry * (speedSoundsqr * drho_dx - dp_dx);
+          L3 = vel_bndry * dVel_dx[dir1];
+          L4 = vel_bndry * dVel_dx[dir2];
+        } 
+        //__________________________________
+        // L5 Wave Amplitude
+        int L5_sign;
+        double L5=0;
+        L5_sign =  Sign(norm * (vel_bndry + speedSound));
+        if(L5_sign > 0) {      // outgoing wave
+          L5 = (vel_bndry + speedSound) 
+             * (dp_dx + rho[c] * speedSound * dVel_dx[dir0]);
+        } 
+        //__________________________________
+        // Compute d1-5
+        d[1][c][dir0] = (L2 + 0.5 * (L1 + L5))/(speedSoundsqr);
+        d[2][c][dir0] = 0.5 * (L5 + L1);
+        d[3][c][dir0] = 0.5 * (L5 - L1)/(rho[c] * speedSound);
+        d[4][c][dir0] = L3;
+        d[5][c][dir0] = L4;
+     } 
   } //end of for loop over faces
 }//end of function
-
-
-/*__________________________________________________________________
- Function~ computeLODISecondOrder--                 L   O   D   I
- Purpose~  compute Di's at the boundary cells using upwind second-order 
-           differenceing scheme
-____________________________________________________________________*/
-void computeLODISecondOrder(CCVariable<double>& d1_x, 
-                            CCVariable<double>& d2_x, 
-                            CCVariable<double>& d3_x, 
-                            CCVariable<double>& d4_x, 
-                            CCVariable<double>& d5_x,
-                            CCVariable<double>& d1_y, 
-                            CCVariable<double>& d2_y, 
-                            CCVariable<double>& d3_y, 
-                            CCVariable<double>& d4_y, 
-                            CCVariable<double>& d5_y,
-                            CCVariable<double>& d1_z, 
-                            CCVariable<double>& d2_z, 
-                            CCVariable<double>& d3_z, 
-                            CCVariable<double>& d4_z, 
-                            CCVariable<double>& d5_z,
-                       constCCVariable<double>& rho_tmp,  
-                       const CCVariable<double>& p, 
-                       constCCVariable<Vector>& vel, 
-                       constCCVariable<double>& c, 
-                       const Patch* patch,
-                       const int mat_id)
-
-{
-  BC_doing << "LODI computeLODISecondOrder "<< endl;
-  IntVector low = p.getLowIndex();
-  IntVector hi  = p.getHighIndex();
-  Vector dx = patch->dCell();
-  int hi_x = hi.x() - 1;
-  int hi_y = hi.y() - 1;
-  int hi_z = hi.z() - 1;
-  double d1, d2, d3, d4, d5, vel_cross_bound, delta;
-  double rhoR, rhoM, rhoL, pR, pM, pL, cSpeed;
-  double rhoT, rhoB, pT, pB;
-  double rhoF, rhoBK, pF, pBK;
-  Vector n, velR, velM, velL, velT, velB, velF, velBK;
-  
-  for(Patch::FaceType face = Patch::startFace; face <= Patch::endFace;
-      face=Patch::nextFace(face)){
-    switch (face) {
-      case Patch::xplus:{ 
-        delta = dx.x();
-        n = Vector(1.0, 0.0, 0.0); 
-        //_____________________________________
-        //Compute Di at xplus plane
-        for(int j = low.y(); j <= hi_y; j++) {
-          for (int k = low.z(); k <= hi_z; k++) {
-            IntVector r  =  IntVector(hi_x,  j, k);
-            IntVector m  =  IntVector(hi_x-1,j, k);
-            IntVector l  =  IntVector(hi_x-2,j, k);
-            rhoR = rho_tmp[r];
-            rhoM = rho_tmp[m];
-            rhoL = rho_tmp[l];
-            pR   = p[r];
-            pM   = p[m];
-            pL   = p[l];
-            cSpeed = c[r];
-            velR = vel[r];
-            velM = vel[m];
-            velL = vel[l];
-            vel_cross_bound = velR.x();
-            
-            computeDiSecondOrder(n, d1, d2, d3, d4, d5, rhoR, rhoM, rhoL, 
-                                 pR, pM, pL, cSpeed, velR, velM, velL, vel_cross_bound, delta);
-            d1_x[r] = d1;
-            d2_x[r] = d2;
-            d3_x[r] = d3;
-            d4_x[r] = d4;
-            d5_x[r] = d5;
-          } 
-        } 
-      } 
-      break;
-      case Patch::xminus:{
-        delta =  dx.x();
-        n = Vector(-1.0, 0.0, 0.0);
-        //_____________________________________
-        //Compute Di at xminus plane
-        for(int j = low.y(); j <= hi_y; j++) {
-          for (int k = low.z(); k <= hi_z; k++) {
-           IntVector r     =  IntVector(low.x()+2,  j, k);
-           IntVector m     =  IntVector(low.x()+1,  j, k);
-           IntVector l     =  IntVector(low.x(),j, k);
-
-           rhoR            =  rho_tmp[r];
-           rhoM            =  rho_tmp[m];
-           rhoL            =  rho_tmp[l];
-           pR              =  p[r];
-           pM              =  p[m];
-           pL              =  p[l];
-           cSpeed          =  c[l];
-           velR            =  vel[r];
-           velM            =  vel[m];
-           velL            =  vel[l];
-           vel_cross_bound =  velL.x();
-
-           computeDiSecondOrder(n, d1, d2, d3, d4, d5, rhoL, rhoM, rhoR, 
-                                pL, pM, pR, cSpeed, velL, velM, velR, vel_cross_bound, delta);
-
-           d1_x[l] = d1;
-           d2_x[l] = d2;
-           d3_x[l] = d3;
-           d4_x[l] = d4;
-           d5_x[l] = d5;
-          }
-        }
-      }
-      break;
-      case Patch::yplus:{
-        n = Vector(0.0, 1.0, 0.0); 
-        delta = dx.y();
-        //_____________________________________
-        //Compute Di at yplus plane
-        for(int i = low.x(); i<= hi_x; i++) {
-          for (int k = low.z(); k <= hi_z; k++) {
-            IntVector t     = IntVector(i, hi_y,   k);
-            IntVector m     = IntVector(i, hi_y-1,   k);
-            IntVector b     = IntVector(i, hi_y-2, k);
-            
-            rhoT            = rho_tmp[t];
-            rhoM            = rho_tmp[m];
-            rhoB            = rho_tmp[b];
-            pT              = p[t];
-            pM              = p[m];
-            pB              = p[b];
-            cSpeed          = c[t];
-            velT            = vel[t];
-            velM            = vel[m];
-            velB            = vel[b];
-            vel_cross_bound = velT.y();
-            
-            computeDiSecondOrder(n, d1, d2, d3, d4, d5, rhoT, rhoM, rhoB, 
-                                 pT, pM, pB, cSpeed, velT, velM, velB, vel_cross_bound, delta);
-                                 
-            d1_y[t] = d1;
-            d2_y[t] = d2;
-            d3_y[t] = d3;
-            d4_y[t] = d4;
-            d5_y[t] = d5;
-          }
-        }
-      }
-      break;
-      case Patch::yminus:{ 
-        n = Vector(0.0, -1.0, 0.0);
-        delta = dx.y();
-        //_____________________________________
-        //Compute Di at yminus plane
-        for(int i = low.x(); i<= hi_x; i++) {
-          for (int k = low.z(); k <= hi_z; k++) {
-            IntVector t = IntVector(i, low.y()+2, k);
-            IntVector m = IntVector(i, low.y()+1, k);
-            IntVector b = IntVector(i, low.y(), k);
-
-            rhoT  = rho_tmp[t];
-            rhoM  = rho_tmp[m];
-            rhoB  = rho_tmp[b];
-            pT    = p[t];
-            pM    = p[m];
-            pB    = p[b];
-            cSpeed = c[b];
-            velT  = vel[t];
-            velM  = vel[m];
-            velB  = vel[b];
-            vel_cross_bound = velB.y();
-               
-            computeDiSecondOrder(n, d1, d2, d3, d4, d5, rhoB, rhoM, rhoT, 
-                                 pB, pM, pT, cSpeed, velB, velM, velT, vel_cross_bound, delta);
-                                 
-            d1_y[b] = d1;
-            d2_y[b] = d2;
-            d3_y[b] = d3;
-            d4_y[b] = d4;
-            d5_y[b] = d5;
-          }
-        }
-      }
-      break;
-      case Patch::zplus:{
-        //_____________________________________
-        //Compute Di at zplus plane
-        n = Vector(0.0, 0.0, 1.0);
-        delta = dx.z();
-        
-        for(int i = low.x(); i <= hi_x; i++) {
-          for (int j = low.y(); j <= hi_y; j++) {
-            IntVector f  = IntVector(i, j, hi_z);
-            IntVector m  = IntVector(i, j, hi_z-1);
-            IntVector bk = IntVector(i, j, hi_z-2);
-             
-            rhoF = rho_tmp[f];
-            rhoM = rho_tmp[m];
-            rhoBK = rho_tmp[bk];
-            pF = p[f];
-            pM = p[m];
-            pBK = p[bk];
-            cSpeed = c[f];
-            velF = vel[f];
-            velM = vel[m];
-            velBK = vel[bk];
-            vel_cross_bound = velF.z();
-            
-            computeDiSecondOrder(n, d1, d2, d3, d4, d5, rhoF, rhoM, rhoBK, 
-                                 pF, pM, pBK, cSpeed, velF, velM, velBK, vel_cross_bound, delta);
-            d1_z[f] = d1;
-            d2_z[f] = d2;
-            d3_z[f] = d3;
-            d4_z[f] = d4;
-            d5_z[f] = d5;
-          }
-        }
-      }
-      break;
-      case Patch::zminus: { 
-        //_____________________________________
-        //Compute Di at zminus plane
-        delta = dx.z();
-        n = Vector(0.0, 0.0, -1.0); 
-        for(int i = low.x(); i <= hi_x; i++) {
-          for (int j = low.y(); j <= hi_y; j++) {
-            IntVector f  = IntVector(i, j, low.z()+2);
-            IntVector m  = IntVector(i, j, low.z()+1);
-            IntVector bk = IntVector(i, j, low.z());
-            
-            rhoF  = rho_tmp[f];
-            rhoM  = rho_tmp[m];
-            rhoBK = rho_tmp[bk];
-            pF    = p[f];
-            pM    = p[m];
-            pBK   = p[bk];
-            cSpeed = c[bk];
-            velF  = vel[f];
-            velM  = vel[m];
-            velBK = vel[bk];
-            vel_cross_bound = velBK.z();
-           
-            computeDiSecondOrder(n, d1, d2, d3, d4, d5, rhoBK, rhoM, rhoF, 
-                                 pBK, pM, pF, cSpeed, velBK, velM, velF, vel_cross_bound, delta);
-            d1_z[bk] = d1;
-            d2_z[bk] = d2;
-            d3_z[bk] = d3;
-            d4_z[bk] = d4;
-            d5_z[bk] = d5;
-          }
-        }
-      }
-      break;
-
-      default:
-      break;
-    }//end of switch
-  } //loop over faces
-}
 
 /*___________________________________________
  Function~ computeNu--                    L   O   D   I
  Purpose~  compute dissipation coefficients 
  __________________________________________*/ 
-
 void computeNu(CCVariable<double>& nux, 
                CCVariable<double>& nuy, 
                CCVariable<double>& nuz,
@@ -2592,208 +1823,123 @@ void computeNu(CCVariable<double>& nux,
   double d_SMALL_NUM = 1.0e-100;
     
   for(Patch::FaceType face = Patch::startFace; face <= Patch::endFace; 
-                      face = Patch::nextFace(face))
-    { 
-      switch (face) {
-      case Patch::xplus:{               //  X  P L U S
-        for(int j = low.y()+1; j < hi_y; j++) {
+                      face = Patch::nextFace(face)){ 
+    if(face == Patch::xplus || face == Patch::xminus) {      // X   F A C E S
+      int xFaceCell;
+      if(face == Patch::xplus ){
+       xFaceCell = hi_x;  
+      } else {
+       xFaceCell = low.x();
+      } 
+      
+      for(int j = low.y()+1; j < hi_y; j++) {
           for (int k = low.z(); k <= hi_z; k++) {
-            IntVector t  =  IntVector(hi_x,  j+1, k);
-            IntVector b  =  IntVector(hi_x,  j-1, k);
-            IntVector r  =  IntVector(hi_x,  j,   k);
+            IntVector t  =  IntVector(xFaceCell,  j+1, k);
+            IntVector b  =  IntVector(xFaceCell,  j-1, k);
+            IntVector r  =  IntVector(xFaceCell,  j,   k);
             nuy[r] = fabs(p[t] - 2.0 * p[r] + p[b])/
                     (fabs(p[t] - p[r]) + fabs(p[r] - p[b])  + d_SMALL_NUM);
           }
         }
          
         for (int k = low.z(); k <= hi_z; k++) {
-         nuy[IntVector(hi_x,hi_y,k)]    = nuy[IntVector(hi_x,hi_y-1,k)];
-         nuy[IntVector(hi_x,low.y(),k)] = nuy[IntVector(hi_x,low.y()+1,k)];
+         nuy[IntVector(xFaceCell,hi_y,k)]    = nuy[IntVector(xFaceCell,hi_y-1,k)];
+         nuy[IntVector(xFaceCell,low.y(),k)] = nuy[IntVector(xFaceCell,low.y()+1,k)];
         }
 
         for(int j = low.y(); j <= hi_y; j++) {
           for (int k = low.z()+1; k < hi_z; k++) {
-            IntVector r  =  IntVector(hi_x,  j,   k);
-            IntVector f  =  IntVector(hi_x,  j,   k+1);
-            IntVector bk =  IntVector(hi_x,  j,   k-1);
+            IntVector r  =  IntVector(xFaceCell,  j,   k);
+            IntVector f  =  IntVector(xFaceCell,  j,   k+1);
+            IntVector bk =  IntVector(xFaceCell,  j,   k-1);
             nuz[r] = fabs(p[f] - 2.0 * p[r] + p[bk])/
                     (fabs(p[f] - p[r]) + fabs(p[r] - p[bk]) + d_SMALL_NUM);
           }
         }
 
         for(int j = low.y(); j <= hi_y; j++) {
-          nuz[IntVector(hi_x,j,low.z())] = nuz[IntVector(hi_x,j,low.z()+1)];
-          nuz[IntVector(hi_x,j,hi_z)]    = nuz[IntVector(hi_x,j,hi_z-1)];
+          nuz[IntVector(xFaceCell,j,low.z())] = nuz[IntVector(xFaceCell,j,low.z()+1)];
+          nuz[IntVector(xFaceCell,j,hi_z)]    = nuz[IntVector(xFaceCell,j,hi_z-1)];
         }
       }
-      break;
-      
-      case Patch::xminus:{            //  X  M I N U S
-        for(int j = low.y()+1; j < hi_y; j++) {
+      //__________________________________
+      if(face == Patch::yplus || face == Patch::yminus) {      // Y   F A C E S
+     
+       int yFaceCell;
+       if(face == Patch::yplus ){
+        yFaceCell = hi_y;  
+       } else {
+        yFaceCell = low.y();
+       }
+         for(int i = low.x()+1; i < hi_x; i++) {
           for (int k = low.z(); k <= hi_z; k++) {
-            IntVector t  =  IntVector(low.x(),  j+1, k);
-            IntVector b  =  IntVector(low.x(),  j-1, k);
-            IntVector r  =  IntVector(low.x(),  j,   k);
-            nuy[r] = fabs(p[t] - 2.0 * p[r] + p[b])/
-                    (fabs(p[t] - p[r]) + fabs(p[r] - p[b])  + d_SMALL_NUM);
-          }
-        }
-         
-        for (int k = low.z(); k <= hi_z; k++) {
-          nuy[IntVector(low.x(),hi_y,k)]    = nuy[IntVector(low.x(),hi_y-1,k)];
-          nuy[IntVector(low.x(),low.y(),k)] = nuy[IntVector(low.x(),low.y()+1,k)];
-        }
-         
-        for(int j = low.y(); j <= hi_y; j++) {
-          for (int k = low.z()+1; k < hi_z; k++) {
-            IntVector r  =  IntVector(low.x(),  j,   k);
-            IntVector f  =  IntVector(low.x(),  j,   k+1);
-            IntVector bk =  IntVector(low.x(),  j,   k-1);
-            nuz[r] = fabs(p[f] - 2.0 * p[r] + p[bk])/
-                    (fabs(p[f] - p[r]) + fabs(p[r] - p[bk]) + d_SMALL_NUM);
-          }
-        }
-        
-        for(int j = low.y(); j <= hi_y; j++) {
-          nuz[IntVector(low.x(),j,low.z())] = nuz[IntVector(low.x(),j,low.z()+1)];
-          nuz[IntVector(low.x(),j,hi_z)]    = nuz[IntVector(low.x(),j,hi_z-1)];
-        }
-      }
-      break;
-
-      case Patch::yplus:{            //  Y   P L U S
-        for(int i = low.x()+1; i < hi_x; i++) {
-          for (int k = low.z(); k <= hi_z; k++) {
-            IntVector r  =  IntVector(i+1, hi_y,   k);
-            IntVector l  =  IntVector(i-1, hi_y,   k);
-            IntVector t  =  IntVector(i,   hi_y,   k);
-            nux[t] = fabs(p[r] - 2.0 * p[t] + p[l])/
-                    (fabs(p[r] - p[t]) + fabs(p[t] - p[l])  + d_SMALL_NUM);
+            IntVector r  =  IntVector(i+1, yFaceCell,   k);
+            IntVector l  =  IntVector(i-1, yFaceCell,   k);
+            IntVector c  =  IntVector(i,   yFaceCell,   k);
+            nux[c] = fabs(p[r] - 2.0 * p[c] + p[l])/
+                    (fabs(p[r] - p[c]) + fabs(p[c] - p[l])  + d_SMALL_NUM);
           }
         }
 
         for (int k = low.z(); k <= hi_z; k++) {
-          nux[IntVector(low.x(), hi_y, k)] = nux[IntVector(low.x()+1, hi_y, k)];
-          nux[IntVector(hi_x,    hi_y, k)] = nux[IntVector(hi_x-1,    hi_y, k)];
+          nux[IntVector(low.x(),yFaceCell,k)] = nux[IntVector(low.x()+1, yFaceCell, k)];
+          nux[IntVector(hi_x,   yFaceCell,k)] = nux[IntVector(hi_x-1,    yFaceCell, k)];
         }
 
 
         for(int i = low.x(); i <= hi_x; i++) {
           for (int k = low.z()+1; k < hi_z; k++) {
-            IntVector t  =  IntVector(i,   hi_y,   k);
-            IntVector f  =  IntVector(i,   hi_y,   k+1);
-            IntVector bk =  IntVector(i,   hi_y,   k-1);
-            nuz[t] = fabs(p[f] - 2.0 * p[t] + p[bk])/
-                    (fabs(p[f] - p[t]) + fabs(p[t] - p[bk]) + d_SMALL_NUM);
+            IntVector c  =  IntVector(i,   yFaceCell,   k);
+            IntVector f  =  IntVector(i,   yFaceCell,   k+1);
+            IntVector bk =  IntVector(i,   yFaceCell,   k-1);
+            nuz[c] = fabs(p[f] - 2.0 * p[c] + p[bk])/
+                    (fabs(p[f] - p[c]) + fabs(p[c] - p[bk]) + d_SMALL_NUM);
           }
         }
 
         for (int i = low.x(); i <= hi_x; i++) {
-          nuz[IntVector(i,hi_y,low.z())] = nuz[IntVector(i,hi_y,low.z()+1)];
-          nuz[IntVector(i,hi_y,hi_z)]   = nuz[IntVector(i,hi_y,hi_z-1)];
+          nuz[IntVector(i,yFaceCell,low.z())] = nuz[IntVector(i,yFaceCell,low.z()+1)];
+          nuz[IntVector(i,yFaceCell,hi_z)]    = nuz[IntVector(i,yFaceCell,hi_z-1)];
+        }
+      }  
+     //__________________________________
+     if(face == Patch::zplus || face == Patch::zminus) {      // Z   F A C E S
+
+      int zFaceCell;
+      if(face == Patch::zplus ){
+       zFaceCell = hi_z;  
+      } else {
+       zFaceCell = low.z();
+      }     
+      for(int i = low.x()+1; i < hi_x; i++) {
+         for (int j = low.y(); j <= hi_y; j++) {
+           IntVector r = IntVector(i+1, j,   zFaceCell);  
+           IntVector l = IntVector(i-1, j,   zFaceCell);  
+           IntVector c = IntVector(i,   j,   zFaceCell);  
+           nux[c] = fabs(p[r] - 2.0 * p[c] + p[l])/
+                   (fabs(p[r] - p[c]) + fabs(p[c] - p[l])  + d_SMALL_NUM);
+         }
+       }
+
+       for (int j = low.y(); j <= hi_y; j++) {
+         nux[IntVector(low.x(),j,zFaceCell)] = nux[IntVector(low.x()+1, j, zFaceCell)];
+         nux[IntVector(hi_x,   j,zFaceCell)] = nux[IntVector(hi_x-1,    j, zFaceCell)];
+       }
+
+       for(int i = low.x(); i <= hi_x; i++) {
+         for (int j = low.y()+1; j < hi_y; j++) {
+           IntVector t = IntVector(i, j+1, zFaceCell);    
+           IntVector b = IntVector(i, j-1, zFaceCell);    
+           IntVector c = IntVector(i, j,   zFaceCell);    
+           nuy[c] = fabs(p[t] - 2.0 * p[c] + p[b])/
+                   (fabs(p[t] - p[c]) + fabs(p[c] - p[b]) + d_SMALL_NUM);
         }
       }
 
-      break;
-      case Patch::yminus:{            //  Y    M I N U S
-
-        for(int i = low.x()+1; i < hi_x; i++) {
-          for (int k = low.z(); k <= hi_z; k++) {
-            IntVector r  =  IntVector(i+1, low.y(),   k);
-            IntVector l  =  IntVector(i-1, low.y(),   k);
-            IntVector b  =  IntVector(i,   low.y(),   k);
-            nux[b] = fabs(p[r] - 2.0 * p[b] + p[l])/
-                    (fabs(p[r] - p[b]) + fabs(p[b] - p[l])  + d_SMALL_NUM);
-          }
-        }
-
-        for (int k = low.z(); k <= hi_z; k++) {
-          nux[IntVector(low.x(), low.y(), k)] = nux[IntVector(low.x()+1, low.y(), k)];
-          nux[IntVector(hi_x,    low.y(), k)] = nux[IntVector(hi_x-1,    low.y(), k)];
-        }
-
-        for(int i = low.x(); i <= hi_x; i++) {
-          for (int k = low.z()+1; k < hi_z; k++) {
-            IntVector b  =  IntVector(i,   low.y(),   k);
-            IntVector f  =  IntVector(i,   low.y(),   k+1);
-            IntVector bk =  IntVector(i,   low.y(),   k-1);
-            nuz[b] = fabs(p[f] - 2.0 * p[b] + p[bk])/
-                    (fabs(p[f] - p[b]) + fabs(p[b] - p[bk]) + d_SMALL_NUM);
-         }
-       }
-
-        for (int i = low.x(); i <= hi_x; i++) {
-          nuz[IntVector(i,low.y(),low.z())] = nuz[IntVector(i,low.y(),low.z()+1)];
-          nuz[IntVector(i,low.y(),hi_z)]    = nuz[IntVector(i,low.y(),hi_z-1)];
-        }
+      for (int i = low.x(); i <= hi_x; i++) {
+        nuy[IntVector(i,low.y(),zFaceCell)] = nuy[IntVector(i,low.y()+1,zFaceCell)];
+        nuy[IntVector(i,hi_y,   zFaceCell)] = nuy[IntVector(i,hi_y-1,   zFaceCell)];
       }
-
-      case Patch::zplus:{             //   Z   P L U S
-        for(int i = low.x()+1; i < hi_x; i++) {
-          for (int j = low.y(); j <= hi_y; j++) {
-            IntVector r  =  IntVector(i+1, j,   hi_z);
-            IntVector l  =  IntVector(i-1, j,   hi_z);
-            IntVector f  =  IntVector(i,   j,   hi_z);
-            nux[f] = fabs(p[r] - 2.0 * p[f] + p[l])/
-                    (fabs(p[r] - p[f]) + fabs(p[f] - p[l])  + d_SMALL_NUM);
-          }
-        }
-
-        for (int j = low.y(); j <= hi_y; j++) {
-          nux[IntVector(low.x(), j, hi_z)] = nux[IntVector(low.x()+1, j, hi_z)];
-          nux[IntVector(hi_x,    j, hi_z)] = nux[IntVector(hi_x-1,    j, hi_z)];
-        }
-
-        for(int i = low.x(); i <= hi_x; i++) {
-          for (int j = low.y()+1; j < hi_y; j++) {
-            IntVector t  =  IntVector(i, j+1,   hi_z);
-            IntVector b  =  IntVector(i, j-1,   hi_z);
-            IntVector f =  IntVector(i, j, hi_z);
-            nuy[f] = fabs(p[t] - 2.0 * p[f] + p[b])/
-                    (fabs(p[t] - p[f]) + fabs(p[f] - p[b]) + d_SMALL_NUM);
-         }
-       }
-
-       for (int i = low.x(); i <= hi_x; i++) {
-         nuy[IntVector(i,low.y(),hi_z)] = nuy[IntVector(i,low.y()+1,hi_z)];
-         nuy[IntVector(i,hi_y,   hi_z)] = nuy[IntVector(i,hi_y-1,   hi_z)];
-       }
-     }
-      
-     case Patch::zminus:{             //   Z   M I N U S
-        for(int i = low.x()+1; i < hi_x; i++) {
-          for (int j = low.y(); j <= hi_y; j++) {
-            IntVector r  =  IntVector(i+1, j,   low.z());
-            IntVector l  =  IntVector(i-1, j,   low.z());
-            IntVector f  =  IntVector(i,   j,   low.z());
-            nux[f] = fabs(p[r] - 2.0 * p[f] + p[l])/
-                    (fabs(p[r] - p[f]) + fabs(p[f] - p[l])  + d_SMALL_NUM);
-          }
-        }
-
-        for (int j = low.y(); j <= hi_y; j++) {
-          nux[IntVector(low.x(), j, low.z())] = nux[IntVector(low.x()+1,j, low.z())];
-          nux[IntVector(hi_x,    j, low.z())] = nux[IntVector(hi_x-1,   j, low.z())];
-        }
-
-        for(int i = low.x(); i <= hi_x; i++) {
-          for (int j = low.y()+1; j < hi_y; j++) {
-            IntVector t  =  IntVector(i, j+1,   low.z());
-            IntVector b  =  IntVector(i, j-1,   low.z());
-            IntVector f =  IntVector(i, j, low.z());
-            nuy[f] = fabs(p[t] - 2.0 * p[f] + p[b])/
-                    (fabs(p[t] - p[f]) + fabs(p[f] - p[b]) + d_SMALL_NUM);
-         }
-       }
-
-       for (int i = low.x(); i <= hi_x; i++) {
-         nuy[IntVector(i,low.y(),low.z())] = nuy[IntVector(i,low.y()+1,low.z())];
-         nuy[IntVector(i,hi_y,   low.z())] = nuy[IntVector(i,hi_y-1,   low.z())];
-       }
-     }
-      
-     default:
-     break;
     }
   }
 }

@@ -1182,7 +1182,7 @@ void ICE::scheduleAdvectAndAdvanceInTime(SchedulerP& sched,
   task->requires(Task::OldDW, lb->rho_CCLabel,      ice_matls,  gn, 0);      
   task->requires(Task::OldDW, lb->vel_CCLabel,      ice_matls,  gn, 0);      
   task->requires(Task::OldDW, lb->sp_vol_CCLabel,   ice_matls,  gn, 0);      
-  task->requires(Task::OldDW, lb->vol_frac_CCLabel, ice_matls,  gn, 0);  
+  task->requires(Task::OldDW, lb->vol_frac_CCLabel, ice_matls,  gn, 0);
 #endif
 /*==========TESTING==========`*/
   task->modifies(lb->rho_CCLabel,   ice_matls);
@@ -4172,10 +4172,7 @@ cout << "using LODI BCS" <<endl;
       constCCVariable<double> vol_frac_old;
       constCCVariable<Vector> vel_old;
       CCVariable<double> press_tmp;
-      CCVariable<double> nux, nuy, nuz, e;
-      CCVariable<double> d1_x, d2_x, d3_x, d4_x, d5_x;
-      CCVariable<double> d1_y, d2_y, d3_y, d4_y, d5_y;
-      CCVariable<double> d1_z, d2_z, d3_z, d4_z, d5_z;      
+      CCVariable<double> nux, nuy, nuz, e;    
       double gamma = ice_matl->getGamma();
 
                                 //  O L D   D W
@@ -4190,54 +4187,20 @@ cout << "using LODI BCS" <<endl;
       new_dw->allocateTemporary(nux, patch);  
       new_dw->allocateTemporary(nuy, patch);  
       new_dw->allocateTemporary(nuz, patch);  
-      new_dw->allocateTemporary(e,   patch); 
-       
-      new_dw->allocateTemporary(d1_x, patch);
-      new_dw->allocateTemporary(d2_x, patch); 
-      new_dw->allocateTemporary(d3_x, patch);
-      new_dw->allocateTemporary(d4_x, patch);  
-      new_dw->allocateTemporary(d5_x, patch);  
+      new_dw->allocateTemporary(e,   patch);
      
-      new_dw->allocateTemporary(d1_y, patch);
-      new_dw->allocateTemporary(d2_y, patch); 
-      new_dw->allocateTemporary(d3_y, patch);
-      new_dw->allocateTemporary(d4_y, patch);  
-      new_dw->allocateTemporary(d5_y, patch);
-      
-      new_dw->allocateTemporary(d1_z, patch);
-      new_dw->allocateTemporary(d2_z, patch); 
-      new_dw->allocateTemporary(d3_z, patch);
-      new_dw->allocateTemporary(d4_z, patch);  
-      new_dw->allocateTemporary(d5_z, patch);
-     
-      d1_x.initialize(0.0);
-      d2_x.initialize(0.0);
-      d3_x.initialize(0.0);
-      d4_x.initialize(0.0);
-      d5_x.initialize(0.0);
-      d1_y.initialize(0.0);
-      d2_y.initialize(0.0);
-      d3_y.initialize(0.0);
-      d4_y.initialize(0.0);
-      d5_y.initialize(0.0);
-      d1_z.initialize(0.0);
-      d2_z.initialize(0.0);
-      d3_z.initialize(0.0);
-      d4_z.initialize(0.0);
-      d5_z.initialize(0.0);
       nux.initialize(0.0);
       nuy.initialize(0.0);  
       nuz.initialize(0.0);  
       press_tmp.initialize(0.0);  
       e.initialize(0.0);
-#if 0      
-      ostringstream desc1;
-       desc1 <<"BOT_Advection_after_BC_Mat_" <<indx<<"_patch_"<<patch->getID();           
-       printData(   indx, patch,1, desc1.str(), "nux",    nux);
-       printData(   indx, patch,1, desc1.str(), "nuy",    nuy);
-       printData(   indx, patch,1, desc1.str(), "nuz",    nuz);
-#endif
-    
+      
+      StaticArray<CCVariable<Vector> > di(6);
+      for (int i = 0; i <= 5; i++){
+        new_dw->allocateTemporary(di[i], patch);
+        di[i].initialize(Vector(0,0,0));
+      }    
+
       //   T O   D O :  change to faceCellIterator
       for(CellIterator iter = patch->getExtraCellIterator();
                                      !iter.done();iter++){
@@ -4250,61 +4213,40 @@ cout << "using LODI BCS" <<endl;
       computeNu(nux, nuy, nuz, press_tmp, patch);
       
       //compute Di at boundary cells
-      computeLODIFirstOrder(d1_x, d2_x, d3_x, d4_x, d5_x, 
-                            d1_y, d2_y, d3_y, d4_y, d5_y,
-                            d1_z, d2_z, d3_z, d4_z, d5_z, 
-                            rho_old,  press_tmp, vel_old, 
-                            speedSound, patch, indx); 
-                           
-                                
-/*    computeLODISecondOrder(d1_x, d2_x, d3_x, d4_x, d5_x, 
-                             d1_y, d2_y, d3_y, d4_y, d5_y,
-                             d1_z, d2_z, d3_z, d4_z, d5_z, 
-                           rho_old,  press_tmp, vel_old, speedSound, 
-                             patch, indx);
-    */ 
-#if 0
+      computeDi(di,rho_old,  press_tmp, vel_old, 
+                            speedSound, patch, indx);  
+    #if 0
       //--------------------TESTING---------------------//    
       ostringstream desc;
       desc <<"BOT_Advection_after_BC_Mat_" <<indx<<"_patch_"<<patch->getID();
       printData(   indx, patch,1, desc.str(), "press_tmp",    press_tmp);
-      printData(   indx, patch,1, desc.str(), "rho_L",        rho_L);
-      printVector( indx, patch,1, desc.str(), "vel_L_CC", 0, vel_L_CC);
-      printData(   indx, patch,1, desc.str(), "d1_x",    d1_x);
-      printData(   indx, patch,1, desc.str(), "d1_y",    d1_y);
-      printData(   indx, patch,1, desc.str(), "d1_z",    d1_z);
-      printData(   indx, patch,1, desc.str(), "d2_x",    d2_x);
-      printData(   indx, patch,1, desc.str(), "d2_y",    d2_y);
-      printData(   indx, patch,1, desc.str(), "d2_z",    d2_z);
-      printData(   indx, patch,1, desc.str(), "d3_x",    d3_x);
-      printData(   indx, patch,1, desc.str(), "d3_y",    d3_y);
-      printData(   indx, patch,1, desc.str(), "d3_z",    d3_z);
-      printData(   indx, patch,1, desc.str(), "d4_x",    d4_x);
-      printData(   indx, patch,1, desc.str(), "d4_y",    d4_y);
-      printData(   indx, patch,1, desc.str(), "d4_z",    d4_z);
-      printData(   indx, patch,1, desc.str(), "d5_x",    d5_x);
-      printData(   indx, patch,1, desc.str(), "d5_y",    d5_y);
-      printData(   indx, patch,1, desc.str(), "d5_z",    d5_z);
+      printData(   indx, patch,1, desc.str(), "rho_old",        rho_old);
+      printVector( indx, patch,1, desc.str(), "vel_old", 0, vel_old);
+      printData(   indx, patch,1, desc.str(), "nux",    nux);
+      printData(   indx, patch,1, desc.str(), "nuy",    nuy);
+      printData(   indx, patch,1, desc.str(), "nuz",    nuz);
+      printVector( indx, patch,1, desc.str(), "d1",      0, di[1]);    
+      printVector( indx, patch,1, desc.str(), "d2",      0, di[2]);    
+      printVector( indx, patch,1, desc.str(), "d3",      0, di[3]);    
+      printVector( indx, patch,1, desc.str(), "d4",      0, di[4]);    
+      printVector( indx, patch,1, desc.str(), "d5",      0, di[5]);    
+     
        //--------------------TESTING---------------------//             
-#endif          
-      setBCDensityLODI(rho_CC,d1_x, d1_y, d1_z, 
+    #endif          
+      setBCDensityLODI(rho_CC,di,
                        nux, nuy, nuz,
                        rho_old, press_tmp, 
                        vel_old, delT, patch, indx);
 
-      setBCVelLODI(vel_CC, d1_x, d3_x, d4_x, d5_x, 
-                           d1_y, d3_y, d4_y, d5_y,
-                           d1_z, d3_z, d4_z, d5_z,
+      setBCVelLODI(vel_CC, di,
                            nux, nuy, nuz, rho_old, press_tmp, 
                            vel_old, delT, patch, indx);
                      
                        
-      setBCTempLODI(temp, d1_x, d2_x, d3_x, d4_x, d5_x, 
-                          d1_y, d2_y, d3_y, d4_y, d5_y,
-                          d1_z, d2_z, d3_z, d4_z, d5_z, 
+      setBCTempLODI(temp, di, 
                           e, rho_CC, nux, nuy, nuz, 
                           rho_old, press_tmp, vel_old, 
-                    delT, cv, gamma, patch, indx);
+                          delT, cv, gamma, patch, indx);
 #endif
 
       //---- P R I N T   D A T A ------   
