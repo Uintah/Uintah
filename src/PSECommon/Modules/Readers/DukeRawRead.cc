@@ -46,7 +46,7 @@ public:
   virtual void execute();
 };
 
-extern "C" Module* make_DukeRawReader(const clString& id) {
+extern "C" Module* make_DukeRawRead(const clString& id) {
   return new DukeRawReader(id);
 }
 
@@ -174,6 +174,9 @@ void DukeRawReader::execute()
 
 //
 // $Log$
+// Revision 1.8  2000/11/30 17:57:51  moulding
+// corrected maker function name DukeRawReader -> DukeRawRead
+//
 // Revision 1.7  2000/03/17 09:27:11  sparker
 // New makefile scheme: sub.mk instead of Makefile.in
 // Use XML-based files for module repository
