@@ -4,6 +4,7 @@
 #include <Core/Exceptions/InternalError.h>
 #include <Core/Thread/Time.h>
 #include <Core/Util/Assert.h>
+#include <Core/Util/NotFinished.h>
 
 #include <iostream>
 #include <stdio.h>
@@ -16,7 +17,7 @@ using namespace SCIRun;
 
 // Debug: Used to sync cerr so it is readable (when output by
 // multiple threads at the same time)
-Mutex * cerrLock = scinew Mutex( "cerr lock" );
+Mutex cerrLock( "cerr lock" );
 
 #define DAV_DEBUG 0
 
@@ -30,9 +31,9 @@ void
 Worker::assignTask( Task * task, const ProcessorGroup * pg )
 {
 #if DAV_DEBUG
-  cerrLock->lock();
+  cerrLock.lock();
   cerr << "Worker " << d_id << "- assignTask:   " << *task << "\n";
-  cerrLock->unlock();
+  cerrLock.unlock();
 #endif
   ASSERT( !d_pg && !d_task );
   d_pg = pg;
@@ -47,18 +48,22 @@ Worker::run()
 
     double beginTime = Time::currentSeconds();
 #if DAV_DEBUG
-    cerrLock->lock(); cerr << "Worker " << d_id << " running: " 
-			  << *d_task << "\n"; cerrLock->unlock();
+    cerrLock.lock(); cerr << "Worker " << d_id << " running: " 
+			  << *d_task << "\n"; cerrLock.unlock();
 #endif
 
     ASSERT( d_task != 0 );
 
     Task * task = d_task;
 
+#if 0
     d_task->doit( d_pg );
+#else
+    NOT_FINISHED("new task stuff");
+#endif
 
 #if DAV_DEBUG
-    cerrLock->lock();cerr<<"Done:    " <<*d_task<< "\n";cerrLock->unlock();
+    cerrLock.lock();cerr<<"Done:    " <<*d_task<< "\n";cerrLock.unlock();
 #endif
 
     d_task = 0;
@@ -189,9 +194,9 @@ ThreadPool::done( int id, Task * task, double timeUsed )
   d_workerQueueLock->lock();
 
 #if DAV_DEBUG
-  cerrLock->lock();
+  cerrLock.lock();
   cerr << "Worker " << id << " finished: " << *task << "\n";
-  cerrLock->unlock();
+  cerrLock.unlock();
 #endif
 
   d_finishedTasks.push_back( task );

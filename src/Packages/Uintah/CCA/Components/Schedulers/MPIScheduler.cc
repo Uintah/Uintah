@@ -1,26 +1,27 @@
 
-
 #include <Packages/Uintah/CCA/Components/Schedulers/MPIScheduler.h>
 #include <Packages/Uintah/CCA/Components/Schedulers/OnDemandDataWarehouse.h>
 #include <Packages/Uintah/CCA/Components/Schedulers/SendState.h>
+#include <Packages/Uintah/CCA/Components/Schedulers/DetailedTasks.h>
 #include <Packages/Uintah/CCA/Ports/LoadBalancer.h>
+#include <Packages/Uintah/Core/Grid/DetailedTask.h>
 #include <Packages/Uintah/Core/Grid/Patch.h>
 #include <Packages/Uintah/Core/Grid/ParticleVariable.h>
-#include <Packages/Uintah/Core/Grid/ScatterGatherBase.h>
+#include <Packages/Uintah/Core/Grid/BufferInfo.h>
 #include <Packages/Uintah/Core/Parallel/ProcessorGroup.h>
+#include <Core/Containers/Array2.h>
 #include <Core/Thread/Time.h>
 #include <Core/Util/DebugStream.h>
 #include <Core/Util/FancyAssert.h>
 #include <Packages/Uintah/Core/Grid/VarLabel.h>
 #include <Packages/Uintah/Core/Grid/TypeDescription.h>
 #include <Core/Malloc/Allocator.h>
+#include <Core/Util/NotFinished.h>
 #include <mpi.h>
 #include <iomanip>
+#include <map>
 #include <set>
-
-#ifdef USE_VAMPIR
 #include <Packages/Uintah/Core/Parallel/Vampir.h>
-#endif //USE_VAMPIR
 
 using namespace std;
 using namespace Uintah;
@@ -28,72 +29,71 @@ using namespace SCIRun;
 
 static DebugStream dbg("MPIScheduler", false);
 static DebugStream timeout("MPIScheduler.timings", false);
-#define PARTICLESET_TAG		0x1000000
-#define RECV_BUFFER_SIZE_TAG	0x2000000
+#define RELOCATE_TAG            0x1000000
 
-struct DestType {
-   // A unique destination for sending particle sets
-   const Patch* patch;
-   int matlIndex;
-   int dest;
-   DestType(int matlIndex, const Patch* patch, int dest)
-      : patch(patch), matlIndex(matlIndex), dest(dest)
-   {
-   }
-   bool operator<(const DestType& c) const {
-      if(patch < c.patch)
-	 return true;
-      else if(patch == c.patch){
-	 if(matlIndex < c.matlIndex)
-	    return true;
-	 else if(matlIndex == c.matlIndex)
-	    return dest < c.dest;
-      }
-      // Never reached, but SGI compile complaines?
-      return false;
-   }
+namespace Uintah {
+struct SendRecord {
+  void testsome(int me);
+  void waitall(int me);
+  vector<MPI_Request> ids;
+  vector<MPI_Status> statii;
+  vector<int> indices;
+  void add(MPI_Request id) {
+    ids.push_back(id);
+  }
 };
+}
 
-struct VarDestType {
-   // A unique destination for sending particle sets
-   const VarLabel* var;
-   const Patch* patch;
-   int matlIndex;
-   int dest;
-   VarDestType(const VarLabel* var, int matlIndex, const Patch* patch, int dest)
-      : var(var), patch(patch), matlIndex(matlIndex), dest(dest)
-   {
-   }
-   bool operator<(const VarDestType& c) const {
-      VarLabel::Compare comp;
-      if(comp(var, c.var))
-	 return true;
-      else if(!(comp(c.var, var))){
-	 if(patch < c.patch)
-	    return true;
-	 else if(patch == c.patch){
-	    if(matlIndex < c.matlIndex)
-	       return true;
-	    else if(matlIndex == c.matlIndex)
-	       return dest < c.dest;
-	 }
-      }
-      return false;
-   }
-};
 
-static const TypeDescription* specialType;
+static void printTask(ostream& out, DetailedTask* task)
+{
+  out << task->getTask()->getName();
+  if(task->getPatches()){
+    out << " on patches ";
+    const PatchSubset* patches = task->getPatches();
+    for(int p=0;p<patches->size();p++){
+      if(p != 0)
+	out << ", ";
+      out << patches->get(p)->getID();
+    }
+  }
+}
+
+void SendRecord::testsome(int me)
+{
+  if(ids.size() == 0)
+    return;
+  statii.resize(ids.size());
+  indices.resize(ids.size());
+  dbg << me << " Calling send Testsome with " << ids.size() << " waiters\n";
+  int donecount;
+  MPI_Testsome((int)ids.size(), &ids[0], &donecount,
+	       &indices[0], &statii[0]);
+  dbg << me << " Done calling send Testsome with " << ids.size() 
+      << " waiters and got " << donecount << " done\n";
+  if(donecount == (int)ids.size() || donecount == MPI_UNDEFINED){
+    ids.clear();
+  }
+}
+
+void SendRecord::waitall(int me)
+{
+  if(ids.size() == 0)
+    return;
+  statii.resize(ids.size());
+  dbg << me << " Calling recv waitall with " << ids.size() << " waiters\n";
+  MPI_Waitall((int)ids.size(), &ids[0], &statii[0]);
+  dbg << me << " Done calling recv waitall with " 
+      << ids.size() << " waiters\n";
+  ids.clear();
+}
 
 MPIScheduler::MPIScheduler(const ProcessorGroup* myworld, Output* oport)
-   : UintahParallelComponent(myworld), Scheduler(oport), log(myworld, oport)
+   : SchedulerCommon(myworld, oport), log(myworld, oport)
 {
   d_generation = 0;
-  if(!specialType)
-     specialType = scinew TypeDescription(TypeDescription::ScatterGatherVariable,
-				       "DataWarehouse::specialInternalScatterGatherType", false, -1);
-  scatterGatherVariable = scinew VarLabel("DataWarehouse::scatterGatherVariable",
-				       specialType, VarLabel::Internal);
   d_lasttime=Time::currentSeconds();
+  reloc_matls = 0;
 }
 
 
@@ -105,928 +105,886 @@ MPIScheduler::problemSetup(const ProblemSpecP& prob_spec)
 
 MPIScheduler::~MPIScheduler()
 {
+  if(reloc_matls && reloc_matls->removeReference())
+    delete reloc_matls;
 }
 
 void
-MPIScheduler::initialize()
+MPIScheduler::compile(const ProcessorGroup* pg)
 {
-   graph.initialize();
+  if(dt)
+    delete dt;
+  dt = graph.createDetailedTasks(pg);
+
+  if(dt->numTasks() == 0){
+    cerr << "WARNING: Scheduler executed, but no tasks\n";
+  }
+  
+  UintahParallelPort* lbp = getPort("load balancer");
+  LoadBalancer* lb = dynamic_cast<LoadBalancer*>(lbp);
+  lb->assignResources(*dt, d_myworld);
+
+  graph.createDetailedDependencies(dt, lb, pg);
+  releasePort("load balancer");
+
+  dt->assignMessageTags();
+  int me=pg->myrank();
+  dt->computeLocalTasks(me);
+  // Compute a simple checksum to make sure that all processes
+  // are trying to execute the same graph.  We should do two
+  // things in the future:
+  //  - make a flag to turn this off
+  //  - make the checksum more sophisticated
+  int checksum = dt->getMaxMessageTag();
+  int result_checksum;
+  MPI_Allreduce(&checksum, &result_checksum, 1, MPI_INT, MPI_MIN,
+		d_myworld->getComm());
+  if(checksum != result_checksum){
+    cerr << "Failed task checksum comparison!\n";
+    cerr << "Processor: " << d_myworld->myrank() << " of "
+	 << d_myworld->size() << ": has sum " << checksum
+	 << " and global is " << result_checksum << '\n';
+    MPI_Abort(d_myworld->getComm(), 1);
+  }
 }
 
 void
-MPIScheduler::execute(const ProcessorGroup * pc,
-		      DataWarehouseP   & old_dw,
-		      DataWarehouseP   & dw )
+MPIScheduler::execute(const ProcessorGroup * pg )
 {
-#ifdef USE_VAMPIR
-   VT_begin(VT_EXECUTE);
-#endif
+  ASSERT(dt != 0);
+  dbg << "MPIScheduler executing\n";
+  VT_begin(VT_EXECUTE);
 
-   d_labels.clear();
-   d_times.clear();
-   emitTime("time since last execute");
-   SendState ss;
-   // We do not use many Bsends, so this doesn't need to be
-   // big.  We make it moderately large anyway.
-   void* old_mpibuffer;
-   int old_mpibuffersize;
-   MPI_Buffer_detach(&old_mpibuffer, &old_mpibuffersize);
+  d_labels.clear();
+  d_times.clear();
+  emitTime("time since last execute");
+  SendState ss;
+  // We do not use many Bsends, so this doesn't need to be
+  // big.  We make it moderately large anyway - memory is cheap.
+  void* old_mpibuffer;
+  int old_mpibuffersize;
+  MPI_Buffer_detach(&old_mpibuffer, &old_mpibuffersize);
 #define MPI_BUFSIZE (10000+MPI_BSEND_OVERHEAD)
-   char* mpibuffer = new char[MPI_BUFSIZE];
-   MPI_Buffer_attach(mpibuffer, MPI_BUFSIZE);
+  char* mpibuffer = scinew char[MPI_BUFSIZE];
+  MPI_Buffer_attach(mpibuffer, MPI_BUFSIZE);
 
-   UintahParallelPort* lbp = getPort("load balancer");
-   LoadBalancer* lb = dynamic_cast<LoadBalancer*>(lbp);
-   lb->assignResources(graph, d_myworld);
-   releasePort("load balancer");
+  VT_begin(VT_SEND_PARTICLES);
 
-   graph.assignSerialNumbers();
+  SendRecord sends;
 
-   emitTime("assignSerialNumbers");
+  int me = pg->myrank();
+  makeTaskGraphDoc(dt, me == 0);
 
+  emitTime("taskGraph output");
+  double totalreduce=0;
+  double totalsend=0;
+  double totalrecv=0;
+  double totaltask=0;
+  double totalreducempi=0;
+  double totalsendmpi=0;
+  double totalrecvmpi=0;
+  double totaltestmpi=0;
+  double totalwaitmpi=0;
+  int ntasks = dt->numLocalTasks();
+  dbg << "Executing " << dt->numTasks() << " tasks (" << ntasks << " local)\n";
 
-#ifdef USE_VAMPIR
-   VT_begin(VT_SEND_PARTICLES);
-#endif
-
-   // Send particle sets
-   int me = pc->myrank();
-   vector<Task*>& presort_tasks = graph.getTasks();
-   set<DestType> sent;
-   for(vector<Task*>::iterator iter = presort_tasks.begin();
-       iter != presort_tasks.end(); iter++){
-      Task* task = *iter;
-      if(task->getAssignedResourceIndex() == me)
-	 continue;
-      if(task->getType() != Task::Normal)
-	 continue;
-
-      const Task::reqType& reqs = task->getRequires();
-      for(Task::reqType::const_iterator dep = reqs.begin();
-	  dep != reqs.end(); dep++){
-
-	 if(dep->d_dw->isFinalized() && dep->d_patch 
-	    && dep->d_var->typeDescription()->getType() == TypeDescription::ParticleVariable){
-	    int dest = task->getAssignedResourceIndex();
-	    if(dep->d_dw->haveParticleSubset(dep->d_matlIndex, dep->d_patch)){
-	       DestType ddest(dep->d_matlIndex, dep->d_patch, dest);
-	       if(sent.find(ddest) == sent.end()){
-		  int size;
-		  ParticleSubset* pset = dep->d_dw->getParticleSubset(dep->d_matlIndex, dep->d_patch);
-		  OnDemandDataWarehouse* newdw = dynamic_cast<OnDemandDataWarehouse*>(dw.get_rep());
-		  if(!dw)
-		     throw InternalError("Wrong Datawarehouse?");
-		  newdw->sendParticleSubset(ss, pset, reloc_new_posLabel,
-					    dep, task->getPatch(), d_myworld, &size);
-		  log.logSend(dep, size, "particleSet size");
-		  sent.insert(ddest);
-	       }
-	    }
-	 }
+  for(int i=0;i<ntasks;i++){
+    DetailedTask* task = dt->localTask(i);
+    dbg << "Task " << i << " of " << ntasks << '\n';
+    switch(task->getTask()->getType()){
+    case Task::Reduction:
+      {
+	dbg << me << " Performing reduction: ";
+	printTask(dbg, task);
+	dbg << '\n';
+	double reducestart = Time::currentSeconds();
+	const Task::Dependency* comp = task->getTask()->getComputes();
+	ASSERT(!comp->next);
+	OnDemandDataWarehouse* dw = this->dw[Task::NewDW];
+	dw->reduceMPI(comp->var, task->getMaterials(), d_myworld);
+	double reduceend = Time::currentSeconds();
+	emitNode(task, reducestart, reduceend - reducestart);
+	totalreduce += reduceend-reducestart;
+	totalreducempi += reduceend-reducestart;
       }
-   }
+      break;
+    case Task::Normal:
+    case Task::InitialSend:
+      {
+	dbg << me << " Performing task: ";
+	printTask(dbg, task);
+	dbg << '\n';
+	double recvstart = Time::currentSeconds();
+	{
+	  VT_begin(VT_RECV_DEPENDENCIES);
+	  SendRecord recvs;
+	  // Receive any of the foreign requires
+	  for(DependencyBatch* batch = task->getRequires();
+	      batch != 0; batch = batch->req_next){
+	    // Prepare to receive a message
+	    BufferInfo mpibuff;
 
-#ifdef USE_VAMPIR
-   VT_end(VT_SEND_PARTICLES);
-   VT_begin(VT_RECV_PARTICLES);
-#endif
-
-   // Recv particle sets
-   for(vector<Task*>::iterator iter = presort_tasks.begin();
-       iter != presort_tasks.end(); iter++){
-      Task* task = *iter;
-      if(task->getAssignedResourceIndex() != me)
-	 continue;
-      if(task->getType() != Task::Normal)
-	 continue;
-
-      const Task::reqType& reqs = task->getRequires();
-      for(Task::reqType::const_iterator dep = reqs.begin();
-	  dep != reqs.end(); dep++){
-	 if(dep->d_dw->isFinalized() && dep->d_patch 
-	    && dep->d_var->typeDescription()->getType() == TypeDescription::ParticleVariable){
-	    if(!dep->d_dw->haveParticleSubset(dep->d_matlIndex, dep->d_patch)){
-	       int numParticles;
-	       MPI_Status status;
-	       ASSERT(dep->d_serialNumber >= 0);
-	       MPI_Recv(&numParticles, 1, MPI_INT, MPI_ANY_SOURCE, PARTICLESET_TAG|dep->d_serialNumber, d_myworld->getComm(), &status);
-	       dep->d_dw->createParticleSubset(numParticles, dep->d_matlIndex, dep->d_patch);
+	    // Create the MPI type
+	    for(DetailedDep* req = batch->head; req != 0; req = req->next){
+	      OnDemandDataWarehouse* dw = this->dw[req->req->dw];
+	      dbg << me << " <-- receiving " << *req << '\n';
+	      dw->recvMPI(mpibuff, batch, pg, this->dw[Task::OldDW], req);
 	    }
-	 }
-      }
-   }
-
-#ifdef USE_VAMPIR
-   VT_end(VT_RECV_PARTICLES);
-   VT_begin(VT_SEND_INITDATA);
-#endif
-
-   emitTime("send/recv particles sets");
-
-   set<VarDestType> varsent;
-   // send initial data from old datawarehouse
-   vector<MPI_Request> send_ids;
-   vector<MPI_Status> send_statii;
-   vector<int> indices;
-   for(vector<Task*>::iterator iter = presort_tasks.begin();
-       iter != presort_tasks.end(); iter++){
-      Task* task = *iter;
-      if(task->getAssignedResourceIndex() == me)
-	 continue;
-      if(task->getType() != Task::Normal)
-	 continue;
-
-      const Task::reqType& reqs = task->getRequires();
-      for(Task::reqType::const_iterator dep = reqs.begin();
-	  dep != reqs.end(); dep++){
-	 if(dep->d_dw->isFinalized() && dep->d_patch){
-	    if(dep->d_dw->exists(dep->d_var, dep->d_matlIndex, dep->d_patch)){
-	       VarDestType ddest(dep->d_var, dep->d_matlIndex, dep->d_patch, task->getAssignedResourceIndex());
-	       if(varsent.find(ddest) == varsent.end()){
-		  OnDemandDataWarehouse* dw = dynamic_cast<OnDemandDataWarehouse*>(dep->d_dw);
-		  if(!dw)
-		     throw InternalError("Wrong Datawarehouse?");
-		  MPI_Request requestid;
-		  ASSERT(dep->d_serialNumber >= 0);
-		  dbg << me << " --> sending initial " << dep->d_var->getName() << " serial " << dep->d_serialNumber << ", to " << dep->d_task->getAssignedResourceIndex() << '\n';
-		  int size;
-		  dw->sendMPI(ss, dep->d_var, dep->d_matlIndex,
-			      dep->d_patch, d_myworld, dep,
-			      dep->d_task->getAssignedResourceIndex(),
-			      dep->d_serialNumber, &size, &requestid);
-		  if(size != -1){
-		     log.logSend(dep, size);
-		     send_ids.push_back(requestid);
-		  }
-		  varsent.insert(ddest);
-	       }
+	    // Post the receive
+	    if(mpibuff.count()>0){
+	      ASSERT(batch->messageTag > 0);
+	      double start = Time::currentSeconds();
+	      void* buf;
+	      int count;
+	      MPI_Datatype datatype;
+	      mpibuff.get_type(buf, count, datatype);
+	      int from = batch->fromTask->getAssignedResourceIndex();
+	      MPI_Request requestid;
+	      MPI_Irecv(buf, count, datatype, from, batch->messageTag,
+			pg->getComm(), &requestid);
+	      recvs.add(requestid);
+	      totalrecvmpi+=Time::currentSeconds()-start;
 	    }
-	 }
+	  }
+
+	  double start = Time::currentSeconds();
+	  recvs.waitall(me);
+	  totalwaitmpi+=Time::currentSeconds()-start;
+	}
+	
+	VT_end(VT_RECV_DEPENDENCIES);
+
+	VT_begin(VT_PERFORM_TASK);
+	dbg << me << " Starting task: ";
+	printTask(dbg, task);
+	dbg << '\n';
+	double taskstart = Time::currentSeconds();
+	task->doit(pg, dw[Task::OldDW], dw[Task::NewDW]);
+	double sendstart = Time::currentSeconds();
+	
+	VT_end(VT_PERFORM_TASK);
+	VT_begin(VT_SEND_COMPUTES);
+
+	// Send data to dependendents
+	for(DependencyBatch* batch = task->getComputes();
+	    batch != 0; batch = batch->comp_next){
+	  // Prepare to send a message
+	  BufferInfo mpibuff;
+
+	  // Create the MPI type
+	  int to = batch->toTask->getAssignedResourceIndex();
+	  for(DetailedDep* req = batch->head; req != 0; req = req->next){
+	    OnDemandDataWarehouse* dw = this->dw[req->req->dw];
+	    dbg << me << " --> sending " << *req << '\n';
+	    dw->sendMPI(ss, batch, pg, reloc_new_posLabel,
+			mpibuff, this->dw[Task::OldDW], req);
+	  }
+	  // Post the send
+	  if(mpibuff.count()>0){
+	    ASSERT(batch->messageTag > 0);
+	    double start = Time::currentSeconds();
+	    void* buf;
+	    int count;
+	    MPI_Datatype datatype;
+	    mpibuff.get_type(buf, count, datatype);
+	    dbg << "Sending message number " << batch->messageTag 
+		<< " to " << to << "\n";
+	    MPI_Request requestid;
+	    MPI_Isend(buf, count, datatype, to, batch->messageTag,
+		      pg->getComm(), &requestid);
+	    sends.add(requestid);
+	    totalsendmpi+=Time::currentSeconds()-start;
+	  }
+	}
+
+	double start = Time::currentSeconds();
+	sends.testsome(me);
+	totaltestmpi += Time::currentSeconds()-start;
+	VT_end(VT_SEND_COMPUTES);
+
+	double dsend = Time::currentSeconds()-sendstart;
+	double dtask = sendstart-taskstart;
+	double drecv = taskstart-recvstart;
+	dbg << me << " Completed task: ";
+	printTask(dbg, task);
+	dbg << '\n';
+	emitNode(task, Time::currentSeconds(), dsend+dtask+drecv);
+	totalsend+=dsend;
+	totaltask+=dtask;
+	totalrecv+=drecv;
       }
-   }
-   if(send_ids.size() > 0){
-      send_statii.resize(send_ids.size());
-      indices.resize(send_ids.size());
-      dbg << me << " Calling send Testsome with " << send_ids.size() << " waiters\n";
-      int donecount;
-      MPI_Testsome((int)send_ids.size(), &send_ids[0], &donecount,
-		   &indices[0], &send_statii[0]);
-      dbg << me << " Done calling send Testsome with " << send_ids.size() << " waiters and got " << donecount << " done\n";
-      if(donecount == (int)send_ids.size() || donecount == MPI_UNDEFINED){
-	 send_ids.clear();
-      }
-   }
+      break;
+    default:
+      throw InternalError("Unknown task type");
+    }
+  }
+  emitTime("MPI send time", totalsendmpi);
+  emitTime("MPI Testsome time", totaltestmpi);
+  emitTime("Total send time", totalsend-totalsendmpi-totaltestmpi);
+  emitTime("MPI recv time", totalrecvmpi);
+  emitTime("MPI wait time", totalwaitmpi);
+  emitTime("Total recv time", totalrecv-totalrecvmpi-totalwaitmpi);
+  emitTime("Total task time", totaltask);
+  emitTime("Total MPI reduce time", totalreducempi);
+  emitTime("Total reduction time", totalreduce-totalreducempi);
+  double time = Time::currentSeconds();
+  double totalexec = time-d_lasttime;
+  d_lasttime=time;
+  emitTime("Other excution time",
+	   totalexec-totalsend-totalrecv-totaltask-totalreduce);
 
-#ifdef USE_VAMPIR
-   VT_end(VT_SEND_INITDATA);
-   VT_begin(VT_RECV_INITDATA);
-#endif
+  sends.waitall(me);
+  emitTime("final wait");
 
-   // recv initial data from old datawarhouse
-   vector<MPI_Request> recv_ids;
-   for(vector<Task*>::iterator iter = presort_tasks.begin();
-       iter != presort_tasks.end(); iter++){
-      Task* task = *iter;
-      if(task->getAssignedResourceIndex() != me)
-	 continue;
-      if(task->getType() != Task::Normal)
-	 continue;
+  dw[1]->finalize();
+  finalizeNodes(me);
+  int junk;
+  MPI_Buffer_detach(&mpibuffer, &junk);
+  delete[] mpibuffer;
+  if(old_mpibuffersize)
+    MPI_Buffer_attach(old_mpibuffer, old_mpibuffersize);
 
-      const Task::reqType& reqs = task->getRequires();
-      for(Task::reqType::const_iterator dep = reqs.begin();
-	  dep != reqs.end(); dep++){
-	 if(dep->d_dw->isFinalized() && dep->d_patch){
-	    if(!dep->d_dw->exists(dep->d_var, dep->d_matlIndex, dep->d_patch)){
-	       OnDemandDataWarehouse* dw = dynamic_cast<OnDemandDataWarehouse*>(dep->d_dw);
-	       if(!dw)
-		  throw InternalError("Wrong Datawarehouse?");
-	       MPI_Request requestid;
-	       ASSERT(dep->d_serialNumber >= 0);
-	       dbg << me << " <-- receiving initial " << dep->d_var->getName() << " serial " << dep->d_serialNumber << '\n';
-	       int size;
-	       dw->recvMPI(ss, old_dw, dep->d_var, dep->d_matlIndex,
-			   dep->d_patch, d_myworld, dep,
-			   MPI_ANY_SOURCE,
-			   dep->d_serialNumber, &size, &requestid);
-	       if(size != -1){
-		  log.logRecv(dep, size);
-		  recv_ids.push_back(requestid);
-	       }
-	    }
-	 }
-      }
-   }
-   if(recv_ids.size() > 0){
-      vector<MPI_Status> statii(recv_ids.size());
-      dbg << me << " Calling recv waitall with " << recv_ids.size() << " waiters\n";
-      MPI_Waitall((int)recv_ids.size(), &recv_ids[0], &statii[0]);
-      dbg << me << " Done calling recv waitall with " << recv_ids.size() << " waiters\n";
-   }
+  log.finishTimestep();
+  emitTime("finalize");
+  vector<double> d_totaltimes(d_times.size());
+  MPI_Reduce(&d_times[0], &d_totaltimes[0], (int)d_times.size(), MPI_DOUBLE,
+	     MPI_SUM, 0, d_myworld->getComm());
+  if(me == 0){
+    double total=0;
+    for(int i=0;i<(int)d_totaltimes.size();i++)
+      total+= d_totaltimes[i];
+    for(int i=0;i<(int)d_totaltimes.size();i++){
+      timeout << "MPIScheduler: " << d_labels[i] << ": ";
+      int len = (int)(strlen(d_labels[i])+strlen("MPIScheduler: ")+strlen(": "));
+      for(int j=len;j<55;j++)
+	timeout << ' ';
+      double percent=d_totaltimes[i]/total*100;
+      timeout << d_totaltimes[i] << " seconds (" << percent << "%)\n";
+    }
+    double time = Time::currentSeconds();
+    double rtime=time-d_lasttime;
+    d_lasttime=time;
+    timeout << "MPIScheduler: TOTAL                                    "
+	    << total << '\n';
+    timeout << "MPIScheduler: time sum reduction (one processor only): " 
+	    << rtime << '\n';
+  }
 
-#ifdef USE_VAMPIR
-   VT_end(VT_RECV_INITDATA);
-#endif
-
-   emitTime("send initial data");
-
-   vector<Task*> tasks;
-   graph.topologicalSort(tasks);
-
-   int ntasks = (int)tasks.size();
-   if(ntasks == 0){
-      cerr << "WARNING: Scheduler executed, but no tasks\n";
-   }
-
-   emitTime("topologicalSort:");
-
-#ifdef USE_VAMPIR
-   VT_begin(VT_CHECKSUM);
-#endif
-   // Compute a simple checksum to make sure that all processes
-   // are trying to execute the same graph.  We should do two
-   // things in the future:
-   //  - make a flag to turn this off
-   //  - make the checksum more sophisticated
-#if 0
-   int checksum = graph.getMaxSerialNumber();
-   int result_checksum;
-   MPI_Allreduce(&checksum, &result_checksum, 1, MPI_INT, MPI_MIN,
-		 d_myworld->getComm());
-   if(checksum != result_checksum){
-      cerr << "Failed task checksum comparison!\n";
-      cerr << "Processor: " << d_myworld->myrank() << " of "
-	   << d_myworld->size() << ": has sum " << checksum
-	   << " and global is " << result_checksum << '\n';
-      MPI_Abort(d_myworld->getComm(), 1);
-   }
-#ifdef USE_VAMPIR
-   VT_end(VT_CHECKSUM);
-#endif
-#endif
-
-   emitTime("checksum reduction");
-
-   dbg << "Executing " << ntasks << " tasks\n";
-
-   makeTaskGraphDoc(tasks, me == 0);
-
-   emitTime("taskGraph output");
-   double totalreduce=0;
-   double totalsend=0;
-   double totalrecv=0;
-   double totaltask=0;
-   double totalreducempi=0;
-   double totalsendmpi=0;
-   double totalrecvmpi=0;
-   double totaltestmpi=0;
-   double totalwaitmpi=0;
-   for(int i=0;i<ntasks;i++){
-      Task* task = tasks[i];
-      switch(task->getType()){
-      case Task::Reduction:
-	 {
-	    double reducestart = Time::currentSeconds();
-	    const Task::compType& comps = task->getComputes();
-	    ASSERTEQ(comps.size(), 1);
-	    const Task::Dependency* dep = &comps[0];
-	    OnDemandDataWarehouse* dw = dynamic_cast<OnDemandDataWarehouse*>(dep->d_dw);
-	    double reducestart2 = Time::currentSeconds();
-	    dw->reduceMPI(dep->d_var, dep->d_matlIndex, d_myworld);
-	    double reduceend = Time::currentSeconds();
-	    time_t t(0);
-	    emitNode(tasks[i], t, reduceend - reducestart);
-	    totalreduce += reduceend-reducestart;
-	    totalreducempi += reduceend-reducestart2;
-	 }
-	 break;
-      case Task::Scatter:
-      case Task::Gather:
-      case Task::Normal:
-	 if(task->getAssignedResourceIndex() == me){
-
-	    dbg << me << " Performing task: " << task->getName();
-	    if(task->getPatch())
-	       dbg << " on patch " << task->getPatch()->getID();
-	    dbg << '\n';
-	    double recvstart = Time::currentSeconds();
-	    if(task->getType() != Task::Gather){
-#ifdef USE_VAMPIR
-	      VT_begin(VT_RECV_DEPENDENCIES);
-#endif
-	       // Receive any of the foreign requires
-	       const Task::reqType& reqs = task->getRequires();
-	       vector<MPI_Request> recv_ids;
-	       for(int r=0;r<(int)reqs.size();r++){
-		  const Task::Dependency* req = &reqs[r];
-		  if(!req->d_dw->isFinalized()){
-		     const Task::Dependency* dep = graph.getComputesForRequires(req);
-		     OnDemandDataWarehouse* dw = dynamic_cast<OnDemandDataWarehouse*>(req->d_dw);
-		     if(!dep->d_task->isReductionTask() 
-			&& dep->d_task->getAssignedResourceIndex() != me
-			&& !dw->exists(req->d_var, req->d_matlIndex, req->d_patch)){
-			if(dw->isFinalized())
-			   throw InternalError("Should not receive from finalized dw!");
-			if(!dw)
-			   throw InternalError("Wrong Datawarehouse?");
-			MPI_Request requestid;
-			ASSERT(req->d_serialNumber >= 0);
-			dbg << me << " <-- receiving " << req->d_var->getName() << " serial " << req->d_serialNumber << ' ' << *req << '\n';
-			int size;
-			double start = Time::currentSeconds();
-			dw->recvMPI(ss, old_dw, req->d_var, req->d_matlIndex,
-				    req->d_patch, d_myworld, req,
-				    MPI_ANY_SOURCE,
-				    req->d_serialNumber, &size, &requestid);
-			totalrecvmpi+=Time::currentSeconds()-start;
-			if(size != -1){
-			   log.logRecv(req, size);
-			   recv_ids.push_back(requestid);
-			}
-			dbg << "there are now " << recv_ids.size() << " waiters\n";
-		     }
-		  }
-	       }
-	       vector<MPI_Status> statii(recv_ids.size());
-	       if(recv_ids.size() > 0){
-		  dbg << me << " Calling recv(2) waitall with " << recv_ids.size() << " waiters\n";
-		  double start = Time::currentSeconds();
-		  MPI_Waitall((int)recv_ids.size(), &recv_ids[0], &statii[0]);
-		  totalwaitmpi+=Time::currentSeconds()-start;
-		  dbg << me << " Done calling recv(2) waitall with " << recv_ids.size() << " waiters\n";
-	       }
-	    }
-
-#ifdef USE_VAMPIR
-	    VT_end(VT_RECV_DEPENDENCIES);
-#endif
-
-	    if(task->getType() == Task::Scatter){
-	       const Task::compType& comps = task->getComputes();
-	       ASSERTEQ(comps.size(), 1);
-	       const Task::Dependency* cmp = &comps[0];
-	       vector<const Task::Dependency*> reqs;
-	       graph.getRequiresForComputes(cmp, reqs);
-	       
-	       sgargs.dest.resize(reqs.size());
-	       sgargs.tags.resize(reqs.size());
-	       for(int r=0;r<(int)reqs.size();r++){
-		  const Task::Dependency* dep = reqs[r];
-		  sgargs.dest[r] = dep->d_task->getAssignedResourceIndex();
-		  sgargs.tags[r] = dep->d_serialNumber;
-	       }
-	    } else if(task->getType() == Task::Gather){
-	       const Task::reqType& reqs = task->getRequires();
-	       sgargs.dest.resize(reqs.size());
-	       sgargs.tags.resize(reqs.size());
-	       for(int r=0;r<(int)reqs.size();r++){
-		  const Task::Dependency* req = &reqs[r];
-		  const Task::Dependency* cmp = graph.getComputesForRequires(req);
-		  sgargs.dest[r] = cmp->d_task->getAssignedResourceIndex();
-		  sgargs.tags[r] = req->d_serialNumber;
-	       }
-	    } else {
-	       sgargs.dest.resize(0);
-	       sgargs.tags.resize(0);
-	    }
-
-#ifdef USE_VAMPIR
-	    VT_begin(VT_PERFORM_TASK);
-#endif
-	    dbg << me << " Starting task: " << task->getName();
-	    if(task->getPatch())
-	       dbg << " on patch " << task->getPatch()->getID() << '\n';
-	    double taskstart = Time::currentSeconds();
-	    //AuditAllocator(default_allocator);
-	    task->doit(pc);
-	    //AuditAllocator(default_allocator);
-	    double sendstart = Time::currentSeconds();
-	    
-#ifdef USE_VAMPIR
-	    VT_end(VT_PERFORM_TASK);
-	    VT_begin(VT_SEND_COMPUTES);
-#endif	    
-
-	    if(task->getType() != Task::Scatter){
-	       //cerr << me << " !scatter\n";
-	       // Send all of the productions
-	       const Task::compType& comps = task->getComputes();
-	       //cerr << me << " comps.size=" << comps.size() << '\n';
-	       for(int c=0;c<(int)comps.size();c++){
-		  //cerr << me << " c=" << c << '\n';
-		  vector<const Task::Dependency*> reqs;
-		  graph.getRequiresForComputes(&comps[c], reqs);
-		  set<VarDestType> varsent;
-		  //cerr << me << " reqs size=" << reqs.size() << '\n';
-		  for(int r=0;r<(int)reqs.size();r++){
-		     //cerr << me << "r=" << r << '\n';
-		     const Task::Dependency* dep = reqs[r];
-		     //cerr << me << "resource=" << dep->d_task->getAssignedResourceIndex() << '\n';
-		     //cerr << me << "red=" << dep->d_task->isReductionTask() << '\n';
-		     if(dep->d_task->getAssignedResourceIndex() != me
-			&& !dep->d_task->isReductionTask()){
-
-			VarDestType ddest(dep->d_var, dep->d_matlIndex, dep->d_patch, dep->d_task->getAssignedResourceIndex());
-			if(varsent.find(ddest) == varsent.end()){
-			   //cerr << me << " not sent!\n";
-			   OnDemandDataWarehouse* dw = dynamic_cast<OnDemandDataWarehouse*>(dep->d_dw);
-			   if(!dw)
-			      throw InternalError("Wrong Datawarehouse?");
-			   MPI_Request requestid;
-			   ASSERT(dep->d_serialNumber >= 0);
-			   dbg << me << " --> sending " << dep->d_var->getName() << " serial " << dep->d_serialNumber << ", to " << dep->d_task->getAssignedResourceIndex() << " " << *dep << '\n';
-			   int size;
-			   double start = Time::currentSeconds();
-			   dw->sendMPI(ss, dep->d_var, dep->d_matlIndex,
-				       dep->d_patch, d_myworld, dep,
-				       dep->d_task->getAssignedResourceIndex(),
-				       dep->d_serialNumber,
-				       &size, &requestid);
-			   totalsendmpi += Time::currentSeconds()-start;
-			   if(size != -1){
-			      log.logSend(dep, size);
-			      send_ids.push_back(requestid);
-			   }
-			   varsent.insert(ddest);
-			}
-		     }
-		  }
-	       }
-	       if(send_ids.size() > 0){
-		  send_statii.resize(send_ids.size());
-		  indices.resize(send_ids.size());
-		  dbg << me << " Calling send Testsome(2) with " << send_ids.size() << " waiters\n";
-		  int donecount;
-	   	  double start = Time::currentSeconds();
-		  MPI_Testsome((int)send_ids.size(), &send_ids[0], &donecount,
-			       &indices[0], &send_statii[0]);
-		  totaltestmpi += Time::currentSeconds()-start;
-		  dbg << me << " Done calling send Testsome with " << send_ids.size() << " waiters and got " << donecount << " done\n";
-		  if(donecount == (int)send_ids.size() || donecount == MPI_UNDEFINED){
-		     send_ids.clear();
-		  }
-	       }
-	    }
-
-#ifdef USE_VAMPIR
-	    VT_end(VT_SEND_COMPUTES);
-#endif	    
-
-	    double dsend = Time::currentSeconds()-sendstart;
-	    double dtask = sendstart-taskstart;
-	    double drecv = taskstart-recvstart;
-	    dbg << me << " Completed task: " << task->getName();
-	    if(task->getPatch())
-	       dbg << " on patch " << task->getPatch()->getID();
-	    dbg << " (recv: " << drecv << " seconds, task: " << dtask << " seconds, send: " << dsend << " seconds)\n";
-	    time_t t = time(0);
-	    emitNode(tasks[i], t, dsend+dtask+drecv);
-	    totalsend+=dsend;
-	    totaltask+=dtask;
-	    totalrecv+=drecv;
-	 }
-	 break;
-      default:
-	 throw InternalError("Unknown task type");
-      }
-   }
-   emitTime("MPI send time", totalsendmpi);
-   emitTime("MPI Testsome time", totaltestmpi);
-   emitTime("Total send time", totalsend-totalsendmpi-totaltestmpi);
-   emitTime("MPI recv time", totalrecvmpi);
-   emitTime("MPI wait time", totalwaitmpi);
-   emitTime("Total recv time", totalrecv-totalrecvmpi-totalwaitmpi);
-   emitTime("Total task time", totaltask);
-   emitTime("Total MPI reduce time", totalreducempi);
-   emitTime("Total reduction time", totalreduce-totalreducempi);
-   double time = Time::currentSeconds();
-   double totalexec = time-d_lasttime;
-   d_lasttime=time;
-   emitTime("Other excution time", totalexec-totalsend-totalrecv-totaltask-totalreduce);
-
-   if(send_ids.size() > 0){
-      vector<MPI_Status> statii(send_ids.size());
-      dbg << me << " Calling send(2) waitall with " << send_ids.size() << " waiters\n";
-      MPI_Waitall((int)send_ids.size(), &send_ids[0], &statii[0]);
-      dbg << me << " Done calling send(2) waitall with " << send_ids.size() << " waiters\n";
-   }
-   emitTime("final wait");
-
-   dw->finalize();
-   finalizeNodes(me);
-   int junk;
-   MPI_Buffer_detach(&mpibuffer, &junk);
-   delete[] mpibuffer;
-   if(old_mpibuffersize)
-      MPI_Buffer_attach(old_mpibuffer, old_mpibuffersize);
-
-   log.finishTimestep();
-   emitTime("finalize");
-   vector<double> d_totaltimes(d_times.size());
-   MPI_Reduce(&d_times[0], &d_totaltimes[0], (int)d_times.size(), MPI_DOUBLE,
-	      MPI_SUM, 0, d_myworld->getComm());
-   if(me == 0){
-      double total=0;
-      for(int i=0;i<(int)d_totaltimes.size();i++)
-	 total+= d_totaltimes[i];
-      for(int i=0;i<(int)d_totaltimes.size();i++){
-	 timeout << "MPIScheduler: " << d_labels[i] << ": ";
-	 int len = (int)(strlen(d_labels[i])+strlen("MPIScheduler: ")+strlen(": "));
-	 for(int j=len;j<55;j++)
-	    timeout << ' ';
-	 double percent=d_totaltimes[i]/total*100;
-	 timeout << d_totaltimes[i] << " seconds (" << percent << "%)\n";
-      }
-      double time = Time::currentSeconds();
-      double rtime=time-d_lasttime;
-      d_lasttime=time;
-      timeout << "MPIScheduler: TOTAL                                    "
-	      << total << '\n';
-      timeout << "MPIScheduler: time sum reduction (one processor only): " 
-	      << rtime << '\n';
-   }
-
-#ifdef USE_VAMPIR
-   VT_end(VT_EXECUTE);
-#endif
+  VT_end(VT_EXECUTE);
+  dbg << "MPIScheduler finished\n";
 }
 
-void
-MPIScheduler::addTask(Task* task)
+static PatchSet* createPerProcessorPatchset(const ProcessorGroup* world,
+					    LoadBalancer* lb,
+					    const LevelP& level)
 {
-   graph.addTask(task);
-}
-
-DataWarehouseP
-MPIScheduler::createDataWarehouse( DataWarehouseP& parent_dw )
-{
-  int generation = d_generation++;
-  return scinew OnDemandDataWarehouse(d_myworld, generation, parent_dw);
+  PatchSet* patches = scinew PatchSet();
+  patches->createEmptySubsets(world->size());
+  for(Level::const_patchIterator iter = level->patchesBegin();
+      iter != level->patchesEnd(); iter++){
+    const Patch* patch = *iter;
+    int proc = lb->getPatchwiseProcessorAssignment(patch, world);
+    ASSERTRANGE(proc, 0, world->size());
+    PatchSubset* subset = patches->getSubset(proc);
+    subset->add(patch);
+  }
+  return patches;
 }
 
 void
 MPIScheduler::scheduleParticleRelocation(const LevelP& level,
-					 DataWarehouseP& old_dw,
-					 DataWarehouseP& new_dw,
 					 const VarLabel* old_posLabel,
 					 const vector<vector<const VarLabel*> >& old_labels,
 					 const VarLabel* new_posLabel,
 					 const vector<vector<const VarLabel*> >& new_labels,
-					 int numMatls)
+					 const MaterialSet* matls)
 {
-   reloc_old_posLabel = old_posLabel;
-   reloc_old_labels = old_labels;
-   reloc_new_posLabel = new_posLabel;
-   reloc_new_labels = new_labels;
-   reloc_numMatls = numMatls;
-   for (int m = 0; m < numMatls; m++ )
-     ASSERTEQ(reloc_new_labels[m].size(), reloc_old_labels[m].size());
-   for(Level::const_patchIterator iter=level->patchesBegin();
-       iter != level->patchesEnd(); iter++){
+  reloc_old_posLabel = old_posLabel;
+  reloc_old_labels = old_labels;
+  reloc_new_posLabel = new_posLabel;
+  reloc_new_labels = new_labels;
+  if(reloc_matls && reloc_matls->removeReference())
+    delete reloc_matls;
+  reloc_matls = matls;
+  reloc_matls->addReference();
+  ASSERTEQ(reloc_old_labels.size(), reloc_new_labels.size());
+  int numMatls = reloc_old_labels.size();
+  ASSERTEQ(matls->size(), 1);
+  ASSERTEQ(numMatls, matls->getSubset(0)->size());
+  for (int m = 0; m< numMatls; m++)
+    ASSERTEQ(reloc_old_labels[m].size(), reloc_new_labels[m].size());
+  Task* t = scinew Task("MPIScheduler::relocParticles",
+			this, &MPIScheduler::relocateParticles);
+  t->usesMPI();
+  t->requires( Task::NewDW, old_posLabel, Ghost::None);
+  for(int m=0;m < numMatls;m++){
+    MaterialSubset* thismatl = scinew MaterialSubset();
+    thismatl->add(m);
+    for(int i=0;i<(int)old_labels[m].size();i++)
+      t->requires( Task::NewDW, old_labels[m][i], Ghost::None);
 
-      const Patch* patch=*iter;
+    t->computes( new_posLabel, thismatl);
+    for(int i=0;i<(int)new_labels[m].size();i++)
+      t->computes(new_labels[m][i], thismatl);
+  }
+  UintahParallelPort* lbp = getPort("load balancer");
+  LoadBalancer* lb = dynamic_cast<LoadBalancer*>(lbp);
 
-      Task* t = scinew Task("MPIScheduler::scatterParticles",
-			    patch, old_dw, new_dw,
-			    this, &MPIScheduler::scatterParticles);
-      for(int m=0;m < numMatls;m++){
-	 t->requires( new_dw, old_posLabel, m, patch, Ghost::None);
-	 for(int i=0;i<(int)old_labels[m].size();i++)
-	    t->requires( new_dw, old_labels[m][i], m, patch, Ghost::None);
-      }
-      t->computes(new_dw, scatterGatherVariable, 0, patch);
-      t->setType(Task::Scatter);
-      addTask(t);
-
-      Task* t2 = scinew Task("MPIScheduler::gatherParticles",
-			     patch, old_dw, new_dw,
-			     this, &MPIScheduler::gatherParticles);
-      // Particles are only allowed to be one cell out
-      IntVector l = patch->getCellLowIndex()-IntVector(1,1,1);
-      IntVector h = patch->getCellHighIndex()+IntVector(1,1,1);
-      Level::selectType neighbors;
-      level->selectPatches(l, h, neighbors);
-      for(int i=0;i<(int)neighbors.size();i++)
-	 t2->requires(new_dw, scatterGatherVariable, 0, neighbors[i], Ghost::None);
-      for(int m=0;m < numMatls;m++){
-	 t2->computes( new_dw, new_posLabel, m, patch);
-	 for(int i=0;i<(int)new_labels[m].size();i++)
-	    t2->computes(new_dw, new_labels[m][i], m, patch);
-      }
-      t2->setType(Task::Gather);
-      addTask(t2);
-   }
+  const PatchSet* patches = createPerProcessorPatchset(d_myworld, lb, level);
+  addTask(t, patches, matls);
 }
 
 namespace Uintah {
-   struct MPIScatterMaterialRecord {
-      ParticleSubset* relocset;
-      vector<ParticleVariableBase*> vars;
-   };
+  struct MPIScatterRecord {
+    const Patch* fromPatch;
+    ParticleSubset* sendset;
+    MPIScatterRecord(const Patch* fromPatch)
+      : fromPatch(fromPatch), sendset(0)
+    {
+    }
+  };
+  struct MPIScatterProcessorRecord {
+    typedef vector<const Patch*> patchestype;
+    patchestype patches;
+    void sortPatches();
+  };
+  struct MPIRecvBuffer {
+    MPIRecvBuffer* next;
+    char* databuf;
+    int bufsize;
+    int numParticles;
+    MPIRecvBuffer(char* databuf, int bufsize, int numParticles)
+      : next(0), databuf(databuf), bufsize(bufsize), numParticles(numParticles)
+    {
+    }
+  };
+  class MPIScatterRecords {
+  public:
+    typedef multimap<pair<const Patch*, int>, MPIScatterRecord*> maptype;
+    maptype records;
 
-   struct MPIScatterRecord : public ScatterGatherBase {
-      vector<MPIScatterMaterialRecord*> matls;
-   };
+    typedef map<int, MPIScatterProcessorRecord*> procmaptype;
+    procmaptype procs;
+
+    MPIScatterRecord* findRecord(const Patch* from, const Patch* to, int matl,
+				 ParticleSubset* pset);
+    MPIScatterRecord* findRecord(const Patch* from, const Patch* to, int matl);
+    void addNeighbor(LoadBalancer* lb, const ProcessorGroup* pg,
+		     const Patch* to);
+
+    typedef map<pair<const Patch*, int>, MPIRecvBuffer*> recvmaptype;
+    recvmaptype recvs;
+    void saveRecv(const Patch* to, int matl,
+		  char* databuf, int bufsize, int numParticles);
+    MPIRecvBuffer* findRecv(const Patch* to, int matl);
+
+    ~MPIScatterRecords();
+  };
 } // End namespace Uintah
 
-void
-MPIScheduler::scatterParticles(const ProcessorGroup* pc,
-			       const Patch* patch,
-			       DataWarehouseP& old_dw,
-			       DataWarehouseP& new_dw)
+void MPIScatterRecords::saveRecv(const Patch* to, int matl,
+				 char* databuf, int datasize, int numParticles)
 {
-   const Level* level = patch->getLevel();
+  recvmaptype::key_type key(to, matl);
+  recvmaptype::iterator iter = recvs.find(key);
+  MPIRecvBuffer* record = scinew MPIRecvBuffer(databuf, datasize, numParticles);
+  if(iter == recvs.end()){
+    recvs[key]=record;
+  } else {
+    record->next=iter->second;
+    recvs[key]=record;
+  }
+}
 
-   // Particles are only allowed to be one cell out
-   IntVector l = patch->getCellLowIndex()-IntVector(1,1,1);
-   IntVector h = patch->getCellHighIndex()+IntVector(1,1,1);
-   Level::selectType neighbors;
-   level->selectPatches(l, h, neighbors);
+MPIRecvBuffer* MPIScatterRecords::findRecv(const Patch* to, int matl)
+{
+  recvmaptype::iterator iter = recvs.find(make_pair(to, matl));
+  if(iter == recvs.end())
+    return 0;
+  else
+    return iter->second;
+}
 
-   vector<MPIScatterRecord*> sr(neighbors.size());
-   for(int i=0;i<(int)sr.size();i++)
-      sr[i]=0;
-   for(int m = 0; m < reloc_numMatls; m++){
-      ParticleSubset* pset = old_dw->getParticleSubset(m, patch);
+MPIScatterRecord* MPIScatterRecords::findRecord(const Patch* from,
+						const Patch* to, int matl,
+						ParticleSubset* pset)
+{
+  pair<maptype::iterator, maptype::iterator> pr = records.equal_range(make_pair(to, matl));
+  for(;pr.first != pr.second;pr.first++){
+    if(pr.first->second->fromPatch == from)
+      break;
+  }
+  if(pr.first == pr.second){
+    MPIScatterRecord* rec = scinew MPIScatterRecord(from);
+    rec->sendset = scinew ParticleSubset(pset->getParticleSet(), false, -1, 0);
+    records.insert(maptype::value_type(make_pair(to, matl), rec));
+    return rec;
+  } else {
+    return pr.first->second;
+  }
+}
+
+MPIScatterRecord* MPIScatterRecords::findRecord(const Patch* from,
+						const Patch* to, int matl)
+{
+  pair<maptype::iterator, maptype::iterator> pr = records.equal_range(make_pair(to, matl));
+  for(;pr.first != pr.second;pr.first++){
+    if(pr.first->second->fromPatch == from)
+      break;
+  }
+  if(pr.first == pr.second){
+    return 0;
+  } else {
+    return pr.first->second;
+  }
+}
+
+static bool ComparePatches(const Patch* p1, const Patch* p2)
+{
+  return p1->getID() < p2->getID();
+}
+
+void MPIScatterProcessorRecord::sortPatches()
+{
+  sort(patches.begin(), patches.end(), ComparePatches);
+}
+
+void MPIScatterRecords::addNeighbor(LoadBalancer* lb, const ProcessorGroup* pg,
+				    const Patch* neighbor)
+{
+  int toProc = lb->getPatchwiseProcessorAssignment(neighbor, pg);
+  procmaptype::iterator iter = procs.find(toProc);
+  if(iter == procs.end()){
+    MPIScatterProcessorRecord* pr = scinew MPIScatterProcessorRecord();
+    procs[toProc]=pr;
+    pr->patches.push_back(neighbor);
+  } else {
+    // This is linear, with the hope that the number of patches per
+    // processor will not be huge.
+    MPIScatterProcessorRecord* pr = iter->second;
+    int i;
+    for(i=0;i<(int)pr->patches.size();i++)
+      if(pr->patches[i] == neighbor)
+	break;
+    if(i==(int)pr->patches.size())
+      pr->patches.push_back(neighbor);
+  }
+}
+
+MPIScatterRecords::~MPIScatterRecords()
+{
+  for(procmaptype::iterator iter = procs.begin(); iter != procs.end(); iter++)
+    delete iter->second;
+  for(maptype::iterator iter = records.begin(); iter != records.end(); iter++){
+    delete iter->second->sendset;
+    delete iter->second;
+  }
+  for(recvmaptype::iterator iter = recvs.begin(); iter != recvs.end(); iter++){
+    MPIRecvBuffer* p = iter->second;
+    while(p){
+      MPIRecvBuffer* next = p->next;
+      delete p;
+      p=next;
+    }
+  }
+}
+
+void
+MPIScheduler::relocateParticles(const ProcessorGroup* pg,
+				const PatchSubset* patches,
+				const MaterialSubset* matls,
+				DataWarehouse* old_dw,
+				DataWarehouse* new_dw)
+{
+  UintahParallelPort* lbp = getPort("load balancer");
+  LoadBalancer* lb = dynamic_cast<LoadBalancer*>(lbp);
+
+  typedef MPIScatterRecords::maptype maptype;
+  typedef MPIScatterRecords::procmaptype procmaptype;
+  typedef MPIScatterProcessorRecord::patchestype patchestype;
+
+  // First pass: For each of the patches we own, look for particles
+  // that left the patch.  Create a scatter record for each one.
+  MPIScatterRecords scatter_records;
+  int numMatls = reloc_old_labels.size();
+  Array2<ParticleSubset*> keepsets(patches->size(), numMatls);
+  keepsets.initialize(0);
+  for(int p=0;p<patches->size();p++){
+    const Patch* patch = patches->get(p);
+    const Level* level = patch->getLevel();
+
+    // Particles are only allowed to be one cell out
+    IntVector l = patch->getCellLowIndex()-IntVector(1,1,1);
+    IntVector h = patch->getCellHighIndex()+IntVector(1,1,1);
+    Level::selectType neighbors;
+    level->selectPatches(l, h, neighbors);
+
+    // Find all of the neighbors, and add them to a set
+    for(int i=0;i<neighbors.size();i++){
+      const Patch* neighbor=neighbors[i];
+      scatter_records.addNeighbor(lb, pg, neighbor);
+    }
+
+    for(int m = 0; m < matls->size(); m++){
+      int matl = matls->get(m);
+      ParticleSubset* pset = old_dw->getParticleSubset(matl, patch);
       ParticleVariable<Point> px;
       new_dw->get(px, reloc_old_posLabel, pset);
 
       ParticleSubset* relocset = scinew ParticleSubset(pset->getParticleSet(),
-						    false, -1, 0);
+						       false, -1, 0);
+      ParticleSubset* keepset = scinew ParticleSubset(pset->getParticleSet(),
+						      false, -1, 0);
 
+      // Look for particles that left the patch, and put them in relocset
       for(ParticleSubset::iterator iter = pset->begin();
 	  iter != pset->end(); iter++){
-	 particleIndex idx = *iter;
-	 if(!patch->getBox().contains(px[idx])){
-	    relocset->addParticle(idx);
-	 }
+	particleIndex idx = *iter;
+	if(patch->getBox().contains(px[idx])){
+	  keepset->addParticle(idx);
+	} else {
+	  relocset->addParticle(idx);
+	}
       }
+
+      if(relocset->numParticles() == 0){
+	delete keepset;
+	keepset=pset;
+      }
+      keepset->addReference();
+      keepsets(p, m)=keepset;
+
       if(relocset->numParticles() > 0){
-	 // Figure out where they went...
-	 for(ParticleSubset::iterator iter = relocset->begin();
-	     iter != relocset->end(); iter++){
-	    particleIndex idx = *iter;
-	    // This loop should change - linear searches are not good!
-	    int i;
-	    for(i=0;i<(int)neighbors.size();i++){
-	       if(neighbors[i]->getBox().contains(px[idx])){
-		  break;
-	       }
+	// Figure out exactly where they went...
+	for(ParticleSubset::iterator iter = relocset->begin();
+	    iter != relocset->end(); iter++){
+	  particleIndex idx = *iter;
+	  // This loop should change - linear searches are not good!
+	  // However, since not very many particles leave the patches
+	  // and there are a limited number of neighbors, perhaps it
+	  // won't matter much
+	  int i;
+	  for(i=0;i<(int)neighbors.size();i++){
+	    if(neighbors[i]->getBox().contains(px[idx])){
+	      break;
 	    }
-	    if(i == (int)neighbors.size()){
-	       // Make sure that the particle left the world
-	       if(level->containsPoint(px[idx]))
-		  throw InternalError("Particle fell through the cracks!");
-	    } else {
-	       if(!sr[i]){
-		  sr[i] = scinew MPIScatterRecord();
-		  sr[i]->matls.resize(reloc_numMatls);
-		  for(int m=0;m<reloc_numMatls;m++){
-		     sr[i]->matls[m]=0;
-		  }
-	       }
-	       if(!sr[i]->matls[m]){
-		  MPIScatterMaterialRecord* smr=scinew MPIScatterMaterialRecord();
-		  sr[i]->matls[m]=smr;
-		  smr->vars.push_back(new_dw->getParticleVariable(reloc_old_posLabel, pset));
-		  for(int v=0;v<(int)reloc_old_labels[m].size();v++)
-		     smr->vars.push_back(new_dw->getParticleVariable(reloc_old_labels[m][v], pset));
-		  smr->relocset = scinew ParticleSubset(pset->getParticleSet(),
-						     false, -1, 0);
-		  smr->relocset->addReference();
-	       }
-	       sr[i]->matls[m]->relocset->addParticle(idx);
+	  }
+	  if(i == (int)neighbors.size()){
+	    // Make sure that the particle really left the world
+	    if(level->containsPoint(px[idx]))
+	      throw InternalError("Particle fell through the cracks!");
+	  } else {
+	    // Save this particle set for sending later
+	    const Patch* toPatch=neighbors[i];
+	    MPIScatterRecord* record = scatter_records.findRecord(patch,
+								  toPatch,
+								  matl, pset);
+	    record->sendset->addParticle(idx);
+
+	    // Optimization: see if other (consecutive) particles
+	    // also went to this same patch
+	    ParticleSubset::iterator iter2=iter;
+	    iter2++;
+	    for(;iter2 != relocset->end(); iter2++){
+	      particleIndex idx2 = *iter2;
+	      if(toPatch->getBox().contains(px[idx2])){
+		iter++;
+		record->sendset->addParticle(idx2);
+	      } else {
+		break;
+	      }
 	    }
-	 }
+	  }
+	}
       }
       delete relocset;
-   }
+    }
+  }
 
-   int me = pc->myrank();
-   ASSERTEQ(sr.size(), sgargs.dest.size());
-   ASSERTEQ(sr.size(), sgargs.tags.size());
-   for(int i=0;i<(int)sr.size();i++){
-      if(sgargs.dest[i] == me){
-	 new_dw->scatter(sr[i], patch, neighbors[i]);
-      } else {
-	 if(sr[i]){
-	    int sendsize = 0;
-	    for(int j=0;j<(int)sr[i]->matls.size();j++){
-	      int size;
-	      MPI_Pack_size(1, MPI_INT, pc->getComm(), &size);
-	      sendsize+=size;
+  int me = pg->myrank();
+  vector<char*> sendbuffers;
+  vector<MPI_Request> sendrequests;
+  for(procmaptype::iterator iter = scatter_records.procs.begin();
+      iter != scatter_records.procs.end(); iter++){
+    if(iter->first == me){
+      // Local
+      continue;
+    }
+    MPIScatterProcessorRecord* pr = iter->second;
+    pr->sortPatches();
 
-	      if (sr[i]->matls[j]) {
-		MPIScatterMaterialRecord* mr = sr[i]->matls[j];
-		int numP = mr->relocset->numParticles();
-		for(int v=0;v<(int)mr->vars.size();v++){
-		  ParticleVariableBase* var = mr->vars[v];
-		  ParticleVariableBase* var2 = var->cloneSubset(mr->relocset);
-		  var2->packsizeMPI(&sendsize, pc, 0, numP);
-		  delete var2;
-		}
-	      }
-	    } 
-	    char* buf = scinew char[sendsize];
-	    int position = 0;
-	    for(int j=0;j<(int)sr[i]->matls.size();j++){
-	      if (sr[i]->matls[j]) {
-		MPIScatterMaterialRecord* mr = sr[i]->matls[j];
-		int numP = mr->relocset->numParticles();
-		MPI_Pack(&numP, 1, MPI_INT, buf, sendsize, &position, pc->getComm());
-		for(int v=0;v<(int)mr->vars.size();v++){
-		  ParticleVariableBase* var = mr->vars[v];
-		  ParticleVariableBase* var2 = var->cloneSubset(mr->relocset);
-		  int numP = mr->relocset->numParticles();
-		  var2->packMPI(buf, sendsize, &position, pc, 0, numP);
-		  delete var2;
-		}
-	      } else {
-		int numP = 0;
-		MPI_Pack(&numP, 1, MPI_INT, buf, sendsize, &position, pc->getComm());
-              }   
-	    }
-	    // This may not be a valid assertion on some systems
-	    //ASSERTEQ(position, sendsize);
-	    MPI_Send(buf, sendsize, MPI_PACKED, sgargs.dest[i],
-		     sgargs.tags[i], pc->getComm());
-	    log.logSend(0, sizeof(int), "scatter");
-	    delete[] buf;
-	 } else {
-	    MPI_Send(NULL, 0, MPI_PACKED, sgargs.dest[i],
-	        sgargs.tags[i], pc->getComm());
-	    log.logSend(0, sizeof(int), "scatter");
-	 }
+    // Go through once to calc the size of the message
+    int psize;
+    MPI_Pack_size(1, MPI_INT, pg->getComm(), &psize);
+    int sendsize=psize; // One for the count of active patches
+    int numactive=0;
+    vector<int> datasizes;
+    for(patchestype::iterator it = pr->patches.begin();
+	it != pr->patches.end(); it++){
+      const Patch* toPatch = *it;
+      for(int matl=0;matl<numMatls;matl++){
+	int numVars = reloc_old_labels[matl].size();
+	int numParticles=0;
+	pair<maptype::iterator, maptype::iterator> pr;
+	pr = scatter_records.records.equal_range(make_pair(toPatch, matl));
+	for(;pr.first != pr.second; pr.first++){
+	  numactive++;
+	  int psize;
+	  MPI_Pack_size(4, MPI_INT, pg->getComm(), &psize);
+	  sendsize += psize; // Patch ID, matl #, # particles, datasize
+	  int orig_sendsize=sendsize;
+	  MPIScatterRecord* record = pr.first->second;
+	  int np = record->sendset->numParticles();
+	  numParticles += np;
+	  ParticleSubset* pset = old_dw->getParticleSubset(matl, record->fromPatch);
+	  ParticleVariableBase* posvar = new_dw->getParticleVariable(reloc_old_posLabel, pset);
+	  ParticleSubset* sendset=record->sendset;
+	  posvar->packsizeMPI(&sendsize, pg, sendset);
+	  for(int v=0;v<numVars;v++){
+	    ParticleVariableBase* var = new_dw->getParticleVariable(reloc_old_labels[matl][v], pset);
+	    var->packsizeMPI(&sendsize, pg, sendset);
+	  }
+	  int datasize=sendsize-orig_sendsize;
+	  datasizes.push_back(datasize);
+	}
       }
-   }
-}
+    }
+    // Create the buffer for this message
+    char* buf = scinew char[sendsize];
+    int position=0;
 
-void
-MPIScheduler::gatherParticles(const ProcessorGroup* pc,
-			      const Patch* patch,
-			      DataWarehouseP& old_dw,
-			      DataWarehouseP& new_dw)
-{
-   const Level* level = patch->getLevel();
+    // And go through it again to pack the message
+    int idx=0;
+    MPI_Pack(&numactive, 1, MPI_INT, buf, sendsize, &position, pg->getComm());
+    for(patchestype::iterator it = pr->patches.begin();
+	it != pr->patches.end(); it++){
+      const Patch* toPatch = *it;
+      for(int matl=0;matl<numMatls;matl++){
+	int numVars = reloc_old_labels[matl].size();
 
-   // Particles are only allowed to be one cell out
-   IntVector l = patch->getCellLowIndex()-IntVector(1,1,1);
-   IntVector h = patch->getCellHighIndex()+IntVector(1,1,1);
-   Level::selectType neighbors;
-   level->selectPatches(l, h, neighbors);
+	pair<maptype::iterator, maptype::iterator> pr;
+	pr = scatter_records.records.equal_range(make_pair(toPatch, matl));
+	for(;pr.first != pr.second; pr.first++){
+	  int patchid = toPatch->getID();
+	  MPI_Pack(&patchid, 1, MPI_INT, buf, sendsize, &position,
+		   pg->getComm());
+	  MPI_Pack(&matl, 1, MPI_INT, buf, sendsize, &position,
+		   pg->getComm());
+	  MPIScatterRecord* record = pr.first->second;
+	  int totalParticles=record->sendset->numParticles();
+	  MPI_Pack(&totalParticles, 1, MPI_INT, buf, sendsize, &position,
+		   pg->getComm());
+	  int datasize = datasizes[idx];
+	  ASSERT(datasize>0);
+	  MPI_Pack(&datasize, 1, MPI_INT, buf, sendsize, &position,
+		   pg->getComm());
 
-   vector<MPIScatterRecord*> sr;
-   vector<int> recvsize(neighbors.size());
-   int me = d_myworld->myrank();
-   ASSERTEQ((int)sgargs.dest.size(), (int)neighbors.size());
-   ASSERTEQ((int)sgargs.tags.size(), (int)neighbors.size());
-   vector<char*> recvbuf(neighbors.size());
-   vector<int> recvpos(neighbors.size());
-   for(int i=0;i<(int)neighbors.size();i++){
-      if(patch != neighbors[i]){
-	 if(sgargs.dest[i] == me){
-	    ScatterGatherBase* sgb = new_dw->gather(neighbors[i], patch);
-	    if(sgb != 0){
-	       MPIScatterRecord* srr = dynamic_cast<MPIScatterRecord*>(sgb);
-	       ASSERT(srr != 0);
-	       sr.push_back(srr);
-	    }
-	 } else {
-	    MPI_Status stat;
-	    MPI_Probe(sgargs.dest[i], sgargs.tags[i], pc->getComm(), &stat);
-	    MPI_Get_count(&stat, MPI_PACKED, &recvsize[i]);
-	    log.logRecv(0, sizeof(int), "sg_buffersize");
-	    recvpos[i] = 0;
-	    recvbuf[i] = scinew char[recvsize[i]];
-	    MPI_Recv(recvbuf[i], recvsize[i], MPI_PACKED,
-		     sgargs.dest[i], sgargs.tags[i],
-		     pc->getComm(), &stat);
-	    log.logRecv(0, recvsize[i], "gather");
-	 }
+	  int start = position;
+	  ParticleSubset* pset = old_dw->getParticleSubset(matl, record->fromPatch);
+	  ParticleVariableBase* posvar = new_dw->getParticleVariable(reloc_old_posLabel, pset);
+	  ParticleSubset* sendset=record->sendset;
+	  posvar->packMPI(buf, sendsize, &position, pg, sendset);
+	  for(int v=0;v<numVars;v++){
+	    ParticleVariableBase* var = new_dw->getParticleVariable(reloc_old_labels[matl][v], pset);
+	    var->packMPI(buf, sendsize, &position, pg, sendset);
+	  }
+	  int size=position-start;
+	  if(size < datasize){
+	    // MPI mis-esimated the size of the message.  For some
+	    // reason, mpich does this all the time.  We must pad...
+	    int diff=datasize-size;
+	    char* junk = scinew char[diff];
+	    MPI_Pack(junk, diff, MPI_CHAR, buf, sendsize, &position,
+		     pg->getComm());
+	    ASSERTEQ(position, start+datasize);
+	    delete[] junk;
+	  }
+	  idx++;
+	}
       }
-   }
-   for(int m=0;m<reloc_numMatls;m++){
-      // Compute the new particle subset
+    }
+    ASSERT(position <= sendsize);
+    // Send (isend) the message
+    MPI_Request rid;
+    int to=iter->first;
+    MPI_Isend(buf, sendsize, MPI_PACKED, to, RELOCATE_TAG,
+	      pg->getComm(), &rid);
+    sendbuffers.push_back(buf);
+    sendrequests.push_back(rid);
+  }
+
+  // Receive, and handle the local case too...
+  // Foreach processor, post a receive
+  vector<char*> recvbuffers(scatter_records.procs.size());
+
+  // I wish that there was an Iprobe_some call, so that we could do
+  // this more dynamically...
+  int idx=0;
+  for(procmaptype::iterator iter = scatter_records.procs.begin();
+      iter != scatter_records.procs.end(); iter++, idx++){
+    if(iter->first == me){
+      // Local - put a placeholder here for the buffer and request
+      recvbuffers[idx]=0;
+      continue;
+    }
+    MPI_Status status;
+    MPI_Probe(iter->first, RELOCATE_TAG, pg->getComm(), &status);
+    int size;
+    MPI_Get_count(&status, MPI_PACKED, &size);
+    char* buf = scinew char[size];
+    recvbuffers[idx]=buf;
+    MPI_Recv(recvbuffers[idx], size, MPI_PACKED, iter->first,
+	     RELOCATE_TAG, pg->getComm(), &status);
+
+    // Partially unpack
+    int position=0;
+    int numrecords;
+    MPI_Unpack(buf, size, &position, &numrecords, 1, MPI_INT,
+	       pg->getComm());
+    for(int i=0;i<numrecords;i++){
+      int patchid;
+      MPI_Unpack(buf, size, &position, &patchid, 1, MPI_INT,
+		 pg->getComm());
+      const Patch* toPatch = Patch::getByID(patchid);
+      ASSERT(toPatch != 0);
+      int matl;
+      MPI_Unpack(buf, size, &position, &matl, 1, MPI_INT,
+		 pg->getComm());
+      ASSERTRANGE(matl, 0, numMatls);
+      int numParticles;
+      MPI_Unpack(buf, size, &position, &numParticles, 1, MPI_INT,
+		 pg->getComm());
+      int datasize;
+      MPI_Unpack(buf, size, &position, &datasize, 1, MPI_INT,
+		 pg->getComm());
+      char* databuf=buf+position;
+      ASSERTEQ(lb->getPatchwiseProcessorAssignment(toPatch, pg), me);
+      scatter_records.saveRecv(toPatch, matl,
+			       databuf, datasize, numParticles);
+      position+=datasize;
+    }
+  }
+
+  // No go through each of our patches, and do the merge.  Also handle
+  // the local case
+  for(int p=0;p<patches->size();p++){
+    const Patch* patch = patches->get(p);
+    const Level* level = patch->getLevel();
+
+    // Particles are only allowed to be one cell out
+    IntVector l = patch->getCellLowIndex()-IntVector(1,1,1);
+    IntVector h = patch->getCellHighIndex()+IntVector(1,1,1);
+    Level::selectType neighbors;
+    level->selectPatches(l, h, neighbors);
+
+    for(int m = 0; m < matls->size(); m++){
+      int matl = matls->get(m);
+      int numVars = reloc_old_labels[matl].size();
+      vector<ParticleSubset*> orig_psets;
       vector<ParticleSubset*> subsets;
-      vector<ParticleVariableBase*> posvars;
-
-      // Get the local subset without the deleted particles...
-      ParticleSubset* pset = old_dw->getParticleSubset(m, patch);
-      ParticleVariable<Point> px;
-      new_dw->get(px, reloc_old_posLabel, pset);
-
-      ParticleSubset* keepset = scinew ParticleSubset(pset->getParticleSet(),
-						   false, -1, 0);
-
-      for(ParticleSubset::iterator iter = pset->begin();
-	  iter != pset->end(); iter++){
-	 particleIndex idx = *iter;
-	 if(patch->getBox().contains(px[idx]))
-	    keepset->addParticle(idx);
-      }
+      ParticleSubset* keepset = keepsets(p, m);
+      ASSERT(keepset != 0);
+      orig_psets.push_back(old_dw->getParticleSubset(matl, patch));
       subsets.push_back(keepset);
-      particleIndex totalParticles = keepset->numParticles();
-      ParticleVariableBase* pos = new_dw->getParticleVariable(reloc_old_posLabel, pset);
-      posvars.push_back(pos);
-
-      // Get the subsets from the neighbors
-      particleIndex recvParticles = 0;
-      for(int i=0;i<(int)sr.size();i++){
-	 if(sr[i]->matls[m]){
-	    subsets.push_back(sr[i]->matls[m]->relocset);
-	    posvars.push_back(sr[i]->matls[m]->vars[0]);
-	    totalParticles += sr[i]->matls[m]->relocset->numParticles();
-	 }
-      }
-      vector<int> counts(neighbors.size());
       for(int i=0;i<(int)neighbors.size();i++){
-	 if(sgargs.dest[i] != me){
-	   if(recvsize[i]){
-	       int n=-1234;
-	       MPI_Unpack(recvbuf[i], recvsize[i], &recvpos[i],
-			  &n, 1, MPI_INT, pc->getComm());
-	       counts[i]=n;
-	       totalParticles += n;
-	       recvParticles += n;
-	    } else {
-	       counts[i] = 0;
-	    }
-	 }
+	const Patch* fromPatch=neighbors[i];
+	int from = lb->getPatchwiseProcessorAssignment(fromPatch, pg);
+	if(from == me){
+	  MPIScatterRecord* record = scatter_records.findRecord(fromPatch,
+								patch, matl);
+	  if(record){
+	    ParticleSubset* pset = old_dw->getParticleSubset(matl, record->fromPatch);
+	    orig_psets.push_back(pset);
+	    subsets.push_back(record->sendset);
+	  }
+	}
       }
+      MPIRecvBuffer* recvs = scatter_records.findRecv(patch, matl);
+      ParticleSubset* orig_pset = old_dw->getParticleSubset(matl, patch);
+      if(recvs == 0 && subsets.size() == 1 && keepset == orig_pset){
+	// carry forward old data
+	new_dw->saveParticleSubset(matl, patch, orig_pset);
+	ParticleVariableBase* posvar = new_dw->getParticleVariable(reloc_old_posLabel, orig_pset);
+	new_dw->put(*posvar, reloc_new_posLabel);
+	for(int v=0;v<numVars;v++){
+	  ParticleVariableBase* var = new_dw->getParticleVariable(reloc_old_labels[matl][v], orig_pset);
+	  new_dw->put(*var, reloc_new_labels[matl][v]);
+	}
+      } else {
+	int totalParticles=0;
+	for(int i=0;i<(int)subsets.size();i++)
+	  totalParticles+=subsets[i]->numParticles();
+	int numRemote=0;
+	for(MPIRecvBuffer* buf=recvs;buf!=0;buf=buf->next){
+	  numRemote+=buf->numParticles;
+	}
+	totalParticles+=numRemote;
 
-      ParticleVariableBase* newpos = pos->clone();
-      ParticleSubset* newsubset = new_dw->createParticleSubset(totalParticles, m, patch);
-      newpos->gather(newsubset, subsets, posvars, recvParticles);
+	ParticleVariableBase* posvar = new_dw->getParticleVariable(reloc_old_posLabel, orig_pset);
+	ParticleSubset* newsubset = new_dw->createParticleSubset(totalParticles, matl, patch);
 
-      particleIndex start = totalParticles - recvParticles;
-      for(int i=0;i<(int)neighbors.size();i++){
-	 if(sgargs.dest[i] != me && counts[i]){
-	    newpos->unpackMPI(recvbuf[i], recvsize[i], &recvpos[i], pc,
-			      start, counts[i]);
-	    start += counts[i];
-	 }
+	// Merge local portion
+	vector<ParticleVariableBase*> invars(subsets.size());
+	for(int i=0;i<(int)subsets.size();i++)
+	  invars[i]=new_dw->getParticleVariable(reloc_old_posLabel,
+						orig_psets[i]);
+	ParticleVariableBase* newpos = posvar->clone();
+	newpos->gather(newsubset, subsets, invars, numRemote);
+
+	vector<ParticleVariableBase*> vars(numVars);
+	for(int v=0;v<numVars;v++){
+	  const VarLabel* label = reloc_old_labels[matl][v];
+	  ParticleVariableBase* var = new_dw->getParticleVariable(label, orig_pset);
+	  for(int i=0;i<(int)subsets.size();i++)
+	    invars[i]=new_dw->getParticleVariable(label, orig_psets[i]);
+	  ParticleVariableBase* newvar = var->clone();
+	  newvar->gather(newsubset, subsets, invars, numRemote);
+	  vars[v]=newvar;
+	}
+	// Unpack MPI portion
+	particleIndex idx = totalParticles-numRemote;
+	for(MPIRecvBuffer* buf=recvs;buf!=0;buf=buf->next){
+	  int position=0;
+	  ParticleSubset* unpackset = scinew ParticleSubset(newsubset->getParticleSet(),
+							 false, matl, patch);
+	  for(int p=0;p<buf->numParticles;p++,idx++)
+	    unpackset->addParticle(idx);
+	  newpos->unpackMPI(buf->databuf, buf->bufsize, &position,
+			    pg, unpackset);
+	  for(int v=0;v<numVars;v++)
+	    vars[v]->unpackMPI(buf->databuf, buf->bufsize, &position,
+			       pg, unpackset);
+	  ASSERT(position <= buf->bufsize);
+	  delete unpackset;
+	}
+	ASSERTEQ(idx, totalParticles);
+	// Put the data back in the data warehouse
+	new_dw->put(*newpos, reloc_new_posLabel);
+	delete newpos;
+	for(int v=0;v<numVars;v++){
+	  new_dw->put(*vars[v], reloc_new_labels[matl][v]);
+	  delete vars[v];
+	}
       }
-      ASSERTEQ(start, totalParticles);
+      if(keepset->removeReference())
+	delete keepset;
+    }
+  }
 
-      new_dw->put(*newpos, reloc_new_posLabel);
-      delete newpos;
+  // Wait to make sure that all of the sends completed
+  int numsends = sendrequests.size();
+  vector<MPI_Status> statii(numsends);
+  MPI_Waitall(numsends, &sendrequests[0], &statii[0]);
 
-      for(int v=0;v<(int)reloc_old_labels[m].size();v++){
-	 vector<ParticleVariableBase*> gathervars;
-	 ParticleVariableBase* var = new_dw->getParticleVariable(reloc_old_labels[m][v], pset);
-
-	 gathervars.push_back(var);
-	 for(int i=0;i<(int)sr.size();i++){
-	    if(sr[i]->matls[m])
-	       gathervars.push_back(sr[i]->matls[m]->vars[v+1]);
-	 }
-	 ParticleVariableBase* newvar = var->clone();
-	 newvar->gather(newsubset, subsets, gathervars, recvParticles);
-	 particleIndex start = totalParticles - recvParticles;
-	 for(int i=0;i<(int)neighbors.size();i++){
-	    if(sgargs.dest[i] != me && counts[i]){
-	       newvar->unpackMPI(recvbuf[i], recvsize[i], &recvpos[i], pc,
-				 start, counts[i]);
-	       start += counts[i];
-	    }
-	 }
-	 ASSERTEQ(start, totalParticles);
-	 new_dw->put(*newvar, reloc_new_labels[m][v]);
-	 delete newvar;
-      }
-      delete keepset;
-   }
-   for(int i=0;i<(int)sr.size();i++){
-      for(int m=0;m<reloc_numMatls;m++){
-	 if(sr[i]->matls[m]){
-	    if(sr[i]->matls[m]->relocset->removeReference())
-	       delete sr[i]->matls[m]->relocset;
-	    delete sr[i]->matls[m];
-	 }
-      }
-      delete sr[i];
-   }
-   for(int i=0;i<(int)neighbors.size();i++){
-      // This may not be a valid assertion on some systems
-      // ASSERTEQ(recvsize[i], recvpos[i]);
-      if(sgargs.dest[i] != me && recvsize[i] != 0){
-	 delete recvbuf[i];
-      }
-   }
+  // delete the buffers
+  for(int i=0;i<(int)sendbuffers.size();i++)
+    delete[] sendbuffers[i];
+  for(int i=0;i<(int)recvbuffers.size();i++)
+    if(recvbuffers[i])
+      delete[] recvbuffers[i];
+  releasePort("load balancer");
 }
 
-LoadBalancer*
-MPIScheduler::getLoadBalancer()
-{
-   UintahParallelPort* lbp = getPort("load balancer");
-   LoadBalancer* lb = dynamic_cast<LoadBalancer*>(lbp);
-   return lb;
-}
-
-void
-MPIScheduler::releaseLoadBalancer()
-{
-   releasePort("load balancer");
-}
 
 void
 MPIScheduler::emitTime(char* label)
