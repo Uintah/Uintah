@@ -21,46 +21,45 @@ University of Utah. All Rights Reserved.
 
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
   <head>
+    <script type="text/javascript" src="../Utilities/HTML/tools.js"></script>
+    <script type="text/javascript">var doc = new IndexDocument();</script>
     <title>Developer Documentation</title>
-    <link href="../Utilities/HTML/indexcommon.css" type="text/css" rel="stylesheet"/>
   </head>  
 
   <body>
-    <script type="text/javascript" src="../Utilities/HTML/tools.js"></script>
-    <script type="text/javascript">preContent();</script>
+    <script type="text/javascript">doc.preContent();</script>
 
     <h1 class="page-title">Developer Documentation Index<br/>(v. <!--%= doc.edition %-->)</h1>
-    <div class="content-layer1">
-      <div class="doc-group">
-	<h1>General</h1>
-	<h2><a href="Guide/srdg.html">Guide</a> <sup><a href="Guide/srdg.pdf">pdf</a></sup></h2>
-	<p>A guide to writing SCIRun modules, data types, and other
-	code.</p>
-	<h2><a href="FAQ/faq.html">FAQ</a> <sup><a href="FAQ/faq.pdf">pdf</a></sup></h2>
-	<p>Common developer questions and answers.</p>
-	<h2><a href="CodeViews/html/index.html">Source Code Views</a></h2>
-	<p>SCIRun source code from several points of view.</p>
-	<h2><a href="Modules/index.html">Module Reference</a> <sup><a href="Modules/srmrg.pdf">pdf</a></sup></h2>
-	<p>Descriptions of SCIRun modules organized by package (and by
-	category and alphabetically)</p>
-      </div>
-      <div class="doc-group">
-	<h1>Tutorials</h1>
-	<h2><a href="Tutorials/PowerAppCreation/index.html">PowerApp
-	Creation Tutorial</a></h2>
-	<p>An introduction to developing SCIRun PowerApps</p>
-      </div>
-      <div class="doc-group">
-	<h1>Documentum</h1>
-	<h2><a href="../Documentum/documentum.html">Documentum</a> <sup><a href="../Documentum/documentum.pdf">pdf</a></sup></h2>
-	<p>Information for those writing or building SCIRun documentation.</p>
-	<h2><a href="../Documentum/mod-spec-ref.html">Module
-	Specification Reference</a> <sup><a href="../Documentum/mod-spec-ref.pdf">pdf</a></sup></h2>
-	<p>A guide and reference to writing module specifications.</p>
-      </div>
-      <div class="clear-right"></div>
+    <div class="doc-group">
+      <h1>General</h1>
+      <h2><a href="Guide/srdg.html">Guide</a> <sup><a href="Guide/srdg.pdf">pdf</a></sup></h2>
+      <p>A guide to writing SCIRun modules, data types, and other
+      code.</p>
+      <h2><a href="FAQ/faq.html">FAQ</a> <sup><a href="FAQ/faq.pdf">pdf</a></sup></h2>
+      <p>Common developer questions and answers.</p>
+      <h2><a href="CodeViews/html/index.html">Source Code Views</a></h2>
+      <p>SCIRun source code from several points of view.</p>
+      <h2><a href="Modules/index.html">Module Reference</a> <sup><a href="Modules/srmrg.pdf">pdf</a></sup></h2>
+      <p>Descriptions of SCIRun modules organized by package (and by
+      category and alphabetically)</p>
     </div>
-    <script type="text/javascript">postContent();</script>
+    <div class="doc-group">
+      <h1>Tutorials</h1>
+      <h2><a href="Tutorials/PowerAppCreation/index.html">PowerApp
+      Creation Tutorial</a></h2>
+      <p>An introduction to developing SCIRun PowerApps</p>
+    </div>
+    <div class="doc-group">
+      <h1>Documentum</h1>
+      <h2><a href="../Documentum/documentum.html">Documentum</a> <sup><a href="../Documentum/documentum.pdf">pdf</a></sup></h2>
+      <p>Information for those writing or building SCIRun documentation.</p>
+      <h2><a href="../Documentum/mod-spec-ref.html">Module
+      Specification Reference</a> <sup><a href="../Documentum/mod-spec-ref.pdf">pdf</a></sup></h2>
+      <p>A guide and reference to writing module specifications.</p>
+    </div>
+    <div class="clear-right"></div>
+    
+    <script type="text/javascript">doc.postContent();</script>
   </body>
 
 </html>
