@@ -20,6 +20,7 @@ class GLUI_EditText;
 class GLUI_StaticText;
 class GLUI_Spinner;
 class GLUI_Button;
+class GLUI_Checkbox;
 
 namespace rtrt {
 
@@ -36,6 +37,9 @@ class  Worker;
 class  DepthStats;
 class  Stats;
 class  Light;
+class SelectableGroup;
+class SpinningInstance;
+class CutGroup;
 
 class Gui {
 
@@ -199,11 +203,23 @@ private:
 
   ////////////////////////////////////////////////////////////////
   //
-  // objectWindow GLUI elemets:
+  // objectWindow GLUI elements:
   //
 
   GLUI_Button * attachKeypadBtn_;
-  bool          keypadAttached_;
+  int          keypadAttached_;
+
+
+  SelectableGroup * attachedSG_;
+  SpinningInstance * attachedSI_;
+  CutGroup * attachedCut_;
+
+  GLUI_Checkbox * SGAutoButton_;
+  GLUI_Button * SGCycleButton_;
+  GLUI_Checkbox * SIAutoButton_;
+  GLUI_Button * SIIncMagButton_;
+  GLUI_Button * SIDecMagButton_;
+  GLUI_Button * CutToggleButton_;
 
   ////////////////////////////////////////////////////////////////
 
@@ -255,6 +271,10 @@ private:
   static void toggleObjectsWindowCB( int id );
   static void updateObjectCB( int id );
   static void attachKeypadCB( int id );
+  static void resetObjSelection();
+  static void SGChangeCB( int id );
+  static void SIChangeCB( int id );
+  static void CutToggleCB( int id );
 
   ////////////////////////////////////////////////////////////////
 

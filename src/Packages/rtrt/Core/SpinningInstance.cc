@@ -4,7 +4,7 @@ using namespace rtrt;
 using namespace SCIRun;
 
 SpinningInstance::SpinningInstance(InstanceWrapperObject* o, Transform* trans, Point cen, Vector axis, double _rate) 
-  : Instance(o, trans), cen(cen), axis(axis)
+  : Instance(o, trans), cen(cen), axis(axis), dorotate(true), ctime(0)
 {
   rate = 2*_rate; //2rad = 1 revolution
   axis.normalize();
@@ -145,13 +145,15 @@ void SpinningInstance::compute_bounds(BBox& b, double /*offset*/)
 }
 
 void SpinningInstance::animate(double time, bool& changed) {
-  o->animate(time, changed);
+  if (dorotate) ctime = time;
+  
+  o->animate(ctime, changed);
 
   //There should be a more efficient way to do this, the copies are bad.
   //But seem necessary to prevent degeneration on off angles
   *currentTransform=*location_trans;
   //the pretranslate is done in the constructor
-  currentTransform->pre_rotate(time*rate, axis);
+  currentTransform->pre_rotate(ctime*rate, axis);
   currentTransform->pre_translate(cen-Point(0,0,0));
   changed = true;
   
@@ -188,6 +190,23 @@ void SpinningInstance::intersect(const Ray& ray, HitInfo& hit, DepthStats* st,
       }
     }	      
 
+}
+
+void SpinningInstance::incMagnification()
+{
+  //the pretranslate is done in the constructor
+  location_trans->pre_scale(Vector(1.2,1.2,1.2));
+  //Transform *t = new Transform();
+  //t->pre_scale(Vector(1.2,1.2,1.2));
+  //bbox.transform(t);
+}
+void SpinningInstance::decMagnification()
+{
+  //the pretranslate is done in the constructor
+  location_trans->pre_scale(Vector(.83333,.83333,.83333));
+  //Transform *t = new Transform();
+  //t->pre_scale(Vector(.83333,.83333,.83333));
+  //bbox.transform(t);
 }
 
 

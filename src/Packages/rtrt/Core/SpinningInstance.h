@@ -13,6 +13,8 @@ namespace rtrt {
     {
       Transform *location_trans;
       BBox bbox_orig;
+      bool dorotate;
+      double ctime;
     public:
       Point cen;
       Vector axis;
@@ -24,6 +26,10 @@ namespace rtrt {
       void intersect(const Ray& ray, HitInfo& hit, DepthStats* st,
 		     PerProcessorContext* ppc);
 
+      void toggleDoSpin() { dorotate = !dorotate; };	
+      int doSpin() { if (dorotate) return 1; else return 0; };
+      void incMagnification();	
+      void decMagnification();	
     };
 }
 #endif

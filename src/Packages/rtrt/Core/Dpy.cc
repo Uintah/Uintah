@@ -144,6 +144,8 @@ static int      rendering_scene = 0;
 static MusilRNG rng;
 static Object * obj;
 
+static double   lightoff_frame = -1.0;
+
 //static float float_identity[4][4] = { {1,0,0,0}, {0,1,0,0},
 //	 			        {0,0,1,0}, {0,0,0,1} };
 
@@ -299,9 +301,17 @@ Dpy::checkGuiFlags()
     lightsShowing_ = false;
   }
 
+  if( turnOffAllLights_ && (lightoff_frame < 0)){
+    lightoff_frame = SCIRun::Time::currentSeconds();
+  }
+
   if( turnOffAllLights_ ){
-    scene->turnOffAllLights();
-    turnOffAllLights_ = false;
+    double elapsed = 1.0-(SCIRun::Time::currentSeconds()-lightoff_frame)*0.2;
+    scene->turnOffAllLights(elapsed);
+    if (elapsed <= 0.0) {
+      lightoff_frame = -1.0;
+      turnOffAllLights_ = false;
+    }
   }
   if( turnOnAllLights_ ){
     scene->turnOnAllLights();

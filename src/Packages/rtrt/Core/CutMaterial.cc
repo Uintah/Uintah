@@ -83,9 +83,11 @@ void CutMaterial::shade(Color& result, const Ray& ray,
 	    else 
 	      light=my_lights[i-ngloblights];
 	    
-	    difflight+=light->get_color();
+	    difflight+=light->get_color()*cmapcol;
 	  }
-	  result = cmapcol*difflight;
+	  result = 
+	    //cmapcol*ambient(cx->scene, cutgrp->n) +
+	    difflight;
 
 	} else {
 	  //nope, color as normal

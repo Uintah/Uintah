@@ -43,6 +43,7 @@ class CutPlaneDpy : public PlaneDpy {
     CutPlaneDpy(const Vector& v, const Point& p);
     CutPlaneDpy(const Vector& v, const double d);
     virtual ~CutPlaneDpy();
+    void redisplay() { redraw = true; };
 };
 
 } // end namespace rtrt
