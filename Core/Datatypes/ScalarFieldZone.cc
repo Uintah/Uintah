@@ -104,12 +104,14 @@ int ScalarFieldZone::interpolate(const Point& p, double& v, int& cache,
 
 void ScalarFieldZone::io(Piostream& stream)
 {
+#ifndef _WIN32
     using SCICore::PersistentSpace::Pio;
     using SCICore::Containers::Pio;
 
     /* int version=*/stream.begin_class("ScalarFieldZone", SCALARFIELDZONE_VERSION);
     Pio(stream, zones);
     stream.end_class();
+#endif
 }
 
 void ScalarFieldZone::get_boundary_lines(Array1<Point>& lines)
@@ -123,6 +125,11 @@ void ScalarFieldZone::get_boundary_lines(Array1<Point>& lines)
 
 //
 // $Log$
+// Revision 1.4  1999/09/23 01:07:07  moulding
+// #ifndef'ed out the io functions, in win32, for these datatypes.  They are
+// causing problems with Pio and namespaces in VC++.  Sooner or later these have
+// to actually get fixed
+//
 // Revision 1.3  1999/08/25 03:48:41  sparker
 // Changed SCICore/CoreDatatypes to SCICore/Datatypes
 // Changed PSECore/CommonDatatypes to PSECore/Datatypes
