@@ -179,7 +179,7 @@ ColorMap::Build1d(const int size)
   colors_.resize(size);
 
   for (int i = 0; i < size; i++) {
-    colors_[i] = scinew Material();
+    colors_[i] = scinew Material(ambient, C0, specular, 10);
     
     MaterialHandle &color = colors_[i];
     
@@ -195,9 +195,6 @@ ColorMap::Build1d(const int size)
 	A0 * (AT1 - t) / (AT1 - CT0);
     }
 
-    color->ambient = ambient;
-    color->specular = specular;
-    
     rawRGBA_[i*4+0] = COLOR_FTOB(color->diffuse.r());
     rawRGBA_[i*4+1] = COLOR_FTOB(color->diffuse.g());
     rawRGBA_[i*4+2] = COLOR_FTOB(color->diffuse.b());
