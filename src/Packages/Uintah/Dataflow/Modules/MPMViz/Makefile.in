@@ -5,6 +5,6 @@ OBJTOP   = ../../..
 SRCS     = TecplotFileSelector.cc ParticleGridVisControl.cc PartToGeom.cc \
            RescaleParticleColorMap.cc cfdGridLines.cc TecplotReader.cc
 
-INCLUDES = -I$(OBJTOP)
+INCLUDES = -I$(SRCTOP) -I$(OBJTOP)
 
 include $(SRCTOP)/scripts/objs.mk

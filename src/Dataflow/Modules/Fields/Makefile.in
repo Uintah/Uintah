@@ -12,7 +12,7 @@ SRCS     = ClipField.cc Downsample.cc ExtractSurfs.cc FieldFilter.cc \
 	   MergeTensor.cc OpenGL_Ex.cc TracePath.cc TrainSeg2.cc \
 	   TrainSegment.cc TransformField.cc
 
-INCLUDES = -I$(OBJTOP) \
+INCLUDES = -I$(SRCTOP) -I$(OBJTOP) \
            -I$(TCL_INCLUDE_DIR) -I$(TK_INCLUDE_DIR) -I$(ITCL_INCLUDE_DIR)
 
 include $(SRCTOP)/scripts/objs.mk

@@ -4,6 +4,6 @@ OBJTOP   = ../..
 
 SRCS     = Sort.cc String.cc PQueue.cc TrivialAllocator.cc BitArray1.cc
 
-INCLUDES = -I$(OBJTOP)
+INCLUDES = -I$(SRCTOP) -I$(OBJTOP)
 
 include $(SRCTOP)/scripts/objs.mk

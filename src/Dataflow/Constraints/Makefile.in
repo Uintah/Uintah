@@ -8,6 +8,6 @@ SRCS     = AngleConstraint.cc BaseConstraint.cc BaseVariable.cc \
            PythagorasConstraint.cc RatioConstraint.cc SegmentConstraint.cc \
            VarCore.cc
 
-INCLUDES = -I$(OBJTOP)
+INCLUDES = -I$(SRCTOP) -I$(OBJTOP)
 
 include $(SRCTOP)/scripts/objs.mk
