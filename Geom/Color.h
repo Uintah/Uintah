@@ -32,6 +32,14 @@ public:
     Color operator+(const Color&) const;
     Color& operator+=(const Color&);
 
+    inline int operator==(const Color& c) const {
+      return ((_r==c._r)&&(_g==c._g)&&(_b==c._b));
+    }
+
+    inline int operator!=(const Color& c) const {
+      return ((_r != c._r)||(_g!=c._g)||(_b!=c._b));
+    }
+
     void get_color(float color[4]);
     inline double r() const {return _r;}
     inline double g() const {return _g;}
