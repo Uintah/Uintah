@@ -952,11 +952,10 @@ OpenGL::redraw_frame()
 	for(;ii<maxlights;ii++)
 	  glDisable((GLenum)(GL_LIGHT0+ii));
 
-	// now set up the fog stuff
-	
-	glFogi(GL_FOG_MODE,GL_LINEAR);
+	// Now set up the fog stuff.
+	glFogi(GL_FOG_MODE, GL_LINEAR);
 	glFogf(GL_FOG_START,float(znear));
-	glFogf(GL_FOG_END,float(zfar));
+	glFogf(GL_FOG_END,float((zfar-znear) * 1.40 + znear));
 	GLfloat bgArray[4];
 	bgArray[0]=bg.r();
 	bgArray[1]=bg.g();
