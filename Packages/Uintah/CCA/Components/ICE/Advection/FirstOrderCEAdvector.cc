@@ -17,27 +17,31 @@ References:
  ---------------------------------------------------------------------  */
 FirstOrderCEAdvector::FirstOrderCEAdvector()
 {
+  OFS_CCLabel = 0;
   OFE_CCLabel = 0;
   OFC_CCLabel = 0;
 }
 
 FirstOrderCEAdvector::FirstOrderCEAdvector(DataWarehouse* new_dw, 
                                           const Patch* patch)
-  :   d_advector(new_dw,patch)
 {
 
-
+  OFS_CCLabel = VarLabel::create("OFS_CC",
+                             CCVariable<fflux>::getTypeDescription());
   OFE_CCLabel = VarLabel::create("OFE_CC",
                              CCVariable<eflux>::getTypeDescription());
   OFC_CCLabel = VarLabel::create("OFC_CC",
                              CCVariable<cflux>::getTypeDescription());
-  new_dw->allocateTemporary(d_OFE,  patch, Ghost::AroundCells,1);
-  new_dw->allocateTemporary(d_OFC,  patch, Ghost::AroundCells,1);
+  Ghost::GhostType  gac = Ghost::AroundCells;
+  new_dw->allocateTemporary(d_OFS,  patch, gac,1);
+  new_dw->allocateTemporary(d_OFE,  patch, gac,1);
+  new_dw->allocateTemporary(d_OFC,  patch, gac,1);
 }
 
 
 FirstOrderCEAdvector::~FirstOrderCEAdvector()
 {
+  VarLabel::destroy(OFS_CCLabel);
   VarLabel::destroy(OFE_CCLabel);
   VarLabel::destroy(OFC_CCLabel);
 }
@@ -99,12 +103,12 @@ void FirstOrderCEAdvector::inFluxOutFluxVolume(
     
     //__________________________________
     //   SLAB outfluxes
-    d_advector.d_OFS[c].d_fflux[TOP]   = delY_top   * delX_tmp * delZ_tmp;
-    d_advector.d_OFS[c].d_fflux[BOTTOM]= delY_bottom* delX_tmp * delZ_tmp;
-    d_advector.d_OFS[c].d_fflux[RIGHT] = delX_right * delY_tmp * delZ_tmp;
-    d_advector.d_OFS[c].d_fflux[LEFT]  = delX_left  * delY_tmp * delZ_tmp;
-    d_advector.d_OFS[c].d_fflux[FRONT] = delZ_front * delX_tmp * delY_tmp;
-    d_advector.d_OFS[c].d_fflux[BACK]  = delZ_back  * delX_tmp * delY_tmp;
+    d_OFS[c].d_fflux[TOP]   = delY_top   * delX_tmp * delZ_tmp;
+    d_OFS[c].d_fflux[BOTTOM]= delY_bottom* delX_tmp * delZ_tmp;
+    d_OFS[c].d_fflux[RIGHT] = delX_right * delY_tmp * delZ_tmp;
+    d_OFS[c].d_fflux[LEFT]  = delX_left  * delY_tmp * delZ_tmp;
+    d_OFS[c].d_fflux[FRONT] = delZ_front * delX_tmp * delY_tmp;
+    d_OFS[c].d_fflux[BACK]  = delZ_back  * delX_tmp * delY_tmp;
 
     // Edge flux terms
     d_OFE[c].d_eflux[TOP_R]     = delY_top      * delX_right * delZ_tmp;
@@ -139,7 +143,7 @@ void FirstOrderCEAdvector::inFluxOutFluxVolume(
     //  Bullet proofing
     double total_fluxout = 0.0;
     for(int face = TOP; face <= BACK; face++ )  {
-      total_fluxout  += d_advector.d_OFS[c].d_fflux[face];
+      total_fluxout  += d_OFS[c].d_fflux[face];
     }
     for(int edge = TOP_R; edge <= LEFT_FR; edge++ )  {
       total_fluxout  += d_OFE[c].d_eflux[edge];
@@ -158,7 +162,7 @@ void FirstOrderCEAdvector::inFluxOutFluxVolume(
       IntVector c = *iter; 
       double total_fluxout = 0.0;
       for(int face = TOP; face <= BACK; face++ )  {
-        total_fluxout  += d_advector.d_OFS[c].d_fflux[face];
+        total_fluxout  += d_OFS[c].d_fflux[face];
       }
       for(int edge = TOP_R; edge <= LEFT_FR; edge++ )  {
         total_fluxout  += d_OFE[c].d_eflux[edge];
@@ -224,7 +228,10 @@ template <class T, typename F>
                                   SFCZVariable<double>& q_ZFC,
                                   F save_q_FC)  // function is passed in
 {
-
+                                  //  W A R N I N G
+  Vector dx = patch->dCell();    // assumes equal cell spacing             
+  double invvol = 1.0/(dx.x() * dx.y() * dx.z());
+  
   for(CellIterator iter = patch->getCellIterator(); !iter.done(); iter++) { 
     double oneThird = 1.0/3.0;
     IntVector c = *iter;
@@ -240,11 +247,11 @@ template <class T, typename F>
       //__________________________________
       //   S L A B S
       IntVector ac = c + S_ac[f];     // slab adjacent cell
-      double outfluxVol = d_advector.d_OFS[c ].d_fflux[OF_slab[f]];
-      double influxVol  = d_advector.d_OFS[ac].d_fflux[IF_slab[f]];
+      double outfluxVol = d_OFS[c ].d_fflux[OF_slab[f]];
+      double influxVol  = d_OFS[ac].d_fflux[IF_slab[f]];
 
       q_slab_flux  = - q_CC[c]  * outfluxVol + q_CC[ac] * influxVol;             
-      slab_vol    +=  outfluxVol +  influxVol;                 
+      slab_vol     =  outfluxVol +  influxVol;                 
 
       //__________________________________
       //   E D G E S  
@@ -273,7 +280,7 @@ template <class T, typename F>
         int OF = OF_corner[f][crner];      // cleans up the equations
         int IF = IF_corner[f][crner];
 
-        IntVector ac = c + C_ac[f][crner]; // adjcent cell
+        IntVector ac = c + C_ac[f][crner]; // adjacent cell
         outfluxVol = oneThird * d_OFC[c ].d_cflux[OF];
         influxVol  = oneThird * d_OFC[ac].d_cflux[IF];
 
@@ -290,18 +297,37 @@ template <class T, typename F>
     //  sum up all the contributions
     q_advected[c] = T(0.0);
     for(int f = TOP; f <= BACK; f++ )  {
-      q_advected[c] += q_face_flux[f];
+      q_advected[c] += q_face_flux[f] * invvol;
     }
     
     //__________________________________
     //  inline function to compute q_FC
-    save_q_FC(c, q_XFC, q_YFC, q_ZFC, faceVol, q_face_flux);
+    save_q_FC(c, q_XFC, q_YFC, q_ZFC, faceVol, q_face_flux, q_CC);
   }
 }
 //______________________________________________________________________
 //  
 namespace Uintah {
-
+  static MPI_Datatype makeMPI_fflux()
+  {
+    ASSERTEQ(sizeof(FirstOrderCEAdvector::fflux), sizeof(double)*6);
+    MPI_Datatype mpitype;
+    MPI_Type_vector(1, 6, 6, MPI_DOUBLE, &mpitype);
+    MPI_Type_commit(&mpitype);
+    return mpitype;
+  }
+  
+  const TypeDescription* fun_getTypeDescription(FirstOrderCEAdvector::fflux*)
+  {
+    static TypeDescription* td = 0;
+    if(!td){
+      td = scinew TypeDescription(TypeDescription::Other,
+				  "FirstOrderCEAdvector::fflux", true, 
+				  &makeMPI_fflux);
+    }
+    return td;
+  }
+  
   static MPI_Datatype makeMPI_eflux()
   {
     ASSERTEQ(sizeof(FirstOrderCEAdvector::eflux), sizeof(double)*12);
@@ -345,7 +371,11 @@ namespace Uintah {
 }
 
 namespace SCIRun {
-
+void swapbytes( Uintah::FirstOrderCEAdvector::fflux& f) {
+    double *p = f.d_fflux;
+    SWAP_8(*p); SWAP_8(*++p); SWAP_8(*++p);
+    SWAP_8(*++p); SWAP_8(*++p); SWAP_8(*++p);
+  }
 void swapbytes( Uintah::FirstOrderCEAdvector::eflux& e) {
   double *p = e.d_eflux;
   SWAP_8(*p); SWAP_8(*++p); SWAP_8(*++p);
