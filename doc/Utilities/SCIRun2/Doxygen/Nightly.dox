@@ -8,22 +8,13 @@ logs before attempting to build SCIRun2 from a new CVS checkout.
 
 \htmlonly
 <ul>
-<!-- Josh's build path:
-<li> <a href="http://www.sci.utah.edu/~cates/SR2/nightly/build_log.txt">build log</a>
-<li> <a href="http://www.sci.utah.edu/~cates/SR2/nightly/configure_log.txt">configure log</a>
-<li> <a href="http://www.sci.utah.edu/~cates/SR2/nightly/configVars.mk">configuration variables</a>
-<li> <a href="http://www.sci.utah.edu/~cates/SR2/nightly/config.log">config.log</a>
-<li> <a href="http://www.sci.utah.edu/~cates/SR2/nightly/nightly.txt">build script</a>
-<li> <a href="http://www.sci.utah.edu/~cates/SR2/nightly/doxygen.log">doxygen output</a>
-<li> <a href="http://www.sci.utah.edu/~cates/SR2/nightly/build_log.txt">build log</a>
--->
-<li> <a href="http://www.sci.utah.edu/~ayla/cca/nightly_build_logs/build_log.txt">build log</a>
-<li> <a href="http://www.sci.utah.edu/~ayla/cca/nightly_build_logs/configure_log.txt">configure log</a>
-<li> <a href="http://www.sci.utah.edu/~ayla/cca/nightly_build_logs/configVars.mk">configuration variables</a>
-<li> <a href="http://www.sci.utah.edu/~ayla/cca/nightly_build_logs/config.log">config.log</a>
 <li> <a href="http://www.sci.utah.edu/~ayla/cca/nightly_build_logs/nightly.txt">build script</a>
+<li> <a href="http://www.sci.utah.edu/~ayla/cca/nightly_build_logs/cvs_log.txt">cvs checkout output</a>
+<li> <a href="http://www.sci.utah.edu/~ayla/cca/nightly_build_logs/configure_log.txt">configure script output</a>
+<li> <a href="http://www.sci.utah.edu/~ayla/cca/nightly_build_logs/config.log">config.log</a>
+<li> <a href="http://www.sci.utah.edu/~ayla/cca/nightly_build_logs/configVars.mk">configuration variables</a>
+<li> <a href="http://www.sci.utah.edu/~ayla/cca/nightly_build_logs/build_log.txt">build output</a>
 <li> <a href="http://www.sci.utah.edu/~ayla/cca/nightly_build_logs/doxygen.log">doxygen output</a>
-<li> <a href="http://www.sci.utah.edu/~ayla/cca/nightly_build_logs/build_log.txt">build log</a>
 </ul>
 \endhtmlonly
 */
