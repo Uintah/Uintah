@@ -28,8 +28,8 @@ itcl_class SCIRun_DataIO_FieldWriter {
 	set_defaults
     }
     method set_defaults {} {
-	global $this-d_filetype
-	set $this-d_filetype Binary
+	global $this-filetype
+	set $this-filetype Binary
 	# set $this-split 0
     }
     
@@ -85,7 +85,7 @@ itcl_class SCIRun_DataIO_FieldWriter {
 	        -initialfile $defname \
 		-initialdir $initdir \
 		-defaultextension $defext \
-		-formatvar $this-d_filetype 
+		-formatvar $this-filetype 
 		#-splitvar $this-split
     }
 }
