@@ -40,7 +40,8 @@ using namespace std;
 using namespace Uintah;
 using namespace SCIRun;
 
-MPMMaterial::MPMMaterial(ProblemSpecP& ps, MPMLabel* lb, int n8or27)
+MPMMaterial::MPMMaterial(ProblemSpecP& ps, MPMLabel* lb, int n8or27,
+			 string integrator)
   : Material(ps), lb(lb), d_cm(0), d_burn(0), d_eos(0), d_membrane(false) 
 {
    // Constructor
@@ -58,7 +59,7 @@ MPMMaterial::MPMMaterial(ProblemSpecP& ps, MPMLabel* lb, int n8or27)
 
   // Step 1 -- create the constitutive gmodel.
 
-   d_cm = ConstitutiveModelFactory::create(ps,lb,n8or27);
+   d_cm = ConstitutiveModelFactory::create(ps,lb,n8or27,integrator);
    if(!d_cm)
       throw ParameterNotFound("No constitutive model");
 
@@ -458,8 +459,9 @@ particleIndex MPMMaterial::createParticles(GeometryObject* obj,
    } // else
    return count;
 }
+#if 0
 int MPMMaterial::checkForSurface(const GeometryPiece* piece, const Point p,
-							const Vector dxpp)
+				 const Vector dxpp)
 {
 
 //  Check the candidate points which surround the point just passed
@@ -494,6 +496,7 @@ int MPMMaterial::checkForSurface(const GeometryPiece* piece, const Point p,
     return 0;
   }
 }
+#endif
 
 double MPMMaterial::getThermalConductivity() const
 {

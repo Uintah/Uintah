@@ -20,10 +20,6 @@
 #include <fstream>
 #include <iostream>
 
-#ifdef IMPLICIT
-#include <Packages/Uintah/CCA/Components/MPM/ImpMPM.h>
-#endif
-
 using std::cerr;
 using namespace Uintah;
 using namespace SCIRun;
@@ -64,26 +60,12 @@ void CompNeoHook::initializeCMData(const Patch* patch,
    new_dw->allocateAndPut(deformationGradient,lb->pDeformationMeasureLabel,
 			  pset);
    new_dw->allocateAndPut(pstress,lb->pStressLabel,pset);
-#ifdef IMPLICIT
-   ParticleVariable<Matrix3> bElBar;
-   new_dw->allocateAndPut(bElBar,lb->bElBarLabel,pset);
-#endif
 
    for(ParticleSubset::iterator iter = pset->begin();
           iter != pset->end(); iter++) {
           deformationGradient[*iter] = Identity;
           pstress[*iter] = zero;
-#ifdef IMPLICIT
-	  bElBar[*iter] = Identity;
-#endif
    }
-   // cout << "Puting deformationGradient, pstress" << endl;
-   // new_dw->put(deformationGradient, lb->pDeformationMeasureLabel);
-   // new_dw->put(pstress, lb->pStressLabel);
-#ifdef IMPLICIT
-   cout << "Putting bElBar" << endl;
-   // new_dw->put(bElBar, lb->bElBarLabel);
-#endif
 
    computeStableTimestep(patch, matl, new_dw);
 }
@@ -93,15 +75,9 @@ void CompNeoHook::addParticleState(std::vector<const VarLabel*>& from,
 {
    from.push_back(lb->pDeformationMeasureLabel);
    from.push_back(lb->pStressLabel);
-#ifdef IMPLICIT
-   from.push_back(lb->bElBarLabel);
-#endif
 
    to.push_back(lb->pDeformationMeasureLabel_preReloc);
    to.push_back(lb->pStressLabel_preReloc);
-#ifdef IMPLICIT
-   to.push_back(lb->bElBarLabel_preReloc);
-#endif
 }
 
 void CompNeoHook::computeStableTimestep(const Patch* patch,
@@ -286,27 +262,19 @@ void CompNeoHook::computeStressTensorImplicit(const PatchSubset* patches,
   IntVector nodes(0,0,0);
   int num_nodes(0);
   
-  cout << "nodes = " << nodes << endl;
-  cout << "number of patches = " << patches->size() << endl;
+  cerr << "nodes = " << nodes << endl;
+  cerr << "number of patches = " << patches->size() << endl;
   for(int pp=0;pp<patches->size();pp++){
     const Patch* patch = patches->get(pp);
     nodes = patch->getNNodes();
     num_nodes += (nodes.x())*(nodes.y())*(nodes.z())*3;
-    cout << "num_nodes = " << num_nodes << "\n";
+    cerr << "num_nodes = " << num_nodes << "\n";
   }
-  // KK.setSize(num_nodes,num_nodes);
 
-#if 0
-#ifdef HAVE_PETSC
-  MatCreateMPIAIJ(PETSC_COMM_WORLD,PETSC_DETERMINE,PETSC_DETERMINE,num_nodes,
-		  num_nodes, PETSC_DEFAULT,PETSC_NULL,PETSC_DEFAULT,
-		  PETSC_NULL,&A);
-#endif
-#endif
 #endif
   for(int pp=0;pp<patches->size();pp++){
     const Patch* patch = patches->get(pp);
-    cout <<"Doing computeStressTensor on " << patch->getID()
+    cerr <<"Doing computeStressTensor on " << patch->getID()
 	 <<"\t\t\t\t IMPM"<< "\n" << "\n";
 #ifdef HAVE_PETSC
     IntVector lowIndex = patch->getNodeLowIndex();
@@ -330,7 +298,7 @@ void CompNeoHook::computeStressTensorImplicit(const PatchSubset* patches,
 
     ParticleSubset* pset = old_dw->getParticleSubset(dwi, patch);
 
-    cout << "number of particles = " << pset->numParticles() << endl;
+    cerr << "number of particles = " << pset->numParticles() << endl;
     constParticleVariable<Point> px;
     ParticleVariable<Matrix3> deformationGradient_new,bElBar_new;
     constParticleVariable<Matrix3> deformationGradient,bElBar_old;
@@ -376,23 +344,12 @@ void CompNeoHook::computeStressTensorImplicit(const PatchSubset* patches,
     FastMatrix Btrans(24,6);
     FastMatrix Bnl(3,24);
     FastMatrix Bnltrans(24,3);
-#if 0
-    IntVector nodes = patch->getNNodes();
-    int num_nodes = (nodes.x())*(nodes.y())*(nodes.z())*3;
-    KK.setSize(num_nodes,num_nodes);
-
-#ifdef HAVE_PETSC
-    MatCreateMPIAIJ(PETSC_COMM_WORLD,num_nodes,num_nodes,PETSC_DETERMINE,
-		    PETSC_DETERMINE,PETSC_DEFAULT,PETSC_NULL,PETSC_DEFAULT,
-		    PETSC_NULL,&A);
-#endif
-#endif
 
     for(ParticleSubset::iterator iter = pset->begin();
 	iter != pset->end(); iter++){
       particleIndex idx = *iter;
 #if 1
-      cout << "Particle " << px[idx] << endl;
+      cerr << "Particle " << px[idx] << endl;
 #endif
       velGrad.set(0.0);
       dispGrad.set(0.0);
@@ -408,26 +365,48 @@ void CompNeoHook::computeStressTensorImplicit(const PatchSubset* patches,
       for(int k = 0; k < 8; k++) {
 	// Need to loop over the neighboring patches l2g to get the right
 	// dof number.
+	cerr << "working on node = " << ni[k] << endl;
+	cerr << "patch extents = " << patch->getNodeLowIndex() << " " 
+	     << patch->getNodeHighIndex() << endl;
 	if (!patch->containsNode(ni[k])) {
+	  cerr << "patch doesn't contain node: " << ni[k] << endl;
+#if 0
 	  IntVector lowIndex = patch->getNodeLowIndex();
 	  IntVector highIndex = patch->getNodeHighIndex();
+	  lowIndex -= IntVector(1,1,1);
+	  highIndex += IntVector(1,1,1);
+#endif
+	  IntVector lowIndex,highIndex;
 	  const Level* level = patch->getLevel();
+	  level->findIndexRange(lowIndex,highIndex);
 	  Level::selectType neighbors;
 	  level->selectPatches(lowIndex, highIndex, neighbors);
-	  for (int n = 0; n < neighbors.size() 
-		 && neighbors[n]->containsNode(ni[k]); n++) {
-	    const Patch* neighbor = neighbors[n];
-	    cout << "John look at line 420 in CompNeoHook.cc -Todd "<<endl;
-	    // I had to comment out the following to get it to compile
-	    //l2g_node_num = (d_petscLocalToGlobal)[neighbor][ni[k]];
-	  } 
-	} else {
-	  cout << "John look at line 425 in CompNeoHook.cc -Todd "<<endl;
+	  cerr << "number of neighbors = " << neighbors.size() << endl;
+	  for (int n = 0; n < neighbors.size(); n++){
+	    cerr << "neighbor extents = " << neighbors[n]->getNodeLowIndex() 
+		 << " " << neighbors[n]->getNodeHighIndex() << endl;
+	    cerr << "node extents = " << ni[k] << endl;
+	    cerr << "containsNode = " << neighbors[n]->containsNode(ni[k]) 
+		 << endl;
+	  }
+	  for (int n = 0; n < neighbors.size(); n++) {
+	    if (neighbors[n]->containsNode(ni[k])) {
+	      const Patch* neighbor = neighbors[n];
+	      // I had to comment out the following to get it to compile
+	      l2g_node_num = (d_petscLocalToGlobal)[neighbor][ni[k]];
+	      cerr << "l2g_node_num = " << l2g_node_num << endl;
+	      dof. push_back(l2g_node_num);
+	      dof.push_back(l2g_node_num+1);
+	      dof.push_back(l2g_node_num+2);
+	    }
+	  }
+	 } else {
 	  // I had to comment out the following to get it to compile
-	  //l2g_node_num = l2g[ni[k]];
-	  //dof.push_back(l2g_node_num);
-	  //dof.push_back(l2g_node_num+1);
-	  //dof.push_back(l2g_node_num+2);
+	  l2g_node_num = l2g[ni[k]];
+	  cerr << "l2g_node_num = " << l2g_node_num << endl;
+	  dof.push_back(l2g_node_num);
+	  dof.push_back(l2g_node_num+1);
+	  dof.push_back(l2g_node_num+2);
 	}  
 
 #ifndef HAVE_PETSC 		
@@ -446,10 +425,10 @@ void CompNeoHook::computeStressTensorImplicit(const PatchSubset* patches,
 	  }
 	}
 #if 1
-	cout << "d_Shape = " << d_S[k] << endl;
-	cout << "oodx = " << oodx[0] << "\t" << oodx[1] << "\t" << oodx[2] <<
+	cerr << "d_Shape = " << d_S[k] << endl;
+	cerr << "oodx = " << oodx[0] << "\t" << oodx[1] << "\t" << oodx[2] <<
 	  endl;
-	cout << "d_S = " << d_S[k][0]*oodx[0] << "\t" << d_S[k][1]*oodx[1]
+	cerr << "d_S = " << d_S[k][0]*oodx[0] << "\t" << d_S[k][1]*oodx[1]
 	     << "\t" << d_S[k][2]*oodx[2] << endl;
 #endif
 	
@@ -497,34 +476,34 @@ void CompNeoHook::computeStressTensorImplicit(const PatchSubset* patches,
 #if 1
       for (int i = 1; i<= 3; i++) {
 	for (int j = 1; j <= 3; j++) {
-	  cout << "dispGrad(" << i << "," << j << ")= " << dispGrad(i,j) 
+	  cerr << "dispGrad(" << i << "," << j << ")= " << dispGrad(i,j) 
 	       << "\t";
 	}
-	cout << endl;
+	cerr << endl;
       }
       
       for (int i = 1; i<= 3; i++) {
 	for (int j = 1; j <= 3; j++) {
-	  cout << "defGradInc(" << i << "," << j << ")= " 
+	  cerr << "defGradInc(" << i << "," << j << ")= " 
 	       << deformationGradientInc(i,j)  << "\t";
 	}
-	cout << endl;
+	cerr << endl;
       }
       
       for (int i = 1; i<= 3; i++) {
 	for (int j = 1; j <= 3; j++) {
-	  cout << "defGrad(" << i << "," << j << ")= " 
+	  cerr << "defGrad(" << i << "," << j << ")= " 
 	       << deformationGradient[idx](i,j)  << "\t";
 	}
-	cout << endl;
+	cerr << endl;
       }
 #if 0
       for (int i = 1; i<= 3; i++) {
 	for (int j = 1; j <= 3; j++) {
-	  cout << "defGrad_new(" << i << "," << j << ")= " 
+	  cerr << "defGrad_new(" << i << "," << j << ")= " 
 	       << deformationGradient_new[idx](i,j)  << "\t";
 	}
-	cout << endl;
+	cerr << endl;
       }
 #endif
 #endif
@@ -538,25 +517,25 @@ void CompNeoHook::computeStressTensorImplicit(const PatchSubset* patches,
       fbar = deformationGradientInc * 
 	pow(deformationGradientInc.Determinant(),-1./3.);
 #if 1
-      cout << "J = " << J << " fbar = " << fbar << endl;
+      cerr << "J = " << J << " fbar = " << fbar << endl;
 #endif
       bElBar_new[idx] = fbar*bElBar_old[idx]*fbar.Transpose();
 #if 0
-      cout << "bElBar_old = " << bElBar_old[idx] << endl;
+      cerr << "bElBar_old = " << bElBar_old[idx] << endl;
       
-      cout << "bElBar_new = " << bElBar_new[idx] << endl;
+      cerr << "bElBar_new = " << bElBar_new[idx] << endl;
 #endif
       // Shear is equal to the shear modulus times dev(bElBar)
       double mubar = 1./3. * bElBar_new[idx].Trace()*shear;
       Matrix3 shrTrl = (bElBar_new[idx]*shear - Identity*mubar);
 #if 0
-      cout << "shear " << shear << endl;
+      cerr << "shear " << shear << endl;
       
       for (int i = 1; i<= 3; i++) {
 	for (int j = 1; j <= 3; j++) {
-	  cout << "shrTrl(" << i << "," << j << ")= " << shrTrl(i,j) << "\t";
+	  cerr << "shrTrl(" << i << "," << j << ")= " << shrTrl(i,j) << "\t";
 	}
-	cout << endl;
+	cerr << endl;
       }
 #endif
       // get the hydrostatic part of the stress
@@ -569,7 +548,7 @@ void CompNeoHook::computeStressTensorImplicit(const PatchSubset* patches,
       double coef1 = bulk;
       double coef2 = 2.*bulk*log(J);
 #if 0
-      cout << "mubar = " << mubar << " coef1 = " << coef1 << " coef2 = " 
+      cerr << "mubar = " << mubar << " coef1 = " << coef1 << " coef2 = " 
 	   << coef2 << endl;
 #endif
       FastMatrix D(6,6);
@@ -621,40 +600,40 @@ void CompNeoHook::computeStressTensorImplicit(const PatchSubset* patches,
 
       // Error it looks like the stress tensor is doubled for some reason.
 #if 1
-      cout << "sig = " << "\t" << sig(0,0) << "\t" << sig(0,1) << "\t" 
+      cerr << "sig = " << "\t" << sig(0,0) << "\t" << sig(0,1) << "\t" 
 	   << sig(0,2) << endl;
-      cout << "sig = " << "\t" << sig(1,0) << "\t" << sig(1,1) << "\t" 
+      cerr << "sig = " << "\t" << sig(1,0) << "\t" << sig(1,1) << "\t" 
 	   << sig(1,2) << endl;
-      cout << "sig = " << "\t" << sig(2,0) << "\t" << sig(2,1) << "\t" 
+      cerr << "sig = " << "\t" << sig(2,0) << "\t" << sig(2,1) << "\t" 
 	   << sig(2,2) << endl;
 #endif
       
       double volold = pvolumeold[idx];
       double volnew = pvolumeold[idx]*J;
 #if 1
-      cout << "volnew = " << volnew << " volold = " << volold << endl;
+      cerr << "volnew = " << volnew << " volold = " << volold << endl;
 #endif
       pvolume_deformed[idx] = volnew;
 #if 1
       for (int i = 0; i < 6; i++) {
 	for (int j = 0; j < 6; j++) {
-	  cout << "D[" << i << "][" << j << "]= " << D(i,j) << "\t";
+	  cerr << "D[" << i << "][" << j << "]= " << D(i,j) << "\t";
 	}
-	cout << endl;
+	cerr << endl;
       }
       
       for (int i = 0; i < 6; i++) {
 	for (int j = 0; j < 24; j++) {
-	  cout << "B[" << i << "][" << j << "]= " << B(i,j) << "\t";
+	  cerr << "B[" << i << "][" << j << "]= " << B(i,j) << "\t";
 	}
-	cout << endl;
+	cerr << endl;
       }
       
       for (int i = 0; i < 3; i++) {
 	for (int j = 0; j < 24; j++) {
-	  cout << "Bnl[" << i << "][" << j << "]= " << Bnl(i,j) << "\t";
+	  cerr << "Bnl[" << i << "][" << j << "]= " << Bnl(i,j) << "\t";
 	}
-	cout << endl;
+	cerr << endl;
       }
 #endif
       // Perform kmat = B.transpose()*D*B*volold
@@ -670,18 +649,20 @@ void CompNeoHook::computeStressTensorImplicit(const PatchSubset* patches,
       out1.multiply(Bnltrans, sig);
       kgeo.multiply(out1, Bnl);
       kgeo.multiply(volnew);
-      cout.precision(16);
+      cerr.precision(16);
+      for (int d_o_f = 0; d_o_f < (int) dof.size(); d_o_f++)
+	cerr << "dof = " << dof[d_o_f] << endl;
       for (int I = 0; I < (int)dof.size();I++) {
 	int dofi = dof[I];
 	for (int J = 0; J < (int)dof.size(); J++) {
 	  int dofj = dof[J];
 #if 1
 #if 1
-	  cout << "KK[" << dofi << "][" << dofj << "]= " << KK[dofi][dofj] 
+	  cerr << "KK[" << dofi << "][" << dofj << "]= " << KK[dofi][dofj] 
 	       << endl;
 #endif
-	  cout << "kmat[" << I << "][" << J << "]= " << kmat(I,J) << endl;
-	  cout << "kgeo[" << I << "][" << J << "]= " << kgeo(I,J) << endl;
+	  cerr << "kmat[" << I << "][" << J << "]= " << kmat(I,J) << endl;
+	  cerr << "kgeo[" << I << "][" << J << "]= " << kgeo(I,J) << endl;
 #endif
 	  KK[dofi][dofj] = KK[dofi][dofj] + (kmat(I,J) + kgeo(I,J));
 #ifdef HAVE_PETSC
@@ -689,7 +670,7 @@ void CompNeoHook::computeStressTensorImplicit(const PatchSubset* patches,
 	  MatSetValues(A,1,&dofi,1,&dofj,&v,ADD_VALUES);
 #endif
 #if 1
-	  cout << "KK[" << dofi << "][" << dofj << "]= " << KK[dofi][dofj] 
+	  cerr << "KK[" << dofi << "][" << dofj << "]= " << KK[dofi][dofj] 
 	       << endl;
 #endif
 	  
@@ -739,11 +720,7 @@ void CompNeoHook::computeStressTensorImplicitOnly(const PatchSubset* patches,
      old_dw->get(px,                  lb->pXLabel,                  pset);
      old_dw->get(pvolume,             lb->pVolumeLabel,             pset);
      old_dw->get(pvolumeold,          lb->pVolumeOldLabel,             pset);
-#if 0
-     old_dw->get(deformationGradient, lb->pDeformationMeasureLabel, 
-		 pset);
-     old_dw->get(bElBar_old, lb->bElBarLabel, pset);
-#endif
+
      new_dw->get(dispNew,lb->dispNewLabel,dwi,patch,Ghost::AroundCells,1);
      new_dw->getModifiable(pstress,        lb->pStressLabel_preReloc, pset);
      new_dw->getModifiable(pvolume_deformed, lb->pVolumeDeformedLabel, pset);
@@ -752,7 +729,7 @@ void CompNeoHook::computeStressTensorImplicitOnly(const PatchSubset* patches,
      new_dw->getModifiable(bElBar_new,lb->bElBarLabel_preReloc, pset);
      
 
-     cout << "delT = " << delT << endl;
+     cerr << "delT = " << delT << endl;
 
      double shear = d_initialData.Shear;
      double bulk  = d_initialData.Bulk;
@@ -791,26 +768,26 @@ void CompNeoHook::computeStressTensorImplicitOnly(const PatchSubset* patches,
 #if 1
       for (int i = 1; i<= 3; i++) {
 	for (int j = 1; j <= 3; j++) {
-	  cout << "dispGrad(" << i << "," << j << ")= " << dispGrad(i,j) 
+	  cerr << "dispGrad(" << i << "," << j << ")= " << dispGrad(i,j) 
 	       << "\t";
 	}
-	cout << endl;
+	cerr << endl;
       }
       
       for (int i = 1; i<= 3; i++) {
 	for (int j = 1; j <= 3; j++) {
-	  cout << "defGradInc(" << i << "," << j << ")= " 
+	  cerr << "defGradInc(" << i << "," << j << ")= " 
 	       << deformationGradientInc(i,j)  << "\t";
 	}
-	cout << endl;
+	cerr << endl;
       }
       
 #endif
        // Update the deformation gradient tensor to its time n+1 value.
 #if 0
-       cout << "Before the update . . ." << endl;
-       cout << "Old defGrad = " << deformationGradient[idx] << endl;
-       cout << "New defGrad = " << deformationGradient_new[idx] << endl;
+       cerr << "Before the update . . ." << endl;
+       cerr << "Old defGrad = " << deformationGradient[idx] << endl;
+       cerr << "New defGrad = " << deformationGradient_new[idx] << endl;
 #endif
        
        deformationGradient_new[idx] = deformationGradientInc *
@@ -823,7 +800,7 @@ void CompNeoHook::computeStressTensorImplicitOnly(const PatchSubset* patches,
 	 pow(deformationGradientInc.Determinant(),-1./3.);
 
 #if 1
-      cout << "J = " << J << " fbar = " << fbar << endl;
+      cerr << "J = " << J << " fbar = " << fbar << endl;
 #endif
        bElBar_new[idx] = fbar*bElBar_new[idx]*fbar.Transpose();
 
@@ -846,17 +823,17 @@ void CompNeoHook::computeStressTensorImplicitOnly(const PatchSubset* patches,
        }
 
 #if 1
-      cout << "sig = " << "\t" << sig(0,0) << "\t" << sig(0,1) << "\t" 
+      cerr << "sig = " << "\t" << sig(0,0) << "\t" << sig(0,1) << "\t" 
 	   << sig(0,2) << endl;
-      cout << "sig = " << "\t" << sig(1,0) << "\t" << sig(1,1) << "\t" 
+      cerr << "sig = " << "\t" << sig(1,0) << "\t" << sig(1,1) << "\t" 
 	   << sig(1,2) << endl;
-      cout << "sig = " << "\t" << sig(2,0) << "\t" << sig(2,1) << "\t" 
+      cerr << "sig = " << "\t" << sig(2,0) << "\t" << sig(2,1) << "\t" 
 	   << sig(2,2) << endl;
 #endif
 
        pvolume_deformed[idx] = pvolumeold[idx]*J;
 #if 1
-      cout << "volnew = " << pvolumeold[idx]*J << " volold = " 
+      cerr << "volnew = " << pvolumeold[idx]*J << " volold = " 
 	   << pvolumeold[idx] << endl;
 #endif
 
@@ -945,11 +922,7 @@ void CompNeoHook::addComputesAndRequiresImplicitOnly(Task* task,
   task->requires(Task::OldDW, lb->pXLabel,      matlset, Ghost::None);
   task->requires(Task::OldDW, lb->pVolumeLabel, matlset, Ghost::None);
   task->requires(Task::OldDW, lb->pVolumeOldLabel, matlset, Ghost::None);
-#if 0
-  task->requires(Task::OldDW, lb->pDeformationMeasureLabel,
-		 matlset, Ghost::None);
-  task->requires(Task::OldDW,lb->bElBarLabel,matlset,Ghost::None);
-#endif
+
   task->requires(Task::NewDW,lb->dispNewLabel,matlset,Ghost::AroundCells,1);
   
   task->requires(Task::OldDW, lb->delTLabel);
