@@ -3075,26 +3075,26 @@ if test "$sci_required_teem" = "yes"; then
     _sci_lib="$sci_thirdparty_libs"
     _sci_inc="$sci_thirdparty_includes"
   fi
+  _sci_optional=required
   
-  if test "$sci_required_rtrt" = "yes"; then
-     SCI_TRY_LINK(TEEM,teem library and headers,teem/nrrd.h,$_sci_inc,teem,$_sci_lib m,,,optional)
-  else
-
-     # Determine if teem is using png.  Assume teem is either in the 3rd Party
-     # or where the user has specified (as we are going to use nm to look at its
-     # symbols and are not trying to link against it (at this point.))
-
-     result=`nm $_sci_lib/libteem.a | grep png`
-     if test -n "$result" && test "$HAVE_PNG" != "yes"; then
-        AC_MSG_WARN(Teem was built with PNG support.  However the SCIRun configure)
-        AC_MSG_WARN(did not find PNG.  You need to determine where it is... as)
-        AC_MSG_WARN(Teem seems to have found it already.  You will most likely then need)
-        AC_MSG_WARN(to use --with-png=/dir/above/dir/having/libpng on your configure line.)
-        AC_MSG_ERROR(Please fix this problem and then configure again.)
-     fi
-
-     SCI_TRY_LINK(TEEM,teem library and headers,teem/nrrd.h,$_sci_inc,teem,$_sci_lib,$PNG_LIB_DIR_FLAG $PNG_LIB_FLAG -lm,,required)
+  if test "$pkg_rtrt" = "yes" && test "$pkg_BioPSE" != "yes" && test "$pkg_teem" != "yes" && test "$pkg_MatlabInterface" != "yes" && test "$pkg_uintah" != "yes"; then
+     _sci_optional=optional
   fi
+
+  # Determine if teem is using png.  Assume teem is either in the 3rd Party
+  # or where the user has specified (as we are going to use nm to look at its
+  # symbols and are not trying to link against it (at this point.))
+
+  result=`nm $_sci_lib/libteem.a | grep png_write_info`
+  if test _sci_optional != "optional" && test -n "$result" && test "$HAVE_PNG" != "yes"; then
+     AC_MSG_WARN(Teem was built with PNG support.  However the SCIRun configure)
+     AC_MSG_WARN(did not find PNG.  You need to determine where it is... as)
+     AC_MSG_WARN(Teem seems to have found it already.  You will most likely then need)
+     AC_MSG_WARN(to use --with-png=/dir/above/dir/having/libpng on your configure line.)
+     AC_MSG_ERROR(Please fix this problem and then configure again.)
+  fi
+
+  SCI_TRY_LINK(TEEM,teem library and headers,teem/nrrd.h,$_sci_inc,teem,$_sci_lib,$PNG_LIB_DIR_FLAG $PNG_LIB_FLAG -lm,,$_sci_optional)
 
   if test "$HAVE_TEEM" = "yes"; then
      DEF_TEEM="#define HAVE_TEEM 1"
@@ -3355,7 +3355,7 @@ AC_SUBST(QT_MOC_BIN)
 
 ##  --  search for ruby  ----------------------------------------------------
 if test "$sci_required_ruby" = "yes"; then
-  _sci_optional=required;
+  _sci_optional=required
 
   if test "$with_ruby" = "yes"; then
     # --with-ruby has been specified without a parameter.
