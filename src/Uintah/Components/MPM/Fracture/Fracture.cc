@@ -4,11 +4,9 @@
 
 #include <Uintah/Components/MPM/MPMLabel.h>
 #include <Uintah/Grid/ParticleVariable.h>
-#include <Uintah/Grid/CCVariable.h>
 #include <Uintah/Grid/NCVariable.h>
 
 #include <Uintah/Interface/DataWarehouse.h>
-#include <Uintah/Grid/Patch.h>
 #include <Uintah/Grid/NodeIterator.h>
 #include <Uintah/Grid/CellIterator.h>
 
@@ -180,6 +178,68 @@ labelCellSurfaceNormal (
 
 void
 Fracture::
+labelSelfContactNodes(
+           const ProcessorContext*,
+           const Patch* patch,
+           DataWarehouseP& old_dw,
+           DataWarehouseP& new_dw)
+{
+#if 0
+  int numMatls = d_sharedState->getNumMatls();
+
+  const MPMLabel* lb = MPMLabel::getLabels();
+
+  for(int m = 0; m < numMatls; m++){
+    Material* matl = d_sharedState->getMaterial( m );
+    MPMMaterial* mpm_matl = dynamic_cast<MPMMaterial*>(matl);
+    if(mpm_matl){
+      int matlindex = matl->getDWIndex();
+      int vfindex = matl->getVFIndex();
+
+      CCVariable<Vector> cSurfaceNormal;
+      new_dw->get(cSurfaceNormal, lb->cSurfaceNormalLabel, matlindex, patch,
+		  Ghost::AroundNodes, 1);
+		  
+      NCVariable<bool> gSelfContact;
+      new_dw->allocate(gSelfContact, lb->gSelfContactLabel, vfindex, patch);
+      
+      for(NodeIterator iter = patch->getNodeIterator(); !iter.done(); iter++)
+      {
+        IntVector cellIndex[8];
+        patch->findCellsFromNode(*iter,cellIndex);
+        
+        for(int k = 0; k < 8; k++) {
+          if( cellStatus(cSurfaceNormal[cellIndex[k]]) == 
+	    HAS_SEVERAL_BOUNDARY_SURFACE )
+          {
+	    gSelfContact[*iter] = true;
+            break;
+          }
+        }
+        gSelfContact[*iter] = true;
+      }
+    }
+  }
+#endif
+}
+
+bool
+Fracture::
+isSelfContactNode(const IntVector& nodeIndex,Patch* patch,
+  const CCVariable<Vector>& cSurfaceNormal)
+{
+  IntVector cellIndex[8];
+  patch->findCellsFromNode(nodeIndex,cellIndex);
+        
+  for(int k = 0; k < 8; k++) {
+    if( cellStatus(cSurfaceNormal[cellIndex[k]]) == 
+	    HAS_SEVERAL_BOUNDARY_SURFACE ) return true;
+  }
+  return false;
+}
+
+void
+Fracture::
 labelSelfContactNodesAndCells(
            const ProcessorContext*,
            const Patch* patch,
@@ -274,6 +334,10 @@ Fracture(ProblemSpecP& ps,SimulationStateP& d_sS)
 } //namespace Uintah
 
 // $Log$
+// Revision 1.16  2000/06/02 21:12:24  tan
+// Added function isSelfContactNode(...) to determine if a node is a
+// self-contact node.
+//
 // Revision 1.15  2000/06/02 19:13:39  tan
 // Finished function labelCellSurfaceNormal() to label the cell surface normal
 // according to the boundary particles surface normal information.

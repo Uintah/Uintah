@@ -5,6 +5,8 @@
 #include <Uintah/Grid/SimulationStateP.h>
 #include <Uintah/Interface/ProblemSpec.h>
 #include <Uintah/Interface/ProblemSpecP.h>
+#include <Uintah/Grid/Patch.h>
+#include <Uintah/Grid/CCVariable.h>
 
 #include <Uintah/Interface/DataWarehouseP.h>
 
@@ -12,7 +14,6 @@ namespace Uintah {
 
    class VarLabel;
    class ProcessorContext;
-   class Patch;
 
 namespace MPM {
 
@@ -73,6 +74,15 @@ private:
            DataWarehouseP& old_dw,
            DataWarehouseP& new_dw);
 
+  void   labelSelfContactNodes(
+           const ProcessorContext*,
+           const Patch* patch,
+           DataWarehouseP& old_dw,
+           DataWarehouseP& new_dw);
+
+  static bool isSelfContactNode(const IntVector& nodeIndex,Patch* patch,
+    const CCVariable<Vector>& cSurfaceNormal);
+
   static Fracture::CellStatus  cellStatus(
            const Vector& cellSurfaceNormal);
   static void setCellStatus(Fracture::CellStatus status,
@@ -94,6 +104,10 @@ private:
 #endif //__FRACTURE_H__
 
 // $Log$
+// Revision 1.13  2000/06/02 21:12:07  tan
+// Added function isSelfContactNode(...) to determine if a node is a
+// self-contact node.
+//
 // Revision 1.12  2000/06/02 00:12:58  tan
 // Added ParticleStatus to determine if a particle is a BOUNDARY_PARTICLE
 // or a INTERIOR_PARTICLE.
