@@ -63,7 +63,7 @@ itcl_class Teem_DataIO_NrrdWriter {
 	# to be modified for particular reader
 
 	# extansion to append if no extension supplied by user
-	set defext ".nd"
+	set defext ".nrrd"
 	
 	# name to appear initially
 	set defname "MyNrrd"
@@ -71,7 +71,8 @@ itcl_class Teem_DataIO_NrrdWriter {
 
 	# file types to appers in filter box
 	set types {
-	    {{Nrrd Data (and separate .nrrd)}     {.nd}      }
+	    {{Nrrd}     {.nrrd}      }
+	    {{Nrrd Header and Raw}     {.nhrd}      }
 	    {{All Files}       {.*}   }
 	}
 	
