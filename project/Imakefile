@@ -5,7 +5,7 @@ LOCALINCLUDES = -I. -I../modules -I../../wrapper -I../../wrapper/Mt -I../../wrap
 OBJS = CallbackCloners.o \
 	Color.o ColorManager.o  Connection.o  \
 	ContourSet.o  ContourSetPort.o  DBContext.o  Datatype.o  Dialbox.o  \
-	Geom.o  GeometryPort.o  \
+	Geom.o  GeometryPort.o  Grid.o\
 	HelpUI.o  MatrixPort.o  MemStats.o  Mesh.o  MeshPort.o  \
 	MessageBase.o  MenuBar.o  ModuleHelper.o  \
 	Module.o  ModuleList.o  MotifCallbackBase.o  \
@@ -23,7 +23,7 @@ OBJS = CallbackCloners.o \
 SRCS = CallbackCloners.cc \
 	Color.cc ColorManager.cc Connection.cc \
 	ContourSet.cc ContourSetPort.cc DBContext.cc Datatype.cc Dialbox.cc \
-	Geom.cc GeometryPort.cc \
+	Geom.cc GeometryPort.cc Grid.cc\
 	HelpUI.cc MatrixPort.cc MemStats.cc Mesh.cc MeshPort.cc \
 	MessageBase.cc MenuBar.cc ModuleHelper.cc \
 	Module.cc ModuleList.cc MotifCallbackBase.cc \
