@@ -26,9 +26,8 @@
    DEALINGS IN THE SOFTWARE.
 */
 
-
 /*
- *  DTPoint.h: Data Communication Point (Sender/Receiver)
+ *  DTMessageTag.h
  *
  *  Written by:
  *   Keming Zhang
@@ -40,45 +39,56 @@
  */
 
 
-#ifndef CORE_CCA_COMM_DT_DTPOINT_H
-#define CORE_CCA_COMM_DT_DTPOINT_H
+#ifndef CORE_CCA_COMM_DT_DTMESSAGETAG_H
+#define CORE_CCA_COMM_DT_DTMESSAGETAG_H
 
-#include <Core/CCA/Comm/DT/DTMessageTag.h>
+
+#include <iostream>
+#include <vector>
+#include <map>
+#include <string>
+#include <Core/CCA/Comm/DT/DTAddress.h>
+#include <Core/Thread/Mutex.h>
+
+////////////////////////////////////////////
+//  This class defines a message tag, which
+//  essentially 8-byte unsigned integer. It 
+//  will not does not overflow in thousands
+//  of years assuming 1 message passing per 
+//  micro second.
+/////////////////////////////////////////////
+
 
 namespace SCIRun {
-  class DTMessage;
-  class DTMessageTag;
-  class DataTransmitter;
-
-  class DTPoint{
+  class DTMessageTag{
   public:
-    friend class DataTransmitter;
-    void *object;
-    DTPoint(DataTransmitter *dt);
-    ~DTPoint();
-    
-    ///////////
-    //This method blocks until a message is available in the 
-    //DataTransmitter and then return this message.
-    DTMessage* getMessage(const DTMessageTag& tag);
-    
-    ///////////
-    //Put msg into the sending message queue.
-    //the sender field and tag are filled by this method.
-    DTMessageTag putInitialMessage(DTMessage *msg);
+    /////////////////////////////////////////
+    // constructor: the message counter is 
+    // initialized
+    DTMessageTag();
 
-    ///////////
-    //Put msg into the sending message queue.
-    //the sender field is filled by this method.
-    void putReplyMessage(DTMessage *msg);
+    /////////////////////////////////////////
+    // constructor: the message counter is 
+    // initialized with the given (hi, lo) pair.
+    DTMessageTag(unsigned int hi, unsigned int lo);
 
-    //callback function
-    void (*service)(DTMessage *msg);
+    /////////////////////////////////////////
+    // destructor
+    ~DTMessageTag();
 
+    bool operator<(const DTMessageTag &tag) const;
+    bool operator==(const DTMessageTag &tag) const;
+
+    ////////////////////////////////////////
+    // this method increment the current tag
+    // and return a copy of itself. This is
+    // method is thread-safe.
+    DTMessageTag nextTag();
   private:
-    DataTransmitter *dt;
+    unsigned int hi, lo;
+    static Mutex counter_mutex;
   };
-
 }//namespace SCIRun
 
 #endif
+

@@ -41,6 +41,7 @@
 #include <Core/Thread/Semaphore.h>
 #include <Core/CCA/Comm/DT/DTPoint.h>
 #include <Core/CCA/Comm/DT/DTMessage.h>
+#include <Core/CCA/Comm/DT/DTMessageTag.h>
 #include <Core/CCA/Comm/DT/DataTransmitter.h>
 
 
@@ -49,29 +50,31 @@ using namespace SCIRun;
 DTPoint::DTPoint(DataTransmitter *dt){
   this->dt=dt;
   object=NULL;
-  sema=new Semaphore("DTPoint semaphore", 0);
-  dt->registerPoint(this);
+  //  dt->registerPoint(this);
   service=NULL;
 }
 
 DTPoint::~DTPoint(){
-  delete sema;
-  dt->unregisterPoint(this);
+  //  delete sema;
+  //  dt->unregisterPoint(this);
 }
 
 DTMessage *
-DTPoint::getMessage(int tag){
-  sema->down();
-  return dt->getMessage(this, tag);
+DTPoint::getMessage(const DTMessageTag &tag){
+  return dt->getMessage(tag);
 }
 
-void 
-DTPoint::putMessage(DTMessage *msg){
+DTMessageTag
+DTPoint::putInitialMessage(DTMessage *msg){
   msg->sender=this;
-  dt->putMessage(msg);
+  return dt->putMessage(msg);
 }
 
-
+void
+DTPoint::putReplyMessage(DTMessage *msg){
+  msg->sender=this;
+  dt->putReplyMessage(msg);
+}
 
 
 

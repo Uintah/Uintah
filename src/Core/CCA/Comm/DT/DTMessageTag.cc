@@ -26,9 +26,8 @@
    DEALINGS IN THE SOFTWARE.
 */
 
-
 /*
- *  DTPoint.h: Data Communication Point (Sender/Receiver)
+ *  DTMessageTag.cc: 
  *
  *  Written by:
  *   Keming Zhang
@@ -40,45 +39,67 @@
  */
 
 
-#ifndef CORE_CCA_COMM_DT_DTPOINT_H
-#define CORE_CCA_COMM_DT_DTPOINT_H
 
+#include <stdlib.h>
+#include <string>
+#include <sstream>
+#include <sys/types.h>
+#include <sys/socket.h>
+#include <errno.h>
+#include <unistd.h>
+#include <iostream>
+#include <string.h>
+#include <netinet/in.h>
+#include <netinet/tcp.h>
+#include <arpa/inet.h>
+#include <netdb.h>
+#include <Core/Thread/Time.h>
+#include <sys/time.h>
+
+
+#include <iostream>
+#include <Core/CCA/Comm/CommError.h>
+#include <Core/Thread/Thread.h>
+#include <Core/Thread/Mutex.h>
+#include <Core/Thread/ConditionVariable.h>
 #include <Core/CCA/Comm/DT/DTMessageTag.h>
+#include <Core/CCA/Comm/DT/DTThread.h>
+#include <Core/CCA/Comm/DT/DTPoint.h>
+#include <Core/CCA/Comm/DT/DTMessage.h>
 
-namespace SCIRun {
-  class DTMessage;
-  class DTMessageTag;
-  class DataTransmitter;
+using namespace SCIRun;
+using namespace std;
 
-  class DTPoint{
-  public:
-    friend class DataTransmitter;
-    void *object;
-    DTPoint(DataTransmitter *dt);
-    ~DTPoint();
-    
-    ///////////
-    //This method blocks until a message is available in the 
-    //DataTransmitter and then return this message.
-    DTMessage* getMessage(const DTMessageTag& tag);
-    
-    ///////////
-    //Put msg into the sending message queue.
-    //the sender field and tag are filled by this method.
-    DTMessageTag putInitialMessage(DTMessage *msg);
+DTMessageTag::DTMessageTag(){
+  hi=lo=0;
+}
 
-    ///////////
-    //Put msg into the sending message queue.
-    //the sender field is filled by this method.
-    void putReplyMessage(DTMessage *msg);
+DTMessageTag::DTMessageTag(unsigned int hi, unsigned int lo){
+  this->hi=hi;
+  this->lo=lo;
+}
 
-    //callback function
-    void (*service)(DTMessage *msg);
+DTMessageTag::~DTMessageTag(){
+}
 
-  private:
-    DataTransmitter *dt;
-  };
+bool 
+DTMessageTag::operator<(const DTMessageTag &tag) const{
+  return (hi<tag.hi) || (hi==tag.hi && lo<tag.lo); 
+}
 
-}//namespace SCIRun
+bool 
+DTMessageTag::operator==(const DTMessageTag &tag) const{
+  return (hi==tag.hi) && (lo==tag.lo); 
+}
 
-#endif
+DTMessageTag
+DTMessageTag:: nextTag(){
+  counter_mutex.lock();
+  if(++lo==0) hi++;
+  DTMessageTag newTag=*this;
+  counter_mutex.unlock();
+  return newTag;
+}
+
+Mutex 
+DTMessageTag::counter_mutex("DTMessageTag mutex");
