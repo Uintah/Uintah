@@ -19,16 +19,16 @@
 
 ::netedit dontschedule
 
-set m0 [addModuleAtPosition "Teem" "Unu" "UnuSlice" 333 256]
+set m0 [addModuleAtPosition "Teem" "Unu" "UnuSlice" 304 263]
 set m1 [addModuleAtPosition "SCIRun" "Fields" "SampleLattice" 304 2]
-set m2 [addModuleAtPosition "Teem" "DataIO" "FieldToNrrd" 333 183]
+set m2 [addModuleAtPosition "Teem" "DataIO" "FieldToNrrd" 304 195]
 set m3 [addModuleAtPosition "SCIRun" "Fields" "TransformData" 304 80]
-set m4 [addModuleAtPosition "SCIRun" "Render" "Viewer" 127 467]
+set m4 [addModuleAtPosition "SCIRun" "Render" "Viewer" 127 493]
 set m5 [addModuleAtPosition "SCIRun" "Visualization" "ShowField" 28 339]
-set m6 [addModuleAtPosition "SCIRun" "Visualization" "GenStandardColorMaps" 0 13]
+set m6 [addModuleAtPosition "SCIRun" "Visualization" "GenStandardColorMaps" 20 20]
 set m7 [addModuleAtPosition "SCIRun" "Visualization" "RescaleColorMap" 20 175]
-set m8 [addModuleAtPosition "Teem" "DataIO" "NrrdToField" 325 327]
-set m9 [addModuleAtPosition "SCIRun" "Visualization" "ShowField" 359 416]
+set m8 [addModuleAtPosition "Teem" "DataIO" "NrrdToField" 304 338]
+set m9 [addModuleAtPosition "SCIRun" "Visualization" "ShowField" 304 408]
 
 addConnection $m1 0 $m3 0
 addConnection $m3 0 $m5 0
@@ -39,6 +39,7 @@ addConnection $m7 0 $m5 1
 addConnection $m3 0 $m2 0
 addConnection $m2 0 $m0 0
 addConnection $m0 0 $m8 0
+addConnection $m3 0 $m8 3
 addConnection $m8 0 $m9 0
 addConnection $m7 0 $m9 1
 addConnection $m9 0 $m4 1
