@@ -43,13 +43,18 @@
 #  include <sys/procfs.h>
 #endif
 
+#if defined( __APPLE__ )
+#  include <mach/mach_init.h>
+#  include <mach/ppc/task.h>
+#endif
+
 
 namespace SCIRun {
 
   bool ProcessInfo::IsSupported ( int info_type )
   {
 
-#if defined( __linux ) || defined( __sgi ) || defined( __alpha) || defined( _AIX )
+#if defined( __linux ) || defined( __sgi ) || defined( __alpha) || defined( _AIX ) || defined( __APPLE__ )
 
     switch ( info_type ) {
     case MEM_SIZE: return true;
@@ -57,8 +62,6 @@ namespace SCIRun {
     default      : return false;
     }
 
-#elif defined( __APPLE__ )
-    return false;
 #else
     return false;
 #endif
@@ -149,7 +152,26 @@ namespace SCIRun {
     return 0;
 
 #elif defined( __APPLE__ )
+
+    task_basic_info_data_t processInfo;
+    mach_msg_type_number_t count;
+    kern_return_t          error;
+
+    count = TASK_BASIC_INFO_COUNT;
+    error = task_info(mach_task_self(), TASK_BASIC_INFO, (task_info_t)&processInfo, &count);
+
+    if (error != KERN_SUCCESS) {
+      return 0;
+    }
+
+    switch ( info_type ) {
+    case MEM_SIZE: return processInfo.virtual_size;
+    case MEM_RSS : return processInfo.resident_size;
+    default:       return 0;
+    }
+    
     return 0;
+
 #else
     return 0;
 #endif
