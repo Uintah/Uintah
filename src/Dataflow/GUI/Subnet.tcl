@@ -844,13 +844,6 @@ proc counting_addConnection { args } {
     return doNothing
 }
 
-proc counting_sourceSettingsFile { args } {
-    global scriptCount
-    incr scriptCount(Total)
-    incr scriptCount(sourceSettingsFile)
-    renameSourceCommand
-    return "[netedit getenv SCIRUN_DATA] [netedit getenv SCIRUN_DATASET]"
-}
 
 proc counting_set { args } {
     global scriptCount
@@ -867,33 +860,38 @@ proc counting_instanceSubnet { args } {
     return doNothing
 }
 
+proc counting_addSubnetToDatabase { args } {
+    global scriptCount
+    incr scriptCount(Total)
+}
+
 
 proc loading_addModuleAtPosition { args } {
-    global PowerApp
-    if { !$PowerApp } {
-	set modulepath [join [lrange $args 0 2] ->]
-	setProgressText "Loading Module: $modulepath"
+    global PowerApp progressMeter
+    if { [info exists progressMeter] } {
+	if { !$PowerApp } {
+	    set modulepath [join [lrange $args 0 2] ->]
+	    setProgressText "Loading Module: $modulepath"
+	}
+	incrProgress 6
     }
-    incrProgress 6
+
     return [uplevel 1 real_addModuleAtPosition $args]
 }
 
 proc loading_addConnection { args } {
-    global scriptCount PowerApp
-    if { !$PowerApp } {
-	incr scriptCount(addConnectionLoading)
-	setProgressText "Creating connection \# $scriptCount(addConnectionLoading) of $scriptCount(addConnection)"
-	if { $scriptCount(addConnectionLoading) == $scriptCount(addConnection) } {
-	    setProgressText "Loading module GUI settings..."
+    global scriptCount PowerApp progressMeter
+    if { [info exists progressMeter] } {
+	if { !$PowerApp } {
+	    incr scriptCount(addConnectionLoading)
+	    setProgressText "Creating connection \# $scriptCount(addConnectionLoading) of $scriptCount(addConnection)"
+	    if { $scriptCount(addConnectionLoading) == $scriptCount(addConnection) } {
+		setProgressText "Loading module GUI settings..."
+	    }
 	}
+	incrProgress 3
     }
-    incrProgress 3
     return [uplevel 1 real_addConnection $args]
-}
-
-proc loading_sourceSettingsFile { args } {
-    incrProgress
-    return [uplevel 1 real_sourceSettingsFile $args]
 }
 
 proc loading_set { args } {
@@ -901,9 +899,21 @@ proc loading_set { args } {
     return [uplevel 1 real_set $args]
 }
 
-proc loading_instanceSubnet { args } {
+proc loading_instanceSubnet { args } {    
     incrProgress
-    return [uplevel 1 instanceSubnet $args]
+    global progressMeter scriptCount
+    setProgressText "Creating [lindex $args 0] Sub-Network"
+    setIfExists scriptCount(progressMeter) progressMeter
+    unsetIfExists progressMeter
+    set retval [uplevel 1 real_instanceSubnet $args]
+    setIfExists progressMeter scriptCount(progressMeter)
+    
+    return $retval
+}
+
+proc loading_addSubnetToDatabase { args } {
+    incrProgress
+    return [uplevel 1 real_addSubnetToDatabase $args]
 }
 
 
@@ -913,6 +923,7 @@ proc renameNetworkCommands { prefix } {
     lappend commands addModuleAtPosition
     lappend commands addConnection
     lappend commands instanceSubnet
+    lappend commands addSubnetToDatabase
 
     foreach command $commands {
 	set exists [expr [llength [info commands ${prefix}${command}]] == 1]
@@ -941,16 +952,25 @@ proc resetScriptCount {} {
 }
     
 
+proc bla { args } { puts $args }
+
 proc addSubnetToDatabase { script } {
-    return
-    global SubnetScripts
-    renameNetworkCommands counting_
-    eval $script
-    if { [info exists Name] && ![info exists name] } { set name $Name }
-    if { ![info exists name] } { set name Unknown }
-    set SubnetScripts($name) $script
-    renameNetworkCommands counting_
-    resetSourceCommand
+    set testing [interp create -safe]    
+    foreach line [split $script "\n"] {
+	catch "$testing eval \{$line\}"
+	if { [$testing eval info exists Name] } {
+	    set name [$testing eval set Name]
+	    break
+	} elseif { [$testing eval info exists name] } {
+	    set name [$testing eval set name]
+	    break
+	}
+    }
+    interp delete $testing
+
+    if { [info exists name] } {
+	setGlobal SubnetScripts($name) $script
+    }
 }
 
 
