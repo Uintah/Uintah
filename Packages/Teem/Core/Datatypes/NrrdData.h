@@ -64,38 +64,38 @@ public:
 
   virtual NrrdData* clone();
 
-  void set_orig_field(FieldHandle fh) { originating_field_ = fh; }
-  FieldHandle get_orig_field() { return originating_field_; }
+  //void set_orig_field(FieldHandle fh) { originating_field_ = fh; }
+  //FieldHandle get_orig_field() { return originating_field_; }
 
   //! Is a sci nrrd if we wrap a field up with it, and we have a tuple axis.
-  bool is_sci_nrrd() const;
-  void copy_sci_data(const NrrdData &);
+  //bool is_sci_nrrd() const;
+  //void copy_sci_data(const NrrdData &);
  
-  int get_tuple_axis_size() const;
-  bool get_tuple_indecies(vector<string> &elems) const;
-  bool get_tuple_index_info(int tmin, int tmax, int &min, int &max) const;
-  string concat_tuple_types() const;
-  bool verify_tuple_label(const string &s, vector<string> &elems) const;
+  //int get_tuple_axis_size() const;
+  //bool get_tuple_indecies(vector<string> &elems) const;
+  //bool get_tuple_index_info(int tmin, int tmax, int &min, int &max) const;
+  //string concat_tuple_types() const;
+  //bool verify_tuple_label(const string &s, vector<string> &elems) const;
 
   virtual void io(Piostream&);
   static PersistentTypeID type_id;
 
 private:
   bool in_name_set(const string &s) const;
-  bool in_type_set(const string &s) const;
+  //bool in_type_set(const string &s) const;
 
   //! did we wrap some existing memory, or was this allocated
   //! for this object to delete.
   bool                 data_owned_;
   //! a handle to the mesh this data originally belonged with. 
   //! has a rep == 0 if there was no such mesh.
-  FieldHandle           originating_field_; 
+  //FieldHandle           originating_field_; 
 
   // To help with pio
   string                nrrd_fname_;
 
-  static void load_valid_tuple_types();
-  static vector<string> valid_tup_types_;
+  //static void load_valid_tuple_types();
+  //static vector<string> valid_tup_types_;
 };
 
 typedef LockingHandle<NrrdData> NrrdDataHandle;
@@ -152,7 +152,6 @@ template <class T>
 unsigned int get_nrrd_type() {
   return nrrdTypeDouble;
 }
-
 
 } // end namespace SCITeem
 
