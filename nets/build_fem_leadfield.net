@@ -18,7 +18,7 @@ mesh and set of electrodes.
 "
 
 set m0 [addModuleAtPosition "SCIRun" "DataIO" "FieldReader" 226 15]
-set m1 [addModuleAtPosition "BioPSE" "Forward" "BuildFEMatrix" 45 179]
+set m1 [addModuleAtPosition "BioPSE" "Forward" "SetupFEMatrix" 45 179]
 set m2 [addModuleAtPosition "SCIRun" "DataIO" "FieldReader" 387 14]
 set m3 [addModuleAtPosition "BioPSE" "LeadField" "RecipBasis" 262 179]
 set m4 [addModuleAtPosition "SCIRun" "Math" "SolveMatrix" 244 263]
