@@ -580,6 +580,6 @@ PDFMixingModel::readStaticTable() {
   for (int ii = 0; ii < d_tableDimension; ii++)
     totalEntries *= d_tableInfo->getNumDivsBelow(ii) + d_tableInfo->getNumDivsAbove(ii) + 1;
   cerr << "dataCount = " << dataCount << " totalEntries = " << totalEntries << endl;
-  assert(dataCount==totalEntries);
+  ASSERT(dataCount==totalEntries);
 }
 
