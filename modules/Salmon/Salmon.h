@@ -18,8 +18,12 @@
 #include <Classlib/Array1.h>
 #include <Geometry/Point.h>
 class CallbackData;
+class DialogShellC;
 class DrawingAreaC;
+class FormC;
+class FrameC;
 class GeometryIPort;
+class GLwMDrawC;
 class XQColor;
 
 class Salmon : public Module {
@@ -30,6 +34,12 @@ class Salmon : public Module {
     DrawingAreaC* drawing_a;
     void redraw_widget(CallbackData*, void*);
     XQColor* bgcolor;
+
+    // User Interface stuff...
+    DialogShellC* dialog;
+    FormC* form;
+    FrameC* gr_frame;
+    GLwMDrawC* graphics;
 public:
     Salmon();
     Salmon(const Salmon&, int deep);
