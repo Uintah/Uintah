@@ -20,6 +20,8 @@
 #include <Geom/Sphere.h>
 #include <Geom/Torus.h>
 #include <Geometry/Plane.h>
+#include <Math/Expon.h>
+#include <Math/Trig.h>
 
 const Index NumCons = 7;
 const Index NumVars = 8;
@@ -365,7 +367,7 @@ void
 RingWidget::SetRatio( const Real ratio )
 {
    ASSERT((ratio>=0.0) && (ratio<=1.0));
-   variables[AngleVar]->Set(ratio*2.0*3.14159 - 3.14159);
+   variables[AngleVar]->Set(ratio*2.0*Pi - Pi);
 
    execute();
 }
@@ -374,7 +376,10 @@ RingWidget::SetRatio( const Real ratio )
 Real
 RingWidget::GetRatio() const
 {
-   return (variables[AngleVar]->real() + 3.14159) / (2.0 * 3.14159);
+   Real ratio=variables[AngleVar]->real() / (2.0 * Pi);
+   if(ratio < 0)
+       ratio+=Pi;
+   return ratio;
 }
 
 
@@ -439,4 +444,10 @@ RingWidget::GetAxis3()
       return (oldaxis3 = axis.normal());
 }
 
+
+void RingWidget::GetPlane(Vector& v1, Vector& v2)
+{
+    v1=GetAxis1();
+    v2=(GetAxis2()*2+v1)*Sqrt(1./3.);
+}
 

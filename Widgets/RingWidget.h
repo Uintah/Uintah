@@ -36,6 +36,8 @@ public:
    void SetRatio( const Real ratio );
    Real GetRatio() const;
 
+   void GetPlane( Vector& v1, Vector& v2);
+
    void SetRadius( const Real radius );
    Real GetRadius() const;
    
