@@ -17,7 +17,7 @@
     <inputs lastportdynamic="no">
       <port>
         <name>Vector Particles</name>
-        <datatype>Uintah::TensorParticles</datatype>
+        <datatype>Uintah::VectorParticles</datatype>
       </port>
      </inputs>
     <outputs>
