@@ -3747,10 +3747,38 @@ class BioTensorApp {
     method execute_Data {} {
 	global mods 
 	global data_mode
+	global $mods(ChooseNrrd1)-port-index
 
-	set data_completed 1
 
 	if {$data_mode == "DWI"} {
+	    # determine if we are loading nrrd, dicom, or analyze
+	    # and check if both DWI and T2 files have been specified
+	    if {[set $mods(ChooseNrrd1)-port-index] == 0} {
+		# Nrrd
+		global $mods(NrrdReader1)-filename
+		if {![file exists [set $mods(NrrdReader1)-filename]]} {
+		    set answer [tk_messageBox -message \
+				    "Please specify an valid nrrd file\nwith DWI volumes before executing." -type ok -icon info -parent .standalone] 
+		    return
+		}
+		global $mods(NrrdReader-T2)-filename
+		if {![file exists [set $mods(NrrdReader-T2)-filename]]} {
+		    set answer [tk_messageBox -message \
+				    "Please specify an existing nrrd file\nwith a T2 reference image before\nexecuting." -type ok -icon info -parent .standalone] 
+		    return
+		}
+	    } elseif {[set $mods(ChooseNrrd1)-port-index] == 1} {
+		# Dicom 
+
+	    } elseif {[set $mods(ChooseNrrd1)-port-index] == 2} {
+		# Analyze
+	    } else {
+		# shouldn't get here
+		return
+	    }
+	    
+	    set data_completed 1
+
 	    if {!$dt_completed} {
 		disableModule $mods(ChooseNrrd-DT) 1
 	    }
@@ -3763,6 +3791,29 @@ class BioTensorApp {
 	    $data_next_button2 configure -state normal \
 		-foreground black -background $next_color
 	} else {
+	    # Loading tensors
+	    # determine if we are loading nrrd, dicom, or analyze
+	    # and check if the tensors file has been specified
+	    if {[set $mods(ChooseNrrd1)-port-index] == 0} {
+		# Nrrd
+		global $mods(NrrdReader1)-filename
+		if {![file exists [set $mods(NrrdReader1)-filename]]} {
+		    set answer [tk_messageBox -message \
+				    "Please specify an valid nrrd file\nwith tensors before executing." -type ok -icon info -parent .standalone] 
+		    return
+		}
+	    } elseif {[set $mods(ChooseNrrd1)-port-index] == 1} {
+		# Dicom 
+
+	    } elseif {[set $mods(ChooseNrrd1)-port-index] == 2} {
+		# Analyze
+	    } else {
+		# shouldn't get here
+		return
+	    }
+
+	    set data_completed 1
+
 	    disableModule $mods(TendEpireg) 1
 	    disableModule $mods(ChooseNrrd-DT) 0
 	    disableModule $mods(TendEstim) 1
