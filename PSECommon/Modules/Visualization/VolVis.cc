@@ -897,7 +897,7 @@ VolVis::redraw_all()
   
 //  imagelock.unlock();
   
-  int errcode;
+  GLenum errcode;
   while((errcode=glGetError()) != GL_NO_ERROR){
     cerr << "plot_matrices got an error from GL: " << (char*)gluErrorString(errcode) << endl;
   }
@@ -1712,6 +1712,9 @@ VolVis::CalculateRayIncrements ()
 
 //
 // $Log$
+// Revision 1.9  2000/03/20 21:47:42  yarden
+// Linux port: convert int to GLenum
+//
 // Revision 1.8  2000/03/17 09:27:36  sparker
 // New makefile scheme: sub.mk instead of Makefile.in
 // Use XML-based files for module repository
