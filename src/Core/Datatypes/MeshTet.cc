@@ -18,6 +18,11 @@ namespace SCIRun {
 
 PersistentTypeID MeshTet::type_id("MeshTet", "Datatype", NULL);
 
+const string MeshTet::type_name(int)
+{
+  return "MeshTet";
+}
+
 
 MeshTet::MeshTet()
 {

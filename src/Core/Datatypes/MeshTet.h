@@ -45,8 +45,6 @@ public:
   typedef vector<edge_index> edge_array;
   typedef vector<face_index> face_array;
 
-  typedef vector container_type;
-
   MeshTet();
   MeshTet(const MeshTet &copy);
   //MeshTet(const MeshRG &lattice);
@@ -87,6 +85,8 @@ public:
 
   virtual void io(Piostream&);
   static PersistentTypeID type_id;
+  static  const string type_name(int);
+  virtual const string get_type_name(int n) const { return type_name(n); }
 
 private:
 

@@ -13,21 +13,22 @@
 #define Datatypes_GenericField_h
 
 #include <Core/Datatypes/Field.h>
+#include <Core/Datatypes/TypeName.h>
 #include <Core/Datatypes/MeshTet.h>
 #include <Core/Containers/LockingHandle.h>
 #include <vector>
 
 namespace SCIRun {
 
-template <class Mesh, class Data>
+template <class Mesh, class FData>
 class GenericField: public Field 
 {
 public:
   //! Typedefs to support the Field concept.
-  typedef Data                       value_type;
+  typedef typename FData::value_type value_type;
   typedef Mesh                       mesh_type;
-  typedef Mesh::container_type<Data> fdata_type;
   typedef LockingHandle<Mesh>        mesh_handle_type;
+  typedef FData                      fdata_type;
 
   GenericField();
   GenericField(data_location data_at);
@@ -40,10 +41,10 @@ public:
   virtual InterpolateToScalar* query_interpolate_to_scalar() const;
 
   //! Required interface to support Field Concept.
-  value_type operator[] (Mesh::node_index);
-  value_type operator[] (Mesh::edge_index);
-  value_type operator[] (Mesh::face_index);
-  value_type operator[] (Mesh::cell_index);
+  value_type operator[] (typename Mesh::node_index);
+  value_type operator[] (typename Mesh::edge_index);
+  value_type operator[] (typename Mesh::face_index);
+  value_type operator[] (typename Mesh::cell_index);
   
   mesh_handle_type get_typed_mesh(); 
 
@@ -51,7 +52,8 @@ public:
   void    io(Piostream &stream);
   static  PersistentTypeID type_id;
   static  const string type_name(int);
-  virtual const string get_type_name(int n) const;
+  virtual const string get_type_name(int n) const { return type_name(n); }
+
 private:
   //! A Tetrahedral Mesh.
   mesh_handle_type             mesh_;
@@ -59,14 +61,23 @@ private:
   fdata_type                   fdata_;
 };
 
-const double TET_VOL_VERSION = 1.0;
+const double GENERICFIELD_VERSION = 1.0;
 
-template <class Data>
-void GenericField<Data>::io(Piostream& stream){
+template <class Mesh, class FData>
+const string GenericField<Mesh, FData>::type_name(int)
+{
+  static string name = "GenericField<" + find_type_name((Mesh *)0) + ", "
+    + find_type_name((FData *)0) + ">";
+  return name;
+}
 
-  stream.begin_class(typeName().c_str(), TET_VOL_VERSION);
+
+template <class Mesh, class FData>
+void GenericField<Mesh, FData>::io(Piostream& stream)
+{
+  stream.begin_class(type_name(0).c_str(), GENERICFIELD_VERSION);
   Field::io(stream);
-  Pio(stream, mesh_.get_rep());
+  mesh_->io(stream);
   Pio(stream, fdata_);
   stream.end_class();
 }

@@ -30,6 +30,10 @@ template class LockingHandle<Matrix>;
 #include <Core/Datatypes/Mesh.h>
 template class LockingHandle<Mesh>;
 
+#include <Core/Datatypes/GenericField.h>
+#include <Core/Datatypes/MeshTet.h>
+template class GenericField<MeshTet, vector<double> >;
+
 #ifdef __sgi
 #pragma reset woff 1468
 #endif
