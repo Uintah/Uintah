@@ -12,5 +12,6 @@ SRCS     += \
 	$(SRCDIR)/ViscoScram.cc               \
 	$(SRCDIR)/HypoElastic.cc 
 
-PSELIBS := Packages/Uintah/Core/Grid
+PSELIBS := Packages/Uintah/Core/Grid \
+	Packages/Uintah/CCA/Components/ICE
 

@@ -26,6 +26,8 @@
 #include <Packages/Uintah/CCA/Components/MPM/PhysicalBC/MPMPhysicalBCFactory.h>
 #include <Packages/Uintah/CCA/Components/MPM/PhysicalBC/ForceBC.h>
 #include <Packages/Uintah/CCA/Components/MPM/PhysicalBC/CrackBC.h>
+#include <Packages/Uintah/CCA/Components/ICE/EOS/EquationOfState.h>
+#include <Packages/Uintah/CCA/Components/ICE/EOS/EquationOfStateFactory.h>
 
 #include <iostream>
 
@@ -59,6 +61,8 @@ MPMMaterial::MPMMaterial(ProblemSpecP& ps)
 	throw ParameterNotFound("No burn model");
 	
    d_fracture = FractureFactory::create(ps);
+
+   d_eos = EquationOfStateFactory::create(ps);
 
    // Step 2 -- get the general material properties
 
@@ -129,6 +133,14 @@ Fracture * MPMMaterial::getFractureModel() const
   // with this material
 
   return d_fracture;
+}
+
+EquationOfState* MPMMaterial::getEOSModel() const
+{
+  // Return the pointer to the EOS model associated
+  // with this material
+
+  return d_eos;
 }
 
 particleIndex MPMMaterial::countParticles(const Patch* patch) const

@@ -27,6 +27,7 @@ class GeometryPiece;
 class ConstitutiveModel;
 class HEBurn;
 class Fracture;
+class EquationOfState;
       
 /**************************************
      
@@ -72,6 +73,9 @@ WARNING
 
 	 // Return correct burn fracture pointer for this material
 	 Fracture * getFractureModel() const;
+
+	 // Return correct EOS model pointer for this material
+	 EquationOfState* getEOSModel() const;
 	 
 	 particleIndex countParticles(const Patch*) const;
 	 particleIndex countParticles(GeometryObject* obj,
@@ -114,6 +118,9 @@ WARNING
 
          // Burn model
 	 Fracture *d_fracture;
+
+	 // EOS model
+	 EquationOfState* d_eos;
 	 
 	 double d_density;
 
