@@ -92,8 +92,8 @@ set $m1-endpoint1z {}
 set $m1-widgetscale {}
 set $m1-maxseeds {15}
 set $m1-numseeds {2500}
-set $m1-rngseed {7}
-set $m1-rnginc {1}
+set $m1-rngseed {1}
+set $m1-rnginc {0}
 set $m1-clamp {0}
 set $m1-autoexecute {1}
 set $m1-type {}
@@ -213,7 +213,7 @@ set $m6-direction {1}
 set $m6-color {0}
 set $m6-remove-colinear {1}
 set $m6-method {5}
-set $m6-np {32}
+set $m6-np {1}
 set $m7-notes {}
 set $m7-nodes-on {0}
 set $m7-nodes-transparency {0}
