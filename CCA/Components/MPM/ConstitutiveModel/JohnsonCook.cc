@@ -265,7 +265,8 @@ JohnsonCook::computeStressTensor(const PatchSubset* patches,
     constNCVariable<Vector> gVelocity;
 
     old_dw->get(pVelocity, lb->pVelocityLabel, pset);
-    new_dw->get(gVelocity, lb->gVelocityLabel, dwi, patch, Ghost::AroundCells, NGN);
+    Ghost::GhostType  gac = Ghost::AroundCells;
+    new_dw->get(gVelocity, lb->gVelocityLabel, dwi, patch, gac, NGN);
 
     // Get the particle stress
     // Get the plastic part of rate of deformation
@@ -441,12 +442,14 @@ JohnsonCook::computeStressTensor(const PatchSubset* patches,
 
         // Calculate new dstar
         int count = 0;
+        double dstar_old = 0.0;
         do {
+          dstar_old = dstar;
 	  Matrix3 temp = (tensorU_q+tensorU_eta)*(0.5*theta) + tensorU_eta*(1.0-theta);
 	  dstar = (tensorU_eta.Contract(temp))*sqrtcplus;
 	  theta = (dstar - cplus*gammadotplus)/dstar;
 	  ++count;
-        } while (count < 5);
+        } while (fabs(dstar-dstar_old) > tolerance && count < 5);
 
         // Calculate sig(T+delT)
         /*
@@ -456,7 +459,7 @@ JohnsonCook::computeStressTensor(const PatchSubset* patches,
         double sig = evaluateFlowStress(plasticStrain, plasticStrainRate, temperature);
         ASSERT(sig != 0);
         */
-        double sig = sqrt(flowStress);
+        double sig = sqrt(flowStress); ASSERT(sig != 0);
 
         // Calculate delGammaEr
         double delGammaEr =  (sqrtTwo*sig - sqrtThree*sqrtSxS)/(2.0*shear*cplus);
@@ -469,10 +472,7 @@ JohnsonCook::computeStressTensor(const PatchSubset* patches,
         Matrix3 Stilde = (tensorS + tensorEta*(2.0*shear*delT))/denom;
         
         // Do radial return adjustment
-        /*
-        tensorS = Stilde*(sig*sqrtTwo/(sqrtThree*sqrtSxS));
-        */
-        tensorS = Stilde;
+        tensorS = Stilde*(sig*sqrtTwo/(sqrtThree*Stilde.Norm()));
         equivStress = sqrt((tensorS.NormSquared())*1.5);
         //cout << "After plastic step : equivStress = " << equivStress << " new flowstress = " << sig << endl;
 
@@ -580,15 +580,17 @@ JohnsonCook::computeVelocityGradient(const Patch* patch,
   IntVector ni[MAX_BASIS];
   Vector d_S[MAX_BASIS];
 
-  patch->findCellAndShapeDerivatives27(px, ni, d_S,psize);
+  patch->findCellAndShapeDerivatives27(px, ni, d_S, psize);
 
   for(int k = 0; k < d_8or27; k++) {
-    const Vector& gvel = gVelocity[ni[k]];
-    for (int j = 0; j<3; j++){
-      for (int i = 0; i<3; i++) {
-	velGrad(i+1,j+1) += gvel[i] * d_S[k][j] * oodx[j];
+    //if(patch->containsNode(ni[k])) {
+      const Vector& gvel = gVelocity[ni[k]];
+      for (int j = 0; j<3; j++){
+	for (int i = 0; i<3; i++) {
+	  velGrad(i+1,j+1) += gvel[i] * d_S[k][j] * oodx[j];
+	}
       }
-    }
+    //}
   }
   return velGrad;
 }
@@ -715,9 +717,18 @@ JohnsonCook::evaluateFlowStress(double& ep,
   if (epdot < 1.0) 
     strainRatePart = pow((1.0 + epdot),d_initialData.C);
   else
-    strainRatePart = 1 + d_initialData.C*log(epdot);
-  double tempPart = 1 - pow((T-d_initialData.TRoom)/
-                   (d_initialData.TMelt-d_initialData.TRoom),d_initialData.m);
+    strainRatePart = 1.0 + d_initialData.C*log(epdot);
+  double Tr = d_initialData.TRoom;
+  double Tm = d_initialData.TMelt;
+  double m = d_initialData.m;
+  double t = (T-Tr)/(Tm-Tr);
+  if (fabs(t) < 1.0e-8) t = 0.0;
+  ASSERT(t > -1.0e-8);
+  //cout << "t = " << t << endl;
+  double tm = pow(t,m);
+  double tempPart = 1.0 - tm;
+  //cout << "tempPart = " << tempPart << " T = " << T << " Tm = " << Tm << 
+  //        " Tr = " << Tr << " t = " << t << " m = " << m << " tm = " << tm << endl;
   return (strainPart*strainRatePart*tempPart);
 }
 
