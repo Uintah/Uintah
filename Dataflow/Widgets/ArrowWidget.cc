@@ -172,6 +172,17 @@ ArrowWidget::redraw()
 }
 
 
+
+void
+ArrowWidget::geom_pick(GeomPick *p, ViewWindow *vw, int data, const BState &bs)
+{
+  BaseWidget::geom_pick(p, vw, data, bs);
+  pick_pointvar_ = variables[PointVar]->point();
+  pick_headvar_ = variables[HeadVar]->point();
+}
+
+
+
 /***************************************************************************
  * The widget's geom_moved method receives geometry move requests from
  *      the widget's picks.  The widget's variables must be altered to
@@ -194,15 +205,22 @@ ArrowWidget::geom_moved( GeomPick*, int /* axis */, double /* dist */,
   switch(pick)
   {
   case HeadP:
-    variables[HeadVar]->SetDelta(delta, Scheme1);
+    variables[PointVar]->Move(pick_pointvar_);
+    variables[HeadVar]->Move(pick_headvar_);
+    variables[HeadVar]->SetDelta(pick_offset, Scheme1);
     break;
+
   case ResizeP:
-    variables[HeadVar]->SetDelta(delta, Scheme2);
+    variables[PointVar]->Move(pick_pointvar_);
+    variables[HeadVar]->Move(pick_headvar_);
+    variables[HeadVar]->SetDelta(pick_offset, Scheme2);
     break;
 
   case PointP:
   case ShaftP:
-    MoveDelta(delta);
+    variables[PointVar]->Move(pick_pointvar_);
+    variables[HeadVar]->Move(pick_headvar_);
+    MoveDelta(pick_offset);
     break;
   }
   execute(0);

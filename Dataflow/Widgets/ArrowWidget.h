@@ -44,6 +44,7 @@ public:
   virtual ~ArrowWidget();
 
   virtual void redraw();
+  virtual void geom_pick(GeomPick*, ViewWindow*, int, const BState& bs);
   virtual void geom_moved(GeomPick*, int, double,
 			  const Vector&, int, const BState&,
 			  const Vector &pick_offset);
@@ -74,6 +75,9 @@ protected:
 private:
   Vector direction;
   double length;
+
+  Point pick_pointvar_;
+  Point pick_headvar_;
 };
 
 } // End namespace SCIRun
