@@ -48,6 +48,242 @@ doc.insertDocType("article", entities)
 
   <qandaset defaultlabel="number">
 
+    <qandaentry>
+      <revhistory>
+	<revision>
+	  <revnumber>001</revnumber>
+	  <date>3/7/05</date>
+	</revision>
+      </revhistory>
+      <question>
+	<para>
+	  On a Linux system, what video cards and drivers work with
+	  SCIRun's advanced volume rendering code?
+	</para>
+      </question>
+      <answer>
+	<para>
+	  Nvidia FX class or better and ATI Radeon 9500 or better
+	  video cards will work.
+	</para>
+	<para>
+	  An accelerated graphics card driver must also be installed.
+	  An accelerated graphics card driver offloads graphics
+	  computations to the graphics card hardware and results in
+	  faster graphics. Acclerated drivers enable scientific
+	  imaging modalities, such as volume rendering, to happen on
+	  the graphics card.
+	</para>
+	<para>
+	  A <link linkend="card1">later</link> FAQ shows how to
+	  determine the type of graphics card installed.
+	</para>
+	<para>
+	  Accelerated Nvidia drivers can be <ulink
+	  url="http://www.nvidia.com/content/drivers/drivers.asp">downloaded</ulink>
+	  from Nvidia's web site.
+	</para>
+	<para>Accelerated ATI drivers can be
+	  <ulink
+	  url="https://support.ati.com/ics/support/KBAnswer.asp?questionID=3380">downloaded</ulink>
+	  from ATI's web site.
+	</para>
+	<para>
+	  Note that a non-accelerated driver is normally installed in
+	  a typical Linux installation.  A <link
+	  linkend="driver1">later</link> FAQ shows how to determine if
+	  an accelerated driver is installed.
+	</para>
+      </answer>
+    </qandaentry>
+
+    <qandaentry id="card1">
+      <revhistory>
+	<revision>
+	  <revnumber>001</revnumber>
+	  <date>3/7/05</date>
+	</revision>
+      </revhistory>
+      <question>
+	<para>
+	  On a Linux system, how do I determine the type of installed graphics card?
+	</para>
+      </question>
+      <answer>
+	<para>
+	  Type the following commands (example output provided):
+	  <literallayout class="monospaced">
+$ /sbin/lspci | grep VGA
+01:00.0 VGA compatible controller: nVidia Corporation NV35GL [GeForce FX 5900]  
+$
+$ cat /var/log/XFree86.0.log |grep -i GPU
+(II) NVIDIA Unified Driver for all NVIDIA GPUs
+(--) Chipset NVIDIA GPU found
+(II) NVIDIA(0): NVIDIA GPU detected as: GeForce FX 5900 Ultra
+(--) NVIDIA(0): Interlaced video modes are supported on this GPU
+$
+$ glxinfo |grep renderer
+OpenGL renderer string: GeForce FX 5900 Ultra/AGP/SSE
+	  </literallayout>
+	  If your card was detected when linux was loaded on the
+	  machine, then a section in /etc/X11/XFree86, similar to the
+	  following, will be found:
+<literallayout class="monospaced">
+Section "Device"
+     Identifier  "Videocard0"
+     Driver      "nvidia"
+     VendorName  "Videocard vendor"
+     BoardName   "NVIDIA GeForce 4 (generic)"
+EndSection
+</literallayout>
+	</para>
+      </answer>
+    </qandaentry>
+
+    <qandaentry id="driver1">
+      <revhistory>
+	<revision>
+	  <revnumber>001</revnumber>
+	  <date>3/7/05</date>
+	</revision>
+      </revhistory>
+      <question>
+	<para>
+	  On a Linux system, how do I determine if an accelerated
+	  graphics card driver is installed?
+	</para>
+      </question>
+      <answer>
+	<para>
+	  Look in <filename>/etc/X11/XFree86Config</filename> for a
+	  section named <quote>Device</quote>. The accelerated ATI
+	  driver is called <quote>fglrx</quote>:
+	  <literallayout class="monospaced">
+Section "Device"
+    &#x22EE;
+    Driver      "fglrx"  &lt;== accelerated
+    Driver      "radeon" &lt;== non-accelerated
+	  </literallayout>
+	  The Accelerated Nvidia driver is called <quote>nvidia</quote>
+	  <literallayout class="monospaced">
+Section "Device"
+    &#x22EE;
+    Driver       "nvidia"  &lt;== accelerated
+    Driver       "nv"      &lt;== non-accelerated
+	  </literallayout>
+	</para>
+      </answer>
+    </qandaentry>
+
+    <qandaentry id="nvidiadriver1">
+      <revhistory>
+	<revision>
+	  <revnumber>001</revnumber>
+	  <date>3/7/05</date>
+	</revision>
+      </revhistory>
+      <question>
+	<para>
+	  On a Linux system, how do I know which Nvidia driver is
+	  currently installed?
+	</para>
+      </question>
+      <answer>
+	<para>
+	  Look in /proc/driver/nvidia:
+	  <literallayout class="monospaced">
+$ cat /proc/driver/nvidia/version
+NVRM version: NVIDIA Linux x86 NVIDIA Kernel Module  1.0-5336  Wed Jan 14 18:29:26 PST 2004
+	  </literallayout>
+Above, the driver version is 5336.
+	</para>
+	<para>
+Or, run glxinfo
+<literallayout class="monospaced">
+$ glxinfo | grep version
+server glx version string: 1.3
+client glx version string: 1.3
+OpenGL version string: 1.4.1 NVIDIA 53.36
+glu version: 1.3
+</literallayout>
+	</para>
+      </answer>
+    </qandaentry>
+
+    <qandaentry id="nvidiadriver2">
+      <revhistory>
+	<revision>
+	  <revnumber>001</revnumber>
+	  <date>3/7/05</date>
+	</revision>
+      </revhistory>
+      <question>
+	<para>
+	  I installed the latest Nvidia drivers, why won't SCIRun
+	  compile with advanced volume rendering?
+	</para>
+      </question>
+      <answer>
+	<para>
+	  You need to install the Nvidia OpenGL header files (they
+	  don't get installed by default). In order to install the
+	  headers, you need to give the
+	  <option>--opengl-headers</option> option to the install
+	  script, for example:
+	  <literallayout class="monospaced">
+./NVIDIA-Linux-x86-1.0-6111-pkg1.run --opengl-headers
+	  </literallayout>
+	  For more help, type
+	  <literallayout class="monospaced">
+./NVIDIA-Linux-x86-1.0-6111-pkg1.run -A --help
+	  </literallayout>
+	  After installing the Nvidia OpenGL headers, you should find
+	  files <filename>gl.h</filename>, <filename>glx.h</filename>,
+	  <filename>glxtokens.h</filename> in directory
+	  <filename>/usr/include/GL</filename>.  Also check to make
+	  sure that those files are the Nvidia versions and not the
+	  Mesa version (Mesa is a software-only OpenGL implementation
+	  that comes packaged with linux):
+	  <literallayout class="monospaced">
+$ pwd
+/usr/include/GL
+$ head gl.h
+
+* Mesa 3-D graphics library
+	  </literallayout>
+	  The above output indicates the presence of Mesa headers.
+	  Install the Nvidia headers.
+	  <literallayout class="monospaced">
+$ head gl.h
+
+** Copyright 1998-2002, NVIDIA Corporation.
+	  </literallayout>
+	  The above output shows that Nvidia headers are installed.
+	</para>
+      </answer>
+    </qandaentry>
+
+    <qandaentry id="nvidiadriver3">
+      <revhistory>
+	<revision>
+	  <revnumber>001</revnumber>
+	  <date>3/7/05</date>
+	</revision>
+      </revhistory>
+      <question>
+	<para>
+	  How do I tell if the Nvidia headers are installed? How do I
+	  know if the Nvidia headers match the version of Nvidia
+	  driver I have installed?
+	</para>
+      </question>
+      <answer>
+	<para>
+	  If in doubt, reinstall the driver. See the <link
+	  linkend="nvidiadriver2">previous</link> FAQ entry.
+	</para>
+      </answer>
+    </qandaentry>
 
     <qandaentry>
       <revhistory>
@@ -131,10 +367,12 @@ and
       </question>
       <answer>
 	<para>
-	  Try this: Rename ~/.scirunrc to ~/.scirunrc.O.  Run SCIRun
-	  again.  If the problems resolve then merge any changes you made
-	  in ~/.scirunrc.O into the new ~/.scirunrc created by
-	  SCIRun and delete ~/.scirunrc.O.
+	  Try this: Rename <filename>~/.scirunrc</filename> to
+	  <filename>~/.scirunrc.O</filename>.  Run SCIRun again.  If
+	  the problems resolve then merge any changes you made in
+	  <filename>~/.scirunrc.O</filename> into the new
+	  <filename>~/.scirunrc</filename> created by SCIRun and
+	  delete <filename>~/.scirunrc.O</filename>.
 	</para>
       </answer>
     </qandaentry>
