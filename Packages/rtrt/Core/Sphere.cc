@@ -212,7 +212,7 @@ Sphere::io(SCIRun::Piostream &str)
 }
 
 namespace SCIRun {
-void SCIRun::Pio(SCIRun::Piostream& stream, rtrt::Sphere*& obj)
+void Pio(SCIRun::Piostream& stream, rtrt::Sphere*& obj)
 {
   SCIRun::Persistent* pobj=obj;
   stream.io(pobj, rtrt::Sphere::type_id);

@@ -14,8 +14,6 @@ class Light;
 }
 
 namespace SCIRun {
-using SCIRun::Vector;
-using SCIRun::Point;
 void Pio(Piostream&, rtrt::Light*&);
 }
 

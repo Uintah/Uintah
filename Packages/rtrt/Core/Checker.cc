@@ -52,15 +52,15 @@ Checker::io(SCIRun::Piostream &str)
 {
   str.begin_class("Checker", CHECKER_VERSION);
   Material::io(str);
-  Pio(str, matl0);
-  Pio(str, matl1);
-  Pio(str, u);
-  Pio(str, v);
+  SCIRun::Pio(str, matl0);
+  SCIRun::Pio(str, matl1);
+  SCIRun::Pio(str, u);
+  SCIRun::Pio(str, v);
   str.end_class();
 }
 
 namespace SCIRun {
-void SCIRun::Pio(SCIRun::Piostream& stream, rtrt::Checker*& obj)
+void Pio(SCIRun::Piostream& stream, rtrt::Checker*& obj)
 {
   SCIRun::Persistent* pobj=obj;
   stream.io(pobj, rtrt::Checker::type_id);

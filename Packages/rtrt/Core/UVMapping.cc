@@ -41,7 +41,7 @@ UVMapping::io(SCIRun::Piostream &str)
 }
 
 namespace SCIRun {
-void SCIRun::Pio(SCIRun::Piostream& stream, rtrt::UVMapping*& obj)
+void Pio(SCIRun::Piostream& stream, rtrt::UVMapping*& obj)
 {
   SCIRun::Persistent* pobj=obj;
   stream.io(pobj, rtrt::UVMapping::type_id);

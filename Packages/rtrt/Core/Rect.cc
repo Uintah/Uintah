@@ -170,23 +170,23 @@ Rect::io(SCIRun::Piostream &str)
   str.begin_class("Rect", RECT_VERSION);
   Object::io(str);
   UVMapping::io(str);
-  Pio(str, cen);
-  Pio(str, u);
-  Pio(str, v);
-  Pio(str, n);
-  Pio(str, d);
-  Pio(str, d1);
-  Pio(str, d2);
-  Pio(str, un);
-  Pio(str, vn);
-  Pio(str, du);
-  Pio(str, dv);
-  Pio(str, tex_scale);
+  SCIRun::Pio(str, cen);
+  SCIRun::Pio(str, u);
+  SCIRun::Pio(str, v);
+  SCIRun::Pio(str, n);
+  SCIRun::Pio(str, d);
+  SCIRun::Pio(str, d1);
+  SCIRun::Pio(str, d2);
+  SCIRun::Pio(str, un);
+  SCIRun::Pio(str, vn);
+  SCIRun::Pio(str, du);
+  SCIRun::Pio(str, dv);
+  SCIRun::Pio(str, tex_scale);
   str.end_class();
 }
 
 namespace SCIRun {
-void SCIRun::Pio(SCIRun::Piostream& stream, rtrt::Rect*& obj)
+void Pio(SCIRun::Piostream& stream, rtrt::Rect*& obj)
 {
   SCIRun::Persistent* pobj=obj;
   stream.io(pobj, rtrt::Rect::type_id);

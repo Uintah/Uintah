@@ -547,7 +547,7 @@ TexturedTri::io(SCIRun::Piostream &str)
 } // end namespace rtrt
 
 namespace SCIRun {
-void SCIRun::Pio(SCIRun::Piostream& stream, rtrt::TexturedTri*& obj)
+void Pio(SCIRun::Piostream& stream, rtrt::TexturedTri*& obj)
 {
   SCIRun::Persistent* pobj=obj;
   stream.io(pobj, rtrt::TexturedTri::type_id);

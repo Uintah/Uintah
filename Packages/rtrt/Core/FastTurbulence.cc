@@ -104,7 +104,7 @@ Vector FastTurbulence::dturb(const Point& p, double m, double& n)
 }
 
 namespace SCIRun {
-void SCIRun::Pio(SCIRun::Piostream& str, rtrt::FastTurbulence& obj)
+void Pio(SCIRun::Piostream& str, rtrt::FastTurbulence& obj)
 {
   str.begin_cheap_delim();
   Pio(str, obj.noise);

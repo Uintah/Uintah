@@ -87,7 +87,7 @@ ALLTARGETS := $(ALLTARGETS) $(SCENES)
 # $(SRCDIR)/blah.data: $(SRCTOP)/$(SRCDIR)/blah.data
 # 	@echo $@
 
-RTRT_ULIBS = -lPackages_rtrt_Core -lPackages_Uintah_CCA_Components_DataArchiver -lPackages_Uintah_CCA_Components_MPM -lPackages_Uintah_Core_Grid -lCore_Geometry -lCore_Containers -lCore_Exceptions -lDataflow_Comm -lDataflow_XMLUtil $(XML_LIBRARY) $(MPI_LIBRARY) -lCore_Malloc
+RTRT_ULIBS = -lPackages_rtrt_Core -lPackages_Uintah_CCA_Components_DataArchiver -lPackages_Uintah_CCA_Components_MPM -lPackages_Uintah_Core_Grid -lCore_Persistent -lCore_Geometry -lCore_Containers -lCore_Exceptions -lDataflow_Comm -lDataflow_XMLUtil $(XML_LIBRARY) $(MPI_LIBRARY) -lCore_Malloc
 
 $(SRCDIR)/VolumeVisMod.mo: $(SRCDIR)/VolumeVisMod.o
 	$(CXX) -o $@ $(LDFLAGS) -shared $(patsubst %.mo,%.o,$(filter %.mo,$@)) $(RTRT_ULIBS) -lnrrd -lair -lbiff -lnrrd -lm $(GLUI_LIBRARY) $(GLUT_LIBRARY)
@@ -107,10 +107,10 @@ $(SRCDIR)/uintahisosurface.mo: $(SRCDIR)/uintahisosurface.o
 #$(SRCDIR)/uintahparticle.o: $(SRCDIR)/uintahparticle.cc
 #	$(CXX) -c $(CCFLAGS) $<
 
-$(SCENES): lib/libPackages_rtrt_Core.so lib/libCore_Geometry.so lib/libCore_Malloc.so lib/libCore_Thread.so
+$(SCENES): lib/libPackages_rtrt_Core.so lib/libCore_Persistent.so lib/libCore_Geometry.so lib/libCore_Malloc.so lib/libCore_Thread.so
 %.mo: %.o
 	rm -f $@
-	$(CXX) -o $@ $(LDFLAGS) -shared $(patsubst %.mo,%.o,$(filter %.mo,$@)) -lPackages_rtrt_Core -lCore_Exceptions -lCore_Geometry -lCore_Malloc -lCore_Thread -lm $(GLUI_LIBRARY) $(GLUT_LIBRARY)
+	$(CXX) -o $@ $(LDFLAGS) -shared $(patsubst %.mo,%.o,$(filter %.mo,$@)) -lPackages_rtrt_Core -lCore_Exceptions -lCore_Geometry -lCore_Persistent -lCore_Malloc -lCore_Thread -lm $(GLUI_LIBRARY) $(GLUT_LIBRARY)
 
 CLEANPROGS := $(CLEANPROGS) $(SCENES) 
 

@@ -138,13 +138,14 @@ void
 Material::io(SCIRun::Piostream &str)
 {
   str.begin_class("Material", MATERIAL_VERSION);
-  Pio(str, my_lights);
-  Pio(str, (unsigned int)local_ambient_mode);
+  SCIRun::Pio(str, my_lights);
+  AmbientType &tmp = local_ambient_mode;
+  SCIRun::Pio(str, (unsigned int&)tmp);
   str.end_class();
 }
 
 namespace SCIRun {
-void SCIRun::Pio(SCIRun::Piostream& stream, rtrt::Material*& obj)
+void Pio(SCIRun::Piostream& stream, rtrt::Material*& obj)
 {
   SCIRun::Persistent* pobj=obj;
   stream.io(pobj, rtrt::Material::type_id);

@@ -83,13 +83,13 @@ void
 Object::io(SCIRun::Piostream &str)
 {
   str.begin_class("Object", OBJECT_VERSION);
-  Pio(str, matl);
-  Pio(str, uv);
+  SCIRun::Pio(str, matl);
+  SCIRun::Pio(str, uv);
   str.end_class();
 }
 
 namespace SCIRun {
-void SCIRun::Pio(SCIRun::Piostream& stream, rtrt::Object*& obj)
+void Pio(SCIRun::Piostream& stream, rtrt::Object*& obj)
 {
   SCIRun::Persistent* pobj=obj;
   stream.io(pobj, rtrt::Object::type_id);

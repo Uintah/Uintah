@@ -68,8 +68,7 @@ Slice<T,A,B>::~Slice()
 }
 
 template<class T, class A, class B>
-void 
-Slice::io(SCIRun::Piostream &str)
+void Slice<T,A,B>::io(SCIRun::Piostream &str)
 {
   ASSERTFAIL("Pio for Slice<T,A,B> not implemented");
 }

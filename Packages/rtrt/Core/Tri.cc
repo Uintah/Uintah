@@ -504,7 +504,7 @@ Tri::io(SCIRun::Piostream &str)
 }
 
 namespace SCIRun {
-void SCIRun::Pio(SCIRun::Piostream& stream, rtrt::Tri*& obj)
+void Pio(SCIRun::Piostream& stream, rtrt::Tri*& obj)
 {
   SCIRun::Persistent* pobj=obj;
   stream.io(pobj, rtrt::Tri::type_id);

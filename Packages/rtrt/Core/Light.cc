@@ -106,12 +106,12 @@ void
 Light::io(SCIRun::Piostream &str)
 {
   str.begin_class("Light", LIGHT_VERSION);
-  Pio(str, radius);
-  Pio(str, intensity_);
-  Pio(str, currentColor_);
-  Pio(str, origColor_);
-  Pio(str, pos);
-  Pio(str, isOn_);
+  SCIRun::Pio(str, radius);
+  SCIRun::Pio(str, intensity_);
+  SCIRun::Pio(str, currentColor_);
+  SCIRun::Pio(str, origColor_);
+  SCIRun::Pio(str, pos);
+  SCIRun::Pio(str, isOn_);
   if (str.reading()) {
     init();
   }
@@ -119,7 +119,7 @@ Light::io(SCIRun::Piostream &str)
 }
 
 namespace SCIRun {
-void SCIRun::Pio(SCIRun::Piostream& stream, rtrt::Light*& obj)
+void Pio(SCIRun::Piostream& stream, rtrt::Light*& obj)
 {
   SCIRun::Persistent* pobj=obj;
   stream.io(pobj, rtrt::Light::type_id);

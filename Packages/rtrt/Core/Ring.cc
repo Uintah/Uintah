@@ -93,7 +93,7 @@ Ring::io(SCIRun::Piostream &str)
 }
 
 namespace SCIRun {
-void SCIRun::Pio(SCIRun::Piostream& stream, rtrt::Ring*& obj)
+void Pio(SCIRun::Piostream& stream, rtrt::Ring*& obj)
 {
   SCIRun::Persistent* pobj=obj;
   stream.io(pobj, rtrt::Ring::type_id);

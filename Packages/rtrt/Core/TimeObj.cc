@@ -127,15 +127,15 @@ TimeObj::io(SCIRun::Piostream &str)
 {
   str.begin_class("TimeObj", TIMEOBJ_VERSION);
   Object::io(str);
-  Pio(str, cur);
-  Pio(str, objs);
-  Pio(str, rate);
-  Pio(str, num_processors);
+  SCIRun::Pio(str, cur);
+  SCIRun::Pio(str, objs);
+  SCIRun::Pio(str, rate);
+  SCIRun::Pio(str, num_processors);
   str.end_class();
 }
 
 namespace SCIRun {
-void SCIRun::Pio(SCIRun::Piostream& stream, rtrt::TimeObj*& obj)
+void Pio(SCIRun::Piostream& stream, rtrt::TimeObj*& obj)
 {
   SCIRun::Persistent* pobj=obj;
   stream.io(pobj, rtrt::TimeObj::type_id);

@@ -168,13 +168,13 @@ Box::io(SCIRun::Piostream &str)
 {
   str.begin_class("Box", BOX_VERSION);
   Object::io(str);
-  Pio(str, min);
-  Pio(str, max);
+  SCIRun::Pio(str, min);
+  SCIRun::Pio(str, max);
   str.end_class();
 }
 
 namespace SCIRun {
-void SCIRun::Pio(SCIRun::Piostream& stream, rtrt::Box*& obj)
+void Pio(SCIRun::Piostream& stream, rtrt::Box*& obj)
 {
   SCIRun::Persistent* pobj=obj;
   stream.io(pobj, rtrt::Box::type_id);

@@ -251,21 +251,21 @@ DielectricMaterial::io(SCIRun::Piostream &str)
 {
   str.begin_class("DielectricMaterial", DIELECTRICMATERIAL_VERSION);
   Material::io(str);
-  Pio(str, R0);
-  Pio(str, n_in);
-  Pio(str, n_out);
-  Pio(str, phong_exponent);
-  Pio(str, extinction_in);
-  Pio(str, extinction_out);
-  Pio(str, extinction_constant_in);
-  Pio(str, extinction_constant_out);
-  Pio(str, nothing_inside);
-  Pio(str, extinction_scale);
+  SCIRun::Pio(str, R0);
+  SCIRun::Pio(str, n_in);
+  SCIRun::Pio(str, n_out);
+  SCIRun::Pio(str, phong_exponent);
+  SCIRun::Pio(str, extinction_in);
+  SCIRun::Pio(str, extinction_out);
+  SCIRun::Pio(str, extinction_constant_in);
+  SCIRun::Pio(str, extinction_constant_out);
+  SCIRun::Pio(str, nothing_inside);
+  SCIRun::Pio(str, extinction_scale);
   str.end_class();
 }
 
 namespace SCIRun {
-void SCIRun::Pio(SCIRun::Piostream& stream, rtrt::DielectricMaterial*& obj)
+void Pio(SCIRun::Piostream& stream, rtrt::DielectricMaterial*& obj)
 {
   SCIRun::Persistent* pobj=obj;
   stream.io(pobj, rtrt::DielectricMaterial::type_id);

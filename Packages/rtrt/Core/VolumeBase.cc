@@ -40,7 +40,7 @@ VolumeBase::io(SCIRun::Piostream &str)
 }
 
 namespace SCIRun {
-void SCIRun::Pio(SCIRun::Piostream& stream, rtrt::VolumeBase*& obj)
+void Pio(SCIRun::Piostream& stream, rtrt::VolumeBase*& obj)
 {
   SCIRun::Persistent* pobj=obj;
   stream.io(pobj, rtrt::VolumeBase::type_id);

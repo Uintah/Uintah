@@ -200,22 +200,25 @@ ImageMaterial::io(SCIRun::Piostream &str)
 {
   str.begin_class("ImageMaterial", IMAGEMATERIAL_VERSION);
   Material::io(str);
-  Pio(str, (unsigned int)umode);
-  Pio(str, (unsigned int)vmode);
-  Pio(str, Kd);
-  Pio(str, specular);
-  Pio(str, specpow);
-  Pio(str, refl);
-  Pio(str, transp);
-  Pio(str, image);
-  Pio(str, outcolor);
-  Pio(str, valid_);
-  Pio(str, filename_);
+  Mode &tmp = umode;
+  SCIRun::Pio(str, (unsigned int&)tmp);
+  Mode &tmp2 = vmode;
+  SCIRun::Pio(str, (unsigned int&)tmp2);
+  SCIRun::Pio(str, Kd);
+  SCIRun::Pio(str, specular);
+  SCIRun::Pio(str, specpow);
+  SCIRun::Pio(str, refl);
+  SCIRun::Pio(str, transp);
+// MARTY: FIX ME
+//  SCIRun::Pio(str, image);
+  SCIRun::Pio(str, outcolor);
+  SCIRun::Pio(str, valid_);
+  SCIRun::Pio(str, filename_);
   str.end_class();
 }
 
 namespace SCIRun {
-void SCIRun::Pio(SCIRun::Piostream& stream, rtrt::ImageMaterial*& obj)
+void Pio(SCIRun::Piostream& stream, rtrt::ImageMaterial*& obj)
 {
   SCIRun::Persistent* pobj=obj;
   stream.io(pobj, rtrt::ImageMaterial::type_id);

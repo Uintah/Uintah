@@ -58,8 +58,8 @@ public:
 } // end namespace rtrt
 namespace SCIRun {
 template<class T>
-void SCIRun::Pio(SCIRun::Piostream &str, rtrt::CatmullRomSpline<T> &crs) {
-  str.begin_cheap_delim;
+void Pio(SCIRun::Piostream &str, rtrt::CatmullRomSpline<T> &crs) {
+  str.begin_cheap_delim();
   Pio(str, crs.get_nintervals());
   Pio(str, crs.get_nset());
   Pio(str, crs.get_mx());
@@ -71,7 +71,7 @@ void SCIRun::Pio(SCIRun::Piostream &str, rtrt::CatmullRomSpline<T> &crs) {
     Pio(str, crs.get_d()[i]);
   }
 
-  str.end_cheap_delim;
+  str.end_cheap_delim();
 }
 } // end namespace SCIRun
 namespace rtrt {
