@@ -222,9 +222,8 @@ def runSusTest(test, susdir, inputsdir, compare_root, algo, mode, max_parallelis
     rc = system("compare_sus_runs %s %s %s %s > compare_sus_runs.log 2>&1" % (testname, getcwd(), compare_root, susdir))
     if rc != 0:
 	if rc == 5 * 256:
-    	    print "\t*** Warning, %s has changed.  You must update the gold standard in %s/%s/%s." % (input(test), compare_root, ALGO, testname)
-	    if do_restart != "yes":
- 	    	print "%s" % replace_msg
+     	    print "\t*** Warning, %s has changed.  You must update the gold standard." % (input(test))
+ 	    print "%s" % replace_msg
 	    return 1
 	elif rc == 1 * 256:
     	    print "\t*** Warning, test %s failed uda comparison with error code %s" % (testname, rc)
