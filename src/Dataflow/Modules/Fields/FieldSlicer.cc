@@ -76,7 +76,7 @@ DECLARE_MAKER(FieldSlicer)
 
 
 FieldSlicer::FieldSlicer(GuiContext *context)
-  : Module("FieldSlicer", context, Source, "Fields", "SCIRun"),
+  : Module("FieldSlicer", context, Filter, "Fields", "SCIRun"),
     
     Axis_(context->subVar("axis")),
     Dims_(context->subVar("dims")),

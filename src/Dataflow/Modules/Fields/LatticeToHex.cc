@@ -37,7 +37,7 @@ public:
   DECLARE_MAKER(LatticeToHex(GuiContext* ctx));
 
 LatticeToHex::LatticeToHex(GuiContext* ctx)
-  : Module("LatticeToHex", ctx, Source, "Fields", "SCIRun"), last_gen_(-1)
+  : Module("LatticeToHex", ctx, Filter, "Fields", "SCIRun"), last_gen_(-1)
 {
 }
 

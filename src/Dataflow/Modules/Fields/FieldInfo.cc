@@ -52,7 +52,7 @@ public:
   DECLARE_MAKER(FieldInfo)
 
 FieldInfo::FieldInfo(GuiContext* ctx)
-  : Module("FieldInfo", ctx, Source, "Fields", "SCIRun"),
+  : Module("FieldInfo", ctx, Sink, "Fields", "SCIRun"),
     generation_(-1),
     minmax_(1,0)
   

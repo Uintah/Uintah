@@ -55,7 +55,7 @@ public:
   DECLARE_MAKER(ChangeFieldDataType)
 
 ChangeFieldDataType::ChangeFieldDataType(GuiContext* ctx)
-  : Module("ChangeFieldDataType", ctx, Source, "Fields", "SCIRun"),
+  : Module("ChangeFieldDataType", ctx, Filter, "Fields", "SCIRun"),
     outputdatatype_(ctx->subVar("outputdatatype")),
     generation_(-1),
     outputfield_(0)
