@@ -120,7 +120,9 @@ using std::vector;
       const VarLabel* TotalMassLabel;
       const VarLabel* NeedAddMPMMaterialLabel;
       const VarLabel* BndyForceLabel[6];
+      const VarLabel* BndyTractionLabel[6];
       const VarLabel* BndyContactAreaLabel[6];
+      const VarLabel* BndyContactCellAreaLabel[6];
       const VarLabel* CenterOfMassPositionLabel;
       const VarLabel* CenterOfMassVelocityLabel;
 

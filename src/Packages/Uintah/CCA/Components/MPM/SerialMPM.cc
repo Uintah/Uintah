@@ -64,6 +64,20 @@ static DebugStream amr_doing("AMRMPM", false);
 extern Mutex cerrLock;
 
 
+static Vector face_norm(Patch::FaceType f)
+{
+  switch(f) { 
+  case Patch::xminus: return Vector(-1,0,0);
+  case Patch::xplus:  return Vector( 1,0,0);
+  case Patch::yminus: return Vector(0,-1,0);
+  case Patch::yplus:  return Vector(0, 1,0);
+  case Patch::zminus: return Vector(0,0,-1);
+  case Patch::zplus:  return Vector(0,0, 1);
+  default:
+    return Vector(0,0,0); // oops !
+  }
+}
+
 SerialMPM::SerialMPM(const ProcessorGroup* myworld) :
   UintahParallelComponent(myworld)
 {
@@ -379,6 +393,7 @@ SerialMPM::scheduleTimeAdvance(const LevelP & level,
   scheduleComputeHeatExchange(            sched, patches, matls);
   scheduleExMomInterpolated(              sched, patches, matls);
   scheduleComputeStressTensor(            sched, patches, matls);
+  scheduleComputeContactArea(             sched, patches, matls);
   scheduleComputeInternalForce(           sched, patches, matls);
   scheduleComputeInternalHeatRate(        sched, patches, matls);
   scheduleSolveEquationsMotion(           sched, patches, matls);
@@ -603,6 +618,27 @@ void SerialMPM::scheduleComputeArtificialViscosity(SchedulerP& sched,
 }
 
 
+void SerialMPM::scheduleComputeContactArea(SchedulerP& sched,
+                                           const PatchSet* patches,
+                                           const MaterialSet* matls)
+{
+  /*
+   * computeContactArea */
+  if(d_bndy_traction_faces.size()>0) {
+    Task* t = scinew Task("MPM::computeContactArea",
+                          this, &SerialMPM::computeContactArea);
+    
+    Ghost::GhostType  gnone = Ghost::None;
+    t->requires(Task::NewDW, lb->gVolumeLabel, gnone);
+    for(std::list<Patch::FaceType>::const_iterator ftit(d_bndy_traction_faces.begin());
+        ftit!=d_bndy_traction_faces.end();ftit++) {
+      int iface = (int)(*ftit);
+      t->computes(lb->BndyContactCellAreaLabel[iface]);
+    }
+    sched->addTask(t, patches, matls);
+  }
+}
+
 void SerialMPM::scheduleComputeInternalForce(SchedulerP& sched,
                                              const PatchSet* patches,
                                              const MaterialSet* matls)
@@ -642,14 +678,13 @@ void SerialMPM::scheduleComputeInternalForce(SchedulerP& sched,
 
   t->computes(lb->gInternalForceLabel);
   
-  if (!d_bndy_traction_faces.empty()) {
-     
-    for(std::list<Patch::FaceType>::const_iterator ftit(d_bndy_traction_faces.begin());
-        ftit!=d_bndy_traction_faces.end();ftit++) {
-      t->computes(lb->BndyForceLabel[*ftit]);       // node based
-      t->computes(lb->BndyContactAreaLabel[*ftit]); // node based
-    }
-    
+  for(std::list<Patch::FaceType>::const_iterator ftit(d_bndy_traction_faces.begin());
+      ftit!=d_bndy_traction_faces.end();ftit++) {
+    int iface = (int)(*ftit);
+    t->requires(Task::NewDW, lb->BndyContactCellAreaLabel[iface]);
+    t->computes(lb->BndyForceLabel[iface]);
+    t->computes(lb->BndyContactAreaLabel[iface]);
+    t->computes(lb->BndyTractionLabel[iface]);
   }
   
   t->computes(lb->gStressForSavingLabel);
@@ -1614,6 +1649,78 @@ void SerialMPM::computeArtificialViscosity(const ProcessorGroup*,
 
 }
 
+void SerialMPM::computeContactArea(const ProcessorGroup*,
+                                   const PatchSubset* patches,
+                                   const MaterialSubset* ,
+                                   DataWarehouse* old_dw,
+                                   DataWarehouse* new_dw)
+{
+  // six indices for each of the faces
+  double bndyCArea[6] = {0,0,0,0,0,0};
+  
+  for(int p=0;p<patches->size();p++){
+    const Patch* patch = patches->get(p);
+    
+    cout_doing <<"Doing computeContactArea on patch " << patch->getID()
+               <<"\t\t\t MPM"<< endl;
+    
+    Vector dx = patch->dCell();
+    double cellvol = dx.x()*dx.y()*dx.z();
+    
+    int numMPMMatls = d_sharedState->getNumMPMMatls();
+    
+    for(int m = 0; m < numMPMMatls; m++){
+      MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial( m );
+      int dwi = mpm_matl->getDWIndex();
+      constNCVariable<double> gvolume;
+      
+      new_dw->get(gvolume, lb->gVolumeLabel, dwi, patch, Ghost::None, 0);
+     
+      for(list<Patch::FaceType>::const_iterator fit(d_bndy_traction_faces.begin()); 
+          fit!=d_bndy_traction_faces.end();fit++) {       
+        Patch::FaceType face = *fit;
+        int iface = (int)(face);
+        
+        // Check if the face is on an external boundary
+        if(patch->getBCType(face)==Patch::Neighbor)
+           continue;
+        
+        // We are on the boundary, i.e. not on an interior patch
+        // boundary, and also on the correct side, 
+        // so do the traction accumulation . . .
+        // loop cells to find boundary areas
+        IntVector projlow, projhigh;
+        patch->getFaceCells(face, 0, projlow, projhigh);
+        // Vector norm = face_norm(face);
+        
+        for (int i = projlow.x(); i<projhigh.x(); i++) {
+          for (int j = projlow.y(); j<projhigh.y(); j++) {
+            for (int k = projlow.z(); k<projhigh.z(); k++) {
+              IntVector ijk(i,j,k);
+              double nodevol = gvolume[ijk];
+              if(nodevol>0) // FIXME: uses node index to get node volume ...
+                {
+                  const double celldepth  = dx[iface/2];
+                  bndyCArea[iface] += cellvol/celldepth;
+                }
+            }
+          }
+        }
+        
+      } // faces
+    } // materials
+  } // patches
+  
+  // be careful only to put the fields that we have built
+  // that way if the user asks to output a field that has not been built
+  // it will fail early rather than just giving zeros.
+  for(std::list<Patch::FaceType>::const_iterator ftit(d_bndy_traction_faces.begin());
+      ftit!=d_bndy_traction_faces.end();ftit++) {
+    int iface = (int)(*ftit);
+    new_dw->put(sum_vartype(bndyCArea[iface]),lb->BndyContactCellAreaLabel[iface]);
+  }
+}
+
 void SerialMPM::computeInternalForce(const ProcessorGroup*,
                                      const PatchSubset* patches,
                                      const MaterialSubset* ,
@@ -1622,10 +1729,10 @@ void SerialMPM::computeInternalForce(const ProcessorGroup*,
 {
   // node based forces
   Vector bndyForce[6];
-  double bndyArea[6];
+  Vector bndyTraction[6];
   for(int iface=0;iface<6;iface++) {
-      bndyForce[iface]  = Vector(0.);
-      bndyArea [iface]  = 0.;
+    bndyForce   [iface]  = Vector(0.);
+    bndyTraction[iface]  = Vector(0.);
   }
   double partvoldef = 0.;
   
@@ -1640,6 +1747,7 @@ void SerialMPM::computeInternalForce(const ProcessorGroup*,
     oodx[0] = 1.0/dx.x();
     oodx[1] = 1.0/dx.y();
     oodx[2] = 1.0/dx.z();
+    double cellvol = dx.x()*dx.y()*dx.z();
     Matrix3 Id;
     Id.Identity();
 
@@ -1665,7 +1773,6 @@ void SerialMPM::computeInternalForce(const ProcessorGroup*,
       constParticleVariable<Vector>  psize;
       constParticleVariable<double>  pErosion;
       NCVariable<Vector>             internalforce;
-      constNCVariable<double>        gvolume;
       NCVariable<Matrix3>            gstress;
       constNCVariable<double>        gmass;
 
@@ -1681,7 +1788,6 @@ void SerialMPM::computeInternalForce(const ProcessorGroup*,
         old_dw->get(psize, lb->pSizeLabel,                   pset);
       }
       new_dw->get(gmass,   lb->gMassLabel, dwi, patch, Ghost::None, 0);
-      new_dw->get(gvolume, lb->gVolumeLabel, dwi, patch, Ghost::None, 0);
       new_dw->get(pErosion,lb->pErosionLabel_preReloc,       pset);
 
       new_dw->allocateAndPut(gstress,      lb->gStressForSavingLabel,dwi,patch);
@@ -1763,6 +1869,8 @@ void SerialMPM::computeInternalForce(const ProcessorGroup*,
         // Check if the face is on an external boundary
         if(patch->getBCType(face)==Patch::Neighbor)
            continue;
+        
+        const int iface = (int)face;
       
         // We are on the boundary, i.e. not on an interior patch
         // boundary, and also on the correct side, 
@@ -1770,16 +1878,32 @@ void SerialMPM::computeInternalForce(const ProcessorGroup*,
         // loop nodes to find forces
         IntVector projlow, projhigh;
         patch->getFaceNodes(face, 0, projlow, projhigh);
+        Vector norm = face_norm(face);
         
         for (int i = projlow.x(); i<projhigh.x(); i++) {
           for (int j = projlow.y(); j<projhigh.y(); j++) {
             for (int k = projlow.z(); k<projhigh.z(); k++) {
-              IntVector ijk(i,j,k);     
-              // flip sign so that pushing on boundary gives positive force
-              bndyForce[face] -= internalforce[ijk];
+              IntVector ijk(i,j,k);	
               
-              double celldepth  = dx[face/2];
-              bndyArea [face] += gvolume[ijk]/celldepth;
+              // flip sign so that pushing on boundary gives positive force
+              bndyForce[iface] -= internalforce[ijk];
+            }
+          }
+        }
+        
+        patch->getFaceCells(face, 0, projlow, projhigh);
+        for (int i = projlow.x(); i<projhigh.x(); i++) {
+          for (int j = projlow.y(); j<projhigh.y(); j++) {
+            for (int k = projlow.z(); k<projhigh.z(); k++) {
+              IntVector ijk(i,j,k);
+              
+              double celldepth  = dx[iface/2]; // length in direction perpendicular to boundary
+              double dA_c       = cellvol/celldepth; // cell based volume
+              
+              for(int ic=0;ic<3;ic++) for(int jc=0;jc<3;jc++) {
+                bndyTraction[iface][ic] += gstress[ijk](ic,jc)*norm[jc]*dA_c;
+              }
+              
             }
           }
         }
@@ -1800,17 +1924,28 @@ void SerialMPM::computeInternalForce(const ProcessorGroup*,
     }
   }
   new_dw->put(sum_vartype(partvoldef), lb->TotalVolumeDeformedLabel);
-   
   
   // be careful only to put the fields that we have built
   // that way if the user asks to output a field that has not been built
   // it will fail early rather than just giving zeros.
   for(std::list<Patch::FaceType>::const_iterator ftit(d_bndy_traction_faces.begin());
       ftit!=d_bndy_traction_faces.end();ftit++) {
-    new_dw->put(sumvec_vartype(bndyForce[*ftit]),lb->BndyForceLabel[*ftit]);
-    new_dw->put(sum_vartype(bndyArea[*ftit]),lb->BndyContactAreaLabel[*ftit]);
+    int iface = (int)(*ftit);
+    new_dw->put(sumvec_vartype(bndyForce[iface]),lb->BndyForceLabel[iface]);
+    
+    sum_vartype bndyContactCellArea_iface;
+    new_dw->get(bndyContactCellArea_iface, lb->BndyContactCellAreaLabel[iface]);
+    
+    if(bndyContactCellArea_iface>0)
+      bndyTraction[iface] /= bndyContactCellArea_iface;
+    
+    new_dw->put(sumvec_vartype(bndyTraction[iface]),lb->BndyTractionLabel[iface]);
+    
+    double bndyContactArea_iface = bndyContactCellArea_iface;
+    if(bndyTraction[iface].length2()>0) 
+      bndyContactArea_iface = ::sqrt(bndyForce[iface].length2()/bndyTraction[iface].length2());
+    new_dw->put(sum_vartype(bndyContactArea_iface), lb->BndyContactAreaLabel[iface]);
   }
-  
 }
 
 void SerialMPM::computeInternalHeatRate(const ProcessorGroup*,
