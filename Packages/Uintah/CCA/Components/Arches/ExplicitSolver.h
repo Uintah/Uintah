@@ -43,6 +43,7 @@ class MomentumSolver;
 class ScalarSolver;
 class ReactiveScalarSolver; 
 class TurbulenceModel;
+class ScaleSimilarityModel;
 class Properties;
 class BoundaryCondition;
 class PhysicalConstants;
@@ -60,6 +61,7 @@ public:
 		     Properties* props, 
 		     BoundaryCondition* bc,
 		     TurbulenceModel* turbModel, 
+		     ScaleSimilarityModel* scaleSimilarityModel, 
 		     PhysicalConstants* physConst,
 		     bool calcReactscalar,
 		     bool calcEnthalpy,
@@ -215,6 +217,13 @@ private:
 				 DataWarehouse* new_dw,
 				 const TimeIntegratorLabel* timelabels);
 
+      void computeVorticity(const ProcessorGroup* pc,
+				 const PatchSubset* patches,
+				 const MaterialSubset* matls,
+				 DataWarehouse* old_dw,
+				 DataWarehouse* new_dw,
+				 const TimeIntegratorLabel* timelabels);
+
       void probeData(const ProcessorGroup* pc,
 		     const PatchSubset* patches,
 		     const MaterialSubset* matls,
@@ -293,6 +302,8 @@ private:
       BoundaryCondition* d_boundaryCondition;
       // Turbulence Model
       TurbulenceModel* d_turbModel;
+      ScaleSimilarityModel* d_scaleSimilarityModel;
+      bool d_mixedModel;
       bool d_reactingScalarSolve;
       bool d_enthalpySolve;
       vector<IntVector> d_probePoints;

@@ -29,6 +29,8 @@ SRCS     += $(SRCDIR)/Arches.cc \
 	$(SRCDIR)/ScaleSimilarityModel.cc \
 	$(SRCDIR)/IncDynamicProcedure.cc \
 	$(SRCDIR)/CompDynamicProcedure.cc \
+	$(SRCDIR)/CompLocalDynamicProcedure.cc \
+	$(SRCDIR)/OdtClosure.cc \
 	$(SRCDIR)/Source.cc \
 	$(SRCDIR)/TurbulenceModel.cc
 

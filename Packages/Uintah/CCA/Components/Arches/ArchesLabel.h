@@ -205,7 +205,15 @@ namespace Uintah {
       // labels for scalesimilaritymodels
 
       const VarLabel* d_stressTensorCompLabel;
+      const VarLabel* d_stressSFCXdivLabel;
+      const VarLabel* d_stressSFCYdivLabel;
+      const VarLabel* d_stressSFCZdivLabel;      
+      const VarLabel* d_stressCCXdivLabel;
+      const VarLabel* d_stressCCYdivLabel;
+      const VarLabel* d_stressCCZdivLabel;
       const VarLabel* d_strainTensorCompLabel;
+      const VarLabel* d_betaIJCompLabel;
+      const VarLabel* d_LIJCompLabel;
 
       const VarLabel* d_scalarFluxCompLabel;
       
@@ -213,7 +221,28 @@ namespace Uintah {
       const VarLabel* d_strainMagnitudeLabel;
       const VarLabel* d_strainMagnitudeMLLabel;
       const VarLabel* d_strainMagnitudeMMLabel;
+      const VarLabel* d_lalphaLabel;
+      const VarLabel* d_cbetaHATalphaLabel;
+      const VarLabel* d_alphaalphaLabel;
       const VarLabel* d_CsLabel;
+      const VarLabel* d_sumUUULabel;
+      const VarLabel* d_sumDllLabel;
+      const VarLabel* d_sumSijSijLabel;
+      const VarLabel* d_sumDllMinusLabel;
+      const VarLabel* d_sumPointsLabel;
+      const VarLabel* d_sumUUUPredLabel;
+      const VarLabel* d_sumDllPredLabel;
+      const VarLabel* d_sumSijSijPredLabel;
+      const VarLabel* d_sumDllMinusPredLabel;
+      const VarLabel* d_sumPointsPredLabel;
+      const VarLabel* d_sumUUUIntermLabel;
+      const VarLabel* d_sumDllIntermLabel;
+      const VarLabel* d_sumSijSijIntermLabel;
+      const VarLabel* d_sumDllMinusIntermLabel;
+      const VarLabel* d_sumPointsIntermLabel;
+      //label for odt model
+      const VarLabel* d_odtDataLabel;
+
       // label for ref_density and pressure
 
       const VarLabel* d_refDensity_label;
@@ -275,13 +304,11 @@ namespace Uintah {
       const VarLabel* d_cpINLabel;
       const VarLabel* d_co2INLabel;
       const VarLabel* d_h2oINLabel;
-
+      const VarLabel* d_c2h2INLabel;
       const VarLabel* d_h2sINLabel;
       const VarLabel* d_so2INLabel;
       const VarLabel* d_so3INLabel;
       const VarLabel* d_coINLabel;
-
-      const VarLabel* d_c2h2INLabel;
       const VarLabel* d_denRefArrayLabel;
       const VarLabel* d_densityMicroLabel;
       const VarLabel* d_densityMicroINLabel;
@@ -352,6 +379,10 @@ namespace Uintah {
       // runge-kutta 3d order pressure and momentum labels
       const VarLabel* d_pressureIntermLabel;
       const VarLabel* d_velocityDivergenceLabel;
+      const VarLabel* d_vorticityXLabel;
+      const VarLabel* d_vorticityYLabel;
+      const VarLabel* d_vorticityZLabel;
+      const VarLabel* d_vorticityLabel;
       const VarLabel* d_velDivResidualLabel;
       const VarLabel* d_velocityDivergenceBCLabel;
       const VarLabel* d_continuityResidualLabel;

@@ -96,8 +96,20 @@ public:
 	d_calcEnthalpy = calcEnthalpy;
 	d_calcReactingScalar = calcReactingScalar;
       }
+      inline void setMixedModel(bool mixedModel) {
+	d_mixedModel = mixedModel;
+      }
+      inline bool getMixedModel() const {
+	return d_mixedModel;
+      }
 
       // GROUP: Schedule Action :
+      ///////////////////////////////////////////////////////////////////////
+      virtual void sched_initializeSmagCoeff( SchedulerP&,
+                                  const PatchSet* patches,
+                                  const MaterialSet* matls,
+                                  const TimeIntegratorLabel* timelabels) = 0;
+                                                
       ///////////////////////////////////////////////////////////////////////
       // Interface for Schedule the recomputation of Turbulence Model data
       //    [in] 
@@ -116,7 +128,8 @@ public:
 						  const PatchSet* patches,
 						  const MaterialSet* matls,
 			    	     const TimeIntegratorLabel* timelabels) = 0;
- protected:
+//bool d_mixedModel;
+protected:
 
       const ArchesLabel* d_lab;
       const MPMArchesLabel* d_MAlab;
@@ -125,8 +138,9 @@ public:
       Filter* d_filter;
 #endif
       bool d_reactingFlow, d_calcEnthalpy, d_calcReactingScalar;
+//      bool d_mixedModel;
 private:
-
+bool d_mixedModel;
 #ifdef PetscFilter
       void initFilterMatrix(const ProcessorGroup* pg,
 			    const PatchSubset* patches,

@@ -75,6 +75,7 @@ namespace Uintah {
   class NonlinearSolver;
   class Properties;
   class TurbulenceModel;
+  class ScaleSimilarityModel;
   class BoundaryCondition;
   class MPMArchesLabel;
   class ArchesLabel;
@@ -91,7 +92,6 @@ public:
       ////////////////////////////////////////////////////////////////////////
       // Number of dimensions in the problem
       static const int NDIM;
-
       // GROUP: Constants:
       ////////////////////////////////////////////////////////////////////////
       enum d_eqnType { PRESSURE, MOMENTUM, SCALAR };
@@ -99,7 +99,7 @@ public:
       enum d_stencilName { AP, AE, AW, AN, AS, AT, AB };
       enum d_numGhostCells {ZEROGHOSTCELLS , ONEGHOSTCELL, TWOGHOSTCELLS,
 			    THREEGHOSTCELLS, FOURGHOSTCELLS, FIVEGHOSTCELLS };
-
+int nofTimeSteps;
       // GROUP: Constructors:
       ////////////////////////////////////////////////////////////////////////
       // Arches constructor
@@ -246,6 +246,8 @@ private:
       bool d_calcReactingScalar;
       bool d_calcThermalNOx;
       bool d_calcEnthalpy;
+      bool d_mixedModel;
+      ScaleSimilarityModel* d_scaleSimilarityModel;
       PhysicalConstants* d_physicalConsts;
       NonlinearSolver* d_nlSolver;
       // properties...solves density, temperature and species concentrations
@@ -263,7 +265,7 @@ private:
       Filter* d_filter;
 #endif
 
-      int nofTimeSteps;
+//      int nofTimeSteps;
 #ifdef multimaterialform
       MultiMaterialInterface* d_mmInterface;
 #endif
