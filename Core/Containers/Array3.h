@@ -167,16 +167,20 @@ Array3<T>::Array3()
 template<class T>
 void Array3<T>::allocate()
 {
-  objs=new T**[dm1];
-  T** p=new T*[dm1*dm2];
-  T* pp=new T[dm1*dm2*dm3];
-  for(int i=0;i<dm1;i++){
-    objs[i]=p;
-    p+=dm2;
-    for(int j=0;j<dm2;j++){
-      objs[i][j]=pp;
-      pp+=dm3;
+  if( dm1 & dm2 & dm3 ){
+    objs=new T**[dm1];
+    T** p=new T*[dm1*dm2];
+    T* pp=new T[dm1*dm2*dm3];
+    for(int i=0;i<dm1;i++){
+      objs[i]=p;
+      p+=dm2;
+      for(int j=0;j<dm2;j++){
+	objs[i][j]=pp;
+	pp+=dm3;
+      }
     }
+  } else {
+    objs = 0;
   }
 }
 
