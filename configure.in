@@ -1822,12 +1822,14 @@ case $host in
 esac
 
 AC_CHECKING(for an MPI PETSc...)
+AC_MSG_RESULT(                using PETSC_ARCH: $PETSC_ARCH)
 
 FOUND_ALL_PETSC=no
 for i in $petsc $thirdparty $SCI_LAB_TP_DEFAULT; do
   if test ! -d "$i"; then 
     continue
   fi
+  AC_CHECKING(in $i...)
   if test "$PETSC_ARCH" = "unknown" &&
      test -x "$i/bin/petscarch"; then
     PETSC_ARCH=`$i/bin/petscarch`
