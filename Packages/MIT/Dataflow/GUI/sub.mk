@@ -16,7 +16,6 @@ $(SRCDIR)/tclIndex: \
 	$(SRCDIR)/Metropolis.tcl\
 	$(SRCDIR)/MeasurementsReader.tcl\
 	$(SRCDIR)/DistributionReader.tcl\
-	$(SRCDIR)/ThetaView.tcl\
 #[INSERT NEW TCL FILE HERE]
 	$(OBJTOP)/createTclIndex $(SRCTOP)/Packages/MIT/Dataflow/GUI
 
