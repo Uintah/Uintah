@@ -90,7 +90,7 @@ SRCS := \
         $(SRCDIR)/DirectInterpolate.tcl \
         $(SRCDIR)/EditColorMap.tcl \
         $(SRCDIR)/EditPath.tcl \
-        $(SRCDIR)/EditTransferFunc2.tcl \
+        $(SRCDIR)/EditColorMap2D.tcl \
         $(SRCDIR)/ErrorMetric.tcl \
         $(SRCDIR)/FieldCage.tcl\
         $(SRCDIR)/FieldInfo.tcl\

@@ -360,10 +360,10 @@ class BioImageApp {
 	    change_indicate_val 1
 	} elseif {[string first "NrrdTextureBuilder" $which] != -1 && $state == "Completed"} {
 	    change_indicate_val 2
-	} elseif {[string first "EditTransferFunc2" $which] != -1 && $state == "JustStarted"} {
+	} elseif {[string first "EditColorMap2D" $which] != -1 && $state == "JustStarted"} {
 	    change_indicator_labels "Volume Rendering..."
 	    change_indicate_val 1
-	} elseif {[string first "EditTransferFunc2" $which] != -1 && $state == "Completed"} {
+	} elseif {[string first "EditColorMap2D" $which] != -1 && $state == "Completed"} {
 	    change_indicate_val 2
 	} elseif {[string first "VolumeVisualizer" $which] != -1 && $state == "JustStarted"} {
 	    change_indicator_labels "Volume Rendering..."
@@ -1201,7 +1201,7 @@ class BioImageApp {
 	    set m11 [addModuleAtPosition "Teem" "UnuNtoZ" "UnuQuantize" 218 2198]
 	    set m12 [addModuleAtPosition "SCIRun" "Visualization" "NrrdTextureBuilder" 182 2674]
 	    set m13 [addModuleAtPosition "Teem" "UnuNtoZ" "UnuProject" 447 2138]
-	    set m14 [addModuleAtPosition "SCIRun" "Visualization" "EditTransferFunc2" 375 2675]
+	    set m14 [addModuleAtPosition "SCIRun" "Visualization" "EditColorMap2D" 375 2675]
 	    set m15 [addModuleAtPosition "SCIRun" "Visualization" "VolumeVisualizer" 224 2760]
 	    set m16 [addModuleAtPosition "Teem" "DataIO" "NrrdToField" 182 1937]
 	    set m17 [addModuleAtPosition "SCIRun" "FieldsData" "NodeGradient" 182 1997]
@@ -1284,7 +1284,7 @@ class BioImageApp {
 	    # connect 2D Viewer to 3D Viewer
 	    set c37 [addConnection $m26 0 $mods(Viewer) 1]
 
-	    # connect EditTransferFunc2 to ViewSlices for painting
+	    # connect EditColorMap2D to ViewSlices for painting
 	    set c42 [addConnection $m14 0 $m26 4]
 
 	    # connect Gradient Magnitude to ViewSlices for painting
@@ -4915,7 +4915,7 @@ class BioImageApp {
 	set FieldToNrrd [lindex [lindex $filters(0) $modules] 17]
 	set UnuQuantize [lindex [lindex $filters(0) $modules] 7]
 	set UnuJhisto [lindex [lindex $filters(0) $modules] 21]
-        set EditTransferFunc2 [lindex [lindex $filters(0) $modules] 13]
+        set EditColorMap2D [lindex [lindex $filters(0) $modules] 13]
         set NrrdTextureBuilder [lindex [lindex $filters(0) $modules] 11]
         set UnuProject [lindex [lindex $filters(0) $modules] 12]
 
@@ -4925,7 +4925,7 @@ class BioImageApp {
 	    disableModule [set FieldToNrrd] 0
 	    disableModule [set UnuQuantize] 0
 	    disableModule [set UnuJhisto] 0
-	    disableModule [set EditTransferFunc2] 0
+	    disableModule [set EditColorMap2D] 0
 	    disableModule [set NrrdTextureBuilder] 0
 	    disableModule [set UnuProject] 0
 
@@ -4938,7 +4938,7 @@ class BioImageApp {
 	    disableModule [set FieldToNrrd] 1
 	    disableModule [set UnuQuantize] 1
 	    disableModule [set UnuJhisto] 1
-	    disableModule [set EditTransferFunc2] 1
+	    disableModule [set EditColorMap2D] 1
 	    disableModule [set NrrdTextureBuilder] 1
 	    disableModule [set UnuProject] 1
         }
