@@ -1,4 +1,4 @@
-
+#include <Packages/Uintah/CCA/Components/MPM/Crack/FractureDefine.h>
 #include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/ViscoScramForBinder.h>
 #include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/ConstitutiveModelFactory.h>
 #include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/MPMMaterial.h>
@@ -29,9 +29,6 @@ using std::cerr;
 using std::string;
 using namespace Uintah;
 using namespace SCIRun;
-
-#define FRACTURE
-#undef FRACTURE
 
 ViscoScramForBinder::ViscoScramForBinder(ProblemSpecP& ps, 
                                          MPMLabel* Mlb, 
