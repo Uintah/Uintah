@@ -61,4 +61,51 @@ public:
     static PersistentTypeID type_id;
 };
 
+class GeomTrianglesP: public GeomObj {
+protected:
+    Array1<float> points;
+    Array1<float> normals;
+public:
+    GeomTrianglesP();
+    virtual ~GeomTrianglesP();
+
+    int size(void);
+
+    int add(const Point&, const Point&, const Point&);
+    virtual GeomObj* clone();
+
+    virtual void get_bounds(BBox&);
+    virtual void get_bounds(BSphere&);
+
+#ifdef SCI_OPENGL
+    virtual void draw(DrawInfoOpenGL*, Material*, double time);
+#endif
+    virtual void make_prims(Array1<GeomObj*>& free,
+			    Array1<GeomObj*>& dontfree);
+    virtual void preprocess();
+    virtual void intersect(const Ray& ray, Material*,
+			   Hit& hit);
+
+    virtual void io(Piostream&);
+    static PersistentTypeID type_id;
+};
+
+class GeomTrianglesPC: public GeomTrianglesP {
+    Array1<float> colors;
+public:
+    GeomTrianglesPC();
+    virtual ~GeomTrianglesPC();
+
+    int add(const Point&, const Color&,
+	    const Point&, const Color&,
+	    const Point&, const Color&);
+
+#ifdef SCI_OPENGL
+    virtual void draw(DrawInfoOpenGL*, Material*, double time);
+#endif
+
+    virtual void io(Piostream&);
+    static PersistentTypeID type_id;
+};
+
 #endif /* SCI_Geom_Triangles_h */

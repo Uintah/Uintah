@@ -16,6 +16,7 @@
 #include <Classlib/String.h>
 #include <Geom/Tri.h>
 #include <Geometry/BBox.h>
+#include <Geometry/BSphere.h>
 #include <Malloc/Allocator.h>
 
 Persistent* make_GeomTriangles()
@@ -167,3 +168,130 @@ void GeomTriangles::io(Piostream& stream)
     Pio(stream, normals);
     stream.end_class();
 }
+
+GeomTrianglesP::GeomTrianglesP()
+{
+    // don't really need to do anythin...
+}
+
+GeomTrianglesP::~GeomTrianglesP()
+{
+
+}
+
+int GeomTrianglesP::size(void)
+{
+    return points.size()/9;
+}
+
+int GeomTrianglesP::add(const Point& p1, const Point& p2, const Point& p3)
+{
+    Vector n(Cross(p2-p1, p3-p1));
+    if(n.length2() > 0){
+        n.normalize();
+    }   	
+    else {
+	cerr << "degenerate triangle!!!\n" << endl;
+	return 0;
+    }
+
+    normals.add(n.x());
+    normals.add(n.y());
+    normals.add(n.z());
+
+    points.add(p1.x());
+    points.add(p1.y());
+    points.add(p1.z());
+
+    points.add(p2.x());
+    points.add(p2.y());
+    points.add(p2.z());
+
+    points.add(p3.x());
+    points.add(p3.y());
+    points.add(p3.z());
+
+    return 1;
+}
+
+GeomObj* GeomTrianglesP::clone()
+{
+    // not implemented....
+    return 0;
+}
+
+void GeomTrianglesP::get_bounds(BBox& box)
+{
+    for(int i=0;i<points.size();i+=3)
+	box.extend(Point(points[i],points[i+1],points[i+2]));
+}
+
+void GeomTrianglesP::get_bounds(BSphere& box)
+{
+    for(int i=0;i<points.size();i+=3)
+	box.extend(Point(points[i],points[i+1],points[i+2]));
+}
+
+
+void GeomTrianglesP::make_prims(Array1<GeomObj*>& /*free */,
+				Array1<GeomObj*>& /*dontfree*/)
+{
+    // not implemented...
+}
+
+void GeomTrianglesP::preprocess()
+{
+    // not implemented...
+}
+
+void GeomTrianglesP::intersect(const Ray&, Material*, Hit&)
+{
+    NOT_FINISHED("GeomTrianglesP::intersect");
+}
+
+void GeomTrianglesP::io(Piostream&)
+{
+    // not implemented...
+}
+
+// PersistentTypeID GeomTrianglesP::type_id;
+
+GeomTrianglesPC::GeomTrianglesPC()
+{
+    // don't really need to do anythin...
+}
+
+GeomTrianglesPC::~GeomTrianglesPC()
+{
+
+}
+
+int GeomTrianglesPC::add(const Point& p1, const Color& c1,
+			const Point& p2, const Color& c2,
+			const Point& p3, const Color& c3)
+{
+    if (GeomTrianglesP::add(p1,p2,p3)) {
+	colors.add(c1.r());
+	colors.add(c1.g());
+	colors.add(c1.b());
+
+	colors.add(c2.r());
+	colors.add(c2.g());
+	colors.add(c2.b());
+
+	colors.add(c3.r());
+	colors.add(c3.g());
+	colors.add(c3.b());
+	return 1;
+    }
+
+    return 0;
+}
+
+void GeomTrianglesPC::io(Piostream&)
+{
+    // not implemented...
+}
+
+//PersistentTypeID GeomTrianglesPC::type_id;
+
