@@ -90,6 +90,8 @@ public:
   virtual void scalar_multiply(double s);
   virtual MatrixHandle submatrix(int r1, int c1, int r2, int c2);
 
+
+  DenseMatrix exterior(const ColumnMatrix &) const;
   double vector_norm() const;
   double vector_norm(int& flops, int& memrefs) const;
   double vector_norm(int& flops, int& memrefs, int beg, int end) const;

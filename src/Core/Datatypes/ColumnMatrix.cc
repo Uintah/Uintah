@@ -470,6 +470,24 @@ ColumnMatrix::submatrix(int r1, int c1, int r2, int c2)
 }
 
 
+DenseMatrix
+ColumnMatrix::exterior(const ColumnMatrix &m) const
+{
+  const int rows = nrows();
+  DenseMatrix ret(rows, rows);
+
+  if (rows != m.nrows())
+  {
+    ASSERT("Cannot compute exterior of two vectors of unequal dimensions.");
+    return ret;
+  }
+  for (int i=0; i < rows; i++)
+    for (int j=0; j< rows; j++)
+      ret.put(i, j, get(j)*m.get(i));
+
+  return ret;
+}
+
 } // End namespace SCIRun
 
 
