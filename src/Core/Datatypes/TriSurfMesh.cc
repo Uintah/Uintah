@@ -1021,6 +1021,16 @@ struct edgehash
     hash<int> hasher;
     return hasher(hasher(a.first) + a.second);
   }
+#ifdef __ECC
+
+  static const size_t bucket_size = 4;
+  static const size_t min_buckets = 8;
+
+  bool operator()(const pair<int, int> &a, const pair<int, int> &b) const
+  {
+    return a.first < b.first || a.first == b.first && a.second < b.second;
+  }
+#endif
 };
 
 struct edgecompare
@@ -1043,6 +1053,20 @@ struct edgecompare
 
 #endif
 
+#ifdef HAVE_HASH_MAP
+
+#ifdef __ECC
+typedef hash_map<pair<int, int>, int, edgehash> EdgeMapType;
+#else
+typedef hash_map<pair<int, int>, int, edgehash, edgecompare> EdgeMapType;
+#endif
+
+#else
+
+typedef map<pair<int, int>, int, edgecompare> EdgeMapType;
+
+#endif
+
 void
 TriSurfMesh::compute_edges()
 {
@@ -1052,15 +1076,7 @@ TriSurfMesh::compute_edges()
     return;
   }
     
-#ifdef HAVE_HASH_MAP
-
-  hash_map<pair<int, int>, int, edgehash, edgecompare> edge_map;
-
-#else
-
-  map<pair<int, int>, int, edgecompare> edge_map;
-
-#endif
+  EdgeMapType edge_map;
   
   int i;
   for (i=faces_.size()-1; i >= 0; i--)
@@ -1077,15 +1093,7 @@ TriSurfMesh::compute_edges()
     edge_map[nodes] = i;
   }
 
-#ifdef HAVE_HASH_MAP
-
-  hash_map<pair<int, int>, int, edgehash, edgecompare>::iterator itr;
-
-#else
-
-  map<pair<int, int>, int, edgecompare>::iterator itr;
-
-#endif
+  EdgeMapType::iterator itr;
 
   for (itr = edge_map.begin(); itr != edge_map.end(); ++itr)
   {
@@ -1159,15 +1167,8 @@ TriSurfMesh::compute_edge_neighbors(double /*err*/)
     edge_neighbor_lock_.unlock();
     return;
   }
-#ifdef HAVE_HASH_MAP
 
-  hash_map<pair<int, int>, int, edgehash, edgecompare> edge_map;
-
-#else
-
-  map<pair<int, int>, int, edgecompare> edge_map;
-
-#endif
+  EdgeMapType edge_map;
   
   edge_neighbors_.resize(faces_.size());
   for (unsigned int j = 0; j < edge_neighbors_.size(); j++)
@@ -1188,15 +1189,8 @@ TriSurfMesh::compute_edge_neighbors(double /*err*/)
 
     pair<int, int> nodes(n0, n1);
     
-#ifdef HAVE_HASH_MAP
+    EdgeMapType::iterator maploc;
 
-    hash_map<pair<int, int>, int, edgehash, edgecompare>::iterator maploc;
-
-#else
-
-    map<pair<int, int>, int, edgecompare>::iterator maploc;
-
-#endif
     maploc = edge_map.find(nodes);
     if (maploc != edge_map.end())
     {
