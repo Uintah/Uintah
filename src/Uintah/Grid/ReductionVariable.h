@@ -57,7 +57,7 @@ WARNING
       inline operator T () const {
 	 return value;
       }
-      virtual ReductionVariable<T, Op>* clone() const;
+      virtual ReductionVariableBase* clone() const;
       virtual void copyPointer(const ReductionVariableBase&);
       virtual void reduce(const ReductionVariableBase&);
       virtual void emit(ostream&);
@@ -103,7 +103,7 @@ WARNING
       }
 
    template<class T, class Op>
-      ReductionVariable<T, Op>*
+      ReductionVariableBase*
       ReductionVariable<T, Op>::clone() const
       {
 	 return scinew ReductionVariable<T, Op>(*this);
@@ -149,6 +149,10 @@ WARNING
 
 //
 // $Log$
+// Revision 1.13  2000/09/25 18:12:20  sparker
+// do not use covariant return types due to problems with g++
+// other linux/g++ fixes
+//
 // Revision 1.12  2000/08/08 01:32:46  jas
 // Changed new to scinew and eliminated some(minor) memory leaks in the scheduler
 // stuff.

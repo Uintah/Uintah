@@ -19,7 +19,7 @@ VarLabel::Compare::operator()(const VarLabel* v1,
 {
    if(v1 == v2)
       return false;
-   return v1->d_name < v2->d_name;
+   return v1->getName() < v2->getName();
 }
 
 string
@@ -45,6 +45,10 @@ operator<<( ostream & out, const Uintah::VarLabel & vl )
 
 //
 // $Log$
+// Revision 1.8  2000/09/25 18:12:20  sparker
+// do not use covariant return types due to problems with g++
+// other linux/g++ fixes
+//
 // Revision 1.7  2000/08/23 22:36:50  dav
 // added output operator
 //

@@ -72,7 +72,7 @@ class FCVariable : public Array3<T>, public FCVariableBase {
 
       //////////
       // Insert Documentation Here:
-      virtual FCVariable<T>* clone() const;
+      virtual FCVariableBase* clone() const;
 
  virtual void allocate(const IntVector& lowIndex,
 			    const IntVector& highIndex);
@@ -245,7 +245,7 @@ class FCVariable : public Array3<T>, public FCVariableBase {
       }
    
    template<class T>
-      FCVariable<T>*
+      FCVariableBase*
       FCVariable<T>::clone() const
       {
 	 return scinew FCVariable<T>(*this);
@@ -360,6 +360,10 @@ class FCVariable : public Array3<T>, public FCVariableBase {
 
 //
 // $Log$
+// Revision 1.9  2000/09/25 18:12:19  sparker
+// do not use covariant return types due to problems with g++
+// other linux/g++ fixes
+//
 // Revision 1.8  2000/08/08 01:32:46  jas
 // Changed new to scinew and eliminated some(minor) memory leaks in the scheduler
 // stuff.

@@ -3,7 +3,7 @@
 #define UINTAH_HOMEBREW_VarLabel_H
 
 #include <string>
-#include <ostream>
+#include <iostream>
 
 using std::ostream;
 using std::string;
@@ -85,6 +85,10 @@ ostream & operator<<( ostream & out, const Uintah::VarLabel & vl );
 
 //
 // $Log$
+// Revision 1.10  2000/09/25 18:12:20  sparker
+// do not use covariant return types due to problems with g++
+// other linux/g++ fixes
+//
 // Revision 1.9  2000/08/23 22:36:50  dav
 // added output operator
 //

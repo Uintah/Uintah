@@ -67,7 +67,7 @@ class SFCZVariable : public Array3<T>, public SFCZVariableBase {
      
      //////////
      // Insert Documentation Here:
-     virtual SFCZVariable<T>* clone() const;
+     virtual SFCZVariableBase* clone() const;
      
      //////////
      // Insert Documentation Here:
@@ -237,7 +237,7 @@ class SFCZVariable : public Array3<T>, public SFCZVariableBase {
       }
    
    template<class T>
-      SFCZVariable<T>*
+      SFCZVariableBase*
       SFCZVariable<T>::clone() const
       {
 	 return scinew SFCZVariable<T>(*this);
@@ -373,6 +373,10 @@ class SFCZVariable : public Array3<T>, public SFCZVariableBase {
 
 //
 // $Log$
+// Revision 1.6  2000/09/25 18:12:20  sparker
+// do not use covariant return types due to problems with g++
+// other linux/g++ fixes
+//
 // Revision 1.5  2000/09/25 14:41:32  rawat
 // added mpi support for cell centered and staggered cell variables
 //

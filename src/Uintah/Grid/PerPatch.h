@@ -50,7 +50,7 @@ WARNING
 	 return value;
       }
       void setData(const T&);
-      virtual PerPatch<T>* clone() const;
+      virtual PerPatchBase* clone() const;
       PerPatch<T>& operator=(const PerPatch<T>& copy);
    private:
       T value;
@@ -69,7 +69,7 @@ WARNING
       }
    
    template<class T>
-      PerPatch<T>*
+      PerPatchBase*
       PerPatch<T>::clone() const
       {
 	 return scinew PerPatch<T>(*this);
@@ -105,6 +105,10 @@ WARNING
 
 //
 // $Log$
+// Revision 1.5  2000/09/25 18:12:20  sparker
+// do not use covariant return types due to problems with g++
+// other linux/g++ fixes
+//
 // Revision 1.4  2000/09/20 15:48:30  sparker
 // Added .copy() method to copy one Array3 from another
 //

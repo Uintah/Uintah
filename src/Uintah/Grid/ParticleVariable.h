@@ -76,8 +76,8 @@ WARNING
       
       //////////
       // Insert Documentation Here:
-      virtual ParticleVariable<T>* clone() const;
-      virtual ParticleVariable<T>* cloneSubset(ParticleSubset*) const;
+      virtual ParticleVariableBase* clone() const;
+      virtual ParticleVariableBase* cloneSubset(ParticleSubset*) const;
       
       //////////
       // Insert Documentation Here:
@@ -178,14 +178,14 @@ WARNING
       }
    
    template<class T>
-      ParticleVariable<T>*
+      ParticleVariableBase*
       ParticleVariable<T>::clone() const
       {
 	 return scinew ParticleVariable<T>(*this);
       }
    
    template<class T>
-      ParticleVariable<T>*
+      ParticleVariableBase*
       ParticleVariable<T>::cloneSubset(ParticleSubset* pset) const
       {
 	 return scinew ParticleVariable<T>(d_pdata, pset);
@@ -394,6 +394,10 @@ WARNING
 
 //
 // $Log$
+// Revision 1.20  2000/09/25 18:12:20  sparker
+// do not use covariant return types due to problems with g++
+// other linux/g++ fixes
+//
 // Revision 1.19  2000/08/08 01:32:46  jas
 // Changed new to scinew and eliminated some(minor) memory leaks in the scheduler
 // stuff.
