@@ -51,7 +51,6 @@ class Dpy : public Runnable {
   // Begin Gui Interaction Flags:
   Image    * showImage_;
   bool       doAutoJitter_; // Jitter when not moving
-  bool       doJitter_;     // Jitter on/off
   int        shadowMode_;  // Must be an int so GLUI can write to it.
   int        ambientMode_; // Must be an int so GLUI can write to it.
 

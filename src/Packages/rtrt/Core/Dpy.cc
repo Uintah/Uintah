@@ -164,7 +164,7 @@ Dpy::Dpy( Scene* scene, char* criteria1, char* criteria2,
     nworkers(nworkers), bench(bench), ncounters(ncounters),
     c0(c0), c1(c1), frameless(frameless),synch_frameless(0),
     display_frames(display_frames), stealth_(NULL),
-    showImage_(NULL), doAutoJitter_(false), doJitter_(false),
+    showImage_(NULL), doAutoJitter_(false),
     showLights_( false ), lightsShowing_( false ),
     turnOffAllLights_( false ), turnOnAllLights_( false ),
     turnOnLight_( false ), turnOffLight_( false ),
@@ -376,9 +376,6 @@ Dpy::checkGuiFlags()
       renderWindowSize_ = 0;
     }
   }
-
-  if( doJitter_ ) { scene->rtrt_engine->do_jitter = true; }
-  else            { scene->rtrt_engine->do_jitter = false;  }
 
   if(animate && scene->animate) {
     // Do all the regular animated objects.
