@@ -1407,6 +1407,8 @@ NrrdDataHandle HDF5DataReader::readDataset( string filename,
 
   // Remove all of the tcl special characters.
   std::string::size_type pos;
+  while( (pos = nrrdName.find(":")) != string::npos )
+    nrrdName.replace( pos, 1, "-" );
   while( (pos = nrrdName.find("/")) != string::npos )
     nrrdName.replace( pos, 1, "-" );
   while( (pos = nrrdName.find("[")) != string::npos )
