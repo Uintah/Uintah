@@ -13,6 +13,7 @@
 // refineInterface should not require old coarse if step == nsteps -1;
 #include <Packages/Uintah/CCA/Components/Examples/AMRSimpleCFD.h>
 #include <Packages/Uintah/CCA/Components/Examples/ExamplesLabel.h>
+#include <Packages/Uintah/CCA/Components/Regridder/PerPatchVars.h>
 #include <Packages/Uintah/CCA/Ports/SolverInterface.h>
 #include <Packages/Uintah/CCA/Ports/Scheduler.h>
 #include <Packages/Uintah/Core/Grid/CCVariable.h>
@@ -1210,12 +1211,14 @@ void AMRSimpleCFD::errorEstimate(const ProcessorGroup*,
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
     CCVariable<int> refineFlag;
-    PerPatch<int> refinePatchFlag;
-      
+    PerPatch<PatchFlagP> refinePatchFlag;
+    
     new_dw->getModifiable(refineFlag, sharedState_->get_refineFlag_label(),
                           0, patch);
     new_dw->get(refinePatchFlag, sharedState_->get_refinePatchFlag_label(),
                 0, patch);
+
+    PatchFlag* refinePatch = refinePatchFlag.get().get_rep();
     
     cout_doing << "Doing errorEstimate on patch "<< patch->getID()<<" \t\t\t AMRSimpleCFD" << '\n';
     for(int m = 0;m<matls->size();m++){
@@ -1268,7 +1271,7 @@ void AMRSimpleCFD::errorEstimate(const ProcessorGroup*,
           density_gradient_mag[idx]=grad.length();
           if(density_gradient_mag[idx] > err_density_grad) {
             refineFlag[idx]=true;
-            refinePatchFlag.setData(true);
+            refinePatch->set();
           }
           density_gradient_mag[idx] *= err_density_grad_inv;
         }
@@ -1311,7 +1314,7 @@ void AMRSimpleCFD::errorEstimate(const ProcessorGroup*,
 	  temperature_gradient_mag[idx]=grad.length();
 	  if(temperature_gradient_mag[idx] > err_temperature_grad) {
 	    refineFlag[idx]=true;
-            refinePatchFlag.setData(true);
+            refinePatch->set();
           }
 	  temperature_gradient_mag[idx] *= inv_err_temperature_grad;
 	}
@@ -1354,7 +1357,7 @@ void AMRSimpleCFD::errorEstimate(const ProcessorGroup*,
 	  pressure_gradient_mag[idx]=grad.length();
 	  if(pressure_gradient_mag[idx] > err_pressure_grad) {
 	    refineFlag[idx]=true;
-            refinePatchFlag.setData(true);
+            refinePatch->set();
           }
 	  pressure_gradient_mag[idx] *= inv_err_pressure_grad;
 	}
@@ -1397,7 +1400,7 @@ void AMRSimpleCFD::errorEstimate(const ProcessorGroup*,
 	  ccvorticitymag[idx]=w.length();
 	  if(ccvorticitymag[idx] > err_vorticity_mag) {
 	    refineFlag[idx]=true;
-            refinePatchFlag.setData(true);
+            refinePatch->set();
           }
 	  ccvorticitymag[idx] *= inv_err_vorticity_mag;
 	}
