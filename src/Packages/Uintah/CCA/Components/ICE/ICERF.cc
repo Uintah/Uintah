@@ -731,10 +731,9 @@ void ICE::addExchangeToMomentumAndEnergyRF(const ProcessorGroup*,
     vector<double> cv(numALLMatls);
     vector<double> X(numALLMatls);
     vector<double> e_prime_v(numALLMatls);
-    vector<Vector> del_vel_CC(numALLMatls, Vector(0,0,0));
     vector<double> if_mpm_matl_ignore(numALLMatls);
     
-    double tmp, alpha;
+    double tmp, alpha,KE;
 /*`==========TESTING==========*/
 // I've included this term but it's turned off -Todd
     double Joule_coeff   = 0.0;         // measure of "thermal imperfection" 
@@ -780,8 +779,7 @@ void ICE::addExchangeToMomentumAndEnergyRF(const ProcessorGroup*,
       new_dw->get(speedSound[m],    lb->speedSound_CCLabel,indx, patch,gn, 0);
       new_dw->get(f_theta[m],       lb->f_theta_CCLabel,   indx, patch,gn, 0);
       new_dw->get(rho_CC[m],        lb->rho_CCLabel,       indx, patch,gn, 0);
-      new_dw->get(int_eng_source[m],lb->int_eng_source_CCLabel,    
-                                                           indx, patch,gn, 0);  
+        
       new_dw->allocateAndPut(Tdot[m],        lb->Tdot_CCLabel,    indx, patch);          
       new_dw->allocateAndPut(mom_L_ME[m],    lb->mom_L_ME_CCLabel,indx, patch);         
       new_dw->allocateAndPut(tot_eng_L_ME[m],lb->int_eng_L_ME_CCLabel,
@@ -793,11 +791,13 @@ void ICE::addExchangeToMomentumAndEnergyRF(const ProcessorGroup*,
     new_dw->get(press_CC,           lb->press_CCLabel,     0,  patch,gn, 0);
     new_dw->get(delP_Dilatate,      lb->delP_DilatateLabel,0,  patch,gn, 0);       
     
-    // Convert momenta to velocities and internal energy to Temp
+    // Convert momenta to velocities and internal energy to total energy
+    // using the old_vel
     for(CellIterator iter = patch->getExtraCellIterator(); !iter.done();iter++){
       IntVector c = *iter;
       for (int m = 0; m < numALLMatls; m++) {
-        Temp_CC[m][c] = int_eng_L[m][c]/(mass_L[m][c]*cv[m]);
+        KE = 0.5 * mass_L[m][c] * old_vel_CC[m][c].length() * old_vel_CC[m][c].length();
+        tot_eng_L_ME[m][c] = int_eng_L[m][c] + KE;
         vel_CC[m][c]  = mom_L[m][c]/mass_L[m][c]; 
       }
     }
@@ -850,13 +850,21 @@ void ICE::addExchangeToMomentumAndEnergyRF(const ProcessorGroup*,
         
         for(int m = 0; m < numALLMatls; m++) {
           vel_CC[m][c](dir) =  vel_CC[m][c](dir) + X[m];
-          del_vel_CC[m](dir) = X[m];
         }
       }
+    }   // cell iterator
 
-      //----------  E N E R G Y   E X C H A N G E 
-      //  For mpm matls ignore thermal expansion term alpha
-      //  compute phi and alpha
+    //----------  E N E R G Y   E X C H A N G E 
+    //  For mpm matls ignore thermal expansion term alpha
+    //  compute phi and alpha
+    // Convert total energy to Temp.  Use the vel after exchange
+    for(CellIterator iter = patch->getCellIterator(); !iter.done();iter++){
+      IntVector c = *iter;                                                        
+      for (int m = 0; m < numALLMatls; m++) {                                     
+        KE = 0.5 * mass_L[m][c] * vel_CC[m][c].length() * vel_CC[m][c].length();         
+        Temp_CC[m][c] = (tot_eng_L_ME[m][c] - KE) /(mass_L[m][c]*cv[m]);          
+      }                                                                           
+  
       for(int m = 0; m < numALLMatls; m++) {
         for(int n = 0; n < numALLMatls; n++)  {
           beta(m,n)  = delT * vol_frac_CC[m][c] * vol_frac_CC[n][c] * H(n,m)/
@@ -919,26 +927,24 @@ void ICE::addExchangeToMomentumAndEnergyRF(const ProcessorGroup*,
     //  Add on the KE
     // For total energy conservation use old_vel_CC
     // for a single matl or vel_CC_ME for multiple matls. -bak. 
-    double KE;
     if (numALLMatls == 1 ){
-      for(CellIterator iter = patch->getExtraCellIterator(); !iter.done();iter++){
-        IntVector c = *iter;
-        for (int m = 0; m < numALLMatls; m++) {     
+      for (int m = 0; m < numALLMatls; m++) { 
+        for(CellIterator iter = patch->getExtraCellIterator(); !iter.done();iter++){
+          IntVector c = *iter;
           KE = 0.5 * mass_L[m][c] * old_vel_CC[m][c].length() * old_vel_CC[m][c].length();
           tot_eng_L_ME[m][c] = Temp_CC[m][c] * cv[m] * mass_L[m][c] + KE;
         }
       }    
     } else {
-      for(CellIterator iter = patch->getExtraCellIterator(); !iter.done();iter++){
-        IntVector c = *iter;
-        for (int m = 0; m < numALLMatls; m++) {
+      for (int m = 0; m < numALLMatls; m++) {
+        for(CellIterator iter = patch->getExtraCellIterator(); !iter.done();iter++){
+          IntVector c = *iter;
           KE = 0.5 * mass_L[m][c] * vel_CC[m][c].length() * vel_CC[m][c].length(); 
           tot_eng_L_ME[m][c] = Temp_CC[m][c] * cv[m] * mass_L[m][c] + KE;
         }
       }    
     }
-   
-    
+
     //---- P R I N T   D A T A ------ 
     if (switchDebugMomentumExchange_CC ) {
       for(int m = 0; m < numALLMatls; m++) {
