@@ -302,7 +302,11 @@ GLVolumeRenderer::BuildTransferFunctions( )
       transfer_functions_[i][4*j + 0] = (unsigned char)(c.r()*alpha2*255);
       transfer_functions_[i][4*j + 1] = (unsigned char)(c.g()*alpha2*255);
       transfer_functions_[i][4*j + 2] = (unsigned char)(c.b()*alpha2*255);
-      transfer_functions_[i][4*j + 3] = (unsigned char)(alpha2*255);
+      if( alphamult_ ) {
+	transfer_functions_[i][4*j + 3] = (unsigned char)(alpha2*255);
+      } else {
+	transfer_functions_[i][4*j + 3] = (unsigned char)(alpha*255);
+      }
     }
   }
 }
