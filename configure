@@ -15852,7 +15852,7 @@ done
 CFLAGS="$_sci_includes $CFLAGS"
 CXXFLAGS="$_sci_includes $CXXFLAGS"
 LDFLAGS="$_sci_lib_path $LDFLAGS"
-LIBS="$_sci_libs $Z_LIB_FLAG $LIBS"
+LIBS="$_sci_libs $Z_LIB_DIR_FLAG $Z_LIB_FLAG $LIBS"
 
 # Build up a list of the #include <file> lines for use in compilation:
 __sci_pound_includes=
@@ -28470,7 +28470,7 @@ done
 CFLAGS="$_sci_includes $CFLAGS"
 CXXFLAGS="$_sci_includes $CXXFLAGS"
 LDFLAGS="$_sci_lib_path $LDFLAGS"
-LIBS="$_sci_libs $PNG_LIB_DIR_FLAG $PNG_LIB_FLAG -lm $LIBS"
+LIBS="$_sci_libs $PNG_LIB_DIR_FLAG $PNG_LIB_FLAG $Z_LIB_DIR_FLAG $Z_LIB_FLAG -lm $LIBS"
 
 # Build up a list of the #include <file> lines for use in compilation:
 __sci_pound_includes=

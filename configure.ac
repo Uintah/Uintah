@@ -2023,7 +2023,7 @@ else
   fi 
 fi
 
-SCI_TRY_LINK(PNG,png library and headers,png.h,$_sci_inc,png,$_sci_lib,$Z_LIB_FLAG,,$_sci_optional)
+SCI_TRY_LINK(PNG,png library and headers,png.h,$_sci_inc,png,$_sci_lib,$Z_LIB_DIR_FLAG $Z_LIB_FLAG,,$_sci_optional)
 
 # Now check for the correct version.
 if test "$HAVE_PNG" = "yes"; then
@@ -3094,7 +3094,7 @@ if test "$sci_required_teem" = "yes"; then
      AC_MSG_ERROR(Please fix this problem and then configure again.)
   fi
 
-  SCI_TRY_LINK(TEEM,teem library and headers,teem/nrrd.h,$_sci_inc,teem,$_sci_lib,$PNG_LIB_DIR_FLAG $PNG_LIB_FLAG -lm,,$_sci_optional)
+  SCI_TRY_LINK(TEEM,teem library and headers,teem/nrrd.h,$_sci_inc,teem,$_sci_lib,$PNG_LIB_DIR_FLAG $PNG_LIB_FLAG $Z_LIB_DIR_FLAG $Z_LIB_FLAG -lm,,$_sci_optional)
 
   if test "$HAVE_TEEM" = "yes"; then
      DEF_TEEM="#define HAVE_TEEM 1"
