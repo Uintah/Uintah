@@ -1543,9 +1543,9 @@ itcl_class ViewWindow {
 
     method lightSwitch {i} {
 	if { [set $this-global-light$i] == 0 } {
-	    $this-c switch_light $i 0 [lindex [set $this-global-vectors] $i]
+	    $this-c edit_light $i 0 [lindex [set $this-global-vectors] $i]
 	} else {
-	    $this-c switch_light $i 1 [lindex [set $this-global-vectors] $i]
+	    $this-c edit_light $i 1 [lindex [set $this-global-vectors] $i]
 	}
     }
 	
