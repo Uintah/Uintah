@@ -574,6 +574,7 @@ void AMRSimpleCFD::scheduleCoarsen(const LevelP& coarseLevel,
   task->modifies(lb_->zvelocity);  
   sched->addTask(task, coarseLevel->eachPatch(), sharedState_->allMaterials());
 
+  
   //__________________________________
   // Re-solve/apply the pressure, using the pressure2 variable
   // you need to clean up the pressure field after you coarsen so that
@@ -582,7 +583,8 @@ void AMRSimpleCFD::scheduleCoarsen(const LevelP& coarseLevel,
   if(!solver)
     throw InternalError("SimpleCFD needs a solver component to work");
   schedulePressureSolve(coarseLevel, sched, solver, lb_->pressure2,
-			lb_->pressure2_matrix, lb_->pressure2_rhs);
+			lb_->pressure2_matrix, lb_->pressure2_rhs, false);
+  
   releasePort("solver");
 }
 //______________________________________________________________________
@@ -612,10 +614,15 @@ void AMRSimpleCFD::scheduleRefine(const LevelP& fineLevel,
   task->requires(Task::NewDW, lb_->zvelocity,
 		 0, Task::CoarseLevel, 0, Task::NormalDomain,gn, 0);
 
+  //task->requires(Task::NewDW, lb_->pressure2,
+  //		 0, Task::CoarseLevel, 0, Task::NormalDomain,gn, 0);
+
   task->computes(lb_->density);
   task->computes(lb_->xvelocity);
   task->computes(lb_->yvelocity);
-  task->computes(lb_->zvelocity);  
+  task->computes(lb_->zvelocity);
+  //  task->computes(lb_->pressure2);
+
   sched->addTask(task, fineLevel->eachPatch(), sharedState_->allMaterials());
   /*
   //__________________________________
@@ -945,14 +952,13 @@ void AMRSimpleCFD::refine(const ProcessorGroup*,
 	  CCVariable<double> pressure;
 	  new_dw->allocateAndPut(pressure, lb_->pressure, matl, finePatch);
 	}
-	/*
-	if (old_dw->exists(lb_->pressure2, m, finePatch)) {
+        /*	if (old_dw->exists(lb_->pressure2, m, finePatch)) {
 	  new_dw->transferFrom(old_dw, lb_->pressure2, patches, matls);
 	} else {
 	  CCVariable<double> pressure2;
 	  new_dw->allocateAndPut(pressure2, lb_->pressure2, matl, finePatch);
-	}
-	*/
+        }
+*/
       }
 
       //__________________________________

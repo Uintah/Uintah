@@ -486,7 +486,8 @@ void SimpleCFD::schedulePressureSolve(const LevelP& level, SchedulerP& sched,
 				      SolverInterface* solver,
 				      const VarLabel* pressure,
 				      const VarLabel* pressure_matrix,
-				      const VarLabel* pressure_rhs)
+				      const VarLabel* pressure_rhs,
+                                      bool usePressureAsGuess /*=true*/)
 {
   cout_doing << "SimpleCFD::schedulePressureSolve on level " << level->getIndex() << '\n';
   Task* task;
@@ -502,7 +503,7 @@ void SimpleCFD::schedulePressureSolve(const LevelP& level, SchedulerP& sched,
   sched->addTask(task, level->eachPatch(), sharedState_->allMaterials());
   solver->scheduleSolve(level, sched, sharedState_->allMaterials(),
 			pressure_matrix, pressure, false,
-			pressure_rhs, keep_pressure?pressure:0,
+			pressure_rhs, (keep_pressure&&usePressureAsGuess) ? pressure : 0,
 			Task::OldDW, pressure_params_);
 
   task = scinew Task("applyProjection", this, &SimpleCFD::applyProjection,
