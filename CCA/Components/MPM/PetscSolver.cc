@@ -156,7 +156,7 @@ void MPMPetscSolver::solve()
   SLESGetPC(sles,&pc);
   KSPSetType(ksp,KSPCG);
   PCSetType(pc,PCJACOBI);
-  KSPSetTolerances(ksp,1.e-10,PETSC_DEFAULT,PETSC_DEFAULT,PETSC_DEFAULT);
+  KSPSetTolerances(ksp,PETSC_DEFAULT,PETSC_DEFAULT,PETSC_DEFAULT,PETSC_DEFAULT);
   
   int its;
 #ifdef debug
