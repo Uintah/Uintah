@@ -83,14 +83,14 @@ GatherPoints::execute()
       DynamicAlgoHandle algo_handle;
       if (! DynamicLoader::scirun_loader().get(*ci, algo_handle))
       {
-	msgStream_ << "Could not compile algorithm." << endl;
+	error("Could not compile algorithm.");
 	return;
       }
       GatherPointsAlgo *algo =
 	dynamic_cast<GatherPointsAlgo *>(algo_handle.get_rep());
       if (algo == 0)
       {
-	msgStream_ << "Could not get algorithm." << endl;
+	error("Could not get algorithm.");
 	return;
       }
       algo->execute(field->mesh(), pcmH);

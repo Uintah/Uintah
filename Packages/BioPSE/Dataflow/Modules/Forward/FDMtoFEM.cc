@@ -92,24 +92,24 @@ void FDMtoFEM::execute() {
   }
   
   if (!ifdm_->get(ifdmH)) {
-    msgStream_ << "Can't get input finite difference field" << endl;
+    error("Can't get input finite difference field.");
     return;
   }
   
   if (!ifdmH.get_rep()) {
-    msgStream_ << "Error: empty field" << endl;
+    error("Empty input field.");
     return;
   }
  
   if (ifdmH->mesh()->get_type_description()->get_name() !=
       get_type_description((LatVolMesh *)0)->get_name())
   {
-    msgStream_ << "Error: need a lattice vol as input" << endl;
+    error("Need a lattice volume field  as input.");
     return;
   }
 
   if (ifdmH->data_at() != Field::CELL) {
-    msgStream_ << "Error: need a lattice vol as input" << endl;
+    error("Need cell centered data as input.");
     return;
   }
     
@@ -121,7 +121,7 @@ void FDMtoFEM::execute() {
     // first check to see if it's the same field as last time, though...
     //   if so, resend old results
     if (ofemH_.get_rep() && ifdmH->generation == ifdmGen_) {
-      msgStream_ << "Sending cached output field" << endl;
+      remark("Sending cached output field.");
       ofem_->send(ofemH_);
       return;
     }
@@ -258,7 +258,7 @@ void FDMtoFEM::execute() {
     ofemH_ = tv;
     ofem_->send(ofemH_);
   } else {
-    msgStream_ << "Error: couldn't get tensors from the lattice vol" << endl;
+    error("Could not get tensors from the lattice vol.");
     return;
   }
 }

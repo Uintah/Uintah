@@ -246,7 +246,7 @@ void AttributeTrf::execute(){
   FieldHandle hFieldGeomF;
 
   if(!iportGeomF->get(hFieldGeomF)) { 
-    msgStream_ << "Couldn't get handle to the Input Field. Returning." << endl;
+    error("Couldn't get handle to the Input Field.");
     return;
   }
 

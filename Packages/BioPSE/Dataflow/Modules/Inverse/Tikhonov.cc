@@ -276,13 +276,13 @@ namespace BioPSE
     
     if(!iportForMat->get(hMatrixForMat)) 
       { 
-    	msgStream_ << "Couldn't get handle to the Forward Prob Matrix. Returning." << endl;
+    	error("Couldn't get handle to the Forward Prob Matrix.");
 	return;
       }
     
     if(!iportMeasDat->get(hMatrixMeasDat)) 
       { 
-    	msgStream_ << "Couldn't get handle to the measured data. Returning." << endl;
+    	error("Couldn't get handle to the measured data.");
 	return;
       }
     

@@ -214,14 +214,14 @@ void EditField::update_input_attributes(FieldHandle f)
   DynamicAlgoHandle algo_handle;
   if (! DynamicLoader::scirun_loader().get(*ci, algo_handle))
   {
-    msgStream_ << "Could not compile algorithm." << endl;
+    error("Could not compile algorithm.");
     return;
   }
   EditFieldAlgoCount *algo =
     dynamic_cast<EditFieldAlgoCount *>(algo_handle.get_rep());
   if (algo == 0)
   {
-    msgStream_ << "Could not get algorithm." << endl;
+    error("Could not get algorithm.");
     return;
   }
   int num_nodes;
@@ -381,8 +381,7 @@ EditField::execute()
   {
     // no changes, just send the original through (it may be nothing!)
     oport->send(fh);
-    msgStream_ << "Passing field from input port to output port unchanged." 
-	       << endl;
+    remark("Passing field from input port to output port unchanged.");
     return;
   }
 
@@ -442,14 +441,14 @@ EditField::execute()
   DynamicAlgoHandle algo_handle;
   if (! DynamicLoader::scirun_loader().get(*ci, algo_handle))
   {
-    msgStream_ << "Could not compile algorithm." << endl;
+    error("Could not compile algorithm.");
     return;
   }
   EditFieldAlgoCreate *algo =
     dynamic_cast<EditFieldAlgoCreate *>(algo_handle.get_rep());
   if (algo == 0)
   {
-    msgStream_ << "Could not get algorithm." << endl;
+    error("Could not get algorithm.");
     return;
   }
   gui->execute(id + " set_state Executing 0");
@@ -468,14 +467,14 @@ EditField::execute()
     DynamicAlgoHandle algo_handle;
     if (! DynamicLoader::scirun_loader().get(*ci, algo_handle))
     {
-      msgStream_ << "Could not compile algorithm." << endl;
+      error("Could not compile algorithm.");
       return;
     }
     EditFieldAlgoCopy *algo =
       dynamic_cast<EditFieldAlgoCopy *>(algo_handle.get_rep());
     if (algo == 0)
     {
-      msgStream_ << "Could not get algorithm." << endl;
+      error("Could not get algorithm.");
       return;
     }
     gui->execute(id + " set_state Executing 0");

@@ -115,7 +115,7 @@ void SetupFEMatrix::execute(){
 
   FieldHandle hField;
   if(!iportField_->get(hField)){
-    msgStream_ << "Error: Cann't get field" << endl;
+    error("Can not get input field.");
     return;
   }
 
@@ -133,12 +133,12 @@ void SetupFEMatrix::execute(){
     hCondMesh = dynamic_cast<TetVolField<int>* >(hField.get_rep());
     
     if (!hCondMesh.get_rep()){
-      msgStream_ << "Error: Unable to cast to TetVolField<int>*" << endl;
+      error("Unable to cast to TetVolField<int>.");
       return;
     }
   }
   else {
-    msgStream_ << "Error: The mesh in conductivity tensor field is not of type TetVolField<int>" << endl;
+    error("The conductivity tensor field is not of type TetVolField<int>.");
     return;
   }
   
@@ -161,10 +161,10 @@ void SetupFEMatrix::execute(){
   }
   if (uiUseCond_.get()==1 &&
       hCondMesh->get_property("conductivity_table", tens)){
-    msgStream_ << "Using supplied conductivity tensors "  << endl;
+    remark("Using supplied conductivity tensors.");
   }
   else {
-    msgStream_ << "Using identity conductivity tensors" << endl;
+    remark("Using identity conductivity tensors.");
     pair<int,int> minmax;
     minmax.second=1;
     field_minmax(*(hCondMesh.get_rep()), minmax);

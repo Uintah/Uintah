@@ -125,7 +125,7 @@ void DipoleMatrixSourceRHSQuadratic::execute(){
      LockingHandle<PointCloudField<Vector> > hDipField;
      
      if (mp->get_type_name(0)!="PointCloudField" || mp->get_type_name(1)!="Vector"){
-       msgStream_ << "Supplied field is not of type PointCloudField<Vector>. Returning..." << endl;
+       error("Supplied field is not of type PointCloudField<Vector>.");
        return;
      }
      else {
