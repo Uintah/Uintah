@@ -92,7 +92,6 @@ NIMRODConverter::~NIMRODConverter(){
 void
 NIMRODConverter::execute(){
 
-
   vector< NrrdDataHandle > nHandles;
   NrrdDataHandle nHandle;
 
@@ -463,6 +462,7 @@ NIMRODConverter::execute(){
 
   if( nmodes_ > 0 ) {
     for( int ic=0; ic<=nmodes_; ic++ ) {
+      gModes_[ic]->reset();
       if( modes_[ic] != gModes_[ic]->get() ) {
 	modes_[ic] = gModes_[ic]->get();
 	updateMode = true;
@@ -606,9 +606,9 @@ NIMRODConverter::tcl_command(GuiArgs& args, void* userdata)
 }
 
 
-void get_nrrd_type( const unsigned int type,
-		    string & typeStr,
-		    string & typeName );
+void get_nrrd_compile_type( const unsigned int type,
+			    string & typeStr,
+			    string & typeName );
 
 CompileInfoHandle
 NIMRODConverterAlgo::get_compile_info( const string converter,
@@ -621,7 +621,7 @@ NIMRODConverterAlgo::get_compile_info( const string converter,
 
   string nTypeStr, nTypeName;
 
-  get_nrrd_type( ntype, nTypeStr, nTypeName );
+  get_nrrd_compile_type( ntype, nTypeStr, nTypeName );
 
   CompileInfo *rval = 
     scinew CompileInfo(template_class_name + "." +
