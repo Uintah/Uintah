@@ -26,6 +26,10 @@ T SQR(const T& a);
 double pythag(double a, double b);
 
 double getMaxEigenvalue(const Matrix3& mat, Vector& eigenVector);
+void   getFirstAndSecondEigenvalue(const Matrix3& mat, 
+                                 Vector& eigenVector1, double& eigenValue1,
+				 Vector& eigenVector2, double& eigenValue2);
+
 void QLAlgorithm(Matrix3& z, Vector& d);
 void HouseholderReduction(Matrix3& z, Vector& d, Vector& e);
 

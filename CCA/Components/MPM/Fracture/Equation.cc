@@ -242,6 +242,39 @@ double getMaxEigenvalue(const Matrix3& mat, Vector& eigenVector)
   return d[index];
 }
 
+void getFirstAndSecondEigenvalue(const Matrix3& mat, 
+                                 Vector& eigenVector1, double& eigenValue1,
+				 Vector& eigenVector2, double& eigenValue2)
+{
+  Matrix3 a = mat;
+  Vector d;
+  int index1,index2;
+
+  QLAlgorithm(a, d);
+
+       if(d[1]>=d[2] && d[1]>=d[3]) index1 = 1;
+  else if(d[2]>=d[1] && d[2]>=d[3]) index1 = 2;
+  else index1 = 3;
+
+       if( (d[1]-d[2]) *(d[1]-d[3]) <= 0 ) index2 = 1;
+  else if( (d[2]-d[1]) *(d[2]-d[3]) <= 0 ) index2 = 2;
+  else index2 = 3;
+
+  ASSERT(index1 != index2);
+
+  eigenVector1[1] = a(1,index1);
+  eigenVector1[2] = a(2,index1);
+  eigenVector1[3] = a(3,index1);
+  eigenVector1.normalize();
+  eigenValue1 = d[index1];
+  
+  eigenVector2[1] = a(1,index2);
+  eigenVector2[2] = a(2,index2);
+  eigenVector2[3] = a(3,index2);
+  eigenVector2.normalize();
+  eigenValue2 = d[index2];
+}
+
 } // End namespace Uintah
 
 
