@@ -1,5 +1,5 @@
 <!--
-For more information, please see: http://software.sci.utah.edu
+    For more information, please see: http://software.sci.utah.edu
 
 The MIT License
 
@@ -136,10 +136,10 @@ DEALINGS IN THE SOFTWARE.
 	  <phrase>3d Viewer Window showing tooth dataset.</phrase>
 	</textobject>
 	<imageobject>
-	  <imagedata fileref="Figures/3dview.jpg" format="JPG"/>
+	  <imagedata fileref="Figures/3dview.eps" format="EPS"/>
 	</imageobject>
 	<imageobject>
-	  <imagedata fileref="Figures/3dview.eps" format="EPS"/>
+	  <imagedata fileref="Figures/3dview.jpg" format="JPG"/>
 	</imageobject>
       </mediaobject>
     </figure>
@@ -156,10 +156,10 @@ DEALINGS IN THE SOFTWARE.
 	  <phrase>2d Viewer Window showing tooth dataset.</phrase>
 	</textobject>
 	<imageobject>
-	  <imagedata fileref="Figures/2dview.jpg" format="JPG"/>
+	  <imagedata fileref="Figures/2dview.eps" format="EPS"/>
 	</imageobject>
 	<imageobject>
-	  <imagedata fileref="Figures/2dview.eps" format="EPS"/>
+	  <imagedata fileref="Figures/2dview.jpg" format="JPG"/>
 	</imageobject>
       </mediaobject>
     </figure>
@@ -167,104 +167,110 @@ DEALINGS IN THE SOFTWARE.
       <title>Planes</title>
       <para>Each slice plane can be manipulated via sliders</para>
       <figure id="fig.2dslider">
-        <title>Slice plane slider</title>
-        <mediaobject>
+	<title>Slice plane slider</title>
+	<mediaobject>
 	  <textobject>
 	    <phrase>Slider used to move change location of slice plane.</phrase>
 	  </textobject>
 	  <imageobject>
-	    <imagedata fileref="Figures/2dslider.jpg" format="JPG"/>
-	  </imageobject>
-	  <imageobject>
 	    <imagedata fileref="Figures/2dslider.eps" format="EPS"/>
 	  </imageobject>
-        </mediaobject>
+	  <imageobject>
+	    <imagedata fileref="Figures/2dslider.jpg" format="JPG"/>
+	  </imageobject>
+	</mediaobject>
       </figure>
       <para>
-	Looking at the lower left slice window, we
-	see the 2D slice and corresponding slider controls for the saggital plane.
-	The location of the slice plane inside of the volume is displayed
-	on the left side of the slider.
-	By default, the slice is placed at the center of the volume, which for the tooth
+	Looking at the lower left slice window, we see the 2D slice
+	and corresponding slider controls for the saggital plane.  The
+	location of the slice plane inside of the volume is displayed
+	on the left side of the slider.  By default, the slice is
+	placed at the center of the volume, which for the tooth
 	dataset corresponds to the 51st slice along the saggital axis.
       </para>
       <section>
 	<title>Moving the slice</title>
-      </section>
-      <para>
-	If we move the slice plane slider over to the left until it reads 68,
-	we see the 68th saggital slice displayed in both the 2D and 3D viewers.
-      </para>
-      <figure id="fig.68saggitalBoth">
-	<title>Slice plane slider moved to 68th saggital slice</title>
-	<mediaobject>
-	  <textobject>
-	    <phrase>Slice plane slider moved to 68th saggital slice.</phrase>
-	  </textobject>
-	  <imageobject>
-	    <imagedata fileref="Figures/68saggitalBoth.jpg" format="JPG"/>
-	  </imageobject>
-	  <imageobject>
-	    <imagedata fileref="Figures/68saggitalBoth.eps" format="EPS"/>
-	  </imageobject>
-	</mediaobject>
-      </figure>
-      
-
-    <section>
-      <title>Changing slice colormaps</title>
-      <para>
-	The colors displayed in the viewers are greyscale and represent the
-	underlying values of the data. The colors may represent density, in which case
-	the highest densities correspond to white colored areas and the lowest density
-	regions are colored in black, with in between areas in shades of grey.
-      </para>
-      <para>
-	It is possible to change the colormaps to use other ranges of colors. Instead of
-	ranging from white to black there is an option that goes from blue to red, 
-	or uses a rainbow colors. To change the colormap, choose the 
-	"Vis Options" tab in the left control section, then choose the "Planes" tab.
-	<figure id="fig.planesTab">
-	  <title>Options for controlling planes</title>
+	<para>
+	  If we move the slice plane slider over to the left until it reads 68,
+	  we see the 68th saggital slice displayed in both the 2D and 3D viewers.
+	</para>
+	<figure id="fig.68saggitalBoth">
+	  <title>Slice plane slider moved to 68th saggital slice</title>
 	  <mediaobject>
 	    <textobject>
-	      <phrase>Options for controlling planes.</phrase>
+	      <phrase>Slice plane slider moved to 68th saggital slice.</phrase>
 	    </textobject>
 	    <imageobject>
-	      <imagedata fileref="Figures/planesTab.jpg" format="JPG"/>
+	      <imagedata fileref="Figures/68saggitalBoth.eps" format="EPS"/>
 	    </imageobject>
 	    <imageobject>
-	      <imagedata fileref="Figures/planesTab.eps" format="EPS"/>
+	      <imagedata fileref="Figures/68saggitalBoth.jpg" format="JPG"/>
 	    </imageobject>
 	  </mediaobject>
-	</figure>	
-      </para>
-      <para>
-	Choose the Rainbow colormap and notice the difference in the resulting images displayed
-	in the viewer windows. (colormaps are not working on my build, Nov 29th, hartner).
-	---Include image of colormaps applied to data when colormaps are working---
-      </para>
-      <para>
-	Using a rainbow color map makes it easier to identify variations in the
-	underlying data, but also makes it more difficult to correlate differences in colors
-	to differences in data (ie is green high density?).
-      </para>
-    </section>
+	</figure>
+      </section>
+      
+      <section>
+	<title>Changing slice colormaps</title>
+	<para>
+	  The colors displayed in the viewers are greyscale and
+	  represent the underlying values of the data. The colors may
+	  represent density, in which case the highest densities
+	  correspond to white colored areas and the lowest density
+	  regions are colored in black, with in between areas in
+	  shades of grey.
+	</para>
+	<para>
+	  It is possible to change the colormaps to use other ranges
+	  of colors. Instead of ranging from white to black there is
+	  an option that goes from blue to red, or uses a rainbow
+	  colors. To change the colormap, choose the "Vis Options" tab
+	  in the left control section, then choose the "Planes" tab.
+	  <figure id="fig.planesTab">
+	    <title>Options for controlling planes</title>
+	    <mediaobject>
+	      <textobject>
+		<phrase>Options for controlling planes.</phrase>
+	      </textobject>
+	      <imageobject>
+		<imagedata fileref="Figures/planesTab.eps" format="EPS"/>
+	      </imageobject>
+	      <imageobject>
+		<imagedata fileref="Figures/planesTab.jpg" format="JPG"/>
+	      </imageobject>
+	    </mediaobject>
+	  </figure>	
+	</para>
+	<para>
+	  Choose the Rainbow colormap and notice the difference in the
+	  resulting images displayed in the viewer windows. (colormaps
+	  are not working on my build, Nov 29th, hartner).  ---Include
+	  image of colormaps applied to data when colormaps are
+	  working---
+	</para>
+	<para>
+	  Using a rainbow color map makes it easier to identify
+	  variations in the underlying data, but also makes it more
+	  difficult to correlate differences in colors to differences
+	  in data (ie is green high density?).
+	</para>
+      </section>
 
     </section>
 
     <section>
       <title>Volume Rendering</title>
       <para>
-	(Talk about the paintbrush interface, link to transfer function stuff in the advanced
-	techniques section)
+	(Talk about the paintbrush interface, link to transfer
+	function stuff in the advanced techniques section)
       </para>
     </section>
 
     <section>
       <title>Using the 3D viewer</title>
       <para>
-	The 3D viewer is located in the upper left window and can be controlled by the mouse.
+	The 3D viewer is located in the upper left window and can be
+	controlled by the mouse.
 	<simplelist type="vert" columns="1">
 	  <member>Left Mouse Button: translate up/down, side-to-side</member>
 	  <member>Right Mouse Button: zoom in and out</member>
@@ -272,9 +278,9 @@ DEALINGS IN THE SOFTWARE.
 	</simplelist>
       </para>
       <para>
-	If the object is not longer in view, you can go to the 
-	"Viewer Options" tab in the left control panel and click "Autoview" and a reasonable
-	default view will be set.
+	If the object is not longer in view, you can go to the "Viewer
+	Options" tab in the left control panel and click "Autoview"
+	and a reasonable default view will be set.
       </para>
     </section>
 
