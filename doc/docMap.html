@@ -1,8 +1,8 @@
  <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2 Final//EN">
  <HTML>
    <HEAD>
-     <TITLE>PSE Document Map (02-Aug-2000)</TITLE>
-     <!-- Changed by: TjD, 02-Aug-2000 -->
+     <TITLE>PSE Document Map (03-Aug-2000)</TITLE>
+     <!-- Changed by: TjD, 03-Aug-2000 -->
 
    </HEAD>  
 
@@ -17,7 +17,7 @@
      </P>
 
      <DL>
-       <DT> <A HREF="#GeneralInformation">General Information Documents</A> </DT>
+       <DT> <A HREF="#GeneralInformation">PSE General Information Documents</A> </DT>
 
        <DD>
 	 <P>
@@ -26,24 +26,23 @@
 	 </P>
        </DD>
 
-       <DT> <A HREF="#Administrator">Administrator Documents</A> </DT>
+       <DT> <A HREF="#Administrator">PSE Administrator Documents</A> </DT>
 
        <DD>
 	 <P>
-	   Documents for those who will be downloading, building, and
-	   updating the PSE.
+	   Documents for those who will be downloading and building the PSE.
 	 </P>
        </DD>
        
-       <DT> <A HREF="#NetworkUser">Network User Documents</A> </DT>
+       <DT> <A HREF="#NetworkUser">PSE Network User Documents</A> </DT>
 
        <DD>
 	 <P>
-	   These describe the purpose and use of predefined networks.
+	   These describe the purpose and use of predefined PSE networks.
 	 </P>
        </DD>
 
-       <DT> <A HREF="#NetworkBuilder">Network Builder Documents</A> </DT>
+       <DT> <A HREF="#NetworkBuilder">PSE Network Builder Documents</A> </DT>
        
        <DD>
 	 <P>
@@ -52,7 +51,7 @@
 	 </P>
        </DD>
 
-       <DT> <A HREF="#Developer">Developer Documents</A> </DT>
+       <DT> <A HREF="#Developer">PSE Developer Documents</A> </DT>
 
        <DD>
 	 <P>
@@ -61,7 +60,7 @@
 	 </P>
        </DD>
 
-       <DT> <A HREF="#DesignDocuments">Design documents</A> </DT>
+       <DT> <A HREF="#DesignDocuments">PSE Design Documents</A> </DT>
 
        <DD>
 	 <P>
@@ -118,21 +117,22 @@
 
 	   <LI>
 	     <P>
-	       <EM>BioPSE</EM> is a PSE developed by the
+	       <EM>BioPSE</EM> is a problem solving environment for bioelectric field
+	       problems.  It is developed by the
 	       <A HREF="http://www.sci.utah.edu/ncrr/">NIH Center for Bioelectric
 		 Field Modeling, Simulation, and Visualization</A>.  BioPSE
-	       is designed to solve bioelectric field problems. 
 	     </P>
 	   </LI>
 	   
 	   <LI>
 	     <P>
-	       <EM>Uintah</EM> is developed by the Center for the
-	       <A HREF="http://www.csafe.utah.edu/">Simulation of Accidental
-	       Fires and Explosions</A> (C-SAFE).  This PSE is used to
-	       simulate fires involving a diverse range of accident
+	       <EM>Uintah</EM> is a problem solving environment for
+	       simulating fires involving a diverse range of accident
 	       scenarios including multiple high-energy devices, complex
-	       building/surroundings geometries and many fuel sources.
+	       building/surroundings geometries and many fuel sources.  It
+	       is developed by the Center for the 
+	       <A HREF="http://www.csafe.utah.edu/">Simulation of Accidental
+	       Fires and Explosions</A> (C-SAFE).
 	     </P>
 	   </LI>
 	 </UL>
@@ -142,13 +142,23 @@
 	 </P>
        </LI>
 
-       
        <LI>
 	 <P>
 	   An <A HREF="ReferenceGuide/faq.html">FAQ</A> list has been compiled from
 	   the scirun-develop mailing list.
 	 </P>
        </LI>
+       
+       <LI>
+	 <P>
+	   You may subscribe to one of the PSE mailing lists:
+	   <UL>
+	     <LI>  </LI>
+	   </UL>
+	 </P>
+       </LI>
+
+       
      </UL>
 
      <A NAME="Administrator"/>
@@ -157,11 +167,26 @@
      <UL>
        <LI>Introduction</LI>
        
-       <LI>Installation
+       <LI>
+	 <P>
+	   Installation
+	 </P>
 	 <UL>
-	   <LI> <A HREF="ReferenceGuide/building.html">CS SGI machines</A> </LI>
-	   <LI> <A HREF="ReferenceGuide/nt.html">CS NT machines</A></LI>
-	   <LI> <A HREF="ReferenceGuide/pseInstall.html">Non-CS SGI/Linux machines</A> </LI>
+	   <LI>
+	     <P>
+	       <A HREF="ReferenceGuide/building.html">UUCS SGI machines</A>
+	     </P>
+	   </LI>
+	   <LI>
+	     <P>
+	       <A HREF="ReferenceGuide/nt.html">UUCS NT machines</A>
+	     </P>
+	   </LI>
+	   <LI>
+	     <P>
+	       <A HREF="ReferenceGuide/pseInstall.html">SGI/Linux machines</A>
+	     </P>
+	   </LI>
 	 </UL>
        </LI>
        
@@ -239,7 +264,7 @@
 	   </LI>
 	   <LI>
 	     <P>
-	       <A HREF="http://techpubs.sgi.com/library/dynaweb_docs/0650/SGI_Developer/books/STL_PG/index.html">Standard Template Library</A> by SGI.
+	      SGI's implementation of the <A HREF="http://techpubs.sgi.com/library/dynaweb_docs/0650/SGI_Developer/books/STL_PG/index.html">Standard Template Library</A>.
 	     </P>
 	   </LI>
 	 </UL>
@@ -301,15 +326,16 @@
 	   Module writers must follow a <A
 					  HREF="ReferenceGuide/specProcedure.html">specification procedure</A>
 	   when writing new modules.  Modules which are not fully spec'ed
-	   will not be incorporated into "official" PSE releases.
+	   will not be incorporated into official PSE releases.
 	 </P>
        </LI>
        <LI>
 	 <P>
 	   <A HREF="ReferenceGuide/convertingForeignData.html">Data converters</A> are standalone programs that convert
-	   "foreign" data to an existing PSE datatype (PSE datatypes
-	   are "persistant" - that is data objects can be saved to a
-	   file and can later be recreated from the content of the file).
+	   "foreign" data to an existing PSE datatype object (PSE datatypes
+	   are "persistent" - data objects can be saved to a
+	   file and later recreated from the content of the file).  You may
+	   need to write one some day.
 	 </P>
        </LI>
 
@@ -327,11 +353,23 @@
      <H1>Design Documents</H1>
 
      <UL>
-       <LI> <A HREF="ReferenceGuide/makefiles.html">PSE <KBD>make</KBD> strategy</A></LI>
+       <LI>
+	 <P>
+	   <A HREF="ReferenceGuide/makefiles.html">PSE <KBD>make</KBD> strategy</A>
+	 </P>
+       </LI>
 
-       <LI> <A HREF="ReferenceGuide/exceptions.html">PSE Exception Facility</A> </LI>
+       <LI>
+	 <P>
+	   <A HREF="ReferenceGuide/exceptions.html">PSE Exception Facility</A>
+	 </P>
+       </LI>
 
-       <LI> <A HREF="../src/SCICore/Datatypes/doc/domainDesign.html">Domains, Attributes, and Geometries</A></LI>
+       <LI>
+	 <P>
+	   <A HREF="../src/SCICore/Datatypes/doc/domainDesign.html">Domains, Attributes, and Geometries</A>
+	 </P>
+       </LI>
      </UL>
 
 
