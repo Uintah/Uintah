@@ -278,9 +278,8 @@ void GridSpheresDpy::run()
 	break;
       case XK_s:
       case XK_S:
-        // Right now there are only two methods, but there could be
-        // more in the future.  Change the 2 to num_shade_methods.
-        new_shade_method = (new_shade_method+1)%3;
+        // The modulous is the number of shade methods
+        new_shade_method = (new_shade_method+1)%5;
         break;
       }
       break;
