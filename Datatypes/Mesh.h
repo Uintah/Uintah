@@ -31,7 +31,7 @@ struct Element {
               // tensor of this element
     Mesh* mesh;
     Element(Mesh*, int, int, int, int);
-    Element(const Element&);
+    Element(const Element&, Mesh* mesh);
     void* operator new(size_t);
     void operator delete(void*, size_t);
     int face(int);
@@ -70,6 +70,8 @@ public:
     Array1<Node*> nodes;
     Array1<Element*> elems;
     Array1<Array1<double> > cond_tensors;
+//    int have_all_neighbors;
+//    void compute_face_neighbors();
     Mesh();
     Mesh(const Mesh&);
     Mesh(int nnodes, int nelems);
@@ -86,6 +88,13 @@ public:
     void get_bounds(Point& min, Point& max);
     int unify(Element*, const Array1<int>&, const Array1<int>&,
 	      const Array1<int>&);
+
+    int insert_delaunay(int node);
+    int insert_delaunay(const Point& p);
+    void remove_delaunay(int node);
+    void pack_nodes();
+    void pack_elems();
+    int face_idx(int, int);
 
     // Persistent representation...
     virtual void io(Piostream&);

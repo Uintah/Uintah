@@ -12,6 +12,7 @@
 
 #include <Datatypes/Mesh.h>
 
+#include <Classlib/HashTable.h>
 #include <Classlib/NotFinished.h>
 #include <Classlib/String.h>
 #include <Classlib/TrivialAllocator.h>
@@ -30,24 +31,25 @@ static Persistent* make_Mesh()
 PersistentTypeID Mesh::type_id("Mesh", "Datatype", make_Mesh);
 
 Mesh::Mesh()
+//: have_all_neighbors(0)
 {
 }
 
 Mesh::Mesh(int nnodes, int nelems)
-: nodes(nnodes), elems(nelems)
+: nodes(nnodes), elems(nelems)//, have_all_neighbors(0)
 {
 }
 
 Mesh::Mesh(const Mesh& copy)
 : nodes(copy.nodes.size()), elems(copy.elems.size()),
-  cond_tensors(copy.cond_tensors)
+  cond_tensors(copy.cond_tensors)//, have_all_neighbors(copy.have_all_neighbors)
 {
     int nnodes=nodes.size();
     for(int i=0;i<nnodes;i++)
 	nodes[i]=new Node(*copy.nodes[i]);
     int nelems=elems.size();
     for(i=0;i<nelems;i++)
-	elems[i]=new Element(*copy.elems[i]);
+	elems[i]=new Element(*copy.elems[i], this);
 }
 
 Mesh::~Mesh()
@@ -107,8 +109,8 @@ Element::Element(Mesh* mesh, int n1, int n2, int n3, int n4)
     faces[0]=faces[1]=faces[2]=faces[3]=-2;
 }
 
-Element::Element(const Element& copy)
-: mesh(copy.mesh), cond(copy.cond)
+Element::Element(const Element& copy, Mesh* mesh)
+: mesh(mesh), cond(copy.cond)
 {
     faces[0]=copy.faces[0];
     faces[1]=copy.faces[1];
@@ -436,6 +438,8 @@ int Mesh::locate(const Point& p, int& ix)
 	double s1=iV6*(a1+b1*p.x()+c1*p.y()+d1*p.z());
 	if(s1<-1.e-6){
 	    i=elem->face(0);
+	    if(i==-1)
+		return 0;
 	    continue;
 	}
 
@@ -445,6 +449,8 @@ int Mesh::locate(const Point& p, int& ix)
 	double s2=iV6*(a2+b2*p.x()+c2*p.y()+d2*p.z());
 	if(s2<-1.e-6){
 	    i=elem->face(1);
+	    if(i==-1)
+		return 0;
 	    continue;
 	}
 
@@ -454,6 +460,8 @@ int Mesh::locate(const Point& p, int& ix)
 	double s3=iV6*(a3+b3*p.x()+c3*p.y()+d3*p.z());
 	if(s3<-1.e-6){
 	    i=elem->face(2);
+	    if(i==-1)
+		return 0;
 	    continue;
 	}
 
@@ -463,6 +471,8 @@ int Mesh::locate(const Point& p, int& ix)
 	double s4=iV6*(a4+b4*p.x()+c4*p.y()+d4*p.z());
 	if(s4<-1.e-6){
 	    i=elem->face(3);
+	    if(i==-1)
+		return 0;
 	    continue;
 	}
 	ix=i;
@@ -568,3 +578,252 @@ int Face::operator==(const Face& f) const
 {
     return n[0]==f.n[0] && n[1]==f.n[1] && n[2]==f.n[2];
 }
+
+int Mesh::face_idx(int p, int f)
+{
+    Element* e=elems[p];
+    int n=e->faces[f];
+    if(n==-1)
+	return -1;
+    Element* ne=elems[n];
+    for(int i=0;i<4;i++){
+	if(ne->faces[i]==p)
+	    return (n<<2)|i;
+    }
+    cerr << "face_idx confused!\n";
+    return 0;
+}
+
+int Mesh::insert_delaunay(const Point& p)
+{
+    int idx=nodes.size();
+    nodes.add(new Node(p));
+    return insert_delaunay(idx);
+}
+
+int Mesh::insert_delaunay(int node)
+{
+//    if(!have_all_neighbors)
+//	compute_face_neighbors();
+    Point p(nodes[node]->p);
+    // Find which element this node is in
+    int in_element;
+    if(!locate(p, in_element)){
+	return 0;
+    }
+
+    Array1<int> to_remove;
+    to_remove.add(in_element);
+    Array1<int> done;
+    done.add(in_element);
+    HashTable<Face, int> face_table;
+    
+    // Find it's neighbors...
+    // We might be able to fix this loop to make it
+    // O(N) instead of O(n^2) - use a Queue
+    int i=0;
+    while(i<to_remove.size()){
+	// See if the neighbor should also be removed...
+	int tr=to_remove[i];
+	Element* e=elems[tr];
+	// Add these faces to the list of exposed faces...
+	Face f1(e->n[1], e->n[2], e->n[3]);
+	Face f2(e->n[2], e->n[3], e->n[0]);
+	Face f3(e->n[3], e->n[0], e->n[1]);
+	Face f4(e->n[0], e->n[1], e->n[2]);
+	
+	// If the face is in the list, remove it.
+	// Otherwise, add it.
+	int dummy;
+	if(face_table.lookup(f1, dummy))
+	    face_table.remove(f1);
+	else
+	    face_table.insert(f1, face_idx(tr, 0));
+
+	if(face_table.lookup(f2, dummy))
+	    face_table.remove(f2);
+	else
+	    face_table.insert(f2, face_idx(tr, 1));
+
+	if(face_table.lookup(f3, dummy))
+	    face_table.remove(f3);
+	else
+	    face_table.insert(f3, face_idx(tr, 2));
+
+	if(face_table.lookup(f4, dummy))
+	    face_table.remove(f4);
+	else
+	    face_table.insert(f4, face_idx(tr, 3));
+
+	for(int j=0;j<4;j++){
+	    int skip=0;
+	    int neighbor=e->face(j);
+	    for(int ii=0;ii<done.size();ii++){
+		if(neighbor==done[ii]){
+		    skip=1;
+		    break;
+		}
+	    }
+	    if(neighbor==-1 || neighbor==-2)
+		skip=1;
+	    if(!skip){
+		// Process this neighbor
+		if(!skip){
+		    // See if this element is deleted by this point
+		    Element* ne=elems[neighbor];
+		    Point cen;
+		    double rad2;
+		    ne->get_sphere2(cen, rad2);
+		    double ndist2=(p-cen).length2();
+		    if(ndist2 < rad2){
+			// This one must go...
+			to_remove.add(neighbor);
+		    }
+		}	
+		done.add(neighbor);
+	    }
+	}
+	i++;
+    }
+    // Remove the to_remove elements...
+    for(i=0;i<to_remove.size();i++){
+	int idx=to_remove[i];
+	delete elems[idx];
+	elems[idx]=0;
+    }
+
+    // Add the new elements from the faces...
+    HashTableIter<Face, int> fiter(&face_table);
+    
+    // Make a copy of the face table.  We use the faces in there
+    // To compute the new neighborhood information
+    HashTable<Face, int> new_faces(face_table);
+    for(fiter.first();fiter.ok();++fiter){
+	Face f(fiter.get_key());
+	Element* ne=new Element(this, node, f.n[0], f.n[1], f.n[2]);
+	
+	// If the new element is not degenerate, add it to the mix...
+	if(ne->orient()){
+	    int nen=elems.size();
+	    
+	    // The face neighbor is in the Face data item
+	    Face f1(ne->n[1], ne->n[2], ne->n[3]);
+	    Face f2(ne->n[2], ne->n[3], ne->n[0]);
+	    Face f3(ne->n[3], ne->n[0], ne->n[1]);
+	    Face f4(ne->n[0], ne->n[1], ne->n[2]);
+	    int ef;
+	    if(new_faces.lookup(f1, ef)){
+		// We have this face...
+		if(ef==-1){
+		    ne->faces[0]=-1; // Boundary
+		} else {
+		    int which_face=ef%4;
+		    int which_elem=ef/4;
+		    ne->faces[0]=which_elem;
+		    elems[which_elem]->faces[which_face]=nen;
+		}
+		new_faces.remove(f1);
+	    } else {
+		new_faces.insert(f1, (nen<<2)|0);
+		ne->faces[0]=-3;
+	    }
+	    if(new_faces.lookup(f2, ef)){
+		// We have this face...
+		if(ef==-1){
+		    ne->faces[1]=-1; // Boundary;
+		} else {
+		    int which_face=ef%4;
+		    int which_elem=ef/4;
+		    ne->faces[1]=which_elem;
+		    elems[which_elem]->faces[which_face]=nen;
+		}
+		new_faces.remove(f2);
+	    } else {
+		new_faces.insert(f2, (nen<<2)|1);
+		ne->faces[1]=-3;
+	    }
+	    if(new_faces.lookup(f3, ef)){
+		// We have this face...
+		if(ef==-1){
+		    ne->faces[2]=-1; // Boundary
+		} else {
+		    int which_face=ef%4;
+		    int which_elem=ef/4;
+		    ne->faces[2]=which_elem;
+		    elems[which_elem]->faces[which_face]=nen;
+		}
+		new_faces.remove(f3);
+	    } else {
+		new_faces.insert(f3, (nen<<2)|2);
+		ne->faces[2]=-3;
+	    }
+	    if(new_faces.lookup(f4, ef)){
+		// We have this face...
+		if(ef==-1){
+		    ne->faces[3]=-1;
+		} else {
+		    int which_face=ef%4;
+		    int which_elem=ef/4;
+		    ne->faces[3]=which_elem;
+		    elems[which_elem]->faces[which_face]=nen;
+		}
+		new_faces.remove(f4);
+	    } else {
+		new_faces.insert(f4, (nen<<2)|3);
+		ne->faces[3]=-3;
+	    }
+	    elems.add(ne);
+	} else {
+	    cerr << "Degenerate element (node=" << node << ")\n";
+	    return 0;
+	}
+    }
+    return 1;
+}
+
+void Mesh::pack_elems()
+{
+    // Pack the elements...
+    int nelems=elems.size();
+    int idx=0;
+    for(int i=0;i<nelems;i++){
+	Element* e=elems[i];
+	if(e){
+	    elems[idx++]=e;
+	}
+    }
+    elems.resize(idx);
+}
+
+void Mesh::pack_nodes()
+{
+    // Pack the elements...
+    int nnodes=nodes.size();
+    int idx=0;
+    for(int i=0;i<nnodes;i++){
+	Node* e=nodes[i];
+	if(e){
+	    nodes[idx++]=e;
+	}
+    }
+    nodes.resize(idx);
+}
+
+void Mesh::remove_delaunay(int node)
+{
+    NOT_FINISHED("Mesh::remove_delaunay");
+}
+
+#if 0
+void Mesh::compute_face_neighbors()
+{
+    cerr << "Compute_face_neighbors called\n";
+    // This could probably be done much faster...
+    for(int i=0;i<elems.size();i++){
+	for(int j=0;j<4;j++){
+	    elems[i]->face(j);
+	}
+    }
+//    have_all_neighbors=1;
+}
+#endif
