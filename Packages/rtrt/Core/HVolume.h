@@ -4,7 +4,7 @@
 
 #include "VolumeBase.h"
 #include "Point.h"
-#include "Array3.h"
+#include "Array3.cc"
 #include <stdlib.h>
 #include <Core/Thread/WorkQueue.h>
 
@@ -133,15 +133,22 @@ HVolume<T,A,B>::HVolume(Material* matl, VolumeDpy* dpy,
   
   blockdata.resize(nx, ny, nz);
   sprintf(buf, "%s.brick", filebase);
-  int bin=open(buf, O_RDONLY);//|O_DIRECT);
-  if(bin == -1){
+  cout << "buf = " << buf << endl;
+  //  ifstream bin(buf);
+  int bin_fd = open(buf, O_RDONLY);
+#if 0
+  if(!bin){
     cerr << "Direct I/O failed, trying without\n";
     bin=open(buf, O_RDONLY);
   }
+#endif
   
-  if(bin == -1){
-    //	ifstream din(filebase);
+  if(bin_fd == -1){
+    cerr << "Brick data not found, reading data file\n";
+    //  if(!bin){
+    //    ifstream din(filebase);
     int din_fd = open (filebase, O_RDONLY);
+    //    if(!din){
     if(din_fd == -1) {
       cerr << "Error opening data file: " << filebase << '\n';
       exit(1);
@@ -151,10 +158,11 @@ HVolume<T,A,B>::HVolume(Material* matl, VolumeDpy* dpy,
     double start=Time::currentSeconds();
     cerr << "Reading " << filebase << "...";
     cerr.flush();
-    //read(din.rdbuf()->fd(), indata.get_dataptr(), indata.get_datasize());
+    //    read(din.rdbuf()->fd(), indata.get_dataptr(), indata.get_datasize());
     read(din_fd, indata.get_dataptr(), indata.get_datasize());
     double dt=Time::currentSeconds()-start;
     cerr << "done in " << dt << " seconds (" << (double)(sizeof(T)*nx*ny*nz)/dt/1024/1024 << " MB/sec)\n";
+    //    if(!din){
     int s = close (din_fd);
     if(s == -1 ) {
       cerr << "Error reading data file: " << filebase << '\n';
@@ -170,15 +178,19 @@ HVolume<T,A,B>::HVolume(Material* matl, VolumeDpy* dpy,
     Thread::parallel(phelper, bnp, true);
     delete work;
     
-    //	ofstream bout(buf);
-    int bout_fd = open (buf, O_WRONLY | O_CREAT | O_TRUNC);
+    ///////////////////////////////////////////////////////////////
+    // write the bricked data to a file, so that we don't have to rebrick it
+    //    ofstream bout(buf);
+    //    if (!bout) {
+    int bout_fd = open (buf, O_WRONLY | O_CREAT | O_TRUNC,
+			S_IRUSR|S_IWUSR|S_IRGRP|S_IWGRP|S_IROTH|S_IWOTH);
     if (bout_fd == -1 ) {
       cerr << "Error in opening file " << buf << " for writing.\n";
       exit(1);
     }
     cerr << "Writing " << buf << "...";
     start=Time::currentSeconds();	
-    //	write(bout.rdbuf()->fd(), blockdata.get_dataptr(), blockdata.get_datasize());
+    //    write(bout.rdbuf()->fd(), blockdata.get_dataptr(), blockdata.get_datasize());
     write(bout_fd, blockdata.get_dataptr(),blockdata.get_datasize());
     dt=Time::currentSeconds()-start;
     cerr << "done (" << (double)(blockdata.get_datasize())/dt/1024/1024 << " MB/sec)\n";
@@ -199,8 +211,11 @@ HVolume<T,A,B>::HVolume(Material* matl, VolumeDpy* dpy,
     cerr << "Reading " << buf << "...";
     cerr.flush();
     double start=Time::currentSeconds();
+#if 1
+    read(bin_fd, blockdata.get_dataptr(),blockdata.get_datasize());
+#else
     cerr << "dataptr=" << blockdata.get_dataptr() << '\n';
-    cerr << "bin=" << bin << '\n';
+    //    cerr << "bin=" << bin << '\n';
     cerr.flush();
     unsigned long ss=blockdata.get_datasize();
     ss=(ss+s.d_miniosz)/s.d_miniosz*s.d_miniosz;
@@ -210,7 +225,7 @@ HVolume<T,A,B>::HVolume(Material* matl, VolumeDpy* dpy,
       if(t>s.d_maxiosz)
 	t=s.d_maxiosz;
       cerr << "reading: " << t << " bytes\n";
-      int n=read(bin, blockdata.get_dataptr(), t);
+      int n=read(bin_fd, blockdata.get_dataptr(), t);
       cerr << "n=" << n << '\n';
       if(n != t){
 	perror("read");
@@ -221,9 +236,10 @@ HVolume<T,A,B>::HVolume(Material* matl, VolumeDpy* dpy,
       }
       total+=t;
     }
+#endif
     double dt=Time::currentSeconds()-start;
     cerr << "done (" << (double)(blockdata.get_datasize())/dt/1024/1024 << " MB/sec)\n";
-    close(bin);
+    close(bin_fd);
   }
   
   xsize=new int[depth];
@@ -374,7 +390,7 @@ HVolume<T,A,B>::HVolume(Material* matl, VolumeDpy* dpy,
   cerr.flush();
   indata.resize(0,0,0);
 
-#if 1
+#if 0
   {
     T my_datamin,my_datamax;
     my_datamin = my_datamax = blockdata(0,0,0);
@@ -1106,7 +1122,7 @@ void HVolume<T,A,B>::brickit(int proc)
   while(work->nextAssignment(sx, ex)){
     for(int x=sx;x<ex;x++){
       io.lock();
-      cerr << "processor " << proc << ": " << x << " of " << nx-1 << "\n";
+      //      cerr << "processor " << proc << ": " << x << " of " << nx-1 << "\n";
       io.unlock();
       for(int y=0;y<ny;y++){
 	for(int z=0;z<nz;z++){
