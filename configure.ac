@@ -404,6 +404,11 @@ SCI_ARG_ENABLE(rath,
                  Use the default runtime library search path),
   [enable_rpath="$enableval"],
   [enable_rpath=${enable_rpath='yes'}])
+SCI_ARG_ENABLE(chromium,
+  AC_HELP_STRING(--enable-chromium,
+                 Use the default runtime library search path),
+  [enable_chromium="$enableval"],
+  [enable_chromium=${enable_rpath='no'}])
 SCI_ARG_WITH(ftgl,
   AC_HELP_STRING(--with-ftgl=DIR,
                  Use the Freetype GL installation in DIR),
@@ -418,6 +423,10 @@ if test "$enable_rpath" = "no"; then
    AC_MSG_WARN("Do not do this unless you really know what you are doing.")
 fi
 
+if test "$enable_rpath" = "no"; then
+   DEF_CHROMIUM="#define HAVE_CHROMIUM 1"
+fi
+AC_SUBST(DEF_CHROMIUM)
 
 ##  --------------------------------------------------------------------
 ##  Save off the arguments to configure, being careful to save 
@@ -672,7 +681,7 @@ LARGESOS=$largesos
 if test "$enable_sci_malloc" = "yes"; then
   DEF_MALLOC=""
 else
-  DEF_MALLOC="#define DISABLE_SCI_MALLOC"
+  DEF_MALLOC="#define DISABLE_SCI_MALLOC 1"
 fi
 
 AC_SUBST(SO_OR_ARCHIVE_EXTENSION)
@@ -1686,7 +1695,7 @@ if test "$DEF_HASHMAP" = "None"; then
   AC_MSG_WARN([Cannot find hash_map, will use map instead])
 else
   AC_MSG_RESULT(found: $DEF_HASHMAP)
-  DEF_HASHMAP="#define $DEF_HASHMAP"
+  DEF_HASHMAP="#define $DEF_HASHMAP 1"
 fi
 AC_SUBST(DEF_HASHMAP)
 AC_CHECK_HEADERS(ext/algorithm)
