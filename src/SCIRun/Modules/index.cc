@@ -58,6 +58,7 @@ using namespace SCIRun::Modules;
 
 #define RM(a,b,c,d) packageDB.registerModule("SCIRun",a,b,c,d)
 #define RMI(b,c,d) RM("Image",b,c,d)
+#define RMM(b,c,d) RM("Mesh",b,c,d)
 
 extern "C" {
 void initPackage(const clString& tcl) {
@@ -94,16 +95,16 @@ void initPackage(const clString& tcl) {
   RMI("WhiteNoiseImage",make_WhiteNoiseImage,tcl+"/WhiteNoiseImage.tcl");
 
    // Mesh
-  RMI("Delaunay",	make_Delaunay,	    tcl+"/Delaunay.tcl");
-  RMI("ExtractMesh",	make_ExtractMesh,	    "");
-  RMI("HexMeshToGeom",	make_HexMeshToGeom,	    "");
-  RMI("InsertDelaunay",	make_InsertDelaunay,	    "");
-  RMI("MakeScalarField",	make_MakeScalarField,	"");
-  RMI("MeshBoundary",	make_MeshBoundary,	    "");
-  RMI("MeshInterpVals",	make_MeshInterpVals,	    tcl+"/MeshInterpVals.tcl");
-  RMI("MeshRender",	make_MeshRender,	    "");
-  RMI("MeshToGeom",	make_MeshToGeom,	    tcl+"/MeshToGeom.tcl");
-  RMI("MeshView",	make_MeshView,	    tcl+"/MeshView.tcl");
+  RMM("Delaunay",	make_Delaunay,	    tcl+"/Delaunay.tcl");
+  RMM("ExtractMesh",	make_ExtractMesh,	    "");
+  RMM("HexMeshToGeom",	make_HexMeshToGeom,	    "");
+  RMM("InsertDelaunay",	make_InsertDelaunay,	    "");
+  RMM("MakeScalarField",	make_MakeScalarField,	"");
+  RMM("MeshBoundary",	make_MeshBoundary,	    "");
+  RMM("MeshInterpVals",	make_MeshInterpVals,	    tcl+"/MeshInterpVals.tcl");
+  RMM("MeshRender",	make_MeshRender,	    "");
+  RMM("MeshToGeom",	make_MeshToGeom,	    tcl+"/MeshToGeom.tcl");
+  RMM("MeshView",	make_MeshView,	    tcl+"/MeshView.tcl");
 
     // Writers
   //  RM("Writers", "TiffWriter",     make_TiffWriter,	    tcl+"/TiffWriter.tcl");
