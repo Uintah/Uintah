@@ -7,11 +7,14 @@ SRCDIR   := Uintah/Components/MPM/Fracture
 
 SRCS     += $(SRCDIR)/Fracture.cc \
 	$(SRCDIR)/FractureFactory.cc \
-	$(SRCDIR)/Lattice.cc
+	$(SRCDIR)/Lattice.cc \
 	$(SRCDIR)/Cell.cc
 
 #
 # $Log$
+# Revision 1.6  2000/06/05 20:50:56  tan
+# A small modification.
+#
 # Revision 1.5  2000/06/05 19:46:03  tan
 # Cell class will be designed to carray a link list of particle indexes
 # in a cell.  This will facilitate the seaching of particles from a given
