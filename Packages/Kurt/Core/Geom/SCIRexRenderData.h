@@ -42,6 +42,7 @@ struct SCIRexRenderData {
   DrawInfoOpenGL* di_;
   Material *mat_;
   double time_;
+  int *comp_order_;
 };
   
 } // end namspace Kurt

@@ -43,6 +43,7 @@ using SCIRun::ColorMapIPort;
 using SCIRun::GeometryOPort;
 using SCIRun::GuiInt;
 using SCIRun::GuiDouble;
+using SCIRun::GeomID;
 
 using SCIRun::GLTexture3DHandle;
 

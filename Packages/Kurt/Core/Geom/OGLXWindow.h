@@ -41,7 +41,7 @@ public:
 
 protected:
   
-  OGLXVisual *v;
+  OGLXVisual *visual;
   char *name;
   char *dpyName;
   Display *dpy;

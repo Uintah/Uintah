@@ -47,37 +47,37 @@ SCIRexWindow::run()
     while (XPending(dpy)){ 
       handleEvent();
     } 
-    render_data_->mutex_->lock(); 
-    cerr<<"check for Exit "<<my_thread_->getThreadName()<<endl;
-    render_data_->mutex_->unlock();
+//     render_data_->mutex_->lock(); 
+//     cerr<<"check for Exit "<<my_thread_->getThreadName()<<endl;
+//     render_data_->mutex_->unlock();
     render_data_->barrier_->wait(render_data_->waiters_);
     if( die_ ){  
-      render_data_->mutex_->lock(); 
-      cerr<<"Returning from thread "<<my_thread_->getThreadName()<<endl;
-      render_data_->mutex_->unlock();
+//       render_data_->mutex_->lock(); 
+//       cerr<<"Returning from thread "<<my_thread_->getThreadName()<<endl;
+//       render_data_->mutex_->unlock();
       break;
     }
-    render_data_->mutex_->lock(); 
-    cerr<<"update info for "<<my_thread_->getThreadName()<<endl;
-    render_data_->mutex_->unlock();
+//     render_data_->mutex_->lock(); 
+//     cerr<<"update info for "<<my_thread_->getThreadName()<<endl;
+//     render_data_->mutex_->unlock();
     
     update_data();
     
     render_data_->barrier_->wait( render_data_->waiters_);
-    render_data_->mutex_->lock(); 
-    cerr<<"render windows "<<my_thread_->getThreadName()<<endl;
-    render_data_->mutex_->unlock();
+//     render_data_->mutex_->lock(); 
+//     cerr<<"render windows "<<my_thread_->getThreadName()<<endl;
+//     render_data_->mutex_->unlock();
     
     draw();
 
     render_data_->barrier_->wait( render_data_->waiters_);
-    render_data_->mutex_->lock(); 
-    cerr<<"wait on compositers "<<my_thread_->getThreadName()<<endl;
-    render_data_->mutex_->unlock();
+//     render_data_->mutex_->lock(); 
+//     cerr<<"wait on compositers "<<my_thread_->getThreadName()<<endl;
+//     render_data_->mutex_->unlock();
     render_data_->barrier_->wait( render_data_->waiters_);
-    render_data_->mutex_->lock(); 
-    cerr<<"wait on Display "<<my_thread_->getThreadName()<<endl;
-    render_data_->mutex_->unlock();
+//     render_data_->mutex_->lock(); 
+//     cerr<<"wait on Display "<<my_thread_->getThreadName()<<endl;
+//     render_data_->mutex_->unlock();
     render_data_->barrier_->wait( render_data_->waiters_);
   }while(true);
   
@@ -133,22 +133,23 @@ static Bool WaitForNotify(Display *d, XEvent *e, char *arg) {
 
 void SCIRexWindow::setup()
 {
-//   GLXFBConfig *fbc = NULL;  // GLX 1.3
+  GLXFBConfig *fbc = NULL;  // GLX 1.3
   //GLXFBConfigSGIX *fbc;  // pseudo GLX 1.3
   XVisualInfo *vi;
    Colormap cmap;
    XSetWindowAttributes swa;
    //   Window win;
 //    XEvent event;
-//    int nelements;
+   int nelements;
 
 //    /* GLX 1.3 */
 //    /* Find a FBConfig that uses RGBA.  Note that no attribute list is */
 //    /* needed since GLX_RGBA_BIT is a default attribute.               */
-//    fbc = glXChooseFBConfig(dpy, DefaultScreen(dpy), 0, &nelements); //1.3
+   fbc = glXChooseFBConfig(dpy, DefaultScreen(dpy),
+			   visual->attributes(), &nelements); //1.3
 
 //       fbc = glXChooseFBConfigSGIX(dpy, DefaultScreen(dpy), 0, &nelements);
-//    vi = glXGetVisualFromFBConfig(dpy, *fbc); // 1.3
+   vi = glXGetVisualFromFBConfig(dpy, *fbc); // 1.3
 //       vi =  glXGetVisualFromFBConfigSGIX(dpy, fbc[0]); // pseudo 1.3
 //    if (!vi) // error(name, "no suitable visual");
 //      cerr<<name<<" no suitable visual\n";
@@ -167,12 +168,13 @@ void SCIRexWindow::setup()
 //                            GLX_TRANSPARENT_TYPE, GLX_TRANSPARENT_RGB,
 //                            None};
 
-     int alist[] = { GLX_RGBA, None };
-    vi = glXChooseVisual(dpy, DefaultScreen(dpy), alist );
-    if (!vi){
-      /* error(name, "no suitable visual"); */
-      cerr<<name<<" no suitable visual\n";
-    }
+//      int alist[] = { GLX_RGBA, None };
+//    vi = glXChooseVisual(dpy, DefaultScreen(dpy), alist );
+//     vi = glXChooseVisual(dpy, DefaultScreen(dpy), visual->attributes() );
+//     if (!vi){
+//       /* error(name, "no suitable visual"); */
+//       cerr<<name<<" no suitable visual\n";
+//     }
     cx = glXCreateContext(dpy, vi, 0, GL_TRUE);
 // ***********************************************************************
    /* Create a colormap */
@@ -279,7 +281,7 @@ SCIRexWindow::draw(){
     glXMakeCurrent(dpy, win, cx);
   }
 
-  
+  glDrawBuffer(GL_FRONT);
   glClear(GL_DEPTH_BUFFER_BIT);
   //  glClearColor(0.2,0.2,0.5,1.0);
   glShadeModel(GL_SMOOTH);
@@ -292,16 +294,15 @@ SCIRexWindow::draw(){
   if(rd->mvmat_)
     glLoadMatrixd( rd->mvmat_ );
 
-  glDrawBuffer(GL_FRONT);
+
+  //  glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
   glDrawPixels(rd->viewport_x_,
-	       rd->viewport_y_,
+		rd->viewport_y_,
 	       GL_DEPTH_COMPONENT,
 	       GL_UNSIGNED_BYTE, rd->depth_buffer_);
-
-   glClearColor(0,0,0,1.0);
-   glClear(GL_COLOR_BUFFER_BIT);
   
-  
+  glClearColor(0,0,0,0.0);
+  glClear(GL_COLOR_BUFFER_BIT);
   vector<GeomObj *>::iterator i;
   for( i = geom_objs.begin(); i != geom_objs.end(); i++){
     (*i)->draw( rd->di_, rd->mat_, rd->time_);

@@ -11,7 +11,7 @@ OGLXWindow::~OGLXWindow(){ glXDestroyWindow( dpy, win );}
 OGLXWindow::OGLXWindow(char *name, char *dpyname,
 		       OGLXVisual *v, bool map,
 		       int width, int height, int x, int y) :
-  name(name), dpyName(dpyname), _mapped(map),
+  name(name), dpyName(dpyname), visual(v),_mapped(map),
   _width(width), _height(height)
 {
   // not done
