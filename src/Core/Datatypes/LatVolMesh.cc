@@ -13,9 +13,12 @@
  */
 
 #include <Core/Datatypes/LatVolMesh.h>
+#include <iostream>
 
 
 namespace SCIRun {
+
+using namespace std;
 
 
 PersistentTypeID LatVolMesh::type_id("LatVolMesh", "MeshBase", maker);
@@ -53,14 +56,14 @@ LatVolMesh::get_point(Point &result, const node_index &index) const
 inline LatVolMesh::node_iterator
 LatVolMesh::node_begin() const
 {
-  return node_iterator(this,0, 0, 0);
+  return node_iterator(this, 0, 0, 0);
 }
 
 
 inline LatVolMesh::node_iterator
 LatVolMesh::node_end() const
 {
-  return node_iterator(this,nx_, ny_, nz_);
+  return node_iterator(this, 0, 0, nz_);
 }
 
 inline LatVolMesh::edge_iterator
@@ -93,14 +96,14 @@ LatVolMesh::face_end() const
 inline LatVolMesh::cell_iterator
 LatVolMesh::cell_begin() const
 {
-  return cell_iterator(this,0, 0, 0);
+  return cell_iterator(this, 0, 0, 0);
 }
 
 
 inline LatVolMesh::cell_iterator
 LatVolMesh::cell_end() const
 {
-  return cell_iterator(this,nx_-1, ny_-1, nz_-1);
+  return cell_iterator(this, 0, 0, nz_-1);
 }
 
 inline void
