@@ -138,6 +138,7 @@ public:
 
   virtual void color_in_direction(const Vector& v, Color& c) const ;
 
+  bool valid() { return valid_; }
 protected:
   inline Vector ChangeFromBasis( const Vector& a ) const 
   {
@@ -159,6 +160,7 @@ protected:
   Vector _up;
   Vector _u;
   Vector _v;
+  bool valid_;
 };
 
 } // end namespace rtrt

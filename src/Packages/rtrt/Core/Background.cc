@@ -122,6 +122,11 @@ EnvironmentMapBackground::EnvironmentMapBackground( char* filename,
   _u = PerpendicularVector( _up );
   _v = Cross( _up, _u );
   PPMImage ppm(filename);
+  valid_ = ppm.valid();
+  if (!valid_) {
+    cerr << "Trouble reading image "<<filename<<" for EnvironmentMapBackground\n";
+    return;
+  }
   ppm.get_dimensions_and_data(_image, _width, _height);
   
   cout << "env_map width, height: " << _width << ", " << _height << endl;
