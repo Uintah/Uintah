@@ -385,52 +385,52 @@ PicardNonlinearSolver::setInitialGuess(const ProcessorGroup* ,
     int archIndex = 0; // only one arches material
     int matlIndex = d_lab->d_sharedState->getArchesMaterial(archIndex)->getDWIndex(); 
     int nofGhostCells = 0;
-    CCVariable<double> denMicro;
+    constCCVariable<double> denMicro;
     CCVariable<double> denMicro_new;
     if (d_MAlab) {
       old_dw->get(denMicro, d_lab->d_densityMicroLabel, 
 		  matlIndex, patch, Ghost::None, nofGhostCells);
       new_dw->allocate(denMicro_new, d_lab->d_densityMicroINLabel, 
 		       matlIndex, patch);
-      denMicro_new.copyPatch(denMicro);
+      denMicro_new.copyData(denMicro);
     }
-    CCVariable<int> cellType;
+    constCCVariable<int> cellType;
     if (d_MAlab)
       new_dw->get(cellType, d_lab->d_mmcellTypeLabel, matlIndex, patch,
 		  Ghost::None, nofGhostCells);
     else
       old_dw->get(cellType, d_lab->d_cellTypeLabel, matlIndex, patch,
 		  Ghost::None, nofGhostCells);
-    CCVariable<double> pressure;
+    constCCVariable<double> pressure;
     old_dw->get(pressure, d_lab->d_pressureSPBCLabel, matlIndex, patch, 
 		Ghost::None, nofGhostCells);
 
-    SFCXVariable<double> uVelocity;
+    constSFCXVariable<double> uVelocity;
     old_dw->get(uVelocity, d_lab->d_uVelocitySPBCLabel, matlIndex, patch, 
 		Ghost::None, nofGhostCells);
-    SFCYVariable<double> vVelocity;
+    constSFCYVariable<double> vVelocity;
     old_dw->get(vVelocity, d_lab->d_vVelocitySPBCLabel, matlIndex, patch, 
 		Ghost::None, nofGhostCells);
-    SFCZVariable<double> wVelocity;
+    constSFCZVariable<double> wVelocity;
     old_dw->get(wVelocity, d_lab->d_wVelocitySPBCLabel, matlIndex, patch, 
 		Ghost::None, nofGhostCells);
 
     int nofScalars = d_props->getNumMixVars();
-    StaticArray< CCVariable<double> > scalar(nofScalars);
+    StaticArray< constCCVariable<double> > scalar(nofScalars);
     for (int ii = 0; ii < nofScalars; ii++) {
       old_dw->get(scalar[ii], d_lab->d_scalarSPLabel, matlIndex, patch, 
 		  Ghost::None, nofGhostCells);
     }
-    CCVariable<double> enthalpy;
+    constCCVariable<double> enthalpy;
     if (d_enthalpySolve)
       old_dw->get(enthalpy, d_lab->d_enthalpySPLabel, matlIndex, patch, 
 		  Ghost::None, nofGhostCells);
 
-    CCVariable<double> density;
+    constCCVariable<double> density;
     old_dw->get(density, d_lab->d_densityCPLabel, matlIndex, patch, 
 		Ghost::None, nofGhostCells);
 
-    CCVariable<double> viscosity;
+    constCCVariable<double> viscosity;
     old_dw->get(viscosity, d_lab->d_viscosityCTSLabel, matlIndex, patch, 
 		Ghost::None, nofGhostCells);
 
@@ -438,7 +438,7 @@ PicardNonlinearSolver::setInitialGuess(const ProcessorGroup* ,
   // Create vars for new_dw ***warning changed new_dw to old_dw...check
     CCVariable<int> cellType_new;
     new_dw->allocate(cellType_new, d_lab->d_cellTypeLabel, matlIndex, patch);
-    cellType_new.copyPatch(cellType);
+    cellType_new.copyData(cellType);
     // Get the PerPatch CellInformation data
     PerPatch<CellInformationP> cellInfoP;
     if (new_dw->exists(d_lab->d_cellInfoLabel, matlIndex, patch)) 
@@ -455,22 +455,22 @@ PicardNonlinearSolver::setInitialGuess(const ProcessorGroup* ,
 #endif
     CCVariable<double> pressure_new;
     new_dw->allocate(pressure_new, d_lab->d_pressureINLabel, matlIndex, patch);
-    pressure_new.copyPatch(pressure); // copy old into new
+    pressure_new.copyData(pressure); // copy old into new
 
     SFCXVariable<double> uVelocity_new;
     new_dw->allocate(uVelocity_new, d_lab->d_uVelocityINLabel, matlIndex, patch);
-    uVelocity_new.copyPatch(uVelocity); // copy old into new
+    uVelocity_new.copyData(uVelocity); // copy old into new
     SFCYVariable<double> vVelocity_new;
     new_dw->allocate(vVelocity_new, d_lab->d_vVelocityINLabel, matlIndex, patch);
-    vVelocity_new.copyPatch(vVelocity); // copy old into new
+    vVelocity_new.copyData(vVelocity); // copy old into new
     SFCZVariable<double> wVelocity_new;
     new_dw->allocate(wVelocity_new, d_lab->d_wVelocityINLabel, matlIndex, patch);
-    wVelocity_new.copyPatch(wVelocity); // copy old into new
+    wVelocity_new.copyData(wVelocity); // copy old into new
     
     StaticArray< CCVariable<double> > scalar_new(nofScalars);
     for (int ii = 0; ii < nofScalars; ii++) {
       new_dw->allocate(scalar_new[ii], d_lab->d_scalarINLabel, ii, patch);
-      scalar_new[ii].copyPatch(scalar[ii]); // copy old into new
+      scalar_new[ii].copyData(scalar[ii]); // copy old into new
     }
     CCVariable<double> new_enthalpy;
     if (d_enthalpySolve) {
@@ -480,11 +480,11 @@ PicardNonlinearSolver::setInitialGuess(const ProcessorGroup* ,
 
     CCVariable<double> density_new;
     new_dw->allocate(density_new, d_lab->d_densityINLabel, matlIndex, patch);
-    density_new.copyPatch(density); // copy old into new
+    density_new.copyData(density); // copy old into new
 
     CCVariable<double> viscosity_new;
     new_dw->allocate(viscosity_new, d_lab->d_viscosityINLabel, matlIndex, patch);
-    viscosity_new.copyPatch(viscosity); // copy old into new
+    viscosity_new.copyData(viscosity); // copy old into new
 
     // Copy the variables into the new datawarehouse
     new_dw->put(cellType_new, d_lab->d_cellTypeLabel, matlIndex, patch);
@@ -523,9 +523,9 @@ PicardNonlinearSolver::interpolateFromFCToCC(const ProcessorGroup* ,
     int nofGhostCells = 1;
 
     // Get the old velocity
-    SFCXVariable<double> oldUVel;
-    SFCYVariable<double> oldVVel;
-    SFCZVariable<double> oldWVel;
+    constSFCXVariable<double> oldUVel;
+    constSFCYVariable<double> oldVVel;
+    constSFCZVariable<double> oldWVel;
     new_dw->get(oldUVel, d_lab->d_uVelocityINLabel, matlIndex, patch, 
 		Ghost::AroundCells, nofGhostCells);
     new_dw->get(oldVVel, d_lab->d_vVelocityINLabel, matlIndex, patch, 
@@ -534,9 +534,9 @@ PicardNonlinearSolver::interpolateFromFCToCC(const ProcessorGroup* ,
 		Ghost::AroundCells, nofGhostCells);
 
     // Get the new velocity
-    SFCXVariable<double> newUVel;
-    SFCYVariable<double> newVVel;
-    SFCZVariable<double> newWVel;
+    constSFCXVariable<double> newUVel;
+    constSFCYVariable<double> newVVel;
+    constSFCZVariable<double> newWVel;
     new_dw->get(newUVel, d_lab->d_uVelocitySPBCLabel, matlIndex, patch, 
 		Ghost::AroundCells, nofGhostCells);
     new_dw->get(newVVel, d_lab->d_vVelocitySPBCLabel, matlIndex, patch, 
@@ -625,19 +625,19 @@ PicardNonlinearSolver::probeData(const ProcessorGroup* ,
     int nofGhostCells = 0;
 
   // Get the new velocity
-    SFCXVariable<double> newUVel;
-    SFCYVariable<double> newVVel;
-    SFCZVariable<double> newWVel;
+    constSFCXVariable<double> newUVel;
+    constSFCYVariable<double> newVVel;
+    constSFCZVariable<double> newWVel;
     new_dw->get(newUVel, d_lab->d_uVelocitySPBCLabel, matlIndex, patch, 
 		Ghost::None, nofGhostCells);
     new_dw->get(newVVel, d_lab->d_vVelocitySPBCLabel, matlIndex, patch, 
 		Ghost::None, nofGhostCells);
     new_dw->get(newWVel, d_lab->d_wVelocitySPBCLabel, matlIndex, patch, 
 		Ghost::None, nofGhostCells);
-    CCVariable<double> density;
-    CCVariable<double> viscosity;
-    CCVariable<double> pressure;
-    CCVariable<double> mixtureFraction;
+    constCCVariable<double> density;
+    constCCVariable<double> viscosity;
+    constCCVariable<double> pressure;
+    constCCVariable<double> mixtureFraction;
     new_dw->get(density, d_lab->d_densityCPLabel, matlIndex, patch, 
 		Ghost::None, nofGhostCells);
     new_dw->get(viscosity, d_lab->d_viscosityCTSLabel, matlIndex, patch, 
@@ -647,7 +647,7 @@ PicardNonlinearSolver::probeData(const ProcessorGroup* ,
     new_dw->get(mixtureFraction, d_lab->d_scalarSPLabel, matlIndex, patch, 
 		Ghost::None, nofGhostCells);
     
-    CCVariable<double> gasfraction;
+    constCCVariable<double> gasfraction;
     new_dw->get(gasfraction, d_lab->d_mmgasVolFracLabel, matlIndex, patch, 
 		Ghost::None, nofGhostCells);
 

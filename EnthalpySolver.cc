@@ -221,26 +221,26 @@ void EnthalpySolver::buildLinearMatrix(const ProcessorGroup* pc,
     CellInformation* cellinfo = cellInfoP.get().get_rep();
 
     // from old_dw get PCELL, DENO, FO(index)
-    new_dw->get(enthalpyVars.cellType, d_lab->d_cellTypeLabel, 
+    new_dw->getCopy(enthalpyVars.cellType, d_lab->d_cellTypeLabel, 
 		matlIndex, patch, Ghost::AroundCells, numGhostCells);
-    new_dw->get(enthalpyVars.old_density, d_lab->d_densityINLabel, 
+    new_dw->getCopy(enthalpyVars.old_density, d_lab->d_densityINLabel, 
 		matlIndex, patch, Ghost::None, zeroGhostCells);
-    new_dw->get(enthalpyVars.old_enthalpy, d_lab->d_enthalpyINLabel, 
+    new_dw->getCopy(enthalpyVars.old_enthalpy, d_lab->d_enthalpyINLabel, 
 		matlIndex, patch, Ghost::None, zeroGhostCells);
 
     // from new_dw get DEN, VIS, F(index), U, V, W
-    new_dw->get(enthalpyVars.density, d_lab->d_densityINLabel, 
+    new_dw->getCopy(enthalpyVars.density, d_lab->d_densityINLabel, 
 		matlIndex, patch, Ghost::AroundCells, numGhostCells);
-    new_dw->get(enthalpyVars.viscosity, d_lab->d_viscosityINLabel, 
+    new_dw->getCopy(enthalpyVars.viscosity, d_lab->d_viscosityINLabel, 
 		matlIndex, patch, Ghost::AroundCells, numGhostCells);
-    new_dw->get(enthalpyVars.enthalpy, d_lab->d_enthalpyOUTBCLabel, 
+    new_dw->getCopy(enthalpyVars.enthalpy, d_lab->d_enthalpyOUTBCLabel, 
 		matlIndex, patch, Ghost::None, zeroGhostCells);
     // for explicit get old values
-    new_dw->get(enthalpyVars.uVelocity, d_lab->d_uVelocityOUTBCLabel, 
+    new_dw->getCopy(enthalpyVars.uVelocity, d_lab->d_uVelocityOUTBCLabel, 
 		matlIndex, patch, Ghost::AroundCells, numGhostCells);
-    new_dw->get(enthalpyVars.vVelocity, d_lab->d_vVelocityOUTBCLabel, 
+    new_dw->getCopy(enthalpyVars.vVelocity, d_lab->d_vVelocityOUTBCLabel, 
 		matlIndex, patch, Ghost::AroundCells, numGhostCells);
-    new_dw->get(enthalpyVars.wVelocity, d_lab->d_wVelocityOUTBCLabel, 
+    new_dw->getCopy(enthalpyVars.wVelocity, d_lab->d_wVelocityOUTBCLabel, 
 		matlIndex, patch, Ghost::AroundCells, numGhostCells);
 
   // allocate matrix coeffs
@@ -336,19 +336,23 @@ EnthalpySolver::enthalpyLinearSolve(const ProcessorGroup* pc,
       new_dw->put(cellInfoP, d_lab->d_cellInfoLabel, matlIndex, patch);
     }
     CellInformation* cellinfo = cellInfoP.get().get_rep();
-    new_dw->get(enthalpyVars.old_density, d_lab->d_densityINLabel, 
+    new_dw->getCopy(enthalpyVars.old_density, d_lab->d_densityINLabel, 
 		matlIndex, patch, Ghost::None, zeroGhostCells);
     // for explicit calculation
-    new_dw->get(enthalpyVars.enthalpy, d_lab->d_enthalpyOUTBCLabel, 
+    {
+    new_dw->allocate(enthalpyVars.enthalpy, d_lab->d_enthalpySPLabel, 
 		matlIndex, patch, Ghost::AroundCells, numGhostCells);
+    new_dw->copyOut(enthalpyVars.enthalpy, d_lab->d_enthalpyOUTBCLabel, 
+		matlIndex, patch, Ghost::AroundCells, numGhostCells);
+    }
     enthalpyVars.old_enthalpy.allocate(enthalpyVars.enthalpy.getLowIndex(),
 				   enthalpyVars.enthalpy.getHighIndex());
     enthalpyVars.old_enthalpy.copy(enthalpyVars.enthalpy);
     
     for (int ii = 0; ii < d_lab->d_stencilMatl->size(); ii++)
-      new_dw->get(enthalpyVars.scalarCoeff[ii], d_lab->d_enthCoefSBLMLabel, 
+      new_dw->getCopy(enthalpyVars.scalarCoeff[ii], d_lab->d_enthCoefSBLMLabel, 
 		  ii, patch, Ghost::None, zeroGhostCells);
-    new_dw->get(enthalpyVars.scalarNonlinearSrc, d_lab->d_enthNonLinSrcSBLMLabel,
+    new_dw->getCopy(enthalpyVars.scalarNonlinearSrc, d_lab->d_enthNonLinSrcSBLMLabel,
 		matlIndex, patch, Ghost::None, zeroGhostCells);
     new_dw->allocate(enthalpyVars.residualEnthalpy, d_lab->d_enthalpyRes,
 		     matlIndex, patch);
@@ -477,28 +481,28 @@ void EnthalpySolver::buildLinearMatrixPred(const ProcessorGroup* pc,
     CellInformation* cellinfo = cellInfoP.get().get_rep();
 
     // from old_dw get PCELL, DENO, FO(index)
-    new_dw->get(enthalpyVars.cellType, d_lab->d_cellTypeLabel, 
+    new_dw->getCopy(enthalpyVars.cellType, d_lab->d_cellTypeLabel, 
 		matlIndex, patch, Ghost::AroundCells, numGhostCells);
-    new_dw->get(enthalpyVars.old_density, d_lab->d_densityINLabel, 
+    new_dw->getCopy(enthalpyVars.old_density, d_lab->d_densityINLabel, 
 		matlIndex, patch, Ghost::None, zeroGhostCells);
     //    new_dw->get(enthalpyVars.old_enthalpy, d_lab->d_enthalpyINLabel, 
     //		matlIndex, patch, Ghost::None, zeroGhostCells);
-    new_dw->get(enthalpyVars.old_enthalpy, d_lab->d_enthalpyOUTBCLabel, 
+    new_dw->getCopy(enthalpyVars.old_enthalpy, d_lab->d_enthalpyOUTBCLabel, 
 		matlIndex, patch, Ghost::None, zeroGhostCells);
 
     // from new_dw get DEN, VIS, F(index), U, V, W
-    new_dw->get(enthalpyVars.density, d_lab->d_densityINLabel, 
+    new_dw->getCopy(enthalpyVars.density, d_lab->d_densityINLabel, 
 		matlIndex, patch, Ghost::AroundCells, numGhostCells);
-    new_dw->get(enthalpyVars.viscosity, d_lab->d_viscosityINLabel, 
+    new_dw->getCopy(enthalpyVars.viscosity, d_lab->d_viscosityINLabel, 
 		matlIndex, patch, Ghost::AroundCells, numGhostCells);
-    new_dw->get(enthalpyVars.enthalpy, d_lab->d_enthalpyOUTBCLabel, 
+    new_dw->getCopy(enthalpyVars.enthalpy, d_lab->d_enthalpyOUTBCLabel, 
 		matlIndex, patch, Ghost::None, zeroGhostCells);
     // for explicit get old values
-    new_dw->get(enthalpyVars.uVelocity, d_lab->d_uVelocityOUTBCLabel, 
+    new_dw->getCopy(enthalpyVars.uVelocity, d_lab->d_uVelocityOUTBCLabel, 
 		matlIndex, patch, Ghost::AroundCells, numGhostCells);
-    new_dw->get(enthalpyVars.vVelocity, d_lab->d_vVelocityOUTBCLabel, 
+    new_dw->getCopy(enthalpyVars.vVelocity, d_lab->d_vVelocityOUTBCLabel, 
 		matlIndex, patch, Ghost::AroundCells, numGhostCells);
-    new_dw->get(enthalpyVars.wVelocity, d_lab->d_wVelocityOUTBCLabel, 
+    new_dw->getCopy(enthalpyVars.wVelocity, d_lab->d_wVelocityOUTBCLabel, 
 		matlIndex, patch, Ghost::AroundCells, numGhostCells);
 
   // allocate matrix coeffs
@@ -532,9 +536,9 @@ void EnthalpySolver::buildLinearMatrixPred(const ProcessorGroup* pc,
       enthalpyVars.qfluxb.allocate(patch->getCellLowIndex(),
 				   patch->getCellHighIndex());
       enthalpyVars.qfluxb.initialize(0.0);
-      old_dw->get(enthalpyVars.temperature, d_lab->d_tempINLabel, 
+      old_dw->getCopy(enthalpyVars.temperature, d_lab->d_tempINLabel, 
 		  matlIndex, patch, Ghost::AroundCells, numGhostCells);
-      old_dw->get(enthalpyVars.absorption, d_lab->d_absorpINLabel, 
+      old_dw->getCopy(enthalpyVars.absorption, d_lab->d_absorpINLabel, 
 		  matlIndex, patch, Ghost::None, zeroGhostCells);
 
     }
@@ -676,19 +680,26 @@ EnthalpySolver::enthalpyLinearSolvePred(const ProcessorGroup* pc,
       new_dw->put(cellInfoP, d_lab->d_cellInfoLabel, matlIndex, patch);
     }
     CellInformation* cellinfo = cellInfoP.get().get_rep();
-    new_dw->get(enthalpyVars.old_density, d_lab->d_densityINLabel, 
+    new_dw->getCopy(enthalpyVars.old_density, d_lab->d_densityINLabel, 
 		matlIndex, patch, Ghost::None, zeroGhostCells);
     // for explicit calculation
-    new_dw->get(enthalpyVars.enthalpy, d_lab->d_enthalpyOUTBCLabel, 
+#ifdef correctorstep  
+    new_dw->allocate(enthalpyVars.enthalpy, d_lab->d_enthalpyPredLabel, 
+                matlIndex, patch, Ghost::AroundCells, numGhostCells);
+#else
+    new_dw->allocate(enthalpyVars.enthalpy, d_lab->d_enthalpySPLabel, 
+                matlIndex, patch, Ghost::AroundCells, numGhostCells);
+#endif    
+    new_dw->copyOut(enthalpyVars.enthalpy, d_lab->d_enthalpyOUTBCLabel, 
 		matlIndex, patch, Ghost::AroundCells, numGhostCells);
     enthalpyVars.old_enthalpy.allocate(enthalpyVars.enthalpy.getLowIndex(),
 				   enthalpyVars.enthalpy.getHighIndex());
     enthalpyVars.old_enthalpy.copy(enthalpyVars.enthalpy);
     
     for (int ii = 0; ii < d_lab->d_stencilMatl->size(); ii++)
-      new_dw->get(enthalpyVars.scalarCoeff[ii], d_lab->d_enthCoefPredLabel, 
+      new_dw->getCopy(enthalpyVars.scalarCoeff[ii], d_lab->d_enthCoefPredLabel, 
 		  ii, patch, Ghost::None, zeroGhostCells);
-    new_dw->get(enthalpyVars.scalarNonlinearSrc, d_lab->d_enthNonLinSrcPredLabel,
+    new_dw->getCopy(enthalpyVars.scalarNonlinearSrc, d_lab->d_enthNonLinSrcPredLabel,
 		matlIndex, patch, Ghost::None, zeroGhostCells);
     new_dw->allocate(enthalpyVars.residualEnthalpy, d_lab->d_enthalpyRes,
 		     matlIndex, patch);
@@ -818,27 +829,27 @@ void EnthalpySolver::buildLinearMatrixCorr(const ProcessorGroup* pc,
     CellInformation* cellinfo = cellInfoP.get().get_rep();
 
     // from old_dw get PCELL, DENO, FO(index)
-    new_dw->get(enthalpyVars.cellType, d_lab->d_cellTypeLabel, 
+    new_dw->getCopy(enthalpyVars.cellType, d_lab->d_cellTypeLabel, 
 		matlIndex, patch, Ghost::AroundCells, numGhostCells);
     // ***warning* 21st July changed from IN to Pred
-    new_dw->get(enthalpyVars.old_density, d_lab->d_densityINLabel, 
+    new_dw->getCopy(enthalpyVars.old_density, d_lab->d_densityINLabel, 
 		matlIndex, patch, Ghost::None, zeroGhostCells);
-    new_dw->get(enthalpyVars.old_enthalpy, d_lab->d_enthalpyINLabel, 
+    new_dw->getCopy(enthalpyVars.old_enthalpy, d_lab->d_enthalpyINLabel, 
 		matlIndex, patch, Ghost::None, zeroGhostCells);
 
     // from new_dw get DEN, VIS, F(index), U, V, W
-    new_dw->get(enthalpyVars.density, d_lab->d_densityPredLabel, 
+    new_dw->getCopy(enthalpyVars.density, d_lab->d_densityPredLabel, 
 		matlIndex, patch, Ghost::AroundCells, numGhostCells);
-    new_dw->get(enthalpyVars.viscosity, d_lab->d_viscosityINLabel, 
+    new_dw->getCopy(enthalpyVars.viscosity, d_lab->d_viscosityINLabel, 
 		matlIndex, patch, Ghost::AroundCells, numGhostCells);
-    new_dw->get(enthalpyVars.enthalpy, d_lab->d_enthalpyPredLabel, 
+    new_dw->getCopy(enthalpyVars.enthalpy, d_lab->d_enthalpyPredLabel, 
 		matlIndex, patch, Ghost::None, zeroGhostCells);
     // for explicit get old values
-    new_dw->get(enthalpyVars.uVelocity, d_lab->d_uVelocityPredLabel, 
+    new_dw->getCopy(enthalpyVars.uVelocity, d_lab->d_uVelocityPredLabel, 
 		matlIndex, patch, Ghost::AroundCells, numGhostCells);
-    new_dw->get(enthalpyVars.vVelocity, d_lab->d_vVelocityPredLabel, 
+    new_dw->getCopy(enthalpyVars.vVelocity, d_lab->d_vVelocityPredLabel, 
 		matlIndex, patch, Ghost::AroundCells, numGhostCells);
-    new_dw->get(enthalpyVars.wVelocity, d_lab->d_wVelocityPredLabel, 
+    new_dw->getCopy(enthalpyVars.wVelocity, d_lab->d_wVelocityPredLabel, 
 		matlIndex, patch, Ghost::AroundCells, numGhostCells);
 
   // allocate matrix coeffs
@@ -968,19 +979,23 @@ EnthalpySolver::enthalpyLinearSolveCorr(const ProcessorGroup* pc,
     }
     CellInformation* cellinfo = cellInfoP.get().get_rep();
     // ***warning* 21st July changed from IN to Pred
-    new_dw->get(enthalpyVars.old_density, d_lab->d_densityPredLabel, 
+    new_dw->getCopy(enthalpyVars.old_density, d_lab->d_densityPredLabel, 
 		matlIndex, patch, Ghost::None, zeroGhostCells);
     // for explicit calculation
-    new_dw->get(enthalpyVars.enthalpy, d_lab->d_enthalpyPredLabel, 
+    {
+    new_dw->allocate(enthalpyVars.enthalpy, d_lab->d_enthalpySPLabel, 
 		matlIndex, patch, Ghost::AroundCells, numGhostCells);
+    new_dw->copyOut(enthalpyVars.enthalpy, d_lab->d_enthalpyPredLabel, 
+		matlIndex, patch, Ghost::AroundCells, numGhostCells);
+    }
     enthalpyVars.old_enthalpy.allocate(enthalpyVars.enthalpy.getLowIndex(),
 				   enthalpyVars.enthalpy.getHighIndex());
     enthalpyVars.old_enthalpy.copy(enthalpyVars.enthalpy);
     
     for (int ii = 0; ii < d_lab->d_stencilMatl->size(); ii++)
-      new_dw->get(enthalpyVars.scalarCoeff[ii], d_lab->d_enthCoefCorrLabel, 
+      new_dw->getCopy(enthalpyVars.scalarCoeff[ii], d_lab->d_enthCoefCorrLabel, 
 		  ii, patch, Ghost::None, zeroGhostCells);
-    new_dw->get(enthalpyVars.scalarNonlinearSrc, d_lab->d_enthNonLinSrcCorrLabel,
+    new_dw->getCopy(enthalpyVars.scalarNonlinearSrc, d_lab->d_enthNonLinSrcCorrLabel,
 		matlIndex, patch, Ghost::None, zeroGhostCells);
     new_dw->allocate(enthalpyVars.residualEnthalpy, d_lab->d_enthalpyRes,
 		     matlIndex, patch);

@@ -383,7 +383,7 @@ PetscSolver::setPressMatrix(const ProcessorGroup* ,
   l2g.copy(d_petscLocalToGlobal[patch]);
 
 #if 0
-  if ((patchNumber != 0)&&(patchNumber != sizeof(d_petscIndex)-1)) {
+  //if ((patchNumber != 0)&&(patchNumber != sizeof(d_petscIndex)-1)) 
 #endif
     for (int colZ = idxLo.z(); colZ <= idxHi.z(); colZ ++) {
       for (int colY = idxLo.y(); colY <= idxHi.y(); colY ++) {
@@ -419,7 +419,6 @@ PetscSolver::setPressMatrix(const ProcessorGroup* ,
 	}
       }
     }
-
 
 #ifdef ARCHES_PETSC_DEBUG
   cerr << "assemblign rhs\n";

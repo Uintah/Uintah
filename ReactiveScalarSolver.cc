@@ -195,33 +195,37 @@ void ReactiveScalarSolver::buildLinearMatrixPred(const ProcessorGroup* pc,
     CellInformation* cellinfo = cellInfoP.get().get_rep();
 
     // from old_dw get PCELL, DENO, FO(index)
-    new_dw->get(reactscalarVars.cellType, d_lab->d_cellTypeLabel, 
+    new_dw->getCopy(reactscalarVars.cellType, d_lab->d_cellTypeLabel, 
 		matlIndex, patch, Ghost::AroundCells, numGhostCells);
-    new_dw->get(reactscalarVars.old_density, d_lab->d_densityINLabel, 
+    new_dw->getCopy(reactscalarVars.old_density, d_lab->d_densityINLabel, 
 		matlIndex, patch, Ghost::None, zeroGhostCells);
     //    new_dw->get(scalarVars.old_scalar, d_lab->d_scalarINLabel, 
     //		matlIndex, patch, Ghost::None, zeroGhostCells);
-    new_dw->get(reactscalarVars.old_scalar, d_lab->d_reactscalarOUTBCLabel, 
+    new_dw->getCopy(reactscalarVars.old_scalar, d_lab->d_reactscalarOUTBCLabel, 
 		matlIndex, patch, Ghost::None, zeroGhostCells);
 
     // from new_dw get DEN, VIS, F(index), U, V, W
-    new_dw->get(reactscalarVars.density, d_lab->d_densityINLabel, 
+    new_dw->getCopy(reactscalarVars.density, d_lab->d_densityINLabel, 
 		matlIndex, patch, Ghost::AroundCells, numGhostCells);
-    new_dw->get(reactscalarVars.viscosity, d_lab->d_viscosityINLabel, 
+    new_dw->getCopy(reactscalarVars.viscosity, d_lab->d_viscosityINLabel, 
 		matlIndex, patch, Ghost::AroundCells, numGhostCells);
-    new_dw->get(reactscalarVars.scalar, d_lab->d_reactscalarOUTBCLabel, 
+    {
+    new_dw->allocate(reactscalarVars.scalar, d_lab->d_reactscalarPredLabel, 
+                matlIndex, patch, Ghost::None, zeroGhostCells);
+    new_dw->copyOut(reactscalarVars.scalar, d_lab->d_reactscalarOUTBCLabel, 
 		matlIndex, patch, Ghost::None, zeroGhostCells);
+    }
     // computes reaction scalar source term in properties
-    old_dw->get(reactscalarVars.reactscalarSRC, d_lab->d_reactscalarSRCINLabel, 
+    old_dw->getCopy(reactscalarVars.reactscalarSRC, d_lab->d_reactscalarSRCINLabel, 
 		matlIndex, patch, Ghost::None, zeroGhostCells);
 
 
     // for explicit get old values
-    new_dw->get(reactscalarVars.uVelocity, d_lab->d_uVelocityOUTBCLabel, 
+    new_dw->getCopy(reactscalarVars.uVelocity, d_lab->d_uVelocityOUTBCLabel, 
 		matlIndex, patch, Ghost::AroundCells, numGhostCells);
-    new_dw->get(reactscalarVars.vVelocity, d_lab->d_vVelocityOUTBCLabel, 
+    new_dw->getCopy(reactscalarVars.vVelocity, d_lab->d_vVelocityOUTBCLabel, 
 		matlIndex, patch, Ghost::AroundCells, numGhostCells);
-    new_dw->get(reactscalarVars.wVelocity, d_lab->d_wVelocityOUTBCLabel, 
+    new_dw->getCopy(reactscalarVars.wVelocity, d_lab->d_wVelocityOUTBCLabel, 
 		matlIndex, patch, Ghost::AroundCells, numGhostCells);
 
   // allocate matrix coeffs
@@ -355,19 +359,19 @@ ReactiveScalarSolver::reactscalarLinearSolvePred(const ProcessorGroup* pc,
       new_dw->put(cellInfoP, d_lab->d_cellInfoLabel, matlIndex, patch);
     }
     CellInformation* cellinfo = cellInfoP.get().get_rep();
-    new_dw->get(reactscalarVars.old_density, d_lab->d_densityINLabel, 
+    new_dw->getCopy(reactscalarVars.old_density, d_lab->d_densityINLabel, 
 		matlIndex, patch, Ghost::None, zeroGhostCells);
     // for explicit calculation
-    new_dw->get(reactscalarVars.scalar, d_lab->d_reactscalarOUTBCLabel, 
+    new_dw->getCopy(reactscalarVars.scalar, d_lab->d_reactscalarOUTBCLabel, 
 		matlIndex, patch, Ghost::AroundCells, numGhostCells);
     reactscalarVars.old_scalar.allocate(reactscalarVars.scalar.getLowIndex(),
 				   reactscalarVars.scalar.getHighIndex());
     reactscalarVars.old_scalar.copy(reactscalarVars.scalar);
     
     for (int ii = 0; ii < d_lab->d_stencilMatl->size(); ii++)
-      new_dw->get(reactscalarVars.scalarCoeff[ii], d_lab->d_reactscalCoefPredLabel, 
+      new_dw->getCopy(reactscalarVars.scalarCoeff[ii], d_lab->d_reactscalCoefPredLabel, 
 		  ii, patch, Ghost::None, zeroGhostCells);
-    new_dw->get(reactscalarVars.scalarNonlinearSrc, d_lab->d_reactscalNonLinSrcPredLabel,
+    new_dw->getCopy(reactscalarVars.scalarNonlinearSrc, d_lab->d_reactscalNonLinSrcPredLabel,
 		matlIndex, patch, Ghost::None, zeroGhostCells);
     new_dw->allocate(reactscalarVars.residualReactivescalar, d_lab->d_reactscalarRes,
 		     matlIndex, patch);
