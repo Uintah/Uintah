@@ -27,14 +27,17 @@
 #include <Core/Math/MusilRNG.h>
 #include <Core/Datatypes/PointCloudField.h>
 #include <Core/Datatypes/FieldInterface.h>
+#include <Dataflow/Network/Module.h>
+#include <algorithm>
 
 namespace SCIRun {
 
-class SampleFieldAlgo : public DynamicAlgoBase
+class SampleFieldRandomAlgo : public DynamicAlgoBase
 {
 public:
 
-  virtual FieldHandle execute(FieldHandle field, unsigned int num_seeds,
+  virtual FieldHandle execute(Module *mod,
+			      FieldHandle field, unsigned int num_seeds,
 			      int rng_seed, const string &dist, int clamp) = 0;
 
   //! support the dynamically compiled algorithm concept
@@ -43,364 +46,153 @@ public:
 
 
 template <class Mesh>
-class SampleFieldAlgoT : public SampleFieldAlgo
+class SampleFieldRandomAlgoT : public SampleFieldRandomAlgo
 {
 private:
-  class DistTable
+  enum mode_e {IMPUNI, IMPSCAT, UNIUNI, UNISCAT};
+
+  typedef pair<long double, typename Mesh::Elem::index_type> weight_type;
+
+  bool build_weight_table(Mesh *mesh,
+			  ScalarFieldInterface *sfi,
+			  VectorFieldInterface *vfi,
+			  vector<weight_type> &table,
+			  const mode_e dist);
+
+  static bool
+  weight_less(const weight_type &a, const weight_type &b)
   {
-  public:
-    typedef typename Mesh::Elem::index_type      elem_index_type;
-    typedef pair<long double, elem_index_type>   table_entry_type;
-
-    vector<table_entry_type> table_;
-
-    void push_back(long double size, elem_index_type id) 
-    { table_.push_back(table_entry_type(size,id)); }
-    void push_back(table_entry_type entry) 
-    { table_.push_back(entry); }
-
-    const table_entry_type& operator[](unsigned idx) const
-    { return table_[idx]; }
-    table_entry_type& operator[](unsigned idx)
-    { return table_[idx]; }
-
-    int size() { return table_.size(); }
-    void clear() { table_.clear(); }
-
-    bool search(table_entry_type&, long double);
-  };
-
-  bool build_weight_table_sfi(MeshHandle mesh_h,
-			      ScalarFieldInterface *sfi,
-			      DistTable &table,
-			      const string &dist);
-
-  bool build_weight_table_vfi(MeshHandle mesh_h,
-			      VectorFieldInterface *vfi,
-			      DistTable &table,
-			      const string &dist);
+    return a.first < b.first;
+  }
 
 public:
 
-  virtual FieldHandle execute(FieldHandle field, unsigned int num_seeds,
+  virtual FieldHandle execute(Module *mod,
+			      FieldHandle field, unsigned int num_seeds,
 			      int rng_seed, const string &dist, int clamp);
 };
 
 
 template <class Mesh>
-bool
-SampleFieldAlgoT<Mesh>::DistTable::search(table_entry_type &e, long double d)
-{
-  int min = 0;
-  int max = table_.size() - 1;
-  int cur = max / 2;
-
-  if ( (d < table_[0].first) || (d>table_[max].first) )
-  {
-    return false; 
-  }
-
-  // use binary search to find the bin holding the value d
-  while (max - 1 > min)
-  {
-    if (table_[cur].first >= d) max = cur;
-    if (table_[cur].first < d)  min = cur;
-    cur = (max - min) / 2 + min;
-  }
-
-  e = (table_[min].first>d) ? table_[min] : table_[max];
-
-  return true;
-}
-
-
-template <class Mesh>
 bool 
-SampleFieldAlgoT<Mesh>::build_weight_table_sfi(MeshHandle mesh_h,
-					       ScalarFieldInterface *sfi,
-					       DistTable &table,
-					       const string &dist)
+SampleFieldRandomAlgoT<Mesh>::build_weight_table(Mesh *mesh,
+						 ScalarFieldInterface *sfi,
+						 VectorFieldInterface *vfi,
+						 vector<weight_type> &table,
+						 const mode_e dist)
 {
-  long double size = 1;
-
-  Mesh *mesh = dynamic_cast<Mesh *>(mesh_h.get_rep());
-  if (mesh == 0)
-  {
-    cout << "SampleFieldAlgo:: No mesh\n";
-    return false;
-  }
-
   typename Mesh::Elem::iterator ei, ei_end;
   mesh->begin(ei);
   mesh->end(ei_end);
-  if (ei == ei_end)
+  long double sum = 0.0;
+  while (ei != ei_end)
   {
-    cout << "SampleFieldAlgo:: Empty mesh\n";
-    return false;
-  }
-
-  // the tables are to be filled with increasing values.
-  // degenerate elements (size<=0) will not be included in the table.
-  // mag(data) <=0 means ignore the element (don't include in the table).
-  // bin[n] = b[n-1]+newval;bin[0]=newval
-
-  if (dist=="impuni")
-  { // size of element * data at element
-    double val;
-    Point p;
-    for (;ei!=ei_end;)
-    {
-      mesh->get_center(p,*ei);
-      if (!sfi->interpolate(val,p)) continue;
-      if ((val > 0) && (mesh->get_element_size(*ei)>0)) break;
-      ++ei;
-    }
-    if (ei==ei_end)
-    {
-      cout << "SampleFieldAlgo:: Invalid Mesh weights, try Non-Weighted randomization.\n";
-      return false;
-    }
-    table.push_back(mesh->get_element_size(*ei) * val,*ei);
-    ++ei;
-    while (ei != ei_end)
-    {
-      mesh->get_center(p,*ei);
-      if (!sfi->interpolate(val,p)) continue;
-      if ( mesh->get_element_size(*ei)>0 && val > 0)
+    double elemsize = 0.0;
+    if (dist == IMPUNI)
+    { // Size of element * data at element.
+      Point p;
+      mesh->get_center(p, *ei);
+      if (vfi)
       {
-	table.push_back(mesh->get_element_size(*ei) * val +
-			table[table.size()-1].first,*ei);
+	Vector v;
+	if (vfi->interpolate(v, p))
+	{
+	  elemsize = v.length() * mesh->get_element_size(*ei);
+	}
       }
-      ++ei;
-    }
-  }
-  else if (dist == "impscat")
-  { // standard size * data at element
-    double val;
-    Point p;
-    for (;ei!=ei_end;)
-    {
-      mesh->get_center(p,*ei);
-      if (!sfi->interpolate(val,p)) continue;
-      if (val > 0) break;
-      ++ei;
-    }
-    if (ei==ei_end)
-    {
-      cout << "SampleFieldAlgo:: Invalid Mesh weights, try Non-Weighted randomization.\n";
-      return false;
-    }
-    table.push_back(size * val, *ei);
-    ++ei;
-    while (ei != ei_end)
-    {
-      mesh->get_center(p,*ei);
-      if (!sfi->interpolate(val,p)) continue;
-      if (val > 0)
+      if (sfi)
       {
-	table.push_back(size * val +
-			table[table.size()-1].first,*ei);
+	double d;
+	if (sfi->interpolate(d, p) && d > 0.0)
+	{
+	  elemsize = d * mesh->get_element_size(*ei);
+	}
       }
-      ++ei;
     }
-  }
-  else if (dist=="uniuni")
-  { // size of element only
-    for (;ei!=ei_end;)
+    else if (dist == IMPSCAT)
+    { // data at element
+      Point p;
+      mesh->get_center(p, *ei);
+      if (vfi)
+      {
+	Vector v;
+	if (vfi->interpolate(v, p))
+	{
+	  elemsize = v.length();
+	}
+      }
+      if (sfi)
+      {
+	double d;
+	if (sfi->interpolate(d, p) && d > 0.0)
+	{
+	  elemsize = d;
+	}
+      }
+    }
+    else if (dist == UNIUNI)
+    { // size of element only
+      elemsize = mesh->get_element_size(*ei);
+    }
+    else if (dist == UNISCAT)
+    { 
+      elemsize = 1.0;
+    }
+    if (elemsize > 0.0)
     {
-      if (mesh->get_element_size(*ei)>0) break;
-      ++ei;
+      sum += elemsize;
+      table.push_back(weight_type(sum, *ei));
     }
-    if (ei==ei_end)
-    {
-      cout << "SampleFieldAlgo:: Invalid Mesh\n";
-      return false;
-    }
-    table.push_back(mesh->get_element_size(*ei),*ei);
     ++ei;
-    while (ei != ei_end)
-    {
-      if (mesh->get_element_size(*ei)>0)
-	table.push_back(mesh->get_element_size(*ei)+
-			table[table.size()-1].first,*ei);
-      ++ei;
-    }
   }
-  else if (dist=="uniscat")
-  { // standard size only
-    table.push_back(size,*ei);
-    ++ei;
-    while (ei != ei_end)
-    {
-      table.push_back(size+table[table.size()-1].first,*ei);
-      ++ei;
-    }    
-  }
-  else
-  { // unknown distribution type
-    return false;
-  } 
-
-  return true;
-}
-
-
-template <class Mesh>
-bool 
-SampleFieldAlgoT<Mesh>::build_weight_table_vfi(MeshHandle mesh_h,
-					       VectorFieldInterface *vfi,
-					       DistTable &table,
-					       const string &dist)
-{
-  long double size = 1;
-
-  Mesh *mesh = dynamic_cast<Mesh *>(mesh_h.get_rep());
-  if (mesh == 0)
+  if (table.size() > 0)
   {
-    cout << "SampleFieldAlgo:: No mesh.\n";
-    return false;
+    return true;
   }
-
-  typename Mesh::Elem::iterator ei, ei_end;
-  mesh->begin(ei);
-  mesh->end(ei_end);
-  if (ei == ei_end) // empty mesh
-  {
-    cout << "SampleFieldAlgo:: Empty mesh\n";
-    return false;
-  }
-
-  // the tables are to be filled with increasing values.
-  // degenerate elements (size<=0) will not be included in the table.
-  // mag(data) <=0 means ignore the element (don't include in the table).
-  // bin[n] = b[n-1]+newval;bin[0]=newval
-
-  if (dist=="impuni")
-  { // size of element * data at element
-    Vector val;
-    Point p;
-    for(;ei != ei_end;)
-    {
-      mesh->get_center(p,*ei);
-      if (!vfi->interpolate(val,p)) continue;
-      if ((val.length()>0)&&(mesh->get_element_size(*ei)>0)) break;
-      ++ei;
-    }
-    if (ei==ei_end)
-    {
-      cout << "SampleFieldAlgo:: Invalid Mesh weights, try Non-Weighted randomization.\n";
-      return false;
-    }
-    table.push_back(mesh->get_element_size(*ei) * val.length(),*ei);
-    ++ei;
-    while (ei != ei_end)
-    {
-      mesh->get_center(p,*ei);
-      if (!vfi->interpolate(val,p)) continue;
-      if ( mesh->get_element_size(*ei)>0 && val.length() > 0)
-      {
-	table.push_back(mesh->get_element_size(*ei) * val.length() +
-			table[table.size()-1].first,*ei);
-      }
-      ++ei;
-    }
-  }
-  else if (dist == "impscat")
-  { // standard size * data at element
-    Vector val;
-    Point p;
-    for (;ei != ei_end;)
-    {
-      mesh->get_center(p,*ei);
-      if (!vfi->interpolate(val,p)) continue;
-      if (val.length() > 0) break;
-      ++ei;
-    }
-    if (ei==ei_end)
-    {
-      cout << "SampleFieldAlgo:: Invalid Mesh weights, try Non-Weighted randomization.\n";
-      return false;
-    }
-    table.push_back(size * val.length(), *ei);
-    ++ei;
-    while (ei != ei_end)
-    {
-      mesh->get_center(p,*ei);
-      if (!vfi->interpolate(val,p)) continue;
-      if (val.length() > 0)
-      {
-	table.push_back(size * val.length() +
-			table[table.size()-1].first,*ei);
-      }
-      ++ei;
-    }
-  }
-  else if (dist=="uniuni")
-  { // size of element only
-    for(;ei!=ei_end;)
-    {
-      if (mesh->get_element_size(*ei)>0) break;
-      ++ei;
-    }
-    if (ei==ei_end)
-    {
-      cout << "SampleFieldAlgo:: Invalid Mesh\n";
-      return false;
-    }
-    table.push_back(mesh->get_element_size(*ei),*ei);
-    ++ei;
-    while (ei != ei_end)
-    {
-      if (mesh->get_element_size(*ei)>0)
-	table.push_back(mesh->get_element_size(*ei)+
-			table[table.size()-1].first,*ei);
-      ++ei;
-    }
-  }
-  else if (dist=="uniscat")
-  { // standard size only
-    table.push_back(size,*ei);
-    ++ei;
-    while (ei != ei_end)
-    {
-      table.push_back(size+table[table.size()-1].first,*ei);
-      ++ei;
-    }    
-  }
-  else
-  { // unknown distribution type
-    return false;
-  } 
-
-  return true;
+  return false;
 }
 
 
 
 template <class Mesh>
 FieldHandle
-SampleFieldAlgoT<Mesh>::execute(FieldHandle field,
-				unsigned int num_seeds,
-				int rng_seed,
-				const string &dist,
-				int clamp)
+SampleFieldRandomAlgoT<Mesh>::execute(Module *mod,
+				      FieldHandle field,
+				      unsigned int num_seeds,
+				      int rng_seed,
+				      const string &dist,
+				      int clamp)
 {
-  DistTable table;
-  table.clear();
+  vector<weight_type> table;
+  Mesh *mesh = dynamic_cast<Mesh *>(field->mesh().get_rep());
+  if (mesh == 0)
+  {
+    mod->error("Invalid input mesh.");
+    return 0;
+  }
 
   ScalarFieldInterface *sfi = field->query_scalar_interface();
   VectorFieldInterface *vfi = field->query_vector_interface();
-  if (sfi)
+  mode_e distmode = IMPUNI;
+  if (dist == "impscat")
   {
-    if (!build_weight_table_sfi(field->mesh(), sfi, table, dist))
-    {
-      return 0;
-    }
+    distmode = IMPSCAT;
   }
-  else if (vfi)
+  else if (dist == "uniuni")
   {
-    if (!build_weight_table_vfi(field->mesh(), vfi, table, dist))
+    distmode = UNIUNI;
+  }
+  else if (dist == "uniscat")
+  {
+    distmode = UNISCAT;
+  }
+  if (sfi || vfi || distmode == UNIUNI || distmode == UNISCAT)
+  {
+    if (!build_weight_table(mesh, sfi, vfi, table, distmode))
     {
+      mod->error("Bad distribution of weights, unable to choose any.");
+      mod->remark("Mesh is empty, or contains invalid weights.");
+      mod->remark("Try using an unweighted option.");
       return 0;
     }
   }
@@ -408,27 +200,33 @@ SampleFieldAlgoT<Mesh>::execute(FieldHandle field,
   MusilRNG rng(rng_seed);
 
   long double max = table[table.size()-1].first;
-  Mesh *mesh = dynamic_cast<Mesh *>(field->mesh().get_rep());
 
   PointCloudMesh *pcmesh = scinew PointCloudMesh;
 
-  unsigned int loop;
-  for (loop=0; loop < num_seeds; loop++)
+  unsigned int i;
+  for (i=0; i < num_seeds; i++)
   {
     Point p;
-    typename DistTable::table_entry_type e;
-    table.search(e,rng() * max);             // find random cell
+    vector<weight_type>::iterator loc;
+    do {
+      loc =
+	std::lower_bound(table.begin(), table.end(),
+			 weight_type(rng() * max,
+				     typename Mesh::Elem::index_type()),
+			 weight_less);
+    } while (loc == table.end());
+
     if (clamp)
     {
       // Find a random node in that cell.
       typename Mesh::Node::array_type ra;
-      mesh->get_nodes(ra,e.second);
+      mesh->get_nodes(ra, (*loc).second);
       mesh->get_center(p,ra[(int)(rng()*ra.size()+0.5)]);
     }
     else
     {
       // Find random point in that cell.
-      mesh->get_random_point(p, e.second, rng_seed + loop);
+      mesh->get_random_point(p, (*loc).second, rng_seed + i);
     }
     pcmesh->add_node(p);
   }
