@@ -382,7 +382,6 @@ main( int argc, char** argv )
 	  sim = scinew ImpMPM(world);
 	} else if(do_arches){
 	  sim = scinew Arches(world);
-	  cerr << "Arches sim = " << sim << endl;
 	} else if(do_ice) {
 	  ICE* ice = scinew ICE(world);
 	  ice->attachPort("output", output);
