@@ -26,7 +26,8 @@
     <authors>
       <author>Michael Callahan</author>
     </authors>
-    <summary>Computes the gradient of a field.</summary>
+    <summary>The Gradient module computes the derivative of a scalar field and converts it to a vector field. The gradient is the derivative of three dimensions; the first component in the X direction, the second component in the Y direction, and the third component in the Z direction grid, computing the general direction of "flow" at a specific point on the geometry. 
+<p>At this time, LatVolMesh and tetVolMesh are the only SCIRun supported Fields accepted by the Gradient module. The Gradient module has no GUI. If Gradient recieves as input a Field type it does not support, an error message appears in the Error frame of the SCIRun environment.</p> </summary>
     <description>
     </description>
   </overview>
