@@ -1,5 +1,9 @@
 #include "Vector.h"
 #include "Complex.h"
+using std::ostream;
+using std::endl;
+using std::cout;
+using std::cerr;
 
 template<> ZVector<Complex>::ZVector(int N,double x_re[],double x_im[]){
   Size = N;
@@ -16,9 +20,8 @@ template<> ZVector<double>::ZVector(int N,double x_re[],double x_im[]){
 
 }
 
-#if 0
 template<>
-ostream &operator<< (ostream &output, ZVector<double>  &b){
+ostream &operator<< (ostream &output, const ZVector<double>  &b){
 
   output<<endl;
   for(int i=0 ;i < b.size();i++);
@@ -27,7 +30,6 @@ ostream &operator<< (ostream &output, ZVector<double>  &b){
   
   return(output);
 }
-#endif
 
 //-----------------------------------------------------------------
 template<> void ZVector<double>:: info(){

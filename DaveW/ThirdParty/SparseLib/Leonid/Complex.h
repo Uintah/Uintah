@@ -4,7 +4,7 @@
 #include<math.h>
 #include<iostream>
 
-using namespace std;
+//using namespace std;
 
 //Complex Class Definitions
 //-------------------------------------------------------------------------
@@ -40,8 +40,8 @@ public:
   friend  Complex operator* (double , Complex&); 
   friend  Complex operator/ (double , Complex&);
   
-  friend ostream &operator<<(ostream &output, Complex&);
-  friend istream &operator>>(istream &input, Complex&);
+  friend std::ostream &operator<<(std::ostream &output, Complex&);
+  friend std::istream &operator>>(std::istream &input, Complex&);
 };
 
 #endif

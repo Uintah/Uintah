@@ -22,6 +22,11 @@
 #include "utils.h"
 #include "time.h"
 
+using std::ostream;
+using std::endl;
+using std::cout;
+using std::cerr;
+
 //SVD<Data_Type> Class Definitions
 //----------------------------------------------------------------------------
 template <class Data_Type>

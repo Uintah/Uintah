@@ -48,7 +48,7 @@ template<> void EigenSystem<double>::solve(){
       WORK = new double[LWORK];
     }
     
-    cout << "Calling LAPACK dgeev_() "<<endl;
+    std::cout << "Calling LAPACK dgeev_() "<<std::endl;
     dgeev_(&JOBVL,&JOBVR, &N,((MatrixDense<double>*) A)->get_p(), &LDA, WR, WI, VL, &LDVL, VR, &LDVR, WORK, &LWORK, &INFO);
     
     if (INFO == 0)
@@ -92,7 +92,7 @@ template<> void EigenSystem<double>::solve(){
       WORK = new double[1];
     }
     
-    cout << "Calling LAPACK dstev_() "<<endl;
+    std::cout << "Calling LAPACK dstev_() "<<std::endl;
     dstev_(&JOBZ, &N,((MatrixTridiag<double>*)A)->get_pd(),((MatrixTridiag<double>*)A)->get_pdu(),Z,&LDZ,WORK,&INFO);
     
     if (INFO == 0)
@@ -112,7 +112,7 @@ template<> void EigenSystem<double>::solve(){
   }
   
   else
-    cerr << "I should not be here!"<<endl;
+    std::cerr << "I should not be here!"<<std::endl;
   
   
 }  

@@ -27,7 +27,7 @@
 #include "Index.h"
 #include "utils.h"
 
-using namespace std;
+//using namespace std;
 
 template<class Data_Type> class MatrixSparse;
 template<class Data_Type> class MatrixTridiag;
@@ -115,7 +115,7 @@ public:
 //Input & Output:
   void read(char* filename);
   void write(char* filename);
-  friend ostream& operator << (ostream& output, MatrixDense<Data_Type> &A);
+  friend std::ostream& operator << (std::ostream& output, MatrixDense<Data_Type> &A);
   void info();
   
 };
@@ -644,7 +644,7 @@ void  MatrixDense<Data_Type>:: mult(Data_Type alpha,int col_begin,
 
 //---------------------------------------------------------------------
 template <class Data_Type>
-ostream &operator<< (ostream &output,MatrixDense<Data_Type> &A){
+std::ostream &operator<< (std::ostream &output,MatrixDense<Data_Type> &A){
   output << endl;  
   for(int i=0 ;i < A.nr();i++){
     output<<"[";
