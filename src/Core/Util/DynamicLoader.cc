@@ -37,6 +37,12 @@ namespace SCIRun {
 
 using namespace std;
 
+#ifdef __APPLE__
+  const string ext("dylib");
+#else
+  const string ext("so");
+#endif
+
 env_map scirunrc;
 
 DynamicLoader* DynamicLoader::scirun_loader_ = 0;
@@ -199,9 +205,9 @@ DynamicLoader::compile_and_store(const CompileInfo &info, bool maybe_compile_p,
 
   if (!do_compile && !wait_for_current_compile(info.filename_)) return false;
 
-  // Try to load a .so that is already compiled
+  // Try to load a dynamic library that is already compiled
   string full_so = get_compile_dir() + string("/") + 
-    info.filename_ + string("so");
+    info.filename_ + ext;
 
   LIBRARY_HANDLE so = 0;
   struct stat buf;
@@ -261,13 +267,13 @@ DynamicLoader::compile_and_store(const CompileInfo &info, bool maybe_compile_p,
 
 //! DynamicLoader::compile_so
 //! 
-//! Attempt to compile file into a .so, return true if it succeeded
+//! Attempt to compile file into a dynamic library, return true if it succeeded
 //! false otherwise.
 bool 
 DynamicLoader::compile_so(const CompileInfo &info, ostream &serr)
 {
   string command = ("cd " + get_compile_dir() + "; gmake " + 
-		    info.filename_ + "so");
+		    info.filename_ + ext);
 
   serr << "DynamicLoader - Executing: " << command << endl;
 
