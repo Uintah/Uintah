@@ -1,86 +1,10 @@
-/* ---------------------------------------------------------------------
- Function~  MPMICE::scheduleComputeNonEquilibrationPressureRF--
- Note:  This similar to ICE::scheduleComputeEquilibrationPressure
-         with the addition of MPM matls
-_____________________________________________________________________*/
-void MPMICE::scheduleComputeNonEquilibrationPressureRF(SchedulerP& sched,
-					    const PatchSet* patches,
-                                       const MaterialSubset* ice_matls,
-                                       const MaterialSubset* mpm_matls,
-                                       const MaterialSubset* press_matl,
-					    const MaterialSet*    all_matls)
-{
-  cout_doing << "MPMICE::scheduleComputeNonEquilibrationPressureRF" << endl;
-
-  Task* t = scinew Task("MPMICE::computeNonEquilibrationPressureRF",
-                     this, &MPMICE::computeNonEquilibrationPressureRF);
-
-//  t->requires(Task::OldDW,Ilb->press_CCLabel, press_matl, Ghost::None);
-                 // I C E
-  t->requires(Task::OldDW,Ilb->temp_CCLabel,            ice_matls, Ghost::None);
-  t->requires(Task::OldDW,Ilb->rho_CC_top_cycleLabel,   ice_matls, Ghost::None);
-  t->requires(Task::OldDW,Ilb->sp_vol_CCLabel,          ice_matls, Ghost::None);
-                // M P M
-  t->requires(Task::NewDW,MIlb->temp_CCLabel, mpm_matls,  Ghost::None);
-  t->requires(Task::NewDW,MIlb->cVolumeLabel, mpm_matls,  Ghost::None);
-  t->requires(Task::NewDW,MIlb->cMassLabel,   mpm_matls,  Ghost::None);  
-
-                //  A L L _ M A T L S
-  t->computes(Ilb->speedSound_CCLabel);
-  t->computes(Ilb->rho_micro_CCLabel);
-  t->computes(Ilb->vol_frac_CCLabel);
-  t->computes(Ilb->rho_CCLabel);
-  t->computes(Ilb->matl_press_CCLabel);
-  t->computes(Ilb->f_theta_CCLabel);
-
-  t->computes(Ilb->press_equil_CCLabel, press_matl);
-
-  sched->addTask(t, patches, all_matls);
-}
-//______________________________________________________________________
-//
-void MPMICE::scheduleCCMomExchangeRF(SchedulerP& sched,
-				   const PatchSet* patches,
-                               const MaterialSubset* ice_matls,
-                               const MaterialSubset* mpm_matls,
-				   const MaterialSet* all_matls)
-{
-
-  cout_doing << "MPMICE::scheduleCCMomExchangeRF" << endl;
- 
-  Task* t=scinew Task("MPMICE::doCCMomExchangeRF",
-		  this, &MPMICE::doCCMomExchangeRF);
-  t->requires(Task::OldDW, d_sharedState->get_delt_label());
-                                 // I C E
-  t->computes(Ilb->mom_L_ME_CCLabel,     ice_matls);
-  t->computes(Ilb->int_eng_L_ME_CCLabel, ice_matls);
-  t->requires(Task::NewDW, Ilb->mass_L_CCLabel, ice_matls, Ghost::None);
-  t->requires(Task::OldDW, Ilb->temp_CCLabel,   ice_matls, Ghost::None);
-
-                                 // M P M
-  t->computes(MIlb->dTdt_CCLabel, mpm_matls);
-  t->computes(MIlb->dvdt_CCLabel, mpm_matls);
-  t->requires(Task::NewDW,  Ilb->rho_CCLabel,   mpm_matls, Ghost::None);
-  t->requires(Task::NewDW,  Ilb->temp_CCLabel,  mpm_matls, Ghost::None);
-
-                                // A L L  M A T L S
-  t->requires(Task::NewDW,  Ilb->mom_L_CCLabel,     Ghost::None);
-  t->requires(Task::NewDW,  Ilb->int_eng_L_CCLabel, Ghost::None);
-  t->requires(Task::NewDW,  Ilb->rho_micro_CCLabel, Ghost::None);
-  t->requires(Task::NewDW,  Ilb->vol_frac_CCLabel,  Ghost::None);
-  t->computes(Ilb->Tdot_CCLabel);
-
-
-  sched->addTask(t, patches, all_matls);
-}
-
 
 /* --------------------------------------------------------------------- 
- Function~  MPMICE::computeNonEquilibrationPressureRF-- 
+ Function~  MPMICE::computeRateFormPressure-- 
  Reference: A Multifield Model and Method for Fluid Structure
             Interaction Dynamics
 _____________________________________________________________________*/
-void MPMICE::computeNonEquilibrationPressureRF(const ProcessorGroup*,
+void MPMICE::computeRateFormPressure(const ProcessorGroup*,
 			 		     const PatchSubset* patches,
 					     const MaterialSubset* ,
 					     DataWarehouse* old_dw,
@@ -89,7 +13,7 @@ void MPMICE::computeNonEquilibrationPressureRF(const ProcessorGroup*,
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
 
-    cout_doing<<"Doing computeNonEquilibrationPressure(RF) on patch "
+    cout_doing<<"Doing computeRateFormPressure on patch "
               << patch->getID() <<"\t\t MPMICE" << endl;
 
     double    tmp;

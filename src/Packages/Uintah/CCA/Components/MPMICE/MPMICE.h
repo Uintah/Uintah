@@ -106,12 +106,12 @@ public:
                                                const MaterialSubset*,
                                                const MaterialSet*);
 
-  void scheduleComputeEquilibrationPressure(SchedulerP&, 
-                                            const PatchSet*,
-                                            const MaterialSubset*,
-                                            const MaterialSubset*,
-                                            const MaterialSubset*,
-                                            const MaterialSet*);
+  void scheduleComputePressure(SchedulerP&, 
+                               const PatchSet*,
+                               const MaterialSubset*,
+                               const MaterialSubset*,
+                               const MaterialSubset*,
+                               const MaterialSet*);
 
 
   void scheduleInterpolatePressCCToPressNC(SchedulerP&, 
@@ -135,22 +135,7 @@ public:
   
   void scheduleInterpolateMassBurnFractionToNC( SchedulerP&, 
                                                 const PatchSet*,
-                                                const MaterialSet*);
-//__________________________________
-//   R A T E   F O R M 
-  void scheduleComputeNonEquilibrationPressureRF(SchedulerP&, 
-                                               const PatchSet*,
-                                               const MaterialSubset*,
-                                               const MaterialSubset*,
-                                               const MaterialSubset*,
-                                               const MaterialSet*);
-  void scheduleCCMomExchangeRF(SchedulerP&, 
-                            const PatchSet*,
-                            const MaterialSubset*,
-                            const MaterialSubset*,
-                            const MaterialSet*);
-                    
-
+                                                const MaterialSet*);            
 //______________________________________________________________________
 //       A C T U A L   S T E P S : 
   void actuallyInitialize(const ProcessorGroup*,
@@ -227,11 +212,11 @@ public:
                      
 //__________________________________
 //    R A T E   F O R M                   
-  void computeNonEquilibrationPressureRF(const ProcessorGroup*,
-                                             const PatchSubset* patch,
-                                             const MaterialSubset* matls,
-                                             DataWarehouse*, 
-                                             DataWarehouse*); 
+  void computeRateFormPressure(const ProcessorGroup*,
+                               const PatchSubset* patch,
+                               const MaterialSubset* matls,
+                               DataWarehouse*, 
+                               DataWarehouse*); 
 
  void doCCMomExchangeRF(const ProcessorGroup*,
                        const PatchSubset* patch,
