@@ -6008,9 +6008,9 @@ fi
 if test "$DEF_HASHMAP" = "None"; then
   { echo "configure: error: "Cannot find hash_map"" 1>&2; exit 1; }
 fi
+echo "$ac_t""found: $DEF_HASHMAP" 1>&6
 DEF_HASHMAP="#define $DEF_HASHMAP"
 
-echo "$ac_t""found: $DEF_HASHMAP" 1>&6
 
 ##  --  search for tcl stuff  ---------------------------------------------
 echo 
