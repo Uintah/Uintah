@@ -103,7 +103,7 @@ public:
   void size(Cell::size_type &) const;
 
   virtual BBox get_bounding_box() const;
-  virtual void transform(Transform &t);
+  virtual void transform(const Transform &t);
 
   //! set the mesh statistics
   void resize_nodes(Node::size_type n) { points_.resize(n); }

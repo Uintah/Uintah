@@ -93,7 +93,7 @@ StructQuadSurfMesh::get_bounding_box() const
 }
 
 void
-StructQuadSurfMesh::transform(Transform &t)
+StructQuadSurfMesh::transform(const Transform &t)
 {
   Node::iterator i, ie;
   begin(i);

@@ -45,8 +45,8 @@ class SCICORESHARE Transform : public Persistent {
   void build_shear(double mat[4][4], const Vector&, const Plane&);
   void build_scale(double m[4][4], const Vector&);
   void build_translate(double m[4][4], const Vector&);
-  void pre_mulmat(double[4][4]);
-  void post_mulmat(double[4][4]);
+  void pre_mulmat(const double[4][4]);
+  void post_mulmat(const double[4][4]);
   void invmat(double[4][4]);
   void switch_rows(double m[4][4], int row1, int row2) const;
   void sub_rows(double m[4][4], int row1, int row2, double mul) const;
@@ -73,8 +73,8 @@ public:
   void load_frame(const Point&,const Vector&, const Vector&, const Vector&);
 
   void change_basis(Transform&);
-  void post_trans(Transform&);
-  void pre_trans(Transform&);
+  void post_trans(const Transform&);
+  void pre_trans(const Transform&);
     
   void print(void);
   void printi(void);

@@ -39,7 +39,13 @@ public:
   
   //! Required virtual functions.
   virtual BBox get_bounding_box() const = 0;
-  virtual void transform(Transform &t) = 0;
+
+  //! Destructively applies the given transform to the mesh.
+  virtual void transform(const Transform &t) = 0;
+
+  //! Return the transformation that takes a 0-1 space bounding box 
+  //! to the current bounding box of this mesh.
+  virtual void get_canonical_transform(Transform &t);
 
   enum
   { 

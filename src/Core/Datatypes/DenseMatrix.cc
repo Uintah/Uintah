@@ -571,9 +571,10 @@ void DenseMatrix::io(Piostream& stream)
   stream.end_class();
 }
 
-void DenseMatrix::invert()
+bool
+DenseMatrix::invert()
 {
-  ASSERTEQ(nr, nc);
+  if (nr != nc) return false;
   double** newdata=scinew double*[nr];
   double* tmp=scinew double[nr*nc];
   double* newdataptr=tmp;
@@ -599,7 +600,11 @@ void DenseMatrix::invert()
 	row=j;
       }
     }
-    ASSERT(Abs(max) > 1.e-12);
+    if (Abs(max) <= 1.e-12) { 
+      delete[] newdataptr;
+      delete[] newdata;
+      return false; 
+    }
     if(row != i){
       // Switch rows (actually their pointers)
       double* tmp=data[i];
@@ -625,7 +630,11 @@ void DenseMatrix::invert()
 
   // Back-substitution
   for(i=1;i<nr;i++){
-    ASSERT(Abs(data[i][i]) > 1.e-12);
+    if (Abs(data[i][i]) <= 1.e-12) {
+      delete[] newdataptr;
+      delete[] newdata; 
+      return false; 
+    }
     double denom=1./data[i][i];
     double* r1=data[i];
     double* n1=newdata[i];
@@ -642,7 +651,11 @@ void DenseMatrix::invert()
 
   // Normalize
   for(i=0;i<nr;i++){
-    ASSERT(Abs(data[i][i]) > 1.e-12);
+    if (Abs(data[i][i]) <= 1.e-12) { 
+      delete[] newdataptr;
+      delete[] newdata;
+      return false; 
+    }
     double factor=1./data[i][i];
     for(int j=0;j<nr;j++){
       data[i][j]*=factor;
@@ -650,11 +663,11 @@ void DenseMatrix::invert()
     }
   }
 
-
   delete[] dataptr;
   delete[] data;    
   dataptr=newdataptr;
   data=newdata;
+  return true;
 }
 
 void Mult(DenseMatrix& out, const DenseMatrix& m1, const DenseMatrix& m2)

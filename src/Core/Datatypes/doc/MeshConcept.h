@@ -165,7 +165,10 @@ public:
   //! Returns the axis aligned bounding box of the mesh.
   virtual BBox get_bounding_box() const;
   //! Destructively applies the given transform to the mesh.
-  virtual void transform(Transform &t);
+  virtual void transform(const Transform &t);
+  //! Return the transformation that takes a 0-1 space bounding box 
+  //! to the current bounding box of this mesh.
+  virtual bool get_canonical_transform(Transform &t);
 
   //@{
   //! Get the child elements of the given index.

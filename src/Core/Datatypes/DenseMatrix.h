@@ -120,7 +120,9 @@ public:
   virtual void io(Piostream&);
   static PersistentTypeID type_id;
   
-  void invert();
+  //! return false if not invertable.
+  bool invert();
+
   void mult(double s);
   virtual DenseMatrix* clone();
   

@@ -65,7 +65,7 @@ public:
 
   //! get the mesh statistics
   virtual BBox get_bounding_box() const;
-  virtual void transform(Transform &t);
+  virtual void transform(const Transform &t);
 
   bool get_dim(vector<unsigned int> &array) const;
   void set_dim(vector<unsigned int> dims) {

@@ -120,9 +120,16 @@ Vector LatVolMesh::diagonal() const
 }
 
 void
-LatVolMesh::transform(Transform &t)
+LatVolMesh::transform(const Transform &t)
 {
   transform_.pre_trans(t);
+}
+
+void
+LatVolMesh::get_canonical_transform(Transform &t) 
+{
+  t = transform_;
+  t.post_scale(Vector(ni_ - 1.0, nj_ - 1.0, nk_ - 1.0));
 }
 
 bool

@@ -207,7 +207,7 @@ TetVolMesh::get_bounding_box() const
 
 
 void
-TetVolMesh::transform(Transform &t)
+TetVolMesh::transform(const Transform &t)
 {
   vector<Point>::iterator itr = points_.begin();
   vector<Point>::iterator eitr = points_.end();

@@ -55,6 +55,7 @@ itcl_class SCIRun_Math_LinAlgUnary {
 		{"Floor" Floor}\
 		{"Normalize" Normalize}\
 		{"Transpose" Transpose}\
+		{"Invert" Invert}\
 		{"Sort" Sort}\
  		{"Subtract Mean" Subtract_Mean}\
 		{"Function" Function}}

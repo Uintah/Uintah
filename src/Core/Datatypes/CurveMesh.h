@@ -107,7 +107,7 @@ public:
   void size(Cell::size_type &) const;
 
   virtual BBox get_bounding_box() const;
-  virtual void transform(Transform &t);
+  virtual void transform(const Transform &t);
 
   //! get the child elements of the given index
   void get_nodes(Node::array_type &a, Edge::index_type i) const

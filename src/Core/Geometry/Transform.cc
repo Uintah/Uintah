@@ -130,13 +130,13 @@ void Transform::change_basis(Transform& T)
   pre_mulmat(T.imat);
 }
 
-void Transform::post_trans(Transform& T)
+void Transform::post_trans(const Transform& T)
 {
   post_mulmat(T.mat);
   inverse_valid = 0;
 }
 
-void Transform::pre_trans(Transform& T)
+void Transform::pre_trans(const Transform& T)
 {
   pre_mulmat(T.mat);
   inverse_valid = 0;
@@ -627,7 +627,7 @@ void Transform::compute_imat()
   inverse_valid=1;
 }
 
-void Transform::post_mulmat(double mmat[4][4])
+void Transform::post_mulmat(const double mmat[4][4])
 {
   double newmat[4][4];
   for(int i=0;i<4;i++){
@@ -641,7 +641,7 @@ void Transform::post_mulmat(double mmat[4][4])
   install_mat(newmat);
 }
 
-void Transform::pre_mulmat(double mmat[4][4])
+void Transform::pre_mulmat(const double mmat[4][4])
 {
   double newmat[4][4];
   for(int i=0;i<4;i++){

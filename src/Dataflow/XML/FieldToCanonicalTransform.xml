@@ -21,27 +21,20 @@
 -->
 
 
-<component name="BuildTransform" category="Math">
+<component name="FieldToCanonicalTransform" category="Math">
   <overview>
     <authors>
-      <author>David Weinstein</author>
+      <author>Martin Cole</author>
     </authors>
-    <summary>Build a 4x4 geometric transformation matrix.</summary>
+    <summary>Generate a trasformation matrix that transforms a 0 to 1 space box at the origin to the input Field's bounding box.</summary>
     <description>
-      <p>Build the transformation matrix by specifying options in
-respect to Translate, Scale, Rotate, Sheer and Permute.</p>
-      <p>If the second input (SCIRun::Field) is input, its bounding
-box is used to init the transform</p>
+      <p>Generate a trasformation matrix that transforms a 0 to 1 space box at the origin to the input Field's bounding box.  It is output in the Matrix output port.  Some Fields have transformations stored with them, some just have bounding box information, so the canonical transform may not include rotation information.</p>
     </description>
   </overview>
   <io>
     <inputs lastportdynamic="no">
       <port>
-        <name>Matrix</name>
-	<datatype>SCIRun::Matrix</datatype>
-      </port>
-      <port>
-        <name>Field BBox</name>
+        <name>Field</name>
 	<datatype>SCIRun::Field</datatype>
       </port>
     </inputs>
@@ -50,19 +43,9 @@ box is used to init the transform</p>
         <name>Matrix</name>
 	<datatype>SCIRun::Matrix</datatype>
       </port>
-      <port>
-        <name>Geometry</name>
-	<datatype>SCIRun::Geometry</datatype>
-      </port>
     </outputs>
   </io>
   <gui>
-    <img>../Modules/Math/doc/BuildTransform-permute.gif</img>
-    <img>../Modules/Math/doc/BuildTransform-scale.gif</img>
-    <img>../Modules/Math/doc/BuildTransform-shear.gif</img>
-    <img>../Modules/Math/doc/BuildTransform-translate.gif</img>
-    <img>../Modules/Math/doc/BuildTransform-widget-roe.gif</img>
-    <img>../Modules/Math/doc/BuildTransform-widget.gif</img>
   </gui>
   <testing>
   </testing>

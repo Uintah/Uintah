@@ -70,12 +70,17 @@ Vector ScanlineMesh::diagonal() const
 }
 
 void
-ScanlineMesh::transform(Transform &t)
+ScanlineMesh::transform(const Transform &t)
 {
   transform_.pre_trans(t);
 }
 
-
+void 
+ScanlineMesh::get_canonical_transform(Transform &t) 
+{
+  t = transform_;
+  t.post_scale(Vector(ni_ - 1.0, 1.0, 1.0));
+}
 
 bool ScanlineMesh::get_min(vector<unsigned int> &array ) const
 {

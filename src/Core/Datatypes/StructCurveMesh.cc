@@ -76,7 +76,7 @@ StructCurveMesh::get_bounding_box() const
 }
 
 void
-StructCurveMesh::transform(Transform &t)
+StructCurveMesh::transform(const Transform &t)
 {
   Node::iterator i, ie;
   begin(i);
