@@ -10,6 +10,7 @@
 #include <Packages/rtrt/Core/CutPlane.h>
 #include <Packages/rtrt/Core/PlaneDpy.h>
 #include <Core/Thread/Thread.h>
+#include <Packages/rtrt/Core/Disc.h>
 #include <Packages/rtrt/Core/Sphere.h>
 #include <Packages/rtrt/Core/Rect.h>
 #include <Packages/rtrt/Core/MetalMaterial.h>
@@ -146,6 +147,7 @@ static Object* make_obj(int size)
     Material* matl2=new Phong(Color(.05,.05,.05), Color(.95,.95,.95), Color(.6,.6,.6), 10);
 #endif
     double planesize=15;
+    //    Object* obj1=new Disc(matl2, Point(0,0,0), Vector(0,0,1), planesize);
     Object* obj1=new Rect(matl2, Point(0,0,0), Vector(planesize,planesize*1.1,0), Vector(-planesize*1.1,planesize,0));
     world->add(obj1);
     return world;
@@ -186,7 +188,10 @@ Scene* make_scene(int argc, char* argv[], int /*nworkers*/)
     Scene* scene=new Scene(obj, cam,
 			   bgcolor, cdown, cup, groundplane,
 			   ambient_scale, Arc_Ambient);
-    scene->add_light(new Light(Point(5,-3,3), Color(1,1,.8)*2, light_radius));
+    Light *light0 = new Light(Point(5,-3,3), Color(1,1,.8)*2, light_radius);
+    light0->name_ = "light 0";
+    light0->fixed_to_eye = false;
+    scene->add_light(light0);
 
     scene->set_background_ptr( new LinearBackground(
                                Color(0.2, 0.4, 0.9),
