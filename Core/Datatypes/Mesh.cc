@@ -863,10 +863,16 @@ bool Mesh::tetra_edge_in_box(const Point&  min, const Point&  max,
 
 bool Mesh::overlaps(Element* e, const Point& v0, const Point& v1)
 {
-  Point& p0(e->mesh->nodes[e->n[0]]->p);
-  Point& p1(e->mesh->nodes[e->n[1]]->p);
-  Point& p2(e->mesh->nodes[e->n[2]]->p);
-  Point& p3(e->mesh->nodes[e->n[3]]->p);
+  //Point& p0(e->mesh->nodes[e->n[0]]->p);
+  //Point& p1(e->mesh->nodes[e->n[1]]->p);
+  //Point& p2(e->mesh->nodes[e->n[2]]->p);
+  //Point& p3(e->mesh->nodes[e->n[3]]->p);
+  Point& p0 = e->mesh->nodes[e->n[0]]->p;
+  Point& p1 = e->mesh->nodes[e->n[1]]->p;
+  Point& p2 = e->mesh->nodes[e->n[2]]->p;
+  Point& p3 = e->mesh->nodes[e->n[3]]->p;
+
+
   if(inside(Point(v0.x(),v0.y(),v0.z()), e))
     return true;
   if(inside(Point(v0.x(),v0.y(),v1.z()), e))
@@ -1852,6 +1858,10 @@ void Pio(Piostream& stream, SCICore::Datatypes::ElementVersion1& elem)
 
 //
 // $Log$
+// Revision 1.7  1999/09/23 01:04:31  moulding
+// changed the reference constructors in Mesh::overlaps() to reference assignments:
+// VC++ can't initialize references from function calls.
+//
 // Revision 1.6  1999/09/05 05:32:27  dmw
 // updated and added Modules from old tree to new
 //
