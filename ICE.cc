@@ -335,15 +335,29 @@ _____________________________________________________________________*/
 void ICE::scheduleComputeStableTimestep(const LevelP& level,
                                       SchedulerP& sched)
 {
-  cout_doing << "ICE::scheduleComputeStableTimestep " << endl;
-  Task* task = scinew Task("ICE::actuallyComputeStableTimestep",
+  Task* t;
+  if (d_EqForm) {             // EQ 
+    cout_doing << "ICE::scheduleComputeStableTimestep " << endl;
+    t = scinew Task("ICE::actuallyComputeStableTimestep",
                      this, &ICE::actuallyComputeStableTimestep);
-
-  task->requires(Task::NewDW, lb->doMechLabel);
-  task->requires(Task::NewDW, lb->vel_CCLabel,        Ghost::None);
-  task->requires(Task::NewDW, lb->speedSound_CCLabel, Ghost::None);
-  task->computes(d_sharedState->get_delt_label());
-  sched->addTask(task,level->eachPatch(), d_sharedState->allICEMaterials());
+  } else if (d_RateForm) {    // RF
+    cout_doing << "ICE::scheduleComputeStableTimestepRF " << endl;
+    t = scinew Task("ICE::actuallyComputeStableTimestepRF",
+                      this, &ICE::actuallyComputeStableTimestepRF);
+  }
+  Ghost::GhostType  gac = Ghost::AroundCells;  
+  
+  t->requires(Task::NewDW, lb->doMechLabel);
+  if (d_EqForm){            // EQ
+    t->requires(Task::NewDW, lb->vel_CCLabel,        Ghost::None);
+    t->requires(Task::NewDW, lb->speedSound_CCLabel, Ghost::None);
+  } else if (d_RateForm){   // RATE FORM
+    t->requires(Task::NewDW, lb->vel_CCLabel,        gac, 1);
+    t->requires(Task::NewDW, lb->speedSound_CCLabel, gac, 1);
+    t->requires(Task::NewDW, lb->sp_vol_CCLabel,     gac, 1);
+  }
+  t->computes(d_sharedState->get_delt_label());
+  sched->addTask(t,level->eachPatch(), d_sharedState->allICEMaterials());
 }
 /* ---------------------------------------------------------------------
  Function~  ICE::scheduleTimeAdvance--
@@ -895,7 +909,7 @@ void ICE::schedulePrintConservedQuantities(SchedulerP& sched,
 _____________________________________________________________________*/
 void ICE::actuallyComputeStableTimestep(const ProcessorGroup*,  
                                     const PatchSubset* patches,
-                                         const MaterialSubset* /*matls*/,
+                                    const MaterialSubset* /*matls*/,
                                     DataWarehouse* /*old_dw*/,
                                     DataWarehouse* new_dw)
 {
@@ -904,42 +918,39 @@ void ICE::actuallyComputeStableTimestep(const ProcessorGroup*,
     cout_doing << "Doing Compute Stable Timestep on patch " << patch->getID() 
          << "\t\t ICE" << endl;
       
-      Vector dx = patch->dCell();
-      double delt_CFL = 100000, fudge_factor = 1.;
-      constCCVariable<double> speedSound;
-      constCCVariable<Vector> vel;
+    Vector dx = patch->dCell();
+    double delt_CFL = 100000, fudge_factor = 1.;
+    constCCVariable<double> speedSound;
+    constCCVariable<Vector> vel;
+    Ghost::GhostType  gn  = Ghost::None;    
+    for (int m = 0; m < d_sharedState->getNumICEMatls(); m++) {
+      ICEMaterial* ice_matl = d_sharedState->getICEMaterial(m);
+      int indx= ice_matl->getDWIndex();
+      new_dw->get(speedSound, lb->speedSound_CCLabel, indx,patch,gn, 0);
+      new_dw->get(vel,        lb->vel_CCLabel,        indx,patch,gn, 0);
 
-      for (int m = 0; m < d_sharedState->getNumICEMatls(); m++) {
-        ICEMaterial* ice_matl = d_sharedState->getICEMaterial(m);
-        int indx= ice_matl->getDWIndex();
+     for(CellIterator iter=patch->getCellIterator(); !iter.done(); iter++){
+       IntVector c = *iter;
+       double A = fudge_factor*d_CFL*dx.x()/(speedSound[c] + 
+                                      fabs(vel[c].x())+d_SMALL_NUM);
+       double B = fudge_factor*d_CFL*dx.y()/(speedSound[c] + 
+                                      fabs(vel[c].y())+d_SMALL_NUM);
+       double C = fudge_factor*d_CFL*dx.z()/(speedSound[c] + 
+                                      fabs(vel[c].z())+d_SMALL_NUM);
+       delt_CFL = std::min(A, delt_CFL);
+       delt_CFL = std::min(B, delt_CFL);
+       delt_CFL = std::min(C, delt_CFL);
 
-        new_dw->get(speedSound, lb->speedSound_CCLabel,
-                                           indx,patch,Ghost::None, 0);
-        new_dw->get(vel, lb->vel_CCLabel, indx,patch,Ghost::None, 0);
-       
-       for(CellIterator iter=patch->getCellIterator(); !iter.done(); iter++){
-         IntVector c = *iter;
-         double A = fudge_factor*d_CFL*dx.x()/(speedSound[c] + 
-                                        fabs(vel[c].x())+d_SMALL_NUM);
-         double B = fudge_factor*d_CFL*dx.y()/(speedSound[c] + 
-                                        fabs(vel[c].y())+d_SMALL_NUM);
-         double C = fudge_factor*d_CFL*dx.z()/(speedSound[c] + 
-                                        fabs(vel[c].z())+d_SMALL_NUM);
-
-         delt_CFL = std::min(A, delt_CFL);
-         delt_CFL = std::min(B, delt_CFL);
-         delt_CFL = std::min(C, delt_CFL);
-
-        }
       }
-      delt_CFL = std::min(delt_CFL, d_initialDt);
-      d_initialDt = 10000.0;
+    }
+    delt_CFL = std::min(delt_CFL, d_initialDt);
+    d_initialDt = 10000.0;
 
-      delt_vartype doMech;
-      new_dw->get(doMech, lb->doMechLabel);
-      if(doMech >= 0.){
-        delt_CFL = .0625;
-      }
+    delt_vartype doMech;
+    new_dw->get(doMech, lb->doMechLabel);
+    if(doMech >= 0.){
+      delt_CFL = .0625;
+    }
     //__________________________________
     //  Bullet proofing
     if(delt_CFL < 1e-20) {  
