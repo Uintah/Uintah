@@ -829,13 +829,15 @@ proc NiceQuit {} {
 		    -icon warning ]
 
     if {[string compare "ok" $result] == 0} {
-	global modules
-	if { [info exists modules] } {
-	    foreach m $modules {
-		moduleDestroy .bot.neteditFrame.canvas \
-			.top.globalViewFrame.canvas $m
-	    }
-	}    
+	# Disable this for now, module deletion is blocking.
+	# This causes quit to get stuck when the modules are running.
+        #
+	#global modules
+	#if { [info exists modules] } {
+	#    foreach m $modules {
+	#	moduleDestroy .bot.neteditFrame.canvas .top.globalViewFrame.canvas $m
+	#    }
+	#}    
 	set modules ""
 	netedit quit
     }   
