@@ -72,6 +72,7 @@ void CastTVtoMLV::execute()
     return;
   
   // we expect that the input field is a TetVol<Vector>
+  cout << "typename = " << ifieldH->get_type_description()->get_name() << '\n';
   if (ifieldH->get_type_description()->get_name() !=
       get_type_description((TetVol<Vector> *)0)->get_name())
   {
