@@ -155,7 +155,7 @@ particleIndex MPMMaterial::countParticles(const Patch* patch) const
 }
 
 void MPMMaterial::createParticles(particleIndex numParticles,
-				  PerPatch<long> NAPID,
+				  CCVariable<short int>& cellNAPID,
 				  const Patch* patch,
 				  DataWarehouse* new_dw)
 {
@@ -201,7 +201,7 @@ void MPMMaterial::createParticles(particleIndex numParticles,
       start += createParticles( d_geom_objs[i], start, position,
 				pvelocity,pexternalforce,pmass,pvolume,
 				pissurf,ptemperature,pToughness,
-				pparticleID,NAPID,patch);
+				pparticleID,cellNAPID,patch);
    }
 
    particleIndex partclesNum = start;
@@ -436,7 +436,7 @@ particleIndex MPMMaterial::createParticles(GeometryObject* obj,
 				   ParticleVariable<double>& temperature,
 				   ParticleVariable<double>& toughness,
 				   ParticleVariable<long>& particleID,
-				   PerPatch<long>& NAPID,
+				   CCVariable<short int>& cellNAPID,
 				   const Patch* patch)
 {
    GeometryPiece* piece = obj->getPiece();
@@ -449,11 +449,6 @@ particleIndex MPMMaterial::createParticles(GeometryObject* obj,
    IntVector ppc = obj->getNumParticlesPerCell();
    Vector dxpp = patch->dCell()/obj->getNumParticlesPerCell();
    Vector dcorner = dxpp*0.5;
-   int nbits=40;
-
-   long patch_number = patch->getID();
-
-   patch_number <<= nbits;
 
    particleIndex count = 0;
    for(CellIterator iter = patch->getCellIterator(b); !iter.done(); iter++){
@@ -463,6 +458,15 @@ particleIndex MPMMaterial::createParticles(GeometryObject* obj,
 	    for(int iz=0;iz < ppc.z(); iz++){
 	       IntVector idx(ix, iy, iz);
 	       Point p = lower + dxpp*idx;
+	       IntVector cell_idx = iter.index();
+	       // If the assertion fails then we may just need to change
+	       // the format of particle ids such that the cell indices
+	       // have more bits.
+	       ASSERT(cell_idx.x() <= 0xffff && cell_idx.y() <= 0xffff
+		      && cell_idx.z() <= 0xffff);
+	       long cellID = ((long)cell_idx.x() << 16) |
+		 ((long)cell_idx.y() << 32) |
+		 ((long)cell_idx.z() << 48);
 	       if(piece->inside(p)){
 		  position[start+count]=p;
 		  volume[start+count]=dxpp.x()*dxpp.y()*dxpp.z();
@@ -472,9 +476,10 @@ particleIndex MPMMaterial::createParticles(GeometryObject* obj,
 		  // Determine if particle is on the surface
 //		  pissurf[start+count]=checkForSurface(piece,p,dxpp);
 		  pexternalforce[start+count]=Vector(0,0,0); // for now
-		  particleID[start+count]=
-				(patch_number | (NAPID + start + count));
-
+		  short int& myCellNAPID = cellNAPID[cell_idx];
+		  particleID[start+count] = cellID | (long)myCellNAPID;
+		  ASSERT(myCellNAPID < 0xffff);
+		  myCellNAPID++;
 
 		  if( d_fracture ) {
 		    if(obj->getToughnessMin() == obj->getToughnessMax())
