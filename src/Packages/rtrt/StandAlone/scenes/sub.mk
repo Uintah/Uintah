@@ -33,7 +33,8 @@ SCENES := $(SRCDIR)/0.mo \
 	$(SRCDIR)/teapot.rational.mo \
 	$(SRCDIR)/teapot.scene.mo \
 	$(SRCDIR)/vfem.mo \
-	$(SRCDIR)/t0.mo
+	$(SRCDIR)/t0.mo \
+	$(SRCDIR)/ASE-RTRT.mo
 
 ifeq ($(uintah),yes)
 SCENES += \
