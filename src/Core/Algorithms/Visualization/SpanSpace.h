@@ -255,11 +255,11 @@ void SpanSpaceFace<T,Index>::init_face(Field *field)
     }
 	
     if ( min < max ) // ignore elems with min == max
-      span.push_back( SpanPoint<T,Index>(min, max, *elem));
+      this->span.push_back( SpanPoint<T,Index>(min, max, *elem));
   }
       
   // init kd-tree
-  select_min( &span[0], span.size() );    
+  this->select_min( &(this->span[0]), this->span.size() );    
 }
 
 
@@ -296,11 +296,11 @@ void SpanSpaceCell<T,Index>::init_cell(Field *field)
     }
 	
     if ( min < max ) // ignore elems with min == max
-      span.push_back( SpanPoint<T,Index>(min, max, *elem));
+      this->span.push_back( SpanPoint<T,Index>(min, max, *elem));
   }
       
   // init kd-tree
-  select_min( &span[0], span.size() );    
+  this->select_min( &(this->span[0]), this->span.size() );    
 }
 
 
