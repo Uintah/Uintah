@@ -41,15 +41,55 @@ public:
   virtual FieldHandle execute(FieldHandle src) = 0;
 
   //! support the dynamically compiled algorithm concept
+#ifdef __sgi
+  static CompileInfo *get_compile_info(const TypeDescription *iftd,
+				       const TypeDescription *oftd);
+#else
   static CompileInfo *get_compile_info(const TypeDescription *ftd);
+#endif
 };
 
 
 #ifdef __sgi
-template< class FIELD >
+template< class IFIELD, class OFIELD >
+class VectorMagnitudeAlgoT : public VectorMagnitudeAlgo
+{
+public:
+  //! virtual interface. 
+  virtual FieldHandle execute(FieldHandle src);
+};
+
+template< class IFIELD, class OFIELD >
+FieldHandle
+VectorMagnitudeAlgoT<IFIELD, OFIELD>::execute(FieldHandle field_h)
+{
+  if( field_h.get_rep()->query_vector_interface() ) {
+
+    IFIELD *ifield = (IFIELD *) field_h.get_rep();
+
+    OFIELD *ofield = 
+      scinew FIELD(ifield->get_typed_mesh(), ifield->data_at());
+
+    typename IFIELD::fdata_type::iterator in  = ifield->fdata().begin();
+    typename IFIELD::fdata_type::iterator end = ifield->fdata().end();
+    typename OFIELD::fdata_type::iterator out = ofield->fdata().begin();
+
+    while (in != end) {
+      *out = in->length();;
+      ++in; ++out;
+    }
+
+    return FieldHandle( ofield );
+  }
+  else {
+    cerr << "VectorMagnitude - Only availible for Vector data" << endl;
+
+    return NULL;
+  }
+}
+
 #else
 template< template<class> class FIELD >
-#endif
 
 class VectorMagnitudeAlgoT : public VectorMagnitudeAlgo
 {
@@ -58,11 +98,7 @@ public:
   virtual FieldHandle execute(FieldHandle src);
 };
 
-#ifdef __sgi
-template< class FIELD >
-#else
 template< template<class> class FIELD >
-#endif
 
 FieldHandle
 VectorMagnitudeAlgoT<FIELD>::execute(FieldHandle field_h)
@@ -91,6 +127,7 @@ VectorMagnitudeAlgoT<FIELD>::execute(FieldHandle field_h)
     return NULL;
   }
 }
+#endif
 
 } // end namespace SCIRun
 

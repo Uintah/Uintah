@@ -52,10 +52,7 @@ public:
 
 
 #ifdef __sgi
-template< class FIELD, class TYPE >
-#else
-template< template<class> class FIELD, class TYPE >
-#endif
+template< class IFIELD, class OFIELD >
 class GradientAlgoT : public GradientAlgo
 {
 public:
@@ -64,11 +61,58 @@ public:
 };
 
 
-#ifdef __sgi
-template< class FIELD, class TYPE >
+template< class IFIELD, class OFIELD >
+FieldHandle
+GradientAlgoT<IFIELD, OFIELD>::execute(FieldHandle field_h)
+{
+  IFIELD *ifield = (IFIELD *) field_h.get_rep();
+
+  if( ifield->query_scalar_interface() ) {
+
+    typename IFIELD::mesh_handle_type imesh = ifield->get_typed_mesh();
+    
+    OFIELD *ofield = scinew OFIELD(imesh, Field::CELL);
+
+    typename IFIELD::mesh_type::Cell::iterator in, end;
+    typename OFIELD::mesh_type::Cell::iterator out;
+
+    imesh->begin( in );
+    imesh->end( end );
+
+    ifield->get_typed_mesh()->begin( out );
+
+    Point pt;
+    Vector vec;
+
+    while (in != end) {
+      imesh->get_center(pt, *in);
+      ifield->get_gradient(vec, pt);
+      ofield->set_value(vec, *out);
+      ++in; ++out;
+    }
+
+    ofield->freeze();
+
+    return FieldHandle( ofield );
+  }
+  else {
+    cerr << "Gradient - Only availible for Scalar data" << endl;
+
+    return NULL;
+  }
+}
+
 #else
 template< template<class> class FIELD, class TYPE >
-#endif
+class GradientAlgoT : public GradientAlgo
+{
+public:
+  //! virtual interface. 
+  virtual FieldHandle execute(FieldHandle src);
+};
+
+
+template< template<class> class FIELD, class TYPE >
 FieldHandle
 GradientAlgoT<FIELD, TYPE>::execute(FieldHandle field_h)
 {
@@ -108,6 +152,7 @@ GradientAlgoT<FIELD, TYPE>::execute(FieldHandle field_h)
     return NULL;
   }
 }
+#endif
 
 } // end namespace SCIRun
 

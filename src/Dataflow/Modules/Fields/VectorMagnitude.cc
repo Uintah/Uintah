@@ -86,7 +86,13 @@ VectorMagnitude::execute()
 
     const TypeDescription *ftd = fieldin->get_type_description(0);
 
+#ifdef __sgi
+    const TypeDescription *ttd = fieldin->get_type_description(-1);
+    CompileInfo *ci = VectorMagnitudeAlgo::get_compile_info(ftd, ttd);
+#else
     CompileInfo *ci = VectorMagnitudeAlgo::get_compile_info(ftd);
+#endif
+
     DynamicAlgoHandle algo_handle;
     if (! DynamicLoader::scirun_loader().get(*ci, algo_handle)) {
       error( "Could not compile algorithm." );
@@ -123,7 +129,12 @@ VectorMagnitude::execute()
 
 
 CompileInfo *
+#ifdef __sgi
+VectorMagnitudeAlgo::get_compile_info(const TypeDescription *ftd,
+				      const TypeDescription *ttd)
+#else
 VectorMagnitudeAlgo::get_compile_info(const TypeDescription *ftd)
+#endif
 {
   // use cc_to_h if this is in the .cc file, otherwise just __FILE__
   static const string include_path(TypeDescription::cc_to_h(__FILE__));
@@ -135,8 +146,12 @@ VectorMagnitudeAlgo::get_compile_info(const TypeDescription *ftd)
 		       ftd->get_filename() + ".",
                        base_class_name, 
                        template_class_name, 
+#ifdef __sgi
+                       ttd->get_name() + "," +
+                       ftd->get_name() + "<double>");
+#else
                        ftd->get_name());
-  
+#endif  
   // Add in the include path to compile this obj
   rval->add_include(include_path);
   ftd->fill_compile_info(rval);
@@ -144,5 +159,13 @@ VectorMagnitudeAlgo::get_compile_info(const TypeDescription *ftd)
 }
 
 } // End namespace SCIRun
+
+
+
+
+
+
+
+
 
 
