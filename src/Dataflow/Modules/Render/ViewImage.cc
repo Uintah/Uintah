@@ -47,7 +47,10 @@
 #include <tk.h>
 #include <stdlib.h>
 
+
 #include <Core/Malloc/Allocator.h>
+#include <Core/Thread/Runnable.h>
+#include <Core/Util/Timer.h>
 #include <Core/Datatypes/Field.h>
 #include <Core/GuiInterface/UIvar.h>
 #include <Core/Geom/Material.h>
@@ -77,6 +80,8 @@ extern Tcl_Interp* the_interp;
 
 
 namespace SCIRun {
+
+class RealDrawer;
 
 // SWAP ----------------------------------------------------------------
 template <class T>
@@ -168,6 +173,7 @@ class ViewImage : public Module
     UIdouble		x_;
     UIdouble		y_;
 
+    bool		redraw_;
     bool		clut_dirty_;
     UIint		clut_ww_;
     UIint		clut_wl_;
@@ -202,7 +208,6 @@ class ViewImage : public Module
     OpenGLContext *	opengl_;
     int			mouse_x_;
     int			mouse_y_;
-    
     SliceWindows	windows_;
   };
 
@@ -250,7 +255,8 @@ class ViewImage : public Module
   map<string, FreeTypeFace *>		fonts_;
   Labels		labels_;
   
-
+  RealDrawer *		runner_;
+  Thread *		runner_thread_;
 
   void			redraw_all();
   void			redraw_window_layout(WindowLayout &);
@@ -308,7 +314,57 @@ public:
   virtual ~ViewImage();
   virtual void		execute();
   virtual void		tcl_command(GuiArgs& args, void*);
+  void			real_draw_all();
+  double		fps_;
 };
+
+
+class RealDrawer : public Runnable {
+  ViewImage *	module_;
+  TimeThrottle	throttle_;
+public:
+  bool		dead_;
+  RealDrawer(ViewImage* module) : module_(module), throttle_(), dead_(0) {};
+  virtual ~RealDrawer();
+  virtual void run();
+};
+
+
+
+RealDrawer::~RealDrawer()
+{
+}
+
+
+void
+RealDrawer::run()
+{
+  throttle_.start();
+  
+  double t = throttle_.time();
+  double t2;
+  double frame_count_start = t;
+  double time_since_frame_count_start;
+  int frames;
+  
+  while (!dead_) {
+    throttle_.wait_for_time(t);
+    module_->real_draw_all();
+    t2 = throttle_.time();
+    frames++;
+    time_since_frame_count_start = t2 - frame_count_start;
+    if (frames > 30 || ((time_since_frame_count_start > 0.75) && frames)) {
+      module_->fps_ = frames / time_since_frame_count_start;
+      frames = 0;
+      frame_count_start = t2;
+    }
+
+    while (t <= t2) t += 1.0/120;
+  }
+}
+
+
+
 
 ViewImage::NrrdSlice::NrrdSlice(int axis, int slice, NrrdVolume *volume) :
   axis_(axis),
@@ -337,6 +393,7 @@ ViewImage::SliceWindow::SliceWindow(GuiContext *ctx) :
   zoom_(ctx->subVar("zoom"), 100.0),
   x_(ctx->subVar("posx"),0.0),
   y_(ctx->subVar("posy"),0.0),
+  redraw_(true),
   clut_dirty_(false),
   clut_ww_(ctx->subVar("clut_ww")),
   clut_wl_(ctx->subVar("clut_wl")),
@@ -401,7 +458,8 @@ ViewImage::ViewImage(GuiContext* ctx) :
   ogeom_(0),
   freetype_lib_(0),
   fonts_(),
-  labels_(0)
+  labels_(0),
+  fps_(0.0)
 {
   try {
     freetype_lib_ = scinew FreeTypeLibrary();
@@ -423,21 +481,18 @@ ViewImage::ViewImage(GuiContext* ctx) :
       fonts_["default"] = freetype_lib_->load_face(sdir+"/scirun.ttf");
       fonts_["anatomical"] = fonts_["default"];
       fonts_["patientname"] = fonts_["default"];
+      fonts_["fps"] = fonts_["default"];
       fonts_["view"] = fonts_["default"];
       fonts_["position"] = fonts_["default"];
       
     } catch (...) {
       fonts_.clear();
-      fonts_["default"] = 0;
-      fonts_["anatomical"] = fonts_["default"];
-      fonts_["patientname"] = fonts_["default"];
-      fonts_["position"] = fonts_["default"];
-      fonts_["view"] = fonts_["default"];
-      
       error("Error loading fonts.\n"
 	    "Please set SCIRUN_FONT_PATH to a directory with scirun.ttf\n");
     }
   }
+  runner_ = scinew RealDrawer(this);
+  runner_thread_ = scinew Thread(runner_, string(id+" OpenGL drawer").c_str());
 }
 
 void
@@ -479,6 +534,11 @@ ViewImage::NrrdVolume::reset() {
 
 ViewImage::~ViewImage()
 {
+  if (runner_thread_) {
+    runner_->dead_ = true;
+    runner_thread_->join();
+    runner_thread_ = 0;
+  }
 }
 
 
@@ -499,13 +559,44 @@ ViewImage::log2(const unsigned int dim) const {
 }
 
 
+
+
+void
+ViewImage::real_draw_all()
+{
+  WindowLayouts::iterator pos = layouts_.begin();
+  while (pos != layouts_.end()) {
+    WindowLayout &layout = *(*pos).second;
+    SliceWindows::iterator viter, vend = layout.windows_.end();
+    for (viter = layout.windows_.begin(); viter != vend; ++viter) {
+      SliceWindow &window = **viter;
+      if (!window.redraw_) continue;
+      window.redraw_ = false;
+      window.viewport_->make_current();
+      window.viewport_->clear();
+      for (unsigned int s = 0; s < window.slices_.size(); ++s)
+	draw_slice(window, *window.slices_[s]);
+      
+      if (*window.show_guidelines_)
+	draw_guidelines(window, cursor_.x(), cursor_.y(), cursor_.z());
+      window.viewport_->swap();
+      window.viewport_->release();
+    }
+
+    pos++;
+  }
+}
+
+
+
+
+
 void
 ViewImage::redraw_all()
 {
   WindowLayouts::iterator pos = layouts_.begin();
   while (pos != layouts_.end()) {
-    redraw_window_layout(*(*pos).second);
-    pos++;
+    redraw_window_layout(*(*pos++).second);
   }
 }
 
@@ -513,40 +604,18 @@ ViewImage::redraw_all()
 void
 ViewImage::redraw_window_layout(ViewImage::WindowLayout &layout)
 {
-  if (!layout.opengl_) return;
-
-  // TODO: better make_current so we dont release every viewport
-  //  if (!layout.opengl_->make_current()) {
-  //  error("Unable to make GL window current");
-  //  return;
-  //}
- 
   SliceWindows::iterator viter, vend = layout.windows_.end();
   for (viter = layout.windows_.begin(); viter != vend; ++viter) {
-    redraw_window(**viter); 
+    redraw_window(**viter);
   }
-
-  //  layout.opengl_->release();
 }
 
 
 
 void
 ViewImage::redraw_window(SliceWindow &window) {
-  window.viewport_->make_current();
-  window.viewport_->clear();//drand48(), drand48(), drand48(), 1.0);
-  //  ASSERT(slices_[window.axis_][window.slice_num_]);
-  for (unsigned int s = 0; s < window.slices_.size(); ++s)
-    draw_slice(window, *window.slices_[s]);
-
-  if (*window.show_guidelines_)
-    draw_guidelines(window, cursor_.x(), cursor_.y(), cursor_.z());
-  window.viewport_->swap();
-  window.viewport_->release();
+  window.redraw_ = true;
 }
-
-  
-
 
 
 
@@ -1158,8 +1227,14 @@ ViewImage::draw_slice(SliceWindow &window, NrrdSlice &slice)
     draw_label(window, text, window.viewport_->width() - 2, 0, 
 	       FreeTypeText::se, font);
   }
-
-
+  
+  font = fonts_["fps"];
+  if (font) {
+    font->set_points(20.0);
+    draw_label(window, "fps: "+to_string(fps_), 
+	       0, window.viewport_->height() - 2,
+	       FreeTypeText::nw, font);
+  }
 
   glFlush();
 
@@ -1259,10 +1334,12 @@ ViewImage::extract_window_slices(SliceWindow &window) {
   int a;
   gui->lock();
   for (s = 0; s < window.slices_.size(); ++s) {
+#if 0
     window.viewport_->make_current();
     if (glIsTexture(window.slices_[s]->tex_name_))
       glDeleteTextures(1,&window.slices_[s]->tex_name_);
     window.viewport_->release();
+#endif
     delete window.slices_[s];
   }
   gui->unlock();
@@ -1954,7 +2031,6 @@ ViewImage::tcl_command(GuiArgs& args, void* userdata) {
     redraw_window_layout(layout);
   } else Module::tcl_command(args, userdata);
 }
-
 
 
 
