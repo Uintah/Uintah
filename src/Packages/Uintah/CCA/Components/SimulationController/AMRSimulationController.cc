@@ -165,6 +165,9 @@ void AMRSimulationController::run()
      archive.restartInitialize(d_restartTimestep, grid,
 			       scheduler->get_dw(1), &t, &delt);
      
+     ProblemSpecP pspec = archive.getRestartTimestepDoc();
+     XMLURL url = archive.getRestartTimestepURL();
+     lb->restartInitialize(pspec, url);
      output->restartSetup(restartFromDir, 0, d_restartTimestep, t,
 			  d_restartFromScratch, d_restartRemoveOldDir);
      sharedState->setCurrentTopLevelTimeStep( output->getCurrentTimestep() );
@@ -176,9 +179,6 @@ void AMRSimulationController::run()
      scheduler->get_dw(1)->setID( output->getCurrentTimestep() );
      scheduler->get_dw(1)->finalize();
      sim->restartInitialize();
-     ProblemSpecP pspec = archive.getRestartTimestepDoc();
-     XMLURL url = archive.getRestartTimestepURL();
-     lb->restartInitialize(pspec, url);
 
    } else {
      sharedState->setCurrentTopLevelTimeStep( 0 );
