@@ -18,7 +18,6 @@
 
 # Makefile fragment for this subdirectory
 
-ifeq($(HAVE_MPI),1)
 include $(SCIRUN_SCRIPTS)/smallso_prologue.mk
 
 SRCDIR   := Core/CCA/Component/Comm/Intra
@@ -30,4 +29,3 @@ PSELIBS := Core/Exceptions Core/Thread
 LIBS := $(MPI_LIBRARY)
 
 include $(SCIRUN_SCRIPTS)/smallso_epilogue.mk
-endif
