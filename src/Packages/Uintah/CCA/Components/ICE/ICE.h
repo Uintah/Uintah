@@ -194,16 +194,6 @@ using namespace SCIRun;
                
       void setBC(CCVariable<double>& press_CC, const CCVariable<double>& rho,
                const std::string& type, const Patch* p, const int mat_id);
-               
-      void setBC(CCVariable<double>& press_CC, 
-                StaticArray<constCCVariable<double> >& rho_micro_CC,
-                StaticArray<constCCVariable<double> >& rho_CC,
-                StaticArray<constCCVariable<double> >& vol_frac_CC,
-                StaticArray<constCCVariable<Vector> >& vel_CC,
-                DataWarehouse* old_dw,
-                const string& kind, 
-                const Patch* patch, 
-                const int mat_id);
 
       void setBC(CCVariable<Vector>& variable,const std::string& type,
 		 const Patch* p, const int mat_id);
@@ -244,16 +234,7 @@ using namespace SCIRun;
                         const MaterialSubset* matls,  
                         DataWarehouse* old_dw,
                         DataWarehouse* new_dw);  
-                         
-      void backoutGCPressFromVelFC(const Patch* patch,
-                                Patch::FaceType face,
-                                DataWarehouse* old_dw,
-                                CCVariable<double>& press_CC, 
-                          const StaticArray<constCCVariable<double> >& rho_micro_CC,
-                          const StaticArray<constCCVariable<double> >& rho_CC,
-                          const StaticArray<constCCVariable<double> >& vol_frac_CC,
-                          const StaticArray<constCCVariable<Vector> >& vel_CC);
-                             
+                                                      
       void getExchangeCoefficients( DenseMatrix& K,
                                     DenseMatrix& H ); 
 
