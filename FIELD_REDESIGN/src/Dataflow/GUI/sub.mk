@@ -25,11 +25,8 @@ CLEANPROGS := $(CLEANPROGS) $(SRCDIR)/tclIndex
 
 #
 # $Log$
-# Revision 1.2.2.2  2000/10/26 10:04:04  moulding
+# Revision 1.2.2.3  2000/10/26 14:16:54  moulding
 # merge HEAD into FIELD_REDESIGN
-#
-# Revision 1.2.2.1  2000/10/16 23:15:30  moulding
-# more Phase 1 changes to FIELD_REDESIGN branch.
 #
 # Revision 1.4  2000/10/24 05:57:42  moulding
 # new module maker Phase 2: new module maker goes online

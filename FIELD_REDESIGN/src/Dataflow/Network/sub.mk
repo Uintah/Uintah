@@ -24,11 +24,8 @@ include $(SRCTOP)/scripts/smallso_epilogue.mk
 
 #
 # $Log$
-# Revision 1.3.2.3  2000/10/26 10:03:59  moulding
+# Revision 1.3.2.4  2000/10/26 14:16:50  moulding
 # merge HEAD into FIELD_REDESIGN
-#
-# Revision 1.3.2.2  2000/10/16 23:15:24  moulding
-# more Phase 1 changes to FIELD_REDESIGN branch.
 #
 # Revision 1.7  2000/10/24 05:57:41  moulding
 # new module maker Phase 2: new module maker goes online

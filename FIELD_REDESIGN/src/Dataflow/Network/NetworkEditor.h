@@ -81,7 +81,7 @@ void postMessage(const clString& errmsg, bool err=true);
 
 //
 // $Log$
-// Revision 1.4.2.1  2000/10/26 10:03:58  moulding
+// Revision 1.4.2.2  2000/10/26 14:16:49  moulding
 // merge HEAD into FIELD_REDESIGN
 //
 // Revision 1.5  2000/10/21 18:35:10  moulding
