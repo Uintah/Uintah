@@ -8,12 +8,16 @@ SRCDIR   := Uintah/Components/MPM/ConstitutiveModel
 SRCS     += $(SRCDIR)/CompMooneyRivlin.cc $(SRCDIR)/CompNeoHook.cc \
 	$(SRCDIR)/CompNeoHookPlas.cc $(SRCDIR)/ConstitutiveModelFactory.cc \
 	$(SRCDIR)/ConstitutiveModel.cc \
-	$(SRCDIR)/MPMMaterial.cc $(SRCDIR)/ViscoScram.cc
+	$(SRCDIR)/MPMMaterial.cc $(SRCDIR)/ViscoScram.cc \
+	$(SRCDIR)/HypoElastic.cc 
 
 PSELIBS := Uintah/Grid
 
 #
 # $Log$
+# Revision 1.8  2000/12/08 22:16:22  bard
+# Added Hypo-Elastic constitutive model.
+#
 # Revision 1.7  2000/08/22 00:17:49  guilkey
 # Took ElasticConstitutiveModel, HyperElasticDamage and ViscoElasticDamage
 # out of sub.mk and ConstitutiveModelFactory, since they currently aren't
