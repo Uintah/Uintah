@@ -1,34 +1,26 @@
 #ifndef UINTAH_HOMEBREW_Task_H
 #define UINTAH_HOMEBREW_Task_H
 
-#include <Packages/Uintah/Core/Variables/ComputeSet.h>
-#include <Packages/Uintah/Core/Grid/fixedvector.h>
 #include <Packages/Uintah/Core/Grid/Ghost.h>
-#include <Packages/Uintah/Core/Util/Handle.h>
-#include <Packages/Uintah/Core/Util/constHandle.h>
-#include <Packages/Uintah/Core/Variables/SimpleString.h>
 #include <Packages/Uintah/Core/Variables/VarLabel.h>
+#include <Packages/Uintah/Core/Variables/ComputeSet.h>
 #include <Packages/Uintah/CCA/Ports/DataWarehouseP.h>
-#include <Core/Containers/TrivialAllocator.h>
-#include <Core/Geometry/IntVector.h>
+#include <Packages/Uintah/Core/Util/constHandle.h>
 #include <Core/Malloc/Allocator.h>
-#include <Core/Exceptions/InternalError.h>
+#include <Core/Geometry/IntVector.h>
+
 #include <sgi_stl_warnings_off.h>
 #include <map>
-#include <string>
 #include <vector>
-#include <iosfwd>
+#include <string>
+#include <iostream>
 #include <sgi_stl_warnings_on.h>
+
 
 namespace Uintah {
 
-  using std::vector;
-  using std::string;
-  using std::ostream;
-  using std::multimap;
-  
-  class DataWarehouse;
   class Level;
+  class DataWarehouse;
   class ProcessorGroup;
 
 /**************************************
@@ -300,7 +292,7 @@ WARNING
       Output
     };
     
-    Task(const SimpleString& taskName, TaskType type)
+    Task(const std::string& taskName, TaskType type)
       :  d_taskName(taskName),
 	 d_action(0)
     {
@@ -309,7 +301,7 @@ WARNING
     }
     
     template<class T>
-    Task(const SimpleString&         taskName,
+    Task(const std::string&         taskName,
 	 T*                    ptr,
 	 void (T::*pmf)(const ProcessorGroup*,
 			const PatchSubset* patches,
@@ -324,7 +316,7 @@ WARNING
     }
     
     template<class T, class Arg1>
-    Task(const SimpleString&         taskName,
+    Task(const std::string&         taskName,
 	 T*                    ptr,
 	 void (T::*pmf)(const ProcessorGroup*,
 			const PatchSubset* patches,
@@ -341,7 +333,7 @@ WARNING
     }
     
     template<class T, class Arg1, class Arg2>
-    Task(const SimpleString&         taskName,
+    Task(const std::string&         taskName,
 	 T*                    ptr,
 	 void (T::*pmf)(const ProcessorGroup*,
 			const PatchSubset* patches,
@@ -358,7 +350,7 @@ WARNING
     }
     
     template<class T, class Arg1, class Arg2, class Arg3>
-    Task(const SimpleString&         taskName,
+    Task(const std::string&         taskName,
 	 T*                    ptr,
 	 void (T::*pmf)(const ProcessorGroup*,
 			const PatchSubset* patches,
@@ -375,7 +367,7 @@ WARNING
     }
     
     template<class T, class Arg1, class Arg2, class Arg3, class Arg4>
-    Task(const SimpleString&         taskName,
+    Task(const std::string&         taskName,
 	 T*                    ptr,
 	 void (T::*pmf)(const ProcessorGroup*,
 			const PatchSubset* patches,
@@ -392,7 +384,7 @@ WARNING
     }
     
     template<class T, class Arg1, class Arg2, class Arg3, class Arg4, class Arg5>
-    Task(const SimpleString&         taskName,
+    Task(const std::string&         taskName,
 	 T*                    ptr,
 	 void (T::*pmf)(const ProcessorGroup*,
 			const PatchSubset* patches,
@@ -413,6 +405,7 @@ WARNING
     ~Task();
     
     void hasSubScheduler(bool state = true);
+    bool inline getHasSubScheduler() { return d_hasSubScheduler; }
     void usesMPI(bool state=true);
     void usesThreads(bool state);
     bool usesThreads() const {
@@ -543,7 +536,7 @@ WARNING
 	      const MaterialSubset*, vector<DataWarehouseP>& dws);
 
     inline const char* getName() const {
-      return d_taskName;
+      return d_taskName.c_str();
     }
     inline const PatchSet* getPatchSet() const {
       return patch_set;
@@ -604,7 +597,7 @@ WARNING
     private:
       template <class T>
       static constHandle< ComputeSubset<T> >
-      getComputeSubsetUnderDomain(string domString, DomainSpec dom,
+      getComputeSubsetUnderDomain(std::string domString, DomainSpec dom,
 				  const ComputeSubset<T>* subset,
 				  const ComputeSubset<T>* domainSubset);
       static constHandle< MaterialSubset >
@@ -633,7 +626,7 @@ WARNING
       }
     };
 
-    typedef multimap<const VarLabel*, Dependency*, VarLabel::Compare> DepMap;
+    typedef std::multimap<const VarLabel*, Dependency*, VarLabel::Compare> DepMap;
     
     const Dependency* getComputes() const {
       return comp_head;
@@ -681,11 +674,11 @@ WARNING
     
     //////////
     // Prints out information about the task...
-    void display( ostream & out ) const;
+    void display( std::ostream & out ) const;
     
     //////////
     // Prints out all information about the task, including dependencies
-    void displayAll( ostream & out ) const;
+    void displayAll( std::ostream & out ) const;
     
     int mapDataWarehouse(WhichDW dw) const;
     DataWarehouse* mapDataWarehouse(WhichDW dw, vector<DataWarehouseP>& dws) const;
@@ -693,14 +686,15 @@ WARNING
     int getSortedOrder() const {
       return sortedOrder;
     }
-  protected: // class Task
-    friend class TaskGraph;
-    friend class SchedulerCommon;
-    friend class DetailedTasks;
+
+    void setSortedOrder(int order) {
+      sortedOrder = order;
+    }
+
     void setMapping(int dwmap[TotalDWs]);
-    bool visited;
-    bool sorted;
+
     void setSets(const PatchSet* patches, const MaterialSet* matls);
+
     
   private: // class Task
     Dependency* isInDepMap(const DepMap& depMap, const VarLabel* var,
@@ -708,8 +702,8 @@ WARNING
     
     //////////
     // Insert Documentation Here:
-    SimpleString        d_taskName;
-    ActionBase*         d_action;
+    std::string d_taskName;
+    ActionBase* d_action;
     Dependency* comp_head;
     Dependency* comp_tail;
     Dependency* req_head;
@@ -736,9 +730,9 @@ WARNING
 
     static const MaterialSubset* getGlobalMatlSubset();
     static MaterialSubset* globalMatlSubset;
-    int sortedOrder;
 
     int dwmap[TotalDWs];
+    int sortedOrder;
   };
   
   inline void Task::Dependency::addComp(Edge* edge)
