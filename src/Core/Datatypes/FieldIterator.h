@@ -29,8 +29,10 @@ struct FieldIteratorBase {
   inline 
   T operator ++() { return ++index_; }
   
-  bool operator ==(const FieldIteratorBase &a) { return index_ == a.index_; }
-  bool operator !=(const FieldIteratorBase &a) { return index_ != a.index_; }
+  bool operator ==(const FieldIteratorBase &a) const 
+  { return index_ == a.index_; }
+  bool operator !=(const FieldIteratorBase &a) const 
+  { return index_ != a.index_; }
 
 protected:
   T index_;
