@@ -28,13 +28,14 @@
 #include <Widgets/BoxWidget.h>
 #include <Widgets/ScaledBoxWidget.h>
 #include <Widgets/ViewWidget.h>
+#include <Widgets/LightWidget.h>
 #include <Widgets/PathWidget.h>
 
 #include <iostream.h>
 
 enum WidgetTypes { WT_Point, WT_Arrow, WT_Crit, WT_Cross, WT_Gauge, WT_Ring,
-		   WT_Frame, WT_SFrame, WT_Box, WT_SBox, WT_View, WT_Path,
-		   NumWidgetTypes };
+		   WT_Frame, WT_SFrame, WT_Box, WT_SBox, WT_View, WT_Light,
+		   WT_Path, NumWidgetTypes };
 
 class WidgetTest : public Module {
    GeometryOPort* ogeom;
@@ -72,27 +73,27 @@ static clString module_name("WidgetTest");
 
 WidgetTest::WidgetTest(const clString& id)
 : Module("WidgetTest", id, Source), widget_scale("widget_scale", id, this),
-  widget_type("widget_type", id, this)
+  widget_type("widget_type", id, this), init(1)
 {
    // Create the output port
    ogeom = new GeometryOPort(this, "Geometry", GeometryIPort::Atomic);
    add_oport(ogeom);
 
-   widgets[WT_Point] = new PointWidget(this, &widget_lock, .1);
-   widgets[WT_Arrow] = new ArrowWidget(this, &widget_lock, .1);
-   widgets[WT_Crit] = new CriticalPointWidget(this, &widget_lock, .1);
-   widgets[WT_Cross] = new CrosshairWidget(this, &widget_lock, .1);
-   widgets[WT_Gauge] = new GaugeWidget(this, &widget_lock, .1);
-   widgets[WT_Ring] = new RingWidget(this, &widget_lock, .1);
-   widgets[WT_Frame] = new FrameWidget(this, &widget_lock, .1);
-   widgets[WT_SFrame] = new ScaledFrameWidget(this, &widget_lock, .1);
-   widgets[WT_Box] = new BoxWidget(this, &widget_lock, .1);
-   widgets[WT_SBox] = new ScaledBoxWidget(this, &widget_lock, .1);
-   widgets[WT_View] = new ViewWidget(this, &widget_lock, .1);
-   widgets[WT_Path] = new PathWidget(this, &widget_lock, .1);
+   float INIT(0.01);
 
-   widget_scale.set(.1);
-   init = 1;
+   widgets[WT_Point] = new PointWidget(this, &widget_lock, INIT);
+   widgets[WT_Arrow] = new ArrowWidget(this, &widget_lock, INIT);
+   widgets[WT_Crit] = new CriticalPointWidget(this, &widget_lock, INIT);
+   widgets[WT_Cross] = new CrosshairWidget(this, &widget_lock, INIT);
+   widgets[WT_Gauge] = new GaugeWidget(this, &widget_lock, INIT);
+   widgets[WT_Ring] = new RingWidget(this, &widget_lock, INIT);
+   widgets[WT_Frame] = new FrameWidget(this, &widget_lock, INIT);
+   widgets[WT_SFrame] = new ScaledFrameWidget(this, &widget_lock, INIT);
+   widgets[WT_Box] = new BoxWidget(this, &widget_lock, INIT);
+   widgets[WT_SBox] = new ScaledBoxWidget(this, &widget_lock, INIT);
+   widgets[WT_View] = new ViewWidget(this, &widget_lock, INIT);
+   widgets[WT_Light] = new LightWidget(this, &widget_lock, INIT);
+   widgets[WT_Path] = new PathWidget(this, &widget_lock, INIT);
 }
 
 WidgetTest::WidgetTest(const WidgetTest& copy, int deep)
@@ -168,16 +169,16 @@ void WidgetTest::tcl_command(TCLArgs& args, void* userdata)
        widget_lock.write_lock();
        for(int i = 0; i < NumWidgetTypes; i++)
 	   widgets[i]->SetState(0);
-   
        widgets[widget_type.get()]->SetState(1);
-       widget_lock.write_unlock();
-       widgets[widget_type.get()]->SetScale(widget_scale.get());
-//       widget_lock.write_unlock();
-   } else if(args[1] == "scale"){
-//       widget_lock.write_lock();
+   
        widgets[widget_type.get()]->SetScale(widget_scale.get());
        widgets[widget_type.get()]->execute();
-//       widget_lock.write_unlock();
+       widget_lock.write_unlock();
+   } else if(args[1] == "scale"){
+       widget_lock.write_lock();
+       widgets[widget_type.get()]->SetScale(widget_scale.get());
+       widgets[widget_type.get()]->execute();
+       widget_lock.write_unlock();
        ogeom->flushViews();
     } else {
       Module::tcl_command(args, userdata);

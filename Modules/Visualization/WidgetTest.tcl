@@ -40,7 +40,7 @@ itcl_class WidgetTest {
 		{RingWidget 5} {FrameWidget 6} \
 		{ScaledFrameWidget 7} {BoxWidget 8} \
 		{ScaledBoxWidget 9} {ViewWidget 10} \
-		{PathWidget 11}}
+		{LightWidget 11} {PathWidget 12}}
 	pack $w.f.wids
 
 	button $w.f.nextmode -text "NextMode" -command "$this-c nextmode"
