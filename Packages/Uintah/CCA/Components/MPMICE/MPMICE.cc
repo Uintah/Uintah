@@ -113,6 +113,7 @@ void MPMICE::problemSetup(const ProblemSpecP& prob_spec, GridP& grid,
     debug_ps->get("d_dbgBeginIndx",    d_dbgBeginIndx);
     debug_ps->get("d_dbgEndIndx",      d_dbgEndIndx );
     debug_ps->get("dbg_SigFigs",       d_dbgSigFigs );
+    debug_ps->get("dbg_Matls",         d_dbgMatls);
 
     d_dbgOldTime = -d_dbgOutputInterval;
     d_dbgNextDumpTime = 0.0;
@@ -674,11 +675,11 @@ void MPMICE::actuallyInitialize(const ProcessorGroup*,
         ostringstream desc;
         desc << "MPMICE_Initialization_Mat_" << indx << "_patch_"
              << patch->getID();
-        d_ice->printData(patch,   1, desc.str(), "rho_CC",      rho_CC);
-        d_ice->printData(patch,   1, desc.str(), "rho_micro_CC",rho_micro);
-        d_ice->printData(patch,   1, desc.str(), "sp_vol_CC",   sp_vol_CC);
-        d_ice->printData(patch,   1, desc.str(), "Temp_CC",     Temp_CC);
-        d_ice->printVector(patch, 1, desc.str(), "vel_CC", 0,   vel_CC);
+        d_ice->printData(indx, patch,   1, desc.str(), "rho_CC",      rho_CC);
+        d_ice->printData(indx, patch,   1, desc.str(), "rho_micro_CC",rho_micro);
+        d_ice->printData(indx, patch,   1, desc.str(), "sp_vol_CC",   sp_vol_CC);
+        d_ice->printData(indx, patch,   1, desc.str(), "Temp_CC",     Temp_CC);
+        d_ice->printVector(indx, patch, 1, desc.str(), "vel_CC", 0,   vel_CC);
       }          
     }  // num_MPM_matls loop 
 
@@ -807,7 +808,7 @@ void MPMICE::interpolatePAndGradP(const ProcessorGroup*,
         ostringstream desc;
         desc<< "BOT_MPMICE::interpolatePAndGradP_mat_"<< indx<<"_patch_"
             <<patch->getID();                   
-        printNCVector( patch, 1,desc.str(),"gradPAccNC",0,gradPAccNC);
+        printNCVector(0, patch, 1,desc.str(),"gradPAccNC",0,gradPAccNC);
       }
     }  // numMPMMatls
   } //patches
@@ -887,10 +888,10 @@ void MPMICE::interpolateNCToCC_0(const ProcessorGroup*,
         ostringstream desc;
         desc<< "TOP_MPMICE::interpolateNCToCC_0_mat_"<<indx<<"_patch_"
             <<  patch->getID();
-        printData(     patch, 1,desc.str(), "gmass",       gmass);
-        printData(     patch, 1,desc.str(), "gvolume",     gvolume);
-        printData(     patch, 1,desc.str(), "gtemperatue", gtemperature);
-        printNCVector( patch, 1,desc.str(), "gvelocity", 0, gvelocity);
+        printData(     indx, patch, 1,desc.str(), "gmass",       gmass);
+        printData(     indx, patch, 1,desc.str(), "gvolume",     gvolume);
+        printData(     indx, patch, 1,desc.str(), "gtemperatue", gtemperature);
+        printNCVector( indx, patch, 1,desc.str(), "gvelocity", 0, gvelocity);
       }
 #endif 
       //__________________________________
@@ -957,10 +958,10 @@ void MPMICE::interpolateNCToCC_0(const ProcessorGroup*,
         ostringstream desc;
         desc<< "BOT_MPMICE::interpolateNCToCC_0_Mat_"<< indx <<"_patch_"
             <<  patch->getID();
-        d_ice->printData(   patch, 1,desc.str(), "cmass",     cmass);
-        d_ice->printData(   patch, 1,desc.str(), "cvolume",   cvolume);
-        d_ice->printData(   patch, 1,desc.str(), "Temp_CC",   Temp_CC);
-        d_ice->printVector( patch, 1,desc.str(), "vel_CC", 0,vel_CC);
+        d_ice->printData(   indx, patch, 1,desc.str(), "cmass",     cmass);
+        d_ice->printData(   indx, patch, 1,desc.str(), "cvolume",   cvolume);
+        d_ice->printData(   indx, patch, 1,desc.str(), "Temp_CC",   Temp_CC);
+        d_ice->printVector( indx, patch, 1,desc.str(), "vel_CC", 0,vel_CC);
       } 
     }
     if(doMechNew < 0.){
@@ -1036,10 +1037,10 @@ void MPMICE::computeLagrangianValuesMPM(const ProcessorGroup*,
          ostringstream desc;
          desc <<"TOP_MPMICE::computeLagrangianValuesMPM_mat_"<<indx<<"_patch_"
               <<  indx<<patch->getID();
-         d_ice->printData(patch,1,desc.str(), "cmass",    cmass);
-         printData(     patch,  1,desc.str(), "gmass",    gmass);
-         printData(     patch,  1,desc.str(), "gtemStar", gtempstar);
-         printNCVector( patch,  1,desc.str(), "gvelocityStar", 0, gvelocity);
+         d_ice->printData(indx, patch,1,desc.str(), "cmass",    cmass);
+         printData(     indx, patch,  1,desc.str(), "gmass",    gmass);
+         printData(     indx, patch,  1,desc.str(), "gtemStar", gtempstar);
+         printNCVector( indx, patch,  1,desc.str(), "gvelocityStar", 0, gvelocity);
       }
 
       for(CellIterator iter = patch->getExtraCellIterator();!iter.done();
@@ -1131,9 +1132,9 @@ void MPMICE::computeLagrangianValuesMPM(const ProcessorGroup*,
         ostringstream desc;
         desc<<"BOT_MPMICE::computeLagrangianValuesMPM_mat_"<<indx<<"_patch_"
             <<  patch->getID();
-        d_ice->printData(   patch, 1,desc.str(), "rho_CC",    rho_CC);
-        d_ice->printData(   patch, 1,desc.str(), "int_eng_L", int_eng_L);
-        d_ice->printVector( patch, 1,desc.str(), "mom_L_CC", 0,  cmomentum);
+        d_ice->printData(   indx, patch, 1,desc.str(), "rho_CC",    rho_CC);
+        d_ice->printData(   indx, patch, 1,desc.str(), "int_eng_L", int_eng_L);
+        d_ice->printVector( indx, patch, 1,desc.str(), "mom_L_CC", 0,  cmomentum);
       }
     }  //numMatls
     //__________________________________
@@ -1243,9 +1244,9 @@ void MPMICE::interpolateCCToNC(const ProcessorGroup*,
         ostringstream desc;
         desc<< "BOT_MPMICE::interpolateCCToNC_mat_"<< indx<<"_patch_"
             <<patch->getID();                   
-        printData(     patch, 1,desc.str(), "dTdt_NC",     dTdt_NC);
-        printNCVector( patch, 1,desc.str(),"gvelocity",    0,gvelocity);
-        printNCVector( patch, 1,desc.str(),"gacceleration",0,gacceleration);
+        printData(     indx, patch, 1,desc.str(), "dTdt_NC",     dTdt_NC);
+        printNCVector( indx, patch, 1,desc.str(),"gvelocity",    0,gvelocity);
+        printNCVector( indx, patch, 1,desc.str(),"gacceleration",0,gacceleration);
       }
     }  
   }  //patches
@@ -1434,18 +1435,18 @@ void MPMICE::computeEquilibrationPressure(const ProcessorGroup*,
     if(d_ice -> switchDebug_EQ_RF_press)  {
         ostringstream desc1;
         desc1<< "TOP_equilibration_patch_"<< patch->getID();
-        d_ice->printData( patch, 1, desc1.str(), "Press_CC_top", press); 
+        d_ice->printData( 0, patch, 1, desc1.str(), "Press_CC_top", press); 
 
         for (int m = 0; m < numALLMatls; m++)  {
           Material* matl = d_sharedState->getMaterial( m );
           int indx = matl->getDWIndex();
           ostringstream desc;
           desc<<"TOP_equilibration_Mat_"<< indx<<"_patch_"<<patch->getID();
-          d_ice->printData( patch,1,desc.str(),"rho_CC_new",rho_CC_new[m]);    
-          d_ice->printData( patch,1,desc.str(),"rho_micro", rho_micro[m]);     
-        //  d_ice->printData( patch,0,desc.str(),"speedSound",speedSound_new[m]); 
-          d_ice->printData( patch,1,desc.str(),"Temp_CC",   Temp[m]);     
-          d_ice->printData( patch,1,desc.str(),"vol_frac_CC",vol_frac[m]);
+          d_ice->printData( indx, patch,1,desc.str(),"rho_CC_new",rho_CC_new[m]);    
+          d_ice->printData( indx, patch,1,desc.str(),"rho_micro", rho_micro[m]);     
+        //  d_ice->printData( indx, patch,0,desc.str(),"speedSound",speedSound_new[m]); 
+          d_ice->printData( indx, patch,1,desc.str(),"Temp_CC",   Temp[m]);     
+          d_ice->printData( indx, patch,1,desc.str(),"vol_frac_CC",vol_frac[m]);
         }
       }
   //______________________________________________________________________
@@ -1684,17 +1685,17 @@ void MPMICE::computeEquilibrationPressure(const ProcessorGroup*,
     if(d_ice -> switchDebug_EQ_RF_press)  { 
       ostringstream desc1;
       desc1<< "BOT_equilibration_patch_"<<patch->getID();
-      d_ice->printData( patch, 1, desc1.str(), "Press_CC_equil", press_new);
-      d_ice->printData( patch, 1, desc1.str(), "delPress",       delPress_tmp);
+      d_ice->printData( 0, patch, 1, desc1.str(), "Press_CC_equil", press_new);
+      d_ice->printData( 0, patch, 1, desc1.str(), "delPress",       delPress_tmp);
    #if 1                 
       for (int m = 0; m < numALLMatls; m++)  {
          Material* matl = d_sharedState->getMaterial( m );
          int indx = matl->getDWIndex();
          ostringstream desc; 
          desc<< "BOT_equilibration_Mat_"<<indx<<"_patch_"<< patch->getID();
-         d_ice->printData( patch,1,desc.str(), "rho_CC",      rho_CC_new[m]);
-         d_ice->printData( patch,1,desc.str(), "rho_micro_CC",rho_micro[m]);
-         d_ice->printData( patch,1,desc.str(), "vol_frac_CC", vol_frac[m]);
+         d_ice->printData( indx, patch,1,desc.str(), "rho_CC",      rho_CC_new[m]);
+         d_ice->printData( indx, patch,1,desc.str(), "rho_micro_CC",rho_micro[m]);
+         d_ice->printData( indx, patch,1,desc.str(), "vol_frac_CC", vol_frac[m]);
       }
     #endif
     }
@@ -1987,17 +1988,17 @@ void MPMICE::HEChemistry(const ProcessorGroup*,
         char desc[50];
         if(ice_matl) {
           sprintf(desc,"ICEsources_sinks_Mat_%d_patch_%d",indx,patch->getID());
-          d_ice->printData( patch,0,desc,"SumburnedMass",  sumBurnedMass);      
-          d_ice->printData( patch,0,desc,"sumReleasedHeat",sumReleasedHeat);    
-          d_ice->printData( patch,0,desc,"sumCreatedVol",  sumCreatedVol);  
-          d_ice->printVector( patch,0,desc,"sum_Mom_comb", 0, sumMom_comb);    
+          d_ice->printData( indx, patch,0,desc,"SumburnedMass",  sumBurnedMass);      
+          d_ice->printData( indx, patch,0,desc,"sumReleasedHeat",sumReleasedHeat);    
+          d_ice->printData( indx, patch,0,desc,"sumCreatedVol",  sumCreatedVol);  
+          d_ice->printVector(indx,patch,0,desc,"sum_Mom_comb", 0, sumMom_comb);    
         }
         if(mpm_matl) {
           sprintf(desc,"MPMsources_sinks_Mat_%d_patch_%d",indx,patch->getID());
-          d_ice->printData( patch, 0, desc,"burnedMass",   burnedMass[m]);
-          d_ice->printData( patch, 0, desc,"int_eng_react",int_eng_react[m]);
-          d_ice->printData( patch, 0, desc,"createdVol",   createdVol[m]); 
-          d_ice->printVector( patch, 0, desc,"mom_comb", 0, mom_comb[m]);      
+          d_ice->printData( indx, patch, 0, desc,"burnedMass",   burnedMass[m]);
+          d_ice->printData( indx, patch, 0, desc,"int_eng_react",int_eng_react[m]);
+          d_ice->printData( indx, patch, 0, desc,"createdVol",   createdVol[m]); 
+          d_ice->printVector(indx,patch, 0, desc,"mom_comb", 0, mom_comb[m]);      
         }
       }
     }
