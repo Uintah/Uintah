@@ -42,12 +42,31 @@ using namespace std;
 PersistentTypeID ImageMesh::type_id("ImageMesh", "MeshBase", maker);
 
 
+ImageMesh::ImageMesh(unsigned x, unsigned y,
+		     const Point &min, const Point &max)
+  : min_x_(0), min_y_(0), nx_(x), ny_(y)
+{
+  transform_.pre_scale(Vector(1.0 / (x-1.0), 1.0 / (y-1.0), 1.0));
+  transform_.pre_scale(max - min);
+  transform_.pre_translate(Vector(min));
+  transform_.invert();
+}
+
+
+
 BBox
 ImageMesh::get_bounding_box() const
 {
+  Point p0(0.0, 0.0, 0.0);
+  Point p1(nx_, 0.0, 0.0);
+  Point p2(nx_, ny_, 0.0);
+  Point p3(0.0, ny_, 0.0);
+  
   BBox result;
-  result.extend(min_);
-  result.extend(max_);
+  result.extend(transform_.const_unproject(p0));
+  result.extend(transform_.const_unproject(p1));
+  result.extend(transform_.const_unproject(p2));
+  result.extend(transform_.const_unproject(p3));
   return result;
 }
 
@@ -85,34 +104,25 @@ ImageMesh::get_faces(Face::array_type &arr, const BBox &bbox) const
 void
 ImageMesh::get_center(Point &result, Node::index_type idx) const
 {
-  const double sx = (max_.x() - min_.x()) / (nx_ - 1);
-  const double sy = (max_.y() - min_.y()) / (ny_ - 1);
-
-  result.x(idx.i_ * sx + min_.x());
-  result.y(idx.j_ * sy + min_.y());
-  result.z(0);
+  Point p(idx.i_, idx.j_, 0.0);
+  result = transform_.const_unproject(p);
 }
 
 
 void
 ImageMesh::get_center(Point &result, Face::index_type idx) const
 {
-  const double sx = (max_.x() - min_.x()) / (nx_ - 1);
-  const double sy = (max_.y() - min_.y()) / (ny_ - 1);
-
-  result.x((idx.i_ + 0.5) * sx + min_.x());
-  result.y((idx.j_ + 0.5) * sy + min_.y());
-  result.z(0);
+  Point p(idx.i_ + 0.5, idx.j_ + 0.5, 0.0);
+  result = transform_.const_unproject(p);
 }
 
 bool
 ImageMesh::locate(Face::index_type &face, const Point &p) const
 {
-  double i = (p.x() - min_.x()) / (max_.x() - min_.x()) * (nx_ - 1) + 0.5;
-  double j = (p.y() - min_.y()) / (max_.y() - min_.y()) * (ny_ - 1) + 0.5;
+  const Point r = transform_.project(p);
 
-  face.i_ = (unsigned int)i;
-  face.j_ = (unsigned int)j;
+  face.i_ = (unsigned int)r.x();
+  face.j_ = (unsigned int)r.y();
 
   if (face.i_ >= (nx_-1) ||
       face.j_ >= (ny_-1))
@@ -166,8 +176,6 @@ ImageMesh::io(Piostream& stream)
   // IO data members, in order
   Pio(stream, nx_);
   Pio(stream, ny_);
-  Pio(stream, min_);
-  Pio(stream, max_);
 
   stream.end_class();
 }
@@ -191,7 +199,7 @@ template<>
 ImageMesh::Node::iterator
 ImageMesh::tend(ImageMesh::Node::iterator *) const
 {
-  return Node::iterator(this, min_x_ + nx_, min_y_ + ny_);
+  return Node::iterator(this, min_x_, min_y_ + ny_);
 }
 
 template<>
@@ -234,7 +242,7 @@ template<>
 ImageMesh::Face::iterator
 ImageMesh::tend(ImageMesh::Face::iterator *) const
 {
-  return Face::iterator(this, min_x_ + nx_ - 1, min_y_ + ny_ - 1);
+  return Face::iterator(this, min_x_, min_y_ + ny_ - 1);
 }
 
 template<>

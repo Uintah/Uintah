@@ -32,6 +32,7 @@
 #define SCI_project_ImageMesh_h 1
 
 #include <Core/Geometry/Point.h>
+#include <Core/Geometry/Transform.h>
 #include <Core/Containers/LockingHandle.h>
 #include <Core/Datatypes/MeshBase.h>
 #include <Core/share/share.h>
@@ -183,7 +184,7 @@ public:
     NodeIter &operator++()
     {
       i_++;
-      if (i_ >= mesh_->min_x_+mesh_->nx_)	{
+      if (i_ >= mesh_->min_x_ + mesh_->nx_) {
 	i_ = mesh_->min_x_;
 	j_++;
       }
@@ -270,16 +271,14 @@ public:
 
   ImageMesh()
     : min_x_(0), min_y_(0),
-      nx_(1), ny_(1), min_(Point(0, 0, 0)), max_(Point(1, 1, 1)) {}
-  ImageMesh(unsigned x, unsigned y, const Point &min, const Point &max)
-    : min_x_(0), min_y_(0), nx_(x), ny_(y), min_(min), max_(max) {}
+      nx_(1), ny_(1) {}
+  ImageMesh(unsigned x, unsigned y, const Point &min, const Point &max);
   ImageMesh(ImageMesh* mh, unsigned int mx, unsigned int my,
 	    unsigned int x, unsigned int y)
-    : min_x_(mx), min_y_(my), nx_(x), ny_(y), min_(mh->min_), max_(mh->max_) {}
+    : min_x_(mx), min_y_(my), nx_(x), ny_(y), transform_(mh->transform_) {}
   ImageMesh(const ImageMesh &copy)
     : min_x_(copy.min_x_), min_y_(copy.min_y_),
-      nx_(copy.get_nx()), ny_(copy.get_ny()),
-      min_(copy.get_min()), max_(copy.get_max()) {}
+      nx_(copy.get_nx()), ny_(copy.get_ny()), transform_(copy.transform_) {}
   virtual ImageMesh *clone() { return new ImageMesh(*this); }
   virtual ~ImageMesh() {}
 
@@ -306,9 +305,7 @@ public:
   //! get the mesh statistics
   unsigned get_nx() const { return nx_; }
   unsigned get_ny() const { return ny_; }
-  Point get_min() const { return min_; }
-  Point get_max() const { return max_; }
-  Vector diagonal() const { return max_-min_; }
+  Vector diagonal() const { return get_bounding_box().diagonal(); }
   virtual BBox get_bounding_box() const;
 
   //! set the mesh statistics
@@ -316,9 +313,6 @@ public:
   void set_min_y(unsigned y) {min_y_ = y; }
   void set_nx(unsigned x) { nx_ = x; }
   void set_ny(unsigned y) { ny_ = y; }
-  void set_min(Point p) { min_ = p; }
-  void set_max(Point p) { max_ = p; }
-
 
   //! get the child elements of the given index
   void get_nodes(Node::array_type &, Edge::index_type) const {}
@@ -377,7 +371,7 @@ private:
   unsigned nx_, ny_;
 
   //! the object space extents of a ImageMesh
-  Point min_, max_;
+  Transform transform_;
 
   // returns a ImageMesh
   static Persistent *maker() { return new ImageMesh(); }
