@@ -78,6 +78,7 @@ private:
 
   void update_isosurface_material() {}
   void update_isosurface_value();
+  void update_cutting_plane(string which, float val);
 };
 
 DECLARE_MAKER(GeoProbeScene)
@@ -264,6 +265,8 @@ void GeoProbeScene::tcl_command(GuiArgs& args, void* userdata)
     update_isosurface_color();
   } else if (args[1] == "update_isosurface_value") {
     update_isosurface_value();
+  } else if (args[1] == "update_cut") {
+    update_cutting_plane(args[2], atof(args[3].c_str()));
   } else {
     Module::tcl_command(args, userdata);
   }
@@ -297,5 +300,22 @@ void GeoProbeScene::update_isosurface_value() {
   vdpy->change_isoval((float)(iso_val_.get()));
 }
 
+void GeoProbeScene::update_cutting_plane(string which, float val) {
+  cout << "Updating cutting plane ";
+  if (which == "xa") {
+    cout << "xa";
+  } else if (which == "xb") {
+    cout << "xb";
+  } else if (which == "ya") {
+    cout << "ya";
+  } else if (which == "yb") {
+    cout << "yb";
+  } else if (which == "za") {
+    cout << "za";
+  } else if (which == "zb") {
+    cout << "zb";
+  }
+  cout <<" with value "<<val<<"\n";
+}
 
 } // End namespace rtrt
