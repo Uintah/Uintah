@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="iso-8859-1"?>
 <filter name="DiscreteGaussianImageFilter">
-  <include href="/Users/yarden/projects/SCIRun/src/Packages/Insight/ITK/itk_DiscreteGaussianImageFilter.xml"/>
-  <include href="/Users/yarden/projects/SCIRun/src/Packages/Insight/Dataflow/Modules/Filters/XML/gui_DiscreteGuassianImageFilter_Yarden.xml"/>
+  <include href="ITK/itk_DiscreteGaussianImageFilter.xml"/>
+  <include href="Dataflow/Modules/Filters/XML/gui_DiscreteGuassianImageFilter_Yarden.xml"/>
 
 <filter-sci name="DiscreteGaussianImageFilter">
   <package>Insight</package>
