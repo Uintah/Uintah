@@ -132,8 +132,8 @@ using std::vector;
 
       const VarLabel* pCellNAPIDLabel;
 
-      static vector<vector<const VarLabel* > > d_particleState;
-      static vector<vector<const VarLabel* > > d_particleState_preReloc;
+      vector<vector<const VarLabel* > > d_particleState;
+      vector<vector<const VarLabel* > > d_particleState_preReloc;
 
 
       // Implicit MPM labels
