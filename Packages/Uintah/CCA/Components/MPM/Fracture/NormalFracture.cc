@@ -75,13 +75,12 @@ void NormalFracture::computeBoundaryContact(
   Lattice lattice(pX_pg);
 
   //Allocate new data
-  ParticleVariable<Vector> pContactNormal_p_new;
-  new_dw->allocate(pContactNormal_p_new, lb->pContactNormalLabel, pset_p);
+  ParticleVariable<Vector> pTouchNormal_p_new;
+  new_dw->allocate(pTouchNormal_p_new, lb->pTouchNormalLabel, pset_p);
   
   for(ParticleSubset::iterator iter = pset_p->begin();
           iter != pset_p->end(); iter++)
   {
-#if 0
     particleIndex pIdx_p = *iter;
     particleIndex pIdx_pg = pIdxEx[pIdx_p];
 
@@ -92,8 +91,8 @@ void NormalFracture::computeBoundaryContact(
     lattice.getParticlesNeighbor(particlePoint, particles);
     int particlesNumber = particles.size();
 
-    int contactFacetsNum = 0;
-    pContactNormal_p_new[pIdx_p] = Vector(0.,0.,0.);
+    int touchFacetsNum = 0;
+    pTouchNormal_p_new[pIdx_p] = Vector(0.,0.,0.);
 
     //other side
     for(int facetIdx=0;facetIdx<3;facetIdx++)
@@ -111,8 +110,8 @@ void NormalFracture::computeBoundaryContact(
           if( vDis>0 && vDis<(size0+size1)/2 ) {
             double hDis = (dis - n1 * vDis).length();
             if(hDis < size1/2) {
-	      pContactNormal_p_new[pIdx_p] -= n1;
-  	      contactFacetsNum ++;
+	      pTouchNormal_p_new[pIdx_p] -= n1;
+  	      touchFacetsNum ++;
 	    }
           }
 	}
@@ -135,19 +134,18 @@ void NormalFracture::computeBoundaryContact(
           if( vDis>0 && vDis<(size0+size1)/2 ) {
             double hDis = (dis - n0 * vDis).length();
             if(hDis < size0/2) {
-	      pContactNormal_p_new[pIdx_p] += n0;
-  	      contactFacetsNum ++;
+	      pTouchNormal_p_new[pIdx_p] += n0;
+  	      touchFacetsNum ++;
 	    }
           }
 	}
       }
     }
 
-    if(contactFacetsNum>0) pContactNormal_p_new[pIdx_p].normalize();
-#endif
+    if(touchFacetsNum>0) pTouchNormal_p_new[pIdx_p].normalize();
   }
 
-  new_dw->put(pContactNormal_p_new, lb->pContactNormalLabel);
+  new_dw->put(pTouchNormal_p_new, lb->pTouchNormalLabel);
   }
 }
 
@@ -157,7 +155,7 @@ void NormalFracture::computeConnectivity(
 		  DataWarehouse* old_dw, 
 		  DataWarehouse* new_dw)
 {
-  for(int p=0;p<patches->size();p++){
+  for(int p=0;p<patches->size();p++) {
     const Patch* patch = patches->get(p);
 
   static Vector zero(0.,0.,0.);
@@ -170,7 +168,7 @@ void NormalFracture::computeConnectivity(
   ParticleVariable<double> pVolume_pg;
   ParticleVariable<int>    pIsBroken_pg;
   ParticleVariable<Vector> pCrackNormal_pg[3];
-  ParticleVariable<Vector> pContactNormal_pg;
+  ParticleVariable<Vector> pTouchNormal_pg;
 
   old_dw->get(pX_pg, lb->pXLabel, pset_pg);
   old_dw->get(pVolume_pg, lb->pVolumeLabel, pset_pg);
@@ -178,7 +176,7 @@ void NormalFracture::computeConnectivity(
   old_dw->get(pCrackNormal_pg[0], lb->pCrackNormal1Label, pset_pg);
   old_dw->get(pCrackNormal_pg[1], lb->pCrackNormal2Label, pset_pg);
   old_dw->get(pCrackNormal_pg[2], lb->pCrackNormal3Label, pset_pg);
-  new_dw->get(pContactNormal_pg, lb->pContactNormalLabel, pset_pg);
+  new_dw->get(pTouchNormal_pg, lb->pTouchNormalLabel, pset_pg);
 
   ParticleSubset* pset_p = old_dw->getParticleSubset(matlindex, patch);
 
@@ -191,7 +189,9 @@ void NormalFracture::computeConnectivity(
   fit(pset_p,pX_p,pset_pg,pX_pg,pIdxEx);
 
   ParticleVariable<int>       pConnectivity_p_new;
+  ParticleVariable<Vector>    pContactNormal_p_new;
   new_dw->allocate(pConnectivity_p_new, lb->pConnectivityLabel, pset_p);
+  new_dw->allocate(pContactNormal_p_new, lb->pContactNormalLabel, pset_p);
 
   Lattice lattice(pX_pg);
   ParticlesNeighbor particles;
@@ -203,6 +203,8 @@ void NormalFracture::computeConnectivity(
   {
     particleIndex pIdx_p = *iter;
     particleIndex pIdx_pg = pIdxEx[pIdx_p];
+    
+    pContactNormal_p_new[pIdx_p] = Vector(0.,0.,0.);
     
     patch->findCell(pX_p[pIdx_p],cellIdx);
     particles.clear();
@@ -224,11 +226,12 @@ void NormalFracture::computeConnectivity(
         double r = pow(pVolume_pg[pidx_pg] *0.75/M_PI,0.3333333333);
         double r2 = r*r;
 	
-	if( pContactNormal_pg[pidx_pg].length2() > 0.5 )
+	if( pTouchNormal_pg[pidx_pg].length2() > 0.5 )
 	{
-	  Point O = pX_pg[pidx_pg] + pContactNormal_pg[pidx_pg] * r;
-          if( !particles.visible(A,B,O,pContactNormal_pg[pidx_pg],r2) ) {
+	  Point O = pX_pg[pidx_pg] + pTouchNormal_pg[pidx_pg] * r;
+          if( !particles.visible(A,B,O,pTouchNormal_pg[pidx_pg],r2) ) {
 	    conn[k] = 2;
+	    pContactNormal_p_new[pIdx_p] = pTouchNormal_pg[pidx_pg];
 	    break;
 	  }
 	}
@@ -250,6 +253,7 @@ void NormalFracture::computeConnectivity(
   }
   
   new_dw->put(pConnectivity_p_new, lb->pConnectivityLabel);
+  new_dw->put(pContactNormal_p_new, lb->pContactNormalLabel);
   }
 }
 
