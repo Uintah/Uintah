@@ -408,33 +408,47 @@ AddSparse(const SparseRowMatrix &a, const SparseRowMatrix &b)
     rows[r+1] = rows[r];
     ca = a.rows[r];
     cb = b.rows[r];
-    while (ca < a.rows[r+1] && cb < b.rows[r+1])
+    while (1)
     {
-      if (a.columns[ca] < b.columns[cb] || cb >= b.rows[r+1])
+      if (ca >= a.rows[r+1] && cb >= b.rows[r+1])
       {
-	cols.push_back(a.columns[ca]);
-	vals.push_back(a.a[ca]);
-	rows[r+1]++;
-	ca++;
+	break;
       }
-      else if (a.columns[ca] > b.columns[cb] || ca >= a.rows[r+1])
+      else if (ca >= a.rows[r+1])
       {
 	cols.push_back(b.columns[cb]);
 	vals.push_back(b.a[cb]);
 	rows[r+1]++;
 	cb++;
       }
-      else if (a.columns[ca] == b.columns[cb])
+      else if (cb >= b.rows[r+1])
+      {
+	cols.push_back(a.columns[ca]);
+	vals.push_back(a.a[ca]);
+	rows[r+1]++;
+	ca++;
+      }
+      else if (a.columns[ca] < b.columns[cb])
+      {
+	cols.push_back(a.columns[ca]);
+	vals.push_back(a.a[ca]);
+	rows[r+1]++;
+	ca++;
+      }
+      else if (a.columns[ca] > b.columns[cb])
+      {
+	cols.push_back(b.columns[cb]);
+	vals.push_back(b.a[cb]);
+	rows[r+1]++;
+	cb++;
+      }
+      else
       {
 	cols.push_back(a.columns[ca]);
 	vals.push_back(a.a[ca] + b.a[cb]);
 	rows[r+1]++;
 	ca++;
 	cb++;
-      }
-      else
-      {
-	ASSERTFAIL("Should not get here.");
       }
     }
   }
