@@ -28,7 +28,7 @@ Persistent* make_GeomPick()
 PersistentTypeID GeomPick::type_id("GeomPick", "GeomObj", make_GeomPick);
 
 GeomPick::GeomPick(GeomObj* obj, Pickable* module)
-: GeomContainer(obj), module(module), cbdata(0),  pick_index(-99),
+: GeomContainer(obj), module(module), cbdata(0),  picked_obj(0),
   directions(6), widget(0), selected(0), ignore(0), drawOnlyOnPick(0)
 {
     directions[0]=Vector(1,0,0);
@@ -41,7 +41,7 @@ GeomPick::GeomPick(GeomObj* obj, Pickable* module)
 
 GeomPick::GeomPick(GeomObj* obj, Pickable* module,
 		   Pickable* widget, int widget_data)
-: GeomContainer(obj), module(module), cbdata(0), pick_index(-99),
+: GeomContainer(obj), module(module), cbdata(0), picked_obj(0),
   directions(6), widget(widget), widget_data(widget_data), selected(0),
   ignore(0), drawOnlyOnPick(0)
 {
@@ -54,7 +54,7 @@ GeomPick::GeomPick(GeomObj* obj, Pickable* module,
 }
 
 GeomPick::GeomPick(GeomObj* obj, Pickable* module, const Vector& v1)
-: GeomContainer(obj), module(module), cbdata(0),directions(2), pick_index(-99),
+: GeomContainer(obj), module(module), cbdata(0),directions(2), picked_obj(0),
   widget(0), selected(0), ignore(0), drawOnlyOnPick(0)
 {
     directions[0]=v1;
@@ -62,7 +62,7 @@ GeomPick::GeomPick(GeomObj* obj, Pickable* module, const Vector& v1)
 }
 
 GeomPick::GeomPick(GeomObj* obj, Pickable* module, const Vector& v1, const Vector& v2)
-: GeomContainer(obj), module(module), cbdata(0), directions(4), pick_index(-99),
+: GeomContainer(obj), module(module), cbdata(0), directions(4), picked_obj(0),
   widget(0), selected(0), ignore(0), drawOnlyOnPick(0)
 {
     directions[0]=v1;
@@ -73,7 +73,7 @@ GeomPick::GeomPick(GeomObj* obj, Pickable* module, const Vector& v1, const Vecto
 
 GeomPick::GeomPick(GeomObj* obj, Pickable* module, const Vector& v1, const Vector& v2,
 		   const Vector& v3)
-: GeomContainer(obj), module(module), cbdata(0), directions(6), pick_index(-99),
+: GeomContainer(obj), module(module), cbdata(0), directions(6), picked_obj(0),
   widget(0), selected(0), ignore(0), drawOnlyOnPick(0)
 {
     directions[0]=v1;
@@ -86,7 +86,7 @@ GeomPick::GeomPick(GeomObj* obj, Pickable* module, const Vector& v1, const Vecto
 
 GeomPick::GeomPick(const GeomPick& copy)
 : GeomContainer(copy), module(copy.module), cbdata(copy.cbdata), 
-  pick_index(copy.pick_index),
+  picked_obj(copy.picked_obj),
   directions(copy.directions), widget(copy.widget),
   selected(copy.selected),  ignore(copy.ignore), highlight(copy.highlight), drawOnlyOnPick(0)
 {
@@ -116,9 +116,9 @@ void GeomPick::set_widget_data(int _wd)
     widget_data=_wd;
 }
 
-void GeomPick::set_index(int _index)
+void GeomPick::set_picked_obj(GeomObj* _object)
 {
-   pick_index = _index;
+   picked_obj = _object;
 }
 
 void GeomPick::ignore_until_release()
@@ -133,7 +133,7 @@ void GeomPick::pick(Roe* roe, const BState& bs )
   if(widget)
     widget->geom_pick(this, roe, widget_data, bs);
   if(module)
-    module->geom_pick(this, cbdata, pick_index);
+    module->geom_pick(this, cbdata, picked_obj);
 }
 
 void GeomPick::release(const BState& bs)
@@ -142,7 +142,7 @@ void GeomPick::release(const BState& bs)
     if(widget)
 	widget->geom_release(this, widget_data, bs);
     if(module)
-	module->geom_release(this, cbdata, pick_index);
+	module->geom_release(this, cbdata, picked_obj);
 }
 
 void GeomPick::moved(int axis, double distance, const Vector& delta, const BState& bs)
@@ -151,7 +151,7 @@ void GeomPick::moved(int axis, double distance, const Vector& delta, const BStat
     if(widget)
 	widget->geom_moved(this, axis, distance, delta, widget_data, bs);
     if(module)
-      module->geom_moved(this, axis, distance, delta, cbdata,pick_index);
+      module->geom_moved(this, axis, distance, delta, cbdata,picked_obj);
 }
 
 int GeomPick::nprincipal() {
@@ -212,6 +212,10 @@ bool GeomPick::saveobj(ostream& out, const clString& format, GeomSave* saveinfo)
 
 //
 // $Log$
+// Revision 1.4  2000/08/11 15:49:06  bigler
+// Removed the int index and replaced it with a GeomObj* picked_obj.
+// The index can be accessed though picked_obj->getID(int or IntVector).
+//
 // Revision 1.3  1999/10/07 02:07:43  sparker
 // use standard iostreams and complex type
 //
