@@ -2,7 +2,6 @@
 
 #include <Packages/Uintah/CCA/Components/MPMArches/MPMArches.h>
 #include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/MPMMaterial.h>
-#include <Packages/Uintah/CCA/Components/MPM/MPMPhysicalModules.h>
 #include <Packages/Uintah/Core/Grid/PerPatch.h>
 #include <Packages/Uintah/CCA/Ports/Scheduler.h>
 #include <Packages/Uintah/CCA/Components/Arches/CellInformationP.h>
@@ -101,9 +100,7 @@ void MPMArches::scheduleTimeAdvance(double time, double delt,
     d_mpm->scheduleComputeConnectivity(sched, patches, matls);
   }
   d_mpm->scheduleInterpolateParticlesToGrid(sched, patches, matls);
-  if (MPMPhysicalModules::thermalContactModel) {
-    d_mpm->scheduleComputeHeatExchange(sched, patches, matls);
-  }
+  d_mpm->scheduleComputeHeatExchange(sched, patches, matls);
 
   // interpolate mpm properties from node center to cell center/ face center
   // these computed variables are used by void fraction and mom exchange

@@ -5,7 +5,7 @@
 #include <Packages/Uintah/CCA/Components/MPM/SerialMPM.h>
 #include <Packages/Uintah/CCA/Components/HETransformation/Burn.h>
 #include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/ConstitutiveModel.h>
-#include <Packages/Uintah/CCA/Components/MPM/MPMPhysicalModules.h>
+#include <Packages/Uintah/CCA/Components/MPM/ThermalContact/ThermalContact.h>
 #include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/MPMMaterial.h>
 #include <Packages/Uintah/CCA/Components/ICE/ICE.h>
 #include <Packages/Uintah/CCA/Components/ICE/ICEMaterial.h>
@@ -120,9 +120,7 @@ void MPMICE::scheduleTimeAdvance(double, double,
   }
   d_mpm->scheduleInterpolateParticlesToGrid(      sched, patches, mpm_matls);
 
-  if (MPMPhysicalModules::thermalContactModel) {
-    d_mpm->scheduleComputeHeatExchange(           sched, patches, mpm_matls);
-  }
+  d_mpm->scheduleComputeHeatExchange(             sched, patches, mpm_matls);
 
   // schedule the interpolation of mass and volume to the cell centers
   scheduleInterpolateNCToCC_0(                    sched, patches, mpm_matls);
