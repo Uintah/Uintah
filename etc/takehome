@@ -3,8 +3,8 @@ setenv name `whoami`
 setenv EDITOR vi
 cvs commit
 set release = `cat etc/release`
-cvs rdiff -u -r $name_$release work > patch.$release
+cvs rdiff -u -r $name"_"$release work > patch.$release
 gzip patch.$release
 @ release ++
-cvs tag $name_$release
+cvs tag $name"_"$release
 echo $release > etc/release
