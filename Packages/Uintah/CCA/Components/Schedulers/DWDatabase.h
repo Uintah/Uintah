@@ -8,6 +8,7 @@
 
 #include <Core/Exceptions/InternalError.h>
 #include <Core/Malloc/Allocator.h>
+#include <Core/Util/FancyAssert.h>
 
 #include <map>
 #include <vector>
