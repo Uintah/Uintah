@@ -68,10 +68,11 @@ namespace Uintah {
   }; 
   
   //__________________________________
-  void  warning_restartTimestep( const IntVector c,
-                                 const double total_fluxout,
+  void  warning_restartTimestep( vector<IntVector> badCells,
+                                 vector<double> badOutFlux,
                                  const double vol,
                                  const int indx,
+                                 const Patch* patch,
                                  DataWarehouse* new_dw);
  /*______________________________________________________________________
  *   C O M M O N L Y   U S E D 
