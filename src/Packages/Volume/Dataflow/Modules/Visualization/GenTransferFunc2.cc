@@ -1,31 +1,33 @@
-/*
-   For more information, please see: http://software.sci.utah.edu
-
-   The MIT License
-
-   Copyright (c) 2004 Scientific Computing and Imaging Institute,
-   University of Utah.
-
-   License for the specific language governing rights and limitations under
-   Permission is hereby granted, free of charge, to any person obtaining a
-   copy of this software and associated documentation files (the "Software"),
-   to deal in the Software without restriction, including without limitation
-   the rights to use, copy, modify, merge, publish, distribute, sublicense,
-   and/or sell copies of the Software, and to permit persons to whom the
-   Software is furnished to do so, subject to the following conditions:
-
-   The above copyright notice and this permission notice shall be included
-   in all copies or substantial portions of the Software.
-
-   THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
-   OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-   FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL
-   THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-   LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
-   FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
-   DEALINGS IN THE SOFTWARE.
-*/
-
+//  
+//  For more information, please see: http://software.sci.utah.edu
+//  
+//  The MIT License
+//  
+//  Copyright (c) 2004 Scientific Computing and Imaging Institute,
+//  University of Utah.
+//  
+//  License for the specific language governing rights and limitations under
+//  Permission is hereby granted, free of charge, to any person obtaining a
+//  copy of this software and associated documentation files (the "Software"),
+//  to deal in the Software without restriction, including without limitation
+//  the rights to use, copy, modify, merge, publish, distribute, sublicense,
+//  and/or sell copies of the Software, and to permit persons to whom the
+//  Software is furnished to do so, subject to the following conditions:
+//  
+//  The above copyright notice and this permission notice shall be included
+//  in all copies or substantial portions of the Software.
+//  
+//  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
+//  OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+//  FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL
+//  THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+//  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+//  FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
+//  DEALINGS IN THE SOFTWARE.
+//  
+//    File   : GenTransferFunc2.cc
+//    Author : Milan Ikits
+//    Date   : Thu Jul  8 01:50:58 2004
 
 #include <Dataflow/Network/Module.h>
 #include <Core/GuiInterface/GuiVar.h>
@@ -33,7 +35,7 @@
 #include <Core/Containers/Array3.h>
 
 #include <sci_gl.h>
-//#include <Packages/Volume/Core/Util/Pbuffer.h>
+#include <Packages/Volume/Core/Util/Pbuffer.h>
 #include <Packages/Volume/Core/Util/ShaderProgramARB.h>
 #include <Packages/Volume/Dataflow/Ports/Colormap2Port.h>
 #include <Packages/Teem/Core/Datatypes/NrrdData.h>
@@ -213,8 +215,7 @@ TriangleWidget::Init()
 {
   if (!shader_) {
     shader_ = new FragmentProgramARB(TriangleWidgetShader);
-    shader_->create();
-    //return true;
+    return shader_->create();
   }
   return false;
 }
@@ -230,27 +231,23 @@ TriangleWidget::Exit()
 void
 TriangleWidget::rasterize()
 {
-#if 0  
-  if(shader_->valid()) {
-    shader_->bind();
-    shader_->setLocalParam(0, color_.r(), color_.g(), color_.b(), alpha_);
-    shader_->setLocalParam(1, base_, top_x_, top_y_, 0.0);
-    shader_->setLocalParam(2, width_, bottom_, 0.0, 0.0);
+  shader_->bind();
+  shader_->setLocalParam(0, color_.r(), color_.g(), color_.b(), alpha_);
+  shader_->setLocalParam(1, base_, base_+top_x_, top_y_, 0.0);
+  shader_->setLocalParam(2, width_, bottom_, 0.0, 0.0);
 
-    GLint vp[4];
-    glGetIntegerv(GL_VIEWPORT, vp);
-    shader_->setLocalParam(3, 1.0/vp[2], 1.0/vp[3], 0.0, 0.0);
+  GLint vp[4];
+  glGetIntegerv(GL_VIEWPORT, vp);
+  shader_->setLocalParam(3, 1.0/vp[2], 1.0/vp[3], 0.0, 0.0);
     
-    glBegin(GL_TRIANGLES);
-    {
-      glVertex2f(base_, 0.0);
-      glVertex2f(top_x_+width_/2, top_y_);
-      glVertex2f(top_x_-width_/2, top_y_);
-    }
-    glEnd();
-    shader_->release();
+  glBegin(GL_TRIANGLES);
+  {
+    glVertex2f(base_, 0.0);
+    glVertex2f(base_+top_x_+width_/2, top_y_);
+    glVertex2f(base_+top_x_-width_/2, top_y_);
   }
-#endif
+  glEnd();
+  shader_->release();
 }
 
 void
@@ -356,8 +353,7 @@ RectangleWidget::Init()
 {
   if (!shader_) {
     shader_ = new FragmentProgramARB(RectangleWidgetShader1D);
-    shader_->create();
-    //return true;
+    return shader_->create();
   }
   return false;
 }
@@ -516,8 +512,9 @@ class GenTransferFunc2 : public Module {
   int width_, height_;
   int button_;
   Widget* widget_[2];
-  //Pbuffer* pbuffer_;
-
+  Pbuffer* pbuffer_;
+  bool use_pbuffer_;
+  
   Nrrd* histo_;
   bool histo_dirty_;
   GLuint histo_tex_;
@@ -549,7 +546,7 @@ public:
 DECLARE_MAKER(GenTransferFunc2)
 GenTransferFunc2::GenTransferFunc2(GuiContext* ctx)
   : Module("GenTransferFunc2", ctx, Filter, "Visualization", "Volume"),
-    ctx_(0), dpy_(0), win_(0), button_(0), //pbuffer_(0),
+    ctx_(0), dpy_(0), win_(0), button_(0), pbuffer_(0), use_pbuffer_(true),
     histo_(0), histo_dirty_(false), histo_tex_(0),
     cmap_(new Colormap2),
     cmap_dirty_(true), cmap_size_dirty_(true), cmap_out_dirty_(true), cmap_tex_(0)
@@ -702,58 +699,112 @@ GenTransferFunc2::update()
   }
   glXMakeCurrent(dpy_, win_, ctx_);
 
+  if(use_pbuffer_) {
+    if (TriangleWidget::Init()
+        || RectangleWidget::Init()) {
+      use_pbuffer_ = false;
+      cerr << "Shaders not supported; switching to software rasterization" << endl;
+    }
+  }
+
+  // create pbuffer
+  if(use_pbuffer_ && (!pbuffer_
+      || pbuffer_->width() != width_
+      || pbuffer_->height() != height_)) {
+    if(pbuffer_) {
+      pbuffer_->destroy();
+      delete pbuffer_;
+    }
+    pbuffer_ = new Pbuffer(width_, height_, GL_INT, 8, true, GL_FALSE);
+    if(pbuffer_->create()) {
+      use_pbuffer_ = false;
+      pbuffer_->destroy();
+      delete pbuffer_;
+      pbuffer_ = 0;
+      cerr << "Pbuffers not supported; switching to software rasterization" << endl;
+    }
+  }
+  
   //----------------------------------------------------------------
   // update colormap array
-  Array3<float>& cmap = cmap_->array();
-  if(width_ != cmap.dim2() || height_ != cmap.dim1()) {
-    cmap_size_dirty_ = true;
-    cmap_dirty_ = true;
-  }
+  if(use_pbuffer_) {
+    pbuffer_->makeCurrent();
+    glDrawBuffer(GL_FRONT);
+    glViewport(0, 0, width_, height_);
 
-  if(cmap_dirty_) {
-    cmap_->lock_array();
-    // realloc cmap
-    if(cmap_size_dirty_)
-      cmap.resize(height_, width_, 4);
-    // clear cmap
-    for(int i=0; i<cmap.dim1(); i++) {
-      for(int j=0; j<cmap.dim2(); j++) {
-        cmap(i,j,0) = 0.0;
-        cmap(i,j,1) = 0.0;
-        cmap(i,j,2) = 0.0;
-        cmap(i,j,3) = 0.0;
-      }
-    }
+    glClearColor(0.0, 0.0, 0.0, 0.0);
+    glClear(GL_COLOR_BUFFER_BIT);
+
+    glMatrixMode(GL_PROJECTION);
+    glLoadIdentity();
+    glMatrixMode(GL_MODELVIEW);
+    glLoadIdentity();
+    glTranslatef(-1.0, -1.0, 0.0);
+    glScalef(2.0, 2.0, 2.0);
+
+    glDisable(GL_DEPTH_TEST);
+    glDisable(GL_LIGHTING);
+    glDisable(GL_CULL_FACE);
+
     // rasterize widgets
-    widget_[0]->rasterize(cmap);
-    widget_[1]->rasterize(cmap);
-    // update textures
-    if(cmap_size_dirty_) {
-      if(glIsTexture(cmap_tex_)) {
-        glDeleteTextures(1, &cmap_tex_);
-        cmap_tex_ = 0;
-      }
-      glGenTextures(1, &cmap_tex_);
-      glBindTexture(GL_TEXTURE_2D, cmap_tex_);
-      glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-      glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-      glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-      glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-      glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, cmap.dim2(), cmap.dim1(),
-                   0, GL_RGBA, GL_FLOAT, &cmap(0,0,0));
-      glBindTexture(GL_TEXTURE_2D, 0);
-      cmap_size_dirty_ = false;
-    } else {
-      glBindTexture(GL_TEXTURE_2D, cmap_tex_);
-      glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, cmap.dim2(), cmap.dim1(),
-                   0, GL_RGBA, GL_FLOAT, &cmap(0,0,0));
-      glBindTexture(GL_TEXTURE_2D, 0);
-    }
-    cmap_dirty_ = false;
-    cmap_->unlock_array();
-    do_execute = true;
-  }
+    widget_[0]->rasterize();
+    widget_[1]->rasterize();
 
+    glFlush();
+    
+    glXMakeCurrent(dpy_, win_, ctx_);
+  } else {
+    Array3<float>& cmap = cmap_->array();
+    if(width_ != cmap.dim2() || height_ != cmap.dim1()) {
+      cmap_size_dirty_ = true;
+      cmap_dirty_ = true;
+    }
+
+    if(cmap_dirty_) {
+      cmap_->lock_array();
+      // realloc cmap
+      if(cmap_size_dirty_)
+        cmap.resize(height_, width_, 4);
+      // clear cmap
+      for(int i=0; i<cmap.dim1(); i++) {
+        for(int j=0; j<cmap.dim2(); j++) {
+          cmap(i,j,0) = 0.0;
+          cmap(i,j,1) = 0.0;
+          cmap(i,j,2) = 0.0;
+          cmap(i,j,3) = 0.0;
+        }
+      }
+      // rasterize widgets
+      widget_[0]->rasterize(cmap);
+      widget_[1]->rasterize(cmap);
+      // update textures
+      if(cmap_size_dirty_) {
+        if(glIsTexture(cmap_tex_)) {
+          glDeleteTextures(1, &cmap_tex_);
+          cmap_tex_ = 0;
+        }
+        glGenTextures(1, &cmap_tex_);
+        glBindTexture(GL_TEXTURE_2D, cmap_tex_);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, cmap.dim2(), cmap.dim1(),
+                     0, GL_RGBA, GL_FLOAT, &cmap(0,0,0));
+        glBindTexture(GL_TEXTURE_2D, 0);
+        cmap_size_dirty_ = false;
+      } else {
+        glBindTexture(GL_TEXTURE_2D, cmap_tex_);
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, cmap.dim2(), cmap.dim1(),
+                     0, GL_RGBA, GL_FLOAT, &cmap(0,0,0));
+        glBindTexture(GL_TEXTURE_2D, 0);
+      }
+      cmap_dirty_ = false;
+      cmap_->unlock_array();
+      do_execute = true;
+    }
+  }
+  
   //----------------------------------------------------------------
   // update histo tex
   if (histo_dirty_) {
@@ -834,10 +885,13 @@ GenTransferFunc2::redraw()
   // draw cmap
   glEnable(GL_BLEND);
   glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-
   glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE);
-  glEnable(GL_TEXTURE_2D);
-  glBindTexture(GL_TEXTURE_2D, cmap_tex_);
+  if(use_pbuffer_) {
+    pbuffer_->bind(GL_FRONT);
+  } else {
+    glEnable(GL_TEXTURE_2D);
+    glBindTexture(GL_TEXTURE_2D, cmap_tex_);
+  }
   glBegin(GL_QUADS);
   {
     glTexCoord2f( 0.0,  0.0);
@@ -850,9 +904,12 @@ GenTransferFunc2::redraw()
     glVertex2f( 0.0,  1.0);
   }
   glEnd();
-  glBindTexture(GL_TEXTURE_2D, 0);
-  glDisable(GL_TEXTURE_2D);
-  
+  if(use_pbuffer_) {
+    pbuffer_->release(GL_FRONT);
+  } else {
+    glBindTexture(GL_TEXTURE_2D, 0);
+    glDisable(GL_TEXTURE_2D);
+  }
   glDisable(GL_BLEND);
   
   widget_[0]->draw();
@@ -864,108 +921,4 @@ GenTransferFunc2::redraw()
   gui->unlock();
 }
 
-
-
-#if 0  
-
-#if defined(HAVE_GLEW)
-  if (!glew_init) {
-    glewExperimental = GL_TRUE;
-    GLenum err = glewInit();
-    if (GLEW_OK != err )
-    {
-      /* problem: glewInit failed, something is seriously wrong */
-      fprintf(stderr, "Error: %s\n", glewGetErrorString(err)); 
-    }
-    fprintf(stdout, "Status: Using GLEW %s\n", glewGetString(GLEW_VERSION));
-    glew_init = GL_TRUE;
-  }
-#endif
-
-  
-  // create pbuffer
-  if (!pbuffer_
-      || pbuffer_->getWidth() != width_
-      || pbuffer_->getHeight() != height_) {
-    if (pbuffer_) {
-      pbuffer_->destroy();
-      delete pbuffer_;
-    }
-    pbuffer_ = new Pbuffer(width_, height_, GL_INT, 8, true, GL_FALSE);
-    if (pbuffer_->create()) {
-      pbuffer_->destroy();
-      delete pbuffer_;
-      pbuffer_ = 0;
-      return false;
-    }
-    //cerr << "Using visual: " << pbuffer_->getVisualId() << endl;
-  }
-
-  //pbuffer_->makeCurrent();
-  
-  TriangleWidget::Init();
-  RectangleWidget::Init();
-#endif
-
-
-  //pbuffer_->makeCurrent();
-
-  //glClear(GL_COLOR_BUFFER_BIT);
-
-//   glColor3f(1.0, 0.0, 0.0);
-//   glBegin(GL_TRIANGLES);
-//   {
-//     glVertex2f(0.0, 0.0);
-//     glVertex2f(1.0, 0.0);
-//     glVertex2f(1.0, 1.0);
-//   }
-//   glEnd();
-
-  //glFlush();
-
-  //update();
-
-
-  //-------------------------------------------------------
-#if 0
-  pbuffer_->makeCurrent();
-  
-  glDrawBuffer(GL_FRONT);
-  glClearColor(0.0, 0.0, 0.0, 0.0);
-
-  glViewport(0, 0,width_, height_);
-  glMatrixMode(GL_PROJECTION);
-  glLoadIdentity();
-  glMatrixMode(GL_MODELVIEW);
-  glLoadIdentity();
-  glTranslatef(-1.0, -1.0, 0.0);
-  glScalef(2.0, 2.0, 2.0);
-
-//   glEnable(GL_COLOR_MATERIAL);
-//   glColorMaterial(GL_FRONT_AND_BACK, GL_DIFFUSE);
-  glDisable(GL_LIGHTING);
-  glDisable(GL_DEPTH_TEST);
-  glDisable(GL_CULL_FACE);
-  glDisable(GL_TEXTURE_2D);
-#endif
-
-
-  
-#if 0
-  pbuffer_->bind(GL_FRONT);
-  glBegin(GL_QUADS);
-  {
-    glTexCoord2f( 0.0,  0.0);
-    glVertex2f( 0.0,  0.0);
-    glTexCoord2f( 1.0,  0.0);
-    glVertex2f( 1.0,  0.0);
-    glTexCoord2f( 1.0,  1.0);
-    glVertex2f( 1.0,  1.0);
-    glTexCoord2f( 0.0,  1.0);
-    glVertex2f( 0.0,  1.0);
-  }
-  glEnd();
-  pbuffer_->release(GL_FRONT);
-#endif
-
-} // End namespace Volume
+} // end namespace Volume

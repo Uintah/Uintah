@@ -146,8 +146,8 @@ Pbuffer::create ()
 #else
     /* query GLX version */
     int major, minor;
-    glXQueryVersion(glXGetCurrentDisplay(), &major, &minor);
-
+    const char* version = glXGetClientString(glXGetCurrentDisplay(), GLX_VERSION);
+    sscanf(version, "%d.%d", &major, &minor);
     mATI_render_texture = gluCheckExtension((GLubyte*)"GLX_ATI_render_texture", (GLubyte*)glXGetClientString(glXGetCurrentDisplay(), GLX_EXTENSIONS));
     mATI_pixel_format_float = gluCheckExtension((GLubyte*)"GLX_ATI_pixel_format_float", (GLubyte*)glXGetClientString(glXGetCurrentDisplay(), GLX_EXTENSIONS));
     mNV_float_buffer = gluCheckExtension((GLubyte*)"GLX_NV_float_buffer", (GLubyte*)glXGetClientString(glXGetCurrentDisplay(), GLX_EXTENSIONS));
@@ -370,8 +370,9 @@ Pbuffer::create ()
       glTexParameteri(mTexFormat, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
       glTexParameteri(mTexFormat, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
     }
+    return false;
   }
-  return false;
+  return true;
 }
 
 void
