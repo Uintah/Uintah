@@ -1,5 +1,10 @@
 /* look from above:
 
+./rtrt -np 12 -scene scenes/multi-scene 5 -scene scenes/sphere-room2
+-scene scenes/living-room -scene scenes/science-room -scene
+scenes/min-museum -scene scenes/basic-sea 
+
+
 rtrt -np 8 -eye -18.9261 -22.7011 52.5255 -lookat -7.20746 -8.61347 -16.643 -up 0.490986 -0.866164 -0.0932288 -fov 40 -scene scenes/graphics-museum 
 
 look from hallway:
@@ -88,12 +93,12 @@ using namespace SCIRun;
 #define SCALE 500
 
 // all the following should be 1 for demos  (0 to speedup for debugging)
-#define IMGSONWALL 0
-#define INSERTDAVID 0
+#define IMGSONWALL 1
+#define INSERTDAVID 1
 #define INSERTCEILING 1
 #define INSERTVIDEO 0
-#define INSERTMODERNMODELS 0
-#define INSERTHISTORYMODELS 0
+#define INSERTMODERNMODELS 1
+#define INSERTHISTORYMODELS 1
 #define INSERTMULTIWALLLIGHTS 0
 
 #define INSERTHUGEMODELS 0
@@ -108,7 +113,7 @@ using namespace SCIRun;
 #define INSERT_VENUS
 #define INSERT_BUNNY
 #define INSERT_SPIRAL
-//  #define INSERT_STADIUM
+#define INSERT_STADIUM
 #define INSERT_HEAD
 
 #endif
@@ -1560,7 +1565,7 @@ void build_history_hall (Group* main_group, Group* no_shadow_group,
   copter_matl->my_lights.add(l);
 
   historyg->add (new Parallelogram(turquoise,
-				   CopterPt+Vector(-diff,-diff,0.001),
+				   CopterPt+Vector(diff,-diff,0.001),
 				   Vector(gbox_size,0,0),Vector(0,-gbox_size,0)));
 
   Group* copterg;
@@ -1679,20 +1684,26 @@ void build_david_room (Group* main_group, Scene *scene, Light *light1, Light *li
   int depth=3;
 
   printf ("\n\n*********************************\n\n");
-  Transform davidT (Point(0,0,0),
-		    Vector(0.001000,0.,0.),
-		    Vector(0.,0.,0.001000),
-		    Vector(0.,-0.001000,0.));
-  davidT.pre_translate (Vector(-14.079300,-33.336876,3.586000));
-  davidT.print();
 
   Color bone(0.9608, 0.8706, 0.7020);
   Material* david_white=new Phong(bone*.6, bone*.6, 100, 0);
   GridTris* davidg = new GridTris(david_white, cells, depth);
 
 #if INSERTHUGEMODELS
+  Transform davidT (Point(0,0,0),
+		    Vector(0.001000,0.,0.),
+		    Vector(0.,0.,-0.001), 
+		    Vector(0.,0.001000,0.));
+  davidT.pre_translate (Vector(-14.743912,-21.719974, 1.951428));
+  davidT.print();
   read_ply("/usr/sci/data/Geometry/Stanford_Sculptures/david_1mm.ply",davidg,&davidT);
 #else
+  Transform davidT (Point(0,0,0),
+		    Vector(0.001000,0.,0.),
+		    Vector(0.,0.,0.001000),
+		    Vector(0.,-0.001000,0.));
+  davidT.pre_translate (Vector(-14.079300,-33.336876,3.586000));
+  davidT.print();
   read_ply("/usr/sci/data/Geometry/Stanford_Sculptures/david_2mm.ply",davidg,&davidT);  
 #endif
 
@@ -2648,8 +2659,8 @@ void build_modern_room (Group *main_group, Group* no_shadow_group,
   stadiumT.pre_scale(Vector(stadium_scale,
 			    stadium_scale,
 			    stadium_scale));
-  stadiumT.pre_rotate(M_PI,Vector(0,0,1));
-  stadiumT.pre_translate(stadium_centerpt.asVector()-Vector(0,0,0.08));
+  stadiumT.pre_rotate(M_PI_2,Vector(0,0,1));
+  stadiumT.pre_translate(stadium_centerpt.asVector()); //-Vector(0,0,0.08));
   // .01 is high
 
   stadiumg->transform(stadiumT);
@@ -3152,17 +3163,18 @@ Scene* make_scene(int argc, char* argv[], int /*nworkers*/)
   ModL1->name_ = "Modern Room A";
   scene->add_per_matl_light(ModL1);
 
+  add_baseboards (ceiling_floor, HistoryL0,HistoryL1,HistoryL2, DavL1, DavL2, ModL1);
+
   Group *solidg = new Group();
   Group *clearg = new Group();   /* don't cast a shadow */
   Group *fakeg = new Group();    /* don't appear in scene but cast a shadow */
 
   // KEY functions!  
 
-  //  build_david_room (solidg,scene, DavL1, DavL2);
+  build_david_room (solidg,scene, DavL1, DavL2);
   build_history_hall (solidg, clearg, fakeg, scene, HistoryL0,HistoryL1, HistoryL2); 
-  //  build_modern_room (solidg,clearg,fakeg,scene);
+  build_modern_room (solidg,clearg,fakeg,scene);
 
-  cerr << "end of rooms\n";
  /*
   Transform outlet_trans;
   // first, get it centered at the origin (in x and y), and scale it
@@ -3178,17 +3190,14 @@ Scene* make_scene(int argc, char* argv[], int /*nworkers*/)
   solidg->add(partitions);
   
   g->add(solidg);
-  cerr << "solid\n";
   if (clearg->numObjects()>0)
       g->add(clearg); 
-  cerr << "clear\n";
 
   shadow->add(solidg);
-  cerr << "solid\n";
   if (fakeg->numObjects()>0)
     shadow->add(fakeg);
   cerr << "fake\n";
-  add_baseboards (ceiling_floor, HistoryL0,HistoryL1,HistoryL2, DavL1, DavL2, ModL1);
+
 
 #if INSERTMULTIWALLLIGHTS
   his_black->my_lights.add (HistoryL0);

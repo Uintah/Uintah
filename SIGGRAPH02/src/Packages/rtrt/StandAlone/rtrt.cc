@@ -84,7 +84,7 @@ using namespace std;
 using SCIRun::Thread;
 using SCIRun::ThreadGroup;
 
-bool use_pm = false;
+bool use_pm = true;
 bool pin = false;
 #ifdef __sgi
 #include <sys/types.h>
@@ -268,8 +268,8 @@ main(int argc, char* argv[])
       i++;
       rtrt_engine->nworkers=atoi(argv[i]);
       rtrt_engine->np = rtrt_engine->nworkers;
-    } else if(strcmp(argv[i], "-mempolicy") == 0){
-      use_pm=true;
+    } else if(strcmp(argv[i], "-nomempolicy") == 0){
+      use_pm=false;
     } else if(strcmp(argv[i], "-pin") == 0){
       pin=true;
     } else if(strcmp(argv[i], "-nobv")==0){
@@ -589,8 +589,10 @@ main(int argc, char* argv[])
   Trigger * bottomGraphicTrigger = NULL;
   Trigger * leftGraphicTrigger = NULL;
   if( fullscreen ) { // For Demo... and oogl stuff 
-    xres = 512; // Start in low res mode.
-    yres = 288;
+      xres = 512; // Start in low res mode.
+      yres = 288;
+//    xres = 1024; // Start in low res mode.
+//    yres = 576;
   } else {
     if( demo ) demo = false; // If not in full screen mode, no demo stuff.
   }
