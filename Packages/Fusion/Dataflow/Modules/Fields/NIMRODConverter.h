@@ -118,8 +118,8 @@ NIMRODMeshConverterAlgoT< NTYPE >::execute(vector< NrrdDataHandle > nHandles,
 
   nrrdWrap(nout->nrrd, ndata, nHandles[mesh[2]]->nrrd->type,
 	   ndims+1, sink_size, idim, jdim, kdim);
-  nrrdAxesSet(nout->nrrd, nrrdAxesInfoCenter, nrrdCenterNode, 
-	      nrrdCenterNode, nrrdCenterNode, nrrdCenterNode);
+  nrrdAxisInfoSet(nout->nrrd, nrrdAxisInfoCenter, nrrdCenterNode, 
+		  nrrdCenterNode, nrrdCenterNode, nrrdCenterNode);
 
   vector< string > dataset;
 
@@ -185,8 +185,8 @@ NIMRODScalarConverterAlgoT< NTYPE >::execute(vector< NrrdDataHandle > nHandles,
 
   nrrdWrap(nout->nrrd, ndata, nHandles[data[0]]->nrrd->type,
 	   ndims+1, sink_size, idim, jdim, kdim);
-  nrrdAxesSet(nout->nrrd, nrrdAxesInfoCenter, nrrdCenterNode, 
-	      nrrdCenterNode, nrrdCenterNode, nrrdCenterNode);
+  nrrdAxisInfoSet(nout->nrrd, nrrdAxisInfoCenter, nrrdCenterNode, 
+		  nrrdCenterNode, nrrdCenterNode, nrrdCenterNode);
 
   vector< string > dataset;
 
@@ -262,8 +262,8 @@ execute(vector< NrrdDataHandle > nHandles,
 
   nrrdWrap(nout->nrrd, ndata, nHandles[data[2]]->nrrd->type,
 	   ndims+1, sink_size, idim, jdim, kdim);
-  nrrdAxesSet(nout->nrrd, nrrdAxesInfoCenter, nrrdCenterNode, 
-	      nrrdCenterNode, nrrdCenterNode, nrrdCenterNode);
+  nrrdAxisInfoSet(nout->nrrd, nrrdAxisInfoCenter, nrrdCenterNode, 
+		  nrrdCenterNode, nrrdCenterNode, nrrdCenterNode);
 
   vector< string > dataset;
 
@@ -365,8 +365,8 @@ execute(vector< NrrdDataHandle > nHandles,
 
   nrrdWrap(nout->nrrd, ndata, nHandles[data[0]]->nrrd->type,
 	   ndims+1, sink_size, idim, jdim, kdim);
-  nrrdAxesSet(nout->nrrd, nrrdAxesInfoCenter, nrrdCenterNode, 
-	      nrrdCenterNode, nrrdCenterNode, nrrdCenterNode);
+  nrrdAxisInfoSet(nout->nrrd, nrrdAxisInfoCenter, nrrdCenterNode, 
+		  nrrdCenterNode, nrrdCenterNode, nrrdCenterNode);
 
   vector< string > dataset;
 

@@ -902,8 +902,8 @@ NrrdDataHandle HDF5DataReader::readDataset( string filename,
   case 1: 
     nrrdWrap(nout->nrrd, data,
 	     nrrd_type, ndims+1, sink_size, (unsigned int) count[0]);
-    nrrdAxesSet(nout->nrrd, nrrdAxesInfoCenter, nrrdCenterNode, 
-		nrrdCenterNode);
+    nrrdAxisInfoSet(nout->nrrd, nrrdAxisInfoCenter, nrrdCenterNode, 
+		    nrrdCenterNode);
     break;
 
   case 2: 
@@ -917,24 +917,24 @@ NrrdDataHandle HDF5DataReader::readDataset( string filename,
       case 3: // Vector data
 	nrrdWrap(nout->nrrd, data, nrrd_type, ndims, 3, 
 		 (unsigned int) count[0], (unsigned int) count[1]);
-	nrrdAxesSet(nout->nrrd, nrrdAxesInfoCenter, nrrdCenterNode, 
-		    nrrdCenterNode, nrrdCenterNode);
+	nrrdAxisInfoSet(nout->nrrd, nrrdAxisInfoCenter, nrrdCenterNode, 
+			nrrdCenterNode, nrrdCenterNode);
 	tuple_type_str = ":Vector";
 	break;
 	
       case 6: // Tensor data
 	nrrdWrap(nout->nrrd, data, nrrd_type, ndims, 6, 
 		 (unsigned int) count[0], (unsigned int) count[1]);
-	nrrdAxesSet(nout->nrrd, nrrdAxesInfoCenter, nrrdCenterNode, 
-		    nrrdCenterNode, nrrdCenterNode);	
+	nrrdAxisInfoSet(nout->nrrd, nrrdAxisInfoCenter, nrrdCenterNode, 
+			nrrdCenterNode, nrrdCenterNode);	
 	tuple_type_str = ":Tensor";
 	break;
 
       default: // treat the rest as Scalar data
 	nrrdWrap(nout->nrrd, data, nrrd_type, ndims+1, sink_size, 
 		 (unsigned int) count[0], (unsigned int) count[1]);
-	nrrdAxesSet(nout->nrrd, nrrdAxesInfoCenter, nrrdCenterNode, 
-		    nrrdCenterNode, nrrdCenterNode);	
+	nrrdAxisInfoSet(nout->nrrd, nrrdAxisInfoCenter, nrrdCenterNode, 
+			nrrdCenterNode, nrrdCenterNode);	
 	break;
       };
     }
@@ -952,8 +952,8 @@ NrrdDataHandle HDF5DataReader::readDataset( string filename,
 	nrrdWrap(nout->nrrd, data, nrrd_type, ndims, 3, 
 		 (unsigned int) count[0], (unsigned int) count[1], 
 		 (unsigned int) count[2]);
-	nrrdAxesSet(nout->nrrd, nrrdAxesInfoCenter, nrrdCenterNode, 
-		    nrrdCenterNode, nrrdCenterNode, nrrdCenterNode);
+	nrrdAxisInfoSet(nout->nrrd, nrrdAxisInfoCenter, nrrdCenterNode, 
+			nrrdCenterNode, nrrdCenterNode, nrrdCenterNode);
 	tuple_type_str = ":Vector";
 	break;
 	
@@ -961,8 +961,8 @@ NrrdDataHandle HDF5DataReader::readDataset( string filename,
 	nrrdWrap(nout->nrrd, data, nrrd_type, ndims, 6, 
 		 (unsigned int) count[0], (unsigned int) count[1], 
 		 (unsigned int) count[2]);
-	nrrdAxesSet(nout->nrrd, nrrdAxesInfoCenter, nrrdCenterNode, 
-		    nrrdCenterNode, nrrdCenterNode, nrrdCenterNode);	
+	nrrdAxisInfoSet(nout->nrrd, nrrdAxisInfoCenter, nrrdCenterNode, 
+			nrrdCenterNode, nrrdCenterNode, nrrdCenterNode);	
 	tuple_type_str = ":Tensor";
 	break;
 
@@ -970,8 +970,8 @@ NrrdDataHandle HDF5DataReader::readDataset( string filename,
 	nrrdWrap(nout->nrrd, data, nrrd_type, ndims+1, sink_size, 
 		 (unsigned int) count[0], (unsigned int) count[1], 
 		 (unsigned int) count[2]);
-	nrrdAxesSet(nout->nrrd, nrrdAxesInfoCenter, nrrdCenterNode, 
-		    nrrdCenterNode, nrrdCenterNode, nrrdCenterNode);
+	nrrdAxisInfoSet(nout->nrrd, nrrdAxisInfoCenter, nrrdCenterNode, 
+			nrrdCenterNode, nrrdCenterNode, nrrdCenterNode);
 	break;
       };
     }
@@ -989,9 +989,9 @@ NrrdDataHandle HDF5DataReader::readDataset( string filename,
 	nrrdWrap(nout->nrrd, data, nrrd_type, ndims, 3, 
 		 (unsigned int) count[0], (unsigned int) count[1], 
 		 (unsigned int) count[2], (unsigned int) count[3]);
-	nrrdAxesSet(nout->nrrd, nrrdAxesInfoCenter, nrrdCenterNode, 
-		    nrrdCenterNode, nrrdCenterNode, nrrdCenterNode, 
-		    nrrdCenterNode);
+	nrrdAxisInfoSet(nout->nrrd, nrrdAxisInfoCenter, nrrdCenterNode, 
+			nrrdCenterNode, nrrdCenterNode, nrrdCenterNode,
+			nrrdCenterNode);
 	tuple_type_str = ":Vector";
 	break;
 	
@@ -999,9 +999,10 @@ NrrdDataHandle HDF5DataReader::readDataset( string filename,
 	nrrdWrap(nout->nrrd, data, nrrd_type, ndims, 6, 
 		 (unsigned int) count[0], (unsigned int) count[1], 
 		 (unsigned int) count[2], (unsigned int) count[3]);
-	nrrdAxesSet(nout->nrrd, nrrdAxesInfoCenter, nrrdCenterNode, 
-		    nrrdCenterNode, nrrdCenterNode, nrrdCenterNode, 
-		    nrrdCenterNode);	
+	nrrdAxisInfoSet(nout->nrrd, nrrdAxisInfoCenter, nrrdCenterNode, 
+			nrrdCenterNode, nrrdCenterNode, nrrdCenterNode,
+			nrrdCenterNode);
+	
 	tuple_type_str = ":Tensor";
 	break;
 
@@ -1009,9 +1010,9 @@ NrrdDataHandle HDF5DataReader::readDataset( string filename,
 	nrrdWrap(nout->nrrd, data, nrrd_type, ndims+1, sink_size, 
 		 (unsigned int) count[0], (unsigned int) count[1], 
 		 (unsigned int) count[2], (unsigned int) count[3]);
-	nrrdAxesSet(nout->nrrd, nrrdAxesInfoCenter, nrrdCenterNode, 
-		    nrrdCenterNode, nrrdCenterNode, nrrdCenterNode, 
-		    nrrdCenterNode);
+	nrrdAxisInfoSet(nout->nrrd, nrrdAxisInfoCenter, nrrdCenterNode, 
+			nrrdCenterNode, nrrdCenterNode, nrrdCenterNode,
+			nrrdCenterNode);
 	break;
       };
     }
@@ -1030,7 +1031,7 @@ NrrdDataHandle HDF5DataReader::readDataset( string filename,
 		 (unsigned int) count[0], (unsigned int) count[1], 
 		 (unsigned int) count[2], (unsigned int) count[3], 
 		 (unsigned int) count[4]);
-	nrrdAxesSet(nout->nrrd, nrrdAxesInfoCenter, nrrdCenterNode, 
+	nrrdAxisInfoSet(nout->nrrd, nrrdAxisInfoCenter, nrrdCenterNode, 
 		    nrrdCenterNode, nrrdCenterNode, nrrdCenterNode, 
 		    nrrdCenterNode, nrrdCenterNode);
 	tuple_type_str = ":Vector";
@@ -1041,7 +1042,7 @@ NrrdDataHandle HDF5DataReader::readDataset( string filename,
 		 (unsigned int) count[0], (unsigned int) count[1], 
 		 (unsigned int) count[2], (unsigned int) count[3], 
 		 (unsigned int) count[4]);
-	nrrdAxesSet(nout->nrrd, nrrdAxesInfoCenter, nrrdCenterNode, 
+	nrrdAxisInfoSet(nout->nrrd, nrrdAxisInfoCenter, nrrdCenterNode, 
 		    nrrdCenterNode, nrrdCenterNode, nrrdCenterNode, 
 		    nrrdCenterNode, nrrdCenterNode);	
 	tuple_type_str = ":Tensor";
@@ -1052,7 +1053,7 @@ NrrdDataHandle HDF5DataReader::readDataset( string filename,
 		 (unsigned int) count[0], (unsigned int) count[1], 
 		 (unsigned int) count[2], (unsigned int) count[3], 
 		 (unsigned int) count[4]);
-	nrrdAxesSet(nout->nrrd, nrrdAxesInfoCenter, nrrdCenterNode, 
+	nrrdAxisInfoSet(nout->nrrd, nrrdAxisInfoCenter, nrrdCenterNode, 
 		    nrrdCenterNode, nrrdCenterNode, nrrdCenterNode, 
 		    nrrdCenterNode, nrrdCenterNode);
 	break;
@@ -1074,7 +1075,7 @@ NrrdDataHandle HDF5DataReader::readDataset( string filename,
 		 (unsigned int) count[0], (unsigned int) count[1], 
 		 (unsigned int) count[2], (unsigned int) count[3], 
 		 (unsigned int) count[4], dims[5]);
-	nrrdAxesSet(nout->nrrd, nrrdAxesInfoCenter, nrrdCenterNode, 
+	nrrdAxisInfoSet(nout->nrrd, nrrdAxisInfoCenter, nrrdCenterNode, 
 		    nrrdCenterNode, nrrdCenterNode, nrrdCenterNode, 
 		    nrrdCenterNode, nrrdCenterNode, nrrdCenterNode);
 	tuple_type_str = ":Vector";
@@ -1085,7 +1086,7 @@ NrrdDataHandle HDF5DataReader::readDataset( string filename,
 		 (unsigned int) count[0], (unsigned int) count[1], 
 		 (unsigned int) count[2], (unsigned int) count[3], 
 		 (unsigned int) count[4], dims[5]);
-	nrrdAxesSet(nout->nrrd, nrrdAxesInfoCenter, nrrdCenterNode, 
+	nrrdAxisInfoSet(nout->nrrd, nrrdAxisInfoCenter, nrrdCenterNode, 
 		    nrrdCenterNode, nrrdCenterNode, nrrdCenterNode, 
 		    nrrdCenterNode, nrrdCenterNode, nrrdCenterNode);	
 	tuple_type_str = ":Tensor";
@@ -1096,7 +1097,7 @@ NrrdDataHandle HDF5DataReader::readDataset( string filename,
 		 (unsigned int) count[0], (unsigned int) count[1], 
 		 (unsigned int) count[2], (unsigned int) count[3], 
 		 (unsigned int) count[4], dims[5]);
-	nrrdAxesSet(nout->nrrd, nrrdAxesInfoCenter, nrrdCenterNode, 
+	nrrdAxisInfoSet(nout->nrrd, nrrdAxisInfoCenter, nrrdCenterNode, 
 		    nrrdCenterNode, nrrdCenterNode, nrrdCenterNode, 
 		    nrrdCenterNode, nrrdCenterNode, nrrdCenterNode);
 	break;
@@ -1261,7 +1262,8 @@ void HDF5DataReader::tcl_command(GuiArgs& args, void* userdata)
       str << id << " build_tree " << tmp_filename;
       
       gui->execute(str.str().c_str());
-      
+
+      cerr << "updating set_size from update_file" << endl;
       // Update the dims in the GUI.
       gui->execute(id + " set_size 0 {}");
     }
@@ -1336,7 +1338,7 @@ void HDF5DataReader::tcl_command(GuiArgs& args, void* userdata)
       bool set = (ndims != (unsigned int) nDims_.get());
 
       if( !set ) {
-	for( int ic=0; ic<MAX_DIMS; ic++ ) {
+	for( unsigned int ic=0; ic<ndims; ic++ ) {
 	  if( dims_[ic] != gDims_[ic]->get() ) {
 	    set = true;
 	  }
@@ -1357,6 +1359,8 @@ void HDF5DataReader::tcl_command(GuiArgs& args, void* userdata)
 	}
 
 	dimstr += " }";
+
+	cerr << "updating set_size from update_selection" << endl;
 
 	// Update the dims in the GUI.
 	ostringstream str;
