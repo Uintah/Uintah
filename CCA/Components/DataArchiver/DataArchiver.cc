@@ -653,21 +653,19 @@ void DataArchiver::finalizeTimestep(double time, double delt,
 				    const GridP& grid, SchedulerP& sched,
                                     bool recompile /*=false*/)
 {
-  // run this every timestep - we don't want to schedule tasks unless
-  // the taskgraph is recompiled.
-  if (!recompile) {
-    beginOutputTimestep(time, delt, grid);
-    return;
-  }
-    
+  //this function should get called exactly once per timestep
+
   static bool wereSavesAndCheckpointsInitialized = false;
   dbg << "DataArchiver finalizeTimestep, delt= " << delt << endl;
   d_currentTime=time+delt;
+  if (delt != 0)
+    d_currentTimestep++;
+  beginOutputTimestep(time, delt, grid);
 
-  if (!wereSavesAndCheckpointsInitialized &&
-      !(delt == 0) /* skip the initialization timestep for this
-		      because it needs all computes to be set
-		      to find the save labels */) {
+  if (delt != 0 && (!wereSavesAndCheckpointsInitialized)) {
+      /* skip the initialization timestep for this
+         because it needs all computes to be set
+         to find the save labels */
     
     // This assumes that the TaskGraph doesn't change after the second
     // timestep and will need to change if the TaskGraph becomes dynamic. 
@@ -675,15 +673,20 @@ void DataArchiver::finalizeTimestep(double time, double delt,
     
     if (d_outputInterval != 0.0 || d_outputTimestepInterval != 0) {
       initSaveLabels(sched);
-      indexAddGlobals(); /* add saved global (reduction)
-			    variables to index.xml */
+     
+      if (!wereSavesAndCheckpointsInitialized)
+        indexAddGlobals(); /* add saved global (reduction)
+                              variables to index.xml */
     }
 
     if (d_checkpointInterval != 0.0 || d_checkpointTimestepInterval != 0 || 
 	d_checkpointWalltimeInterval != 0)
       initCheckpoints(sched);
   }
-  
+
+  // we don't want to schedule more tasks unless we're recompiling
+  if (!recompile)
+    return;
   if ( (d_outputInterval != 0.0 || d_outputTimestepInterval != 0) && 
        delt != 0 ) {
     // Schedule task to dump out reduction variables at every timestep
@@ -722,17 +725,12 @@ void DataArchiver::finalizeTimestep(double time, double delt,
     scheduleOutputTimestep(d_checkpointsDir, d_checkpointLabels,
 			   grid, sched, true);
   }
-  beginOutputTimestep(time, delt, grid);
 }
 
 
 void DataArchiver::beginOutputTimestep( double time, double delt,
 					const GridP& grid )
 {
-  d_currentTime=time+delt;
-  if (delt != 0)
-    d_currentTimestep++;
-
   dbg << "beginOutputTimestep called at time=" << d_currentTime 
       << " (" << d_nextOutputTime << "), " << d_outputTimestepInterval 
       << " (" << d_nextOutputTimestep << ")\n";
@@ -982,6 +980,7 @@ void DataArchiver::executedTimestep()
       ProblemSpecP indexDoc = loadDocument(iname);
 #endif
 
+      ASSERT(indexDoc != 0);
       ProblemSpecP ts = indexDoc->findBlock("timesteps");
       if(ts == 0){
 	ts = indexDoc->appendChild("timesteps");
