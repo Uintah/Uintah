@@ -26,6 +26,8 @@ SimulationState::SimulationState(ProblemSpecP &ps)
 
    refineFlag_label = VarLabel::create("refineFlag",
 				       CCVariable<int>::getTypeDescription());
+   oldRefineFlag_label = VarLabel::create("oldRefineFlag",
+				       CCVariable<int>::getTypeDescription());
    refinePatchFlag_label = VarLabel::create("refinePatchFlag",
 				       PerPatch<int>::getTypeDescription());
    d_ref_press = 0.0;
@@ -135,6 +137,7 @@ SimulationState::~SimulationState()
 {
   VarLabel::destroy(delt_label);
   VarLabel::destroy(refineFlag_label);
+  VarLabel::destroy(oldRefineFlag_label);
   VarLabel::destroy(refinePatchFlag_label);
   for (int i = 0; i < (int)matls.size(); i++)
     delete matls[i];
