@@ -32,6 +32,11 @@ ConstitutiveModel* ConstitutiveModelFactory::create(ProblemSpecP& ps,
    if(!child->getAttribute("type", mat_type))
       throw ProblemSetupException("No type for constitutive_model");
    
+   if (integrator != "implicit" && integrator != "explicit"){
+     string txt="MPM: time integrator [explicit or implicit] hasn't been set.";
+    throw ProblemSetupException(txt);
+   }   
+   
    if (mat_type == "comp_mooney_rivlin")
       return(scinew CompMooneyRivlin(child,lb,n8or27));
    
