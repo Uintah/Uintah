@@ -1,4 +1,5 @@
 // TODO:
+// Matrix file - why are ghosts there?
 // Read hypre options from input file
 // 3D performance
 // Logging?
@@ -17,6 +18,7 @@
 #include <Packages/Uintah/Core/Grid/Stencil7.h>
 #include <Packages/Uintah/Core/Grid/VarTypes.h>
 #include <Packages/Uintah/Core/Exceptions/ProblemSetupException.h>
+#include <Packages/Uintah/Core/Exceptions/ConvergenceFailure.h>
 #include <Packages/Uintah/Core/Parallel/ProcessorGroup.h>
 #include <Packages/Uintah/Core/ProblemSpec/ProblemSpec.h>
 #include <Packages/Uintah/CCA/Ports/Scheduler.h>
@@ -72,6 +74,7 @@ public:
   int npost;
   int skip;
   int jump;
+  int logging;
 };
 
 template<class Types>
@@ -139,7 +142,11 @@ public:
       HYPRE_StructMatrix HA;
       HYPRE_StructMatrixCreate(pg->getComm(), grid, stencil, &HA);
       HYPRE_StructMatrixSetSymmetric(HA, 0);
-      int ghost[] = {1,1,1,1,1,1};
+      int ghost[] = {0,0,0,0,0,0};
+      if(params->getSolveOnExtraCells()){
+	for(int i=0;i<6;i++)
+	  ghost[i]=1;
+      }
       HYPRE_StructMatrixSetNumGhost(HA, ghost);
       HYPRE_StructMatrixInitialize(HA);
 
@@ -244,32 +251,6 @@ public:
       double solve_start = Time::currentSeconds();
       int num_iterations;
       double final_res_norm;
-#if 0
-      if(solvertype == "SMG" || solvertype == "smg"){
-	HYPRE_StructSolver solver;
-	HYPRE_StructSMGCreate(pg->getComm(), &solver);
-	if(guess_label)
-	  HYPRE_StructSMGSetNonZeroGuess(solver);
-	else
-	  HYPRE_StructSMGSetZeroGuess(solver);
-	HYPRE_StructSMGSetMemoryUse(solver, 0);
-	HYPRE_StructSMGSetMaxIter(solver, 75);
-	HYPRE_StructSMGSetTol(solver, 1.e-14);
-	HYPRE_StructSMGSetRelChange(solver, 0);
-	HYPRE_StructSMGSetNumPreRelax(solver, 1);
-	HYPRE_StructSMGSetNumPostRelax(solver, 1);
-	HYPRE_StructSMGSetLogging(solver, 1);
-	HYPRE_StructSMGSetup(solver, HA, HB, HX);
-	HYPRE_StructSMGSolve(solver, HA, HB, HX);
-	double solve_dt = Time::currentSeconds()-solve_start;
-
-	HYPRE_StructSMGGetNumIterations(solver, &num_iterations);
-	double final_res_norm;
-	HYPRE_StructSMGGetFinalRelativeResidualNorm(solver, &final_res_norm);
-	HYPRE_StructSMGDestroy(solver);
-	...;
-      }
-#endif
       // Solve the system
       if (params->solvertype == "SMG" || params->solvertype == "smg"){
 	int time_index = hypre_InitializeTiming("SMG Setup");
@@ -283,7 +264,7 @@ public:
 	HYPRE_StructSMGSetRelChange(solver, 0);
 	HYPRE_StructSMGSetNumPreRelax(solver, params->npre);
 	HYPRE_StructSMGSetNumPostRelax(solver, params->npost);
-	HYPRE_StructSMGSetLogging(solver, 0);
+	HYPRE_StructSMGSetLogging(solver, params->logging);
 	HYPRE_StructSMGSetup(solver, HA, HB, HX);
 
 	hypre_EndTiming(time_index);
@@ -318,7 +299,7 @@ public:
 	HYPRE_StructPFMGSetNumPreRelax(solver, params->npre);
 	HYPRE_StructPFMGSetNumPostRelax(solver, params->npost);
 	HYPRE_StructPFMGSetSkipRelax(solver, params->skip);
-	HYPRE_StructPFMGSetLogging(solver, 1);
+	HYPRE_StructPFMGSetLogging(solver, params->logging);
 	HYPRE_StructPFMGSetup(solver, HA, HB, HX);
 
 	hypre_EndTiming(time_index);
@@ -353,7 +334,7 @@ public:
 	HYPRE_StructSparseMSGSetRelaxType(solver, 1);
 	HYPRE_StructSparseMSGSetNumPreRelax(solver, params->npre);
 	HYPRE_StructSparseMSGSetNumPostRelax(solver, params->npost);
-	HYPRE_StructSparseMSGSetLogging(solver, 1);
+	HYPRE_StructSparseMSGSetLogging(solver, params->logging);
 	HYPRE_StructSparseMSGSetup(solver, HA, HB, HX);
 
 	hypre_EndTiming(time_index);
@@ -385,7 +366,7 @@ public:
 	HYPRE_PCGSetTol( (HYPRE_Solver)solver, params->tolerance);
 	HYPRE_PCGSetTwoNorm( (HYPRE_Solver)solver, 1 );
 	HYPRE_PCGSetRelChange( (HYPRE_Solver)solver, 0 );
-	HYPRE_PCGSetLogging( (HYPRE_Solver)solver, 1 );
+	HYPRE_PCGSetLogging( (HYPRE_Solver)solver, params->logging);
 
 	HYPRE_PtrToSolverFcn precond;
 	HYPRE_PtrToSolverFcn precond_setup;
@@ -432,7 +413,7 @@ public:
 	HYPRE_StructHybridSetConvergenceTol(solver, 0.90);
 	HYPRE_StructHybridSetTwoNorm(solver, 1);
 	HYPRE_StructHybridSetRelChange(solver, 0);
-	HYPRE_StructHybridSetLogging(solver, 1);
+	HYPRE_StructHybridSetLogging(solver, params->logging);
 
 	HYPRE_PtrToSolverFcn precond;
 	HYPRE_PtrToSolverFcn precond_setup;
@@ -474,7 +455,7 @@ public:
 	HYPRE_GMRESSetMaxIter( (HYPRE_Solver)solver, params->maxiterations);
 	HYPRE_GMRESSetTol( (HYPRE_Solver)solver, params->tolerance );
 	HYPRE_GMRESSetRelChange( (HYPRE_Solver)solver, 0 );
-	HYPRE_GMRESSetLogging( (HYPRE_Solver)solver, 1 );
+	HYPRE_GMRESSetLogging( (HYPRE_Solver)solver, params->logging);
 	HYPRE_PtrToSolverFcn precond;
 	HYPRE_PtrToSolverFcn precond_setup;
 	HYPRE_StructSolver precond_solver;
@@ -506,6 +487,11 @@ public:
       } else {
 	throw InternalError("Unknown solver type: "+params->solvertype);
       }
+
+      if(final_res_norm > params->tolerance)
+	throw ConvergenceFailure("HypreSolver variable: "+X_label->getName()+", solver: "+params->solvertype+", preconditioner: "+params->precondtype,
+				 num_iterations, final_res_norm,
+				 params->tolerance);
       double solve_dt = Time::currentSeconds()-solve_start;
 
       for(int p=0;p<patches->size();p++){
@@ -537,6 +523,30 @@ public:
 	  }
 	}
       }
+
+#if 0
+      {
+	static int count=0;
+	count++;
+	ostringstream name;
+	name << "A.dat." << new_dw->getID() << "." << count;
+	HYPRE_StructMatrixPrint(name.str().c_str(), HA, 1);
+      }
+      {
+	static int count=0;
+	count++;
+	ostringstream name;
+	name << "B.dat." << new_dw->getID() << "." << count;
+	HYPRE_StructVectorPrint(name.str().c_str(), HB, 1);
+      }
+      {
+	static int count=0;
+	count++;
+	ostringstream name;
+	name << "X.dat." << new_dw->getID() << "." << count;
+	HYPRE_StructVectorPrint(name.str().c_str(), HX, 1);
+      }
+#endif
 
       HYPRE_StructMatrixDestroy(HA);
       HYPRE_StructVectorDestroy(HB);
@@ -670,6 +680,7 @@ SolverParameters* HypreSolver2::readParameters(ProblemSpecP& params, const strin
       param->getWithDefault("npost", p->npost, 1);
       param->getWithDefault("skip", p->skip, 0);
       param->getWithDefault("jump", p->jump, 0);
+      param->getWithDefault("logging", p->logging, 0);
       found=true;
     }
   }
@@ -682,6 +693,7 @@ SolverParameters* HypreSolver2::readParameters(ProblemSpecP& params, const strin
     p->npost = 1;
     p->skip = 0;
     p->jump = 0;
+    p->logging = 0;
   }
   return p;
 }
