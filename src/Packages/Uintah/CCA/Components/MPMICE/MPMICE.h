@@ -214,6 +214,7 @@ protected:
   bool             d_burns;
   SerialMPM*       d_mpm;
   ICE*             d_ice;
+  bool             d_fracture;
 
   vector<MPMPhysicalBC*> d_physicalBCs;
   double d_SMALL_NUM;
