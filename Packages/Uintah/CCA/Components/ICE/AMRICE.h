@@ -28,46 +28,24 @@ namespace Uintah {
     virtual void scheduleErrorEstimate(const LevelP& coarseLevel,
                                        SchedulerP& sched);
   protected:
-
-    virtual void refineBoundaries(const Patch* patch,
-                                  CCVariable<double>& val,
-                                  DataWarehouse* new_dw,
-                                  const VarLabel* label,
-                                  int matl, 
-                                  double factor);
+    void refineBoundaries(const Patch* patch,
+                          CCVariable<double>& val,
+                          DataWarehouse* new_dw,
+                          const VarLabel* label,
+                          int matl, 
+                          double factor);
+                
+    void refineBoundaries(const Patch* patch,
+                          CCVariable<Vector>& val,
+                          DataWarehouse* new_dw,
+                          const VarLabel* label,
+                          int matl, 
+                          double factor);
                                   
-    virtual void refineBoundaries(const Patch* patch,
-                                  CCVariable<Vector>& val,
-                                  DataWarehouse* new_dw,
-                                  const VarLabel* label,
-                                  int matl, 
-                                  double factor);
-                                  
-    virtual void refineBoundaries(const Patch* patch,
-                                  SFCXVariable<double>& val,
-                                  DataWarehouse* new_dw,
-                                  const VarLabel* label,
-                                  int matl, 
-                                  double factor);
-                                  
-    virtual void refineBoundaries(const Patch* patch,
-                                  SFCYVariable<double>& val,
-                                  DataWarehouse* new_dw,
-                                  const VarLabel* label,
-                                  int matl, 
-                                  double factor);
-                                  
-    virtual void refineBoundaries(const Patch* patch,
-                                  SFCZVariable<double>& val,
-                                  DataWarehouse* new_dw,
-                                  const VarLabel* label,
-                                  int matl, 
-                                  double factor);
-                                  
-    virtual void addRefineDependencies(Task* task, 
-                                       const VarLabel* var,
-                                       int step, 
-                                       int nsteps);
+    void addRefineDependencies(Task* task, 
+                               const VarLabel* var,
+                               int step, 
+                               int nsteps);
   private:
 
     void initialize(const ProcessorGroup*,
