@@ -25,7 +25,7 @@ libraries, sample data sets, and &sr; documentation.</para>
 <para> The <ulink
 url="http://www-unix.mcs.anl.gov/petsc/petsc-2/"><acronym>PETSc</acronym></ulink>
 library adds equation solvers to &sr;'s SolveMatrix module.  The
-<ulink url="http://www.itk.org">Insight toolkit
+<ulink url="http://www.itk.org">Insight Toolkit
 (<acronym>ITK</acronym>)</ulink> provides segmentation, registration,
 and image processing filters encapsulated as &sr; modules.
 </para>
@@ -129,19 +129,19 @@ distribution</link>.
 <para>
 Read  <citetitle pubwork="section"><xref
 endterm="title.prepare" linkend="sec.prepare"/></citetitle> after
-installing, but before starting &sr;.
+installing &sr;.
 </para>
 
 <para>
 Start with <citetitle
 pubwork="section"><xref linkend="sec.rpminst"
 endterm="title.rpminst"/></citetitle> if installing &sr; from an
-<acronym>RPM</acronym>.  Otherwise proceed as follows:
+<acronym>RPM</acronym>.  Otherwise, proceed as follows:
 <orderedlist>
 <listitem>
 <para>Read <citetitle pubwork="section"><xref linkend="sec.opt_inst"
 endterm="title.opt_inst"/></citetitle> if installing
-<acronym>PETSc</acronym> or Insight toolkit (<acronym>ITK</acronym>)
+<acronym>PETSc</acronym> or Insight Toolkit (<acronym>ITK</acronym>)
 support.  Note that support for <acronym>PETSc</acronym> and
 <acronym>ITK</acronym> is not provided by Linux <acronym>RPM</acronym>
 &sr; distributions.</para>
