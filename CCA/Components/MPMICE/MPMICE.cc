@@ -11,6 +11,7 @@
 #include <Packages/Uintah/CCA/Components/ICE/BoundaryCond.h>
 #include <Packages/Uintah/CCA/Components/ICE/ICEMaterial.h>
 #include <Packages/Uintah/CCA/Ports/Scheduler.h>
+#include <Packages/Uintah/CCA/Ports/ModelMaker.h>
 
 #include <Packages/Uintah/Core/Grid/Task.h>
 #include <Packages/Uintah/Core/Grid/NodeIterator.h>
@@ -40,9 +41,6 @@ static DebugStream cout_norm("MPMICE_NORMAL_COUT", false);
 static DebugStream cout_doing("MPMICE_DOING_COUT", false);
 
 #define MAX_BASIS 27
-
-//#define FAKE_BURN_MODEL
-#undef FAKE_BURN_MODEL
 
 #undef RIGID_MPM
 //#define RIGID_MPM
@@ -99,12 +97,12 @@ void MPMICE::problemSetup(const ProblemSpecP& prob_spec, GridP& grid,
   } else if(d_8or27==MAX_BASIS){
     NGN=2;
   }
+
   //__________________________________
   //  I C E
   dataArchiver = dynamic_cast<Output*>(getPort("output"));
-  if(dataArchiver == 0){
-    cout<<"dataArhiver in MPMICE is null now exiting; "<<endl;
-    exit(1);
+  if(!dataArchiver){
+    throw InternalError("MPMICE needs a dataArchiever component to work");
   }
   d_ice->attachPort("output", dataArchiver);
   
@@ -112,9 +110,19 @@ void MPMICE::problemSetup(const ProblemSpecP& prob_spec, GridP& grid,
   if(!solver){
     throw InternalError("ICE needs a solver component to work");
   }
-  d_ice->attachPort("solver", solver); 
+  d_ice->attachPort("solver", solver);
+  
+//  port* models = getPort("modelmaker");
+  ModelMaker* models = dynamic_cast<ModelMaker*>(getPort("modelmaker"));
+
+//  port* models = dynamic_cast<port*>(getPort("modelmaker"));
+  if(models){  // of there are models then push the port down to ICE
+    d_ice->attachPort("modelmaker",models);
+  } 
+  
   d_ice->setICELabel(Ilb);
   d_ice->problemSetup(prob_spec, grid, d_sharedState);
+  
   //__________________________________
   //  M P M I C E
   ProblemSpecP debug_ps = prob_spec->findBlock("Debug");
@@ -148,7 +156,8 @@ void MPMICE::problemSetup(const ProblemSpecP& prob_spec, GridP& grid,
       else if (debug_attr["label"] == "switchDebug_InterpolatePAndGradP")
         switchDebug_InterpolatePAndGradP   = true;       
     }
-  }
+  }  
+  
   //__________________________________
   //  reaction bulletproofing
   bool react = false;
@@ -303,6 +312,8 @@ MPMICE::scheduleTimeAdvance(const LevelP& level, SchedulerP& sched, int , int )
                                                                   prod_sub,
                                                                   press_matl,
                                                                   all_matls);
+  d_ice->scheduleModelMassExchange(               sched, level,   all_matls);
+  
   if(d_ice->d_impICE) {        //  I M P L I C I T 
     d_ice->scheduleImplicitPressureSolve(         sched, level,   patches,
                                                                   one_matl, 
@@ -362,6 +373,8 @@ MPMICE::scheduleTimeAdvance(const LevelP& level, SchedulerP& sched, int , int )
   d_mpm->scheduleIntegrateAcceleration(           sched, patches, mpm_matls);
   d_mpm->scheduleIntegrateTemperatureRate(        sched, patches, mpm_matls);
 
+  d_ice->scheduleModelMomentumAndEnergyExchange(  sched, level,   all_matls);
+  
   scheduleComputeLagrangianValuesMPM(             sched, patches, one_matl,
                                                                   mpm_matls); 
 
@@ -514,18 +527,24 @@ void MPMICE::scheduleComputeLagrangianValuesMPM(SchedulerP& sched,
                  this, &MPMICE::computeLagrangianValuesMPM);
 
    const MaterialSubset* mss = mpm_matls->getUnion();
+   Ghost::GhostType  gac = Ghost::AroundCells;
+   Ghost::GhostType  gn  = Ghost::None;
+   t->requires(Task::NewDW, Mlb->gVelocityStarLabel, mss, gac,1);
+   t->requires(Task::NewDW, Mlb->gMassLabel,              gac,1);
+   t->requires(Task::NewDW, Mlb->gTemperatureStarLabel,   gac,1);
+   t->requires(Task::OldDW, MIlb->NC_CCweightLabel,       one_matl, gac,1);
+   t->requires(Task::NewDW, MIlb->cMassLabel,             gn);
+   t->requires(Task::NewDW, MIlb->burnedMassCCLabel,      gn);
+   t->requires(Task::NewDW, Ilb->int_eng_comb_CCLabel,    gn);
+   t->requires(Task::NewDW, Ilb->mom_comb_CCLabel,        gn);
+   t->requires(Task::NewDW, MIlb->temp_CCLabel,           gn);
+   t->requires(Task::NewDW, MIlb->vel_CCLabel,            gn); 
 
-   t->requires(Task::NewDW, Mlb->gVelocityStarLabel, mss, Ghost::AroundCells,1);
-   t->requires(Task::NewDW, Mlb->gMassLabel,              Ghost::AroundCells,1);
-   t->requires(Task::NewDW, Mlb->gTemperatureStarLabel,   Ghost::AroundCells,1);
-   t->requires(Task::OldDW, MIlb->NC_CCweightLabel,       one_matl,
-                                                          Ghost::AroundCells,1);
-   t->requires(Task::NewDW, MIlb->cMassLabel,             Ghost::None);
-   t->requires(Task::NewDW, MIlb->burnedMassCCLabel,      Ghost::None);
-   t->requires(Task::NewDW, Ilb->int_eng_comb_CCLabel,    Ghost::None);
-   t->requires(Task::NewDW, Ilb->mom_comb_CCLabel,        Ghost::None);
-   t->requires(Task::NewDW, MIlb->temp_CCLabel,           Ghost::None);
-   t->requires(Task::NewDW, MIlb->vel_CCLabel,            Ghost::None); 
+   if(d_ice->d_models.size() > 0){
+     t->requires(Task::NewDW, Ilb->modelMass_srcLabel,   gn);
+     t->requires(Task::NewDW, Ilb->modelMom_srcLabel,    gn);
+     t->requires(Task::NewDW, Ilb->modelEng_srcLabel,    gn);
+   }
 
    t->modifies( Ilb->rho_CCLabel); 
    t->computes( Ilb->mass_L_CCLabel);
@@ -695,7 +714,10 @@ void MPMICE::scheduleInterpolateMassBurnFractionToNC(SchedulerP& sched,
   t->requires(Task::OldDW, d_sharedState->get_delt_label());  
   t->requires(Task::NewDW, MIlb->burnedMassCCLabel, Ghost::AroundCells,1);
   t->requires(Task::NewDW, MIlb->cMassLabel,        Ghost::AroundCells,1);
-
+  
+  if(d_ice->d_models.size() > 0){
+    t->requires(Task::NewDW,Ilb->modelVol_srcLabel, Ghost::None,0);
+  }
   t->computes(Mlb->massBurnFractionLabel);
 
   sched->addTask(t, patches, mpm_matls);
@@ -1138,9 +1160,14 @@ void MPMICE::computeLagrangianValuesMPM(const ProcessorGroup*,
               <<  indx<<patch->getID();
          d_ice->printData(indx, patch,1,desc.str(), "cmass",    cmass);
          printData(     indx, patch,  1,desc.str(), "gmass",    gmass);
+/*`==========TESTING==========*/
+         d_ice->printData(indx, patch,1,desc.str(), "rho_CC",   rho_CC);
+#if 0
          printData(     indx, patch,  1,desc.str(), "gtemStar", gtempstar);
          printNCVector( indx, patch,  1,desc.str(), "gvelocityStar", 0,
-                                                                gvelocity);
+                                                                gvelocity); 
+#endif
+/*==========TESTING==========`*/
       }
 
       for(CellIterator iter = patch->getExtraCellIterator();!iter.done();
@@ -1178,6 +1205,10 @@ void MPMICE::computeLagrangianValuesMPM(const ProcessorGroup*,
          rho_CC[c]    = mass_L[c] * inv_cellVol;
         }
       }
+//__________________________________
+//   T H R O W   A W A Y   W H E N   M O D E L S   A R E   W O R K I N G
+      if(d_ice->d_massExchange && d_ice->d_models.size() > 0)
+	throw InternalError("Cannot handle mass exchange simultaneous with new style models");
 
       //__________________________________
       //  REACTION
@@ -1218,7 +1249,60 @@ void MPMICE::computeLagrangianValuesMPM(const ProcessorGroup*,
           int_eng_L[c] = (int_eng_L[c]/mass_L[c]) * (cmass[c]+burnedMassCC[c]);
           int_eng_L[c] = std::max((int_eng_L[c] - int_eng_comb[c]),min_int_eng);
         }
-      }        
+      } 
+//__________________________________
+      //__________________________________
+      //   M O D E L   B A S E D   E X C H A N G E
+      // The reaction can't completely eliminate 
+      //  all the mass, momentum and internal E.
+      // If it does then we'll get erroneous vel,
+      // and temps in CCMomExchange.  If the mass
+      // goes to min_mass then cmomentum and int_eng_L
+      // need to be scaled by min_mass to avoid inf temp and vel_CC
+      // in 
+      if(d_ice->d_models.size() > 0)  { 
+	 constCCVariable<double> modelMass_src;
+        constCCVariable<double> modelEng_src;
+        constCCVariable<Vector> modelMom_src;
+	 new_dw->get(modelMass_src,Ilb->modelMass_srcLabel,indx, patch, gn, 0);
+	 new_dw->get(modelMom_src, Ilb->modelMom_srcLabel, indx, patch, gn, 0);
+	 new_dw->get(modelEng_src, Ilb->modelEng_srcLabel, indx, patch, gn, 0);
+        
+        ostringstream desc;
+        desc<<"BOT_MPMICE::computeLagrangianValuesMPM_mat_"<<indx<<"_patch_"
+            <<  patch->getID();
+        d_ice->printData(  indx,patch, 1,desc.str(), "modelMass",    modelMass_src);
+                
+        for(CellIterator iter = patch->getExtraCellIterator();!iter.done();
+                                                    iter++){ 
+          IntVector c = *iter;
+          //  must have a minimum mass
+          double min_mass = d_TINY_RHO * cellVol;
+          double inv_cmass = 1.0/cmass[c];
+          mass_L[c] = std::max( (cmass[c] + modelMass_src[c] ), min_mass);
+          rho_CC[c] = mass_L[c] * inv_cellVol;
+              
+          //  must have a minimum momentum 
+          for (int dir = 0; dir <3; dir++) {  //loop over all three directons
+            double min_mom_L = min_mass * cmomentum[c][dir] * inv_cmass;
+            double mom_L_tmp = cmomentum[c][dir] + modelMom_src[c][dir];
+
+            // Preserve the original sign on momemtum     
+            // Use d_SMALL_NUMs to avoid nans when mom_L_temp = 0.0
+            double plus_minus_one = (mom_L_tmp+d_SMALL_NUM)/
+                                    (fabs(mom_L_tmp+d_SMALL_NUM));
+
+            mom_L_tmp = (mom_L_tmp/mass_L[c] ) * (cmass[c] + modelMass_src[c] );
+                                
+            cmomentum[c][dir] = plus_minus_one *
+                                std::max( fabs(mom_L_tmp), fabs(min_mom_L) );
+          }
+          // must have a minimum int_eng   
+          double min_int_eng = min_mass * int_eng_L[c] * inv_cmass;
+          int_eng_L[c] = (int_eng_L[c]/mass_L[c]) * (cmass[c]+modelMass_src[c]);
+          int_eng_L[c] = std::max((int_eng_L[c] + modelEng_src[c]),min_int_eng);
+        }
+      }  // if(model.size() >0)      
        
        //__________________________________
        //  Set Boundary conditions
@@ -2061,11 +2145,6 @@ void MPMICE::HEChemistry(const ProcessorGroup*,
                                        NCsolidMass[nodeIdx[nN]]); 
           }               
 
-/*`==========TESTING==========*/
-         #ifdef FAKE_BURN_MODEL
-            MinMass = 0.0;   
-         #endif
-/*==========TESTING==========`*/
          if ((MaxMass-MinMass)/MaxMass > 0.4            //--------------KNOB 1
           && (MaxMass-MinMass)/MaxMass < 1.0
           &&  MaxMass > d_SMALL_NUM){
@@ -2154,20 +2233,16 @@ void MPMICE::HEChemistry(const ProcessorGroup*,
                                           sumReleasedHeat[c],
                                           delt, surfArea);
                              
-/*`==========FAKE BURN MODEL==========*/
-      #ifdef FAKE_BURN_MODEL
-               burnedMass[m][c] = solidMass[c]/10.0;
-               sumReleasedHeat[c] = 0.0;
-      #endif
-/*===================================`*/
              int_eng_react[m][c] =
                       cv_solid*solidTemperature[c]*burnedMass[m][c];
-             createdVol[m][c]    =  burnedMass[m][c] * sp_vol_CC[c];
+                      
+             double createdVolx  =  burnedMass[m][c] * sp_vol_CC[c];
+
              mom_comb[m][c]      = -vel_CC[c] * burnedMass[m][c];
 
              sumBurnedMass[c]   += burnedMass[m][c];
              sumReleasedHeat[c] += int_eng_react[m][c];
-             sumCreatedVol[c]   += createdVol[m][c];
+             sumCreatedVol[c]   += createdVolx;
              sumMom_comb[c]     += -mom_comb[m][c];
              burnedMass[m][c]    = -burnedMass[m][c];
              // reactantants: (-)burnedMass
@@ -2180,7 +2255,8 @@ void MPMICE::HEChemistry(const ProcessorGroup*,
 
              // We've gotten all the use we need out of createdVol by
              // accumulating it in sumCreatedVol
-             createdVol[m][c]    = 0.0;
+             createdVol[m][c]    = 0.0;                 // this is wrong
+             // createdVol[m][c]    = -createdVolx;     // this is right
          }
          else {
             burnedMass[m][c]      = 0.0;
@@ -2255,6 +2331,8 @@ void MPMICE::interpolateMassBurnFractionToNC(const ProcessorGroup*,
     delt_vartype delT;
     old_dw->get(delT, d_sharedState->get_delt_label());
     Ghost::GhostType  gac = Ghost::AroundCells;
+    Ghost::GhostType  gn = Ghost::AroundCells;
+    
     for (int m = 0; m < numALLMatls; m++) {
       Material* matl = d_sharedState->getMaterial( m );
       MPMMaterial* mpm_matl = dynamic_cast<MPMMaterial*>(matl);
@@ -2268,16 +2346,31 @@ void MPMICE::interpolateMassBurnFractionToNC(const ProcessorGroup*,
         new_dw->allocateAndPut(massBurnFraction, 
                                   Mlb->massBurnFractionLabel,indx,patch);
         massBurnFraction.initialize(0.);
+        if(d_ice->d_models.size() > 0)  {     // MODEL REMOVE this stuff
+          IntVector cIdx[8];  
+          for(NodeIterator iter = patch->getNodeIterator(); !iter.done();iter++){
+             patch->findCellsFromNode(*iter,cIdx);
+            for (int in=0;in<8;in++){
+              massBurnFraction[*iter] +=
+                       (fabs(burnedMassCC[cIdx[in]])/massCC[cIdx[in]])*.125;
 
-        IntVector cIdx[8];
-        for(NodeIterator iter = patch->getNodeIterator(); !iter.done();iter++){
-           patch->findCellsFromNode(*iter,cIdx);
-          for (int in=0;in<8;in++){
-            massBurnFraction[*iter] +=
-                     (fabs(burnedMassCC[cIdx[in]])/massCC[cIdx[in]])*.125;
-
+            }
           }
         }
+        if(d_ice->d_models.size() > 0)  { 
+          constCCVariable<double> modelMass_src;
+	   new_dw->get(modelMass_src,Ilb->modelMass_srcLabel,indx, patch, gn, 0);
+          
+          IntVector cIdx[8];  
+          for(NodeIterator iter = patch->getNodeIterator(); !iter.done();iter++){
+             patch->findCellsFromNode(*iter,cIdx);
+            for (int in=0;in<8;in++){
+              massBurnFraction[*iter] +=
+                       (fabs(modelMass_src[cIdx[in]])/massCC[cIdx[in]])*.125;
+
+            }
+          }
+        }  // if(models >0 )
       }  //if(mpm_matl)
     }  //ALLmatls  
   }  //patches
