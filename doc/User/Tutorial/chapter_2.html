@@ -97,8 +97,8 @@
         minimum/maximum range is from 0 to 1.  
 
         <P>Using the RescaleColorMap module, you can set the min/max values by
-        hand, or, you can &quot;auto-scale&quot; them to correspond with
-       the min/max data value range from a scalar Field.
+        hand, or, you can auto-scale them to correspond with
+       the min/max data value range from a scalar field.
                   
         <p>Now, we can add a GenStandardColorMaps and a RescaleColorMap
          module to our net from <a href="chapter_1.html#chapter1">Chapter
@@ -125,32 +125,32 @@
 	<p><br>
 
 	<p>Note that, RescaleColorMap is another example of a module that has dynamic input ports.
-	If the user connects more than one Field into RescaleColorMap,
+	If the user connects more than one field into RescaleColorMap,
 	the min/max range for auto-scaling corresponds to the
-	min/max range of data values from all of the input Fields.</p>
+	min/max range of data values from all of the input fields.</p>
 
 	<p>The second input port on the ShowField module accepts a
-        ColorMap that maps the data values in its input Field to a color in the
+        ColorMap that maps the data values in its input field to a color in the
         input ColorMap, and renders accordingly.  If a ColorMap is
         present in ShowField the module ignores the Default
         Color, and uses the ColorMap value.</p>
                   
-        <p>To complete this net we must read in a Field.  
+        <p>To complete this net we must read in a field.  
 	<ol>
 	<p><li> <A NAME=electrodes>
 	    Use the FieldReader User Interface (UI) to read in
         utahtorso-lowres-electrodes.pcd.fld (a point cloud of
         electrode positions, with voltages measured from a single
         instant in time).</p>  
-	<p><li>Select the Autoview option in the View window and rotate the image downward.</p>
+	<p><li>Select the Autoview option in the ViewWindow and rotate the image downward.</p>
 <p><li>In the ShowField UI, change the Node Scale to 6.</p> 
 <p><li>You should see an image like <b>Figure 2.3</b> in
-	  the View window.</p>
+	  the ViewWindow.</p>
 	</ol>
 	</div>
 	<center>
 	<p><img height="451" width="450" src="images/figures/2_3.gif"><br>
-	<b>Figure 2.3, View window showing utah-torso-lowres-electrodes.pcd.fld</b></p>
+	<b>Figure 2.3, ViewWindow showing utah-torso-lowres-electrodes.pcd.fld</b></p>
 	</center>
 	<div align="left">
 	<p><br>
@@ -169,17 +169,17 @@
 	<p><br>
 
         <p><ul>
-	  <li>A selection of standard maps appears on the left.
-	  <li>The selected color map appears at the top of the window, and
+	  <p><li>A selection of standard maps appears on the left.</p>
+	  <p><li>The selected color map appears at the top of the window, and
 	      has a clickable interface for changing the opacity of each
-	      color swatch in the map.  
-	  <li>The Shift option indicates a gamma value for non-linear
-	      compression or expansion of the otherwise-linear color ramp.
-	  <li>The Resolution slider sets the number of
-	      distinct colors to be stored in the color table.   
-	  <li>By choosing a low resolution, you can generate
-	      &quot;banded&quot; colors. 
-	  <li>Choose a higher resolution for smoother color transitions, and a lower resolution for banded colors.
+	      color swatch in the map.</p>  
+	  <p><li>The Shift option indicates a gamma value for non-linear
+	      compression or expansion of the otherwise-linear color ramp.</p>
+	  <p><li>The Resolution slider sets the number of
+	      distinct colors to be stored in the color table.</p>   
+	  <p><li>By choosing a low resolution, you can generate
+	      <i>banded</i> colors.</p> 
+	  <p><li>Choose a higher resolution for smoother color transitions, and a lower resolution for banded colors.</p>
 	</ul>  
 <p><b><A name="section-4">RescaleColorMaps UI</A></b></p>               
         <p><b>Figure 2.5</b> shows the UI to the RescaleColorMap module.</p>
