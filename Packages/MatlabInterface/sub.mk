@@ -30,8 +30,9 @@
 SRCDIR := Packages/MatlabInterface
 
 SUBDIRS := \
-	$(SRCDIR)/Core \
-	$(SRCDIR)/Dataflow \
-	$(SRCDIR)/Services
+        $(SRCDIR)/Core \
+        $(SRCDIR)/Dataflow \
+	$(SRCDIR)/Services 
+
 
 include $(SCIRUN_SCRIPTS)/recurse.mk
