@@ -574,8 +574,10 @@ namespace BioPSE
             return;
           }
       }
+#if 0
     else
       N=matrixX->nrows();
+#endif
 
     ColumnMatrix *Uy=scinew ColumnMatrix(matrixU->ncols());
     ColumnMatrix *solution = scinew ColumnMatrix(N);
