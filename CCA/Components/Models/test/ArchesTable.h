@@ -133,9 +133,7 @@ WARNING
 
     int getInt(istream&);
     double getDouble(istream&);
-    bool getBool(istream&);
     string getString(istream&);
-    string getLine(istream&);
 
     bool startline;
     void error(istream& in);

@@ -830,40 +830,6 @@ string ArchesTable::getString(istream& in)
   return result;
 }
 
-string ArchesTable::getLine(istream& in)
-{
-  eatWhite(in);
-  if(startline)
-    skipComments(in);
-  eatWhite(in);
-
-  string result;
-  eatWhite(in);
-  for(;;){
-    int c = in.get();
-    if(c == '\n')
-      break;
-    result.push_back(c);
-  }
-  result.erase(result.find_last_not_of(" \t\n")+1);
-  return result;
-}
-
-bool ArchesTable::getBool(istream& in)
-{
-  eatWhite(in);
-  if(startline)
-    skipComments(in);
-  eatWhite(in);
-  int c = in.get();
-  if(c == 'Y' || c == 'y')
-    return true;
-  else if(c == 'N' || c == 'n')
-    return false;
-  else
-    throw InternalError("Error parsing yes/no bool value in table");
-}
-
 void ArchesTable::skipComments(istream& in)
 {
   eatWhite(in);
