@@ -65,9 +65,10 @@ WARNING
     virtual void createNeighborhood(const GridP& grid) = 0;
     virtual bool inNeighborhood(const PatchSubset*, const MaterialSubset*) = 0;
     virtual bool inNeighborhood(const Patch*) = 0;
-
+    
     virtual const PatchSet* createPerProcessorPatchSet(const LevelP& level) = 0;
     virtual void dynamicReallocation(const GridP&, const SchedulerP&) {}
+    virtual int getNthProc() { return 1; }
     virtual void restartInitialize(ProblemSpecP&, XMLURL tsurl) {}
   private:
     LoadBalancer(const LoadBalancer&);
