@@ -6,7 +6,7 @@
 #include <iostream>
 #include <assert.h>
 #include <Core/CCA/Component/PIDL/MxNScheduleEntry.h>
-#include <Core/CCA/Component/SIDL/array.h>
+#include <Core/CCA/Component/SSIDL/array.h>
 using namespace SCIRun;
 using namespace std;
 
@@ -39,7 +39,7 @@ int main()
   mxnentry1->reportMetaRecvFinished(1);
 
   //Set the Array
-  SIDL::array1<int>* main_arr = new  SIDL::array1<int>(5);
+  SSIDL::array1<int>* main_arr = new  SSIDL::array1<int>(5);
   mxnentry1->setArray((void**) &main_arr);
 
   //Report that the Actual Data is received
@@ -47,7 +47,7 @@ int main()
 
   //Retrieve the Complete Array
   void* arr = mxnentry1->getCompleteArray();
-  delete ((SIDL::array1<int>*) arr);
+  delete ((SSIDL::array1<int>*) arr);
 
   delete mxnentry1;
 }

@@ -33,7 +33,7 @@ int main()
 
 
   //Create an ArrayRep from an array 
-  SIDL::array2<int> arr1(3,2);
+  SSIDL::array2<int> arr1(3,2);
   arr1[0][0] = 29; arr1[1][0] = 101; arr1[2][0] = 4;
   arr1[0][1] = 23; arr1[1][1] = 107; arr1[2][1] = 5;
   mxnarep3 = new MxNArrayRep(arr1);
