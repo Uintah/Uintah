@@ -158,8 +158,8 @@ WARNING
       virtual void emit(OutputContext&, const VarLabel* label,
 			int matlIndex, const Patch* patch) const = 0;
 
-      virtual void emit(ostream& intout, const VarLabel* label,
-			int matlIndex = -1) const = 0;
+      virtual void print(ostream& intout, const VarLabel* label,
+			 int matlIndex = -1) const = 0;
 
       // For the schedulers
       virtual bool isFinalized() const = 0;
