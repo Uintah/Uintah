@@ -71,7 +71,7 @@ TIME_IMPL = $(SRCDIR)/@TIME_IMPL@
 LOCK_IMPL = $(SRCDIR)/@LOCK_IMPL@
 
 # Subdirectories
-SUBDIRS := Core Dataflow $(COMPONENT_DIRS) main \
+SUBDIRS := Core Dataflow StandAlone $(COMPONENT_DIRS) main \
 	testprograms $(PACKAGE_DIRS)
 
 # Libraries and other flags
