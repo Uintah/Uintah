@@ -122,7 +122,7 @@ bool ParticleLoadBalancer::assignPatchesParticle(const GridP& grid)
     for (Level::const_patchIterator iter = level->patchesBegin(); 
          iter != level->patchesEnd(); iter++) {
       Patch *patch = *iter;
-      int id = patch->getID();
+      int id = patch->getGridIndex();
       if (d_processorAssignment[id] != myrank)
         continue;
       
@@ -194,7 +194,7 @@ bool ParticleLoadBalancer::assignPatchesParticle(const GridP& grid)
       for (Level::const_patchIterator iter = level->patchesBegin(); 
            iter != level->patchesEnd(); iter++) {
         Patch* patch = *iter;
-        int id = patch->getID();
+        int id = patch->getGridIndex();
         // are patch id's in order of level and then patch?
         ASSERT(id == allParticles[id].id);
         patchset.push_back(patch);
@@ -277,12 +277,13 @@ bool ParticleLoadBalancer::assignPatchesParticle(const GridP& grid)
                                         lowIndex, highIndex);
           for(int i=0;i<(int)n.size();i++){
             const Patch* neighbor = n[i]->getRealPatch();
-            if (allParticles[neighbor->getID()].assigned || neighbor == patch)
+            int neighborid = neighbor->getGridIndex();
+            if (allParticles[neighborid].assigned || neighbor == patch)
               continue;
-            float myGuess = patch_costs[p] + patch_costs[neighbor->getID()];
+            float myGuess = patch_costs[p] + patch_costs[neighborid];
             if (fabs(myGuess-target) < fabs(best-target)) {
               best = myGuess;
-              bestIndex = neighbor->getID();
+              bestIndex = neighborid;
             }
           }
           dbg << " LB - assigning patch " << allParticles[p].id << " with " 
@@ -393,7 +394,7 @@ bool ParticleLoadBalancer::assignPatchesParticle(const GridP& grid)
           //dbg << "Patch " << index << "-> proc " << currentProc 
           //    << " PatchCost: " << patchCost << ", ProcCost: " 
           //    << currentProcCost 
-          //    << ", idcheck: " << patchset[index]->getID() << endl;
+          //    << ", idcheck: " << patchset[index]->getGridIndex() << endl;
         }
         else {
           // add patch to currentProc
@@ -402,7 +403,7 @@ bool ParticleLoadBalancer::assignPatchesParticle(const GridP& grid)
           //dbg << "Patch " << index << "-> proc " << currentProc 
           //    << " PatchCost: " << patchCost << ", ProcCost: " 
           //    << currentProcCost 
-          //    << ", idcheck: " << patchset[index]->getID() << endl;
+          //    << ", idcheck: " << patchset[index]->getGridIndex() << endl;
         }
       }
     }
@@ -508,8 +509,8 @@ bool ParticleLoadBalancer::assignPatchesCyclic(const GridP&)
 int
 ParticleLoadBalancer::getPatchwiseProcessorAssignment(const Patch* patch)
 {
-  int proc = d_processorAssignment[patch->getRealPatch()->getID()];
-  //cout << group->myrank() << " Requesting patch " << patch->getID()
+  int proc = d_processorAssignment[patch->getRealPatch()->getGridIndex()];
+  //cout << group->myrank() << " Requesting patch " << patch->getGridIndex()
   //   << " which is stored on processor " << proc << endl;
   //int proc = (patch->getLevelIndex()*numProcs)/patch->getLevel()->numPatches();
   ASSERTRANGE(proc, 0, d_myworld->size());
@@ -524,8 +525,8 @@ ParticleLoadBalancer::getOldProcessorAssignment(const VarLabel* var,
   if (var && var->typeDescription()->isReductionVariable()) {
     return d_myworld->myrank();
   }
-  int proc = d_oldAssignment[patch->getID()];
-  //cout << d_myworld->myrank() << " Requesting patch " << patch->getID()
+  int proc = d_oldAssignment[patch->getGridIndex()];
+  //cout << d_myworld->myrank() << " Requesting patch " <<patch->getGridIndex()
   //   << " which *used to be* stored on processor " << proc << endl;
   ASSERTRANGE(proc, 0, d_myworld->size());
   return proc;
@@ -570,7 +571,7 @@ ParticleLoadBalancer::needRecompile(double /*time*/, double /*delt*/,
   
   // if we check for lb every timestep, but don't, we still need to recompile
   // if we load balanced on the last timestep
-  if (possiblyDynamicallyReallocate(grid) || old_state == postLoadBalance) {
+  if (possiblyDynamicallyReallocate(grid, false) || old_state == postLoadBalance) {
     dbg << d_myworld->myrank() << " PLB - scheduling recompile " <<endl;
     return true;
   }
@@ -687,7 +688,7 @@ ParticleLoadBalancer::setDynamicAlgorithm(std::string algo, double interval,
   d_cellFactor = factor;
 }
 
-bool ParticleLoadBalancer::possiblyDynamicallyReallocate(const GridP& grid)
+bool ParticleLoadBalancer::possiblyDynamicallyReallocate(const GridP& grid, bool force)
 {
 
   dbg << d_myworld->myrank() << " In PLB - State: " << d_state << endl;
@@ -731,8 +732,10 @@ bool ParticleLoadBalancer::possiblyDynamicallyReallocate(const GridP& grid)
       for (Level::const_patchIterator iter = level->patchesBegin(); 
            iter != level->patchesEnd(); iter++) {
         Patch *patch = *iter;
-        d_processorAssignment[patch->getID()] = patch->getID() % numProcs;
-        ASSERTRANGE(patch->getID(),0,numPatches);
+        int patchid = patch->getGridIndex();
+        d_processorAssignment[patchid] = 
+          patchid % numProcs;
+        ASSERTRANGE(patchid,0,numPatches);
       }
     }
 
@@ -749,8 +752,9 @@ bool ParticleLoadBalancer::possiblyDynamicallyReallocate(const GridP& grid)
       for (Level::const_patchIterator iter = level->patchesBegin(); 
            iter != level->patchesEnd(); iter++) {
         Patch *patch = *iter;
-        d_processorAssignment[patch->getID()] = patch->getID() % numProcs;
-        ASSERTRANGE(patch->getID(),0,numPatches);
+        int patchid = patch->getGridIndex();
+        d_processorAssignment[patchid] = patchid % numProcs;
+        ASSERTRANGE(patchid,0,numPatches);
       }
     }
     d_state = postLoadBalance;
@@ -767,7 +771,7 @@ bool ParticleLoadBalancer::possiblyDynamicallyReallocate(const GridP& grid)
     case random_lb:    dynamicAllocate = assignPatchesRandom(grid); break;
     // static_lb does nothing
     }
-    if (dynamicAllocate) {
+    if (dynamicAllocate || force) {
       d_oldAssignment = d_processorAssignment;
       d_processorAssignment = d_tempAssignment;
       d_state = postLoadBalance;
