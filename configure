@@ -3995,7 +3995,12 @@ fi
 
 
 ##-- Generate Output Files ---------------------------------------------------
-
+if ! test -d "Dataflow/Modules/Fields/Manip"; then
+  mkdir -p "Dataflow/Modules/Fields/Manip";
+fi
+if ! test -d "Dataflow/Modules/Math/Manip"; then
+  mkdir -p "Dataflow/Modules/Math/Manip";
+fi
 trap '' 1 2 15
 cat > confcache <<\EOF
 # This file is a shell script that caches the results of configure
@@ -4099,6 +4104,7 @@ ac_given_srcdir=$srcdir
 trap 'rm -fr `echo "configVars.mk \
 		Makefile \
                 Dataflow/Modules/Fields/Manip/Makefile\
+		Dataflow/Modules/Math/Manip/Makefile\
 		sci_defs.h \
 		 sci_config.h" | sed "s/:[^ ]*//g"` conftest*; exit 1' 1 2 15
 EOF
@@ -4273,6 +4279,7 @@ cat >> $CONFIG_STATUS <<EOF
 CONFIG_FILES=\${CONFIG_FILES-"configVars.mk \
 		Makefile \
                 Dataflow/Modules/Fields/Manip/Makefile\
+		Dataflow/Modules/Math/Manip/Makefile\
 		sci_defs.h \
 		"}
 EOF
