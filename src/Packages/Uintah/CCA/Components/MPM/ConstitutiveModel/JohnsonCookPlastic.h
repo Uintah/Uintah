@@ -106,6 +106,9 @@ namespace Uintah {
     virtual void allocateAndPutInternalVars(ParticleSubset* pset,
 					    DataWarehouse* new_dw); 
 
+    virtual void allocateAndPutRigid(ParticleSubset* pset,
+				     DataWarehouse* new_dw); 
+
     virtual void updateElastic(const particleIndex idx);
 
     virtual void updatePlastic(const particleIndex idx, const double& delGamma);

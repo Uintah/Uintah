@@ -286,11 +286,6 @@ void MPMMaterial::initializeCCVariables(CCVariable<double>& rho_micro,
    Point b1up(b1.upper().x()+3.*dx.x(),b1.upper().y()+3.*dx.y(),
                                         b1.upper().z()+3.*dx.z());
    
-   if(b.degenerate()){
-      cerr << "b.degenerate" << endl;
-      cerr << "So what? " << endl;
-   }
-
    IntVector ppc = d_geom_objs[obj]->getNumParticlesPerCell();
    Vector dxpp    = patch->dCell()/ppc;
    Vector dcorner = dxpp*0.5;
