@@ -609,43 +609,49 @@ void HVolumeVis2D<DataT,MetaCT>::isect(int depth, double t_sample,
 	if (opacity_factor > 0.001) {
 	  // the point is contributing, so compute the color
 	  
-	  // compute the gradient
-	  float dx = ly2.v() - ly1.v();
-	      
-	  float dy, dy1, dy2;
-	  dy1 = lz2.v() - lz1.v();
-	  dy2 = lz4.v() - lz3.v();
-	  dy = dy1 * (1 - x_weight_high) + dy2 * x_weight_high;
-	  
-	  float dz, dz1, dz2, dz3, dz4, dzly1, dzly2;
-	  dz1 = rhos[1].v() - rhos[0].v();
-	  dz2 = rhos[3].v() - rhos[2].v();
-	  dz3 = rhos[5].v() - rhos[4].v();
-	  dz4 = rhos[7].v() - rhos[6].v();
-	  dzly1 = dz1 * (1 - y_weight_high) + dz2 * y_weight_high;
-	  dzly2 = dz3 * (1 - y_weight_high) + dz4 * y_weight_high;
-	  dz = dzly1 * (1 - x_weight_high) + dzly2 * x_weight_high;
-	  float length2 = dx*dx+dy*dy+dz*dz;
+          Light* light=isctx.cx->scene->light(0);
+          if (light->isOn()) {
 
-	  Vector gradient;
-	  if (length2){
-	    // this lets the compiler use a special 1/sqrt() operation
-	    float ilength2 = 1/sqrtf(length2);
-	    gradient = Vector(dx*ilength2, dy*ilength2,dz*ilength2);
-	  } else {
-	    gradient = Vector(0,0,0);
-	  }
-	  
-	  Light* light=isctx.cx->scene->light(0);
-	  Vector light_dir;
-	  Point current_p = isctx.ray.origin() + isctx.ray.direction()*t_sample - min.vector();
-	  light_dir = light->get_pos()-current_p;
+            // compute the gradient
+            float dx = ly2.v() - ly1.v();
 	      
-	  Color temp = color(gradient, isctx.ray.direction(),
-			     light_dir.normal(), 
-			     value_color,
-			     light->get_color());
-	  isctx.total += temp * opacity_factor;
+            float dy, dy1, dy2;
+            dy1 = lz2.v() - lz1.v();
+            dy2 = lz4.v() - lz3.v();
+            dy = dy1 * (1 - x_weight_high) + dy2 * x_weight_high;
+	  
+            float dz, dz1, dz2, dz3, dz4, dzly1, dzly2;
+            dz1 = rhos[1].v() - rhos[0].v();
+            dz2 = rhos[3].v() - rhos[2].v();
+            dz3 = rhos[5].v() - rhos[4].v();
+            dz4 = rhos[7].v() - rhos[6].v();
+            dzly1 = dz1 * (1 - y_weight_high) + dz2 * y_weight_high;
+            dzly2 = dz3 * (1 - y_weight_high) + dz4 * y_weight_high;
+            dz = dzly1 * (1 - x_weight_high) + dzly2 * x_weight_high;
+            float length2 = dx*dx+dy*dy+dz*dz;
+
+            Vector gradient;
+            if (length2){
+              // this lets the compiler use a special 1/sqrt() operation
+              float ilength2 = 1/sqrtf(length2);
+              gradient = Vector(dx*ilength2, dy*ilength2,dz*ilength2);
+            } else {
+              gradient = Vector(0,0,0);
+            }
+	  
+            Vector light_dir;
+            Point current_p = isctx.ray.origin() + isctx.ray.direction()*t_sample - min.vector();
+            light_dir = light->get_pos()-current_p;
+	      
+            Color temp = color(gradient, isctx.ray.direction(),
+                               light_dir.normal(), 
+                               value_color,
+                               light->get_color());
+            isctx.total += temp * opacity_factor;
+          } else {
+            // Do not do lighting
+            isctx.total += value_color * opacity_factor;
+          }
 	  isctx.opacity += opacity_factor;
 	}
 	
@@ -653,6 +659,11 @@ void HVolumeVis2D<DataT,MetaCT>::isect(int depth, double t_sample,
 
       // Update the new position
       t_sample += isctx.t_inc;
+
+      // If we have overstepped the limit of the ray
+      if(t_sample >= isctx.t_max)
+	break;
+
       bool break_forloop = false;
       while (t_sample > next_x) {
 	// Step in x...
@@ -1070,40 +1081,46 @@ void HVolumeVis2D<DataT,MetaCT>::shade(Color& result, const Ray& ray,
 	if (opacity_factor > 0.001) {
 	  // the point is contributing, so compute the color
 	  
-	  // compute the gradient
-	  Vector gradient;
-	  float dx = ly2.v() - ly1.v();
-	  
-	  float dy1, dy2, dy;
-	  dy1 = lz2.v() - lz1.v();
-	  dy2 = lz4.v() - lz3.v();
-	  dy = dy1 * (1-x_weight_high) + dy2 * x_weight_high;
-	  
-	  float dz1, dz2, dz3, dz4, dzly1, dzly2, dz;
-	  dz1 = b.v() - a.v();
-	  dz2 = d.v() - c.v();
-	  dz3 = f.v() - e.v();
-	  dz4 = h.v() - g.v();
-	  dzly1 = dz1 * (1-y_weight_high) + dz2 * y_weight_high;
-	  dzly2 = dz3 * (1-y_weight_high) + dz4 * y_weight_high;
-	  dz = dzly1 * (1-x_weight_high) + dzly2 * x_weight_high;
-
-	  float length2 = dx*dx+dy*dy+dz*dz;
-	  if(length2){
-	    // this lets the compiler use a special 1/sqrt() operation
-	    float ilength2 = 1/sqrtf(length2);
-	    gradient = Vector(dx*ilength2, dy*ilength2, dz*ilength2);
-	  } else {
-	    gradient = Vector(0,0,0);
-	  }
-	  
 	  Light* light=ctx->scene->light(0);
-	  Vector light_dir;
-	  light_dir = light->get_pos()-current_p;
+          if (light->isOn()) {
+
+            // compute the gradient
+            Vector gradient;
+            float dx = ly2.v() - ly1.v();
+            
+            float dy1, dy2, dy;
+            dy1 = lz2.v() - lz1.v();
+            dy2 = lz4.v() - lz3.v();
+            dy = dy1 * (1-x_weight_high) + dy2 * x_weight_high;
+            
+            float dz1, dz2, dz3, dz4, dzly1, dzly2, dz;
+            dz1 = b.v() - a.v();
+            dz2 = d.v() - c.v();
+            dz3 = f.v() - e.v();
+            dz4 = h.v() - g.v();
+            dzly1 = dz1 * (1-y_weight_high) + dz2 * y_weight_high;
+            dzly2 = dz3 * (1-y_weight_high) + dz4 * y_weight_high;
+            dz = dzly1 * (1-x_weight_high) + dzly2 * x_weight_high;
+            
+            float length2 = dx*dx+dy*dy+dz*dz;
+            if(length2){
+              // this lets the compiler use a special 1/sqrt() operation
+              float ilength2 = 1/sqrtf(length2);
+              gradient = Vector(dx*ilength2, dy*ilength2, dz*ilength2);
+            } else {
+              gradient = Vector(0,0,0);
+            }
 	  
-	  Color temp = color(gradient, ray.direction(), light_dir.normal(), 
-			     value_color, light->get_color());
-	  total += temp * opacity_factor;
+            Vector light_dir;
+            light_dir = light->get_pos()-current_p;
+            
+            Color temp = color(gradient, ray.direction(), light_dir.normal(), 
+                               value_color, light->get_color());
+            total += temp * opacity_factor;
+          } else {
+            // Do not do lighting
+            total += value_color * opacity_factor;
+          }
 	  opacity += opacity_factor;
 	}
       } else {
