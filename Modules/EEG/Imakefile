@@ -7,8 +7,9 @@ SRCS = Coregister.cc
 LIBNAME = EEG
 
 SO_LIBS = 
-SO_LDFLAGS = -L$(TOP)/lib -lDatatypes -lGeom -lDataflow -lGeometry -lClasslib \
-	-lMultitask -lMalloc -lWidgets
+SO_LDFLAGS = -L$(TOP)/lib -lDatatypes -lGeom -lDataflow \
+	-lGeometry -lMath -lTCL -lClasslib -lMultitask \
+	-lMalloc -lWidgets
 
 SCIDependTarget($(SRCS))
 SCIObjLibraryTarget($(LIBNAME),$(OBJS),$(SO_LIBS),$(SO_LDFLAGS))
