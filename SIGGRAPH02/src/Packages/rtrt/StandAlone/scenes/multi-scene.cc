@@ -79,6 +79,7 @@ Scene* make_scene(int argc, char* argv[], int nworkers)
   rtrt::Array1<Material*>   * allMaterials;
   vector< string >          * allRouteNames_;
   vector< string >          * allRoomsForRoutes_;
+  Group *sg = new Group;
   rtrt::Array1<ShadowBase*> * allShadows;
 
   for (s=0; s<nscenes; s++) {
@@ -120,7 +121,9 @@ Scene* make_scene(int argc, char* argv[], int nworkers)
 	allMaterials = &(scene[0]->getMaterials());
 	allRouteNames_ = &(scene[0]->getRouteNames());
 	allRoomsForRoutes_ = &(scene[0]->getRoomsForRoutes());
-	allShadows = &(scene[0]->getShadows());
+        allShadows = &(scene[0]->getShadows());
+        Object *so = scene[0]->get_shadow_object();
+        if (so) sg->objs.add(so);
       }
     else
       {
@@ -168,8 +171,10 @@ Scene* make_scene(int argc, char* argv[], int nworkers)
 	for( int cnt = 0; cnt < shadows.size(); cnt++ ) {
 	  allShadows->add( shadows[cnt] );
 	}
+        Object *so = scene[s]->get_shadow_object();
+        if (so) sg->objs.add(so);
       }
-
+    
     if (strncmp(argv[scene_first_arg[s]], "scenes/sea", strlen("scenes/sea")) == 0) {
       std::cerr << "\n\n"
 		<< " ==== Adding scene's objs to CellGroup WITHOUT a bbox ==="
@@ -204,5 +209,15 @@ Scene* make_scene(int argc, char* argv[], int nworkers)
        << "\n";
 
   scene[0]->set_object(g);
+  if (sg->objs.size()) scene[0]->shadowobj=sg;
+  scene[0]->set_cup(Color(.8,.8,.8));
+  scene[0]->set_cdown(Color(.4,.4,.4));
   return scene[0];
 }
+
+
+
+
+
+
+
