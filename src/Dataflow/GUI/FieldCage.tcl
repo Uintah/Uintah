@@ -34,8 +34,6 @@ itcl_class SCIRun_FieldsOther_FieldCage {
     method ui {} {
         set w .ui[modname]
         if {[winfo exists $w]} {
-	    wm deiconify $w
-            raise $w
             return
         }
         toplevel $w

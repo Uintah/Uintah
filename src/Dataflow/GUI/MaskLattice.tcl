@@ -36,8 +36,6 @@ itcl_class SCIRun_FieldsData_MaskLattice {
     method ui {} {
         set w .ui[modname]
         if {[winfo exists $w]} {
-	    wm deiconify $w
-            raise $w
             return
         }
         toplevel $w

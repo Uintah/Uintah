@@ -100,8 +100,8 @@ itcl_class SCIRun_Visualization_Isosurface {
 	 global $color
 	 set window .ui[modname]
 	 if {[winfo exists $window.color]} {
-	     wm deiconify $window.color
 	     raise $window.color
+	     wm deiconify $window.color
 	     return
 	 } else {
 	     toplevel $window.color
@@ -162,8 +162,6 @@ itcl_class SCIRun_Visualization_Isosurface {
     method ui {} {
 	set w .ui[modname]
 	if {[winfo exists $w]} {
-	    wm deiconify $w
-	    raise $w
 	    return
 	}
 	
