@@ -1,19 +1,31 @@
-/***************************************************************************
-                          Module.cpp  -  description
-                             -------------------
-    begin                : Mon Mar 18 2002
-    copyright            : (C) 2002 by kzhang
-    email                : kzhang@rat.sci.utah.edu
- ***************************************************************************/
+/*
+  The contents of this file are subject to the University of Utah Public
+  License (the "License"); you may not use this file except in compliance
+  with the License.
 
-/***************************************************************************
- *                                                                         *
- *   This program is free software; you can redistribute it and/or modify  *
- *   it under the terms of the GNU General Public License as published by  *
- *   the Free Software Foundation; either version 2 of the License, or     *
- *   (at your option) any later version.                                   *
- *                                                                         *
- ***************************************************************************/
+  Software distributed under the License is distributed on an "AS IS"
+  basis, WITHOUT WARRANTY OF ANY KIND, either express or implied. See the
+  License for the specific language governing rights and limitations under
+  the License.
+
+  The Original Source Code is SCIRun, released March 12, 2001.
+
+  The Original Source Code was developed by the University of Utah.
+  Portions created by UNIVERSITY are Copyright (C) 2001, 1994
+  University of Utah. All Rights Reserved.
+*/
+
+/*
+ *  Module.cc:
+ *
+ *  Written by:
+ *   Steven G. Parker
+ *   Department of Computer Science
+ *   University of Utah
+ *   June 2002 
+ *
+ */
+
 #include "Module.h"
 
 #include <qpushbutton.h>
@@ -24,14 +36,15 @@
 using namespace std;
 
 Module::Module(QWidget *parent, const string& moduleName,
+	       CIA::array1<std::string> & up, CIA::array1<std::string> &pp,
 	       const gov::cca::Services::pointer& services,
 	       const gov::cca::ComponentID::pointer& cid)
-  :QFrame(parent, moduleName.c_str() ), moduleName(moduleName), services(services), cid(cid)
+  :QFrame(parent, moduleName.c_str() ), moduleName(moduleName), up(up), services(services), cid(cid)
 {
   pd=10; //distance between two ports
   pw=10; //port width
   ph=4; //prot height
-
+		
   int dx=5;
   // int dy=10;
   //  int d=5;
@@ -54,41 +67,62 @@ Module::Module(QWidget *parent, const string& moduleName,
     cerr << "Fatal Error: Cannot find builder service\n";
   } 
   else {
-    up=builder->getUsedPortNames(cid);
     CIA::array1<string> ports = builder->getProvidedPortNames(cid);
     for(unsigned int i=0; i < ports.size(); i++){
       if(ports[i]=="ui") hasUIPort=true;
       else if(ports[i]=="go") hasGoPort=true;
-      else pp.push_back(ports[i]); 
+      else this->pp.push_back(ports[i]); 
     }
   }
 
-  menu=new QPopupMenu(this);
   if(hasUIPort){
-    QPushButton *ui=new QPushButton("UI", this,"ui");
-    //	ui->setDefault(false);
-    ui->setGeometry(QRect(dx,h-dx-20,20,20));
-    connect(ui,SIGNAL(clicked()), this, SLOT(ui()));
-    
-    string instanceName = cid->getInstanceName();
-    string uiPortName = instanceName+" uiPort";
-    services->registerUsesPort(uiPortName, "gov.cca.UIPort",
-			       gov::cca::TypeMap::pointer(0));
-    builder->connect(services->getComponentID(), uiPortName, cid, "ui");
+      QPushButton *ui=new QPushButton("UI", this,"ui");
+      //	ui->setDefault(false);
+      ui->setGeometry(QRect(dx,h-dx-20,20,20));
+      connect(ui,SIGNAL(clicked()), this, SLOT(ui()));
+
+      string instanceName = cid->getInstanceName();
+      string uiPortName = instanceName+" uiPort";
+      services->registerUsesPort(uiPortName, "gov.cca.UIPort",
+				 gov::cca::TypeMap::pointer(0));
+      builder->connect(services->getComponentID(), uiPortName, cid, "ui");
   }
+
+  menu=new QPopupMenu(this);
 
   if(hasGoPort){
-    menu->insertItem("Go",this, SLOT(go()) );
-    menu->insertItem("Stop",this,  SLOT(stop()) );
-    menu->insertSeparator();	
-    
-    string instanceName = cid->getInstanceName();
-    string goPortName = instanceName+" goPort";
-    services->registerUsesPort(goPortName, "gov.cca.GoPort",
-			       gov::cca::TypeMap::pointer(0));
-    builder->connect(services->getComponentID(), goPortName, cid, "go");
+      menu->insertItem("Go",this, SLOT(go()) );
+      menu->insertItem("Stop",this,  SLOT(stop()) );
+      menu->insertSeparator();	
+
+      string instanceName = cid->getInstanceName();
+      string goPortName = instanceName+" goPort";
+      services->registerUsesPort(goPortName, "gov.cca.GoPort",
+				 gov::cca::TypeMap::pointer(0));
+      builder->connect(services->getComponentID(), goPortName, cid, "go");
   }
 
+  if(hasUIPort || hasGoPort){
+    progress=new QProgressBar(100,this);
+    progress->reset();
+    QPalette pal=progress->palette();
+    QColorGroup cg=pal.active();
+    QColor barColor(0,127,0);
+    cg.setColor( QColorGroup::Highlight, barColor);
+    pal.setActive( cg );
+    cg=pal.inactive();
+    cg.setColor( QColorGroup::Highlight, barColor );
+    pal.setInactive( cg );
+    cg=pal.disabled();
+    cg.setColor( QColorGroup::Highlight, barColor );
+    pal.setDisabled( cg );
+    progress->setPalette( pal );
+    progress->setPercentageVisible(false);
+    progress->setGeometry(QRect(dx+22,h-dx-20,w-dx-24-dx,20));
+  }
+  else{
+    progress=0;
+  }
   menu->insertItem("Destroy",this,  SLOT(destroy()) );
   services->releasePort("cca.BuilderService");
 }
@@ -209,20 +243,24 @@ void Module::go()
   if(goPort.isNull()){
     cerr << "goPort is not connected, cannot bring up Go!\n";
   } 
-  else {
-    goPort->go();
+  else{
+    int status=goPort->go();
+    if(status==0) 
+      progress->setProgress(100);
+    else 
+      progress->setProgress(0);
     services->releasePort(goPortName);
   }
 }
 
 void Module::stop()
 {
-	cerr<<"stop() not implemented"<<endl;	
+  cerr<<"stop() not implemented"<<endl;	
 }
 
 void Module::destroy()
 {
-	cerr<<"destroy() not implemented"<<endl;	
+  emit destroyModule(this);
 }
 
 void Module::ui()
@@ -233,8 +271,16 @@ void Module::ui()
   gov::cca::ports::UIPort::pointer uiPort = pidl_cast<gov::cca::ports::UIPort::pointer>(p);
   if(uiPort.isNull()){
     cerr << "uiPort is not connected, cannot bring up UI!\n";
-  } else {
-    uiPort->ui();
+  } 
+  else {
+    int status=uiPort->ui();
+
+    if(!hasGoPort){
+      if(status==0) 
+	progress->setProgress(100);
+      else 
+	progress->setProgress(0);
+    }
     services->releasePort(uiPortName);
   }
 }

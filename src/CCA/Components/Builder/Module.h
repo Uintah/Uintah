@@ -1,19 +1,30 @@
-/***************************************************************************
-                          Module.h  -  description
-                             -------------------
-    begin                : Mon Mar 18 2002
-    copyright            : (C) 2002 by kzhang
-    email                : kzhang@rat.sci.utah.edu
- ***************************************************************************/
+/*The contents of this file are subject to the University of Utah Public
+  License (the "License"); you may not use this file except in compliance
+  with the License.
 
-/***************************************************************************
- *                                                                         *
- *   This program is free software; you can redistribute it and/or modify  *
- *   it under the terms of the GNU General Public License as published by  *
- *   the Free Software Foundation; either version 2 of the License, or     *
- *   (at your option) any later version.                                   *
- *                                                                         *
- ***************************************************************************/
+  Software distributed under the License is distributed on an "AS IS"
+  basis, WITHOUT WARRANTY OF ANY KIND, either express or implied. See the
+  License for the specific language governing rights and limitations under
+  the License.
+
+  The Original Source Code is SCIRun, released March 12, 2001.
+
+  The Original Source Code was developed by the University of Utah.
+  Portions created by UNIVERSITY are Copyright (C) 2001, 1994
+  University of Utah. All Rights Reserved.
+*/
+
+/*
+ *  Module.h:
+ *
+ *  Written by:
+ *   Steven G. Parker
+ *   Department of Computer Science
+ *   University of Utah
+ *   October 2001
+ *
+ */
+
 #ifndef MODULE_H
 #define MODULE_H
 
@@ -21,6 +32,7 @@
 #include <qpoint.h>
 #include <qrect.h>
 #include <qpopmenu.h>
+#include <qprogressbar.h>
 #include "Core/CCA/spec/cca_sidl.h"
 #include "Core/CCA/Component/PIDL/PIDL.h"
 class Module:public QFrame
@@ -30,6 +42,7 @@ class Module:public QFrame
 public:
   enum PortType{USES, PROVIDES}; 
   Module(QWidget *parent, const std::string& name,
+	 CIA::array1<std::string> & up, CIA::array1<std::string> &pp,
 	 const gov::cca::Services::pointer& services,
 	 const gov::cca::ComponentID::pointer &cid);
   QPoint usePortPoint(int num);
@@ -48,6 +61,8 @@ public slots:
   void stop();
   void destroy();
   void ui();
+signals:
+  void destroyModule(Module *);
 
 protected:
   void paintEvent(QPaintEvent *e);
@@ -64,6 +79,7 @@ private:
   int ph; //prot height
   bool hasGoPort;
   bool hasUIPort;
+  QProgressBar *progress;
 public:
   gov::cca::ComponentID::pointer cid;
 };
