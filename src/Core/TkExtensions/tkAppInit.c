@@ -170,17 +170,20 @@ Tcl_AppInit(interp)
     the_interp=interp;
 
     printf("Initializing the tcl packages: ");
+    fflush(stdout);
 
     printf("tcl, ");
     if (Tcl_Init(interp) == TCL_ERROR) {
       printf("Tcl_Init() failed\n");
 	return TCL_ERROR;
     }
+    fflush(stdout);
     printf("tk, ");
     if (Tk_Init(interp) == TCL_ERROR) {
       printf("Tk_Init() failed.  Is the DISPLAY environment variable set properly?\n");
 	return TCL_ERROR;
     }
+    fflush(stdout);
     Tcl_StaticPackage(interp, "Tk", Tk_Init, Tk_SafeInit);
 
 #ifdef _WIN32
@@ -220,11 +223,13 @@ Tcl_AppInit(interp)
       printf("Itcl_Init() failed\n");
         return TCL_ERROR;
     }
+    fflush(stdout);
     printf("itk, ");
     if (Itk_Init(interp) == TCL_ERROR) {
       printf("Itk_Init() failed\n");
         return TCL_ERROR;
     }
+    fflush(stdout);
     printf("blt, ");
     if (Blt_Init(interp) == TCL_ERROR) {
       printf("Blt_Init() failed\n");
@@ -236,6 +241,7 @@ Tcl_AppInit(interp)
     Tcl_StaticPackage(interp, "BLT", Blt_Init, Blt_SafeInit);
 
     printf("Done.\n");
+    fflush(stdout);
 
     /*
      *  This is itkwish, so import all [incr Tcl] commands by
@@ -273,22 +279,26 @@ Tcl_AppInit(interp)
 #endif
 
     printf("Adding SCI extensions to tcl: ");
+    fflush(stdout);
 
 #ifdef SCI_OPENGL
     printf("OpenGL widget, ");
     Tcl_CreateCommand(interp, "opengl", OpenGLCmd, (ClientData) Tk_MainWindow(interp),
 		      (void (*)(PARAMETERTYPE)) NULL);
 #endif
+    fflush(stdout);
     printf("bevel widget, ");
     Tcl_CreateCommand(interp, "bevel", BevelCmd, (ClientData) Tk_MainWindow(interp),
 		      (void (*)(PARAMETERTYPE)) NULL);
 /*     Tcl_CreateCommand(interp, "range", Tk_RangeCmd, (ClientData) Tk_MainWindow(interp), */
 /*                       (void (*)(PARAMETERTYPE)) NULL); */
+    fflush(stdout);
     printf("cursor, ");
     Tcl_CreateCommand(interp, "cursor", Tk_CursorCmd,
 		      (ClientData) Tk_MainWindow(interp), NULL);
 
     printf("Done.\n");
+    fflush(stdout);
 
     /*
      * Initialize the BLine Canvas item
