@@ -1,5 +1,5 @@
-
 #include <Datatypes/SparseRowMatrix.h>
+#include <Math/ssmult.h>
 #include <Math/MiscMath.h>
 #include <Math/MinMax.h>
 #include <Classlib/Assert.h>
@@ -164,9 +164,6 @@ void SparseRowMatrix::solve(ColumnMatrix&)
 {
     EXCEPTION(General("SparseRowMatrix can't do a direct solve!"));
 }
-
-extern "C" void ssmult(int beg, int end, int* rows, int* columns,
-		       double* a, double* xp, double* bp);
 
 void SparseRowMatrix::mult(const ColumnMatrix& x, ColumnMatrix& b,
 			      int& flops, int& memrefs, int beg, int end) const

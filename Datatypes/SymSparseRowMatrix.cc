@@ -1,5 +1,5 @@
-
 #include <Datatypes/SymSparseRowMatrix.h>
+#include <Math/ssmult.h>
 #include <Math/MiscMath.h>
 #include <Math/MinMax.h>
 #include <Classlib/Assert.h>
@@ -171,13 +171,6 @@ void SymSparseRowMatrix::solve(ColumnMatrix&)
 {
     EXCEPTION(General("SymSparseRowMatrix can't do a direct solve!"));
 }
-
-extern "C" void ssmult(int beg, int end, int* rows, int* columns,
-		       double* a, double* xp, double* bp);
-extern "C" void ssmult_upper(int beg, int end, int* rows, int* columns,
-			     double* a, double* xp, double* bp);
-extern "C" void ssmult_uppersub(int nrows, int beg, int end, int* rows, int* columns,
-			     double* a, double* xp, double* bp);
 
 void SymSparseRowMatrix::mult(const ColumnMatrix& x, ColumnMatrix& b,
 			      int& flops, int& memrefs, int beg, int end) const
