@@ -61,7 +61,8 @@ ScalarFieldNormalize::normalizeScalarField(ScalarField* input,
   int z = zIndex_.get() + 1;  // index space by (1,1,1). 
   
   // only CC data
-  ASSERT( scalarField->basis_order() == 0 );
+  ASSERT( input->basis_order() == 0 );
+  ASSERT( output->basis_order() == 0 );
   typename ScalarField::mesh_handle_type sfmh =input->get_typed_mesh();
   typename ScalarField::mesh_type *mesh =input->get_typed_mesh().get_rep();
 
