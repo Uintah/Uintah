@@ -10,7 +10,7 @@ namespace rtrt {
   class Ray;
   class HitInfo;
 
-  typedef void (*cbFunc)(int, int, Object *obj, const Ray&, const HitInfo&);
+  typedef void (*cbFunc)( Object *obj, const Ray&, const HitInfo& );
 
 /*    typedef struct MouseCBGroup { */
 /*      cbFunc mouseDown; */
