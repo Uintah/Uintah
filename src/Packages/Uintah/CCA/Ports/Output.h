@@ -77,11 +77,9 @@ WARNING
       // Get the current time step
       virtual int getCurrentTimestep() = 0;
 
-/*`==========TESTING==========*/ 
       //////////
       // Get the current time step
       virtual double getCurrentTime() = 0;
- /*==========TESTING==========`*/
       
       //////////
       // Returns true if the last timestep was one
