@@ -37,8 +37,8 @@ static bool computeDt = false;
 #define GAS 0
  /*==========TESTING==========`*/
  
-//#define DOING
-#undef DOING
+#define DOING
+//#undef DOING
 
 ICE::ICE(const ProcessorGroup* myworld) 
   : UintahParallelComponent(myworld)
@@ -236,6 +236,9 @@ endl;
 _____________________________________________________________________*/
 void ICE::scheduleInitialize(const LevelP& level, SchedulerP& sched)
 {
+#ifdef DOING
+  cout << "Doing ICE::scheduleInitialize " << endl;
+#endif
 #if 1
   Task* t = scinew Task("ICE::actuallyInitialize",
                   this, &ICE::actuallyInitialize);
@@ -262,22 +265,23 @@ void ICE::scheduleInitialize(const LevelP& level, SchedulerP& sched)
 _____________________________________________________________________*/
 void ICE::scheduleComputeStableTimestep(const LevelP& level,SchedulerP& sched)
 {
-#if 0
-    int numMatls = d_sharedState->getNumICEMatls();
-    
-    for (Level::const_patchIterator iter = level->patchesBegin();
-	 iter != level->patchesEnd(); iter++)  {
-      const Patch* patch = *iter;
-      
-      Task* task = scinew Task("ICE::actuallyComputeStableTimestep"
-			    this, &ICE::actuallyComputeStableTimestep);
-      if(computeDt) {      
-        task->requires(dw,lb->vel_CCLabel,        Ghost::None);
-        task->requires(dw,lb->speedSound_CCLabel, Ghost::None);
-      }
-      task->computes(d_sharedState->get_delt_label());
-      sched->addTask(task);
+#ifdef DOING
+  cout << "ICE::scheduleComputeStableTimestep " << endl;
+#endif
+#if 1
+  for (Level::const_patchIterator iter = level->patchesBegin();
+      iter != level->patchesEnd(); iter++)  {
+    const Patch* patch = *iter;
+
+    Task* task = scinew Task("ICE::actuallyComputeStableTimestep",
+			  this, &ICE::actuallyComputeStableTimestep);
+    if(computeDt) {      
+      task->requires(Task::NewDW,lb->vel_CCLabel,        Ghost::None);
+      task->requires(Task::NewDW,lb->speedSound_CCLabel, Ghost::None);
     }
+    task->computes(d_sharedState->get_delt_label());
+    sched->addTask(task,level->eachPatch(), d_sharedState->allICEMaterials());
+  }
 #else
       NOT_FINISHED("new task stuff");
 #endif
@@ -288,35 +292,38 @@ _____________________________________________________________________*/
 void ICE::scheduleTimeAdvance(double t, double dt,const LevelP& level,
 			      SchedulerP& sched)
 {
+#ifdef DOING
+  cout << "ICE::scheduleTimeAdvance" << endl;
+#endif
 #if 1
   const PatchSet* patches = level->eachPatch();
   const MaterialSet* matls = d_sharedState->allMPMMaterials();
 
-    scheduleComputeEquilibrationPressure(sched, patches, matls);
-        
-    scheduleComputeFaceCenteredVelocities(sched, patches, matls);
-    
-    scheduleAddExchangeContributionToFCVel(sched, patches, matls);    
+  scheduleComputeEquilibrationPressure(sched, patches, matls);
 
-    scheduleComputeDelPressAndUpdatePressCC(sched, patches, matls);
-    
-    scheduleComputePressFC(sched, patches, matls);
-    
-    scheduleMassExchange(sched, patches, matls);
-    
-    scheduleAccumulateMomentumSourceSinks(sched, patches, matls);
-    
-    scheduleAccumulateEnergySourceSinks(sched, patches, matls);
-    
-    scheduleComputeLagrangianValues(sched, patches, matls);
-    
-    scheduleAddExchangeToMomentumAndEnergy(sched, patches, matls);
-    
-    scheduleAdvectAndAdvanceInTime(sched, patches, matls);
- 
-    if (switchTestConservation){ 
-      schedulePrintConservedQuantities(sched, patches, matls); 
-    }
+  scheduleComputeFaceCenteredVelocities(sched, patches, matls);
+
+  scheduleAddExchangeContributionToFCVel(sched, patches, matls);    
+
+  scheduleComputeDelPressAndUpdatePressCC(sched, patches, matls);
+
+  scheduleComputePressFC(sched, patches, matls);
+
+  scheduleMassExchange(sched, patches, matls);
+
+  scheduleAccumulateMomentumSourceSinks(sched, patches, matls);
+
+  scheduleAccumulateEnergySourceSinks(sched, patches, matls);
+
+  scheduleComputeLagrangianValues(sched, patches, matls);
+
+  scheduleAddExchangeToMomentumAndEnergy(sched, patches, matls);
+
+  scheduleAdvectAndAdvanceInTime(sched, patches, matls);
+
+  if (switchTestConservation){ 
+    schedulePrintConservedQuantities(sched, patches, matls); 
+  }
       
   
 #else
@@ -331,6 +338,9 @@ void ICE::scheduleComputeEquilibrationPressure(SchedulerP& sched,
 					       const PatchSet* patches,
 					       const MaterialSet* matls)
 {
+#ifdef DOING
+  cout << "ICE::scheduleComputeEquilibrationPressure" << endl;
+#endif
 #if 1
   Task* task = scinew Task("ICE::computeEquilibrationPressure",
                      this, &ICE::computeEquilibrationPressure);
@@ -357,6 +367,9 @@ void ICE::scheduleComputeFaceCenteredVelocities(SchedulerP& sched,
 						const PatchSet* patches,
 						const MaterialSet* matls)
 {
+#ifdef DOING
+  cout << "ICE::scheduleComputeFaceCenteredVelocities" << endl;
+#endif
 #if 1
   Task* task = scinew Task("ICE::computeFaceCenteredVelocities",
                      this, &ICE::computeFaceCenteredVelocities);
@@ -397,6 +410,9 @@ void ICE::scheduleAddExchangeContributionToFCVel(SchedulerP& sched,
 						 const PatchSet* patches,
 						 const MaterialSet* matls)
 {
+#ifdef DOING
+  cout << "ICE::scheduleAddExchangeContributionToFCVel" << endl;
+#endif
 #if 1
   Task* task = scinew Task("ICE::addExchangeContributionToFCVel",
                      this, &ICE::addExchangeContributionToFCVel);
@@ -425,6 +441,9 @@ void ICE::scheduleComputeDelPressAndUpdatePressCC(SchedulerP& sched,
 						  const PatchSet* patches,
 						  const MaterialSet* matls)
 {
+#ifdef DOING
+  cout << "ICE::scheduleComputeDelPressAndUpdatePressCC" << endl;
+#endif
 #if 1
   Task* task = scinew Task("ICE::computeDelPressAndUpdatePressCC",
                      this, &ICE::computeDelPressAndUpdatePressCC);
@@ -453,7 +472,10 @@ _____________________________________________________________________*/
 void ICE::scheduleComputePressFC(SchedulerP& sched,
 				 const PatchSet* patches,
 				 const MaterialSet* matls)
-{                     
+{ 
+#ifdef DOING
+  cout << "ICE::scheduleComputePressFC" << endl;
+#endif                    
 #if 1
   Task* task = scinew Task("ICE::computePressFC",
                      this, &ICE::computePressFC);
@@ -475,8 +497,10 @@ _____________________________________________________________________*/
 void  ICE::scheduleMassExchange(SchedulerP& sched,
 				const PatchSet* patches,
 				const MaterialSet* matls)
-
 {
+#ifdef DOING
+  cout << "ICE::scheduleMassExchange" << endl;
+#endif 
 #if 1
   Task* task = scinew Task("ICE::massExchange",
 			this, &ICE::massExchange);
@@ -496,6 +520,9 @@ void ICE::scheduleAccumulateMomentumSourceSinks(SchedulerP& sched,
 						const PatchSet* patches,
 						const MaterialSet* matls)
 {
+#ifdef DOING
+  cout << "ICE::scheduleAccumulateMomentumSourceSinks" << endl;
+#endif 
 #if 1
   Task* task = scinew Task("ICE::accumulateMomentumSourceSinks", 
                      this, &ICE::accumulateMomentumSourceSinks);
@@ -530,6 +557,9 @@ void ICE::scheduleAccumulateEnergySourceSinks(SchedulerP& sched,
 					      const MaterialSet* matls)
 
 {
+#ifdef DOING
+  cout << "ICE::scheduleAccumulateEnergySourceSinks" << endl;
+#endif 
 #if 1
   Task* task = scinew Task("ICE::accumulateEnergySourceSinks",
                      this, &ICE::accumulateEnergySourceSinks);
@@ -556,6 +586,9 @@ void ICE::scheduleComputeLagrangianValues(SchedulerP& sched,
 					  const PatchSet* patches,
 					  const MaterialSet* matls)
 {
+#ifdef DOING
+  cout << "ICE::scheduleComputeLagrangianValues" << endl;
+#endif 
 #if 1
   Task* task = scinew Task("ICE::computeLagrangianValues",
                       this,&ICE::computeLagrangianValues);
@@ -592,6 +625,9 @@ void ICE::scheduleAddExchangeToMomentumAndEnergy(SchedulerP& sched,
 						 const PatchSet* patches, 
 						 const MaterialSet* matls)
 {
+#ifdef DOING
+  cout << "ICE::scheduleAddExchangeToMomentumAndEnergy" << endl;
+#endif
 #if 1
   Task* task = scinew Task("ICE::addExchangeToMomentumAndEnergy",
                      this, &ICE::addExchangeToMomentumAndEnergy);;
@@ -617,6 +653,9 @@ void ICE::scheduleAdvectAndAdvanceInTime(SchedulerP& sched,
 					 const PatchSet* patches,
 					 const MaterialSet* matls)
 {
+#ifdef DOING
+  cout << "ICE::scheduleAdvectAndAdvanceInTime" << endl;
+#endif
 #if 1
   Task* task = scinew Task("ICE::advectAndAdvanceInTime",
                      this, &ICE::advectAndAdvanceInTime);
@@ -645,6 +684,9 @@ void ICE::schedulePrintConservedQuantities(SchedulerP& sched,
 					   const PatchSet* patches,
 					   const MaterialSet* matls)
 {
+#ifdef DOING
+  cout << "ICE::schedulePrintConservedQuantities" << endl;
+#endif
 #if 1
   Task* task = scinew Task("ICE::printConservedQuantities",
                      this, &ICE::printConservedQuantities);
@@ -664,10 +706,14 @@ void ICE::schedulePrintConservedQuantities(SchedulerP& sched,
  Purpose~   Compute next time step based on speed of sound and 
             maximum velocity in the domain
 _____________________________________________________________________*/
-void ICE::actuallyComputeStableTimestep(const ProcessorGroup*,
-					const Patch*    patch,
-					DataWarehouse*,DataWarehouse* new_dw)
+void ICE::actuallyComputeStableTimestep(const ProcessorGroup*,  
+					 const PatchSubset* patches,
+                                    const MaterialSubset* matls,
+					 DataWarehouse* old_dw, 
+					 DataWarehouse* new_dw)
 {
+  for(int p=0;p<patches->size();p++){
+    const Patch* patch = patches->get(p);
 #ifdef DOING
   cout << "Doing Compute Stable Timestep on patch " << patch->getID() 
        << "\t\t ICE" << endl;
@@ -714,7 +760,7 @@ void ICE::actuallyComputeStableTimestep(const ProcessorGroup*,
   }
   new_dw->put(delt_vartype(dT), lb->delTLabel);
   computeDt = true;
-
+}
 }
 
 /* --------------------------------------------------------------------- 
