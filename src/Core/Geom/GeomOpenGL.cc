@@ -185,11 +185,9 @@ static void quad_error(GLenum code)
     cerr << "WARNING: Quadric Error (" << (char*)gluErrorString(code) << ")" << endl;
 }
 
-#ifdef __GNUC__
-  typedef void (*gluQuadricCallbackType)(...);
-#else
-  typedef void (*gluQuadricCallbackType)();
-#endif
+// May need to do this for really old GCC compilers?
+//typedef void (*gluQuadricCallbackType)(...);
+typedef void (*gluQuadricCallbackType)();
 
 DrawInfoOpenGL::DrawInfoOpenGL()
   : lighting(1),
