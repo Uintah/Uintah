@@ -1436,6 +1436,7 @@ TetVolMesh::compute_grid()
       box.extend(padmax);
 
       sgc.insert(*ci, box);
+
       ++ci;
     }
 
