@@ -72,10 +72,11 @@ itcl_class SCIRun_Visualization_GenClock {
         toplevel $w
 	wm title $w "Gen Clock"
 	
-
+# Type
 	iwidgets::labeledframe $w.type -labeltext "Clock Type"
 	set type [$w.type childsite]
 
+# Type - digital
 	frame $type.digital
 
 	radiobutton $type.digital.button -variable $this-type -value 1 \
@@ -85,6 +86,7 @@ itcl_class SCIRun_Visualization_GenClock {
 	
 	pack $type.digital.button $type.digital.label -side left
 
+# Type - analog
 	frame $type.analog
 
 	radiobutton $type.analog.button -variable $this-type -value 0 \
@@ -98,8 +100,10 @@ itcl_class SCIRun_Visualization_GenClock {
 	    -anchor w -just left
 	
 
+# Type - analog - time
 	frame $type.time
 
+# Type - analog - time - hide
 	frame $type.time.hide
 
 	radiobutton $type.time.hide.button -variable $this-showtime -value 0 \
@@ -109,6 +113,7 @@ itcl_class SCIRun_Visualization_GenClock {
 	
 	pack $type.time.hide.button $type.time.hide.label -side left
 
+# Type - analog - hide - show
 	frame $type.time.show
 
 	radiobutton $type.time.show.button -variable $this-showtime -value 1 \
@@ -125,9 +130,11 @@ itcl_class SCIRun_Visualization_GenClock {
 	pack $w.type -fill x -expand yes -side top
 
 
+# Style
 	iwidgets::labeledframe $w.style -labeltext "Clock Style"
 	set style [$w.style childsite]
 
+# Style - box
 	frame $style.bbox
 
 	checkbutton $style.bbox.button -variable $this-bbox \
@@ -137,26 +144,28 @@ itcl_class SCIRun_Visualization_GenClock {
 	
 	pack $style.bbox.button $style.bbox.label -side left
 
+	pack $style.bbox -side left
+
+# Style - color
 	frame $style.color
-
-	addColorSelection $style.color "Color" $this-color \
-		"color_change"
-
-
-	pack $style.bbox $style.color -side left
+	addColorSelection $style.color "Color" $this-color "color_change"
+	pack $style.color -side left
 
 	pack $w.style -fill x -expand yes -side top
 
 
+# Range
 	iwidgets::labeledframe $w.range -labeltext "Clock Range"
 	set range [$w.range childsite]
 
+# Range - minimum
 	frame $range.min
 	label $range.min.label -text "Min."  -width 5 -anchor w -just left
 	entry $range.min.entry -width 6 -text $this-min
 
 	pack $range.min.label $range.min.entry -side left
 
+# Range - maximum
 	frame $range.max
 	label $range.max.label -text "Max."  -width 5 -anchor w -just left
 	entry $range.max.entry -width 6 -text $this-max
@@ -174,6 +183,7 @@ itcl_class SCIRun_Visualization_GenClock {
 	pack $w.range -fill x -expand yes -side top
 
 
+# Range - units
 	iwidgets::labeledframe $w.units -labeltext "Clock Units"
 	set units [$w.units childsite]
 
@@ -195,9 +205,11 @@ itcl_class SCIRun_Visualization_GenClock {
 
 
 
+# Range - size
 	iwidgets::labeledframe $w.size -labeltext "Clock Size"
 	set size [$w.size childsite]
 
+# Range - size - small
 	frame $size.small
 
 	radiobutton $size.small.button -variable $this-size -value 50 \
@@ -207,6 +219,7 @@ itcl_class SCIRun_Visualization_GenClock {
 	
 	pack $size.small.button $size.small.label -side left
 
+# Range - size - medium
 	frame $size.medium
 
 	radiobutton $size.medium.button -variable $this-size -value 100 \
@@ -217,6 +230,7 @@ itcl_class SCIRun_Visualization_GenClock {
 	
 	pack $size.medium.button $size.medium.label -side left
 
+# Range - size - large
 	frame $size.large
 
 	radiobutton $size.large.button -variable $this-size -value 150 \
@@ -226,6 +240,7 @@ itcl_class SCIRun_Visualization_GenClock {
 	
 	pack $size.large.button $size.large.label -side left
 
+# Range - size - custom
 	frame $size.custom
 	label $size.custom.label -text "Custom"  -width 7 -anchor w -just left
 	entry $size.custom.entry -width 4 -text $this-size
@@ -240,9 +255,11 @@ itcl_class SCIRun_Visualization_GenClock {
 
 
 
+# Range - location
 	iwidgets::labeledframe $w.location -labeltext "Clock Location"
 	set location [$w.location childsite]
 
+# Range - location - top left
 	frame $location.top_left
 
 	radiobutton $location.top_left.button -variable $this-location \
@@ -252,6 +269,7 @@ itcl_class SCIRun_Visualization_GenClock {
 	
 	pack $location.top_left.button $location.top_left.label -side left
 
+# Range - location - top right
 	frame $location.top_right
 
 	radiobutton $location.top_right.button -variable $this-location \
@@ -261,6 +279,7 @@ itcl_class SCIRun_Visualization_GenClock {
 	
 	pack $location.top_right.button $location.top_right.label -side left
 
+# Range - location - bottom left
 	frame $location.bottom_left
 
 	radiobutton $location.bottom_left.button -variable $this-location \
@@ -270,6 +289,7 @@ itcl_class SCIRun_Visualization_GenClock {
 	
 	pack $location.bottom_left.button $location.bottom_left.label -side left
 
+# Range - location - bottom right
 	frame $location.bottom_right
 
 	radiobutton $location.bottom_right.button -variable $this-location \
@@ -286,6 +306,7 @@ itcl_class SCIRun_Visualization_GenClock {
 	pack $w.location -fill x -expand yes -side top
 
 
+# Misc
 	frame $w.misc
 
         button $w.misc.execute -text "Execute" -command "$this-c needexecute"
@@ -311,7 +332,7 @@ itcl_class SCIRun_Visualization_GenClock {
 		     "$this setColor $col $color $colMsg" \
 		     "destroy $window.color"
 	 }
-    }
+   }
 
     method setColor {col color colMsg} {
 	 global $color
@@ -325,6 +346,9 @@ itcl_class SCIRun_Visualization_GenClock {
 	 set window .ui[modname]
 	 $col config -background [format #%04x%04x%04x $ir $ig $ib]
 	 $this-c $colMsg
+
+# The above works for only the geometry not for the text so execute.
+	 $this-c needexecute
     }
 
     method addColorSelection {frame text color colMsg} {

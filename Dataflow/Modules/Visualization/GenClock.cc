@@ -91,7 +91,6 @@ protected:
   MaterialHandle material_;
 
   bool update_;
-  bool error_;
 };
 
 
@@ -113,10 +112,10 @@ GenClock::GenClock(GuiContext *context)
     color_r_(ctx->subVar("color-r")),
     color_g_(ctx->subVar("color-g")),
     color_b_(ctx->subVar("color-b")),
+
     material_(scinew Material(Color(1., 1., 1.))),
 
-    update_(0),
-    error_(0)
+    update_(false)
 {
 }
 
@@ -149,9 +148,7 @@ void GenClock::execute(){
     return;
   }
 
-  if( update_ == true ||
-
-      error_ == true ||
+  if( update_   == true ||
 
       current_  != dCurrent_.get() ||
       type_     != iType_.get() ||
@@ -165,7 +162,9 @@ void GenClock::execute(){
       location_ != sLocation_.get() ) {
 
     update_ = false;
-    error_ = false;
+
+    dCurrent_.set(current_);
+    dCurrent_.reset();
 
     type_     = iType_.get();
     showTime_ = iShowTime_.get();
@@ -178,9 +177,6 @@ void GenClock::execute(){
     location_ = sLocation_.get();
 
     material_->diffuse = Color(color_r_.get(), color_g_.get(), color_b_.get());
-
-    dCurrent_.set(current_);
-    dCurrent_.reset();
 
     ogeom_port->delAll();
 
@@ -221,8 +217,7 @@ GeomHandle GenClock::generateAnalog()
     
   circle->add( new GeomLine( Point(0,0,0), Point( cx, cy, 0 ) ) );
   
-  GeomHandle gmat = scinew GeomMaterial(circle, material_);
-  group->add( gmat );
+  group->add( scinew GeomMaterial(circle, material_) );
   
   double border = 0.025;    
   double scale = .00225;
@@ -265,9 +260,7 @@ GeomHandle GenClock::generateAnalog()
     box->add( new GeomLine( Point(-cx-border,radius+border,0),
 			    Point(-cx-border,   -cy-border,0) ) );
     
-    GeomHandle gmat = scinew GeomMaterial(box, material_);
-
-    group->add( gmat );
+    group->add( scinew GeomMaterial(box, material_) );
   }
 
   Vector refVec;
@@ -316,9 +309,7 @@ GeomHandle GenClock::generateDigital()
     box->add( new GeomLine( Point(-border,dy,0),
 			    Point(-border,-border,0) ) );
     
-    GeomHandle gmat = scinew GeomMaterial(box, material_);
-
-    group->add( gmat );
+    group->add( scinew GeomMaterial(box, material_) );
   }
 
   Vector refVec;
@@ -371,7 +362,21 @@ GenClock::tcl_command(GuiArgs& args, void* userdata) {
 
   if (args[1] == "color_change") {
     update_ = true;
-    execute();
+
+    // The below works for only the geometry not for the text so update.
+    /*
+    // Get a handle to the output geom port.
+    GeometryOPort *ogeom_port = (GeometryOPort *) get_oport("Clock");
+    
+    if (!ogeom_port) {
+      error("Unable to initialize oport 'Clock'.");
+      return;
+    }
+    
+    material_->diffuse = Color(color_r_.get(), color_g_.get(), color_b_.get());
+    
+    if (ogeom_port) ogeom_port->flushViews();
+    */
   } else {
     Module::tcl_command(args, userdata);
   }
