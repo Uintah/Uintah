@@ -65,6 +65,7 @@ void TYPEReader::execute()
 {
     clString fn(filename.get());
     if(!handle.get_rep() || fn != old_filename){
+	old_filename=fn;
 	Piostream* stream=auto_istream(fn);
 	if(!stream){
 	    error(clString("Error reading file: ")+filename.get());
