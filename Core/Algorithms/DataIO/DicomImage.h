@@ -68,7 +68,8 @@ class DicomImage
 public:
   // !Constructors
   DicomImage();
-  DicomImage( itk::DicomImageIO::Pointer io, ImageNDType::Pointer image );
+  DicomImage( itk::DicomImageIO::Pointer io, ImageNDType::Pointer image,
+              std::string id );
 
   // !Copy constructor
   DicomImage(const DicomImage& d);
@@ -77,6 +78,7 @@ public:
   ~DicomImage();
 
   //! Utility functions
+  std::string get_id();
   int get_num_pixels();
   PixelType * get_pixel_buffer();
   //void get_data_type();
@@ -88,14 +90,15 @@ public:
   void print_image_info();
 
 private:
-  unsigned long num_pixels;
-  PixelType * pixel_buffer;
+  unsigned long num_pixels_;
+  PixelType * pixel_buffer_;
   // ??? data_type;
-  int dim;
-  int * size;
-  double * origin;
-  double * spacing;
-  int * index;
+  int dim_;
+  int * size_;
+  double * origin_;
+  double * spacing_;
+  int * index_;
+  std::string id_;
 
 protected:
 

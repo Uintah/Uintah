@@ -235,7 +235,7 @@ int DicomSeriesReader::read( DicomImage & di )
 
     ImageNDType::Pointer image = reader->GetOutput();
 
-    di = DicomImage( io, image );
+    di = DicomImage( io, image, read_files[0] );
   }
   else if( num_files > 1 ) 
   { 
@@ -270,7 +270,10 @@ int DicomSeriesReader::read( DicomImage & di )
 
     ImageNDType::Pointer image = reader->GetOutput();
 
-    di = DicomImage( io, image );
+    string id = string( read_files[0] + " ... " + 
+                        read_files[read_files.size()-1] );
+ 
+    di = DicomImage( io, image, id );
   }
   else
   {

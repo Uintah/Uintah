@@ -19,18 +19,23 @@
 /*
  * HEADER (H) FILE : AnalyzeReader.h
  *
- * DESCRIPTION     : 
+ * DESCRIPTION     : Provides ability to read and get information about
+ *                   a set of Analyze files.  The read function can read
+ *                   one valid Analyze series at a time.  The other functions
+ *                   return information about what Analyze series' are in a 
+ *                   directory and what files are in each series.  The user
+ *                   can use that information to decide which directory/files
+ *                   to read from.  The read function stores each Analyze 
+ *                   series as a AnalyzeImage object, which in turn contains 
+ *                   information about the series (dimensions, pixel spacing, 
+ *                   etc.).
  *                     
  * AUTHOR(S)       : Jenny Simpson
  *                   SCI Institute
  *                   University of Utah
  *                 
- *                   Darby J. Van Uitert
- *                   SCI Institute
- *                   University of Utah
- *
  * CREATED         : 9/19/2003
- * MODIFIED        : 9/19/2003
+ * MODIFIED        : 10/4/2003
  * DOCUMENTATION   :
  * NOTES           : 
  *
@@ -40,8 +45,13 @@
 #ifndef AnalyzeReader_h
 #define AnalyzeReader_h
 
+// SCIRun includes
+
 // Itk includes
+#include "itkAnalyzeImageIOFactory.h"
+#include "itkAnalyzeImageIO.h"
 #include "itkImageSeriesReader.h"
+#include "itkImageFileReader.h"
 #include <Core/Algorithms/DataIO/AnalyzeImage.h>
 
 // Standard lib includes
@@ -50,10 +60,8 @@
 namespace SCIRun {
 
 // ****************************************************************************
-// ************************ Class: AnalyzeReader **************************
+// *************************** Class: AnalyzeReader ***************************
 // ****************************************************************************
-
-typedef itk::ImageSeriesReader<ImageNDType> ReaderType;
 
 class AnalyzeReader
 {
@@ -62,12 +70,14 @@ public:
   AnalyzeReader();
   ~AnalyzeReader();
 
-  //! Reading function
-  AnalyzeImage read_series( char * dir );
+  //! Reading functions
+  void set_file( std::string file );
+  std::string get_file();
+  int read( AnalyzeImage & di );
 
 private:
 
-protected:
+  std::string file_;
 
 };
 

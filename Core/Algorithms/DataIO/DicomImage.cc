@@ -24,7 +24,7 @@
  *                 includes the pixel buffer, dimension, size along each 
  *                 axis, origin, pixel spacing, and index. This object is
  *                 typically initialized using the DicomSeriesReader.
- *                      
+ *                       
  * AUTHOR(S)     : Jenny Simpson
  *                 SCI Institute
  *                 University of Utah
@@ -54,12 +54,12 @@ namespace SCIRun {
 //
 DicomImage::DicomImage()
 {
-  pixel_buffer = 0;
-  size = 0;
-  origin = 0;
-  spacing = 0;
-  index = 0;
-  
+  pixel_buffer_ = 0;
+  size_ = 0;
+  origin_ = 0;
+  spacing_ = 0;
+  index_ = 0;
+  id_ = "";
 }
 /*===========================================================================*/
 // 
@@ -71,43 +71,44 @@ DicomImage::DicomImage()
 //
 
 DicomImage::DicomImage( itk::DicomImageIO::Pointer io, 
-                        ImageNDType::Pointer image )
+                        ImageNDType::Pointer image, string id )
 {
   ImageNDType::RegionType region = image->GetLargestPossibleRegion();
 
   // Initialize all member variables
-  num_pixels = region.GetNumberOfPixels();
-  pixel_buffer = scinew PixelType[num_pixels];
+  id_ = id;
+  num_pixels_ = region.GetNumberOfPixels();
+  pixel_buffer_ = scinew PixelType[num_pixels_];
   PixelType * data = image->GetPixelContainer()->GetBufferPointer();
-  for(unsigned int i=0; i < num_pixels; i++ )
+  for(unsigned int i=0; i < num_pixels_; i++ )
   {
-    pixel_buffer[i] = *data++;
+    pixel_buffer_[i] = *data++;
   }
 
   // ??? data_type;
 
-  dim = region.GetImageDimension();
+  dim_ = region.GetImageDimension();
 
   // Make sure single files have dimension 2, not 3
-  if( dim == 3 ) 
+  if( dim_ == 3 ) 
   {
     if( region.GetSize(2) == 1)
     {
-      dim = 2;
+      dim_ = 2;
     }
   }
 
-  size = scinew int[dim];
-  origin = scinew double[dim];
-  spacing = scinew double[dim];
-  index = scinew int[dim];
+  size_ = scinew int[dim_];
+  origin_ = scinew double[dim_];
+  spacing_ = scinew double[dim_];
+  index_ = scinew int[dim_];
 
-  for( int j = 0; j < dim; j++ )
+  for( int j = 0; j < dim_; j++ )
   {
-    size[j] = region.GetSize(j);
-    origin[j] = image->GetOrigin()[j];
-    spacing[j] = image->GetSpacing()[j];
-    index[j] =  region.GetIndex(j); 
+    size_[j] = region.GetSize(j);
+    origin_[j] = image->GetOrigin()[j];
+    spacing_[j] = image->GetSpacing()[j];
+    index_[j] =  region.GetIndex(j); 
   }
 
 }
@@ -124,29 +125,30 @@ DicomImage::DicomImage( itk::DicomImageIO::Pointer io,
 //
 DicomImage::DicomImage(const DicomImage& d)
 {
-  num_pixels = d.num_pixels;
-  pixel_buffer = scinew PixelType[num_pixels];
-  PixelType * dpb = d.pixel_buffer;
-  for( unsigned long i = 0; i < num_pixels; i++ )
+  id_ = d.id_;
+  num_pixels_ = d.num_pixels_;
+  pixel_buffer_ = scinew PixelType[num_pixels_];
+  PixelType * dpb = d.pixel_buffer_;
+  for( unsigned long i = 0; i < num_pixels_; i++ )
   {
-    pixel_buffer[i] = dpb[i];
+    pixel_buffer_[i] = dpb[i];
   }
 
   // ??? data_type;
 
-  dim = d.dim;
+  dim_ = d.dim_;
 
-  size = scinew int[dim];
-  origin = scinew double[dim];
-  spacing = scinew double[dim];
-  index = scinew int[dim];
+  size_ = scinew int[dim_];
+  origin_ = scinew double[dim_];
+  spacing_ = scinew double[dim_];
+  index_ = scinew int[dim_];
 
-  for( int j = 0; j < dim; j++ )
+  for( int j = 0; j < dim_; j++ )
   {
-    size[j] = d.size[j];
-    origin[j] = d.origin[j];
-    spacing[j] = d.spacing[j];
-    index[j] =  d.index[j]; 
+    size_[j] = d.size_[j];
+    origin_[j] = d.origin_[j];
+    spacing_[j] = d.spacing_[j];
+    index_[j] =  d.index_[j]; 
   }
 }
 
@@ -166,6 +168,19 @@ DicomImage::~DicomImage()
 
 /*===========================================================================*/
 // 
+// get_id
+//
+// Description : Returns the string id of this Dicom image
+//
+// Arguments   : none
+//
+string DicomImage::get_id()
+{
+  return id_;
+}
+
+/*===========================================================================*/
+// 
 // get_num_pixels
 //
 // Description : Returns the number of pixels in the pixel buffer.
@@ -174,7 +189,7 @@ DicomImage::~DicomImage()
 //
 int DicomImage::get_num_pixels()
 {
-  return num_pixels;
+  return num_pixels_;
 }
 
 /*===========================================================================*/
@@ -187,7 +202,7 @@ int DicomImage::get_num_pixels()
 //
 PixelType * DicomImage::get_pixel_buffer()
 {
-  return pixel_buffer;
+  return pixel_buffer_;
 }
 
 /*===========================================================================*/
@@ -221,7 +236,7 @@ PixelType * DicomImage::get_pixel_buffer()
 //
 int DicomImage::get_dimension()
 {
-  return dim;
+  return dim_;
 }
 
 /*===========================================================================*/
@@ -240,8 +255,8 @@ int DicomImage::get_dimension()
 //
 int DicomImage::get_size( int i )
 {
-  assert( i >= 0 && i < dim );
-  return size[i];
+  assert( i >= 0 && i < dim_ );
+  return size_[i];
 }
 
 /*===========================================================================*/
@@ -262,8 +277,8 @@ int DicomImage::get_size( int i )
 double DicomImage::get_origin( int i )
 {
   //return image_->GetOrigin()[i]; 
-  assert( i >= 0 && i < dim );
-  return origin[i];
+  assert( i >= 0 && i < dim_ );
+  return origin_[i];
 }
 
 /*===========================================================================*/
@@ -281,8 +296,8 @@ double DicomImage::get_origin( int i )
 //
 double DicomImage::get_spacing( int i )
 {
-  assert( i >= 0 && i < dim );
-  return spacing[i];
+  assert( i >= 0 && i < dim_ );
+  return spacing_[i];
 }
 
 /*===========================================================================*/
@@ -300,8 +315,8 @@ double DicomImage::get_spacing( int i )
 //
 int DicomImage::get_index( int i )
 {
-  assert( i >= 0 && i < dim );
-  return index[i];
+  assert( i >= 0 && i < dim_ );
+  return index_[i];
 }
 
 /*===========================================================================*/
@@ -317,6 +332,10 @@ void DicomImage::print_image_info()
 {
 
   // Get data from DICOM files
+
+  // Get id
+  string id = get_id();
+  cout << "(DicomImage::print_image_info) ID: " << id << "\n";
 
   // Get number of pixels
   int num_pixels = get_num_pixels();
