@@ -30,6 +30,12 @@ const SCIRun::Point &Uintah::ForceBC::getLowerRange() const
 
 bool SCIRun::Thread::isInitialized()  
 
+bool SCIRun::pair_less#
+double &SCIRun::SparseRowMatrix::get#
+void SCIRun::BBox::extend#
+SCIRun::Point SCIRun::BBox::min#
+SCIRun::Point SCIRun::BBox::max#
+
 END_EXCLUDE_LIST
 
 BEGIN_FILE_EXCLUDE_LIST
@@ -38,4 +44,6 @@ BEGIN_FILE_EXCLUDE_LIST
 *malloc.cc
 *new.cc
 *sus.cc
+*Thread_pthreads.cc
+*main.cc
 END_FILE_EXCLUDE_LIST
