@@ -10,7 +10,7 @@
    </Meta>
 
    <Time>
-	<maxTime>0.1</maxTime>
+	<maxTime>0.2</maxTime>
 	<initTime>0.0</initTime>
 	<delt_min>0.00001</delt_min>
 	<delt_max>0.001</delt_max>
@@ -18,7 +18,7 @@
    </Time>
    <DataArchiver>
         <filebase>disks.uda</filebase>
-	<outputInterval>1.0001</outputInterval>
+	<outputInterval>.01</outputInterval>
    </DataArchiver>
 
     <MPM>
@@ -92,6 +92,34 @@
     </MaterialProperties>
 	
     <Grid>
+        <BoundaryConditions>
+                 <Face side = "x-">
+                        <BCType label = "Kinematic" var = "velocity">
+                           <velocity> [0.0,0.0,0.0] </velocity>
+                        </BCType>
+                </Face>
+                <Face side = "x+">
+                        <BCType label = "Kinematic" var = "velocity">
+                             <velocity> [0.0,0.0,0.0] </velocity>
+                        </BCType>
+                </Face>
+                <Face side = "y-">
+                        <BCType label = "Kinematic" var = "velocity">
+                           <velocity> [0.0,0.0,0.0] </velocity>
+                        </BCType>
+                </Face>
+                <Face side = "y+">
+                        <BCType label = "Kinematic" var = "velocity">
+                            <velocity> [0.0,0.0,0.0] </velocity>
+                        </BCType>
+                </Face>
+                <Face side = "z-">
+                        <BCType label = "Symmetric" var = "symmetry"> </BCType>
+                </Face>
+                <Face side = "z+">
+                        <BCType label = "Symmetric" var = "symmetry"> </BCType>
+                </Face>
+        </BoundaryConditions>
 	<Level>
 	    <Box label="1">
 		<lower>[0,0,0]</lower>
