@@ -12,7 +12,6 @@
 #include <Packages/Uintah/Core/Grid/Array3Index.h>
 #include <Packages/Uintah/Core/Grid/Grid.h>
 #include <Packages/Uintah/Core/Grid/Level.h>
-#include <Packages/Uintah/Core/Grid/CCVariable.h>
 #include <Packages/Uintah/Core/Grid/NCVariable.h>
 #include <Packages/Uintah/Core/Grid/ParticleSet.h>
 #include <Packages/Uintah/Core/Grid/ParticleVariable.h>
@@ -23,7 +22,7 @@
 #include <Packages/Uintah/Core/Grid/SimulationState.h>
 #include <Packages/Uintah/Core/Grid/SoleVariable.h>
 #include <Packages/Uintah/Core/Grid/Task.h>
-#include <Packages/Uintah/Core/Grid/BoundCond.h>
+//#include <Packages/Uintah/Core/Grid/BoundCond.h>
 #include <Packages/Uintah/Core/Grid/PressureBoundCond.h>
 #include <Packages/Uintah/Core/Grid/VelocityBoundCond.h>
 #include <Packages/Uintah/Core/Grid/TemperatureBoundCond.h>
@@ -204,8 +203,6 @@ void ICE::problemSetup(const ProblemSpecP& prob_spec,GridP& ,
   }
 //__________________________________
 //  Print out what I've found
-
- 
   cout << "Number of ICE materials: " 
        << d_sharedState->getNumICEMatls()<< endl;
   
@@ -855,7 +852,7 @@ if (switchDebugInitialize){
   sprintf(description, "Initialization_Mat_%d ",dwindex);
   printData(   patch, 1, description, "rho_CC",         rho_top_cycle);
   printData(   patch, 1, description, "rho_micro_CC",   rho_micro);
-  printData(   patch, 1, description, "sp_vol_CC",      sp_vol_CC);
+//  printData(   patch, 1, description, "sp_vol_CC",      sp_vol_CC);
   printData(   patch, 1, description, "Temp_CC",        Temp_CC);
   printData(   patch, 1, description, "vol_frac_CC",    vol_frac_CC);
   printVector( patch, 1, description, "uvel_CC", 0,  vel_CC);
@@ -968,6 +965,10 @@ void ICE::computeEquilibrationPressure(
 
 /*`==========DEBUG============*/ 
   if (switchDebug_equilibration_press) {
+#if 0
+//__________________________________
+//  Stand alone ICE dumps it's output
+//  just before going into the routine
     printData( patch, 1, "TOP_equilibration", "Press_CC_top", press);
               
    for (int m = 0; m < numMatls; m++)  {
@@ -976,9 +977,12 @@ void ICE::computeEquilibrationPressure(
      char description[50];
      sprintf(description, "TOP_equilibration_Mat_%d ",dwindex);
      printData( patch, 1, description, "rho_CC",          rho_CC[m]);
+     printData( patch, 1, description, "rho_micro_CC",    rho_micro[m]);
      printData( patch, 0, description, "speedSound",      speedSound_new[m]);
      printData( patch, 1, description, "Temp_CC",         Temp[m]);
+     printData( patch, 1, description, "vol_frac_CC",     vol_frac[m]);
     }
+#endif
   }
  /*==========DEBUG============`*/
    
@@ -1209,9 +1213,11 @@ void ICE::computeEquilibrationPressure(
      int dwindex = matl->getDWIndex(); 
      char description[50];
      sprintf(description, "BOT_equilibration_Mat_%d ",dwindex);
-     printData( patch, 1, description, "rho_CC",          rho_CC[m]);
-     printData( patch, 1, description, "speedSound",      speedSound_new[m]);
-     printData( patch, 1, description, "Temp_CC",         Temp[m]);
+     printData( patch, 1, description, "rho_CC",        rho_CC[m]);
+     //printData( patch, 1, description, "speedSound",   speedSound_new[m]);
+     printData( patch, 1, description,  "rho_micro_CC",    rho_micro[m]);
+     printData( patch,1,description,    "vol_frac_CC",  vol_frac[m]);
+    
     }
   }
  /*==========DEBUG============`*/
@@ -1265,17 +1271,6 @@ void ICE::computeFaceCenteredVelocities(
 #if 0
 /*`==========TESTING==========*/ 
     if (switchDebug_vel_FC ) {
-<<<<<<< ICE.cc
-    Material* matl = d_sharedState->getMaterial( m );
-    int dwindex = matl->getDWIndex(); 
-    char description[50];
-    sprintf(description, "TOP_vel_FC_Mat_%d ",dwindex); 
-    printData( patch, 1, description, "rho_CC",      rho_CC);
-    printData( patch, 1, description, "rho_micro_CC",rho_micro_CC);
-    printVector( patch,1, description, "uvel_CC", 0, vel_CC);
-    printVector( patch,1, description, "vvel_CC", 1, vel_CC);
-    printVector( patch,1, description, "wvel_CC", 2, vel_CC);
-=======
       char description[50];
       sprintf(description, "TOP_vel_FC_Mat_%d ",dwindex); 
       printData( patch, 1, description, "rho_CC",      rho_CC);
@@ -1283,7 +1278,6 @@ void ICE::computeFaceCenteredVelocities(
       printVector( patch,1, description, "uvel_CC", 0, vel_CC);
       printVector( patch,1, description, "vvel_CC", 1, vel_CC);
       printVector( patch,1, description, "wvel_CC", 2, vel_CC);
->>>>>>> 1.11
     }
  /*==========TESTING==========`*/
 #endif    
@@ -1501,7 +1495,7 @@ void ICE::addExchangeContributionToFCVel(
       iter++){
     IntVector curcell = *iter;
     //__________________________________
-    //  T  O  P -- B  E  T  A      
+    //   T O P  F A C E -- B  E  T  A      
     //  Note this includes b[m][m]
     //  You need to make sure that mom_exch_coeff[m][m] = 0
     //   - form off diagonal terms of (a) 
@@ -1533,19 +1527,22 @@ void ICE::addExchangeContributionToFCVel(
       for(int m = 0; m < numMatls; m++) {
 	b[m] = 0.0;
 	for(int n = 0; n < numMatls; n++)  {
-	  b[m] += beta[m][n] * (vvel_FC[n][*iter] - vvel_FC[m][*iter]);
+	  b[m] += beta[m][n] * (vvel_FC[n][adjcell] - vvel_FC[m][adjcell]);
 	}
       }
       //__________________________________
       //      S  O  L  V  E  
-      //   - backout velocities              
+      //   - backout velocities
+      //  In order to set the TOP face we 
+      //  operate on the BOTTOM face of the adj cell              
       itworked = a.solve(b);
       for(int m = 0; m < numMatls; m++)  {
-	vvel_FCME[m][*iter] = vvel_FC[m][*iter] + b[m];
+	vvel_FCME[m][adjcell] = vvel_FC[m][adjcell] + b[m];
       }
     }
+    
     //__________________________________
-    //  R I G H T -- B  E  T  A      
+    //   R I G H T  F A C E-- B  E  T  A      
     //  Note this includes b[m][m]
     //  You need to make sure that mom_exch_coeff[m][m] = 0
     //   - form off diagonal terms of (a)
@@ -1572,24 +1569,29 @@ void ICE::addExchangeContributionToFCVel(
 	  a[m][m] +=  beta[m][n];
 	}
       }
+      
       //__________________________________
       //    F  O  R  M     R  H  S  (b) 
       for(int m = 0; m < numMatls; m++)  {
 	b[m] = 0.0;
 	for(int n = 0; n < numMatls; n++)  {
-	  b[m] += beta[m][n] * (uvel_FC[n][*iter] - uvel_FC[m][*iter]);
+	  b[m] += beta[m][n] * (uvel_FC[n][adjcell] - uvel_FC[m][adjcell]);
 	}
       }
+    
       //__________________________________
       //      S  O  L  V  E
       //   - backout velocities
+      //  In order to set the RIGHT face we 
+      //  operate on the left face of the adj cell
       itworked = a.solve(b);
+     
       for(int m = 0; m < numMatls; m++) {
-	uvel_FCME[m][*iter] = uvel_FC[m][*iter] + b[m];
+	uvel_FCME[m][adjcell] = uvel_FC[m][adjcell] + b[m];
       }
     }
     //__________________________________
-    //  F R O N T -- B  E  T  A      
+    //  B A C K  F A C E -- B  E  T  A      
     //  Note this includes b[m][m]
     //  You need to make sure that mom_exch_coeff[m][m] = 0
     //   - form off diagonal terms of (a)
@@ -1620,15 +1622,17 @@ void ICE::addExchangeContributionToFCVel(
       for(int m = 0; m < numMatls; m++) {
 	b[m] = 0.0;
 	for(int n = 0; n < numMatls; n++) {
-	  b[m] += beta[m][n] * (wvel_FC[n][*iter] - wvel_FC[m][*iter]);
+	  b[m] += beta[m][n] * (wvel_FC[n][adjcell] - wvel_FC[m][adjcell]);
 	}
       }
       //__________________________________
       //      S  O  L  V  E
       //   - backout velocities
+      //  In order to set the FRONT face we 
+      //  operate on the BACK face of the adj cell  
       itworked = a.solve(b);
       for(int m = 0; m < numMatls; m++) {
-	wvel_FCME[m][*iter] = wvel_FC[m][*iter] + b[m];
+	wvel_FCME[m][adjcell] = wvel_FC[m][adjcell] + b[m];
       }
     }
   }
@@ -1644,7 +1648,7 @@ void ICE::addExchangeContributionToFCVel(
     Material* matl = d_sharedState->getMaterial( m );
     int dwindex = matl->getDWIndex();
     char description[50];
-    sprintf(description, "Exchange_FC_before_BC_Mat_%d ",dwindex);
+    sprintf(description, "Exchange_FC_after_BC_Mat_%d ",dwindex);
     printData_FC( patch,1, description, "uvel_FCME", uvel_FCME[m]);
     printData_FC( patch,1, description, "vvel_FCME", vvel_FCME[m]);
     printData_FC( patch,1, description, "wvel_FCME", wvel_FCME[m]);
@@ -1781,9 +1785,10 @@ void ICE::computeDelPressAndUpdatePressCC(
       
       term3[*iter] += vol_frac[*iter] /(rho_micro_CC[*iter] *
 					speedSound[*iter]*speedSound[*iter]);
-    }
-  }
-  for(CellIterator iter = patch->getCellIterator(); !iter.done(); iter++) {
+    }  //iter loop
+  }  //matl loop
+  for(CellIterator iter = patch->getCellIterator(); !iter.done(); iter++) { 
+    
     delPress[*iter] = (delT * term1[*iter] - term2[*iter])/(term3[*iter]);
     press_CC[*iter]  = pressure[*iter] + delPress[*iter];    
   }
