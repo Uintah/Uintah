@@ -94,6 +94,7 @@ public:
 
   struct NodeIter : public LevelIter
   {
+    NodeIter() : LevelIter(0, 0, 0, 0) {}
     NodeIter(const LevelMesh *m, int i, int j, int k) 
       : LevelIter(m, i, j, k) {}
     
@@ -130,6 +131,7 @@ public:
   
   struct CellIter : public LevelIter
   {
+    CellIter() : LevelIter(0, 0, 0, 0) {}
     CellIter(const LevelMesh *m, int i, int j, int k)
       : LevelIter(m, i, j, k) {}
     
@@ -208,6 +210,7 @@ public:
 
   struct EdgeIter : public UnfinishedIter
   {
+    EdgeIter() : UnfinishedIter(0, 0) {}
     EdgeIter(const LevelMesh *m, int i) 
       : UnfinishedIter(m, i) {}
     
@@ -227,6 +230,7 @@ public:
 
   struct FaceIter : public UnfinishedIter
   {
+    FaceIter() : UnfinishedIter(0, 0) {}
     FaceIter(const LevelMesh *m, int i) 
       : UnfinishedIter(m, i) {}
     
