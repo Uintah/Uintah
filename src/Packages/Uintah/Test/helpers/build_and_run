@@ -27,7 +27,6 @@ if [ ! -x "${BUILDROOT}/${mode}/build/Packages/Uintah/StandAlone/sus" ]; then
 	cd "${BUILD_DIR}"
 	if [ ! -d "configure-${mode}.lock" ]; then
 	    # failed ${mode} configure, set a lock
-	    echo "ln -s $BUILDROOT configure-${mode}.lock"
 	    ln -s "$BUILDROOT" "configure-${mode}.lock"
 	fi
 	exit 1
