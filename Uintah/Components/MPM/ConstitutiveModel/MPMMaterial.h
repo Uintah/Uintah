@@ -78,6 +78,7 @@ WARNING
 				       ParticleVariable<double>& volume,
 				       ParticleVariable<int>& pissurf,
 				       ParticleVariable<double>& temperature,
+				       ParticleVariable<long>& particleID,
 				       const Patch*);
 
 	 int checkForSurface(const GeometryPiece* piece,
@@ -115,6 +116,10 @@ WARNING
 #endif // __MPM_MATERIAL_H__
 
 // $Log$
+// Revision 1.20  2000/06/02 21:17:28  guilkey
+// Added ParticleID's.  This isn't quite done yet, but shouldn't
+// cause anything else to not work.  It will be completed ASAP.
+//
 // Revision 1.19  2000/06/02 17:26:36  guilkey
 // Removed VarLabels from the constructor.  Now using the MPMLabel class
 // instead.

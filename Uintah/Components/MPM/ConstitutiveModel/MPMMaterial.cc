@@ -130,12 +130,18 @@ void MPMMaterial::createParticles(particleIndex numParticles,
    new_dw->allocate(pissurf, lb->pSurfLabel, getDWIndex(), patch);
    ParticleVariable<double> ptemperature;
    new_dw->allocate(ptemperature, lb->pTemperatureLabel, getDWIndex(), patch);
+   ParticleVariable<long> pparticleID;
+   new_dw->allocate(pparticleID, lb->pParticleIDLabel, getDWIndex(), patch);
+
+//   particleIndex start = patch->getNextAvailableParticleIndex();
 
    particleIndex start = 0;
    for(int i=0; i<d_geom_objs.size(); i++)
       start += createParticles(d_geom_objs[i], start, position,
 			       pvelocity,pexternalforce,pmass,pvolume,
-					pissurf,ptemperature,patch);
+					pissurf,ptemperature,pparticleID,patch);
+
+//   patch->storeLastParticleIndexUsed(start);
 
    new_dw->put(position, lb->pXLabel, getDWIndex(), patch);
    new_dw->put(pvelocity, lb->pVelocityLabel, getDWIndex(), patch);
@@ -144,6 +150,7 @@ void MPMMaterial::createParticles(particleIndex numParticles,
    new_dw->put(pvolume, lb->pVolumeLabel, getDWIndex(), patch);
    new_dw->put(pissurf, lb->pSurfLabel, getDWIndex(), patch);
    new_dw->put(ptemperature, lb->pTemperatureLabel, getDWIndex(), patch);
+   new_dw->put(pparticleID, lb->pParticleIDLabel, getDWIndex(), patch);
 }
 
 particleIndex MPMMaterial::countParticles(GeometryObject* obj,
@@ -188,6 +195,7 @@ particleIndex MPMMaterial::createParticles(GeometryObject* obj,
 				   ParticleVariable<double>& volume,
 				   ParticleVariable<int>& pissurf,
 				   ParticleVariable<double>& temperature,
+				   ParticleVariable<long>& particleID,
 				   const Patch* patch)
 {
    GeometryPiece* piece = obj->getPiece();
@@ -200,6 +208,14 @@ particleIndex MPMMaterial::createParticles(GeometryObject* obj,
    IntVector ppc = obj->getNumParticlesPerCell();
    Vector dxpp = patch->dCell()/obj->getNumParticlesPerCell();
    Vector dcorner = dxpp*0.5;
+
+   long patch_number = patch->getID();
+
+   cout << patch_number << endl;
+
+   patch_number <<= 40;
+
+   cout << patch_number << endl;
 
    particleIndex count = 0;
    for(CellIterator iter = patch->getCellIterator(b); !iter.done(); iter++){
@@ -218,6 +234,8 @@ particleIndex MPMMaterial::createParticles(GeometryObject* obj,
 		  // Determine if particle is on the surface
 		  pissurf[start+count]=checkForSurface(piece,p,dxpp);
 		  pexternalforce[start+count]=Vector(0,0,0); // for now
+		  particleID[start+count]=(patch_number | (start + count));
+		cout << particleID[start+count] << endl;
 		  count++;
 	       }
 	    }
@@ -281,6 +299,10 @@ double  MPMMaterial::getHeatTransferCoefficient() const
 }
 
 // $Log$
+// Revision 1.27  2000/06/02 21:17:28  guilkey
+// Added ParticleID's.  This isn't quite done yet, but shouldn't
+// cause anything else to not work.  It will be completed ASAP.
+//
 // Revision 1.26  2000/06/02 17:26:36  guilkey
 // Removed VarLabels from the constructor.  Now using the MPMLabel class
 // instead.
