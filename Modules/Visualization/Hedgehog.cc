@@ -158,7 +158,7 @@ void Hedgehog::execute()
 	GeomGroup* w = new GeomGroup;
 	w->add(w2d);
 	w->add(w3d);
-	widget_id = ogeom->addObj( w, module_name, &widget_lock );
+	widget_id = ogeom->addObj( w, widget_name, &widget_lock );
 
 	widget2d->Connect( ogeom );
 	widget2d->SetRatioR( 0.2 );

@@ -364,10 +364,12 @@ void Streamline::execute()
 
 	// Do it...
 	if(markertype == "Line"){
+	    cerr << "Calling do_streamline" << endl;
 	    do_streamline(si, vfield, stepsize, maxsteps, skip,
 			  sfield, cmap, alg_enum);
 	} else if(markertype == "Tube"){
 	    double tubesize;
+	    cerr << "Calling do_tube" << endl;
 	    if(!get_tcl_doublevar(sidstr, "tubesize", tubesize)){
 		error("Error reading tubesize variable");
 		return;
@@ -376,14 +378,17 @@ void Streamline::execute()
 			  sfield, cmap, alg_enum, tubesize);
 	} else if(markertype == "Ribbon"){
 	    double ribbonsize;
+	    cerr << "Calling do_ribbon" << endl;
 	    if(!get_tcl_doublevar(sidstr, "ribbonsize", ribbonsize)){
 		error("Error reading ribbonsize variable");
 		return;
 	    }
 	    do_streamribbon(si, vfield, stepsize, maxsteps, skip,
 			    sfield, cmap, alg_enum, ribbonsize);
+	    cerr << "do_ribbon done" << endl;
 	} else if(markertype == "Surface"){
 	    double maxbend;
+	    cerr << "Calling do_surface" << endl;
 	    if(!get_tcl_doublevar(sidstr, "maxbend", maxbend)){
 		error("Error reading ribbonsize variable");
 		return;
@@ -972,14 +977,20 @@ void SLLineSource::find(const Point& start, const Vector& downstream,
     double dist=scale/3.;
     Point p1(start-v1*dist);
     Point p2(start+v1*dist);
-    gw->SetEndpoints(p1, p2);
+    cerr << "p1=" << p1 << endl;
+    cerr << "p2=" << p2 << endl;
     gw->SetScale(scale/50);
+    gw->SetEndpoints(p1, p2);
+
+    gw->GetEndpoints(p1, p2);
+    cerr << "1. return - p1=" << p1 << ", p2=" << p2 << endl;
 }
 
 Point SLLineSource::trace_start(double s, double)
 {
     Point p1, p2;
     gw->GetEndpoints(p1, p2);
+    cerr << "2. return - p1=" << p1 << ", p2=" << p2 << endl;
     Vector axis(p2-p1);
     double ratio=gw->GetRatio();
     return p1+axis*s*ratio;
@@ -987,6 +998,9 @@ Point SLLineSource::trace_start(double s, double)
 
 void SLLineSource::get_n(int& ns, int& nt)
 {
+    Point p1, p2;
+    gw->GetEndpoints(p1, p2);
+    cerr << "3. return - p1=" << p1 << ", p2=" << p2 << endl;
     double ratio=gw->GetRatio();
     if(ratio < 1.e-3)
 	ns=1;
@@ -1001,6 +1015,7 @@ Vector SLLineSource::ribbon_direction(double, double,
 {
     Point p1, p2;
     gw->GetEndpoints(p1, p2);
+    cerr << "4. return - p1=" << p1 << ", p2=" << p2 << endl;
     Vector axis(p2-p1);
     axis.normalize();
     return axis;
@@ -1190,16 +1205,22 @@ void SLSourceInfo::pick_source(const clString& sname,
     // See if we need to find the field
     if(need_find){
 	// Find the field
+	cerr << "Finding...\n";
 	Point min, max;
 	vfield->get_bounds(min, max);
 	Point cen(AffineCombination(min, 0.5, max, 0.5));
+	cerr << "cen=" << cen << endl;
 	Vector axis;
 	if(!vfield->interpolate(cen, axis)){
 	    // No field???
 	    module->error("Can't find center of field");
 	    return;
 	}
-	axis.normalize();
+	cerr << "axis=" << axis << endl;
+	if(axis.length2() != 0)
+	    axis.normalize();
+	else
+	    axis=Vector(0,0,1);
 	double scale=vfield->longest_dimension();
 	need_find=0;
 	cerr << "scale=" << scale << endl;

@@ -67,6 +67,7 @@ Module* make_CuttingPlane(const clString& id)
 };
 
 static clString module_name("CuttingPlane");
+static clString widget_name("CuttingPlane Widget");
 
 CuttingPlane::CuttingPlane(const clString& id)
 : Module("CuttingPlane", id, Filter), 
@@ -131,7 +132,7 @@ void CuttingPlane::execute()
     {
 	init = 0;
 	GeomObj *w = widget->GetWidget() ;
-	widget_id = ogeom->addObj( w, module_name, &widget_lock );
+	widget_id = ogeom->addObj( w, widget_name, &widget_lock );
 	widget->Connect( ogeom );
 	widget->SetRatioR( 0.2 );
 	widget->SetRatioD( 0.2 );

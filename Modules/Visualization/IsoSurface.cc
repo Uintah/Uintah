@@ -233,7 +233,7 @@ void IsoSurface::execute()
 	need_seed=0;
     }
     sp=show_progress.get();
-    if(do_3dwidget.get()){
+    if(do_3dwidget.get() && have_seedpoint.get()){
 	double widget_scale=0.05*field->longest_dimension();
 	
 
@@ -251,6 +251,9 @@ void IsoSurface::execute()
 	if(grad.length2() > 0)
 	    grad.normalize();
 	widget->SetDirection(grad);
+	widget->SetState(1);
+    } else {
+	widget->SetState(0);
     }
     double iv=isoval.get();
     Point sp;
@@ -810,6 +813,8 @@ int IsoSurface::iso_tetra(Element* element, Mesh* mesh,
     NodeHandle n2=mesh->nodes[element->n[1]];
     NodeHandle n3=mesh->nodes[element->n[2]];
     NodeHandle n4=mesh->nodes[element->n[3]];
+    if(v1 == v2 && v3 == v4 && v1 == v4)
+	return 0;
     int f1=v1<0;
     int f2=v2<0;
     int f3=v3<0;
@@ -824,7 +829,7 @@ int IsoSurface::iso_tetra(Element* element, Mesh* mesh,
     case 1:
     case 14:
 	// Point 4 is inside
- 	{
+ 	if(v4 != 0){
 	    Point p1(Interpolate(n4->p, n1->p, v4/(v4-v1)));
 	    Point p2(Interpolate(n4->p, n2->p, v4/(v4-v2)));
 	    Point p3(Interpolate(n4->p, n3->p, v4/(v4-v3)));
@@ -835,7 +840,7 @@ int IsoSurface::iso_tetra(Element* element, Mesh* mesh,
     case 2:
     case 13:
 	// Point 3 is inside
- 	{
+ 	if(v3 != 0){
 	    Point p1(Interpolate(n3->p, n1->p, v3/(v3-v1)));
 	    Point p2(Interpolate(n3->p, n2->p, v3/(v3-v2)));
 	    Point p3(Interpolate(n3->p, n4->p, v3/(v3-v4)));
@@ -851,15 +856,19 @@ int IsoSurface::iso_tetra(Element* element, Mesh* mesh,
 	    Point p2(Interpolate(n3->p, n2->p, v3/(v3-v2)));
 	    Point p3(Interpolate(n4->p, n1->p, v4/(v4-v1)));
 	    Point p4(Interpolate(n4->p, n2->p, v4/(v4-v2)));
-	    group->add(p1, p2, p3);
-	    group->add(p2, p3, p4);
+	    if(v3 != v4){
+		if(v3 != 0 && v1 != 0)
+		    group->add(p1, p2, p3);
+		if(v4 != 0 && v2 != 0)
+		    group->add(p2, p3, p4);
+	    }
 	    faces=ALLFACES;
 	}
 	break;
     case 4:
     case 11:
 	// Point 2 is inside
- 	{
+ 	if(v2 != 0){
 	    Point p1(Interpolate(n2->p, n1->p, v2/(v2-v1)));
 	    Point p2(Interpolate(n2->p, n3->p, v2/(v2-v3)));
 	    Point p3(Interpolate(n2->p, n4->p, v2/(v2-v4)));
@@ -875,8 +884,12 @@ int IsoSurface::iso_tetra(Element* element, Mesh* mesh,
 	    Point p2(Interpolate(n2->p, n3->p, v2/(v2-v3)));
 	    Point p3(Interpolate(n4->p, n1->p, v4/(v4-v1)));
 	    Point p4(Interpolate(n4->p, n3->p, v4/(v4-v3)));
-	    group->add(p1, p2, p3);
-	    group->add(p2, p3, p4);
+	    if(v2 != v4){
+		if(v2 != 0 && v1 != 0)
+		    group->add(p1, p2, p3);
+		if(v4 != 0 && v3 != 0)
+		    group->add(p2, p3, p4);
+	    }
 	    faces=ALLFACES;
 	}
 	break;
@@ -888,15 +901,19 @@ int IsoSurface::iso_tetra(Element* element, Mesh* mesh,
 	    Point p2(Interpolate(n2->p, n4->p, v2/(v2-v4)));
 	    Point p3(Interpolate(n3->p, n1->p, v3/(v3-v1)));
 	    Point p4(Interpolate(n3->p, n4->p, v3/(v3-v4)));
-	    group->add(p1, p2, p3);
-	    group->add(p2, p3, p4);
+	    if(v2 != v3){
+		if(v2 != 0 && v1 != 0)
+		    group->add(p1, p2, p3);
+		if(v3 != 0 && v4 != 0)
+		    group->add(p2, p3, p4);
+	    }
 	    faces=ALLFACES;
 	}
 	break;
     case 7:
     case 8:
 	// Point 1 is inside
- 	{
+ 	if(v1 != 0){
 	    Point p1(Interpolate(n1->p, n2->p, v1/(v1-v2)));
 	    Point p2(Interpolate(n1->p, n3->p, v1/(v1-v3)));
 	    Point p3(Interpolate(n1->p, n4->p, v1/(v1-v4)));

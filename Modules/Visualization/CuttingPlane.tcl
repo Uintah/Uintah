@@ -10,8 +10,6 @@
 #  Copyright (C) 1995 SCI Group
 #
 
-puts "Sourced cuttingplane"
-
 itcl_class CuttingPlane {
     inherit Module
     constructor {config} {

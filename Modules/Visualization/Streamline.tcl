@@ -341,7 +341,6 @@ itcl_class Streamline {
 
 	change_radio_var $ii.alg $s-algorithm
 	global $s-stepsize
-	puts "before config: stepsize=[set $s-stepsize]"
 	$ii.stepsize config -variable $s-stepsize
 	$ii.maxsteps config -variable $s-maxsteps
 	change_radio_var $ii.dir $s-direction
