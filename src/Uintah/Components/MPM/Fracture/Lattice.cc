@@ -31,12 +31,12 @@ bool Lattice::containCell(const IntVector& cellIndex) const
   else return false;
 }
 
-const Patch* Lattice::getPatch()
+const Patch* Lattice::getPatch() const
 {
   return d_patch;
 }
 
-const ParticleVariable<Point>& Lattice::getParticlesPosition()
+const ParticleVariable<Point>& Lattice::getParticlesPosition() const
 {
   return d_pX;
 }
@@ -46,6 +46,9 @@ const ParticleVariable<Point>& Lattice::getParticlesPosition()
 } //namespace Uintah
 
 // $Log$
+// Revision 1.5  2000/06/06 21:04:47  bigler
+// Added const to Lattice members to get it to compile
+//
 // Revision 1.4  2000/06/05 23:57:51  tan
 // Added conainCell().
 //
