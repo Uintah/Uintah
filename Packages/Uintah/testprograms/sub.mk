@@ -14,6 +14,6 @@ PSELIBS := Packages/Uintah/testprograms/TestSuite \
 	Packages/Uintah/testprograms/TestMatrix3 \
 	Packages/Uintah/testprograms/TestConsecutiveRangeSet
 
-LIBS := -lm
+LIBS := $(XML_LIBRARY) -lm
 
 include $(SRCTOP)/scripts/program.mk

@@ -12,6 +12,5 @@ SUBDIRS := \
 	$(SRCDIR)/Arches \
 	$(SRCDIR)/ProblemSpecification
 
-
 include $(SRCTOP)/scripts/recurse.mk
 
