@@ -598,7 +598,10 @@ void CI::emit_handler_table(EmitState& e)
 
 bool Method::reply_required() const
 {
-  return true; // For now
+  if (modifier2 == Oneway) 
+	return false;
+  else 
+ 	return true; 
 }
 
 string Method::get_classname() const
@@ -695,7 +698,7 @@ void Method::emit_handler(EmitState& e, CI* emit_class) const
   e.out << "  if(int _gerr=globus_nexus_buffer_destroy(_recvbuff))\n";
   e.out << "    throw ::PIDL::GlobusError(\"buffer_destroy\", _gerr);\n";
   e.out << "  void* _v=globus_nexus_endpoint_get_user_pointer(_ep);\n";
-  string myclass=emit_class->cppfullname(0);
+  string myclass = emit_class->cppfullname(0);
   e.out << "  ::PIDL::ServerContext* _sc=static_cast< ::PIDL::ServerContext*>(_v);\n";
   e.out << "  " << myclass << "* _obj=static_cast< " << myclass << "*>(_sc->d_ptr);\n";
   e.out << "\n";
@@ -780,7 +783,8 @@ void Method::emit_handler(EmitState& e, CI* emit_class) const
 
     e.out << "  // Send the reply...\n";
     int reply_handler_id=0; // Always 0
-    e.out << "  if(int _gerr=globus_nexus_send_rsr(&_sendbuff, &_sp, " << reply_handler_id << ", GLOBUS_TRUE, GLOBUS_FALSE))\n";
+    e.out << "  if(int _gerr=globus_nexus_send_rsr(&_sendbuff, &_sp, " 
+	  << reply_handler_id << ", GLOBUS_TRUE, GLOBUS_FALSE))\n";
     e.out << "    throw ::PIDL::GlobusError(\"send_rsr\", _gerr);\n";
     e.out << "  if(int _gerr=globus_nexus_startpoint_eventually_destroy(&_sp, GLOBUS_FALSE, 30))\n";
     e.out << "    throw ::PIDL::GlobusError(\"startpoint_eventually_destroy\", _gerr);\n";
@@ -991,10 +995,11 @@ void Method::emit_proxy(EmitState& e, const string& fn,
 {
   emit_prototype_defin(e, fn+"::", localScope);
   e.out << "\n{\n";
-  if(reply_required())
+  if(reply_required()) {
     e.out << "  ::PIDL::ReplyEP* _reply=::PIDL::ReplyEP::acquire();\n";
-  e.out << "  globus_nexus_startpoint_t _sp;\n";
-  e.out << "  _reply->get_startpoint_copy(&_sp);\n\n";
+    e.out << "  globus_nexus_startpoint_t _sp;\n";
+    e.out << "  _reply->get_startpoint_copy(&_sp);\n\n";
+  }
   std::vector<Argument*>& list=args->getList();
   e.out << "  // Size the buffer\n";
   e.out << "  int _size=";
@@ -1076,6 +1081,10 @@ void Method::emit_proxy(EmitState& e, const string& fn,
 	e.out << "  return _ret;\n";
       }
     }
+  }
+  else {
+    // A reply is not requred but we need to return something
+    e.out << "  return -1;\n";
   }
   e.out << "}\n";
 }
