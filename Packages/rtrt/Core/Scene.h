@@ -23,34 +23,15 @@ class Light;
 class Ray;
 class HitInfo;
 class DpyBase;
-  class Material;
-  class ShadowBase;
+class Gui;
+class Material;
+class ShadowBase;
+
 struct DepthStats;
 struct PerProcessorContext;
 
 class Scene {
-  Object* obj;
-  Camera* camera0;
-  Camera* camera1;
-  Image* image0;
-  Image* image1;
-  Background* background;
-  Color cup;           // color above groundplane
-  Color cdown;         // color in direction of groundplane
-  Plane groundplane;   // the groundplane for ambient hack
-                       // distance guage is based on normal length
   
-  int shadow_mode;
-  int lightbits;
-  Array1<Light*> lights;
-  Array1<Light*> per_matl_lights;
-  RTRT *rtrt_engine;
-  Array1<DpyBase*> displays;
-  
-  double ambientscale;
-  bool hotspots;
-  Array1<Material*> materials;
-  friend class Dpy;
 public:
   Scene(Object*, const Camera&, Image*, Image*, const Color& bgcolor,
 	const Color& cdown, const Color& cup, const Plane& groundplane,
@@ -135,8 +116,22 @@ public:
     cup=c;
   }
   
-  inline double get_ambientscale() const {
-    return ambientscale;
+  inline const Color & getAmbientColor() const {
+    return ambientColor_;
+  }
+
+  inline void setAmbientLevel( float scale ) {
+    if( scale > 1.0 ) scale = 1.0;
+    else if( scale < 0.0 ) scale = 0.0;
+
+    cup = origCup_ * scale;
+    cdown = origCDown_ * scale;
+
+    ambientColor_ = origAmbientColor_ * scale;
+
+    cout << "ambientColor_ : " << ambientColor_ << "\n";
+
+    background->updateAmbient( scale );
   }
   
   inline int nlights() {
@@ -169,7 +164,6 @@ public:
   void refill_work(int which, int nworkers);
   void waitForEmpty(int which);
   
-  
   void preprocess(double maxradius, int& pp_offset, int& scratchsize);
   Array1<ShadowBase*> shadows;
   int maxdepth;
@@ -186,12 +180,9 @@ public:
   bool stereo;
   bool animate;
   
-  bool logframes;
   int frameno;
   FILE* frametime_fp;
   double lasttime;
-  bool followpath;  
-  FILE* path_fp;
 
   bool doHotSpots() {
     return hotspots;
@@ -200,7 +191,7 @@ public:
   void attach_display(DpyBase *dpy);
   void init(const Camera& cam, const Color& bgcolor);
   void add_shadowmode(const char* name, ShadowBase* s);
-  bool select_shadow_mode(const char* name);
+  void select_shadow_mode( ShadowType st );
 
   inline bool lit(const Point& hitpos, Light* light,
 		  const Vector& light_dir, double dist, Color& shadow_factor,
@@ -208,7 +199,40 @@ public:
     return shadows[shadow_mode]->lit(hitpos, light, light_dir, dist,
 				     shadow_factor, depth, cx);
   }
-};
+
+private:
+
+  friend class Dpy;
+  friend class Gui;
+
+  Object* obj;
+  Camera* camera0;
+  Camera* camera1;
+  Image* image0;
+  Image* image1;
+  Background* background;
+
+  Color origCup_;      // initialized cup value
+  Color origCDown_;    // initialized cdown value
+
+  Color cup;           // color above groundplane
+  Color cdown;         // color in direction of groundplane
+  Plane groundplane;   // the groundplane for ambient hack
+                       // distance guage is based on normal length
+  int shadow_mode;
+  int lightbits;
+  Array1<Light*> lights;
+  Array1<Light*> per_matl_lights;
+  RTRT *rtrt_engine;
+  Array1<DpyBase*> displays;
+  
+  Color  ambientColor_;
+  Color  origAmbientColor_;
+
+  bool hotspots;
+  Array1<Material*> materials;
+
+}; // end class Scene
 
 } // end namespace rtrt
 
