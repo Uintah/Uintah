@@ -1,5 +1,8 @@
 
 #include <Packages/Uintah/Core/Grid/ParticleSubset.h>
+#include <Packages/Uintah/Core/Grid/ParticleVariable.h>
+#include <Packages/Uintah/Core/Disclosure/TypeUtils.h>
+#include <Core/Exceptions/InternalError.h>
 #include <Core/Malloc/Allocator.h>
 
 using namespace Uintah;
@@ -53,5 +56,32 @@ ParticleSubset::fillset()
    d_particles.resize(np);
    for(int i=0;i<np;i++)
       d_particles[i]=i;
+}
+
+
+class compareIDFunctor
+{
+public:
+  compareIDFunctor(ParticleVariable<long64>* particleIDs)
+    : particleIDs_(particleIDs) {}
+  
+  bool operator()(particleIndex x, particleIndex y)
+  {
+    return (*particleIDs_)[x] < (*particleIDs_)[y];
+  }
+
+private:
+  ParticleVariable<long64>* particleIDs_;
+};
+
+void
+ParticleSubset::sort(ParticleVariableBase* particleIDs)
+{
+  ParticleVariable<long64>* pIDs =
+    dynamic_cast<ParticleVariable<long64>*>(particleIDs);
+  if (pIDs == 0)
+    throw InternalError("particleID variable must be ParticleVariable<long64>");
+  compareIDFunctor comp(pIDs);
+  ::sort(d_particles.begin(), d_particles.end(), comp);
 }
 
