@@ -2,6 +2,7 @@
 #define __Uintah_SurfaceCouples__
 
 #include "SurfaceCouple.h"
+#include "Lattice.h"
 #include <vector>
 
 namespace Uintah {
@@ -10,10 +11,10 @@ using namespace SCIRun;
 class SurfaceCouples {
 public:
   SurfaceCouples(const ParticleVariable<Vector>& pCrackNormal,
-                 const ParticleVariable<Point>& pX);
+                 const Lattice& lattice);
   
   void  setup();
-  void  find();
+  void  build();
   
   int   size() const
     {
@@ -37,13 +38,13 @@ public:
     
   const ParticleVariable<Point>& getpX() const
     {
-      return d_pX;
+      return d_lattice.getpX();
     }
 		 
 private:
-  const ParticleVariable<Vector>&     d_pCrackNormal;
-  const ParticleVariable<Point>&      d_pX;
-  std::vector<SurfaceCouple>          d_couples;
+  const ParticleVariable<Vector>&  d_pCrackNormal;
+  const Lattice&                   d_lattice;
+  std::vector<SurfaceCouple>       d_couples;
 };
 
 ostream& operator<<( ostream& os, const SurfaceCouples& couples );

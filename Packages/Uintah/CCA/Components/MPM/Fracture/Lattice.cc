@@ -65,7 +65,8 @@ const ParticleVariable<Point>& Lattice::getpX() const
   return *d_pX;
 }
 
-void Lattice::getParticlesNeighbor(const Point& p, ParticlesNeighbor& particles)
+void Lattice::getParticlesNeighbor(const Point& p, 
+                                   ParticlesNeighbor& particles) const
 {
   particles.clear();
   IntVector cellIdx;

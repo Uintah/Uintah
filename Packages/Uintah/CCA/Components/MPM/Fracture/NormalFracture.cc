@@ -41,6 +41,9 @@ void NormalFracture::computeBoundaryContact(
 		  DataWarehouse* old_dw, 
 		  DataWarehouse* new_dw)
 {
+  delt_vartype delT;
+  old_dw->get(delT, lb->delTLabel);
+
   int matlindex = mpm_matl->getDWIndex();
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
@@ -54,17 +57,17 @@ void NormalFracture::computeBoundaryContact(
     ParticleVariable<int>    pIsBroken_pg;
     ParticleVariable<Vector> pCrackNormal_pg;
     ParticleVariable<Vector> pVelocity_pg;
+    ParticleVariable<double> pMass_pg;
 
     old_dw->get(pX_pg, lb->pXLabel, pset_pg);
     old_dw->get(pVolume_pg, lb->pVolumeLabel, pset_pg);
     old_dw->get(pIsBroken_pg, lb->pIsBrokenLabel, pset_pg);
     old_dw->get(pCrackNormal_pg, lb->pCrackNormalLabel, pset_pg);
     old_dw->get(pVelocity_pg, lb->pVelocityLabel, pset_pg);
+    old_dw->get(pMass_pg, lb->pMassLabel, pset_pg);
 
     //patchOnly data
     ParticleSubset* pset_p = old_dw->getParticleSubset(matlindex, patch);
-
-    //cout<<"computeFracture:computeBoundaryContact: "<< pset_p->numParticles()<<endl;
 
     ParticleVariable<Point>  pX_p;
     new_dw->get(pX_p, lb->pXXLabel, pset_p);
@@ -73,15 +76,13 @@ void NormalFracture::computeBoundaryContact(
     IndexExchange indexExchange(pset_p,pX_p,pset_pg,pX_pg);
 
     Lattice lattice(pX_pg);
-    /*
-    SurfaceCouples couples(pCrackNormal_pg,pX_pg);
-    couples.find();
-    cout<<couples<<endl;
-    */
 
     //Allocate new data
-    ParticleVariable<Vector> pTouchNormal_p_new;
-    new_dw->allocate(pTouchNormal_p_new, lb->pTouchNormalLabel, pset_p);
+    ParticleVariable<Vector> pContactForce_p_new;
+    ParticleVariable<int>    pCrackEffective_p_new;
+
+    new_dw->allocate(pContactForce_p_new, lb->pContactForceLabel, pset_p);
+    new_dw->allocate(pCrackEffective_p_new, lb->pCrackEffectiveLabel, pset_p);
   
     for(ParticleSubset::iterator iter = pset_p->begin();
       iter != pset_p->end(); iter++)
@@ -90,73 +91,75 @@ void NormalFracture::computeBoundaryContact(
       particleIndex pIdx_pg = indexExchange.getPatchAndGhostIndex(pIdx_p);
 
       const Point& particlePoint = pX_pg[pIdx_pg];
-      double size0 = pow(pVolume_pg[pIdx_pg],1./3.);
+      double size0 = pow(pVolume_pg[pIdx_pg],0.333);
     
       ParticlesNeighbor particles;
       lattice.getParticlesNeighbor(particlePoint, particles);
       int particlesNumber = particles.size();
 
-      int touchFacetsNum = 0;
-      pTouchNormal_p_new[pIdx_p] = Vector(0.,0.,0.);
-      
-
-      //other side
-      for(int j=0; j<particlesNumber; j++) {
-        int idx_pg = particles[j];
-        if( pIdx_pg == idx_pg ) continue;
-        if(pIsBroken_pg[idx_pg] > 0) {
-          double size1 = pow(pVolume_pg[idx_pg],1./3.);
-          const Vector& n1 = pCrackNormal_pg[idx_pg];
-      
-          Vector dis = particlePoint - pX_pg[idx_pg];
-	  
-	  if( Dot( (pVelocity_pg[pIdx_pg]-pVelocity_pg[idx_pg]),
-	           dis ) >= 0 ) continue;
-
-          double vDis = Dot( dis, n1 );
-	  
-          if( vDis>0 && vDis<(size0+size1)/2 ) {
-            double hDis = (dis - n1 * vDis).length();
-            if(hDis < size1/2) {
-	      pTouchNormal_p_new[pIdx_p] -= n1;
-  	      touchFacetsNum ++;
-	    }
-          }
-	}
-      }
-
-      //self side
-      if(pIsBroken_pg[pIdx_pg] > 0) {
-        const Vector& n0 = pCrackNormal_pg[pIdx_pg];
+      //crack effective
+      pCrackEffective_p_new[pIdx_p] = 0;
+      if(pIsBroken_pg[pIdx_pg]) {
         for(int j=0; j<particlesNumber; j++) {
           int idx_pg = particles[j];
-          if( pIdx_pg == idx_pg ) continue;
- 
-          Vector dis = pX_pg[idx_pg] - particlePoint;
-	  
-	  if( Dot( (pVelocity_pg[idx_pg]-pVelocity_pg[pIdx_pg]),
-	           dis ) >= 0 ) continue;
-
-          double size1 = pow(pVolume_pg[idx_pg],1./3.);
-
-          double vDis = Dot( dis, n0 );
-          if( vDis>0 && vDis<(size0+size1)/2 ) {
-            double hDis = (dis - n0 * vDis).length();
-            if(hDis < size0/2) {
-	      pTouchNormal_p_new[pIdx_p] += n0;
-  	      touchFacetsNum ++;
+          if( pIdx_pg != idx_pg ) {
+            if( pIsBroken_pg[idx_pg]) {
+              if(Dot(pCrackNormal_pg[pIdx_pg],pCrackNormal_pg[idx_pg]) < 0) {
+                pCrackEffective_p_new[pIdx_p] = 1;
+                break;
+              }
+            }
+            else {
+              if(Dot(pCrackNormal_pg[pIdx_pg],
+                     pX_pg[idx_pg]-pX_pg[pIdx_pg]) > 0) {
+                pCrackEffective_p_new[pIdx_p] = 1;
+                break;
+              }
             }
           }
         }
       }
 
-      if(touchFacetsNum>0) {
-        pTouchNormal_p_new[pIdx_p].normalize();
-        //cout<<"HAVE crack contact!"<<endl;
+      //contact force
+      double mass = 0;
+      Vector momentum(0.,0.,0.);
+      if(pCrackEffective_p_new[pIdx_p]) {
+        const Vector& n0 = pCrackNormal_pg[pIdx_pg];
+        for(int j=0; j<particlesNumber; j++) {
+          int idx_pg = particles[j];
+          if( pIdx_pg != idx_pg && pIsBroken_pg[idx_pg] ) {
+            Vector dis = pX_pg[idx_pg] - particlePoint;
+            if( Dot( (pVelocity_pg[idx_pg]-pVelocity_pg[pIdx_pg]), n0 ) < 0 &&
+	        Dot( pCrackNormal_pg[idx_pg], n0 ) < -0.707 )
+	    {
+              double size1 = pow(pVolume_pg[idx_pg],1./3.);
+              double vDis = Dot( dis, n0 );
+              if( vDis>-size0 && vDis<(size0+size1)/2 ) {
+                double hDis = (dis - n0 * vDis).length();
+                if(hDis < size0*2.0) {
+                  mass += pMass_pg[idx_pg];
+                  momentum += (pVelocity_pg[idx_pg] * pMass_pg[idx_pg]);
+                }
+              }
+            }
+          }
+        }
+      }
+      
+      if( mass > 0 ) {
+        pCrackEffective_p_new[pIdx_p] = -1;
+        pContactForce_p_new[pIdx_p] = 
+	  pCrackNormal_pg[pIdx_pg] * Dot( pCrackNormal_pg[pIdx_pg],
+	  ( momentum/mass - pVelocity_pg[pIdx_pg] )*
+          ( pMass_pg[pIdx_pg] /2 /delT ) );
+      }
+      else {
+        pContactForce_p_new[pIdx_p] = Vector(0.,0.,0.);
       }
     }
 
-    new_dw->put(pTouchNormal_p_new, lb->pTouchNormalLabel);
+    new_dw->put(pContactForce_p_new, lb->pContactForceLabel);
+    new_dw->put(pCrackEffective_p_new, lb->pCrackEffectiveLabel);
   }
 }
 
@@ -180,21 +183,20 @@ void NormalFracture::computeConnectivity(
 
     ParticleVariable<Point>  pX_pg;
     ParticleVariable<double> pVolume_pg;
-    ParticleVariable<int>    pIsBroken_pg;
-    ParticleVariable<int>    pIsolated_pg;
     ParticleVariable<Vector> pCrackNormal_pg;
-    ParticleVariable<Vector> pTouchNormal_pg;
+    ParticleVariable<int>    pCrackEffective_pg;
 
     old_dw->get(pX_pg, lb->pXLabel, pset_pg);
     old_dw->get(pVolume_pg, lb->pVolumeLabel, pset_pg);
-    old_dw->get(pIsBroken_pg, lb->pIsBrokenLabel, pset_pg);
-    old_dw->get(pIsolated_pg, lb->pIsolatedLabel, pset_pg);
     old_dw->get(pCrackNormal_pg, lb->pCrackNormalLabel, pset_pg);
-    new_dw->get(pTouchNormal_pg, lb->pTouchNormalLabel, pset_pg);
+    new_dw->get(pCrackEffective_pg, lb->pCrackEffectiveLabel, pset_pg);
 
     ParticleSubset* pset_p = old_dw->getParticleSubset(matlindex, patch);
 
-    //cout<<"computeConnectivity:computeBoundaryContact: "<< pset_p->numParticles()<<endl;
+    /*
+    cout<<"computeConnectivity:computeBoundaryContact: "
+      <<pset_p->numParticles()<<endl;
+      */
 
     ParticleVariable<Point>  pX_p;
     new_dw->get(pX_p, lb->pXXLabel, pset_p);
@@ -202,124 +204,59 @@ void NormalFracture::computeConnectivity(
     IndexExchange indexExchange(pset_p,pX_p,pset_pg,pX_pg);
 
     ParticleVariable<int>       pConnectivity_p_new;
-    ParticleVariable<int>       pIsolated_p_new;
-    ParticleVariable<Vector>    pContactNormal_p_new;
     new_dw->allocate(pConnectivity_p_new, lb->pConnectivityLabel, pset_p);
-    new_dw->allocate(pIsolated_p_new, lb->pIsolatedLabel, pset_p);
-    new_dw->allocate(pContactNormal_p_new, lb->pContactNormalLabel, pset_p);
 
     Lattice lattice(pX_pg);
     ParticlesNeighbor particles;
     IntVector cellIdx;
 
     vector<BoundaryBand> pBoundaryBand_pg(pset_pg->numParticles());
-    Array3<BoundaryBand> gBoundaryBand( 
-      patch->getCellLowIndex()-IntVector(1,1,1),
-      patch->getCellHighIndex()+IntVector(1,1,1) );
-
     int pnumber = pBoundaryBand_pg.size();
     for(int pidx=0;pidx<pnumber;++pidx) {
       pBoundaryBand_pg[pidx].setup(pidx,
                              pCrackNormal_pg,
-			     pIsBroken_pg,
+			     pCrackEffective_pg,
 			     pVolume_pg,
 			     lattice,
 			     cellLength*0.75);
     }
     
-    IntVector l(gBoundaryBand.getLowIndex());
-    IntVector h(gBoundaryBand.getHighIndex());
-    for (int ii = l.x(); ii < h.x(); ii++)
-    for (int jj = l.y(); jj < h.y(); jj++)
-    for (int kk = l.z(); kk < h.z(); kk++) {
-      IntVector nidx(ii,jj,kk);
-      gBoundaryBand[nidx].setup(patch->nodePosition(nidx),
-                             pCrackNormal_pg,
-			     pIsBroken_pg,
-			     pVolume_pg,
-			     lattice,
-			     cellLength*0.75);
-    }
-
     for(ParticleSubset::iterator iter = pset_p->begin();
           iter != pset_p->end(); iter++)
     {
       particleIndex pIdx_p = *iter;
       particleIndex pIdx_pg = indexExchange.getPatchAndGhostIndex(pIdx_p);
       
-      pIsolated_p_new[pIdx_p] = pIsolated_pg[pIdx_pg];
-      
-      if( !pIsolated_pg[pIdx_pg] ) {
-    
-        pContactNormal_p_new[pIdx_p] = zero;
-    
-        const Point& part = pX_pg[pIdx_pg];
+      const Point& part = pX_pg[pIdx_pg];
 
-        patch->findCell(pX_p[pIdx_p],cellIdx);
-        particles.clear();
-        particles.buildIn(cellIdx,lattice);
-        int particlesNumber = particles.size();
+      patch->findCell(pX_p[pIdx_p],cellIdx);
+      particles.clear();
+      particles.buildIn(cellIdx,lattice);
+      int particlesNumber = particles.size();
 
-        IntVector nodeIdx[8];
-        patch->findNodesFromCell(cellIdx,nodeIdx);
+      IntVector nodeIdx[8];
+      patch->findNodesFromCell(cellIdx,nodeIdx);
     
-        int conn[8];
-        for(int k=0;k<8;++k) {
-          Point node = patch->nodePosition(nodeIdx[k]);
+      int conn[8];
+      for(int k=0;k<8;++k) {
+        Point node = patch->nodePosition(nodeIdx[k]);
 
-  	  if(pBoundaryBand_pg[pIdx_pg].numCracks() == 0 &&
-	     gBoundaryBand[nodeIdx[k]].numCracks() == 0)
-	  {
-	    conn[k] = 1;
-	  }
-	  else {
-	    conn[k] = 1;
-	    VisibilityConnection(
+	conn[k] = 1;
+	VisibilityConnection(
 	        particles, pIdx_pg, node,
-		pIsBroken_pg, pCrackNormal_pg, pVolume_pg, pX_pg, conn[k]);
+		pCrackEffective_pg, pCrackNormal_pg, pVolume_pg,
+		pX_pg, conn[k]);
 
-	    if(conn[k] == 0) BoundaryBandConnection(
-	        pBoundaryBand_pg, gBoundaryBand, 
-		pIdx_pg, part, nodeIdx[k], node, conn[k]);
-		
-            if(conn[k] == 0) ContactConnection(
-	        particles, pIdx_pg, node,
-		pTouchNormal_pg, pVolume_pg, pX_pg,
-		conn[k], pContactNormal_p_new[pIdx_p]);
-          }
-        } //loop over of k
+	if(conn[k] == 0) BoundaryBandConnection(
+	        pBoundaryBand_pg, pIdx_pg, part, node, conn[k]);
+
+      } //loop over of k
       
-/* 
-        if(pIsBroken_pg[pIdx_pg]) {
-          for(int k=0;k<8;++k) {
-            Point node = patch->nodePosition(nodeIdx[k]);
-	    if(Dot(node-part,pCrackNormal_pg[pIdx_pg]) > 0 &&
-	       conn[k] == 1)
-	    {
-	      cout<<"particle: "<<part<<"   node "<<k<<" : "<<node<<endl;
-	    }
-          }
-        }
-*/
-
-        Connectivity connectivity(conn);
-        pConnectivity_p_new[pIdx_p] = connectivity.flag();
-
-/*
-        int numConnected = 0;
-        for(int k=0;k<8;++k) {
-          if(conn[k] == 1) numConnected++;
-        }
-        if(numConnected<1) {
-          pIsolated_p_new[pIdx_p] = 1;
-        }
-*/
-      } //if isolated
+      Connectivity connectivity(conn);
+      pConnectivity_p_new[pIdx_p] = connectivity.flag();
     }
   
     new_dw->put(pConnectivity_p_new, lb->pConnectivityLabel);
-    new_dw->put(pIsolated_p_new, lb->pIsolatedLabel_preReloc);
-    new_dw->put(pContactNormal_p_new, lb->pContactNormalLabel);
   }
 }
 
@@ -332,51 +269,50 @@ void NormalFracture::computeFracture(
   delt_vartype delT;
   old_dw->get(delT, lb->delTLabel);
 
+  //cout<<"patch size: "<<patches->size()<<endl;
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
-
-    //const Vector dx = patch->dCell();
-    //double cellLength = dx.x();
 
     int matlindex = mpm_matl->getDWIndex();
     ParticleSubset* pset_pg = old_dw->getParticleSubset(matlindex, 
        patch, Ghost::AroundCells, 1, lb->pXLabel);
 
-    ParticleVariable<Point>  pX_pg;
-    ParticleVariable<Vector> pVelocity_pg;
-    ParticleVariable<double> pVolume_pg;
+    ParticleVariable<Point>   pX_pg;
+    ParticleVariable<double>  pVolume_pg;
+    ParticleVariable<Vector>  pTipNormal_pg;
+    ParticleVariable<Vector>  pExtensionDirection_pg;
+    ParticleVariable<Matrix3> pStress_pg;
+    ParticleVariable<double>  pToughness_pg;
+    ParticleVariable<double>  pStrainEnergy_pg;
+    ParticleVariable<double>  pMass_pg;
+    ParticleVariable<int>     pIsBroken_pg;
+    ParticleVariable<Vector>  pCrackNormal_pg;
+    ParticleVariable<Vector>  pDisplacement_pg;
 
     old_dw->get(pX_pg, lb->pXLabel, pset_pg);
-    new_dw->get(pVelocity_pg, lb->pVelocityLabel_afterUpdate, pset_pg);
     old_dw->get(pVolume_pg, lb->pVolumeLabel, pset_pg);
+    old_dw->get(pTipNormal_pg, lb->pTipNormalLabel, pset_pg);
+    old_dw->get(pExtensionDirection_pg, lb->pExtensionDirectionLabel, pset_pg);
+    new_dw->get(pStress_pg, lb->pStressLabel_afterStrainRate, pset_pg);
+    old_dw->get(pToughness_pg, lb->pToughnessLabel, pset_pg);
+    new_dw->get(pStrainEnergy_pg, lb->pStrainEnergyLabel, pset_pg);
+    old_dw->get(pMass_pg, lb->pMassLabel, pset_pg);
+    old_dw->get(pIsBroken_pg, lb->pIsBrokenLabel, pset_pg);
+    old_dw->get(pCrackNormal_pg, lb->pCrackNormalLabel, pset_pg);
+    old_dw->get(pDisplacement_pg, lb->pDisplacementLabel, pset_pg);
 
     //patchOnly data
     ParticleSubset* pset_p = old_dw->getParticleSubset(matlindex, patch);
   
     ParticleVariable<Point>   pX_p;
     ParticleVariable<Vector>  pRotationRate_p;
-    ParticleVariable<Matrix3> pStress_p;
-    ParticleVariable<int>     pIsBroken_p;
-    ParticleVariable<Vector>  pCrackNormal_p;
-    ParticleVariable<Vector>  pTipNormal_p;
-    ParticleVariable<Vector>  pExtensionDirection_p;
-    ParticleVariable<double>  pToughness_p;
     ParticleVariable<double>  pCrackSurfacePressure_p;
-    ParticleVariable<double>  pStrainEnergy_p;
-    ParticleVariable<double>  pMass_p;
+    ParticleVariable<Vector>  pVelocity_p;
 
     new_dw->get(pX_p, lb->pXXLabel, pset_p);
     new_dw->get(pRotationRate_p, lb->pRotationRateLabel, pset_p);
-    new_dw->get(pStress_p, lb->pStressLabel_afterStrainRate, pset_p);
-    old_dw->get(pIsBroken_p, lb->pIsBrokenLabel, pset_p);
-    old_dw->get(pCrackNormal_p, lb->pCrackNormalLabel, pset_p);
-    old_dw->get(pTipNormal_p, lb->pTipNormalLabel, pset_p);
-    old_dw->get(pExtensionDirection_p, lb->pExtensionDirectionLabel, pset_p);
-    old_dw->get(pToughness_p, lb->pToughnessLabel, pset_p);
-    old_dw->get(pCrackSurfacePressure_p, 
-      lb->pCrackSurfacePressureLabel, pset_p);
-    new_dw->get(pStrainEnergy_p, lb->pStrainEnergyLabel, pset_p);
-    old_dw->get(pMass_p, lb->pMassLabel, pset_p);
+    old_dw->get(pCrackSurfacePressure_p,lb->pCrackSurfacePressureLabel,pset_p);
+    new_dw->get(pVelocity_p, lb->pVelocityLabel_afterUpdate, pset_p);
     
     //particle index exchange from patch to patch+ghost
     IndexExchange indexExchange(pset_p,pX_p,pset_pg,pX_pg);
@@ -388,6 +324,7 @@ void NormalFracture::computeFracture(
     ParticleVariable<Matrix3> pStress_p_new;
     ParticleVariable<double> pCrackSurfacePressure_p_new;
     ParticleVariable<Vector> pVelocity_p_new;
+    ParticleVariable<double> pToughness_p_new;
   
     new_dw->allocate(pIsBroken_p_new, lb->pIsBrokenLabel, pset_p);
     new_dw->allocate(pCrackNormal_p_new, lb->pCrackNormalLabel, pset_p);
@@ -395,6 +332,7 @@ void NormalFracture::computeFracture(
     new_dw->allocate(pCrackSurfacePressure_p_new,
       lb->pCrackSurfacePressureLabel, pset_p);
     new_dw->allocate(pVelocity_p_new, lb->pVelocityLabel, pset_p);
+    new_dw->allocate(pToughness_p_new, lb->pToughnessLabel, pset_p);
 
     for(ParticleSubset::iterator iter = pset_p->begin();
           iter != pset_p->end(); iter++)
@@ -402,87 +340,157 @@ void NormalFracture::computeFracture(
       particleIndex pIdx_p = *iter;
       particleIndex pIdx_pg = indexExchange.getPatchAndGhostIndex(pIdx_p);
     
-      pIsBroken_p_new[pIdx_p] = pIsBroken_p[pIdx_p];
-      pStress_p_new[pIdx_p] = pStress_p[pIdx_p];
+      pIsBroken_p_new[pIdx_p] = pIsBroken_pg[pIdx_pg];
+      pStress_p_new[pIdx_p] = pStress_pg[pIdx_pg];
+      pToughness_p_new[pIdx_p] = pToughness_pg[pIdx_pg];
       
       //for explosive fracture
       pCrackSurfacePressure_p_new[pIdx_p] = pCrackSurfacePressure_p[pIdx_p];
       if(pCrackSurfacePressure_p[pIdx_p]>0) {
         pCrackSurfacePressure_p_new[pIdx_p] += 
 	  mpm_matl->getPressureRate() * delT;
-	//cout<<"pCrackSurfacePressure="<<pCrackSurfacePressure_p_new[pIdx_p]
-	//<<endl;
       }
 
-      pVelocity_p_new[pIdx_p] = pVelocity_pg[pIdx_pg];
+      pVelocity_p_new[pIdx_p] = pVelocity_p[pIdx_p];
 
-      pCrackNormal_p_new[pIdx_p] = pCrackNormal_p[pIdx_p];
+      pCrackNormal_p_new[pIdx_p] = pCrackNormal_pg[pIdx_pg];
       if( pIsBroken_p_new[pIdx_p] > 0 ) {
         pCrackNormal_p_new[pIdx_p] += Cross( pRotationRate_p[pIdx_p] * delT, 
 	                            pCrackNormal_p_new[pIdx_p] );
         pCrackNormal_p_new[pIdx_p].normalize();
-	continue;
-      }
-
-      if(pTipNormal_p[pIdx_p].length2()<0.5) continue;
-
-      const Vector& nx = pExtensionDirection_p[pIdx_p];
-      const Vector& ny = pTipNormal_p[pIdx_p];
-
-      static double Gmax = 0;
-
-      double R = pow( pVolume_pg[pIdx_pg], 0.333333 ) /2.;
-      Point pTip = pX_p[pIdx_p] + ny*R - nx*R;
-
-      ParticlesNeighbor particles;
-      lattice.getParticlesNeighbor(pTip, particles);
-
-      //double sigma = Dot(pStress_p[pIdx_p]*ny,ny);
-      //cout<<"stress: "<<pStress_p[pIdx_p]<<endl;
-      //cout<<"sigma: "<<sigma<<" position: "<<pX_p[pIdx_p]<<endl;
-      //cout<<"pTipNormal: "<<pTipNormal_p[pIdx_p]<<endl;
-      //cout<<"pExtensionDirection: "<<pExtensionDirection_p[pIdx_p]<<endl;
-
-      //cout<<"sigma*cellLength*2: "<<sigma*cellLength*2
-      //    <<" pToughness: "<<pToughness_p[pIdx_p]<<endl;
-      //if(sigma*cellLength*2 < pToughness_p[pIdx_p]) continue;
-
-      double G = particles.computeCrackClosureIntegral(
-        pTip,R,nx,ny,pStress_p[pIdx_p],pX_pg,pVelocity_pg,pVolume_pg,delT);
-
-      if(G>Gmax) {
-        Gmax=G;
-        cout<<"Max energy release rate: "<<Gmax<<endl;
-      }
-    
-      Vector& N = pCrackNormal_p_new[pIdx_p];
-      if( G > pToughness_p[pIdx_p] ) {
-        double sigmay = getMaxEigenvalue(pStress_p[pIdx_p], N);
-	if( sigmay <= 0 ) continue;
-	double rel = Dot(N,ny);
-	if( fabs(rel) < 0.7 ) continue;
-	if( rel < 0 ) N = -N;
-
-        //stress release
-        double I2 = 0;
-        for(int i=1;i<=3;++i)
-        for(int j=1;j<=3;++j) {
-	  I2 += pStress_p[pIdx_p](i,j) * pStress_p[pIdx_p](i,j);
-          pStress_p_new[pIdx_p](i,j) -= N[i] * sigmay * N[j];
-        }
-        double v = sqrt( 2. * pStrainEnergy_p[pIdx_p] * sigmay * sigmay / I2 /
-          pMass_p[pIdx_p] );
-	pVelocity_p_new[pIdx_p] -= N * v;
-
-        pIsBroken_p_new[pIdx_p] = 1;
-	pCrackSurfacePressure_p_new[pIdx_p] = mpm_matl->getExplosivePressure();
-      
-        cout<<"crack! "
-	    <<"normal="<<pCrackNormal_p_new[pIdx_p]<<endl;
       }
     }
     
-    new_dw->put(pToughness_p, lb->pToughnessLabel_preReloc);
+    //build surface couples
+    vector<SurfaceCouple> couples;
+    {
+      double relate_cosine = 0.5;
+      for(ParticleSubset::iterator iterA = pset_pg->begin();
+          iterA != pset_pg->end(); iterA++)
+      {
+        particleIndex pIdxA_pg = *iterA;
+        const Vector& tipNormalA = pTipNormal_pg[pIdxA_pg];
+        if(tipNormalA.length2()>0.5) {
+          particleIndex match = -1;
+          double distance = pow(pVolume_pg[pIdxA_pg],0.333)*2; //max crack gap
+	  Vector normal;
+          ParticlesNeighbor particles;
+          lattice.getParticlesNeighbor(pX_pg[pIdxA_pg], particles);
+          int particlesNumber = particles.size();
+          for(int j=0; j<particlesNumber; j++)
+          {
+            particleIndex pIdxB_pg = particles[j];
+            if(pIdxA_pg != pIdxB_pg) {
+	      if(pIsBroken_pg[pIdxB_pg]) {
+                const Vector& crackNormalB = pCrackNormal_pg[pIdxB_pg];
+                if( Dot(tipNormalA,crackNormalB) < -relate_cosine ) {
+                  Vector dis = pX_pg[pIdxB_pg] - pX_pg[pIdxA_pg];
+	          double AB = dis.length();
+	          double vAB = Dot(tipNormalA,dis);
+                  if(vAB/AB>relate_cosine) {
+	            if(AB<distance) {
+	              //cout<<"crack couple"<<endl;
+	              distance = AB;
+		      match = pIdxB_pg;
+		      normal = tipNormalA - crackNormalB;
+ 	              normal.normalize();
+	            }
+	          }
+	        }
+	      }
+	      else {
+	        const Vector& tipNormalB = pTipNormal_pg[pIdxB_pg];
+	        if(tipNormalB.length2() > 0.5) {
+                  if( Dot(tipNormalA,tipNormalB) < -relate_cosine ) {
+                    Vector dis = pX_pg[pIdxB_pg] - pX_pg[pIdxA_pg];
+	            double AB = dis.length();
+	            double vAB = Dot(tipNormalA,dis);
+                    if(vAB/AB>relate_cosine) {
+	              if(AB<distance) {
+	                //cout<<"tip couple"<<endl;
+	                distance = AB;
+		        match = pIdxB_pg;
+		        normal = tipNormalA - tipNormalB;
+ 	                normal.normalize();
+	              }
+	            }
+	          }
+	        }
+	      }
+	    }
+          }
+          if(match >= 0) {
+            bool newMatch = true;
+            int coupleNum = couples.size();
+            for(int i=0;i<coupleNum;++i) {
+	      if( couples[i].getIdxA() == match && 
+	          couples[i].getIdxB() == pIdxA_pg )
+	      {
+                newMatch = false;
+	        break;
+	      }
+            }
+            if(newMatch) {
+	      SurfaceCouple couple(pIdxA_pg,match,normal);
+	      couples.push_back(couple);
+	    }
+	  }
+        } //if A
+      }
+    }
+    
+    //cout<<"tip couples number: "<<couples.size()<<endl;
+    
+    //calculate energy release rate
+    
+    int coupleNum = couples.size();
+    for(int k=0;k<coupleNum;++k) {
+      const SurfaceCouple& couple = couples[k];
+      Vector nx = pExtensionDirection_pg[couple.getIdxA()] +
+                  pExtensionDirection_pg[couple.getIdxB()];
+      nx.normalize();
+
+      double toughness = ( pToughness_pg[couple.getIdxA()] +
+                           pToughness_pg[couple.getIdxB()] )/2;
+      double GI,GII,GIII;
+      Vector N;
+
+      if( couple.computeCrackClosureIntegralAndCrackNormalFromEnergyReleaseRate(
+        nx,lattice,pStress_pg,pDisplacement_pg,pVolume_pg,pIsBroken_pg,toughness,
+	GI,GII,GIII,N) )
+      {
+	int constraint = mpm_matl->getFractureModel()->getConstraint();
+	if( constraint > 0) N[constraint] = 0.;
+
+	//pIdxA
+	{
+          particleIndex pIdx_pg = couple.getIdxA();
+	  int pIdx_p = indexExchange.getPatchOnlyIndex(pIdx_pg);
+	  if( pIdx_p >= 0 && !pIsBroken_pg[pIdx_pg] ) {
+	    pCrackNormal_p_new[pIdx_p] = N;
+            pIsBroken_p_new[pIdx_p] = 1;
+            pCrackSurfacePressure_p_new[pIdx_p] = 
+	        mpm_matl->getExplosivePressure();
+            cout<<"crack! "<<"normal="<<pCrackNormal_p_new[pIdx_p]<<endl;
+	  }
+        }
+
+	//pIdxB
+	{
+	  particleIndex pIdx_pg = couple.getIdxB();
+  	  int pIdx_p = indexExchange.getPatchOnlyIndex(pIdx_pg);
+	  if( pIdx_p >= 0 && !pIsBroken_pg[pIdx_pg] ) {
+  	    pCrackNormal_p_new[pIdx_p] = -N;
+	    pIsBroken_p_new[pIdx_p] = 1;
+	    pCrackSurfacePressure_p_new[pIdx_p] = 
+	        mpm_matl->getExplosivePressure();
+            cout<<"crack! "<<"normal="<<pCrackNormal_p_new[pIdx_p]<<endl;
+	  }
+	}
+      }
+    }
+    
+    new_dw->put(pToughness_p_new, lb->pToughnessLabel_preReloc);
     new_dw->put(pIsBroken_p_new, lb->pIsBrokenLabel_preReloc);
     new_dw->put(pCrackNormal_p_new, lb->pCrackNormalLabel_preReloc);
     new_dw->put(pStress_p_new, lb->pStressLabel_afterFracture);
@@ -544,78 +552,172 @@ void NormalFracture::computeCrackExtension(
     new_dw->allocate(pExtensionDirection_p_new, 
       lb->pExtensionDirectionLabel, pset_p);
     
+    //build newly cracked surface couples
+    vector<SurfaceCouple> couples;
+    {
+      double relate_cosine = 0.7;
+      for(ParticleSubset::iterator iterA = pset_pg->begin();
+          iterA != pset_pg->end(); iterA++)
+      {
+        particleIndex pIdxA_pg = *iterA;
+
+        if(pIsBroken_pg[pIdxA_pg] && 
+	   pExtensionDirection_pg[pIdxA_pg].length2()>0.5)
+        //if(pIsBroken_pg[pIdxA_pg])
+	{
+          const Vector& crackNormalA = pCrackNormal_pg[pIdxA_pg];
+          particleIndex match = -1;
+          double distance = pow(pVolume_pg[pIdxA_pg],0.333)*2;
+	  Vector normal = crackNormalA;
+          ParticlesNeighbor particles;
+          lattice.getParticlesNeighbor(pX_pg[pIdxA_pg], particles);
+          int particlesNumber = particles.size();
+          for(int j=0; j<particlesNumber; j++)
+          {
+            particleIndex pIdxB_pg = particles[j];
+            if(pIdxA_pg != pIdxB_pg) {
+	      if(pIsBroken_pg[pIdxB_pg]) {
+                const Vector& crackNormalB = pCrackNormal_pg[pIdxB_pg];
+                if( Dot(crackNormalA,crackNormalB) < -relate_cosine ) {
+		  normal -= crackNormalB;
+	          normal.normalize();
+                  Vector dis = pX_pg[pIdxB_pg] - pX_pg[pIdxA_pg];
+	          double AB = dis.length();
+	          double vAB = Dot(normal,dis);
+                  if(vAB/AB>relate_cosine) {
+	            if(AB<distance) {
+	              distance = AB;
+		      match = pIdxB_pg;
+	            }
+	          }
+	        }
+	      }
+/*
+	      else {
+                Vector dis = pX_pg[pIdxB_pg] - pX_pg[pIdxA_pg];
+	        double AB = dis.length();
+	        double vAB = Dot(normal,dis);
+                if(vAB/AB>relate_cosine) {
+	          if(AB<distance) {
+	            distance = AB;
+	            match = pIdxB_pg;
+		  }
+	        }
+	      }
+*/
+	    }
+          }
+          if(match >= 0) {
+            bool newMatch = true;
+            int coupleNum = couples.size();
+            for(int i=0;i<coupleNum;++i) {
+	      if( couples[i].getIdxA() == match && 
+	          couples[i].getIdxB() == pIdxA_pg )
+	      {
+                newMatch = false;
+	        break;
+	      }
+            }
+            if(newMatch) {
+	      SurfaceCouple couple(pIdxA_pg,match,normal);
+	      couples.push_back(couple);
+	    }
+	  }
+        } //if A
+      }
+    }
+    int couplesNum = couples.size();
+    //cout<<"before extension crack couplesNum "<<couplesNum<<endl;
+
     for(ParticleSubset::iterator iter = pset_p->begin();
           iter != pset_p->end(); iter++)
     {
       particleIndex pIdx_p = *iter;
       particleIndex pIdx_pg = indexExchange.getPatchAndGhostIndex(pIdx_p);
-
     
-      if(pExtensionDirection_pg[pIdx_pg].length2()>0.5 && 
-         pIsBroken_pg[pIdx_pg])
+      pExtensionDirection_p_new[pIdx_p] = pExtensionDirection_pg[pIdx_pg];
+      pTipNormal_p_new[pIdx_p] = pTipNormal_p[pIdx_p];
+    }
+
+    //clean the newly crack tip area
+    for(int k=0;k<couplesNum;++k) {
+      Point tip(couples[k].crackTip(pX_pg));
+      ParticlesNeighbor particles;
+      lattice.getParticlesNeighbor(tip, particles);
+      double d = pow( (pVolume_pg[couples[k].getIdxA()]+
+                       pVolume_pg[couples[k].getIdxB()])/2, 0.333 ) * 3;
+      int particlesNumber = particles.size();
+      for(int j=0; j<particlesNumber; j++)
       {
-        pExtensionDirection_p_new[pIdx_p] = Vector(0.,0.,0.);
-        pTipNormal_p_new[pIdx_p] = Vector(0.,0.,0.);
-      }
-      else {
-        pExtensionDirection_p_new[pIdx_p] = pExtensionDirection_pg[pIdx_pg];
-        pTipNormal_p_new[pIdx_p] = pTipNormal_p[pIdx_p];
-	if(pExtensionDirection_p_new[pIdx_p].length2()>0.5) {
-          pExtensionDirection_p_new[pIdx_p] += 
-	    Cross( pRotationRate_p[pIdx_p] * delT, 
-	    pExtensionDirection_p_new[pIdx_p] );
-          pExtensionDirection_p_new[pIdx_p].normalize();
-          pTipNormal_p_new[pIdx_p] += 
-	    Cross( pRotationRate_p[pIdx_p] * delT, 
-	    pTipNormal_p_new[pIdx_p] );
-          pTipNormal_p_new[pIdx_p].normalize();
+        particleIndex pidx_pg = particles[j];
+        if( (pX_pg[pidx_pg]-tip).length() < d ) {
+	  particleIndex pIdx_p = indexExchange.getPatchOnlyIndex(pidx_pg);
+	  if(pIdx_p >= 0) {
+	    Vector dis = pX_pg[pidx_pg]-tip;
+	    if(Dot(pExtensionDirection_pg[couples[k].getIdxA()],dis)>0 ||
+	       Dot(pExtensionDirection_pg[couples[k].getIdxB()],dis)>0)
+	    {
+              pExtensionDirection_p_new[pIdx_p] = Vector(0.,0.,0.);
+              pTipNormal_p_new[pIdx_p] = Vector(0.,0.,0.);
+	    }
+	  }
 	}
       }
+    }
 
-      if(pIsBroken_pg[pIdx_pg]) continue;
-      if(pExtensionDirection_pg[pIdx_pg].length2()>0.5) continue;
+    for(ParticleSubset::iterator iter = pset_p->begin();
+          iter != pset_p->end(); iter++)
+    {
+      particleIndex pIdx_p = *iter;
+      particleIndex pIdx_pg = indexExchange.getPatchAndGhostIndex(pIdx_p);
       
-      ParticlesNeighbor particles;
-      lattice.getParticlesNeighbor(pX_p[pIdx_p], particles);
-      int particlesNumber = particles.size();
-    
-      int extensionIdx_pg = -1;
-      double vDistance = DBL_MAX;
-      for(int p=0; p<particlesNumber; p++) {
-        int idx_pg = particles[p];
-        if(pExtensionDirection_pg[idx_pg].length2()>0.5 && pIsBroken_pg[idx_pg])
+      if( pExtensionDirection_p_new[pIdx_p].length2()>0.5 && 
+         !pIsBroken_pg[pIdx_pg] )
+      {
+        pExtensionDirection_p_new[pIdx_p] += 
+	    Cross( pRotationRate_p[pIdx_p] * delT, 
+	    pExtensionDirection_p_new[pIdx_p] );
+        pExtensionDirection_p_new[pIdx_p].normalize();
+        pTipNormal_p_new[pIdx_p] += 
+	    Cross( pRotationRate_p[pIdx_p] * delT, 
+	    pTipNormal_p_new[pIdx_p] );
+        pTipNormal_p_new[pIdx_p].normalize();
+      }
+
+      if(!pIsBroken_pg[pIdx_pg])
+      {
+        double volume = pVolume_pg[pIdx_pg];
+        int extension = -1;
+        double distanceToCrack = pow(volume,0.333)*0.866*3;
+        for(int k=0;k<couplesNum;++k) {
+	  if( couples[k].extensible(pIdx_pg,
+	    pX_pg,pExtensionDirection_pg,pCrackNormal_pg,
+	    volume,distanceToCrack) ) extension = k;
+	}
+        
+        if( extension >= 0 )
         {
-	  double r = pow(pVolume_pg[idx_pg],0.333333)/2;
-	  Vector dis = pX_pg[pIdx_pg] - (pX_pg[idx_pg] + pCrackNormal_pg[idx_pg] * r);
-	  if(dis.length()>r*3) continue;
-	  if( Dot(dis,pExtensionDirection_pg[idx_pg]) > 0 ) {
-            double vDis = fabs( Dot(dis, pCrackNormal_pg[idx_pg]) );
-            if(vDis<vDistance) {
-              vDistance = vDis;
-	      extensionIdx_pg = idx_pg;
-	    }
+	  //cout<<"A extension" <<endl;
+	  const SurfaceCouple& couple = couples[extension];
+          Point pTip = couple.crackTip(pX_pg);
+          Vector& Ny = pTipNormal_p_new[pIdx_p];
+	  Vector& Nx = pExtensionDirection_p_new[pIdx_p];
+	  Ny = couple.getNormal();
+          Vector dis = pX_p[pIdx_p] - pTip;
+          if(Dot(dis,Ny) > 0) Ny = -Ny;
+          Nx = dis - Ny * Dot(dis,Ny);
+          Nx.normalize();
+
+          int constraint = mpm_matl->getFractureModel()->getConstraint();
+	  if( constraint > 0) {
+	    Nx[constraint] = 0.;
+	    Ny[constraint] = 0.;
 	  }
         }
       }
-    
-      if( extensionIdx_pg >= 0 && vDistance < pow(pVolume_pg[pIdx_pg],0.333333)*0.8 )
-      {
-        const Vector& ny = pCrackNormal_pg[extensionIdx_pg];
-        const Vector& nx = pExtensionDirection_pg[extensionIdx_pg];
-        double r = pow(pVolume_pg[extensionIdx_pg],0.333333)/2;
-        Point pTip = pX_pg[extensionIdx_pg] + ny * r - nx * r;
-      
-        Vector& Ny = pTipNormal_p_new[pIdx_p];
-	Vector& Nx = pExtensionDirection_p_new[pIdx_p];
-	
-	Ny = pCrackNormal_pg[extensionIdx_pg];
-
-        Vector dis = pX_p[pIdx_p] - pTip;
-        if(Dot(dis,ny) * Dot(Ny,ny) > 0) Ny = -Ny;
-        Nx = dis - Ny * Dot(dis,Ny);
-        Nx.normalize();
-      }
     }
+    
+    //cout<<"NumExtension "<<NumExtension<<endl;
 
     new_dw->put(pTipNormal_p_new, lb->pTipNormalLabel_preReloc);
     new_dw->put(pExtensionDirection_p_new, lb->pExtensionDirectionLabel_preReloc);
@@ -633,112 +735,27 @@ NormalFracture::~NormalFracture()
 
 void NormalFracture::BoundaryBandConnection(
    const vector<BoundaryBand>& pBoundaryBand_pg,
-   const Array3<BoundaryBand>& gBoundaryBand,
    particleIndex pIdx_pg,
    const Point& part,
-   const IntVector& nodeIdx,
    const Point& node,
    int& conn) const
 {
   int part_pBB = pBoundaryBand_pg[pIdx_pg].inside(pIdx_pg);
-  int part_gBB = gBoundaryBand[nodeIdx].inside(part);
   int node_pBB = pBoundaryBand_pg[pIdx_pg].inside(node);
-  int node_gBB = gBoundaryBand[nodeIdx].inside(node);
 	
-  if(pBoundaryBand_pg[pIdx_pg].numCracks() == 0) {
-    if(node_gBB) {
-      if(part_gBB) {
-        conn = 1;
-	return;
-      }
-      else {
-        conn = 0;
-        return;
-      }
-    }
-    else {
-      if(part_gBB) {
-        conn = 0;
-        return;
-      }
-      else {
-        conn = 1;
-        return;
-      }
-    }
-  }
-  else {
-    if(gBoundaryBand[nodeIdx].numCracks() == 0) {
-      if(part_pBB) {
-	if(node_pBB) {
-	  conn = 1;
-	  return;
-	}
-	else {
-	  conn = 0;
-	  return;
-	}
-      }
-      else {
-        if(node_pBB) {
-	  conn = 0;
-	  return;
-	}
-        else {
-	  conn = 1;
-	  return;
-	}
-      }
-    }
-    else {
-      if(part_pBB) {
-        if(node_pBB) {
-	  conn = 1;
-	  return;
-	}
-        else {
-	  conn = 0;
-	  return;
-	}
-      }
-      else {
-        if(node_pBB) {
-	  conn = 0;
-	  return;
-	}
-        else {
-          if(node_gBB) {
-            if(part_gBB) {
-	      conn = 1;
-	      return;
-	    }
-            else {
-	      conn = 0;
-	      return;
-	    }
-	  }
-          else {
-            if(part_gBB) {
-	      conn = 0;
-	      return;
-	    }
-            else {
-	      conn = 1;
-	      return;
-	    }
-          }
-        }
-      }
-    }
+  if(pBoundaryBand_pg[pIdx_pg].numCracks() != 0) {
+         if( part_pBB &&  node_pBB) conn = 1;
+    else if(!part_pBB && !node_pBB) conn = 1;
+    else if(!part_pBB &&  node_pBB) conn = 0;
+    else conn = 0;
   }
 }
-
 
 void NormalFracture::VisibilityConnection(
    const ParticlesNeighbor& particles,
    particleIndex pIdx_pg,
    const Point& node,
-   const ParticleVariable<int>& pIsBroken_pg,
+   const ParticleVariable<int>& pCrackEffective_pg,
    const ParticleVariable<Vector>& pCrackNormal_pg,
    const ParticleVariable<double>& pVolume_pg,
    const ParticleVariable<Point>& pX_pg,
@@ -746,7 +763,7 @@ void NormalFracture::VisibilityConnection(
 {
   const Point& part = pX_pg[pIdx_pg];
 
-  if(pIsBroken_pg[pIdx_pg]) {
+  if(pCrackEffective_pg[pIdx_pg]) {
     Vector dis = node - part;
     double vdis = Dot( pCrackNormal_pg[pIdx_pg], dis );
     if( vdis > 0 ) {
@@ -758,7 +775,7 @@ void NormalFracture::VisibilityConnection(
   int particlesNumber = particles.size();
   for(int i=0; i<particlesNumber; i++) {
     int pidx_pg = particles[i];
-    if(pIsBroken_pg[pidx_pg]) {
+    if(pCrackEffective_pg[pidx_pg]) {
       if(pidx_pg != pIdx_pg) {
         double r = connectionRadius(pVolume_pg[pidx_pg]);
 	double r2 = r*r;
@@ -789,9 +806,13 @@ void NormalFracture::ContactConnection(
     Vector dis = node-part;
     double vdis = Dot(pTouchNormal_pg[pIdx_pg], dis);
     if( vdis > 0 ) {
-      conn = 2;
-      pContactNormal = pTouchNormal_pg[pIdx_pg];
-      return;
+      if( (dis-pTouchNormal_pg[pIdx_pg]*vdis).length() < 
+          connectionRadius(pVolume_pg[pIdx_pg]) )
+      {
+        conn = 2;
+        pContactNormal = pTouchNormal_pg[pIdx_pg];
+        return;
+      }
     }
   }
 
@@ -817,7 +838,7 @@ void NormalFracture::ContactConnection(
 
 double NormalFracture::connectionRadius(double volume)
 {
-  return pow(volume,0.333333)/1.414;
+  return pow(volume,0.333333)*0.87;
 }
 
 
