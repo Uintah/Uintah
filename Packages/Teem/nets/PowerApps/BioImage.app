@@ -276,13 +276,16 @@ class BioImageApp {
 		set $mods(ViewImage)-sagittal-viewport0-axis 0
 		set $mods(ViewImage)-coronal-viewport0-axis 1
 
-		set $mods(ViewImage)-axial-viewport0-clut_ww 221
-		set $mods(ViewImage)-sagittal-viewport0-clut_ww 221
-		set $mods(ViewImage)-coronal-viewport0-clut_ww 221
+		set ww 221
+		set wl 137
 
-		set $mods(ViewImage)-axial-viewport0-clut_wl 137
-		set $mods(ViewImage)-sagittal-viewport0-clut_wl 137
-		set $mods(ViewImage)-coronal-viewport0-clut_wl 137
+		set $mods(ViewImage)-axial-viewport0-clut_ww $ww
+		set $mods(ViewImage)-sagittal-viewport0-clut_ww $ww
+		set $mods(ViewImage)-coronal-viewport0-clut_ww $ww
+
+		set $mods(ViewImage)-axial-viewport0-clut_wl $wl
+		set $mods(ViewImage)-sagittal-viewport0-clut_wl $wl
+		set $mods(ViewImage)-coronal-viewport0-clut_wl $wl
 
 # 		global $mods(ViewImage)-nrrd1-flip_y
 # 		set $mods(ViewImage)-nrrd1-flip_y 1
@@ -294,6 +297,22 @@ class BioImageApp {
                 $mods(ViewImage)-c rebind .standalone.viewers.topbot.pane1.childsite.lr.pane0.childsite.sagittal
                 $mods(ViewImage)-c rebind .standalone.viewers.topbot.pane1.childsite.lr.pane1.childsite.coronal
 
+		# rebind 2D windows to call the ViewImage callback and then BioImage's so we
+		# can catch the release
+		bind  .standalone.viewers.topbot.pane0.childsite.lr.pane1.childsite.axial <ButtonRelease> "$mods(ViewImage)-c release  %W %b %s %X %Y; $this update_ViewImage_button_release %b"
+		bind   .standalone.viewers.topbot.pane1.childsite.lr.pane0.childsite.sagittal <ButtonRelease> "$mods(ViewImage)-c release  %W %b %s %X %Y; $this update_ViewImage_button_release %b"
+		bind  .standalone.viewers.topbot.pane1.childsite.lr.pane1.childsite.coronal <ButtonRelease> "$mods(ViewImage)-c release  %W %b %s %X %Y; $this update_ViewImage_button_release %b"
+
+
+		set UnuQuantize [lindex [lindex $filters(0) $modules] 7] 
+		set UnuJhisto [lindex [lindex $filters(0) $modules] 21] 
+		global [set UnuQuantize]-maxf [set UnuQuantize]-minf
+		global [set UnuJhisto]-maxs [set UnuJhisto]-mins
+
+		set [set UnuQuantize]-maxf $ww
+		set [set UnuQuantize]-minf $wl
+		set [set UnuJhisto]-maxs "$ww nan"
+		set [set UnuJhisto]-mins "$wl nan"
 
                 set 2D_fixed 1
 	    } 
@@ -805,7 +824,6 @@ class BioImageApp {
 
 	pack $botr.modes.expand -side bottom -fill both
 
-
 	# embed viewer in top left
 	global mods
  	set eviewer [$mods(Viewer) ui_embedded]
@@ -839,7 +857,38 @@ class BioImageApp {
 	    -cursor based_arrow_up
     }
 
+    method update_ViewImage_button_release {b} {
+	if {$b == 1} {
+	    # Window/level just changed
+	    global mods
+	    global $mods(ViewImage)-axial-viewport0-clut_ww 
+	    global $mods(ViewImage)-axial-viewport0-clut_wl
 
+	    set ww [set $mods(ViewImage)-axial-viewport0-clut_ww]
+	    set wl [set $mods(ViewImage)-axial-viewport0-clut_wl]
+
+	    # Update the UnuQuantize min/max and the 
+	    # UnuJhisto axis 0 mins/maxs
+	    set UnuQuantize [lindex [lindex $filters(0) $modules] 7] 
+	    set UnuJhisto [lindex [lindex $filters(0) $modules] 21] 
+
+	    global [set UnuQuantize]-maxf [set UnuQuantize]-minf
+	    global [set UnuJhisto]-maxs [set UnuJhisto]-mins
+
+	    set [set UnuQuantize]-maxf $ww
+	    set [set UnuQuantize]-minf $wl
+
+	    set [set UnuJhisto]-maxs "$ww nan"
+	    set [set UnuJhisto]-mins "$wl nan"
+
+	    # execute modules if volume rendering enabled
+	    global show_vol_ren
+	    if {$show_vol_ren == 1} {
+		[set UnuQuantize]-c needexecute
+		[set UnuJhisto]-c needexecute
+	    }
+	}
+    }
 
     #############################
     ### init_Pframe
@@ -1106,9 +1155,9 @@ class BioImageApp {
 	    global $m8-nbits
 	    set $m8-nbits {8}
 	    global $m8-useinputmin
-	    set $m8-useinputmin 1
+	    set $m8-useinputmin 0
 	    global $m8-useinputmax
-	    set $m8-useinputmax 1
+	    set $m8-useinputmax 0
 
 	    global $m9-nbits
 	    set $m9-nbits {8}
