@@ -1023,13 +1023,16 @@ void matlabconverter::addedges(SCIRun::LockingHandle<MESH> meshH,matlabarray mla
 
    // Dynamically do the field contents. Luckily this is better templated and hence a couple
    // of templated functions do the trick
-   typename FIELD::fdata_type fdata = field->fdata();
-   if (translate.mladdfield(fdata,mlarray) == false)
-   {
-     // Could not translate field but continuing anyway
-     return(false);
-   }
 
+   if (field->basis_order() > -1)
+   {
+     typename FIELD::fdata_type fdata = field->fdata();
+     if (translate.mladdfield(fdata,mlarray) == false)
+     {
+       // Could not translate field but continuing anyway
+       return(false);
+     }
+   }
    // everything went ok, so report this to the function doing the actual implementation
    return(true);
  } 
