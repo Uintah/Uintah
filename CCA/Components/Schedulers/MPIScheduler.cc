@@ -335,7 +335,7 @@ MPIScheduler::execute(const ProcessorGroup * pg )
 	    }
 #ifdef USE_PACKING
 	    else {
-	      // otherwise, it will be deleted after it recieves and unpacks
+	      // otherwise, it will be deleted after it receives and unpacks
 	      // the data.
 	      delete p_mpibuff;
 	    }
@@ -344,7 +344,7 @@ MPIScheduler::execute(const ProcessorGroup * pg )
 
 	  double start = Time::currentSeconds();
 #ifdef USE_PACKING
-	  // This will allow some recieves to start unpacking while
+	  // This will allow some receives to start unpacking while
 	  // waiting for other receives.
 	  while (recvs.testsome(pg->getComm(), me))
 		 ;
