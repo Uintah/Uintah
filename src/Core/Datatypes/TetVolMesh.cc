@@ -1039,12 +1039,11 @@ TetVolMesh::get_weights(const Point &p,
     get_point(p1,ra[1]);
     get_point(p2,ra[2]);
     get_point(p3,ra[3]);
-    double vol0, vol1, vol2, vol3, vol_sum;
-    vol0 = (Cross(Cross(p1-p,p2-p),p3-p)).length();
-    vol1 = (Cross(Cross(p0-p,p2-p),p3-p)).length();
-    vol2 = (Cross(Cross(p0-p,p1-p),p3-p)).length();
-    vol3 = (Cross(Cross(p0-p,p1-p),p2-p)).length();
-    vol_sum = vol0+vol1+vol2+vol3;
+    const double vol0 = (Cross(Cross(p1-p,p2-p),p3-p)).length();
+    const double vol1 = (Cross(Cross(p0-p,p2-p),p3-p)).length();
+    const double vol2 = (Cross(Cross(p0-p,p1-p),p3-p)).length();
+    const double vol3 = (Cross(Cross(p0-p,p1-p),p2-p)).length();
+    const double vol_sum = vol0+vol1+vol2+vol3;
     l.push_back(ra[0]);
     l.push_back(ra[1]);
     l.push_back(ra[2]);
