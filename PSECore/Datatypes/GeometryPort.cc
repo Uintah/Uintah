@@ -66,7 +66,7 @@ void GeometryOPort::reset()
     if(nconnections() == 0)
 	return;
     if(!outbox){
-	turn_on(Resetting);
+	if (module->show_status) turn_on(Resetting);
 	Connection* connection=connections[0];
 	Module* mod=connection->iport->get_module();
 	outbox=&mod->mailbox;
@@ -76,7 +76,7 @@ void GeometryOPort::reset()
 	GeomReply reply=tmp.receive();
 	portid=reply.portid;
 	busy_bit=reply.busy_bit;
-	turn_off();
+	if (module->show_status) turn_off();
     }
     dirty=0;
 }
@@ -96,9 +96,9 @@ void GeometryOPort::finish()
     if(dirty){
 	GeometryComm* msg=scinew GeometryComm(MessageTypes::GeometryFlush, portid);
 	if(outbox){
-	    turn_on(Finishing);
+	    if (module->show_status) turn_on(Finishing);
 	    outbox->send(msg);
-	    turn_off();
+	    if (module->show_status) turn_off();
 	} else {
 	    save_msg(msg);
 	}
@@ -108,7 +108,7 @@ void GeometryOPort::finish()
 GeomID GeometryOPort::addObj(GeomObj* obj, const clString& name,
 			     CrowdMonitor* lock)
 {
-    turn_on();
+    if (module->show_status) turn_on();
     GeomID id=serial++;
     GeometryComm* msg=scinew GeometryComm(portid, id, obj, name, lock);
     if(outbox){
@@ -117,7 +117,7 @@ GeomID GeometryOPort::addObj(GeomObj* obj, const clString& name,
 	save_msg(msg);
     }
     dirty=1;
-    turn_off();
+    if (module->show_status) turn_off();
     return id;
 }
 
@@ -135,43 +135,43 @@ void GeometryOPort::forward(GeometryComm* msg)
 
 void GeometryOPort::delObj(GeomID id, int del)
 {
-    turn_on();
+    if (module->show_status) turn_on();
     GeometryComm* msg=scinew GeometryComm(portid, id, del);
     if(outbox)
 	outbox->send(msg);
     else
 	save_msg(msg);
     dirty=1;
-    turn_off();
+    if (module->show_status) turn_off();
 }
 
 void GeometryOPort::delAll()
 {
-    turn_on();
+    if (module->show_status) turn_on();
     GeometryComm* msg=scinew GeometryComm(MessageTypes::GeometryDelAll, portid);
     if(outbox)
 	outbox->send(msg);
     else
 	save_msg(msg);
     dirty=1;
-    turn_off();
+    if (module->show_status) turn_off();
 }
 
 void GeometryOPort::flushViews()
 {
-    turn_on();
+    if (module->show_status) turn_on();
     GeometryComm* msg=scinew GeometryComm(MessageTypes::GeometryFlushViews, portid, (Semaphore*)0);
     if(outbox)
 	outbox->send(msg);
     else
 	save_msg(msg);
     dirty=0;
-    turn_off();
+    if (module->show_status) turn_off();
 }
 
 void GeometryOPort::flushViewsAndWait()
 {
-    turn_on();
+    if (module->show_status) turn_on();
     Semaphore waiter("flushViewsAndWait wait semaphore", 0);
     GeometryComm* msg=scinew GeometryComm(MessageTypes::GeometryFlushViews, portid, &waiter);
     if(outbox)
@@ -180,7 +180,7 @@ void GeometryOPort::flushViewsAndWait()
 	save_msg(msg);
     waiter.down();
     dirty=0;
-    turn_off();
+    if (module->show_status) turn_off();
 }
 
 int GeometryOPort::busy()
@@ -203,7 +203,7 @@ void GeometryOPort::attach(Connection* c)
 {
     OPort::attach(c);
     reset();
-    turn_on();
+    if (module->show_status) turn_on();
     GeometryComm* p=save_msgs;
     while(p){
 	GeometryComm* next=p->next;
@@ -212,7 +212,7 @@ void GeometryOPort::attach(Connection* c)
 	p=next;
     }
     save_msgs=0;
-    turn_off();
+    if (module->show_status) turn_off();
 }
 
 int GeometryOPort::have_data()
@@ -329,6 +329,9 @@ GeometryData::Print()
 
 //
 // $Log$
+// Revision 1.7  1999/11/11 19:56:37  dmw
+// added show_status check for GeometryPort and SoundPort
+//
 // Revision 1.6  1999/10/07 02:07:21  sparker
 // use standard iostreams and complex type
 //
