@@ -164,9 +164,7 @@ itcl_class Uintah_Visualization_GridVisualizer {
     method ui {} {
 	set w .ui[modname]
 	if {[winfo exists $w]} {
-	    wm deiconify $w
-	    raise $w
-	    return;
+	    return
 	}
 	Uintah_Visualization_VariablePlotter::ui
 #	toplevel $w
@@ -176,7 +174,6 @@ itcl_class Uintah_Visualization_GridVisualizer {
 	#selection stuff
 	frame $w.grid
 	pack $w.grid -side top -fill x -padx 2 -pady 2
-
 	frame $w.grid.select
 	pack $w.grid.select -side left -fill x -padx 2 -pady 2
 	

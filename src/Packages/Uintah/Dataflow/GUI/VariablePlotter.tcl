@@ -77,12 +77,12 @@ itcl_class Uintah_Visualization_VariablePlotter {
 
 	}
     }
-    method Rebuild {} {
-	set w .ui[modname]
-
-	$this destroyFrames
-	$this makeFrames $w
-    }
+#     method Rebuild {} {
+# 	set w .ui[modname]
+#         puts "Rebuilding VariablePlotter..."
+# 	$this destroyFrames
+# 	$this makeFrames $w
+#     }
     method build {} {
 	set w .ui[modname]
 
@@ -374,6 +374,8 @@ itcl_class Uintah_Visualization_VariablePlotter {
     method addVar {w name mat_list type i} {
 	set fname "$w.var$i"
 	frame $fname
+        # If these padding numbers change, then the padding added to yincr in 
+        # buildVarFrame must change to be (padx + pady).
 	pack $fname -side top -fill x -padx 2 -pady 2
 
 	label $fname.label -text "$name"
@@ -416,7 +418,7 @@ itcl_class Uintah_Visualization_VariablePlotter {
     method buildVarFrame {w} {
 	if {[llength $var_list] > 0} {
 	    frame $w.vars -borderwidth 3 -relief ridge
-	    pack $w.vars -side top -fill x -padx 2 -pady 2
+	     pack $w.vars -fill x -padx 2 -pady 2
 	    
             # Create a scrolling pane within this frame
             # Width and height set to some default, no other options set yet.
@@ -447,7 +449,8 @@ itcl_class Uintah_Visualization_VariablePlotter {
 	    }
 
             # Use these 3 commands to force the window to draw so that queried
-            # data is accurate.  
+            # data is accurate.  I tried to use tkwait first, however that brought 
+            # scirun crashing down.
             wm withdraw $w
             ::update idletasks
             wm deiconify $w
@@ -455,7 +458,8 @@ itcl_class Uintah_Visualization_VariablePlotter {
             set width [winfo reqwidth $w.vars.canvas.frame]
             set height [winfo reqheight $w.vars.canvas.frame]
             set yincr [winfo reqheight $w.vars.canvas.frame.var0]
-            # Add 4 to the y increment to account for the padding
+            # Add 4 to the y increment to account for the padding in addVar, this number
+            # must change if padding in addVar changes
             set yincr [expr $yincr + 4]
 
             $w.vars.canvas config -yscrollincrement $yincr
@@ -509,7 +513,7 @@ itcl_class Uintah_Visualization_VariablePlotter {
 	radiobutton $w.o.select.cell -variable $this-var_orientation \
 		-command $n -text "Cell Centered" -value 1
 	pack $w.o.select.cell -side top -anchor w -pady 2 -ipadx 3
-	
+	puts "w is $w"
 	# node ID
 	make_entry $w.o.nodel "level index:" $this-index_l $pick
 	pack $w.o.nodel -side top -fill x -padx 2 -pady 2
@@ -527,8 +531,8 @@ itcl_class Uintah_Visualization_VariablePlotter {
 #	button $w.gtest -text "Graph test" -command "$this graph_test"
 #	pack $w.gtest -side bottom -expand yes -fill x
 
-	makeSciButtonPanel $w $w $this
-	moveToCursor $w "leave_up"
+	makeSciButtonPanel $w $w $this -force_bottom
+	moveToCursor $w 
     }
     method reset_var_val {} {
 	set var_val_list {}

@@ -157,9 +157,7 @@ itcl_class Uintah_Visualization_ParticleVis {
 	set w .ui[modname]
 
 	if {[winfo exists $w]} {
-	    wm deiconify $w
-	    raise $w
-	    return;
+	    return
 	}
 	set type ""
   
