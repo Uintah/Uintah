@@ -43,73 +43,65 @@ using std::endl;
 using std::string;
 
 #ifdef HAVE_AVR_SUPPORT
-#ifndef HAVE_GLEW
+#  ifndef HAVE_GLEW
+#    ifndef GL_ARB_vertex_program
+#       define GL_VERTEX_PROGRAM_ARB 0x8620
+#       define GL_PROGRAM_ERROR_POSITION_ARB 0x864B
+#       define GL_PROGRAM_FORMAT_ASCII_ARB 0x8875
 
-#ifndef GL_ARB_vertex_program
+        typedef void (GLAPIENTRY * PFNGLGENPROGRAMSARBPROC) (GLsizei n, GLuint* programs);
+        typedef void (GLAPIENTRY * PFNGLDELETEPROGRAMSARBPROC) (GLsizei n, const GLuint* programs);
+        typedef void (GLAPIENTRY * PFNGLBINDPROGRAMARBPROC) (GLenum target, GLuint program);
+        typedef void (GLAPIENTRY * PFNGLPROGRAMSTRINGARBPROC) (GLenum target, GLenum format, GLsizei len, const void* string);
+        typedef GLboolean (GLAPIENTRY * PFNGLISPROGRAMARBPROC) (GLuint program);
+        typedef void (GLAPIENTRY * PFNGLPROGRAMLOCALPARAMETER4FARBPROC) (GLenum target, GLuint index, GLfloat x, GLfloat y, GLfloat z, GLfloat w);
 
-#define GL_VERTEX_PROGRAM_ARB 0x8620
-#define GL_PROGRAM_ERROR_POSITION_ARB 0x864B
-#define GL_PROGRAM_FORMAT_ASCII_ARB 0x8875
+#    endif /* GL_ARB_vertex_program */
+#    ifndef GL_ARB_fragment_program
+#      define GL_FRAGMENT_PROGRAM_ARB 0x8804
+#    endif /* GL_ARB_fragment_program */
 
-typedef void (GLAPIENTRY * PFNGLGENPROGRAMSARBPROC) (GLsizei n, GLuint* programs);
-typedef void (GLAPIENTRY * PFNGLDELETEPROGRAMSARBPROC) (GLsizei n, const GLuint* programs);
-typedef void (GLAPIENTRY * PFNGLBINDPROGRAMARBPROC) (GLenum target, GLuint program);
-typedef void (GLAPIENTRY * PFNGLPROGRAMSTRINGARBPROC) (GLenum target, GLenum format, GLsizei len, const void* string);
-typedef GLboolean (GLAPIENTRY * PFNGLISPROGRAMARBPROC) (GLuint program);
-typedef void (GLAPIENTRY * PFNGLPROGRAMLOCALPARAMETER4FARBPROC) (GLenum target, GLuint index, GLfloat x, GLfloat y, GLfloat z, GLfloat w);
+#    if !defined(GLX_ARB_get_proc_address) || !defined(GLX_GLXEXT_PROTOTYPES)
+        extern "C" void ( * glXGetProcAddressARB (const GLubyte *procName)) (void);
+#    endif /* !defined(GLX_ARB_get_proc_address) || !defined(GLX_GLXEXT_PROTOTYPES) */
 
-#endif /* GL_ARB_vertex_program */
+#    ifdef __APPLE__
+#      include <mach-o/dyld.h>
+#      include <stdlib.h>
+#      include <string.h>
 
-#ifndef GL_ARB_fragment_program
+       static void *NSGLGetProcAddress (const GLubyte *name)
+       {
+         NSSymbol symbol;
+         char *symbolName;
+         /* prepend a '_' for the Unix C symbol mangling convention */
+         symbolName = (char*)malloc(strlen((const char *)name) + 2);
+         strcpy(symbolName+1, (const char *)name);
+         symbolName[0] = '_';
+         symbol = NULL;
+         if (NSIsSymbolNameDefined(symbolName))
+           symbol = NSLookupAndBindSymbol(symbolName);
+         free(symbolName);
+         return symbol ? NSAddressOfSymbol(symbol) : NULL;
+       }
+#      define getProcAddress(x) (NSGLGetProcAddress((const GLubyte*)x))
+#    else
+#      define getProcAddress(x) ((*glXGetProcAddressARB)((const GLubyte*)x))
+#    endif /* APPLE */
+#  endif /* HAVE_GLEW */
 
-#define GL_FRAGMENT_PROGRAM_ARB 0x8804
+  //static PFNGLGENPROGRAMSARBPROC SCIglGenProgramsARB = 0;
+  //static PFNGLDELETEPROGRAMSARBPROC SCIglDeleteProgramsARB = 0;
+  //static PFNGLBINDPROGRAMARBPROC SCIglBindProgramARB = 0;
+  //static PFNGLPROGRAMSTRINGARBPROC SCIglProgramStringARB = 0;
+  //static PFNGLISPROGRAMARBPROC SCIglIsProgramARB = 0;
+  //static PFNGLPROGRAMLOCALPARAMETER4FARBPROC SCIglProgramLocalParameter4fARB = 0;
 
-#endif /* GL_ARB_fragment_program */
 
-#if !defined(GLX_ARB_get_proc_address) || !defined(GLX_GLXEXT_PROTOTYPES)
-
-extern "C" void ( * glXGetProcAddressARB (const GLubyte *procName)) (void);
-
-#endif /* GLX_ARB_get_proc_address */
-
-#ifdef __APPLE__
-
-#include <mach-o/dyld.h>
-#include <stdlib.h>
-#include <string.h>
-
-static void *NSGLGetProcAddress (const GLubyte *name)
-{
-  NSSymbol symbol;
-  char *symbolName;
-  /* prepend a '_' for the Unix C symbol mangling convention */
-  symbolName = (char*)malloc(strlen((const char *)name) + 2);
-  strcpy(symbolName+1, (const char *)name);
-  symbolName[0] = '_';
-  symbol = NULL;
-  if (NSIsSymbolNameDefined(symbolName))
-    symbol = NSLookupAndBindSymbol(symbolName);
-  free(symbolName);
-  return symbol ? NSAddressOfSymbol(symbol) : NULL;
-}
-
-#define getProcAddress(x) (NSGLGetProcAddress((const GLubyte*)x))
-
-#else
-
-#define getProcAddress(x) ((*glXGetProcAddressARB)((const GLubyte*)x))
-
-#endif
-#endif
-
-//static PFNGLGENPROGRAMSARBPROC SCIglGenProgramsARB = 0;
-//static PFNGLDELETEPROGRAMSARBPROC SCIglDeleteProgramsARB = 0;
-//static PFNGLBINDPROGRAMARBPROC SCIglBindProgramARB = 0;
-//static PFNGLPROGRAMSTRINGARBPROC SCIglProgramStringARB = 0;
-//static PFNGLISPROGRAMARBPROC SCIglIsProgramARB = 0;
-//static PFNGLPROGRAMLOCALPARAMETER4FARBPROC SCIglProgramLocalParameter4fARB = 0;
-
-#endif /* HAVE_GLEW */
+#else  /* NO AVR SUPPORT... */
+#  define GL_FRAGMENT_PROGRAM_ARB -1
+#  define GL_VERTEX_PROGRAM_ARB -1
+#endif /* HAVE_AVR_SUPPORT */
 
 namespace SCIRun {
 
