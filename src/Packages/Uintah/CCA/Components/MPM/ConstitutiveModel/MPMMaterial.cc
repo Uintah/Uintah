@@ -160,6 +160,8 @@ void MPMMaterial::createParticles(particleIndex numParticles,
 #ifdef IMPLICIT
    ParticleVariable<Vector> pacceleration;
    new_dw->allocateAndPut(pacceleration, lb->pAccelerationLabel, subset);
+   ParticleVariable<double> pvolumeold;
+   new_dw->allocateAndPut(pvolumeold, lb->pVolumeOldLabel, subset);
    ParticleVariable<Matrix3> bElBar;
    new_dw->allocateTemporary(bElBar,  subset);
 #endif
@@ -191,6 +193,7 @@ void MPMMaterial::createParticles(particleIndex numParticles,
 				 ptemperature,psize,
 #ifdef IMPLICIT
 				 pacceleration,
+				 pvolumeold,
 				 bElBar,
 #endif
 				 pparticleID,cellNAPID,patch);
@@ -316,6 +319,7 @@ particleIndex MPMMaterial::createParticles(GeometryObject* obj,
 				   ParticleVariable<Vector>& psize,
 #ifdef IMPLICIT
 				   ParticleVariable<Vector>& pacceleration,
+				   ParticleVariable<double>& pvolumeold,
 				   ParticleVariable<Matrix3>& bElBar,
 #endif
 				   ParticleVariable<long64>& particleID,
@@ -360,6 +364,7 @@ particleIndex MPMMaterial::createParticles(GeometryObject* obj,
 		  velocity[start+count]=obj->getInitialVelocity();
 #ifdef IMPLICIT
 		  pacceleration[start+count]=Vector(0.,0.,0.);
+		  pvolumeold[start+count]=volume[start+count];
 		  bElBar[start+count]=Matrix3(0.);
 #endif
 		  temperature[start+count]=obj->getInitialTemperature();

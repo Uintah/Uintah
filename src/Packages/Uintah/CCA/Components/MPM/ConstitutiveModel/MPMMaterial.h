@@ -95,6 +95,7 @@ WARNING
 				       ParticleVariable<Vector>& size,
 #ifdef IMPLICIT
 				       ParticleVariable<Vector>& pacceleration,
+				       ParticleVariable<double>& pvolumeold,
 				       ParticleVariable<Matrix3>& bElBar,
 #endif
 				       ParticleVariable<long64>& particleID,
