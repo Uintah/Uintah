@@ -21,8 +21,11 @@ include $(SCIRUN_SCRIPTS)/smallso_prologue.mk
 
 SRCDIR   := Core/2d
 
-SRCS     += $(SRCDIR)/Point2d.cc \
+SRCS     += \
+	$(SRCDIR)/Point2d.cc \
+	$(SRCDIR)/Vector2d.cc \
 	$(SRCDIR)/DrawObj.cc \
+	$(SRCDIR)/DrawGui.cc \
 	$(SRCDIR)/BBox2d.cc \
 	$(SRCDIR)/Diagram.cc \
 	$(SRCDIR)/HairObj.cc \

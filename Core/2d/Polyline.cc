@@ -77,13 +77,22 @@ Polyline::~Polyline()
 double
 Polyline::at( double v )
 {
-  if ( v < 0 )
-    return data_[0];
-  if ( v >= data_.size()-1 )
-    return data_[data_.size()-1];
+  read_lock();
+  
+  double val;
 
-  int p = int(v);
-  return data_[p] + (data_[p+1] - data_[p])*(v-p);
+  if ( v < 0 ) 
+    val = data_[0];
+  else if ( v >= data_.size()-1 ) 
+    val = data_[data_.size()-1];
+  else {
+    int p = int(v);
+    val  = data_[p] + (data_[p+1] - data_[p])*(v-p);
+  }
+
+  read_unlock();
+
+  return val;
 }
 
 void
@@ -112,18 +121,16 @@ Polyline::add( double v )
     if ( v < min_ ) min_ = v;
     else if ( max_ < v ) max_ = v;
 
-  lock();
+  write_lock();
   data_.add(v);
-  unlock();
+  write_unlock();
 }
 
 void
 Polyline::get_bounds( BBox2d &bb )
 {
-  lock();
   bb.extend( Point2d(0, min_));
   bb.extend( Point2d(data_.size()-1, max_ ) );
-  unlock();
 }
 
 #define POLYLINE_VERSION 1

@@ -55,26 +55,21 @@ namespace SCIRun {
 void 
 Polyline::draw()
 {
-  lock();
-
   glColor3f( color_.r(), color_.g(), color_.b() );
+  
+  read_lock();
+
   glBegin(GL_LINE_STRIP);
   for (int i=0; i<data_.size(); i++) 
     glVertex2f( i, data_[i] );
   glEnd();
 
-  unlock();
-  GLenum errcode;
-  while((errcode=glGetError()) != GL_NO_ERROR)
-    cerr << "Polyline GL error: " 
-	 << (char*)gluErrorString(errcode) << endl;
+  read_unlock();
 }
   
 void 
 Diagram::draw()
 {
-  GLenum errcode;
-
   if ( poly_.size() == 0 ) return; 
 
   glMatrixMode(GL_PROJECTION);
@@ -146,19 +141,13 @@ Diagram::draw()
     }
     break;
   }
-  
-  //  GLenum errcode;
-  while((errcode=glGetError()) != GL_NO_ERROR)
-    cerr << "Diagram GL error: " 
-	 << (char*)gluErrorString(errcode) << endl;
 }
 
 void
 Hairline::draw()
 {
-  //  update_hair();
-  hair_->draw();
-  //update();
+  HairObj::draw();
+  update();
 }
 
 void
@@ -167,8 +156,7 @@ HairObj::draw()
   glMatrixMode(GL_PROJECTION);
   glPushMatrix();
 
-  BBox2d bbox;
-  glOrtho( from_, to_,  0, 1,  -1, 1 );
+  glOrtho( 0, 1,  0, 1,  -1, 1 );
 
   glColor3f(0,0,0);
   glBegin(GL_LINES);
@@ -229,7 +217,21 @@ Axes::draw()
 void
 BoxObj::draw()
 {
-  cerr << "BoxObj draw" << endl;
+  glMatrixMode(GL_PROJECTION);
+  glPushMatrix();
+
+  glOrtho( 0, 1,  0, 1,  -1, 1 );
+
+  glColor3f(0,0,0);
+
+  glBegin(GL_LINE_LOOP);
+    glVertex2f( screen_.min().x(), screen_.min().y());
+    glVertex2f( screen_.max().x(), screen_.min().y());
+    glVertex2f( screen_.max().x(), screen_.max().y());
+    glVertex2f( screen_.min().x(), screen_.max().y());
+  glEnd();
+
+  glPopMatrix();
 }
 
 void

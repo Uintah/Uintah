@@ -43,14 +43,11 @@ public:
   Widget( const string &name="" );
   virtual ~Widget();
 
-  virtual void set_bbox( const BBox2d &bbox) { bbox_ = bbox; }
-  virtual void reset_bbox() {}
-  virtual void get_bounds(BBox2d& bbox) { bbox.extend(bbox_); } 
-
-
   virtual void select( double x, double y, int  ) {}
   virtual void move( double x, double y, int  ) {}
   virtual void release( double x, double y, int ) {}
+
+  virtual void get_bounds(BBox2d&) {}
   
   // For OpenGL
 #ifdef SCI_OPENGL

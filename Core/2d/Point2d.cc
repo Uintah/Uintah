@@ -30,6 +30,7 @@
 
 #include <Core/Disclosure/TypeDescription.h>
 #include <Core/2d/Point2d.h>
+#include <Core/2d/Vector2d.h>
 #include <Core/Util/Assert.h>
 #include <Core/Persistent/Persistent.h>
 #include <Core/Math/MinMax.h>
@@ -43,6 +44,12 @@ using std::istream;
 using std::ostream;
 
 namespace SCIRun {
+
+
+Point2d::Point2d(const Vector2d& v)
+    : x_(v.x()), y_(v.y())
+{
+}
 
 
 Point2d Interpolate(const Point2d& p1, const Point2d& p2, double w)
@@ -68,6 +75,18 @@ int Point2d::operator==(const Point2d& p) const
 int Point2d::operator!=(const Point2d& p) const
 {
   return p.x_ != x_ || p.y_ != y_ ;
+}
+
+Point2d 
+Point2d::operator+(const Vector2d& v) const
+{
+  return Point2d( x_ + v.x_ ,  y_ + v.y_ ) ;
+}
+
+Point2d 
+Point2d::operator-(const Vector2d& v) const
+{
+  return Point2d( x_ - v.x_ ,  y_ - v.y_ ) ;
 }
 
 
