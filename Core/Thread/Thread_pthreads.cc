@@ -53,25 +53,35 @@ typedef void (*SIG_HANDLER_T)(int);
 #include "Barrier_default.cc"
 #include "CrowdMonitor_default.cc"
 
+
+using SCIRun::ConditionVariable;
+using SCIRun::Mutex;
+using SCIRun::RecursiveMutex;
+using SCIRun::Semaphore;
+using SCIRun::Thread;
+using SCIRun::ThreadError;
+using SCIRun::ThreadGroup;
+
 bool exiting=false;
 
 #define MAXBSTACK 10
 #define MAXTHREADS 4000
 
+
 namespace SCIRun {
-      struct Thread_private {
-	 Thread* thread;
-	 pthread_t threadid;
-	 Thread::ThreadState state;
-	 int bstacksize;
-	 const char* blockstack[MAXBSTACK];
-	 sem_t done;
-	 sem_t delete_ready;
-	 sem_t block_sema;
-      };
-   }
+struct Thread_private {
+  Thread* thread;
+  pthread_t threadid;
+  Thread::ThreadState state;
+  int bstacksize;
+  const char* blockstack[MAXBSTACK];
+  sem_t done;
+  sem_t delete_ready;
+  sem_t block_sema;
+};
 }
 
+using SCIRun::Thread_private;
 
 static Thread_private* active[MAXTHREADS];
 static int numActive;
@@ -562,10 +572,9 @@ Thread::migrate(int proc)
 }
 
 namespace SCIRun {
-	struct Mutex_private {
-	    pthread_mutex_t mutex;
-	};
-    }
+struct Mutex_private {
+  pthread_mutex_t mutex;
+};
 }
 
 Mutex::Mutex(const char* name)
@@ -641,10 +650,9 @@ Mutex::tryLock()
 }
 
 namespace SCIRun {
-	struct RecursiveMutex_private {
-	    pthread_mutex_t mutex;
-	};
-    }
+struct RecursiveMutex_private {
+  pthread_mutex_t mutex;
+};
 }
 
 RecursiveMutex::RecursiveMutex(const char* name)
@@ -697,10 +705,9 @@ RecursiveMutex::lock()
 }
 
 namespace SCIRun {
-	struct Semaphore_private {
-	    sem_t sem;
-	};
-    }
+struct Semaphore_private {
+  sem_t sem;
+};
 }
 
 Semaphore::Semaphore(const char* name, int value)
@@ -765,10 +772,9 @@ Semaphore::tryDown()
 }
 
 namespace SCIRun {
-	struct ConditionVariable_private {
-	    pthread_cond_t cond;
-	};
-    }
+struct ConditionVariable_private {
+  pthread_cond_t cond;
+};
 }
 
 ConditionVariable::ConditionVariable(const char* name)
@@ -834,11 +840,14 @@ ConditionVariable::conditionSignal()
 {
     if(pthread_cond_signal(&d_priv->cond) != 0)
 	throw ThreadError(std::string("pthread_cond_signal: ")
+
 			  +strerror(errno));
-} // End namespace SCIRun
+}
+
 void
 ConditionVariable::conditionBroadcast()
 {
     if(pthread_cond_broadcast(&d_priv->cond) != 0)
 	throw ThreadError(std::string("pthread_cond_broadcast: ")
 			  +strerror(errno));
+}

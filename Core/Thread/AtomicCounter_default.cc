@@ -14,15 +14,16 @@
 #include <Core/Thread/AtomicCounter.h>
 
 namespace SCIRun {
-	struct AtomicCounter_private {
-	    Mutex lock;
-	    int value;
-	    AtomicCounter_private();
-	    ~AtomicCounter_private();
-	};
-    }
+struct AtomicCounter_private {
+  Mutex lock;
+  int value;
+  AtomicCounter_private();
+  ~AtomicCounter_private();
+};
 }
 
+using SCIRun::AtomicCounter_private;
+using SCIRun::AtomicCounter;
 
 AtomicCounter_private::AtomicCounter_private()
     : lock("AtomicCounter lock")
@@ -98,7 +99,7 @@ AtomicCounter::operator--(int)
     d_priv->lock.unlock();
     Thread::couldBlockDone(oldstate);
     return ret;
-} // End namespace SCIRun
+} 
 
 void
 AtomicCounter::set(int v)
@@ -108,4 +109,4 @@ AtomicCounter::set(int v)
     d_priv->value=v;
     d_priv->lock.unlock();
     Thread::couldBlockDone(oldstate);
-
+}
