@@ -11,9 +11,10 @@
 
 using namespace rtrt;
 
-PhongMaterial::PhongMaterial(const Color& Rd, double opacity, double Rphong, double phong_exponent)
+PhongMaterial::PhongMaterial(const Color& Rd, double opacity, double Rphong, double phong_exponent, bool refl)
     : Rd(Rd), opacity(opacity), Rphong(Rphong), phong_exponent(phong_exponent)
 {
+  reflects = refl;
 }
 
 PhongMaterial::~PhongMaterial()
@@ -71,7 +72,21 @@ void PhongMaterial::shade(Color& result, const Ray& ray,
     
     Color surfcolor=Rd * opac * (difflight + ambient_hack(cx->scene, hitpos, normal)) + Rphong*speclight;
 
-    if (depth < cx->scene->maxdepth && atten > 0.02 && transp > 0.02){
+    // fire the reflection ray
+    if (reflects && depth < cx->scene->maxdepth && 
+	atten > 0.02 && (1-transp) > 0.02){
+      Vector refl_dir = reflection( ray.direction(), normal );
+      Ray rray(hitpos, refl_dir);
+      Color rcolor;
+      cx->worker->traceRay(rcolor, rray, depth+1,  atten,
+			   accumcolor+surfcolor*atten, cx);
+      surfcolor += rcolor * (1.-transp);
+      cx->stats->ds[depth].nrefl++;
+    }
+
+    // fire the transparency ray
+    if (depth < cx->scene->maxdepth && 
+	atten > 0.02 && transp > 0.02){
             Ray tray(hitpos, ray.direction());
             Color tcolor;
             cx->worker->traceRay(tcolor, tray, depth+1,  atten,
@@ -79,7 +94,6 @@ void PhongMaterial::shade(Color& result, const Ray& ray,
             surfcolor+= tcolor * transp;
             cx->stats->ds[depth].nrefl++;
     }
-    
 
     result=surfcolor;
 }
