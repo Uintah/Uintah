@@ -16,35 +16,30 @@
 */
 
 
+#include <sci_config.h>
 #include "Spec.h"
 #include "SymbolTable.h"
-#ifdef __sgi
-extern "C" {
+#ifdef HAVE_SYS_UUID_H
+extern "C" { // SGI uuid.h doesn't have this, so we need extern C here
 #include <sys/uuid.h>
 }
+#define UUID_CREATE
 #else
-extern "C" {
+#ifdef HAVE_UUID_UUID_H
 #include <uuid/uuid.h>
-}
+#define UUID_GENERATE
+#else
+#error We need either sys/uuid.h or uuid/uuid.h
 #endif
+#endif
+
 #include <algorithm>
 #include <iostream>
 #include <map>
 #include <sstream>
 
 #include <stdio.h>
-/*
-using std::cerr;
-using std::for_each;
-using std::map;
-using std::replace;
-using std::string;
-using std::vector;
-*/
-
 using namespace std;
-
-
 extern bool doing_cia;
 
 static string handle_class = "\
@@ -373,7 +368,7 @@ void CI::emit_typeinfo(EmitState& e)
 
   char* uuid_str;
   uuid_t uuid;
-#ifdef __sgi
+#ifdef UUID_CREATE
   uint_t status;
   uuid_create(&uuid, &status);
   if(status != uuid_s_ok){
@@ -386,14 +381,11 @@ void CI::emit_typeinfo(EmitState& e)
     cerr << "Error creating uuid string!\n";
     exit(1);
   }
-#else
+#endif
+#ifdef UUID_GENERATE
   uuid_str = (char*)malloc(64*sizeof(char));
-#if 1
   uuid_generate( uuid );
   uuid_unparse(uuid, uuid_str);
-#else
-  sprintf( uuid_str, "dav_was_here" );
-#endif
 #endif
   e.out << "const ::PIDL::TypeInfo* " << fn << "::_getTypeInfo()\n";
   e.out << "{\n";
