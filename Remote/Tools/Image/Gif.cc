@@ -7,6 +7,7 @@
 #include <Remote/Tools/Image/Quant.h>
 
 #include <iostream>
+#include <string.h>
 #include <strings.h>
 using namespace std;
 
