@@ -565,6 +565,116 @@ OnDemandDataWarehouse::put(const CCVariableBase& var, const VarLabel* label,
    // Put it in the database
    d_ccDB.put(label, matlIndex, patch, var, true);
 }
+void
+OnDemandDataWarehouse::allocate(FCVariableBase& var,
+				const VarLabel* label,
+				int matlIndex,
+				const Patch* patch)
+{
+   // Error checking
+   if(d_fcDB.exists(label, matlIndex, patch))
+      throw InternalError("FC variable already exists: "+label->getName());
+
+   // Allocate the variable
+   // Probably should be getFaceLowIndex() . . .
+   var.allocate(patch->getCellLowIndex(), patch->getCellHighIndex());
+}
+
+void
+OnDemandDataWarehouse::get(FCVariableBase& var, const VarLabel* label,
+			   int matlIndex,
+			   const Patch* patch, Ghost::GhostType gtype,
+			   int numGhostCells)
+{
+#if 0
+   if(gtype == Ghost::None) {
+      if(numGhostCells != 0)
+	 throw InternalError("Ghost cells specified with task type none!\n");
+#endif
+      if(!d_fcDB.exists(label, matlIndex, patch))
+	 throw UnknownVariable(label->getName());
+      d_fcDB.get(label, matlIndex, patch, var);
+#if 0
+   } else {
+      int l,h;
+      IntVector gc(numGhostCells, numGhostCells, numGhostCells);
+      IntVector lowIndex;
+      IntVector highIndex;
+      switch(gtype){
+      case Ghost::AroundNodes:
+	 if(numGhostCells == 0)
+	    throw InternalError("No ghost cells specified with Task::AroundNodes");
+	 // All 27 neighbors
+	 l=-1;
+	 h=1;
+	 lowIndex = patch->getCellLowIndex()-gc;
+	 highIndex = patch->getCellHighIndex()+gc;
+	 cerr << "Cells around nodes is probably not functional!\n";
+	 break;
+      case Ghost::AroundCells:
+	 if(numGhostCells == 0)
+	    throw InternalError("No ghost cells specified with Task::AroundCells");
+	 // all 6 faces
+	 l=-1;
+	 h=1;
+	 lowIndex = patch->getCellLowIndex()-gc;
+         highIndex = patch->getCellHighIndex()+gc;
+	 break;
+      default:
+	 throw InternalError("Illegal ghost type");
+      }
+      var.allocate(lowIndex, highIndex);
+      long totalCells=0;
+      // change it to traverse only thru patches with adjoining faces
+      for(int ix=l;ix<=h;ix++){
+	 for(int iy=l;iy<=h;iy++){
+	    for(int iz=l;iz<=h;iz++){
+	       const Patch* neighbor = patch->getNeighbor(IntVector(ix,iy,iz));
+	       if(neighbor){
+		  if(!d_fcDB.exists(label, matlIndex, neighbor))
+		     throw InternalError("Position variable does not exist: "+ 
+					 label->getName());
+		  FCVariableBase* srcvar = 
+		    d_fcDB.get(label, matlIndex, neighbor);
+
+		  using SCICore::Geometry::Max;
+		  using SCICore::Geometry::Min;
+
+		  IntVector low = Max(lowIndex, neighbor->getCellLowIndex());
+		  IntVector high= Min(highIndex, neighbor->getCellHighIndex());
+
+		  if( ( high.x() < low.x() ) || ( high.y() < low.y() ) 
+		      || ( high.z() < low.z() ) )
+		     throw InternalError("Patch doesn't overlap?");
+
+		  var.copyPatch(srcvar, low, high);
+		  IntVector dcells = high-low;
+		  totalCells+=dcells.x()*dcells.y()*dcells.z();
+	       }
+	    }
+	 }
+      }
+      IntVector dn = highIndex-lowIndex;
+      long wantcells = dn.x()*dn.y()*dn.z();
+      ASSERTEQ(wantcells, totalCells);
+   }
+#endif
+}
+
+void
+OnDemandDataWarehouse::put(const FCVariableBase& var, const VarLabel* label,
+			   int matlIndex, const Patch* patch )
+{
+   ASSERT(!d_finalized);
+
+   // Error checking
+   if(d_fcDB.exists(label, matlIndex, patch))
+      throw InternalError("FC variable already exists: "+label->getName());
+
+   // Put it in the database
+   d_fcDB.put(label, matlIndex, patch, var, true);
+}
+
 
 int
 OnDemandDataWarehouse::findMpiNode( const VarLabel * label,
@@ -684,6 +794,8 @@ OnDemandDataWarehouse::exists(const VarLabel* label, const Patch* patch) const
 	 return true;
       if(d_ccDB.exists(label, patch))
 	 return true;
+      if(d_fcDB.exists(label, patch))
+	 return true;
       if(d_particleDB.exists(label, patch))
 	 return true;
    }
@@ -709,6 +821,11 @@ void OnDemandDataWarehouse::emit(OutputContext& oc, const VarLabel* label,
      var->emit(oc);
      return;
    }
+   if(d_fcDB.exists(label, matlIndex, patch)) {
+     FCVariableBase* var = d_fcDB.get(label, matlIndex, patch);
+     var->emit(oc);
+     return;
+   }
    throw UnknownVariable(label->getName());
 }
 
@@ -731,6 +848,9 @@ OnDemandDataWarehouse::ReductionRecord::ReductionRecord(ReductionVariableBase* v
 
 //
 // $Log$
+// Revision 1.32  2000/06/14 23:39:26  jas
+// Added FCVariables.
+//
 // Revision 1.31  2000/06/14 00:31:06  jas
 // Added cc_DB to the emit method.
 //
