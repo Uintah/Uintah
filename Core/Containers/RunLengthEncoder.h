@@ -173,6 +173,9 @@ private:
   };
 
 public:
+  class iterator;        // For C++ (AIX xlC only?) nested classes are 
+  friend class iterator; // private, thus we need to make them a friend.
+
   class iterator
   {
   private:
