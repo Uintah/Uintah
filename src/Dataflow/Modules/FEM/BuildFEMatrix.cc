@@ -12,7 +12,6 @@
  *  Copyright (C) 1994 SCI Group
  */
 
-#include <SCICore/Util/NotFinished.h>
 #include <PSECore/Dataflow/Module.h>
 #include <PSECore/CommonDatatypes/ColumnMatrixPort.h>
 #include <PSECore/CommonDatatypes/MatrixPort.h>
@@ -383,6 +382,10 @@ void BuildFEMatrix::add_lcl_gbl(Matrix& gbl_a, double lcl_a[4][4],
 
 //
 // $Log$
+// Revision 1.4  1999/08/19 23:17:41  sparker
+// Removed a bunch of #include <SCICore/Util/NotFinished.h> statements
+// from files that did not need them.
+//
 // Revision 1.3  1999/08/18 20:19:36  sparker
 // Eliminated copy constructor and clone in all modules
 // Added a private copy ctor and a private clone method to Module so

@@ -16,7 +16,6 @@
 #include <PSECommon/Modules/Salmon/Renderer.h>
 #include <PSECommon/Modules/Salmon/Roe.h>
 #include <SCICore/Containers/HashTable.h>
-#include <SCICore/Util/NotFinished.h>
 #include <PSECore/Comm/MessageTypes.h>
 #include <PSECore/Dataflow/Connection.h>
 #include <PSECore/Dataflow/ModuleHelper.h>
@@ -486,6 +485,10 @@ void Salmon::emit_vars(ostream& out)
 
 //
 // $Log$
+// Revision 1.5  1999/08/19 23:17:53  sparker
+// Removed a bunch of #include <SCICore/Util/NotFinished.h> statements
+// from files that did not need them.
+//
 // Revision 1.4  1999/08/18 20:19:53  sparker
 // Eliminated copy constructor and clone in all modules
 // Added a private copy ctor and a private clone method to Module so

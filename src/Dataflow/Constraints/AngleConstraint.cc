@@ -16,6 +16,7 @@
 #include <SCICore/Geometry/Plane.h>
 #include <SCICore/Geometry/Vector.h>
 #include <SCICore/Util/Debug.h>
+#include <SCICore/Util/NotFinished.h>
 
 namespace PSECore {
 namespace Constraints {
@@ -146,6 +147,10 @@ AngleConstraint::Satisfy( const Index index, const Scheme scheme, const Real Eps
 
 //
 // $Log$
+// Revision 1.3  1999/08/19 23:18:03  sparker
+// Removed a bunch of #include <SCICore/Util/NotFinished.h> statements
+// from files that did not need them.
+//
 // Revision 1.2  1999/08/17 06:38:15  sparker
 // Merged in modifications from PSECore to make this the new "blessed"
 // version of SCIRun/Uintah.

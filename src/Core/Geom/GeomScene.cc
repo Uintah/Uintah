@@ -14,7 +14,6 @@
 
 #include <SCICore/Geom/GeomScene.h>
 
-#include <SCICore/Util/NotFinished.h>
 #include <SCICore/Containers/String.h>
 #include <SCICore/Geom/Lighting.h>
 #include <SCICore/Geom/GeomObj.h>
@@ -355,6 +354,10 @@ void GeomSave::rib_orient(ostream& out, const Point& center, const Vector& up,
 
 //
 // $Log$
+// Revision 1.4  1999/08/19 23:18:06  sparker
+// Removed a bunch of #include <SCICore/Util/NotFinished.h> statements
+// from files that did not need them.
+//
 // Revision 1.3  1999/08/17 23:50:25  sparker
 // Removed all traces of the old Raytracer and X11 renderers.
 // Also removed a .o and .d file

@@ -15,7 +15,6 @@
 #define SCI_project_LevoyVol_h 1
 
 #include <SCICore/Containers/Array2.h>
-#include <SCICore/Util/NotFinished.h>
 #include <SCICore/Containers/String.h>
 
 #include <SCICore/CoreDatatypes/ScalarFieldRG.h>
