@@ -74,7 +74,6 @@ SecondOrderAdvector::inFluxOutFluxVolume( const SFCXVariable<double>& uvel_FC,
 
   double vol = dx.x()*dx.y()*dx.z();
   double delY_top, delY_bottom, delX_right, delX_left, delZ_front, delZ_back;
-  double delX_tmp, delY_tmp, delZ_tmp;
   double delX = dx.x(), delY = dx.y(), delZ = dx.z();
   double r_x, r_y, r_z;
 
@@ -98,22 +97,18 @@ SecondOrderAdvector::inFluxOutFluxVolume( const SFCXVariable<double>& uvel_FC,
     delZ_front  = std::max(0.0, (wvel_FC[c+IntVector(0,0,1)] * delT));
     delZ_back   = std::max(0.0,-(wvel_FC[c                 ] * delT));
     
-    delX_tmp    = delX - delX_right - delX_left;
-    delY_tmp    = delY - delY_top   - delY_bottom;
-    delZ_tmp    = delZ - delZ_front - delZ_back;
-    
     //__________________________________
     //   SLAB outfluxes
-    double delX_Z_tmp = delX_tmp * delZ_tmp;
-    double delX_Y_tmp = delX_tmp * delY_tmp;
-    double delY_Z_tmp = delY_tmp * delZ_tmp;
+    double delX_Z = delX * delZ;
+    double delX_Y = delX * delY;
+    double delY_Z = delY * delZ;
     fflux& ofs = d_OFS[c];
-    ofs.d_fflux[TOP]   = delY_top   * delX_Z_tmp;
-    ofs.d_fflux[BOTTOM]= delY_bottom* delX_Z_tmp;
-    ofs.d_fflux[RIGHT] = delX_right * delY_Z_tmp;
-    ofs.d_fflux[LEFT]  = delX_left  * delY_Z_tmp;
-    ofs.d_fflux[FRONT] = delZ_front * delX_Y_tmp;
-    ofs.d_fflux[BACK]  = delZ_back  * delX_Y_tmp; 
+    ofs.d_fflux[TOP]   = delY_top   * delX_Z;
+    ofs.d_fflux[BOTTOM]= delY_bottom* delX_Z;
+    ofs.d_fflux[RIGHT] = delX_right * delY_Z;
+    ofs.d_fflux[LEFT]  = delX_left  * delY_Z;
+    ofs.d_fflux[FRONT] = delZ_front * delX_Y;
+    ofs.d_fflux[BACK]  = delZ_back  * delX_Y; 
     
     //__________________________________
     //  Bullet proofing
