@@ -92,13 +92,13 @@ SmagorinskyModel::sched_computeTurbSubmodel(SchedulerP& sched, const PatchSet* p
   tsk->requires(Task::NewDW, d_lab->d_viscosityINLabel, Ghost::None,
 		zeroGhostCells);
   tsk->requires(Task::NewDW, d_lab->d_uVelocitySPLabel, 
-		Ghost::AroundCells,
+		Ghost::AroundFaces,
 		numGhostCells);
   tsk->requires(Task::NewDW, d_lab->d_vVelocitySPLabel,
-		Ghost::AroundCells,
+		Ghost::AroundFaces,
 		numGhostCells);
   tsk->requires(Task::NewDW, d_lab->d_wVelocitySPLabel,
-		Ghost::AroundCells,
+		Ghost::AroundFaces,
 		numGhostCells);
 
       // Computes
@@ -129,13 +129,13 @@ SmagorinskyModel::sched_reComputeTurbSubmodel(SchedulerP& sched,
 		Ghost::None,
 		zeroGhostCells);
   tsk->requires(Task::NewDW, d_lab->d_uVelocitySPBCLabel,
-		Ghost::AroundCells,
+		Ghost::AroundFaces,
 		numGhostCells);
   tsk->requires(Task::NewDW, d_lab->d_vVelocitySPBCLabel, 
-		Ghost::AroundCells,
+		Ghost::AroundFaces,
 		numGhostCells);
   tsk->requires(Task::NewDW, d_lab->d_wVelocitySPBCLabel, 
-		Ghost::AroundCells,
+		Ghost::AroundFaces,
 		numGhostCells);
   // for multimaterial
   if (d_MAlab)
@@ -177,11 +177,11 @@ SmagorinskyModel::computeTurbSubmodel(const ProcessorGroup*,
     new_dw->copyOut(viscosity, d_lab->d_viscosityINLabel, matlIndex, patch,
 		    Ghost::None, zeroGhostCells);
     new_dw->get(uVelocity, d_lab->d_uVelocitySPLabel, matlIndex, patch,
-		Ghost::AroundCells, numGhostCells);
+		Ghost::AroundFaces, numGhostCells);
     new_dw->get(vVelocity, d_lab->d_vVelocitySPLabel, matlIndex, patch, 
-		Ghost::AroundCells, numGhostCells);
+		Ghost::AroundFaces, numGhostCells);
     new_dw->get(wVelocity,d_lab->d_wVelocitySPLabel, matlIndex, patch, 
-		Ghost::AroundCells, numGhostCells);
+		Ghost::AroundFaces, numGhostCells);
     new_dw->get(density, d_lab->d_densityCPLabel, matlIndex, patch,
 		Ghost::None, zeroGhostCells);
 
@@ -280,11 +280,11 @@ SmagorinskyModel::reComputeTurbSubmodel(const ProcessorGroup*,
 		    Ghost::None, zeroGhostCells);
     
     new_dw->get(uVelocity,d_lab->d_uVelocitySPBCLabel, matlIndex, patch, 
-		Ghost::AroundCells, numGhostCells);
+		Ghost::AroundFaces, numGhostCells);
     new_dw->get(vVelocity,d_lab->d_vVelocitySPBCLabel, matlIndex, patch,
-		Ghost::AroundCells, numGhostCells);
+		Ghost::AroundFaces, numGhostCells);
     new_dw->get(wVelocity, d_lab->d_wVelocitySPBCLabel, matlIndex, patch, 
-		Ghost::AroundCells, numGhostCells);
+		Ghost::AroundFaces, numGhostCells);
     new_dw->get(density, d_lab->d_densityCPLabel, matlIndex, patch, Ghost::None,
 		zeroGhostCells);
     

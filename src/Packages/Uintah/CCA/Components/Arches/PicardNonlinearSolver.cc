@@ -327,17 +327,17 @@ PicardNonlinearSolver::sched_interpolateFromFCToCC(SchedulerP& sched,
 			   this, &PicardNonlinearSolver::interpolateFromFCToCC);
   int numGhostCells = 1;
   tsk->requires(Task::NewDW, d_lab->d_uVelocityINLabel,
-		Ghost::AroundCells, numGhostCells);
+		Ghost::AroundFaces, numGhostCells);
   tsk->requires(Task::NewDW, d_lab->d_vVelocityINLabel, 
-                Ghost::AroundCells, numGhostCells);
+                Ghost::AroundFaces, numGhostCells);
   tsk->requires(Task::NewDW, d_lab->d_wVelocityINLabel, 
-		Ghost::AroundCells, numGhostCells);
+		Ghost::AroundFaces, numGhostCells);
   tsk->requires(Task::NewDW, d_lab->d_uVelocitySPBCLabel,
-                Ghost::AroundCells, numGhostCells);
+                Ghost::AroundFaces, numGhostCells);
   tsk->requires(Task::NewDW, d_lab->d_vVelocitySPBCLabel,
-		Ghost::AroundCells, numGhostCells);
+		Ghost::AroundFaces, numGhostCells);
   tsk->requires(Task::NewDW, d_lab->d_wVelocitySPBCLabel,
-                Ghost::AroundCells, numGhostCells);
+                Ghost::AroundFaces, numGhostCells);
 
   tsk->computes(d_lab->d_oldCCVelocityLabel);
   tsk->computes(d_lab->d_newCCVelocityLabel);
@@ -359,11 +359,11 @@ PicardNonlinearSolver::sched_probeData(SchedulerP& sched, const PatchSet* patche
   int numGhostCells = 1;
   
   tsk->requires(Task::NewDW, d_lab->d_uVelocitySPBCLabel,
-		Ghost::AroundCells, numGhostCells);
+		Ghost::AroundFaces, numGhostCells);
   tsk->requires(Task::NewDW, d_lab->d_vVelocitySPBCLabel,
-		Ghost::AroundCells, numGhostCells);
+		Ghost::AroundFaces, numGhostCells);
   tsk->requires(Task::NewDW, d_lab->d_wVelocitySPBCLabel,
-		Ghost::AroundCells, numGhostCells);
+		Ghost::AroundFaces, numGhostCells);
   tsk->requires(Task::NewDW, d_lab->d_densityCPLabel, 
 		Ghost::AroundCells, numGhostCells);
   tsk->requires(Task::NewDW, d_lab->d_pressurePSLabel,
@@ -538,22 +538,22 @@ PicardNonlinearSolver::interpolateFromFCToCC(const ProcessorGroup* ,
     constSFCYVariable<double> oldVVel;
     constSFCZVariable<double> oldWVel;
     new_dw->get(oldUVel, d_lab->d_uVelocityINLabel, matlIndex, patch, 
-		Ghost::AroundCells, nofGhostCells);
+		Ghost::AroundFaces, nofGhostCells);
     new_dw->get(oldVVel, d_lab->d_vVelocityINLabel, matlIndex, patch, 
-		Ghost::AroundCells, nofGhostCells);
+		Ghost::AroundFaces, nofGhostCells);
     new_dw->get(oldWVel, d_lab->d_wVelocityINLabel, matlIndex, patch, 
-		Ghost::AroundCells, nofGhostCells);
+		Ghost::AroundFaces, nofGhostCells);
 
     // Get the new velocity
     constSFCXVariable<double> newUVel;
     constSFCYVariable<double> newVVel;
     constSFCZVariable<double> newWVel;
     new_dw->get(newUVel, d_lab->d_uVelocitySPBCLabel, matlIndex, patch, 
-		Ghost::AroundCells, nofGhostCells);
+		Ghost::AroundFaces, nofGhostCells);
     new_dw->get(newVVel, d_lab->d_vVelocitySPBCLabel, matlIndex, patch, 
-		Ghost::AroundCells, nofGhostCells);
+		Ghost::AroundFaces, nofGhostCells);
     new_dw->get(newWVel, d_lab->d_wVelocitySPBCLabel, matlIndex, patch, 
-		Ghost::AroundCells, nofGhostCells);
+		Ghost::AroundFaces, nofGhostCells);
     
     // Get the low and high index for the Cell Centered Variables
     IntVector idxLo = patch->getCellLowIndex();

@@ -584,11 +584,11 @@ BoundaryCondition::sched_computePressureBC(SchedulerP& sched, const PatchSet* pa
 		numGhostCells);
   tsk->requires(Task::NewDW, d_lab->d_densityCPLabel, Ghost::None,
 		numGhostCells);
-  tsk->requires(Task::NewDW, d_lab->d_uVelocitySPLabel, Ghost::AroundCells,
+  tsk->requires(Task::NewDW, d_lab->d_uVelocitySPLabel, Ghost::AroundFaces,
 		numGhostCells+1);
-  tsk->requires(Task::NewDW, d_lab->d_vVelocitySPLabel, Ghost::AroundCells,
+  tsk->requires(Task::NewDW, d_lab->d_vVelocitySPLabel, Ghost::AroundFaces,
 		numGhostCells+1);
-  tsk->requires(Task::NewDW, d_lab->d_wVelocitySPLabel, Ghost::AroundCells,
+  tsk->requires(Task::NewDW, d_lab->d_wVelocitySPLabel, Ghost::AroundFaces,
 		numGhostCells+1);
       // This task computes new uVelocity, vVelocity and wVelocity
   tsk->computes(d_lab->d_pressureSPBCLabel);
@@ -1187,11 +1187,11 @@ BoundaryCondition::sched_recomputePressureBC(SchedulerP& sched,
 		numGhostCells);
   // changes to make it work for the task graph
   tsk->requires(Task::NewDW, d_lab->d_uVelocitySIVBCLabel,
-		Ghost::AroundCells, numGhostCells+2);
+		Ghost::AroundFaces, numGhostCells+2);
   tsk->requires(Task::NewDW, d_lab->d_vVelocitySIVBCLabel,
-		Ghost::AroundCells, numGhostCells+2);
+		Ghost::AroundFaces, numGhostCells+2);
   tsk->requires(Task::NewDW, d_lab->d_wVelocitySIVBCLabel,
-		Ghost::AroundCells, numGhostCells+2);
+		Ghost::AroundFaces, numGhostCells+2);
   for (int ii = 0; ii < d_nofScalars; ii++)
     tsk->requires(Task::NewDW, d_lab->d_scalarINLabel, 
 		  Ghost::None, numGhostCells);
