@@ -62,6 +62,7 @@ itcl_class Fusion_Fields_NrrdFieldConverter {
 
 	toplevel $w
 
+	# Permute option
 	global $this-permute
 
 	frame $w.permute
@@ -70,10 +71,10 @@ itcl_class Fusion_Fields_NrrdFieldConverter {
 	checkbutton $w.permute.button -variable $this-permute
 	
 	pack $w.permute.button $w.permute.label -side left
+	pack $w.permute -side top -pady 5
 
-	pack $w.permute -side top
 
-
+	# Nomesh option
 	global $this-nomesh
 
 	frame $w.mesh
@@ -82,29 +83,28 @@ itcl_class Fusion_Fields_NrrdFieldConverter {
 	checkbutton $w.mesh.button -variable $this-nomesh
 	
 	pack $w.mesh.button $w.mesh.label -side left
+	pack $w.mesh -side top -pady 5
 
-	pack $w.mesh -side top
+
+	# Input dataset label
+	frame $w.label
+	label $w.label.l -text "Inputs: (Execute to show list)" -width 30 \
+	    -just left
+
+	pack $w.label.l  -side left
+	pack $w.label -side top -pady 5
 
 
-	frame $w.grid
-	label $w.grid.l -text "Inputs: (Execute to show list)" -width 30 -just left
-
-	pack $w.grid.l  -side left
-	pack $w.grid -side top
-
+	# Input Dataset
 	frame $w.datasets
-	
+	pack $w.datasets -side top -pady 5
+
 	global $this-datasets
 	set_names [set $this-datasets]
 
-	pack $w.datasets -side top -pady 10
 
-	frame $w.misc
-	button $w.misc.execute -text "Execute" -command "$this-c needexecute"
-	button $w.misc.close -text Close -command "destroy $w"
-	pack $w.misc.execute $w.misc.close -side left -padx 25
-
-	pack $w.misc -side bottom -pady 10
+	makeSciButtonPanel $w $w $this
+	moveToCursor $w
     }
 
     method set_names {datasets} {

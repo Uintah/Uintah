@@ -209,19 +209,12 @@ itcl_class DataIO_Readers_MDSPlusDataReader {
 	    -width 30 -anchor w -just left
 	
 	pack $dm.svt.button $dm.svt.label -side left
-
 	pack $dm.merge $dm.svt -side left
-
-
-
 	pack $w.dm -fill x -expand yes -side top
 
-	frame $w.misc
-	button $w.misc.dismiss -text Dismiss -command "destroy $w"
-	button $w.misc.execute -text "Download" -command "$this-c needexecute"
 
-	pack $w.misc.execute $w.misc.dismiss -side left -padx 10
-	pack $w.misc -pady 10
+	makeSciButtonPanel $w $w $this
+	moveToCursor $w
     }
 
     method create_entries {} {

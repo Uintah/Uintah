@@ -65,49 +65,49 @@ itcl_class Fusion_Fields_NIMRODConverter {
 
 	toplevel $w
 
+	# Modes
+	global $this-nmodes
 	frame $w.modes
-
-	label $w.modes.label -text "Mode Summing" -width 15 -anchor w -just left
-	pack $w.modes.label -side left	    
+	label $w.modes.label -text "Mode Summing" -width 15 \
+	    -anchor w -just left
+	pack $w.modes.label -side left
+	pack $w.modes -side top -pady 5
 
 	set_modes [set $this-nmodes] 0
 
-	pack $w.modes -side top -pady 5
 
-
-
+	# Unrolling
+	global $this-allowUnrolling
 	frame $w.unrolling
-
-	label $w.unrolling.label -text "Mesh unrolling" -width 15 -anchor w -just left
+	label $w.unrolling.label -text "Mesh unrolling" -width 15 \
+	    -anchor w -just left
 	checkbutton $w.unrolling.button -variable $this-unrolling
 
-	pack $w.unrolling.label $w.unrolling.button -side left	    
+	pack $w.unrolling.button $w.unrolling.label -side left
+	pack $w.unrolling -side top -pady 5
 
 	set_unrolling [set $this-allowUnrolling]
 
-	pack $w.unrolling -side top -pady 5
+
+	# Input dataset label
+	frame $w.label
+	label $w.label.l -text "Inputs: (Execute to show list)" -width 30 \
+	    -just left
+
+	pack $w.label.l  -side left
+	pack $w.label -side top -pady 5
 
 
+	# Input Dataset
+	frame $w.datasets	
+	pack $w.datasets -side top -pady 5
 
-	frame $w.grid
-	label $w.grid.l -text "Inputs: (Execute to show list)" -width 30 -just left
-
-	pack $w.grid.l  -side left
-	pack $w.grid -side top
-
-	frame $w.datasets
-	
 	global $this-datasets
 	set_names [set $this-datasets]
 
-	pack $w.datasets -side top -pady 10
 
-	frame $w.misc
-	button $w.misc.execute -text "Execute" -command "$this-c needexecute"
-	button $w.misc.close -text Close -command "destroy $w"
-	pack $w.misc.execute $w.misc.close -side left -padx 25
-
-	pack $w.misc -side bottom -pady 10
+	makeSciButtonPanel $w $w $this
+	moveToCursor $w
     }
 
     method set_modes {nmodes reset} {
