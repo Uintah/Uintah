@@ -20,7 +20,7 @@ CC_DEPEND_REGEN = @CC_DEPEND_REGEN@
 	$(CXX) $(CFLAGS) $(INCLUDES) $(CC_DEPEND_REGEN) -c $<
 
 .c.o: $<
-	$(CC) -c $(CFLAGS) $(INCLUDES) $<
+	$(CC) $(CFLAGS) $(INCLUDES) $(CC_DEPEND_REGEN) -c $<
 
 .s.o: $<
 	$(AS) $(ASFLAGS) -o $@ $<
