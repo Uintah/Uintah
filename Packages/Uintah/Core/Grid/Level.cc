@@ -349,6 +349,8 @@ void Level::finalizeLevel()
   all_patches->addAll(tmp_patches);
 
   setBCTypes();
+
+  std::sort(d_realPatches.begin(), d_realPatches.end(), Patch::Compare());
 }
 
 void Level::finalizeLevel(bool periodicX, bool periodicY, bool periodicZ)
@@ -397,6 +399,10 @@ void Level::finalizeLevel(bool periodicX, bool periodicY, bool periodicZ)
       }
     }
   }
+
+  std::sort(d_realPatches.begin(), d_realPatches.end(), Patch::Compare());
+  std::sort(d_virtualAndRealPatches.begin(), d_virtualAndRealPatches.end(),
+	    Patch::Compare());
   
   setBCTypes();
 }
