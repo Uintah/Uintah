@@ -167,6 +167,7 @@ SelectField::execute()
     if (mode_.get() == 2) { replace_p = true; }
     algo->execute(output_field_, box_, value_.get(), replace_p, 0);
 
+    output_field_->generation++;
     forward_p = true;
   }
 
