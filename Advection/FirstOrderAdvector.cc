@@ -76,11 +76,9 @@ void FirstOrderAdvector::inFluxOutFluxVolume(
 
   // Compute outfluxes 
   const IntVector gc(1,1,1);
-  double error_test = 0.0;
-  int    num_cells = 0;
-
+  bool error = false;
   for(CellIterator iter = patch->getCellIterator(gc); !iter.done(); iter++){
-    IntVector c = *iter;
+    const IntVector& c = *iter; 
     delY_top    = std::max(0.0, (vvel_FC[c+IntVector(0,1,0)] * delT));
     delY_bottom = std::max(0.0,-(vvel_FC[c+IntVector(0,0,0)] * delT));
     delX_right  = std::max(0.0, (uvel_FC[c+IntVector(1,0,0)] * delT));
@@ -97,31 +95,29 @@ void FirstOrderAdvector::inFluxOutFluxVolume(
     double delX_Z_tmp = delX_tmp * delZ_tmp;
     double delX_Y_tmp = delX_tmp * delY_tmp;
     double delY_Z_tmp = delY_tmp * delZ_tmp;
-    d_OFS[c].d_fflux[TOP]   = delY_top   * delX_Z_tmp;
-    d_OFS[c].d_fflux[BOTTOM]= delY_bottom* delX_Z_tmp;
-    d_OFS[c].d_fflux[RIGHT] = delX_right * delY_Z_tmp;
-    d_OFS[c].d_fflux[LEFT]  = delX_left  * delY_Z_tmp;
-    d_OFS[c].d_fflux[FRONT] = delZ_front * delX_Y_tmp;
-    d_OFS[c].d_fflux[BACK]  = delZ_back  * delX_Y_tmp; 
+    fflux& ofs = d_OFS[c];
+    ofs.d_fflux[TOP]   = delY_top   * delX_Z_tmp;
+    ofs.d_fflux[BOTTOM]= delY_bottom* delX_Z_tmp;
+    ofs.d_fflux[RIGHT] = delX_right * delY_Z_tmp;
+    ofs.d_fflux[LEFT]  = delX_left  * delY_Z_tmp;
+    ofs.d_fflux[FRONT] = delZ_front * delX_Y_tmp;
+    ofs.d_fflux[BACK]  = delZ_back  * delX_Y_tmp; 
 
     //__________________________________
     //  Bullet proofing
     double total_fluxout = 0.0;
     for(int face = TOP; face <= BACK; face++ )  {
-      total_fluxout  += d_OFS[c].d_fflux[face];
+      total_fluxout  += ofs.d_fflux[face];
     }
-    
-    num_cells++;
-    error_test +=(vol - total_fluxout)/fabs(vol- total_fluxout);
+    if(total_fluxout > vol){
+      error = true;
+    }
   }  //cell iterator
   
   //__________________________________
   // if total_fluxout > vol then 
   // find the cell and throw an exception.
-  if(fabs(error_test - num_cells) > 1.0e-2){
-    cout << " outfluxVol > vol " << endl;
-  }
-  if (fabs(error_test - num_cells) > 1.0e-2 && bulletProof_test) {
+  if (error && bulletProof_test) {
     for(CellIterator iter = patch->getCellIterator(gc); !iter.done(); iter++){
       IntVector c = *iter; 
       double total_fluxout = 0.0;
@@ -147,7 +143,7 @@ void FirstOrderAdvector::advectQ(const CCVariable<double>& q_CC,
         
   advectSlabs<double>(q_CC,patch,q_advected, 
                       d_notUsedX, d_notUsedY, d_notUsedZ, 
-                      ignoreFaceFluxesD);
+                      ignoreFaceFluxesD());
 }
 //__________________________________
 //  S P E C I A L I Z E D   D O U B L E 
@@ -161,7 +157,7 @@ void FirstOrderAdvector::advectQ(const CCVariable<double>& q_CC,
 				 DataWarehouse* /*new_dw*/)
 {
   advectSlabs<double>(q_CC,patch,q_advected,  
-                      q_XFC, q_YFC, q_ZFC, saveFaceFluxes);
+                      q_XFC, q_YFC, q_ZFC, saveFaceFluxes());
 }
 //__________________________________
 //     V E C T O R
@@ -172,7 +168,7 @@ void FirstOrderAdvector::advectQ(const CCVariable<Vector>& q_CC,
 {
   advectSlabs<Vector>(q_CC,patch,q_advected, 
                       d_notUsedX, d_notUsedY, d_notUsedZ, 
-                      ignoreFaceFluxesV);
+                      ignoreFaceFluxesV());
 } 
 
 /* ---------------------------------------------------------------------
@@ -192,12 +188,12 @@ template <class T, typename F>
   double invvol = 1.0/(dx.x() * dx.y() * dx.z());                     
 
   for(CellIterator iter = patch->getCellIterator(); !iter.done(); iter++) { 
-    IntVector c = *iter; 
-    //__________________________________
-    //   all faces
+    const IntVector& c = *iter;  
+    
     T q_face_flux[6];
     double faceVol[6];
-         
+    
+    T sum_q_face_flux(0.0);   
     for(int f = TOP; f <= BACK; f++ )  {    
       //__________________________________
       //   S L A B S
@@ -205,16 +201,13 @@ template <class T, typename F>
       double outfluxVol = d_OFS[c ].d_fflux[OF_slab[f]];
       double influxVol  = d_OFS[ac].d_fflux[IF_slab[f]];
 
-      q_face_flux[f] =   q_CC[ac] * influxVol - q_CC[c] * outfluxVol;
-      faceVol[f]     =   outfluxVol +  influxVol;
-    }  // face loop 
-       
-    //__________________________________
-    //  sum up all the contributions
-    q_advected[c] = T(0.0);        
-    for(int f = TOP; f <= BACK; f++ )  {
-      q_advected[c] += q_face_flux[f] * invvol;
-    }
+      T q_faceFlux_tmp  =   q_CC[ac] * influxVol - q_CC[c] * outfluxVol;
+        
+      faceVol[f]       =  outfluxVol +  influxVol;
+      q_face_flux[f]   = q_faceFlux_tmp; 
+      sum_q_face_flux += q_faceFlux_tmp;
+    }  
+    q_advected[c] = sum_q_face_flux*invvol;
     
     //__________________________________
     //  inline function to compute q_FC
