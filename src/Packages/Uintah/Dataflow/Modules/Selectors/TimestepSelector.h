@@ -30,6 +30,7 @@ LOG
 #include <Packages/Uintah/Core/Datatypes/Archive.h>
 #include <Packages/Uintah/Dataflow/Ports/ArchivePort.h>
 #include <Dataflow/Network/Module.h> 
+#include <Dataflow/Ports/GeometryPort.h>
 #include <Core/GuiInterface/GuiVar.h> 
 #include <string>
 #include <vector>
@@ -73,9 +74,20 @@ private:
 
   ArchiveIPort *in;
   ArchiveOPort *out;
+  GeometryOPort *ogeom;
   
   ArchiveHandle archiveH;
   void setVars(ArchiveHandle ar);
+  virtual void tcl_command(GuiArgs& args, void* userdata);
+ 
+private:
+  //! default color and material
+  GuiDouble                def_color_r_;
+  GuiDouble                def_color_g_;
+  GuiDouble                def_color_b_;
+  GuiDouble                def_color_a_;
+  MaterialHandle           def_mat_handle_;
+
 
 }; //class 
 } // End namespace Uintah
