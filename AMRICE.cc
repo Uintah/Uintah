@@ -683,6 +683,20 @@ void AMRICE::scheduleCoarsen(const LevelP& coarseLevel,
   
   task->requires(Task::NewDW, lb->vel_CCLabel,
                0, Task::FineLevel, 0, Task::NormalDomain, gn, 0);
+
+  //__________________________________
+  // Model Variables.
+  if(d_modelSetup && d_modelSetup->tvars.size() > 0){
+    vector<TransportedVariable*>::iterator iter;
+
+    for(iter = d_modelSetup->tvars.begin();
+       iter != d_modelSetup->tvars.end(); iter++){
+      TransportedVariable* tvar = *iter;
+      task->requires(Task::NewDW, tvar->var,
+                  0, Task::FineLevel, 0, Task::NormalDomain, gn, 0);
+      task->modifies(tvar->var);
+    }
+  }
   
   task->modifies(lb->press_CCLabel);
   task->modifies(lb->rho_CCLabel);
@@ -741,7 +755,38 @@ void AMRICE::coarsen(const ProcessorGroup*,
                          invRefineRatio, coarsePatch, coarseLevel, fineLevel);
        
       fineToCoarseOperator<Vector>( vel_CC,   lb->vel_CCLabel,  indx, new_dw, 
-                         invRefineRatio, coarsePatch, coarseLevel, fineLevel);    
+                         invRefineRatio, coarsePatch, coarseLevel, fineLevel);
+      //__________________________________
+      //    Model Variables                     
+      if(d_modelSetup && d_modelSetup->tvars.size() > 0){
+        vector<TransportedVariable*>::iterator t_iter;
+        for( t_iter  = d_modelSetup->tvars.begin();
+            t_iter != d_modelSetup->tvars.end(); t_iter++){
+          TransportedVariable* tvar = *t_iter;
+
+          if(tvar->matls->contains(indx)){
+            CCVariable<double> q_CC;
+            new_dw->getModifiable(q_CC, tvar->var, indx, coarsePatch);
+            fineToCoarseOperator<double>(temp,      lb->temp_CCLabel, indx, new_dw, 
+                       invRefineRatio, coarsePatch, coarseLevel, fineLevel);
+          #if 0  
+            string name = tvar->var->getName();
+            printData(indx, coarsePatch, 1, "coarsen_models", name, q_CC);
+          #endif                 
+          }
+        }
+      }    
+ #if 0
+      //__________________________________
+      //  Print Data 
+      ostringstream desc;     
+      desc << "coarsen_Mat_" << indx << "_patch_"<< coarsePatch->getID();
+      printData(indx, coarsePatch,   1, desc.str(), "press_CC",    press_CC);
+      printData(indx, coarsePatch,   1, desc.str(), "rho_CC",      rho_CC);
+      printData(indx, coarsePatch,   1, desc.str(), "sp_vol_CC",   sp_vol_CC);
+      printData(indx, coarsePatch,   1, desc.str(), "Temp_CC",     temp);
+      printVector(indx, coarsePatch, 1, desc.str(), "vel_CC", 0,   vel_CC);
+#endif
     }
   }  // course patch loop 
 }
