@@ -34,6 +34,41 @@ PNGImage::eat_comments_and_whitespace(ifstream &str)
   }
 }
 
+PNGImage::PNGImage(const string& s, bool flip) 
+  : flipped_(flip) 
+{ 
+  valid_ = read_image(s.c_str()); //read also the alpha mask
+}
+
+PNGImage::PNGImage(int nu, int nv, bool flip) 
+  : width_(nu), height_(nv), valid_(false), flipped_(flip) 
+{
+  image_.resize(width_*height_);
+  alpha_.resize(width_*height_);
+}
+
+void PNGImage::get_dimensions_and_data(Array2<rtrt::Color> &c,
+				       Array2<float> &d, int &nu, int &nv) {
+  if (valid_) {
+    c.resize(width_+2,height_+2);  // image size + slop for interpolation
+    d.resize(width_+2, height_+2);
+    nu=width_;
+    nv=height_;
+    for (unsigned v=0; v<height_; ++v)
+      for (unsigned u=0; u<width_; ++u)
+	{
+	  c(u,v)=image_[v*width_+u];
+	  d(u,v)=alpha_[v*width_+u];
+	}
+    
+  } else {
+    c.resize(0,0);
+    d.resize(0,0);
+    nu=0;
+    nv=0;
+  }
+}
+
 #define PNG_BYTES_TO_CHECK 4
 int check_if_png(char *file_name, FILE **fp)
 {
@@ -95,11 +130,11 @@ PNGImage::read_image(const char* filename)
   png_byte pbSig[8];
   int iBitDepth;
   int iColorType;
-  double dGamma;
+  //  double dGamma;
   //the params
  
   png_uint_32 piWidth, piHeight;
-  int *piChannels = NULL;
+  //  int *piChannels = NULL;
   png_color *pBkgColor = NULL;
   
   png_color_16 *pBackground = NULL;
@@ -193,8 +228,8 @@ PNGImage::read_image(const char* filename)
 	png_get_IHDR(png_ptr, info_ptr, &piWidth, 
 		     &piHeight, &iBitDepth, &iColorType, NULL,
 		     NULL, NULL);
-	u_ = (unsigned int)piWidth;
-	v_ = (unsigned int)piHeight;
+	width_ = (unsigned int)piWidth;
+	height_ = (unsigned int)piHeight;
 
 	
 	//expand images of all color-type and bit depth to 3x8 bit RGB images
@@ -239,8 +274,8 @@ PNGImage::read_image(const char* filename)
 		     &piHeight, &iBitDepth,
 		     &iColorType, NULL, NULL, NULL);
         
-	u_ = (unsigned int)piWidth;
-	v_ = (unsigned int)piHeight;
+	width_ = (unsigned int)piWidth;
+	height_ = (unsigned int)piHeight;
 	// row_bytes is the width x number of channels
 	
         
@@ -248,13 +283,13 @@ PNGImage::read_image(const char* filename)
         ulChannels = png_get_channels(png_ptr, info_ptr);
         
 	
-        *piChannels = ulChannels;
+	//        *piChannels = ulChannels;
         
 	
         // now we can allocate memory to store the image
 	
-	image_.resize((u_)*v_);
-	alpha_.resize((u_)*v_);
+	image_.resize((width_)*height_);
+	alpha_.resize((width_)*height_);
 	
 	
 	// now we can allocate memory to store the image
@@ -289,7 +324,7 @@ PNGImage::read_image(const char* filename)
         
         // set the individual row-pointers to point at the correct offsets
         
-        for (i = 0; i < v_; i++)
+        for (i = 0; i < height_; i++)
             ppbRowPointers[i] = pbImageData + i * ulRowBytes;
         
         // now we can go ahead and just read the whole image
@@ -302,26 +337,26 @@ PNGImage::read_image(const char* filename)
         
 
 	
-	for(unsigned v=0;v<v_;v++){
-	  for(unsigned u=0;u<u_*ulChannels;u+=ulChannels){
+	for(unsigned v=0;v<height_;v++){
+	  for(unsigned u=0;u<width_*ulChannels;u+=ulChannels){
 	   
 	    if (flipped_) {
 	      //we have to get the colors from the ppbRowPointers
-	      image_[(v_-v-1)*(u_)+(u/ulChannels)]=rtrt::Color(ppbRowPointers[v][u]/255.0f,
+	      image_[(height_-v-1)*(width_)+(u/ulChannels)]=rtrt::Color(ppbRowPointers[v][u]/255.0f,
 						ppbRowPointers[v][u+1]/255.0f,
 						ppbRowPointers[v][u+2]/255.0f);
 
 	      
-	      alpha_[(v_-v-1)*(u_)+(u/ulChannels)]=ppbRowPointers[v][u+3]/255.0f;
+	      alpha_[(height_-v-1)*(width_)+(u/ulChannels)]=ppbRowPointers[v][u+3]/255.0f;
 	
 	    } else {
-	      image_[v*(u_)+(u/ulChannels)]=rtrt::Color((float)ppbRowPointers[v][u]/255.0f,
+	      image_[v*(width_)+(u/ulChannels)]=rtrt::Color((float)ppbRowPointers[v][u]/255.0f,
 						(float)ppbRowPointers[v][u+1]/255.0f,
 						(float)ppbRowPointers[v][u+2]/255.0f);
 	     
 
 
-	      alpha_[v*(u_)+(u/ulChannels)]=ppbRowPointers[v][u+3]/255.0f;
+	      alpha_[v*(width_)+(u/ulChannels)]=ppbRowPointers[v][u+3]/255.0f;
 	
 	    
 	    }
@@ -355,9 +390,44 @@ PNGImage::read_image(const char* filename)
     return true;
 }
     
-    
-
-
+bool PNGImage::write_ppm(const char* filename, int bin) {
+  ofstream outdata(filename);
+  if (!outdata.is_open()) {
+    cerr << "PPMImage: ERROR: I/O fault: couldn't write image file: "
+	 << filename << "\n";
+    return false;
+  }
+  if (bin)
+    outdata << "P6\n# PPM binary image created with rtrt\n";
+  else
+    outdata << "P3\n# PPM ASCII image created with rtrt\n";
+  
+  outdata << width_ << " " << height_ << "\n";
+  outdata << "255\n";
+  
+  unsigned char c[3];
+  if (bin) {
+    for(unsigned v=0;v<height_;++v){
+      for(unsigned u=0;u<width_;++u){
+	c[0]=(unsigned char)(image_[v*width_+u].red()*255);
+	c[1]=(unsigned char)(image_[v*width_+u].green()*255);
+	c[2]=(unsigned char)(image_[v*width_+u].blue()*255);
+	outdata.write((char *)c, 3);
+      }
+    }
+  } else {
+    int count=0;
+    for(unsigned v=0;v<height_;++v){
+      for(unsigned u=0;u<width_;++u, ++count){
+	if (count == 5) { outdata << "\n"; count=0; }
+	outdata << (int)(image_[v*width_+u].red()*255) << " ";
+	outdata << (int)(image_[v*width_+u].green()*255) << " ";
+	outdata << (int)(image_[v*width_+u].blue()*255) << " ";
+      }
+    }
+  }
+  return true;
+}
 
 const int PNGIMAGE_VERSION = 1;
 
@@ -367,8 +437,8 @@ namespace SCIRun {
 void Pio(SCIRun::Piostream &str, rtrt::PNGImage& obj)
 {
   str.begin_class("PNGImage", PNGIMAGE_VERSION);
-  SCIRun::Pio(str, obj.u_);
-  SCIRun::Pio(str, obj.v_);
+  SCIRun::Pio(str, obj.width_);
+  SCIRun::Pio(str, obj.height_);
   SCIRun::Pio(str, obj.valid_);
   SCIRun::Pio(str, obj.image_);
   SCIRun::Pio(str, obj.flipped_);
