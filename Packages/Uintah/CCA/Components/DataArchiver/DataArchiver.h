@@ -176,8 +176,13 @@ using std::pair;
       void indexAddGlobals();
 
       string d_filebase;
+
+      // only one of these should be nonzero
       double d_outputInterval;
-      double d_nextOutputTime;
+      int d_outputTimestepInterval;
+     
+      double d_nextOutputTime; // used when d_outputInterval != 0
+      int d_nextOutputTimestep; // used when d_outputTimestepInterval != 0
       int d_currentTimestep;
       Dir d_dir;
       bool d_writeMeta;
@@ -204,13 +209,17 @@ using std::pair;
       // the names of labels to save when checkpointing
       vector< SaveItem > d_checkpointLabels;
       vector< SaveItem > d_checkpointReductionLabels;
+
+      // only one of these should be nonzero
       double d_checkpointInterval;
+      int d_checkpointTimestepInterval;
+
       int d_checkpointCycle;
 
       Dir d_checkpointsDir;
       list<string> d_checkpointTimestepDirs;
-      double d_nextCheckpointTime;
-     
+      double d_nextCheckpointTime; // used when d_checkpointInterval != 0
+      int d_nextCheckpointTimestep; // used when d_checkpointTimestepInterval != 0
       Mutex d_outputLock;
       Mutex d_outputReductionLock;
 
