@@ -176,6 +176,7 @@ public:
   Elem::index_type add_elem(Node::array_type a) { return a[0]; }
 
   virtual bool is_editable() const { return true; }
+  virtual int dimensionality() const { return 0; }
 
   virtual void io(Piostream&);
   static PersistentTypeID type_id;

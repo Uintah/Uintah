@@ -68,6 +68,7 @@ public:
   //! finish all computed data within the mesh.
   virtual bool has_normals() const { return false; }
   virtual bool is_editable() const { return false; } // supports add_elem(...)
+  virtual int  dimensionality() const = 0;
   // Required interfaces
   
   //! Persistent I/O.

@@ -193,6 +193,8 @@ public:
   Transform &set_transform(const Transform &trans) 
   { transform_ = trans; return transform_; }
 
+  virtual int dimensionality() const { return 1; }
+
 protected:
 
   //! the min Node::index_type ( incase this is a subLattice )

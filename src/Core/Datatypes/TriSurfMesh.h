@@ -209,6 +209,7 @@ public:
   void add_triangle(const Point &p0, const Point &p1, const Point &p2);
   Elem::index_type add_elem(Node::array_type a);
   virtual bool is_editable() const { return true; }
+  virtual int dimensionality() const { return 2; }
 
   Node::index_type add_point(const Point &p);
 

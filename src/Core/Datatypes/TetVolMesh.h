@@ -430,6 +430,7 @@ public:
 
 
   virtual bool		is_editable() const { return true; }
+  virtual int           dimensionality() const { return 3; }
 
 protected:
   void			compute_node_neighbors();
