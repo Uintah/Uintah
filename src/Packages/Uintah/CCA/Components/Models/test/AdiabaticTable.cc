@@ -285,7 +285,7 @@ void AdiabaticTable::initialize(const ProcessorGroup*,
     for(vector<Region*>::iterator iter = d_scalar->regions.begin();
                                   iter != d_scalar->regions.end(); iter++){
       Region* region = *iter;
-      for(CellIterator iter = patch->getExtraCellIterator();
+      for(CellIterator iter = patch->getCellIterator();
           !iter.done(); iter++){
         IntVector c = *iter;
         Point p = patch->cellPosition(c);            
@@ -302,19 +302,19 @@ void AdiabaticTable::initialize(const ProcessorGroup*,
     vector<constCCVariable<double> > ind_vars;
     ind_vars.push_back(f);
     
-    CellIterator extraCellIterator = patch->getExtraCellIterator();
-    table->interpolate(d_density_index,   rho_CC,   extraCellIterator, ind_vars);
-    table->interpolate(d_gamma_index,     gamma,    extraCellIterator, ind_vars);
-    table->interpolate(d_cv_index,        cv,       extraCellIterator, ind_vars);
-    table->interpolate(d_viscosity_index, viscosity,extraCellIterator, ind_vars);
-    table->interpolate(d_temp_index,      temp,     extraCellIterator, ind_vars);
+    CellIterator iter = patch->getExtraCellIterator();
+    table->interpolate(d_density_index,   rho_CC,   iter, ind_vars);
+    table->interpolate(d_gamma_index,     gamma,    iter, ind_vars);
+    table->interpolate(d_cv_index,        cv,       iter, ind_vars);
+    table->interpolate(d_viscosity_index, viscosity,iter, ind_vars);
+    table->interpolate(d_temp_index,      temp,     iter, ind_vars);
     CCVariable<double> ref_temp, ref_cv, ref_gamma;
     new_dw->allocateTemporary(ref_cv, patch);
     new_dw->allocateTemporary(ref_gamma, patch);
     new_dw->allocateTemporary(ref_temp, patch);
-    table->interpolate(d_ref_cv_index,    ref_cv,   extraCellIterator, ind_vars);
-    table->interpolate(d_ref_gamma_index, ref_gamma,extraCellIterator, ind_vars);
-    table->interpolate(d_ref_temp_index,  ref_temp, extraCellIterator, ind_vars);
+    table->interpolate(d_ref_cv_index,    ref_cv,   iter, ind_vars);
+    table->interpolate(d_ref_gamma_index, ref_gamma,iter, ind_vars);
+    table->interpolate(d_ref_temp_index,  ref_temp, iter, ind_vars);
     
     Vector dx = patch->dCell();
     double volume = dx.x()*dx.y()*dx.z();
@@ -402,10 +402,10 @@ void AdiabaticTable::modifyThermoTransportProperties(const ProcessorGroup*,
     vector<constCCVariable<double> > ind_vars;
     ind_vars.push_back(f_old);
     
-    CellIterator extraCellIterator = patch->getExtraCellIterator();
-    table->interpolate(d_gamma_index,     gamma,    extraCellIterator,ind_vars);
-    table->interpolate(d_cv_index,        cv,       extraCellIterator,ind_vars);
-    table->interpolate(d_viscosity_index, viscosity,extraCellIterator,ind_vars);
+    CellIterator iter = patch->getExtraCellIterator();
+    table->interpolate(d_gamma_index,     gamma,    iter, ind_vars);
+    table->interpolate(d_cv_index,        cv,       iter, ind_vars);
+    table->interpolate(d_viscosity_index, viscosity,iter, ind_vars);
     
     for(CellIterator iter = patch->getExtraCellIterator();!iter.done();iter++){
       const IntVector& c = *iter;
