@@ -26,6 +26,9 @@ class CylinderSurface : public Surface {
     int nv;
     int ndiscu;
 
+    Vector u;
+    Vector v;
+
     Vector axis;
     double rad2;
     double height;
@@ -33,6 +36,20 @@ public:
     CylinderSurface(const Point& p1, const Point& p2, double radius,
 		    int nu, int nv, int ndiscu);
     virtual ~CylinderSurface();
+    virtual Surface* clone();
+    virtual int inside(const Point& p);
+    virtual void get_surfpoints(Array1<Point>&);
+
+    // Persistent representation...
+    virtual void io(Piostream&);
+    static PersistentTypeID type_id;
+};
+
+class PointSurface : public Surface {
+    Point pos;
+public:
+    PointSurface(const Point& pos);
+    virtual ~PointSurface();
     virtual Surface* clone();
     virtual int inside(const Point& p);
     virtual void get_surfpoints(Array1<Point>&);
