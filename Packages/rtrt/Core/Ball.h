@@ -4,7 +4,7 @@
 
 /* smoosh ken shoemakes stuff into c++, PPS */
 
-#include "BallAux.h"
+#include <Packages/rtrt/Core/BallAux.h>
 
 namespace rtrt {
 

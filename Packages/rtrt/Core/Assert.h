@@ -32,7 +32,7 @@
 #define SCI_ASSERTION_LEVEL 4
 #endif
 
-#include "Exceptions.h"
+#include <Packages/rtrt/Core/Exceptions.h>
 
 #if SCI_ASSERTION_LEVEL >= 1
 #define ASSERTL1(condition) \

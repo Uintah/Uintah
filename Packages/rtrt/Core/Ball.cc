@@ -1,7 +1,7 @@
 /***** Ball.c *****/
 /* Ken Shoemake, 1993 */
-#include "Ball.h"
-#include "BallMath.h"
+#include <Packages/rtrt/Core/Ball.h>
+#include <Packages/rtrt/Core/BallMath.h>
 #include <stdio.h>
 #include <GL/gl.h>
 #include <GL/glu.h>

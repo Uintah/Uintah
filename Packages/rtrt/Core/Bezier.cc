@@ -1,4 +1,4 @@
-#include "Bezier.h"
+#include <Packages/rtrt/Core/Bezier.h>
 
 using namespace rtrt;
 

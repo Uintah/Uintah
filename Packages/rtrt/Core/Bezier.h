@@ -1,16 +1,16 @@
 #ifndef Bezier_H
 #define Bezier_H
 
-#include "Mesh.h"
-#include "Object.h"
-#include "BBox.h"
-#include "Stats.h"
-#include "Light.h"
-#include "Ray.h"
-#include "Material.h"
-#include "HitInfo.h"
-#include "BV1.h"
-#include "Group.h"
+#include <Packages/rtrt/Core/Mesh.h>
+#include <Packages/rtrt/Core/Object.h>
+#include <Packages/rtrt/Core/BBox.h>
+#include <Packages/rtrt/Core/Stats.h>
+#include <Packages/rtrt/Core/Light.h>
+#include <Packages/rtrt/Core/Ray.h>
+#include <Packages/rtrt/Core/Material.h>
+#include <Packages/rtrt/Core/HitInfo.h>
+#include <Packages/rtrt/Core/BV1.h>
+#include <Packages/rtrt/Core/Group.h>
 
 #define OVERLAP 0.1
 #define PATCH_OVERLAP 0.05
