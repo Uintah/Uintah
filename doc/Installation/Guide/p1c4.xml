@@ -88,6 +88,17 @@
       writing Nrrds, and wrappers for invoking Nrrd raster processing
       algorithms.
       </entry></row>
+      <row><entry>--with-unipetsc=INST_DIR</entry><entry>INST_DIR = the 
+      directory containing the /lib and /include directories for PETSc 2.1.1 
+      compiled using the uni-processor MPI libraries.  This directory is 
+      the same one PETSC_DIR is set to when compiling PETSc.  
+      The uniMPI PETSc code is used in the SolveMatrix Module as an alternate
+      linear equation solver.  It provides many preconditioners and 
+      solving methods.
+      If found and configured correctly, the Solvematrix module will hilight 
+      the PETSc solve methods in the UI.
+      </entry></row>
+
       </tbody></tgroup></table>
     </para>
   </sect1>
