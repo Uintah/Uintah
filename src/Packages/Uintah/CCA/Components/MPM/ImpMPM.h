@@ -12,6 +12,10 @@
 #include <Packages/Uintah/Core/Grid/ComputeSet.h>
 #include <Packages/Uintah/Core/Math/Sparse.h>
 #include <valarray>
+#include <Packages/Uintah/Core/Grid/Array3.h>
+#include <map>
+
+using namespace std;
 
 #ifdef HAVE_PETSC
 extern "C" {
@@ -157,6 +161,12 @@ private:
 			       DataWarehouse* old_dw,
 			       DataWarehouse* new_dw);
 
+  void createMatrix(const ProcessorGroup*,
+		    const PatchSubset* patches,
+		    const MaterialSubset* matls,
+		    DataWarehouse* old_dw,
+		    DataWarehouse* new_dw);
+  
   //////////
   // Insert Documentation Here:
 
@@ -288,7 +298,9 @@ private:
 
 
   void scheduleApplyBoundaryConditions(SchedulerP&, const PatchSet*,
-					       const MaterialSet*);
+				       const MaterialSet*);
+
+  void scheduleCreateMatrix(SchedulerP&, const PatchSet*,const MaterialSet*);
 
   void scheduleComputeStressTensorI(SchedulerP&, const PatchSet*,
 				    const MaterialSet*,
@@ -399,9 +411,13 @@ private:
    SLES sles;
 #endif
 
-  bool dynamic;
+   const PatchSet* d_perproc_patches;
+   map<const Patch*, int> d_petscGlobalStart;
+   map<const Patch*, Array3<int> > d_petscLocalToGlobal;
 
-  IntegratorType d_integrator;
+   bool dynamic;
+   
+   IntegratorType d_integrator;
 
 };
       
