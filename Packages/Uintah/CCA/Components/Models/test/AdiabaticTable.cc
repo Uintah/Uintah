@@ -108,9 +108,12 @@ if (!oldStyleAdvect.active()){
   d_matl_set->addAll(m);
   d_matl_set->addReference();
 
+  //__________________________________
+  //setup the table
   string tablename = "adiabatic";
   table = TableFactory::readTable(params, tablename);
   table->addIndependentVariable("mix. frac.");
+  
   for (ProblemSpecP child = params->findBlock("tableValue"); child != 0;
        child = child->findNextBlock("tableValue")) {
     TableValue* tv = new TableValue;
@@ -120,11 +123,13 @@ if (!oldStyleAdvect.active()){
     tv->label = VarLabel::create(labelname, CCVariable<double>::getTypeDescription());
     tablevalues.push_back(tv);
   }
-  temp_index = table->addDependentVariable("Temp(K)");
-  density_index = table->addDependentVariable("density (kg/m3)");
-  gamma_index = table->addDependentVariable("gamma");
-  cv_index = table->addDependentVariable("heat capacity Cv(j/kg-K)");
-  viscosity_index = table->addDependentVariable("viscosity");
+  
+  d_temp_index      = table->addDependentVariable("Temp(K)");
+  d_density_index   = table->addDependentVariable("density (kg/m3)");
+  d_sp_vol_index    = table->addDependentVariable("specific volume(m3/kg)");
+  d_gamma_index     = table->addDependentVariable("gamma");
+  d_cv_index        = table->addDependentVariable("heat capacity Cv(j/kg-K)");
+  d_viscosity_index = table->addDependentVariable("viscosity");
   table->setup();
   
   //__________________________________
@@ -157,7 +162,7 @@ if (!oldStyleAdvect.active()){
      throw ProblemSetupException("AdiabaticTable: Couldn't find constants tag");
    }
     
-   const_ps->get("diffusivity",      d_scalar->diff_coeff);
+   const_ps->get("diffusivity",  d_scalar->diff_coeff);
 
   //__________________________________
   //  Read in the geometry objects for the scalar
@@ -264,18 +269,20 @@ void AdiabaticTable::initialize(const ProcessorGroup*,
         }
       } // Over cells
     } // regions
+    
     setBC(f,"scalar-f", patch, sharedState,indx, new_dw); 
 
+    //__________________________________
+    // initialize other properties
     vector<constCCVariable<double> > ind_vars;
     ind_vars.push_back(f);
-    table->interpolate(density_index, rho_CC, patch->getExtraCellIterator(),
-                       ind_vars);
-    table->interpolate(gamma_index, gamma, patch->getExtraCellIterator(),
-                       ind_vars);
-    table->interpolate(cv_index, cv, patch->getExtraCellIterator(),
-                       ind_vars);
-    table->interpolate(viscosity_index, viscosity, patch->getExtraCellIterator(),
-                       ind_vars);
+    
+    CellIterator extraCellIterator = patch->getExtraCellIterator();
+    table->interpolate(d_density_index,   rho_CC,   extraCellIterator,ind_vars);
+    table->interpolate(d_gamma_index,     gamma,    extraCellIterator,ind_vars);
+    table->interpolate(d_cv_index,        cv,       extraCellIterator,ind_vars);
+    table->interpolate(d_viscosity_index, viscosity,extraCellIterator,ind_vars);
+    
     for(CellIterator iter = patch->getExtraCellIterator();!iter.done();iter++){
       const IntVector& c = *iter;
       rho_micro[c] = rho_CC[c];
@@ -336,7 +343,8 @@ void AdiabaticTable::modifyThermoTransportProperties(const ProcessorGroup*,
 { 
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
-    cout_doing << "Doing modifyThermoTransportProperties on patch "<<patch->getID()<< "\t ADIABATIC_TABLE" << endl;
+    cout_doing << "Doing modifyThermoTransportProperties on patch "<<patch->getID()
+               << "\t ADIABATIC_TABLE" << endl;
    
     int indx = d_matl->getDWIndex();
     CCVariable<double> diffusionCoeff, gamma, cv, thermalCond, viscosity;
@@ -354,12 +362,12 @@ void AdiabaticTable::modifyThermoTransportProperties(const ProcessorGroup*,
     
     vector<constCCVariable<double> > ind_vars;
     ind_vars.push_back(f_old);
-    table->interpolate(gamma_index, gamma, patch->getExtraCellIterator(),
-                       ind_vars);
-    table->interpolate(cv_index, cv, patch->getExtraCellIterator(),
-                       ind_vars);
-    table->interpolate(viscosity_index, viscosity, patch->getExtraCellIterator(),
-                       ind_vars);
+    
+    CellIterator extraCellIterator = patch->getExtraCellIterator();
+    table->interpolate(d_gamma_index,     gamma,    extraCellIterator,ind_vars);
+    table->interpolate(d_cv_index,        cv,       extraCellIterator,ind_vars);
+    table->interpolate(d_viscosity_index, viscosity,extraCellIterator,ind_vars);
+    
     for(CellIterator iter = patch->getExtraCellIterator();!iter.done();iter++){
       const IntVector& c = *iter;
       thermalCond[c] = 0;
@@ -377,7 +385,8 @@ void AdiabaticTable::computeSpecificHeat(CCVariable<double>& cv_new,
                                     DataWarehouse* new_dw,
                                     const int indx)
 { 
-  cout_doing << "Doing computeSpecificHeat on patch "<<patch->getID()<< "\t ADIABATIC_TABLE" << endl;
+  cout_doing << "Doing computeSpecificHeat on patch "<<patch->getID()
+             << "\t ADIABATIC_TABLE" << endl;
 
   int test_indx = d_matl->getDWIndex();
   //__________________________________
@@ -387,9 +396,11 @@ void AdiabaticTable::computeSpecificHeat(CCVariable<double>& cv_new,
 
   constCCVariable<double> f;
   new_dw->get(f,  d_scalar->scalar_CCLabel,  indx, patch, Ghost::None,0);
+  
+  // interpolate cv
   vector<constCCVariable<double> > ind_vars;
   ind_vars.push_back(f);
-  table->interpolate(cv_index, cv_new, patch->getExtraCellIterator(),
+  table->interpolate(d_cv_index, cv_new, patch->getExtraCellIterator(),
                      ind_vars);
 } 
 
@@ -401,24 +412,26 @@ void AdiabaticTable::scheduleComputeModelSources(SchedulerP& sched,
   cout_doing << "ADIABATIC_TABLE::scheduleComputeModelSources " << endl;
   Task* t = scinew Task("AdiabaticTable::computeModelSources", 
                    this,&AdiabaticTable::computeModelSources, mi);
-                     
+                    
   Ghost::GhostType  gn = Ghost::None;  
   Ghost::GhostType  gac = Ghost::AroundCells;
+  //t->requires(Task::OldDW, mi->delT_Label); turn off for AMR 
+ 
   //t->requires(Task::NewDW, d_scalar->diffusionCoefLabel, gac,1);
   t->requires(Task::OldDW, d_scalar->scalar_CCLabel,     gac,1); 
   t->requires(Task::OldDW, mi->density_CCLabel,          gn);
   t->requires(Task::OldDW, mi->temperature_CCLabel,      gn);
 
-  Task::DomainSpec oims = Task::OutOfDomain;  //outside of ice matlSet.
+  t->requires(Task::NewDW, lb->specific_heatLabel,       gn);
+  t->requires(Task::NewDW, lb->gammaLabel,               gn);
+  t->requires(Task::NewDW, lb->sp_vol_CCLabel,           gn);
   
+  Task::DomainSpec oims = Task::OutOfDomain;  //outside of ice matlSet.
   MaterialSubset* press_matl = scinew MaterialSubset();
   press_matl->add(0);
   press_matl->addReference();
   t->requires(Task::NewDW, lb->press_equil_CCLabel, press_matl, oims, gn );
-  //t->requires(Task::NewDW, lb->specific_heatLabel,       gn);
-  //t->requires(Task::NewDW, lb->gammaLabel, gn);
-  //t->requires(Task::OldDW, mi->delT_Label); turn off for AMR
-  
+
   t->modifies(mi->energy_source_CCLabel);
   t->modifies(d_scalar->scalar_source_CCLabel);
 
@@ -452,54 +465,57 @@ void AdiabaticTable::computeModelSources(const ProcessorGroup*,
       int matl = matls->get(m);
 
       // Get mixture fraction, and initialize source to zero
-      constCCVariable<double> f_old;
-      old_dw->get(f_old,      d_scalar->scalar_CCLabel,    matl, patch, gn, 0);
-      CCVariable<double> f_src;
-      new_dw->allocateAndPut(f_src, d_scalar->scalar_source_CCLabel,
-                             matl, patch);
-      f_src.initialize(0);
+      constCCVariable<double> f_old, rho_CC, press, oldTemp, cv, gamma;
+      constCCVariable<double> sp_vol_CC;
+      CCVariable<double> energySource, f_src, sp_vol_ref, flameTemp;
 
-      // Interpolate out gamma, cv, and temperature
+      new_dw->allocateTemporary(flameTemp, patch); 
+      new_dw->allocateTemporary(sp_vol_ref, patch);              
+
+      old_dw->get(f_old,    d_scalar->scalar_CCLabel,   matl, patch, gn, 0);
+      old_dw->get(rho_CC,   mi->density_CCLabel,        matl, patch, gn, 0);
+      old_dw->get(oldTemp,  mi->temperature_CCLabel,    matl, patch, gn, 0);
+      new_dw->get(press,    lb->press_equil_CCLabel,    0,    patch, gn, 0);
+      new_dw->get(sp_vol_CC,lb->sp_vol_CCLabel,         matl, patch, gn,0);
+      new_dw->get(cv,       lb->specific_heatLabel,     matl, patch, gn, 0);
+      new_dw->get(gamma,    lb->gammaLabel,             matl, patch, gn, 0);
+      new_dw->getModifiable(energySource,   mi->energy_source_CCLabel,  
+                                                        matl, patch);                      
+      new_dw->allocateAndPut(f_src,        d_scalar->scalar_source_CCLabel,
+                                                        matl, patch);                            
+      f_src.initialize(0);
+           
+      
+      //__________________________________
+      //  grab values from the tables
       vector<constCCVariable<double> > ind_vars;
       ind_vars.push_back(f_old);
-      CCVariable<double> gamma;
-      new_dw->allocateTemporary(gamma, patch);
-      table->interpolate(gamma_index, gamma, patch->getExtraCellIterator(),
-                         ind_vars);
-      CCVariable<double> cv;
-      new_dw->allocateTemporary(cv, patch);
-      table->interpolate(cv_index, cv, patch->getExtraCellIterator(),
-                         ind_vars);
-      CCVariable<double> flameTemp;
-      new_dw->allocateTemporary(flameTemp, patch);
-      table->interpolate(temp_index, flameTemp, patch->getExtraCellIterator(),
-                         ind_vars);
-
-      // Get density, temperature, and energy source
-      constCCVariable<double> rho_CC;
-      old_dw->get(rho_CC, mi->density_CCLabel,          matl, patch, gn, 0);
-      constCCVariable<double> oldTemp;
-      old_dw->get(oldTemp,     mi->temperature_CCLabel, matl, patch, gn, 0);
-      constCCVariable<double> press;
-      new_dw->get(press,     lb->press_equil_CCLabel, 0, patch, gn, 0);
-      CCVariable<double> energySource;
-      new_dw->getModifiable(energySource,   
-                            mi->energy_source_CCLabel,  matl, patch);
+      CellIterator extraCellIterator = patch->getExtraCellIterator();
+      table->interpolate(d_temp_index,  flameTemp,  extraCellIterator,ind_vars);
+      table->interpolate(d_sp_vol_index,sp_vol_ref, extraCellIterator,ind_vars);
 
       Vector dx = patch->dCell();
       double volume = dx.x()*dx.y()*dx.z();
+      
       double maxTemp = 0;
-      double maxIncrease = 0;
+      double maxIncrease = 0;    //debugging
       double maxDecrease = 0;
       double totalEnergy = 0;
+      
       for(CellIterator iter = patch->getCellIterator(); !iter.done(); iter++){
         IntVector c = *iter;
-        double mass = rho_CC[c]*volume;
-        double cp = gamma[c] * cv[c];
-        double newTemp = flameTemp[c]*press[c]/101325;
-        //double newTemp = flameTemp[c];
+        double mass      = rho_CC[c]*volume;
+        double cp        = gamma[c] * cv[c];
+        double press_ref = (gamma[c] -1) * cv[c] * flameTemp[c]/ sp_vol_ref[c];
+        
+        double newTemp = flameTemp[c] * (press[c] * sp_vol_CC[c])/(press_ref*sp_vol_ref[c]);
         double energyx =( newTemp - oldTemp[c]) * cp * mass;
         energySource[c] += energyx;
+        energySource[c] = 0;
+
+        
+        //__________________________________
+        // debugging
         //        cerr << c << ", f=" << f_old[c] << ", flameTemp=" << flameTemp[c] << ", press=" << press[c] << ", newTemp=" << newTemp << ", oldTemp=" << oldTemp[c] << ", dtemp=" << newTemp-oldTemp[c] << '\n';
         totalEnergy += energyx;
         if(newTemp > maxTemp)
@@ -550,7 +566,7 @@ void AdiabaticTable::computeModelSources(const ProcessorGroup*,
         }  // time to dump
       } // if(probePts)  
       
-      // Compute miscellaneous table quantities
+      // Compute miscellaneous table quantities           STEVE what does this do???
       for(int i=0;i<(int)tablevalues.size();i++){
         TableValue* tv = tablevalues[i];
         cerr << "interpolating " << tv->name << '\n';
