@@ -79,7 +79,7 @@ class SCICORESHARE Path : public Datatype {
   double    path_prm;              // current value of corresponding parameter
                                    // (changes from 0 to 1)
 
-  int       is_loop, is_built, is_sampled, is_back, is_acc, is_run;
+  int       is_loop, is_built, is_back, is_acc, is_run;
   
   int       path_t;
   int       acc_t;
@@ -108,6 +108,7 @@ class SCICORESHARE Path : public Datatype {
   PiecewiseInterp<Point>* lookatP;
   PiecewiseInterp<Vector>* upV;
   PiecewiseInterp<double>* fov;
+  PiecewiseInterp<double>* speed;
 
   // smooth start/end mode support
   Array1<double> sint;
@@ -132,7 +133,7 @@ public:
     bool   set_acc_t(int);
     double get_speed_val(int) const;
 
-    bool get_keyF(int, View&);
+    bool get_keyF(int, View&, double&);
     int  get_num_views() const;
 
     // path points manipulation
@@ -208,6 +209,9 @@ inline void Path::set_arc_param(){
 
 //
 // $Log$
+// Revision 1.4  2000/09/29 08:42:34  samsonov
+// Added camera speed support
+//
 // Revision 1.3  2000/09/28 05:57:56  samsonov
 // minor fix
 //
