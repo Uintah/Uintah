@@ -495,6 +495,7 @@ using namespace SCIRun;
       bool switchDebugSource_Sink;
       bool switchDebug_advance_advect;
       bool switchTestConservation; 
+     
       
       bool d_massExchange;
       bool d_RateForm;
@@ -507,9 +508,10 @@ using namespace SCIRun;
       int d_max_iter_implicit;
       double d_outer_iter_tolerance;
       
+      // ADD HEAT VARIABLES
       vector<int>    d_add_heat_matls;
       vector<double> d_add_heat_coeff;
-      double         d_add_heat_iters;
+      double         d_add_heat_t_start, d_add_heat_t_final;
       bool           d_add_heat;
      
     private:
