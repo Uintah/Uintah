@@ -93,15 +93,12 @@ TetMC<Field>::find_or_add_edgepoint(int n0, int n1, Point p) {
   map<long int, TriSurfMesh::node_index>::iterator node_iter;
   TriSurfMesh::node_index node_idx;
   long int key = (n0 < n1) ? n0*nnodes_+n1 : n1*nnodes_+n0;
-  cerr << "mapping key: "<<key<<"\n";
   node_iter = vertex_map_.find(key);
   if (node_iter == vertex_map_.end()) { // first time to see this node
     node_idx = trisurf_->add_point(p);
-    cerr << "  didn't find it - adding it as node index: "<<node_idx<<"\n";
     vertex_map_[key] = node_idx;
   } else {
     node_idx = (*node_iter).second;
-    cerr << "  found it at node index: "<<node_idx<<"\n";
   }
   return node_idx;
 }
