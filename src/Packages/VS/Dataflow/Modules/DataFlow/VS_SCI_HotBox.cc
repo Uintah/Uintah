@@ -48,6 +48,7 @@ using namespace SCIRun;
 
 VS_SCI_Hotbox::VS_SCI_Hotbox()
 {
+  fprintf(stderr, "VS_SCI_Hotbox::VS_SCI_Hotbox(): ");
   // set relative box corner addresses
   relBoxCorners[VS_HB_NW].set_minX(-2*VS_HB_BOX_WID);
   relBoxCorners[VS_HB_NW].set_maxX(-VS_HB_BOX_WID);
@@ -93,9 +94,12 @@ VS_SCI_Hotbox::VS_SCI_Hotbox()
 
   for(int i = 0; i < VS_HB_NUM_BOXES; i++)
   {
+      fprintf(stderr,  "(%d,%d) ",
+             relBoxCorners[i].get_minX(), relBoxCorners[i].get_minY());
       callbackData[i] = (void  *)0;
   }
   callbackFn = &testCB;
+  fprintf(stderr,  " -- done\n");
 
   // Color geom_color;
   // geom_color = Color(1,1,1);
@@ -122,10 +126,16 @@ VS_SCI_Hotbox::VS_SCI_Hotbox(int cX, int cY)
 void
 VS_SCI_Hotbox::setAbsBoxCorners()
 {
+  fprintf(stderr,  "VS_SCI_Hotbox::setAbsBoxCorners(): ");
   // set absolute box corner addresses from Center + Relative
   for(int i = 0; i < VS_HB_NUM_BOXES; i++)
+  {
     absBoxCorners[i] = relBoxCorners[i] +
                        VS_box2D(centerX, centerY, centerY, centerY);
+    fprintf(stderr,  "(%d,%d) ",
+             absBoxCorners[i].get_minX(), absBoxCorners[i].get_minY());
+  }
+  fprintf(stderr,  " -- done\n");
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -161,6 +171,8 @@ VS_SCI_Hotbox::draw(int x, int y, float newScale)
     // draw a box
     // fl_rect(absBoxCorners[i].get_minX(), absBoxCorners[i].get_minY(),
     //         VS_HB_BOX_WID, VS_HB_BOX_HGT);
+     fprintf(stderr,  "(%d,%d) ",
+             absBoxCorners[i].get_minX(), absBoxCorners[i].get_minY());
     SCIlines->add(Point(newScale * absBoxCorners[i].get_minX(),
                      newScale * absBoxCorners[i].get_minY(),
                      0.0), SCIMtl,
@@ -191,7 +203,7 @@ VS_SCI_Hotbox::draw(int x, int y, float newScale)
     //		        newScale * absBoxCorners[i].get_minY(),
     //                    0.0), Color(1, 1, 1));
     
-  }
+  } // end for(int i = 0; i < VS_HB_NUM_BOXES; i++)
   fprintf(stderr, " done\n");
 } // end VS_SCI_Hotbox::draw()
 
