@@ -289,12 +289,12 @@ void NetworkEditor::tcl_command(GuiArgs& args, void*)
 	net->unblock_connection(args[2]);
     } else if(args[1] == "getconnected"){
 	if(args.count() < 3){
-	    args.error("netedit getconnections needs a module name");
+	    args.error("netedit getconnected needs a module name");
 	    return;
 	}
 	Module* mod=net->get_module_by_id(args[2]);
 	if(!mod){
-	    args.error("netedit addconnection can't find output module");
+	    args.error("netedit getconnected can't find output module");
 	    return;
 	}
 	vector<string> res;
@@ -303,12 +303,11 @@ void NetworkEditor::tcl_command(GuiArgs& args, void*)
 	    Port* p=mod->getIPort(i);
 	    for(int c=0;c<p->nconnections();c++){
 		Connection* conn=p->connection(c);
-		vector<string> cinfo(5);
-		cinfo[0]=conn->id;
-		cinfo[1]=conn->oport->get_module()->id;
-		cinfo[2]=to_string(conn->oport->get_which_port());
-		cinfo[3]=conn->iport->get_module()->id;
-		cinfo[4]=to_string(conn->iport->get_which_port());
+		vector<string> cinfo(4);
+		cinfo[0]=conn->oport->get_module()->id;
+		cinfo[1]=to_string(conn->oport->get_which_port());
+		cinfo[2]=conn->iport->get_module()->id;
+		cinfo[3]=to_string(conn->iport->get_which_port());
 		res.push_back(args.make_list(cinfo));
 	    }
 	}
@@ -316,12 +315,11 @@ void NetworkEditor::tcl_command(GuiArgs& args, void*)
 	    Port* p=mod->getOPort(i);
 	    for(int c=0;c<p->nconnections();c++){
 		Connection* conn=p->connection(c);
-		vector<string> cinfo(5);
-		cinfo[0]=conn->id;
-		cinfo[1]=conn->oport->get_module()->id;
-		cinfo[2]=to_string(conn->oport->get_which_port());
-		cinfo[3]=conn->iport->get_module()->id;
-		cinfo[4]=to_string(conn->iport->get_which_port());
+		vector<string> cinfo(4);
+		cinfo[0]=conn->oport->get_module()->id;
+		cinfo[1]=to_string(conn->oport->get_which_port());
+		cinfo[2]=conn->iport->get_module()->id;
+		cinfo[3]=to_string(conn->iport->get_which_port());
 		res.push_back(args.make_list(cinfo));
 	    }
 	}
