@@ -3,6 +3,11 @@
 
 #include <Packages/Uintah/Core/Grid/GeometryPiece.h>
 #include <Core/Geometry/Point.h>
+#include <Core/Geometry/Vector.h>
+
+#ifndef M_PI
+# define M_PI           3.14159265358979323846  /* pi */
+#endif
 
 namespace Uintah {
 
@@ -72,11 +77,30 @@ WARNING
 	 virtual Box getBoundingBox() const;
 	 
 	 //////////
-	 // Get the top, bottom and radius
+	 // Calculate the surface area
+	 inline double surfaceArea() const
+	 {
+	   return ((2.0*M_PI*d_radius)*height());
+	 }
+
+	 //////////
+	 // Calculate the volume
+	 inline double volume() const
+	 {
+	   return ((M_PI*d_radius*d_radius)*height());
+	 }
+
+	 //////////
+	 // Calculate the unit normal vector to axis from point
+	 Vector radialDirection(const Point& pt) const;
+
+	 //////////
+	 // Get the top, bottom, radius, height
 	 //
 	 inline Point top() const {return d_top;}
 	 inline Point bottom() const {return d_bottom;}
 	 inline double radius() const {return d_radius;}
+	 inline double height() const { return (d_top-d_bottom).length();}
 
       private:
 	 Point d_bottom;

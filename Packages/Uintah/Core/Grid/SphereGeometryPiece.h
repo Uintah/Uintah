@@ -4,7 +4,10 @@
 #include <Packages/Uintah/Core/Grid/GeometryPiece.h>
 #include <Core/Geometry/Point.h>
 
-#include <math.h>
+#ifndef M_PI
+# define M_PI           3.14159265358979323846  /* pi */
+#endif
+
 
 namespace Uintah {
 
@@ -71,6 +74,27 @@ WARNING
 	 // Returns the bounding box surrounding the box.
 	 virtual Box getBoundingBox() const;
 	 
+	 //////////
+	 // Returns the voulme of the sphere
+	 inline double volume() const
+	 {
+	   return (4.0/3.0*M_PI*pow(d_radius,3.0));
+	 }
+
+	 //////////
+	 // Returns the surface area of the sphere
+	 inline double surfaceArea() const
+	 {
+	   return (4.0*M_PI*d_radius*d_radius);
+	 }
+
+         //////////
+         // Calculate the unit normal vector to center from point
+        inline Vector radialDirection(const Point& pt) const
+        {
+          Vector normal = pt-d_origin;  
+          return (normal/normal.length());
+        }
 	 //////////
 	 // Get the center and radius
 	 //
