@@ -87,6 +87,12 @@
 	</description>
 	<datatype>SCIRun::Field</datatype>
       </port>
+      <port>
+	<name>Interpolant</name>
+	<description>
+	</description>
+	<datatype>SCIRun::Field</datatype>
+      </port>
     </inputs>
     <outputs>
       <!-- one of (device port file) -->
