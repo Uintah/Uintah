@@ -290,6 +290,7 @@ SimpleSimulationController::run()
 	newDW->override(delt_vartype(delt), sharedState->get_delt_label(),
 			level);
       }
+     prev_delt=delt;
 
 #ifndef DISABLE_SCI_MALLOC
       size_t nalloc,  sizealloc, nfree,  sizefree, nfillbin,
