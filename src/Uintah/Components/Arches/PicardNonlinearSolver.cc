@@ -14,11 +14,11 @@
 
 using Uintah::Components::PicardNonlinearSolver;
 
-PicardNonlinearSolver::PicardNonlinearSolver(Properties& props, 
-					     BoundaryCondition& bc,
-					     TurbulenceModel& turbModel,
-					     PhysicalConstants& physConst):
-  d_properties(props), d_boundaryCondition(bc), d_turbModel(turbModel),
+PicardNonlinearSolver::PicardNonlinearSolver(Properties* props, 
+					     BoundaryCondition* bc,
+					     TurbulenceModel* turbModel,
+					     PhysicalConstants* physConst):
+  d_props(props), d_boundaryCondition(bc), d_turbModel(turbModel),
   d_physicalConsts(physConst)
 {
 }
@@ -29,6 +29,7 @@ PicardNonlinearSolver::~PicardNonlinearSolver()
 
 void PicardNonlinearSolver::problemSetup(const ProblemSpecP& params)
 {
+#if 0
   ProblemSpecP db = params->findBlock("PicardSolver");
   db->require("max_iter", d_nonlinear_its);
   dw->put(nonlinear_its, "max_nonlinear_its");
@@ -53,6 +54,7 @@ void PicardNonlinearSolver::problemSetup(const ProblemSpecP& params)
     d_scalarSolver->problemSetup(db);
   }
   
+#endif
 }
 
 int PicardNonlinearSolver::nonlinearSolve(double time, double delta_t,
@@ -61,6 +63,7 @@ int PicardNonlinearSolver::nonlinearSolve(double time, double delta_t,
 					  const DataWarehouseP& old_dw,
 					  DataWarehouseP& new_dw)
 {
+#if 0
   int nlIterations = 0;
  //initializes and allocates vars for new_dw
   sched_initialize(level, sched, old_dw, new_dw);
@@ -103,17 +106,19 @@ int PicardNonlinearSolver::nonlinearSolve(double time, double delta_t,
     // residual represents the degrees of inaccuracies
     nlResidual = computeResidual(level, sched, new_dw, new_dw);
   }while((nlIterations < d_nonlinear_its)||(nlResidual > d_resTol));
-       
+#endif
   return(0);
 }
 
 
+#if 0
 double PicardNonlinearSolver::computeResidual(const LevelP& level,
 					    SchedulerP& sched,
 					    const DataWarehouseP& old_dw,
 					    DataWarehouseP& new_dw)
 {
   double nlresidual;
+#if 0
   SoleVariable<double> residual;
   SoleVariable<double> omg;
   // not sure of the syntax...this operation is supposed to get 
@@ -132,16 +137,17 @@ double PicardNonlinearSolver::computeResidual(const LevelP& level,
     new_dw->get(omg,"scalaromg", index);
     nlresidual = max(nlresidual, MACHINEPRECISSION+log(residual/omg));
   }
+#endif
   return nlresidual;
 }
-  
-  
+#endif  
 
 void PicardNonlinearSolver::sched_initialize(const LevelP& level,
 					     SchedulerP& sched,
 					     const DataWarehouseP& old_dw,
 					     DataWarehouseP& new_dw)
 {
+#if 0
   for(Level::const_regionIterator iter=level->regionsBegin();
       iter != level->regionsEnd(); iter++){
     const Region* region=*iter;
@@ -177,6 +183,7 @@ void PicardNonlinearSolver::sched_initialize(const LevelP& level,
     }
 
   }
+#endif
 }
 
 
@@ -186,6 +193,7 @@ void PicardNonlinearSolver::initialize(const ProcessorContext* pc,
 				       const DataWarehouseP& old_dw,
 				       DataWarehouseP& new_dw)
 {
+#if 0
   CCVariable<double> pressure;
   old_dw->get(pressure, "pressure", region, 0);
   FCVariable<Vector> velocity;
@@ -217,6 +225,7 @@ void PicardNonlinearSolver::initialize(const ProcessorContext* pc,
   new_dw->put(scalar_new, "scalar", region, 0);
   new_dw->put(density_new, "density", region, 0);
   new_dw->put(viscosity_new, "viscosity", region, 0);
+#endif
 }
 
 

@@ -1,4 +1,5 @@
 #include <Uintah/Components/Arches/BoundaryCondition.h>
+#include <Uintah/Components/Arches/Discretization.h>
 #include <Uintah/Grid/Stencil.h>
 #include <Uintah/Components/Arches/TurbulenceModel.h>
 #include <SCICore/Util/NotFinished.h>
@@ -7,14 +8,20 @@
 #include <Uintah/Grid/CCVariable.h>
 #include <Uintah/Grid/PerRegion.h>
 #include <Uintah/Grid/SoleVariable.h>
+#include <Uintah/Interface/ProblemSpec.h>
+#include <Uintah/Interface/DataWarehouse.h>
 #include <SCICore/Geometry/Vector.h>
 #include <Uintah/Exceptions/InvalidValue.h>
 #include <Uintah/Grid/Array3.h>
+#include <Uintah/Interface/Scheduler.h>
+#include <Uintah/Grid/Level.h>
+#include <Uintah/Exceptions/InvalidValue.h>
 #include <iostream>
 using namespace std;
 using Uintah::Components::Discretization;
 using namespace Uintah::Components;
 using namespace Uintah::Grid;
+using Uintah::Exceptions::InvalidValue;
 using SCICore::Geometry::Vector;
 
 BoundaryCondition::BoundaryCondition()
@@ -33,6 +40,7 @@ BoundaryCondition::~BoundaryCondition()
 void BoundaryCondition::problemSetup(const ProblemSpecP& params,
 				     DataWarehouseP& dw)
 {
+#if 0
   ProblemSpecP db = params->findBlock("Boundary Conditions");
   int numFlowInlets;
   db->require("NumFlowInlets", numFlowInlets);
@@ -61,7 +69,7 @@ void BoundaryCondition::problemSetup(const ProblemSpecP& params,
     FlowOutlet* flow_outlet = new FlowOutlet(numMixingScalars);
     flow_outlet->problemSetup(db, dw);
   }
-  
+#endif
 }
 
     
@@ -71,6 +79,7 @@ void BoundaryCondition::sched_setFlatProfile(const LevelP& level,
 					     SchedulerP& sched,
 					     const DataWarehouseP& old_dw)
 {
+#if 0
   for(Level::const_regionIterator iter=level->regionsBegin();
       iter != level->regionsEnd(); iter++){
     const Region* region=*iter;
@@ -89,6 +98,7 @@ void BoundaryCondition::sched_setFlatProfile(const LevelP& level,
       sched->addTask(tsk);
     }
   }
+#endif
 }
 
 
@@ -96,6 +106,7 @@ void BoundaryCondition::setFlatProfile(const ProcessorContext* pc,
 				       const Region* region,
 				       const DataWarehouseP& old_dw)
 {
+#if 0
   FCVariable<Vector> velocity;
   old_dw->get(velocity, "velocity", region, 1);
   CCVariable<double> density;
@@ -117,6 +128,7 @@ void BoundaryCondition::setFlatProfile(const ProcessorContext* pc,
     old_dw->put(velocity, "velocity", region, 1);
     old_dw->put(density, "density", region, 1);
   }
+#endif
 }
 
 
@@ -148,6 +160,7 @@ void BoundaryCondition::setInletVelocityBC(const ProcessorContext* pc,
 					   const DataWarehouseP& old_dw,
 					   DataWarehouseP& new_dw) 
 {
+#if 0
   FCVariable<Vector> velocity;
   old_dw->get(velocity, "velocity", region, 1);
   Array3Index lowIndex = region->getLowIndex();
@@ -170,6 +183,7 @@ void BoundaryCondition::setInletVelocityBC(const ProcessorContext* pc,
     new_dw->put(velocity, "velocity", region, 1);
     new_dw->put(density, "density", region, 1);
   }
+#endif
 }
 
  
@@ -205,6 +219,7 @@ void BoundaryCondition::calculatePressBC(const ProcessorContext* pc,
 					 const DataWarehouseP& old_dw,
 					 DataWarehouseP& new_dw) 
 {
+#if 0
   FCVariable<Vector> velocity;
   old_dw->get(velocity, "velocity", region, 1);
   CCVariable<double> pressure;
@@ -220,7 +235,7 @@ void BoundaryCondition::calculatePressBC(const ProcessorContext* pc,
 	      pressinletp->refPressure, pressinletp->area,
 	      pressinletp->density, pressinletp->inletType);
   new_dw->put(velocity, "velocity", region, 1);
- 
+#endif
 } 
 // sets velocity bc
 void BoundaryCondition::sched_velocityBC(const int index,
@@ -301,6 +316,7 @@ void BoundaryCondition::velocityBC(const ProcessorContext* pc,
 				   DataWarehouseP& new_dw,
 				   const int index) 
 {
+#if 0
   FCVariable<Vector> velocity;
   old_dw->get(velocity, "velocity", region, 1);
   CCVariable<double> density;
@@ -431,6 +447,7 @@ void BoundaryCondition::velocityBC(const ProcessorContext* pc,
     else {
     cerr << "Invalid Index value" << endl;
   }
+#endif
 }
 
 void BoundaryCondition::sched_pressureBC(const LevelP& level,
@@ -438,6 +455,7 @@ void BoundaryCondition::sched_pressureBC(const LevelP& level,
 					 const DataWarehouseP& old_dw,
 					 DataWarehouseP& new_dw)
 {
+#if 0
   for(Level::const_regionIterator iter=level->regionsBegin();
       iter != level->regionsEnd(); iter++){
     const Region* region=*iter;
@@ -457,6 +475,7 @@ void BoundaryCondition::sched_pressureBC(const LevelP& level,
     }
 
   }
+#endif
 }
 
 
@@ -466,6 +485,7 @@ void BoundaryCondition::pressureBC(const ProcessorContext*,
 				   const DataWarehouseP& old_dw,
 				   DataWarehouseP& new_dw)
 {
+#if 0
   CCVariable<double> pressure;
   old_dw->get(pressure, "pressure", region, 1);
   CCVariable<Vector> pressCoeff; //7 point stencil
@@ -489,6 +509,7 @@ void BoundaryCondition::pressureBC(const ProcessorContext*,
   FORT_PRESSBC(pressCoeff, pressure, 
 	       lowIndex, highIndex, cellType);
   new_dw->put(pressCoeff, "pressureCoeff", region, 0);
+#endif
 }
 
 void BoundaryCondition::sched_scalarBC(const int index,

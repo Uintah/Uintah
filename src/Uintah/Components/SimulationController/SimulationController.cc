@@ -124,7 +124,7 @@ void SimulationController::run()
 	cerr << "WARNING: raising delt from " << delt << " to minimum: " << timeinfo.delt_min << '\n';
 	delt = timeinfo.delt_min;
       }
-      if(delt < timeinfo.delt_max){
+      if(delt > timeinfo.delt_max){
 	cerr << "WARNING: lowering delt from " << delt << " to maxmimum: " << timeinfo.delt_max << '\n';
 	delt = timeinfo.delt_max;
       }
@@ -340,6 +340,10 @@ void SimulationController::scheduleTimeAdvance(double t, double delt,
 
 //
 // $Log$
+// Revision 1.7  2000/04/13 20:05:56  sparker
+// Compile more of arches
+// Made SimulationController work somewhat
+//
 // Revision 1.6  2000/04/13 06:50:59  sparker
 // More implementation to get this to work
 //

@@ -35,6 +35,7 @@ none
 #include <Uintah/Grid/LevelP.h>
 #include <Uintah/Grid/Region.h>
 #include <Uintah/Interface/SchedulerP.h>
+#include <Uintah/Interface/ProblemSpecP.h>
 #include <Uintah/Interface/DataWarehouseP.h>
 #include <Uintah/Parallel/ProcessorContext.h>
 
@@ -147,7 +148,7 @@ public:
 		 DataWarehouseP& new_dw,
 		 const int index);
    // used for calculating wall boundary conditions
-   TurbulenceModel* d_turb_model;
+   TurbulenceModel* d_turbModel;
    // Diff BC types
 #if 0
    struct FlowInlet {
