@@ -151,7 +151,7 @@ void Array3<T>::allocate()
 template<class T>
 void Array3<T>::newsize(int d1, int d2, int d3)
 {
-    if(objs && dm1==d2 && dm2==d2 && dm3==d3)return;
+    if(objs && dm1==d1 && dm2==d2 && dm3==d3)return;
     dm1=d1;
     dm2=d2;
     dm3=d3;
@@ -292,6 +292,9 @@ void Pio(Piostream& stream, Containers::Array3<T>*& data) {
 
 //
 // $Log$
+// Revision 1.9  1999/09/16 23:03:49  mcq
+// Fixed a few little bugs, hopefully didn't introduce more.  Started ../doc
+//
 // Revision 1.8  1999/09/08 02:26:45  sparker
 // Various #include cleanups
 //
