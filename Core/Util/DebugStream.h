@@ -115,14 +115,4 @@ namespace SCIRun {
     
 } // End namespace SCIRun
 
-
-  
-
-
-
-
-
-
-
-
 #endif
