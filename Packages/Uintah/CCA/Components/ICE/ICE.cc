@@ -182,13 +182,12 @@ void ICE::problemSetup(const ProblemSpecP& prob_spec, GridP& /**/,
     cout_norm << "Solution Technique = Equilibration Form " << endl;
   }
   if (d_RateForm == false && d_EqForm == false ) {
-    throw ProblemSetupException("\n\nERROR:\nMust specify either EqForm or RateForm in ICE solution technique\n\n");
+    string warn="ERROR:\nMust specify EqForm or RateForm in ICE solution";
+    throw ProblemSetupException(warn);
   }
   
   cout_norm << "cfl = " << d_CFL << endl;
-  cout_norm << "max_iteration_equilibration " << d_max_iter_equilibration << endl;
-  cout_norm << "max_iteration_equilibration " << d_max_iter_equilibration << endl;
-
+  cout_norm << "max_iteration_equilibration "<<d_max_iter_equilibration<<endl;
   cout_norm << "Pulled out CFD-ICE block of the input file" << endl;
     
   //__________________________________
@@ -225,13 +224,17 @@ void ICE::problemSetup(const ProblemSpecP& prob_spec, GridP& /**/,
   for (int i = 0; i<(int)d_K_mom.size(); i++) {
     cout_norm << "K_mom = " << d_K_mom[i] << endl;
     if( d_K_mom[i] < 0.0 || d_K_mom[i] > 1e15 ) {
-      throw ProblemSetupException( "E R R O R\n Momentum exchange coef. is either too big or negative\n");
+      ostringstream warn;
+      warn<<"ERROR\n Momentum exchange coef. is either too big or negative\n";
+      throw ProblemSetupException(warn.str());
     }
   }
   for (int i = 0; i<(int)d_K_heat.size(); i++) {
     cout_norm << "K_heat = " << d_K_heat[i] << endl;
     if( d_K_heat[i] < 0.0 || d_K_heat[i] > 1e15 ) {
-      throw ProblemSetupException( "E R R O R\n Heat exchange coef. is either too big or negative\n");
+      ostringstream warn;
+      warn<<"ERROR\n Heat exchange coef. is either too big or negative\n";
+      throw ProblemSetupException(warn.str());
     }
   }
   cout_norm << "Pulled out exchange coefficients of the input file" << endl;
@@ -554,8 +557,8 @@ _____________________________________________________________________*/
 void ICE::scheduleComputeDelPressAndUpdatePressCC(SchedulerP& sched,
                                             const PatchSet* patches,
                                             const MaterialSubset* press_matl,
-                                            const MaterialSubset* /*ice_matls*/,
-                                            const MaterialSubset* /*mpm_matls*/,
+                                            const MaterialSubset* /*iceMatls*/,
+                                            const MaterialSubset* /*mpmMatls*/,
                                             const MaterialSet* matls)
 {
   cout_doing << "ICE::scheduleComputeDelPressAndUpdatePressCC" << endl;
@@ -707,10 +710,10 @@ void ICE::scheduleComputeLagrangianValues(SchedulerP& sched,
  Function~  ICE:: scheduleComputeLagrangianSpecificVolume--
 _____________________________________________________________________*/
 void ICE::scheduleComputeLagrangianSpecificVolume(SchedulerP& sched,
-                                               const PatchSet* patches,
-                                               const MaterialSubset* press_matl,
-                                               const MaterialSubset* ice_matls,
-                                               const MaterialSet* matls)
+                                             const PatchSet* patches,
+                                             const MaterialSubset* press_matl,
+                                             const MaterialSubset* ice_matls,
+                                             const MaterialSet* matls)
 {
   Task* t;
   if (d_RateForm) {     //RATE FORM
@@ -732,15 +735,15 @@ void ICE::scheduleComputeLagrangianSpecificVolume(SchedulerP& sched,
   }
   else if (d_RateForm) {     // RATE FORM
     t->requires(Task::OldDW, lb->delTLabel);
-    t->requires(Task::NewDW, lb->rho_CCLabel,       ice_matls, Ghost::None);       
-    t->requires(Task::NewDW, lb->sp_vol_CCLabel,    ice_matls, Ghost::None);
-    t->requires(Task::NewDW, lb->speedSound_CCLabel,ice_matls, Ghost::None);
-    t->requires(Task::NewDW, lb->vol_frac_CCLabel,  ice_matls, Ghost::None);
-    t->requires(Task::OldDW, lb->temp_CCLabel,      ice_matls, Ghost::None);
-    t->requires(Task::NewDW, lb->Tdot_CCLabel,      ice_matls, Ghost::None);
-    t->requires(Task::NewDW, lb->f_theta_CCLabel,   ice_matls, Ghost::None);
-    t->requires(Task::NewDW, lb->press_CCLabel,     press_matl,Ghost::None);
-    t->requires(Task::NewDW, lb->delP_DilatateLabel,press_matl,Ghost::None);
+    t->requires(Task::NewDW, lb->rho_CCLabel,       /*all_matls*/ Ghost::None);
+    t->requires(Task::NewDW, lb->sp_vol_CCLabel,    /*all_matls*/ Ghost::None);
+    t->requires(Task::NewDW, lb->speedSound_CCLabel,/*all_matls*/ Ghost::None);
+    t->requires(Task::NewDW, lb->vol_frac_CCLabel,  /*all_matls*/ Ghost::None);
+    t->requires(Task::OldDW, lb->temp_CCLabel,      /*all_matls*/ Ghost::None);
+    t->requires(Task::NewDW, lb->Tdot_CCLabel,      /*all_matls*/ Ghost::None);
+    t->requires(Task::NewDW, lb->f_theta_CCLabel,   /*all_matls*/ Ghost::None);
+    t->requires(Task::NewDW, lb->press_CCLabel,     press_matl,  Ghost::None);
+    t->requires(Task::NewDW, lb->delP_DilatateLabel,press_matl,  Ghost::None);
     t->computes(lb->spec_vol_L_CCLabel);
     t->computes(lb->spec_vol_source_CCLabel);
   }
@@ -886,7 +889,7 @@ void ICE::actuallyComputeStableTimestep(const ProcessorGroup*,
     //__________________________________
     //  Bullet proofing
     if(delt_CFL < 1e-20) {  
-      string warn = " E R R O R -------> ICE::ComputeStableTimestep: delT < 1e-20";
+      string warn = " E R R O R \n ICE::ComputeStableTimestep: delT < 1e-20";
       throw InvalidValue(warn);
     }
     
@@ -986,9 +989,7 @@ void ICE::actuallyInitialize(const ProcessorGroup*,
                                      press_CC,   gamma,   cv[m],
                                      rho_micro[m],    Temp_CC[m]);
       }
-      //__________________________________
-      //    B U L L E T   P R O O F I N G
-      //press_CC[IntVector(1,1,1)] = -press_CC[IntVector(1,1,1)];
+      //____ B U L L E T   P R O O F I N G----
       IntVector neg_cell;
       ostringstream warn;
       if( !areAllValuesPositive(press_CC, neg_cell) ) {
@@ -1084,7 +1085,7 @@ void ICE::computeEquilibrationPressure(const ProcessorGroup*,
 
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
-    cout_doing << "Doing calc_equilibration_pressure on patch "<<patch->getID() 
+    cout_doing << "Doing calc_equilibration_pressure on patch "<<patch->getID()
          << "\t\t ICE" << endl;
     double    converg_coeff = 15;              
     double    convergence_crit = converg_coeff * DBL_EPSILON;
@@ -1288,7 +1289,7 @@ void ICE::computeEquilibrationPressure(const ProcessorGroup*,
     //__________________________________
     // compute sp_vol_CC
     for (int m = 0; m < numMatls; m++)   {
-      for (CellIterator iter=patch->getExtraCellIterator();!iter.done();iter++) {
+      for(CellIterator iter=patch->getExtraCellIterator();!iter.done();iter++){
         IntVector c = *iter;
         sp_vol_CC[m][c] = 1.0/rho_micro[m][c];
       }
@@ -1448,8 +1449,8 @@ void ICE::computeFaceCenteredVelocities(const ProcessorGroup*,
       adj_offset[2] = IntVector(0,  0, -1);   // Z faces     
 
       if(doMechOld < -1.5) {
-      int offset=0;      // 0=Compute all faces in computational domain
-                         // 1=Skip the faces at the border between interior and gc    
+      int offset=0;    // 0=Compute all faces in computational domain             
+                       // 1=Skip the faces at the border between interior and gc
       //__________________________________
       //  Compute vel_FC for each face
       computeVelFace<SFCXVariable<double> >(0,patch->getSFCXIterator(offset),
@@ -1598,7 +1599,7 @@ void ICE::addExchangeContributionToFCVel(const ProcessorGroup*,
           tmp = (vol_frac_CC[n][adj] + vol_frac_CC[n][cur]) * K[n][m];
    
           sp_vol_brack = (sp_vol_CC[m][adj] * sp_vol_CC[m][cur])/
-                         (sp_vol_CC[m][adj] + sp_vol_CC[m][cur]);                         
+                         (sp_vol_CC[m][adj] + sp_vol_CC[m][cur]);
           beta[m][n] = sp_vol_brack * delT * tmp;
           a[m][n] = -beta[m][n];
         }
@@ -1843,7 +1844,7 @@ void ICE::computeDelPressAndUpdatePressCC(const ProcessorGroup*,
       // - divide vol_frac_cc/vol
       advector->inFluxOutFluxVolume(uvel_FC,vvel_FC,wvel_FC,delT,patch);
 
-      for(CellIterator iter = patch->getCellIterator(gc); !iter.done(); iter++){
+      for(CellIterator iter = patch->getCellIterator(gc); !iter.done();iter++){
        IntVector c = *iter;
         q_CC[c] = vol_frac[c] * invvol;
       }
@@ -1861,7 +1862,7 @@ void ICE::computeDelPressAndUpdatePressCC(const ProcessorGroup*,
         term2[c] -= q_advected[c];
 
         term3[c] += vol_frac[c] * sp_vol_CC[m][c]/
-                            (speedSound[c]*speedSound[c]);                             
+                            (speedSound[c]*speedSound[c]);
       }  //iter loop 
     }  //matl loop
     delete advector;
@@ -1890,8 +1891,8 @@ void ICE::computeDelPressAndUpdatePressCC(const ProcessorGroup*,
     //printData( patch, 1,desc.str(), "delP_MassX",    delP_MassX);
       printData( patch, 1,desc.str(), "Press_CC",      press_CC);
     }
-    //__________________________________
-    //  B U L L E T   P R O O F I N G
+   //____ B U L L E T   P R O O F I N G----
+  #if 0
     IntVector neg_cell;
     if(!areAllValuesPositive(press_CC, neg_cell) ) {
       ostringstream warn;
@@ -1899,6 +1900,7 @@ void ICE::computeDelPressAndUpdatePressCC(const ProcessorGroup*,
           << neg_cell<< " Negative press_CC";
       throw InvalidValue(warn.str());
     }
+#endif
   }  // patch loop
 }
 
@@ -2215,7 +2217,7 @@ void ICE::accumulateMomentumSourceSinks(const ProcessorGroup*,
       tau_Z_FC.initialize(Vector(0.,0.,0.));
       viscosity = 0.0;
       if(ice_matl){
-        old_dw->get(vel_CC, lb->vel_CCLabel,  indx,patch,Ghost::AroundCells, 2); 
+        old_dw->get(vel_CC, lb->vel_CCLabel,  indx,patch,Ghost::AroundCells,2);
         viscosity = ice_matl->getViscosity();
         if(viscosity != 0.0){  
           computeTauX_Components( patch, vel_CC, viscosity, dx, tau_X_FC);
@@ -2292,18 +2294,17 @@ void ICE::accumulateMomentumSourceSinks(const ProcessorGroup*,
           //    X - M O M E N T U M 
           press_diff_source = (press_diffX_FC[right] - press_diffX_FC[left]);
           mom_source[c].x(mom_source[c].x() +
-                          press_diff_source * delY * delZ * include_term * delT);
+                        press_diff_source * delY * delZ * include_term * delT);
           //__________________________________
           //    Y - M O M E N T U M 
           press_diff_source = (press_diffY_FC[top] - press_diffY_FC[bottom]);
           mom_source[c].y(mom_source[c].y() +
-                          press_diff_source * delX * delZ * include_term * delT );
+                        press_diff_source * delX * delZ * include_term * delT);
           //__________________________________
           //    Z - M O M E N T U M 
           press_diff_source = (press_diffZ_FC[front] - press_diffZ_FC[back]);
           mom_source[c].z(mom_source[c].z() +
-                          press_diff_source * delX * delY * include_term * delT );
-
+                        press_diff_source * delX * delY * include_term * delT);
         }
       }
       } // if doMechOld
@@ -2511,7 +2512,7 @@ void ICE::computeLagrangianValues(const ProcessorGroup*,
           massGain += burnedMass[c];
           
           //  must have a minimum momentum   
-          for (int dir = 0; dir <3; dir++) {  //loop over all three directons                         
+          for (int dir = 0; dir <3; dir++) {  //loop over all three directons
             double min_mom_L = vel_CC[c](dir) * min_mass;
 
          // Todd:  I believe the second term here to be flawed as was
@@ -2566,8 +2567,7 @@ void ICE::computeLagrangianValues(const ProcessorGroup*,
           printData(  patch,1, desc.str(), "int_eng_L_CC", int_eng_L); 
 
         }
-        //__________________________________
-        //  B U L L E T   P R O O F I N G
+        //____ B U L L E T   P R O O F I N G----
         // catch negative internal energies
         IntVector neg_cell;
         if (!areAllValuesPositive(int_eng_L, neg_cell) ) {
@@ -2617,7 +2617,7 @@ void ICE::computeLagrangianSpecificVolume(const ProcessorGroup*,
        new_dw->get(sp_vol,    lb->sp_vol_CCLabel,     indx,patch,Ghost::None,0);
        new_dw->get(createdVol,lb->created_vol_CCLabel,indx,patch,Ghost::None,0);
 
-       for(CellIterator iter=patch->getExtraCellIterator();!iter.done();iter++){ 
+       for(CellIterator iter=patch->getExtraCellIterator();!iter.done();iter++){
          IntVector c = *iter;
          spec_vol_L[c] = (rho_CC[c] * vol * sp_vol[c]) + createdVol[c];
        }
@@ -3061,8 +3061,7 @@ void ICE::advectAndAdvanceInTime(const ProcessorGroup*,
        printVector( patch,1, desc.str(), "vvel_CC", 1,  vel_CC);
        printVector( patch,1, desc.str(), "wvel_CC", 2,  vel_CC);
       }
-      //__________________________________
-      //   B U L L E T   P R O O F I N G
+      //____ B U L L E T   P R O O F I N G----
       if (!areAllValuesPositive(rho_CC, neg_cell)) {
         warn <<"ERROR ICE::advectAndAdvanceInTime, mat "<< indx <<" cell "
              << neg_cell << " negative rho_CC\n ";
@@ -3169,7 +3168,7 @@ void ICE::hydrostaticPressureAdjustment(const Patch* patch,
  
   Note:   - The edge velocities are defined as the average velocity 
             of the 4 cells surrounding that edge, however we only use 2 cells
-            to compute it.  When you take the difference of the edge velocities 
+            to compute it.  When you take the difference of the edge velocities
             there are two common cells that automatically cancel themselves out.
           - The viscosity we're using isn't right if it varies spatially.   
  ---------------------------------------------------------------------  */
@@ -3261,7 +3260,7 @@ void ICE::computeTauX_Components( const Patch* patch,
  Purpose:   This function computes shear stress tau_YY, ta_yx, tau_yz 
   Note:   - The edge velocities are defined as the average velocity 
             of the 4 cells surrounding that edge, however we only use2 cells
-            to compute it.  When you take the difference of the edge velocities 
+            to compute it.  When you take the difference of the edge velocities
             there are two common cells that automatically cancel themselves out.
           - The viscosity we're using isn't right if it varies spatially. 
  ---------------------------------------------------------------------  */
@@ -3353,7 +3352,7 @@ void ICE::computeTauY_Components( const Patch* patch,
  Purpose:   This function computes shear stress tau_zx, ta_zy, tau_zz 
   Note:   - The edge velocities are defined as the average velocity 
             of the 4 cells surrounding that edge, however we only use 2 cells
-            to compute it.  When you take the difference of the edge velocities 
+            to compute it.  When you take the difference of the edge velocities
             there are two common cells that automatically cancel themselves out.
           - The viscosity we're using isn't right if it varies spatially.
  ---------------------------------------------------------------------  */
