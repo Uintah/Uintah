@@ -182,7 +182,7 @@ namespace Uintah {
     // Convert J-integral into stress intensity for hypoelastic materials 
     // (for FRACTURE)
     virtual void ConvertJToK(const MPMMaterial* matl,const Vector& J,
-                             const Vector& C,const Vector& V,Vector& SIF);
+                             const double& C,const Vector& V,Vector& SIF);
 
     //////////
     // Detremine crack-propagating direction (for FRACTURE)
@@ -190,7 +190,8 @@ namespace Uintah {
                                      
     //////////                       
     // Detect if crack propagates (for FRACTURE)
-    virtual short CrackSegmentPropagates(const double& KI,const double& KII);
+    virtual short CrackSegmentPropagates(const double& Vc,
+		                         const double& KI,const double& KII);
 
 
     virtual void addRequiresDamageParameter(Task* task,

@@ -322,7 +322,7 @@ ConstitutiveModel::computeVelocityGradient(const Patch* patch,
 // Convert J-integral into stress intensity (for FRACTURE)
 void 
 ConstitutiveModel::ConvertJToK(const MPMMaterial*,
-     const Vector&,const Vector&,const Vector&,Vector& SIF)
+     const Vector&,const double&,const Vector&,Vector& SIF)
 {
   SIF=Vector(-9999.,-9999.,-9999.);
 }
@@ -338,8 +338,8 @@ ConstitutiveModel::GetPropagationDirection(const double& KI,
 
 // Detect if crack propagtes (for FRACTURE)
 short
-ConstitutiveModel::CrackSegmentPropagates(const double& KI,
-                                          const double& KII)
+ConstitutiveModel::CrackSegmentPropagates(const double& Vc, 
+		        const double& KI, const double& KII)
 {
   enum {NO=0, YES};
   return NO;
