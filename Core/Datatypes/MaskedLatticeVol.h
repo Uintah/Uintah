@@ -58,13 +58,13 @@ public:
   virtual ~MaskedLatticeVol() {};
 
   bool value(T &val, typename LatVolMesh::node_index idx) const
-  { if (!mask_(idx)) return false; val = fdata_[idx]; return true; }
+  { if (!mask_[idx]) return false; val = fdata()[idx]; return true; }
   bool value(T &val, typename LatVolMesh::edge_index idx) const
-  { if (!mask_(idx)) return false; val = fdata_[idx]; return true; }
+  { if (!mask_[idx]) return false; val = fdata()[idx]; return true; }
   bool value(T &val, typename LatVolMesh::face_index idx) const
-  { if (!mask_(idx)) return false; val = fdata_[idx]; return true; }
+  { if (!mask_[idx]) return false; val = fdata()[idx]; return true; }
   bool value(T &val, typename LatVolMesh::cell_index idx) const
-  { if (!mask_(idx)) return false; val = fdata_[idx]; return true; }
+  { if (!mask_[idx]) return false; val = fdata()[idx]; return true; }
 
   void    io(Piostream &stream);
 
