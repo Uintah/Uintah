@@ -78,6 +78,11 @@ public:
 		   int matlIndex, const Region*, int numGhostCells) const = 0;
   virtual void put(const NCVariableBase&, const VarLabel*,
 		   int matlIndex, const Region*) = 0;
+
+  virtual void allocate( NCVariableBase &, const VarLabel*,
+			 int matlIndex, const Region*, int numGhostCells );
+
+
 #if 0
   virtual void get(ParticleVariableBase&, const VarLabel*,
 		   const Region* region) const;
@@ -170,6 +175,9 @@ private:
 
 //
 // $Log$
+// Revision 1.11  2000/04/21 20:31:25  dav
+// added some allocates
+//
 // Revision 1.10  2000/04/20 18:56:35  sparker
 // Updates to MPM
 //
