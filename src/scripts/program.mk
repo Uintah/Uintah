@@ -51,7 +51,7 @@ $(PROGRAM)_LIBS := $(LIBS)
 # we can use the -l syntax to link, but still express the dependicies.
 $(PROGRAM): $(OBJS) $(patsubst %,$(LIBDIR)lib%.$(SO_OR_A_FILE),$(PSELIBS))
 	rm -f $@
-	$(CXX) $(LDFLAGS) $(LDRUN_PREFIX)$(LIBDIR_ABS) -o $@ $(filter %.o,$^) $(patsubst $(LIBDIR)lib%.$(SO_OR_A_FILE),-l%,$(filter %.$(SO_OR_A_FILE),$^)) $(REPOSITORIES_$@) $($@_LIBS) $(TAU_MPI_LIBS) $(TAU_SHLIBS)
+	$(CXX) $(LDFLAGS) $(LDRUN_PREFIX)$(LIBDIR_ABS) -o $@ $(filter %.o,$^) $(patsubst $(LIBDIR)lib%.$(SO_OR_A_FILE),-l%,$(filter %.$(SO_OR_A_FILE),$^)) $(REPOSITORIES_$@) $($@_LIBS) $(TAU_LIBRARY)
 
 #  These will get removed on make clean
 CLEANOBJS := $(CLEANOBJS) $(OBJS)
