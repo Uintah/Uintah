@@ -116,7 +116,7 @@ void GenCategory(char* catname, char* packname, char* psepath)
   /* edit the modules sub.mk file - add the new category */
 
   char* modname = new char[strlen(catname)+25];
-  sprintf(modname,"\t%s\\\n",catname);
+  sprintf(modname,"\t$(SRCDIR)/%s\\\n",catname);
   string = new char[strlen(psepath)+strlen(packname)+25];
   sprintf(string,"%s/src/%s/Modules/sub.mk",psepath,packname);
   InsertStringInFile(string,"#[INSERT NEW CATEGORY DIR HERE]",modname);
