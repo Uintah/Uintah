@@ -374,7 +374,7 @@ StructHexVolMesh::polygon_area(const Node::array_type &ni, const Vector N) const
     double area = 0;
     double an, ax, ay, az;  // abs value of normal and its coords
     int   coord;           // coord to ignore: 1=x, 2=y, 3=z
-    int   i, j, k;         // loop indices
+    unsigned int   i, j, k;         // loop indices
     const unsigned int n = ni.size();
 
     // select largest abs coordinate to ignore for projection

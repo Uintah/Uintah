@@ -114,7 +114,7 @@ GeomPoints::add(const Point &p, MaterialHandle m)
 void
 GeomPoints::get_bounds(BBox& bb)
 {
-  for (int i=0; i<points_.size(); i+=3)
+  for (unsigned int i=0; i<points_.size(); i+=3)
   {
     bb.extend(Point(points_[i], points_[i+1], points_[i+2]));
   }
@@ -240,7 +240,7 @@ GeomTranspPoints::sort()
 void
 GeomTranspPoints::io(Piostream& stream)
 {
-  int version=stream.begin_class("GeomTranspPoints", GEOMTRANSPPOINTS_VERSION);
+  stream.begin_class("GeomTranspPoints", GEOMTRANSPPOINTS_VERSION);
   GeomPoints::io(stream);
   stream.end_class();
 }

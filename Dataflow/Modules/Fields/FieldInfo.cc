@@ -40,9 +40,6 @@ using std::pair;
 
 class PSECORESHARE FieldInfo : public Module {
 private:
-
-  int              generation_;
-
   GuiString gui_fldname_;
   GuiString gui_typename_;
   GuiString gui_datamin_;
@@ -56,6 +53,8 @@ private:
   GuiString gui_sizex_;
   GuiString gui_sizey_;
   GuiString gui_sizez_;
+
+  int              generation_;
 
   void clear_vals();
   void update_input_attributes(FieldHandle);

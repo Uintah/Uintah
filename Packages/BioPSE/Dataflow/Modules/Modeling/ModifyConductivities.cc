@@ -250,7 +250,7 @@ ModifyConductivities::execute()
     sfi->compute_min_max(minval, maxval);
     if (imatrix->nrows() > maxval && imatrix->ncols() == 9)
     {
-      for (unsigned int i = 0; i < imatrix->nrows(); i++)
+      for (int i = 0; i < imatrix->nrows(); i++)
       {
 	Tensor t;
 	t.mat_[0][0] = imatrix->get(i, 0);
@@ -271,7 +271,7 @@ ModifyConductivities::execute()
     }
     else if (imatrix->nrows() == 9 && imatrix->ncols() > maxval)
     {
-      for (unsigned int i = 0; i < imatrix->ncols(); i++)
+      for (int i = 0; i < imatrix->ncols(); i++)
       {
 	Tensor t;
 	t.mat_[0][0] = imatrix->get(0, i);

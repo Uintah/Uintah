@@ -642,10 +642,8 @@ GeomObj* GeomCLineStrips::clone()
 
 void GeomCLineStrips::get_bounds(BBox& bb)
 {
-  const int n_strips = points_.size();
-  for(unsigned int s = 0; s < n_strips; s++) {
-    const int n_coords = points_[s].size();
-    for (unsigned int i = 0; i < n_coords; i+=3) {
+  for(unsigned int s = 0; s < points_.size(); s++) {
+    for (unsigned int i = 0; i < points_[s].size(); i+=3) {
       bb.extend(Point(points_[s][i+0], points_[s][i+1], points_[s][i+2]));
     }
   }
@@ -682,12 +680,11 @@ GeomCLineStrips::add(const vector<Point> &p,
   points_.push_back(vector<float>());
   colors_.push_back(vector<unsigned char>());
 
-  const int n_points = p.size();
-  const int n_colors = c.size();
-  ASSERT(n_colors == n_points);
-
-  for (unsigned int i = 0; i < n_points; i++) 
+  ASSERT(p.size() == c.size());
+  for (unsigned int i = 0; i < p.size(); i++)
+  {
     add(p[i], c[i]);
+  }
 }
 
 void
