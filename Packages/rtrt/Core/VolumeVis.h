@@ -6,6 +6,7 @@
 #include <Packages/rtrt/Core/Point.h>
 #include <Packages/rtrt/Core/BrickArray3.h>
 #include <Packages/rtrt/Core/ScalarTransform1D.h>
+#include <Packages/rtrt/Core/Array1.h>
 #include <stdlib.h>
 
 namespace rtrt {
@@ -22,9 +23,9 @@ protected:
   float data_min, data_max, data_diff_inv;
   int nx, ny, nz;
   Point min, max;
-  Material** matls;
+  Array1<Material*> matls;
   int nmatls;
-  float *alphas;
+  Array1<float> alphas;
   int nalphas;
   //  ScalarTransform1D<float,float> *alpha_transform;
   float delta_x2, delta_y2, delta_z2;
@@ -33,8 +34,8 @@ protected:
 public:
   VolumeVis(BrickArray3<float>& data, float data_min, float data_max,
 	    int nx, int ny, int nz,
-	    Point min, Point max, Material** matls, int nmatls,
-	    float *alphas, int nalphas);
+	    Point min, Point max, const Array1<Material*> &matls, int nmatls,
+	    const Array1<float> &alphas, int nalphas);
   virtual ~VolumeVis();
   virtual void intersect(const Ray& ray, HitInfo& hit, DepthStats* st,
 			 PerProcessorContext*);
