@@ -20,6 +20,7 @@ PSELIBS := \
 	Packages/Uintah/Core/Math          \
 	Packages/Uintah/CCA/Components/MPM \
 	Packages/Uintah/CCA/Components/Arches \
+	Packages/Uintah/CCA/Components/Arches/fortran \
 	Core/Exceptions \
 	Core/Thread     \
 	Core/Geometry   \
