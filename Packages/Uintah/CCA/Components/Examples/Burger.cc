@@ -55,7 +55,8 @@ void Burger::scheduleComputeStableTimestep(const LevelP& level,
   sched->addTask(task, level->eachPatch(), sharedState_->allMaterials());
 }
 
-void Burger::scheduleTimeAdvance(const LevelP& level, SchedulerP& sched)
+void
+Burger::scheduleTimeAdvance( const LevelP& level, SchedulerP& sched, int, int )
 {
   Task* task = scinew Task("timeAdvance",
 			   this, &Burger::timeAdvance);
@@ -63,14 +64,6 @@ void Burger::scheduleTimeAdvance(const LevelP& level, SchedulerP& sched)
   task->requires(Task::OldDW, sharedState_->get_delt_label());
   task->computes(lb_->u);
   sched->addTask(task, level->eachPatch(), sharedState_->allMaterials());
-}
-
-// scheduleTimeAdvance version called by the AMR simulation controller.
-void
-Burger::scheduleTimeAdvance( const LevelP&, SchedulerP&, int , int )
-{
-  cout << "Burger component does not support ARM yet.\n";
-  throw InternalError("Burger component does not support AMR yet.");
 }
 
 void Burger::computeStableTimestep(const ProcessorGroup*,

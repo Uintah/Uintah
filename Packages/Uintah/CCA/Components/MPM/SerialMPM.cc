@@ -183,8 +183,10 @@ void SerialMPM::scheduleComputeStableTimestep(const LevelP&,
    // consitutive model
 }
 
-void SerialMPM::scheduleTimeAdvance(const LevelP&         level,
-				    SchedulerP&     sched)
+void
+SerialMPM::scheduleTimeAdvance(const LevelP & level,
+			       SchedulerP   & sched,
+			       int, int ) // AMR Parameters
 {
   const PatchSet* patches = level->eachPatch();
   const MaterialSet* matls = d_sharedState->allMPMMaterials();
@@ -208,15 +210,6 @@ void SerialMPM::scheduleTimeAdvance(const LevelP&         level,
 				    lb->pXLabel, lb->d_particleState,
 				    lb->pParticleIDLabel, matls);
 }
-
-// scheduleTimeAdvance version called by the AMR simulation controller.
-void
-SerialMPM::scheduleTimeAdvance(const LevelP&, SchedulerP&, int , int )
-{
-  cout << "SerialMPM component does not support ARM yet.\n";
-  throw InternalError("SerialMPM component does not support AMR yet.");
-}
-
 
 void SerialMPM::scheduleInterpolateParticlesToGrid(SchedulerP& sched,
 						   const PatchSet* patches,

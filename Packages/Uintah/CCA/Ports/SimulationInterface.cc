@@ -36,12 +36,6 @@ void SimulationInterface::scheduleTimeAdvance(const LevelP& level,
 					      SchedulerP& sched,
 					      int step, int nsteps)
 {
-  scheduleTimeAdvance(level, sched);
-}
-
-void SimulationInterface::scheduleTimeAdvance(const LevelP& level,
-					      SchedulerP& sched)
-{
   throw InternalError("no simulation implemented?");
 }
 
