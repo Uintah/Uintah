@@ -56,7 +56,7 @@
 
 namespace SCIRun {
 
-class ShowField : public Module 
+class ShowField : public Module
 {
   //! Private Data
 
@@ -68,7 +68,7 @@ class ShowField : public Module
   string                   last_field_name_;
 
   //! output port
-  GeometryOPort           *ogeom_;  
+  GeometryOPort           *ogeom_;
 
   //! Scene graph ID's
   int                      node_id_;
@@ -117,7 +117,7 @@ class ShowField : public Module
   GuiInt                   scalars_transparency_;
   GuiInt                   scalars_usedefcolor_;
   GuiInt                   has_scalar_data_;
-  
+
   //! Options for rendering text.
   GuiInt                   text_on_;
   GuiInt                   text_use_default_color_;
@@ -135,7 +135,7 @@ class ShowField : public Module
   GuiInt                   text_show_cells_;
   MaterialHandle           text_material_;
   bool                     text_dirty_;
-  
+
   //! default color and material
   GuiDouble                def_color_r_;
   GuiDouble                def_color_g_;
@@ -198,8 +198,8 @@ public:
   virtual void tcl_command(GuiArgs& args, void* userdata);
 };
 
-ShowField::ShowField(GuiContext* ctx) : 
-  Module("ShowField", ctx, Filter, "Visualization", "SCIRun"), 
+ShowField::ShowField(GuiContext* ctx) :
+  Module("ShowField", ctx, Filter, "Visualization", "SCIRun"),
   field_generation_(-1),
   mesh_generation_(-1),
   vector_generation_(-1),
@@ -360,7 +360,7 @@ ShowField::check_for_svt_data(FieldHandle fld_handle)
 bool
 ShowField::fetch_typed_algorithm(FieldHandle fld_handle,
 				 FieldHandle vfld_handle,
-				 bool recompile_nonvector) 
+				 bool recompile_nonvector)
 {
   const TypeDescription *ftd = fld_handle->get_type_description();
   const TypeDescription *ltd = fld_handle->data_at_type_description();
@@ -381,7 +381,7 @@ ShowField::fetch_typed_algorithm(FieldHandle fld_handle,
     }
   }
 
-  if (vfld_handle.get_rep() && 
+  if (vfld_handle.get_rep() &&
       vfld_handle->query_scalar_interface(this).get_rep())
   {
     const TypeDescription *vftd = vfld_handle->get_type_description();
@@ -397,7 +397,7 @@ ShowField::fetch_typed_algorithm(FieldHandle fld_handle,
     }
   }
 
-  if (vfld_handle.get_rep() && 
+  if (vfld_handle.get_rep() &&
       vfld_handle->query_vector_interface(this).get_rep())
   {
     const TypeDescription *vftd = vfld_handle->get_type_description();
@@ -413,7 +413,7 @@ ShowField::fetch_typed_algorithm(FieldHandle fld_handle,
     }
   }
 
-  if (vfld_handle.get_rep() && 
+  if (vfld_handle.get_rep() &&
       vfld_handle->query_tensor_interface(this).get_rep())
   {
     const TypeDescription *vftd = vfld_handle->get_type_description();
@@ -434,7 +434,7 @@ ShowField::fetch_typed_algorithm(FieldHandle fld_handle,
 
 
 bool
-ShowField::determine_dirty(FieldHandle fld_handle, FieldHandle vfld_handle) 
+ShowField::determine_dirty(FieldHandle fld_handle, FieldHandle vfld_handle)
 {
   const bool mesh_new = fld_handle->mesh()->generation != mesh_generation_;
   const bool field_new = fld_handle->generation != field_generation_;
@@ -442,7 +442,7 @@ ShowField::determine_dirty(FieldHandle fld_handle, FieldHandle vfld_handle)
     (vfld_handle.get_rep())?
     (vfld_handle->generation != vector_generation_):
     (vector_generation_ != -1);
-  
+
   // Update the field name.
   if ((field_new || vector_new) && gui_field_name_update_.get())
   {
@@ -451,7 +451,7 @@ ShowField::determine_dirty(FieldHandle fld_handle, FieldHandle vfld_handle)
 	vfld_handle.get_rep() != fld_handle.get_rep() &&
 	vfld_handle->get_property("name", fname))
     {
-      gui_field_name_.set(fname);      
+      gui_field_name_.set(fname);
     }
     else if (fld_handle->get_property("name", fname))
     {
@@ -469,8 +469,8 @@ ShowField::determine_dirty(FieldHandle fld_handle, FieldHandle vfld_handle)
     {
       check_for_svt_data(fld_handle);
     }
-    
-    const TypeDescription *data_type_description = 
+
+    const TypeDescription *data_type_description =
       fld_handle->get_type_description(1);
     const string fdt = data_type_description->get_name();
     Field::data_location at = fld_handle->data_at();
@@ -482,13 +482,13 @@ ShowField::determine_dirty(FieldHandle fld_handle, FieldHandle vfld_handle)
       return false;
     }
 
-    field_generation_  = fld_handle->generation;  
-    mesh_generation_ = fld_handle->mesh()->generation; 
+    field_generation_  = fld_handle->generation;
+    mesh_generation_ = fld_handle->mesh()->generation;
     vector_generation_ = (vfld_handle.get_rep())?(vfld_handle->generation):-1;
 
-    nodes_dirty_ = true; 
-    edges_dirty_ = true; 
-    faces_dirty_ = true; 
+    nodes_dirty_ = true;
+    edges_dirty_ = true;
+    faces_dirty_ = true;
     data_dirty_ = true;
     text_dirty_ = true;
 
@@ -541,7 +541,7 @@ clean_fieldname(string fname)
 }
 
 
-void 
+void
 ShowField::execute()
 {
   // tell module downstream to delete everything we have sent it before.
@@ -598,10 +598,10 @@ ShowField::execute()
     vfld_handle = 0;
   }
 
-  // What has changed from last time?  A false return value means that we 
+  // What has changed from last time?  A false return value means that we
   // could not load the algorithm from the dynamic loader.
   if (! determine_dirty(fld_handle, vfld_handle)) { return; }
-  
+
   // Simply update the colormap handle.  If the colormap gets connected
   // or disconnected then we may have to do a redraw.
   const bool was_color_map = color_map_.get_rep();
@@ -646,11 +646,16 @@ ShowField::execute()
   data_resolution_ = gui_data_resolution_.get();
 
   // check to see if we have something to do.
-  if ((!nodes_dirty_) && (!edges_dirty_) && 
+  if ((!nodes_dirty_) && (!edges_dirty_) &&
       (!faces_dirty_) && (!data_dirty_) &&
       (!text_dirty_) && (!color_map_changed))
   {
-    return; 
+    return;
+  }
+
+  if (color_map_.get_rep() == 0)
+  {
+    remark("No colormap, using default color.");
   }
 
   node_display_type_.reset();
@@ -692,12 +697,12 @@ ShowField::execute()
     if (node_id_) ogeom_->delObj(node_id_);
     node_id_ = 0;
     render_state_[NODE] = nodes_on_.get();
-  } 
+  }
   if (render_state_[EDGE] != edges_on_.get()) {
     if (edge_id_) ogeom_->delObj(edge_id_);
     edge_id_ = 0;
     render_state_[EDGE] = edges_on_.get();
-  } 
+  }
   if (render_state_[FACE] != faces_on_.get()) {
     if (face_id_) ogeom_->delObj(face_id_);
     face_id_ = 0;
@@ -711,21 +716,21 @@ ShowField::execute()
     data_id_ = 0;
     render_state_[DATA] =
       vectors_on_.get() || tensors_on_.get() || scalars_on_.get();
-  }  
+  }
   if (render_state_[TEXT] != text_on_.get()) {
     if (text_id_) ogeom_->delObj(text_id_);
     text_id_ = 0;
     render_state_[TEXT] = text_on_.get();
-  }  
-  
+  }
+
   string fname = clean_fieldname(gui_field_name_.get());
   if (fname != "" && fname[fname.size()-1] != ' ') { fname = fname + " "; }
-  
+
   normalize_vectors_.reset();
   if (renderer_.get_rep())
   {
     if (faces_normals_.get()) fld_handle->mesh()->synchronize(Mesh::NORMALS_E);
-    renderer_->render(fld_handle, 
+    renderer_->render(fld_handle,
 		      do_nodes, do_edges, do_faces,
 		      color_map_, def_material_,
 		      ndt, edt, ns, es, vscale, normalize_vectors_.get(),
@@ -767,7 +772,7 @@ ShowField::execute()
   }
   if (do_faces || color_map_changed) {
     faces_dirty_ = false;
-    if (renderer_.get_rep() && faces_on_.get()) 
+    if (renderer_.get_rep() && faces_on_.get())
     {
       const char *name = faces_transparency_.get()?"Transparent Faces":"Faces";
       if (face_id_) ogeom_->delObj(face_id_);
@@ -777,7 +782,7 @@ ShowField::execute()
 	scinew GeomSwitch(scinew GeomColorMap(gmat, color_map_));
       face_id_ = ogeom_->addObj(geom, fname + name);
     }
-  }  
+  }
   if (do_data || color_map_changed)
   {
     data_dirty_ = false;
@@ -788,7 +793,7 @@ ShowField::execute()
       if (data_id_) ogeom_->delObj(data_id_);
       if (do_data)
       {
-	data_geometry_ = 
+	data_geometry_ =
 	  data_vector_renderer_->render_data(vfld_handle,
 					     fld_handle,
 					     color_map_,
@@ -886,8 +891,8 @@ ShowField::execute()
 }
 
 
-void 
-ShowField::maybe_execute(toggle_type_e dis_type) 
+void
+ShowField::maybe_execute(toggle_type_e dis_type)
 {
   bool do_execute = false;
   if (interactive_mode_.get() == "Interactive") {
@@ -910,14 +915,14 @@ ShowField::maybe_execute(toggle_type_e dis_type)
     case DATA_AT :
       do_execute = true;
 	break;
-    }   
+    }
   }
   if (do_execute) {
     want_to_execute();
   }
 }
 
-void 
+void
 ShowField::tcl_command(GuiArgs& args, void* userdata) {
   if(args.count() < 2){
     args.error("ShowField needs a minor command");
@@ -971,7 +976,7 @@ ShowField::tcl_command(GuiArgs& args, void* userdata) {
     def_color_g_.reset();
     def_color_b_.reset();
     def_color_a_.reset();
-    def_material_->diffuse = 
+    def_material_->diffuse =
       Color(def_color_r_.get(), def_color_g_.get(), def_color_b_.get());
     def_material_->transparency = def_color_a_.get();
     if (ogeom_) ogeom_->flushViews();
@@ -1140,7 +1145,7 @@ ShowField::tcl_command(GuiArgs& args, void* userdata) {
     maybe_execute(DATA); // Must redraw the vectors.
   } else if (args[1] == "execute_policy"){
   } else if (args[1] == "calcdefs") {
-    
+
     if (false) { //if (bounding_vector_) {
       //0.00896657
       double fact = 0.01; // * bounding_vector_->length();
