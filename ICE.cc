@@ -53,6 +53,7 @@ ICE::ICE(const ProcessorGroup* myworld)
   switchDebugInitialize           = false;
   switchDebug_EQ_RF_press         = false;
   switchDebug_vel_FC              = false;
+  switchDebug_Temp_FC             = false;
   switchDebug_PressDiffRF         = false;
   switchDebug_Exchange_FC         = false;
   switchDebug_explicit_press      = false;
@@ -148,6 +149,8 @@ void ICE::problemSetup(const ProblemSpecP& prob_spec, GridP& /**/,
        switchDebug_PressDiffRF          = true;
       else if (debug_attr["label"] == "switchDebug_vel_FC")
        switchDebug_vel_FC               = true;
+      else if (debug_attr["label"] == "switchDebug_Temp_FC")
+       switchDebug_Temp_FC               = true;
       else if (debug_attr["label"] == "switchDebug_Exchange_FC")
        switchDebug_Exchange_FC          = true;
       else if (debug_attr["label"] == "switchDebug_explicit_press")
@@ -442,6 +445,11 @@ ICE::scheduleTimeAdvance( const LevelP& level, SchedulerP& sched, int, int )
                                                           mpm_matls_sub,        
                                                           all_matls);           
   }  
+  
+  scheduleComputeTempFC(                   sched, patches, ice_matls_sub,  
+                                                           mpm_matls_sub,         
+                                                           all_matls);    
+                                                                 
   scheduleMassExchange(                   sched, patches, all_matls);                                                           
 
   if(d_impICE) {        //  I M P L I C I T                                           
@@ -1049,7 +1057,7 @@ void ICE::actuallyComputeStableTimestep(const ProcessorGroup*,
 
 /* --------------------------------------------------------------------- 
  Function~  ICE::actuallyInitialize--
- Purpose~  Initialize the CC and FC variables and the pressure  
+ Purpose~  Initialize CC variables and the pressure  
  Note that rho_micro, sp_vol, temp and velocity must be defined 
  everywhere in the domain
 _____________________________________________________________________*/ 
@@ -1117,6 +1125,7 @@ void ICE::actuallyInitialize(const ProcessorGroup*,
       setBC(rho_CC[m],        "Density",      patch, d_sharedState, indx);
       setBC(rho_micro[m],     "Density",      patch, d_sharedState, indx);
       setBC(Temp_CC[m],       "Temperature",  patch, d_sharedState, indx);
+      setBC(speedSound[m],    "zeroNeumann",  patch, d_sharedState, indx); 
       setBC(vel_CC[m],        "Velocity",     patch, indx); 
 
       for (CellIterator iter = patch->getExtraCellIterator();
@@ -1580,8 +1589,8 @@ void ICE::computeTempFC(const ProcessorGroup*,
         new_dw->get(Temp_CC,lb->temp_CCLabel,indx, patch, gac, 1);
       }
       //---- P R I N T   D A T A ------
-  #if 1
-      if (switchDebug_vel_FC ) {
+  #if 0
+      if (switchDebug_Temp_FC ) {
         ostringstream desc;
         desc << "TOP_computeTempFC_Mat_" << indx << "_patch_"<< patch->getID();
         printData(indx, patch, 1, desc.str(), "rho_CC",      rho_CC);
@@ -1624,14 +1633,12 @@ void ICE::computeTempFC(const ProcessorGroup*,
       }
 
       //---- P R I N T   D A T A ------ 
-      if (switchDebug_vel_FC ) {
-        ostringstream desc;      
-        if ( d_massExchange == true ) {
-          desc << "BOT_computeTempFC_Mat_" << indx << "_patch_"<< patch->getID(); 
-          printData_FC( indx, patch,1, desc.str(), "TempX_FC", TempX_FC);
-          printData_FC( indx, patch,1, desc.str(), "TempY_FC", TempY_FC);
-          printData_FC( indx, patch,1, desc.str(), "TempZ_FC", TempZ_FC);
-        }
+      if (switchDebug_Temp_FC ) {
+        ostringstream desc;
+        desc << "BOT_computeTempFC_Mat_" << indx << "_patch_"<< patch->getID(); 
+        printData_FC( indx, patch,1, desc.str(), "TempX_FC", TempX_FC);
+        printData_FC( indx, patch,1, desc.str(), "TempY_FC", TempY_FC);
+        printData_FC( indx, patch,1, desc.str(), "TempZ_FC", TempZ_FC);
       }
     } // matls loop
   }  // patch loop
