@@ -40,6 +40,7 @@ namespace SCIRun{
   class TypeMap : public sci::cca::TypeMap{
   public:
     typedef map<string, string> StringMap;
+    typedef map<string, int> IntMap;
     
 
     TypeMap();
@@ -160,7 +161,7 @@ namespace SCIRun{
     virtual sci::cca::Type typeOf(const ::std::string& key);
   private:
     StringMap stringMap;
-    
+    IntMap intMap;
 
 
 
