@@ -4,6 +4,7 @@
 #include <Uintah/Grid/ParticleVariable.h>
 #include <Uintah/Grid/Array3.h>
 #include <SCICore/Geometry/Point.h>
+#include "Cell.h"
 
 namespace Uintah {
 
@@ -11,8 +12,6 @@ namespace MPM {
 
 using SCICore::Geometry::Vector;
 using SCICore::Geometry::Point;
-
-class Cell;
 
 class Lattice : public Array3<Cell> {
 public:
@@ -34,6 +33,9 @@ private:
 #endif //__LATTICE_H__
 
 // $Log$
+// Revision 1.7  2000/09/25 18:09:04  sparker
+// include Cell.h for template instantiation
+//
 // Revision 1.6  2000/09/05 06:34:13  tan
 // Introduced BrokenCellShapeFunction for SerialMPM::interpolateParticlesToGrid
 // where farcture is involved.
