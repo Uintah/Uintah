@@ -51,10 +51,13 @@ namespace SCIRun {
     ~CCAPortInstance();
     virtual bool connect(PortInstance*);
     virtual PortInstance::PortType portType();
+    virtual std::string getType();
+    virtual std::string getModel();
     virtual std::string getUniqueName();
     virtual bool disconnect(PortInstance*);
     virtual bool canConnectTo(PortInstance*);
-
+    virtual bool available();
+    virtual PortInstance *getPeer();
     std::string getName();
     void incrementUseCount();
     bool decrementUseCount();
@@ -63,7 +66,7 @@ namespace SCIRun {
     std::string name;
     std::string type;
     gov::cca::TypeMap::pointer properties;
-    std::vector<CCAPortInstance*> connections;
+    std::vector<PortInstance*> connections;
     gov::cca::Port::pointer port;
     PortType porttype;
     int useCount;
