@@ -350,6 +350,7 @@ MPMLabel::~MPMLabel()
   VarLabel::destroy(gVelocityNewLabel);
   VarLabel::destroy(gVelocityOldLabel);
   VarLabel::destroy(dispNewLabel);
+  VarLabel::destroy(dispIncLabel);
   VarLabel::destroy(gAccelerationOldLabel);
   VarLabel::destroy(pAccelerationLabel);
   VarLabel::destroy(converged);
