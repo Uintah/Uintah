@@ -142,8 +142,8 @@ void Taubin::bldMatrices() {
 	for (j=0; j<nbrs[i].size(); j++) in_cols.add(nbrs[i][j]);
     }
     in_rows[i]=in_cols.size();
-    srm=scinew SparseRowMatrix(nbrs.size(), in_cols.size(), in_rows, in_cols);
-    srg=scinew SparseRowMatrix(nbrs.size(), in_cols.size(), in_rows, in_cols);
+    srm=scinew SparseRowMatrix(nbrs.size(), nbrs.size(), in_rows, in_cols);
+    srg=scinew SparseRowMatrix(nbrs.size(), nbrs.size(), in_rows, in_cols);
 
     for (i=0; i<nbrs.size(); i++)
 	if (nbrs[i].size()) {
@@ -298,6 +298,9 @@ void Taubin::tcl_command(TCLArgs& args, void* userdata)
 
 //
 // $Log$
+// Revision 1.5  1999/11/17 00:32:01  dmw
+// fixed a bug in Taubin (nrows has to equal ncols) and added a flag to STreeExtractSurf so the node numbers dont change
+//
 // Revision 1.4  1999/10/07 02:06:29  sparker
 // use standard iostreams and complex type
 //
