@@ -125,7 +125,8 @@ public:
 
   virtual void execute();
 
-  void tcl_command(GuiArgs&, void*);
+  virtual void tcl_command(GuiArgs&, void*);
+  virtual void presave();
   
   void resize_gui(int n = -1);
   void update_from_gui();
@@ -255,6 +256,15 @@ EditTransferFunc2::tcl_command(GuiArgs& args, void* userdata)
   }
 }
 
+
+void
+EditTransferFunc2::presave()
+{
+  // TODO: Remove deleted variables from those GuiVar arrays in the
+  // presave function.  This would make the nets cleaner as extra
+  // variables can get written.
+  update_to_gui(false);
+}
 
 
 void
@@ -529,13 +539,6 @@ EditTransferFunc2::execute()
     redraw();
   }
   
-  // TODO: This is tcl_pickle and should go in presave() when that callback
-  // is ported in from the 1.22.0 branch.
-  // TODO: Remove deleted variables from those GuiVar arrays in the
-  // presave function.  This would make the nets cleaner as extra
-  // variables can get written.
-  update_to_gui(false);
-
   Colormap2OPort* cmap_port = (Colormap2OPort*)get_oport("Output Colormap");
   if (cmap_port) {
     Colormap2Handle cmap(scinew Colormap2(widgets_, updating_, gui_faux_.get()));
