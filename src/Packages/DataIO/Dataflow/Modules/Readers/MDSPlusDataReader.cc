@@ -824,7 +824,13 @@ NrrdDataHandle MDSPlusDataReader::readDataset( string& server,
     sink_label.clear();
 
     // Remove the MDS characters that are illegal in Nrrds.
-    const string nums("\\:.");
+    /*
+    std::string::size_type pos;
+    while( (pos = sink_label.find("/")) != string::npos )
+    sink_label.replace( pos, 1, "-" );
+    */
+
+    const string nums("\"\\:.()");
 	      
     // test against valid char set.
     for(string::size_type i = 0; i < signal.size(); i++) {
