@@ -13,11 +13,14 @@ void usage(char *me, const char *unknown = 0) {
   }
 
   // Print out the usage
-  printf("-input  <filename>   basename of input nrrds (null)\n");
-  printf("-output <filename>   name of output nrrd (null)\n");
-  printf("-bases <filename>    load basis textures from file (null)\n");
-  printf("-trans <filename>    load transform matrix from file (null)\n");
-  printf("-mean <filename>     load mean vector from file (null)\n");
+  printf("usage:  %s [options]\n", me);
+  printf("options:\n");
+  printf("  -i <filename>   basename of input nrrds (null)\n");
+  printf("  -o <filename>   filename of output nrrd (null)\n");
+  printf("  -b <filename>   load basis textures from file (null)\n");
+  printf("  -t <filename>   load transform matrix from file (null)\n");
+  printf("  -m <filename>   load mean vector from file (null)\n");
+  printf("  -nrrd           use .nrrd extension (false)\n");
   
   if (unknown)
     exit(1);
@@ -94,12 +97,12 @@ int main(int argc, char *argv[]) {
   }
 
   // Load the input nrrds
-  Nrrd *basesTextures = nrrdNew();
+  Nrrd *bases = nrrdNew();
   Nrrd *transform = nrrdNew();
   Nrrd *mean = nrrdNew();
   int E = 0;
   cerr<<"attempting to load "<<bases_filename<<endl;
-  if (!E) E |= nrrdLoad(basesTextures, bases_filename, 0);
+  if (!E) E |= nrrdLoad(bases, bases_filename, 0);
   cerr<<"attempting to load "<<trans_filename<<endl;
   if (!E) E |= nrrdLoad(transform, trans_filename, 0);
   cerr<<"attempting to load "<<mean_filename<<endl;
@@ -114,8 +117,8 @@ int main(int argc, char *argv[]) {
     
   int num_bases = transform->axis[0].size;
   int num_channels = transform->axis[1].size;
-  int width = basesTextures->axis[1].size;
-  int height = basesTextures->axis[2].size;
+  int width = bases->axis[1].size;
+  int height = bases->axis[2].size;
 
   if (mean->axis[0].size != num_channels) {
     cerr<<"number of channels in mean vector ("<<mean->axis[0].size
@@ -123,8 +126,8 @@ int main(int argc, char *argv[]) {
     exit(2);
   }
 
-  if (basesTextures->axis[0].size != num_bases) {
-    cerr<<"number of basis textures ("<<basesTextures->axis[0].size
+  if (bases->axis[0].size != num_bases) {
+    cerr<<"number of basis textures ("<<bases->axis[0].size
 	<<") is not correct"<<endl;
     exit(2);
   }
@@ -138,7 +141,7 @@ int main(int argc, char *argv[]) {
   }
 
   float *outdata = (float*)(nout->data);
-  float *btdata = (float*)(basesTextures->data);
+  float *btdata = (float*)(bases->data);
   float *tdata = (float*)(transform->data);
   float *mdata = (float*)(mean->data);
   // Produce one channel at a time
