@@ -154,7 +154,7 @@ void SimulationController::run()
       delt_vartype delt_var;
       old_ds->get(delt_var, sharedState->get_delt_label());
 
-      double delt = delt_var*timeinfo.delt_factor;
+      double delt = delt_var;
 
       if(delt < timeinfo.delt_min){
 	 cerr << "WARNING: raising delt from " << delt
@@ -447,6 +447,10 @@ void SimulationController::scheduleTimeAdvance(double t, double delt,
 
 //
 // $Log$
+// Revision 1.31  2000/06/09 23:36:33  bard
+// Removed cosmetic implementation of fudge factor (time step multiplier).
+// It needs to be put in the constitutive routines to have the correct effect.
+//
 // Revision 1.30  2000/06/09 17:20:12  tan
 // Added MD(molecular dynamics) module to SimulationController.
 //
