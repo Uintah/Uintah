@@ -107,6 +107,53 @@ using namespace SCIRun;
       void schedulePrintConservedQuantities(SchedulerP&, const PatchSet*,
 					    const MaterialSubset*,
 					    const MaterialSet*);
+/*__________________________________
+*   PUT THE RF SCHEDULES HERE
+*   FOR NOW
+*__________________________________*/
+     void scheduleComputeNonEquilibrationPressureRF(SchedulerP&, 
+                                               const PatchSet*,
+                                               const MaterialSubset*,
+                                               const MaterialSubset*,
+					            const MaterialSet*);                                              
+
+     void scheduleComputeFCPressDiffRF( SchedulerP&,
+                                      const PatchSet*,
+                                      const MaterialSubset*,
+                                      const MaterialSubset*,
+                                      const MaterialSubset*,
+					   const MaterialSet*);
+                                                                               
+      void scheduleComputeFaceCenteredVelocitiesRF(SchedulerP&, 
+                                                const PatchSet*,
+                                                const MaterialSubset*,
+                                                const MaterialSubset*,
+                                                const MaterialSubset*,
+                                                const MaterialSet*);
+      
+      void scheduleAccumulateMomentumSourceSinksRF(SchedulerP&, 
+                                            const PatchSet*,
+                                            const MaterialSubset*,
+                                            const MaterialSubset*,
+						  const MaterialSet*);
+      
+      void scheduleAccumulateEnergySourceSinksRF(SchedulerP&, 
+                                            const PatchSet*,
+                                            const MaterialSubset*,
+					         const MaterialSet*);
+      
+                 
+      void scheduleComputeLagrangianSpecificVolumeRF(SchedulerP&, 
+                                                   const PatchSet*,
+                                                   const MaterialSubset*,
+                                                   const MaterialSet*);
+
+      void scheduleAddExchangeToMomentumAndEnergyRF(SchedulerP&, 
+                                                  const PatchSet*,
+						        const MaterialSet*);
+/*__________________________________
+*   END OF RF 
+*__________________________________*/
       
       void setICELabel(ICELabel* Ilb) {
 	delete lb;
@@ -194,6 +241,54 @@ using namespace SCIRun;
                                   DataWarehouse*,
                                   DataWarehouse*);
                                   
+/*__________________________________
+*   PUT THE RF TASKS HERE FOR 
+*   NOW
+*__________________________________*/                               
+     void computeNonEquilibrationPressureRF(const ProcessorGroup*,
+				       const PatchSubset* patch,
+				       const MaterialSubset* matls,
+				       DataWarehouse*, 
+				       DataWarehouse*);
+                                   
+     void computeFCPressDiffRF(const ProcessorGroup*,
+				 const PatchSubset* patch,
+				 const MaterialSubset* matls,
+				 DataWarehouse*,
+				 DataWarehouse*);
+                             
+      void computeFaceCenteredVelocitiesRF(const ProcessorGroup*, 
+                                         const PatchSubset* patch,
+                                         const MaterialSubset* matls,
+                                         DataWarehouse*,
+                                         DataWarehouse*);
+                   
+      void accumulateMomentumSourceSinksRF(const ProcessorGroup*,
+                                         const PatchSubset* patches,
+                                         const MaterialSubset* matls,
+                                         DataWarehouse*,
+                                         DataWarehouse*);
+      
+      void accumulateEnergySourceSinksRF(const ProcessorGroup*,
+                                       const PatchSubset* patches,
+                                       const MaterialSubset* matls,
+                                       DataWarehouse*,
+                                       DataWarehouse*);
+      
+      void computeLagrangianSpecificVolumeRF(const ProcessorGroup*,
+                                           const PatchSubset* patches,
+                                           const MaterialSubset* matls,
+                                           DataWarehouse*,
+                                           DataWarehouse*);
+
+      void addExchangeToMomentumAndEnergyRF(const ProcessorGroup*,
+                                          const PatchSubset* patches,
+                                          const MaterialSubset* matls,
+                                          DataWarehouse*,
+                                          DataWarehouse*);  
+/*__________________________________
+* END OF RF TASKS
+*__________________________________*/                                
       void printConservedQuantities(const ProcessorGroup*,
                                     const PatchSubset* patches,
                                     const MaterialSubset* matls,
