@@ -61,13 +61,13 @@ namespace SCIRun {
 
   using namespace MIT;
   
-template<> string SimpleIPort<MeasurementsHandle>::port_type("Measurements");
-template<> string SimpleIPort<MeasurementsHandle>::port_color("yellow");
+template<> string SimpleIPort<MeasurementsHandle>::port_type_("Measurements");
+template<> string SimpleIPort<MeasurementsHandle>::port_color_("yellow");
 
-template<> string SimpleIPort<DistributionHandle>::port_type("Distribution");
-template<> string SimpleIPort<DistributionHandle>::port_color("green");
+template<> string SimpleIPort<DistributionHandle>::port_type_("Distribution");
+template<> string SimpleIPort<DistributionHandle>::port_color_("green");
 
-template<> string SimpleIPort<ResultsHandle>::port_type("Results");
-template<> string SimpleIPort<ResultsHandle>::port_color("white");
+template<> string SimpleIPort<ResultsHandle>::port_type_("Results");
+template<> string SimpleIPort<ResultsHandle>::port_color_("white");
 
 } // End namespace SCIRun
