@@ -99,6 +99,9 @@ SerialMPM::SerialMPM( int MpiRank, int MpiProcesses ) :
    gMomExedVelocityStarLabel = new VarLabel( "g.momexedvelocity_star",
 			      NCVariable<Vector>::getTypeDescription() );
 
+   gSelfContactLabel = new VarLabel( "g.selfContact",
+			      NCVariable<bool>::getTypeDescription() );
+
    // I'm not sure about this one:
    deltLabel = 
      new VarLabel( "delt", delt_vartype::getTypeDescription() );
@@ -861,6 +864,9 @@ void SerialMPM::crackGrow(const ProcessorContext*,
 
 
 // $Log$
+// Revision 1.44  2000/05/08 17:16:51  tan
+// Added grid VarLabel selfContactLabel for fracture simulation.
+//
 // Revision 1.43  2000/05/07 06:02:01  sparker
 // Added beginnings of multiple patch support and real dependencies
 //  for the scheduler
