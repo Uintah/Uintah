@@ -234,8 +234,13 @@ TaskGraph::addTask(Task* task)
       Task::Dependency* dep = *iter;
       TaskProduct p(dep->d_patch, dep->d_matlIndex, dep->d_var);
       actype::iterator aciter = d_allcomps.find(p);
-      if(aciter != d_allcomps.end()) 
+      if(aciter != d_allcomps.end()){
+	 cerr << "First task:\n";
+	 task->displayAll(cerr);
+	 cerr << "Second task:\n";
+	 aciter->second->d_task->displayAll(cerr);
 	 throw InternalError("Two tasks compute the same result: "+dep->d_var->getName()+" (tasks: "+task->getName()+" and "+aciter->second->d_task->getName()+")");
+      }
       d_allcomps[p] = dep;
    }
 }
@@ -262,7 +267,7 @@ void TaskGraph::getRequiresForComputes(const Task::Dependency* comp,
 	 const Task::Dependency* dep = *dep_iter;
 
 	 if (!dep->d_dw->isFinalized()) {
-	    extern int myrank;
+	    //extern int myrank;
 	    //cerr << myrank << ": " << (dep->d_patch?dep->d_patch->getID():-1) << "/" << (comp->d_patch?comp->d_patch->getID():-1) << ", " << dep->d_matlIndex << "/" << comp->d_matlIndex << ", " << dep->d_var->getName() << "/" << comp->d_var->getName() << ": " << dep->d_task->getName() << '\n';
 	    if(dep->d_patch == comp->d_patch 
 	       && dep->d_matlIndex == comp->d_matlIndex
@@ -295,6 +300,9 @@ Task* TaskGraph::getTask(int idx)
 
 //
 // $Log$
+// Revision 1.8  2000/09/25 16:25:30  sparker
+// Display more info when two tasks compute the same result
+//
 // Revision 1.7  2000/09/13 14:00:48  sparker
 // Changed the MPI_Send behaviour - use MPI_Testsome instead of
 // MPI_Waitall after sends.
