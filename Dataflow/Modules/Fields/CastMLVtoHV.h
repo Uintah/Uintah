@@ -126,8 +126,6 @@ CastMLVtoHVAlgoT<FSRC, LSRC, FDST, LDST>::execute(FieldHandle lv_h,
   hvm->begin(bi);
   hvm->end(ei);
 
-  cout << "Got to here, before the loop\n";
-
   while (bi != ei)
   {
     Point p;
@@ -140,8 +138,6 @@ CastMLVtoHVAlgoT<FSRC, LSRC, FDST, LDST>::execute(FieldHandle lv_h,
 
     ++bi;
   }
-
-  cout << "Finished the loop.\n";
 
   return hv;
 }
