@@ -51,7 +51,6 @@ public:
   double* a;
 
   //! Constructors
-
   // Fuck the SGI compiler for hinting that someone should strip out
   // all of the variable names from these.  Every time I use this god
   // forsaken class I have to redecipher this terrible interface.
@@ -64,10 +63,10 @@ public:
   //         row/col orderand corresponds with the spaces in the rr array.
   //   nnz = number of non zero entries.
   //   d   = non zero data values.
-  SparseRowMatrix();
-  SparseRowMatrix(int r, int c, Array1<int>& rr, Array1<int>& cc);
-  SparseRowMatrix(int r, int c, int *rr, int *cc, int nnz, double *d);
-  SparseRowMatrix(int r, int c, int *rr, int *cc, int nnz);
+private:
+  SparseRowMatrix(); // This is only used by the maker function.
+public:
+  SparseRowMatrix(int r, int c, int *rr, int *cc, int nnz, double *d = 0);
   SparseRowMatrix(const SparseRowMatrix&);
 
   //! Destructor
@@ -127,6 +126,9 @@ public:
 						 const SparseRowMatrix &b);
   friend SCICORESHARE SparseRowMatrix *SubSparse(const SparseRowMatrix &a,
 						 const SparseRowMatrix &b);
+
+
+  static Persistent *maker();
 };
 
 } // End namespace SCIRun
