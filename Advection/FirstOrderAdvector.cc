@@ -262,10 +262,3 @@ void swapbytes( Uintah::FirstOrderAdvector::fflux& f) {
 }
 
 } // namespace SCIRun
-
-
-
-
-
-
-
