@@ -126,10 +126,12 @@ void GLTextureBuilder::execute(void)
     return;
   }
 
+
   double minV, maxV;
   double min = min_.get();
   double max = max_.get();
   int is_fixed = is_fixed_.get();
+
   if (sfield.get_rep() != sfrg_.get_rep()  && !tex_.get_rep())
   {
     sfrg_ = sfield;

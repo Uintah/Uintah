@@ -154,14 +154,12 @@ void TexCuttingPlanes::execute(void)
     Point Smin(tex->min());
     Point Smax(tex->max());
     Vector dv(Smax - Smin);
-    LatVolMeshHandle lvmH = tex->get_mesh();
-    ddv.x(dv.x()/(lvmH->get_nx() - 1));
-    ddv.y(dv.y()/(lvmH->get_ny() - 1));
-    ddv.z(dv.z()/(lvmH->get_nz() - 1));
-    ddview = (dv.length()/(std::max(lvmH->get_nx(), 
-				    std::max(lvmH->get_ny(), 
-					     lvmH->get_nz())) -1));
-
+    int nx, ny, nz;
+    tex->get_dimensions(nx,ny,nz);
+    ddv.x(dv.x()/(nx - 1));
+    ddv.y(dv.y()/(ny - 1));
+    ddv.z(dv.z()/(nz - 1));
+    ddview = (dv.length()/(std::max(nx, std::max(ny,nz)) -1));
     control_widget->SetPosition(Interpolate(Smin,Smax,0.5));
     control_widget->SetScale(dv.length()/80.0);
   }
@@ -187,13 +185,12 @@ void TexCuttingPlanes::execute(void)
       Point Smin(tex->min());
       Point Smax(tex->max());
       Vector dv(Smax - Smin);
-      LatVolMeshHandle lvmH = tex->get_mesh();
-      ddv.x(dv.x()/(lvmH->get_nx() - 1));
-      ddv.y(dv.y()/(lvmH->get_ny() - 1));
-      ddv.z(dv.z()/(lvmH->get_nz() - 1));
-      ddview = (dv.length()/(std::max(lvmH->get_nx(), 
-				      std::max(lvmH->get_ny(), 
-					       lvmH->get_nz())) -1));
+      int nx, ny, nz;
+      tex->get_dimensions(nx,ny,nz);
+      ddv.x(dv.x()/(nx - 1));
+      ddv.y(dv.y()/(ny - 1));
+      ddv.z(dv.z()/(nz - 1));
+      ddview = (dv.length()/(std::max(nx, std::max(ny,nz)) -1));
       volren->SetVol( tex.get_rep() );
     }
 

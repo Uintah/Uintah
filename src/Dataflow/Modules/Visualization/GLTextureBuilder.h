@@ -51,7 +51,7 @@ public:
 
   virtual void execute();
 
-private:
+protected:
   FieldIPort *infield_;
 
   GLTexture3DOPort* otexture_;
