@@ -445,6 +445,7 @@ void ICE::scheduleInitialize(const LevelP& level,SchedulerP& sched)
        iter != d_models.end(); iter++){
       ModelInterface* model = *iter;
       model->scheduleInitialize(sched, level, d_modelInfo);
+      model->d_dataArchiver = dataArchiver;
     }
   }
 }
