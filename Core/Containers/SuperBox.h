@@ -97,7 +97,7 @@ public:
     { return (size_t)box; }
   };
   
-  typedef hash_map<BoxP, BB*, BoxHash> BoxHashMap;
+  typedef std::hash_map<BoxP, BB*, BoxHash> BoxHashMap;
 #else
   typedef map<BoxP, BB*>               BoxHashMap;
 #endif
