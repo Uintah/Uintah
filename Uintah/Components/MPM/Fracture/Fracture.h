@@ -18,6 +18,11 @@ namespace MPM {
 
 class Fracture {
 public:
+  enum CellStatus { HAS_ONE_BOUNDARY_SURFACE,
+                    HAS_SEVERAL_BOUNDARY_SURFACE,
+                    INTERIOR
+                  };
+
   void   materialDefectsInitialize(const Patch* patch,
                                    DataWarehouseP& new_dw);
   
@@ -58,6 +63,15 @@ public:
 	 Fracture(ProblemSpecP& ps, SimulationStateP& d_sS);
                 
 private:
+  void   labelCellSurfaceNormal (
+           const ProcessorContext*,
+           const Patch* patch,
+           DataWarehouseP& old_dw,
+           DataWarehouseP& new_dw);
+
+  static Fracture::CellStatus  cellStatus(const Vector& cellSurfaceNormal);
+  static void setCellStatus(Fracture::CellStatus status,Vector* cellSurfaceNormal);
+
   double           d_averageMicrocrackLength;
   double           d_materialToughness;
   SimulationStateP d_sharedState;
@@ -69,6 +83,10 @@ private:
 #endif //__FRACTURE_H__
 
 // $Log$
+// Revision 1.11  2000/06/01 23:55:47  tan
+// Added CellStatus to determine if a cell HAS_ONE_BOUNDARY_SURFACE,
+// HAS_SEVERAL_BOUNDARY_SURFACE or is INTERIOR cell.
+//
 // Revision 1.10  2000/05/30 20:19:13  sparker
 // Changed new to scinew to help track down memory leaks
 // Changed region to patch
