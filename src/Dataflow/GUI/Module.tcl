@@ -63,8 +63,6 @@ itcl_class Module {
 	# messages should be accumulating
 	if {[info exists $this-msgStream]} {
 	    $msgLogStream registerVar $this-msgStream
-	} else {
-	    puts "No stream buffer variable exists"
 	}
 
 	set MacroModule ""
