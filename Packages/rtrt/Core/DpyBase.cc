@@ -28,12 +28,17 @@ using SCIRun::Mutex;
 using SCIRun::Thread;
 using namespace std;
 
-namespace rtrt {
-  extern Mutex xlock;
-} // end namespace rtrt
+// I wanted to make this mutex a static member of DpyBase, but I had
+// troubles when calling Thread::exitAll().  Somehow it was getting
+// destroyed before non class members had a chance to use it.
+static Mutex xmutex("X windows lock");
+bool rtrt::DpyBase::useXThreads = false;
 
-DpyBase::DpyBase(const char *name, const int window_mode):
-  xres(300), yres(300), opened(false), on_death_row(false),
+DpyBase::DpyBase(const char *name, const int window_mode,
+                 bool delete_on_exit):
+  Runnable(delete_on_exit),
+  xres(300), yres(300), opened(false), close_display_flag(true),
+  cleaned(false), on_death_row(false),
   redraw(true), control_pressed(false), shift_pressed(false),
   window_mode(window_mode), scene(0)
 {
@@ -43,18 +48,21 @@ DpyBase::DpyBase(const char *name, const int window_mode):
 
   // Register the call back function to close the window when
   // Thread::exitAll(0) is called.
-  SCIRun::CleanupManager::add_callback(this->close_display_aux, this);
+  SCIRun::CleanupManager::add_callback(this->cleanup_aux, this);
 }
 
 DpyBase::~DpyBase() {
-  close_display();
+  // Need to remove and call callback at same time or else you get a
+  // race condition and the callback could be called twice.
+  SCIRun::CleanupManager::invoke_remove_callback(this->cleanup_aux,
+                                                 this);
 }
 
 static int DPY_NX=0;
 static int DPY_NY=0;
 
 int DpyBase::open_events_display(Window parent) {
-  xlock.lock();
+  xlock();
 
   dpy = XOpenDisplay(NULL);
   if(!dpy){
@@ -90,7 +98,7 @@ int DpyBase::open_events_display(Window parent) {
   XSetWMProperties(dpy, win, &tp, &tp, 0, 0, &sh, 0, 0);
   XMapWindow(dpy, win);
   
-  xlock.unlock();
+  xunlock();
   
   opened = true;
 
@@ -106,7 +114,7 @@ int DpyBase::open_events_display(Window parent) {
 }
 
 int DpyBase::open_display(Window parent, bool needevents) {
-  xlock.lock();
+  xlock();
   // Open an OpenGL window
   dpy = XOpenDisplay(NULL);
   if(!dpy){
@@ -202,7 +210,7 @@ int DpyBase::open_display(Window parent, bool needevents) {
     exit (0);
   }
   glXUseXFont(id, first, last-first+1, fontbase+first);
-  xlock.unlock();
+  xunlock();
 
   opened = true;
 
@@ -224,57 +232,70 @@ DpyBase::setName( const string & name )
   window_name = name;
   sprintf( cwindow_name,"%.255s", window_name.c_str() );
   if (dpy && win) {
-    xlock.lock();  
+    xlock();  
     XTextProperty tp;
     XStringListToTextProperty(&cwindow_name, 1, &tp);
     XSizeHints sh;
     sh.flags = USSize;
     XSetWMProperties(dpy, win, &tp, &tp, 0, 0, &sh, 0, 0);
  
-    xlock.unlock();  
+    xunlock();  
   }
 }
 
 void DpyBase::Hide() {
-  xlock.lock();
+  xlock();
   XUnmapWindow(dpy, win);
-  xlock.unlock();
+  xunlock();
   XFlush(dpy);
 }
 void DpyBase::Show() {
-  xlock.lock();
+  xlock();
   XMapRaised(dpy, win);
-  xlock.unlock();
+  xunlock();
   XFlush(dpy);
 }
 
-int DpyBase::close_display(bool remove_from_cleanup_manager) {
+int DpyBase::close_display() {
   if (!opened) return 1;
   else opened = false;
-  
-  xlock.lock();
-  cerr << "Closing dpy:"<<window_name<<"\n";
-  XCloseDisplay(dpy);
-  cerr << "Closed dpy:"<<window_name<<"\n";
 
-  if (remove_from_cleanup_manager) {
-#if 1
-    cerr << "Trying to remove the call back\n";
-    // Remove this from the cleanup manager, so we don't close the
-    // display twice.
-    SCIRun::CleanupManager::remove_callback(this->close_display_aux, this);
-    cerr << "Removed the call back\n";
-#endif
+  if (close_display_flag) {
+    xlock();
+    
+    cerr << "Closing dpy:"<<window_name<<"\n";
+    XCloseDisplay(dpy);
+    cerr << "Closed dpy:"<<window_name<<"\n";
+    
+    xunlock();
   }
-  
-  xlock.unlock();
-  cerr << "lock unlocked\n";
   
   return 0;
 }
 
+void DpyBase::dont_close() {
+  cerr << window_name << ": will not be closed\n";
+  close_display_flag = false;
+}
+
+void DpyBase::cleanup() {
+  if (cleaned) return;
+  else cleaned = true;
+  
+  close_display();
+}
+
 void DpyBase::stop() {
+  cerr << "DpyBase::stop() called for "<<window_name<<"\n";
   on_death_row = true;
+
+  // Need to figure out a better event for this, but this works for
+  // now.
+  XEvent event;
+  event.type = Expose;
+  if (useXThreads) XLockDisplay(dpy);
+  XSendEvent(dpy, win, false, 0, &event);
+  if (useXThreads) XUnlockDisplay(dpy);
 }
 
 void DpyBase::init() {
@@ -326,9 +347,12 @@ bool DpyBase::should_close() {
 }
 
 void DpyBase::post_redraw() {
+  cerr << "Sending redraw event\n";
   XEvent event;
   event.type = Expose;
+  if (useXThreads) XLockDisplay(dpy);
   XSendEvent(dpy, win, false, 0, &event);
+  if (useXThreads) XUnlockDisplay(dpy);
 }
 
 extern bool pin;
@@ -341,19 +365,10 @@ void DpyBase::run() {
 
   init();
   
-  // Create the Xevent handler
-  for(;;){
-    XEvent e;
-    XNextEvent(dpy, &e);
-    if(e.type == MapNotify)
-      break;
-  }
-  
-
   for(;;){
     // Now we need to test to see if we should die
     if (should_close()) {
-      close_display();
+      cleanup();
       return;
     }
     
@@ -385,7 +400,6 @@ void DpyBase::wait_and_handle_events() {
     //    cerr << window_name << ": " << XPending(dpy) << " events left to process\n";
     // Now we need to test to see if we should die
     if (should_close()) {
-      close_display();
       return;
     }
 
@@ -394,7 +408,7 @@ void DpyBase::wait_and_handle_events() {
     XNextEvent(dpy, &e);	
     switch(e.type){
     case Expose:
-      //      cerr << window_name << ": "<< "Expose event found.  " << XPending(dpy) << " events left to process\n";
+      cerr << window_name << ": "<< "Expose event found.  " << XPending(dpy) << " events left to process\n";
       redraw=true;
       break;
     case ConfigureNotify:
@@ -496,6 +510,22 @@ void DpyBase::wait_and_handle_events() {
     } // end switch (e.type)
   } // end of while (there is a queued event)
 }
+
+void DpyBase::xlock() {
+  xmutex.lock();
+}
+
+void DpyBase::xunlock() {
+  xmutex.unlock();
+}
+
+void DpyBase::initUseXThreads() {
+  if (XInitThreads()) {
+    cerr << "Enabling XThreads\n";
+    useXThreads = true;
+  }
+}
+
 namespace rtrt {
   
 void printString(GLuint fontbase, double x, double y,

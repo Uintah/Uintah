@@ -56,10 +56,22 @@ protected:
   int open_events_display(Window parent = 0);
   
   // Closes the display
-  int close_display(bool remove_from_cleanup_manager=true);
+  int close_display();
+  // Calling this will make sure the window doesn't close.  This is
+  // useful for when you have a parent.  Let the parent window close.
+  // Don't close the child.
+  void dont_close();
+  // Tells if the display should be closed.  Defaults to true.
+  bool close_display_flag;
+
+  // This function does what ever you need to do before going away.
+  // It should also call close_display().
+  virtual void cleanup();
+  bool cleaned;
+  
   // This is for global cleanups
-  static void close_display_aux(void* ptr) {
-    ((DpyBase*)ptr)->close_display(false);
+  static void cleanup_aux(void* ptr) {
+    ((DpyBase*)ptr)->cleanup();
   }
 
   // Flag letting the control loop know to stop executing and
@@ -119,7 +131,8 @@ protected:
   Scene *scene;
 public:
   // name is the name of the window.
-  DpyBase(const char *name, const int window_mode = DoubleBuffered);
+  DpyBase(const char *name, const int window_mode = DoubleBuffered,
+          bool delete_on_exit = true);
   virtual ~DpyBase();
 
   void Hide();
@@ -140,17 +153,29 @@ public:
   // I don't think this function is needed right now.
   //  virtual void animate(double t, bool& changed);
 
-  // This causes the thread to end at the first opportunity closing the window.
+  // This causes the thread to end at the first opportunity closing
+  // the window.  It also generates an X event so that a thread
+  // waiting for an event will actually stop.
   void stop();
   
   void set_scene(Scene *new_scene) { scene = new_scene; }
+
+public:
+  // These functions try to minimize the number of things going on
+  // with the xserver.
+  static void xlock();
+  static void xunlock();
+
+  // This says whether to use XLockDisplay and XUnlockDisplay.
+  static void initUseXThreads();
+  static bool useXThreads;
 };
 
   // helper funtions
   void printString(GLuint fontbase, double x, double y,
 		   const char *s, const Color& c);
   int calc_width(XFontStruct* font_struct, const char* str);
-  
+
 } // end namespace rtrt
 
 #endif // __DPYBASE__H__
