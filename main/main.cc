@@ -46,9 +46,7 @@
 
 #include <string>
 #include <iostream>
-using std::cerr;
 using std::cout;
-using std::endl;
 
 #ifdef _WIN32
 #include <afxwin.h>
@@ -124,8 +122,8 @@ parse_args( int argc, char *argv[] )
       struct stat buf;
       if (stat(arg.c_str(),&buf) < 0)
       {
-	cerr << "Couldn't find net file " << arg
-	     << ".\nNo such file or directory.  Exiting." << endl;
+	std::cerr << "Couldn't find net file " << arg
+		  << ".\nNo such file or directory.  Exiting." << std::endl;
 	exit(0);
       }
 
@@ -177,6 +175,8 @@ show_license_and_copy_scirunrc(GuiInterface *gui) {
   if (tclresult == "accept") {
     string homerc = string(HOME)+"/.scirunrc";
     string cmd = string("cp -f ")+SCIRUN_SRCDIR+string("/scirunrc ")+homerc;
+    std::cout << "Copying default " << SCIRUN_SRCDIR << "/scirunrc to " <<
+      homerc << "...\n";
     if (sci_system(cmd.c_str())) {      
       std::cerr << "Error executing: " << cmd << std::endl;
     } else { 
@@ -189,7 +189,7 @@ show_license_and_copy_scirunrc(GuiInterface *gui) {
 
 
 int
-main( int argc, char *argv[], char **environment) {
+main(int argc, char *argv[], char **environment) {
   // Setup the SCIRun key/value environment
   create_sci_environment(environment);
   sci_putenv("SCIRUN_SRCDIR", SCIRUN_SRCDIR);
@@ -209,7 +209,7 @@ main( int argc, char *argv[], char **environment) {
   // We need to start the thread in the NotActivated state, so we can
   // change the stack size.  The 0 is a pointer to a ThreadGroup which
   // will default to the global thread group.
-  Thread* t=new Thread(tcl_task, "TCL main event loop",0, Thread::NotActivated);
+  Thread* t=new Thread(tcl_task,"TCL main event loop",0, Thread::NotActivated);
   t->setStackSize(1024*1024);
   // False here is stating that the tread was stopped or not.  Since
   // we have never started it the parameter should be false.
@@ -219,18 +219,19 @@ main( int argc, char *argv[], char **environment) {
 
   // Create user interface link
   GuiInterface* gui = new TCLInterface();
-  // If the user doesnt have a .scirunrc file, provide them with a default one
-  if (!find_and_parse_scirunrc()) show_license_and_copy_scirunrc(gui);
   // setup TCL auto_path to find core components
   gui->execute("lappend auto_path "SCIRUN_SRCDIR"/Core/GUI "
 	       SCIRUN_SRCDIR"/Dataflow/GUI "ITCL_WIDGETS);
-  gui->execute("global scirun2; set scirun2 0");
+  gui->execute("set scirun2 0");
 
   // Create initial network
   packageDB = new PackageDB(gui);
   Network* net=new Network();
   Scheduler* sched_task=new Scheduler(net);
   new NetworkEditor(net, gui);
+
+  // If the user doesnt have a .scirunrc file, provide them with a default one
+  if (!find_and_parse_scirunrc()) show_license_and_copy_scirunrc(gui);
 
   // Activate the scheduler.  Arguments and return
   // values are meaningless
