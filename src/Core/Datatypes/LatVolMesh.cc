@@ -117,29 +117,20 @@ LatVolMesh::get_center(Point &result, cell_index idx) const
 bool
 LatVolMesh::locate(cell_index &cell, const Point &p) const
 {
-  double xa,xb;
-  double ya,yb;
-  double za,zb;
+  cell.i_ = (p.x() - min_.x()) / (max_.x() - min_.x()) * (nx_ - 1) + 0.5;
+  cell.j_ = (p.y() - min_.y()) / (max_.y() - min_.y()) * (ny_ - 1) + 0.5;
+  cell.k_ = (p.z() - min_.z()) / (max_.z() - min_.z()) * (nz_ - 1) + 0.5;
 
-  // if point is not inside field, return false
-  if (p.x()<min_.x() || p.y()<min_.y() || p.z()<min_.z() ||
-      p.x()>max_.x() || p.y()>max_.y() || p.z()>max_.z())
+  if (cell.i_ < 0 || cell.i_ >= (nx_-1) ||
+      cell.j_ < 0 || cell.j_ >= (ny_-1) ||
+      cell.k_ < 0 || cell.k_ >= (nz_-1))
+  {
     return false;
-
-  // compute linear mapping coefficients
-  xa = (nx_-1)/(max_.x()-min_.x());
-  xb = -(min_.x()*(nx_-1))/(max_.x()-min_.x());
-  ya = (ny_-1)/(max_.y()-min_.y());
-  yb = -(min_.y()*(ny_-1))/(max_.y()-min_.y());
-  za = (nz_-1)/(max_.z()-min_.z());
-  zb = -(min_.z()*(nz_-1))/(max_.z()-min_.z());
-
-  // convertg from object space to cell_index space
-  cell.i_ = (unsigned)(p.x()*xa+xb);
-  cell.j_ = (unsigned)(p.y()*ya+yb);
-  cell.k_ = (unsigned)(p.z()*za+zb);
-
-  return true;
+  }
+  else
+  {
+    return true;
+  }
 }
 
 bool
