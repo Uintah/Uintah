@@ -24,7 +24,7 @@
 
 #include <Core/Containers/Handle.h>
 #include <Core/Datatypes/Datatype.h>
-#include <Core/Datatypes/Clipper.h>
+#include <Core/Datatypes/Mesh.h>
 #include <Core/Geometry/Transform.h>
 #include <Core/Containers/LockingHandle.h>
 
@@ -117,7 +117,9 @@ private:
   LockingHandle<MESH> mesh_;
 
 public:
-  MeshClipper(LockingHandle<MESH> mesh) : mesh_(mesh) {}
+  MeshClipper(LockingHandle<MESH> mesh) : mesh_(mesh) { 
+    mesh->synchronize(Mesh::LOCATE_E);
+  }
 
   virtual bool inside_p(const Point &p)
   {
