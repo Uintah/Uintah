@@ -1,7 +1,7 @@
 #include <Core/Geometry/Point.h>
 #include <Core/Geometry/Vector.h>
 #include <Packages/rtrt/Core/VolumeVis2D.h>
-#include <Packages/rtrt/Core/VolumeVis2DDpy.h>
+#include <Packages/rtrt/Core/Volvis2DDpy.h>
 #include <Packages/rtrt/Core/HitInfo.h>
 #include <Packages/rtrt/Core/Ray.h>
 #include <Packages/rtrt/Core/Light.h>
@@ -34,7 +34,7 @@ VolumeVis2D::VolumeVis2D(BrickArray3<Voxel2D<float>>& _data,
 			 int nx, int ny, int nz,
 			 Point min, Point max,
 			 double spec_coeff, double ambient, double diffuse,
-			 double specular, VolumeVis2DDpy *dpy):
+			 double specular, Volvis2DDpy *dpy):
   Object(this), dpy(dpy), diag(max - min),
   data_min(data_min), data_max(data_max),
   nx(nx), ny(ny), nz(nz),
