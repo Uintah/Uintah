@@ -49,7 +49,6 @@ using SCICore::Datatypes::DenseMatrix;
 
 static int iterNum = 0;
 
-#undef john_debug
 #undef todd_debug
 
 ICE::ICE(const ProcessorGroup* myworld) 
@@ -106,9 +105,10 @@ void ICE::problemSetup(const ProblemSpecP& prob_spec,GridP& grid,
 
   cerr << "In the preprocessor . . ." << endl;
 
-  ProblemSpecP cfl_ps = prob_spec->findBlock("CFD");
-  cfl_ps->require("cfl",d_CFL);
- 
+  ProblemSpecP cfd_ps = prob_spec->findBlock("CFD");
+  cfd_ps->require("cfl",d_CFL);
+  ProblemSpecP cfd_ice_ps = cfd_ps->findBlock("ICE");
+  cfd_ice_ps->require("max_iteration_equilibration",d_max_iter_equilibration);
 
   ProblemSpecP time_ps = prob_spec->findBlock("Time");
   time_ps->require("delt_init",d_initialDt);
@@ -139,6 +139,7 @@ void ICE::problemSetup(const ProblemSpecP& prob_spec,GridP& grid,
   ice_ic_ps->require("pressure",d_pressure);  
 
   cout << "cfl = " << d_CFL << endl;
+  cout << "max_iteration_equilibration " << d_max_iter_equilibration << endl;
   cout << "Initial dt = " << d_initialDt << endl;
   cout << "Number of ICE materials: " 
        << d_sharedState->getNumICEMatls()<< endl;
@@ -673,22 +674,10 @@ void ICE::actuallyInitialize(const ProcessorGroup*, const Patch* patch,
 
   CCVariable<double>    press;  
   new_dw->allocate(press,lb->press_CCLabel, 0,patch);
-#ifdef john_debug
-  cout << "Initial pressure = " << d_pressure << endl;
-#endif   
   press.initialize(d_pressure);
-
   setBC(press,"Pressure",patch);
-
   new_dw->put(press,    lb->press_CCLabel,  0,patch);
   
-#ifdef john_debug
-  cout << "Initial pressure = " << d_pressure << endl;
-  for(CellIterator iter = patch->getCellIterator(); !iter.done(); iter++){
-    cout << "press["<< *iter<< "]=" << press[*iter] << endl;
-  } 
-#endif
-
   for (int m = 0; m < d_sharedState->getNumICEMatls(); m++ ) {
     ICEMaterial* ice_matl = d_sharedState->getICEMaterial(m);
     int dwindex = ice_matl->getDWIndex();
@@ -722,41 +711,12 @@ void ICE::actuallyInitialize(const ProcessorGroup*, const Patch* patch,
     vvel_FC.initialize(0.);
     wvel_FC.initialize(0.);
     
-#ifdef john_debug
-    cout << "Before doing the boundary conditions" << endl;
-    for(CellIterator iter = patch->getExtraCellIterator(); !iter.done(); 
-	iter++){
-      cout << "rho_CC["<< *iter<< "]=" << rho_CC[*iter] << endl;
-#ifdef john_debug
-      cout << "rho_micro["<< *iter<< "]=" << rho_micro[*iter] << endl;
-      cout << "temp["<< *iter<< "]=" << Temp_CC[*iter] << endl;
-      cout << "uvel_CC["<< *iter<< "]=" << uvel_CC[*iter] << endl;
-      cout << "vvel_CC["<< *iter<< "]=" << vvel_CC[*iter] << endl;
-      cout << "wvel_CC["<< *iter<< "]=" << wvel_CC[*iter] << endl;
-#endif
-	
-      } 
-#endif
     setBC(rho_CC, "Density",      patch);
     setBC(Temp_CC,"Temperature",  patch);
     setBC(uvel_CC,"Velocity","x", patch);
     setBC(vvel_CC,"Velocity","y", patch);
     setBC(wvel_CC,"Velocity","z", patch);
-    
-#ifdef john_debug
-    cout << "After doing the boundary conditions" << endl;
-    for(CellIterator iter = patch->getExtraCellIterator(); !iter.done(); 
-	iter++){
-      cout << "rho_CC["<< *iter<< "]=" << rho_CC[*iter] << endl;
-#ifdef john_debug
-      cout << "rho_micro["<< *iter<< "]=" << rho_micro[*iter] << endl;
-      cout << "temp["<< *iter<< "]=" << Temp_CC[*iter] << endl;
-      cout << "uvel_CC["<< *iter<< "]=" << uvel_CC[*iter] << endl;
-      cout << "vvel_CC["<< *iter<< "]=" << vvel_CC[*iter] << endl;
-      cout << "wvel_CC["<< *iter<< "]=" << wvel_CC[*iter] << endl;
-#endif
-    } 
-#endif
+
     new_dw->put(rho_micro,  lb->rho_micro_CCLabel, dwindex,patch);
     new_dw->put(rho_CC,     lb->rho_CCLabel,       dwindex,patch);
     new_dw->put(vol_frac_CC,lb->vol_frac_CCLabel,  dwindex,patch);
@@ -885,10 +845,6 @@ void ICE::actuallyStep1b(const ProcessorGroup*, const Patch* patch,
     
     for(CellIterator iter = patch->getExtraCellIterator(); !iter.done(); 
 	iter++)  {
-#ifdef john_debug
-      cout << "rho_CC" << (*iter+IntVector(1,1,1)) << "=" 
-	   << rho_temp[*iter] << endl;
-#endif
       vol_frac[m][*iter] = rho_temp[*iter]/rho_micro_temp[*iter];
     }
   }
@@ -943,15 +899,15 @@ void ICE::actuallyStep1b(const ProcessorGroup*, const Patch* patch,
     double delPress = 0.;
     bool converged  = false;
     count           = 0;
-    while ( count < MAX_ITER_EQUILIBRATION && converged == false) {
-      count ++;
+    while ( count < d_max_iter_equilibration && converged == false) {
+      count++;
       double A = 0.;
       double B = 0.;
       double C = 0.;
       
       for (int m = 0; m < numMatls; m++) 
 	delVol_frac[m] = 0.;
-     //__________________________________
+      //__________________________________
      // evaluate presss_eos at cell i,j,k
      for (int m = 0; m < numMatls; m++)  {
        ICEMaterial* ice_matl = d_sharedState->getICEMaterial(m);
@@ -1028,13 +984,6 @@ void ICE::actuallyStep1b(const ProcessorGroup*, const Patch* patch,
   // Update the boundary conditions for the variables:
   // Pressure (press_new)
 
-#ifdef john_debug
-  for (CellIterator iter=patch->getExtraCellIterator(); !iter.done(); iter++) {
-     cout << "press_new["<<*iter<<"]="<<press_new[*iter] << endl;
-  }
-          
-#endif
-
   /*__________________________________
    *   THIS NEEDS TO BE FIXED 
    *   WE NEED TO UPDATE BC_VALUES NOT PRESSURE
@@ -1104,12 +1053,6 @@ void ICE::actuallyStep1b(const ProcessorGroup*, const Patch* patch,
     new_dw->put( vol_frac[m],  lb->vol_frac_CCLabel,         dwindex,patch);
     new_dw->put( speedSound[m],lb->speedSound_equiv_CCLabel, dwindex,patch);
     new_dw->put( rho_micro[m], lb->rho_micro_equil_CCLabel,  dwindex,patch);
-    
-#ifdef john_debug
-    for(CellIterator iter = patch->getCellIterator(); !iter.done(); iter++){
-      cout << "rho_micro"<<*iter<<"="<<rho_micro[m][*iter] << endl;
-    }
-#endif
   }
   new_dw->put(press_new,lb->press_CCLabel,0,patch);
   
@@ -1201,20 +1144,6 @@ void ICE::actuallyStep1c(const ProcessorGroup*, const Patch* patch,
 	// gravity term
 	term3 =  delT * gravity.y();
 	vvel_FC[curcell + IntVector(0,1,0)] = term1- term2 + term3;
-	
-#ifdef john_debug
-	cout << "rho_micro_CC adjacent = " << rho_micro_CC[adjcell] << 
-	  " current = " << rho_micro_CC[curcell] << endl;
-	cout << "Top face rho_micro_FC = " << rho_micro_FC << endl;
-	cout << "Top face rho_FC = " << rho_FC << endl;
-	cout << "vvel_CC adjacent = " << vvel_CC[adjcell] << " current = " 
-	     << vvel_CC[curcell] << endl;
-	cout << "Top face term 1 = " << term1 << " term 2 = " << term2 << 
-	  " term 3 = " << term3 << endl;
-	cout << "uvel="<< uvel_FC[curcell+IntVector(0,1,0)] << endl;
-	cout << "vvel="<< vvel_FC[curcell+IntVector(0,1,0)] << endl;
-	cout << "wvel="<< wvel_FC[curcell+IntVector(0,1,0)] << endl<<endl;
-#endif
       }
       
       //__________________________________
@@ -1241,15 +1170,6 @@ void ICE::actuallyStep1c(const ProcessorGroup*, const Patch* patch,
 	term3 =  delT * gravity.x();
 	
 	uvel_FC[curcell + IntVector(1,0,0)] = term1- term2 + term3;
-	
-	
-#ifdef john_debug
-	cout << "Right face term 1 = " << term1 << " term 2 = " << term2 << 
-	  " term 3 = " << term3 << endl;
-	cout << "uvel="<< uvel_FC[curcell+IntVector(1,0,0)] << endl;
-	cout << "vvel="<< vvel_FC[curcell+IntVector(1,0,0)] << endl;
-	cout << "wvel="<< wvel_FC[curcell+IntVector(1,0,0)] << endl<<endl;
-#endif
       }
 
       //__________________________________
@@ -1279,58 +1199,19 @@ void ICE::actuallyStep1c(const ProcessorGroup*, const Patch* patch,
 	term3 =  delT * gravity.z();
 	
 	wvel_FC[curcell + IntVector(0,0,1)] = term1- term2 + term3;
-           
-#ifdef john_debug
-	cout << "Front face term 1 = " << term1 << " term 2 = " << term2 << 
-	  " term 3 = " << term3 << endl;
-	cout << "uvel="<< uvel_FC[curcell+IntVector(0,0,1)] << endl;
-	cout << "vvel="<< vvel_FC[curcell+IntVector(0,0,1)] << endl;
-	cout << "wvel="<< wvel_FC[curcell+IntVector(0,0,1)] << endl<<endl;
-#endif
       }
     }
     
-#ifdef john_debug
-    cout << "Before BC application" << endl << endl;
-    for(CellIterator iter = patch->getExtraCellIterator(); !iter.done(); 
-	iter++) {
-      cout << "left face velocity" << *iter << "=" <<uvel_FC[*iter] << endl;
-      cout << "right face velocity" << *iter << "=" 
-	   <<uvel_FC[*iter+IntVector(1,0,0)] << endl;
-      cout << "bottom face velocity" << *iter << "=" <<vvel_FC[*iter] << endl;
-      cout << "top face velocity" << *iter << "=" 
-	   <<vvel_FC[*iter + IntVector(0,1,0)] << endl;
-      cout << "back face velocity" << *iter << "=" <<wvel_FC[*iter] << endl;
-      cout << "front face velocity" << *iter << "=" 
-	   <<wvel_FC[*iter+IntVector(0,0,1)] << endl << endl;
-    }
-#endif     
-      setBC(uvel_CC,"Velocity","x",patch);
-      setBC(vvel_CC,"Velocity","y",patch);
-      setBC(wvel_CC,"Velocity","z",patch);
-      setBC(uvel_FC,"Velocity","x",patch);
-      setBC(vvel_FC,"Velocity","y",patch);
-      setBC(wvel_FC,"Velocity","z",patch);
-
-#ifdef john_debug
-      cout << "After BC in step 1c application" << endl << endl;
-      for(CellIterator iter = patch->getExtraCellIterator(); !iter.done(); 
-	  iter++) {
-	cout << "left face velocity" << *iter << "=" <<uvel_FC[*iter] << endl;
-	cout << "right face velocity" << *iter << "=" 
-	     <<uvel_FC[*iter+IntVector(1,0,0)] << endl;
-	cout << "bottom face velocity" << *iter << "=" <<vvel_FC[*iter] << endl;
-	cout << "top face velocity" << *iter << "=" 
-	     <<vvel_FC[*iter + IntVector(0,1,0)] << endl;
-	cout << "back face velocity" << *iter << "=" <<wvel_FC[*iter] << endl;
-	cout << "front face velocity" << *iter << "=" 
-	     <<wvel_FC[*iter+IntVector(0,0,1)] << endl << endl;
-      }
-#endif       
-
-      new_dw->put(uvel_FC, lb->uvel_FCLabel, dwindex, patch);
-      new_dw->put(vvel_FC, lb->vvel_FCLabel, dwindex, patch);
-      new_dw->put(wvel_FC, lb->wvel_FCLabel, dwindex, patch);
+    setBC(uvel_CC,"Velocity","x",patch);
+    setBC(vvel_CC,"Velocity","y",patch);
+    setBC(wvel_CC,"Velocity","z",patch);
+    setBC(uvel_FC,"Velocity","x",patch);
+    setBC(vvel_FC,"Velocity","y",patch);
+    setBC(wvel_FC,"Velocity","z",patch);
+   
+    new_dw->put(uvel_FC, lb->uvel_FCLabel, dwindex, patch);
+    new_dw->put(vvel_FC, lb->vvel_FCLabel, dwindex, patch);
+    new_dw->put(wvel_FC, lb->wvel_FCLabel, dwindex, patch);
   }
 }
 
@@ -1416,25 +1297,7 @@ void ICE::actuallyStep1d(const ProcessorGroup*,const Patch* patch,
     new_dw->allocate(vvel_FCME[m], lb->vvel_FCMELabel, dwindex, patch);
     new_dw->allocate(wvel_FCME[m], lb->wvel_FCMELabel, dwindex, patch);
   }
-
-#ifdef john_debug
-  cout << "At the beginning of step1d" << endl << endl;
-  for (int m = 0; m < numMatls; m++) {
-    for(CellIterator iter = patch->getExtraCellIterator(); !iter.done(); 
-	iter++) {
-      cout << "left face velocity" << *iter << "=" <<uvel_FC[m][*iter] << endl;
-      cout << "right face velocity" << *iter << "=" 
-	   <<uvel_FC[m][*iter+IntVector(1,0,0)] << endl;
-      cout << "bottom face velocity" << *iter << "=" <<vvel_FC[m][*iter] << endl;
-      cout << "top face velocity" << *iter << "=" 
-	   <<vvel_FC[m][*iter + IntVector(0,1,0)] << endl;
-      cout << "back face velocity" << *iter << "=" <<wvel_FC[m][*iter] << endl;
-      cout << "front face velocity" << *iter << "=" 
-	   <<wvel_FC[m][*iter+IntVector(0,0,1)] << endl << endl;
-    }
-  }
-#endif       
-     
+  
   for (int m = 0; m < numMatls; m++)  {
     uvel_FCME[m] = uvel_FC[m];
     vvel_FCME[m] = vvel_FC[m];
@@ -1531,10 +1394,6 @@ void ICE::actuallyStep1d(const ProcessorGroup*,const Patch* patch,
       itworked = a.solve(b);
       for(int m = 0; m < numMatls; m++) {
 	uvel_FCME[m][*iter] = uvel_FC[m][*iter] + b[m];
-#ifdef john_debug
-	cout << "uvel_FC = " << uvel_FC[m][*iter] << " b = " << b[m] <<
-	  "uvel_FCME = " << uvel_FCME[m][*iter] << endl;
-#endif
       }
     }
     //__________________________________
@@ -1576,56 +1435,16 @@ void ICE::actuallyStep1d(const ProcessorGroup*,const Patch* patch,
       //      S  O  L  V  E
       //   - backout velocities
       itworked = a.solve(b);
-#ifdef john_debug
-      for (int i = 0; i < (int)b.size(); i++)  {
-	cout << "Front faced b[" << i << "]=" << b[i] << endl;
-      }      
-#endif
-
       for(int m = 0; m < numMatls; m++) {
 	wvel_FCME[m][*iter] = wvel_FC[m][*iter] + b[m];
       }
     }
   }
   
-
-#ifdef john_debug
-  cout << "Before the BCs in step1d" << endl << endl;
-  for (int m = 0; m < numMatls; m++) {
-    for (CellIterator iter=patch->getExtraCellIterator(); !iter.done();
-	 iter++) {
-      cout << "left face velocity" << *iter << "=" <<uvel_FCME[m][*iter] << endl;
-      cout << "right face velocity" << *iter << "=" 
-	   <<uvel_FCME[m][*iter+IntVector(1,0,0)] << endl;
-      cout << "bottom face velocity" << *iter << "=" <<vvel_FCME[m][*iter] << endl;
-      cout << "top face velocity" << *iter << "=" 
-	   <<vvel_FCME[m][*iter + IntVector(0,1,0)] << endl;
-      cout << "back face velocity" << *iter << "=" <<wvel_FCME[m][*iter] << endl;
-      cout << "front face velocity" << *iter << "=" 
-	   <<wvel_FCME[m][*iter+IntVector(0,0,1)] << endl << endl;
-    }
-  }
-#endif
-
   for (int m = 0; m < numMatls; m++)  {
     setBC(uvel_FCME[m],"Velocity","x",patch);
     setBC(vvel_FCME[m],"Velocity","y",patch);
     setBC(wvel_FCME[m],"Velocity","z",patch);
-#ifdef john_debug
-    cout << endl << endl << "Now doing the BC in step1d" << endl << endl;
-    for (CellIterator iter=patch->getExtraCellIterator(); !iter.done();
-	 iter++) {
-      cout << "left face velocity" << *iter << "=" <<uvel_FCME[m][*iter] << endl;
-      cout << "right face velocity" << *iter << "=" 
-	   <<uvel_FCME[m][*iter+IntVector(1,0,0)] << endl;
-      cout << "bottom face velocity" << *iter << "=" <<vvel_FCME[m][*iter] << endl;
-      cout << "top face velocity" << *iter << "=" 
-	   <<vvel_FCME[m][*iter + IntVector(0,1,0)] << endl;
-      cout << "back face velocity" << *iter << "=" <<wvel_FCME[m][*iter] << endl;
-      cout << "front face velocity" << *iter << "=" 
-	   <<wvel_FCME[m][*iter+IntVector(0,0,1)] << endl << endl;
-    }
-#endif
   }
 
   for(int m = 0; m < numMatls; m++) {
@@ -1718,9 +1537,6 @@ void ICE::actuallyStep2(const ProcessorGroup*,const Patch* patch,
     for(CellIterator iter = patch->getExtraCellIterator(); !iter.done();
 	iter++) {
       q_CC[*iter] = vol_frac[*iter] * invvol;
-#ifdef john_debug
-      cout << "q_CC"<<*iter<<"="<< q_CC[*iter] << endl;
-#endif
     }
     //__________________________________
     //   First order advection of q_CC
@@ -1754,19 +1570,11 @@ void ICE::actuallyStep2(const ProcessorGroup*,const Patch* patch,
       
       term3[*iter] += vol_frac[*iter] /(rho_micro_CC[*iter] *
 					speedSound[*iter]*speedSound[*iter]);
-#ifdef john_debug                          
-      cout << "term1 = " << term1[*iter] << " term2 = " << term2[*iter] << " term3 = " << term3[*iter] << endl;
-#endif
     }
   }
   for(CellIterator iter = patch->getCellIterator(); !iter.done(); iter++) {
     delPress[*iter] = (delT * term1[*iter] - term2[*iter])/(term3[*iter]);
-    pressdP[*iter]  = pressure[*iter] + delPress[*iter];
-    
-#ifdef john_debug
-    cout << "delPress = " << delPress[*iter] << " pressdP = " 
-	 << pressdP[*iter] << endl;
-#endif
+    pressdP[*iter]  = pressure[*iter] + delPress[*iter];    
   }
   setBC(pressdP,"Pressure",patch);
 
@@ -1818,9 +1626,6 @@ void ICE::actuallyStep3(const ProcessorGroup*,const Patch* patch,
 
   for(CellIterator iter = patch->getExtraCellIterator();!iter.done();iter++){
     IntVector curcell = *iter;
-#ifdef john_debug
-    cout << "Cell = " << curcell << endl;
-#endif
     //__________________________________
     //  T O P   F A C E
     if (curcell.y() < (patch->getCellHighIndex()).y()-1) {
@@ -1830,9 +1635,6 @@ void ICE::actuallyStep3(const ProcessorGroup*,const Patch* patch,
       for(int m = 0; m < numMatls; m++) {
 	sum_rho      += (rho_CC[m][curcell] + d_SMALL_NUM);
 	sum_rho_adj  += (rho_CC[m][adjcell] + d_SMALL_NUM);
-#ifdef john_debug
-	cout << "rho_CC"<<curcell<<"=" << rho_CC[m][curcell] << " sum_rho=" << sum_rho << " sum_rho_adj=" << sum_rho_adj << endl;
-#endif
       }
       
       A =  (press_CC[curcell]/sum_rho) + (press_CC[adjcell]/sum_rho_adj);
@@ -1875,46 +1677,10 @@ void ICE::actuallyStep3(const ProcessorGroup*,const Patch* patch,
     }
   }
 
-#ifdef john_debug
-  cout << "Before application of pressure BCS" << endl;
-  for(CellIterator iter = patch->getExtraCellIterator(); !iter.done(); iter++){
-    cout << "Cell = " << *iter << endl;
-    cout << "top face pressure = " << pressY_FC[*iter+IntVector(0,1,0)] 
-	 << endl;
-    cout << "bottom face pressure = " << pressY_FC[*iter+IntVector(0,0,0)] 
-	 << endl;
-    cout << "left face pressure = " << pressX_FC[*iter+IntVector(0,0,0)] 
-	 << endl;
-    cout << "right face pressure = " << pressX_FC[*iter+IntVector(1,0,0)] 
-	 << endl;
-    cout << "front face pressure = " << pressZ_FC[*iter+IntVector(0,0,1)] 
-	 << endl;
-    cout << "back face pressure = " << pressZ_FC[*iter+IntVector(0,0,0)] 
-	 << endl<<endl;
-  }
-#endif
   setBC(pressX_FC,"Pressure",patch);
   setBC(pressY_FC,"Pressure",patch);
   setBC(pressZ_FC,"Pressure",patch);
 
-#ifdef john_debug
-  cout << "After application of pressure BCS" << endl;
-  for(CellIterator iter = patch->getExtraCellIterator(); !iter.done(); iter++){
-    cout << "Cell = " << *iter << endl;
-    cout << "top face pressure = " << pressY_FC[*iter+IntVector(0,1,0)] 
-	 << endl;
-    cout << "bottom face pressure = " << pressY_FC[*iter+IntVector(0,0,0)] 
-	 << endl;
-    cout << "left face pressure = " << pressX_FC[*iter+IntVector(0,0,0)] 
-	 << endl;
-    cout << "right face pressure = " << pressX_FC[*iter+IntVector(1,0,0)] 
-	 << endl;
-    cout << "front face pressure = " << pressZ_FC[*iter+IntVector(0,0,1)] 
-	 << endl;
-    cout << "back face pressure = " << pressZ_FC[*iter+IntVector(0,0,0)] 
-	 << endl << endl;
-  }
-#endif
   new_dw->put(pressX_FC,lb->pressX_FCLabel, 0, patch);
   new_dw->put(pressY_FC,lb->pressY_FCLabel, 0, patch);
   new_dw->put(pressZ_FC,lb->pressZ_FCLabel, 0, patch);
@@ -2042,10 +1808,8 @@ void ICE::actuallyStep4a(const ProcessorGroup*,const Patch* patch,
 #endif
       zmom_source[*iter]  =   (-pressure_source * delX * delY +
 			       mass * gravity.z()) * delT;
-#ifdef john_debug
-      cout << "xmom_source"<<*iter <<"="<<xmom_source[*iter] << " ymom_source=" << ymom_source[*iter] << " zmom_source="<< zmom_source[*iter] << endl;
-#endif
     }
+
     new_dw->put(xmom_source, lb->xmom_source_CCLabel, dwindex, patch);
     new_dw->put(ymom_source, lb->ymom_source_CCLabel, dwindex, patch);
     new_dw->put(zmom_source, lb->zmom_source_CCLabel, dwindex, patch);
@@ -2102,10 +1866,6 @@ void ICE::actuallyStep4b(const ProcessorGroup*,const Patch* patch,
       A = vol * vol_frac[*iter] * press_CC[*iter];
       B = rho_micro_CC[*iter]   * speedSound[*iter] * speedSound[*iter];
       int_eng_source[*iter] = (A/B) * delPress[*iter];
-#ifdef john_debug
-      cout << "A = " << A << " B = " << B << endl;
-      cout << "int_eng_source"<<*iter<<"="<<int_eng_source[*iter] << endl;
-#endif
     }
     new_dw->put(int_eng_source,lb->int_eng_source_CCLabel,dwindex,patch);
   }
@@ -2176,14 +1936,6 @@ void ICE::actuallyStep5a(const ProcessorGroup*, const Patch* patch,
       int_eng_L[*iter] = mass * cv_CC[*iter] * temp_CC[*iter]
 	//-cv_CC[*iter] * temp_CC * mass_source[*iter]
 	+ int_eng_source[*iter];
-#ifdef john_debug
-      cout << "mass_L"<<*iter<<"="<<mass_L[*iter] << endl;
-      cout << "rho_L"<<*iter<<"="<<rho_L[*iter] << endl;
-      cout << "xmom_L"<<*iter<<"="<<xmom_L[*iter] << endl;
-      cout << "ymom_L"<<*iter<<"="<<ymom_L[*iter] << endl;
-      cout << "zmom_L"<<*iter<<"="<<zmom_L[*iter] << endl;
-      cout << "int_eng_L"<<*iter<<"="<<int_eng_L[*iter] << endl << endl;
-#endif
     }
     new_dw->put(xmom_L,    lb->xmom_L_CCLabel,    dwindex,patch);
     new_dw->put(ymom_L,    lb->ymom_L_CCLabel,    dwindex,patch);
@@ -2453,10 +2205,6 @@ void ICE::actuallyStep6and7(const ProcessorGroup*, const Patch* patch,
     {
       CFL = d_CFL;
     }
-#ifdef john_debug
-  cout << "CFL = " << CFL << endl;
-#endif
-  
   
   CCVariable<double> xmom_L_ME, ymom_L_ME, zmom_L_ME, int_eng_L_ME, mass_L;
   CCVariable<double> speedSound,cv_old;
@@ -2542,14 +2290,7 @@ void ICE::actuallyStep6and7(const ProcessorGroup*, const Patch* patch,
 		 q_in,q_in_EF,q_in_CF,q_advected);
     
     for(CellIterator iter = patch->getCellIterator(); !iter.done(); iter++) {
-#ifdef john_debug
-      cout << "mass_L"<<*iter<<"="<<mass_L[*iter] << " q_advected = " <<
-	q_advected[*iter] << " invvol = " << invvol << endl;
-#endif
       rho_CC[*iter] = (mass_L[*iter] + q_advected[*iter]) * invvol;
-#ifdef john_debug
-      cout << "rho_CC" << *iter << "=" << rho_CC[*iter] << endl;
-#endif
     }
     
     // Advect X momentum and backout uvel_CC
@@ -2603,18 +2344,6 @@ void ICE::actuallyStep6and7(const ProcessorGroup*, const Patch* patch,
       temp[*iter] = (int_eng_L_ME[*iter] + q_advected[*iter])/(mass*cv[*iter]);
     }
 
-#ifdef john_debug
-    cout << "Before applying bcs  6&7cd. . . " << endl << endl;
-    for(CellIterator iter = patch->getExtraCellIterator(); !iter.done(); 
-	iter++) {
-      cout << "rho"<<*iter<<"="<<rho_CC[*iter]<< endl;
-        cout << "temp"<<*iter<<"="<<temp[*iter]<< endl;
-        cout << "uvel"<<*iter<<"="<<uvel_CC[*iter]<< endl;
-        cout << "vvel"<<*iter<<"="<<vvel_CC[*iter]<< endl;
-        cout << "wvel"<<*iter<<"="<<wvel_CC[*iter]<< endl;
-    }
-#endif
-    
     setBC(rho_CC,   "Density",              patch);
     setBC(temp,     "Temperature",          patch);
     setBC(uvel_CC,  "Velocity",     "x",    patch);
@@ -2629,18 +2358,6 @@ void ICE::actuallyStep6and7(const ProcessorGroup*, const Patch* patch,
     printData( patch,1, "",   "Temp_CC",  temp);
 #endif
     /*==========DEBUG============`*/
-#ifdef john_debug
-    cout << "After applying bcs . . . " << endl << endl;
-    for(CellIterator iter = patch->getExtraCellIterator(); !iter.done(); 
-	iter++) {
-      cout << "rho"<<*iter<<"="<<rho_CC[*iter]<< endl;
-      cout << "temp"<<*iter<<"="<<temp[*iter]<< endl;
-      cout << "uvel"<<*iter<<"="<<uvel_CC[*iter]<< endl;
-      cout << "vvel"<<*iter<<"="<<vvel_CC[*iter]<< endl;
-      cout << "wvel"<<*iter<<"="<<wvel_CC[*iter]<< endl;
-    }
-#endif
-    
     
     // Compute new delt
     
@@ -2676,9 +2393,6 @@ void ICE::actuallyStep6and7(const ProcessorGroup*, const Patch* patch,
     new_dw->put(cv,     lb->cv_CCLabel,       dwindex,patch);
   }
   double dT = std::min(delt_stability, delt_CFL);
-#ifdef john_debug
-  cout << "new dT = " << dT << endl;
-#endif
   new_dw->put(delt_vartype(dT), lb->delTLabel);
   
 }
@@ -2692,27 +2406,18 @@ void ICE::setBC(CCVariable<double>& variable, const string& kind,
       face <= Patch::endFace; face=Patch::nextFace(face)){
     vector<BoundCondBase* > bcs;
     bcs = patch->getBCValues(face);
-#ifdef john_debug
-    cout << bcs.size() << " of BCS for face " << face << endl;
-    for (int i = 0; i<(int)bcs.size(); i++) {
-      cout << "BC kind = " << bcs[i]->getType() << endl;
-    }
-#endif
+
     if (bcs.size() == 0) continue;
     
     BoundCondBase* bc_base = 0;
-#ifdef john_debug
-    cout << "bc_base = " << bc_base << endl;
-#endif
+
     for (int i = 0; i<(int)bcs.size(); i++ ) {
       if (bcs[i]->getType() == kind) {
 	bc_base = bcs[i];
 	break;
       }
     }
-#ifdef john_debug
-    cout << "bc_base = " << bc_base << endl;
-#endif
+
     if (bc_base == 0)
       continue;
     
@@ -3128,10 +2833,6 @@ void ICE::influxOutfluxVolume(const SFCXVariable<double>& uvel_FC,
   double delX_tmp, delY_tmp,   delZ_tmp, totalfluxin;
   double vol = dx.x()*dx.y()*dx.z();
 
-#ifdef john_debug
-  cout << "delT = " << delT << endl;
-#endif
-  
   // Compute outfluxes 
   for(CellIterator iter = patch->getExtraCellIterator(); !iter.done(); iter++){
     delY_top    = std::max(0.0, (vvel_FC[*iter+IntVector(0,1,0)] * delT));
@@ -3140,14 +2841,6 @@ void ICE::influxOutfluxVolume(const SFCXVariable<double>& uvel_FC,
     delX_left   = std::max(0.0,-(uvel_FC[*iter+IntVector(0,0,0)] * delT));
     delZ_front  = std::max(0.0, (wvel_FC[*iter+IntVector(0,0,1)] * delT));
     delZ_back   = std::max(0.0,-(wvel_FC[*iter+IntVector(0,0,0)] * delT));
-#ifdef john_debug
-    cout << "delY_top = " << delY_top << " "
-	 << "delY_bottom = " << delY_bottom << " "
-	 << "delX_right = " << delX_right << " "
-	 << "delX_left = " << delX_left << " "
-	 << "delZ_front = " << delZ_front << " "
-	 << "delZ_back = " << delZ_back << " " << endl << endl;
-#endif
     
     delX_tmp    = dx.x() - delX_right - delX_left;
     delY_tmp    = dx.y() - delY_top   - delY_bottom;
@@ -3297,10 +2990,6 @@ void ICE::influxOutfluxVolume(const SFCXVariable<double>& uvel_FC,
     for(int corner = TOP_R_BK; corner <= BOT_L_FR; corner++ )  {
       totalfluxin  += IFC[*iter].d_cflux[corner];
     }
-#ifdef john_debug
-    cout << "totalfluxin = " << totalfluxin << endl;
-    cout << "vol = " << vol << endl;
-#endif
   }
   ASSERT(totalfluxin < vol);
   }
@@ -3394,12 +3083,7 @@ void ICE::advectQFirst(const CCVariable<double>&   q_CC,const Patch* patch,
     //  Calculate the advected q at t + delta t
     q_advected[*iter] = - sum_q_outflux - sum_q_outflux_EF - sum_q_outflux_CF
                         + sum_q_influx  + sum_q_influx_EF  + sum_q_influx_CF;
-#ifdef john_debug
-    cout << setprecision(16)<<"sum_q_outflux = " << sum_q_outflux << " sum_q_outflux_EF = " <<
-      sum_q_outflux_EF << " sum_q_influx = " << sum_q_influx << 
-      " sum_q_influx_EF = " << sum_q_influx_EF << " q_advect"<<*iter<<
-      "=" << q_advected[*iter] << endl;
-#endif
+
   }
   //__________________________________
   // DEBUGGING
@@ -3832,6 +3516,10 @@ ______________________________________________________________________*/
 
 //
 // $Log$
+// Revision 1.75  2001/01/04 03:35:42  jas
+// Remove john_debugs.  Now specifying max_iter_equilibration in the input
+// file instead of using #define MAX_ITER_EQUILIBRATION.
+//
 // Revision 1.74  2001/01/04 00:06:48  jas
 // Formatting changes.
 //
