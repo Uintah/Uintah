@@ -35,7 +35,6 @@ namespace Uintah {
     const VarLabel* mom_L_CCLabel;
     const VarLabel* int_eng_L_CCLabel;
     const VarLabel* mass_L_CCLabel;
-    const VarLabel* rho_L_CCLabel;
     const VarLabel* mom_L_ME_CCLabel;
     const VarLabel* int_eng_L_ME_CCLabel;
     const VarLabel* q_CCLabel;
