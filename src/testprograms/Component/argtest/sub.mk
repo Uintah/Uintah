@@ -19,13 +19,20 @@
 
 SRCDIR := testprograms/Component/argtest
 
+
 ifeq ($(LARGESOS),yes)
 PSELIBS := Core
 else
 PSELIBS := Core/CCA/Component/SSIDL Core/CCA/Component/PIDL Core/Thread \
-	Core/Exceptions Core/globus_threads Core/CCA/Component/Comm
+	Core/Exceptions Core/CCA/Component/Comm
 endif
+
+ifeq ($(HAVE_GLOBUS),yes)
+PSELIBS+=Core/globus_threads
+endif
+
 LIBS := 
+
 
 PROGRAM := $(SRCDIR)/argtest
 SRCS := $(SRCDIR)/argtest.cc $(SRCDIR)/argtest_sidl.cc

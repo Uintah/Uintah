@@ -65,7 +65,7 @@ int main(int argc, char* argv[])
 	bool client=false;
 	bool server=false;
 	string client_url;
-	int reps=100;
+	int reps=10;
 
 	for(int i=1;i<argc;i++){
 	    string arg(argv[i]);
@@ -92,7 +92,8 @@ int main(int argc, char* argv[])
 	    usage(argv[0]);
 
 	if(server) {
-	    PingPong_impl* pp=new PingPong_impl;
+	    PingPong_impl::pointer pp(new PingPong_impl);
+	    pp->addReference();
 	    cerr << "Waiting for pingpong connections...\n";
 	    cerr << pp->getURL().getString() << '\n';
 	} else {

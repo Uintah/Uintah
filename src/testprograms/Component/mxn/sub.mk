@@ -22,9 +22,15 @@ SRCDIR := testprograms/Component/mxn
 ifeq ($(LARGESOS),yes)
 PSELIBS := Core
 else
-PSELIBS := Core/CCA/Component/PIDL  Core/CCA/Component/Comm Core/Thread \
-	Core/Exceptions Core/globus_threads 
+PSELIBS := Core/CCA/Component/SSIDL Core/CCA/Component/PIDL Core/Thread \
+	Core/Exceptions Core/CCA/Component/Comm
 endif
+
+ifeq ($(HAVE_GLOBUS),yes)
+PSELIBS+=Core/globus_threads
+endif
+
+
 LIBS := 
 
 PROGRAM := $(SRCDIR)/MxNArrRep_Test

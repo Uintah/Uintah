@@ -29,7 +29,12 @@
  */
 
 #include <iostream>
+<<<<<<< pingpong.cc
+#include <vector>
+#include <string>
+=======
 #include <sci_config.h> // For MPIPP_H on SGI
+>>>>>>> 1.6
 #include <mpi.h>
 #include <Core/CCA/Component/PIDL/PIDL.h>
 #include <Core/CCA/Component/PIDL/MxNArrayRep.h>
@@ -41,7 +46,12 @@
 #include <Core/Thread/Time.h>
 #include <signal.h>
 
+<<<<<<< pingpong.cc
 using namespace std;
+
+=======
+using namespace std;
+>>>>>>> 1.6
 using namespace SCIRun;
 
 void usage(char* progname)
