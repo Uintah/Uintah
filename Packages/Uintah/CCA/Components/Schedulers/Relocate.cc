@@ -358,7 +358,7 @@ SPRelocate::relocateParticles(const ProcessorGroup*,
 	  new_dw->put(*var, reloc_new_labels[matl][v]);
 	}
       } else {
-	int numOldVariables = subsets.size();
+	int numOldVariables = (int)subsets.size();
 	if(newParts){
 	  map<const VarLabel*, ParticleVariableBase*>::iterator piter;
 	  piter = newParts->find(reloc_new_posLabel);

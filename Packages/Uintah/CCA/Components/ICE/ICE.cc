@@ -558,7 +558,7 @@ void ICE::scheduleComputeStableTimestep(const LevelP& level,
 _____________________________________________________________________*/
 void
 ICE::scheduleTimeAdvance( const LevelP& level, SchedulerP& sched, 
-                          int step, int nsteps )
+                          int /*step*/, int /*nsteps*/ )
 {
   cout_doing << "ICE::scheduleTimeAdvance\t\t\tL-" <<level->getIndex()<< endl;
   const PatchSet* patches = level->eachPatch();
@@ -952,12 +952,13 @@ void ICE::scheduleModelMomentumAndEnergyExchange(SchedulerP& sched,
 /* ---------------------------------------------------------------------
  Function~  ICE::scheduleAccumulateMomentumSourceSinks--
 _____________________________________________________________________*/
-void ICE::scheduleAccumulateMomentumSourceSinks(SchedulerP& sched,
-                                          const PatchSet* patches,
-                                          const MaterialSubset* press_matl,
-                                          const MaterialSubset* ice_matls_sub,
-                                          const MaterialSubset* mpm_matls_sub,
-                                          const MaterialSet* matls)
+void
+ICE::scheduleAccumulateMomentumSourceSinks(SchedulerP& sched,
+					   const PatchSet* patches,
+					   const MaterialSubset* press_matl,
+					   const MaterialSubset* ice_matls_sub,
+					   const MaterialSubset* /*mpm_matls_sub*/,
+					   const MaterialSet* matls)
 {
   Task* t;
   cout_doing << "ICE::scheduleAccumulateMomentumSourceSinks" << endl; 
@@ -1664,10 +1665,10 @@ void ICE::initializeSubTask_hydrostaticAdj(const ProcessorGroup*,
       hydrostaticPressureAdjustment(patch, rho_micro[d_surroundingMatl_indx],
                                     press_CC);
 
-      Patch::FaceType facePlaceHolder;
-      ice_matl->getEOS()->computeTempCC(patch, "WholeDomain",
-                                   press_CC, gamma, cv,
-                                   rho_micro[m], Temp, facePlaceHolder);
+      Patch::FaceType dummy = Patch::invalidFace; // This is a dummy variable
+      ice_matl->getEOS()->computeTempCC( patch, "WholeDomain",
+					 press_CC, gamma, cv,
+					 rho_micro[m], Temp, dummy );
 
       //__________________________________
       //  Print Data
