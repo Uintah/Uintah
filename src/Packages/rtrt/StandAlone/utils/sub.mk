@@ -44,6 +44,11 @@ SRCS := $(SRCDIR)/pca-reconstruct.cc
 # Does need teem
 include $(SCIRUN_SCRIPTS)/program.mk
 
+PROGRAM := $(SRCDIR)/dilate
+SRCS := $(SRCDIR)/dilate.cc
+# Does need teem
+include $(SCIRUN_SCRIPTS)/program.mk
+
 ifeq ($(HAVE_LAPACK),yes)
 PROGRAM := $(SRCDIR)/pca-image
 SRCS := $(SRCDIR)/pca-image.cc
