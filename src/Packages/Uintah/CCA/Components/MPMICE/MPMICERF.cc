@@ -95,9 +95,6 @@ void MPMICE::computeRateFormPressure(const ProcessorGroup*,
          ice_matl->getEOS()->computePressEOS(rho_micro[m][c],gamma[m],
                                          cv[m],Temp[m][c],
                                          press_eos[m],dp_drho[m],dp_de[m]);
-         
-         compressibility[m]=
-                     ice_matl->getEOS()->getCompressibility(press_eos[m]);
 
          mat_mass[m]   = rho_CC[m][c] * cell_vol;
          mat_volume[m] = mat_mass[m] * sp_vol_CC[m][c];
@@ -110,9 +107,6 @@ void MPMICE::computeRateFormPressure(const ProcessorGroup*,
           rho_micro[m][c] = mass_CC[m][c]/mat_vol[m][c];
           mat_mass[m]     = mass_CC[m][c];
 
-          compressibility[m]=
-              mpm_matl->getConstitutiveModel()->getCompressibility();
-
           mpm_matl->getConstitutiveModel()->
             computePressEOSCM(rho_micro[m][c],press_eos[m], press_ref,
                               dp_drho[m], tmp,mpm_matl);
@@ -121,7 +115,12 @@ void MPMICE::computeRateFormPressure(const ProcessorGroup*,
         }              
         matl_press[m][c] = press_eos[m];
         total_mat_vol += mat_volume[m];
-        speedSound_new[m][c] = sqrt(tmp);
+/*`==========TESTING==========*/
+        speedSound_new[m][c] = sqrt(tmp)/gamma[m];  // Isothermal speed of sound
+        speedSound_new[m][c] = sqrt(tmp);           // Isentropic speed of sound
+        compressibility[m] = sp_vol_CC[m][c]/ 
+                            (speedSound_new[m][c] * speedSound_new[m][c]); 
+/*==========TESTING==========`*/
        }  // for ALLMatls...
        
        
