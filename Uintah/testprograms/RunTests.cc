@@ -1,3 +1,16 @@
+/*********************************************
+ * RunTests.cc
+ * Wayne Witzel
+ * SCI Institute,
+ * University of Utah
+ *
+ * Program for running tests and reporting them
+ * in a tree of test suites.
+ *
+ * Add methods to populate this suite tree with more
+ * suites below where it says:
+ /* ADD MORE POPULATING METHODS ABOVE FOR OTHER TEST SUITES */
+
 #include "TestSuite/SuiteTree.h"
 #include "TestMatrix3/testmatrix3.h"
 #include <stdlib.h>
@@ -49,44 +62,7 @@ int main(int argc, char* argv[])
   // populate the suites tree
   suites->addSubTree(matrix3TestTree());
 
-  /*
-  Suite* dSuites[5];
-  dSuites[0] = new Suite("suite 1");
-  dSuites[1] = new Suite("suite 2");
-  dSuites[2] = new Suite("suite 3");
-  dSuites[3] = new Suite("suite 4");
-  dSuites[4] = new Suite("suite 5");
-
-  for (int i = 0; i < 5; i++) {
-    dSuites[i]->addTest("Test 1", rand() % 5 > 0);
-    dSuites[i]->addTest("Test 2", rand() % 5 > 0);
-  }
- 
-  SuiteTreeNode* t1 = new SuiteTreeNode("Group 1");
-  SuiteTreeNode* t2 = new SuiteTreeNode("Sub 1");
-  SuiteTreeNode* t3 = new SuiteTreeNode("Sub 2");
-  t1->addSubTree(t2);
-  t1->addSubTree(t3);
-  t2->addSubTree(new SuiteTreeLeaf(dSuites[0]));
-  t3->addSubTree(new SuiteTreeLeaf(dSuites[1]));
-  SuiteTreeNode* t4 = new SuiteTreeNode("Group 2");
-  SuiteTreeNode* t5 = new SuiteTreeNode("Sub 1");
-  t4->addSubTree(t5);
-  t5->addSubTree(new SuiteTreeLeaf(dSuites[2]));
-  SuiteTreeNode* t6 = new SuiteTreeNode("SubSub 1");
-  t5->addSubTree(t6);
-  t6->addSubTree(new SuiteTreeLeaf(dSuites[3]));
-  SuiteTreeNode* t7 = new SuiteTreeNode("Sub 2");
-  t4->addSubTree(t7);
-  t7->addSubTree(new SuiteTreeLeaf(dSuites[4]));
-  suites->addSubTree(t1);
-  suites->addSubTree(t4);
-  */
-
-  // display summary
-  bool allPassed;
-  cout << endl << suites->composeSubSummary("", expandAll, allPassed);
-  cout << endl;
+  /* ADD MORE POPULATING METHODS ABOVE FOR OTHER TEST SUITES */
   
   // report failed suites to itemized the tests the failed
   if (reportAll)
