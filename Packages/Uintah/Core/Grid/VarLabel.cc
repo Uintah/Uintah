@@ -12,11 +12,12 @@ using std::string;
 using std::ostringstream;
 
 map<string, VarLabel*> VarLabel::allLabels;
+string VarLabel::defaultCompressionMode = "none";
 
 VarLabel::VarLabel(const std::string& name, const TypeDescription* td,
 		   VarType vartype)
    : d_name(name), d_td(td), d_vartype(vartype),
-     d_compressionMode(""), d_allowMultipleComputes(false) 
+     d_compressionMode("default"), d_allowMultipleComputes(false) 
 {
    map<string, VarLabel*>::value_type mappair(name, this);
    if (allLabels.insert(mappair).second == false) {
