@@ -430,6 +430,16 @@ for i in $package; do
    SCI_SET_PACKAGE_CHECKS($i)
 done
 
+# Take care of package dependencies
+if test $pkg_Fusion == yes; then
+  # Fusion depends upon Teem Package.  
+  if test -z $pkg_Teem; then
+    AC_MSG_ERROR([The Fusion Package depends on the Teem Package. Please 
+                  make sure you have the Teem Package and configure 
+                  with it enabled.])
+  fi
+fi
+
 LOAD_PACKAGE="SCIRun"
 for i in $package; do
  LOAD_PACKAGE=$LOAD_PACKAGE,"$i"

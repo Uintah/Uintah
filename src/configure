@@ -2186,6 +2186,20 @@ esac
 
 done
 
+# Take care of package dependencies
+if test $pkg_Fusion == yes; then
+  # Fusion depends upon Teem Package.
+  if test -z $pkg_Teem; then
+    { { echo "$as_me:$LINENO: error: The Fusion Package depends on the Teem Package. Please
+                  make sure you have the Teem Package and configure
+                  with it enabled." >&5
+echo "$as_me: error: The Fusion Package depends on the Teem Package. Please
+                  make sure you have the Teem Package and configure
+                  with it enabled." >&2;}
+   { (exit 1); exit 1; }; }
+  fi
+fi
+
 LOAD_PACKAGE="SCIRun"
 for i in $package; do
  LOAD_PACKAGE=$LOAD_PACKAGE,"$i"
@@ -3395,7 +3409,7 @@ fi
 
 
 # Provide some information about the compiler.
-echo "$as_me:3398:" \
+echo "$as_me:3412:" \
      "checking for Fortran 77 compiler version" >&5
 ac_compiler=`set X $ac_compile; echo $2`
 { (eval echo "$as_me:$LINENO: \"$ac_compiler --version </dev/null >&5\"") >&5
