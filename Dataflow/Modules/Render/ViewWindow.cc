@@ -128,7 +128,8 @@ ViewWindow::ViewWindow(Viewer* s, GuiInterface* gui, GuiContext* ctx)
     file_resx(ctx->subVar("resx")),
     file_resy(ctx->subVar("resy")),
     file_aspect(ctx->subVar("aspect")),
-    file_aspect_ratio(ctx->subVar("aspect_ratio"))
+    file_aspect_ratio(ctx->subVar("aspect_ratio")),
+    need_redraw( false )
 {
   inertia_mode=0;
   bgcolor.set(Color(0,0,0));
