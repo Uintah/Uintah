@@ -181,3 +181,7 @@ include $(SCIRUN_SCRIPTS)/program.mk
 PROGRAM := $(SRCDIR)/TetgenToTetVol
 SRCS := $(SRCDIR)/TetgenToTetVol.cc
 include $(SCIRUN_SCRIPTS)/program.mk
+
+PROGRAM := $(SRCDIR)/UCSDToHexField
+SRCS := $(SRCDIR)/UCSDToHexField.cc
+include $(SCIRUN_SCRIPTS)/program.mk
