@@ -115,19 +115,20 @@ Thread::disallow_sgi_OpenGL_page0_sillyness()
 void
 Thread::exit()
 {
-  ::exit(0);
+  exitAll(0);
 }
 
 void
 Thread::checkExit()
 {
-  ::exit(0);
+  exitAll(0);
 }
 
 void
 Thread::exitAll(int code)
 {
-
+  delete mainthread;
+  delete ThreadGroup::s_default_group; 
   ::exit(code);
 }
 
