@@ -128,6 +128,11 @@ protected:
     past = SCIRun::Time::currentSeconds();
     for(;;) {
       if (should_close()) {
+        if (!glXMakeCurrent(dpy,None, NULL)) {
+          cerr << "glXMakeCurrent failed\n";
+        } else {
+          cerr << "glXMakeCurrent succeeded\n";
+        }
         cleanup();
         parentSema.up();
         return;
@@ -172,6 +177,8 @@ protected:
     glXSwapBuffers(dpy, win);
     XFlush(dpy);
 
+    //    usleep(1000);
+    
     glClearColor(1,0,1, 1);
     glClear(GL_COLOR_BUFFER_BIT);
 
@@ -195,6 +202,8 @@ protected:
     glFinish();
     glXSwapBuffers(dpy, win);
     XFlush(dpy);
+
+    //    usleep(1000);
   }
 };
 
