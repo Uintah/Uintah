@@ -46,7 +46,7 @@ public:
   virtual void execute();
   virtual void tcl_command(GuiArgs& args, void* userdata);
 private:
-  void read_nrrd();
+  bool maybe_read_nrrd();
   void get_nrrd_info(NrrdDataHandle handle);
 
   GuiString       label_;
@@ -83,15 +83,15 @@ NrrdReader::~NrrdReader()
 void 
 NrrdReader::get_nrrd_info(NrrdDataHandle handle)
 {
-  if (!handle.get_rep()) { return; }
-  // send the axis info to the gui.
-
-  // clear any old info
+  // Clear any old info.
   ostringstream clear; 
   clear << id.c_str() << " clear_axis_info";
   gui->execute(clear.str());
   
-  // call the following tcl method
+  if (!handle.get_rep()) { return; }
+  // Send the axis info to the gui.
+
+  // Call the following tcl method
   // add_axis_info {id label center size spacing min max} 
   for (int i = 0; i < handle->nrrd->dim; i++) {
     ostringstream add; 
@@ -125,17 +125,21 @@ NrrdReader::get_nrrd_info(NrrdDataHandle handle)
   }
 }
 
-void
-NrrdReader::read_nrrd() 
+
+// Return true if handle_ was changed, otherwise return false.  This
+// return value does not necessarily signal an error!
+bool
+NrrdReader::maybe_read_nrrd() 
 {
-  // Read the status of this file so we can compare modification timestamps
-  struct stat buf;
   filename_.reset();
   string fn(filename_.get());
+  if (fn == "") { return false; }
 
+  // Read the status of this file so we can compare modification timestamps.
+  struct stat buf;
   if (stat(fn.c_str(), &buf)) {
     error(string("FieldReader error - file not found: '")+fn+"'");
-    return;
+    return false;
   }
 
   // If we haven't read yet, or if it's a new filename, 
@@ -151,7 +155,7 @@ NrrdReader::read_nrrd()
   {
     old_filemodification_ = new_filemodification;
     old_filename_=fn;
-
+    handle_ = 0;
 
     int len = fn.size();
     const string ext(".nd");
@@ -162,7 +166,7 @@ NrrdReader::read_nrrd()
       if (!stream)
       {
 	error("Error reading file '" + fn + "'.");
-	return;
+	return true;
       }
 
       // Read the file
@@ -171,7 +175,7 @@ NrrdReader::read_nrrd()
       {
 	error("Error reading data from file '" + fn +"'.");
 	delete stream;
-	return;
+	return true;
       }
       delete stream;
     } else { // assume it is just a nrrd
@@ -181,23 +185,27 @@ NrrdReader::read_nrrd()
 	char *err = biffGetDone(NRRD);
 	error("Read error on '" + fn + "': " + err);
 	free(err);
-	return;
+	return true;
       }
       handle_ = n;
-
     }
+    return true;
   }
+  return false;
 }
 
-void NrrdReader::execute()
+
+
+void
+NrrdReader::execute()
 {
   update_state(NeedData);
 
-  filename_.reset();
-  if (! handle_.get_rep() && filename_.get() != "") {
-    read_nrrd();
+  if (maybe_read_nrrd())
+  {
     get_nrrd_info(handle_);
   }
+
   if (!handle_.get_rep()) { 
     error("Please load and set up the axes for a nrrd.");
     return; 
@@ -276,7 +284,6 @@ void NrrdReader::execute()
     label_.reset();
     type_.reset();
     string label(label_.get() + ":" + type_.get());
-  
 
     string full_label = label;
     int count;
@@ -301,18 +308,25 @@ void NrrdReader::execute()
   update_state(Completed);
 }
 
+
 void 
 NrrdReader::tcl_command(GuiArgs& args, void* userdata)
 {
-  if(args.count() < 2){
+  if(args.count() < 2)
+  {
     args.error("NrrdReader needs a minor command");
     return;
   }
   
-  if (args[1] == "read_nrrd") {
-    read_nrrd();
-    get_nrrd_info(handle_);
-  }else {
+  if (args[1] == "read_nrrd")
+  {
+    if (maybe_read_nrrd())
+    {
+      get_nrrd_info(handle_);
+    }
+  }
+  else
+  {
     Module::tcl_command(args, userdata);
   }
 }
