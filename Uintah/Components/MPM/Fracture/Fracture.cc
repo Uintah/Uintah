@@ -119,13 +119,16 @@ crackGrow(const Patch* patch,
 	  pIsBroken[idx] = 1;
 	  pCrackSurfaceNormal[idx] = maxDirection;
 	  pMicrocrackSize[idx] = 0;
+	  cout<<"Microcrack initiated!"<<endl;
 	}
       }
       else {
         //crack propagation
+	double tensilStress = Dot(pStress[idx] * pCrackSurfaceNormal[idx],
+	   pCrackSurfaceNormal[idx]);
 	
-	//pDilatationalWaveSpeed[idx];
-
+	pMicrocrackSize[idx] += pDilatationalWaveSpeed[idx] * 
+	  ( 1 - exp(tensilStress/d_tensileStrength - 1) ) * delT;
       }
    }
 
@@ -150,6 +153,9 @@ Fracture::~Fracture()
 } //namespace Uintah
 
 // $Log$
+// Revision 1.36  2000/09/08 02:21:55  tan
+// Crack initiation works now!
+//
 // Revision 1.35  2000/09/08 01:47:02  tan
 // Added pDilatationalWaveSpeedLabel for fracture and is saved as a
 // side-effect of computeStressTensor in each constitutive model class.
