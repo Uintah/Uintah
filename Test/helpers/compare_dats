@@ -1,0 +1,99 @@
+#!/bin/sh
+
+TEST=$1
+TEST_UDADIR=$2
+COMPARE_UDADIR=$3
+TMPDIR=$4
+ERRORS_TO=$5
+
+if [ -d "$TEST_UDADIR" ]; then
+  echo "$TEST_UDADIR doesn't exist"
+  exit 1
+fi  
+if [ ! -d "$COMPARE_UDADIR" ]; then
+  echo "$COMPARE_UDADIR doesn't exist"
+  exit 1
+fi
+
+cd $TEST_UDADIR
+
+# choose the first dat file to compare number of lines later
+ls -1 $TEST_UDADIR/*.dat
+retval=$?
+echo
+if [ $retval != "0" ]; then
+    # $TEST_UDADIR has no dat files
+    ls -1 $COMPARE_UDADIR/*.dat
+    retval=$?
+    echo
+    if [ $retval != "0" ]; then
+	# $COMPARE_UDADIR has no dat files either
+	echo "No dat files to compare"
+        exit -1
+    else
+        # $COMPARE_UDADIR does have at least one dat file so
+        # there is no excuse for $TEST_UDADIR for not having any.
+        echo "The new uda directory has no dat files, but the old one does"
+        exit 1
+    fi
+fi
+
+testdat=`ls -1 *.dat | head -n 1`
+abs_error_allowable=1e-10
+rel_error_allowable=1e-8
+compare_dat_files $abs_error_allowable $rel_error_allowable $TEST_UDADIR/ $COMPARE_UDADIR/ *.dat > $TMPDIR/compare_dat_files.msg 2>&1
+retval=$?
+
+if [ $retval = "0" ]; then
+    newcount=`grep -c '\0' $TEST_UDADIR/$testdat`
+    oldcount=`grep -c '\0' $COMPARE_UDADIR/$testdat`
+fi
+
+if [ $retval = "0" -a $newcount = $oldcount ]; then
+    echo "Comparison passed"
+else
+    if [ $retval != "0" ]; then
+	cat $TMPDIR/compare_dat_files.msg > $TMPDIR/error_info.msg
+    else
+        cat >> $TMPDIR/error_info.msg <<EOF
+There is only a discrepancy in the line count of the dat files.
+There are $newcount lines in the new $testdat and
+          $oldcount lines in the old $testdat.
+This could simply be a result of changes timestep size.
+EOF
+    fi
+    cat $TMPDIR/error_info.msg
+
+    if [ "$ERRORS_TO" != "" -a $retval -gt "0" ]; then
+	cat > $TMPDIR/error.msg <<EOF
+Subject: *** Automated Correctness Regression Alert ***
+To: $ERRORS_TO
+
+Correctness test failed for $TEST.
+
+EOF
+        cat $TMPDIR/error_info.msg >> $TMPDIR/error.msg
+        cat >> $TMPDIR/error.msg <<EOF
+
+The failed uda directory can be found in 
+$TEST_UDADIR at `hostname`.
+The comparing uda directory can be found in
+$COMPARE_UDADIR at `hostname`
+(but should also be in the cvs repository).
+
+If the 'failed' uda directory is actually more
+correct than the 'comparing' uda directory, then
+you should replace it in the cvs repository.
+
+EOF
+        # sending the diff information is too messy and they are better off
+        # using xdiff. 
+        #diff -y --width 160 --suppress-common-lines -x "*.xml" -x "taskgraph"  $TEST_UDADIR $COMPARE_UDADIR >> $TMPDIR/error.msg
+        /usr/lib/sendmail "$ERRORS_TO" < $TMPDIR/error.msg
+        echo "Mail sent"
+    fi
+    exit 1
+fi
+
+exit 0
+
