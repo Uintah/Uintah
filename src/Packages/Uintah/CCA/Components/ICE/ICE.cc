@@ -1323,8 +1323,8 @@ void ICE::computeEquilibrationPressure(const ProcessorGroup*,
     
       new_dw->allocateTemporary(n_iters_equil_press,  patch);
 #if 1
-      ostringstream desc;
-      desc << "TOP_equilibration_patch_" << patch->getID();
+      ostringstream desc,desc1;
+      desc1 << "TOP_equilibration_patch_" << patch->getID();
       printData( 0, patch, 1, desc.str(), "Press_CC_top", press);
      for (int m = 0; m < numMatls; m++)  {
        ICEMaterial* matl = d_sharedState->getICEMaterial( m );
@@ -3377,30 +3377,20 @@ void ICE::advectAndAdvanceInTime(const ProcessorGroup*,
 /* 
  ======================================================================*
  Function:  hydrostaticPressureAdjustment--
- Notes:
-            This doesn't take the ghostcells into account, therefore you 
-            must adjust boundary conditions after this function.  Material 0 is
-            assumed to be the surrounding fluid and therfore we compute the 
-            hydrostatic pressure using
+ Notes:      Material 0 is assumed to be the surrounding fluid and 
+            we compute the hydrostatic pressure using
             
-            press_hydro_ = rho_micro_CC[SURROUNDING_MAT] * grav * some_distance
-            
-            Currently it is assumed that the top, right and front ghostcells is
-            where the reference pressure is defined.
-            
-CAVEAT:     Only works -gravity.x(), -gravity.y() and -gravity.z()           
+            press_hydro_ = rho_micro_CC[SURROUNDING_MAT] * grav * some_distance         
 _______________________________________________________________________ */
 void ICE::hydrostaticPressureAdjustment(const Patch* patch,
-                          const CCVariable<double>& sp_vol_CC,
+                          const CCVariable<double>& rho_micro_CC,
                                 CCVariable<double>& press_CC)
 {
   Vector dx             = patch->dCell();
   Vector gravity        = d_sharedState->getGravity();
-//  IntVector highIndex   = patch->getInteriorCellHighIndex();
-  
-                  //ONLY WORKS ON ONE PATCH  Press_ref_* will have to change
   double press_hydro;
   double dist_from_p_ref;
+#if 0  // To reference the hydrostatic pressure from ceiling  
   IntVector HighIndex;
   IntVector L;
   const Level* level= patch->getLevel();
@@ -3408,41 +3398,38 @@ void ICE::hydrostaticPressureAdjustment(const Patch* patch,
   int press_ref_x = HighIndex.x() -2;   // we want the interiorCellHighIndex 
   int press_ref_y = HighIndex.y() -2;   // therefore we subtract off 2
   int press_ref_z = HighIndex.z() -2;
-
+#endif  
+  int press_ref_x = 0;  // to reference the hydrostatic pressure from the floor   
+  int press_ref_y = 0;  
+  int press_ref_z = 0;
   //__________________________________
   //  X direction
   if (gravity.x() != 0.)  {
     for (CellIterator iter = patch->getCellIterator(); !iter.done(); iter++) {
-      IntVector curcell = *iter;
-      dist_from_p_ref   =  fabs((double) (curcell.x() - press_ref_x)) * dx.x();
-      press_hydro       = 1.0/sp_vol_CC[curcell] * 
-                          fabs(gravity.x() ) * dist_from_p_ref;
-      
-      press_CC[curcell] += press_hydro;
+      IntVector c = *iter;
+      dist_from_p_ref  = fabs((double) (c.x() - press_ref_x)) * dx.x();
+      press_hydro      = rho_micro_CC[c] * gravity.x() * dist_from_p_ref;
+      press_CC[c] += press_hydro;
     }
   }
   //__________________________________
   //  Y direction
   if (gravity.y() != 0.)  {
     for (CellIterator iter = patch->getCellIterator(); !iter.done(); iter++) {
-      IntVector curcell = *iter;
-      dist_from_p_ref   = fabs((double) (curcell.y() - press_ref_y)) * dx.y();
-      press_hydro       = 1.0/sp_vol_CC[curcell] * 
-                          fabs(gravity.y() ) * dist_from_p_ref;
-      
-      press_CC[curcell] += press_hydro;
+      IntVector c = *iter;
+      dist_from_p_ref = fabs((double) (c.y() - press_ref_y)) * dx.y();
+      press_hydro     = rho_micro_CC[c] * gravity.y() * dist_from_p_ref;
+      press_CC[c] += press_hydro;
     }
   }
   //__________________________________
   //  Z direction
   if (gravity.z() != 0.)  {
     for (CellIterator iter = patch->getCellIterator(); !iter.done(); iter++) {
-      IntVector curcell = *iter;
-      dist_from_p_ref   = fabs((double) (curcell.z() - press_ref_z)) * dx.z();
-      press_hydro       = 1.0/sp_vol_CC[curcell] * 
-                          fabs(gravity.z() ) * dist_from_p_ref;
-      
-      press_CC[curcell] += press_hydro;
+      IntVector c = *iter;
+      dist_from_p_ref   = fabs((double) (c.z() - press_ref_z)) * dx.z();
+      press_hydro       = rho_micro_CC[c] * gravity.z() * dist_from_p_ref;
+      press_CC[c] += press_hydro;
     }
   }   
 }
