@@ -25,6 +25,10 @@ class ScalarTransform1D {
   LType min, max;
   double linear_factor;
   bool isscaled;
+  // This is true when ScalarTransform1D allocated the memory.  When
+  // the results pointer comes from outside source this is set to
+  // false.
+  bool delete_results;
 
 
   inline int bound(const int val, const int min, const int max) const {
@@ -34,7 +38,7 @@ class ScalarTransform1D {
 public:
   ScalarTransform1D(Array1<RType> *results=0);
   ScalarTransform1D(const Array1<RType> &r);
-  ~ScalarTransform1D() {}
+  ~ScalarTransform1D();
 
   // access members
 
@@ -101,8 +105,21 @@ public:
   Array1<RType> *get_results_ptr() {
     return results;
   }
+  Array1<RType> &get_results_ref() {
+    return *results;
+  }
+  // This function could cause problems in parallel, so watch out!
   void set_results_ptr(Array1<RType> *_results) {
+    if (delete_results)
+      delete results;
+    delete_results = false;
     results = _results;
+  }
+  // If you want the results pointer to not be deleted (in the case
+  // where it was created by ScalarTransform1D you need to call this
+  // function.  This will prevent the class from deleting the memory.
+  void dont_delete_results() {
+    delete_results = false;
   }
   
   // min and max operators
@@ -115,14 +132,23 @@ public:
 		 
 template <class LType, class RType>
 ScalarTransform1D<LType,RType>::ScalarTransform1D(Array1<RType> *results):
-  results(results), min(0), max(1), linear_factor(1), isscaled(false)
+  results(results), min(0), max(1), linear_factor(1), isscaled(false),
+  delete_results(false)
 {}
 
 template <class LType, class RType>
 ScalarTransform1D<LType,RType>::ScalarTransform1D(const Array1<RType> &r):
-  min(0), max(1), linear_factor(1), isscaled(false)
+  min(0), max(1), linear_factor(1), isscaled(false), delete_results(true)
 {
   results = new Array1<RType>(r);
+}
+
+template <class LType, class RType>
+ScalarTransform1D<LType,RType>::~ScalarTransform1D()
+{
+  if (delete_results)
+    if (results != 0)
+      delete results;
 }
 
 // min and max operators
