@@ -14,8 +14,6 @@ SRCDIR   := Packages/Fusion/Dataflow/Modules/DataIO
 
 INCLUDES += $(MDSPLUS_INCLUDE) $(HDF5_INCLUDE) -DHDF5_PATH='"$(HDF5_LIB_DIR)/../bin"'
 
-#	$(SRCDIR)/FusionFieldSetReader.cc\
-
 SRCS     += \
 	$(SRCDIR)/FusionFieldReader.cc\
 	$(SRCDIR)/FusionFieldSetReader.cc\
