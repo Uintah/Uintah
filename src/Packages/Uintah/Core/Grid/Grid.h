@@ -21,8 +21,6 @@ namespace Uintah {
 
   class ProcessorGroup;
 
-using namespace SCIRun;
-
 /**************************************
 
 CLASS
@@ -68,18 +66,20 @@ WARNING
     
     //////////
     // Adds a level to the grid.
-    Level* addLevel(const Point& anchor, const Vector& dcell, int id=-1);
+    Level* addLevel(const SCIRun::Point& anchor,
+                    const SCIRun::Vector& dcell, int id=-1);
     
     void performConsistencyCheck() const;
     void printStatistics() const;
 
     //////////
     // Computes the physical boundaries for the grid
-    void getSpatialRange(BBox& b) const;
+    void getSpatialRange(SCIRun::BBox& b) const;
     
     //////////
     // Computes the length of the grid
-    void getLength(Vector& length, const string flag = "plusExtraCells") const;
+    void getLength(SCIRun::Vector& length,
+                   const string flag = "plusExtraCells") const;
     
     //////////
     // Problem setup functions called from simulation controller
