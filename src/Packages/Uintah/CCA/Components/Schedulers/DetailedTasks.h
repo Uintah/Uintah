@@ -28,10 +28,10 @@ namespace Uintah {
         fromPatch(fromPatch), low(low), high(high), matl(matl)
     {
       ASSERT(Min(high - low, IntVector(1, 1, 1)) == IntVector(1, 1, 1));
-      ASSERT(Min(low, fromPatch->getNodeLowIndex()) ==
-	     fromPatch->getNodeLowIndex());
-      ASSERT(Max(high, fromPatch->getNodeHighIndex()) ==
-	     fromPatch->getNodeHighIndex());      
+      ASSERT(fromPatch == 0 || (Min(low, fromPatch->getNodeLowIndex()) ==
+	     fromPatch->getNodeLowIndex()) );
+      ASSERT(fromPatch == 0 || (Max(high, fromPatch->getNodeHighIndex()) ==
+	     fromPatch->getNodeHighIndex()));      
       toTasks.push_back(toTask);
     }
 
