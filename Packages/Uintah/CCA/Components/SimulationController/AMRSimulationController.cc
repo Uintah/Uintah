@@ -245,14 +245,14 @@ void AMRSimulationController::run()
      if(t <= timeinfo.initial_delt_range && delt > timeinfo.max_initial_delt){
        if(d_myworld->myrank() == 0)
 	 cerr << "WARNING: lowering delt from " << delt 
-	      << " to maxmimum: " << timeinfo.max_initial_delt
+	      << " to maximum: " << timeinfo.max_initial_delt
 	      << " (for initial timesteps)\n";
        delt = timeinfo.max_initial_delt;
      }
      if(delt > timeinfo.delt_max){
        if(d_myworld->myrank() == 0)
 	 cerr << "WARNING: lowering delt from " << delt 
-	      << " to maxmimum: " << timeinfo.delt_max << '\n';
+	      << " to maximum: " << timeinfo.delt_max << '\n';
        delt = timeinfo.delt_max;
      }
      newDW->override(delt_vartype(delt), sharedState->get_delt_label());
