@@ -105,6 +105,7 @@ void SimulationController::run()
       md->problemSetup(ups, grid, sharedState);
    
    Scheduler* sched = dynamic_cast<Scheduler*>(getPort("scheduler"));
+   sched->problemSetup(ups);
    SchedulerP scheduler(sched);
    DataWarehouseP null_dw = 0;
    DataWarehouseP old_dw = scheduler->createDataWarehouse(null_dw);
@@ -196,6 +197,7 @@ void SimulationController::run()
 
       /* I THINK THIS SHOULD BE null_dw, NOT old_dw... Dd: */
       DataWarehouseP new_dw = scheduler->createDataWarehouse(/*old_dw*/null_dw);
+      //DataWarehouseP new_dw = scheduler->createDataWarehouse(old_dw);
 
       scheduleTimeAdvance(t, delt, level, scheduler, old_dw, new_dw,
 			  cfd, mpm, md);
@@ -475,6 +477,9 @@ void SimulationController::scheduleTimeAdvance(double t, double delt,
 
 //
 // $Log$
+// Revision 1.45  2000/09/20 16:05:24  sparker
+// Call problemSetup on scheduler
+//
 // Revision 1.44  2000/09/04 23:21:10  tan
 // Control the information showing at each step in SimulationController by
 // Analyze module.
