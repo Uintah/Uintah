@@ -45,7 +45,7 @@ static Persistent* maker()
     return scinew ColumnMatrix(0);
 }
 
-PersistentTypeID ColumnMatrix::type_id("ColumnMatrix", "Datatype", maker);
+PersistentTypeID ColumnMatrix::type_id("ColumnMatrix", "Matrix", maker);
 
 ColumnMatrix::ColumnMatrix(int rows)
   : Matrix(Matrix::non_symmetric, Matrix::column), rows(rows)
