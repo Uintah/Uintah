@@ -5,6 +5,8 @@
 #include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/MPMMaterial.h>
 #include <Packages/Uintah/CCA/Ports/DataWarehouse.h>
 #include <Packages/Uintah/CCA/Ports/Scheduler.h>
+#include <Packages/Uintah/CCA/Ports/ModelInterface.h>
+#include <Packages/Uintah/CCA/Ports/ModelMaker.h>
 #include <Packages/Uintah/Core/Grid/Patch.h>
 #include <Packages/Uintah/Core/Grid/PerPatch.h>
 #include <Packages/Uintah/Core/Grid/SimulationState.h>
@@ -87,6 +89,7 @@ ICE::ICE(const ProcessorGroup* myworld)
   d_dbgVar2      = 0;
   d_SMALL_NUM    = 1.0e-100; 
   d_TINY_RHO     = 1.0e-12;// also defined ICEMaterial.cc and MPMMaterial.cc
+  d_modelInfo = 0;
 }
 
 ICE::~ICE()
@@ -95,21 +98,29 @@ ICE::~ICE()
   delete MIlb;
   delete d_advector;
 
+  for(vector<ModelInterface*>::iterator iter = d_models.begin();
+      iter != d_models.end(); iter++)
+    delete *iter;
+
   releasePort("solver");
+
+  if(d_modelInfo)
+    delete d_modelInfo;
 }
 
 /* ---------------------------------------------------------------------
  Function~  ICE::problemSetup--
 _____________________________________________________________________*/
-void ICE::problemSetup(const ProblemSpecP& prob_spec, GridP& /**/,
+void ICE::problemSetup(const ProblemSpecP& prob_spec, GridP& grid,
                         SimulationStateP&   sharedState)
 {
   d_sharedState = sharedState;
+  lb->delTLabel = sharedState->get_delt_label();
 
   cout_norm << "In the preprocessor . . ." << endl;
   dataArchiver = dynamic_cast<Output*>(getPort("output"));
   if(dataArchiver == 0){
-    cout<<"dataArhiver in ICE is null now exiting; "<<endl;
+    cout<<"dataArchiver in ICE is null now exiting; "<<endl;
     exit(1);
   }
   solver = dynamic_cast<SolverInterface*>(getPort("solver"));
@@ -390,6 +401,26 @@ void ICE::problemSetup(const ProblemSpecP& prob_spec, GridP& /**/,
   if (switchTestConservation == true)
     cout_norm << "switchTestConservation is ON" << endl;
 
+  ModelMaker* modelMaker = dynamic_cast<ModelMaker*>(getPort("modelmaker"));
+  if(modelMaker){
+    modelMaker->makeModels(prob_spec, grid, sharedState, d_models);
+    releasePort("ModelMaker");
+    for(vector<ModelInterface*>::iterator iter = d_models.begin();
+	iter != d_models.end(); iter++){
+      ModelSetup setup;
+      (*iter)->problemSetup(grid, sharedState, setup);
+    }
+
+    d_modelInfo = scinew ModelInfo(d_sharedState->get_delt_label(),
+				   lb->model_mass_source_CCLabel,
+				   lb->model_momentum_source_CCLabel,
+				   lb->model_energy_source_CCLabel,
+				   lb->rho_CCLabel,
+				   lb->vel_CCLabel,
+				   lb->temp_CCLabel,
+				   lb->press_CCLabel);
+
+  }
 }
 /* ---------------------------------------------------------------------
  Function~  ICE::scheduleInitialize--
@@ -458,6 +489,14 @@ void ICE::scheduleComputeStableTimestep(const LevelP& level,
   }
   t->computes(d_sharedState->get_delt_label());
   sched->addTask(t,level->eachPatch(), all_matls); 
+
+  if(d_models.size() != 0){
+    for(vector<ModelInterface*>::iterator iter = d_models.begin();
+	iter != d_models.end(); iter++){
+      ModelInterface* model = *iter;
+      model->scheduleComputeStableTimestep(sched, level, d_modelInfo);
+    }
+  }
 }
 /* ---------------------------------------------------------------------
  Function~  ICE::scheduleTimeAdvance--
@@ -491,6 +530,7 @@ ICE::scheduleTimeAdvance( const LevelP& level, SchedulerP& sched, int, int )
                                                            all_matls);    
                                                                  
   scheduleMassExchange(                   sched, patches, all_matls);                                                           
+  scheduleModelMassExchange(              sched, level,   all_matls);
 
   if(d_impICE) {        //  I M P L I C I T                                           
     scheduleImplicitPressureSolve(         sched, level,   patches,       
@@ -533,6 +573,8 @@ ICE::scheduleTimeAdvance( const LevelP& level, SchedulerP& sched, int, int )
                                                           mpm_matls_sub,
                                                           press_matl,
                                                           all_matls);
+
+  scheduleModelMomentumAndEnergyExchange( sched, level,   all_matls);
 
   scheduleComputeLagrangianValues(        sched, patches, all_matls);
 
@@ -714,9 +756,31 @@ void ICE::scheduleMassExchange(SchedulerP& sched,
   task->computes(lb->int_eng_comb_CCLabel);
   task->computes(lb->mom_comb_CCLabel);
   task->computes(lb->created_vol_CCLabel);
-  
   sched->addTask(task, patches, matls);
 }
+
+/* ---------------------------------------------------------------------
+ Function~  ICE::scheduleModelMassExchange--
+_____________________________________________________________________*/
+void ICE::scheduleModelMassExchange(SchedulerP& sched, const LevelP& level,
+				    const MaterialSet* matls)
+{
+  if(d_models.size() != 0){
+    Task* task = scinew Task("ICE::zeroModelSources",
+			     this, &ICE::zeroModelSources);
+    task->computes(lb->model_mass_source_CCLabel);
+    task->computes(lb->model_momentum_source_CCLabel);
+    task->computes(lb->model_energy_source_CCLabel);
+    sched->addTask(task, level->eachPatch(), matls);
+
+    for(vector<ModelInterface*>::iterator iter = d_models.begin();
+	iter != d_models.end(); iter++){
+      ModelInterface* model = *iter;
+      model->scheduleMassExchange(sched, level, d_modelInfo);
+    }
+  }
+}
+
 /* ---------------------------------------------------------------------
  Function~  ICE::scheduleComputeDelPressAndUpdatePressCC--
 _____________________________________________________________________*/
@@ -776,6 +840,22 @@ void ICE::scheduleComputePressFC(SchedulerP& sched,
   task->computes(lb->pressZ_FCLabel, press_matl);
 
   sched->addTask(task, patches, matls);
+}
+
+/* ---------------------------------------------------------------------
+ Function~  ICE::scheduleModelMomentumAndEnergyExchange--
+_____________________________________________________________________*/
+void ICE::scheduleModelMomentumAndEnergyExchange(SchedulerP& sched,
+						 const LevelP& level,
+						 const MaterialSet* matls)
+{
+  if(d_models.size() != 0){
+    for(vector<ModelInterface*>::iterator iter = d_models.begin();
+	iter != d_models.end(); iter++){
+      ModelInterface* model = *iter;
+      model->scheduleMomentumAndEnergyExchange(sched, level, d_modelInfo);
+    }
+  }
 }
 
 /* ---------------------------------------------------------------------
@@ -890,6 +970,12 @@ void ICE::scheduleComputeLagrangianValues(SchedulerP& sched,
   task->requires(Task::NewDW,lb->burnedMass_CCLabel,      Ghost::None);
   task->requires(Task::NewDW,lb->int_eng_comb_CCLabel,    Ghost::None);
   task->requires(Task::NewDW,lb->int_eng_source_CCLabel,  Ghost::None);
+
+  if(d_models.size() > 0){
+    task->requires(Task::NewDW, lb->model_mass_source_CCLabel, Ghost::None);
+    task->requires(Task::NewDW, lb->model_momentum_source_CCLabel, Ghost::None);
+    task->requires(Task::NewDW, lb->model_energy_source_CCLabel, Ghost::None);
+  }
 
   task->computes(lb->mom_L_CCLabel);
   task->computes(lb->int_eng_L_CCLabel);
@@ -1574,8 +1660,10 @@ void ICE::computeEquilibrationPressure(const ProcessorGroup*,
        }
        double vol_frac_not_close_packed = 1.;
        delPress = (A - vol_frac_not_close_packed - B)/C;
+       //cerr << "A=" << A << ", vol_frac...=" << vol_frac_not_close_packed << ", B=" << B << ", C=" << C << '\n';
 
        press_new[c] += delPress;
+       //cerr << "press_new=" << press_new[c] << ", delPress=" << delPress << '\n';
 
        //__________________________________
        // backout rho_micro_CC at this new pressure
@@ -1584,11 +1672,13 @@ void ICE::computeEquilibrationPressure(const ProcessorGroup*,
          rho_micro[m][c] = 
            ice_matl->getEOS()->computeRhoMicro(press_new[c],gamma[m],
                                                cv[m],Temp[m][c]);
+	 //cerr << "rho_micro=" << rho_micro[m][c] << ", press=" << press_new[c] << ", gamma=" << gamma[m] << ", cv=" << cv[m] << ", temp=" << Temp[m][c] << '\n';
 
         double div = 1./rho_micro[m][c];
        //__________________________________
        // - compute the updated volume fractions
         vol_frac[m][c]   = rho_CC[m][c]*div;
+	//cerr << "volfrac=" << vol_frac[m][c] << ", rho=" << rho_CC[m][c] << ", div=" << div << '\n'; 
 
        //__________________________________
        // Find the speed of sound 
@@ -1608,6 +1698,7 @@ void ICE::computeEquilibrationPressure(const ProcessorGroup*,
        for (int m = 0; m < numMatls; m++)  {
          sum += vol_frac[m][c];
        }
+       //cerr << "cell: " << *iter << ", sum=" << sum << '\n';
        if (fabs(sum-1.0) < convergence_crit)
          converged = true;
 
@@ -2280,7 +2371,7 @@ void ICE::computeDelPressAndUpdatePressCC(const ProcessorGroup*,
       constSFCXVariable<double> uvel_FC;
       constSFCYVariable<double> vvel_FC;
       constSFCZVariable<double> wvel_FC;
-            
+
       new_dw->get(uvel_FC,     lb->uvel_FCMELabel,     indx,patch,gac, 2);   
       new_dw->get(vvel_FC,     lb->vvel_FCMELabel,     indx,patch,gac, 2);   
       new_dw->get(wvel_FC,     lb->wvel_FCMELabel,     indx,patch,gac, 2);   
@@ -2328,7 +2419,17 @@ void ICE::computeDelPressAndUpdatePressCC(const ProcessorGroup*,
         term3[c] += (vol_frac[c] + created_vol[c]/vol)*sp_vol_CC[m][c]/
                                              (speedSound[c]*speedSound[c]);
       }  //iter loop 
-      
+      if(d_models.size() > 0){
+	constCCVariable<double> model_mass_source;
+	new_dw->get(model_mass_source, lb->model_mass_source_CCLabel,
+		    indx, patch, Ghost::None, 0);
+	for(CellIterator iter=patch->getCellIterator(); !iter.done();iter++) {
+	  IntVector c = *iter;
+	  //   Contributions from models
+	  term1[c] += model_mass_source[c] * (sp_vol_CC[m][c]/vol);
+	}
+      }
+	  
       //__________________________________
       //  compute sum_rho_CC used by press_FC
       for(CellIterator iter=patch->getExtraCellIterator(); !iter.done();iter++){
@@ -2570,6 +2671,38 @@ void ICE::massExchange(const ProcessorGroup*,
     }
 #endif
   }   // patch loop
+}
+
+/* ---------------------------------------------------------------------
+ Function~  ICE::zeroModelMassExchange
+ Purpose~   This function initializes the mass exchange quantities to
+            zero.  These quantities are subsequently modified by the
+            models
+ ---------------------------------------------------------------------  */
+void ICE::zeroModelSources(const ProcessorGroup*,
+				const PatchSubset* patches,
+				const MaterialSubset* matls,
+				DataWarehouse* /*old_dw*/,
+				DataWarehouse* new_dw)
+{
+  for(int p=0;p<patches->size();p++){
+    const Patch* patch = patches->get(p);
+    for(int m=0;m<matls->size();m++){
+      int matl = matls->get(m);
+      CCVariable<double> mass_source;
+      new_dw->allocateAndPut(mass_source, lb->model_mass_source_CCLabel,
+			     matl, patch);
+      mass_source.initialize(0.0);
+      CCVariable<double> energy_source;
+      new_dw->allocateAndPut(energy_source, lb->model_energy_source_CCLabel,
+			     matl, patch);
+      energy_source.initialize(0.0);
+      CCVariable<Vector> mom_source;
+      new_dw->allocateAndPut(mom_source, lb->model_momentum_source_CCLabel,
+			     matl, patch);
+      mom_source.initialize(Vector(0.0, 0.0, 0.0));
+    }
+  }
 }
 
 /* ---------------------------------------------------------------------
@@ -2926,18 +3059,14 @@ void ICE::computeLagrangianValues(const ProcessorGroup*,
      if(ice_matl)  {               //  I C E
       constCCVariable<double> rho_CC, temp_CC;
       constCCVariable<Vector> vel_CC;
-      constCCVariable<double> int_eng_source, burnedMass;
-      constCCVariable<double> int_eng_comb;
+      constCCVariable<double> int_eng_source;
       constCCVariable<Vector> mom_source;
       constCCVariable<Vector> mom_comb;
       Ghost::GhostType  gn = Ghost::None;
       new_dw->get(rho_CC,         lb->rho_CCLabel,           indx,patch,gn,0);  
       old_dw->get(vel_CC,         lb->vel_CCLabel,           indx,patch,gn,0);  
       old_dw->get(temp_CC,        lb->temp_CCLabel,          indx,patch,gn,0);  
-      new_dw->get(burnedMass,     lb->burnedMass_CCLabel,    indx,patch,gn,0);    
-      new_dw->get(int_eng_comb,   lb->int_eng_comb_CCLabel,  indx,patch,gn,0);   
       new_dw->get(mom_source,     lb->mom_source_CCLabel,    indx,patch,gn,0);    
-      new_dw->get(mom_comb,       lb->mom_comb_CCLabel,      indx,patch,gn,0);    
       new_dw->get(int_eng_source, lb->int_eng_source_CCLabel,indx,patch,gn,0);  
       new_dw->allocateAndPut(mom_L,     lb->mom_L_CCLabel,     indx,patch);
       new_dw->allocateAndPut(int_eng_L, lb->int_eng_L_CCLabel, indx,patch);
@@ -2957,6 +3086,10 @@ void ICE::computeLagrangianValues(const ProcessorGroup*,
           int_eng_L[c] = mass*cv * temp_CC[c] + int_eng_source[c];
         }
       }
+
+      if(d_massExchange && d_models.size() > 0)
+	throw InternalError("Cannot handle mass exchange simultaneous with new style models");
+
       //__________________________________
       //  WITH mass exchange
       // Note that the mass exchange can't completely
@@ -2964,6 +3097,12 @@ void ICE::computeLagrangianValues(const ProcessorGroup*,
       // If it does then we'll get erroneous vel, and temps
       // after advection.  Thus there is always a mininum amount
       if(d_massExchange)  {
+	constCCVariable<double> burnedMass;
+	new_dw->get(burnedMass,   lb->burnedMass_CCLabel,    indx,patch,gn,0);
+	constCCVariable<Vector> mom_comb;
+	new_dw->get(mom_comb,     lb->mom_comb_CCLabel,      indx,patch,gn,0);
+	constCCVariable<double> int_eng_comb;
+	new_dw->get(int_eng_comb, lb->int_eng_comb_CCLabel,  indx,patch,gn,0);
         double massGain = 0.;
         for(CellIterator iter = patch->getCellIterator(); !iter.done(); iter++){
          IntVector c = *iter;
@@ -3017,6 +3156,78 @@ void ICE::computeLagrangianValues(const ProcessorGroup*,
          }
          cout << "Mass gained by the gas this timestep = " << massGain << endl;
        }  //  if (mass exchange)
+
+      //__________________________________
+      //  WITH "model-based" mass exchange
+      // Note that the mass exchange can't completely
+      // eliminate all the mass, momentum and internal E
+      // If it does then we'll get erroneous vel, and temps
+      // after advection.  Thus there is always a mininum amount
+      if(d_models.size() > 0)  {
+
+	constCCVariable<double> model_mass_source;
+	new_dw->get(model_mass_source, lb->model_mass_source_CCLabel,
+		    indx, patch, Ghost::None, 0);
+	constCCVariable<Vector> model_mom_source;
+	new_dw->get(model_mom_source, lb->model_momentum_source_CCLabel,
+		    indx, patch, Ghost::None, 0);
+	constCCVariable<double> model_energy_source;
+	new_dw->get(model_energy_source, lb->model_energy_source_CCLabel,
+		    indx, patch, Ghost::None, 0);
+
+        double massGain = 0.;
+        for(CellIterator iter = patch->getCellIterator(); !iter.done(); iter++){
+         IntVector c = *iter;
+         massGain += model_mass_source[c];
+        }
+        for(CellIterator iter = patch->getExtraCellIterator(); !iter.done(); 
+           iter++) {
+         IntVector c = *iter;
+           //  must have a minimum mass
+          double mass = rho_CC[c] * vol;
+          double min_mass = d_TINY_RHO * vol;
+
+          mass_L[c] = std::max( (mass + model_mass_source[c] ), min_mass);
+
+          //  must have a minimum momentum   
+          for (int dir = 0; dir <3; dir++) {  //loop over all three directons
+            double min_mom_L = vel_CC[c][dir] * min_mass;
+            double mom_L_tmp = vel_CC[c][dir] * mass
+                             + model_mom_source[c][dir];
+  
+             // Preserve the original sign on momemtum     
+             // Use d_SMALL_NUMs to avoid nans when mom_L_temp = 0.0
+            double plus_minus_one = (mom_L_tmp + d_SMALL_NUM)/
+                                    (fabs(mom_L_tmp + d_SMALL_NUM));
+            
+            mom_L[c][dir] = mom_source[c][dir] +
+                  plus_minus_one * std::max( fabs(mom_L_tmp), min_mom_L );
+          }
+
+          // must have a minimum int_eng   
+          double min_int_eng = min_mass * cv * temp_CC[c];
+          double int_eng_tmp = mass * cv * temp_CC[c];
+
+          //  Glossary:
+          //  int_eng_tmp    = the amount of internal energy for this
+          //                   matl in this cell coming into this task
+          //  int_eng_source = thermodynamic work = f(delP_Dilatation)
+          //  model_energy_source   = enthalpy of reaction gained by the
+          //                   product gas, PLUS (OR, MINUS) the
+          //                   internal energy of the reactant
+          //                   material that was liberated in the
+          //                   reaction
+          // min_int_eng     = a small amount of internal energy to keep
+          //                   the equilibration pressure from going nuts
+
+          int_eng_L[c] = int_eng_tmp +
+                             int_eng_source[c] +
+                             model_energy_source[c];
+
+          int_eng_L[c] = std::max(int_eng_L[c], min_int_eng);
+         }
+         cout << "Mass gained by the models this timestep = " << massGain << endl;
+       }  //  if (models.size() > 0)
 
         //---- P R I N T   D A T A ------ 
         // Dump out all the matls data

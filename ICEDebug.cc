@@ -899,7 +899,7 @@ void ICE::printConservedQuantities(const ProcessorGroup*,
 
     static double initial_total_eng;
     static Vector initial_total_mom;
-    static int n_passes = 0.0;
+    static int n_passes = 0;
     
     vector<Vector> mat_momentum(numICEmatls);
     vector<double> mat_mass(numICEmatls);
