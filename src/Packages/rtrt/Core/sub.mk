@@ -139,7 +139,8 @@ SRCS += $(SRCDIR)/Worker.cc \
 	$(SRCDIR)/Instance.cc \
 	$(SRCDIR)/InstanceWrapperObject.cc \
 	$(SRCDIR)/PPMImage.cc \
-	$(SRCDIR)/Satellite.cc 
+	$(SRCDIR)/Satellite.cc \
+	$(SRCDIR)/Grid2.cc \
 
 #	$(SRCDIR)/LumiDpy.cc \
 #	$(SRCDIR)/LumiCamera.cc \
