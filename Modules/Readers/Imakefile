@@ -25,11 +25,10 @@ TCLS = $(GENTCLS) GeomReader.tcl PointsReader.tcl VectorFieldOceanReader.tcl \
 
 LIBNAME = Readers
 
-LOCALINCLUDES = -I~/libtiff/libtiff
+LOCALINCLUDES = 
 SO_LIBS =
 SO_LDFLAGS = -L$(TOP)/lib -lDatatypes -lDataflow -lGeom -lTCL -lClasslib \
-	-lMultitask -lMalloc -lm -lC -lc \
-	~/libtiff/libtiff/libtiff.a
+	-lMultitask -lMalloc -lm -lC -lc -ltiff
 
 depend:: $(GENSRCS)
 
@@ -49,7 +48,7 @@ ColorMapReader.tcl: Reader.tcl
 ColumnMatrixReader.cc: Reader.cc
 	sed 's/TYPE/ColumnMatrix/g' < Reader.cc > ColumnMatrixReader.cc
 
-ColumnMatrixReader.tcl: Reader.tcl
+ColumnMatrixReader.tcl: Reader.tcl	
 	sed 's/TYPE/ColumnMatrix/g' < Reader.tcl > ColumnMatrixReader.tcl
 
 ContourSetReader.cc: Reader.cc
