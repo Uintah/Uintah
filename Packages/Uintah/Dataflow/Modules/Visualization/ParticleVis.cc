@@ -163,7 +163,7 @@ void ParticleVis::execute()
   
   // grab the color map from the input port
   ColorMapHandle cmh;
-  ColorMap *cmap;
+  ColorMap *cmap = NULL;
   bool create_cmap = true;
   if (cin ) {
     if( cin->get( cmh ) ){
