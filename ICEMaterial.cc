@@ -235,7 +235,7 @@ void ICEMaterial::initializeCells(CCVariable<double>& rho_micro,
            vel_CC[*iter]     = d_geom_objs[obj]->getInitialVelocity();
            rho_micro[*iter]  = d_geom_objs[obj]->getInitialDensity();
            sp_vol_CC[*iter]  = 1.0/rho_micro[*iter];
-           rho_CC[*iter]     = rho_micro[*iter] * vol_frac_CC[*iter] +SMALL_NUM;
+           rho_CC[*iter]    = rho_micro[*iter] * vol_frac_CC[*iter] +SMALL_NUM;
            temp[*iter]       = d_geom_objs[obj]->getInitialTemperature();
            speedSound[*iter] = d_speed_of_sound;
 	   IveBeenHere[*iter]= obj; 
