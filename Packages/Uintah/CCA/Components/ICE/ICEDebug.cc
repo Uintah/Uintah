@@ -94,8 +94,6 @@ void ICE::printData_problemSetup( const ProblemSpecP& prob_spec)
        switchDebug_advance_advect       = true;
       else if (debug_attr["label"] == "switchTestConservation")
         switchTestConservation           = true;
-      else if (debug_attr["label"] == "switchDebugConvergence")
-        switchDebugConvergence           = true;
     }
   }
  
