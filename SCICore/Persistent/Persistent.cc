@@ -173,27 +173,26 @@ Piostream* auto_istream(const clString& filename)
     return auto_istream(inp, filename());
 }
 
-Piostream* auto_istream(int/* fd*/)
+Piostream* auto_istream(int fd)
 {
   // Dd:
-  printf("Persistent.cc: auto_istream using fd taken out for now.\n");
-  //    ifstream* inp=scinew ifstream(fd);
-  //    return auto_istream(inp);
-  return NULL;
+//  printf("Persistent.cc: auto_istream using fd taken out for now.\n");
+    ifstream* inp=scinew ifstream(fd);
+    return auto_istream(inp);
+//  return NULL;
 }
 
-Piostream* auto_istream(ifstream* /*inp*/, const char */*name*/)
+Piostream* auto_istream(ifstream* inp, const char *name)
 {
   // Dd:
-  printf("Persistent.cc: auto_istream(inp,name) using fd taken out for now.\n");
+//  printf("Persistent.cc: auto_istream(inp,name) using fd taken out for now.\n");
   //    ifstream* inp=scinew ifstream(fd);
   //    return auto_istream(inp);
-  return NULL;
-#if 0
-
-    GzipPiostream *gzp=scinew GzipPiostream(name, 1);
-    if (gzp->fileOpen()) return gzp;
-    delete gzp;
+//  return NULL;
+//
+//    GzipPiostream *gzp=scinew GzipPiostream(const clString(name), 1);
+//    if (gzp->fileOpen()) return gzp;
+//    delete gzp;
 
     ifstream& in=(*inp);
     if(!in){
@@ -236,7 +235,6 @@ Piostream* auto_istream(ifstream* /*inp*/, const char */*name*/)
         cerr << name << " is an unknown type!\n";
         return 0;
     }
-#endif
 }
 
 } // End namespace PersistentSpace

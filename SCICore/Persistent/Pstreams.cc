@@ -19,7 +19,7 @@
 #include <SCICore/Malloc/Allocator.h>
 
 // KCC stuff
-// #include <fstream.h>
+#include <fstream.h>
 
 #include <sys/types.h>
 #include <sys/stat.h>
@@ -39,9 +39,9 @@ TextPiostream::TextPiostream(ifstream* istr, int version)
 : Piostream(Read, version), istr(istr), ostr(0), have_peekname(0)
 {
   // Dd:
-  printf(" TextPiostream constructor not working to get KCC to compile\n");
+//  printf(" TextPiostream constructor not working to get KCC to compile\n");
 
-#if 0
+//#if 0
     int fd=istr->rdbuf()->fd();
     struct stat buf;
     if(fstat(fd, &buf) != 0){
@@ -49,16 +49,16 @@ TextPiostream::TextPiostream(ifstream* istr, int version)
 	exit(-1);
     }
     len=buf.st_size;
-#endif
+//#endif
 }
 
 TextPiostream::TextPiostream(const clString& filename, Direction dir)
 : Piostream(dir, -1)
 {
   // Dd:
-  printf(" TextPiostream constructor not working to get KCC to compile\n");
+//  printf(" TextPiostream constructor not working to get KCC to compile\n");
 
-#if 0
+//#if 0
     if(dir==Read){
 	ostr=0;
 	istr=0;
@@ -75,16 +75,16 @@ TextPiostream::TextPiostream(const clString& filename, Direction dir)
 	out << "SCI\nASC\n" << PERSISTENT_VERSION << "\n";
 	version=PERSISTENT_VERSION;
     }
-#endif
+//#endif
 }
 
 TextPiostream::TextPiostream(int fd, Direction dir)
 : Piostream(dir, -1)
 {
   // Dd:
-  printf(" TextPiostream constructor not working to get KCC to compile\n");
+//  printf(" TextPiostream constructor not working to get KCC to compile\n");
 
-#if 0
+//#if 0
 
     if(dir==Read){
         ostr=0;
@@ -102,7 +102,7 @@ TextPiostream::TextPiostream(int fd, Direction dir)
         out << "SCI\nASC\n" << PERSISTENT_VERSION << "\n";
         version=PERSISTENT_VERSION;
     }
-#endif
+//#endif
 }
 
 TextPiostream::~TextPiostream()
@@ -571,26 +571,26 @@ void TextPiostream::emit_pointer(int& have_data, int& pointer_id)
 double TextPiostream::get_percent_done()
 {
   // Dd:
-  printf(" TextPiostream get_percent_done not working to get KCC to compile\n");
+//  printf(" TextPiostream get_percent_done not working to get KCC to compile\n");
 
-#if 0
+//#if 0
     if(dir == Read){
 	int pos=istr->tellg();
 	return double(pos)/double(len);
     } else {
 	return 0;
     }
-#endif
-return 0; // Dd: delete this.
+//#endif
+//return 0; // Dd: delete this.
 }
 
 BinaryPiostream::BinaryPiostream(ifstream* istr, int version)
 : Piostream(Read, version), have_peekname(0)
 {
   // Dd:
-  printf(" BinaryPiostream constructor not working to get KCC to compile\n");
+//  printf(" BinaryPiostream constructor not working to get KCC to compile\n");
 
-#if 0
+//#if 0
 
     int fd=istr->rdbuf()->fd();
     xdr=scinew XDR;
@@ -620,7 +620,7 @@ BinaryPiostream::BinaryPiostream(ifstream* istr, int version)
 	err=1;
 	return;
     }
-#endif
+//#endif
 }
 
 BinaryPiostream::BinaryPiostream (int fd, Direction dir)
@@ -1167,9 +1167,9 @@ GunzipPiostream::GunzipPiostream(ifstream* istr, int version)
 : Piostream(Read, version), have_peekname(0)
 {
   // Dd:
-  printf(" GunzipPiostream constructor not working to get KCC to compile\n");
+//  printf(" GunzipPiostream constructor not working to get KCC to compile\n");
 
-#if 0
+//#if 0
     unzipfile=istr->rdbuf()->fd();
     struct stat buf;
     if(fstat(unzipfile, &buf) != 0){
@@ -1177,7 +1177,7 @@ GunzipPiostream::GunzipPiostream(ifstream* istr, int version)
 	exit(-1);
     }
     len=buf.st_size;
-#endif
+//#endif
 }
 
 GunzipPiostream::~GunzipPiostream()
