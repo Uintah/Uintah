@@ -184,8 +184,8 @@ public:
     clString categoryName;   
     clString packageName;    
     clString moduleName;  
-public:
     int abort_flag;
+public:
     int niports();
     int noports();
     IPort* iport(int);
@@ -204,7 +204,7 @@ public:
     bool isSkeleton()	{ return skeleton; }
     void tcl_command(TCLArgs&, void*);
 
-    friend class AI;
+    bool get_abort() { return abort_flag; }
 };
 
 typedef Module* (*ModuleMaker)(const clString& id);
@@ -214,6 +214,10 @@ typedef Module* (*ModuleMaker)(const clString& id);
 
 //
 // $Log$
+// Revision 1.12  2000/07/23 19:34:22  yarden
+// move abort_flag back to private
+// provided an inline public get_abort()
+//
 // Revision 1.11  2000/07/22 17:51:23  yarden
 // move make abort_flag public
 //
