@@ -96,6 +96,12 @@ proc makeRoe {salmon rid} {
     pack $w.bframe.v.sethome -fill x -pady 2
     button $w.bframe.v.gohome -text "Go home" -command "$rid gohome"
     pack $w.bframe.v.gohome -fill x -pady 2
+    frame $w.bframe.dolly
+    pack $w.bframe.dolly -side left -anchor nw 
+    button $w.bframe.dolly.in -text "In" -command "$rid dolly .8"
+    button $w.bframe.dolly.out -text "Out" -command "$rid dolly 1.25"
+    pack $w.bframe.dolly.in $w.bframe.dolly.out -fill x -padx 2 -pady 2 \
+	    -anchor nw
 
     button $w.bframe.more -text "+" -padx 3 \
 	    -font "-Adobe-Helvetica-bold-R-Normal-*-140-75-*" \
