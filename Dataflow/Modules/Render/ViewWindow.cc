@@ -229,6 +229,10 @@ void ViewWindow::spawnChCB(CallbackData*, void*)
 
 ViewWindow::~ViewWindow()
 {
+  delete current_renderer;
+  delete ball;
+  delete bawgl;
+
   gui->delete_command( id+"-c" );
 }
 
@@ -2314,7 +2318,6 @@ void ViewWindow::setView(View newView) {
 }
 
 GeomHandle ViewWindow::createGenAxes() {     
-  
   MaterialHandle dk_red = scinew Material(Color(0,0,0), Color(.2,0,0),
 					  Color(.5,.5,.5), 20);
   MaterialHandle dk_green = scinew Material(Color(0,0,0), Color(0,.2,0),
