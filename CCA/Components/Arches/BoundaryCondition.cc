@@ -130,6 +130,8 @@ BoundaryCondition::problemSetup(const ProblemSpecP& params)
   int total_cellTypes = 0;
   int numMixingScalars = d_props->getNumMixVars();
   
+// flow ramping is on or off, it is the same for all inlets  
+  db->getWithDefault("ramping_inlet_flowrate", d_ramping_inlet_flowrate, true);
   if (ProblemSpecP inlet_db = db->findBlock("FlowInlet")) {
     d_inletBoundary = true;
     for (ProblemSpecP inlet_db = db->findBlock("FlowInlet");
@@ -901,7 +903,8 @@ BoundaryCondition::setFlatProfile(const ProcessorGroup* /*pc*/,
         fort_profv(uVelocity, vVelocity, wVelocity, idxLo, idxHi,
 		   cellType, area, fi.d_cellTypeID, fi.flowRate, fi.inletVel,
 		   fi.calcStream.d_density,
-		   xminus, xplus, yminus, yplus, zminus, zplus, time);
+		   xminus, xplus, yminus, yplus, zminus, zplus, time,
+		   d_ramping_inlet_flowrate);
 
         fort_profscalar(idxLo, idxHi, density, cellType,
 		        fi.calcStream.d_density, fi.d_cellTypeID,
@@ -3469,7 +3472,8 @@ BoundaryCondition::velRhoHatInletBC(const ProcessorGroup* ,
     fort_inlbcs(vars->uVelRhoHat, vars->vVelRhoHat, vars->wVelRhoHat,
       	  idxLo, idxHi, constvars->new_density, constvars->cellType, 
       	  fi.d_cellTypeID, time,
-      	  xminus, xplus, yminus, yplus, zminus, zplus);
+      	  xminus, xplus, yminus, yplus, zminus, zplus,
+	  d_ramping_inlet_flowrate);
     
   }
 }

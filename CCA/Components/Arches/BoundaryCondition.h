@@ -719,6 +719,8 @@ private:
       bool d_intrusionBoundary;
       IntrusionBdry* d_intrusionBC;
 
+      bool d_ramping_inlet_flowrate;
+
 }; // End of class BoundaryCondition
 } // End namespace Uintah
 
