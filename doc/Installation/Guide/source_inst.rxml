@@ -399,9 +399,12 @@ For example:
 <para>
 &osx; builds of &sr; require use of configure options
 <option>--enable-32bit</option> and
-<option>--disable-sci-malloc</option> and
-<option>--enable-debug</option>.  The configure command must also
-include the following environment variable assignments:
+<option>--disable-sci-malloc</option>.  Also, option
+<option>--enable-debug</option> is needed when building under &osx;
+10.2 using gcc 3.1 (December 2002 developer tools).  Option
+<option>--enable-debug</option> is not needed when building under
+&osx; 10.3 using gcc 3.3.  The configure command must also include the
+following environment variable assignments:
 <userinput>CC=gcc</userinput> and <userinput>CXX=g++</userinput>.  For
 example:
 <literallayout class="monospaced">
@@ -413,12 +416,6 @@ example:
   --enable-debug \
   CC=gcc CXX=g++
 </literallayout>
-<note>
-<para>Option <option>--enable-debug</option> is not needed when using
-gcc 3.3.  Option <option>--enable-debug</option> is needed only when
-using an earlier version of gcc.
-</para>
-</note>
 </para>
 
 <para>
