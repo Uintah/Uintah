@@ -52,8 +52,40 @@ itcl_class Volume_Visualization_EditTransferFunc2 {
 	}
 	toplevel $w
 	frame $w.f
-	pack $w.f -padx 20 -pady 20
+	pack $w.f -padx 2 -pady 2
         create_gl
+
+	iwidgets::scrolledframe $w.widgets -hscrollmode none -vscrollmode dynamic
+
+	frame $w.title
+	label $w.title.name -text "Widget Name" \
+	    -width 16 -relief groove
+	label $w.title.color -text "Color" -width 8 -relief groove
+	label $w.title.opacity -text "Opacity" -width 8 -relief groove
+	label $w.title.empty -text "" -width 3
+	pack $w.title.name $w.title.color $w.title.opacity \
+	    $w.title.empty \
+	    -side left 
+
+	frame $w.controls
+	button $w.controls.addtriangle -text "Add Triangle" \
+	    -command "$this-c addtriangle"
+	button $w.controls.addrectangle -text "Add Rectangle" \
+	    -command "$this-c addrectangle"
+	button $w.controls.delete -text "Delete" \
+	    -command "$this-c deletewidget"
+	button $w.controls.undo -text "Undo" \
+	    -command "$this-c undowidget"
+	pack $w.controls.addtriangle $w.controls.addrectangle \
+	    $w.controls.delete $w.controls.undo \
+	    -padx 20 -pady 4 -fill x -expand yes -side left
+
+	pack $w.title  -fill x -padx 2 -pady 2
+	pack $w.widgets -side top -fill both -expand yes -padx 2
+	pack $w.controls -fill x 
+
+	makeSciButtonPanel $w $w $this "\"Reset\" \"$this-c reset_gui\" \"\""
+	moveToCursor $w
     }
 
     method create_gl {} {
