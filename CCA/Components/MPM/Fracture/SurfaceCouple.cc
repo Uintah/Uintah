@@ -187,7 +187,7 @@ computeCrackClosureIntegralAndCrackNormalFromForce(
     double G = GI + GII + GIII;
     if(G>Gmax) {
       Gmax=G;
-      cout<<"Max energy release rate: "<<Gmax<<endl;
+//      cout<<"Max energy release rate: "<<Gmax<<endl;
     }
     
     if( GI<0 || G<toughness ) return false;
@@ -335,7 +335,7 @@ computeCrackClosureIntegralAndCrackNormalFromEnergyReleaseRate(
     G= fabs(G);
     if(G>Gmax) {
       Gmax=G;
-      cout<<"Max energy release rate: "<<Gmax<<endl;
+//      cout<<"Max energy release rate: "<<Gmax<<endl;
     }
     
     if( GI<0 || G<toughness ) return false;
@@ -483,7 +483,7 @@ computeCrackClosureIntegralAndCrackNormalFromEnergyReleaseRate(
     G= fabs(G);
     if(G>Gmax) {
       Gmax=G;
-      cout<<"Max energy release rate: "<<Gmax<<endl;
+//      cout<<"Max energy release rate: "<<Gmax<<endl;
     }
     
     if( GI<0 || G<toughness ) return false;
