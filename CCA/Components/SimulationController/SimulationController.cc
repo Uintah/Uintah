@@ -248,7 +248,7 @@ void SimulationController::run()
 #ifndef DISABLE_SCI_MALLOC
       size_t nalloc,  sizealloc, nfree,  sizefree, nfillbin,
 	nmmap, sizemmap, nmunmap, sizemunmap, highwater_alloc,  
-	highwater_mmap, nlonglocks, nnaps;
+	highwater_mmap;
       
       GetGlobalStats(DefaultAllocator(),
 		     nalloc, sizealloc, nfree, sizefree,
@@ -298,7 +298,7 @@ void SimulationController::run()
       // put the current time into the shared state so other components
       // can access it
       sharedState->setElapsedTime(t);
-      if(first || need_recompile(t, delt, level, cfd, mpm, mpmcfd, md, output)){
+      if(need_recompile(t, delt, level, cfd, mpm, mpmcfd, md, output) || first){
 	first=false;
 	if(d_myworld->myrank() == 0)
 	  cout << "Compiling taskgraph...";
