@@ -243,15 +243,18 @@ void flameSheet_rxn::scheduleMomentumAndEnergyExchange(SchedulerP& sched,
   cout_doing << "flameSheet_rxn::react " << endl;
   Task* t = scinew Task("flameSheet_rxn::react",
 			this, &flameSheet_rxn::react, mi);
+                     
+  Ghost::GhostType  gn = Ghost::None;  
+  Ghost::GhostType  gac = Ghost::AroundCells; 
   t->modifies(mi->energy_source_CCLabel);
-  t->requires(Task::OldDW, mi->density_CCLabel,     Ghost::None);
-  t->requires(Task::OldDW, mi->temperature_CCLabel, Ghost::None);
+  t->requires(Task::OldDW, mi->density_CCLabel,     gn);
+  t->requires(Task::OldDW, mi->temperature_CCLabel, gn);
   t->requires(Task::OldDW, mi->delT_Label);
   
   for(vector<Scalar*>::iterator iter = scalars.begin();
       iter != scalars.end(); iter++){
     Scalar* scalar = *iter;
-    t->requires(Task::OldDW, scalar->scalar_CCLabel, Ghost::None);
+    t->requires(Task::OldDW, scalar->scalar_CCLabel, gac,1);
     t->modifies(scalar->scalar_source_CCLabel);
   }
   sched->addTask(t, level->eachPatch(), mymatls);
@@ -274,7 +277,8 @@ void flameSheet_rxn::react(const ProcessorGroup*,
 
     Vector dx = patch->dCell();
     double volume = dx.x()*dx.y()*dx.z();
-    Ghost::GhostType  gn = Ghost::None;   
+    Ghost::GhostType  gn = Ghost::None;  
+    Ghost::GhostType  gac = Ghost::AroundCells;     
     
     for(int m=0;m<matls->size();m++){
       int matl = matls->get(m);
@@ -293,7 +297,7 @@ void flameSheet_rxn::react(const ProcessorGroup*,
 	  iter != scalars.end(); iter++){
 	 Scalar* scalar = *iter;
         old_dw->get(f_old,            scalar->scalar_CCLabel,       
-                                                        matl, patch, gn, 0);
+                                                        matl, patch, gac, 1);
         new_dw->allocateAndPut(f_src, scalar->scalar_source_CCLabel,
                                                         matl, patch, gn, 0);
       }
@@ -315,8 +319,8 @@ void flameSheet_rxn::react(const ProcessorGroup*,
 	 double oldTemp  = Temp_CC[c];
         numCells++;
         
-        f = cannotBeGreaterThan(f, 1.0);    // keep 0 < f < 1
-        f = cannotBeLessThan(f,0.0);
+        f = min(f,1.0);    // keep 0 < f < 1
+        f = max(f,0.0);
         //__________________________________
         // compute the energy source
         //__________________________________
@@ -381,9 +385,8 @@ void flameSheet_rxn::react(const ProcessorGroup*,
         SFCYVariable<double> f_flux_Y_FC;
         SFCZVariable<double> f_flux_Z_FC;
 
-        computeQ_diffusion_FC( new_dw, patch, 
-                                rho_CC,  rho_CC, f_old, d_diffusivity,
-                                f_flux_X_FC, f_flux_Y_FC, f_flux_Z_FC);
+        computeQ_diffusion_FC( new_dw, patch, f_old, d_diffusivity,
+                               f_flux_X_FC, f_flux_Y_FC, f_flux_Z_FC);
 
         for(CellIterator iter = patch->getCellIterator(); !iter.done(); 
                                                                   iter++){
@@ -427,9 +430,7 @@ template <class T>
 //______________________________________________________________________
 //
 void flameSheet_rxn::computeQ_diffusion_FC(DataWarehouse* new_dw,
-                                 const Patch* patch,
-                                 const CCVariable<double>& rho_CC,      
-                                 const CCVariable<double>& sp_vol_CC,   
+                                 const Patch* patch,   
                                  const CCVariable<double>& q_CC,
                                  const double diffusivity,
                                  SFCXVariable<double>& q_flux_X_FC,
@@ -441,10 +442,11 @@ void flameSheet_rxn::computeQ_diffusion_FC(DataWarehouse* new_dw,
   adj_offset[0] = IntVector(-1, 0, 0);    // X faces
   adj_offset[1] = IntVector(0, -1, 0);    // Y faces
   adj_offset[2] = IntVector(0,  0, -1);   // Z faces
-
-  new_dw->allocateTemporary(q_flux_X_FC, patch, Ghost::AroundCells, 1);
-  new_dw->allocateTemporary(q_flux_Y_FC, patch, Ghost::AroundCells, 1);
-  new_dw->allocateTemporary(q_flux_Z_FC, patch, Ghost::AroundCells, 1);
+ 
+  Ghost::GhostType  gac = Ghost::AroundCells;
+  new_dw->allocateTemporary(q_flux_X_FC, patch, gac, 1);
+  new_dw->allocateTemporary(q_flux_Y_FC, patch, gac, 1);
+  new_dw->allocateTemporary(q_flux_Z_FC, patch, gac, 1);
 
   q_flux_X_FC.initialize(0.0);
   q_flux_Y_FC.initialize(0.0);
@@ -486,7 +488,7 @@ void flameSheet_rxn::computeQ_diffusion_FC(DataWarehouse* new_dw,
   q_diffusion<SFCYVariable<double> >(Y_FC_iterLimits,
                                      adj_offset[1], diffusivity, dx.y(),
                                      q_CC, q_flux_Y_FC);
-  
+
   q_diffusion<SFCZVariable<double> >(Z_FC_iterLimits,
                                      adj_offset[2],  diffusivity, dx.z(),
                                      q_CC, q_flux_Z_FC);
