@@ -22,10 +22,11 @@
 #include <Core/CCA/Component/Comm/Message.h>
 
 namespace SCIRun {
+  class SocketEpChannel;
   class SocketMessage : public Message {
   public:
-
     SocketMessage();
+    SocketMessage(SocketEpChannel* sep);
     virtual ~SocketMessage();
     void* getLocalObj();
     void createMessage();
@@ -55,6 +56,7 @@ namespace SCIRun {
     int capacity;
     int msg_size;
     static const int INIT_SIZE=1024;
+    SocketEpChannel *sep;
   };
 }
 

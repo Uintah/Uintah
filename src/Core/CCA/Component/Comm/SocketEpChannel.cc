@@ -27,7 +27,9 @@
 #include <netdb.h>
 //#include <sys/wait.h>
 
+#include <Core/CCA/Component/PIDL/URL.h>
 #include <Core/CCA/Component/Comm/SocketEpChannel.h>
+#include <Core/CCA/Component/Comm/SocketSpChannel.h>
 #include <Core/CCA/Component/Comm/CommError.h>
 #include <Core/CCA/Component/Comm/SocketMessage.h>
 #include <Core/CCA/Component/Comm/SocketThreads.h>
@@ -55,6 +57,7 @@ SocketEpChannel::SocketEpChannel(){
 
   handler_table=NULL;
   msg = NULL;
+  object=NULL;
 }
 
 SocketEpChannel::~SocketEpChannel(){ 
@@ -94,6 +97,7 @@ string SocketEpChannel::getUrl() {
 }
 
 void SocketEpChannel::activateConnection(void* obj){
+  object=obj;
   Thread* t = new Thread(new SocketAcceptThread(this), "SocketAcceptThread", 0, Thread::Activated);
   t->detach();
 }
@@ -102,7 +106,7 @@ Message* SocketEpChannel::getMessage() {
   if (sockfd == 0)
     return NULL;
   if (msg == NULL)
-    msg = new SocketMessage();
+    msg = new SocketMessage(this);
   return msg;
 }
 
@@ -117,8 +121,9 @@ SocketEpChannel::registerHandler(int num, void* handle){
 }
 
 void 
-SocketEpChannel::bind(SpChannel* /*spchan*/){
-  //does nothing, at this time
+SocketEpChannel::bind(SpChannel* spchan){
+  spchan->openConnection(URL(getUrl()));
+  //might save spchan for reference
 }
 
 

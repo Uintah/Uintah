@@ -39,12 +39,17 @@ SocketSpChannel::SocketSpChannel() {
   msg = NULL;
 }
 
+SocketSpChannel::SocketSpChannel(const string &url) { 
+  ep_url=url;
+}
+
 SocketSpChannel::~SocketSpChannel(){
   if(sockfd!=0) close(sockfd);
   if(msg!=NULL) delete msg;
 }
 
 void SocketSpChannel::openConnection(const URL& url) {
+  ep_url=url.getString();
   struct hostent *he;
   struct sockaddr_in their_addr; // connector's address information 
 
@@ -82,10 +87,14 @@ void SocketSpChannel::openConnection(const URL& url) {
   */
 }
 
-SpChannel* SocketSpChannel::SPFactory(bool /*deep*/) {
-  //...
-  SocketSpChannel* new_sp = new SocketSpChannel(); 
-  return new_sp;
+SpChannel* SocketSpChannel::SPFactory(bool deep) {
+  //I am not sure about this yet.
+  if(deep){
+    return new SocketSpChannel(); 
+  }
+  else{
+    return this;
+  }
 }
 
 void SocketSpChannel::closeConnection() {
