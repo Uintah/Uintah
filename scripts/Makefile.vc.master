@@ -148,12 +148,19 @@ FULLDLLNAME = $(DLLNAME)$(APPENDIX)
 # names for a .dll and/or a .exe
 #
 
-ALL = \
 !if ("$(DLLNAME)"!="")
-	$(FULLDLLNAME).dll\
-!elseif ("$(EXENAME)"!="")
-	$(EXENAME).exe
+ALLDLL = $(FULLDLLNAME).dll
+!else
+ALLDLL = 
 !endif
+
+!if ("$(EXENAME)"!="")
+ALLEXE = $(EXENAME).exe
+!else
+ALLEXE = 
+!endif
+
+ALL = $(ALLDLL) $(ALLEXE)
 
 
 
