@@ -43,8 +43,7 @@ itcl_class SCIRun_Math_AppendMatrix {
     method ui {} {
         set w .ui[modname]
         if {[winfo exists $w]} {
-            raise $w
-            return;
+            return
         }
 
         toplevel $w
@@ -68,8 +67,7 @@ itcl_class SCIRun_Math_AppendMatrix {
                 {"Postpend" 0}}
 	pack $w.f.r $w.f.a $w.f.f -side left -expand 1 -fill x
 
-	button $w.clear -text "Clear Output" -command "$this-c clear"
-
-	pack $w.f $w.clear -expand 1 -fill x
+	makeSciButtonPanel $w $w $this "\"Clear Output\" \"$this-c clear\" \"\""
+	moveToCursor $w
     }
 }
