@@ -43,7 +43,7 @@ for test in TESTS:
     testlog = "%s/MPM-%s/%s.log" % (environ['BUILDROOT'], mode, testname)
 
     print "MPM-%s: Running test %s on %s" % (mode, testname, date())
-    rc = system("StandAlone/sus -mpm inputs/MPM/%s > %s 2>&1" % (input(test), testlog))
+    rc = system("StandAlone/sus -mpm StandAlone/inputs/MPM/%s > %s 2>&1" % (input(test), testlog))
     if rc != 0:
     	print "MPM-%s: Test %s failed with code %d" % (mode, testname, rc)
     	failcode = 1
