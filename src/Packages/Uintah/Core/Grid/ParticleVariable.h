@@ -282,7 +282,9 @@ private:
   ParticleVariable<T>::emitNormal(ostream& out, DOM_Element varnode)
   {
     const TypeDescription* td = fun_getTypeDescription((T*)0);
-    appendElement(varnode, "numParticles", d_pset->numParticles());
+    if (findNode("numParticles", varnode) == 0)
+      appendElement(varnode, "numParticles", d_pset->numParticles());
+      
     if(!td->isFlat()){
       throw InternalError("Cannot yet write non-flat objects!\n");
     }
