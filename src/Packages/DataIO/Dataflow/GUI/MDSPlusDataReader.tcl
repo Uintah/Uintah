@@ -41,8 +41,14 @@ itcl_class DataIO_Readers_MDSPlusDataReader {
     }
 
     method set_defaults {} {
+	global $this-power_app
+	global power_app_command
+
+	set    $this-power_app 0
+	set    power_app_command ""
+
 	global $this-num-entries
-	set $this-num-entries 1
+	set $this-num-entries 0
   
 	global $this-check
 	global $this-server
@@ -71,6 +77,14 @@ itcl_class DataIO_Readers_MDSPlusDataReader {
 
 	global allow_selection
 	set allow_selection true
+    }
+
+    method set_power_app { cmd } {
+	global $this-power_app
+	global power_app_command
+
+	set $this-power_app 1
+	set power_app_command $cmd
     }
 
     method ui {} {
@@ -357,7 +371,16 @@ itcl_class DataIO_Readers_MDSPlusDataReader {
 	pack $w.dm -fill x -expand yes -side top
 
 
-	makeSciButtonPanel $w $w $this
+	global $this-power_app
+	global power_app_command
+
+	if { [set $this-power_app] } {
+	    makeSciButtonPanel $w $w $this -no_execute -no_close -no_find \
+		"\"Close\" \"wm withdraw $w; $power_app_command\" \"Hides this GUI\""
+	} else {
+	    makeSciButtonPanel $w $w $this
+	}
+	 
 	moveToCursor $w
     }
 
@@ -497,7 +520,7 @@ itcl_class DataIO_Readers_MDSPlusDataReader {
 
 	    create_entries
 	    
-	    if { [set $this-num-entries] == 0 } {
+	    if { [set $this-num-entries] == -1 } {
 		global $this-signal
 		global $this-status
 		global $this-port

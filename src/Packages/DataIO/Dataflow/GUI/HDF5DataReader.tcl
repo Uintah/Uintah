@@ -43,6 +43,12 @@ itcl_class DataIO_Readers_HDF5DataReader {
 
     method set_defaults {} {
 
+	global $this-power_app
+	global power_app_command
+
+	set    $this-power_app 0
+	set    power_app_command ""
+
 	global have_groups
 	global have_attributes
 	global have_datasets
@@ -134,6 +140,14 @@ itcl_class DataIO_Readers_HDF5DataReader {
 
 	global read_error
 	set read_error 0
+    }
+
+    method set_power_app { cmd } {
+	global $this-power_app
+	global power_app_command
+
+	set $this-power_app 1
+	set power_app_command $cmd
     }
 
     method make_file_open_box {} {
@@ -539,7 +553,16 @@ itcl_class DataIO_Readers_HDF5DataReader {
 
 	animate
 
-	makeSciButtonPanel $w $w $this
+	global $this-power_app
+	global power_app_command
+
+	if { [set $this-power_app] } {
+	    makeSciButtonPanel $w $w $this -no_execute -no_close -no_find \
+		"\"Close\" \"wm withdraw $w; $power_app_command\" \"Hides this GUI\""
+	} else {
+	    makeSciButtonPanel $w $w $this
+	}
+	 
 	moveToCursor $w
     }
 
@@ -1027,6 +1050,10 @@ itcl_class DataIO_Readers_HDF5DataReader {
 	set w .ui[modname]
 
 	if [ expr [winfo exists $w] ] {
+	    set sd [$w.sd childsite]
+	    set listbox $sd.listbox
+	    $listbox.list delete 0 end
+
 	    set treeframe [$w.treeview childsite]
 	    set treeview $treeframe.tree.tree
 
@@ -1038,15 +1065,12 @@ itcl_class DataIO_Readers_HDF5DataReader {
 		global $this-datasets
 
 		if { {[set $this-datasets]} != {$names} } {
+		    global $this-ports
 		    set $ports ""
 		    set $this-ports ""
 		}
 		
 		set $this-datasets $names
-
-		set sd [$w.sd childsite]
-		set listbox $sd.listbox
-		$listbox.list delete 0 end
 
 		if { [string first "\{" $names] == 0 } {
 		    set tmp $names
@@ -1077,6 +1101,12 @@ itcl_class DataIO_Readers_HDF5DataReader {
 		}
 
 		$this-c update_selection;
+	    } else {
+		global $this-datasets
+		global $this-ports
+		set $ports ""
+		set $this-ports ""
+		set $this-datasets ""
 	    }
 	}
     }
@@ -1245,22 +1275,25 @@ itcl_class DataIO_Readers_HDF5DataReader {
     }
 
     method animate {} {
-	set w .ui[modname]
-	
-	if [ expr [winfo exists $w] ] {
-	    set dm [$w.dm childsite]
+	global $this-power_app
+	global power_app_command
 
-	    if { [set $this-animate] } {
+	if { ![set $this-power_app] } {
+	    set w .ui[modname]
+	    
+	    if [ expr [winfo exists $w] ] {
+		if { [set $this-animate] } {
 
-		$this-c update_selection;
+		    $this-c update_selection;
 
-		make_animate_box
+		    make_animate_box ""
 
-	    } else {
-		set w [format "%s-animate" .ui[modname]]
+		} else {
+		    set w [format "%s-animate" .ui[modname]]
 
-		if {[winfo exists $w]} {
-		    destroy $w
+		    if {[winfo exists $w]} {
+			destroy $w
+		    }
 		}
 	    }
 	}
@@ -1272,19 +1305,22 @@ itcl_class DataIO_Readers_HDF5DataReader {
 	$this-c needexecute
     }
 
-    method make_animate_box {} {
-	set w [format "%s-animate" .ui[modname]]
+    method make_animate_box { w } {
 
-	if {[winfo exists $w]} {
-	    set child [lindex [winfo children $w] 0]
+	if { $w != "" } {
+	    set w [format "%s-animate" .ui[modname]]
+	    
+	    if {[winfo exists $w]} {
+		set child [lindex [winfo children $w] 0]
+		
+		# $w withdrawn by $child's procedures
+		raise $child
+		return
+	    }
 
-	    # $w withdrawn by $child's procedures
-	    raise $child
-	    return
+	    toplevel $w
 	}
 
-        toplevel $w
-	
 	frame $w.loc -borderwidth 2
 	frame $w.playmode -relief groove -borderwidth 2
 	frame $w.execmode -relief groove -borderwidth 2
