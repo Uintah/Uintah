@@ -170,7 +170,7 @@ endif
 
 # Always put $(TAU_LIBRARY) in front of $(MPI_LIBRARY) for the TAU_MPI wrapper
 
-MPI_LIBRARY := @MPI_LIB_DIR_FLAG@ @MPI_LIB_FLAG@
+MPI_LIBRARY := $(TAU_LIBRARY) @MPI_LIB_DIR_FLAG@ @MPI_LIB_FLAG@
 
 # not blank.  Its "value" is not useful.
 HAVE_MPI := @HAVE_MPI@
