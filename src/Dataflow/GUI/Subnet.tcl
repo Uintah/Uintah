@@ -981,7 +981,8 @@ proc genSubnetScript { subnet { tab "__auto__" }  } {
 	if { [string equal "SCIRun->Render->Viewer" $modstr] } {
 	    foreach w [winfo children .] {
 		if { [string first .ui$module $w] == 0 } {
-		    append script "\n${tab}$modVar($module) ui\n"
+		    append script "\n${tab}$modVar($module) ui"
+		    append script "\n${tab}set $modVar($module)-ViewWindow_0-geometry [wm geometry .ui$module-ViewWindow_0]\n"
 		    break
 		}
 	    }
@@ -1001,20 +1002,25 @@ proc genSubnetScript { subnet { tab "__auto__" }  } {
 	    append script "\n${tab}\# Set GUI variables for the $modstr Module\n"
 	    foreach var $write_vars {
 		upvar \#0 $module-$var val
+		set varname "\$m$i-${var}"
+		if { [llength $varname] > 1 } {
+		    set varname \"${varname}\"
+		}
+
 		if { [info exists ModuleSubstitutedVars($module)] && \
 		     [lsearch $ModuleSubstitutedVars($module) $var] != -1 } {
 		    set tmpval [subDATADIRandDATASET $val]
-		    append script "${tab}set \$m$i-${var} \"${tmpval}\"\n"
+		    append script "${tab}set $varname \"${tmpval}\"\n"
 		} else {
 		    set len [string length $val]
 		    if { $len > 9 } {
 			set failed [catch "set num [format %.${len}e $val]"]
 			if { !$failed } {
-			    append script "${tab}set \$m$i-${var} \{${num}\}\n"
+			    append script "${tab}set $varname \{${num}\}\n"
 			    continue
 			}
 		    }
-		    append script "${tab}set \$m$i-${var} \{${val}\}\n"
+		    append script "${tab}set $varname \{${val}\}\n"
 		}
 	    }
 	}
