@@ -222,9 +222,6 @@
        <MPM>
          <material name = "Copper Ring" >
                 <burn type = "null" />
-               <EOS type = "ideal_gas">
-                  <gas_constant>      287               </gas_constant>
-               </EOS>
                 <density>   8900.0   </density>
                 <constitutive_model type="comp_neo_hook">
                   <shear_modulus>      43.875e9      </shear_modulus>
@@ -254,9 +251,6 @@
          </material>
          <material name = "Contents" >
                 <burn type = "null" />
-               <EOS type = "ideal_gas">
-                  <gas_constant>      287               </gas_constant>
-               </EOS>
                 <density>   1828.0   </density>
                 <constitutive_model type="visco_scram">
                     <PR>0.3</PR>
@@ -312,9 +306,7 @@
        <ICE>
          <material name = "Inner air" >
            <burn type = "null" />
-           <EOS type = "ideal_gas">
-              <gas_constant>            287           </gas_constant>
-           </EOS>
+           <EOS type = "ideal_gas">                     </EOS>
            <viscosity>                  0.0            </viscosity>
            <thermal_conductivity>       0.0            </thermal_conductivity>
            <specific_heat>              716.0          </specific_heat>
@@ -335,9 +327,7 @@
          </material>
          <material name = "Surrounding air" >
            <burn type = "null" />
-           <EOS type = "ideal_gas">
-              <gas_constant>            287           </gas_constant>
-           </EOS>
+           <EOS type = "ideal_gas">                     </EOS>
            <viscosity>                  0.0            </viscosity>
            <thermal_conductivity>       0.0            </thermal_conductivity>
            <specific_heat>              716.0          </specific_heat>

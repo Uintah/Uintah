@@ -161,9 +161,6 @@
        <MPM>
          <material name = " Piston Piston">
                 <burn type = "null"/>
-                <EOS type = "ideal_gas">
-                    <gas_constant>       0.0         </gas_constant>
-                </EOS>
                 <density>                  1.9e6         </density>
                 <constitutive_model type = "comp_neo_hook_plastic">
                   <bulk_modulus>           10.2e6        </bulk_modulus>
@@ -195,10 +192,8 @@
       <!--__________________________________ -->   
        <ICE>
          <material name = "Trapped air">
-            <burn type = "null"/>
-            <EOS type = "ideal_gas">
-                 <gas_constant>         0.0              </gas_constant>
-            </EOS>
+           <burn type = "null"/>
+           <EOS type = "ideal_gas">                     </EOS>
            <viscosity>                  0.0             </viscosity>
            <thermal_conductivity>       0.0             </thermal_conductivity>
            <specific_heat>              716.0e-8        </specific_heat>
@@ -220,9 +215,7 @@
          
          <material name = "Air Above piston">
             <burn type = "null"/>
-            <EOS type = "ideal_gas">
-                 <gas_constant>         0.0              </gas_constant>
-            </EOS>
+            <EOS type = "ideal_gas">                     </EOS>
            <viscosity>                  0.0             </viscosity>
            <thermal_conductivity>       0.0             </thermal_conductivity>
            <specific_heat>              716.0e-8        </specific_heat>
