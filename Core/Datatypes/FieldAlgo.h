@@ -12,9 +12,13 @@
 #ifndef Datatypes_FieldAlgo_h
 #define Datatypes_FieldAlgo_h
 
+#include <iostream>
+#include <utility>
+#include <map>
+
 #include <Core/Geometry/Point.h>
 #include <Core/Geometry/Vector.h>
-#include <iostream>
+
 namespace SCIRun {
 using std::cout;
 using std::cerr;
@@ -44,6 +48,37 @@ calc_weights(const Mesh *mesh, Index i, const Point &p,
     ++witer;
   }
 }
+
+template<class Field, class T>
+bool
+field_minmax( Field &field, pair<T,T>& minmax )
+{
+  typedef typename Field::value_type value_type;
+  pair<value_type,value_type> local_minmax;
+  
+  if ( !field.get( "minmax", local_minmax ) ) {
+    // compute minmax
+    typename Field::fdata_type::iterator i = field.fdata().begin();
+    if ( i == field.fdata().end() ) 
+      return false;// error! empty field
+
+    local_minmax.first = local_minmax.second = *i;
+    for (++i; i != field.fdata().end(); i++ ) {
+      value_type v = *i;
+      if ( v < local_minmax.first ) local_minmax.first = v;
+      else if ( v > local_minmax.second ) local_minmax.second = v;
+    }
+
+    // cache in the field properties
+    field.store( "minmax", local_minmax );
+  }
+
+  minmax.first = T(local_minmax.first);
+  minmax.second = T(local_minmax.second);
+
+  return true;
+}
+    
 
 template <class Field, class Functor>
 bool
