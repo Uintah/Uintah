@@ -1624,7 +1624,16 @@ ViewWindow::autoview(const BBox& bbox)
     double myfov=20.0;
 
     Vector diag(bbox.diagonal());
-    const double w = diag.length();
+    
+    double w = diag.length();
+    if( w < 0.000001 ){
+      BBox bb;
+      bb.reset();
+      Vector epsilon(0.001, 0.001, 0.001 );
+      bb.extend( bbox.min() - epsilon );
+      bb.extend( bbox.max() + epsilon );
+      w = bb.diagonal().length();
+    }
     Vector lookdir(cv.lookat() - cv.eyep()); 
     lookdir.safe_normalize();
     const double scale = 1.0 / (2*Tan(DtoR(myfov/2.0)));
