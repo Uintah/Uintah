@@ -111,7 +111,7 @@ c       Generate weights "WT"
 
               if ((ABS(OXI(i)).EQ.ORD(2)).OR.
      1  (ABS(OETA(i)).EQ.ORD(2)).OR.
-     1  (ABS(OMU(i)).EQ.ORD(2)))WT(i)=0.3626469d0
+     1  (ABS(OMU(i)).EQ.ORD(2))) WT(i)=0.3626469d0
           
            else if (SN.EQ.8) then
               WT(i)=0.0992284d0
@@ -121,8 +121,9 @@ c       Generate weights "WT"
      1  (ABS(OMU(i)).EQ.ORD(1)))
      1  WT(i)=0.1712359d0
 
-              if ((ABS(OXI(i)).AND.ABS(OETA(i)).AND.
-     1  ABS(OMU(i))).EQ.ORD(3))WT(i)=0.4617179d0
+              if ((ABS(OXI(i)).EQ.ORD(3)).AND.
+     1            (ABS(OETA(i)).EQ.ORD(3)).AND.
+     1            (ABS(OMU(i)).EQ.ORD(3))) WT(i)=0.4617179d0
 
               endif
 c              write(6,*)OMU(i),OETA(i),OXI(i),WT(i)
