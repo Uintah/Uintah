@@ -19,6 +19,16 @@
    <DataArchiver>
         <filebase>disksel.uda</filebase>
 	<outputInterval>.1</outputInterval>
+	<save label="KineticEnergy"/>
+	<save label="TotalMass"/>
+	<save label="StrainEnergy"/>
+	<save label="CenterOfMassPosition"/>
+	<save label="CenterOfMassVelocity"/>
+	<save label="p.x"/>
+	<save label="p.volume"/>
+	<save label="p.stress"/>
+	<save label="g.mass"/>
+	<save label="g.stressFS"/>
    </DataArchiver>
 
     <MPM>
@@ -117,5 +127,10 @@
 	<MPM>
 	</MPM>
     </PhysicalBC>
+
+    <Save material="2">p.StrainEnergy</Save>
     
 </Uintah_specification>
+
+
+
