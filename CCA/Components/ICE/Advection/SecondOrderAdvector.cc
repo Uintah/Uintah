@@ -252,7 +252,7 @@ void SecondOrderAdvector::advectQ(const CCVariable<Vector>& q_CC,
                   
   qAverageFlux(   q_CC, patch, grad_lim, q_grad_x, q_grad_y, q_grad_z,
                   q_OAFS);
-                  
+
   advect(q_OAFS, patch, q_advected);
 }
 
@@ -382,14 +382,9 @@ SecondOrderAdvector::qAverageFlux( const CCVariable<T>& q_CC,
     q_OAFS[LEFT][c] =   q_grad_X * r_out_x[c].d_fflux[LEFT] + 
                         q_grad_Y * r_out_y[c].d_fflux[LEFT] + 
                         q_grad_Z * r_out_z[c].d_fflux[LEFT] + Q_CC;
-                                  
+
     q_OAFS[RIGHT][c] =  q_grad_X * r_out_x[c].d_fflux[RIGHT] + 
                         q_grad_Y * r_out_y[c].d_fflux[RIGHT] + 
-                        q_grad_Z * r_out_z[c].d_fflux[RIGHT] + Q_CC;                      
+                        q_grad_Z * r_out_z[c].d_fflux[RIGHT] + Q_CC;
   }
 }
-
-
-
-
-
