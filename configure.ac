@@ -2329,7 +2329,7 @@ if test "$HAVE_LAPACK" != "yes"; then
 fi
 
 if test "$HAVE_LAPACK" != "yes"; then
-  SCI_TRY_LINK(LAPACK,complib.sgimath library,,,complib.sgimath,$_sci_lib,,,optional)
+  SCI_TRY_LINK(LAPACK,complib.sgimath_mp library,,,complib.sgimath_mp,$_sci_lib,,,optional)
   if test "$HAVE_LAPACK" = "yes"; then
        AC_MSG_WARN(Using complib for lapack)
   fi
