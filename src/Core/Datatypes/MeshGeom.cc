@@ -32,7 +32,10 @@ MeshGeom::io(Piostream& stream)
 {
   stream.begin_class(typeName(0).c_str(), MESHGEOM_VERSION);
   SurfaceGeom::io(stream);
+#if 0
+  // Commented out to fix compilation problem on linux - Steve
   Pio(stream, cell_);
+#endif
   stream.end_class();
 }
 

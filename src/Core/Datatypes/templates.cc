@@ -44,6 +44,7 @@ template class LockingHandle<Surface>;
 
 //template class MinMaxFunctor<double>;
 
+#if 0
 #include <Core/Datatypes/TypedFData.h>
 #include <functional>
 template class TypedFData<double>;
@@ -65,6 +66,7 @@ public:
 };
 
 //template class FDataBinOp<double, FData1D<double>, FData1D<double>, minwrap>;
+#endif
 
 #ifdef __sgi
 #pragma reset woff 1468

@@ -31,7 +31,10 @@ DebugStream TetMeshGeom::dbg("TetMeshGeom", true);
 void TetMeshGeom::io(Piostream& stream){
   stream.begin_class(typeName(0).c_str(), TETMESHGEOM_VERSION);
   MeshGeom::io(stream);
+#if 0
+  // Commented out to fix compilation problem on linux - Steve
   Pio(stream, tets_);
+#endif
   stream.end_class();
 }
 
