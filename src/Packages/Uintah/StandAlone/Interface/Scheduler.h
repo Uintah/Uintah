@@ -69,7 +69,7 @@ WARNING
        //////////
        // Insert Documentation Here:
        virtual DataWarehouseP createDataWarehouse(DataWarehouseP& parent_dw) = 0;
-    protected:
+       //    protected:
 
        //////////
        // Insert Documentation Here:
@@ -77,9 +77,9 @@ WARNING
 					       DataWarehouseP& old_dw,
 					       DataWarehouseP& new_dw,
 					       const VarLabel* posLabel,
-					       const vector<const VarLabel*>& labels,
+					       const vector<vector<const VarLabel*> >& labels,
 					       const VarLabel* new_posLabel,
-					       const vector<const VarLabel*>& new_labels,
+					       const vector<vector<const VarLabel*> >& new_labels,
 					       int numMatls) = 0;
 
     protected:
@@ -101,6 +101,11 @@ WARNING
 
 //
 // $Log$
+// Revision 1.17  2000/07/28 22:45:17  jas
+// particle relocation now uses separate var labels for each material.
+// Addd <iostream> for ReductionVariable.  Commented out protected: in
+// Scheduler class that preceeded scheduleParticleRelocation.
+//
 // Revision 1.16  2000/07/28 03:01:07  rawat
 // modified createDatawarehouse and added getTop function
 //
