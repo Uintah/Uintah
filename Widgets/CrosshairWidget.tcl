@@ -45,6 +45,8 @@ itcl_class CrosshairWidget {
     }
 
     method scale_changed {newscale} {
+	ui
+	set w .ui$this
 	$w.dialbox dial_scale 0 $newscale
 	$w.dialbox dial_scale 2 $newscale
 	$w.dialbox dial_scale 4 $newscale

@@ -32,6 +32,14 @@ enum { ConstDist, ConstRatio };
 enum { GeomPointL, GeomPointR, GeomShaft, GeomSlider, GeomResizeL, GeomResizeR };
 enum { PickSphL, PickSphR, PickCyl, PickSlider, PickResizeL, PickResizeR };
 
+/***************************************************************************
+ * The constructor initializes the widget's constraints, variables,
+ *      geometry, picks, materials, modes, switches, and schemes.
+ * Variables and constraints are initialized as a function of the
+ *      widget_scale.
+ * Much of the work is accomplished in the BaseWidget constructor which
+ *      includes some consistency checking to ensure full initialization.
+ */
 GaugeWidget::GaugeWidget( Module* module, CrowdMonitor* lock, double widget_scale )
 : BaseWidget(module, lock, "GaugeWidget", NumVars, NumCons, NumGeoms, NumPcks, NumMatls, NumMdes, NumSwtchs, widget_scale),
   oldaxis(1, 0, 0)
@@ -113,11 +121,26 @@ GaugeWidget::GaugeWidget( Module* module, CrowdMonitor* lock, double widget_scal
 }
 
 
+/***************************************************************************
+ * The destructor frees the widget's allocated structures.
+ * The BaseWidget's destructor frees the widget's constraints, variables,
+ *      geometry, picks, materials, modes, switches, and schemes.
+ * Therefore, most widgets' destructors will not need to do anything.
+ */
 GaugeWidget::~GaugeWidget()
 {
 }
 
 
+/***************************************************************************
+ * The widget's redraw method changes widget geometry to reflect the
+ *      widget's variable values and its widget_scale.
+ * Geometry should only be changed if the mode_switch that displays
+ *      that geometry is active.
+ * Redraw should also set the principal directions for all picks.
+ * Redraw should never be called directly; the BaseWidget execute method
+ *      calls redraw after establishing the appropriate locks.
+ */
 void
 GaugeWidget::redraw()
 {
@@ -151,6 +174,19 @@ GaugeWidget::redraw()
 }
 
 
+/***************************************************************************
+ * The widget's geom_moved method receives geometry move requests from
+ *      the widget's picks.  The widget's variables must be altered to
+ *      reflect these changes based upon which pick made the request.
+ * No more than one variable should be Set since this triggers solution of
+ *      the constraints--multiple Sets could lead to inconsistencies.
+ *      The constraint system only requires that a variable be Set if the
+ *      change would cause a constraint to be invalid.  For example, if
+ *      all PointVariables are moved by the same delta, then no Set is
+ *      required.
+ * The last line of the widget's geom_moved method should call the
+ *      BaseWidget execute method (which calls the redraw method).
+ */
 void
 GaugeWidget::geom_moved( GeomPick*, int axis, double dist,
 			 const Vector& delta, int pick, const BState& )
@@ -185,6 +221,12 @@ GaugeWidget::geom_moved( GeomPick*, int axis, double dist,
 }
 
 
+/***************************************************************************
+ * This standard method simply moves all the widget's PointVariables by
+ *      the same delta.
+ * The last line of this method should call the BaseWidget execute method
+ *      (which calls the redraw method).
+ */
 void
 GaugeWidget::MoveDelta( const Vector& delta )
 {
@@ -195,6 +237,11 @@ GaugeWidget::MoveDelta( const Vector& delta )
 }
 
 
+/***************************************************************************
+ * This standard method returns a reference point for the widget.  This
+ *      point should have some logical meaning such as the center of the
+ *      widget's geometry.
+ */
 Point
 GaugeWidget::ReferencePoint() const
 {
@@ -250,6 +297,11 @@ GaugeWidget::GetAxis()
 }
 
 
+/***************************************************************************
+ * This standard method returns a string describing the functionality of
+ *      a widget's material property.  The string is used in the 
+ *      BaseWidget UI.
+ */
 clString
 GaugeWidget::GetMaterialName( const Index mindex ) const
 {

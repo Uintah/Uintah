@@ -58,6 +58,14 @@ static clString make_id(const clString& name)
    
 }
 
+/***************************************************************************
+ * The constructor initializes the widget's constraints, variables,
+ *      geometry, picks, materials, modes, switches, and schemes.
+ * Variables and constraints are initialized as a function of the
+ *      widget_scale.
+ * Much of the work is accomplished in the BaseWidget constructor which
+ *      includes some consistency checking to ensure full initialization.
+ */
 BaseWidget::BaseWidget( Module* module, CrowdMonitor* lock,
 			const clString& name,
 			const Index NumVariables,
@@ -99,6 +107,12 @@ BaseWidget::BaseWidget( Module* module, CrowdMonitor* lock,
 }
 
 
+/***************************************************************************
+ * The destructor frees the widget's allocated structures.
+ * The BaseWidget's destructor frees the widget's constraints, variables,
+ *      geometry, picks, materials, modes, switches, and schemes.
+ * Therefore, most widgets' destructors will not need to do anything.
+ */
 BaseWidget::~BaseWidget()
 {
    Index index;
@@ -110,6 +124,10 @@ BaseWidget::~BaseWidget()
    for (index = 0; index < NumConstraints; index++) {
       delete constraints[index];
    }
+
+   // Geometry, picks, materials, and switches are freed automatically.
+   // Modes don't require freeing.
+   // Schemes are freed as part of the variables and constraints.
 }
 
 
@@ -527,6 +545,10 @@ BaseWidget::SetMode( const Index mode, const long swtchs )
 }
 
 
+/***************************************************************************
+ * This performs consistency checking to ensure full initialization.
+ * It should be called as the last line of each widget's constructor.
+ */
 void
 BaseWidget::FinishWidget()
 {
