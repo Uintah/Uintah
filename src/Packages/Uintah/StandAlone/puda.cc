@@ -10,7 +10,7 @@
  *  Copyright (C) 2000 U of U
  */
 
-#include <Packages/Uintah/CCA/Ports/DataArchive.h>
+#include <Packages/Uintah/Core/DataArchive/DataArchive.h>
 #include <Packages/Uintah/Core/Grid/Grid.h>
 #include <Packages/Uintah/Core/Grid/Level.h>
 #include <Packages/Uintah/Core/Grid/NodeIterator.h>
@@ -24,7 +24,6 @@
 #include <Packages/Uintah/Core/Disclosure/TypeDescription.h>
 #include <Core/Geometry/Vector.h>
 #include <Core/OS/Dir.h>
-#include <Dataflow/XMLUtil/XMLUtil.h>
 #include <iostream>
 #include <string>
 #include <vector>
@@ -409,14 +408,6 @@ int main(int argc, char** argv)
     usage("", argv[0]);
   }
 
-  try {
-    XMLPlatformUtils::Initialize();
-  } catch(const XMLException& toCatch) {
-    cerr << "Caught XML exception: " << to_char_ptr(toCatch.getMessage()) 
-	 << '\n';
-    exit( 1 );
-  }
-  
   try {
     DataArchive* da = scinew DataArchive(filebase);
     

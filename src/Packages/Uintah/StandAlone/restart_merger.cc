@@ -16,14 +16,13 @@
  *  Copyright (C) 2001 U of U
  */
 
-#include <Packages/Uintah/CCA/Ports/DataArchive.h>
+#include <Packages/Uintah/Core/DataArchive/DataArchive.h>
 #include <Packages/Uintah/CCA/Components/DataArchiver/DataArchiver.h>
 #include <Packages/Uintah/CCA/Ports/ProblemSpecInterface.h>
 #include <Packages/Uintah/CCA/Components/ProblemSpecification/ProblemSpecReader.h>
 #include <Packages/Uintah/Core/ProblemSpec/ProblemSpec.h>
 #include <Packages/Uintah/Core/Parallel/Parallel.h>
 #include <Core/OS/Dir.h>
-#include <Dataflow/XMLUtil/XMLUtil.h>
 #include <iostream>
 #include <string>
 #include <vector>
@@ -80,14 +79,6 @@ int main(int argc, char** argv)
 
   bool thrownException = false;
   
-  try {
-    XMLPlatformUtils::Initialize();
-  } catch(const XMLException& toCatch) {
-    cerr << "Caught XML exception: " << to_char_ptr(toCatch.getMessage()) 
-	 << '\n';
-    exit( 1 );
-  }  
-
   string new_uda_dir;
   try {
     ProblemSpecInterface* reader = scinew ProblemSpecReader(ups_filename);
@@ -125,7 +116,7 @@ int main(int argc, char** argv)
     out_uda.copySection(restartFromDir, "variables");
     out_uda.restartSetup(restartFromDir, prevTimestep, -1, 0, false, move);
 
-    ups->getNode()->getOwnerDocument()->release();
+    ups->releaseDocument();
   } catch (Exception& e) {
     cerr << "Caught exception: " << e.message() << '\n';
     if(e.stackTrace())
