@@ -4,7 +4,6 @@
 
 #include <Uintah/Grid/Handle.h>
 #include <Uintah/Grid/GridP.h>
-#include <Uintah/Grid/LevelP.h>
 #include <Uintah/Grid/CCVariableBase.h>
 #include <Uintah/Grid/Ghost.h>
 #include <Uintah/Grid/RefCounted.h>
@@ -32,6 +31,7 @@ namespace Uintah {
    class OutputContext;
    class ProcessorGroup;
    class VarLabel;
+   class ScatterGatherBase;
 
 /**************************************
 	
@@ -80,10 +80,16 @@ WARNING
       virtual void get(ReductionVariableBase&, const VarLabel*) = 0;
       virtual void put(const ReductionVariableBase&, const VarLabel*) = 0;
       virtual void override(const ReductionVariableBase&, const VarLabel*) = 0;
+
+      // Scatther/gather.  This will need a VarLabel if anyone but the
+      // scheduler ever wants to use it.
+      virtual void scatter(ScatterGatherBase*, const Patch*, const Patch*) = 0;
+      virtual ScatterGatherBase* gather(const Patch*, const Patch*) = 0;
       
       // Particle Variables
       virtual ParticleSubset* createParticleSubset(particleIndex numParticles,
-					int matlIndex, const Patch*) = 0;
+				        int matlIndex, const Patch*) = 0;
+      virtual bool haveParticleSubset(int matlIndex, const Patch*) = 0;
       virtual ParticleSubset* getParticleSubset(int matlIndex,
 					const Patch*) = 0;
       virtual ParticleSubset* getParticleSubset(int matlIndex,
@@ -94,6 +100,8 @@ WARNING
       virtual void get(ParticleVariableBase&, const VarLabel*,
 		       ParticleSubset*) = 0;
       virtual void put(const ParticleVariableBase&, const VarLabel*) = 0;
+      virtual ParticleVariableBase* getParticleVariable(const VarLabel*,
+							ParticleSubset*) = 0;
       
       // Node Centered (NC) Variables
       virtual void allocate(NCVariableBase&, const VarLabel*,
@@ -148,16 +156,6 @@ WARNING
 				int matlIndex, const Patch*) = 0;
      
       //////////
-      // Insert Documentation Here:
-      virtual void scheduleParticleRelocation(const LevelP& level,
-					      SchedulerP& sched,
-					      DataWarehouseP& dw,
-					      const VarLabel* posLabel,
-				const vector<const VarLabel*>& labels,
-					      const VarLabel* new_posLabel,
-				const vector<const VarLabel*>& new_labels,
-					      int numMatls) = 0;
-
       // Remove particles that are no longer relevant
       virtual void deleteParticles(ParticleSubset* delset) = 0;
 
@@ -202,6 +200,9 @@ WARNING
       virtual bool exists(const VarLabel*, const Patch*) const = 0;
       virtual void finalize() = 0;
 
+      int getID() const {
+	 return d_generation;
+      }
    protected:
       DataWarehouse(const ProcessorGroup* myworld, int generation );
       // These two things should be removed from here if possible - Steve
@@ -218,6 +219,10 @@ WARNING
 
 //
 // $Log$
+// Revision 1.35  2000/07/27 22:39:53  sparker
+// Implemented MPIScheduler
+// Added associated support
+//
 // Revision 1.34  2000/06/27 23:20:52  rawat
 // added staggered variables
 //
