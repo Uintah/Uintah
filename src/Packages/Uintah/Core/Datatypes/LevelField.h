@@ -432,14 +432,14 @@ bool LevelField<Data>::get_gradient(Vector &g, const Point &p) {
       double fx=x-ix0;
       double fy=y-iy0;
       double fz=z-iz0;
-      double d000=(double)value(typename mesh_type::Node(ix0,iy0,iz0));
-      double d100=(double)value(typename mesh_type::Node(ix1,iy0,iz0));
-      double d010=(double)value(typename mesh_type::Node(ix0,iy1,iz0));
-      double d110=(double)value(typename mesh_type::Node(ix1,iy1,iz0));
-      double d001=(double)value(typename mesh_type::Node(ix0,iy0,iz1));
-      double d101=(double)value(typename mesh_type::Node(ix1,iy0,iz1));
-      double d011=(double)value(typename mesh_type::Node(ix0,iy1,iz1));
-      double d111=(double)value(typename mesh_type::Node(ix1,iy1,iz1));
+      double d000=(double)value(mesh->node(ix0,iy0,iz0));
+      double d100=(double)value(mesh->node(ix1,iy0,iz0));
+      double d010=(double)value(mesh->node(ix0,iy1,iz0));
+      double d110=(double)value(mesh->node(ix1,iy1,iz0));
+      double d001=(double)value(mesh->node(ix0,iy0,iz1));
+      double d101=(double)value(mesh->node(ix1,iy0,iz1));
+      double d011=(double)value(mesh->node(ix0,iy1,iz1));
+      double d111=(double)value(mesh->node(ix1,iy1,iz1));
       double z00=Interpolate(d000, d001, fz);
       double z01=Interpolate(d010, d011, fz);
       double z10=Interpolate(d100, d101, fz);
@@ -491,14 +491,14 @@ bool LevelField<Data>::interpolate(Data &g, const Point &p) const {
     double fx=x-ix0;
     double fy=y-iy0;
     double fz=z-iz0;
-    Data x00=Interpolate(value(typename mesh_type::Node(ix0,iy0,iz0)),
-			 value(typename mesh_type::Node(ix1,iy0,iz0)), fx);
-    Data x01=Interpolate(value(typename mesh_type::Node(ix0,iy0,iz1)),
-			 value(typename mesh_type::Node(ix1,iy0,iz1)), fx);
-    Data x10=Interpolate(value(typename mesh_type::Node(ix0,iy1,iz0)),
-			 value(typename mesh_type::Node(ix1,iy1,iz1)), fx);
-    Data x11=Interpolate(value(typename mesh_type::Node(ix0,iy1,iz1)),
-			 value(typename mesh_type::Node(ix1,iy1,iz1)), fx);
+    Data x00=Interpolate(value(mesh->node(ix0,iy0,iz0)),
+			 value(mesh->node(ix1,iy0,iz0)), fx);
+    Data x01=Interpolate(value(mesh->node(ix0,iy0,iz1)),
+			 value(mesh->node(ix1,iy0,iz1)), fx);
+    Data x10=Interpolate(value(mesh->node(ix0,iy1,iz0)),
+			 value(mesh->node(ix1,iy1,iz1)), fx);
+    Data x11=Interpolate(value(mesh->node(ix0,iy1,iz1)),
+			 value(mesh->node(ix1,iy1,iz1)), fx);
     Data y0=Interpolate(x00, x10, fy);
     Data y1=Interpolate(x01, x11, fy);
     g=Interpolate(y0, y1, fz);
