@@ -36,7 +36,7 @@ namespace Nektar {
     {
     }
     
-    VectorField* NektarVectorField::clone()
+    NektarVectorField* NektarVectorField::clone()
     {
       NOT_FINISHED("NektarVectorField::clone()");
       return 0;

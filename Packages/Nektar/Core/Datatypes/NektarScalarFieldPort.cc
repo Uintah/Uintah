@@ -1,6 +1,6 @@
 
 /*
- *  NektarScalarField.h: The Scalar Field Data type
+ *  NektarScalarFieldPort.cc: The Scalar Field Data type
  *
  *  Written by:
  *   Yarden Livnat
@@ -11,22 +11,14 @@
  *  Copyright (C) 2000 SCI Group
  */
 
-#ifndef NektarScalarFieldPort_h
-#define NektarScalarFieldPort_h 
-
-#include <PSECore/Datatypes/SimplePort.h>
-#include <Nektar/Datatypes/NektarScalarField.h>
+#include <Nektar/Datatypes/NektarScalarFieldPort.h>
 
 namespace Nektar {
   namespace Datatypes {
 
-    using namespace SCICore::Datatypes;
-    using Nektar::Datatypes::NektarScalarFieldHandle;
-
-    typedef SimpleIPort<NektarScalarFieldHandle> NektarScalarFieldIPort;
-    typedef SimpleOPort<NektarScalarFieldHandle> NektarScalarFieldOPort;
-
-} // End namespace Datatypes
+    template<> clString SimpleIPort<NektarScalarFieldHandle>::port_type("NektarScalarField");
+    template<> clString SimpleIPort<NektarScalarFieldHandle>::port_color("Blue");
+    
+  } // End namespace Datatypes
 } // End namespace Nektar
 
-#endif
