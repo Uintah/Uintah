@@ -28,10 +28,9 @@ using namespace Uintah;
 using namespace std;
 //__________________________________
 //  To turn on the output
-//  setenv SCI_DEBUG "SIMPLE_RXN_DOING_COUT:+,SIMPLE_RXN_DBG_COUT:+"
+//  setenv SCI_DEBUG "MODELS_DOING_COUT:+,SIMPLE_RXN_DBG_COUT:+"
 //  SIMPLE_RXN_DBG:  dumps out during problemSetup 
-//  SIMPLE_RXN_DOING_COUT:   dumps when tasks are scheduled and performed
-static DebugStream cout_doing("SIMPLE_RXN_DOING_COUT", false);
+static DebugStream cout_doing("MODELS_DOING_COUT", false);
 static DebugStream cout_dbg("SIMPLE_RXN_DBG_COUT", false);
 /*`==========TESTING==========*/
 static DebugStream oldStyleAdvect("oldStyleAdvect",false); 
@@ -422,49 +421,13 @@ void SimpleRxn::computeSpecificHeat(CCVariable<double>& cv_new,
 } 
 
 //______________________________________________________________________
-void SimpleRxn::scheduleMassExchange(SchedulerP& sched,
-                              const LevelP& level,
-                              const ModelInfo* mi)
+void SimpleRxn::scheduleComputeModelSources(SchedulerP& sched,
+                                            const LevelP& level,
+                                            const ModelInfo* mi)
 {
-  cout_doing << "SIMPLE_RXN::scheduleMassExchange" << endl;
-  Task* t = scinew Task("SimpleRxn::massExchange", 
-                   this,&SimpleRxn::massExchange, mi);
-
-  t->requires(Task::OldDW, mi->density_CCLabel,  Ghost::None);
-  t->modifies(mi->mass_source_CCLabel);
-  t->modifies(mi->sp_vol_source_CCLabel);
-  sched->addTask(t, level->eachPatch(), d_matl_set);
-}
-//______________________________________________________________________
-void SimpleRxn::massExchange(const ProcessorGroup*, 
-                             const PatchSubset* patches,
-                             const MaterialSubset*,
-                             DataWarehouse* old_dw,
-                             DataWarehouse* new_dw,
-                             const ModelInfo* mi)
-{
-  const Level* level = getLevel(patches);
-  delt_vartype delT;
-  old_dw->get(delT, mi->delT_Label, level);
-  
-  for(int p=0;p<patches->size();p++){
-    const Patch* patch = patches->get(p);
-    int indx = d_matl->getDWIndex();
-    cout_doing << "Doing massExchange on patch "<<patch->getID()<< "\t\t\t\t SIMPLERXN" << endl;
-    CCVariable<double> mass_src, sp_vol_src;
-    new_dw->getModifiable(mass_src,   mi->mass_source_CCLabel,  indx,patch);
-    new_dw->getModifiable(sp_vol_src, mi->sp_vol_source_CCLabel,indx,patch);
-    // current does nothing.
-  }
-}
-//______________________________________________________________________
-void SimpleRxn::scheduleMomentumAndEnergyExchange(SchedulerP& sched,
-                                          const LevelP& level,
-                                          const ModelInfo* mi)
-{
-  cout_doing << "SIMPLE_RXN::scheduleMomentumAndEnergyExchange " << endl;
-  Task* t = scinew Task("SimpleRxn::momentumAndEnergyExchange", 
-                   this,&SimpleRxn::momentumAndEnergyExchange, mi);
+  cout_doing << "SIMPLE_RXN::scheduleComputeModelSources " << endl;
+  Task* t = scinew Task("SimpleRxn::computeModelSources", 
+                   this,&SimpleRxn::computeModelSources, mi);
                      
   Ghost::GhostType  gn = Ghost::None;  
   Ghost::GhostType  gac = Ghost::AroundCells;
@@ -487,12 +450,12 @@ void SimpleRxn::scheduleMomentumAndEnergyExchange(SchedulerP& sched,
 }
 
 //______________________________________________________________________
-void SimpleRxn::momentumAndEnergyExchange(const ProcessorGroup*, 
-                                            const PatchSubset* patches,
-                                            const MaterialSubset* matls,
-                                            DataWarehouse* old_dw,
-                                            DataWarehouse* new_dw,
-                                            const ModelInfo* mi)
+void SimpleRxn::computeModelSources(const ProcessorGroup*, 
+                                    const PatchSubset* patches,
+                                    const MaterialSubset* matls,
+                                    DataWarehouse* old_dw,
+                                    DataWarehouse* new_dw,
+                                    const ModelInfo* mi)
 {
   const Level* level = getLevel(patches);
   delt_vartype delT;
@@ -502,7 +465,8 @@ void SimpleRxn::momentumAndEnergyExchange(const ProcessorGroup*,
   
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
-    cout_doing << "Doing momentumAndEnergyExh... on patch "<<patch->getID()<< "\t\tSIMPLERXN" << endl;
+    cout_doing << "Doing computeModelSources... on patch "<<patch->getID()
+               << "\t\tSIMPLERXN" << endl;
 
     Vector dx = patch->dCell();
     double volume = dx.x()*dx.y()*dx.z();     

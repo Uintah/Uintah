@@ -30,10 +30,9 @@ using namespace Uintah;
 using namespace std;
 //__________________________________
 //  To turn on the output
-//  setenv SCI_DEBUG "PINTO300TEST_DOING_COUT:+,PINTO300TEST_DBG_COUT:+"
+//  setenv SCI_DEBUG "MODELS_DOING_COUT:+,PINTO300TEST_DBG_COUT:+"
 //  PINTO300TEST_DBG:  dumps out during problemSetup 
-//  PINTO300TEST_DOING_COUT:   dumps when tasks are scheduled and performed
-static DebugStream cout_doing("PINTO300TEST_DOING_COUT", false);
+static DebugStream cout_doing("MODELS_DOING_COUT", false);
 static DebugStream cout_dbg("PINTO300TEST_DBG_COUT", false);
 /*`==========TESTING==========*/
 static DebugStream oldStyleAdvect("oldStyleAdvect",false); 
@@ -188,50 +187,15 @@ void PinTo300Test::computeSpecificHeat(CCVariable<double>& cv_new,
 #endif
 } 
 
-//______________________________________________________________________
-void PinTo300Test::scheduleMassExchange(SchedulerP& sched,
-                              const LevelP& level,
-                              const ModelInfo* mi)
-{
-  cout_doing << "PINTO300TEST::scheduleMassExchange" << endl;
-  Task* t = scinew Task("PinTo300Test::massExchange", 
-                   this,&PinTo300Test::massExchange, mi);
 
-  t->requires(Task::OldDW, mi->density_CCLabel,  Ghost::None);
-  t->modifies(mi->mass_source_CCLabel);
-  t->modifies(mi->sp_vol_source_CCLabel);
-  sched->addTask(t, level->eachPatch(), d_matl_set);
-}
 //______________________________________________________________________
-void PinTo300Test::massExchange(const ProcessorGroup*, 
-                             const PatchSubset* patches,
-                             const MaterialSubset*,
-                             DataWarehouse* old_dw,
-                             DataWarehouse* new_dw,
-                             const ModelInfo* mi)
+void PinTo300Test::scheduleComputeModelSources(SchedulerP& sched,
+                                               const LevelP& level,
+                                               const ModelInfo* mi)
 {
-  delt_vartype delT;
-  const Level* level = getLevel(patches);
-  old_dw->get(delT, mi->delT_Label,level);
-  
-  for(int p=0;p<patches->size();p++){
-    const Patch* patch = patches->get(p);
-    int indx = d_matl->getDWIndex();
-    cout_doing << "Doing massExchange on patch "<<patch->getID()<< "\t\t\t\t PINTO300TEST" << endl;
-    CCVariable<double> mass_src, sp_vol_src;
-    new_dw->getModifiable(mass_src,   mi->mass_source_CCLabel,  indx,patch);
-    new_dw->getModifiable(sp_vol_src, mi->sp_vol_source_CCLabel,indx,patch);
-    // current does nothing.
-  }
-}
-//______________________________________________________________________
-void PinTo300Test::scheduleMomentumAndEnergyExchange(SchedulerP& sched,
-                                          const LevelP& level,
-                                          const ModelInfo* mi)
-{
-  cout_doing << "PINTO300TEST::scheduleMomentumAndEnergyExchange " << endl;
-  Task* t = scinew Task("PinTo300Test::momentumAndEnergyExchange", 
-                   this,&PinTo300Test::momentumAndEnergyExchange, mi);
+  cout_doing << "PINTO300TEST::scheduleComputeModelSources " << endl;
+  Task* t = scinew Task("PinTo300Test::computeModelSources", 
+                   this,&PinTo300Test::computeModelSources, mi);
                      
   Ghost::GhostType  gn = Ghost::None;  
   Task::DomainSpec oims = Task::OutOfDomain;  //outside of ice matlSet.
@@ -253,12 +217,12 @@ void PinTo300Test::scheduleMomentumAndEnergyExchange(SchedulerP& sched,
 }
 
 //______________________________________________________________________
-void PinTo300Test::momentumAndEnergyExchange(const ProcessorGroup*, 
-                                            const PatchSubset* patches,
-                                            const MaterialSubset* matls,
-                                            DataWarehouse* old_dw,
-                                            DataWarehouse* new_dw,
-                                            const ModelInfo* mi)
+void PinTo300Test::computeModelSources(const ProcessorGroup*, 
+                                       const PatchSubset* patches,
+                                       const MaterialSubset* matls,
+                                       DataWarehouse* old_dw,
+                                       DataWarehouse* new_dw,
+                                       const ModelInfo* mi)
 {
   delt_vartype delT;
   const Level* level = getLevel(patches);
@@ -267,7 +231,8 @@ void PinTo300Test::momentumAndEnergyExchange(const ProcessorGroup*,
     
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
-    cout_doing << "Doing momentumAndEnergyExch... on patch "<<patch->getID()<< "\t\tPinTo300Test" << endl;
+    cout_doing << "Doing computeModelSources... on patch "<<patch->getID()
+               << "\t\tPinTo300Test" << endl;
 
     for(int m=0;m<matls->size();m++){
       int matl = matls->get(m);

@@ -28,11 +28,10 @@ using namespace Uintah;
 using namespace std;
 //__________________________________
 //  To turn on the output
-//  setenv SCI_DEBUG "SIMPLE_RXN_DOING_COUT:+,SIMPLE_RXN_DBG_COUT:+"
-//  SIMPLE_RXN_DBG:  dumps out during problemSetup 
-//  SIMPLE_RXN_DOING_COUT:   dumps when tasks are scheduled and performed
-static DebugStream cout_doing("SIMPLE_RXN_DOING_COUT", false);
-static DebugStream cout_dbg("SIMPLE_RXN_DBG_COUT", false);
+//  setenv SCI_DEBUG "MODELS_DOING_COUT:+,TABLETEST_DBG_COUT:+"
+//  TABLETEST_DBG:       dumps out during problemSetup 
+static DebugStream cout_doing("MODELS_DOING_COUT", false);
+static DebugStream cout_dbg("TABLETEST_DBG_COUT", false);
 /*`==========TESTING==========*/
 static DebugStream oldStyleAdvect("oldStyleAdvect",false); 
 /*==========TESTING==========`*/
@@ -93,7 +92,7 @@ if (!oldStyleAdvect.active()){
 /*==========TESTING==========`*/
 
 
-  cout_doing << "Doing problemSetup \t\t\t\tSIMPLE_RXN" << endl;
+  cout_doing << "Doing problemSetup \t\t\t\tTABLETEST" << endl;
   sharedState = in_state;
   d_matl = sharedState->parseAndLookupMaterial(params, "material");
 
@@ -234,7 +233,7 @@ void TableTest::scheduleInitialize(SchedulerP& sched,
                                    const LevelP& level,
                                    const ModelInfo*)
 {
-  cout_doing << "SIMPLERXN::scheduleInitialize " << endl;
+  cout_doing << "TABLETEST::scheduleInitialize " << endl;
   Task* t = scinew Task("TableTest::initialize", this, &TableTest::initialize);
 
   t->modifies(lb->sp_vol_CCLabel);
@@ -259,7 +258,7 @@ void TableTest::initialize(const ProcessorGroup*,
                            DataWarehouse*,
                            DataWarehouse* new_dw)
 {
-  cout_doing << "Doing Initialize \t\t\t\t\tSIMPLE_RXN" << endl;
+  cout_doing << "Doing Initialize \t\t\t\t\tTABLETEST" << endl;
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
     int indx = d_matl->getDWIndex();
@@ -357,7 +356,7 @@ void TableTest::scheduleModifyThermoTransportProperties(SchedulerP& sched,
                                                    const MaterialSet* /*ice_matls*/)
 {
 
-  cout_doing << "SIMPLE_RXN::scheduleModifyThermoTransportProperties" << endl;
+  cout_doing << "TABLETEST::scheduleModifyThermoTransportProperties" << endl;
 
   Task* t = scinew Task("TableTest::modifyThermoTransportProperties", 
                    this,&TableTest::modifyThermoTransportProperties);
@@ -382,7 +381,8 @@ void TableTest::modifyThermoTransportProperties(const ProcessorGroup*,
 { 
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
-    cout_doing << "Doing modifyThermoTransportProperties on patch "<<patch->getID()<< "\t SIMPLERXN" << endl;
+    cout_doing << "Doing modifyThermoTransportProperties on patch "
+               <<patch->getID()<< "\t TABLETEST" << endl;
    
     int indx = d_matl->getDWIndex();
     CCVariable<double> diffusionCoeff, gamma, cv, thermalCond, viscosity;
@@ -422,7 +422,7 @@ void TableTest::computeSpecificHeat(CCVariable<double>& cv_new,
                                     DataWarehouse* new_dw,
                                     const int indx)
 { 
-  cout_doing << "Doing computeSpecificHeat on patch "<<patch->getID()<< "\t SIMPLERXN" << endl;
+  cout_doing << "Doing computeSpecificHeat on patch "<<patch->getID()<< "\t TABLETEST" << endl;
 
   int test_indx = d_matl->getDWIndex();
   //__________________________________
@@ -439,49 +439,13 @@ void TableTest::computeSpecificHeat(CCVariable<double>& cv_new,
 } 
 
 //______________________________________________________________________
-void TableTest::scheduleMassExchange(SchedulerP& sched,
-                              const LevelP& level,
-                              const ModelInfo* mi)
+void TableTest::scheduleComputeModelSources(SchedulerP& sched,
+                                            const LevelP& level,
+                                            const ModelInfo* mi)
 {
-  cout_doing << "SIMPLE_RXN::scheduleMassExchange" << endl;
-  Task* t = scinew Task("TableTest::massExchange", 
-                   this,&TableTest::massExchange, mi);
-
-  t->requires(Task::OldDW, mi->density_CCLabel,  Ghost::None);
-  t->modifies(mi->mass_source_CCLabel);
-  t->modifies(mi->sp_vol_source_CCLabel);
-  sched->addTask(t, level->eachPatch(), d_matl_set);
-}
-//______________________________________________________________________
-void TableTest::massExchange(const ProcessorGroup*, 
-                             const PatchSubset* patches,
-                             const MaterialSubset*,
-                             DataWarehouse* old_dw,
-                             DataWarehouse* new_dw,
-                             const ModelInfo* mi)
-{
-  delt_vartype delT;
-  const Level* level = getLevel(patches);
-  old_dw->get(delT, mi->delT_Label,level);
-  
-  for(int p=0;p<patches->size();p++){
-    const Patch* patch = patches->get(p);
-    int indx = d_matl->getDWIndex();
-    cout_doing << "Doing massExchange on patch "<<patch->getID()<< "\t\t\t\t SIMPLERXN" << endl;
-    CCVariable<double> mass_src, sp_vol_src;
-    new_dw->getModifiable(mass_src,   mi->mass_source_CCLabel,  indx,patch);
-    new_dw->getModifiable(sp_vol_src, mi->sp_vol_source_CCLabel,indx,patch);
-    // current does nothing.
-  }
-}
-//______________________________________________________________________
-void TableTest::scheduleMomentumAndEnergyExchange(SchedulerP& sched,
-                                          const LevelP& level,
-                                          const ModelInfo* mi)
-{
-  cout_doing << "SIMPLE_RXN::scheduleMomentumAndEnergyExchange " << endl;
-  Task* t = scinew Task("TableTest::momentumAndEnergyExchange", 
-                   this,&TableTest::momentumAndEnergyExchange, mi);
+  cout_doing << "TABLETEST::scheduleComputeModelSources " << endl;
+  Task* t = scinew Task("TableTest::computeModelSources", 
+                   this,&TableTest::computeModelSources, mi);
                      
   Ghost::GhostType  gn = Ghost::None;  
   Ghost::GhostType  gac = Ghost::AroundCells;
@@ -510,12 +474,12 @@ void TableTest::scheduleMomentumAndEnergyExchange(SchedulerP& sched,
 }
 
 //______________________________________________________________________
-void TableTest::momentumAndEnergyExchange(const ProcessorGroup*, 
-                                            const PatchSubset* patches,
-                                            const MaterialSubset* matls,
-                                            DataWarehouse* old_dw,
-                                            DataWarehouse* new_dw,
-                                            const ModelInfo* mi)
+void TableTest::computeModelSources(const ProcessorGroup*, 
+                                    const PatchSubset* patches,
+                                    const MaterialSubset* matls,
+                                    DataWarehouse* old_dw,
+                                    DataWarehouse* new_dw,
+                                    const ModelInfo* mi)
 {
   delt_vartype delT;
   const Level* level = getLevel(patches);
@@ -525,7 +489,8 @@ void TableTest::momentumAndEnergyExchange(const ProcessorGroup*,
   
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
-    cout_doing << "Doing momentumAndEnergyExh... on patch "<<patch->getID()<< "\t\tSIMPLERXN" << endl;
+    cout_doing << "Doing computeModelSources... on patch "<<patch->getID()
+               << "\t\tTABLETEST" << endl;
 
     //Vector dx = patch->dCell();
     //double volume = dx.x()*dx.y()*dx.z();     
