@@ -245,7 +245,6 @@ WARNING
 	 return d_generation;
       }
 
-      static bool show_warnings;     
    protected:
       DataWarehouse(const ProcessorGroup* myworld,
 		    const Scheduler* scheduler, int generation);
