@@ -78,6 +78,7 @@ public:
     int npicks;
     int fog;
     int cull;
+    int dl;
 
     int check_clip; // see if you should ignore clipping planes
     
@@ -117,6 +118,9 @@ public:
 
 //
 // $Log$
+// Revision 1.7  2000/07/28 21:16:44  yarden
+// add dli (display list)  flag to draw info
+//
 // Revision 1.6  1999/10/16 20:51:01  jmk
 // forgive me if I break something -- this fixes picking and sets up sci
 // bench - go to /home/sci/u2/VR/PSE for the latest sci bench technology
