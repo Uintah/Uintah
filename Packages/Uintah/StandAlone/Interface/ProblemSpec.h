@@ -71,6 +71,11 @@ public:
     void require(const std::string& name, bool& value);
     void require(const std::string& name, std::string& value);
 
+    ProblemSpecP get(const std::string& name, double& value);
+    ProblemSpecP get(const std::string& name, int& value);
+    ProblemSpecP get(const std::string& name, bool& value);
+    ProblemSpecP get(const std::string& name, std::string& value);
+
     static const TypeDescription* getTypeDescription();
 private:
     ProblemSpec(const ProblemSpec&);
@@ -86,6 +91,10 @@ private:
 
 //
 // $Log$
+// Revision 1.5  2000/03/29 23:48:00  jas
+// Filled in methods for extracting data from the xml tree (requires and get)
+// and storing the result in a variable.
+//
 // Revision 1.4  2000/03/29 01:59:59  jas
 // Filled in the findBlock method.
 //
