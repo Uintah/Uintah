@@ -545,8 +545,8 @@ void Pio(Piostream& stream, HashTable<Key, Data>& t)
 
 //
 // $Log$
-// Revision 1.11.2.1  2000/09/28 03:14:28  mcole
-// merge trunk into FIELD_REDESIGN branch
+// Revision 1.11.2.2  2000/10/26 17:44:52  moulding
+// merge HEAD into FIELD_REDESIGN
 //
 // Revision 1.12  2000/07/27 20:12:16  yarden
 // replace int with unsigned int to make linux compiler happy

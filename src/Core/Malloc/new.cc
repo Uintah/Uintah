@@ -127,11 +127,8 @@ void* operator new[](size_t size, Allocator* a, char* tag)
 
 //
 // $Log$
-// Revision 1.4.2.2  2000/10/26 10:04:37  moulding
+// Revision 1.4.2.3  2000/10/26 17:38:01  moulding
 // merge HEAD into FIELD_REDESIGN
-//
-// Revision 1.4.2.1  2000/09/28 03:12:25  mcole
-// merge trunk into FIELD_REDESIGN branch
 //
 // Revision 1.5  2000/09/14 15:34:21  sparker
 // Use --disable-sci-malloc configure flag
