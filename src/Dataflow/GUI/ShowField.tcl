@@ -53,6 +53,11 @@ itcl_class SCIRun_Visualization_ShowField {
 	global $this-text-color-r
 	global $this-text-color-g
 	global $this-text-color-b
+	global $this-text-show-data
+	global $this-text-show-nodes
+	global $this-text-show-edges
+	global $this-text-show-faces
+	global $this-text-show-cells
 	set $this-node_display_type Spheres
 	set $this-edge_display_type Lines
 	set $this-node_scale 0.03
@@ -82,6 +87,11 @@ itcl_class SCIRun_Visualization_ShowField {
 	set $this-text-color-r 1.0
 	set $this-text-color-g 1.0
 	set $this-text-color-b 1.0
+	set $this-text-show-data 1
+	set $this-text-show-nodes 0
+	set $this-text-show-edges 0
+	set $this-text-show-faces 0
+	set $this-text-show-cells 0
 	trace variable $this-active_tab w "$this switch_to_active_tab"
 	trace variable $this-has_vec_data w "$this vec_tab_changed"
 	trace variable $this-nodes-as-disks w "$this disk_render_status_changed"
@@ -307,11 +317,37 @@ itcl_class SCIRun_Visualization_ShowField {
 
 	frame $text.def_col -borderwidth 2
 
+	frame $text.show 
+	checkbutton $text.show.data \
+	    -text "Show data values" \
+	    -command "$this-c rerender_text" \
+	    -variable $this-text-show-data
+	checkbutton $text.show.nodes \
+	    -text "Show node indices" \
+	    -command "$this-c rerender_text" \
+	    -variable $this-text-show-nodes
+	checkbutton $text.show.edges \
+	    -text "Show edge indices" \
+	    -command "$this-c rerender_text" \
+	    -variable $this-text-show-edges
+	checkbutton $text.show.faces \
+	    -text "Show face indices" \
+	    -command "$this-c rerender_text" \
+	    -variable $this-text-show-faces
+	checkbutton $text.show.cells \
+	    -text "Show cell indices" \
+	    -command "$this-c rerender_text" \
+	    -variable $this-text-show-cells
+
+	pack $text.show.data $text.show.nodes $text.show.edges \
+	    $text.show.faces $text.show.cells \
+	    -side top -fill y -anchor w
+	
 	addColorSelection $text.def_col "Text Color" $this-text-color \
 	    "text_color_change"
 
-	pack $text.show_text $text.use_def_col $text.def_col \
-		-side top -fill y -anchor w
+	pack $text.show_text $text.use_def_col $text.def_col $text.show \
+	    -side top -fill y -anchor w
     }
 
     method disk_render_status_changed {name1 name2 op} {
