@@ -400,7 +400,7 @@ AddSparse(const SparseRowMatrix &a, const SparseRowMatrix &b)
   vector<int> cols;
   vector<double> vals;
 
-  unsigned int r, ca, cb, i;
+  int r, ca, cb;
 
   rows[0] = 0;
   for (r = 0; r < a.nrows(); r++)
@@ -453,6 +453,7 @@ AddSparse(const SparseRowMatrix &a, const SparseRowMatrix &b)
     }
   }
 
+  unsigned int i;
   int *vcols = scinew int[cols.size()];
   for (i = 0; i < cols.size(); i++)
   {
