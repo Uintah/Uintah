@@ -3,21 +3,30 @@ SRCDIR   = @srcdir@
 OBJTOP   = ../..
 
 INCLUDES = -I$(SRCTOP) -I$(SRCTOP)/DaveW/ThirdParty/Nrrd/include/ -I$(OBJTOP)
-LIBRARIES = -L$(OBJTOP)/SCICore -lSCICore
+LIBRARIES = -L$(OBJTOP)/SCICore -Wl,-rpath -Wl,/home/sci/u2/VR/SCI/PSE/src/SCICore/ -lSCICore
 
 all:: prog-SurfToJAS
 
 prog-CVRTItoMesh:
 	@$(MAKE) --no-print-directory SRCS=CVRTItoMesh.cc PROGRAM=CVRTItoMesh CVRTItoMesh
 
+prog-JAStoMesh:
+	@$(MAKE) --no-print-directory SRCS=JAStoMesh.cc PROGRAM=JAStoMesh JAStoMesh
+
 prog-JAStoSurf:
 	@$(MAKE) --no-print-directory SRCS=JAStoSurf.cc PROGRAM=JAStoSurf JAStoSurf
+
+prog-MeshToJAS:
+	@$(MAKE) --no-print-directory SRCS=MeshToJAS.cc PROGRAM=MeshToJAS MeshToJAS
 
 prog-SFRGfile:
 	@$(MAKE) --no-print-directory SRCS=SFRGfile.cc PROGRAM=SFRGfile SFRGfile
 
 prog-SurfToJAS:
 	@$(MAKE) --no-print-directory SRCS=SurfToJAS.cc PROGRAM=SurfToJAS SurfToJAS
+
+prog-WatsonToMesh:
+	@$(MAKE) --no-print-directory SRCS=WatsonToMesh.cc PROGRAM=WatsonToMesh WatsonToMesh
 
 _cleanHere::
 	rm -f *.o *.d
