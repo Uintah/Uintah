@@ -75,12 +75,21 @@ template <class T>
 TetVolField<T>::TetVolField(Field::data_location data_at)
   : GenericField<TetVolMesh, vector<T> >(data_at)
 {
+  ASSERTMSG(data_at != Field::EDGE, 
+	    "TetVolField does NOT currently support data at edges."); 
+  ASSERTMSG(data_at != Field::FACE, 
+	    "TetVolField does NOT currently support data at faces."); 
+
 }
 
 template <class T>
 TetVolField<T>::TetVolField(TetVolMeshHandle mesh, Field::data_location data_at)
   : GenericField<TetVolMesh, vector<T> >(mesh, data_at)
 {
+  ASSERTMSG(data_at != Field::EDGE, 
+	    "TetVolField does NOT currently support data at edges."); 
+  ASSERTMSG(data_at != Field::FACE, 
+	    "TetVolField does NOT currently support data at faces."); 
 }
 
 template <class T>
