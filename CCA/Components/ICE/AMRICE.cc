@@ -41,8 +41,8 @@ void AMRICE::scheduleInitialize(const LevelP& level,
 }
 //___________________________________________________________________
 void AMRICE::initialize(const ProcessorGroup*,
-                           const PatchSubset* patches, const MaterialSubset* matls,
-                           DataWarehouse* old_dw, DataWarehouse* new_dw)
+                           const PatchSubset*, const MaterialSubset*,
+                           DataWarehouse*, DataWarehouse*)
 {
 }
 /*___________________________________________________________________
@@ -121,19 +121,19 @@ void AMRICE::refineInterface(const ProcessorGroup*,
         old_dw->get(vel_CC,   lb->vel_CCLabel,    indx,patch, gac,1);
 
         refineBoundaries(patch, press_CC.castOffConst(), new_dw, 
-                            lb->press_CCLabel,  indx,subCycleProgress);
+                         lb->press_CCLabel,  indx,subCycleProgress);
 
-        refineBoundaries(patch, rho_CC.castOffConst(),new_dw, 
-                            lb->rho_CCLabel,    indx,subCycleProgress);
+        refineBoundaries(patch, rho_CC.castOffConst(),   new_dw, 
+                         lb->rho_CCLabel,    indx,subCycleProgress);
 
         refineBoundaries(patch, sp_vol_CC.castOffConst(),new_dw,
-                            lb->sp_vol_CCLabel, indx,subCycleProgress);
+                         lb->sp_vol_CCLabel, indx,subCycleProgress);
 
-        refineBoundaries(patch, temp_CC.castOffConst(),new_dw,
-                            lb->temp_CCLabel,   indx,subCycleProgress);
+        refineBoundaries(patch, temp_CC.castOffConst(),  new_dw,
+                         lb->temp_CCLabel,   indx,subCycleProgress);
 
         refineBoundaries(patch, vel_CC.castOffConst(),new_dw,
-                            lb->vel_CCLabel,    indx,subCycleProgress);
+                         lb->vel_CCLabel,    indx,subCycleProgress);
        //__________________________________
        //    Model Variables                     
        if(d_modelSetup && d_modelSetup->tvars.size() > 0){
@@ -217,15 +217,14 @@ inline void linearInterpolationWeights(const IntVector& idx,
      break;
    }
 }
-#if 0
 /*___________________________________________________________________
  Function~  AMRICE::linearInterpolation--
 _____________________________________________________________________*/
 template<class T>
-  void linearInterpolation(ArrayType& q_CC,
-                               const Vector w,
-                               const IntVector cidx,
-                                T& x0)
+  inline void linearInterpolation(constCCVariable<T>& q_CC,
+                                  const Vector w,
+                                  const IntVector cidx,
+                                   T& x0)
 {
   x0 = q_CC[cidx+IntVector(0,0,0)]*(1-w.x())*(1-w.y())*(1-w.z())
      + q_CC[cidx+IntVector(1,0,0)]*   w.x() *(1-w.y())*(1-w.z())
@@ -236,25 +235,24 @@ template<class T>
      + q_CC[cidx+IntVector(0,1,1)]*(1-w.x())*   w.y() *   w.z()
      + q_CC[cidx+IntVector(1,1,1)]*   w.x() *   w.y() *   w.z();
 }
-#endif
 
 /*___________________________________________________________________
- Function~  AMRICE::refineFaces--   scalar vesion
+ Function~  AMRICE::refineFaces-- 
 _____________________________________________________________________*/
-template<class ArrayType, class constArrayType>
+template<class varType>
 void refineFaces(const Patch* patch, 
                 const Level* level,
                 const Level* coarseLevel, 
-                const IntVector& dir,
-                Patch::FaceType lowFace, 
-                Patch::FaceType highFace,
-                ArrayType& Q, 
+                const IntVector& /*dir*/,
+                Patch::FaceType /*lowFace*/, 
+                Patch::FaceType /*highFace*/,
+                CCVariable<varType>& Q, 
                 const VarLabel* label,
                 double subCycleProgress_var, 
                 int matl, 
                 DataWarehouse* coarse_old_dw,
                 DataWarehouse* coarse_new_dw, 
-                Patch::VariableBasis basis)
+                Patch::VariableBasis /*basis*/)
 {
   for(Patch::FaceType face = Patch::startFace;
       face <= Patch::endFace; face=Patch::nextFace(face)){
@@ -298,243 +296,67 @@ void refineFaces(const Patch* patch,
       
       //__________________________________
       //   subCycleProgress_var  = 0
+      //  interpolation using the coarse_old_dw data
       if(subCycleProgress_var < 1.e-10){
-       constArrayType q_OldDW;
+       constCCVariable<varType> q_OldDW;
        coarse_old_dw->getRegion(q_OldDW, label, matl, coarseLevel,
                              coarseLow, coarseHigh);
                              
-       for(CellIterator iter(l,h); !iter.done(); iter++){
-         IntVector idx = *iter;
-         IntVector cidx;
-         Vector w;
-        
-         linearInterpolationWeights( idx,w, cidx, coarseHigh, level, face);
-         //_________________
-         //  interpolation, using the coarse old_DW
-         double x0 = q_OldDW[cidx+IntVector(0,0,0)]*(1-w.x())*(1-w.y())*(1-w.z())
-           + q_OldDW[cidx+IntVector(1,0,0)]*   w.x() *(1-w.y())*(1-w.z())
-           + q_OldDW[cidx+IntVector(0,1,0)]*(1-w.x())*   w.y() *(1-w.z())
-           + q_OldDW[cidx+IntVector(1,1,0)]*   w.x() *   w.y() *(1-w.z())
-           + q_OldDW[cidx+IntVector(0,0,1)]*(1-w.x())*(1-w.y())*   w.z()
-           + q_OldDW[cidx+IntVector(1,0,1)]*   w.x() *(1-w.y())*   w.z()
-           + q_OldDW[cidx+IntVector(0,1,1)]*(1-w.x())*   w.y() *   w.z()
-           + q_OldDW[cidx+IntVector(1,1,1)]*   w.x() *   w.y() *   w.z();     
-           
-         Q[idx] = x0;
-         
-       }  // cell iterator
-      } else if(subCycleProgress_var > 1-1.e-10){  // subCycleProgress_var near 1.0
-       constArrayType q_NewDW;
-       coarse_new_dw->getRegion(q_NewDW, label, matl, coarseLevel,
-                             coarseLow, coarseHigh);
-                             
-       for(CellIterator iter(l,h); !iter.done(); iter++){
-         IntVector idx = *iter;
-         IntVector cidx;
-         Vector w;
-        
-         linearInterpolationWeights( idx,w, cidx, coarseHigh, level, face);
-         //_________________
-         //  interpolation using the coarse_new_dw data
-         double x1 = q_NewDW[cidx+IntVector(0,0,0)]*(1-w.x())*(1-w.y())*(1-w.z())
-           + q_NewDW[cidx+IntVector(1,0,0)]*   w.x() *(1-w.y())*(1-w.z())
-           + q_NewDW[cidx+IntVector(0,1,0)]*(1-w.x())*   w.y() *(1-w.z())
-           + q_NewDW[cidx+IntVector(1,1,0)]*   w.x() *   w.y() *(1-w.z())
-           + q_NewDW[cidx+IntVector(0,0,1)]*(1-w.x())*(1-w.y())*   w.z()
-           + q_NewDW[cidx+IntVector(1,0,1)]*   w.x() *(1-w.y())*   w.z()
-           + q_NewDW[cidx+IntVector(0,1,1)]*(1-w.x())*   w.y() *   w.z()
-           + q_NewDW[cidx+IntVector(1,1,1)]*   w.x() *   w.y() *   w.z();
+        for(CellIterator iter(l,h); !iter.done(); iter++){
+          IntVector idx = *iter;
+          IntVector cidx;
+          Vector weights;
 
-         Q[idx] = x1;
-       }  // cell iterator
-      } else {                    // subCycleProgress_var neither 0 or 1 
-       constArrayType q_OldDW, q_NewDW;
-       coarse_old_dw->getRegion(q_OldDW, label, matl, coarseLevel,
-                             coarseLow, coarseHigh);
+          linearInterpolationWeights( idx,weights, cidx, coarseHigh, level, face);
+          linearInterpolation<varType>(q_OldDW, weights, cidx, Q[idx]);
+        } 
+      } 
+       
+       //__________________________________
+       // subCycleProgress_var near 1.0
+       //  interpolation using the coarse_new_dw data
+      else if(subCycleProgress_var > 1-1.e-10){ 
+       constCCVariable<varType> q_NewDW;
        coarse_new_dw->getRegion(q_NewDW, label, matl, coarseLevel,
                              coarseLow, coarseHigh);
                              
-      for(CellIterator iter(l,h); !iter.done(); iter++){
-         IntVector idx = *iter;
-         IntVector cidx;
-         Vector w;
-        
-         linearInterpolationWeights( idx,w, cidx, coarseHigh, level, face);
-         //_________________
-         //  interpolation from both coarse new and old dw
-         // coarse_old_dw data
-         double x0 = q_OldDW[cidx+IntVector(0,0,0)]*(1-w.x())*(1-w.y())*(1-w.z())           
-           + q_OldDW[cidx+IntVector(1,0,0)]*   w.x() *(1-w.y())*(1-w.z())
-           + q_OldDW[cidx+IntVector(0,1,0)]*(1-w.x())*   w.y() *(1-w.z())
-           + q_OldDW[cidx+IntVector(1,1,0)]*   w.x() *   w.y() *(1-w.z())
-           + q_OldDW[cidx+IntVector(0,0,1)]*(1-w.x())*(1-w.y())*   w.z()
-           + q_OldDW[cidx+IntVector(1,0,1)]*   w.x( )*(1-w.y())*   w.z()
-           + q_OldDW[cidx+IntVector(0,1,1)]*(1-w.x())*    w.y()*   w.z()
-           + q_OldDW[cidx+IntVector(1,1,1)]*   w.x() *    w.y()*   w.z();
-          
-          // coarse_new_dw data 
-         double x1 = q_NewDW[cidx+IntVector(0,0,0)]*(1-w.x())*(1-w.y())*(1-w.z())
-           + q_NewDW[cidx+IntVector(1,0,0)]*   w.x() *(1-w.y())*(1-w.z())
-           + q_NewDW[cidx+IntVector(0,1,0)]*(1-w.x())*   w.y() *(1-w.z())
-           + q_NewDW[cidx+IntVector(1,1,0)]*   w.x() *   w.y() *(1-w.z())
-           + q_NewDW[cidx+IntVector(0,0,1)]*(1-w.x())*(1-w.y())*   w.z()
-           + q_NewDW[cidx+IntVector(1,0,1)]*   w.x() *(1-w.y())*   w.z()
-           + q_NewDW[cidx+IntVector(0,1,1)]*(1-w.x())*   w.y() *   w.z()
-           + q_NewDW[cidx+IntVector(1,1,1)]*   w.x() *   w.y() *   w.z();
-           
-         // Interpolate temporally  
-         double x = (1-subCycleProgress_var)*x0 + subCycleProgress_var*x1;
-         Q[idx] = x;
-       }
+        for(CellIterator iter(l,h); !iter.done(); iter++){
+          IntVector idx = *iter;
+          IntVector cidx;
+          Vector weights;
+
+          linearInterpolationWeights( idx,weights, cidx, coarseHigh, level, face);
+          linearInterpolation<varType>(q_NewDW, weights, cidx, Q[idx]);
+        } 
+      } else {    
+                      
+      //__________________________________
+      // subCycleProgress_var somewhere between 0 or 1
+      //  interpolation from both coarse new and old dw 
+        constCCVariable<varType> q_OldDW, q_NewDW;
+        coarse_old_dw->getRegion(q_OldDW, label, matl, coarseLevel,
+                             coarseLow, coarseHigh);
+        coarse_new_dw->getRegion(q_NewDW, label, matl, coarseLevel,
+                             coarseLow, coarseHigh);
+                             
+        for(CellIterator iter(l,h); !iter.done(); iter++){
+          IntVector idx = *iter;
+          IntVector cidx;
+          Vector weights;
+          varType C_old, C_new;
+
+          linearInterpolationWeights(idx,weights, cidx, coarseHigh, level, face);
+          linearInterpolation<varType>(q_OldDW, weights, cidx, C_old);
+          linearInterpolation<varType>(q_NewDW, weights, cidx, C_new);
+
+          // Interpolate temporally  
+          Q[idx] = (1-subCycleProgress_var)*C_old + subCycleProgress_var*C_new;
+        }
       }
     }
   }
 }
-/*___________________________________________________________________
- Function~  AMRICE::refineFaces--   vector version
-_____________________________________________________________________*/
-void refineFaces(const Patch* patch, 
-                const Level* level,
-                const Level* coarseLevel, 
-                const IntVector& dir,
-                Patch::FaceType lowFace, 
-                Patch::FaceType highFace,
-                CCVariable<Vector>& Q, 
-                const VarLabel* label,
-                double subCycleProgress_var, 
-                int matl, 
-                DataWarehouse* coarse_old_dw,
-                DataWarehouse* coarse_new_dw, 
-                Patch::VariableBasis basis)
-{
-  for(Patch::FaceType face = Patch::startFace;
-      face <= Patch::endFace; face=Patch::nextFace(face)){
-/*`==========TESTING==========*/
-#if 0  
-    Need to test this when the fine level is 
-    on the edge of the computational domain
-    if(patch->getBCType(face) != Patch::Coarse){
-      continue;
 
-#endif
-/*===========TESTING==========`*/
-
-    {
-     //__________________________________
-     //  determine low and high cell iter limits
-     // and coarselevel hi and low index
-      CellIterator iter_tmp = patch->getFaceCellIterator(face, "plusEdgeCells");
-      IntVector l = iter_tmp.begin();
-      IntVector h = iter_tmp.end(); 
-      IntVector refineRatio = level->getRefinementRatio();
-      IntVector coarseLow  = level->mapCellToCoarser(l);
-      IntVector coarseHigh = level->mapCellToCoarser(h + refineRatio - IntVector(1,1,1));
-
-      //__________________________________
-      // enlarge the coarse foot print by oneCell
-      // x-           x+        y-       y+       z-        z+
-      // (-1,0,0)  (1,0,0)  (0,-1,0)  (0,1,0)  (0,0,-1)  (0,0,1)
-      IntVector oneCell = patch->faceDirection(face);
-      if( face == Patch::xminus || face == Patch::yminus || face == Patch::zminus) {
-        coarseHigh -= oneCell;
-      }
-      if( face == Patch::xplus || face == Patch::yplus || face == Patch::zplus) {
-        coarseLow -= oneCell;
-      }
-
-      cout_dbg << "face " << face << " FineLevel " << iter_tmp;
-      cout_dbg << "  coarseLow " << coarseLow << " coarse high " << coarseHigh;
-      cout_dbg << "  refine Patch " << *patch << endl;
-      //__________________________________
-      //   subCycleProgress_var  = 0
-      if(subCycleProgress_var < 1.e-10){
-       constCCVariable<Vector> q_OldDW;
-       coarse_old_dw->getRegion(q_OldDW, label, matl, coarseLevel,
-                             coarseLow, coarseHigh);
-                             
-       for(CellIterator iter(l,h); !iter.done(); iter++){
-         IntVector idx = *iter;
-         IntVector cidx;
-         Vector w;
-        
-         linearInterpolationWeights( idx,w, cidx, coarseHigh, level, face);
-         
-         //_________________
-         //  interpolation, using the coarse old_DW
-         Vector x0 = q_OldDW[cidx+IntVector(0,0,0)]*(1-w.x())*(1-w.y())*(1-w.z())
-           + q_OldDW[cidx+IntVector(1,0,0)]*   w.x() *(1-w.y())*(1-w.z())
-           + q_OldDW[cidx+IntVector(0,1,0)]*(1-w.x())*   w.y() *(1-w.z())
-           + q_OldDW[cidx+IntVector(1,1,0)]*   w.x() *   w.y() *(1-w.z())
-           + q_OldDW[cidx+IntVector(0,0,1)]*(1-w.x())*(1-w.y())*   w.z()
-           + q_OldDW[cidx+IntVector(1,0,1)]*   w.x() *(1-w.y())*   w.z()
-           + q_OldDW[cidx+IntVector(0,1,1)]*(1-w.x())*   w.y() *   w.z()
-           + q_OldDW[cidx+IntVector(1,1,1)]*   w.x() *   w.y() *   w.z();
-         Q[idx] = x0;
-       }  // cell iterator
-      } else if(subCycleProgress_var > 1-1.e-10){        /// subCycleProgress_var near 1.0
-       constCCVariable<Vector> q_NewDW;
-       coarse_new_dw->getRegion(q_NewDW, label, matl, coarseLevel,
-                             coarseLow, coarseHigh);
-                             
-       for(CellIterator iter(l,h); !iter.done(); iter++){
-         IntVector idx = *iter;
-         IntVector cidx;
-         Vector w;
-         linearInterpolationWeights( idx, w, cidx, coarseHigh, level, face);
-         //_________________
-         //  interpolation using the coarse_new_dw data
-         Vector x1 = q_NewDW[cidx+IntVector(0,0,0)]*(1-w.x())*(1-w.y())*(1-w.z())
-           + q_NewDW[cidx+IntVector(1,0,0)]*   w.x() *(1-w.y())*(1-w.z())
-           + q_NewDW[cidx+IntVector(0,1,0)]*(1-w.x())*   w.y() *(1-w.z())
-           + q_NewDW[cidx+IntVector(1,1,0)]*   w.x() *   w.y() *(1-w.z())
-           + q_NewDW[cidx+IntVector(0,0,1)]*(1-w.x())*(1-w.y())*   w.z()
-           + q_NewDW[cidx+IntVector(1,0,1)]*   w.x() *(1-w.y())*   w.z()
-           + q_NewDW[cidx+IntVector(0,1,1)]*(1-w.x())*   w.y() *   w.z()
-           + q_NewDW[cidx+IntVector(1,1,1)]*   w.x() *   w.y() *   w.z();
-         Q[idx] = x1;
-       }  // cell iterator
-      } else {                    // subCycleProgress_var neither 0 or 1 
-       constCCVariable<Vector> q_OldDW, q_NewDW;
-       coarse_old_dw->getRegion(q_OldDW, label, matl, coarseLevel,
-                             coarseLow, coarseHigh);
-       coarse_new_dw->getRegion(q_NewDW, label, matl, coarseLevel,
-                             coarseLow, coarseHigh);
-
-       for(CellIterator iter(l,h); !iter.done(); iter++){
-         IntVector idx = *iter;
-         IntVector cidx;
-         Vector w;
-         linearInterpolationWeights( idx, w, cidx, coarseHigh, level, face); 
-         //_________________
-         //  interpolation from both coarse new and old dw
-         // coarse_old_dw data
-         Vector x0 = q_OldDW[cidx+IntVector(0,0,0)]*(1-w.x())*(1-w.y())*(1-w.z())           
-           + q_OldDW[cidx+IntVector(1,0,0)]*   w.x() *(1-w.y())*(1-w.z())
-           + q_OldDW[cidx+IntVector(0,1,0)]*(1-w.x())*   w.y() *(1-w.z())
-           + q_OldDW[cidx+IntVector(1,1,0)]*   w.x() *   w.y() *(1-w.z())
-           + q_OldDW[cidx+IntVector(0,0,1)]*(1-w.x())*(1-w.y())*   w.z()
-           + q_OldDW[cidx+IntVector(1,0,1)]*   w.x( )*(1-w.y())*   w.z()
-           + q_OldDW[cidx+IntVector(0,1,1)]*(1-w.x())*    w.y()*   w.z()
-           + q_OldDW[cidx+IntVector(1,1,1)]*   w.x() *    w.y()*   w.z();
-          
-          // coarse_new_dw data 
-         Vector x1 = q_NewDW[cidx+IntVector(0,0,0)]*(1-w.x())*(1-w.y())*(1-w.z())
-           + q_NewDW[cidx+IntVector(1,0,0)]*   w.x() *(1-w.y())*(1-w.z())
-           + q_NewDW[cidx+IntVector(0,1,0)]*(1-w.x())*   w.y() *(1-w.z())
-           + q_NewDW[cidx+IntVector(1,1,0)]*   w.x() *   w.y() *(1-w.z())
-           + q_NewDW[cidx+IntVector(0,0,1)]*(1-w.x())*(1-w.y())*   w.z()
-           + q_NewDW[cidx+IntVector(1,0,1)]*   w.x() *(1-w.y())*   w.z()
-           + q_NewDW[cidx+IntVector(0,1,1)]*(1-w.x())*   w.y() *   w.z()
-           + q_NewDW[cidx+IntVector(1,1,1)]*   w.x() *   w.y() *   w.z();
-           
-         // Interpolate temporally  
-         Vector x = (1-subCycleProgress_var)*x0 + subCycleProgress_var*x1;
-         Q[idx] = x;
-       }
-      }
-    }
-  }
-}
 /*___________________________________________________________________
  Function~  AMRICE::addRefineDependencies--
 _____________________________________________________________________*/
@@ -578,7 +400,7 @@ void AMRICE::refineBoundaries(const Patch* patch,
   const Level* level = patch->getLevel();
   const Level* coarseLevel = level->getCoarserLevel().get_rep();
   
-  refineFaces<CCVariable<double>, constCCVariable<double> >
+  refineFaces<double>
     (patch, level, coarseLevel, IntVector(0,0,0), Patch::invalidFace,
      Patch::invalidFace, val, label, subCycleProgress_var, matl,
      coarse_old_dw, coarse_new_dw, Patch::CellBased);
@@ -601,78 +423,11 @@ void AMRICE::refineBoundaries(const Patch* patch,
   const Level* level = patch->getLevel();
   const Level* coarseLevel = level->getCoarserLevel().get_rep();
 
-  refineFaces(patch, level, coarseLevel, IntVector(0,0,0), Patch::invalidFace,
+  refineFaces<Vector>(patch, level, coarseLevel, IntVector(0,0,0), Patch::invalidFace,
               Patch::invalidFace, val, label, subCycleProgress_var, matl,
               coarse_old_dw, coarse_new_dw, Patch::CellBased);
 }
 
-
-//______________________________________________________________________
-//  SFCXVariable version        N O T   U S E D
-void AMRICE::refineBoundaries(const Patch* patch,
-                           SFCXVariable<double>& val,
-                           DataWarehouse* new_dw,
-                           const VarLabel* label,
-                           int matl,
-                           double subCycleProgress_var)
-{
-  cout_dbg << "\t refineBoundaries ("<<label->getName() << ") \t" 
-           << " subCycleProgress_var " << subCycleProgress_var<< '\n';
-  DataWarehouse* coarse_old_dw = new_dw->getOtherDataWarehouse(Task::CoarseOldDW);
-  DataWarehouse* coarse_new_dw = new_dw->getOtherDataWarehouse(Task::CoarseNewDW);
-  
-  const Level* level = patch->getLevel();
-  const Level* coarseLevel = level->getCoarserLevel().get_rep();
-  
-  refineFaces<SFCXVariable<double>, constSFCXVariable<double> >
-    (patch, level, coarseLevel, IntVector(1,0,0), Patch::xminus,
-     Patch::xplus, val, label, subCycleProgress_var, matl,
-     coarse_old_dw, coarse_new_dw, Patch::XFaceBased);
-}
-//______________________________________________________________________
-//  SFCYVariable version        N O T   U S E D
-void AMRICE::refineBoundaries(const Patch* patch,
-                           SFCYVariable<double>& val,
-                           DataWarehouse* new_dw,
-                           const VarLabel* label,
-                           int matl,
-                           double subCycleProgress_var)
-{
-  cout_dbg << "\t refineBoundaries ("<<label->getName() << ") \t" 
-           << " subCycleProgress_var " << subCycleProgress_var<< '\n';
-  DataWarehouse* coarse_old_dw = new_dw->getOtherDataWarehouse(Task::CoarseOldDW);
-  DataWarehouse* coarse_new_dw = new_dw->getOtherDataWarehouse(Task::CoarseNewDW);
-  
-  const Level* level = patch->getLevel();
-  const Level* coarseLevel = level->getCoarserLevel().get_rep();
-  
-  refineFaces<SFCYVariable<double>, constSFCYVariable<double> >
-    (patch, level, coarseLevel, IntVector(0,1,0), Patch::yminus,
-     Patch::yplus, val, label, subCycleProgress_var, matl,
-     coarse_old_dw, coarse_new_dw, Patch::YFaceBased);
-}
-//______________________________________________________________________
-//  SFCZVariable version        N O T   U S E D
-void AMRICE::refineBoundaries(const Patch* patch,
-                            SFCZVariable<double>& val,
-                            DataWarehouse* new_dw,
-                            const VarLabel* label,
-                            int matl,
-                            double subCycleProgress_var)
-{
-  cout_dbg << "\t refineBoundaries ("<<label->getName() << ") \t" 
-           << " subCycleProgress_var " << subCycleProgress_var<< '\n';
-  DataWarehouse* coarse_old_dw = new_dw->getOtherDataWarehouse(Task::CoarseOldDW);
-  DataWarehouse* coarse_new_dw = new_dw->getOtherDataWarehouse(Task::CoarseNewDW);
-  
-  const Level* level = patch->getLevel();
-  const Level* coarseLevel = level->getCoarserLevel().get_rep();
-  
-  refineFaces<SFCZVariable<double>, constSFCZVariable<double> >
-    (patch, level, coarseLevel, IntVector(0,0,1), Patch::zminus,
-     Patch::zplus, val, label, subCycleProgress_var, matl,
-     coarse_old_dw, coarse_new_dw, Patch::ZFaceBased);
-}
 /*___________________________________________________________________
  Function~  AMRICE::scheduleCoarsen--  
 _____________________________________________________________________*/
@@ -727,7 +482,7 @@ _____________________________________________________________________*/
 void AMRICE::coarsen(const ProcessorGroup*,
                         const PatchSubset* patches,
                         const MaterialSubset* matls,
-                        DataWarehouse* old_dw,
+                        DataWarehouse*,
                         DataWarehouse* new_dw)
 {
   cout_doing << "Doing coarsen \t\t\t\t\t\t AMRICE";
@@ -862,16 +617,16 @@ void AMRICE::fineToCoarseOperator(CCVariable<T>& q_CC,
  Function~  AMRICE::scheduleErrorEstimate--
 ______________________________________________________________________*/
 void AMRICE::scheduleErrorEstimate(const LevelP& coarseLevel,
-                                   SchedulerP& sched)
+                                   SchedulerP&)
 {
   cout_doing << "AMRICE::scheduleErrorEstimate \t\t\tL-" << coarseLevel->getIndex() << '\n';
   // when we know what to estimate we'll fill it in
 }
 
 void AMRICE::errorEstimate(const ProcessorGroup*,
-                           const PatchSubset* patches,
-                           const MaterialSubset* matls,
+                           const PatchSubset*,
+                           const MaterialSubset*,
                            DataWarehouse*,
-                           DataWarehouse* new_dw)
+                           DataWarehouse*)
 {
 }
