@@ -138,6 +138,12 @@ private:
                                        DataWarehouse* old_dw,
                                        DataWarehouse* new_dw);
 
+  void rigidBody(                      const ProcessorGroup*,
+                                       const PatchSubset* patches,
+                                       const MaterialSubset* matls,
+                                       DataWarehouse* old_dw,
+                                       DataWarehouse* new_dw);
+
   void applyBoundaryConditions(        const ProcessorGroup*,
                                        const PatchSubset* patches,
                                        const MaterialSubset* matls,
@@ -277,6 +283,9 @@ private:
 				    const MaterialSet*, const bool recursion);
 
   void scheduleInterpolateParticlesToGrid(     SchedulerP&, const PatchSet*,
+                                               const MaterialSet*);
+
+  void scheduleRigidBody(                      SchedulerP&, const PatchSet*,
                                                const MaterialSet*);
 
   void scheduleApplyBoundaryConditions(        SchedulerP&, const PatchSet*,
