@@ -115,7 +115,6 @@ public:
   virtual const string get_type_name(int n = -1) const;
   static PersistentTypeID type_id;
   virtual void io(Piostream &stream);
-  bool get_gradient(Vector &, Point &);
   virtual const TypeDescription* get_type_description() const;
 
 private:
@@ -276,20 +275,6 @@ ImageField<Data>::type_name(int n)
     return find_type_name((Data *)0);
   }
 } 
-
-
-
-
-//! compute the gradient g, at point p
-template <> bool ImageField<Tensor>::get_gradient(Vector &, Point &p);
-template <> bool ImageField<Vector>::get_gradient(Vector &, Point &p);
-
-template <class Data>
-bool ImageField<Data>::get_gradient(Vector &, Point &)
-{
-  return false;
-}
-
 
 } // end namespace SCIRun
 

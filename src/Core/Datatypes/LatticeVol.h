@@ -115,8 +115,11 @@ public:
   virtual const string get_type_name(int n = -1) const;
   static PersistentTypeID type_id;
   virtual void io(Piostream &stream);
-  bool get_gradient(Vector &, const Point &);
   virtual const TypeDescription* get_type_description() const;
+
+  // LatticeVol Specific methods.
+  bool get_gradient(Vector &, const Point &);
+
 private:
   static Persistent* maker();
 };
