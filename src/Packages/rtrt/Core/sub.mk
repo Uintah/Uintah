@@ -61,6 +61,7 @@ SRCS += $(SRCDIR)/Worker.cc \
 	$(SRCDIR)/HVolumeBrick.cc \
 	$(SRCDIR)/HVolumeBrick16.cc \
 	$(SRCDIR)/HVolumeBrickColor.cc \
+	$(SRCDIR)/HVolumeMaterial.cc \
 	$(SRCDIR)/VolumeBase.cc \
 	$(SRCDIR)/VolumeDpy.cc \
 	$(SRCDIR)/VolumeBrick16.cc \
