@@ -36,19 +36,44 @@ function findSiteTop() {
   return treeTop;
 }
 
-function newWindow(pageName,wide,tall,scroll){
-  window.open(pageName,"","toolbar=0,location=0,directories=0,status=0,menubar=0,scrollbars=" + scroll + ",resizable=0,width=" + wide + ",height=" + tall + ",left=0,top=0");
+function newWindow(pageName,wide,tall,scroll) {
+  window.open(pageName,"",
+    "toolbar=0,location=0,directories=0,status=0,menubar=0,scrollbars=" +
+    scroll + ",resizable=0,width=" + wide + ",height=" + tall +
+    ",left=0,top=0");
 }
 
-function beginContent() {
+/* Document objects - An html document is classified as one of: Index,
+DocBook, ModuleSpec, ModuleIndex, or ReleaseNotes.  To inherit the
+correct "look and feel", an html document should contain the following
+code in the <head> element:
+
+<script type="text/javascript" src="path-to/tools.js"></script>
+<script type="text/javascript">var doc = new XXXXDocument();</script>
+
+where XXXX is one of "Index", "DocBook", "ModuleSpec", ModuleIndex, or
+"ReleaseNotes".  The following code should be inserted right after the
+<body> tag:
+
+<script type="text/javascript">doc.preContent();</script>
+
+The following code should be inserted right before the </body> tag:
+
+<script type="text/javascript">doc.postContent();</script>
+*/
+
+/* Base document object */
+function Document() { }
+
+Document.prototype.beginContent = function() {
   document.write("<div class=\"content\">");
 }
 
-function endContent() {
+Document.prototype.endContent = function() {
   document.write("</div>");
 }
 
-function doTopBanner() {
+Document.prototype.doTopBanner = function() {
   document.write('<img class="top-banner" src="', gSiteTop, 'doc/Utilities/Figures/doc_banner04.jpg" border="0" usemap="#banner"> \
 <map name="banner">\
 <area href="http://www.sci.utah.edu" coords="133,103,212,124" alt="SCI Home">\
@@ -60,60 +85,114 @@ function doTopBanner() {
 </map>');
 }
 
-function doBottomBanner() {
+Document.prototype.doBottomBanner = function() {}
+
+Document.prototype.preContent = function() {
+  this.doTopBanner();
+  this.beginContent();
 }
 
-
-/* Default pre and post content functions */
-function preContent() {
-  doTopBanner();
-  beginContent();
+Document.prototype.postContent = function() {
+  this.endContent();
+  this.doBottomBanner();
 }
 
-function postContent() {
-  endContent();
-  doBottomBanner();
+Document.prototype.insertLinkElement = function(cssfile) {
+  document.write("<link href=\"", gSiteTop, "doc/Utilities/HTML/", cssfile, "\" type=\"text/css\" rel=\"stylesheet\"/>");
 }
 
-/* Pre and post content functions for DocBook documents */
-function preDBContent() {
-  preContent();
+/* Index document object */
+function IndexDocument() {
+  Document.prototype.insertLinkElement("indexcommon.css");
+}
+
+IndexDocument.prototype = new Document();
+IndexDocument.prototype.constructor = IndexDocument;
+
+/* DocBook document object */
+function DocBookDocument() {
+  Document.prototype.insertLinkElement("srdocbook.css");
+}
+
+DocBookDocument.prototype = new Document()
+DocBookDocument.prototype.constructor = DocBookDocument;
+
+DocBookDocument.prototype.preContent = function() {
+  Document.prototype.preContent();
   document.write("<div class=\"content-layer1\">\n");
 }
 
-function postDBContent() {
+DocBookDocument.prototype.postContent = function() {
   document.write("</div>\n");
-  postContent();
+  Document.prototype.postContent();
 }
 
-/* Pre and post content functions for module spec documents */
-function preMSContent() {
-  preContent();
+/* Release notes document object */
+function ReleaseNotesDocument() {
+  Document.prototype.insertLinkElement("releasenotes.css");
+}
+
+ReleaseNotesDocument.prototype = new Document()
+ReleaseNotesDocument.prototype.constructor = ReleaseNotesDocument;
+
+ReleaseNotesDocument.prototype.preContent = function() {
+  Document.prototype.preContent();
   document.write("<div class=\"content-layer1\">\n");
 }
 
-function postMSContent() {
+ReleaseNotesDocument.prototype.postContent = function() {
   document.write("</div>\n");
-  postContent();
+  Document.prototype.postContent();
 }
 
-/*
-  Start of Toc object code
-*/
+/* Module spec document object */
+function ModuleSpecDocument() {
+  Document.prototype.insertLinkElement("component.css");
+}
+
+ModuleSpecDocument.prototype = new Document()
+ModuleSpecDocument.prototype.constructor = ModuleSpecDocument;
+
+ModuleSpecDocument.prototype.preContent = function() {
+  Document.prototype.preContent();
+  document.write("<div class=\"content-layer1\">\n");
+}
+
+ModuleSpecDocument.prototype.postContent = function() {
+  document.write("</div>\n");
+  Document.prototype.postContent();
+}
+
+/* Module index document object */
+function ModuleIndexDocument() {
+  Document.prototype.insertLinkElement("moduleindex.css");
+}
+
+ModuleIndexDocument.prototype = new Document()
+ModuleIndexDocument.prototype.constructor = ModuleIndexDocument;
 
 /*
-  The toc code should be used as follows:
-  -Insert the following anchor element before the content to be toc'ed:
-    <a id="begin-toc">tag-list</a>
-   where 'tag-list' is list of tags with optional class attributes that are to be toc'ed.
-   Tags themselves must be upper-case.  Class attributes may be upper or lower case.
-  -Insert the following script element after all content to be toc'ed:
-    <script  type="text/javascript">new Toc().build()</script>
-  -Add css style rules that manifest hierarchical arrangements amongst entries in the toc.  
-   Rules follow this form:  p.toc-tag-class where 'toc' must be literally present, 'tag' is a 
-   tag name, and 'class' is an optional class attribute.  The '-' separators must be present.
+Code for generating table of contents.
 
-  To do: All the toc entries ought to wrapped up in their own div.
+The toc code should be used as follows:
+
++ Insert the following anchor element before the content to be
+  toc'ed: <a id="begin-toc">tag-list</a> where 'tag-list' is list of
+  tags with optional class attributes (i.e. tag[.attr]) that are to
+  be toc'ed.  Tags must be upper-case.
+
++ Insert the following script element after all content to be toc'ed
+  (but before </body>): <script type="text/javascript">new
+  Toc().build()</script>
+
++ Add css style rules that manifest hierarchical arrangements
+  amongst entries in the toc.  Rules follow this form:
+  p.toc-tag-class where 'toc' must be literally present, 'tag' is a
+  tag name, and 'class' is an optional class attribute.  The '-'
+  separators must be present.
+
+I've not tested the generation of multiple tocs for things like tables,
+figures, etc. but it ought to work.
 */
 
 function setClassAttribute(node, value) {
