@@ -41,6 +41,10 @@ static DebugStream cout_doing("MPMICE_DOING_COUT", false);
 //#define IDEAL_GAS
 #undef IDEAL_GAS
 
+
+#define RATE_FORM
+#undef  EQ_FORM
+
 MPMICE::MPMICE(const ProcessorGroup* myworld)
   : UintahParallelComponent(myworld)
 {
@@ -191,6 +195,113 @@ void MPMICE::scheduleTimeAdvance(const LevelP&   level,
   }
  //__________________________________
  // Scheduling
+ 
+ 
+/*`==========TESTING==========*/ 
+//  T H I S   C O D E   D U P L I C A T I O N   W I L L   C H A N G E
+#ifdef RATE_FORM
+  if( d_mpm->withFracture() ) {
+    d_mpm->scheduleSetPositions(                  sched, patches, mpm_matls);
+    d_mpm->scheduleComputeBoundaryContact(        sched, patches, mpm_matls);
+    d_mpm->scheduleComputeConnectivity(           sched, patches, mpm_matls);
+  }
+  d_mpm->scheduleInterpolateParticlesToGrid(      sched, patches, mpm_matls);
+
+  d_mpm->scheduleComputeHeatExchange(             sched, patches, mpm_matls);
+
+  // schedule the interpolation of mass and volume to the cell centers
+  scheduleInterpolateNCToCC_0(                    sched, patches, one_matl,
+                                                                  mpm_matls);
+
+  scheduleComputeNonEquilibrationPressureRF(      sched, patches, ice_matls_sub,
+                                                                  mpm_matls_sub,
+                                                                  press_matl,
+                                                                  all_matls);
+                                                                  
+  d_ice->scheduleComputeFCPressDiffRF(            sched, patches, ice_matls_sub,
+                                                                  mpm_matls_sub,
+                                                                  press_matl,
+                                                                  all_matls);
+
+  d_ice->scheduleComputeFaceCenteredVelocitiesRF( sched, patches, ice_matls_sub,
+                                                                  mpm_matls_sub,
+                                                                  press_matl,
+                                                                  all_matls);
+                                                               
+  d_ice->scheduleAddExchangeContributionToFCVel(  sched, patches, all_matls);
+  
+  scheduleHEChemistry(                            sched, patches, react_sub,
+                                                                  prod_sub,
+                                                                  press_matl,
+                                                                  all_matls);
+                                                                  
+  d_ice->scheduleComputeDelPressAndUpdatePressCC( sched, patches, press_matl,
+                                                                  ice_matls_sub, 
+                                                                  mpm_matls_sub,
+                                                                  all_matls);
+  
+  d_mpm->scheduleExMomInterpolated(               sched, patches, mpm_matls);
+  d_mpm->scheduleComputeStressTensor(             sched, patches, mpm_matls);
+
+  scheduleInterpolateMassBurnFractionToNC(        sched, patches, mpm_matls);
+
+  d_ice->scheduleComputePressFC(                  sched, patches, press_matl,
+                                                                  all_matls);
+  d_ice->scheduleAccumulateMomentumSourceSinksRF( sched, patches, press_matl,
+                                                                  ice_matls_sub,
+                                                                  all_matls);
+  d_ice->scheduleAccumulateEnergySourceSinksRF(   sched, patches, press_matl,
+                                                                  all_matls);
+
+  scheduleInterpolatePressCCToPressNC(            sched, patches, press_matl,
+                                                                  mpm_matls);
+  scheduleInterpolatePAndGradP(                   sched, patches, press_matl,
+                                                                  one_matl,
+                                                                  mpm_matls_sub,
+                                                                  mpm_matls);
+   
+  d_mpm->scheduleComputeInternalForce(            sched, patches, mpm_matls);
+  d_mpm->scheduleComputeInternalHeatRate(         sched, patches, mpm_matls);
+  d_mpm->scheduleSolveEquationsMotion(            sched, patches, mpm_matls);
+  d_mpm->scheduleSolveHeatEquations(              sched, patches, mpm_matls);
+  d_mpm->scheduleIntegrateAcceleration(           sched, patches, mpm_matls);
+  d_mpm->scheduleIntegrateTemperatureRate(        sched, patches, mpm_matls);
+
+  scheduleInterpolateNCToCC(                      sched, patches, one_matl,
+                                                                  mpm_matls);
+
+  d_ice->scheduleComputeLagrangianValues(         sched, patches, mpm_matls_sub,
+                                                                  ice_matls);
+
+  scheduleCCMomExchangeRF(                        sched, patches, ice_matls_sub,
+                                                                  mpm_matls_sub,
+                                                                  all_matls);
+
+  d_ice->scheduleComputeLagrangianSpecificVolumeRF(sched, patches, press_matl,
+                                                                  ice_matls_sub,
+                                                                  all_matls);
+  scheduleInterpolateCCToNC(                      sched, patches, mpm_matls);
+  d_mpm->scheduleExMomIntegrated(                 sched, patches, mpm_matls);
+  d_mpm->scheduleSetGridBoundaryConditions(       sched, patches, mpm_matls);
+  d_mpm->scheduleInterpolateToParticlesAndUpdate( sched, patches, mpm_matls);
+
+  if( d_mpm->withFracture() ) {
+    d_mpm->scheduleComputeFracture(               sched, patches, mpm_matls);
+    d_mpm->scheduleComputeCrackExtension(         sched, patches, mpm_matls);
+  }
+
+  d_mpm->scheduleCarryForwardVariables(           sched, patches, mpm_matls);
+  d_ice->scheduleAdvectAndAdvanceInTime(          sched, patches, ice_matls);
+
+  sched->scheduleParticleRelocation(level,
+				    Mlb->pXLabel_preReloc, 
+				    Mlb->d_particleState_preReloc,
+				    Mlb->pXLabel, Mlb->d_particleState,
+				    Mlb->pParticleIDLabel, mpm_matls);
+#endif
+ 
+ /*==========TESTING==========`*/
+#ifdef EQ_FORM
   if( d_mpm->withFracture() ) {
     d_mpm->scheduleSetPositions(                  sched, patches, mpm_matls);
     d_mpm->scheduleComputeBoundaryContact(        sched, patches, mpm_matls);
@@ -283,6 +394,7 @@ void MPMICE::scheduleTimeAdvance(const LevelP&   level,
 				    Mlb->d_particleState_preReloc,
 				    Mlb->pXLabel, Mlb->d_particleState,
 				    Mlb->pParticleIDLabel, mpm_matls);
+#endif
 
    // whatever tasks use press_matl will have their own reference to it.
   if (press_matl->removeReference())
@@ -2116,3 +2228,8 @@ void MPMICE::interpolateMassBurnFractionToNC(const ProcessorGroup*,
     }  //ALLmatls  
   }  //patches
 }
+
+//______________________________________________________________________
+//  Bring all the rate form code here
+
+#include "MPMICERF.cc"
