@@ -77,11 +77,19 @@ by the <modref package="SCIRun" name="ManageFieldData"/> module. </p>
         <name>Time Axis nrrd</name>
 	<datatype>Teem::Nrrd</datatype>
       </port>
+      <port>
+        <name>Current Index</name>
+	<datatype>SCIRun::Matrix</datatype>
+      </port>
     </inputs>
     <outputs>
       <port>
         <name>Time Slice</name>
 	<datatype>Teem::Nrrd</datatype>
+      </port>
+      <port>
+        <name>Selected Index</name>
+	<datatype>SCIRun::Matrix</datatype>
       </port>
     </outputs>
   </io>
