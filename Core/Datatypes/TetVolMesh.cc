@@ -906,11 +906,12 @@ TetVolMesh::combine_3_to_2(Cell::index_type &removed,
   
   ASSERT(shared_face.size() == 3);
 
-  Node::array_type face;
   iter = shared_face.begin();
-  face.push_back(*iter++);
-  face.push_back(*iter++);
-  face.push_back(*iter++);
+  Node::array_type face;
+  face.resize(3);
+  face[0] = *iter++;
+  face[1] = *iter++;
+  face[2] = *iter++;
 
   // the cell index that is orphaned, needs to be added to the set for 
   // later deletion outside of this call.
