@@ -1,0 +1,204 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+    "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<!--
+  The contents of this file are subject to the University of Utah Public
+  License (the "License"); you may not use this file except in compliance
+  with the License.
+  
+  Software distributed under the License is distributed on an "AS IS"
+  basis, WITHOUT WARRANTY OF ANY KIND, either express or implied. See the
+  License for the specific language governing rights and limitations under
+  the License.
+  
+  The Original Source Code is SCIRun, released March 12, 2001.
+  
+  The Original Source Code was developed by the University of Utah.
+  Portions created by UNIVERSITY are Copyright (C) 2001, 1994 
+  University of Utah. All Rights Reserved.
+-->
+
+<!--
+  Note to authors: Last time I checked, this file consisted of valid
+  xhtml.  Please continue to write valid xhtml code only!  Use the
+  validator at http://validator.w3.org/.
+-->
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta content="HTML Tidy for Mac OS X (vers 1st December 2002), see www.w3.org"
+      name="generator" />
+    <meta http-equiv="content-type"
+      content="text/html;charset=iso-8859-1" />
+    <meta name="generator" content="Adobe GoLive 4" />
+    <title>
+      PowerApp Creation      
+    </title>
+  </head>
+  <body bgcolor="white">
+    <table align="center" border="0" cellpadding="0" cellspacing="0"
+      width="600">
+      <tr>
+        <td><center>
+          <img height="101" width="600"
+	    src="images/powerapps101.gif" border="0"
+	    usemap="#biot-banner-sub1a87b5e6" alt="BioTensor Banner Sub"/>
+	  <map name="biot-banner-sub1a87b5e6"
+	    id="biot-banner-sub1a87b5e6">
+            <area href="http://software.sci.utah.edu/"
+	      coords="501,32,592,46" shape="rect" alt="http://software.sci.utah.edu/" />
+            <area href="http://www.sci.utah.edu" coords="505,11,592,29"
+	      shape="rect" alt="http://www.sci.utah.edu"/>
+          </map></center>
+        </td>
+      </tr>
+      <tr>
+        <td>
+          <table border="0" cellpadding="10" cellspacing="0"
+	    width="600">
+            <tr>
+              <td bgcolor="#DCDCDC">
+                <div align="right">
+                  <a href="index.html">1</a>
+                  <a href="chapter_2.html">2</a>
+                  <a href="chapter_3.html">3</a>
+                  <a href="chapter_4.html">4</a>
+                </div>
+                <center>
+                  <p>
+                    <font color="maroon" size="4"><b>Chapter 4: PowerApp Child Class</b></font>
+                  </p>
+                </center>
+                <div align="left">
+                <div align="left">
+
+                  <h4>
+                    <b><a href="#MandMethods">Manditory Methods</a></b>
+                  </h4>
+
+
+
+                  <h4>
+                    <b><a href="#SugMethods">Suggested Methods</a></b>
+                  </h4>
+
+                  <h4>
+                    <b><a href="#Variables">Suggested Variables</a></b>
+                  </h4>
+
+                <h4>
+                  <b>Overview</b>
+                </h4>
+
+<p>The child class includes several &quot;manditory&quot; methods as well as any other methods it needs. Below are descriptions of the different components of a PowerApp child class.</p>
+
+                <h4>
+                  <b><a name="MandMethods" id="MandMethods">Manditory Methods</a></b>
+                </h4>
+
+
+<p>Files such as Module.tcl make calls to PowerApp methods when their state is updated, they are dynamically compling, or an error is recieved. Therefore, each PowerApp must have certain methods to handle these situations. In addition, every PowerApp must handle loading and saving and displaying help and an about box. The following are manditory methods to have in a PowerApp child class:</p>
+<ul>
+  <li><b>constructor {}</b> to initialize variables and  define tooltips</li>
+  <li><b>appname {}</b> - method that returns the name of the app</li>
+  <li><b>save_session {}</b> - method to handle saving a session</li>
+  <li><b>load_session {}</b> - method to handle loading a saved session</li>
+  <li><b>show_help {}</b> - method to display the help information</li>
+  <li><b>show_about {}</b> - method to display about information</li>
+  <li><b>indicate_dynamic_compile {which mode}</b> - method to change the indicator and labels when dynamic compilation begins and ends</li>
+  <li><b>update_progress {which state}</b> - method to catch module update_state calls and change the progress bar and labels accordingly</li>
+  <li><b>indicate_error {which msg_state}</b> - method to indicate an error or reset an error</li>
+  <li><b>change_indicate_val {val}</b> - method to change the indicate val and change labels appropriately</li>
+  <li><b>change_indicator_labels {msg}</b> - method to change indicator labels and handle changing labels when loading a session.</li>
+</ul>
+
+
+                <h4>
+                  <b><a name="SugMethods" id="SugMethods">Suggested Methods</a></b>
+                </h4>
+<p>Below are several &quot;suggested&quot; methods that will help make keeping track of the state easeir.</p>
+<ul>
+  <li><b>build_app {}</b> - method to construct your app.  This will build both Panes and any tabs contained in them.</li>
+  <li><b>initialize_blocks {}</b> - method to disable any modules to enforce the step-by-step functionality</li>
+  <li><b>setColor {col color mode}</b> - method only when giving a colormap selection choice</li>
+  <li><b>build_<i>step</i>_tab {f}</b> - for each step.  This should take a frame and should be called for the attached and detached Panes.</li>
+  <li><b>execute_<i>step</i> {}</b> - method to execute each processing step</li>
+  <li><b>configure_<i>tabname</i>_tabs {}</b> - method to configure both the attached and detached tab given by <i>tabname</i></li>
+  <li><b>switch_<i>tabname</i>_tabs {}</b> - method called when switching a tab which should make sure the attached and detached tabs are in sync<i>tabname</i></li>
+  <li><b>toggle_<i>option</i></b> - methods for each checkbutton or radiobutton that enables or disables gui widgets</li>
+  <li><b>init_Pframe {f}</b> - method to build Processing Pane on a specified frame</li>
+  <li><b>init_Vframe {f}</b> - method to build Visualization Pane on a specified frame</li>
+  <li><b>switch_P_frames</b> - method to handle the attaching and detaching of the Processing Panes</li>
+  <li><b>switch_V_frames</b> - method to handle the attaching and detaching of the Visualization Panes</li>
+</ul>
+
+
+
+                <h4>
+                  <b><a name="Variables" id="Variables">Suggested Variables</a></b>
+                </h4>
+<p>To help maintain state during executing and when loading a saved session, there are several suggested variables regarding which tab is visible and which widgets are enabled or disabled.</p> 
+
+<p>There should be two variables for every tabnotebook widget so that when a tab is selected on the attached frame, the corresponding tab can be selected on the detached frame.  There should also be a variable for each tabnotebook indicating which tab is currently visible.</p>
+
+<p>For example, in BioTensor, the $proc_tab1 and $proc_tab2 point to the tabnotebook for the processing steps.  The c_procedure_tab variable indicates which tab is currently visible.  When the user clicks the &quot;Registration&quot; tab, a method is called that will change the indicator labels, set the $c_procedure_tab variable, and bring the appropriate tab forward in both the attached and detached panes.</p>
+<pre>
+  change_indicator_labels "Registration..."
+
+  set c_procedure_tab "Registration"
+
+  $proc_tab1 view "Registration"
+  $proc_tab2 view "Registration"
+</pre>
+
+<p>When loading a session, these variables will be saved and you can easily restore the state of the PowerApp.</p>
+
+<p>It is also useful to have variables to indicate if each processing step has been completed.  This helps when enabling the next step. </p>
+<pre>
+  set data_completed 0
+</pre>
+
+
+                <h4>
+                  <b>Summary</b>
+                </h4>
+<p>Chapter 4 gave suggestions for what to include in your child PowerApp class.  For a simple example, look at the BioFEM example </p>
+<pre>   SCIRun/src/Packages/BioPSE/nets/PowerApps/BioFEM.app</pre> 
+<p>and for a more complicated example see BioTensor </p>
+<pre>   SCIRun/src/Packages/Teem/nets/PowerApps/BioTensor.app</pre>
+
+                <div align="right">
+                  <p>
+                    <a href="index.html">1</a>
+                    <a href="chapter_2.html">2</a>
+                    <a href="chapter_3.html">3</a>
+                    <a href="chapter_4.html">4</a>
+                  </p>
+                </div>
+                </div>
+                </div>
+              </td>
+            </tr>
+          </table>
+        </td>
+      </tr>
+      <tr>
+        <td>
+          <img height="13" width="600" src="images/footer.gif"
+	    alt="Footer Images" />
+        </td>
+      </tr>
+    </table>
+  </body>
+</html>
+
+<!-- Keep this comment at the end of the file
+Local variables:
+mode: xml
+sgml-default-dtd-file:"../../Utilities/XML/xhtml1-transitional.ced"
+sgml-indent-data: t
+sgml-indent-step: 2
+sgml-omittag:nil
+sgml-shorttag:nil
+End:
+-->
