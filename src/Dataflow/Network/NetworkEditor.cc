@@ -419,7 +419,12 @@ void NetworkEditor::save_network(const string& filename)
       out << "global notes\nset notes \"" << myvalue << "\"\n" ;
       out << "\n" ;
     }
-
+    myvalue = Tcl_GetVar (the_interp, "modulesBbox", TCL_GLOBAL_ONLY) ;
+    if (myvalue != NULL) {
+      out << "set bbox {" << myvalue << "}\n" ;
+      out << "\n" ;
+    }
+   
     TCLTask::unlock();
 
 
