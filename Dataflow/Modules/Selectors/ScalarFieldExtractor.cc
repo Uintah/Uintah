@@ -56,8 +56,9 @@ ScalarFieldExtractor::ScalarFieldExtractor(GuiContext* ctx)
 ScalarFieldExtractor::~ScalarFieldExtractor(){} 
 
 //------------------------------------------------------------- 
-void ScalarFieldExtractor::get_vars(vector< string >& names,
-				   vector< const TypeDescription *>& types)
+void
+ScalarFieldExtractor::get_vars(vector< string >& names,
+                               vector< const TypeDescription *>& types)
 {
   string command;
   // Set up data to build or rebuild GUI interface
@@ -70,29 +71,29 @@ void ScalarFieldExtractor::get_vars(vector< string >& names,
     const TypeDescription *subtype = td->getSubType();
     //  only handle NC and CC Vars
     if( td->getType() ==  TypeDescription::NCVariable ||
-	td->getType() ==  TypeDescription::CCVariable ||
- 	td->getType() ==  TypeDescription::SFCXVariable ||
-	td->getType() ==  TypeDescription::SFCYVariable ||
-	td->getType() ==  TypeDescription::SFCZVariable )
+        td->getType() ==  TypeDescription::CCVariable ||
+        td->getType() ==  TypeDescription::SFCXVariable ||
+        td->getType() ==  TypeDescription::SFCYVariable ||
+        td->getType() ==  TypeDescription::SFCZVariable )
     {
       // supported scalars double, float, int, long64, long long, short, bool
       if( subtype->getType() == TypeDescription::double_type ||
-  	  subtype->getType() == TypeDescription::float_type ||
-	  subtype->getType() == TypeDescription::int_type ||
-  	  subtype->getType() == TypeDescription::long64_type ||
-  	  subtype->getType() == TypeDescription::bool_type) {
-//  	  subtype->getType() == TypeDescription::short_int_type ||
-	if( sNames.size() != 0 )
-	  sNames += " ";
-	sNames += names[i];
-	if( sVar.get() == "" ){ sVar.set( names[i].c_str() ); }
-	if( sVar.get() == names[i].c_str()){
-	  type = td;
-	  matches = true;
-	} else {
-	  if( index == -1) {index = i;}
-	}
-      }	
+          subtype->getType() == TypeDescription::float_type ||
+          subtype->getType() == TypeDescription::int_type ||
+          subtype->getType() == TypeDescription::long64_type ||
+          subtype->getType() == TypeDescription::bool_type) {
+//        subtype->getType() == TypeDescription::short_int_type ||
+        if( sNames.size() != 0 )
+          sNames += " ";
+        sNames += names[i];
+        if( sVar.get() == "" ){ sVar.set( names[i].c_str() ); }
+        if( sVar.get() == names[i].c_str()){
+          type = td;
+          matches = true;
+        } else {
+          if( index == -1) {index = i;}
+        }
+      } 
     }
   }
 
