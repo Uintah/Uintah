@@ -207,11 +207,24 @@ GeomColoredCylinders::io(Piostream& stream)
   Pio(stream, nv_);
   Pio(stream, points_);
   Pio(stream, colors_);
+  Pio(stream, indices_);
   stream.end_class();
 }
 
-void GeomColoredCylinders::add(const Point& p1, MaterialHandle c1,
-			       const Point& p2, MaterialHandle c2)
+
+void
+GeomColoredCylinders::add(const Point& p1, const Point& p2)
+{
+  if ((p1 - p2).length2() > 1.0e-12)
+  {
+    points_.push_back(p1);
+    points_.push_back(p2);
+  }
+}
+
+void
+GeomColoredCylinders::add(const Point& p1, MaterialHandle c1,
+			  const Point& p2, MaterialHandle c2)
 {
   if ((p1 - p2).length2() > 1.0e-12)
   {
@@ -219,6 +232,19 @@ void GeomColoredCylinders::add(const Point& p1, MaterialHandle c1,
     points_.push_back(p2);
     colors_.push_back(c1);
     colors_.push_back(c2);
+  }
+}
+
+void
+GeomColoredCylinders::add(const Point& p1, float index1,
+			  const Point& p2, float index2)
+{
+  if ((p1 - p2).length2() > 1.0e-12)
+  {
+    points_.push_back(p1);
+    points_.push_back(p2);
+    indices_.push_back(index1);
+    indices_.push_back(index2);
   }
 }
 

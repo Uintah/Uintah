@@ -82,8 +82,9 @@ protected:
   double radius_;
   int  nu_;
   int  nv_;
-  vector <Point> points_;
-  vector <MaterialHandle> colors_;
+  vector<Point> points_;
+  vector<MaterialHandle> colors_;
+  vector<float> indices_;
 
 public:
   GeomColoredCylinders();
@@ -93,8 +94,11 @@ public:
   virtual GeomObj* clone();
   virtual void get_bounds(BBox&);
 
+  void add(const Point &p0, const Point &p1);
   void add(const Point &p0, MaterialHandle c0,
 	   const Point &p1, MaterialHandle c1);
+  void add(const Point &p0, float index0,
+	   const Point &p1, float index1);
   void set_radius(double val) { radius_ = val; reset_bbox(); }
   void set_nu_nv(int nu, int nv);
 
