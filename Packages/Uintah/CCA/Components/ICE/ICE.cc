@@ -833,7 +833,7 @@ void ICE::actuallyInitialize(const ProcessorGroup*,
       //  Adjust pressure and Temp field if g != 0
       //  so fields are thermodynamically consistent.
       if ((grav.x() !=0 || grav.y() != 0.0 || grav.z() != 0.0))  {
-        hydrostaticPressureAdjustment(patch, 
+        hydrostaticPressureAdjustment(patch,
                                       rho_micro[SURROUND_MAT], press_CC);
 
         setBC(press_CC, rho_micro[SURROUND_MAT], "Pressure",patch,0);
@@ -3637,7 +3637,7 @@ void ICE::qInfluxFirst(const CCVariable<fflux>& q_out,
             
 CAVEAT:     Only works -gravity.x(), -gravity.y() and -gravity.z()           
 _______________________________________________________________________ */
-void   ICE::hydrostaticPressureAdjustment(const Patch* patch, 
+void   ICE::hydrostaticPressureAdjustment(const Patch* patch,
                           const CCVariable<double>& rho_micro_CC,
                                 CCVariable<double>& press_CC)
 {
@@ -3648,9 +3648,14 @@ void   ICE::hydrostaticPressureAdjustment(const Patch* patch,
                   //ONLY WORKS ON ONE PATCH  Press_ref_* will have to change
   double press_hydro;
   double dist_from_p_ref;
-  int press_ref_x  = highIndex.x();      // PRESS REFERENCE LOCATION HARDWIRED
-  int press_ref_y  = highIndex.y();
-  int press_ref_z  = highIndex.z();
+  IntVector HighIndex;
+  IntVector L;
+  const Level* level= patch->getLevel();
+  level->findIndexRange(L, HighIndex);
+  int press_ref_x = HighIndex.x() -2;   // we want the interiorCellHighIndex 
+  int press_ref_y = HighIndex.y() -2;   // therefore we subtract off 2
+  int press_ref_z = HighIndex.z() -2;
+
   //__________________________________
   //  X direction
   if (gravity.x() != 0.)  {
