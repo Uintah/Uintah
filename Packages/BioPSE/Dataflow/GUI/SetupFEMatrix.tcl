@@ -35,7 +35,9 @@ itcl_class BioPSE_Forward_SetupFEMatrix {
     }
     method set_defaults {} {
 	global $this-UseCondTCL
+	global $this-UseBasisTCL
 	set $this-UseCondTCL 1
+	set $this-UseBasisTCL 0
     }
     method ui {} {
         set w .ui[modname]
@@ -49,8 +51,12 @@ itcl_class BioPSE_Forward_SetupFEMatrix {
         frame $w.f
         pack $w.f -padx 2 -pady 2 -side top -expand yes
 	global $this-UseCondTCL
-	checkbutton $w.f.b -text "Use Conductivities" -variable $this-UseCondTCL -onvalue 1 -offvalue 0
-	pack $w.f.b -side top -expand 1 -fill x
+	checkbutton $w.f.c -text "Use Conductivities" \
+	    -variable $this-UseCondTCL
+	global $this-UseBasisTCL
+	checkbutton $w.f.b -text "Use Conductivity Basis Matrices" \
+	    -variable $this-UseBasisTCL
+	pack $w.f.c $w.f.b -side top -expand 1 -fill x
 	pack $w.f -expand 1 -fill x
     }
 }
