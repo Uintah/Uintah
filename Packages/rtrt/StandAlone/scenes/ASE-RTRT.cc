@@ -6,12 +6,14 @@
 #include <Packages/rtrt/Core/Grid.h>
 #include <Packages/rtrt/Core/Group.h>
 #include <Packages/rtrt/Core/Tri.h>
+#include <Packages/rtrt/Core/TexturedTri.h>
 #include <Packages/rtrt/Core/Phong.h>
 #include <Packages/rtrt/Core/Scene.h>
 #include <Packages/rtrt/Core/Camera.h>
 #include <Packages/rtrt/Core/Plane.h>
 #include <Packages/rtrt/Core/Light.h>
 #include <Packages/rtrt/Core/ASETokens.h>
+#include <Packages/rtrt/Core/ImageMaterial.h>
 #include <fstream>
 #include <iostream>
 #include <stdlib.h>
@@ -20,9 +22,13 @@ using namespace SCIRun;
 using namespace rtrt;
 using namespace std;
 
-Material *default_material = (Material*) new Phong(Color(0,0,0),
-                                                   Color(.6,1,.4),
-                                                   Color(0,0,0), 100, 0);
+Material *default_material = 
+(Material*) new ImageMaterial("/local/sci/raid0/moulding/stadium.ase-dir2/texture/Tex\ Cancha.raw",
+                              ImageMaterial::Clamp,
+                              ImageMaterial::Clamp,
+                              Color(0,0,0),
+                              1,
+                              Color(0,0,0), 100);
 
 Array1<Material*> ase_matls;
 
@@ -31,7 +37,9 @@ ConvertASEFileToRTRTObject(ASEFile &infile, Group *scene)
 {
   token_list *children1, *children2, *children3;
   vector<float>    *v1=0;
+  vector<float>    *v3=0;
   vector<unsigned> *v2=0;
+  vector<unsigned> *v4=0;
   unsigned loop1, length1;
   unsigned loop2, length2;
   unsigned loop3, length3;
@@ -50,15 +58,19 @@ ConvertASEFileToRTRTObject(ASEFile &infile, Group *scene)
 	    if ((*children3)[loop3]->GetMoniker() == "*MESH_VERTEX_LIST") {
 	      v1 = ((MeshVertexListToken*)
 		    ((*children3)[loop3]))->GetVertices();
-	      if (v1 && v2)
-		break;
 	    } else if ((*children3)[loop3]->GetMoniker() == 
 		       "*MESH_FACE_LIST") {
 	      v2 = ((MeshFaceListToken*)
 		    ((*children3)[loop3]))->GetFaces();
-	      if (v1 && v2)
-		break;
-	    }
+	    } else if ((*children3)[loop3]->GetMoniker() ==
+                       "*MESH_TVERTLIST") {
+              v3 = ((MeshTVertListToken*)
+                    ((*children3)[loop3]))->GetTVertices();
+            } else if ((*children3)[loop3]->GetMoniker() ==
+                       "*MESH_TFACELIST") {
+              v4 = ((MeshTFaceListToken*)
+                    ((*children3)[loop3]))->GetTFaces();
+            }
 	  }
 	  if (v1 && v2) {
 	    matl_index++;
@@ -72,24 +84,58 @@ ConvertASEFileToRTRTObject(ASEFile &infile, Group *scene)
 	      findex2 = (*v2)[index++]*3;
 	      findex3 = (*v2)[index]*3;
 	      
-	      Object *tri = new Tri( ase_matls[matl_index],
-		                     Point((*v1)[findex1],
-					   (*v1)[findex1+1],
-					   (*v1)[findex1+2]),
-				     
-				     Point((*v1)[findex2],
-					   (*v1)[findex2+1],
-					   (*v1)[findex2+2]),
-				     
-				     Point((*v1)[findex3],
-					   (*v1)[findex3+1],
-					   (*v1)[findex3+2]) );
-	      group->add(tri);
+              if (v3 && v4) {
+                TexturedTri *tri = new TexturedTri( default_material,
+                                                    Point((*v1)[findex1],
+                                                          (*v1)[findex1+1],
+                                                          (*v1)[findex1+2]),
+                                                    
+                                                    Point((*v1)[findex2],
+                                                          (*v1)[findex2+1],
+                                                          (*v1)[findex2+2]),
+                                                    
+                                                    Point((*v1)[findex3],
+                                                          (*v1)[findex3+1],
+                                                          (*v1)[findex3+2]) );
+                
+                index = loop4*3;
+                findex1 = (*v4)[index++]*3;
+                findex2 = (*v4)[index++]*3;
+                findex3 = (*v4)[index]*3;
+                tri->set_texcoords( Point((*v3)[findex1],
+                                         (*v3)[findex1+1],
+                                         (*v3)[findex2+2]),
+
+                                   Point((*v3)[findex2],
+                                         (*v3)[findex2+1],
+                                         (*v3)[findex2+2]),
+                                   
+                                   Point((*v3)[findex3],
+                                         (*v3)[findex3+1],
+                                         (*v3)[findex3+2]) );
+                group->add(tri);
+              } else {
+                Tri *tri = new Tri( ase_matls[matl_index],
+                                    Point((*v1)[findex1],
+                                          (*v1)[findex1+1],
+                                          (*v1)[findex1+2]),
+                                    
+                                    Point((*v1)[findex2],
+                                          (*v1)[findex2+1],
+                                          (*v1)[findex2+2]),
+                                    
+                                    Point((*v1)[findex3],
+                                             (*v1)[findex3+1],
+                                          (*v1)[findex3+2]) );
+                group->add(tri);
+              }
 	    }
 	    scene->add(group);
 	  }
 	  v1 = 0;
-	  v2 = 0;	  
+          v2 = 0;
+          v3 = 0;
+          v4 = 0;
 	}
       }
     }

@@ -98,6 +98,7 @@ SRCS += $(SRCDIR)/Worker.cc \
 	$(SRCDIR)/prefilter.cc \
 	$(SRCDIR)/Token.cc  \
 	$(SRCDIR)/HierarchicalGrid.cc \
+	$(SRCDIR)/TexturedTri.cc \
 	$(SRCDIR)/TimeCycleMaterial.cc 
 
 PSELIBS :=  \

@@ -525,6 +525,8 @@ class MeshTVertListToken : public Token
     str << "}" << endl;
   }
 
+  vector<float> *GetTVertices() { return &tvertices_; }
+
   Token *MakeToken() { return new MeshTVertListToken(); }
 };
 
@@ -666,6 +668,8 @@ class MeshTFaceListToken : public Token
     Indent(str);
     str << "}" << endl;
   }
+
+  vector<unsigned> *GetTFaces() { return &tfaces_; }
 
   virtual Token *MakeToken() { return new MeshTFaceListToken(); }
 };
