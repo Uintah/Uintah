@@ -46,6 +46,7 @@ public:
 
   virtual void execute() 
   {
+    d_mat.clear();
     readVector();
     fstream dipfs(dipoleFile);
 
