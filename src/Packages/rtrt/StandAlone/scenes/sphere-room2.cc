@@ -10,7 +10,9 @@
 
 #include <Packages/rtrt/Core/Satellite.h>
 #include <Packages/rtrt/Core/PortalParallelogram.h>
+#include <Packages/rtrt/Core/Parallelogram2.h>
 #include <Packages/rtrt/Core/RingSatellite.h>
+#include <Packages/rtrt/Core/TexturedTri2.h>
 
 #include <Packages/rtrt/Core/Group.h>
 #include <Packages/rtrt/Core/Camera.h>
@@ -18,6 +20,7 @@
 #include <Packages/rtrt/Core/Light.h>
 #include <Packages/rtrt/Core/Light2.h>
 #include <Packages/rtrt/Core/Grid2.h>
+#include <Packages/rtrt/Core/BV1.h>
 
 #include <iostream>
 #include <math.h>
@@ -26,7 +29,7 @@ using namespace rtrt;
 using namespace std;
 
 #define RENDERWALLS            1
-#define RENDERPLANETS          0 
+#define RENDERPLANETS          1
 #define DOORWIDTH              1.5
 #define DOORHEIGHT             2.3
 #define DOOROFFSET             5.25
@@ -124,6 +127,8 @@ Scene *make_scene(int /*argc*/, char* /*argv*/[], int /*nworkers*/)
   //Grid2 *solar_system = new Grid2(galaxy_room,8);
 
   //galaxy_room->add( solar_system );
+  BV1 *room_grid = new BV1();
+  room_grid->add(galaxy_room);
 
   Camera cam( Point(10,0,1.8), 
               Point(9,ROOMRADIUS,1.8), 
@@ -138,7 +143,7 @@ Scene *make_scene(int /*argc*/, char* /*argv*/[], int /*nworkers*/)
   Color cdown(0.82, 0.62, 0.62);
   Color cup(0.1, 0.3, 0.8);
   rtrt::Plane groundplane ( Point(0, 0, 0), Vector(0, 0, 1) );
-  Scene* scene=new Scene(galaxy_room, cam,
+  Scene* scene=new Scene(room_grid, cam,
                          bgcolor, cdown, cup, groundplane,
                          ambient_scale, Constant_Ambient);
   scene->select_shadow_mode(No_Shadows);
@@ -205,16 +210,15 @@ Scene *make_scene(int /*argc*/, char* /*argv*/[], int /*nworkers*/)
   BBox bbox;
 
 
-
   // galaxy room
 
 #if RENDERWALLS
-  Parallelogram *floor = new Parallelogram(holo0, 
-                                           Point(ROOMOFFSETX,
-                                                 ROOMOFFSETY,
-                                                 ROOMFLOOR),
-                                           Vector(ROOMRADIUS*2,0,0),
-                                           Vector(0,ROOMRADIUS*2,0));
+  Parallelogram2 *floor = new Parallelogram2(holo0, 
+                                             Point(ROOMOFFSETX,
+                                                   ROOMOFFSETY,
+                                                   ROOMFLOOR),
+                                             Vector(ROOMRADIUS*2,0,0),
+                                             Vector(0,ROOMRADIUS*2,0));
 
   Parallelogram *ceiling = new Parallelogram(holo0, 
                                              Point(ROOMOFFSETX,
@@ -224,11 +228,11 @@ Scene *make_scene(int /*argc*/, char* /*argv*/[], int /*nworkers*/)
                                              Vector(0,ROOMRADIUS*2,0));
 
   // south
-  Parallelogram *wall0 = new Parallelogram(holo1, 
-                                           Point(ROOMOFFSETX,ROOMOFFSETY,
-                                                 ROOMFLOOR),
-                                           Vector(ROOMRADIUS*2,0,0),
-                                           Vector(0,0,ROOMHEIGHT));
+  Parallelogram2 *wall0 = new Parallelogram2(holo1, 
+                                             Point(ROOMOFFSETX,ROOMOFFSETY,
+                                                   ROOMFLOOR),
+                                             Vector(ROOMRADIUS*2,0,0),
+                                             Vector(0,0,ROOMHEIGHT));
   // north
   Parallelogram *wall1 = new Parallelogram(holo1, \
                                            Point(ROOMRADIUS*2+ROOMOFFSETX,
@@ -304,6 +308,8 @@ Scene *make_scene(int /*argc*/, char* /*argv*/[], int /*nworkers*/)
   galaxy_room->add( outwall1 );
   galaxy_room->add( outwall2 );
   galaxy_room->add( outwall3 );
+  scene->addObjectOfInterest( floor, true );
+  scene->addObjectOfInterest( wall0, true );
 
   // doors
   
