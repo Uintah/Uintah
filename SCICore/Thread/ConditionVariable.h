@@ -2,7 +2,7 @@
 // $Id$
 
 /*
- *  ConditionVariable.h: Condition variable primitive
+ *  ConditionVariable: Condition variable primitive
  *
  *  Written by:
  *   Author: Steve Parker
@@ -23,7 +23,7 @@ CLASS
    ConditionVariable
    
 KEYWORDS
-   ConditionVariable
+   Thread
    
 DESCRIPTION
    Condition variable primitive.  When a thread calls the
@@ -43,16 +43,12 @@ WARNING
    
 ****************************************/
 
-#include <SCICore/Thread/Semaphore.h>
-#include <SCICore/Thread/Mutex.h>
-
 namespace SCICore {
     namespace Thread {
+	class ConditionVariable_private;
+	class Mutex;
+
 	class ConditionVariable {
-	    const char* d_name;
-	    int d_num_waiters;
-	    Mutex d_mutex;
-	    Semaphore d_semaphore;
 	public:
 	    //////////
 	    // Create a condition variable. <i>name</i> should be a static
@@ -83,6 +79,10 @@ namespace SCICore {
 	    // be unblocked. No guarantee is made that these are the same
 	    // N threads that were blocked at the time of the broadcast.
 	    void conditionBroadcast();
+
+	private:
+	    const char* d_name;
+	    ConditionVariable_private* d_priv;
 	};
     }
 }
@@ -91,6 +91,11 @@ namespace SCICore {
 
 //
 // $Log$
+// Revision 1.5  1999/08/25 19:00:47  sparker
+// More updates to bring it up to spec
+// Factored out common pieces in Thread_irix and Thread_pthreads
+// Factored out other "default" implementations of various primitives
+//
 // Revision 1.4  1999/08/25 02:37:55  sparker
 // Added namespaces
 // General cleanups to prepare for integration with SCIRun

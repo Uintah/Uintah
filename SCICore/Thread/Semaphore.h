@@ -2,7 +2,7 @@
 // $Id$
 
 /*
- *  Semaphore.h: Basic semaphore primitive
+ *  Semaphore: Basic semaphore primitive
  *
  *  Written by:
  *   Author: Steve Parker
@@ -22,7 +22,7 @@ CLASS
    Semaphore
    
 KEYWORDS
-   Semaphore
+   Thread
    
 DESCRIPTION
    Counting semaphore synchronization primitive.  A semaphore provides
@@ -44,8 +44,6 @@ namespace SCICore {
 	class Semaphore_private;
 
 	class Semaphore {
-	    Semaphore_private* d_priv;
-	    const char* d_name;
 	public:
 	    //////////
 	    // Create the semaphore, and setup the initial <i>count.name</i>
@@ -58,23 +56,28 @@ namespace SCICore {
 	    ~Semaphore();
 
 	    //////////
-	    // Increment the semaphore count, unblocking up to one
-	    // thread that may be blocked in the <i>down</i> method.
-	    void up();
+	    // Increment the semaphore count, unblocking up to <i>count</i>
+	    // threads that may be blocked in the <i>down</i> method.
+	    void up(int count=1);
     
 	    //////////
-	    // Decrement the semaphore count.  If the count is zero, this
-	    // thread will be blocked until another thread calls the
-	    // <i>up</i> method. The order in which threads will be
-	    // unblocked is not defined, but implementors should give
-	    // preference to those threads that have waited the longest.
-	    void down();
+	    // Decrement the semaphore count by <i>count</i>.  If the
+	    // count is zero, this thread will be blocked until another
+	    // thread calls the <i>up</i> method. The order in which
+	    // threads will be unblocked is not defined, but implementors
+	    // should give preference to those threads that have waited
+	    // the longest.
+	    void down(int count=1);
 
 	    //////////
-	    // Attempt to decrement the semaphore count, but will never
-	    // block. If the count was zero, <i>tryDown</i> will return
-	    // false. Otherwise, <i>tryDown</i> will return true.
+	    // Attempt to decrement the semaphore count by one, but will
+	    // never block. If the count was zero, <i>tryDown</i> will
+	    // return false. Otherwise, <i>tryDown</i> will return true.
 	    bool tryDown();
+
+	private:
+	    Semaphore_private* d_priv;
+	    const char* d_name;
 	};
     }
 }
@@ -83,6 +86,11 @@ namespace SCICore {
 
 //
 // $Log$
+// Revision 1.5  1999/08/25 19:00:51  sparker
+// More updates to bring it up to spec
+// Factored out common pieces in Thread_irix and Thread_pthreads
+// Factored out other "default" implementations of various primitives
+//
 // Revision 1.4  1999/08/25 02:38:00  sparker
 // Added namespaces
 // General cleanups to prepare for integration with SCIRun

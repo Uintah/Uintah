@@ -2,7 +2,7 @@
 // $Id$
 
 /*
- *  CrowdMonitor.h: Multiple reader/single writer locks
+ *  CrowdMonitor: Multiple reader/single writer locks
  *
  *  Written by:
  *   Author: Steve Parker
@@ -22,7 +22,7 @@ CLASS
    CrowdMonitor
    
 KEYWORDS
-   CrowdMonitor
+   Thread
    
 DESCRIPTION
    Multiple reader, single writer synchronization primitive.  Some
@@ -50,21 +50,12 @@ WARNING
 ****************************************/
 
 #include <SCICore/Thread/Mutex.h>
-#include <SCICore/Thread/ConditionVariable.h>
 
 namespace SCICore {
     namespace Thread {
 	class CrowdMonitor_private;
 
 	class CrowdMonitor {
-	    const char* d_name;
-	    ConditionVariable d_write_waiters;
-	    ConditionVariable d_read_waiters;
-	    int d_num_readers_waiting;
-	    int d_num_writers_waiting;
-	    int d_num_readers;
-	    int d_num_writers;
-	    Mutex d_lock;
 	public:
 	    //////////
 	    // Create and initialize the CrowdMonitor. <i>name</i> should
@@ -102,6 +93,10 @@ namespace SCICore {
 	    // called and a <i>writeLock</i> is not held by the calling
 	    // Thread.
 	    void writeUnlock();
+
+	private:
+	    const char* d_name;
+	    CrowdMonitor_private* d_priv;
 	};
     }
 }
@@ -110,6 +105,11 @@ namespace SCICore {
 
 //
 // $Log$
+// Revision 1.5  1999/08/25 19:00:47  sparker
+// More updates to bring it up to spec
+// Factored out common pieces in Thread_irix and Thread_pthreads
+// Factored out other "default" implementations of various primitives
+//
 // Revision 1.4  1999/08/25 02:37:55  sparker
 // Added namespaces
 // General cleanups to prepare for integration with SCIRun

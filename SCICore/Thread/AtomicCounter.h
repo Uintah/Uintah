@@ -2,7 +2,7 @@
 // $Id$
 
 /*
- *  AtomicCounter.h: Thread-safe integer variable
+ *  AtomicCounter: Thread-safe integer variable
  *
  *  Written by:
  *   Author: Steve Parker
@@ -22,7 +22,7 @@ CLASS
    AtomicCounter
    
 KEYWORDS
-   AtomicCounter
+   Thread
    
 DESCRIPTION
    Provides a simple atomic counter.  This will work just like an
@@ -41,14 +41,10 @@ WARNING
    
 ****************************************/
 
-#include <SCICore/Thread/Mutex.h>
-
 namespace SCICore {
     namespace Thread {
+	class AtomicCounter_priv;
 	class AtomicCounter {
-	    const char* d_name;
-	    Mutex d_lock;
-	    int d_value;
 	public:
 	    //////////
 	    // Create an atomic counter with an unspecified initial value.
@@ -92,6 +88,10 @@ namespace SCICore {
 	    //////////
 	    // Set the counter to a new value
 	    void set(int);
+
+	private:
+	    const char* d_name;
+	    AtomicCounter_priv* d_priv;
 	};
     }
 }
@@ -100,6 +100,11 @@ namespace SCICore {
 
 //
 // $Log$
+// Revision 1.5  1999/08/25 19:00:46  sparker
+// More updates to bring it up to spec
+// Factored out common pieces in Thread_irix and Thread_pthreads
+// Factored out other "default" implementations of various primitives
+//
 // Revision 1.4  1999/08/25 02:37:54  sparker
 // Added namespaces
 // General cleanups to prepare for integration with SCIRun

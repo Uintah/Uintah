@@ -2,7 +2,7 @@
 // $Id$
 
 /*
- *  WorkQueue.h: Manage assignments of work
+ *  WorkQueue: Manage assignments of work
  *
  *  Written by:
  *   Author: Steve Parker
@@ -22,7 +22,7 @@ CLASS
    WorkQueue
    
 KEYWORDS
-   WorkQueue
+   Thread, Work
    
 DESCRIPTION
    Doles out work assignment to various worker threads.  Simple
@@ -37,8 +37,8 @@ WARNING
    
 ****************************************/
 
-#include <SCICore/Thread/Mutex.h>
 #include <SCICore/Thread/ConditionVariable.h>
+#include <SCICore/Thread/Mutex.h>
 #include <vector>
 
 namespace SCICore {
@@ -46,23 +46,7 @@ namespace SCICore {
 	struct WorkQueue_private;
 	
 	class WorkQueue {
-	    WorkQueue_private* d_priv;
-	    const char* d_name;
-	    int d_num_threads;
-	    int d_total_assignments;
-	    int d_granularity;
-	    vector<int> d_assignments;
-	    
-	    int d_num_waiting;
-	    bool d_done;
-	    bool d_dynamic;
-	    
-	    void init();
-	    void fill();
-	    WorkQueue(const WorkQueue& copy);
-	    WorkQueue& operator=(const WorkQueue&);
 	public:
-	    
 	    //////////
 	    // Make an empty work queue with no assignments.
 	    WorkQueue(const char* name);
@@ -100,11 +84,27 @@ namespace SCICore {
 	    // to the constructor MUST be true. Work should only be added
 	    // by the workers.
 	    void addWork(int nassignments);
-	    
-	    
+
 	    //////////
 	    // Block until the queue is empty
 	    void waitForEmpty();
+
+	private:
+	    WorkQueue_private* d_priv;
+	    const char* d_name;
+	    int d_num_threads;
+	    int d_total_assignments;
+	    int d_granularity;
+	    std::vector<int> d_assignments;
+	    
+	    int d_num_waiting;
+	    bool d_done;
+	    bool d_dynamic;
+	    
+	    void init();
+	    void fill();
+	    WorkQueue(const WorkQueue& copy);
+	    WorkQueue& operator=(const WorkQueue&);
 	};
     }
 }
@@ -113,6 +113,11 @@ namespace SCICore {
 
 //
 // $Log$
+// Revision 1.5  1999/08/25 19:00:53  sparker
+// More updates to bring it up to spec
+// Factored out common pieces in Thread_irix and Thread_pthreads
+// Factored out other "default" implementations of various primitives
+//
 // Revision 1.4  1999/08/25 02:38:03  sparker
 // Added namespaces
 // General cleanups to prepare for integration with SCIRun

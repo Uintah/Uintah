@@ -2,7 +2,7 @@
 // $Id$
 
 /*
- *  Parallel.h: Automatically instantiate several threads
+ *  Parallel: Automatically instantiate several threads
  *
  *  Written by:
  *   Author: Steve Parker
@@ -22,7 +22,7 @@ CLASS
    Parallel
    
 KEYWORDS
-   Parallel
+   Thread
    
 DESCRIPTION
    Helper class to make instantiating threads to perform a parallel
@@ -38,24 +38,23 @@ WARNING
 
 namespace SCICore {
     namespace Thread {
-	template<class T>
-	    class Parallel  : public ParallelBase {
-		T* d_obj;
-		void (T::*d_pmf)(int);
-	    protected:
-		virtual void run(int proc);
-	    public:
-		//////////
-		// Create a parallel object, using the specified member
-		// function instead of <i>parallel</i>.  This will
-		// typically be used like:
-		// <pre>Thread::parallel(Parallel&ltMyClass> (this, &ampMyClass::mymemberfn), nthreads)</pre>
-		Parallel(T* obj, void (T::*pmf)(int));
-    
-		//////////
-		// Destroy the Parallel object - the threads will remain alive.
-		~Parallel();
-	    };
+	template<class T> class Parallel  : public ParallelBase {
+	public:
+	    //////////
+	    // Create a parallel object, using the specified member
+	    // function instead of <i>parallel</i>.  This will
+	    // typically be used like:
+	    // <pre>Thread::parallel(Parallel&ltMyClass> (this, &ampMyClass::mymemberfn), nthreads)</pre>
+	    Parallel(T* obj, void (T::*pmf)(int));
+	    
+	    //////////
+	    // Destroy the Parallel object - the threads will remain alive.
+	    virtual ~Parallel();
+	    T* d_obj;
+	    void (T::*d_pmf)(int);
+	protected:
+	    virtual void run(int proc);
+	};
     }
 }
 
@@ -73,13 +72,18 @@ SCICore::Thread::Parallel<T>::Parallel(T* obj, void (T::*pmf)(int))
 }
 
 template<class T>
-Parallel< T>::~Parallel()
+SCICore::Thread::Parallel<T>::~Parallel()
 {
 }
 
 #endif
 //
 // $Log$
+// Revision 1.4  1999/08/25 19:00:49  sparker
+// More updates to bring it up to spec
+// Factored out common pieces in Thread_irix and Thread_pthreads
+// Factored out other "default" implementations of various primitives
+//
 // Revision 1.3  1999/08/25 02:37:57  sparker
 // Added namespaces
 // General cleanups to prepare for integration with SCIRun

@@ -2,7 +2,7 @@
 // $Id$
 
 /*
- *  Barrier.h: Barrier synchronization primitive
+ *  Barrier: Barrier synchronization primitive
  *
  *  Written by:
  *   Author: Steve Parker
@@ -22,7 +22,7 @@ CLASS
    RecursiveMutex
    
 KEYWORDS
-   RecursiveMutex
+   Thread
    
 DESCRIPTION
    Provides a recursive <b>Mut</b>ual <b>Ex</b>clusion primitive.  Atomic
@@ -47,10 +47,6 @@ namespace SCICore {
 	class RecursiveMutex_private;
 
 	class RecursiveMutex {
-	    Mutex d_my_lock;
-	    RecursiveMutex_private* d_priv;
-	    Thread* d_owner;
-	    int d_lock_count;
 	public:
 	    //////////
 	    // Create the Mutex.  The Mutex is allocated in the unlocked
@@ -72,6 +68,10 @@ namespace SCICore {
 	    // Release the Mutex, unblocking any other threads that are
 	    // blocked waiting for the Mutex.
 	    void unlock();
+
+	private:
+	    const char* d_name;
+	    RecursiveMutex_private* d_priv;
 	};
     }
 }
@@ -80,6 +80,11 @@ namespace SCICore {
 
 //
 // $Log$
+// Revision 1.5  1999/08/25 19:00:49  sparker
+// More updates to bring it up to spec
+// Factored out common pieces in Thread_irix and Thread_pthreads
+// Factored out other "default" implementations of various primitives
+//
 // Revision 1.4  1999/08/25 02:37:59  sparker
 // Added namespaces
 // General cleanups to prepare for integration with SCIRun

@@ -14,15 +14,23 @@ static char *id="$Id$";
  *  Copyright (C) 1997 SCI Group
  */
 
-#include "Barrier.h"
-#include "ConditionVariable.h"
-#include "Mutex.h"
-#include "Semaphore.h"
-#include "ThreadGroup.h"
-#include "Thread.h"
+#include <SCICore/Thread/Thread.h>
+#include <SCICore/Thread/AtomicCounter.h>
+#include <SCICore/Thread/Barrier.h>
+#include <SCICore/Thread/ConditionVariable.h>
+#include <SCICore/Thread/Mutex.h>
+#include <SCICore/Thread/Semaphore.h>
+#include <SCICore/Thread/ThreadGroup.h>
+#include <SCICore/Thread/WorkQueue.h>
 #include <iostream.h>
 #include <stdio.h>
 #include <stdlib.h>
+
+struct WorkQueue_private {
+    WorkQueue_private();
+    AtomicCounter counter;
+};
+
 
 extern "C" {
 #include <semaphore.h>
@@ -75,14 +83,18 @@ static void lock_scheduler() {
     }
 }
 
-static void unlock_scheduler() {
+static
+void
+unlock_scheduler() {
     if(pthread_mutex_unlock(&sched_lock)){
 	perror("pthread_mutex_unlock");
 	Thread::niceAbort();
     }
 }
 
-static int push_bstack(Thread_private* p, int state, const char* name) {
+static
+int
+push_bstack(Thread_private* p, int state, const char* name) {
     int oldstate=p->state;
     p->state=state;
     p->blockstack[p->bstacksize]=name;
@@ -94,7 +106,9 @@ static int push_bstack(Thread_private* p, int state, const char* name) {
     return oldstate;
 }
 
-static void pop_bstack(Thread_private* p, int oldstate) {
+static
+void
+pop_bstack(Thread_private* p, int oldstate) {
     p->bstacksize--;
     p->state=oldstate;
 }
@@ -139,7 +153,8 @@ Barrier::~Barrier()
     delete d_priv;
 }
 
-void Barrier::wait()
+void
+Barrier::wait()
 {
     int n=d_threadGroup?d_threadGroup->numActive(true):d_numThreads;
     Thread_private* p=Thread::currentThread()->d_priv;
@@ -182,7 +197,8 @@ Mutex::~Mutex()
     delete d_priv;
 }
 
-void Mutex::unlock()
+void
+Mutex::unlock()
 {
     if(pthread_mutex_unlock(&d_priv->mutex) != 0){
 	perror("pthread_mutex_unlock");
@@ -190,7 +206,8 @@ void Mutex::unlock()
     }
 }
 
-void Mutex::lock()
+void
+Mutex::lock()
 {
     if(pthread_mutex_lock(&d_priv->mutex) != 0){
 	perror("pthread_mutex_lock");
@@ -198,7 +215,8 @@ void Mutex::lock()
     }
 }
 
-bool Mutex::tryLock()
+bool
+Mutex::tryLock()
 {
     if(pthread_mutex_trylock(&d_priv->mutex) != 0){
 	if(errno == EAGAIN || errno == EINTR)
@@ -232,7 +250,8 @@ Semaphore::~Semaphore()
     delete d_priv;
 }
 
-void Semaphore::up()
+void
+Semaphore::up()
 {
     if(sem_post(&d_priv->sem) != 0){
 	perror("sem_post");
@@ -240,7 +259,8 @@ void Semaphore::up()
     }
 }
 
-void Semaphore::down()
+void
+Semaphore::down()
 {
     if(sem_wait(&d_priv->sem) != 0){
 	perror("sem_wait");
@@ -248,7 +268,8 @@ void Semaphore::down()
     }
 }
 
-bool Semaphore::tryDown()
+bool
+Semaphore::tryDown()
 {
     if(sem_trywait(&d_priv->sem) != 0){
 	if(errno == EAGAIN)
@@ -259,12 +280,14 @@ bool Semaphore::tryDown()
     return true;
 }
 
-void ThreadGroup::gangSchedule()
+void
+ThreadGroup::gangSchedule()
 {
     NF
 }
 
-void Thread::checkExit()
+void
+Thread::checkExit()
 {
     lock_scheduler();
     int done=true;
@@ -281,7 +304,8 @@ void Thread::checkExit()
 	Thread::exitAll(0);
 }
 
-Thread* Thread::currentThread()
+Thread*
+Thread::currentThread()
 {
     void* p=pthread_getspecific(thread_key);
     if(!p){
@@ -291,7 +315,8 @@ Thread* Thread::currentThread()
     return (Thread*)p;
 }
 
-void Thread::join()
+void
+Thread::join()
 {
     Thread* us=Thread::currentThread();
     int os=push_bstack(us->d_priv, STATE_JOINING, d_threadname.c_str());
@@ -304,12 +329,14 @@ void Thread::join()
 }
 
 //void Thread::profile(FILE*, FILE*) { NF }
-int Thread::numProcessors()
+int
+Thread::numProcessors()
 {
     return 1;
 }
 
-void Thread_shutdown(Thread* thread)
+void
+Thread_shutdown(Thread* thread)
 {
     Thread_private* priv=thread->d_priv;
 
@@ -353,12 +380,15 @@ void Thread_shutdown(Thread* thread)
     }
 }
 
-void Thread_run(Thread* t)
+void
+Thread_run(Thread* t)
 {
     t->run_body();
 }
 
-static void* run_threads(void* priv_v)
+static
+void*
+run_threads(void* priv_v)
 {
     Thread_private* priv=(Thread_private*)priv_v;
     if(pthread_setspecific(thread_key, priv->thread) != 0){
@@ -373,7 +403,8 @@ static void* run_threads(void* priv_v)
     return 0;
 }
 
-void Thread::os_start(bool)
+void
+Thread::os_start(bool)
 {
     if(!initialized){
 	Thread::initialize();
@@ -405,29 +436,34 @@ void Thread::os_start(bool)
     unlock_scheduler();
 }
 
-void Thread::stop()
+void
+Thread::stop()
 {
     NF
 }
 
-void Thread::resume()
+void
+Thread::resume()
 {
     NF
 }
 
-int Thread::couldBlock(const std::string& why)
+int
+Thread::couldBlock(const std::string& why)
 {
     Thread_private* p=Thread::currentThread()->d_priv;
     return push_bstack(p, STATE_BLOCK_ANY, why.c_str());
 }
 
-void Thread::couldBlockDone(int restore)
+void
+Thread::couldBlockDone(int restore)
 {
     Thread_private* p=Thread::currentThread()->d_priv;
     pop_bstack(p, restore);
 }
 
-void Thread::detach()
+void
+Thread::detach()
 {
     if(sem_post(&d_priv->delete_ready) != 0){
 	perror("sem_post");
@@ -440,17 +476,20 @@ void Thread::detach()
     }
 }
 
-void Thread::setPriority(int)
+void
+Thread::setPriority(int)
 {
     NF
 }
 
-void Thread::exitAll(int)
+void
+Thread::exitAll(int)
 {
     NF
 }
 
-void Thread::initialize()
+void
+Thread::initialize()
 {
     if(pthread_mutex_init(&sched_lock, NULL) != 0){
 	perror("pthread_mutex_init");
@@ -494,41 +533,25 @@ void Thread::initialize()
     initialized=1;
 }
 
-void Thread::yield()
+void
+Thread::yield()
 {
     sched_yield();
 }
 
-void Thread::migrate(int proc)
+void
+Thread::migrate(int proc)
 {
     // Nothing for now...
 }
-
-
-
-#include "WorkQueue.h"
-#include "Thread.h"
-#include <iostream.h>
-#include "AtomicCounter.h"
-#include <stdio.h>
-
-/*
- * Doles out work assignment to various worker threads.  Simple
- * attempts are made at evenly distributing the workload.
- * Initially, assignments are relatively large, and will get smaller
- * towards the end in an effort to equalize the total effort.
- */
-struct WorkQueue_private {
-    WorkQueue_private();
-    AtomicCounter counter;
-};
 
 WorkQueue_private::WorkQueue_private()
     : counter("WorkQueue counter", 0)
 {
 }
 
-void WorkQueue::init()
+void
+WorkQueue::init()
 {
     d_priv->counter.set(0);
     fill();
@@ -561,7 +584,8 @@ WorkQueue::~WorkQueue()
     }
 }
 
-bool WorkQueue::nextAssignment(int& start, int& end)
+bool
+WorkQueue::nextAssignment(int& start, int& end)
 {
     int i=d_priv->counter++;
     if(i >= (int)d_assignments.size())
@@ -571,8 +595,9 @@ bool WorkQueue::nextAssignment(int& start, int& end)
     return true;
 }
 
-void WorkQueue::refill(int new_ta, int new_numThreads,
-		       bool new_dynamic, int new_granularity)
+void
+WorkQueue::refill(int new_ta, int new_numThreads,
+		  bool new_dynamic, int new_granularity)
 {
     if(new_ta == d_totalAssignments && new_numThreads == d_numThreads
        && new_dynamic == d_dynamic && new_granularity == d_granularity){
@@ -585,11 +610,16 @@ void WorkQueue::refill(int new_ta, int new_numThreads,
 	init();
     }
 }
+
 //
 // $Log$
+// Revision 1.4  1999/08/25 19:00:52  sparker
+// More updates to bring it up to spec
+// Factored out common pieces in Thread_irix and Thread_pthreads
+// Factored out other "default" implementations of various primitives
+//
 // Revision 1.3  1999/08/25 02:38:02  sparker
 // Added namespaces
 // General cleanups to prepare for integration with SCIRun
 //
 //
-

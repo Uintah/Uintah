@@ -3,7 +3,7 @@
 static char *id="$Id$";
 
 /*
- *  Thread.h: The thread class
+ *  Thread: The thread class
  *
  *  Written by:
  *   Author: Steve Parker
@@ -14,101 +14,94 @@ static char *id="$Id$";
  *  Copyright (C) 1997 SCI Group
  */
 
-#include "Thread.h"
-#include "ThreadGroup.h"
-#include "Parallel.h"
-#include <Tester/RigorousTest.h>
+#include <SCICore/Thread/Thread.h>
+#include <SCICore/Thread/Parallel.h>
+#include <SCICore/Thread/ThreadGroup.h>
+#include <errno.h>
+#include <iostream.h>
+#include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 #include <sys/types.h>
 #include <unistd.h>
-#include <stdlib.h>
-#include <iostream.h>
-#include <errno.h>
-#include <stdio.h>
 
-
-Thread::~Thread()
+SCICore::Thread::Thread::~Thread()
 {
     if(d_runner){
-        d_runner->d_myThread=0;
+        d_runner->d_my_thread=0;
         delete d_runner;
     }
 }
 
-Thread::Thread(ThreadGroup* g, const std::string& name)
+SCICore::Thread::Thread::Thread(ThreadGroup* g, const char* name)
 {
     d_group=g;
     g->addme(this);
     d_threadname=name;
     d_daemon=false;
     d_detached=false;
-    d_cpu=-1;
-    d_priority=5;
     d_runner=0;
+    d_cpu=-1;
 }
 
-void Thread::run_body()
+void
+SCICore::Thread::Thread::run_body()
 {
     d_runner->run();
 }
 
-Thread::Thread(Runnable* runner, const std::string& name,
+SCICore::Thread::Thread::Thread(Runnable* runner, const char* name,
 	       ThreadGroup* group, bool stopped)
     : d_runner(runner), d_threadname(name), d_group(group)
 {
     if(group == 0){
-        if(!ThreadGroup::s_defaultGroup)
+        if(!ThreadGroup::s_default_group)
 	    Thread::initialize();
-        group=ThreadGroup::s_defaultGroup;
+        group=ThreadGroup::s_default_group;
     }
 
-    d_runner->d_myThread=this;
+    d_runner->d_my_thread=this;
     d_group->addme(this);
     d_daemon=false;
-    d_detached=false;
     d_cpu=-1;
-    d_priority=5;
+    d_detached=false;
     os_start(stopped);
 }
 
-ThreadGroup* Thread::threadGroup()
+SCICore::Thread::ThreadGroup*
+SCICore::Thread::Thread::getThreadGroup()
 {
     return d_group;
 }
 
-void Thread::setDaemon(bool to)
+void
+SCICore::Thread::Thread::setDaemon(bool to)
 {
     d_daemon=to;
     checkExit();
 }
 
-int Thread::getPriority() const
-{
-    return d_priority;
-}
-
-bool Thread::isDaemon() const
+bool
+SCICore::Thread::Thread::isDaemon() const
 {
     return d_daemon;
 }
 
-bool Thread::isDetached() const
+bool
+SCICore::Thread::Thread::isDetached() const
 {
     return d_detached;
 }
 
-const std::string& Thread::threadName() const
+const char*
+SCICore::Thread::Thread::getThreadName() const
 {
     return d_threadname;
 }
 
-Thread_private* Thread::getPrivate() const
-{
-    return d_priv;
-}
-
-ThreadGroup* Thread::parallel(const ParallelBase& helper, int nthreads,
-			      bool block, ThreadGroup* threadGroup)
+SCICore::Thread::ThreadGroup*
+SCICore::Thread::Thread::parallel(const ParallelBase& helper, int nthreads,
+		 bool block, ThreadGroup* threadGroup)
 {
     ThreadGroup* newgroup=new ThreadGroup("Parallel group",
     				      threadGroup);
@@ -130,18 +123,19 @@ ThreadGroup* Thread::parallel(const ParallelBase& helper, int nthreads,
     return newgroup;
 }
 
-void Thread::niceAbort()
+void
+SCICore::Thread::Thread::niceAbort()
 {
     for(;;){
         char action;
-        Thread* s=Thread::currentThread();
+        Thread* s=Thread::self();
 #if 0
         if(s->d_abortHandler){
 	    //action=s->d_abortHandler->threadAbort(s);
         } else {
 #endif
 	    fprintf(stderr, "Abort signalled by pid: %d\n", getpid());
-	    fprintf(stderr, "Occured for thread:\n \"%s\"", s->d_threadname.c_str());
+	    fprintf(stderr, "Occured for thread:\n \"%s\"", s->d_threadname);
 	    fprintf(stderr, "resume(r)/dbx(d)/cvd(c)/kill thread(k)/exit(e)? ");
 	    fflush(stderr);
 	    char buf[100];
@@ -169,7 +163,7 @@ void Thread::niceAbort()
     	system(command);	
     	break;
         case 'k': case 'K':
-    	exit(1);
+	exit();
     	break;
         case 'e': case 'E':
     	exitAll(1);
@@ -180,11 +174,29 @@ void Thread::niceAbort()
     }
 }
 
+int
+SCICore::Thread::Thread::couldBlock(const char* why)
+{
+    Thread_private* p=Thread::self()->d_priv;
+    return push_bstack(p, BLOCK_ANY, why);
+}
+
+void
+SCICore::Thread::Thread::couldBlockDone(int restore)
+{
+    Thread_private* p=Thread::self()->d_priv;
+    pop_bstack(p, restore);
+}
+
 //
 // $Log$
+// Revision 1.4  1999/08/25 19:00:51  sparker
+// More updates to bring it up to spec
+// Factored out common pieces in Thread_irix and Thread_pthreads
+// Factored out other "default" implementations of various primitives
+//
 // Revision 1.3  1999/08/25 02:38:00  sparker
 // Added namespaces
 // General cleanups to prepare for integration with SCIRun
 //
 //
-

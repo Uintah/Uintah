@@ -2,7 +2,7 @@
 // $Id$
 
 /*
- *  Mailbox.h: Threadsafe FIFO
+ *  Mailbox: Threadsafe FIFO
  *
  *  Written by:
  *   Author: Steve Parker
@@ -22,7 +22,7 @@ CLASS
    Mailbox
    
 KEYWORDS
-   Mailbox
+   Thread, FIFO
    
 DESCRIPTION
    A thread-safe, fixed-length FIFO queue which allows multiple
@@ -36,27 +36,15 @@ WARNING
    
 ****************************************/
 
-#include <SCICore/Thread/Thread.h>
-#include <SCICore/Thread/Semaphore.h>
-#include <SCICore/Thread/Mutex.h>
 #include <SCICore/Thread/ConditionVariable.h>
+#include <SCICore/Thread/Mutex.h>
+#include <SCICore/Thread/Semaphore.h>
+#include <SCICore/Thread/Thread.h>
 #include <vector>
 
 namespace SCICore {
     namespace Thread {
 	template<class Item> class Mailbox {
-	    const char* d_name;
-	    Mutex d_mutex;
-	    vector<Item> d_ring_buffer;
-	    int d_head;
-	    int d_len;
-	    int d_max;
-	    ConditionVariable d_empty;
-	    ConditionVariable d_full;
-	    Semaphore d_rendezvous;
-	    int d_send_wait;
-	    int d_recv_wait;
-	    inline int ringNext(int inc);
 	public:
 	    //////////
 	    // Create a mailbox with a maximum queue size of <i>size</i>
@@ -113,6 +101,20 @@ namespace SCICore {
 	    //////////
 	    // Return the number of items currently in the queue.
 	    int numItems() const;
+
+	private:
+	    const char* d_name;
+	    Mutex d_mutex;
+	    vector<Item> d_ring_buffer;
+	    int d_head;
+	    int d_len;
+	    int d_max;
+	    ConditionVariable d_empty;
+	    ConditionVariable d_full;
+	    Semaphore d_rendezvous;
+	    int d_send_wait;
+	    int d_recv_wait;
+	    inline int ringNext(int inc);
 	};
     }
 }
@@ -254,6 +256,11 @@ SCICore::Thread::Mailbox<Item>::numItems() const
 
 //
 // $Log$
+// Revision 1.4  1999/08/25 19:00:48  sparker
+// More updates to bring it up to spec
+// Factored out common pieces in Thread_irix and Thread_pthreads
+// Factored out other "default" implementations of various primitives
+//
 // Revision 1.3  1999/08/25 02:37:56  sparker
 // Added namespaces
 // General cleanups to prepare for integration with SCIRun
