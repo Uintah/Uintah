@@ -36,11 +36,13 @@ namespace Uintah {
     
    class SingleProcessorLoadBalancer : public LoadBalancer, public UintahParallelComponent {
    public:
-      SingleProcessorLoadBalancer(const ProcessorGroup* myworld);
-      ~SingleProcessorLoadBalancer();
-      virtual void assignResources(DetailedTasks& tg, const ProcessorGroup*);
-      virtual int getPatchwiseProcessorAssignment(const Patch* patch,
+     SingleProcessorLoadBalancer(const ProcessorGroup* myworld);
+     ~SingleProcessorLoadBalancer();
+     virtual void assignResources(DetailedTasks& tg, const ProcessorGroup*);
+     virtual int getPatchwiseProcessorAssignment(const Patch* patch,
 						  const ProcessorGroup* resources);
+     virtual const PatchSet* createPerProcessorPatchSet(const LevelP& level,
+							const ProcessorGroup* resources);
    private:
       SingleProcessorLoadBalancer(const SingleProcessorLoadBalancer&);
       SingleProcessorLoadBalancer& operator=(const SingleProcessorLoadBalancer&);

@@ -320,24 +320,6 @@ SPRelocate::relocateParticles(const ProcessorGroup*,
     cerr << "Particles crossing patch boundaries: " << total_reloc << '\n';
 }
 
-
-static PatchSet* createPerProcessorPatchset(const ProcessorGroup* world,
-					    LoadBalancer* lb,
-					    const LevelP& level)
-{
-  PatchSet* patches = scinew PatchSet();
-  patches->createEmptySubsets(world->size());
-  for(Level::const_patchIterator iter = level->patchesBegin();
-      iter != level->patchesEnd(); iter++){
-    const Patch* patch = *iter;
-    int proc = lb->getPatchwiseProcessorAssignment(patch, world);
-    ASSERTRANGE(proc, 0, world->size());
-    PatchSubset* subset = patches->getSubset(proc);
-    subset->add(patch);
-  }
-  return patches;
-}
-
 void
 Relocate::scheduleParticleRelocation(Scheduler* sched,
 				     const ProcessorGroup* pg,
@@ -380,7 +362,7 @@ Relocate::scheduleParticleRelocation(Scheduler* sched,
   }
   const PatchSet* patches;
   if(lb)
-    patches = createPerProcessorPatchset(pg, lb, level);
+    patches = lb->createPerProcessorPatchSet(level, pg);
   else
     patches = level->allPatches();
   sched->addTask(t, patches, matls);

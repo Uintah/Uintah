@@ -31,4 +31,9 @@ int SingleProcessorLoadBalancer::getPatchwiseProcessorAssignment(const Patch*,
    return 0;
 }
 
-
+const PatchSet*
+SingleProcessorLoadBalancer::createPerProcessorPatchSet(const LevelP& level,
+							const ProcessorGroup*)
+{
+  return level->allPatches();
+}

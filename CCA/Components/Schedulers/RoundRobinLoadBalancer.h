@@ -36,11 +36,13 @@ namespace Uintah {
     
    class RoundRobinLoadBalancer : public LoadBalancer, public UintahParallelComponent {
    public:
-      RoundRobinLoadBalancer(const ProcessorGroup* myworld);
-      ~RoundRobinLoadBalancer();
-      virtual void assignResources(DetailedTasks& tg, const ProcessorGroup*);
-      virtual int getPatchwiseProcessorAssignment(const Patch* patch,
+     RoundRobinLoadBalancer(const ProcessorGroup* myworld);
+     ~RoundRobinLoadBalancer();
+     virtual void assignResources(DetailedTasks& tg, const ProcessorGroup*);
+     virtual int getPatchwiseProcessorAssignment(const Patch* patch,
 						  const ProcessorGroup* resources);
+     virtual const PatchSet* createPerProcessorPatchSet(const LevelP& level,
+							const ProcessorGroup* resources);
    private:
       RoundRobinLoadBalancer(const RoundRobinLoadBalancer&);
       RoundRobinLoadBalancer& operator=(const RoundRobinLoadBalancer&);
