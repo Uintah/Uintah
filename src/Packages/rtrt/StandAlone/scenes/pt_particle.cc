@@ -215,7 +215,7 @@ void usage(char* me, const char* unknown) {
   cerr<<"  -gdepth <int>           gdepth of grid cells ("
       <<DEFAULT_GDEPTH<<")"<<endl;
   cerr<<"  -cmap <filename>        filename of color map (null)"<<endl;
-  cerr<<"  -env <filename>         filename of environment map (null)"<<endl;
+  cerr<<"  -envmap <filename>      filename of environment map (null)"<<endl;
   cerr<<"  -no_dpy                 turn off GridSpheresDpy display (false)"<<endl;
   cerr<<"  -start <int>            index of starting timestep (0)"<<endl;
   cerr<<"  -inc <int>              timestep load increment  (1)"<<endl;
@@ -283,7 +283,6 @@ int parseFile(char* fname, GridSpheresDpy* dpy, SelectableGroup* timesteps) {
 	  // Position stream for reading first requested timestep
 	  int ts_current=0;
 	  infile.getline(line, MAX_LINE_LEN);
-	  cout<<"Read line="<<line<<endl;
 	  while (!infile.eof()) {
 	    char* token=strtok(line, " ");
 	    if (strcmp(token, "timestep")==0) {
@@ -470,7 +469,7 @@ int parseFile(char* fname, GridSpheresDpy* dpy, SelectableGroup* timesteps) {
 	// Check for a texture data file
 	char* fname=strtok(0, " ");
 	if (!fname) {
-	  cerr<<me<<":  \"textures_file\" requires a filename"<<endl;
+	  cerr<<me<<":  \"texture_file\" requires a filename"<<endl;
 	  return 1;
 	}
 
@@ -527,7 +526,6 @@ int parseFile(char* fname, GridSpheresDpy* dpy, SelectableGroup* timesteps) {
 	    // Position stream for reading next requested timestep
 	    int ts_skipped=0;
 	    infile.getline(line, MAX_LINE_LEN);
-	    cout<<"Read line="<<line<<endl;
 	    while (!infile.eof()) {
 	      char* token=strtok(line, " ");
 	      if (strcmp(token, "timestep")==0) {
@@ -664,7 +662,7 @@ int parseFile(char* fname, GridSpheresDpy* dpy, SelectableGroup* timesteps) {
       meanNrrd=nrrdNew();
       if (nrrdLoad(meanNrrd, m_fname, 0)) {
 	err=biffGet(NRRD);
-	cerr<<me<<":  error loading mean texture:  "<<err<<endl;
+	cerr<<me<<":  error loading mean values:  "<<err<<endl;
 	free(err);
 	biffDone(NRRD);
 	return 1;
@@ -758,7 +756,7 @@ int parseFile(char* fname, GridSpheresDpy* dpy, SelectableGroup* timesteps) {
       cout<<"Loaded "<<ntextures<<" basis textures from \""<<b_fname<<"\""<<endl;
       cout<<"Loaded "<<nvecs<<"x"<<ntextures<<" coefficient matrix from \""
 	  <<c_fname<<"\""<<endl;
-      cout<<"Loaded mean texture from \""<<m_fname<<"\""<<endl;
+      cout<<"Loaded mean values from \""<<m_fname<<"\""<<endl;
       cout<<"Unquantized basis min/max:  "<<b_min<<", "<<b_max<<endl;
       cout<<"Unquantized coefficient min/max:  "<<coeff_min<<", "<<coeff_max<<endl;
     } else
