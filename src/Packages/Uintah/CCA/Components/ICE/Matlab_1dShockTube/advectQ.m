@@ -64,6 +64,7 @@ function [q_slab, gradLim, grad_x] = qAverageFlux(q, rho, rho_slab, rx, grad_x, 
 fprintf('Inside qAverageFlux\n');
 q_slab      = zeros(nCells,1);
 for j = 1:nCells                                                % For cells 1 and nCells, disregard contributions in this matlab code (note: grads=0 there)
+    q_slab(j) = q(j);                                           % Limiter=0, first order upwind scheme
     %    q_slab(j) = q(j) * rho_slab(j) + rho(j) * grad_x(j) * gradLim(j) * rx(j);   % compatible flux fomulation; here q = energy (NOT temperature)
-    q_slab(j) = q(j) + grad_x(j) * gradLim(j) * rx(j);                          % van Leer limiter
+%    q_slab(j) = q(j) + grad_x(j) * gradLim(j) * rx(j);                          % van Leer limiter
 end
