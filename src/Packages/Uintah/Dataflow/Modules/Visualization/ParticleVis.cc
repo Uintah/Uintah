@@ -64,6 +64,8 @@ ParticleVis::ParticleVis(const string& id)
     shaft_rad("shaft_rad", id,this), drawcylinders("drawcylinders", id, this),
     polygons("polygons", id, this),
     show_nth("show_nth", id, this),
+    isFixed("isFixed", id, this),
+    min_("min_", id, this),  max_("max_", id, this),
     MIN_POLYS(8), MAX_POLYS(400),
     MIN_NU(4), MAX_NU(20), MIN_NV(2), MAX_NV(20)
 {
@@ -120,9 +122,16 @@ void ParticleVis::execute()
   }
 
   if(spin1->get(scaleSet)){
-    if( scaleSet.get_rep() != 0)
+    if( scaleSet.get_rep() != 0) {
       hasScale = true;
+      TCL::execute(id + " scalable 1");
+    } else {
+      TCL::execute(id + " scalable 0");
+    }
+  } else {
+    TCL::execute(id + " scalable 0");
   }
+
 
   if(vpin->get(vect)){
     if( vect.get_rep() != 0)
@@ -239,8 +248,9 @@ void ParticleVis::execute()
 	  if( hasScale ) {
 	    double smin = 0, smax = 0;
 	    scaleSet->get_minmax(smin,smax);
- 	    double scalefactor =
- 	      ((*scale_it)[*iter] - smin)/(smax - smin);
+ 	    double scalefactor = 0;
+            if (smax-smin > 1e-10)
+              scalefactor = ((*scale_it)[*iter] - smin)/(smax - smin);
 	    if( scalefactor >= 1e-6 ){
 	      if(!hasTensors){
 		sp = scinew GeomSphere( (*p_it)[*iter],
