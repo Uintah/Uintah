@@ -28,11 +28,13 @@ typedef LockingHandle<Surface> SurfaceHandle;
 #include <Geometry/Point.h>
 
 class TriSurface;
+class PointsSurface;
 class Grid;
 class Surface : public Datatype {
 protected:
     enum Representation {
 	TriSurf,
+	PointsSurf,
 	Other,
     };
     Surface(Representation, int closed);
@@ -67,7 +69,7 @@ public:
     virtual void destroy_grid();
     virtual void destroy_hash();
     TriSurface* getTriSurface();
-
+    PointsSurface* getPointsSurface();
     virtual void get_surfnodes(Array1<NodeHandle>&)=0;
     virtual GeomObj* get_obj(const ColormapHandle&)=0;
 

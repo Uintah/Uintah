@@ -42,12 +42,18 @@ void Surface::destroy_hash() {
     if (pntHash) delete pntHash;
 }
 
-#define SURFACE_VERSION 3
+#define SURFACE_VERSION 4
 
 void Surface::io(Piostream& stream) {
     int version=stream.begin_class("Surface", SURFACE_VERSION);
     Pio(stream, name);
-    if (version >= 3){
+    if (version >= 4){
+	int* btp=(int*)&boundary_type;
+	Pio(stream, rep);
+	Pio(stream, *btp);
+	Pio(stream, boundary_expr);
+    }	
+    if (version == 3){
 	int* btp=(int*)&boundary_type;
 	Pio(stream, *btp);
 	Pio(stream, boundary_expr);
@@ -65,6 +71,13 @@ TriSurface* Surface::getTriSurface()
 {
     if(rep==TriSurf)
 	return (TriSurface*)this;
+    else
+	return 0;
+}
+
+PointsSurface* Surface::getPointsSurface() {
+    if (rep==PointsSurf)
+	return (PointsSurface*)this;
     else
 	return 0;
 }
