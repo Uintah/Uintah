@@ -92,6 +92,12 @@ WARNING
        virtual LoadBalancer* getLoadBalancer();
        virtual void releaseLoadBalancer();
        
+       // Makes and returns a map that maps strings to VarLabels of
+       // that name and a list of material indices for which that
+       // variable is valid (according to d_allcomps in d_graph).
+       virtual VarLabelMaterialMap* makeVarLabelMaterialMap()
+       { return d_graph.makeVarLabelMaterialMap(); }
+
    private:
       void scatterParticles(const ProcessorGroup*,
 			    const Patch* patch,
@@ -157,6 +163,9 @@ WARNING
 
 //
 // $Log$
+// Revision 1.4  2000/12/06 23:57:13  witzel
+// Added makeVarLabelMaterialMap method
+//
 // Revision 1.3  2000/09/28 02:15:51  dav
 // updates due to not sending 0 particles
 //

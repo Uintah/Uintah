@@ -76,9 +76,15 @@ WARNING
 					      const vector<vector<const VarLabel*> >& new_labels,
 					      int numMatls);
 
-       virtual LoadBalancer* getLoadBalancer();
-       virtual void releaseLoadBalancer();
-       
+      virtual LoadBalancer* getLoadBalancer();
+      virtual void releaseLoadBalancer();
+
+      // Makes and returns a map that maps strings to VarLabels of
+      // that name and a list of material indices for which that
+      // variable is valid (according to d_allcomps in graph).
+      virtual VarLabelMaterialMap* makeVarLabelMaterialMap()
+      { return graph.makeVarLabelMaterialMap(); }
+     
    private:
       const VarLabel* reloc_old_posLabel;
       vector<vector<const VarLabel*> > reloc_old_labels;
@@ -99,6 +105,7 @@ WARNING
       SingleProcessorScheduler& operator=(const SingleProcessorScheduler&);
 
       TaskGraph graph;
+
       // id of datawarehouse
       int d_generation;
    };
@@ -107,6 +114,9 @@ WARNING
 
 //
 // $Log$
+// Revision 1.8  2000/12/06 23:56:01  witzel
+// Added makeVarLabelMaterialMap method
+//
 // Revision 1.7  2000/09/20 16:00:28  sparker
 // Added external interface to LoadBalancer (for per-processor tasks)
 // Added message logging functionality. Put the tag <MessageLog/> in
