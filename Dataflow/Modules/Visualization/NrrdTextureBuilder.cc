@@ -29,6 +29,7 @@
 //    Author : Milan Ikits
 //    Date   : Fri Jul 16 03:28:21 2004
 
+#include <sci_defs/ogl_defs.h>
 #include <Core/Containers/StringUtil.h>
 #include <Core/Datatypes/LatVolField.h>
 #include <Core/GuiInterface/GuiVar.h>
@@ -82,15 +83,20 @@ NrrdTextureBuilder::NrrdTextureBuilder(GuiContext* ctx)
     texture_(new Texture)
 {}
 
+
 NrrdTextureBuilder::~NrrdTextureBuilder()
 {}
+
 
 void
 NrrdTextureBuilder::execute()
 {
-  if(card_mem_ != 0 && gui_card_mem_auto_.get()) {
+  if (card_mem_ != 0 && gui_card_mem_auto_.get())
+  {
     gui_card_mem_.set(card_mem_);
-  } else if(card_mem_ == 0) {
+  }
+  else if (card_mem_ == 0)
+  {
     gui_card_mem_auto_.set(0);
   }
 
@@ -98,7 +104,8 @@ NrrdTextureBuilder::execute()
   NrrdIPort* igfield = (NrrdIPort*)get_iport("Gradmag Nrrd");
   TextureOPort* otexture = (TextureOPort *)get_oport("Texture");
 
-  if(!ivfield) {
+  if (!ivfield)
+  {
     error("Unable to initialize input ports.");
     return;
   }
@@ -106,33 +113,46 @@ NrrdTextureBuilder::execute()
   // check rep
   NrrdDataHandle nvfield;
   ivfield->get(nvfield);
-  if(!nvfield.get_rep()) {
+  if (!nvfield.get_rep())
+  {
     error("Field has no representation.");
     return;
   }
 
   // check type
-  if (nvfield->nrrd->type != nrrdTypeUChar) {
+  if (nvfield->nrrd->type != nrrdTypeUChar)
+  {
     error("Normal-Value input nrrd type is not unsigned char.");
     return;
   }
   
-  if (nvfield->generation != nvfield_last_generation_) {
+  if (nvfield->generation != nvfield_last_generation_)
+  {
     nvfield_last_generation_ = nvfield->generation;
   }
 
-  NrrdDataHandle gmfield;
-  if(igfield) {
+  NrrdDataHandle gmfield = 0;
+  if (igfield)
+  {
     igfield->get(gmfield);
-    if(gmfield.get_rep()) {
-      if (gmfield->generation != gmfield_last_generation_) {
+    if (gmfield.get_rep()) 
+    {
+#ifndef HAVE_AVR_SUPPORT
+      // TODO: Runtime check, change message to reflect that.
+      warning("This build does not support advanced volume rendering.  The gradient magnitude will be ignored.");
+      gmfield = 0;
+#else
+      if (gmfield->generation != gmfield_last_generation_)
+      {
         gmfield_last_generation_ = gmfield->generation;
       }
       // check type
-      if (gmfield->nrrd->type != nrrdTypeUChar) {
+      if (gmfield->nrrd->type != nrrdTypeUChar)
+      {
         error("Gradmag input nrrd type is not unsigned char.");
         return;
       }
+#endif
     }
   }
 
