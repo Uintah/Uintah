@@ -16,7 +16,7 @@
 
 static Persistent* make_MultiMesh()
 {
-    return new Mesh;
+    return new MultiMesh;
 }
 
 PersistentTypeID MultiMesh::type_id("MultiMesh", "Datatype", make_MultiMesh);
@@ -34,21 +34,18 @@ MultiMesh::~MultiMesh() {
 }
 
 void MultiMesh::clean_up() {
-    int nnodes=meshes[meshes.size()-1]->nodes.size();
+
     for (int i=0; i<meshes.size(); i++) {
-	for (int j=0; j<meshes[i]->elems.size(); j++) {
-	    if ((meshes[i]->elems[j]) && 
-		(meshes[i]->elems[j]->n[0] >= nnodes ||
-		 meshes[i]->elems[j]->n[1] >= nnodes ||
-		 meshes[i]->elems[j]->n[2] >= nnodes ||
-		 meshes[i]->elems[j]->n[3] >= nnodes))
-		meshes[i]->elems[j]=0;
-	}
-	meshes[i]->pack_elems();
+	meshes[i]->remove_delaunay(0,0);
+	meshes[i]->remove_delaunay(1,0);
+	meshes[i]->remove_delaunay(2,0);
+	meshes[i]->remove_delaunay(3,0);
+	meshes[i]->pack_nodes();
 	meshes[i]->compute_neighbors();
     }
 }
     
+
 MultiMesh* MultiMesh::clone()
 {
     return new MultiMesh(*this);
