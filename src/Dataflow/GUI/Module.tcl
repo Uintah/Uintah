@@ -268,7 +268,6 @@ itcl_class Module {
 	update_time
 
 	# Stick it in the canvas
-	
 	$canvas create window $modx $mody -window $modframe \
 		-tags [modname] -anchor nw 
 	
@@ -1218,17 +1217,31 @@ proc IPortTrace { imodid which temp } {
 	if { [string match $toName $imodid] && \
 		[string match $which $toPort] } {
 	    # light up the pipe
-	    global netedit_canvas
+	    global netedit_canvas netedit_mini_canvas
 	    set path [routeConnection $fromName $fromPort $toName $toPort]
 	    eval $netedit_canvas create bline $path -width 7 \
 		    -borderwidth 2 -fill red -tags $temp
+	    set minipath ""
+	    global SCALEX SCALEY
+	    set doingX 1
+	    foreach point $path {
+		if [expr $doingX ] {
+		    lappend minipath [expr $point/$SCALEX] 
+		} else {
+		    lappend minipath [expr $point/$SCALEY] 
+		}
+		set doingX [expr !$doingX]
+	    }
+	    eval $netedit_mini_canvas create bline $minipath -width 1 \
+		    -fill red -tags $temp
 	}
     }
 }
 
 proc IPortReset { temp } {
-    global netedit_canvas
+    global netedit_canvas netedit_mini_canvas
     $netedit_canvas delete $temp
+    $netedit_mini_canvas delete $temp
 }
 
 proc OPortTrace { omodid which temp } {
@@ -1243,17 +1256,31 @@ proc OPortTrace { omodid which temp } {
 	if { [string match $fromName $omodid] && \
 		[string match $which $fromPort] } {
 	    # light up the pipe
-	    global netedit_canvas
+	    global netedit_canvas netedit_mini_canvas
 	    set path [routeConnection $fromName $fromPort $toName $toPort]
 	    eval $netedit_canvas create bline $path -width 7 \
 		    -borderwidth 2 -fill red -tags $temp
+	    set minipath ""
+	    global SCALEX SCALEY
+	    set doingX 1
+	    foreach point $path {
+		if [expr $doingX ] {
+		    lappend minipath [expr $point/$SCALEX] 
+		} else {
+		    lappend minipath [expr $point/$SCALEY] 
+		}
+		set doingX [expr !$doingX]
+	    }
+	    eval $netedit_mini_canvas create bline $minipath -width 1 \
+		    -fill red -tags $temp
 	}
     }
 }
 
 proc OPortReset { temp } {
-    global netedit_canvas
+    global netedit_canvas netedit_mini_canvas
     $netedit_canvas delete $temp
+    $netedit_mini_canvas delete $temp
 }
     
 
@@ -1262,16 +1289,35 @@ proc lightPipe { temp omodid owhich imodid iwhich } {
     set path [routeConnection $omodid $owhich $imodid $iwhich]
     eval $netedit_canvas create bline $path -width 7 \
 	-borderwidth 2 -fill red  -tags $temp
+    global netedit_mini_canvas
+    set minipath ""
+    global SCALEX SCALEY
+    set doingX 1
+    foreach point $path {
+	if [expr $doingX ] {
+	    lappend minipath [expr $point/$SCALEX] 
+	} else {
+	    lappend minipath [expr $point/$SCALEY] 
+	}
+	set doingX [expr !$doingX]
+    }
+    eval $netedit_mini_canvas create line $minipath -width 1 \
+	-fill red -tags $temp
+
+    $netedit_mini_canvas raise $temp
 }
 
 proc resetPipe { temp } {
     global netedit_canvas
     $netedit_canvas delete $temp
+    global netedit_mini_canvas
+    $netedit_mini_canvas delete $temp
 }
 
 proc raisePipe { connid } {
-    global netedit_canvas
+    global netedit_canvas netedit_mini_canvas
     $netedit_canvas raise $connid
+    $netedit_mini_canvas raise $connid
 }
 
 proc destroyConnection {connid omodid imodid} { 
@@ -2636,7 +2682,6 @@ proc moduleDestroy {maincanvas minicanvas modid} {
 	append rconnid "_p$riwhich"
 	
 	destroyConnection $rconnid $romodid $rimodid
-
     }
 
     $maincanvas delete $modid
@@ -2649,7 +2694,6 @@ proc moduleDestroy {maincanvas minicanvas modid} {
     if {[winfo exists .ui$modid]} {
 	destroy .ui$modid
     }
-
 }
 
 proc moduleDestroySelected {maincanvas minicanvas module} {
