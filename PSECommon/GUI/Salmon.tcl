@@ -50,6 +50,13 @@ catch {rename Roe ""}
 
 itcl_class Roe {
     public salmon
+	method modname {} {
+	   set n $this
+	   if {[string first "::" "$n"] == 0} {
+	       set n "[string range $n 2 end]"
+	   }
+	   return $n
+	}
 
     destructor {
     }
