@@ -2853,8 +2853,8 @@ class BioImageApp {
         global $m1-bins
         set $m1-bins 3000
 
-        global $m2-bits $m2-minf $m2-maxf $m2-useinputmin $m2-useinputmax
-        set $m2-bits 8
+        global $m2-nbits $m2-minf $m2-maxf $m2-useinputmin $m2-useinputmax
+        set $m2-nbits 8
         set $m2-minf $min
         set $m2-maxf $max
         set $m2-useinputmin 1
