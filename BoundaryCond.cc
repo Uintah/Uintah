@@ -162,6 +162,7 @@ void setBC(CCVariable<double>& press_CC,
 /* --------------------------------------------------------------------- 
  Function~  setBC--
  Purpose~   Takes care of Density_CC and Temperature_CC
+ or any CC Variable with zeroNeumann
  ---------------------------------------------------------------------  */
 void setBC(CCVariable<double>& variable, const string& kind, 
               const Patch* patch, 
@@ -171,17 +172,30 @@ void setBC(CCVariable<double>& variable, const string& kind,
   Vector dx = patch->dCell();
   Vector grav = sharedState->getGravity();
   IntVector offset(0,0,0);
+  bool onEdgeOfDomain = false; 
+  
   for(Patch::FaceType face = Patch::startFace;
       face <= Patch::endFace; face=Patch::nextFace(face)){
-    const BoundCondBase *bcs, *sym_bcs;
-    const BoundCond<double> *new_bcs;
+
+  const BoundCondBase *bcs, *sym_bcs;
+  const BoundCond<double> *new_bcs; 
     if (patch->getBCType(face) == Patch::None) {
-      bcs     = patch->getBCValues(mat_id,kind,face);
+      bcs     = patch->getBCValues(mat_id, kind,      face);
       sym_bcs = patch->getBCValues(mat_id,"Symmetric",face);
       new_bcs = dynamic_cast<const BoundCond<double> *>(bcs);
-    } else
+      onEdgeOfDomain = true;
+    } else {
+      onEdgeOfDomain = false;
       continue;
- 
+    }
+    
+    //__________________________________
+    // any CC Variable with zeroNeumann
+    if (onEdgeOfDomain && kind == "zeroNeumann") {
+      fillFaceFlux(variable,face,0.0,dx, 1.0, offset);
+    }
+    //__________________________________
+    // symmetric BC
     if (sym_bcs != 0) { 
       if (kind == "Density" || kind == "Temperature" || kind == "set_if_sym_BC") {
         fillFaceFlux(variable,face,0.0,dx, 1.0, offset);
@@ -209,8 +223,7 @@ void setBC(CCVariable<double>& variable, const string& kind,
         }
            
          // Neumann && gravity                 
-        if (new_bcs->getKind() == "Neumann" ) {  
-
+        if (new_bcs->getKind() == "Neumann" ) {
           fillFaceFlux(variable,face,new_bcs->getValue(),dx,1.0, offset);
             
           if(fabs(grav.x()) >0.0 ||fabs(grav.y()) >0.0 ||fabs(grav.z()) >0.0) {
