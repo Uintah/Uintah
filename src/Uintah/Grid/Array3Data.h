@@ -48,7 +48,7 @@ namespace Uintah {
 	 CHECKARRAYBOUNDS(idx.x(), 0, d_size.x());
 	 CHECKARRAYBOUNDS(idx.y(), 0, d_size.y());
 	 CHECKARRAYBOUNDS(idx.z(), 0, d_size.z());
-	 return d_data3[idx.x()][idx.y()][idx.z()];
+	 return d_data3[idx.z()][idx.y()][idx.x()];
       }
 
       ///////////////////////////////////////////////////////////////////////
@@ -89,17 +89,17 @@ namespace Uintah {
 	 CHECKARRAYBOUNDS(highIndex.x(), lowIndex.x(), d_size.x()+1);
 	 CHECKARRAYBOUNDS(highIndex.y(), lowIndex.y(), d_size.y()+1);
 	 CHECKARRAYBOUNDS(highIndex.z(), lowIndex.z(), d_size.z()+1);
-	 T* d = &d_data3[lowIndex.x()][lowIndex.y()][lowIndex.z()];
+	 T* d = &d_data3[lowIndex.z()][lowIndex.y()][lowIndex.x()];
 	 IntVector s = highIndex-lowIndex;
-	 for(int i=0;i<s.x();i++){
+	 for(int i=0;i<s.z();i++){
 	    T* dd=d;
 	    for(int j=0;j<s.y();j++){
 	       T* ddd=dd;
-	       for(int k=0;k<s.z();k++)
+	       for(int k=0;k<s.x();k++)
 		  ddd[k]=val;
-	       dd+=d_size.z();
+	       dd+=d_size.x();
 	    }
-	    d+=d_size.z()*d_size.y();
+	    d+=d_size.x()*d_size.y();
 	 }
       }
    
@@ -108,17 +108,17 @@ namespace Uintah {
       : d_size(size)
       {
 	 if(d_size.x() && d_size.y() && d_size.z())
-	    d_data=new T[d_size.x()*d_size.y()*d_size.z()];
+	    d_data=new T[d_size.z()*d_size.y()*d_size.x()];
 	 else
 	    d_data=0;
-	 d_data3=new T**[d_size.x()];
-	 d_data3[0]=new T*[d_size.x()*d_size.y()];
+	 d_data3=new T**[d_size.z()];
+	 d_data3[0]=new T*[d_size.z()*d_size.y()];
 	 d_data3[0][0]=d_data;
-	 for(int i=1;i<d_size.x();i++){
+	 for(int i=1;i<d_size.z();i++){
 	    d_data3[i]=d_data3[i-1]+d_size.y();
 	 }
-	 for(int j=1;j<d_size.x()*d_size.y();j++){
-	    d_data3[0][j]=d_data3[0][j-1]+d_size.z();
+	 for(int j=1;j<d_size.z()*d_size.y();j++){
+	    d_data3[0][j]=d_data3[0][j-1]+d_size.x();
 	 }
       }
    
@@ -136,6 +136,9 @@ namespace Uintah {
 
 //
 // $Log$
+// Revision 1.12  2000/06/16 05:19:20  sparker
+// Changed arrays to fortran order
+//
 // Revision 1.11  2000/06/11 04:05:06  bbanerje
 // Added first cut of getPointer() needed for fortran calls.
 //

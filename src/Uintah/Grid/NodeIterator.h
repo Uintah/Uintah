@@ -45,11 +45,11 @@ WARNING
       inline NodeIterator operator++(int) {
 	 NodeIterator old(*this);
 	 
-	 if(++d_iz >= d_e.z()){
-	    d_iz = d_s.z();
+	 if(++d_ix >= d_e.x()){
+	    d_ix = d_s.x();
 	    if(++d_iy >= d_e.y()){
 	       d_iy = d_s.y();
-	       ++d_ix;
+	       ++d_iz;
 	    }
 	 }
 	 return old;
@@ -100,6 +100,9 @@ WARNING
 
 //
 // $Log$
+// Revision 1.12  2000/06/16 05:19:21  sparker
+// Changed arrays to fortran order
+//
 // Revision 1.11  2000/06/15 21:57:17  sparker
 // Added multi-patch support (bugzilla #107)
 // Changed interface to datawarehouse for particle data

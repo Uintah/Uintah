@@ -5,7 +5,6 @@ static char *id="@(#) $Id$";
 #include <Uintah/Exceptions/InvalidGrid.h>
 #include <Uintah/Grid/CellIterator.h>
 #include <Uintah/Grid/NodeIterator.h>
-#include <Uintah/Grid/NodeSubIterator.h>
 #include <Uintah/Grid/SubPatch.h>
 #include <Uintah/Math/Primes.h>
 
@@ -16,14 +15,14 @@ static char *id="@(#) $Id$";
 #include <iostream>
 #include <sstream>
 
-using namespace Uintah;
-using namespace SCICore::Geometry;
-using namespace std;
 using SCICore::Exceptions::InternalError;
-using SCICore::Math::Floor;
-static SCICore::Thread::AtomicCounter ids("Patch ID counter");
-using SCICore::Geometry::Min;
 using SCICore::Geometry::Max;
+using SCICore::Geometry::Min;
+using SCICore::Math::Floor;
+using namespace SCICore::Geometry;
+using namespace Uintah;
+using namespace std;
+static SCICore::Thread::AtomicCounter ids("Patch ID counter");
 
 Patch::Patch(const Level* level,
 	     const IntVector& lowIndex, const IntVector& highIndex,
@@ -260,6 +259,9 @@ IntVector Patch::getNodeHighIndex() const
 
 //
 // $Log$
+// Revision 1.12  2000/06/16 05:19:21  sparker
+// Changed arrays to fortran order
+//
 // Revision 1.11  2000/06/15 21:57:19  sparker
 // Added multi-patch support (bugzilla #107)
 // Changed interface to datawarehouse for particle data

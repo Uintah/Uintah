@@ -28,7 +28,6 @@ namespace Uintah {
    using SCICore::Math::Min;
    using SCICore::Math::Max;
    
-   class NodeSubIterator;
    class NodeIterator;
    class CellIterator;
 
@@ -234,6 +233,9 @@ std::ostream& operator<<(std::ostream& out, const Uintah::Patch* r);
 
 //
 // $Log$
+// Revision 1.10  2000/06/16 05:19:21  sparker
+// Changed arrays to fortran order
+//
 // Revision 1.9  2000/06/15 21:57:19  sparker
 // Added multi-patch support (bugzilla #107)
 // Changed interface to datawarehouse for particle data
