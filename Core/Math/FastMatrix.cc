@@ -36,6 +36,7 @@
  */
 
 #include <Packages/Uintah/Core/Math/FastMatrix.h>
+#include <Core/Geometry/Vector.h>
 #include <Core/Math/MinMax.h>
 #include <Core/Math/MiscMath.h>
 #include <Core/Util/Assert.h>
@@ -309,7 +310,7 @@ void FastMatrix::big_destructiveSolve(double* b)
     for(int j=i+1;j<rows;j++){
       double factor=mat[j][i];
       b[j]-=factor*b[i];
-      for(int k=0;k<rows;k++){
+      for(int k=i;k<rows;k++){
 	mat[j][k]-=factor*mat[i][k];
       }
     }
@@ -336,7 +337,7 @@ template<int size> void med_destructiveSolve(double mat[FastMatrix::MaxSize][Fas
     for(int j=i+1;j<size;j++){
       double factor=mat[j][i];
       b[j]-=factor*b[i];
-      for(int k=0;k<size;k++){
+      for(int k=i;k<size;k++){
 	mat[j][k]-=factor*mat[i][k];
       }
     }
@@ -444,7 +445,7 @@ void FastMatrix::big_destructiveSolve(double* b1, double* b2)
       double factor=mat[j][i];
       b1[j]-=factor*b1[i];
       b2[j]-=factor*b2[i];
-      for(int k=0;k<rows;k++){
+      for(int k=i;k<rows;k++){
 	mat[j][k]-=factor*mat[i][k];
       }
     }
@@ -475,7 +476,7 @@ template<int size> void med_destructiveSolve(double mat[FastMatrix::MaxSize][Fas
       double factor=mat[j][i];
       b1[j]-=factor*b1[i];
       b2[j]-=factor*b2[i];
-      for(int k=0;k<size;k++){
+      for(int k=i;k<size;k++){
 	mat[j][k]-=factor*mat[i][k];
       }
     }
@@ -580,29 +581,24 @@ void FastMatrix::destructiveSolve(double* b1, double* b2)
 }
 
 
-// 3 RHS
+// Vector RHS
 
-void FastMatrix::big_destructiveSolve(double* b1, double* b2, double* b3)
+void FastMatrix::big_destructiveSolve(Vector* b)
 {
   ASSERTEQ(rows, cols);
 
   // Gauss-Jordan with no pivoting
   for(int i=0;i<rows;i++){
     double scale=1./mat[i][i];
-    b1[i]*=scale;
-    b2[i]*=scale;
-    b3[i]*=scale;
+    b[i]*=scale;
     for(int j=i;j<rows;j++){
       mat[i][j]*=scale;
     }
     for(int j=i+1;j<rows;j++){
       double factor=mat[j][i];
-      b1[j]-=factor*b1[i];
-      b2[j]-=factor*b2[i];
-      b3[j]-=factor*b3[i];
-      for(int k=0;k<rows;k++){
+      b[j]-=factor*b[i];
+      for(int k=i;k<rows;k++)
 	mat[j][k]-=factor*mat[i][k];
-      }
     }
   }
 
@@ -610,33 +606,26 @@ void FastMatrix::big_destructiveSolve(double* b1, double* b2, double* b3)
   for(int i=rows-1;i>=0;i--){
     for(int j=i-1;j>=0;j--){
       double factor=mat[j][i];
-      b1[j]-=factor*b1[i];
-      b2[j]-=factor*b2[i];
-      b3[j]-=factor*b3[i];
+      b[j]-=factor*b[i];
     }
   }
 }
 
 template<int size> void med_destructiveSolve(double mat[FastMatrix::MaxSize][FastMatrix::MaxSize],
-                                             double* b1, double* b2, double* b3)
+                                             Vector* b)
 {
   // Gauss-Jordan with no pivoting
   for(int i=0;i<size;i++){
     double scale=1./mat[i][i];
-    b1[i]*=scale;
-    b2[i]*=scale;
-    b3[i]*=scale;
+    b[i]*=scale;
     for(int j=i;j<size;j++){
       mat[i][j]*=scale;
     }
     for(int j=i+1;j<size;j++){
       double factor=mat[j][i];
-      b1[j]-=factor*b1[i];
-      b2[j]-=factor*b2[i];
-      b3[j]-=factor*b3[i];
-      for(int k=0;k<size;k++){
+      b[j]-=factor*b[i];
+      for(int k=i;k<size;k++)
 	mat[j][k]-=factor*mat[i][k];
-      }
     }
   }
 
@@ -644,9 +633,7 @@ template<int size> void med_destructiveSolve(double mat[FastMatrix::MaxSize][Fas
   for(int i=size-1;i>=0;i--){
     for(int j=i-1;j>=0;j--){
       double factor=mat[j][i];
-      b1[j]-=factor*b1[i];
-      b2[j]-=factor*b2[i];
-      b3[j]-=factor*b3[i];
+      b[j]-=factor*b[i];
     }
   }
 }
@@ -655,15 +642,16 @@ template<int size> void med_destructiveSolve(double mat[FastMatrix::MaxSize][Fas
  Function~  matrixSolver--
  Reference~  Mathematica provided the code
  ---------------------------------------------------------------------  */
-void FastMatrix::destructiveSolve(double* b1, double* b2, double* b3)
+void FastMatrix::destructiveSolve(Vector* b)
 {
   // Can ruin the matrix (this) and replaces the vector b
   ASSERTEQ(rows, cols);
   switch(rows){
   case 1:
-    b1[0] /= mat[0][0];
-    b2[0] /= mat[0][0];
-    b3[0] /= mat[0][0];
+    {
+      double scale = 1./mat[0][0];
+      b[0] *= scale;
+    }
     break;
   case 2:
     {
@@ -679,15 +667,9 @@ void FastMatrix::destructiveSolve(double* b1, double* b2, double* b3)
       double a00 = mat[0][0], a01 = mat[0][1];
       double a10 = mat[1][0], a11 = mat[1][1];
       double one_over_denom = 1./(a00*a11 - a01*a10);
-      double b10 = b1[0], b11 = b1[1];
-      b1[0] = (a11*b10 - a01*b11)*one_over_denom;
-      b1[1] = (a00*b11 - a10*b10)*one_over_denom;
-      double b20 = b2[0], b21 = b2[1];
-      b2[0] = (a11*b20 - a01*b21)*one_over_denom;
-      b2[1] = (a00*b21 - a10*b20)*one_over_denom;
-      double b30 = b3[0], b31 = b3[1];
-      b3[0] = (a11*320 - a01*b31)*one_over_denom;
-      b3[1] = (a00*321 - a10*b30)*one_over_denom;
+      Vector b0 = b[0], b1 = b[1];
+      b[0] = (a11*b0 - a01*b1)*one_over_denom;
+      b[1] = (a00*b1 - a10*b0)*one_over_denom;
     } 
     break;
   case 3:
@@ -696,9 +678,7 @@ void FastMatrix::destructiveSolve(double* b1, double* b2, double* b3)
       double a00 = mat[0][0], a01 = mat[0][1], a02 = mat[0][2];
       double a10 = mat[1][0], a11 = mat[1][1], a12 = mat[1][2];
       double a20 = mat[2][0], a21 = mat[2][1], a22 = mat[2][2];
-      double b10 = b1[0], b11 = b1[1], b12 = b1[2];
-      double b20 = b2[0], b21 = b2[1], b22 = b2[2];
-      double b30 = b3[0], b31 = b3[1], b32 = b3[2];
+      Vector b0 = b[0], b1 = b[1], b2 = b[2];
 
       //__________________________________
       // Example Problem Hilbert matrix
@@ -712,40 +692,27 @@ void FastMatrix::destructiveSolve(double* b1, double* b2, double* b3)
       double one_over_denom = 1./(-(a02*a11*a20) + a01*a12*a20 + a02*a10*a21 
 				  - a00*a12*a21 -  a01*a10*a22 + a00*a11*a22);
 
-      b1[0] = ( (-(a12*a21) + a11*a22)*b10 + (a02*a21 - a01*a22)*b11 +
-	       (-(a02*a11) + a01*a12)*b12 )*one_over_denom;
-      b2[0] = ( (-(a12*a21) + a11*a22)*b20 + (a02*a21 - a01*a22)*b21 +
-	       (-(a02*a11) + a01*a12)*b22 )*one_over_denom;
-      b3[0] = ( (-(a12*a21) + a11*a22)*b30 + (a02*a21 - a01*a22)*b31 +
-	       (-(a02*a11) + a01*a12)*b32 )*one_over_denom;
+      b[0] = ( (-(a12*a21) + a11*a22)*b0 + (a02*a21 - a01*a22)*b1 +
+	       (-(a02*a11) + a01*a12)*b2 )*one_over_denom;
 
+      b[1] = ( (a12*a20 - a10*a22)*b0 +  (-(a02*a20) + a00*a22)*b1 +
+	       (a02*a10 - a00*a12)*b2 ) * one_over_denom;
 
-      b1[1] = ( (a12*a20 - a10*a22)*b10 +  (-(a02*a20) + a00*a22)*b11 +
-	       (a02*a10 - a00*a12)*b12 ) * one_over_denom;
-      b2[1] = ( (a12*a20 - a10*a22)*b20 +  (-(a02*a20) + a00*a22)*b21 +
-	       (a02*a10 - a00*a12)*b22 ) * one_over_denom;
-      b3[1] = ( (a12*a20 - a10*a22)*b30 +  (-(a02*a20) + a00*a22)*b31 +
-	       (a02*a10 - a00*a12)*b32 ) * one_over_denom;
-
-      b1[2] =  ( (-(a11*a20) + a10*a21)*b10 +  (a01*a20 - a00*a21)*b11 +
-		(-(a01*a10) + a00*a11)*b12) * one_over_denom;
-      b2[2] =  ( (-(a11*a20) + a10*a21)*b20 +  (a01*a20 - a00*a21)*b21 +
-		(-(a01*a10) + a00*a11)*b22) * one_over_denom;
-      b3[2] =  ( (-(a11*a20) + a10*a21)*b30 +  (a01*a20 - a00*a21)*b31 +
-		(-(a01*a10) + a00*a11)*b32) * one_over_denom;
+      b[2] =  ( (-(a11*a20) + a10*a21)*b0 +  (a01*a20 - a00*a21)*b1 +
+		(-(a01*a10) + a00*a11)*b2) * one_over_denom;
     }
     break;
   case 4:
-    med_destructiveSolve<4>(mat, b1, b2, b3);
+    med_destructiveSolve<4>(mat, b);
     break;
   case 5:
-    med_destructiveSolve<5>(mat, b1, b2, b3);
+    med_destructiveSolve<5>(mat, b);
     break;
   case 6:
-    med_destructiveSolve<6>(mat, b1, b2, b3);
+    med_destructiveSolve<6>(mat, b);
     break;
   default:
-    big_destructiveSolve(b1, b2, b3);
+    big_destructiveSolve(b);
     break;
   }
 }
