@@ -33,12 +33,6 @@ ICELabel::ICELabel()
      scinew VarLabel("temp_CC",   CCVariable<double>::getTypeDescription() );
     vel_CCLabel       = 
      scinew VarLabel("vel_CC",    CCVariable<Vector>::getTypeDescription() );
-    uvel_CCLabel       = 
-     scinew VarLabel("uvel_CC",    CCVariable<double>::getTypeDescription() );
-    vvel_CCLabel       = 
-     scinew VarLabel("vvel_CC",    CCVariable<double>::getTypeDescription() );
-    wvel_CCLabel       = 
-     scinew VarLabel("wvel_CC",    CCVariable<double>::getTypeDescription() );
 
     cv_CCLabel        = 
      scinew VarLabel("cv_CC",         CCVariable<double>::getTypeDescription());
@@ -135,9 +129,6 @@ ICELabel::~ICELabel()
     delete  rho_CCLabel;
     delete temp_CCLabel;
     delete vel_CCLabel;
-    delete uvel_CCLabel;
-    delete vvel_CCLabel;
-    delete wvel_CCLabel;
     delete speedSound_CCLabel;
     delete speedSound_equiv_CCLabel;
     delete cv_CCLabel;
@@ -178,6 +169,9 @@ ICELabel::~ICELabel()
     delete delTLabel;
 }
 // $Log$
+// Revision 1.19  2001/01/05 17:55:29  jas
+// Remove uvel_CC, vvel_CC and wvel_CC from labels.
+//
 // Revision 1.18  2001/01/05 16:34:10  jas
 // Changed over uvel_CC, vvel_CC, wvel_CC to a CCVariable<Vector> in all steps
 // where CC velocities are used.

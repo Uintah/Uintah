@@ -26,9 +26,6 @@ namespace Uintah {
     const VarLabel* rho_CCLabel;
     const VarLabel* temp_CCLabel;
     const VarLabel* vel_CCLabel;
-    const VarLabel* uvel_CCLabel;
-    const VarLabel* vvel_CCLabel;
-    const VarLabel* wvel_CCLabel;
     const VarLabel* speedSound_CCLabel;
     const VarLabel* speedSound_equiv_CCLabel;
     const VarLabel* cv_CCLabel;
@@ -75,6 +72,9 @@ namespace Uintah {
 
 #endif
 // $Log$
+// Revision 1.17  2001/01/05 17:55:29  jas
+// Remove uvel_CC, vvel_CC and wvel_CC from labels.
+//
 // Revision 1.16  2001/01/05 16:34:10  jas
 // Changed over uvel_CC, vvel_CC, wvel_CC to a CCVariable<Vector> in all steps
 // where CC velocities are used.
