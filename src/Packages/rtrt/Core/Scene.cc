@@ -42,7 +42,8 @@ Persistent* scene_maker() {
 // initialize the static member type_id
 PersistentTypeID Scene::type_id("Scene", "Persistent", scene_maker);
 
-Scene::Scene() : 
+Scene::Scene() :
+  rtrt_engine(0),
   work("frame tiles"),
   maxdepth(-1),
   base_threshold(0),
