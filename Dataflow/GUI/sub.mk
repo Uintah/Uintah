@@ -34,6 +34,7 @@ $(SRCDIR)/tclIndex: \
 	$(SRCDIR)/ComponentWizard.tcl \
 	$(SRCDIR)/CriticalPointWidget.tcl \
 	$(SRCDIR)/CrosshairWidget.tcl \
+	$(SRCDIR)/EditField.tcl\
 	$(SRCDIR)/EditPath.tcl \
 	$(SRCDIR)/ErrorMetric.tcl \
 	$(SRCDIR)/FieldReader.tcl \
@@ -63,6 +64,7 @@ $(SRCDIR)/tclIndex: \
 	$(SRCDIR)/PointWidget.tcl \
 	$(SRCDIR)/PromptedText.tcl \
 	$(SRCDIR)/PromptedEntry.tcl \
+	$(SRCDIR)/Rescale.tcl \
 	$(SRCDIR)/RescaleColorMap.tcl \
 	$(SRCDIR)/RingWidget.tcl \
 	$(SRCDIR)/ScaledBoxWidget.tcl \
@@ -76,7 +78,6 @@ $(SRCDIR)/tclIndex: \
 	$(SRCDIR)/ViewWidget.tcl \
 	$(SRCDIR)/Viewer.tcl \
 	$(SRCDIR)/TclStream.tcl \
-	$(SRCDIR)/Rescale.tcl \
 
 	$(OBJTOP)/createTclIndex $(SRCTOP)/Dataflow/GUI
 
