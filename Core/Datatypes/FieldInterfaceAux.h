@@ -34,6 +34,7 @@
 #ifndef Datatypes_FieldInterfaceAux_h
 #define Datatypes_FieldInterfaceAux_h
 
+#include <Core/Datatypes/FieldInterface.h>
 #include <Core/Geometry/Point.h>
 #include <Core/Geometry/Vector.h>
 #include <Core/Geometry/Tensor.h>

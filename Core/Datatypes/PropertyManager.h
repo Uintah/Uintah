@@ -32,11 +32,11 @@
 #define PropertyManager_h 
 
 #include <map>
-#include <Core/Containers/LockingHandle.h>
 #include <Core/Malloc/Allocator.h>
 #include <Core/Datatypes/TypeName.h>
 #include <Core/Datatypes/builtin.h>
 #include <Core/Datatypes/Datatype.h>
+#include <Core/Persistent/PersistentSTL.h>
 #include <iostream>
 
 namespace SCIRun {
@@ -195,7 +195,7 @@ PropertyManager::set_property(const string &name,  const T& obj,
 {
   if (is_transient && (! is_frozen())) {
     cerr << "WARNING::PropertyManager must be frozen to store transient data" 
-	 <<" freezing now!" << endl;
+	 <<" freezing now!" << std::endl;
     freeze();
   }
   lock.lock();

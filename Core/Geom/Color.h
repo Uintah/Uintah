@@ -33,10 +33,8 @@
 
 #include <Core/share/share.h>
 
-#include <Core/Persistent/Persistent.h>
-
 namespace SCIRun {
-
+  class Piostream;
 
 class HSVColor;
 

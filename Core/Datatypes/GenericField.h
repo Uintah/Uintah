@@ -34,6 +34,7 @@
 #include <Core/Datatypes/TypeName.h>
 #include <Core/Containers/LockingHandle.h>
 #include <Core/Malloc/Allocator.h>
+#include <Core/Persistent/PersistentSTL.h>
 #include <vector>
 #include <iostream>
 

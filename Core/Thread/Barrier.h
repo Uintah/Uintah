@@ -33,8 +33,6 @@
 
 #include <Core/share/share.h>
 
-#include <Core/Thread/Thread.h>
-
 namespace SCIRun {
 
 class Barrier_private;

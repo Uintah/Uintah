@@ -29,6 +29,7 @@
  */
 
 #include <Core/Malloc/Allocator.h>
+#include <Core/Util/Assert.h>
 #include <Core/Datatypes/PropertyManager.h>
 
 namespace SCIRun {

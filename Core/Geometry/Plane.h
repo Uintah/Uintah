@@ -33,11 +33,10 @@
 
 #include <Core/share/share.h>
 
-#include <Core/Geometry/Point.h>
 #include <Core/Geometry/Vector.h>
 
 namespace SCIRun {
-
+  class Point;
 class SCICORESHARE Plane {
    Vector n;
    double d;

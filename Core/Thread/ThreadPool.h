@@ -34,13 +34,14 @@
 #include <Core/Thread/Barrier.h>
 #include <Core/Thread/Mutex.h>
 #include <Core/Thread/Parallel.h>
+#include <Core/Thread/Parallel1.h>
 #include <Core/Thread/Parallel2.h>
 #include <Core/Thread/Parallel3.h>
 #include <Core/share/share.h>
 #include <vector>
 
 namespace SCIRun {
-
+  class ThreadGroup;
 class 	ThreadPoolHelper;
 /**************************************
 

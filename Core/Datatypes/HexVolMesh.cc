@@ -29,6 +29,8 @@
  */
 
 #include <Core/Datatypes/HexVolMesh.h>
+#include <Core/Geometry/BBox.h>
+#include <Core/Geometry/Transform.h>
 #include <Core/Malloc/Allocator.h>
 #include <iostream>
 #include <algorithm>

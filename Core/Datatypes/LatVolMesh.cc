@@ -31,6 +31,7 @@
 
 #include <Core/Datatypes/LatVolMesh.h>
 #include <Core/Datatypes/FieldAlgo.h>
+#include <Core/Geometry/BBox.h>
 #include <iostream>
 
 

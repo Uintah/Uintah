@@ -33,7 +33,7 @@
 
 #include <string>
 #include <vector>
-#include <iostream>
+#include <iosfwd>
 
 namespace SCIRun {
   class GuiInterface;

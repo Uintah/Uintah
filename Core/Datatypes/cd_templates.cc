@@ -76,6 +76,7 @@ template void Pio<unsigned short, unsigned short>(Piostream&, pair<unsigned shor
 #endif
 #endif
 
+#ifdef __sgi
 template class LockingHandle<ColumnMatrix>;
 template class LockingHandle<Matrix>;
 
@@ -106,7 +107,7 @@ template class Property<pair<unsigned char,unsigned char> >;
 template class Property<pair<char,char> >;
 template class Property<vector<pair<string,Tensor> > >;
 template class Property<vector<pair<int,double> > >;
-
+#endif
 
 //! Compute the gradient g in cell ci.
 template <>
@@ -170,13 +171,3 @@ template <> bool LatVolField<Vector>::get_gradient(Vector &, const Point &/*p*/)
 #if defined(__sgi) && !defined(__GNUC__) && (_MIPS_SIM != _MIPS_SIM_ABI32)
 #pragma reset woff 1468
 #endif
-
-
-
-
-
-
-
-
-
-

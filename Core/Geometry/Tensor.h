@@ -31,12 +31,13 @@
 #define Geometry_Tensor_h 1
 
 #include <Core/share/share.h>
-#include <Core/Containers/Array1.h>
 #include <Core/Geometry/Vector.h>
-#include <Core/Persistent/Persistent.h>
+#include <iosfwd>
+#include <vector>
 
 namespace SCIRun {
-
+  template<class T> class Array1;
+  class Piostream;
 class SCICORESHARE Tensor {
 private:
   Vector e1_, e2_, e3_;  // these are already scaled by the eigenvalues
@@ -48,7 +49,7 @@ public:
   Tensor(int);
   Tensor(double);
   Tensor(const Array1<double> &);
-  Tensor(const vector<double> &);
+  Tensor(const std::vector<double> &);
   Tensor(const double *);
   Tensor(const double **);
   Tensor(const Vector&, const Vector&, const Vector&);

@@ -39,7 +39,6 @@
 #include <Dataflow/Network/Module.h> 
 #include <Core/Datatypes/Field.h> 
 #include <Dataflow/Ports/FieldPort.h>  
-#include <Core/Thread/Thread.h>
 
 #include <Core/Geom/GeomTriangles.h>
 #include <Core/Geom/GeomGroup.h>

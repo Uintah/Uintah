@@ -16,6 +16,7 @@
 */
 
 #include <Core/GLVolumeRenderer/GLTexture3D.h>
+#include <Core/Datatypes/FieldInterface.h>
 #include <Core/GLVolumeRenderer/Brick.h>
 #include <Core/GLVolumeRenderer/VolumeUtils.h>
 #include <Core/Util/NotFinished.h>

@@ -20,6 +20,7 @@
 //    Date   : September 2001
 
 #include <Core/Geometry/Transform.h>
+#include <Core/Geometry/Point.h>
 #include <Core/Datatypes/Clipper.h>
 
 

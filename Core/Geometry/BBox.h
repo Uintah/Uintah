@@ -33,10 +33,7 @@
 
 #include <Core/share/share.h>
 
-#include <Core/share/share.h>
-
 #include <Core/Geometry/Point.h>
-#include <Core/Geometry/Plane.h>
 
 namespace SCIRun {
 

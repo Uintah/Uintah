@@ -31,6 +31,7 @@
 
 #include <Core/Datatypes/ScanlineMesh.h>
 #include <Core/Datatypes/FieldAlgo.h>
+#include <Core/Geometry/BBox.h>
 #include <iostream>
 
 
@@ -177,6 +178,11 @@ ScanlineMesh::get_weights(const Point &p,
   }
 }
 
+
+Vector ScanlineMesh::diagonal() const
+{
+  return get_bounding_box().diagonal();
+}
 
 #define LATVOLMESH_VERSION 1
 

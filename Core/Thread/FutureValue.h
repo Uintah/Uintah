@@ -37,26 +37,26 @@
 namespace SCIRun {
 /**************************************
  
-				       CLASS
-				       FutureValue
+  CLASS
+  FutureValue
    
-				       KEYWORDS
-				       Thread
+  KEYWORDS
+  Thread
    
-				       DESCRIPTION
-				       Creates a single slot for some return value.  The <i>wait</i> method
-				       waits for a value to be sent from another thread via the <i>reply</i>
-				       method.  This is typically used to provide a simple means of returning
-				       data from a server thread.  An <b>FutureValue</b> object is created on the
-				       stack, and some request is sent (usually via a <b>Mailbox</b>) to a server
-				       thread.  Then the thread will block in <i>wait</i> until the server thread
-				       receives the message and responds using <i>reply</i>.
+  DESCRIPTION
+  Creates a single slot for some return value.  The <i>wait</i> method
+  waits for a value to be sent from another thread via the <i>reply</i>
+  method.  This is typically used to provide a simple means of returning
+  data from a server thread.  An <b>FutureValue</b> object is created on the
+  stack, and some request is sent (usually via a <b>Mailbox</b>) to a server
+  thread.  Then the thread will block in <i>wait</i> until the server thread
+  receives the message and responds using <i>reply</i>.
   
-				       <p><b>FutureValue</b> is a one-shot wait/reply pair - a new
-				       <b>FutureValue</b> object must be created for each reply, and these are
-				       typically created on the stack.  Only a single thread should
-				       call <i>wait</i> and a single thread shuold call <i>reply</i>.
-   
+  <p><b>FutureValue</b> is a one-shot wait/reply pair - a new
+  <b>FutureValue</b> object must be created for each reply, and these are
+  typically created on the stack.  Only a single thread should
+  call <i>wait</i> and a single thread shuold call <i>reply</i>.
+  
 ****************************************/
 template<class Item> class FutureValue {
 public:

@@ -35,6 +35,7 @@
 #include <Core/Containers/LockingHandle.h>
 #include <Core/Datatypes/Mesh.h>
 #include <Core/Datatypes/FieldIterator.h>
+#include <Core/Geometry/Transform.h>
 #include <Core/share/share.h>
 #include <string>
 #include <iostream>
@@ -219,7 +220,7 @@ public:
   //! get the mesh statistics
   unsigned get_nx() const { return nx_; }
   unsigned get_ny() const { return ny_; }
-  Vector diagonal() const { return get_bounding_box().diagonal(); }
+  Vector diagonal() const;
   virtual BBox get_bounding_box() const;
   virtual void transform(Transform &t);
 

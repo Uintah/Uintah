@@ -32,20 +32,19 @@
 #define Core_Thread_Parallel_h
 
 #include <Core/Thread/ParallelBase.h>
-#include <Core/Thread/Semaphore.h>
 
 namespace SCIRun {
 /**************************************
  
-				       CLASS
-				       Parallel
+  CLASS
+  Parallel
    
-				       KEYWORDS
-				       Thread
+  KEYWORDS
+  Thread
    
-				       DESCRIPTION
-				       Helper class to make instantiating threads to perform a parallel
-				       task easier.
+  DESCRIPTION
+  Helper class to make instantiating threads to perform a parallel
+  task easier.
    
 ****************************************/
 template<class T> class Parallel  : public ParallelBase {

@@ -38,23 +38,17 @@
 #include <Core/Geometry/Vector.h>
 
 namespace SCIRun {
-  class Vector;
-  class Point;
-}
-
-namespace SCIRun {
-
   class GuiContext;
 
-class SCICORESHARE GuiVar {
-protected:
-  GuiContext* ctx;
-public:
-  GuiVar(GuiContext* ctx);
-  virtual ~GuiVar();
+  class SCICORESHARE GuiVar {
+  protected:
+    GuiContext* ctx;
+  public:
+    GuiVar(GuiContext* ctx);
+    virtual ~GuiVar();
 
-  void reset();
-};
+    void reset();
+  };
   
   
   

@@ -20,13 +20,13 @@
 #define Datatypes_Field_h
 
 #include <Core/Datatypes/PropertyManager.h>
-#include <Core/Util/TypeDescription.h>
-#include <Core/Datatypes/FieldInterface.h>
 #include <Core/Datatypes/Mesh.h>
 #include <Core/Containers/LockingHandle.h>
 
 namespace SCIRun {
-
+  class ScalarFieldInterface;
+  class VectorFieldInterface;
+  class TensorFieldInterface;
 class  SCICORESHARE Field: public PropertyManager {
 
 public:

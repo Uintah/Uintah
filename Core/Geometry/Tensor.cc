@@ -27,8 +27,9 @@
  *  Copyright (C) 200  SCI Group
  */
 
-#include <Core/Util/TypeDescription.h>
 #include <Core/Geometry/Tensor.h>
+#include <Core/Containers/Array1.h>
+#include <Core/Util/TypeDescription.h>
 #include <Core/Util/Assert.h>
 #include <Core/Persistent/Persistent.h>
 #include <Core/Math/MiscMath.h>

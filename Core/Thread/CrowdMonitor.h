@@ -33,11 +33,8 @@
 
 #include <Core/share/share.h>
 
-#include <Core/Thread/Thread.h>
-#include <Core/Thread/Mutex.h>
-#include <Core/Thread/ConditionVariable.h>
-
 namespace SCIRun {
+  class CrowdMonitor_private;
 /**************************************
  
 CLASS

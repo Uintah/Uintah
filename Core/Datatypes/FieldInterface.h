@@ -34,12 +34,13 @@
 #ifndef Datatypes_FieldInterface_h
 #define Datatypes_FieldInterface_h
 
-#include <Core/Geometry/Point.h>
-#include <Core/Geometry/Vector.h>
-#include <Core/Geometry/Tensor.h>
-#include <Core/Util/DynamicLoader.h>
+#include <vector>
 
 namespace SCIRun {
+  class Point;
+  class Vector;
+  class Tensor;
+  using std::vector;
 
 class ScalarFieldInterface {
 public:

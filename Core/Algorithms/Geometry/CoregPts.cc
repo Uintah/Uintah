@@ -18,6 +18,8 @@
 //    Date   : Wed Dec  5 16:05:07 MST 2001
 
 #include <Core/Algorithms/Geometry/CoregPts.h>
+#include <Core/Datatypes/FieldInterface.h>
+#include <Core/Geometry/BBox.h>
 #include <Core/Math/MiscMath.h>
 #include <Core/Math/Trig.h>
 #include <iostream>

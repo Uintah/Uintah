@@ -35,6 +35,7 @@
 #include <Core/Containers/LockingHandle.h>
 #include <Core/Datatypes/Mesh.h>
 #include <Core/Datatypes/FieldIterator.h>
+#include <Core/Geometry/Transform.h>
 #include <Core/share/share.h>
 #include <Core/Math/MusilRNG.h>
 #include <string>

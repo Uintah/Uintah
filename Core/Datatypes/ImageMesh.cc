@@ -31,6 +31,7 @@
 
 #include <Core/Datatypes/ImageMesh.h>
 #include <Core/Datatypes/FieldAlgo.h>
+#include <Core/Geometry/BBox.h>
 #include <Core/Math/MusilRNG.h>
 #include <iostream>
 
@@ -118,6 +119,10 @@ ImageMesh::get_nodes(Node::array_type &array, Edge::index_type idx) const
   }
 }
 
+Vector ImageMesh::diagonal() const
+{
+  return get_bounding_box().diagonal();
+}
 
 //! return all face_indecies that overlap the BBox in arr.
 void

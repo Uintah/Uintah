@@ -30,6 +30,7 @@
 
 #include <Core/Datatypes/TetVolMesh.h>
 #include <Core/Malloc/Allocator.h>
+#include <Core/Geometry/BBox.h>
 #include <iostream>
 #include <algorithm>
 
