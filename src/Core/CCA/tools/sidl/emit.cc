@@ -280,6 +280,9 @@ void Symbol::emit_forward(EmitState& e)
   case EnumeratorType:
     cerr << "Symbol::emit_forward called for an enumerator!\n";
     exit(1);
+  case DistArrayType:
+    cerr << "Symbol::emit_forward called for an distributed array type!\n";
+    exit(1);
   }
   emitted_forward=true;
 }	
@@ -2267,10 +2270,11 @@ void NamedType::emit_unmarshal(EmitState& e, const string& arg,
     else {
       if (ctx == ArgIn) {
 	// *********** IN arg -- No Special Redis ****************************
-	string arr_ptr_name = arg + "_ptr";
+        string Dname = distarr->getName();
+        string arr_ptr_name = arg + "_ptr";
 	e.out << leader2 << arr_t->cppfullname(0) << "* " << arr_ptr_name << ";\n";
 	e.out << leader2 << arr_ptr_name << " = static_cast< " << arr_t->cppfullname(0) 
-	      << "*>(_sc->d_sched->getCompleteArray(\"" << distarr->getName() << "\"));\n";
+	      << "*>(_sc->d_sched->getCompleteArray(\"" << Dname << "\"));\n";
 	e.out << leader2 << "#define " << arg << " (* " << arr_ptr_name << ")\n";
 	
 	//TEMPORARY TEST
@@ -2279,7 +2283,7 @@ void NamedType::emit_unmarshal(EmitState& e, const string& arg,
 	e.out << leader2 << "std::ostringstream fname;\n";
 	e.out << leader2 << "int rank;\n";
 	e.out << leader2 << "MPI_Comm_rank(MPI_COMM_WORLD,&rank);\n";
-	e.out << leader2 << "fname << \"" << distarr->getName() << "\" << \"_\" << rank << \".callee.out\";\n";
+	e.out << leader2 << "fname << \"" << Dname << "\" << \"_\" << rank << \".callee.out\";\n";
 	e.out << leader2 << "_sc->d_sched->dbg.open(fname.str().c_str(), std::ios_base::app);\n";
 	e.out << leader2 << "_sc->d_sched->dbg << \"Complete distribution received;\\n\";\n";
 	if (arr_t->dim == 1) {
@@ -2300,13 +2304,14 @@ void NamedType::emit_unmarshal(EmitState& e, const string& arg,
       }
       else if (ctx == ArgOut) {
 	// *********** OUT arg -- No Special Redis ********************************
-	e.out << leader2 << "//OUT redistribution array detected. Get it afterwards\n";
+        string Dname = distarr->getName();
+        e.out << leader2 << "//OUT redistribution array detected. Get it afterwards\n";
 	e.out << leader2 << "//Resize array \n";
-	e.out << leader2 << "SCIRun::MxNArrayRep* _d_rep = d_sched->callerGetCallerRep(\"" 
-	      << distarr->getName() << "\");\n";
+	e.out << leader2 << "SCIRun::MxNArrayRep* _d_rep_" << Dname << " = d_sched->callerGetCallerRep(\"" 
+	      << Dname << "\");\n";
 	e.out << leader2 << arg << ".resize(";
 	for(int i=arr_t->dim; i > 0; i--) {
-	  e.out << "_d_rep->getSize(" << i << ")";
+	  e.out << "_d_rep_" << Dname << "->getSize(" << i << ")";
 	  if (i != 1) e.out << ", ";
 	}
 	e.out << ");\n";
