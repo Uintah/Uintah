@@ -597,7 +597,7 @@ proc ClearCanvas { {confirm 1} {subnet 0} } {
     if { $confirm && $NetworkChanged } {
 	set result \
 	    [tk_messageBox -type okcancel -parent . -icon warning -message \
-		 "You network has not been saved.\nALL modules and connections will be cleared.\nReally clear?"]	
+		 "Your network has not been saved.\nALL modules and connections will be cleared.\nReally clear?"]	
     }
     if {!$confirm || [string compare "ok" $result] == 0} {
 	global Subnet netedit_savefile CurrentlySelectedModules
@@ -614,13 +614,20 @@ proc ClearCanvas { {confirm 1} {subnet 0} } {
 proc NiceQuit {} {
     global NetworkChanged netedit_savefile
     if {$NetworkChanged} {
-	set result [tk_messageBox -type yesnocancel -parent . -message \
-			"Your network has not been saved.\nWould you like to save before exiting?" -icon warning ]
-	if {![string compare "cancel" $result]} { return }
-	if {![string compare "yes" $result]} { 
-	    puts -nonewline "Saving $netedit_savefile..."
-	    popupSaveMenu
-	}	
+        if {[winfo exists .standalone] } {
+	    set result [tk_messageBox -type yesnocancel -parent . -message \
+			    "Your session has not been saved.\nWould you like to save before exiting?" -icon warning ]
+	    if {![string compare "yes" $result]} { app save_session }
+	    if {![string compare "cancel" $result]} { return }
+	} else {
+	    set result [tk_messageBox -type yesnocancel -parent . -message \
+			    "Your network has not been saved.\nWould you like to save before exiting?" -icon warning ]
+	    if {![string compare "cancel" $result]} { return }
+	    if {![string compare "yes" $result]} { 
+		puts -nonewline "Saving $netedit_savefile..."
+		popupSaveMenu
+	    }	
+	}
     } 
     puts "Goodbye!"
     netedit quit
