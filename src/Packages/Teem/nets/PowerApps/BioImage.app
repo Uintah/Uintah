@@ -839,7 +839,7 @@ class BioImageApp {
 	set bot [$w.topbot childsite top]
 	set top [$w.topbot childsite bottom]
 
-	$w.topbot fraction 66 34
+	$w.topbot fraction 62 38
 	iwidgets::panedwindow $top.lmr -orient vertical -thickness 0 \
 	    -sashheight 5000 -sashwidth 6 -sashindent 0 -sashborderwidth 2 \
 	    -sashcursor sb_h_double_arrow
