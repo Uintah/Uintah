@@ -43,6 +43,7 @@ namespace SCIRun {
     virtual bool haveComponent(const std::string& type) = 0;
     virtual ComponentInstance* createInstance(const std::string& name,
 					      const std::string& type) = 0;
+    virtual bool destroyInstance(ComponentInstance* ci)= 0;
     virtual std::string getName() const = 0;
     virtual void listAllComponentTypes(std::vector<ComponentDescription*>&,
 				       bool) = 0;

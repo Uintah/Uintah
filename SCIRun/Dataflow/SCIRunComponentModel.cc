@@ -142,6 +142,12 @@ SCIRunComponentModel::createInstance(const std::string& name,
   return ci;
 }
 
+bool SCIRunComponentModel::destroyInstance(ComponentInstance * ic)
+{
+  cerr<<"Warning:I don't know how to destroy a SCIRun compoent instance"<<endl;
+  return true; 
+}
+
 string SCIRunComponentModel::getName() const
 {
   return "Dataflow";
