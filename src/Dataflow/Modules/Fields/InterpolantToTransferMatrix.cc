@@ -89,9 +89,9 @@ InterpolantToTransferMatrix::execute()
   Handle<Interp2TransferAlgo> algo;
   if (!module_dynamic_compile(ci, algo)) return;
 
-  MatrixOPort *omp = (MatrixOPort *)getOPort("Output");
+  MatrixOPort *omp = (MatrixOPort *)getOPort("Transfer");
   if (!omp) {
-    error("Unable to initialize oport 'Output'.");
+    error("Unable to initialize oport 'Transfer'.");
     return;
   }
     
