@@ -23,7 +23,6 @@ PSELIBS := \
 	Packages/Uintah/Core/Exceptions    \
 	Dataflow/Network  \
 	Dataflow/Ports    \
-	Dataflow/XMLUtil  \
 	Core/Containers   \
 	Core/Persistent   \
 	Core/Exceptions   \
@@ -34,7 +33,7 @@ PSELIBS := \
 	Core/Util         \
 	Core/Geometry \
 	Core/GeomInterface
-LIBS := $(XML_LIBRARY) $(MPI_LIBRARY)
+LIBS := $(MPI_LIBRARY)
 
 include $(SRCTOP)/scripts/smallso_epilogue.mk
 

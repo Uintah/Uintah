@@ -25,7 +25,6 @@ PSELIBS := \
 	Dataflow/Ports                 \
 	Dataflow/Modules/Visualization \
 	Dataflow/Widgets               \
-	Dataflow/XMLUtil               \
 	Core/Datatypes                 \
         Core/Thread                    \
 	Core/Persistent                \
@@ -46,7 +45,7 @@ PSELIBS := \
 	Packages/Uintah/Core/Datatypes     \
 	Packages/Uintah/Dataflow/Modules/Selectors
 
-LIBS := $(XML_LIBRARY) $(M_LIBRARY)
+LIBS := $(M_LIBRARY)
 
 include $(SCIRUN_SCRIPTS)/smallso_epilogue.mk
 
