@@ -318,7 +318,7 @@ void VariablePlotter::extract_data(string display_mode, string varname,
   gui->execute(id + " reset_var_val");
 
   // determine type
-  const TypeDescription *td;
+  const TypeDescription *td = NULL;
   for(int i = 0; i < (int)names.size() ; i++)
     if (names[i] == varname)
       td = types[i];
