@@ -27,6 +27,7 @@ MTSPlastic::MTSPlastic(ProblemSpecP& ps)
   ps->require("b1",d_const.b1);
   ps->require("b2",d_const.b2);
   ps->require("b3",d_const.b3);
+  ps->require("mu_0",d_const.mu_0);
 
   // Initialize internal variable labels for evolution
   pMTSLabel = VarLabel::create("p.mtStress",
@@ -116,7 +117,7 @@ MTSPlastic::computeFlowStress(const Matrix3& rateOfDeformation,
 {
   double edot = sqrt(rateOfDeformation.NormSquared()*2.0/3.0);
   double delEps = edot*delT;
-  double theta_0 = d_const.a0 + d_const.a1*log(edot) + d_const.a2*edot;
+  double theta_0 = d_const.a0 + d_const.a1*log(edot) + d_const.a2*sqrt(edot);
   double mu = d_const.b1 - d_const.b2/(exp(d_const.b3/T) - 1.0);
   double CC = d_const.koverbcubed*T/mu;
   double s_s = d_const.s_s0*pow((edot/d_const.edot_s0),(CC/d_const.A));
@@ -125,7 +126,7 @@ MTSPlastic::computeFlowStress(const Matrix3& rateOfDeformation,
   double theta = theta_0*(1.0 - FX);
   double s_thermal = pMTS[idx] - d_const.s_a;
   double p1 = pow((log(d_const.edot0/edot)*(CC/d_const.g0)),(1.0/d_const.q));
-  double sigma = d_const.s_a + s_thermal*pow((1.0 - p1),(1.0/d_const.p));
+  double sigma = d_const.s_a + (mu/d_const.mu_0)*s_thermal*pow((1.0 - p1),(1.0/d_const.p));
   pMTS_new[idx] = pMTS[idx] + delEps*theta;
   return sigma;
 }
