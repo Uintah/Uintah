@@ -53,7 +53,7 @@ class Downhill_Simplex : public Module {
     MatrixIPort* dipole_inport;
     ColumnMatrixIPort* rms_inport;
     ColumnMatrixIPort* dir_inport;
-    ColumnMatrixOPort* d_outport;
+    MatrixOPort* d_outport;
     MatrixOPort* dipole_outport;
     
     int ndipoles; 
@@ -97,8 +97,8 @@ Downhill_Simplex::Downhill_Simplex(const clString& id)
 				       ColumnMatrixIPort::Atomic);
     add_iport(dir_inport);
     
-    d_outport = new ColumnMatrixOPort(this, "DipolePos Out port",
-				      ColumnMatrixIPort::Atomic);
+    d_outport = new MatrixOPort(this, "DipolePos Out port",
+				MatrixIPort::Atomic);
     add_oport(d_outport);
 //    dipoley_outport = new ColumnMatrixOPort(this, "DipoleY Out port",
 //					    ColumnMatrixIPort::Atomic);
@@ -172,17 +172,17 @@ void Downhill_Simplex::execute() {
     }
     p[i+1][1]=p[i+1][2]=p[i+1][3]=p[i+1][4]=p[i+1][5]=p[i+1][6]=0;
     
-    ColumnMatrix* dipole_out = new ColumnMatrix(3);
-    double *d_o=dipole_out->get_rhs();
-    for (int ii=0; ii<3; ii++) {
-	d_o[ii]=p[1][ii+1];
-    }
+    DenseMatrix* dipole_out = new DenseMatrix(6,3);
+    dipole_out->zero();
+    for (int ii=0; ii<3; ii++)
+	for (int jj=0; jj<3; jj++)
+	    (*dipole_out)[ii][jj]=p[1][ii+1];
 
     cerr << "Downhill_Simplex: about to do a send_intermediate...\n";
     d_outport->send_intermediate(dipole_out);
     cerr << "Downhill_Simplex: sent intermediate!\n";
 
-    cerr << "d_o=("<<d_o[0]<<", "<<d_o[1]<<", "<<d_o[2]<<")\n";
+    cerr << "dipole_out=("<<(*dipole_out)[0][0]<<", "<<(*dipole_out)[1][0]<<", "<<(*dipole_out)[2][0]<<")\n";
 
 
     
@@ -243,29 +243,34 @@ void Downhill_Simplex::execute() {
 	    error_sem->up();
 	}
 	
-	ColumnMatrix* do_out = new ColumnMatrix(6);
-	double *d_o=do_out->get_rhs();
+	dipole_out = new DenseMatrix(6, 3);
+	dipole_out->zero();
 	
 	int ii=0;
 	if (counter < ndipoles) {
 	    y[counter]=*err;
-	    for (; ii<3; ii++) d_o[ii]=p[counter+1][ii+1];
+	    for (; ii<3; ii++) 
+		for (int jj=0; jj<3; jj++) 
+		    (*dipole_out)[ii][jj]=p[counter+1][ii+1];
 	    for (; ii<6; ii++) p[counter][ii+1]=dirP[ii-3];
 	    counter++;
 	} else {
 	    for (ii=3; ii<6; ii++) p[counter][ii+1]=dirP[ii-3];
 	    if (counter == ndipoles) {
 		y[counter]=*err;
-		for (int jj=0; jj<3; jj++) d_o[ii]=p[counter+1][ii+1];
+		for (ii=0; ii<3; ii++)
+		    for (int jj=0; jj<3; jj++) 
+			(*dipole_out)[ii][jj]=p[counter+1][ii+1];
 		helper_sem->up();
 		counter++;
 	    }
 	    pos_sem->down();
 	}	
 	
-	free(err);
 	if (counter>ndipoles) 
-	    for (ii=0; ii<3; ii++) d_o[ii]=p[ndipoles+1][ii+1];
+	    for (ii=0; ii<3; ii++) 
+		for (int jj=0; jj<3; jj++)
+		    (*dipole_out)[ii][jj]=p[ndipoles+1][ii+1];
 	
 	DenseMatrix* dips = new DenseMatrix(ndipoles+1, ndim+3);
 	MatrixHandle dipoles(dips);
@@ -281,11 +286,11 @@ void Downhill_Simplex::execute() {
 	}
 
 	if (send_pos) {
-	    d_outport->send_intermediate(do_out);
+	    d_outport->send_intermediate(dipole_out);
 	    dipole_outport->send_intermediate(dipoles);
 	} else {
 	    cerr << "I'm sending final version\n";
-	    d_outport->send(do_out);
+	    d_outport->send(dipole_out);
 	    dipole_outport->send(dipoles);
 	    // gotta clear these ports so when we start again, everything works
 	    dir_inport->get(dir);
@@ -358,6 +363,9 @@ void Downhill_Simplex::tcl_command(TCLArgs& args, void* userdata) {
 
 //
 // $Log$
+// Revision 1.2  1999/09/05 23:16:46  dmw
+// new module
+//
 // Revision 1.1  1999/09/02 04:50:04  dmw
 // more of Dave's modules
 //
