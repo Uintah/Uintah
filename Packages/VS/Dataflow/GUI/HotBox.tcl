@@ -60,6 +60,7 @@ itcl_class VS_DataFlow_HotBox {
     global $this-Files_on
     global $this-enableDraw
     global $this-currentselection
+    global $this-currentTime
     # values: "fromHotBoxUI" or "fromProbe"
     global $this-selectionsource
     global $this-datafile
@@ -135,6 +136,8 @@ itcl_class VS_DataFlow_HotBox {
     set $this-Files_on "no"
     set $this-enableDraw "no"
     set $this-currentselection ""
+    set $this-currentTime "1"
+    set $this-selectionsource "fromHotBoxUI"
     set $this-datafile ""
     set $this-datasource "2"
     set $this-anatomydatasource ""
@@ -465,6 +468,15 @@ itcl_class VS_DataFlow_HotBox {
     pack $w.probeUI.slide $w.probeUI.loc -side bottom -expand yes -fill x
 
     ######################################
+    # time
+    ######################################
+    frame $w.timeUI
+    label $w.timeUI.timeLable -text "Time" -just left
+    entry $w.timeUI.timeVal -width 5 -textvariable $this-currentTime
+    bind $w.timeUI.timeVal <KeyPress-Return> "$this-c needexecute"
+    pack $w.timeUI.timeLable $w.timeUI.timeVal -side left
+
+    ######################################
     # FMA Hierarchy UI
     ######################################
     frame $w.hier
@@ -543,9 +555,9 @@ itcl_class VS_DataFlow_HotBox {
     pack $w.controls2.querytypelabel $w.controls2.containsbutton $w.controls2.partsbutton $w.controls2.partcontainsbutton -side left -expand yes -fill x
 
     if { [set $this-Files_on] == "yes" } {
-    pack $w.togFilesUI $w.files $w.f $w.probeUI $w.hier $w.controls2 $w.controls -side top -expand yes -fill both -padx 5 -pady 5
+    pack $w.togFilesUI $w.files $w.f $w.probeUI $w.timeUI $w.hier $w.controls2 $w.controls -side top -expand yes -fill both -padx 5 -pady 5
     } else {
-    pack $w.togFilesUI $w.f $w.probeUI $w.hier $w.controls2 $w.controls -side top -expand yes -fill both -padx 5 -pady 5
+    pack $w.togFilesUI $w.f $w.probeUI $w.timeUI $w.hier $w.controls2 $w.controls -side top -expand yes -fill both -padx 5 -pady 5
     }
 # pack $w.title -side top
   }
