@@ -25,7 +25,7 @@
 
 #include <sci_defs.h>
 
-#define HAVE_HAS_HMAP
+#define HAVE_HASH_MAP
 #ifdef HAVE_STD_HASHMAP
 #include <hash_map>
 using std::hash_map;
