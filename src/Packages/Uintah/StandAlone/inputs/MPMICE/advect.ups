@@ -25,7 +25,7 @@
 	<delt_min>           0.0         </delt_min>
 	<delt_max>           1.0         </delt_max>
 	<delt_init>          1.0e-9      </delt_init>
-	<timestep_multiplier>0.8         </timestep_multiplier>
+	<timestep_multiplier>1.0         </timestep_multiplier>
    </Time>
    
     <!--____________________________________________________________________-->
@@ -129,7 +129,7 @@
                <extraCells> [1,1,1]     </extraCells>
 		<patches>     [1,1,1]     </patches>
 	    </Box>
-	    <spacing>        [1.,1.,1.]  </spacing>
+	    <spacing>        [0.5,0.5,0.5]  </spacing>
 	</Level>
     </Grid>
    
@@ -149,7 +149,7 @@
    </DataArchiver>
 
    <Debug>
-     <!--<debug label = "switchDebugInitialize"/>       -->         
+     <!--<debug label = "switchDebugInitialize"/>      -->         
      <debug label = "switchDebug_equilibration_press"/>
      <debug label = "switchDebug_vel_FC"/>           
      <debug label = "switchDebug_explicit_press"/>   
@@ -202,10 +202,10 @@
                 <geom_object>
                     <box label="gpmpm">
                         <min>           [1.0,1.0,1.0]   </min>
-                        <max>           [2.0,2.0,2.0]   </max>
+                        <max>           [1.5,1.5,1.5]   </max>
                     </box>
                     <res>               [2,2,2]         </res>
-                    <velocity>          [1.0,0.0,0.0]   </velocity>
+                    <velocity>          [0.0,0.0,0.0]   </velocity>
                     <temperature>       300             </temperature>
                 </geom_object>
             </material>
@@ -234,21 +234,25 @@
                 </box>
 		<box label="gpicehole">
                     <min>           [1.0,1.0,1.0]       </min>
-                    <max>           [2.0,2.0,2.0]       </max>
+                    <max>           [1.5,1.5,1.5]       </max>
                 </box>
 		</difference>
 	        <res>		        [2,2,2]             </res>
-	        <velocity>           [1.0,0.0,0.0]       </velocity>
+	        <velocity>           [0.0,0.0,0.0]       </velocity>
 	        <temperature>        300.0               </temperature>
 	        <density>    1.1792946927374306000e+00   </density>
                <pressure>           101325.0            </pressure>
 	    </geom_object>
 	  </material>
-	  <exchange_coefficients>
-	     <momentum>	        [1e10, 1e10]         </momentum>
-	     <heat>                  [0.0, 0.0]           </heat>
-	 </exchange_coefficients>
 	</ICE>	
+       
+      
+       <MPMICE>
+         <exchange_coefficients>
+	       <momentum>	        [1e10, 1e10]         </momentum>
+	       <heat>                  [0.0, 0.0]           </heat>
+	   </exchange_coefficients>
+       </MPMICE>
     </MaterialProperties>
             
 
