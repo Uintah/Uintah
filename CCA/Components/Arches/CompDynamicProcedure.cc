@@ -629,9 +629,9 @@ CompDynamicProcedure::reComputeTurbSubmodel(const ProcessorGroup* pc,
     if (xminus) indexLowU -= IntVector(1,0,0); 
     if (yminus) indexLowV -= IntVector(0,1,0); 
     if (zminus) indexLowW -= IntVector(0,0,1); 
-    if (xplus) indexLowU += IntVector(1,0,0); 
-    if (yplus) indexLowV += IntVector(0,1,0); 
-    if (zplus) indexLowW += IntVector(0,0,1); 
+    if (xplus) indexHighU += IntVector(1,0,0); 
+    if (yplus) indexHighV += IntVector(0,1,0); 
+    if (zplus) indexHighW += IntVector(0,0,1); 
 
     int flowID = d_boundaryCondition->flowCellType();
     for (int colZ = indexLowU.z(); colZ <= indexHighU.z(); colZ ++) {
