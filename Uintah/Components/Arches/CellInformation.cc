@@ -11,23 +11,24 @@ CellInformation::CellInformation(const Patch* patch)
 {
   int domainLow[3], domainHigh[3];
   int indexLow[3], indexHigh[3];
-  domainLow[0] = (patch->getCellLowIndex()).x()+1;
-  domainLow[1] = (patch->getCellLowIndex()).y()+1;
-  domainLow[2] = (patch->getCellLowIndex()).z()+1;
+  domainLow[0] = (patch->getCellLowIndex()).x();
+  domainLow[1] = (patch->getCellLowIndex()).y();
+  domainLow[2] = (patch->getCellLowIndex()).z();
   domainHigh[0] = (patch->getCellHighIndex()).x();
   domainHigh[1] = (patch->getCellHighIndex()).y();
   domainHigh[2] = (patch->getCellHighIndex()).z();
   for (int ii = 0; ii < 3; ii++) {
-    indexLow[ii] = domainLow[ii]+1;
-    indexHigh[ii] = domainHigh[ii]-1;
+    indexLow[ii] = 0;
+    indexHigh[ii] = domainHigh[ii]-domainLow[ii];
   }
   // cell information
   xx.resize(domainHigh[0]-domainLow[0]);
   yy.resize(domainHigh[1]-domainLow[1]);
   zz.resize(domainHigh[2]-domainLow[2]);
-  xx[indexLow[0]] = (patch->getBox().upper()).x()+0.5*(patch->dCell()).x();
-  yy[indexLow[1]] = (patch->getBox().upper()).y()+0.5*(patch->dCell()).y();
-  zz[indexLow[2]] = (patch->getBox().upper()).z()+0.5*(patch->dCell()).z();
+  /// need to change it...its giving an index of -1
+  xx[indexLow[0]] = (patch->getBox().lower()).x()+0.5*(patch->dCell()).x();
+  yy[indexLow[1]] = (patch->getBox().lower()).y()+0.5*(patch->dCell()).y();
+  zz[indexLow[2]] = (patch->getBox().lower()).z()+0.5*(patch->dCell()).z();
   // cell grid information, for nonuniform grid it will be more
   // complicated
   for (int ii = indexLow[0]+1; ii < indexHigh[0]; ii++) {
@@ -106,6 +107,9 @@ CellInformation::CellInformation(const Patch* patch)
   fac3w.resize(domainHigh[2]-domainLow[2]);
   fac4w.resize(domainHigh[2]-domainLow[2]);
   kbsdw.resize(domainHigh[2]-domainLow[2]);
+  for (int ii = 0; ii < 3; ii++) 
+    domainHigh[ii] = domainHigh[ii]-1;
+
 
   // for computing geometry parameters
   FORT_CELLG(domainLow, domainHigh, indexLow, indexHigh,

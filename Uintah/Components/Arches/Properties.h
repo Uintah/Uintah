@@ -69,6 +69,14 @@ public:
       //
       void problemSetup(const ProblemSpecP& params);
 
+      // GROUP: Compute properties 
+      ///////////////////////////////////////////////////////////////////////
+      //
+      // Compute properties for inlet/outlet streams
+      //
+      double computeInletProperties(const std::vector<double>&
+				    mixfractionStream);
+
       // GROUP: Schedule Action :
       ///////////////////////////////////////////////////////////////////////
       //
@@ -164,6 +172,10 @@ private:
 
 //
 // $Log$
+// Revision 1.12  2000/06/19 18:00:30  rawat
+// added function to compute velocity and density profiles and inlet bc.
+// Fixed bugs in CellInformation.cc
+//
 // Revision 1.11  2000/06/18 01:20:16  bbanerje
 // Changed names of varlabels in source to reflect the sequence of tasks.
 // Result : Seg Violation in addTask in MomentumSolver

@@ -55,7 +55,7 @@ BoundaryCondition::BoundaryCondition(TurbulenceModel* turb_model,
 {
   //** WARNING ** Velocity is a FC Variable : change all velocity related stuff
   // to FCVariable type and delete this comment.
-
+  d_nofScalars = d_props->getNumMixVars();
   // The input labels first
   d_cellTypeLabel = scinew VarLabel("CellType", 
 				    CCVariable<int>::getTypeDescription() );
@@ -82,6 +82,9 @@ BoundaryCondition::BoundaryCondition(TurbulenceModel* turb_model,
 				    CCVariable<double>::getTypeDescription() );
   d_wVelocitySPLabel = scinew VarLabel("wVelocitySP", 
 				    CCVariable<double>::getTypeDescription() );
+  d_scalarSPLabel = scinew VarLabel("scalarSP", 
+				    CCVariable<double>::getTypeDescription() );
+  
 
   // 2) The labels computed by setInletVelocityBC (SIVBC)
   d_densitySIVBCLabel = scinew VarLabel("densitySIVBC", 
@@ -177,7 +180,8 @@ BoundaryCondition::problemSetup(const ProblemSpecP& params)
     d_flowInlets.push_back(FlowInlet(numMixingScalars, total_cellTypes));
     d_flowInlets[d_numInlets].problemSetup(inlet_db);
     d_cellTypes.push_back(total_cellTypes);
-     
+    d_flowInlets[d_numInlets].density = d_props->computeInletProperties(
+					  d_flowInlets[d_numInlets].streamMixturefraction);
     ++total_cellTypes;
     ++d_numInlets;
   }
@@ -195,6 +199,9 @@ BoundaryCondition::problemSetup(const ProblemSpecP& params)
     d_pressBoundary = true;
     d_pressureBdry = scinew PressureInlet(numMixingScalars, total_cellTypes);
     d_pressureBdry->problemSetup(press_db);
+    d_pressureBdry->density = d_props->computeInletProperties(
+					  d_pressureBdry->streamMixturefraction);
+    
     d_cellTypes.push_back(total_cellTypes);
     ++total_cellTypes;
   }
@@ -206,6 +213,8 @@ BoundaryCondition::problemSetup(const ProblemSpecP& params)
     d_outletBoundary = true;
     d_outletBC = scinew FlowOutlet(numMixingScalars, total_cellTypes);
     d_outletBC->problemSetup(outlet_db);
+    d_outletBC->density = d_props->computeInletProperties(
+              			  d_outletBC->streamMixturefraction);
     d_cellTypes.push_back(total_cellTypes);
     ++total_cellTypes;
   }
@@ -653,6 +662,44 @@ BoundaryCondition::sched_computePressureBC(const LevelP& level,
 }
 
 //****************************************************************************
+// Schedule computes inlet areas
+// computes inlet area for inlet bc
+//****************************************************************************
+void 
+BoundaryCondition::sched_calculateArea(const LevelP& level,
+				       SchedulerP& sched,
+				       DataWarehouseP& old_dw,
+				       DataWarehouseP& new_dw)
+{
+  for(Level::const_patchIterator iter=level->patchesBegin();
+      iter != level->patchesEnd(); iter++){
+    const Patch* patch=*iter;
+    {
+      Task* tsk = new Task("BoundaryCondition::calculateArea",
+			   patch, old_dw, new_dw, this,
+			   &BoundaryCondition::computeInletFlowArea);
+      cerr << "New task created successfully\n";
+      int matlIndex = 0;
+      int numGhostCells = 0;
+      tsk->requires(old_dw, d_cellTypeLabel, matlIndex, patch, Ghost::None,
+		    numGhostCells);
+      for (int ii = 0; ii < d_numInlets; ii++) {
+	// make it simple by adding matlindex for reduction vars
+	tsk->computes(old_dw, d_flowInlets[ii].d_area_label);
+      }
+      sched->addTask(tsk);
+      cerr << "New task added successfully to scheduler\n";
+    }
+  }
+}
+
+ 
+
+
+
+
+
+//****************************************************************************
 // Schedule set profile
 // assigns flat velocity profiles for primary and secondary inlets
 // Also sets flat profiles for density
@@ -673,22 +720,19 @@ BoundaryCondition::sched_setProfile(const LevelP& level,
       int numGhostCells = 0;
       int matlIndex = 0;
 
-      // This task requires old density, uVelocity, vVelocity and wVelocity
-      tsk->requires(old_dw, d_densityINLabel, matlIndex, patch, Ghost::None,
+      // This task requires cellTypeVariable and areaLabel for inlet boundary
+      tsk->requires(old_dw, d_cellTypeLabel, matlIndex, patch, Ghost::None,
 		    numGhostCells);
-      tsk->requires(old_dw, d_uVelocityINLabel, matlIndex, patch, Ghost::None,
-		    numGhostCells);
-      tsk->requires(old_dw, d_vVelocityINLabel, matlIndex, patch, Ghost::None,
-		    numGhostCells);
-      tsk->requires(old_dw, d_wVelocityINLabel, matlIndex, patch, Ghost::None,
-		    numGhostCells);
-
-      // This task computes new density, uVelocity, vVelocity and wVelocity
+      for (int ii = 0; ii < d_numInlets; ii++) {
+	tsk->requires(old_dw, d_flowInlets[ii].d_area_label);
+      }
+      // This task computes new density, uVelocity, vVelocity and wVelocity, scalars
       tsk->computes(new_dw, d_densitySPLabel, matlIndex, patch);
       tsk->computes(new_dw, d_uVelocitySPLabel, matlIndex, patch);
       tsk->computes(new_dw, d_vVelocitySPLabel, matlIndex, patch);
       tsk->computes(new_dw, d_wVelocitySPLabel, matlIndex, patch);
-
+      for (int ii = 0; ii < d_props->getNumMixVars(); ii++) 
+	tsk->computes(new_dw, d_scalarSPLabel, ii, patch);
       sched->addTask(tsk);
     }
   }
@@ -1311,7 +1355,7 @@ BoundaryCondition::calculatePressBC(const ProcessorGroup* pc,
 } 
 
 //****************************************************************************
-// Actually set flat profile
+// Actually set flat profile at flow inlet boundary
 //****************************************************************************
 void 
 BoundaryCondition::setFlatProfile(const ProcessorGroup* pc,
@@ -1325,45 +1369,80 @@ BoundaryCondition::setFlatProfile(const ProcessorGroup* pc,
   CCVariable<double> uVelocity;
   CCVariable<double> vVelocity;
   CCVariable<double> wVelocity;
-
+  vector<CCVariable<double> > scalar(d_nofScalars);
   int matlIndex = 0;
   int nofGhostCells = 0;
 
   // get cellType, density and velocity
   old_dw->get(cellType, d_cellTypeLabel, matlIndex, patch, Ghost::None,
 	      nofGhostCells);
-  old_dw->get(density, d_densityINLabel, matlIndex, patch, Ghost::None,
-	      nofGhostCells);
-  old_dw->get(uVelocity, d_uVelocityINLabel, matlIndex, patch, Ghost::None,
-	      nofGhostCells);
-  old_dw->get(vVelocity, d_vVelocityINLabel, matlIndex, patch, Ghost::None,
-	      nofGhostCells);
-  old_dw->get(wVelocity, d_wVelocityINLabel, matlIndex, patch, Ghost::None,
-	      nofGhostCells);
 
+  old_dw->allocate(uVelocity, d_uVelocitySPLabel, matlIndex, patch);
+  old_dw->allocate(vVelocity, d_vVelocitySPLabel, matlIndex, patch);
+  old_dw->allocate(wVelocity, d_wVelocitySPLabel, matlIndex, patch);
+  old_dw->allocate(density, d_densitySPLabel, matlIndex, patch);
+  for (int ii = 0; ii < d_nofScalars; ii++) {
+    old_dw->allocate(scalar[ii], d_scalarSPLabel, ii, patch);
+  }
   // Get the low and high index for the patch
+  IntVector domainLow = patch->getCellLowIndex();
+  IntVector domainHigh = patch->getCellHighIndex();
   IntVector lowIndex = patch->getCellLowIndex();
   IntVector highIndex = patch->getCellHighIndex();
 
-  // loop thru the flow inlets
+  // loop thru the flow inlets to set all the components of velocity and density
   for (int indx = 0; indx < d_numInlets; indx++) {
-
+    sum_vartype area_var;
+    old_dw->get(area_var, d_flowInlets[indx].d_area_label);
+    double area = area_var;
     // Get a copy of the current flowinlet
+    // check if given patch intersects with the inlet boundary of type index
     FlowInlet fi = d_flowInlets[indx];
 
 #ifdef WONT_COMPILE_YET
     FORT_PROFV(domainLow, domainHigh, indexLow, indexHigh,
-	       uVelocity, vVelocity, wVelocity, density, 
-	       &fi.d_cellTypeID, &fi.flowRate, &fi.area, &fi.density, 
-	       &fi.inletType);
+	       uVelocity.getPointer(), vVelocity.getPointer(), wVelocity.getPointer(),
+	       cellType.getPointer(), &area, &fi.d_cellTypeID, &fi.flowRate,  &fi.density);
+    FORT_PROFSCALAR(domainLow, domainHigh, indexLow, indexHigh,
+		    density.getPointer(), cellType.getPointer(),
+		    &fi.density, &fi.d_cellTypeID);
 #endif
-
-    // Put the calculated data into the new DW
-    new_dw->put(density, d_densitySPLabel, matlIndex, patch);
-    new_dw->put(uVelocity, d_uVelocitySPLabel, matlIndex, patch);
-    new_dw->put(vVelocity, d_vVelocitySPLabel, matlIndex, patch);
-    new_dw->put(wVelocity, d_wVelocitySPLabel, matlIndex, patch);
+  }   
+  if (d_pressureBdry) {
+#ifdef WONT_COMPILE_YET
+    FORT_PROFSCALAR(domainLow, domainHigh, indexLow, indexHigh,
+		    density.getPointer(), cellType.getPointer(),
+		    &d_pressureBdry->density, &d_pressureBdry->d_cellTypeID);
+#endif
+  }    
+  for (int indx = 0; indx < d_nofScalars; indx++) {
+    for (int ii = 0; ii < d_numInlets; ii++) {
+      double scalarValue = d_flowInlets[ii].streamMixturefraction[indx];
+#ifdef WONT_COMPILE_YET
+      FORT_PROFSCALAR(domainLow, domainHigh, indexLow, indexHigh,
+		      scalar[indx].getPointer(), cellType.getPointer(),
+		      &scalarValue, &d_flowInlets[ii].d_cellTypeID);
+#endif
+    }
+    if (d_pressBoundary) {
+      double scalarValue = d_pressureBdry->streamMixturefraction[indx];
+#ifdef WONT_COMPILE_YET
+      FORT_PROFSCALAR(domainLow, domainHigh, indexLow, indexHigh,
+		      scalar[indx].getPointer(), cellType.getPointer(),
+		      &scalarValue, &d_pressureBdry->d_cellTypeID);
+#endif
+    }
   }
+      
+  // Put the calculated data into the new DW
+  new_dw->put(density, d_densitySPLabel, matlIndex, patch);
+  new_dw->put(uVelocity, d_uVelocitySPLabel, matlIndex, patch);
+  new_dw->put(vVelocity, d_vVelocitySPLabel, matlIndex, patch);
+  new_dw->put(wVelocity, d_wVelocitySPLabel, matlIndex, patch);
+  for (int ii =0; ii < d_nofScalars; ii++) {
+    new_dw->put(scalar[ii], d_scalarSPLabel, ii, patch);
+  }
+
 }
 
 //****************************************************************************
@@ -1489,8 +1568,6 @@ BoundaryCondition::PressureInlet::problemSetup(ProblemSpecP& params)
     mixfrac_db->require("Mixfrac", mixfrac);
     streamMixturefraction.push_back(mixfrac);
   }
-  // check to see if this will work
-  // params->require("Mixturefraction", streamMixturefraction[0]);
 }
 
 //****************************************************************************
@@ -1536,6 +1613,10 @@ BoundaryCondition::FlowOutlet::problemSetup(ProblemSpecP& params)
 
 //
 // $Log$
+// Revision 1.24  2000/06/19 18:00:29  rawat
+// added function to compute velocity and density profiles and inlet bc.
+// Fixed bugs in CellInformation.cc
+//
 // Revision 1.23  2000/06/18 01:20:14  bbanerje
 // Changed names of varlabels in source to reflect the sequence of tasks.
 // Result : Seg Violation in addTask in MomentumSolver

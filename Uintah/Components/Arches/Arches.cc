@@ -188,29 +188,10 @@ Arches::scheduleInitialize(const LevelP& level,
       sched->addTask(tsk);
       cerr << "New task added successfully to scheduler\n";
     }
-    // computing flow inlet areas
-    {
-      Task* tsk = new Task("BoundaryCondition::calculateArea",
-			   patch, dw, dw, d_boundaryCondition,
-			   &BoundaryCondition::computeInletFlowArea);
-      cerr << "New task created successfully\n";
-      int matlIndex = 0;
-      int numGhostCells = 0;
-      tsk->requires(dw, d_cellTypeLabel, matlIndex, patch, Ghost::None,
-		    numGhostCells);
-      std::vector <VarLabel*> areaLabel;
-      for (int ii = 0; ii << d_boundaryCondition->getNumInlets(); ii++) {
-	// make it simple by adding matlindex for reduction vars
-	VarLabel* areaLabel = scinew VarLabel("flowarea"+
-				       d_boundaryCondition->getFlowCellID(ii),
-             ReductionVariable<double, Reductions::Sum<double> >::getTypeDescription()); 
-	tsk->computes(dw, areaLabel, matlIndex, patch);
-      }
-      sched->addTask(tsk);
-      cerr << "New task added successfully to scheduler\n";
-    }
 
   }
+  // computing flow inlet areas
+  d_boundaryCondition->sched_calculateArea(level, sched, dw, dw);
   // Set the profile (output Varlabel have SP appended to them)
   // require : densityIN,[u,v,w]VelocityIN
   // compute : densitySP, [u,v,w]VelocitySP
@@ -377,6 +358,10 @@ Arches::paramInit(const ProcessorGroup* ,
 
 //
 // $Log$
+// Revision 1.43  2000/06/19 18:00:28  rawat
+// added function to compute velocity and density profiles and inlet bc.
+// Fixed bugs in CellInformation.cc
+//
 // Revision 1.42  2000/06/18 01:20:14  bbanerje
 // Changed names of varlabels in source to reflect the sequence of tasks.
 // Result : Seg Violation in addTask in MomentumSolver
