@@ -53,7 +53,7 @@ WARNING
     virtual void scheduleErrorEstimate         ( const LevelP& level, SchedulerP& scheduler );
     virtual void scheduleInitialErrorEstimate  ( const LevelP& level, SchedulerP& scheduler );
     virtual void scheduleCoarsen               ( const LevelP& level, SchedulerP& scheduler );
-    virtual void scheduleRefine                ( const LevelP& level, SchedulerP& scheduler );
+    virtual void scheduleRefine                ( const PatchSet* patches, SchedulerP& scheduler );
     virtual void scheduleRefineInterface       ( const LevelP& level, SchedulerP& scheduler, int step, int nsteps );
 
   private:
@@ -91,6 +91,7 @@ WARNING
     SimpleMaterial*  d_material;
 
     VarLabel* d_oldDensityLabel;
+    VarLabel* d_densityLabel;
     VarLabel* d_currentAngleLabel;
     SCIRun::Vector d_gridMax;
     SCIRun::Vector d_gridMin;
