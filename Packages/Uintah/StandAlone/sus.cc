@@ -21,6 +21,8 @@
 #include <Packages/Uintah/CCA/Components/ICE/ICE.h>
 #include <Packages/Uintah/CCA/Components/MPMICE/MPMICE.h>
 #include <Packages/Uintah/CCA/Components/MPMArches/MPMArches.h>
+#include <Packages/Uintah/CCA/Components/Examples/Poisson1.h>
+#include <Packages/Uintah/CCA/Components/Examples/Poisson2.h>
 #include <Packages/Uintah/CCA/Components/Schedulers/SimpleScheduler.h>
 #include <Packages/Uintah/CCA/Components/Schedulers/SingleProcessorScheduler.h>
 #include <Packages/Uintah/CCA/Components/Schedulers/MPIScheduler.h>
@@ -152,6 +154,8 @@ main(int argc, char** argv)
     bool   do_mpm=false;
     bool   do_arches=false;
     bool   do_ice=false;
+    bool   do_poisson1=false;
+    bool   do_poisson2=false;
     bool   emit_graphs=false;
     bool   restart=false;
     int    restartTimestep = -1;
@@ -180,6 +184,10 @@ main(int argc, char** argv)
 	} else if(s == "-mpmice"){
 	    do_ice=true;
 	    do_mpm=true;
+	} else if(s == "-poisson1"){
+	    do_poisson1=true;
+	} else if(s == "-poisson2"){
+	    do_poisson2=true;
 	} else if(s == "-mpmarches"){
 	    do_arches=true;
 	    do_mpm=true;
@@ -262,7 +270,7 @@ main(int argc, char** argv)
 	usage( "ICE and Arches do not work together", "", argv[0]);
     }
 
-    if(!(do_ice || do_arches || do_mpm)){
+    if(!(do_ice || do_arches || do_mpm || do_poisson1 || do_poisson2)){
 	usage( "You need to specify -arches, -ice, or -mpm", "", argv[0]);
     }
 
@@ -291,54 +299,38 @@ main(int argc, char** argv)
      */
     try {
 	const ProcessorGroup* world = Uintah::Parallel::getRootProcessorGroup();
-	SimulationController* sim = scinew SimulationController(world);
+	SimulationController* ctl = scinew SimulationController(world);
 
 	// Reader
 	ProblemSpecInterface* reader = scinew ProblemSpecReader(filename);
-	sim->attachPort("problem spec", reader);
+	ctl->attachPort("problem spec", reader);
 
-	// Connect a MPM module if applicable
-	MPMInterface* mpm = 0;
-	if(do_mpm && !do_ice){
-	  mpm = scinew SerialMPM(world);
-	  sim->attachPort("mpm", mpm);
-	}
-
-	// Connect a CFD module if applicable
-	CFDInterface* cfd = 0;
-	ICE* ice = 0;
-	if(do_arches){
-	    cfd = scinew Arches(world);
-	}
-	if(do_ice && !do_mpm){
-	    cfd = ice = scinew ICE(world);
-	}
-	if(cfd)
-	    sim->attachPort("cfd", cfd);
-
-	// Connect an MPMICE module if do_mpm and do_ice are both true
-	MPMCFDInterface* mpmcfd = 0;
-       MPMICE* mpmice = 0;
-	if(do_mpm && do_ice){
-	    mpmcfd = mpmice = scinew MPMICE(world);
-	}
-	if(do_mpm && do_arches){
-	    mpmcfd = scinew MPMArches(world);
-	}
-	if (mpmcfd)
-	  sim->attachPort("mpmcfd", mpmcfd);
 	// Output
 	Output* output = scinew DataArchiver(world);
-	sim->attachPort("output", output);
+	ctl->attachPort("output", output);
 
-	// This port is only needed for knowing when to spit out debugging
-	// information. 
-       if (ice)
+	// Connect a MPM module if applicable
+	SimulationInterface* sim = 0;
+	if(do_mpm && do_ice){
+	  sim = scinew MPMICE(world);
+	} else if(do_mpm && do_arches){
+	  sim = scinew MPMArches(world);
+	} else if(do_mpm){
+	  sim = scinew SerialMPM(world);
+	} else if(do_arches){
+	  sim = scinew Arches(world);
+	} else if(do_ice) {
+	  ICE* ice = scinew ICE(world);
 	  ice->attachPort("output", output);
-
-       if (mpmcfd) {
-	  mpmice->attachPort("output", output);
-       }
+	  sim = ice;
+	} else if(do_poisson1){
+	  sim = scinew Poisson1(world);
+	} else if(do_poisson2){
+	  sim = scinew Poisson2(world);
+	} else {
+	  usage("You need to specify a simulation, -arches, -ice, -mpm, -mpmice, -mpmarches, or -poisson1, or -poisson2", "", argv[0]);
+	}
+	ctl->attachPort("sim", sim);
 
 	if(world->myrank() == 0){
 	   cerr << "Using scheduler: " << scheduler << " and load balancer: " << loadbalancer << '\n';
@@ -365,19 +357,19 @@ main(int argc, char** argv)
 	if(scheduler == "SingleProcessorScheduler"){
 	   SingleProcessorScheduler* sched = 
 	      scinew SingleProcessorScheduler(world, output);
-	   sim->attachPort("scheduler", sched);
+	   ctl->attachPort("scheduler", sched);
 	   sched->attachPort("load balancer", bal);
 	   sch=sched;
 	} else if(scheduler == "SimpleScheduler"){
 	   SimpleScheduler* sched = 
 	      scinew SimpleScheduler(world, output);
-	   sim->attachPort("scheduler", sched);
+	   ctl->attachPort("scheduler", sched);
 	   sched->attachPort("load balancer", bal);
 	   sch=sched;
 	} else if(scheduler == "MPIScheduler"){
 	   MPIScheduler* sched =
 	      scinew MPIScheduler(world, output);
-	   sim->attachPort("scheduler", sched);
+	   ctl->attachPort("scheduler", sched);
 	   sched->attachPort("load balancer", bal);
 	   sch=sched;
 	} else if(scheduler == "MixedScheduler"){
@@ -388,13 +380,13 @@ main(int argc, char** argv)
 	  }
 	  MixedScheduler* sched =
 	    scinew MixedScheduler(world, output);
-	  sim->attachPort("scheduler", sched);
+	  ctl->attachPort("scheduler", sched);
 	  sched->attachPort("load balancer", bal);
 	  sch=sched;
 	} else if(scheduler == "NullScheduler"){
 	   NullScheduler* sched =
 	      scinew NullScheduler(world, output);
-	   sim->attachPort("scheduler", sched);
+	   ctl->attachPort("scheduler", sched);
 	   sched->attachPort("load balancer", bal);
 	   sch=sched;
 	} else {
@@ -417,17 +409,15 @@ main(int argc, char** argv)
 	}
 
 	if (restart) {
-	  sim->doRestart(restartFromDir, restartTimestep,
+	  ctl->doRestart(restartFromDir, restartTimestep,
 			 restartFromScratch, restartRemoveOldDir);
 	}
-	sim->run();
+	ctl->run();
 
-	delete mpm;
-	delete cfd;
-	delete mpmcfd;
+	delete sim;
 	delete output;
 	delete bal;
-	delete sim;
+	delete ctl;
 	delete reader;
 	sch->removeReference();
 	delete sch;
