@@ -69,7 +69,7 @@ itcl_class Fusion_Fields_NrrdFieldConverter {
 	frame $w.datasets
 	
 	global $this-datasets
-	set_names 1 [set $this-datasets]
+	set_names [set $this-datasets]
 
 	pack $w.datasets -side top -pady 10
 
@@ -81,12 +81,9 @@ itcl_class Fusion_Fields_NrrdFieldConverter {
 	pack $w.misc -side bottom -pady 10
     }
 
-    method set_names {dims datasets} {
+    method set_names {datasets} {
 
-	global $this-ndims
 	global $this-datasets
-
-	set $this-ndims $dims
 	set $this-datasets $datasets
 
         set w .ui[modname]
