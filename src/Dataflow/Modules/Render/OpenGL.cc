@@ -1527,8 +1527,8 @@ void OpenGL::listvisuals(TCLArgs& args)
   }
   dpy=Tk_Display(topwin);
   int screen=Tk_ScreenNumber(topwin);
-  Array1<string> visualtags;
-  Array1<int> scores;
+  vector<string> visualtags;
+  vector<int> scores;
   visuals.remove_all();
   int nvis;
   XVisualInfo* vinfo=XGetVisualInfo(dpy, 0, NULL, &nvis);
@@ -1604,12 +1604,12 @@ void OpenGL::listvisuals(TCLArgs& args)
     tag += ", score=" + to_string(score);
     //cerr << score << ": " << tag << '\n';
     
-    visualtags.add(tag);
+    visualtags.push_back(tag);
     visuals.add(&vinfo[i]);
-    scores.add(score);
+    scores.push_back(score);
   }
-  for(i=0;i<scores.size()-1;i++){
-    for(int j=i+1;j<scores.size();j++){
+  for(i=0;(unsigned int)i<scores.size()-1;i++){
+    for(unsigned int j=i+1;j<scores.size();j++){
       if(scores[i] < scores[j]){
 	// Swap...
 	int tmp1=scores[i];

@@ -43,14 +43,16 @@
 #include <Core/GuiInterface/Remote.h>
 #include <Core/GuiInterface/TCLTask.h>
 #include <Core/Thread/Runnable.h>
+#include <vector>
 
 namespace SCIRun {
 
+using std::vector;
 
 class SCICORESHARE GuiServer : public Runnable {
     private:
 	int gui_socket;
-	Array1<int> clients;
+        vector<int> clients;
     public:
 	GuiServer ();
 	~GuiServer();

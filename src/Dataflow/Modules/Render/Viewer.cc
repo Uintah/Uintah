@@ -429,12 +429,12 @@ void Viewer::tcl_command(TCLArgs& args, void* userdata)
 	ViewWindow* r=scinew ViewWindow(this, args[2]);
 	viewwindow.add(r);
     } else if(args[1] == "listrenderers"){
-	Array1<string> list;
+        vector<string> rlist;
 	AVLTreeIter<string, RegisterRenderer*> iter(Renderer::get_db());
 	for(iter.first();iter.ok();++iter){
-	    list.add(iter.get_key());
+	    rlist.push_back(iter.get_key());
 	}
-	args.result(args.make_list(list));
+	args.result(args.make_list(rlist));
     } else {
 	Module::tcl_command(args, userdata);
     }

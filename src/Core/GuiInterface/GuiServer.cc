@@ -36,7 +36,6 @@
 #ifndef _WIN32
 #include <Core/GuiInterface/GuiServer.h>
 
-#include <Core/Containers/Array1.h>
 #include <Core/GuiInterface/TCLTask.h>
 #include <unistd.h>
 #include <string>
@@ -44,6 +43,7 @@
 #include <tcl.h>
 #include <tk.h>
 #include <iostream>
+
 using namespace std;
 
 #define DEBUG 0
@@ -99,7 +99,7 @@ cerr << "GuiServer::getClients() clients.size() = " << clients.size() << endl;
 #endif
 
 	// read from all available clients 
-      	for (int i = 0; i < clients.size(); i++)  {
+      	for (unsigned int i = 0; i < clients.size(); i++)  {
 	    if (FD_ISSET (clients[i], &readfds)) {
 
 #if DEBUG
@@ -132,7 +132,7 @@ cerr << "GuiServer::getClients() read from clients["<<i<<"], socket = " <<
 	// check for a pending connection request
 	if (FD_ISSET (listen_socket, &readfds)) {
 		int new_fd = acceptConnect (listen_socket);
-		clients.add(new_fd);
+		clients.push_back(new_fd);
 #if DEBUG
 cerr << "GuiServer::getClients() add new client connection " << new_fd << endl;
 #endif

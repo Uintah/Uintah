@@ -157,12 +157,11 @@ void HexMC<Field>::extract( const cell_index_type& cell, double iso )
 
   // interpolate and project vertices
   int v = 0;
-  Array1<int> visited(12);
-  visited.initialize(0);
+  vector<bool> visited(12, false);
   while (vertex[v] != -1) {
     int i = vertex[v++];
     if (visited[i]) continue;
-    visited[i]=1;
+    visited[i]=true;
     int v1 = edge_tab[i][0];
     int v2 = edge_tab[i][1];
     q[i] = Interpolate(p[v1], p[v2], 

@@ -225,7 +225,7 @@ BaseWidget::tcl_command(TCLArgs& args, void*)
       args.error("widget doesn't need a minor command");
       return;
     }
-    Array1<string> defmateriallist(NumDefaultMaterials);
+    vector<string> defmateriallist(NumDefaultMaterials);
       
     for (Index i=0; i<NumDefaultMaterials; i++)
     {
@@ -240,7 +240,7 @@ BaseWidget::tcl_command(TCLArgs& args, void*)
       args.error("widget doesn't nedd a minor command");
       return;
     }
-    Array1<string> materiallist(materials.size());
+    vector<string> materiallist(materials.size());
       
     for (Index i=0; i<materials.size(); i++)
     {

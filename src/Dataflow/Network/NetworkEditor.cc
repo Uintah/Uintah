@@ -568,32 +568,32 @@ void NetworkEditor::tcl_command(TCLArgs& args, void*)
 	    args.error("netedit addconnection can't find output module");
 	    return;
 	}
-	Array1<string> res;
+	vector<string> res;
 	int i;
 	for(i=0;i<mod->niports();i++){
 	    Port* p=mod->iport(i);
 	    for(int c=0;c<p->nconnections();c++){
 		Connection* conn=p->connection(c);
-		Array1<string> cinfo(5);
+		vector<string> cinfo(5);
 		cinfo[0]=conn->id;
 		cinfo[1]=conn->oport->get_module()->id;
 		cinfo[2]=to_string(conn->oport->get_which_port());
 		cinfo[3]=conn->iport->get_module()->id;
 		cinfo[4]=to_string(conn->iport->get_which_port());
-		res.add(args.make_list(cinfo));
+		res.push_back(args.make_list(cinfo));
 	    }
 	}
 	for(i=0;i<mod->noports();i++){
 	    Port* p=mod->oport(i);
 	    for(int c=0;c<p->nconnections();c++){
 		Connection* conn=p->connection(c);
-		Array1<string> cinfo(5);
+		vector<string> cinfo(5);
 		cinfo[0]=conn->id;
 		cinfo[1]=conn->oport->get_module()->id;
 		cinfo[2]=to_string(conn->oport->get_which_port());
 		cinfo[3]=conn->iport->get_module()->id;
 		cinfo[4]=to_string(conn->iport->get_which_port());
-		res.add(args.make_list(cinfo));
+		res.push_back(args.make_list(cinfo));
 	    }
 	}
 	args.result(args.make_list(res));
@@ -631,14 +631,14 @@ void NetworkEditor::tcl_command(TCLArgs& args, void*)
 	    return;
 	}
 	OPort* oport=mod->oport(which);
-	Array1<string> iports;
+	vector<string> iports;
 	for(int i=0;i<net->nmodules();i++){
 	    Module* m=net->module(i);
 	    for(int j=0;j<m->niports();j++){
 		IPort* iport=m->iport(j);
 		if(iport->nconnections() == 0 && 
 		   oport->get_typename() == iport->get_typename()){
-		    iports.add(args.make_list(m->id, to_string(j)));
+		    iports.push_back(args.make_list(m->id, to_string(j)));
 		}
 	    }
 	}
@@ -667,13 +667,13 @@ void NetworkEditor::tcl_command(TCLArgs& args, void*)
 	    args.result("");
 	    return;
 	}
-	Array1<string> oports;
+	vector<string> oports;
 	for(int i=0;i<net->nmodules();i++){
 	    Module* m=net->module(i);
 	    for(int j=0;j<m->noports();j++){
 		OPort* oport=m->oport(j);
 		if(oport->get_typename() == iport->get_typename()){
-		    oports.add(args.make_list(m->id, to_string(j)));
+		    oports.push_back(args.make_list(m->id, to_string(j)));
 		}
 	    }
 	}

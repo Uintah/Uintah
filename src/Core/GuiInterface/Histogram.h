@@ -31,17 +31,18 @@
 #ifndef SCI_project_Histogram_h
 #define SCI_project_Histogram_h 1
 
-#include <Core/Containers/Array1.h>
 #include <Core/GuiInterface/TCL.h>
 #include <Core/GuiInterface/GuiVar.h>
+#include <vector>
 
 namespace SCIRun {
 
+using std::vector;
 
 class SCICORESHARE Histogram : public TCL {
-   Array1<double> data;
+   vector<double> data;
    int numbuckets;
-   Array1<int> freqs;
+   vector<int> freqs;
    
    double minfreq, maxfreq;
    double minval, maxval;
@@ -77,7 +78,7 @@ public:
    int GetNumBuckets();
    void SetNumBuckets( const int nb );
    
-   void SetData( const Array1<double> values );
+   void SetData( const vector<double> &values );
    void ui() const;
    void update() const;
 };

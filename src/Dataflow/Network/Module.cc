@@ -578,26 +578,26 @@ void Module::tcl_command(TCLArgs& args, void*)
 	return;
     }
     if(args[1] == "iportinfo"){
-	Array1<string> info(iports.size());
+	vector<string> info(iports.size());
 	for(int i=0;i<iports.size();i++){
 	    IPort* port=iports[i];
-	    Array1<string> pi;
-	    pi.add(port->get_colorname());
-	    pi.add(to_string(port->nconnections()>0));
-	    pi.add(port->get_typename());
-	    pi.add(port->get_portname());
+	    vector<string> pi;
+	    pi.push_back(port->get_colorname());
+	    pi.push_back(to_string(port->nconnections()>0));
+	    pi.push_back(port->get_typename());
+	    pi.push_back(port->get_portname());
 	    info[i]=args.make_list(pi);
 	}
 	args.result(args.make_list(info));
     } else if(args[1] == "oportinfo"){
-	Array1<string> info(oports.size());
+	vector<string> info(oports.size());
 	for(int i=0;i<oports.size();i++){
 	    OPort* port=oports[i];
-	    Array1<string> pi;
-	    pi.add(port->get_colorname());
-	    pi.add(to_string(port->nconnections()>0));
-	    pi.add(port->get_typename());
-	    pi.add(port->get_portname());
+	    vector<string> pi;
+	    pi.push_back(port->get_colorname());
+	    pi.push_back(to_string(port->nconnections()>0));
+	    pi.push_back(port->get_typename());
+	    pi.push_back(port->get_portname());
 	    info[i]=args.make_list(pi);
 	}
 	args.result(args.make_list(info));
