@@ -2629,6 +2629,17 @@ OpenGL::render_rotation_axis(const View &view,
   for(;ii<maxlights;ii++)
     glDisable((GLenum)(GL_LIGHT0+ii));
 
+  // Disable clipping planes for the orientation icon.
+  vector<bool> cliplist(6, false);
+  for (ii = 0; ii < 6; ii++)
+  {
+    if (glIsEnabled((GLenum)(GL_CLIP_PLANE0+ii)))
+    {
+      glDisable((GLenum)(GL_CLIP_PLANE0+ii));
+      cliplist[ii] = true;
+    }
+  }
+
   drawinfo->viewwindow = viewwindow;
   
   // Use depthrange to force the icon to move forward.
@@ -2648,6 +2659,15 @@ OpenGL::render_rotation_axis(const View &view,
   glPopMatrix();
 
   glViewport(viewport[0], viewport[1], viewport[2], viewport[3]);
+
+  // Reenable clipping planes.
+  for (ii = 0; ii < 6; ii++)
+  {
+    if (cliplist[ii])
+    {
+      glEnable((GLenum)(GL_CLIP_PLANE0+ii));
+    }
+  }
 }
 
 } // End namespace SCIRun
