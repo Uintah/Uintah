@@ -16,12 +16,17 @@
 #
 
 # Makefile fragment for this subdirectory
-SRCDIR := Core/Algorithms
 
-SUBDIRS := \
-	$(SRCDIR)/Geometry		\
-	$(SRCDIR)/Visualization		\
-	$(SRCDIR)/GLVolumeRenderer      \
+include $(SCIRUN_SCRIPTS)/smallso_prologue.mk
 
-include $(SCIRUN_SCRIPTS)/recurse.mk
+SRCDIR   := Core/Algorithms/GLVolumeRenderer
 
+SRCS     += $(SRCDIR)/GLTexture3DBuilder.cc
+
+
+PSELIBS := Core/Datatypes Core/Containers Core/Thread \
+	Core/Exceptions Core/Geom Core/Util Core/Geometry \
+	Core/Persistent
+LIBS := $(GL_LIBRARY) $(M_LIBRARY)
+
+include $(SCIRUN_SCRIPTS)/smallso_epilogue.mk
