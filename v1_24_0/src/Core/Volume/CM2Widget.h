@@ -48,7 +48,7 @@ namespace SCIRun {
 class CM2ShaderFactory;
 class Pbuffer;
 
-class CM2Widget : public SCIRun::Datatype
+class CM2Widget : public Datatype
 {
 public:
   CM2Widget();
@@ -58,10 +58,13 @@ public:
   // appearance
   virtual void draw() = 0;
   virtual void rasterize(CM2ShaderFactory& factory, bool faux, Pbuffer* pbuffer) = 0;
-  virtual void rasterize(SCIRun::Array3<float>& array, bool faux) = 0;
+  virtual void rasterize(Array3<float>& array, bool faux) = 0;
   virtual CM2Widget* clone() = 0;
-  virtual int  get_shadeType() = 0;
-  virtual int  get_onState() = 0;
+
+  virtual int  get_shadeType();
+  virtual void set_shadeType(int type);
+  virtual int  get_onState();
+  virtual void set_onState(int state);
   
   virtual bool is_empty() { return false; }
   // behavior
@@ -75,31 +78,30 @@ public:
 
   void select(int obj) { selected_ = obj; }
   void unselect_all() { selected_ = 0; }
-  SCIRun::Color color() const { return color_; }
-  void set_color(const SCIRun::Color &c) { color_ = c; }
+  Color color() const { return color_; }
+  void set_color(const Color &c) { color_ = c; }
   float alpha() const { return alpha_; }
   void set_alpha(float a);
-  virtual void set_shadeType(int type);
-  virtual void set_onState(int state);
-  virtual void io(SCIRun::Piostream &stream) = 0;
-  static SCIRun::PersistentTypeID type_id;
+
+  virtual void io(Piostream &stream) = 0;
+  static PersistentTypeID type_id;
 
 protected:
   void selectcolor(int obj);
 
-  SCIRun::Color line_color_;
+  Color line_color_;
   float line_alpha_;
-  SCIRun::Color selected_color_;
+  Color selected_color_;
   float selected_alpha_;
   float thin_line_width_;
   float thick_line_width_;
   float point_size_;
-  SCIRun::Color color_;
+  Color color_;
   float alpha_;
   int selected_;
   int shadeType_;
   int onState_;
-  SCIRun::HSVColor last_hsv_;
+  HSVColor last_hsv_;
 };
 
 typedef LockingHandle<CM2Widget> CM2WidgetHandle;
@@ -119,9 +121,7 @@ public:
   // appearance
   void draw();
   void rasterize(CM2ShaderFactory& factory, bool faux, Pbuffer* pbuffer);
-  void rasterize(SCIRun::Array3<float>& array, bool faux);
-  int  get_shadeType() {return shadeType_;}
-  int  get_onState() {return onState_;}
+  void rasterize(Array3<float>& array, bool faux);
   
   // behavior
   virtual int pick1 (int x, int y, int w, int h);
@@ -132,8 +132,8 @@ public:
   virtual std::string tcl_pickle();
   virtual void tcl_unpickle(const std::string &p);
 
-  virtual void io(SCIRun::Piostream &stream);
-  static SCIRun::PersistentTypeID type_id;
+  virtual void io(Piostream &stream);
+  static PersistentTypeID type_id;
 
 protected:
   float base_;
@@ -166,9 +166,7 @@ public:
   // appearance
   void draw();
   void rasterize(CM2ShaderFactory& factory, bool faux, Pbuffer* pbuffer);
-  void rasterize(SCIRun::Array3<float>& array, bool faux);
-  int  get_shadeType() {return shadeType_;}
-  int  get_onState() {return onState_;}
+  void rasterize(Array3<float>& array, bool faux);
 
   // behavior
   virtual int pick1 (int x, int y, int w, int h);
@@ -179,8 +177,8 @@ public:
   virtual std::string tcl_pickle();
   virtual void tcl_unpickle(const std::string &p);
 
-  virtual void io(SCIRun::Piostream &stream);
-  static SCIRun::PersistentTypeID type_id;
+  virtual void io(Piostream &stream);
+  static PersistentTypeID type_id;
 
 protected:
   CM2RectangleType type_;
@@ -206,9 +204,7 @@ public:
   // appearance
   void draw();
   void rasterize(CM2ShaderFactory& factory, bool faux, Pbuffer* pbuffer);
-  void rasterize(SCIRun::Array3<float>& array, bool faux);
-  int  get_shadeType() {return shadeType_;}
-  int  get_onState() {return onState_;}
+  void rasterize(Array3<float>& array, bool faux);
   
   bool is_empty() { return ! pixels_.get_rep(); }
   // behavior
@@ -220,8 +216,8 @@ public:
   virtual std::string tcl_pickle() {return "i";}
   virtual void tcl_unpickle(const std::string &/*p*/) {}
 
-  virtual void io(SCIRun::Piostream &stream);
-  static SCIRun::PersistentTypeID type_id;
+  virtual void io(Piostream &stream);
+  static PersistentTypeID type_id;
 
 protected:
   // nrrdSpatialResample ...
@@ -251,9 +247,7 @@ public:
   // appearance
   void draw();
   void rasterize(CM2ShaderFactory& factory, bool faux, Pbuffer* pbuffer);
-  void rasterize(SCIRun::Array3<float>& array, bool faux);
-  int  get_shadeType() {return shadeType_;}
-  int  get_onState() {return onState_;}
+  void rasterize(Array3<float>& array, bool faux);
   
   bool is_empty();
   // behavior
@@ -265,8 +259,8 @@ public:
   virtual std::string tcl_pickle() {return "i";}
   virtual void tcl_unpickle(const std::string &/*p*/) {}
 
-  virtual void io(SCIRun::Piostream &stream);
-  static SCIRun::PersistentTypeID type_id;
+  virtual void io(Piostream &stream);
+  static PersistentTypeID type_id;
 
   ColoredSegments &	get_segments() { return segments_; }
 
