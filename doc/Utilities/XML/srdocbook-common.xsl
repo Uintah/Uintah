@@ -28,6 +28,9 @@ version="1.0">
     <script type="text/javascript">
       var treetop="";
       var path = location.pathname;
+      if (path.charAt(path.length-1) == "/") {
+        path += "bogus.html"
+      }
       var base = path.substr(path.lastIndexOf("/")+1)
       var roottag = "doc"
       while (base != roottag &amp;&amp; base != "") {
@@ -58,6 +61,11 @@ version="1.0">
         document.write('&lt;script type="text/javascript" src="',treetop,'doc/Utilities/HTML/banner_bottom.js"&gt;&lt;\/script&gt;');
       }
     </script>
+  </xsl:template>
+
+  <!-- Change type from a 'charseq' to a 'monoseq' -->
+  <xsl:template match="type">
+    <xsl:call-template name="inline.monoseq"/>
   </xsl:template>
 
 </xsl:stylesheet>
