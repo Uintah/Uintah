@@ -1035,7 +1035,7 @@ void HVolumeVis2D<DataT,MetaCT>::shade(Color& result, const Ray& ray,
   if(dir.y() > 0){
     diy_dy=1;
     ddy=1;
-  } else if(dir.y() <-1.e-6){
+  } else {
     diy_dy=-1;
     ddy=0;
   }
