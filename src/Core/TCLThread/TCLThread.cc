@@ -27,6 +27,7 @@
 */
 
 #include <Core/TCLThread/TCLThread.h>
+#include <Core/Containers/StringUtil.h>
 #include <Core/GuiInterface/TCLInterface.h>
 #include <Core/GuiInterface/TCLTask.h>
 #include <Core/Util/Environment.h>
@@ -46,14 +47,16 @@ using namespace SCIRun;
      extern "C" {
 #  endif // __cplusplus
        __declspec(dllimport) void Tcl_SetLock(Tcl_LockProc*, Tcl_LockProc*);
-       int tkMain(int argc, char** argv, void (*nwait_func)(void*), void* nwait_func_data);
+       int tkMain(int argc, char** argv, 
+		  void (*nwait_func)(void*), void* nwait_func_data);
 #  ifdef __cplusplus
      }
 #  endif // __cplusplus
 
 #else // _WIN32
   extern "C" void Tcl_SetLock(Tcl_LockProc*, Tcl_LockProc*);
-  extern "C" int tkMain(int argc, char** argv, void (*nwait_func)(void*), void* nwait_func_data);
+  extern "C" int tkMain(int argc, char** argv,
+			void (*nwait_func)(void*), void* nwait_func_data);
 
 #endif // _WIN32
 
@@ -162,7 +165,8 @@ TCLThread::startNetworkEditor()
     show_license_and_copy_scirunrc(gui);
   else {
     const char *rcversion = sci_getenv("SCIRUN_RCFILE_VERSION");
-    const string ver =string(SCIRUN_VERSION)+"."+string(SCIRUN_RCFILE_SUBVERSION);
+    const string ver = 
+      string(SCIRUN_VERSION)+"."+string(SCIRUN_RCFILE_SUBVERSION);
     // If the .scirunrc is an old version
     if (!rcversion || string(rcversion) != ver)
       // Ask them if they want to copy over a new one
@@ -171,8 +175,8 @@ TCLThread::startNetworkEditor()
   }
 
   // determine if we are loading an app
-  const bool loading_app_p = strstr(argv[startnetno],".app");
-  if (!loading_app_p) {
+  const bool powerapp_p = (startnetno && ends_with(argv[startnetno],".app"));
+  if (!powerapp_p) {
     gui->eval("set PowerApp 0");
     // wait for the main window to display before continuing the startup.
     gui->eval("wm deiconify .");
@@ -205,7 +209,7 @@ TCLThread::startNetworkEditor()
   packageDB = new PackageDB(gui);
   packageDB->loadPackage();  // load the packages
 
-  if (!loading_app_p) {
+  if (!powerapp_p) {
     gui->eval("hideProgress");
   }
   
@@ -221,7 +225,8 @@ TCLThread::startNetworkEditor()
   // Load the Network file specified from the command line
   if (startnetno) {
     gui->eval("loadnet {"+string(argv[startnetno])+"}");
-    if (sci_getenv_p("SCIRUN_EXECUTE_ON_STARTUP") || sci_getenv_p("SCI_REGRESSION_TESTING")) {
+    if (sci_getenv_p("SCIRUN_EXECUTE_ON_STARTUP") || 
+	sci_getenv_p("SCI_REGRESSION_TESTING")) {
       gui->eval("netedit scheduleall");
     }
   }
