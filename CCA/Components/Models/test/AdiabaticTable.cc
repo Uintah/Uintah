@@ -266,6 +266,7 @@ void AdiabaticTable::initialize(const ProcessorGroup*,
         }
       } // Over cells
     } // regions
+    setBC(f,"scalar-f", patch, sharedState,indx, new_dw); 
 
     vector<constCCVariable<double> > ind_vars;
     ind_vars.push_back(f);
