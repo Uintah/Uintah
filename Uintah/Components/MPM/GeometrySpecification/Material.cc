@@ -1,37 +1,67 @@
-
 #include "Material.h"
-#ifdef WONT_COMPILE_YET
-#include "ConstitutiveModelFactory.h"
-#include <fstream>
-using std::ifstream;
+#include <Uintah/Components/MPM/ConstitutiveModel/ConstitutiveModelFactory.h>
+
+class ConstitutiveModelFactory;
 
 Material::Material(){}
 Material::~Material(){}
 
-void Material::addMaterial(ifstream &filename)
+void Material::addMaterial(ProblemSpecP mat_ps)
 {
-  filename >> Density >> MatType;
-  ConstitutiveModelFactory::readParameters(filename, MatType, mp);
+  mat_ps->require("density",d_density);
+  mat_ps->require("material_type",d_mat_type);
+  mat_ps->require("toughness",d_toughness);
+  mat_ps->require("thermal_conductivity",d_thermal_cond);
+  mat_ps->require("specific_heat",d_spec_heat);
+ 
+  ConstitutiveModelFactory::readParameters(mat_ps,d_mat_type,d_mat_properties);
 }
 
-double Material::getDensity() const { return Density; }
+double Material::getDensity() const 
+{ 
+  return d_density; 
+}
 
-int Material::getMaterialType() const { return MatType; }
+double Material::getToughness() const
+{
+  return d_toughness;
+}
+
+double Material::getThermalConductivity() const
+{
+  return d_thermal_cond;
+}
+
+double Material::getSpecificHeat() const
+{
+  return d_spec_heat;
+}
+
+
+std::string Material::getMaterialType() const 
+{ 
+  return d_mat_type; 
+}
 
 void Material::getMatProps(double matprop[10]) const
 {
 
   for(int i=0;i<10;i++){
-	matprop[i] = mp[i];
+	matprop[i] = d_mat_properties[i];
   }
 
   return;
 
 }
 
-#endif
+
 
 // $Log$
+// Revision 1.3  2000/04/14 02:05:46  jas
+// Subclassed out the GeometryPiece into 4 types: Box,Cylinder,Sphere, and
+// Tri.  This made the GeometryObject class simpler since many of the
+// methods are now relegated to the GeometryPiece subclasses.
+//
 // Revision 1.2  2000/03/20 17:17:15  sparker
 // Made it compile.  There are now several #idef WONT_COMPILE_YET statements.
 //
