@@ -15,6 +15,10 @@
 #ifndef SCICore_Thread_Semaphore_h
 #define SCICore_Thread_Semaphore_h
 
+namespace SCICore {
+    namespace Thread {
+	class Semaphore_private;
+
 /**************************************
  
 CLASS
@@ -31,17 +35,7 @@ DESCRIPTION
    when the counter is zero, that thread will be blocked until another
    thread calls the <i>up</i> method.
 
-PATTERNS
-
-
-WARNING
-   
 ****************************************/
-
-namespace SCICore {
-    namespace Thread {
-	class Semaphore_private;
-
 	class Semaphore {
 	public:
 	    //////////
@@ -89,6 +83,9 @@ namespace SCICore {
 
 //
 // $Log$
+// Revision 1.7  1999/09/02 16:52:43  sparker
+// Updates to cocoon documentation
+//
 // Revision 1.6  1999/08/28 03:46:50  sparker
 // Final updates before integration with PSE
 //

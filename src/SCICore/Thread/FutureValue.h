@@ -15,6 +15,11 @@
 #ifndef SCICore_Thread_FutureValue_h
 #define SCICore_Thread_FutureValue_h
 
+#include <SCICore/Thread/Semaphore.h>
+#include <SCICore/Thread/Thread.h>
+
+namespace SCICore {
+    namespace Thread {
 /**************************************
  
 CLASS
@@ -36,18 +41,8 @@ DESCRIPTION
    <b>FutureValue</b> object must be created for each reply, and these are
    typically created on the stack.  Only a single thread should
    call <i>wait</i> and a single thread shuold call <i>reply</i>.
-PATTERNS
-
-
-WARNING
    
 ****************************************/
-
-#include <SCICore/Thread/Semaphore.h>
-#include <SCICore/Thread/Thread.h>
-
-namespace SCICore {
-    namespace Thread {
 	template<class Item> class FutureValue {
 	public:
 	    //////////
@@ -113,6 +108,9 @@ SCICore::Thread::FutureValue<Item>::send(const Item& reply)
 
 //
 // $Log$
+// Revision 1.5  1999/09/02 16:52:42  sparker
+// Updates to cocoon documentation
+//
 // Revision 1.4  1999/08/28 17:54:53  sparker
 // Integrated new Thread library
 //

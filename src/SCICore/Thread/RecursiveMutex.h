@@ -15,6 +15,13 @@
 #ifndef SCICore_Thread_RecursiveMutex_h
 #define SCICore_Thread_RecursiveMutex_h
 
+#include <SCICore/Thread/Mutex.h>
+
+namespace SCICore {
+    namespace Thread {
+	class Thread;
+	class RecursiveMutex_private;
+
 /**************************************
  
 CLASS
@@ -31,20 +38,7 @@ DESCRIPTION
    may be less efficient that the <b>Mutex</b> class, and should not
    be used unless the recursive lock feature is really required.
  
-PATTERNS
-
-
-WARNING
-   
 ****************************************/
-
-#include <SCICore/Thread/Mutex.h>
-
-namespace SCICore {
-    namespace Thread {
-	class Thread;
-	class RecursiveMutex_private;
-
 	class RecursiveMutex {
 	public:
 	    //////////
@@ -83,6 +77,9 @@ namespace SCICore {
 
 //
 // $Log$
+// Revision 1.7  1999/09/02 16:52:43  sparker
+// Updates to cocoon documentation
+//
 // Revision 1.6  1999/08/28 03:46:49  sparker
 // Final updates before integration with PSE
 //

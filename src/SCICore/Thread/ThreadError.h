@@ -17,6 +17,8 @@
 
 #include <SCICore/Exceptions/Exception.h>
 
+namespace SCICore {
+    namespace Thread {
 /**************************************
  
 CLASS
@@ -29,15 +31,7 @@ DESCRIPTION
    An exception class for serious thread library errors.  They are
    often not recoverable.
 
-PATTERNS
-
-
-WARNING
-   
 ****************************************/
-
-namespace SCICore {
-    namespace Thread {
 	class ThreadError : public SCICore::Exceptions::Exception {
 	public:
 	    //////////
@@ -64,6 +58,9 @@ namespace SCICore {
 
 //
 // $Log$
+// Revision 1.5  1999/09/02 16:52:44  sparker
+// Updates to cocoon documentation
+//
 // Revision 1.4  1999/08/28 03:46:51  sparker
 // Final updates before integration with PSE
 //

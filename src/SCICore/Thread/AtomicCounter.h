@@ -15,6 +15,10 @@
 #ifndef SCICore_Thread_AtomicCounter_h
 #define SCICore_Thread_AtomicCounter_h
 
+namespace SCICore {
+    namespace Thread {
+	class AtomicCounter_private;
+
 /**************************************
  
 CLASS
@@ -33,16 +37,7 @@ DESCRIPTION
    instead uses a "set" method.  This is to avoid the inadvertant
    use of a statement like: x=x+2, which would NOT be thread safe.
 
-PATTERNS
-
-
-WARNING
-   
 ****************************************/
-
-namespace SCICore {
-    namespace Thread {
-	class AtomicCounter_private;
 	class AtomicCounter {
 	public:
 	    //////////
@@ -107,6 +102,9 @@ namespace SCICore {
 
 //
 // $Log$
+// Revision 1.8  1999/09/02 16:52:41  sparker
+// Updates to cocoon documentation
+//
 // Revision 1.7  1999/08/29 00:46:59  sparker
 // Integrated new thread library
 // using statement tweaks to compile with both MipsPRO and g++

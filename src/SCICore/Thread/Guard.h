@@ -15,6 +15,11 @@
 #ifndef SCICore_Thread_Guard_h
 #define SCICore_Thread_Guard_h
 
+namespace SCICore {
+    namespace Thread {
+	class CrowdMonitor;
+	class Mutex;
+
 /**************************************
  
 CLASS
@@ -35,18 +40,8 @@ DESCRIPTION
        ... critical section ...</blockquote>
    } // mutex is released when mlock goes out of scope
    </pre></blockquote>
-PATTERNS
-
-
-WARNING
    
 ****************************************/
-
-namespace SCICore {
-    namespace Thread {
-	class CrowdMonitor;
-	class Mutex;
-
 	class Guard {
 	public:
 	    //////////
@@ -86,6 +81,9 @@ namespace SCICore {
 
 //
 // $Log$
+// Revision 1.5  1999/09/02 16:52:42  sparker
+// Updates to cocoon documentation
+//
 // Revision 1.4  1999/08/28 03:46:48  sparker
 // Final updates before integration with PSE
 //
