@@ -24,8 +24,6 @@
 #include <Packages/Uintah/CCA/Ports/ProblemSpecInterface.h>
 #include <Packages/Uintah/Core/ProblemSpec/ProblemSpecP.h>
 #include <Packages/Uintah/CCA/Ports/Scheduler.h>
-#include <Packages/Uintah/CCA/Ports/LoadBalancer.h>
-#include <Packages/Uintah/CCA/Components/Schedulers/MPIScheduler.h>
 #include <Packages/Uintah/CCA/Ports/DataArchive.h>
 #include <Packages/Uintah/Core/Parallel/ProcessorGroup.h>
 #include <Packages/Uintah/Core/Grid/VarTypes.h>
@@ -225,7 +223,7 @@ void SimulationController::run()
    list<double> wallTimes;
    double prevWallTime;
 #endif
-
+   
    bool first=true;
    while(t < timeinfo.maxTime) {
       double wallTime = Time::currentSeconds() - start_time;
@@ -334,35 +332,26 @@ void SimulationController::run()
       // can access it
       sharedState->setElapsedTime(t);
       if(need_recompile(t, delt, level, cfd, mpm, mpmcfd, output) || first){
+	first=false;
 	if(d_myworld->myrank() == 0)
 	  cout << "Compiling taskgraph...";
 	double start = Time::currentSeconds();
-	SchedulerP _sched = scheduler;
-	/*
-	if (!first) {
-	  MPIScheduler* sched = scinew MPIScheduler(d_myworld, output);
-	  UintahParallelPort* bal = scheduler->getLoadBalancer();
-	  sched->attachPort("load balancer", bal);
-	  _sched = sched;
-	}
-	*/
-	_sched->initialize();
+	scheduler->initialize();
 
-	scheduleTimeAdvance(level, _sched,
+	scheduleTimeAdvance(level, scheduler,
 			    cfd, mpm, mpmcfd);
 
-	//if(output)
-	//  output->finalizeTimestep(t, delt, level, _sched);
+	if(output)
+	  output->finalizeTimestep(t, delt, level, scheduler);
       
 	// Begin next time step...
-	scheduleComputeStableTimestep(level, _sched, cfd, mpm, mpmcfd);
+	scheduleComputeStableTimestep(level, scheduler, cfd, mpm, mpmcfd);
 	
 	scheduler->compile(d_myworld, false);
 
 	double dt=Time::currentSeconds()-start;
 	if(d_myworld->myrank() == 0)
 	  cout << "DONE TASKGRAPH RE-COMPILE (" << dt << " seconds)\n";
-	first=false;	
       }
       // Execute the current timestep
       scheduler->execute(d_myworld);
