@@ -182,8 +182,8 @@ MaskedLatVolMesh::size(MaskedLatVolMesh::Edge::size_type &s) const
 }
 
 void
-MaskedLatVolMesh::to_index(MaskedLatVolMesh::Edge::index_type &idx,
-			   unsigned int a)
+MaskedLatVolMesh::to_index(MaskedLatVolMesh::Edge::index_type &/*idx*/,
+			   unsigned int /*a*/)
 {
   // TODO: Implement inverse of unsigned() function in EdgeIndex.
   ASSERTFAIL("NOT IMPLEMENTED YET!");
@@ -210,8 +210,8 @@ MaskedLatVolMesh::size(MaskedLatVolMesh::Face::size_type &s) const
 }
 
 void
-MaskedLatVolMesh::to_index(MaskedLatVolMesh::Face::index_type &idx,
-			   unsigned int a)
+MaskedLatVolMesh::to_index(MaskedLatVolMesh::Face::index_type &/*idx*/,
+			   unsigned int /*a*/)
 {
   // TODO: Implement inverse of unsigned() function in FaceIndex.
   ASSERTFAIL("NOT IMPLEMENTED YET!");
@@ -570,9 +570,9 @@ MaskedLatVolMesh::get_weights(const Point &p,
   const unsigned int j = (unsigned int)floor(jj);
   const unsigned int k = (unsigned int)floor(kk);
 
-  if (i < (ni_-1) && i >= 0 &&
-      j < (nj_-1) && j >= 0 &&
-      k < (nk_-1) && k >= 0)
+  if (i < (ni_-1) && 
+      j < (nj_-1) && 
+      k < (nk_-1))
   {
     locs.resize(8);
     locs[0].i_ = i;   locs[0].j_ = j;   locs[0].k_ = k;   locs[0].mesh_=this;
