@@ -3,23 +3,23 @@
 //---------------------------------------------------------------------
 template<> void MatrixDense<double>:: info(){
   
-  cout<<"********************************************"<<endl; 
-  cout<<"Matrix:"<<endl;
-  cout<<"Data Type = 'double'"<<endl;
-  cout<<"Matrix Type = 'dense'"<<endl;
-  cout<<"Size = "<<nrows<<" x "<<ncols<<endl;
-  cout<<"********************************************"<<endl;
+  std::cout<<"********************************************"<<std::endl; 
+  std::cout<<"Matrix:"<<std::endl;
+  std::cout<<"Data Type = 'double'"<<std::endl;
+  std::cout<<"Matrix Type = 'dense'"<<std::endl;
+  std::cout<<"Size = "<<nrows<<" x "<<ncols<<std::endl;
+  std::cout<<"********************************************"<<std::endl;
 }
 
 #if 0
 void MatrixDense<Complex>:: info(){
   
-  cout<<"********************************************"<<endl; 
-  cout<<"Matrix:"<<endl;
-  cout<<"Data Type = 'Complex'"<<endl;
-  cout<<"Matrix Type = 'dense'"<<endl;
-  cout<<"Size = "<<nrows<<" x "<<ncols<<endl;
-  cout<<"********************************************"<<endl;
+  std::cout<<"********************************************"<<std::endl; 
+  std::cout<<"Matrix:"<<std::endl;
+  std::cout<<"Data Type = 'Complex'"<<std::endl;
+  std::cout<<"Matrix Type = 'dense'"<<std::endl;
+  std::cout<<"Size = "<<nrows<<" x "<<ncols<<std::endl;
+  std::cout<<"********************************************"<<std::endl;
 }
 #endif
 
