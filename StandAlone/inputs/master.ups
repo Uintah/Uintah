@@ -297,6 +297,24 @@
 		</geom_object>
 		<velocity_field>1</velocity_field>
 	    </material>
+
+	    <contact>
+	       <type>null</type>
+	     <contact>
+
+	    <contact>
+	       <type>single_velocity</type>
+	     <contact>
+
+	    <contact>
+	       <type>friction</type>
+	       <mu>.2</mu>
+	     <contact>
+
+	    <contact>
+	       <type>bonded</type>
+	       <parameter>.2</parameter>
+	     <contact>
 	</MPM>
 
     </MaterialProperties>
