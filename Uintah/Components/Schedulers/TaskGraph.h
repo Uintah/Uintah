@@ -60,8 +60,18 @@ WARNING
       // Insert Documentation Here:
       bool allDependenciesCompleted(Task* task) const;
 
+      void getRequiresForComputes(const Task::Dependency* comp,
+				  vector<const Task::Dependency*>& reqs);
+
+      const Task::Dependency* getComputesForRequires(const Task::Dependency* req);
+
       int getNumTasks() const;
       Task* getTask(int i);
+      void assignSerialNumbers();
+
+      std::vector<Task*>& getTasks() {
+	 return d_tasks;
+      }
 
    private:
       TaskGraph(const TaskGraph&);
@@ -75,13 +85,18 @@ WARNING
       
       std::vector<Task*>        d_tasks;
 
-      std::map<TaskProduct, Task*>   d_allcomps;
+      typedef std::map<TaskProduct, Task::Dependency*> actype;
+      actype d_allcomps;
    };
    
 } // end namespace Uintah
 
 //
 // $Log$
+// Revision 1.4  2000/07/27 22:39:47  sparker
+// Implemented MPIScheduler
+// Added associated support
+//
 // Revision 1.3  2000/07/25 20:59:28  jehall
 // - Simplified taskgraph output implementation
 // - Sort taskgraph edges; makes critical path algorithm eastier

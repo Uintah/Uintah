@@ -17,11 +17,14 @@ SRCS     += $(SRCDIR)/Array3Index.cc $(SRCDIR)/Box.cc \
 	$(SRCDIR)/NCVariableBase.cc $(SRCDIR)/ParticleSet.cc \
 	$(SRCDIR)/ParticleSubset.cc $(SRCDIR)/ParticleVariableBase.cc \
 	$(SRCDIR)/ReductionVariableBase.cc \
+	$(SRCDIR)/ReductionVariable_special.cc \
 	$(SRCDIR)/RefCounted.cc $(SRCDIR)/Patch.cc \
+	$(SRCDIR)/ScatterGatherBase.cc \
 	$(SRCDIR)/SimulationState.cc \
 	$(SRCDIR)/SimulationTime.cc $(SRCDIR)/SubPatch.cc \
 	$(SRCDIR)/Task.cc $(SRCDIR)/TypeDescription.cc \
 	$(SRCDIR)/TypeUtils.cc $(SRCDIR)/VarLabel.cc \
+	$(SRCDIR)/Variable.cc \
 	$(SRCDIR)/templates.cc $(SRCDIR)/PerPatchBase.cc \
 	$(SRCDIR)/GeometryPiece.cc \
 	$(SRCDIR)/SphereGeometryPiece.cc \
@@ -35,8 +38,7 @@ SRCS     += $(SRCDIR)/Array3Index.cc $(SRCDIR)/Box.cc \
 	$(SRCDIR)/KinematicBoundCond.cc \
 	$(SRCDIR)/TempThermalBoundCond.cc \
 	$(SRCDIR)/FluxThermalBoundCond.cc \
-	$(SRCDIR)/BoundCondFactory.cc 
-	
+	$(SRCDIR)/BoundCondFactory.cc
 
 
 
@@ -48,6 +50,10 @@ include $(SRCTOP)/scripts/smallso_epilogue.mk
 
 #
 # $Log$
+# Revision 1.22  2000/07/27 22:39:51  sparker
+# Implemented MPIScheduler
+# Added associated support
+#
 # Revision 1.21  2000/06/27 23:18:18  rawat
 # implemented Staggered cell variables. Modified Patch.cc to get ghostcell
 # and staggered cell indexes.

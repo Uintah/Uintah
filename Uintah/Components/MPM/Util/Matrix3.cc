@@ -75,18 +75,31 @@ ostream & operator << (ostream &out_file, const Matrix3 &m3)
 }
 
 namespace Uintah {
+
+MPI_Datatype makeMPI_Matrix3()
+{
+   ASSERTEQ(sizeof(Matrix3), sizeof(double)*9);
+   MPI_Datatype mpitype;
+   MPI_Type_vector(1, 9, 9, MPI_DOUBLE, &mpitype);
+   return mpitype;
+}
+
    const TypeDescription* fun_getTypeDescription(Matrix3*)
    {
       static TypeDescription* td = 0;
       if(!td){
-	 ASSERTEQ(sizeof(Matrix3), sizeof(double)*9);
-	 td = new TypeDescription(TypeDescription::Matrix3, "Matrix3", true);
+	 td = new TypeDescription(TypeDescription::Matrix3, "Matrix3", true,
+				  &makeMPI_Matrix3);
       }
       return td;
    }
 }
 
 //$Log$
+//Revision 1.3  2000/07/27 22:39:45  sparker
+//Implemented MPIScheduler
+//Added associated support
+//
 //Revision 1.2  2000/05/20 08:09:12  sparker
 //Improved TypeDescription
 //Finished I/O

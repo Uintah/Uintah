@@ -2,10 +2,12 @@
 #ifndef UINTAH_HOMEBREW_SCHEDULER_H
 #define UINTAH_HOMEBREW_SCHEDULER_H
 
+#include <Uintah/Grid/LevelP.h>
 #include <Uintah/Parallel/UintahParallelPort.h>
 #include <Uintah/Interface/DataWarehouseP.h>
 #include <Uintah/Interface/Output.h>
 #include <string>
+#include <vector>
 
 class DOM_Document;
 class DOM_Element;
@@ -15,6 +17,7 @@ namespace Uintah {
     class TaskGraph;
     class VarLabel;
     class ProcessorGroup;
+    using namespace std;
 /**************************************
 
 CLASS
@@ -56,6 +59,7 @@ WARNING
        //////////
        // Insert Documentation Here:
        virtual void execute(const ProcessorGroup * pc, 
+			          DataWarehouseP   & old_dwp,
 			          DataWarehouseP   & dwp ) = 0;
        
        //////////
@@ -66,6 +70,17 @@ WARNING
        // Insert Documentation Here:
        virtual DataWarehouseP createDataWarehouse( int generation ) = 0;
        
+       //////////
+       // Insert Documentation Here:
+       virtual void scheduleParticleRelocation(const LevelP& level,
+					       DataWarehouseP& old_dw,
+					       DataWarehouseP& new_dw,
+					       const VarLabel* posLabel,
+					       const vector<const VarLabel*>& labels,
+					       const VarLabel* new_posLabel,
+					       const vector<const VarLabel*>& new_labels,
+					       int numMatls) = 0;
+
     protected:
     	void emitEdges(const vector<Task*>& tasks);
     	void emitNode(const Task* name, time_t start, double duration);
@@ -85,6 +100,10 @@ WARNING
 
 //
 // $Log$
+// Revision 1.15  2000/07/27 22:39:53  sparker
+// Implemented MPIScheduler
+// Added associated support
+//
 // Revision 1.14  2000/07/26 20:14:12  jehall
 // Moved taskgraph/dependency output files to UDA directory
 // - Added output port parameter to schedulers

@@ -35,13 +35,18 @@ WARNING
 
    class Parallel {
    public:
+      enum Circumstances {
+	 NormalShutdown,
+	 Abort
+      };
+
       //////////
       // Insert Documentation Here:
       static void initializeManager(int argc, char** argv);
       
       //////////
       // Insert Documentation Here:
-      static void finalizeManager();
+      static void finalizeManager(Circumstances cirumstances = NormalShutdown);
 
       //////////
       // Insert Documenatation here:
@@ -63,6 +68,10 @@ WARNING
 
 //
 // $Log$
+// Revision 1.6  2000/07/27 22:39:54  sparker
+// Implemented MPIScheduler
+// Added associated support
+//
 // Revision 1.5  2000/06/17 07:06:48  sparker
 // Changed ProcessorContext to ProcessorGroup
 //

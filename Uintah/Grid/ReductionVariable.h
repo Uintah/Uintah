@@ -7,6 +7,7 @@
 #include <Uintah/Grid/TypeUtils.h>
 #include <Uintah/Exceptions/TypeMismatchException.h>
 #include <SCICore/Malloc/Allocator.h>
+#include <Uintah/Grid/Reductions.h>
 
 #include <iosfwd>
 using namespace std;
@@ -59,8 +60,11 @@ WARNING
       virtual void copyPointer(const ReductionVariableBase&);
       virtual void reduce(const ReductionVariableBase&);
       virtual void emit(ostream&);
+      virtual const TypeDescription* virtualGetTypeDescription() const;
+      virtual void getMPIBuffer(void*& buf, int& count, MPI_Datatype& datatype, MPI_Op& op);
    private:
       ReductionVariable<T, Op>& operator=(const ReductionVariable<T, Op>& copy);
+      static Variable* maker();
       T value;
    };
    
@@ -72,17 +76,31 @@ WARNING
 	 if(!td){
 	    T* junk=0;
 	    td = scinew TypeDescription(TypeDescription::ReductionVariable,
-				     "ReductionVariable",
-				     fun_getTypeDescription(junk));
+					"ReductionVariable", &maker,
+					fun_getTypeDescription(junk));
 	 }
 	 return td;
+      }
+
+   template<class T, class Op>
+      Variable*
+      ReductionVariable<T, Op>::maker()
+      {
+	 return new ReductionVariable<T, Op>();
+      }
+   
+   template<class T, class Op>
+      const TypeDescription*
+      ReductionVariable<T, Op>::virtualGetTypeDescription() const
+      {
+	 return getTypeDescription();
       }
    
    template<class T, class Op>
       ReductionVariable<T, Op>::~ReductionVariable()
       {
       }
-   
+
    template<class T, class Op>
       ReductionVariable<T, Op>*
       ReductionVariable<T, Op>::clone() const
@@ -125,11 +143,15 @@ WARNING
       {
         intout << value;
       }
-   
+
 } // end namespace Uintah
 
 //
 // $Log$
+// Revision 1.10  2000/07/27 22:39:50  sparker
+// Implemented MPIScheduler
+// Added associated support
+//
 // Revision 1.9  2000/06/03 05:29:44  sparker
 // Changed reduction variable emit to require ostream instead of ofstream
 // emit now only prints number without formatting

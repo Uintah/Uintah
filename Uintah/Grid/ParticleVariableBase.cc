@@ -1,9 +1,10 @@
-#include <Uintah/Grid/ParticleVariableBase.h>
 
+#include <Uintah/Grid/ParticleVariableBase.h>
+#include <Uintah/Grid/TypeDescription.h>
 using namespace Uintah;
 
 ParticleVariableBase::~ParticleVariableBase()
-{
+{	
    if(d_pset && d_pset->removeReference())
       delete d_pset;
 }
@@ -34,8 +35,21 @@ ParticleVariableBase& ParticleVariableBase::operator=(const ParticleVariableBase
    return *this;
 }   
 
+void ParticleVariableBase::getMPIBuffer(void*& buf, int& count,
+					MPI_Datatype& datatype)
+{
+   buf = getBasePointer();
+   const TypeDescription* td = virtualGetTypeDescription()->getSubType();
+   datatype=td->getMPIType();
+   count = d_pset->getParticleSet()->numParticles();
+}
+
 //
 // $Log$
+// Revision 1.4  2000/07/27 22:39:50  sparker
+// Implemented MPIScheduler
+// Added associated support
+//
 // Revision 1.3  2000/06/15 21:57:19  sparker
 // Added multi-patch support (bugzilla #107)
 // Changed interface to datawarehouse for particle data

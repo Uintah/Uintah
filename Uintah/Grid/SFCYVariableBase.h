@@ -2,6 +2,8 @@
 #ifndef UINTAH_HOMEBREW_SFCYVariableBase_H
 #define UINTAH_HOMEBREW_SFCYVariableBase_H
 
+#include <Uintah/Grid/Variable.h>
+
 namespace SCICore {
    namespace Geometry {
       class IntVector;
@@ -42,7 +44,7 @@ WARNING
   
 ****************************************/
 
-   class SFCYVariableBase {
+   class SFCYVariableBase : public Variable {
    public:
       
       virtual ~SFCYVariableBase();
@@ -71,6 +73,10 @@ WARNING
 
 //
 // $Log$
+// Revision 1.2  2000/07/27 22:39:50  sparker
+// Implemented MPIScheduler
+// Added associated support
+//
 // Revision 1.1  2000/06/27 23:18:18  rawat
 // implemented Staggered cell variables. Modified Patch.cc to get ghostcell
 // and staggered cell indexes.

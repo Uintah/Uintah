@@ -6,6 +6,7 @@
 
 namespace Uintah {
    class TypeDescription;
+   class Patch;
     
     /**************************************
       
@@ -52,6 +53,7 @@ namespace Uintah {
       const std::string& getName() const {
 	 return d_name;
       }
+      std::string getFullName(int matlIndex, const Patch* patch) const;
       bool isPositionVariable() const {
 	 return d_vartype == PositionVariable;
       }
@@ -73,11 +75,14 @@ namespace Uintah {
       VarLabel(const VarLabel&);
       VarLabel& operator=(const VarLabel&);
    };
-
 } // end namespace Uintah
 
 //
 // $Log$
+// Revision 1.8  2000/07/27 22:39:51  sparker
+// Implemented MPIScheduler
+// Added associated support
+//
 // Revision 1.7  2000/05/07 06:02:14  sparker
 // Added beginnings of multiple patch support and real dependencies
 //  for the scheduler

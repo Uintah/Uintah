@@ -22,7 +22,7 @@ using SCICore::Math::Floor;
 using namespace SCICore::Geometry;
 using namespace Uintah;
 using namespace std;
-static SCICore::Thread::AtomicCounter ids("Patch ID counter");
+static SCICore::Thread::AtomicCounter ids("Patch ID counter", 0);
 
 Patch::Patch(const Level* level,
 	     const IntVector& lowIndex, const IntVector& highIndex,
@@ -38,7 +38,6 @@ Patch::Patch(const Level* level,
      vector<BoundCond* > a;
      d_bcs[i] = a;
    }
-
 }
 
 Patch::~Patch()
@@ -153,7 +152,7 @@ bool Patch::findCellAndShapeDerivatives(const Point& pos,
 
 ostream& operator<<(ostream& out, const Patch* r)
 {
-   out << "(Patch: box=" << r->getBox() << ", lowIndex=" << r->getCellLowIndex() << ", highIndex=" << r->getCellHighIndex() << ")";
+   out << "(Patch " << r->getID() << ": box=" << r->getBox() << ", lowIndex=" << r->getCellLowIndex() << ", highIndex=" << r->getCellHighIndex() << ")";
   return out;
 }
 
@@ -462,6 +461,10 @@ IntVector Patch::getGhostSFCZHighIndex(const int numGC) const
 
 //
 // $Log$
+// Revision 1.17  2000/07/27 22:39:50  sparker
+// Implemented MPIScheduler
+// Added associated support
+//
 // Revision 1.16  2000/07/11 15:21:24  kuzimmer
 // Patch::getCellIterator()
 //

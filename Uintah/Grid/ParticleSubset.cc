@@ -4,15 +4,13 @@ static char *id="@(#) $Id$";
 #include "ParticleSubset.h"
 #include <SCICore/Malloc/Allocator.h>
 
-#include <iostream>
-
 using namespace Uintah;
 using namespace std;
 
 ParticleSubset::~ParticleSubset()
 {
-    if(d_pset && d_pset->removeReference())
-	delete d_pset;
+   if(d_pset && d_pset->removeReference())
+      delete d_pset;
 }
 
 ParticleSubset::ParticleSubset() :
@@ -56,6 +54,10 @@ ParticleSubset::fillset()
 
 //
 // $Log$
+// Revision 1.9  2000/07/27 22:39:50  sparker
+// Implemented MPIScheduler
+// Added associated support
+//
 // Revision 1.8  2000/06/15 21:57:18  sparker
 // Added multi-patch support (bugzilla #107)
 // Changed interface to datawarehouse for particle data

@@ -235,7 +235,7 @@ void DataArchive::queryVariables( vector<string>& names,
 	    if(!unknown_type)
 	       unknown_type = scinew TypeDescription(TypeDescription::Unknown,
 						     "-- unknown type --",
-						     false);
+						     false, -1);
 	    td = unknown_type;
 	 }
 	 types.push_back(td);
@@ -332,6 +332,10 @@ int DataArchive::queryNumMaterials( const string& name, const Patch* patch, doub
 
 //
 // $Log$
+// Revision 1.8  2000/07/27 22:39:52  sparker
+// Implemented MPIScheduler
+// Added associated support
+//
 // Revision 1.7  2000/06/27 18:28:36  bigler
 // Steve did some fixing up and moving around
 //

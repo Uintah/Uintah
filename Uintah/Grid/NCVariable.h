@@ -79,6 +79,10 @@ class NCVariable : public Array3<T>, public NCVariableBase {
 			     const IntVector& highIndex);
      NCVariable<T>& operator=(const NCVariable<T>&);
      
+     virtual void* getBasePointer();
+     virtual const TypeDescription* virtualGetTypeDescription() const;
+
+     virtual void getSizes(IntVector& low, IntVector& high, IntVector& siz) const;
      // Replace the values on the indicated face with value
      void fillFace(Patch::FaceType face, const T& value)
        { 
@@ -200,6 +204,7 @@ class NCVariable : public Array3<T>, public NCVariableBase {
       virtual void read(InputContext&);
       static TypeDescription::Register registerMe;
    private:
+   static Variable* maker();
    };
    
    template<class T>
@@ -212,10 +217,17 @@ class NCVariable : public Array3<T>, public NCVariableBase {
 	 static TypeDescription* td;
 	 if(!td){
 	    td = scinew TypeDescription(TypeDescription::NCVariable,
-				     "NCVariable",
-				     fun_getTypeDescription((T*)0));
+					"NCVariable", &maker,
+					fun_getTypeDescription((T*)0));
 	 }
 	 return td;
+      }
+   
+   template<class T>
+      Variable*
+      NCVariable<T>::maker()
+      {
+	 return new NCVariable<T>();
       }
    
    template<class T>
@@ -311,6 +323,13 @@ class NCVariable : public Array3<T>, public NCVariableBase {
       }
 
    template<class T>
+      void*
+      NCVariable<T>::getBasePointer()
+      {
+	 return getPointer();
+      }
+
+   template<class T>
       void
       NCVariable<T>::read(InputContext& oc)
       {
@@ -332,10 +351,31 @@ class NCVariable : public Array3<T>, public NCVariableBase {
 	    throw InternalError("Cannot yet write non-flat objects!\n");
 	 }
       }
+
+   template<class T>
+      const TypeDescription*
+      NCVariable<T>::virtualGetTypeDescription() const
+      {
+	 return getTypeDescription();
+      }
+   
+   template<class T>
+      void
+      NCVariable<T>::getSizes(IntVector& low, IntVector& high, IntVector& siz) const
+      {
+	 low=getLowIndex();
+	 high=getHighIndex();
+	 siz=size();
+      }
+   
 } // end namespace Uintah
 
 //
 // $Log$
+// Revision 1.26  2000/07/27 22:39:50  sparker
+// Implemented MPIScheduler
+// Added associated support
+//
 // Revision 1.25  2000/06/22 21:56:30  sparker
 // Changed variable read/write to fortran order
 //

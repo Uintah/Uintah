@@ -207,6 +207,7 @@ class FCVariable : public Array3<T>, public FCVariableBase {
       static TypeDescription::Register registerMe;
 
    private:
+   static Variable* maker();
    };
       template<class T>
       TypeDescription::Register
@@ -225,10 +226,17 @@ class FCVariable : public Array3<T>, public FCVariableBase {
 	static TypeDescription* td;
 	if(!td){
 	  td = scinew TypeDescription(TypeDescription::FCVariable,
-				   "FCVariable",
+				   "FCVariable", &maker,
 				   fun_getTypeDescription((T*)0));
 	}
 	return td;
+      }
+   
+   template<class T>
+      Variable*
+      FCVariable<T>::maker()
+      {
+	 return new NCVariable<T>();
       }
    
    template<class T>
@@ -352,6 +360,10 @@ class FCVariable : public Array3<T>, public FCVariableBase {
 
 //
 // $Log$
+// Revision 1.7  2000/07/27 22:39:50  sparker
+// Implemented MPIScheduler
+// Added associated support
+//
 // Revision 1.6  2000/06/22 21:56:30  sparker
 // Changed variable read/write to fortran order
 //

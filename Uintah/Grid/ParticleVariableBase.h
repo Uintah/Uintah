@@ -4,12 +4,16 @@
 
 #include <vector>
 #include <Uintah/Grid/ParticleSubset.h>
+#include <Uintah/Grid/Variable.h>
+#include <mpi.h>
 
 namespace Uintah {
    class OutputContext;
    class ParticleSubset;
    class ParticleSet;
    class Patch;
+   class ProcessorGroup;
+   class TypeDescription;
 
 /**************************************
 
@@ -40,7 +44,7 @@ WARNING
   
 ****************************************/
 
-   class ParticleVariableBase {
+   class ParticleVariableBase : public Variable {
    public:
       
       virtual ~ParticleVariableBase();
@@ -49,11 +53,19 @@ WARNING
       //////////
       // Insert Documentation Here:
       virtual ParticleVariableBase* clone() const = 0;
+      virtual ParticleVariableBase* cloneSubset(ParticleSubset*) const = 0;
 
       virtual void allocate(ParticleSubset*) = 0;
       virtual void gather(ParticleSubset* dest,
 			  std::vector<ParticleSubset*> subsets,
-			  std::vector<ParticleVariableBase*> srcs) = 0;
+			  std::vector<ParticleVariableBase*> srcs,
+			  particleIndex extra = 0) = 0;
+      virtual void unpackMPI(void* buf, int bufsize, int* bufpos,
+			     const ProcessorGroup* pg, int start, int n) = 0;
+      virtual void packMPI(void* buf, int bufsize, int* bufpos,
+			   const ProcessorGroup* pg, int start, int n) = 0;
+      virtual void packsizeMPI(int* bufpos,
+			       const ProcessorGroup* pg, int start, int n) = 0;
       virtual void emit(OutputContext&) = 0;
 
       //////////
@@ -68,6 +80,9 @@ WARNING
 	 return d_pset->getParticleSet();
       }
       
+      virtual void* getBasePointer() = 0;
+      void getMPIBuffer(void*& buf, int& count, MPI_Datatype& datatype);
+      virtual const TypeDescription* virtualGetTypeDescription() const = 0;
    protected:
       ParticleVariableBase(const ParticleVariableBase&);
       ParticleVariableBase(ParticleSubset* pset);
@@ -82,6 +97,10 @@ WARNING
 
 //
 // $Log$
+// Revision 1.9  2000/07/27 22:39:50  sparker
+// Implemented MPIScheduler
+// Added associated support
+//
 // Revision 1.8  2000/06/15 21:57:19  sparker
 // Added multi-patch support (bugzilla #107)
 // Changed interface to datawarehouse for particle data

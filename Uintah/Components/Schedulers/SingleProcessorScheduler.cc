@@ -5,12 +5,18 @@
 #include <Uintah/Components/Schedulers/OnDemandDataWarehouse.h>
 #include <Uintah/Interface/LoadBalancer.h>
 #include <Uintah/Grid/Patch.h>
+#include <Uintah/Grid/ParticleVariable.h>
+#include <Uintah/Grid/ScatterGatherBase.h>
+#include <Uintah/Grid/TypeDescription.h>
 #include <SCICore/Thread/Time.h>
 #include <SCICore/Util/DebugStream.h>
+#include <SCICore/Util/FancyAssert.h>
 
 using namespace Uintah;
 using namespace std;
 using SCICore::Thread::Time;
+
+static const TypeDescription* specialType;
 
 static SCICore::Util::DebugStream dbg("SingleProcessorScheduler", false);
 
@@ -18,6 +24,13 @@ SingleProcessorScheduler::SingleProcessorScheduler(const ProcessorGroup* myworld
     	    	    	    	    	    	   Output* oport)
    : UintahParallelComponent(myworld), Scheduler(oport)
 {
+  if(!specialType)
+     specialType = new TypeDescription(TypeDescription::ScatterGatherVariable,
+				       "DataWarehouse::specialInternalScatterGatherType", false, -1);
+  scatterGatherVariable = new VarLabel("DataWarehouse::scatterGatherVariable",
+				       specialType, VarLabel::Internal);
+
+  reloc_old_posLabel = reloc_new_posLabel = 0;
 }
 
 SingleProcessorScheduler::~SingleProcessorScheduler()
@@ -32,6 +45,7 @@ SingleProcessorScheduler::initialize()
 
 void
 SingleProcessorScheduler::execute(const ProcessorGroup * pc,
+			             DataWarehouseP   &,
 			             DataWarehouseP   & dw )
 {
    UintahParallelPort* lbp = getPort("load balancer");
@@ -79,8 +93,234 @@ SingleProcessorScheduler::createDataWarehouse( int generation )
     return scinew OnDemandDataWarehouse(d_myworld, generation );
 }
 
+void
+SingleProcessorScheduler::scheduleParticleRelocation(const LevelP& level,
+						     DataWarehouseP& old_dw,
+						     DataWarehouseP& new_dw,
+						     const VarLabel* old_posLabel,
+						     const vector<const VarLabel*>& old_labels,
+						     const VarLabel* new_posLabel,
+						     const vector<const VarLabel*>& new_labels,
+						     int numMatls)
+{
+   reloc_old_posLabel = old_posLabel;
+   reloc_old_labels = old_labels;
+   reloc_new_posLabel = new_posLabel;
+   reloc_new_labels = new_labels;
+   reloc_numMatls = numMatls;
+   ASSERTEQ(reloc_new_labels.size(), reloc_old_labels.size());
+   for(Level::const_patchIterator iter=level->patchesBegin();
+       iter != level->patchesEnd(); iter++){
+
+      const Patch* patch=*iter;
+
+      Task* t = scinew Task("SingleProcessorScheduler::scatterParticles",
+			    patch, old_dw, new_dw,
+			    this, &SingleProcessorScheduler::scatterParticles);
+      for(int m=0;m < numMatls;m++){
+	 t->requires( new_dw, old_posLabel, m, patch, Ghost::None);
+	 for(int i=0;i<old_labels.size();i++)
+	    t->requires( new_dw, old_labels[i], m, patch, Ghost::None);
+      }
+      t->computes(new_dw, scatterGatherVariable, 0, patch);
+      addTask(t);
+
+      Task* t2 = scinew Task("SingleProcessorScheduler::gatherParticles",
+			     patch, old_dw, new_dw,
+			     this, &SingleProcessorScheduler::gatherParticles);
+      // Particles are only allowed to be one cell out
+      IntVector l = patch->getCellLowIndex()-IntVector(1,1,1);
+      IntVector h = patch->getCellHighIndex()+IntVector(1,1,1);
+      std::vector<const Patch*> neighbors;
+      level->selectPatches(l, h, neighbors);
+      for(int i=0;i<neighbors.size();i++)
+	 t2->requires(new_dw, scatterGatherVariable, 0, neighbors[i], Ghost::None);
+      for(int m=0;m < numMatls;m++){
+	 t2->computes( new_dw, new_posLabel, m, patch);
+	 for(int i=0;i<new_labels.size();i++)
+	    t2->computes(new_dw, new_labels[i], m, patch);
+      }
+
+      addTask(t2);
+   }
+}
+
+namespace Uintah {
+   struct ScatterMaterialRecord {
+      ParticleSubset* relocset;
+      vector<ParticleVariableBase*> vars;
+   };
+
+   struct ScatterRecord : public ScatterGatherBase {
+      vector<ScatterMaterialRecord*> matls;
+   };
+}
+
+void
+SingleProcessorScheduler::scatterParticles(const ProcessorGroup*,
+					   const Patch* patch,
+					   DataWarehouseP& old_dw,
+					   DataWarehouseP& new_dw)
+{
+   const Level* level = patch->getLevel();
+
+   // Particles are only allowed to be one cell out
+   IntVector l = patch->getCellLowIndex()-IntVector(1,1,1);
+   IntVector h = patch->getCellHighIndex()+IntVector(1,1,1);
+   vector<const Patch*> neighbors;
+   level->selectPatches(l, h, neighbors);
+
+   vector<ScatterRecord*> sr(neighbors.size());
+   for(int i=0;i<sr.size();i++)
+      sr[i]=0;
+   for(int m = 0; m < reloc_numMatls; m++){
+      ParticleSubset* pset = old_dw->getParticleSubset(m, patch);
+      ParticleVariable<Point> px;
+      new_dw->get(px, reloc_old_posLabel, pset);
+
+      ParticleSubset* relocset = new ParticleSubset(pset->getParticleSet(),
+						    false, -1, 0);
+
+      for(ParticleSubset::iterator iter = pset->begin();
+	  iter != pset->end(); iter++){
+	 particleIndex idx = *iter;
+	 if(!patch->getBox().contains(px[idx])){
+	    //cerr << "WARNING: Particle left patch: " << px[idx] << ", patch: " << patch << '\n';
+	    relocset->addParticle(idx);
+	 }
+      }
+      if(relocset->numParticles() > 0){
+	 // Figure out where they went...
+	 for(ParticleSubset::iterator iter = relocset->begin();
+	     iter != relocset->end(); iter++){
+	    particleIndex idx = *iter;
+	    // This loop should change - linear searches are not good!
+	    int i;
+	    for(i=0;i<neighbors.size();i++){
+	       if(neighbors[i]->getBox().contains(px[idx])){
+		  break;
+	       }
+	    }
+	    if(i == neighbors.size()){
+	       // Make sure that the particle left the world
+	       if(level->containsPoint(px[idx]))
+		  throw InternalError("Particle fell through the cracks!");
+	    } else {
+	       if(!sr[i]){
+		  sr[i] = new ScatterRecord();
+		  sr[i]->matls.resize(reloc_numMatls);
+		  for(int m=0;m<reloc_numMatls;m++){
+		     sr[i]->matls[m]=0;
+		  }
+	       }
+	       if(!sr[i]->matls[m]){
+		  ScatterMaterialRecord* smr=new ScatterMaterialRecord();
+		  sr[i]->matls[m]=smr;
+		  smr->vars.push_back(new_dw->getParticleVariable(reloc_old_posLabel, pset));
+		  for(int v=0;v<reloc_old_labels.size();v++)
+		     smr->vars.push_back(new_dw->getParticleVariable(reloc_old_labels[v], pset));
+		  smr->relocset = new ParticleSubset(pset->getParticleSet(),
+						     false, -1, 0);
+	       }
+	       sr[i]->matls[m]->relocset->addParticle(idx);
+	    }
+	 }
+      } else {
+	 delete relocset;
+      }
+   }
+   for(int i=0;i<sr.size();i++){
+      new_dw->scatter(sr[i], patch, neighbors[i]);
+   }
+}
+
+void
+SingleProcessorScheduler::gatherParticles(const ProcessorGroup*,
+					  const Patch* patch,
+					  DataWarehouseP& old_dw,
+					  DataWarehouseP& new_dw)
+{
+   const Level* level = patch->getLevel();
+
+   // Particles are only allowed to be one cell out
+   IntVector l = patch->getCellLowIndex()-IntVector(1,1,1);
+   IntVector h = patch->getCellHighIndex()+IntVector(1,1,1);
+   vector<const Patch*> neighbors;
+   level->selectPatches(l, h, neighbors);
+
+   vector<ScatterRecord*> sr;
+   for(int i=0;i<neighbors.size();i++){
+      if(patch != neighbors[i]){
+	 ScatterGatherBase* sgb = new_dw->gather(neighbors[i], patch);
+	 if(sgb != 0){
+	    ScatterRecord* srr = dynamic_cast<ScatterRecord*>(sgb);
+	    ASSERT(srr != 0);
+	    sr.push_back(srr);
+	 }
+      }
+   }
+   for(int m=0;m<reloc_numMatls;m++){
+      // Compute the new particle subset
+      vector<ParticleSubset*> subsets;
+      vector<ParticleVariableBase*> posvars;
+
+      // Get the local subset without the deleted particles...
+      ParticleSubset* pset = old_dw->getParticleSubset(m, patch);
+      ParticleVariable<Point> px;
+      new_dw->get(px, reloc_old_posLabel, pset);
+
+      ParticleSubset* keepset = new ParticleSubset(pset->getParticleSet(),
+						   false, -1, 0);
+
+      for(ParticleSubset::iterator iter = pset->begin();
+	  iter != pset->end(); iter++){
+	 particleIndex idx = *iter;
+	 if(patch->getBox().contains(px[idx]))
+	    keepset->addParticle(idx);
+      }
+      subsets.push_back(keepset);
+      particleIndex totalParticles = keepset->numParticles();
+      ParticleVariableBase* pos = new_dw->getParticleVariable(reloc_old_posLabel, pset);
+      posvars.push_back(pos);
+
+      // Get the subsets from the neighbors
+      for(int i=0;i<sr.size();i++){
+	 if(sr[i]->matls[m]){
+	    subsets.push_back(sr[i]->matls[m]->relocset);
+	    posvars.push_back(sr[i]->matls[m]->vars[0]);
+	    totalParticles += sr[i]->matls[m]->relocset->numParticles();
+	 }
+      }
+      ParticleVariableBase* newpos = pos->clone();
+      ParticleSubset* newsubset = new_dw->createParticleSubset(totalParticles, m, patch);
+      newpos->gather(newsubset, subsets, posvars);
+      new_dw->put(*newpos, reloc_new_posLabel);
+
+      for(int v=0;v<reloc_old_labels.size();v++){
+	 vector<ParticleVariableBase*> gathervars;
+	 ParticleVariableBase* var = new_dw->getParticleVariable(reloc_old_labels[v], pset);
+
+	 gathervars.push_back(var);
+	 for(int i=0;i<sr.size();i++){
+	    if(sr[i]->matls[m])
+	       gathervars.push_back(sr[i]->matls[m]->vars[v+1]);
+	 }
+	 ParticleVariableBase* newvar = var->clone();
+	 newvar->gather(newsubset, subsets, gathervars);
+	 new_dw->put(*newvar, reloc_new_labels[v]);
+      }
+
+      for(int i=0;i<subsets.size();i++)
+	 delete subsets[i];
+   }
+}
+
 //
 // $Log$
+// Revision 1.7  2000/07/27 22:39:47  sparker
+// Implemented MPIScheduler
+// Added associated support
+//
 // Revision 1.6  2000/07/26 20:14:11  jehall
 // Moved taskgraph/dependency output files to UDA directory
 // - Added output port parameter to schedulers

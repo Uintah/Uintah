@@ -358,12 +358,21 @@ void CompNeoHook::addComputesAndRequires(Task* task,
 
 namespace Uintah {
    namespace MPM {
+
+static MPI_Datatype makeMPI_CMData()
+{
+   ASSERTEQ(sizeof(CompNeoHook::CMData), sizeof(double)*2);
+   MPI_Datatype mpitype;
+   MPI_Type_vector(1, 2, 2, MPI_DOUBLE, &mpitype);
+   return mpitype;
+}
+
 const TypeDescription* fun_getTypeDescription(CompNeoHook::CMData*)
 {
    static TypeDescription* td = 0;
    if(!td){
-      ASSERTEQ(sizeof(CompNeoHook::CMData), sizeof(double)*2);
-      td = new TypeDescription(TypeDescription::Other, "CompNeoHook::CMData", true);
+      td = new TypeDescription(TypeDescription::Other,
+			       "CompNeoHook::CMData", true, &makeMPI_CMData);
    }
    return td;
 }
@@ -371,6 +380,10 @@ const TypeDescription* fun_getTypeDescription(CompNeoHook::CMData*)
 }
 
 // $Log$
+// Revision 1.31  2000/07/27 22:39:44  sparker
+// Implemented MPIScheduler
+// Added associated support
+//
 // Revision 1.30  2000/07/25 19:10:26  guilkey
 // Changed code relating to particle combustion as well as the
 // heat conduction.

@@ -2,8 +2,10 @@
 #define UINTAH_HOMEBREW_TypeDescription_H
 
 #include <string>
+#include <mpi.h>
 
 namespace Uintah {
+   class Variable;
    
    /**************************************
      
@@ -44,6 +46,7 @@ namespace Uintah {
 	 SFCYVariable,
 	 SFCZVariable,
 	 ParticleVariable,
+	 ScatterGatherVariable,
 	 Point,
 	 Vector,
 	 Matrix3,
@@ -57,8 +60,11 @@ namespace Uintah {
       };
 
       TypeDescription(Type type, const std::string& name,
-		      bool isFlat);
+		      bool isFlat, MPI_Datatype (*make_mpitype)());
       TypeDescription(Type type, const std::string& name,
+		      bool isFlat, MPI_Datatype mpitype);
+      TypeDescription(Type type, const std::string& name,
+		      Variable* (*maker)(),
 		      const TypeDescription* subtype);
      
       bool isReductionVariable() const {
@@ -76,16 +82,24 @@ namespace Uintah {
 	 return d_isFlat;
       }
 
+      MPI_Datatype getMPIType() const;
+
       struct Register {
 	 Register(const TypeDescription*);
 	 ~Register();
       };
       static const TypeDescription* lookupType(const std::string&);
+
+      Variable* createInstance() const;
+
    private:
       Type d_type;
       const TypeDescription* d_subtype;
       std::string d_name;
       bool d_isFlat;
+      mutable MPI_Datatype d_mpitype;
+      MPI_Datatype (*d_mpitypemaker)();
+      Variable* (*d_maker)();
       ~TypeDescription();
        
       TypeDescription(const TypeDescription&);
@@ -96,6 +110,10 @@ namespace Uintah {
 
 //
 // $Log$
+// Revision 1.8  2000/07/27 22:39:50  sparker
+// Implemented MPIScheduler
+// Added associated support
+//
 // Revision 1.7  2000/06/27 23:18:18  rawat
 // implemented Staggered cell variables. Modified Patch.cc to get ghostcell
 // and staggered cell indexes.

@@ -53,6 +53,7 @@ WARNING
       //////////
       // Insert Documentation Here:
       virtual void execute( const ProcessorGroup * pc,
+			          DataWarehouseP   & old_dwp,
 			          DataWarehouseP   & dwp );
       
       //////////
@@ -63,7 +64,32 @@ WARNING
       // Insert Documentation Here:
       virtual DataWarehouseP createDataWarehouse( int generation );
       
+      //////////
+      // Insert Documentation Here:
+      virtual void scheduleParticleRelocation(const LevelP& level,
+					      DataWarehouseP& old_dw,
+					      DataWarehouseP& new_dw,
+					      const VarLabel* old_posLabel,
+					      const vector<const VarLabel*>& old_labels,
+					      const VarLabel* new_posLabel,
+					      const vector<const VarLabel*>& new_labels,
+					      int numMatls);
    private:
+      const VarLabel* reloc_old_posLabel;
+      std::vector<const VarLabel*> reloc_old_labels;
+      const VarLabel* reloc_new_posLabel;
+      std::vector<const VarLabel*> reloc_new_labels;
+      int reloc_numMatls;
+
+      void scatterParticles(const ProcessorGroup*,
+			    const Patch* patch,
+			    DataWarehouseP& old_dw,
+			    DataWarehouseP& new_dw);
+      void gatherParticles(const ProcessorGroup*,
+			   const Patch* patch,
+			   DataWarehouseP& old_dw,
+			   DataWarehouseP& new_dw);
+      const VarLabel* scatterGatherVariable;
       SingleProcessorScheduler(const SingleProcessorScheduler&);
       SingleProcessorScheduler& operator=(const SingleProcessorScheduler&);
 
@@ -74,6 +100,10 @@ WARNING
 
 //
 // $Log$
+// Revision 1.4  2000/07/27 22:39:47  sparker
+// Implemented MPIScheduler
+// Added associated support
+//
 // Revision 1.3  2000/07/26 20:14:11  jehall
 // Moved taskgraph/dependency output files to UDA directory
 // - Added output port parameter to schedulers

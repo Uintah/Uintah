@@ -11,6 +11,7 @@
 #include <map>
 #include <string>
 #include <iosfwd>
+#include <mpi.h>
 
 using std::string;
 
@@ -20,7 +21,6 @@ class DataItem;
 class TypeDescription;
 class Patch;
 class ProcessorGroup;
-class ScatterRecord;
 
 /**************************************
 
@@ -66,9 +66,15 @@ public:
    virtual void put(const ReductionVariableBase&, const VarLabel*);
    virtual void override(const ReductionVariableBase&, const VarLabel*);
 
+   // Scatther/gather.  This will need a VarLabel if anyone but the
+   // scheduler ever wants to use it.
+   virtual void scatter(ScatterGatherBase*, const Patch*, const Patch*);
+   virtual ScatterGatherBase* gather(const Patch*, const Patch*);
+      
    // Particle Variables
    virtual ParticleSubset* createParticleSubset(particleIndex numParticles,
 						int matlIndex, const Patch*);
+   virtual bool haveParticleSubset(int matlIndex, const Patch*);
    virtual ParticleSubset* getParticleSubset(int matlIndex,
 					     const Patch*);
    virtual ParticleSubset* getParticleSubset(int matlIndex,
@@ -79,6 +85,8 @@ public:
    virtual void get(ParticleVariableBase&, const VarLabel*,
 		    ParticleSubset*);
    virtual void put(const ParticleVariableBase&, const VarLabel*);
+   virtual ParticleVariableBase* getParticleVariable(const VarLabel*,
+						     ParticleSubset*);
 
    // NCVariables Variables
    virtual void allocate(NCVariableBase&, const VarLabel*,
@@ -132,16 +140,6 @@ public:
 				 int matIndex, const Patch*);
 
    //////////
-   // Insert Documentation Here:
-   virtual void scheduleParticleRelocation(const LevelP& level,
-					   SchedulerP& sched,
-					   DataWarehouseP& dw,
-					   const VarLabel* old_posLabel,
-					   const vector<const VarLabel*>& old_labels,
-					   const VarLabel* new_posLabel,
-					   const vector<const VarLabel*>& new_labels,
-					   int numMatls);
-
    // Remove particles that are no longer relevant
    virtual void deleteParticles(ParticleSubset* delset);
 
@@ -185,17 +183,16 @@ public:
 
    virtual void emit(ostream& intout, const VarLabel* label) const;
 
+   void sendMPI(const VarLabel* label, int matlIndex,
+		const Patch* patch, const ProcessorGroup* world,
+		int dest, int tag, MPI_Request* requestid);
+   void recvMPI(DataWarehouseP& old_dw, 
+		const VarLabel* label, int matlIndex,
+		const Patch* patch, const ProcessorGroup* world,
+		int dest, int tag, MPI_Request* requestid);
+   void reduceMPI(const VarLabel* label, const ProcessorGroup* world);
 private:
 
-   void scatterParticles(const ProcessorGroup*,
-			 const Patch* patch,
-			 DataWarehouseP& old_dw,
-			 DataWarehouseP& new_dw);
-   void gatherParticles(const ProcessorGroup*,
-			const Patch* patch,
-			DataWarehouseP& old_dw,
-			DataWarehouseP& new_dw);
-   const VarLabel* scatterGatherVariable;
    void sendMpiDataRequest( const string & varName,
 			          Patch * patch,
 			          int      numGhostCells );
@@ -246,18 +243,18 @@ private:
    std::vector<const VarLabel*> d_saveset_integrated;
    std::vector<int> d_savenumbers;
 
-   const VarLabel* reloc_old_posLabel;
-   std::vector<const VarLabel*> reloc_old_labels;
-   const VarLabel* reloc_new_posLabel;
-   std::vector<const VarLabel*> reloc_new_labels;
-   int reloc_numMatls;
-   std::map<pair<const Patch*, const Patch*>, ScatterRecord* > d_sgDB;
+   std::map<pair<const Patch*, const Patch*>, ScatterGatherBase* > d_sgDB;
+
 };
 
 } // end namespace Uintah
 
 //
 // $Log$
+// Revision 1.33  2000/07/27 22:39:47  sparker
+// Implemented MPIScheduler
+// Added associated support
+//
 // Revision 1.32  2000/06/27 23:20:03  rawat
 // added functions to deal with staggered cell variables. Also modified get function
 // for CCVariables.

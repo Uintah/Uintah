@@ -1,23 +1,37 @@
 
 #include <Uintah/Grid/TypeDescription.h>
 #include <SCICore/Malloc/Allocator.h>
+#include <SCICore/Exceptions/InternalError.h>
+#include <SCICore/Util/Assert.h>
+#include <sci_defs.h>
 #include <map>
 #include <iostream>
 
 using namespace Uintah;
 using namespace std;
+using namespace SCICore::Exceptions;
 
 static map<string, const TypeDescription*>* types;
 
 TypeDescription::TypeDescription(Type type, const std::string& name,
-				 bool isFlat)
-   : d_type(type), d_name(name), d_isFlat(isFlat), d_subtype(0)
+				 bool isFlat, MPI_Datatype (*mpitypemaker)())
+   : d_type(type), d_name(name), d_isFlat(isFlat), d_subtype(0), d_maker(0),
+     d_mpitype(-1), d_mpitypemaker(mpitypemaker)
 {
 }
 
 TypeDescription::TypeDescription(Type type, const std::string& name,
+				 bool isFlat, MPI_Datatype mpitype)
+   : d_type(type), d_name(name), d_isFlat(isFlat), d_subtype(0), d_maker(0),
+     d_mpitype(mpitype), d_mpitypemaker(0)
+{
+}
+
+TypeDescription::TypeDescription(Type type, const std::string& name,
+				 Variable* (*maker)(),
 				 const TypeDescription* subtype)
-   : d_type(type), d_name(name), d_isFlat(false), d_subtype(subtype)
+   : d_type(type), d_name(name), d_isFlat(false), d_maker(maker),
+     d_subtype(subtype), d_mpitype(-2), d_mpitypemaker(0)
 {
 }
 
@@ -50,8 +64,33 @@ TypeDescription::Register::~Register()
 {
 }
 
+MPI_Datatype TypeDescription::getMPIType() const
+{
+   if(d_mpitype == -1){
+      if(d_mpitypemaker){
+	 d_mpitype = (*d_mpitypemaker)();
+      } else {
+	 throw InternalError("MPI Datatype requested, but do not know how to make it");
+      }
+   }
+   ASSERT(d_mpitype != -2);
+   return d_mpitype;
+}
+
+Variable* TypeDescription::createInstance() const
+{
+   if(!d_maker)
+      throw InternalError("Do not know how to create instance for type: "+getName());
+   return (*d_maker)();
+}
+
+
 //
 // $Log$
+// Revision 1.7  2000/07/27 22:39:50  sparker
+// Implemented MPIScheduler
+// Added associated support
+//
 // Revision 1.6  2000/05/30 20:19:35  sparker
 // Changed new to scinew to help track down memory leaks
 // Changed region to patch

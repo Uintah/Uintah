@@ -2,11 +2,13 @@
 #ifndef UINTAH_HOMEBREW_ReductionVariableBase_H
 #define UINTAH_HOMEBREW_ReductionVariableBase_H
 
+#include <Uintah/Grid/Variable.h>
 #include <iosfwd>
 using namespace std;
+#include <mpi.h>
 
 namespace Uintah {
-   
+   class TypeDescription;
    class Patch;
 
 /**************************************
@@ -38,7 +40,7 @@ WARNING
   
 ****************************************/
 
-   class ReductionVariableBase {
+   class ReductionVariableBase : public Variable {
    public:
       
       virtual ~ReductionVariableBase();
@@ -47,6 +49,8 @@ WARNING
       virtual ReductionVariableBase* clone() const = 0;
       virtual void reduce(const ReductionVariableBase&) = 0;
       virtual void emit(ostream&) = 0;
+      virtual void getMPIBuffer(void*& buf, int& count, MPI_Datatype& datatype, MPI_Op& op) = 0;
+      virtual const TypeDescription* virtualGetTypeDescription() const = 0;
    protected:
       ReductionVariableBase(const ReductionVariableBase&);
       ReductionVariableBase();
@@ -59,6 +63,10 @@ WARNING
 
 //
 // $Log$
+// Revision 1.7  2000/07/27 22:39:50  sparker
+// Implemented MPIScheduler
+// Added associated support
+//
 // Revision 1.6  2000/06/03 05:29:44  sparker
 // Changed reduction variable emit to require ostream instead of ofstream
 // emit now only prints number without formatting

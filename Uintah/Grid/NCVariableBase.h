@@ -2,6 +2,9 @@
 #ifndef UINTAH_HOMEBREW_NCVariableBase_H
 #define UINTAH_HOMEBREW_NCVariableBase_H
 
+#include <Uintah/Grid/Variable.h>
+#include <mpi.h>
+
 namespace SCICore {
    namespace Geometry {
       class IntVector;
@@ -42,7 +45,7 @@ WARNING
   
 ****************************************/
 
-   class NCVariableBase {
+   class NCVariableBase : public Variable {
    public:
       
       virtual ~NCVariableBase();
@@ -59,6 +62,10 @@ WARNING
 			      const IntVector& lowIndex,
 			      const IntVector& highIndex) = 0;
       virtual void emit(OutputContext&) = 0;
+      virtual void* getBasePointer() = 0;
+      void getMPIBuffer(void*& buf, int& count, MPI_Datatype& datatype);
+      virtual const TypeDescription* virtualGetTypeDescription() const = 0;
+      virtual void getSizes(IntVector& low, IntVector& high, IntVector& siz) const = 0;
    protected:
       NCVariableBase(const NCVariableBase&);
       NCVariableBase();
@@ -71,6 +78,10 @@ WARNING
 
 //
 // $Log$
+// Revision 1.7  2000/07/27 22:39:50  sparker
+// Implemented MPIScheduler
+// Added associated support
+//
 // Revision 1.6  2000/05/30 20:19:30  sparker
 // Changed new to scinew to help track down memory leaks
 // Changed region to patch
