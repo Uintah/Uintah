@@ -79,6 +79,8 @@ int main(int argc, char** argv)
 
   bool thrownException = false;
   
+  Parallel::determineIfRunningUnderMPI( argc, argv );
+
   string new_uda_dir;
   try {
     ProblemSpecInterface* reader = scinew ProblemSpecReader(ups_filename);
