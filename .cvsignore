@@ -6,5 +6,6 @@ sci_defs.h
 config.log
 uintah
 davew
+pse
 stamp-h
 *.sr
