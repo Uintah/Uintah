@@ -1,3 +1,7 @@
+//----- SmagorinksyModel.cc --------------------------------------------------
+
+/* REFERENCED */
+static char *id="@(#) $Id$";
 
 #include <Uintah/Components/Arches/SmagorinskyModel.h>
 #include <Uintah/Components/Arches/PhysicalConstants.h>
@@ -16,21 +20,47 @@
 #include <Uintah/Exceptions/InvalidValue.h>
 #include <Uintah/Grid/Array3.h>
 #include <iostream>
+
 using namespace std;
 
 using namespace Uintah::ArchesSpace;
 using SCICore::Geometry::Vector;
 
-SmagorinskyModel::SmagorinskyModel(PhysicalConstants* phyConsts):
-TurbulenceModel(), d_physicalConsts(phyConsts)
+//****************************************************************************
+// Constructor that is private
+//****************************************************************************
+SmagorinskyModel::SmagorinskyModel(): TurbulenceModel()
 {
 }
 
+//****************************************************************************
+// Default constructor for SmagorinkyModel
+//****************************************************************************
+SmagorinskyModel::SmagorinskyModel(PhysicalConstants* phyConsts):
+                                                 TurbulenceModel(), 
+                                                 d_physicalConsts(phyConsts)
+{
+  // BB : (tmp) velocity is set as CCVariable (should be FCVariable)
+  d_velocityLabel = scinew VarLabel("velocity",
+				    CCVariable<Vector>::getTypeDescription() );
+  d_densityLabel = scinew VarLabel("density",
+				   CCVariable<Vector>::getTypeDescription() );
+  d_viscosityLabel = scinew VarLabel("viscosity",
+				   CCVariable<Vector>::getTypeDescription() );
+}
+
+//****************************************************************************
+// Destructor
+//****************************************************************************
 SmagorinskyModel::~SmagorinskyModel()
 {
 }
 
-void SmagorinskyModel::problemSetup(const ProblemSpecP& params)
+//****************************************************************************
+// Problem Setup 
+//****************************************************************************
+void 
+SmagorinskyModel::problemSetup(const ProblemSpecP& params)
 {
   ProblemSpecP db = params->findBlock("Turbulence");
   db->require("cf", d_CF);
@@ -38,47 +68,66 @@ void SmagorinskyModel::problemSetup(const ProblemSpecP& params)
   db->require("filterl", d_filterl);
 }
 
-void SmagorinskyModel::sched_computeTurbSubmodel(const LevelP& level,
-						 SchedulerP& sched,
-						 const DataWarehouseP& old_dw,
-						 DataWarehouseP& new_dw)
+//****************************************************************************
+// Schedule compute 
+//****************************************************************************
+void 
+SmagorinskyModel::sched_computeTurbSubmodel(const LevelP& level,
+					    SchedulerP& sched,
+					    DataWarehouseP& old_dw,
+					    DataWarehouseP& new_dw)
 {
-#ifdef WONT_COMPILE_YET
   for(Level::const_patchIterator iter=level->patchesBegin();
       iter != level->patchesEnd(); iter++){
     const Patch* patch=*iter;
     {
       Task* tsk = scinew Task("SmagorinskyModel::TurbSubmodel",
 			      patch, old_dw, new_dw, this,
-			      SmagorinskyModel::computeTurbSubmodel);
-      tsk->requires(old_dw, "velocity", patch, 1,
-		    FCVariable<Vector>::getTypeDescription());
-      tsk->requires(old_dw, "density", patch, 0,
-		    CCVariable<double>::getTypeDescription());
-      tsk->requires(old_dw, "viscosity", patch, 0,
-		    CCVariable<double>::getTypeDescription());
-      tsk->computes(new_dw, "viscosity", patch, 0,
-		    CCVariable<double>::getTypeDescription());
+			      &SmagorinskyModel::computeTurbSubmodel);
+
+      int numGhostCells = 1;
+      int matlIndex = 0;
+      tsk->requires(old_dw, d_velocityLabel, matlIndex, patch, Ghost::None,
+		    numGhostCells);
+      numGhostCells = 0;
+      tsk->requires(old_dw, d_densityLabel, matlIndex, patch, Ghost::None,
+		    numGhostCells);
+      tsk->requires(old_dw, d_viscosityLabel, matlIndex, patch, Ghost::None,
+		    numGhostCells);
+      tsk->computes(new_dw, d_viscosityLabel, matlIndex, patch);
       sched->addTask(tsk);
     }
-
   }
-#endif
 }
 
 
-void SmagorinskyModel::computeTurbSubmodel(const ProcessorContext* pc,
-					   const Patch* patch,
-					   const DataWarehouseP& old_dw,
-					   DataWarehouseP& new_dw)
+//****************************************************************************
+// Actual compute 
+//****************************************************************************
+void 
+SmagorinskyModel::computeTurbSubmodel(const ProcessorContext* pc,
+				      const Patch* patch,
+				      DataWarehouseP& old_dw,
+				      DataWarehouseP& new_dw)
 {
-#if 0
-  FCVariable<Vector> velocity;
-  old_dw->get(velocity, "velocity", patch, 1);
+
+  // Get the velocity, density and viscosity from the old data warehouse
+  // (tmp) velocity should be FCVariable
+  CCVariable<Vector> velocity;
+  int matlIndex = 0;
+  int nofGhostCells = 1;
+  old_dw->get(velocity, d_velocityLabel, matlIndex, patch, Ghost::None,
+	      nofGhostCells);
+
   CCVariable<double> density;
-  old_dw->get(density, "density", patch, 1);
+  old_dw->get(density, d_densityLabel, matlIndex, patch, Ghost::None,
+	      nofGhostCells);
+
   CCVariable<double> viscosity;
-  old_dw->get(viscosity, "viscosity", patch, 1);
+  old_dw->get(viscosity, d_viscosityLabel, matlIndex, patch, Ghost::None,
+	      nofGhostCells);
+
+#ifdef NOT_SURE_WHAT_THIS_DOES
   // using chain of responsibility pattern for getting cell information
   DataWarehouseP top_dw = new_dw->getTop();
   PerPatch<CellInformation*> cellinfop;
@@ -89,14 +138,22 @@ void SmagorinskyModel::computeTurbSubmodel(const ProcessorContext* pc,
     top_dw->put(cellinfop, "cellinfo", patch);
   } 
   CellInformation* cellinfo = cellinfop;
-  Array3Index lowIndex = patch->getLowIndex();
-  Array3Index highIndex = patch->getHighIndex();
+#endif
 
-  //get physical constants
+  // Get the patch details
+  IntVector lowIndex = patch->getCellLowIndex();
+  IntVector highIndex = patch->getCellHighIndex();
+
+  // get physical constants
   double mol_viscos; // molecular viscosity
   mol_viscos = d_physicalConsts->getMolecularViscosity();
+
+  // Create the new viscosity variable to write the result to 
+  // and allocate space in the new data warehouse for this variable
   CCVariable<double> new_viscosity;
-  new_dw->allocate(new_viscosity, "viscosity", patch, 0);
+  new_dw->allocate(new_viscosity, d_viscosityLabel, matlIndex, patch);
+
+#ifdef NOT_COMPILED_YET
   FORT_SMAGMODEL(new_viscosity, velocity, viscosity, density, mol_viscos,
 		 lowIndex, highIndex,
 		 cellinfo->ceeu, cellinfo->cweu, cellinfo->cwwu,
@@ -108,10 +165,15 @@ void SmagorinskyModel::computeTurbSubmodel(const ProcessorContext* pc,
 		 cellinfo->fac3u, cellinfo->fac4u,cellinfo->iesdu,
 		 cellinfo->iwsdu, cellinfo->enfac, cellinfo->sfac,
 		 cellinfo->tfac, cellinfo->bfac);
-  new_dw->put(new_viscosity, "viscosity", patch);
 #endif
+
+  // Put the calculated viscosityvalue into the new data warehouse
+  new_dw->put(new_viscosity, d_viscosityLabel, matlIndex, patch);
 }
 
+//****************************************************************************
+// Calculate the Velocity BC at the Wall
+//****************************************************************************
 void SmagorinskyModel::calcVelocityWallBC(const ProcessorContext* pc,
 					  const Patch* patch,
 					  const DataWarehouseP& old_dw,
@@ -196,7 +258,9 @@ void SmagorinskyModel::calcVelocityWallBC(const ProcessorContext* pc,
 }
 
 
+//****************************************************************************
 // No source term for samgorinsky model
+//****************************************************************************
 void SmagorinskyModel::calcVelocitySource(const ProcessorContext* pc,
 					  const Patch* patch,
 					  const DataWarehouseP& old_dw,
@@ -205,5 +269,11 @@ void SmagorinskyModel::calcVelocitySource(const ProcessorContext* pc,
 {
 }
 
-
+//
+// $Log$
+// Revision 1.8  2000/05/31 20:11:30  bbanerje
+// Cocoon stuff, tasks added to SmagorinskyModel, TurbulenceModel.
+// Added schedule compute of properties and TurbModel to Arches.
+//
+//
 
