@@ -307,12 +307,16 @@ int main(int argc, char** argv)
       da->queryVariables(vars, types);
       ASSERTEQ(vars.size(), types.size());
       cout << "There are " << vars.size() << " variables:\n";
+      for(int i=0;i<(int)vars.size();i++)
+	cout << vars[i] << ": " << types[i]->getName() << '\n';
       
       vector<int> index;
       vector<double> times;
       da->queryTimesteps(index, times);
       ASSERTEQ(index.size(), times.size());
       cout << "There are " << index.size() << " timesteps:\n";
+      for(int i=0;i<(int)index.size();i++)
+	cout << index[i] << ": " << times[i] << '\n';
       
       if (!tslow_set)
 	time_step_lower =0;
@@ -338,6 +342,7 @@ int main(int argc, char** argv)
 	  cout << "\tVariable: " << var << ", type " << td->getName() << "\n";
 	  for(int l=0;l<grid->numLevels();l++){
 	    LevelP level = grid->getLevel(l);
+	    cout << "\t    Level: " << level->getIndex() << ", id " << level->getID() << '\n';
 	    for(Level::const_patchIterator iter = level->patchesBegin();
 		iter != level->patchesEnd(); iter++){
 	      const Patch* patch = *iter;
