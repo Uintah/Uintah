@@ -114,12 +114,14 @@ int main(int argc, char** argv)
     t2->setDaemon(true);
     t2->detach();
 
+#if 0
     // startup master-side GuiServer, even when no slave..
     // XXX: Is this a remnant of dist'd stuff?  Michelle?
     GuiServer* gui_server = new GuiServer;
     Thread* t3=new Thread(gui_server, "GUI server thread");
     t3->setDaemon(true);
     t3->detach();
+#endif
 
     // Now activate the TCL event loop
     tcl_task->release_mainloop();
@@ -130,6 +132,11 @@ int main(int argc, char** argv)
 
 //
 // $Log$
+// Revision 1.5  1999/08/29 00:47:03  sparker
+// Integrated new thread library
+// using statement tweaks to compile with both MipsPRO and g++
+// Thread library bug fixes
+//
 // Revision 1.4  1999/08/28 17:54:54  sparker
 // Integrated new Thread library
 //

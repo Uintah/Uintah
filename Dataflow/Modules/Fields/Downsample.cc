@@ -10,15 +10,29 @@
  *  Copyright (C) 1994 SCI Group
  */
 
-#include <PSECommon/Dataflow/Module.h>
-#include <PSECommon/Datatypes/ScalarFieldPort.h>
-#include <PSECommon/Datatypes/SurfacePort.h>
+#include <PSECore/Dataflow/Module.h>
+#include <PSECore/Datatypes/ScalarFieldPort.h>
+#include <PSECore/Datatypes/SurfacePort.h>
 #include <SCICore/Datatypes/ScalarFieldRG.h>
 #include <SCICore/Geometry/Point.h>
 #include <SCICore/TclInterface/TCLvar.h>
 #include <SCICore/Math/Expon.h>
-#include <SCICore/Multitask/Task.h>
+#include <SCICore/Math/MinMax.h>
+#include <SCICore/Thread/Parallel.h>
+#include <SCICore/Thread/Thread.h>
 #include <values.h>
+
+namespace PSECommon {
+namespace Modules {
+
+using namespace PSECore::Dataflow;
+using namespace PSECore::Datatypes;
+using namespace SCICore::TclInterface;
+using namespace SCICore::GeomSpace;
+using namespace SCICore::Containers;
+using namespace SCICore::Geometry;
+using namespace SCICore::Math;
+using namespace SCICore::Thread;
 
 class Downsample : public Module {
     ScalarFieldIPort* infield;
@@ -51,20 +65,8 @@ Downsample::Downsample(const clString& id)
   add_oport(outfield);
 }
 
-Downsample::Downsample(const Downsample& copy, int deep)
-: Module(copy, deep), downsamplex("downsamplex", id, this),
-  downsampley("downsampley", id, this), downsamplez("downsamplez", id, this)
-{
-}
-
 Downsample::~Downsample()
 {
-}
-
-static void do_parallel(void* obj, int proc)
-{
-  Downsample* module=(Downsample*)obj;
-  module->parallel(proc);
 }
 
 void Downsample::parallel(int proc)
@@ -125,10 +127,13 @@ void Downsample::execute()
   double mn, mx;
   ifield->get_minmax(mn, mx);
   ofield->set_minmax(mn, mx);
-  ofield->xgrid=ifield->xgrid;
-  ofield->ygrid=ifield->ygrid;
-  ofield->zgrid=ifield->zgrid;
-  np=Task::nprocessors();
-  Task::multiprocess(np, do_parallel, this);
+  np=Thread::numProcessors();
+  Thread::parallel(Parallel<Downsample>(this, &Downsample::parallel),
+		   np, true);
+
   outfield->send(ofield);
 }
+
+} // End namespace Modules
+} // End namespace PSECommon
+

@@ -197,7 +197,7 @@ IsoSurfaceMSRG::IsoSurfaceMSRG(const clString& id)
 : Module("IsoSurfaceMSRG", id, Filter), seed_point("seed_point", id, this),
   have_seedpoint("have_seedpoint", id, this), isoval("isoval", id, this),
   do_3dwidget("do_3dwidget", id, this), emit_surface("emit_surface", id, this),
-  show_progress("show_progress", id, this)
+  show_progress("show_progress", id, this), widget_lock("IsoSurfaceSP widget lock")
 {
     // Create the input ports
     infield=scinew ScalarFieldIPort(this, "Field", ScalarFieldIPort::Atomic);
@@ -1707,6 +1707,11 @@ void IsoSurfaceMSRG::widget_moved(int last)
 
 //
 // $Log$
+// Revision 1.5  1999/08/29 00:46:47  sparker
+// Integrated new thread library
+// using statement tweaks to compile with both MipsPRO and g++
+// Thread library bug fixes
+//
 // Revision 1.4  1999/08/25 03:48:09  sparker
 // Changed SCICore/CoreDatatypes to SCICore/Datatypes
 // Changed PSECore/CommonDatatypes to PSECore/Datatypes

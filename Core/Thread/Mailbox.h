@@ -104,7 +104,7 @@ namespace SCICore {
 	private:
 	    const char* d_name;
 	    Mutex d_mutex;
-	    vector<Item> d_ring_buffer;
+	    std::vector<Item> d_ring_buffer;
 	    int d_head;
 	    int d_len;
 	    int d_max;
@@ -259,6 +259,11 @@ SCICore::Thread::Mailbox<Item>::numItems() const
 
 //
 // $Log$
+// Revision 1.6  1999/08/29 00:47:00  sparker
+// Integrated new thread library
+// using statement tweaks to compile with both MipsPRO and g++
+// Thread library bug fixes
+//
 // Revision 1.5  1999/08/28 03:46:48  sparker
 // Final updates before integration with PSE
 //

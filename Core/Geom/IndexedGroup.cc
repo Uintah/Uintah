@@ -73,7 +73,7 @@ void GeomIndexedGroup::io(Piostream& stream)
     stream.begin_class("GeomIndexedGroup", GEOMINDEXEDGROUP_VERSION);
     // Do the base class first...
     GeomObj::io(stream);
-    Pio(stream, objs);
+    SCICore::Containers::Pio(stream, objs);
     stream.end_class();
 }
 
@@ -149,6 +149,11 @@ HashTable<int,GeomObj*>* GeomIndexedGroup::getHash(void)
 
 //
 // $Log$
+// Revision 1.5  1999/08/29 00:46:57  sparker
+// Integrated new thread library
+// using statement tweaks to compile with both MipsPRO and g++
+// Thread library bug fixes
+//
 // Revision 1.4  1999/08/28 17:54:43  sparker
 // Integrated new Thread library
 //

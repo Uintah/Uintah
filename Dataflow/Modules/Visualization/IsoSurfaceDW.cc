@@ -47,10 +47,12 @@
 #include <SCICore/Malloc/Allocator.h>
 #include <SCICore/Math/Expon.h>
 #include <SCICore/Math/MiscMath.h>
-#include <SCICore/Multitask/ITC.h>
-#include <SCICore/Multitask/Task.h>
 #include <SCICore/TclInterface/TCLvar.h>
 #include <PSECore/Widgets/ArrowWidget.h>
+#include <SCICore/Thread/Barrier.h>
+#include <SCICore/Thread/Parallel.h>
+#include <SCICore/Thread/Semaphore.h>
+#include <SCICore/Thread/Thread.h>
 #include <iostream.h>
 #include <strstream.h>
 
@@ -71,8 +73,8 @@ using namespace SCICore::TclInterface;
 using namespace SCICore::GeomSpace;
 using namespace SCICore::Geometry;
 using namespace SCICore::Containers;
-using namespace SCICore::Multitask;
 using namespace SCICore::Math;
+using namespace SCICore::Thread;
 
 class IsoSurfaceDW : public Module {
     ScalarFieldIPort* infield;
@@ -228,24 +230,6 @@ static clString module_name("IsoSurfaceDW");
 static clString surface_name("IsoSurfaceDW");
 static clString widget_name("IsoSurfaceDW widget");
 
-static void do_parallel_reg_grid_hash(void* obj, int proc)
-{
-  IsoSurfaceDW* module=(IsoSurfaceDW*)obj;
-  module->parallel_reg_grid_hash(proc);
-}
-
-static void do_parallel_reg_grid_rings(void* obj, int proc)
-{
-  IsoSurfaceDW* module=(IsoSurfaceDW*)obj;
-  module->parallel_reg_grid_rings(proc);
-}
-
-static void do_parallel_reg_grid(void* obj, int proc)
-{
-  IsoSurfaceDW* module=(IsoSurfaceDW*)obj;
-  module->parallel_reg_grid(proc);
-}
-
 IsoSurfaceDW::IsoSurfaceDW(const clString& id)
 : Module("IsoSurfaceDW", id, Filter), seed_point("seed_point", id, this),
   have_seedpoint("have_seedpoint", id, this), isoval("isoval", id, this),
@@ -253,7 +237,10 @@ IsoSurfaceDW::IsoSurfaceDW(const clString& id)
   single("single", id, this), show_progress("show_progress", id, this), 
   tclBlockSize("tclBlockSize", id, this),
   method("method", id, this), clr_r("clr-r", id, this), 
-  clr_g("clr-g", id, this), clr_b("clr-b", id, this)
+  clr_g("clr-g", id, this), clr_b("clr-b", id, this),
+    widget_lock("IsoSurfaceDW widget lock"),
+  io("IsoSurfaceDW i/o lock"), hashing("IsoSurfaceDW hashing lock"),
+    grouplock("IsoSurfaceDW grouplock lock"), barrier("IsoSurfaceDW barrier")
 {
     // Create the input ports
     infield=scinew ScalarFieldIPort(this, "Field", ScalarFieldIPort::Atomic);
@@ -1013,7 +1000,7 @@ void IsoSurfaceDW::iso_reg_grid_hash()
     wct.start();
     blockSize=tclBlockSize.get();
     if (sing) np=1;	
-    else np=Min(Task::nprocessors(), ((rgbase->nx-2)/blockSize)+1);
+    else np=Min(Thread::numProcessors(), ((rgbase->nx-2)/blockSize)+1);
 
     cerr << "Parallel extraction with Hashing -- using "<<np<<" processors, blocksize="<<blockSize<<"  emit="<<emit<<"\n";
 
@@ -1036,7 +1023,7 @@ void IsoSurfaceDW::iso_reg_grid_hash()
     start_elems.resize(np);
     for (i=0; i<np; i++) {
 	all_tris[i] = new GeomTrianglesP();
-	all_sems[i] = new Semaphore(0);
+	all_sems[i] = new Semaphore("IsoSurfaceDW reg_grid_hash semaphore", 0);
 	all_bdryHashes[i] = new HashTable<int,int>;
     }
     
@@ -1044,7 +1031,8 @@ void IsoSurfaceDW::iso_reg_grid_hash()
     innerExtract.clear();
     lace.clear();
 
-    Task::multiprocess(np, do_parallel_reg_grid_hash, this);
+    Thread::parallel(Parallel<IsoSurfaceDW>(this, &IsoSurfaceDW::parallel_reg_grid_hash),
+		     np, true);
 
     for (i=0; i<np; i++) {
 	if (all_tris[i]->size())
@@ -1079,7 +1067,7 @@ void IsoSurfaceDW::iso_reg_grid()
     wct.start();
     blockSize=tclBlockSize.get();
     if (sing) np=1;	
-    else np=Min(Task::nprocessors(), ((rgbase->nx-2)/blockSize)+1);
+    else np=Min(Thread::numProcessors(), ((rgbase->nx-2)/blockSize)+1);
     cerr << "Parallel extraction -- using "<<np<<" processors, blocksize="<<blockSize<<"  emit="<<emit<<"\n";
 
     all_tris.resize(np);
@@ -1090,7 +1078,8 @@ void IsoSurfaceDW::iso_reg_grid()
     
     outerExtract.clear();
 
-    Task::multiprocess(np, do_parallel_reg_grid, this);
+    Thread::parallel(Parallel<IsoSurfaceDW>(this, &IsoSurfaceDW::parallel_reg_grid),
+		     np, true);
 
     for (i=0; i<np; i++) {
 	if (all_tris[i]->size())
@@ -1717,8 +1706,8 @@ void IsoSurfaceDW::iso_reg_grid_rings()
     wct.start();
     blockSize=tclBlockSize.get();
     if (sing) np=1;	
-    else np=Min(Task::nprocessors(), ((rgbase->nx-2)/blockSize)+1);
-//    np=Min(Task::nprocessors(), ((rgbase->nx-2)/blockSize)+1);
+    else np=Min(Thread::numProcessors(), ((rgbase->nx-2)/blockSize)+1);
+//    np=Min(Thread::numProcessors(), ((rgbase->nx-2)/blockSize)+1);
     cerr << "Parallel extraction with cache rings -- using "<<np<<" processors, blocksize="<<blockSize<<"  emit="<<emit<<"\n";
 
     // build them as separate surfaces...
@@ -1740,7 +1729,7 @@ void IsoSurfaceDW::iso_reg_grid_rings()
     start_elems.resize(np);
     for (i=0; i<np; i++) {
 	all_tris[i] = new GeomTrianglesP();
-	all_sems[i] = new Semaphore(0);
+	all_sems[i] = new Semaphore("IsoSurfaceDW iso_reg_grid_rings semaphore", 0);
 	all_bdryRings[i] = new Ring<int>(rgbase->ny*rgbase->nz);
     }
     
@@ -1748,7 +1737,8 @@ void IsoSurfaceDW::iso_reg_grid_rings()
     innerExtract.clear();
     lace.clear();
 
-    Task::multiprocess(np, do_parallel_reg_grid_rings, this);
+    Thread::parallel(Parallel<IsoSurfaceDW>(this, &IsoSurfaceDW::parallel_reg_grid_rings),
+		     np, true);
 
     for (i=0; i<np; i++) {
 	if (all_tris[i]->size())
@@ -2826,6 +2816,11 @@ void IsoSurfaceDW::widget_moved(int last)
 
 //
 // $Log$
+// Revision 1.5  1999/08/29 00:46:47  sparker
+// Integrated new thread library
+// using statement tweaks to compile with both MipsPRO and g++
+// Thread library bug fixes
+//
 // Revision 1.4  1999/08/25 03:48:09  sparker
 // Changed SCICore/CoreDatatypes to SCICore/Datatypes
 // Changed PSECore/CommonDatatypes to PSECore/Datatypes

@@ -18,8 +18,6 @@
 #include <SCICore/Geometry/Point.h>
 #include <SCICore/Math/MinMax.h>
 #include <SCICore/Malloc/Allocator.h>
-#include <SCICore/Multitask/Task.h>
-#include <SCICore/Multitask/ITC.h>
 #include <SCICore/TclInterface/TCLvar.h>
 
 #include <iostream.h>
@@ -305,6 +303,11 @@ void BoundGrid::execute()
 
 //
 // $Log$
+// Revision 1.6  1999/08/29 00:46:45  sparker
+// Integrated new thread library
+// using statement tweaks to compile with both MipsPRO and g++
+// Thread library bug fixes
+//
 // Revision 1.5  1999/08/25 03:48:05  sparker
 // Changed SCICore/CoreDatatypes to SCICore/Datatypes
 // Changed PSECore/CommonDatatypes to PSECore/Datatypes

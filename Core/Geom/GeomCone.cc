@@ -121,9 +121,9 @@ void GeomCone::io(Piostream& stream)
 
     stream.begin_class("GeomCone", GEOMCONE_VERSION);
     GeomObj::io(stream);
-    Pio(stream, bottom);
-    Pio(stream, top);
-    Pio(stream, axis);
+    SCICore::Geometry::Pio(stream, bottom);
+    SCICore::Geometry::Pio(stream, top);
+    SCICore::Geometry::Pio(stream, axis);
     Pio(stream, bot_rad);
     Pio(stream, top_rad);
     Pio(stream, nu);
@@ -229,6 +229,11 @@ bool GeomCappedCone::saveobj(ostream& out, const clString& format,
 
 //
 // $Log$
+// Revision 1.5  1999/08/29 00:46:54  sparker
+// Integrated new thread library
+// using statement tweaks to compile with both MipsPRO and g++
+// Thread library bug fixes
+//
 // Revision 1.4  1999/08/28 17:54:39  sparker
 // Integrated new Thread library
 //

@@ -25,7 +25,7 @@
 #include <PSECore/Dataflow/Module.h>
 
 namespace SCICore {
-  namespace Multitask {
+  namespace Thread {
     class CrowdMonitor;
   }
 }
@@ -53,7 +53,6 @@ using SCICore::Containers::clString;
 using SCICore::Containers::Array1;
 using SCICore::PersistentSpace::Piostream;
 using SCICore::PersistentSpace::PersistentTypeID;
-using SCICore::Multitask::CrowdMonitor;
 
 /* this is basicaly a indexed group that also has some simple message
  * stuff
@@ -81,12 +80,12 @@ public:
 class GeomSalmonItem: public GeomObj {
     GeomObj *child;
     clString name;
-    CrowdMonitor* lock;
+    SCICore::Thread::CrowdMonitor* lock;
 
 public:
     friend class Roe;
     GeomSalmonItem();
-    GeomSalmonItem(GeomObj*,const clString&, CrowdMonitor* lock);
+    GeomSalmonItem(GeomObj*,const clString&, SCICore::Thread::CrowdMonitor* lock);
     virtual ~GeomSalmonItem();
 
     virtual GeomObj* clone();
@@ -109,6 +108,11 @@ public:
 
 //
 // $Log$
+// Revision 1.5  1999/08/29 00:46:43  sparker
+// Integrated new thread library
+// using statement tweaks to compile with both MipsPRO and g++
+// Thread library bug fixes
+//
 // Revision 1.4  1999/08/25 03:47:58  sparker
 // Changed SCICore/CoreDatatypes to SCICore/Datatypes
 // Changed PSECore/CommonDatatypes to PSECore/Datatypes

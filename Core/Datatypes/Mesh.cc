@@ -196,10 +196,10 @@ void Mesh::io(Piostream& stream)
 
 void Node::io(Piostream& stream)
 {
-    using SCICore::Containers::Pio;
+    using SCICore::PersistentSpace::Pio;
 
     int version=stream.begin_class("Node", NODE_VERSION);
-    Pio(stream, p);
+    SCICore::Geometry::Pio(stream, p);
     if(version >= 3){
       if (version >= 4) {
 	  Pio(stream, fluxBC);
@@ -214,8 +214,8 @@ void Node::io(Piostream& stream)
       if(stream.reading() && flag)
 	bc=new DirichletBC(0,0);
       if(flag){
-	Pio(stream, bc->fromsurf);
-	Pio(stream, bc->value);
+	  SCICore::Containers::Pio(stream, bc->fromsurf);
+	  Pio(stream, bc->value);
       }
     }
     stream.end_class();
@@ -1597,6 +1597,11 @@ void Pio(Piostream& stream, SCICore::Datatypes::ElementVersion1& elem)
 
 //
 // $Log$
+// Revision 1.5  1999/08/29 00:46:52  sparker
+// Integrated new thread library
+// using statement tweaks to compile with both MipsPRO and g++
+// Thread library bug fixes
+//
 // Revision 1.4  1999/08/28 17:54:36  sparker
 // Integrated new Thread library
 //

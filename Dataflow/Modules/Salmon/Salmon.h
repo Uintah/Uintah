@@ -23,10 +23,10 @@
 #include <SCICore/Geom/GeomObj.h>
 #include <SCICore/Geom/Material.h>
 #include <SCICore/Geom/Lighting.h>
-#include <SCICore/Multitask/ITC.h>
 #include <SCICore/Geom/IndexedGroup.h>
 #include <PSECommon/Modules/Salmon/SalmonGeom.h>
 #include <SCICore/TclInterface/TCL.h>
+#include <SCICore/Thread/CrowdMonitor.h>
 
 namespace PSECommon {
 namespace Modules {
@@ -37,11 +37,10 @@ using PSECore::Comm::MessageTypes;
 using PSECore::Datatypes::GeomReply;
 
 using SCICore::Containers::HashTable;
-using SCICore::Multitask::Mailbox;
-using SCICore::Multitask::CrowdMonitor;
 using SCICore::GeomSpace::MaterialHandle;
 using SCICore::TclInterface::TCLArgs;
 using SCICore::GeomSpace::Lighting;
+using SCICore::Thread::CrowdMonitor;
 
 class Renderer;
 class Roe;
@@ -80,10 +79,10 @@ public:
     Salmon(const clString& id);
     virtual ~Salmon();
     virtual void execute();
-    void initPort(Mailbox<GeomReply>*);
+    void initPort(SCICore::Thread::Mailbox<GeomReply>*);
     void append_port_msg(GeometryComm*);
     void addObj(GeomSalmonPort* port, GeomID serial, GeomObj *obj,
-		const clString&, CrowdMonitor* lock);
+		const clString&, SCICore::Thread::CrowdMonitor* lock);
     void delObj(GeomSalmonPort* port, GeomID serial, int del);
     void delAll(GeomSalmonPort* port);
     void flushPort(int portid);
@@ -109,7 +108,7 @@ public:
     int lookup_specific(const clString& key, void*&);
     void insert_specific(const clString& key, void* data);
 
-    CrowdMonitor geomlock;
+    SCICore::Thread::CrowdMonitor geomlock;
 };
 
 class SalmonMessage : public MessageBase {
@@ -136,6 +135,11 @@ public:
 
 //
 // $Log$
+// Revision 1.5  1999/08/29 00:46:43  sparker
+// Integrated new thread library
+// using statement tweaks to compile with both MipsPRO and g++
+// Thread library bug fixes
+//
 // Revision 1.4  1999/08/25 03:47:58  sparker
 // Changed SCICore/CoreDatatypes to SCICore/Datatypes
 // Changed PSECore/CommonDatatypes to PSECore/Datatypes

@@ -26,6 +26,7 @@
 #include <SCICore/Math/MinMax.h>
 #include <SCICore/Malloc/Allocator.h>
 #include <SCICore/TclInterface/TCLvar.h>
+#include <SCICore/Thread/CrowdMonitor.h>
 
 #include <PSECore/Widgets/ScaledBoxWidget.h>
 #include <PSECore/Widgets/ScaledFrameWidget.h>
@@ -154,7 +155,7 @@ Module* make_Hedgehog(const clString& id) {
 }       
 
 Hedgehog::Hedgehog(const clString& id)
-: Module("Hedgehog", id, Filter), 
+: Module("Hedgehog", id, Filter), widget_lock("Hedgehog widget lock"),
   length_scale("length_scale", id, this),
   width_scale("width_scale", id, this),
   head_length("head_length", id, this),
@@ -418,6 +419,11 @@ void Hedgehog::tcl_command(TCLArgs& args, void* userdata)
 
 //
 // $Log$
+// Revision 1.6  1999/08/29 00:46:46  sparker
+// Integrated new thread library
+// using statement tweaks to compile with both MipsPRO and g++
+// Thread library bug fixes
+//
 // Revision 1.5  1999/08/25 03:48:07  sparker
 // Changed SCICore/CoreDatatypes to SCICore/Datatypes
 // Changed PSECore/CommonDatatypes to PSECore/Datatypes

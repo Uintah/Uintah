@@ -50,7 +50,7 @@ namespace SCICore {
 	    typedef T (*ReductionOp)(const T&, const T&);
 
 	    //////////
-	    // Create a <b> Reducer</i> for the specified number of threads.
+	    // Create a <b> Reducer</i>.
 	    // At each operation, a barrier wait is performed, and the
 	    // operation will be performed to compute the global balue.
 	    // <i>name</i> should be a static string which describes
@@ -58,15 +58,7 @@ namespace SCICore {
 	    // op is a function which will compute a reduced value from
 	    // a pair of values.  op should be associative and commutative,
 	    // even up to floating point errors.
-	    Reducer(const char* name, int nthreads, ReductionOp);
-
-	    //////////
-	    // Create a <b>Reducer</b> to be associated with a particular
-	    // <b>ThreadGroup</b>.
-	    // op is a function which will compute a reduced value from
-	    // a pair of values.  op should be associative and commutative,
-	    // even up to floating point errors.
-	    Reducer(const char* name, ThreadGroup* group, ReductionOp);
+	    Reducer(const char* name, ReductionOp);
 
 	    //////////
 	    // Destroy the Reducer and free associated memory.
@@ -76,7 +68,7 @@ namespace SCICore {
 	    // Performs a global reduction over all of the threads.  As
 	    // soon as each thread has called reduce with their local value,
 	    // each thread will return the same global reduced value.
-	    T reduce(int proc, const T& value);
+	    T reduce(int myrank, int numThreads, const T& value);
 
 	private:
 	    T (*f_op)(const T&, const T&);
@@ -95,7 +87,7 @@ namespace SCICore {
 	    BufArray* d_p;
 
 	    int d_array_size;
-	    void collectiveResize(int proc);
+	    void collectiveResize(int proc, int numThreads);
 	    void allocate(int size);
 
 	    // Cannot copy them
@@ -106,11 +98,11 @@ namespace SCICore {
 }
 
 template<class T>
-SCICore::Thread::Reducer<T>::Reducer(const char* name, int numThreads,
-				     ReductionOp op)
-    : Barrier(name, numThreads), f_op(op)
+SCICore::Thread::Reducer<T>::Reducer(const char* name, ReductionOp op)
+    : Barrier(name), f_op(op)
 {
-    allocate(numThreads);
+    d_array_size=-1;
+    d_p=0;
 }
 
 template<class T>
@@ -126,46 +118,38 @@ SCICore::Thread::Reducer<T>::allocate(int n)
 }
 
 template<class T>
-SCICore::Thread::Reducer<T>::Reducer(const char* name, ThreadGroup* group,
-				     ReductionOp op)
-    : Barrier(name, group), f_op(op)
-{
-    allocate(group->numActive(true));
-}
-
-template<class T>
 SCICore::Thread::Reducer<T>::~Reducer()
 {
-    delete[] d_join[0]-1;
-    delete[] d_p-1;
+    if(d_p){
+	delete[] d_join[0]-1;
+	delete[] d_p-1;
+    }
 }
 
 template<class T>
 void
-SCICore::Thread::Reducer<T>::collectiveResize(int proc)
+SCICore::Thread::Reducer<T>::collectiveResize(int proc, int n)
 {
     // Extra barrier here to change the array size...
 
     // We must wait until everybody has seen the array size change,
     // or they will skip down too soon...
-    wait();
+    wait(n);
     if(proc==0){
-        int n=d_thread_group?d_thread_group->numActive(true):d_num_threads;
 	delete[] d_join[0]-1;
 	delete[] d_p-1;
 	allocate(n);
 	d_array_size=n;
     }
-    wait();
+    wait(n);
 }
 
 template<class T>
 T
-SCICore::Thread::Reducer<T>::reduce(int proc, const T& myresult)
+SCICore::Thread::Reducer<T>::reduce(int proc, int n, const T& myresult)
 {
-    int n=d_thread_group?d_thread_group->numActive(true):d_num_threads;
     if(n != d_array_size){
-        collectiveResize(proc);
+        collectiveResize(proc, n);
     }
     if(n<=1)
 	return myresult;
@@ -175,7 +159,7 @@ SCICore::Thread::Reducer<T>::reduce(int proc, const T& myresult)
 
     dataArray* j=d_join[buf];
     j[proc].d_data=myresult;
-    wait();
+    wait(n);
     T red=j[0].d_data;
     for(int i=1;i<n;i++)
         red=(*f_op)(red, j[i].d_data);
@@ -186,6 +170,11 @@ SCICore::Thread::Reducer<T>::reduce(int proc, const T& myresult)
 
 //
 // $Log$
+// Revision 1.7  1999/08/29 00:47:01  sparker
+// Integrated new thread library
+// using statement tweaks to compile with both MipsPRO and g++
+// Thread library bug fixes
+//
 // Revision 1.6  1999/08/28 03:46:49  sparker
 // Final updates before integration with PSE
 //

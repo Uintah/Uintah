@@ -73,10 +73,10 @@ Thread::Thread(Runnable* runner, const char* name,
 	       ThreadGroup* group, ActiveState state)
     : d_runner(runner), d_threadname(name), d_group(group)
 {
-    if(group == 0){
+    if(d_group == 0){
         if(!ThreadGroup::s_default_group)
 	    Thread::initialize();
-        group=ThreadGroup::s_default_group;
+        d_group=ThreadGroup::s_default_group;
     }
 
     d_runner->d_my_thread=this;
@@ -102,7 +102,7 @@ Thread::Thread(Runnable* runner, const char* name,
 }
 
 void
-Thread::Thread::activate(bool stopped)
+Thread::activate(bool stopped)
 {
     if(d_activated)
 	throw ThreadError("Thread is already activated");
@@ -171,6 +171,8 @@ Thread::niceAbort()
     for(;;){
         char action;
         Thread* s=Thread::self();
+	print_threads();
+	fprintf(stderr, "\n");
 	fprintf(stderr, "Abort signalled by pid: %d\n", getpid());
 	fprintf(stderr, "Occured for thread:\n \"%s\"", s->d_threadname);
 	fprintf(stderr, "resume(r)/dbx(d)/cvd(c)/kill thread(k)/exit(e)? ");
@@ -272,6 +274,11 @@ Thread::getStateString(ThreadState state)
 
 //
 // $Log$
+// Revision 1.7  1999/08/29 00:47:01  sparker
+// Integrated new thread library
+// using statement tweaks to compile with both MipsPRO and g++
+// Thread library bug fixes
+//
 // Revision 1.6  1999/08/28 03:46:50  sparker
 // Final updates before integration with PSE
 //
