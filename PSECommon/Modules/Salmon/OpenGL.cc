@@ -919,7 +919,6 @@ void OpenGL::put_scanline(int y, int width, Color* scanline, int repeat)
 
 void OpenGL::pick_draw_obj(Salmon* salmon, Roe*, GeomObj* obj)
 {
-#if 0
 #if (_MIPS_SZPTR == 64)
     unsigned long o=(unsigned long)obj;
     unsigned int o1=(o>>32)&0xffffffff;
@@ -934,7 +933,6 @@ void OpenGL::pick_draw_obj(Salmon* salmon, Roe*, GeomObj* obj)
     glPopName();
     glLoadName((GLuint)obj);
     glPushName(0x12345678);
-#endif
 #endif
     obj->draw(drawinfo, salmon->default_matl.get_rep(), current_time);
 }
@@ -1460,6 +1458,10 @@ GetReq::GetReq(int datamask, FutureValue<GeometryData*>* result)
 
 //
 // $Log$
+// Revision 1.8  1999/09/08 22:04:32  sparker
+// Fixed picking
+// Added messages for pick mode
+//
 // Revision 1.7  1999/08/29 00:46:41  sparker
 // Integrated new thread library
 // using statement tweaks to compile with both MipsPRO and g++
