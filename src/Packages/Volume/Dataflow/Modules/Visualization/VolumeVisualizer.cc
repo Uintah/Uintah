@@ -227,7 +227,11 @@ VolumeVisualizer::execute(){
   volren_->set_adaptive(gui_adaptive_.get());
   volren_->set_colormap_size(1 << gui_cmap_size_.get());
   volren_->set_slice_alpha(gui_alpha_scale_.get());
-  volren_->set_sw_raster(gui_sw_raster_.get());
+  if(!volren_->use_pbuffer()) {
+    gui_sw_raster_.set(1);
+  } else {
+    volren_->set_sw_raster(gui_sw_raster_.get());
+  }
   volren_->set_shading(gui_shading_.get());
   volren_->set_material(gui_ambient_.get(), gui_diffuse_.get(),
                         gui_specular_.get(), gui_shine_.get());
