@@ -28,6 +28,14 @@
     </authors>
     <summary>Probe values in a field.</summary>
     <description>
+      <p>
+        A GUI Point widget is created and can be moved around in the
+        scene.  The Probe Point port contains a PointCloud field with
+        one point in it at the location of the probe.  The value at
+        that point is interpolated from the input field.  The input
+        field is also used to determine the initial position and
+        relative size of the probe widget.
+      </p>
     </description>
   </overview>
   <io>

@@ -26,9 +26,15 @@
     <authors>
       <author>Michael Callahan</author>
     </authors>
-    <summary>Make an ImageField that fits the source field.
+    <summary>
+      Make a LatticeVol that fits the source field.
     </summary>
     <description>
+      <p>
+        Make a LatticeVol that fits the source field.  The value type of
+        the LatticeVol is the same as that of the input field.  The data
+        location is at the nodes.
+      </p>
     </description>
   </overview>
   <io>

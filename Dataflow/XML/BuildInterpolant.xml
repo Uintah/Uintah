@@ -28,10 +28,36 @@
       <author>David Weinstein</author>
       <author>Michael Callahan</author>
     </authors>
-    <summary>Build an interpolant field -- a field that says how to
-    project the data from one field onto the data of a second field.
+    <summary>
+      Build an interpolant field -- a field that says how to project
+      the data from one field onto the data of a second field.
     </summary>
     <description>
+      <p>
+        This module builds an interpolant field which contains data
+        about how to interpolate the data from the source field onto
+        the geometry of the destination field.  The resulting
+        interpolant field can then be used by the ApplyInterpolant
+        module to interpolate the values from a field similar to the
+        source field onto the destination field.
+      </p>
+      <p>
+        The source field for BuildInterpolant and ApplyInterpolant
+        must contain the same geometry and data locations.  However
+        they do not have to contain the same data values or value
+        types.  For instance, a TetVol of doubles with data at the
+        nodes can be passed into the Source port of BuildInterpolant,
+        and a TetVol of Vectors with data also at the nodes and with
+        the same mesh can be passed into the source port of
+        ApplyInterpolant.
+      </p>
+      <p>
+        DirectInterpolate should be used instead of BuildInterpolant
+        and ApplyInterpolant if the Interpolant is not to be reused,
+        as it does the same interpolation without building the
+        intermediate interpolant field.  This should be used if the
+        source field changes much more often than the destination field.
+      <p> 
     </description>
   </overview>
   <io>
