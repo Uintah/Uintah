@@ -57,11 +57,15 @@ TransIsoHyper::TransIsoHyper(ProblemSpecP& ps,  MPMLabel* Mlb, int n8or27)
     NGN=2;
   }
 
+  pStretchLabel = VarLabel::create("p.stretch",
+        ParticleVariable<double>::getTypeDescription());
+
 }
 
 TransIsoHyper::~TransIsoHyper()
 // _______________________DESTRUCTOR
 {
+  VarLabel::destroy(pStretchLabel);
 }
 
 void TransIsoHyper::initializeCMData(const Patch* patch,
@@ -229,6 +233,7 @@ void TransIsoHyper::computeStressTensor(const PatchSubset* patches,
     ParticleVariable<Matrix3> pstress;
     constParticleVariable<double> pmass,pvolume;
     ParticleVariable<double> pvolume_deformed;
+    ParticleVariable<double> stretch;
     constParticleVariable<Vector> pvelocity;
     constParticleVariable<Vector> pfiberdir;
     ParticleVariable<Vector> pfiberdir_carry;
@@ -251,6 +256,7 @@ void TransIsoHyper::computeStressTensor(const PatchSubset* patches,
     new_dw->allocateAndPut(pfiberdir_carry,  lb->pFiberDirLabel_preReloc,pset);
     new_dw->allocateAndPut(deformationGradient_new,
                                   lb->pDeformationMeasureLabel_preReloc, pset);
+    new_dw->allocateAndPut(stretch,          pStretchLabel,          pset);
 
     new_dw->get(gvelocity, lb->gVelocityLabel,dwi,patch,gac,NGN);
     old_dw->get(delT, lb->delTLabel);
@@ -325,6 +331,10 @@ void TransIsoHyper::computeStressTensor(const PatchSubset* patches,
       I4tilde = Dot(deformed_fiber_vector,
                    (rightCauchyGreentilde_new*deformed_fiber_vector));
       lambda_tilde = sqrt(I4tilde);
+
+      // For diagnostics only
+      double I4 = I4tilde*pow(J,(2./3.));
+      stretch[idx] = sqrt(I4);
 
       deformed_fiber_vector = deformationGradient_new[idx]*deformed_fiber_vector                             *(1./lambda_tilde*pow(J,-(1./3.)));
 
@@ -444,8 +454,8 @@ void TransIsoHyper::carryForward(const PatchSubset* patches,
 void TransIsoHyper::addComputesAndRequires(Task* task,
 					  const MPMMaterial* matl,
 					  const PatchSet*) const
-//______________________________________TELLS THE SCHEDULER WHAT DATA
-//______________________________NEEDS TO BE AVAILABLE AT THE TIME computeStressTensor IS CALLED
+//___________TELLS THE SCHEDULER WHAT DATA
+//___________NEEDS TO BE AVAILABLE AT THE TIME computeStressTensor IS CALLED
 {
     const MaterialSubset* matlset = matl->thisMaterial();
     Ghost::GhostType  gac   = Ghost::AroundCells;
@@ -466,6 +476,7 @@ void TransIsoHyper::addComputesAndRequires(Task* task,
     task->computes(lb->pDeformationMeasureLabel_preReloc, matlset);
     task->computes(lb->pVolumeDeformedLabel,              matlset);
     task->computes(lb->pFiberDirLabel_preReloc,           matlset);
+    task->computes(pStretchLabel,                         matlset);
 }
 
 void TransIsoHyper::addComputesAndRequires(Task* ,
