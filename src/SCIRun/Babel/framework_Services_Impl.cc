@@ -3,21 +3,22 @@
 // Symbol:        framework.Services-v1.0
 // Symbol Type:   class
 // Babel Version: 0.7.4
-// SIDL Created:  20030405 01:08:32 MST
-// Generated:     20030405 01:08:37 MST
+// SIDL Created:  20030428 21:05:32 MDT
+// Generated:     20030428 21:05:39 MDT
 // Description:   Server-side implementation for framework.Services
 // 
 // WARNING: Automatically generated; only changes within splicers preserved
 // 
 // babel-version = 0.7.4
 // source-line   = 7
-// source-url    = file:/home/sci/kzhang/SCIRun/cca-debug/../src/SCIRun/Babel/framework.sidl
+// source-url    = file:/home/sci/kzhang/testSCIRun/SCIRun/debug/../src/SCIRun/Babel/framework.sidl
 // 
 #include "framework_Services_Impl.hh"
 
 // DO-NOT-DELETE splicer.begin(framework.Services._includes)
 // Put additional includes or other arbitrary code here...
 #include <iostream>
+using namespace std;
 // DO-NOT-DELETE splicer.end(framework.Services._includes)
 
 // user defined constructor
