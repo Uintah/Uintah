@@ -65,7 +65,6 @@ BuildTriFEMatrix::BuildTriFEMatrix(TriSurfFieldIntHandle hFieldInt,
   TriSurfMesh::Node::size_type nsize; hMesh_->size(nsize);
   unsigned int nNodes = nsize;
   rows_ = scinew int[nNodes+1];
-//  cerr << "unitsScale_ = "<< unitsScale_ << "\n";
 }
 BuildTriFEMatrix::~BuildTriFEMatrix(){}
 
@@ -93,7 +92,6 @@ bool BuildTriFEMatrix::build_FEMatrix(TriSurfFieldIntHandle hFieldInt,
   BuildTriFEMatrixHandle hMaker =
     new BuildTriFEMatrix(hFieldInt, hFieldTensor, index_based, tens, 
 			 hA, np, unitsScale);
-  cerr << "SetupFEMatrix: number of threads being used = " << np << endl;
 
   Thread::parallel(Parallel<BuildTriFEMatrix>(hMaker.get_rep(), 
 					   &BuildTriFEMatrix::parallel),
@@ -119,14 +117,13 @@ void BuildTriFEMatrix::parallel(int proc)
   int start_node = nNodes * proc/np_;
   int end_node   = nNodes * (proc+1)/np_;
   int ndof       = end_node - start_node;
-  
   int r = start_node;
   int i;
   
   //----------------------------------------------------------------------
   //! Creating sparse matrix structure
   Array1<int> mycols(0, 15*ndof);
-  
+
   if (proc==0){
     hMesh_->synchronize(Mesh::EDGES_E | Mesh::NODE_NEIGHBORS_E);
   }
@@ -203,7 +200,7 @@ void BuildTriFEMatrix::parallel(int proc)
   for(i=ns;i<ne;i++){
     a[i]=0;
   }
-  
+    
   //----------------------------------------------------------
   //! Filling the matrix
   TriSurfMesh::Face::iterator ii, iie;
@@ -212,20 +209,19 @@ void BuildTriFEMatrix::parallel(int proc)
    
   TriSurfMesh::Node::array_type face_nodes(3);
   hMesh_->begin(ii); hMesh_->end(iie);
-  int count = 0;
   for (; ii != iie; ++ii){
     if (hMesh_->test_nodes_range(*ii, start_node, end_node)){ 
       build_local_matrix(lcl_matrix, *ii);
       add_lcl_gbl(lcl_matrix, *ii, start_node, end_node, face_nodes);
     }
   }
-
   barrier_.wait(np_);
 }
 
 void BuildTriFEMatrix::build_local_matrix(double lcl_a[3][3], 
 					  TriSurfMesh::Face::index_type f_ind)
 {
+
   Vector grad1, grad2, grad3;
   double area = hMesh_->get_gradient_basis(f_ind, grad1, grad2, grad3);
  
@@ -267,10 +263,6 @@ void BuildTriFEMatrix::build_local_matrix(double lcl_a[3][3],
       lcl_a[i][j] = 0.0;
       for (int k=0; k< 3; k++){
 	for (int l=0; l<3; l++){
-	  //	  cout << "4b ii " << &lcl_a[i][j];
-          //cout << " " <<  &el_cond[k][l] << "  " ;
-	  // cout << &el_coefs[i][j] << "  ";
-          //cout << &el_coefs[j][l] << "  " << k << "  " << l << endl;
 	  lcl_a[i][j] += 
 	    (el_cond[k][l]*unitsScale_)*el_coefs[i][k]*el_coefs[j][l];
 	}
@@ -278,11 +270,12 @@ void BuildTriFEMatrix::build_local_matrix(double lcl_a[3][3],
       lcl_a[i][j] *= fabs(area);
     }
   }
+
 }
 
 void BuildTriFEMatrix::add_lcl_gbl(double lcl_a[3][3], TriSurfMesh::Face::index_type f_ind, int s, int e, TriSurfMesh::Node::array_type& face_nodes)
 {
-  //TriSurfMesh::Node::array_type cell_nodes(4);
+
   hMesh_->get_nodes(face_nodes, f_ind); 
 
   for (int i=0; i<3; i++) {
@@ -293,6 +286,7 @@ void BuildTriFEMatrix::add_lcl_gbl(double lcl_a[3][3], TriSurfMesh::Face::index_
 	pA_->get(ii, jj) += lcl_a[i][j];
       }
   }
+
 }
 
 void BuildTriFEMatrix::io(Piostream&){
