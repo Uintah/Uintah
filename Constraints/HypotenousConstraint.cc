@@ -13,7 +13,9 @@
 
 
 #include <Constraints/HypotenousConstraint.h>
+#include <Classlib/Debug.h>
 
+static DebugSwitch hc_debug("BaseConstraint", "Hypotenous");
 
 HypotenousConstraint::HypotenousConstraint( const clString& name,
 					    const Index numSchemes,
@@ -38,9 +40,11 @@ HypotenousConstraint::Satisfy( const Index index, const Scheme scheme )
    Variable& v0 = *vars[0];
    Variable& v1 = *vars[1];
    Point temp;
-   
-   ChooseChange(index, scheme);
-   printc(cout, scheme);
+
+   if (hc_debug) {
+      ChooseChange(index, scheme);
+      printc(cout, scheme);
+   }
    
    /* 2 * dist^2 = hypo^2 */
    switch (ChooseChange(index, scheme)) {

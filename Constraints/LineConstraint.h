@@ -24,7 +24,7 @@ public:
 		   const Index numSchemes,
 		   Variable* line_p1, Variable* line_p2,
 		   Variable* p );
-   ~LineConstraint();
+   virtual ~LineConstraint();
 
 protected:
    virtual void Satisfy( const Index index, const Scheme scheme );

@@ -14,6 +14,9 @@
 
 #include <Constraints/PlaneConstraint.h>
 #include <Geometry/Vector.h>
+#include <Classlib/Debug.h>
+
+static DebugSwitch pc_debug("BaseConstraint", "Plane");
 
 PlaneConstraint::PlaneConstraint( const clString& name,
 				  const Index numSchemes,
@@ -30,6 +33,10 @@ PlaneConstraint::PlaneConstraint( const clString& name,
    Register();
 };
 
+PlaneConstraint::~PlaneConstraint()
+{
+}
+
 
 void
 PlaneConstraint::Satisfy( const Index index, const Scheme scheme )
@@ -38,8 +45,10 @@ PlaneConstraint::Satisfy( const Index index, const Scheme scheme )
    Variable& v1 = *vars[1];
    Variable& v2 = *vars[2];
 
-   ChooseChange(index, scheme);
-   print();
+   if (pc_debug) {
+      ChooseChange(index, scheme);
+      print();
+   }
    
    switch (ChooseChange(index, scheme)) {
    case 0:

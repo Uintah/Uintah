@@ -23,7 +23,7 @@ public:
    HypotenousConstraint( const clString& name,
 			 const Index numSchemes,
 			 Variable* distInX, Variable* hypoInX );
-    virtual ~HypotenousConstraint();
+   virtual ~HypotenousConstraint();
    
 protected:
    virtual void Satisfy( const Index index, const Scheme scheme );

@@ -24,7 +24,7 @@ public:
 		      const Index numSchemes,
 		      Variable* segment_p1, Variable* segment_p2,
 		      Variable* p );
-   ~SegmentConstraint();
+   virtual ~SegmentConstraint();
 
 protected:
    virtual void Satisfy( const Index index, const Scheme scheme );
