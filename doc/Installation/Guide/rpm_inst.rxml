@@ -108,7 +108,7 @@ DEALINGS IN THE SOFTWARE.
 	    <filename>SCIRunData.<!--%= doc.version %-->.tar.gz</filename>
 	    (or
 	    <filename>FusionData.<!--%= doc.version %-->.tar.gz</filename>
-	    if also downloading the Fusion specific RPM).
+	    if downloading the Fusion specific RPM).
 	  </para>
 	</listitem>
 	<listitem>
@@ -124,20 +124,22 @@ DEALINGS IN THE SOFTWARE.
   <section id="sec.rpm_install">
     <title>Installing</title>
 
-    <para> Start a terminal (e.g. xterm) application.  Become the root
-    user by typing:
-      <literallayout class="monospaced">
-su -	
-      </literallayout>
-      Command <command>su</command> prompts for root's password.</para>
-      <para>
-	Install the RPM by typing:
+
+    <para>
+      The following procedure installs the documentation
+      in the directory <filename>/usr/local</filename>
+    </para>
+    <para>
+      Use the <command>su</command> command to become the root user.  Then
+      <command>cd</command> to the directory containing the compressed
+      documentation tarball and type:
       <literallayout class="monospaced">
 rpm -ivh SCIRun-<!--%= doc.version %-->-<replaceable>system</replaceable>.rpm
       </literallayout>
-      </para>
-      <para>The RPM should take approximately one minute to
+    </para>
+    <para>The RPM should take approximately one minute to
       install.</para>
+
     <para>
       Type <command>exit</command> to leave the root account.
     </para>
@@ -160,11 +162,10 @@ rpm -e SCIRun
       <filename>/usr/local</filename>.
     </para>
     <para>
-      Become root:
-      <literallayout class="monospaced">
-su -
-      </literallayout>
-      and type:
+      Use the <command>su</command> command to become the root user.  Then
+      <command>cd</command> to the directory containing the compressed
+      documentation tarball and type:
+
       <literallayout class="monospaced">
 gunzip -c SCIRunData.<!--%= doc.version %-->.tar.gz | (cd /usr/local &amp;&amp; tar xf -)
       </literallayout>
@@ -187,8 +188,8 @@ gunzip -c SCIRunData.<!--%= doc.version %-->.tar.gz | (cd /usr/local &amp;&amp; 
       <literallayout class="monospaced">
 gunzip -c SCIRunDocs.<!--%= doc.version %-->.tar.gz | (cd /usr/local &amp;&amp; tar xf -)
       </literallayout>
-      This will create <filename>/usr/local/SCIRunDocs.<!--%= doc.version %--></filename>, the
-      SCIRun documentation directory. Type <command>exit</command> to leave the
+      This will create <filename>/usr/local/SCIRunDocs.<!--%= doc.version %--></filename> (the
+      SCIRun documentation directory). Type <command>exit</command> to leave the
       root account.
     </para>
     <para>

@@ -36,14 +36,14 @@ DEALINGS IN THE SOFTWARE.
 
   <para>This guide provides instructions for installing &sr;, its
   sample data sets, and &sr; documentation on the &pf; platform.  &sr;
-  is installed from <phrase os="linux">an RPM or</phrase> <phrase
+  may be installed from either <phrase os="linux">an RPM or</phrase> <phrase
   os="osx">a disk image (DMG) or</phrase> source code.</para>
 
   <para>&pf; platform guidelines are listed in <xref
   linkend="tbl.pltfm_req"/>.</para>
   
   <para os="linux">Linux has been tested on the specified systems and RPMs are
-  provided for these systems.  &sr; may work on other Linux systems
+  provided for these systems.  &sr; should work on other Linux systems
   as well.</para>
 
   <para>
@@ -179,14 +179,14 @@ DEALINGS IN THE SOFTWARE.
     Additional platform notes:
     <itemizedlist>
       <listitem>
-	<para>Nvidia drivers, versions 1.0-5328 and 1.0-5336, will not
+	<para>NVIDIA drivers, versions 1.0-5328, 1.0-5336, and 1.0-6106, will not
 	work for hardware based texture volume rendering in SCIRun.
 	Please do not update to these drivers if you wish your volume
 	rendering to work.</para>
       </listitem>
       <listitem>
-	<para>Driver versions 1.0-4496, 1.0-4363 are known to
-	work.</para>
+	<para>Driver versions 1.0-4496, 1.0-4363 will work, but 1.0-6111 or later is required 
+	for advanced volume rendering.</para>
       </listitem>
       <listitem>
 	<para>Driver version 1.0-4191 does not work.  SCI has not
@@ -199,31 +199,20 @@ DEALINGS IN THE SOFTWARE.
 	running &sr; on this system at this time.</para>
       </listitem>
       <listitem>
-	<para>SCI does not recommend the use of ATI cards with &sr;
-	based on the following experiences:</para>
+	<para>While NVIDIA graphic cards and drivers seem to work best under linux,
+              we recently ahve had success with ATI cards/drivers.
+        </para>
 	<itemizedlist>
 	  <listitem>
-	    <para>On one system, ATI drivers installed with apparent
-	    success, but the system did not report using the drivers
-	    and only software rendering appeared to be used.</para>
+	    <para>Note, we have seen problems with vertex arrays.  A workaround for this is
+                  available by setting the environment variable SCIRUN_DRAWARRAYS_DISABLE to true.
+                  (This may be done in the .scirunrc file or in the shell's environment.)
+            </para>
 	  </listitem>
 	  <listitem>
-	    <para>Under Red Hat Enterprise the drivers installed and
-	    worked, but the graphics were very choppy, producing a mostly
-	    unusable rendering.</para>
-	  </listitem>
-	  <listitem>
-	    <para>On another system, drivers installed and were used but
-	    vertex arrays did not work, which caused some objects to be
-	    rendered incorrectly</para>
-	  </listitem>
-	  <listitem>
-	    <para>One card did work well under Redhat 9.</para>
-	  </listitem>
-	  <listitem>
-	    <para>Setting environment variable
-	    <envar>SCIRUN_DRAWARRAYS_DISABLE</envar> can be used to
-	    improve the usability of ATI cards.</para>
+	    <para>Note - Pbuffers on the ATI card has shown some problems resulting in 
+                  saved images not being optimal.
+            </para>
 	  </listitem>
 	</itemizedlist>
       </listitem>

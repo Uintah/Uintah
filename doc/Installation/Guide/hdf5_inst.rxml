@@ -92,7 +92,7 @@ doc.doIfPrint {
 	  <para>
 	    Unpack.  In a terminal window type:
 	    <literallayout>
-gunzip -c hdf5-1.6.2.tar.gz | tar xvf -	      
+gunzip -c hdf5-1.6.3.tar.gz | tar xvf -	      
 	    </literallayout>
 	  </para>
 	</listitem>
@@ -111,7 +111,7 @@ gunzip -c hdf5-1.6.2.tar.gz | tar xvf -
 	<para>
 	  Change the working directory to the HDF5 directory:
 	  <literallayout class="monospaced">
-cd <replaceable>path-to</replaceable>/hdf5-1.6.2
+cd <replaceable>path-to</replaceable>/hdf5-1.6.3
 	  </literallayout>
 	</para>
       </listitem>

@@ -97,8 +97,8 @@ DEALINGS IN THE SOFTWARE.
     </itemizedlist>
   </para>
 
-  <para>External thirdparty software must be installed before building
-  SCIRun.</para>
+  <para>In external thirdparty software is desired, it must be
+        installed before building SCIRun.</para>
 
   <para os="irix;linux"><xref linkend="sec.blas_lapack_inst"/>
   provides installation instructions for <acronym>BLAS</acronym> and

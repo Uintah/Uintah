@@ -103,7 +103,7 @@ cd SCIRun/<replaceable>build-dir</replaceable>
       </para>
       <para>
 	Replace "<replaceable>package-name1 package-name2
-	 &#x2026;</replaceable>" by a list of package names ,
+	 &#x2026;</replaceable>" by a list of package names,
 	e.g. "BioPSE MatlabInterface".  An example configure command
 	is:
 	<literallayout class="monospaced">
@@ -143,7 +143,7 @@ cd SCIRun/<replaceable>build-dir</replaceable>
 	<literallayout class="monospaced">
 ../src/configure \
 <!--%= withThirdParty %--> \
---enable-package="BioPSE Teem DataIO" \
+--enable-package="Fusion Teem DataIO" \
 --with-hdf5=/usr/local/hdf5 \
 --with-mdsplus=/usr/local/mdsplus
 	</literallayout>
@@ -151,7 +151,7 @@ cd SCIRun/<replaceable>build-dir</replaceable>
 
       <para>
 	Not all of <command>configure</command>'s options have been
-	mentioned. Command <command>configure --help</command> lists them all.
+	mentioned. Running <command>configure --help</command> lists them all.
       </para>
 
     </listitem>

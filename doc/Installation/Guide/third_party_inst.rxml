@@ -108,7 +108,7 @@ setenv TEEM_ZLIB_IPATH -I/usr/local/include
   <title id="title.third_party_inst">Building Internal Third Party Software</title>
 
   <para>Internal third party software is distributed with SCIRun and
-  is required by SCIRun to run properly.  It must be built before
+  is required for SCIRun to run properly.  It must be built before
   building &sr;.  This section provides instruction for building
   internal third party software.</para>
 
@@ -146,7 +146,7 @@ cd Thirdparty_install.<replaceable>x.x.x</replaceable>
 	<literallayout class="monospaced">
 python install <replaceable>dir</replaceable>
 	</literallayout>
-	where <replaceable>dir</replaceable> is the third-party installation directory.
+	where <replaceable>dir</replaceable> is the location you wish to install the third-party installation.
       </para>
 
       <para>

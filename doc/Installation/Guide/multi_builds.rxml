@@ -32,7 +32,7 @@
   <title>Single Source, Multiple Binaries</title>
   <para>
     It is possible to build &sr; for multiple machine architectures
-    within the same source code directory. For instance, if the
+    using the same source code directory. For instance, if the
     <filename>&sr;</filename> source code directory resides on a
     shared volume then Linux, 32 bit and 64 bit Irix, and Mac OSX
     versions can be built as follows:

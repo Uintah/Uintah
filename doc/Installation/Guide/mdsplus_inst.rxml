@@ -80,25 +80,6 @@ rpm -ivh mdsplus-redhat9.x-1.6-2.i386.rpm
       </listitem>
     </itemizedlist>
 
-    <itemizedlist os="osx">
-      <listitem>
-	<para>Download the &osx; disk image from the <ulink
-	url="http://www.mdsplus.org/software/download.php">MDSplus
-	web site.</ulink></para>
-      </listitem>
-      <listitem>
-	<para>Double-click the disk image to open it.  The disk
-	image will be named, for example,
-	<filename>mdsplus-1.3-2-macosx.dmg</filename>.</para>
-      </listitem>
-      <listitem>
-	<para>Double-click the file
-	<filename>MDSplus.mpkg</filename> and follow on-screen
-	instructions.  MDSplus will be installed in
-	<filename>/usr/local/mdsplus</filename>.</para>
-      </listitem>
-      <!--}}} $-->
-    </itemizedlist>
   </section>
 
   <section>

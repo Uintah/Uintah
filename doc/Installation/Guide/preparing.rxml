@@ -78,8 +78,8 @@ ulimit -n unlimited
     Compilation</firstterm>.</para>
 
     <para>Dynamic compilation is a technique used by &sr; to discover
-    and generate code for the data types and algorithms used by modules
-    in networks.  This is done at runtime and is done once for each
+    and generate code for the data types and algorithms used by
+    modules.  This is done at runtime and is done once for each
     new data type and algorithm encountered.  This technique provides a
     number of benefits (not discussed here).</para>
 

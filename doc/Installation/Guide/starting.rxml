@@ -35,7 +35,8 @@ DEALINGS IN THE SOFTWARE.
   <title>Starting SCIRun</title>
 
   <para os="linux">
-    If installed from its rpm, SCIRun's installation can be tested by
+    If installed from <phrase os="linux">RPM</phrase><phrase
+    os="osx">DMG</phrase>, SCIRun's installation can be tested by
     changing the working directory (<command>cd</command>ing) to
     <filename>/usr/local/SCIRun/bin/</filename> and typing:
     <command>./scirun</command>.
