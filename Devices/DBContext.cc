@@ -14,7 +14,7 @@
 #include <Devices/DBContext.h>
 
 DBContext::DBContext(const clString& name)
-: name(name), dialbox(0)
+: dialbox(0), name(name)
 {
 }
 
