@@ -47,7 +47,7 @@ public:
   virtual void set_field( Field * ) = 0;
   virtual void search( double, bool ) = 0;
   virtual GeomObj* get_geom() = 0;
-  virtual FieldHandle get_field() = 0;
+  virtual FieldHandle get_field(int n) = 0;
 
   //! support the dynamically compiled algorithm concept
   static const string& get_h_file_path();
@@ -66,7 +66,7 @@ protected:
   vector<Tesselator *> tess_;
   mesh_handle_type mesh_;
   GeomObj *geom_;
-  FieldHandle output_field_;
+  vector<FieldHandle> output_field_;
 public:
   MarchingCubes() : mesh_(0) { tess_.resize( np_, 0 ); }
   virtual ~MarchingCubes() {}
@@ -76,7 +76,8 @@ public:
   virtual void set_field( Field * );
   virtual void search( double, bool=false );
   virtual GeomObj* get_geom() { return geom_; } 
-  virtual FieldHandle get_field() { return output_field_; }
+  virtual FieldHandle get_field(int n)
+  { ASSERT((unsigned int)n < output_field_.size()); return output_field_[n]; }
 
   void parallel_search( int, double, bool );
 };
@@ -102,6 +103,8 @@ MarchingCubes<Tesselator>::set_np( int np )
     tess_.resize( np, 0 );
   if ( geom_ ) 
     geom_ = 0;
+  
+  output_field_.resize(np);
 
   np_ = np;
 }  
@@ -133,7 +136,6 @@ MarchingCubes<Tesselator>::search( double iso, bool build_trisurf )
       ++cell;
     }
     geom_ = tess_[0]->get_geom();
-    output_field_ = tess_[0]->get_field(iso);
   }
   else {
     Thread::parallel( this,  
@@ -141,7 +143,7 @@ MarchingCubes<Tesselator>::search( double iso, bool build_trisurf )
 		      np_, 
 		      true,    // block
 		      iso, 
-		      false ); // for now build_trisurf is off for parallel mc
+		      build_trisurf );
     GeomGroup *group = new GeomGroup;
     for (int i=0; i<np_; i++) {
       GeomObj *obj = tess_[i]->get_geom();
@@ -154,6 +156,11 @@ MarchingCubes<Tesselator>::search( double iso, bool build_trisurf )
       delete group;
       geom_ = 0;
     }
+  }
+  output_field_.resize(np_);
+  for (int i = 0; i < np_; i++)
+  {
+    output_field_[i] = tess_[i]->get_field(iso);
   }
 }
 
