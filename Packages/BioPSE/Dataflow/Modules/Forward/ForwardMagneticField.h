@@ -21,7 +21,6 @@
 #include <Core/Thread/Thread.h>
 #include <Dataflow/Ports/FieldPort.h>
 #include <Core/Malloc/Allocator.h>
-#include <Dataflow/Modules/Fields/ChangeFieldDataType.h>
 #include <Core/Thread/Mutex.h>
 #include <sci_hash_map.h>
 
@@ -71,10 +70,11 @@ public:
   //! support the dynamically compiled algorithm concept
   static CompileInfoHandle get_compile_info(const TypeDescription *efld_td, 
 					    const TypeDescription *ctfld_td,
-					    const TypeDescription *detfld_td);
+					    const TypeDescription *detfld_td,
+					    const string&);
 };
 
-template <class ElecField, class CondField, class PointField>
+template <class ElecField, class CondField, class PointField, class MagField>
 class CalcFMField : public CalcFMFieldBase
 {
 public:
@@ -96,7 +96,7 @@ public:
 					   ProgressReporter *mod);
 
 private:
-  typedef CalcFMField<ElecField, CondField, PointField> AlgoType;
+  typedef CalcFMField<ElecField, CondField, PointField, MagField> AlgoType;
   typedef typename ElecField::mesh_type::Cell::iterator EFieldCIter;
   typedef typename ElecField::mesh_type::Cell::iterator EFieldCIndex;
   typedef typename PointField::mesh_type::Node::iterator PFieldNIter;
@@ -106,8 +106,7 @@ private:
   void set_up_cell_cache();
   void calc_parallel(int proc, ProgressReporter *mod);
   void get_parallel_iter(int np);
-  void set_parallel_data(PointField *fout, FieldHandle &magnitudes,  
-			 Handle<ChangeFieldDataTypeAlgoCreate> create_algo);
+  void set_parallel_data(PointField *fout, MagField *fscalarout);
 
   int                                                     np_;
   vector<Vector>                                          interp_value_;
@@ -131,9 +130,9 @@ private:
 };
 
 
-template <class ElecField, class CondField, class PointField>
+template <class ElecField, class CondField, class PointField, class MagField>
 void
-CalcFMField<ElecField, CondField, PointField>::calc_parallel(int proc,
+CalcFMField<ElecField, CondField, PointField, MagField>::calc_parallel(int proc,
 							 ProgressReporter *mod)
 {
   PFieldNIter iter, end;
@@ -141,17 +140,18 @@ CalcFMField<ElecField, CondField, PointField>::calc_parallel(int proc,
 
   iter = iters.first;
   end = iters.second;
-
+  int chunk = (unsigned)*(iters.second) - (unsigned)*(iters.first);
+  const int prog = 100.0 / chunk;
   typename PointField::mesh_handle_type mesh = detfld_->get_typed_mesh();
   typename PointField::mesh_handle_type dip_mesh = dipfld_->get_typed_mesh();
 
+  int count = 0;
   // iterate over the detectors.
   while (iter != end) {
     // finish loop iteration.
-
+    
     PFieldNIndex ind = *iter;
     ++iter;
-    //    mod->update_progress(count_, det_sz);    
     Vector mag_field;
     Point  pt;
     mesh->get_center(pt, ind);
@@ -167,7 +167,7 @@ CalcFMField<ElecField, CondField, PointField>::calc_parallel(int proc,
     Vector normal;
     normal = detfld_->value(ind);
     // the following for verification against sphere.
-    //    normal = pt - Point(0,0,0);
+    //normal = pt - Point(0,0,0);
     //normal.normalize();
 
     // start of B(P) stuff
@@ -204,13 +204,17 @@ CalcFMField<ElecField, CondField, PointField>::calc_parallel(int proc,
     //cout <<  "scalar: " << p.first << endl;
     //cout << "vector: " << p.second << endl;
     data_out_[proc].push_back(p);
+    if (++count % 100) {
+      mod->accumulate_progress(prog);
+    }
   }
+  mod->accumulate_progress(chunk - count);
 }
 
 //! Assume that the value_type for the input fields are Vector.
-template <class ElecField, class CondField, class PointField>
+template <class ElecField, class CondField, class PointField, class MagField>
 bool
-CalcFMField<ElecField, CondField, PointField>::calc_forward_magnetic_field(
+CalcFMField<ElecField, CondField, PointField, MagField>::calc_forward_magnetic_field(
       					    FieldHandle efield, 
 					    FieldHandle ctfield, 
 					    FieldHandle dipoles, 
@@ -246,33 +250,26 @@ CalcFMField<ElecField, CondField, PointField>::calc_forward_magnetic_field(
 				       detfld->data_at());
   magnetic_field = fout;
 
-  // The magnitude field has a shared mesh wity detectors, but is scalar.
-  const string new_field_type =
-    detectors->get_type_description(0)->get_name() + "<double> ";
-  // Create a field identical to the input, except for the edits.
-  const TypeDescription *fsrc_td = detectors->get_type_description();
-  CompileInfoHandle create_ci =
-    ChangeFieldDataTypeAlgoCreate::get_compile_info(fsrc_td, new_field_type);
-  Handle<ChangeFieldDataTypeAlgoCreate> create_algo;
-  if (!DynamicCompilation::compile(create_ci, create_algo, this))
-  {
-    mod->error("Unable to compile creation algorithm.");
-    return false;
-  }
-  
-  magnitudes = create_algo->execute(detectors);
+
+  MagField *fscalarout = scinew MagField(detfld->get_typed_mesh(), 
+					 detfld->data_at());
+
+  magnitudes = fscalarout;
   
   typedef typename PointField::value_type val_t;
   typename PointField::mesh_handle_type mesh = detfld->get_typed_mesh();
   typename PointField::mesh_handle_type dip_mesh = dipfld->get_typed_mesh();
   mesh->synchronize(Mesh::NODES_E);
-
+  typename PointField::mesh_type::Node::size_type sz;
+  mesh->size(sz);
   // init parallel iterators
   get_parallel_iter(np);
   
   // cache per cell calculations that are used over and over again.
   set_up_cell_cache();
   
+  mod->update_progress(1, sz);
+ 
   data_out_.resize(np_);
   // do the parallel work.
   Thread::parallel(Parallel1<AlgoType, ProgressReporter*>(this, 
@@ -280,18 +277,17 @@ CalcFMField<ElecField, CondField, PointField>::calc_forward_magnetic_field(
 						      mod), np_, true);
   
   //iterate over output fields and set the values...
-  set_parallel_data(fout, magnitudes,  create_algo);
+  set_parallel_data(fout, fscalarout);
   return true;
 }
 
-template <class ElecField, class CondField, class PointField>
+template <class ElecField, class CondField, class PointField, class MagField>
 void
-CalcFMField<ElecField, CondField, PointField>::set_parallel_data(
-		      PointField *fout, FieldHandle &magnitudes,  
-		      Handle<ChangeFieldDataTypeAlgoCreate> create_algo)
+CalcFMField<ElecField, CondField, PointField, MagField>::set_parallel_data(
+							 PointField *fout, 
+							 MagField *fscalarout)
 {
   int chunk = 0;
-  typename PointField::mesh_handle_type mag_mesh = detfld_->get_typed_mesh();
   vector<vector<pair<double, Vector> > >::iterator iter = data_out_.begin();
   while (iter != data_out_.end()) {
     vector<pair<double, Vector> > &dat = *iter++;
@@ -306,20 +302,17 @@ CalcFMField<ElecField, CondField, PointField>::set_parallel_data(
     while (fld_iter != end) {
       // set in field.
       PFieldNIndex ind = *fld_iter; 
-      create_algo->set_val_scalar(magnitudes, &ind, dat[i].first);
+      fscalarout->set_value(dat[i].first, ind);
+      //cout << "scalar set: " << dat[i].first << endl;
       fout->set_value(dat[i].second, ind);
-      //cout << "@ " << (unsigned)ind << " " << dat[i].first << endl; 
-      //cout << "@ " << (unsigned)ind << " " << dat[i].second << endl; 
       ++fld_iter; ++i;
     }
-    //cout << "set " << i << " values" << endl;
-    //cout << "vector has " << dat.size() << " values" << endl;
   }
 }  
 
-template <class ElecField, class CondField, class PointField>
+template <class ElecField, class CondField, class PointField, class MagField>
 void
-CalcFMField<ElecField, CondField, PointField>::get_parallel_iter(int np)
+CalcFMField<ElecField, CondField, PointField, MagField>::get_parallel_iter(int np)
 {
   if (np_ != np) {
     np_ = np;
@@ -360,9 +353,9 @@ CalcFMField<ElecField, CondField, PointField>::get_parallel_iter(int np)
   }
 }
 
-template <class ElecField, class CondField, class PointField>
+template <class ElecField, class CondField, class PointField, class MagField>
 void
-CalcFMField<ElecField, CondField, PointField>::set_up_cell_cache()
+CalcFMField<ElecField, CondField, PointField, MagField>::set_up_cell_cache()
 {
   typename ElecField::mesh_handle_type mesh = efld_->get_typed_mesh();
   mesh->synchronize(Mesh::CELLS_E);
@@ -393,9 +386,9 @@ CalcFMField<ElecField, CondField, PointField>::set_up_cell_cache()
 
 }
 
-template <class ElecField, class CondField, class PointField>
+template <class ElecField, class CondField, class PointField, class MagField>
 void
-CalcFMField<ElecField, CondField, PointField>::interpolate(int proc, Point p)  
+CalcFMField<ElecField, CondField, PointField, MagField>::interpolate(int proc, Point p)  
 {
 
   typename ElecField::mesh_handle_type mesh = efld_->get_typed_mesh();
