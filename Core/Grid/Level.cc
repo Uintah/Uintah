@@ -416,29 +416,6 @@ void Level::finalizeLevel()
   // per patch.  This is meant to correct these problems by using the
   // above info about Patch::Neighbor to determine the extra indices.
 
-  for(iter=d_patches.begin(), ii = 0;
-      iter != d_patches.end(); iter++, ii++){
-    Patch* patch = *iter;
-   
-    IntVector low = patch->getInteriorCellLowIndex();
-    IntVector high = patch->getInteriorCellHighIndex();
-    low -= 
-      IntVector(patch->getBCType(Patch::xminus) == 
-		Patch::Neighbor?0:d_extraCells.x(),
-		patch->getBCType(Patch::yminus) == 
-		Patch::Neighbor?0:d_extraCells.y(),
-		patch->getBCType(Patch::zminus) == 
-		Patch::Neighbor?0:d_extraCells.z());
-
-    high += IntVector(patch->getBCType(Patch::xplus) == 
-		      Patch::Neighbor?0:d_extraCells.x(),
-		      patch->getBCType(Patch::yplus) == 
-		      Patch::Neighbor?0:d_extraCells.y(),
-		      patch->getBCType(Patch::zplus) == 
-		      Patch::Neighbor?0:d_extraCells.z());
-
-    patch->setExtraIndices(low,high);
-  }
   d_finalized=true;
 }
 
