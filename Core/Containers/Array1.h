@@ -23,14 +23,19 @@ namespace SCICore {
 
 namespace PersistentSpace {
   class Piostream;
+  void Pio();  // This is a dummy declaration to get things to compile.
 }
 namespace Containers {
+  void Pio();  // This is a dummy declaration to get things to compile.
 }
  namespace GeomSpace {
+  void Pio();  // This is a dummy declaration to get things to compile.
  }
  namespace CoreDatatypes {
+  void Pio();  // This is a dummy declaration to get things to compile.
  }
  namespace Geometry {
+  void Pio();  // This is a dummy declaration to get things to compile.
  }
 
 namespace Containers {
@@ -329,11 +334,19 @@ T* Array1<T>::get_objs()
 template<class T>
 void Pio(Piostream& stream, Array1<T>& array)
 {
+#ifdef __GNUG__
   using namespace SCICore::GeomSpace;
   using namespace SCICore::PersistentSpace;
   using namespace SCICore::Geometry;
   using namespace SCICore::Containers;
   using namespace SCICore::CoreDatatypes;
+#else
+  using SCICore::GeomSpace::Pio;
+  using SCICore::PersistentSpace::Pio;
+  using SCICore::Geometry::Pio;
+  using SCICore::Containers::Pio;
+  using SCICore::CoreDatatypes::Pio;
+#endif
 
   /* int version= */stream.begin_class("Array1", ARRAY1_VERSION);
   int size=array._size;
@@ -359,6 +372,9 @@ void Pio(Piostream& stream, Containers::Array1<T>*& array) {
 
 //
 // $Log$
+// Revision 1.6  1999/08/23 07:06:32  sparker
+// Fix IRIX build
+//
 // Revision 1.5  1999/08/23 06:30:33  sparker
 // Linux port
 // Added X11 configuration options
