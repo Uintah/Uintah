@@ -214,7 +214,7 @@ void Crack::PropagateCrackFrontPoints(const ProcessorGroup*,
 		  
                 for(int k = 0; k < d_8or27; k++) {
                   double totalMass=gmass[ni[k]]+Gmass[ni[k]];
-                  if(totalMass<1.e-6*d_cell_mass) {
+                  if(totalMass<d_cell_mass/64.) {
                     newPtInMat=NO;
                     break;
                   }
@@ -230,9 +230,9 @@ void Crack::PropagateCrackFrontPoints(const ProcessorGroup*,
 	                   mpi_crack_comm, &status);
 	      }  
 		
-	      // If new_pt is inside, extend it out by 2dx_bar/3
+	      // If new_pt is inside, extend it out by dx_bar/3 each time
               if(newPtInMat) { 
-                new_pt+=v*(dx_bar*2./3.);
+                new_pt+=v*(dx_bar/3.);
 	        extTimes++;
      	      } // end of if(newPtInMat)
             } // End of while(newPtInMat)
@@ -269,7 +269,7 @@ void Crack::PropagateCrackFrontPoints(const ProcessorGroup*,
 		  TrimLineSegmentWithBox(new_pt,cross_pt,LLP,LHP); 
 
 		  // Extend cross_pt a little bit (dx_bar*10%) outside 
-		  new_pt=cross_pt+v*(dx_bar/3.);
+		  new_pt=cross_pt+v*(dx_bar*0.1);
 		} 
 		MPI_Bcast(&new_pt,1,MPI_POINT,k,mpi_crack_comm);
 	      } // End of loop over k         
