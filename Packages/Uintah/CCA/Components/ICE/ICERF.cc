@@ -801,7 +801,7 @@ _____________________________________________________________________*/
 void ICE::actuallyComputeStableTimestep(const ProcessorGroup*,  
 					 const PatchSubset* patches,
                                     const MaterialSubset* /*matls*/,
-					 DataWarehouse* old_dw, 
+					 DataWarehouse* /*old_dw*/, 
 					 DataWarehouse* new_dw)
 {
   for(int p=0;p<patches->size();p++){
@@ -1301,7 +1301,6 @@ void ICE::computeNonEquilibrationPressure(const ProcessorGroup*,
               << patch->getID() <<"\t\t MPMICE" << endl;
 
     double    tmp;
-    double press_ref= d_sharedState->getRefPress();
     int numMatls = d_sharedState->getNumICEMatls();
 
     Vector dx       = patch->dCell(); 
@@ -2225,7 +2224,6 @@ void ICE::computePressFC(const ProcessorGroup*,
 
     delt_vartype delT; 
     old_dw->get(delT, d_sharedState->get_delt_label());
-    Vector dx      = patch->dCell();
 
     StaticArray<constCCVariable<double> > rho_CC(numMatls);
     constCCVariable<double> press_CC;
@@ -2911,11 +2909,12 @@ void ICE::computeLagrangianSpecificVolume(const ProcessorGroup*,
        new_dw->get(rho_micro, lb->rho_micro_CCLabel,indx,patch,Ghost::None, 0);
        new_dw->get(vol_frac,  lb->vol_frac_CCLabel, indx,patch,Ghost::None, 0);
        old_dw->get(Temp_CC,   lb->temp_CCLabel,     indx,patch,Ghost::None, 0);
-
+#if 0
        for(CellIterator iter=patch->getExtraCellIterator();!iter.done();iter++){
 	 alpha = 1.0/Temp_CC[*iter];  // this assumes an ideal gas
 	 sum_therm_exp[*iter] += vol_frac[*iter]*alpha*Tdot[*iter];
        }
+#endif
      }
     }
 
@@ -2942,11 +2941,14 @@ void ICE::computeLagrangianSpecificVolume(const ProcessorGroup*,
 	// volume of material, this is consistent with 4.8c
         double K = ice_matl->getEOS()->getCompressibility(press_CC[*iter]);
         double term1 = -vol * vol_frac[*iter] * K * delP_Dilatate[*iter];
+#if 0
 	alpha = 1.0/Temp_CC[*iter];  // this assumes an ideal gas
 	double term2 = delT * vol * (vol_frac[*iter]*alpha*Tdot[*iter] -
 					vol_frac[*iter]*sum_therm_exp[*iter]);
 	spec_vol_source[*iter] = term1 + term2;
-	spec_vol_source[*iter] = term2;
+	spec_vol_source[*iter] = term1;
+#endif
+	spec_vol_source[*iter] = term1;
 	spec_vol_L[*iter] = (rho_CC[*iter]*vol)/rho_micro[*iter] + term1;
        }
      }
