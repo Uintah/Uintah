@@ -63,6 +63,10 @@ itcl_class Uintah_Visualization_GridVisualizer {
 	set $this-var_orientation 0
 
 	#sphere stuff
+	global $this-use_default_radius
+	set $this-use_default_radius 1
+	global $this-default_radius
+	set $this-radius 0.01
 	global $this-radius
 	set $this-radius 0.01
 	global $this-polygons
@@ -205,6 +209,15 @@ itcl_class Uintah_Visualization_GridVisualizer {
 	# sphere stuff
 	frame $w.grid.r.sphere
 	pack $w.grid.r.sphere -side top -anchor w -fill x -padx 2 -pady 2
+
+	checkbutton $w.grid.r.sphere.udr -text "Use default radius" \
+		-variable $this-use_default_radius \
+		-command $n
+	pack $w.grid.r.sphere.udr -side top -anchor w -pady 2 -ipadx 3
+
+	entry $w.grid.r.sphere.default_r -state disabled \
+	     -textvariable $this-default_radius -justify left
+        pack $w.grid.r.sphere.default_r -side top -anchor e -pady 2 -ipadx 3
 
 	set r [expscale $w.grid.r.sphere.radius -label "Radius:" \
 		-orient horizontal -variable $this-radius -command $n ]
