@@ -190,6 +190,28 @@ GatherFields::execute()
 
 
 CompileInfoHandle
+GatherPointsAlgo::get_compile_info(const TypeDescription *mesh_td)
+{
+  // use cc_to_h if this is in the .cc file, otherwise just __FILE__
+  static const string include_path(TypeDescription::cc_to_h(__FILE__));
+  static const string template_class_name("GatherPointsAlgoT");
+  static const string base_class_name("GatherPointsAlgo");
+
+  CompileInfo *rval = 
+    scinew CompileInfo(template_class_name + "." +
+		       mesh_td->get_filename() + ".",
+                       base_class_name, 
+                       template_class_name, 
+                       mesh_td->get_name());
+
+  // Add in the include path to compile this obj
+  rval->add_include(include_path);
+  mesh_td->fill_compile_info(rval);
+  return rval;
+}
+
+
+CompileInfoHandle
 GatherFieldsAlgo::get_compile_info(const TypeDescription *field_td)
 {
   // use cc_to_h if this is in the .cc file, otherwise just __FILE__
