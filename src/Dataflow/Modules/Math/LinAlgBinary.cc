@@ -68,6 +68,7 @@ void LinAlgBinary::execute() {
   MatrixHandle aH, bH;
   if (!imatA_->get(aH)) {
     if (!imatB_->get(bH))
+      error( "No handle or representation" );
       return;
   } else imatB_->get(bH);
       
