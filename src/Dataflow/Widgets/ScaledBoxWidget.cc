@@ -45,18 +45,13 @@ namespace SCIRun {
 
 
 
-const Index NumCons = 12;
-const Index NumVars = 16;
-const Index NumGeoms = 35;
-const Index NumPcks = 16;
-const Index NumMatls = 4;
 const Index NumMdes = 7;
 const Index NumSwtchs = 4;
 const Index NumSchemes = 7;
 
 enum { ConstRD, ConstDI, ConstIR, ConstRC, ConstDC, ConstIC,
        ConstPythRD, ConstPythDI, ConstPythIR,
-       ConstRatioR, ConstRatioD, ConstRatioI };
+       ConstRatioR, ConstRatioD, ConstRatioI, NumCons };
 enum { SphereR, SphereL, SphereD, SphereU, SphereI, SphereO,
        SmallSphereIUL, SmallSphereIUR, SmallSphereIDR, SmallSphereIDL,
        SmallSphereOUL, SmallSphereOUR, SmallSphereODR, SmallSphereODL,
@@ -65,12 +60,12 @@ enum { SphereR, SphereL, SphereD, SphereU, SphereI, SphereO,
        CylOU, CylOR, CylOD, CylOL,
        GeomResizeR, GeomResizeL, GeomResizeD, GeomResizeU,
        GeomResizeI, GeomResizeO,
-       SliderCylR, SliderCylD, SliderCylI };
+       SliderCylR, SliderCylD, SliderCylI, NumGeoms };
 enum { PickSphR, PickSphL, PickSphD, PickSphU, PickSphI, PickSphO,
        PickCyls,
        PickResizeR, PickResizeL, PickResizeD, PickResizeU,
        PickResizeI, PickResizeO,
-       PickSliderR, PickSliderD, PickSliderI };
+       PickSliderR, PickSliderD, PickSliderI, NumPcks };
 
 /***************************************************************************
  * The constructor initializes the widget's constraints, variables,
@@ -82,10 +77,15 @@ enum { PickSphR, PickSphL, PickSphD, PickSphU, PickSphI, PickSphO,
  */
 ScaledBoxWidget::ScaledBoxWidget( Module* module, CrowdMonitor* lock, 
 				  double widget_scale,
-				  bool aligned , bool slideable)
-: BaseWidget(module, lock, "ScaledBoxWidget", NumVars, NumCons, NumGeoms, NumPcks, NumMatls, NumMdes, NumSwtchs, widget_scale),
-  is_aligned_(aligned), is_slideable_(slideable),
-  oldrightaxis(1, 0, 0), olddownaxis(0, 1, 0), oldinaxis(0, 0, 1)
+				  bool aligned , bool slideable) :
+  BaseWidget(module, lock, "ScaledBoxWidget",
+	     NumVars, NumCons, NumGeoms, NumPcks, NumMatls,
+	     NumMdes, NumSwtchs, widget_scale),
+  is_aligned_(aligned),
+  is_slideable_(slideable),
+  oldrightaxis(1, 0, 0),
+  olddownaxis(0, 1, 0),
+  oldinaxis(0, 0, 1)
 {
    double INIT = 5.0*widget_scale;
    variables[CenterVar] = scinew PointVariable("Center", solve, Scheme1, Point(0, 0, 0));
@@ -493,8 +493,11 @@ ScaledBoxWidget::redraw()
 
 // if rotating, save the start position of the selected widget 
 void
-ScaledBoxWidget::geom_pick( GeomPick*, ViewWindow*, int pick, const BState& )
+ScaledBoxWidget::geom_pick( GeomPick *p, ViewWindow *w,
+			    int pick, const BState&state )
 {
+  BaseWidget::geom_pick(p, w, pick, state);
+
   Point c2=(variables[CenterVar]->point().vector()*2).point();
   rot_start_d_=variables[PointDVar]->point();
   rot_start_r_=variables[PointRVar]->point();
@@ -796,7 +799,7 @@ ScaledBoxWidget::GetInAxis()
 string
 ScaledBoxWidget::GetMaterialName( const Index mindex ) const
 {
-   ASSERT(mindex<NumMaterials);
+   ASSERT(mindex<materials.size());
    
    switch(mindex){
    case 0:

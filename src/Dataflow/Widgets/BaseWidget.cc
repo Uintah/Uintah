@@ -111,41 +111,18 @@ BaseWidget::BaseWidget( Module* module, CrowdMonitor* lock,
     name(name),
     id(make_id(name)),
     solve(scinew ConstraintSolver), 
-    NumVariables(NumVariables),
-    NumConstraints(NumConstraints),
-    NumGeometries(NumGeometries),
-    NumPicks(NumPicks),
-    NumMaterials(NumMaterials),
-    constraints(NumConstraints),
-    variables(NumVariables),
-    geometries(NumGeometries),
-    picks(NumPicks),
-    materials(NumMaterials),
-    NumModes(NumModes),
-    NumSwitches(NumSwitches),
-    modes(NumModes),
-    mode_switches(NumSwitches),
+    constraints(NumConstraints, NULL),
+    variables(NumVariables, NULL),
+    geometries(NumGeometries, NULL),
+    picks(NumPicks, NULL),
+    materials(NumMaterials, NULL),
+    modes(NumModes, -1),
+    mode_switches(NumSwitches, NULL),
     CurrentMode(0),
     widget_scale(widget_scale),
     epsilon(1e-3),
     tclmat("material", id, this)
 {
-
-   Index i;
-   for (i=0; i<NumSwitches; i++)
-      mode_switches[i] = NULL;
-   for (i=0; i<NumConstraints; i++)
-      constraints[i] = NULL;
-   for (i=0; i<NumVariables; i++)
-      variables[i] = NULL;
-   for (i=0; i<NumGeometries; i++)
-      geometries[i] = NULL;
-   for (i=0; i<NumPicks; i++)
-      picks[i] = NULL;
-   for (i=0; i<NumMaterials; i++)
-      materials[i] = NULL;
-   for (i=0; i<NumModes; i++)
-      modes[i] = -1;
 
    init_tcl();
 }
@@ -161,11 +138,11 @@ BaseWidget::~BaseWidget()
 {
    Index index;
    
-   for (index = 0; index < NumVariables; index++) {
+   for (index = 0; index < variables.size(); index++) {
       delete variables[index];
    }
    
-   for (index = 0; index < NumConstraints; index++) {
+   for (index = 0; index < constraints.size(); index++) {
       delete constraints[index];
    }
 
@@ -239,9 +216,9 @@ BaseWidget::tcl_command(TCLArgs& args, void*)
 	 args.error("widget doesn't nedd a minor command");
 	 return;
       }
-      Array1<string> materiallist(NumMaterials);
+      Array1<string> materiallist(materials.size());
       
-      for(Index i=0;i<NumMaterials;i++){
+      for(Index i=0;i<materials.size();i++){
 	 materiallist[i]=GetMaterialName(i);
       }   
       args.result(args.make_list(materiallist));
@@ -269,7 +246,7 @@ BaseWidget::tcl_command(TCLArgs& args, void*)
 	 args.error("widget can't parse material index `"+args[2]+"'");
 	 return;
       }
-      if ((mati < 0) || ((unsigned int)mati >= NumMaterials)) {
+      if ((mati < 0) || ((unsigned int)mati >= materials.size())) {
 	 args.error("widget material index out of range `"+args[2]+"'");
 	 return;
       }
@@ -300,7 +277,7 @@ BaseWidget::tcl_command(TCLArgs& args, void*)
 	 args.error("widget can't parse material index `"+args[2]+"'");
 	 return;
       }
-      if ((mati < 0) || ((unsigned int)mati >= NumMaterials)) {
+      if ((mati < 0) || ((unsigned int)mati >= materials.size())) {
 	 args.error("widget material index out of range `"+args[2]+"'");
 	 return;
       }
@@ -399,8 +376,8 @@ BaseWidget::SetState( const int state )
 void
 BaseWidget::NextMode()
 {
-   CurrentMode = (CurrentMode+1) % NumModes;
-   for (Index s=0; s<NumSwitches; s++)
+   CurrentMode = (CurrentMode+1) % modes.size();
+   for (Index s=0; s<mode_switches.size(); s++)
       if (modes[CurrentMode]&(1<<s))
 	 mode_switches[s]->set_state(1);
       else
@@ -412,8 +389,8 @@ BaseWidget::NextMode()
 void
 BaseWidget::SetCurrentMode(const Index mode)
 {
-   CurrentMode = mode % NumModes;
-   for (Index s=0; s<NumSwitches; s++)
+   CurrentMode = mode % modes.size();
+   for (Index s=0; s<mode_switches.size(); s++)
       if (modes[CurrentMode]&(1<<s))
 	 mode_switches[s]->set_state(1);
       else
@@ -432,7 +409,7 @@ BaseWidget::GetMode() const
 void
 BaseWidget::SetMaterial( const Index mindex, const MaterialHandle& matl )
 {
-   ASSERT(mindex<NumMaterials);
+   ASSERT(mindex<materials.size());
    materials[mindex]->setMaterial(matl);
    flushViews();
 }
@@ -441,7 +418,7 @@ BaseWidget::SetMaterial( const Index mindex, const MaterialHandle& matl )
 MaterialHandle
 BaseWidget::GetMaterial( const Index mindex ) const
 {
-   ASSERT(mindex<NumMaterials);
+   ASSERT(mindex<materials.size());
    return materials[mindex]->getMaterial();
 }
 
@@ -520,7 +497,7 @@ BaseWidget::GetDefaultMaterialName( const Index mindex ) const
 Point
 BaseWidget::GetPointVar( const Index vindex ) const
 {
-   ASSERT(vindex<NumVariables);
+   ASSERT(vindex<variables.size());
 
    return variables[vindex]->point();
 }
@@ -529,7 +506,7 @@ BaseWidget::GetPointVar( const Index vindex ) const
 double
 BaseWidget::GetRealVar( const Index vindex ) const
 {
-   ASSERT(vindex<NumVariables);
+   ASSERT(vindex<variables.size());
 
    return variables[vindex]->real();
 }
@@ -598,7 +575,7 @@ BaseWidget::geom_moved(GeomPick*, int, double, const Vector&,
 void
 BaseWidget::CreateModeSwitch( const Index snum, GeomObj* o )
 {
-   ASSERT(snum<NumSwitches);
+   ASSERT(snum<mode_switches.size());
    ASSERT(mode_switches[snum]==NULL);
    mode_switches[snum] = scinew GeomSwitch(o);
 }
@@ -607,7 +584,7 @@ BaseWidget::CreateModeSwitch( const Index snum, GeomObj* o )
 void
 BaseWidget::SetMode( const Index mode, const long swtchs )
 {
-   ASSERT(mode<NumModes);
+   ASSERT(mode<modes.size());
    modes[mode] = swtchs;
 }
 
@@ -620,44 +597,37 @@ void
 BaseWidget::FinishWidget()
 {
    Index i;
-   for (i=0; i<NumModes; i++)
-      if (modes[i] == -1) {
-	 cerr << "BaseWidget Error:  Mode " << i << " is unitialized!" << endl;
-	 exit(-1);
-      }
-   for (i=0; i<NumSwitches; i++)
-      if (mode_switches[i] == NULL) {
-	 cerr << "BaseWidget Error:  Switch " << i << " is unitialized!" << endl;
-	 exit(-1);
-      }
-   for (i=0; i<NumConstraints; i++)
-      if (constraints[i] == NULL) {
-	 cerr << "BaseWidget Error:  Constraint " << i << " is unitialized!" << endl;
-	 exit(-1);
-      }
-   for (i=0; i<NumVariables; i++)
-      if (variables[i] == NULL) {
-	 cerr << "BaseWidget Error:  Variable " << i << " is unitialized!" << endl;
-	 exit(-1);
-      }
-   for (i=0; i<NumGeometries; i++)
-      if (geometries[i] == NULL) {
-	 cerr << "BaseWidget Error:  Geometry " << i << " is unitialized!" << endl;
-	 exit(-1);
-      }
-   for (i=0; i<NumPicks; i++)
-      if (picks[i] == NULL) {
-	 cerr << "BaseWidget Error:  Pick " << i << " is unitialized!" << endl;
-	 exit(-1);
-      }
-   for (i=0; i<NumMaterials; i++)
-      if (materials[i] == NULL) {
-	 cerr << "BaseWidget Error:  Material " << i << " is unitialized!" << endl;
-	 exit(-1);
-      }
+   for (i=0; i<modes.size(); i++)
+   {
+     ASSERT(modes[i] != -1);
+   }
+   for (i=0; i<mode_switches.size(); i++)
+   {
+     ASSERT(mode_switches[i] != NULL);
+   }
+   for (i=0; i<constraints.size(); i++)
+   {
+     ASSERT(constraints[i] != NULL);
+   }
+   for (i=0; i<variables.size(); i++)
+   {
+     ASSERT(variables[i] != NULL);
+   }
+   for (i=0; i<geometries.size(); i++)
+   {
+     ASSERT(geometries[i] != NULL);
+   }
+   for (i=0; i<picks.size(); i++)
+   {
+     ASSERT(picks[i] != NULL);
+   }
+   for (i=0; i<materials.size(); i++)
+   {
+     ASSERT(materials[i] != NULL);
+   }
    
    GeomGroup* sg = scinew GeomGroup;
-   for (i=0; i<NumSwitches; i++) {
+   for (i=0; i<mode_switches.size(); i++) {
       if (modes[CurrentMode]&(1<<i))
 	 mode_switches[i]->set_state(1);
       else
@@ -667,7 +637,7 @@ BaseWidget::FinishWidget()
    widget = scinew GeomSwitch(sg);
 
    // Init variables.
-   for (Index vindex=0; vindex<NumVariables; vindex++)
+   for (Index vindex=0; vindex<variables.size(); vindex++)
       variables[vindex]->Order();
 }
 
@@ -677,12 +647,12 @@ BaseWidget::print( ostream& os ) const
 {
    Index index;
    
-   for (index=0; index< NumVariables; index++) {
+   for (index=0; index< variables.size(); index++) {
       os << *(variables[index]) << endl;
    }
    os << endl;
    
-   for (index=0; index< NumConstraints; index++) {
+   for (index=0; index< constraints.size(); index++) {
       os << *(constraints[index]) << endl;
    }
    os << endl;

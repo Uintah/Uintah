@@ -140,11 +140,6 @@ protected:
    
    void execute(int always_callback);
    virtual void redraw()=0;
-   Index NumVariables;
-   Index NumConstraints;
-   Index NumGeometries;
-   Index NumPicks;
-   Index NumMaterials;
 
    vector<BaseConstraint*> constraints;
    vector<BaseVariable*>   variables;
@@ -153,11 +148,11 @@ protected:
    vector<GeomMaterial*>   materials;
 
    enum {Mode0,Mode1,Mode2,Mode3,Mode4,Mode5,Mode6,Mode7,Mode8,Mode9};
-   Index NumModes;
-   Index NumSwitches;
    vector<long> modes;
    vector<GeomSwitch*> mode_switches;
+
    Index CurrentMode;
+
    // modes contains the bitwise OR of Switch0-Switch8
    enum {
 	Switch0 = 0x0001,
@@ -184,7 +179,7 @@ protected:
 
    void CreateModeSwitch( const Index snum, GeomObj* o );
    void SetMode( const Index mode, const long swtchs );
-   void SetNumModes(int num) { NumModes = num; }
+   void SetNumModes(int num) { modes.resize(num); }
    void FinishWidget();
 
    // Used to pass a material to .tcl file.

@@ -461,7 +461,7 @@ PathWidget::GetNumPoints() const
 string
 PathWidget::GetMaterialName( const Index mindex ) const
 {
-   ASSERT(mindex<NumMaterials);
+   ASSERT(mindex<materials.size());
    
    switch(mindex){
    default:

@@ -496,7 +496,7 @@ FrameWidget::GetDownAxis()
 string
 FrameWidget::GetMaterialName( const Index mindex ) const
 {
-   ASSERT(mindex<NumMaterials);
+   ASSERT(mindex<materials.size());
    
    switch(mindex){
    case 0:

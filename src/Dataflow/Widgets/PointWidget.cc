@@ -118,12 +118,12 @@ PointWidget::redraw()
  *      BaseWidget execute method (which calls the redraw method).
  */
 void
-PointWidget::geom_moved( GeomPick*, int /* axis */, double /* dist */,
+PointWidget::geom_moved( GeomPick*, int /* axis */, double dist,
 			 const Vector& delta, int pick, const BState& )
 {
    switch(pick){
    case Pick:
-      MoveDelta(delta);
+      MoveDelta(delta * dist);
       break;
    }
    execute(0);
@@ -181,7 +181,7 @@ PointWidget::GetPosition() const
 string
 PointWidget::GetMaterialName( const Index mindex ) const
 {
-   ASSERT(mindex<NumMaterials);
+   ASSERT(mindex<materials.size());
    
    switch(mindex){
    case 0:
