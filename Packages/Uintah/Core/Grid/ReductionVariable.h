@@ -26,6 +26,7 @@ namespace SCIRun {
 
 #include <sgi_stl_warnings_off.h>
 #include <iosfwd>
+#include <iostream>
 #include <sgi_stl_warnings_on.h>
 
 
@@ -105,6 +106,13 @@ WARNING
       totsize = sizeof(T);
       ptr = 0;
     }
+
+    //! Sets the value to a harmless value that will have no impact
+    //! on a reduction.
+    virtual void setBenignValue() {
+      Op op;
+      value = op.getBenignValue();
+    }
   private:
     ReductionVariable<T, Op>& operator=(const ReductionVariable<T, Op>&copy);
     static Variable* maker();
@@ -129,7 +137,8 @@ WARNING
   Variable*
   ReductionVariable<T, Op>::maker()
   {
-    return scinew ReductionVariable<T, Op>();
+	  
+     return scinew ReductionVariable<T, Op>();
   }
    
   template<class T, class Op>
