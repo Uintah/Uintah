@@ -2,11 +2,20 @@
  * File: labelmaps.h
  *
  * Description: C header source class definitions to provide an API for
- *		Visible Human segmentation information:
- *		* The Master Anatomy Label Map
- *		* Spatial Adjacency relations for the anatomical structures
- *		and
- *		* Bounding Boxes for each anatomical entity.
+ *		the Visible Human KnowledgeBase
+ *
+ *              Included in the KnowledgeBase are:
+ *
+ *              o segmentation information as formatted ASCII files:
+ *		  * The Master Anatomy Label Map
+ *		  * Spatial Adjacency relations for the anatomical structures
+ *		  and
+ *		  * Bounding Boxes for each anatomical entity.
+ *
+ *              o An Injury list in XML format
+ *
+ *              o A mapping from anatomical structures to physiological
+ *                parameters corresponding to that structure or region
  *
  * Author: Stewart Dickson <mailto:dicksonsp@ornl.gov>
  *	   <http://www.csm.ornl.gov/~dickson>
@@ -191,5 +200,63 @@ class VH_injury
 
 bool
 is_injured(char *targetName, vector<VH_injury> &injured_tissue_list);
+
+/******************************************************************************
+ * class VH_HIPvarMap
+ *
+ * description: Two parallel arrays -- FMA names <-> HIP var file names
+ *
+ *		The map from anatomical anatomical names to HIP data channels.
+ ******************************************************************************/
+
+class VH_HIPvarMap {
+public:
+	VH_HIPvarMap();
+	~VH_HIPvarMap();
+	void readFile(char *infilename);
+	void readFile(FILE *infileptr);
+	string getActiveFile() { return activeFile; };
+	char *get_HIPvarFile(char *targAnatomyName);
+	int get_num_names() { return num_names; };
+private:
+	string activeFile;
+	char **anatomyname;
+	char **HIPvarFileName;
+	int num_names;
+};
+
+/******************************************************************************
+ * class VH_physioMapping
+ *
+ * description: A node containing a mapping from anatomical names to
+ *		sets of corresponding physiological parameters
+ ******************************************************************************/
+
+class VH_hipParam
+{
+  public:
+        VH_hipParam();
+        VH_hipParam(int, char *, char *, char *, char *);
+        int col_no;
+        string var_shortName;
+        string var_longName;
+        string var_type;
+        string var_unit;
+};
+
+class VH_physioMapping
+{
+  private:
+        string anatomyLump;
+        string GE_anatName;
+        string eFMA_prefName;
+	int fmaID;
+  public:
+        vector<VH_hipParam *> hip_param;
+        VH_physioMapping();
+	VH_physioMapping(char *, char *,  char *, int);
+};
+
+VH_physioMapping *VH_physioMapping_readFile(char *inFileName);
 
 #endif

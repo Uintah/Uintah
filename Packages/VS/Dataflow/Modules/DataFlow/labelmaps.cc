@@ -36,6 +36,17 @@ char *space_to_underbar(char *dst, char *src)
   return(dst);
 } /* end space_to_underbar() */
 
+bool iswhitespace(char *src)
+{
+  char *srcPtr;
+
+  for(srcPtr = src; *srcPtr != '\0'; srcPtr++)
+  {
+    if(*srcPtr != ' ' && *srcPtr != '\t') return(false);
+  }
+  return(true);
+}
+
 char *capitalize(char *dst, char *src)
 {
   char *srcPtr, *dstPtr;
@@ -69,6 +80,17 @@ countCommas(char *inString)
   while(*inString != '\0')
   {
     if(*inString++ == ',') count++;
+  }
+  return count;
+} /* end countCommas() */
+
+int
+countTabs(char *inString)
+{
+  int count = 0;
+  while(*inString != '\0')
+  {
+    if(*inString++ == '\t') count++;
   }
   return count;
 } /* end countCommas() */
@@ -222,7 +244,7 @@ VH_MasterAnatomy::readFile(char *infilename)
     { // expect lines of the form: AnatomyName,Label
       if(!splitAtComma((char *)inLine,
                    &anatomyname[num_names], &indexStr)) break;
-      // labe indices to not correspond 1-1 to lines in the file
+      // label indices to not correspond 1-1 to lines in the file
       labelindex[num_names] = atoi(indexStr);
       if(maxLabelIndex < labelindex[num_names])
          maxLabelIndex = labelindex[num_names];
@@ -633,3 +655,190 @@ void VH_injury::print()
   cout << axisX1 << ", " << axisY1 << ", " << axisZ1 << ")";
   cout << " Diameter: " << rad0 << endl;
 } // end VH_injury::print()
+
+/******************************************************************************
+ * class VH_HIPvarMap
+ *
+ * description: Mapping from anatomical names to files containing corresponding
+ *              time-varying physiological data channels.
+ ******************************************************************************/
+
+VH_HIPvarMap::VH_HIPvarMap()
+{
+  anatomyname = new (char *)[VH_LM_NUM_NAMES];
+  HIPvarFileName = new (char *)[VH_LM_NUM_NAMES];
+  num_names = 0;
+}
+                                                                                
+VH_HIPvarMap::~VH_HIPvarMap()
+{
+  delete [] anatomyname;
+  delete [] HIPvarFileName;
+}
+                                                                                
+void
+VH_HIPvarMap::readFile(FILE *infileptr)
+{
+} // end VH_HIPvarMap::readFile(FILE *infileptr)
+
+/******************************************************************************
+ * VH_HIPvarMap::readFile()
+ ******************************************************************************/
+void
+VH_HIPvarMap::readFile(char *infilename)
+{
+  FILE *infile;
+  char *inLine;
+  if(!(infile = fopen(infilename, "r")))
+  {
+    perror("VH_HIPvarMap::readFile()");
+    cerr << "cannot open '" << infilename << "'" << endl;
+    return;
+  }
+
+  inLine = new char[VH_FILE_MAXLINE];
+  int buffsize = VH_FILE_MAXLINE;
+
+  activeFile = string(infilename);
+  cerr << "VH_HIPvarMap::readFile(" << infilename << ")";
+  
+  while(read_line(inLine, &buffsize, infile) != 0)
+  {
+    if(strlen(inLine) > 0)
+    { // expect lines of the form: AnatomyName,fileName
+      if(!splitAtComma((char *)inLine,
+                   &anatomyname[num_names], &HIPvarFileName[num_names])) break;
+    } // end if(strlen(inLine) > 0)
+    // (else) blank line -- ignore
+    // clear input buffer line
+    strcpy(inLine, "");
+    num_names++;
+    cerr << ".";
+  } // end while(read_line(inLine, &buffsize, infile) != 0)
+
+  delete [] inLine;
+  fclose(infile);
+  cerr << "done" << endl;
+} // end VH_HIPvarMap::readFile(char *infilename)
+
+char *
+VH_HIPvarMap::get_HIPvarFile(char *targetname)
+{
+  for(int index = 0; index < num_names; index++)
+  {
+    if(anatomyname[index] != 0 && strcmp(anatomyname[index], targetname) == 0)
+      return(HIPvarFileName[index]);
+  }
+
+  return((char *)NULL);
+} // end VH_VH_HIPvarMap::get_labelindex(char *anatomyname)
+
+VH_hipParam::VH_hipParam(int newColNo, char *newShortName, char *newLongName,
+            char *newType, char *newUnit)
+{
+  col_no = newColNo;
+  var_shortName = string(newShortName);
+  var_longName  = string(newLongName);
+  var_type = string(newType);
+  var_unit = string(newUnit);
+}
+
+VH_physioMapping::VH_physioMapping(char *newanatomyLump, char *newGE_anatName,
+                 char *newEfmaPrefName, int newFMAid)
+{
+  anatomyLump = string(newanatomyLump);
+  GE_anatName = string(newGE_anatName);
+  eFMA_prefName = string(newEfmaPrefName);
+  fmaID = newFMAid;
+}
+
+/******************************************************************************
+ * VH_physioMapping::readFile()
+ *
+ * description: Read a table containing a more detailed listing of HIP
+ *              variables corresponding to anatomical structures.
+ ******************************************************************************/
+
+void
+VH_physioMapping_readFile(char *inFileName,
+                          vector<VH_physioMapping *> returnList)
+{
+  FILE *infile;
+  char *inLine;
+  if(!(infile = fopen(inFileName, "r")))
+  {
+    perror("VH_physioMapping_readFile()");
+    cerr << "cannot open '" << inFileName << "'" << endl;
+    return;
+  }
+
+  inLine = new char[VH_FILE_MAXLINE];
+  int buffsize = VH_FILE_MAXLINE;
+
+  cerr << "VH_physioMapping_readFile(" << inFileName <<  ")";
+
+  // parse the first line -- header
+  if((inLine = read_line(inLine, &buffsize, infile)) <= 0)
+  {
+    cerr << "VH_physioMapping_readFile(): premature EOF" << endl;
+  }
+  int num_cols = countTabs(inLine);
+
+  char anatLump[32], GEanatName[32], eFMAprefName[32], HIP_shortName[32];
+  char HIP_longName[32], type[16], unit[16];
+  int fmaID, HIPcol;
+  if(sscanf(inLine, 
+     "%[^\t]\t%[^\t]\t%[^\t]\t%d\t%d\t%[^\t]\t%[^\t]\t%[^\t]\t%[^\t]",
+     anatLump, GEanatName, eFMAprefName, &fmaID, &HIPcol, HIP_shortName,
+     HIP_longName, type, unit) < 9)
+  {
+     cerr << "Format error -- line 1 -- header" << endl;
+  }
+  if(strcmp(anatLump, "Demo anatomical lumps") ||
+     strcmp(GEanatName, "GE Anatomy Name") ||
+     strcmp(eFMAprefName, "eFMA Preferred Name") ||
+     strcmp(HIP_shortName, "HIP var") ||
+     strcmp(HIP_longName, "HIP var name") ||
+     strcmp(type, "var type") ||
+     strcmp(unit, "var unit")
+    )
+  {
+     cerr << "Format error -- line 1 -- header" << endl;
+  }
+  // clear input buffer line
+  strcpy(inLine, "");
+
+  int lineCount = 2;
+
+  VH_physioMapping *newPhysioNode;
+  VH_hipParam *newHIPvarNode;
+  // parse the remaining lines in the file
+  while(read_line(inLine, &buffsize, infile) != 0)
+  {
+    if(strlen(inLine) > 0)
+    {
+      if(sscanf(inLine,
+         "%[^\t]\t%[^\t]\t%[^\t]\t%d\t%d\t%[^\t]\t%[^\t]\t%[^\t]\t%[^\t]",
+         anatLump, GEanatName, eFMAprefName, &fmaID, &HIPcol, HIP_shortName,
+         HIP_longName, type, unit) < 9)
+      {
+         cerr << "Format error -- line " << lineCount << endl;
+      }
+      if(!iswhitespace(anatLump) && !iswhitespace(GEanatName) &&
+         !iswhitespace(eFMAprefName))
+      { // this is a new physiology mapping
+        newPhysioNode =
+            new VH_physioMapping(anatLump, GEanatName, eFMAprefName, fmaID);
+        returnList.push_back(newPhysioNode);
+      }
+      else
+      { // this is a new HIP parameter for the previous physiology mapping
+        newHIPvarNode =
+            new VH_hipParam(HIPcol, HIP_shortName, HIP_longName, type, unit);
+        newPhysioNode->hip_param.push_back(newHIPvarNode);
+      }
+    } // end if(strlen(inLine) > 0)
+    lineCount++;
+  } // end while(read_line(inLine, &buffsize, infile) != 0)
+} // end VH_physioMapping_readFile()
+
