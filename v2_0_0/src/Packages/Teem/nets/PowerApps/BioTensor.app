@@ -1581,6 +1581,7 @@ set mods(ChooseNrrd-BMatrix) $m49
 set mods(ChooseNrrd-ToReg) $m105
 set mods(ChooseNrrd-KnownB0) $m136
 set mods(ChooseNrrd-ToSmooth) $m104
+set mods(ChangeFieldBounds-Variance) $m46
 
 set mods(NrrdReader-Gradient) $m50
 
@@ -3600,8 +3601,6 @@ class BioTensorApp {
     # This is called when any module calls update_state.
     # We only care about "JustStarted" and "Completed" calls.
     method update_progress { which state } {
-#	puts "$which $state"
-	
 	global mods
 	global $mods(ShowField-Isosurface)-faces-on
 	global $mods(ShowField-Glyphs)-tensors-on
@@ -3698,6 +3697,14 @@ class BioTensorApp {
 		set min_y [set $mods(NrrdInfo1)-min2]
 		set min_z [set $mods(NrrdInfo1)-min3]
 
+		# configure the variance offset
+		global $mods(ChangeFieldBounds-Variance)-outputcenterx
+		global $mods(ChangeFieldBounds-Variance)-outputcentery
+		set $mods(ChangeFieldBounds-Variance)-outputcenterx \
+		    [expr -($min_x + ($size_x*$spacing_x/2.0)*1.1)]
+		set $mods(ChangeFieldBounds-Variance)-outputcentery \
+		    [expr $min_y + ($size_y*$spacing_y/2.0)]
+
 		# configure fiber edges to be average spacing * 0.25
 		global $mods(ShowField-Fibers)-edge_scale
 		set $mods(ShowField-Fibers)-edge_scale [expr 0.125 * $average_spacing]
@@ -3719,7 +3726,7 @@ class BioTensorApp {
 		    sync_fibers_tabs
 		    
 		    configure_sample_planes
-		    
+
 		    # reconfigure registration reference image slider
 		    $ref_image1.s.ref configure -from 1 -to $volumes
 		    $ref_image2.s.ref configure -from 1 -to $volumes
@@ -4641,7 +4648,6 @@ class BioTensorApp {
         
 	
     }
-
 
 
     method toggle_dt_threshold {} {
