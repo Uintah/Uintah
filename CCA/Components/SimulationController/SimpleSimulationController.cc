@@ -191,7 +191,7 @@ SimpleSimulationController::run()
    scheduler->initialize();
    scheduler->advanceDataWarehouse(grid);
    // for dynamic lb's, set up initial patch config
-   lb->possiblyDynamicallyReallocate(grid); 
+   lb->possiblyDynamicallyReallocate(grid, false); 
 
    double t;
 

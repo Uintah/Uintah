@@ -56,7 +56,9 @@ namespace Uintah {
     /// to load balance (that the gain is greater than some threshold), it will
     /// set the patches to their new location, set d_state to postLoadBalance,
     /// return true, signifying that we need to recompile.
-    virtual bool possiblyDynamicallyReallocate(const GridP& grid);
+    /// However, if force is true, it will re-loadbalance regardless of the
+    /// threshold.
+    virtual bool possiblyDynamicallyReallocate(const GridP& grid, bool force);
 
     //! Asks the load balancer if it is dynamic.
     virtual bool isDynamic() { return true; }
