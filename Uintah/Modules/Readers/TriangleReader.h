@@ -46,7 +46,6 @@
     0 2 3 
     ------------------------------------------- */
 
-#include <Util/NotFinished.h>
 #include <Dataflow/Module.h>
 #include <CommonDatatypes/GeometryPort.h>
 #include <CommonDatatypes/ColorMapPort.h>
@@ -89,6 +88,10 @@ private:
 
 //
 // $Log$
+// Revision 1.2  1999/08/19 23:18:09  sparker
+// Removed a bunch of #include <SCICore/Util/NotFinished.h> statements
+// from files that did not need them.
+//
 // Revision 1.1  1999/08/02 20:00:39  kuzimmer
 // checked in Triangle Reader for Honlai's Triangles.
 //

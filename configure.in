@@ -1,4 +1,4 @@
-## XXX: Should probably set AC_PREFIX_DEFUALT to something good some day.
+## XXX: Should probably set AC_PREFIX_DEFAULT to something good some day.
 ## TODO:
 ##  - Automatically detect TEMPLATE_BOX and TEMPLATE_TAG variables
 

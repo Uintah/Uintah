@@ -13,7 +13,6 @@
  */
 
 #include <SCICore/Geom/PointLight.h>
-#include <SCICore/Util/NotFinished.h>
 #include <SCICore/Geom/GeomSphere.h>
 #include <SCICore/Malloc/Allocator.h>
 
@@ -58,6 +57,10 @@ void PointLight::io(Piostream& stream)
 
 //
 // $Log$
+// Revision 1.4  1999/08/19 23:18:07  sparker
+// Removed a bunch of #include <SCICore/Util/NotFinished.h> statements
+// from files that did not need them.
+//
 // Revision 1.3  1999/08/17 23:50:32  sparker
 // Removed all traces of the old Raytracer and X11 renderers.
 // Also removed a .o and .d file

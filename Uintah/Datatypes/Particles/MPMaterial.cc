@@ -18,7 +18,6 @@
 #include <string.h>
 
 #include <SCICore/Malloc/Allocator.h>
-#include <SCICore/Util/NotFinished.h>
 
 #include <Uintah/Datatypes/Particles/MPMaterial.h>
 
@@ -122,6 +121,10 @@ void MPMaterial::io(Piostream& stream)
 
 //
 // $Log$
+// Revision 1.3  1999/08/19 23:18:08  sparker
+// Removed a bunch of #include <SCICore/Util/NotFinished.h> statements
+// from files that did not need them.
+//
 // Revision 1.2  1999/08/17 06:40:06  sparker
 // Merged in modifications from PSECore to make this the new "blessed"
 // version of SCIRun/Uintah.

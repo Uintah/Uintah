@@ -20,7 +20,6 @@
 #include <SCICore/Containers/HashTable.h>
 #include <SCICore/Containers/Queue.h>
 #include <SCICore/Containers/Stack.h>
-#include <SCICore/Util/NotFinished.h>
 #include <SCICore/CoreDatatypes/Mesh.h>
 #include <SCICore/CoreDatatypes/ScalarField.h>
 #include <SCICore/CoreDatatypes/ScalarFieldRG.h>
@@ -273,6 +272,10 @@ cerr << "Dd: SurfOctree Portion of this code deleted... it is"
 
 //
 // $Log$
+// Revision 1.4  1999/08/19 23:17:43  sparker
+// Removed a bunch of #include <SCICore/Util/NotFinished.h> statements
+// from files that did not need them.
+//
 // Revision 1.3  1999/08/18 20:19:39  sparker
 // Eliminated copy constructor and clone in all modules
 // Added a private copy ctor and a private clone method to Module so

@@ -12,9 +12,6 @@
  *  Copyright (C) 1994 SCI Group
  */
 
-
-
-#include <SCICore/Util/NotFinished.h>
 #include <PSECore/CommonDatatypes/ColorMapPort.h>
 #include <SCICore/CoreDatatypes/ColorMap.h>
 #include <PSECore/CommonDatatypes/ScalarFieldPort.h>
@@ -115,6 +112,10 @@ RescaleColorMap::connection(ConnectionMode mode, int which_port, int)
 
 //
 // $Log$
+// Revision 1.4  1999/08/19 23:17:58  sparker
+// Removed a bunch of #include <SCICore/Util/NotFinished.h> statements
+// from files that did not need them.
+//
 // Revision 1.3  1999/08/18 20:20:10  sparker
 // Eliminated copy constructor and clone in all modules
 // Added a private copy ctor and a private clone method to Module so

@@ -73,7 +73,6 @@ public:
 #include <SCICore/CoreDatatypes/LockArray3.h>
 #include <SCICore/Containers/String.h>
 #include <SCICore/Malloc/Allocator.h>
-#include <SCICore/Util/NotFinished.h>
 
 #include <SCICore/Geometry/Point.h>
 
@@ -182,12 +181,6 @@ LockArray3<T>::get_onedim_byte( unsigned char *v )
 }
 
 template<class T>
-LockArray3<T>& LockArray3<T>::operator=(const LockArray3<T>&)
-{
-    NOT_FINISHED("Array2::operator=");
-}
-
-template<class T>
 void LockArray3<T>::io(Piostream&)
 {
   cerr << "Error - not implemented!\n";
@@ -237,6 +230,10 @@ void Pio(Piostream& stream, SCICore::CoreDatatypes::LockArray3<T>*& data) {
 
 //
 // $Log$
+// Revision 1.3  1999/08/19 23:18:04  sparker
+// Removed a bunch of #include <SCICore/Util/NotFinished.h> statements
+// from files that did not need them.
+//
 // Revision 1.2  1999/08/17 06:38:47  sparker
 // Merged in modifications from PSECore to make this the new "blessed"
 // version of SCIRun/Uintah.

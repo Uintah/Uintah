@@ -15,7 +15,6 @@
 #include <PSECore/CommonDatatypes/SoundPort.h>
 
 #include <SCICore/Util/Assert.h>
-#include <SCICore/Util/NotFinished.h>
 #include <SCICore/Containers/String.h>
 #include <PSECore/Dataflow/Connection.h>
 #include <PSECore/Dataflow/Port.h>
@@ -248,6 +247,10 @@ void SoundOPort::resend(Connection*)
 
 //
 // $Log$
+// Revision 1.3  1999/08/19 23:18:03  sparker
+// Removed a bunch of #include <SCICore/Util/NotFinished.h> statements
+// from files that did not need them.
+//
 // Revision 1.2  1999/08/17 06:38:12  sparker
 // Merged in modifications from PSECore to make this the new "blessed"
 // version of SCIRun/Uintah.

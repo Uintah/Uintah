@@ -10,7 +10,6 @@
  *  Copyright (C) 1994 SCI Group
  */
 
-#include <SCICore/Util/NotFinished.h>
 #include <PSECommon/Dataflow/Module.h>
 #include <PSECommon/CommonDatatypes/ScalarFieldPort.h>
 #include <PSECommon/CommonDatatypes/SurfacePort.h>

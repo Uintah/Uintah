@@ -33,7 +33,6 @@ DESCRIPTION
 ****************************************/   
 
 #include <PSECommon/Modules/Visualization/GenStandardColorMaps.h> 
-#include <SCICore/Util/NotFinished.h> 
 #include <PSECore/CommonDatatypes/ColorMapPort.h>
 #include <SCICore/Geom/Material.h>
 #include <SCICore/Malloc/Allocator.h>
