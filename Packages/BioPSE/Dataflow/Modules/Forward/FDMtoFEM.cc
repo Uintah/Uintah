@@ -113,7 +113,7 @@ void FDMtoFEM::execute() {
     
   vector<pair<string, Tensor> > conds;
   if (ifdmH->get_type_name(1) == "Tensor" ||
-      (ifdmH->get_type_name(1) == "unsigned_char" && 
+      (ifdmH->get_type_name(1) == "int" && 
        ifdmH->get_property("conductivity_table", conds))) {
 
     // first check to see if it's the same field as last time, though...
@@ -141,9 +141,9 @@ void FDMtoFEM::execute() {
     // if the input Field was a Masked Lattice Vol, copy the mask
     if (ifdmH->get_type_name(0) == "MaskedLatVolField") {
       valid_nodes.initialize(0);
-      if (ifdmH->get_type_name(1) == "unsigned_char") {
-	MaskedLatVolField<unsigned char> *mlv =
-	  dynamic_cast<MaskedLatVolField<unsigned char> *>(ifdmH.get_rep());
+      if (ifdmH->get_type_name(1) == "int") {
+	MaskedLatVolField<int> *mlv =
+	  dynamic_cast<MaskedLatVolField<int> *>(ifdmH.get_rep());
 	mask.copy(mlv->mask());
       } else { // Tensor
 	MaskedLatVolField<Tensor> *mlv =
@@ -234,9 +234,9 @@ void FDMtoFEM::execute() {
 	++ci;
       }
     } else {
-      // we have unsigned_char's -- the "conds" array has the tensors
-      LatVolField<unsigned char> *lv = 
-	dynamic_cast<LatVolField<unsigned char> *>(ifdmH.get_rep());
+      // we have int's -- the "conds" array has the tensors
+      LatVolField<int> *lv = 
+	dynamic_cast<LatVolField<int> *>(ifdmH.get_rep());
       tv = scinew TetVolField<int>(tvm, Field::CELL);
       LatVolMesh::Cell::iterator ci;
       lvm->begin(ci);
@@ -252,7 +252,7 @@ void FDMtoFEM::execute() {
     cerr << "Conds->size() == "<<conds.size()<<"\n";
     tv->set_property("data_storage", string("table"), false);
     tv->set_property("name", string("conductivity"), false);
-    tv->set_property("conductivity_table", conds, true);
+    tv->set_property("conductivity_table", conds, false);
     ofemH_ = tv;
     ofem_->send(ofemH_);
   } else {
