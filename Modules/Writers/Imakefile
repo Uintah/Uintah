@@ -3,11 +3,14 @@
 
 #ifdef SCI_DIR_Modules_Writers
 
-OBJS = ContourSetWriter.o   MeshWriter.o   ScalarFieldWriter.o   \
+OBJS = ContourSetWriter.o   MeshWriter.o   \
+	MultiMeshWriter.o   ScalarFieldWriter.o   \
 	SurfaceWriter.o   VectorFieldWriter.o
-SRCS = ContourSetWriter.cc  MeshWriter.cc  ScalarFieldWriter.cc  \
+SRCS = ContourSetWriter.cc  MeshWriter.cc  \
+	MultiMeshWriter.cc  ScalarFieldWriter.cc  \
 	SurfaceWriter.cc  VectorFieldWriter.cc
-TCLS = ContourSetWriter.tcl MeshWriter.tcl ScalarFieldWriter.tcl \
+TCLS = ContourSetWriter.tcl MeshWriter.tcl \
+	MultiMeshWriter.tcl ScalarFieldWriter.tcl \
 	SurfaceWriter.tcl VectorFieldWriter.tcl
 
 LIBNAME = Writers
@@ -32,6 +35,12 @@ MeshWriter.cc: Writer.cc
 
 MeshWriter.tcl: Writer.tcl
 	sed 's/TYPE/Mesh/g' < Writer.tcl > MeshWriter.tcl
+
+MultiMeshWriter.cc: Writer.cc
+	sed 's/TYPE/MultiMesh/g' < Writer.cc > MultiMeshWriter.cc
+
+MultiMeshWriter.tcl: Writer.tcl
+	sed 's/TYPE/MultiMesh/g' < Writer.tcl > MultiMeshWriter.tcl
 
 ScalarFieldWriter.cc: Writer.cc
 	sed 's/TYPE/ScalarField/g' < Writer.cc > ScalarFieldWriter.cc
