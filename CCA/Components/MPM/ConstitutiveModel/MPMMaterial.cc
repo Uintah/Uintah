@@ -14,9 +14,9 @@
 #include <Core/Geometry/IntVector.h>
 #include <Packages/Uintah/Core/Grid/Box.h>
 #include <Packages/Uintah/Core/Grid/Patch.h>
-#include <Packages/Uintah/Core/Variables/CellIterator.h>
-#include <Packages/Uintah/Core/Variables/VarLabel.h>
-#include <Packages/Uintah/Core/Variables/PerPatch.h>
+#include <Packages/Uintah/Core/Grid/Variables/CellIterator.h>
+#include <Packages/Uintah/Core/Grid/Variables/VarLabel.h>
+#include <Packages/Uintah/Core/Grid/Variables/PerPatch.h>
 #include <Packages/Uintah/Core/GeometryPiece/GeometryPieceFactory.h>
 #include <Packages/Uintah/Core/GeometryPiece/UnionGeometryPiece.h>
 #include <Packages/Uintah/Core/GeometryPiece/NullGeometryPiece.h>

@@ -3,12 +3,12 @@
 #define Packages_Uintah_CCA_Components_Examples_SimpleRxn_h
 #include <Packages/Uintah/CCA/Ports/ModelInterface.h>
 
-#include <Packages/Uintah/Core/Variables/ComputeSet.h>
-#include <Packages/Uintah/Core/Variables/CCVariable.h>
-#include <Packages/Uintah/Core/Variables/SFCXVariable.h>
-#include <Packages/Uintah/Core/Variables/SFCYVariable.h>
-#include <Packages/Uintah/Core/Variables/SFCZVariable.h>
-#include <Packages/Uintah/Core/Variables/VarTypes.h>
+#include <Packages/Uintah/Core/Grid/Variables/ComputeSet.h>
+#include <Packages/Uintah/Core/Grid/Variables/CCVariable.h>
+#include <Packages/Uintah/Core/Grid/Variables/SFCXVariable.h>
+#include <Packages/Uintah/Core/Grid/Variables/SFCYVariable.h>
+#include <Packages/Uintah/Core/Grid/Variables/SFCZVariable.h>
+#include <Packages/Uintah/Core/Grid/Variables/VarTypes.h>
 #include <map>
 #include <vector>
 

@@ -27,7 +27,9 @@ PSELIBS := \
 	Core/Exceptions                   \
 	Packages/Uintah/CCA/Ports         \
 	Packages/Uintah/Core/Grid         \
+	Packages/Uintah/Core/Util         \
 	Packages/Uintah/Core/ProblemSpec  \
+	Packages/Uintah/Core/GeometryPiece  \
 	Packages/Uintah/Core/Exceptions   \
 	Packages/Uintah/Core/Disclosure   \
 	Packages/Uintah/Core/Math         \

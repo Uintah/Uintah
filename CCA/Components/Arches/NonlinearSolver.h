@@ -4,7 +4,7 @@
 #define Uintah_Component_Arches_NonlinearSolver_h
 
 #include <Packages/Uintah/CCA/Components/Arches/Arches.h>
-#include <Packages/Uintah/Core/Variables/ComputeSet.h>
+#include <Packages/Uintah/Core/Grid/Variables/ComputeSet.h>
 
 /**************************************
 CLASS

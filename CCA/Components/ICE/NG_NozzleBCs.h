@@ -3,11 +3,11 @@
 
 #include <Packages/Uintah/Core/Labels/ICELabel.h>
 #include <Packages/Uintah/Core/Grid/SimulationStateP.h>
-#include <Packages/Uintah/Core/Variables/CCVariable.h>
-#include <Packages/Uintah/Core/Variables/VarTypes.h>
-#include <Packages/Uintah/Core/BoundaryConditions/CircleBCData.h>
-#include <Packages/Uintah/Core/BoundaryConditions/BCDataArray.h>
-#include <Packages/Uintah/Core/BoundaryConditions/BoundCond.h>
+#include <Packages/Uintah/Core/Grid/Variables/CCVariable.h>
+#include <Packages/Uintah/Core/Grid/Variables/VarTypes.h>
+#include <Packages/Uintah/Core/Grid/BoundaryConditions/CircleBCData.h>
+#include <Packages/Uintah/Core/Grid/BoundaryConditions/BCDataArray.h>
+#include <Packages/Uintah/Core/Grid/BoundaryConditions/BoundCond.h>
 #include <Packages/Uintah/Core/Grid/Patch.h>
 #include <Packages/Uintah/Core/Grid/Task.h>
 #include <Packages/Uintah/Core/Math/MiscMath.h>

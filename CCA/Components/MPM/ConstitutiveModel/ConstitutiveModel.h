@@ -1,18 +1,18 @@
 #ifndef __CONSTITUTIVE_MODEL_H__
 #define __CONSTITUTIVE_MODEL_H__
 
-#include <Packages/Uintah/Core/Variables/ComputeSet.h>
+#include <Packages/Uintah/Core/Grid/Variables/ComputeSet.h>
 #include <sgi_stl_warnings_off.h>
 #include <vector>
 #include <sgi_stl_warnings_on.h>
 #include <Packages/Uintah/Core/Math/Matrix3.h>
 #include <Packages/Uintah/Core/Math/Short27.h>
 #include <Core/Containers/StaticArray.h>
-#include <Packages/Uintah/Core/Variables/Array3.h>
+#include <Packages/Uintah/Core/Grid/Variables/Array3.h>
 #include <Packages/Uintah/CCA/Components/MPM/PetscSolver.h>
 #include <Packages/Uintah/CCA/Components/MPM/SimpleSolver.h>
-#include <Packages/Uintah/Core/Variables/NCVariable.h>
-#include <Packages/Uintah/Core/Variables/ParticleVariable.h>
+#include <Packages/Uintah/Core/Grid/Variables/NCVariable.h>
+#include <Packages/Uintah/Core/Grid/Variables/ParticleVariable.h>
 #include <Packages/Uintah/Core/Parallel/ProcessorGroup.h>
 #include <Packages/Uintah/Core/Math/FastMatrix.h>
 #include <Packages/Uintah/CCA/Components/MPM/MPMFlags.h>

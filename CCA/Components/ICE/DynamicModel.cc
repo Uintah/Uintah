@@ -1,7 +1,7 @@
 #include <Packages/Uintah/CCA/Components/ICE/DynamicModel.h>
 #include <Packages/Uintah/CCA/Components/ICE/BoundaryCond.h>
 #include <Packages/Uintah/Core/ProblemSpec/ProblemSpec.h>
-#include <Packages/Uintah/Core/Variables/CellIterator.h>
+#include <Packages/Uintah/Core/Grid/Variables/CellIterator.h>
 #include <Core/Geometry/IntVector.h>
 #include <Packages/Uintah/CCA/Ports/Scheduler.h>
 #include <Packages/Uintah/Core/Grid/Patch.h>

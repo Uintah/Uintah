@@ -7,7 +7,7 @@
 #include <Packages/Uintah/CCA/Ports/DataWarehouseP.h>
 #include <Packages/Uintah/Core/ProblemSpec/ProblemSpecP.h>
 #include <Packages/Uintah/Core/Grid/Material.h>
-#include <Packages/Uintah/Core/Variables/CCVariable.h>
+#include <Packages/Uintah/Core/Grid/Variables/CCVariable.h>
 
 #include <sgi_stl_warnings_off.h>
 #include <vector>

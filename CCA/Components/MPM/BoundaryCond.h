@@ -1,7 +1,7 @@
 #ifndef Packages_Uintah_CCA_Components_MPM_BoundaryCond_h
 #define Packages_Uintah_CCA_Components_MPM_BoundaryCond_h
 #include <Packages/Uintah/Core/Grid/Patch.h>
-#include <Packages/Uintah/Core/Variables/NCVariable.h>
+#include <Packages/Uintah/Core/Grid/Variables/NCVariable.h>
 #include <Packages/Uintah/CCA/Ports/DataWarehouse.h>
 #include <Core/Geometry/IntVector.h>
 #include <Core/Geometry/Vector.h>

@@ -4,16 +4,16 @@
 #include <Packages/Uintah/CCA/Components/ICE/microSlipBCs.h>
 #include <Packages/Uintah/CCA/Components/ICE/NG_NozzleBCs.h>
 #include <Packages/Uintah/CCA/Components/ICE/LODI2.h>
-#include <Packages/Uintah/Core/BoundaryConditions/BCDataArray.h>
-#include <Packages/Uintah/Core/BoundaryConditions/DensityBoundCond.h>
-#include <Packages/Uintah/Core/BoundaryConditions/BoundCond.h>
+#include <Packages/Uintah/Core/Grid/BoundaryConditions/BCDataArray.h>
+#include <Packages/Uintah/Core/Grid/BoundaryConditions/DensityBoundCond.h>
+#include <Packages/Uintah/Core/Grid/BoundaryConditions/BoundCond.h>
 #include <Packages/Uintah/Core/Grid/SimulationStateP.h>
-#include <Packages/Uintah/Core/Variables/VarTypes.h>
-#include <Packages/Uintah/Core/Variables/CCVariable.h>
-#include <Packages/Uintah/Core/Variables/SFCXVariable.h>
-#include <Packages/Uintah/Core/Variables/SFCYVariable.h>
-#include <Packages/Uintah/Core/Variables/SFCZVariable.h>
-#include <Packages/Uintah/Core/Variables/Stencil7.h>
+#include <Packages/Uintah/Core/Grid/Variables/VarTypes.h>
+#include <Packages/Uintah/Core/Grid/Variables/CCVariable.h>
+#include <Packages/Uintah/Core/Grid/Variables/SFCXVariable.h>
+#include <Packages/Uintah/Core/Grid/Variables/SFCYVariable.h>
+#include <Packages/Uintah/Core/Grid/Variables/SFCZVariable.h>
+#include <Packages/Uintah/Core/Grid/Variables/Stencil7.h>
 
 #include <Core/Exceptions/InternalError.h>
 #include <Core/Util/DebugStream.h>

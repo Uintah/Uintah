@@ -3,12 +3,12 @@
 #include <Packages/Uintah/CCA/Components/MPM/MPMFlags.h>
 #include <Packages/Uintah/Core/Math/Matrix3.h>
 #include <Packages/Uintah/CCA/Ports/DataWarehouse.h>
-#include <Packages/Uintah/Core/Variables/VarLabel.h>
-#include <Packages/Uintah/Core/Variables/ParticleSet.h>
-#include <Packages/Uintah/Core/Variables/ParticleVariable.h>
-#include <Packages/Uintah/Core/Variables/NCVariable.h>
+#include <Packages/Uintah/Core/Grid/Variables/VarLabel.h>
+#include <Packages/Uintah/Core/Grid/Variables/ParticleSet.h>
+#include <Packages/Uintah/Core/Grid/Variables/ParticleVariable.h>
+#include <Packages/Uintah/Core/Grid/Variables/NCVariable.h>
 #include <Packages/Uintah/Core/Grid/Patch.h>
-#include <Packages/Uintah/Core/Variables/VarTypes.h>
+#include <Packages/Uintah/Core/Grid/Variables/VarTypes.h>
 #include <Packages/Uintah/Core/Labels/MPMLabel.h>
 #include <Packages/Uintah/Core/Math/FastMatrix.h>
 #include <Core/Malloc/Allocator.h>

@@ -9,8 +9,8 @@
 
 #include "ConstitutiveModelFactory.h"
 #include "ElasticConstitutiveModel.h"
-#include <Packages/Uintah/Core/Variables/ParticleVariable.h>
-#include <Packages/Uintah/Core/Variables/VarLabel.h>
+#include <Packages/Uintah/Core/Grid/Variables/ParticleVariable.h>
+#include <Packages/Uintah/Core/Grid/Variables/VarLabel.h>
 #include <Packages/Uintah/CCA/Ports/DataWarehouse.h>
 #include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/MPMMaterial.h>
 #include <Packages/Uintah/CCA/Components/MPM/MPMLabel.h>
