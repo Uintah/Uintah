@@ -90,7 +90,6 @@ for test in *"$USER_FLAG"; do
 
 	cd "${BUILDROOT}/${mode}"
 	doTestScript="do${test}tests"
-        echo "$doTestScript"
 	echo "#!/bin/tcsh" > "$doTestScript"
 	echo "setenv PATH $PATH" >> "$doTestScript"
         echo "setenv OS $OS" >> "$doTestScript"
