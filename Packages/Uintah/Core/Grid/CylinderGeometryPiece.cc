@@ -19,14 +19,10 @@ CylinderGeometryPiece::CylinderGeometryPiece(ProblemSpecP& ps) {
   ps->require("radius",rad);
   
   double near_zero = 1e-100;
-  double xdiff =  top.x() - bottom.x();
-  double ydiff =  top.y() - bottom.y();
-  double zdiff =  top.z() - bottom.z();
+  Vector axis = top - bottom;
   
-  if ( xdiff < near_zero   &&
-       ydiff < near_zero   &&
-       zdiff < near_zero ) {
-    SCI_THROW(ProblemSetupException("Input File Error: Cylinder max <= min coordinates"));
+  if ( axis.length()  < near_zero ) {
+    SCI_THROW(ProblemSetupException("Input File Error: Cylinder axes has zero length"));
   }
   if ( rad <= 0.0) {
     SCI_THROW(ProblemSetupException("Input File Error: Cylinder radius must be > 0.0"));
