@@ -29,52 +29,37 @@
 #ifndef SCIRun_VTK_Components_Actor_h
 #define SCIRun_VTK_Components_Actor_h
 
-#include <SCIRun/Vtk/Port.h>
+#include <SCIRun/Vtk/InPort.h>
+#include <SCIRun/Vtk/OutPort.h>
 #include <SCIRun/Vtk/Component.h>
 #include <vector>
-
-#define IPort Actor_IPort
-#define OPort Actor_OPort
 
 class vtkActor;
 
 namespace SCIRun {
   namespace vtk{
-  class IPort : public vtk::Port {
-  public:
-    IPort(vtkActor *actor);
-    virtual ~IPort();
-    bool isInput();
-    std::string getName();
-    bool accept(Port *);
-    void connect(Port* p);
-    vtkActor *actor;
-  };
-
-  class OPort : public vtk::Port {
-  public:
-    OPort(vtkActor *actor);
-    virtual ~OPort();
-    bool isInput();
-    std::string getName();
-    vtkObject* getObj();
-    vtkActor *actor;
-  };
-  
-  class Actor: public vtk::Component{
-    
-  public:
-    Actor();
-    virtual ~Actor();
-  private:
-    vtkActor *actor;
-
-    Actor(const Actor&);
-    Actor& operator=(const Actor&);
-  };
-  
-  
-} //namespace vtk
+    class Actor: public Component, public InPort, public OutPort{
+      
+    public:
+      //constructor
+      Actor();
+      
+      //destructor
+      ~Actor();
+      
+      //InPort interface
+      bool accept(OutPort *);
+      
+      //InPort interface
+      void connect(OutPort* p);
+      
+    private:
+      vtkActor *actor;
+      
+      Actor(const Actor&);
+      Actor& operator=(const Actor&);
+    };
+  } //namespace vtk
 } //namespace SCIRun
 
 

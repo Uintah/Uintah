@@ -27,11 +27,10 @@
  */
 
 #include <iostream>
-#include <SCIRun/Vtk/Port.h>
-#include <CCA/Components/VtkTest/Actor/Actor.h>
+#include <vtkActor.h>
+#include <vtkMapper.h>
 
-#include "vtkActor.h"
-#include "vtkMapper.h"
+#include <CCA/Components/VtkTest/Actor/Actor.h>
 
 using namespace std;
 using namespace SCIRun;
@@ -42,74 +41,31 @@ extern "C" vtk::Component* make_Vtk_Actor()
   return new Actor;
 }
 
-//Input Port
-IPort::IPort(vtkActor *actor){
-  this->actor=actor;  
-}
-
-IPort::~IPort(){
-
-}
-
-bool
-IPort::isInput(){
-  return true;
-}
-
-std::string
-IPort::getName(){
-  return "Actor::input";
-}
-
 bool 
-IPort::accept(Port* port){
-  return dynamic_cast<vtkMapper*>(port->getObj())!=0;
+Actor::accept(OutPort* port){
+  return dynamic_cast<vtkMapper*>(port->getOutput())!=0;
 }
 
 void
-IPort::connect(Port* port){
-  actor->SetMapper(dynamic_cast<vtkMapper*>(port->getObj()));
+Actor::connect(OutPort* port){
+  actor->SetMapper(dynamic_cast<vtkMapper*>(port->getOutput()));
 }
-
-//Output Port
-
-OPort::OPort(vtkActor *actor){
-  this->actor=actor;
-}
-
-OPort::~OPort(){
-
-}
-
-bool
-OPort::isInput(){
-  return false;
-}
-
-std::string
-OPort::getName(){
-  return "Actor::output";
-}
-
-vtkObject *
-OPort::getObj(){
-  return actor;
-}
-
 
 Actor::Actor(){
+  //set input port name
+  InPort::setName("Actor::input");
+
+  //set output port name
+  OutPort::setName("Actor::output");
 
   actor=vtkActor::New();
-  iports.push_back(new IPort(actor));
-  oports.push_back(new OPort(actor));
+
+  setOutput(actor);
+
+  addPort( dynamic_cast<InPort*>(this));
+  addPort( dynamic_cast<OutPort*>(this));
 }
 
 Actor::~Actor(){
-  for(unsigned int i=0; i<iports.size(); i++){
-    delete iports[i];
-  }
-  for(unsigned int i=0; i<oports.size(); i++){
-    delete oports[i];
-  }
   actor->Delete();
 }
