@@ -1,0 +1,11 @@
+
+#include <config/sci.cf>
+
+OBJS = tkAppInit.o  tkCanvBLine.o  tkBevel.o  tkMain.o  tkOpenGL.o
+SRCS = tkAppInit.c  tkCanvBLine.c  tkBevel.c  tkMain.c  tkOpenGL.c
+LOCALINCLUDES = -I../tcl7.3 -I../tk3.6
+
+LIBNAME = scitk
+
+SCIDependTarget($(SRCS))
+NormalLibraryTarget($(LIBNAME),$(OBJS))

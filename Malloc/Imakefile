@@ -1,0 +1,10 @@
+
+#include <config/sci.cf>
+
+OBJS = New.o
+SRCS = New.cc
+
+LIBNAME = Malloc
+
+SCIDependTarget($(SRCS))
+NormalLibraryTarget($(LIBNAME),$(OBJS))

@@ -1,0 +1,10 @@
+
+#include <config/sci.cf>
+
+OBJS = Point.o  Vector.o  BBox.o Transform.o
+SRCS = Point.cc Vector.cc BBox.cc Transform.cc
+
+LIBNAME = Geometry
+
+SCIDependTarget($(SRCS))
+NormalLibraryTarget($(LIBNAME),$(OBJS))

@@ -1,0 +1,13 @@
+
+#include <config/sci.cf>
+
+LOCALINCLUDES = -I../../project/project
+
+OBJS = BaseWidget.o FrameWidget.o
+SRCS = BaseWidget.cc FrameWidget.cc
+
+
+LIBNAME = widgets
+
+SCIDependTarget($(SRCS))
+NormalLibraryTarget($(LIBNAME),$(OBJS))

@@ -1,0 +1,10 @@
+
+#include <config/sci.cf>
+
+OBJS = TrigTable.o
+SRCS = TrigTable.cc
+
+LIBNAME = Math
+
+SCIDependTarget($(SRCS))
+NormalLibraryTarget($(LIBNAME),$(OBJS))
