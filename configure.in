@@ -3444,6 +3444,18 @@ case $host in
         DEF_BLAS="#define HAVE_BLAS 1"
      fi
      ;;
+  *dec*)
+    SCI_CHECK_LIB($dirs,cxml,main,,,optional)
+    if test "$HAVE_LIB_CXML"; then
+      AC_MSG_WARN(Using cxml for blas)
+      LIB_DIR_BLAS="$LIB_DIR_CXML"
+      HAVE_LIB_BLAS="yes"
+      BLAS_LIB_FLAG="$CXML_LIB_FLAG"
+      BLAS_LIB_DIR_FLAG="$CXML_LIB_DIR_FLAG"
+      DEF_BLAS="#define HAVE_BLAS 1"
+    fi
+    ;;
+
   *)
      SCI_CHECK_LIB($dirs,blas,main,$F_LIB_FLAG,,optional)
      if test "$HAVE_LIB_BLAS"; then
@@ -3559,9 +3571,10 @@ AC_SUBST(INC_HYPRE_H)
 ## -- stuff for Multiprocessor PETSc --------------------------------------
 
 
-# It seems that under AIX, you don't need lapack for petsc...
+# It seems that under AIX or OSF you don't need lapack for petsc...
 if test "$HAVE_LIB_MPI" && test "$HAVE_LIB_BLAS" && 
-   (test "$PETSC_ARCH" = "rs6000_sp" || test "$HAVE_LIB_LAPACK"); then
+   (test "$PETSC_ARCH" = "rs6000_sp" || test "$PETSC_ARCH" = "dec" ||
+    test "$HAVE_LIB_LAPACK"); then
 
   dirs=""
 
