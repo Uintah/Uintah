@@ -23,8 +23,8 @@ using namespace Uintah;
  Purpose:  Print to stderr a cell-centered, single material
 _______________________________________________________________________ */
 void    ICE::printData(const Patch* patch, int include_EC,
-        const string&    message1,         /* message1                     */
-        const string&    message2,         /* message to user              */
+        const string&    message1,        
+        const string&    message2,       
         const CCVariable<double>& q_CC)
 {
  //__________________________________
@@ -52,7 +52,7 @@ void    ICE::printData(const Patch* patch, int include_EC,
     cerr << "$" << message2 << "\n";
 
     cerr.setf(ios::scientific,ios::floatfield);
-    cerr.precision(10);  
+    cerr.precision(d_dbgSigFigs);  
     for(int k = low.z(); k < high.z(); k++)  {
       for(int j = low.y(); j < high.y(); j++) {
         for(int i = low.x(); i < high.x(); i++) {
@@ -104,6 +104,9 @@ void    ICE::printData(const Patch* patch, int include_EC,
     cerr << "______________________________________________\n";
     cerr << "$" << message1 << "\n";
     cerr << "$" << message2 << "\n";
+    
+    cerr.setf(ios::scientific,ios::floatfield);
+    cerr.precision(d_dbgSigFigs);
     for(int k = low.z(); k < high.z(); k++)  {
       for(int j = low.y(); j < high.y(); j++) {
         for(int i = low.x(); i < high.x(); i++) {
@@ -118,6 +121,7 @@ void    ICE::printData(const Patch* patch, int include_EC,
       cerr << "\n";
     }
     cerr << " ______________________________________________\n";
+    cerr.setf(ios::scientific ,ios::floatfield);
   }
 }
 /* 
@@ -153,7 +157,7 @@ void    ICE::printVector(const Patch* patch, int include_EC,
     
     
     cerr.setf(ios::scientific,ios::floatfield);
-    cerr.precision(10);  
+    cerr.precision(d_dbgSigFigs);  
     cerr << "______________________________________________\n";
     cerr << "$" << message1 << "\n";
     cerr << "$" << message2 << "\n";
@@ -207,7 +211,7 @@ void    ICE::printData_FC(const Patch* patch, int include_EC,
      
      
     cerr.setf(ios::scientific,ios::floatfield);
-    cerr.precision(10); 
+    cerr.precision(d_dbgSigFigs); 
     cerr << "______________________________________________\n";
     cerr << "$" << message1 << "\n";
     cerr << "$" << message2 << "\n"; 
@@ -260,7 +264,7 @@ void    ICE::printData_FC(const Patch* patch, int include_EC,
     
     
     cerr.setf(ios::scientific,ios::floatfield);
-    cerr.precision(5);
+    cerr.precision(d_dbgSigFigs);
     cerr << "______________________________________________\n";
     cerr << "$" << message1 << "\n";
     cerr << "$" << message2 << "\n";
@@ -315,7 +319,7 @@ void    ICE::printData_FC(const Patch* patch, int include_EC,
     adjust_dbg_indices( d_dbgBeginIndx, d_dbgEndIndx, low, high); 
     
     cerr.setf(ios::scientific,ios::floatfield);
-    cerr.precision(10);   
+    cerr.precision(d_dbgSigFigs);   
     cerr << "______________________________________________\n";
     cerr << "$" << message1 << "\n";
     cerr << "$" << message2 << "\n";
