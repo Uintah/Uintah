@@ -132,7 +132,7 @@ GLTexture3D::init(double& min, double &max, bool use_minmax)
 
   if (xmax_ == 0 && ymax_ ==0 && zmax_== 0)
   {
-    xmax_=ymax_=zmax_=64;
+    xmax_=ymax_=zmax_=128;
   }
 
   if( texfld_->data_at() == Field::CELL )
