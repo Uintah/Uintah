@@ -34,7 +34,7 @@ hook up user interface buttons
 #include <Dataflow/Ports/ColorMapPort.h>
 #include <Dataflow/Ports/GeometryPort.h>
 #include <Core/Datatypes/ScalarField.h>
-#include <Core/Datatypes/ScalarFieldRG.h>
+//#include <Core/Datatypes/ScalarFieldRG.h>
 #include <Core/Datatypes/ScalarFieldUG.h>
 #include <Dataflow/Ports/ScalarFieldPort.h>
 #include <Core/Datatypes/VectorField.h>

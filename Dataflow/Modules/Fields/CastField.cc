@@ -21,7 +21,7 @@
 #include "CastField.h"
 #include <Dataflow/Ports/ScalarFieldPort.h>
 #include <Core/Datatypes/ScalarField.h>
-#include <Core/Datatypes/ScalarFieldRG.h>
+//#include <Core/Datatypes/ScalarFieldRG.h>
 #include <Core/Geometry/BBox.h>
 #include <Core/Geometry/Point.h>
 #include <Core/Geometry/Vector.h>
@@ -63,6 +63,7 @@ CastField::~CastField()
 }
 
 void CastField::execute() {
+#if 0
     if(!iField->get(ifh) || !ifh.get_rep())
 	return;
     isf=ifh->getRGBase();
@@ -82,6 +83,7 @@ void CastField::execute() {
 
     setOutputFieldHandle();
     oField->send(ofh);
+#endif
 }
 
 void CastField::checkInterface() {
@@ -147,6 +149,7 @@ void CastField::printOutputStats() {
 }
 
 void CastField::setInputFieldVars() {
+#if 0
     nx = isf->nx;
     ny = isf->ny;
     nz = isf->nz;
@@ -175,10 +178,12 @@ void CastField::setInputFieldVars() {
     if (ifus) inVoxel = USHORT;
     if (ifuc) inVoxel = UCHAR;
     if (ifc) inVoxel = CHAR;
+#endif
 }
 
 
 void CastField::setBounds() {
+#if 0
     if (outVoxel == UCHAR) {
 	ifuc->set_bounds(minOut, maxOut);
     } else if (outVoxel == CHAR) {
@@ -194,9 +199,11 @@ void CastField::setBounds() {
     } else if (outVoxel == DOUBLE) {
 	ifd->set_bounds(minOut, maxOut);
     }
+#endif
 }
 
 void CastField::revoxelize() {
+#if 0
     if (inVoxel == outVoxel && !haveMinMax) return;
 
     int i,j,k;
@@ -646,9 +653,11 @@ void CastField::revoxelize() {
 	    }
 	}
     }
+#endif
 }
 
 void CastField::setOutputFieldHandle() {
+#if 0
     if (outVoxel == UCHAR) ofh=ifuc;    
     else if (outVoxel == CHAR) ofh=ifc;
     else if (outVoxel == SHORT) ofh=ifs;
@@ -656,6 +665,7 @@ void CastField::setOutputFieldHandle() {
     else if (outVoxel == INT) ofh=ifi;
     else if (outVoxel == FLOAT) ofh=iff;
     else if (outVoxel == DOUBLE) ofh=ifd;
+#endif
 }
 
 } // End namespace SCIRun

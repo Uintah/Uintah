@@ -11,7 +11,7 @@
 
 #include <Core/Containers/Array1.h>
 #include <Core/Containers/String.h>
-#include <Core/Datatypes/ScalarFieldRGBase.h>
+//#include <Core/Datatypes/ScalarFieldRGBase.h>
 #include <Core/Datatypes/ScalarField.h>
 #include <Core/Malloc/Allocator.h>
 #include <Core/GuiInterface/GuiVar.h>
@@ -106,6 +106,7 @@ GLTextureBuilder::DestroyContext(Display *dpy, GLXContext& cx)
 */
 void GLTextureBuilder::execute(void)
 {
+#if 0
   //  Display *dpy;
   // GLXContext cx;
   //static bool init = false;
@@ -158,6 +159,7 @@ void GLTextureBuilder::execute(void)
     cerr << "Not an rg field!\n";
     otexture->send( 0 );
   }
+#endif
 }
 
 } // End namespace SCIRun

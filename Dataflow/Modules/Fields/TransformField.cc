@@ -15,7 +15,7 @@
 #include <Dataflow/Network/Module.h>
 #include <Core/Datatypes/DenseMatrix.h>
 #include <Dataflow/Ports/MatrixPort.h>
-#include <Core/Datatypes/ScalarFieldRG.h>
+//#include <Core/Datatypes/ScalarFieldRG.h>
 #include <Dataflow/Ports/ScalarFieldPort.h>
 #include <Core/Geometry/Transform.h>
 #include <Core/Malloc/Allocator.h>
@@ -71,7 +71,7 @@ void TransformField::MatToTransform(MatrixHandle mH, Transform& t) {
 
 void TransformField::execute()
 {
-
+#if 0
     ScalarFieldHandle sfIH;
     iport->get(sfIH);
     if (!sfIH.get_rep()) return;
@@ -162,6 +162,7 @@ void TransformField::execute()
 	    }
     ScalarFieldHandle sfOH(ofb);
     oport->send(sfOH);
+#endif
 }
 
 } // End namespace SCIRun

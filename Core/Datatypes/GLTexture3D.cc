@@ -6,7 +6,7 @@
 #include <Core/Malloc/Allocator.h>
 #include <Core/Persistent/Persistent.h>
 #include <Core/Containers/String.h>
-#include <Core/Datatypes/ScalarFieldRG.h>
+//#include <Core/Datatypes/ScalarFieldRG.h>
 //#include <Uintah/Datatypes/NCScalarField.h>
 //#include <Uintah/Datatypes/CCScalarField.h>
 
@@ -63,12 +63,13 @@ GLTexture3D::GLTexture3D() :
 {
 }
 
-GLTexture3D::GLTexture3D(ScalarFieldRGBase *tex ) :
-  _tex(tex), X(tex->nx), Y(tex->ny),
-  Z(tex->nz),  xmax(128), ymax(128), zmax(128), isCC(false)
+GLTexture3D::GLTexture3D(void /*ScalarFieldRGBase*/ *tex ) :
+  /*_tex(tex), X(tex->nx), Y(tex->ny),
+    Z(tex->nz),  */
+  xmax(128), ymax(128), zmax(128), isCC(false)
 {
-  tex->get_bounds( minP, maxP );
-  tex->get_minmax( _min, _max );
+  /*  tex->get_bounds( minP, maxP );
+      tex->get_minmax( _min, _max );*/
   SetBounds();
   computeTreeDepth(); 
 //   bontree = buildBonTree(minP, maxP, 0, 0, 0, X, Y, Z, 0, tex, 0);
@@ -92,6 +93,7 @@ void GLTexture3D::SetBounds()
 
 void GLTexture3D::BuildTexture()
 {
+#if 0
   cerr<<"Type = "<<_tex->getType()<<endl;
   if( _tex->getRGDouble() ){
     bontree = buildBonTree(minP, maxP, 0, 0, 0, X, Y, Z, 0,
@@ -141,6 +143,7 @@ void GLTexture3D::BuildTexture()
     } */else {
     cerr<<"Error: cast didn't work!\n";
   }
+#endif
   ASSERT(bontree != 0x0);
   //  AuditAllocator(default_allocator);
 }
@@ -149,9 +152,9 @@ bool
 GLTexture3D::SetBrickSize(int bsize)
 {
   xmax = ymax = zmax = bsize;
-  X = _tex->nx;
+  /*  X = _tex->nx;
   Y = _tex->ny;
-  Z = _tex->nz;
+  Z = _tex->nz;*/
   
   if( bontree ) delete bontree;
   computeTreeDepth();
@@ -161,18 +164,19 @@ GLTexture3D::SetBrickSize(int bsize)
 }
 
 void
-GLTexture3D::SetField( ScalarFieldRGBase *tex )
+GLTexture3D::SetField( void /*ScalarFieldRGBase*/ *tex )
 {
   this->_tex = tex;
-  X = tex->nx;
+
+  /*  X = tex->nx;
   Y = tex->ny;
-  Z = tex->nz;
+  Z = tex->nz;*/
 
   int size = std::max(X,Y);
   size = std::max(size,Z);
 
-  tex->get_bounds( minP, maxP );
-  tex->get_minmax( _min, _max );
+  /*  tex->get_bounds( minP, maxP );
+      tex->get_minmax( _min, _max );*/
   xmax = ymax = zmax = 128;
 
 

@@ -24,9 +24,9 @@
 namespace SCIRun {
 
 
-class ScalarFieldRGBase;
-template <class T> class ScalarFieldRGT;
-typedef class ScalarFieldRGT<double> ScalarFieldRG;
+  //class ScalarFieldRGBase;
+  //template <class T> class ScalarFieldRGT;
+  //typedef class ScalarFieldRGT<double> ScalarFieldRG;
 class ScalarFieldUG;
 class ScalarFieldHUG;
 class ScalarField;
@@ -87,9 +87,10 @@ private:
 public:
     virtual ~ScalarField();
     virtual ScalarField* clone()=0;
-
+    /*
     ScalarFieldRG* getRG();
     ScalarFieldRGBase* getRGBase();
+    */
     ScalarFieldUG* getUG();
     ScalarFieldHUG* getHUG();
     void get_minmax(double&, double&);
