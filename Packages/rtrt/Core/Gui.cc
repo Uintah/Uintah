@@ -119,7 +119,7 @@ Gui::Gui() :
   lightList(NULL), routeList(NULL), objectList(NULL), soundList_(NULL),
   r_color_spin(NULL), g_color_spin(NULL), b_color_spin(NULL), 
   lightIntensity_(NULL), enableSounds_(false),
-  lightBrightness_(1.0), ambientBrightness_(1.0),
+  lightBrightness_(1.0),
   mouseDown_(0), beQuiet_(true),
   lightsOn_(true), lightsBeingRendered_(false),
   keypadAttached_(0), rightButtonMenuActive_(true),
@@ -428,6 +428,7 @@ Gui::handleKeyPressCB( unsigned char key, int /*mouse_x*/, int /*mouse_y*/ )
 	activeGui->camera_->set_eye( activeGui->camera_->get_lookat() -
 				    lookdir*length );
 	activeGui->camera_->setup();
+	activeGui->fovSpinner_->set_float_val( FOVtry );
       }
     }
     break;
@@ -752,7 +753,7 @@ Gui::handleMouseMotionCB( int mouse_x, int mouse_y )
 	    fov = MIN_FOV;
 	  else if( fov > MAX_FOV )
 	    fov = MAX_FOV;
-	  activeGui->camera_->fov= fov;
+	  activeGui->camera_->fov = fov;
 	  activeGui->fovSpinner_->set_float_val( fov );
 	}
       activeGui->camera_->setup();
@@ -1367,11 +1368,13 @@ Gui::createLightWindow( GLUI * window )
 {
   GLUI_Panel * panel = window->add_panel( "Lights" );
 
+  activeGui->ambientBrightness_ = activeGui->dpy_->scene->getAmbientLevel();
+
   ambientIntensity_ = 
     window->add_spinner_to_panel( panel, "Ambient Level:", GLUI_SPINNER_FLOAT,
 				  &ambientBrightness_, -1, updateAmbientCB );
   ambientIntensity_->set_float_limits( 0.0, 1.0 );
-  ambientIntensity_->set_speed( 0.01 );
+  ambientIntensity_->set_speed( 0.03 );
 
   window->add_separator_to_panel( panel );
 
@@ -1542,7 +1545,7 @@ Gui::createMenus( int winId, bool soundOn /* = false */,
 			 &(activeGui->translateSensitivity_),
 			 SENSITIVITY_SPINNER_ID, updateTranslateSensitivityCB);
   trans->set_float_limits( MIN_SENSITIVITY, MAX_SENSITIVITY );
-  trans->set_speed( 0.1 );
+  trans->set_speed( 0.01 );
 
   /////////////////////////////////////////////////////////
   // Display Parameters Panel
@@ -1744,8 +1747,6 @@ void
 Gui::updateRotateSensitivityCB( int /*id*/ )
 {
   activeGui->stealth_->updateRotateSensitivity(activeGui->rotateSensitivity_);
-  printf("update control sensitivity cb called: %f\n", 
-	 activeGui->rotateSensitivity_ );
 }
 
 void
@@ -1753,9 +1754,6 @@ Gui::updateTranslateSensitivityCB( int /*id*/ )
 {
   activeGui->stealth_->
     updateTranslateSensitivity(activeGui->translateSensitivity_);
-
-  printf("update translate sensitivity cb called: %f\n", 
-	 activeGui->translateSensitivity_ );
 }
 
 void
@@ -1899,6 +1897,25 @@ Gui::hideGetStringWindowCB( int /*id*/ )
   activeGui->getStringWindow->hide();
 }
 
+
+void
+Gui::loadAllRoutes()
+{
+  const vector<string> & routes = activeGui->dpy_->scene->getRoutes();
+  string routeName;
+  char name[1024];
+
+  for( int i = 0; i < routes.size(); i++ )
+    {
+      routeName = routes[i];
+
+      sprintf( name, "%s", routeName.c_str() );
+      activeGui->routeList->add_item( routeNumber, name );
+      activeGui->routeList->set_int_val( routeNumber );
+      
+      routeNumber++;
+    }
+}
 
 void
 Gui::loadRouteCB( int /*id*/ )
