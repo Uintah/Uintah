@@ -67,6 +67,8 @@ Arches::Arches(const ProcessorGroup* myworld) :
   d_boundaryCondition = 0;
   d_nlSolver = 0;
   d_physicalConsts = 0;
+  d_calcReactingScalar = 0;
+  d_calcEnthalpy =0;
 #ifdef multimaterialform
   d_mmInterface = 0;
 #endif
