@@ -97,6 +97,12 @@ extern Mutex xlock;
   int        pp_size_;
   int        scratchsize_;
   bool       bench;
+    // Number of frames to warmup with before starting the bench mark.
+    int bench_warmup;
+    // This is the number of frames to bench + warmup frames.
+    int bench_num_frames;
+    // Please exit rtrt after doing the bench mark
+    bool exit_after_bench;
   RServer* rserver;
 
   Stats    * drawstats[2];
@@ -123,6 +129,10 @@ extern Mutex xlock;
 
   bool checkGuiFlags();
 
+    // Call this function when you want to start a benchmark
+    void start_bench(int num_frames=100, int warmup=5);
+    // Call this to stop the currently in progress benchmark
+    void stop_bench();
 public:
   Dpy(Scene* scene, char* criteria1, char* criteria2,
       int nworkers, bool bench, int ncounters, int c0, int c1,
