@@ -257,7 +257,7 @@ DataTransmitter::runSendingThread(){
 	  throw CommError("connect", errno);
 	}
 	//immediate register the listening port
-	cerr<<"register port "<<addr.port<<endl;
+	//cerr<<"register port "<<addr.port<<endl;
 	sendall(new_fd, &addr.port, sizeof(short));
 	sockmap_mutex->lock();
 	sockmap[msg->to_addr]=new_fd;
@@ -341,7 +341,7 @@ DataTransmitter::runRecvingThread(){
 	}
 	else{
 	  //remote connection is closed, if receive 0 bytes
-	  cerr<<"######: recved 0 bytes!\n";
+	  //cerr<<"######: recved 0 bytes!\n";
 	  close(iter->second);
 	  sockmap_mutex->lock();
 	  sockmap.erase(iter);
