@@ -78,21 +78,28 @@ FieldBoundaryAlgoAuxT<Msh>::execute(const MeshHandle mesh_untyped,
   typename Msh::Cell::iterator citer; mesh->begin(citer);
   typename Msh::Cell::iterator citere; mesh->end(citere);
 
-  while (citer != citere) {
+  while (citer != citere)
+  {
     typename Msh::Cell::index_type ci = *citer;
     ++citer;
+  
     mesh->get_center(center, ci);
+
     // Get all the faces in the cell.
     typename Msh::Face::array_type faces;
     mesh->get_faces(faces, ci);
-    // Check each face for neighbors
+
+    // Check each face for neighbors.
     typename Msh::Face::array_type::iterator fiter = faces.begin();
 
-    while (fiter != faces.end()) {
+    while (fiter != faces.end())
+    {
       typename Msh::Cell::index_type nci;
       typename Msh::Face::index_type fi = *fiter;
       ++fiter;
-      if (! mesh->get_neighbor(nci , ci, fi)) {
+
+      if (! mesh->get_neighbor(nci , ci, fi))
+      {
 	// Faces with no neighbors are on the boundary, build a tri.
 	typename Msh::Node::array_type nodes;
 	mesh->get_nodes(nodes, fi);
@@ -100,40 +107,54 @@ FieldBoundaryAlgoAuxT<Msh>::execute(const MeshHandle mesh_untyped,
 	Point p[3]; // cache points off
 	typename Msh::Node::array_type::iterator niter = nodes.begin();
 
-	for (int i=0; i<3; i++) {
+	for (int i=0; i<3; i++)
+	{
 	  node_iter = vertex_map.find(*niter);
 	  mesh->get_point(p[i], *niter);
-	  if (node_iter == vertex_map.end()) {
+	  if (node_iter == vertex_map.end())
+	  {
 	    node_idx[i] = tmesh->add_point(p[i]);
 	    vertex_map[*niter] = node_idx[i];
 	    reverse_map.push_back(*niter);
-	  } else {
+	  }
+	  else
+	  {
 	    node_idx[i] = (*node_iter).second;
 	  }
 	  ++niter;
 	}
-	if (determine_tri_order(p, center)) {
+	if (determine_tri_order(p, center))
+	{
 	  tmesh->add_triangle(node_idx[0], node_idx[1], node_idx[2]);
-	} else {
+	}
+	else
+	{
 	  tmesh->add_triangle(node_idx[2], node_idx[1], node_idx[0]);
 	}
 
-	while (niter != nodes.end()) {
+	while (niter != nodes.end())
+	{
 	  node_idx[1] = node_idx[2];
 	  p[1] = p[2];
 	  node_iter = vertex_map.find(*niter);
 	  mesh->get_point(p[2], *niter);
-	  if (node_iter == vertex_map.end()) {
+	  if (node_iter == vertex_map.end())
+	  {
 	    node_idx[2] = tmesh->add_point(p[2]);
 	    vertex_map[*niter] = node_idx[2];
 	    reverse_map.push_back(*niter);
-	  } else {
+	  }
+	  else
+	  {
 	    node_idx[2] = (*node_iter).second;
 	  }
 	  ++niter;
-	  if (determine_tri_order(p, center)) {
+	  if (determine_tri_order(p, center))
+	  {
 	    tmesh->add_triangle(node_idx[0], node_idx[1], node_idx[2]);
-	  } else {
+	  }
+	  else
+	  {
 	    tmesh->add_triangle(node_idx[2], node_idx[1], node_idx[0]);
 	  }
 	} 
