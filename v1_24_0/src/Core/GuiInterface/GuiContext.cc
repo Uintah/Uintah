@@ -98,21 +98,6 @@ GuiContext* GuiContext::subVar(const std::string& subname, bool saveChild)
   return child;
 }
 
-// void GuiContext::erase(const std::string& subname)
-// {
-//   const std::string fullname(name+"-"+subname);
-//   for(vector<GuiContext*>::iterator iter = children.begin();
-//       iter != children.end(); ++iter) 
-//   {
-//     if((*iter)->getfullname() == fullname) 
-//     {
-//       delete *iter;
-//       children.erase(iter);
-//       return;
-//     } 
-//   }
-// }
-
 void GuiContext::lock()
 {
   gui->lock();
