@@ -19,8 +19,8 @@
 #endif
 
 template<class T>
-Stack<T>::Stack(int initial_alloc)
-: stack(0, initial_alloc)
+Stack<T>::Stack(int initial_alloc, int growsize)
+: stack(0, initial_alloc), growsize(growsize), sp(0)
 {
 }
 
@@ -30,35 +30,20 @@ Stack<T>::~Stack()
 }
 
 template<class T>
-void Stack<T>::push(const T& item)
-{
-   stack.add(item);
-}
-
-template<class T>
 void Stack<T>::dup()
 {
-   stack.add(stack[stack.size()-1]);
-}
-
-template<class T>
-T Stack<T>::pop()
-{
-    ASSERT(stack.size() != 0);
-    T item(stack[stack.size()-1]);
-    stack.remove(stack.size()-1);
-    return item;
+    push(top());
 }
 
 template<class T>
 void Stack<T>::yank(int n)
 {
-   stack.remove(n);
+    stack.remove(n);
+    sp--;
 }
 
 template<class T>
 void Stack<T>::remove_all()
 {
-   stack.remove_all();
+    sp=0;
 }
-

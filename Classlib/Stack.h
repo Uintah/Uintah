@@ -21,9 +21,11 @@
 #endif
 
 template<class T> class Stack {
-   Array1<T> stack;
+    Array1<T> stack;
+    int sp;
+    int growsize;
 public:
-    Stack(int initial_alloc=0);
+    Stack(int initial_alloc=0, int growsize=100);
     ~Stack();
     void push(const T&);
     void dup();
@@ -36,31 +38,44 @@ public:
 
     // Accesses the nth element of the stack (0=bottom)
     inline T& operator[](int n) const {
-	ASSERTL3(n>=0 && n<stack.size());
 	return stack[n];
     }
+
 };
 
 template<class T>
 inline
 T& Stack<T>::top() const
 {
-   ASSERT(stack.size() > 0);
-   return stack[stack.size()-1];
+    return stack[sp-1];
 }
 
 template<class T>
 inline
 int Stack<T>::size() const
 {
-    return stack.size();
+    return sp;
 }
 
 template<class T>
 inline
 int Stack<T>::empty() const
 {
-    return (stack.size()==0);
+    return sp==0;
+}
+
+template<class T>
+inline void Stack<T>::push(const T& item)
+{
+    if(sp >= stack.size())
+	stack.grow(growsize);
+    stack[sp++]=item;
+}
+
+template<class T>
+inline T Stack<T>::pop()
+{
+    return stack[--sp];
 }
 
 #endif
