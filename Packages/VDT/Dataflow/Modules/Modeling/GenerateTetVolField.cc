@@ -38,39 +38,37 @@ using namespace SCIRun;
 
 class VDTSHARE GenerateTetVolField : public Module {
 public:
-  GenerateTetVolField(const string& id);
+  GenerateTetVolField(GuiContext *context);
 
   virtual ~GenerateTetVolField();
 
   virtual void execute();
-
-  virtual void tcl_command(TCLArgs&, void*);
 };
 
-extern "C" VDTSHARE Module* make_GenerateTetVolField(const string& id) {
-  return scinew GenerateTetVolField(id);
-}
 
-GenerateTetVolField::GenerateTetVolField(const string& id)
-  : Module("GenerateTetVolField", id, Source, "Modeling", "VDT")
+DECLARE_MAKER(GenerateTetVolField)
+
+
+GenerateTetVolField::GenerateTetVolField(GuiContext *context)
+  : Module("GenerateTetVolField", context, Source, "Modeling", "VDT")
 {
 }
 
-GenerateTetVolField::~GenerateTetVolField(){
+
+GenerateTetVolField::~GenerateTetVolField()
+{
 }
 
-void GenerateTetVolField::execute()
+
+void
+GenerateTetVolField::execute()
 {
   // just test that the lib is loaded and we can make a call into it for now.
-  VDT gentv_vdt = VDT_new_mesher();
+  //VDT gentv_vdt =
+  VDT_new_mesher();
   cout << "completed" << endl;
-
 }
 
-void GenerateTetVolField::tcl_command(TCLArgs& args, void* userdata)
-{
-  Module::tcl_command(args, userdata);
-}
 
 } // End namespace VDT
 

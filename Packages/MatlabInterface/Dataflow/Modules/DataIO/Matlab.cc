@@ -34,20 +34,19 @@ class MatlabInterfaceSHARE Matlab : public Module
   static bool engine_running;   // ==1 if engine runs under SCIRun
 
 public:
-  Matlab(const string& id);
+  Matlab(GuiContext *context);
   virtual ~Matlab();
   virtual void execute();
-  virtual void tcl_command(TCLArgs&, void*);
 };
 
-extern "C" MatlabInterfaceSHARE Module* make_Matlab(const string& id) {
-  return scinew Matlab(id);
-}
 
-Matlab::Matlab(const string& id) :
-  Module("Matlab", id, Source, "DataIO", "MatlabInterface"), 
-  hpTCL("hpTCL",id,this),
-  cmdTCL("cmdTCL",id,this)
+DECLARE_MAKER(Matlab)
+
+
+Matlab::Matlab(GuiContext *context) :
+  Module("Matlab", context, Source, "DataIO", "MatlabInterface"), 
+  hpTCL(context->subVar("hpTCL")),
+  cmdTCL(context->subVar("cmdTCL"))
 {
   for (int i = 0; i < 5; i++)
   {
@@ -284,15 +283,6 @@ Matlab::execute()
       op[k]->send(mho[k]);
     }
   }
-}
-
-
-/****************************END OF MAIN ROUTINE**************************************/
-
-void
-Matlab::tcl_command(TCLArgs& args, void* userdata)
-{
-  Module::tcl_command(args, userdata);
 }
 
 

@@ -61,6 +61,9 @@ main(int argc, char **argv) {
     cerr << "Error -- input field wasn't a TriSurfField (type_name="<<inner_surf->get_type_name(0)<<"\n";
     exit(0);
   }
+  TriSurfField<double> *inner_field =
+    dynamic_cast<TriSurfField<double> *>(inner_surf.get_rep());
+
   MeshHandle mh = inner_surf->mesh();
   TriSurfMesh *inner = dynamic_cast<TriSurfMesh *>(mh.get_rep());
 
@@ -121,14 +124,21 @@ main(int argc, char **argv) {
   fprintf(fout, "! boundary facets\n");
   inner->begin(fiter);
   inner->end(fiter_end);
+  int maxval = 1;
   for (i=0; fiter != fiter_end; i++, ++fiter) {
     inner->get_nodes(fac_nodes, *fiter);
     int i1, i2, i3;
     i1=fac_nodes[1]+1;
     i2=fac_nodes[0]+1;
     i3=fac_nodes[2]+1;
-    fprintf(fout, "bsf %d %d %d  1 1 0\n", i1, i2, i3);
+    double val;
+    inner_field->value(val, *fiter);
+    int ival = (int)val;
+    if (ival < 1) ival = 1;
+    maxval = Max(ival, maxval);
+    fprintf(fout, "bsf %d %d %d  %d 1 0\n", i1, i2, i3, ival);
   }
+  maxval++;
   outer->begin(fiter);
   outer->end(fiter_end);
   for (; fiter != fiter_end; i++, ++fiter) {
@@ -137,7 +147,7 @@ main(int argc, char **argv) {
     i1=fac_nodes[0]+1+ninner;
     i2=fac_nodes[1]+1+ninner;
     i3=fac_nodes[2]+1+ninner;
-    fprintf(fout, "bsf %d %d %d  2 1 0\n", i1, i2, i3);
+    fprintf(fout, "bsf %d %d %d %d 1 0\n", i1, i2, i3, maxval);
   }
   fclose(fout);
   return 0;
