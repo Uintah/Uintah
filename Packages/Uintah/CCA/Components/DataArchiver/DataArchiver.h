@@ -120,11 +120,7 @@ using std::pair;
       // Get the directory of the current time step for outputting info.
       virtual const string& getLastTimestepOutputLocation() const
       { return d_lastTimestepLocation; }
-
-      static DataArchiver* getTheDataArchiver()
-      { return theDataArchiver; }
    private:
-      static DataArchiver* theDataArchiver;
      
       struct SaveNameItem {
 	string labelName;
