@@ -151,6 +151,35 @@ template class Property<pair<short,short> >;
 template class Property<pair<unsigned char,unsigned char> >;
 template class Property<pair<char,char> >;
 
+//! Instantiate the specialized query_scalar_interface methods just once.
+template <>
+SFIHandle 
+TetVol<double>::query_scalar_interface() const
+{
+  return SFIHandle(scinew SFInterface<TetVol<double> >(this)); 
+}
+
+template <>
+SFIHandle 
+TetVol<int>::query_scalar_interface() const
+{
+  return SFIHandle(scinew SFInterface<TetVol<int> >(this)); 
+}
+
+template <>
+SFIHandle 
+TetVol<short>::query_scalar_interface() const
+{
+  return SFIHandle(scinew SFInterface<TetVol<short> >(this)); 
+}
+
+template <>
+SFIHandle 
+TetVol<unsigned char>::query_scalar_interface() const
+{
+  return SFIHandle(scinew SFInterface<TetVol<unsigned char> >(this)); 
+}
+
 //! Compute the gradient g in cell ci.
 template <>
 Vector TetVol<Vector>::cell_gradient(TetVolMesh::cell_index /*ci*/)

@@ -68,6 +68,9 @@ public:
   virtual void mesh_detach();
 
   //! Required interfaces from field base.
+  virtual SFIHandle query_scalar_interface() const;
+  virtual VectorFieldInterface* query_vector_interface() const;
+  virtual TensorFieldInterface* query_tensor_interface() const;
   virtual interp_type* query_interpolate() const;
 
   virtual bool is_scalar() const;
@@ -124,6 +127,25 @@ private:
 
 
 //! Virtual interface.
+template <class Mesh, class FData>
+SFIHandle 
+GenericField<Mesh, FData>::query_scalar_interface() const
+{
+  ASSERTFAIL("GenericField::query_scalar_interface() not implemented");
+}
+template <class Mesh, class FData>
+VectorFieldInterface* 
+GenericField<Mesh, FData>::query_vector_interface() const
+{
+  ASSERTFAIL("GenericField::query_vector_interface() not implemented");
+}
+template <class Mesh, class FData>
+TensorFieldInterface* 
+GenericField<Mesh, FData>::query_tensor_interface() const
+{
+  ASSERTFAIL("GenericField::query_tensor_interface() not implemented");
+}
+
 //! internal interp object
 template <class Mesh, class FData> template <class Data>
 bool 

@@ -379,6 +379,22 @@ TetVolMesh::get_neighbor(cell_index &neighbor, cell_index from,
 }
 
 void 
+TetVolMesh::get_neighbors(cell_array &array, cell_index idx) const 
+{
+  face_array faces;
+  get_faces(faces, idx);
+  array.clear();
+  face_array::iterator iter = faces.begin();
+  while(iter != faces.end()) {
+    cell_index nbor;
+    if (get_neighbor(nbor, idx, *iter)) {
+      array.push_back(nbor);
+    }
+    ++iter;
+  }
+}
+
+void 
 TetVolMesh::get_neighbors(node_array &array, node_index idx) const
 {
   array.clear();

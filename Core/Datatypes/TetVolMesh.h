@@ -64,6 +64,7 @@ public:
   typedef vector<node_index> node_array;
   typedef vector<edge_index> edge_array;
   typedef vector<face_index> face_array;
+  typedef vector<cell_index> cell_array;
   //! type for weights used by locate.
   typedef vector<double>     weight_array;
 
@@ -96,6 +97,7 @@ public:
   void get_faces(face_array &array, cell_index idx) const;
   bool get_neighbor(cell_index &neighbor, cell_index from, 
 		   face_index idx) const;
+  void get_neighbors(cell_array &array, cell_index idx) const;
   //! must call compute_node_neighbors before calling get_neighbors.
   void get_neighbors(node_array &array, node_index idx) const;
   void get_center(Point &result, node_index idx) const;
