@@ -82,7 +82,7 @@ set $m2-ypos {-1.0000}
 set $m2-xscale {2.00}
 set $m2-xscale {2.00}
 set $m2-yscale {2.0}
-set $m2-displaymode {2D}
+set $m2-3d_mode {0}
 set $m2-gmode {1}
 set $m2-showtext {1}
 set $m2-row_begin {0}
