@@ -22,20 +22,23 @@ itcl_class Uintah_DataIO_ArchiveReader {
 
 	global $this-filebase
 	toplevel $w
+	set n "$this-c needexecute"
 
 	set len [string length [set $this-filebase]]
 	if { $len == 0 } { set len 40 }
 	frame $w.f 
 	pack $w.f 
 	label $w.f.l -text "Choose Archive"
-	entry $w.f.e -textvariable $this-filebase -width $len -state disabled
+	entry $w.f.e -textvariable $this-filebase -width $len
 	frame $w.f.b
 	pack $w.f.l $w.f.e $w.f.b -side top -pady 2 -expand yes -fill x
 
-	button $w.f.b.b1 -text "Select UDA" -command "$this get_uda"
+	button $w.f.b.b1 -text "Browse" -command "$this get_uda"
 	button $w.f.b.b2 -text "Execute" \
-	    -command "$this-c needexecute"
+	    -command $n
 	pack $w.f.b.b1 $w.f.b.b2 -side left -padx 2
+
+	bind $w.f.e <Return> $n 
 
     }
     method get_uda {} {
