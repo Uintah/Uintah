@@ -416,8 +416,7 @@ void ParticleVis::execute()
       }
     } else if( ps->getParticleSet()->numParticles() ) { // Particles
       GeomGroup *obj = scinew GeomGroup;
-      GeomPoints *pts= scinew GeomPoints(ps->getParticleSet()->numParticles());
-      pts->pickable = 1;
+      GeomPoints *pts= scinew GeomPoints();
       int count = 0;
       GeomArrows* arrows;
       if( drawVectors.get() == 1 && hasVectors){
