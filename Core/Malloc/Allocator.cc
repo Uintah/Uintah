@@ -197,8 +197,6 @@ static void shutdown()
 		a->highwater_alloc);
 	fprintf(a->stats_out, "highwater mmap:\t\t"UCONV" bytes\n",
 		a->highwater_mmap);
-	fprintf(a->stats_out, "long locks:\t\t"UCONV" times\n", a->nlonglocks);
-	fprintf(a->stats_out, "naps:\t\t\t"UCONV" times\n", a->nnaps);
 	fprintf(a->stats_out, "\n");
 	fprintf(a->stats_out, "breakdown of total bytes:\n");	
 	fprintf(a->stats_out, "in use:\t\t\t"UCONV" bytes\n", bytes_inuse);
@@ -232,15 +230,17 @@ inline AllocBin* Allocator::get_bin(size_t size)
 
 #ifdef SCI_PTHREAD
 
-pthread_mutex_t thelock = PTHREAD_MUTEX_INITIALIZER;
-
 void Allocator::initlock()
 {
+   if(pthread_mutex_init(&the_lock) != 0){
+      perror("pthread_mutex_init");
+      exit(-1);
+   }
 }
 
 inline void Allocator::lock()
 {
-  if(pthread_mutex_lock(&thelock) != 0){
+  if(pthread_mutex_lock(&the_lock) != 0){
     perror("pthread_mutex_lock");
     exit(-1);
   }
@@ -248,7 +248,7 @@ inline void Allocator::lock()
 
 inline void Allocator::unlock()
 {
-  if(pthread_mutex_unlock(&thelock) != 0){
+  if(pthread_mutex_unlock(&the_lock) != 0){
     perror("pthread_mutex_lock");
     exit(-1);
   }
@@ -258,103 +258,26 @@ inline void Allocator::unlock()
 
 #ifdef __sgi
 
-extern "C" int Allocator_try_lock(unsigned int*);
-
-#include <unistd.h>
-
 void Allocator::initlock()
 {
-    the_lock=0;
+   if(init_lock(&the_lock))
+      AllocError("Error initializing lock");
 }
 
 
 inline void Allocator::lock()
 {
-    // Simple try first...
-    if(Allocator_try_lock(&the_lock) != 0)
-       longlock();
-}
-
-void Allocator::longlock()
-{
-    int rt=1000000;
-    nlonglocks++;
-    while(rt){
-	// Try the lock...
-	for(int i=0;i<10;i++){
-	    if(Allocator_try_lock(&the_lock) == 0)
-		return;
-	}
-	// Sleep...
-	sginap(0);
-	nnaps++;
-
-	rt--;
-    }
-    AllocError("Possible deadlock after 1000000 retries\n");
+   spin_lock(&the_lock);
 }
 
 inline void Allocator::unlock()
 {
-    the_lock=0;
+   if(release_lock(&the_lock) != 0)
+      AllocError("Error unlocking lock");
 }
 
-#endif
-#ifdef __linux
-
-extern inline char tas(char* m)
-{
-    char res;
-
-    __asm__("xchgb %0,%1":"=q" (res),"=m" (*m):"0" (0x1));
-    return res;
-}
-
-void Allocator::initlock()
-{
-    the_lock=0;
-}
-
-
-inline void Allocator::lock()
-{
-    // Simple try first...
-    if(tas((char*)&the_lock) != 0)
-       longlock();
-}
-
-static void (*sleeper)();
-
-void Allocator::longlock()
-{
-    int rt=1000000;
-    nlonglocks++;
-    while(rt){
-	// Try the lock...
-	for(int i=0;i<10;i++){
-	    if(tas((char*)&the_lock) == 0)
-		return;
-	}
-	// Sleep...
-	if(sleeper)
-	    (*sleeper)();
-	nnaps++;
-
-	rt--;
-    }
-    AllocError("Possible deadlock after 1000000 retries\n");
-}
-
-inline void Allocator::unlock()
-{
-    the_lock=0;
-}
-
-void SetAllocSleeper(void (*s)())
-{
-    sleeper=s;
-}
-
+#else
+#error "No lock implementation for this architecture"
 #endif
 #endif
 
@@ -420,7 +343,6 @@ Allocator* MakeAllocator()
     a->sizemmap=size+sizeof(OSHunk);
     a->highwater_mmap=size;
     a->nalloc=a->nfree=a->sizealloc=a->sizefree=0;
-    a->nlonglocks=a->nnaps=0;
     a->nfillbin=0;
     a->nmunmap=a->sizemunmap=0;
     a->highwater_alloc=0;
@@ -1116,7 +1038,6 @@ void GetGlobalStats(Allocator* a,
 		    size_t& nmmap, size_t& sizemmap,
 		    size_t& nmunmap, size_t& sizemunmap,
 		    size_t& highwater_alloc, size_t& highwater_mmap,
-		    size_t& nlonglocks, size_t& nnaps,
 		    size_t& bytes_overhead,
 		    size_t& bytes_free,
 		    size_t& bytes_fragmented,
@@ -1126,7 +1047,7 @@ void GetGlobalStats(Allocator* a,
     if(!a){
 	nalloc=sizealloc=nfree=sizefree=nfillbin=0;
 	nmmap=sizemmap=nmunmap=sizemunmap=0;
-	highwater_alloc=highwater_mmap=nlonglocks=nnaps=0;
+	highwater_alloc=highwater_mmap=0;
 	bytes_overhead=bytes_free=bytes_fragmented=bytes_inuse=0;
 	bytes_inhunks=0;
 	return;
@@ -1143,8 +1064,6 @@ void GetGlobalStats(Allocator* a,
     sizemunmap=a->sizemunmap;
     highwater_alloc=a->highwater_alloc;
     highwater_mmap=a->highwater_mmap;
-    nlonglocks=a->nlonglocks;
-    nnaps=a->nnaps;
     
     // Full accounting - go through each bin...
     bytes_overhead=bytes_free=bytes_fragmented=bytes_inuse=bytes_inhunks=0;
@@ -1181,13 +1100,12 @@ void GetGlobalStats(Allocator* a,
 		    size_t& nfillbin,
 		    size_t& nmmap, size_t& sizemmap,
 		    size_t& nmunmap, size_t& sizemunmap,
-		    size_t& highwater_alloc, size_t& highwater_mmap,
-		    size_t& nlonglocks, size_t& nnaps)
+		    size_t& highwater_alloc, size_t& highwater_mmap)
 {
     if(!a){
 	nalloc=sizealloc=nfree=sizefree=nfillbin=0;
 	nmmap=sizemmap=nmunmap=sizemunmap=0;
-	highwater_alloc=highwater_mmap=nlonglocks=nnaps=0;
+	highwater_alloc=highwater_mmap=0;
 	return;
     }
     a->lock();
@@ -1202,8 +1120,6 @@ void GetGlobalStats(Allocator* a,
     sizemunmap=a->sizemunmap;
     highwater_alloc=a->highwater_alloc;
     highwater_mmap=a->highwater_mmap;
-    nlonglocks=a->nlonglocks;
-    nnaps=a->nnaps;
     
     a->unlock();
 }
