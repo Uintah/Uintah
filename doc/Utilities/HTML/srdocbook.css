@@ -23,19 +23,30 @@ This stylesheet is used by html documents generated from docbook sources.
 
 @import url(common.css);
 
+.title {
+color:#003300}
+
+h2.title {
+border-bottom: 1px dotted;
+border-left: 1px dotted;
+padding-left: 4px}
+
+.subtitle {
+color:#003300}
+
 .screen {
-color:#003366}
+color:#000066}
 
 .literallayout {
-color:#003366}
+color:#000066}
 
 .programlisting {
-color:#003366}
+color:#000066}
 
 /* I wish there were some way to discriminate amongst all the different 
    uses of <tt>. */
 tt {
-color:#003366}
+color:#000066}
 
 /* things look wierd w/o setting font to Times; we set the font size
    as well, this is what the new browsers will all imply */
@@ -66,8 +77,7 @@ background:  #CCCCCC}
 color: black;
 background: #CCCCCC}
 
-/* General definitions for tables */ 
-/* background: white; */
+/* General table stuff. */ 
 table {
 border-width: 2;
 border-color: black;}
