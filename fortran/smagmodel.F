@@ -3,15 +3,8 @@ c
 c
 c*********************************************************************
 
-      SUBROUTINE smagmodel(domLoU, domHiU, UU,
-     &     domLoV, domHiV, VV,
-     &     domLoW, domHiW, WW,
-     &     domLoDen, domHiDen, DEN,
-     &     domLoVis, domHiVis, indexLoVis, indexHiVis, VIS,
-     $     domLo, domHi,
-     &     SEW, SNS, STB, VISCOS,
-     &     CF, FAC_MESH, FILTERL,
-     &     ierr)
+#include <Packages/Uintah/CCA/Components/Arches/fortran/smagmodel_fort.h>
+
 C--------------------------------------------------------------------
 C     THIS SUBROUTINE CALCULATES THE TURBULENT DIFFUSIVITY 
 C          ACCORDING TO THE PRANDTL MIXING LENGTH MODEL.  THE 
@@ -19,42 +12,6 @@ C          MIXING LENGTH IS DETERMINED AS THE MINIMUM DISTANCE
 C          AMONG THE REACTOR HEIGHT, LENGTH, AND DEPTH.
 C--------------------------------------------------------------------
 
-      implicit none
-
-
-c*********************************************************************
-c     Arguments :
-c*********************************************************************
-      integer domLoU(3)
-      integer domHiU(3)
-      integer domLoV(3)
-      integer domHiV(3)
-      integer domLoW(3)
-      integer domHiW(3)
-      integer domLoDen(3)
-      integer domHiDen(3)
-      integer domLoVis(3)
-      integer domHiVis(3)
-      integer domLo(3)
-      integer domHi(3)
-      integer indexLoVis(3)
-      integer indexHiVis(3)
-      double precision UU(domLoU(1):domHiU(1), 
-     &     domLoU(2):domHiU(2),domLoU(3):domHiU(3))
-      double precision VV(domLoV(1):domHiV(1), 
-     &     domLoV(2):domHiV(2),domLoV(3):domHiV(3))
-      double precision WW(domLoW(1):domHiW(1), 
-     &     domLoW(2):domHiW(2),domLoW(3):domHiW(3))
-      double precision DEN(domLoDen(1):domHiDen(1), 
-     &     domLoDen(2):domHiDen(2),domLoDen(3):domHiDen(3))
-      double precision VIS(domLoVis(1):domHiVis(1), 
-     &     domLoVis(2):domHiVis(2),domLoVis(3):domHiVis(3))
-      double precision VISCOS
-      double precision SEW(domLo(1):domHi(1))
-      double precision SNS(domLo(2):domHi(2))
-      double precision STB(domLo(3):domHi(3))
-      double precision CF, FAC_MESH, FILTERL
-      integer ierr
 
 c*********************************************************************
 c     Locals
@@ -73,12 +30,21 @@ c*********************************************************************
 c*********************************************************************
 c     Get the indices of interest
 c*********************************************************************
+#if 0
       IST = indexLoVis(1)
       JST = indexLoVis(2)
       KST = indexLoVis(3)
       IEND = indexHiVis(1)
       JEND = indexHiVis(2)
       KEND = indexHiVis(3)
+#else
+      IST = domLo(1)
+      JST = domLo(2)
+      KST = domLo(3)
+      IEND = domHi(1)
+      JEND = domHi(2)
+      KEND = domHi(3)
+#endif
 
 c*********************************************************************
 c     Start
