@@ -34,7 +34,8 @@ public:
                             const MPMMaterial* matl,
                             DataWarehouseP& new_dw);
 
-  void   computerNodesVisibility(const Patch* patch,
+  void   computerNodesVisibilityAndCrackSurfaceContactForce(
+                  const Patch* patch,
                   MPMMaterial* mpm_matl, 
 		  DataWarehouseP& old_dw, 
 		  DataWarehouseP& new_dw);
@@ -59,6 +60,9 @@ private:
 #endif //__FRACTURE_H__
 
 // $Log$
+// Revision 1.27  2000/09/11 18:55:51  tan
+// Crack surface contact force is now considered in the simulation.
+//
 // Revision 1.26  2000/09/09 19:34:16  tan
 // Added MPMLabel::pVisibilityLabel and SerialMPM::computerNodesVisibility().
 //

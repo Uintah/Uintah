@@ -14,6 +14,8 @@ using namespace Uintah::MPM;
 MPMLabel::MPMLabel()
 {
   // Particle Variables
+
+  //non PermanentParticleState
   pDeformationMeasureLabel = scinew VarLabel("p.deformationMeasure",
 			ParticleVariable<Matrix3>::getTypeDescription());
 
@@ -26,6 +28,10 @@ MPMLabel::MPMLabel()
   pVisibilityLabel = scinew VarLabel("p.visibility",
 			ParticleVariable<int>::getTypeDescription());
   
+  pCrackSurfaceContactForceLabel = scinew VarLabel("p.crfackSurfaceContactForce",
+			ParticleVariable<Vector>::getTypeDescription());
+  
+  //PermanentParticleState
   pStressLabel = scinew VarLabel( "p.stress",
 			ParticleVariable<Matrix3>::getTypeDescription() );
   
@@ -253,8 +259,14 @@ MPMLabel::MPMLabel()
 
 MPMLabel::~MPMLabel()
 {
+  //non PermanentParticleState
   delete pDeformationMeasureLabel;
   delete pDilationalWaveSpeedLabel;
+  delete pCrackSurfaceContactForceLabel;
+  delete pRotationRateLabel,
+  delete pVisibilityLabel;
+
+  //PermanentParticleState
   delete pStressLabel;
   delete pVolumeLabel;
   delete pVolumeDeformedLabel;
@@ -347,6 +359,9 @@ void MPMLabel::registerPermanentParticleState(int i,
 }
 
 // $Log$
+// Revision 1.37  2000/09/11 18:56:25  tan
+// Crack surface contact force is now considered in the simulation.
+//
 // Revision 1.36  2000/09/11 03:12:20  tan
 // Added energy release rate computations for fracture.
 //
