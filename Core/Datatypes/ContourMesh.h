@@ -42,37 +42,8 @@ namespace SCIRun {
 
 using std::string;
 using std::vector;
+using std::pair;
 
-template <class Data>
-struct IndexPair {
-public:
-  IndexPair() {}
-  IndexPair(Data first, Data second)
-    : first(first), second(second) {}
-  IndexPair(const IndexPair &copy)
-    : first(copy.first), second(copy.second) {}
-  ~IndexPair() {}
-
-  friend void TEMPLATE_TAG Pio TEMPLATE_BOX ( Piostream &,
-					      IndexPair<Data> & );
-
-  Data first;
-  Data second;
-};
-
-#define INDEXPAIR_VERSION 1
-
-template <class Data>
-void Pio(Piostream &stream, IndexPair<Data> &data)
-{
-  stream.begin_class("IndexPair", INDEXPAIR_VERSION);
-
-  // IO data members, in order
-  Pio(stream,data.first);
-  Pio(stream,data.second);
-
-  stream.end_class();
-}
 
 class SCICORESHARE ContourMesh : public Mesh
 {
@@ -80,8 +51,6 @@ public:
   typedef unsigned int under_type;
 
   //! Index and Iterator types required for Mesh Concept.
-  typedef IndexPair<under_type>       index_pair;
-
   struct Node {
     typedef NodeIndex<under_type>       index_type;
     typedef NodeIterator<under_type>    iterator;
@@ -112,7 +81,7 @@ public:
 
   typedef Edge Elem;
 
-  typedef vector<double>      weight_array;
+  typedef pair<Node::index_type, Node::index_type> index_pair_type;
 
   ContourMesh() {}
   ContourMesh(const ContourMesh &copy)
@@ -191,9 +160,9 @@ public:
   Node::index_type add_node(Point p)
     { nodes_.push_back(p); return nodes_.size()-1; }
   Edge::index_type add_edge(Node::index_type i1, Node::index_type i2)
-    { edges_.push_back(index_pair(i1,i2)); return nodes_.size()-1; }
+    { edges_.push_back(index_pair_type(i1,i2)); return nodes_.size()-1; }
   Elem::index_type add_elem(Node::array_type a)
-  { edges_.push_back(index_pair(a[0],a[1])); return nodes_.size()-1; }
+  { edges_.push_back(index_pair_type(a[0],a[1])); return nodes_.size()-1; }
   virtual bool is_editable() const { return true; }
     
   virtual void io(Piostream&);
@@ -209,7 +178,7 @@ private:
   vector<Point> nodes_;
 
   //! the edges
-  vector<index_pair> edges_;
+  vector<index_pair_type> edges_;
 
   // returns a ContourMesh
   static Persistent *maker() { return new ContourMesh(); }
