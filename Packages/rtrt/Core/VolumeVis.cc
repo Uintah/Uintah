@@ -34,11 +34,11 @@ VolumeVis::VolumeVis(BrickArray3<float>& _data, float data_min, float data_max,
 		     Point min, Point max,
 		     double spec_coeff, double ambient, double diffuse,
 		     double specular, VolumeVisDpy *dpy):
-  Object(this), diag(max - min),
+  Object(this), dpy(dpy), diag(max - min),
   data_min(data_min), data_max(data_max),
   nx(nx), ny(ny), nz(nz),
   min(min), max(max), spec_coeff(spec_coeff),
-  ambient(ambient), diffuse(diffuse), specular(specular), dpy(dpy)
+  ambient(ambient), diffuse(diffuse), specular(specular)
 {
   if (data_max < data_min) {
     float temp = data_max;
