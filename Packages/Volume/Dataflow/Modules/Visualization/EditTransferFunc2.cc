@@ -1036,12 +1036,17 @@ EditTransferFunc2::update()
     glDisable(GL_LIGHTING);
     glDisable(GL_CULL_FACE);
 
+    glEnable(GL_BLEND);
+    glBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
+    
     // Rasterize widgets
     for (unsigned int i = 0; i < widget_.size(); i++)
     {
       widget_[i]->rasterize();
     }
 
+    glDisable(GL_BLEND);
+    
     pbuffer_->swapBuffers();
     
     glXMakeCurrent(dpy_, win_, ctx_);
