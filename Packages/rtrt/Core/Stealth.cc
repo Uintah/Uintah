@@ -14,11 +14,11 @@ Stealth::Stealth( double scale /* = 100 */ ) :
   vertical_accel_cnt_( 0 ), pitch_accel_cnt_( 0 ), rotate_accel_cnt_( 0 ),
   scale_( scale ), segment_percentage_( 0 )
 {
-  path_.push_back( Point(0,0,0) );
-  path_.push_back( Point(5,5,2) );
-  path_.push_back( Point(0,10,0) );
-  path_.push_back( Point(5,5,-2) );
-  path_.push_back( Point(0,0,0) );
+  path_.push_back( Point(-5,-5,5) );
+  path_.push_back( Point(5,5,1) );
+  path_.push_back( Point(0,10,5) );
+  path_.push_back( Point(5,5,1) );
+  path_.push_back( Point(-5,-5,5) );
 }
 
 Stealth::~Stealth()
@@ -167,24 +167,29 @@ Stealth::slowDown()
 Point
 Stealth::getNextLocation()
 {
+  if( path_.size() < 2 ) {
+    cout << "Not enough path enformation!\n";
+    return Point(0,0,0);
+  }
+
   segment_percentage_ += 1;
 
-  if( segment_percentage_ >= 100 )
+  int begin_index = segment_percentage_ / 100;
+  int end_index   = (segment_percentage_ / 100) + 1;
+
+  if( end_index == path_.size() )
     {
-      cout << "remove point\n";
-      path_.erase( path_.begin() );
-      if( path_.size() == 0 )
-	{
-	  printf("got to the end of the path");
-	  return Point(0,0,0);
-	}
-      segment_percentage_ = 0;
+      cout << "got to the end of the path... restarting\n";
+      segment_percentage_ = 1;
+      begin_index = 0; end_index = 1;
     }
 
-  Point & begin = path_[0];
-  Point & end = path_[1];
+  Point & begin = path_[ begin_index ];
+  Point & end = path_[ end_index ];
 
-  Point new_loc = Point((end - begin) * (segment_percentage_ / 100.0));
+  double local_percent = segment_percentage_ - (100*begin_index);
+
+  Point new_loc = begin + ((end - begin) * (local_percent / 100.0));
 
   return new_loc;
 }
