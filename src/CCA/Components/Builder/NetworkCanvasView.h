@@ -45,44 +45,46 @@
 
 
 #include <CCA/Components/Builder/BuilderWindow.h>
+#include <CCA/Components/Builder/Module.h>
+#include <CCA/Components/Builder/Connection.h>
+#include <CCA/Components/Builder/BridgeConnection.h>
+#include <Core/CCA/PIDL/PIDL.h>
+#include <Core/CCA/spec/cca_sidl.h>
+
 #include <qcanvas.h>
-#include "Module.h"
-#include "Connection.h"
-#include "BridgeConnection.h"
-#include "Core/CCA/PIDL/PIDL.h"
-#include "Core/CCA/spec/cca_sidl.h"
 
-
-class NetworkCanvasView:public QCanvasView
+class NetworkCanvasView
+    : public QCanvasView,
+      public sci::cca::ports::ConnectionEventListener
 {
   Q_OBJECT
 public:
 
   NetworkCanvasView(BuilderWindow* p2BuilderWindow,
-	    QCanvas* canvas, QWidget* parent=0);
+                    QCanvas* canvas, QWidget* parent,
+                    const sci::cca::Services::pointer &services);
   virtual ~NetworkCanvasView();
 
-  void setServices(const sci::cca::Services::pointer &services);
-
   Module* addModule(const std::string& name,
-		    int x, int y,
-		    SSIDL::array1<std::string> &up,
-		    SSIDL::array1<std::string> &pp,
-		    const sci::cca::ComponentID::pointer &cid,
-		    bool reposition);
+                    int x, int y,
+                    SSIDL::array1<std::string> &up,
+                    SSIDL::array1<std::string> &pp,
+                    const sci::cca::ComponentID::pointer &cid,
+                    bool reposition);
   std::vector<Module*> getModules();
 
   void addConnection(Module *m1, const std::string & portname1,
-		    Module *m2, const std::string & portname2);	
+                     Module *m2, const std::string & portname2); 
   void removeConnection(QCanvasItem *c);
 
   //Bridge:
-  void addBridgeConnection(Module *m1, const std::string& portname1, Module *m2, const std::string& portname2);
+  void addBridgeConnection(Module *m1, const std::string& portname1,
+                           Module *m2, const std::string& portname2);
 
   void highlightConnection(QCanvasItem *c);
   void showPossibleConnections(Module *m, 
-			       const std::string &protname,
-				Module::PortType);
+                               const std::string &protname,
+                               Module::PortType);
   void clearPossibleConnections();
   void removeAllConnections(Module *module);
 
@@ -91,6 +93,7 @@ public:
   BuilderWindow* p2BuilderWindow;
 
   void addChild(Module* child, int x, int y, bool reposition);
+  virtual void connectionActivity(const sci::cca::ports::ConnectionEvent::pointer &e);
 
 public slots:
   void removeModule(Module *);
@@ -99,17 +102,16 @@ protected:
   void contentsMousePressEvent(QMouseEvent*);
   void contentsMouseMoveEvent(QMouseEvent*);
   void contentsMouseReleaseEvent(QMouseEvent*);
-
-  void contentsContextMenuEvent(QContextMenuEvent*) { p2BuilderWindow->componentContextMenu()->exec(QCursor::pos()); }
+  void contentsContextMenuEvent(QContextMenuEvent*);
 
   //void contentsMouseDoubleClickEvent( QMouseEvent * );
-  void NetworkCanvasView::viewportResizeEvent( QResizeEvent* );
+  void NetworkCanvasView::viewportResizeEvent(QResizeEvent*);
 
 private:
   Module* moving;
   Module* connecting;
   Module::PortType porttype;
-  std::string portname;	
+  std::string portname; 
   QPoint moving_start;
   std::vector<Module*> modules;
   std::vector<Connection*> connections;
@@ -119,13 +121,28 @@ private:
   NetworkCanvasView& operator=(const NetworkCanvasView&);
   sci::cca::Services::pointer services;
 };
+
+inline void NetworkCanvasView::contentsContextMenuEvent(QContextMenuEvent*)
+{
+    p2BuilderWindow->componentContextMenu()->exec(QCursor::pos());
+}
+
+inline std::vector<Module*> NetworkCanvasView::getModules()
+{
+    return modules;
+}
+
+inline std::vector<Connection*> NetworkCanvasView::getConnections()
+{
+    return connections;
+}
+
+inline void NetworkCanvasView::viewportResizeEvent(QResizeEvent* p2QResizeEvent)
+{
+  QScrollView::viewportResizeEvent(p2QResizeEvent);
+  p2BuilderWindow->updateMiniView();  
+}
+
+
 #endif
-
-
-
-
-
-
-
-
 
