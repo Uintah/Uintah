@@ -25,7 +25,9 @@ PSELIBS :=  PSECore/Dataflow PSECore/Datatypes \
         SCICore/Geom SCICore/Geometry PSECore/Widgets PSECore/XMLUtil \
 	Kurt/Datatypes SCICore/Util \
 	Uintah/Datatypes Uintah/Grid Uintah/Interface Uintah/Exceptions \
-        Kurt/DataArchive Kurt/Geom
+        Kurt/Geom        
+
+
 
 LIBS := $(XML_LIBRARY) -lm
 
@@ -34,6 +36,9 @@ include $(SRCTOP)/scripts/smallso_epilogue.mk
 
 #
 # $Log$
+# Revision 1.12  2000/09/26 18:24:39  kuzimmer
+# to remove dependency on libKurt_DataArchive.so
+#
 # Revision 1.11  2000/09/21 22:22:49  kuzimmer
 # some lines that weren't supposed to be commented out were.  fixed.
 #
