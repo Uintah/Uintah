@@ -207,14 +207,17 @@ void BuildFEMatrix::execute()
      MeshHandle mesh;
      if(!inmesh->get(mesh))
 	  return;
+
+#if 1
      if (mesh->generation == gen && gbl_matrixH.get_rep() && rhsH.get_rep() &&
 	 lastBCFlag == BCFlag.get()) {
-	 outmatrix->send(gbl_matrixH);
-	 rhsoport->send(rhsH);
+	 outmatrix->send(gbl_matrix);
+	 rhsoport->send(rhs);
 	 return;
      }
      gen=mesh->generation;
      UseCond=UseCondTCL.get();
+#endif
 
      this->mesh=mesh.get_rep();
      int nnodes=mesh->nodes.size();
@@ -223,25 +226,34 @@ void BuildFEMatrix::execute()
      if (np>10) np=5;
      colidx.resize(np+1);
 
+#if 1
      refnode=0;
      ColumnMatrixHandle refnodeH;
      if (refnodeport->get(refnodeH)&&refnodeH.get_rep()&&refnodeH->nrows()>0){
 	 refnode=(*refnodeH.get_rep())[0];
      }
+#endif
 
      DirSub=PinZero=0;
      if (BCFlag.get() == "DirSub") DirSub=1;
      else if (BCFlag.get() == "PinZero") PinZero=1;
+     else cerr << "WARNING: BCFlag not set: " << BCFlag.get() << "!\n";
      lastBCFlag=BCFlag.get();
      if (PinZero) cerr << "BuildFEM: pinning node "<<refnode<<" to zero.\n";
+
+     
 
      Thread::parallel(Parallel<BuildFEMatrix>(this, &BuildFEMatrix::parallel),
 		      np, true);
 
-     gbl_matrixH=gbl_matrix;
+     gbl_matrixH=MatrixHandle(gbl_matrix);
      outmatrix->send(gbl_matrixH);
-     rhsH=rhs;
+     //outmatrix->send(gbl_matrix);
+     //cerr << "sent gbl_matrix to matrix port" << endl;
+     rhsH=ColumnMatrixHandle(rhs);
      rhsoport->send(rhsH);
+     //rhsoport->send(rhs);
+     //cerr << "sent rhs to coloumn matrix port" << endl;
      this->mesh=0;
 }
 
@@ -397,6 +409,10 @@ void BuildFEMatrix::add_lcl_gbl(Matrix& gbl_a, double lcl_a[4][4],
 
 //
 // $Log$
+// Revision 1.9  2000/01/19 22:33:29  moulding
+// These two had some bug(s) or other that steve fixed (BCFlag and
+// some parrellel stuff?).  Now the TorsoFE demo (from a fresh checkout) works!
+//
 // Revision 1.8  1999/12/11 05:44:50  dmw
 // added support for reference electrode
 //
