@@ -2798,7 +2798,17 @@ class BioImageApp {
     method add_Resample {which} {
 	# a which of -1 indicates to add to the end
 	if {$which == -1} {
-	    set which [expr $grid_rows-1]
+	    # find previous valid module starting with $num_filters - 1
+            if {$grid_rows == 1} {
+                set which 0
+            } else {
+                  for {set i [expr $num_filters - 1]} { $i > 0 } {decr i} {
+                    if {[lindex $filters($i) $which_row] != -1} {
+                        set which $i
+		        break
+                    }
+                }
+            }
         }
 
         $this check_crop
@@ -2882,7 +2892,17 @@ class BioImageApp {
     method add_Crop {which} {
 	# a which of -1 indicates to add to the end
 	if {$which == -1} {
-	    set which [expr $grid_rows-1]
+	    # find previous valid module starting with $num_filters - 1
+            if {$grid_rows == 1} {
+                set which 0
+            } else {
+                for {set i [expr $num_filters - 1]} { $i > 0 } {decr i} {
+                    if {[lindex $filters($i) $which_row] != -1} {
+                        set which $i
+		        break
+                    }
+                }
+            }	    
         }
 
         $this check_crop
@@ -2982,7 +3002,7 @@ class BioImageApp {
 
         if {!$loading} {
 	    set current_crop [expr $num_filters-1]
-	    $m2-c needexecute
+	    after 500 "$m2-c needexecute"
             $this start_crop [expr $num_filters-1]
         }
     }
@@ -2990,7 +3010,17 @@ class BioImageApp {
     method add_Cmedian {which} {
 	# a which of -1 indicates to add to the end
 	if {$which == -1} {
-	    set which [expr $grid_rows-1]
+	    # find previous valid module starting with $num_filters - 1
+            if {$grid_rows == 1} {
+                set which 0
+            } else {
+                for {set i [expr $num_filters - 1]} { $i > 0 } {decr i} {
+                    if {[lindex $filters($i) $which_row] != -1} {
+                        set which $i
+		        break
+                    }
+                }
+            }
         }
 
         $this check_crop
@@ -3007,6 +3037,7 @@ class BioImageApp {
 	set ChooseNrrd [lindex [lindex $filters(0) $modules] $load_choose_vis]
 	set output_mod [lindex [lindex $filters($which) $output] 0]
 	set output_port [lindex [lindex $filters($which) $output] 1]
+        puts "Adding connection from $output_mod to $m1 computed from $which"
 	addConnection $output_mod $output_port $m1 0
 	addConnection $m1 0 $ChooseNrrd $choose
 
@@ -3071,7 +3102,17 @@ class BioImageApp {
     method add_Histo {which} {
 	# a which of -1 indicates to add to the end
 	if {$which == -1} {
-	    set which [expr $grid_rows-1]
+	    # find previous valid module starting with $num_filters - 1
+            if {$grid_rows == 1} {
+                set which 0
+            } else {
+                for {set i [expr $num_filters - 1]} { $i > 0 } {decr i} {
+                    if {[lindex $filters($i) $which_row] != -1} {
+                        set which $i
+		        break
+                    }
+                }
+            }	    
         }
 
         $this check_crop
