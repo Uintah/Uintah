@@ -125,7 +125,7 @@
 	<Level>
 	    <Box label="1">
 	    	<lower>       [1,1,1]     </lower>
-	    	<upper>       [2,2,2]   </upper>
+	    	<upper>       [3,3,3]   </upper>
 	       	<resolution>  [2,2,1]   </resolution>
                 <extraCells>  [1,1,1]	  </extraCells>
 		<patches>     [1,1,1]     </patches>
@@ -186,7 +186,7 @@
 	    <ideal_gas>
 		<gas_constant>287 </gas_constant>
 	    </ideal_gas>
-	    <density> 1. </density>
+	    <density> 1.1 </density>
 	    <viscosity>      0.0         </viscosity>
 	    <thermal_conductivity>0.0    </thermal_conductivity>
 	    <specific_heat>  716.0         </specific_heat>
@@ -196,7 +196,7 @@
 	    <geom_object>
                 <box label="gp1">
                     <min>[ 1.0, 1.0, 1.0 ]</min>
-                    <max>[ 2.0, 2.0, 2.0 ]</max>
+                    <max>[ 3.0, 3.0, 3.0 ]</max>
                 </box>
 	        <res>		   [2,2,2]    </res>
 	        <velocity>         [1,1,0]    </velocity>
@@ -209,5 +209,11 @@
 	 </exchange_coefficients>
 	</ICE>	
     </MaterialProperties>
+
+    <InitialConditions>
+        <ICE>
+         <pressure>          101325.0    </pressure>
+        </ICE>
+    </InitialConditions>                   
 	
 </Uintah_specification>
