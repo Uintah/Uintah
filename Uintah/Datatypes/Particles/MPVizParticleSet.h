@@ -15,6 +15,7 @@
 #define SCI_Datatypes_MPVizParticleSet_h 1
 
 #include <SCICore/Containers/LockingHandle.h>
+#include <SCICore/Containers/String.h>
 
 #include <Uintah/Datatypes/Particles/ParticleSet.h>
 #include <Uintah/Datatypes/Particles/cfdlibParticleSet.h>
@@ -26,11 +27,12 @@ class MPVizParticleSet : public cfdlibParticleSet {
 public:
     MPVizParticleSet(clString scalarVar, clString vectorVar,
 		          void* cbClass);
+    MPVizParticleSet(clString name);
+    MPVizParticleSet( clString name, clString scalarVar,
+		      clString vectorVar, void* cbClass);
     MPVizParticleSet(const MPVizParticleSet&);
     MPVizParticleSet();
     virtual ~MPVizParticleSet();
-
-    virtual ParticleSet* clone() const;
 
     virtual void SetScalarId(const  clString& id);
     virtual void SetVectorId(const  clString& id);
@@ -41,6 +43,7 @@ public:
     const clString& getVectorId();
   
     void *getCallbackClass();
+  clString getName(){ return name; }
 
 
     // Persistent representation...
@@ -49,6 +52,7 @@ public:
 
   // testing
 private:
+  clString name;
   clString sVar;
   clString vVar;
   void* cbClass;
@@ -59,6 +63,9 @@ private:
 
 //
 // $Log$
+// Revision 1.3  1999/09/21 16:08:30  kuzimmer
+// modifications for binary file format
+//
 // Revision 1.2  1999/08/17 06:40:07  sparker
 // Merged in modifications from PSECore to make this the new "blessed"
 // version of SCIRun/Uintah.

@@ -39,7 +39,6 @@ public:
     ParticleSet();
     virtual ~ParticleSet();
     ParticleSet(const ParticleSet&);
-    virtual ParticleSet* clone() const=0;
 
     virtual int find_scalar(const clString& name)=0;
     virtual void list_scalars(Array1<clString>& names)=0;
@@ -73,6 +72,9 @@ public:
 
 //
 // $Log$
+// Revision 1.4  1999/09/21 16:08:31  kuzimmer
+// modifications for binary file format
+//
 // Revision 1.3  1999/08/25 03:49:02  sparker
 // Changed SCICore/CoreDatatypes to SCICore/Datatypes
 // Changed PSECore/CommonDatatypes to PSECore/Datatypes

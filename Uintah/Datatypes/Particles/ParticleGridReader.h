@@ -31,12 +31,21 @@ LOG
 #include <SCICore/Containers/LockingHandle.h>
 #include <SCICore/Containers/Array1.h>
 #include <SCICore/Geometry/Vector.h>
-
-#include <Uintah/Datatypes/Particles/MPMaterial.h>
+#include <SCICore/Containers/String.h>
+#include "ParticleSet.h"
+#include "VizGrid.h" 
 
 namespace Uintah {
 namespace Datatypes {
 
+using SCICore::Containers::LockingHandle;
+using SCICore::Containers::Array1;
+using SCICore::Containers::clString;
+using SCICore::PersistentSpace::Piostream;
+using SCICore::PersistentSpace::PersistentTypeID;
+using SCICore::Geometry::Vector;
+using namespace SCICore::Datatypes;
+  
 class ParticleGridReader;
 typedef LockingHandle<ParticleGridReader> ParticleGridReaderHandle;
 
@@ -45,7 +54,6 @@ public:
     ParticleGridReader();
     virtual ~ParticleGridReader();
     ParticleGridReader(const ParticleGridReader&);
-    virtual ParticleGridReader* clone() const=0;
 
   //////////
   // SetFile expects a filename include full path
@@ -56,10 +64,7 @@ public:
     virtual int GetStartTime()=0;
     virtual int GetEndTime() = 0;
     virtual int GetIncrement() = 0;
-  //////////
-  // Material and particle data is broken into materials
-    virtual MPMaterial* getMaterial(int i)=0;
-    virtual int getNMaterials()=0;
+
   //////////
   // GetGraphData will fill and array of length nTimesteps with
   // values corresponding to single variable of a particular particle
@@ -69,11 +74,23 @@ public:
 			      int materialId,
 			      bool isVector,
 			      Array1<float>& values)=0;
+    virtual void GetParticleData(int particleId,
+                                 clString varname,
+                                 Array1<double>& values) = 0;
   //////////
   // If the filename is set and it hasn't been read, read it and put
   // it into SCIRun data structures.
     virtual int readfile()=0;
 
+  //////////
+  // Get Grid and Particle information
+    virtual int GetNGrids() = 0;
+    virtual int GetNParticleSets() = 0;
+  
+    virtual ParticleSetHandle GetParticleSet( clString name) = 0;
+    virtual VizGridHandle  GetGrid(clString name) = 0;
+    virtual ParticleSetHandle GetParticleSet( int i) = 0;
+    virtual VizGridHandle  GetGrid(int i) = 0;
   ////////// Persistent representation...
   virtual void io(Piostream&);
   static PersistentTypeID type_id;
@@ -85,6 +102,9 @@ public:
 
 //
 // $Log$
+// Revision 1.4  1999/09/21 16:08:30  kuzimmer
+// modifications for binary file format
+//
 // Revision 1.3  1999/08/25 03:49:02  sparker
 // Changed SCICore/CoreDatatypes to SCICore/Datatypes
 // Changed PSECore/CommonDatatypes to PSECore/Datatypes

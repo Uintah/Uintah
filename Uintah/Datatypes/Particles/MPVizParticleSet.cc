@@ -26,30 +26,39 @@ PersistentTypeID MPVizParticleSet::type_id("MPVizParticleSet", "Datatype", 0);
 MPVizParticleSet::MPVizParticleSet( clString scalarVar,
 				      clString vectorVar,
 				      void* cbClass) :
-  sVar( scalarVar ), vVar( vectorVar), cbClass( cbClass )
+ name(clString("")), sVar( scalarVar ), vVar( vectorVar), cbClass( cbClass )
 {
   // No body
 }
-  
 
-MPVizParticleSet::MPVizParticleSet(const MPVizParticleSet&) :
-   sVar(""), vVar(""), cbClass(0)
+ MPVizParticleSet::MPVizParticleSet( clString name,
+				    clString scalarVar,
+				      clString vectorVar,
+				      void* cbClass) :
+  name(name),  sVar( scalarVar ), vVar( vectorVar), cbClass( cbClass )
+{
+  // No body
+}
+ 
+
+MPVizParticleSet::MPVizParticleSet(const MPVizParticleSet& pset) :
+  name(pset.name), sVar(pset.sVar),
+  vVar(pset.vVar), cbClass(pset.cbClass)
 {
   // No body
 }
 
 MPVizParticleSet::MPVizParticleSet() :
-   sVar(""), vVar(""), cbClass(0)
+   name(""), sVar(""), vVar(""), cbClass(0)
 {
   // No body
 }
 
-ParticleSet* MPVizParticleSet::clone() const
+MPVizParticleSet::MPVizParticleSet(clString name) :
+  name(name), sVar(""), vVar(""), cbClass(0)
 {
-  return scinew MPVizParticleSet();
+  // No body
 }
-
-
 
 MPVizParticleSet::~MPVizParticleSet()
 {
@@ -99,6 +108,9 @@ void MPVizParticleSet::io(Piostream& stream)
 
 //
 // $Log$
+// Revision 1.4  1999/09/21 16:08:30  kuzimmer
+// modifications for binary file format
+//
 // Revision 1.3  1999/09/08 02:27:07  sparker
 // Various #include cleanups
 //

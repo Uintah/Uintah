@@ -24,7 +24,7 @@ namespace Datatypes {
 
 static Persistent* maker()
 {
-    return scinew cfdlibParticleSet();
+    return new cfdlibParticleSet();
 }
 
 PersistentTypeID cfdlibParticleSet::type_id("cfdlibParticleSet", "ParticleSet", maker);
@@ -141,10 +141,6 @@ void cfdlibParticleSet::io(Piostream& stream)
 
 // The following functions added by psutton to make things compile.
 // I doubt any do what they're supposed to.
-ParticleSet *cfdlibParticleSet::clone() const
-{
-  return scinew cfdlibParticleSet();
-}
 
 int cfdlibParticleSet::find_scalar(const clString& var)
 {
@@ -204,6 +200,9 @@ void cfdlibParticleSet::print() {
 
 //
 // $Log$
+// Revision 1.3  1999/09/21 16:08:31  kuzimmer
+// modifications for binary file format
+//
 // Revision 1.2  1999/08/17 06:40:09  sparker
 // Merged in modifications from PSECore to make this the new "blessed"
 // version of SCIRun/Uintah.

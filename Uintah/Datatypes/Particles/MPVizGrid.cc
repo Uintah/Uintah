@@ -1,7 +1,7 @@
 //static char *id="@(#) $Id$";
 
 /*
- *  MPMaterial.cc: ?
+ *  MPVizGrid.cc: ?
  *
  *  Written by:
  *   Author: ?
@@ -12,52 +12,45 @@
  *  Copyright (C) 199? SCI Group
  */
 
-#include <SCICore/Malloc/Allocator.h>
-
-#include <Uintah/Datatypes/Particles/MPMaterial.h>
+#include "MPVizGrid.h"
 
 namespace Uintah {
 namespace Datatypes {
 
-PersistentTypeID MPMaterial::type_id("MPMaterial",
+PersistentTypeID MPVizGrid::type_id("MPVizGrid",
 				  "Datatype", 0);
 
-MPMaterial::~MPMaterial()
+MPVizGrid::~MPVizGrid()
 {
 }
 
-MPMaterial::MPMaterial(){
-ps = 0;
-}
-
-MPMaterial* MPMaterial::clone() const
+MPVizGrid::MPVizGrid() : name("")
 {
-  return new MPMaterial();
 }
 
-void MPMaterial::AddVectorField(const clString& name,
+MPVizGrid::MPVizGrid(clString n) :  name(n)
+{
+}
+
+VizGrid* MPVizGrid::clone() const
+{
+  return new MPVizGrid();
+}
+
+void MPVizGrid::AddVectorField(const clString& name,
 			     VectorFieldHandle vfh)
 {
   vmap[ name ] = vfh;
 }
 
-void MPMaterial::AddScalarField(const clString& name,
+void MPVizGrid::AddScalarField(const clString& name,
 			     ScalarFieldHandle sfh)
 {
   smap[ name ] = sfh;
 }
 
-void MPMaterial::AddParticleSet(ParticleSetHandle psh)
-{
-  ps = psh;
-}
 
-ParticleSetHandle MPMaterial::getParticleSet()
-{
-  return ps;
-}
-
-void MPMaterial::getVectorNames( Array1< clString>& vars)
+void MPVizGrid::getVectorNames( Array1< clString>& vars)
 {
   vars.setsize(0);
   map<clString, VectorFieldHandle, ltstr>::iterator it = vmap.begin();
@@ -70,7 +63,7 @@ void MPMaterial::getVectorNames( Array1< clString>& vars)
 
 }
 
-void MPMaterial::getScalarNames( Array1< clString>& vars)
+void MPVizGrid::getScalarNames( Array1< clString>& vars)
 {
   vars.setsize(0);
   map<clString, ScalarFieldHandle, ltstr>::iterator it = smap.begin();
@@ -83,7 +76,7 @@ void MPMaterial::getScalarNames( Array1< clString>& vars)
 
 }
 
-VectorFieldHandle MPMaterial::getVectorField( clString name )
+VectorFieldHandle MPVizGrid::getVectorField( clString name )
 {
   map<clString, VectorFieldHandle, ltstr>::iterator it = vmap.find( name );
   if (it == vmap.end())
@@ -92,7 +85,7 @@ VectorFieldHandle MPMaterial::getVectorField( clString name )
     return vmap[ name ];
 }     
 
-ScalarFieldHandle MPMaterial::getScalarField( clString name )
+ScalarFieldHandle MPVizGrid::getScalarField( clString name )
 {
   map<clString, ScalarFieldHandle, ltstr>::iterator it = smap.find( name );
   if (it == smap.end())
@@ -104,9 +97,9 @@ ScalarFieldHandle MPMaterial::getScalarField( clString name )
 
 #define MPMATERIAL_VERSION 1
 
-void MPMaterial::io(Piostream& stream)
+void MPVizGrid::io(Piostream& stream)
 {
-  stream.begin_class("MPMaterial", MPMATERIAL_VERSION);
+  stream.begin_class("MPVizGrid", MPMATERIAL_VERSION);
 
   stream.end_class();
 }
@@ -116,19 +109,8 @@ void MPMaterial::io(Piostream& stream)
 
 //
 // $Log$
-// Revision 1.5  1999/09/21 16:08:29  kuzimmer
+// Revision 1.1  1999/09/21 16:08:29  kuzimmer
 // modifications for binary file format
-//
-// Revision 1.4  1999/09/08 02:27:07  sparker
-// Various #include cleanups
-//
-// Revision 1.3  1999/08/19 23:18:08  sparker
-// Removed a bunch of #include <SCICore/Util/NotFinished.h> statements
-// from files that did not need them.
-//
-// Revision 1.2  1999/08/17 06:40:06  sparker
-// Merged in modifications from PSECore to make this the new "blessed"
-// version of SCIRun/Uintah.
 //
 // Revision 1.1  1999/07/27 16:58:58  mcq
 // Initial commit

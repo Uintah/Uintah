@@ -41,7 +41,6 @@ public:
     cfdlibParticleSet();
     virtual ~cfdlibParticleSet();
 
-    virtual ParticleSet* clone() const;
 
     virtual int find_scalar(const clString& name);
     virtual void list_scalars(Array1<clString>& names);
@@ -80,6 +79,9 @@ public:
 
 //
 // $Log$
+// Revision 1.3  1999/09/21 16:08:31  kuzimmer
+// modifications for binary file format
+//
 // Revision 1.2  1999/08/17 06:40:09  sparker
 // Merged in modifications from PSECore to make this the new "blessed"
 // version of SCIRun/Uintah.
