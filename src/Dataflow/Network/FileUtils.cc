@@ -152,6 +152,8 @@ std::map<int,char*>* GetFilenamesEndingWith(char* d, char* ext)
     file = readdir(dir);
   }
 
+  closedir(dir);
+
   return newmap;
 }
 
