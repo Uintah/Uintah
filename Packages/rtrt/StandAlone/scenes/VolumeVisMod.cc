@@ -592,7 +592,7 @@ Scene* make_scene(int argc, char* argv[], int nworkers)
       cerr << " -colormap nrrd [filename.nrrd] - read in a nrrd for the colormap with alphas\n";
       cerr << " -alpha [filename.nrrd] - read in a nrrd with just the alpha transfer function\n";
       cerr << " -bgcolor [float] [float] [float] - the three floats are r, g, b\n";
-      cerr << " -usehv - use the HVolumeVis code instead of VolumeVis.\n";
+      cerr << " -nohv  - use the VolumeVis code instead of HVolumeVis.\n";
       cerr << " -depth - the number of depths to use for the HVolumeVis.\n";
       cerr << "          [defaults to "<<depth<<"]\n";
       cerr << " -nohv  - do not use the fast version.\n";
@@ -700,9 +700,8 @@ Scene* make_scene(int argc, char* argv[], int nworkers)
   Light *light0 = new Light(Point(500,-300,300), Color(.8,.8,.8), 0);
   light0->name_ = "light 0";
   scene->add_light(light0);
-  //scene->shadow_mode=1;
   scene->attach_display(dpy);
-  scene->addObjectOfInterest(obj,true);
+  scene->addGuiObject("Volume 1", obj);
   
   return scene;
 }
