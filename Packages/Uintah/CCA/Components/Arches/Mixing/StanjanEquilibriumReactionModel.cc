@@ -124,8 +124,8 @@ StanjanEquilibriumReactionModel::tableLookUp(int* tableKeyIndex, Stream& equilSt
       double eps = 0.0001;
       vector <double> dfMixVars(1);
       if (mixVars[0] > 0.9999) 
-        //dfMixVars[0] = mixVars[0] - eps;
-	dfMixVars[0] = mixVars[0] - 0.01;
+        dfMixVars[0] = mixVars[0] - eps;
+	//dfMixVars[0] = mixVars[0] - 0.01;
       else
         dfMixVars[0] = mixVars[0] + eps;
       Stream dfStream =  d_mixModel->speciesStateSpace(dfMixVars);
