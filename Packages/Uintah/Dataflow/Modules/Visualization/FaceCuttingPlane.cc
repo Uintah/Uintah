@@ -417,18 +417,24 @@ void FaceCuttingPlane::execute()
   
   int u_ = u_num, 
       v_ = v_num;
-  if(horiz) v_++;
-  else u_++;
+//   if(horiz) v_++;
+//   else u_++;
   for (i = 0; i < u_; i++){
     for (j = 0; j < v_; j++) {
       Point p0, p1;
       
-      if(horiz){
-	if( j == v_num ){
+      if ( horiz ) {
+	if( j == v_ -1 && i == u_ - 1){
+	  p0 = corner + u * ((double) (i-0.1)/(u_num-1)) + 
+	    v * ((double) (j-0.1)/(v_num-1));
+	  p1 = corner + u * ((double) (i+1-0.1)/(u_num-1)) + 
+	    v * ((double) (j-0.1)/(v_num-1));
+	} else 
+	if( j == v_ - 1  ){
 	  p0 = corner + u * ((double) i/(u_num-1)) + 
-	    v * ((double) (j-0.001)/(v_num-1));
+	    v * ((double) (j-0.1)/(v_num-1));
 	  p1 = corner + u * ((double)(i+1)/(u_num-1)) + 
-	    v * ((double) (j-0.001)/(v_num-1));
+	    v * ((double) (j-0.1)/(v_num-1));
 	} else {
 	  p0 = corner + u * ((double) i/(u_num-1)) + 
 	    v * ((double) j/(v_num-1));
@@ -436,10 +442,16 @@ void FaceCuttingPlane::execute()
 	    v * ((double) j/(v_num-1));
 	}
       } else {
-	if( i == u_num ){
-	  p0 = corner + u * ((double) (i-0.001)/(u_num-1)) + 
+	if( j == v_ -1 && i == u_ - 1){
+	  p0 = corner + u * ((double) (i-0.1)/(u_num-1)) + 
+	    v * ((double) (j-0.1)/(v_num-1));
+	  p1 = corner + u * ((double) (i-0.1)/(u_num-1)) + 
+	    v * ((double)(j+1-0.1)/(v_num-1));
+	} else 
+	if( i == u_ - 1  ){
+	  p0 = corner + u * ((double) (i-0.1)/(u_num-1)) + 
 	    v * ((double) j/(v_num-1));
-	  p1 = corner + u * ((double) (i-0.001)/(u_num-1)) + 
+	  p1 = corner + u * ((double) (i-0.1)/(u_num-1)) + 
 	    v * ((double)(j+1)/(v_num-1));
 	} else {
 	  p0 = corner + u * ((double) i/(u_num-1)) + 
@@ -459,6 +471,7 @@ void FaceCuttingPlane::execute()
 	matl = cmap->lookup( sval);
       }
       else {
+	cerr<<"p0 = "<<p0<<" which is out of bounds\n";
 	matl = outcolor;
 	sval = 0;
       }

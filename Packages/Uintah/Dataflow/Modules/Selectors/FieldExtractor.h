@@ -122,24 +122,24 @@ void FieldExtractor::build_field(DataArchive& archive,
     } else {
       sfd->get_property("vartype", vartype);
       low = (*r)->getNodeLowIndex();
-      hi = (*r)->getNodeHighIndex();
       switch (vartype) {
       case TypeDescription::SFCXVariable:
-	hi.y(hi.y() - 1);
-	hi.z(hi.z() - 1);
+	hi = (*r)->getSFCXHighIndex();
 	break;
       case TypeDescription::SFCYVariable:
-	hi.x(hi.x() - 1);
-	hi.z(hi.z() - 1);
+	hi = (*r)->getSFCYHighIndex();
 	break;
       case TypeDescription::SFCZVariable:
-	hi.x(hi.x() - 1);
-	hi.y(hi.y() - 1);
+	hi = (*r)->getSFCZHighIndex();
 	break;
+      default:
+	hi = (*r)->getNodeHighIndex();	
       } 
     }
 
     IntVector range = hi - low;
+
+    cerr<<"indices are "<<low<<" to "<<hi<<" and size is "<<range<<endl;
     int z_min = low.z();
     int z_max = low.z() + hi.z() - low.z();
     int z_step, i, z, N = 0;
