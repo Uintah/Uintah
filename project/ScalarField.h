@@ -26,17 +26,20 @@ typedef LockingHandle<ScalarField> ScalarFieldHandle;
 
 class ScalarField : public Datatype {
 protected:
-#if 0
     int have_bounds;
-    Point min;
-    Point max;
+    Point bmin;
+    Point bmax;
     Vector diagonal;
-    virtual void compute_bounds();
-#endif
+    virtual void compute_bounds()=0;
+
+    int have_minmax;
+    double data_min;
+    double data_max;
+    virtual void compute_minmax()=0;
 protected:
     enum Representation {
 	RegularGrid,
-	TetraHedra,
+	UnstructuredGrid,
     };
     ScalarField(Representation);
 private:
@@ -48,10 +51,12 @@ public:
     ScalarFieldUG* getUG();
     void get_minmax(double&, double&);
     double longest_dimension();
-    virtual Vector gradient(const Point&);
+    virtual Vector gradient(const Point&)=0;
+    virtual int interpolate(const Point&, double&)=0;
 
     // Persistent representation...
     virtual void io(Piostream&);
+    static PersistentTypeID typeid;
 };
 
 #endif /* SCI_project_ScalarField_h */

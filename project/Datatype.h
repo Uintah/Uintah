@@ -13,7 +13,7 @@
 #ifndef SCI_project_Datatype_h
 #define SCI_project_Datatype_h 1
 
-#include <Persistent.h>
+#include <Classlib/Persistent.h>
 #include <Multitask/ITC.h>
 
 class Datatype : public Persistent {

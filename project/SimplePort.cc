@@ -12,6 +12,7 @@
  */
 
 #include <SimplePort.h>
+#include <Connection.h>
 #include <Classlib/Assert.h>
 #include <iostream.h>
 

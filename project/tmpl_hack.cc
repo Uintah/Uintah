@@ -10,3 +10,7 @@ typedef ScalarFieldIPort _dummy2_;
 #include <Readers/ScalarFieldReader.h>
 
 typedef ScalarFieldReader _dummy3_;
+
+#include <ScalarField.h>
+
+typedef ScalarFieldHandle _dummy4_;
