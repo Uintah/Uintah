@@ -1,7 +1,7 @@
 #
 #
 
-itcl_class Edge {
+itcl_class SCIRun_Image_Edge {
     inherit Module
     constructor {config} {
 	set name Edge

@@ -1,7 +1,7 @@
 #
 #
 
-itcl_class Threshold {
+itcl_class SCIRun_Image_Threshold {
     inherit Module
     constructor {config} {
 	set name Threshold

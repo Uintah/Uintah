@@ -1,7 +1,7 @@
 #
 #
 
-itcl_class Unop {
+itcl_class SCIRun_Image_Unop {
     inherit Module
     constructor {config} {
 	set name Unop

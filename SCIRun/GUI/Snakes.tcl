@@ -1,7 +1,7 @@
 #
 #
 
-itcl_class Snakes {
+itcl_class SCIRun_Image_Snakes {
     inherit Module
     constructor {config} {
 	set name Snakes

@@ -1,7 +1,7 @@
 #
 #
 
-itcl_class Sharpen {
+itcl_class SCIRun_Image_Sharpen {
     inherit Module
     constructor {config} {
 	set name Sharpen

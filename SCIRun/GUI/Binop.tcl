@@ -1,7 +1,7 @@
 #
 #
 
-itcl_class Binop {
+itcl_class SCIRun_Image_Binop {
     inherit Module
     constructor {config} {
 	set name Binop

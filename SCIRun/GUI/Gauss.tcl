@@ -1,5 +1,5 @@
 
-itcl_class Gauss {
+itcl_class SCIRun_Image_Gauss {
     inherit Module
     constructor {config} {
 	set name Gauss

@@ -1,7 +1,7 @@
 #
 #
 
-itcl_class Transforms {
+itcl_class SCIRun_Image_Transforms {
     inherit Module
     constructor {config} {
 	set name Transforms

@@ -1,7 +1,7 @@
 #
 #
 
-itcl_class ImageGen {
+itcl_class SCIRun_Image_ImageGen {
     inherit Module
     constructor {config} {
 	set name ImageGen
