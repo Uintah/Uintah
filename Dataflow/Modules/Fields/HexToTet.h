@@ -39,7 +39,7 @@ namespace SCIRun {
 class HexToTetAlgo : public DynamicAlgoBase
 {
 public:
-  virtual bool execute(FieldHandle src, FieldHandle& dst) = 0;
+  virtual bool execute(FieldHandle, FieldHandle&, std::ostream &) = 0;
 
   //! support the dynamically compiled algorithm concept
   static CompileInfoHandle get_compile_info(const TypeDescription *data_td);
@@ -51,13 +51,14 @@ class HexToTetAlgoT : public HexToTetAlgo
 {
 public:
   //! virtual interface. 
-  virtual bool execute(FieldHandle src, FieldHandle& dst);
+  virtual bool execute(FieldHandle src, FieldHandle& dst, std::ostream &msg);
 };
 
 
 template <class FSRC>
 bool
-HexToTetAlgoT<FSRC>::execute(FieldHandle srcH, FieldHandle& dstH)
+HexToTetAlgoT<FSRC>::execute(FieldHandle srcH, FieldHandle& dstH, 
+			     std::ostream &msg)
 {
   FSRC *hvfield = dynamic_cast<FSRC*>(srcH.get_rep());
 
@@ -209,12 +210,8 @@ HexToTetAlgoT<FSRC>::execute(FieldHandle srcH, FieldHandle& dstH)
       tvfield->set_value(val, (TetVolMesh::Elem::index_type)(i*5+3));
       tvfield->set_value(val, (TetVolMesh::Elem::index_type)(i*5+4));
     }
-  } else if (hvfield->data_at() == Field::NONE) {
-    // nothing to copy
   } else {
-    cerr << "Error -- don't know how to handle data_at == "<<hvfield->data_at()<<"\n";
-    dstH=0;
-    return false;
+    msg << "Warning: did not load data values, use DirectInterp" << endl;
   }
   return true;
 }
@@ -223,7 +220,7 @@ HexToTetAlgoT<FSRC>::execute(FieldHandle srcH, FieldHandle& dstH)
 class LatToTetAlgo : public DynamicAlgoBase
 {
 public:
-  virtual bool execute(FieldHandle src, FieldHandle& dst) = 0;
+  virtual bool execute(FieldHandle, FieldHandle&, std::ostream &) = 0;
 
   //! support the dynamically compiled algorithm concept
   static CompileInfoHandle get_compile_info(const TypeDescription *data_td);
@@ -235,13 +232,14 @@ class LatToTetAlgoT : public LatToTetAlgo
 {
 public:
   //! virtual interface. 
-  virtual bool execute(FieldHandle src, FieldHandle& dst);
+  virtual bool execute(FieldHandle src, FieldHandle& dst, std::ostream &msg);
 };
 
 
 template <class FSRC>
 bool
-LatToTetAlgoT<FSRC>::execute(FieldHandle srcH, FieldHandle& dstH)
+LatToTetAlgoT<FSRC>::execute(FieldHandle srcH, FieldHandle& dstH, 
+			     std::ostream &msg)
 {
   FSRC *hvfield = dynamic_cast<FSRC*>(srcH.get_rep());
 
@@ -357,12 +355,8 @@ LatToTetAlgoT<FSRC>::execute(FieldHandle srcH, FieldHandle& dstH)
       tvfield->set_value(val, (TetVolMesh::Cell::index_type)(i*5+4));
       ++cbi;
     }
-  } else if (hvfield->data_at() == Field::NONE) {
-    // nothing to copy
   } else {
-    cerr << "Error -- don't know how to handle data_at == "<<hvfield->data_at()<<"\n";
-    dstH=0;
-    return false;
+    msg << "Warning: did not load data values, use DirectInterp" << endl;
   }
   return true;
 }

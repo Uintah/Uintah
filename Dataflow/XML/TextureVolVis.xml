@@ -26,8 +26,36 @@
     <authors>
       <author>Kurt Zimmerman</author>
     </authors>
-    <summary>A volume renderer.</summary>
+    <summary>This module implements a volume renderer using 3D texture
+    hardware.
+    </summary>
     <description>
+      <p>
+        The Rendering Style Frame allows the selection of standard
+        (Over Operator), maximum intensity projection (MIP) or
+        attenuated (Attenuate) rendering styles.
+     </p>
+      <p> For large data, the View Mode, allows the user view the data
+        at full resolution, or to see the maximum resolution along a
+        line of sight or in a region of influence.  The line of sight
+        and region of influence modes are controlled by a selection
+        widget in the view window.
+     </p>
+      <p> The Interpolation Mode specifies linear interpolation
+      (Interpolate) or nearest neighbor interpolation (Nearest).
+        
+     </p>
+      <p> The slice transparency slider allows the user to control the
+      slice transparency in concert with the transparency specified in the
+      transfer function that was  provided to the GLTextureBuilder.  The range
+      is from -1 (full transparency for each slice) to 0 (accept
+      the values in the transfer function) to 1 (full opacity for each
+      slice--except for regions that are zero in the transfer function)
+     </p>
+      <p> The number of slices slider controls rendering
+      quality. Increase the number of slices to improve rendering
+      quality. Decrease the number of slice to improve interaction.
+     </p>
     </description>
   </overview>
   <io>

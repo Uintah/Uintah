@@ -213,7 +213,7 @@ void PackageDB::loadPackage(bool resolve)
   string packagePath;
 
   if(gui)
-    gui->postMessage("Loading packages, please wait...\n", false);
+    gui->postMessage("Loading packages, please wait...", false);
   else
     cerr << "Loading packages...\n";
 
@@ -281,7 +281,7 @@ void PackageDB::loadPackage(bool resolve)
       if(gui){
 	gui->postMessage("Unable to load package " + packageElt +
 			 ":\n - Can't find " + packageElt + 
-			 " directory in package path\n");
+			 " directory in package path");
       } else {
 	cerr << "Unable to load package " << packageElt
 	     << ":\n - Can't find " << packageElt
@@ -314,7 +314,7 @@ void PackageDB::loadPackage(bool resolve)
     if (!files) {
       if(gui)
 	gui->postMessage("Unable to load package " + pname +
-			 ":\n - Couldn't find *.xml in " + xmldir +"\n");
+			 ":\n - Couldn't find *.xml in " + xmldir );
       continue;
     }
 
@@ -453,7 +453,7 @@ void PackageDB::loadPackage(bool resolve)
     } else {
       if(gui)
 	gui->postMessage("Unable to load package " + pname + ":\n"
-			 " - could not find any valid modules.\n");
+			 " - could not find any valid modules.");
       else
 	cerr << "Unable to load package " << pname
 	     <<":\n - could not find any valid modules.\n";
@@ -461,7 +461,7 @@ void PackageDB::loadPackage(bool resolve)
   }
 
   if(gui){
-    gui->postMessage("\nFinished loading packages.\n",false);
+    gui->postMessage("\nFinished loading packages.",false);
     gui->execute("if [winfo exists .loading] {destroy .loading}");
     gui->eval("update idletasks",result);
   } else {

@@ -87,22 +87,22 @@ void CastTVtoMLV::execute()
   int ny = ny_.get();
   int nz = nz_.get();
 
-  LatVolMesh *lvm = scinew LatVolMesh(nx, ny, nz, b.min(), b.max());
-  MaskedLatVolField<Vector> *lv ;//= 
-  //    scinew MaskedLatVolField<Vector>(lvm, Field::NODE);
-  //  lv->initialize_mask(1);
+  MaskedLatVolMesh *mlvm = 
+    scinew MaskedLatVolMesh(nx, ny, nz, b.min(), b.max());
+  MaskedLatVolField<Vector> *lv = 
+    scinew MaskedLatVolField<Vector>(mlvm, Field::NODE);
 
   // for each node in the LatVol, check to see if it's inside the TetMesh
   //    if it is, use the weights from get_weights and interpolate
   //    the fiber vectors
 
-  LatVolMesh::Node::iterator ib, ie; lvm->begin(ib); lvm->end(ie);
+  MaskedLatVolMesh::Node::iterator ib, ie; mlvm->begin(ib); mlvm->end(ie);
   TetVolMesh::Cell::index_type tet;
   tvm->synchronize(Mesh::LOCATE_E); // for get_weights
   Point p;
   int cnt=0;
   while (ib != ie) {
-    lvm->get_center(p, *ib);
+    mlvm->get_center(p, *ib);
     if (tvm->locate(tet, p)) {
       cnt++;
       TetVolMesh::Node::array_type nodes;
@@ -112,9 +112,9 @@ void CastTVtoMLV::execute()
       for (unsigned int i=0; i<nodes.size(); i++) {
 	f1+=tv->fdata()[nodes[i]] * weights[i];
       }
-      //      lv->fdata()[*ib]=f1;
+      lv->fdata()[*ib]=f1;
     } else {
-      //      lv->mask()[*ib] = 0;
+      mlvm->mask_cell(MaskedLatVolMesh::Cell::index_type(mlvm, ib.i_, ib.j_, ib.k_));
     }
     ++ib;
   }

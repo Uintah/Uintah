@@ -134,8 +134,6 @@ void Viewer::do_execute()
       //r->current_renderer->kill_helper();
       //	}
       //      }
-      
-      helper_done.send(1);
       return;
     }
   }
@@ -366,7 +364,7 @@ void Viewer::addObj(GeomViewerPort* port, int serial, GeomHandle obj,
 }
 
 //----------------------------------------------------------------------
-void Viewer::delObj(GeomViewerPort* port, int serial, int del)
+void Viewer::delObj(GeomViewerPort* port, int serial)
 {
   GeomViewerItem* si;
   if ((si = ((GeomViewerItem*)port->getObj(serial).get_rep())))
@@ -595,7 +593,7 @@ void Viewer::flushPort(int portid)
       addObj(pi, gmsg->serial, gmsg->obj, gmsg->name, gmsg->lock);
       break;
     case MessageTypes::GeometryDelObj:
-      delObj(pi, gmsg->serial, gmsg->del);
+      delObj(pi, gmsg->serial);
       break;
     case MessageTypes::GeometryDelAll:
       delAll(pi);

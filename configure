@@ -2186,6 +2186,26 @@ esac
 
 done
 
+# Set the subdir name in the bin tree for matlab engine.
+if test $pkg_MatlabInterface == yes; then
+  MATLAB_ENG=matlab
+
+fi
+
+# Take care of package dependencies
+if test $pkg_Fusion == yes; then
+  # Fusion depends upon Teem Package.
+  if test -z $pkg_Teem; then
+    { { echo "$as_me:$LINENO: error: The Fusion Package depends on the Teem Package. Please
+                  make sure you have the Teem Package and configure
+                  with it enabled." >&5
+echo "$as_me: error: The Fusion Package depends on the Teem Package. Please
+                  make sure you have the Teem Package and configure
+                  with it enabled." >&2;}
+   { (exit 1); exit 1; }; }
+  fi
+fi
+
 LOAD_PACKAGE="SCIRun"
 for i in $package; do
  LOAD_PACKAGE=$LOAD_PACKAGE,"$i"
@@ -3395,7 +3415,7 @@ fi
 
 
 # Provide some information about the compiler.
-echo "$as_me:3398:" \
+echo "$as_me:3418:" \
      "checking for Fortran 77 compiler version" >&5
 ac_compiler=`set X $ac_compile; echo $2`
 { (eval echo "$as_me:$LINENO: \"$ac_compiler --version </dev/null >&5\"") >&5
@@ -5321,6 +5341,8 @@ echo "$as_me: error: GNU make not found." >&2;}
 fi
 
 
+
+
     ##  SCI_CHECK_VERSION
     _SCI_CORRECT_='echo $echo_n "$echo_c"'
     _SCI_NOTCORRECT_='echo $echo_n "$echo_c"'
@@ -6540,7 +6562,7 @@ fi
 ##  if thirdparty not set use defaults
 
 if test -z "$thirdparty"; then
-  sci_tp_version=1.8
+  sci_tp_version=1.10
   sci_tp_arch=`uname -s`
   sci_compiler_vers=gcc-3.0.4
   ac_try="$CC -v > /dev/null 2> conftest.out"
@@ -7582,8 +7604,18 @@ cat >conftest.$ac_ext <<_ACEOF
 #include "confdefs.h"
 
 #include<GL/gl.h>
+
+#ifndef GLAPIENTRY
+  #define GLAPIENTRY
+#endif
+
+#ifndef GLAPI
+  #define GLAPI
+#endif
+
 #include<GL/glu.h>
 #include<GL/glx.h>
+
 
 #ifdef F77_DUMMY_MAIN
 #  ifdef __cplusplus
@@ -20000,6 +20032,7 @@ s,@F77@,$F77,;t t
 s,@FFLAGS@,$FFLAGS,;t t
 s,@CPP@,$CPP,;t t
 s,@CXXCPP@,$CXXCPP,;t t
+s,@MATLAB_ENG@,$MATLAB_ENG,;t t
 s,@ac_ct_CC@,$ac_ct_CC,;t t
 s,@EXEEXT@,$EXEEXT,;t t
 s,@OBJEXT@,$OBJEXT,;t t

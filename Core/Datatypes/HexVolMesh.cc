@@ -31,9 +31,11 @@
 #include <Core/Datatypes/HexVolMesh.h>
 #include <Core/Geometry/BBox.h>
 #include <Core/Geometry/Transform.h>
+#include <Core/Geometry/Plane.h>
 #include <Core/Malloc/Allocator.h>
 #include <iostream>
 #include <algorithm>
+#include <set>
 #include <sci_hash_map.h>
 #include <Core/Exceptions/InternalError.h>
 
@@ -876,41 +878,119 @@ tetinterp(const Point &p, Point nodes[8],
   w[d] = wd * sum;
 }
 
+//===================================================================
+
+// area3D_Polygon(): computes the area of a 3D planar polygon
+//    Input:  int n = the number of vertices in the polygon
+//            Point* V = an array of n+2 vertices in a plane
+//                       with V[n]=V[0] and V[n+1]=V[1]
+//            Point N = unit normal vector of the polygon's plane
+//    Return: the (float) area of the polygon
+double
+HexVolMesh::polygon_area(const Node::array_type &ni, const Vector N) const
+{
+    double area = 0;
+    double an, ax, ay, az;  // abs value of normal and its coords
+    int   coord;           // coord to ignore: 1=x, 2=y, 3=z
+    int   i, j, k;         // loop indices
+    const unsigned int n = ni.size();
+
+    // select largest abs coordinate to ignore for projection
+    ax = (N.x()>0 ? N.x() : -N.x());     // abs x-coord
+    ay = (N.y()>0 ? N.y() : -N.y());     // abs y-coord
+    az = (N.z()>0 ? N.z() : -N.z());     // abs z-coord
+
+    coord = 3;                     // ignore z-coord
+    if (ax > ay) {
+        if (ax > az) coord = 1;    // ignore x-coord
+    }
+    else if (ay > az) coord = 2;   // ignore y-coord
+
+    // compute area of the 2D projection
+    for (i=1, j=2, k=0; i<=n; i++, j++, k++)
+        switch (coord) {
+        case 1:
+            area += (points_[ni[i%n]].y() *
+		     (points_[ni[j%n]].z() - points_[ni[k%n]].z()));
+            continue;
+        case 2:
+            area += (points_[ni[i%n]].x() * 
+		     (points_[ni[j%n]].z() - points_[ni[k%n]].z()));
+            continue;
+        case 3:
+            area += (points_[ni[i%n]].x() * 
+		     (points_[ni[j%n]].y() - points_[ni[k%n]].y()));
+            continue;
+        }
+
+    // scale to get area before projection
+    an = sqrt( ax*ax + ay*ay + az*az);  // length of normal vector
+    switch (coord) {
+    case 1:
+        area *= (an / (2*ax));
+        break;
+    case 2:
+        area *= (an / (2*ay));
+        break;
+    case 3:
+        area *= (an / (2*az));
+    }
+    return area;
+}
+
+double
+HexVolMesh::pyramid_volume(const Node::array_type &face, const Point &p) const
+{
+  Node::index_type min_index = 3;
+  for (int i = 0; i < 2; i++)
+    if (face[i] < face[min_index]) min_index = i;
+  Plane plane(points_[face[min_index]], 
+	      points_[face[(min_index+1)%4]], 
+	      points_[face[(min_index+2)%4]]);
+  double dist = plane.eval_point(p);
+  return fabs(plane.eval_point(p)*polygon_area(face,plane.normal())*0.25);
+}
+  
+  
 
 void
 HexVolMesh::get_weights(const Point &p,
 			Node::array_type &nodes, vector<double> &w)
 {
+  synchronize (Mesh::FACES_E);
   Cell::index_type cell;
   if (locate(cell, p))
   {
-    get_nodes(nodes, cell);
-    Point v[8];
-    int i;
-    for (i = 0; i < 8; i++)
+    get_nodes(nodes,cell);
+    unsigned int nnodes = nodes.size();
+    ASSERT(nnodes == 8);
+    w.resize(nnodes);
+      
+    Face::array_type faces;
+    get_faces(faces, cell);
+    unsigned int nfaces = faces.size();
+    vector<double> face_point_volume(nfaces);
+    double total_volume = 0.0;
+    map<Node::index_type, map<Face::index_type,bool> > attached;
+    int f, n;
+      
+    for (f = 0; f < nfaces; f++)
     {
-      get_point(v[i], nodes[i]);
+      Node::array_type face_nodes;
+      get_nodes(face_nodes, faces[f]);
+      face_point_volume[f] = pyramid_volume(face_nodes, p);
+      total_volume += face_point_volume[f];
+      unsigned int n_face_nodes = face_nodes.size();
+      for (n = 0; n < n_face_nodes; n++)
+	attached[face_nodes[n]][faces[f]] = true;
     }
-    
-    if (tet_inside_p(p, v[0], v[4], v[3], v[1]))
+    for (n = 0; n < nnodes; n++)
     {
-      tetinterp(p, v, w, 0, 4, 3, 1);
-    }
-    else if (tet_inside_p(p, v[2], v[6], v[1], v[3]))
-    {
-      tetinterp(p, v, w, 2, 6, 1, 3);
-    }
-    else if (tet_inside_p(p, v[5], v[1], v[6], v[4]))
-    {
-      tetinterp(p, v, w, 5, 1, 6, 4);
-    }
-    else if (tet_inside_p(p, v[7], v[3], v[4], v[6]))
-    {
-      tetinterp(p, v, w, 7, 3, 4, 6);
-    }
-    else
-    {
-      tetinterp(p, v, w, 1, 3, 4, 6);
+      double unattached_volume = 0.0;
+      for (f = 0; f < nfaces; f++)
+	if (!attached[nodes[n]][faces[f]])
+	  unattached_volume += face_point_volume[f];
+      w[n] = unattached_volume / total_volume;
     }
   }
 }

@@ -130,18 +130,7 @@ SampleField::SampleField(GuiContext* ctx)
 
 SampleField::~SampleField()
 {
-  if (widgetid_)
-  {
-    GeometryOPort *ogport = (GeometryOPort *)get_oport("Sampling Widget");
-    if (!ogport)
-    {
-      error("Unable to initialize oport 'Sampling Widget'.");
-      return;
-    }
-    ogport->delObj(widgetid_);
-    ogport->flushViews();
-    widgetid_ = 0;
-  }
+  if (rake_) delete rake_;
 }
 
 

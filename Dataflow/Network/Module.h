@@ -156,6 +156,7 @@ public:
   Module(const std::string& name, GuiContext* ctx, SchedClass,
 	 const string& cat="unknown", const string& pack="unknown");
   virtual ~Module();
+  void kill_helper();
 
   // Used by SCIRun2
   Network* getNetwork() {
@@ -236,7 +237,6 @@ protected:
   bool lastportdynamic;
   int pid_;
   bool have_own_dispatch;
-  FutureValue<int> helper_done;
   friend class Network;
   friend class OPort;
   friend class IPort;
@@ -295,6 +295,7 @@ private:
   int first_dynamic_port;
   unsigned long stacksize;
   ModuleHelper* helper;
+  Thread *helper_thread;
   Network* network;
 
   GuiString  notes ;

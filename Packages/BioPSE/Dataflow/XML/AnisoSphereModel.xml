@@ -8,12 +8,17 @@
       <author>Sascha Moehrs</author>
     </authors>
 
+	<summary>Provide all parameters for a 4-layer anisotropic spherical volume conductor;</summary>
+
     <description>
       <p>Date: February 2003;   Version 1.0</p>
-	  <p>Input module for all specifications for a 4-layer anisotropic spherical volume conductor:</p>
+	  <p>This module describes the geometry and the composition of a 4-layer anisotropic spherical volume conductor, resembling the human head.
+         Its main purpose is to provide modules like 'DipoleInAnisoSpheres' or 'CreateDisAnisoSpheres' with all necessary information, to compute
+         the potential distribution on the outer sphere of the volume conductor, due to a dipole in the innermost sphere.</p>
+	  <p>The parameters which can be specified include:</p>
 	  <p>radii for scalp, skull, cerebrospinal fluid and brain;</p>
-	  <p>radial and tangential conductivities for the various compartments;</p>
-	  <p>elelctrode positions (will be projected on the scalp) where the potential should be measured;</p>
+	  <p>radial and tangential conductivities for scalp, skull, cerebrospinal fluid and brain;</p>
+	  <p>elelctrode positions where the potential distribution should be computed (on the surface of the outermost sphere);</p>
     </description>
 
   </overview>

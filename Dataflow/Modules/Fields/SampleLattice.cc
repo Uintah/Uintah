@@ -76,6 +76,7 @@ SampleLattice::~SampleLattice()
 {
 }
 
+
 void
 SampleLattice::execute()
 {
@@ -136,33 +137,42 @@ SampleLattice::execute()
   if (datatype == SCALAR)
   {
     LatVolField<double> *lvf = scinew LatVolField<double>(mesh, data_at);
-    LatVolField<double>::fdata_type::iterator itr = lvf->fdata().begin();
-    while (itr != lvf->fdata().end())
+    if (data_at != Field::NONE)
     {
-      *itr = 0.0;
-      ++itr;
+      LatVolField<double>::fdata_type::iterator itr = lvf->fdata().begin();
+      while (itr != lvf->fdata().end())
+      {
+	*itr = 0.0;
+	++itr;
+      }
     }
     ofh = lvf;
   } 
   else if (datatype == VECTOR)
   {
     LatVolField<Vector> *lvf = scinew LatVolField<Vector>(mesh, data_at);
-    LatVolField<Vector>::fdata_type::iterator itr = lvf->fdata().begin();
-    while (itr != lvf->fdata().end())
+    if (data_at != Field::NONE)
     {
-      *itr = Vector(0.0, 0.0, 0.0);
-      ++itr;
+      LatVolField<Vector>::fdata_type::iterator itr = lvf->fdata().begin();
+      while (itr != lvf->fdata().end())
+      {
+	*itr = Vector(0.0, 0.0, 0.0);
+	++itr;
+      }
     }
     ofh = lvf;
   }				    
   else // if (datatype == TENSOR)	    
   {				    
     LatVolField<Tensor> *lvf = scinew LatVolField<Tensor>(mesh, data_at);
-    LatVolField<Tensor>::fdata_type::iterator itr = lvf->fdata().begin();
-    while (itr != lvf->fdata().end())
+    if (data_at != Field::NONE)
     {
-      *itr = Tensor(0.0);
-      ++itr;
+      LatVolField<Tensor>::fdata_type::iterator itr = lvf->fdata().begin();
+      while (itr != lvf->fdata().end())
+      {
+	*itr = Tensor(0.0);
+	++itr;
+      }
     }
     ofh = lvf;
   }				    

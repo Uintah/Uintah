@@ -564,6 +564,10 @@ namespace BioPSE
 	else
 	if(matrixS->ncols()==2)
 	{
+		// TGSVD is not implemented yet.
+
+		error("S matrix dimensions incorrect.");
+		return;	
 		Method=GSVD_method;
 		
 		/*if(!iportX->get(hMatrixX)) 
@@ -589,7 +593,14 @@ namespace BioPSE
 	
 	M=matrixU->nrows();
 	if(Method == SVD_method)
+	{
 		N=matrixV->nrows();
+		if(matrixS->nrows() != N || matrixU->ncols() != N || matrixMeasDatD->nrows() != M )
+		{
+			error("Input matrix dimensions incorrect.");
+			return;
+		}
+	}
 	else
 		N=matrixX->nrows();
 

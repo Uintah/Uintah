@@ -35,7 +35,7 @@
 #include <math.h>
 
 #include <GL/gl.h>
-#include <GL/glu.h>
+#include <sci_glu.h>
 #include <string.h>
 
 #include <iostream>

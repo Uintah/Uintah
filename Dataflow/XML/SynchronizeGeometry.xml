@@ -20,7 +20,7 @@
 	    out explicitly by calling functions like GeometryOPort::
 	    flushViews(), or implicitly by SCIRun after you did some 
 	    geometry operations (delete or add) in Module::execute() but 
-            did not call any flush messages. With a checkbox in the control
+	    did not call any flush messages. With a checkbox in the control
 	    panel, users can dynamically choose whether or not to enforce 
 	    the barrier.
 	</p>

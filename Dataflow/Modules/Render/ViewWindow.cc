@@ -145,7 +145,14 @@ ViewWindow::ViewWindow(Viewer* s, GuiInterface* gui, GuiContext* ctx)
     file_resx(ctx->subVar("resx")),
     file_resy(ctx->subVar("resy")),
     file_aspect(ctx->subVar("aspect")),
-    file_aspect_ratio(ctx->subVar("aspect_ratio"))
+    file_aspect_ratio(ctx->subVar("aspect_ratio")),
+    gui_global_light_(ctx->subVar("global-light")),
+    gui_global_fog_(ctx->subVar("global-fog")),
+    gui_global_debug_(ctx->subVar("global-debug")),
+    gui_global_clip_(ctx->subVar("global-clip")),
+    gui_global_cull_(ctx->subVar("global-cull")),
+    gui_global_dl_(ctx->subVar("global-dl")),
+    gui_global_type_(ctx->subVar("global-type"))
 {
   inertia_mode=0;
   bgcolor.set(Color(0,0,0));

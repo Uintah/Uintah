@@ -33,6 +33,9 @@
 #include <Dataflow/Ports/MatrixPort.h>
 #include <Dataflow/Ports/FieldPort.h>
 #include <Dataflow/Modules/Fields/Unstructure.h>
+#include <Core/Datatypes/StructHexVolField.h>
+#include <Core/Datatypes/StructQuadSurfField.h>
+#include <Core/Datatypes/StructCurveField.h>
 #include <Core/GuiInterface/GuiVar.h>
 #include <Core/Containers/Handle.h>
 
@@ -91,22 +94,26 @@ Unstructure::execute()
     ofieldhandle_ = ifieldhandle;
     string dstname = "";
     const TypeDescription *mtd = ifieldhandle->mesh()->get_type_description();
-    if (mtd->get_name() == get_type_description((LatVolMesh *)0)->get_name())
+    const string &mtdn = mtd->get_name();
+    if (mtdn == get_type_description((LatVolMesh *)0)->get_name() ||
+	mtdn == get_type_description((StructHexVolMesh *)0)->get_name())
     {
       dstname = "HexVolField";
     }
-    if (mtd->get_name() == get_type_description((ImageMesh *)0)->get_name())
+    else if (mtdn == get_type_description((ImageMesh *)0)->get_name() ||
+	     mtdn == get_type_description((StructQuadSurfMesh *)0)->get_name())
     {
       dstname = "QuadSurfField";
     }  
-    if (mtd->get_name() == get_type_description((ScanlineMesh *)0)->get_name())
+    else if (mtdn == get_type_description((ScanlineMesh *)0)->get_name() ||
+	     mtdn == get_type_description((StructCurveMesh *)0)->get_name())
     {
       dstname = "CurveField";
     }
 
     if (dstname == "")
     {
-      warning("Do not know how to unstructure a " + mtd->get_name() + ".");
+      warning("Do not know how to unstructure a " + mtdn + ".");
     }
     else
     {

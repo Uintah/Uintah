@@ -186,18 +186,32 @@ SampleFieldRandomAlgoT<Mesh>::execute(ModuleReporter *mod,
   {
     distmode = UNISCAT;
   }
-  if (distmode == UNIUNI || distmode == UNISCAT ||
-      (sfi = field->query_scalar_interface(mod)) ||
-      (vfi = field->query_vector_interface(mod)))
+
+  if (distmode == UNIUNI || distmode == UNISCAT)
+  {
+    if (!build_weight_table(mesh, 0, 0, table, distmode))
+    {
+      mod->error("Unable to build unweighted weight table for this mesh.");
+      mod->error("Mesh is likely to be empty.");
+      return 0;
+    }
+  }
+  else if ((sfi = field->query_scalar_interface(mod)) ||
+	   (vfi = field->query_vector_interface(mod)))
   {
     mesh->synchronize(Mesh::LOCATE_E);
     if (!build_weight_table(mesh, sfi, vfi, table, distmode))
     {
-      mod->error("Bad distribution of weights, unable to choose any.");
-      mod->remark("Mesh is empty, or contains invalid weights.");
-      mod->remark("Try using an unweighted option.");
+      mod->error("Invalid weights in mesh, probably all zero.");
+      mod->error("Try using an unweighted option.");
       return 0;
     }
+  }
+  else
+  {
+    mod->error("Mesh contains non-weight data.");
+    mod->error("Try using an unweighted option.");
+    return 0;
   }
 
   MusilRNG rng(rng_seed);

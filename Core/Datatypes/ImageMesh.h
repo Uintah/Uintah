@@ -335,6 +335,9 @@ public:
   bool get_neighbor(Face::index_type &neighbor,
 		    Face::index_type from,
 		    Edge::index_type idx) const;
+  
+  void get_neighbors(Face::array_type &array, Face::index_type idx) const;
+    
   void get_normal(Vector &, const Node::index_type &) const
   { ASSERTFAIL("not implemented") }
 

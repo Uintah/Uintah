@@ -17,26 +17,34 @@
 
 # SCI Network 1.0
 
+# Because this net only works for the 'aneurysm' dataset, we can't use
+# the generic "sourceSettingsFile" call...  So we just print out the
+# error message.  This will need to be fixed at some point.
+
 if {[llength [array get env SCIRUN_DATA]] == 0} {
-   puts ""
-   puts "*** Error: This net depends on the SCIRUN_DATA enviroment variable."
-   puts "*** Please exit, set it in your shell, and rerun."
-   puts "*** (e.g. setenv SCIRUN_DATA /local/data/SCIRunData/)"
-   puts ""
+
+   displayErrorWarningOrInfo "" error
+   displayErrorWarningOrInfo "*** Error: This net depends on the SCIRUN_DATA enviroment variable." error
+   displayErrorWarningOrInfo "*** Please exit, set it in your shell, and rerun." error
+   displayErrorWarningOrInfo "*** (e.g. setenv SCIRUN_DATA /usr/sci/data/SCIRunData/1.10.0)" error
+   displayErrorWarningOrInfo "" error
    ::netedit scheduleok
    return
 }
+
 set DATADIR $env(SCIRUN_DATA)
-if {![file isdirectory $DATADIR]} {
-   puts ""
-   puts "*** Error: $DATADIR is not a valid directory."
-   puts "*** Please exit and make sure the SCIRUN_DATA and SCIRUN_DATA_SET"
-   puts "*** environment variables are set correctly."
-   puts ""
+
+if {![file isfile $DATADIR/aneurysm/aneurysm.settings]} {
+   displayErrorWarningOrInfo "" error
+   displayErrorWarningOrInfo "*** Error: $DATADIR/aneurysm/aneurysm.settings does not exist." error
+   displayErrorWarningOrInfo "*** Please exit and make sure that the environment varaible SCIRUN_DATA" error
+   displayErrorWarningOrInfo "*** points to a directory with a 'aneurysm' subdirectory." error
+   displayErrorWarningOrInfo "" error
    ::netedit scheduleok
    return
 }
-puts "*** Using SCIRUN_DATA $DATADIR"
+
+displayErrorWarningOrInfo "*** Using SCIRun data directory: $DATADIR" info
 
 source $DATADIR/aneurysm/aneurysm.settings
 

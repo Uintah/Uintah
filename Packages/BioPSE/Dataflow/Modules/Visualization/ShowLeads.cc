@@ -71,16 +71,17 @@ void ShowLeads::execute(){
   }
   gen_ = mh->generation;
 
-  DenseMatrix *dm = dynamic_cast<DenseMatrix*>(mh.get_rep());
-  if (!dm) {
-    error("Matrix is not a DenseMatrix");
-    return;
-  }
-  int rows = dm->nrows();
-  int cols = dm->ncols();
+  ostringstream clr;
+  clr << id << " clear";
+  gui->execute(clr.str().c_str());
   
-  // test GUI first 
-  
+
+  int rows = mh->nrows();
+  int cols = mh->ncols();
+  ostringstream set_mm;
+  set_mm << id << " set_min_max_index 0 " << rows - 1; 
+  gui->execute(set_mm.str().c_str());
+
   for(int i = 0; i < rows; i++) {
     ostringstream cmmd;
     ostringstream xstr;
@@ -90,7 +91,7 @@ void ShowLeads::execute(){
     cmmd << id << " add_lead " << i << " ";
     for (int j = 0; j < cols; j++) {
       xstr << j/(float)cols << " "; // the time inc we are at
-      ystr << dm->get(i, j) << " "; // the value at i
+      ystr << mh->get(i, j) << " "; // the value at i
     }
     xstr << "}";
     ystr << "}";

@@ -23,8 +23,6 @@
 #include <Core/Datatypes/QuadraticLatVolMesh.h>
 #include <Core/Geometry/Tensor.h>
 #include <Core/Containers/LockingHandle.h>
-#include <Core/Containers/Array3.h>
-#include <Core/Math/MiscMath.h>
 #include <Core/Malloc/Allocator.h>
 #include <Core/Util/Assert.h>
 #include <string>
@@ -44,6 +42,7 @@ public:
   // ../src/Core/Datatypes/QuadraticTetVolField.h:95: warning: implicit typename is 
   // deprecated, please see the documentation for details
   typedef typename GenericField<QuadraticLatVolMesh, vector<Data> >::mesh_handle_type mesh_handle_type;
+
   QuadraticLatVolField();
   QuadraticLatVolField(Field::data_location data_at);
   QuadraticLatVolField(QuadraticLatVolMeshHandle mesh, Field::data_location data_at);

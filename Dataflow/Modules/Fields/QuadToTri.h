@@ -39,7 +39,7 @@ namespace SCIRun {
 class QuadToTriAlgo : public DynamicAlgoBase
 {
 public:
-  virtual bool execute(FieldHandle src, FieldHandle& dst) = 0;
+  virtual bool execute(FieldHandle, FieldHandle&, std::ostream & ) = 0;
 
   //! support the dynamically compiled algorithm concept
   static CompileInfoHandle get_compile_info(const TypeDescription *data_td);
@@ -51,13 +51,14 @@ class QuadToTriAlgoT : public QuadToTriAlgo
 {
 public:
   //! virtual interface. 
-  virtual bool execute(FieldHandle src, FieldHandle& dst);
+  virtual bool execute(FieldHandle src, FieldHandle& dst, std::ostream &msg);
 };
 
 
 template <class FSRC>
 bool
-QuadToTriAlgoT<FSRC>::execute(FieldHandle srcH, FieldHandle& dstH)
+QuadToTriAlgoT<FSRC>::execute(FieldHandle srcH, FieldHandle& dstH,
+			      std::ostream &msg)
 {
   FSRC *qsfield = dynamic_cast<FSRC*>(srcH.get_rep());
 
@@ -79,15 +80,17 @@ QuadToTriAlgoT<FSRC>::execute(FieldHandle srcH, FieldHandle& dstH)
 
   vector<typename FSRC::mesh_type::Elem::index_type> elemmap;
 
-  typename FSRC::mesh_type::Node::size_type hnsize; qsmesh->size(hnsize);
-  typename FSRC::mesh_type::Elem::size_type hesize; qsmesh->size(hesize);
+  typename FSRC::mesh_type::Node::size_type hnsize; 
+  qsmesh->size(hnsize);
+  typename FSRC::mesh_type::Elem::size_type hesize; 
+  qsmesh->size(hesize);
 
   vector<bool> visited(hesize, false);
 
   typename FSRC::mesh_type::Elem::iterator bi, ei;
   qsmesh->begin(bi); qsmesh->end(ei);
 
-  const unsigned int surfsize = pow(hesize, 2.0 / 3.0);
+  const unsigned int surfsize = (unsigned int)pow(hesize, 2.0 / 3.0);
   vector<typename FSRC::mesh_type::Elem::index_type> buffers[2];
   buffers[0].reserve(surfsize);
   buffers[1].reserve(surfsize);
@@ -134,7 +137,7 @@ QuadToTriAlgoT<FSRC>::execute(FieldHandle srcH, FieldHandle& dstH)
 	  }
 
 	  elemmap.push_back(buffers[flipflop][i]);
-
+	  qsmesh->synchronize(Mesh::EDGE_NEIGHBORS_E);
 	  typename FSRC::mesh_type::Face::array_type neighbors;
 	  qsmesh->get_neighbors(neighbors, buffers[flipflop][i]);
 
@@ -161,10 +164,14 @@ QuadToTriAlgoT<FSRC>::execute(FieldHandle srcH, FieldHandle& dstH)
   typename FSRC::value_type val;
 
   if (qsfield->data_at() == Field::NODE) {
-    for (unsigned int i = 0; i < hnsize; i++)
-    {
-      qsfield->value(val, (typename FSRC::mesh_type::Node::index_type)(i));
+
+    unsigned int i = 0;
+    typename FSRC::fdata_type dat = qsfield->fdata();
+    typename FSRC::fdata_type::iterator iter = dat.begin();
+    while (iter != dat.end()) {
+      val = *iter;
       tvfield->set_value(val, (TriSurfMesh::Node::index_type)(i));
+      ++iter; ++i;
     }
   } else if (qsfield->data_at() == Field::FACE) {
     for (unsigned int i = 0; i < elemmap.size(); i++)
@@ -173,12 +180,8 @@ QuadToTriAlgoT<FSRC>::execute(FieldHandle srcH, FieldHandle& dstH)
       tvfield->set_value(val, (TriSurfMesh::Elem::index_type)(i*2+0));
       tvfield->set_value(val, (TriSurfMesh::Elem::index_type)(i*2+1));
     }
-  } else if (qsfield->data_at() == Field::NONE) {
-    // nothing to copy
   } else {
-    cerr << "Error -- don't know how to handle data_at == "<<qsfield->data_at()<<"\n";
-    dstH=0;
-    return false;
+    msg << "Warning: did not load data values, use DirectInterp" << endl;
   }
   return true;
 }

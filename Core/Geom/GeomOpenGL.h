@@ -39,7 +39,7 @@
 
 #include <stddef.h>
 #include <stdlib.h>
-#include <GL/glu.h>
+#include <sci_glu.h>
 #include <GL/glx.h>
 
 #include <sci_config.h>

@@ -84,7 +84,7 @@ Gradient::execute()
 
   if (!fieldin->query_scalar_interface(this))
   {
-    error( "Only availible for Scalar data." );
+    error( "This module only works on fields of scalar data." );
     return;
   }
 

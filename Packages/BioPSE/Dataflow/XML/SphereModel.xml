@@ -8,10 +8,14 @@
       <author>Sascha Moehrs</author>
     </authors>
 
+	<summary>Build a discrete unit sphere from a unit volume</summary>
+
     <description>
       <p>Date: January 2003; Version: 1.0</p>
-	  <p>selects those elements from the unit volume which belong to the unit sphere
-          and creates a new mesh containing only those elements</p>
+	  <p>The module takes a HexVolField, which covers the unit volume, as input
+         and creates a new mesh, which contains only those cells belonging to
+         the unit sphere.
+      </p>
     </description>
 
   </overview>

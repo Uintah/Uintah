@@ -195,7 +195,7 @@ Isosurface::execute()
   if ( field->generation != last_generation_ )
   {
     // new field
-    new_field( field );
+    if (!new_field( field )) return;
     last_generation_ = field->generation;
     if ( !gui_extract_from_new_field_.get() )
     {
@@ -259,17 +259,14 @@ Isosurface::execute()
   }
   else if (gui_active_isoval_selection_tab_.get() == "2")
   { // list
-    string vlist = gui_iso_value_list_.get();
-    char *value_str = new char[500];
-    strncpy(value_str, vlist.c_str(), 500);
-    char *val;
-    while ((val = strtok(value_str, " "))) {
-      //value_str = 0;
-      isovals.push_back(atof(val));
+    istringstream vlist(gui_iso_value_list_.get());
+    double val;
+    while(!vlist.eof())
+    {
+      vlist >> val;
+      if (vlist.fail()) { break; }
+      isovals.push_back(val);
     }
-//    cerr << "Number of isovalues="<<isovals.size()<<"\n";
-//    for (int idx=0; idx<isovals.size(); idx++) 
-//      cerr << "  "<<idx<<" - "<<isovals[idx]<<"\n";
   }
   else
   {
@@ -446,7 +443,7 @@ Isosurface::execute()
 }
 
 
-void
+bool
 Isosurface::new_field( FieldHandle field )
 {
   const string type = field->get_type_description()->get_name();
@@ -454,8 +451,8 @@ Isosurface::new_field( FieldHandle field )
   ScalarFieldInterface *sfi = field->query_scalar_interface(this);
   if (! sfi)
   {
-    error("Not a scalar input field.");
-    return;
+    error("Input field does not contain scalar data.");
+    return false;
   }
 
   // Reset the GUI.
@@ -476,6 +473,7 @@ Isosurface::new_field( FieldHandle field )
     prev_min_ = minmax.first;
     prev_max_ = minmax.second;
   }
+  return true;
 }
 
 } // End namespace SCIRun

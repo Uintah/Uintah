@@ -43,7 +43,7 @@
 #include <Core/2d/Axes.h>
 
 #include <GL/gl.h>
-#include <GL/glu.h>
+#include <sci_glu.h>
 #if HAVE_GL_GLS_H
 #include <GL/gls.h>
 #endif

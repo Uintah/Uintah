@@ -95,9 +95,13 @@ ScalarFieldStats::execute()
     error("Unable to initialize iport 'Input Field'.");
     return;
   }
-  if (!(ifp->get(ifieldhandle) && ifieldhandle.get_rep()
-	&& ifieldhandle->is_scalar()))
+  if (!(ifp->get(ifieldhandle) && ifieldhandle.get_rep()))
   {
+    return;
+  }
+  if (!ifieldhandle->query_scalar_interface(this))
+  {
+    error("This module only works on scalar fields.");
     return;
   }
 

@@ -95,18 +95,7 @@ ChangeFieldBounds::ChangeFieldBounds(GuiContext* ctx)
 
 ChangeFieldBounds::~ChangeFieldBounds()
 {
-  if (widgetid_)
-  {
-    GeometryOPort *ogport = (GeometryOPort*)get_oport("Transformation Widget");
-    if (!ogport)
-    {
-      error("Unable to initialize oport 'Transformation Widget'.");
-      return;
-    }
-    ogport->delObj(widgetid_);
-    ogport->flushViews();
-    widgetid_ = 0;
-  }
+  delete box_;
 }
 
 

@@ -259,41 +259,6 @@ ShowField::ShowField(GuiContext* ctx) :
 
 ShowField::~ShowField()
 {
-  bool changed_visibility = false;
-  if (node_id_)
-  {
-    ogeom_->delObj(node_id_);
-    changed_visibility = true;
-    node_id_ = 0;
-  }
-  if (edge_id_)
-  {
-    ogeom_->delObj(edge_id_);
-    changed_visibility = true;
-    edge_id_ = 0;
-  }
-  if (face_id_)
-  {
-    ogeom_->delObj(face_id_);
-    changed_visibility = true;
-    face_id_ = 0;
-  }
-  if (data_id_)
-  {
-    ogeom_->delObj(data_id_);
-    changed_visibility = true;
-    data_id_ = 0;
-  }
-  if (text_id_)
-  {
-    ogeom_->delObj(text_id_);
-    changed_visibility = true;
-    text_id_ = 0;
-  }
-  if (changed_visibility)
-  {
-    ogeom_->flushViews();
-  }
 }
 
 
@@ -355,7 +320,7 @@ ShowField::fetch_typed_algorithm(FieldHandle fld_handle,
     }
   }
 
-  if (vfld_handle.get_rep() && vfld_handle->query_vector_interface())
+  if (vfld_handle.get_rep() && vfld_handle->query_vector_interface(this))
   {
     const TypeDescription *vftd = vfld_handle->get_type_description();
     CompileInfoHandle dci =
@@ -370,7 +335,7 @@ ShowField::fetch_typed_algorithm(FieldHandle fld_handle,
     }
   }
 
-  if (vfld_handle.get_rep() && vfld_handle->query_tensor_interface())
+  if (vfld_handle.get_rep() && vfld_handle->query_tensor_interface(this))
   {
     const TypeDescription *vftd = vfld_handle->get_type_description();
     CompileInfoHandle dci =
@@ -507,8 +472,8 @@ ShowField::execute()
       return;
     }
   }
-  else if (fld_handle->query_vector_interface() ||
-	   fld_handle->query_tensor_interface())
+  else if (fld_handle->query_vector_interface(this) ||
+	   fld_handle->query_tensor_interface(this))
   {
     vfld_handle = fld_handle;
   }

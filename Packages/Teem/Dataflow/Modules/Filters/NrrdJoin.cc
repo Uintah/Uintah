@@ -79,7 +79,6 @@ NrrdJoin::execute()
     return;
   }
   
-
   port_range_type range = get_iports("Nrrds");
   if (range.first == range.second) { return; }
 
@@ -121,10 +120,7 @@ NrrdJoin::execute()
       if ((onrrd_type_ != nrrd->nrrd->type) && 
 	  (onrrd_type_ != nrrdTypeDouble)) {
 	//! promote to the biggest type
-	if (! nrrdTypeFixed[nrrd->nrrd->type]) {
-	  //! just promote to double
-	  onrrd_type_ = nrrdTypeDouble;
-	} else if (nrrdTypeSize[nrrd->nrrd->type] > nrrdTypeSize[onrrd_type_]){
+	if (nrrdTypeSize[nrrd->nrrd->type] > nrrdTypeSize[onrrd_type_]){
 	  onrrd_type_ = nrrd->nrrd->type;
 	}
       }

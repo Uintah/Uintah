@@ -10,25 +10,24 @@
     </authors>
     <summary>The ShowLeads module graphs a Matrix that has rows of potentials.</summary>
     <description>
-      <p>The input matrix must be a DenseMatrix, which has unlimited rows. Each
-row can have an unlimited number of time instances. The scalar value
-at each (row,column) is a potential measurement, and the graph is a
-series of graphs. For each row in the matrix ShowLeads displays a line
-graph of the potentials over regular time intervals, and time progresses
-along the x-axis.</p>
+      <p>The input matrix is rendered by interpreting each row in the
+matrix as a time series of values.  So if you have a mxn matrix, you
+will see m line graphs with n values per graph. If an upstream module
+has set the units and timescale appropriately, the x-axis is (time) is
+updated appropriately. </p>
       <p>Time units are displayed along the x-axis, where they are
 taken as a string from the properties in the Matrix. </p>
       <p>The ShowLeads module properties are: time-units, time-start,
-and time-end time-units; a string that displays along the
-x-axis. The start and end time determine the values for time.</p>
-      <p>The sliders at the top of the dialog zoom the display, showing 
-desired leads only. Changing the Vertical Scale simply
-applies a multiplier to the scalar values before display.</p>
+and time-end time-units; a string that displays along the x-axis. The
+start and end time determine the values for time.</p>
+      <p>The sliders at the top of the dialog are for choosing the row
+indecies that you wish to display. The Vertical Scale slider is for
+controlling the spacing that the graphs are drawn with, for example if
+you wish to render each lead in exaclty the same space, then set the
+Vertical Scale to 0.0.</p>
       <p>Dragging the yellow vertical bars in the graph window updates
-the value at each lead on the left side of the graph, allowing for
-closer data inspection.</p>
-      <p>Data is arranged as follows: Each row in the matrix is a
-lead; each column is a time instance.  Thus, time (row, column) is a potential (scalar) at each lead.</p>
+the value displayed for each lead on the left side of the graph,
+allowing for closer data inspection at each time step.</p>
     </description>
   </overview>
   <implementation>
