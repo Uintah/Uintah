@@ -2452,43 +2452,53 @@ if test "$sci_required_mpi" = "yes"; then
         # CXX="mp$CXX"
         # ;;
      *)
+        _sci_optional=optional
         if test "$with_mpi"; then
-           _sci_lib="$with_mpi/lib"
-           _sci_inc="$with_mpi/include"
-        else
-           _sci_lib="$sci_thirdparty_libs"
-           _sci_inc="$sci_thirdparty_includes"
+           if test "$with_mpi" = "yes"; then
+              _sci_optional=required
+           else
+              _sci_optional=specific
+              _sci_lib="$with_mpi/lib"
+              _sci_inc="$with_mpi/include"
+           fi
         fi
         # /usr/include/mpi is the standard location of mpi on some linux dists.
         SCI_TRY_LINK(MPI,mpi library and header-1,mpi.h,
                      $_sci_inc /usr/include/mpi,mpi lam util pmpi,$_sci_lib,,,optional)
 
         if test "$HAVE_MPI" != "yes"; then
-        # Try without pmpi (and with pthreads) (for the newer version
-	# of lam mpi.
-        SCI_TRY_LINK(MPI,mpi library and header-2,mpi.h,
-        $_sci_inc /usr/include/mpi,mpi lam util pthread,$_sci_lib,,,optional)
+          # Try without pmpi (and with pthreads) (for the newer version
+          # of lam mpi.
+          SCI_TRY_LINK(MPI,mpi library and header-2,mpi.h,
+          $_sci_inc /usr/include/mpi,mpi lam util pthread,$_sci_lib,,,optional)
 
+          if test "$HAVE_MPI" != "yes"; then
+             SCI_TRY_LINK(MPI,mpi library and header-3,mpi.h,
+             $_sci_inc /usr/include/mpi,mpi,$_sci_lib,,,optional)
 
-        if test "$HAVE_MPI" != "yes"; then
-           SCI_TRY_LINK(MPI,mpi library and header-3,mpi.h,
-           $_sci_inc /usr/include/mpi,mpi,$_sci_lib,,,optional)
+             if test "$HAVE_MPI" != "yes"; then
+                SCI_TRY_LINK(MPI,mpich library and header,mpi.h,
+                $_sci_inc /usr/include/mpi,mpich pmpich,$_sci_lib,,,optional)
 
-           if test "$HAVE_MPI" != "yes"; then
-              SCI_TRY_LINK(MPI,mpich library and header,mpi.h,
-              $_sci_inc /usr/include/mpi,mpich pmpich,$_sci_lib,,,optional)
-
-              if test "$HAVE_MPI" = "yes"; then
-  	        HAVE_MPICH="yes"
-#  	        LIB_DIR_MPI="$LIB_DIR_MPICH"
-#                MPI_LIB_FLAG="$MPICH_LIB_FLAG"
-#                MPI_LIB_DIR_FLAG="$MPICH_LIB_DIR_FLAG"
-              fi
-           fi
-        fi
+                if test "$HAVE_MPI" = "yes"; then
+                  HAVE_MPICH="yes"
+                fi
+             fi
+          fi
         fi
         
         if test "$HAVE_MPI" = "yes"; then
+
+           if test "$_sci_optional" = "specific"; then
+              # verify that it was found in the location requested.
+              if test ! -e $with_mpi/lib/libmpi.so &&
+                 test ! -e $with_mpi/lib/libmpi.a &&
+                 test ! -e $with_mpi/lib/libmpi.dylib; then
+                   echo
+                   AC_MSG_ERROR(Found libmpi but not in requested directory: $with_mpi/lib)
+              fi
+           fi
+
            if test "$HAVE_MPICH" = "yes"; then
              DEF_MPI="#define HAVE_MPICH 1"
            else
