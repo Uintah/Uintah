@@ -6,7 +6,7 @@ SRCDIR   := Packages/Uintah/Core/Grid
 
 SRCS     += \
 	$(SRCDIR)/Array3Index.cc $(SRCDIR)/Box.cc \
-	$(SRCDIR)/BufferInfo.cc \
+	$(SRCDIR)/BufferInfo.cc $(SRCDIR)/PackBufferInfo.cc \
 	$(SRCDIR)/CellIterator.cc $(SRCDIR)/CCVariableBase.cc \
 	$(SRCDIR)/SFCXVariableBase.cc $(SRCDIR)/SFCYVariableBase.cc \
 	$(SRCDIR)/SFCZVariableBase.cc \
