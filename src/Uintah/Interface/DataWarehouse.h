@@ -12,6 +12,10 @@
 #include <Uintah/Grid/ReductionVariableBase.h>
 #include <Uintah/Interface/DataWarehouseP.h>
 
+#include <iostream>
+#include <fstream>
+
+using namespace std;
 namespace SCICore {
 namespace Geometry {
   class Vector;
@@ -117,13 +121,23 @@ WARNING
       // Adds a variable to the save set
       virtual void pleaseSave(const VarLabel* label, int number) = 0;
        
+      // Adds a variable to the integrated save set
+      virtual void pleaseSaveIntegrated(const VarLabel* label) = 0;
+
       //////////
       // Retrieves the saveset
       virtual void getSaveSet(std::vector<const VarLabel*>&,
 			      std::vector<int>&) const = 0;
 
+      // Retrieves the integrated saveset
+      virtual void getIntegratedSaveSet(std::vector<const VarLabel*>&) const=0;
+
       virtual void emit(OutputContext&, const VarLabel* label,
 			int matlIndex, const Patch* patch) const = 0;
+
+      virtual void emit(ofstream& intout,
+			vector <const VarLabel*> label) const = 0;
+
    protected:
       DataWarehouse( int MpiRank, int MpiProcesses, int generation );
       int d_MpiRank, d_MpiProcesses;
@@ -139,6 +153,9 @@ WARNING
 
 //
 // $Log$
+// Revision 1.24  2000/06/01 23:17:53  guilkey
+// Added virtual pleaseSaveIntegrated functions.
+//
 // Revision 1.23  2000/05/30 20:19:40  sparker
 // Changed new to scinew to help track down memory leaks
 // Changed region to patch
