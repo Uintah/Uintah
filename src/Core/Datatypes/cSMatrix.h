@@ -15,9 +15,7 @@
 #define CSMATRIX_H 1
 
 #include <SCICore/share/share.h>
-
-#include <iostream.h>
-#include <fstream.h>
+class ostream;
 #include <SCICore/CoreDatatypes/cMatrix.h>
 #include <SCICore/Math/Complex.h>
 #include <SCICore/CoreDatatypes/cVector.h>
@@ -55,6 +53,10 @@ public:
 
 //
 // $Log$
+// Revision 1.3  1999/08/19 23:52:59  sparker
+// Removed extraneous includes of iostream.h  Fixed a few NotFinished.h
+// problems.  May have broken KCC support.
+//
 // Revision 1.2  1999/08/17 06:39:01  sparker
 // Merged in modifications from PSECore to make this the new "blessed"
 // version of SCIRun/Uintah.
