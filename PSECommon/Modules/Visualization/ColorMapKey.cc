@@ -49,7 +49,6 @@ public:
   virtual ~ColorMapKey();
   virtual void execute();
 };
-
 extern "C" Module *make_ColorMapKey(const clString &id) {
   return new ColorMapKey(id);
 }
@@ -79,15 +78,10 @@ void ColorMapKey::execute() {
   if( imap->get(map) == 0) 
     return;
 
-  // default billboard coordinates
-  Vector bbvec(0,0,0);
-  // default scaling
-  Vector scale(1,1,1);
-
   GeomGroup *all = new GeomGroup();
 
   double xsize = 15./16.0;
-  double ysize = 0.1;
+  double ysize = 0.05;
   ColorMapTex *sq = new ColorMapTex( Point( 0, -1, 0),
 				 Point( xsize, -1, 0),
 				 Point( xsize, -1 + ysize, 0 ),
@@ -107,36 +101,46 @@ void ColorMapKey::execute() {
       cerr << "ColorMapKey wants ScalarFieldRG, didn't get it\n";
       return;
     }
+    double max = -1e30;
+    double min = 1e30;
 
-    scale = Vector(grid->nx, grid->ny, 1 );
-    
-    int i;
-
-    double min = map->max;
-    double max = map->min;
-
+    int i,j,k;
+    if( !map->IsScaled()) {
+      for(i = 0; i < grid->nx; i++){
+	for(j = 0; j < grid->ny; j++){
+	  for(k = 0; k < grid->nz; k++){
+	    max = ( grid->grid(i,j,k) > max) ? grid->grid(i,j,k) : max;
+	    min = ( grid->grid(i,j,k) < min) ? grid->grid(i,j,k) : min;
+	  }
+	}
+      }
+      if (min == max) {
+	min -= 0.001;
+	max += 0.001;
+      }
+      map->Scale(min,max);
+    } else {
+      max = map->max;
+      min = map->min;
+    }
     // some bases for positioning text
     double xloc = xsize;
-    double yloc = -1 + 1.5 * ysize;
+    double yloc = -1 + 1.1 * ysize;
 
     // create min and max numbers at the ends
     char value[80];
-    sprintf(value, "%g", min );
+    sprintf(value, "%.2g", max );
     all->add( new GeomMaterial( new GeomText(value, Point(xloc,yloc,0) ),
 					     white) );
-    sprintf(value, "%g", max );
+    sprintf(value, "%.2g", min );
     all->add( new GeomMaterial( new GeomText(value, Point(0,yloc,0)), white));
 
     // fill in 3 other places
     for( i = 1; i < 4; i++ ) {
-      sprintf( value, "%g", max - i*(max-min)/4.0 );
+      sprintf( value, "%.2g", min + i*(max-min)/4.0 );
       all->add( new GeomMaterial( new GeomText(value,Point(xloc*i/4.0,yloc,0)),
 				  white) );
-    }
-    
-    Point a, b;
-    sf->get_bounds(a, b);
-    bbvec = Vector(a.x() - 1, a.y() - 1, (a.z() + b.z()) / 2.0 );
+    }    
   }
 
   GeomSticky *sticky = new GeomSticky(all);
@@ -149,6 +153,11 @@ void ColorMapKey::execute() {
 
 //
 // $Log$
+// Revision 1.10  2000/06/13 20:31:19  kuzimmer
+// Modified RescaleColorMap to set the scaled flag in the color map.
+// Modified ColorMapKey so that it scales the colormap to the data if it
+// wasn't previously scaled.
+//
 // Revision 1.9  2000/06/01 16:40:25  kuzimmer
 // numbers were backwards on ColorMapKey
 //
