@@ -119,6 +119,7 @@ public:
     image[y][x].set(value);
   }
   void save(char* file);
+  void save_ppm(char *filename);
 };
 #if 0
 class ImageTile;
