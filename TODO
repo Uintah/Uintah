@@ -24,10 +24,16 @@ Fix Salmon
    Raytracer
    Postscript renderer
    X11 renderer
+     X server fixes
+     TrueColor support
+     Fix mouse motions - backwards
+     Verify transformations
+     Move bounding boxes only
+     Overlapping
 TCL/TK:
    Thumbwheel 2D widget *
    Rewrite User Interfaces for all modules *
-   File browser box *
+   DONE File browser box *
    Fix portlights
    Fix backward connections in NetworkEditor
    Fix one to many connections
