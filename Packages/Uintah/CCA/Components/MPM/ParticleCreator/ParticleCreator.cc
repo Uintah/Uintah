@@ -417,7 +417,6 @@ ParticleCreator::countAndCreateParticles(const Patch* patch,
   Box b2 = patch->getBox();
   Box b = b1.intersect(b2);
   if(b.degenerate()){
-    cout << "B.DEGENERATE" << endl;
     return 0;
   }
   
