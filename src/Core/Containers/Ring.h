@@ -38,9 +38,9 @@
 
 #include <vector>
 
-using std::vector;
-
 namespace SCIRun {
+  using std::vector;
+
 
 template<class T> class Ring {
     vector<T> data;
