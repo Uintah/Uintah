@@ -74,17 +74,17 @@ HypoElasticPlastic::HypoElasticPlastic(ProblemSpecP& ps, MPMLabel* Mlb, int n8or
   }
 
   pLeftStretchLabel = VarLabel::create("p.leftStretch",
-				       ParticleVariable<Matrix3>::getTypeDescription());
+	ParticleVariable<Matrix3>::getTypeDescription());
   pLeftStretchLabel_preReloc = VarLabel::create("p.leftStretch+",
-						ParticleVariable<Matrix3>::getTypeDescription());
+	ParticleVariable<Matrix3>::getTypeDescription());
   pRotationLabel = VarLabel::create("p.rotation",
-				    ParticleVariable<Matrix3>::getTypeDescription());
+	ParticleVariable<Matrix3>::getTypeDescription());
   pRotationLabel_preReloc = VarLabel::create("p.rotation+",
-					     ParticleVariable<Matrix3>::getTypeDescription());
+	ParticleVariable<Matrix3>::getTypeDescription());
   pDamageLabel = VarLabel::create("p.damage",
-				  ParticleVariable<double>::getTypeDescription());
+	ParticleVariable<double>::getTypeDescription());
   pDamageLabel_preReloc = VarLabel::create("p.damage+",
-					   ParticleVariable<double>::getTypeDescription());
+	ParticleVariable<double>::getTypeDescription());
 }
 
 HypoElasticPlastic::~HypoElasticPlastic()
@@ -322,6 +322,12 @@ HypoElasticPlastic::computeStressTensor(const PatchSubset* patches,
       // Calculate rate of deformation tensor (D) and spin tensor (W)
       tensorD = (tensorL + tensorL.Transpose())*0.5;
       tensorW = (tensorL - tensorL.Transpose())*0.5;
+      for (int ii = 1; ii < 4; ++ii) {
+        for (int jj = 1; jj < 4; ++jj) {
+          if (fabs(tensorD(ii,jj)) < d_tol) tensorD(ii,jj) = 0.0;
+          if (fabs(tensorW(ii,jj)) < d_tol) tensorW(ii,jj) = 0.0;
+        }
+      }
 
       // Calculate the incremental update of the left stretch (V) and the rotation (R)
       tensorV = pLeftStretch[idx];
@@ -329,20 +335,11 @@ HypoElasticPlastic::computeStressTensor(const PatchSubset* patches,
       computeUpdatedVR(delT, tensorD, tensorW, tensorV, tensorR);
       tensorF_new = tensorV*tensorR;
       double J = tensorF_new.Determinant();
-
-         // Test that this leads to same deformation gradient as before
-         //cout << "Tensor F using new algorithm = \n" << tensorF_new << endl;
-         //cout << "Determinant of F = " << J << endl;
-         //Matrix3 deformationGradientInc = tensorF*delT + one;
-         //double Jinc = deformationGradientInc.Determinant();
-         //Matrix3 deformationGradient_new = deformationGradientInc*pDeformGrad[idx];
-         //double J_new = deformationGradient_new.Determinant();
-         //cout << "Tensor F using old algorithm = \n" << deformationGradient_new << endl;
-         //cout << "Determinant of F = " << J_new << endl;
-         //double vol_new_algo = pMass[idx]/rho_0*J;
-         //double vol_old_algo = Jinc*pVolume[idx];
-         //cout << "New volume using new algorithm = " << vol_new_algo << endl;
-         //cout << "New volume using old algorithm = " << vol_old_algo << endl;
+      //cout << "For particle " << idx << " kinematics \n";
+      //cout << "Velocity Gradient = \n" << tensorL << endl;
+      //cout << "D = \n" << tensorD << endl;
+      //cout << "V = \n" << tensorV << endl;
+      //cout << "R = \n" << tensorR << endl;
 
       // Update the kinematic variables
       pLeftStretch_new[idx] = tensorV;
@@ -353,9 +350,6 @@ HypoElasticPlastic::computeStressTensor(const PatchSubset* patches,
       // the plastic rate of deformation tensor, and the Cauchy stress
       // back to the material configuration and calculate their
       // deviatoric parts
-      //cout << " tensorL = \n" << tensorL << endl;
-      //cout << " tensorD = \n" << tensorD << endl;
-      //cout << " tensorR = \n" << tensorR << endl;
       tensorD = (tensorR.Transpose())*(tensorD*tensorR);
       tensorEta = tensorD - one*(tensorD.Trace()/3.0);
 
@@ -363,12 +357,11 @@ HypoElasticPlastic::computeStressTensor(const PatchSubset* patches,
       tensorSig = (tensorR.Transpose())*(tensorSig*tensorR);
       Matrix3 tensorP = one*(tensorSig.Trace()/3.0);
       tensorS = tensorSig - tensorP;
-      //cout << "Tensor Sigma = \n" << tensorSig << endl;
-      //cout << "Tensor Hydro = \n" << tensorP << endl;
-      //cout << "Tensor Devia = \n" << tensorS << endl;
 
       // Integrate the stress rate equation to get a trial stress
-      Matrix3 trialS = tensorS + tensorD*(2.0*shear*delT);
+      // and calculate the J2 equivalent stress (assuming isotropic yield surface)
+      Matrix3 trialS = tensorS + tensorEta*(2.0*shear*delT);
+      equivStress = (trialS.NormSquared())*1.5;
 
       // To determine if the stress is above or below yield used a von Mises yield
       // criterion Assumption: Material yields, on average, like a von Mises solid
@@ -376,30 +369,32 @@ HypoElasticPlastic::computeStressTensor(const PatchSubset* patches,
                                                    delT, d_tol, matl, idx);
       double flowStressSq = flowStress*flowStress;
 
-      // Calculate the J2 equivalent stress (assuming isotropic yield surface)
-      equivStress = (trialS.NormSquared())*1.5;
-
-      //cout << "Trial values : \n";
+      //cout << "Trial values : Particle " << idx << "\n";
       //cout << "FlowStress = " << flowStress << " Equiv. Stress = " 
       //     << sqrt(equivStress) << endl;
-      if (flowStressSq > equivStress) {
+      if (flowStressSq >= equivStress) {
 
         // Calculate the deformed volume
         double rho_cur = rho_0/J;
         pVolume_deformed[idx]=pMass[idx]/rho_cur;
 
         // For the elastic region : the updated stress is the trial stress
-        Matrix3 tensorDElastic = tensorD;
-        Matrix3 tensorHy = d_eos->computePressure(matl, bulk, shear, tensorF_new, tensorDElastic, 
+        Matrix3 tensorHy = d_eos->computePressure(matl, bulk, shear, tensorF_new, tensorD, 
                                                  tensorP, pTemperature[idx], rho_cur, delT);
         Matrix3 tensorSig = trialS + tensorHy;
+        //cout << "For particle " << idx << " elastic \n";
+        //cout << "tensorD = \n" << tensorD << endl;
+        //cout << "tensorS = \n" << tensorS << endl;
+        //cout << "tensorP = \n" << tensorP << endl;
+        //cout << "tensorHy = \n" << tensorHy << endl;
+        //cout << "tensorSig = \n" << tensorSig << endl;
 
         // Compute the strain energy for the particles
         double pStrainEnergy = (tensorD(1,1)*tensorSig(1,1) +
 				tensorD(2,2)*tensorSig(2,2) + tensorD(3,3)*tensorSig(3,3) +
 				2.0*(tensorD(1,2)*tensorSig(1,2) + 
-				     tensorD(1,3)*tensorSig(1,3) + tensorD(2,3)*tensorSig(2,3)))*
-	  pVolume_deformed[idx]*delT;
+				tensorD(1,3)*tensorSig(1,3) + tensorD(2,3)*tensorSig(2,3)))*
+	                        pVolume_deformed[idx]*delT;
         totalStrainEnergy += pStrainEnergy;		   
 
         // Rotate the stress rate back to the laboratory coordinates
@@ -418,47 +413,57 @@ HypoElasticPlastic::computeStressTensor(const PatchSubset* patches,
         // Using the algorithm from Zocher, Maudlin, Chen, Flower-Maudlin
         // European Congress on Computational Methods in Applied Sciences and Engineering
         // September 11-14, 2000.
-        ASSERT(flowStress != 0);
- 
         // Basic assumption is that all strain rate is plastic strain rate
+        ASSERT(flowStress != 0);
 
-        // Calculate the tensor u (at start of time interval)
-        double sqrtSxS = tensorS.Norm(); ASSERT(sqrtSxS != 0);
-        Matrix3 tensorU = tensorS*(sqrtThree/sqrtSxS);
+        Matrix3 Stilde;
+        double delGamma;
+        double sqrtSxS = tensorS.Norm(); 
+        // cout << " Before update : sqrtSxS = " << sqrtSxS << endl;
+        // cout << "tensorS = \n" << tensorS << endl;
+        if ((sqrtSxS == 0) && (pDamage[idx] < 1)) { 
+	  // If the material goes plastic in the first step, 
+	  Stilde = trialS;
+          delGamma = ((sqrt(equivStress)-flowStress)/(2.0*shear))/(1.0+bulk/(3.0*shear));
+        } else {
+	  // Calculate the tensor u (at start of time interval)
+	  ASSERT(sqrtSxS != 0);
+	  Matrix3 tensorU = tensorS*(sqrtThree/sqrtSxS);
 
-        // Calculate cplus and initial values of dstar, gammadot and theta
-        ASSERT(tensorS.Determinant() != 0.0);
-        double gammadotplus = tensorEta.Contract(tensorS.Inverse())*sqrtSxS/sqrtThree;
-        double cplus = tensorU.NormSquared(); ASSERT(cplus != 0);
-        double sqrtcplus = sqrt(cplus);
-        double dstar = tensorU.Contract(tensorEta); ASSERT(dstar != 0);
-        double theta = (dstar - cplus*gammadotplus)/dstar;
+	  // Calculate cplus and initial values of dstar, gammadot and theta
+	  ASSERT(tensorS.Determinant() != 0.0);
+	  double gammadotplus = tensorEta.Contract(tensorS.Inverse())*sqrtSxS/sqrtThree;
+	  double cplus = tensorU.NormSquared(); ASSERT(cplus != 0);
+	  double sqrtcplus = sqrt(cplus);
+	  double dstar = tensorU.Contract(tensorEta); ASSERT(dstar != 0);
+	  double theta = (dstar - cplus*gammadotplus)/dstar;
 
-        // Calculate u_eta and u_q
-        double sqrtEtaxEta = tensorEta.Norm();
-        Matrix3 tensorU_eta = tensorEta/sqrtEtaxEta;
-        Matrix3 tensorU_q = tensorS/sqrtSxS;
+	  // Calculate u_eta and u_q
+	  double sqrtEtaxEta = tensorEta.Norm();
+	  Matrix3 tensorU_eta = tensorEta/sqrtEtaxEta;
+	  Matrix3 tensorU_q = tensorS/sqrtSxS;
 
-        // Calculate new dstar
-        int count = 0;
-        double dstar_old = 0.0;
-        do {
-          dstar_old = dstar;
-	  Matrix3 temp = (tensorU_q+tensorU_eta)*(0.5*theta) + tensorU_eta*(1.0-theta);
-	  dstar = (tensorU_eta.Contract(temp))*sqrtcplus;
-	  theta = (dstar - cplus*gammadotplus)/dstar;
-	  ++count;
-        } while (fabs(dstar-dstar_old) > d_tol && count < 5);
+	  // Calculate new dstar
+	  int count = 0;
+	  double dstar_old = 0.0;
+	  do {
+	    dstar_old = dstar;
+	    Matrix3 temp = (tensorU_q+tensorU_eta)*(0.5*theta) + tensorU_eta*(1.0-theta);
+	    dstar = (tensorU_eta.Contract(temp))*sqrtcplus;
+	    theta = (dstar - cplus*gammadotplus)/dstar;
+	    ++count;
+	  } while (fabs(dstar-dstar_old) > d_tol && count < 5);
 
-        // Calculate delGammaEr
-        double delGammaEr =  (sqrtTwo*flowStress - sqrtThree*sqrtSxS)/(2.0*shear*cplus);
+	  // Calculate delGammaEr
+	  double delGammaEr =  (sqrtTwo*flowStress - sqrtThree*sqrtSxS)/(2.0*shear*cplus);
 
-        // Calculate delGamma
-        double delGamma = dstar/cplus*delT - delGammaEr;
+	  // Calculate delGamma
+	  delGamma = dstar/cplus*delT - delGammaEr;
 
-        // Calculate Stilde
-        double denom = 1.0 + (3.0*sqrtTwo*shear*delGamma)/flowStress; ASSERT(denom != 0);
-        Matrix3 Stilde = (tensorS + tensorEta*(2.0*shear*delT))/denom;
+	  // Calculate Stilde
+	  double denom = 1.0 + (3.0*sqrtTwo*shear*delGamma)/flowStress; ASSERT(denom != 0);
+	  Stilde = trialS/denom;
+        }
         
         // Do radial return adjustment
         tensorS = Stilde*(flowStress*sqrtTwo/(sqrtThree*Stilde.Norm()));
@@ -476,19 +481,22 @@ HypoElasticPlastic::computeStressTensor(const PatchSubset* patches,
         pVolume_deformed[idx]=pMass[idx]/rho_cur;
 
         // Update the total stress tensor
-        Matrix3 tensorDElastic = zero;
-        Matrix3 tensorHy = d_eos->computePressure(matl, bulk, shear, tensorF_new, tensorDElastic, 
+        Matrix3 tensorHy = d_eos->computePressure(matl, bulk, shear, tensorF_new, tensorD, 
                                                  tensorP, pTemperature[idx], rho_cur, delT);
         Matrix3 tensorSig = tensorS + tensorHy;
+        //cout << "For particle " << idx << " plastic \n";
+        //cout << "tensorD = \n" << tensorD << endl;
+        //cout << "tensorS = \n" << tensorS << endl;
+        //cout << "tensorP = \n" << tensorP << endl;
+        //cout << "tensorHy = \n" << tensorHy << endl;
+        //cout << "tensorSig = \n" << tensorSig << endl;
 
-        //cout << "New Stress after plastic update for particle "<<idx<<" = \n" << tensorS << endl
-        //     << "\n" << (one*pressure) << "\n" << tensorP << endl;
         // Compute the strain energy for the particles
         double pStrainEnergy = (tensorD(1,1)*tensorSig(1,1) +
-				tensorD(2,2)*tensorSig(2,2) + tensorD(3,3)*tensorSig(3,3) +
-				2.0*(tensorD(1,2)*tensorSig(1,2) + 
-				     tensorD(1,3)*tensorSig(1,3) + tensorD(2,3)*tensorSig(2,3)))*
-	  pVolume_deformed[idx]*delT;
+		tensorD(2,2)*tensorSig(2,2) + tensorD(3,3)*tensorSig(3,3) +
+		2.0*(tensorD(1,2)*tensorSig(1,2) + 
+		tensorD(1,3)*tensorSig(1,3) + tensorD(2,3)*tensorSig(2,3)))*
+	        pVolume_deformed[idx]*delT;
         totalStrainEnergy += pStrainEnergy;		   
 
         // Rotate the stress and deformation rate back to the laboratory coordinates
