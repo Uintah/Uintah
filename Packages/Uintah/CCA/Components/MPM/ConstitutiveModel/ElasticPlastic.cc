@@ -6,7 +6,6 @@
 #include "PlasticityModels/MPMEquationOfStateFactory.h"
 #include "PlasticityModels/PlasticityState.h"
 #include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/MPMMaterial.h>
-#include <Packages/Uintah/CCA/Components/MPM/Crack/FractureDefine.h>
 #include <Packages/Uintah/Core/Grid/Patch.h>
 #include <Packages/Uintah/CCA/Ports/DataWarehouse.h>
 #include <Packages/Uintah/Core/Grid/NCVariable.h>
@@ -666,12 +665,12 @@ ElasticPlastic::computeStressTensor(const PatchSubset* patches,
     delt_vartype delT;
     old_dw->get(delT, lb->delTLabel);
 
-#ifdef FRACTURE
     constParticleVariable<Short27> pgCode;
-    new_dw->get(pgCode, lb->pgCodeLabel, pset);
     constNCVariable<Vector> GVelocity;
-    new_dw->get(GVelocity,lb->GVelocityLabel, dwi, patch, gac, NGN);
-#endif
+    if (flag->d_fracture) {
+      new_dw->get(pgCode, lb->pgCodeLabel, pset);
+      new_dw->get(GVelocity,lb->GVelocityLabel, dwi, patch, gac, NGN);
+    }
 
     // GET LOCAL DATA 
 
@@ -744,24 +743,24 @@ ElasticPlastic::computeStressTensor(const PatchSubset* patches,
       // Stage 1:
       //-----------------------------------------------------------------------
       // Calculate the velocity gradient (L) from the grid velocity
-#ifdef FRACTURE
       short pgFld[27];
-      for(int k=0; k<27; k++) 
-        pgFld[k]=pgCode[idx][k];
-      if (flag->d_8or27==27) 
-        tensorL = computeVelocityGradient(patch, oodx, px[idx], psize[idx],
-                                          pgFld, gVelocity, GVelocity);
-      else 
-        tensorL = computeVelocityGradient(patch, oodx, px[idx], 
-                                          pgFld, gVelocity, GVelocity);
-#else
-      if (flag->d_8or27==27)
-        tensorL = computeVelocityGradient(patch, oodx, px[idx], psize[idx],
-                                          gVelocity, pErosion[idx]);
-      else
-        tensorL = computeVelocityGradient(patch, oodx, px[idx], 
-                                          gVelocity, pErosion[idx]);
-#endif
+      if (flag->d_fracture) {
+	for(int k=0; k<27; k++) 
+	  pgFld[k]=pgCode[idx][k];
+	if (flag->d_8or27==27) 
+	  tensorL = computeVelocityGradient(patch, oodx, px[idx], psize[idx],
+					    pgFld, gVelocity, GVelocity);
+	else 
+	  tensorL = computeVelocityGradient(patch, oodx, px[idx], 
+					    pgFld, gVelocity, GVelocity);
+      } else {
+	if (flag->d_8or27==27)
+	  tensorL = computeVelocityGradient(patch, oodx, px[idx], psize[idx],
+					    gVelocity, pErosion[idx]);
+	else
+	  tensorL = computeVelocityGradient(patch, oodx, px[idx], 
+					    gVelocity, pErosion[idx]);
+      }
       for (int ii = 0; ii < 3; ++ii) {
         for (int jj = 0; jj < 3; ++jj) {
           tensorL(ii,jj)=(fabs(tensorL(ii,jj)) < d_tol) ? 0.0 : tensorL(ii,jj);
@@ -1393,10 +1392,10 @@ ElasticPlastic::addComputesAndRequires(Task* task,
 
   task->requires(Task::OldDW, lb->pErosionLabel,           matlset, Ghost::None);
 
-#ifdef FRACTURE
-  task->requires(Task::NewDW,  lb->pgCodeLabel,    matlset, Ghost::None); 
-  task->requires(Task::NewDW,  lb->GVelocityLabel, matlset, gac, NGN);
-#endif
+  if (flag->d_fracture) {
+    task->requires(Task::NewDW,  lb->pgCodeLabel,    matlset, Ghost::None); 
+    task->requires(Task::NewDW,  lb->GVelocityLabel, matlset, gac, NGN);
+  }
 
   task->requires(Task::OldDW, pRotationLabel, matlset,Ghost::None);
   task->requires(Task::OldDW, pStrainRateLabel, matlset,Ghost::None);

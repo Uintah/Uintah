@@ -1,4 +1,3 @@
-#include <Packages/Uintah/CCA/Components/MPM/Crack/FractureDefine.h>
 #include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/CompMooneyRivlin.h>
 #include <Packages/Uintah/Core/Grid/Patch.h>
 #include <Packages/Uintah/CCA/Ports/DataWarehouse.h>
@@ -77,22 +76,22 @@ void CompMooneyRivlin::initializeCMData(const Patch* patch,
 			 pset);
   new_dw->allocateAndPut(pstress,lb->pStressLabel,pset);
   // for J-Integral
-#ifdef FRACTURE
   ParticleVariable<Matrix3> pdispGrads;
-  new_dw->allocateAndPut(pdispGrads, lb->pDispGradsLabel, pset);
   ParticleVariable<double>  pstrainEnergyDensity;
-  new_dw->allocateAndPut(pstrainEnergyDensity, lb->pStrainEnergyDensityLabel, pset);
-#endif
-
-  for(ParticleSubset::iterator iter =pset->begin();iter != pset->end();iter++){
-        deformationGradient[*iter] = Identity;
-        pstress[*iter] = zero;
-#ifdef FRACTURE
-     pdispGrads[*iter] = zero;
-     pstrainEnergyDensity[*iter] = 0.0;
-#endif
+  if (flag->d_fracture) {
+    new_dw->allocateAndPut(pdispGrads, lb->pDispGradsLabel, pset);
+    new_dw->allocateAndPut(pstrainEnergyDensity, lb->pStrainEnergyDensityLabel,
+			   pset);
   }
 
+  for(ParticleSubset::iterator iter =pset->begin();iter != pset->end();iter++){
+    deformationGradient[*iter] = Identity;
+    pstress[*iter] = zero;
+    if (flag->d_fracture) {
+      pdispGrads[*iter] = zero;
+      pstrainEnergyDensity[*iter] = 0.0;
+    }
+  }
   computeStableTimestep(patch, matl, new_dw);
 }
 
@@ -106,12 +105,14 @@ void CompMooneyRivlin::allocateCMDataAddRequires(Task* task,
                  matlset, Ghost::None);
   task->requires(Task::NewDW,lb->pStressLabel_preReloc, 
                  matlset, Ghost::None);
-#ifdef FRACTURE
-  task->requires(Task::NewDW,lb->pDispGradsLabel_preReloc, 
-                 matlset, Ghost::None);
-  task->requires(Task::NewDW,lb->pStrainEnergyDensityLabel_preReloc, 
-                 matlset, Ghost::None);
-#endif
+
+  if (flag->d_fracture) {
+    task->requires(Task::NewDW,lb->pDispGradsLabel_preReloc, 
+		   matlset, Ghost::None);
+    task->requires(Task::NewDW,lb->pStrainEnergyDensityLabel_preReloc, 
+		   matlset, Ghost::None);
+  }
+
 }
 
 
@@ -135,36 +136,37 @@ void CompMooneyRivlin::allocateCMDataAdd(DataWarehouse* new_dw,
   new_dw->allocateTemporary(deformationGradient,addset);
   new_dw->allocateTemporary(pstress, addset);
 
-#ifdef FRACTURE
-  // for J-Integral
-  new_dw->allocateTemporary(pdispGrads, addset);
-  new_dw->allocateTemporary(pstrainEnergyDensity, addset);
-#endif
+  if (flag->d_fracture) {
+    // for J-Integral
+    new_dw->allocateTemporary(pdispGrads, addset);
+    new_dw->allocateTemporary(pstrainEnergyDensity, addset);
+  }
 
   new_dw->get(o_deformationGradient,lb->pDeformationMeasureLabel_preReloc,delset);
   new_dw->get(o_stress,lb->pStressLabel_preReloc,delset);
 
-#ifdef FRACTURE
-  new_dw->get(o_dispGrads,lb->pDispGradsLabel_preReloc,delset);
-  new_dw->get(o_strainEnergyDensity,lb->pStrainEnergyDensityLabel_preReloc,delset);
-#endif
+  if (flag->d_fracture) {
+    new_dw->get(o_dispGrads,lb->pDispGradsLabel_preReloc,delset);
+    new_dw->get(o_strainEnergyDensity,lb->pStrainEnergyDensityLabel_preReloc,
+		delset);
+  }
 
   ParticleSubset::iterator o,n = addset->begin();
   for (o=delset->begin(); o != delset->end(); o++, n++) {
     deformationGradient[*n] = o_deformationGradient[*o];
     pstress[*n] = o_stress[*o];
-#ifdef FRACTURE
-    pdispGrads[*n] = o_dispGrads[*o];
-    pstrainEnergyDensity[*n] = o_strainEnergyDensity[*o];
-#endif
+    if (flag->d_fracture) {
+      pdispGrads[*n] = o_dispGrads[*o];
+      pstrainEnergyDensity[*n] = o_strainEnergyDensity[*o];
+    }
   }
 
   (*newState)[lb->pDeformationMeasureLabel]=deformationGradient.clone();
   (*newState)[ lb->pStressLabel]=pstress.clone();
-#ifdef FRACTURE
-  (*newState)[lb->pDispGradsLabel]=pdispGrads.clone();
-  (*newState)[ lb->pStrainEnergyDensityLabel]=pstrainEnergyDensity.clone();
-#endif
+  if (flag->d_fracture) {
+    (*newState)[lb->pDispGradsLabel]=pdispGrads.clone();
+    (*newState)[ lb->pStrainEnergyDensityLabel]=pstrainEnergyDensity.clone();
+  }
 }
 
 
@@ -254,26 +256,25 @@ void CompMooneyRivlin::computeStressTensor(const PatchSubset* patches,
     new_dw->allocateAndPut(deformationGradient_new,
                                   lb->pDeformationMeasureLabel_preReloc, pset);
 
-#ifdef FRACTURE
-    constNCVariable<Vector> Gvelocity;
-    new_dw->get(Gvelocity,lb->GVelocityLabel, matlindex, patch, gac, NGN);
 
+    constNCVariable<Vector> Gvelocity;
     constParticleVariable<Short27> pgCode;
     constParticleVariable<Matrix3> pdispGrads;
     constParticleVariable<double>  pstrainEnergyDensity;
-    new_dw->get(pgCode,              lb->pgCodeLabel,              pset);
-    old_dw->get(pdispGrads,          lb->pDispGradsLabel,          pset);
-    old_dw->get(pstrainEnergyDensity,lb->pStrainEnergyDensityLabel,pset);
-
     ParticleVariable<Matrix3> pvelGrads;
-    new_dw->allocateAndPut(pvelGrads,  lb->pVelGradsLabel,  pset);
-
     ParticleVariable<Matrix3> pdispGrads_new;
     ParticleVariable<double> pstrainEnergyDensity_new;
-    new_dw->allocateAndPut(pdispGrads_new, lb->pDispGradsLabel_preReloc, pset);
-    new_dw->allocateAndPut(pstrainEnergyDensity_new,
-                                 lb->pStrainEnergyDensityLabel_preReloc, pset);
-#endif
+
+    if (flag->d_fracture) {
+      new_dw->get(Gvelocity,lb->GVelocityLabel, matlindex, patch, gac, NGN);
+      new_dw->get(pgCode,              lb->pgCodeLabel,              pset);
+      old_dw->get(pdispGrads,          lb->pDispGradsLabel,          pset);
+      old_dw->get(pstrainEnergyDensity,lb->pStrainEnergyDensityLabel,pset);
+      new_dw->allocateAndPut(pvelGrads,  lb->pVelGradsLabel,  pset);
+      new_dw->allocateAndPut(pdispGrads_new,lb->pDispGradsLabel_preReloc,pset);
+      new_dw->allocateAndPut(pstrainEnergyDensity_new,
+			     lb->pStrainEnergyDensityLabel_preReloc, pset);
+    }
 
     new_dw->get(gvelocity, lb->gVelocityLabel, matlindex,patch, gac, NGN);
     old_dw->get(delT, lb->delTLabel);
@@ -304,19 +305,18 @@ void CompMooneyRivlin::computeStressTensor(const PatchSubset* patches,
       Vector gvel;
       velGrad.set(0.0);
       for(int k = 0; k < flag->d_8or27; k++) {
-#ifdef FRACTURE
-	if(pgCode[idx][k]==1) gvel = gvelocity[ni[k]];
-	if(pgCode[idx][k]==2) gvel = Gvelocity[ni[k]];
-#else
-	gvel = gvelocity[ni[k]];
-#endif
+	if (flag->d_fracture) {
+	  if(pgCode[idx][k]==1) gvel = gvelocity[ni[k]];
+	  if(pgCode[idx][k]==2) gvel = Gvelocity[ni[k]];
+	} else
+	  gvel = gvelocity[ni[k]];
+
 	for (int j = 0; j<3; j++){
 	  double d_SXoodx = d_S[k][j] * oodx[j];
 	  for (int i = 0; i<3; i++) {
 	    velGrad(i,j) += gvel[i] * d_SXoodx;
-#ifdef FRACTURE
-            pvelGrads[idx](i,j)  = velGrad(i,j);
-#endif
+	    if (flag->d_fracture)
+	      pvelGrads[idx](i,j)  = velGrad(i,j);
 	  }
 	}
       }
@@ -378,13 +378,14 @@ void CompMooneyRivlin::computeStressTensor(const PatchSubset* patches,
             C4*(invar3-1.0)*(invar3-1.0))*pvolume_deform[idx]/J;
 
       se += e;
-#ifdef FRACTURE
-      // Update particle displacement gradients
-      pdispGrads_new[idx] = pdispGrads[idx] + velGrad * delT;
-      // Update particle strain energy density
-      pstrainEnergyDensity_new[idx] = pstrainEnergyDensity[idx] +
-                                         e/pvolume_deform[idx];
-#endif
+
+      if (flag->d_fracture) {
+	// Update particle displacement gradients
+	pdispGrads_new[idx] = pdispGrads[idx] + velGrad * delT;
+	// Update particle strain energy density
+	pstrainEnergyDensity_new[idx] = pstrainEnergyDensity[idx] +
+	  e/pvolume_deform[idx];
+      }
     }
         
     WaveSpeed = dx/WaveSpeed;
@@ -440,12 +441,12 @@ void CompMooneyRivlin::addParticleState(std::vector<const VarLabel*>& from,
    to.push_back(lb->pDeformationMeasureLabel_preReloc);
    to.push_back(lb->pStressLabel_preReloc);
 
-#ifdef FRACTURE
-   from.push_back(lb->pDispGradsLabel);
-   from.push_back(lb->pStrainEnergyDensityLabel);
-   to.push_back(lb->pDispGradsLabel_preReloc);
-   to.push_back(lb->pStrainEnergyDensityLabel_preReloc);
-#endif
+   if (flag->d_fracture) {
+     from.push_back(lb->pDispGradsLabel);
+     from.push_back(lb->pStrainEnergyDensityLabel);
+     to.push_back(lb->pDispGradsLabel_preReloc);
+     to.push_back(lb->pStrainEnergyDensityLabel_preReloc);
+   }
 }
 
 void CompMooneyRivlin::addComputesAndRequires(Task* task,
@@ -465,16 +466,17 @@ void CompMooneyRivlin::addComputesAndRequires(Task* task,
 
   task->requires(Task::OldDW, lb->delTLabel);
 
-#ifdef FRACTURE
-  task->requires(Task::NewDW, lb->GVelocityLabel,          matlset,gac,NGN);
-  task->requires(Task::NewDW, lb->pgCodeLabel,             matlset,Ghost::None);
-  task->requires(Task::OldDW, lb->pDispGradsLabel,         matlset,Ghost::None);
-  task->requires(Task::OldDW,lb->pStrainEnergyDensityLabel,matlset,Ghost::None);
-
-  task->computes(lb->pDispGradsLabel_preReloc,             matlset);
-  task->computes(lb->pVelGradsLabel,                       matlset);
-  task->computes(lb->pStrainEnergyDensityLabel_preReloc,   matlset);
-#endif
+  if (flag->d_fracture) {
+    task->requires(Task::NewDW, lb->GVelocityLabel,          matlset,gac,NGN);
+    task->requires(Task::NewDW, lb->pgCodeLabel,          matlset,Ghost::None);
+    task->requires(Task::OldDW, lb->pDispGradsLabel,      matlset,Ghost::None);
+    task->requires(Task::OldDW,lb->pStrainEnergyDensityLabel,matlset,
+		   Ghost::None);
+    
+    task->computes(lb->pDispGradsLabel_preReloc,             matlset);
+    task->computes(lb->pVelGradsLabel,                       matlset);
+    task->computes(lb->pStrainEnergyDensityLabel_preReloc,   matlset);
+  }
 
   task->computes(lb->pStressLabel_preReloc,             matlset);
   task->computes(lb->pDeformationMeasureLabel_preReloc, matlset);
