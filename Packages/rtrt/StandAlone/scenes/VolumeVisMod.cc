@@ -22,115 +22,30 @@ using namespace std;
 using namespace rtrt;
 using SCIRun::Thread;
 
-void get_material(Array1<Color*> &matls, Array1<float> &alphas,
+void get_material(Array1<Color> &matls, Array1<AlphaPos> &alphas,
 		  int ncolors) {
-  CatmullRomSpline<Color> spline(0);
-#if 1
-  spline.add(Color(0,0,1));
-  spline.add(Color(0,0,1));
-  spline.add(Color(0,0,1));
-  spline.add(Color(0,0.4,1));
-  spline.add(Color(0,0.8,1));
-  spline.add(Color(0,1,0.8));
-  spline.add(Color(0,1,0.4));
-  spline.add(Color(0,1,0));
-  spline.add(Color(0.4,1,0));
-  spline.add(Color(0.8,1,0));
-  spline.add(Color(1,0.9176,0));
-  spline.add(Color(1,0.8,0));
-  spline.add(Color(1,0.4,0));
-  spline.add(Color(1,0,0));
-  spline.add(Color(1,0,0));
-  spline.add(Color(1,0,0));
-#else
-  spline.add(Color(.4,.4,.4));
-  spline.add(Color(.4,.4,1));
-  //    for(int i=0;i<2;i++)
-  spline.add(Color(.4,1,1));
-  spline.add(Color(.4,1,.4));
-  //    for(int i=0;i<3;i++)
-  spline.add(Color(1,1,.4));
-  //    for(int i=0;i<300;i++)
-  spline.add(Color(1,.4,.4));
-  spline.add(Color(1,.4,.4));
-#endif
-  CatmullRomSpline<float> alpha_spline(0);
-#if 0
-  alpha_spline.add(0.9);
-  alpha_spline.add(0.9);
-  alpha_spline.add(0.3);
-  alpha_spline.add(0.1);
-  alpha_spline.add(0.01);
-  alpha_spline.add(0.001);
-  alpha_spline.add(0.003);
-  alpha_spline.add(0.005);
-  alpha_spline.add(0.001);
-  alpha_spline.add(0.01);
-  alpha_spline.add(0.1);
-#else
-#if 1
-  alpha_spline.add(0);
-  alpha_spline.add(0);
-  alpha_spline.add(0);
-  //  alpha_spline.add(0.001);
-  alpha_spline.add(1);
-  alpha_spline.add(1);
-#else
-  alpha_spline.add(0);
-  alpha_spline.add(0);
-  alpha_spline.add(0);
-  alpha_spline.add(0.03);
-  alpha_spline.add(0.04);
-  alpha_spline.add(0.05);
-#endif
-  //  alpha_spline.add(0.1);
-#endif
-  matls.resize(ncolors);
-  alphas.resize(ncolors);
-#if 1
-  for(int i=0;i<ncolors;i++){
-    float frac=float(i)/(ncolors-1);
-    matls[i] = new Color(spline(frac));
-#if 1
-      if (i>=28 && i<64)
-	alphas[i] = (i-28)*(0.1/36);
-      else if (i>=64 && i<100)
-	alphas[i] = (i-64)*(-0.1/36)+0.1;
-      else if (i>=156 && i<192)
-	alphas[i] = (i-156)*(1.0/36);
-      else if (i>=192 && i<228)
-	alphas[i] = (i-192)*(-1.0/36)+1.0;
-      else
-	alphas[i] = 0;
-      //      cout << "ALPHAS[i="<<i<<"] = "<<alphas[i]<<endl;
-#else
-    alphas[i] = alpha_spline(frac);
-#endif
-  }
-#else
-  if (true) {
-    float Ka=1;
-    float Kd=1;
-    float Ks=1;
-    float refl=0;
-    float specpow=200;
-    for(int i=0;i<ncolors;i++){
-      float frac=float(i)/(ncolors-1);
-      Color c(spline(frac));
-      matls[i]=new Phong(c*Ka, c*Kd, c*Ks, specpow, refl);
-      alphas[i] = alpha_spline(frac);
-    }
-  } else {
-    for(int i=0;i<ncolors;i++){
-      float frac=float(i)/(ncolors-1);
-      Color c(spline(frac));
-      matls[i]=new LambertianMaterial(c);
-      alphas[i] = alpha_spline(frac);
-      //cerr << ", alpha = " << alphas[i];
-      //matls[i]=new LambertianMaterial(c*Kd);
-    }
-  }
-#endif
+
+  matls.add(Color(0,0,1));
+  matls.add(Color(0,0.4,1));
+  matls.add(Color(0,0.8,1));
+  matls.add(Color(0,1,0.8));
+  matls.add(Color(0,1,0.4));
+  matls.add(Color(0,1,0));
+  matls.add(Color(0.4,1,0));
+  matls.add(Color(0.8,1,0));
+  matls.add(Color(1,0.9176,0));
+  matls.add(Color(1,0.8,0));
+  matls.add(Color(1,0.4,0));
+  matls.add(Color(1,0,0));
+
+  alphas.add(AlphaPos(0       , 0));  // pos 0
+  alphas.add(AlphaPos(28.0/255, 0));  // pos 28
+  alphas.add(AlphaPos(64.0/255, 0.1));// pos 64
+  alphas.add(AlphaPos(100.0/255,0));  // pos 100
+  alphas.add(AlphaPos(156.0/255,0));  // pos 156
+  alphas.add(AlphaPos(192.0/255,1));  // pos 192
+  alphas.add(AlphaPos(228.0/255,0));  // pos 192 
+  alphas.add(AlphaPos(1,        0));  // pos 192
 }
 
 extern "C" 
@@ -243,14 +158,10 @@ Scene* make_scene(int argc, char* argv[], int /*nworkers*/)
   Color bgcolor(0.,0.,0.);
   
   Group* all = new Group();
-  Array1<Color*> matls;
-  Array1<float> alphas;
+  Array1<Color> matls;
+  Array1<AlphaPos> alphas;
   get_material(matls,alphas,ncolors);
-#if 0
-  cout << "alphas :\n";
-  for(unsigned int i = 0; i < alphas.size(); i++)
-    cout << "alphas[i="<<i<<"] = "<<alphas[i]<<endl;
-#endif
+
   BrickArray3<float> data;
   float data_min, data_max;
   Point minP, maxP;
@@ -399,9 +310,7 @@ Scene* make_scene(int argc, char* argv[], int /*nworkers*/)
     data_max = data_max_in;
 
   cout << "minP = "<<minP<<", maxP = "<<maxP<<endl;
-  VolumeVisDpy *dpy = new VolumeVisDpy(new Array1<Color*>(matls),
-				       new Array1<float>(alphas),
-				       t_inc);
+  VolumeVisDpy *dpy = new VolumeVisDpy(matls, alphas, ncolors, t_inc);
   Object* obj = (Object*) new VolumeVis(data, data_min, data_max,
 					nx, ny, nz,
 					minP, maxP,
