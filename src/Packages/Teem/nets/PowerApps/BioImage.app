@@ -77,15 +77,24 @@ set side "L"
 global show_plane_x
 global show_plane_y
 global show_plane_z
+global show_MIP_x
+global show_MIP_y
+global show_MIP_z
 global show_guidelines
 set show_plane_x 1
 set show_plane_y 1
 set show_plane_z 1
+set show_MIP_x 0
+set show_MIP_y 0
+set show_MIP_z 0
 set show_guidelines 1
 global planes_mapType
 set planes_mapType 0
 global planes_threshold
 set planes_threshold 0
+global slab_min slab_max
+set slab_min 0
+set slab_max 124
 
 # volume rendering
 global show_vol_ren
@@ -321,8 +330,9 @@ class BioImageApp {
  		set [set UnuJhisto]-mins "$min nan"
 
 		global planes_threshold
-		global $mods(ViewImage)-min
-		set planes_threshold [set $mods(ViewImage)-min]
+		set planes_threshold $min
+
+		$this update_planes_threshold_slider_min_max
 
                 set 2D_fixed 1
 	    } 
@@ -893,6 +903,11 @@ class BioImageApp {
 	    set [set UnuJhisto]-maxs "$max nan"
 	    set [set UnuJhisto]-mins "$min nan"
 
+	    # update background threshold slider min/max 
+	    $this update_planes_threshold_slider_min_max
+
+	    $this update_planes_threshold
+
 	    # execute modules if volume rendering enabled
 	    global show_vol_ren
 	    if {$show_vol_ren == 1} {
@@ -1257,10 +1272,6 @@ class BioImageApp {
 
 	    global $m24-operator
 	    set $m24-operator {log}
-
-            global $m26-min $m26-max
-            trace variable $m26-min w "$this update_planes_threshold_slider_min_max"
-            trace variable $m26-max w "$this update_planes_threshold_slider_min_max"
 
             global $m27-mapType planes_mapType
 	    set $m27-mapType $planes_mapType
@@ -1821,7 +1832,7 @@ class BioImageApp {
             iwidgets::tabnotebook $v.tnb -width [expr $notebook_width - 20] \
 		-height [expr $vis_height - 35] -tabpos n \
                 -equaltabs false
-	    pack $v.tnb -padx 0 -pady 0 -anchor n -fill both -expand 1
+	    pack $v.tnb -padx 0 -pady 0 -anchor n 
 
 	    set page [$v.tnb add -label "Planes"]
 
@@ -1830,23 +1841,48 @@ class BioImageApp {
             pack $page.planes -side top -anchor nw -expand no -fill x
             
 	    global show_plane_x show_plane_y show_plane_z
-	    checkbutton $page.planes.x -text "Show Sagittal Plane" \
+	    global show_MIP_x show_MIP_y show_MIP_z
+
+	    checkbutton $page.planes.xp -text "Show Sagittal Plane" \
 		-variable show_plane_x \
 		-command "$this toggle_show_plane_x"
-            Tooltip $page.planes.x "Turn Sagittal plane on/off"
+            Tooltip $page.planes.xp "Turn Sagittal plane on/off"
 
-	    checkbutton $page.planes.y -text "Show Coronal Plane" \
+	    checkbutton $page.planes.xm -text "Show Sagittal MIP" \
+		-variable show_MIP_x \
+		-command "$this toggle_show_MIP_x"
+            Tooltip $page.planes.xm "Turn Sagittal MIP on/off"
+
+
+	    checkbutton $page.planes.yp -text "Show Coronal Plane" \
 		-variable show_plane_y \
 		-command "$this toggle_show_plane_y"
-            Tooltip $page.planes.y "Turn Coronal plane on/off"
+            Tooltip $page.planes.yp "Turn Coronal plane on/off"
 
-	    checkbutton $page.planes.z -text "Show Axial Plane" \
+	    checkbutton $page.planes.ym -text "Show Coronal MIP" \
+		-variable show_MIP_y \
+		-command "$this toggle_show_MIP_y"
+            Tooltip $page.planes.ym "Turn Coronal MIP on/off"
+
+
+	    checkbutton $page.planes.zp -text "Show Axial Plane" \
 		-variable show_plane_z \
 		-command "$this toggle_show_plane_z"
-            Tooltip $page.planes.z "Turn Axial plane on/off"
+            Tooltip $page.planes.zp "Turn Axial plane on/off"
 
-	    pack $page.planes.x $page.planes.y $page.planes.z -side top -anchor nw \
-		-padx 4 -pady 4
+	    checkbutton $page.planes.zm -text "Show Axial MIP" \
+		-variable show_MIP_z \
+		-command "$this toggle_show_MIP_z"
+            Tooltip $page.planes.zm "Turn Axial MIP on/off"
+
+
+            grid configure $page.planes.xp -row 0 -column 0 -sticky "w"
+            grid configure $page.planes.xm -row 0 -column 1 -sticky "w"
+            grid configure $page.planes.yp -row 1 -column 0 -sticky "w"
+            grid configure $page.planes.ym -row 1 -column 1 -sticky "w"
+            grid configure $page.planes.zp -row 2 -column 0 -sticky "w"
+            grid configure $page.planes.zm -row 2 -column 1 -sticky "w"
+
 
             # Background threshold
             global planes_threshold
@@ -1979,7 +2015,7 @@ class BioImageApp {
 	    canvas $maps.bpseismic.f.canvas -bg "#ffffff" -height $colormap_height -width $colormap_width
 	    pack $maps.bpseismic.f.canvas -anchor e
 	    
-	    draw_colormap "Blue-to-Red" $maps.bpseismic.f.canvas
+	    draw_colormap "Blue-to-Red" $maps.bpseismic.f.canvas           
 
 
             #######
@@ -3609,13 +3645,48 @@ class BioImageApp {
 	}
     }
 
-    method update_planes_threshold_slider_min_max {varname varele varop} {
-        global mods
-	global $mods(ViewImage)-min $mods(ViewImage)-max
-	
-	set min [set $mods(ViewImage)-min]
-	set max [set $mods(ViewImage)-max]
 
+    #########################
+    ### toggle_show_MIP_n
+    ##########################
+    # Methods to turn on/off MIP
+    method toggle_show_MIP_x {} {
+	global mods show_MIP_x
+	if {$show_MIP_x == 1} {
+
+	} else {
+
+	}
+    }
+
+    method toggle_show_MIP_y {} {
+	global mods show_MIP_y
+	if {$show_MIP_y == 1} {
+
+	} else {
+
+	}
+    }
+
+    method toggle_show_MIP_z {} {
+	global mods show_MIP_z
+	if {$show_MIP_z == 1} {
+
+	} else {
+
+	}
+    }
+
+    method update_planes_threshold_slider_min_max { } {
+        global mods
+	global $mods(ViewImage)-axial-viewport0-clut_ww 
+	global $mods(ViewImage)-axial-viewport0-clut_wl
+
+	set ww [set $mods(ViewImage)-axial-viewport0-clut_ww]
+        set wl [set $mods(ViewImage)-axial-viewport0-clut_wl]
+        set min [expr $wl-$ww/2]
+	set max [expr $wl+$ww/2]
+	
 	$attachedVFr.f.vis.childsite.tnb.canvas.notebook.cs.page1.cs.tnb.canvas.notebook.cs.page1.cs.thresh.s configure -from $min -to $max
 	$detachedVFr.f.vis.childsite.tnb.canvas.notebook.cs.page1.cs.tnb.canvas.notebook.cs.page1.cs.thresh.s configure -from $min -to $max
 
@@ -3623,7 +3694,13 @@ class BioImageApp {
 
     method update_planes_threshold {} {
 	global mods planes_threshold 
-	global $mods(ViewImage)-min $mods(ViewImage)-max
+	global $mods(ViewImage)-axial-viewport0-clut_ww 
+	global $mods(ViewImage)-axial-viewport0-clut_wl
+
+	set ww [set $mods(ViewImage)-axial-viewport0-clut_ww]
+        set wl [set $mods(ViewImage)-axial-viewport0-clut_wl]
+        set min [expr $wl-$ww/2]
+	set max [expr $wl+$ww/2]
 
 	set m1 [lindex [lindex $filters(0) $modules] 26]
         global $m1-nodeList $m1-positionList
@@ -3631,17 +3708,18 @@ class BioImageApp {
         # the node positions are based on the threshold value which must
         # be within the min/max of the data. Therefore, this cannot compute
         # ranges unless it has been executed at least once.
+
         if {$has_executed == 1} {
 	    # if threshold is set at borders, only have two control points
-	    if {$planes_threshold == [set $mods(ViewImage)-min]} {
+	    if {$planes_threshold == $min} {
                 set $m1-positionList {{0 0} {441 0}}
                 set $m1-nodeList {514 1055}
-            } elseif {$planes_threshold == [set $mods(ViewImage)-max]} {
+            } elseif {$planes_threshold == $max} {
 	        set $m1-positionList {{0 40} {441 40}}
                 set $m1-nodeList {514 803}	    
 	    } else {	    
 	        # otherwise, use 4 points
-	        set range [expr [set $mods(ViewImage)-max] - [set $mods(ViewImage)-min]]
+	        set range [expr $max - $min]
                 set new_x [expr round ([expr [expr 441.0 / $range] * $planes_threshold])]
 
                 set $m1-positionList {{0 40} {$new_x 40} {$new_x 0} {441 0}}
