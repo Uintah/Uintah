@@ -123,7 +123,7 @@ Histogram::tcl_command(TCLArgs& args, void*)
 
 
 void
-Histogram::SetData( const Array1<double> values )
+Histogram::SetData( const vector<double> &values )
 {
    ASSERT(values.size() > 1);
 
@@ -131,7 +131,7 @@ Histogram::SetData( const Array1<double> values )
    
    // Find minval/maxval.
    minval = maxval = values[0];
-   for (int i=1; i<values.size(); i++) {
+   for (unsigned int i=1; i<values.size(); i++) {
       if (values[i] < minval) {
 	 minval = values[i];
       } else if (values[i] > maxval) {
@@ -149,7 +149,7 @@ Histogram::FillBuckets()
    double range(double(numbuckets-1)/(maxval-minval));
    
    initfreqs();
-   int i;
+   unsigned int i;
    for (i=0; i<data.size(); i++) {
       freqs[int(0.5+(data[i]-minval)*range)]++;
    }
@@ -164,7 +164,7 @@ Histogram::FillBuckets()
       }
    }
 
-   Array1<string> freqlist(numbuckets);
+   vector<string> freqlist(numbuckets);
 
    for (i=0; i<numbuckets; i++) {
       freqlist[i] = to_string(freqs[i]);

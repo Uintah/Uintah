@@ -36,31 +36,32 @@
 #pragma interface
 #endif
 
-#include <Core/Containers/Array1.h>
+#include <vector>
+
+using std::vector;
 
 namespace SCIRun {
 
 template<class T> class Ring {
-    Array1<T> data;
-    int _head;
-    int _tail;
-    int _size;
+    vector<T> data;
+    int head_;
+    int tail_;
+    int size_;
 public:
-    inline int size() {return _size;}
-    inline int head() {return _head;}
-    inline int tail() {return _tail;}
+    inline int size() {return size_;}
+    inline int head() {return head_;}
+    inline int tail() {return tail_;}
     Ring(int s);
     ~Ring();
-    inline T pop() {T item=data[_head]; _head=(_head+1)%_size; return item;}
-    inline T top() {return data[_head];}
-    inline void push(T item) {data[_tail]=item; _tail=(_tail+1)%_size;}
-    inline void swap(T item) {int i=(_tail-1)%_size; T tmp=data[i]; data[i]=item; data[_tail]=tmp; _tail=(_tail+1)%_size;}
+    inline T pop() {T item=data_[head_]; head_=(head_+1)%size_; return item;}
+    inline T top() {return data_[head_];}
+    inline void push(T item) {data_[tail_]=item; tail_=(tail_+1)%size_;}
+    inline void swap(T item) {int i=(tail_-1)%size_; T tmp=data_[i]; data_[i]=item; data_[tail_]=tmp; tail_=(tail_+1)%size_;}
 };
 
 template<class T> Ring<T>::Ring(int s)
-: _head(0), _tail(0), _size(s)
+  : data_(s), head_(0), tail_(0), size_(s)
 {
-    data.resize(s);
 }
 
 template<class T> Ring<T>::~Ring()
