@@ -59,6 +59,7 @@ ICE::ICE(const ProcessorGroup* myworld)
   switchDebug_setupMatrix         = false;
   switchDebug_setupRHS            = false;
   switchDebug_updatePressure      = false;
+  switchDebug_computeDelP         = false;
   switchDebug_PressFC             = false;
   switchDebugLagrangianValues     = false;
   switchDebugLagrangianSpecificVol= false;
@@ -86,9 +87,8 @@ ICE::~ICE()
   delete lb;
   delete MIlb;
   delete d_advector;
-/*`==========TESTING==========*/
+
   releasePort("solver");
-/*==========TESTING==========`*/
 }
 
 /* ---------------------------------------------------------------------
@@ -105,12 +105,11 @@ void ICE::problemSetup(const ProblemSpecP& prob_spec, GridP& /**/,
     cout<<"dataArhiver in ICE is null now exiting; "<<endl;
     exit(1);
   }
-/*`==========TESTING==========*/
   solver = dynamic_cast<SolverInterface*>(getPort("solver"));
   if(!solver) {
     throw InternalError("ICE:couldn't get solver port");
   } 
-/*==========TESTING==========`*/
+
   //__________________________________
   // Find the switches
   ProblemSpecP debug_ps = prob_spec->findBlock("Debug");
@@ -159,6 +158,8 @@ void ICE::problemSetup(const ProblemSpecP& prob_spec, GridP& /**/,
        switchDebug_setupRHS             = true;
       else if (debug_attr["label"] == "switchDebug_updatePressure")
        switchDebug_updatePressure       = true;
+      else if (debug_attr["label"] == "switchDebug_computeDelP")
+       switchDebug_computeDelP          = true;
       else if (debug_attr["label"] == "switchDebug_PressFC")
        switchDebug_PressFC              = true;
       else if (debug_attr["label"] == "switchDebugLagrangianValues")
@@ -237,15 +238,16 @@ void ICE::problemSetup(const ProblemSpecP& prob_spec, GridP& /**/,
     } 
   }
  
-/*`==========TESTING==========*/
-//__________________________________
-// Pull out implicit solver parameters
-  ProblemSpecP impSolver = cfd_ice_ps->findBlock("Solver");
+  //__________________________________
+  // Pull out implicit solver parameters
+  ProblemSpecP impSolver = cfd_ice_ps->findBlock("ImplicitSolver");
   if (impSolver) {
     solver_parameters = solver->readParameters(impSolver, "implicitPressure");
+    impSolver->require("max_outer_iterations",      d_max_iter_implicit);
+    impSolver->require("outer_iteration_tolerance", d_outer_iter_tolerance);
     d_impICE = true; 
   }
-/*==========TESTING==========`*/  
+    
   //__________________________________
   // Pull out from Time section
   d_initialDt = 10000.0;
@@ -370,9 +372,7 @@ void ICE::scheduleInitialize(const LevelP& level,SchedulerP& sched)
   t->computes(lb->rho_micro_CCLabel);
   t->computes(lb->speedSound_CCLabel);
   t->computes(lb->press_CCLabel, press_matl);
-  t->computes(lb->imp_delPLabel, press_matl);  // one_matl
-  //t->computes(d_sharedState->get_delt_label());
-
+  
   sched->addTask(t, level->eachPatch(), d_sharedState->allICEMaterials());
 
   // The task will have a reference to press_matl
@@ -442,41 +442,36 @@ ICE::scheduleTimeAdvance( const LevelP& level, SchedulerP& sched, int, int )
                                                           mpm_matls_sub,        
                                                           all_matls);           
   }  
-                                                            
-/*`==========TESTING==========*/
-if(!d_impICE) {
-  scheduleComputeFC_vel_Temp(             sched, patches, ice_matls_sub,
-                                                          mpm_matls_sub,
-                                                          press_matl, 
-                                                          all_matls,
-                                                          false);
+  scheduleMassExchange(                   sched, patches, all_matls);                                                           
 
-  scheduleAddExchangeContributionToFCVel( sched, patches, all_matls,
-                                                          false); 
-}   
-/*===========TESTING==========`*/ 
+  if(d_impICE) {        //  I M P L I C I T                                           
+    scheduleImplicitPressureSolve(         sched, level,   patches,       
+                                                           one_matl,      
+                                                           press_matl,    
+                                                           ice_matls_sub,  
+                                                           mpm_matls_sub, 
+                                                           all_matls);
+                                                           
+    scheduleComputeDel_P(                   sched,  level, patches,  
+                                                           one_matl,
+                                                           press_matl,
+                                                           all_matls);    
+  }else{                //  E X P L I C I T
+    scheduleComputeVel_FC(                  sched, patches,ice_matls_sub, 
+                                                           mpm_matls_sub, 
+                                                           press_matl,    
+                                                           all_matls,     
+                                                           false);        
 
-  scheduleMassExchange(                   sched, patches, all_matls);
-/*`==========TESTING==========*/
-  if(!d_impICE) {
-  scheduleComputeDelPressAndUpdatePressCC(sched, patches, press_matl,
-                                                          ice_matls_sub, 
-                                                          mpm_matls_sub,
-                                                          all_matls);
+    scheduleAddExchangeContributionToFCVel( sched, patches,all_matls,
+                                                           false); 
+
+    scheduleComputeDelPressAndUpdatePressCC(sched, patches,press_matl,     
+                                                           ice_matls_sub,  
+                                                           mpm_matls_sub,  
+                                                           all_matls);     
   }
-                                                       
-  if(d_impICE) {                                                
-   scheduleImplicitPressureSolve(         sched, level,   patches, 
-                                                          one_matl,
-                                                          press_matl,
-                                                          ice_matls_sub, 
-                                                          mpm_matls_sub,
-                                                          all_matls);
-  }
-
-/*==========TESTING==========`*/                                                          
-                                                          
-
+  
   scheduleComputePressFC(                 sched, patches, press_matl,
                                                           all_matls);
 
@@ -554,20 +549,44 @@ void ICE::scheduleComputePressure(SchedulerP& sched,
   t->computes(lb->sp_vol_CCLabel);
   t->computes(lb->rho_CCLabel);
   t->computes(lb->press_equil_CCLabel, press_matl);
-  
+  t->computes(lb->press_CCLabel,       press_matl);  // needed by implicit
+    
   sched->addTask(t, patches, ice_matls);
 }
 
 /* ---------------------------------------------------------------------
- Function~  ICE::scheduleComputeFC_vel_Temp--
+ Function~  ICE::scheduleComputeTempFC--
 _____________________________________________________________________*/
-void ICE::scheduleComputeFC_vel_Temp(SchedulerP& sched,
-                                          const PatchSet* patches,
-                                          const MaterialSubset* ice_matls,
-                                          const MaterialSubset* mpm_matls,
-                                          const MaterialSubset* press_matl,
-                                          const MaterialSet* all_matls,
-                                          bool recursion)
+void ICE::scheduleComputeTempFC(SchedulerP& sched,
+                                const PatchSet* patches,
+                                const MaterialSubset* ice_matls,
+                                const MaterialSubset* mpm_matls,
+                                const MaterialSet* all_matls)
+{ 
+  Task* t;
+  cout_doing << "ICE::scheduleComputeTempFC" << endl;
+  t = scinew Task("ICE::computeTempFC", this, &ICE::computeTempFC);
+  
+  Ghost::GhostType  gac = Ghost::AroundCells;
+  t->requires(Task::NewDW,lb->rho_CCLabel,     /*all_matls*/ gac,1);                      
+  t->requires(Task::OldDW,lb->temp_CCLabel,      ice_matls,  gac,1);    
+  t->requires(Task::NewDW,lb->temp_CCLabel,      mpm_matls,  gac,1);    
+  
+  t->computes(lb->TempX_FCLabel);
+  t->computes(lb->TempY_FCLabel);
+  t->computes(lb->TempZ_FCLabel);
+  sched->addTask(t, patches, all_matls);
+}
+/* ---------------------------------------------------------------------
+ Function~  ICE::scheduleComputeVel_FC--
+_____________________________________________________________________*/
+void ICE::scheduleComputeVel_FC(SchedulerP& sched,
+                                const PatchSet* patches,
+                                const MaterialSubset* ice_matls,
+                                const MaterialSubset* mpm_matls,
+                                const MaterialSubset* press_matl,
+                                const MaterialSet* all_matls,
+                                bool recursion)
 { 
   Task* t;
   if (d_RateForm) {     //RATE FORM
@@ -576,9 +595,9 @@ void ICE::scheduleComputeFC_vel_Temp(SchedulerP& sched,
               this, &ICE::computeFaceCenteredVelocitiesRF);
   }
   else if (d_EqForm) {       // EQ 
-    cout_doing << "ICE::scheduleComputeFC_vel_Temp" << endl;
-    t = scinew Task("ICE::computeFC_vel_Temp",
-              this, &ICE::computeFC_vel_Temp, recursion);
+    cout_doing << "scheduleComputeVel_FC" << endl;
+    t = scinew Task("ICE::computeVel_FC",
+              this, &ICE::computeVel_FC, recursion);
   }
                       // EQ  & RATE FORM 
   Ghost::GhostType  gac = Ghost::AroundCells;                      
@@ -588,10 +607,6 @@ void ICE::scheduleComputeFC_vel_Temp(SchedulerP& sched,
   t->requires(Task::NewDW,lb->rho_CCLabel,       /*all_matls*/ gac,1);
   t->requires(Task::OldDW,lb->vel_CCLabel,         ice_matls,  gac,1);
   t->requires(Task::NewDW,lb->vel_CCLabel,         mpm_matls,  gac,1);
-  if (d_EqForm) {
-    t->requires(Task::OldDW,lb->temp_CCLabel,      ice_matls,  gac,1);  
-    t->requires(Task::NewDW,lb->temp_CCLabel,      mpm_matls,  gac,1);  
-  }
   
   if (d_RateForm) {     //RATE FORM
     t->requires(Task::NewDW,lb->DLabel,                        gac, 1);
@@ -602,14 +617,9 @@ void ICE::scheduleComputeFC_vel_Temp(SchedulerP& sched,
     t->computes(lb->press_diffY_FCLabel);
     t->computes(lb->press_diffZ_FCLabel); 
   }
-
   t->computes(lb->uvel_FCLabel);
   t->computes(lb->vvel_FCLabel);
   t->computes(lb->wvel_FCLabel);
-  
-  t->computes(lb->TempX_FCLabel);
-  t->computes(lb->TempY_FCLabel);
-  t->computes(lb->TempZ_FCLabel);
   sched->addTask(t, patches, all_matls);
 }
 /* ---------------------------------------------------------------------
@@ -686,7 +696,7 @@ void ICE::scheduleComputeDelPressAndUpdatePressCC(SchedulerP& sched,
   task->requires( Task::NewDW, lb->speedSound_CCLabel, gn);
   task->requires( Task::NewDW, lb->created_vol_CCLabel,gn);
   
-  task->computes(lb->press_CCLabel,        press_matl);
+  task->modifies(lb->press_CCLabel,        press_matl);
   task->computes(lb->delP_DilatateLabel,   press_matl);
   task->computes(lb->delP_MassXLabel,      press_matl);
   task->computes(lb->term2Label,           press_matl);
@@ -1072,11 +1082,9 @@ void ICE::actuallyInitialize(const ProcessorGroup*,
     StaticArray<CCVariable<double>   > speedSound(numMatls);
     StaticArray<CCVariable<double>   > vol_frac_CC(numMatls);
     StaticArray<CCVariable<Vector>   > vel_CC(numMatls);
-    CCVariable<double>    press_CC, imp_delP;  
+    CCVariable<double>    press_CC;  
     StaticArray<double>   cv(numMatls);
     new_dw->allocateAndPut(press_CC, lb->press_CCLabel, 0,patch);
-    new_dw->allocateAndPut(imp_delP, lb->imp_delPLabel, 0,patch);
-    imp_delP.initialize(0.0);  // initial guess
     press_CC.initialize(0.0);
 
   //__________________________________
@@ -1233,13 +1241,16 @@ void ICE::computeEquilibrationPressure(const ProcessorGroup*,
     StaticArray<constCCVariable<Vector> > vel_CC(numMatls);
     CCVariable<int> n_iters_equil_press;
     constCCVariable<double> press;
-    CCVariable<double> press_new;
+    CCVariable<double> press_new, press_copy;
     StaticArray<double> cv(numMatls), gamma(numMatls);
     Ghost::GhostType  gn = Ghost::None;
     
-    old_dw->get(press,         lb->press_CCLabel, 0,patch,gn, 0); 
+    //__________________________________
+    //  Implicit press needs two copies of press 
+    old_dw->get(press,                lb->press_CCLabel, 0,patch,gn, 0); 
     new_dw->allocateAndPut(press_new, lb->press_equil_CCLabel, 0,patch);
-
+    new_dw->allocateAndPut(press_copy,lb->press_CCLabel,       0,patch);
+        
     for (int m = 0; m < numMatls; m++) {
       ICEMaterial* matl = d_sharedState->getICEMaterial(m);
       int indx = matl->getDWIndex();
@@ -1414,9 +1425,11 @@ void ICE::computeEquilibrationPressure(const ProcessorGroup*,
 
     //__________________________________
     // update Boundary conditions
+    // make copy of press for implicit calc.
     setBC(press_new,   rho_micro[SURROUND_MAT],
           "rho_micro", "Pressure", patch , d_sharedState, 0, new_dw);    
-    
+
+    press_copy.copyData(press_new);
     //__________________________________
     // compute sp_vol_CC
     for (int m = 0; m < numMatls; m++)   {
@@ -1534,10 +1547,98 @@ template<class T> void ICE::computeTempFace(CellIterator it,
     Temp_FC[R] = term1;
   } 
 }
-                       
+
 //______________________________________________________________________
 //                       
-void ICE::computeFC_vel_Temp(const ProcessorGroup*,  
+void ICE::computeTempFC(const ProcessorGroup*,  
+                        const PatchSubset* patches,                     
+                        const MaterialSubset* /*matls*/,                
+                        DataWarehouse* old_dw,                          
+                        DataWarehouse* new_dw)                          
+{
+  for(int p = 0; p<patches->size(); p++){
+    const Patch* patch = patches->get(p);
+    
+    cout_doing << "Doing compute_FC_Temp on patch " 
+              << patch->getID() << "\t\t\t ICE" << endl;
+            
+    int numMatls = d_sharedState->getNumMatls();
+    Ghost::GhostType  gac = Ghost::AroundCells; 
+    
+    // Compute the face centered Temperatures
+    for(int m = 0; m < numMatls; m++) {
+      Material* matl = d_sharedState->getMaterial( m );
+      int indx = matl->getDWIndex();
+      ICEMaterial* ice_matl = dynamic_cast<ICEMaterial*>(matl);
+      constCCVariable<double> rho_CC, Temp_CC;
+      
+      if(ice_matl){
+        new_dw->get(rho_CC, lb->rho_CCLabel, indx, patch, gac, 1);
+        old_dw->get(Temp_CC,lb->temp_CCLabel,indx, patch, gac, 1); 
+      } else {
+        new_dw->get(rho_CC, lb->rho_CCLabel, indx, patch, gac, 1);
+        new_dw->get(Temp_CC,lb->temp_CCLabel,indx, patch, gac, 1);
+      }
+      //---- P R I N T   D A T A ------
+  #if 1
+      if (switchDebug_vel_FC ) {
+        ostringstream desc;
+        desc << "TOP_computeTempFC_Mat_" << indx << "_patch_"<< patch->getID();
+        printData(indx, patch, 1, desc.str(), "rho_CC",      rho_CC);
+        printData(indx, patch, 1, desc.str(), "Temp_CC",    Temp_CC);
+      }
+  #endif
+      SFCXVariable<double> TempX_FC;
+      SFCYVariable<double> TempY_FC;
+      SFCZVariable<double> TempZ_FC; 
+      new_dw->allocateAndPut(TempX_FC,lb->TempX_FCLabel,indx, patch);   
+      new_dw->allocateAndPut(TempY_FC,lb->TempY_FCLabel,indx, patch);   
+      new_dw->allocateAndPut(TempZ_FC,lb->TempZ_FCLabel,indx, patch);   
+      
+      IntVector lowIndex(patch->getSFCXLowIndex());
+      TempX_FC.initialize(0.0,lowIndex,patch->getSFCXHighIndex()); 
+      TempY_FC.initialize(0.0,lowIndex,patch->getSFCYHighIndex()); 
+      TempZ_FC.initialize(0.0,lowIndex,patch->getSFCZHighIndex());
+      
+      vector<IntVector> adj_offset(3);
+      adj_offset[0] = IntVector(-1, 0, 0);    // X faces
+      adj_offset[1] = IntVector(0, -1, 0);    // Y faces
+      adj_offset[2] = IntVector(0,  0, -1);   // Z faces     
+
+      int offset=0;    // 0=Compute all faces in computational domain             
+                       // 1=Skip the faces at the border between interior and gc
+
+      //__________________________________
+      //  Compute the temperature on each face     
+      //  Currently on used by HEChemistry and in  
+      //  the future by heat conduction 
+      if ( d_massExchange == true ) {        
+        computeTempFace<SFCXVariable<double> >(patch->getSFCXIterator(offset),
+                                     adj_offset[0], rho_CC,Temp_CC, TempX_FC);
+
+        computeTempFace<SFCYVariable<double> >(patch->getSFCYIterator(offset),
+                                     adj_offset[1], rho_CC,Temp_CC, TempY_FC);
+
+        computeTempFace<SFCZVariable<double> >(patch->getSFCZIterator(offset),
+                                     adj_offset[2], rho_CC,Temp_CC, TempZ_FC);
+      }
+
+      //---- P R I N T   D A T A ------ 
+      if (switchDebug_vel_FC ) {
+        ostringstream desc;      
+        if ( d_massExchange == true ) {
+          desc << "BOT_computeTempFC_Mat_" << indx << "_patch_"<< patch->getID(); 
+          printData_FC( indx, patch,1, desc.str(), "TempX_FC", TempX_FC);
+          printData_FC( indx, patch,1, desc.str(), "TempY_FC", TempY_FC);
+          printData_FC( indx, patch,1, desc.str(), "TempZ_FC", TempZ_FC);
+        }
+      }
+    } // matls loop
+  }  // patch loop
+}                       
+//______________________________________________________________________
+//                       
+void ICE::computeVel_FC(const ProcessorGroup*,  
                              const PatchSubset* patches,                
                              const MaterialSubset* /*matls*/,           
                              DataWarehouse* old_dw,                     
@@ -1547,50 +1648,48 @@ void ICE::computeFC_vel_Temp(const ProcessorGroup*,
   for(int p = 0; p<patches->size(); p++){
     const Patch* patch = patches->get(p);
     
-    cout_doing << "Doing compute_FC_vel_Temp on patch " 
+    cout_doing << "Doing computeVel_FC on patch " 
               << patch->getID() << "\t\t\t ICE" << endl;
-              
-/*`==========TESTING==========*/
-    // change the definition of parent(old/new)DW
-    // when implicit
-    DataWarehouse* pNewDW;
-    DataWarehouse* pOldDW;
-    if(recursion) {
-      pNewDW = 
-	  new_dw->getOtherDataWarehouse(Task::ParentNewDW);
-      pOldDW = 
-	  new_dw->getOtherDataWarehouse(Task::ParentOldDW);    
-    } else {
-      pNewDW =new_dw;
-      pOldDW =old_dw;
-    } 
-/*===========TESTING==========`*/
+
     int numMatls = d_sharedState->getNumMatls();
     
-    delt_vartype delT;
-    pOldDW->get(delT, d_sharedState->get_delt_label());
+    
     Vector dx      = patch->dCell();
     Vector gravity = d_sharedState->getGravity();
     
     constCCVariable<double> press_CC;
     Ghost::GhostType  gac = Ghost::AroundCells; 
-    pNewDW->get(press_CC,lb->press_equil_CCLabel, 0, patch,gac, 1);
-    
+    //__________________________________
+    //  Implicit
+    DataWarehouse* pNewDW;
+    DataWarehouse* pOldDW;
+
+    if(recursion) {
+      pNewDW  = new_dw->getOtherDataWarehouse(Task::ParentNewDW);
+      pOldDW  = new_dw->getOtherDataWarehouse(Task::ParentOldDW); 
+      old_dw->get(press_CC,lb->press_CCLabel,       0, patch,gac, 1);
+    } else {
+      pNewDW  = new_dw;
+      pOldDW  = old_dw;
+      new_dw->get(press_CC,lb->press_equil_CCLabel, 0, patch,gac, 1);
+    }
+     
+    delt_vartype delT;
+    pOldDW->get(delT, d_sharedState->get_delt_label());   
+     
     // Compute the face centered velocities
     for(int m = 0; m < numMatls; m++) {
       Material* matl = d_sharedState->getMaterial( m );
       int indx = matl->getDWIndex();
       ICEMaterial* ice_matl = dynamic_cast<ICEMaterial*>(matl);
-      constCCVariable<double> rho_CC, sp_vol_CC, Temp_CC;
+      constCCVariable<double> rho_CC, sp_vol_CC;
       constCCVariable<Vector> vel_CC;
       if(ice_matl){
         pNewDW->get(rho_CC, lb->rho_CCLabel, indx, patch, gac, 1);
-        pOldDW->get(vel_CC, lb->vel_CCLabel, indx, patch, gac, 1);
-        pOldDW->get(Temp_CC,lb->temp_CCLabel,indx, patch, gac, 1); 
+        pOldDW->get(vel_CC, lb->vel_CCLabel, indx, patch, gac, 1); 
       } else {
         pNewDW->get(rho_CC, lb->rho_CCLabel, indx, patch, gac, 1);
         pNewDW->get(vel_CC, lb->vel_CCLabel, indx, patch, gac, 1);
-        pNewDW->get(Temp_CC,lb->temp_CCLabel,indx, patch, gac, 1);
       }              
       pNewDW->get(sp_vol_CC, lb->sp_vol_CCLabel,indx,patch, gac, 1);
               
@@ -1598,31 +1697,25 @@ void ICE::computeFC_vel_Temp(const ProcessorGroup*,
   #if 1
       if (switchDebug_vel_FC ) {
         ostringstream desc;
-        desc << "TOP_FC_vel_Temp_Mat_" << indx << "_patch_"<< patch->getID(); 
+        desc << "TOP_computeVel_FC_Mat_" << indx << "_patch_"<< patch->getID();
+        printData(indx, patch, 1, desc.str(), "press_CC",    press_CC); 
         printData(indx, patch, 1, desc.str(), "rho_CC",      rho_CC);
-        printData(indx, patch, 1, desc.str(), "sp_vol_CC",  sp_vol_CC);
-        printVector(indx,patch,1, desc.str(), "vel_CC",  0, vel_CC);
-        printData(indx, patch, 1, desc.str(), "Temp_CC",    Temp_CC);
+        printData(indx, patch, 1, desc.str(), "sp_vol_CC",   sp_vol_CC);
+        printVector(indx,patch,1, desc.str(), "vel_CC",  0,  vel_CC);
       }
   #endif
-      SFCXVariable<double> uvel_FC, TempX_FC;
-      SFCYVariable<double> vvel_FC, TempY_FC;
-      SFCZVariable<double> wvel_FC, TempZ_FC;
+      SFCXVariable<double> uvel_FC;
+      SFCYVariable<double> vvel_FC;
+      SFCZVariable<double> wvel_FC;
 
       new_dw->allocateAndPut(uvel_FC, lb->uvel_FCLabel, indx, patch);
       new_dw->allocateAndPut(vvel_FC, lb->vvel_FCLabel, indx, patch);
-      new_dw->allocateAndPut(wvel_FC, lb->wvel_FCLabel, indx, patch); 
-      new_dw->allocateAndPut(TempX_FC,lb->TempX_FCLabel,indx, patch);   
-      new_dw->allocateAndPut(TempY_FC,lb->TempY_FCLabel,indx, patch);   
-      new_dw->allocateAndPut(TempZ_FC,lb->TempZ_FCLabel,indx, patch);   
+      new_dw->allocateAndPut(wvel_FC, lb->wvel_FCLabel, indx, patch);   
       
       IntVector lowIndex(patch->getSFCXLowIndex());
       uvel_FC.initialize(0.0, lowIndex,patch->getSFCXHighIndex());
       vvel_FC.initialize(0.0, lowIndex,patch->getSFCYHighIndex());
       wvel_FC.initialize(0.0, lowIndex,patch->getSFCZHighIndex());
-      TempX_FC.initialize(0.0,lowIndex,patch->getSFCXHighIndex()); 
-      TempY_FC.initialize(0.0,lowIndex,patch->getSFCYHighIndex()); 
-      TempZ_FC.initialize(0.0,lowIndex,patch->getSFCZHighIndex());
       
       vector<IntVector> adj_offset(3);
       adj_offset[0] = IntVector(-1, 0, 0);    // X faces
@@ -1652,35 +1745,13 @@ void ICE::computeFC_vel_Temp(const ProcessorGroup*,
       // (*)vel_FC BC are updated in 
       // ICE::addExchangeContributionToFCVel()
 
-
-      //__________________________________
-      //  Compute the temperature on each face     
-      //  Currently on used by HEChemistry and in  
-      //  the future by heat conduction 
-      if ( d_massExchange == true ) {        
-        computeTempFace<SFCXVariable<double> >(patch->getSFCXIterator(offset),
-                                     adj_offset[0], rho_CC,Temp_CC, TempX_FC);
-
-        computeTempFace<SFCYVariable<double> >(patch->getSFCYIterator(offset),
-                                     adj_offset[1], rho_CC,Temp_CC, TempY_FC);
-
-        computeTempFace<SFCZVariable<double> >(patch->getSFCZIterator(offset),
-                                     adj_offset[2], rho_CC,Temp_CC, TempZ_FC);
-      }
-
       //---- P R I N T   D A T A ------ 
       if (switchDebug_vel_FC ) {
         ostringstream desc;
-        desc <<"BOT_FC_vel_Temp_Mat_" << indx << "_patch_"<< patch->getID();
+        desc <<"BOT_computeVel_FC_Mat_" << indx << "_patch_"<< patch->getID();
         printData_FC( indx, patch,1, desc.str(), "uvel_FC",  uvel_FC);
         printData_FC( indx, patch,1, desc.str(), "vvel_FC",  vvel_FC);
         printData_FC( indx, patch,1, desc.str(), "wvel_FC",  wvel_FC);
-        
-        if ( d_massExchange == true ) { 
-          printData_FC( indx, patch,1, desc.str(), "TempX_FC", TempX_FC);
-          printData_FC( indx, patch,1, desc.str(), "TempY_FC", TempY_FC);
-          printData_FC( indx, patch,1, desc.str(), "TempZ_FC", TempZ_FC);
-        }
       }
     } // matls loop
   }  // patch loop
@@ -1731,29 +1802,25 @@ void ICE::addExchangeContributionToFCVel(const ProcessorGroup*,
     const Patch* patch = patches->get(p);
     cout_doing << "Doing Add_exchange_contribution_to_FC_vel on patch " <<
       patch->getID() << "\t ICE" << endl;
-
-/*`==========TESTING==========*/
+ 
     // change the definition of parent(old/new)DW
     // when implicit
     DataWarehouse* pNewDW;
     DataWarehouse* pOldDW;
     if(recursion) {
-      pNewDW = 
-	  new_dw->getOtherDataWarehouse(Task::ParentNewDW);
-      pOldDW = 
-	  new_dw->getOtherDataWarehouse(Task::ParentOldDW);    
+      pNewDW  = new_dw->getOtherDataWarehouse(Task::ParentNewDW);
+      pOldDW  = new_dw->getOtherDataWarehouse(Task::ParentOldDW); 
     } else {
-      pNewDW =new_dw;
-      pOldDW =old_dw;
+      pNewDW  = new_dw;
+      pOldDW  = old_dw;
     } 
-/*===========TESTING==========`*/
+
     int numMatls = d_sharedState->getNumMatls();
     delt_vartype delT;
     pOldDW->get(delT, d_sharedState->get_delt_label());
 
     double tmp, sp_vol_brack;
     StaticArray<constCCVariable<double> > sp_vol_CC(numMatls);
-
     StaticArray<constCCVariable<double> > vol_frac_CC(numMatls);
     StaticArray<constSFCXVariable<double> > uvel_FC(numMatls);
     StaticArray<constSFCYVariable<double> > vvel_FC(numMatls);
@@ -1996,6 +2063,7 @@ void ICE::computeDelPressAndUpdatePressCC(const ProcessorGroup*,
     const IntVector gc(1,1,1);
     Ghost::GhostType  gn  = Ghost::None;
     Ghost::GhostType  gac = Ghost::AroundCells;
+    new_dw->getModifiable(press_CC,      lb->press_CCLabel,     0,patch);
     new_dw->allocateAndPut(delP_Dilatate,lb->delP_DilatateLabel,0, patch);
     new_dw->allocateAndPut(delP_MassX,   lb->delP_MassXLabel,   0, patch);
     new_dw->allocateAndPut(press_CC,     lb->press_CCLabel,     0, patch);
