@@ -15,8 +15,6 @@
 JNIEXPORT jint JNICALL
 Java_ptolemy_scirun_StartSCIRun_getScirun(JNIEnv *env, jobject obj, jstring name, jstring file, jstring reader, jint run)
 {
-		
-
 	std::string nPath = JNIUtils::GetStringNativeChars(env, name);
 	std::string dPath = JNIUtils::GetStringNativeChars(env, file);
 	std::string modName = JNIUtils::GetStringNativeChars(env, reader);
@@ -29,17 +27,5 @@ Java_ptolemy_scirun_StartSCIRun_getScirun(JNIEnv *env, jobject obj, jstring name
     t->join();
 	
 	return 1;
-}
-
-JNIEXPORT jint JNICALL
-Java_ptolemy_scirun_StartSCIRun_loadNetwork(JNIEnv *env, jobject obj)
-{
-    AddNet *add = new AddNet();
-    Thread *t = new Thread(add, "add network", 0, Thread::NotActivated);
-    t->setStackSize(1024*1024);
-    t->activate(false);	
-	t->join();
-	
-    return 1;
 }
 
