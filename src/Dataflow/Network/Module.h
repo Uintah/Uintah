@@ -245,6 +245,7 @@ protected:
     Reset
   };
   void update_state(State);
+  virtual void light_module0();
   virtual void light_module();
   virtual void reset_module_color();
   void update_msg_state(MsgState);  

@@ -57,6 +57,7 @@ public:
   bool module_maybe_dynamic_compile(CompileInfoHandle ci, DC &result);
 
 protected:
+  virtual void light_module0() = 0;
   virtual void light_module() = 0;
   virtual void reset_module_color() = 0;
 };
@@ -69,6 +70,8 @@ ModuleReporter::module_dynamic_compile(CompileInfoHandle cih, DC &result)
   ASSERT(cih.get_rep());
   const CompileInfo &ci = *(cih.get_rep());
   DynamicAlgoHandle algo_handle;
+  light_module0();
+  bool reset_color = false;
   if (! DynamicLoader::scirun_loader().fetch(ci, algo_handle))
   {
     remark("Dynamically compiling some code.");
@@ -76,6 +79,7 @@ ModuleReporter::module_dynamic_compile(CompileInfoHandle cih, DC &result)
     const bool status =
       DynamicLoader::scirun_loader().compile_and_store(ci, false, msgStream());
     reset_module_color();
+    reset_color = true;
     msgStream_flush();
     remark("Dynamic compilation completed.");
 
@@ -86,6 +90,8 @@ ModuleReporter::module_dynamic_compile(CompileInfoHandle cih, DC &result)
       return false;
     }
   }
+
+  if (!reset_color) { reset_module_color(); }
 
   result = dynamic_cast<typename DC::pointer_type>(algo_handle.get_rep());
   if (result.get_rep() == 0) 
@@ -105,6 +111,8 @@ ModuleReporter::module_maybe_dynamic_compile(CompileInfoHandle cih, DC &result)
   ASSERT(cih.get_rep());
   const CompileInfo &ci = *(cih.get_rep());
   DynamicAlgoHandle algo_handle;
+  light_module0();
+  bool reset_color = false;
   if (! DynamicLoader::scirun_loader().fetch(ci, algo_handle))
   {
     remark("Maybe dynamically compiling some code, ignore failure here.");
@@ -112,6 +120,7 @@ ModuleReporter::module_maybe_dynamic_compile(CompileInfoHandle cih, DC &result)
     const bool status =
       DynamicLoader::scirun_loader().compile_and_store(ci, true, msgStream());
     reset_module_color();
+    reset_color = true;
     msgStream_flush();
     remark("Dynamic compilation completed.");
 
@@ -122,6 +131,8 @@ ModuleReporter::module_maybe_dynamic_compile(CompileInfoHandle cih, DC &result)
       return false;
     }
   }
+
+  if (!reset_color) { reset_module_color(); }
 
   result = dynamic_cast<typename DC::pointer_type>(algo_handle.get_rep());
   if (result.get_rep() == 0) 
