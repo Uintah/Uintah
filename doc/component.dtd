@@ -34,7 +34,7 @@ Component  specification dtd.
 <!ENTITY % rlink.attr "path %rpath; #REQUIRED">
 
 <!-- Text level stuff -->
-<!ENTITY % phrase "term | keyword | keyboard | cite | acronym">
+<!ENTITY % phrase "term | keyword | keyboard | cite | acronym | latex">
 <!ENTITY % phrase.content "(#PCDATA)">
 <!ENTITY % inline "%phrase; | %links;">
 <!ENTITY % Inline "(#PCDATA | %inline;)*">
@@ -43,7 +43,7 @@ Component  specification dtd.
 <!-- Higher level stuff -->
 <!ENTITY % lists "orderedlist | unorderedlist | desclist">
 <!ENTITY % admonition "note | tip | warning">
-<!ENTITY % block "p">
+<!ENTITY % block "p | latex">
 <!ENTITY % flow "%block; | %lists;">
 <!ENTITY % BasicFlow "(p,(%flow;)*)">
 <!ENTITY % DescFlow "(p,(%flow; | developer | %admonition;)*)">
@@ -183,3 +183,5 @@ Component  specification dtd.
 <!ELEMENT desclistterm (#PCDATA)>
 <!ELEMENT desclistdef %BasicFlow;>
 
+<!-- Latex element.  Acts as both an inline phrase type element and a block element -->
+<!ELEMENT latex (#PCDATA)>
