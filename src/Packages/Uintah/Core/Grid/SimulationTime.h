@@ -39,6 +39,8 @@ public:
   SimulationTime(const ProblemSpecP& params);
   double maxTime;
   double initTime;
+  double max_initial_delt;
+  double initial_delt_range;
   double delt_min;
   double delt_max;
   double delt_factor;
