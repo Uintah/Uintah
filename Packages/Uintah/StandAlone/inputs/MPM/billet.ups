@@ -61,7 +61,6 @@
 		    <velocity>[0.0,-50.0,0.0]</velocity>
 		    <temperature>12</temperature>
  		</geom_object>
-		<velocity_field>0</velocity_field>
 	    </material>
 
 	    <material>
@@ -83,13 +82,13 @@
 		    <velocity>[0.0,0.0,0]</velocity>
 		    <temperature>12</temperature>
  		</geom_object>
-		<velocity_field>1</velocity_field>
 	    </material>
 
 	    <contact>
 	      <type>rigid</type>
 	      <vel_fields>[0,1,0]</vel_fields>
               <stop_time>999999.9 </stop_time>
+              <direction>  [1,1,1]    </direction>
 	    </contact>
 	</MPM>
 
