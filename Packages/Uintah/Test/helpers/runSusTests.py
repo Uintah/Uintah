@@ -202,7 +202,8 @@ def runSusTests(argv, TESTS, algo, callback = nullCallback):
   # if results saved on the web server, copy back to build root
   if outputpath != startpath:
     system("cp -r %s %s/%s-results" % (resultsdir, startpath, ALGO))
-
+    # remove xml and data files so they don't pile up after they're copied
+    system("find %s -name '*.uda*' | xargs rm -rf " % resultsdir)
   if solotest != "" and solotest_found == 0:
     print "unknown test: %s" % solotest
     system("rm -rf %s" % (resultsdir))
