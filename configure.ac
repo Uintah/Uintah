@@ -2965,14 +2965,14 @@ AC_SUBST(UUID_LIB_FLAG)
 ##  --  See if we have everything needed for SCIRun2 ----------------------
 
 if test "$enable_scirun2" = "yes"; then
-  if test "$HAVE_GLOBUS" != "yes"; then
-    if test "$with_globus" = "no"; then
-      SCI_MSG_ERROR(Must include --with-globus with --enable-scirun2)
-    else
-      SCI_MSG_ERROR(Globus not found required for scirun2)
-    fi
-    exit 1
-  fi
+#  if test "$HAVE_GLOBUS" != "yes"; then
+#    if test "$with_globus" = "no"; then
+#      SCI_MSG_ERROR(Must include --with-globus with --enable-scirun2)
+#    else
+#      SCI_MSG_ERROR(Globus not found required for scirun2)
+#    fi
+#    exit 1
+#  fi
   if test "$have_uuid" != "yes"; then
     case $host in
       *linux*)
