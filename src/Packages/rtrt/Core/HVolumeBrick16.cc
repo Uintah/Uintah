@@ -975,7 +975,7 @@ void HVolumeBrick16::get_minmax(float& min, float& max)
 //returns a value from a point (ray+t) in a HVB16, or false if the point is not in it
 bool HVolumeBrick16::interior_value(double& ret_val, const Ray &ray, const double t) {
 
-    const Point where(ray.origin()+(ray.direction()*t));
+  const Point where(ray.eval(t));
     
     //quick reject for out of bounds
     Point max(min+hierdiag);
