@@ -92,10 +92,21 @@ WARNING
          *this = *c;
       }
 
+
+   template<class T>
+      void
+      PerPatch<T>::setData(const T& val)
+      {
+	value = val;
+      }
+
 } // end namespace Uintah
 
 //
 // $Log$
+// Revision 1.3  2000/06/30 04:17:25  rawat
+// added setData() function in PerPatch.h
+//
 // Revision 1.2  2000/06/05 19:44:48  guilkey
 // Created PerPatchBase, filled in PerPatch class.
 //
