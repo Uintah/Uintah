@@ -103,6 +103,15 @@ export 	TEEM_PNG_LPATH TEEM_PNG_IPATH
 setenv TEEM_PNG_LPATH -L/usr/local/lib
 setenv TEEM_PNG_IPATH -I/usr/local/include
 	    </literallayout>
+	    <note>
+	      <para>Don't use variables <envar>CFLAGS</envar>,
+	      <envar>CXXFLAGS</envar>, or <envar>LDFLAGS</envar> in
+	      place of <envar>TEEM_PNG_LPATH</envar> and
+	      <envar>TEEM_PNG_IPATH</envar>.  TEEM compilation does
+	      not use variables <envar>CFLAGS</envar>,
+	      <envar>CXXFLAGS</envar>, or
+	      <envar>LDFLAGS</envar>.</para>
+	    </note>
 	  </para>
 	  <para>If <acronym>ZLIB</acronym> libraries (and
 	  corresponding header files) are not installed in a
@@ -125,6 +134,15 @@ export TEEM_ZLIB_LPATH TEEM_ZLIB_IPATH
 setenv TEEM_ZLIB_LPATH -L/usr/local/lib
 setenv TEEM_ZLIB_IPATH -I/usr/local/include
 	    </literallayout>
+	    <note>
+	      <para>Don't use variables <envar>CFLAGS</envar>,
+	      <envar>CXXFLAGS</envar>, or <envar>LDFLAGS</envar> in
+	      place of <envar>ZLIB_PNG_LPATH</envar> and
+	      <envar>ZLIB_PNG_IPATH</envar>.  TEEM compilation does
+	      not use variables <envar>CFLAGS</envar>,
+	      <envar>CXXFLAGS</envar>, or
+	      <envar>LDFLAGS</envar>.</para>
+	    </note>
 	  </para>
 	</listitem>
 
@@ -259,6 +277,15 @@ export TEEM_PNG_LPATH TEEM_PNG_IPATH
 setenv TEEM_PNG_LPATH -L/usr/local/lib
 setenv TEEM_PNG_IPATH -I/usr/local/include
 	  </literallayout>
+	  <note>
+	    <para>Don't use variables <envar>CFLAGS</envar>,
+	    <envar>CXXFLAGS</envar>, or <envar>LDFLAGS</envar> in
+	    place of <envar>TEEM_PNG_LPATH</envar> and
+	    <envar>TEEM_PNG_IPATH</envar>.  TEEM compilation does
+	    not use variables <envar>CFLAGS</envar>,
+	    <envar>CXXFLAGS</envar>, or
+	    <envar>LDFLAGS</envar>.</para>
+	  </note>
 	</para>
 	<para>If <acronym>ZLIB</acronym> libraries (and corresponding
 	header files) are not installed in a standard location then
@@ -280,6 +307,15 @@ export TEEM_ZLIB_LPATH TEEM_ZLIB_IPATH
 setenv TEEM_ZLIB_LPATH -L/usr/local/lib
 setenv TEEM_ZLIB_IPATH -I/usr/local/include
 	  </literallayout>
+	  <note>
+	    <para>Don't use variables <envar>CFLAGS</envar>,
+	    <envar>CXXFLAGS</envar>, or <envar>LDFLAGS</envar> in
+	    place of <envar>ZLIB_PNG_LPATH</envar> and
+	    <envar>ZLIB_PNG_IPATH</envar>.  TEEM compilation does
+	    not use variables <envar>CFLAGS</envar>,
+	    <envar>CXXFLAGS</envar>, or
+	    <envar>LDFLAGS</envar>.</para>
+	  </note>
 	</para>
       </listitem>
 
