@@ -47,9 +47,6 @@ void server_mode()
   cerr << "Server starting..." << endl;;
   
   ConnectionEventService 
-
-
-
 }
 #endif
 
