@@ -165,13 +165,15 @@ private:
 		    const PatchSubset* patches,
 		    const MaterialSubset* matls,
 		    DataWarehouse* old_dw,
-		    DataWarehouse* new_dw);
+		    DataWarehouse* new_dw,
+		    const bool recursion);
 
   void destroyMatrix(const ProcessorGroup*,
-		    const PatchSubset* patches,
-		    const MaterialSubset* matls,
-		    DataWarehouse* old_dw,
-		    DataWarehouse* new_dw);
+		     const PatchSubset* patches,
+		     const MaterialSubset* matls,
+		     DataWarehouse* old_dw,
+		     DataWarehouse* new_dw,
+		     const bool recursion);
   //////////
   // Insert Documentation Here:
 
@@ -304,9 +306,11 @@ private:
   void scheduleApplyBoundaryConditions(SchedulerP&, const PatchSet*,
 				       const MaterialSet*);
 
-  void scheduleCreateMatrix(SchedulerP&, const PatchSet*,const MaterialSet*);
+  void scheduleCreateMatrix(SchedulerP&, const PatchSet*,const MaterialSet*,
+			    const bool recursion);
 
-  void scheduleDestroyMatrix(SchedulerP&, const PatchSet*,const MaterialSet*);
+  void scheduleDestroyMatrix(SchedulerP&, const PatchSet*,const MaterialSet*,
+			     const bool recursion);
 
   void scheduleComputeStressTensorI(SchedulerP&, const PatchSet*,
 				    const MaterialSet*,

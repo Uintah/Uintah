@@ -406,7 +406,7 @@ void CompNeoHookImplicit::computeStressTensorImplicit(const PatchSubset* patches
 	    dispGrad(i+1,j+1) += disp[i] * d_S[k][j]* oodx[j];
 	  }
 	}
-#if 1
+#if 0
 	cerr << "d_Shape = " << d_S[k] << endl;
 	cerr << "oodx = " << oodx[0] << "\t" << oodx[1] << "\t" << oodx[2] <<
 	  endl;
