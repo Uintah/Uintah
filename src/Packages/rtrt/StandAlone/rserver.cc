@@ -32,7 +32,7 @@ namespace rtrt {
   public:
     RStream(WindowInfo& winfo, int listen_sock, int myidx);
     ~RStream();
-    bool shutdown;
+    volatile bool shutdown;
     virtual void run();
   private:
     char buf[MAXBUFSIZE];
@@ -227,9 +227,10 @@ void RStream::run()
       if(winfo.curFrames[myidx] < framenumber){
 	winfo.curFrames[myidx] = framenumber;
 	int i;
+	int pendingCurFrame = winfo.pendingCurFrame;
 	for(i=0;i<winfo.streams.size();i++)
-	  if(winfo.curFrames[i] <= curFrame)
-	  break;
+	  if(winfo.curFrames[i] <= pendingCurFrame)
+	    break;
 	if(i == winfo.streams.size()){
 	  int writecount=0;
 	  winfo.lock.lock();
@@ -252,7 +253,7 @@ void RStream::run()
 	  cerr << "Stream reader " << myidx << " is too far ahead, spinning...\n";
 	  cerr << "pendingCurFrame=" << winfo.pendingCurFrame << ", curFrame=" << winfo.curFrame << "frameno=" << framenumber << '\n';
 	  io.unlock();
-	  while(framenumber > winfo.curFrame+1) {}
+	  while(framenumber > winfo.curFrame+1 && !shutdown) {}
 	  io.lock();
 	  cerr << "Stream reader " << myidx << " done spinning...\n";
 	  io.unlock();
@@ -318,8 +319,6 @@ void setupStreams(WindowInfo& winfo, int newnstreams, RemoteReply& reply)
   int nstreams = (int)winfo.streams.size();
   for(int i=0;i<nstreams;i++)
     winfo.streams[i]->shutdown=true;
-  for(int i=0;i<nstreams;i++)
-    winfo.streamthreads[i]->join();
   winfo.streams.resize(newnstreams);
   winfo.streamthreads.resize(newnstreams);
 
@@ -351,8 +350,11 @@ void setupStreams(WindowInfo& winfo, int newnstreams, RemoteReply& reply)
     winfo.streams[i]=new RStream(winfo, winfo.listen_sock, i);
     winfo.streamthreads[i] = new Thread(winfo.streams[i],
 					"Image receive thread");
+    winfo.streamthreads[i]->detach();
     reply.ports[i] = p;
   }
+  winfo.curFrame = 0;
+  winfo.pendingCurFrame = 0;
 }
 
 void processMessage(WindowInfo& winfo, int sock)
@@ -495,17 +497,19 @@ void serve(int inbound)
 	perror("4. read");
 	Thread::exitAll(1);
       }
-      Image* image = winfo.images[winfo.curFrame%MAXFRAMES];
-      glMatrixMode(GL_PROJECTION);
-      glLoadIdentity();
-      gluOrtho2D(0, image->get_xres(), 0, image->get_yres());
-      glMatrixMode(GL_MODELVIEW);
-      glLoadIdentity();
-      glTranslatef(0.375, 0.375, 0.0);
-      image->draw(0, false);
-      glXSwapBuffers(winfo.dpy, winfo.win);
-      glFinish();
-      winfo.curFrame++;
+      while(winfo.curFrame < winfo.pendingCurFrame){
+	Image* image = winfo.images[winfo.curFrame%MAXFRAMES];
+	glMatrixMode(GL_PROJECTION);
+	glLoadIdentity();
+	gluOrtho2D(0, image->get_xres(), 0, image->get_yres());
+	glMatrixMode(GL_MODELVIEW);
+	glLoadIdentity();
+	glTranslatef(0.375, 0.375, 0.0);
+	image->draw(0, false);
+	glXSwapBuffers(winfo.dpy, winfo.win);
+	glFinish();
+	winfo.curFrame++;
+      }
     }
   }
   if(winfo.listen_sock != -1)
