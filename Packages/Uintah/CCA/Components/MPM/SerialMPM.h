@@ -211,6 +211,15 @@ private:
                           const MaterialSubset* ,
                           DataWarehouse* old_dw,
                           DataWarehouse* new_dw);
+
+  //////////
+  // Calculate the rate of evolution of the damping coefficient
+  void calculateDampingRate(const ProcessorGroup*,
+			    const PatchSubset* patches,
+			    const MaterialSubset* matls,
+			    DataWarehouse* old_dw,
+			    DataWarehouse* new_dw);
+
   //////////
   // Insert Documentation Here:
   void interpolateToParticlesAndUpdate(const ProcessorGroup*,
@@ -266,6 +275,9 @@ private:
   void scheduleInterpolateParticlesForSaving(SchedulerP&, const PatchSet*,
 					     const MaterialSet*);
 
+  void scheduleCalculateDampingRate(SchedulerP&, const PatchSet*,
+				    const MaterialSet*);
+
   SerialMPM(const SerialMPM&);
   SerialMPM& operator=(const SerialMPM&);
 	 
@@ -279,6 +291,10 @@ private:
   double           d_min_part_mass; // Minimum particle mass before it's deleted
   int              NGP;      // Number of ghost particles needed.
   int              NGN;      // Number of ghost nodes     needed.
+
+  const VarLabel*  d_dampingRateLabel; // Damping rate summed over particles
+  const VarLabel*  d_dampingCoeffLabel; // Calculated damping coefficient
+  double           d_artificialDampCoeff; // Artificial damping coefficient
 
   vector<MPMPhysicalBC*> d_physicalBCs;
   bool             d_fracture;
