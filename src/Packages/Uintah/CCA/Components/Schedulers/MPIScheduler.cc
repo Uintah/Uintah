@@ -115,7 +115,7 @@ MPIScheduler::actuallyCompile(const ProcessorGroup* pg)
 {
   TAU_PROFILE("MPIScheduler::compile()", " ", TAU_USER); 
 
-  dbg << "MPIScheduler starting compile\n";
+  dbg << pg->myrank() << " MPIScheduler starting compile\n";
   if( dts_ )
     delete dts_;
 
@@ -139,7 +139,7 @@ MPIScheduler::actuallyCompile(const ProcessorGroup* pg)
 
   verifyChecksum();
 
-  dbg << "MPIScheduler finished compile\n";
+  dbg << pg->myrank() << " MPIScheduler finished compile\n";
 }
 
 #ifdef USE_TAU_PROFILING
