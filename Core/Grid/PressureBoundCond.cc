@@ -1,5 +1,6 @@
 #include <Packages/Uintah/Core/Grid/PressureBoundCond.h>
 #include <Packages/Uintah/Core/ProblemSpec/ProblemSpec.h>
+#include <Core/Malloc/Allocator.h>
 
 using namespace Uintah;
 
@@ -16,5 +17,5 @@ PressureBoundCond::~PressureBoundCond()
 
 PressureBoundCond* PressureBoundCond::clone()
 {
-  return new PressureBoundCond(*this);
+  return scinew PressureBoundCond(*this);
 }

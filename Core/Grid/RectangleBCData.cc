@@ -2,6 +2,7 @@
 #include <Core/Geometry/Point.h>
 #include <Packages/Uintah/Core/Grid/Box.h>
 #include <Packages/Uintah/Core/Grid/BoundCondFactory.h>
+#include <Core/Malloc/Allocator.h>
 
 using namespace SCIRun;
 using namespace Uintah;
@@ -28,7 +29,7 @@ RectangleBCData::~RectangleBCData()
 
 RectangleBCData* RectangleBCData::clone()
 {
-  return new RectangleBCData(*this);
+  return scinew RectangleBCData(*this);
 }
 
 void RectangleBCData::addBCData(BCData& bc)

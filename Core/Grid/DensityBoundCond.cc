@@ -1,5 +1,6 @@
 #include <Packages/Uintah/Core/Grid/DensityBoundCond.h>
 #include <Packages/Uintah/Core/ProblemSpec/ProblemSpec.h>
+#include <Core/Malloc/Allocator.h>
 
 using namespace Uintah;
 
@@ -16,6 +17,6 @@ DensityBoundCond::~DensityBoundCond()
 
 DensityBoundCond* DensityBoundCond::clone()
 {
-  return new DensityBoundCond(*this);
+  return scinew DensityBoundCond(*this);
 }
 
