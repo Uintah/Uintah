@@ -108,7 +108,9 @@ MatrixWriter::call_exporter(const string &filename)
   MatrixIEPlugin *pl = mgr.get_plugin(ft);
   if (pl)
   {
-    return pl->fileWriter_(this, handle_, filename.c_str());
+    const bool result = pl->fileWriter_(this, handle_, filename.c_str());
+    msgStream_flush();
+    return result;
   }
   return false;
 }

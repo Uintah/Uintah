@@ -106,7 +106,9 @@ ColorMapWriter::call_exporter(const string &filename)
   ColorMapIEPlugin *pl = mgr.get_plugin(ft);
   if (pl)
   {
-    return pl->filewriter(this, handle_, filename.c_str());
+    const bool result = pl->filewriter(this, handle_, filename.c_str());
+    msgStream_flush();
+    return result;
   }
   return false;
 }
