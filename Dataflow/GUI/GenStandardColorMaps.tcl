@@ -503,6 +503,10 @@ itcl_class SCIRun_Visualization_GenStandardColorMaps {
 	global $this-height
 	set w .ui[modname]
 	
+	if {![winfo exists $w]} { 
+	    return
+	} 
+
 	set n [llength $colorMap]
 	set canvas $w.f.f1.canvas
 	$canvas delete map
