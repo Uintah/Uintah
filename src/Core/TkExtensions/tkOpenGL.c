@@ -59,6 +59,7 @@ typedef struct {
     Display *display;		/* X's token for the window's display. */
     Tcl_Interp *interp;		/* Interpreter associated with widget. */
     char* geometry;
+    Cursor cursor;
 
     /*
      * glXChooseVisual options
@@ -135,6 +136,8 @@ static Tk_ConfigSpec configSpecs[] = {
      "0", Tk_Offset(OpenGL, visualid), 0},
     {TK_CONFIG_STRING, "-geometry", "geometry", "Geometry",
      "100x100", Tk_Offset(OpenGL, geometry), 0},
+    {TK_CONFIG_CURSOR, "-cursor", "cursor", "Cursor",
+     "left_ptr", Tk_Offset(OpenGL, cursor), 0},
     {TK_CONFIG_END, (char *) NULL, (char *) NULL, (char *) NULL,
 	(char *) NULL, 0, 0}
 };
@@ -209,6 +212,7 @@ OpenGLCmd(clientData, interp, argc, argv)
     OpenGLPtr->tkwin = tkwin;
     OpenGLPtr->display = Tk_Display(tkwin);
     OpenGLPtr->geometry=0;
+    OpenGLPtr->cursor=0;
 
     Tk_CreateEventHandler(OpenGLPtr->tkwin, StructureNotifyMask,
 	    OpenGLEventProc, (ClientData) OpenGLPtr);
@@ -426,6 +430,11 @@ OpenGLConfigure(interp, OpenGLPtr, argc, argv, flags)
         }
         Tk_GeometryRequest(OpenGLPtr->tkwin, width, height);
     }
+
+    Tk_DefineCursor( OpenGLPtr->tkwin, OpenGLPtr->cursor );
+    //Tk_GetCursor( interp, OpenGLPtr->tkwin, "fleur" );
+    //    Tk_AllocCursorFromObj( interp, OpenGLPtr->tkwin, OpenGLPtr->cursor);
+
     return TCL_OK;
 }
 
