@@ -358,7 +358,7 @@ void Crack::AdjustCrackContactIntegrated(const ProcessorGroup*,
                                                          dwi, patch);
 
       delt_vartype delT;
-      old_dw->get(delT, lb->delTLabel);
+      old_dw->get(delT, lb->delTLabel, getLevel(patches));
 
       if(crackType[m]=="NO_CRACK") continue; // No crack(s) in this material
 

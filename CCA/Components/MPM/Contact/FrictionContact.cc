@@ -88,7 +88,7 @@ void FrictionContact::exMomInterpolated(const ProcessorGroup*,
     double cell_vol = dx.x()*dx.y()*dx.z();
 
     delt_vartype delT;
-    old_dw->get(delT, lb->delTLabel);
+    old_dw->get(delT, lb->delTLabel, getLevel(patches));
 
     Vector surnor;
 
@@ -514,7 +514,7 @@ void FrictionContact::exMomIntegrated(const ProcessorGroup*,
     }
 
     delt_vartype delT;
-    old_dw->get(delT, lb->delTLabel);
+    old_dw->get(delT, lb->delTLabel, getLevel(patches));
     double epsilon_max_max=0.0;
 
     for(NodeIterator iter = patch->getNodeIterator(); !iter.done(); iter++){

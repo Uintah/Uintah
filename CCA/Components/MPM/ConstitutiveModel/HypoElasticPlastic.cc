@@ -8,6 +8,7 @@
 #include "PlasticityModels/PlasticityState.h"
 #include <math.h>
 #include <Packages/Uintah/Core/Grid/Patch.h>
+#include <Packages/Uintah/Core/Grid/Level.h>
 #include <Packages/Uintah/CCA/Ports/DataWarehouse.h>
 #include <Packages/Uintah/Core/Grid/NCVariable.h>
 #include <Packages/Uintah/Core/Grid/ParticleSet.h>
@@ -553,7 +554,7 @@ void HypoElasticPlastic::computeStableTimestep(const Patch* patch,
 
   WaveSpeed = dx/WaveSpeed;
   double delT_new = WaveSpeed.minComponent();
-  new_dw->put(delt_vartype(delT_new), lb->delTLabel);
+  new_dw->setDelT(delT_new, lb->delTLabel, patch->getLevel());
 }
 
 void 
@@ -635,7 +636,7 @@ HypoElasticPlastic::computeStressTensor(const PatchSubset* patches,
 
     // Get the time increment (delT)
     delt_vartype delT;
-    old_dw->get(delT, lb->delTLabel);
+    old_dw->get(delT, lb->delTLabel, getLevel(patches));
 
     constParticleVariable<Short27> pgCode;
     constNCVariable<Vector> GVelocity;
@@ -1228,7 +1229,7 @@ HypoElasticPlastic::computeStressTensor(const PatchSubset* patches,
     }
     WaveSpeed = dx/WaveSpeed;
     double delT_new = WaveSpeed.minComponent();
-    new_dw->put(delt_vartype(delT_new), lb->delTLabel);
+    new_dw->setDelT(delT_new, lb->delTLabel, patch->getLevel());
     new_dw->put(sum_vartype(totalStrainEnergy), lb->StrainEnergyLabel);
   }
   //if ((patches->get(0))->getID() == 19)
@@ -1338,7 +1339,7 @@ void HypoElasticPlastic::carryForward(const PatchSubset* patches,
       pPlasticTempInc_new[idx] = 0.0;
     }
 
-    new_dw->put(delt_vartype(1.e10), lb->delTLabel);
+    new_dw->setDelT(1.e10, lb->delTLabel, patch->getLevel());
     new_dw->put(sum_vartype(0.),     lb->StrainEnergyLabel);
   }
 }

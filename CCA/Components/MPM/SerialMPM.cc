@@ -293,7 +293,8 @@ SerialMPM::scheduleTimeAdvance(const LevelP & level,
                                SchedulerP   & sched,
                                int, int ) // AMR Parameters
 {
-  if ( level->getIndex() != level->getGrid()->numLevels()-1)
+  if (flags->d_finestLevelOnly &&
+      level->getIndex() != level->getGrid()->numLevels()-1)
     return;
   const PatchSet* patches = level->eachPatch();
   const MaterialSet* matls = d_sharedState->allMPMMaterials();
@@ -1797,8 +1798,7 @@ void SerialMPM::solveEquationsMotion(const ProcessorGroup*,
 
     Vector gravity = d_sharedState->getGravity();
     delt_vartype delT;
-    old_dw->get(delT, d_sharedState->get_delt_label() );
-
+    old_dw->get(delT, d_sharedState->get_delt_label(), getLevel(patches) );
     Ghost::GhostType  gnone = Ghost::None;
     for(int m = 0; m < d_sharedState->getNumMPMMatls(); m++){
       MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial( m );
@@ -1946,7 +1946,7 @@ void SerialMPM::integrateAcceleration(const ProcessorGroup*,
       new_dw->get(acceleration,lb->gAccelerationLabel,dwi, patch,Ghost::None,0);
       new_dw->get(velocity,    lb->gVelocityLabel,    dwi, patch,Ghost::None,0);
 
-      old_dw->get(delT, d_sharedState->get_delt_label() );
+      old_dw->get(delT, d_sharedState->get_delt_label(), getLevel(patches) );
 
       // Create variables for the results
       NCVariable<Vector> velocity_star;
@@ -1987,7 +1987,7 @@ void SerialMPM::integrateTemperatureRate(const ProcessorGroup*,
       new_dw->get(temp_oldNoBC,lb->gTemperatureNoBCLabel, dwi,patch,gnone,0);
       new_dw->getModifiable(temp_rate, lb->gTemperatureRateLabel,dwi,patch);
 
-      old_dw->get(delT, d_sharedState->get_delt_label() );
+      old_dw->get(delT, d_sharedState->get_delt_label(), getLevel(patches) );
 
       new_dw->allocateAndPut(tempStar, lb->gTemperatureStarLabel, dwi,patch);
       tempStar.initialize(0.0);
@@ -2028,7 +2028,7 @@ void SerialMPM::setGridBoundaryConditions(const ProcessorGroup*,
     int numMPMMatls=d_sharedState->getNumMPMMatls();
     
     delt_vartype delT;            
-    old_dw->get(delT, d_sharedState->get_delt_label() );
+    old_dw->get(delT, d_sharedState->get_delt_label(), getLevel(patches) );
                       
     for(int m = 0; m < numMPMMatls; m++){
       MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial( m );
@@ -2522,7 +2522,7 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
     double ke=0;
     int numMPMMatls=d_sharedState->getNumMPMMatls();
     delt_vartype delT;
-    old_dw->get(delT, d_sharedState->get_delt_label() );
+    old_dw->get(delT, d_sharedState->get_delt_label(), getLevel(patches) );
     bool combustion_problem=false;
 
     // Artificial Damping 

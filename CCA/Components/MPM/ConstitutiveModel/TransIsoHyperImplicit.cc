@@ -7,6 +7,7 @@
 #include <Packages/Uintah/Core/Grid/ParticleSet.h>
 #include <Packages/Uintah/Core/Grid/ParticleVariable.h>
 #include <Packages/Uintah/Core/Grid/Task.h>
+#include <Packages/Uintah/Core/Grid/Level.h>
 #include <Packages/Uintah/Core/Grid/VarLabel.h>
 #include <Packages/Uintah/Core/Grid/VarTypes.h>
 #include <Packages/Uintah/Core/Math/Matrix3.h>
@@ -646,7 +647,7 @@ TransIsoHyperImplicit::computeStressTensor(const PatchSubset* patches,
      constNCVariable<Vector> dispNew;
      delt_vartype delT;
 
-     old_dw->get(delT,lb->delTLabel);
+     old_dw->get(delT,lb->delTLabel, getLevel(patches));
      old_dw->get(px,                  lb->pXLabel,                  pset);
      old_dw->get(pvolumeold,          lb->pVolumeOldLabel,          pset);
      old_dw->get(ptemperature,        lb->pTemperatureLabel,        pset);

@@ -7,6 +7,7 @@
 #include <Packages/Uintah/Core/Grid/Grid.h>
 #include <Packages/Uintah/Core/Grid/NCVariable.h>
 #include <Packages/Uintah/Core/Grid/Patch.h>
+#include <Packages/Uintah/Core/Grid/Level.h>
 #include <Packages/Uintah/Core/Grid/NodeIterator.h>
 #include <Packages/Uintah/Core/Grid/SimulationState.h>
 #include <Packages/Uintah/Core/Grid/SimulationStateP.h>
@@ -159,7 +160,7 @@ void RigidBodyContact::exMomIntegrated(const ProcessorGroup*,
     }
 
     delt_vartype delT;
-    old_dw->get(delT, lb->delTLabel);
+    old_dw->get(delT, lb->delTLabel, getLevel(patches));
 
     static bool stopped = false;
     Vector new_velocity = d_vel_after_stop;
@@ -219,7 +220,7 @@ void RigidBodyContact::addComputesAndRequiresInterpolated( Task* t,
 }
 
 void RigidBodyContact::addComputesAndRequiresIntegrated( Task* t,
-					     const PatchSet* ,
+					     const PatchSet*,
 					     const MaterialSet* ms) const
 {
   const MaterialSubset* mss = ms->getUnion();
