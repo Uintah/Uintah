@@ -141,12 +141,12 @@
 
 ### SCIRUN_ON_THE_FLY_LIBS_DIR = [path]
 #   User writable directory to build 'on-the-fly' .h, .cc, .o and .so files.
-# SCIRUN_ON_THE_FLY_LIBS_DIR = $HOME/SCIRun/on-the-fly-libs
+# SCIRUN_ON_THE_FLY_LIBS_DIR = $(HOME)/SCIRun/on-the-fly-libs
 
 
 ### SCIRUN_FONT_PATH = [path]
 #   The directory in which scirun.ttf (default font) resides.
-SCIRUN_FONT_PATH = $SCIRUN_SRCDIR/pixmaps
+SCIRUN_FONT_PATH = $(SCIRUN_SRCDIR)/pixmaps
 
 
 ### SCIRUN_TMP_DIR = [path]
