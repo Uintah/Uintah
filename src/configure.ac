@@ -269,6 +269,12 @@ SCI_ARG_WITH(tau,
   [with_tau="$withval"
    sci_required_tau=yes],
   [with_tau=""])
+SCI_ARG_WITH(unp,
+  AC_HELP_STRING(--with-unp=DIR,
+                 Use the unp installation in DIR),
+  [with_unp="$withval"
+   sci_required_unp=yes],
+  [with_unp=""])
 SCI_ARG_WITH(globus,
   AC_HELP_STRING(--with-globus=DIR,
                  Use the globus installation in DIR),
@@ -1433,6 +1439,12 @@ case $host in
     ;;
 esac
 
+
+##  ----------------------------------------------------------------------
+
+# Each of the HAVE_??? statements for these header files is found in sci_config.h.in
+AC_CHECK_HEADERS(limits.h sys/select.h unistd.h sys/time.h sys/uuid.h uuid/uuid.h ext/algorithm stdint.h inttypes.h)
+
 ##  ----------------------------------------------------------------------
 ##  ----------  required checks for required libraries and headers  ------
 ##  ----------------------------------------------------------------------
@@ -1719,7 +1731,6 @@ else
   DEF_HASHMAP="#define $DEF_HASHMAP 1"
 fi
 AC_SUBST(DEF_HASHMAP)
-AC_CHECK_HEADERS(ext/algorithm)
 
 ##  --  search for tcl stuff  ---------------------------------------------
 echo 
@@ -2011,7 +2022,8 @@ else
   _sci_inc="$sci_thirdparty_includes"
 fi
 
-SCI_TRY_LINK(UNP,unp socket library and headers,extern_C unpv12e/unp.h unpv12e/unpthread.h,$_sci_inc,unp,$_sci_lib,,[
+SCI_TRY_LINK(UNP,unp socket library and headers,extern_C unpv12e/unp.h unpv12e/unpthread.h,$_sci_inc,
+             unp scisock,$_sci_lib,,[
   Connect(0, NULL, 0);
 ],optional)
 
