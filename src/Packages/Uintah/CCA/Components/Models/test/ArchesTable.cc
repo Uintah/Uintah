@@ -67,7 +67,7 @@ ArchesTable::~ArchesTable()
     if(deps[i]->data)
       delete[] deps[i]->data;
     if(deps[i]->expression)
-      delete[] deps[i]->expression;
+      delete deps[i]->expression;
     delete deps[i];
   }
 }
