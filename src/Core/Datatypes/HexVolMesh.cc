@@ -675,9 +675,117 @@ HexVolMesh::get_weights(const Point &p,
 
 void
 HexVolMesh::get_weights(const Point &p,
-			Node::array_type &l, vector<double> &w)
+			Node::array_type &nodes, vector<double> &w)
 {
-  ASSERTFAIL("get_weights not yet implemented for hexes");
+  Cell::index_type cell;
+  if (locate(cell, p))
+  {
+    get_nodes(nodes, cell);
+    Vector v[8];
+    double vol[8];
+    int i;
+    for (i = 0; i < 8; i++)
+    {
+      Point np;
+      get_point(np, nodes[i]);
+      v[i] = np - p;
+    }
+    vol[0] =
+      Cross(Cross(v[1], v[2]), v[6]).length() +
+      Cross(Cross(v[1], v[3]), v[2]).length() +
+      Cross(Cross(v[1], v[4]), v[5]).length() +
+      Cross(Cross(v[1], v[6]), v[5]).length() +
+      Cross(Cross(v[2], v[5]), v[6]).length() +
+      Cross(Cross(v[3], v[4]), v[7]).length() +
+      Cross(Cross(v[3], v[6]), v[7]).length() +
+      Cross(Cross(v[4], v[5]), v[6]).length() +
+      Cross(Cross(v[4], v[6]), v[7]).length();
+
+    vol[1] =
+      Cross(Cross(v[0], v[2]), v[3]).length() +
+      Cross(Cross(v[0], v[3]), v[7]).length() +
+      Cross(Cross(v[0], v[4]), v[5]).length() +
+      Cross(Cross(v[0], v[4]), v[7]).length() +
+      Cross(Cross(v[2], v[3]), v[7]).length() +
+      Cross(Cross(v[2], v[5]), v[6]).length() +
+      Cross(Cross(v[2], v[6]), v[7]).length() +
+      Cross(Cross(v[4], v[5]), v[7]).length() +
+      Cross(Cross(v[5], v[6]), v[7]).length();
+
+    vol[2] =
+      Cross(Cross(v[0], v[1]), v[3]).length() +
+      Cross(Cross(v[0], v[1]), v[4]).length() +
+      Cross(Cross(v[0], v[3]), v[4]).length() +
+      Cross(Cross(v[1], v[4]), v[5]).length() +
+      Cross(Cross(v[1], v[5]), v[6]).length() +
+      Cross(Cross(v[3], v[4]), v[7]).length() +
+      Cross(Cross(v[3], v[6]), v[7]).length() +
+      Cross(Cross(v[4], v[5]), v[6]).length() +
+      Cross(Cross(v[4], v[6]), v[7]).length();
+
+    vol[3] =
+      Cross(Cross(v[0], v[1]), v[2]).length() +
+      Cross(Cross(v[0], v[1]), v[4]).length() +
+      Cross(Cross(v[0], v[4]), v[7]).length() +
+      Cross(Cross(v[1], v[2]), v[5]).length() +
+      Cross(Cross(v[1], v[4]), v[5]).length() +
+      Cross(Cross(v[2], v[5]), v[6]).length() +
+      Cross(Cross(v[2], v[6]), v[7]).length() +
+      Cross(Cross(v[4], v[5]), v[7]).length() +
+      Cross(Cross(v[5], v[6]), v[7]).length();
+
+    vol[4] =
+      Cross(Cross(v[0], v[1]), v[2]).length() +
+      Cross(Cross(v[0], v[1]), v[5]).length() +
+      Cross(Cross(v[0], v[2]), v[3]).length() +
+      Cross(Cross(v[0], v[3]), v[7]).length() +
+      Cross(Cross(v[1], v[2]), v[5]).length() +
+      Cross(Cross(v[2], v[3]), v[6]).length() +
+      Cross(Cross(v[2], v[5]), v[6]).length() +
+      Cross(Cross(v[3], v[6]), v[7]).length() +
+      Cross(Cross(v[5], v[6]), v[7]).length();
+
+    vol[5] =
+      Cross(Cross(v[0], v[1]), v[3]).length() +
+      Cross(Cross(v[0], v[1]), v[4]).length() +
+      Cross(Cross(v[0], v[3]), v[4]).length() +
+      Cross(Cross(v[1], v[2]), v[3]).length() +
+      Cross(Cross(v[1], v[2]), v[6]).length() +
+      Cross(Cross(v[2], v[3]), v[6]).length() +
+      Cross(Cross(v[3], v[4]), v[7]).length() +
+      Cross(Cross(v[3], v[6]), v[7]).length() +
+      Cross(Cross(v[4], v[6]), v[7]).length();
+
+    vol[6] =
+      Cross(Cross(v[0], v[1]), v[5]).length() +
+      Cross(Cross(v[0], v[2]), v[1]).length() +
+      Cross(Cross(v[0], v[2]), v[3]).length() +
+      Cross(Cross(v[0], v[3]), v[4]).length() +
+      Cross(Cross(v[0], v[4]), v[5]).length() +
+      Cross(Cross(v[1], v[2]), v[5]).length() +
+      Cross(Cross(v[2], v[3]), v[7]).length() +
+      Cross(Cross(v[3], v[4]), v[7]).length() +
+      Cross(Cross(v[4], v[5]), v[7]).length();
+
+    vol[7] =
+      Cross(Cross(v[0], v[1]), v[3]).length() +
+      Cross(Cross(v[0], v[1]), v[4]).length() +
+      Cross(Cross(v[0], v[3]), v[4]).length() +
+      Cross(Cross(v[1], v[2]), v[3]).length() +
+      Cross(Cross(v[1], v[2]), v[6]).length() +
+      Cross(Cross(v[1], v[4]), v[5]).length() +
+      Cross(Cross(v[1], v[5]), v[6]).length() +
+      Cross(Cross(v[2], v[3]), v[6]).length() +
+      Cross(Cross(v[4], v[5]), v[6]).length();
+
+    const double suminv = 1.0 / (vol[0] + vol[1] + vol[2] + vol[3] +
+				 vol[4] + vol[5] + vol[6] + vol[7]);
+
+    for (i = 0; i < 8; i++)
+    {
+      w.push_back(vol[i] * suminv);
+    }
+  }
 }
 
 
