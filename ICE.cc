@@ -1342,26 +1342,27 @@ template<class T> void ICE::computeVelFace(int dir, CellIterator it,
 {
 
   for(;!it.done(); it++){
-    IntVector c = *it;
-    IntVector adj = c + adj_offset; 
-    double rho_FC = rho_CC[adj] + rho_CC[c];
+    IntVector R = *it;
+    IntVector L = R + adj_offset; 
+
+    double rho_FC = rho_CC[L] + rho_CC[R];
     ASSERT(rho_FC > 0.0);
     //__________________________________
     // interpolation to the face
-    double term1 = (rho_CC[adj] * vel_CC[adj](dir) +
-                  rho_CC[c] * vel_CC[c](dir))/(rho_FC);            
+    double term1 = (rho_CC[L] * vel_CC[L](dir) +
+                    rho_CC[R] * vel_CC[R](dir))/(rho_FC);            
     //__________________________________
     // pressure term           
-    double sp_vol_brack = 2.*(sp_vol_CC[adj] * sp_vol_CC[c])/
-                             (sp_vol_CC[adj] + sp_vol_CC[c]); 
+    double sp_vol_brack = 2.*(sp_vol_CC[L] * sp_vol_CC[R])/
+                             (sp_vol_CC[L] + sp_vol_CC[R]); 
     
-    double term2 = delT * sp_vol_brack * (press_CC[c] - press_CC[adj])/dx;
+    double term2 = delT * sp_vol_brack * (press_CC[R] - press_CC[L])/dx;
     
     //__________________________________
     // gravity term
     double term3 =  delT * gravity;
     
-    vel_FC[c] = term1- term2 + term3;
+    vel_FC[R] = term1- term2 + term3;
   } 
 }
 
@@ -1389,9 +1390,8 @@ void ICE::computeFaceCenteredVelocities(const ProcessorGroup*,
     Vector gravity = d_sharedState->getGravity();
     
     constCCVariable<double> press_CC;
-    new_dw->get(press_CC,lb->press_equil_CCLabel, 0, patch, 
-               Ghost::AroundCells, 1);
-    
+    Ghost::GhostType  gac = Ghost::AroundCells; 
+    new_dw->get(press_CC,lb->press_equil_CCLabel, 0, patch,gac, 1);
     
     // Compute the face centered velocities
     for(int m = 0; m < numMatls; m++) {
@@ -1401,18 +1401,13 @@ void ICE::computeFaceCenteredVelocities(const ProcessorGroup*,
       constCCVariable<double> rho_CC, sp_vol_CC;
       constCCVariable<Vector> vel_CC;
       if(ice_matl){
-        new_dw->get(rho_CC, lb->rho_CCLabel, indx, patch, 
-                  Ghost::AroundCells, 1);
-        old_dw->get(vel_CC, lb->vel_CCLabel, indx, patch, 
-                  Ghost::AroundCells, 1);
+        new_dw->get(rho_CC, lb->rho_CCLabel, indx, patch, gac, 1);
+        old_dw->get(vel_CC, lb->vel_CCLabel, indx, patch, gac, 1);
       } else {
-        new_dw->get(rho_CC, lb->rho_CCLabel, indx, patch, 
-                  Ghost::AroundCells, 1);
-        new_dw->get(vel_CC, lb->vel_CCLabel, indx, patch, 
-                  Ghost::AroundCells, 1);
+        new_dw->get(rho_CC, lb->rho_CCLabel, indx, patch, gac, 1);
+        new_dw->get(vel_CC, lb->vel_CCLabel, indx, patch, gac, 1);
       }              
-      new_dw->get(sp_vol_CC, lb->sp_vol_CCLabel,indx,patch,
-                  Ghost::AroundCells, 1);
+      new_dw->get(sp_vol_CC, lb->sp_vol_CCLabel,indx,patch, gac, 1);
               
       //---- P R I N T   D A T A ------
   #if 1
@@ -1902,15 +1897,30 @@ void ICE::computeDelPressAndUpdatePressCC(const ProcessorGroup*,
     cell faces for every cell in the computational domain and a single 
     layer of ghost cells. 
   ---------------------------------------------------------------------  */
-
-template <class T> void ICE::computePressFace(int& numMatls,CellIterator iter, 
-                                         IntVector adj_offset,
-                        StaticArray<constCCVariable<double> >& rho_CC,
-                                        constCCVariable<double>& press_CC,
-                                         T& press_FC)
+template <class T> void ICE::computePressFace(int& numMatls,
+                              CellIterator iter, 
+                              IntVector adj_offset,
+                              StaticArray<constCCVariable<double> >& rho_CC,
+                              constCCVariable<double>& press_CC,
+                              T& press_FC)
 {
-
+/*`==========TESTING==========*/
+#if 1
   for(;!iter.done(); iter++){
+    IntVector R = *iter;
+    IntVector L = R + adj_offset; 
+    double sum_rho_R = 0.0;
+    double sum_rho_L = 0.0;
+    for(int m = 0; m < numMatls; m++) {
+      sum_rho_R  += rho_CC[m][R];    
+      sum_rho_L  += rho_CC[m][L];    
+    }
+    press_FC[R] = (press_CC[R] * sum_rho_L + press_CC[L] * sum_rho_R)/
+      (sum_rho_R + sum_rho_L);
+  }
+#endif
+#if 0
+for(;!iter.done(); iter++){
     IntVector c = *iter;
     IntVector adj = c + adj_offset; 
     double sum_rho     = 0.0;
@@ -1922,8 +1932,9 @@ template <class T> void ICE::computePressFace(int& numMatls,CellIterator iter,
     
     press_FC[c] = (press_CC[c] * sum_rho_adj + press_CC[adj] * sum_rho)/
       (sum_rho + sum_rho_adj);
-  }
-
+  } 
+  #endif
+/*==========TESTING==========`*/
 }
 
 //______________________________________________________________________
