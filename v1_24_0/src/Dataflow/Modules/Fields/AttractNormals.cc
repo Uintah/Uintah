@@ -102,7 +102,7 @@ void
 AttractNormals::execute()
 {
   // Get input field.
-  FieldIPort *ifp = (FieldIPort *)getIPort("Input Field");
+  FieldIPort *ifp = (FieldIPort *)get_iport("Input Field");
   FieldHandle ifieldhandle;
   if (!(ifp->get(ifieldhandle) && ifieldhandle.get_rep()))
   {
