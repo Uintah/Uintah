@@ -145,7 +145,8 @@ def runSusTests(argv, TESTS, algo, callback = nullCallback):
   
   chdir("..")
 
-  system("chmod g+w %s" % resultsdir)
+  system("chgrp -R csafe %s" % resultsdir)
+  system("chmod -R g+rwX %s" % resultsdir)
 
 
   if solotest != 0 and solotest_found == 0:
