@@ -21,8 +21,8 @@ c*********************************************************************
       double precision GE, GP, GW, GN, GNW, GS, GSW, GT, GTW, GTP, GBW
       double precision CEO, CWO, CNO, CSO, CTO, CBO
       double precision CE, CW, CN, CS, CT, CB
-      double precision CPE, CPW, GVP, CPN, CPS, GWP, CPT, CPB
-      double precision CP, GEP, GWP 
+      double precision CPE, CPW, GVP, CPN, CPS, CPT, CPB
+      double precision CP, GEP, GWP
       double precision VISE, VISW, VISN, VISS, VIST, VISB
       double precision DEO, DWO, DNO, DSO, DTO, DBO
       double precision DE, DW, DN, DS, DT, DB
