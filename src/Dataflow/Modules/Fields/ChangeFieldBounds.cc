@@ -393,7 +393,7 @@ ChangeFieldBounds::execute()
   inv.invert();
   t.post_trans(inv);
 
-
+  ef.detach();
   ef->mesh_detach();
   ef->mesh()->transform(t);
 
