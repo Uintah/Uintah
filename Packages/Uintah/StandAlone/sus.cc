@@ -104,6 +104,7 @@ extern Mutex cerrLock;
 extern DebugStream mixedDebug;
 extern DebugStream fullDebug;
 
+
 static
 void
 quit( const std::string & msg = "" )
@@ -146,6 +147,7 @@ usage( const std::string & message,
       cerr << "-smpm                : option for shell MPM\n";
       cerr << "-smpmice             : option for shell MPM with ICE\n";
       cerr << "-rmpmice             : option for rigid MPM with ICE\n";
+      cerr << "-fmpmice             : option for Fracture MPM with ICE\n";
       cerr << "-ice                 : \n";
       cerr << "-arches              : \n";
       cerr << "-AMR                 : use AMR simulation controller\n";
@@ -201,6 +203,7 @@ main( int argc, char** argv )
     bool   do_smpm=false;      // for shell MPM
     bool   do_smpmice=false;   // for shell MPM with ICE
     bool   do_rmpmice=false;   // for rigid MPM with ICE
+    bool   do_fmpmice=false;   // for Fracture MPM with ICE
     bool   do_impmpm=false;
     bool   do_arches=false;
     bool   do_ice=false;
@@ -268,6 +271,8 @@ main( int argc, char** argv )
 	  do_smpmice = true;
 	} else if(s == "-rmpmice"){
 	  do_rmpmice = true;
+	} else if(s == "-fmpmice"){
+	  do_fmpmice = true;
 	} else if(s == "-impm"){
 	  do_impmpm=true;
 	} else if(s == "-arches"){
@@ -390,7 +395,7 @@ main( int argc, char** argv )
     }
 
     if(!(do_ice || do_arches || do_mpm || do_mpmf  || do_rmpm || do_smpm ||
-	 do_smpmice || do_rmpmice || do_impmpm || do_burger || do_particletest1 ||
+	 do_smpmice || do_rmpmice || do_fmpmice || do_impmpm || do_burger || do_particletest1 ||
 	 do_regriddertest || do_poisson1 || do_poisson2 || do_poisson3 ||
 	 do_simplecfd || combine_patches)){
 	usage( "You need to specify -arches, -ice, -mpmf, -rmpm, -smpm or -mpm", "", argv[0]);
@@ -505,6 +510,10 @@ main( int argc, char** argv )
 	  MPMICE* mpmice = scinew MPMICE(world, RIGID_MPMICE);
 	  sim = mpmice;
 	  comp = mpmice;
+	} else if(do_fmpmice){
+	  MPMICE* mpmice = scinew MPMICE(world, FRACTURE_MPMICE);
+	  sim = mpmice;
+	  comp = mpmice;
 	} else if(do_impmpm){
 	  ImpMPM* impm = scinew ImpMPM(world);
 	  sim = impm;
@@ -561,7 +570,7 @@ main( int argc, char** argv )
 	  ctl->doCombinePatches(udaDir);
 	} else {
 	  usage("You need to specify a simulation: -arches, -ice, -mpm, "
-		"-impm -mpmice, -mpmarches, -burger, -poisson1, -poisson2, or -poisson3",
+		"-impm, -fmpmice, -mpmice, -mpmarches, -burger, -poisson1, -poisson2, or -poisson3",
 		"", argv[0]);
 	}
 
