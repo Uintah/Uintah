@@ -53,6 +53,7 @@ WARNING
       // Insert Documentation Here:
       virtual void problemSetup(const ProblemSpecP& params) = 0;
 
+      virtual void initializeOutput(const ProblemSpecP& params) = 0;
       //////////
       // Call this when restarting from a checkpoint after calling
       // problemSetup.
