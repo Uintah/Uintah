@@ -12,6 +12,7 @@ static char *id="@(#) $Id$";
 #include <Uintah/Grid/Patch.h>
 #include <Uintah/Grid/Task.h>
 #include <Uintah/Grid/CCVariable.h>
+#include <Uintah/Exceptions/InvalidValue.h>
 
 using namespace Uintah::ArchesSpace;
 
@@ -42,8 +43,8 @@ Properties::problemSetup(const ProblemSpecP& params)
   ProblemSpecP db = params->findBlock("Properties");
   db->require("denUnderrelax", d_denUnderrelax);
 
-  // Read the mixing variable streams
-  d_numMixingVars = 0;
+  // Read the mixing variable streams, total is noofStreams - 1
+  d_numMixingVars = -1;
   for (ProblemSpecP stream_db = db->findBlock("Stream");
        stream_db != 0; stream_db = stream_db->findNextBlock("Stream")) {
 
@@ -54,6 +55,28 @@ Properties::problemSetup(const ProblemSpecP& params)
   }
 }
 
+//****************************************************************************
+// compute density for inlet streams: only for cold streams
+//****************************************************************************
+
+double 
+Properties::computeInletProperties(const std::vector<double>&
+				   mixfractionStream) 
+{
+  double invDensity = 0;
+  double mixfracSum = 0.0;
+  int ii;
+  for (ii = 0 ; ii < mixfractionStream.size(); ii++) {
+    invDensity += mixfractionStream[ii]/d_streams[ii].d_density;
+    mixfracSum += mixfractionStream[ii];
+  }
+  invDensity += (1.0 - mixfracSum)/d_streams[ii].d_density;
+  if (invDensity <= 0.0)
+    throw InvalidValue("Computed zero density for inlet stream" + ii );
+  else
+    return (1.0/invDensity);
+}
+  
 //****************************************************************************
 // Schedule the computation of properties
 //****************************************************************************
@@ -203,6 +226,10 @@ Properties::Stream::problemSetup(ProblemSpecP& params)
 
 //
 // $Log$
+// Revision 1.17  2000/06/19 18:00:30  rawat
+// added function to compute velocity and density profiles and inlet bc.
+// Fixed bugs in CellInformation.cc
+//
 // Revision 1.16  2000/06/18 01:20:16  bbanerje
 // Changed names of varlabels in source to reflect the sequence of tasks.
 // Result : Seg Violation in addTask in MomentumSolver

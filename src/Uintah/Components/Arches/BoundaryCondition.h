@@ -123,9 +123,20 @@ public:
 
       ////////////////////////////////////////////////////////////////////////
       //
+      // Initialize inlet area
+      // Details here
+      //
+      void sched_calculateArea(const LevelP& level,
+			       SchedulerP& sched,
+			       DataWarehouseP& old_dw,
+			       DataWarehouseP& new_dw);
+
+      ////////////////////////////////////////////////////////////////////////
+      //
       // Initialize celltyping
       // Details here
       //
+
       void cellTypeInit(const ProcessorGroup*,
 			const Patch* patch,
 			DataWarehouseP& old_dw,  
@@ -396,6 +407,7 @@ private:
       WallBdry* d_wallBdry;
       int d_numInlets;
       int d_numMixingScalars;
+      int d_nofScalars;
       std::vector<FlowInlet> d_flowInlets;
       bool d_pressBoundary;
       PressureInlet* d_pressureBdry;
@@ -416,6 +428,7 @@ private:
       const VarLabel* d_uVelocitySPLabel;
       const VarLabel* d_vVelocitySPLabel;
       const VarLabel* d_wVelocitySPLabel;
+      const VarLabel* d_scalarSPLabel;
 
       // Labels for data computed by setInletVelocityBC()
       const VarLabel* d_densitySIVBCLabel;
@@ -463,6 +476,10 @@ private:
   
 //
 // $Log$
+// Revision 1.26  2000/06/19 18:00:29  rawat
+// added function to compute velocity and density profiles and inlet bc.
+// Fixed bugs in CellInformation.cc
+//
 // Revision 1.25  2000/06/18 01:20:14  bbanerje
 // Changed names of varlabels in source to reflect the sequence of tasks.
 // Result : Seg Violation in addTask in MomentumSolver
