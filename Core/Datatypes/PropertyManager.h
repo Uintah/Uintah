@@ -142,13 +142,19 @@ public:
   template<class T> void store( const string &, const T &);
   template<class T> void store( const string &, T &); 
 
-  void store( const string &name, const char *s )  { store(name,string(s));}
-  void store( const string &name, const char s )   { store(name,Char(s));}
-  void store( const string &name, const short s )  { store(name,Short(s));}
-  void store( const string &name, const int s )    { store(name,Int(s));}
-  void store( const string &name, const float s )  { store(name,Float(s));}
-  void store( const string &name, const double s ) { store(name,Double(s));}
-  
+  void store( const string &name, const char *s )
+  { store(name, *scinew string(s)); }
+  void store( const string &name, const char s )
+  { store(name, *scinew Char(s)); }
+  void store( const string &name, const short s )
+  { store(name, *scinew Short(s)); }
+  void store( const string &name, const int s )
+  { store(name, *scinew Int(s)); }
+  void store( const string &name, const float s )
+  { store(name, *scinew Float(s)); }
+  void store( const string &name, const double s )
+  { store(name, *scinew Double(s)); }
+
   template<class T> bool get( const string &, T &);
   template<class T> bool get( const string &, T *&);
 
