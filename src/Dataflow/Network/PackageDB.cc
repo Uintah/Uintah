@@ -725,7 +725,7 @@ void PackageDB::setSplashPath(string p) {
   splash_path_ = p;
 }
 
-void PackageDB::setLoadingApp(bool b, string ses) {
+void PackageDB::setLoadingApp(bool b, const string ses) {
   loading_app_ = b;
 
   if (ses != "") {
