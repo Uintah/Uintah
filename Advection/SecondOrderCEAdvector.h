@@ -48,8 +48,6 @@ namespace Uintah {
                          const Patch* patch,
                          CCVariable<Vector>& q_advected,
                          DataWarehouse* new_dw);
-                         
-
 
     struct eflux { double d_eflux[12]; };         //edge flux
     struct cflux { double d_cflux[8]; };          //corner flux
@@ -92,6 +90,7 @@ namespace Uintah {
                     StaticArray<CCVariable<T> >& q_OAFE,
 		      StaticArray<CCVariable<T> >& q_OAFC,
                     const Patch* patch,
+                    const CCVariable<T>& q_CC,
                     CCVariable<T>& q_advected,
                     SFCXVariable<double>& q_XFC,
                     SFCYVariable<double>& q_YFC,
@@ -102,7 +101,7 @@ namespace Uintah {
 
 // Added for compatibility with core types
 namespace SCIRun {
-
+  void swapbytes( Uintah::SecondOrderCEAdvector::fflux& );
   void swapbytes( Uintah::SecondOrderCEAdvector::eflux& );
   void swapbytes( Uintah::SecondOrderCEAdvector::cflux& );
 
