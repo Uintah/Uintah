@@ -1,0 +1,35 @@
+#!/bin/csh
+#__________________________________
+#  This script pulls out data from sus 
+#   output and plot it using gnuplot.
+#  Usage:
+#     plotStat <name of out file>
+#__________________________________
+
+if( $#argv == 0 ) then
+  echo "You must input the name of the file that contains the simulation spew"
+  exit(1)
+endif
+set out = $argv[1]
+
+#__________________________________
+# extract the data
+echo "Now extracting the data"
+
+echo "0.0">&meanTime
+echo "0.0">>meanTime  # mean time data isn't collect the first 4 timestps
+echo "0.0">>meanTime
+echo "0.0">>meanTime
+
+grep elap out | cut -d"=" -f4 | cut -d "," -f1 >& elapsedTime
+grep mean out | cut -d" " -f 3 >> meanTime
+grep elap out | cut -d"=" -f2 | cut -d"," -f1 >& PhysicalTime
+grep delT out | cut -d"=" -f3 | cut -d"," -f1 >& delT
+grep delT out | cut -d"=" -f5 >& memUse
+paste -d "  " elapsedTime meanTime PhysicalTime delT memUse>& data
+
+#__________________________________
+# plot it up
+gnuplot ./inputs/plotStatsTemplate
+
+exit(1)
