@@ -83,15 +83,14 @@ class SFRGfile : public Module {
     TCLstring maxOutTCLY;
     TCLstring maxOutTCLZ;
 
-    void setDefaultArgs();
     void checkInterface();
     void printInputStats();
     void printOutputStats();
-    void readSCI();
+    void setInputFieldVars();
     void setBounds();
     inline double SETVAL(double val);
     void revoxelize();
-    void writeSCI();
+    void setOutputFieldHandle();
 public:
     SFRGfile(const clString& id);
     SFRGfile(const SFRGfile&, int deep);
@@ -147,7 +146,6 @@ Module* SFRGfile::clone(int deep)
 }
 
 void SFRGfile::execute() {
-    setDefaultArgs();
     if(!iField->get(ifh))
 	return;
     isf=ifh->getRGBase();
@@ -155,43 +153,28 @@ void SFRGfile::execute() {
 	error("SFRGfile can't deal with unstructured grids!");
 	return;
     }
-    checkInterface();
 
-    readSCI();
+    checkInterface();
+    setInputFieldVars();
     printInputStats();
 
     if (!haveOutVoxel) outVoxel=inVoxel;
 
-    printOutputStats();
     revoxelize();
     setBounds();
+    printOutputStats();
 
-    writeSCI();
+    setOutputFieldHandle();
     oField->send(ofh);
-}
-
-void SFRGfile::setDefaultArgs() {
-    outVoxel = DOUBLE;
-
-    haveBBox = false;
-    haveMinMax = 0;
-    haveOutVoxel=0;
-
-    ifd=0;
-    iff=0;
-    ifi=0;
-    ifs=0;
-    ifc=0;
-    ifu=0;
 }
 
 void SFRGfile::checkInterface() {
     haveMinMax=haveMinMaxTCL.get();
     if (haveMinMax) {
 	(NminTCL.get()).get_double(Nmin);
-	(NmaxTCL.get()).get_double(Nmin);
-	(CminTCL.get()).get_double(Nmin);
-	(CmaxTCL.get()).get_double(Nmin);
+	(NmaxTCL.get()).get_double(Nmax);
+	(CminTCL.get()).get_double(Cmin);
+	(CmaxTCL.get()).get_double(Cmax);
 	Nspan=Nmax-Nmin;
     }
     haveBBox=haveBBoxTCL.get();
@@ -241,7 +224,7 @@ void SFRGfile::printOutputStats() {
     cerr << "\n    and bounds "<<minOut<<" to "<<maxOut<<"\n\n";
 }
 
-void SFRGfile::readSCI() {
+void SFRGfile::setInputFieldVars() {
     nx = isf->nx;
     ny = isf->ny;
     nz = isf->nz;
@@ -635,7 +618,7 @@ void SFRGfile::revoxelize() {
     }
 }
 
-void SFRGfile::writeSCI() {
+void SFRGfile::setOutputFieldHandle() {
     if (outVoxel == UCHAR) ofh=ifu;
     else if (outVoxel == CHAR) ofh=ifc;
     else if (outVoxel == USHORT) ofh=ifs;
@@ -643,4 +626,3 @@ void SFRGfile::writeSCI() {
     else if (outVoxel == FLOAT) ofh=iff;
     else if (outVoxel == DOUBLE) ofh=ifd;
 }
-    
