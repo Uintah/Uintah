@@ -59,7 +59,10 @@ extern "C" {
     int get_slice_ids( int **nids );
     char *get_slice_name( const int *nids, int slice );
     double get_slice_time( const char *name );
-    double *get_realspace_data( const char *name, const char *node, int *dims );
+    double *get_slice_data( const char *name,
+			    const char *space,
+			    const char *node,
+			    int *dims );
 #endif  // HAVE_MDSPLUS
 
 #ifdef __cplusplus
