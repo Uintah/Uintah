@@ -14,13 +14,13 @@
 #ifndef SCI_project_MessageBase_h
 #define SCI_project_MessageBase_h 1
 
-#include <SCICore/share/share.h>
+#include <PSECore/share/share.h>
 #include <PSECore/Comm/MessageTypes.h>
 
 namespace PSECore {
 namespace Comm {
 
-class SCICORESHARE MessageBase {
+class PSECORESHARE MessageBase {
 public:
     MessageTypes::MessageType type;
     MessageBase(MessageTypes::MessageType type);
@@ -32,6 +32,9 @@ public:
 
 //
 // $Log$
+// Revision 1.3  1999/08/26 23:56:07  moulding
+// changed SCICORESHARE to PSECORESHARE
+//
 // Revision 1.2  1999/08/17 06:38:05  sparker
 // Merged in modifications from PSECore to make this the new "blessed"
 // version of SCIRun/Uintah.

@@ -14,7 +14,7 @@
 #ifndef SCI_project_Module_h
 #define SCI_project_Module_h 1
 
-#include <SCICore/share/share.h>
+#include <PSECore/share/share.h>
 #include <SCICore/Containers/Array1.h>
 #include <SCICore/Containers/String.h>
 #include <SCICore/Util/Timer.h>
@@ -66,7 +66,7 @@ class NetworkEditor;
 class OPort;
 class IPort;
 
-class SCICORESHARE Module : public TCL, public Pickable {
+class PSECORESHARE Module : public TCL, public Pickable {
     /*
      * This exists to trip people up that still have clone and
      * copy constructors in the modules - they shoudl be removed.
@@ -195,6 +195,9 @@ typedef Module* (*ModuleMaker)(const clString& id);
 
 //
 // $Log$
+// Revision 1.5  1999/08/26 23:59:07  moulding
+// changed SCICORESHARE to PSECORESHARE
+//
 // Revision 1.4  1999/08/18 20:20:18  sparker
 // Eliminated copy constructor and clone in all modules
 // Added a private copy ctor and a private clone method to Module so

@@ -14,7 +14,7 @@
 #ifndef SCI_project_GeometryPort_h
 #define SCI_project_GeometryPort_h 1
 
-#include <SCICore/share/share.h>
+#include <PSECore/share/share.h>
 #include <PSECore/Dataflow/Port.h>
 #include <SCICore/Multitask/ITC.h>
 
@@ -57,7 +57,7 @@ class GeometryComm;
 
 typedef int GeomID;
 
-class SCICORESHARE GeometryIPort : public IPort {
+class PSECORESHARE GeometryIPort : public IPort {
 public:
     enum Protocol {
 	Atomic=0x01
@@ -90,7 +90,7 @@ struct GeometryData {
 #define GEOM_DEPTHBUFFER 4
 #define GEOM_ALLDATA 7
 
-class SCICORESHARE GeometryOPort : public OPort {
+class PSECORESHARE GeometryOPort : public OPort {
     GeometryIPort* in;
     int portid;
     GeomID serial;
@@ -134,6 +134,9 @@ public:
 
 //
 // $Log$
+// Revision 1.4  1999/08/27 00:03:02  moulding
+// changed SCICORESHARE to PSECORESHARE
+//
 // Revision 1.3  1999/08/25 03:48:20  sparker
 // Changed SCICore/CoreDatatypes to SCICore/Datatypes
 // Changed PSECore/CommonDatatypes to PSECore/Datatypes

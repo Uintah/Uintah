@@ -14,7 +14,7 @@
 #ifndef SCI_project_ModuleHelper_h
 #define SCI_project_ModuleHelper_h 1
 
-#include <SCICore/share/share.h>
+#include <PSECore/share/share.h>
 
 #include <SCICore/Multitask/Task.h>
 
@@ -25,7 +25,7 @@ using SCICore::Multitask::Task;
 
 class Module;
 
-class SCICORESHARE ModuleHelper : public Task {
+class PSECORESHARE ModuleHelper : public Task {
     Module* module;
 public:
     ModuleHelper(Module* module);
@@ -39,6 +39,9 @@ public:
 
 //
 // $Log$
+// Revision 1.3  1999/08/26 23:59:07  moulding
+// changed SCICORESHARE to PSECORESHARE
+//
 // Revision 1.2  1999/08/17 06:38:23  sparker
 // Merged in modifications from PSECore to make this the new "blessed"
 // version of SCIRun/Uintah.

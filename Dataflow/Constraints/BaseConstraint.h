@@ -15,7 +15,7 @@
 #ifndef SCI_project_Base_Constraint_h
 #define SCI_project_Base_Constraint_h 1
 
-#include <SCICore/share/share.h>
+#include <PSECore/share/share.h>
 #include <PSECore/Constraints/BaseVariable.h>
 #include <SCICore/Containers/Array1.h>
 #include <SCICore/Containers/Array2.h>
@@ -27,7 +27,7 @@ namespace Constraints {
 using SCICore::Containers::Array1;
 using SCICore::Containers::Array2;
 
-class SCICORESHARE BaseConstraint {
+class PSECORESHARE BaseConstraint {
    friend class BaseVariable;
    friend class ConstraintSolver;
 public:
@@ -75,7 +75,7 @@ protected:
    virtual int Satisfy( const Index index, const Scheme scheme, const Real Epsilon,
 			BaseVariable*& var, VarCore& c );
 };
-inline SCICORESHARE ostream& operator<<( ostream& os, BaseConstraint& v );
+inline PSECORESHARE ostream& operator<<( ostream& os, BaseConstraint& v );
 
 
 /***************************************************************************
@@ -100,6 +100,9 @@ operator<<( ostream& os, BaseConstraint& c )
 
 //
 // $Log$
+// Revision 1.3  1999/08/26 23:57:01  moulding
+// changed SCICORESHARE to PSECORESHARE
+//
 // Revision 1.2  1999/08/17 06:38:15  sparker
 // Merged in modifications from PSECore to make this the new "blessed"
 // version of SCIRun/Uintah.

@@ -14,7 +14,7 @@
 #ifndef SCI_project_SoundPort_h
 #define SCI_project_SoundPort_h 1
 
-#include <SCICore/share/share.h>
+#include <PSECore/share/share.h>
 #include <PSECore/Dataflow/Port.h>
 #include <SCICore/Multitask/ITC.h>
 
@@ -42,7 +42,7 @@ struct SoundComm {
     double* samples;
 };
 
-class SCICORESHARE SoundIPort : public IPort {
+class PSECORESHARE SoundIPort : public IPort {
 public:
     enum Protocol {
 	Atomic=0x01,
@@ -83,7 +83,7 @@ public:
     virtual void finish();
 };
 
-class SCICORESHARE SoundOPort : public OPort {
+class PSECORESHARE SoundOPort : public OPort {
     int total_samples;
     double rate;
     int stereo;
@@ -137,6 +137,9 @@ inline int SoundIPort::end_of_stream()
 
 //
 // $Log$
+// Revision 1.4  1999/08/27 00:03:03  moulding
+// changed SCICORESHARE to PSECORESHARE
+//
 // Revision 1.3  1999/08/25 03:48:24  sparker
 // Changed SCICore/CoreDatatypes to SCICore/Datatypes
 // Changed PSECore/CommonDatatypes to PSECore/Datatypes

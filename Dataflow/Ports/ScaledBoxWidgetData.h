@@ -14,7 +14,7 @@
 #ifndef SCI_Datatypes_ScaledBoxWidgetData_h
 #define SCI_Datatypes_ScaledBoxWidgetData_h 1
 
-#include <SCICore/share/share.h>
+#include <PSECore/share/share.h>
 #include <SCICore/Datatypes/Datatype.h>
 #include <SCICore/Containers/LockingHandle.h>
 #include <SCICore/Geometry/Point.h>
@@ -31,7 +31,7 @@ using namespace SCICore::Datatypes;
 class ScaledBoxWidgetData;
 typedef LockingHandle<ScaledBoxWidgetData> ScaledBoxWidgetDataHandle;
 
-class SCICORESHARE ScaledBoxWidgetData : public Datatype {
+class PSECORESHARE ScaledBoxWidgetData : public Datatype {
 public:
     Point Center;
     Point R;
@@ -58,6 +58,9 @@ public:
 
 //
 // $Log$
+// Revision 1.4  1999/08/27 00:03:03  moulding
+// changed SCICORESHARE to PSECORESHARE
+//
 // Revision 1.3  1999/08/25 03:48:22  sparker
 // Changed SCICore/CoreDatatypes to SCICore/Datatypes
 // Changed PSECore/CommonDatatypes to PSECore/Datatypes

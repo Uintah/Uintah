@@ -15,7 +15,7 @@
 #ifndef SCI_project_Center_Constraint_h
 #define SCI_project_Center_Constraint_h 1
 
-#include <SCICore/share/share.h>
+#include <PSECore/share/share.h>
 #include <PSECore/Constraints/BaseConstraint.h>
 
 namespace PSECore {
@@ -23,7 +23,7 @@ namespace Constraints {
 
 // This constraint only finds the center (i.e. one-way constraint).
 
-class SCICORESHARE CenterConstraint : public BaseConstraint {
+class PSECORESHARE CenterConstraint : public BaseConstraint {
 public:
    CenterConstraint( const clString& name,
 		     const Index numSchemes,
@@ -51,6 +51,9 @@ protected:
 
 //
 // $Log$
+// Revision 1.3  1999/08/26 23:57:01  moulding
+// changed SCICORESHARE to PSECORESHARE
+//
 // Revision 1.2  1999/08/17 06:38:16  sparker
 // Merged in modifications from PSECore to make this the new "blessed"
 // version of SCIRun/Uintah.
