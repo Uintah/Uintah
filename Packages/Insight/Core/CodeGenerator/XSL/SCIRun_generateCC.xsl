@@ -358,7 +358,6 @@ bool </xsl:text><xsl:value-of select="$sci-name"/><xsl:text>::run( </xsl:text>
 	gui-&gt;execute(id.c_str() + string(&quot; clear_gui&quot;));
         gui_dimension_.set(<xsl:value-of select="name"/>.<xsl:value-of select="$call"/>());
 	gui-&gt;execute(id.c_str() + string(&quot; init_<xsl:value-of select="name"/>_dimensions&quot;));
-	gui-&gt;execute(id.c_str() + string(&quot; set_default_<xsl:value-of select="name"/>_vals&quot;));
   }
   
   // register GuiVars
@@ -391,7 +390,7 @@ bool </xsl:text><xsl:value-of select="$sci-name"/><xsl:text>::run( </xsl:text>
 </xsl:choose>
   }
 
-  // set radius values
+  // set <xsl:value-of select="name"/> values
   for(int i=0; i&lt;<xsl:value-of select="name"/>.<xsl:value-of select="$call"/>(); i++) {
     <xsl:value-of select="name"/>[i] = gui_<xsl:value-of select="name"/>_[i]-&gt;get();
   }
@@ -414,13 +413,13 @@ bool </xsl:text><xsl:value-of select="$sci-name"/><xsl:text>::run( </xsl:text>
   }  
   </xsl:when>
   <xsl:otherwise>
-  filter-><xsl:value-of select="call"/>( gui_<xsl:value-of select="name"/>_-&gt;get() ); 
+  filter-><xsl:value-of select="call"/>( gui_<xsl:value-of select="name"/>_.get() ); 
   </xsl:otherwise>
   </xsl:choose>
 
   </xsl:when>
   <xsl:otherwise>
-  filter-><xsl:value-of select="call"/>( gui_<xsl:value-of select="name"/>_&gt;get() ); 
+  filter-><xsl:value-of select="call"/>( gui_<xsl:value-of select="name"/>_.get() ); 
   </xsl:otherwise>
   </xsl:choose>
   </xsl:otherwise>
