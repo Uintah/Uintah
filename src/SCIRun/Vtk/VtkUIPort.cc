@@ -26,10 +26,41 @@
  *
  */
 
+#include <Core/Thread/Runnable.h>
+#include <Core/Thread/Semaphore.h>
+#include <Core/Thread/Thread.h>
+
 #include <SCIRun/Vtk/VtkUIPort.h>
 #include <SCIRun/Vtk/VtkComponentInstance.h>
+
 #include <iostream>
+
 using namespace SCIRun;
+
+
+class VtkUIThread : public Runnable {
+public:
+  VtkUIThread(VtkComponentInstance* ci);
+  ~VtkUIThread() {}
+  void run();
+private:
+  VtkComponentInstance* ci;
+};
+
+VtkUIThread::VtkUIThread(VtkComponentInstance* ci)
+  :ci(ci)
+{
+}
+
+
+
+
+void VtkUIThread::run()
+{
+  ci->getComponent()->popupUI();
+}
+
+
 
 VtkUIPort::VtkUIPort(VtkComponentInstance* ci)
   : ci(ci)
@@ -43,11 +74,8 @@ VtkUIPort::~VtkUIPort()
 int 
 VtkUIPort::ui()
 {
-  //  vtk::Component* component=ci->getComponent();
-  
-  //TODO: add popupUI()
-  ci->getComponent()->popupUI();
-
+  Thread* t = new Thread(new VtkUIThread(ci), "Vtk UI Thread", 0);
+  t->detach();
   //TODO: need return correct value: 0 success, -1 fatal error, 
   //other values for other errors.
   return 0;
