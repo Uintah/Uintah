@@ -160,12 +160,19 @@ WARNING
                                                   const Vector& size) const;
      //////////
      //////////
-     // Insert Documentation Here:
+     // Insert Documentation Here:  
      CellIterator getCellIterator(const IntVector gc = IntVector(0,0,0)) const;
      CellIterator getExtraCellIterator(const IntVector gc = 
 				       IntVector(0,0,0)) const;
      
+     // This function will return all cells that are intersected by
+     // the box.  This is based on the fact that boundaries of cells
+     // are closed on the bottom and open on the top.
      CellIterator getCellIterator(const Box& b) const;
+     // This function works on the assumption that we want all the cells
+     // whose centers lie on or within the box.
+     CellIterator getCellCenterIterator(const Box& b) const;
+     // Insert Documentation Here:  
      CellIterator getExtraCellIterator(const Box& b) const;
      
      //__________________________________
@@ -184,6 +191,10 @@ WARNING
      // Insert Documentation Here:
      NodeIterator getNodeIterator() const;
      
+     // This will return an iterator which will include all the nodes
+     // contained by the bounding box.  If a dimension of the widget
+     // is degenerate (has a thickness of 0) the nearest node in that
+     // dimension is used.
      NodeIterator getNodeIterator(const Box& b) const;
 
      IntVector getLowIndex(VariableBasis basis, const IntVector& boundaryLayer /*= IntVector(0,0,0)*/) const;
