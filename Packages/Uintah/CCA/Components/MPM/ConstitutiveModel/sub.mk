@@ -18,9 +18,17 @@ SRCS     += \
 	$(SRCDIR)/JohnsonCook.cc 		\
 	$(SRCDIR)/DamageModel.cc \
 	$(SRCDIR)/DamageModelFactory.cc \
+	$(SRCDIR)/DefaultHypoElasticEOS.cc \
+	$(SRCDIR)/DefaultHyperElasticEOS.cc \
+	$(SRCDIR)/EquationOfState.cc \
+	$(SRCDIR)/EquationOfStateFactory.cc \
 	$(SRCDIR)/HypoElasticPlastic.cc \
+	$(SRCDIR)/HyperElasticPlastic.cc \
+	$(SRCDIR)/IsoHardeningPlastic.cc \
 	$(SRCDIR)/JohnsonCookDamage.cc \
 	$(SRCDIR)/JohnsonCookPlastic.cc \
+	$(SRCDIR)/MieGruneisenEOS.cc \
+	$(SRCDIR)/MTSPlastic.cc \
 	$(SRCDIR)/PlasticityModel.cc \
 	$(SRCDIR)/PlasticityModelFactory.cc 
 
