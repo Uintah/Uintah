@@ -128,7 +128,6 @@ EditFusionField::EditFusionField(GuiContext *context)
 
     fGeneration_(-1),
     mGeneration_(-1)
-
 {
 }
 
@@ -229,18 +228,17 @@ void EditFusionField::execute(){
     const TypeDescription *ftd = fHandle->get_type_description();
     CompileInfo *ci = EditFusionFieldAlgo::get_compile_info(ftd);
     DynamicAlgoHandle algo_handle;
-    if (! DynamicLoader::scirun_loader().get(*ci, algo_handle))
-    {
-      cout << "Could not compile algorithm." << std::endl;
+    if (! DynamicLoader::scirun_loader().get(*ci, algo_handle)) {
+      error( "Could not compile algorithm." );
       return;
     }
     EditFusionFieldAlgo *algo =
       dynamic_cast<EditFusionFieldAlgo *>(algo_handle.get_rep());
-    if (algo == 0)
-    {
-      cout << "Could not get algorithm." << std::endl;
+    if (algo == 0) {
+      error( "Could not get algorithm." );
       return;
     }
+
     fHandle_ = algo->execute(fHandle,
 			     istart_, jstart_, kstart_,
 			     iend_, jend_, kend_,
@@ -248,9 +246,7 @@ void EditFusionField::execute(){
   }
 
   // Get a handle to the output field port.
-
-  if( fHandle_.get_rep() )
-  {
+  if( fHandle_.get_rep() ) {
     FieldOPort *ofield_port = 
       (FieldOPort *) get_oport("Output Field");
 
