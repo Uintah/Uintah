@@ -1,8 +1,18 @@
 
 #include <Packages/rtrt/Core/Shadows/MultiSampleSoftShadows.h>
 #include <Packages/rtrt/Core/Array1.h>
-using namespace rtrt;
 
+using namespace rtrt;
+using namespace SCIRun;
+
+Persistent* multiSampleSoftShadows_maker() {
+  return new MultiSampleSoftShadows();
+}
+
+// initialize the static member type_id
+PersistentTypeID MultiSampleSoftShadows::type_id("MultiSampleSoftShadows", 
+						 "ShadowBase", 
+						 multiSampleSoftShadows_maker);
 
 MultiSampleSoftShadows::MultiSampleSoftShadows()
 {
@@ -33,3 +43,24 @@ bool MultiSampleSoftShadows::lit(const Point& hitpos, Light* light,
   return true;
 }
 
+const int MULTISAMPLESHADOWS_VERSION = 1;
+
+void 
+MultiSampleSoftShadows::io(SCIRun::Piostream &str)
+{
+  str.begin_class("MultiSampleSoftShadows", MULTISAMPLESHADOWS_VERSION);
+  ShadowBase::io(str);
+  str.end_class();
+}
+
+namespace SCIRun {
+void Pio(SCIRun::Piostream& stream, rtrt::MultiSampleSoftShadows*& obj)
+{
+  SCIRun::Persistent* pobj=obj;
+  stream.io(pobj, rtrt::MultiSampleSoftShadows::type_id);
+  if(stream.reading()) {
+    obj=dynamic_cast<rtrt::MultiSampleSoftShadows*>(pobj);
+    ASSERT(obj != 0)
+  }
+}
+} // end namespace SCIRun

@@ -6,6 +6,14 @@
 #include <stdlib.h>
 
 namespace rtrt {
+class Satellite;
+}
+
+namespace SCIRun {
+void Pio(Piostream&, rtrt::Satellite*&);
+}
+
+namespace rtrt {
 
 class Satellite : public UVSphere
 {
@@ -36,6 +44,12 @@ class Satellite : public UVSphere
     }
   }
   virtual ~Satellite() {}
+  Satellite() : UVSphere() {} // for Pio.
+
+  //! Persistent I/O.
+  static  SCIRun::PersistentTypeID type_id;
+  virtual void io(SCIRun::Piostream &stream);
+  friend void SCIRun::Pio(SCIRun::Piostream&, Satellite*&);
 
   Satellite *get_parent() { return parent_; }
   void set_parent(Satellite *p) { parent_ = p; }
@@ -69,6 +83,7 @@ class Satellite : public UVSphere
       bbox.extend(cen, orb_radius_+radius+offset);
     }
   }
+
   virtual void animate(double t, bool& changed);
 };
 

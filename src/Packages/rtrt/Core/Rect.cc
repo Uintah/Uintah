@@ -192,7 +192,7 @@ void Pio(SCIRun::Piostream& stream, rtrt::Rect*& obj)
   stream.io(pobj, rtrt::Rect::type_id);
   if(stream.reading()) {
     obj=dynamic_cast<rtrt::Rect*>(pobj);
-    ASSERT(obj != 0)
+    //ASSERT(obj != 0)
   }
 }
 } // end namespace SCIRun

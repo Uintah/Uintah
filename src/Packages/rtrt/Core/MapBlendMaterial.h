@@ -10,10 +10,17 @@
 #include <Packages/rtrt/Core/UV.h>
 
 namespace rtrt {
+class MapBlendMaterial;
+}
+
+namespace SCIRun {
+void Pio(Piostream&, rtrt::MapBlendMaterial*&);
+}
+
+namespace rtrt {
 
 class MapBlendMaterial : public Material
 {
-  
  protected:
 
   Material *mat1_, *mat2_;
@@ -25,6 +32,13 @@ class MapBlendMaterial : public Material
                    bool flip=false)
     : mat1_(one), mat2_(two), map_(s,flip) {}
   virtual ~MapBlendMaterial() {}
+
+  MapBlendMaterial() : Material() {} // for Pio.
+
+  //! Persistent I/O.
+  static  SCIRun::PersistentTypeID type_id;
+  virtual void io(SCIRun::Piostream &stream);
+  friend void SCIRun::Pio(SCIRun::Piostream&, MapBlendMaterial*&);
 
   Color interp_color(double u, double v)
   { 

@@ -10,6 +10,16 @@ using namespace rtrt;
 using namespace SCIRun;
 using namespace std;
 
+Persistent* cbackground_maker() {
+  return new ConstantBackground();
+}
+
+// initialize the static member type_id
+PersistentTypeID Background::type_id("Background", "Persistent", 0);
+PersistentTypeID ConstantBackground::type_id("ConstantBackground", 
+					     "Background", 
+					     cbackground_maker);
+
 Background::Background(const Color& avg)
   : avg(avg), origAvg_( avg )
 {
@@ -134,3 +144,36 @@ EnvironmentMapBackground::color_in_direction( const Vector& DIR , Color& result)
     int j=int( u*( _height - 1 ) );
     result = _image( i, j ) * ambientScale_;
 }
+
+const int BACKGROUND_VERSION = 1;
+const int CBACKGROUND_VERSION = 1;
+
+void 
+Background::io(SCIRun::Piostream &str)
+{
+  str.begin_class("Background", BACKGROUND_VERSION);
+  Background::io(str);
+  SCIRun::Pio(str, avg);
+  SCIRun::Pio(str, origAvg_);
+  str.end_class();
+}
+void 
+ConstantBackground::io(SCIRun::Piostream &str)
+{
+  str.begin_class("ConstantBackground", CBACKGROUND_VERSION);
+  SCIRun::Pio(str, C);
+  SCIRun::Pio(str, origC_);
+  str.end_class();
+}
+
+namespace SCIRun {
+void Pio(SCIRun::Piostream& stream, rtrt::Background*& obj)
+{
+  SCIRun::Persistent* pobj=obj;
+  stream.io(pobj, rtrt::Background::type_id);
+  if(stream.reading()) {
+    obj=dynamic_cast<rtrt::Background*>(pobj);
+    //ASSERT(obj != 0)
+  }
+}
+} // end namespace SCIRun

@@ -10,6 +10,16 @@
 #include <Packages/rtrt/Core/Stats.h>
 using namespace rtrt;
 
+using namespace SCIRun;
+
+Persistent* hardShadows_maker() {
+  return new HardShadows();
+}
+
+// initialize the static member type_id
+PersistentTypeID HardShadows::type_id("HardShadows", "ShadowBase", 
+				      hardShadows_maker);
+
 #define MAXDEPTH 200
 
 HardShadows::HardShadows()
@@ -56,3 +66,26 @@ bool HardShadows::lit(const Point& hitpos, Light* light,
   shadow_cache[scindex]=0;
   return true;
 }
+
+const int HARDSHADOWS_VERSION = 1;
+
+void 
+HardShadows::io(SCIRun::Piostream &str)
+{
+  str.begin_class("HardShadows", HARDSHADOWS_VERSION);
+  ShadowBase::io(str);
+  SCIRun::Pio(str, shadow_cache_offset);
+  str.end_class();
+}
+
+namespace SCIRun {
+void Pio(SCIRun::Piostream& stream, rtrt::HardShadows*& obj)
+{
+  SCIRun::Persistent* pobj=obj;
+  stream.io(pobj, rtrt::HardShadows::type_id);
+  if(stream.reading()) {
+    obj=dynamic_cast<rtrt::HardShadows*>(pobj);
+    ASSERT(obj != 0)
+  }
+}
+} // end namespace SCIRun

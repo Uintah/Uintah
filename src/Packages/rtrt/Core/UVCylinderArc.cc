@@ -167,7 +167,7 @@ void Pio(SCIRun::Piostream& stream, rtrt::UVCylinderArc*& obj)
   stream.io(pobj, rtrt::UVCylinderArc::type_id);
   if(stream.reading()) {
     obj=dynamic_cast<rtrt::UVCylinderArc*>(pobj);
-    ASSERT(obj != 0)
+    //ASSERT(obj != 0)
   }
 }
 } // end namespace SCIRun

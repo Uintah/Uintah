@@ -8,6 +8,18 @@
 
 using namespace rtrt;
 using namespace std;
+using namespace SCIRun;
+
+Persistent* p_maker() {
+  return new Pixel();
+}
+Persistent* image_maker() {
+  return new Image();
+}
+
+// initialize the static member type_id
+PersistentTypeID Pixel::type_id("Pixel", "Persistent", p_maker);
+PersistentTypeID Image::type_id("Image", "Persistent", image_maker);
 
 Image::Image(int xres, int yres, bool stereo)
     : xres(xres), yres(yres), stereo(stereo)
@@ -94,3 +106,61 @@ void Image::save(char* filename)
 
 // this code is added for tiled images...
 
+const int IMAGE_VERSION = 1;
+
+void 
+Image::io(SCIRun::Piostream &str)
+{
+  str.begin_class("Image", IMAGE_VERSION);
+  SCIRun::Pio(str, xres);
+  SCIRun::Pio(str, yres);
+  SCIRun::Pio(str, stereo);
+
+  if (str.reading()) {
+    image = 0;
+    resize_image();
+  }
+  
+  for(int y=0;y<yres;y++){
+    for(int x=0;x<xres;x++){
+      Pio(str, image[y][x]);
+    }
+  }
+  str.end_class();
+}
+
+const int PIXEL_VERSION = 1;
+
+void 
+Pixel::io(SCIRun::Piostream &str)
+{
+  str.begin_class("Pixel", PIXEL_VERSION);
+  SCIRun::Pio(str, r);
+  SCIRun::Pio(str, g);
+  SCIRun::Pio(str, b);
+  SCIRun::Pio(str, a);
+  str.end_class();
+}
+
+
+
+namespace SCIRun {
+void Pio(SCIRun::Piostream& stream, rtrt::Image*& obj)
+{
+  SCIRun::Persistent* pobj=obj;
+  stream.io(pobj, rtrt::Image::type_id);
+  if(stream.reading()) {
+    obj=dynamic_cast<rtrt::Image*>(pobj);
+    //ASSERT(obj != 0)
+  }
+}
+void Pio(SCIRun::Piostream& stream, rtrt::Pixel*& obj)
+{
+  SCIRun::Persistent* pobj=obj;
+  stream.io(pobj, rtrt::Pixel::type_id);
+  if(stream.reading()) {
+    obj=dynamic_cast<rtrt::Pixel*>(pobj);
+    //ASSERT(obj != 0)
+  }
+}
+} // end namespace SCIRun

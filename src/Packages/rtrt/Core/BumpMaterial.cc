@@ -352,7 +352,7 @@ void Pio(SCIRun::Piostream& stream, rtrt::BumpMaterial*& obj)
   stream.io(pobj, rtrt::BumpMaterial::type_id);
   if(stream.reading()) {
     obj=dynamic_cast<rtrt::BumpMaterial*>(pobj);
-    ASSERT(obj != 0)
+    //ASSERT(obj != 0)
   }
 }
 } // end namespace SCIRun

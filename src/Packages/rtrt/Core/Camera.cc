@@ -14,6 +14,13 @@ using namespace rtrt;
 using namespace SCIRun;
 using std::cerr;
 
+Persistent* camera_maker() {
+  return new Camera();
+}
+
+// initialize the static member type_id
+PersistentTypeID Camera::type_id("Camera", "Persistent", camera_maker);
+
 Camera::Camera()
 {
 }
@@ -361,3 +368,35 @@ Camera::changeFacing( double amount )
   lookat = t.project( lookat );
   setup();
 }
+
+const int CAMERA_VERSION = 1;
+
+void 
+Camera::io(SCIRun::Piostream &str)
+{
+  str.begin_class("Camera", CAMERA_VERSION);
+  SCIRun::Pio(str, eye);
+  SCIRun::Pio(str, lookat);
+  SCIRun::Pio(str, up);
+  SCIRun::Pio(str, fov);
+  SCIRun::Pio(str, u);
+  SCIRun::Pio(str, v);
+  SCIRun::Pio(str, uhat);
+  SCIRun::Pio(str, vhat);
+  SCIRun::Pio(str, what);
+  SCIRun::Pio(str, direction);
+  SCIRun::Pio(str, eyesep);
+  str.end_class();
+}
+
+namespace SCIRun {
+void Pio(SCIRun::Piostream& stream, rtrt::Camera*& obj)
+{
+  SCIRun::Persistent* pobj=obj;
+  stream.io(pobj, rtrt::Camera::type_id);
+  if(stream.reading()) {
+    obj=dynamic_cast<rtrt::Camera*>(pobj);
+    //ASSERT(obj != 0)
+  }
+}
+} // end namespace SCIRun

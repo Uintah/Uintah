@@ -6,6 +6,14 @@ extern double ROTATE_SPEED;
 extern bool   HOLO_ON;
 
 namespace rtrt {
+using namespace SCIRun;
+
+Persistent* satellite_maker() {
+  return new Satellite();
+}
+
+// initialize the static member type_id
+PersistentTypeID Satellite::type_id("Satellite", "Material", satellite_maker);
 
 void Satellite::animate(double t, bool& changed)
 {
@@ -39,4 +47,31 @@ void Satellite::animate(double t, bool& changed)
   }
 }
 
+const int SATELLITE_VERSION = 1;
+
+void 
+Satellite::io(SCIRun::Piostream &str)
+{
+  str.begin_class("Satellite", SATELLITE_VERSION);
+  UVSphere::io(str);
+  SCIRun::Pio(str, parent_);
+  SCIRun::Pio(str, name_);
+  SCIRun::Pio(str, rev_speed_);
+  SCIRun::Pio(str, orb_radius_);
+  SCIRun::Pio(str, orb_speed_);
+  SCIRun::Pio(str, theta_);
+  str.end_class();
+}
 } // end namespace
+
+namespace SCIRun {
+void Pio(SCIRun::Piostream& stream, rtrt::Satellite*& obj)
+{
+  SCIRun::Persistent* pobj=obj;
+  stream.io(pobj, rtrt::Satellite::type_id);
+  if(stream.reading()) {
+    obj=dynamic_cast<rtrt::Satellite*>(pobj);
+    //ASSERT(obj != 0)
+  }
+}
+} // end namespace SCIRun

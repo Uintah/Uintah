@@ -162,7 +162,7 @@ void Pio(SCIRun::Piostream& stream, rtrt::Parallelogram*& obj)
   stream.io(pobj, rtrt::Parallelogram::type_id);
   if(stream.reading()) {
     obj=dynamic_cast<rtrt::Parallelogram*>(pobj);
-    ASSERT(obj != 0);
+    //ASSERT(obj != 0);
   }
 }
 } // end namespace SCIRun

@@ -145,7 +145,7 @@ void Pio(SCIRun::Piostream& stream, rtrt::TimeObj*& obj)
   stream.io(pobj, rtrt::TimeObj::type_id);
   if(stream.reading()) {
     obj=dynamic_cast<rtrt::TimeObj*>(pobj);
-    ASSERT(obj != 0)
+    //ASSERT(obj != 0)
   }
 }
 } // end namespace SCIRun

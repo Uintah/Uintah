@@ -8,6 +8,16 @@
 using std::vector;
 
 namespace rtrt {
+class MatPercent;
+class MultiMaterial;
+}
+
+namespace SCIRun {
+void Pio(Piostream&, rtrt::MatPercent&);
+void Pio(Piostream&, rtrt::MultiMaterial*&);
+}
+
+namespace rtrt {
 
 struct MatPercent {
  public:
@@ -16,6 +26,8 @@ struct MatPercent {
 
   MatPercent(Material *m, double d) { material=m; percent=d; }
   ~MatPercent() {}
+
+  friend void SCIRun::Pio(SCIRun::Piostream&, MatPercent&);
 };
 
 class MultiMaterial : public Material {
@@ -29,12 +41,17 @@ class MultiMaterial : public Material {
   MultiMaterial() {}
   virtual ~MultiMaterial() {
     unsigned loop,length;
-    length = material_stack_.size();
+    length = material_stack_.size(); 
     for (loop=0; loop<length; ++loop) {
       delete material_stack_[loop];
     }
     material_stack_.resize(0);
   }
+
+  //! Persistent I/O.
+  static  SCIRun::PersistentTypeID type_id;
+  virtual void io(SCIRun::Piostream &stream);
+  friend void SCIRun::Pio(SCIRun::Piostream&, MultiMaterial*&);
 
   unsigned insert(Material *m, double percent)
   {

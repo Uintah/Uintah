@@ -47,7 +47,7 @@ void Pio(SCIRun::Piostream& stream, rtrt::UVMapping*& obj)
   stream.io(pobj, rtrt::UVMapping::type_id);
   if(stream.reading()) {
     obj=dynamic_cast<rtrt::UVMapping*>(pobj);
-    ASSERT(obj != 0);
+    //ASSERT(obj != 0);
   }
 }
 } // end namespace SCIRun

@@ -13,6 +13,13 @@
 using namespace rtrt;
 using namespace SCIRun;
 
+Persistent* wood_maker() {
+  return new Wood();
+}
+
+// initialize the static member type_id
+PersistentTypeID Wood::type_id("Wood", "Material", wood_maker);
+
 Wood::Wood(const Color&  c1,const Color&  c2, double ringscale)
     : ringscale(ringscale), lightwood(c1), darkwood(c2)
 {
@@ -73,3 +80,29 @@ void Wood::shade(Color& result, const Ray& ray,
     
     result = Rd * (difflight + ambient(cx->scene, normal));
 }
+
+const int WOOD_VERSION = 1;
+
+void 
+Wood::io(SCIRun::Piostream &str)
+{
+  str.begin_class("Wood", WOOD_VERSION);
+  Material::io(str);
+  SCIRun::Pio(str, ringscale);
+  SCIRun::Pio(str, lightwood);
+  SCIRun::Pio(str, darkwood);
+  SCIRun::Pio(str, noise);
+  str.end_class();
+}
+
+namespace SCIRun {
+void Pio(SCIRun::Piostream& stream, rtrt::Wood*& obj)
+{
+  SCIRun::Persistent* pobj=obj;
+  stream.io(pobj, rtrt::Wood::type_id);
+  if(stream.reading()) {
+    obj=dynamic_cast<rtrt::Wood*>(pobj);
+    //ASSERT(obj != 0)
+  }
+}
+} // end namespace SCIRun

@@ -12,6 +12,15 @@
 #include <Packages/rtrt/Core/CycleMaterial.h>
 #include <Packages/rtrt/Core/PhongMaterial.h>
 using namespace rtrt;
+using namespace SCIRun;
+
+Persistent* screwyShadows_maker() {
+  return new ScrewyShadows();
+}
+
+// initialize the static member type_id
+PersistentTypeID ScrewyShadows::type_id("ScrewyShadows", "ShadowBase", 
+				      screwyShadows_maker);
 
 
 ScrewyShadows::ScrewyShadows()
@@ -86,3 +95,25 @@ bool ScrewyShadows::lit(const Point& hitpos, Light*,
   return true;
 }
 
+const int SCREWYSHADOWS_VERSION = 1;
+
+void 
+ScrewyShadows::io(SCIRun::Piostream &str)
+{
+  str.begin_class("ScrewyShadows", SCREWYSHADOWS_VERSION);
+  ShadowBase::io(str);
+  SCIRun::Pio(str, shadow_cache_offset);
+  str.end_class();
+}
+
+namespace SCIRun {
+void Pio(SCIRun::Piostream& stream, rtrt::ScrewyShadows*& obj)
+{
+  SCIRun::Persistent* pobj=obj;
+  stream.io(pobj, rtrt::ScrewyShadows::type_id);
+  if(stream.reading()) {
+    obj=dynamic_cast<rtrt::ScrewyShadows*>(pobj);
+    ASSERT(obj != 0)
+  }
+}
+} // end namespace SCIRun

@@ -152,7 +152,7 @@ void Pio(SCIRun::Piostream& stream, rtrt::CrowMarble*& obj)
   stream.io(pobj, rtrt::CrowMarble::type_id);
   if(stream.reading()) {
     obj=dynamic_cast<rtrt::CrowMarble*>(pobj);
-    ASSERT(obj != 0)
+    //ASSERT(obj != 0)
   }
 }
 } // end namespace SCIRun

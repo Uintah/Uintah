@@ -20,12 +20,12 @@ using namespace SCIRun;
 using std::cerr;
 using std::vector;
 
-Persistent* tri_maker() {
+Persistent* rtrttri_maker() {
   return new Tri();
 }
 
 // initialize the static member type_id
-PersistentTypeID Tri::type_id("Tri", "Object", tri_maker);
+PersistentTypeID Tri::type_id("Tri", "Object", rtrttri_maker);
 
 
 Tri::Tri(Material* matl, const Point& p1, const Point& p2,
@@ -510,7 +510,7 @@ void Pio(SCIRun::Piostream& stream, rtrt::Tri*& obj)
   stream.io(pobj, rtrt::Tri::type_id);
   if(stream.reading()) {
     obj=dynamic_cast<rtrt::Tri*>(pobj);
-    ASSERT(obj != 0)
+    //ASSERT(obj != 0)
   }
 }
 } // end namespace SCIRun

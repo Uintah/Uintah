@@ -287,7 +287,7 @@ void Pio(SCIRun::Piostream& stream, rtrt::DielectricMaterial*& obj)
   stream.io(pobj, rtrt::DielectricMaterial::type_id);
   if(stream.reading()) {
     obj=dynamic_cast<rtrt::DielectricMaterial*>(pobj);
-    ASSERT(obj != 0)
+    //ASSERT(obj != 0)
   }
 }
 } // end namespace SCIRun

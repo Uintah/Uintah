@@ -8,6 +8,16 @@
 #include <Packages/rtrt/Core/PerProcessorContext.h>
 #include <Packages/rtrt/Core/Stats.h>
 using namespace rtrt;
+using namespace SCIRun;
+
+Persistent* singleSampleShadows_maker() {
+  return new SingleSampleSoftShadows();
+}
+
+// initialize the static member type_id
+PersistentTypeID SingleSampleSoftShadows::type_id("SingleSampleSoftShadows", 
+						  "ShadowBase", 
+						  singleSampleShadows_maker);
 
 #define MAXDEPTH 200
 
@@ -55,3 +65,26 @@ bool SingleSampleSoftShadows::lit(const Point& hitpos, Light* light,
   shadow_cache[depth]=0;
   return true;
 }
+
+const int SINGLESAMPLESHADOWS_VERSION = 1;
+
+void 
+SingleSampleSoftShadows::io(SCIRun::Piostream &str)
+{
+  str.begin_class("SingleSampleSoftShadows", SINGLESAMPLESHADOWS_VERSION);
+  ShadowBase::io(str);
+  SCIRun::Pio(str, shadow_cache_offset);
+  str.end_class();
+}
+
+namespace SCIRun {
+void Pio(SCIRun::Piostream& stream, rtrt::SingleSampleSoftShadows*& obj)
+{
+  SCIRun::Persistent* pobj=obj;
+  stream.io(pobj, rtrt::SingleSampleSoftShadows::type_id);
+  if(stream.reading()) {
+    obj=dynamic_cast<rtrt::SingleSampleSoftShadows*>(pobj);
+    ASSERT(obj != 0)
+  }
+}
+} // end namespace SCIRun

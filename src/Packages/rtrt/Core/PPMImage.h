@@ -14,6 +14,14 @@
 #include <stdlib.h>
 
 namespace rtrt {
+class PPMImage;
+}
+
+namespace SCIRun {
+void Pio(Piostream&, rtrt::PPMImage&);
+}
+
+namespace rtrt {
 
 using std::ifstream;
 using std::ofstream;
@@ -36,6 +44,7 @@ class PPMImage
   void eat_comments_and_whitespace(ifstream &str);
 
  public:
+  PPMImage() {} // for Pio.
   PPMImage(const string& s, bool flip=false) 
     : valid_(false), flipped_(flip) 
   { 
@@ -48,6 +57,8 @@ class PPMImage
   }
 
   virtual ~PPMImage() {}
+
+  friend void SCIRun::Pio(SCIRun::Piostream&, PPMImage&);
 
   unsigned get_width() { return u_; }
   unsigned get_height() { return v_; }

@@ -976,6 +976,7 @@ Gui::updateObjectCB( int /*id*/ )
 void
 Gui::updateSoundCB( int /*id*/ )
 {
+#if !defined(linux)
   activeGui->currentSound_ = activeGui->sounds_[ activeGui->selectedSoundId_ ];
 
   Point & location = activeGui->currentSound_->locations_[0];
@@ -985,6 +986,7 @@ Gui::updateSoundCB( int /*id*/ )
   activeGui->soundOriginX_->set_float_val( location.x() );
   activeGui->soundOriginY_->set_float_val( location.y() );
   activeGui->soundOriginZ_->set_float_val( location.z() );
+#endif
 }
 
 void
@@ -1671,7 +1673,7 @@ Gui::createMenus( int winId, bool soundOn /* = false */,
   activeGui->soundVolumeSpinner_->set_speed( 0.01 );
   activeGui->soundVolumeSpinner_->set_int_limits( 0, 100 );
   activeGui->soundVolumeSpinner_->disable();
-
+#if !defined(linux)
   //adding in the start sounds button after volume spinner
   //disabled if no sounds or sounds selected in beginning
   activeGui->startSoundThreadBtn_ = activeGui->mainWindow->
@@ -1690,7 +1692,7 @@ Gui::createMenus( int winId, bool soundOn /* = false */,
 	  startSoundThreadCB( -1 );
 	}
     }
-
+#endif
   // 
   activeGui->depthValue_ = 2;
   GLUI_Spinner * depthSpinner = activeGui->mainWindow->
@@ -1828,6 +1830,7 @@ Gui::update()
 void
 Gui::updateSoundPanel()
 {
+#if !defined(linux)
   if( soundsWindowVisible )
     {
       double right, left;
@@ -1836,6 +1839,7 @@ Gui::updateSoundPanel()
       rightVolume_->set_float_val(right);
       leftVolume_->set_float_val(left);
     }
+#endif
 }
 
 // Display image as a "transmission".  Ie: turn off every other scan line.
