@@ -13,7 +13,7 @@
 using namespace Uintah;
 using std::pair;
 
-#ifdef __sgi
+#if defined(__sgi) && !defined(__GNUC__) && (_MIPS_SIM != _MIPS_SIM_ABI32)
 #pragma set woff 1468
 #endif
 
@@ -56,6 +56,6 @@ template class SFCZVariable<double>;
 template class SFCZVariable<int>;
 template class SFCZVariable<long64>;
 
-#ifdef __sgi
+#if defined(__sgi) && !defined(__GNUC__) && (_MIPS_SIM != _MIPS_SIM_ABI32)
 #pragma reset woff 1468
 #endif
