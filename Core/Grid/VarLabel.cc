@@ -19,19 +19,23 @@ VarLabel::VarLabel(const std::string& name, const TypeDescription* td,
    : d_name(name), d_td(td), d_vartype(vartype),
      d_compressionMode("default"), d_allowMultipleComputes(false) 
 {
-   map<string, VarLabel*>::value_type mappair(name, this);
-   if (allLabels.insert(mappair).second == false) {
-      // two labels with the same name -- make sure they are the same type
-      VarLabel* dup = allLabels[name];
-      if (d_td != dup->d_td || d_vartype != dup->d_vartype)
-	 throw InternalError(string("VarLabel with same name exists, '")
-			     + name + "', but with different type");
-   }
+  map<string, VarLabel*>::iterator iter = allLabels.find(name);
+  if(iter != allLabels.end()){
+    // two labels with the same name -- make sure they are the same type
+    VarLabel* dup = iter->second;
+    if (d_td != dup->d_td || d_vartype != dup->d_vartype)
+      throw InternalError(string("VarLabel with same name exists, '")
+			  + name + "', but with different type");
+  } else {
+    allLabels[name]=this;
+  }
 }
 
 VarLabel::~VarLabel()
 {
-   allLabels.erase(d_name);
+  map<string, VarLabel*>::iterator iter = allLabels.find(d_name);
+  if(iter != allLabels.end() && iter->second == this)
+    allLabels.erase(iter);
 }
 
 VarLabel* VarLabel::find(string name)
@@ -40,7 +44,7 @@ VarLabel* VarLabel::find(string name)
    if (found == allLabels.end())
       return NULL;
    else
-      return (*found).second;
+      return found->second;
 }
 
 
