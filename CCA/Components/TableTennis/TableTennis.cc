@@ -39,9 +39,9 @@
 using namespace std;
 using namespace SCIRun;
 
-extern "C" sci::cca::Component::pointer make_SCIRun_TableTennis()
+extern "C" gov::cca::Component::pointer make_SCIRun_TableTennis()
 {
-  return sci::cca::Component::pointer(new TableTennis());
+  return gov::cca::Component::pointer(new TableTennis());
 }
 
 
@@ -55,16 +55,18 @@ TableTennis::~TableTennis()
   cerr << "called ~TableTennis()\n";
 }
 
-void TableTennis::setServices(const sci::cca::Services::pointer& svc)
+void TableTennis::setServices(const gov::cca::Services::pointer& svc)
 {
   services=svc;
   //register provides ports here ...  
 
-  sci::cca::TypeMap::pointer props = svc->createTypeMap();
+  gov::cca::TypeMap::pointer props = svc->createTypeMap();
   myUIPort::pointer uip(&uiPort);
   myGoPort::pointer gop(&goPort);
-  svc->addProvidesPort(uip,"ui","sci.cca.ports.UIPort", props);
-  svc->addProvidesPort(gop,"go","sci.cca.ports.GoPort", props);
+  myTTPort::pointer ttp(&ttPort);
+  svc->addProvidesPort(uip,"ui","gov.cca.UIPort", props);
+  svc->addProvidesPort(gop,"go","gov.cca.GoPort", props);
+  svc->addProvidesPort(ttp,"tt","gov.cca.TTPort", props);
   // Remember that if the PortInfo is created but not used in a call to the svc object
   // then it must be freed.
   // Actually - the ref counting will take care of that automatically - Steve
@@ -80,7 +82,13 @@ int myUIPort::ui()
 int myGoPort::go() 
 {
   //QMessageBox::warning(0, "TableTennis", "Go ...");
-  cout<<"Go Go Go!"<<endl;
+  cout<<"Nowhere to go!"<<endl;
   return 0;
 }
- 
+
+int myTTPort::pingpong(int test)
+{
+  cout << "Test = " << test << "\n";
+  return test;
+}
+
