@@ -1021,9 +1021,11 @@ Gui::handleWindowResizeCB( int width, int height )
     activeGui->dpy_->release(win);
     first=false;
   }
-  activeGui->dpy_->priv->xres=width;
-  activeGui->dpy_->priv->yres=height;
-  activeGui->camera_->setWindowAspectRatio((double)height/width);
+  if (activeGui->dpy_->display_frames) {
+    activeGui->dpy_->priv->xres=width;
+    activeGui->dpy_->priv->yres=height;
+    activeGui->camera_->setWindowAspectRatio((double)height/width);
+  }
   
 #if 0
   glutSetWindow( activeGui->glutDisplayWindowId );
@@ -1487,9 +1489,23 @@ Gui::createObjectWindow( GLUI * window )
 
 	window->add_statictext_to_panel( panel, name );
 
-	window->add_checkbox_to_panel( panel, "Cycle Objects", NULL,
+	(window->add_checkbox_to_panel( panel, "Cycle Objects", NULL,
+					num,
+					SGAutoCycleCB ))->
+	  set_int_val(sg->GetAutoswitch());
+
+	(window->add_checkbox_to_panel( panel, "Display Every Frame", NULL,
 				       num,
-				       SGAutoCycleCB );
+				       SGNoSkipCB ))->
+	  set_int_val(sg->GetNoSkip());
+
+	GLUI_Spinner *sg_frame_rate =
+	  window->add_spinner_to_panel( panel, "Seconds Per Frame",
+					GLUI_SPINNER_FLOAT,
+					&(sg->autoswitch_secs),
+					num, NULL);
+	sg_frame_rate->set_float_limits(0, 100);
+	sg_frame_rate->set_speed(0.1);
 
 	window->add_button_to_panel( panel, "Next Item",
 				     num,
@@ -1679,6 +1695,12 @@ void Gui::SGAutoCycleCB( int id ) {
   Array1<Object*> & objects = activeGui->dpy_->scene->objectsOfInterest_;
   SelectableGroup *obj = dynamic_cast<SelectableGroup*>(objects[id]);
   obj->toggleAutoswitch();
+}
+
+void Gui::SGNoSkipCB( int id ) {
+  Array1<Object*> & objects = activeGui->dpy_->scene->objectsOfInterest_;
+  SelectableGroup *obj = dynamic_cast<SelectableGroup*>(objects[id]);
+  obj->toggleNoSkip();
 }
 
 void Gui::SGNextItemCB( int id )
