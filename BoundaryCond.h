@@ -11,6 +11,7 @@
 #include <Packages/Uintah/Core/Grid/SFCZVariable.h>
 #include <Packages/Uintah/Core/Grid/Stencil7.h>
 #include <Packages/Uintah/Core/Grid/BCDataArray.h>
+#include <Packages/Uintah/Core/Grid/DensityBoundCond.h>
 #include <Core/Exceptions/InternalError.h>
 #include <Core/Util/DebugStream.h>
 #include <Core/Containers/StaticArray.h>
@@ -92,7 +93,9 @@ template<class T>
                             const vector<IntVector> bound,
                             const string& bc_kind,
                             const T& value,
-                            const Vector& cell_dx);
+                            const Vector& cell_dx,
+			    const int mat_id,
+			    const int child);
   
   void ImplicitMatrixBC(CCVariable<Stencil7>& var, const Patch* patch);
   
@@ -151,7 +154,9 @@ void getIteratorBCValueBCKind( const Patch* patch,
                             const vector<IntVector> bound,
                             string& bc_kind,
                             T& value,
-                            const Vector& cell_dx)
+                            const Vector& cell_dx,
+			    const int mat_id,
+			    const int child)
 {
  vector<IntVector>::const_iterator iter;
  IntVector oneCell = patch->faceDirection(face);
@@ -169,6 +174,28 @@ void getIteratorBCValueBCKind( const Patch* patch,
      var[*iter] = value;
    }
    IveSetBC = true;
+ }
+
+ // Random variations for density
+ if (bc_kind == "Dirichlet_perturbed") {
+   vector<IntVector> cbound,nbound,sfx,sfy,sfz;
+   const BoundCondBase* bc = patch->getArrayBCValues(face,mat_id,
+						     "Density", cbound,nbound,
+						     sfx,sfy,sfz,child);
+
+   const BoundCond<double> *new_bcs = 
+     dynamic_cast<const BoundCond<double> *>(bc);
+   
+   const DensityBoundCond *density_bcs =  
+     dynamic_cast<const DensityBoundCond *>(new_bcs);   
+
+   double K = density_bcs->getConstant();
+
+   for (iter = bound.begin(); iter != bound.end(); iter++) {
+     var[*iter] = value + K*random()*value;
+   }
+   IveSetBC = true;
+   delete bc;
  }
 
  if (bc_kind == "Neumann") {       //    N E U M A N N
