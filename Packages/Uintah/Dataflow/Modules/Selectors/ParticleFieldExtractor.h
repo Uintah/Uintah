@@ -57,6 +57,8 @@ using namespace SCIRun;
 //class Patch;
 class ParticleFieldExtractor;
 
+#define PARTICLE_FIELD_EXTRACTOR_BOGUS_PART_ID -1
+  
 class ParticleFieldExtractor : public Module { 
   friend class PFEThread;
 public: 
