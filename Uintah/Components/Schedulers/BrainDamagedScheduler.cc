@@ -27,7 +27,8 @@ using std::find;
 using std::set;
 using std::vector;
 
-BrainDamagedScheduler::BrainDamagedScheduler()
+BrainDamagedScheduler::BrainDamagedScheduler( int MpiRank, int MpiProcesses ) :
+  UintahParallelComponent( MpiRank, MpiProcesses )
 {
     d_numThreads=0;
     d_reducer = 
@@ -205,7 +206,7 @@ BrainDamagedScheduler::allDependenciesCompleted(TaskRecord*) const
 DataWarehouseP
 BrainDamagedScheduler::createDataWarehouse()
 {
-    return new OnDemandDataWarehouse();
+    return new OnDemandDataWarehouse( d_MpiRank, d_MpiProcesses );
 }
 
 void
@@ -237,6 +238,9 @@ TaskRecord::TaskRecord(Task* t)
 
 //
 // $Log$
+// Revision 1.6  2000/04/19 21:20:02  dav
+// more MPI stuff
+//
 // Revision 1.5  2000/04/19 05:26:10  sparker
 // Implemented new problemSetup/initialization phases
 // Simplified DataWarehouse interface (not finished yet)

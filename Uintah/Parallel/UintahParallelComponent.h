@@ -47,7 +47,7 @@ class UintahParallelComponent {
     };
     std::map<string, PortRecord*> portmap;
 public:
-    UintahParallelComponent();
+    UintahParallelComponent( int MpiRank, int MpiProcesses );
     virtual ~UintahParallelComponent();
 
     //////////
@@ -56,6 +56,10 @@ public:
 
     UintahParallelPort* getPort(const std::string& name);
     void releasePort(const std::string& name);
+
+protected:
+    int d_MpiRank;
+    int d_MpiProcesses;
 };
 
 } // end namespace Parallel
@@ -63,6 +67,9 @@ public:
 
 //
 // $Log$
+// Revision 1.4  2000/04/19 21:20:05  dav
+// more MPI stuff
+//
 // Revision 1.3  2000/04/11 07:10:57  sparker
 // Completing initialization and problem setup
 // Finishing Exception modifications

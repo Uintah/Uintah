@@ -124,11 +124,15 @@ int main(int argc, char** argv)
      */
     Parallel::initializeManager(argc, argv);
 
+    int MpiRank = Parallel::getRank();
+    int MpiProcesses = Parallel::getSize();
+
     /*
      * Create the components
      */
     try {
-	SimulationController* sim = new SimulationController();
+	SimulationController* sim = new SimulationController( MpiRank,
+							      MpiProcesses );
 
 	// Reader
 	ProblemSpecInterface* reader = new ProblemSpecReader(filename);
@@ -152,7 +156,7 @@ int main(int argc, char** argv)
 	// Connect a CFD module if applicable
 	CFDInterface* cfd = 0;
 	if(do_arches){
-	    cfd = new Arches();
+	    cfd = new Arches( MpiRank, MpiProcesses );
 	}
 	if(do_ice){
 	    cfd = new ICE();
@@ -164,7 +168,8 @@ int main(int argc, char** argv)
 
 
 	// Scheduler
-	BrainDamagedScheduler* sched = new BrainDamagedScheduler();
+	BrainDamagedScheduler* sched = 
+	  new BrainDamagedScheduler( MpiRank, MpiProcesses );
 	sched->setNumThreads(numThreads);
 	sim->attachPort("scheduler", sched);
 
@@ -188,6 +193,9 @@ int main(int argc, char** argv)
 
 //
 // $Log$
+// Revision 1.6  2000/04/19 21:19:59  dav
+// more MPI stuff
+//
 // Revision 1.5  2000/04/13 06:50:49  sparker
 // More implementation to get this to work
 //

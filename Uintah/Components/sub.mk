@@ -5,14 +5,18 @@
 
 SRCDIR := Uintah/Components
 
-SUBDIRS := $(SRCDIR)/Arches $(SRCDIR)/ICE $(SRCDIR)/MPM \
-	$(SRCDIR)/ProblemSpecification \
+
+SUBDIRS :=  $(SRCDIR)/ICE $(SRCDIR)/MPM \
+	$(SRCDIR)/Arches $(SRCDIR)/ProblemSpecification \
 	$(SRCDIR)/Schedulers $(SRCDIR)/SimulationController
 
 include $(SRCTOP)/scripts/recurse.mk
 
 #
 # $Log$
+# Revision 1.5  2000/04/19 21:20:00  dav
+# more MPI stuff
+#
 # Revision 1.4  2000/04/11 07:10:34  sparker
 # Completing initialization and problem setup
 # Finishing Exception modifications

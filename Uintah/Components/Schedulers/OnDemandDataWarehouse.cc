@@ -16,8 +16,8 @@ using Uintah::Exceptions::TypeMismatchException;
 using Uintah::Exceptions::UnknownVariable;
 using std::cerr;
 
-OnDemandDataWarehouse::OnDemandDataWarehouse()
-  : d_lock("DataWarehouse lock")
+OnDemandDataWarehouse::OnDemandDataWarehouse( int MpiRank, int MpiProcesses )
+  : d_lock("DataWarehouse lock"), DataWarehouse( MpiRank, MpiProcesses )
 {
   d_allowCreation = true;
 }
@@ -210,6 +210,9 @@ OnDemandDataWarehouse::DataRecord::DataRecord(DataItem* di,
 
 //
 // $Log$
+// Revision 1.7  2000/04/19 21:20:03  dav
+// more MPI stuff
+//
 // Revision 1.6  2000/04/19 05:26:11  sparker
 // Implemented new problemSetup/initialization phases
 // Simplified DataWarehouse interface (not finished yet)

@@ -8,30 +8,30 @@
 
 namespace Uintah {
 
-  namespace Grid {
-    class DataItem;
-    class TypeDescription;
-    class Region;
-  }
+namespace Grid {
+  class DataItem;
+  class TypeDescription;
+  class Region;
+}
 
-  namespace Components {
+namespace Components {
 
-    using Uintah::Interface::DataWarehouse;
-    using Uintah::Grid::DataItem;
-    using Uintah::Grid::TypeDescription;
-    using Uintah::Grid::Region;
-    using Uintah::Grid::ReductionVariableBase;
-    using Uintah::Grid::GridP;
-    using Uintah::Grid::VarLabel;
+using Uintah::Interface::DataWarehouse;
+using Uintah::Grid::DataItem;
+using Uintah::Grid::TypeDescription;
+using Uintah::Grid::Region;
+using Uintah::Grid::ReductionVariableBase;
+using Uintah::Grid::GridP;
+using Uintah::Grid::VarLabel;
 
-    /**************************************
+/**************************************
 
-      CLASS
+  CLASS
         OnDemandDataWarehouse
    
 	Short description...
 
-      GENERAL INFORMATION
+  GENERAL INFORMATION
 
         OnDemandDataWarehouse.h
 
@@ -43,91 +43,93 @@ namespace Uintah {
   
 	Copyright (C) 2000 SCI Group
 
-      KEYWORDS
+  KEYWORDS
         On_Demand_Data_Warehouse
 
-      DESCRIPTION
+  DESCRIPTION
         Long description...
   
-      WARNING
+  WARNING
   
-      ****************************************/
+****************************************/
 
-    class OnDemandDataWarehouse : public DataWarehouse {
-    public:
-      OnDemandDataWarehouse();
-      virtual ~OnDemandDataWarehouse();
+class OnDemandDataWarehouse : public DataWarehouse {
+public:
+  OnDemandDataWarehouse( int MpiRank, int MpiProcesses );
+  virtual ~OnDemandDataWarehouse();
 
-      virtual void setGrid(const GridP&);
+  virtual void setGrid(const GridP&);
 
-       virtual void get(ReductionVariableBase&, const VarLabel*) const ;
+  virtual void get(ReductionVariableBase&, const VarLabel*) const ;
 #if 0
-      //////////
-      // Insert Documentation Here:
-      virtual void getBroadcastData(DataItem& di, const std::string& name,
-				    const TypeDescription*) const;
+  //////////
+  // Insert Documentation Here:
+  virtual void getBroadcastData(DataItem& di, const std::string& name,
+				const TypeDescription*) const;
 
-      //////////
-      // Insert Documentation Here:
-      virtual void getRegionData(DataItem& di, const std::string& name,
-				 const TypeDescription*,
-				 const Region*, int numGhostCells) const;
+  //////////
+  // Insert Documentation Here:
+  virtual void getRegionData(DataItem& di, const std::string& name,
+			     const TypeDescription*,
+			     const Region*, int numGhostCells) const;
 
-      //////////
-      // Insert Documentation Here:
-      virtual void getRegionData(DataItem& di, const std::string& name,
-				 const TypeDescription*,
-				 const Region*) const;
+  //////////
+  // Insert Documentation Here:
+  virtual void getRegionData(DataItem& di, const std::string& name,
+			     const TypeDescription*,
+			     const Region*) const;
+  
+  //////////
+  // Insert Documentation Here:
+  virtual void putRegionData(const DataItem& di, const std::string& name,
+			     const TypeDescription*,
+			     const Region*, int numGhostCells);
 
-      //////////
-      // Insert Documentation Here:
-      virtual void putRegionData(const DataItem& di, const std::string& name,
-				 const TypeDescription*,
-				 const Region*, int numGhostCells);
+  //////////
+  // Insert Documentation Here:
+  virtual void putRegionData(const DataItem& di, const std::string& name,
+			     const TypeDescription*,
+			     const Region*);
 
-      //////////
-      // Insert Documentation Here:
-      virtual void putRegionData(const DataItem& di, const std::string& name,
-				 const TypeDescription*,
-				 const Region*);
+  //////////
+  // Insert Documentation Here:
+  virtual void putBroadcastData(const DataItem& di, const std::string& name,
+				const TypeDescription*);
 
-      //////////
-      // Insert Documentation Here:
-      virtual void putBroadcastData(const DataItem& di, const std::string& name,
-				    const TypeDescription*);
-
-      //////////
-      // Insert Documentation Here:
-      virtual void allocateRegionData(DataItem& di, const std::string& name,
-				      const TypeDescription*,
-				      const Region*, int numGhostCells);
+  //////////
+  // Insert Documentation Here:
+  virtual void allocateRegionData(DataItem& di, const std::string& name,
+				  const TypeDescription*,
+				  const Region*, int numGhostCells);
 
 #endif
+  
+private:
+  struct DataRecord {
+    DataItem* di;
+    const TypeDescription* td;
+    const Region* region;
+    DataRecord(DataItem* di, const TypeDescription* td,
+	       const Region* region);
+  };
+  typedef std::map<std::string, DataRecord*> dbType;
 
-    private:
-      struct DataRecord {
-	DataItem* di;
-	const TypeDescription* td;
-	const Region* region;
-	DataRecord(DataItem* di, const TypeDescription* td,
-		   const Region* region);
-      };
-      typedef std::map<std::string, DataRecord*> dbType;
+  //////////
+  // Insert Documentation Here:
+  mutable SCICore::Thread::CrowdMonitor  d_lock;
+  dbType                                 d_data;
+  bool                                   d_allowCreation;
+  GridP grid;
+};
 
-
-      //////////
-      // Insert Documentation Here:
-      mutable SCICore::Thread::CrowdMonitor  d_lock;
-      dbType                                 d_data;
-      bool                                   d_allowCreation;
-      GridP grid;
-    };
-
-  } // end namespace Components
+} // end namespace Components
 } // end namespace Uintah
 
 //
 // $Log$
+// Revision 1.7  2000/04/19 21:20:03  dav
+// more MPI stuff
+//
 // Revision 1.6  2000/04/19 05:26:11  sparker
 // Implemented new problemSetup/initialization phases
 // Simplified DataWarehouse interface (not finished yet)
