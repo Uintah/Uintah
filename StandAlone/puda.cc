@@ -15,6 +15,8 @@
 #include <Uintah/Grid/Grid.h>
 #include <Uintah/Grid/Level.h>
 #include <Uintah/Grid/NodeIterator.h>
+#include <Uintah/Grid/CellIterator.h>
+#include <Uintah/Components/MPM/Util/Matrix3.h>
 #include <SCICore/Math/MinMax.h>
 #include <SCICore/Geometry/Point.h>
 #include <SCICore/Geometry/Vector.h>
@@ -39,6 +41,7 @@ typedef struct{
   vector<ParticleVariable<double> > pv_double_list;
   vector<ParticleVariable<Point> > pv_point_list;
   vector<ParticleVariable<Vector> > pv_vector_list;
+  vector<ParticleVariable<Matrix3> > pv_matrix3_list;
   ParticleVariable<Point> p_x;
 } MaterialData;
 
@@ -115,6 +118,7 @@ void usage(const std::string& badarg, const std::string& progname)
     cerr << "  -patch (outputs patch id with data)\n";
     cerr << "  -material (outputs material number with data)\n";
     cerr << "  -NCvar [double or point or vector]\n";
+    cerr << "  -CCvar [double or point or vector]\n";
     cerr << "  -verbose (prints status of output)\n";
     cerr << "  -timesteplow [int] (only outputs timestep from int)\n";
     cerr << "  -timestephigh [int] (only outputs timesteps upto int)\n";
@@ -139,6 +143,11 @@ int main(int argc, char** argv)
   bool do_NCvar_double = false;
   bool do_NCvar_point = false;
   bool do_NCvar_vector = false;
+  bool do_NCvar_matrix3 = false;
+  bool do_CCvar_double = false;
+  bool do_CCvar_point = false;
+  bool do_CCvar_vector = false;
+  bool do_CCvar_matrix3 = false;
   bool do_PTvar = false;
   bool do_PTvar_all = true;
   bool do_patch = false;
@@ -178,11 +187,29 @@ int main(int argc, char** argv)
 	  do_NCvar_point = true;
 	else if (s == "vector")
 	  do_NCvar_vector = true;
+	else if (s == "matrix3")
+	  do_NCvar_matrix3 = true;
 	else
 	  usage("-NCvar", argv[0]);
       }
       else
 	usage("-NCvar", argv[0]);
+    } else if(s == "-CCvar") {
+      if (++i < argc) {
+	s = argv[i];
+	if (s == "double")
+	  do_CCvar_double = true;
+	else if (s == "point")
+	  do_CCvar_point = true;
+	else if (s == "vector")
+	  do_CCvar_vector = true;
+	else if (s == "matrix3")
+	  do_CCvar_matrix3 = true;
+	else
+	  usage("-CCvar", argv[0]);
+      }
+      else
+	usage("-CCvar", argv[0]);
     } else if(s == "-PTvar") {
       do_PTvar = true;
     } else if (s == "-ptonly") {
@@ -358,6 +385,25 @@ int main(int argc, char** argv)
 		      }
 		    }
 		  break;
+		  case TypeDescription::Matrix3:
+		    {
+		      ParticleVariable<Matrix3> value;
+		      da->query(value, var, matl, patch, time);
+		      ParticleSubset* pset = value.getParticleSubset();
+		      cout << "\t\t\t\t" << td->getName() << " over " << pset->numParticles() << " particles\n";
+		      if(pset->numParticles() > 0){
+			double min, max;
+			ParticleSubset::iterator iter = pset->begin();
+			min=max=value[*iter++].Norm();
+			for(;iter != pset->end(); iter++){
+			  min=Min(min, value[*iter].Norm());
+			  max=Max(max, value[*iter].Norm());
+			}
+			cout << "\t\t\t\tmin Norm: " << min << '\n';
+			cout << "\t\t\t\tmax Norm: " << max << '\n';
+		      }
+		    }
+		  break;
 		  default:
 		    cerr << "Particle Variable of unknown type: " << subtype->getType() << '\n';
 		    break;
@@ -422,8 +468,110 @@ int main(int argc, char** argv)
 		      }
 		    }
 		  break;
+		  case TypeDescription::Matrix3:
+		    {
+		      NCVariable<Matrix3> value;
+		      da->query(value, var, matl, patch, time);
+		      cout << "\t\t\t\t" << td->getName() << " over " << value.getLowIndex() << " to " << value.getHighIndex() << "\n";
+		      IntVector dx(value.getHighIndex()-value.getLowIndex());
+		      if(dx.x() && dx.y() && dx.z()){
+			double min, max;
+			NodeIterator iter = patch->getNodeIterator();
+			min=max=value[*iter].Norm();
+			for(;!iter.done(); iter++){
+			  min=Min(min, value[*iter].Norm());
+			  max=Max(max, value[*iter].Norm());
+			}
+			cout << "\t\t\t\tmin Norm: " << min << '\n';
+			cout << "\t\t\t\tmax Norm: " << max << '\n';
+		      }
+		    }
+		  break;
 		  default:
 		    cerr << "NC Variable of unknown type: " << subtype->getType() << '\n';
+		    break;
+		  }
+		  break;
+		case TypeDescription::CCVariable:
+		  switch(subtype->getType()){
+		  case TypeDescription::double_type:
+		    {
+		      CCVariable<double> value;
+		      da->query(value, var, matl, patch, time);
+		      cout << "\t\t\t\t" << td->getName() << " over " << value.getLowIndex() << " to " << value.getHighIndex() << "\n";
+		      IntVector dx(value.getHighIndex()-value.getLowIndex());
+		      if(dx.x() && dx.y() && dx.z()){
+			double min, max;
+			CellIterator iter = patch->getCellIterator();
+			min=max=value[*iter];
+			for(;!iter.done(); iter++){
+			  min=Min(min, value[*iter]);
+			  max=Max(max, value[*iter]);
+			}
+			cout << "\t\t\t\tmin value: " << min << '\n';
+			cout << "\t\t\t\tmax value: " << max << '\n';
+		      }
+		    }
+		  break;
+		  case TypeDescription::Point:
+		    {
+		      CCVariable<Point> value;
+		      da->query(value, var, matl, patch, time);
+		      cout << "\t\t\t\t" << td->getName() << " over " << value.getLowIndex() << " to " << value.getHighIndex() << "\n";
+		      IntVector dx(value.getHighIndex()-value.getLowIndex());
+		      if(dx.x() && dx.y() && dx.z()){
+			Point min, max;
+			CellIterator iter = patch->getCellIterator();
+			min=max=value[*iter];
+			for(;!iter.done(); iter++){
+			  min=Min(min, value[*iter]);
+			  max=Max(max, value[*iter]);
+			}
+			cout << "\t\t\t\tmin value: " << min << '\n';
+			cout << "\t\t\t\tmax value: " << max << '\n';
+		      }
+		    }
+		  break;
+		  case TypeDescription::Vector:
+		    {
+		      CCVariable<Vector> value;
+		      da->query(value, var, matl, patch, time);
+		      cout << "\t\t\t\t" << td->getName() << " over " << value.getLowIndex() << " to " << value.getHighIndex() << "\n";
+		      IntVector dx(value.getHighIndex()-value.getLowIndex());
+		      if(dx.x() && dx.y() && dx.z()){
+			double min, max;
+			CellIterator iter = patch->getCellIterator();
+			min=max=value[*iter].length2();
+			for(;!iter.done(); iter++){
+			  min=Min(min, value[*iter].length2());
+			  max=Max(max, value[*iter].length2());
+			}
+			cout << "\t\t\t\tmin magnitude: " << sqrt(min) << '\n';
+			cout << "\t\t\t\tmax magnitude: " << sqrt(max) << '\n';
+		      }
+		    }
+		  break;
+		  case TypeDescription::Matrix3:
+		    {
+		      CCVariable<Matrix3> value;
+		      da->query(value, var, matl, patch, time);
+		      cout << "\t\t\t\t" << td->getName() << " over " << value.getLowIndex() << " to " << value.getHighIndex() << "\n";
+		      IntVector dx(value.getHighIndex()-value.getLowIndex());
+		      if(dx.x() && dx.y() && dx.z()){
+			double min, max;
+			CellIterator iter = patch->getCellIterator();
+			min=max=value[*iter].Norm();
+			for(;!iter.done(); iter++){
+			  min=Min(min, value[*iter].Norm());
+			  max=Max(max, value[*iter].Norm());
+			}
+			cout << "\t\t\t\tmin Norm: " << min << '\n';
+			cout << "\t\t\t\tmax Norm: " << max << '\n';
+		      }
+		    }
+		  break;
+		  default:
+		    cerr << "CC Variable of unknown type: " << subtype->getType() << '\n';
 		    break;
 		  }
 		  break;
@@ -575,6 +723,13 @@ int main(int argc, char** argv)
 			material_data.pv_vector_list.push_back(value);
 		      }
 		    break;
+		    case TypeDescription::Matrix3:
+		      {
+			ParticleVariable<Matrix3> value;
+			da->query(value, var, matl, patch, time);
+			material_data.pv_matrix3_list.push_back(value);
+		      }
+		    break;
 		    default:
 		      cerr << "Particle Variable of unknown type: " << subtype->getType() << '\n';
 		      break;
@@ -639,8 +794,85 @@ int main(int argc, char** argv)
 		      }
 		    }
 		  break;
+		  case TypeDescription::Matrix3:
+		    {
+		      if (do_NCvar_matrix3) {
+			// not implemented at this time
+		      }
+		    }
+		  break;
 		  default:
 		    cerr << "NC variable of unknown type: " << subtype->getType() << '\n';
+		    break;
+		  }
+		  break;
+		case TypeDescription::CCVariable:
+		  switch(subtype->getType()){
+		  case TypeDescription::double_type:
+		    {
+		      if (do_CCvar_double) {
+			// setup output files
+			string raydatafile = makeFileName(raydatadir,variable_file,time_file,patchID_file,materialType_file);			
+			FILE* datafile;
+			FILE* headerfile;
+			if (!setupOutFiles(&datafile,&headerfile,raydatafile,string("hdr")))
+			  abort();
+
+			// addfile to filelist
+			fprintf(filelist,"%s\n",raydatafile.c_str());
+			// get the data and write it out
+			double min, max;
+			CCVariable<double> value;
+			da->query(value, var, matl, patch, time);
+			IntVector dim(value.getHighIndex()-value.getLowIndex());
+			if(dim.x() && dim.y() && dim.z()){
+			  NodeIterator iter = patch->getNodeIterator();
+			  min=max=value[*iter];
+			  for(;!iter.done(); iter++){
+			    min=Min(min, value[*iter]);
+			    max=Max(max, value[*iter]);
+			    float temp_value = (float)value[*iter];
+			    fwrite(&temp_value, sizeof(float), 1, datafile);
+			  }	  
+			}
+			
+			Point b_min = patch->getBox().lower();
+			Point b_max = patch->getBox().upper();
+			
+			// write the header file
+			fprintf(headerfile, "%d %d %d\n",dim.x(), dim.y(), dim.z());
+			fprintf(headerfile, "%f %f %f\n",(float)b_min.x(),(float)b_min.y(),(float)b_min.z());
+			fprintf(headerfile, "%f %f %f\n",(float)b_max.x(),(float)b_max.y(),(float)b_max.z());
+			fprintf(headerfile, "%f %f\n",(float)min,(float)max);
+
+			fclose(datafile);
+			fclose(headerfile);
+		      }
+		    }
+		  break;
+		  case TypeDescription::Point:
+		    {
+		      if (do_CCvar_point) {
+			// not implemented at this time
+		      }
+		    }
+		  break;
+		  case TypeDescription::Vector:
+		    {
+		      if (do_CCvar_vector) {
+			// not implemented at this time
+		      }
+		    }
+		  break;
+		  case TypeDescription::Matrix3:
+		    {
+		      if (do_CCvar_matrix3) {
+			// not implemented at this time
+		      }
+		    }
+		  break;
+		  default:
+		    cerr << "CC variable of unknown type: " << subtype->getType() << '\n';
 		    break;
 		  }
 		  break;
@@ -692,6 +924,10 @@ int main(int argc, char** argv)
 		    for(int i = 0; i < md.pv_vector_list.size(); i++) {
 		      v_min.push_back(md.pv_vector_list[i][*iter].length());
 		      v_max.push_back(md.pv_vector_list[i][*iter].length());
+		    }
+		    for(int i = 0; i < md.pv_matrix3_list.size(); i++) {
+		      v_min.push_back(md.pv_matrix3_list[i][*iter].Norm());
+		      v_max.push_back(md.pv_matrix3_list[i][*iter].Norm());
 		    }
 		  }
 		  // initialized mins/maxes
@@ -749,6 +985,14 @@ int main(int argc, char** argv)
 		      // vector data
 		      for(int i = 0; i < md.pv_vector_list.size(); i++) {
 			double value = md.pv_vector_list[i][*iter].length();
+			v_min[i]=Min(v_min[i],value);
+			v_max[i]=Max(v_max[i],value);
+			temp_value = (float)value;
+			fwrite(&temp_value, sizeof(float), 1, datafile);
+		      }
+		      // matrix3 data
+		      for(int i = 0; i < md.pv_matrix3_list.size(); i++) {
+			double value = md.pv_matrix3_list[i][*iter].Norm();
 			v_min[i]=Min(v_min[i],value);
 			v_max[i]=Max(v_max[i],value);
 			temp_value = (float)value;
@@ -814,6 +1058,9 @@ int main(int argc, char** argv)
 
 //
 // $Log$
+// Revision 1.9  2000/07/11 20:00:11  kuzimmer
+// Modified so that CCVariables and Matrix3 are recognized
+//
 // Revision 1.8  2000/06/22 20:31:04  bigler
 // Removed a line of debugging code that inadvertently got looked over.
 //
