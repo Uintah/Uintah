@@ -7,6 +7,7 @@
 #include <Core/Thread/Thread.h>
 #include <Core/Thread/Parallel.h>
 #include <Core/Thread/WorkQueue.h>
+#include <Core/Thread/Mutex.h>
 
 #include <stdio.h>
 #include <unistd.h>

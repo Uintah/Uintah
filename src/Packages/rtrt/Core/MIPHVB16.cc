@@ -10,6 +10,7 @@
 #include <Core/Thread/Thread.h>
 #include <Core/Thread/Time.h>
 #include <Core/Thread/Parallel.h>
+#include <Core/Thread/Mutex.h>
 #include <stdio.h>
 #include <fstream>
 #include <sys/types.h>
@@ -23,8 +24,8 @@ using namespace std;
 using namespace SCIRun;
 
 namespace rtrt {
-  extern Mutex io;
-  extern Mutex xlock;
+  extern SCIRun::Mutex io;
+  extern SCIRun::Mutex xlock;
   
 struct MIPVMCell {
     float max;
