@@ -46,6 +46,9 @@
 #include <Core/Persistent/Pstreams.h>
 #include <Core/Malloc/Allocator.h>
 #include <Core/Containers/StringUtil.h>
+
+#include <teem/air.h>
+
 #include <sgi_stl_warnings_off.h>
 #include <fstream>
 #include <iostream>
@@ -559,14 +562,41 @@ void TextPiostream::io(double& data)
   if(dir==Read){
     istream& in=*istr;
     in >> data;
-    if(!in){
-      cerr << "Error reading double\n";
-      char buf[100];
+    
+    if(!in) {
+      
+      char ibuf[5];
       in.clear();
-      in.getline(buf, 100);
-      cerr << "Rest of line is: " << buf << endl;
-      err=1;
-      return;
+      in.get(ibuf,4);
+      // Set the last character to null for airToLower.
+      ibuf[3] = '\0';
+      // Make sure the comparison is case insensitive.
+      airToLower(ibuf);
+      if (strcmp(ibuf,"nan")==0) {
+        data = (double) AIR_NAN;
+      }
+      else if (strcmp(ibuf,"inf")==0) {
+        data = (double) AIR_POS_INF;
+      }
+      else {
+        in.clear();
+        in.get(&(ibuf[3]),2);
+        // Set the last character to null for airToLower.
+        ibuf[4] = '\0';
+        airToLower(ibuf);
+        if (strcmp(ibuf,"-inf")==0) {
+          data = (double) AIR_NEG_INF;
+        }
+        else {
+          char buf[100];
+          cerr << "Error reading double\n";
+          in.clear();
+          in.getline(buf, 100);
+          cerr << "Rest of line is: " << ibuf << buf << endl;
+          err=1;
+          return;
+        }
+      }
     }
     expect(' ');
   } else {
@@ -581,14 +611,40 @@ void TextPiostream::io(float& data)
   if(dir==Read){
     istream& in=*istr;
     in >> data;
-    if(!in){
-      cerr << "Error reading float\n";
-      char buf[100];
+    if(!in) {
+      
+      char ibuf[5];
       in.clear();
-      in.getline(buf, 100);
-      cerr << "Rest of line is: " << buf << endl;
-      err=1;
-      return;
+      in.get(ibuf,4);
+      // Set the last character to null for airToLower.
+      ibuf[3] = '\0';
+      // Make sure the comparison is case insensitive.
+      airToLower(ibuf);
+      if (strcmp(ibuf,"nan")==0) {
+        data = AIR_NAN; 
+      }  
+      else if (strcmp(ibuf,"inf")==0) {
+        data = AIR_POS_INF; 
+      }
+      else {
+        in.clear();
+        in.get(&(ibuf[3]),2);
+        // Set the last character to null for airToLower.
+        ibuf[4] = '\0';
+        airToLower(ibuf);
+        if (strcmp(ibuf,"-inf")==0) {
+          data = AIR_NEG_INF;
+        }  	  	
+        else {
+          char buf[100];
+          cerr << "Error reading float\n";
+          in.clear();
+          in.getline(buf, 100);
+          cerr << "Rest of line is: " << ibuf << buf << endl;
+          err=1;
+          return;
+        }
+      }
     }
     expect(' ');
   } else {
