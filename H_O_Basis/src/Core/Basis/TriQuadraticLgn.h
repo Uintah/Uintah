@@ -157,6 +157,19 @@ TriQuadraticLgn<T>::io(Piostream &stream)
   stream.end_class();
 }
 
+template <class T>
+int TriQuadraticLgn<T>::GaussianNum = 7;
+
+template <class T>
+double TriQuadraticLgn<T>::GaussianPoints[7][2] = {
+  {0.1012865073, 0.1012865073}, {0.7974269853, 0.1012865073}, {0.1012865073, 0.7974269853},
+  {0.4701420641, 0.0597158717}, {0.4701420641, 0.4701420641}, {0.0597158717, 0.4701420641},
+  {0.3333333333, 0.3333333333}};
+
+template <class T>
+double TriQuadraticLgn<T>::GaussianWeights[7] = 
+  {0.1259391805, 0.1259391805, 0.1259391805, 0.1323941527, 0.1323941527, 0.1323941527, 0.0225};
+
 } //namespace SCIRun
 
 #endif // TriQuadraticLgn_h

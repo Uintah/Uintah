@@ -33,16 +33,9 @@
 
 namespace SCIRun {
 
-  double QuadApprox::UnitVertices[4][2] = {{0,0}, {1,0}, {1,1}, {0,1}};
-  int QuadApprox::UnitEdges[4][2] = {{0,1}, {1,2}, {2,3,}, {3,0}};
-  int QuadApprox::UnitFaces[1][4] = {{0,1,2,3}};
-
-  int QuadBilinearLgn::GaussianNum=4;
-  double QuadBilinearLgn::GaussianPoints[4][2] = {{0.211324865405, 0.211324865405},
-						  {0.788675134595, 0.211324865405},
-						  {0.788675134595, 0.788675134595},
-						  {0.211324865405, 0.788675134595}};
-  double QuadBilinearLgn::GaussianWeights[4] = {.25, .25, .25, .25};
+double QuadApprox::UnitVertices[4][2] = {{0,0}, {1,0}, {1,1}, {0,1}};
+int QuadApprox::UnitEdges[4][2] = {{0,1}, {1,2}, {2,3,}, {3,0}};
+int QuadApprox::UnitFaces[1][4] = {{0,1,2,3}};
 
 } //namespace SCIRun
 

@@ -82,9 +82,13 @@ template <class T>
 class CrvLinearLgn : public CrvApprox
 {
 public:
-  static int GaussianNum;
+  typedef T value_type;
+
+  static int    GaussianNum;
   static double GaussianPoints[1][1];
   static double GaussianWeights[1];
+
+  int polynomial_order() const { return 1; }
 
   CrvLinearLgn() : CrvApprox() {}
   virtual ~CrvLinearLgn() {}
@@ -196,7 +200,15 @@ CrvLinearLgn<T>::get_coords(vector<double> &coords, const T& value,
   coords[0] = numerator / denominator;
 }
  
+template <class T>
+int CrvLinearLgn<T>::GaussianNum = 1;
+
+template <class T>
+double CrvLinearLgn<T>::GaussianPoints[1][1] = {{0.5}};
+
+template <class T>
+double CrvLinearLgn<T>::GaussianWeights[1] = {1.};
 
 } //namespace SCIRun
 
-#endif // LinearLagrangian_h
+#endif // CrvLinearLgn_h

@@ -46,12 +46,6 @@ NoDataBasis::~NoDataBasis()
 }
   
 
-unsigned 
-NoDataBasis::order() const 
-{ 
-  return 1; 
-}
-
 const string
 NoDataBasis::type_name(int n)
 {

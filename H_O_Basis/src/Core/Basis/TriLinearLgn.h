@@ -119,6 +119,8 @@ public:
   TriLinearLgn() {}
   virtual ~TriLinearLgn() {}
   
+  virtual int polynomial_order() const { return 1; }
+
   virtual void approx_edge(const unsigned edge, 
 			   const unsigned /* div_per_unit */,
 			   vector<vector<double> > &coords) const
@@ -126,7 +128,7 @@ public:
     coords.resize(2);
     vector<double> &tmp = coords[0];
     tmp[0] = UnitVertices[UnitEdges[edge][0]][0];
-    tmp[1] = UnitVrtices[UnitEdges[edge][0]][1];
+    tmp[1] = UnitVertices[UnitEdges[edge][0]][1];
     tmp = coords[1];
     tmp[0] = UnitVertices[UnitEdges[edge][1]][0];
     tmp[1] = UnitVertices[UnitEdges[edge][1]][1];
@@ -232,6 +234,16 @@ TriLinearLgn<T>::io(Piostream &stream)
   stream.begin_class(type_name(-1), TRILINEARLGN_VERSION);
   stream.end_class();
 }
+
+template <class T>
+int TriLinearLgn<T>::GaussianNum = 3;
+
+template <class T>
+double TriLinearLgn<T>::GaussianPoints[3][2] = {
+  {1./6.,1./6.}, {2./3.,1./6.}, {1./6.,2./3.}};
+
+template <class T>
+double TriLinearLgn<T>::GaussianWeights[3] = {1./3., 1./3., 1./3.};
 
 } //namespace SCIRun
 

@@ -104,13 +104,17 @@ template <class T>
 class QuadBilinearLgn : public QuadApprox
 {
 public:
+  typedef T value_type;
+
   static int GaussianNum;
   static double GaussianPoints[4][2];
   static double GaussianWeights[4];
- 
+
   QuadBilinearLgn() {}
   virtual ~QuadBilinearLgn() {}
   
+  int polynomial_order() const { return 1; }
+
   // Value at coord
   template <class ElemData>
   T interpolate(const vector<double> &coords, const ElemData &cd) const
@@ -217,6 +221,19 @@ QuadBilinearLgn<T>::io(Piostream &stream)
   stream.begin_class(type_name(-1), QUADBILINEARLGN_VERSION);
   stream.end_class();
 }
+
+template <class T>
+int QuadBilinearLgn<T>::GaussianNum = 4;
+
+template <class T>
+double QuadBilinearLgn<T>::GaussianPoints[4][2] = {
+  {0.211324865405, 0.211324865405},
+  {0.788675134595, 0.211324865405},
+  {0.788675134595, 0.788675134595},
+  {0.211324865405, 0.788675134595}};
+
+template <class T>
+double QuadBilinearLgn<T>::GaussianWeights[4] = {.25, .25, .25, .25};
 
 } //namespace SCIRun
 

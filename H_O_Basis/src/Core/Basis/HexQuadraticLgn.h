@@ -26,7 +26,7 @@
 //  DEALINGS IN THE SOFTWARE.
 //  
 //    File   : HexQuadraticLgn.h
-//    Author : Martin Cole
+//    Author : Martin Cole, Frank B. Sachse
 //    Date   : Fri Sep 10 09:40:12 2004
 
 #if !defined(HexQuadraticLgn_h)
@@ -52,6 +52,8 @@ class HexQuadraticLgn : public TriLinearLgn<T> {
 public:
   HexQuadraticLgn() {}
   virtual ~HexQuadraticLgn() {}
+
+  int polynomial_order() const { return 2; }
 
   //! Piecewise Linear approximation to within epsilon accuracy.
   //! return: approx has the values on the curve that satisfy epsilon.

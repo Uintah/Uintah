@@ -134,6 +134,8 @@ public:
 template <class T>
 class PrismLinearLgn : public PrismApprox {
 public:
+  typedef T value_type;
+
   static int GaussianNum;
   static double GaussianPoints[6][2];
   static double GaussianWeights[6];
@@ -141,6 +143,8 @@ public:
   PrismLinearLgn() {}
   virtual ~PrismLinearLgn() {}
 
+  int polynomial_order() const { return 1; }
+  
   // Value at coord
   template <class ElemData>
   T interpolate(const vector<double> &coords, const ElemData &cd) const
@@ -238,6 +242,19 @@ PrismLinearLgn<T>::io(Piostream &stream)
   stream.end_class();
 }
 
+template <class T>
+int PrismLinearLgn<T>::GaussianNum = 6;
+
+template <class T>
+double PrismLinearLgn<T>::GaussianPoints[6][2] = {
+  {1./6.,1./6., 0.211324865405}, {2./3.,1./6., 0.211324865405}, 
+  {1./6.,2./3., 0.211324865405}, {1./6.,1./6., 0.788675134595}, 
+  {2./3.,1./6., 0.788675134595}, {1./6.,2./3., 0.788675134595}};
+
+template <class T>
+double PrismLinearLgn<T>::GaussianWeights[6] = 
+  {1./6., 1./6., 1./6., 1./6., 1./6., 1./6.};
+  
 } //namespace SCIRun
 
 #endif // PrismLinearLgn_h

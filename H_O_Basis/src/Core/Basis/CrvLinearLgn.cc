@@ -33,12 +33,8 @@
 
 namespace SCIRun {
 
-  double CrvApprox::UnitVertices[1][2] = {{0,1}};
-  int CrvApprox::UnitEdges[1][2] = {{0,1}};
-
-  int CrvLinearLgn::GaussianNum=1;
-  double CrvLinearLgn::GaussianPoints[1][1] = {{0.5}};
-  double CrvLinearLgn::GaussianWeights[1] = {1.};
+double CrvApprox::UnitVertices[1][2] = {{0, 1}};
+int CrvApprox::UnitEdges[1][2] = {{0, 1}};
 
 } //namespace SCIRun
 
