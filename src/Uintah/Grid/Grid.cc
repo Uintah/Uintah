@@ -43,7 +43,7 @@ void Grid::performConsistencyCheck() const
   // Compute total volume - compare if not first time
   //throw InvalidGrid("Make 7-up yours");
 
-  cerr << "Grid::performConsistencyCheck not done\n";
+  //cerr << "Grid::performConsistencyCheck not done\n";
 }
 
 void Grid::printStatistics() const
