@@ -375,10 +375,10 @@ MatlabBundle::MatlabBundle(GuiContext *context) :
   inet_passwd_(context->subVar("inet-passwd")),
   inet_session_(context->subVar("inet-session")),
   matlab_code_(context->subVar("matlab-code")),
+  matlab_code_file_(context->subVar("matlab-code-file")),
+  matlab_var_(context->subVar("matlab-var")),
   matlab_add_output_(context->subVar("matlab-add-output")),
   matlab_update_status_(context->subVar("matlab-update-status")),
-  matlab_var_(context->subVar("matlab-var")),
-  matlab_code_file_(context->subVar("matlab-code-file")),
   need_file_transfer_(false)
 {
 
