@@ -39,8 +39,10 @@ WARNING
      DensityBoundCond(ProblemSpecP& ps,std::string& kind);
      virtual ~DensityBoundCond();
      virtual DensityBoundCond* clone();
-     
+     double getConstant() const;
+
    private:
+     double d_constant;
    };
 } // End namespace Uintah
 
