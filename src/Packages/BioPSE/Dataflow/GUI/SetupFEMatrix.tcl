@@ -62,7 +62,7 @@ itcl_class BioPSE_Forward_SetupFEMatrix {
         make_labeled_radio $w.f.r "Boundary Conditions:" "" \
                 left $this-BCFlag \
                 {{"Apply Dirichlet" DirSub} \
-                {"Ground Node Zero)" GroundZero}}
+                {"Ground Node Zero)" GroundZero}
                 {"No Dirichlet" none}}
 	
 	global $this-UseCondTCL
