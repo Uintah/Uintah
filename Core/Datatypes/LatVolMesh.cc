@@ -296,19 +296,28 @@ LatVolMesh::get_faces(Face::array_type &array, Cell::index_type idx) const
 void
 LatVolMesh::get_cells(Cell::array_type &arr, const BBox &bbox)
 {
+  // Limited to range of ints.
   arr.clear();
-  Cell::index_type min;
-  locate(min, bbox.min());
-  Cell::index_type max;
-  locate(max, bbox.max());
+  const Point minp = transform_.unproject(bbox.min());
+  int mini = (int)floor(minp.x());
+  int minj = (int)floor(minp.y());
+  int mink = (int)floor(minp.z());
+  if (mini < 0) { mini = 0; }
+  if (minj < 0) { minj = 0; }
+  if (mink < 0) { mink = 0; }
 
-  if (max.i_ >= ni_ - 1) max.i_ = Max(((int)ni_) - 2, 0);
-  if (max.j_ >= nj_ - 1) max.j_ = Max(((int)nj_) - 2, 0);
-  if (max.k_ >= nk_ - 1) max.k_ = Max(((int)nk_) - 2, 0);
-
-  for (unsigned i = min.i_; i <= max.i_; i++) {
-    for (unsigned j = min.j_; j <= max.j_; j++) {
-      for (unsigned k = min.k_; k <= max.k_; k++) {
+  const Point maxp = transform_.unproject(bbox.max());
+  int maxi = (int)floor(maxp.x());
+  int maxj = (int)floor(maxp.y());
+  int maxk = (int)floor(maxp.z());
+  if (maxi >= (int)(ni_ - 1)) { maxi = ni_ - 1; }
+  if (maxj >= (int)(nj_ - 1)) { maxj = nj_ - 1; }
+  if (maxk >= (int)(nk_ - 1)) { maxk = nk_ - 1; }
+  
+  int i, j, k;
+  for (i = mini; i <= maxi; i++) {
+    for (j = minj; j <= maxj; j++) {
+      for (k = mink; k <= maxk; k++) {
 	arr.push_back(Cell::index_type(this, i,j,k));
       }
     }
