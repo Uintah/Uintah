@@ -1269,7 +1269,7 @@ proc moduleDrag {modid x y} {
 proc do_moduleDrag {modid x y} {
     global Subnet lastX lastY grouplastX grouplastY SCALEX SCALEY
     set canvas $Subnet(Subnet$Subnet($modid)_canvas)
-    set canvas $Subnet(Subnet$Subnet($modid)_minicanvas)
+    set minicanvas $Subnet(Subnet$Subnet($modid)_minicanvas)
 
     set grouplastX $x
     set grouplastY $y
@@ -1281,6 +1281,7 @@ proc do_moduleDrag {modid x y} {
 
     # Total Canvas Scroll Region width and height
     set canScroll [$canvas cget -scrollregion]
+    puts "$canvas $canScroll"
     set canWidth  [expr double([lindex $canScroll 2] - [lindex $canScroll 0])]
     set canHeight [expr double([lindex $canScroll 3] - [lindex $canScroll 1])]
         
