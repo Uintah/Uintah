@@ -27,7 +27,6 @@
 #
 
 
-
 catch {rename EditTransferFunc2 ""}
 
 itcl_class SCIRun_Visualization_EditTransferFunc2 {
