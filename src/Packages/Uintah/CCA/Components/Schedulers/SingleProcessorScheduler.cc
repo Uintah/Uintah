@@ -126,7 +126,11 @@ SingleProcessorScheduler::execute_tasks(const ProcessorGroup * pg, DataWarehouse
 #endif    
     double start = Time::currentSeconds();
     DetailedTask* task = dts_->getTask( i );
+
+    dbg << "Running task: " << task->getTask()->getName() << "\n";
+
     task->doit(pg, oldDW, newDW);
+    dbg << "calling done\n";
     task->done(oldDW, newDW);
     double delT = Time::currentSeconds()-start;
     long long flop_count = 0;
