@@ -150,6 +150,28 @@ static Transform prev_trans;
 // Used for loading in routes.  (Is monotonicly increasing)
 static int routeNumber = 0;
 
+// Callback global variable
+  
+// These are to help callbacks.
+namespace rtrt {
+  
+class CallbackInfo {
+public:
+  int callback_id;
+};
+
+class SGCallbackInfo: public CallbackInfo {
+public:
+  SelectableGroup *sg;
+  int current_frame;
+  GLUI_Spinner *current_frame_spinner;
+};
+
+} // end namespace rtrt
+
+static std::vector<CallbackInfo*> callback_info_list;
+
+
 // If someone accidentally types in a huge number to the number of
 // threads spinner, the machine goes into a fit.  If possible, this
 // number should be set dynamically based on the number of processors
@@ -730,6 +752,15 @@ Gui::handleKeyPressCB( unsigned char key, int /*mouse_x*/, int /*mouse_y*/ )
 				    lookdir*length );
 	activeGui->camera_->setup();
 	activeGui->fovSpinner_->set_float_val( FOVtry );
+
+	// Move the lights that are fixed to the eye
+	for(int i = 0; i < activeGui->dpy_->scene->nlights(); i++) {
+	  Light *light = activeGui->dpy_->scene->light(i);
+	  if (light->fixed_to_eye) {
+	    //	    light->updatePosition(light->get_pos() + dir*scl);
+	    light->updatePosition(activeGui->camera_->get_eye());
+	  }
+	}
       }
     }
     break;
@@ -922,7 +953,7 @@ Gui::handleMousePress(int button, int mouse_x, int mouse_y)
     eye_dist = z_axis.normalize();
 
     prev_trans.load_frame(Point(0.0,0.0,0.0),x_axis,y_axis,z_axis);
-			
+
     ball->Init();
     ball->Place(center,rad);
     HVect mouse((2.0*mouse_x)/priv->xres - 1.0,
@@ -978,6 +1009,14 @@ Gui::handleMouseRelease(int button, int /*mouse_x*/, int /*mouse_y*/)
 	activeGui->camera_->setup();
 	prev_trans = prv;
 
+	// Move the lights that are fixed to the eye
+	for(int i = 0; i < activeGui->dpy_->scene->nlights(); i++) {
+	  Light *light = activeGui->dpy_->scene->light(i);
+	  if (light->fixed_to_eye) {
+	    //	    light->updatePosition(light->get_pos() + dir*scl);
+	    light->updatePosition(activeGui->camera_->eye);
+	  }
+	}
 	// now you need to use the history to 
 	// set up the arc you want to use...
 
@@ -1102,6 +1141,14 @@ Gui::handleMouseMotionCB( int mouse_x, int mouse_y )
 	  if (Abs(xmtn)>Abs(ymtn)) scl=xmtn; else scl=ymtn;
 	  Vector dir = activeGui->camera_->lookat - activeGui->camera_->eye;
 	  activeGui->camera_->eye += dir*scl;
+	  // Move the lights that are fixed to the eye
+	  for(int i = 0; i < activeGui->dpy_->scene->nlights(); i++) {
+	    Light *light = activeGui->dpy_->scene->light(i);
+	    if (light->fixed_to_eye) {
+	      //light->updatePosition(light->get_pos() + dir*scl);
+	      light->updatePosition(activeGui->camera_->eye);
+	    }
+	  }
 	} else {
 	  // Zoom in/out.
 	  double scl;
@@ -1137,6 +1184,15 @@ Gui::handleMouseMotionCB( int mouse_x, int mouse_y )
       activeGui->camera_->eye+=trans;
       activeGui->camera_->lookat+=trans;
       activeGui->camera_->setup();
+
+      // Move the lights that are fixed to the eye
+      for(int i = 0; i < activeGui->dpy_->scene->nlights(); i++) {
+	Light *light = activeGui->dpy_->scene->light(i);
+	if (light->fixed_to_eye) {
+	  //	  light->updatePosition(light->get_pos() + trans);
+	  light->updatePosition(activeGui->camera_->eye);
+	}
+      }
     }
     break;
   case GLUT_MIDDLE_BUTTON:
@@ -1178,6 +1234,15 @@ Gui::handleMouseMotionCB( int mouse_x, int mouse_y )
       activeGui->camera_->eye = activeGui->camera_->lookat+z_a*eye_dist;
       activeGui->camera_->setup();
 			
+      // Move the lights that are fixed to the eye
+      for(int i = 0; i < activeGui->dpy_->scene->nlights(); i++) {
+	Light *light = activeGui->dpy_->scene->light(i);
+	if (light->fixed_to_eye) {
+	  //	    light->updatePosition(light->get_pos() + dir*scl);
+	  light->updatePosition(activeGui->camera_->eye);
+	}
+      }
+
       last_time=SCIRun::Time::currentSeconds();
       //inertia_mode=0;
     }
@@ -1489,26 +1554,40 @@ Gui::createObjectWindow( GLUI * window )
 
 	window->add_statictext_to_panel( panel, name );
 
+	SGCallbackInfo *cbi1 = new SGCallbackInfo();
+	callback_info_list.push_back(cbi1);
+	cbi1->sg = sg;
+	int callback_info_id = callback_info_list.size() - 1;
+	
 	(window->add_checkbox_to_panel( panel, "Cycle Objects", NULL,
-					num,
+					callback_info_id,
 					SGAutoCycleCB ))->
 	  set_int_val(sg->GetAutoswitch());
 
 	(window->add_checkbox_to_panel( panel, "Display Every Frame", NULL,
-				       num,
+				       callback_info_id,
 				       SGNoSkipCB ))->
 	  set_int_val(sg->GetNoSkip());
 
 	GLUI_Spinner *sg_frame_rate =
 	  window->add_spinner_to_panel( panel, "Seconds Per Frame",
 					GLUI_SPINNER_FLOAT,
-					&(sg->autoswitch_secs),
-					num, NULL);
+					&(sg->autoswitch_secs));
 	sg_frame_rate->set_float_limits(0, 100);
 	sg_frame_rate->set_speed(0.1);
 
+	cbi1->current_frame_spinner = 
+	  window->add_spinner_to_panel( panel, "Current Frame",
+					GLUI_SPINNER_INT,
+					&(cbi1->current_frame),
+					callback_info_id, SGCurrentFrameCB);
+	cbi1->current_frame_spinner->set_int_limits(0, sg->numObjects(),
+						    GLUI_LIMIT_WRAP);
+	cbi1->current_frame_spinner->set_speed(0.1);
+	cbi1->current_frame_spinner->set_int_val(sg->GetChild());
+
 	window->add_button_to_panel( panel, "Next Item",
-				     num,
+				     callback_info_id,
 				     SGNextItemCB );	
       }
 
@@ -1692,23 +1771,25 @@ Gui::soundThreadNowActive()
 }
 
 void Gui::SGAutoCycleCB( int id ) {
-  Array1<Object*> & objects = activeGui->dpy_->scene->objectsOfInterest_;
-  SelectableGroup *obj = dynamic_cast<SelectableGroup*>(objects[id]);
-  obj->toggleAutoswitch();
+  SGCallbackInfo* sgcbi = (SGCallbackInfo*)callback_info_list[id];
+  sgcbi->sg->toggleAutoswitch();
+  // Now get the current timestep and then display it
+  sgcbi->current_frame_spinner->set_int_val(sgcbi->sg->GetChild());
 }
 
 void Gui::SGNoSkipCB( int id ) {
-  Array1<Object*> & objects = activeGui->dpy_->scene->objectsOfInterest_;
-  SelectableGroup *obj = dynamic_cast<SelectableGroup*>(objects[id]);
-  obj->toggleNoSkip();
+  SelectableGroup *sg = ((SGCallbackInfo*)callback_info_list[id])->sg;
+  sg->toggleNoSkip();
 }
 
 void Gui::SGNextItemCB( int id )
 {
-  Array1<Object*> & objects = activeGui->dpy_->scene->objectsOfInterest_;
-  SelectableGroup * sg = dynamic_cast<SelectableGroup*>(objects[id]);  
-  sg->nextChild();
-  Object * newObj = sg->getCurrentChild();
+  SGCallbackInfo* sgcbi = (SGCallbackInfo*)callback_info_list[id];
+  sgcbi->sg->nextChild();
+  // Now get the current timestep and then display it
+  sgcbi->current_frame_spinner->set_int_val(sgcbi->sg->GetChild());
+
+  Object * newObj = sgcbi->sg->getCurrentChild();
   if( Names::hasName( newObj ) ) {
     Trigger * trig = NULL;
 
@@ -1738,6 +1819,11 @@ void Gui::SGNextItemCB( int id )
 	}
     }
   }
+}
+
+void Gui::SGCurrentFrameCB( int id ) {
+  SGCallbackInfo* sgcbi = (SGCallbackInfo*)callback_info_list[id];
+  sgcbi->sg->SetChild(sgcbi->current_frame_spinner->get_int_val());
 }
 
 void Gui::SISpinCB( int id ) {
@@ -2010,6 +2096,15 @@ Gui::createMenus( int winId, bool soundOn /* = false */,
   activeGui->fovSpinner_->set_float_limits( MIN_FOV, MAX_FOV );
   activeGui->fovSpinner_->set_speed( 0.01 );
 
+  // Ray offset
+  activeGui->ray_offset_spinner = activeGui->mainWindow->
+    add_spinner_to_panel( display_panel, "Ray Offset", GLUI_SPINNER_FLOAT,
+			   &(activeGui->ray_offset), 0,
+			  updateRayOffsetCB );
+  activeGui->ray_offset_spinner->set_float_val(activeGui->dpy_->scene->get_camera(0)->get_ray_offset());
+  activeGui->ray_offset_spinner->set_float_limits( 0, 5000 );
+  activeGui->ray_offset_spinner->set_speed( 0.01 );
+
   // Other Controls
   GLUI_Panel * otherControls = activeGui->mainWindow->
     add_panel_to_panel( display_panel, "Other Controls" );
@@ -2252,6 +2347,12 @@ Gui::updateFovCB( int /*id*/ )
 {
   activeGui->camera_->set_fov( activeGui->fovValue_ );
   activeGui->camera_->setup();
+}
+
+void
+Gui::updateRayOffsetCB( int /*id*/ )
+{
+  activeGui->camera_->set_ray_offset( activeGui->ray_offset );
 }
 
 void
@@ -2622,6 +2723,15 @@ Gui::goToNextMarkerCB( int /*id*/ )
   activeGui->camera_->set_eye( pos );
   activeGui->camera_->set_lookat( look_at );
   activeGui->camera_->setup();
+
+  // Move the lights that are fixed to the eye
+  for(int i = 0; i < activeGui->dpy_->scene->nlights(); i++) {
+    Light *light = activeGui->dpy_->scene->light(i);
+    if (light->fixed_to_eye) {
+      //	    light->updatePosition(light->get_pos() + dir*scl);
+      light->updatePosition(pos);
+    }
+  }
 }
 
 void
@@ -2635,6 +2745,14 @@ Gui::goToPrevMarkerCB( int /*id*/ )
   activeGui->camera_->set_eye( pos );
   activeGui->camera_->set_lookat( look_at );
   activeGui->camera_->setup();
+
+  // Move the lights that are fixed to the eye
+  for(int i = 0; i < activeGui->dpy_->scene->nlights(); i++) {
+    Light *light = activeGui->dpy_->scene->light(i);
+    if (light->fixed_to_eye) {
+      light->updatePosition(pos);
+    }
+  }
 }
 
 void
@@ -2648,6 +2766,14 @@ Gui::goToRouteBeginningCB( int /*id*/ )
   activeGui->camera_->set_eye( pos );
   activeGui->camera_->set_lookat( look_at );
   activeGui->camera_->setup();
+
+  // Move the lights that are fixed to the eye
+  for(int i = 0; i < activeGui->dpy_->scene->nlights(); i++) {
+    Light *light = activeGui->dpy_->scene->light(i);
+    if (light->fixed_to_eye) {
+      light->updatePosition(pos);
+    }
+  }
 }
 
 void
