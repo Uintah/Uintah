@@ -516,14 +516,13 @@ LatVolMesh::get_center(Point &result, Edge::index_type idx) const
   get_center(p0, arr[0]);
   get_center(p1, arr[1]);
 
-  result = (p0.asVector() + p1.asVector() * 0.5).asPoint();
+  result = ((p0.asVector() + p1.asVector()) * 0.5).asPoint();
 }
 
 
 void
-LatVolMesh::get_center(Point &/*result*/, Face::index_type /*idx*/) const
+LatVolMesh::get_center(Point &result, Face::index_type idx) const
 {
-#if 0 // TODO: Fix get_nodes
   Node::array_type nodes;
   get_nodes(nodes, idx);
   Node::array_type::iterator nai = nodes.begin();
@@ -537,7 +536,6 @@ LatVolMesh::get_center(Point &/*result*/, Face::index_type /*idx*/) const
   }
   v *= 1.0 / nodes.size();
   result = v.asPoint();
-#endif
 }
 
 
