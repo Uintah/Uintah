@@ -486,6 +486,11 @@ AC_DEFUN(SCI_CHECK_HEADERS,
                 fi
                 eval $_SCI_HEADER_HAVE_=yes
 
+		if test "$debugging" = "yes"; then
+		   echo "Setting HAVE_$_SCI_HEADER_NAME_ to $_SCI_HEADER_HAVE_"
+		   echo "Setting INC$_SCI_HEADER_NAME_ to $_SCI_INCLUDE_NAME_"
+		fi
+
                 # Save a list of defines in confdefs.h.  Something
 	        # later removes a bunch of them... haven't been able
                 # to figure out what yet.
@@ -577,6 +582,12 @@ EOF
              else
 	        AC_MSG_RESULT($_CHECK_PATH_)
              fi
+
+	     if test "$debugging" = "yes"; then
+	        eval echo "Setting HAVE_$_SCI_HEADER_NAME_: $"$_SCI_HEADER_HAVE_""
+		eval echo "Setting INC$_SCI_HEADER_NAME_: $"$_SCI_INCLUDE_NAME_""
+	     fi
+
              # Save a list of defines in confdefs.h.  Something
 	     # later removes a bunch of them... haven't been able
              # to figure out what yet.
@@ -864,7 +875,9 @@ AC_DEFUN(SCI_ARG_ENABLE,
 DIRNAME_IS=`which dirname`
 BASENAME_IS=`which dirname`
 
-saved_args = $*
+IFS='^'
+saved_args=$*
+IFS=' '
 
 ## We use both of these in a number of spots, so I think this is fair:
 ## (Eventually we could write our own if necessary...
@@ -2350,7 +2363,7 @@ if test "$HAVE_LIBEXC"; then
   SCI_CHECK_HEADERS($thirdparty/lib,libexc.h,,,optional)
 fi
 
-if test "$HAVE_LIBEXC" && test "$INCLIBEXC_H"; then
+if test "$HAVE_LIBEXC" && test "$HAVE_LIBEXC_H"; then
   TRACEBACK_LIB=-lexc
   DEF_EXC="#define HAVE_EXC 1"
 fi
