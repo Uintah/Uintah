@@ -314,6 +314,7 @@ bool disconnect( Signal1<Arg> &s, void (*fun)(Arg) )
 template<class Arg1,class Arg2>
 class SlotBase2 :  public SlotBase {
 public:
+  SlotBase2(int priority=0) : SlotBase(priority) {}
   virtual void send(Arg1,Arg2) {}
 };
 
