@@ -36,10 +36,11 @@ namespace Uintah {
          // copy constructor
          HypoElastic(const HypoElastic &cm);
          HypoElastic& operator=(const HypoElastic &cm);
+         int d_8or27;
 
       public:
          // constructors
-         HypoElastic(ProblemSpecP& ps, MPMLabel* lb);
+         HypoElastic(ProblemSpecP& ps, MPMLabel* lb, int n8or27);
        
          // destructor
          virtual ~HypoElastic();

@@ -215,7 +215,6 @@ public:
   const MPMArchesLabel* d_MAlb;
   SerialMPM*       d_mpm;
   Arches*          d_arches;
-  bool             d_fracture;
 
   double d_htcoeff;
   bool d_calcEnergyExchange;

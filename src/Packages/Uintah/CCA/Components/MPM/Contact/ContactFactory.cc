@@ -15,7 +15,7 @@ using std::cerr;
 using namespace Uintah;
 
 Contact* ContactFactory::create(const ProblemSpecP& ps, SimulationStateP &ss,
-								MPMLabel* lb)
+                                                    MPMLabel* lb, int n8or27)
 {
 
    ProblemSpecP mpm_ps = ps->findBlock("MaterialProperties")->findBlock("MPM");
@@ -32,7 +32,7 @@ Contact* ContactFactory::create(const ProblemSpecP& ps, SimulationStateP &ss,
 	 return(scinew SingleVelContact(child,ss,lb));
 
       else if (con_type == "friction")
-	 return(scinew FrictionContact(child,ss,lb));
+	 return(scinew FrictionContact(child,ss,lb,n8or27));
     
       else if (con_type == "rigid")
 	 return(scinew RigidBodyContact(child,ss,lb));

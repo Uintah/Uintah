@@ -2,6 +2,7 @@
 #define Uintah_Connectivity
 
 #include <Core/Geometry/Vector.h>
+#include <Core/Containers/StaticArray.h>
 
 namespace Uintah {
 
@@ -26,10 +27,10 @@ public:
          void        setInfo(const int info[8]);
 
   static void        modifyWeights(const int connectivity[8],
-                                   double S[8],
+                                   StaticArray<double> S,
 				   Cond cond);
   static void        modifyShapeDerivatives(const int connectivity[8],
-                                            Vector d_S[8],
+                                            StaticArray<Vector> d_S,
 					    Cond cond);
 
          int         flag() const {return d_flag;}

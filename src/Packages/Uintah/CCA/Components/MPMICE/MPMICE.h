@@ -223,7 +223,8 @@ protected:
   bool             d_burns;
   SerialMPM*       d_mpm;
   ICE*             d_ice;
-  bool             d_fracture;
+  int              d_8or27;
+  int              d_NGCs;
 
   double d_dbgTime; 
   double d_dbgStartTime;

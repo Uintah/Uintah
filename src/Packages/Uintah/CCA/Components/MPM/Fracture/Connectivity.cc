@@ -60,7 +60,7 @@ setInfo(const int info[8])
 
 void
 Connectivity::
-modifyWeights(const int connectivity[8],double S[8],Cond cond)
+modifyWeights(const int connectivity[8],StaticArray<double> S,Cond cond)
 {
   double N[8];
   for(int i=0;i<8;++i) {
@@ -106,7 +106,8 @@ modifyWeights(const int connectivity[8],double S[8],Cond cond)
 
 void
 Connectivity::
-modifyShapeDerivatives(const int connectivity[8],Vector d_S[8],Cond cond)
+modifyShapeDerivatives(const int connectivity[8],
+                       StaticArray<Vector> d_S,Cond cond)
 {
   Vector d_N[8];
 
