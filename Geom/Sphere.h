@@ -16,7 +16,6 @@
 
 #include <Geom/Geom.h>
 #include <Geometry/Point.h>
-#include <Classlib/Boolean.h>
 
 class GeomSphere : public GeomObj {
 public:

@@ -17,7 +17,6 @@
 #include <Geom/Geom.h>
 #include <Geometry/Point.h>
 #include <Geometry/Vector.h>
-#include <Classlib/Boolean.h>
 
 class GeomCone : public GeomObj {
 protected:

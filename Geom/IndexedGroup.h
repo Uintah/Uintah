@@ -8,7 +8,6 @@
 #include <Geom/Geom.h>
 #include <Geometry/BBox.h>
 #include <Geometry/BSphere.h>
-#include <Classlib/Boolean.h>
 
 class GeomIndexedGroup: public GeomObj {
     HashTable<int, GeomObj*> objs;

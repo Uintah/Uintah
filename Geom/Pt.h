@@ -16,7 +16,6 @@
 
 #include <Geom/Geom.h>
 #include <Geometry/Point.h>
-#include <Classlib/Boolean.h>
 
 class GeomPts : public GeomObj {
 public:

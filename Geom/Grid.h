@@ -19,7 +19,6 @@
 #include <Geometry/Point.h>
 #include <Geometry/Vector.h>
 #include <Classlib/Array2.h>
-#include <Classlib/Boolean.h>
 
 class GeomGrid : public GeomObj {
     Array2<double> verts;

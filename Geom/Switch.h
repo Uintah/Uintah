@@ -15,7 +15,6 @@
 #define SCI_Geom_Switch_h 1
 
 #include <Geom/Container.h>
-#include <Classlib/Boolean.h>
 
 class GeomSwitch : public GeomContainer {
     int state;
