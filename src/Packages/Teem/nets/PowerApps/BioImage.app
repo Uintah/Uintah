@@ -303,11 +303,17 @@ class BioImageApp {
 	    }
 	} elseif {[string first "Teem_NrrdData_NrrdInfo_1" $which] != -1 && $state == "Completed"} {
 	    # update slice sliders
-	    global $which-size0 $which-size1 $which-size2
+	    global $which-size0 
 
-	    set sizex [expr [set $which-size0] - 1]
-	    set sizey [expr [set $which-size1] - 1]
-	    set sizez [expr [set $which-size2] - 1]
+
+	    if {[info exists $which-size1]} {
+		global $which-size1 $which-size2
+
+		set sizex [expr [set $which-size0] - 1]
+		set sizey [expr [set $which-size1] - 1]
+		set sizez [expr [set $which-size2] - 1]
+
+	    }
 
   	    .standalone.viewers.topbot.pane0.childsite.lr.pane1.childsite.modes.slice.s configure -from 0 -to $sizez
   	    .standalone.viewers.topbot.pane1.childsite.lr.pane0.childsite.modes.slice.s configure -from 0 -to $sizex
@@ -593,10 +599,10 @@ class BioImageApp {
 	
 	# modes for axial
 	frame $topr.modes
-	pack $topr.modes -side bottom -padx 0 -pady 0
+	pack $topr.modes -side bottom -padx 0 -pady 0  -expand yes -fill x
 
 	frame $topr.modes.slice
-	pack $topr.modes.slice -side top -pady 0 -anchor nw
+	pack $topr.modes.slice -side top -pady 0 -anchor nw -expand yes -fill x
 
 	global $mods(ViewImage)-axial-viewport0-mode
 	radiobutton $topr.modes.slice.b -text "Slice Mode" \
@@ -611,22 +617,33 @@ class BioImageApp {
  	    -length 110 \
 	    -variable $mods(ViewImage)-axial-viewport0-slice
 
-	label $topr.modes.slice.l -textvariable $mods(ViewImage)-axial-viewport0-slice
+	entry $topr.modes.slice.l -textvariable $mods(ViewImage)-axial-viewport0-slice \
+	    -width 6 -relief flat
+	bind $topr.modes.slice.l <Return> "$mods(ViewImage)-c rebind .standalone.viewers.topbot.pane0.childsite.lr.pane1.childsite.axial"
  	pack $topr.modes.slice.s $topr.modes.slice.l -side left -anchor n -padx 0
 
         bind $topr.modes.slice.s <ButtonRelease> "$mods(ViewImage)-c rebind .standalone.viewers.topbot.pane0.childsite.lr.pane1.childsite.axial"
 
-	radiobutton $topr.modes.mip -text "MIP Mode" \
+	frame $topr.modes.mip
+	pack $topr.modes.mip -side top -anchor nw \
+	    -expand yes -fill x -pady 0 -padx 0
+
+	radiobutton $topr.modes.mip.b -text "MIP Mode" \
 	    -variable $mods(ViewImage)-axial-viewport0-mode -value 1 \
 	    -command "$mods(ViewImage)-c rebind .standalone.viewers.topbot.pane0.childsite.lr.pane1.childsite.axial"
-	pack $topr.modes.mip -side top -padx 0 -pady 0 -anchor nw
+	pack $topr.modes.mip.b -side left -padx 0 -pady 0 -anchor nw
+
+	set img [image create photo -width 1 -height 1]
+	button $topr.modes.expand -height 4 -bd 2 -relief raised -image $img \
+	    -cursor based_arrow_down -command "$this hide_control_panel $topr.modes"
+	pack $topr.modes.expand -side bottom -fill both
 
 	# modes for sagittal
 	frame $botl.modes
-	pack $botl.modes -side bottom -padx 0 -pady 0
+	pack $botl.modes -side bottom -padx 0 -pady 0 -expand yes -fill x
 
 	frame $botl.modes.slice
-	pack $botl.modes.slice -side top -pady 0 -anchor nw
+	pack $botl.modes.slice -side top -pady 0 -anchor nw -expand yes -fill x
 
 	global $mods(ViewImage)-sagittal-viewport0-mode
 	radiobutton $botl.modes.slice.b -text "Slice Mode" \
@@ -641,8 +658,10 @@ class BioImageApp {
  	    -orient horizontal -showvalue false \
  	    -length 110 \
 	    -variable $mods(ViewImage)-sagittal-viewport0-slice
-	label $botl.modes.slice.l -textvariable $mods(ViewImage)-sagittal-viewport0-slice
+	entry $botl.modes.slice.l -textvariable $mods(ViewImage)-sagittal-viewport0-slice \
+	    -width 6 -relief flat
  	pack $botl.modes.slice.s $botl.modes.slice.l -side left -anchor n -padx 0
+	bind $botl.modes.slice.l <Return> "$mods(ViewImage)-c rebind  .standalone.viewers.topbot.pane1.childsite.lr.pane0.childsite.sagittal"
 
         bind $botl.modes.slice.s <ButtonRelease> "$mods(ViewImage)-c rebind .standalone.viewers.topbot.pane1.childsite.lr.pane0.childsite.sagittal"
 
@@ -651,13 +670,19 @@ class BioImageApp {
 	    -command "$mods(ViewImage)-c rebind .standalone.viewers.topbot.pane1.childsite.lr.pane0.childsite.sagittal"
 	pack $botl.modes.mip -side top -padx 0 -pady 0 -anchor nw
 
+	set img [image create photo -width 1 -height 1]
+	button $botl.modes.expand -height 4 -bd 2 -relief raised -image $img \
+	    -cursor based_arrow_down -command "$this hide_control_panel $botl.modes"
+	pack $botl.modes.expand -side bottom -fill both
+
+
 	# modes for coronal
 	frame $botr.modes
-	pack $botr.modes -side bottom -padx 0 -pady 0
+	pack $botr.modes -side bottom -padx 0 -pady 0 -expand yes -fill x
 
 
 	frame $botr.modes.slice
-	pack $botr.modes.slice -side top -pady 0 -anchor nw
+	pack $botr.modes.slice -side top -pady 0 -anchor nw -expand yes -fill x
 
 	global $mods(ViewImage)-coronal-viewport0-mode
 	radiobutton $botr.modes.slice.b -text "Slice Mode" \
@@ -671,7 +696,9 @@ class BioImageApp {
  	    -orient horizontal -showvalue false \
  	    -length 110 \
 	    -variable $mods(ViewImage)-coronal-viewport0-slice
-	label $botr.modes.slice.l -textvariable $mods(ViewImage)-coronal-viewport0-slice
+	entry $botr.modes.slice.l -textvariable $mods(ViewImage)-coronal-viewport0-slice \
+	    -width 6 -relief flat
+	bind $botr.modes.slice.l <Return> "$mods(ViewImage)-c rebind .standalone.viewers.topbot.pane1.childsite.lr.pane1.childsite.coronal"
  	pack $botr.modes.slice.s $botr.modes.slice.l -side left -anchor n -padx 0
 
         bind $botr.modes.slice.s <ButtonRelease> "$mods(ViewImage)-c rebind .standalone.viewers.topbot.pane1.childsite.lr.pane1.childsite.coronal"
@@ -680,6 +707,11 @@ class BioImageApp {
 	    -variable $mods(ViewImage)-coronal-viewport0-mode -value 1 \
 	    -command "$mods(ViewImage)-c rebind .standalone.viewers.topbot.pane1.childsite.lr.pane1.childsite.coronal"
 	pack $botr.modes.mip -side top -padx 0 -pady 0 -anchor nw
+
+	set img [image create photo -width 1 -height 1]
+	button $botr.modes.expand -height 4 -bd 2 -relief raised -image $img \
+	    -cursor based_arrow_down -command "$this hide_control_panel $botr.modes"
+	pack $botr.modes.expand -side bottom -fill both
 
 
 	# embed viewer in top left
@@ -696,6 +728,23 @@ class BioImageApp {
 	pack [$viewimage gl_frame $topr "Axial" $w] -side top -padx 0 -ipadx 0 -pady 0 -ipady 0
 	pack [$viewimage gl_frame $botl "Sagittal" $w] -side top -padx 0 -ipadx 0 -pady 0 -ipady 0
 	pack [$viewimage gl_frame $botr "Coronal" $w] -side top -padx 0 -pady 0 -ipadx 0 -ipady 0
+    }
+
+    method show_control_panel { w } {
+	pack forget $w.expand
+	pack $w.slice $w.mip -side top -pady 0 -anchor nw -expand yes -fill x
+	pack $w.expand -side bottom -fill both
+
+	$w.expand configure -command "$this hide_control_panel $w" \
+	    -cursor based_arrow_down
+    }
+
+    method hide_control_panel { w } {
+	pack forget $w.slice $w.mip
+	pack $w.expand -side bottom -fill both
+
+	$w.expand configure -command "$this show_control_panel $w" \
+	    -cursor based_arrow_up
     }
 
 
@@ -1331,7 +1380,7 @@ class BioImageApp {
 
 	    checkbutton $page.lines -text "Show Guidelines" \
 		-variable show_guidelines \
-		-command "$this toggle_show_guidelines" -state disabled
+		-command "$this toggle_show_guidelines" 
             pack $page.lines -side top -anchor nw -padx 4 -pady 7
 
 	    global planes_color
@@ -1471,9 +1520,12 @@ class BioImageApp {
 		set iso_slider2 $page.isoval.s
 	    }
 	    
-            bind $page.isoval.s <ButtonRelease> "global show_iso; if{$show_iso == 1} {[set Isosurface]-c needexecute}"
+            bind $page.isoval.s <ButtonRelease> "global show_iso; if {$show_iso == 1} {[set Isosurface]-c needexecute}"
 	    
-            label $page.isoval.val -textvariable [set Isosurface]-isoval 
+            entry $page.isoval.val -textvariable [set Isosurface]-isoval \
+                -width 6 -relief flat
+
+            bind $page.isoval.val <Return> "global show_iso; if {$show_iso == 1} {[set Isosurface]-c needexecute}"
 	    
 	    pack $page.isoval.l $page.isoval.s $page.isoval.val -side left -anchor nw -padx 3     
 
@@ -3021,8 +3073,13 @@ class BioImageApp {
     method toggle_show_guidelines {} {
          global mods show_guidelines
          #puts "FIX ME: implement toggle_show_guidelines"
-         global $mods(ViewImage)-show_guidelines
-         set $mods(ViewImage)-show_guidelines $show_guidelines
+         global $mods(ViewImage)-axial-viewport0-show_guidelines
+         global $mods(ViewImage)-sagittal-viewport0-show_guidelines
+         global $mods(ViewImage)-coronal-viewport0-show_guidelines
+
+         set $mods(ViewImage)-axial-viewport0-show_guidelines $show_guidelines
+         set $mods(ViewImage)-sagittal-viewport0-show_guidelines $show_guidelines
+         set $mods(ViewImage)-coronal-viewport0-show_guidelines $show_guidelines
   }
 
     method update_planes_color_by {} {
