@@ -3,8 +3,9 @@
 
       double precision PI,PI1,SIG
 
-      DATA PI/3.141593D0/,SIG/5.67D-08/
+      DATA SIG/5.67D-08/
 
+      pi = dacos(-1.0D0)
       PI1 = 1.0d0 / PI
 
       IEND=idxhi(1)
@@ -19,13 +20,13 @@
                if (xminus) then
                   i = ist -1
                   IF (PCELL(I,J,K).NE.FFIELD) THEN
-                     ABSKG(I,J,K) = 1.0
+                     ABSKG(I,J,K) = 1.0D0
                   END IF
                endif
                if (xplus) then
                   i = iend + 1
                   IF (PCELL(I,J,K).NE.FFIELD) THEN
-                     ABSKG(I,J,K) = 1.0
+                     ABSKG(I,J,K) = 1.0D0
                   END IF
                endif
  20         CONTINUE
@@ -37,13 +38,13 @@
                if (yminus) then
                   j = jst -1
                   IF (PCELL(I,J,K).NE.FFIELD) THEN
-                     ABSKG(I,J,K) = 1.0
+                     ABSKG(I,J,K) = 1.0D0
                   END IF
                endif
                if (yplus) then
                   j = jend + 1
                   IF (PCELL(I,J,K).NE.FFIELD) THEN
-                     ABSKG(I,J,K) = 1.0
+                     ABSKG(I,J,K) = 1.0D0
                   END IF
                endif
  40         CONTINUE
@@ -55,13 +56,13 @@
                if (zminus) then
                   k = kst -1
                   IF (PCELL(I,J,K).NE.FFIELD) THEN
-                     ABSKG(I,J,K) = 1.0
+                     ABSKG(I,J,K) = 1.0D0
                   END IF
                endif
                if (zplus) then
                   k = kend + 1
                   IF (PCELL(I,J,K).NE.FFIELD) THEN
-                     ABSKG(I,J,K) = 1.0
+                     ABSKG(I,J,K) = 1.0D0
                   END IF
                endif
  60         CONTINUE
