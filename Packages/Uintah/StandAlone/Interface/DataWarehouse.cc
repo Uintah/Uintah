@@ -1,5 +1,6 @@
-/* REFERENCED */
-static char *id="@(#) $Id$";
+//
+// $Id$
+//
 
 #include "DataWarehouse.h"
 #include <SCICore/Geometry/Vector.h>
@@ -32,6 +33,9 @@ DataWarehouse::getTop() const{
 
 //
 // $Log$
+// Revision 1.12  2000/09/25 20:39:14  sparker
+// Quiet g++ compiler warnings
+//
 // Revision 1.11  2000/08/23 22:54:01  dav
 // removed debug print statement
 //

@@ -1,6 +1,6 @@
-
-/* REFERENCED */
-static char *id="@(#) $Id$";
+//
+// $Id$
+//
 
 #include "ProblemSpec.h"
 
@@ -451,6 +451,9 @@ const TypeDescription* ProblemSpec::getTypeDescription()
 
 //
 // $Log$
+// Revision 1.21  2000/09/25 20:39:14  sparker
+// Quiet g++ compiler warnings
+//
 // Revision 1.20  2000/06/23 19:24:57  jas
 // Added method to parse out the attributes for a given tag, i.e.
 // <sample label = "test" stuff = "extra" >.  A map is used with indices

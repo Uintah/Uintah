@@ -1,5 +1,6 @@
-/* REFERENCED */
-static char *id="@(#) $Id$";
+//
+// $Id$
+//
 
 #include "MPMInterface.h"
 
@@ -15,6 +16,9 @@ MPMInterface::~MPMInterface()
 
 //
 // $Log$
+// Revision 1.4  2000/09/25 20:39:14  sparker
+// Quiet g++ compiler warnings
+//
 // Revision 1.3  2000/04/26 06:49:10  sparker
 // Streamlined namespaces
 //
