@@ -122,7 +122,9 @@ main(int argc, char *argv[] )
     }
 
     
-    if(!HAVE_QT) defaultBuilder="txt";
+#   if !defined(HAVE_QT)
+      defaultBuilder="txt";
+#   endif
 
     if(defaultBuilder=="qt"){
       ComponentID::pointer gui_id=builder->createInstance("QtBuilder", "cca:SCIRun.Builder", sci::cca::TypeMap::pointer(0));
