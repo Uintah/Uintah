@@ -89,7 +89,7 @@ TriWidget::TriWidget( float x, float w, float h, float l, float c[3], float a,
 TriWidget::TriWidget( float lV0, float mLV0, float mLV1, float mRV0, float mRV1,
 		      float uLV0, float uLV1, float uRV0, float uRV1, float r, float g, float b,
 		      float a, float o_x, float o_y, float t_r, float t_g, float t_b,
-		      float t_x, float t_y )
+		      int t_x, int t_y )
 {
   lowerVertex[0] = lV0;        lowerVertex[1] = 0;
   midLeftVertex[0] = mLV0;     midLeftVertex[1] = mLV1;
@@ -390,7 +390,7 @@ TriWidget::manipulate( float x, float dx, float y, float dy )
 
 // paints this widget's texture onto a background texture
 void 
-TriWidget::paintTransFunc( GLfloat texture_dest[textureHeight][textureWidth][4] )
+TriWidget::paintTransFunc( GLfloat texture_dest[textureHeight][textureWidth][4], float master_alpha )
 {
   int x, y;
   int startx, starty, endx, endy;
@@ -422,7 +422,7 @@ TriWidget::paintTransFunc( GLfloat texture_dest[textureHeight][textureWidth][4] 
 		 transText->current_color[0], 
 		 transText->current_color[1], 
 		 transText->current_color[2],
-		 intensity+opacity_offset );
+		 (intensity+opacity_offset)*master_alpha );
 	} // for
       fractionalHeight += fhInterval;
     } // for
@@ -477,6 +477,26 @@ TriWidget::changeColor( float r, float g, float b )
   color[0] = r;
   color[1] = g;
   color[2] = b;
+}
+
+
+
+// reflects this widget's texture across its diagonal
+void
+TriWidget::reflectTrans( void )
+{
+  GLfloat elem[4];
+  for( int i = 0; i < textureHeight; i++ )
+    for( int j = textureWidth/textureHeight*i; j < textureWidth; j++ )
+	//	*elem = *transText->textArray[i][j];
+	//	*transText->textArray[i][j] = *transText->textArray[j][i];
+	//	*transText->textArray[j][i] = *elem;
+      for( int k = 0; k < 4; k++ )
+	{
+	  elem[k] = transText->textArray[i][j][k];
+	  transText->textArray[i][j][k] = transText->textArray[j][i][k];
+	  transText->textArray[j][i][k] = elem[k];
+	}
 }
 
 
@@ -540,7 +560,7 @@ RectWidget::RectWidget( float x, float y, float w, float h, float c[3], float a,
 // RectWidget construction primarily used for restoring widget information from saved UI state
 RectWidget::RectWidget( int t, float x, float y, float w, float h, float r, float g, float b,
 			float a, float f_x, float f_y, float o_x, float o_y,
-			float t_r, float t_g, float t_b, float t_x, float t_y )
+			float t_r, float t_g, float t_b, int t_x, int t_y )
 {
   drawFlag = 0;
   type = t;
@@ -802,16 +822,32 @@ RectWidget::invertColor( float color[3] )
 
 
 
+// reflects this widget's texture across its diagonal
+void
+RectWidget::reflectTrans( void )
+{
+  for( int i = 0; i < textureHeight; i++ )
+    for( int j = textureWidth/textureHeight*i; j < textureWidth; j++ )
+      {
+	GLfloat elem[4];
+	*elem = *transText->textArray[i][j];
+	*transText->textArray[i][j] = *transText->textArray[j][i];
+	*transText->textArray[j][i] = *elem;
+      }
+}
+
+
+
 // paints this widget's texture onto a background texture
 void
-RectWidget::paintTransFunc( GLfloat texture_dest[textureHeight][textureWidth][4] )
+RectWidget::paintTransFunc( GLfloat texture_dest[textureHeight][textureWidth][4], float master_alpha )
 {
   int x, y;
   int startx, starty, endx, endy;
   startx = (int)(upperLeftVertex[0] * textureWidth/500.0f);
   endx = (int)(lowerRightVertex[0] * textureWidth/500.0f);
-  starty = textureWidth-(int)((250.0f-lowerRightVertex[1]) * textureHeight/250.0f);
-  endy = textureWidth-(int)((250.0f-upperLeftVertex[1]) * textureHeight/250.0f);
+  starty = textureHeight-(int)((250.0f-lowerRightVertex[1]) * textureHeight/250.0f);
+  endy = textureHeight-(int)((250.0f-upperLeftVertex[1]) * textureHeight/250.0f);
   float midx, midy;
   midx = (float)(endx+startx)/2.0f;
   midy = (float)(endy+starty)/2.0f;
@@ -848,17 +884,16 @@ RectWidget::paintTransFunc( GLfloat texture_dest[textureHeight][textureWidth][4]
 		   intensity+opacStar_alpha_off );
 	  } // for()
       break;
-      // one-dimensional texture
     case 2:
       for( y = starty; y < endy; y++ )
-	for( x = startx; x < endx; x++ ) 
+	for( x = startx; x < endx; x++ )
 	  {
 	    intensity = (halfWidth-fabs(x-startx-halfWidth))/halfWidth;
-	    blend( texture_dest[y][x], 
-		   transText->textArray[(int)((y-starty)/height*textureHeight)][(int)((x-startx)/width*textureWidth)][0], 
-		   transText->textArray[(int)((y-starty)/height*textureHeight)][(int)((x-startx)/width*textureWidth)][1], 
+	    blend( texture_dest[y][x],
+		   transText->textArray[(int)((y-starty)/height*textureHeight)][(int)((x-startx)/width*textureWidth)][0],
+		   transText->textArray[(int)((y-starty)/height*textureHeight)][(int)((x-startx)/width*textureWidth)][1],
 		   transText->textArray[(int)((y-starty)/height*textureHeight)][(int)((x-startx)/width*textureWidth)][2],
-		   intensity+opacStar_alpha_off+alpha_x_off*(float)(x-midx)/(float)(width) );
+		   intensity+opacStar_alpha_off+alpha_x_off*(float)(x-midx)/(float)width );
 	  } // for()
       break;
       // rainbow texture
@@ -866,16 +901,14 @@ RectWidget::paintTransFunc( GLfloat texture_dest[textureHeight][textureWidth][4]
       for( y = starty; y < endy; y++ )
 	for( x = startx; x < endx; x++ )
 	  {
-	    //	    intensity = (y-starty)/height * (upperLeftVertex[1]-focus_y)/this->height;
 	    intensity = 0.5f;
-	    if( intensity < 0 )
-	      intensity = 0;
-	    blend( texture_dest[y][x], 
+	    blend( texture_dest[y][x],
 		   transText->textArray[(int)((y-starty)/height*textureHeight)][(int)((x-startx)/width*textureWidth)][0],
 		   transText->textArray[(int)((y-starty)/height*textureHeight)][(int)((x-startx)/width*textureWidth)][1],
 		   transText->textArray[(int)((y-starty)/height*textureHeight)][(int)((x-startx)/width*textureWidth)][2],
-		   intensity+opacStar_alpha_off+alpha_x_off*(float)(x-midx)/(float)(width)+alpha_y_off*(float)(y-midy)/(float)(height) );
+		   (intensity+opacStar_alpha_off+alpha_x_off*(float)(x-midx)/(float)(width)+alpha_y_off*(float)(y-midy)/(float)(height))*master_alpha );
 	  } // for()
+      break;
     } // switch()
 } // paintTransFunc()
 
