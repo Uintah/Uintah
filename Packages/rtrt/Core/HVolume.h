@@ -4,7 +4,7 @@
 
 #include <Packages/rtrt/Core/VolumeBase.h>
 #include <Core/Geometry/Point.h>
-#include <Packages/rtrt/Core/Array3.cc>
+#include <Packages/rtrt/Core/Array3.h>
 #include <stdlib.h>
 #include <Core/Thread/WorkQueue.h>
 

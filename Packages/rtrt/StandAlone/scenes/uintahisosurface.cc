@@ -33,7 +33,7 @@
 #include <Packages/rtrt/Core/TimeObj.h>
 #include <Packages/rtrt/Core/VolumeDpy.h>
 #include <Packages/rtrt/Core/rtrt.h>
-#include <Packages/rtrt/Core/Array3.cc>
+#include <Packages/rtrt/Core/Array3.h>
 // undef some things that conflict
 #undef None
 
