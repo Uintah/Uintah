@@ -27,17 +27,56 @@ namespace Component {
 	class URL;
 	class Wharehouse;
 
+/**************************************
+ 
+CLASS
+   PIDL
+   
+KEYWORDS
+   PIDL
+   
+DESCRIPTION
+   A class to encapsulate several static methods for PIDL.
+****************************************/
 	class PIDL {
 	public:
+	    //////////
+	    // Initialize PIDL
 	    static void initialize(int argc, char* argv[]);
-	    static Wharehouse* getWharehouse();
+
+	    //////////
+	    // Create a base Object class from the given URL
 	    static Object objectFrom(const URL&);
+
+	    //////////
+	    // Create a base Object class from the given Reference
 	    static Object objectFrom(const Reference&);
+
+	    //////////
+	    // Go into the main loop which services requests for all
+	    // objects.  This will not return until all objects have
+	    // been destroyed.
 	    static void serveObjects();
+
+	    //////////
+	    // Return the URL for the current process.  Individual
+	    // objects may be identified by appending their id number
+	    // or name to the end of the string.
 	    static std::string getBaseURL();
+
+	    //////////
+	    // Return the object Wharehouse.  Most clients will not
+	    // need to use this.
+	    static Wharehouse* getWharehouse();
 	protected:
 	private:
+	    //////////
+	    // The wharehouse singleton object
 	    static Wharehouse* wharehouse;
+
+	    //////////
+	    // Private constructor to prevent creation of a PIDL
+	    PIDL();
 	};
     }
 }
@@ -46,6 +85,9 @@ namespace Component {
 
 //
 // $Log$
+// Revision 1.3  1999/09/24 20:03:35  sparker
+// Added cocoon documentation
+//
 // Revision 1.2  1999/09/17 05:08:08  sparker
 // Implemented component model to work with sidl code generator
 //
