@@ -59,20 +59,6 @@ while [ ! -x "${BUILDROOT}/${mode}/build/Packages/Uintah/StandAlone/sus" ]; do
     fi
 done
 
-# I don't really like this, but I haven't thought of a better way -- Wayne
-nice /usr/local/gnu/bin/make Packages/Uintah/Test/helpers/compare_dat_files >> ../make.log 2>&1
-retval=$?
-if [ $retval != "0" ]; then
-    echo "Packages/Uintah/Test/helpers/compare_dat_files make failed with code $retval"
-    echo ""
-
-    # failed make, set a lock for this build
-    if [ ! -d "${BUILD_DIR}/make-${mode}.lock" ]; then
-	ln -s "$BUILDROOT" "${BUILD_DIR}/make-${mode}.lock"
-    fi
-    exit 1
-fi
-
 if [ -d "${BUILD_DIR}/make-${mode}.lock" ]; then
     # built successfully - remove old make lock 
     rm "${BUILD_DIR}/make-${mode}.lock"
