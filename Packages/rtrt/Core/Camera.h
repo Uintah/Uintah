@@ -34,7 +34,13 @@ protected:
   friend class Dpy;
   friend class Gui;
 
-  char pad1[128];
+  // I don't know who was using these, but I'm going to comment them
+  // out for now.  If after a while of (August 2004) these are not
+  // missed, delete them.
+
+  //  char pad1[128];
+  //  char pad2[128];
+
   Point eye;
   Point lookat;
   Vector up;
@@ -44,14 +50,11 @@ protected:
   double windowAspectRatio_;
 
   Vector u, v;
-  Vector uhat, vhat, what;
   Vector direction;
   double eyesep;
 
   // This is the ammount that the primary rays will be offset.
   double ray_offset;
-  
-  char pad2[128];
   
 public:
   Camera(const Point& eye, const Point& lookat,
@@ -114,6 +117,12 @@ public:
   void changePitch( double amount );
   void changeFacing( double amount );
 
+  // Some math to combine and blend cameras.  You should call setup
+  // once you get the final camera, as u,v, and direction are not
+  // propagated.
+  Camera operator+(const Camera& right) const;
+  Camera operator-(const Camera& right) const;
+  Camera operator*(double val) const;
 };
 
 } // end namespace rtrt
