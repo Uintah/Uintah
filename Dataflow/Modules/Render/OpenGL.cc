@@ -44,20 +44,11 @@
 #include <sci_gl.h>
 #include <sci_glu.h>
 #include <sci_glx.h>
-
-
 #include <Dataflow/Modules/Render/OpenGL.h>
 #include <Dataflow/Modules/Render/logo.h>
 #include <Core/Containers/StringUtil.h>
 #include <Core/Util/Environment.h>
-
 #include <sci_values.h>
-
-// CollabVis code begin
-#ifdef HAVE_COLLAB_VIS
-#  include <Core/Datatypes/Image.h>
-#endif
-// CollabVis code end
 
 #ifdef HAVE_MAGICK
 namespace C_Magick {
@@ -105,66 +96,50 @@ OpenGL::query(GuiInterface* gui)
 }
 
 
-OpenGL::OpenGL(GuiInterface* gui) :
-  gui(gui),
-  helper(0),
-  tkwin(0),
-  have_pbuffer_(false),
-  do_hi_res(false),
-  encoding_mpeg_(false),
-
-  send_mb("OpenGL renderer send mailbox",10),
-  recv_mb("OpenGL renderer receive mailbox", 10),
-  get_mb("OpenGL renderer request mailbox", 5),
-  img_mb("OpenGL renderer image data mailbox", 5),
-  // CollabVis Code begin
-#ifdef HAVE_COLLAB_VIS
-  doZTexView(false),
-  doZTexTransform(false),
-#endif
+OpenGL::OpenGL(GuiInterface* gui, Viewer *viewer, ViewWindow *vw) :
+  xres_(0),
+  yres_(0),
+  doing_image_p_(false),
+  doing_movie_p_(false),
+  make_MPEG_p_(false),
+  current_movie_frame_(0),
+  movie_name_("./movie.%04d"),
+  // private member variables
+  gui_(gui),
+  helper_(0),
   helper_thread_(0),
-  dead_(false)
-  // CollabVis code end
+  tkwin_(0),
+  x11_dpy_(0),
+  myname_("INVAID"),
+  viewer_(viewer),
+  view_window_(vw),
+  drawinfo_(scinew DrawInfoOpenGL),
+  x11_visuals_(),
+  have_pbuffer_(false),
+  dead_(false),
+  do_hi_res_(false),
+  encoding_mpeg_(false),
+  max_gl_lights_(0),
+  animate_num_frames_(0),
+  animate_time_begin_(0.0),
+  animate_time_end_(0.0),
+  animate_framerate_(0.0),
+  znear_(0.0),
+  zfar_(0.0),
+  current_time_(0.0),
+  frame_count_(1),
+  cached_view_(),
+  send_pick_x_(0),
+  send_pick_y_(0),
+  ret_pick_index_(0),
+  ret_pick_obj_(0),
+  ret_pick_pick_(0),
+  send_mailbox_("OpenGL renderer send mailbox",10),
+  recv_mailbox_("OpenGL renderer receive mailbox", 10),
+  get_mailbox_("OpenGL renderer request mailbox", 5),
+  img_mailbox_("OpenGL renderer image data mailbox", 5)
 {
-  drawinfo=scinew DrawInfoOpenGL;
-  fpstimer.start();
-  num_frames = 1;
-
-  /* Grey */
-  stylusMaterial[0] = scinew Material(Color(0,0,0), Color(.3,.3,.3), Color(.5,.5,.5), 20);
-  /* White */
-  stylusMaterial[1] = scinew Material(Color(0,0,0), Color(1.0,1.0,1.0), Color(.5,.5,.5), 20);
-  /* Yellow */
-  stylusMaterial[2] = scinew Material(Color(0,0,0), Color(1.0,1.0,0.0), Color(.5,.5,.5), 20);
-  /* Light red */
-  stylusMaterial[3] = scinew Material(Color(0,0,0), Color(.8,0,0), Color(.5,.5,.5), 20);
-  /* Dark red */
-  stylusMaterial[4] = scinew Material(Color(0,0,0), Color(.2,0,0), Color(.5,.5,.5), 20);
-  /* Light green */
-  stylusMaterial[5] = scinew Material(Color(0,0,0), Color(0,.8,0), Color(.5,.5,.5), 20);
-  /* Dark green */
-  stylusMaterial[6] = scinew Material(Color(0,0,0), Color(0,.2,0), Color(.5,.5,.5), 20);
-  /* Light blue */
-  stylusMaterial[7] = scinew Material(Color(0,0,0), Color(0,0,.8), Color(.5,.5,.5), 20);
-  /* Dark blue */
-  stylusMaterial[8] = scinew Material(Color(0,0,0), Color(0,0,.2), Color(.5,.5,.5), 20);
-
-  stylusCylinder[0] = scinew GeomCappedCylinder(Point(0,-3,0), Point(0,3,0), 0.3, 20, 10);
-  stylusCylinder[1] = scinew GeomCappedCylinder(Point(0,3,0), Point(0,3.3,0), 0.3, 20, 10);
-
-  stylusTriangle[0] = scinew GeomTri(Point(0,-1.5,0), Point(0,1.5,0), Point(1.5,0,0));
-  stylusTriangle[1] = scinew GeomTri(Point(0,-1.5,0), Point(0,1.5,0), Point(-1.5,0,0));
-  stylusTriangle[2] = scinew GeomTri(Point(0,-1.5,0), Point(0,1.5,0), Point(0,0,1.5));
-  stylusTriangle[3] = scinew GeomTri(Point(0,-1.5,0), Point(0,1.5,0), Point(0,0,-1.5));
-
-  pinchMaterial = scinew Material(Color(0,0,0), Color(0,.8,0), Color(.5,.5,.5), 20);
-  pinchSphere = scinew GeomSphere(Point(0,0,0), 0.4, 20, 10);
-
-  pinchText[0] = scinew GeomText("",Point(1,1,1));
-  pinchText[1] = scinew GeomText("",Point(1,1,1));
-
-  pinchCylinder[0] = scinew GeomCappedCylinder(Point(0,0,0), Point(1,0,0), 0.2, 20, 10);
-  pinchCylinder[1] = scinew GeomCappedCylinder(Point(0,0,0), Point(-1,0,0), 0.2, 20, 10);
+  fps_timer_.start();
 }
 
 
@@ -177,14 +152,27 @@ OpenGL::~OpenGL()
     EndMpeg();
   }
   kill_helper();
-
   int r;
-  while (send_mb.tryReceive(r)) ;
-  while (recv_mb.tryReceive(r)) ;
+  while (send_mailbox_.tryReceive(r)) ;
+  while (recv_mailbox_.tryReceive(r)) ;
 
-  fpstimer.stop();
+  fps_timer_.stop();
 
-  delete drawinfo; drawinfo = 0;
+  delete drawinfo_;
+  drawinfo_ = 0;
+
+  gui_->lock();
+  Tk_Window new_tkwin=Tk_NameToWindow(the_interp, ccast_unsafe(myname_),
+				      Tk_MainWindow(the_interp));
+  if(!new_tkwin)
+  {
+    cerr << "Unable to locate window!\n";
+    gui_->unlock();
+    return;
+  }
+  glXMakeCurrent(Tk_Display(new_tkwin), None, NULL);
+  gui_->unlock();
+
 }
 
 
@@ -217,30 +205,25 @@ OpenGLHelper::run()
 
 
 void
-OpenGL::redraw(Viewer* s, ViewWindow* r, double _tbeg, double _tend,
-	       int _nframes, double _framerate)
+OpenGL::redraw(double _tbeg, double _tend, int _nframes, double _framerate)
 {
   if (dead_) return;
-  viewer_ = s;
-  viewwindow=r;
-  tbeg=_tbeg;
-  tend=_tend;
-  nframes=_nframes;
-  framerate=_framerate;
+  animate_time_begin_=_tbeg;
+  animate_time_end_=_tend;
+  animate_num_frames_=_nframes;
+  animate_framerate_=_framerate;
   // This is the first redraw - if there is not an OpenGL thread,
   // start one...
-  if(!helper)
+  if(!helper_)
   {
-    my_openglname= "OpenGL: " + myname_;
-    helper=new OpenGLHelper(this);
-    helper_thread_ = new Thread(helper, my_openglname.c_str());
+    helper_=new OpenGLHelper(this);
+    helper_thread_ = new Thread(helper_, string("OpenGL: "+myname_).c_str());
   }
-
-  send_mb.send(DO_REDRAW);
-  int rc=recv_mb.receive();
+  send_mailbox_.send(DO_REDRAW);
+  int rc=recv_mailbox_.receive();
   if(rc != REDRAW_DONE)
   {
-    cerr << "Wanted redraw_done, but got: " << r << "\n";
+    cerr << "Wanted redraw_done, but got: " << rc << "\n";
   }
 }
 
@@ -252,7 +235,7 @@ OpenGL::kill_helper()
   dead_ = true;
   if (helper_thread_)
   {
-    send_mb.send(86);
+    send_mailbox_.send(86);
     helper_thread_->join();
     helper_thread_ = 0;
   }
@@ -273,39 +256,38 @@ OpenGL::redraw_loop()
   for(;;)
   {
     int nreply=0;
-    if(viewwindow->inertia_mode)
+    if(view_window_->inertia_mode_)
     {
-      double current_time=throttle.time();
-      if(framerate==0)
-	framerate=30;
-      double frametime=1./framerate;
-      double delta=current_time-newtime;
+      current_time_=throttle.time();
+      if(animate_framerate_==0)
+	animate_framerate_=30;
+      double frametime=1./animate_framerate_;
+      double delta=current_time_-newtime;
       if(delta > 1.5*frametime)
       {
-	framerate=1./delta;
+	animate_framerate_=1./delta;
 	frametime=delta;
-	newtime=current_time;
+	newtime=current_time_;
       }
       if(delta > .85*frametime)
       {
-	framerate*=.9;
-	frametime=1./framerate;
-	newtime=current_time;
+	animate_framerate_*=.9;
+	frametime=1./animate_framerate_;
+	newtime=current_time_;
       }
       else if(delta < .5*frametime)
       {
-	framerate*=1.1;
-	if(framerate>30)
+	animate_framerate_*=1.1;
+	if(animate_framerate_>30)
 	{
-	  framerate=30;
+	  animate_framerate_=30;
 	}
-	frametime=1./framerate;
-	newtime=current_time;
+	frametime=1./animate_framerate_;
+	newtime=current_time_;
       }
       newtime+=frametime;
       throttle.wait_for_time(newtime);
-
-      while (send_mb.tryReceive(r))
+      while (send_mailbox_.tryReceive(r))
       {
 	if (r == 86)
 	{
@@ -314,19 +296,19 @@ OpenGL::redraw_loop()
 	}
 	else if (r == DO_PICK)
 	{
-	  real_get_pick(viewer_, viewwindow, send_pick_x, send_pick_y,
-			ret_pick_obj, ret_pick_pick, ret_pick_index);
-	  recv_mb.send(PICK_DONE);
+	  real_get_pick(send_pick_x_, send_pick_y_, ret_pick_obj_,
+			ret_pick_pick_, ret_pick_index_);
+	  recv_mailbox_.send(PICK_DONE);
 	}
 	else if(r== DO_GETDATA)
 	{
-	  GetReq req(get_mb.receive());
+	  GetReq req(get_mailbox_.receive());
 	  real_getData(req.datamask, req.result);
 	}
 	else if(r== DO_IMAGE)
 	{
-	  ImgReq req(img_mb.receive());
-	  do_hi_res = true;
+	  ImgReq req(img_mailbox_.receive());
+	  do_hi_res_ = true;
 	  fname = req.name;
 	  ftype = req.type;
 	  resx = req.resx;
@@ -338,40 +320,34 @@ OpenGL::redraw_loop()
 	  nreply++;
 	}
       }
-
       // you want to just rotate around the current rotation
-      // axis - the current quaternion is viewwindow->ball->qNow	
+      // axis - the current quaternion is viewwindow->ball_->qNow	
       // the first 3 components of this
 
-      viewwindow->ball->SetAngle(newtime*viewwindow->angular_v);
-
-      View tmpview(viewwindow->rot_view);
-
+      view_window_->ball_->SetAngle(newtime*view_window_->angular_v_);
+      View tmpview(view_window_->rot_view_);
       Transform tmp_trans;
       HMatrix mNow;
-      viewwindow->ball->Value(mNow);
+      view_window_->ball_->Value(mNow);
       tmp_trans.set(&mNow[0][0]);
-
-      Transform prv = viewwindow->prev_trans;
+      Transform prv = view_window_->prev_trans_;
       prv.post_trans(tmp_trans);
-
       HMatrix vmat;
       prv.get(&vmat[0][0]);
-
       Point y_a(vmat[0][1],vmat[1][1],vmat[2][1]);
       Point z_a(vmat[0][2],vmat[1][2],vmat[2][2]);
-
       tmpview.up(y_a.vector());
-
-      if (viewwindow->inertia_mode == 1)
+      if (view_window_->inertia_mode_ == 1)
       {
-	tmpview.eyep((z_a*(viewwindow->eye_dist)) + tmpview.lookat().vector());
-	viewwindow->view.set(tmpview);
+	tmpview.eyep((z_a*(view_window_->eye_dist_))+
+		     tmpview.lookat().vector());
+	view_window_->gui_view_.set(tmpview);
       }
-      else if (viewwindow->inertia_mode == 2)
+      else if (view_window_->inertia_mode_ == 2)
       {
-	tmpview.lookat(tmpview.eyep()-(z_a*(viewwindow->eye_dist)).vector());
-	viewwindow->view.set(tmpview);
+	tmpview.lookat(tmpview.eyep()-
+		       (z_a*(view_window_->eye_dist_)).vector());
+	view_window_->gui_view_.set(tmpview);
       }
 
     }
@@ -379,7 +355,7 @@ OpenGL::redraw_loop()
     {
       for (;;)
       {
-	int r=send_mb.receive();
+	int r=send_mailbox_.receive();
 	if (r == 86)
 	{
 	  throttle.stop();
@@ -387,19 +363,19 @@ OpenGL::redraw_loop()
 	}
 	else if (r == DO_PICK)
 	{
-	  real_get_pick(viewer_, viewwindow, send_pick_x, send_pick_y,
-			ret_pick_obj, ret_pick_pick, ret_pick_index);
-	  recv_mb.send(PICK_DONE);
+	  real_get_pick(send_pick_x_, send_pick_y_, ret_pick_obj_,
+			ret_pick_pick_, ret_pick_index_);
+	  recv_mailbox_.send(PICK_DONE);
 	}
 	else if(r== DO_GETDATA)
 	{
-	  GetReq req(get_mb.receive());
+	  GetReq req(get_mailbox_.receive());
 	  real_getData(req.datamask, req.result);
 	}
 	else if(r== DO_IMAGE)
 	{
-	  ImgReq req(img_mb.receive());
-	  do_hi_res = true;
+	  ImgReq req(img_mailbox_.receive());
+	  do_hi_res_ = true;
 	  fname = req.name;
 	  ftype = req.type;
 	  resx = req.resx;
@@ -417,15 +393,14 @@ OpenGL::redraw_loop()
       throttle.start();
     }
 
-    if(do_hi_res)
+    if(do_hi_res_)
     {
       render_and_save_image(resx,resy,fname,ftype);
-      do_hi_res=false;
+      do_hi_res_=false;
     }
-
     redraw_frame();
     for(int i=0;i<nreply;i++) {
-      recv_mb.send(REDRAW_DONE);
+      recv_mailbox_.send(REDRAW_DONE);
     }
   } // end for(;;)
 }
@@ -439,7 +414,8 @@ OpenGL::render_and_save_image(int x, int y,
 #ifndef HAVE_MAGICK
   if (ftype != "ppm" && ftype != "raw")
   {
-    cerr << "Error - ImageMagick is not enabled, can only save .ppm or .raw files.\n";
+    cerr << "Error - ImageMagick is not enabled, " 
+	 << "can only save .ppm or .raw files.\n";
     return;
   }
 #endif
@@ -450,32 +426,32 @@ OpenGL::render_and_save_image(int x, int y,
 
   // FIXME: this next line was apparently meant to raise the Viewer to the
   //        top... but it doesn't actually seem to work
-  Tk_RestackWindow(tkwin,Above,NULL);
+  Tk_RestackWindow(tkwin_,Above,NULL);
 
 
-  gui->lock();
+  gui_->lock();
   // Make sure our GL context is current
   if(current_drawer != this)
   {
     current_drawer=this;
-    glXMakeCurrent(dpy, win, cx);
+    glXMakeCurrent(x11_dpy_, x11_win_, x11_gl_context_);
   }
   deriveFrustum();
 
   // Get Viewport dimensions
   GLint vp[4];
   glGetIntegerv(GL_VIEWPORT,vp);
-  gui->unlock();
+  gui_->unlock();
 
-  hi_res.resx = x;
-  hi_res.resy = y;
+  hi_res_.resx = x;
+  hi_res_.resy = y;
   // The EXACT # of screen rows and columns needed to render the image
-  hi_res.ncols = (double)hi_res.resx/(double)vp[2];
-  hi_res.nrows = (double)hi_res.resy/(double)vp[3];
+  hi_res_.ncols = (double)hi_res_.resx/(double)vp[2];
+  hi_res_.nrows = (double)hi_res_.resy/(double)vp[3];
 
   // The # of screen rows and columns that will be rendered to make the image
-  const int nrows = (int)ceil(hi_res.nrows);
-  const int ncols = (int)ceil(hi_res.ncols);
+  const int nrows = (int)ceil(hi_res_.nrows);
+  const int ncols = (int)ceil(hi_res_.ncols);
 
   ofstream *image_file = NULL;
 #ifdef HAVE_MAGICK
@@ -494,7 +470,7 @@ OpenGL::render_and_save_image(int x, int y,
     if (ftype == "ppm")
     {
       (*image_file) << "P6" << std::endl;
-      (*image_file) << hi_res.resx << " " << hi_res.resy << std::endl;
+      (*image_file) << hi_res_.resx << " " << hi_res_.resy << std::endl;
       (*image_file) << 255 << std::endl;
     }
   }
@@ -510,8 +486,8 @@ OpenGL::render_and_save_image(int x, int y,
     image_info->colorspace = C_Magick::RGBColorspace;
     image_info->quality = 90;
     image=C_Magick::AllocateImage(image_info);
-    image->columns=hi_res.resx;
-    image->rows=hi_res.resy;
+    image->columns=hi_res_.resx;
+    image->rows=hi_res_.resy;
 #endif
   }
 
@@ -519,24 +495,24 @@ OpenGL::render_and_save_image(int x, int y,
 
   // Write out a screen height X image width chunk of pixels at a time
   unsigned char* pixels=
-    scinew unsigned char[hi_res.resx*vp[3]*pix_size];
+    scinew unsigned char[hi_res_.resx*vp[3]*pix_size];
 
   // Start writing image_file
   static unsigned char* tmp_row = 0;
   if (!tmp_row )
-    tmp_row = scinew unsigned char[hi_res.resx*pix_size];
+    tmp_row = scinew unsigned char[hi_res_.resx*pix_size];
 
 
-  for (hi_res.row = nrows - 1; hi_res.row >= 0; --hi_res.row)
+  for (hi_res_.row = nrows - 1; hi_res_.row >= 0; --hi_res_.row)
   {
-    int read_height = hi_res.resy - hi_res.row * vp[3];
+    int read_height = hi_res_.resy - hi_res_.row * vp[3];
     read_height = (vp[3] < read_height) ? vp[3] : read_height;
 
     if (do_magick)
     {
 #ifdef HAVE_MAGICK
       pixels = (unsigned char *)C_Magick::SetImagePixels
-	(image,0,vp[3]*(nrows - 1 - hi_res.row),hi_res.resx,read_height);
+	(image,0,vp[3]*(nrows - 1 - hi_res_.row),hi_res_.resx,read_height);
 #endif
     }
 
@@ -546,21 +522,21 @@ OpenGL::render_and_save_image(int x, int y,
       break;
     }
 
-    for (hi_res.col = 0; hi_res.col < ncols; hi_res.col++)
+    for (hi_res_.col = 0; hi_res_.col < ncols; hi_res_.col++)
     {
       // render the col and row in the hi_res struct
-      viewwindow->doingImage = true; // forces pbuffer if available
+      doing_image_p_ = true; // forces pbuffer if available
       redraw_frame();
-      viewwindow->doingImage = false;
-      gui->lock();
+      doing_image_p_ = false;
+      gui_->lock();
 	
       // Tell OpenGL where to put the data in our pixel buffer
       glPixelStorei(GL_PACK_ALIGNMENT,1);
-      glPixelStorei(GL_PACK_SKIP_PIXELS, hi_res.col * vp[2]);
+      glPixelStorei(GL_PACK_SKIP_PIXELS, hi_res_.col * vp[2]);
       glPixelStorei(GL_PACK_SKIP_ROWS,0);
-      glPixelStorei(GL_PACK_ROW_LENGTH, hi_res.resx);
+      glPixelStorei(GL_PACK_ROW_LENGTH, hi_res_.resx);
 
-      int read_width = hi_res.resx - hi_res.col * vp[2];
+      int read_width = hi_res_.resx - hi_res_.col * vp[2];
       read_width = (vp[2] < read_width) ? vp[2] : read_width;
 
       // Read the data from OpenGL into our memory
@@ -569,18 +545,18 @@ OpenGL::render_and_save_image(int x, int y,
 		   (num_channels == 3) ? GL_RGB : GL_BGRA,
 		   (channel_bytes == 1) ? GL_UNSIGNED_BYTE : GL_UNSIGNED_SHORT,
 		   pixels);
-      gui->unlock();
+      gui_->unlock();
     }
     // OpenGL renders upside-down to image_file writing
     unsigned char *top_row, *bot_row;	
     int top, bot;
     for(top = read_height-1, bot = 0; bot < read_height/2; top--, bot++)
     {
-      top_row = pixels + hi_res.resx*top*pix_size;
-      bot_row = pixels + hi_res.resx*bot*pix_size;
-      memcpy(tmp_row, top_row, hi_res.resx*pix_size);
-      memcpy(top_row, bot_row, hi_res.resx*pix_size);
-      memcpy(bot_row, tmp_row, hi_res.resx*pix_size);
+      top_row = pixels + hi_res_.resx*top*pix_size;
+      bot_row = pixels + hi_res_.resx*bot*pix_size;
+      memcpy(tmp_row, top_row, hi_res_.resx*pix_size);
+      memcpy(top_row, bot_row, hi_res_.resx*pix_size);
+      memcpy(bot_row, tmp_row, hi_res_.resx*pix_size);
     }
     if (do_magick)
     {
@@ -588,9 +564,9 @@ OpenGL::render_and_save_image(int x, int y,
       C_Magick::SyncImagePixels(image);
 #endif
     } else
-      image_file->write((char *)pixels, hi_res.resx*read_height*pix_size);
+      image_file->write((char *)pixels, hi_res_.resx*read_height*pix_size);
   }
-  gui->lock();
+  gui_->lock();
 
   // Set OpenGL back to nice PixelStore values for somebody else
   glPixelStorei(GL_PACK_SKIP_PIXELS,0);
@@ -616,7 +592,7 @@ OpenGL::render_and_save_image(int x, int y,
     delete[] pixels;
   }
 
-  gui->unlock();
+  gui_->unlock();
 
   if (tmp_row)
   {
@@ -631,33 +607,13 @@ OpenGL::render_and_save_image(int x, int y,
 }
 
 
-
-void
-OpenGL::make_image()
-{
-  imglist=glGenLists(1);
-  glNewList(imglist, GL_COMPILE_AND_EXECUTE);
-  glMatrixMode(GL_PROJECTION);
-  glLoadIdentity();
-  glOrtho(0.0, xres-1, 0.0, yres-1, -10.0, 10.0);
-  glMatrixMode(GL_MODELVIEW);
-  glLoadIdentity();
-  glDisable(GL_DEPTH_TEST);
-  glRasterPos2i(xres-168-5, yres-5);
-  glDrawPixels(168, 95, GL_LUMINANCE, GL_UNSIGNED_BYTE, logoimg);
-  glEnable(GL_DEPTH_TEST);
-  glEndList();
-}
-
-
-
 void
 OpenGL::redraw_frame()
 {
   if (dead_) return;
-  gui->lock();
-  if (dead_) { // ViewWindow was deleted from gui
-    gui->unlock(); 
+  gui_->lock();
+  if (dead_) { // ViewWindow was deleted from gui_
+    gui_->unlock(); 
     return;
   }
   Tk_Window new_tkwin=Tk_NameToWindow(the_interp, ccast_unsafe(myname_),
@@ -665,30 +621,34 @@ OpenGL::redraw_frame()
   if(!new_tkwin)
   {
     cerr << "Unable to locate window!\n";
-    gui->unlock();
+    gui_->unlock();
     return;
   }
-  if(tkwin != new_tkwin)
+  if(tkwin_ != new_tkwin)
   {
-    tkwin=new_tkwin;
-    dpy=Tk_Display(tkwin);
-    win=Tk_WindowId(tkwin);
+    tkwin_=new_tkwin;
+    x11_dpy_=Tk_Display(tkwin_);
+    x11_win_=Tk_WindowId(tkwin_);
     // Race condition,  create context before the window is done.
-    while (win==0)
+    while (x11_win_==0)
     {
-      gui->unlock();
+      gui_->unlock();
       Thread::yield();
-      gui->lock();
-      win = Tk_WindowId(tkwin);
+      gui_->lock();
+      x11_win_ = Tk_WindowId(tkwin_);
     }
-    cx=OpenGLGetContext(the_interp, ccast_unsafe(myname_));
-    if(!cx)
+    x11_gl_context_=OpenGLGetContext(the_interp, ccast_unsafe(myname_));
+    if(!x11_gl_context_)
     {
       cerr << "Unable to create OpenGL Context!\n";
-      gui->unlock();
+      gui_->unlock();
       return;
     }
-    glXMakeCurrent(dpy, win, cx);
+    cerr << "The next line will crash!: " << (unsigned int)x11_dpy_ <<  ", " 
+	 << (unsigned int)x11_win_ << ", " << (unsigned int)x11_gl_context_ 
+	 << std::endl;
+    glXMakeCurrent(x11_dpy_, x11_win_, x11_gl_context_);
+    cerr << "See! it crashed";
     glXWaitX();
 #if defined(HAVE_GLEW)
     sci_glew_init();
@@ -696,7 +656,7 @@ OpenGL::redraw_frame()
     current_drawer=this;
     GLint data[1];
     glGetIntegerv(GL_MAX_LIGHTS, data);
-    maxlights=data[0];
+    max_gl_lights_=data[0];
     // Look for multisample extension...
 #ifdef __sgi
     if(strstr((char*)glGetString(GL_EXTENSIONS), "GL_SGIS_multisample"))
@@ -708,7 +668,7 @@ OpenGL::redraw_frame()
 #endif
   }
 
-  gui->unlock();
+  gui_->unlock();
 
   // Start polygon counter...
   WallClockTimer timer;
@@ -716,80 +676,72 @@ OpenGL::redraw_frame()
   timer.start();
 
   // Get the window size
-  xres=Tk_Width(tkwin);
-  yres=Tk_Height(tkwin);
+  xres_=Tk_Width(tkwin_);
+  yres_=Tk_Height(tkwin_);
 
   // Make ourselves current
   if(current_drawer != this)
   {
     current_drawer=this;
-    gui->lock();
-    glXMakeCurrent(dpy, win, cx);
-    gui->unlock();
+    gui_->lock();
+    glXMakeCurrent(x11_dpy_, x11_win_, x11_gl_context_);
+    gui_->unlock();
   }
-  // Set up a pbuffer associated with dpy
+  // Set up a pbuffer associated with x11_dpy_
   // Get a lock on the geometry database...
   // Do this now to prevent a hold and wait condition with TCLTask
   viewer_->geomlock_.readLock();
 
-  gui->lock();
+  gui_->lock();
 #if defined(HAVE_PBUFFER)
-  int screen = Tk_ScreenNumber(tkwin);
-  if( xres != pbuffer.width() || yres != pbuffer.height() ){
-    //    cerr<<"creating new pbuffer: width = "<<xres<<", height == "<<yres<<"\n";
+  int screen = Tk_ScreenNumber(tkwin_);
+  if( xres_ != pbuffer.width() || yres_ != pbuffer.height() ){
+    //cerr<<"creating new pbuffer: width = "<<xres<<", height == "<<yres<<"\n";
     pbuffer.destroy();
-    if( !pbuffer.create( dpy, screen, xres, yres, 8, 8 ) ) {
-      //      printf( "Pbuffer create failed.  PBuffering will not be used.\n" );
+    if( !pbuffer.create( x11_dpy_, screen, xres_, yres_, 8, 8 ) ) {
+      //  printf( "Pbuffer create failed.  PBuffering will not be used.\n" );
     } else {
       have_pbuffer_ = true;
     }
   }
 
-  if((viewwindow->doingMovie || viewwindow->doingImage) && pbuffer.is_valid()){
+  if((doing_movie_p_ || doing_image_p_) && 
+     pbuffer.is_valid()){
     pbuffer.makeCurrent();
     glDrawBuffer( GL_FRONT );
   } else if( have_pbuffer_ && pbuffer.is_current() ) {
-    glXMakeCurrent(dpy, win, cx);
+    glXMakeCurrent(x11_dpy_, x11_win_, x11_gl_context_);
   }
 #endif
 
   // Clear the screen...
-  glViewport(0, 0, xres, yres);
-  Color bg(viewwindow->bgcolor.get());
+  glViewport(0, 0, xres_, yres_);
+  Color bg(view_window_->gui_bgcolor_.get());
   glClearColor(bg.r(), bg.g(), bg.b(), 1);
-  string saveprefix(viewwindow->saveprefix.get());
 
   // Setup the view...
-  View view(viewwindow->view.get());
-  lastview=view;
-  double aspect=double(xres)/double(yres);
+  View view(view_window_->gui_view_.get());
+  cached_view_=view;
+  double aspect=double(xres_)/double(yres_);
   // XXX - UNICam change-- should be '1.0/aspect' not 'aspect' below
   double fovy=RtoD(2*Atan(1.0/aspect*Tan(DtoR(view.fov()/2.))));
 
-  drawinfo->reset();
+  drawinfo_->reset();
 
-  int do_stereo=viewwindow->do_stereo.get();
-  drawinfo->ambient_scale_=viewwindow->ambient_scale.get();
-  drawinfo->diffuse_scale_=viewwindow->diffuse_scale.get();
-  drawinfo->specular_scale_=viewwindow->specular_scale.get();
-  drawinfo->shininess_scale_=viewwindow->shininess_scale.get();
-  drawinfo->emission_scale_=viewwindow->emission_scale.get();
-  drawinfo->line_width_=viewwindow->line_width.get();
-  drawinfo->point_size_=viewwindow->point_size.get();
-  drawinfo->polygon_offset_factor_=viewwindow->polygon_offset_factor.get();
-  drawinfo->polygon_offset_units_=viewwindow->polygon_offset_units.get();
+  int do_stereo=view_window_->gui_do_stereo_.get();
+  drawinfo_->ambient_scale_ = view_window_->gui_ambient_scale_.get();
+  drawinfo_->diffuse_scale_ = view_window_->gui_diffuse_scale_.get();
+  drawinfo_->specular_scale_ = view_window_->gui_specular_scale_.get();
+  drawinfo_->shininess_scale_ = view_window_->gui_shininess_scale_.get();
+  drawinfo_->emission_scale_ = view_window_->gui_emission_scale_.get();
+  drawinfo_->line_width_ = view_window_->gui_line_width_.get();
+  drawinfo_->point_size_ = view_window_->gui_point_size_.get();
+  drawinfo_->polygon_offset_factor_ =
+    view_window_->gui_polygon_offset_factor_.get();
+  drawinfo_->polygon_offset_units_ =
+    view_window_->gui_polygon_offset_units_.get();
 
-#ifdef __sgi
-  //  --  BAWGL  --
-  int do_bawgl = viewwindow->do_bawgl.get();
-  SCIBaWGL* bawgl = viewwindow->get_bawgl();
-
-  if(!do_bawgl)
-    bawgl->shutdown_ok();
-  //  --  BAWGL  --
-#endif
-
-  if(compute_depth(viewwindow, view, znear, zfar))
+  if(compute_depth(view, znear_, zfar_))
   {
 
     // Set up graphics state
@@ -799,8 +751,8 @@ OpenGL::redraw_frame()
     glColorMaterial(GL_FRONT_AND_BACK, GL_DIFFUSE);
     glEnable(GL_COLOR_MATERIAL);
     string globals("global");
-    viewwindow->setState(drawinfo,globals);
-    drawinfo->pickmode=0;
+    view_window_->setState(drawinfo_,globals);
+    drawinfo_->pickmode=0;
 
     GLenum errcode;
     while((errcode=glGetError()) != GL_NO_ERROR)
@@ -812,65 +764,35 @@ OpenGL::redraw_frame()
 
 #if defined(HAVE_PBUFFER)
     if( pbuffer.is_current() &&
-	(!viewwindow->doingMovie && !viewwindow->doingImage) ){
-      glXMakeCurrent(dpy, win, cx);
+	(!doing_movie_p_ && !doing_image_p_) ){
+      glXMakeCurrent(x11_dpy_, x11_win_, x11_gl_context_);
     }
 #endif
     // Do the redraw loop for each time value
-    double dt=(tend-tbeg)/nframes;
-    double frametime=framerate==0?0:1./framerate;
+    double dt=(animate_time_end_-animate_time_begin_)/animate_num_frames_;
+    double frametime=animate_framerate_==0?0:1./animate_framerate_;
     TimeThrottle throttle;
     throttle.start();
     Vector eyesep(0,0,0);
     if(do_stereo)
     {
       //      double eye_sep_dist=0.025/2;
-      double eye_sep_dist=viewwindow->sbase.get()*
-	(viewwindow->sr.get()?0.048:0.0125);
+      double eye_sep_dist=view_window_->gui_sbase_.get()*
+	(view_window_->gui_sr_.get()?0.048:0.0125);
       Vector u, v;
       view.get_viewplane(aspect, 1.0, u, v);
       u.normalize();
-      double zmid=(znear+zfar)/2.;
+      double zmid=(znear_+zfar_)/2.;
       eyesep=u*eye_sep_dist*zmid;
     }
 
-#ifdef __sgi
-    GLfloat realStylusMatrix[16], realPinchMatrix[16];
-    int stylusID, pinchID;
-    int stylus, pinch;
-    GLfloat scale;
-    char scalestr[512];
-
-    //  --  BAWGL  --
-    if( do_bawgl )
-    {
-      bawgl->getAllEyePositions();
-
-      stylusID = bawgl->getControllerID(BAWGL_STYLUS);
-      pinchID = bawgl->getControllerID(BAWGL_PINCH);
-
-      bawgl->getControllerMatrix(stylusID, BAWGL_ONE,
-				 realStylusMatrix, BAWGL_REAL_SPACE);
-      bawgl->getControllerState(stylusID, &stylus);
-      bawgl->getControllerMatrix(pinchID, BAWGL_LEFT,
-				 realPinchMatrix, BAWGL_REAL_SPACE);
-      bawgl->getControllerState(pinchID, &pinch);
-    }
-#endif
-
-
-    for(int t=0;t<nframes;t++)
+    for(int t=0;t<animate_num_frames_;t++)
     {
       int n=1;
-#ifdef __sgi
-      bool stereo_or_bawgl = do_stereo || do_bawgl;
-#else
-      bool stereo_or_bawgl = do_stereo;
-#endif
-      if( stereo_or_bawgl ) n=2;
+      if( do_stereo ) n=2;
       for(int i=0;i<n;i++)
       {
-	if( stereo_or_bawgl )
+	if( do_stereo )
 	{
 	  glDrawBuffer(i==0?GL_BACK_LEFT:GL_BACK_RIGHT);
 	}
@@ -878,7 +800,7 @@ OpenGL::redraw_frame()
 	{
 #if defined(HAVE_PBUFFER)
 	  if(have_pbuffer_){
-	    if(!viewwindow->doingMovie && !viewwindow->doingImage){
+	    if(!doing_movie_p_ && !doing_image_p_){
 	      if( pbuffer.is_current() )
                 cerr<<"pbuffer is current while not doing Movie\n";
 #endif
@@ -893,52 +815,27 @@ OpenGL::redraw_frame()
 #endif	
 	}
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-	glViewport(0, 0, xres, yres);
+	glViewport(0, 0, xres_, yres_);
 
-	double modeltime=t*dt+tbeg;
-	viewwindow->set_current_time(modeltime);
+	double modeltime=t*dt+animate_time_begin_;
+	view_window_->set_current_time(modeltime);
 	
-#ifdef __sgi
-	if( do_bawgl ) // render head tracked stereo
-	{
-	  bawgl->setViewPort(0, 0, xres, yres);
-	
-	  if( i==1 )
-	  {
-	    bawgl->setModelViewMatrix(BAWGL_RIGHT_EYE);
-	    bawgl->setProjectionMatrix(BAWGL_RIGHT_EYE);
-	  }
-	  else
-	  {
-	    bawgl->setModelViewMatrix(BAWGL_LEFT_EYE);
-	    bawgl->setProjectionMatrix(BAWGL_LEFT_EYE);
-	  }
-	
-	  bawgl->setSurfaceView();
-	
-	  glPushMatrix();
-	
-	  bawgl->setVirtualView();
-	}
-	else
-	  //  --  BAWGL  --
-#endif
 	{ // render normal
 	  // Setup view.
 	  glMatrixMode(GL_PROJECTION);
 
 	  glLoadIdentity();
 
-	  if (viewwindow->ortho_view())
+	  if (view_window_->gui_ortho_view_.get())
 	  {
 	    const double len = (view.lookat() - view.eyep()).length();
 	    const double yval = tan(fovy * M_PI / 360.0) * len;
 	    const double xval = yval * aspect;
-	    glOrtho(-xval, xval, -yval, yval, znear, zfar);
+	    glOrtho(-xval, xval, -yval, yval, znear_, zfar_);
 	  }
 	  else
 	  {
-	    gluPerspective(fovy, aspect, znear, zfar);
+	    gluPerspective(fovy, aspect, znear_, zfar_);
 	  }
 	  glMatrixMode(GL_MODELVIEW);
 
@@ -948,11 +845,11 @@ OpenGL::redraw_frame()
 	  if(do_stereo){
 	    if(i==0){
 	      eyep-=eyesep;
-	      if (!viewwindow->sr.get())
+	      if (!view_window_->gui_sr_.get())
 		lookat-=eyesep;
 	    } else {
 	      eyep+=eyesep;
-	      if (!viewwindow->sr.get())
+	      if (!view_window_->gui_sr_.get())
 		lookat+=eyesep;
 	    }
 	  }
@@ -960,29 +857,29 @@ OpenGL::redraw_frame()
 	  gluLookAt(eyep.x(), eyep.y(), eyep.z(),
 		    lookat.x(), lookat.y(), lookat.z(),
 		    up.x(), up.y(), up.z());
-	  if(do_hi_res)
+	  if(do_hi_res_)
 	    setFrustumToWindowPortion();
 	}
 	
 	// Set up Lighting
 	glLightModeli(GL_LIGHT_MODEL_TWO_SIDE, GL_TRUE);
-	const Lighting& l=viewer_->lighting_;
+	const Lighting& l = viewer_->lighting_;
 	int idx=0;
 	int ii;
 	for(ii=0;ii<l.lights.size();ii++)
 	{
 	  LightHandle light=l.lights[ii];
-	  light->opengl_setup(view, drawinfo, idx);
+	  light->opengl_setup(view, drawinfo_, idx);
 	}
-	for(ii=0;ii<idx && ii<maxlights;ii++)
+	for(ii=0;ii<idx && ii<max_gl_lights_;ii++)
 	  glEnable((GLenum)(GL_LIGHT0+ii));
-	for(;ii<maxlights;ii++)
+	for(;ii<max_gl_lights_;ii++)
 	  glDisable((GLenum)(GL_LIGHT0+ii));
 
 	// Now set up the fog stuff.
 	glFogi(GL_FOG_MODE, GL_LINEAR);
-	glFogf(GL_FOG_START,float(znear));
-	glFogf(GL_FOG_END,float((zfar-znear) * 1.40 + znear));
+	glFogf(GL_FOG_START,float(znear_));
+	glFogf(GL_FOG_END,float((zfar_-znear_) * 1.40 + znear_));
 	GLfloat bgArray[4];
 	bgArray[0]=bg.r();
 	bgArray[1]=bg.g();
@@ -991,326 +888,86 @@ OpenGL::redraw_frame()
 	glFogfv(GL_FOG_COLOR, bgArray);
 
 	// now make the ViewWindow setup its clipping planes...
-	viewwindow->setClip(drawinfo);
-        viewwindow->setMouse(drawinfo);
+	view_window_->setClip(drawinfo_);
+        view_window_->setMouse(drawinfo_);
         
 	// UNICAM addition
-	glGetDoublev (GL_MODELVIEW_MATRIX, get_depth_model);
-	glGetDoublev (GL_PROJECTION_MATRIX, get_depth_proj);
-	glGetIntegerv(GL_VIEWPORT, get_depth_view);
+	glGetDoublev (GL_MODELVIEW_MATRIX, modelview_matrix_);
+	glGetDoublev (GL_PROJECTION_MATRIX, projection_matrix_);
+	glGetIntegerv(GL_VIEWPORT, viewport_matrix_);
 
 	// set up point size, line size, and polygon offset
-	glPointSize(drawinfo->point_size_);
-	glLineWidth(drawinfo->line_width_);
+	glPointSize(drawinfo_->point_size_);
+	glLineWidth(drawinfo_->line_width_);
 	glHint(GL_POINT_SMOOTH_HINT, GL_NICEST);
-	if (drawinfo->polygon_offset_factor_ || 
-	    drawinfo->polygon_offset_units_) {
-	  glPolygonOffset(drawinfo->polygon_offset_factor_, 
-			  drawinfo->polygon_offset_units_);
+	if (drawinfo_->polygon_offset_factor_ || 
+	    drawinfo_->polygon_offset_units_) {
+	  glPolygonOffset(drawinfo_->polygon_offset_factor_, 
+			  drawinfo_->polygon_offset_units_);
 	  glEnable(GL_POLYGON_OFFSET_FILL);
 	} else {
 	  glDisable(GL_POLYGON_OFFSET_FILL);
 	}
 
 	// Draw it all...
-	current_time=modeltime;
-	viewwindow->do_for_visible(this, &OpenGL::redraw_obj);
+	current_time_=modeltime;
+	view_window_->do_for_visible(this, &OpenGL::redraw_obj);
 
-	if (viewwindow->show_rotation_axis)
+	if (view_window_->gui_raxes_.get())
 	{
 	  render_rotation_axis(view, do_stereo, i, eyesep);
 	}
 
-#ifdef __sgi
-	//  --  BAWGL  --
-	if( do_bawgl ) // render stylus and pinch 'metaphores'
-	{
-	  glPopMatrix();
-	
-	  glPushMatrix();
-	  glMultMatrixf(realStylusMatrix);
-	  stylusCylinder[0]->draw(drawinfo, stylusMaterial[0],
-				  current_time);
-	
-	  if( stylus == BAWGL_STYLUS_ON )
-	  {
-	    stylusCylinder[1]->draw(drawinfo, stylusMaterial[2],
-				    current_time);
-	    stylusTriangle[0]->draw(drawinfo, stylusMaterial[3],
-				    current_time);
-	    stylusTriangle[1]->draw(drawinfo, stylusMaterial[4],
-				    current_time);
-	    stylusTriangle[2]->draw(drawinfo, stylusMaterial[7],
-				    current_time);
-	    stylusTriangle[3]->draw(drawinfo, stylusMaterial[8],
-				    current_time);
-	  }
-	  else
-	  {
-	    stylusCylinder[1]->draw(drawinfo, stylusMaterial[1],
-				    current_time);
-	  }
-	  glPopMatrix();
-	
-	  if( !bawgl->pick )
-	  {
-	    glPushMatrix();
-	    glMultMatrixf(realPinchMatrix);
-	    pinchSphere->draw(drawinfo, pinchMaterial,
-			      current_time);
-	    glPopMatrix();
-	  }
-	
-	  if( bawgl->scale )
-	  {
-	    glPushMatrix();
-	    glMultMatrixf(realPinchMatrix);
-	    scale = bawgl->scaleFrom - realPinchMatrix[13];
-		
-	    glPushMatrix();
-	    if( scale > 0 )
-	    {
-	      glPushMatrix();
-	      glScalef(scale, 1.0, 1.0);
-	      pinchCylinder[0]->draw(drawinfo,
-				     stylusMaterial[3],
-				     current_time);
-	      glPopMatrix();
-	
-	      glTranslatef(scale, 0.0, 0.0);
-	      pinchSphere->draw(drawinfo,
-				pinchMaterial, current_time);
-	    }
-	    else
-	    {
-	      glPushMatrix();
-	      glScalef(-scale, 1.0, 1.0);
-	      pinchCylinder[1]->draw(drawinfo,
-				     stylusMaterial[3],
-				     current_time);
-	      glPopMatrix();
-	
-	      glTranslatef(scale, 0.0, 0.0);
-	      pinchSphere->draw(drawinfo,
-				pinchMaterial,
-				current_time);
-	    }
-	    glPopMatrix();
-		
-	    sprintf(scalestr, "Scale: %.2f", bawgl->virtualViewScale);
-		
-	    pinchText[0] = scinew GeomText(scalestr, Point(1,1,1));
-	    pinchText[0]->draw(drawinfo, pinchMaterial, current_time);
-	
-	    glPopMatrix();
-	  }
-	
-	  if( bawgl->navigate )
-	  {
-	    glPushMatrix();
-	    glMultMatrixf(realPinchMatrix);
-		
-	    scale = bawgl->navigateFrom - realPinchMatrix[13];
-		
-	    glPushMatrix();
-	    if( scale > 0 )
-	    {
-	      glPushMatrix();
-	      glScalef(scale, 1.0, 1.0);
-	      pinchCylinder[0]->draw(drawinfo, stylusMaterial[7],
-				     current_time);
-	      glPopMatrix();
-		
-	      glTranslatef(scale, 0.0, 0.0);
-	      pinchSphere->draw(drawinfo, pinchMaterial,
-				current_time);
-	    }
-	    else
-	    {
-	      glPushMatrix();
-	      glScalef(-scale, 1.0, 1.0);
-	      pinchCylinder[1]->draw(drawinfo, stylusMaterial[7],
-				     current_time);
-	      glPopMatrix();
-	
-	      glTranslatef(scale, 0.0, 0.0);
-	      pinchSphere->draw(drawinfo, pinchMaterial,
-				current_time);
-	    }
-	    glPopMatrix();
-	
-	    sprintf(scalestr, "Velocity: %.2f", -1000*bawgl->velocity);
-	
-	    pinchText[1] = scinew GeomText(scalestr, Point(1,1,1));
-	    pinchText[1]->draw(drawinfo, pinchMaterial,
-			       current_time);
-	
-	    glPopMatrix();
-	
-	  }
-	}
-	//  --  BAWGL  --
-#endif
       }
-	
-#if 0
-      if(viewwindow->drawimg.get())
-      {
-	if(!imglist)
-	  make_image();
-	else
-	  glCallList(imglist);
-      }
-#endif
 	
       // save z-buffer data
       if (CAPTURE_Z_DATA_HACK)
       {
 	CAPTURE_Z_DATA_HACK = 0;
-	glReadPixels( 0, 0,
-		      xres, yres,
-		      GL_DEPTH_COMPONENT, GL_FLOAT,
-		      pixel_depth_data );
-	//            cerr << "(read from (0,0) to (" << xres << "," << yres << ")\n";
+	glReadPixels(0, 0, xres_, yres_, GL_DEPTH_COMPONENT, GL_FLOAT,
+		     depth_buffer_ );
       }
 	
       // Wait for the right time before swapping buffers
       //gui->unlock();
       double realtime=t*frametime;
-      if(nframes>1)
+      if(animate_num_frames_>1)
       {
 	throttle.wait_for_time(realtime);
       }
       //gui->lock();
-      gui->execute("update idletasks");
+      gui_->execute("update idletasks");
 
       // Show the pretty picture
 #if defined(HAVE_PBUFFER)
       if( !have_pbuffer_ ||
-	  (!viewwindow->doingMovie && !viewwindow->doingImage) )
+	  (!doing_movie_p_ && !doing_image_p_) )
 #endif
-      glXSwapBuffers(dpy, win);
-
-      // CollabVis code begin
-#ifdef HAVE_COLLAB_VIS
-      if ( viewwindow->serverNeedsImage() ) {
-	/* BUG - we need to grab an image whose dimensions are a multiple
-	   of 4. */
-	int _x = xres - ( xres % 4 );
-	int _y = yres - ( yres % 4 );
-	char * image = scinew char[_x*_y*3];
-
-        // test code
-        for ( int i = 0; i < 640 * 512 * 3; i+=3 ) {
-          image[i] = 0;
-          image[i+1] = 0;
-          image[i+2] = 0;
-        }
-
-
-        glReadBuffer(GL_BACK);
-	glReadPixels( 0, 0, _x, _y, GL_RGB, GL_UNSIGNED_BYTE,
-		      (GLubyte *)image);
-
-        cerr << "Dimensions: " << _x << " x " << _y << endl;
-        // DEBUG CODE
-        unsigned char * testImage = (unsigned char *) image;
-        int numColoredPixels = 0;
-        for ( int i = 0; i < 640 * 512 * 3; i+=3 ) {
-          if((unsigned int)testImage[ i ] != 0 || (unsigned int)testImage[ i+1 ] != 0 || (unsigned int)testImage[ i+2 ] != 0){
-            //cerr << "<" << (unsigned int)testImage[ i ] << ", " << (unsigned int)testImage[ i+1 ] << ", " << (unsigned int)testImage[ i+2 ] << ">  ";
-            numColoredPixels++;
-          }
-        }
-        cerr << "**************************NUM COLORED PIXELS = " << numColoredPixels << endl;
-
-        // test code
-        glRasterPos2i( 0, 0 );
-        glDrawPixels( _x, _y, GL_RGB, GL_UNSIGNED_BYTE, image);
-
-	viewwindow->sendImageToServer( image, _x, _y );
-	
-      }
-#endif
-      // CollabVis code end
-
-      //  #ifdef __sgi
-      //  	  if(saveprefix != ""){
-      //  	    // Save out the image...
-      //  	    char filename[200];
-      //  	    sprintf(filename, "%s%04d.rgb", saveprefix.c_str(), t);
-      //  	    unsigned char* rgbdata=scinew unsigned char[xres*yres*3];
-      //  	    glReadPixels(0, 0, xres, yres, GL_RGB, GL_UNSIGNED_BYTE, rgbdata);
-      //  	    iflSize dims(xres, yres, 1);
-      //  	    iflFileConfig fc(&dims, iflUChar);
-      //  	    iflStatus sts;
-      //  	    iflFile *file=iflFile::create(filename, NULL, &fc, NULL, &sts);
-      //  	    if (sts != iflOKAY) {
-      //  	      cerr << "Unable to save image file "<<filename<<"\n";
-      //  	      break;
-      //  	    }
-      //  	    sts = file->setTile(0, 0, 0, xres, yres, 1, rgbdata);
-      //  	    if (sts != iflOKAY) {
-      //  	      cerr << "Unable to save image tile to "<<filename<<"\n";
-      //  	      break;
-      //  	    }
-      //  	    sts = file->flush();
-      //  	    if (sts != iflOKAY) {
-      //  	      cerr << "Unable to write tile to "<<filename<<"\n";
-      //  	      break;
-      //  	    }
-      //  	    file->close();
-      //  	    delete[] rgbdata;
-      //  	  }
-      //  #endif // __sgi
+	glXSwapBuffers(x11_dpy_, x11_win_);
     }
     throttle.stop();
     double fps;
     if (throttle.time()>0)
-      fps=nframes/throttle.time();
+      fps=animate_num_frames_/throttle.time();
     else
-      fps=nframes;
-    int fps_whole=(int)fps;
-    int fps_hund=(int)((fps-fps_whole)*100);
+      fps=animate_num_frames_;
+    //int fps_whole=(int)fps;
+    //int fps_hund=(int)((fps-fps_whole)*100);
     ostringstream str;
-    //    str << viewwindow->id << " setFrameRate " << fps_whole << "." << fps_hund;
-    gui->execute(str.str());
-    viewwindow->set_current_time(tend);
+    // str << view_window_->id << " setFrameRate "<<fps_whole<<"."<< fps_hund;
+    gui_->execute(str.str());
+    view_window_->set_current_time(animate_time_end_);
   }
   else
   {
     // Just show the cleared screen
-    viewwindow->set_current_time(tend);
+    view_window_->set_current_time(animate_time_end_);
 	
-#ifdef __sgi
-    //  --  BAWGL  --
-    if( do_stereo || do_bawgl )
-    {
-      glDrawBuffer(GL_BACK_LEFT);
-      glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-      glDrawBuffer(GL_BACK_RIGHT);
-    }
-    else
-    {
-      glDrawBuffer(GL_BACK);
-    }
-    //  --  BAWGL  --
-#endif
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-    if(viewwindow->drawimg.get())
-    {
-#if 0
-      if(!imglist)
-	make_image();
-      else
-	glCallList(imglist);
-#endif
-    }
 #if defined(HAVE_PBUFFER)
-      if( !have_pbuffer_ ||
-	  (!viewwindow->doingMovie && !viewwindow->doingImage ) )
+      if( !have_pbuffer_ || (!doing_movie_p_ && !doing_image_p_))
 #endif
-    glXSwapBuffers(dpy, win);
+    glXSwapBuffers(x11_dpy_, x11_win_);
   }
 
   viewer_->geomlock_.readUnlock();
@@ -1326,49 +983,55 @@ OpenGL::redraw_frame()
 
   // Report statistics
   timer.stop();
-  fpstimer.stop();
+  fps_timer_.stop();
   ostringstream str;
-  if (fpstimer.time()>.33) {
+  // Frame counter This is used to keep track of how many frames the
+  // statistics are being used for.  When we go to update the on
+  // screen statistics we will check to see if the elapsed time is
+  // greater than .33 seconds.  If not we increment this counter and
+  // don't display the statistics.  When the accumulated time becomes
+  // greater than .33 seconds, we update our statistics.
+  if (fps_timer_.time()>.33) {
     double fps;
-    fps=nframes*num_frames/fpstimer.time();
-    //    cerr << "fps = " << fps <<",\tnum_frames = "<<num_frames<<",\tfpstimer.time = "<<fpstimer.time()<<",\tnframes = "<<nframes<<"\n";
+    fps=animate_num_frames_*frame_count_/fps_timer_.time();
+//     cerr << "fps = " << fps <<",\tframe_count_ = "<<frame_count_
+// 	 <<",\tfps_timer_.time = "<<fps_timer_.time()
+// 	 <<",\tanimate_num_frames_ = "<<animate_num_frames_<<"\n";
     cerr.flush();
-    num_frames = 1;
+    frame_count_ = 1;
     fps+=0.05;			// Round to nearest tenth
     int fps_whole=(int)fps;
     int fps_tenths=(int)((fps-fps_whole)*10);
-    fpstimer.clear();
-    fpstimer.start();		// Start it running for next time
+    fps_timer_.clear();
+    fps_timer_.start();		// Start it running for next time
     double pps;
     if (timer.time()>0)
-      pps=drawinfo->polycount/timer.time();
+      pps=drawinfo_->polycount/timer.time();
     else
-      pps=drawinfo->polycount;
-    str << viewwindow->id << " updatePerf \"";
-    str << drawinfo->polycount << " polygons in " << timer.time()
+      pps=drawinfo_->polycount;
+    str << view_window_->id_ << " updatePerf \"";
+    str << drawinfo_->polycount << " polygons in " << timer.time()
       	<< " seconds\" \"" << pps
     	<< " polygons/second\"" << " \"" << fps_whole << "."
     	<< fps_tenths << " frames/sec\"" << '\0';
-  //    cerr <<"updatePerf: <" << str.str() << ">\n";
-
-  } else if (fpstimer.time() > 0) {
-    num_frames++;
-    fpstimer.start();
+  } else if (fps_timer_.time() > 0) {
+    frame_count_++;
+    fps_timer_.start();
   } else {
-    fpstimer.start();
+    fps_timer_.start();
   }    
   /*****************************************/
   /* movie-movie makin' movie-movie makin' */
   /*****************************************/
-  if (viewwindow->doingMovie) {	
+  if (doing_movie_p_) {	
     //      cerr << "Saving a movie!\n";
-    if( viewwindow->makeMPEG ) {
+    if(make_MPEG_p_ ) {
 
       if(encoding_mpeg_) {
 	AddMpegFrame();
       } else {
 
-	string fname = viewwindow->curName;
+	string fname = movie_name_;
 
 	// only add extension if not allready there
 	if(!(fname.find(".mpg") != std::string::npos ||
@@ -1405,17 +1068,18 @@ OpenGL::redraw_frame()
 	EndMpeg();
       }
 
-      std::string::size_type pos = viewwindow->curName.find_last_of("%0");
+      std::string::size_type pos = movie_name_.find_last_of("%0");
 
       if( pos == std::string::npos ||
-	  viewwindow->curName[pos+2] != 'd' ||
-	  viewwindow->curName.find("%") != viewwindow->curName.find_last_of("%") ) {
+	  movie_name_[pos+2] != 'd' ||
+	  movie_name_.find("%") != movie_name_.find_last_of("%") ) {
 	cerr << "Bad C Style format for the frames." << std::endl;
-	cerr << "The format should be of the form: './my_movie.%04d'" << std::endl;
+	cerr << "The format should be of the form: './my_movie.%04d'";
+	cerr << std::endl;
       } else {
 
 	char fname[256];
-	sprintf(fname, viewwindow->curName.c_str(), viewwindow->curFrame++);
+	sprintf(fname, movie_name_.c_str(), current_movie_frame_++);
 	string fullpath = string(fname) + string(".ppm");
 	cerr << "Dumping " << fullpath << "....  ";
 	dump_image(fullpath);
@@ -1428,32 +1092,32 @@ OpenGL::redraw_frame()
       EndMpeg();
     }
   }
-  gui->execute(str.str());
-  gui->unlock();
+  gui_->execute(str.str());
+  gui_->unlock();
 }
 
 
 
 void
-OpenGL::get_pick(Viewer*, ViewWindow*, int x, int y,
+OpenGL::get_pick(int x, int y,
 		 GeomHandle& pick_obj, GeomPickHandle& pick_pick,
 		 int& pick_index)
 {
-  send_pick_x=x;
-  send_pick_y=y;
-  send_mb.send(DO_PICK);
+  send_pick_x_=x;
+  send_pick_y_=y;
+  send_mailbox_.send(DO_PICK);
   for(;;)
   {
-    int r=recv_mb.receive();
+    int r=recv_mailbox_.receive();
     if(r != PICK_DONE)
     {
       cerr << "WANTED A PICK!!! (got back " << r << "\n";
     }
     else
     {
-      pick_obj=ret_pick_obj;
-      pick_pick=ret_pick_pick;
-      pick_index=ret_pick_index;
+      pick_obj=ret_pick_obj_;
+      pick_pick=ret_pick_pick_;
+      pick_index=ret_pick_index_;
       break;
     }
   }
@@ -1462,7 +1126,7 @@ OpenGL::get_pick(Viewer*, ViewWindow*, int x, int y,
 
 
 void
-OpenGL::real_get_pick(Viewer*, ViewWindow* ViewWindow, int x, int y,
+OpenGL::real_get_pick(int x, int y,
 		      GeomHandle& pick_obj, GeomPickHandle& pick_pick,
 		      int& pick_index)
 {
@@ -1473,22 +1137,22 @@ OpenGL::real_get_pick(Viewer*, ViewWindow* ViewWindow, int x, int y,
   if(current_drawer != this)
   {
     current_drawer=this;
-    gui->lock();
-    glXMakeCurrent(dpy, win, cx);
+    gui_->lock();
+    glXMakeCurrent(x11_dpy_, x11_win_, x11_gl_context_);
     cerr<<"viewer current\n";
-    gui->unlock();
+    gui_->unlock();
   }
   // Setup the view...
-  View view(viewwindow->view.get());
+  View view(view_window_->gui_view_.get());
   viewer_->geomlock_.readLock();
 
-  // Compute znear and zfar...
+  // Compute znear_ and zfar...
   double znear;
   double zfar;
-  if(compute_depth(ViewWindow, view, znear, zfar))
+  if(compute_depth(view, znear, zfar))
   {
     // Setup picking...
-    gui->lock();
+    gui_->lock();
 
     GLuint pick_buffer[pick_buffer_size];
     glSelectBuffer(pick_buffer_size, pick_buffer);
@@ -1506,55 +1170,45 @@ OpenGL::real_get_pick(Viewer*, ViewWindow* ViewWindow, int x, int y,
     glPushName(0x12345678); //for the object's face index
 #endif
 
-    if(!viewwindow->do_bawgl.get())
-    { //Regular flavor picking
-      double aspect=double(xres)/double(yres);
-      // XXX - UNICam change-- should be '1.0/aspect' not 'aspect' below
-      double fovy=RtoD(2*Atan(1.0/aspect*Tan(DtoR(view.fov()/2.))));
-      glViewport(0, 0, xres, yres);
-      glMatrixMode(GL_PROJECTION);
-      glLoadIdentity();
-      GLint viewport[4];
-      glGetIntegerv(GL_VIEWPORT, viewport);
-      gluPickMatrix(x, viewport[3]-y, pick_window, pick_window, viewport);
-      if (viewwindow->ortho_view())
-      {
-	const double len = (view.lookat() - view.eyep()).length();
-	const double yval = tan(fovy * M_PI / 360.0) * len;
-	const double xval = yval * aspect;
-	glOrtho(-xval, xval, -yval, yval, znear, zfar);
-      }
-      else
-      {
-	gluPerspective(fovy, aspect, znear, zfar);
-      }
-
-      glMatrixMode(GL_MODELVIEW);
-      glLoadIdentity();
-      Point eyep(view.eyep());
-      Point lookat(view.lookat());
-      Vector up(view.up());
-      gluLookAt(eyep.x(), eyep.y(), eyep.z(),
-		lookat.x(), lookat.y(), lookat.z(),
-		up.x(), up.y(), up.z());
+    // Picking
+    double aspect=double(xres_)/double(yres_);
+    // XXX - UNICam change-- should be '1.0/aspect' not 'aspect' below
+    double fovy=RtoD(2*Atan(1.0/aspect*Tan(DtoR(view.fov()/2.))));
+    glViewport(0, 0, xres_, yres_);
+    glMatrixMode(GL_PROJECTION);
+    glLoadIdentity();
+    GLint viewport[4];
+    glGetIntegerv(GL_VIEWPORT, viewport);
+    gluPickMatrix(x, viewport[3]-y, pick_window, pick_window, viewport);
+    if (view_window_->gui_ortho_view_.get())
+    {
+      const double len = (view.lookat() - view.eyep()).length();
+      const double yval = tan(fovy * M_PI / 360.0) * len;
+      const double xval = yval * aspect;
+      glOrtho(-xval, xval, -yval, yval, znear, zfar);
     }
     else
-    { //BAWGL flavored picking setup!!!
-      SCIBaWGL* bawgl = viewwindow->get_bawgl();
-      bawgl->setModelViewMatrix(BAWGL_MIDDLE_EYE);
-      bawgl->setPickProjectionMatrix(BAWGL_MIDDLE_EYE, x, y, pick_window);
-
-      bawgl->setSurfaceView();
-      bawgl->setVirtualView();
+    {
+      gluPerspective(fovy, aspect, znear, zfar);
     }
+    
+    glMatrixMode(GL_MODELVIEW);
+    glLoadIdentity();
+    Point eyep(view.eyep());
+    Point lookat(view.lookat());
+    Vector up(view.up());
+    gluLookAt(eyep.x(), eyep.y(), eyep.z(),
+	      lookat.x(), lookat.y(), lookat.z(),
+	      up.x(), up.y(), up.z());
 
-    drawinfo->lighting=0;
-    drawinfo->set_drawtype(DrawInfoOpenGL::Flat);
-    drawinfo->pickmode=1;
-    //drawinfo->pickable=0;
+    drawinfo_->lighting=0;
+    drawinfo_->set_drawtype(DrawInfoOpenGL::Flat);
+    drawinfo_->pickmode=1;
+    //drawinfo_->pickable=0;
 
     // Draw it all...
-    viewwindow->do_for_visible(this, (ViewWindowVisPMF)&OpenGL::pick_draw_obj);
+    view_window_->do_for_visible(this,
+				 (ViewWindowVisPMF)&OpenGL::pick_draw_obj);
 
 #if (_MIPS_SZPTR == 64)
     glPopName();
@@ -1573,7 +1227,7 @@ OpenGL::real_get_pick(Viewer*, ViewWindow* ViewWindow, int x, int y,
       cerr << "We got an error from GL: " << (char*)gluErrorString(errcode)
 	   << "\n";
     }
-    gui->unlock();
+    gui_->unlock();
     GLuint min_z;
 #if (_MIPS_SZPTR == 64)
     unsigned long hit_obj=0;
@@ -1662,7 +1316,7 @@ OpenGL::dump_image(const string& name, const string& /* type */)
 
 #if defined(HAVE_PBUFFER)
   if( have_pbuffer_ && pbuffer.is_valid() && pbuffer.is_current() ){
-    glXMakeCurrent( dpy, win, cx ); 
+    glXMakeCurrent( x11_dpy_, x11_win_, x11_gl_context_ ); 
     glMatrixMode(GL_PROJECTION);
     glPushMatrix();
     glLoadIdentity();
@@ -1680,7 +1334,7 @@ OpenGL::dump_image(const string& name, const string& /* type */)
     glPopMatrix();
     glMatrixMode(GL_PROJECTION);
     glPopMatrix();
-    glXSwapBuffers(dpy,win);
+    glXSwapBuffers(x11_dpy_,x11_win_);
   }
 #endif
 
@@ -1728,7 +1382,7 @@ OpenGL::put_scanline(int y, int width, Color* scanline, int repeat)
   glPushMatrix();
   glLoadIdentity();
   glTranslated(-1, -1, 0);
-  glScaled(2./xres, 2./yres, 1.0);
+  glScaled(2./xres_, 2./yres_, 1.0);
   glDepthFunc(GL_ALWAYS);
   glDrawBuffer(GL_FRONT);
   for(i=0;i<repeat;i++)
@@ -1765,7 +1419,7 @@ OpenGL::pick_draw_obj(Viewer* viewer, ViewWindow*, GeomHandle obj)
   glPushName((GLuint)(obj.get_rep()));
   glPushName(0x12345678);
 #endif
-  obj->draw(drawinfo, viewer->default_material_.get_rep(), current_time);
+  obj->draw(drawinfo_, viewer->default_material_.get_rep(), current_time_);
 }
 
 
@@ -1773,8 +1427,8 @@ OpenGL::pick_draw_obj(Viewer* viewer, ViewWindow*, GeomHandle obj)
 void
 OpenGL::redraw_obj(Viewer* viewer, ViewWindow* viewwindow, GeomHandle obj)
 {
-  drawinfo->viewwindow = viewwindow;
-  obj->draw(drawinfo, viewer->default_material_.get_rep(), current_time);
+  drawinfo_->viewwindow = viewwindow;
+  obj->draw(drawinfo_, viewer->default_material_.get_rep(), current_time_);
 }
 
 
@@ -1782,7 +1436,7 @@ OpenGL::redraw_obj(Viewer* viewer, ViewWindow* viewwindow, GeomHandle obj)
 void
 ViewWindow::setState(DrawInfoOpenGL* drawinfo, const string& tclID)
 {
-  GuiString type(ctx->subVar(tclID+"-type",false));
+  GuiString type(ctx_->subVar(tclID+"-type",false));
   if (type.valid()) {
     if (type.get() == "Default")
     {
@@ -1813,51 +1467,51 @@ ViewWindow::setState(DrawInfoOpenGL* drawinfo, const string& tclID)
   }
 
   // Now see if they want a bounding box.
-  GuiInt debug(ctx->subVar(tclID+"-debug",false));
+  GuiInt debug(ctx_->subVar(tclID+"-debug",false));
   if (debug.valid()) 
     drawinfo->debug = debug.get();
 
 
-  GuiString movieName(ctx->subVar(tclID+"-movieName",false));
+  GuiString movieName(ctx_->subVar(tclID+"-movieName",false));
   if (movieName.valid())
-    curName = movieName.get();
+    renderer_->movie_name_ = movieName.get();
 
-  GuiInt movie(ctx->subVar(tclID+"-movie",false));
+  GuiInt movie(ctx_->subVar(tclID+"-movie",false));
   if (movie.valid()) {
     if (!movie.get()) {
-      doingMovie = 0;
-      makeMPEG = 0;
-    } else if (!doingMovie) {
-      GuiInt movieFrame(ctx->subVar(tclID+"-movieFrame",false));
+      renderer_->doing_movie_p_ = 0;
+      renderer_->make_MPEG_p_ = 0;
+    } else if (!renderer_->doing_movie_p_) {
+      GuiInt movieFrame(ctx_->subVar(tclID+"-movieFrame",false));
       if (movieFrame.valid())
-	curFrame = movieFrame.get();
+	renderer_->current_movie_frame_ = movieFrame.get();
 
-      doingMovie = 1;
+      renderer_->doing_movie_p_ = 1;
       if (movie.get() == 1)
-	makeMPEG = 0;
+	renderer_->make_MPEG_p_ = 0;
       else if (movie.get() == 2)
-	makeMPEG = 1;
+	renderer_->make_MPEG_p_ = 1;
     }
   }
 
-  GuiInt clip(ctx->subVar(tclID+"-clip",false));
+  GuiInt clip(ctx_->subVar(tclID+"-clip",false));
   if (clip.valid())
     drawinfo->check_clip = clip.get();
   drawinfo->init_clip(); // set clipping
 
-  GuiInt cull(ctx->subVar(tclID+"-cull",false));
+  GuiInt cull(ctx_->subVar(tclID+"-cull",false));
   if (cull.valid())
     drawinfo->cull = cull.get();
 
-  GuiInt dl(ctx->subVar(tclID+"-dl",false));
+  GuiInt dl(ctx_->subVar(tclID+"-dl",false));
   if (dl.valid())
     drawinfo->dl = dl.get();
 
-  GuiInt fog(ctx->subVar(tclID+"-fog",false));
+  GuiInt fog(ctx_->subVar(tclID+"-fog",false));
   if (fog.valid())
     drawinfo->fog=fog.get();
 
-  GuiInt lighting(ctx->subVar(tclID+"-light",false));
+  GuiInt lighting(ctx_->subVar(tclID+"-light",false));
   if (lighting.valid())
       drawinfo->lighting=lighting.get();
 
@@ -1870,8 +1524,8 @@ ViewWindow::setState(DrawInfoOpenGL* drawinfo, const string& tclID)
 void
 ViewWindow::setDI(DrawInfoOpenGL* drawinfo,string name)
 {
-  map<string,int>::iterator tag_iter = obj_tag.find(name);      
-  if (tag_iter != obj_tag.end()) { // if found
+  map<string,int>::iterator tag_iter = obj_tag_.find(name);
+  if (tag_iter != obj_tag_.end()) { // if found
     setState(drawinfo,to_string((*tag_iter).second));
   }
 }
@@ -1881,8 +1535,8 @@ ViewWindow::setDI(DrawInfoOpenGL* drawinfo,string name)
 void
 ViewWindow::setClip(DrawInfoOpenGL* drawinfo)
 {
-  GuiString val(ctx->subVar("clip-visible",false));
-  GuiInt clipnum(ctx->subVar("clip-num",false));
+  GuiString val(ctx_->subVar("clip-visible",false));
+  GuiInt clipnum(ctx_->subVar("clip-num",false));
   int i = clipnum.get();
 
   drawinfo->clip_planes = 0; // set them all of for default
@@ -1894,20 +1548,20 @@ ViewWindow::setClip(DrawInfoOpenGL* drawinfo)
       while(i--)
       {
 	const string istr = to_string(i+1);
-	GuiInt visible(ctx->subVar("clip-visible-"+ istr,false));
+	GuiInt clip_visible(ctx_->subVar("clip-visible-"+ istr,false));
 		
-	if (!visible.valid()) continue;
+	if (!clip_visible.valid()) continue;
 
-	if (!visible.get()) {
+	if (!clip_visible.get()) {
 	  glDisable((GLenum)(GL_CLIP_PLANE0+i));
 	}
 	else 
 	{
 	  double plane[4];
-	  GuiDouble x(ctx->subVar("clip-normal-x-"+ istr,false));
-	  GuiDouble y(ctx->subVar("clip-normal-y-"+ istr,false));
-	  GuiDouble z(ctx->subVar("clip-normal-z-"+ istr,false));
-	  GuiDouble d(ctx->subVar("clip-normal-d-"+ istr,false));
+	  GuiDouble x(ctx_->subVar("clip-normal-x-"+ istr,false));
+	  GuiDouble y(ctx_->subVar("clip-normal-y-"+ istr,false));
+	  GuiDouble z(ctx_->subVar("clip-normal-z-"+ istr,false));
+	  GuiDouble d(ctx_->subVar("clip-normal-d-"+ istr,false));
 
 	  if (!x.valid() || !y.valid() || ! z.valid() || !d.valid())
 	  {
@@ -2030,7 +1684,7 @@ GeomViewerItem::draw(DrawInfoOpenGL* di, Material *m, double time)
 
 
 #define GETCONFIG(attrib) \
-if(glXGetConfig(dpy, &vinfo[i], attrib, &value) != 0){\
+if(glXGetConfig(x11_dpy_, &vinfo[i], attrib, &value) != 0){\
   args.error("Error getting attribute: " #attrib); \
   return; \
 }
@@ -2039,7 +1693,7 @@ if(glXGetConfig(dpy, &vinfo[i], attrib, &value) != 0){\
 void
 OpenGL::listvisuals(GuiArgs& args)
 {
-  gui->lock();
+  gui_->lock();
 
   Thread::allow_sgi_OpenGL_page0_sillyness();
   Tk_Window topwin=Tk_NameToWindow(the_interp, ccast_unsafe(args[2]),
@@ -2047,20 +1701,20 @@ OpenGL::listvisuals(GuiArgs& args)
   if(!topwin)
   {
     cerr << "Unable to locate window!\n";
-    gui->unlock();
+    gui_->unlock();
     return;
   }
-  dpy=Tk_Display(topwin);
+  x11_dpy_=Tk_Display(topwin);
   int screen=Tk_ScreenNumber(topwin);
   vector<string> visualtags;
   vector<int> scores;
-  visuals.clear();
+  x11_visuals_.clear();
   int nvis;
-  XVisualInfo* vinfo=XGetVisualInfo(dpy, 0, NULL, &nvis);
+  XVisualInfo* vinfo=XGetVisualInfo(x11_dpy_, 0, NULL, &nvis);
   if(!vinfo)
   {
     args.error("XGetVisualInfo failed");
-    gui->unlock();
+    gui_->unlock();
     return;
   }
   int i;
@@ -2136,7 +1790,7 @@ OpenGL::listvisuals(GuiArgs& args)
     tag += ", score=" + to_string(score);
 
     visualtags.push_back(tag);
-    visuals.push_back(&vinfo[i]);
+    x11_visuals_.push_back(&vinfo[i]);
     scores.push_back(score);
   }
   for(i=0;(unsigned int)i<scores.size()-1;i++)
@@ -2152,34 +1806,34 @@ OpenGL::listvisuals(GuiArgs& args)
 	string tmp2=visualtags[i];
 	visualtags[i]=visualtags[j];
 	visualtags[j]=tmp2;
-	XVisualInfo* tmp3=visuals[i];
-	visuals[i]=visuals[j];
-	visuals[j]=tmp3;
+	XVisualInfo* tmp3=x11_visuals_[i];
+	x11_visuals_[i]=x11_visuals_[j];
+	x11_visuals_[j]=tmp3;
       }
     }
   }
   args.result(GuiArgs::make_list(visualtags));
-  gui->unlock();
+  gui_->unlock();
 }
 
 
 
 void
-OpenGL::setvisual(const string& wname, int which, int width, int height)
+OpenGL::setvisual(const string& wname, unsigned int which, int wid, int height)
 {
-  if (which >= visuals.size())
+  if (which >= x11_visuals_.size())
   {
     cerr << "Invalid OpenGL visual, using default.\n";
     which = 0;
   }
 
-  tkwin=0;
+  tkwin_=0;
   current_drawer=0;
 
-  gui->execute("opengl " + wname +
-	       " -visual " + to_string((int)visuals[which]->visualid) +
+  gui_->execute("opengl " + wname +
+	       " -visual " + to_string((int)x11_visuals_[which]->visualid) +
 	       " -direct true" +
-	       " -geometry " + to_string(width) + "x" + to_string(height));
+	       " -geometry " + to_string(wid) + "x" + to_string(height));
 
   myname_ = wname;
 }
@@ -2192,14 +1846,14 @@ OpenGL::deriveFrustum()
   double pmat[16];
   glGetDoublev(GL_PROJECTION_MATRIX, pmat);
   const double G = (pmat[10]-1)/(pmat[10]+1);
-  frustum.znear = -(pmat[14]*(G-1))/(2*G);
-  frustum.zfar = frustum.znear*G;
-  frustum.left = frustum.znear*(pmat[8]-1)/pmat[0];
-  frustum.right = frustum.znear*(pmat[8]+1)/pmat[0];
-  frustum.bottom = frustum.znear*(pmat[9]-1)/pmat[5];
-  frustum.top = frustum.znear*(pmat[9]+1)/pmat[5];
-  frustum.width = frustum.right - frustum.left;
-  frustum.height = frustum.top - frustum.bottom;
+  frustum_.znear = -(pmat[14]*(G-1))/(2*G);
+  frustum_.zfar = frustum_.znear*G;
+  frustum_.left = frustum_.znear*(pmat[8]-1)/pmat[0];
+  frustum_.right = frustum_.znear*(pmat[8]+1)/pmat[0];
+  frustum_.bottom = frustum_.znear*(pmat[9]-1)/pmat[5];
+  frustum_.top = frustum_.znear*(pmat[9]+1)/pmat[5];
+  frustum_.width = frustum_.right - frustum_.left;
+  frustum_.height = frustum_.top - frustum_.bottom;
 }
 
 
@@ -2209,11 +1863,11 @@ OpenGL::setFrustumToWindowPortion()
 {
   glMatrixMode( GL_PROJECTION );
   glLoadIdentity();
-  glFrustum(frustum.left + frustum.width / hi_res.ncols * hi_res.col,
-	    frustum.left + frustum.width / hi_res.ncols * (hi_res.col+1),
-	    frustum.bottom + frustum.height / hi_res.nrows * hi_res.row,
-	    frustum.bottom + frustum.height / hi_res.nrows * (hi_res.row+1),
-	    frustum.znear, frustum.zfar);
+  glFrustum(frustum_.left + frustum_.width / hi_res_.ncols * hi_res_.col,
+	    frustum_.left + frustum_.width / hi_res_.ncols * (hi_res_.col+1),
+	    frustum_.bottom + frustum_.height / hi_res_.nrows * hi_res_.row,
+	    frustum_.bottom + frustum_.height / hi_res_.nrows *(hi_res_.row+1),
+	    frustum_.znear, frustum_.zfar);
 }
 
 
@@ -2223,30 +1877,15 @@ OpenGL::saveImage(const string& fname,
 		  const string& type,
 		  int x, int y)
 {
-  send_mb.send(DO_IMAGE);
-  img_mb.send(ImgReq(fname,type,x,y));
+  send_mailbox_.send(DO_IMAGE);
+  img_mailbox_.send(ImgReq(fname,type,x,y));
 }
-
-// CollabVis code begin
-#ifdef HAVE_COLLAB_VIS
-
-void OpenGL::setZTexTransform( double * matrix ) {
-  ZTexTransform.set( matrix );
-  doZTexTransform = true;
-}
-
-void OpenGL::setZTexView( const View &v ) {
-  ZTexView = v;
-  doZTexView = true;
-}
-#endif
-// CollabVis code end
 
 void
 OpenGL::getData(int datamask, FutureValue<GeometryData*>* result)
 {
-  send_mb.send(DO_GETDATA);
-  get_mb.send(GetReq(datamask, result));
+  send_mailbox_.send(DO_GETDATA);
+  get_mailbox_.send(GetReq(datamask, result));
 }
 
 void
@@ -2255,36 +1894,31 @@ OpenGL::real_getData(int datamask, FutureValue<GeometryData*>* result)
   GeometryData* res = new GeometryData;
   if(datamask&GEOM_VIEW)
   {
-    res->view=new View(lastview);
-    res->xres=xres;
-    res->yres=yres;
-    res->znear=znear;
-    res->zfar=zfar;
+    res->view=new View(cached_view_);
+    res->xres=xres_;
+    res->yres=yres_;
+    res->znear=znear_;
+    res->zfar=zfar_;
   }
   if(datamask&(GEOM_COLORBUFFER|GEOM_DEPTHBUFFER/*CollabVis*/|GEOM_MATRICES))
   {
-    gui->lock();
+    gui_->lock();
   }
   if(datamask&GEOM_COLORBUFFER)
   {
-    ColorImage* img = res->colorbuffer = new ColorImage(xres, yres);
-    float* data=new float[xres*yres*3];
-    cerr << "xres=" << xres << ", yres=" << yres << "\n";
+    ColorImage* img = res->colorbuffer = new ColorImage(xres_, yres_);
+    float* data=new float[xres_*yres_*3];
+    cerr << "xres_=" << xres_ << ", yres_=" << yres_ << "\n";
     WallClockTimer timer;
     timer.start();
-    // CollabVis code begin
-#ifdef HAVE_COLLAB_VIS
-    //cerr << "[HAVE_COLLAB_VIS] (OpenGL::real_getData) 0" << endl;
-    glReadBuffer(GL_FRONT);
-#endif
-    // CollabVis code end
-    glReadPixels(0, 0, xres, yres, GL_RGB, GL_FLOAT, data);
+
+    glReadPixels(0, 0, xres_, yres_, GL_RGB, GL_FLOAT, data);
     timer.stop();
     cerr << "done in " << timer.time() << " seconds\n";
     float* p=data;
-    for(int y=0;y<yres;y++)
+    for(int y=0;y<yres_;y++)
     {
-      for(int x=0;x<xres;x++)
+      for(int x=0;x<xres_;x++)
       {
 	img->put_pixel(x, y, Color(p[0], p[1], p[2]));
 	p+=3;
@@ -2294,43 +1928,15 @@ OpenGL::real_getData(int datamask, FutureValue<GeometryData*>* result)
   }
   if(datamask&GEOM_DEPTHBUFFER)
   {
-    DepthImage* img=res->depthbuffer=new DepthImage(xres, yres);
-    unsigned int* data=new unsigned int[xres*yres*3];
+    //    DepthImage* img=res->depthbuffer=new DepthImage(xres_, yres_);
+    unsigned int* data=new unsigned int[xres_*yres_*3];
     cerr << "reading depth...\n";
     WallClockTimer timer;
     timer.start();
-    glReadPixels(0, 0, xres, yres, GL_DEPTH_COMPONENT, GL_UNSIGNED_INT, data);
+    glReadPixels(0, 0,xres_,yres_, GL_DEPTH_COMPONENT, GL_UNSIGNED_INT, data);
     timer.stop();
     cerr << "done in " << timer.time() << " seconds\n";
-    // CollabVis code begin
-#ifndef HAVE_COLLAB_VIS
-    //cerr << "[HAVE_COLLAB_VIS] (OpenGL::real_getData) 1" << endl;
-    unsigned int* p=data;
-    for(int y=0;y<yres;y++)
-    {
-      for(int x=0;x<xres;x++)
-      {
-	img->put_pixel(x, y, (*p++)*(1./4294967295.));
-      }
-    }
-    delete[] data;
-#else
-    res->depthbuffer = (DepthImage *)data;
-#endif
-    // CollabVis code end
   }
-  // CollabVis code begin
-#ifdef HAVE_COLLAB_VIS
-  //cerr << "[HAVE_COLLAB_VIS] (OpenGL::real_getData) 2" << endl;
-  if (datamask&GEOM_MATRICES) {
-    /* Get the necessary matrices */
-    glGetDoublev(GL_MODELVIEW_MATRIX, res->modelview);
-    glGetDoublev(GL_PROJECTION_MATRIX, res->projection);
-    glGetIntegerv(GL_VIEWPORT, res->viewport);
-  }
-
-#endif
-// CollabVis code end
 
   if(datamask&(GEOM_COLORBUFFER|GEOM_DEPTHBUFFER/*CollabVis*/|GEOM_MATRICES))
   {
@@ -2340,36 +1946,10 @@ OpenGL::real_getData(int datamask, FutureValue<GeometryData*>* result)
       cerr << "We got an error from GL: " <<
 	(char*)gluErrorString(errcode) << "\n";
     }
-    gui->unlock();
+    gui_->unlock();
   }
-
-  // CollabVis code begin
-#ifdef HAVE_COLLAB_VIS
-  if ( datamask & GEOM_TRIANGLES ) {
-    triangles = new Array1<float>;
-    viewwindow->do_for_visible(this,
-			       (ViewWindowVisPMF)&OpenGL::collect_triangles);
-    res->depthbuffer = (DepthImage*)triangles;
-  }
-  // CollabVis code end
-#endif
-
   result->send(res);
 }
-
-// CollabVis code begin
-#ifdef HAVE_COLLAB_VIS
-void OpenGL::collect_triangles(Viewer *viewer,
-			       ViewWindow *viewwindow,
-			       GeomHandle obj)
-{
-  cerr << "[HAVE_COLLAB_VIS] (OpenGL::collect_triangles) 0" << endl;
-  obj->get_triangles(*triangles);
-  cerr << "found " << (*triangles).size()/3 << "  triangles" << endl;
-
-}
-// CollabVis code end
-#endif
 
 void
 OpenGL::StartMpeg(const string& fname)
@@ -2395,8 +1975,6 @@ OpenGL::StartMpeg(const string& fname)
   }
 #endif // HAVE_MPEG
 }
-
-
 
 void
 OpenGL::AddMpegFrame()
@@ -2434,7 +2012,7 @@ OpenGL::AddMpegFrame()
 
 #if defined(HAVE_PBUFFER)
   if( have_pbuffer_ && pbuffer.is_valid() && pbuffer.is_current() ){
-    glXMakeCurrent( dpy, win, cx ); 
+    glXMakeCurrent( x11_dpy_, x11_win_, x11_gl_context_ ); 
     glMatrixMode(GL_PROJECTION);
     glPushMatrix();
     glLoadIdentity();
@@ -2452,7 +2030,7 @@ OpenGL::AddMpegFrame()
     glPopMatrix();
     glMatrixMode(GL_PROJECTION);
     glPopMatrix();
-    glXSwapBuffers(dpy,win);
+    glXSwapBuffers(x11_dpy_,x11_win_);
   }
 #endif
 
@@ -2502,15 +2080,15 @@ OpenGL::pick_scene( int x, int y, Point *p )
 {
   // y = 0 is bottom of screen (not top of screen, which is what X
   // events reports)
-  y = (yres - 1) - y;
-  int index = x + (y * xres);
-  double z = pixel_depth_data[index];
+  y = (yres_ - 1) - y;
+  int index = x + (y * xres_);
+  double z = depth_buffer_[index];
   if (p)
   {
     // Unproject the window point (x, y, z).
     GLdouble world_x, world_y, world_z;
     gluUnProject(x, y, z,
-		 get_depth_model, get_depth_proj, get_depth_view,
+		 modelview_matrix_, projection_matrix_, viewport_matrix_,
 		 &world_x, &world_y, &world_z);
 
     *p = Point(world_x, world_y, world_z);
@@ -2523,13 +2101,12 @@ OpenGL::pick_scene( int x, int y, Point *p )
 
 
 bool
-OpenGL::compute_depth(ViewWindow* viewwindow, const View& view,
-		      double& znear, double& zfar)
+OpenGL::compute_depth(const View& view, double& znear, double& zfar)
 {
   znear=MAXDOUBLE;
   zfar=-MAXDOUBLE;
   BBox bb;
-  viewwindow->get_bounds(bb);
+  view_window_->get_bounds(bb);
   if(bb.valid())
   {
     // We have something to draw.
@@ -2601,54 +2178,6 @@ ImgReq::ImgReq(const string& n, const string& t, int x, int y)
 }
 
 
-static GeomHandle
-createGenAxes()
-{     
-  MaterialHandle dk_red = scinew Material(Color(0,0,0), Color(.2,0,0),
-					  Color(.5,.5,.5), 20);
-  MaterialHandle dk_green = scinew Material(Color(0,0,0), Color(0,.2,0),
-					    Color(.5,.5,.5), 20);
-  MaterialHandle dk_blue = scinew Material(Color(0,0,0), Color(0,0,.2),
-					   Color(.5,.5,.5), 20);
-  MaterialHandle lt_red = scinew Material(Color(0,0,0), Color(.8,0,0),
-					  Color(.5,.5,.5), 20);
-  MaterialHandle lt_green = scinew Material(Color(0,0,0), Color(0,.8,0),
-					    Color(.5,.5,.5), 20);
-  MaterialHandle lt_blue = scinew Material(Color(0,0,0), Color(0,0,.8),
-					   Color(.5,.5,.5), 20);
-
-  GeomGroup* xp = scinew GeomGroup; 
-  GeomGroup* yp = scinew GeomGroup;
-  GeomGroup* zp = scinew GeomGroup;
-  GeomGroup* xn = scinew GeomGroup;
-  GeomGroup* yn = scinew GeomGroup;
-  GeomGroup* zn = scinew GeomGroup;
-
-  const double sz = 1.0;
-  xp->add(scinew GeomCylinder(Point(0,0,0), Point(sz, 0, 0), sz/20));
-  xp->add(scinew GeomCone(Point(sz, 0, 0), Point(sz+sz/5, 0, 0), sz/10, 0));
-  yp->add(scinew GeomCylinder(Point(0,0,0), Point(0, sz, 0), sz/20));
-  yp->add(scinew GeomCone(Point(0, sz, 0), Point(0, sz+sz/5, 0), sz/10, 0));
-  zp->add(scinew GeomCylinder(Point(0,0,0), Point(0, 0, sz), sz/20));
-  zp->add(scinew GeomCone(Point(0, 0, sz), Point(0, 0, sz+sz/5), sz/10, 0));
-  xn->add(scinew GeomCylinder(Point(0,0,0), Point(-sz, 0, 0), sz/20));
-  xn->add(scinew GeomCone(Point(-sz, 0, 0), Point(-sz-sz/5, 0, 0), sz/10, 0));
-  yn->add(scinew GeomCylinder(Point(0,0,0), Point(0, -sz, 0), sz/20));
-  yn->add(scinew GeomCone(Point(0, -sz, 0), Point(0, -sz-sz/5, 0), sz/10, 0));
-  zn->add(scinew GeomCylinder(Point(0,0,0), Point(0, 0, -sz), sz/20));
-  zn->add(scinew GeomCone(Point(0, 0, -sz), Point(0, 0, -sz-sz/5), sz/10, 0));
-  GeomGroup* all=scinew GeomGroup;
-  all->add(scinew GeomMaterial(xp, lt_red));
-  all->add(scinew GeomMaterial(yp, lt_green));
-  all->add(scinew GeomMaterial(zp, lt_blue));
-  all->add(scinew GeomMaterial(xn, dk_red));
-  all->add(scinew GeomMaterial(yn, dk_green));
-  all->add(scinew GeomMaterial(zn, dk_blue));
-
-  return all;
-}
-
-
 // i is the frame number, usually refers to left or right when do_stereo
 // is set.
 
@@ -2657,7 +2186,7 @@ OpenGL::render_rotation_axis(const View &view,
 			     bool do_stereo, int i, const Vector &eyesep)
 {
   static GeomHandle axis_obj = 0;
-  if (axis_obj.get_rep() == 0) axis_obj = createGenAxes();
+  if (axis_obj.get_rep() == 0) axis_obj = view_window_->createGenAxes();
 
   GLint viewport[4];
   glGetIntegerv(GL_VIEWPORT, viewport);
@@ -2689,11 +2218,11 @@ OpenGL::render_rotation_axis(const View &view,
   if(do_stereo){
     if(i==0){
       eyep-=eyesep;
-      if (!viewwindow->sr.get())
+      if (!view_window_->gui_sr_.get())
 	lookat-=eyesep;
     } else {
       eyep+=eyesep;
-      if (!viewwindow->sr.get())
+      if (!view_window_->gui_sr_.get())
 	lookat+=eyesep;
     }
   }
@@ -2702,33 +2231,33 @@ OpenGL::render_rotation_axis(const View &view,
   gluLookAt(eyep.x(), eyep.y(), eyep.z(),
 	    lookat.x(), lookat.y(), lookat.z(),
 	    up.x(), up.y(), up.z());
-  if(do_hi_res)
+  if(do_hi_res_)
   {
     // Draw in upper right hand corner of total image, not viewport image.
-    const int xysize = Min(hi_res.resx, hi_res.resy) / 4;
-    const int xoff = hi_res.resx - hi_res.col * viewport[2];
-    const int yoff = hi_res.resy - hi_res.row * viewport[3];
+    const int xysize = Min(hi_res_.resx, hi_res_.resy) / 4;
+    const int xoff = hi_res_.resx - hi_res_.col * viewport[2];
+    const int yoff = hi_res_.resy - hi_res_.row * viewport[3];
     glViewport(xoff - xysize, yoff - xysize, xysize, xysize);
   }
 
   // Disable fog for the orientation axis.
-  const bool fog = drawinfo->fog;
+  const bool fog = drawinfo_->fog;
   if (fog) { glDisable(GL_FOG); }
-  drawinfo->fog = false;
+  drawinfo_->fog = false;
 
   // Set up Lighting
   glLightModeli(GL_LIGHT_MODEL_TWO_SIDE, GL_TRUE);
-  const Lighting& l=viewer_->lighting_;
+  const Lighting& l = viewer_->lighting_;
   int idx=0;
   int ii;
   for(ii=0;ii<l.lights.size();ii++)
   {
     LightHandle light=l.lights[ii];
-    light->opengl_setup(view, drawinfo, idx);
+    light->opengl_setup(view, drawinfo_, idx);
   }
-  for(ii=0;ii<idx && ii<maxlights;ii++)
+  for(ii=0;ii<idx && ii<max_gl_lights_;ii++)
     glEnable((GLenum)(GL_LIGHT0+ii));
-  for(;ii<maxlights;ii++)
+  for(;ii<max_gl_lights_;ii++)
     glDisable((GLenum)(GL_LIGHT0+ii));
 
   // Disable clipping planes for the orientation icon.
@@ -2742,17 +2271,17 @@ OpenGL::render_rotation_axis(const View &view,
     }
   }
 
-  drawinfo->viewwindow = viewwindow;
+  drawinfo_->viewwindow = view_window_;
 
   // Use depthrange to force the icon to move forward.
   // Ideally the rest of the scene should be drawn at 0.05 1.0,
   // so there was no overlap at all, but that would require
   // mucking about in the picking code.
   glDepthRange(0.0, 0.05);
-  axis_obj->draw(drawinfo, 0, current_time);
+  axis_obj->draw(drawinfo_, 0, current_time_);
   glDepthRange(0.0, 1.0);
 
-  drawinfo->fog = fog;  // Restore fog state.
+  drawinfo_->fog = fog;  // Restore fog state.
   if (fog) { glEnable(GL_FOG); }
 
   glMatrixMode(GL_PROJECTION);

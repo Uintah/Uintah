@@ -54,32 +54,25 @@
 #include <Core/Containers/StringUtil.h>
 #include <Core/Util/Environment.h>
 #include <Core/Math/MiscMath.h>
-
 #include <iostream>
-using std::cerr;
-using std::endl;
-using std::ostream;
-
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <fcntl.h>
 
+using std::cerr;
+using std::endl;
+using std::ostream;
+
 namespace SCIRun {
-
-
 
 //----------------------------------------------------------------------
 DECLARE_MAKER(Viewer)
 //----------------------------------------------------------------------
+
 Viewer::Viewer(GuiContext* ctx)
   : Module("Viewer", ctx, ViewerSpecial,"Render","SCIRun"),
-    view_window_lock_("Viewer view window lock"),
     geomlock_("Viewer geometry lock"), 
-    // CollabVis code begin
-#ifdef HAVE_COLLAB_VIS
-    newViewWindowMailbox( "NewViewWindowMailbox", 10 ),
-#endif
-    // CollabVis code end
+    view_window_lock_("Viewer view window lock"),
     max_portno_(0),
     stop_rendering_(false)
 {
@@ -90,33 +83,23 @@ Viewer::Viewer(GuiContext* ctx)
   li[0] = 0;
   for(int i = 1; i < 4; i++){ // only set up 3 more lights
     char l[8];
-    sprintf( l, "Light%d", i );
-    lighting_.lights.add(scinew DirectionalLight(string(l), 
-						       Vector(0,0,1),
-						       Color(1,1,1), 
-						       false, false));
+    sprintf(l, "Light%d", i);
+    lighting_.lights.add
+      (scinew DirectionalLight(l, Vector(0,0,1), Color(1,1,1), false, false));
     li[i] = i;
   }
   pli_[0] = li;
 
-  default_material_ = scinew Material(Color(.1,.1,.1),
-				      Color(.6,0,0),
-				      Color(.7,.7,.7),
-				      50);
+  default_material_ =
+    scinew Material(Color(.1,.1,.1), Color(.6,0,0), Color(.7,.7,.7), 50);
   have_own_dispatch=true;
 
-				// Create port 0 - we use this for
-				// global objects such as cameras,
-				// light source icons, etc.
-  int portid=max_portno_++;
-    
-				// Create the port
-  GeomViewerPort *pi = new GeomViewerPort(portid);
-
-  ports_.addObj(pi,portid);
+  // Create port 0 - we use this for global objects such as cameras,
+  // light source icons, etc.
+  ports_.addObj(new GeomViewerPort(0),0);
+  max_portno_ = 1;
 
 }
-
 
 //----------------------------------------------------------------------
 Viewer::~Viewer()
@@ -129,6 +112,7 @@ Viewer::~Viewer()
   }
 
 }
+
 //----------------------------------------------------------------------
 void
 Viewer::do_execute()
@@ -145,7 +129,7 @@ Viewer::do_execute()
 	for(unsigned int i=0;i<view_window_.size();i++)
 	{
 	  if (view_window_[i]) {
-	    if (view_window_[i]->need_redraw)
+	    if (view_window_[i]->need_redraw_)
 	    {
 	      did_some++;
 	      view_window_[i]->redraw_if_needed();
@@ -156,13 +140,14 @@ Viewer::do_execute()
     }
     if (process_event() == 86)  
     {
+      // Doesn't this get handled in the destructor of the viewwindow?
       for(unsigned int i=0;i<view_window_.size();i++)
       {
       	ViewWindow* r=view_window_[i];
-	if (r && r->current_renderer)
+	if (r && r->renderer_)
 	{
-	  r->current_renderer->kill_helper();
-	  r->manager = 0;
+	  r->renderer_->kill_helper();
+	  r->viewer_ = 0;
       	}
       }
       return;
@@ -185,7 +170,7 @@ Viewer::process_event()
     stop_rendering_ = true;
     //stop spinning windows...
     for(unsigned i = 0; i < view_window_.size(); i++) {
-      view_window_[i]->inertia_mode = 0;
+      view_window_[i]->inertia_mode_ = 0;
     }    
     break;
 
@@ -201,7 +186,7 @@ Viewer::process_event()
       for(i=0;i<view_window_.size();i++)
       {
 	r=view_window_[i];
-	if(r->id == rmsg->rid)
+	if(r->id_ == rmsg->rid)
 	  break;
       }
       if(i==view_window_.size())
@@ -211,7 +196,7 @@ Viewer::process_event()
       else if(rmsg->nframes == 0)
       {
 	// Normal redraw (lazy)
-	r->need_redraw=1;
+	r->need_redraw_=1;
       }
       else
       {
@@ -228,7 +213,7 @@ Viewer::process_event()
       for(unsigned int i=0;i<view_window_.size();i++)
       {
 	ViewWindow* r=view_window_[i];
-	if(r->id == rmsg->rid)
+	if(r->id_ == rmsg->rid)
 	{
 	  ((lighting_.lights)[rmsg->lightNo])->on = rmsg->on;
 	  if( rmsg->on ){
@@ -241,7 +226,7 @@ Viewer::process_event()
 	      hl->setColor( rmsg->lightColor );
 	    }
 	  }
-	  r->need_redraw = 1;
+	  r->need_redraw_ = 1;
 	  break;
 	}
       }
@@ -253,10 +238,10 @@ Viewer::process_event()
       for(unsigned int i=0;i<view_window_.size();i++)
       {
 	ViewWindow* r=view_window_[i];
-	if(r->id == rmsg->rid)
+	if(r->id_ == rmsg->rid)
 	{
-	  r->current_renderer->saveImage(rmsg->filename, rmsg->format, 
-					 rmsg->resx,rmsg->resy);
+	  r->renderer_->saveImage(rmsg->filename, rmsg->format, 
+				  rmsg->resx,rmsg->resy);
 	  break;
 	}
       }
@@ -270,7 +255,7 @@ Viewer::process_event()
       for(unsigned int i=0;i<view_window_.size();i++)
       {
 	ViewWindow* r=view_window_[i];
-	if(r->id == rmsg->rid)
+	if(r->id_ == rmsg->rid)
 	{
 	  r->dump_objects(rmsg->filename, rmsg->format);
 	  break;
@@ -288,9 +273,10 @@ Viewer::process_event()
       for(unsigned int i=0;i<view_window_.size();i++)
       {
 	ViewWindow* r=view_window_[i];
-	if(r->id == rmsg->rid)
+	if(r->id_ == rmsg->rid)
 	{
-	  (r->*(rmsg->handler))(rmsg->action, rmsg->x, rmsg->y, rmsg->state, rmsg->btn, rmsg->time);
+	  (r->*(rmsg->handler))(rmsg->action, rmsg->x, rmsg->y, 
+				rmsg->state, rmsg->btn, rmsg->time);
 	  if (i == 0) {
 	    tracking = true;
 	    r->NormalizeMouseXY(rmsg->x, rmsg->y, &NX, &NY);
@@ -301,12 +287,13 @@ Viewer::process_event()
 	for(unsigned int i=0;i<view_window_.size();i++)
 	{
 	  ViewWindow* r=view_window_[i];
-	  r->track_view_window_0_.reset();
-	  if(r->id != rmsg->rid && r->track_view_window_0_.get())
+	  r->gui_track_view_window_0_.reset();
+	  if(r->id_ != rmsg->rid && r->gui_track_view_window_0_.get())
 	  {
 	    int xx,yy;
 	    r->UnNormalizeMouseXY(NX,NY,&xx,&yy);
-	    (r->*(rmsg->handler))(rmsg->action, xx, yy, rmsg->state, rmsg->btn, rmsg->time);
+	    (r->*(rmsg->handler))(rmsg->action, xx, yy, 
+				  rmsg->state, rmsg->btn, rmsg->time);
 	  }
 	}
       }
@@ -331,6 +318,7 @@ Viewer::process_event()
       break;
     }
     break;
+
   case MessageTypes::GeometryDelLight:
     {
       map<LightID, int>::iterator li;
@@ -338,13 +326,13 @@ Viewer::process_event()
 	pli_.find( gmsg->portno );
       if( it == pli_.end() ){
 	error("Error while deleting a light: no data base for port number " +
-	      to_string( gmsg->portno ) );
+	      to_string(gmsg->portno));
       } else {
 	li = ((*it).second).find(gmsg->lserial);
 	if( li == (*it).second.end() ){
 	  error("Error while deleting a light: no light with id " +
 		to_string(gmsg->lserial) + "in database for port number" +
-		to_string( gmsg->portno));
+		to_string(gmsg->portno));
 	} else {
 	  int idx = (*li).second;
 	  int i;
@@ -426,18 +414,6 @@ Viewer::process_event()
     }
     break;
 
-#if 0
-  case MessageTypes::TrackerMoved:
-    {
-      TrackerMessage* tmsg=(TrackerMessage*)msg;
-      ViewWindow* view_window_=(ViewWindow*)tmsg->clientdata;
-      if(tmsg->data.head_moved)
-	view_window_->head_moved(tmsg->data.head_pos);
-      if(tmsg->data.mouse_moved)
-	view_window_->flyingmouse_moved(tmsg->data.mouse_pos);
-    }
-    break;
-#endif
 
   default:
     error("Illegal Message type: " + to_string(msg->type));
@@ -450,20 +426,19 @@ Viewer::process_event()
 }
 
 //----------------------------------------------------------------------
-void Viewer::initPort(Mailbox<GeomReply>* reply)
+void
+Viewer::initPort(Mailbox<GeomReply>* reply)
 {
   int portid=max_portno_++;
   portno_map_.push_back(portid);
   syncronized_map_.push_back(false);
-
-  // Create the port
-  GeomViewerPort *pi = new GeomViewerPort(portid);
-  ports_.addObj(pi,portid);
+  ports_.addObj(new GeomViewerPort(portid), portid);   // Create the port
   reply->send(GeomReply(portid));
 }
 
 //----------------------------------------------------------------------
-int Viewer::real_portno(int portno)
+int
+Viewer::real_portno(int portno)
 {
   for (unsigned int i=0; i < portno_map_.size(); i++)
   {
@@ -477,7 +452,8 @@ int Viewer::real_portno(int portno)
 }
 
 //----------------------------------------------------------------------
-void Viewer::delete_patch_portnos(int portid)
+void
+Viewer::delete_patch_portnos(int portid)
 {
   int found = -1;
   for (unsigned int i=0; i < portno_map_.size(); i++)
@@ -528,7 +504,8 @@ void Viewer::delete_patch_portnos(int portid)
 }
 
 //----------------------------------------------------------------------
-void Viewer::detachPort(int portid)
+void
+Viewer::detachPort(int portid)
 {
   GeomViewerPort* pi;
   if(!(pi = ((GeomViewerPort*)ports_.getObj(portid).get_rep())))
@@ -538,28 +515,27 @@ void Viewer::detachPort(int portid)
   }
   delAll(pi);
   ports_.delObj(portid);
-
   delete_patch_portnos(portid);
-
   flushViews();
 }
 
 //----------------------------------------------------------------------
-void Viewer::flushViews()
+void
+Viewer::flushViews()
 {
   for (unsigned int i=0; i<view_window_.size(); i++)
-    view_window_[i]->force_redraw();
+    view_window_[i]->need_redraw_ = 1;
 }
 
 
 //----------------------------------------------------------------------
-void Viewer::addObj(GeomViewerPort* port, int serial, GeomHandle obj,
+void
+Viewer::addObj(GeomViewerPort* port, int serial, GeomHandle obj,
 		    const string& name, CrowdMonitor* lock)
 {
   string pname(name + " ("+to_string(real_portno(port->portno))+")");
   GeomViewerItem* si = scinew GeomViewerItem(obj, pname, lock);
   port->addObj(si,serial);
-  // port->objs->insert(serial, si);
   for (unsigned int i=0; i<view_window_.size(); i++)
   {
     view_window_[i]->itemAdded(si);
@@ -567,7 +543,8 @@ void Viewer::addObj(GeomViewerPort* port, int serial, GeomHandle obj,
 }
 
 //----------------------------------------------------------------------
-void Viewer::delObj(GeomViewerPort* port, int serial)
+void
+Viewer::delObj(GeomViewerPort* port, int serial)
 {
   GeomViewerItem* si;
   if ((si = ((GeomViewerItem*)port->getObj(serial).get_rep())))
@@ -584,14 +561,14 @@ void Viewer::delObj(GeomViewerPort* port, int serial)
 }
 
 //----------------------------------------------------------------------
-void Viewer::delAll(GeomViewerPort* port)
+void
+Viewer::delAll(GeomViewerPort* port)
 {
   GeomIndexedGroup::IterIntGeomObj iter = port->getIter();
   if (!stop_rendering_) {
     for ( ; iter.first != iter.second; iter.first++)
     {
-      GeomViewerItem* si =
-	(GeomViewerItem*)((*iter.first).second.get_rep());
+      GeomViewerItem* si = (GeomViewerItem*)((*iter.first).second.get_rep());
       for (unsigned int i=0; i<view_window_.size(); i++)
 	view_window_[i]->itemDeleted(si);
     }
@@ -599,64 +576,28 @@ void Viewer::delAll(GeomViewerPort* port)
   port->delAll();
 }
 
-void Viewer::addTopViewWindow(ViewWindow *r)
-{
-  top_view_window_.push_back(r);
-}
-
-void Viewer::delTopViewWindow(ViewWindow *r)
-{
-  for (unsigned int i=0; i<top_view_window_.size(); i++)
-  {
-    if (r==top_view_window_[i])
-    {
-      top_view_window_.erase(top_view_window_.begin()+i);
-    }
-  }
-} 
 
 //----------------------------------------------------------------------
-#ifdef OLDUI
-void Viewer::spawnIndCB(CallbackData*, void*)
-{
-  top_view_window_.push_back(scinew ViewWindow(this));
-  top_view_window_[top_view_window_.size()-1]->SetTop();
-  GeomItem *item;
-  for (int i=0; i<top_view_window_[0]->geomItemA.size(); i++)
-  {
-    item=top_view_window_[0]->geomItemA[i];
-    top_view_window_[top_view_window_.size()-1]->itemAdded(item->geom, item->name);
-  }
-  //  printFamilyTree();
-}
-#endif
-
-//----------------------------------------------------------------------
-//void Viewer::connection(ConnectionMode mode, int which_port, int)
-//{
-//    if(mode==Disconnected){
-//	remove_iport(which_port);
-//    } else {
-//	add_iport(scinew GeometryIPort(this, "Geometry", GeometryIPort::Atomic));
-//    }
-//}
-//----------------------------------------------------------------------
-void Viewer::delete_viewwindow(ViewWindow* delviewwindow)
+void
+Viewer::delete_viewwindow(const string &id)
 {
   for(unsigned int i=0;i<view_window_.size();i++)
   {
-    if(view_window_[i] == delviewwindow)
+    if(view_window_[i]->id_ == id)
     {
       view_window_lock_.lock();
+      delete view_window_[i];
       view_window_.erase(view_window_.begin() + i);
-      delete delviewwindow;
       view_window_lock_.unlock();
+      return;
     }
   }
+  cerr << "ERROR in delete_viewwindow, cannot find ID: " << id << std::endl;
 }
 
 //----------------------------------------------------------------------
-void Viewer::tcl_command(GuiArgs& args, void* userdata)
+void
+Viewer::tcl_command(GuiArgs& args, void* userdata)
 {
   if(args.count() < 2)
   {
@@ -665,48 +606,35 @@ void Viewer::tcl_command(GuiArgs& args, void* userdata)
   }
   if(args[1] == "addviewwindow")
   {
-    // CollabVis code begin
-#ifdef HAVE_COLLAB_VIS
-    //std::cerr << "[HAVE_COLLAB_VIS] (Viewer::tcl_command) 0\n";
-    if ( args.count() == 4 ) {
-      ViewWindow* r=scinew ViewWindow(this, gui, gui->createContext(args[2]));
-      view_window_.push_back(r);
-      newViewWindowMailbox.send(r);
-      return;
-    }
-#endif
-    // CollabVis code end
-    
     if(args.count() != 3)
     {
-      args.error("addviewwindow must have a RID");
+      args.error(args[1]+" must have a RID");
       return;
     }
-    view_window_.push_back(scinew ViewWindow(this, gui, gui->createContext(args[2])));
+    view_window_lock_.lock();
+    ViewWindow* r=scinew ViewWindow(this, gui, gui->createContext(args[2]));
+    view_window_.push_back(r);
+    view_window_lock_.unlock();
   } else if (args[1] == "deleteviewwindow") {
     if(args.count() != 3)
     {
       args.error(args[1]+" must have a RID");
       return;
     }
-    unsigned int win = 0;
-    while (win<view_window_.size() && view_window_[win]->id!=args[2]) ++win;
-    if (win < view_window_.size()) {
-      gui->unlock();
-      delete_viewwindow(view_window_[win]);
-      gui->lock();
-    } else {
-      args.error(args[1]+": invalid ViewWindow: "+args[1]);
-    }
+    gui->unlock();
+    delete_viewwindow(args[2]);
+    gui->lock();
   } else {
     Module::tcl_command(args, userdata);
   }
 
 }
 //----------------------------------------------------------------------
-void Viewer::execute()
+void
+Viewer::execute()
 {
   // Never gets called...
+  ASSERTFAIL("Viewer::execute() should not ever be called.");
 }
 
 //----------------------------------------------------------------------
@@ -756,7 +684,8 @@ ViewerMessage::ViewerMessage(MessageTypes::MessageType type,
 			     const string& rid, int lightNo, 
 			     bool on, const Vector& dir,
 			     const Color& color)
-  : MessageBase(type), rid(rid), lightDir(dir), lightColor(color), lightNo(lightNo), on(on)
+  : MessageBase(type), rid(rid), lightDir(dir), lightColor(color), 
+    lightNo(lightNo), on(on)
 {}
 
 
@@ -767,21 +696,19 @@ ViewerMessage::~ViewerMessage()
 
 
 //----------------------------------------------------------------------
-void Viewer::append_port_msg(GeometryComm* gmsg)
+void
+Viewer::append_port_msg(GeometryComm* gmsg)
 {
-				// Look up the right port number
-  // PortInfo* pi;
+  // Look up the right port number
   GeomViewerPort *pi;
-  
   if (!(pi = ((GeomViewerPort*)ports_.getObj(gmsg->portno).get_rep())))
   {
-    warning("Geometry message sent to bad port!!!: " +
-	    to_string(gmsg->portno));
+    warning("Geometry message sent to bad port!!!: "+to_string(gmsg->portno));
     return;
   }
   
-				// Queue up the messages until the
-				// flush...
+  // Queue up the messages until the
+  // flush...
   if(pi->msg_tail)
   {
     pi->msg_tail->next=gmsg;
@@ -794,7 +721,8 @@ void Viewer::append_port_msg(GeometryComm* gmsg)
 }
 
 //----------------------------------------------------------------------
-void Viewer::flushPort(int portid)
+void
+Viewer::flushPort(int portid)
 {
   // Look up the right port number
   GeomViewerPort* pi;
@@ -850,7 +778,7 @@ void Viewer::flushPort(int portid)
       {
 	const string name = string("snapshot") + to_string(i) + ".ppm";
 	view_window_[i]->redraw_if_needed();
-	view_window_[i]->current_renderer->saveImage(name, "ppm", 640, 512);
+	view_window_[i]->renderer_->saveImage(name, "ppm", 640, 512);
       }
       geomlock_.writeLock();
       flushViews();
