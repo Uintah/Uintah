@@ -69,7 +69,7 @@
 #include <Dataflow/Modules/Render/Ball.h>
 
 
-#if defined(__linux)
+#if defined(__linux) || defined(__APPLE__)
 #define HAVE_PBUFFER
 #endif
 
