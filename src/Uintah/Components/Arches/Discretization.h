@@ -81,32 +81,40 @@ public:
    ////////////////////////////////////////////////////////////////////////
    // Set stencil weights. It uses second order hybrid differencing for computing
    // coefficients
-   virtual void sched_calculatePressureCoeff(const LevelP& level,
-					     SchedulerP& sched,
-					     const DataWarehouseP& old_dw,
-					     DataWarehouseP& new_dw);
-   virtual void sched_calculateVelocityCoeff(const int index,
-					     const LevelP& level,
-					     SchedulerP& sched,
-					     const DataWarehouseP& old_dw,
-					     DataWarehouseP& new_dw);
-   virtual void sched_calculateScalarCoeff(const int index,
-					   const LevelP& level,
-					   SchedulerP& sched,
-					   const DataWarehouseP& old_dw,
-					   DataWarehouseP& new_dw);
-
- private:
-   
     void calculateVelocityCoeff(const ProcessorContext*,
-			  const Region* region,
-			  const DataWarehouseP& old_dw,
-			  DataWarehouseP& new_dw,
+				const Region* region,
+				const DataWarehouseP& old_dw,
+				DataWarehouseP& new_dw,
+				double delta_t,
 				const int Index);
     void calculatePressureCoeff(const ProcessorContext*,
 				const Region* region,
 				const DataWarehouseP& old_dw,
-				DataWarehouseP& new_dw); 
+				DataWarehouseP& new_dw,
+				double delta_t); 
+    void calculateScalarCoeff(const ProcessorContext*,
+			      const Region* region,
+			      const DataWarehouseP& old_dw,
+			      DataWarehouseP& new_dw,
+			      double delta_t,
+			      const int Index);
+
+    void calculateVelDiagonal(const ProcessorContext*,
+			      const Region* region,
+			      const DataWarehouseP& old_dw,
+			      DataWarehouseP& new_dw,
+			      const int Index);
+    void calculatePressDiagonal(const ProcessorContext*,
+				const Region* region,
+				const DataWarehouseP& old_dw,
+				DataWarehouseP& new_dw);
+    void calculateScalarDiagonal(const ProcessorContext*,
+				 const Region* region,
+				 const DataWarehouseP& old_dw,
+				 DataWarehouseP& new_dw,
+				 const int Index);
+ private:
+   
 
   // Stencil weights.
    // Array of size NDIM and of depth determined by stencil coefficients

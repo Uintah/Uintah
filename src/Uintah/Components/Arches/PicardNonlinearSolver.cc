@@ -47,7 +47,8 @@ void PicardNonlinearSolver::problemSetup(const ProblemSpecP& params)
   db->require("cal_momentum", calMom);
   if (calMom) {
 #if 0
-    d_momSolver = new MomentumSolver(d_turbModel, d_boundaryCondition);
+    d_momSolver = new MomentumSolver(d_turbModel, d_boundaryCondition,
+				     d_physicalConsts);
     d_momSolver->problemSetup(db);
 #endif
   }
@@ -55,7 +56,8 @@ void PicardNonlinearSolver::problemSetup(const ProblemSpecP& params)
   db->require("cal_scalar", calScalar);
   if (calScalar) {
 #if 0
-    d_scalarSolver = new ScalarSolver(d_turbModel, d_boundaryCondition);
+    d_scalarSolver = new ScalarSolver(d_turbModel, d_boundaryCondition,
+				      d_physicalConsts);
     d_scalarSolver->problemSetup(db);
 #endif
   }
@@ -98,7 +100,7 @@ int PicardNonlinearSolver::nonlinearSolve(double time, double delta_t,
     for (int index = 1;index <= d_props->getNumMixVars(); index ++) {
       // in this case we're only solving for one scalar...but
       // the same subroutine can be used to solve different scalars
-      d_scalarSolver->solve(index, level, sched, new_dw, new_dw);
+      d_scalarSolver->solve(time, delta_t, index, level, sched, new_dw, new_dw);
     }
     // update properties
     d_props->sched_computeProps(level, sched, new_dw, new_dw);
@@ -130,16 +132,16 @@ double PicardNonlinearSolver::computeResidual(const LevelP& level,
   // not sure of the syntax...this operation is supposed to get 
   // L1norm of the residual over the whole level
   new_dw->get(residual,"pressResidual");
-  new_dw->get(omg,"pressomg",reduce);
+  new_dw->get(omg,"pressomg");
   nlresidual = MACHINEPRECISSION + log(residual/omg);
   for (int index = 1; index <= Arches::NDIM; ++index) {
-    new_dw->get(residual,"velocityResidual", index, reduce);
+    new_dw->get(residual,"velocityResidual", index);
     new_dw->get(omg,"velocityomg", index);
     nlresidual = max(nlresidual, MACHINEPRECISSION+log(residual/omg));
   }
   //for multiple scalars iterate
   for (int index = 1;index <= d_props->getNumMixVars(); index ++) {
-    new_dw->get(residual,"scalarResidual", index, reduce);
+    new_dw->get(residual,"scalarResidual", index);
     new_dw->get(omg,"scalaromg", index);
     nlresidual = max(nlresidual, MACHINEPRECISSION+log(residual/omg));
   }

@@ -63,7 +63,7 @@ public:
  
    Source();
 
-   Source(TurbulenceModel* turb_model);
+   Source(TurbulenceModel* turb_model, PhysicalConstants* phys_const);
   // GROUP: Destructors:
   ////////////////////////////////////////////////////////////////////////
   // Destructor
@@ -72,33 +72,40 @@ public:
    ////////////////////////////////////////////////////////////////////////
    // Set source terms. Will need more parameters...like velocity and
    // scalars
-   
-   void sched_calculatePressureSource(const LevelP& level,
-				      SchedulerP& sched,
-				      const DataWarehouseP& old_dw,
-				      DataWarehouseP& new_dw);
-   void sched_calculateVelocitySource(int index,const LevelP& level,
-				      SchedulerP& sched,
-				      const DataWarehouseP& old_dw,
-				      DataWarehouseP& new_dw);
-   void sched_calculateScalarSource(int index,const LevelP& level,
-				    SchedulerP& sched,
-				    const DataWarehouseP& old_dw,
-				    DataWarehouseP& new_dw);
- private:
-   void calculatePressureSource(const Region* region,
-				SchedulerP& sched,
+   void calculatePressureSource(const ProcessorContext* pc,
+				const Region* region,
 				const DataWarehouseP& old_dw,
-				DataWarehouseP& new_dw);
-   void calculateVelocitySource(int index,const Region* region,
-				SchedulerP& sched,
+				DataWarehouseP& new_dw,
+				double delta_t, const int index);
+   void calculateVelocitySource(const ProcessorContext* pc,
+				const Region* region,
 				const DataWarehouseP& old_dw,
-				DataWarehouseP& new_dw);
-   void calculateScalarSource(int index,const Region* region,
-			      SchedulerP& sched,
+				DataWarehouseP& new_dw,
+				double delta_t, const int index);
+   void calculateScalarSource(const ProcessorContext* pc,
+			      const Region* region,
 			      const DataWarehouseP& old_dw,
-			      DataWarehouseP& new_dw);
+			      DataWarehouseP& new_dw,
+			      double delta_t, const int index);
+   void modifyVelMassSource(const ProcessorContext* pc,
+			    const Region* region,
+			    const DataWarehouseP& old_dw,
+			    DataWarehouseP& new_dw,
+			    double delta_t, const int index);
+   void modifyScalarMassSource(const ProcessorContext* pc,
+			       const Region* region,
+			       const DataWarehouseP& old_dw,
+			       DataWarehouseP& new_dw,
+			       double delta_t, const int index);
+   void addPressureSource(const ProcessorContext* pc,
+			  const Region* region,
+			  const DataWarehouseP& old_dw,
+			  DataWarehouseP& new_dw,
+			  const int index);
+  
+ private:
    TurbulenceModel* d_turbModel;
+   PhysicalConstants* d_physicalConsts;
 
 };
 
