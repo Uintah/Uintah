@@ -104,7 +104,7 @@ void NirvanaLoadBalancer::assignResources(DetailedTasks& graph)
 	ASSERT(task->getAssignedResourceIndex() != -1);
       } else {
 #if DAV_DEBUG
-	cerr << "Task " << *task << " IS ASSIGNED TO PG 0!\n";
+	//	cerr << "Task " << *task << " IS ASSIGNED TO PG 0!\n";
 #endif
 	task->assignResource(0);
       }
