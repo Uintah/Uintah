@@ -169,7 +169,9 @@ struct MLVMFaceIndex : public MLVMIndex
   MLVMFaceIndex(const MaskedLatVolMesh *m, unsigned i, unsigned j, unsigned k, 
             unsigned dir)
     : MLVMIndex(m, i,j,k) , dir_(dir){}
+
   operator unsigned() const;
+
   bool operator ==(const MLVMFaceIndex &a) const
   {
     return (i_ == a.i_ && j_ == a.j_ && k_ == a.k_ && 
