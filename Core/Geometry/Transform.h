@@ -91,9 +91,11 @@ public:
   void post_rotate(double, const Vector& axis);
   void pre_translate(const Vector&);
   void post_translate(const Vector&);
+
   Point unproject(const Point& p);
-  Point project(const Point& p);
-  Vector project(const Vector& p);
+  Point const_unproject(const Point& p) const;
+  Point project(const Point& p) const;
+  Vector project(const Vector& p) const;
   void get(double*);
   void get_trans(double*);
   void set(double*);
