@@ -855,22 +855,27 @@ proc loadfile {netedit_loadfile} {
     return
 }
 
-proc loadnet {netedit_loadfile } {
+proc loadnet { netedit_loadfile } {
     # Check to see of the file exists; warn user if it doesnt
     if { ![file exists $netedit_loadfile] } {
-	createSciDialog -warning -message \
+	createSciDialog -warning -message 
 	    "File \"$netedit_loadfile\" does not exist."
 	return
     }
-    # Cut off the path from the net name and put in on the title bar:
-    wm title . "SCIRun ([lindex [split "$netedit_loadfile" / ] end])"
-    # Remember the name of this net for future "Saves".
-    global netedit_savefile NetworkChanged Subnet
-    set netedit_savefile $netedit_loadfile
-    # The '#' below is not a comment...
-    uplevel #0 {source $netedit_savefile}
+
+    global netedit_savefile NetworkChanged Subnet inserting
+    if { !$inserting || ![string length $netedit_savefile] } {
+	# Cut off the path from the net name and put in on the title bar:
+	set name [lindex [file split "$netedit_loadfile"] end]
+	wm title . "SCIRun ($name)"
+	# Remember the name of this net for future "Saves".
+	set netedit_savefile $netedit_loadfile
+    }
+
+    # The '#' below is not a comment... This souces the network file globally
+    uplevel \#0 {source $netedit_savefile}
     set Subnet(Subnet$Subnet(Loading)_filename) $netedit_loadfile
-    set NetworkChanged 0
+    if { !$inserting } { set NetworkChanged 0 }
 }
 
 # Ask the user to select a data directory 
@@ -1337,4 +1342,13 @@ proc listFindAndRemove { name elem } {
 proc initVar { var } {
     if { [string first msgStream $var] != -1 } return
     uplevel \#0 trace variable \"$var\" w networkHasChanged
+}
+
+
+# Debug procedure to print global variable values
+proc printvars { pattern } {
+    foreach name [lsort [uplevel \#0 "info vars *${pattern}*"]] { 
+	upvar \#0 $name var
+	puts "set \"$name\" \{$var\}"
+    }
 }
