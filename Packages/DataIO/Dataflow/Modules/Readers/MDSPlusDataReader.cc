@@ -1005,6 +1005,10 @@ void MDSPlusDataReader::tcl_command(GuiArgs& args, void* userdata)
     if( mdsdump.tree(server, tree, shot, signal, depth ) < 0 ) {
       error( mdsdump.error() );
       gui->execute( "reset_cursor" );
+
+      sPtr.flush();
+      sPtr.close();
+
       return;
     }
 
