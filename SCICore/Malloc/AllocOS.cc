@@ -21,6 +21,7 @@
 #ifdef __sgi
 #include <unistd.h>
 #endif
+#include <config.h>
 
 #ifdef sun
 #define MMAP_TYPE char
@@ -44,9 +45,17 @@ OSHunk* OSHunk::alloc(size_t size)
 	    abort();
 	}
     }
+#ifdef SCI_64BIT
+    void* ptr=mmap64(0, asize, PROT_READ|PROT_WRITE, MAP_PRIVATE, devzero_fd, 0);
+#else
     void* ptr=mmap(0, asize, PROT_READ|PROT_WRITE, MAP_PRIVATE, devzero_fd, 0);
+#endif
     if((long)ptr == -1){
+#ifdef SCI_64BIT
+	fprintf(stderr, "Error allocating memory (%ld bytes requested)\nmmap: errno=%d\n", asize, errno);
+#else
 	fprintf(stderr, "Error allocating memory (%d bytes requested)\nmmap: errno=%d\n", asize, errno);
+#endif
 	abort();
     }
     OSHunk* hunk=(OSHunk*)ptr;
@@ -82,6 +91,12 @@ void OSHunk::free(OSHunk* hunk)
 
 //
 // $Log$
+// Revision 1.3  1999/08/18 18:56:17  sparker
+// Use 64 bit mmap
+// Incorporated missing Hashtable Pio function
+// Fix bug in MAKE_PARALLELISM handling
+// Got rid of lib32 in main/Makefile.in (for 64 bit)
+//
 // Revision 1.2  1999/08/17 06:39:30  sparker
 // Merged in modifications from PSECore to make this the new "blessed"
 // version of SCIRun/Uintah.

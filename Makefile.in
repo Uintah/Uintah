@@ -6,6 +6,9 @@ SUBDIRS = SCICore PSECore main PSECommon Uintah
 
 include $(SRCTOP)/scripts/recurse.mk
 
+_cleanHere::
+	rm -f uintah
+
 _distcleanHere::
 	rm -f config.h so_locations
 	rm -f scripts/cc scripts/CC
