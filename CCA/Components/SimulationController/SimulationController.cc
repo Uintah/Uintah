@@ -155,8 +155,10 @@ void SimulationController::run()
    sched->problemSetup(ups);
    SchedulerP scheduler(sched);
 
-   if(d_myworld->myrank() == 0)
-     cerr << "Compiling taskgraph...";
+   if(d_myworld->myrank() == 0){
+     cout << "Compiling taskgraph...";
+     cout.flush();
+   }
    double start = Time::currentSeconds();
    scheduler->advanceDataWarehouse(grid);
    
@@ -210,7 +212,7 @@ void SimulationController::run()
    scheduler->compile(d_myworld);
    double dt=Time::currentSeconds()-start;
    if(d_myworld->myrank() == 0)
-     cerr << "done (" << dt << " seconds)\n";
+     cout << "done (" << dt << " seconds)\n";
    scheduler->execute(d_myworld);
 
 #ifdef OUTPUT_AVG_ELAPSED_WALLTIME
@@ -300,7 +302,7 @@ void SimulationController::run()
       if(first || need_recompile(t, delt, level, cfd, mpm, mpmcfd, md, output)){
 	first=false;
 	if(d_myworld->myrank() == 0)
-	  cerr << "Compiling taskgraph...";
+	  cout << "Compiling taskgraph...";
 	double start = Time::currentSeconds();
 	scheduler->initialize();
 
@@ -321,7 +323,7 @@ void SimulationController::run()
 
 	double dt=Time::currentSeconds()-start;
 	if(d_myworld->myrank() == 0)
-	  cerr << "done (" << dt << " seconds)\n";
+	  cout << "done (" << dt << " seconds)\n";
       }
       // Execute the current timestep
       scheduler->execute(d_myworld);
