@@ -41,21 +41,22 @@ void XceptionRelay::relayException(int x_id, Message* message)
   (*sbuf) = length;
   ::std::cout << "Packed Message\n";
 
+  //Send to all cohorts
   for(int k=0; k < mypb->rm.getSize(); k++) {
     if(k !=  mypb->rm.getRank()) {
       icomm->async_send(k,sbuf,MAX_X_MSG_LENGTH);
-      ::std::cout << "SENDING to " << k << "\n";
+      ::std::cout << "SENDING to " << k << ", xid=" << x_id << "\n";
     } 
   }
 }
 
-void XceptionRelay::checkException() 
+int XceptionRelay::checkException(Message** _xMsg) 
 { 
   IntraComm* icomm = mypb->rm.intracomm;
   Message* message = mypb->rm.getIndependentReference()->chan->getMessage();
 
   //If this is a serial object, intracomm. may be NULL
-  if(icomm == NULL) return;
+  assert(icomm != NULL);
 
   //Increment lineID
   lineID++;
@@ -63,29 +64,46 @@ void XceptionRelay::checkException()
   for(int k=0; k < mypb->rm.getSize(); k++) {
     if(k !=  mypb->rm.getRank()) {
       if(icomm->async_receive(k,rbuf,MAX_X_MSG_LENGTH)) {
-	//Unmarshal data and store it in the XDB
-	Xception newX;
+	//Unmarshal data 
 	char* p_rbuf = rbuf;
 	int length = (int)(*p_rbuf);
 	assert(length <= MAX_X_MSG_LENGTH);
 	p_rbuf += sizeof(int);
-	newX.xID = (int)(*p_rbuf);
+	int xID = (int)(*p_rbuf);
 	p_rbuf += sizeof(int);	
 	int xlineID = (int)(*p_rbuf);
 	p_rbuf += sizeof(int);
 	length -= (3*sizeof(int));
-	message->setRecvBuffer(p_rbuf,length);
+
+	char* msgbuf = (char*)malloc(length); 
+        memcpy(msgbuf,p_rbuf,length);
+	message->setRecvBuffer(msgbuf,length);
+        message->unmarshalInt(&xID);
+
+	//Throw right away if it is past due
+	if(xlineID <= lineID) {
+	  ::std::cerr << "New exception; x_id=" << xID << ", lineID="
+	              << lineID << ", xlineID=" << xlineID << "\n";
+
+	  (*_xMsg) = message;
+	  return (xID);
+	}
+ 
+	//Store data in exception database 
+	Xception newX;
+        newX.xID = xID;
 	newX.xMsg = message;
-	::std::cerr << "New exception; x_id=" << newX.xID << ", lineID=" << lineID << ", xlineID=" << xlineID << "\n";
-	xdb.insert(XDB_valType(xlineID, newX));
-      }
+        xdb.insert(XDB_valType(xlineID, newX));
+
+
+      } //EndIf msgReceived
     }
   }
 
-
-
   //Check XDB for exceptions'need throwin'
+  
 
+  return 0;
 }
 
 

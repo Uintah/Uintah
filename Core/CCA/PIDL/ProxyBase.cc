@@ -121,3 +121,14 @@ void ProxyBase::_proxycreateSubset(int localsize, int remotesize)
   rm.createSubset(localsize,remotesize);
 }
 
+void ProxyBase::_proxygetException()
+{
+  (rm.intracomm)->barrier();
+  ::SCIRun::Message* _xMsg;
+  int _xid = xr->checkException(&_xMsg);
+  if(_xid != 0) {
+    //_castException(_xid,&_xMsg);
+  }
+  (rm.intracomm)->barrier();
+}
+

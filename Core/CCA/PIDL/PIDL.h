@@ -107,6 +107,12 @@ DESCRIPTION
 
     static bool isNexus();
 
+    //////////
+    // Rank and size for parallel proxies are statically set 
+    // into these variables. Set by PIDL::initialize().
+    static int rank;
+    static int size;
+
   protected:
   private:
     //////////
@@ -124,9 +130,6 @@ DESCRIPTION
     static Warehouse* warehouse;
 
     static DataTransmitter* theDataTransmitter;
-
-    static int mpi_rank;
-    static int mpi_size;
 
     //////////
     // Private constructor to prevent creation of a PIDL
