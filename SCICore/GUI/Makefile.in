@@ -2,9 +2,9 @@ SRCTOP   = @top_srcdir@
 SRCDIR   = @srcdir@
 OBJTOP   = ../..
 
-VPATH = $(SRCDIR)
-
 include $(OBJTOP)/scripts/targets.mk
+
+VPATH = $(SRCDIR)
 
 all:: tclIndex
 
