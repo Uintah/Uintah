@@ -39,14 +39,15 @@ namespace OESort_ns {
     public:
 	OESort_impl();
 	virtual ~OESort_impl();
-	virtual int sort(CIA::array1<int>&);
+	virtual int sort(const CIA::array1<int>&, CIA::array1<int>&, CIA::array1<int>&);
     };
 
     class OESplit_impl : public OESplit {
     public:
 	OESplit_impl();
 	virtual ~OESplit_impl();
-	virtual int split(CIA::array1<int>&);
+	virtual int split(const CIA::array1<int>&, CIA::array1<int>&);
+	OESort::pointer ss;
     };
 
 } // End namespace OESort

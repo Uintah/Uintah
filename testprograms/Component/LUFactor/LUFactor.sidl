@@ -16,19 +16,10 @@
 */
 
 
-package OESort_ns {
-    distribution array X <int, 1>;
-    distribution array Y <int, 1>;
-    distribution array Z <int, 1>;
-
-    distribution array A <int, 1>;
-    distribution array B <int, 1>;
-
-    interface OESort {
-	int sort(in X arr, out Y odds, out Z evens);
-    };
-    interface OESplit {	
-	int split(in A arr, out B result_arr);
+package LUFactor_ns {
+    distribution array X <double, 2>;
+    interface LUFactor {
+	int LUFactorize(in X arr);
     };
 };
 

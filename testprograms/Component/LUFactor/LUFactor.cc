@@ -17,7 +17,7 @@
 
 
 /*
- *  Jacobi.cc
+ *  LUFactor.cc
  *
  *  Written by:
  *   Kostadin Damevski
@@ -36,16 +36,12 @@
 #include <Core/CCA/Component/PIDL/MxNArrayRep.h>
 #include <Core/CCA/Component/PIDL/MalformedURL.h>
 
-#include <testprograms/Component/Jacobi/Jacobi_impl.h>
-#include <testprograms/Component/Jacobi/Jacobi_sidl.h>
+#include <testprograms/Component/LUFactor/LUFactor_impl.h>
+#include <testprograms/Component/LUFactor/LUFactor_sidl.h>
 #include <Core/Thread/Time.h>
 
 
-/*****************************************************************************/
-#define NYI    100                       /* Number of Y-Intervals            */
-#define NXI    100                       /* Number of X-Intervals            */
-#define Tinit    0                       /* Starting value                   */
-/*****************************************************************************/
+#define SIZE 200               
 
 using std::cerr;
 using std::cout;
@@ -62,23 +58,24 @@ void usage(char* progname)
     exit(1);
 }
 
-void initialize(CIA::array2<double>& t){
+void generate(CIA::array2<double>& A){
   unsigned int i, j;
   
-  for( i=0; i<t.size1(); i++ )       
-    for ( j=0; j<t.size2(); j++ )
-      t[i][j] = Tinit;
+  for( i=0; i<SIZE; i++ )       
+    for ( j=0; j<SIZE; j++ )
+      A[i][j] = (rand() % 10);
+     
 }
 
 int main(int argc, char* argv[])
 {
     using std::string;
 
-    using Jacobi_ns::Jacobi_impl;
-    using Jacobi_ns::Jacobi;
+    using LUFactor_ns::LUFactor_impl;
+    using LUFactor_ns::LUFactor;
 
-    CIA::array2<double> t;
-    t.resize(NXI,NYI); 
+    CIA::array2<double> A;
+    A.resize(SIZE,SIZE); 
 
     int myrank = 0;
     int mysize = 0;
@@ -124,42 +121,37 @@ int main(int argc, char* argv[])
 	    usage(argv[0]);
 
 	if(server) {
-	  Jacobi_impl* jc=new Jacobi_impl;
-
-          int arrsize = NYI / mysize;
-          int sta = myrank * arrsize;
-          int fin = (myrank * arrsize) + arrsize;
-	  if (myrank == mysize-1) fin = NYI;
+	  LUFactor_impl* lu=new LUFactor_impl;
 	  
           //Set up server's requirement of the distribution array 
           Index** dr0 = new Index* [2];
-	  dr0[0] = new Index(0,NXI,1);
-          dr0[1] = new Index(sta,fin,1);
+	  dr0[0] = new Index(0,SIZE,1);
+          dr0[1] = new Index(0,SIZE,1);
           MxNArrayRep* arrr0 = new MxNArrayRep(2,dr0);
-	  jc->setCalleeDistribution("X",arrr0);
+	  lu->setCalleeDistribution("X",arrr0);
           std::cerr << "setCalleeDistribution completed\n";
 
-	  cerr << "Waiting for Jacobi connections...\n";
-	  cerr << jc->getURL().getString() << '\n';
+	  cerr << "Waiting for LUFactor connections...\n";
+	  cerr << lu->getURL().getString() << '\n';
 
 	} else {
 
           //Creating a multiplexing proxy from all the URLs
 	  Object::pointer obj=PIDL::objectFrom(server_urls,mysize,myrank);
-	  Jacobi::pointer jc=pidl_cast<Jacobi::pointer>(obj);
+	  LUFactor::pointer jc=pidl_cast<LUFactor::pointer>(obj);
 	  if(jc.isNull()){
 	    cerr << "jc_isnull\n";
 	    abort();
 	  }
 
-	  //Set up the array 
-	  initialize(t);                  
+	  //Set up a random matrix 
+	  generate(A);                  
 
 	  //Inform everyone else of my distribution
           //(this sends a message to all the callee objects)
           Index** dr0 = new Index* [2];
-	  dr0[0] = new Index(0,NXI,1);
-          dr0[1] = new Index(0,NYI,1);
+	  dr0[0] = new Index(0,SIZE,1);
+          dr0[1] = new Index(0,SIZE,1);
           MxNArrayRep* arrr0 = new MxNArrayRep(2,dr0);
 	  jc->setCallerDistribution("X",arrr0);
           std::cerr << "setCallerDistribution completed\n";
@@ -167,19 +159,20 @@ int main(int argc, char* argv[])
           double stime=Time::currentSeconds();
 
 	  /*Solve heat equation on this array*/
-	  jc->solveHeatEquation(t,300,100,0,0);
-
+	  jc->LUFactorize(A);
+	  
 	  double dt=Time::currentSeconds()-stime;
 	  cerr << reps << " reps in " << dt << " seconds\n";
 	  double us=dt/reps*1000*1000;
 	  cerr << us << " us/rep\n";
-	  
+
+	  cout << "\n";
 	}
     } catch(const MalformedURL& e) {
-	cerr << "Jacobi.cc: Caught MalformedURL exception:\n";
+	cerr << "LUFactor.cc: Caught MalformedURL exception:\n";
 	cerr << e.message() << '\n';
     } catch(const Exception& e) {
-	cerr << "Jacobi.cc: Caught exception:\n";
+	cerr << "LUFactor.cc: Caught exception:\n";
 	cerr << e.message() << '\n';
 	abort();
     } catch(...) {
@@ -192,5 +185,14 @@ int main(int argc, char* argv[])
 
     return 0;
 }
+
+
+
+
+
+
+
+
+
 
 
