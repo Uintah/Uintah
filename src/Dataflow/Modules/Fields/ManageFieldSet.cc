@@ -14,16 +14,20 @@
 #include <Core/Persistent/Pstreams.h>
 #include <Dataflow/Network/Module.h>
 #include <Core/GuiInterface/GuiVar.h>
+#include <Core/Datatypes/FieldSet.h>
+#include <Dataflow/Ports/FieldSetPort.h>
 
 #include <iostream>
 using std::cerr;
 #include <stdio.h>
+
 
 namespace SCIRun {
 
 class ManageFieldSet : public Module
 {
   GuiString          op_gui_;
+
 
 public:
   ManageFieldSet(const clString& id);
@@ -37,14 +41,18 @@ extern "C" Module* make_ManageFieldSet(const clString& id)
   return new ManageFieldSet(id);
 }
 
+
 ManageFieldSet::ManageFieldSet(const clString& id)
-  : Module("ManageFieldSet", id, Filter), op_gui_("op_gui", id, this)
+  : Module("ManageFieldSet", id, Filter),
+    op_gui_("op_gui", id, this)
 {
 }
+
 
 ManageFieldSet::~ManageFieldSet()
 {
 }
+
 
 void
 ManageFieldSet::execute()
