@@ -3773,6 +3773,9 @@ void ICE::advectAndAdvanceInTime(const ProcessorGroup*,
          
       setBC(vel_CC, "Velocity", patch,d_sharedState, indx, lodi_vars); 
 
+      if(d_usingLODI){  // you need vel_CC_new
+        lodi_vars->vel_CC.copyData(vel_CC);
+      }
       //__________________________________
       // Advect internal energy and backout Temp_CC
       advector->advectQ(int_eng_L_ME,patch,q_advected, new_dw);

@@ -298,6 +298,7 @@ void  lodi_bc_preprocess( const Patch* patch,
   
   const double cv = lv->cv;
   CCVariable<double>& e = lv->e;  // shortcuts to Lodi_vars struct
+  CCVariable<Vector>& vel_CC = lv->vel_CC;
   CCVariable<double>& rho_CC = lv->rho_CC;
   CCVariable<double>& press_tmp = lv->press_tmp; 
   CCVariable<Vector>& nu = lv->nu;  
@@ -316,9 +317,11 @@ void  lodi_bc_preprocess( const Patch* patch,
   old_dw->get(vol_frac_old, lb->vol_frac_CCLabel, indx,patch,gac,1);
 
   new_dw->allocateTemporary(press_tmp,  patch, gac, 2);
-  new_dw->allocateTemporary(nu, patch, gac, 1);
-  new_dw->allocateTemporary(e,  patch, gac, 1);
-  new_dw->allocateTemporary(rho_CC,  patch, gac, 1);
+  new_dw->allocateTemporary(nu,         patch, gac, 1);
+  new_dw->allocateTemporary(e,          patch, gac, 1);
+  new_dw->allocateTemporary(rho_CC,     patch, gac, 1);  
+  new_dw->allocateTemporary(vel_CC,     patch, gac, 1);
+
   for (int i = 0; i <= 5; i++){
     new_dw->allocateTemporary(di[i], patch, gac, 1);
   }  
@@ -581,8 +584,8 @@ void FaceDensity_LODI(const Patch* patch,
   // shortcuts
   StaticArray<CCVariable<Vector> >& d = lv->di;
   const CCVariable<Vector>& nu      = lv->nu;
-  const CCVariable<double>& rho_tmp = lv->rho_old;
-  const CCVariable<Vector>& vel     = lv->vel_old;
+  const CCVariable<double>& rho_old = lv->rho_old;
+  const CCVariable<Vector>& vel_old = lv->vel_old;
   const double delT = lv->delT;
 
   double conv_dir1, conv_dir2;
@@ -604,24 +607,24 @@ void FaceDensity_LODI(const Patch* patch,
     IntVector l1 = c;
     r1[dir1] += offset[dir1];  // tweak the r and l cell indices
     l1[dir1] -= offset[dir1];
-    qConFrt  = rho_tmp[r1] * vel[r1][dir1];
-    qConLast = rho_tmp[l1] * vel[l1][dir1];
+    qConFrt  = rho_old[r1] * vel_old[r1][dir1];
+    qConLast = rho_old[l1] * vel_old[l1][dir1];
     
     conv_dir1 = computeConvection(nu[r1][dir1], nu[c][dir1], nu[l1][dir1], 
-                                  rho_tmp[r1], rho_tmp[c], rho_tmp[l1], 
+                                  rho_old[r1], rho_old[c], rho_old[l1], 
                                   qConFrt, qConLast, delT, dx[dir1]);
     IntVector r2 = c;
     IntVector l2 = c;
     r2[dir2] += offset[dir2];  // tweak the r and l cell indices
     l2[dir2] -= offset[dir2];
     
-    qConFrt  = rho_tmp[r2] * vel[r2][dir2];
-    qConLast = rho_tmp[l2] * vel[l2][dir2];
+    qConFrt  = rho_old[r2] * vel_old[r2][dir2];
+    qConLast = rho_old[l2] * vel_old[l2][dir2];
     conv_dir2 = computeConvection(nu[r2][dir2], nu[c][dir2], nu[l2][dir2],
-                                  rho_tmp[r2], rho_tmp[c], rho_tmp[l2], 
+                                  rho_old[r2], rho_old[c], rho_old[l2], 
                                   qConFrt, qConLast, delT, dx[dir2]);
 
-    rho_CC[c] = rho_tmp[c] - delT * (d[1][c][P_dir] + conv_dir1 + conv_dir2);
+    rho_CC[c] = rho_old[c] - delT * (d[1][c][P_dir] + conv_dir1 + conv_dir2);
   }
  
   //__________________________________
@@ -649,13 +652,13 @@ void FaceDensity_LODI(const Patch* patch,
       IntVector c = *iter;  
       IntVector r = c + offset;  
       IntVector l = c - offset;
-      qConFrt  = rho_tmp[r] * vel[r][Edir2];
-      qConLast = rho_tmp[l] * vel[l][Edir2];
+      qConFrt  = rho_old[r] * vel_old[r][Edir2];
+      qConLast = rho_old[l] * vel_old[l][Edir2];
       double conv = computeConvection(nu[r][Edir2], nu[c][Edir2], nu[l][Edir2],
-                                rho_tmp[r], rho_tmp[c], rho_tmp[l], 
+                                rho_old[r], rho_old[c], rho_old[l], 
                                 qConFrt, qConLast, delT, dx[Edir2]);
                                 
-      rho_CC[c] = rho_tmp[c] - delT * (d[1][c][P_dir] + d[1][c][Edir1] + conv);
+      rho_CC[c] = rho_old[c] - delT * (d[1][c][P_dir] + d[1][c][Edir1] + conv);
     }
   }
 
@@ -667,7 +670,7 @@ void FaceDensity_LODI(const Patch* patch,
   vector<IntVector>::iterator itr;
   for(itr = crn.begin(); itr != crn.end(); ++ itr ) {
     IntVector c = *itr;
-    rho_CC[c] = rho_tmp[c] 
+    rho_CC[c] = rho_old[c] 
               - delT * (d[1][c][P_dir] + d[1][c][dir1] + d[1][c][dir2]);
   }           
 }
@@ -691,8 +694,10 @@ void FaceVel_LODI(const Patch* patch,
      
   // shortcuts       
   StaticArray<CCVariable<Vector> >& d = lv->di;      
-  constCCVariable<double>& rho_tmp = lv->rho_old;    
-  constCCVariable<Vector>& vel     = lv->vel_old; 
+  constCCVariable<double>& rho_old = lv->rho_old;
+  constCCVariable<Vector>& vel_old = lv->vel_old; 
+  CCVariable<double>& rho_new = lv->rho_CC;
+  
   CCVariable<double>& p  = lv->press_tmp;          
   double delT = lv->delT;
                  
@@ -717,8 +722,8 @@ void FaceVel_LODI(const Patch* patch,
     Vector convect1(0,0,0);
     for(int dir = 0; dir <3; dir ++ ) {
       convect1[dir] = 
-        0.5 * ( (rho_tmp[r1] * vel[r1][dir] * vel[r1][dir1]
-              -  rho_tmp[l1] * vel[l1][dir] * vel[l1][dir1] )/dx[dir1] );
+        0.5 * ( (rho_old[r1] * vel_old[r1][dir] * vel_old[r1][dir1]
+              -  rho_old[l1] * vel_old[l1][dir] * vel_old[l1][dir1] )/dx[dir1]);
     }
     
     IntVector r2 = c;
@@ -729,8 +734,8 @@ void FaceVel_LODI(const Patch* patch,
     Vector convect2(0,0,0);
      for(int dir = 0; dir <3; dir ++ ) {
        convect2[dir] = 
-         0.5 * ( (rho_tmp[r2] * vel[r2][dir] * vel[r2][dir2]
-               -  rho_tmp[l2] * vel[l2][dir] * vel[l2][dir2] )/dx[dir2] );
+         0.5*( (rho_old[r2] * vel_old[r2][dir] * vel_old[r2][dir2]
+             -  rho_old[l2] * vel_old[l2][dir] * vel_old[l2][dir2] )/dx[dir2]);
      }       
     //__________________________________
     // Pressure gradient terms
@@ -740,22 +745,25 @@ void FaceVel_LODI(const Patch* patch,
     
     //__________________________________
     // Equation 9.9 - 9.10
-    vel_CC[c][P_dir] =
-           rho_tmp[c] * vel[c][P_dir] - delT * ( vel[c][P_dir] * d[1][c][P_dir] 
-                                             + rho_tmp[c]      * d[3][c][P_dir]
-                                             + convect1[P_dir] + convect2[P_dir]
-                                             +   pressGradient[P_dir] );     
-    vel_CC[c][dir1]  =
-           rho_tmp[c] * vel[c][dir1] - delT * ( vel[c][dir1] * d[1][c][P_dir]
-                                             +  rho_tmp[c]   * d[4][c][P_dir] 
-                                             +  convect1[dir1] + convect2[dir1]
-                                             +  pressGradient[dir1] );
-    vel_CC[c][dir2] =
-           rho_tmp[c] * vel[c][dir2] - delT * ( vel[c][dir2] * d[1][c][P_dir]
-                                             +  rho_tmp[c]   * d[5][c][P_dir]
-                                             +  convect1[dir2] + convect2[dir2]
-                                             +  pressGradient[dir2] );
-    vel_CC[c] /= rho_tmp[c];
+    Vector mom; // momentum
+    mom[P_dir] = rho_old[c] * vel_old[c][P_dir] 
+                     - delT * ( vel_old[c][P_dir] * d[1][c][P_dir] 
+                            + rho_old[c] * d[3][c][P_dir]
+                            + convect1[P_dir] + convect2[P_dir]
+                            + pressGradient[P_dir] );
+                     
+    mom[dir1]  = rho_old[c] * vel_old[c][dir1] 
+                     - delT * ( vel_old[c][dir1] * d[1][c][P_dir]
+                            +  rho_old[c] * d[4][c][P_dir] 
+                            +  convect1[dir1] + convect2[dir1]
+                            +  pressGradient[dir1] );
+                     
+    mom[dir2] = rho_old[c] * vel_old[c][dir2] 
+                    - delT * ( vel_old[c][dir2] * d[1][c][P_dir]
+                           +  rho_old[c] * d[5][c][P_dir]
+                           +  convect1[dir2] + convect2[dir2]
+                           +  pressGradient[dir2] );
+    vel_CC[c] = mom/rho_new[c];
   }
   //__________________________________
   //    E D G E S  -- on boundaryFaces only
@@ -780,68 +788,69 @@ void FaceVel_LODI(const Patch* patch,
     CellIterator iterLimits =  PatchEdgeIterator( patch,face,face0,offset);
                       
     for(CellIterator iter = iterLimits;!iter.done();iter++){ 
-    IntVector c = *iter;
-    
-    //__________________________________
-    // convective terms
-    IntVector r1 = c;
-    IntVector l1 = c;
-    r1[Edir2] += offset[Edir2];  // tweak the r and l cell indices
-    l1[Edir2] -= offset[Edir2]; 
-       
-    Vector convect1(0,0,0);
-    for(int dir = 0; dir <3; dir ++ ) {
-      convect1[dir] = 
-        0.5 * ( (rho_tmp[r1] * vel[r1][dir] * vel[r1][Edir2]
-              -  rho_tmp[l1] * vel[l1][dir] * vel[l1][Edir2] )/dx[Edir2] );
-    }
-    //__________________________________
-    // Pressure gradient terms
-    Vector pressGradient(0,0,0); 
-    pressGradient[Edir2] = 0.5 * (p[r1] - p[l1])/dx[Edir2];  
-    
-    //__________________________________
-    // Equation 9.9 - 9.10
-    vel_CC[c][P_dir]= rho_tmp[c] * vel[c][P_dir] 
-                    - delT * ( vel[c][P_dir] * (d[1][c][P_dir] + d[1][c][Edir1])
-                           +   rho_tmp[c]    * (d[3][c][P_dir] + d[4][c][Edir1])
-                           +   convect1[P_dir]
-                           +   pressGradient[P_dir] );
-    vel_CC[c][Edir1]= rho_tmp[c] * vel[c][Edir1]
-                    - delT * ( vel[c][Edir1] * (d[1][c][P_dir] + d[1][c][Edir1])
-                           +  rho_tmp[c]     * (d[4][c][P_dir] + d[3][c][Edir1])
-                           +  convect1[Edir1]
-                           +  pressGradient[Edir1] );
-    vel_CC[c][Edir2]= rho_tmp[c] * vel[c][Edir2]
-                    - delT * ( vel[c][Edir2] * (d[1][c][P_dir] + d[1][c][Edir1])
-                           +  rho_tmp[c]     * (d[5][c][P_dir] + d[5][c][Edir1])
-                           +  convect1[Edir2]
-                           +  pressGradient[Edir2] );
-    vel_CC[c] /= rho_tmp[c];
+      IntVector c = *iter;
+
+      //__________________________________
+      // convective terms
+      IntVector r1 = c;
+      IntVector l1 = c;
+      r1[Edir2] += offset[Edir2];  // tweak the r and l cell indices
+      l1[Edir2] -= offset[Edir2]; 
+
+      Vector convect1(0,0,0);
+      for(int dir = 0; dir <3; dir ++ ) {
+        convect1[dir] = 
+         0.5 * ( (rho_old[r1] * vel_old[r1][dir] * vel_old[r1][Edir2]
+               -  rho_old[l1] * vel_old[l1][dir] * vel_old[l1][Edir2] )/dx[Edir2] );
+      }
+      //__________________________________
+      // Pressure gradient terms
+      Vector pressGradient(0,0,0); 
+      pressGradient[Edir2] = 0.5 * (p[r1] - p[l1])/dx[Edir2];  
+
+      //__________________________________
+      // Equation 9.9 - 9.10
+      Vector mom; // momentum
+      mom[P_dir] = rho_old[c] * vel_old[c][P_dir] 
+               - delT * ( vel_old[c][P_dir] * (d[1][c][P_dir] + d[1][c][Edir1])
+                      +   rho_old[c] * (d[3][c][P_dir] + d[4][c][Edir1])
+                      +   convect1[P_dir]
+                      +   pressGradient[P_dir] );
+      mom[Edir1] = rho_old[c] * vel_old[c][Edir1]
+               - delT * ( vel_old[c][Edir1] * (d[1][c][P_dir] + d[1][c][Edir1])
+                      +  rho_old[c]     * (d[4][c][P_dir] + d[3][c][Edir1])
+                      +  convect1[Edir1]
+                      +  pressGradient[Edir1] );
+      mom[Edir2] = rho_old[c] * vel_old[c][Edir2]
+               - delT * ( vel_old[c][Edir2] * (d[1][c][P_dir] + d[1][c][Edir1])
+                      +  rho_old[c]     * (d[5][c][P_dir] + d[5][c][Edir1])
+                      +  convect1[Edir2]
+                      +  pressGradient[Edir2] );
+      vel_CC[c] = mom/rho_new[c];
     }
   }  
   //________________________________________________________
   // C O R N E R S    
-  double uVel, vVel, wVel;
+  double mom_x, mom_y, mom_z; // momentum
   vector<IntVector> crn;
   computeCornerCellIndices(patch, face, crn);
  
   vector<IntVector>::iterator itr;
   for(itr = crn.begin(); itr != crn.end(); ++ itr ) {
     IntVector c = *itr;
-    uVel = rho_tmp[c] * vel[c].x() - delT 
-         * ((d[1][c].x() + d[1][c].y() + d[1][c].z()) * vel[c].x()  
-         +  (d[3][c].x() + d[4][c].y() + d[5][c].z()) * rho_tmp[c]);
+    mom_x = rho_old[c] * vel_old[c].x() - delT 
+         * ((d[1][c].x() + d[1][c].y() + d[1][c].z()) * vel_old[c].x()  
+         +  (d[3][c].x() + d[4][c].y() + d[5][c].z()) * rho_old[c]);
 
-    vVel = rho_tmp[c] * vel[c].y() - delT 
-         * ((d[1][c].x() + d[1][c].y() + d[1][c].z()) * vel[c].y() 
-         +  (d[4][c].x() + d[3][c].y() + d[4][c].z()) * rho_tmp[c]);
+    mom_y = rho_old[c] * vel_old[c].y() - delT 
+         * ((d[1][c].x() + d[1][c].y() + d[1][c].z()) * vel_old[c].y() 
+         +  (d[4][c].x() + d[3][c].y() + d[4][c].z()) * rho_old[c]);
 
-    wVel = rho_tmp[c] * vel[c].z() - delT 
-         * ((d[1][c].x() + d[1][c].y() + d[1][c].z()) * vel[c].z() 
-         +  (d[5][c].x() + d[5][c].y() + d[3][c].z()) * rho_tmp[c]);
+    mom_z = rho_old[c] * vel_old[c].z() - delT 
+         * ((d[1][c].x() + d[1][c].y() + d[1][c].z()) * vel_old[c].z() 
+         +  (d[5][c].x() + d[5][c].y() + d[3][c].z()) * rho_old[c]);
 
-    vel_CC[c] = Vector(uVel, vVel, wVel)/ rho_tmp[c];
+    vel_CC[c] = Vector(mom_x, mom_y, mom_z)/ rho_new[c];
   }
 } //end of the function FaceVelLODI() 
 
@@ -864,10 +873,11 @@ void FaceTemp_LODI(const Patch* patch,
   // shortcuts  
   StaticArray<CCVariable<Vector> >& d = lv->di;
   const CCVariable<double>& e         = lv->e;
-  const CCVariable<double>& rho_CC    = lv->rho_CC;
+  const CCVariable<double>& rho_new   = lv->rho_CC;
   const CCVariable<double>& rho_old   = lv->rho_old;
   const CCVariable<double>& press_tmp = lv->press_tmp;
-  const CCVariable<Vector>& vel = lv->vel_old;
+  const CCVariable<Vector>& vel_old   = lv->vel_old;
+  const CCVariable<Vector>& vel_new   = lv->vel_CC;
   const CCVariable<Vector>& nu  = lv->nu;
   const double delT  = lv->delT;
   const double gamma = lv->gamma;
@@ -892,8 +902,8 @@ void FaceTemp_LODI(const Patch* patch,
     IntVector l1 = c;
     r1[dir1] += offset[dir1];  // tweak the r and l cell indices
     l1[dir1] -= offset[dir1];
-    qConFrt  = vel[r1][dir1] * (e[r1] + press_tmp[r1]);
-    qConLast = vel[l1][dir1] * (e[l1] + press_tmp[l1]);
+    qConFrt  = vel_old[r1][dir1] * (e[r1] + press_tmp[r1]);
+    qConLast = vel_old[l1][dir1] * (e[l1] + press_tmp[l1]);
     
     conv_dir1 = computeConvection(nu[r1][dir1], nu[c][dir1], nu[l1][dir1], 
                                   e[r1], e[c], e[l1], 
@@ -903,25 +913,26 @@ void FaceTemp_LODI(const Patch* patch,
     r2[dir2] += offset[dir2];  // tweak the r and l cell indices
     l2[dir2] -= offset[dir2];
     
-    qConFrt  = vel[r2][dir2] * (e[r2] + press_tmp[r2]);
-    qConLast = vel[l2][dir2] * (e[l2] + press_tmp[l2]);
+    qConFrt  = vel_old[r2][dir2] * (e[r2] + press_tmp[r2]);
+    qConLast = vel_old[l2][dir2] * (e[l2] + press_tmp[l2]);
     conv_dir2 = computeConvection(nu[r2][dir2], nu[c][dir2], nu[l2][dir2],
                                   e[r2], e[c], e[l2], 
                                   qConFrt, qConLast, delT, dx[dir2]);
 
-    double vel_sqr = vel[c].length2();
-    term1 = 0.5 * d[1][c][P_dir] * vel_sqr;
+    double vel_old_sqr = vel_old[c].length2();
+    double vel_new_sqr = vel_new[c].length2();
+    term1 = 0.5 * d[1][c][P_dir] * vel_old_sqr;
     
     term2 = d[2][c][P_dir]/(gamma - 1.0) 
-          + rho_old[c] * ( vel[c][P_dir] * d[3][c][P_dir] + 
-                           vel[c][dir1]  * d[4][c][P_dir] +
-                           vel[c][dir2]  * d[5][c][P_dir] );
+          + rho_old[c] * ( vel_old[c][P_dir] * d[3][c][P_dir] + 
+                           vel_old[c][dir1]  * d[4][c][P_dir] +
+                           vel_old[c][dir2]  * d[5][c][P_dir] );
                                  
     term3 = conv_dir1 + conv_dir2;
                                                       
     double e_tmp = e[c] - delT * (term1 + term2 + term3);               
 
-    temp_CC[c] = e_tmp/(rho_CC[c]*cv) - 0.5 * vel_sqr/cv;
+    temp_CC[c] = e_tmp/(rho_new[c]*cv) - 0.5 * vel_new_sqr/cv;
   }
   
   //__________________________________
@@ -952,40 +963,44 @@ void FaceTemp_LODI(const Patch* patch,
       IntVector r = c + offset;  
       IntVector l = c - offset;
 
-      qConFrt  = vel[r][Edir2] * (e[r] + press_tmp[r]);
-      qConLast = vel[l][Edir2] * (e[l] + press_tmp[l]);
+      qConFrt  = vel_old[r][Edir2] * (e[r] + press_tmp[r]);
+      qConLast = vel_old[l][Edir2] * (e[l] + press_tmp[l]);
     
       double conv = computeConvection(nu[r][Edir2], nu[c][Edir2], nu[l][Edir2],
                                       e[r], e[c], e[l],               
                                       qConFrt, qConLast, delT, dx[Edir2]); 
                                       
-      double vel_sqr = vel[c].length2();
+      double vel_old_sqr = vel_old[c].length2();
 
-      term1 = 0.5 * (d[1][c][P_dir] + d[1][c][Edir1]) * vel_sqr;
+      term1 = 0.5 * (d[1][c][P_dir] + d[1][c][Edir1]) * vel_old_sqr;
 
-      term2 =  (d[2][c][P_dir] + d[2][c][Edir1])/(gamma - 1.0);
+      term2 = (d[2][c][P_dir] + d[2][c][Edir1])/(gamma - 1.0);
       
       if( edge == IntVector(1,1,0) ) { // Left/Right faces top/bottom edges
-        term3 = rho_old[c] * vel[c][P_dir] * (d[3][c][P_dir] + d[4][c][Edir1])  
-              + rho_old[c] * vel[c][Edir1] * (d[4][c][P_dir] + d[3][c][Edir1])  
-              + rho_old[c] * vel[c][Edir2] * (d[5][c][P_dir] + d[5][c][Edir1]); 
+        term3 =
+            rho_old[c] * vel_old[c][P_dir] * (d[3][c][P_dir] + d[4][c][Edir1])  
+          + rho_old[c] * vel_old[c][Edir1] * (d[4][c][P_dir] + d[3][c][Edir1])  
+          + rho_old[c] * vel_old[c][Edir2] * (d[5][c][P_dir] + d[5][c][Edir1]); 
       }
       
       if( edge == IntVector(1,0,1) ) { // Left/Right faces  Front/Back edges
-        term3 = rho_old[c] * vel[c][P_dir] * (d[3][c][P_dir] + d[5][c][Edir1])  
-              + rho_old[c] * vel[c][Edir2] * (d[4][c][P_dir] + d[4][c][Edir1])  
-              + rho_old[c] * vel[c][Edir1] * (d[5][c][P_dir] + d[3][c][Edir1]); 
+        term3 =
+            rho_old[c] * vel_old[c][P_dir] * (d[3][c][P_dir] + d[5][c][Edir1])  
+          + rho_old[c] * vel_old[c][Edir2] * (d[4][c][P_dir] + d[4][c][Edir1])  
+          + rho_old[c] * vel_old[c][Edir1] * (d[5][c][P_dir] + d[3][c][Edir1]); 
       }
       
       if( edge == IntVector(0,1,1) ) { // Top/Bottom faces  Front/Back edges
-        term3 = rho_old[c] * vel[c][Edir2] * (d[4][c][P_dir] + d[5][c][Edir1])  
-              + rho_old[c] * vel[c][P_dir] * (d[3][c][P_dir] + d[4][c][Edir1])  
-              + rho_old[c] * vel[c][Edir1] * (d[5][c][P_dir] + d[3][c][Edir1]); 
+        term3 =
+            rho_old[c] * vel_old[c][Edir2] * (d[4][c][P_dir] + d[5][c][Edir1])  
+          + rho_old[c] * vel_old[c][P_dir] * (d[3][c][P_dir] + d[4][c][Edir1])  
+          + rho_old[c] * vel_old[c][Edir1] * (d[5][c][P_dir] + d[3][c][Edir1]); 
       }      
       
       double e_tmp = e[c] - delT * ( term1 + term2 + term3 + conv);
+      double vel_new_sqr = vel_new[c].length2();
 
-      temp_CC[c] = e_tmp/(rho_CC[c] *cv) - 0.5 * vel_sqr/cv;
+      temp_CC[c] = e_tmp/(rho_new[c] *cv) - 0.5 * vel_new_sqr/cv;
     }
   }  
  
@@ -997,18 +1012,20 @@ void FaceTemp_LODI(const Patch* patch,
   vector<IntVector>::iterator itr;
   for(itr = crn.begin(); itr != crn.end(); ++ itr ) {
     IntVector c = *itr;
-    double vel_sqr = vel[c].length2();
-
-    term1 = 0.5 * (d[1][c].x() + d[1][c].y() + d[1][c].z()) * vel_sqr;
+    double vel_old_sqr = vel_old[c].length2();
+    double vel_new_sqr = vel_new[c].length2();
+    
+    term1 = 0.5 * (d[1][c].x() + d[1][c].y() + d[1][c].z()) * vel_old_sqr;
     term2 =       (d[2][c].x() + d[2][c].y() + d[2][c].z())/(gamma - 1.0);
     
-    term3 = rho_old[c] * vel[c].x() * (d[3][c].x() + d[4][c].y() + d[5][c].z())  
-          + rho_old[c] * vel[c].y() * (d[4][c].x() + d[3][c].y() + d[4][c].z())  
-          + rho_old[c] * vel[c].z() * (d[5][c].x() + d[5][c].y() + d[3][c].z()); 
+    term3 =
+        rho_old[c] * vel_old[c].x() * (d[3][c].x() + d[4][c].y() + d[5][c].z())  
+      + rho_old[c] * vel_old[c].y() * (d[4][c].x() + d[3][c].y() + d[4][c].z())  
+      + rho_old[c] * vel_old[c].z() * (d[5][c].x() + d[5][c].y() + d[3][c].z()); 
 
     double e_tmp = e[c] - delT * ( term1 + term2 + term3);
 
-    temp_CC[c] = e_tmp/rho_CC[c]/cv - 0.5 * vel_sqr/cv;
+    temp_CC[c] = e_tmp/rho_new[c]/cv - 0.5 * vel_new_sqr/cv;
   }
 } //end of function FaceTempLODI()  
 
