@@ -54,6 +54,10 @@ namespace Uintah {
                                GridP& grid,
                                SimulationStateP&);
       
+      virtual void updateExchangeCoefficients(const ProblemSpecP& params, 
+                                              GridP& grid,
+                                             SimulationStateP&);
+      
       virtual void scheduleInitialize(const LevelP& level, 
                                       SchedulerP&);
 
