@@ -29,6 +29,7 @@ proc makeNetworkEditor {} {
 
     frame .main_menu -relief raised -borderwidth 3
     pack .main_menu -fill x
+    
     menubutton .main_menu.file -text "File" -underline 0 \
 	-menu .main_menu.file.menu
     menu .main_menu.file.menu -tearoff false
@@ -48,6 +49,18 @@ proc makeNetworkEditor {} {
 
     .main_menu.file.menu add command -label "Quit" -underline 0 \
 	    -command "netedit quit"
+
+
+    menubutton .main_menu.edit -text "Edit" -underline 0 \
+	    -menu .main_menu.edit.menu
+    menu .main_menu.edit.menu -tearoff false
+    .main_menu.edit.menu add command -label "Select All" -underline 0 \
+	    -command "SelectAll"
+    .main_menu.edit.menu add command -label "Clear Canvas" -underline 0 \
+	    -command "ClearCanvas"
+    
+
+
 
     menubutton .main_menu.stats -text "Statistics" -underline 0 \
 	-menu .main_menu.stats.menu
@@ -70,6 +83,7 @@ proc makeNetworkEditor {} {
 #         .main_menu.modules     \
 #         .main_menu.appModules     -side left
     pack .main_menu.file -side left
+    pack .main_menu.edit -side left
     pack .main_menu.help        \
          .main_menu.stats          -side right
 
@@ -497,7 +511,7 @@ proc popupLoadMenu {} {
     set netedit_loadfile [tk_getOpenFile -filetypes $types ]
     
     if { [file exists $netedit_loadfile] } {
-	source $netedit_loadfile
+	loadfile $netedit_loadfile
     }
 }
 
@@ -791,4 +805,146 @@ proc createAlias {fromPackage fromCategory fromModule toPackage toCategory toMod
     set fromClassName [removeSpaces "${fromPackage}_${fromCategory}_${fromModule}"]
     set toClassName [removeSpaces "${toPackage}_${toCategory}_${toModule}"]
     itcl_class $toClassName "inherit $fromClassName"
+}
+
+proc loadfile {netedit_loadfile} {
+    # Check to see of the file exists; exit if it doesn't
+    if { ! [file exists $netedit_loadfile] } {
+	puts "loadfile: no such file"
+	return
+    }
+    
+    set fchannel [open $netedit_loadfile]
+    
+    set curr_line ""
+    set stage 1
+
+    global info_list
+    set info_list ""
+
+    # Used in tracking modnames
+    set curr_modname ""
+    set counter -1
+
+    # read in the first line of the file
+    set curr_line [gets $fchannel]
+    while { ! [string match $curr_line "# EOF"] } {
+	# Stage 1: Source basic variables
+	if { $stage == 1 } {
+	    if { [string match "set m*" $curr_line] } {
+		# Go on to stage 2, not moving on to the next line of the file
+		set stage 2
+		continue
+	    } elseif { [string match $curr_line "return"] || \
+		    [string match "puts*" $curr_line] } {
+		# do nothing
+	    } else {
+		# Execute the line (comments and/or blank lines are ignored)
+		eval $curr_linesave
+	    }
+	}
+	
+	# Stage 2: Create Modules
+	if { $stage == 2 } {
+	    if { [string match "set m*" $curr_line] } {
+		# build the module
+		eval $curr_line
+	    } elseif { [string match $curr_line "addConnection*"] } {
+		# add connections
+		eval $curr_line
+	    } elseif { [string match $curr_line ""] } {
+		# do nothing
+	    } else {
+		# Move on to the next stage
+		set stage 3
+		continue
+	    }
+	}
+
+	# Stage 3: do some stuff
+	if { $stage == 3 } {
+	    if { [string match "set ::*" $curr_line] } {
+		set curr_string $curr_line
+		set var [string trimleft $curr_string "set :"]
+
+		set c 0
+		set t 0
+		set pram ""
+		set modname ""
+		while { 1 } {
+		    set char [string index $var $c]
+		    
+		    # Check for -'s; if one is found, begin getting
+		    # the variable name
+		    
+		    if { [string match $char "-"] } {
+			set t 1
+		    }
+		    
+		    # Break if there is a space
+		    
+		    if { [string match $char " "] } {
+			break
+		    }
+
+		    # If the dash has been seen, begin getting the
+		    # variable name...
+
+		    if { $t == 1 } {
+			set pram "$pram$char"
+		    } else {
+			set modname "$modname$char"
+		    }
+		    
+		    # increment the counter...
+		    incr c
+		}
+		
+		set value [lindex $var 1]
+				
+		# Increment the counter each time the modname changes
+		
+		if { ! [string match $modname $curr_modname] } {
+		    incr counter
+		    set curr_modname $modname
+		}
+		
+		if { [string match $value ""] } {
+		    set value "{}"
+		}
+		
+		set mvar "m$counter"
+		set m [expr $$mvar]
+		
+		set command "set ::$m"
+		append command "$pram $value"
+
+		# Execute the "real" command
+		eval $command
+
+	    } elseif { [string match $curr_line ""] } {
+		# do nothing
+	    } else {
+		set stage 4
+		continue
+	    }
+	}
+	
+	# one last source (this will need to be changed)
+	if { $stage == 4 } {
+	    eval $curr_line
+	}
+	
+	# Read the next line of the file
+	set curr_line [gets $fchannel]
+	
+	# break out of loop, if at end of file
+	if { [string match $curr_line "# EOF"] } {
+	    break
+	}
+    }
+    
+    # close the file
+    close $fchannel
+
 }
