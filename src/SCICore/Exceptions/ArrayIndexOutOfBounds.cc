@@ -30,7 +30,7 @@ ArrayIndexOutOfBounds::ArrayIndexOutOfBounds(long value, long lower, long upper)
 }
 
 ArrayIndexOutOfBounds::ArrayIndexOutOfBounds(const ArrayIndexOutOfBounds& copy)
-    : msg(strdup(copy.msg))
+   : msg(strdup(copy.msg)), value(copy.value), lower(copy.lower), upper(copy.upper)
 {
 }
     
@@ -51,6 +51,10 @@ const char* ArrayIndexOutOfBounds::type() const
 
 //
 // $Log$
+// Revision 1.3  2000/09/25 17:58:57  sparker
+// Do not call variables errno due to #defines on some systems (linux)
+// Correctly implemented copy CTORs
+//
 // Revision 1.2  2000/03/23 20:43:09  sparker
 // Added copy ctor to all exception classes (for Linux/g++)
 //
