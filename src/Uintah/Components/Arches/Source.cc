@@ -102,6 +102,8 @@ Source::calculateVelocitySource(const ProcessorGroup* ,
   IntVector domHiVng;
   IntVector domLoWng;
   IntVector domHiWng;
+  IntVector domLong = vars->old_density.getFortLowIndex();
+  IntVector domHing = vars->old_density.getFortHighIndex();
 
   for (int iii = 0; iii < (domHi.z()-domLo.z()); iii++)
     std::cerr << cellinfo->ktsdw[iii] << " " << cellinfo->kbsdw[iii] << endl;
@@ -128,8 +130,9 @@ Source::calculateVelocitySource(const ProcessorGroup* ,
 		    vars->wVelocity.getPointer(), 
 		    domLo.get_pointer(), domHi.get_pointer(),
 		    vars->density.getPointer(),
-		    vars->old_density.getPointer(),
 		    vars->viscosity.getPointer(), 
+		    domLong.get_pointer(), domHing.get_pointer(),
+		    vars->old_density.getPointer(),
 		    &gravity, &delta_t, &den_ref,
 		    cellinfo->ceeu.get_objs(), cellinfo->cweu.get_objs(), 
 		    cellinfo->cwwu.get_objs(),
@@ -195,8 +198,9 @@ Source::calculateVelocitySource(const ProcessorGroup* ,
 		    vars->wVelocity.getPointer(), 
 		    domLo.get_pointer(), domHi.get_pointer(),
 		    vars->density.getPointer(),
-		    vars->old_density.getPointer(),
 		    vars->viscosity.getPointer(), 
+		    domLong.get_pointer(), domHing.get_pointer(),
+		    vars->old_density.getPointer(),
 		    &gravity, &delta_t, &den_ref,
 		    cellinfo->cee.get_objs(), cellinfo->cwe.get_objs(), 
 		    cellinfo->cww.get_objs(),
@@ -258,8 +262,9 @@ Source::calculateVelocitySource(const ProcessorGroup* ,
 		    vars->vVelocity.getPointer(), 
 		    domLo.get_pointer(), domHi.get_pointer(),
 		    vars->density.getPointer(),
-		    vars->old_density.getPointer(),
 		    vars->viscosity.getPointer(), 
+		    domLong.get_pointer(), domHing.get_pointer(),
+		    vars->old_density.getPointer(),
 		    &gravity, &delta_t, &den_ref,
 		    cellinfo->cee.get_objs(), cellinfo->cwe.get_objs(), 
 		    cellinfo->cww.get_objs(),
@@ -837,6 +842,9 @@ Source::addPressureSource(const ProcessorGroup* ,
 
 //
 //$Log$
+//Revision 1.43  2000/10/06 23:07:48  rawat
+//fixed some more bc routines for mulit-patch
+//
 //Revision 1.42  2000/09/29 20:32:36  rawat
 //added underrelax to pressure solver
 //

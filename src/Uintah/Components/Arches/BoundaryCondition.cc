@@ -394,12 +394,20 @@ BoundaryCondition::computeInletFlowArea(const ProcessorGroup*,
 	   << "]" << endl;
       cerr << "Cell ID = " << cellid << endl;
 #endif
+      int xminus = patch->getBCType(Patch::xminus) == Patch::Neighbor?0:1;
+      int xplus =  patch->getBCType(Patch::xplus) == Patch::Neighbor?0:1;
+      int yminus = patch->getBCType(Patch::yminus) == Patch::Neighbor?0:1;
+      int yplus =  patch->getBCType(Patch::yplus) == Patch::Neighbor?0:1;
+      int zminus = patch->getBCType(Patch::zminus) == Patch::Neighbor?0:1;
+      int zplus =  patch->getBCType(Patch::zplus) == Patch::Neighbor?0:1;
 
       FORT_AREAIN(domLo.get_pointer(), domHi.get_pointer(),
 		  idxLo.get_pointer(), idxHi.get_pointer(),
 		  cellInfo->sew.get_objs(),
 		  cellInfo->sns.get_objs(), cellInfo->stb.get_objs(),
-		  &inlet_area, cellType.getPointer(), &cellid);
+		  &inlet_area, cellType.getPointer(), &cellid,
+		  &xminus, &xplus, &yminus, &yplus,
+		  &zminus, &zplus);
 
 #ifdef ARCHES_GEOM_DEBUG
       cerr << "Inlet area = " << inlet_area << endl;
@@ -824,12 +832,19 @@ BoundaryCondition::uVelocityBC(DataWarehouseP& new_dw,
   // for no ghost cells
   IntVector domLoUng = vars->uVelLinearSrc.getFortLowIndex();
   IntVector domHiUng = vars->uVelLinearSrc.getFortHighIndex();
-
+  
   // ** Reverted back to old ways
   // for a single patch should be equal to 1 and nx
   //IntVector idxLoU = vars->cellType.getFortLowIndex();
   //IntVector idxHiU = vars->cellType.getFortHighIndex();
   // computes momentum source term due to wall
+  int xminus = patch->getBCType(Patch::xminus) == Patch::Neighbor?0:1;
+  int xplus =  patch->getBCType(Patch::xplus) == Patch::Neighbor?0:1;
+  int yminus = patch->getBCType(Patch::yminus) == Patch::Neighbor?0:1;
+  int yplus =  patch->getBCType(Patch::yplus) == Patch::Neighbor?0:1;
+  int zminus = patch->getBCType(Patch::zminus) == Patch::Neighbor?0:1;
+  int zplus =  patch->getBCType(Patch::zplus) == Patch::Neighbor?0:1;
+
   FORT_BCUVEL(domLoU.get_pointer(), domHiU.get_pointer(), 
 	      domLoUng.get_pointer(), domHiUng.get_pointer(), 
 	      idxLoU.get_pointer(), idxHiU.get_pointer(),
@@ -857,7 +872,9 @@ BoundaryCondition::uVelocityBC(DataWarehouseP& new_dw,
 	      cellinfo->stb.get_objs(),
 	      cellinfo->yy.get_objs(), cellinfo->yv.get_objs(), 
 	      cellinfo->zz.get_objs(),
-	      cellinfo->zw.get_objs());
+	      cellinfo->zw.get_objs(),
+	      &xminus, &xplus, &yminus, &yplus,
+	      &zminus, &zplus);
 
 #ifdef ARCHES_BC_DEBUG
   cerr << "AFTER UVELBC_FORT" << endl;
@@ -1011,6 +1028,12 @@ BoundaryCondition::vVelocityBC(DataWarehouseP& new_dw,
   //IntVector idxLoV = vars->cellType.getFortLowIndex();
   //IntVector idxHiV = vars->cellType.getFortHighIndex();
   // computes momentum source term due to wall
+  int xminus = patch->getBCType(Patch::xminus) == Patch::Neighbor?0:1;
+  int xplus =  patch->getBCType(Patch::xplus) == Patch::Neighbor?0:1;
+  int yminus = patch->getBCType(Patch::yminus) == Patch::Neighbor?0:1;
+  int yplus =  patch->getBCType(Patch::yplus) == Patch::Neighbor?0:1;
+  int zminus = patch->getBCType(Patch::zminus) == Patch::Neighbor?0:1;
+  int zplus =  patch->getBCType(Patch::zplus) == Patch::Neighbor?0:1;
 
   // computes remianing diffusion term and also computes source due to gravity
   FORT_BCVVEL(domLoV.get_pointer(), domHiV.get_pointer(), 
@@ -1040,7 +1063,9 @@ BoundaryCondition::vVelocityBC(DataWarehouseP& new_dw,
 	      cellinfo->stb.get_objs(),
 	      cellinfo->xx.get_objs(), cellinfo->xu.get_objs(), 
 	      cellinfo->zz.get_objs(),
-	      cellinfo->zw.get_objs());
+	      cellinfo->zw.get_objs(), 
+	      &xminus, &xplus, &yminus, &yplus,
+	      &zminus, &zplus);
 
 #ifdef ARCHES_BC_DEBUG
   cerr << "AFTER VVELBC_FORT" << endl;
@@ -1190,6 +1215,12 @@ BoundaryCondition::wVelocityBC(DataWarehouseP& new_dw,
   // for no ghost cells
   IntVector domLoWng = vars->wVelLinearSrc.getFortLowIndex();
   IntVector domHiWng = vars->wVelLinearSrc.getFortHighIndex();
+  int xminus = patch->getBCType(Patch::xminus) == Patch::Neighbor?0:1;
+  int xplus =  patch->getBCType(Patch::xplus) == Patch::Neighbor?0:1;
+  int yminus = patch->getBCType(Patch::yminus) == Patch::Neighbor?0:1;
+  int yplus =  patch->getBCType(Patch::yplus) == Patch::Neighbor?0:1;
+  int zminus = patch->getBCType(Patch::zminus) == Patch::Neighbor?0:1;
+  int zplus =  patch->getBCType(Patch::zplus) == Patch::Neighbor?0:1;
   // for a single patch should be equal to 1 and nx
   //IntVector idxLoW = vars->cellType.getFortLowIndex();
   //IntVector idxHiW = vars->cellType.getFortHighIndex();
@@ -1221,7 +1252,9 @@ BoundaryCondition::wVelocityBC(DataWarehouseP& new_dw,
 	      cellinfo->stbw.get_objs(),
 	      cellinfo->xx.get_objs(), cellinfo->xu.get_objs(), 
 	      cellinfo->yy.get_objs(),
-	      cellinfo->yv.get_objs());
+	      cellinfo->yv.get_objs(),
+	      &xminus, &xplus, &yminus, &yplus,
+	      &zminus, &zplus);
 
 #ifdef ARCHES_BC_DEBUG
   cerr << "AFTER WVELBC_FORT" << endl;
@@ -1371,6 +1404,13 @@ BoundaryCondition::pressureBC(const ProcessorGroup*,
   // ** WARNING ** Symmetry is hardcoded to -3
   int symmetry_celltypeval = -3;
 
+  int xminus = patch->getBCType(Patch::xminus) == Patch::Neighbor?0:1;
+  int xplus =  patch->getBCType(Patch::xplus) == Patch::Neighbor?0:1;
+  int yminus = patch->getBCType(Patch::yminus) == Patch::Neighbor?0:1;
+  int yplus =  patch->getBCType(Patch::yplus) == Patch::Neighbor?0:1;
+  int zminus = patch->getBCType(Patch::zminus) == Patch::Neighbor?0:1;
+  int zplus =  patch->getBCType(Patch::zplus) == Patch::Neighbor?0:1;
+
   //fortran call
   FORT_PRESSBC(domLo.get_pointer(), domHi.get_pointer(),
 	       domLong.get_pointer(), domHing.get_pointer(),
@@ -1386,7 +1426,9 @@ BoundaryCondition::pressureBC(const ProcessorGroup*,
 	       vars->pressLinearSrc.getPointer(),
 	       vars->cellType.getPointer(),
 	       &wall_celltypeval, &symmetry_celltypeval,
-	       &flow_celltypeval);
+	       &flow_celltypeval,
+	       &xminus, &xplus, &yminus, &yplus,
+	       &zminus, &zplus);
 
 #ifdef ARCHES_BC_DEBUG
   cerr << "AFTER FORT_PRESSBC" << endl;
@@ -1728,11 +1770,11 @@ BoundaryCondition::setInletVelocityBC(const ProcessorGroup* ,
 	        //	flowType);
 
   }
-  // Put the calculated data into the new DW
+// Put the calculated data into the new DW
   new_dw->put(uVelocity, d_lab->d_uVelocitySIVBCLabel, matlIndex, patch);
   new_dw->put(vVelocity, d_lab->d_vVelocitySIVBCLabel, matlIndex, patch);
   new_dw->put(wVelocity, d_lab->d_wVelocitySIVBCLabel, matlIndex, patch);
-
+  
 #ifdef ARCHES_BC_DEBUG
   cerr << " After INLBCS : " << endl;
   for (int ii = domLoU.x(); ii <= domHiU.x(); ii++) {
@@ -1933,17 +1975,6 @@ BoundaryCondition::setFlatProfile(const ProcessorGroup* pc,
 	       &area, &fi.d_cellTypeID, &fi.flowRate, 
 	       &fi.density, &xminus, &xplus, &yminus, &yplus,
 	       &zminus, &zplus);
-    for(CellIterator iter = patch->getCellIterator();
-	!iter.done(); iter++){
-      cerr.width(10);
-      cerr << "U"<<*iter << ": " << uVelocity[*iter] << "\n" ; 
-    }
-    for(CellIterator iter = patch->getCellIterator();
-	!iter.done(); iter++){
-      cerr.width(10);
-      cerr << "V"<<*iter << ": " << vVelocity[*iter] << "\n" ; 
-    }
-
     FORT_PROFSCALAR(domLo.get_pointer(), domHi.get_pointer(),
 		    idxLo.get_pointer(), idxHi.get_pointer(),
 		    density.getPointer(), 
@@ -2242,6 +2273,9 @@ BoundaryCondition::FlowOutlet::problemSetup(ProblemSpecP& params)
 
 //
 // $Log$
+// Revision 1.61  2000/10/06 23:07:47  rawat
+// fixed some more bc routines for mulit-patch
+//
 // Revision 1.60  2000/10/05 16:39:46  rawat
 // modified bcs for multi-patch
 //

@@ -8,7 +8,8 @@ c*********************************************************************
      &     indexLow, indexHigh,
      &     SEW, SNS, STB, 
 c     &     RA, RV, 
-     &     AREAPR, PCELL, PFIELD) 
+     &     AREAPR, PCELL, PFIELD,
+     $     xminus, xplus, yminus, yplus, zminus, zplus) 
 c     &     LCORD, LPRIN,
 c     &     ierr)
 C---------------------------------------------------------------------
@@ -38,6 +39,7 @@ c      double precision RA(domainLow(2): domainHigh(2)),
 c     &     RV(domainLow(2): domainHigh(2))
       double precision AREAPR
       integer PFIELD
+      integer xminus, xplus, yminus, yplus, zminus, zplus
 c      logical LCORD, LPRIN
 c      integer ierr
 
@@ -70,41 +72,48 @@ C--------------------------------------------------------------------
 C     CALCULATION OF THE AREA OF TOTAL PRIMARY STREAMS
 C--------------------------------------------------------------------
       AREAT = ZERO
-      DO 110 K = KST,KEND
-         DO 100 J = JST,JEND
-            IF (PCELL(iBegGhost,J,K).EQ.PFIELD) THEN
+      if (xminus.or.xplus) then
+         DO 110 K = KST,KEND
+            DO 100 J = JST,JEND
+               IF ((PCELL(iBegGhost,J,K).EQ.PFIELD).and.xminus) THEN
 c           write(*,'("i=",i2," j=",i2," k=",i2," sns=",f5.2," stb=",f5.2)')
 c    &        iBegGhost,j,k,sns(j),stb(k) 
-               AREAT = AREAT + SNS(J)*STB(K)
-            END IF
-            IF (PCELL(iEndGhost,J,K).EQ.PFIELD) THEN
-               AREAT = AREAT + SNS(J)*STB(K)
-            END IF
- 100     CONTINUE
- 110   CONTINUE
-       DO 140 K = KST,KEND
-          DO 130 I = IST,IEND
-             IF (PCELL(I,jBegGhost,K).EQ.PFIELD) THEN
+                  AREAT = AREAT + SNS(J)*STB(K)
+               END IF
+               IF ((PCELL(iEndGhost,J,K).EQ.PFIELD).and.xplus) THEN
+                  AREAT = AREAT + SNS(J)*STB(K)
+               END IF
+ 100        CONTINUE
+ 110     CONTINUE
+      endif
+      if (yminus.or.yplus) then
+         DO 140 K = KST,KEND
+            DO 130 I = IST,IEND
+               IF ((PCELL(I,jBegGhost,K).EQ.PFIELD).and.yminus) THEN
                 AREAT = AREAT + SEW(I)*STB(K)
 c               IF(LCORD.AND.LPRIN)WRITE(3,*)' ERROR ON INLET CONDITION'
              END IF
-             IF (PCELL(I,jEndGhost,K).EQ.PFIELD) THEN
+             IF ((PCELL(I,jEndGhost,K).EQ.PFIELD).and.yplus) THEN
                 AREAT = AREAT + SEW(I)*STB(K)
              END IF
  130      CONTINUE
  140   CONTINUE
-       DO 170 J = JST,JEND
-          DO 160 I = IST,IEND
-             IF (PCELL(I,J,kBegGhost).EQ.PFIELD) THEN
-                AREAT = AREAT + SEW(I)*SNS(J)
-c               IF(LCORD.AND.LPRIN)WRITE(3,*)' ERROR ON INLET CONDITION'
-             END IF
-             IF (PCELL(I,J,kEndGhost).EQ.PFIELD) THEN
-                AREAT = AREAT + SEW(I)*SNS(J)
-c               IF(LCORD.AND.LPRIN)WRITE(3,*)' ERROR ON INLET CONDITION'
-             END IF
- 160      CONTINUE
- 170   CONTINUE
+      endif
+
+      if (zminus.or.zplus) then
+         DO 170 J = JST,JEND
+            DO 160 I = IST,IEND
+               IF ((PCELL(I,J,kBegGhost).EQ.PFIELD).and.zminus) THEN
+                  AREAT = AREAT + SEW(I)*SNS(J)
+c     IF(LCORD.AND.LPRIN)WRITE(3,*)' ERROR ON INLET CONDITION'
+               END IF
+               IF ((PCELL(I,J,kEndGhost).EQ.PFIELD).and.zplus) THEN
+                  AREAT = AREAT + SEW(I)*SNS(J)
+c     IF(LCORD.AND.LPRIN)WRITE(3,*)' ERROR ON INLET CONDITION'
+               END IF
+ 160        CONTINUE
+ 170     CONTINUE
+      end if
        IF (AREAT.EQ.ZERO) THEN
 c         IF(LPRIN) WRITE(3,*)
 c    &              ' NO PRIMARY INLET AREA IN INPUT GEOMETRY '
@@ -119,6 +128,9 @@ c    &              ' NO PRIMARY INLET AREA IN INPUT GEOMETRY '
 c*********************************************************************
 c
 c $Log$
+c Revision 1.6  2000/10/06 23:07:53  rawat
+c fixed some more bc routines for mulit-patch
+c
 c Revision 1.5  2000/06/30 06:29:43  bbanerje
 c Got Inlet Area to be calculated correctly .. but now two CellInformation
 c variables are being created (Rawat ... check that).

@@ -8,7 +8,8 @@ c*********************************************************************
      &     PP,
      &     AE,AW,AN,AS,AT,AB,
      &     SU, SP,
-     &     PCELL, WALL, SYMTRY, FFIELD)
+     &     PCELL, WALL, SYMTRY, FFIELD,
+     $     xminus, xplus, yminus, yplus, zminus, zplus)
 *-----------------------------------------------------------------------
 *     This subroutine calculates the boundary
 *     conditions for the pressure and pressure correction equations.
@@ -43,12 +44,11 @@ c*********************************************************************
       integer PCELL(domLo(1):domHi(1), domLo(2):domHi(2), 
      &     domLo(3):domHi(3))
       integer WALL, SYMTRY, FFIELD
+      integer xminus, xplus, yminus, yplus, zminus, zplus
 
 c*********************************************************************
 c     Local Variables :
 c*********************************************************************
-      integer iBegGhost, jBegGhost, kBegGhost
-      integer iEndGhost, jEndGhost, kEndGhost
       integer IST, JST, KST, IEND, JEND, KEND
       integer i,j,k
 
@@ -57,12 +57,6 @@ c*********************************************************************
 c*********************************************************************
 c     Start :
 c*********************************************************************
-      iBegGhost = domLo(1)
-      jBegGhost = domLo(2)
-      kBegGhost = domLo(3)
-      iEndGhost = domHi(1)
-      jEndGhost = domHi(2)
-      kEndGhost = domHi(3)
       IST = idxLo(1)
       JST = idxLo(2)
       KST = idxLo(3)
@@ -101,60 +95,72 @@ c*********************************************************************
 *     INLET/OUTLET BOUNDARY CONDITIONS 
 *       EAST AND/OR WEST WALLS
 *----------------------------------------------------------------------
+      if (xminus.or.xplus) then
 C$DIR SCALAR
-      DO 610 K = KST,KEND
+         DO 610 K = KST,KEND
 C$DIR SCALAR
-         DO 600 J = JST,JEND
-            IF ((PCELL(IEND+1,J,K).NE.WALL .AND.
-     &           PCELL(IEND,J,K).NE.WALL).AND.
-     $           (PCELL(IEND+1,J,K).NE.FFIELD)) THEN
-               AE(IEND,J,K) = ZERO
-            END IF
-            IF ((PCELL(IST-1,J,K).NE.WALL .AND.
-     &           PCELL(IST,J,K).NE.WALL).AND.
-     $           (PCELL(IST-1,J,K).NE.FFIELD)) THEN
-               AW(IST,J,K) = ZERO
-            END IF
- 600     CONTINUE
- 610  CONTINUE
+            DO 600 J = JST,JEND
+               IF ((PCELL(IEND+1,J,K).NE.WALL .AND.
+     &              PCELL(IEND,J,K).NE.WALL).AND.
+     $              (PCELL(IEND+1,J,K).NE.FFIELD).AND.
+     $              xplus) THEN
+                  AE(IEND,J,K) = ZERO
+               END IF
+               IF ((PCELL(IST-1,J,K).NE.WALL .AND.
+     &              PCELL(IST,J,K).NE.WALL).AND.
+     $              (PCELL(IST-1,J,K).NE.FFIELD).AND.
+     $              xminus) THEN
+                  AW(IST,J,K) = ZERO
+               END IF
+ 600        CONTINUE
+ 610     CONTINUE
+      endif
 *--------------------------------------------------------------------
 *     NORTH AND/OR SOUTH WALLS
 *--------------------------------------------------------------------
+      if (yminus.or.yplus) then
 C$DIR SCALAR
-      DO 710 K = KST,KEND
+         DO 710 K = KST,KEND
 C$DIR SCALAR
-         DO 700 I = IST,IEND
-            IF ((PCELL(I,JEND+1,K).NE.WALL.AND.
-     &           PCELL(I,JEND,K).NE.WALL).AND.
-     $           (PCELL(I,JEND+1,K).NE.FFIELD)) THEN
-               AN(I,JEND,K) = ZERO
-            END IF
-            IF ((PCELL(I,JST-1,K).NE.WALL.AND.
-     &           PCELL(I,JST,K).NE.WALL).AND.
-     $           (PCELL(I,JST-1,K).NE.FFIELD)) THEN
-               AS(I,JST,K) = ZERO
-            END IF
- 700     CONTINUE
- 710  CONTINUE
+            DO 700 I = IST,IEND
+               IF ((PCELL(I,JEND+1,K).NE.WALL.AND.
+     &              PCELL(I,JEND,K).NE.WALL).AND.
+     $              (PCELL(I,JEND+1,K).NE.FFIELD).AND.
+     $              yplus) THEN
+                  AN(I,JEND,K) = ZERO
+               END IF
+               IF ((PCELL(I,JST-1,K).NE.WALL.AND.
+     &              PCELL(I,JST,K).NE.WALL).AND.
+     $              (PCELL(I,JST-1,K).NE.FFIELD).AND.
+     $              yminus) THEN
+                  AS(I,JST,K) = ZERO
+               END IF
+ 700        CONTINUE
+ 710     CONTINUE
+      endif
 *--------------------------------------------------------------------
 *     TOP AND/OR BOTTOM WALLS
 *--------------------------------------------------------------------
+      if (zminus.or.zplus) then
 C$DIR SCALAR
-      DO 810 J = JST,JEND
+         DO 810 J = JST,JEND
 C$DIR SCALAR
-         DO 800 I = IST,IEND
-            IF ((PCELL(I,J,KEND+1).NE.WALL .AND. 
-     &           PCELL(I,J,KEND).NE.WALL).AND.
-     $           (PCELL(I,J,KEND+1).NE.FFIELD))THEN
-               AT(I,J,KEND) = ZERO
-            END IF
-            IF ((PCELL(I,J,KST-1).NE.WALL .AND. 
-     &           PCELL(I,J,KST).NE.WALL).AND.
-     $           (PCELL(I,J,KST-1).NE.FFIELD)) THEN
-               AB(I,J,KST) = ZERO
-            END IF
- 800     CONTINUE
- 810  CONTINUE
+            DO 800 I = IST,IEND
+               IF ((PCELL(I,J,KEND+1).NE.WALL .AND. 
+     &              PCELL(I,J,KEND).NE.WALL).AND.
+     $              (PCELL(I,J,KEND+1).NE.FFIELD).and.
+     $              zplus)THEN
+                  AT(I,J,KEND) = ZERO
+               END IF
+               IF ((PCELL(I,J,KST-1).NE.WALL .AND. 
+     &              PCELL(I,J,KST).NE.WALL).AND.
+     $              (PCELL(I,J,KST-1).NE.FFIELD).AND.
+     $              zminus) THEN
+                  AB(I,J,KST) = ZERO
+               END IF
+ 800        CONTINUE
+ 810     CONTINUE
+      endif
 *--------------------------------------------------------------------
 *     SYMMETRY AND INTRUSION BOUNDARY CONDITIONS
 *--------------------------------------------------------------------
@@ -168,13 +174,17 @@ C$DIR SCALAR
 
       CALL WALLBC(domLo, domHi, domLong, domHing, idxLo, idxHi,
      $     AE,AW,AN,AS,AT,AB,
-     &     PCELL,WALL)
+     &     PCELL,WALL,
+     $     xminus, xplus, yminus, yplus, zminus, zplus)
       RETURN
       END 
 
 c*********************************************************************
 c
 c $Log$
+c Revision 1.5  2000/10/06 23:07:53  rawat
+c fixed some more bc routines for mulit-patch
+c
 c Revision 1.4  2000/09/26 19:59:19  sparker
 c Work on MPI petsc
 c

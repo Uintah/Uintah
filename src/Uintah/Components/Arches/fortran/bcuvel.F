@@ -13,7 +13,8 @@ c*********************************************************************
      &     domLo, domHi, idxLo, idxHi, PCELL, WALL, FFIELD, PBCFLD,
      &     VISCOS, 
      &     SEWU, SNS, STB,
-     &     Y, YV, Z, ZW, 
+     &     Y, YV, Z, ZW,
+     $     xminus, xplus, yminus, yplus, zminus, zplus,
      &     ierr)
 C---------------------------------------------------------------------
 C     THREE-DIMENSIONAL VERSION
@@ -79,6 +80,7 @@ c*********************************************************************
       
       integer WALL
       integer FFIELD, PBCFLD
+      integer xminus, xplus, yminus, yplus, zminus, zplus
       integer ierr
 
 c*********************************************************************
@@ -101,15 +103,36 @@ c*********************************************************************
       IEND = idxHi(1)
       JEND = idxHi(2)
       KEND = idxHi(3)
-      iBegGhost = ist-1
-      jBegGhost = jst-1
-      kBegGhost = kst-1
-      iEndGhost = iend+1
-      jEndGhost = jend+1
-      kEndGhost = kend+1
-      idxUInlet = domHiU(1)
-      idxVInlet = domHiV(2)
-      idxWInlet = domHiW(3)
+      if (xminus) then
+         iBegGhost = ist-1
+      else
+         iBegGhost = ist
+      endif
+      if (yminus) then
+         jBegGhost = jst-1
+      else
+         jBegGhost = jst
+      endif
+      if (zminus) then
+         kBegGhost = kst - 1
+      else
+         kBegGhost = kst
+      endif
+      if (xplus) then
+         iEndGhost = iend+1
+      else
+         iEndGhost = iend
+      endif
+      if (yplus) then
+         jEndGhost = jend+1
+      else
+         jEndGhost = jend
+      endif
+      if (zplus) then
+         kEndGhost = kend + 1
+      else
+         kEndGhost = kend
+      endif
       
 c------------------------------------------------------------------ 
 c     interior intrusions
@@ -345,6 +368,9 @@ C--------------------------------------------------------------------
 c*********************************************************************
 c
 c $Log$
+c Revision 1.8  2000/10/06 23:07:53  rawat
+c fixed some more bc routines for mulit-patch
+c
 c Revision 1.7  2000/09/26 04:35:34  rawat
 c added some more multi-patch support
 c
