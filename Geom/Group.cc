@@ -332,3 +332,16 @@ template class Array1<GeomObj*>;
 template void Pio(Piostream&, Array1<GeomObj*>&);
 
 #endif
+
+#ifdef __sgi
+#if _MIPS_SZPTR == 64
+#include <Classlib/Array1.cc>
+
+static void _dummy_(Piostream& p1, Array1<GeomObj*>& p2)
+{
+    Pio(p1, p2);
+}
+
+#endif
+#endif
+

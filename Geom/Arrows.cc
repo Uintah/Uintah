@@ -145,3 +145,21 @@ template void Pio(Piostream&, Array1<Point>&);
 template void Pio(Piostream&, Array1<Vector>&);
 
 #endif
+
+#ifdef __sgi
+#if _MIPS_SZPTR == 64
+#include <Classlib/Array1.cc>
+
+static void _dummy1_(Piostream& p1, Array1<Vector>& p2)
+{
+    Pio(p1, p2);
+}
+
+static void _dummy2_(Piostream& p1, Array1<Point>& p2)
+{
+    Pio(p1, p2);
+}
+
+#endif
+#endif
+

@@ -30,6 +30,13 @@ Persistent* make_GeomTorus()
 
 PersistentTypeID GeomTorus::type_id("GeomTorus", "GeomObj", make_GeomTorus);
 
+Persistent* make_GeomTorusArc()
+{
+    return new GeomTorusArc;
+}
+
+PersistentTypeID GeomTorusArc::type_id("GeomTorusArc", "GeomTorus", make_GeomTorusArc);
+
 GeomTorus::GeomTorus(int nu, int nv)
 : GeomObj(), cen(0,0,0), axis(0,0,1), rad1(1), rad2(.1), nu(nu), nv(nv)
 {

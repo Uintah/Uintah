@@ -182,8 +182,12 @@ void GeomPick::set_principal(const Vector& v1, const Vector& v2,
     directions[5]=-v3;
 }
 
-void GeomPick::io(Piostream&)
+#define GEOMPICK_VERSION 1
+
+void GeomPick::io(Piostream& stream)
 {
-    NOT_FINISHED("GeomPick::io");
+    stream.begin_class("GeomPick", GEOMPICK_VERSION);
+    GeomContainer::io(stream);
+    stream.end_class();
 }
 

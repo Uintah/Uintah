@@ -602,10 +602,11 @@ void GeomPick::draw(DrawInfoOpenGL* di, Material* matl, double time)
 	unsigned long o=(unsigned long)this;
 	unsigned int o1=(o>>32)&0xffffffff;
 	unsigned int o2=o&0xffffffff;
-	glLoadName(o1);
-	glLoadName(o2);
+	glPushName(o1);
+	glPushName(o2);
+	cerr << "pick: " << this << endl;
 #else
-	glLoadName((GLuint)this);
+	glPushName((GLuint)this);
 #endif
     }
     if(selected && highlight.get_rep()){
@@ -617,8 +618,14 @@ void GeomPick::draw(DrawInfoOpenGL* di, Material* matl, double time)
     } else {
 	child->draw(di, matl, time);
     }
-    if(di->pickmode)
+    if(di->pickmode){
+#if (_MIPS_SZPTR == 64)
 	glPopName();
+	glPopName();
+#else
+	glPopName();
+#endif
+    }
 }
 
 void GeomPolyline::draw(DrawInfoOpenGL* di, Material* matl, double)

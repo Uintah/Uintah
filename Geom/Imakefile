@@ -1,8 +1,6 @@
 
 #include <config/sci.cf>
 
-#ifdef SCI_DIR_Geom
-
 #ifdef SCI_OPENGL
 OPENGLOBJS = GeomOpenGL.o
 OPENGLSRCS = GeomOpenGL.cc
@@ -48,11 +46,3 @@ LIBNAME = Geom
 
 SCIDependTarget($(SRCS))
 SCIObjLibraryTarget($(LIBNAME),$(OBJS), $(SO_LIBS), $(SO_LDFLAGS))
-
-#else
-all:
-depend::
-
-           RM_CMD = $(RM) *.CKP *.ln *.BAK *.bak core errs ,* *~ .emacs_* tags TAGS make.log MakeOut
-
-#endif
