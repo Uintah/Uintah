@@ -1340,62 +1340,71 @@ OpenGL::redraw_frame()
   } else {
     fpstimer.start();
   }    
-  /***********************************/
-  /* movie makin' movie-movie makin' */
-  /***********************************/
-  if (viewwindow->doingMovie)
-  {
-	
-    string segname(viewwindow->curName);
-    int lasthash=-1;
-    for (unsigned int ii=0; ii<segname.size(); ii++)
-    {
-      if (segname[ii] == '/') lasthash=ii;
-    }
-    string pathname;
-    if (lasthash == -1) pathname = "./";
-    else pathname = segname.substr(0, lasthash+1);
-    string fname = segname.substr(lasthash+1, segname.size()-(lasthash+1));
-	
+  /*****************************************/
+  /* movie-movie makin' movie-movie makin' */
+  /*****************************************/
+  if (viewwindow->doingMovie) {	
     //      cerr << "Saving a movie!\n";
-    if( viewwindow->makeMPEG )
-    {
-      if(!encoding_mpeg_)
-      {
-	encoding_mpeg_ = true;
-	fname = fname + ".mpg";
-	StartMpeg( fname );
+    if( viewwindow->makeMPEG ) {
+
+      if(encoding_mpeg_) {
+	AddMpegFrame();
+      } else {
+
+	string fname = viewwindow->curName + string(".mpg");
+
+	// Dump the mpeg in the local dir ... ignoring any path since mpeg
+	// can not handle it.
+	std::string::size_type pos = fname.find_last_of("/");
+	if( pos != std::string::npos ) {
+	  cerr << "Removing the mpeg path." << std::endl;
+	  fname = fname.erase(0, pos+1);
+	}
+
+	if( fname.find("%") != std::string::npos ) {
+	  cerr << "Remove the C Style format for the frames." << std::endl;
+	  cerr << "The format should be of the form: 'my_movie'" << std::endl;
+	} else {
+	  cerr << "Dumping mpeg " << fname << std::endl;
+
+	  StartMpeg( fname );
+	  AddMpegFrame();
+
+	  encoding_mpeg_ = true;
+	}
       }
-      AddMpegFrame();
-    }
-    else
-    { // dump each frame
-      /* if mpeg has just been turned off, close the file. */
-      if(encoding_mpeg_)
-      {
+
+    } else { // dump each frame
+      if(encoding_mpeg_) { // Finish up mpeg that was in progress.
 	encoding_mpeg_ = false;
 	EndMpeg();
       }
-      char movie[100];
-      sprintf(movie, "%05d",viewwindow->curFrame);
-      string fullpath(pathname + string(movie) + "."+ fname + ".ppm");
-      cerr << "Dumping "<<fullpath<<"....  ";
-      dump_image(fullpath);
-      cerr << " done!\n";
-      viewwindow->curFrame++;
+
+      std::string::size_type pos = viewwindow->curName.find_last_of("%0");
+
+      if( pos == std::string::npos ||
+	  viewwindow->curName[pos+2] != 'd' ||
+	  viewwindow->curName.find("%") != viewwindow->curName.find_last_of("%") ) {
+	cerr << "Bad C Style format for the frames." << std::endl;
+	cerr << "The format should be of the form: './my_movie.%04d'" << std::endl;
+      } else {
+
+	char fname[256];
+	sprintf(fname, viewwindow->curName.c_str(), viewwindow->curFrame++);
+	string fullpath = string(fname) + string(".ppm");
+	cerr << "Dumping " << fullpath << "....  ";
+	dump_image(fullpath);
+	cerr << " done!\n";
+      }
     }
-  }
-  else
-  {
-    if(encoding_mpeg_)
-    { // Finish up mpeg that was in progress.
+  } else {
+    if(encoding_mpeg_) { // Finish up mpeg that was in progress.
       encoding_mpeg_ = false;
       EndMpeg();
     }
   }
   gui->execute(str.str());
   gui->unlock();
-
 }
 
 
@@ -1788,16 +1797,16 @@ ViewWindow::setState(DrawInfoOpenGL* drawinfo, const string& tclID)
   if (movieName.valid())
     curName = movieName.get();
 
-  GuiInt movieFrame(ctx->subVar(tclID+"-movieFrame",false));
-  if (movieFrame.valid())
-    curFrame = movieFrame.get();
-
   GuiInt movie(ctx->subVar(tclID+"-movie",false));
   if (movie.valid()) {
     if (!movie.get()) {
       doingMovie = 0;
       makeMPEG = 0;
     } else if (!doingMovie) {
+      GuiInt movieFrame(ctx->subVar(tclID+"-movieFrame",false));
+      if (movieFrame.valid())
+	curFrame = movieFrame.get();
+
       doingMovie = 1;
       if (movie.get() == 1)
 	makeMPEG = 0;

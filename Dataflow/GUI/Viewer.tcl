@@ -675,7 +675,7 @@ itcl_class ViewWindow {
 	set "$this-global-cull" 0
 	set "$this-global-dl" 0
 	set "$this-global-movie" 0
-	set "$this-global-movieName" "movie"
+	set "$this-global-movieName" "./movie.%04d"
 	set "$this-global-movieFrame" 0
 	set "$this-global-resize" 0
 	set "$this-x-resize" 700
