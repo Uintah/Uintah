@@ -1,5 +1,4 @@
 #include <Packages/Uintah/CCA/Components/ICE/ICE.h>
-#include <Packages/Uintah/CCA/Components/ICE/MathToolbox.h>
 #include <Packages/Uintah/CCA/Components/ICE/BoundaryCond.h>
 #include <Packages/Uintah/CCA/Components/ICE/ICEMaterial.h>
 #include <Packages/Uintah/CCA/Components/ICE/Advection/AdvectionFactory.h>
@@ -23,7 +22,7 @@
 #include <Packages/Uintah/Core/Exceptions/InvalidValue.h>
 #include <Packages/Uintah/Core/Exceptions/MaxIteration.h>
 #include <Packages/Uintah/Core/Parallel/ProcessorGroup.h>
-#include <Core/Datatypes/DenseMatrix.h>
+#include <Packages/Uintah/Core/Math/FastMatrix.h>
 #include <vector>
 #include <Core/Geometry/Vector.h>
 #include <Core/Containers/StaticArray.h>
@@ -1544,11 +1543,13 @@ void ICE::addExchangeContributionToFCVel(const ProcessorGroup*,
     IntVector lowIndex(patch->getSFCXLowIndex()); 
     
     // Extract the momentum exchange coefficients
-    vector<double> b(numMatls);
-    vector<double> X(numMatls);
-    DenseMatrix beta(numMatls,numMatls),a(numMatls,numMatls);
-    DenseMatrix K(numMatls,numMatls), junk(numMatls,numMatls);
+    vector<double> b(numMatls, numMatls);
+    vector<double> X(numMatls, numMatls);
+    FastMatrix beta(numMatls, numMatls),a(numMatls, numMatls);
+    FastMatrix K(numMatls, numMatls), junk(numMatls, numMatls);
 
+    // Is it necessary to zero them?  It doesn't hhurt because it is
+    // only one per patch, but it could potentially mask some bugs.. - Steve
     beta.zero();
     a.zero();
     K.zero();
@@ -1583,21 +1584,21 @@ void ICE::addExchangeContributionToFCVel(const ProcessorGroup*,
       IntVector adj(cur.x(),cur.y()-1,cur.z()); 
       for(int m = 0; m < numMatls; m++) {
         for(int n = 0; n < numMatls; n++) {
-          tmp = (vol_frac_CC[n][adj] + vol_frac_CC[n][cur]) * K[n][m];
+          tmp = (vol_frac_CC[n][adj] + vol_frac_CC[n][cur]) * K(n,m);
    
           sp_vol_brack = (sp_vol_CC[m][adj] * sp_vol_CC[m][cur])/
                          (sp_vol_CC[m][adj] + sp_vol_CC[m][cur]);
-          beta[m][n] = sp_vol_brack * delT * tmp;
-          a[m][n] = -beta[m][n];
+          beta(m,n) = sp_vol_brack * delT * tmp;
+          a(m,n) = -beta(m,n);
         }
       }
       //__________________________________
       //  F  O  R  M     M  A  T  R  I  X   (a)
       //  - Diagonal terms      
       for(int m = 0; m < numMatls; m++) {
-       a[m][m] = 1.;
+       a(m,m) = 1.;
        for(int n = 0; n < numMatls; n++) {
-         a[m][m] +=  beta[m][n];
+         a(m,m) +=  beta(m,n);
        }
       }
       //__________________________________
@@ -1605,13 +1606,13 @@ void ICE::addExchangeContributionToFCVel(const ProcessorGroup*,
       for(int m = 0; m < numMatls; m++) {
        b[m] = 0.0;
        for(int n = 0; n < numMatls; n++)  {
-         b[m] += beta[m][n] * (vvel_FC[n][cur] - vvel_FC[m][cur]);
+         b[m] += beta(m,n) * (vvel_FC[n][cur] - vvel_FC[m][cur]);
        }
       }
       //__________________________________
       //      S  O  L  V  E  
-      //   - backout velocities           
-      matrixSolver(numMatls,a,b,X);
+      //   - backout velocities
+      a.destructiveSolve(b,X);
       for(int m = 0; m < numMatls; m++) {
        vvel_FCME[m][cur] = vvel_FC[m][cur] + X[m];
       }
@@ -1628,22 +1629,22 @@ void ICE::addExchangeContributionToFCVel(const ProcessorGroup*,
 
       for(int m = 0; m < numMatls; m++)  {
        for(int n = 0; n < numMatls; n++)  {
-         tmp = (vol_frac_CC[n][adj] + vol_frac_CC[n][cur]) * K[n][m];
+         tmp = (vol_frac_CC[n][adj] + vol_frac_CC[n][cur]) * K(n,m);
 
           sp_vol_brack = (sp_vol_CC[m][adj] * sp_vol_CC[m][cur])/
                          (sp_vol_CC[m][adj] + sp_vol_CC[m][cur]);
                            
-          beta[m][n] = sp_vol_brack * delT * tmp;
-          a[m][n] = -beta[m][n];
+          beta(m,n) = sp_vol_brack * delT * tmp;
+          a(m,n) = -beta(m,n);
        }
       }
       //__________________________________
       //  F  O  R  M     M  A  T  R  I  X   (a)
       //  - Diagonal terms  
       for(int m = 0; m < numMatls; m++) {
-       a[m][m] = 1.;
+       a(m,m) = 1.;
        for(int n = 0; n < numMatls; n++) {
-         a[m][m] +=  beta[m][n];
+         a(m,m) +=  beta(m,n);
        }
       }
 
@@ -1652,13 +1653,13 @@ void ICE::addExchangeContributionToFCVel(const ProcessorGroup*,
       for(int m = 0; m < numMatls; m++)  {
        b[m] = 0.0;
        for(int n = 0; n < numMatls; n++)  {
-         b[m] += beta[m][n] * (uvel_FC[n][cur] - uvel_FC[m][cur]);
+         b[m] += beta(m,n) * (uvel_FC[n][cur] - uvel_FC[m][cur]);
        }
       }
       //__________________________________
       //      S  O  L  V  E
       //   - backout velocities
-      matrixSolver(numMatls,a,b,X);
+      a.destructiveSolve(b,X);
       for(int m = 0; m < numMatls; m++) {
        uvel_FCME[m][cur] = uvel_FC[m][cur] + X[m];
       }   
@@ -1673,22 +1674,22 @@ void ICE::addExchangeContributionToFCVel(const ProcessorGroup*,
       IntVector adj(cur.x(),cur.y(),cur.z()-1); 
       for(int m = 0; m < numMatls; m++)  {
         for(int n = 0; n < numMatls; n++) {
-          tmp = (vol_frac_CC[n][adj] + vol_frac_CC[n][cur]) * K[n][m];
+          tmp = (vol_frac_CC[n][adj] + vol_frac_CC[n][cur]) * K(n,m);
   
           sp_vol_brack = (sp_vol_CC[m][adj] * sp_vol_CC[m][cur])/
                          (sp_vol_CC[m][adj] + sp_vol_CC[m][cur]);
                            
-          beta[m][n] = sp_vol_brack * delT * tmp;
-          a[m][n] = -beta[m][n];
+          beta(m,n) = sp_vol_brack * delT * tmp;
+          a(m,n) = -beta(m,n);
         }
       }
       //__________________________________
       //  F  O  R  M     M  A  T  R  I  X   (a)
       // - Diagonal terms
       for(int m = 0; m < numMatls; m++) {
-       a[m][m] = 1.;
+       a(m,m) = 1.;
        for(int n = 0; n < numMatls; n++) {
-         a[m][m] +=  beta[m][n];
+         a(m,m) +=  beta(m,n);
        }
       }
       //__________________________________
@@ -1696,13 +1697,13 @@ void ICE::addExchangeContributionToFCVel(const ProcessorGroup*,
       for(int m = 0; m < numMatls; m++) {
        b[m] = 0.0;
        for(int n = 0; n < numMatls; n++) {
-         b[m] += beta[m][n] * (wvel_FC[n][cur] - wvel_FC[m][cur]);
+         b[m] += beta(m,n) * (wvel_FC[n][cur] - wvel_FC[m][cur]);
        }
       }
       //__________________________________
       //      S  O  L  V  E
       //   - backout velocities 
-      matrixSolver(numMatls,a,b,X);
+      a.destructiveSolve(b,X);
       for(int m = 0; m < numMatls; m++) {
        wvel_FCME[m][cur] = wvel_FC[m][cur] + X[m];
       }
@@ -2685,9 +2686,9 @@ void ICE::addExchangeToMomentumAndEnergy(const ProcessorGroup*,
     vector<double> cv(numALLMatls);
     vector<double> X(numALLMatls);
     double tmp;
-    DenseMatrix beta(numALLMatls,numALLMatls),acopy(numALLMatls,numALLMatls);
-    DenseMatrix K(numALLMatls,numALLMatls),H(numALLMatls,numALLMatls);
-    DenseMatrix a(numALLMatls,numALLMatls), a_inverse(numALLMatls,numALLMatls);
+    FastMatrix beta(numALLMatls, numALLMatls),acopy(numALLMatls, numALLMatls);
+    FastMatrix K(numALLMatls, numALLMatls), H(numALLMatls, numALLMatls);
+    FastMatrix a(numALLMatls, numALLMatls), a_inverse(numALLMatls, numALLMatls);
     beta.zero();
     acopy.zero();
     K.zero();
@@ -2758,28 +2759,28 @@ void ICE::addExchangeToMomentumAndEnergy(const ProcessorGroup*,
       for(int m = 0; m < numALLMatls; m++)  {
         tmp = sp_vol_CC[m][c];
         for(int n = 0; n < numALLMatls; n++) {
-          beta[m][n] = delT * vol_frac_CC[n][c]  * K[n][m] * tmp;
-          a[m][n] = -beta[m][n];
+          beta(m,n) = delT * vol_frac_CC[n][c]  * K(n,m) * tmp;
+          a(m,n) = -beta(m,n);
         }
       }
       //   Form matrix (a) diagonal terms
       for(int m = 0; m < numALLMatls; m++) {
-        a[m][m] = 1.0;
+        a(m,m) = 1.0;
         for(int n = 0; n < numALLMatls; n++) {
-          a[m][m] +=  beta[m][n];
+          a(m,m) +=  beta(m,n);
         }
       }
-      matrixInverse(numALLMatls, a, a_inverse);
+      a_inverse.destructiveInvert(a);
       
       for (int dir = 0; dir <3; dir++) {  //loop over all three directons
         for(int m = 0; m < numALLMatls; m++) {
           b[m] = 0.0;
           for(int n = 0; n < numALLMatls; n++) {
-           b[m] += beta[m][n] *
+           b[m] += beta(m,n) *
              (vel_CC[n][c](dir) - vel_CC[m][c](dir));
           }
         }
-        multiplyMatrixAndVector(numALLMatls,a_inverse,b,X);
+        a_inverse.multiply(b,X);
         for(int m = 0; m < numALLMatls; m++) {
           vel_CC[m][c](dir) =  vel_CC[m][c](dir) + X[m];
         }
@@ -2789,15 +2790,15 @@ void ICE::addExchangeToMomentumAndEnergy(const ProcessorGroup*,
       for(int m = 0; m < numALLMatls; m++) {
         tmp = sp_vol_CC[m][c] / cv[m];
         for(int n = 0; n < numALLMatls; n++)  {
-          beta[m][n] = delT * vol_frac_CC[n][c] * H[n][m]*tmp;
-          a[m][n] = -beta[m][n];
+          beta(m,n) = delT * vol_frac_CC[n][c] * H(n,m)*tmp;
+          a(m,n) = -beta(m,n);
         }
       }
       //   Form matrix (a) diagonal terms
       for(int m = 0; m < numALLMatls; m++) {
-        a[m][m] = 1.;
+        a(m,m) = 1.;
         for(int n = 0; n < numALLMatls; n++)   {
-          a[m][m] +=  beta[m][n];
+          a(m,m) +=  beta(m,n);
         }
       }
       // -  F O R M   R H S   (b)
@@ -2805,11 +2806,11 @@ void ICE::addExchangeToMomentumAndEnergy(const ProcessorGroup*,
         b[m] = 0.0;
 
        for(int n = 0; n < numALLMatls; n++) {
-         b[m] += beta[m][n] * (Temp_CC[n][c] - Temp_CC[m][c]);
+         b[m] += beta(m,n) * (Temp_CC[n][c] - Temp_CC[m][c]);
         }
       }
       //     S O L V E, Add exchange contribution to orig value
-      matrixSolver(numALLMatls,a,b,X);
+      a.destructiveSolve(b,X);
       for(int m = 0; m < numALLMatls; m++) {
         Temp_CC[m][c] = Temp_CC[m][c] + X[m];
       }
@@ -3391,7 +3392,7 @@ void ICE::computeTauZ_Components( const Patch* patch,
 /*---------------------------------------------------------------------
  Function~  ICE::getExchangeCoefficients--
  ---------------------------------------------------------------------  */
-void ICE::getExchangeCoefficients( DenseMatrix& K, DenseMatrix& H  )
+void ICE::getExchangeCoefficients( FastMatrix& K, FastMatrix& H  )
 {
   int numMatls  = d_sharedState->getNumMatls();
     // Fill in the exchange matrix with the vector of exchange coefficients.
@@ -3407,8 +3408,8 @@ void ICE::getExchangeCoefficients( DenseMatrix& K, DenseMatrix& H  )
      // Fill in the upper triangular matrix
      for (int i = 0; i < numMatls; i++ )  {
       for (int j = i + 1; j < numMatls; j++) {
-        K[i][j] = K[j][i] = *it++;
-        H[i][j] = H[j][i] = *it1++;
+        K(i,j) = K(j,i) = *it++;
+        H(i,j) = H(j,i) = *it1++;
       }
      }
    } else if (2*num_coeff==(int)d_K_mom.size() && 
@@ -3417,8 +3418,8 @@ void ICE::getExchangeCoefficients( DenseMatrix& K, DenseMatrix& H  )
      for (int i = 0; i < numMatls; i++ )  {
       for (int j = 0; j < numMatls; j++) {
         if (i == j) continue;
-        K[i][j] = *it++;
-        H[i][j] = *it1++;
+        K(i,j) = *it++;
+        H(i,j) = *it1++;
       }
      }
    } else 
