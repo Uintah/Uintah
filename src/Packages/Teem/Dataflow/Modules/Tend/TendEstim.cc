@@ -145,6 +145,7 @@ TendEstim::execute()
   nrrdNuke(dummy);
 
   //nrrdNuke(sliced_bmat);
+  nout->axis[0].kind = nrrdKind3DMaskedSymTensor;
   NrrdData *output = scinew NrrdData;
   output->nrrd = nout;
   //output->copy_sci_data(*dwi_handle.get_rep());
