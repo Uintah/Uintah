@@ -167,39 +167,6 @@ public:
 				   const MaterialSet* matls);
 
       ////////////////////////////////////////////////////////////////////////
-      // Schedule Setting inlet velocity bc's
-      // we need to do it because of staggered grid
-      void sched_setInletVelocityBC(SchedulerP&, const PatchSet* patches,
-				    const MaterialSet* matls);
-
-      void sched_computeFlowINOUT(SchedulerP& sched, const PatchSet* patches,
-				  const MaterialSet* matls);
-      void sched_computeOMB(SchedulerP& sched, const PatchSet* patches,
-			    const MaterialSet* matls);
-
-      void sched_correctOutletBC(SchedulerP& sched, const PatchSet* patches,
-				 const MaterialSet* matls);
-
-      void sched_transOutletBC(SchedulerP& sched, 
-			       const PatchSet* patches,
-			       const MaterialSet* matls);
-
-      ////////////////////////////////////////////////////////////////////////
-      // Schedule Compute Pressure BCS
-      // used for pressure boundary type (during time advance)
-      void sched_recomputePressureBC(SchedulerP&, const PatchSet* patches,
-				     const MaterialSet* matls);
-
-      void sched_lastcomputePressureBC(SchedulerP&, const PatchSet* patches,
-				     const MaterialSet* matls);
-
-      void sched_predcomputePressureBC(SchedulerP&, const PatchSet* patches,
-				     const MaterialSet* matls);
-
-      void sched_intermcomputePressureBC(SchedulerP&, const PatchSet* patches,
-				     const MaterialSet* matls);
-
-      ////////////////////////////////////////////////////////////////////////
       // Schedule Set Profile BCS
       // initializes velocities, scalars and properties at the bndry
       // assigns flat velocity profiles for primary and secondary inlets
@@ -386,10 +353,6 @@ public:
 			   CellInformation* cellinfo,			  
 			   ArchesVariables* vars);
 
-      void newrecomputePressureBC(const ProcessorGroup* /*pc*/,
-				  const Patch* patch,
-				  CellInformation* cellinfo,
-				  ArchesVariables* vars);
 
       void calculateVelocityPred_mm(const ProcessorGroup*,
 				    const Patch* patch,
@@ -418,9 +381,6 @@ public:
 			      ArchesConstVariables* constvars,
 			      CellInformation* cellinfo);
 // New boundary conditions
-      void sched_copyINtoOUT(SchedulerP& sched, const PatchSet* patches,
-					    const MaterialSet* matls);
-
       void scalarPressureBC(const ProcessorGroup* pc,
 		    const Patch* patch,
 		    int index,
@@ -583,72 +543,15 @@ private:
       void mmwVelocityBC(const Patch* patch,
 			 ArchesVariables* vars,
 		       	 ArchesConstVariables* constvars);
-      ////////////////////////////////////////////////////////////////////////
-      // Actually set inlet velocity bcs
-      void setInletVelocityBC(const ProcessorGroup* pc,
-			       const PatchSubset* patches,
-			      const MaterialSubset* matls,
-			      DataWarehouse* old_dw,
-			      DataWarehouse* new_dw);
-
-      void transOutletBC(const ProcessorGroup* ,
-			 const PatchSubset* patches,
-			 const MaterialSubset* matls,
-			 DataWarehouse* old_dw,
-			 DataWarehouse* new_dw);
-
-      void computeFlowINOUT(const ProcessorGroup* pc,
-			    const PatchSubset* patches,
-			    const MaterialSubset* matls,
-			    DataWarehouse* old_dw,
-			    DataWarehouse* new_dw);
-  
-      void computeOMB(const ProcessorGroup* pc,
-		      const PatchSubset* patches,
-		      const MaterialSubset* matls,
-		      DataWarehouse* old_dw,
-		      DataWarehouse* new_dw);
-
-      void correctOutletBC(const ProcessorGroup* pc,
-			   const PatchSubset* patches,
-			   const MaterialSubset* matls,
-			   DataWarehouse* old_dw,
-			   DataWarehouse* new_dw);
 
       ////////////////////////////////////////////////////////////////////////
       // Actually calculate pressure bcs
-      void calcPressureBC(const ProcessorGroup* pc,
+      void computePressureBC(const ProcessorGroup* pc,
 			   const PatchSubset* patches,
 			  const MaterialSubset* matls,
 			  DataWarehouse* old_dw,
 			  DataWarehouse* new_dw);
 
-      ////////////////////////////////////////////////////////////////////////
-      // Actually calculate pressure bcs
-      void recomputePressureBC(const ProcessorGroup* pc,
-			       const PatchSubset* patches,
-			       const MaterialSubset* matls,
-			       DataWarehouse* old_dw,
-			       DataWarehouse* new_dw);
-
-
-      void lastcomputePressureBC(const ProcessorGroup* pc,
-			       const PatchSubset* patches,
-			       const MaterialSubset* matls,
-			       DataWarehouse* old_dw,
-			       DataWarehouse* new_dw);
-
-      void predcomputePressureBC(const ProcessorGroup* pc,
-			       const PatchSubset* patches,
-			       const MaterialSubset* matls,
-			       DataWarehouse* old_dw,
-			       DataWarehouse* new_dw);
-
-      void intermcomputePressureBC(const ProcessorGroup* pc,
-			       const PatchSubset* patches,
-			       const MaterialSubset* matls,
-			       DataWarehouse* old_dw,
-			       DataWarehouse* new_dw);
 
       ////////////////////////////////////////////////////////////////////////
       // Actually set the velocity, density and props flat profile
@@ -659,12 +562,6 @@ private:
 			  DataWarehouse* new_dw);
 
 // New boundary conditions
-      void copyINtoOUT(const ProcessorGroup* pc,
-				  const PatchSubset* patches,
-				  const MaterialSubset* matls,
-				  DataWarehouse* old_dw,
-				  DataWarehouse* new_dw); 
-
       void getFlowINOUT(const ProcessorGroup* pc,
 			const PatchSubset* patches,
 			const MaterialSubset* matls,

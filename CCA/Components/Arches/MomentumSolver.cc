@@ -148,7 +148,7 @@ MomentumSolver::sched_buildLinearMatrix(SchedulerP& sched,
   tsk->requires(Task::NewDW, d_lab->d_cellTypeLabel, 
 		  Ghost::AroundCells, Arches::ONEGHOSTCELL);
   
-  tsk->requires(Task::NewDW, timelabels->density_out,
+  tsk->requires(Task::NewDW, d_lab->d_densityCPLabel,
 		Ghost::AroundCells, Arches::ONEGHOSTCELL);
   tsk->requires(Task::NewDW, timelabels->pressure_out,
 		Ghost::AroundCells, Arches::ONEGHOSTCELL);
@@ -162,9 +162,9 @@ MomentumSolver::sched_buildLinearMatrix(SchedulerP& sched,
 
   case Arches::XDIR:
 
-    tsk->requires(Task::NewDW, timelabels->uvelhat_out,
+    tsk->requires(Task::NewDW, d_lab->d_uVelRhoHatLabel,
 		  Ghost::AroundFaces, Arches::ONEGHOSTCELL);
-    tsk->computes(timelabels->uvelocity_out);
+    tsk->modifies(d_lab->d_uVelocitySPBCLabel);
 
     tsk->computes(timelabels->maxabsu_out);
 
@@ -174,9 +174,9 @@ MomentumSolver::sched_buildLinearMatrix(SchedulerP& sched,
 
     // use new uvelocity for v coef calculation
     
-    tsk->requires(Task::NewDW, timelabels->vvelhat_out, 
+    tsk->requires(Task::NewDW, d_lab->d_vVelRhoHatLabel, 
 		  Ghost::AroundFaces, Arches::ONEGHOSTCELL);
-    tsk->computes(timelabels->vvelocity_out);
+    tsk->modifies(d_lab->d_vVelocitySPBCLabel);
 
     tsk->computes(timelabels->maxabsv_out);
 
@@ -186,9 +186,9 @@ MomentumSolver::sched_buildLinearMatrix(SchedulerP& sched,
 
     // use new uvelocity for v coef calculation
 
-    tsk->requires(Task::NewDW, timelabels->wvelhat_out, 
+    tsk->requires(Task::NewDW, d_lab->d_wVelRhoHatLabel, 
 		  Ghost::AroundFaces, Arches::ONEGHOSTCELL);
-    tsk->computes(timelabels->wvelocity_out);
+    tsk->modifies(d_lab->d_wVelocitySPBCLabel);
 
     tsk->computes(timelabels->maxabsw_out);
 
@@ -236,7 +236,7 @@ MomentumSolver::buildLinearMatrix(const ProcessorGroup* pc,
 
     new_dw->get(constVelocityVars.pressure, timelabels->pressure_out, 
 		matlIndex, patch, Ghost::AroundCells, Arches::ONEGHOSTCELL);
-    new_dw->get(constVelocityVars.density, timelabels->density_out, 
+    new_dw->get(constVelocityVars.density, d_lab->d_densityCPLabel, 
 		matlIndex, patch, Ghost::AroundCells, Arches::ONEGHOSTCELL);
 
     // Get the PerPatch CellInformation data
@@ -261,31 +261,28 @@ MomentumSolver::buildLinearMatrix(const ProcessorGroup* pc,
 
     case Arches::XDIR:
 
-      new_dw->allocateAndPut(velocityVars.uVelRhoHat, timelabels->uvelocity_out,
-		             matlIndex, patch,
-			     Ghost::AroundFaces, Arches::ONEGHOSTCELL);
-      new_dw->copyOut(velocityVars.uVelRhoHat, timelabels->uvelhat_out, 
-		  matlIndex, patch, Ghost::AroundFaces, Arches::ONEGHOSTCELL);
+      new_dw->getModifiable(velocityVars.uVelRhoHat, d_lab->d_uVelocitySPBCLabel,
+		             matlIndex, patch);
+      new_dw->copyOut(velocityVars.uVelRhoHat, d_lab->d_uVelRhoHatLabel, 
+		  matlIndex, patch);
 
       break;
 
     case Arches::YDIR:
 
-      new_dw->allocateAndPut(velocityVars.vVelRhoHat, timelabels->vvelocity_out,
-		             matlIndex, patch,
-			     Ghost::AroundFaces, Arches::ONEGHOSTCELL);
-      new_dw->copyOut(velocityVars.vVelRhoHat, timelabels->vvelhat_out, 
-		  matlIndex, patch, Ghost::AroundFaces, Arches::ONEGHOSTCELL);
+      new_dw->getModifiable(velocityVars.vVelRhoHat, d_lab->d_vVelocitySPBCLabel,
+		             matlIndex, patch);
+      new_dw->copyOut(velocityVars.vVelRhoHat, d_lab->d_vVelRhoHatLabel, 
+		  matlIndex, patch);
 
       break;
 
     case Arches::ZDIR:
 
-      new_dw->allocateAndPut(velocityVars.wVelRhoHat, timelabels->wvelocity_out,
-		             matlIndex, patch,
-			     Ghost::AroundFaces, Arches::ONEGHOSTCELL);
-      new_dw->copyOut(velocityVars.wVelRhoHat, timelabels->wvelhat_out, 
-		  matlIndex, patch, Ghost::AroundFaces, Arches::ONEGHOSTCELL);
+      new_dw->getModifiable(velocityVars.wVelRhoHat, d_lab->d_wVelocitySPBCLabel,
+		             matlIndex, patch);
+      new_dw->copyOut(velocityVars.wVelRhoHat, d_lab->d_wVelRhoHatLabel, 
+		  matlIndex, patch);
 
       break;
 
@@ -449,34 +446,45 @@ MomentumSolver::sched_buildLinearMatrixVelHat(SchedulerP& sched,
   tsk->requires(Task::NewDW, d_lab->d_cellTypeLabel,
 		Ghost::AroundCells, Arches::TWOGHOSTCELLS);
 
-  tsk->requires(Task::NewDW, timelabels->density_in,
-		Ghost::AroundCells, Arches::TWOGHOSTCELLS);
-  tsk->requires(Task::NewDW, timelabels->old_density_in,
-		Ghost::AroundCells, Arches::ONEGHOSTCELL);
-  tsk->requires(Task::NewDW, timelabels->density_out, 
+  if (!(timelabels->integrator_step_name == "FE"))
+    tsk->requires(Task::NewDW, d_lab->d_densityTempLabel,
+		  Ghost::AroundCells, Arches::TWOGHOSTCELLS);
+  else
+    tsk->requires(Task::OldDW, d_lab->d_densityCPLabel,
+		  Ghost::AroundCells, Arches::TWOGHOSTCELLS);
+
+  Task::WhichDW old_values_dw;
+  if (timelabels->use_old_values) {
+    old_values_dw = Task::OldDW;
+    tsk->requires(Task::OldDW, d_lab->d_densityCPLabel,
+		  Ghost::AroundCells, Arches::ONEGHOSTCELL);
+  }
+  else {
+    old_values_dw = Task::NewDW;
+    tsk->requires(Task::NewDW, d_lab->d_densityTempLabel,
+		  Ghost::AroundCells, Arches::ONEGHOSTCELL);
+  }
+  tsk->requires(old_values_dw, d_lab->d_uVelocitySPBCLabel,
+		Ghost::None, Arches::ZEROGHOSTCELLS);
+  tsk->requires(old_values_dw, d_lab->d_vVelocitySPBCLabel,
+		Ghost::None, Arches::ZEROGHOSTCELLS);
+  tsk->requires(old_values_dw, d_lab->d_wVelocitySPBCLabel,
+		Ghost::None, Arches::ZEROGHOSTCELLS);
+
+  tsk->requires(Task::NewDW, d_lab->d_densityCPLabel, 
 		Ghost::AroundCells, Arches::ONEGHOSTCELL);
   tsk->requires(Task::NewDW, d_lab->d_denRefArrayLabel,
 		Ghost::AroundCells, Arches::ONEGHOSTCELL);
-  tsk->requires(Task::NewDW, timelabels->viscosity_in,
+  tsk->requires(Task::NewDW, d_lab->d_viscosityCTSLabel,
 		Ghost::AroundCells, Arches::ONEGHOSTCELL);
-  tsk->requires(Task::NewDW, timelabels->uvelocity_in,
+  tsk->requires(Task::NewDW, d_lab->d_uVelocitySPBCLabel,
 		Ghost::AroundFaces, Arches::TWOGHOSTCELLS);
-  tsk->requires(Task::NewDW, timelabels->vvelocity_in,
+  tsk->requires(Task::NewDW, d_lab->d_vVelocitySPBCLabel,
 		Ghost::AroundFaces, Arches::TWOGHOSTCELLS);
-  tsk->requires(Task::NewDW, timelabels->wvelocity_in,
+  tsk->requires(Task::NewDW, d_lab->d_wVelocitySPBCLabel,
 		Ghost::AroundFaces, Arches::TWOGHOSTCELLS);
-  tsk->requires(Task::NewDW, timelabels->old_uvelocity_in,
-		Ghost::None, Arches::ZEROGHOSTCELLS);
-  tsk->requires(Task::NewDW, timelabels->old_vvelocity_in,
-		Ghost::None, Arches::ZEROGHOSTCELLS);
-  tsk->requires(Task::NewDW, timelabels->old_wvelocity_in,
-		Ghost::None, Arches::ZEROGHOSTCELLS);
 
   if (d_pressure_correction)
-  if (timelabels->integrator_last_step)
-    tsk->requires(Task::NewDW, timelabels->pressure_guess, 
-		  Ghost::AroundCells, Arches::ONEGHOSTCELL);
-  else
     tsk->requires(Task::OldDW, timelabels->pressure_guess, 
 		  Ghost::AroundCells, Arches::ONEGHOSTCELL);
 
@@ -492,7 +500,7 @@ MomentumSolver::sched_buildLinearMatrixVelHat(SchedulerP& sched,
   }
   // required for computing div constraint
 #ifdef divergenceconstraint
-  tsk->requires(Task::NewDW, timelabels->scalar_in, 
+  tsk->requires(Task::OldDW, d_lab->d_scalarSPLabel, 
 		Ghost::AroundCells, Arches::ONEGHOSTCELL);
   tsk->requires(Task::NewDW, d_lab->d_drhodfCPLabel, 
 		Ghost::None, Arches::ZEROGHOSTCELLS);
@@ -543,9 +551,9 @@ MomentumSolver::sched_buildLinearMatrixVelHat(SchedulerP& sched,
 		  Ghost::None, Arches::ZEROGHOSTCELLS);
   }
 
-  tsk->computes(timelabels->uvelhat_out);
-  tsk->computes(timelabels->vvelhat_out);
-  tsk->computes(timelabels->wvelhat_out);
+  tsk->modifies(d_lab->d_uVelRhoHatLabel);
+  tsk->modifies(d_lab->d_vVelRhoHatLabel);
+  tsk->modifies(d_lab->d_wVelRhoHatLabel);
     
 #ifdef divergenceconstraint
   if (timelabels->integrator_step_number == TimeIntegratorStepNumber::First)
@@ -612,39 +620,50 @@ MomentumSolver::buildLinearMatrixVelHat(const ProcessorGroup* pc,
     new_dw->get(constVelocityVars.cellType, d_lab->d_cellTypeLabel, 
 		matlIndex, patch, Ghost::AroundCells, Arches::TWOGHOSTCELLS);
 
-    new_dw->get(constVelocityVars.density, timelabels->density_in, 
-		matlIndex, patch, Ghost::AroundCells, Arches::TWOGHOSTCELLS);
-    new_dw->get(constVelocityVars.old_density, timelabels->old_density_in, 
-		matlIndex, patch, Ghost::AroundCells, Arches::ONEGHOSTCELL);
-    new_dw->get(constVelocityVars.new_density, timelabels->density_out, 
+    if (timelabels->number_of_steps > 1)
+      new_dw->get(constVelocityVars.density, d_lab->d_densityTempLabel, 
+		  matlIndex, patch, Ghost::AroundCells, Arches::TWOGHOSTCELLS);
+    else
+      old_dw->get(constVelocityVars.density, d_lab->d_densityCPLabel, 
+		  matlIndex, patch, Ghost::AroundCells, Arches::TWOGHOSTCELLS);
+
+    DataWarehouse* old_values_dw;
+    if (timelabels->use_old_values) {
+      old_values_dw = old_dw;
+      old_dw->get(constVelocityVars.old_density, d_lab->d_densityCPLabel, 
+		  matlIndex, patch, Ghost::AroundCells, Arches::ONEGHOSTCELL);
+    }
+    else {
+      old_values_dw = new_dw;
+      new_dw->get(constVelocityVars.old_density, d_lab->d_densityTempLabel, 
+		  matlIndex, patch, Ghost::AroundCells, Arches::ONEGHOSTCELL);
+    }
+    old_values_dw->get(constVelocityVars.old_uVelocity, d_lab->d_uVelocitySPBCLabel, 
+		matlIndex, patch, Ghost::None, Arches::ZEROGHOSTCELLS);
+    old_values_dw->get(constVelocityVars.old_vVelocity, d_lab->d_vVelocitySPBCLabel, 
+		matlIndex, patch, Ghost::None, Arches::ZEROGHOSTCELLS);
+    old_values_dw->get(constVelocityVars.old_wVelocity, d_lab->d_wVelocitySPBCLabel, 
+		matlIndex, patch, Ghost::None, Arches::ZEROGHOSTCELLS);
+
+    new_dw->get(constVelocityVars.new_density, d_lab->d_densityCPLabel, 
 		matlIndex, patch, Ghost::AroundCells, Arches::ONEGHOSTCELL);
     new_dw->get(constVelocityVars.denRefArray, d_lab->d_denRefArrayLabel,
     		matlIndex, patch, Ghost::AroundCells, Arches::ONEGHOSTCELL);
-    new_dw->get(constVelocityVars.viscosity, timelabels->viscosity_in, 
+    new_dw->get(constVelocityVars.viscosity, d_lab->d_viscosityCTSLabel, 
 		matlIndex, patch, Ghost::AroundCells, Arches::ONEGHOSTCELL);
-    new_dw->get(constVelocityVars.uVelocity, timelabels->uvelocity_in, 
+    new_dw->get(constVelocityVars.uVelocity, d_lab->d_uVelocitySPBCLabel, 
 		matlIndex, patch, Ghost::AroundFaces, Arches::TWOGHOSTCELLS);
-    new_dw->get(constVelocityVars.vVelocity, timelabels->vvelocity_in, 
+    new_dw->get(constVelocityVars.vVelocity, d_lab->d_vVelocitySPBCLabel, 
 		matlIndex, patch, Ghost::AroundFaces, Arches::TWOGHOSTCELLS);
-    new_dw->get(constVelocityVars.wVelocity, timelabels->wvelocity_in, 
+    new_dw->get(constVelocityVars.wVelocity, d_lab->d_wVelocitySPBCLabel, 
 		matlIndex, patch, Ghost::AroundFaces, Arches::TWOGHOSTCELLS);
-    new_dw->get(constVelocityVars.old_uVelocity, timelabels->old_uvelocity_in, 
-		matlIndex, patch, Ghost::None, Arches::ZEROGHOSTCELLS);
-    new_dw->get(constVelocityVars.old_vVelocity, timelabels->old_vvelocity_in, 
-		matlIndex, patch, Ghost::None, Arches::ZEROGHOSTCELLS);
-    new_dw->get(constVelocityVars.old_wVelocity, timelabels->old_wvelocity_in, 
-		matlIndex, patch, Ghost::None, Arches::ZEROGHOSTCELLS);
 
     if (d_pressure_correction)
-    if (timelabels->integrator_last_step)
-      new_dw->get(constVelocityVars.pressure, timelabels->pressure_guess, 
-		  matlIndex, patch, Ghost::AroundCells, Arches::ONEGHOSTCELL);
-    else
       old_dw->get(constVelocityVars.pressure, timelabels->pressure_guess, 
 		  matlIndex, patch, Ghost::AroundCells, Arches::ONEGHOSTCELL);
 
 #ifdef divergenceconstraint
-    new_dw->get(constVelocityVars.scalar, timelabels->scalar_in,
+    old_dw->get(constVelocityVars.scalar, d_lab->d_scalarSPLabel,
 		    matlIndex, patch, Ghost::AroundCells, Arches::ONEGHOSTCELL);
     new_dw->get(constVelocityVars.drhodf, d_lab->d_drhodfCPLabel,
 		    matlIndex, patch, Ghost::None, Arches::ZEROGHOSTCELLS);
@@ -763,9 +782,8 @@ MomentumSolver::buildLinearMatrixVelHat(const ProcessorGroup* pc,
 
 	new_dw->allocateTemporary(velocityVars.uVelLinearSrc,  patch);
 	new_dw->allocateTemporary(velocityVars.uVelNonlinearSrc,  patch);
-	new_dw->allocateAndPut(velocityVars.uVelRhoHat, timelabels->uvelhat_out,
-			       matlIndex, patch,
-			       Ghost::AroundFaces, Arches::ONEGHOSTCELL);
+	new_dw->getModifiable(velocityVars.uVelRhoHat, d_lab->d_uVelRhoHatLabel,
+			       matlIndex, patch);
 	velocityVars.uVelRhoHat.copy(constVelocityVars.uVelocity,
 				     velocityVars.uVelRhoHat.getLowIndex(),
 				     velocityVars.uVelRhoHat.getHighIndex());
@@ -776,9 +794,8 @@ MomentumSolver::buildLinearMatrixVelHat(const ProcessorGroup* pc,
 
 	new_dw->allocateTemporary(velocityVars.vVelLinearSrc,  patch);
 	new_dw->allocateTemporary(velocityVars.vVelNonlinearSrc,  patch);
-	new_dw->allocateAndPut(velocityVars.vVelRhoHat, timelabels->vvelhat_out,
-			       matlIndex, patch,
-			       Ghost::AroundFaces, Arches::ONEGHOSTCELL);
+	new_dw->getModifiable(velocityVars.vVelRhoHat, d_lab->d_vVelRhoHatLabel,
+			       matlIndex, patch);
 	velocityVars.vVelRhoHat.copy(constVelocityVars.vVelocity,
 				     velocityVars.vVelRhoHat.getLowIndex(),
 				     velocityVars.vVelRhoHat.getHighIndex());
@@ -789,9 +806,8 @@ MomentumSolver::buildLinearMatrixVelHat(const ProcessorGroup* pc,
 
 	new_dw->allocateTemporary(velocityVars.wVelLinearSrc,  patch);
 	new_dw->allocateTemporary(velocityVars.wVelNonlinearSrc,  patch);
-	new_dw->allocateAndPut(velocityVars.wVelRhoHat, timelabels->wvelhat_out,
-			       matlIndex, patch,
-			       Ghost::AroundFaces, Arches::ONEGHOSTCELL);
+	new_dw->getModifiable(velocityVars.wVelRhoHat, d_lab->d_wVelRhoHatLabel,
+			       matlIndex, patch);
 	velocityVars.wVelRhoHat.copy(constVelocityVars.wVelocity,
 				     velocityVars.wVelRhoHat.getLowIndex(),
 				     velocityVars.wVelRhoHat.getHighIndex());
@@ -1182,8 +1198,6 @@ MomentumSolver::buildLinearMatrixVelHat(const ProcessorGroup* pc,
 #endif
     
     }
-//    d_boundaryCondition->newrecomputePressureBC(pc, patch, cellinfo,
-//						&velocityVars);
     d_boundaryCondition->velRhoHatInletBC(pc, patch, cellinfo,
 					  &velocityVars, &constVelocityVars);
     d_boundaryCondition->velRhoHatPressureBC(pc, patch, cellinfo,
@@ -1356,25 +1370,25 @@ MomentumSolver::sched_averageRKHatVelocities(SchedulerP& sched,
 			  &MomentumSolver::averageRKHatVelocities,
 			  timelabels);
 
-  tsk->requires(Task::NewDW, d_lab->d_uVelocityOUTBCLabel,
+  tsk->requires(Task::OldDW, d_lab->d_uVelocitySPBCLabel,
                 Ghost::None, Arches::ZEROGHOSTCELLS);
-  tsk->requires(Task::NewDW, d_lab->d_vVelocityOUTBCLabel,
+  tsk->requires(Task::OldDW, d_lab->d_vVelocitySPBCLabel,
                 Ghost::None, Arches::ZEROGHOSTCELLS);
-  tsk->requires(Task::NewDW, d_lab->d_wVelocityOUTBCLabel,
+  tsk->requires(Task::OldDW, d_lab->d_wVelocitySPBCLabel,
                 Ghost::None, Arches::ZEROGHOSTCELLS);
-  tsk->requires(Task::NewDW, d_lab->d_densityINLabel,
+  tsk->requires(Task::OldDW, d_lab->d_densityCPLabel,
 		Ghost::AroundCells, Arches::ONEGHOSTCELL);
   tsk->requires(Task::NewDW, d_lab->d_cellTypeLabel,
 		Ghost::None, Arches::ZEROGHOSTCELLS);
 
-  tsk->requires(Task::NewDW, timelabels->rho2_density,
+  tsk->requires(Task::NewDW, d_lab->d_densityTempLabel,
 		Ghost::AroundCells, Arches::ONEGHOSTCELL);
-  tsk->requires(Task::NewDW, timelabels->density_out,
+  tsk->requires(Task::NewDW, d_lab->d_densityCPLabel,
 		Ghost::AroundCells, Arches::ONEGHOSTCELL);
 
-  tsk->modifies(timelabels->uvelhat_out);
-  tsk->modifies(timelabels->vvelhat_out);
-  tsk->modifies(timelabels->wvelhat_out);
+  tsk->modifies(d_lab->d_uVelRhoHatLabel);
+  tsk->modifies(d_lab->d_vVelRhoHatLabel);
+  tsk->modifies(d_lab->d_wVelRhoHatLabel);
 
   sched->addTask(tsk, patches, matls);
 }
@@ -1385,7 +1399,7 @@ void
 MomentumSolver::averageRKHatVelocities(const ProcessorGroup*,
 			   	       const PatchSubset* patches,
 			   	       const MaterialSubset*,
-			   	       DataWarehouse*,
+			   	       DataWarehouse* old_dw,
 			   	       DataWarehouse* new_dw,
 			   	       const TimeIntegratorLabel* timelabels)
 {
@@ -1397,7 +1411,7 @@ MomentumSolver::averageRKHatVelocities(const ProcessorGroup*,
 		     getArchesMaterial(archIndex)->getDWIndex(); 
 
     constCCVariable<double> old_density;
-    constCCVariable<double> rho2_density;
+    constCCVariable<double> temp_density;
     constCCVariable<double> new_density;
     constCCVariable<int> cellType;
     constSFCXVariable<double> old_uvel;
@@ -1407,27 +1421,27 @@ MomentumSolver::averageRKHatVelocities(const ProcessorGroup*,
     SFCYVariable<double> new_vvel;
     SFCZVariable<double> new_wvel;
 
-    new_dw->get(old_density, d_lab->d_densityINLabel, 
+    old_dw->get(old_density, d_lab->d_densityCPLabel, 
 		matlIndex, patch, Ghost::AroundCells, Arches::ONEGHOSTCELL);
     new_dw->get(cellType, d_lab->d_cellTypeLabel,
 		matlIndex, patch, Ghost::None, Arches::ZEROGHOSTCELLS);
-    new_dw->get(old_uvel, d_lab->d_uVelocityOUTBCLabel, 
+    old_dw->get(old_uvel, d_lab->d_uVelocitySPBCLabel, 
 		matlIndex, patch, Ghost::None, Arches::ZEROGHOSTCELLS);
-    new_dw->get(old_vvel, d_lab->d_vVelocityOUTBCLabel, 
+    old_dw->get(old_vvel, d_lab->d_vVelocitySPBCLabel, 
 		matlIndex, patch, Ghost::None, Arches::ZEROGHOSTCELLS);
-    new_dw->get(old_wvel, d_lab->d_wVelocityOUTBCLabel, 
+    old_dw->get(old_wvel, d_lab->d_wVelocitySPBCLabel, 
 		matlIndex, patch, Ghost::None, Arches::ZEROGHOSTCELLS);
 
-    new_dw->get(rho2_density, timelabels->rho2_density, 
+    new_dw->get(temp_density, d_lab->d_densityTempLabel, 
 		matlIndex, patch, Ghost::AroundCells, Arches::ONEGHOSTCELL);
-    new_dw->get(new_density, timelabels->density_out, 
+    new_dw->get(new_density, d_lab->d_densityCPLabel, 
 		matlIndex, patch, Ghost::AroundCells, Arches::ONEGHOSTCELL);
 
-    new_dw->getModifiable(new_uvel, timelabels->uvelhat_out, 
+    new_dw->getModifiable(new_uvel, d_lab->d_uVelRhoHatLabel, 
 			  matlIndex, patch);
-    new_dw->getModifiable(new_vvel, timelabels->vvelhat_out, 
+    new_dw->getModifiable(new_vvel, d_lab->d_vVelRhoHatLabel, 
 			  matlIndex, patch);
-    new_dw->getModifiable(new_wvel, timelabels->wvelhat_out, 
+    new_dw->getModifiable(new_wvel, d_lab->d_wVelRhoHatLabel, 
 			  matlIndex, patch);
 
     double factor_old, factor_new, factor_divide;
@@ -1448,7 +1462,7 @@ MomentumSolver::averageRKHatVelocities(const ProcessorGroup*,
 	    new_uvel[currCell] = (factor_old*old_uvel[currCell]*
 		(old_density[currCell]+old_density[xminusCell]) +
 		factor_new*new_uvel[currCell]*
-		(rho2_density[currCell]+rho2_density[xminusCell]))/
+		(temp_density[currCell]+temp_density[xminusCell]))/
 		(factor_divide*(new_density[currCell]+new_density[xminusCell]));
 
 	}
@@ -1466,7 +1480,7 @@ MomentumSolver::averageRKHatVelocities(const ProcessorGroup*,
 	    new_vvel[currCell] = (factor_old*old_vvel[currCell]*
 		(old_density[currCell]+old_density[yminusCell]) +
 		factor_new*new_vvel[currCell]*
-		(rho2_density[currCell]+rho2_density[yminusCell]))/
+		(temp_density[currCell]+temp_density[yminusCell]))/
 		(factor_divide*(new_density[currCell]+new_density[yminusCell]));
 
 	}
@@ -1484,7 +1498,7 @@ MomentumSolver::averageRKHatVelocities(const ProcessorGroup*,
 	    new_wvel[currCell] = (factor_old*old_wvel[currCell]*
 		(old_density[currCell]+old_density[zminusCell]) +
 		factor_new*new_wvel[currCell]*
-		(rho2_density[currCell]+rho2_density[zminusCell]))/
+		(temp_density[currCell]+temp_density[zminusCell]))/
 		(factor_divide*(new_density[currCell]+new_density[zminusCell]));
 
 	}
@@ -1514,7 +1528,7 @@ MomentumSolver::averageRKHatVelocities(const ProcessorGroup*,
 	   new_uvel[currCell] = (factor_old*old_uvel[currCell]*
 		(old_density[currCell]+old_density[xminusCell]) +
 		factor_new*new_uvel[currCell]*
-		(rho2_density[currCell]+rho2_density[xminusCell]))/
+		(temp_density[currCell]+temp_density[xminusCell]))/
 		(factor_divide*(new_density[currCell]+new_density[xminusCell]));
 
  	if ((cellType[xminusCell] == out_celltypeval)||
@@ -1526,7 +1540,7 @@ MomentumSolver::averageRKHatVelocities(const ProcessorGroup*,
 	    new_vvel[xminusCell] = (factor_old*old_vvel[xminusCell]*
 		(old_density[xminusCell]+old_density[xminusyminusCell]) +
 		factor_new*new_vvel[xminusCell]*
-		(rho2_density[xminusCell]+rho2_density[xminusyminusCell]))/
+		(temp_density[xminusCell]+temp_density[xminusyminusCell]))/
 		(factor_divide*
 		(new_density[xminusCell]+new_density[xminusyminusCell]));
 	}
@@ -1534,7 +1548,7 @@ MomentumSolver::averageRKHatVelocities(const ProcessorGroup*,
 	    new_wvel[xminusCell] = (factor_old*old_wvel[xminusCell]*
 		(old_density[xminusCell]+old_density[xminuszminusCell]) +
 		factor_new*new_wvel[xminusCell]*
-		(rho2_density[xminusCell]+rho2_density[xminuszminusCell]))/
+		(temp_density[xminusCell]+temp_density[xminuszminusCell]))/
 		(factor_divide*
 		(new_density[xminusCell]+new_density[xminuszminusCell]));
 	}
@@ -1555,7 +1569,7 @@ MomentumSolver::averageRKHatVelocities(const ProcessorGroup*,
 	   new_uvel[xplusCell] = (factor_old*old_uvel[xplusCell]*
 		(old_density[xplusCell]+old_density[currCell]) +
 		factor_new*new_uvel[xplusCell]*
-		(rho2_density[xplusCell]+rho2_density[currCell]))/
+		(temp_density[xplusCell]+temp_density[currCell]))/
 		(factor_divide*(new_density[xplusCell]+new_density[currCell]));
 
  	if ((cellType[xplusCell] == out_celltypeval)||
@@ -1567,7 +1581,7 @@ MomentumSolver::averageRKHatVelocities(const ProcessorGroup*,
 	    new_vvel[xplusCell] = (factor_old*old_vvel[xplusCell]*
 		(old_density[xplusCell]+old_density[xplusyminusCell]) +
 		factor_new*new_vvel[xplusCell]*
-		(rho2_density[xplusCell]+rho2_density[xplusyminusCell]))/
+		(temp_density[xplusCell]+temp_density[xplusyminusCell]))/
 		(factor_divide*
 		(new_density[xplusCell]+new_density[xplusyminusCell]));
 	}
@@ -1576,7 +1590,7 @@ MomentumSolver::averageRKHatVelocities(const ProcessorGroup*,
 	    new_wvel[xplusCell] = (factor_old*old_wvel[xplusCell]*
 		(old_density[xplusCell]+old_density[xpluszminusCell]) +
 		factor_new*new_wvel[xplusCell]*
-		(rho2_density[xplusCell]+rho2_density[xpluszminusCell]))/
+		(temp_density[xplusCell]+temp_density[xpluszminusCell]))/
 		(factor_divide*
 		(new_density[xplusCell]+new_density[xpluszminusCell]));
 	}
@@ -1596,7 +1610,7 @@ MomentumSolver::averageRKHatVelocities(const ProcessorGroup*,
 	   new_vvel[currCell] = (factor_old*old_vvel[currCell]*
 		(old_density[currCell]+old_density[yminusCell]) +
 		factor_new*new_vvel[currCell]*
-		(rho2_density[currCell]+rho2_density[yminusCell]))/
+		(temp_density[currCell]+temp_density[yminusCell]))/
 		(factor_divide*(new_density[currCell]+new_density[yminusCell]));
 
  	if ((cellType[yminusCell] == out_celltypeval)||
@@ -1608,7 +1622,7 @@ MomentumSolver::averageRKHatVelocities(const ProcessorGroup*,
 	    new_uvel[yminusCell] = (factor_old*old_uvel[yminusCell]*
 		(old_density[yminusCell]+old_density[yminusxminusCell]) +
 		factor_new*new_uvel[yminusCell]*
-		(rho2_density[yminusCell]+rho2_density[yminusxminusCell]))/
+		(temp_density[yminusCell]+temp_density[yminusxminusCell]))/
 		(factor_divide*
 		(new_density[yminusCell]+new_density[yminusxminusCell]));
 	}
@@ -1616,7 +1630,7 @@ MomentumSolver::averageRKHatVelocities(const ProcessorGroup*,
 	    new_wvel[yminusCell] = (factor_old*old_wvel[yminusCell]*
 		(old_density[yminusCell]+old_density[yminuszminusCell]) +
 		factor_new*new_wvel[yminusCell]*
-		(rho2_density[yminusCell]+rho2_density[yminuszminusCell]))/
+		(temp_density[yminusCell]+temp_density[yminuszminusCell]))/
 		(factor_divide*
 		(new_density[yminusCell]+new_density[yminuszminusCell]));
 	}
@@ -1637,7 +1651,7 @@ MomentumSolver::averageRKHatVelocities(const ProcessorGroup*,
 	   new_vvel[yplusCell] = (factor_old*old_vvel[yplusCell]*
 		(old_density[yplusCell]+old_density[currCell]) +
 		factor_new*new_vvel[yplusCell]*
-		(rho2_density[yplusCell]+rho2_density[currCell]))/
+		(temp_density[yplusCell]+temp_density[currCell]))/
 		(factor_divide*(new_density[yplusCell]+new_density[currCell]));
 
  	if ((cellType[yplusCell] == out_celltypeval)||
@@ -1649,7 +1663,7 @@ MomentumSolver::averageRKHatVelocities(const ProcessorGroup*,
 	    new_uvel[yplusCell] = (factor_old*old_uvel[yplusCell]*
 		(old_density[yplusCell]+old_density[yplusxminusCell]) +
 		factor_new*new_uvel[yplusCell]*
-		(rho2_density[yplusCell]+rho2_density[yplusxminusCell]))/
+		(temp_density[yplusCell]+temp_density[yplusxminusCell]))/
 		(factor_divide*
 		(new_density[yplusCell]+new_density[yplusxminusCell]));
 	}
@@ -1658,7 +1672,7 @@ MomentumSolver::averageRKHatVelocities(const ProcessorGroup*,
 	    new_wvel[yplusCell] = (factor_old*old_wvel[yplusCell]*
 		(old_density[yplusCell]+old_density[ypluszminusCell]) +
 		factor_new*new_wvel[yplusCell]*
-		(rho2_density[yplusCell]+rho2_density[ypluszminusCell]))/
+		(temp_density[yplusCell]+temp_density[ypluszminusCell]))/
 		(factor_divide*
 		(new_density[yplusCell]+new_density[ypluszminusCell]));
 	}
@@ -1678,7 +1692,7 @@ MomentumSolver::averageRKHatVelocities(const ProcessorGroup*,
 	   new_wvel[currCell] = (factor_old*old_wvel[currCell]*
 		(old_density[currCell]+old_density[zminusCell]) +
 		factor_new*new_wvel[currCell]*
-		(rho2_density[currCell]+rho2_density[zminusCell]))/
+		(temp_density[currCell]+temp_density[zminusCell]))/
 		(factor_divide*
 		(new_density[currCell]+new_density[zminusCell]));
 
@@ -1691,7 +1705,7 @@ MomentumSolver::averageRKHatVelocities(const ProcessorGroup*,
 	    new_uvel[zminusCell] = (factor_old*old_uvel[zminusCell]*
 		(old_density[zminusCell]+old_density[zminusxminusCell]) +
 		factor_new*new_uvel[zminusCell]*
-		(rho2_density[zminusCell]+rho2_density[zminusxminusCell]))/
+		(temp_density[zminusCell]+temp_density[zminusxminusCell]))/
 		(factor_divide*
 		(new_density[zminusCell]+new_density[zminusxminusCell]));
 	}
@@ -1699,7 +1713,7 @@ MomentumSolver::averageRKHatVelocities(const ProcessorGroup*,
 	    new_vvel[zminusCell] = (factor_old*old_vvel[zminusCell]*
 		(old_density[zminusCell]+old_density[zminusyminusCell]) +
 		factor_new*new_vvel[zminusCell]*
-		(rho2_density[zminusCell]+rho2_density[zminusyminusCell]))/
+		(temp_density[zminusCell]+temp_density[zminusyminusCell]))/
 		(factor_divide*
 		(new_density[zminusCell]+new_density[zminusyminusCell]));
 	}
@@ -1720,7 +1734,7 @@ MomentumSolver::averageRKHatVelocities(const ProcessorGroup*,
 	   new_wvel[zplusCell] = (factor_old*old_wvel[zplusCell]*
 		(old_density[zplusCell]+old_density[currCell]) +
 		factor_new*new_wvel[zplusCell]*
-		(rho2_density[zplusCell]+rho2_density[currCell]))/
+		(temp_density[zplusCell]+temp_density[currCell]))/
 		(factor_divide*(new_density[zplusCell]+new_density[currCell]));
 
  	if ((cellType[zplusCell] == out_celltypeval)||
@@ -1732,7 +1746,7 @@ MomentumSolver::averageRKHatVelocities(const ProcessorGroup*,
 	    new_uvel[zplusCell] = (factor_old*old_uvel[zplusCell]*
 		(old_density[zplusCell]+old_density[zplusxminusCell]) +
 		factor_new*new_uvel[zplusCell]*
-		(rho2_density[zplusCell]+rho2_density[zplusxminusCell]))/
+		(temp_density[zplusCell]+temp_density[zplusxminusCell]))/
 		(factor_divide*
 		(new_density[zplusCell]+new_density[zplusxminusCell]));
 	}
@@ -1741,7 +1755,7 @@ MomentumSolver::averageRKHatVelocities(const ProcessorGroup*,
 	    new_vvel[zplusCell] = (factor_old*old_vvel[zplusCell]*
 		(old_density[zplusCell]+old_density[zplusyminusCell]) +
 		factor_new*new_vvel[zplusCell]*
-		(rho2_density[zplusCell]+rho2_density[zplusyminusCell]))/
+		(temp_density[zplusCell]+temp_density[zplusyminusCell]))/
 		(factor_divide*
 		(new_density[zplusCell]+new_density[zplusyminusCell]));
 	}
@@ -1753,6 +1767,7 @@ MomentumSolver::averageRKHatVelocities(const ProcessorGroup*,
 }
 //****************************************************************************
 //  Schedule computing of nonlinear terms
+//  Doesn't work!!!
 //****************************************************************************
 void 
 MomentumSolver::sched_computeNonlinearTerms(SchedulerP& sched, 
@@ -1771,13 +1786,13 @@ MomentumSolver::sched_computeNonlinearTerms(SchedulerP& sched,
   tsk->requires(Task::NewDW, d_lab->d_cellTypeLabel,
 		Ghost::AroundCells, Arches::ONEGHOSTCELL);
 
-  tsk->requires(Task::NewDW, timelabels->density_in,
+  tsk->requires(Task::NewDW, d_lab->d_densityCPLabel,
 		Ghost::AroundCells, Arches::TWOGHOSTCELLS);
-  tsk->requires(Task::NewDW, timelabels->uvelocity_in,
+  tsk->requires(Task::NewDW, d_lab->d_uVelocitySPBCLabel,
 		Ghost::AroundFaces, Arches::ONEGHOSTCELL);
-  tsk->requires(Task::NewDW, timelabels->vvelocity_in, 
+  tsk->requires(Task::NewDW, d_lab->d_vVelocitySPBCLabel, 
 		Ghost::AroundFaces, Arches::ONEGHOSTCELL);
-  tsk->requires(Task::NewDW, timelabels->wvelocity_in, 
+  tsk->requires(Task::NewDW, d_lab->d_wVelocitySPBCLabel, 
 		Ghost::AroundFaces, Arches::ONEGHOSTCELL);
 
   // Computes
@@ -1835,16 +1850,16 @@ MomentumSolver::computeNonlinearTerms(const ProcessorGroup* pc,
     new_dw->get(constVelocityVars.cellType, d_lab->d_cellTypeLabel, 
 		matlIndex, patch, Ghost::AroundCells, Arches::ONEGHOSTCELL);
 
-    new_dw->get(density, timelabels->density_in,
+    new_dw->get(density, d_lab->d_densityCPLabel,
 		matlIndex, patch,
 		Ghost::AroundCells, Arches::TWOGHOSTCELLS);
-    new_dw->get(uVelocity, timelabels->uvelocity_in,
+    new_dw->get(uVelocity, d_lab->d_uVelocitySPBCLabel,
 		matlIndex, patch,
 		Ghost::AroundFaces, Arches::ONEGHOSTCELL);
-    new_dw->get(vVelocity, timelabels->vvelocity_in, 
+    new_dw->get(vVelocity, d_lab->d_vVelocitySPBCLabel, 
 		matlIndex, patch,
 		Ghost::AroundFaces, Arches::ONEGHOSTCELL);
-    new_dw->get(wVelocity, timelabels->wvelocity_in, 
+    new_dw->get(wVelocity, d_lab->d_wVelocitySPBCLabel, 
 		matlIndex, patch,
 		Ghost::AroundFaces, Arches::ONEGHOSTCELL);
 

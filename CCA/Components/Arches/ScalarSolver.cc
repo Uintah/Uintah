@@ -145,8 +145,6 @@ ScalarSolver::sched_buildLinearMatrix(SchedulerP& sched,
 			  timelabels, index);
 
 
-//  Task::WhichDW olddw_index = Task::OldDW;
-//  tsk->requires(olddw_index, d_lab->d_sharedState->get_delt_label());
   tsk->requires(Task::OldDW, d_lab->d_sharedState->get_delt_label());
   
   // This task requires scalar and density from old time step for transient
@@ -155,21 +153,27 @@ ScalarSolver::sched_buildLinearMatrix(SchedulerP& sched,
   tsk->requires(Task::NewDW, d_lab->d_cellTypeLabel,
 		Ghost::AroundCells, Arches::ONEGHOSTCELL);
 
-  tsk->requires(Task::NewDW, timelabels->scalar_in,
+  tsk->requires(Task::NewDW, d_lab->d_scalarSPLabel,
 		Ghost::AroundCells, Arches::TWOGHOSTCELLS);
-  tsk->requires(Task::NewDW, timelabels->density_in, 
+  tsk->requires(Task::NewDW, d_lab->d_densityCPLabel, 
 		Ghost::AroundCells, Arches::TWOGHOSTCELLS);
-  tsk->requires(Task::NewDW, timelabels->old_scalar_in,
-		Ghost::None, Arches::ZEROGHOSTCELLS);
-  tsk->requires(Task::NewDW, timelabels->old_density_in, 
-		Ghost::None, Arches::ZEROGHOSTCELLS);
-  tsk->requires(Task::NewDW, timelabels->viscosity_in,
+
+  Task::WhichDW old_values_dw;
+  if (timelabels->use_old_values) old_values_dw = Task::OldDW;
+  else old_values_dw = Task::NewDW;
+
+   tsk->requires(old_values_dw, d_lab->d_scalarSPLabel,
+		 Ghost::None, Arches::ZEROGHOSTCELLS);
+   tsk->requires(old_values_dw, d_lab->d_densityCPLabel, 
+		 Ghost::None, Arches::ZEROGHOSTCELLS);
+
+  tsk->requires(Task::NewDW, d_lab->d_viscosityCTSLabel,
 		Ghost::AroundCells, Arches::ONEGHOSTCELL);
-  tsk->requires(Task::NewDW, timelabels->uvelocity_in,
+  tsk->requires(Task::NewDW, d_lab->d_uVelocitySPBCLabel,
 		Ghost::AroundFaces, Arches::ONEGHOSTCELL);
-  tsk->requires(Task::NewDW, timelabels->vvelocity_in,
+  tsk->requires(Task::NewDW, d_lab->d_vVelocitySPBCLabel,
 		Ghost::AroundFaces, Arches::ONEGHOSTCELL);
-  tsk->requires(Task::NewDW, timelabels->wvelocity_in,
+  tsk->requires(Task::NewDW, d_lab->d_wVelocitySPBCLabel,
 		Ghost::AroundFaces, Arches::ONEGHOSTCELL);
 
   if (dynamic_cast<const ScaleSimilarityModel*>(d_turbModel)) 
@@ -282,24 +286,29 @@ void ScalarSolver::buildLinearMatrix(const ProcessorGroup* pc,
     // from old_dw get PCELL, DENO, FO(index)
     new_dw->get(constScalarVars.cellType, d_lab->d_cellTypeLabel, 
 		matlIndex, patch, Ghost::AroundCells, Arches::ONEGHOSTCELL);
-    new_dw->get(constScalarVars.old_density, timelabels->old_density_in, 
-		matlIndex, patch, Ghost::None, Arches::ZEROGHOSTCELLS);
-    new_dw->get(constScalarVars.old_scalar, timelabels->old_scalar_in, 
-		matlIndex, patch, Ghost::None, Arches::ZEROGHOSTCELLS);
 
+    DataWarehouse* old_values_dw;
+    if (timelabels->use_old_values) old_values_dw = old_dw;
+    else old_values_dw = new_dw;
+    
+    old_values_dw->get(constScalarVars.old_scalar, d_lab->d_scalarSPLabel, 
+		       matlIndex, patch, Ghost::None, Arches::ZEROGHOSTCELLS);
+    old_values_dw->get(constScalarVars.old_density, d_lab->d_densityCPLabel, 
+		       matlIndex, patch, Ghost::None, Arches::ZEROGHOSTCELLS);
+  
     // from new_dw get DEN, VIS, F(index), U, V, W
-    new_dw->get(constScalarVars.density, timelabels->density_in, 
+    new_dw->get(constScalarVars.density, d_lab->d_densityCPLabel, 
 		matlIndex, patch, Ghost::AroundCells, Arches::TWOGHOSTCELLS);
-    new_dw->get(constScalarVars.viscosity, timelabels->viscosity_in, 
+    new_dw->get(constScalarVars.viscosity, d_lab->d_viscosityCTSLabel, 
 		matlIndex, patch, Ghost::AroundCells, Arches::ONEGHOSTCELL);
-    new_dw->get(constScalarVars.scalar, timelabels->scalar_in, 
+    new_dw->get(constScalarVars.scalar, d_lab->d_scalarSPLabel, 
 		matlIndex, patch, Ghost::AroundCells, Arches::TWOGHOSTCELLS);
     // for explicit get old values
-    new_dw->get(constScalarVars.uVelocity, timelabels->uvelocity_in, 
+    new_dw->get(constScalarVars.uVelocity, d_lab->d_uVelocitySPBCLabel, 
 		matlIndex, patch, Ghost::AroundFaces, Arches::ONEGHOSTCELL);
-    new_dw->get(constScalarVars.vVelocity, timelabels->vvelocity_in, 
+    new_dw->get(constScalarVars.vVelocity, d_lab->d_vVelocitySPBCLabel, 
 		matlIndex, patch, Ghost::AroundFaces, Arches::ONEGHOSTCELL);
-    new_dw->get(constScalarVars.wVelocity, timelabels->wvelocity_in, 
+    new_dw->get(constScalarVars.wVelocity, d_lab->d_wVelocitySPBCLabel, 
 		matlIndex, patch, Ghost::AroundFaces, Arches::ONEGHOSTCELL);
 
   // allocate matrix coeffs
@@ -485,20 +494,26 @@ ScalarSolver::sched_scalarLinearSolve(SchedulerP& sched,
 
   tsk->requires(Task::NewDW, d_lab->d_cellTypeLabel,
 		Ghost::AroundCells, Arches::ONEGHOSTCELL);
-  tsk->requires(Task::NewDW, timelabels->density_in, 
+  tsk->requires(Task::NewDW, d_lab->d_densityCPLabel, 
 		Ghost::None, Arches::ZEROGHOSTCELLS);
-  tsk->requires(Task::NewDW, timelabels->scalar_in, 
-		Ghost::AroundCells, Arches::ONEGHOSTCELL);
+  
+  if (timelabels->number_of_steps > 1)
+    tsk->requires(Task::NewDW, d_lab->d_scalarTempLabel, 
+		  Ghost::AroundCells, Arches::ONEGHOSTCELL);
+  else
+    tsk->requires(Task::OldDW, d_lab->d_scalarSPLabel, 
+		  Ghost::AroundCells, Arches::ONEGHOSTCELL);
+
   tsk->requires(Task::NewDW, d_lab->d_scalCoefSBLMLabel, 
 		d_lab->d_stencilMatl, Task::OutOfDomain,
 		Ghost::None, Arches::ZEROGHOSTCELLS);
   tsk->requires(Task::NewDW, d_lab->d_scalNonLinSrcSBLMLabel, 
 		Ghost::None, Arches::ZEROGHOSTCELLS);
-  tsk->requires(Task::NewDW, timelabels->uvelocity_in,
+  tsk->requires(Task::NewDW, d_lab->d_uVelocitySPBCLabel,
 		Ghost::None, Arches::ZEROGHOSTCELLS);
-  tsk->requires(Task::NewDW, timelabels->vvelocity_in,
+  tsk->requires(Task::NewDW, d_lab->d_vVelocitySPBCLabel,
 		Ghost::None, Arches::ZEROGHOSTCELLS);
-  tsk->requires(Task::NewDW, timelabels->wvelocity_in,
+  tsk->requires(Task::NewDW, d_lab->d_wVelocitySPBCLabel,
 		Ghost::None, Arches::ZEROGHOSTCELLS);
 
   if (timelabels->integrator_step_number == TimeIntegratorStepNumber::First) {
@@ -517,7 +532,7 @@ ScalarSolver::sched_scalarLinearSolve(SchedulerP& sched,
 		  Ghost::None, Arches::ZEROGHOSTCELLS);
   }    
 
-  tsk->computes(timelabels->scalar_out);
+  tsk->modifies(d_lab->d_scalarSPLabel);
   
   
   sched->addTask(tsk, patches, matls);
@@ -576,21 +591,25 @@ ScalarSolver::scalarLinearSolve(const ProcessorGroup* pc,
     }
     CellInformation* cellinfo = cellInfoP.get().get_rep();
 
-    new_dw->get(constScalarVars.old_density, timelabels->density_in, 
+    new_dw->get(constScalarVars.old_density, d_lab->d_densityCPLabel, 
 		matlIndex, patch, Ghost::None, Arches::ZEROGHOSTCELLS);
-    new_dw->get(constScalarVars.old_scalar, timelabels->scalar_in, 
-		matlIndex, patch, Ghost::AroundCells, Arches::ONEGHOSTCELL);
-    // for explicit calculation
-    new_dw->allocateAndPut(scalarVars.scalar, timelabels->scalar_out, 
-                matlIndex, patch, Ghost::None, Arches::ZEROGHOSTCELLS);
-    new_dw->copyOut(scalarVars.scalar, timelabels->scalar_in, 
-                matlIndex, patch, Ghost::None, Arches::ZEROGHOSTCELLS);
 
-    new_dw->get(constScalarVars.uVelocity, timelabels->uvelocity_in, 
+    if (timelabels->number_of_steps > 1)
+      new_dw->get(constScalarVars.old_scalar, d_lab->d_scalarTempLabel, 
+		matlIndex, patch, Ghost::AroundCells, Arches::ONEGHOSTCELL);
+    else
+      old_dw->get(constScalarVars.old_scalar, d_lab->d_scalarSPLabel, 
+		matlIndex, patch, Ghost::AroundCells, Arches::ONEGHOSTCELL);
+
+    // for explicit calculation
+    new_dw->getModifiable(scalarVars.scalar, d_lab->d_scalarSPLabel, 
+                matlIndex, patch);
+
+    new_dw->get(constScalarVars.uVelocity, d_lab->d_uVelocitySPBCLabel, 
 		matlIndex, patch, Ghost::None, Arches::ZEROGHOSTCELLS);
-    new_dw->get(constScalarVars.vVelocity, timelabels->vvelocity_in, 
+    new_dw->get(constScalarVars.vVelocity, d_lab->d_vVelocitySPBCLabel, 
 		matlIndex, patch, Ghost::None, Arches::ZEROGHOSTCELLS);
-    new_dw->get(constScalarVars.wVelocity, timelabels->wvelocity_in, 
+    new_dw->get(constScalarVars.wVelocity, d_lab->d_wVelocitySPBCLabel, 
 		matlIndex, patch, Ghost::None, Arches::ZEROGHOSTCELLS);
 
     for (int ii = 0; ii < d_lab->d_stencilMatl->size(); ii++)

@@ -151,21 +151,27 @@ ReactiveScalarSolver::sched_buildLinearMatrix(SchedulerP& sched,
   tsk->requires(Task::NewDW, d_lab->d_cellTypeLabel,
 		Ghost::AroundCells, Arches::ONEGHOSTCELL);
 
-  tsk->requires(Task::NewDW, timelabels->reactscalar_in,
+  tsk->requires(Task::NewDW, d_lab->d_reactscalarSPLabel,
 		Ghost::AroundCells, Arches::TWOGHOSTCELLS);
-  tsk->requires(Task::NewDW, timelabels->density_in, 
+  tsk->requires(Task::NewDW, d_lab->d_densityCPLabel, 
 		Ghost::AroundCells, Arches::TWOGHOSTCELLS);
-  tsk->requires(Task::NewDW, timelabels->old_reactscalar_in,
+
+  Task::WhichDW old_values_dw;
+  if (timelabels->use_old_values) old_values_dw = Task::OldDW;
+  else old_values_dw = Task::NewDW;
+
+  tsk->requires(old_values_dw, d_lab->d_reactscalarSPLabel,
 		Ghost::None, Arches::ZEROGHOSTCELLS);
-  tsk->requires(Task::NewDW, timelabels->old_density_in, 
+  tsk->requires(old_values_dw, d_lab->d_densityCPLabel, 
 		Ghost::None, Arches::ZEROGHOSTCELLS);
-  tsk->requires(Task::NewDW, timelabels->viscosity_in,
+
+  tsk->requires(Task::NewDW, d_lab->d_viscosityCTSLabel,
 		Ghost::AroundCells, Arches::ONEGHOSTCELL);
-  tsk->requires(Task::NewDW, timelabels->uvelocity_in,
+  tsk->requires(Task::NewDW, d_lab->d_uVelocitySPBCLabel,
 		Ghost::AroundFaces, Arches::ONEGHOSTCELL);
-  tsk->requires(Task::NewDW, timelabels->vvelocity_in,
+  tsk->requires(Task::NewDW, d_lab->d_vVelocitySPBCLabel,
 		Ghost::AroundFaces, Arches::ONEGHOSTCELL);
-  tsk->requires(Task::NewDW, timelabels->wvelocity_in,
+  tsk->requires(Task::NewDW, d_lab->d_wVelocitySPBCLabel,
 		Ghost::AroundFaces, Arches::ONEGHOSTCELL);
 
   if (timelabels->integrator_step_number == TimeIntegratorStepNumber::First)
@@ -266,24 +272,29 @@ void ReactiveScalarSolver::buildLinearMatrix(const ProcessorGroup* pc,
     // from old_dw get PCELL, DENO, FO(index)
     new_dw->get(constReactscalarVars.cellType, d_lab->d_cellTypeLabel, 
 		matlIndex, patch, Ghost::AroundCells, Arches::ONEGHOSTCELL);
-    new_dw->get(constReactscalarVars.old_density, timelabels->old_density_in, 
+
+    DataWarehouse* old_values_dw;
+    if (timelabels->use_old_values) old_values_dw = old_dw;
+    else old_values_dw = new_dw;
+    
+    old_values_dw->get(constReactscalarVars.old_scalar, d_lab->d_reactscalarSPLabel, 
 		matlIndex, patch, Ghost::None, Arches::ZEROGHOSTCELLS);
-    new_dw->get(constReactscalarVars.old_scalar,timelabels->old_reactscalar_in, 
+    old_values_dw->get(constReactscalarVars.old_density, d_lab->d_densityCPLabel, 
 		matlIndex, patch, Ghost::None, Arches::ZEROGHOSTCELLS);
 
     // from new_dw get DEN, VIS, F(index), U, V, W
-    new_dw->get(constReactscalarVars.density, timelabels->density_in, 
+    new_dw->get(constReactscalarVars.density, d_lab->d_densityCPLabel, 
 		matlIndex, patch, Ghost::AroundCells, Arches::TWOGHOSTCELLS);
-    new_dw->get(constReactscalarVars.viscosity, timelabels->viscosity_in, 
+    new_dw->get(constReactscalarVars.viscosity, d_lab->d_viscosityCTSLabel, 
 		matlIndex, patch, Ghost::AroundCells, Arches::ONEGHOSTCELL);
-    new_dw->get(constReactscalarVars.scalar, timelabels->reactscalar_in, 
+    new_dw->get(constReactscalarVars.scalar, d_lab->d_reactscalarSPLabel, 
 		matlIndex, patch, Ghost::AroundCells, Arches::TWOGHOSTCELLS);
     // for explicit get old values
-    new_dw->get(constReactscalarVars.uVelocity, timelabels->uvelocity_in, 
+    new_dw->get(constReactscalarVars.uVelocity, d_lab->d_uVelocitySPBCLabel, 
 		matlIndex, patch, Ghost::AroundFaces, Arches::ONEGHOSTCELL);
-    new_dw->get(constReactscalarVars.vVelocity, timelabels->vvelocity_in, 
+    new_dw->get(constReactscalarVars.vVelocity, d_lab->d_vVelocitySPBCLabel, 
 		matlIndex, patch, Ghost::AroundFaces, Arches::ONEGHOSTCELL);
-    new_dw->get(constReactscalarVars.wVelocity, timelabels->wvelocity_in, 
+    new_dw->get(constReactscalarVars.wVelocity, d_lab->d_wVelocitySPBCLabel, 
 		matlIndex, patch, Ghost::AroundFaces, Arches::ONEGHOSTCELL);
 
     // computes reaction scalar source term in properties
@@ -415,20 +426,26 @@ ReactiveScalarSolver::sched_reactscalarLinearSolve(SchedulerP& sched,
 
   tsk->requires(Task::NewDW, d_lab->d_cellTypeLabel,
 		Ghost::AroundCells, Arches::ONEGHOSTCELL);
-  tsk->requires(Task::NewDW, timelabels->density_in, 
+  tsk->requires(Task::NewDW, d_lab->d_densityCPLabel, 
 		Ghost::None, Arches::ZEROGHOSTCELLS);
-  tsk->requires(Task::NewDW, timelabels->reactscalar_in, 
-		Ghost::AroundCells, Arches::ONEGHOSTCELL);
+
+  if (timelabels->number_of_steps > 1)
+    tsk->requires(Task::NewDW, d_lab->d_reactscalarTempLabel, 
+		  Ghost::AroundCells, Arches::ONEGHOSTCELL);
+  else
+    tsk->requires(Task::OldDW, d_lab->d_reactscalarSPLabel, 
+		  Ghost::AroundCells, Arches::ONEGHOSTCELL);
+
   tsk->requires(Task::NewDW, d_lab->d_reactscalCoefSBLMLabel, 
 		d_lab->d_stencilMatl, Task::OutOfDomain,
 		Ghost::None, Arches::ZEROGHOSTCELLS);
   tsk->requires(Task::NewDW, d_lab->d_reactscalNonLinSrcSBLMLabel, 
 		Ghost::None, Arches::ZEROGHOSTCELLS);
-  tsk->requires(Task::NewDW, timelabels->uvelocity_in,
+  tsk->requires(Task::NewDW, d_lab->d_uVelocitySPBCLabel,
 		Ghost::None, Arches::ZEROGHOSTCELLS);
-  tsk->requires(Task::NewDW, timelabels->vvelocity_in,
+  tsk->requires(Task::NewDW, d_lab->d_vVelocitySPBCLabel,
 		Ghost::None, Arches::ZEROGHOSTCELLS);
-  tsk->requires(Task::NewDW, timelabels->wvelocity_in,
+  tsk->requires(Task::NewDW, d_lab->d_wVelocitySPBCLabel,
 		Ghost::None, Arches::ZEROGHOSTCELLS);
 
   if (timelabels->integrator_step_number == TimeIntegratorStepNumber::First) {
@@ -442,7 +459,7 @@ ReactiveScalarSolver::sched_reactscalarLinearSolve(SchedulerP& sched,
     tsk->requires(Task::NewDW, timelabels->maxabsw_in);
   }
 
-  tsk->computes(timelabels->reactscalar_out);
+  tsk->modifies(d_lab->d_reactscalarSPLabel);
   
   sched->addTask(tsk, patches, matls);
 }
@@ -499,21 +516,25 @@ ReactiveScalarSolver::reactscalarLinearSolve(const ProcessorGroup* pc,
       new_dw->put(cellInfoP, d_lab->d_cellInfoLabel, matlIndex, patch);
     }
     CellInformation* cellinfo = cellInfoP.get().get_rep();
-    new_dw->get(constReactscalarVars.old_density, timelabels->density_in, 
-		matlIndex, patch, Ghost::None, Arches::ZEROGHOSTCELLS);
-    new_dw->get(constReactscalarVars.old_scalar, timelabels->reactscalar_in, 
-		matlIndex, patch, Ghost::AroundCells, Arches::ONEGHOSTCELL);
-    // for explicit calculation
-    new_dw->allocateAndPut(reactscalarVars.scalar, timelabels->reactscalar_out, 
-                matlIndex, patch, Ghost::None, Arches::ZEROGHOSTCELLS);
-    new_dw->copyOut(reactscalarVars.scalar, timelabels->reactscalar_in, 
+    new_dw->get(constReactscalarVars.old_density, d_lab->d_densityCPLabel, 
 		matlIndex, patch, Ghost::None, Arches::ZEROGHOSTCELLS);
 
-    new_dw->get(constReactscalarVars.uVelocity, timelabels->uvelocity_in, 
+    if (timelabels->number_of_steps > 1)
+      new_dw->get(constReactscalarVars.old_scalar, d_lab->d_reactscalarTempLabel, 
+		matlIndex, patch, Ghost::AroundCells, Arches::ONEGHOSTCELL);
+    else
+      old_dw->get(constReactscalarVars.old_scalar, d_lab->d_reactscalarSPLabel, 
+		matlIndex, patch, Ghost::AroundCells, Arches::ONEGHOSTCELL);
+
+    // for explicit calculation
+    new_dw->getModifiable(reactscalarVars.scalar, d_lab->d_reactscalarSPLabel, 
+                matlIndex, patch);
+
+    new_dw->get(constReactscalarVars.uVelocity, d_lab->d_uVelocitySPBCLabel, 
 		matlIndex, patch, Ghost::None, Arches::ZEROGHOSTCELLS);
-    new_dw->get(constReactscalarVars.vVelocity, timelabels->vvelocity_in, 
+    new_dw->get(constReactscalarVars.vVelocity, d_lab->d_vVelocitySPBCLabel, 
 		matlIndex, patch, Ghost::None, Arches::ZEROGHOSTCELLS);
-    new_dw->get(constReactscalarVars.wVelocity, timelabels->wvelocity_in, 
+    new_dw->get(constReactscalarVars.wVelocity, d_lab->d_wVelocitySPBCLabel, 
 		matlIndex, patch, Ghost::None, Arches::ZEROGHOSTCELLS);
     
     for (int ii = 0; ii < d_lab->d_stencilMatl->size(); ii++)

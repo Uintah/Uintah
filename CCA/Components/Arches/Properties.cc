@@ -161,12 +161,11 @@ Properties::sched_computeProps(SchedulerP& sched, const PatchSet* patches,
     tsk->requires(Task::NewDW, d_lab->d_cellTypeLabel, Ghost::None,
 		  Arches::ZEROGHOSTCELLS);
 
-  tsk->modifies(d_lab->d_densityINLabel);
+  tsk->modifies(d_lab->d_densityCPLabel);
   tsk->computes(d_lab->d_refDensity_label);
-  tsk->computes(d_lab->d_densityCPLabel);
 
   if (d_enthalpySolve)
-    tsk->computes(d_lab->d_enthalpySPLabel);
+    tsk->modifies(d_lab->d_enthalpySPLabel);
 
   if (d_reactingFlow) {
     tsk->computes(d_lab->d_tempINLabel);
@@ -217,16 +216,15 @@ Properties::computeProps(const ProcessorGroup* pc,
     // Get the cellType and density from the old datawarehouse
 
     constCCVariable<int> cellType;
-    constCCVariable<double> density_old;
     CCVariable<double> density;
     StaticArray<constCCVariable<double> > scalar(d_numMixingVars);
     CCVariable<double> enthalpy;
 
-    new_dw->getModifiable(density, d_lab->d_densityINLabel, 
+    new_dw->getModifiable(density, d_lab->d_densityCPLabel, 
 		matlIndex, patch);
 
     if (d_enthalpySolve) {
-      new_dw->allocateAndPut(enthalpy, d_lab->d_enthalpySPLabel,
+      new_dw->getModifiable(enthalpy, d_lab->d_enthalpySPLabel,
 			     matlIndex, patch);
       enthalpy.initialize(0.0);
     }
@@ -309,8 +307,6 @@ Properties::computeProps(const ProcessorGroup* pc,
 		    matlIndex, patch, Ghost::None, Arches::ZEROGHOSTCELLS);
     }
 
-    //CCVariable<double> new_density;
-    //new_dw->allocate(new_density, d_densityCPLabel, matlIndex, patch);
 
     // get multimaterial vars
 
@@ -413,8 +409,6 @@ Properties::computeProps(const ProcessorGroup* pc,
 	  }
 	  
 	  if (cellType[currCell] != d_bc->wallCellType()) 
-	    //	    density[currCell] = d_denUnderrelax*local_den +
-	    //  (1.0-d_denUnderrelax)*density[currCell];
 	    density[currCell] = local_den;
 	}
       }
@@ -435,11 +429,6 @@ Properties::computeProps(const ProcessorGroup* pc,
     else
       new_dw->put(sum_vartype(0), d_lab->d_refDensity_label);
     
-    // Write the computed density to the new data warehouse
-    CCVariable<double> density_cp;
-    new_dw->allocateAndPut(density_cp, d_lab->d_densityCPLabel, matlIndex, patch);
-    density_cp.copyData(density);
-
   }
 }
 
@@ -466,7 +455,7 @@ Properties::sched_computePropsFirst_mm(SchedulerP& sched, const PatchSet* patche
   // Require densityIN from old_dw for consistency with
   // gets/requires of nonlinearSolve (we don't do anything 
   // with this densityIN)
-  tsk->requires(Task::OldDW, d_lab->d_densityINLabel,
+  tsk->requires(Task::OldDW, d_lab->d_densityCPLabel,
 		Ghost::None, Arches::ZEROGHOSTCELLS);
 
   if (d_DORadiationCalc)
@@ -514,11 +503,9 @@ Properties::sched_computePropsFirst_mm(SchedulerP& sched, const PatchSet* patche
     }
   }
 
-  tsk->computes(d_lab->d_densityCPLabel);
+  tsk->modifies(d_lab->d_densityCPLabel);
   tsk->computes(d_lab->d_refDensity_label);
   tsk->computes(d_lab->d_densityMicroLabel);
-
-  tsk->modifies(d_lab->d_densityINLabel);
 
   if (d_reactingFlow) {
     tsk->computes(d_lab->d_tempINLabel);
@@ -583,18 +570,15 @@ Properties::computePropsFirst_mm(const ProcessorGroup*,
 		matlIndex, patch, Ghost::None, Arches::ZEROGHOSTCELLS);
 
     CCVariable<double> density;
-    new_dw->allocateAndPut(density, d_lab->d_densityCPLabel, 
+    new_dw->getModifiable(density, d_lab->d_densityCPLabel, 
 			   matlIndex, patch);
-
-    CCVariable<double> densityIN;
-    new_dw->getModifiable(densityIN, d_lab->d_densityINLabel, matlIndex, patch);
 
     // Get densityIN from old_dw for consistency with
     // gets/requires of nonlinearSolve (we don't do 
     // anything with this densityIN)
 
-    CCVariable<double> densityIN_old;
-    old_dw->getModifiable(densityIN_old, d_lab->d_densityINLabel, matlIndex, patch);
+    CCVariable<double> densityCP_old;
+    old_dw->getModifiable(densityCP_old, d_lab->d_densityCPLabel, matlIndex, patch);
 
     CCVariable<double> denMicro_new;
     new_dw->allocateAndPut(denMicro_new, d_lab->d_densityMicroLabel, 
@@ -790,8 +774,6 @@ Properties::computePropsFirst_mm(const ProcessorGroup*,
     else
       new_dw->put(sum_vartype(0), d_lab->d_refDensity_label);
 
-    densityIN.copyData(density);
-    
   }
 }
 //****************************************************************************
@@ -801,22 +783,22 @@ void
 Properties::sched_reComputeProps(SchedulerP& sched, const PatchSet* patches,
 				 const MaterialSet* matls,
 				 const TimeIntegratorLabel* timelabels,
-			         bool modify_density)
+			         bool modify_ref_density)
 {
   string md = "";
-  if (modify_density) md += "RK";
+  if (!(modify_ref_density)) md += "RKSSP";
   string taskname =  "Properties::ReComputeProps" +
 		     timelabels->integrator_step_name + md;
   Task* tsk = scinew Task(taskname, this,
 			  &Properties::reComputeProps,
-			  timelabels, modify_density);
+			  timelabels, modify_ref_density);
 
   tsk->requires(Task::NewDW, d_lab->d_cellTypeLabel, Ghost::None,
 		Arches::ZEROGHOSTCELLS);
 
-  tsk->requires(Task::NewDW, d_lab->d_densityINLabel,
+  tsk->requires(Task::OldDW, d_lab->d_densityCPLabel,
 		Ghost::None, Arches::ZEROGHOSTCELLS);
-  tsk->requires(Task::NewDW, timelabels->scalar_out,
+  tsk->requires(Task::NewDW, d_lab->d_scalarSPLabel,
 		Ghost::None, Arches::ZEROGHOSTCELLS);
 
   if (d_MAlab) {
@@ -833,20 +815,18 @@ Properties::sched_reComputeProps(SchedulerP& sched, const PatchSet* patches,
   }
 
   if (d_mixingModel->getNumRxnVars())
-    tsk->requires(Task::NewDW, timelabels->reactscalar_out,
+    tsk->requires(Task::NewDW, d_lab->d_reactscalarSPLabel,
 		  Ghost::None, Arches::ZEROGHOSTCELLS);
 
   if (!(d_mixingModel->isAdiabatic()))
-    tsk->requires(Task::NewDW, timelabels->enthalpy_out,
+    tsk->requires(Task::NewDW, d_lab->d_enthalpySPLabel,
 		  Ghost::None, Arches::ZEROGHOSTCELLS);
 
-  if (modify_density)
-    tsk->modifies(timelabels->density_out);
-  else {
-    tsk->computes(timelabels->density_out);
+  tsk->modifies(d_lab->d_densityCPLabel);
+
 // assuming ref_density is not changed by RK averaging
+  if (modify_ref_density)
     tsk->computes(timelabels->ref_density);
-  }
 
   if (timelabels->integrator_step_number == TimeIntegratorStepNumber::First) {
     tsk->computes(d_lab->d_drhodfCPLabel);
@@ -919,10 +899,10 @@ void
 Properties::reComputeProps(const ProcessorGroup* pc,
 			   const PatchSubset* patches,
 			   const MaterialSubset*,
-			   DataWarehouse*,
+			   DataWarehouse* old_dw,
 			   DataWarehouse* new_dw,
 			   const TimeIntegratorLabel* timelabels,
-			   bool modify_density)
+			   bool modify_ref_density)
 {
   for (int p = 0; p < patches->size(); p++) {
 
@@ -970,10 +950,10 @@ Properties::reComputeProps(const ProcessorGroup* pc,
     new_dw->get(cellType, d_lab->d_cellTypeLabel, matlIndex, patch, 
 		Ghost::None, Arches::ZEROGHOSTCELLS);
 
-    new_dw->get(density, d_lab->d_densityINLabel, 
+    old_dw->get(density, d_lab->d_densityCPLabel, 
 		matlIndex, patch, Ghost::None, Arches::ZEROGHOSTCELLS);
     for (int ii = 0; ii < d_numMixingVars; ii++)
-      new_dw->get(scalar[ii], timelabels->scalar_out, 
+      new_dw->get(scalar[ii], d_lab->d_scalarSPLabel, 
 		  matlIndex, patch, Ghost::None, Arches::ZEROGHOSTCELLS);
 
     if (d_numMixStatVars > 0) {
@@ -984,20 +964,16 @@ Properties::reComputeProps(const ProcessorGroup* pc,
     
     if (d_mixingModel->getNumRxnVars() > 0) {
       for (int ii = 0; ii < d_mixingModel->getNumRxnVars(); ii++)
-	new_dw->get(reactScalar[ii], timelabels->reactscalar_out, 
+	new_dw->get(reactScalar[ii], d_lab->d_reactscalarSPLabel, 
 		    matlIndex, patch, Ghost::None, Arches::ZEROGHOSTCELLS);
     }
 
     if (!(d_mixingModel->isAdiabatic()))
-      new_dw->get(enthalpy, timelabels->enthalpy_out, 
+      new_dw->get(enthalpy, d_lab->d_enthalpySPLabel, 
 		  matlIndex, patch, Ghost::None, Arches::ZEROGHOSTCELLS);
 
-    if (modify_density)
-      new_dw->getModifiable(new_density, timelabels->density_out,
+    new_dw->getModifiable(new_density, d_lab->d_densityCPLabel,
 			  matlIndex, patch);
-    else
-      new_dw->allocateAndPut(new_density, timelabels->density_out,
-			   matlIndex, patch);
     new_density.initialize(0.0);
 
     if (timelabels->integrator_step_number == TimeIntegratorStepNumber::First) {
@@ -1320,7 +1296,7 @@ Properties::reComputeProps(const ProcessorGroup* pc,
     }
 #endif
 
-    if (!(modify_density)) {
+    if (modify_ref_density) {
       double den_ref = 0.0;
       if (patch->containsCell(d_denRef)) {
         den_ref = new_density[d_denRef];
@@ -1450,27 +1426,27 @@ Properties::sched_averageRKProps(SchedulerP& sched, const PatchSet* patches,
 			  &Properties::averageRKProps,
 			  timelabels);
 
-  tsk->requires(Task::NewDW, d_lab->d_densityINLabel,
+  tsk->requires(Task::OldDW, d_lab->d_densityCPLabel,
 		Ghost::None, Arches::ZEROGHOSTCELLS);
-  tsk->requires(Task::NewDW, d_lab->d_scalarOUTBCLabel, 
+  tsk->requires(Task::OldDW, d_lab->d_scalarSPLabel, 
 		Ghost::None, Arches::ZEROGHOSTCELLS);
   if (d_mixingModel->getNumRxnVars())
-    tsk->requires(Task::NewDW, d_lab->d_reactscalarOUTBCLabel,
+    tsk->requires(Task::OldDW, d_lab->d_reactscalarSPLabel,
 		  Ghost::None, Arches::ZEROGHOSTCELLS);
   if (!(d_mixingModel->isAdiabatic()))
-    tsk->requires(Task::NewDW, d_lab->d_enthalpyOUTBCLabel,
+    tsk->requires(Task::OldDW, d_lab->d_enthalpySPLabel,
 		  Ghost::None, Arches::ZEROGHOSTCELLS);
 
-  tsk->requires(Task::NewDW, timelabels->density_in,
+  tsk->requires(Task::NewDW, d_lab->d_densityTempLabel,
 		Ghost::None, Arches::ZEROGHOSTCELLS);
-  tsk->requires(Task::NewDW, timelabels->density_out,
+  tsk->requires(Task::NewDW, d_lab->d_densityCPLabel,
 		Ghost::None, Arches::ZEROGHOSTCELLS);
 
-  tsk->modifies(timelabels->scalar_out);
+  tsk->modifies(d_lab->d_scalarSPLabel);
   if (d_mixingModel->getNumRxnVars())
-    tsk->modifies(timelabels->reactscalar_out);
+    tsk->modifies(d_lab->d_reactscalarSPLabel);
   if (!(d_mixingModel->isAdiabatic()))
-    tsk->modifies(timelabels->enthalpy_out);
+    tsk->modifies(d_lab->d_enthalpySPLabel);
 
   sched->addTask(tsk, patches, matls);
 }
@@ -1481,7 +1457,7 @@ void
 Properties::averageRKProps(const ProcessorGroup*,
 			   const PatchSubset* patches,
 			   const MaterialSubset*,
-			   DataWarehouse*,
+			   DataWarehouse* old_dw,
 			   DataWarehouse* new_dw,
 			   const TimeIntegratorLabel* timelabels)
 {
@@ -1502,37 +1478,37 @@ Properties::averageRKProps(const ProcessorGroup*,
     constCCVariable<double> old_enthalpy;
     CCVariable<double> new_enthalpy;
 
-    new_dw->get(old_density, d_lab->d_densityINLabel, 
+    old_dw->get(old_density, d_lab->d_densityCPLabel, 
 		matlIndex, patch, Ghost::None, Arches::ZEROGHOSTCELLS);
     for (int ii = 0; ii < d_numMixingVars; ii++) {
-      new_dw->get(old_scalar[ii], d_lab->d_scalarOUTBCLabel, 
+      old_dw->get(old_scalar[ii], d_lab->d_scalarSPLabel, 
 		  matlIndex, patch, Ghost::None, Arches::ZEROGHOSTCELLS);
     }
     if (d_mixingModel->getNumRxnVars() > 0) {
       for (int ii = 0; ii < d_mixingModel->getNumRxnVars(); ii++) {
-	new_dw->get(old_reactScalar[ii], d_lab->d_reactscalarOUTBCLabel, 
+	old_dw->get(old_reactScalar[ii], d_lab->d_reactscalarSPLabel, 
 		    matlIndex, patch, Ghost::None, Arches::ZEROGHOSTCELLS);
       }
     }
     if (!(d_mixingModel->isAdiabatic())) {
-      new_dw->get(old_enthalpy, d_lab->d_enthalpyOUTBCLabel, 
+      old_dw->get(old_enthalpy, d_lab->d_enthalpySPLabel, 
 		  matlIndex, patch, Ghost::None, Arches::ZEROGHOSTCELLS);
     }
 
-    new_dw->get(rho1_density, timelabels->density_in, 
+    new_dw->get(rho1_density, d_lab->d_densityTempLabel,
 		matlIndex, patch, Ghost::None, Arches::ZEROGHOSTCELLS);
-    new_dw->get(new_density, timelabels->density_out, 
+    new_dw->get(new_density, d_lab->d_densityCPLabel, 
 		matlIndex, patch, Ghost::None, Arches::ZEROGHOSTCELLS);
 
     for (int ii = 0; ii < d_numMixingVars; ii++)
-      new_dw->getModifiable(new_scalar[ii], timelabels->scalar_out, 
+      new_dw->getModifiable(new_scalar[ii], d_lab->d_scalarSPLabel, 
 		            matlIndex, patch);
     if (d_mixingModel->getNumRxnVars() > 0)
       for (int ii = 0; ii < d_mixingModel->getNumRxnVars(); ii++)
-	new_dw->getModifiable(new_reactScalar[ii], timelabels->reactscalar_out,
+	new_dw->getModifiable(new_reactScalar[ii], d_lab->d_reactscalarSPLabel,
 		    	      matlIndex, patch);
     if (!(d_mixingModel->isAdiabatic()))
-      new_dw->getModifiable(new_enthalpy, timelabels->enthalpy_out, 
+      new_dw->getModifiable(new_enthalpy, d_lab->d_enthalpySPLabel, 
 			    matlIndex, patch);
 
     double factor_old, factor_new, factor_divide;
@@ -1594,32 +1570,31 @@ Properties::averageRKProps(const ProcessorGroup*,
 }
 
 //****************************************************************************
-// Schedule saving of rho2 density
+// Schedule saving of temp density
 //****************************************************************************
 void 
-Properties::sched_saveRho2Density(SchedulerP& sched, const PatchSet* patches,
+Properties::sched_saveTempDensity(SchedulerP& sched, const PatchSet* patches,
 				  const MaterialSet* matls,
 			   	  const TimeIntegratorLabel* timelabels)
 {
-  string taskname =  "Properties::saveRho2Density" +
+  string taskname =  "Properties::saveTempDensity" +
 		     timelabels->integrator_step_name;
   Task* tsk = scinew Task(taskname, this,
-			  &Properties::saveRho2Density,
+			  &Properties::saveTempDensity,
 			  timelabels);
 
-  tsk->requires(Task::NewDW, timelabels->density_out, Ghost::None,
+  tsk->requires(Task::NewDW, d_lab->d_densityCPLabel, Ghost::None,
 		Arches::ZEROGHOSTCELLS);
  
-// use densityPredLabel to store rho_2 for now
-  tsk->modifies(timelabels->rho2_density);
+  tsk->modifies(d_lab->d_densityTempLabel);
 
   sched->addTask(tsk, patches, matls);
 }
 //****************************************************************************
-// Actually save rho2 density here
+// Actually save temp density here
 //****************************************************************************
 void 
-Properties::saveRho2Density(const ProcessorGroup*,
+Properties::saveTempDensity(const ProcessorGroup*,
 			   const PatchSubset* patches,
 			   const MaterialSubset*,
 			   DataWarehouse*,
@@ -1633,14 +1608,11 @@ Properties::saveRho2Density(const ProcessorGroup*,
     int matlIndex = d_lab->d_sharedState->
 		     getArchesMaterial(archIndex)->getDWIndex(); 
 
-    // Get the CCVariable (density) from the old datawarehouse
-    // just write one function for computing properties
-
     CCVariable<double> temp_density;
 
-    new_dw->getModifiable(temp_density, timelabels->rho2_density,
+    new_dw->getModifiable(temp_density, d_lab->d_densityTempLabel,
 			  matlIndex, patch);
-     new_dw->copyOut(temp_density, timelabels->density_out,
+     new_dw->copyOut(temp_density, d_lab->d_densityCPLabel,
 		     matlIndex, patch);
 
   }
@@ -1662,12 +1634,12 @@ Properties::sched_computeDrhodt(SchedulerP& sched, const PatchSet* patches,
   tsk->requires(Task::OldDW, d_lab->d_sharedState->get_delt_label());
   tsk->requires(Task::OldDW, d_lab->d_oldDeltaTLabel);
 
-  tsk->requires(Task::NewDW, d_lab->d_densityINLabel, Ghost::None,
+  tsk->requires(Task::OldDW, d_lab->d_densityCPLabel, Ghost::None,
 		Arches::ZEROGHOSTCELLS);
-  tsk->requires(Task::OldDW, d_lab->d_densityINLabel, Ghost::None,
+  tsk->requires(Task::OldDW, d_lab->d_densityOldOldLabel, Ghost::None,
 		Arches::ZEROGHOSTCELLS);
 
-  tsk->requires(Task::NewDW, timelabels->density_out, Ghost::None,
+  tsk->requires(Task::NewDW, d_lab->d_densityCPLabel, Ghost::None,
 		Arches::ZEROGHOSTCELLS);
 
   if (timelabels->integrator_step_number == TimeIntegratorStepNumber::First) {
@@ -1715,9 +1687,9 @@ Properties::computeDrhodt(const ProcessorGroup* pc,
     CCVariable<double> drhodt;
     CCVariable<double> filterdrhodt;
 
-    new_dw->get(old_density, d_lab->d_densityINLabel, matlIndex, patch,
+    old_dw->get(old_density, d_lab->d_densityCPLabel, matlIndex, patch,
 	        Ghost::None, Arches::ZEROGHOSTCELLS);
-    old_dw->get(old_old_density, d_lab->d_densityINLabel, matlIndex, patch,
+    old_dw->get(old_old_density, d_lab->d_densityOldOldLabel, matlIndex, patch,
 		Ghost::None, Arches::ZEROGHOSTCELLS);
 
     PerPatch<CellInformationP> cellInfoP;
@@ -1729,7 +1701,7 @@ Properties::computeDrhodt(const ProcessorGroup* pc,
     }
     CellInformation* cellinfo = cellInfoP.get().get_rep();
 
-    new_dw->get(new_density, timelabels->density_out, matlIndex, patch,
+    new_dw->get(new_density, d_lab->d_densityCPLabel, matlIndex, patch,
 		Ghost::None, Arches::ZEROGHOSTCELLS);
 
     if (timelabels->integrator_step_number == TimeIntegratorStepNumber::First)

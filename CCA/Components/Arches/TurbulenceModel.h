@@ -113,27 +113,6 @@ public:
 						  const PatchSet* patches,
 						  const MaterialSet* matls,
 			    	     const TimeIntegratorLabel* timelabels) = 0;
-      // GROUP: Action Computations :
-      ///////////////////////////////////////////////////////////////////////
-      // Interface for Calculate the wall velocity boundary conditions
-      //    [in] 
-      //        index = documentation here
-      virtual void calcVelocityWallBC(const ProcessorGroup*,
-				      const Patch* patch,
-				      DataWarehouseP& old_dw,
-				      DataWarehouseP& new_dw, 
-				      int index,
-				      int eqnType) = 0;
-
-      ///////////////////////////////////////////////////////////////////////
-      // Interface for Calculate the velocity source terms
-      //    [in] 
-      //        index = documentation here
-      virtual void calcVelocitySource(const ProcessorGroup*,
-				      const Patch* patch,
-				      const DataWarehouseP& old_dw,
-				      DataWarehouseP& new_dw, 
-				      int index) = 0;
  protected:
 
       const ArchesLabel* d_lab;
