@@ -45,6 +45,10 @@ public:
                        Context* cx);
     void flip() { flip_ = !flip_; }
     bool valid() { return valid_; }
+    void set_refl(double r)
+      {
+	refl = r;
+      }
 };
 
 } // end namespace rtrt
