@@ -102,7 +102,7 @@ itcl_class Module {
     protected graph_width 50
     protected old_width 0
     protected mdragged
-    protected mconnected
+    protected mconnected {}
     protected last_pos
     protected MacroModule
     protected Macroed
