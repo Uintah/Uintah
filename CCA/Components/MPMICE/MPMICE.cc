@@ -72,7 +72,6 @@ MPMICE::MPMICE(const ProcessorGroup* myworld, MPMType mpmtype)
     case RIGID_MPMICE:
       d_mpm = scinew RigidMPM(myworld);
       d_rigidMPM = true;
-      cout << "RIGID_MPMICE" << endl;
       break;
     case SHELL_MPMICE:
       d_mpm = scinew ShellMPM(myworld);
