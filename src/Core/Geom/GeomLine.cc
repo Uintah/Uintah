@@ -38,6 +38,7 @@
 #include <Core/Geometry/BBox.h>
 #include <Core/Persistent/PersistentSTL.h>
 #include <iostream>
+#include <algorithm>
 
 #include <stdlib.h>
 
