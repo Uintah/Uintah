@@ -22,6 +22,8 @@ itcl_class Kurt_VolVis_VolVis {
 	set $this-debug 0
 	global $this-level
 	set $this-level 0
+	global $this-influence
+	set $this-influence 0
     }
     method ui {} {
 	set w .ui[modname]
@@ -80,12 +82,17 @@ itcl_class Kurt_VolVis_VolVis {
 		-showvalue true -resolution 0.000001\
 		-orient horizontal \
 		-command "$this DoScale SliceTransp"
+	global $this-influence
+	scale $w.f.influence -variable $this-influence \
+	    -from 0.0 -to 1.0 -label "Resolution widget influence" \
+	    -resolution 0.01 -orient horizontal \
+	    -command "$this DoScale Influence"
 
 	global $this-avail_tex
 	scale $w.f.availtex -variable $this-avail_tex \
 		-from 1 -to 64 -label "Available Texture Memory (Mb)" \
 		-showvalue true -orient horizontal
-	pack $w.f.stransp $w.f.availtex -side top -fill x
+	pack $w.f.stransp $w.f.influence $w.f.availtex -side top -fill x
 
 	checkbutton $w.f.debug -text debug -relief raised \
 	    -variable $this-debug -offvalue 0 -onvalue 1
