@@ -38,11 +38,9 @@
 #include <string>
 #include <vector>
 
+namespace SCIRun {
 using std::string;
 using std::vector;
-
-
-namespace SCIRun {
 
 
 class PSECORESHARE BaseConstraint {
