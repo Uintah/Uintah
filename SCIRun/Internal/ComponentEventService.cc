@@ -39,7 +39,7 @@
  */
 
 #include <SCIRun/Internal/ComponentEventService.h>
-#include <SCIRun/SCIRunFramework.h>
+//#include <SCIRun/SCIRunFramework.h>
 #include <SCIRun/CCA/CCAException.h>
 #include <iostream>
 
@@ -57,40 +57,46 @@ ComponentEventService::~ComponentEventService()
 }
 
 InternalComponentInstance* ComponentEventService::create(SCIRunFramework* framework,
-						  const std::string& name)
+                          const std::string& name)
 {
-  ComponentEventService* n = new ComponentEventService(framework, name);
-  n->addReference();
-  return n;
+    ComponentEventService* n =
+        new ComponentEventService(framework, name);
+    n->addReference();
+    return n;
 }
 
 sci::cca::Port::pointer ComponentEventService::getService(const std::string&)
 {
-  return sci::cca::Port::pointer(this);
+    return sci::cca::Port::pointer(this);
 }
 
 void
 ComponentEventService::addComponentEventListener(sci::cca::ports::ComponentEventType type,
-						 const sci::cca::ports::ComponentEventListener::pointer& l,
-						 bool playInitialEvents)
+                         const sci::cca::ports::ComponentEventListener::pointer& l,
+                         bool playInitialEvents)
 {
-  std::cerr << "ComponentEventService::addComponentEventListener " << type << std::endl;
-  listeners.push_back(new Listener(type, l));
-  if (playInitialEvents) {
-    std::cerr << "addComponentEventListener playInitialEvents not done!" << std::endl;
-  }
+    std::cerr << "ComponentEventService::addComponentEventListener " << type << std::endl;
+    Listener *listener = new Listener(type, l);
+    listeners.push_back(listener);
+    if (playInitialEvents) {
+        // send listener all events stored in vector
+        for (std::vector<sci::cca::ports::ComponentEvent::pointer>::iterator iter = events.begin();
+                iter != events.end(); iter++) {
+            listener->l->componentActivity((*iter));
+        }
+    }
 }
 
 void
 ComponentEventService::removeComponentEventListener(
                                   sci::cca::ports::ComponentEventType type,
-			    const sci::cca::ports::ComponentEventListener::pointer& l)
+                const sci::cca::ports::ComponentEventListener::pointer& l)
 {
-    for (std::vector<Listener*>::iterator iter=listeners.begin();
-	    iter != listeners.end(); iter++) {
-	if ((*iter)->type == type && (*iter)->l == l) {
-	    delete *iter;
-	}
+    for (std::vector<Listener*>::iterator iter = listeners.begin();
+            iter != listeners.end(); iter++) {
+        if ((*iter)->type == type && (*iter)->l == l) {
+            delete *iter;
+        }
     }
 }
 
@@ -98,7 +104,7 @@ void
 ComponentEventService::moveComponent(const sci::cca::ComponentID::pointer& /*id*/,
                                      int /*x*/, int /*y*/)
 {
-  std::cerr << "moveComponent not done!" << std::endl;
+    std::cerr << "moveComponent not done!" << std::endl;
 }
 
 void
@@ -109,16 +115,18 @@ ComponentEventService::emitComponentEvent(const sci::cca::ports::ComponentEvent:
 
     // should the event type to be emitted be ALL?
     if (event->getEventType() == sci::cca::ports::AllComponentEvents) {
-	return;
+        return;
     }
 
     for (std::vector<Listener*>::iterator iter=listeners.begin();
-	    iter != listeners.end(); iter++) {
-	if ((*iter)->type == sci::cca::ports::AllComponentEvents ||
-		(*iter)->type == event->getEventType()) {
-	    (*iter)->l->componentActivity(event);
-	}
+            iter != listeners.end(); iter++) {
+        if ((*iter)->type == sci::cca::ports::AllComponentEvents ||
+                (*iter)->type == event->getEventType()) {
+            (*iter)->l->componentActivity(event);
+        }
     }
+    // how to keep track of events?
+    events.push_back(event);
 }
 
 } // end namespace SCIRun

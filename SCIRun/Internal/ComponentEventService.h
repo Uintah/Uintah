@@ -42,6 +42,7 @@
 #define SCIRun_ComponentEventService_h
 
 #include <Core/CCA/spec/cca_sidl.h>
+#include <SCIRun/SCIRunFramework.h>
 #include <SCIRun/Internal/InternalComponentModel.h>
 #include <SCIRun/Internal/InternalComponentInstance.h>
 #include <vector>
@@ -49,13 +50,14 @@
 namespace SCIRun {
 
 class SCIRunFramework;
+class ComponentEvent;
 
 /**
  * \class ComponentEventService
  *
- * The component event service is a CCA port that is used to register command objects
- * (analogous to callback methods) with events broadcast from
- *
+ * The component event service is a CCA port that is used to register
+ * command objects (analogous to callback methods) with events broadcast
+ * from the framework (?)
  *
  */
 class ComponentEventService : public sci::cca::ports::ComponentEventService,
@@ -86,9 +88,8 @@ public:
   
   virtual void moveComponent(const sci::cca::ComponentID::pointer& id, int x, int y);
 
-  void emitComponentEvent(const sci::cca::ports::ComponentEvent::pointer& event);
-
 private:
+  friend void SCIRunFramework::emitComponentEvent(ComponentEvent* event);
   struct Listener
   {
     sci::cca::ports::ComponentEventType type;
@@ -100,7 +101,10 @@ private:
   };
 
   std::vector<Listener*> listeners;
+  std::vector<sci::cca::ports::ComponentEvent::pointer> events;
+
   ComponentEventService(SCIRunFramework* fwk, const std::string& name);
+  void emitComponentEvent(const sci::cca::ports::ComponentEvent::pointer& event);
 };
 
 
