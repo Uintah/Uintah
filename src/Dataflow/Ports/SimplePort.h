@@ -48,17 +48,14 @@ struct SimplePortComm
   SimplePortComm(const T&);
 
   T data_;
-  int have_data_;
+  bool have_data_;
 };
 
-
-template<class T> class SimpleOPort;
 
 template<class T>
 class SimpleIPort : public IPort
 {
 public:
-  friend class SimpleOPort<T>;
   Mailbox<SimplePortComm<T>*> mailbox;
 
   static string port_type_;
@@ -72,7 +69,7 @@ public:
   int get(T&);
 
 private:
-  int recvd_;
+  bool got_something_;
 };
 
 
@@ -85,6 +82,7 @@ public:
 
   virtual void reset();
   virtual void finish();
+  virtual void detach(Connection *conn);
 
   void send(const T&);
   void send_intermediate(const T&);
@@ -147,7 +145,7 @@ SimpleOPort<T>::~SimpleOPort()
 template<class T>
 void SimpleIPort<T>::reset()
 {
-  recvd_ = 0;
+  got_something_ = false;
 }
 
 
@@ -155,13 +153,26 @@ template<class T>
 void
 SimpleIPort<T>::finish()
 {
-  if (!recvd_ && num_unblocked_connections() > 0)
+#if 0
+  if (!got_something_ && num_unblocked_connections() > 0)
   {
     if (module->show_stats()) { turn_on(Finishing); }
-    SimplePortComm<T>* msg=mailbox.receive();
+    SimplePortComm<T>* msg = mailbox.receive();
     delete msg;
     if (module->show_stats()) { turn_off(); }
   }
+#else
+  if (num_unblocked_connections() > 0)
+  {
+    if (module->show_stats()) { turn_on(Finishing); }
+    SimplePortComm<T>* msg;
+    while (mailbox.tryReceive(msg))
+    {
+      delete msg;
+    }
+    if (module->show_stats()) { turn_off(); }
+  }
+#endif
 }
 
 
@@ -180,14 +191,14 @@ SimpleOPort<T>::finish()
 {
   if (!sent_something_ && num_unblocked_connections() > 0)
   {
-    // Tell them that we didn't send anything...
+    // Tell them that we didn't send anything.
     if (module->show_stats()) { turn_on(Finishing); }
-    for (int i=0; i<nconnections(); i++)
+    for (int i = 0; i < nconnections(); i++)
     {
-      SimplePortComm<T>* msg = new SimplePortComm<T>();
       Connection* conn = connections[i];
       if (! conn->is_blocked())
       {
+	SimplePortComm<T>* msg = scinew SimplePortComm<T>();
 	((SimpleIPort<T>*)conn->iport)->mailbox.send(msg);
       }
     }
@@ -195,6 +206,21 @@ SimpleOPort<T>::finish()
     if (module->show_stats()) { turn_off(); }
   }
 }
+
+
+template<class T>
+void
+SimpleOPort<T>::detach(Connection *conn)
+{
+  if (!sent_something_ && !conn->is_blocked())
+  {
+    SimplePortComm<T>* msg = scinew SimplePortComm<T>(0);
+    ((SimpleIPort<T>*)conn->iport)->mailbox.send(msg);
+    sent_something_ = true;
+  }
+  OPort::detach(conn);
+}
+
 
 //! Declare specialization for field ports.
 //! Field ports must only send const fields i.e. frozen fields.
@@ -224,10 +250,10 @@ SimpleOPort<T>::do_send(const T& data)
   for (int i = 0; i < nconnections(); i++)
   {
     // Add the new message.
-    SimplePortComm<T>* msg = new SimplePortComm<T>(data);
     Connection* conn = connections[i];
     if (! conn->is_blocked())
     {
+      SimplePortComm<T>* msg = scinew SimplePortComm<T>(data);
       ((SimpleIPort<T>*)conn->iport)->mailbox.send(msg);
     }
   }
@@ -260,13 +286,13 @@ SimpleOPort<T>::do_send_intermediate(const T& data)
 
   module->request_multisend(this);
 
-  for (int i=0; i<nconnections(); i++)
+  for (int i = 0; i < nconnections(); i++)
   {
     // Add the new message.
-    SimplePortComm<T>* msg = new SimplePortComm<T>(data);
     Connection* conn = connections[i];
     if (! conn->is_blocked())
     {
+      SimplePortComm<T>* msg = scinew SimplePortComm<T>(data);
       ((SimpleIPort<T>*)conn->iport)->mailbox.send(msg);
     }
   }
@@ -280,12 +306,12 @@ template<class T>
 int
 SimpleIPort<T>::get(T& data)
 {
-  if (num_unblocked_connections()==0) { return 0; }
+  if (num_unblocked_connections() == 0) { return 0; }
   if (module->show_stats()) { turn_on(); }
 
-  // Wait for the data...
-  SimplePortComm<T>* comm=mailbox.receive();
-  recvd_ = 1;
+  // Wait for the data.
+  SimplePortComm<T>* comm = mailbox.receive();
+  got_something_ = true;
   if (comm->have_data_)
   {
     data = comm->data_;
@@ -306,7 +332,7 @@ template<class T>
 bool
 SimpleOPort<T>::have_data()
 {
-  return handle_.get_rep();
+  return (bool)(handle_.get_rep());
 }
 
 
@@ -315,14 +341,14 @@ void
 SimpleOPort<T>::resend(Connection* conn)
 {
   if (module->show_stats()) { turn_on(); }
-  for (int i=0; i<nconnections(); i++)
+  for (int i = 0; i < nconnections(); i++)
   {
     Connection* c = connections[i];
     if (! c->is_blocked())
     {
       if (c == conn)
       {
-	SimplePortComm<T>* msg = new SimplePortComm<T>(handle_);
+	SimplePortComm<T>* msg = scinew SimplePortComm<T>(handle_);
 	((SimpleIPort<T>*)c->iport)->mailbox.send(msg);
       }
     }
@@ -333,7 +359,7 @@ SimpleOPort<T>::resend(Connection* conn)
 
 template<class T>
 SimplePortComm<T>::SimplePortComm() :
-  have_data_(0)
+  have_data_(false)
 {
 }
 
@@ -341,7 +367,7 @@ SimplePortComm<T>::SimplePortComm() :
 template<class T>
 SimplePortComm<T>::SimplePortComm(const T& data) :
   data_(data),
-  have_data_(1)
+  have_data_(true)
 {
 }
 
