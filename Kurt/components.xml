@@ -170,5 +170,21 @@
       <creationFunction>make_KurtScalarFieldReader</creationFunction>
     </implementation>
   </dataflow-component>
+  <dataflow-component name="GridVisualizer">
+    <meta>
+      <authors>
+        <author>James Bigler</author>
+      </authors>
+      <version-date>Mon Jun  5 14:15:55 MDT 2000</version-date>
+      <version>1.0</version>
+      <description>Visualize a Uintah Grid in wireframe</description>
+    </meta>
+    <inputs>Archive</inputs>
+    <outputs>Geometry</outputs>
+    <parameters></parameters>
+    <implementation>
+      <creationFunction>make_GridVisualizer</creationFunction>
+    </implementation>
+  </dataflow-component>
   </scirun-library>
 </package>
