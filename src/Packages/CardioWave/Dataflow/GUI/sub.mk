@@ -33,6 +33,7 @@ SRCS := \
 	$(SRCDIR)/RemoveInteriorTets.tcl \
 	$(SRCDIR)/SetupFVMatrix.tcl \
 	$(SRCDIR)/SetupFVM2.tcl \
+  $(SRCDIR)/TimeDataReader.tcl\
 #[INSERT NEW TCL FILE HERE]
 
 include $(SCIRUN_SCRIPTS)/tclIndex.mk
