@@ -17,13 +17,10 @@ ParticlesNeighbor::ParticlesNeighbor(const ParticleVariable<Point>& pX)
 {
 }
 
-void  ParticlesNeighbor::buildIncluding(const particleIndex& pIndex,
-                                        const Lattice& lattice)
+void ParticlesNeighbor::buildIn(const IntVector& cellIndex,const Lattice& lattice)
 {
   CellsNeighbor cellsNeighbor;
-  cellsNeighbor.buildIncluding(
-    lattice.getPatch()->getLevel()->getCellIndex(lattice.getParticlesPosition()[pIndex]),
-    lattice);
+  cellsNeighbor.buildIncluding(cellIndex,lattice);
   
   for(CellsNeighbor::const_iterator iter_cell = cellsNeighbor.begin();
     iter_cell != cellsNeighbor.end();
@@ -35,27 +32,6 @@ void  ParticlesNeighbor::buildIncluding(const particleIndex& pIndex,
          ++iter_p )
     {
       push_back(*iter_p);
-    }
-  }
-}
-
-void  ParticlesNeighbor::buildExcluding(const particleIndex& pIndex,
-                                        const Lattice& lattice)
-{
-  CellsNeighbor cellsNeighbor;
-  cellsNeighbor.buildIncluding(
-    lattice.getPatch()->getLevel()->getCellIndex(lattice.getParticlesPosition()[pIndex]),
-    lattice);
-  for(CellsNeighbor::const_iterator iter_cell = cellsNeighbor.begin();
-    iter_cell != cellsNeighbor.end();
-    ++iter_cell )
-  {
-    std::vector<particleIndex>& parts = lattice[*iter_cell].particles;
-    for( std::vector<particleIndex>::const_iterator iter_p = parts.begin();
-         iter_p != parts.end();
-         ++iter_p )
-    {
-      if( (*iter_p) != pIndex ) push_back(*iter_p);
     }
   }
 }
@@ -116,6 +92,10 @@ void  ParticlesNeighbor::interpolateInternalForce(LeastSquare& ls,
 } //namespace Uintah
 
 // $Log$
+// Revision 1.8  2000/07/06 16:59:34  tan
+// Least square interpolation added for particle velocities and stresses
+// updating.
+//
 // Revision 1.7  2000/07/06 06:23:23  tan
 // Added Least Square interpolation of double (such as temperatures),
 // vector (such as velocities) and stresses for particles in the

@@ -1,5 +1,7 @@
 #include "Fracture.h"
 
+#include "ParticlesNeighbor.h"
+
 #include <Uintah/Components/MPM/ConstitutiveModel/MPMMaterial.h>
 
 #include <Uintah/Components/MPM/MPMLabel.h>
@@ -68,6 +70,10 @@ Fracture::
 initializeFracture(const Patch* patch,
                   DataWarehouseP& new_dw)
 {
+  //for least square interpolation
+  Vector dx = patch->dCell();
+  d_spline.radius = ( dx.x() + dx.y() + dx.z() ) /3;
+
   int vfindex = d_sharedState->getMaterial(0)->getVFIndex();
 
   //  const MPMLabel* lb = MPMLabel::getLabels();
@@ -327,21 +333,25 @@ updateParticleInformationInContactCells(
     Cell& cell = lattice[*cellIter];
     if(cell.particles.size() > 0)
     {
+      ParticlesNeighbor pNeighbor(pX);
+      pNeighbor.buildIn(*cellIter,lattice);
+      
       std::vector<particleIndex>::const_iterator pIdxIter;
       for(pIdxIter = cell.particles.begin();
           pIdxIter != cell.particles.end();
           ++pIdxIter)
       {
-        LeastrSquareInterpolateInternalForce(
-          pX,pStress,*pIdxIter,*cellIter,lattice,internalForce);
+        pNeighbor.interpolateInternalForce(
+          d_ls,*pIdxIter,pStress,internalForce);
+
         acceleration = internalForce /= pMass[*pIdxIter];
 
-        LeastrSquareInterpolateVector(
-          pX,pVelocity,*pIdxIter,*cellIter,lattice,velocity,
-          pDeformationGradient[*pIdxIter]);
-          
-        pX[*pIdxIter] += velocity * delT;
         pVelocity[*pIdxIter] += acceleration * delT;
+
+        pNeighbor.interpolateVector(
+          d_ls,*pIdxIter,pVelocity,velocity,pDeformationGradient[*pIdxIter]);
+        
+        pX[*pIdxIter] += velocity * delT;
       }
     }
   }
@@ -349,41 +359,6 @@ updateParticleInformationInContactCells(
   new_dw->put(pX, lb->pXLabel_preReloc);
   new_dw->put(pVelocity, lb->pVelocityLabel_preReloc);
   new_dw->put(pDeformationGradient, lb->pDeformationMeasureLabel_preReloc);
-}
-
-void
-Fracture::
-LeastrSquareInterpolateDouble(const ParticleVariable<Point>& pX,
-   const ParticleVariable<double>& pValue,
-   const particleIndex pIdx,
-   const IntVector& cellIndex,
-   const Lattice& lattice,
-   double& interpolateValue,
-   Vector& gradientValue)
-{
-}
-
-void
-Fracture::
-LeastrSquareInterpolateVector(const ParticleVariable<Point>& pX,
-   const ParticleVariable<Vector>& pValue,
-   const particleIndex pIdx,
-   const IntVector& cellIndex,
-   const Lattice& lattice,
-   Vector& interpolateValue,
-   Matrix3& gradientValue)
-{
-}
-
-void
-Fracture::
-LeastrSquareInterpolateInternalForce(const ParticleVariable<Point>& pX,
-   const ParticleVariable<Matrix3>& pStress,
-   const particleIndex pIdx,
-   const IntVector& cellIndex,
-   const Lattice& lattice,
-   Vector& pInternalForce)
-{
 }
 
 void
@@ -420,12 +395,13 @@ crackGrow(
 
 Fracture::
 Fracture(ProblemSpecP& ps,SimulationStateP& d_sS)
+: d_ls(d_spline)
 {
   ps->require("average_microcrack_length",d_averageMicrocrackLength);
   ps->require("toughness",d_toughness);
 
   d_sharedState = d_sS;
-
+  
   lb = scinew MPMLabel();
 }
   
@@ -433,6 +409,10 @@ Fracture(ProblemSpecP& ps,SimulationStateP& d_sS)
 } //namespace Uintah
 
 // $Log$
+// Revision 1.27  2000/07/06 16:58:54  tan
+// Least square interpolation added for particle velocities and stresses
+// updating.
+//
 // Revision 1.26  2000/07/05 23:43:37  jas
 // Changed the way MPMLabel is used.  No longer a Singleton class.  Added
 // MPMLabel* lb to various classes to retain the original calling

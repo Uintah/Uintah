@@ -12,6 +12,9 @@
 
 #include "Lattice.h"
 #include "Cell.h"
+#include "LeastSquare.h"
+#include "CubicSpline.h"
+
 #include <Uintah/Components/MPM/Util/Matrix3.h>
 
 #include <Uintah/Interface/DataWarehouseP.h>
@@ -115,34 +118,14 @@ private:
   static void setParticleStatus(Fracture::ParticleStatus status,
            Vector* particleSurfaceNormal);
 
-  //Leastr Square interpolation
-  void LeastrSquareInterpolateDouble(const ParticleVariable<Point>& pX,
-   const ParticleVariable<double>& pValue,
-   const particleIndex pIdx,
-   const IntVector& cellIndex,
-   const Lattice& lattice,
-   double& interpolateValue,
-   Vector& gradientValue);
-
-  void LeastrSquareInterpolateVector(const ParticleVariable<Point>& pX,
-   const ParticleVariable<Vector>& pValue,
-   const particleIndex pIdx,
-   const IntVector& cellIndex,
-   const Lattice& lattice,
-   Vector& interpolateValue,
-   Matrix3& gradientValue);
-
-  void LeastrSquareInterpolateInternalForce(const ParticleVariable<Point>& pX,
-   const ParticleVariable<Matrix3>& pStress,
-   const particleIndex pIdx,
-   const IntVector& cellIndex,
-   const Lattice& lattice,
-   Vector& pInternalForce);
-
   double           d_averageMicrocrackLength;
   double           d_toughness;
   SimulationStateP d_sharedState;
-  MPMLabel* lb;
+
+  LeastSquare      d_ls;
+  CubicSpline      d_spline;
+
+  MPMLabel*        lb;
 };
 
 } //namespace MPM
@@ -151,6 +134,10 @@ private:
 #endif //__FRACTURE_H__
 
 // $Log$
+// Revision 1.22  2000/07/06 16:58:45  tan
+// Least square interpolation added for particle velocities and stresses
+// updating.
+//
 // Revision 1.21  2000/07/05 23:43:37  jas
 // Changed the way MPMLabel is used.  No longer a Singleton class.  Added
 // MPMLabel* lb to various classes to retain the original calling

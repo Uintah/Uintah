@@ -22,11 +22,7 @@ public:
 
         ParticlesNeighbor(const ParticleVariable<Point>& pX);
 
-  void  buildIncluding(const particleIndex& pIndex,
-                       const Lattice& lattice);
-
-  void  buildExcluding(const particleIndex& pIndex,
-                       const Lattice& lattice);
+  void  buildIn(const IntVector& cellIndex,const Lattice& lattice);
 
   void  interpolateVector(LeastSquare& ls,
                           const particleIndex& pIdx,
@@ -55,6 +51,10 @@ private:
 #endif //__PARTICLESNEIGHBOR_H__
 
 // $Log$
+// Revision 1.6  2000/07/06 16:59:24  tan
+// Least square interpolation added for particle velocities and stresses
+// updating.
+//
 // Revision 1.5  2000/07/06 06:23:08  tan
 // Added Least Square interpolation of double (such as temperatures),
 // vector (such as velocities) and stresses for particles in the
