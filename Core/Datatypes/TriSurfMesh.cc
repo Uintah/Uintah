@@ -54,12 +54,8 @@ TriSurfMesh::TriSurfMesh()
     faces_(0),
     edge_neighbors_(0),
     node_neighbors_(0),
-    synchronized_(0)
+    synchronized_(ALL_ELEMENTS_E)
 {
-  // These structures are always up to date because they define the mesh
-  synchronized_.set(FACES_E);
-  synchronized_.set(EDGES_E);
-  synchronized_.set(NODES_E);
 }
 
 TriSurfMesh::TriSurfMesh(const TriSurfMesh &copy)
@@ -137,7 +133,8 @@ TriSurfMesh::transform(Transform &t)
 void
 TriSurfMesh::begin(TriSurfMesh::Node::iterator &itr) const
 {  
-  ASSERTMSG(synchronized_[NODES_E], "Must call synchronize NODES_E on TriSurfMesh first");
+  ASSERTMSG(synchronized_ & NODES_E, 
+	    "Must call synchronize NODES_E on TriSurfMesh first");
   itr = 0;
 }
 
@@ -145,49 +142,56 @@ TriSurfMesh::begin(TriSurfMesh::Node::iterator &itr) const
 void
 TriSurfMesh::end(TriSurfMesh::Node::iterator &itr) const
 {
-  ASSERTMSG(synchronized_[NODES_E], "Must call synchronize NODES_E on TriSurfMesh first");
+  ASSERTMSG(synchronized_ & NODES_E, 
+	    "Must call synchronize NODES_E on TriSurfMesh first");
   itr = points_.size();
 }
 
 void
 TriSurfMesh::begin(TriSurfMesh::Edge::iterator &itr) const
 {
-  ASSERTMSG(synchronized_[EDGES_E], "Must call synchronize EDGES_E on TriSurfMesh first");
+  ASSERTMSG(synchronized_ & EDGES_E,
+	    "Must call synchronize EDGES_E on TriSurfMesh first");
   itr = 0;
 }
 
 void
 TriSurfMesh::end(TriSurfMesh::Edge::iterator &itr) const
 {
-  ASSERTMSG(synchronized_[EDGES_E], "Must call synchronize EDGES_E on TriSurfMesh first");
+  ASSERTMSG(synchronized_ & EDGES_E,
+	    "Must call synchronize EDGES_E on TriSurfMesh first");
   itr = static_cast<Edge::iterator>(faces_.size());
 }
 
 void
 TriSurfMesh::begin(TriSurfMesh::Face::iterator &itr) const
 {
-  ASSERTMSG(synchronized_[FACES_E], "Must call synchronize FACES_E on TriSurfMesh first");
+  ASSERTMSG(synchronized_ & FACES_E,
+	    "Must call synchronize FACES_E on TriSurfMesh first");
   itr = 0;
 }
 
 void
 TriSurfMesh::end(TriSurfMesh::Face::iterator &itr) const
 {
-  ASSERTMSG(synchronized_[FACES_E], "Must call synchronize FACES_E on TriSurfMesh first");
+  ASSERTMSG(synchronized_ & FACES_E,
+	    "Must call synchronize FACES_E on TriSurfMesh first");
   itr = static_cast<Face::iterator>(faces_.size() / 3);
 }
 
 void
 TriSurfMesh::begin(TriSurfMesh::Cell::iterator &itr) const
 {
-  ASSERTMSG(synchronized_[CELLS_E], "Must call synchronize CELLS_E on TriSurfMesh first");
+  ASSERTMSG(synchronized_ & CELLS_E,
+	    "Must call synchronize CELLS_E on TriSurfMesh first");
   itr = 0;
 }
 
 void
 TriSurfMesh::end(TriSurfMesh::Cell::iterator &itr) const
 {
-  ASSERTMSG(synchronized_[CELLS_E], "Must call synchronize CELLS_E on TriSurfMesh first");
+  ASSERTMSG(synchronized_ & CELLS_E,
+	    "Must call synchronize CELLS_E on TriSurfMesh first");
   itr = 0;
 }
 
@@ -242,7 +246,8 @@ TriSurfMesh::get_edges(Edge::array_type &array, Face::index_type idx) const
 void
 TriSurfMesh::get_neighbor(Face::index_type &neighbor, Edge::index_type idx) const
 {
-  ASSERTMSG(synchronized_[EDGE_NEIGHBORS_E], "Must call synchronize EDGE_NEIGHBORS_E on TriSurfMesh first");
+  ASSERTMSG(synchronized_ & EDGE_NEIGHBORS_E,
+	    "Must call synchronize EDGE_NEIGHBORS_E on TriSurfMesh first");
   neighbor = edge_neighbors_[idx];
 }
 
@@ -257,7 +262,7 @@ TriSurfMesh::compute_node_neighbors()
     node_neighbors_[faces_[f]].insert(faces_[next(f)]);
     node_neighbors_[faces_[f]].insert(faces_[prev(f)]);
   }
-  synchronized_.set(NODE_NEIGHBORS_E);
+  synchronized_ |= NODE_NEIGHBORS_E;
 }
       
 
@@ -265,7 +270,8 @@ TriSurfMesh::compute_node_neighbors()
 void
 TriSurfMesh::get_neighbors(Node::array_type &array, Node::index_type idx)
 {
-  ASSERTMSG(synchronized_[NODE_NEIGHBORS_E], "Must call synchronize NODE_NEIGHBORS_E on TriSurfMesh first"); 
+  ASSERTMSG(synchronized_ & NODE_NEIGHBORS_E, 
+	    "Must call synchronize NODE_NEIGHBORS_E on TriSurfMesh first"); 
   copy(node_neighbors_[idx].begin(), node_neighbors_[idx].end(), array.end());
 }
 
@@ -451,11 +457,14 @@ TriSurfMesh::get_center(Point &p, Face::index_type i) const
 
 
 bool
-TriSurfMesh::synchronize(const synchronized_t &tosync)
+TriSurfMesh::synchronize(unsigned int tosync)
 {
-  if (!synchronized_[NORMALS_E] && tosync[NORMALS_E]) compute_normals();
-  if (!synchronized_[NODE_NEIGHBORS_E] && tosync[NODE_NEIGHBORS_E]) compute_node_neighbors();
-  if (!synchronized_[EDGE_NEIGHBORS_E] && tosync[EDGE_NEIGHBORS_E]) compute_edge_neighbors();
+  if (tosync & NORMALS_E && !(synchronized_ & NORMALS_E)) 
+    compute_normals();
+  if (tosync & NODE_NEIGHBORS_E && !(synchronized_ & NODE_NEIGHBORS_E))
+    compute_node_neighbors();
+  if (tosync & EDGE_NEIGHBORS_E && !(synchronized_ & EDGE_NEIGHBORS_E))
+    compute_edge_neighbors();
   return true;
 }
 
@@ -520,7 +529,7 @@ TriSurfMesh::compute_normals()
     }
     ++nif_iter;
   }
-  synchronized_.set(NORMALS_E);
+  synchronized_ |= NORMALS_E;
 }
 
 TriSurfMesh::Node::index_type
@@ -546,9 +555,9 @@ TriSurfMesh::add_triangle(Node::index_type a, Node::index_type b, Node::index_ty
   faces_.push_back(a);
   faces_.push_back(b);
   faces_.push_back(c);
-  synchronized_.reset(EDGE_NEIGHBORS_E);
-  synchronized_.reset(NODE_NEIGHBORS_E);
-  synchronized_.reset(NORMALS_E);
+  synchronized_ &= ~EDGE_NEIGHBORS_E;
+  synchronized_ &= ~NODE_NEIGHBORS_E;
+  synchronized_ &= ~NORMALS_E;
 }
 
 
@@ -558,9 +567,9 @@ TriSurfMesh::add_elem(Node::array_type a)
   faces_.push_back(a[0]);
   faces_.push_back(a[1]);
   faces_.push_back(a[2]);
-  synchronized_.reset(EDGE_NEIGHBORS_E);
-  synchronized_.reset(NODE_NEIGHBORS_E);
-  synchronized_.reset(NORMALS_E);
+  synchronized_ &= ~EDGE_NEIGHBORS_E;
+  synchronized_ &= ~NODE_NEIGHBORS_E;
+  synchronized_ &= ~NORMALS_E;
   return static_cast<Elem::index_type>((faces_.size() - 1) / 3);
 }
 
@@ -642,9 +651,9 @@ TriSurfMesh::compute_edge_neighbors(double err)
     faces_[i] = mapping[i];
   }
 
-  synchronized_.set(EDGE_NEIGHBORS_E);
-  synchronized_.reset(NODE_NEIGHBORS_E);
-  synchronized_.reset(NORMALS_E);
+  synchronized_ |= EDGE_NEIGHBORS_E;
+  synchronized_ &= ~NODE_NEIGHBORS_E;
+  synchronized_ &= ~NORMALS_E;
 }
 
 
@@ -653,8 +662,8 @@ TriSurfMesh::Node::index_type
 TriSurfMesh::add_point(const Point &p)
 {
   points_.push_back(p);
-  if (synchronized_[NORMALS_E]) normals_.push_back(Vector());
-  if (synchronized_[NODE_NEIGHBORS_E]) node_neighbors_.push_back(set<int>());
+  if (synchronized_ & NORMALS_E) normals_.push_back(Vector());
+  if (synchronized_ & NODE_NEIGHBORS_E) node_neighbors_.push_back(set<int>());
   return static_cast<Node::index_type>(points_.size() - 1);
 }
 
@@ -684,7 +693,7 @@ TriSurfMesh::io(Piostream &stream)
 
   if (stream.reading())
   {
-    synchronized_.set(EDGE_NEIGHBORS_E);
+    synchronized_ |= EDGE_NEIGHBORS_E;
   }
 }
 

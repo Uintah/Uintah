@@ -95,12 +95,8 @@ TetVolMesh::TetVolMesh() :
   node_neighbor_lock_("TetVolMesh node_neighbors_ fill lock"),
   grid_(0),
   grid_lock_("TetVolMesh grid_ fill lock"),
-  synchronized_(0)
+  synchronized_(CELLS_E | NODES_E)
 {
-  //! The following Mesh elements are inherent to tetvolmesh storage
-  //! and always syncrhonized
-  synchronized_.set(ELEMENTS_E);
-  synchronized_.set(NODES_E);
 }
 
 TetVolMesh::TetVolMesh(const TetVolMesh &copy):
@@ -235,8 +231,8 @@ TetVolMesh::compute_faces()
     faces_.insert(i);
     all_faces_.insert(i);
   }
-  synchronized_.set(FACES_E);
-  synchronized_.set(FACE_NEIGHBORS_E);
+  synchronized_ |= FACES_E;
+  synchronized_ |= FACE_NEIGHBORS_E;
   face_lock_.unlock();
 }
 
@@ -253,8 +249,8 @@ TetVolMesh::compute_edges()
     edges_.insert(i);
     all_edges_.insert(i);
   }
-  synchronized_.set(EDGES_E);
-  synchronized_.set(EDGE_NEIGHBORS_E);
+  synchronized_ |= EDGES_E;
+  synchronized_ |= EDGE_NEIGHBORS_E;
   edge_lock_.unlock();
 }
 
@@ -269,7 +265,7 @@ TetVolMesh::compute_node_neighbors()
   {
     node_neighbors_[cells_[i]].push_back(i);
   }
-  synchronized_.set(NODE_NEIGHBORS_E);
+  synchronized_ |= NODE_NEIGHBORS_E;
   node_neighbor_lock_.unlock();
 }
 
@@ -277,17 +273,17 @@ TetVolMesh::compute_node_neighbors()
 
 
 bool
-TetVolMesh::synchronize(const synchronized_t &which)
+TetVolMesh::synchronize(unsigned int tosync)
 {
-  if (which[NODE_NEIGHBORS_E] && !synchronized_[NODE_NEIGHBORS_E])
+  if (tosync & NODE_NEIGHBORS_E && !(synchronized_ & NODE_NEIGHBORS_E))
     compute_node_neighbors();
-  if ((which[EDGES_E] && !synchronized_[EDGES_E]) | 
-      (which[EDGE_NEIGHBORS_E] && !synchronized_[EDGE_NEIGHBORS_E]))
+  if (tosync & EDGES_E && !(synchronized_ & EDGES_E) ||
+      tosync & EDGE_NEIGHBORS_E && !(synchronized_ & EDGE_NEIGHBORS_E))
     compute_edges();
-  if ((which[FACES_E] && !synchronized_[FACES_E]) | 
-      (which[FACE_NEIGHBORS_E] && !synchronized_[FACE_NEIGHBORS_E]))
+  if (tosync & FACES_E && !synchronized_ & FACES_E || 
+      tosync & FACE_NEIGHBORS_E && !(synchronized_ & FACE_NEIGHBORS_E))
     compute_faces();
-  if (which[GRID_E] && !synchronized_[GRID_E])
+  if (tosync & GRID_E && !(synchronized_ & GRID_E))
     compute_grid();
   return true;
 }
@@ -296,84 +292,84 @@ TetVolMesh::synchronize(const synchronized_t &which)
 void
 TetVolMesh::begin(TetVolMesh::Node::iterator &itr) const
 {
-  ASSERTMSG(synchronized_[NODES_E], "Must call synchronize on mesh first");
+  ASSERTMSG(synchronized_ & NODES_E, "Must call synchronize on mesh first");
   itr = 0;
 }
 
 void
 TetVolMesh::end(TetVolMesh::Node::iterator &itr) const
 {
-  ASSERTMSG(synchronized_[NODES_E], "Must call synchronize on mesh first");
+  ASSERTMSG(synchronized_ & NODES_E, "Must call synchronize on mesh first");
   itr = points_.size();
 }
 
 void
 TetVolMesh::size(TetVolMesh::Node::size_type &s) const
 {
-  ASSERTMSG(synchronized_[NODES_E], "Must call synchronize on mesh first");
+  ASSERTMSG(synchronized_ & NODES_E, "Must call synchronize on mesh first");
   s = points_.size();
 }
 
 void
 TetVolMesh::begin(TetVolMesh::Edge::iterator &itr) const
 {
-  ASSERTMSG(synchronized_[EDGES_E], "Must call synchronize on mesh first");
+  ASSERTMSG(synchronized_ & EDGES_E, "Must call synchronize on mesh first");
   itr = edges_.begin();
 }
 
 void
 TetVolMesh::end(TetVolMesh::Edge::iterator &itr) const
 {
-  ASSERTMSG(synchronized_[EDGES_E], "Must call synchronize on mesh first");
+  ASSERTMSG(synchronized_ & EDGES_E, "Must call synchronize on mesh first");
   itr = edges_.end();
 }
 
 void
 TetVolMesh::size(TetVolMesh::Edge::size_type &s) const
 {
-  ASSERTMSG(synchronized_[EDGES_E], "Must call synchronize on mesh first");
+  ASSERTMSG(synchronized_ & EDGES_E, "Must call synchronize on mesh first");
   s = edges_.size();
 }
 
 void
 TetVolMesh::begin(TetVolMesh::Face::iterator &itr) const
 {
-  ASSERTMSG(synchronized_[FACES_E], "Must call synchronize on mesh first");
+  ASSERTMSG(synchronized_ & FACES_E, "Must call synchronize on mesh first");
   itr = faces_.begin();
 }
 
 void
 TetVolMesh::end(TetVolMesh::Face::iterator &itr) const
 {
-  ASSERTMSG(synchronized_[FACES_E], "Must call synchronize on mesh first");
+  ASSERTMSG(synchronized_ & FACES_E, "Must call synchronize on mesh first");
   itr = faces_.end();
 }
 
 void
 TetVolMesh::size(TetVolMesh::Face::size_type &s) const
 {
-  ASSERTMSG(synchronized_[FACES_E], "Must call synchronize on mesh first");
+  ASSERTMSG(synchronized_ & FACES_E, "Must call synchronize on mesh first");
   s = faces_.size();
 }
 
 void
 TetVolMesh::begin(TetVolMesh::Cell::iterator &itr) const
 {
-  ASSERTMSG(synchronized_[ELEMENTS_E], "Must call synchronize on mesh first");
+  ASSERTMSG(synchronized_ & ELEMENTS_E, "Must call synchronize on mesh first");
   itr = 0;
 }
 
 void
 TetVolMesh::end(TetVolMesh::Cell::iterator &itr) const
 {
-  ASSERTMSG(synchronized_[ELEMENTS_E], "Must call synchronize on mesh first");
+  ASSERTMSG(synchronized_ & ELEMENTS_E, "Must call synchronize on mesh first");
   itr = cells_.size() >> 2;
 }
 
 void
 TetVolMesh::size(TetVolMesh::Cell::size_type &s) const
 {
-  ASSERTMSG(synchronized_[ELEMENTS_E], "Must call synchronize on mesh first");
+  ASSERTMSG(synchronized_ & ELEMENTS_E, "Must call synchronize on mesh first");
   s = cells_.size() >> 2;
 }
 
@@ -536,7 +532,7 @@ bool
 TetVolMesh::is_edge(Node::index_type n0, Node::index_type n1,
 		    Edge::array_type *array)
 {
-  ASSERTMSG(synchronized_[EDGES_E], "Must call synchronize EDGES_E on TetVolMesh first.");
+  ASSERTMSG(synchronized_ & EDGES_E, "Must call synchronize EDGES_E on TetVolMesh first.");
   edge_lock_.lock();
   cells_lock_.lock();
 
@@ -571,7 +567,7 @@ bool
 TetVolMesh::is_face(Node::index_type n0,Node::index_type n1, 
 		    Node::index_type n2, Face::array_type *array)
 {
-  ASSERTMSG(synchronized_[FACES_E], "Must call synchronize FACES_E on TetVolMesh first.");
+  ASSERTMSG(synchronized_ & FACES_E, "Must call synchronize FACES_E on TetVolMesh first.");
   face_lock_.lock();
   cells_lock_.lock();
 
@@ -637,17 +633,17 @@ TetVolMesh::set_nodes(Node::array_type &array, Cell::index_type idx)
 {
   ASSERT(array.size() == 4);
 
-  if (synchronized_[EDGES_E]) delete_cell_edges(idx);
-  if (synchronized_[FACES_E]) delete_cell_faces(idx);
-  if (synchronized_[NODE_NEIGHBORS_E]) delete_cell_node_neighbors(idx);
+  if (synchronized_ & EDGES_E) delete_cell_edges(idx);
+  if (synchronized_ & FACES_E) delete_cell_faces(idx);
+  if (synchronized_ & NODE_NEIGHBORS_E) delete_cell_node_neighbors(idx);
 
   for (int n = 4; n < 4; ++n)
     cells_[idx * 4 + n] = array[n];
   
-  synchronized_.reset(GRID_E);
-  if (synchronized_[EDGES_E]) create_cell_edges(idx);
-  if (synchronized_[FACES_E]) create_cell_faces(idx);
-  if (synchronized_[NODE_NEIGHBORS_E]) create_cell_node_neighbors(idx);
+  synchronized_ &= ~GRID_E;
+  if (synchronized_ & EDGES_E) create_cell_edges(idx);
+  if (synchronized_ & FACES_E) create_cell_faces(idx);
+  if (synchronized_ & NODE_NEIGHBORS_E) create_cell_node_neighbors(idx);
 
 }
 
@@ -770,7 +766,7 @@ TetVolMesh::get_neighbor(Cell::index_type &neighbor, Cell::index_type from,
 bool
 TetVolMesh::get_neighbor(Face::index_type &neighbor, Face::index_type idx)const
 {
-  ASSERTMSG(synchronized_[FACE_NEIGHBORS_E], "Must call synchronize FACE_NEIGHBORS_E on TetVolMesh first.");
+  ASSERTMSG(synchronized_ & FACE_NEIGHBORS_E, "Must call synchronize FACE_NEIGHBORS_E on TetVolMesh first.");
   pair<Face::HalfFaceSet::const_iterator,
        Face::HalfFaceSet::const_iterator> range = all_faces_.equal_range(idx);
 
@@ -800,7 +796,7 @@ TetVolMesh::get_neighbor(Face::index_type &neighbor, Face::index_type idx)const
 void
 TetVolMesh::get_neighbors(Cell::array_type &array, Cell::index_type idx) const
 {
-  ASSERTMSG(synchronized_[FACE_NEIGHBORS_E], "Must call synchronize FACE_NEIGHBORS_E on TetVolMesh first.");
+  ASSERTMSG(synchronized_ & FACE_NEIGHBORS_E, "Must call synchronize FACE_NEIGHBORS_E on TetVolMesh first.");
   Face::index_type face;
   for (int i = idx*4; i < idx*4+4;i++)
   {
@@ -818,7 +814,7 @@ TetVolMesh::get_neighbors(Cell::array_type &array, Cell::index_type idx) const
 void
 TetVolMesh::get_neighbors(Node::array_type &array, Node::index_type idx) const
 {
-  ASSERTMSG(synchronized_[NODE_NEIGHBORS_E], 
+  ASSERTMSG(synchronized_ & NODE_NEIGHBORS_E, 
 	    "Must call synchronize NODE_NEIGHBORS_E on TetVolMesh first.");
   set<int> inserted;
   for (unsigned int i = 0; i < node_neighbors_[idx].size(); i++)
@@ -1108,7 +1104,7 @@ TetVolMesh::compute_grid()
     }
     ++ci;
   }
-  synchronized_.set(GRID_E);
+  synchronized_ |= GRID_E;
   grid_lock_.unlock();
 }
 
@@ -1286,7 +1282,8 @@ TetVolMesh::add_find_point(const Point &p, double err)
   else
   {
     points_.push_back(p);
-    if (synchronized_[NODE_NEIGHBORS_E]) node_neighbors_.push_back(vector<Cell::index_type>());
+    if (synchronized_ & NODE_NEIGHBORS_E)
+      node_neighbors_.push_back(vector<Cell::index_type>());
     return points_.size() - 1;
   }
 }
@@ -1302,10 +1299,10 @@ TetVolMesh::add_tet(Node::index_type a, Node::index_type b,
   cells_.push_back(c);
   cells_.push_back(d);
 
-  if (synchronized_[NODE_NEIGHBORS_E]) create_cell_node_neighbors(tet);
-  if (synchronized_[EDGES_E]) create_cell_edges(tet);
-  if (synchronized_[FACES_E]) create_cell_faces(tet);
-  synchronized_.reset(GRID_E);
+  if (synchronized_ & NODE_NEIGHBORS_E) create_cell_node_neighbors(tet);
+  if (synchronized_ & EDGES_E) create_cell_edges(tet);
+  if (synchronized_ & FACES_E) create_cell_faces(tet);
+  synchronized_ &= ~GRID_E;
 
   return tet; 
 }
@@ -1316,7 +1313,8 @@ TetVolMesh::Node::index_type
 TetVolMesh::add_point(const Point &p)
 {
   points_.push_back(p);
-  if (synchronized_[NODE_NEIGHBORS_E]) node_neighbors_.push_back(vector<Cell::index_type>());
+  if (synchronized_ & NODE_NEIGHBORS_E)
+    node_neighbors_.push_back(vector<Cell::index_type>());
   return points_.size() - 1;
 }
 
@@ -1340,10 +1338,10 @@ TetVolMesh::add_elem(Node::array_type a)
   for (unsigned int n = 0; n < a.size(); n++)
     cells_.push_back(a[n]);
 
-  if (synchronized_[NODE_NEIGHBORS_E]) create_cell_node_neighbors(tet);
-  if (synchronized_[EDGES_E]) create_cell_edges(tet);
-  if (synchronized_[FACES_E]) create_cell_faces(tet);
-  synchronized_.reset(GRID_E);
+  if (synchronized_ & NODE_NEIGHBORS_E) create_cell_node_neighbors(tet);
+  if (synchronized_ & EDGES_E) create_cell_edges(tet);
+  if (synchronized_ & FACES_E) create_cell_faces(tet);
+  synchronized_ &= ~GRID_E;
 
   return tet;
 }
@@ -1528,7 +1526,7 @@ void
 TetVolMesh::get_cells(Cell::array_type &array, Node::index_type idx) const
 {
   ASSERTMSG(is_frozen(),"only call get_cells with a node index if frozen!!");
-  ASSERTMSG(synchronized_[NODE_NEIGHBORS_E], 
+  ASSERTMSG(synchronized_ & NODE_NEIGHBORS_E, 
 	    "Must call synchronize NODE_NEIGHBORS_E on TetVolMesh first.");
   array.clear();
   for (unsigned int i = 0; i < node_neighbors_[idx].size(); ++i)

@@ -20,7 +20,6 @@
 
 #include <Core/Datatypes/PropertyManager.h>
 #include <Core/Containers/LockingHandle.h>
-#include <bitset>
 
 namespace SCIRun {
   class BBox;
@@ -44,22 +43,19 @@ public:
 
   enum
   { 
-    NONE_E = 0,
-    NODES_E,
-    EDGES_E,
-    FACES_E,
-    CELLS_E,
-    //    ELEMENTS_E,
-    NORMALS_E,
-    NODE_NEIGHBORS_E,
-    EDGE_NEIGHBORS_E,
-    FACE_NEIGHBORS_E,
-    GRID_E,
-    SYNCHRONIZE_COUNT
+    NONE_E		= 0,
+    NODES_E		= 1 << 0,
+    EDGES_E		= 1 << 1,
+    FACES_E		= 1 << 2,
+    CELLS_E		= 1 << 3,
+    ALL_ELEMENTS_E      = NODES_E | EDGES_E | FACES_E | CELLS_E,
+    NORMALS_E		= 1 << 4,
+    NODE_NEIGHBORS_E	= 1 << 5,
+    EDGE_NEIGHBORS_E	= 1 << 6,
+    FACE_NEIGHBORS_E	= 1 << 7,
+    GRID_E		= 1 << 8,
   };
-
-  typedef bitset<SYNCHRONIZE_COUNT>     synchronized_t;
-  virtual bool		synchronize(const synchronized_t &which) { return false; };
+  virtual bool		synchronize(unsigned int) { return false; };
 
 
   //! Optional virtual functions.

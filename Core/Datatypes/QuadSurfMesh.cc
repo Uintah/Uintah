@@ -53,11 +53,8 @@ QuadSurfMesh::QuadSurfMesh()
   : points_(0),
     faces_(0),
     edge_neighbors_(0),
-    synchronized_(synchronized_)
+    synchronized_(ALL_ELEMENTS_E)
 {
-  synchronized_.set(NODES_E);
-  synchronized_.set(EDGES_E);
-  synchronized_.set(FACES_E);
 }
 
 QuadSurfMesh::QuadSurfMesh(const QuadSurfMesh &copy)
@@ -154,7 +151,8 @@ QuadSurfMesh::transform(Transform &t)
 void
 QuadSurfMesh::begin(QuadSurfMesh::Node::iterator &itr) const
 {
-  ASSERTMSG(synchronized_[NODES_E], "Must call synchronize NODES_E on QuadSurfMesh first");
+  ASSERTMSG(synchronized_ & NODES_E,
+	    "Must call synchronize NODES_E on QuadSurfMesh first");
   itr = 0;
 }
 
@@ -162,49 +160,56 @@ QuadSurfMesh::begin(QuadSurfMesh::Node::iterator &itr) const
 void
 QuadSurfMesh::end(QuadSurfMesh::Node::iterator &itr) const
 {
-  ASSERTMSG(synchronized_[NODES_E], "Must call synchronize NODES_E on QuadSurfMesh first");
+  ASSERTMSG(synchronized_ & NODES_E,
+	    "Must call synchronize NODES_E on QuadSurfMesh first");
   itr = points_.size();
 }
 
 void
 QuadSurfMesh::begin(QuadSurfMesh::Edge::iterator &itr) const
 {
-  ASSERTMSG(synchronized_[EDGES_E], "Must call synchronize EDGES_E on QuadSurfMesh first");
+  ASSERTMSG(synchronized_ & EDGES_E,
+	    "Must call synchronize EDGES_E on QuadSurfMesh first");
   itr = 0;
 }
 
 void
 QuadSurfMesh::end(QuadSurfMesh::Edge::iterator &itr) const
 {
-  ASSERTMSG(synchronized_[EDGES_E], "Must call synchronize EDGES_E on QuadSurfMesh first");
+  ASSERTMSG(synchronized_ & EDGES_E,
+	    "Must call synchronize EDGES_E on QuadSurfMesh first");
   itr = static_cast<Edge::iterator>(faces_.size());
 }
 
 void
 QuadSurfMesh::begin(QuadSurfMesh::Face::iterator &itr) const
 {
-  ASSERTMSG(synchronized_[FACES_E], "Must call synchronize FACES_E on QuadSurfMesh first");
+  ASSERTMSG(synchronized_ & FACES_E,
+	    "Must call synchronize FACES_E on QuadSurfMesh first");
   itr = 0;
 }
 
 void
 QuadSurfMesh::end(QuadSurfMesh::Face::iterator &itr) const
 {
-  ASSERTMSG(synchronized_[FACES_E], "Must call synchronize FACES_E on QuadSurfMesh first");
+  ASSERTMSG(synchronized_ & FACES_E,
+	    "Must call synchronize FACES_E on QuadSurfMesh first");
   itr = static_cast<Face::iterator>(faces_.size() / 4);
 }
 
 void
 QuadSurfMesh::begin(QuadSurfMesh::Cell::iterator &itr) const
 {
-  ASSERTMSG(synchronized_[CELLS_E], "Must call synchronize CELLS_E on QuadSurfMesh first");
+  ASSERTMSG(synchronized_ & CELLS_E,
+	    "Must call synchronize CELLS_E on QuadSurfMesh first");
   itr = 0;
 }
 
 void
 QuadSurfMesh::end(QuadSurfMesh::Cell::iterator &itr) const
 {
-  ASSERTMSG(synchronized_[CELLS_E], "Must call synchronize CELLS_E on QuadSurfMesh first");
+  ASSERTMSG(synchronized_ & CELLS_E,
+	    "Must call synchronize CELLS_E on QuadSurfMesh first");
   itr = 0;
 }
 
@@ -212,7 +217,8 @@ QuadSurfMesh::end(QuadSurfMesh::Cell::iterator &itr) const
 void
 QuadSurfMesh::get_nodes(Node::array_type &array, Edge::index_type idx) const
 {
-  ASSERTMSG(synchronized_[FACES_E], "Must call synchronize FACES_E on QuadSurfMesh first");
+  ASSERTMSG(synchronized_ & FACES_E,
+	    "Must call synchronize FACES_E on QuadSurfMesh first");
   static int table[8][2] =
   {
     {0, 1},
@@ -232,7 +238,8 @@ QuadSurfMesh::get_nodes(Node::array_type &array, Edge::index_type idx) const
 void
 QuadSurfMesh::get_nodes(Node::array_type &array, Face::index_type idx) const
 {
-  ASSERTMSG(synchronized_[FACES_E], "Must call synchronize FACES_E on QuadSurfMesh first");
+  ASSERTMSG(synchronized_ & FACES_E,
+	    "Must call synchronize FACES_E on QuadSurfMesh first");
   array.clear();
   array.push_back(faces_[idx * 4 + 0]);
   array.push_back(faces_[idx * 4 + 1]);
@@ -255,7 +262,8 @@ QuadSurfMesh::get_edges(Edge::array_type &array, Face::index_type idx) const
 void
 QuadSurfMesh::get_neighbor(Face::index_type &neighbor, Edge::index_type idx) const
 {
-  ASSERTMSG(synchronized_[EDGE_NEIGHBORS_E], "Must call synchronize EDGE_NEIGHBORS_E on QuadSurfMesh first");
+  ASSERTMSG(synchronized_ & EDGE_NEIGHBORS_E,
+	    "Must call synchronize EDGE_NEIGHBORS_E on QuadSurfMesh first");
   neighbor = edge_neighbors_[idx];
 }
 
@@ -449,10 +457,12 @@ QuadSurfMesh::inside4_p(int i, const Point &p)
 #endif
 
 bool
-QuadSurfMesh::synchronize(const synchronized_t &tosync)
+QuadSurfMesh::synchronize(unsigned int tosync)
 {
-  if (tosync[NORMALS_E] && !synchronized_[NORMALS_E]) compute_normals();
-  if (tosync[EDGE_NEIGHBORS_E] && !synchronized_[EDGE_NEIGHBORS_E]) compute_edge_neighbors();
+  if (tosync & NORMALS_E && !(synchronized_ & NORMALS_E))
+    compute_normals();
+  if (tosync & EDGE_NEIGHBORS_E && !(synchronized_ & EDGE_NEIGHBORS_E)) 
+    compute_edge_neighbors();
   return true;
 }
 
@@ -508,7 +518,7 @@ QuadSurfMesh::compute_normals()
     normals_[i] = ave; ++i;
     ++nif_iter;
   }
-  synchronized_.set(NORMALS_E);
+  synchronized_ |= NORMALS_E;
 }
 
 
@@ -523,7 +533,7 @@ QuadSurfMesh::add_find_point(const Point &p, double err)
   else
   {
     points_.push_back(p);
-    if (synchronized_[NORMALS_E]) normals_.push_back(Vector());
+    if (synchronized_ & NORMALS_E) normals_.push_back(Vector());
     return static_cast<Node::index_type>(points_.size() - 1);
   }
 }
@@ -537,8 +547,8 @@ QuadSurfMesh::add_quad(Node::index_type a, Node::index_type b,
   faces_.push_back(b);
   faces_.push_back(c);
   faces_.push_back(d);
-  synchronized_.reset(NORMALS_E);
-  synchronized_.reset(EDGE_NEIGHBORS_E);
+  synchronized_ &= ~NORMALS_E;
+  synchronized_ &= ~EDGE_NEIGHBORS_E;
 }
 
 
@@ -550,8 +560,8 @@ QuadSurfMesh::add_elem(Node::array_type a)
   faces_.push_back(a[1]);
   faces_.push_back(a[2]);
   faces_.push_back(a[3]);
-  synchronized_.reset(NORMALS_E);
-  synchronized_.reset(EDGE_NEIGHBORS_E);
+  synchronized_ &= ~NORMALS_E;
+  synchronized_ &= ~EDGE_NEIGHBORS_E;
   return static_cast<Elem::index_type>((faces_.size() - 1) >> 2);
 }
 
@@ -641,7 +651,7 @@ QuadSurfMesh::Node::index_type
 QuadSurfMesh::add_point(const Point &p)
 {
   points_.push_back(p);
-  if (synchronized_[NORMALS_E]) normals_.push_back(Vector());
+  if (synchronized_ & NORMALS_E) normals_.push_back(Vector());
   return static_cast<Node::index_type>(points_.size() - 1);
 }
 
@@ -676,10 +686,7 @@ QuadSurfMesh::io(Piostream &stream)
 
   if (stream.reading())
   {
-    synchronized_.reset();
-    synchronized_.set(NODES_E);
-    synchronized_.set(EDGES_E);
-    synchronized_.set(FACES_E);
+    synchronized_ = ALL_ELEMENTS_E;
   }
 }
 

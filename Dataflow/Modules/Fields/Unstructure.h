@@ -134,12 +134,7 @@ UnstructureAlgoT<FSRC, FDST>::execute(Module *module, FieldHandle field_h)
 #endif
   
   elem_hash_type elemmap;
-  Mesh::synchronized_t sync;
-  sync.set(Mesh::FACES_E);
-  sync.set(Mesh::CELLS_E);
-  sync.set(Mesh::EDGES_E);
-  sync.set(Mesh::NODES_E);
-  mesh->synchronize(sync);
+  mesh->synchronize(Mesh::ALL_ELEMENTS_E);
   typename FSRC::mesh_type::Elem::iterator bi, ei;
   mesh->begin(bi); mesh->end(ei);
   while (bi != ei)
@@ -165,9 +160,7 @@ UnstructureAlgoT<FSRC, FDST>::execute(Module *module, FieldHandle field_h)
   }
 
   // really should copy normals
-  sync.clear();
-  sync.set(Mesh::NORMALS_E);
-  outmesh->synchronize(sync);
+  outmesh->synchronize(Mesh::NORMALS_E);
 
   FDST *ofield = scinew FDST(outmesh, field_h->data_at());
 

@@ -197,9 +197,7 @@ void SelectElements::execute()
     ++count;
   }
 
-  Mesh::synchronized_t sync;
-  sync.set(Mesh::NODE_NEIGHBORS_E);
-  mesh->synchronize(sync);
+  mesh->synchronize(Mesh::NODE_NEIGHBORS_E);
 
 
   TetVolMesh *mesh_no_unattached_nodes = scinew TetVolMesh;

@@ -334,7 +334,7 @@ public:
   void rewind_mesh();
 
 
-  virtual bool		synchronize(const synchronized_t &);
+  virtual bool		synchronize(unsigned int);
 
   //! Persistent IO
   virtual void io(Piostream&);
@@ -439,7 +439,7 @@ protected:
   grid_handle           grid_;
   Mutex                 grid_lock_; // Bad traffic!
 
-  synchronized_t	synchronized_;
+  unsigned int		synchronized_;
 public:
   inline grid_handle get_grid() {return grid_;}
 
