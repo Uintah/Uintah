@@ -868,7 +868,8 @@ Mutex::~Mutex()
   if (pthread_mutex_destroy(&priv_->mutex) != 0)
   {
     // EBUSY
-    fprintf(stderr, "Mutex::~Mutex: Warning:  Mutex currently locked.\n");
+    fprintf(stderr,"Mutex::~Mutex: Warning: Mutex \"%s\" currently locked.\n", 
+	    name_);
     priv_ = 0;
     return;
     // EBUSY
