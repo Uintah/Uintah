@@ -538,11 +538,8 @@ SimpleSimulationController::problemSetup(const ProblemSpecP& params,
 	// different limits so that we can develop a CellIterator that will
 	// use only the interior cells instead of including the extraCell
 	// limits.
-	IntVector extraCells(0,0,0);
-	if(box_ps->get("extraCells", extraCells)){
-	  lowCell -= extraCells;
-	  highCell += extraCells;
-	}
+	IntVector extraCells;
+	box_ps->getWithDefault("extraCells", extraCells, IntVector(0,0,0));
 	level->setExtraCells(extraCells);
 	
 	IntVector resolution(highCell-lowCell);
@@ -560,20 +557,14 @@ SimpleSimulationController::problemSetup(const ProblemSpecP& params,
 	      for(int k=0;k<patches.z();k++){
 		IntVector startcell = resolution*IntVector(i,j,k)/patches+lowCell;
 		IntVector endcell = resolution*IntVector(i+1,j+1,k+1)/patches+lowCell;
-		IntVector inStartCell = startcell;
-		IntVector inEndCell = endcell;
-		if(i==0)
-		  inStartCell+=IntVector(extraCells.x(), 0, 0);
-		if(i==patches.x()-1)
-		  inEndCell-=IntVector(extraCells.x(), 0, 0);
-		if(j==0)
-		  inStartCell+=IntVector(0, extraCells.y(), 0);
-		if(j==patches.y()-1)
-		  inEndCell-=IntVector(0, extraCells.y(), 0);
-		if(k==0)
-		  inStartCell+=IntVector(0, 0, extraCells.z());
-		if(k==patches.z()-1)
-		  inEndCell-=IntVector(0, 0, extraCells.z());
+		IntVector inStartCell(startcell);
+		IntVector inEndCell(endcell);
+		startcell -= IntVector(i == 0? extraCells.x():0,
+				       j == 0? extraCells.y():0,
+				       k == 0? extraCells.z():0);
+		endcell += IntVector(i == patches.x()-1? extraCells.x():0,
+				     j == patches.y()-1? extraCells.y():0,
+				     k == patches.z()-1? extraCells.z():0);
 		Patch* p = level->addPatch(startcell, endcell,
 					   inStartCell, inEndCell);
 		p->setLayoutHint(IntVector(i,j,k));
