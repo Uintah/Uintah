@@ -33,9 +33,6 @@ source $DATADIR/$DATASET/$DATASET.settings
 
 ::netedit dontschedule
 
-global notes
-set notes ""
-
 set m0 [addModuleAtPosition "SCIRun" "DataIO" "FieldReader" 44 14]
 set m1 [addModuleAtPosition "SCIRun" "Fields" "ChangeFieldDataType" 167 102]
 set m2 [addModuleAtPosition "SCIRun" "Fields" "TransformVectorData" 116 201]
@@ -63,7 +60,7 @@ set $m2-notes {}
 set $m2-show_status {1}
 set $m2-functionx {0}
 set $m2-functiony {0}
-set $m2-functionz {random()}
+set $m2-functionz {1}
 set $m2-pre_normalize {0}
 set $m2-post_normalize {0}
 set $m3-notes {}
@@ -74,15 +71,15 @@ set $m3-ViewWindow_0-caxes {0}
 set $m3-ViewWindow_0-raxes {1}
 set $m3-ViewWindow_0-iaxes {}
 set $m3-ViewWindow_0-have_collab_vis {0}
-set $m3-ViewWindow_0-view-eyep-x {          5.46465}
-set $m3-ViewWindow_0-view-eyep-y {          9.86631}
-set $m3-ViewWindow_0-view-eyep-z {          3.46691}
+set $m3-ViewWindow_0-view-eyep-x {          9.06601}
+set $m3-ViewWindow_0-view-eyep-y {          7.43455}
+set $m3-ViewWindow_0-view-eyep-z {          1.32621}
 set $m3-ViewWindow_0-view-lookat-x {}
 set $m3-ViewWindow_0-view-lookat-y {}
 set $m3-ViewWindow_0-view-lookat-z {}
-set $m3-ViewWindow_0-view-up-x {       -0.0716206}
-set $m3-ViewWindow_0-view-up-y {        -0.295124}
-set $m3-ViewWindow_0-view-up-z {         0.952771}
+set $m3-ViewWindow_0-view-up-x {         0.102372}
+set $m3-ViewWindow_0-view-up-y {        -0.294339}
+set $m3-ViewWindow_0-view-up-z {         0.950203}
 set $m3-ViewWindow_0-view-fov {               20}
 set $m3-ViewWindow_0-view-eyep_offset-x {}
 set $m3-ViewWindow_0-view-eyep_offset-y {}
@@ -119,15 +116,14 @@ set $m3-ViewWindow_0-global-clip {0}
 set $m3-ViewWindow_0-global-cull {0}
 set $m3-ViewWindow_0-global-dl {0}
 set $m3-ViewWindow_0-global-type {Gouraud}
-set $m3-ViewWindow_0-unused {1}
-set $m3-ViewWindow_0-unused {1}
-set $m3-ViewWindow_0-unused {1}
+set $m3-ViewWindow_0-ortho-view {0}
 set $m3-ViewWindow_0-unused {1}
 set $m4-notes {}
 set $m4-show_status {1}
 set $m4-nodes-on {0}
 set $m4-nodes-as-disks {1}
 set $m4-edges-on {0}
+set $m4-edges-transparency {0}
 set $m4-faces-on {0}
 set $m4-use-normals {0}
 set $m4-use-transparency {0}
@@ -163,7 +159,7 @@ set $m4-tensor_display_type {Boxes}
 set $m4-active_tab {Vectors}
 set $m4-node_scale {0.0300}
 set $m4-edge_scale {0.0150}
-set $m4-vectors_scale {0.360}
+set $m4-vectors_scale {0.184}
 set $m4-tensors_scale {0.30}
 set $m4-show_progress {}
 set $m4-interactive_mode {Interactive}
