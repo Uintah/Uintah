@@ -7,6 +7,7 @@
 #include <Packages/Uintah/CCA/Components/Schedulers/DetailedTasks.h>
 #include <Packages/Uintah/Core/Grid/Task.h>
 #include <Packages/Uintah/Core/Grid/Patch.h>
+#include <Packages/Uintah/Core/Grid/CellIterator.h>
 #include <Packages/Uintah/Core/Parallel/ProcessorGroup.h>
 #include <Packages/Uintah/Core/ProblemSpec/ProblemSpec.h>
 #include <Packages/Uintah/CCA/Ports/DataWarehouse.h>
@@ -462,7 +463,8 @@ SchedulerCommon::copyDataToNewGrid(const ProcessorGroup*, const PatchSubset* pat
     const Patch* oldPatch = currentVar.patch_;
 
     IntVector lowIndex, highIndex;
-    oldPatch->computeVariableExtents(Patch::CellBased, IntVector(0,0,0), Ghost::AroundCells, 0, lowIndex, highIndex);
+    Patch::VariableBasis basis = Patch::translateTypeToBasis(currentVar.label_->typeDescription()->getType(), true);
+    oldPatch->computeVariableExtents(basis, currentVar.label_->getBoundaryLayer(), Ghost::AroundCells, 0, lowIndex, highIndex);
     cout << "  oldPatch(" << oldPatch->getID() << ") = " << lowIndex << " to " << highIndex << endl;
     Patch::selectType neighbors;
     newLevel->selectPatches(lowIndex, highIndex, neighbors);
@@ -478,13 +480,6 @@ SchedulerCommon::copyDataToNewGrid(const ProcessorGroup*, const PatchSubset* pat
 
       cerr << getpid() << ": RANDY: SchedulerCommon::copyDataToNewGrid() FOR NEW PATCH BGN" << endl;
 
-      IntVector newLowIndex = newPatch->getLowIndex();
-      IntVector newHighIndex = newPatch->getHighIndex();
-      cout << "  newPatch(" << newPatch->getID() << ") = " << newLowIndex << " to " << newHighIndex << endl;
-      IntVector copyLowIndex = Max(newLowIndex, lowIndex);
-      IntVector copyHighIndex = Min(newHighIndex, highIndex);
-      cout << "  copPatch(" << newPatch->getID() << ") = " << newLowIndex << " to " << newHighIndex << endl;
-
       //      newDataWarehouse->checkPutAccess(currentVar.label_, currentVar.matlIndex_, currentVar.patch_, false);      
       switch(currentVar.label_->typeDescription()->getType()){
       case TypeDescription::NCVariable:
@@ -494,14 +489,35 @@ SchedulerCommon::copyDataToNewGrid(const ProcessorGroup*, const PatchSubset* pat
 	    SCI_THROW(UnknownVariable(currentVar.label_->getName(), oldDataWarehouse->getID(), currentVar.patch_, currentVar.matlIndex_,
 				      "in copyDataTo NCVariable"));
 	  NCVariableBase* v = oldDataWarehouse->d_ncDB.get(currentVar.label_, currentVar.matlIndex_, currentVar.patch_);
+
+	  IntVector newLowIndex = newPatch->getLowIndex(basis, currentVar.label_->getBoundaryLayer());
+	  IntVector newHighIndex = newPatch->getHighIndex(basis, currentVar.label_->getBoundaryLayer());
+	  cout << "  newPatch(" << newPatch->getID() << ") = " << newLowIndex << " to " << newHighIndex << endl;
+	  IntVector copyLowIndex = Max(newLowIndex, lowIndex);
+	  IntVector copyHighIndex = Min(newHighIndex, highIndex);
+	  cout << "  copPatch(" << newPatch->getID() << ") = " << newLowIndex << " to " << newHighIndex << endl;
+	  cout << "Var Low  = " << v->getLow() << endl;
+	  cout << "Var High = " << v->getHigh() << endl;
+	  /*
+	  for(CellIterator iter(v->getLow(), v->getHigh()); !iter.done(); iter++){
+	    cout << "RANDY: v" << *iter << " = " << (*v)[*iter] << endl;
+	  }
+	  */
 	  if ( !newDataWarehouse->d_ncDB.exists(currentVar.label_, currentVar.matlIndex_, newPatch) ) {
 	    NCVariableBase* newVariable = v->cloneType();
 	    newVariable->rewindow( newLowIndex, newHighIndex );
 	    newVariable->copyPatch( v, copyLowIndex, copyHighIndex );
+	    //	    for(CellIterator iter(v->getLow(), v->getHigh()); !iter.done(); iter++){
+	    //	      cout << "RANDY: newv" << *iter << " = " << v[*iter] << endl;
+	    //	    }
+
 	    newDataWarehouse->d_ncDB.put(currentVar.label_, currentVar.matlIndex_, newPatch, newVariable, false);
 	  } else {
 	    NCVariableBase* newVariable = newDataWarehouse->d_ncDB.get(currentVar.label_, currentVar.matlIndex_, newPatch );
 	    newVariable->copyPatch( v, copyLowIndex, copyHighIndex );
+	    //	    for(CellIterator iter(v->getLow(), v->getHigh()); !iter.done(); iter++){
+	    //	      cout << "RANDY: newv2" << *iter << " = " << v[*iter] << endl;
+	    //	    }
 	  }
 	  cerr << getpid() << ": RANDY: SchedulerCommon::copyDataToNewGrid() FOR NEW PATCH NCVARIABLE END" << endl;
 	}
@@ -516,6 +532,15 @@ SchedulerCommon::copyDataToNewGrid(const ProcessorGroup*, const PatchSubset* pat
 	  cerr << getpid() << ": RANDY: SchedulerCommon::copyDataToNewGrid() FOR NEW PATCH CCVARIABLE AAA" << endl;
 
 	  CCVariableBase* v = oldDataWarehouse->d_ccDB.get(currentVar.label_, currentVar.matlIndex_, currentVar.patch_);
+
+	  IntVector newLowIndex = newPatch->getLowIndex(basis, currentVar.label_->getBoundaryLayer());
+	  IntVector newHighIndex = newPatch->getHighIndex(basis, currentVar.label_->getBoundaryLayer());
+	  cout << "  newPatch(" << newPatch->getID() << ") = " << newLowIndex << " to " << newHighIndex << endl;
+	  IntVector copyLowIndex = Max(newLowIndex, lowIndex);
+	  IntVector copyHighIndex = Min(newHighIndex, highIndex);
+	  cout << "  copPatch(" << newPatch->getID() << ") = " << newLowIndex << " to " << newHighIndex << endl;
+	  cout << "Var Low  = " << v->getLow() << endl;
+	  cout << "Var High = " << v->getHigh() << endl;
 	  if ( !newDataWarehouse->d_ccDB.exists(currentVar.label_, currentVar.matlIndex_, newPatch) ) {
 	    cerr << getpid() << ": RANDY: SchedulerCommon::copyDataToNewGrid() FOR NEW PATCH CCVARIABLE BBB" << endl;
 	    CCVariableBase* newVariable = v->cloneType();
@@ -536,7 +561,17 @@ SchedulerCommon::copyDataToNewGrid(const ProcessorGroup*, const PatchSubset* pat
 	  if(!oldDataWarehouse->d_sfcxDB.exists(currentVar.label_, currentVar.matlIndex_, currentVar.patch_))
 	    SCI_THROW(UnknownVariable(currentVar.label_->getName(), oldDataWarehouse->getID(), currentVar.patch_, currentVar.matlIndex_,
 				      "in copyDataTo SFCXVariable"));
+
 	  SFCXVariableBase* v = oldDataWarehouse->d_sfcxDB.get(currentVar.label_, currentVar.matlIndex_, currentVar.patch_);
+
+	  IntVector newLowIndex = newPatch->getLowIndex(basis, currentVar.label_->getBoundaryLayer());
+	  IntVector newHighIndex = newPatch->getHighIndex(basis, currentVar.label_->getBoundaryLayer());
+	  cout << "  newPatch(" << newPatch->getID() << ") = " << newLowIndex << " to " << newHighIndex << endl;
+	  IntVector copyLowIndex = Max(newLowIndex, lowIndex);
+	  IntVector copyHighIndex = Min(newHighIndex, highIndex);
+	  cout << "  copPatch(" << newPatch->getID() << ") = " << newLowIndex << " to " << newHighIndex << endl;
+	  cout << "Var Low  = " << v->getLow() << endl;
+	  cout << "Var High = " << v->getHigh() << endl;
 	  if ( !newDataWarehouse->d_sfcxDB.exists(currentVar.label_, currentVar.matlIndex_, newPatch) ) {
 	    SFCXVariableBase* newVariable = v->cloneType();
 	    newVariable->rewindow( newLowIndex, newHighIndex );
@@ -555,7 +590,17 @@ SchedulerCommon::copyDataToNewGrid(const ProcessorGroup*, const PatchSubset* pat
 	  if(!oldDataWarehouse->d_sfcyDB.exists(currentVar.label_, currentVar.matlIndex_, currentVar.patch_))
 	    SCI_THROW(UnknownVariable(currentVar.label_->getName(), oldDataWarehouse->getID(), currentVar.patch_, currentVar.matlIndex_,
 				      "in copyDataTo SFCYVariable"));
+
 	  SFCYVariableBase* v = oldDataWarehouse->d_sfcyDB.get(currentVar.label_, currentVar.matlIndex_, currentVar.patch_);
+
+	  IntVector newLowIndex = newPatch->getLowIndex(basis, currentVar.label_->getBoundaryLayer());
+	  IntVector newHighIndex = newPatch->getHighIndex(basis, currentVar.label_->getBoundaryLayer());
+	  cout << "  newPatch(" << newPatch->getID() << ") = " << newLowIndex << " to " << newHighIndex << endl;
+	  IntVector copyLowIndex = Max(newLowIndex, lowIndex);
+	  IntVector copyHighIndex = Min(newHighIndex, highIndex);
+	  cout << "  copPatch(" << newPatch->getID() << ") = " << newLowIndex << " to " << newHighIndex << endl;
+	  cout << "Var Low  = " << v->getLow() << endl;
+	  cout << "Var High = " << v->getHigh() << endl;
 	  if ( !newDataWarehouse->d_sfcyDB.exists(currentVar.label_, currentVar.matlIndex_, newPatch) ) {
 	    SFCYVariableBase* newVariable = v->cloneType();
 	    newVariable->rewindow( newLowIndex, newHighIndex );
@@ -574,7 +619,17 @@ SchedulerCommon::copyDataToNewGrid(const ProcessorGroup*, const PatchSubset* pat
 	  if(!oldDataWarehouse->d_sfczDB.exists(currentVar.label_, currentVar.matlIndex_, currentVar.patch_))
 	    SCI_THROW(UnknownVariable(currentVar.label_->getName(), oldDataWarehouse->getID(), currentVar.patch_, currentVar.matlIndex_,
 				      "in copyDataTo SFCZVariable"));
+
 	  SFCZVariableBase* v = oldDataWarehouse->d_sfczDB.get(currentVar.label_, currentVar.matlIndex_, currentVar.patch_);
+
+	  IntVector newLowIndex = newPatch->getLowIndex(basis, currentVar.label_->getBoundaryLayer());
+	  IntVector newHighIndex = newPatch->getHighIndex(basis, currentVar.label_->getBoundaryLayer());
+	  cout << "  newPatch(" << newPatch->getID() << ") = " << newLowIndex << " to " << newHighIndex << endl;
+	  IntVector copyLowIndex = Max(newLowIndex, lowIndex);
+	  IntVector copyHighIndex = Min(newHighIndex, highIndex);
+	  cout << "  copPatch(" << newPatch->getID() << ") = " << newLowIndex << " to " << newHighIndex << endl;
+	  cout << "Var Low  = " << v->getLow() << endl;
+	  cout << "Var High = " << v->getHigh() << endl;
 	  if ( !newDataWarehouse->d_sfczDB.exists(currentVar.label_, currentVar.matlIndex_, newPatch) ) {
 	    SFCZVariableBase* newVariable = v->cloneType();
 	    newVariable->rewindow( newLowIndex, newHighIndex );
