@@ -29,7 +29,6 @@
 #include <Core/Datatypes/SparseRowMatrix.h>
 #include <Core/Datatypes/ColumnMatrix.h>
 #include <Core/Datatypes/MatrixOperations.h>
-#include <Core/Math/function.h>
 
 namespace SCIRun {
 
