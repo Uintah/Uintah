@@ -10,6 +10,8 @@
 
 namespace rtrt {
 
+using SCIRun::Cross;
+
 class PortalMaterial : public Material
 {
 
