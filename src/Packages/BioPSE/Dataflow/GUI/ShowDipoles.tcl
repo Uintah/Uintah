@@ -39,14 +39,14 @@ itcl_class BioPSE_Visualization_ShowDipoles {
         set_defaults
     }
     method set_defaults {} {
-	global $this-widgetSizeTCL
-	global $this-scaleModeTCL
-	global $this-showLastVecTCL
-	global $this-showLinesTCL
-	set $this-widgetSizeTCL 1
-	set $this-scaleModeTCL normalize
-	set $this-showLastVecTCL 0
-	set $this-showLinesTCL 1
+	global $this-widgetSizeGui_
+	global $this-scaleModeGui_
+	global $this-showLastVecGui_
+	global $this-showLinesGui_
+	set $this-widgetSizeGui_ 1
+	set $this-scaleModeGui_ normalize
+	set $this-showLastVecGui_ 0
+	set $this-showLinesGui_ 1
     }
     method make_entry {w text v c} {
         frame $w
@@ -67,18 +67,18 @@ itcl_class BioPSE_Visualization_ShowDipoles {
         toplevel $w
         wm minsize $w 150 30
         frame $w.f
-	global $this-widgetSizeTCL
-	make_entry $w.f.s "Widget Size:" $this-widgetSizeTCL "$this-c needexecute"
+	global $this-widgetSizeGui_
+	make_entry $w.f.s "Widget Size:" $this-widgetSizeGui_ "$this-c needexecute"
 	frame $w.f.r -relief sunken -bd 2
-	global $this-scaleModeTCL
-	radiobutton $w.f.r.fixed -text "Fixed Size" -value "fixed" -variable $this-scaleModeTCL
-	radiobutton $w.f.r.normalize -text "Normalize Largest" -value "normalize" -variable $this-scaleModeTCL
-	radiobutton $w.f.r.scale -text "Scale Size" -value "scale" -variable $this-scaleModeTCL
+	global $this-scaleModeGui_
+	radiobutton $w.f.r.fixed -text "Fixed Size" -value "fixed" -variable $this-scaleModeGui_
+	radiobutton $w.f.r.normalize -text "Normalize Largest" -value "normalize" -variable $this-scaleModeGui_
+	radiobutton $w.f.r.scale -text "Scale Size" -value "scale" -variable $this-scaleModeGui_
 	pack $w.f.r.fixed $w.f.r.normalize $w.f.r.scale -side top -fill both -expand yes
-	global $this-showLastVecTCL
-	checkbutton $w.f.v -text "Show Last As Vector" -variable $this-showLastVecTCL
-	global $this-showLinesTCL
-	checkbutton $w.f.l -text "Show Lines" -variable $this-showLinesTCL
+	global $this-showLastVecGui_
+	checkbutton $w.f.v -text "Show Last As Vector" -variable $this-showLastVecGui_
+	global $this-showLinesGui_
+	checkbutton $w.f.l -text "Show Lines" -variable $this-showLinesGui_
 
 	pack $w.f.s $w.f.r $w.f.v $w.f.l -side top -fill x -expand yes
         pack $w.f -side top -fill x -expand yes

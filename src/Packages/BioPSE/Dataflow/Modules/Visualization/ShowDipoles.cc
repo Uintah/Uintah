@@ -11,9 +11,9 @@
 
 #include <Dataflow/Network/Module.h>
 #include <Dataflow/Ports/GeometryPort.h>
-#include <Dataflow/Ports/MatrixPort.h>
+#include <Dataflow/Ports/FieldPort.h>
 #include <Dataflow/Widgets/ArrowWidget.h>
-#include <Core/Datatypes/DenseMatrix.h>
+#include <Core/Datatypes/TetVol.h>
 #include <Core/Geom/GeomLine.h>
 #include <Core/Geom/Switch.h>
 #include <Core/Geometry/Point.h>
@@ -32,11 +32,11 @@ namespace BioPSE {
 using namespace SCIRun;
 
 class BioPSESHARE ShowDipoles : public Module {
-  MatrixIPort *imat_;
-  MatrixOPort *omat_;
+  FieldIPort *ifield_;
+  FieldOPort *ofield_;
   GeometryOPort* ogeom_;
   int gen_;
-  MatrixHandle dipoleMatH_;
+  FieldHandle dipoleFldH_;
   GuiString widgetSizeGui_;
   GuiString scaleModeGui_;
   GuiInt showLastVecGui_;
@@ -73,12 +73,12 @@ ShowDipoles::ShowDipoles(const clString& id) :
   showLinesGui_("showLinesGui_", id, this)
 {
   // Create the input port
-  imat_=scinew MatrixIPort(this, "DipoleMatrix", MatrixIPort::Atomic);
-  add_iport(imat_);
+  ifield_=scinew FieldIPort(this, "dipoleFld", FieldIPort::Atomic);
+  add_iport(ifield_);
 
   // Create the output ports
-  omat_=scinew MatrixOPort(this, "DipoleMatrix", MatrixIPort::Atomic);
-  add_oport(omat_);
+  ofield_=scinew FieldOPort(this, "dipoleFld", FieldIPort::Atomic);
+  add_oport(ofield_);
   ogeom_=scinew GeometryOPort(this,"Geometry",GeometryIPort::Atomic);
   add_oport(ogeom_);
   gen_=-1;
@@ -92,27 +92,25 @@ ShowDipoles::~ShowDipoles(){
 }
 
 void ShowDipoles::execute(){
-  MatrixHandle mh;
-  Matrix* mp;
-  if (!imat_->get(mh) || !(mp=mh.get_rep())) {
-    cerr << "No input in ShowDipoles Matrix port.\n";
+  FieldHandle fieldH;
+  TetVol<Vector> *field_tvv;
+  if (!ifield_->get(fieldH) || 
+      !(field_tvv=dynamic_cast<TetVol<Vector>*>(fieldH.get_rep()))) {
+    cerr << "No vald input in ShowDipoles Field port.\n";
     return;
   }
-  cerr << "nrows="<<mp->nrows()<<"  ncols="<<mp->ncols()<<"\n";
-  if (mp->ncols() != 6) {
-    cerr << "Error - dipoles must have six entries.\n";
-    return;
-  }
+  TetVolMeshHandle field_mesh = field_tvv->get_typed_mesh();
+  
   double widgetSize;
   if (!widgetSizeGui_.get().get_double(widgetSize)) {
     widgetSize=1;
     widgetSizeGui_.set("1.0");
   }
      
-  if (mh->generation != gen_ || lastSize_ != widgetSize) {// load this data in
-    if (mp->nrows() != nDips_) {
+  if (fieldH->generation != gen_ || lastSize_ != widgetSize) {// load this data in
+    if (field_tvv->fdata().size() != nDips_) {
 	     
-      cerr << "NEW SIZE FOR DIPOLEMATTOGEOM_  mp->nrows()="<<mp->nrows()<<" nDips_="<<nDips_<<"\n";
+      cerr << "NEW SIZE FOR DIPOLEMATTOGEOM_  field_tvv->data().size()="<<field_tvv->fdata().size()<<" nDips_="<<nDips_<<"\n";
 	     
       // nDips_ always just says how many switches we have set to true
       // need to fix switch setting first and then do allocations if
@@ -122,22 +120,22 @@ void ShowDipoles::execute(){
 	widget_[nDips_-1]->SetCurrentMode(0);
 	widget_[nDips_-1]->SetMaterial(0, deflMatl_);
       }
-      if (mp->nrows()<nDips_) {
-	for (int i=mp->nrows(); i<nDips_; i++)
+      if (field_tvv->fdata().size()<nDips_) {
+	for (int i=field_tvv->fdata().size(); i<nDips_; i++)
 	  widget_switch_[i]->set_state(0);
-	nDips_=mp->nrows();
+	nDips_=field_tvv->fdata().size();
       } else {
 	int i;
 	for (i=nDips_; i<widget_switch_.size(); i++)
 	  widget_switch_[i]->set_state(1);
-	for (; i<mp->nrows(); i++) {
+	for (; i<field_tvv->fdata().size(); i++) {
 	  widget_.add(scinew ArrowWidget(this, &widget_lock_, widgetSize));
 	  deflMatl_=widget_[0]->GetMaterial(0);
 	  widget_switch_.add(widget_[i]->GetWidget());
 	  widget_switch_[i]->set_state(1);
 	  widget_id_.add(ogeom_->addObj(widget_switch_[i], clString(clString("Dipole")+to_string(i)), &widget_lock_));
 	}
-	nDips_=mp->nrows();
+	nDips_=field_tvv->fdata().size();
       }
       if (showLastVecGui_.get()) {
 	widget_[nDips_-1]->SetCurrentMode(0);
@@ -151,17 +149,18 @@ void ShowDipoles::execute(){
     int i;
     clString scaleMode=scaleModeGui_.get();
     double max;
-    for (i=0; i<mp->nrows(); i++) {
-      double dv=Vector((*mp)[i][3], (*mp)[i][4], (*mp)[i][5]).length();
+    for (i=0; i<field_tvv->fdata().size(); i++) {
+      double dv=field_tvv->fdata()[i].length();
       if (dv<0.00000001) dv=1;
       if (i==0 || dv<max) max=dv;
     }
 
-    for (i=0; i<mp->nrows(); i++) {
-      Point p((*mp)[i][0], (*mp)[i][1], (*mp)[i][2]);
+    for (i=0; i<field_tvv->fdata().size(); i++) {
+      Point p;
+      field_mesh->get_point(p,i);
       pts.add(p);
       widget_[i]->SetPosition(p);
-      Vector v((*mp)[i][3], (*mp)[i][4], (*mp)[i][5]);
+      Vector v(field_tvv->fdata()[i]);
       //	     cerr << "widget_["<<i<<"] is at position "<<p<<" and dir "<<v<<"\n";
       double str=v.length();
       if (str<0.0000001) v.z(1);
@@ -186,11 +185,12 @@ void ShowDipoles::execute(){
       gidx_=ogeom_->addObj(gm, clString("Dipole Lines"));
     }
 
-    gen_=mh->generation;
-    dipoleMatH_=mh;
+    gen_=fieldH->generation;
+    fieldH.detach();
+    dipoleFldH_=fieldH;
     lastSize_=widgetSize;
     ogeom_->flushViews();
-    omat_->send(dipoleMatH_);
+    ofield_->send(dipoleFldH_);
     //     } else if (execMsg_ == "widget_moved") {
     //	 cerr << "Can't handle widget_moved callbacks yet...\n";
   } else if (execMsg_ == "widget_moved") {
@@ -204,12 +204,8 @@ void ShowDipoles::execute(){
       double mag=widget_[i]->GetScale();
       cerr << "mag="<<mag<<"  widgetSize="<<widgetSize<<"\n";
       d=d*(mag/widgetSize);
-      (*mp)[i][0]=p.x();
-      (*mp)[i][1]=p.y();
-      (*mp)[i][2]=p.z();
-      (*mp)[i][3]=d.x();
-      (*mp)[i][4]=d.y();
-      (*mp)[i][5]=d.z();
+      field_mesh->set_point(p, i);
+      field_tvv->fdata()[i] = d;
     }
     ogeom_->delObj(gidx_);
     if (showLinesGui_.get()) {
@@ -221,21 +217,12 @@ void ShowDipoles::execute(){
       gidx_=ogeom_->addObj(gm, clString("Dipole Lines"));
     }
     ogeom_->flushViews();
-    dipoleMatH_=mh;
-    omat_->send(dipoleMatH_);
+    dipoleFldH_=fieldH;
+    ofield_->send(dipoleFldH_);
   } else {
     // just send the same old matrix/vector as last time
     cerr << "sending old stuff!\n";
-    omat_->send(dipoleMatH_);
-  }
-
-  //     cerr << "ShowDipoles: Here are the dipoles...\n";
-  for (int i=0; i<mp->nrows(); i++) {
-    //	 cerr << "   "<<i<<"   ";
-    for (int j=0; j<mp->ncols(); j++) {
-      //	     cerr << (*mp)[i][j]<<" ";
-    }
-    //	 cerr << "\n";
+    ofield_->send(dipoleFldH_);
   }
 }
 
