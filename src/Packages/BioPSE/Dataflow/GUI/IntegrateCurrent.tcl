@@ -52,7 +52,7 @@ itcl_class BioPSE_Forward_IntegrateCurrent {
         pack $w.e -side right
     }
     method ui {} {
-        set w .ui$[modname]
+        set w .ui[modname]
         if {[winfo exists $w]} {
             raise $w
             return;
