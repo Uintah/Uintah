@@ -503,15 +503,16 @@ double Path::get_delta(){
  
   double step;
   speed->get_value(path_prm, step);
-  step=step*step_size;
+  double s=step_size*path_dist;
+  step=step*s;
 
   switch (acc_t){
   case SMOOTH: {
-    double ps=step_size*60/PI;
+    double ps=s*60/PI;
     int d=1;
     if (ps>path_dist/2){  // ensuring the path point not in first and last acc zones at a time
       ps=path_dist/2;
-      d=(int)(2*ps*PI/step_size);
+      d=(int)(2*ps*PI/s);
     }
     
     bool is_fzone=(is_back)?(pathP>(path_dist-ps)):(pathP<ps);
@@ -526,7 +527,7 @@ double Path::get_delta(){
     }
     
     if (count>=0 && count<30){
-      step=step_size*sint[count];
+      step=s*sint[count];
       if ((pathP>ps && !is_back) || (is_back && pathP<ps)) 
 	count-=d;
       else
@@ -545,7 +546,7 @@ double Path::get_delta(){
     
   case NO_ACC:
   default:
-    step=step_size;
+    step=s;
   }
   
   is_run=1;
@@ -588,7 +589,7 @@ bool Path::get_nextPP(View& v, int& curr_view, double& curr_speed, double& curr_
 	// syncronzing pathP with actual parameter
 	set_param();
 	keyF=curr_view=calc_view(path_prm, v);
-	curr_speed=step/step_size;
+	curr_speed=step/(step_size*path_dist);
 	curr_acc=path_prm;      // not used
 	return true;
       }
@@ -610,6 +611,9 @@ bool Path::get_nextPP(View& v, int& curr_view, double& curr_speed, double& curr_
 
 //
 // $Log$
+// Revision 1.8  2000/10/11 00:39:28  dmw
+// Alexei's changes
+//
 // Revision 1.7  2000/10/08 00:42:24  samsonov
 // spline interpolation of fov and speed
 //
