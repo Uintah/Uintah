@@ -194,7 +194,6 @@ void GenericField<Mesh, FData>::io(Piostream& stream)
   stream.begin_class(type_name(-1), GENERICFIELD_VERSION);
   Field::io(stream);
   mesh_->io(stream);
-  mesh_->flush_changes();
   mesh_->freeze();
   Pio(stream, fdata_);
   freeze();
@@ -254,7 +253,6 @@ template <class Mesh, class FData>
 MeshHandle
 GenericField<Mesh, FData>::mesh() const
 {
-  mesh_->flush_changes();  // TODO: Fix synchronization on this.
   return MeshHandle(mesh_.get_rep());
 }
 
@@ -263,7 +261,6 @@ void
 GenericField<Mesh, FData>::mesh_detach()
 {
   thaw();
-  mesh_->flush_changes();  // TODO: Fix synchronization on this.
   mesh_.detach();
   mesh_->thaw();
 }
@@ -372,7 +369,6 @@ template <class Mesh, class FData>
 typename GenericField<Mesh, FData>::mesh_handle_type
 GenericField<Mesh, FData>::get_typed_mesh() const
 {
-  mesh_->flush_changes();  // TODO: Fix synchronization on this
   return mesh_;
 }
 
