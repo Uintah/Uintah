@@ -28,7 +28,7 @@ class SCICORESHARE GeomBBoxCache: public GeomObj {
     BBox bbox;
 public:
     GeomBBoxCache(GeomObj*);
-    GeomBBoxCache(GeomObj*, BBox &);
+    GeomBBoxCache(GeomObj*, const BBox &);
 
     virtual ~GeomBBoxCache();
 
@@ -50,6 +50,9 @@ public:
 
 //
 // $Log$
+// Revision 1.6  2000/07/06 23:18:55  yarden
+// fix a bug if the bbox is not valid
+//
 // Revision 1.5  2000/06/06 16:01:42  dahart
 // - Added get_triangles() to several classes for serializing triangles to
 // send them over a network connection.  This is a short term (hack)
