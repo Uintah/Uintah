@@ -15,11 +15,17 @@
 #include <SCICore/Util/NotFinished.h>
 #include <SCICore/Geom/GeomTriangles.h>
 #include <SCICore/Malloc/Allocator.h>
+#include <SCICore/Containers/String.h>
 #include <SCICore/TclInterface/TCLTask.h>
 #include <SCICore/TclInterface/TCLvar.h>
 #include <SCICore/Malloc/Allocator.h>
 #include "TriangleReader.h"
+#include <iostream.h> 
+#include <iomanip.h>
+#include <strstream.h>
 
+#include <ctype.h>
+#include <unistd.h>
 
 
 namespace Uintah {
@@ -29,6 +35,7 @@ using namespace PSECore::Dataflow;
 using namespace PSECore::Datatypes;
 using namespace SCICore::TclInterface;
 using namespace SCICore::PersistentSpace;
+using namespace SCICore::Containers; 
 using namespace SCICore::Malloc; 
 
 
@@ -39,7 +46,11 @@ Module* make_TriangleReader(const clString& id)
 
 
 TriangleReader::TriangleReader(const clString& id)
-: Module("TriangleReader", id, Source), filename("filename", id, this)
+: Module("TriangleReader", id, Source), filename("filename", id, this),
+  animate("animate", id, this),
+  startFrame("startFrame", id, this), endFrame("endFrame", id, this),
+  increment("increment", id, this),
+  status("status",id,this)
 {
     inport=scinew ColorMapIPort(this, "ColorMap", ColorMapIPort::Atomic);
     add_iport(inport);
@@ -122,6 +133,21 @@ TriangleReader::Read(istream& is, ColorMapHandle cmh, GeomGroup *tris)
   }
 }
 
+bool TriangleReader::checkFile( clString filename)
+{
+  ifstream  is( filename() );
+  clString in;
+  
+  is >> in;
+  if( in != "HONGLAI_TRIANGLES"){
+    cerr<<"Error: Unkown triangle file.\n";
+    return false;
+  } else {
+    return true;
+  }
+}
+  
+  
 void TriangleReader::execute()
 {
   bool wasRead = 0;
@@ -145,34 +171,71 @@ void TriangleReader::execute()
     cmh  = new ColorMap(rgb,rgbT,alphas,alphaT,16);
   }
 
-  /* clString fn(filename.get()); */
-  /*   if( fn != old_filename){ */
-  /*     old_filename=fn; */
-  /*     ifstream is(filename.get()(), ios::in); */
-  /*     if(!is){ */
-  /*       error(clString("Error reading file: ")+filename.get()); */
-  /*       return; // Can't open file... */
-  /*     } */
-  /*     // Read the file... */
-  /*     wasRead = Read( is, cmh, tris ); */
-  /*     is.close(); */
-  /*   } else { */
-  /*     wasRead = true; */
-  /*   } */
-  ifstream is(filename.get()(), ios::in);
-  wasRead = Read( is, cmh, tris );
-
-  if( wasRead ){
-    outport->delAll();
-    outport->addObj(tris, "Triangles");
+  if( !animate.get() && checkFile( filename.get() )){
+    status.set("Reading file");
+    ifstream is(filename.get()(), ios::in);
+    wasRead = Read( is, cmh, tris );
+    if( wasRead ){
+      outport->delAll();
+      outport->addObj(tris, "Triangles");
+    }
+  } else if( animate.get() && checkFile( filename.get())){
+    status.set("Animating");
+    doAnimation( cmh );
   }
+  status.set("Done");
 }
+
+void TriangleReader::doAnimation( ColorMapHandle cmh )
+{
+  bool wasRead = 0;
+  clString file = basename( filename.get() );
+  clString path = pathname( filename.get() );
+  const char *p = file();
+  char n[5];
+  char root[ 80 ];
+  int i;
+  int j = 0;
+  int k = 0;
+  for( i= 0; i < file.len(); i++ )
+    {
+      if(isdigit(*p)) n[j++] = *p;
+      else root[k++] = *p;
+      p++;
+    }
+  root[k] = '\0';
+
+  for(i = startFrame.get(); i <= endFrame.get(); i += increment.get() ){
+    ostrstream ostr;
+    ostr.fill('0');
+    ostr << path << "/"<< root<< setw(4)<<i;
+    cerr << ostr.str()<< endl;
+    ifstream is( ostr.str(), ios::in);
+    GeomGroup *tris = scinew GeomGroup;
+    wasRead = Read(is, cmh, tris ); 
+    if( wasRead ){
+      outport->delAll();
+      outport->addObj(tris, "Triangles");
+      outport->flushViewsAndWait();
+    }
+    filename.set( ostr.str() );
+    file = basename( filename.get() );
+    reset_vars();
+    status.set( file );
+  }
+  sleep(2);
+  TCL::execute( id + " deselect");
+}
+
 
 } // End namespace Modules
 } // End namespace Uintah
 
 //
 // $Log$
+// Revision 1.5  1999/10/05 16:40:36  kuzimmer
+// added animation control to triangle file reader
+//
 // Revision 1.4  1999/09/21 16:12:27  kuzimmer
 // changes made to support binary/ASCII file IO
 //
