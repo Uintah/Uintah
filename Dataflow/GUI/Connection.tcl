@@ -126,8 +126,13 @@ proc drawConnections { connlist } {
 	    $canvas bind $id <Control-Button-1> "$canvas raise $id
 						 traceConnection {$conn} 1"
 	    $canvas bind $id <Control-Button-2> "destroyConnection {$conn} 1"
+	    $canvas bind $id <ButtonPress-2> "setGlobal ClosestSegment -1"
 	    $canvas bind $id <B2-Motion> \
 		"changeConnectionRoute %x %y \{$conn\}"
+	    $canvas bind $id <Shift-Button-2> \
+		"splitConnectionRoute %x %y \{$conn\}"
+	    $canvas bind $id <ButtonRelease-2> "setGlobal ClosestSegment -1"
+#	    $canvas bind $id <Shift-Button-2-Motion> "changeConnectionRoute %x %y \{$conn\}"
 	    $canvas bind $id <3> "connectionMenu %X %Y {$conn} %x %y"
 	    canvasTooltip $canvas $id $ToolTipText(Connection)
 	} else {
@@ -151,10 +156,9 @@ proc getPathSegment { path seg } {
     }
 }
 
-proc setPathSegment { path seg newseg } {
-    if { $seg < [getPathLength $path] } {
-	return [eval lreplace \{$path\} [expr $seg*2] [expr $seg*2+3] $newseg]
-    }
+proc setPathSegment { path segnum seg } {
+    if { $segnum >= [getPathLength $path] } return
+    return [eval lreplace \{$path\} [expr $segnum*2] [expr $segnum*2+3] $seg]
 }
 
 proc setPathSegmentX { path seg newx } {
@@ -169,20 +173,78 @@ proc setPathSegmentY { path seg newy } {
     return [setPathSegment $path $seg $newseg]
 }
 
-
+### projectPointLine
+# projects point pX, pY along a perpendicular line onto
+# the line segment defined by x1,y1 to x2, y2
+# returns 1000000,1000000 if the point projects beyond the endpoints
+# of the segment
 proc projectPointLine { pX pY x1 y1 x2 y2 } {
     set u [computeDist $x1 $y1 $x2 $y2]
-    if { $u <= 0.0 } { return "10000 10000" }
+    if { $u <= 0.0 } { return "1000000 1000000" }
     set u [expr (($pX-$x1)*($x2-$x1)+($pY-$y1)*($y2-$y1))/($u*$u)]
-    if { $u < 0.0 || $u > 1.0 } { return "10000 10000" }
+    if { $u < 0.0 || $u > 1.0 } { return "1000000 1000000" }
     set x [expr $x1+$u*($x2-$x1)]
     set y [expr $y1+$u*($y2-$y1)]
     return "$x $y"
 }
 
+### pointLineDist
+# The shortest distance from the point (pX,pY) to the line
+# segment (x1,y1),(x2,y2)
 proc pointLineDist { pX pY x1 y1 x2 y2 } {
     set xy [projectPointLine $pX $pY $x1 $y1 $x2 $y2]
     return [computeDist $pX $pY [lindex $xy 0] [lindex $xy 1]]
+}
+
+proc segmentIsHorizontal { seg } {
+    return [expr [lindex $seg 1] == [lindex $seg 3]]
+}
+
+proc segmentIsVertical { seg } {
+    return [expr [lindex $seg 0] == [lindex $seg 2]]
+}
+
+
+proc insertSegmentMidpoint { path segnum } {
+    set seg [getPathSegment $path $segnum]
+    set mx [expr ([lindex $seg 0]+[lindex $seg 2])/2]
+    set my [expr ([lindex $seg 1]+[lindex $seg 3])/2]
+    set seg [list \
+		 [lindex $seg 0] [lindex $seg 1] \
+		 $mx $my $mx $my \
+		 [lindex $seg 2] [lindex $seg 3]]
+    return [setPathSegment $path $segnum $seg]
+}
+
+
+proc closestConnectionSegment { path mx my } {
+    global ClosestSegment
+    if { $ClosestSegment == -1 } {
+	set shortest 1000000
+	set closest -1
+	for {set s 0} {$s < [getPathLength $path] } {incr s} {
+	    set dist [eval pointLineDist $mx $my [getPathSegment $path $s]]
+	    if { $dist < $shortest } {
+		set closest $s
+		set shortest $dist
+	    }
+	}
+	setGlobal ClosestSegment $closest
+    }
+    return $ClosestSegment
+}
+
+proc splitConnectionRoute { X Y conn } {
+    global Subnet
+    set canvas $Subnet(Subnet$Subnet([oMod conn])_canvas)
+    set mx [expr $X + [$canvas canvasx 0]]
+    set my [expr $Y + [$canvas canvasy 0]]
+    set path [routeConnection $conn]
+    set closest [closestConnectionSegment $path $mx $my]
+    if { $closest == -1 } return
+    set path [insertSegmentMidpoint $path $closest]
+    setGlobal ConnectionRoutes([makeConnID $conn]) $path
+    setGlobal ClosestSegment -1
 }
 
 
@@ -192,18 +254,9 @@ proc changeConnectionRoute { X Y conn } {
     set mx [expr $X + [$canvas canvasx 0]]
     set my [expr $Y + [$canvas canvasy 0]]
     set path [routeConnection $conn]
-    set shortest 100
-    set closest 0
-    set len [getPathLength $path]
-    for {set s 0} {$s < $len } {incr s} {
-	set dist [eval pointLineDist $mx $my [getPathSegment $path $s]]
-	if { $dist < $shortest } {
-	    set closest $s
-	    set shortest $dist
-	}
-    }
+    set closest [closestConnectionSegment $path $mx $my]
 
-    if { $closest == 0 || $closest == $len } return
+    if { $closest <= 0 || $closest >= [getPathLength $path] } return
 
     set seg [getPathSegment $path $closest]
     if { [lindex $seg 1] == [lindex $seg 3] } {
