@@ -46,22 +46,6 @@ GeomObj* GeomPolyline::clone()
     return scinew GeomPolyline(*this);
 }
 
-void GeomPolyline::make_prims(Array1<GeomObj*>&,
-			      Array1<GeomObj*>&)
-{
-    NOT_FINISHED("GeomPolyline::make_prims");
-}
-
-void GeomPolyline::preprocess()
-{
-    NOT_FINISHED("GeomPolyline::preprocess");
-}
-
-void GeomPolyline::intersect(const Ray&, Material*, Hit&)
-{
-    NOT_FINISHED("GeomPolyline::intersect");
-}
-
 #define GEOMPOLYLINE_VERSION 1
 
 void GeomPolyline::io(Piostream& stream)
@@ -115,27 +99,6 @@ void GeomPolylineTC::get_bounds(BBox& box)
   box.extend(bbox);
 }
 
-void GeomPolylineTC::get_bounds(BSphere&)
-{
-  NOT_FINISHED("GeomPolylineTC::get_bounds");
-}
-
-void GeomPolylineTC::make_prims(Array1<GeomObj*>&,
-				Array1<GeomObj*>&)
-{
-  NOT_FINISHED("GeomPolylineTC::make_prims");
-}
-
-void GeomPolylineTC::preprocess()
-{
-  NOT_FINISHED("GeomPolylineTC::preprocess");
-}
-
-void GeomPolylineTC::intersect(const Ray&, Material*, Hit&)
-{
-  NOT_FINISHED("GeomPolylineTC::intersect");
-}
-
 void GeomPolylineTC::io(Piostream& stream)
 {
   using SCICore::PersistentSpace::Pio;
@@ -157,6 +120,10 @@ bool GeomPolylineTC::saveobj(ostream&, const clString&, GeomSave*)
 
 //
 // $Log$
+// Revision 1.3  1999/08/17 23:50:23  sparker
+// Removed all traces of the old Raytracer and X11 renderers.
+// Also removed a .o and .d file
+//
 // Revision 1.2  1999/08/17 06:39:10  sparker
 // Merged in modifications from PSECore to make this the new "blessed"
 // version of SCIRun/Uintah.

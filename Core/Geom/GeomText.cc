@@ -15,7 +15,6 @@
 #include <SCICore/Util/NotFinished.h>
 #include <SCICore/Containers/String.h>
 #include <SCICore/Geometry/BBox.h>
-#include <SCICore/Geometry/BSphere.h>
 #include <SCICore/Malloc/Allocator.h>
 #include <SCICore/Geom/Color.h>
 #include <SCICore/Geometry/Point.h>
@@ -66,31 +65,11 @@ void GeomText::get_bounds(BBox& in_bb)
   in_bb.extend( at );
 }
 
-void GeomText::get_bounds(BSphere& in_sphere)
-{
-  in_sphere.extend( at );
-}
-
-
-void GeomText::make_prims(Array1<GeomObj*>&,
-			 Array1<GeomObj*>&)
-{
-}
-
-
 GeomText::~GeomText()
 {
 }
 
 void GeomText::reset_bbox()
-{
-}
-
-void GeomText::preprocess()
-{
-}
-
-void GeomText::intersect(const Ray&, Material*, Hit& )
 {
 }
 
@@ -120,6 +99,10 @@ bool GeomText::saveobj(ostream&, const clString&, GeomSave*)
 
 //
 // $Log$
+// Revision 1.3  1999/08/17 23:50:26  sparker
+// Removed all traces of the old Raytracer and X11 renderers.
+// Also removed a .o and .d file
+//
 // Revision 1.2  1999/08/17 06:39:14  sparker
 // Merged in modifications from PSECore to make this the new "blessed"
 // version of SCIRun/Uintah.

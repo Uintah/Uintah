@@ -65,27 +65,6 @@ void GeomBox::get_bounds(BBox& bb)
   bb.extend(max);
 }
 
-void GeomBox::get_bounds(BSphere&)
-{
-    NOT_FINISHED("GeomBox::get_bounds");
-}
-
-void GeomBox::make_prims(Array1<GeomObj*>&, Array1<GeomObj*>&)
-{
-    NOT_FINISHED("GeomBox::preprocess");
-}
-
-void GeomBox::preprocess()
-{
-    NOT_FINISHED("GeomBox::preprocess");
-}
-
-void GeomBox::intersect(const Ray&, Material*,
-			  Hit&)
-{
-    NOT_FINISHED("GeomBox::intersect");
-}
-
 #define GEOMBOX_VERSION 1
 
 void GeomBox::io(Piostream& stream)
@@ -114,6 +93,10 @@ bool GeomBox::saveobj(ostream&, const clString&, GeomSave*)
 
 //
 // $Log$
+// Revision 1.3  1999/08/17 23:50:19  sparker
+// Removed all traces of the old Raytracer and X11 renderers.
+// Also removed a .o and .d file
+//
 // Revision 1.2  1999/08/17 06:39:05  sparker
 // Merged in modifications from PSECore to make this the new "blessed"
 // version of SCIRun/Uintah.

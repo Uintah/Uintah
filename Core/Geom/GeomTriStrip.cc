@@ -18,7 +18,6 @@
 #include <SCICore/Geom/GeomSave.h>
 #include <SCICore/Geom/GeomTri.h>
 #include <SCICore/Geometry/BBox.h>
-#include <SCICore/Geometry/BSphere.h>
 #include <SCICore/Malloc/Allocator.h>
 
 namespace SCICore {
@@ -51,25 +50,9 @@ GeomTriStrip::GeomTriStrip(const GeomTriStrip& copy)
 GeomTriStrip::~GeomTriStrip() {
 }
 
-void GeomTriStrip::make_prims(Array1<GeomObj*>&,
-			      Array1<GeomObj*>&)
-{
-    NOT_FINISHED("GeomTriStrip::make_prims");
-}
-
 GeomObj* GeomTriStrip::clone()
 {
     return scinew GeomTriStrip(*this);
-}
-
-void GeomTriStrip::preprocess()
-{
-    NOT_FINISHED("GeomTriStrip::preprocess");
-}
-
-void GeomTriStrip::intersect(const Ray&, Material*, Hit&)
-{
-    NOT_FINISHED("GeomTriStrip::intersect");
 }
 
 #define GEOMTRISTRIP_VERSION 1
@@ -164,16 +147,6 @@ void GeomTriStripList::end_strip(void)
     strips[last_s] = last;
 }
 
-void GeomTriStripList::preprocess()
-{
-    NOT_FINISHED("GeomTriStripList::preprocess");
-}
-
-void GeomTriStripList::intersect(const Ray&, Material*, Hit&)
-{
-    NOT_FINISHED("GeomTriStripList::intersect");
-}
-
 int GeomTriStripList::size(void)
 {
     return nrmls.size()/3;
@@ -199,11 +172,6 @@ bool GeomTriStripList::saveobj(ostream&, const clString&, GeomSave*)
 {
     NOT_FINISHED("GeomTriStripList::saveobj");
     return false;
-}
-
-void GeomTriStripList::make_prims(Array1<GeomObj*>&,Array1<GeomObj*>&)
-{
-    NOT_FINISHED("GeomTriStripList::make_prims");
 }
 
 Point GeomTriStripList::get_pm1(void)
@@ -247,13 +215,6 @@ void GeomTriStripList::get_bounds(BBox& box)
 	box.extend(Point(pts[i],pts[i+1],pts[i+2]));
 }
 
-void GeomTriStripList::get_bounds(BSphere& sphere)
-{
-    for(int i=0;i<pts.size();i+=3)
-	sphere.extend(Point(pts[i],pts[i+1],pts[i+2]));
-
-}
-
 int GeomTriStripList::num_since(void)
 {
     int ssize = strips.size();
@@ -272,6 +233,10 @@ int GeomTriStripList::num_since(void)
 
 //
 // $Log$
+// Revision 1.3  1999/08/17 23:50:28  sparker
+// Removed all traces of the old Raytracer and X11 renderers.
+// Also removed a .o and .d file
+//
 // Revision 1.2  1999/08/17 06:39:16  sparker
 // Merged in modifications from PSECore to make this the new "blessed"
 // version of SCIRun/Uintah.

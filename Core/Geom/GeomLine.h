@@ -39,18 +39,10 @@ public:
     void operator delete(void*, size_t);
 
     virtual void get_bounds(BBox&);
-    virtual void get_bounds(BSphere&);
 
 #ifdef SCI_OPENGL
     virtual void draw(DrawInfoOpenGL*, Material*, double time);
 #endif
-    virtual void objdraw(DrawInfoX11*, Material*);
-    virtual double depth(DrawInfoX11*);
-    virtual void make_prims(Array1<GeomObj*>& free,
-			    Array1<GeomObj*>& dontfree);
-    virtual void preprocess();
-    virtual void intersect(const Ray& ray, Material*,
-			   Hit& hit);
 
     virtual void io(Piostream&);
     static PersistentTypeID type_id;
@@ -67,16 +59,10 @@ public:
   virtual ~GeomLines();
   virtual GeomObj* clone();
   virtual void get_bounds(BBox&);
-  virtual void get_bounds(BSphere&);
 
 #ifdef SCI_OPENGL
   virtual void draw(DrawInfoOpenGL*, Material*, double time);
 #endif
-  virtual void make_prims(Array1<GeomObj*>& free,
-			  Array1<GeomObj*>& dontfree);
-  virtual void preprocess();
-  virtual void intersect(const Ray& ray, Material*,
-			 Hit& hit);
   
   virtual void io(Piostream&);
   static PersistentTypeID type_id;
@@ -120,16 +106,10 @@ protected:
   virtual ~TexGeomLines();
   virtual GeomObj* clone();
   virtual void get_bounds(BBox&);
-  virtual void get_bounds(BSphere&);
 
 #ifdef SCI_OPENGL
   virtual void draw(DrawInfoOpenGL*, Material*, double time);
 #endif
-  virtual void make_prims(Array1<GeomObj*>& free,
-			  Array1<GeomObj*>& dontfree);
-  virtual void preprocess();
-  virtual void intersect(const Ray& ray, Material*,
-			 Hit& hit);
   
   virtual void io(Piostream&);
   static PersistentTypeID type_id;
@@ -141,6 +121,10 @@ protected:
 
 //
 // $Log$
+// Revision 1.3  1999/08/17 23:50:22  sparker
+// Removed all traces of the old Raytracer and X11 renderers.
+// Also removed a .o and .d file
+//
 // Revision 1.2  1999/08/17 06:39:09  sparker
 // Merged in modifications from PSECore to make this the new "blessed"
 // version of SCIRun/Uintah.

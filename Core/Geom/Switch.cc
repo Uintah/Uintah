@@ -68,29 +68,6 @@ void GeomSwitch::get_bounds(BBox& bbox)
 }
 
 
-void GeomSwitch::get_bounds(BSphere& bs)
-{
-   if(state)child->get_bounds(bs);
-}
-
-void GeomSwitch::make_prims(Array1<GeomObj*>& free,
-			    Array1<GeomObj*>& dontfree)
-{
-   if(state)child->make_prims(free, dontfree);
-}
-
-
-void GeomSwitch::preprocess()
-{
-   if(state)child->preprocess();
-}
-
-
-void GeomSwitch::intersect(const Ray& ray, Material* matl, Hit& hit)
-{
-   if(state)child->intersect(ray, matl, hit);
-}
-
 bool GeomSwitch::saveobj(ostream& out, const clString& format,
 			 GeomSave* saveinfo)
 {
@@ -158,6 +135,10 @@ bool GeomTimeSwitch::saveobj(ostream&, const clString&, GeomSave*)
 
 //
 // $Log$
+// Revision 1.3  1999/08/17 23:50:33  sparker
+// Removed all traces of the old Raytracer and X11 renderers.
+// Also removed a .o and .d file
+//
 // Revision 1.2  1999/08/17 06:39:23  sparker
 // Merged in modifications from PSECore to make this the new "blessed"
 // version of SCIRun/Uintah.

@@ -14,14 +14,10 @@
 
 #include <SCICore/Geom/GeomTorus.h>
 #include <SCICore/Containers/String.h>
-#include <SCICore/Geom/GeomRaytracer.h>
 #include <SCICore/Geom/GeomTri.h>
 #include <SCICore/Geometry/BBox.h>
-#include <SCICore/Geometry/BSphere.h>
-#include <SCICore/Geometry/Ray.h>
 #include <SCICore/Util/NotFinished.h>
 #include <SCICore/Malloc/Allocator.h>
-#include <SCICore/Math/TrigTable.h>
 #include <SCICore/Math/Trig.h>
 
 namespace SCICore {
@@ -159,42 +155,10 @@ void GeomTorus::get_bounds(BBox& bb)
     bb.extend_cyl(cen+axis*rad2, axis, rad1+rad2);
 }
 
-void GeomTorus::get_bounds(BSphere& bs)
-{
-    bs.extend(cen, (rad1+rad2)*1.000001);
-}
-
 void GeomTorusArc::get_bounds(BBox& bb)
 {
     bb.extend_cyl(cen-axis*rad2, axis, rad1+rad2);
     bb.extend_cyl(cen+axis*rad2, axis, rad1+rad2);
-}
-
-void GeomTorusArc::get_bounds(BSphere& bs)
-{
-    bs.extend(cen, (rad1+rad2)*1.000001);
-}
-
-void GeomTorus::make_prims(Array1<GeomObj*>&,
-			    Array1<GeomObj*>&)
-{
-    NOT_FINISHED("GeomTorus::make_prims");
-}
-
-void GeomTorus::preprocess()
-{
-    // Nothing to do...
-}
-
-void GeomTorus::intersect(const Ray&, Material*, Hit&)
-{
-    NOT_FINISHED("GeomTorus::intersect");
-}
-
-Vector GeomTorus::normal(const Point&, const Hit&)
-{
-    NOT_FINISHED("GeomTorus::normal");
-    return Vector(0,0,1);
 }
 
 #define GEOMTORUS_VERSION 1
@@ -250,6 +214,10 @@ bool GeomTorusArc::saveobj(ostream&, const clString&, GeomSave*)
 
 //
 // $Log$
+// Revision 1.3  1999/08/17 23:50:27  sparker
+// Removed all traces of the old Raytracer and X11 renderers.
+// Also removed a .o and .d file
+//
 // Revision 1.2  1999/08/17 06:39:15  sparker
 // Merged in modifications from PSECore to make this the new "blessed"
 // version of SCIRun/Uintah.

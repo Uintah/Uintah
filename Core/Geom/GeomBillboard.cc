@@ -59,29 +59,6 @@ void GeomBillboard::get_bounds(BBox& box)
   //  cerr << " at " << box.min() << "  " << box.max() << "\n";
 }
 
-void GeomBillboard::get_bounds(BSphere& sphere)
-{
-  child->get_bounds(sphere);
-}
-
-
-void GeomBillboard::make_prims(Array1<GeomObj *>& free ,
-				Array1<GeomObj *>& dontfree )
-{
-    child->make_prims(free,dontfree);
-}
-
-void GeomBillboard::preprocess()
-{
-    child->preprocess();
-}
-
-void GeomBillboard::intersect(const Ray& ray, Material* m,
-			       Hit& hit)
-{
-    child->intersect(ray,m,hit);
-}
-
 #define GEOMBBOXCACHE_VERSION 1
 
 void GeomBillboard::io(Piostream& stream)
@@ -104,6 +81,10 @@ bool GeomBillboard::saveobj(ostream& out, const clString& format,
 
 //
 // $Log$
+// Revision 1.3  1999/08/17 23:50:18  sparker
+// Removed all traces of the old Raytracer and X11 renderers.
+// Also removed a .o and .d file
+//
 // Revision 1.2  1999/08/17 06:39:05  sparker
 // Merged in modifications from PSECore to make this the new "blessed"
 // version of SCIRun/Uintah.

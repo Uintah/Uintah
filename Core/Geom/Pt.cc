@@ -13,15 +13,10 @@
  */
 
 #include <SCICore/Geom/Pt.h>
-#include <SCICore/Geom/GeomRaytracer.h>
 #include <SCICore/Containers/String.h>
 #include <SCICore/Containers/Sort.h>
 #include <SCICore/Geometry/BBox.h>
-#include <SCICore/Geometry/BSphere.h>
-#include <SCICore/Geometry/Ray.h>
 #include <SCICore/Malloc/Allocator.h>
-#include <SCICore/Math/TrigTable.h>
-#include <SCICore/Math/Trig.h>
 #include <SCICore/Util/NotFinished.h>
 
 namespace SCICore {
@@ -138,37 +133,6 @@ void GeomPts::get_bounds(BBox& bb)
 {
     for (int i=0; i<pts.size(); i+=3)
 	bb.extend(Point(pts[i], pts[i+1], pts[i+2]));
-}
-
-void GeomPts::get_bounds(BSphere& bs)
-{
-    for (int i=0; i<pts.size(); i+=3)
-	bs.extend(Point(pts[i], pts[i+1], pts[i+2]));
-}
-
-void GeomPts::make_prims(Array1<GeomObj*>&,
-			    Array1<GeomObj*>&)
-{
-    // Nothing to do...
-}
-
-void GeomPts::preprocess()
-{
-    // Nothing to do...
-}
-
-void GeomPts::intersect(const Ray&, Material*, Hit&)
-{
-    NOT_FINISHED("Can't render points yet.");
-}
-
-Vector GeomPts::normal(const Point&, const Hit&)
-{
-    if (have_normal) return n;
-    else {
-	NOT_FINISHED("These points don't have normals -- returning (1,0,0)");
-	return(Vector(1,0,0));
-    }
 }
 
 #define GEOMPTS_VERSION 2
@@ -352,38 +316,6 @@ void GeomTimedParticles::get_bounds(BBox& bb)
 
 }
 
-void GeomTimedParticles::get_bounds(BSphere& bs)
-{
-    for (int i=0; i<particles.size(); i++)
-      for(int j=0;j<particles[i].nslots; j++)
-	bs.extend(Point(particles[i].pos[j].x,
-			particles[i].pos[j].y,
-			particles[i].pos[j].z));
-}
-
-
-void GeomTimedParticles::make_prims(Array1<GeomObj*>&,
-			    Array1<GeomObj*>&)
-{
-    // Nothing to do...
-}
-
-void GeomTimedParticles::preprocess()
-{
-    // Nothing to do...
-}
-
-void GeomTimedParticles::intersect(const Ray&, Material*, Hit&)
-{
-    NOT_FINISHED("Can't render points yet.");
-}
-
-Vector GeomTimedParticles::normal(const Point&, const Hit&)
-{
-  NOT_FINISHED("These points don't have normals -- returning (1,0,0)");
-  return(Vector(1,0,0));
-}
-
 #define GeomTimedParticles_VERSION 2
 
 void GeomTimedParticles::io(Piostream& stream)
@@ -409,6 +341,10 @@ void GeomTimedParticles::draw(DrawInfoOpenGL*, Material*, double)
 
 //
 // $Log$
+// Revision 1.3  1999/08/17 23:50:32  sparker
+// Removed all traces of the old Raytracer and X11 renderers.
+// Also removed a .o and .d file
+//
 // Revision 1.2  1999/08/17 06:39:21  sparker
 // Merged in modifications from PSECore to make this the new "blessed"
 // version of SCIRun/Uintah.
