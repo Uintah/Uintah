@@ -25,7 +25,7 @@ using std::endl;
 #include <tk.h>
 
 typedef void (Tcl_LockProc)();
-typedef int (IsTclThreadProc)();
+//typedef int (IsTclThreadProc)();
 
 #ifdef _WIN32
 #undef ASSERT
@@ -35,7 +35,7 @@ typedef int (IsTclThreadProc)();
 extern "C" {
 #endif
 __declspec(dllimport) void Tcl_SetLock(Tcl_LockProc*, Tcl_LockProc*);
-__declspec(dllimport) void Tcl_SetIsTclThread(IsTclThreadProc* proc);
+  //__declspec(dllimport) void Tcl_SetIsTclThread(IsTclThreadProc* proc);
 int tkMain(int argc, char** argv, void (*nwait_func)(void*), void* nwait_func_data);
 #ifdef __cplusplus
 }
@@ -45,7 +45,7 @@ int tkMain(int argc, char** argv, void (*nwait_func)(void*), void* nwait_func_da
 
 extern "C" int tkMain(int argc, char** argv, void (*nwait_func)(void*), void* nwait_func_data);
 extern "C" void Tcl_SetLock(Tcl_LockProc*, Tcl_LockProc*);
-extern "C" void Tcl_SetIsTclThread(IsTclThreadProc* proc);
+//extern "C" void Tcl_SetIsTclThread(IsTclThreadProc* proc);
 
 #endif
 
@@ -90,10 +90,10 @@ static void do_unlock()
     }
 }
 
-static int is_tcl_thread()
-{
-  return Thread::self() == tcl_task_id;
-}
+// static int is_tcl_thread()
+// {
+//   return Thread::self() == tcl_task_id;
+// }
 
 static int x_error_handler(Display* dpy, XErrorEvent* error)
 {
@@ -124,7 +124,7 @@ TCLTask::TCLTask(int argc, char* argv[])
     XSetErrorHandler(x_error_handler);
 
     Tcl_SetLock(do_lock, do_unlock);
-    Tcl_SetIsTclThread(is_tcl_thread);
+    //    Tcl_SetIsTclThread(is_tcl_thread);
 }
 
 TCLTask::~TCLTask()
@@ -211,6 +211,10 @@ Thread* TCLTask::get_owner()
 
 //
 // $Log$
+// Revision 1.8  2000/11/12 20:53:33  yarden
+// add support for itcltk-8.3
+// remove reference to Tcl_SetIsTclThread
+//
 // Revision 1.7  2000/03/23 10:29:25  sparker
 // Use new exceptions/ASSERT macros
 // Fixed compiler warnings
