@@ -403,6 +403,16 @@ public:
   void setView(View view);
   GeomHandle createGenAxes();   
   void emit_vars(std::ostream& out, const std::string& midx);
+
+private:
+  // Cache off these so that they are saved in the nets.
+  GuiInt gui_global_light_;
+  GuiInt gui_global_fog_;
+  GuiInt gui_global_debug_;
+  GuiInt gui_global_clip_;
+  GuiInt gui_global_cull_;
+  GuiInt gui_global_dl_;
+  GuiString gui_global_type_;
 };
 
 class ViewWindowMouseMessage : public MessageBase {
