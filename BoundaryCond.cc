@@ -345,6 +345,13 @@ void setBC(CCVariable<double>& press_CC,
         IveSetBC = setNeumanDirichletBC<double>(patch, face, press_CC,bound, 
 						  bc_kind, bc_value, cell_dx,
 						  mat_id,child);
+                                          
+        //__________________________________
+        //  hardwiring for NGC nozzle simulation   
+        #define ICEBoundaryCond_1
+        #include "../MPMICE/NGC_nozzle.i"
+        #undef ICEBoundaryCond_1                                  
+                                            
         //__________________________________________________________
         // Tack on hydrostatic pressure after Dirichlet or Neumann BC
         // has been applied.  Note, during the intializaton phase the 
@@ -460,6 +467,12 @@ void setBC(CCVariable<double>& var_CC,
         // Apply the boundary condition
         IveSetBC =  setNeumanDirichletBC<double>
 	  (patch, face, var_CC,bound, bc_kind, bc_value, cell_dx,mat_id,child);
+         
+        //__________________________________
+        //  hardwiring for NGC nozzle simulation   
+        #define ICEBoundaryCond_2
+        #include "../MPMICE/NGC_nozzle.i"
+        #undef ICEBoundaryCond_2 
 
         //__________________________________
         // Temperature and Gravity and ICE Matls
