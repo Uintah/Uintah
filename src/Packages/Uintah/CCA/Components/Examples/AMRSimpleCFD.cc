@@ -26,7 +26,7 @@
 
 using namespace Uintah;
 using namespace std;
-static DebugStream dbg("SimpleCFD", false);
+static DebugStream cout_doing("SimpleCFD_doing", false);
 
 template<class ArrayType>
 static void print(const ArrayType& d, const char* name, int pre=0)
@@ -60,6 +60,7 @@ AMRSimpleCFD::~AMRSimpleCFD()
 void AMRSimpleCFD::problemSetup(const ProblemSpecP& params, GridP& grid,
 				SimulationStateP& sharedState)
 {
+  cout_doing << "Doing problemSetup  \t\t\t AMRSimpleCFD" << '\n';
   SimpleCFD::problemSetup(params, grid, sharedState);
   ProblemSpecP cfd = params->findBlock("SimpleCFD");
   if(!cfd->get("err_density_grad", err_density_grad))
@@ -71,11 +72,12 @@ void AMRSimpleCFD::problemSetup(const ProblemSpecP& params, GridP& grid,
   if(!cfd->get("err_vorticity_mag", err_vorticity_mag))
     err_vorticity_mag=0;
 }
-
+//______________________________________________________________________
+//
 void AMRSimpleCFD::scheduleInitialize(const LevelP& level,
 				      SchedulerP& sched)
 {
-  dbg << "AMRSimpleCFD::scheduleInitialize on level " << level->getIndex() << '\n';
+  cout_doing << "AMRSimpleCFD::scheduleInitialize on level " << level->getIndex() << '\n';
   SimpleCFD::scheduleInitialize(level, sched);
   if(keep_pressure){
     Task* task = scinew Task("initialize",
@@ -84,11 +86,14 @@ void AMRSimpleCFD::scheduleInitialize(const LevelP& level,
     sched->addTask(task, level->eachPatch(), sharedState_->allMaterials());
   }
 }
-
+//______________________________________________________________________
+//
 void AMRSimpleCFD::initialize(const ProcessorGroup*,
 			      const PatchSubset* patches, const MaterialSubset* matls,
 			      DataWarehouse* old_dw, DataWarehouse* new_dw)
 {
+  cout_doing << "Doing initialize  \t\t\t\t AMRSimpleCFD" << '\n';
+
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
     for(int m = 0;m<matls->size();m++){
@@ -101,20 +106,29 @@ void AMRSimpleCFD::initialize(const ProcessorGroup*,
     }
   }
 }
-
+//______________________________________________________________________
+//
 void AMRSimpleCFD::scheduleRefineInterface(const LevelP& fineLevel,
 				       SchedulerP& sched,
 				       int step, int nsteps)
 {
 }
-
+//______________________________________________________________________
+//
 template<class ArrayType, class constArrayType>
-void refineFaces(const Patch* patch, const Level* level,
-		 const Level* coarseLevel, const IntVector& dir,
-		 Patch::FaceType lowFace, Patch::FaceType highFace,
-		 ArrayType& xvel, const VarLabel* label,
-		 double factor, int matl, DataWarehouse* coarse_old_dw,
-		 DataWarehouse* coarse_new_dw, Patch::VariableBasis basis)
+void refineFaces(const Patch* patch, 
+               const Level* level,
+		 const Level* coarseLevel, 
+               const IntVector& dir,
+		 Patch::FaceType lowFace, 
+               Patch::FaceType highFace,
+		 ArrayType& xvel, 
+               const VarLabel* label,
+		 double factor, 
+               int matl, 
+               DataWarehouse* coarse_old_dw,
+		 DataWarehouse* coarse_new_dw, 
+               Patch::VariableBasis basis)
 {
   for(Patch::FaceType face = Patch::startFace;
       face <= Patch::endFace; face=Patch::nextFace(face)){
@@ -150,6 +164,7 @@ void refineFaces(const Patch* patch, const Level* level,
       default:
 	break;
       }
+      
       if(face != Patch::xminus && face != Patch::xplus && patch->getBCType(Patch::xminus) == Patch::None){
 	l+=IntVector(1,0,0);
       }
@@ -168,6 +183,8 @@ void refineFaces(const Patch* patch, const Level* level,
       if(face != Patch::zminus && face != Patch::zplus && patch->getBCType(Patch::zplus) == Patch::None){
 	h-=IntVector(0,0,1);
       }
+      
+      
       IntVector coarseLow = level->mapCellToCoarser(l);
       IntVector coarseHigh = level->mapCellToCoarser(h+level->getRefinementRatio()-IntVector(1,1,1));
       switch(face){
@@ -198,13 +215,16 @@ void refineFaces(const Patch* patch, const Level* level,
 	else
 	  coarseLow -= IntVector(0,0,1);
 	break;
-      }
+      }  // switch face
+      
+      
       l = Max(l, xvel.getLowIndex());
       h = Min(h, xvel.getHighIndex());
       if(factor < 1.e-10){
 	constArrayType xvel0;
 	coarse_old_dw->getRegion(xvel0, label, matl, coarseLevel,
 				 coarseLow, coarseHigh);
+                             
 	for(CellIterator iter(l,h); !iter.done(); iter++){
 	  IntVector idx = *iter;
 
@@ -251,11 +271,12 @@ void refineFaces(const Patch* patch, const Level* level,
 	    + xvel0[cidx+IntVector(0,1,1)]*(1-w.x())*w.y()*w.z()
 	    + xvel0[cidx+IntVector(1,1,1)]*w.x()*w.y()*w.z();
 	  xvel[idx] = x0;
-	}
-      } else if(factor > 1-1.e-10){
+	}  // cell iterator
+      } else if(factor > 1-1.e-10){        /// factor near 1.0
 	constArrayType xvel1;
 	coarse_new_dw->getRegion(xvel1, label, matl, coarseLevel,
 				 coarseLow, coarseHigh);
+                             
 	for(CellIterator iter(l,h); !iter.done(); iter++){
 	  IntVector idx = *iter;
 
@@ -302,8 +323,8 @@ void refineFaces(const Patch* patch, const Level* level,
 	    + xvel1[cidx+IntVector(0,1,1)]*(1-w.x())*w.y()*w.z()
 	    + xvel1[cidx+IntVector(1,1,1)]*w.x()*w.y()*w.z();
 	  xvel[idx] = x1;
-	}
-      } else {
+	}  // cell iterator
+      } else {                    // factor 
 	constArrayType xvel0;
 	coarse_old_dw->getRegion(xvel0, label, matl, coarseLevel,
 				 coarseLow, coarseHigh);
@@ -348,7 +369,8 @@ void refineFaces(const Patch* patch, const Level* level,
 	    w.z(1);
 	    break;
 	  }
-	  double x0 = xvel0[cidx+IntVector(0,0,0)]*(1-w.x())*(1-w.y())*(1-w.z())	    + xvel0[cidx+IntVector(1,0,0)]*w.x()*(1-w.y())*(1-w.z())
+	  double x0 = xvel0[cidx+IntVector(0,0,0)]*(1-w.x())*(1-w.y())*(1-w.z())	    
+           + xvel0[cidx+IntVector(1,0,0)]*w.x()*(1-w.y())*(1-w.z())
 	    + xvel0[cidx+IntVector(0,1,0)]*(1-w.x())*w.y()*(1-w.z())
 	    + xvel0[cidx+IntVector(1,1,0)]*w.x()*w.y()*(1-w.z())
 	    + xvel0[cidx+IntVector(0,0,1)]*(1-w.x())*(1-w.y())*w.z()
@@ -370,10 +392,14 @@ void refineFaces(const Patch* patch, const Level* level,
     }
   }
 }
-
-void AMRSimpleCFD::addRefineDependencies(Task* task, const VarLabel* var,
-					 int step, int nsteps)
+//______________________________________________________________________
+//
+void AMRSimpleCFD::addRefineDependencies(Task* task, 
+                                         const VarLabel* var,
+					      int step, 
+                                         int nsteps)
 {
+  cout_doing << "Doing addRefineDependencies  \t\t\t AMRSimpleCFD" << '\n';
   ASSERTRANGE(step, 0, nsteps+1);
   if(step != nsteps)
     task->requires(Task::CoarseOldDW, var,
@@ -384,7 +410,8 @@ void AMRSimpleCFD::addRefineDependencies(Task* task, const VarLabel* var,
 		   0, Task::CoarseLevel, 0, Task::NormalDomain,
 		   Ghost::AroundCells, 1);
 }
-
+//______________________________________________________________________
+//
 void AMRSimpleCFD::refineBoundaries(const Patch* patch,
 				    CCVariable<double>& val,
 				    DataWarehouse* new_dw,
@@ -392,98 +419,111 @@ void AMRSimpleCFD::refineBoundaries(const Patch* patch,
 				    int matl,
 				    double factor)
 {
+  cout_doing << "Doing refineBoundaries <double>  \t\t AMRSimpleCFD" << '\n';
   DataWarehouse* coarse_old_dw = new_dw->getOtherDataWarehouse(Task::CoarseOldDW);
   DataWarehouse* coarse_new_dw = new_dw->getOtherDataWarehouse(Task::CoarseNewDW);
+  
   const Level* level = patch->getLevel();
   const Level* coarseLevel = level->getCoarserLevel().get_rep();
+  
   refineFaces<CCVariable<double>, constCCVariable<double> >
     (patch, level, coarseLevel, IntVector(0,0,0), Patch::invalidFace,
      Patch::invalidFace, val, label, factor, matl,
      coarse_old_dw, coarse_new_dw, Patch::CellBased);
 }
-
+//______________________________________________________________________
+//
 void AMRSimpleCFD::refineBoundaries(const Patch* patch,
-				    SFCXVariable<double>& val,
-				    DataWarehouse* new_dw,
-				    const VarLabel* label,
-				    int matl,
-				    double factor)
+				        SFCXVariable<double>& val,
+				        DataWarehouse* new_dw,
+				        const VarLabel* label,
+				        int matl,
+				        double factor)
 {
+  cout_doing << "Doing refineBoundaries <SFCXVariable> \t\t AMRSimpleCFD" << '\n';
   DataWarehouse* coarse_old_dw = new_dw->getOtherDataWarehouse(Task::CoarseOldDW);
   DataWarehouse* coarse_new_dw = new_dw->getOtherDataWarehouse(Task::CoarseNewDW);
+  
   const Level* level = patch->getLevel();
   const Level* coarseLevel = level->getCoarserLevel().get_rep();
+  
   refineFaces<SFCXVariable<double>, constSFCXVariable<double> >
     (patch, level, coarseLevel, IntVector(1,0,0), Patch::xminus,
      Patch::xplus, val, label, factor, matl,
      coarse_old_dw, coarse_new_dw, Patch::XFaceBased);
 }
-
+//______________________________________________________________________
+//
 void AMRSimpleCFD::refineBoundaries(const Patch* patch,
-				    SFCYVariable<double>& val,
-				    DataWarehouse* new_dw,
-				    const VarLabel* label,
-				    int matl,
-				    double factor)
+				        SFCYVariable<double>& val,
+				        DataWarehouse* new_dw,
+				        const VarLabel* label,
+				        int matl,
+				        double factor)
 {
+  cout_doing << "Doing refineBoundaries <SFCYVariable> \t\t AMRSimpleCFD" << '\n';
   DataWarehouse* coarse_old_dw = new_dw->getOtherDataWarehouse(Task::CoarseOldDW);
   DataWarehouse* coarse_new_dw = new_dw->getOtherDataWarehouse(Task::CoarseNewDW);
+  
   const Level* level = patch->getLevel();
   const Level* coarseLevel = level->getCoarserLevel().get_rep();
+  
   refineFaces<SFCYVariable<double>, constSFCYVariable<double> >
     (patch, level, coarseLevel, IntVector(0,1,0), Patch::yminus,
      Patch::yplus, val, label, factor, matl,
      coarse_old_dw, coarse_new_dw, Patch::YFaceBased);
 }
-
+//______________________________________________________________________
+//
 void AMRSimpleCFD::refineBoundaries(const Patch* patch,
-				    SFCZVariable<double>& val,
-				    DataWarehouse* new_dw,
-				    const VarLabel* label,
-				    int matl,
-				    double factor)
+				        SFCZVariable<double>& val,
+				        DataWarehouse* new_dw,
+				        const VarLabel* label,
+				        int matl,
+				        double factor)
 {
+  cout_doing << "Doing refineBoundaries <SFCZVariable> \t\t AMRSimpleCFD" << '\n';
   DataWarehouse* coarse_old_dw = new_dw->getOtherDataWarehouse(Task::CoarseOldDW);
   DataWarehouse* coarse_new_dw = new_dw->getOtherDataWarehouse(Task::CoarseNewDW);
+  
   const Level* level = patch->getLevel();
   const Level* coarseLevel = level->getCoarserLevel().get_rep();
+  
   refineFaces<SFCZVariable<double>, constSFCZVariable<double> >
     (patch, level, coarseLevel, IntVector(0,0,1), Patch::zminus,
      Patch::zplus, val, label, factor, matl,
      coarse_old_dw, coarse_new_dw, Patch::ZFaceBased);
 }
-
+//______________________________________________________________________
+//
 void AMRSimpleCFD::scheduleCoarsen(const LevelP& coarseLevel,
 				   SchedulerP& sched)
 {
-  dbg << "AMRSimpleCFD::scheduleCoarsen on level " << coarseLevel->getIndex() << '\n';
+  Ghost::GhostType  gn = Ghost::None; 
+  cout_doing << "AMRSimpleCFD::scheduleCoarsen on level " << coarseLevel->getIndex() << '\n';
   Task* task = scinew Task("coarsen",
 			   this, &AMRSimpleCFD::coarsen);
   task->requires(Task::NewDW, lb_->density,
-		 0, Task::FineLevel, 0, Task::NormalDomain,
-		 Ghost::None, 0);
-  task->modifies(lb_->density);
+		 0, Task::FineLevel, 0, Task::NormalDomain, gn, 0);
 
   if(do_thermal){
     task->requires(Task::NewDW, lb_->temperature,
-		   0, Task::FineLevel, 0, Task::NormalDomain,
-		   Ghost::None, 0);
+		   0, Task::FineLevel, 0, Task::NormalDomain,gn, 0);
     task->modifies(lb_->temperature);
   }
   task->requires(Task::NewDW, lb_->xvelocity,
-		 0, Task::FineLevel, 0, Task::NormalDomain,
-		 Ghost::None, 0);
-  task->modifies(lb_->xvelocity);
+		 0, Task::FineLevel, 0, Task::NormalDomain, gn, 0);
 
   task->requires(Task::NewDW, lb_->yvelocity,
-		 0, Task::FineLevel, 0, Task::NormalDomain,
-		 Ghost::None, 0);
-  task->modifies(lb_->yvelocity);
+		 0, Task::FineLevel, 0, Task::NormalDomain, gn, 0);
 
   task->requires(Task::NewDW, lb_->zvelocity,
-		 0, Task::FineLevel, 0, Task::NormalDomain,
-		 Ghost::None, 0);
-  task->modifies(lb_->zvelocity);
+		 0, Task::FineLevel, 0, Task::NormalDomain,gn, 0);
+
+  task->modifies(lb_->density);
+  task->modifies(lb_->xvelocity);
+  task->modifies(lb_->yvelocity);
+  task->modifies(lb_->zvelocity);  
   sched->addTask(task, coarseLevel->eachPatch(), sharedState_->allMaterials());
 
   // Re-solve/apply the pressure, using the pressure2 variable
@@ -494,17 +534,21 @@ void AMRSimpleCFD::scheduleCoarsen(const LevelP& coarseLevel,
 			lb_->pressure2_matrix, lb_->pressure2_rhs);
   releasePort("solver");
 }
-
+//______________________________________________________________________
+//
 void AMRSimpleCFD::scheduleErrorEstimate(const LevelP& coarseLevel,
 					 SchedulerP& sched)
 {
+  cout_doing << "AMRSimpleCFD::scheduleErrorEstimate on level " << coarseLevel->getIndex() << '\n';
   // Estimate error - this should probably be in it's own schedule,
   // and the simulation controller should not schedule it every time step
+  Ghost::GhostType  gac = Ghost::AroundCells;
   Task* task = scinew Task("errorEstimate", this, &AMRSimpleCFD::errorEstimate);
-  task->requires(Task::NewDW, lb_->density, Ghost::AroundCells, 1);
-  task->requires(Task::NewDW, lb_->temperature, Ghost::AroundCells, 1);
-  task->requires(Task::NewDW, lb_->pressure, Ghost::AroundCells, 1);
-  task->requires(Task::NewDW, lb_->density, Ghost::AroundCells, 1);
+  task->requires(Task::NewDW, lb_->density,     gac, 1);
+  task->requires(Task::NewDW, lb_->temperature, gac, 1);
+  task->requires(Task::NewDW, lb_->pressure,    gac, 1);
+  task->requires(Task::NewDW, lb_->density,     gac, 1);
+  
   task->modifies(sharedState_->get_refineFlag_label());
   task->computes(lb_->density_gradient_mag);
   task->computes(lb_->temperature_gradient_mag);
@@ -512,19 +556,23 @@ void AMRSimpleCFD::scheduleErrorEstimate(const LevelP& coarseLevel,
   task->computes(lb_->ccvorticitymag);
   sched->addTask(task, coarseLevel->eachPatch(), sharedState_->allMaterials());
 }
-
+//______________________________________________________________________
+//
 void AMRSimpleCFD::coarsen(const ProcessorGroup*,
 			   const PatchSubset* patches,
 			   const MaterialSubset* matls,
 			   DataWarehouse* old_dw,
 			   DataWarehouse* new_dw)
 {
+  cout_doing << "Doing coarsen \t\t\t AMRSimpleCFD" << '\n';
   const Level* coarseLevel = getLevel(patches);
   const Level* fineLevel = coarseLevel->getFinerLevel().get_rep();
   IntVector rr(fineLevel->getRefinementRatio());
   double ratio = 1./(rr.x()*rr.y()*rr.z());
-  for(int p=0;p<patches->size();p++){
+  
+  for(int p=0;p<patches->size();p++){  
     const Patch* coarsePatch = patches->get(p);
+    cout_doing << "\t\t on patch " << coarsePatch->getID();
     // Find the overlapping regions...
     Level::selectType finePatches;
     coarsePatch->getFineLevelPatches(finePatches);
@@ -532,23 +580,29 @@ void AMRSimpleCFD::coarsen(const ProcessorGroup*,
     for(int m = 0;m<matls->size();m++){
       int matl = matls->get(m);
 
+      //__________________________________
+      //   D E N S I T Y
       CCVariable<double> density;
       new_dw->getModifiable(density, lb_->density, matl, coarsePatch);
       //print(density, "before coarsen density");
+      
       for(int i=0;i<finePatches.size();i++){
 	const Patch* finePatch = finePatches[i];
 	constCCVariable<double> fine_den;
 	new_dw->get(fine_den, lb_->density, matl, finePatch,
 		    Ghost::None, 0);
+                  
 	IntVector fl(finePatch->getCellLowIndex());
 	IntVector fh(finePatch->getCellHighIndex());
 	IntVector l(fineLevel->mapCellToCoarser(fl));
 	IntVector h(fineLevel->mapCellToCoarser(fh));
 	l = Max(l, coarsePatch->getCellLowIndex());
 	h = Min(h, coarsePatch->getCellHighIndex());
+       
 	for(CellIterator iter(l, h); !iter.done(); iter++){
 	  double d=0;
 	  IntVector fineStart(coarseLevel->mapCellToFiner(*iter));
+         
 	  for(CellIterator inside(IntVector(0,0,0), fineLevel->getRefinementRatio());
 	      !inside.done(); inside++){
 	    d+=fine_den[fineStart+*inside];
@@ -556,26 +610,31 @@ void AMRSimpleCFD::coarsen(const ProcessorGroup*,
 	  density[*iter]=d*ratio;
 	}
       }
-
       //print(density, "coarsened density");
+      //__________________________________
+      //      T E M P E R A T U R E
       if(do_thermal){
 	CCVariable<double> temp;
 	new_dw->getModifiable(temp, lb_->temperature, matl, coarsePatch);
-	for(int i=0;i<finePatches.size();i++){
+	
+       for(int i=0;i<finePatches.size();i++){
 	  const Patch* finePatch = finePatches[i];
 	  constCCVariable<double> fine_temp;
 	  new_dw->get(fine_temp, lb_->temperature, matl, finePatch,
 		      Ghost::None, 0);
+                    
 	  IntVector fl(finePatch->getCellLowIndex());
 	  IntVector fh(finePatch->getCellHighIndex());
 	  IntVector l(fineLevel->mapCellToCoarser(fl));
 	  IntVector h(fineLevel->mapCellToCoarser(fh));
 	  l = Max(l, coarsePatch->getCellLowIndex());
 	  h = Min(h, coarsePatch->getCellHighIndex());
-	  for(CellIterator iter(l, h); !iter.done(); iter++){
+	  
+         for(CellIterator iter(l, h); !iter.done(); iter++){
 	    double d=0;
 	    IntVector fineStart(coarseLevel->mapCellToFiner(*iter));
-	    for(CellIterator inside(IntVector(0,0,0), fineLevel->getRefinementRatio());
+	    
+           for(CellIterator inside(IntVector(0,0,0), fineLevel->getRefinementRatio());
 		!inside.done(); inside++){
 	      d+=fine_temp[fineStart+*inside];
 	    }
@@ -583,24 +642,32 @@ void AMRSimpleCFD::coarsen(const ProcessorGroup*,
 	  }
 	}
 	//print(temp, "coarsened temperature");
-      }
+      }  // do thermal
+      
+      //__________________________________
+      //      X V E L
       SFCXVariable<double> xvel;
       new_dw->getModifiable(xvel, lb_->xvelocity, matl, coarsePatch);
+      
       for(int i=0;i<finePatches.size();i++){
 	const Patch* finePatch = finePatches[i];
-	SFCXVariable<double> fine_xvel;
+	
+       SFCXVariable<double> fine_xvel;
 	new_dw->getCopy(fine_xvel, lb_->xvelocity, matl, finePatch,
 			Ghost::AroundFacesX, 1);
+                     
 	refineFaces<SFCXVariable<double>, constSFCXVariable<double> >
 	  (finePatch, fineLevel, coarseLevel, IntVector(1,0,0),
 	   Patch::xminus, Patch::xplus, fine_xvel,
 	   lb_->xvelocity, 1.0, matl, old_dw, new_dw, Patch::XFaceBased);
+          
 	IntVector fl(finePatch->getSFCXLowIndex());
 	IntVector fh(finePatch->getSFCXHighIndex());
 	IntVector l(fineLevel->mapCellToCoarser(fl));
 	IntVector h(fineLevel->mapCellToCoarser(fh+IntVector(rr.x()-1, 0, 0)));
 	l = Max(l, coarsePatch->getSFCXLowIndex());
 	h = Min(h, coarsePatch->getSFCXHighIndex());
+       
 	for(CellIterator iter(l, h); !iter.done(); iter++){
 	  double d=0;
 	  IntVector fineStart(coarseLevel->mapCellToFiner(*iter));
@@ -619,24 +686,32 @@ void AMRSimpleCFD::coarsen(const ProcessorGroup*,
 	  xvel[*iter]=d*ratio;
 	}
       }
+      
       //print(xvel, "coarsened xvel");
+      //__________________________________
+      //     Y V E L
       SFCYVariable<double> yvel;
       new_dw->getModifiable(yvel, lb_->yvelocity, matl, coarsePatch);
+      
       for(int i=0;i<finePatches.size();i++){
 	const Patch* finePatch = finePatches[i];
+       
 	SFCYVariable<double> fine_yvel;
 	new_dw->getCopy(fine_yvel, lb_->yvelocity, matl, finePatch,
 			Ghost::AroundFacesY, 1);
+                     
 	refineFaces<SFCYVariable<double>, constSFCYVariable<double> >
 	  (finePatch, fineLevel, coarseLevel, IntVector(0,1,0),
 	   Patch::yminus, Patch::yplus, fine_yvel,
 	   lb_->yvelocity, 1.0, matl, old_dw, new_dw, Patch::YFaceBased);
+          
 	IntVector fl(finePatch->getSFCYLowIndex());
 	IntVector fh(finePatch->getSFCYHighIndex());
 	IntVector l(fineLevel->mapCellToCoarser(fl));
 	IntVector h(fineLevel->mapCellToCoarser(fh+IntVector(0, rr.y()-1, 0)));
 	l = Max(l, coarsePatch->getSFCYLowIndex());
 	h = Min(h, coarsePatch->getSFCYHighIndex());
+       
 	for(CellIterator iter(l, h); !iter.done(); iter++){
 	  double d=0;
 	  IntVector fineStart(coarseLevel->mapCellToFiner(*iter));
@@ -656,24 +731,30 @@ void AMRSimpleCFD::coarsen(const ProcessorGroup*,
 	}
       }
       //print(yvel, "coarsened yvel");
+      //__________________________________
+      //      Z   V E L
       SFCZVariable<double> zvel;
       new_dw->getModifiable(zvel, lb_->zvelocity, matl, coarsePatch);
       for(int i=0;i<finePatches.size();i++){
 	const Patch* finePatch = finePatches[i];
+       
 	SFCZVariable<double> fine_zvel;
 	new_dw->getCopy(fine_zvel, lb_->zvelocity, matl, finePatch,
 			Ghost::AroundFacesZ, 1);
-	refineFaces<SFCZVariable<double>, constSFCZVariable<double> >
+	
+       refineFaces<SFCZVariable<double>, constSFCZVariable<double> >
 	  (finePatch, fineLevel, coarseLevel, IntVector(0,0,1),
 	   Patch::zminus, Patch::zplus, fine_zvel,
 	   lb_->zvelocity, 1.0, matl, old_dw, new_dw, Patch::ZFaceBased);
-	IntVector fl(finePatch->getSFCZLowIndex());
+	
+       IntVector fl(finePatch->getSFCZLowIndex());
 	IntVector fh(finePatch->getSFCZHighIndex());
 	IntVector l(fineLevel->mapCellToCoarser(fl));
 	IntVector h(fineLevel->mapCellToCoarser(fh+IntVector(0, 0, rr.z()-1)));
 	l = Max(l, coarsePatch->getSFCZLowIndex());
 	h = Min(h, coarsePatch->getSFCZHighIndex());
-	for(CellIterator iter(l, h); !iter.done(); iter++){
+	
+       for(CellIterator iter(l, h); !iter.done(); iter++){
 	  double d=0;
 	  IntVector fineStart(coarseLevel->mapCellToFiner(*iter));
 	  for(CellIterator inside(IntVector(0,0,-1), IntVector(rr.x(),rr.y(),0));
@@ -693,9 +774,10 @@ void AMRSimpleCFD::coarsen(const ProcessorGroup*,
       }
       //print(zvel, "coarsened zvel");      
     }
-  }
+  }  // course patch loop 
 }
-
+//______________________________________________________________________
+//
 void AMRSimpleCFD::errorEstimate(const ProcessorGroup*,
 				 const PatchSubset* patches,
 				 const MaterialSubset* matls,
@@ -704,6 +786,8 @@ void AMRSimpleCFD::errorEstimate(const ProcessorGroup*,
 {
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
+    
+    cout_doing << "Doing errorEstimate on patch "<< patch->getID()<<" \t\t\t AMRSimpleCFD" << '\n';
     for(int m = 0;m<matls->size();m++){
       int matl = matls->get(m);
 
@@ -717,12 +801,16 @@ void AMRSimpleCFD::errorEstimate(const ProcessorGroup*,
       IntVector l(patch->getCellLowIndex());
       IntVector h(patch->getCellHighIndex());
 
+      //__________________________________
+      //     D E N S I T Y   G R A D
       constCCVariable<double> density;
-      new_dw->get(density, lb_->density, matl, patch, Ghost::AroundCells, 1);
       CCVariable<double> density_gradient_mag;
+      new_dw->get(density, lb_->density, matl, patch, Ghost::AroundCells, 1);
+      
       new_dw->allocateAndPut(density_gradient_mag, lb_->density_gradient_mag,
 			     matl, patch);
       double err_density_grad_inv = 1./err_density_grad;
+      
       for(CellIterator iter(l, h); !iter.done(); iter++){
 	IntVector idx(*iter);
 	double gx, gy, gz;
@@ -753,17 +841,17 @@ void AMRSimpleCFD::errorEstimate(const ProcessorGroup*,
 	  refineFlag[idx]=true;
 	density_gradient_mag[idx] *= err_density_grad_inv;
       }
-
-      // Temperature gradient
+      //__________________________________
+      //   T E M P E R A T U R E   G R A D
       if(err_temperature_grad > 0){
 	CCVariable<double> temperature_gradient_mag;
-	new_dw->allocateAndPut(temperature_gradient_mag,
-			       lb_->temperature_gradient_mag,
+       constCCVariable<double> temperature;
+	new_dw->allocateAndPut(temperature_gradient_mag, lb_->temperature_gradient_mag,
 			       matl, patch);
-	constCCVariable<double> temperature;
 	new_dw->get(temperature, lb_->temperature, matl, patch, Ghost::AroundCells, 1);
 	double inv_err_temperature_grad = 1./err_temperature_grad;
-	for(CellIterator iter(l, h); !iter.done(); iter++){
+	
+       for(CellIterator iter(l, h); !iter.done(); iter++){
 	  IntVector idx(*iter);
 	  double gx, gy, gz;
 	  if(idx.x() == l.x()){
@@ -794,7 +882,8 @@ void AMRSimpleCFD::errorEstimate(const ProcessorGroup*,
 	  temperature_gradient_mag[idx] *= inv_err_temperature_grad;
 	}
       }
-
+      //__________________________________
+      //      P R E S S U R E   G R A D
       if(err_pressure_grad > 0){
 	// Pressure gradient
 	CCVariable<double> pressure_gradient_mag;
@@ -834,7 +923,8 @@ void AMRSimpleCFD::errorEstimate(const ProcessorGroup*,
 	  pressure_gradient_mag[idx] *= inv_err_pressure_grad;
 	}
       }
-
+      //__________________________________
+      //     V O R T I C I T Y   M A G .
       if(err_vorticity_mag > 0){
 	// Vorticity
 	CCVariable<double> ccvorticitymag;
