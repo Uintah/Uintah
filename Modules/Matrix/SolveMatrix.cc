@@ -22,6 +22,7 @@ class SolveMatrix : public Module {
     MatrixIPort* matrixport;
     ColumnMatrixIPort* rhsport;
     ColumnMatrixOPort* solport;
+    ColumnMatrixHandle solution;
 public:
     SolveMatrix(const clString& id);
     SolveMatrix(const SolveMatrix&, int deep);
@@ -72,7 +73,12 @@ void SolveMatrix::execute()
     ColumnMatrixHandle rhs;
     if(!rhsport->get(rhs))
 	return;
-    ColumnMatrix* lhs=new ColumnMatrix(rhs->nrows());
-    matrix->isolve(*lhs, *rhs.get_rep(), 1.e-4);
-    solport->send(lhs);
+    if(!solution.get_rep()){
+	solution=new ColumnMatrix(rhs->nrows());
+	solution->zero();
+    } else {
+	solution.detach();
+    }
+    matrix->isolve(*solution.get_rep(), *rhs.get_rep(), 1.e-4);
+    solport->send(solution);
 }
