@@ -183,7 +183,7 @@ bool GenVField<T,G,A>::set_geom_name(string iname)
 {
   if (geom.get_rep())
     {
-      geom->set_name(iname);
+      geom->setName(iname);
       return true;
     }
   return false;
@@ -216,7 +216,7 @@ bool GenVField<T,G,A>::get_bbox(BBox& bbox)
 {
   if(geom.get_rep())
     {
-      if(geom->get_bbox(bbox))
+      if(geom->getBoundingBox(bbox))
 	{
 	  return 1;
 	}
@@ -236,7 +236,7 @@ template <class T, class G, class A >
 bool GenVField<T,G,A>::longest_dimension(double &odouble)
 {
   if(geom.get_rep()) {
-    return geom->longest_dimension(odouble);
+    return geom->longestDimension(odouble);
   }
   else{
     return false;
