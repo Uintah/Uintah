@@ -18,15 +18,18 @@
 
 package PingPong_ns {
     interface Port{
-	void ui();
+    };
+
+    interface UIPort extends Port{
+	collective void ui();
     };
 
     interface Service{
-	void testPort(in Port port);
+	collective void testPort(in Port port);
     };
 
     interface PingPong {
-	void setService(in Service svc);
+	collective void setService(in Service svc);
     };
 
 
