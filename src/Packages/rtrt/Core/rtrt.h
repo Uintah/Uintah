@@ -55,7 +55,6 @@ namespace rtrt {
     void exit_clean(int status = 0) {
       exit_everybody = true;
       exit_status = status;
-      SCIRun::Thread::exitAll(status);
     }
     bool stop_execution() { return exit_everybody; }
        
