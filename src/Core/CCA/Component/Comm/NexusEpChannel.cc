@@ -27,6 +27,7 @@
 #include <Core/Thread/Thread.h>
 #include <iostream>
 #include <sstream>
+#include <globus_nexus.h>
 using namespace SCIRun;
 using namespace std;
 
@@ -43,7 +44,7 @@ void NexusEpChannel::printDebug(const string& d) {
 }
 
 
-static globus_nexus_handler_t emptytable[] = { };
+static globus_nexus_handler_t emptytable[] = {{GLOBUS_NEXUS_HANDLER_TYPE_THREADED,0}};
 
 
 void unknown_handler(globus_nexus_endpoint_t* endpoint,
@@ -156,15 +157,14 @@ Message* NexusEpChannel::getMessage() {
 }
 
 
-void NexusEpChannel::activateConnection(void *obj) {
+void NexusEpChannel::activateConnection(void * obj) {
   if (kDEBUG) printDebug("NexusEpChannel::activateConnection()");
 
   globus_nexus_endpointattr_t attr;
   if(int gerr=globus_nexus_endpointattr_init(&attr))
     throw CommError("endpointattr_init", gerr);
   if(int gerr=globus_nexus_endpointattr_set_handler_table(&attr,
-							  emptytable,
-							  sizeof(emptytable)/sizeof(globus_nexus_handler_t)))
+							  emptytable, 0))
     throw CommError("endpointattr_set_handler_table", gerr);
   if(int gerr=globus_nexus_endpointattr_set_unknown_handler(&attr,
 							    unknown_handler,

@@ -64,7 +64,7 @@ void DefinitionList::gatherSymbols(SymbolTable* names) const
   }
 }
 
-void Package::staticCheck(SymbolTable* names)
+void Package::staticCheck(SymbolTable* /*names*/)
 {
   definition->staticCheck(symbols);
 }
@@ -449,10 +449,8 @@ bool Method::matches(const Method* m, Method::MatchWhich match) const
   switch(match){
   case TypesOnly:
     return args->matches(m->args, false);
-    break;
   case TypesAndModes:
     return args->matches(m->args, true);
-    break;
   case TypesModesAndThrows:
     if((throws_clause && !m->throws_clause) ||
        (!throws_clause && m->throws_clause))
@@ -460,7 +458,6 @@ bool Method::matches(const Method* m, Method::MatchWhich match) const
     else
       return args->matches(m->args, true)
 	&& (!throws_clause || throws_clause->matches(m->throws_clause));
-    break;
   case TypesModesThrowsAndReturnTypes:
     if((throws_clause && !m->throws_clause) ||
        (!throws_clause && m->throws_clause))
@@ -469,7 +466,6 @@ bool Method::matches(const Method* m, Method::MatchWhich match) const
       return args->matches(m->args, true)
 	&& (!throws_clause || throws_clause->matches(m->throws_clause))
 	&& return_type->matches(m->return_type);
-    break;
   }
   cerr << "Error - should not reach this point!\n";
   exit(1);
@@ -614,7 +610,7 @@ void Enum::staticCheck(SymbolTable* names)
   }
 }
 
-void Enumerator::assignValues1(SymbolTable* names, set<int>& occupied)
+void Enumerator::assignValues1(SymbolTable* /*names*/, set<int>& occupied)
 {
   if(have_value){
     if(occupied.find(value) != occupied.end()){
@@ -625,7 +621,7 @@ void Enumerator::assignValues1(SymbolTable* names, set<int>& occupied)
   }
 }
 
-void Enumerator::assignValues2(SymbolTable* names, set<int>& occupied,
+void Enumerator::assignValues2(SymbolTable* /*names*/, set<int>& occupied,
 			       int& nextvalue)
 {
   if(!have_value){

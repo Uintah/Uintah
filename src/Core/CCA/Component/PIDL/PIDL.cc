@@ -64,10 +64,8 @@ PIDL::getSpChannel() {
   switch (comm_type) {
   case COMM_SOCKET:
     return (new SocketSpChannel());
-    break;
   case COMM_NEXUS:
     return (new NexusSpChannel());
-    break;
   default:
     return (new SocketSpChannel());    
   }
@@ -78,10 +76,8 @@ PIDL::getEpChannel() {
   switch (comm_type) {
   case COMM_SOCKET:
     return (new SocketEpChannel());
-    break;
   case COMM_NEXUS:
     return (new NexusEpChannel());
-    break;
   default:
     return (new SocketEpChannel());
   }

@@ -142,10 +142,10 @@ BuilderWindow::BuilderWindow(const gov::cca::Services::pointer& services)
   QSplitter* hsplit = new QSplitter(Qt::Horizontal, vsplit);
   QCanvas* minicanvas = new QCanvas(100, 100);
   minicanvas->setBackgroundColor(bgcolor);
-  QCanvasView* miniview = new QCanvasView(minicanvas, hsplit);
+  /*QCanvasView* miniview = */new QCanvasView(minicanvas, hsplit);
   QVBox* layout3 = new QVBox(hsplit);
   QHBox* layout4 = new QHBox(layout3);
-  QLabel* message_label = new QLabel(" Messages: ", layout4);
+  /*QLabel* message_label = */new QLabel(" Messages: ", layout4);
   QMimeSourceFactory::defaultFactory()->setPixmap("SCIRun logo", QPixmap(SCIRun_logo));
   QLabel* logo_image = new QLabel("SCIRun logo", layout4);
   logo_image->setPixmap( QPixmap(SCIRun_logo));
