@@ -16,25 +16,23 @@
 		<br>
 		<table align="center" border="4" cellpadding="4" cellspacing="5" width="400" bgcolor="#d3d3d3">
 			<tr>
-				<td bgcolor="#f5f5f5">
+				<td bgcolor="white">
 					<div align="left">
 						<font color="#8b0000" size="4"><b>Using this Tutorial</b></font>
 						<p>The SCIRun/BioPSE Tutorial is most effective when used in conjunction with SCIRun. By running SCIRun simultaneously with our tutorial, you can easily follow the instructions, and build a sample net using the tutorial as a visual reference guide. For this demonstration we have chosen a forward finite element problem to introduce you to the SCIRun software and BioPSE package. As you proceed, you will notice that various statements are linked. <i><b>Click them</b></i>. If your browser supports frames, you will have the visual cues on the right window to guide you as you build your net.</p>
 						<p>This tutorial is not meant as a comprehensive anthology of the SCIRun/BioPSE software system. You will benefit greatly by reading through the full <a href="http://software.sci.utah.edu/software/1_0_1/doc/index.html" target="_blank"><b>documentation</b></a>. Furthermore, the modules we discuss here are <a href="http://software.sci.utah.edu/software/1_0_1/doc/UserGuide/scirun_modules.html" target="_blank"><b>catalogued</b></a> with more descriptive information about their importance.</p>
 						<p><font size="4" color="#8b0000"><b><br>
 						Problem Statement/Introduction</b></font></p>
-						<p>Given a volume conductor model, and an equivalent dipole source, we would like to compute the potentials and electric field that the source induces through the domain. For some very specific geometric models (e.g. <a href="spheres_and_cylinders.html" target="display">analyic cylinders or spheres</a>) there exists an analytic solution to this problem. However, for a real-world problem, the solution can only be obtained through discretization. For this problem, we will discretize our domain into tetrahedral finite elements, where each element contains a conductivity tensor defining how electricity travels through its region of the domain. Within each element, we will assume a piece-wise linear potential field (piece-wise constant electric field).<br>
+						<p>Given a volume conductor model, and an equivalent dipole source, we would like to compute the potentials and electric field that the source induces through the domain. For some very specific geometric models (e.g. <a href="../../cylinders_and_spheres%20Folder/cylinders_and_spheres/index.html" target="display">analyic cylinders or spheres</a>) there exists an analytic solution to this problem. However, for a real-world problem, the solution can only be obtained through discretization. For this problem, we will discretize our domain into tetrahedral finite elements, where each element contains a conductivity tensor defining how electricity travels through its region of the domain. Within each element, we will assume a piece-wise linear potential field (piece-wise constant electric field).<br>
 						</p>
 						<p>The above problem is governed mathematically by Poisson's equation:<br>
 						<br>
 						<img src="equation.gif" align="absbottom"></p>
-						<p>del dot sigma del phi = I<br>
+						<p>Where <img height="16" width="11" src="sigma.gif"> is the local conductivity tensor, <img height="16" width="13" src="phi.gif"> is the voltage over the domain, and <img height="19" width="36" src="i.gif" align="texttop"> is a source term indicating where there are current sources within our domain. In English, this says: the divergence (<img height="16" width="25" src="del_dot.gif" align="absbottom">) of the electric field (<img height="16" width="15" src="del.gif" align="absbottom"><img height="16" width="13" src="phi.gif" align="absbottom">) is zero everywhere there is not a current source Discretizing this onto our tetrahedral domain, we approximate the divergence of the electric field with the stiffness matrix <font size="4"><b>A</b></font>. <img height="16" width="13" src="phi.gif"> is a vector composed of voltages at the nodes. And <font size="4"><b>b</b></font> is a source vector indicating the flux through the nodes -- it is only non-zero for nodes that are corners of elements containing a current source. Given a stiffness matrix, <font size="4"><b>A</b></font>, and a source vector, <font size="4"><b>b</b></font>, we can solve the linear system:<br>
 						</p>
-						<p>Where sigma is the local conductivity tensor, phi is the voltage over the domain, and I is a source term indicating where there are current sources within our domain. In English, this says: the divergence (del dot) of the electric field (del phi) is zero everywhere there is not a current source Discretizing this onto our tetrahedral domain, we approximate the divergence of the electric field with the stiffness matrix A. phi is a vector composed of voltages at the nodes. And b is a source vector indicating the flux through the nodes -- it is only non-zero for nodes that are corners of elements containing a current source. Given a stiffness matrix, A, and a source vector, b, we can solve the linear system:<br>
+						<p><img height="15" width="14" src="A.gif"><img height="16" width="13" src="phi.gif"><img height="16" width="20" src="equals.gif"><img height="16" width="10" src="b.gif"><br>
 						</p>
-						<p>A phi = b<br>
-						</p>
-						<p>To determine the potentials, phi, through the field. Taking the gradient, del phi, we get the electric field through the domain.<br>
+						<p>To determine the potentials,<img height="16" width="13" src="phi.gif">, through the field. Taking the gradient, <img height="16" width="15" src="del.gif"><img height="16" width="13" src="phi.gif">, we get the electric field through the domain.<br>
 						<br>
 						<br>
 						<font size="4" color="#8b0000"><b>Getting Started</b></font><br>
@@ -45,13 +43,13 @@
 						<br>
 						1 - read in the finite element mesh (tet elements, with a conductivity tensors for each cell) [mesh]<br>
 						2 - read in a set of dipole sources [source]<br>
-						3 - construct the finite element stiffness matrix based on the conductivity mesh [A]<br>
-						4 - construct the right hand side source vector based on the location and orientation of any dipole sources [b]<br>
-						5 - solve the linear system A phi = b, to determine the potentials at the nodes [phi]<br>
-						6 - attach the solution vector, phi, to the mesh in order to give the potentials a spatial location [potential field]<br>
-						7 - take the gradient of the potential field (del phi) to get the electric field [E]<br>
+						3 - construct the finite element stiffness matrix based on the conductivity mesh [<font size="4"><b>A</b></font>]<br>
+						4 - construct the right hand side source vector based on the location and orientation of any dipole sources [<font size="4"><b>b</b></font>]<br>
+						5 - solve the linear system <img height="15" width="14" src="A.gif"><img height="16" width="13" src="phi.gif"><img height="16" width="20" src="equals.gif"><img height="16" width="10" src="b.gif">, to determine the potentials at the nodes [<img height="16" width="13" src="phi.gif" align="absbottom">]<br>
+						6 - attach the solution vector,<img height="16" width="13" src="phi.gif"> , to the mesh in order to give the potentials a spatial location [potential field]<br>
+						7 - take the gradient of the potential field (<img height="16" width="15" src="del.gif" align="absbottom"><img height="16" width="13" src="phi.gif" align="absbottom">) to get the electric field [<img height="16" width="11" src="sigma.gif">]<br>
 						<br>
-						For steps 1 and 2, we use FieldReader modules to read in the mesh and a dipole. To access the FieldReader module, first select <a href="figure_1.html" target="display"><b>SCIRun&gt;Data IO&gt;FieldReader</b></a> from the menu bar. The FieldReader module will appear in the upper left corner of the network pane. Note that various modules contain a user interface (UI) button. Clicking these will give you full view of the module's <a href="figure_2.html" target="display">interface</a> as well as the ability to change variables at any point in your computation. For this tutorial we are using the sphere dataset. You can also run it on the cyl3 dataset. Our first FieldReader is reading in the mesh which in this case is a sphere.<br>
+						For steps 1 and 2, we use FieldReader modules to read in the mesh and a dipole. To access the FieldReader module, first select <a href="../../figure_1%20Folder/figure_1/index.html" target="display"><b>SCIRun&gt;Data IO&gt;FieldReader</b></a> from the menu bar. The FieldReader module will appear in the upper left corner of the network pane. Note that various modules contain a user interface (UI) button. Clicking these will give you full view of the module's <a href="../../figure_2%20Folder/figure_2/index.html" target="display">interface</a> as well as the ability to change variables at any point in your computation. For this tutorial we are using the sphere dataset. You can also run it on the cyl3 dataset. Our first FieldReader is reading in the mesh which in this case is a sphere.<br>
 						</p>
 						<p><b>**</b> Note that SCIRun can be installed into any directory, within a user home directory or a system application directory. There is no &quot;make install&quot; step in the build process, so SCIRun will be installed in the chosen directory.<br>
 						<br>
@@ -64,19 +62,20 @@
 						<p>In the user interface, set the filename to be: <font color="#228b22"><i><b>DATA_DIR</b></i></font><b>/sphere-mesh.tvt.fld</b>.</p>
 						<p>You can move the module by left-clicking on the module and dragging it to your desired position. Releasing your finger will set the module in place.<br>
 						<br>
-						For Step 3, we use a SetupFEMatrix module to construct the linear operator A from the mesh. To achieve this, select <a href="figure_3.html" target="display"><b>BioPSE&gt;Forward&gt;SetupFEMatrix</b></a> from the menu bar. Once the module appears in the network pane, you can drag it beneath the existing FieldReader module.</p>
-						<p>SetupFEMatrix: is going to construct A for the equation A phi = b</p>
-						<p><a href="SetupFEMatrix.html" target="display">You can leave all of the default settings</a> which are:</p>
+						For Step 3, we use a SetupFEMatrix module to construct the linear operator <font size="4"><b>A</b></font> from the mesh. To achieve this, select <a href="../../figure_3%20Folder/figure_3/index.html" target="display"><b>BioPSE&gt;Forward&gt;SetupFEMatrix</b></a> from the menu bar. Once the module appears in the network pane, you can drag it beneath the existing FieldReader module.</p>
+						<p>SetupFEMatrix: is going to construct <font size="4"><b>A</b></font> for the equation:<br>
+						<img height="15" width="14" src="A.gif"><img height="16" width="13" src="phi.gif"><img height="16" width="20" src="equals.gif"><img height="16" width="10" src="b.gif"></p>
+						<p><a href="../../SetupFEMatrix%20Folder/SetupFEMatrix/index.html" target="display">You can leave all of the default settings</a> which are:</p>
 						<ul>
 							<li>Select the &quot;No Dirichlet&quot; option so you are not specifying any information regarding the boundary conditions.
 							<li>Select &quot;Use Conductivities&quot; assuming this is a nonhomogeneous volume conductor.
 						</ul>
-						<p>For Step 4, we use an ApplyFEMCurrentSource module to build the righthand side source vector b, based on the location and orientation of the dipoles relative to the mesh. Select: <b>BioPSE&gt;Forward&gt;ApplyFEMCurrentSource</b></p>
-						<p>You should <a href="figure_4.html" target="display">position this module</a> to the right of the SetupFEMatrix.</p>
-						<p><a href="ApplyFEM_variables.html" target="display">In the user interface</a>, select the Source model option to be &quot;dipole.&quot; With this option we do not specify a sink and source electrode.<br>
+						<p>For Step 4, we use an ApplyFEMCurrentSource module to build the righthand side source vector <font size="4"><b>b</b></font>, based on the location and orientation of the dipoles relative to the mesh. Select: <b>BioPSE&gt;Forward&gt;ApplyFEMCurrentSource</b></p>
+						<p>You should <a href="../../figure_4%20Folder/figure_4/index.html" target="display">position this module</a> to the right of the SetupFEMatrix.</p>
+						<p><a href="../../ApplyFEMCurrentSource%20Folder/ApplyFEMCurrentSource/index.html" target="display">In the user interface</a>, select the Source model option to be &quot;dipole.&quot; With this option we do not specify a sink and source electrode.<br>
 						<br>
-						For Step 5, we use a SolveMatrix module to solve for the potentials, phi, in the linear system, A phi = b. Select <b>SCIRun&gt;Math&gt;SolveMatrix</b> from the menu bar. <a href="figure_5.html" target="display">Position the module</a> beneath the SetupFEMatrix in the network pane.</p>
-						<p>Now we can <a href="SolveMatrix.html" target="display">set the SolveMatrix variables</a>.<br>
+						For Step 5, we use a SolveMatrix module to solve for the potentials, <img height="16" width="13" src="phi.gif">, in the linear system, <img height="15" width="14" src="A.gif"><img height="16" width="13" src="phi.gif"><img height="16" width="20" src="equals.gif"><img height="16" width="10" src="b.gif">. Select <b>SCIRun&gt;Math&gt;SolveMatrix</b> from the menu bar. <a href="../../figure_5%20Folder/figure_5/index.html" target="display">Position the module</a> beneath the SetupFEMatrix in the network pane.</p>
+						<p>Now we can <a href="../../SolveMatrix%20Folder/SolveMatrix/index.html" target="display">set the SolveMatrix variables</a>.<br>
 						</p>
 						<ul>
 							<li>The Solution Method we want is &quot;Conjugate Gradient &amp; Precond. (SCI)&quot;
@@ -86,18 +85,18 @@
 							<li>Set the Precondition to Jacobi<br>
 						</ul>
 						<p><font size="4"><b>*</b></font> It is important to note that the SolveMatrix window must either be open or minimized. It must not be closed completely.</p>
-						<p>Now that you have the first four modules positioned in the network pane, you should begin connecting them (though, you can connect or disconnect modules at any time). The first connection, referred to as a data pipe, goes <a href="figure_6.html" target="display">between the FieldReader and the SetupFEMatrix</a>. Note that the FieldReader contains only one output port. To connect the modules, <a href="figure_7.html" target="display">center-click and hold down on the output port of the FieldReader</a>. When you center-click on the output port of any module, a series of black lines will be visible running between all viable connections. As you roll the cursor over the lines, they will <a href="figure_8.html" target="display">highlight in red</a>. Releasing on the highlighted line will <a href="figure_9.html" target="display">complete this piped connection</a> in yellow. For our purposes, you should connect to the first input port on the SetupFEMatrix. This process applies to all inter-module connections.<br>
+						<p>Now that you have the first four modules positioned in the network pane, you should begin connecting them (though, you can connect or disconnect modules at any time). The first connection, referred to as a data pipe, goes <a href="../../figure_6%20Folder/figure_6/index.html" target="display">between the FieldReader and the SetupFEMatrix</a>. Note that the FieldReader contains only one output port. To connect the modules, <a href="../../figure_7%20Folder/figure_7/index.html" target="display">center-click and hold down on the output port of the FieldReader</a>. When you center-click on the output port of any module, a series of black lines will be visible running between all viable connections. As you roll the cursor over the lines, they will <a href="../../figure_8%20Folder/figure_8/index.html" target="display">highlight in red</a>. Releasing on the highlighted line will <a href="../../figure_9%20Folder/figure_9/index.html" target="display">complete this piped connection</a> in yellow. For our purposes, you should connect to the first input port on the SetupFEMatrix. This process applies to all inter-module connections.<br>
 						<br>
 						The next connections will be between:</p>
 						<ul>
-							<li><a href="figure_10.html" target="display">The FieldReader module output port to the first ApplyFEMCurrentSource module input port.</a>
-							<li><a href="figure_11.html" target="display">The first output port of the SetupFEMatrix module to the first input port of the SolveMatrix module</a>.
-							<li><a href="figure_12.html" target="display">The first output port of the ApplyFEMCurrentSource module to the second input port of the SolveMatrix module.</a>
+							<li><a href="../../figure_10%20Folder/figure_10/index.html" target="display">The FieldReader module output port to the first ApplyFEMCurrentSource module input port.</a>
+							<li><a href="../../figure_11%20Folder/figure_11/index.html" target="display">The first output port of the SetupFEMatrix module to the first input port of the SolveMatrix module</a>.
+							<li><a href="../../figure_12%20Folder/figure_12/index.html" target="display">The first output port of the ApplyFEMCurrentSource module to the second input port of the SolveMatrix module.</a>
 						</ul>
 						<p><br>
-						For Step 6, we use a <a href="figure_13.html" target="display">ManageFieldData module</a> (<b>SCIRun&gt;Fields&gt;ManageFieldData</b>) to attach the data values (potentials) to the geometry (finite element mesh) in order to build a potential field. This will be connected to the first input port of the Gradient module (Step 7).<br>
+						For Step 6, we use a <a href="../../figure_13%20Folder/figure_13/index.html" target="display">ManageFieldData module</a> (<b>SCIRun&gt;Fields&gt;ManageFieldData</b>) to attach the data values (potentials) to the geometry (finite element mesh) in order to build a potential field. This will be connected to the first input port of the Gradient module (Step 7).<br>
 						<br>
-						For Step 7, we use a Gradient module (<b>SCIRun&gt;Fields&gt;Gradient</b>) to compute the electric field, E, from the potential field. This will eventually connect to the first input port of the SeedField module.<br>
+						For Step 7, we use a Gradient module (<b>SCIRun&gt;Fields&gt;Gradient</b>) to compute the electric field (<img height="16" width="11" src="sigma.gif">), from the potential field. This will eventually connect to the first input port of the SeedField module.<br>
 						<br>
 						<br>
 						Having solved for the electric and potential fields for a static source, there are two interactions we can now explore: A) moving the dipole within the model; B) visualizing the results of our computations.<br>
@@ -106,7 +105,7 @@
 						<b>Moving the Dipoles</b><br>
 						<br>
 						To move the dipoles, we insert a ShowDipoles module (<b>BioPSE&gt;Visualization&gt;ShowDipoles</b>) between a new dipole source FieldReader module (filename: <font color="#228b22"><i><b>DATA_DIR</b></i></font><b>/sphere-dipole.pcv.fld</b>) and the ApplyFEMCurrentSource module.</p>
-						<p>By <a href="figure_14.html" target="display">connecting</a> the Viewer module (<b>SCIRun&gt;Render&gt;Viewer</b>) to the ShowDipoles module we can begin to <a href="figure_15.html" target="display">visualize the location and orientation of the source</a>, and can move it around in the model by selecting the scene graph widget that represents it.</p>
+						<p>By <a href="../../figure_14%20Folder/figure_14/index.html" target="display">connecting</a> the Viewer module (<b>SCIRun&gt;Render&gt;Viewer</b>) to the ShowDipoles module we can begin to <a href="../../figure_15%20Folder/figure_15/index.html" target="display">visualize the location and orientation of the source</a>, and can move it around in the model by selecting the scene graph widget that represents it.</p>
 						<p>In the user interface, set the option to &quot;Scale Size&quot; and scale the widget to 0.05. Check the option to &quot;Show Last As Vector.&quot;</p>
 						<p>To execute the network, right click on any module. This will bring up a menu with various options. Select Execute.<br>
 						<br>
@@ -114,7 +113,7 @@
 						<br>
 						To visualize the electric field (vectors) and the potential field (scalars), we have a number of visualization modules with which we can experiment. First, let's look at an isopotential surface.</p>
 						<p>We can attach a data pipe to feed the potential field from the ManageFieldData module into an Isosurface module (<b>SCIRun&gt;Visualization&gt;Isosurface</b>). Our isosurface potentials can be mapped to a range of data values -- to do this, we must construct an appropriate colormap.</p>
-						<p>We add a GenStandardColorMaps module (<b>SCIRun&gt;Visualization&gt;GenStandardColorMaps</b>) to the canvas and select an attractive colormap from its user interface. In order to scale that colormap so it corresponds to the range of datavalues in our potential field, we feed (connect) the colormap and the potential field into a RescaleColorMap module (<b>SCIRun&gt;Visualization&gt; RescaleColorMap</b>). The output of RescaleColorMap is a colormap with min/max values mapped to the corresponding values from the potential field. This new colormap, along with the potential field, can then be passed <a href="figure_16.html" target="display">(connected)</a> into an Isosurface module.</p>
+						<p>We add a GenStandardColorMaps module (<b>SCIRun&gt;Visualization&gt;GenStandardColorMaps</b>) to the canvas and select an attractive colormap from its user interface. In order to scale that colormap so it corresponds to the range of datavalues in our potential field, we feed (connect) the colormap and the potential field into a RescaleColorMap module (<b>SCIRun&gt;Visualization&gt; RescaleColorMap</b>). The output of RescaleColorMap is a colormap with min/max values mapped to the corresponding values from the potential field. This new colormap, along with the potential field, can then be passed <a href="../../figure_16%20Folder/figure_16/index.html" target="display">(connected)</a> into an Isosurface module.</p>
 						<p>Isosurface variables:<br>
 						</p>
 						<ul>
@@ -122,9 +121,9 @@
 							<li>Under the Options section, set &quot;Auto Extract from the New Field&quot;
 							<li>Leave the Method as using &quot;MC&quot; which is Marching Cubes and the number of processors, &quot;np,&quot; to be 1.<br>
 						</ul>
-						<p>By changing the isovalue on the Isosurface interface, we can <a href="figure_17.html" target="display">visualize any isopotential surface within the model</a>.<br>
+						<p>By changing the isovalue on the Isosurface interface, we can <a href="../../figure_17%20Folder/figure_17/index.html" target="display">visualize any isopotential surface within the model</a>.<br>
 						<br>
-						In addition to isosurfacing, we can also look at potential values at specific locations within the field. We can interpolate or extrapolate potentials at arbitrary locations using the BuildInterpolant and ApplyInterpolant modules. For example, we can read in a collection of electrode positions (represented as a PointCloud) with a new FieldReader module (<font color="#228b22"><i><b>DATA_DIR</b></i></font><b>/sphere-electrodes.pcd.fld</b>), and feed the geometric mesh and the electrode positions to the BuildInterpolant module (<b>SCIRun&gt;Fields&gt;BuildInterpolant</b>). The output will be an interpolant field indicating the weights and indices from the mesh required to compute the data values at the electrode locations. The interpolant field and the potential field can then be fed into an ApplyInterpolant module (<b>SCIRun&gt;Fields&gt;ApplyInterpolant</b>) to compute those interpolated values (multiplying the kernels by the source data values to get the destination data values). We can then visualize the results using a <a href="figure_18.html" target="display">ShowField module</a> (<b>SCIRun&gt;Visualization&gt;ShowField</b>). <a href="figure_19.html" target="display">To see the electrodes color-mapped</a>, we feed the rescaled colormap into the ShowField module along with the potential-mapped electrode field.</p>
+						In addition to isosurfacing, we can also look at potential values at specific locations within the field. We can interpolate or extrapolate potentials at arbitrary locations using the BuildInterpolant and ApplyInterpolant modules. For example, we can read in a collection of electrode positions (represented as a PointCloud) with a new FieldReader module (<font color="#228b22"><i><b>DATA_DIR</b></i></font><b>/sphere-electrodes.pcd.fld</b>), and feed the geometric mesh and the electrode positions to the BuildInterpolant module (<b>SCIRun&gt;Fields&gt;BuildInterpolant</b>). The output will be an interpolant field indicating the weights and indices from the mesh required to compute the data values at the electrode locations. The interpolant field and the potential field can then be fed into an ApplyInterpolant module (<b>SCIRun&gt;Fields&gt;ApplyInterpolant</b>) to compute those interpolated values (multiplying the kernels by the source data values to get the destination data values). We can then visualize the results using a <a href="../../figure_18%20Folder/figure_18/index.html" target="display">ShowField module</a> (<b>SCIRun&gt;Visualization&gt;ShowField</b>). <a href="../../figure_19%20Folder/figure_19/index.html" target="display">To see the electrodes color-mapped</a>, we feed the rescaled colormap into the ShowField module along with the potential-mapped electrode field.</p>
 						<p>ShowField variables:</p>
 						<ul>
 							<li>Show Nodes as Spheres with a Node Scale of 0.03 (all defaults)
@@ -141,7 +140,7 @@
 							<li>Set the Step Size to be 0.1
 							<li>Set the Maximum Steps to be 200<br>
 						</ul>
-						<p>To choose the seed positions for the streamlines, we use a <a href="figure_20.html" target="display">SeedField module</a> (<b>SCIRun&gt;Fields&gt;SeedField</b>). SeedField generates a collection of seed points based on either a scene widget (e.g. a &quot;rake&quot;) or by randomly distributing them over the input domain. The electric field and the seed positions are passed into the Streamline module, and the seed positions are integrated through the (gradient) vector field. Variable settings can be left at default.The output from the Streamline module is a collection of Streamlines (represented as contours), which we can then <a href="figure_21.html" target="display">visualize</a> by again using a ShowField module.</p>
+						<p>To choose the seed positions for the streamlines, we use a <a href="../../figure_20%20Folder/figure_20/index.html" target="display">SeedField module</a> (<b>SCIRun&gt;Fields&gt;SeedField</b>). SeedField generates a collection of seed points based on either a scene widget (e.g. a &quot;rake&quot;) or by randomly distributing them over the input domain. The electric field and the seed positions are passed into the Streamline module, and the seed positions are integrated through the (gradient) vector field. Variable settings can be left at default.The output from the Streamline module is a collection of Streamlines (represented as contours), which we can then <a href="../../figure_21%20Folder/figure_21/index.html" target="display">visualize</a> by again using a ShowField module.</p>
 						<p>Variables for the second ShowField module should be:</p>
 						<ul>
 							<li>Show Nodes as Spheres with a Node Scale of 0.03 (all defaults)
