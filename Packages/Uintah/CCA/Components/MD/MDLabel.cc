@@ -1,4 +1,3 @@
-/* REFERENCED */
 
 #include <Packages/Uintah/CCA/Components/MD/MDLabel.h>
 #include <Packages/Uintah/Core/Grid/ParticleVariable.h>

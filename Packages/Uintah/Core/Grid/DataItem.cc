@@ -1,4 +1,3 @@
-/* REFERENCED */
 
 #include <Packages/Uintah/Core/Grid/DataItem.h>
 
