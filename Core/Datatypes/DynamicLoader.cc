@@ -129,10 +129,13 @@ DynamicLoader::compile_so(const string& file)
 bool 
 DynamicLoader::create_cc(const CompileInfo &info)
 {
+  const string STD_STR("std::");
+  bool using_std = false;
+
   // Try to open the file for writing.
   string full = OTF_OBJ_DIR + "/" + info.filename_ + "cc";
   ofstream fstr(full.c_str());
-  
+
   if (!fstr) {
     cerr << "DynamicLoader::create_cc could not create file " << full << endl;
     return false;
@@ -142,12 +145,20 @@ DynamicLoader::create_cc(const CompileInfo &info)
   // generate includes
   vector<string>::const_iterator iter = info.includes_.begin();
   while (iter != info.includes_.end()) {  
-    if (*iter != "builtin")
+    if ((*iter).substr(0, 5) == STD_STR) {
+      string std_include = (*iter).substr(6, (*iter).length() -1);
+      fstr << "#include <" << std_include << ">" << endl;
+      using_std = true;
+    } else if (*iter != "builtin")
       fstr << "#include \"" << *iter << "\"" << endl;
     ++iter;
   }
 
   fstr << endl;
+  if (using_std) {
+    fstr << "using namespace std;" << endl << endl;
+  }
+
   fstr << "using namespace SCIRun;" << endl << endl;
   fstr << "extern \"C\" {"  << endl
        << info.base_class_name_ << "* maker() {" << endl
@@ -165,7 +176,7 @@ DynamicLoader::store(const string &name, DynamicAlgoHandle algo)
 }
 
 bool 
-DynamicLoader::get(const string &name, DynamicAlgoHandle algo)
+DynamicLoader::get(const string &name, DynamicAlgoHandle &algo)
 {
   map_type::iterator loc = algo_map_.find(name);
   if (loc != algo_map_.end()) {
