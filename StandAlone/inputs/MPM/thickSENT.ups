@@ -1,0 +1,153 @@
+<?xml version='1.0' encoding='ISO-8859-1' ?>
+<!-- <!DOCTYPE Uintah_specification SYSTEM "input.dtd"> -->
+<!-- @version: Updated 8/1/03-->
+<Uintah_specification>
+
+   <Meta>
+	<title>J-integral and SIF calculation for thick-SENT</title>
+   </Meta>
+
+   <Time>
+	<maxTime>60e-6</maxTime>
+	<initTime>0.0</initTime>
+	<delt_min>0.0</delt_min>
+	<delt_max>1.2e-6</delt_max>
+	<timestep_multiplier>0.8</timestep_multiplier>
+   </Time>
+   <DataArchiver>
+        <filebase>thickSENT.uda</filebase>
+	<outputInterval>1.5e-6</outputInterval>
+	<save label = "KineticEnergy"/>
+	<save label = "TotalMass"/>
+	<save label = "StrainEnergy"/>
+	<save label = "CenterOfMassPosition"/>
+	<save label = "CenterOfMassVelocity"/>
+	<save label = "p.x"/>
+	<save label = "p.volume"/>
+	<save label = "p.stress"/>
+        <save label = "p.particleID"/>
+	<save label = "g.mass"/>
+	<save label = "g.stressFS"/>
+
+	<checkpoint cycle = "2" interval = "12e-6"/>
+   </DataArchiver>
+
+    <MPM>
+	<time_integrator>fracture</time_integrator>
+	<nodes8or27>8</nodes8or27>
+        <calculate_fracture_parameters>every_time_step</calculate_fracture_parameters>
+        <J_radius>2e-3</J_radius>
+        <save_J_matID>0</save_J_matID>
+        <save_J_crkFrtSegID>0</save_J_crkFrtSegID>
+        <do_crack_propagation>false</do_crack_propagation>
+    </MPM>
+
+    <PhysicalConstants>
+	<gravity>[0,0,0]</gravity>
+    </PhysicalConstants>
+
+    <MaterialProperties>
+	<MPM>
+	    <material>
+                <burn type = "null" />
+		<density>7900</density>
+		<constitutive_model type="hypo_elastic"> 
+		   <G>77e9</G>
+		   <K>165e9</K>
+	        </constitutive_model>
+		<toughness>10.e6</toughness>
+		<thermal_conductivity>1.0</thermal_conductivity>
+		<specific_heat>5</specific_heat>
+		<geom_object>
+		    <box label = "box">
+			<min>[-10e-3, -30e-3, -15e-3]</min>
+			<max>[ 10e-3,  30e-3,  0.0]</max>
+		    </box>
+		    <res>[2,2,2]</res>
+		    <velocity>[0.0,0.0,0]</velocity>
+		    <temperature>12</temperature>
+ 		</geom_object>
+		<velocity_field>0</velocity_field>
+
+                <crack>
+                   <type>null</type>
+                   <crack_segments>
+                      <quadrilateral>
+                        <p1> [ 2.1e-3, 0.0, 0.0]  </p1>
+                        <p2> [10.1e-3, 0.0, 0.0]  </p2>
+                        <p3> [10.1e-3, 0.0, -15.1e-3] </p3>
+                        <p4> [ 2.1e-3, 0.0, -15.1e-3] </p4>
+                        <resolution_p1_p2> 1 </resolution_p1_p2>
+                        <resolution_p2_p3> 4 </resolution_p2_p3>
+                        <crack_front_sides>NNNY</crack_front_sides>
+                      </quadrilateral>
+                   </crack_segments>
+                </crack>
+	    </material>
+
+	    <contact>
+	      <type>null</type>
+	      <vel_fields>[0,0,0]</vel_fields>
+	    </contact>
+	</MPM>
+
+    </MaterialProperties>
+	
+    <Grid>
+        <BoundaryConditions>
+           <Face side = "x-">
+                  <BCType id = "all" var = "Dirichlet" label = "Velocity">
+                        <value> [0.0,0.0,0.0] </value>
+                   </BCType>
+           </Face>
+           <Face side = "x+">
+                  <BCType id = "all" var = "Dirichlet" label = "Velocity">
+                      <value> [0.0,0.0,0.0] </value>
+                  </BCType>
+           </Face>
+           <Face side = "y-">
+                  <BCType id = "all" var = "Dirichlet" label = "Velocity">
+                      <value> [0.0,0.0,0.0] </value>
+                  </BCType>
+           </Face>
+           <Face side = "y+">
+                  <BCType id = "all" var = "Dirichlet" label = "Velocity">
+                      <value> [0.0,0.0,0.0] </value>
+                 </BCType>
+           </Face>
+           <Face side = "z-">
+                  <BCType id = "all" var = "Dirichlet" label = "Velocity">
+                      <value> [0.0,0.0,0.0] </value>
+                 </BCType>
+           </Face>
+           <Face side = "z+">
+             <BCType id = "all" var = "symmetry" label = "Symmetric"> </BCType>
+           </Face>
+        </BoundaryConditions>
+	<Level>
+	    <Box label = "1">
+		<lower>[-12e-3, -36e-3, -16e-3]</lower>
+		<upper>[ 12e-3,  36e-3, 0.0]</upper>
+	        <resolution>[24,72,16]</resolution>
+		<patches>[2,4,2]</patches>
+	    </Box>
+	</Level>
+    </Grid>
+
+    <PhysicalBC>
+	<MPM>
+           <force>
+             <lower>[-10e-3, 29.0e-3, -15e-3]</lower>
+             <upper>[ 10e-3, 30.0e-3, 0.0]</upper>
+             <force_density>[0.0, 0.50633e8, 0.0]</force_density>
+           </force>
+           <force>
+             <lower>[-10e-3, -30.0e-3, -15e-3]</lower>
+             <upper>[ 10e-3, -29.0e-3, 0.0]</upper>
+             <force_density>[0.0, -0.50633e8, 0.0]</force_density>
+           </force>
+	</MPM>
+    </PhysicalBC>
+    
+</Uintah_specification>
+
