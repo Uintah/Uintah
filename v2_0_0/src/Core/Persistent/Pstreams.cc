@@ -880,7 +880,8 @@ void FastPiostream::emit_pointer(int& have_data, int& pointer_id)
 // BinaryPiostream -- portable
 BinaryPiostream::~BinaryPiostream()
 {
-#if defined(__APPLE__)
+#if 0 //defined(__APPLE__) -- changed by DMW: I couldn't find any platforms
+      //                      that still require this. [11/13/03]
   if (xdr)
     if ((xdr)->x_ops)
       if ((xdr)->x_ops->x_destroy)
