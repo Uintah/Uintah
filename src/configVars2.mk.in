@@ -1,0 +1,337 @@
+#
+#  The contents of this file are subject to the University of Utah Public
+#  License (the "License"); you may not use this file except in compliance
+#  with the License.
+#  
+#  Software distributed under the License is distributed on an "AS IS"
+#  basis, WITHOUT WARRANTY OF ANY KIND, either express or implied. See the
+#  License for the specific language governing rights and limitations under
+#  the License.
+#  
+#  The Original Source Code is SCIRun, released March 12, 2001.
+#  
+#  The Original Source Code was developed by the University of Utah.
+#  Portions created by UNIVERSITY are Copyright (C) 2001, 1994 
+#  University of Utah. All Rights Reserved.
+#
+
+# configVars.mk.in holds all of the variables needed by the make 
+# system to create makefiles. Various Makefiles can include this central
+# copy of the vars. This file has all of the variables and rules common to 
+# all generated makefiles.
+
+TAU_MAKEFILE := @TAU_MAKEFILE@
+ifneq ($(TAU_MAKEFILE),)
+  include $(TAU_MAKEFILE)
+endif
+
+# Blow away a bunch of makes internal rules to improve the performance
+# of make
+.SUFFIXES:
+% :: RCS/%,v
+% :: RCS/%
+% :: %,v
+% :: s.%
+% :: SCCS/s.%
+%.out :: %
+%.c :: %
+%.tex :: %
+
+# If a sidl-generated file uses templates, it's possible that the MIPSPro
+# CC will decide to recompile the .cc file at link time to get the template
+# instantiation. If make has already removed the _sidl.cc file since it's an
+# intermediate file, the compilation will fail. This prevents make from 
+# deleting these files.
+.PRECIOUS: %_sidl.h %_sidl.cc
+
+
+ifeq ($(OBJTOP),.)
+LIBDIR := lib/
+else
+LIBDIR := $(OBJTOP_ABS)/lib/
+endif
+LIBDIR_ABS    := $(shell mkdir -p $(LIBDIR); cd $(LIBDIR) ; pwd)
+
+SCIRUN_LIBDIR := $(LIBDIR)
+SCIRUN_LIBDIR_ABS := $(shell cd $(SCIRUN_LIBDIR); pwd)
+
+VPATH := $(SRCTOP)
+
+# Optional pieces
+
+PACKAGE_DIRS := @PACKAGE_DIRS@
+LOAD_PACKAGE := @LOAD_PACKAGE@
+BUILD_PARALLEL := @BUILD_PARALLEL@
+# Dd: don't need to do it explicitly this way... I think.
+#ifeq ($(BUILD_PARALLEL),yes)
+#COMPONENT_DIRS := Core/CCA/tools/sidl Core/CCA/Component
+#endif
+
+# These cannot be :=
+THREAD_IMPL = $(SRCDIR)/@THREAD_IMPL@
+TIME_IMPL = $(SRCDIR)/@TIME_IMPL@
+
+# Subdirectories
+SUBDIRS := Core Dataflow StandAlone $(COMPONENT_DIRS) main \
+	testprograms $(PACKAGE_DIRS)
+
+# Libraries and other flags
+
+TCL_LIB_DIR    := @LIBTCL@
+TCL_LIB_FLAG   := -ltcl
+TCL_INIT_DIR   := @TCL_INIT_DIR@
+
+TK_VERSION     := @TK_VERSION@
+TK_LIB_DIR     := @LIBTK@
+TK_LIB_FLAG    := -ltk
+TK_LIB_SPEC    := @TK_LIB_SPEC@
+
+ITCLSH         := @ITCLSH@
+ITCL_LIB_DIR   := @LIBITCL@
+ITCL_BIN_DIR   := @ITCL_BIN_DIR@
+ITCL_LIB_SPEC  := -litcl
+ITCL_INIT_DIR  := @ITCL_INIT_DIR@
+ITCL_WIDGETS   := @ITCL_WIDGETS@
+
+ITK_LIB_SPEC   := -litk
+ITK_LIB_DIR    := @LIBITK@
+
+BLT_LIB_DIR    := @LIBBLT@
+BLT_LIB_FLAG   := -lBLT
+BLT_TLINK      := -L$(BLT_LIB_DIR)
+
+TCL_SRC_DIR    := @TCL_SRC_DIR@
+TK_SRC_DIR     := @TK_SRC_DIR@
+ITCL_SRC_DIR   := @ITCL_SRC_DIR@
+ITK_SRC_DIR    := @ITK_SRC_DIR@
+
+#NEKTAR_LIB_DIR     := @NEKTAR_LIB_DIR@
+#NEKTAR_LIB_FLAG    := @NEKTAR_LIB_FLAG@
+#NEKTAR_INCLUDE_DIR := -I@NEKTAR_INCLUDE_DIR@
+
+TEEM_INCLUDE      := @INCTEEM_H@
+TEEM_LIB_DIR      := @LIBTEEM@
+
+MPEG_INCLUDE      := @INCMPEGE_H@
+MPEG_LIBRARY      := @LIBMPEGE@
+MPEG_DEF_FLAG	  := @MPEG_DEF_FLAG@
+
+LIBIMAGE_INCLUDE  := @INCIMAGE_H@
+LIBIMAGE_LIBRARY  := @LIBIMAGE@
+LIBIMAGE_DEF_FLAG := @LIBIMAGE_DEF_FLAG@
+
+UNI_PETSC_INC_DIR := @INCUNIPETSC_H@
+UNI_PETSC_LIB_DIR := @LIBUNIPETSC@
+UNI_PETSC_LIBS    := @UNI_PETSC_LIBS@
+
+BLAS_LIB_DIR      := @LIBBLAS@
+BLAS_LIBS         := -lblas
+
+LAPACK_LIB_DIR    := @LIBLAPACK@
+LAPACK_LIBS       := -llapack
+
+LDRUN_PREFIX      := @LDRUN_PREFIX@
+
+PERFEX_LIBRARY      := @PERFEX_LIBRARY@
+
+ifneq ($(UNI_PETSC_LIB_DIR),)
+  UNI_PETSC_LIBRARY := $(LDRUN_PREFIX)$(UNI_PETSC_LIB_DIR) \
+                       $(UNI_PETSC_LIB_DIR) $(UNI_PETSC_LIBS)
+else
+  UNI_PETSC_LIBRARY :=
+endif
+
+ifneq ($(BLAS_LIB_DIR),)
+  BLAS_LIBRARY := $(LDRUN_PREFIX)$(BLAS_LIB_DIR) \
+                       -L$(BLAS_LIB_DIR) $(BLAS_LIBS)
+else
+  BLAS_LIBRARY :=
+endif
+
+ifneq ($(LAPACK_LIB_DIR),)
+  LAPACK_LIBRARY := $(LDRUN_PREFIX)$(LAPACK_LIB_DIR) \
+                       -L$(LAPACK_LIB_DIR) $(LAPACK_LIBS)
+else
+  LAPACK_LIBRARY :=
+endif
+
+ifneq ($(TAU_MAKEFILE),)
+  TAU_LIB_DIR       := $(TAU_PREFIX_INSTALL_DIR)/$(CONFIG_ARCH)/lib
+  TAU_LIB_FLAG      := $(TAU_MPI_LIBS) $(TAU_SHLIBS)
+
+  CFLAGS := $(CFLAGS) -DUSE_TAU_PROFILING $(TAU_DEFS)
+  TAU_LIBRARY := $(LDRUN_PREFIX)$(TAU_LIB_DIR) -L$(TAU_LIB_DIR) $(TAU_LIB_FLAG)
+else
+  TAU_LIBRARY :=
+endif
+
+# Always put $(TAU_LIBRARY) in front of $(MPI_LIBRARY) for the TAU_MPI wrapper
+
+MPI_LIB_DIR := @LIBMPI@
+MPI_LIB_FLAG := @MPI@
+ifneq ($(MPI_LIB_DIR),)
+  MPI_LIBRARY := $(LDRUN_PREFIX)$(MPI_LIB_DIR) -L$(MPI_LIB_DIR) $(MPI_LIB_FLAG)
+else
+  MPI_LIBRARY := $(MPI_LIB_FLAG)
+endif
+
+ifneq (@INCMPI_H@,)
+MPI_INCLUDE := @INCMPI_H@
+endif
+MPI_TLINK := -L$(LIBMPI)
+
+X_LIBS := @LIBX@
+X_PRE_LIBS := @X_PRE_LIBS@
+X_EXTRA_LIBS := @X_EXTRA_LIBS@
+THREAD_LIBS := @THREAD_LIBS@
+PLATFORM_LDFLAGS := @PLATFORM_LDFLAGS@
+
+GL_LIBS := $(X_LIBS) $(X_PRE_LIBS) -lGLU -lGL -lXext -lX11 $(X_EXTRA_LIBS)
+X11_LIBS := $(X_LIBS) $(X_PRE_LIBS) -lXext -lX11 $(X_EXTRA_LIBS)
+
+PROGRAM_PSE   := @EXENAME@
+
+TRACEBACK_LIB := @LIBEXC@
+IMAGE_LIBS := @IMAGE_LIBS@
+
+LEX := @LEX@
+YACC := @YACC@ -d -v
+
+MAKE_PARALLELISM := @MAKE_PARALLELISM@
+NBITS := @NBITS@
+
+LARGESOS := @LARGESOS@
+
+ifeq ($(LARGESOS),yes)
+MALLOCLIB := Core
+else
+MALLOCLIB := Core/Malloc
+endif
+
+# Convenience variables - compounded from above definitions
+BLT_LIBRARY := $(LDRUN_PREFIX)$(BLT_LIB_DIR) -L$(BLT_LIB_DIR) $(BLT_LIB_FLAG)
+TCL_LIBRARY := $(LDRUN_PREFIX)$(TCL_LIB_DIR) -L$(TCL_LIB_DIR) $(TCL_LIB_FLAG)
+TK_LIBRARY := $(LDRUN_PREFIX)$(TK_LIB_DIR) $(TK_LIB_SPEC)
+ITCL_LIBRARY := $(LDRUN_PREFIX)$(ITCL_LIB_DIR) $(ITCL_LIB_SPEC) 
+ITK_LIBRARY := $(LDRUN_PREFIX)$(ITK_LIB_DIR) $(ITK_LIB_SPEC) 
+TEEM_LIBRARY := $(LDRUN_PREFIX)$(TEEM_LIB_DIR) -L$(TEEM_LIB_DIR) 
+NEKTAR_LIBRARY := $(LDRUN_PREFIX)$(NEKTAR_LIB_DIR) -L$(NEKTAR_LIB_DIR) $(NEKTAR_LIB_FLAG)
+
+DL_LIBRARY := @LIBDL@
+
+GZ_LIBRARY := @LIBZ@ 
+
+XML_LIB_DIR := @LIBXERCES_C@
+XML_LIB_FLAG := -lxerces_c
+XML_LIBRARY := $(LDRUN_PREFIX)$(XML_LIB_DIR) -L$(XML_LIB_DIR) $(XML_LIB_FLAG)
+XML_INCLUDE := @INCXERCESC_H@
+XML_TLINK := -L$(XML_LIB_DIR)
+
+ifeq ($(BUILD_PARALLEL),yes)
+GLOBUS_LIB_DIR := @GLOBUS_LIB@
+GLOBUS_LIBS := $(LDRUN_PREFIX)$(GLOBUS_LIB_DIR) -L$(GLOBUS_LIB_DIR) -lglobus_nexus -lglobus_io -lglobus_dc -lglobus_common @GLOBUS_EXTRA_DIRS@
+GLOBUS_COMMON := $(LDRUN_PREFIX)$(GLOBUS_LIB_DIR) -L$(GLOBUS_LIB_DIR) -lglobus_common
+GLOBUS_TLINK := -L$(GLOBUS_LIB_DIR)
+endif
+
+TLINK := $(BLT_TLINK) $(GLOBUS_TLINK) $(XML_TLINK)
+
+PETSC_DIR := @PETSC_DIR@
+PETSC_ARCH := @PETSC_ARCH@
+ifneq ($(PETSC_DIR),)
+PETSC_INCLUDES := -I$(PETSC_DIR)/include -I$(PETSC_DIR)/bmake/$(PETSC_ARCH)
+PETSC_SUB := @PETSC_SUB@
+PETSC_LIBDIR := $(PETSC_DIR)/lib/$(PETSC_SUB)/$(PETSC_ARCH)
+PETSC_EXTRA_LIBS := @PETSC_EXTRA_LIBS@
+PETSC_LIBS := $(LDRUN_PREFIX)$(PETSC_LIBDIR) -L$(PETSC_LIBDIR) $(PETSC_EXTRA_LIBS)
+
+endif
+
+INCLUDES += -I$(SRCTOP)/include -I$(SRCTOP) -I$(OBJTOP) -I$(SRCTOP)/Packages @INCTCL_H@ @INCTK_H@ @INCITCL_H@ @INCBLT_H@ @GLOBUS_INCLUDE@ $(XML_INCLUDE) @INCGL_H@ $(PETSC_INCLUDES) $(TAU_INCLUDE) $(MPI_INCLUDE) $(UNI_PETSC_INC_DIR)
+FINCLUDES += -I$(SRCTOP) -I$(OBJTOP)
+
+SSTREAM_COMPAT := @SSTREAM_COMPAT@
+ifeq ($(SSTREAM_COMPAT),yes)
+INCLUDES := $(INCLUDES) -I$(SRCTOP)/include/compat
+endif
+INCLUDES := $(sort $(INCLUDES))
+
+# variables and suffix rules for module transformation
+#------------------------------------------------------------------------------
+
+CC              := @CC@
+CXX             := @CXX@
+AS              := @AS@
+LD              := @LD@
+CFLAGS          := @CFLAGS@ $(CFLAGS)
+SOFLAGS         := @SOFLAGS@ -L$(LIBDIR) $(CFLAGS)
+LDFLAGS         := @LDFLAGS@ -L$(LIBDIR) $(CFLAGS)
+ASFLAGS         := @ASFLAGS@  $(ASFLAGS)
+CC_DEPEND_REGEN = @CC_DEPEND_REGEN@
+CC_DEPEND_REGEN_MOVE = @CC_DEPEND_REGEN_MOVE@
+NEED_SONAME	:= @NEED_SONAME@
+F77		:= @F77@
+FFLAGS		:= @FFLAGS@ $(FFLAGS)
+FLIBS		:= @FLIBS@
+F77_DEPEND_REGEN = @F77_DEPEND_REGEN@
+ifeq ($(NEED_SONAME),yes)
+SONAMEFLAG = -Wl,-soname,$(notdir $@)
+else
+SONAMEFLAG = 
+endif
+
+.SUFFIXES: .cc .c .o .d .s .F
+
+.cc.o: $<
+ifeq ($(CC_DEPEND_REGEN),-MD)
+	$(CXX) $(CFLAGS) $(INCLUDES) -MD -c $< -o $@
+  ifeq ($(CC_DEPEND_REGEN_MOVE),y)
+	echo -n "$(dir $@)" > $(basename $@).d
+	cat $(basename $(notdir $@)).d >> $(basename $@).d
+	rm $(basename $(notdir $@)).d 
+  endif
+else
+  ifeq ($(CC_DEPEND_REGEN),-M)
+	$(CXX) $(CFLAGS) $(INCLUDES) -M > $(basename $@).d
+	awk '{ print "$(basename $@)"".o: " $$2 }' $(basename $@).d > $(basename $@).temp.d
+	mv $(basename $@).temp.d $(basename $@).d
+	$(CXX) $(CFLAGS) $(INCLUDES) -c $< -o $@
+  else
+	$(CXX) $(CFLAGS) $(INCLUDES) $(CC_DEPEND_REGEN) -c $< -o $@
+  endif
+endif
+
+.F.o: $<
+
+	$(F77) $(FFLAGS) $(FINCLUDES) $(F77_DEPEND_REGEN) -c $< -o $@
+ifeq ($(CC_DEPEND_REGEN),-MD)
+  ifeq ($(CC_DEPEND_REGEN_MOVE),y)
+	echo -n "$(dir $@)" > $(basename $@).d
+	cat $(basename $(notdir $@)).d >> $(basename $@).d
+	rm $(basename $(notdir $@)).d 
+  endif
+endif
+
+
+.c.o: $<
+ifeq ($(CC_DEPEND_REGEN),-MD)
+	$(CC) $(CFLAGS) $(INCLUDES) -MD -c $< -o $@
+  ifeq ($(CC_DEPEND_REGEN_MOVE),y)
+	echo -n "$(dir $@)" > $(basename $@).d
+	cat $(basename $(notdir $@)).d >> $(basename $@).d
+	rm $(basename $(notdir $@)).d 
+  endif
+else
+  ifeq ($(CC_DEPEND_REGEN),-M)
+	$(CC) $(CFLAGS) $(INCLUDES) -M > $(basename $@).d
+	awk '{ print "$(basename $@)"".o: " $$2 }' $(basename $@).d > $(basename $@).temp.d
+	mv $(basename $@).temp.d $(basename $@).d
+	$(CC) $(CFLAGS) $(INCLUDES) -c $< -o $@
+  else
+	$(CC) $(CFLAGS) $(INCLUDES) $(CC_DEPEND_REGEN) -c $< -o $@
+  endif
+endif
+
+.s.o: $<
+	$(AS) $(ASFLAGS) -o $@ $< -o $@
+
