@@ -167,7 +167,8 @@ IsoClipAlgoTet<FIELD>::edge_lookup(unsigned int u0, unsigned int u1,
   edgepair_t np;
   if (u0 < u1)  { np.first = u0; np.second = u1; np.dfirst = d0; }
   else { np.first = u1; np.second = u0; np.dfirst = 1.0 - d0; }
-  if (edgemap.find(np) == edgemap.end())
+  const typename edge_hash_type::iterator loc = edgemap.find(np);
+  if (loc == edgemap.end())
   {
     const typename FIELD::mesh_type::Node::index_type nodeindex =
       clipped->add_point(p);
@@ -176,7 +177,7 @@ IsoClipAlgoTet<FIELD>::edge_lookup(unsigned int u0, unsigned int u1,
   }
   else
   {
-    return edgemap[np];
+    return (*loc).second;
   }
 }
 
@@ -227,7 +228,8 @@ IsoClipAlgoTet<FIELD>::face_lookup(unsigned int u0, unsigned int u1,
       nt.dsecond = d1; nt.dthird = 1.0 - d1 - d2;
     }
   }
-  if (facemap.find(nt) == facemap.end())
+  const typename face_hash_type::iterator loc = facemap.find(nt);
+  if (loc == facemap.end())
   {
     const typename FIELD::mesh_type::Node::index_type nodeindex =
       clipped->add_point(p);
@@ -236,7 +238,7 @@ IsoClipAlgoTet<FIELD>::face_lookup(unsigned int u0, unsigned int u1,
   }
   else
   {
-    return facemap[nt];
+    return (*loc).second;
   }
 }
 
@@ -746,7 +748,8 @@ IsoClipAlgoTri<FIELD>::edge_lookup(unsigned int u0, unsigned int u1,
   edgepair_t np;
   if (u0 < u1)  { np.first = u0; np.second = u1; np.dfirst = d0; }
   else { np.first = u1; np.second = u0; np.dfirst = 1.0 - d0; }
-  if (edgemap.find(np) == edgemap.end())
+  const typename edge_hash_type::iterator loc = edgemap.find(np);
+  if (loc == edgemap.end())
   {
     const typename FIELD::mesh_type::Node::index_type nodeindex =
       clipped->add_point(p);
@@ -755,7 +758,7 @@ IsoClipAlgoTri<FIELD>::edge_lookup(unsigned int u0, unsigned int u1,
   }
   else
   {
-    return edgemap[np];
+    return (*loc).second;
   }
 }
 
