@@ -36,11 +36,39 @@
     <!--   patches          = ????                                          -->
     <!--____________________________________________________________________-->
     <Grid>
+		<BoundaryConditions>
+		 <Face side = "x-">
+                        <BCType label = "Kinematic" var = "velocity">
+                           <velocity> [0.0,0.0,0.0] </velocity>
+                        </BCType>
+                </Face>
+                <Face side = "x+">
+                        <BCType label = "Kinematic" var = "velocity">
+			     <velocity> [0.0,0.0,0.0] </velocity>
+                        </BCType>
+                </Face>
+                <Face side = "y-">
+                        <BCType label = "Kinematic" var = "velocity">
+                           <velocity> [0.0,0.0,0.0] </velocity>
+                        </BCType>
+                </Face>                  
+		<Face side = "y+">
+                        <BCType label = "Kinematic" var = "velocity">            			    <velocity> [0.0,0.0,0.0] </velocity>
+                        </BCType>
+                </Face>
+                <Face side = "z-">
+                        <BCType label = "Symmetric" var = "symmetry"> </BCType>
+                </Face>
+                <Face side = "z+">
+                        <BCType label = "Symmetric" var = "symmetry"> </BCType>
+                </Face>                           
+	</BoundaryConditions>
 	<Level>
 	    <Box label="1">
 	    	<lower>       [0,0,0]     </lower>
 	    	<upper>       [20,20,2]   </upper>
 	       <resolution>  [22,22,3]   </resolution>
+                <extraCells>[1,1,1]</extraCells>
 		<patches>     [1,1,1]     </patches>
 	    </Box>
 	</Level>
