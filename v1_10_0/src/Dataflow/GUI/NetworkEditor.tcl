@@ -552,7 +552,7 @@ proc addConnection {omodid owhich imodid iwhich} {
     set connid [netedit addconnection $omodid $owhich $imodid $iwhich]
     if {"" == $connid} {
 	tk_messageBox -type ok -parent . -message \
-	    "Invalid connection found while loading network.  Discarding." \
+	    "Invalid connection found while loading network: addConnection $omodid $owhich $imodid $iwhich -- discarding." \
 	    -icon warning
 	return
     }
