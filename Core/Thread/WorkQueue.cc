@@ -33,7 +33,8 @@
 namespace SCIRun {
 
 WorkQueue::WorkQueue(const char* name)
-    : name_(name), current_assignment_("WorkQueue counter")
+  : name_(name), current_assignment_("WorkQueue counter"),
+    total_assignments_(-1), num_threads_(-1), granularity_(-1)
 {
 }
 
@@ -53,8 +54,7 @@ WorkQueue::nextAssignment(int& start, int& end)
 }
 
 void
-WorkQueue::refill(int new_ta, int new_nthreads,
-				   int new_granularity)
+WorkQueue::refill(int new_ta, int new_nthreads, int new_granularity)
 {
     if(new_ta == total_assignments_ && new_nthreads == num_threads_
        && new_granularity == granularity_){
@@ -113,7 +113,6 @@ WorkQueue::fill()
 	current_assignment+=current_assignmentsize;
     }
     assignments_.push_back(total_assignments_);
-    done_=false;
 }
 
 
