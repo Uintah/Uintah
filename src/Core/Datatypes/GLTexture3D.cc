@@ -66,18 +66,30 @@ void GLTexture3D::io(Piostream&)
 }
 
 GLTexture3D::GLTexture3D() :
-  texfld_(0), X_(0), Y_(0),
-  Z_(0), xmax_(0), ymax_(0), zmax_(0), isCC_(false), tg(0)
+  tg(0),
+  texfld_(0), 
+  X_(0), 
+  Y_(0),
+  Z_(0), 
+  xmax_(0), 
+  ymax_(0), 
+  zmax_(0), 
+  isCC_(false)
 {
 }
 
 
 GLTexture3D::GLTexture3D(FieldHandle texfld, double &min, double &max, 
-			 int use_minmax)
-  :  texfld_(texfld),
-     X_(0), Y_(0), Z_(0),
-     xmax_(0), ymax_(0), zmax_(0),
-     isCC_(false), tg(0)
+			 int use_minmax) :  
+  tg(0),
+  texfld_(texfld),
+  X_(0), 
+  Y_(0), 
+  Z_(0),
+  xmax_(0), 
+  ymax_(0), 
+  zmax_(0),
+  isCC_(false) 
 {
   if (texfld_->get_type_name(0) != "LatticeVol") {
     cerr << "GLTexture3D constructor error - can only make a GLTexture3D from a LatticeVol\n";
@@ -237,6 +249,17 @@ void GLTexture3D::build_texture()
   delete tg;
   thread_sema->down(max_workers);
   ASSERT(bontree_ != 0x0);
+}
+
+
+template<> 
+bool GLTexture3D::get_dimensions(LatVolMeshHandle m,
+				 int& nx, int& ny, int& nz)
+{
+  nx = m->get_nx();
+  ny = m->get_ny();
+  nz = m->get_nz();
+  return true;
 }
 
 bool
@@ -405,22 +428,32 @@ GLTexture3D::SETVALC(double val)
 }
 
 
-GLTexture3D::run_make_low_res_brick_data::run_make_low_res_brick_data(
-				      GLTexture3D* tex3D,
-			              Semaphore *thread,
-				      int xmax, int ymax, int zmax,
-				      int xsize, int ysize, int zsize,
-				      int xoff, int yoff, int zoff,
-				      int& padx, int& pady, int& padz,
-				      int level, Octree<Brick*>* node,
-				      Array3<unsigned char>*& bd) :
+GLTexture3D::run_make_low_res_brick_data
+::run_make_low_res_brick_data(GLTexture3D* tex3D,
+			      Semaphore *thread,
+			      int xmax, int ymax, int zmax,
+			      int xsize, int ysize, int zsize,
+			      int xoff, int yoff, int zoff,
+			      int& padx, int& pady, int& padz,
+			      int level, Octree<Brick*>* node,
+			      Array3<unsigned char>*& bd) :
   tex3D_(tex3D),
+  parent_(node), 
   thread_sema_( thread ), 
-  xmax_(xmax), ymax_(ymax), zmax_(zmax),
-  xsize_(xsize), ysize_(ysize), zsize_(zsize),
-  xoff_(xoff), yoff_(yoff), zoff_(zoff),
-  padx_(padx), pady_(pady), padz_(padz),
-  level_(level), parent_(node), bd_(bd)
+  xmax_(xmax), 
+  ymax_(ymax), 
+  zmax_(zmax),
+  xsize_(xsize), 
+  ysize_(ysize), 
+  zsize_(zsize),
+  xoff_(xoff), 
+  yoff_(yoff), 
+  zoff_(zoff),
+  padx_(padx), 
+  pady_(pady), 
+  padz_(padz),
+  level_(level), 
+  bd_(bd)
 {
   // constructor
 }
@@ -431,7 +464,6 @@ GLTexture3D::run_make_low_res_brick_data::run()
   using SCIRun::Interpolate;
 
   int ii,jj,kk;
-  double dx, dy, dz;
   Brick *brick = 0;
   Array3<unsigned char>* brickTexture;
 

@@ -96,18 +96,20 @@ GLVolRenState::drawPolys( vector<Polygon *> polys )
       glEnd();
       break;
     case 3:
-      glBegin(GL_TRIANGLES);
-      Vector n = Cross(Vector((*(polys[i]))[0] - (*polys[i])[1]),
-		       Vector((*(polys[i]))[0] - (*polys[i])[2]));
-      n.normalize();
-      glNormal3f(n.x(), n.y(), n.z());
-      glVertex3f((*(polys[i]))[0].x(),(*(polys[i]))[0].y(),
-		 (*(polys[i]))[0].z());
-      glVertex3f((*(polys[i]))[1].x(), (*(polys[i]))[1].y(),
-		 (*(polys[i]))[1].z());
-      glVertex3f((*(polys[i]))[2].x(),(*(polys[i]))[2].y(),
-		 (*(polys[i]))[2].z());
-      glEnd();
+      {
+	glBegin(GL_TRIANGLES);
+	Vector n = Cross(Vector((*(polys[i]))[0] - (*polys[i])[1]),
+			 Vector((*(polys[i]))[0] - (*polys[i])[2]));
+	n.normalize();
+	glNormal3f(n.x(), n.y(), n.z());
+	glVertex3f((*(polys[i]))[0].x(),(*(polys[i]))[0].y(),
+		   (*(polys[i]))[0].z());
+	glVertex3f((*(polys[i]))[1].x(), (*(polys[i]))[1].y(),
+		   (*(polys[i]))[1].z());
+	glVertex3f((*(polys[i]))[2].x(),(*(polys[i]))[2].y(),
+		   (*(polys[i]))[2].z());
+	glEnd();
+      }
       break;
     case 4:
     case 5:
