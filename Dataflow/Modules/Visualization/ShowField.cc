@@ -127,20 +127,20 @@ ShowField::reloadNodeColor() {
 
 ShowField::ShowField(const clString& id) : 
   Module("ShowField", id, Filter), 
-  showProgress_("show_progress", id, this), 
+  dbg_("ShowField", true),
+  nodeId_(0),
+  conId_(0),
+  conSwitch_(NULL),
+  nodeSwitch_(NULL),
   nodeDisplayType_("nodeDisplayType", id, this),
   showConP_("showConP", id, this),
+  showProgress_("show_progress", id, this), 
   nodeChanR_("nodeChan-r", id, this), 
   nodeChanG_("nodeChan-g", id, this),
   nodeChanB_("nodeChan-b", id, this),
   conChanR_("conChan-r", id, this), 
   conChanG_("conChan-g", id, this),
-  conChanB_("conChan-b", id, this),
-  dbg_("ShowField", true),
-  nodeId_(0),
-  conId_(0),
-  conSwitch_(NULL),
-  nodeSwitch_(NULL)
+  conChanB_("conChan-b", id, this)
 {
   // Create the input ports
   infield_ = scinew FieldIPort(this, "Field", FieldIPort::Atomic);
