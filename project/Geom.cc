@@ -95,7 +95,7 @@ Triangle::Triangle(const Point& p1, const Point& p2, const Point& p3)
 }
 
 Triangle::Triangle(const Triangle &copy)
-: bb(copy.bb), p1(copy.p1), p2(copy.p2), p3(copy.p3)
+: bb(copy.bb), p1(copy.p1), p2(copy.p2), p3(copy.p3), n(copy.n)
 {
 }
 
