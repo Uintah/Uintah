@@ -45,7 +45,7 @@ def chemfileCallback (test, susdir, inputsdir, compare_root, algo, mode, max_par
   else:
       cfile = cfile + ".bin"
   symlink("%s/chem_bins/%s" % (ArchesInputsdir, cfile), "chem.bin")
-  symlink("%s/StaticMixingTables/JP-8/nonadeqlb.tbl" % ArchesInputsdir, "nonadeqlb.tbl")
+  symlink("%s/StaticMixingTables/JP-8/NAE.rxn.new" % ArchesInputsdir, "NAE.rxn.new")
   symlink("%s/betaTable" % inputsdir, "betaTable")
                      
 exit(runSusTests(argv, TESTS, "mpmarches", chemfileCallback))
