@@ -40,6 +40,7 @@ public:
     ~LibMutex();
     void lock();
     void unlock();
+    int try_lock();
 };
 
 struct Semaphore_private;

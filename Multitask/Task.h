@@ -29,6 +29,7 @@ struct TaskTime {
     TaskTime(int secs, int usecs);
     TaskTime(float secs);
     TaskTime(double secs);
+    TaskTime();
 };
 
 struct TaskInfo
@@ -56,9 +57,20 @@ protected:
     int detached;
     void* specific[Task_max_specific];
 
-    // Used to implement locks and stuff...
     int startup(int);
     friend void* runbody(void*);
+
+    // Used to implement timers
+    struct ITimer {
+	TaskTime start;
+	TaskTime interval;
+	void (*handler)(void*);
+	void* cbdata;
+	int id;
+    };
+    ITimer** timers;
+    int ntimers;
+    int timer_id;
 public:
     TaskPrivate* priv;
 public:
@@ -93,6 +105,10 @@ public:
 
     // Timer stuff
     static void sleep(const TaskTime&); // Sleep for this amount of time
+    int start_itimer(const TaskTime& start, const TaskTime& interval,
+			    void (*handler)(void*), void* data);
+    void cancel_itimer(int);
+    static int test_malloc_lock();
 
     // Interface to select...
     static int mtselect(int, fd_set*, fd_set*, fd_set*, struct timeval*);

@@ -14,6 +14,7 @@
 #include <Multitask/Task.h>
 #include <Multitask/ITC.h>
 #include <Classlib/Args.h>
+#include <Classlib/NotFinished.h>
 #include <Malloc/New.h>
 #include <iostream.h>
 #include <stdlib.h>
@@ -50,6 +51,8 @@ struct TaskPrivate {
     caddr_t stackbot;
     size_t stacklen;
     size_t redlen;
+    void (*handle_alrm)(void*);
+    void* alrm_data;
 };
 
 struct TaskArgs {
@@ -429,6 +432,16 @@ static void unlocker()
     malloc_lock->unlock();
 }
 
+int Task::test_malloc_lock()
+{
+    if(malloc_lock->try_lock()){
+	malloc_lock->unlock();
+	return 1;
+    } else {
+	return 0;
+    }
+}
+
 void Task::initialize(char* pn)
 {
     malloc_lock=new LibMutex;
@@ -653,7 +666,7 @@ void Mutex::lock()
 {
     if(!single_threaded.is_set()){
 	if(ussetlock(priv->lock) == -1){
-	    perror("upsema");
+	    perror("ussetlock");
 	    exit(-1);
 	}
     }
@@ -663,9 +676,23 @@ void Mutex::unlock()
 {
     if(!single_threaded.is_set()){
 	if(usunsetlock(priv->lock) == -1){
-	    perror("usvsema");
+	    perror("usunsetlock");
 	    exit(-1);
 	}
+    }
+}
+
+int Mutex::try_lock()
+{
+    if(!single_threaded.is_set()){
+	int val=uscsetlock(priv->lock, 5);
+	if(val == -1){
+	    perror("uscsetlock");
+	    exit(-1);
+	}
+	return val;
+    } else {
+	return 1;
     }
 }
 
@@ -706,6 +733,15 @@ void LibMutex::unlock()
     }
 }
 
+int LibMutex::try_lock()
+{
+    int val=uscsetlock(priv->lock, 5);
+    if(val == -1){
+	perror("uscsetlock");
+	exit(-1);
+    }
+    return val;
+}
 
 //
 // Condition variable implementation
@@ -824,4 +860,80 @@ int Task::mtselect(int nfds, fd_set* readfds, fd_set* writefds,
 {
     // Irix has kernel threads, so select works ok...
     return select(nfds, readfds, writefds, exceptfds, timeout);
+}
+
+static void handle_alrm(int, int, sigcontext_t*)
+{
+    Task* task=Task::self();
+    if(task->priv->handle_alrm)
+       (*task->priv->handle_alrm)(task->priv->alrm_data);
+}
+
+int Task::start_itimer(const TaskTime& start, const TaskTime& interval,
+		       void (*handler)(void*), void* cbdata)
+{
+    if(ntimers > 0){
+	NOT_FINISHED("Multiple timers in a single thread");
+	return 0;
+    }
+    ITimer** new_timers=new ITimer*[ntimers+1];
+    if(timers){
+	for(int i=0;i<ntimers;i++){
+	    new_timers[i]=timers[i];
+	}
+	delete[] timers;
+    }
+    timers=new_timers;
+    ITimer* t=new ITimer;
+    timers[ntimers]=t;
+    ntimers++;
+    t->start=start;
+    t->interval=interval;
+    t->handler=handler;
+    t->cbdata=cbdata;
+    t->id=timer_id++;
+    struct itimerval it;
+    it.it_interval.tv_sec=interval.secs;
+    it.it_interval.tv_usec=interval.usecs;
+    it.it_value.tv_sec=start.secs;
+    it.it_value.tv_usec=start.usecs;
+    struct sigaction action;
+    action.sa_flags=SA_ONSTACK;
+    sigemptyset(&action.sa_mask);
+
+    action.sa_handler=(SIG_PF)handle_alrm;
+    if(sigaction(SIGALRM, &action, NULL)== -1){
+	perror("sigaction");
+	return 0;
+    }
+    if(setitimer(ITIMER_REAL, &it, 0) == -1){
+	perror("setitimer");
+	return 0;
+    }
+    priv->handle_alrm=handler;
+    priv->alrm_data=cbdata;
+    return t->id;
+}
+
+void Task::cancel_itimer(int which_timer)
+{
+    priv->handle_alrm=0;
+    for(int idx=0;idx<ntimers;idx++){
+	if(timers[idx]->id == which_timer)
+	    break;
+    }
+    if(idx==ntimers){
+	cerr << "Cancelling bad timer!\n" << endl;
+	return;
+    }
+    struct itimerval it;
+    timerclear(&it.it_interval);
+    timerclear(&it.it_value);
+    if(setitimer(ITIMER_REAL, &it, 0) == -1){
+	perror("setitimer");
+	return;
+    }
+    for(int i=idx;i<ntimers-1;i++)
+	timers[i]=timers[i+1];
+    ntimers--;
 }

@@ -16,7 +16,8 @@
 
 // Task constructure
 Task::Task(const clString& name, int detached, int priority)
-: name(name), priority(priority), detached(detached)
+: name(name), priority(priority), detached(detached), timers(0),
+  timer_id(100), ntimers(0)
 {
     activated=0;
 }
@@ -42,6 +43,10 @@ TaskTime::TaskTime(float secs)
 
 TaskTime::TaskTime(double secs)
 : secs((int)secs), usecs((int)((secs-(int)secs)*1000.))
+{
+}
+
+TaskTime::TaskTime()
 {
 }
 
