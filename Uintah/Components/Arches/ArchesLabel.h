@@ -232,6 +232,11 @@ namespace Uintah {
       const VarLabel* d_DUMBLMLabel;
       const VarLabel* d_DVMBLMLabel;
       const VarLabel* d_DWMBLMLabel;
+
+      // For storing the interpolated CC Velocity Variables
+      const VarLabel* d_oldCCVelocityLabel;
+      const VarLabel* d_newCCVelocityLabel;
+
     }; // End class ArchesLabel
 
   }  // End namespace ArchesSpace
@@ -241,6 +246,10 @@ namespace Uintah {
 
 //
 // $Log$
+// Revision 1.7  2000/08/18 05:06:57  bbanerje
+// Added interpolation from FC Var to CC Var for velocity viz in
+// Picard.
+//
 // Revision 1.6  2000/08/10 00:56:33  rawat
 // added pressure bc for scalar and changed discretization option for velocity
 //

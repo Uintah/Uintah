@@ -108,6 +108,17 @@ public:
 				 DataWarehouseP& old_dw,
 				 DataWarehouseP& new_dw);
 
+      ///////////////////////////////////////////////////////////////////////
+      //
+      // Schedule the interpolation of velocities from Face Centered Variables
+      //    to a Cell Centered Vector
+      //    [in] 
+      //
+      void sched_interpolateFromFCToCC(const LevelP&, 
+				       SchedulerP& sched,
+				       DataWarehouseP& old_dw,
+				       DataWarehouseP& new_dw);
+
       // GROUP: Action Computations :
       ///////////////////////////////////////////////////////////////////////
       //
@@ -143,6 +154,17 @@ private:
 			   DataWarehouseP& old_dw,
 			   DataWarehouseP& new_dw);
 
+      ///////////////////////////////////////////////////////////////////////
+      //
+      // Actually Interpolate from SFCX, SFCY, SFCZ to CC<Vector>
+      //    [in] 
+      //        
+      //
+      void interpolateFromFCToCC(const ProcessorGroup* pc,
+				 const Patch* patch,
+				 DataWarehouseP& old_dw,
+				 DataWarehouseP& new_dw);
+
 private:
 
       // Total number of nonlinear iterates
@@ -177,6 +199,10 @@ private:
 
 //
 // $Log$
+// Revision 1.19  2000/08/18 05:06:57  bbanerje
+// Added interpolation from FC Var to CC Var for velocity viz in
+// Picard.
+//
 // Revision 1.18  2000/07/28 02:31:00  rawat
 // moved all the labels in ArchesLabel. fixed some bugs and added matrix_dw to store matrix
 // coeffecients
