@@ -50,46 +50,46 @@ typedef LockingHandle<ColorMap> ColorMapHandle;
 
 class SCICORESHARE ColorMap : public Datatype, public GeomColormapInterface {
 public:
-    int type; // 0 is stupid, 1 is not stupid
-    double min;
-    double max;
-    Array1<MaterialHandle> colors;
+  int type; // 0 is stupid, 1 is not stupid
+  double min;
+  double max;
+  Array1<MaterialHandle> colors;
 
-    Array1<Color> rcolors;// make this big...
-    Array1<float> alphas; // alphas - same size
+  Array1<Color> rcolors;// make this big...
+  Array1<float> alphas; // alphas - same size
 
-//    unsigned char*        raw;  // raw data... 
+  //    unsigned char*        raw;  // raw data... 
 
-    double      *rawRed;
-    double      *rawGreen;
-    double      *rawBlue;
-    double      *rawAlpha;
+  double      *rawRed;
+  double      *rawGreen;
+  double      *rawBlue;
+  double      *rawAlpha;
 
-    Array1<float> rawRampAlpha;
-    Array1<float> rawRampAlphaT;
-    Array1<Color> rawRampColor;
-    Array1<float> rawRampColorT;
+  Array1<float> rawRampAlpha;
+  Array1<float> rawRampAlphaT;
+  Array1<Color> rawRampColor;
+  Array1<float> rawRampColorT;
   
-    unsigned int            flag;
+  unsigned int            flag;
 
-    unsigned int            pre_mult_alpha; // set if you want it...
+  unsigned int            pre_mult_alpha; // set if you want it...
     
-    unsigned char*          raw1d;
+  unsigned char*          raw1d;
 
-    int non_diffuse_constant;   // 1 if non diffuse materials are constant
-    ColorMap();
-    ColorMap(const ColorMap&);
-    ColorMap(int nlevels, double min, double max, int shortrange=0);
+  int non_diffuse_constant;   // 1 if non diffuse materials are constant
+  ColorMap();
+  ColorMap(const ColorMap&);
+  ColorMap(int nlevels, double min, double max, int shortrange=0);
 
-    ColorMap(const Array1<Color>& rgb, Array1<float>& rgbT,
-	     const Array1<float>& alphas, const Array1<float>& alphaT,
-	     const int size=2000);
+  ColorMap(const Array1<Color>& rgb, Array1<float>& rgbT,
+	   const Array1<float>& alphas, const Array1<float>& alphaT,
+	   const int size=2000);
 
-    void SetRaw(const Array1<Color>& rgb, Array1<float>& rgbT,
-		const Array1<float>& alphas, const Array1<float>& alphaT,
-		const int size=2000);
+  void SetRaw(const Array1<Color>& rgb, Array1<float>& rgbT,
+	      const Array1<float>& alphas, const Array1<float>& alphaT,
+	      const int size=2000);
 
-    void Build1d(const int size=256);
+  void Build1d(const int size=256);
 
 
   bool IsScaled(){ return scaled;} // are the colors scaled to some data?
@@ -97,23 +97,23 @@ public:
     this->min = min; this->max = max; scaled = true;}
   void ResetScale() { min = -1; max = 1; scaled = false; }
 
-    MaterialHandle& lookup(double value);
-    MaterialHandle& lookup2(double value);
+  MaterialHandle& lookup(double value);
+  MaterialHandle& lookup2(double value);
 
-    virtual ~ColorMap();
-    virtual ColorMap* clone();
+  virtual ~ColorMap();
+  virtual ColorMap* clone();
 
-    void build_default();
-    // Persistent representation...
-    virtual void io(Piostream&);
-    static PersistentTypeID type_id;
+  void build_default();
+  // Persistent representation...
+  virtual void io(Piostream&);
+  static PersistentTypeID type_id;
 
-    virtual double getMin();
-    virtual double getMax();
+  virtual double getMin();
+  virtual double getMax();
   string units;
+
 private:
   bool scaled;
-   
 };
 
 } // End namespace SCIRun
