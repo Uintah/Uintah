@@ -79,7 +79,10 @@ itcl_class SCIRun_FieldsCreate_FieldSubSample {
 	    set $this-$index-stride    1
 	    set $this-$index-stride2  "1"
 	    set $this-$index-wrap    0
+	    trace variable $this-$index-dim w "$this update_setsize_callback"
 	}
+	
+	trace variable $this-dims w "$this update_setsize_callback"
     }
 
     method set_power_app { cmd } {
@@ -321,6 +324,20 @@ itcl_class SCIRun_FieldsCreate_FieldSubSample {
 	set $var1 [set $var2]
 
 	updateSliderEntry4 $index 0
+    }
+
+    method update_setsize_callback { name1 name2 op } {
+	global $this-dims
+	global $this-i-dim
+	global $this-j-dim
+	global $this-k-dim
+	global $this-wrap
+
+	set_size [set $this-dims] \
+	    [set $this-i-dim] \
+	    [set $this-j-dim] \
+	    [set $this-k-dim] \
+	    [set $this-wrap]
     }
 
     method set_size { dims idim jdim kdim wrap } {
