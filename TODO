@@ -1,14 +1,22 @@
+Fix from SC94:
+    Mesh
+    BuildFEMatrix
+
 Finish and FIX:
    Icons
    Window Titles
    Delete modules
    Disconnect
    Salmon:
+      Resizable window
+      Fix +/- button
+      Better in/out buttons
       New node types:
          Material
          Pick
          Handle
          Rendermode
+      Better triangles - vertex types - with normals, colors
       Fix picking motion
       Children windows...
       More lighting
@@ -40,11 +48,12 @@ Finish and FIX:
 Features/improvements:
    Make progress, time, etc run off of TCL variables
    TCL variables for slider min/max, etc
-   Ranger slider
+   Range slider
    Better Memory allocators
       strict
       fast
    Remote modules
+   Separate defaults from ui Buttons
    Save/Load Networks
    Scheduler visualization?
    Manual scheduling
@@ -55,6 +64,9 @@ Features/improvements:
    Dynamically loadable modules
    Stand alone modules
    Parallelism
+   Let colormaps have an intrinic range instead of a multitude of
+		min/max adjustments
+   2D Graphing application - overlay in Salmon
 
 Applications:
    General PDE solver w/ multiple variables
@@ -70,6 +82,7 @@ Fun:
    Sound
 
 Ports:
+   DCC
    RS/6000 Port
    Freedom board port
    Sun Port
@@ -93,10 +106,6 @@ TCL/TK:
    Color Editor (done?)
    Right titles on windows
 
-Bugs:
-   Annoying flashing on startup.
-   Lock I/O
-
 Modules that need work:
    ApplyBC - implement
    BuildFEMatrix - implement
@@ -111,6 +120,6 @@ Modules that need work:
    SoundOutput - UI
    SoundReader - UI
    SoundMixer - UI
-   Streamline - finish
-   Streamline - UI/finish
+   Streamline - finish / hook strem ribbon width to line radius
+   Streamsurf - UI/finish
    TransformContourSet - UI
