@@ -92,6 +92,8 @@ namespace Uintah {
 
       Variable* createInstance() const;
 
+      ~TypeDescription();
+
    private:
       Type d_type;
       const TypeDescription* d_subtype;
@@ -100,7 +102,6 @@ namespace Uintah {
       mutable MPI_Datatype d_mpitype;
       MPI_Datatype (*d_mpitypemaker)();
       Variable* (*d_maker)();
-      ~TypeDescription();
        
       TypeDescription(const TypeDescription&);
       TypeDescription& operator=(const TypeDescription&);
@@ -110,6 +111,11 @@ namespace Uintah {
 
 //
 // $Log$
+// Revision 1.9  2000/09/25 20:37:43  sparker
+// Quiet g++ compiler warnings
+// Work around g++ compiler bug instantiating vector<NCVariable<Vector> >
+// Added computeVariableExtents to (eventually) simplify data warehouses
+//
 // Revision 1.8  2000/07/27 22:39:50  sparker
 // Implemented MPIScheduler
 // Added associated support

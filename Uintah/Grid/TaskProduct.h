@@ -38,7 +38,7 @@ namespace Uintah {
    class TaskProduct {
    public:
       TaskProduct(const Patch* patch, int matlIndex, const VarLabel* label)
-	 : d_patch(patch), d_matlIndex(matlIndex), d_label(label){
+	 : d_patch(patch), d_label(label), d_matlIndex(matlIndex){
       }
       TaskProduct(const TaskProduct& copy)
 	 : d_patch(copy.d_patch), d_label(copy.d_label),
@@ -83,6 +83,11 @@ namespace Uintah {
 
 //
 // $Log$
+// Revision 1.3  2000/09/25 20:37:43  sparker
+// Quiet g++ compiler warnings
+// Work around g++ compiler bug instantiating vector<NCVariable<Vector> >
+// Added computeVariableExtents to (eventually) simplify data warehouses
+//
 // Revision 1.2  2000/05/30 20:19:35  sparker
 // Changed new to scinew to help track down memory leaks
 // Changed region to patch

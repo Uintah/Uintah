@@ -82,14 +82,14 @@ WARNING
       //////////
       // Insert Documentation Here:
       T& operator[](particleIndex idx) {
-	 ASSERTRANGE(idx, 0, d_pdata->data.size());
+	 ASSERTRANGE(idx, 0, (particleIndex)d_pdata->data.size());
 	 return d_pdata->data[idx];
       }
       
       //////////
       // Insert Documentation Here:
       const T& operator[](particleIndex idx) const {
-	 ASSERTRANGE(idx, 0, d_pdata->data.size());
+	 ASSERTRANGE(idx, 0, (particleIndex)d_pdata->data.size());
 	 return d_pdata->data[idx];
       }
       
@@ -250,7 +250,7 @@ WARNING
 	 d_pdata->addReference();
 	 ASSERTEQ(subsets.size(), srcs.size());
 	 ParticleSubset::iterator dstiter = pset->begin();
-	 for(int i=0;i<subsets.size();i++){
+	 for(int i=0;i<(int)subsets.size();i++){
 	    ParticleVariable<T>* srcptr = dynamic_cast<ParticleVariable<T>*>(srcs[i]);
 	    if(!srcptr)
 	       throw TypeMismatchException("Type mismatch in ParticleVariable::gather");
@@ -282,7 +282,7 @@ WARNING
 		  end++;
 		  iter++;
 	       }
-	       size_t size = sizeof(T)*(end-start);
+	       ssize_t size = (ssize_t)(sizeof(T)*(end-start));
 	       ssize_t s=write(oc.fd, &(*this)[start], size);
 	       if(size != s)
 		  throw ErrnoException("ParticleVariable::emit (write call)", errno);
@@ -309,7 +309,7 @@ WARNING
 		  end++;
 		  iter++;
 	       }
-	       size_t size = sizeof(T)*(end-start);
+	       ssize_t size = (ssize_t)(sizeof(T)*(end-start));
 	       ssize_t s=::read(ic.fd, &(*this)[start], size);
 	       if(size != s)
 		  throw ErrnoException("ParticleVariable::emit (write call)", errno);
@@ -394,6 +394,11 @@ WARNING
 
 //
 // $Log$
+// Revision 1.21  2000/09/25 20:37:42  sparker
+// Quiet g++ compiler warnings
+// Work around g++ compiler bug instantiating vector<NCVariable<Vector> >
+// Added computeVariableExtents to (eventually) simplify data warehouses
+//
 // Revision 1.20  2000/09/25 18:12:20  sparker
 // do not use covariant return types due to problems with g++
 // other linux/g++ fixes

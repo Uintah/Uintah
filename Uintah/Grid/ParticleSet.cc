@@ -1,5 +1,6 @@
-/* REFERENCED */
-static char *id="@(#) $Id$";
+//
+// $Id$"
+//
 
 #include "ParticleSet.h"
 
@@ -21,6 +22,11 @@ ParticleSet::~ParticleSet()
 
 //
 // $Log$
+// Revision 1.5  2000/09/25 20:37:42  sparker
+// Quiet g++ compiler warnings
+// Work around g++ compiler bug instantiating vector<NCVariable<Vector> >
+// Added computeVariableExtents to (eventually) simplify data warehouses
+//
 // Revision 1.4  2000/04/28 07:35:36  sparker
 // Started implementation of DataWarehouse
 // MPM particle initialization now works

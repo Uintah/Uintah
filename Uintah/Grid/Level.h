@@ -2,6 +2,7 @@
 #define UINTAH_GRID_LEVEL_H
 
 #include <Uintah/Grid/RefCounted.h>
+#include <Uintah/Grid/Box.h>
 #include <Uintah/Interface/DataWarehouseP.h>
 #include <Uintah/Grid/GridP.h>
 #include <Uintah/Grid/LevelP.h>
@@ -103,6 +104,8 @@ WARNING
       IntVector getCellIndex(const Point&) const;
       Point positionToIndex(const Point&) const;
 
+      Box getBox(const IntVector&, const IntVector&) const;
+
       void selectPatches(const IntVector&, const IntVector&,
 			 std::vector<const Patch*>&) const;
 
@@ -122,6 +125,11 @@ WARNING
 
 //
 // $Log$
+// Revision 1.21  2000/09/25 20:37:42  sparker
+// Quiet g++ compiler warnings
+// Work around g++ compiler bug instantiating vector<NCVariable<Vector> >
+// Added computeVariableExtents to (eventually) simplify data warehouses
+//
 // Revision 1.20  2000/08/22 18:36:40  bigler
 // Added functionality to get a cell's position with the index.
 //

@@ -1,5 +1,6 @@
-/* REFERENCED */
-static char *id="@(#) $Id$";
+//
+// $Id$
+//
 
 #include "RefCounted.h"
 #include <SCICore/Thread/AtomicCounter.h>
@@ -54,6 +55,11 @@ bool RefCounted::removeReference()
 
 //
 // $Log$
+// Revision 1.8  2000/09/25 20:37:43  sparker
+// Quiet g++ compiler warnings
+// Work around g++ compiler bug instantiating vector<NCVariable<Vector> >
+// Added computeVariableExtents to (eventually) simplify data warehouses
+//
 // Revision 1.7  2000/08/21 23:27:07  sparker
 // Added getReferenceCount() method to RefCounted
 // Correctly maintain ref counts on neighboring particle subsets in ParticleSubset

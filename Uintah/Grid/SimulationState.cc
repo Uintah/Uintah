@@ -31,12 +31,17 @@ SimulationState::~SimulationState()
 {
   delete delt_label;
 
-  for (int i = 0; i < matls.size(); i++) 
+  for (int i = 0; i < (int)matls.size(); i++) 
     delete matls[i];
 }
 
 //
 // $Log$
+// Revision 1.14  2000/09/25 20:37:43  sparker
+// Quiet g++ compiler warnings
+// Work around g++ compiler bug instantiating vector<NCVariable<Vector> >
+// Added computeVariableExtents to (eventually) simplify data warehouses
+//
 // Revision 1.13  2000/08/09 03:18:05  jas
 // Changed new to scinew and added deletes to some of the destructors.
 //

@@ -1,5 +1,5 @@
 /* REFERENCED */
-static char *id="@(#) $Id$";
+// static char *id="@(#) $Id$";
 
 #include <Uintah/Grid/Grid.h>
 #include <Uintah/Grid/Level.h>
@@ -35,7 +35,7 @@ void Grid::addLevel(const LevelP& level)
 void Grid::performConsistencyCheck() const
 {
   // See if patches on each level do not overlap
-  for(int i=0;i<d_levels.size();i++)
+  for(int i=0;i<(int)d_levels.size();i++)
     d_levels[i]->performConsistencyCheck();
 
   // Check overlap between levels
