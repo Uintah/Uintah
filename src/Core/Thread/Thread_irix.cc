@@ -535,6 +535,7 @@ Thread::exitAll(int code)
   unlock_scheduler();
   kill(me, SIGQUIT);
   fprintf(stderr, "Should not reach this point!\n");
+  ::exit(1);
 }
 
 /*
