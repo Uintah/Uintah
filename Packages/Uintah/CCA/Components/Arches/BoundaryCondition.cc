@@ -4115,17 +4115,12 @@ BoundaryCondition::sched_getFlowINOUT(SchedulerP& sched,
 		Ghost::None, Arches::ZEROGHOSTCELLS);
   tsk->requires(Task::NewDW, d_lab->d_wVelocitySPBCLabel,
 		Ghost::None, Arches::ZEROGHOSTCELLS);
-  if ((timelabels->integrator_last_step)&&(d_carbon_balance))
-    tsk->requires(Task::NewDW, d_lab->d_co2INLabel,
-		  Ghost::None, Arches::ZEROGHOSTCELLS);
 
   tsk->computes(timelabels->flowIN);
   tsk->computes(timelabels->flowOUT);
   tsk->computes(timelabels->denAccum);
   tsk->computes(timelabels->floutbc);
   tsk->computes(timelabels->areaOUT);
-  if ((timelabels->integrator_last_step)&&(d_carbon_balance))
-    tsk->computes(d_lab->d_CO2FlowRateLabel);
 
   sched->addTask(tsk, patches, matls);
 }
@@ -4151,7 +4146,6 @@ BoundaryCondition::getFlowINOUT(const ProcessorGroup*,
     constSFCXVariable<double> uVelocity;
     constSFCYVariable<double> vVelocity;
     constSFCZVariable<double> wVelocity;
-    CCVariable<double> co2;
 
     new_dw->get(filterdrhodt, d_lab->d_filterdrhodtLabel,
 		matlIndex, patch, Ghost::None, Arches::ZEROGHOSTCELLS);
@@ -4175,15 +4169,6 @@ BoundaryCondition::getFlowINOUT(const ProcessorGroup*,
 		patch, Ghost::None, Arches::ZEROGHOSTCELLS);
     new_dw->get(wVelocity, d_lab->d_wVelocitySPBCLabel, matlIndex,
 		patch, Ghost::None, Arches::ZEROGHOSTCELLS);
-    bool doing_carbon_balance = 
-	 (timelabels->integrator_last_step)&&(d_carbon_balance);
-    if (doing_carbon_balance)
-      new_dw->getCopy(co2, d_lab->d_co2INLabel, matlIndex, patch, 
-		      Ghost::None, Arches::ZEROGHOSTCELLS);
-    else {
-      co2.allocate(patch->getCellLowIndex(), patch->getCellHighIndex());
-      co2.initialize(0.0);
-    }
 
     // Get the low and high index for the patch and the variables
     IntVector idxLo = patch->getCellFORTLowIndex();
@@ -4200,8 +4185,8 @@ BoundaryCondition::getFlowINOUT(const ProcessorGroup*,
     double denAccum = 0.0;
     double floutbc = 0.0;
     double areaOUT = 0.0;
-    double co2IN  = 0.0;
-    double co2OUT  = 0.0;
+    double varIN  = 0.0;
+    double varOUT  = 0.0;
 
     for (int kk = idxLo.z(); kk <= idxHi.z(); kk++) {
       for (int jj = idxLo.y(); jj <= idxHi.y(); jj++) {
@@ -4214,6 +4199,7 @@ BoundaryCondition::getFlowINOUT(const ProcessorGroup*,
 
     if (xminus||xplus||yminus||yplus||zminus||zplus) {
 
+      bool doing_balance = false;
       for (int indx = 0; indx < d_numInlets; indx++) {
 
 	// Get a copy of the current flow inlet
@@ -4221,23 +4207,15 @@ BoundaryCondition::getFlowINOUT(const ProcessorGroup*,
 	//CellTypeInfo flowType = FLOW;
 	FlowInlet fi = d_flowInlets[indx];
 	double fout = 0.0;
-	double co2out_inlet = 0.0;
-	double co2in_inlet = 0.0;
 	fort_inlpresbcinout(uVelocity, vVelocity, wVelocity, idxLo, idxHi,
 			   density, cellType, fi.d_cellTypeID,
 			   flowIN, fout, cellinfo->sew, cellinfo->sns,
 			   cellinfo->stb, xminus, xplus, yminus, yplus,
-			   zminus, zplus, doing_carbon_balance,
-			   co2, co2in_inlet, co2out_inlet);
+			   zminus, zplus, doing_balance,
+			   density, varIN, varOUT);
 	if (fout > 0.0)
 		throw InvalidValue("Flow comming out of inlet");
-	if ((co2out_inlet > 0.0)&&(doing_carbon_balance))
-		throw InvalidValue("CO2 comming out of inlet");
 
-	// Count CO2 comming through the air inlet
-	double scalarValue = fi.streamMixturefraction.d_mixVars[0];
-	if (scalarValue == 0.0)
-	  co2IN += co2in_inlet;
       } 
 
       if (d_pressureBoundary) {
@@ -4246,8 +4224,8 @@ BoundaryCondition::getFlowINOUT(const ProcessorGroup*,
 			    density, cellType, pressure_celltypeval,
 			    flowIN, flowOUT, cellinfo->sew, cellinfo->sns,
 			    cellinfo->stb, xminus, xplus, yminus, yplus,
-			    zminus, zplus, doing_carbon_balance,
-			    co2, co2IN, co2OUT);
+			    zminus, zplus, doing_balance,
+			    density, varIN, varOUT);
       }
       if (d_outletBoundary) {
 	int outlet_celltypeval = d_outletBC->d_cellTypeID;
@@ -4264,14 +4242,6 @@ BoundaryCondition::getFlowINOUT(const ProcessorGroup*,
      	    	 floutbc -= avdenlow*uVelocity[currCell] *
 	          	     cellinfo->sns[colY] * cellinfo->stb[colZ];
     	         areaOUT += cellinfo->sns[colY] * cellinfo->stb[colZ];
-		 if (doing_carbon_balance) {
- 	           co2OUT -= Min(0.0,avdenlow*uVelocity[currCell] *
- 	          	     cellinfo->sns[colY] * cellinfo->stb[colZ]*
-			     0.5*(co2[currCell]+co2[xminusCell]));
- 	           co2IN += Max(0.0,avdenlow*uVelocity[currCell] *
- 	          	     cellinfo->sns[colY] * cellinfo->stb[colZ]*
-			     0.5*(co2[currCell]+co2[xminusCell]));
-		 }
               }
 	    }
 	  }
@@ -4289,14 +4259,6 @@ BoundaryCondition::getFlowINOUT(const ProcessorGroup*,
 	         floutbc += avden*uVelocity[xplusCell] *
 	       	     cellinfo->sns[colY] * cellinfo->stb[colZ];
     	         areaOUT += cellinfo->sns[colY] * cellinfo->stb[colZ];
-		 if (doing_carbon_balance) {
- 	           co2OUT += Max(0.0,avden*uVelocity[xplusCell] *
- 	          	     cellinfo->sns[colY] * cellinfo->stb[colZ]*
-			     0.5*(co2[currCell]+co2[xplusCell]));
- 	           co2IN -= Min(0.0,avden*uVelocity[xplusCell] *
- 	          	     cellinfo->sns[colY] * cellinfo->stb[colZ]*
-			     0.5*(co2[currCell]+co2[xplusCell]));
-		 }
 	      }
 	    }
 	  }
@@ -4316,14 +4278,6 @@ BoundaryCondition::getFlowINOUT(const ProcessorGroup*,
  	         flowIN += Max(0.0,avdenlow*vVelocity[currCell] *
 	                   cellinfo->sew[colX] * cellinfo->stb[colZ]);
     	         areaOUT += cellinfo->sew[colX] * cellinfo->stb[colZ];
-		 if (doing_carbon_balance) {
- 	           co2OUT -= Min(0.0,avdenlow*vVelocity[currCell] *
- 	          	     cellinfo->sew[colX] * cellinfo->stb[colZ]*
-			     0.5*(co2[currCell]+co2[yminusCell]));
- 	           co2IN += Max(0.0,avdenlow*vVelocity[currCell] *
- 	          	     cellinfo->sew[colX] * cellinfo->stb[colZ]*
-			     0.5*(co2[currCell]+co2[yminusCell]));
-		 }
  	      }
  	    }
  	  }
@@ -4343,14 +4297,6 @@ BoundaryCondition::getFlowINOUT(const ProcessorGroup*,
  	         flowIN -= Min(0.0,avden*vVelocity[yplusCell] *
  	          	     cellinfo->sew[colX] * cellinfo->stb[colZ]);
     	         areaOUT += cellinfo->sew[colX] * cellinfo->stb[colZ];
-		 if (doing_carbon_balance) {
- 	           co2OUT += Max(0.0,avden*vVelocity[yplusCell] *
- 	          	     cellinfo->sew[colX] * cellinfo->stb[colZ]*
-			     0.5*(co2[currCell]+co2[yplusCell]));
- 	           co2IN -= Min(0.0,avden*vVelocity[yplusCell] *
- 	          	     cellinfo->sew[colX] * cellinfo->stb[colZ]*
-			     0.5*(co2[currCell]+co2[yplusCell]));
-		 }
  	      }
  	    }
  	  }
@@ -4370,14 +4316,6 @@ BoundaryCondition::getFlowINOUT(const ProcessorGroup*,
  	         flowIN += Max(0.0,avdenlow*wVelocity[currCell] *
  	          	     cellinfo->sew[colX] * cellinfo->sns[colY]);
     	         areaOUT += cellinfo->sew[colX] * cellinfo->sns[colY];
-		 if (doing_carbon_balance) {
- 	           co2OUT -= Min(0.0,avdenlow*wVelocity[currCell] *
- 	          	     cellinfo->sew[colX] * cellinfo->sns[colY]*
-			     0.5*(co2[currCell]+co2[zminusCell]));
- 	           co2IN += Max(0.0,avdenlow*wVelocity[currCell] *
- 	          	     cellinfo->sew[colX] * cellinfo->sns[colY]*
-			     0.5*(co2[currCell]+co2[zminusCell]));
-		 }
  	      }
  	    }
  	  }
@@ -4397,14 +4335,6 @@ BoundaryCondition::getFlowINOUT(const ProcessorGroup*,
  	         flowIN -= Min(0.0,avden*wVelocity[zplusCell] *
  	          	     cellinfo->sew[colX] * cellinfo->sns[colY]);
     	         areaOUT += cellinfo->sew[colX] * cellinfo->sns[colY];
-		 if (doing_carbon_balance) {
- 	           co2OUT += Max(0.0,avden*wVelocity[zplusCell] *
- 	          	     cellinfo->sew[colX] * cellinfo->sns[colY]*
-			     0.5*(co2[currCell]+co2[zplusCell]));
- 	           co2IN -= Min(0.0,avden*wVelocity[zplusCell] *
- 	          	     cellinfo->sew[colX] * cellinfo->sns[colY]*
-			     0.5*(co2[currCell]+co2[zplusCell]));
-		 }
  	      }
  	    }
  	  }
@@ -4417,8 +4347,6 @@ BoundaryCondition::getFlowINOUT(const ProcessorGroup*,
   new_dw->put(sum_vartype(denAccum), timelabels->denAccum);
   new_dw->put(sum_vartype(floutbc), timelabels->floutbc);
   new_dw->put(sum_vartype(areaOUT), timelabels->areaOUT);
-  if (doing_carbon_balance)
-    new_dw->put(sum_vartype(co2OUT-co2IN), d_lab->d_CO2FlowRateLabel);
   }
 }
 
@@ -4443,18 +4371,9 @@ void BoundaryCondition::sched_correctVelocityOutletBC(SchedulerP& sched,
   tsk->requires(Task::NewDW, timelabels->denAccum);
   tsk->requires(Task::NewDW, timelabels->floutbc);
   tsk->requires(Task::NewDW, timelabels->areaOUT);
-  if ((timelabels->integrator_last_step)&&(d_carbon_balance))
-    tsk->requires(Task::NewDW, d_lab->d_CO2FlowRateLabel);
 
   if (timelabels->integrator_last_step)
     tsk->computes(d_lab->d_uvwoutLabel);
-  if ((timelabels->integrator_last_step)&&(d_carbon_balance)) {
-    for (int ii = 0; ii < d_numInlets; ii++) {
-      tsk->requires(Task::OldDW, d_flowInlets[ii].d_flowRate_label);
-      tsk->computes(d_flowInlets[ii].d_flowRate_label);
-    }
-    tsk->computes(d_lab->d_carbonEfficiencyLabel);
-  }
 
   sched->addTask(tsk, patches, matls);
 }
@@ -4517,32 +4436,6 @@ BoundaryCondition::correctVelocityOutletBC(const ProcessorGroup* pc,
     }
     if (timelabels->integrator_last_step)
       new_dw->put(delt_vartype(uvwcorr), d_lab->d_uvwoutLabel);
-
-    sum_vartype sum_CO2FlowRate;
-    delt_vartype flowRate;
-    double CO2FlowRate;
-    double totalCarbonFlowRate = 0.0;
-    double carbonEfficiency;
-    if ((timelabels->integrator_last_step)&&(d_carbon_balance)) {
-      new_dw->get(sum_CO2FlowRate, d_lab->d_CO2FlowRateLabel);
-      CO2FlowRate = sum_CO2FlowRate;
-      for (int indx = 0; indx < d_numInlets; indx++) {
-	FlowInlet fi = d_flowInlets[indx];
-        old_dw->get(flowRate, d_flowInlets[indx].d_flowRate_label);
-	d_flowInlets[indx].flowRate = flowRate;
-	fi.flowRate = flowRate;
-        new_dw->put(flowRate, d_flowInlets[indx].d_flowRate_label);
-	double scalarValue = fi.streamMixturefraction.d_mixVars[0];
-	if (scalarValue > 0.0)
-	  totalCarbonFlowRate += fi.flowRate * fi.fcr;
-      }
-      if (totalCarbonFlowRate > 0.0)
-	carbonEfficiency = CO2FlowRate * 12.0/28.0 /totalCarbonFlowRate;
-      else 
-	throw InvalidValue("No carbon in the domain");
-      new_dw->put(delt_vartype(carbonEfficiency), d_lab->d_carbonEfficiencyLabel);
-    }
- 
 }
 //****************************************************************************
 // Schedule init inlet bcs
@@ -4963,4 +4856,266 @@ BoundaryCondition::setVelocityTangentialBC(const ProcessorGroup*,
       }
     }
   }
+}
+//****************************************************************************
+// Schedule computation of mixture fraction flow rate
+//****************************************************************************
+void
+BoundaryCondition::sched_getScalarFlowRate(SchedulerP& sched,
+				      const PatchSet* patches,
+				      const MaterialSet* matls)
+{
+  string taskname =  "BoundaryCondition::getScalarFlowRate";
+  Task* tsk = scinew Task(taskname, this,
+			  &BoundaryCondition::getScalarFlowRate);
+  
+  tsk->requires(Task::NewDW, d_lab->d_cellTypeLabel, Ghost::AroundCells,
+		Arches::ONEGHOSTCELL);
+
+  tsk->requires(Task::NewDW, d_lab->d_densityCPLabel, Ghost::None,
+		Arches::ZEROGHOSTCELLS);
+  tsk->requires(Task::NewDW, d_lab->d_uVelocitySPBCLabel,
+		Ghost::None, Arches::ZEROGHOSTCELLS);
+  tsk->requires(Task::NewDW, d_lab->d_vVelocitySPBCLabel,
+		Ghost::None, Arches::ZEROGHOSTCELLS);
+  tsk->requires(Task::NewDW, d_lab->d_wVelocitySPBCLabel,
+		Ghost::None, Arches::ZEROGHOSTCELLS);
+  tsk->requires(Task::NewDW, d_lab->d_scalarSPLabel,
+		Ghost::None, Arches::ZEROGHOSTCELLS);
+  if (d_carbon_balance)
+    tsk->requires(Task::NewDW, d_lab->d_co2INLabel,
+		  Ghost::None, Arches::ZEROGHOSTCELLS);
+
+  tsk->computes(d_lab->d_scalarFlowRateLabel);
+  if (d_carbon_balance)
+    tsk->computes(d_lab->d_CO2FlowRateLabel);
+
+  sched->addTask(tsk, patches, matls);
+}
+
+//****************************************************************************
+// Get mixture fraction flow rate
+//****************************************************************************
+void 
+BoundaryCondition::getScalarFlowRate(const ProcessorGroup* pc,
+				const PatchSubset* patches,
+				const MaterialSubset*,
+				DataWarehouse*,
+				DataWarehouse* new_dw)
+{
+  for (int p = 0; p < patches->size(); p++) {
+    const Patch* patch = patches->get(p);
+    int archIndex = 0; // only one arches material
+    int matlIndex = d_lab->d_sharedState->getArchesMaterial(archIndex)->getDWIndex(); 
+
+    ArchesConstVariables constVars;
+
+    constCCVariable<double> scalar;
+    constCCVariable<double> co2;
+
+    new_dw->get(constVars.cellType, d_lab->d_cellTypeLabel,
+		matlIndex, patch, Ghost::AroundCells,Arches::ONEGHOSTCELL);
+
+    PerPatch<CellInformationP> cellInfoP;
+    if (new_dw->exists(d_lab->d_cellInfoLabel, matlIndex, patch)) 
+      new_dw->get(cellInfoP, d_lab->d_cellInfoLabel, matlIndex, patch);
+    else {
+      cellInfoP.setData(scinew CellInformation(patch));
+      new_dw->put(cellInfoP, d_lab->d_cellInfoLabel, matlIndex, patch);
+    }
+    CellInformation* cellinfo = cellInfoP.get().get_rep();
+
+    new_dw->get(constVars.density, d_lab->d_densityCPLabel, matlIndex, patch, 
+		Ghost::None, Arches::ZEROGHOSTCELLS);
+    new_dw->get(constVars.uVelocity, d_lab->d_uVelocitySPBCLabel, matlIndex,
+		patch, Ghost::None, Arches::ZEROGHOSTCELLS);
+    new_dw->get(constVars.vVelocity, d_lab->d_vVelocitySPBCLabel, matlIndex,
+		patch, Ghost::None, Arches::ZEROGHOSTCELLS);
+    new_dw->get(constVars.wVelocity, d_lab->d_wVelocitySPBCLabel, matlIndex,
+		patch, Ghost::None, Arches::ZEROGHOSTCELLS);
+    new_dw->get(scalar, d_lab->d_scalarSPLabel, matlIndex,
+		patch, Ghost::None, Arches::ZEROGHOSTCELLS);
+
+    double scalarIN = 0.0;
+    double scalarOUT = 0.0;
+    getVariableFlowRate(pc,patch, cellinfo, &constVars, scalar,
+			&scalarIN, &scalarOUT); 
+
+    new_dw->put(sum_vartype(scalarOUT-scalarIN), d_lab->d_scalarFlowRateLabel);
+
+    double co2IN = 0.0;
+    double co2OUT = 0.0;
+    if (d_carbon_balance) {
+      new_dw->get(co2, d_lab->d_co2INLabel, matlIndex,
+		  patch, Ghost::None, Arches::ZEROGHOSTCELLS);
+    getVariableFlowRate(pc,patch, cellinfo, &constVars, co2,
+			&co2IN, &co2OUT); 
+      new_dw->put(sum_vartype(co2OUT-co2IN), d_lab->d_CO2FlowRateLabel);
+    }
+  }
+}
+
+//****************************************************************************
+// Schedule scalar efficiency computation
+//****************************************************************************
+void BoundaryCondition::sched_getScalarEfficiency(SchedulerP& sched,
+					      const PatchSet* patches,
+					      const MaterialSet* matls)
+{
+  string taskname =  "BoundaryCondition::getScalarEfficiency";
+  Task* tsk = scinew Task(taskname, this,
+			  &BoundaryCondition::getScalarEfficiency);
+  
+  for (int ii = 0; ii < d_numInlets; ii++) {
+    tsk->requires(Task::OldDW, d_flowInlets[ii].d_flowRate_label);
+    tsk->computes(d_flowInlets[ii].d_flowRate_label);
+  }
+
+  tsk->requires(Task::NewDW, d_lab->d_scalarFlowRateLabel);
+  tsk->computes(d_lab->d_scalarEfficiencyLabel);
+
+  if (d_carbon_balance) {
+    tsk->requires(Task::NewDW, d_lab->d_CO2FlowRateLabel);
+    tsk->computes(d_lab->d_carbonEfficiencyLabel);
+  }
+
+  sched->addTask(tsk, patches, matls);
+}
+
+//****************************************************************************
+// Correct outlet velocity
+//****************************************************************************
+void 
+BoundaryCondition::getScalarEfficiency(const ProcessorGroup* pc,
+			      const PatchSubset* ,
+			      const MaterialSubset*,
+			      DataWarehouse* old_dw,
+			      DataWarehouse* new_dw)
+{
+    sum_vartype sum_scalarFlowRate, sum_CO2FlowRate;
+    delt_vartype flowRate;
+    double scalarFlowRate = 0.0;
+    double CO2FlowRate = 0.0;
+    double totalFlowRate = 0.0;
+    double totalCarbonFlowRate = 0.0;
+    double scalarEfficiency = 0.0;
+    double carbonEfficiency = 0.0;
+
+    new_dw->get(sum_scalarFlowRate, d_lab->d_scalarFlowRateLabel);
+    scalarFlowRate = sum_scalarFlowRate;
+    if (d_carbon_balance) {
+      new_dw->get(sum_CO2FlowRate, d_lab->d_CO2FlowRateLabel);
+      CO2FlowRate = sum_CO2FlowRate;
+    }
+    for (int indx = 0; indx < d_numInlets; indx++) {
+      FlowInlet fi = d_flowInlets[indx];
+      old_dw->get(flowRate, d_flowInlets[indx].d_flowRate_label);
+      d_flowInlets[indx].flowRate = flowRate;
+      fi.flowRate = flowRate;
+      new_dw->put(flowRate, d_flowInlets[indx].d_flowRate_label);
+      double scalarValue = fi.streamMixturefraction.d_mixVars[0];
+      if (scalarValue > 0.0)
+	  totalFlowRate += fi.flowRate;
+      if ((d_carbon_balance)&&(scalarValue > 0.0))
+	    totalCarbonFlowRate += fi.flowRate * fi.fcr;
+    }
+    if (totalFlowRate > 0.0)
+      scalarEfficiency = scalarFlowRate / totalFlowRate;
+    else 
+      throw InvalidValue("No mixture fraction in the domain");
+    new_dw->put(delt_vartype(scalarEfficiency), d_lab->d_scalarEfficiencyLabel);
+
+    if (d_carbon_balance) {
+      if (totalCarbonFlowRate > 0.0)
+	carbonEfficiency = CO2FlowRate * 12.0/28.0 /totalCarbonFlowRate;
+      else 
+	throw InvalidValue("No carbon in the domain");
+      new_dw->put(delt_vartype(carbonEfficiency), d_lab->d_carbonEfficiencyLabel);
+    }
+ 
+}
+//****************************************************************************
+// Get boundary flow rate for a given variable
+//****************************************************************************
+void 
+BoundaryCondition::getVariableFlowRate(const ProcessorGroup*,
+			               const Patch* patch,
+			               CellInformation* cellinfo,
+			               ArchesConstVariables* constvars,
+				       constCCVariable<double> balance_var,
+				       double* varIN, double* varOUT) 
+{
+    // Get the low and high index for the patch and the variables
+    IntVector idxLo = patch->getCellFORTLowIndex();
+    IntVector idxHi = patch->getCellFORTHighIndex();
+
+    bool xminus = patch->getBCType(Patch::xminus) != Patch::Neighbor;
+    bool xplus =  patch->getBCType(Patch::xplus) != Patch::Neighbor;
+    bool yminus = patch->getBCType(Patch::yminus) != Patch::Neighbor;
+    bool yplus =  patch->getBCType(Patch::yplus) != Patch::Neighbor;
+    bool zminus = patch->getBCType(Patch::zminus) != Patch::Neighbor;
+    bool zplus =  patch->getBCType(Patch::zplus) != Patch::Neighbor;
+
+    if (xminus||xplus||yminus||yplus||zminus||zplus) {
+
+      double flowIN = 0.0;
+      double flowOUT = 0.0;
+      bool doing_balance = true;
+      for (int indx = 0; indx < d_numInlets; indx++) {
+
+	// Get a copy of the current flow inlet
+	// assign flowType the value that corresponds to flow
+	//CellTypeInfo flowType = FLOW;
+	FlowInlet fi = d_flowInlets[indx];
+	double varIN_inlet = 0.0;
+	double varOUT_inlet = 0.0;
+	fort_inlpresbcinout(constvars->uVelocity, constvars->vVelocity,
+			   constvars->wVelocity, idxLo, idxHi,
+			   constvars->density, constvars->cellType,
+			   fi.d_cellTypeID,
+			   flowIN, flowOUT, cellinfo->sew, cellinfo->sns,
+			   cellinfo->stb, xminus, xplus, yminus, yplus,
+			   zminus, zplus, doing_balance,
+			   balance_var, varIN_inlet, varOUT_inlet);
+
+	if (varOUT_inlet > 0.0)
+		throw InvalidValue("Balance variable comming out of inlet");
+
+	// Count balance variable comming through the air inlet
+	double scalarValue = fi.streamMixturefraction.d_mixVars[0];
+	if (scalarValue == 0.0)
+	  *varIN += varIN_inlet;
+      } 
+
+      if (d_pressureBoundary) {
+	double varIN_bc = 0.0;
+	double varOUT_bc = 0.0;
+	int pressure_celltypeval = d_pressureBC->d_cellTypeID;
+	fort_inlpresbcinout(constvars->uVelocity, constvars->vVelocity,
+			   constvars->wVelocity, idxLo, idxHi,
+			   constvars->density, constvars->cellType,
+			   pressure_celltypeval,
+			   flowIN, flowOUT, cellinfo->sew, cellinfo->sns,
+			   cellinfo->stb, xminus, xplus, yminus, yplus,
+			   zminus, zplus, doing_balance,
+			   balance_var, varIN_bc, varOUT_bc);
+	*varIN += varIN_bc;
+	*varOUT += varOUT_bc;
+      }
+      if (d_outletBoundary) {
+	double varIN_bc = 0.0;
+	double varOUT_bc = 0.0;
+	int outlet_celltypeval = d_outletBC->d_cellTypeID;
+	fort_inlpresbcinout(constvars->uVelocity, constvars->vVelocity,
+			   constvars->wVelocity, idxLo, idxHi,
+			   constvars->density, constvars->cellType,
+			   outlet_celltypeval,
+			   flowIN, flowOUT, cellinfo->sew, cellinfo->sns,
+			   cellinfo->stb, xminus, xplus, yminus, yplus,
+			   zminus, zplus, doing_balance,
+			   balance_var, varIN_bc, varOUT_bc);
+	*varIN += varIN_bc;
+	*varOUT += varOUT_bc;
+      }
+    }  
 }

@@ -47,20 +47,20 @@ none
 namespace Uintah {
 
 using namespace SCIRun;
-  class ArchesVariables;
-  class ArchesConstVariables;
-  class CellInformation;
+class ArchesVariables;
+class ArchesConstVariables;
+class CellInformation;
 class VarLabel;
 class GeometryPiece;
 class PhysicalConstants;
 class Properties;
 class Stream;
 class InletStream;
-  class ArchesLabel;
-  class MPMArchesLabel;
-  class ProcessorGroup;
-  class DataWarehouse;
-  class TimeIntegratorLabel;
+class ArchesLabel;
+class MPMArchesLabel;
+class ProcessorGroup;
+class DataWarehouse;
+class TimeIntegratorLabel;
 
 class BoundaryCondition {
 
@@ -168,6 +168,9 @@ public:
 	return d_calcEnergyExchange;
       }      
 
+      inline bool getCarbonBalance() const{
+	return d_carbon_balance;
+      }      
       // GROUP:  Schedule tasks :
       ////////////////////////////////////////////////////////////////////////
       // Initialize cell types
@@ -470,6 +473,15 @@ public:
 			                 const PatchSet* patches,
 			                 const MaterialSet* matls,
 			                 const TimeIntegratorLabel* timelabels);
+
+      void sched_getScalarFlowRate(SchedulerP& sched,
+			           const PatchSet* patches,
+			           const MaterialSet* matls);
+
+      void sched_getScalarEfficiency(SchedulerP& sched,
+			   	     const PatchSet* patches,
+			   	     const MaterialSet* matls);
+
 private:
 
       // GROUP:  Actual Computations (Private)  :
@@ -594,6 +606,25 @@ private:
 			           DataWarehouse* old_dw,
 			           DataWarehouse* new_dw,
 			           const TimeIntegratorLabel* timelabels);
+
+      void getScalarFlowRate(const ProcessorGroup* pc,
+			     const PatchSubset* patches,
+			     const MaterialSubset* matls,
+			     DataWarehouse* old_dw,
+			     DataWarehouse* new_dw);
+
+      void getScalarEfficiency(const ProcessorGroup* pc,
+			      const PatchSubset* patches,
+			      const MaterialSubset* matls,
+			      DataWarehouse* old_dw,
+			      DataWarehouse* new_dw);
+
+      void getVariableFlowRate(const ProcessorGroup*,
+			       const Patch* patch,
+			       CellInformation* cellinfo,
+			       ArchesConstVariables* constvars,
+			       constCCVariable<double> balance_var,
+			       double* varIN, double* varOUT); 
 private:
 
       // GROUP:  Local DataTypes :
