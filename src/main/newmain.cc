@@ -39,7 +39,7 @@ using namespace gov::cca;
 #include <sys/stat.h>
 
 
-string defaultBuilder("txt"); 
+string defaultBuilder("qt"); 
 
 void
 usage()
