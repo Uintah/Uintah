@@ -215,8 +215,8 @@ ShowField::render(Field *f) {
   GeomGroup *verts = scinew GeomGroup;
   typename Field::mesh_handle_type mesh = f->get_typed_mesh();
 
-  typename Field::mesh_type::node_iterator niter = mesh->node_begin();
-  
+  // First pass over the nodes
+  typename Field::mesh_type::node_iterator niter = mesh->node_begin();  
   while (niter != mesh->node_end()) {
     
     Point p;
@@ -228,6 +228,19 @@ ShowField::render(Field *f) {
     }
     ++niter;
 
+  }
+  
+  // Second pass over the edges
+  mesh->compute_edges();
+  typename Field::mesh_type::edge_iterator eiter = mesh->edge_begin();  
+  while (eiter != mesh->edge_end()) {        
+    typename Field::mesh_type::node_array nodes;
+    mesh->get_nodes(nodes, *eiter); ++eiter;
+    
+    Point p1, p2;
+    mesh->get_point(p1, nodes[0]);
+    mesh->get_point(p2, nodes[1]);
+    verts->add(new GeomLine(p1, p2));
   }
 
   reloadNodeColor();
