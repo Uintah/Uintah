@@ -39,11 +39,21 @@ class Dpy : public Runnable {
 
   friend class Gui;
 
-  // Gui Interaction Flags:
+  // Begin Gui Interaction Flags:
   Image    * showImage_;
   bool       doAutoJitter_; // Jitter when not moving
   bool       doJitter_;     // Jitter on/off
-  int        shadowMode_; // Must be an int so GLUI can write to it.
+  int        shadowMode_;   // Must be an int so GLUI can write to it.
+
+  bool       showLights_;    // Display lights as spheres  
+  bool       lightsShowing_; // Lights are being displayed as spheres.
+
+  bool       turnOffAllLights_; 
+  bool       turnOnAllLights_; 
+  Light    * turnOffLight_;
+  Light    * turnOnLight_;
+
+  // End Gui Interaction Flags.
 
   Camera   * guiCam_;
   Stealth  * stealth_;
