@@ -62,7 +62,7 @@ public:
     virtual ~GeometryOPort();
 
     GeomID addObj(GeomObj*, const clString& name, CrowdMonitor* lock=0);
-    void delObj(GeomID);
+    void delObj(GeomID, int del=1);
     void delAll();
     void flushViews();
     void flushViewsAndWait();

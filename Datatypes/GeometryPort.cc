@@ -105,10 +105,10 @@ GeomID GeometryOPort::addObj(GeomObj* obj, const clString& name,
     return id;
 }
 
-void GeometryOPort::delObj(GeomID id)
+void GeometryOPort::delObj(GeomID id, int del)
 {
     turn_on();
-    GeometryComm* msg=scinew GeometryComm(portid, id);
+    GeometryComm* msg=scinew GeometryComm(portid, id, del);
     if(outbox)
 	outbox->send(msg);
     else
@@ -132,7 +132,7 @@ void GeometryOPort::delAll()
 void GeometryOPort::flushViews()
 {
     turn_on();
-    GeometryComm* msg=scinew GeometryComm(MessageTypes::GeometryFlushViews, portid, 0);
+    GeometryComm* msg=scinew GeometryComm(MessageTypes::GeometryFlushViews, portid, (Semaphore*)0);
     if(outbox)
 	outbox->send(msg);
     else
@@ -209,9 +209,9 @@ GeometryComm::GeometryComm(int portno, GeomID serial, GeomObj* obj,
 {
 }
 
-GeometryComm::GeometryComm(int portno, GeomID serial)
+GeometryComm::GeometryComm(int portno, GeomID serial, int del)
 : MessageBase(MessageTypes::GeometryDelObj),
-  portno(portno), serial(serial)
+  portno(portno), serial(serial), del(del)
 {
 }
 
