@@ -23,35 +23,36 @@ void PicardNonlinearSolver::problemSetup(const ProblemSpecP& params)
   ProblemSpecP db = params->findBlock("Picard Solver");
   db->require("max_iter", d_nonlinear_its);
   db->require("res_tol", d_residual);
-  bool calPress;
-  db->require("cal_pressure", calPress);
-  if (calPress) {
-    d_pressSolver = new PressureSolver();
-    d_pressSolver->problemSetup(db);
-  }
-  bool calMom;
-  db->require("cal_momentum", calMom);
-  if (calMom) {
-    d_momSolver = new MomentumSolver();
-    d_momSolver->problemSetup(db);
-  }
-  bool calScalar;
-  db->require("cal_scalar", calScalar);
-  if (calScalar) {
-    d_scalarSolver = new ScalarSolver();
-    d_scalarSolver->problemSetup(db);
-  }
   string turbModel;
   db->require("turbulence_model", turbModel);
   if (turbModel == "Smagorinsky") 
     d_turbModel = new SmagorinskyModel();
   else 
     throw InvalidValue("Turbulence Model not supported" + turbModel, db);
+  bool calPress;
+  db->require("cal_pressure", calPress);
+  if (calPress) {
+    d_pressSolver = new PressureSolver(d_turbModel);
+    d_pressSolver->problemSetup(db);
+  }
+  bool calMom;
+  db->require("cal_momentum", calMom);
+  if (calMom) {
+    d_momSolver = new MomentumSolver(d_turbModel);
+    d_momSolver->problemSetup(db);
+  }
+  bool calScalar;
+  db->require("cal_scalar", calScalar);
+  if (calScalar) {
+    d_scalarSolver = new ScalarSolver(d_turbModel);
+    d_scalarSolver->problemSetup(db);
+  }
   
   d_turbModel->problemSetup(db);
 
   d_props = new Properties();
   d_props->problemSetup(db);
+  d_boundaryCondition = new BoundaryCondition();
 }
 
 int PicardNonlinearSolver::nonlinearSolve(const LevelP& level,
