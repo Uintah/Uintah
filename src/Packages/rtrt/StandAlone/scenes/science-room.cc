@@ -58,10 +58,13 @@ using namespace rtrt;
 using namespace std;
 using SCIRun::Thread;
 
+#define ADD_BRICKBRACK 1
+
 #define ADD_VIS_FEM 1
 #define ADD_HEAD 1
 #define ADD_CSAFE_FIRE 1
 #define ADD_GEO_DATA 1
+#define ADD_SHEEP 1
 
 void make_walls_and_posters(Group *g, const Point &center) {
   Vector north(0,1,0);
@@ -636,8 +639,8 @@ Scene* make_scene(int argc, char* argv[], int nworkers)
   }
 
 // Start inside:
-  Point Eye(-5.85, 6.2, 2.0);
-  Point Lookat(-13.5, 13.5, 2.0);
+  Point Eye(-11, 8, 1.6);
+  Point Lookat(-8, 8, 2.0);
   Vector Up(0,0,1);
   double fov=60;
 
@@ -657,8 +660,9 @@ Scene* make_scene(int argc, char* argv[], int nworkers)
 
   Point center(-8, 8, 0);
   Group *g=new Group;
+#ifdef ADD_BRICKBRACK
   make_walls_and_posters(g, center);
-
+#endif
   Group* table=new Group();
 
   ImageMaterial *cement_pedestal = 
@@ -672,14 +676,18 @@ Scene* make_scene(int argc, char* argv[], int nworkers)
 		      Vector(0,0,1), 1.5));
   g->add(table);
 
+#ifdef ADD_BRICKBRACK
   add_objects(g, center);
+#endif
 
+#ifdef ADD_BRICKBRACK
   SpinningInstance *smw = make_dna(g);
+#endif
 
   //PER MATERIAL LIGHTS FOR THE HOLOGRAMS
-  Light *holo_light1 = new Light(Point(-8, 10, 2.2), Color(0.4,0.4,0.45), 0);
-  Light *holo_light2 = new Light(Point(-9.41, 6.58, 2.2), Color(0.4,0.4,0.45), 0);
-  Light *holo_light3 = new Light(Point(-6.58, 6.58, 2.2), Color(0.4,0.4,0.45), 0);
+  Light *holo_light1 = new Light(Point(-8, 10, 0.2), Color(0.5,0.4,0.55), 0);
+  Light *holo_light2 = new Light(Point(-9.41, 6.58, 2.2), Color(0.4,0.5,0.55), 0);
+  Light *holo_light3 = new Light(Point(-6.58, 6.58, 3.2), Color(0.4,0.4,0.65), 0);
   holo_light1->name_ = "hololight1";
   holo_light2->name_ = "hololight2";
   holo_light3->name_ = "hololight3";
@@ -874,6 +882,41 @@ Scene* make_scene(int argc, char* argv[], int nworkers)
   gcut->add(ginst);
 #endif
 
+#ifdef ADD_SHEEP
+  //ADD THE SHEEP HEART DATA SET
+  ColorMap *scmap = new ColorMap("/usr/sci/data/Geometry/volumes2/sheep",256);
+  Material *smat=new LambertianMaterial(Color(0.7,0.7,0.7));
+  smat->my_lights.add(holo_light1);
+  smat->my_lights.add(holo_light2);
+  smat->my_lights.add(holo_light3);
+
+  Material *scutmat = new CutMaterial(smat, scmap, cpdpy);
+  scutmat->my_lights.add(holo_light1);
+  scutmat->my_lights.add(holo_light2);
+  scutmat->my_lights.add(holo_light3);
+
+  CutVolumeDpy* scvdpy = new CutVolumeDpy(11000.0, scmap);
+
+  HVolumeBrick16* sheep=new HVolumeBrick16(scutmat, scvdpy,
+					   "/usr/sci/data/Geometry/volumes2/sheep-US.raw",
+					   3, nworkers);
+  InstanceWrapperObject *siw = new InstanceWrapperObject(sheep);
+
+  Transform *strans = new Transform();
+  strans->rotate(Vector(1,0,0), Vector(0,0,-1));
+  strans->pre_scale(Vector(6.02,6.02,6.02)); //scale to fit max
+  strans->pre_translate(Vector(-8, 8, 1.75));
+  strans->pre_translate(Vector(0,0,0.30112)); //place 1cm above table
+
+  SpinningInstance *sinst = new SpinningInstance(siw, strans, Point(-8,8,1.56), Vector(0,0,1), 0.1);
+  
+  sinst->name_ = "Spinning Sheep Heart";
+
+  CutGroup *scut = new CutGroup(cpdpy);
+  scut->add(sinst);
+  scut->name_ = "Sheep Heart Cutting Plane";
+#endif
+
   //PUT THE VOLUMES INTO A SWITCHING GROUP  
   SelectableGroup *sg = new SelectableGroup(60);
 #ifdef ADD_VIS_FEM
@@ -887,6 +930,9 @@ Scene* make_scene(int argc, char* argv[], int nworkers)
 #endif
 #ifdef ADD_GEO_DATA
   sg->add(gcut);
+#endif
+#ifdef ADD_SHEEP
+  sg->add(scut);
 #endif
   sg->name_ = "VolVis Selection";
 
@@ -905,7 +951,9 @@ Scene* make_scene(int argc, char* argv[], int nworkers)
 //  Scene *scene = new Scene(g,
 //			   cam, bgcolor, cdown, cup, groundplane, 0.3);
 
+#ifdef ADD_BRICKBRACK
   scene->addObjectOfInterest( smw, true);  
+#endif
 
   scene->select_shadow_mode( Hard_Shadows );
   scene->maxdepth = 8;
@@ -918,6 +966,9 @@ Scene* make_scene(int argc, char* argv[], int nworkers)
   scene->animate=true;
 
   scene->addObjectOfInterest( sg, true );
+#ifdef ADD_HEAD
+  scene->addObjectOfInterest( hcut, false );
+#endif
 #ifdef ADD_VIS_FEM
   scene->addObjectOfInterest( vinst, false );
   scene->attach_auxiliary_display(vcvdpy);
@@ -947,8 +998,12 @@ Scene* make_scene(int argc, char* argv[], int nworkers)
   scene->attach_display(gcvdpy);
   (new Thread(gcvdpy, "GEO Volume Dpy"))->detach();
 #endif
-#ifdef ADD_HEAD
-  scene->addObjectOfInterest( hcut, false );
+#ifdef ADD_SHEEP
+  scene->addObjectOfInterest( sinst, false );
+  scene->attach_auxiliary_display(scvdpy);
+  scvdpy->setName("Sheep Heart Volume");
+  scene->attach_display(scvdpy);
+  (new Thread(scvdpy, "SHEEP Heart Volume Dpy"))->detach();
 #endif
   scene->attach_auxiliary_display(cpdpy);
   cpdpy->setName("Cutting Plane");
