@@ -15,6 +15,8 @@ SRCDIR   := Packages/MIT/Dataflow/Modules/DataIO
 SRCS     += \
 	$(SRCDIR)/MeasurementsReader.cc\
 	$(SRCDIR)/DistributionReader.cc\
+	$(SRCDIR)/MetropolisWriter.cc\
+	$(SRCDIR)/MetropolisReader.cc\
 #[INSERT NEW CODE FILE HERE]
 
 PSELIBS := Packages/MIT/Core/Datatypes \
