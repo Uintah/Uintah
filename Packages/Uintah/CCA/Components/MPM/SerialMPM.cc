@@ -164,7 +164,7 @@ void SerialMPM::problemSetup(const ProblemSpecP& prob_spec, GridP& /*grid*/,
 void SerialMPM::scheduleInitialize(const LevelP& level,
 				   SchedulerP& sched)
 {
-  Task* t = scinew Task("SerialMPM::actuallyInitialize",
+  Task* t = scinew Task("MPM::actuallyInitialize",
 			this, &SerialMPM::actuallyInitialize);
 
   MaterialSubset* zeroth_matl = scinew MaterialSubset();
@@ -223,7 +223,7 @@ void SerialMPM::scheduleInitialize(const LevelP& level,
 
   sched->addTask(t, level->eachPatch(), d_sharedState->allMPMMaterials());
 
-  t = scinew Task("SerialMPM::printParticleCount",
+  t = scinew Task("MPM::printParticleCount",
 		  this, &SerialMPM::printParticleCount);
   t->requires(Task::NewDW, lb->partCountLabel);
   sched->addTask(t, level->eachPatch(), d_sharedState->allMPMMaterials());
@@ -251,7 +251,7 @@ void SerialMPM::scheduleInitializePressureBCs(const LevelP& level,
 
     // Create a task that calculates the total number of particles
     // associated with each load curve.  
-    Task* t = scinew Task("SerialMPM::countMaterialPointsPerLoadCurve",
+    Task* t = scinew Task("MPM::countMaterialPointsPerLoadCurve",
 		  this, &SerialMPM::countMaterialPointsPerLoadCurve);
     t->requires(Task::NewDW, lb->pLoadCurveIDLabel, Ghost::None);
     t->computes(lb->materialPointsPerLoadCurveLabel, loadCurveIndex,
@@ -260,7 +260,7 @@ void SerialMPM::scheduleInitializePressureBCs(const LevelP& level,
 
     // Create a task that calculates the force to be associated with
     // each particle based on the pressure BCs
-    t = scinew Task("SerialMPM::initializePressureBC",
+    t = scinew Task("MPM::initializePressureBC",
 		  this, &SerialMPM::initializePressureBC);
     t->requires(Task::NewDW, lb->pXLabel, Ghost::None);
     t->requires(Task::NewDW, lb->pLoadCurveIDLabel, Ghost::None);
@@ -318,7 +318,7 @@ void SerialMPM::scheduleInterpolateParticlesToGrid(SchedulerP& sched,
    *   out(G.MASS, G.VELOCITY) */
 
 
-  Task* t = scinew Task("SerialMPM::interpolateParticlesToGrid",
+  Task* t = scinew Task("MPM::interpolateParticlesToGrid",
 			this,&SerialMPM::interpolateParticlesToGrid);
   Ghost::GhostType  gan = Ghost::AroundNodes;
   t->requires(Task::OldDW, lb->pMassLabel,             gan,NGP);
@@ -396,7 +396,7 @@ void SerialMPM::scheduleComputeStressTensor(SchedulerP& sched,
 					    const MaterialSet* matls)
 {
   int numMatls = d_sharedState->getNumMPMMatls();
-  Task* t = scinew Task("SerialMPM::computeStressTensor",
+  Task* t = scinew Task("MPM::computeStressTensor",
 		    this, &SerialMPM::computeStressTensor);
   if (d_doErosion) {
     for(int m = 0; m < numMatls; m++){
@@ -419,7 +419,7 @@ void SerialMPM::scheduleComputeStressTensor(SchedulerP& sched,
 
   if (d_accStrainEnergy) {
     // Compute the accumulated strain energy
-    t = scinew Task("SerialMPM::computeAccStrainEnergy",
+    t = scinew Task("MPM::computeAccStrainEnergy",
 		    this, &SerialMPM::computeAccStrainEnergy);
     t->requires(Task::OldDW, lb->AccStrainEnergyLabel);
     t->requires(Task::NewDW, lb->StrainEnergyLabel);
@@ -436,7 +436,7 @@ void SerialMPM::scheduleComputeArtificialViscosity(SchedulerP& sched,
                                                    const PatchSet* patches,
                                                    const MaterialSet* matls)
 {
-  Task* t = scinew Task("SerialMPM::computeArtificialViscosity",
+  Task* t = scinew Task("MPM::computeArtificialViscosity",
 		    this, &SerialMPM::computeArtificialViscosity);
 
   Ghost::GhostType  gac = Ghost::AroundCells;
@@ -466,7 +466,7 @@ void SerialMPM::scheduleComputeInternalForce(SchedulerP& sched,
   *   shape functions)
   * out(G.F_INTERNAL) */
 
-  Task* t = scinew Task("SerialMPM::computeInternalForce",
+  Task* t = scinew Task("MPM::computeInternalForce",
 		    this, &SerialMPM::computeInternalForce);
 
   Ghost::GhostType  gan   = Ghost::AroundNodes;
@@ -512,7 +512,7 @@ void SerialMPM::scheduleComputeInternalHeatRate(SchedulerP& sched,
    * computeInternalHeatRate
    * out(G.INTERNALHEATRATE) */
 
-  Task* t = scinew Task("SerialMPM::computeInternalHeatRate",
+  Task* t = scinew Task("MPM::computeInternalHeatRate",
 			this, &SerialMPM::computeInternalHeatRate);
 
   Ghost::GhostType  gan = Ghost::AroundNodes;
@@ -541,7 +541,7 @@ void SerialMPM::scheduleSolveEquationsMotion(SchedulerP& sched,
    *   operation(acceleration = f/m)
    *   out(G.ACCELERATION) */
 
-  Task* t = scinew Task("SerialMPM::solveEquationsMotion",
+  Task* t = scinew Task("MPM::solveEquationsMotion",
 		    this, &SerialMPM::solveEquationsMotion);
 
   t->requires(Task::OldDW, d_sharedState->get_delt_label());
@@ -571,7 +571,7 @@ void SerialMPM::scheduleSolveHeatEquations(SchedulerP& sched,
    *   in(G.MASS, G.INTERNALHEATRATE, G.EXTERNALHEATRATE)
    *   out(G.TEMPERATURERATE) */
 
-  Task* t = scinew Task("SerialMPM::solveHeatEquations",
+  Task* t = scinew Task("MPM::solveHeatEquations",
 			    this, &SerialMPM::solveHeatEquations);
 
   const MaterialSubset* mss = matls->getUnion();
@@ -601,7 +601,7 @@ void SerialMPM::scheduleIntegrateAcceleration(SchedulerP& sched,
    *   operation(v* = v + a*dt)
    *   out(G.VELOCITY_STAR) */
 
-  Task* t = scinew Task("SerialMPM::integrateAcceleration",
+  Task* t = scinew Task("MPM::integrateAcceleration",
 			    this, &SerialMPM::integrateAcceleration);
 
   t->requires(Task::OldDW, d_sharedState->get_delt_label() );
@@ -623,7 +623,7 @@ void SerialMPM::scheduleIntegrateTemperatureRate(SchedulerP& sched,
    *   operation(t* = t + t_rate * dt)
    *   out(G.TEMPERATURE_STAR) */
 
-  Task* t = scinew Task("SerialMPM::integrateTemperatureRate",
+  Task* t = scinew Task("MPM::integrateTemperatureRate",
 		    this, &SerialMPM::integrateTemperatureRate);
 
   const MaterialSubset* mss = matls->getUnion();
@@ -663,7 +663,7 @@ void SerialMPM::scheduleSetGridBoundaryConditions(SchedulerP& sched,
 						       const MaterialSet* matls)
 
 {
-  Task* t=scinew Task("SerialMPM::setGridBoundaryConditions",
+  Task* t=scinew Task("MPM::setGridBoundaryConditions",
 		    this, &SerialMPM::setGridBoundaryConditions);
                   
   const MaterialSubset* mss = matls->getUnion();
@@ -683,7 +683,7 @@ void SerialMPM::scheduleApplyExternalLoads(SchedulerP& sched,
   * applyExternalLoads
   *   in(p.externalForce, p.externalheatrate)
   *   out(p.externalForceNew, p.externalheatrateNew) */
-  Task* t=scinew Task("SerialMPM::applyExternalLoads",
+  Task* t=scinew Task("MPM::applyExternalLoads",
 		    this, &SerialMPM::applyExternalLoads);
                   
   t->requires(Task::OldDW, lb->pExternalForceLabel,    Ghost::None);
@@ -712,7 +712,7 @@ void SerialMPM::scheduleCalculateDampingRate(SchedulerP& sched,
   *   out(sum_vartpe(dampingRate)) 
   */
   if (d_artificialDampCoeff > 0.0) {
-    Task* t=scinew Task("SerialMPM::calculateDampingRate", this, 
+    Task* t=scinew Task("MPM::calculateDampingRate", this, 
 			&SerialMPM::calculateDampingRate);
     t->requires(Task::NewDW, lb->gVelocityStarLabel, Ghost::AroundCells, NGN);
     t->requires(Task::OldDW, lb->pXLabel, Ghost::None);
@@ -735,7 +735,7 @@ void SerialMPM::scheduleInterpolateToParticlesAndUpdate(SchedulerP& sched,
   *   integrate these to get new particle velocity and position)
   * out(P.VELOCITY, P.X, P.NAT_X) */
 
-  Task* t=scinew Task("SerialMPM::interpolateToParticlesAndUpdate",
+  Task* t=scinew Task("MPM::interpolateToParticlesAndUpdate",
 		    this, &SerialMPM::interpolateToParticlesAndUpdate);
 
 
