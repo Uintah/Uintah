@@ -249,10 +249,16 @@ void DataArchiver::initializeOutput(const ProblemSpecP& params) {
    d_nextCheckpointTime=d_checkpointInterval; 
    d_nextCheckpointTimestep=d_checkpointTimestepInterval+1;
    
-   if (d_checkpointWalltimeInterval > 0)
+   if (d_checkpointWalltimeInterval > 0) {
      d_nextCheckpointWalltime=d_checkpointWalltimeStart + 
        (int) Time::currentSeconds();
-   else 
+     if(Parallel::usingMPI()){
+       // make sure we are all writing at same time,
+       // even if our clocks disagree
+       // make decision based on processor zero time
+       MPI_Bcast(&d_nextCheckpointWalltime, 1, MPI_INT, 0, d_myworld->getComm());
+     }
+   } else 
      d_nextCheckpointWalltime=0;
 
    if(Parallel::usingMPI()){
@@ -468,9 +474,13 @@ void DataArchiver::restartSetup(Dir& restartFromDir, int startTimestep,
       d_nextCheckpointTime = d_checkpointInterval * ceil(time / d_checkpointInterval);
    else if (d_checkpointTimestepInterval > 0)
       d_nextCheckpointTimestep = timestep + d_checkpointTimestepInterval;
-   if (d_checkpointWalltimeInterval > 0)
+   if (d_checkpointWalltimeInterval > 0) {
      d_nextCheckpointWalltime = d_checkpointWalltimeInterval + 
        (int)Time::currentSeconds();
+     if(Parallel::usingMPI()){
+       MPI_Bcast(&d_nextCheckpointWalltime, 1, MPI_INT, 0, d_myworld->getComm());
+     }
+   }
 }
 
 //////////
