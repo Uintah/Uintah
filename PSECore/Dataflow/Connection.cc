@@ -13,14 +13,15 @@
  */
 
 #include <iostream>
+#include <stdio.h>
 #ifndef _WIN32
 #include <unistd.h>
-#endif
-#include <stdio.h>
-#ifdef _WIN32
+#else
 #include <io.h>
-#include <iostream.h> // for cerr 
 #endif
+
+using std::cerr;
+using std::endl;
 
 #include <PSECore/Dataflow/Connection.h>
 #include <PSECore/Dataflow/Module.h>
@@ -102,6 +103,9 @@ Demand_Message::~Demand_Message()
 
 //
 // $Log$
+// Revision 1.7  1999/11/17 23:13:15  moulding
+// restructured #ifdef's for win32 and changed <iostream.h> to <iostream>
+//
 // Revision 1.6  1999/10/26 22:01:03  moulding
 // put #include <iostream.h> back into the win32 #ifdef because cerr isn't in
 // the visual c++ std namespace yet
