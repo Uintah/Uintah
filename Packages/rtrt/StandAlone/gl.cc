@@ -10,6 +10,8 @@
 #include <iostream>
 #include <sgi_stl_warnings_on.h>
 
+#include <unistd.h> // For sleep()
+
 #ifdef GLUT_GLUI_THREAD
 #  include <GL/glut.h>
 #  if defined(__sgi) && !defined(__GNUC__) && (_MIPS_SIM != _MIPS_SIM_ABI32)
@@ -43,6 +45,7 @@ public:
 #endif
     child(0), child_thread(0)
   {
+    cleaned = true;
   }
 
   void setChild(MyDpy* newchild) {
@@ -67,6 +70,8 @@ protected:
 public:
 #endif
 
+  virtual void cleanup();
+
 protected:
   MyDpy* child;
   Thread* child_thread;
@@ -83,11 +88,11 @@ protected:
 // events.
 class MyDpy: public DpyBase {
 public:
-  MyDpy(MyGui* parent):
-    DpyBase("MyDpy"),
+  MyDpy():
+    DpyBase("MyDpy", DoubleBuffered, false),
     parentSema("parent sema", 0)
   {
-    parent->setChild(this);
+    dont_close();
   }
 
   Semaphore parentSema;
@@ -96,6 +101,18 @@ public:
     parentWindow = win;
     parentSema.up();
   }
+
+  void wait_on_close() {
+    parentSema.down();
+    // Now wait for the thread to have exited
+    unsigned int i =0;
+    while(my_thread_ != 0) {
+      i++;
+      if (i %10000 == 0)
+        cerr << "+";
+    }
+  }
+
 protected:
   
   Window parentWindow;
@@ -113,7 +130,8 @@ protected:
     past = SCIRun::Time::currentSeconds();
     for(;;) {
       if (should_close()) {
-        close_display();
+        cleanup();
+        parentSema.up();
         return;
       }
       
@@ -194,16 +212,39 @@ extern "C" Window** __glutWindowList;
 class GGT: public Runnable {
 public:
   GGT():
+    gui(0),
+    opened(false),
+    on_death_row(false),
     mainWindowId(-1)
   {
     activeGui = this;
   }
 
+  void setGui(MyGui* new_gui) {
+    gui = new_gui;
+  }
+  
   virtual ~GGT() {
+    cerr << "GGT::~GGT() called\n";
+    cleanup();
+  }
+
+  void stop() {
+    on_death_row = true;
+  }
+  
+  void cleanup() {
+    if (!opened) return;
+    else opened = false;
+    
+    DpyBase::xlock();
     GLUI_Master.close_all();
     cerr << "GLUI_Master.close_all finished\n";
     glutDestroyWindow(activeGui->mainWindowId);
     cerr << "glutDestroyWindow finished\n";
+    XCloseDisplay(dpy);
+    cerr << "XCloseDisplay for GGT finished\n";
+    DpyBase::xunlock();
   }
   
   virtual void run() {
@@ -216,40 +257,87 @@ public:
     // Initialize GLUT and GLUI stuff.
     printf("start glut inits\n");
     glutInitDisplayMode(GLUT_RGB | GLUT_DOUBLE);
-    glutInitWindowSize(1, 1 );
+    glutInitWindowSize(135, 70 );
     glutInitWindowPosition( 100, 0 );
     
+    DpyBase::xlock();
     mainWindowId = glutCreateWindow("GG Controls");
+    DpyBase::xunlock();
 
     dpy = __glutDisplay;
     win = __glutWindowList[mainWindowId-1][1];
     cerr << "initial win = "<<win<<"\n";
 
+    // Find the keycodes we are interested in
+    //    get_keycodes();
+    //    get_keycodes2();
+    
     // Setup callback functions
     glutDisplayFunc( GGT::display );
 
     // Must do this after glut is initialized.
     createMenus();
 
+    opened = true;
+    
     printf("end glut inits\n");
     
     glutMainLoop();
   }
 
-  static void close(int external) {
-    if (external) {
-      // Generate a signal to the window to close
-      XEvent event;
-      event.type = KeyPress;
-      event.xkey.keycode = XK_q;
-      event.xkey.x = 0;
-      event.xkey.y = -1;
-      event.xkey.window = activeGui->win;
-      cerr << "external close generating an event\n";
-      XSendEvent(activeGui->dpy, activeGui->win, false, 0, &event);
-    } else {
-      // This is internal, just shutdown the thread
+  void get_keycodes2() {
+    cerr << "keycode of 'a' is "<<(int)XKeysymToKeycode(dpy, XK_a)<<"\n";
+    cerr << "keycode of 's' is "<<(int)XKeysymToKeycode(dpy, XK_s)<<"\n";
+    cerr << "keycode of 'd' is "<<(int)XKeysymToKeycode(dpy, XK_d)<<"\n";
+    cerr << "keycode of 'f' is "<<(int)XKeysymToKeycode(dpy, XK_f)<<"\n";
+    cerr << "keycode of 'g' is "<<(int)XKeysymToKeycode(dpy, XK_g)<<"\n";
+  }
+
+  static void close(int mode) {
+    cerr << "GGT::close("<<mode<<")\n";
+    switch (mode) {
+    case 0:
+      // We are just exiting ourselves
+      
+      // Tell the Gui that we've left.
+      if (activeGui->gui) activeGui->gui->setGlutGlui(0,0,0);
+      // This is internal, just shutdown the thread.
       Thread::exit();
+      break;
+    case 1:
+      {
+        // Generate a signal to the window to close
+        XEvent event;
+        event.type = KeyPress;
+        // You can't simply feed a value here, because the keycode
+        // changes from xserver to xserver.
+        event.xkey.keycode = XKeysymToKeycode(activeGui->dpy, XK_q);
+        event.xkey.x = 0;
+        event.xkey.y = -1;
+        event.xkey.window = activeGui->win;
+        // I've kind of reverse engineered these values, so I can't
+        // guarantee that they will work for every X server.
+        
+        // 16 is normal
+        // shift is 17             (0001 0001)
+        // control is 20           (0001 0100)
+        // alt is 24               (0001 1000)
+        // control-shift is 21     (0001 0101)
+        // control-shift-alt is 29 (0001 1101)
+        // shift-alt is 25         (0001 1001)
+        event.xkey.state = 16;
+        cerr << "external close generating an event\n";
+        if (DpyBase::useXThreads) XLockDisplay(activeGui->dpy);
+        XSendEvent(activeGui->dpy, activeGui->win, false, 0, &event);
+        if (DpyBase::useXThreads) XUnlockDisplay(activeGui->dpy);
+      }
+      break;
+    case 2:
+      // Tell the GUI thread to go bye bye.  It would be nice if this
+      // worked.  For now call Thread::exitAll();
+      //      if (activeGui->gui) activeGui->gui->stop();
+      Thread::exitAll(0);
+      break;
     }
   }
 
@@ -261,10 +349,10 @@ public:
   }
 
   static void keyboard(unsigned char key, int x, int y) {
-    cerr << "keyboard called with key '"<<key<<"' at ("<<x<<", "<<y<<")\n";
+    //    cerr << "keyboard called with key '"<<key<<"' at ("<<x<<", "<<y<<")\n";
     switch (key) {
     case 'q':
-      cerr << "'q' received\n";
+      //      cerr << "'q' received\n";
       close(0);
       break;
     }
@@ -278,12 +366,21 @@ public:
       first=false;
     }
   }
+
+  static void idle(void) {
+    // Check to see if we need to go bye bye
+    if (activeGui->on_death_row)
+      close(0);
+    else
+      usleep(1000);
+  }
 protected:
   void createMenus() {
+    DpyBase::xlock();
     // Register call backs with the glui controls.
     GLUI_Master.set_glutKeyboardFunc( GGT::keyboard );
     GLUI_Master.set_glutReshapeFunc( GGT::reshape );
-    GLUI_Master.set_glutIdleFunc( NULL );
+    GLUI_Master.set_glutIdleFunc( GGT::idle );
 
     // Create the sub window.
     GLUI* glui_subwin =
@@ -293,9 +390,14 @@ protected:
 
     GLUI_Panel * main_panel   = glui_subwin->add_panel( "" );
     glui_subwin->add_button_to_panel(main_panel, "Exit Thread", 0, GGT::close);
+    glui_subwin->add_button_to_panel(main_panel, "Exit All", 2, GGT::close);
     
+    DpyBase::xunlock();
   }
 
+  MyGui* gui;
+  bool opened;
+  bool on_death_row;
 public:
   int mainWindowId;
   Display *dpy;
@@ -316,7 +418,7 @@ void MyGui::run() {
   
   for(;;) {
     if (should_close()) {
-      close_display();
+      cleanup();
       return;
     }
 
@@ -338,29 +440,21 @@ void MyGui::key_pressed(unsigned long key) {
   switch (key) {
 #ifdef GLUT_GLUI_THREAD
   case XK_g:
-    ggt->close(1);
+    if (ggt) ggt->stop();
     break;
 #endif
   case XK_r:
     post_redraw();
     break;
-  case XK_c:
-    child->stop();
-    break;
-  case XK_p:
-    stop();
-    break;
+//   case XK_c:
+//     child->stop();
+//     break;
+//   case XK_p:
+//     stop();
+//     break;
   case XK_q:
-#ifdef GLUT_GLUI_THREAD
-    // Close the GG thread
-    ggt->close(1);
-#endif
-    // Close the children
-    //    Thread::exitAll(0);
-    child->stop();
-    //      close_display();
+    cleaned = false;
     stop();
-    //Thread::exit();
     break;
   case XK_Escape:
     Thread::exitAll(0);
@@ -371,6 +465,27 @@ void MyGui::key_pressed(unsigned long key) {
   }
 }
 
+void MyGui::cleanup() {
+  if (cleaned) return;
+  else cleaned = true;
+  
+#ifdef GLUT_GLUI_THREAD
+  // Close the GG thread
+  if (ggt) ggt->stop();
+#endif
+  // Close the children
+  child->stop();
+
+  // Wait for the child to stop rendering
+  child->wait_on_close();
+  // Can't delete it for now, because it will cause a recursive lock
+  // when doing Thread::exitAll().
+
+  //  delete(child);
+
+  close_display();
+}
+
 void MyGui::display() {
   cerr << "MyGui::display called\n";
 }
@@ -379,14 +494,22 @@ void MyGui::display() {
 
 int main(int argc, char *argv[]) {
 
-  if (argc < 2)
+  if (argc < 2) {
     run_gl_test();
+    exit(0);
+  }
 
+  DpyBase::initUseXThreads();
+  
 #if 1
+  // Create the Dpy first
+  MyDpy* dpy = new MyDpy();
   // Create a new GUI thread
   MyGui* gui = new MyGui();
+  // Set up the relationship
+  gui->setChild(dpy);
   // Make a new Display
-  Thread* dpythread = new Thread(new MyDpy(gui), "Dpy");
+  Thread* dpythread = new Thread(dpy, "Dpy");
   dpythread->detach();
   gui->setChildThread(dpythread);
   (new Thread(gui, "Gui"))->detach();
@@ -399,6 +522,7 @@ int main(int argc, char *argv[]) {
 #if 0
     gg_runner->run();
 #else
+    gg_runner->setGui(gui);
     Thread* gg_thread = new Thread(gg_runner, "GG Thread");
     gg_thread->detach();
     gui->setGlutGlui(gg_runner,0,0);
