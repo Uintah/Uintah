@@ -104,7 +104,7 @@ C-----------------------------------------------------------------------
 c      l2up = .false.
       l2up = .true.
 c      lcend = .true.
-      lcend = .false.
+c      lcend = .false.
       lsmpt = .false.
       lcentral = .false.
 c      leno = .true.
