@@ -195,7 +195,7 @@ void VectorFieldExtractor::execute()
   // set the generation of the grid
   int generation = (*(archiveH.get_rep())).generation;
   
-  int max_workers = Max(Thread::numProcessors()/2, 8);
+  int max_workers = Max(Thread::numProcessors()/2, 4);
   Semaphore* thread_sema = scinew Semaphore( "vector extractor semahpore",
 					     max_workers); 
 
