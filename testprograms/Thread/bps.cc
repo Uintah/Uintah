@@ -1,10 +1,10 @@
 
-#include "Thread.h"
-#include "Barrier.h"
-#include "Runnable.h"
-#include "ThreadGroup.h"
-#include "Mutex.h"
-#include "Time.h"
+#include <SCICore/Thread/Thread.h>
+#include <SCICore/Thread/Barrier.h>
+#include <SCICore/Thread/Runnable.h>
+#include <SCICore/Thread/ThreadGroup.h>
+#include <SCICore/Thread/Mutex.h>
+#include <SCICore/Thread/Time.h>
 #include <iostream.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -23,8 +23,9 @@ class BPS : public Runnable {
     Barrier* barrier;
     int count;
     int proc;
+    int np;
 public:
-    BPS(Barrier* barrier, int count, int proc);
+    BPS(Barrier* barrier, int count, int proc, int np);
     virtual void run();
 };
 
@@ -43,32 +44,32 @@ int main(int argc, char* argv[])
     }
     np=atoi(argv[1]);
     count=atoi(argv[2]);
-    Barrier* barrier=new Barrier("test barrier", np);
+    Barrier* barrier=new Barrier("test barrier");
     ThreadGroup* group=new ThreadGroup("test group");
     for(int i=0;i<np;i++){
 	char buf[100];
 	sprintf(buf, "worker %d", i);
-	new Thread(new BPS(barrier, count, i), strdup(buf), group);
+	new Thread(new BPS(barrier, count, i, np), strdup(buf), group);
     }
     group->join();
 }
 
-BPS::BPS(Barrier* barrier, int count, int proc)
-    : barrier(barrier), count(count), proc(proc)
+BPS::BPS(Barrier* barrier, int count, int proc, int np)
+    : barrier(barrier), count(count), proc(proc), np(np)
 {
 }
 
 void BPS::run()
 {
     int np=Thread::numProcessors();
-    barrier->wait();
+    barrier->wait(np);
     double time=Time::currentSeconds();
     for(int i=0;i<count;i++){
-	barrier->wait();
+	barrier->wait(np);
 	static int g=0;
 	if(g != i)
 	    cerr << "OOPS!: " << g << " vs. " << i << ", proc=" << proc << "\n";
-	barrier->wait();
+	barrier->wait(np);
 	if(proc==0)
 	    g++;
     }

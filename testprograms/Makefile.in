@@ -1,0 +1,11 @@
+SRCTOP  = @top_srcdir@
+SRCDIR  = @srcdir@
+OBJTOP  = ..
+
+ifeq (@BUILD_PARALLEL@,yes)
+PARALLEL_DIRS = Component
+endif
+
+SUBDIRS = $(PARALLEL_DIRS)
+
+include $(SRCTOP)/scripts/recurse.mk

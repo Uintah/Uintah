@@ -6,7 +6,8 @@ ifeq (@BUILD_PARALLEL@,yes)
 COMPONENT_DIRS = tools/sidl Component
 endif
 
-SUBDIRS = SCICore $(COMPONENT_DIRS) PSECore main PSECommon @PACKAGE_DIRS@
+SUBDIRS = SCICore $(COMPONENT_DIRS) PSECore main PSECommon \
+	  testprograms @PACKAGE_DIRS@
 
 all:: sci_config.h
 

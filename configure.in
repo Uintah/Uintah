@@ -472,7 +472,9 @@ if test "$enable_parallel" = "yes"; then
 	        SCICore/globus_threads/Makefile \
 	      Component/Makefile \
 	        Component/PIDL/Makefile \
-	        tools/sidl/Makefile \
+	        tools/sidl/Makefile 
+		testprograms/Component/Makefile \
+		  testprograms/Component/pingpong/Makefile \
 		"
   BUILD_PARALLEL="yes"
   GLOBUS_INCLUDE="-I$with_globus/include"
@@ -585,6 +587,9 @@ AC_OUTPUT(Makefile \
                   PSECommon/Modules/Fields/Makefile \
                   PSECommon/Modules/Writers/Makefile \
                   PSECommon/Modules/Visualization/Makefile \
+	      testprograms/Makefile \
+		testprograms/Malloc/Makefile \
+		testprograms/Thread/Makefile \
 	      $package_output \
 	      $parallel_output
 	      , echo timestamp > stamp-h
