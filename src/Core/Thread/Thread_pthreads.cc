@@ -113,13 +113,14 @@ int
 Thread::push_bstack(Thread_private* p, Thread::ThreadState state,
 		    const char* name)
 {
+ 
     int oldstate=p->state;
     p->state=state;
     p->blockstack[p->bstacksize]=name;
     p->bstacksize++;
-    if(p->bstacksize>MAXBSTACK){
-	fprintf(stderr, "Blockstack Overflow!\n");
-	Thread::niceAbort();
+    if(p->bstacksize>=MAXBSTACK){
+      fprintf(stderr, "Blockstack Overflow!\n");
+      Thread::niceAbort();
     }
     return oldstate;
 }
@@ -150,7 +151,8 @@ Thread_shutdown(Thread* thread)
     delete thread;
 
     // Wait to be deleted...
-    if(sem_wait(&priv->delete_ready) == -1)
+    if (priv->threadid != 0)
+      if(sem_wait(&priv->delete_ready) == -1)
 	throw ThreadError(std::string("sem_wait failed")
 			  +strerror(errno));
 
@@ -259,7 +261,7 @@ void
 Thread::os_start(bool stopped)
 {
     if(!initialized)
-	Thread::initialize();
+      Thread::initialize();
 
     d_priv=new Thread_private;
 
@@ -271,6 +273,7 @@ Thread::os_start(bool stopped)
 			  +strerror(errno));
     d_priv->state=STARTUP;
     d_priv->bstacksize=0;
+    
     d_priv->thread=this;
     d_priv->threadid=0;
 
@@ -352,7 +355,11 @@ handle_abort_signals(int sig, struct sigcontext ctx)
 
     Thread* self=Thread::self();
     const char* tname=self?self->getThreadName():"idle or main";
+#ifdef PPC
+    void* addr=(void*)ctx.regs->dsisr;
+#else
     void* addr=(void*)ctx.cr2;
+#endif
     char* signam=SCICore_Thread_signal_name(sig, addr);
     fprintf(stderr, "%c%c%cThread \"%s\"(pid %d) caught signal %s\n", 7,7,7,tname, getpid(), signam);
     Thread::niceAbort();
@@ -487,6 +494,7 @@ static void exit_handler()
 {
     if(exiting)
         return;
+    Thread_shutdown(Thread::self());
     // Wait forever...
     sem_t wait;
     if(sem_init(&wait, 0, 0) != 0)
@@ -515,6 +523,7 @@ Thread::initialize()
 	throw ThreadError(std::string("pthread_key_create failed")
 			  +strerror(errno));
 
+    initialized=true;
     ThreadGroup::s_default_group=new ThreadGroup("default group", 0);
     Thread* mainthread=new Thread(ThreadGroup::s_default_group, "main");
     mainthread->d_priv=new Thread_private;
@@ -543,7 +552,7 @@ Thread::initialize()
     if(!getenv("THREAD_NO_CATCH_SIGNALS"))
 	install_signal_handlers();
 
-    initialized=true;
+    
 }
 
 void
@@ -569,6 +578,10 @@ namespace SCICore {
 Mutex::Mutex(const char* name)
     : d_name(name)
 {
+
+    if(!initialized)
+	Thread::initialize();
+
     d_priv=new Mutex_private;
     if(pthread_mutex_init(&d_priv->mutex, NULL) != 0)
 	throw ThreadError(std::string("pthread_mutex_init: ")
@@ -631,6 +644,8 @@ namespace SCICore {
 RecursiveMutex::RecursiveMutex(const char* name)
     : d_name(name)
 {
+   if(!initialized)
+	Thread::initialize();
     d_priv=new RecursiveMutex_private;
     pthread_mutexattr_t attr;
     if(pthread_mutexattr_init(&attr) != 0)
@@ -685,10 +700,12 @@ namespace SCICore {
 Semaphore::Semaphore(const char* name, int value)
     : d_name(name)
 {
-    d_priv=new Semaphore_private;
-    if(sem_init(&d_priv->sem, 0, value) != 0)
-	throw ThreadError(std::string("sem_init: ")
-			  +strerror(errno));
+  if(!initialized)
+    Thread::initialize();    
+  d_priv=new Semaphore_private;
+  if(sem_init(&d_priv->sem, 0, value) != 0)
+    throw ThreadError(std::string("sem_init: ")
+		      +strerror(errno));
 }
     
 Semaphore::~Semaphore()
@@ -746,10 +763,12 @@ namespace SCICore {
 ConditionVariable::ConditionVariable(const char* name)
     : d_name(name)
 {
-    d_priv=new ConditionVariable_private;
-    if(pthread_cond_init(&d_priv->cond, 0) != 0)
-	throw ThreadError(std::string("pthread_cond_init: ")
-			  +strerror(errno));
+  if(!initialized)
+    Thread::initialize();
+  d_priv=new ConditionVariable_private;
+  if(pthread_cond_init(&d_priv->cond, 0) != 0)
+    throw ThreadError(std::string("pthread_cond_init: ")
+		      +strerror(errno));
 }
 
 ConditionVariable::~ConditionVariable()
@@ -815,6 +834,10 @@ ConditionVariable::conditionBroadcast()
 
 //
 // $Log$
+// Revision 1.14  2000/03/29 20:03:52  jas
+// Fixed thread initialization and shutdown when not using PSE for linux.
+// (Actually, Steve did this).
+//
 // Revision 1.13  2000/03/20 21:58:30  yarden
 // Linux port: add a stub : Thread::allow_sgi_OpenGL_page0_sillyness()
 //
