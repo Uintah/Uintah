@@ -25,6 +25,23 @@
 <!-- ***************** web displayable templates **************** -->
 <!-- ************************************************************ -->
 
+<xsl:template match="figure" mode="web">
+  <center><table border="0">
+    <tr>
+      <img>
+        <xsl:attribute name="src">
+          <xsl:value-of select="@file"/>
+        </xsl:attribute>
+      </img>
+    </tr>
+    <tr align="right">
+      <p class="firstpara">
+        <xsl:value-of select="concat('Figure ',count(ancestor|preceding::figure) + 1,': ',@caption)"/>
+      </p>
+    </tr>
+  </table></center>
+</xsl:template>
+
 <xsl:template match="table" mode="web">
   <center>
     <table border="1"><xsl:apply-templates mode="web"/></table>
@@ -133,6 +150,23 @@
 <!-- ************************************************************ -->
 <!-- *********************** printable templates **************** -->
 <!-- ************************************************************ -->
+
+<xsl:template match="figure" mode="print">
+  <center><table border="0">
+    <tr>
+      <img>
+        <xsl:attribute name="src">
+          <xsl:value-of select="@file"/>
+        </xsl:attribute>
+      </img>
+    </tr>
+    <tr>
+      <p class="pfirstpara">
+        <xsl:value-of select="concat('Figure ',count(ancestor|preceding::figure) + 1,': ',@caption)"/>
+      </p>
+    </tr>
+  </table></center>
+</xsl:template>
 
 <xsl:template match="beginpage" mode="print">
   <br/>
