@@ -23,6 +23,7 @@
 #include <Core/Containers/Array1.h>
 #include <Core/Malloc/Allocator.h>
 #include <Core/GuiInterface/TCL.h>
+#include <Core/GuiInterface/GuiVar.h>
 #include <Core/GuiInterface/TclObj.h>
 #include <Core/Thread/Mutex.h>
 #include <Core/Geom/Color.h>
@@ -45,10 +46,11 @@ struct ObjInfo {
   void set_id( const string & );
 };
 
-class Graph : public TclObj, public Drawable, public OpenGLWindow {
+class Graph : public TclObj, public Drawable {
 private:
-  Mutex *lock_;
   ObjInfo *obj_;
+  OpenGLWindow *ogl_;
+  GuiString gl_window;
 
 public:
   Graph( const string & );
@@ -58,9 +60,6 @@ public:
   virtual void tcl_command(TCLArgs&, void*);
   virtual void set_window( const string &);
   void update();
-
-  void lock() { lock_->lock(); }
-  void unlock() { lock_->unlock(); }
 
   virtual void need_redraw();
   virtual void get_bounds( BBox2d &) {}

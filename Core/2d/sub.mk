@@ -25,10 +25,12 @@ SRCS     += $(SRCDIR)/Point2d.cc \
 	$(SRCDIR)/Drawable.cc \
 	$(SRCDIR)/BBox2d.cc \
 	$(SRCDIR)/Diagram.cc \
+	$(SRCDIR)/Hairline.cc \
 	$(SRCDIR)/Polyline.cc \
 	$(SRCDIR)/OpenGLWindow.cc \
 	$(SRCDIR)/OpenGL.cc \
 	$(SRCDIR)/Graph.cc \
+	$(SRCDIR)/Widget.cc \
 	$(SRCDIR)/glprintf.cc \
 	$(SRCDIR)/asciitable.cc \
 	$(SRCDIR)/texture.cc \

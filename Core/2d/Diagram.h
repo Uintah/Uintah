@@ -35,36 +35,50 @@
 #include <Core/GuiInterface/TclObj.h>
 #include <Core/Containers/Array1.h>
 #include <Core/2d/Drawable.h>
+#include <Core/2d/Widget.h>
 
 namespace SCIRun {
   
 class SCICORESHARE Diagram : public TclObj, public Drawable {
 private:
   Array1<Drawable *> graph_;
+  Array1<Widget *> widget_;
+
   BBox2d graphs_bounds_;
   string window_;
   int selected_;
+  int selected_widget_;
   
   typedef enum { SelectOne, SelectMany } SelectMode;
   typedef enum { ScaleAll, ScaleEach } ScaleMode;
+  typedef enum { Draw, Pick } DrawMode;
 
   GuiInt *gui_select, *gui_scale;
 /*   SelectMode select_mode; */
 /*   ScaleMode scale_mode; */
-  int select_mode, scale_mode;
+  int select_mode_, scale_mode_;
+  DrawMode draw_mode_;
 
 public:
   Diagram( const string &name="" );
   virtual ~Diagram();
 
   void add( Drawable * );
+  void add_widget( Widget *);
+  void redraw() { if ( parent() ) parent()->need_redraw(); }
   virtual void reset_bbox();
   virtual void get_bounds(BBox2d&);
 
   virtual void tcl_command(TCLArgs&, void*);
   virtual void set_id( const string &);
   virtual void set_window( const string& );
-  
+
+ private:  
+  void button_press( int x, int y, int button );
+  void button_motion( int x, int y, int button );
+  void button_release( int x, int y, int button );
+
+ public:
   // For OpenGL
 #ifdef SCI_OPENGL
   virtual void draw();

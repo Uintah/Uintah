@@ -32,6 +32,7 @@
 #include <Core/2d/OpenGL.h>
 #include <Core/2d/Polyline.h>
 #include <Core/2d/Diagram.h>
+#include <Core/2d/Hairline.h>
 #include <Core/2d/Axes.h>
 
 #include <GL/gl.h>
@@ -52,79 +53,123 @@ namespace SCIRun {
 void 
 Polyline::draw()
 {
+  lock();
+
   glColor3f( color.r(), color.g(), color.b() );
   glBegin(GL_LINE_STRIP);
   for (int i=0; i<data_.size(); i++) 
     glVertex2f( i, data_[i] );
   glEnd();
-}
 
+  unlock();
+  GLenum errcode;
+  while((errcode=glGetError()) != GL_NO_ERROR)
+    cerr << "Polyline GL error: " 
+	 << (char*)gluErrorString(errcode) << endl;
+}
+  
 void 
 Diagram::draw()
 {
+  GLenum errcode;
+
   double smidgex;
   double smidgey;
   
   if ( graph_.size() == 0 ) return; 
 
-  if ( select_mode == 2 ) { // select_mode = many
-    if ( scale_mode == 1 ) { // scale_mode = all
-      reset_bbox();
-      
-      if ( !graphs_bounds_.valid() ) return;
-      
-      glMatrixMode(GL_PROJECTION);
-      glLoadIdentity();
+  glMatrixMode(GL_PROJECTION);
 
-      smidgex = (graphs_bounds_.max().x()-graphs_bounds_.min().x())*SMIDGE;
-      smidgey = (graphs_bounds_.max().y()-graphs_bounds_.min().y())*SMIDGE;
-
-      glOrtho( graphs_bounds_.min().x()-smidgex,
-	       graphs_bounds_.max().x()+smidgex,
-	       graphs_bounds_.min().y()-smidgey,
-	       graphs_bounds_.max().y()+smidgey,
-	       -1, 1 );
-      
-      glColor3f( 0,0,0 );
-      for (int i=0; i<graph_.size(); i++) 
-	if ( graph_[i]->is_enabled() ) 
-	  graph_[i]->draw();
-    }
-    else { // scale_mode == each
-      for (int i=0; i<graph_.size(); i++) 
-	if ( graph_[i]->is_enabled() ) {
-	  BBox2d bbox;
-	  graph_[i]->get_bounds( bbox );
-	  smidgex = (bbox.max().x()-bbox.min().x())*SMIDGE;
-	  smidgey = (bbox.max().y()-bbox.min().y())*SMIDGE;
-	  if ( bbox.valid() ) {
-	    glMatrixMode(GL_PROJECTION);
-	    glLoadIdentity();
-	    glOrtho( bbox.min().x()-smidgex,  bbox.max().x()+smidgex,
-		     bbox.min().y()-smidgey,  bbox.max().y()+smidgey,
-		     -1, 1 );
-	    graph_[i]->draw();
-	  }
-	}
-    }
-  }
-  else { // select_mode == one
-    if ( graph_[selected_]->is_enabled() ) {
-      BBox2d bbox;
-      graph_[selected_]->get_bounds( bbox );
-      smidgex = (bbox.max().x()-bbox.min().x())*SMIDGE;
-      smidgey = (bbox.max().y()-bbox.min().y())*SMIDGE;
-      if ( bbox.valid() ) {
-	glMatrixMode(GL_PROJECTION);
-	glLoadIdentity();
-	glOrtho( bbox.min().x()-smidgex,  bbox.max().x()+smidgex,
-		 bbox.min().y()-smidgey,  bbox.max().y()+smidgey,
+  switch ( draw_mode_ ) {
+  case Draw:
+    if ( select_mode_ == 2 ) { // select_mode_ = many
+      if ( scale_mode_ == 1 ) { // scale_mode_ = all
+	reset_bbox();
+	
+	if ( !graphs_bounds_.valid() ) return;
+	
+	glPushMatrix();
+	glOrtho( graphs_bounds_.min().x(),  graphs_bounds_.max().x(),
+		 graphs_bounds_.min().y(),  graphs_bounds_.max().y(),
 		 -1, 1 );
-	graph_[selected_]->draw();
+	
+	glColor3f( 0,0,0 );
+	for (int i=0; i<graph_.size(); i++) 
+	  if ( graph_[i]->is_enabled() ) 
+	    graph_[i]->draw();
+	glPopMatrix();
+      }
+      else { // scale_mode == each
+	for (int i=0; i<graph_.size(); i++) 
+	  if ( graph_[i]->is_enabled() ) {
+	    BBox2d bbox;
+	    graph_[i]->get_bounds( bbox );
+	    if ( bbox.valid() ) {
+	      glMatrixMode(GL_PROJECTION);
+	      glLoadIdentity();
+	      glOrtho( bbox.min().x(),  bbox.max().x(),
+		       bbox.min().y(),  bbox.max().y(),
+		       -1, 1 );
+	      graph_[i]->draw();
+	      glPopMatrix();
+	    }
+	  }
       }
     }
+    else { // select_mode == one
+      if ( graph_[selected_]->is_enabled() ) {
+	BBox2d bbox;
+	graph_[selected_]->get_bounds( bbox );
+	if ( bbox.valid() ) {
+	  glMatrixMode(GL_PROJECTION);
+	  glPushMatrix();
+	  glOrtho( bbox.min().x(),  bbox.max().x(),
+		   bbox.min().y(),  bbox.max().y(),
+		   -1, 1 );
+	  graph_[selected_]->draw();
+	  glPopMatrix();
+	}
+      }
+    }  
+    
+    for (int i=0; i<widget_.size(); i++) {
+      widget_[i]->draw();
+    }
+    break;
+    
+  case Pick:
+    for (int i=0; i<widget_.size(); i++) {
+      glLoadName( i );
+      widget_[i]->draw();
+    }
+    break;
   }
+  
+  //  GLenum errcode;
+  while((errcode=glGetError()) != GL_NO_ERROR)
+    cerr << "Diagram GL error: " 
+	 << (char*)gluErrorString(errcode) << endl;
 }
+
+void
+Hairline::draw() 
+{
+  glMatrixMode(GL_PROJECTION);
+  glPushMatrix();
+
+  BBox2d bbox;
+  glOrtho( from_, to_,  0, 1,  -1, 1 );
+
+  glColor3f(0,0,0);
+  glBegin(GL_LINES);
+    glVertex2f( pos_, 0 );
+    glVertex2f( pos_, 1 );
+  glEnd();
+
+  glPopMatrix();
+}
+  
+  
 
 void 
 Axes::draw()
@@ -136,19 +181,20 @@ Axes::draw()
 
   double pm[16];
   double smidge;
-  glGetDoublev(GL_PROJECTION_MATRIX,pm);
+  //  glGetDoublev(GL_PROJECTION_MATRIX,pm);
 
   // set the projection to NDC
   glMatrixMode(GL_PROJECTION);
+  glPushMatrix();
   glLoadIdentity();
 
   smidge = 2.*SMIDGE/(1.+2.*SMIDGE);
 
   glBegin(GL_LINES);
-  glVertex2f(-1.0f,0.0f);
-  glVertex2f(1.0f,0.0f);
-  glVertex2f(-1.f+smidge,-1.0f);
-  glVertex2f(-1.f+smidge,1.0f);
+    glVertex2f(-1.0f,0.0f);
+    glVertex2f(1.0f,0.0f);
+    glVertex2f(-1.f+smidge,-1.0f);
+    glVertex2f(-1.f+smidge,1.0f);
   glEnd();
 
   double hdelta = 2./num_h_tics;
@@ -168,7 +214,8 @@ Axes::draw()
   glEnd();
 
   // restore the projection
-  glLoadMatrixd(pm);
+  //glLoadMatrixd(pm);
+  glPopMatrix();
 }
 
 } // End namespace SCIRun

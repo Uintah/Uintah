@@ -28,6 +28,7 @@ extern "C" GLXContext OpenGLGetContext(Tcl_Interp*, char*);
 
 
 OpenGLWindow::OpenGLWindow()
+  : TclObj( "OpenGLWindow")
 {
   lock_ = scinew Mutex("OpenGLWindow");
   initialized_ = false;
@@ -44,18 +45,13 @@ OpenGLWindow::clear()
   glClear(GL_COLOR_BUFFER_BIT);
 }
 
-bool
+void
 OpenGLWindow::tcl_command(TCLArgs& args, void* userdata)
 {
-  bool mine = true;
   if ( args[1] == "map" ) {
     if ( !initialized_ ) 
       init(args[2]);
   }
-  else
-    mine = false;
-
-  return mine;
 }
 
 bool
@@ -103,7 +99,6 @@ OpenGLWindow::pre()
   if (!glXMakeCurrent(dpy, win, cx))
     cerr << "*glXMakeCurrent failed.\n";
   
-  // Clear the screen...
   glViewport(0, 0, xres_, yres_);
   
   glMatrixMode(GL_MODELVIEW);
@@ -166,6 +161,13 @@ OpenGLWindow::print_string(char *s)
   glListBase(base);
   glCallLists(strlen(s), GL_UNSIGNED_BYTE, (GLubyte *)s);
   glPopAttrib ();
+}
+
+
+OpenGLWindow *
+OpenGLWindow::sub_window( int l, int r, int t, int b )
+{
+  return 0; // scinew OpenGLSubWindow( *this, l, r, t, b );
 }
 
 } // End namespace SCIRun
