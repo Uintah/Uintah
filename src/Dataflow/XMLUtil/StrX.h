@@ -18,7 +18,7 @@
 #ifndef Dataflow_Dataflow_StrX_h
 #define PSECORE_Dataflow_StrX_h 1
 
-#ifdef __sgi
+#if defined(__sgi) && !defined(__GNUC__) && (_MIPS_SIM != _MIPS_SIM_ABI32)
 #define IRIX
 #pragma set woff 1375
 #endif
@@ -28,7 +28,7 @@
 #include <parsers/DOMParser.hpp>
 #include <dom/DOM_NamedNodeMap.hpp>
 #include <sax/ErrorHandler.hpp>
-#ifdef __sgi
+#if defined(__sgi) && !defined(__GNUC__) && (_MIPS_SIM != _MIPS_SIM_ABI32)
 #pragma reset woff 1375
 #endif
 

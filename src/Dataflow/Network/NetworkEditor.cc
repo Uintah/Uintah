@@ -36,7 +36,7 @@
 #endif
 
 #include <Dataflow/Network/NetworkEditor.h>
-  
+
 #include <Dataflow/Comm/MessageBase.h>
 #include <Dataflow/Network/Connection.h>
 #include <Dataflow/Network/Module.h>
