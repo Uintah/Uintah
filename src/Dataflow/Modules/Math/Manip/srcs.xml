@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE srcs SYSTEM "srcs.dtd">
+
+<srcs>
+  </src>
+  <src name="matrixMan">
+    <description>(null string)</description>
+    <lib name="Core_Thread"/>
+  </src>
+</srcs>
