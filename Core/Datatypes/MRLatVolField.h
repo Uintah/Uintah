@@ -42,7 +42,8 @@ struct MultiResLevel
 {  
   MultiResLevel(){};
   MultiResLevel( vector<LockingHandle<LatVolField<Data> > >p, int l):
-    patches(p), level(l) {}
+    level(l), patches(p) {}
+
   int level;
   vector<LockingHandle<LatVolField<Data> > > patches;
 };
