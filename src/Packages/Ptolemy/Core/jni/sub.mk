@@ -54,23 +54,14 @@ PSELIBS := Core/Datatypes Core/Persistent \
 JAVA_LIB := $(JAVA_PATH)/jre/lib/i386
 JAVA_INC := $(JAVA_PATH)/include
 
-LIBS := \
-         -L$(JAVA_LIB) \
-         -L$(JAVA_LIB)/server \
-         -ljava \
-         -ljvm
-##-L$(JAVA_LIB)/client
-##-L$(JAVA_LIB)/native_threads \
-##-lverify \
-##-lhpi
-##-lawt
-##-ljawt
-
 LDFLAGS += \
+           -L$(JAVA_LIB) \
+           -L$(JAVA_LIB)/client \
+           -ljava \
+           -ljvm \
+           -lawt \
            -Wl,-rpath -Wl,$(JAVA_LIB) \
-           -Wl,-rpath -Wl,$(JAVA_LIB)/server
-#-Wl,-rpath -Wl,$(JAVA_LIB)/client
-#-Wl,-rpath -Wl,$(JAVA_LIB)/native_threads
+           -Wl,-rpath -Wl,$(JAVA_LIB)/client
 
 INCLUDES += \
             -I$(JAVA_INC) \
