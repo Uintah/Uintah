@@ -1,9 +1,9 @@
 #include <Packages/rtrt/Core/Camera.h>
 #include <Packages/rtrt/Core/Light.h>
 #include <Packages/rtrt/Core/Scene.h>
-#include <Packages/rtrt/Core/Point.h>
-#include <Packages/rtrt/Core/Vector.h>
-#include <Packages/rtrt/Core/Transform.h>
+#include <Core/Geometry/Point.h>
+#include <Core/Geometry/Vector.h>
+#include <Core/Geometry/Transform.h>
 #include <Packages/rtrt/Core/Group.h>
 #include <Packages/rtrt/Core/Sphere.h>
 #include <Packages/rtrt/Core/Rect.h>
@@ -115,8 +115,30 @@ void GetFace(char *buf)
     int s1=1 + k;
     int s2=2 + k;
 
-    g->add(new Tri(mat,points[fis[s0]],points[fis[s1]],points[fis[s2]]));
-
+    Point p1 = points[fis[s0]];
+    Point p2 = points[fis[s1]];
+    Point p3 = points[fis[s2]];
+    // check for degenerate triangles
+#if 0
+    if (p1 == p2) {
+      cerr << "Degenerate triangle caught(1==2)\n";
+      continue;
+    }
+    if (p1 == p3 || p2 == p3) {
+      cerr << "Degenerate triangle caught(1==3 || 2==3)\n";
+      continue;
+    }
+    g->add(new Tri(mat, p1, p2, p3));
+#else
+    Tri * t = new Tri(mat, p1, p2, p3);
+    if (!(t->isbad())) {
+      g->add(t);
+    } else {
+      delete(t);
+      cerr << "Degenerate triangle!\n";
+    }
+#endif
+    //g->add(new Tri(mat,points[fis[s0]],points[fis[s1]],points[fis[s2]]));
   }
 
 }
@@ -148,7 +170,7 @@ parseobj(char *fname) {
 	   Get3d(&buf[2],scrtchP);
 	   // add to points list!
 	   points.add(scrtchP);
-	   c = c + scrtchP;
+	   c = c + scrtchP.vector();
 	  break;
 	 }
 	 break;
@@ -222,7 +244,7 @@ Scene* make_scene(int argc, char* argv[], int /*nworkers*/)
   Color cup(0.82, 0.52, 0.22);
   Color cdown(0.03, 0.05, 0.35);
   
-  Plane groundplane ( Point(1000, 0, 0), Vector(0, 2, 1) );
+  rtrt::Plane groundplane ( Point(1000, 0, 0), Vector(0, 2, 1) );
   Scene *scene = new Scene(g,cam,bgcolor,cdown, cup,groundplane,ambient_scale);
   scene->ambient_hack = true;
   scene->set_background_ptr( new LinearBackground(
