@@ -28,7 +28,9 @@ namespace Uintah {
 
     virtual void solve() = 0;
 
-    virtual void createMatrix(const ProcessorGroup* pg) = 0;
+    virtual void createMatrix(const ProcessorGroup* pg, 
+			      const vector<int>& diag,
+			      const vector<int>& off ) = 0;
 
     virtual void destroyMatrix(bool recursion) = 0;
     

@@ -283,6 +283,8 @@ void ImpMPM::scheduleCreateMatrix(SchedulerP& sched,
 
   Task* t = scinew Task("ImpMPM::createMatrix",this,&ImpMPM::createMatrix,
 			recursion);
+  if (!recursion)
+    t->requires(Task::OldDW, lb->pXLabel,Ghost::AroundNodes,1);
   sched->addTask(t, patches, matls);
 
 }
@@ -1104,16 +1106,68 @@ void ImpMPM::applyBoundaryConditions(const ProcessorGroup*,
 void ImpMPM::createMatrix(const ProcessorGroup*,
 			  const PatchSubset* patches,
 			  const MaterialSubset* ,
-			  DataWarehouse* /*old_dw*/,
-			  DataWarehouse* /*new_dw*/,
+			  DataWarehouse* old_dw,
+			  DataWarehouse* new_dw,
 			  const bool recursion)
 {
   if (recursion)
     return;
 
-  d_solver->createLocalToGlobalMapping(d_myworld,d_perproc_patches,patches);
-  d_solver->createMatrix(d_myworld);
 
+  d_solver->createLocalToGlobalMapping(d_myworld,d_perproc_patches,patches);
+
+  vector<int> dof_diag,dof_off;
+  for(int pp=0;pp<patches->size();pp++){
+    const Patch* patch = patches->get(pp);
+    cout_doing <<"Doing createMatrix on patch " << patch->getID() 
+	       << "\t\t\t\t IMPM"    << "\n" << "\n";
+    IntVector lowIndex = patch->getNodeLowIndex();
+    IntVector highIndex = patch->getNodeHighIndex()+IntVector(1,1,1);
+    Array3<int> l2g(lowIndex,highIndex);
+    d_solver->copyL2G(l2g,patch);
+    dof_diag.resize(l2g[patch->getNodeHighIndex()-IntVector(1,1,1)]+2,1);
+    dof_off.resize(l2g[patch->getNodeHighIndex()-IntVector(1,1,1)]+2,1);
+    for (int m = 0; m < d_sharedState->getNumMPMMatls(); m++ ) {
+      MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial( m );
+      int dwi = mpm_matl->getDWIndex();    
+      constParticleVariable<Point> px;
+      ParticleSubset* pset = old_dw->getParticleSubset(dwi,patch,
+						       Ghost::AroundNodes,1,
+						       lb->pXLabel);
+      old_dw->get(px,lb->pXLabel,pset);
+      
+      for(ParticleSubset::iterator iter = pset->begin();
+	  iter != pset->end(); iter++){
+	particleIndex idx = *iter;
+	IntVector cell,ni[8];
+	if (patch->findCell(px[idx],cell)) {
+	  patch->findNodesFromCell(cell,ni);
+	  vector<int> dof(0);
+	  int l2g_node_num;
+	  for (int k = 0; k < 8; k++) {
+	    l2g_node_num = l2g[ni[k]];
+	    dof.push_back(l2g_node_num);
+	    dof.push_back(l2g_node_num+1);
+	    dof.push_back(l2g_node_num+2);
+	  }
+	  
+	  for (int I = 0; I < (int) dof.size(); I++) {
+	    int dofi = dof[I];
+	    for (int J = 0; J < (int) dof.size(); J++) {
+	      dof_diag[dofi] += 1;
+	    }
+	  }
+	}
+      }
+    }
+#if 0
+    for (int i = 0; i < (int)dof_diag.size(); i++) 
+      cout << "dof_diag[" << i << "]=" << dof_diag[i] << endl;
+#endif
+    
+  }
+  
+  d_solver->createMatrix(d_myworld,dof_diag,dof_off);
 }
 
 void ImpMPM::destroyMatrix(const ProcessorGroup*,
