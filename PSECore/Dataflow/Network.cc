@@ -23,6 +23,9 @@
 #include <SCICore/Malloc/Allocator.h>
 #include <SCICore/TclInterface/Remote.h>
 
+#ifdef _WIN32
+#include <io.h>
+#endif
 #include <stdio.h>
 #include <iostream.h>
 #include <string.h>
@@ -398,6 +401,9 @@ int Network::delete_module(const clString& id)
 
 //
 // $Log$
+// Revision 1.4  1999/08/26 23:59:56  moulding
+// added #include <io.h> for win32
+//
 // Revision 1.3  1999/08/23 06:30:32  sparker
 // Linux port
 // Added X11 configuration options
