@@ -100,7 +100,6 @@ set $m3-ViewWindow_0-sr 1
 set $m3-ViewWindow_0-do_bawgl 0
 set $m3-ViewWindow_0-drawimg -2147483647
 set $m3-ViewWindow_0-saveprefix {}
-set $m3-ViewWindow_0-Crosshair (3) 1
 set $m4-notes {}
 set $m4-show_status 1
 set $m4-drawX 0
