@@ -1428,7 +1428,7 @@ proc printvars { pattern } {
 }
 
 proc setGlobal { var val } {
-    uplevel \#0 set \"$var\" \"$val\"
+    uplevel \#0 set \"$var\" \{$val\}
 }
 
 proc emitTCLStyleCopyright { out } {
