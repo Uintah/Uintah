@@ -3,8 +3,8 @@
 // Symbol:        framework.ComponentID-v1.0
 // Symbol Type:   class
 // Babel Version: 0.7.4
-// SIDL Created:  20030306 10:46:20 MST
-// Generated:     20030306 10:46:22 MST
+// SIDL Created:  20030328 15:22:13 MST
+// Generated:     20030328 15:22:16 MST
 // Description:   Server-side implementation for framework.ComponentID
 // 
 // WARNING: Automatically generated; only changes within splicers preserved
