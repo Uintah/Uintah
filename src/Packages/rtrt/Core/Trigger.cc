@@ -32,8 +32,8 @@ Trigger::Trigger( const string  & name,
 {
   if( blank == NULL )
     {
-      string path = "/usr/sci/data/Geometry/interface/";
-      blank = new PPMImage( path + "baseblend.ppm", true );
+      string path = "/usr/sci/data/Geometry/interface/backgrounds/";
+      blank = new PPMImage( path + "text_area.ppm", true );
     }
 
   if( sound && image )
@@ -57,18 +57,9 @@ Trigger::~Trigger()
 bool
 Trigger::check( const Point & eye )
 {
-  if( timeLeft_ == 0 )
-    {
-      for( int cnt = 0; cnt < locations_.size(); cnt++ )
-	{
-	  double dist2 = (eye - locations_[cnt]).length2();
-	  if( dist2 < distance2_ )
-	    {
-	      return true;
-	    }
-	}
-    }
-  else if( timeLeft_ > 0 )
+  // Since sounds are not "advance()"d, we use "check()" to deteremine
+  // when their delay is over.
+  if( sound_ && timeLeft_ > 0 )
     {
       double curTime = SCIRun::Time::currentSeconds();
       double elapsedTime = curTime - lastTime_;
@@ -78,6 +69,19 @@ Trigger::check( const Point & eye )
       if( timeLeft_ < 0 )
 	{
 	  timeLeft_ = 0;
+	}
+    }
+
+
+  if( timeLeft_ == 0 )
+    {
+      for( int cnt = 0; cnt < locations_.size(); cnt++ )
+	{
+	  double dist2 = (eye - locations_[cnt]).length2();
+	  if( dist2 < distance2_ )
+	    {
+	      return true;
+	    }
 	}
     }
   return false;
@@ -100,7 +104,20 @@ Trigger::activate()
 bool
 Trigger::advance( Trigger *& next )
 {
-  // The check() routine decreases "timeLeft_".
+  // Since some triggers may not be in the check list (nexts of
+  // another trigger), we need to advance their time here.
+  if( !sound_ && timeLeft_ > 0 )
+    {
+      double curTime = SCIRun::Time::currentSeconds();
+      double elapsedTime = curTime - lastTime_;
+      lastTime_ = curTime;
+      timeLeft_ -= elapsedTime;
+
+      if( timeLeft_ < 0 )
+	{
+	  timeLeft_ = 0;
+	}
+    }
 
   if( sound_ )
     {
@@ -129,6 +146,7 @@ Trigger::advance( Trigger *& next )
 	      tex_->reset( GL_FLOAT, &((*blank)(0,0)) );
 	      texQuad_->draw(); // Draw blank background
 	    }
+
 	  blend_->alpha( alpha );
 	  tex_->reset( GL_FLOAT, &((*image_)(0,0)) );
 	  texQuad_->draw(); // blend the image over it
