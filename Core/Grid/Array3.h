@@ -67,29 +67,9 @@ WARNING
       inline const T& operator*() const
       { return (*d_array3)[d_index]; }
 
-      inline iterator& operator++()
-      {
-	if (++d_index[0] >= d_array3->getHighIndex().x()) {
-	  d_index[0] = d_array3->getLowIndex().x();
-	  if (++d_index[1] >= d_array3->getHighIndex().y()) {
-	    d_index[1] = d_array3->getLowIndex().y();
-	    d_index[2]++;
-	  }
-	}
-	return *this;
-      }
+      inline iterator& operator++();
 
-      inline iterator& operator--()
-      {
-	if (--d_index[0] < d_array3->getLowIndex().x()) {
-	  d_index[0] = d_array3->getHighIndex().x() - 1;
-	  if (--d_index[1] < d_array3->getLowIndex().y()) {
-	    d_index[1] = d_array3->getHighIndex().y() - 1;
-	    d_index[2]--;
-	  }
-	}
-	return *this;
-      }
+      inline iterator& operator--();
 
       inline iterator operator++(int)
       {
@@ -395,7 +375,33 @@ WARNING
   private:
     Array3Window<T>* d_window;
   };
-   
+
+  template <class T>
+  inline Array3<T>::iterator& Array3<T>::iterator::operator++()
+  {
+    if (++d_index[0] >= d_array3->getHighIndex().x()) {
+      d_index[0] = d_array3->getLowIndex().x();
+      if (++d_index[1] >= d_array3->getHighIndex().y()) {
+	d_index[1] = d_array3->getLowIndex().y();
+	d_index[2]++;
+      }
+    }
+    return *this;
+  }
+
+  template <class T>
+  inline Array3<T>::iterator& Array3<T>::iterator::operator--()
+  {
+    if (--d_index[0] < d_array3->getLowIndex().x()) {
+      d_index[0] = d_array3->getHighIndex().x() - 1;
+      if (--d_index[1] < d_array3->getLowIndex().y()) {
+	d_index[1] = d_array3->getHighIndex().y() - 1;
+	d_index[2]--;
+      }
+    }
+    return *this;
+  }
+
 } // End namespace Uintah
 
 #endif
