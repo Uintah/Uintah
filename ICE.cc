@@ -108,12 +108,14 @@ void ICE::problemSetup(const ProblemSpecP& prob_spec, GridP& grid,
     d_dbgOutputInterval = 0.0;
     d_dbgBeginIndx = IntVector(0,0,0);
     d_dbgEndIndx   = IntVector(0,0,0);
+    d_dbgSigFigs   = 5;
      
     debug_ps->get("dbg_timeStart",     d_dbgStartTime);
     debug_ps->get("dbg_timeStop",      d_dbgStopTime);
     debug_ps->get("dbg_outputInterval",d_dbgOutputInterval);
     debug_ps->get("dbg_BeginIndex",    d_dbgBeginIndx);
     debug_ps->get("dbg_EndIndex",      d_dbgEndIndx );
+    debug_ps->get("dbg_SigFigs",       d_dbgSigFigs );
     d_dbgOldTime      = -d_dbgOutputInterval;
     d_dbgNextDumpTime = 0.0;
 

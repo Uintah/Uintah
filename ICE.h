@@ -370,6 +370,7 @@ using namespace SCIRun;
       double d_dbgOldTime;
       IntVector d_dbgBeginIndx;
       IntVector d_dbgEndIndx; 
+      int d_dbgSigFigs;
       Advector* d_advector;
       
      // exchange coefficients -- off diagonal terms
