@@ -1,108 +1,204 @@
-<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2 Final//EN">
-<HTML>
-  <TITLE>PSE Document Map (12-Jul-2000)</TITLE>
-  <!-- Changed by: TjD, 12-Jul-2000 -->
-  
-  <BODY>
-    <H1>PSE Document Map</H1>
-    <P>
-      This document is a map to PSE documentation.
-    </P>
+ <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2 Final//EN">
+ <HTML>
+   <HEAD>
+     <TITLE>PSE Document Map (18-Jul-2000)</TITLE>
+     <!-- Changed by: TjD, 18-Jul-2000 -->
 
-    <P>
-      There are four categories of PSE documentation:
-    </P>
+   </HEAD>  
 
-    <UL>
-      <LI>
-	Administrator documents.
-      </LI>
-      
-      <LI>
-	User documents
-      </LI>
+   <BODY>
+     <H1>PSE Document Map</H1>
+     <P>
+       This document is a map to PSE documentation.
+     </P>
 
-      <LI>
-	Builder documents
-      </LI>
-      
-      <LI>
-	Developer documents
-      </LI>
-    </UL>
+     <P>
+       PSE documentation falls into the following categories:
+     </P>
 
-    <H1>Administrator</H1>
+     <DL>
+       <DT> <A HREF="#GeneralInformation">General Information Documents</A> </DT>
 
-    <UL>
-      <LI>Introduction</LI>
-      
-      <LI>Installation</LI>
-    
-      <LI>Maintenance</LI>
-    </UL>
+       <DD>
+	 <P>
+	   These describe the concept of a PSE and the types of
+	   problems that the current set of PSE's solve.
+	 </P>
+       </DD>
 
-    <H1>User</H1>
+       <DT> <A HREF="#Administrator">Administrator Documents</A> </DT>
 
-    <UL>
-      <LI>  Introduction</LI>
-    </UL>
+       <DD>
+	 <P>
+	   Documents for those who will be downloading, building, and
+	   updating the PSE.
+	 </P>
+       </DD>
+       
+       <DT> <A HREF="#NetworkUser">Network User Documents</A> </DT>
 
-    <H1>Builder</H1>
+       <DD>
+	 <P>
+	   These describe the purpose and use of predefined networks.
+	 </P>
+       </DD>
 
-    <UL>
-      <LI>Introduction</LI>
-      
-      <LI>PSE Overview</LI>
-      
-      <LI>Starting PSE</LI>
-      
-      <LI>Creating and Editing a Network</LI>
+       <DT> <A HREF="#NetworkBuilder">Network Builder Documents</A> </DT>
+       
+       <DD>
+	 <P>
+	   Documents for those who construct networks for their own use and
+	   for the use by others.
+	 </P>
+       </DD>
 
-      <LI>Executing a Network</LI>
-      
-      <LI>Debugging a Networ</LI>
+       <DT> <A HREF="#Developer">Developer Documents</A> </DT>
 
-      <LI>Importing Foreign Data</LI>
+       <DD>
+	 <P>
+	   Documents for those who develop new modules, datatypes,
+	   converters, and other types of codes.
+	 </P>
+       </DD>
 
-      <LI>Existing Data Sets</LI>
+       <DT> <A HREF="#DesignDocuments">Design documents</A> </DT>
 
-      <LI>Sample Networks</LI>
-    </UL>
+       <DD>
+	 <P>
+	   Documents that describe the design of various pieces of the PSE.
+	 </P>
+       </DD>
+     </DL>
 
-    <H1>Developer</H1>
+     <A NAME="GeneralInformation"/>
+       <H1>General Information</H1>
+     
+     <UL>
+       <LI>
+	 <P>
+	   <A HREF="http://www.sci.utah.edu/scirun/">
+	     <CITE>
+	       SCIRun: A Scientific Programming Environment for
+	       Computational Steering
+	     </CITE>
+	   </A>
+	   (1995) describes the original PSE known as SCIRun.
+	 </P>
+       </LI>
 
-    <UL>
-      <LI> Introduction </LI>
-      
-      <LI> Coding Standards </LI>
-      
-      <LI> Cvs Info</LI>
-      
-      <LI> Creating a Module </LI>
+       
+       <LI>
+	 <P>
+	   <A
+	     HREF="http://www.cs.utah.edu/sci/publications/scitools96/scitools96.html">
+	     <CITE>The SCIRun Computational Steering Software System</CITE>
+	   </A>
+	   discusses the design, implementation, and application of SCIRun.
+	 </P>
+       </LI>
+       
+       <LI><P>
+	     The SCI group has <A HREF="http://www.cs.utah.edu/sci/publications/">published</A> many other papers.
+	   </P></LI>
 
-      <LI> Creating a Data Converter </LI>
+       <LI>PSE's:
+	 <UL>
+	   <LI>SCIRun</LI>
 
-      <LI> Module Reference Guides </LI>
+	   <LI>BioPSE</LI>
+	   
+	   <LI>Uintah </LI>
+	 </UL>
+       </LI>
 
-      <LI> Data Type Reference Guides </LI>
+       
+       <LI>
+	 <P>
+	   This <A HREF="ReferenceGuide/faq.html">FAQ</A> was compiled from
+	   the scirun-develop mailing list.
+	 </P>
+       </LI>
+     </UL>
 
-      <LI> C++ References </LI>
+     <A NAME="Administrator"/>
+     <H1>Administrator</H1>
 
-      <LI> Tck/Tk References </LI>
-    </UL>
+     <UL>
+       <LI>Introduction</LI>
+       
+       <LI>Installation</LI>
+       
+       <LI>Maintenance</LI>
+     </UL>
 
-    <H1>Appendicies</H1>
+     <A NAME="NetworkUser"/>
+     <H1>Network User</H1>
 
-    <H2> Design Documents</H2>
+     <UL>
+       <LI>Introduction</LI>
+     </UL>
 
-    <UL>
-      <LI>  Makefiles</LI>
+     <A NAME="NetworkBuilder"/>
+     <H1>Network Builder</H1>
 
-      <LI> Exception Facility </LI>
+     <UL>
+       <LI>Introduction</LI>
+       
+       <LI>PSE Overview</LI>
+       
+       <LI>Starting PSE</LI>
+       
+       <LI>Creating and Editing a Network</LI>
 
-      <LI>  Domains, Attributes, and Geometries</LI>
-    </UL>
+       <LI>Executing a Network</LI>
+       
+       <LI>Debugging a Network</LI>
+
+       <LI>Importing Foreign Data</LI>
+
+       <LI> Module Reference Guides </LI>
+
+       <LI> Data Type Reference Guides </LI>
+
+       <LI>Existing Data Sets</LI>
+
+       <LI>Sample Networks</LI>
+     </UL>
+
+     <A NAME="Developer"/>
+     <H1>Developer</H1>
+
+     <UL>
+       <LI> Introduction </LI>
+       
+       <LI> Coding Standards </LI>
+       
+       <LI> Cvs Info</LI>
+       
+       <LI> Creating a Module </LI>
+
+       <LI> Creating a Data Converter </LI>
+
+       <LI> Module Reference Guides </LI>
+
+       <LI> Data Type Reference Guides </LI>
+
+       <LI> C++ References </LI>
+
+       <LI> Tck/Tk References </LI>
+     </UL>
+
+     <A NAME="DesignDocuments"/>
+     <H1>Design Documents</H1>
+
+     <UL>
+       <LI> <A HREF="ReferenceGuide/makefiles.html">PSE <KBD>make</KBD> strategy</A></LI>
+
+       <LI> <A HREF="ReferenceGuide/exceptions.html">PSE Exception Facility</A> </LI>
+
+       <LI> Domains, Attributes, and Geometries</LI>
+     </UL>
 
 
-  </BODY>
-</HTML>
+   </BODY>
+ </HTML>
