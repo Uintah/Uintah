@@ -43,13 +43,12 @@ using namespace SCIRun;
 
 class BioPSESHARE DipoleMatrixSourceRHSQuadratic : public Module {
 public:
-  DipoleMatrixSourceRHSQuadratic(const string& id);
+  DipoleMatrixSourceRHSQuadratic(GuiContext *context);
 
   virtual ~DipoleMatrixSourceRHSQuadratic();
 
   virtual void execute();
 
-  virtual void tcl_command(TCLArgs&, void*);
 private:
   FieldIPort               *ifld_;
   FieldIPort              *ifld2_;
@@ -59,12 +58,11 @@ private:
   int gen;
 };
 
-extern "C" BioPSESHARE Module* make_DipoleMatrixSourceRHSQuadratic(const string& id) {
-  return scinew DipoleMatrixSourceRHSQuadratic(id);
-}
+DECLARE_MAKER(DipoleMatrixSourceRHSQuadratic)
 
-DipoleMatrixSourceRHSQuadratic::DipoleMatrixSourceRHSQuadratic(const string& id)
-  : Module("DipoleMatrixSourceRHSQuadratic", id, Source, "Forward", "BioPSE")
+
+DipoleMatrixSourceRHSQuadratic::DipoleMatrixSourceRHSQuadratic(GuiContext *gc)
+  : Module("DipoleMatrixSourceRHSQuadratic", gc, Source, "Forward", "BioPSE")
 {
 }
 
@@ -203,11 +201,6 @@ void DipoleMatrixSourceRHSQuadratic::execute(){
      //     cerr << "DipoleMatrixSourceRHS: sent result!\n";
 
 
-}
-
-void DipoleMatrixSourceRHSQuadratic::tcl_command(TCLArgs& args, void* userdata)
-{
-  Module::tcl_command(args, userdata);
 }
 
 } // End namespace BioPSE

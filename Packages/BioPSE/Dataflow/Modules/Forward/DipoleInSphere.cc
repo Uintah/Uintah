@@ -74,18 +74,16 @@ class DipoleInSphere : public Module {
 
 public:
   
-  DipoleInSphere(const string& id);  
+  DipoleInSphere(GuiContext *context);
   virtual ~DipoleInSphere();
   virtual void execute();
 };
 
-extern "C" Module* make_DipoleInSphere(const string& id)
-{
-  return new DipoleInSphere(id);
-}
+DECLARE_MAKER(DipoleInSphere)
 
-DipoleInSphere::DipoleInSphere(const string& id)
-: Module("DipoleInSphere", id, Filter, "Forward", "BioPSE")
+
+DipoleInSphere::DipoleInSphere(GuiContext *context)
+  : Module("DipoleInSphere", context, Filter, "Forward", "BioPSE")
 {
 }
 

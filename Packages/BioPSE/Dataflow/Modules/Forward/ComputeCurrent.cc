@@ -25,19 +25,17 @@ using namespace SCIRun;
 class ComputeCurrent : public Module {
   GuiDouble current_;
 public:
-  ComputeCurrent(const string& id);
+  ComputeCurrent(GuiContext *context);
   virtual ~ComputeCurrent();
   virtual void execute();
 };
 
-extern "C" Module* make_ComputeCurrent(const string& id)
-{
-    return new ComputeCurrent(id);
-}
+DECLARE_MAKER(ComputeCurrent)
 
-ComputeCurrent::ComputeCurrent(const string& id)
-  : Module("ComputeCurrent", id, Filter, "Forward", "BioPSE"),
-    current_("current", id, this)
+
+ComputeCurrent::ComputeCurrent(GuiContext *context)
+  : Module("ComputeCurrent", context, Filter, "Forward", "BioPSE"),
+    current_(context->subVar("current"))
 {
 }
 

@@ -46,7 +46,7 @@ private:
   int last_field_gen_;
 
 public:
-  ModifyConductivities(const string& id);
+  ModifyConductivities(GuiContext *context);
   virtual ~ModifyConductivities();
 
   void update_gui(const vector<pair<string, Tensor> > &tensors);
@@ -56,13 +56,11 @@ public:
 };
 
 
-extern "C" Module* make_ModifyConductivities(const string& id) {
-  return new ModifyConductivities(id);
-}
+DECLARE_MAKER(ModifyConductivities)
 
 
-ModifyConductivities::ModifyConductivities(const string& id)
-  : Module("ModifyConductivities", id, Filter, "Forward", "BioPSE"),
+ModifyConductivities::ModifyConductivities(GuiContext *context)
+  : Module("ModifyConductivities", context, Filter, "Forward", "BioPSE"),
     last_gui_hash_(0),
     last_field_hash_(0),
     last_field_gen_(0)
@@ -80,8 +78,8 @@ void
 ModifyConductivities::update_gui(const vector<pair<string, Tensor> > &tensors)
 {
   string result;
-  TCL::eval(id + " ui", result);
-  TCL::eval(id + " clear_all", result);
+  gui->eval(id + " ui", result);
+  gui->eval(id + " clear_all", result);
 
   for (unsigned int i=0; i < tensors.size(); i++)
   {
@@ -97,7 +95,7 @@ ModifyConductivities::update_gui(const vector<pair<string, Tensor> > &tensors)
       to_string(tensors[i].second.mat_[2][1]) + " C22 " +
       to_string(tensors[i].second.mat_[2][2]) + " }";
 
-    TCL::eval(command, result);
+    gui->eval(command, result);
   }
 }
 
@@ -128,7 +126,7 @@ ModifyConductivities::push_changes(vector<pair<string, Tensor> > &tensors)
   {
     string result;
     string command = id + " get_item i" + to_string(i);
-    TCL::eval(command, result);
+    gui->eval(command, result);
 
     tensors[i].first = getafter("Material", result);
 

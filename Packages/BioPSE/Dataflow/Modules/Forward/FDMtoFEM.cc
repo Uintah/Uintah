@@ -55,18 +55,18 @@ class FDMtoFEM : public Module {
   FieldHandle ofemH_;
 public:
   
-  FDMtoFEM(const string& id);  
+  FDMtoFEM(GuiContext *context);
   virtual ~FDMtoFEM();
   virtual void execute();
 };
 
-extern "C" Module* make_FDMtoFEM(const string& id)
-{
-  return new FDMtoFEM(id);
-}
 
-FDMtoFEM::FDMtoFEM(const string& id)
-  : Module("FDMtoFEM", id, Filter, "Forward", "BioPSE"), ifdmGen_(-1), ofemH_(0)
+DECLARE_MAKER(FDMtoFEM)
+
+
+FDMtoFEM::FDMtoFEM(GuiContext *context)
+  : Module("FDMtoFEM", context, Filter, "Forward", "BioPSE"),
+    ifdmGen_(-1), ofemH_(0)
 {
 }
 

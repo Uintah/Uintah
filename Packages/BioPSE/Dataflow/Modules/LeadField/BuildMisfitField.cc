@@ -66,19 +66,18 @@ class BuildMisfitField : public Module {
   FieldHandle last_mesh_;
   MatrixHandle last_basis_;
 public:
-  BuildMisfitField(const string& id);
+  BuildMisfitField(GuiContext *context);
   virtual ~BuildMisfitField();
   virtual void execute();
 };
 
 
-extern "C" Module* make_BuildMisfitField(const string& id) {
-  return new BuildMisfitField(id);
-}
+DECLARE_MAKER(BuildMisfitField)
+
 
 //---------------------------------------------------------------
-BuildMisfitField::BuildMisfitField(const string& id)
-  : Module("BuildMisfitField", id, Filter, "LeadField", "BioPSE"), 
+BuildMisfitField::BuildMisfitField(GuiContext *context)
+  : Module("BuildMisfitField", context, Filter, "LeadField", "BioPSE"), 
   last_mesh_generation_(-1), last_leadfield_generation_(-1),
   last_measurements_generation_(-1),
   last_mesh_(0), last_basis_(0)

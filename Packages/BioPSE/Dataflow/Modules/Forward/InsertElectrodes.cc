@@ -35,18 +35,17 @@ class InsertElectrodes : public Module {
 		     const Plane &pl);
 
 public:
-  InsertElectrodes(const string& id);
+  InsertElectrodes(GuiContext *context);
   virtual ~InsertElectrodes();
   virtual void execute();
 };
 
-extern "C" Module* make_InsertElectrodes(const string& id)
-{
-    return new InsertElectrodes(id);
-}
 
-InsertElectrodes::InsertElectrodes(const string& id)
-: Module("InsertElectrodes", id, Filter, "Forward", "BioPSE")
+DECLARE_MAKER(InsertElectrodes)
+
+
+InsertElectrodes::InsertElectrodes(GuiContext *context)
+: Module("InsertElectrodes", context, Filter, "Forward", "BioPSE")
 {
 }
 

@@ -67,23 +67,21 @@ public:
   GuiString modeTCL_; //"dipole" or "electrodes" (if electrodes use interp map)
 
   //! Constructor/Destructor
-  ApplyFEMCurrentSource(const string& id);
+  ApplyFEMCurrentSource(GuiContext *context);
   virtual ~ApplyFEMCurrentSource();
   
   //! Public methods
   virtual void execute();
 };
 
-extern "C" Module* make_ApplyFEMCurrentSource(const string& id)
-{
-  return scinew ApplyFEMCurrentSource(id);
-}
+DECLARE_MAKER(ApplyFEMCurrentSource)
 
-ApplyFEMCurrentSource::ApplyFEMCurrentSource(const string& id)
-  : Module("ApplyFEMCurrentSource", id, Filter, "Forward", "BioPSE"),
-    sourceNodeTCL_("sourceNodeTCL", id, this),
-    sinkNodeTCL_("sinkNodeTCL", id, this),
-    modeTCL_("modeTCL", id, this)
+
+ApplyFEMCurrentSource::ApplyFEMCurrentSource(GuiContext *context)
+  : Module("ApplyFEMCurrentSource", context, Filter, "Forward", "BioPSE"),
+    sourceNodeTCL_(context->subVar("sourceNodeTCL")),
+    sinkNodeTCL_(context->subVar("sinkNodeTCL")),
+    modeTCL_(context->subVar("modeTCL"))
 {
 }
 

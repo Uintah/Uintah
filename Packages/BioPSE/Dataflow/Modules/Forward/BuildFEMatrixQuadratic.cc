@@ -42,13 +42,12 @@ using namespace SCIRun;
 
 class BuildFEMatrixQuadratic : public Module {
 public:
-  BuildFEMatrixQuadratic(const string& id);
+  BuildFEMatrixQuadratic(GuiContext *context);
 
   virtual ~BuildFEMatrixQuadratic();
 
   virtual void execute();
 
-  virtual void tcl_command(TCLArgs&, void*);
 private:
   FieldIPort               *ifld_;
   MatrixIPort              *imat_;
@@ -87,18 +86,17 @@ private:
 		   ColumnMatrix&, TetVolMesh::Cell::index_type, int s, int e);
 };
 
-extern "C" Module* make_BuildFEMatrixQuadratic(const string& id) {
-  return scinew BuildFEMatrixQuadratic(id);
-}
+DECLARE_MAKER(BuildFEMatrixQuadratic)
 
-BuildFEMatrixQuadratic::BuildFEMatrixQuadratic(const string& id) : 
-  Module("BuildFEMatrixQuadratic", id, Source, "Forward", "BioPSE"),
-  barrier("BuildFEMatrixQuadratic barrier"),
-  BCFlag("BCFlag", id, this),
-  UseCondGui("UseCondTCL", id, this), 
-  refnodeGui("refnodeTCL", id, this), 
-  bcArray(256, false),
-  mutex("mutex")
+
+BuildFEMatrixQuadratic::BuildFEMatrixQuadratic(GuiContext *context)
+  : Module("BuildFEMatrixQuadratic", context, Source, "Forward", "BioPSE"),
+    barrier("BuildFEMatrixQuadratic barrier"),
+    BCFlag(context->subVar("BCFlag")),
+    UseCondGui(context->subVar("UseCondTCL")),
+    refnodeGui(context->subVar("refnodeTCL")),
+    bcArray(256, false),
+    mutex("mutex")
 {
 }
 
@@ -555,12 +553,6 @@ void BuildFEMatrixQuadratic::add_lcl_gbl(Matrix& gbl_a, double lcl_a[10][10],
 
 }
 
-
-
-void BuildFEMatrixQuadratic::tcl_command(TCLArgs& args, void* userdata)
-{
-  Module::tcl_command(args, userdata);
-}
 
 } // End namespace BioPSE
 

@@ -41,20 +41,18 @@ class GenDistanceField : public Module
 private:
 
 public:
-  GenDistanceField(const string& id);
+  GenDistanceField(GuiContext *context);
   virtual ~GenDistanceField();
 
   virtual void execute();
 };
 
 
-extern "C" Module* make_GenDistanceField(const string& id) {
-  return new GenDistanceField(id);
-}
+DECLARE_MAKER(GenDistanceField)
 
 
-GenDistanceField::GenDistanceField(const string& id)
-  : Module("GenDistanceField", id, Filter, "Forward", "BioPSE")
+GenDistanceField::GenDistanceField(GuiContext *context)
+  : Module("GenDistanceField", context, Filter, "Forward", "BioPSE")
 {
 }
 

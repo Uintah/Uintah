@@ -94,7 +94,7 @@ class SetupBEMatrix : public Module {
 public:
   
   //! Constructor
-  SetupBEMatrix(const string& id);
+  SetupBEMatrix(GuiContext *context);
   
   //! Destructor  
   virtual ~SetupBEMatrix();
@@ -102,18 +102,16 @@ public:
   virtual void execute();
 };
 
-//////////
-// Module maker
-extern "C" Module* make_SetupBEMatrix(const string& id) {
-  return new SetupBEMatrix(id);
-}
+
+DECLARE_MAKER(SetupBEMatrix)
+
 
 // -------------------------------------------------------------------------------
 //////////
 // Constructor/Destructor
 
-SetupBEMatrix::SetupBEMatrix(const string& id): 
-  Module("SetupBEMatrix", id, Source, "Forward", "BioPSE")
+SetupBEMatrix::SetupBEMatrix(GuiContext *context): 
+  Module("SetupBEMatrix", context, Source, "Forward", "BioPSE")
 {
   genIn_= -1;
   genOut_= -1;

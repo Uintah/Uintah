@@ -96,15 +96,16 @@ class DipoleSearch : public Module {
   int find_better_neighbor(int best, Array1<double>& sum);
 public:
   GuiInt use_cache_gui_;
-  DipoleSearch(const string& id);
+  DipoleSearch(GuiContext *context);
   virtual ~DipoleSearch();
   virtual void execute();
   void tcl_command( TCLArgs&, void * );
 };
 
-extern "C" Module* make_DipoleSearch(const string& id) {
-  return new DipoleSearch(id);
-}
+
+DECLARE_MAKER(DipoleSearch)
+
+
 
 int DipoleSearch::NDIM_ = 3;
 int DipoleSearch::NSEEDS_ = 4;
@@ -113,10 +114,10 @@ int DipoleSearch::MAX_EVALS_ = 1001;
 double DipoleSearch::CONVERGENCE_ = 0.0001;
 double DipoleSearch::OUT_OF_BOUNDS_MISFIT_ = 1000000;
 
-DipoleSearch::DipoleSearch(const string& id)
-  : Module("DipoleSearch", id, Filter, "Inverse", "BioPSE"), 
+DipoleSearch::DipoleSearch(GuiContext *context)
+  : Module("DipoleSearch", context, Filter, "Inverse", "BioPSE"), 
   mylock_("pause lock for DipoleSearch"), 
-  use_cache_gui_("use_cache_gui_",id,this)
+  use_cache_gui_(context->subVar("use_cache_gui_"))
 {
   mylock_.unlock();
   state_ = "SEEDING";

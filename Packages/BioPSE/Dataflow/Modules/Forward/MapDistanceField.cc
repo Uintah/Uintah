@@ -52,7 +52,7 @@ class MapDistanceField : public Module
   GuiString   interp_op_gui_;
 
 public:
-  MapDistanceField(const string& id);
+  MapDistanceField(GuiContext *context);
   virtual ~MapDistanceField();
   virtual void execute();
 
@@ -60,14 +60,13 @@ public:
   //void find_closest(Mesh *mesh, typename Index::index_type &idx, Point &p);
 };
 
-extern "C" Module* make_MapDistanceField(const string& id)
-{
-  return new MapDistanceField(id);
-}
 
-MapDistanceField::MapDistanceField(const string& id) : 
-  Module("MapDistanceField", id, Filter, "Forward", "BioPSE"),
-  interp_op_gui_("interp_op_gui", id, this)
+DECLARE_MAKER(MapDistanceField)
+
+
+MapDistanceField::MapDistanceField(GuiContext *context) : 
+  Module("MapDistanceField", context, Filter, "Forward", "BioPSE"),
+  interp_op_gui_(context->subVar("interp_op_gui"))
 {
 }
 
