@@ -134,28 +134,14 @@ TransformField::execute()
   }
   matrix_to_transform(imatrix_handle, trans_);
 
-  const string geom_name = ifield->get_type_name(0);
-  if (geom_name == "TetVol")
-  {
-    callback(ifield, (TetVolMesh *)0);
-  }
-  else if (geom_name == "TriSurf")
-  {
-    callback(ifield, (TriSurfMesh *) 0);
-  }
-  else if (geom_name == "ContourField")
-  {
-    callback(ifield, (ContourMesh *) 0);
-  }
-  else if (geom_name == "PointCloud")
-  {
-    callback(ifield, (PointCloudMesh *) 0);
-  }
-  else
-  {
-    error("Unsupported mesh type.");
-    return;
-  }
+  Field *ofield = ifield->clone();
+  ofield->mesh_detach();
+
+  ofield->mesh()->transform(trans_);
+
+  FieldOPort *ofp = (FieldOPort *)get_oport("Transformed Field");
+  FieldHandle fh(ofield);
+  ofp->send(fh);
 }
 
 } // End namespace SCIRun
