@@ -82,9 +82,8 @@ public:
   //! Persistent I/O.
   virtual void io(Piostream &stream);
   static  PersistentTypeID type_id;
-  static  const string type_name();
-  static  const string type_name(int);
-  virtual const string get_type_name(int n) const { return type_name(n); }
+  static  const string type_name(int n = -1);
+  virtual const string get_type_name(int n = -1) const { return type_name(n); }
 
 private:
   //! generic interpolate object.
@@ -164,20 +163,15 @@ GenericField<Mesh, FData>::type_id(type_name(),
 				   &make_GenericField<Mesh, FData>);
 
 template <class Mesh, class FData>
-const string GenericField<Mesh, FData>::type_name()
-{
-  // Pstreams do not like spaces
-  static string name = "GenericField<" + find_type_name((Mesh *)0) + ","
-    + find_type_name((FData *)0) + ">";
-  return name;
-}
-
-template <class Mesh, class FData>
 const string GenericField<Mesh, FData>::type_name(int a)
 {
-  ASSERT((a <= 2) && a >= 0);
-  if (a == 0) {
-    return string("GenericField");
+  
+  ASSERT((a <= 2) && a >= -1);
+  if (a == -1) {
+    return "GenericField<" + find_type_name((Mesh *)0) + ","
+    + find_type_name((FData *)0) + ">";
+  } else if (a == 0) {
+    return "GenericField";
   } else if (a == 1) {
     return find_type_name((Mesh *)0);
   }   

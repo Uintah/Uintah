@@ -34,8 +34,8 @@ public:
   void    io(Piostream &stream);
   static  PersistentTypeID type_id;
   //static const string type_name(int a);
-  static const string type_name();
-  static const string type_name(int);
+  static const string type_name(int n = -1);
+  virtual const string get_type_name(int n = -1) const { return type_name(n); }
 
 private:
   static Persistent *maker();
@@ -67,21 +67,14 @@ TetVol<T>::io(Piostream& stream)
   stream.end_class();
 }
 
-// FIX_ME support the int arg return vals...
-template <class T> 
-const string 
-TetVol<T>::type_name()
-{
-  static const string name =  "TetVol<" + find_type_name((T *)0) + ">";
-  return name;
-}
-
 template <class T> 
 const string 
 TetVol<T>::type_name(int a)
 {
-  ASSERT((a <= 1) && a >= 0);
-  if (a == 0) { return "TetVol"; }
+  ASSERT((a <= 1) && a >= -1);
+  if (a == -1) {
+    return "TetVol<" + find_type_name((T *)0) + ">";
+  } else if (a == 0) { return "TetVol"; }
   return find_type_name((T *)0);
 }
 
