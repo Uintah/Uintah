@@ -19,6 +19,7 @@
 #include <Packages/Uintah/CCA/Components/SimulationController/SimpleSimulationController.h>
 #include <Packages/Uintah/CCA/Components/SimulationController/AMRSimulationController.h>
 #include <Packages/Uintah/CCA/Components/MPM/SerialMPM.h>
+#include <Packages/Uintah/CCA/Components/MPM/FractureMPM.h> // for Fracture
 #include <Packages/Uintah/CCA/Components/MPM/ImpMPM.h>
 #include <Packages/Uintah/CCA/Components/Arches/Arches.h>
 #include <Packages/Uintah/CCA/Components/ICE/ICE.h>
@@ -127,6 +128,7 @@ usage( const std::string & message,
       cerr << "Valid options are:\n";
       cerr << "-h[elp]              : This usage information.\n";
       cerr << "-mpm                 : \n";
+      cerr << "-mpmf                : \n";  // option for Fracture
       cerr << "-ice                 : \n";
       cerr << "-arches              : \n";
       cerr << "-AMR                 : use AMR simulation controller\n";
@@ -176,6 +178,7 @@ main( int argc, char** argv )
      * Default values
      */
     bool   do_mpm=false;
+    bool   do_mpmf=false;      // for Fracture
     bool   do_impmpm=false;
     bool   do_arches=false;
     bool   do_ice=false;
@@ -230,6 +233,8 @@ main( int argc, char** argv )
 	  usage( "", "", argv[0]);
 	} else if(s == "-mpm"){
 	  do_mpm=true;
+	} else if(s == "-mpmf"){    // for Fracture
+          do_mpmf=true;
 	} else if(s == "-impm"){
 	  do_impmpm=true;
 	} else if(s == "-arches"){
@@ -335,8 +340,8 @@ main( int argc, char** argv )
 	usage( "ICE and Arches do not work together", "", argv[0]);
     }
 
-    if(!(do_ice || do_arches || do_mpm || do_impmpm || do_burger || do_poisson1 || do_poisson2 || do_poisson3 || do_simplecfd || combine_patches)){
-	usage( "You need to specify -arches, -ice, or -mpm", "", argv[0]);
+    if(!(do_ice || do_arches || do_mpm || do_mpmf || do_impmpm || do_burger || do_poisson1 || do_poisson2 || do_poisson3 || do_simplecfd || combine_patches)){
+	usage( "You need to specify -arches, -ice, -mpmf, or -mpm", "", argv[0]);
     }
 
     SimulationController::start_addr = (char*)sbrk(0);
@@ -416,6 +421,10 @@ main( int argc, char** argv )
 	  SerialMPM* mpm = scinew SerialMPM(world);
 	  sim = mpm;
 	  comp = mpm;
+	} else if(do_mpmf){
+          FractureMPM* mpmf = scinew FractureMPM(world); // for Fracture
+	  sim = mpmf;
+	  comp = mpmf;
 	} else if(do_impmpm){
 	  ImpMPM* impm = scinew ImpMPM(world);
 	  sim = impm;

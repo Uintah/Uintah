@@ -27,7 +27,8 @@ namespace Uintah {
     virtual particleIndex countParticles(GeometryObject* obj,
 					 const Patch*) const;
 
-
+    virtual void registerPermanentParticleState(MPMMaterial* matl,
+						MPMLabel* lb);
     
   };
 

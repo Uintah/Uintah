@@ -6,6 +6,8 @@
 #include <Packages/Uintah/CCA/Components/MPM/MPMLabel.h>
 #include <Packages/Uintah/CCA/Ports/DataWarehouse.h>
 #include <Packages/Uintah/Core/Math/Matrix3.h>
+#include <Packages/Uintah/Core/Math/Short27.h> //for Fracture
+#include <Packages/Uintah/Core/Grid/NodeIterator.h> // just added
 #include <Packages/Uintah/Core/Grid/Patch.h>
 #include <Packages/Uintah/Core/Grid/NCVariable.h>
 #include <Packages/Uintah/Core/Grid/ParticleSet.h>
@@ -25,6 +27,9 @@
 using std::cerr;
 using namespace Uintah;
 using namespace SCIRun;
+
+#define FRACTURE
+#undef FRACTURE
 
 ViscoScram::ViscoScram(ProblemSpecP& ps, MPMLabel* Mlb, int n8or27)
 {
@@ -244,6 +249,17 @@ void ViscoScram::computeStressTensor(const PatchSubset* patches,
 
     delt_vartype delT;
     old_dw->get(delT, lb->delTLabel);
+
+#ifdef FRACTURE
+    // for Fracture -----------------------------------------------------------
+    constParticleVariable<Short27> pgCode;
+    new_dw->get(pgCode, lb->pgCodeLabel, pset);
+    
+    constNCVariable<Vector> Gvelocity;
+    new_dw->get(Gvelocity,lb->GVelocityLabel, dwi, patch, gac, NGN);
+    // ------------------------------------------------------------------------
+#endif
+
     double Gmw[5];
     Gmw[0]=d_initialData.G[0];
     Gmw[1]=d_initialData.G[1];
@@ -279,8 +295,23 @@ void ViscoScram::computeStressTensor(const PatchSubset* patches,
           patch->findCellAndShapeDerivatives27(px[idx], ni, d_S,psize[idx]);
        }
 
-       for(int k = 0; k < d_8or27; k++) {
-           const Vector& gvel = gvelocity[ni[k]];
+      Vector gvel;
+      for(int k = 0; k < d_8or27; k++) {
+#ifdef FRACTURE
+	// for Fracture ------------------------------------------------------
+	if(pgCode[idx][k]==1)
+	  gvel = gvelocity[ni[k]];
+	else if(pgCode[idx][k]==2)
+	  gvel = Gvelocity[ni[k]];
+	else {
+	  cout << "Unknown velocity field in ViscoScram::computeStressTensor:"
+	       << pgCode[idx][k] << endl;
+	  exit(1);
+	}
+	// -------------------------------------------------------------------
+#else
+	 gvel = gvelocity[ni[k]];
+#endif
            for (int j = 0; j<3; j++){
              for (int i = 0; i<3; i++) {
                  velGrad(i+1,j+1)+=gvel[i] * d_S[k][j] * oodx[j];
@@ -615,6 +646,13 @@ void ViscoScram::addComputesAndRequires(Task* task,
   }
 
   task->requires(Task::NewDW, lb->gVelocityLabel,          matlset, gac, NGN);
+
+#ifdef FRACTURE
+  // for Farcture -------------------------------------------------------------
+  task->requires(Task::NewDW, lb->pgCodeLabel,            matlset,Ghost::None);
+  task->requires(Task::NewDW, lb->GVelocityLabel,         matlset, gac, NGN);
+  // --------------------------------------------------------------------------
+#endif
 
   task->computes(lb->pStressLabel_preReloc,               matlset);
   task->computes(lb->pCrackRadiusLabel_preReloc,          matlset);

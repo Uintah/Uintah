@@ -148,6 +148,36 @@ using std::vector;
       // MPM artificial damping labels (updated after each time step)
       const VarLabel* pDampingRateLabel; // Damping rate summed over particles
       const VarLabel* pDampingCoeffLabel; // Calculated damping coefficient
+
+      // for Fracture ------------------------------------------
+      const VarLabel* pX0Label;
+      const VarLabel* pX0Label_preReloc;
+
+      const VarLabel* pgCodeLabel;
+
+      const VarLabel* gNumPatlsLabel;
+      const VarLabel* GNumPatlsLabel;
+      const VarLabel* GCrackNormLabel;
+
+      const VarLabel* GMassLabel;
+      const VarLabel* GVolumeLabel;
+      const VarLabel* GVelocityLabel;
+      const VarLabel* GTemperatureLabel;
+      const VarLabel* GTemperatureNoBCLabel;
+      const VarLabel* GExternalForceLabel;
+      const VarLabel* GExternalHeatRateLabel;
+      const VarLabel* GThermalContactHeatExchangeRateLabel;
+      const VarLabel* GInternalForceLabel;
+      const VarLabel* GInternalHeatRateLabel;
+      const VarLabel* GTemperatureRateLabel;
+      const VarLabel* GTemperatureStarLabel;
+
+      const VarLabel* GVelocityStarLabel;
+      const VarLabel* GAccelerationLabel;
+      const VarLabel* gDisplacementLabel;
+      const VarLabel* GDisplacementLabel;
+      // --------------------------------------------------------
+
     };
 } // End namespace Uintah
 

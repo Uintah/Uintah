@@ -83,6 +83,21 @@ WARNING
 	AllFaceBased = Ghost::AroundFaces
      };
 
+     //Below for Fracture *************************************************
+     void findCellNodes(const Point& pos,IntVector ni[8]) const;
+     void findCellNodes27(const Point& pos,IntVector ni[27]) const;
+ 
+     //determine if a point is in the patch
+     inline bool containsPoint(const Point& p) const {
+       IntVector l(getNodeLowIndex());
+       IntVector h(getNodeHighIndex());
+       Point lp = nodePosition(l);
+       Point hp = nodePosition(h);
+       return p.x() >= lp.x() && p.y() >= lp.y() && p.z() >= lp.z()
+         && p.x() < hp.x() && p.y() < hp.y() && p.z() < hp.z();
+     }
+     //Above for Fracture *************************************************
+
      static VariableBasis translateTypeToBasis(TypeDescription::Type type,
 					       bool mustExist);
      

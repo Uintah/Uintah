@@ -59,6 +59,7 @@ class Variable;
 	 short_int_type,
          long_type,
          long64_type,
+         Short27,   // for Fracture
 	 Unknown,
 	 Other
       };
