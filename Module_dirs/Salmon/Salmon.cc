@@ -109,22 +109,20 @@ void Salmon::do_execute()
 	    initPort(gmsg->reply);
 	    break;	
 	case MessageTypes::GeometryAddObj:
-	    addObj(gmsg->portno, gmsg->serial, gmsg->obj, gmsg->name);
-	    break;
 	case MessageTypes::GeometryDelObj:
-	    delObj(gmsg->portno, gmsg->serial);
-	    break;
 	case MessageTypes::GeometryDelAll:
-	    delAll(gmsg->portno);
+	    append_port_msg(gmsg);
+	    msg=0; // Don't delete it yet...
 	    break;
 	case MessageTypes::GeometryFlush:
-	    flushViews();
+	    flushPort(gmsg->portno);
 	    break;
 	default:
 	    cerr << "Salomon: Illegal Message type: " << msg->type << endl;
 	    break;
 	}
-	delete msg;
+	if(msg)
+	    delete msg;
     }
 }
 
@@ -149,7 +147,14 @@ int Salmon::should_execute()
 
 void Salmon::initPort(Mailbox<GeomReply>* reply)
 {
-    reply->send(GeomReply(max_portno++, &busy_bit));
+    int portid=max_portno++;
+    // Create the port
+    PortInfo* pi;
+    portHash.insert(portid, pi);
+    pi->msg_head=pi->msg_tail=0;
+    pi->portno=portid;
+    pi->objs=new HashTable<int, SceneItem*>;
+    reply->send(GeomReply(portid, &busy_bit));
 }
 
 void Salmon::flushViews()
@@ -159,60 +164,41 @@ void Salmon::flushViews()
     }
 }
 
-void Salmon::addObj(int portno, int serial, GeomObj *obj,
+void Salmon::addObj(PortInfo* port, int serial, GeomObj *obj,
 		    const clString& name)
 {
-    HashTable<int, SceneItem*>* serHash;
-    if (!portHash.lookup(portno, serHash)) {
-	// need to make this table
-	serHash = new HashTable<int, SceneItem*>;
-	portHash.insert(portno, serHash);
-    }
-    clString pname(name+" ("+to_string(portno)+")");
+    clString pname(name+" ("+to_string(port->portno)+")");
     SceneItem* si=new SceneItem(obj, pname);
-    serHash->insert(serial, si);
+    port->objs->insert(serial, si);
     for (int i=0; i<roe.size(); i++)
 	roe[i]->itemAdded(si);
 }
 
-void Salmon::delObj(int portno, int serial)
+void Salmon::delObj(PortInfo* port, int serial)
 {
-    HashTable<int, SceneItem*>* serHash;
-    if (portHash.lookup(portno, serHash)) {
-	SceneItem *si;
-	if(serHash->lookup(serial, si)){
-	    serHash->remove(serial);
-	    for (int i=0; i<roe.size(); i++)
-		roe[i]->itemDeleted(si);
-	    delete si->obj;
-	    delete si;
-	} else {
-	    cerr << "Error deleting object, object not in database...(serial=" << serial << ")" << endl;
-	}
+    SceneItem* si;
+    if(port->objs->lookup(serial, si)){
+	port->objs->remove(serial);
+	for (int i=0; i<roe.size(); i++)
+	    roe[i]->itemDeleted(si);
+	delete si->obj;
+	delete si;
     } else {
-	cerr << "Error deleting object, port not in database...(port=" << portno << ")" << endl;
+	cerr << "Error deleting object, object not in database...(serial=" << serial << ")" << endl;
     }
 }
 
-void Salmon::delAll(int portno)
+void Salmon::delAll(PortInfo* port)
 {
-
-    HashTable<int, SceneItem*>* serHash;
-    if (portHash.lookup(portno, serHash)) {
-	HashTableIter<int, SceneItem*> iter(serHash);
-	for (iter.first(); iter.ok();) {
-	    SceneItem* si=iter.get_data();
-	    int serial=iter.get_key();
-	    ++iter; // We have to increment before we nuke the
-	            // current element...
-	    serHash->remove(serial);
-	    for (int i=0; i<roe.size(); i++) {
-		roe[i]->itemDeleted(si);
-	    }
-	    delete si->obj;
-	    delete si;
-	}
+    HashTableIter<int, SceneItem*> iter(port->objs);
+    for (iter.first(); iter.ok();++iter) {
+	SceneItem* si=iter.get_data();
+	for (int i=0; i<roe.size(); i++)
+	    roe[i]->itemDeleted(si);
+	delete si->obj;
+	delete si;
     }
+    port->objs->remove_all();
 }
 
 void Salmon::addTopRoe(Roe *r)
@@ -302,4 +288,56 @@ SceneItem::SceneItem(GeomObj* obj, const clString& name)
 
 SceneItem::~SceneItem()
 {
+}
+
+void Salmon::append_port_msg(GeometryComm* gmsg)
+{
+    // Look up the right port number
+    PortInfo* pi;
+    if(!portHash.lookup(gmsg->portno, pi)){
+	cerr << "Geometry message sent to bad port!!!\n";
+	return;
+    }
+
+    // Queue up the messages until the flush...
+    if(pi->msg_tail){
+	pi->msg_tail->next=gmsg;
+	pi->msg_tail=gmsg;
+    } else {
+	pi->msg_head=pi->msg_tail=gmsg;
+    }
+    gmsg->next=0;
+}
+
+void Salmon::flushPort(int portid)
+{
+    // Look up the right port number
+    PortInfo* pi;
+    if(!portHash.lookup(portid, pi)){
+	cerr << "Geometry message sent to bad port!!!\n";
+	return;
+    }
+    GeometryComm* gmsg=pi->msg_head;
+    while(gmsg){
+	switch(gmsg->type){
+	case MessageTypes::GeometryAddObj:
+	    addObj(pi, gmsg->serial, gmsg->obj, gmsg->name);
+	    break;
+	case MessageTypes::GeometryDelObj:
+	    delObj(pi, gmsg->serial);
+	    break;
+	case MessageTypes::GeometryDelAll:
+	    delAll(pi);
+	    break;
+	default:
+	    cerr << "How did this message get in here???\n";
+	}
+	GeometryComm* next=gmsg->next;
+	delete gmsg;
+	gmsg=next;
+    }
+    if(pi->msg_head){
+	flushViews();
+	pi->msg_head=pi->msg_tail=0;
+    }
 }

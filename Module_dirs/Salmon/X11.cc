@@ -168,9 +168,9 @@ void X11::redraw(Salmon* salmon, Roe* roe)
     }
     Array1<GeomObj*> free;
     Array1<GeomObj*> dontfree;
-    HashTableIter<int, HashTable<int, SceneItem*>*> portiter(&salmon->portHash);
+    HashTableIter<int, PortInfo*> portiter(&salmon->portHash);
     for(portiter.first();portiter.ok();++portiter){
-	HashTableIter<int, SceneItem*> objiter(portiter.get_data());
+	HashTableIter<int, SceneItem*> objiter(portiter.get_data()->objs);
 	for(objiter.first();objiter.ok();++objiter){
 	    SceneItem* si=objiter.get_data();
 	    si->obj->make_prims(free, dontfree);
@@ -234,7 +234,7 @@ void X11::redraw(Salmon* salmon, Roe* roe)
     str << "updatePerf " << roe->id << " \"";
     str << npolys << " polygons in " << timer.time()
 	<< " seconds\" \"" << npolys/timer.time()
-	<< " polygons/second\"";
+	<< " polygons/second\"" << '\0';
     cerr << "str=" << str.str() << endl;
     TCL::execute(str.str());
 }
