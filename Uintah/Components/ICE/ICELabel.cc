@@ -53,12 +53,16 @@ ICELabel::ICELabel()
 
     viscosity_CCLabel = 
      scinew VarLabel("viscosity_CC",  CCVariable<double>::getTypeDescription());
+    mom_source_CCLabel = 
+      scinew VarLabel("mom_source_CC",CCVariable<Vector>::getTypeDescription());
+#if 0
     xmom_source_CCLabel = 
      scinew VarLabel("xmom_source_CC",CCVariable<double>::getTypeDescription());
     ymom_source_CCLabel = 
      scinew VarLabel("ymom_source_CC",CCVariable<double>::getTypeDescription());
     zmom_source_CCLabel = 
      scinew VarLabel("zmom_source_CC",CCVariable<double>::getTypeDescription());
+#endif
     int_eng_source_CCLabel = 
      scinew VarLabel("intE_source_CC",CCVariable<double>::getTypeDescription());
     xmom_L_CCLabel = 
@@ -136,9 +140,12 @@ ICELabel::~ICELabel()
     delete div_velfc_CCLabel;
     delete vol_frac_CCLabel;
     delete viscosity_CCLabel;
+    delete mom_source_CCLabel;
+#if 0
     delete xmom_source_CCLabel;
     delete ymom_source_CCLabel;
     delete zmom_source_CCLabel;
+#endif
     delete int_eng_source_CCLabel;
     delete xmom_L_CCLabel;
     delete ymom_L_CCLabel;
@@ -169,6 +176,10 @@ ICELabel::~ICELabel()
     delete delTLabel;
 }
 // $Log$
+// Revision 1.20  2001/01/05 20:01:30  jas
+// Replaced {x,y,z}mom_source with a single mom_source that is a
+// CCVariable<Vector>.  Fixed printData so it can handle CCVariable<Vector>.
+//
 // Revision 1.19  2001/01/05 17:55:29  jas
 // Remove uvel_CC, vvel_CC and wvel_CC from labels.
 //

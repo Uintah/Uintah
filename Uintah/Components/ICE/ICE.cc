@@ -34,9 +34,9 @@
 //______________________________________________________________________
 //  DEBUGGING SWITCHES
 #define  switch_Debug_advectQFirst          0
-#define  switchDebug_equilibration_press    0 
-#define  switchDebug_explicit_press         0
-#define  switchDebug_advance_advect        0
+#define  switchDebug_equilibration_press    1 
+#define  switchDebug_explicit_press         1
+#define  switchDebug_advance_advect        1
 
 
 using std::vector;
@@ -438,10 +438,12 @@ void ICE::scheduleStep4a(const Patch* patch, SchedulerP& sched,
     task->requires(old_dw,  lb->vel_CCLabel,       dwindex,patch,Ghost::None);
     task->requires(old_dw,  lb->viscosity_CCLabel,  dwindex,patch,Ghost::None);
     task->requires(new_dw,  lb->vol_frac_CCLabel,   dwindex,patch,Ghost::None);
-    
+    task->computes(new_dw,  lb->mom_source_CCLabel,dwindex,patch);
+#if 0
     task->computes(new_dw,  lb->xmom_source_CCLabel,dwindex,patch);
     task->computes(new_dw,  lb->ymom_source_CCLabel,dwindex,patch);
     task->computes(new_dw,  lb->zmom_source_CCLabel,dwindex,patch);
+#endif
     task->computes(new_dw,  lb->tau_X_FCLabel,      dwindex,patch);
     task->computes(new_dw,  lb->tau_Y_FCLabel,      dwindex,patch);
     task->computes(new_dw,  lb->tau_Z_FCLabel,      dwindex,patch);
@@ -497,9 +499,12 @@ void ICE::scheduleStep5a(const Patch* patch, SchedulerP&  sched,
     task->requires( old_dw, lb->vel_CCLabel,       dwindex,patch,Ghost::None);
     task->requires( old_dw, lb->cv_CCLabel,         dwindex,patch,Ghost::None);
     task->requires( old_dw, lb->temp_CCLabel,       dwindex,patch,Ghost::None);
+    task->requires( new_dw, lb->mom_source_CCLabel,dwindex,patch,Ghost::None);
+#if 0
     task->requires( new_dw, lb->xmom_source_CCLabel,dwindex,patch,Ghost::None);
     task->requires( new_dw, lb->ymom_source_CCLabel,dwindex,patch,Ghost::None);
     task->requires( new_dw, lb->zmom_source_CCLabel,dwindex,patch,Ghost::None);
+#endif
     task->requires( new_dw, lb->int_eng_source_CCLabel,
 		    dwindex,patch,Ghost::None);
     
@@ -597,7 +602,7 @@ void ICE::actuallyComputeStableTimestep(
 #if 0
   Vector dx = patch->dCell();
   double delt_CFL = 100000,delt_stability = 1000000,fudge_factor = 1.;
-  CCVariable<double> uvel,vvel,wvel,speedSound;
+  CCVariable<double> speedSound;
   CCVariable<Vector> vel;
   double CFL,N_ITERATIONS_TO_STABILIZE = 2;
  
@@ -667,7 +672,7 @@ void ICE::actuallyInitialize(const ProcessorGroup*, const Patch* patch,
     ICEMaterial* ice_matl = d_sharedState->getICEMaterial(m);
     int dwindex = ice_matl->getDWIndex();
     CCVariable<double> rho_micro,rho_CC,Temp_CC,cv,speedSound,visc_CC;
-    CCVariable<double> vol_frac_CC,uvel_CC,vvel_CC,wvel_CC;
+    CCVariable<double> vol_frac_CC;
     CCVariable<Vector> vel_CC;
     SFCXVariable<double> uvel_FC;
     SFCYVariable<double> vvel_FC;
@@ -745,9 +750,7 @@ void ICE::actuallyInitialize(const ProcessorGroup*, const Patch* patch,
     printData( patch, 1, "initialCond", "rho_micro",       rho_micro);
     printData( patch, 1, "initialCond", "Temp",            Temp_CC);
     printData( patch, 1, "initialCond", "vol_frac",        vol_frac_CC);
-    printData( patch, 1, "initialCond", "uvel_CC",         uvel_CC);
-    printData( patch, 1, "initialCond", "vvel_CC",         vvel_CC);
-    printData( patch, 1, "initialCond", "wvel_CC",         wvel_CC);
+    printData( patch, 1, "initialCond", "vel_CC",         vel_CC);
     
   }
 #endif
@@ -1067,7 +1070,6 @@ void ICE::actuallyStep1c(const ProcessorGroup*, const Patch* patch,
   Vector gravity = d_sharedState->getGravity();
 
   CCVariable<double> rho_CC, rho_micro_CC;
-  CCVariable<double> uvel_CC, vvel_CC, wvel_CC;
   CCVariable<Vector> vel_CC;
   CCVariable<double> press_CC;
   new_dw->get(press_CC,lb->press_CCLabel, 0, patch, Ghost::None, 0);
@@ -1691,7 +1693,6 @@ void ICE::actuallyStep4a(const ProcessorGroup*,const Patch* patch,
   numMatls  = d_sharedState->getNumICEMatls();
   
   CCVariable<double>   rho_CC;
-  CCVariable<double>   uvel_CC, vvel_CC, wvel_CC;
   CCVariable<Vector>   vel_CC;
   CCVariable<double>   visc_CC;
   CCVariable<double>   vol_frac;
@@ -1712,19 +1713,26 @@ void ICE::actuallyStep4a(const ProcessorGroup*,const Patch* patch,
     new_dw->get(vol_frac,lb->vol_frac_CCLabel, dwindex,patch,Ghost::None, 0);
 
     CCVariable<double>   xmom_source, ymom_source, zmom_source;
+    CCVariable<Vector>   mom_source;
     SFCXVariable<double> tau_X_FC;
     SFCYVariable<double> tau_Y_FC;
     SFCZVariable<double> tau_Z_FC;
+    new_dw->allocate(mom_source, lb->mom_source_CCLabel, dwindex, patch);
+#if 0
     new_dw->allocate(xmom_source, lb->xmom_source_CCLabel, dwindex, patch);
     new_dw->allocate(ymom_source, lb->ymom_source_CCLabel, dwindex, patch);
     new_dw->allocate(zmom_source, lb->zmom_source_CCLabel, dwindex, patch);
+#endif
     new_dw->allocate(tau_X_FC,    lb->tau_X_FCLabel,       dwindex, patch);
     new_dw->allocate(tau_Y_FC,    lb->tau_Y_FCLabel,       dwindex, patch);
     new_dw->allocate(tau_Z_FC,    lb->tau_Z_FCLabel,       dwindex, patch);
  
+    mom_source.initialize(Vector(0.,0.,0.));
+#if 0
     xmom_source.initialize(0.);
     ymom_source.initialize(0.);
     zmom_source.initialize(0.);
+#endif
 
     for(CellIterator iter = patch->getCellIterator(); !iter.done(); iter++) {
       mass = rho_CC[*iter] * vol;
@@ -1749,8 +1757,8 @@ void ICE::actuallyStep4a(const ProcessorGroup*,const Patch* patch,
 	tau_X_FC[*iter+IntVector(0,0,1)] - 
 	tau_X_FC[*iter+IntVector(0,0,0)];
 #endif
-      xmom_source[*iter]  =   (-pressure_source * delY * delZ +
-			       mass * gravity.x()) * delT;
+      mom_source[*iter].x( (-pressure_source * delY * delZ +
+			    mass * gravity.x()) * delT );
       //__________________________________
       //    Y - M O M E N T U M
        pressure_source = (pressY_FC[top] - pressY_FC[bottom])* vol_frac[*iter];
@@ -1765,8 +1773,8 @@ void ICE::actuallyStep4a(const ProcessorGroup*,const Patch* patch,
 	tau_X_FC[*iter+IntVector(0,0,1)] - 
 	tau_X_FC[*iter+IntVector(0,0,0)];
 #endif
-      ymom_source[*iter]  =   (-pressure_source * delX * delZ +
-			       mass * gravity.y()) * delT;
+      mom_source[*iter].y( (-pressure_source * delX * delZ +
+			       mass * gravity.y()) * delT );
       //__________________________________
       //    Z - M O M E N T U M
       pressure_source = (pressZ_FC[front] - pressZ_FC[back]) * vol_frac[*iter];
@@ -1781,13 +1789,16 @@ void ICE::actuallyStep4a(const ProcessorGroup*,const Patch* patch,
 	tau_X_FC[*iter+IntVector(0,0,1)] - 
 	tau_X_FC[*iter+IntVector(0,0,0)];
 #endif
-      zmom_source[*iter]  =   (-pressure_source * delX * delY +
-			       mass * gravity.z()) * delT;
+      mom_source[*iter].z( (-pressure_source * delX * delY +
+			       mass * gravity.z()) * delT );
     }
 
+    new_dw->put(mom_source, lb->mom_source_CCLabel, dwindex, patch);
+#if 0
     new_dw->put(xmom_source, lb->xmom_source_CCLabel, dwindex, patch);
     new_dw->put(ymom_source, lb->ymom_source_CCLabel, dwindex, patch);
     new_dw->put(zmom_source, lb->zmom_source_CCLabel, dwindex, patch);
+#endif
   }
 }
 
@@ -1864,19 +1875,24 @@ void ICE::actuallyStep5a(const ProcessorGroup*, const Patch* patch,
   for(int m = 0; m < numMatls; m++) {
     ICEMaterial* matl = d_sharedState->getICEMaterial( m );
     int dwindex = matl->getDWIndex();
-    CCVariable<double> rho_CC,uvel_CC,vvel_CC, wvel_CC,cv_CC,temp_CC;
+    CCVariable<double> rho_CC,cv_CC,temp_CC;
     CCVariable<Vector> vel_CC;
     CCVariable<double> xmom_source,ymom_source, zmom_source,int_eng_source;
+    CCVariable<Vector> mom_source;
     old_dw->get(rho_CC,  lb->rho_CCLabel,     dwindex,patch,Ghost::None, 0);
     old_dw->get(vel_CC, lb->vel_CCLabel,    dwindex,patch,Ghost::None, 0);
     old_dw->get(cv_CC,   lb->cv_CCLabel,      dwindex,patch,Ghost::None, 0);
     old_dw->get(temp_CC, lb->temp_CCLabel,    dwindex,patch,Ghost::None, 0);
+    new_dw->get(mom_source,    lb->mom_source_CCLabel,dwindex,patch,
+		Ghost::None, 0);
+#if 0
     new_dw->get(xmom_source,    lb->xmom_source_CCLabel,dwindex,patch,
 		Ghost::None, 0);
     new_dw->get(ymom_source,    lb->ymom_source_CCLabel,dwindex,patch,
 		Ghost::None, 0);
     new_dw->get(zmom_source,    lb->zmom_source_CCLabel,dwindex,patch,
 		Ghost::None, 0);
+#endif
     new_dw->get(int_eng_source, lb->int_eng_source_CCLabel,dwindex,patch,
 		Ghost::None, 0);
     CCVariable<double> xmom_L,ymom_L, zmom_L,int_eng_L, mass_L, rho_L;
@@ -1897,15 +1913,15 @@ void ICE::actuallyStep5a(const ProcessorGroup*, const Patch* patch,
       
       xmom_L[*iter] = mass * vel_CC[*iter].x()
 	//- vel_CC[*iter].x() * mass_source[*iter]
-	+ xmom_source[*iter];
+	+ mom_source[*iter].x();
       
       ymom_L[*iter] = mass * vel_CC[*iter].y()
 	//- vel_CC[*iter].y() * mass_source[*iter]
-	+ ymom_source[*iter];
+	+ mom_source[*iter].y();
       
       zmom_L[*iter] = mass * vel_CC[*iter].z()
 	//- vel_CC[*iter].z() * mass_source[*iter]
-	+ zmom_source[*iter];
+	+ mom_source[*iter].z();
       
       int_eng_L[*iter] = mass * cv_CC[*iter] * temp_CC[*iter]
 	//-cv_CC[*iter] * temp_CC * mass_source[*iter]
@@ -2224,7 +2240,7 @@ void ICE::actuallyStep6and7(const ProcessorGroup*, const Patch* patch,
 		Ghost::None,0);
     new_dw->get(speedSound, lb->speedSound_equiv_CCLabel,dwindex,patch,
 		Ghost::None,0);
-    CCVariable<double> uvel_CC, vvel_CC, wvel_CC, rho_CC, visc_CC, cv,temp;
+    CCVariable<double> rho_CC, visc_CC, cv,temp;
     CCVariable<Vector> vel_CC;
     new_dw->allocate(rho_CC, lb->rho_CCLabel,        dwindex,patch);
     new_dw->allocate(temp,   lb->temp_CCLabel,       dwindex,patch);
@@ -2324,9 +2340,7 @@ void ICE::actuallyStep6and7(const ProcessorGroup*, const Patch* patch,
     /*`==========DEBUG============*/ 
 #if switchDebug_advance_advect
     printData( patch,1, "AFTER Advection before BC's",   "rho",      rho_CC);
-    printData( patch,1, "",   "uvel_CC",  uvel_CC);
-    printData( patch,1, "",   "vvel_CC",  vvel_CC);
-    printData( patch,1, "",   "wvel_CC",  wvel_CC);
+    printData( patch,1, "",   "vel_CC",  vel_CC);
     printData( patch,1, "",   "Temp_CC",  temp);
 #endif
     /*==========DEBUG============`*/
@@ -3138,94 +3152,94 @@ void ICE::qInflux(const CCVariable<fflux>& q_out,
 {
   for(CellIterator iter = patch->getCellIterator(); !iter.done(); iter++) {
     IntVector curcell = *iter,adjcell;
-      int i,j,k;
-      
-      //   INFLUX SLABS
-      i = curcell.x();
-      j = curcell.y();
-      k = curcell.z();
-      
-      adjcell = IntVector(i, j+1, k);
-      q_in[*iter].d_fflux[TOP]    = q_out[adjcell].d_fflux[BOTTOM];
-      
-      adjcell = IntVector(i, j-1, k);
-      q_in[*iter].d_fflux[BOTTOM] = q_out[adjcell].d_fflux[TOP];
-      
-      adjcell = IntVector(i+1, j, k);
-      q_in[*iter].d_fflux[RIGHT]  = q_out[adjcell].d_fflux[LEFT];
-      
-      adjcell = IntVector(i-1, j, k);
-      q_in[*iter].d_fflux[LEFT]   = q_out[adjcell].d_fflux[RIGHT];
-
-      adjcell = IntVector(i, j, k+1);
-      q_in[*iter].d_fflux[FRONT]  = q_out[adjcell].d_fflux[BACK];
-
-      adjcell = IntVector(i, j, k-1);
-      q_in[*iter].d_fflux[BACK]   = q_out[adjcell].d_fflux[FRONT];
-
-      //    INFLUX EDGES
-      adjcell = IntVector(i+1, j+1, k);
-      q_in_EF[*iter].d_eflux[TOP_R]    = q_out_EF[adjcell].d_eflux[BOT_L];
-      
-      adjcell = IntVector(i, j+1, k+1);
-      q_in_EF[*iter].d_eflux[TOP_FR]   = q_out_EF[adjcell].d_eflux[BOT_BK];
-      
-      adjcell = IntVector(i-1, j+1, k);
-      q_in_EF[*iter].d_eflux[TOP_L]    = q_out_EF[adjcell].d_eflux[BOT_R];
-      
-      adjcell = IntVector(i, j+1, k-1);
-      q_in_EF[*iter].d_eflux[TOP_BK]   = q_out_EF[adjcell].d_eflux[BOT_FR];
-          
-      adjcell = IntVector(i+1, j-1, k);
-      q_in_EF[*iter].d_eflux[BOT_R]    = q_out_EF[adjcell].d_eflux[TOP_L];
-      
-      adjcell = IntVector(i, j-1, k+1);
-      q_in_EF[*iter].d_eflux[BOT_FR]    = q_out_EF[adjcell].d_eflux[TOP_BK];
-
-      adjcell = IntVector(i-1, j-1, k);
-      q_in_EF[*iter].d_eflux[BOT_L]    = q_out_EF[adjcell].d_eflux[TOP_R];
-      
-      adjcell = IntVector(i, j-1, k-1);
-      q_in_EF[*iter].d_eflux[BOT_BK]    = q_out_EF[adjcell].d_eflux[TOP_FR];
-      
-      adjcell = IntVector(i+1, j, k-1);
-      q_in_EF[*iter].d_eflux[RIGHT_BK]  = q_out_EF[adjcell].d_eflux[LEFT_FR];
-      
-      adjcell = IntVector(i+1, j, k+1);
-      q_in_EF[*iter].d_eflux[RIGHT_FR]  = q_out_EF[adjcell].d_eflux[LEFT_BK];
-      
-      adjcell = IntVector(i-1, j, k-1);
-      q_in_EF[*iter].d_eflux[LEFT_BK]  = q_out_EF[adjcell].d_eflux[RIGHT_FR];
-      
-      adjcell = IntVector(i-1, j, k+1);
-      q_in_EF[*iter].d_eflux[LEFT_FR]  = q_out_EF[adjcell].d_eflux[RIGHT_BK];
-      
-      /*__________________________________
-      *   INFLUX CORNER FLUXES
-      *___________________________________*/
-      adjcell = IntVector(i+1, j+1, k-1);
-      q_in_CF[*iter].d_cflux[TOP_R_BK]= q_out_CF[adjcell].d_cflux[BOT_L_FR];
-      
-      adjcell = IntVector(i+1, j+1, k+1);
-      q_in_CF[*iter].d_cflux[TOP_R_FR]= q_out_CF[adjcell].d_cflux[BOT_L_BK];
-      
-      adjcell = IntVector(i-1, j+1, k-1);
-      q_in_CF[*iter].d_cflux[TOP_L_BK]= q_out_CF[adjcell].d_cflux[BOT_R_FR];
-      
-      adjcell = IntVector(i-1, j+1, k+1);
-      q_in_CF[*iter].d_cflux[TOP_L_FR]= q_out_CF[adjcell].d_cflux[BOT_R_BK];
-      
-      adjcell = IntVector(i+1, j-1, k-1);
-      q_in_CF[*iter].d_cflux[BOT_R_BK]= q_out_CF[adjcell].d_cflux[TOP_L_FR];
-      
-      adjcell = IntVector(i+1, j-1, k+1);
-      q_in_CF[*iter].d_cflux[BOT_R_FR]= q_out_CF[adjcell].d_cflux[TOP_L_BK];
-      
-      adjcell = IntVector(i-1, j-1, k-1);
-      q_in_CF[*iter].d_cflux[BOT_L_BK]= q_out_CF[adjcell].d_cflux[TOP_R_FR];
-      
-      adjcell = IntVector(i-1, j-1, k+1);
-      q_in_CF[*iter].d_cflux[BOT_L_FR]= q_out_CF[adjcell].d_cflux[TOP_R_BK];
+    int i,j,k;
+    
+    //   INFLUX SLABS
+    i = curcell.x();
+    j = curcell.y();
+    k = curcell.z();
+    
+    adjcell = IntVector(i, j+1, k);
+    q_in[*iter].d_fflux[TOP]    = q_out[adjcell].d_fflux[BOTTOM];
+    
+    adjcell = IntVector(i, j-1, k);
+    q_in[*iter].d_fflux[BOTTOM] = q_out[adjcell].d_fflux[TOP];
+    
+    adjcell = IntVector(i+1, j, k);
+    q_in[*iter].d_fflux[RIGHT]  = q_out[adjcell].d_fflux[LEFT];
+    
+    adjcell = IntVector(i-1, j, k);
+    q_in[*iter].d_fflux[LEFT]   = q_out[adjcell].d_fflux[RIGHT];
+    
+    adjcell = IntVector(i, j, k+1);
+    q_in[*iter].d_fflux[FRONT]  = q_out[adjcell].d_fflux[BACK];
+    
+    adjcell = IntVector(i, j, k-1);
+    q_in[*iter].d_fflux[BACK]   = q_out[adjcell].d_fflux[FRONT];
+    
+    //    INFLUX EDGES
+    adjcell = IntVector(i+1, j+1, k);
+    q_in_EF[*iter].d_eflux[TOP_R]    = q_out_EF[adjcell].d_eflux[BOT_L];
+    
+    adjcell = IntVector(i, j+1, k+1);
+    q_in_EF[*iter].d_eflux[TOP_FR]   = q_out_EF[adjcell].d_eflux[BOT_BK];
+    
+    adjcell = IntVector(i-1, j+1, k);
+    q_in_EF[*iter].d_eflux[TOP_L]    = q_out_EF[adjcell].d_eflux[BOT_R];
+    
+    adjcell = IntVector(i, j+1, k-1);
+    q_in_EF[*iter].d_eflux[TOP_BK]   = q_out_EF[adjcell].d_eflux[BOT_FR];
+    
+    adjcell = IntVector(i+1, j-1, k);
+    q_in_EF[*iter].d_eflux[BOT_R]    = q_out_EF[adjcell].d_eflux[TOP_L];
+    
+    adjcell = IntVector(i, j-1, k+1);
+    q_in_EF[*iter].d_eflux[BOT_FR]    = q_out_EF[adjcell].d_eflux[TOP_BK];
+    
+    adjcell = IntVector(i-1, j-1, k);
+    q_in_EF[*iter].d_eflux[BOT_L]    = q_out_EF[adjcell].d_eflux[TOP_R];
+    
+    adjcell = IntVector(i, j-1, k-1);
+    q_in_EF[*iter].d_eflux[BOT_BK]    = q_out_EF[adjcell].d_eflux[TOP_FR];
+    
+    adjcell = IntVector(i+1, j, k-1);
+    q_in_EF[*iter].d_eflux[RIGHT_BK]  = q_out_EF[adjcell].d_eflux[LEFT_FR];
+    
+    adjcell = IntVector(i+1, j, k+1);
+    q_in_EF[*iter].d_eflux[RIGHT_FR]  = q_out_EF[adjcell].d_eflux[LEFT_BK];
+    
+    adjcell = IntVector(i-1, j, k-1);
+    q_in_EF[*iter].d_eflux[LEFT_BK]  = q_out_EF[adjcell].d_eflux[RIGHT_FR];
+    
+    adjcell = IntVector(i-1, j, k+1);
+    q_in_EF[*iter].d_eflux[LEFT_FR]  = q_out_EF[adjcell].d_eflux[RIGHT_BK];
+    
+    /*__________________________________
+     *   INFLUX CORNER FLUXES
+     *___________________________________*/
+    adjcell = IntVector(i+1, j+1, k-1);
+    q_in_CF[*iter].d_cflux[TOP_R_BK]= q_out_CF[adjcell].d_cflux[BOT_L_FR];
+    
+    adjcell = IntVector(i+1, j+1, k+1);
+    q_in_CF[*iter].d_cflux[TOP_R_FR]= q_out_CF[adjcell].d_cflux[BOT_L_BK];
+    
+    adjcell = IntVector(i-1, j+1, k-1);
+    q_in_CF[*iter].d_cflux[TOP_L_BK]= q_out_CF[adjcell].d_cflux[BOT_R_FR];
+    
+    adjcell = IntVector(i-1, j+1, k+1);
+    q_in_CF[*iter].d_cflux[TOP_L_FR]= q_out_CF[adjcell].d_cflux[BOT_R_BK];
+    
+    adjcell = IntVector(i+1, j-1, k-1);
+    q_in_CF[*iter].d_cflux[BOT_R_BK]= q_out_CF[adjcell].d_cflux[TOP_L_FR];
+    
+    adjcell = IntVector(i+1, j-1, k+1);
+    q_in_CF[*iter].d_cflux[BOT_R_FR]= q_out_CF[adjcell].d_cflux[TOP_L_BK];
+    
+    adjcell = IntVector(i-1, j-1, k-1);
+    q_in_CF[*iter].d_cflux[BOT_L_BK]= q_out_CF[adjcell].d_cflux[TOP_R_FR];
+    
+    adjcell = IntVector(i-1, j-1, k+1);
+    q_in_CF[*iter].d_cflux[BOT_L_FR]= q_out_CF[adjcell].d_cflux[TOP_R_BK];
   }
 }
 
@@ -3269,6 +3283,55 @@ void    ICE::printData(const Patch* patch, int include_GC,
 	IntVector idx(i, j, k);
 	fprintf(stderr,"[%d,%d,%d] = %4.3f \t",
 		i,j,k, q_CC[idx]);
+	
+	/*  fprintf(stderr,"\n"); */
+      }
+      fprintf(stderr,"\n");
+    }
+    fprintf(stderr,"\n");
+  }
+  fprintf(stderr," ______________________________________________\n");
+}
+
+/* 
+ ======================================================================*
+ Function:  printData--
+ Purpose:  Print to stderr a cell-centered, single material
+_______________________________________________________________________ */
+void    ICE::printData(const Patch* patch, int include_GC,
+        char    message1[],             /* message1                     */
+        char    message2[],             /* message to user              */
+        const CCVariable<Vector>& q_CC)
+{
+  int i, j, k,xLo, yLo, zLo, xHi, yHi, zHi;
+  IntVector lowIndex, hiIndex; 
+  
+  fprintf(stderr,"______________________________________________\n");
+  fprintf(stderr,"%s\n",message1);
+  fprintf(stderr,"~%s\n",message2);
+  
+  if (include_GC == 1)  { 
+    lowIndex = patch->getCellLowIndex();
+    hiIndex  = patch->getCellHighIndex();
+  }
+  if (include_GC == 0) {
+    lowIndex = patch->getInteriorCellLowIndex();
+    hiIndex  = patch->getInteriorCellHighIndex();
+  }
+  xLo = lowIndex.x();
+  yLo = lowIndex.y();
+  zLo = lowIndex.z();
+  
+  xHi = hiIndex.x();
+  yHi = hiIndex.y();
+  zHi = hiIndex.z();
+  
+  for(k = zLo; k < zHi; k++)  {
+    for(j = yLo; j < yHi; j++) {
+      for(i = xLo; i < xHi; i++) {
+	IntVector idx(i, j, k);
+	fprintf(stderr,"[%d,%d,%d] = %4.3f %4.3f %4.3f \t",
+		i,j,k, q_CC[idx].x(), q_CC[idx].y(),q_CC[idx].z());
 	
 	/*  fprintf(stderr,"\n"); */
       }
@@ -3474,6 +3537,10 @@ ______________________________________________________________________*/
 
 //
 // $Log$
+// Revision 1.77  2001/01/05 20:01:29  jas
+// Replaced {x,y,z}mom_source with a single mom_source that is a
+// CCVariable<Vector>.  Fixed printData so it can handle CCVariable<Vector>.
+//
 // Revision 1.76  2001/01/05 16:34:09  jas
 // Changed over uvel_CC, vvel_CC, wvel_CC to a CCVariable<Vector> in all steps
 // where CC velocities are used.

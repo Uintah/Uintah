@@ -32,9 +32,12 @@ namespace Uintah {
     const VarLabel* div_velfc_CCLabel;
     const VarLabel* vol_frac_CCLabel;
     const VarLabel* viscosity_CCLabel;
+    const VarLabel* mom_source_CCLabel;
+#if 0
     const VarLabel* xmom_source_CCLabel;
     const VarLabel* ymom_source_CCLabel;
     const VarLabel* zmom_source_CCLabel;
+#endif
     const VarLabel* int_eng_source_CCLabel;
     const VarLabel* xmom_L_CCLabel;
     const VarLabel* ymom_L_CCLabel;
@@ -72,6 +75,10 @@ namespace Uintah {
 
 #endif
 // $Log$
+// Revision 1.18  2001/01/05 20:01:30  jas
+// Replaced {x,y,z}mom_source with a single mom_source that is a
+// CCVariable<Vector>.  Fixed printData so it can handle CCVariable<Vector>.
+//
 // Revision 1.17  2001/01/05 17:55:29  jas
 // Remove uvel_CC, vvel_CC and wvel_CC from labels.
 //
