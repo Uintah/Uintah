@@ -32,14 +32,17 @@ if [ -d "$TEST_UDADIR" ]; then
   else
     cd $TEST_UDADIR
     echo "Comparing dat files"
+    echo
 
     # choose the first dat file to compare number of lines later
-    testdat=`ls -1 $TEST_UDADIR/*.dat | head -n 1`
+    ls -1 $TEST_UDADIR/*.dat
     retval=$?
+    echo
     if [ $retval != "0" ]; then
 	# $TEST_UDADIR has no dat files
-	testdat=`ls -1 $COMPARE_UDADIR/*.dat | head -n 1`
+	ls -1 $TEST_UDADIR/*.dat
 	retval=$?
+	echo
 	if [ $retval != "0" ]; then
 	    # $COMPARE_UDADIR has no dat files either
 	    echo "No dat files to compare"
@@ -52,6 +55,7 @@ if [ -d "$TEST_UDADIR" ]; then
 	fi
     fi
 
+    testdat=`ls -1 $TEST_UDADIR/*.dat | head -n 1`
     compare_dat_files 1e-10 $TEST_UDADIR/ $COMPARE_UDADIR/ *.dat > $TMPDIR/compare_dat_files.msg 2>&1
     retval=$?
 
