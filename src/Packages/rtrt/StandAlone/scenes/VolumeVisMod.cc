@@ -487,7 +487,7 @@ Scene* make_scene(int argc, char* argv[], int /*nworkers*/)
   if(cut){
     PlaneDpy* pd=new PlaneDpy(Vector(0,0,1), Point(0,0,0));
     obj=(Object*)new CutPlane(obj, pd);
-    new Thread(pd, "Cutting plane display thread");
+    (new Thread(pd, "Cutting plane display thread"))->detach();
   }
   Group* all = new Group();
   all->add(obj);
