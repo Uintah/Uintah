@@ -34,6 +34,8 @@
 #include <Core/Datatypes/StructHexVolField.h>
 #include <Core/Datatypes/StructQuadSurfField.h>
 #include <Core/Datatypes/StructCurveField.h>
+#include <Core/Math/Trig.h>
+
 
 namespace SCIRun {
 
@@ -236,9 +238,11 @@ FieldSlicerWorkAlgoT<IFIELD, OFIELD>::execute(FieldHandle ifield_h,
   if (axis == 0) {
     new_i = old_j;
     new_j = old_k;
+
   } else if (axis == 1) {
     new_i = old_i;
     new_j = old_k;
+
   } else if (axis == 2) {
     new_i = old_i;
     new_j = old_j;
@@ -250,13 +254,97 @@ FieldSlicerWorkAlgoT<IFIELD, OFIELD>::execute(FieldHandle ifield_h,
   imesh->begin( inodeItr );
   omesh->begin( onodeItr );
 
-#ifdef SET_POINT_DEFINED
-  Point p;
-#endif       
+  Point o, p1, p2, p;
   typename IFIELD::value_type v;
  
   unsigned int i, j;
   unsigned int it, jt, kt;
+
+  // For structured geometery we need to set the correct plane.
+  if( ifield->get_type_description(0)->get_name() == "LatVolField" ||
+      ifield->get_type_description(0)->get_name() == "ImageField" ||
+      ifield->get_type_description(0)->get_name() == "ScanlineField" ) {
+
+    imesh->begin( inodeItr );
+
+    // Get the orgin of mesh. */
+    imesh->get_center(o, *inodeItr);    
+
+    // Get the first point being copied.
+    if (axis == 0) {
+      // Set the iterator to the correct column (i) .
+      for (it=0; it<index; it++)
+	++inodeItr;
+    } else if(axis == 1) {
+      // Set the iterator to the correct row (j).
+      for (jt=0; jt<index; jt++)
+	for (it=0; it<old_i; it++) 
+	  ++inodeItr;
+    } else if(axis == 2) {
+      // Set the iterator to the correct slice (k).
+      for (kt=0; kt<index; kt++)
+	for (j=0; j<old_j; j++)
+	  for (i=0; i<old_i; i++)
+	    ++inodeItr;
+    }
+  
+    // Get the point.
+    imesh->get_center(p, *inodeItr);
+
+    // Set the orginal transform.
+    omesh->set_transform( imesh->get_transform() );
+
+    // Put the new field into the correct location.
+    Transform trans;
+
+    if( dim.size() == 3 ) {
+
+      if( axis == 0 ) {
+
+	trans.pre_translate( (Vector) (-o) );
+
+	trans.pre_rotate( -PI/2.0, Vector(0.0, 1.0, 0.0) );
+
+	trans.pre_translate( (Vector) (o) );
+
+      } else if( axis == 1 ) {
+
+	trans.pre_translate( (Vector) (-o) );
+
+	trans.pre_rotate( PI/2.0, Vector(1.0, 0.0, 0.0) );
+
+	trans.pre_translate( (Vector) (o) );
+      }
+    } else if( dim.size() == 2 ) {
+
+      if( axis == 0 ) {
+
+	// Get two point that along with the orgin define the "Z" plane.
+	++inodeItr;
+	imesh->get_center(p1, *inodeItr);
+
+	for (it=0; it<old_i-1; it++)
+	  ++inodeItr;
+	imesh->get_center(p2, *inodeItr);
+
+	// Get the plane the data is in.
+	Vector normal = Cross( Vector(p1-o).normal(), Vector(p2-o).normal() );
+
+	trans.pre_translate( (Vector) (-o) );
+
+	// Rotate around the orgin.
+	trans.pre_rotate( PI/2.0, normal.normal() );
+
+	trans.pre_translate( (Vector) (o) );
+      }
+    }
+
+    trans.pre_translate( (Vector) (p-o) );
+      
+    omesh->transform( trans );
+  }
+
+  imesh->begin( inodeItr );
 
   // Slicing along the i axis. In order to get the slice in this direction only one
   // location can be obtained at a time. So the iterator must increment to the correct
