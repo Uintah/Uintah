@@ -38,8 +38,8 @@ set $m0-filename {}
 set $m1-notes {}
 set $m1-show_status {1}
 set $m1-isoval {0.0}
-set $m1-isoval-min {-5.2}
-set $m1-isoval-max {4.3}
+set $m1-isoval-min {0.0}
+set $m1-isoval-max {100.0}
 set $m1-isoval-typed {0}
 set $m1-isoval-quantity {1}
 set $m1-quantity-range {colormap}
@@ -92,11 +92,13 @@ class IsoApp {
     }
 
     constructor {} {
+	global mods
+
 	toplevel .standalone
 	wm title .standalone "BioIso"	 
 	set win .standalone
 
-	set notebook_width 3.5i
+	set notebook_width 270
 	set notebook_height 315
 
 	set iso_alg 1
@@ -104,7 +106,7 @@ class IsoApp {
 	set viewer_width 640
 	set viewer_height 512
     
-	set process_width 200
+	set process_width 220
 	set process_height $viewer_height
 
 	set vis_width 300
@@ -112,6 +114,27 @@ class IsoApp {
 
 	set screen_width [winfo screenwidth .]
 	set screen_height [winfo screenheight .]
+
+	set error_module ""
+        set current_step "Loading"
+	set current_data ""
+	set data_frame1 ""
+	set data_frame2 ""
+
+        set data_loaded 0
+
+	set vis_tab "Data Vis"
+
+        set data_label ""
+
+	# block FieldReader to Isosurface
+	# block_connection $mods(FieldReader) 0 $mods(Isosurface) 0 "yellow"
+
+	# block FieldReader to RescaleColorMap
+	# block_connection $mods(FieldReader) 0 $mods(RescaleColorMap) 1 "yellow"
+
+	# block RescaleColorMap to Isosurface
+	# block_connection $mods(RescaleColorMap) 0 $mods(Isosurface) 1 "purple"
 
     }
 
@@ -157,8 +180,8 @@ class IsoApp {
 	set detachedPFr $win.detachedP
 	set attachedPFr $win.attachedP
 
-	init_Pframe $detachedPFr.f $det_msg
-	init_Pframe $attachedPFr.f $att_msg
+	init_Pframe $detachedPFr.f $det_msg 0
+	init_Pframe $attachedPFr.f $att_msg 1
 
 	# create detached width and heigh
 	append geomP $process_width x $process_height
@@ -207,7 +230,7 @@ class IsoApp {
     }
 
 
-    method init_Pframe { m msg } {
+    method init_Pframe { m msg case } {
 
 	if { [winfo exists $m] } {
 	    ### Menu
@@ -247,7 +270,7 @@ class IsoApp {
 	    iwidgets::labeledframe $m.p \
 		-labelpos n -labeltext "Processing Steps" 
 		# -background "MistyRose"
-	    pack $m.p -side top -fill both -anchor n -expand 1
+	    pack $m.p -side left -fill both -anchor n -expand 1
 	    
 	    set process [$m.p childsite]
 	    
@@ -266,23 +289,51 @@ class IsoApp {
 		-width 15 
 	    pack $data_section.load -side top -padx 2 -pady 5  -ipadx 3 -ipady 3 -anchor n
 	    
+	    # Tooltip $data_section.load "Load data set"
+	
 	    ### Progress
 	    iwidgets::labeledframe $process.progress \
 		-labelpos nw -labeltext "Progress" 
 	    pack $process.progress -side bottom -anchor s -fill both
 	    
 	    set progress_section [$process.progress childsite]
-	    iwidgets::feedback $progress_section.fb -labeltext "Isosurfacing..." \
+	    iwidgets::feedback $progress_section.fb -labeltext "$current_step..." \
 		-labelpos nw \
-		-steps 4 -barcolor Green \
+		-steps 30 -barcolor Green \
 		
 	    pack $progress_section.fb -side top -padx 2 -pady 2 -anchor nw -fill both
-	    
-	    set iso_progress $progress_section.fb
+	    if {$case == 0} {
+	        set standalone_progress1 $progress_section.fb
+                bind $standalone_progress1.lwchildsite.trough <Button> { app display_module_error }
+                bind $standalone_progress1.lwchildsite.trough.bar <Button> { app display_module_error }
 
+	        # Tooltip $standalone_progress1.lwchildsite.trough "Click progress bar when\nred to view errors"
+	        # Tooltip $standalone_progress1.lwchildsite.trough.bar "Click progress bar when\nred to view errors"
+	        # Tooltip $standalone_progress1.label "Indicates current step"
+            } else {
+	        set standalone_progress2 $progress_section.fb
+                bind $standalone_progress2.lwchildsite.trough <Button> { app display_module_error }
+                bind $standalone_progress2.lwchildsite.trough.bar <Button> { app display_module_error }
+
+	        # Tooltip $standalone_progress2.lwchildsite.trough "Click progress bar when\nred to view errors"
+	        # Tooltip $standalone_progress2.lwchildsite.trough.bar "Click progress bar when\nred to view errors"
+	        # Tooltip $standalone_progress2.label "Indicates current step"
+
+            }
+	
 	    ### Attach/Detach button
-	    button $process.cut -text $msg -command "$this switch_P_frames"
-	    pack $process.cut -side bottom -before $process.progress -anchor s -pady 5 -padx 5 
+            frame $m.d 
+	    pack $m.d -side left -anchor e
+            for {set i 0} {$i<25} {incr i} {
+                button $m.d.cut$i -text " | " -borderwidth 0 \
+                    -foreground "gray25" \
+                    -activeforeground "gray25" \
+                    -command "$this switch_P_frames" 
+	        pack $m.d.cut$i -side top -anchor se -pady 0 -padx 0
+                # Tooltip $m.d.cut$i "Click to $msg"
+            }
+
+
 
 	}
 	    
@@ -296,17 +347,24 @@ class IsoApp {
 	    iwidgets::labeledframe $m.vis \
 		-labelpos n -labeltext "Visualization" 
 	        # -background "LightSteelBlue3"
-	    pack $m.vis -side top -anchor n
+	    pack $m.vis -side right -anchor n -fill both -expand 1
 	    
 	    set vis [$m.vis childsite]
 
+            if {$case == 0} {
+               set vis1 $vis
+            } else {
+               set vis2 $vis
+            }
+         
+
 	    ### Tabs
 	    iwidgets::tabnotebook $vis.tnb -width $notebook_width \
-		-height 450 -tabpos n
-	    pack $vis.tnb -padx 0 -pady 0 -anchor n
+		-height 490 -tabpos n
+	    pack $vis.tnb -padx 0 -pady 0 -anchor n -fill both -expand 1
 
 	    ### Data Vis Tab
-	    set page [$vis.tnb add -label "Data Vis"]
+	    set page [$vis.tnb add -label "Data Vis" -command "set vis_tab \"Data Vis\""]
 	    iwidgets::scrolledlistbox $page.data -labeltext "Loaded Data" \
 		-vscrollmode dynamic -hscrollmode dynamic \
 		-selectmode single \
@@ -324,39 +382,50 @@ class IsoApp {
 		set data_listbox_Att $page.data
 	    }
 	    
-	    $page.data insert 0 {None}
 	    
 	    
 	    ### Data Info
 	    frame $page.f -relief groove -borderwidth 2
-	    pack $page.f -side top -anchor n -fill x
-	    
-	    iwidgets::notebook $page.f.nb -width $notebook_width \
-		-height $notebook_height 
-	    pack $page.f.nb -padx 4 -pady 4 -anchor n
+	    pack $page.f -side top -anchor n -fill both -expand 1
 
 	    if {$case == 0} {
-		# detached case
-		set notebook_Det $page.f.nb
-	    } else {
-		# attached case
-		set notebook_Att $page.f.nb
-	    }
+              set data_frame1 $page.f
+            } else {
+              set data_frame2 $page.f
+            }
+	
+            label $page.f.datasetl -text "Data: (None)" 
+            pack $page.f.datasetl -side top -anchor nw	
+
+            if {$case == 0} {
+              set data_label1 $page.f.datasetl
+            } else {
+              set data_label2 $page.f.datasetl
+            }
+
+            add_isosurface_section $page.f $case
 	    
 	    ### Renderer Options Tab
 	    create_viewer_tab $vis
 
 
 	    ### Attach/Detach button
-	    button $vis.cut -text $msg -command "$this switch_V_frames"
-	    pack $vis.cut -side top -anchor s -pady 5 -padx 5 
-
+            frame $m.d 
+	    pack $m.d -side right -anchor w
+            for {set i 0} {$i<27} {incr i} {
+                button $m.d.cut$i -text " | " -borderwidth 0 \
+                    -foreground "gray25" \
+                    -activeforeground "gray25" \
+                    -command "$this switch_V_frames" 
+	        pack $m.d.cut$i -side top -anchor se -pady 0 -padx 0
+                # Tooltip $m.d.cut$i "Click to $msg"
+            }
 	}
     }
 
     method create_viewer_tab { vis } {
 	global mods
-	set page [$vis.tnb add -label "Global Options"]
+	set page [$vis.tnb add -label "Global Options" -command "set vis_tab \"Global Options\""]
 	
 	iwidgets::labeledframe $page.viewer_opts \
 	    -labelpos nw -labeltext "Global Render Options"
@@ -384,49 +453,9 @@ class IsoApp {
 	    -variable $mods(Viewer)-ViewWindow_0-global-debug \
 	    -command "$mods(Viewer)-ViewWindow_0-c redraw"
 	
-	checkbutton $view_opts.eframe.a.clip -text "Use Clip" \
-	    -variable $mods(Viewer)-ViewWindow_0-global-clip \
-	    -command "$mods(Viewer)-ViewWindow_0-c redraw"
-	
-	checkbutton $view_opts.eframe.a.cull -text "Back Cull" \
-	    -variable $mods(Viewer)-ViewWindow_0-global-cull \
-	    -command "$mods(Viewer)-ViewWindow_0-c redraw"
-	
-	checkbutton $view_opts.eframe.a.dl -text "Display List" \
-	    -variable $mods(Viewer)-ViewWindow_0-global-dl \
-	    -command "$mods(Viewer)-ViewWindow_0-c redraw"
-	
-	
 	pack $view_opts.eframe.a.light $view_opts.eframe.a.fog \
-	    $view_opts.eframe.a.bbox $view_opts.eframe.a.clip \
-	    $view_opts.eframe.a.cull $view_opts.eframe.a.dl \
+	    $view_opts.eframe.a.bbox  \
 	    -side top -anchor w -padx 4 -pady 4
-	
-	frame $view_opts.eframe.b -relief groove -borderwidth 2
-	pack $view_opts.eframe.b -side left -anchor ne -fill both
-	
-	label $view_opts.eframe.b.label -text "Shading:"
-	pack $view_opts.eframe.b.label -side top -anchor nw
-	
-	radiobutton $view_opts.eframe.b.wire -text "Wire" \
-	    -variable $mods(Viewer)-ViewWindow_0-global-type \
-	    -value "Wire" \
-	    -command "$mods(Viewer)-ViewWindow_0-c redraw" \
-	    -anchor w
-	
-	radiobutton $view_opts.eframe.b.flat -text "Flat" \
-	    -variable $mods(Viewer)-ViewWindow_0-global-type \
-	    -value "Flat" \
-	    -command "$mods(Viewer)-ViewWindow_0-c redraw" \
-	    -anchor w
-	
-	radiobutton $view_opts.eframe.b.gouraud -text "Gouraud" \
-	    -variable $mods(Viewer)-ViewWindow_0-global-type \
-	    -value "Gouraud" \
-	    -command "$mods(Viewer)-ViewWindow_0-c redraw" \
-	    -anchor w
-	
-	pack $view_opts.eframe.b.wire $view_opts.eframe.b.flat $view_opts.eframe.b.gouraud -side top -anchor nw -padx 4 -pady 4
 	
 	frame $view_opts.buttons -relief flat
 	pack $view_opts.buttons -side top -anchor n -padx 4 -pady 4
@@ -439,6 +468,8 @@ class IsoApp {
 	    -command "$mods(Viewer)-ViewWindow_0-c autoview" \
 	    -width 12 -padx 3 -pady 3
 	
+	# Tooltip $view_opts.buttons.v1.autoview "Restore display to\ndefault view"
+
 	pack $view_opts.buttons.v1.autoview -side top -padx 3 -pady 3 \
 	    -anchor n -fill x
 	
@@ -449,6 +480,8 @@ class IsoApp {
 	menubutton $view_opts.buttons.v1.views.def -text "Views" \
 	    -menu $view_opts.buttons.v1.views.def.m -relief raised \
 	    -padx 3 -pady 3  -width 12
+
+	# Tooltip $view_opts.buttons.v1.views.def "Standard viewing angles\nand orientations"
 	
 	menu $view_opts.buttons.v1.views.def.m
 	$view_opts.buttons.v1.views.def.m add cascade -label "Look down +X Axis" \
@@ -555,12 +588,16 @@ class IsoApp {
 	frame $view_opts.buttons.v2 
 	pack $view_opts.buttons.v2 -side left -anchor nw
 	
-	button $view_opts.buttons.v2.sethome -text "Set Home View" -padx 3 -pady 3 \
+	button $view_opts.buttons.v2.sethome -text "Set Home View" \
+            -padx 3 -pady 3 \
 	    -command "$mods(Viewer)-ViewWindow_0-c sethome"
+
+	# Tooltip $view_opts.buttons.v2.sethome "Save current view\nto return to later by\nclicking Go Home button"
 	
 	button $view_opts.buttons.v2.gohome -text "Go Home" \
 	    -command "$mods(Viewer)-ViewWindow_0-c gohome" \
 	    -padx 3 -pady 3
+        # # Tooltip $view_opts.buttons.v2.gohome "Restore current\nhome view"
 	
 	pack $view_opts.buttons.v2.sethome $view_opts.buttons.v2.gohome \
 	    -side top -padx 2 -pady 2 -anchor ne -fill x
@@ -574,20 +611,24 @@ class IsoApp {
 	set c_width [winfo width $win]
 	set c_height [winfo height $win]
 
+    	set x [winfo x $win]
+	set y [expr [winfo y $win] - 20]
+
 	if { $IsPAttached } {	    
 	    pack forget $attachedPFr
 	    set new_width [expr $c_width - $process_width]
-	    append geom1 $new_width x $c_height 
+	    append geom1 $new_width x $c_height + [expr $x+$process_width] + $y
             wm geometry $win $geom1 
-	    append geom2 $process_width x $c_height 
+	    append geom2 $process_width x $c_height + [expr $x-20] + $y
 	    wm geometry $detachedPFr $geom2
 	    wm deiconify $detachedPFr
 	    set IsPAttached 0
 	} else {
 	    wm withdraw $detachedPFr
-	    pack $attachedPFr -anchor n -side left -before $win.viewer
+	    pack $attachedPFr -anchor n -side left -before $win.viewer \
+	      -expand 1 -fill both
 	    set new_width [expr $c_width + $process_width]
-            append geom $new_width x $c_height
+            append geom $new_width x $c_height + [expr $x - $process_width] + $y
 	    wm geometry $win $geom
 	    set IsPAttached 1
 	}
@@ -598,6 +639,10 @@ class IsoApp {
 	set c_width [winfo width $win]
 	set c_height [winfo height $win]
 
+      	set x [winfo x $win]
+	set y [expr [winfo y $win] - 20]
+
+
 	if { $IsVAttached } {
 	    # select data in detached data list box
 	    if {[$data_listbox_Att curselection] != ""} {
@@ -607,7 +652,8 @@ class IsoApp {
 	    set new_width [expr $c_width - $vis_width]
 	    append geom1 $new_width x $c_height
             wm geometry $win $geom1
-	    append geom2 $vis_width x $c_height
+	    set move [expr $c_width - $vis_width]
+	    append geom2 $vis_width x $c_height + [expr $x + $move + 20] + $y
 	    wm geometry $detachedVFr $geom2
 	    wm deiconify $detachedVFr
 	    set IsVAttached 0
@@ -617,7 +663,8 @@ class IsoApp {
 	    }
 
 	    wm withdraw $detachedVFr
-	    pack $attachedVFr -anchor n -side left -after $win.viewer
+	    pack $attachedVFr -anchor n -side left -after $win.viewer \
+	      -expand 1 -fill both
 	    set new_width [expr $c_width + $vis_width]
             append geom $new_width x $c_height
 	    wm geometry $win $geom
@@ -640,8 +687,21 @@ class IsoApp {
     }
 
     method load_data { file } {
+        if {$data_loaded} {
+           save_isosurface_state
+        }
+
 	global mods
 	global $mods(FieldReader)-filename
+        global $mods(Isosurface)-isoval
+        global $mods(Isosurface)-isoval-min
+        global $mods(Isosurface)-isoval-max
+        global $mods(Isosurface)-isoval-list
+        global $mods(Isosurface)-isoval-quantity
+        global $mods(Isosurface)-quantity-min
+        global $mods(Isosurface)-quantity-max
+
+
 	# set the FieldReader filename if it hasn't been set
 	if {[set $mods(FieldReader)-filename] == ""} {
 	    set $mods(FieldReader)-filename $file
@@ -652,8 +712,41 @@ class IsoApp {
 	# data(file) = full path
 	set name [get_file_name $file]
 	set data($name) $file
+        set current_data $name
+
+        # initialize isosurface vars
+        set isovals($name) [set $mods(Isosurface)-isoval]
+        set mins($name) [set $mods(Isosurface)-isoval-min]
+        set maxs($name) [set $mods(Isosurface)-isoval-max]
+        set $mods(Isosurface)-isoval-quantity 1
+        set quantity($name) 1
+        set quantity_min($name) [set $mods(Isosurface)-isoval-min]
+        set quantity_max($name) [set $mods(Isosurface)-isoval-max]
+        set $mods(Isosurface)-quantity-min [set $mods(Isosurface)-isoval-min]
+        set $mods(Isosurface)-quantity-max [set $mods(Isosurface)-isoval-max]
+        set isoval_list($name) [set $mods(Isosurface)-isoval-list]
+        set $mods(Isosurface)-isoval-list {0.0 1.0 2.0 3.0}
+        set iso_page($name) "Slider"
 	
 	# add the data to the listbox
+        add_data_to_listbox $name
+
+        # set label
+        $data_label1 configure -text "Data: $current_data"
+        $data_label2 configure -text "Data: $current_data"
+
+	# reset progress
+	$standalone_progress1 reset
+	$standalone_progress2 reset
+
+	set current_step "Isosurfacing"
+	$standalone_progress1 configure -labeltext "$current_step..."
+	$standalone_progress2 configure -labeltext "$current_step..."
+
+        set data_loaded 1
+    }
+
+    method add_data_to_listbox {name} {
 	if {[array size data] == 1} then {
 	    # first data set should replace "none" in listbox and be selected
 	    $data_listbox_Att delete 0
@@ -686,39 +779,44 @@ class IsoApp {
 		$data_listbox_Det see end
 	    }
 	}
-
-	# build the data info notetab for this
-	build_data_info_page $notebook_Att $name
-	build_data_info_page $notebook_Det $name
-
-	# bring new data info page forward
-	$notebook_Att view $name
-	$notebook_Det view $name
-	
-	# reset progress
-	$iso_progress reset
-
     }
 
     method data_selected {} {
 	global mods
 	global $mods(FieldReader)-filename
-	set current ""
+
+        # save out old isosurface settings
+        save_isosurface_state
+        
+	set has_changed 0
 	if {$IsVAttached} {
-	    set current [$data_listbox_Att getcurselection]
+            if {$current_data != [$data_listbox_Att getcurselection]} {
+                set has_changed 1
+            }
+	    set current_data [$data_listbox_Att getcurselection]
 	} else {
-	    set current [$data_listbox_Det getcurselection]
+            if {$current_data != [$data_listbox_Det getcurselection]} {
+                set has_changed 1
+            }
+	    set current_data [$data_listbox_Det getcurselection]
 	}
 
-	if {[info exists data($current)] == 1} {
+	if {[info exists data($current_data)] && $has_changed} {
+            $data_label1 configure -text "Data: $current_data"
+            $data_label2 configure -text "Data: $current_data"
 
-            # bring data info page forward
-	    $notebook_Att view $current
-	    $notebook_Det view $current
-	    
 	    # data selected - update FieldReader and execute
-	    set $mods(FieldReader)-filename $data($current)
+	    set $mods(FieldReader)-filename $data($current_data)
+
+	    # configure isosurface widgets specific to this dataset
+
+	    restore_isosurface_state
+
+            $standalone_progress1 reset
+            $standalone_progress2 reset
+
 	    $mods(FieldReader)-c needexecute
+
 	} 
    }
 
@@ -734,41 +832,49 @@ class IsoApp {
 	if { $savefile != "" } {
 	    set fileid [open $savefile w]
 
-	    # Save out data information 
-	    global $mods(FieldReader)-filename
-	    puts $fileid "\n\#Current Data Loaded"
-	    puts $fileid "set S_filename [set $mods(FieldReader)-filename]"
+            puts $fileid "set app_name \"BioIso\""
+	    puts $fileid "\nglobal mods\n"
 
-	    # Save out Isosurface info
- 	    global $mods(Isosurface)-isoval
-	    global $mods(Isosurface)-isoval-min
-	    global $mods(Isosurface)-isoval-max
-  	    puts $fileid "\n\#Isosurface Settings"
-  	    puts $fileid "set S_isoval [set $mods(Isosurface)-isoval]"
-	    puts $fileid "set S_isoval_min [set $mods(Isosurface)-isoval-min]"
-	    puts $fileid "set S_isoval_max [set $mods(Isosurface)-isoval-max]"
-	    puts $fileid "set S_isoval_alg $iso_alg"
+	    puts $fileid "\#Save out data sets and isosurface information"
+	    set searchId [array startsearch data]
 
-	    # save_advanced $fileid $mods(Isosurface)
+            while { [array anymore data $searchId] } {
+                set temp [array nextelement data $searchId]
+	        puts $fileid "set data($temp) $data($temp)"
+                puts $fileid "set isovals($temp) $isovals($temp)"
+                puts $fileid "set mins($temp) $mins($temp)"
+                puts $fileid "set maxs($temp) $maxs($temp)"
+                puts $fileid "set quantity($temp) $quantity($temp)"
+                puts $fileid "set quantity_min($temp) $quantity_min($temp)"
+                puts $fileid "set quantity_max($temp) $quantity_max($temp)"
+                puts $fileid "set isoval_list($temp) {$isoval_list($temp)}\n\n"
+            }
+
+            array donesearch data $searchId
+
+            puts $fileid "# current data set\nset current {$current_data}\n"
+
+            global $mods(Isosurface)-active-isoval-selection-tab
+
+            puts $fileid "global \$mods(Isosurface)-active-isoval-selection-tab\nset \$mods(Isosurface)-active-isoval-selection-tab [set $mods(Isosurface)-active-isoval-selection-tab]"
 	    
 	    # Save out global rendering properties
 	    global $mods(Viewer)-ViewWindow_0-global-light
 	    global $mods(Viewer)-ViewWindow_0-global-fog
 	    global $mods(Viewer)-ViewWindow_0-global-debug
-	    global $mods(Viewer)-ViewWindow_0-global-clip
-	    global $mods(Viewer)-ViewWindow_0-global-cull
-	    global $mods(Viewer)-ViewWindow_0-global-dl
-	    global $mods(Viewer)-ViewWindow_0-global-type
-  	    puts $fileid "\n\#Global Rendering Options"
-  	    puts $fileid "set S_global_light [set $mods(Viewer)-ViewWindow_0-global-light]"
-  	    puts $fileid "set S_global_fog [set $mods(Viewer)-ViewWindow_0-global-fog]"
-  	    puts $fileid "set S_global_debug [set $mods(Viewer)-ViewWindow_0-global-debug]"
-  	    puts $fileid "set S_global_clip [set $mods(Viewer)-ViewWindow_0-global-clip]"
-  	    puts $fileid "set S_global_cull [set $mods(Viewer)-ViewWindow_0-global-cull]"
-  	    puts $fileid "set S_global_dl [set $mods(Viewer)-ViewWindow_0-global-dl]"
-	    puts $fileid "set S_global_type [set $mods(Viewer)-ViewWindow_0-global-type]"
 
+  	    puts $fileid "\n\#Global Rendering Options"
+  	    puts $fileid "global \$mods(Viewer)-ViewWindow_0-global-light\nset \$mods(Viewer)-ViewWindow_0-global-light [set $mods(Viewer)-ViewWindow_0-global-light]"
+  	    puts $fileid "global \$mods(Viewer)-ViewWindow_0-global-fog\nset \$mods(Viewer)-ViewWindow_0-global-fog [set $mods(Viewer)-ViewWindow_0-global-fog]"
+  	    puts $fileid "global \$mods(Viewer)-ViewWindow_0-global-debug\nset \$mods(Viewer)-ViewWindow_0-global-debug [set $mods(Viewer)-ViewWindow_0-global-debug]"
 	    
+
+            puts $fileid "\n\# Visualization tab"
+            puts $fileid "set visualization_tab {$vis_tab}"
+
+            puts $fileid "\n\# Save Viewer Settings"
+		
+            set result [$mods(Viewer)-ViewWindow_0-c autoview]
 	    close $fileid
 
 	}
@@ -796,29 +902,44 @@ class IsoApp {
 
 	set file [tk_getOpenFile -filetypes $types]
 	if {$file != ""} {
-		source $file
+   	    source $file
 
-		# Load data
-		load_data $S_filename
+            # add each data set to listbox
+	    set searchId [array startsearch data]
+            while { [array anymore data $searchId] } {
+                 add_data_to_listbox [array nextelement data $searchId]
+            }
+            array donesearch data $searchId
+        
+            # set appropriate isosurface values 
+            set current_data $current
+            restore_isosurface_state
 
-		# Set the isosurface
-		global $mods(Isosurface)-isoval
-		set $mods(Isosurface)-isoval $S_isoval
-		set $mods(Isosurface)-isoval-min $S_isoval_min
-		set $mods(Isosurface)-isoval-max $S_isoval_max
-		#configure $isosurface.isoval -from $S_isoval_min \
-		 	-to $S_isoval_max
-		update
-		set iso_alg $S_isoval_alg
-		$mods(Isosurface) select-alg $iso_alg
+            # set the appropriate dataset to be executed on
+	    global $mods(FieldReader)-filename
+            set $mods(FieldReader)-filename $data($current_data)
 
-		update_isosurface $S_isoval
+            # set iso tab
+            global $mods(Isosurface)-active-isoval-selection-tab
+            if {[set $mods(Isosurface)-active-isoval-selection-tab]==0} {
+	        $isosurface1.tnb view "Slider"
+	        $isosurface2.tnb view "Slider"
+            } elseif {[set $mods(Isosurface)-active-isoval-selection-tab]==1} {
+	        $isosurface1.tnb view "Quantity"
+	        $isosurface2.tnb view "Quantity"
+            } elseif {[set $mods(Isosurface)-active-isoval-selection-tab]==2} {
+	        $isosurface1.tnb view "List"
+	        $isosurface2.tnb view "List"
+            }
 
-		# Set the global rendering options
-		global $mods(Viewer)-ViewWindow_0-global-light
-		set $mods(Viewer)-ViewWindow_0-global-light $S_global_light
+	    # bring appropriate vis tab forward
+	    set vis_tab $visualization_tab
+            $vis1.tnb view "$vis_tab"
+            $vis2.tnb view "$vis_tab"
+
+            # execute
+            $mods(Isosurface)-c needexecute
 	}	
-	
     }
         
     method exit_app {} {
@@ -829,33 +950,96 @@ class IsoApp {
 	puts "NEED TO IMPLEMENT SHOW HELP"
     }
 
-    method update_isosurface_scale {} {
-	# puts "Update Isosurface Scale"
-	global mods
+    method update_isosurface { isoval } {
+	if {$data_loaded} {
+   	   global mods
+	   set isovals($current_data) $isoval
 
-	# Update min and max for isosurface scale
-	global $mods(Isosurface)-isoval-min
-	global $mods(Isosurface)-isoval-max
+	   # execute with the given value
+	   [$mods(Isosurface) get_this_c] needexecute
+        }
 
-	#UpdateIsosurface 0
-	# puts [set $mods(Isosurface)-isoval-min]
-	# puts [set $mods(Isosurface)-isoval-max]
+    }
+	
+    method print_iso {} {
+	parray $isosurface1
+	parray $isosurface2
+    }
 
-	#$isosurface.isoval configure -from [set $mods(Isosurface)-isoval-min] \
-	 #   -to [set $mods(Isosurface)-isoval-max]
+
+    method save_isosurface_state {} {
+        global mods
+
+        global $mods(Isosurface)-isoval
+        global $mods(Isosurface)-isoval-min
+        global $mods(Isosurface)-isoval-max
+        global $mods(Isosurface)-isoval-quantity
+        global $mods(Isosurface)-quantity-min
+        global $mods(Isosurface)-quantity-max
+        global $mods(Isosurface)-isoval-list
+
+        set isovals($current_data) [set $mods(Isosurface)-isoval]
+        set mins($current_data) [set $mods(Isosurface)-isoval-min]
+        set maxs($current_data) [set $mods(Isosurface)-isoval-max]
+
+        set quantity($current_data) [set $mods(Isosurface)-isoval-quantity]
+        set quantity_min($current_data) [set $mods(Isosurface)-quantity-min]
+        set quantity_max($current_data) [set $mods(Isosurface)-quantity-max]
+
+        set isoval_list($current_data) [set $mods(Isosurface)-isoval-list]
 
     }
 
-    method update_isosurface { isoval } {
 
+    method restore_isosurface_state {} {
+        global mods
+
+        set temp1 $isosurface1.tnb.canvas.notebook.cs
+        set temp2 $isosurface2.tnb.canvas.notebook.cs
+
+        # Slider
+        $temp1.page1.cs.isoval configure -from $mins($current_data) -to $maxs($current_data)
+
+	$temp2.page1.cs.isoval configure -from $mins($current_data) -to $maxs($current_data)
+
+        global $mods(Isosurface)-isoval
+	set $mods(Isosurface)-isoval $isovals($current_data)
+
+        # Quantity
+        global $mods(Isosurface)-isoval-quantity
+        global $mods(Isosurface)-quantity-min
+        global $mods(Isosurface)-quantity-max
+        set $mods(Isosurface)-isoval-quantity $quantity($current_data)
+        set $mods(Isosurface)-quantity-min $quantity_min($current_data)
+        set $mods(Isosurface)-quantity-max $quantity_max($current_data)
+
+        global $mods(Isosurface)-isoval-quantity
+        set $mods(Isosurface)-isoval-quantity $quantity($current_data)
+
+        # List
+	global $mods(Isosurface)-isoval-list
+	set $mods(Isosurface)-isoval-list $isoval_list($current_data)
+
+    }
+
+    method set_isosurface_min_max {} {
 	global mods
-
-	# execute with the given value
-	[$mods(Isosurface) get_this_c] needexecute
-
 	global $mods(Isosurface)-isoval-min
 	global $mods(Isosurface)-isoval-max
 
+	set min [set $mods(Isosurface)-isoval-min]
+	set max [set $mods(Isosurface)-isoval-max]
+
+	if {[winfo exists $isosurface1($current_data)]} {
+          # set to and from of isosurface slider tab
+	  # $isosurface1($current_data).tnb.canvas.notebook.cs.page1.cs.isoval configure -from $min -to $max
+	  # $isosurface2($current_data).tnb.canvas.notebook.cs.page1.cs.isoval configure -from $min -to $max
+
+	  # set min/max values of quantity tab
+
+        }
+
+	
     }
     
     method get_file_name { filename } {
@@ -866,7 +1050,7 @@ class IsoApp {
 	return [string range $filename $start $end]	
     }
 
-    method build_data_info_page { w which } {
+    method build_data_info_page { w which case } {
 	set page [$w add -label $which]
 
 	iwidgets::scrolledframe $page.sf \
@@ -878,11 +1062,11 @@ class IsoApp {
 
 	pack $page.sf -anchor n -fill x
 
-	add_isosurface_section [$page.sf childsite] $which
+	add_isosurface_section [$page.sf childsite] $which $case
 
     }
 
-    method add_isosurface_section { w which } {
+    method add_isosurface_section { w case} {
 	global mods
 	global $mods(Isosurface)-isoval
 	global $mods(Isosurface)-isoval-min
@@ -894,81 +1078,220 @@ class IsoApp {
 	pack $w.isosurface -side top -anchor n -fill both -expand 1
 
 	set isosurface [$w.isosurface childsite]
+	if {$case == 0} {
+	  set isosurface1 $isosurface
+        } else {
+	  set isosurface2 $isosurface
+        }
 
 	# isosurface sliders
-	scale $isosurface.isoval -label "Isoval:" \
- 	    -variable $mods(Isosurface)-isoval \
- 	    -from [set $mods(Isosurface)-isoval-min] \
- 	    -to [set $mods(Isosurface)-isoval-max] \
- 	    -length 3c \
- 	    -showvalue true \
- 	    -orient horizontal \
- 	    -digits 5 \
- 	    -resolution 0.001 \
- 	    -command "$this update_isosurface" \
-	
- 	pack $isosurface.isoval -side top -anchor n 
-
-	# isosurface method
-	label $isosurface.mlabel -text "Method"
-	pack $isosurface.mlabel -side top -anchor nw 
-
-	frame $isosurface.method -relief flat
-	pack $isosurface.method  -side top -anchor n -fill x
-
-	radiobutton $isosurface.method.noise -text "Noise" \
-	    -variable $iso_alg \
-	    -value 1 \
-	    -command "$mods(Isosurface) select-alg 1" \
-	    -anchor w
-
-	radiobutton $isosurface.method.mc -text "Marching Cubes" \
-	    -variable $iso_alg \
-	    -value 0 \
-	    -command "$mods(Isosurface) select-alg 0" \
-	    -anchor w
-
-	pack $isosurface.method.noise $isosurface.method.mc -side left \
-	    -anchor n -fill x
-
-	# turn on Noise by default
-	$isosurface.method.noise invoke
+	iwidgets::tabnotebook $isosurface.tnb \
+            -width [expr $notebook_width-35] -height 1i \
+            -tabpos n
+        pack $isosurface.tnb
 
 	
-	label $isosurface.blank -text "  " -width 31
-	pack $isosurface.blank -side top -anchor n
-	
+        #########
+	set page [$isosurface.tnb add -label "Slider" -command "global $mods(Isosurface)-active-isoval-selection-tab; set $mods(Isosurface)-active-isoval-selection-tab 0"]
+
+        scale $page.isoval -label "Isoval:" \
+            -variable $mods(Isosurface)-isoval \
+            -from [set $mods(Isosurface)-isoval-min] \
+            -to [set $mods(Isosurface)-isoval-max] \
+	    -length 3c \
+	    -showvalue true \
+            -orient horizontal \
+            -digits 5 \
+            -resolution 0.001 \
+            -command "$this update_isosurface"
+ 
+        pack $page.isoval -side top -anchor n
+
+        #########
+	set page [$isosurface.tnb add -label "Quantity" -command "global $mods(Isosurface)-active-isoval-selection-tab; set $mods(Isosurface)-active-isoval-selection-tab 1"]
+
+
+	global $mods(Isosurface)-isoval-quantity
+	global $mods(Isosurface)-isoval-min
+	global $mods(Isosurface)-isoval-max
+        global $mods(Isosurface)-quantity-min
+	set $mods(Isosurface)-quantity-min [set $mods(Isosurface)-isoval-min]
+        global $mods(Isosurface)-quantity-max
+	set $mods(Isosurface)-quantity-max [set $mods(Isosurface)-isoval-max]
+	global $mods(Isosurface)-quantity-range
+	set $mods(Isosurface)-quantity-range "manual"
+	frame $page.q
+	pack $page.q -side top -anchor n
+
+	label $page.q.label -text "Number of evenly\nspaced isovals:"
+        entry $page.q.entry -text $mods(Isosurface)-isoval-quantity 
+	pack $page.q.label -side left -anchor nw
+	pack $page.q.entry -side left -anchor w
+
+	frame $page.m
+	pack $page.m -side top -anchor n
+
+	label $page.m.minl -text "Min:"
+        entry $page.m.mine -text $mods(Isosurface)-quantity-min \
+              -width 5
+	label $page.m.maxl -text "Max:"
+        entry $page.m.maxe -text $mods(Isosurface)-quantity-max \
+              -width 5
+	pack $page.m.minl $page.m.mine $page.m.maxl $page.m.maxe \
+	     -side left -anchor nw -padx 5 -pady 5
+
+	button $page.b -text "Extract" -width 20 \
+             -command "$mods(Isosurface)-c needexecute"
+	pack $page.b -side bottom -anchor s -pady 5
+
+
+        #########
+        set page [$isosurface.tnb add -label "List" -command "global $mods(Isosurface)-active-isoval-selection-tab; set $mods(Isosurface)-active-isoval-selection-tab 2"]
+
+
+	global $mods(Isosurface)-isoval-list
+	frame $page.v
+	pack $page.v -side top -anchor n
+
+	label $page.v.label -text "List of Isovals:"
+        entry $page.v.entry -text $mods(Isosurface)-isoval-list \
+	     -width 30
+	pack $page.v.label $page.v.entry -side left -anchor nw -pady 5
+
+	button $page.b -text "Extract" -width 20 \
+             -command "$mods(Isosurface)-c needexecute"
+	pack $page.b -side bottom -anchor s  -pady 5
+
+        $isosurface.tnb view "Slider"
+
     }
  
     method update_progress { which state } {
-	if {$which == "SCIRun_Visualization_Isosurface_0"} {
-     		after 1 "$iso_progress step"
+	global mods
+	if {$which == $mods(Isosurface)} {
+           if {$state == "JustStarted 1123"} {
+     	      after 1 "$standalone_progress1 reset"
+     	      after 1 "$standalone_progress2 reset"
+           } elseif {$state == "Executing"} {
+     	      after 1 "$standalone_progress1 step"
+     	      after 1 "$standalone_progress2 step"
+
+           } elseif {$state == "NeedData"} {
+
+           } elseif {$state == "Completed"} {
+              set remaining [$standalone_progress1 cget -steps]
+	      after 1 "$standalone_progress1 step $remaining"
+	      after 1 "$standalone_progress2 step $remaining"
+
+
+              # reconfigure min/max on slider if needed
+              global $mods(Isosurface)-isoval-min
+	      global $mods(Isosurface)-isoval-max
+	      global $mods(Isosurface)-quantity-min
+	      global $mods(Isosurface)-quantity-max
+              if {$mins($current_data) != [set $mods(Isosurface)-isoval-min]} {
+		$isosurface1.tnb.canvas.notebook.cs.page1.cs.isoval configure -from [set $mods(Isosurface)-isoval-min] -to [set $mods(Isosurface)-isoval-max]
+		$isosurface2.tnb.canvas.notebook.cs.page1.cs.isoval configure -from [set $mods(Isosurface)-isoval-min] -to [set $mods(Isosurface)-isoval-max]
+
+	        set $mods(Isosurface)-quantity-min [set $mods(Isosurface)-isoval-min]
+	        set $mods(Isosurface)-quantity-max [set $mods(Isosurface)-isoval-max]
+
+              }
+
+	   } 
 	}
-        
     }
 
-    method indicate_error {} {
+    method indicate_error { which msg_state } {
+	if {$msg_state == "Error"} {
+           if {$error_module == ""} {
+              set error_module $which
+	      # turn progress graph red
+              $standalone_progress1 configure -barcolor red
+              $standalone_progress1 configure -labeltext "Error"
+
+              $standalone_progress2 configure -barcolor red
+              $standalone_progress2 configure -labeltext "Error"
+           }
+	}
+       if {$msg_state == "Reset" || $msg_state == "Remark" || \
+           $msg_state == "Warning"} {
+           if {$which == $error_module} {
+	      set error_module ""
+              $standalone_progress1 configure -barcolor green
+              $standalone_progress1 configure -labeltext "$current_step..."
+
+              $standalone_progress2 configure -barcolor green
+              $standalone_progress2 configure -labeltext "$current_step..."
+            }
+       }
+             
 
     }
+
+    method block_connection { modA portA modB portB color} {
+	set connection $modA
+	append connection "_p$portA"
+	append connection "_to_$modB"
+	append connection "_p$portB"
+
+	block_pipe $connection $modA $portA $modB $portB $color
+    }
+
+    method display_module_error {} {
+	set result [$error_module displayLog]
+    }
+
+    method indicate_dynamic_compile { which mode } {
+
+	if {$mode == "start"} {
+           $standalone_progress1 configure -labeltext "Compiling..."
+           # Tooltip $standalone_progress1.label "Dynamically Compiling Algorithms.\nPlease see SCIRun Developer's\nGuide for more information"
+           $standalone_progress2 configure -labeltext "Compiling..."
+           # Tooltip $standalone_progress2.label "Dynamically Compiling Algorithms.\nPlease see SCIRun Developer's\nGuide for more information"
+        } else {
+           $standalone_progress1 configure -labeltext "$current_step..."
+           # Tooltip $standalone_progress1.label "Indicates current step"
+           $standalone_progress2 configure -labeltext "$current_step..."
+           # Tooltip $standalone_progress2.label "Indicates current step"
+        }
+   }
+
 
     variable eviewer
     variable win
     variable data
+
+    # isosurface state
+    variable isovals
+    variable mins
+    variable maxs
+    variable quantity
+    variable quantity_min
+    variable quantity_max
+    variable isoval_list
+    variable iso_page
+
     variable data_listbox_Att
     variable data_listbox_Det
-    variable isosurface
-    variable notebook_Att
-    variable notebook_Det
+    variable isosurface1
+    variable isosurface2
+    variable data_frame1
+    variable data_frame2
     variable notebook_width
     variable notebook_height
     variable iso_alg
-    variable iso_progress
+    variable standalone_progress1
+    variable standalone_progress2
     variable IsPAttached
     variable detachedPFr
     variable attachedPFr
     variable IsVAttached
     variable detachedVFr
     variable attachedVFr
+
+    variable vis1
+    variable vis2
 
     variable process_width
     variable process_height
@@ -981,6 +1304,18 @@ class IsoApp {
 
     variable screen_width
     variable screen_height
+
+    variable error_module
+    variable current_step
+    variable current_data
+
+    variable data_loaded
+
+    variable vis_tab
+
+    variable data_label1
+    variable data_label2
+
 
 }
 
