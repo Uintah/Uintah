@@ -553,6 +553,7 @@ double CompNeoHookPlas::computeRhoMicroCM(double pressure,
     double n = p_ref/bulk;
     rho_cur  = rho_orig*pow(pressure/A,n);
   } else {             // Standard EOS
+    double p_g_over_bulk = p_gauge/bulk;
     rho_cur=rho_orig*(p_g_over_bulk + sqrt(p_g_over_bulk*p_g_over_bulk +1.));
   }
   return rho_cur;
