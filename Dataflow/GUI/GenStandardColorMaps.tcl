@@ -33,16 +33,20 @@ itcl_class SCIRun_Visualization_GenStandardColorMaps {
     } 
     
     method set_defaults {} { 
+	global $this-gamma
         global $this-tcl_status 
 	global $this-mapType
 	global $this-resolution
+	global $this-realres
 	global $this-minRes
 	global $this-nodeList
 	global $this-positionList
 	global $this-width
 	global $this-height
+	set $this-gamma 0
 	set $this-mapType 3
 	set $this-resolution 12
+	set $this-realres 12
 	set $this-minRes 12
 	set exposed 0
 	set colorMap {}
@@ -143,6 +147,7 @@ itcl_class SCIRun_Visualization_GenStandardColorMaps {
     method ui {} { 
 	global $this-minRes
 	global $this-resolution
+	global $this-realres
 	global $this-mapType
 	
 	set w .ui[modname]
@@ -179,6 +184,12 @@ itcl_class SCIRun_Visualization_GenStandardColorMaps {
 	label $w.l2 -text "Alpha defaults to 0.5."
 	pack $w.l0 $w.l1 $w.l2 -side top -anchor c
 	
+	frame $w.f3 -relief flat -borderwidth 2
+	pack $w.f3 -side top -anchor c -expand yes -fill x
+	scale $w.f3.s -orient horizontal -from -1 -to 1 -showvalue true \
+	    -label Shift -variable $this-gamma -resolution 0.01 -tickinterval 1
+	pack $w.f3.s -side left -expand yes -fill x
+	
 	frame $w.f2 -relief groove -borderwidth 2
 	pack $w.f2 -side left -padx 2 -pady 2 -expand yes -fill both
 	
@@ -206,18 +217,25 @@ itcl_class SCIRun_Visualization_GenStandardColorMaps {
 		-orient horizontal  -variable $this-resolution 
 	pack $w.f2.f3.s -side top -padx 2 -pady 2 -expand yes -fill x
 	
-	bind $w.f2.f3.s <ButtonRelease> "$this update; $this-c needexecute"
+	bind $w.f2.f3.s <ButtonRelease> \
+	    "$this setres; $this update; $this-c needexecute"
+
 	bind $w.f.f1.canvas <Expose> "$this canvasExpose"
 	bind $w.f.f1.canvas <Button-1> "$this selectNode %x %y"
 	bind $w.f.f1.canvas <B1-Motion> "$this moveNode %x %y"
 	bind $w.f.f1.canvas <Button-3> "$this deleteNode %x %y"
 	bind $w.f.f1.canvas <ButtonRelease> "$this update; $this-c needexecute"
+	bind $w.f3.s <ButtonRelease> $n
 	$this update
 	
 	set cw [winfo width $w.f.f1.canvas]
 
     }
-    
+   
+    method setres {} {
+	global $this-realres
+	set $this-realres [set $this-resolution]
+    }
     method change {} {
 	global $this-minRes
 	global $this-resolution
@@ -438,11 +456,20 @@ itcl_class SCIRun_Visualization_GenStandardColorMaps {
     method SetColorMap {} {
 	global $this-resolution
 	global $this-mapType
+	global $this-realres
 	set colorMap {}
 	set map [lindex $colorMaps [set $this-mapType]]
-	set currentMap [ lindex $map 1 ]
+	set currentMap {}
+	set currentMap [$this makeNewMap [ lindex $map 1 ]]
 	set n [llength $currentMap]
+	if { [set $this-resolution] > [set $this-realres] } {
+	      set $this-resolution [set $this-realres]
+	}
+	if { [set $this-resolution] < $n } {
+	    set $this-resolution $n
+	}
 	set m [set $this-resolution]
+
 	set frac [expr ($n-1)/double($m-1)]
 	for { set i 0 } { $i < $m  } { incr i} {
 	    if { $i == 0 } {
@@ -460,17 +487,56 @@ itcl_class SCIRun_Visualization_GenStandardColorMaps {
 		for { set j 0} { $j < 3 } { incr j} {
 		    set v1 [lindex $c1 $j]
 		    set v2 [lindex $c2 $j]
-#		    set color [concat $color \
-#			       [list [expr int($v1 + $t*($v2 - $v1))]]]
 		    lappend color [expr int($v1 + $t*($v2 - $v1))]
 		}
 		lappend color [$this getAlpha $i]
 	    }
-#	    set colorMap [concat $colorMap [list $color]]
 	    lappend colorMap $color
 	}
     }
     
+
+    method makeNewMap { currentMap } {
+	global $this-gamma
+	global $this-r
+
+	set res [set $this-realres]
+	set newMap {}
+	set m [expr int($res + abs( [set $this-gamma] )*(255 - $res))]
+	set n [llength $currentMap]
+	if { $m < $n } { set m $n }
+	set frac [expr double($n-1)/double($m - 1)]
+	for { set i 0 } { $i < $m  } { incr i} {
+	    if { $i == 0 } {
+		set color [lindex $currentMap 0]
+	    } elseif { $i == [expr ($m -1)] } {
+		set color [lindex $currentMap [expr ($n - 1)]]
+	    } else {
+		set index_double [$this modify [expr $i * $frac] [expr $n-1]]
+		
+		set index [expr int($index_double)]
+		set t  [expr $index_double - $index]
+		set c1 [lindex $currentMap $index]
+		set c2 [lindex $currentMap [expr $index + 1]]
+		set color {}
+		for { set j 0} { $j < 3 } { incr j} {
+		    set v1 [lindex $c1 $j]
+		    set v2 [lindex $c2 $j]
+		    lappend color [expr int($v1 + $t*($v2 - $v1))]
+		}
+	    }
+	    lappend newMap $color
+	}
+	return $newMap
+    }
+    method modify {  i range } {
+	global $this-gamma
+	
+	set val [expr $i/double($range)]
+	set bp [expr tan( 1.570796327*(0.5 + [set $this-gamma]*0.49999))]
+	set index [expr pow($val,$bp)]
+	return $index*$range
+    }
     method getAlpha { index } {
 	global nodeList
 	global $this-positionList
