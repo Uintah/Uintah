@@ -26,14 +26,11 @@
     <authors>
       <author>Martin Cole</author>
     </authors>
-    <summary>Extract boundary surface from volume field.</summary>
+    <summary>The FieldBoundary module extracts a boundary surface from a volume field and is only implemented for volume meshes: HexVolMesh, TetVolMesh, and LatVolMesh.</summary>
     <description>
-      <p>Builds a TriSurfFieldace of doubles (with no data) from the incoming 
-         volume field boundary.  Does nothing if the input is not high 
-         enough order to have faces.</p>
+      <p>The FieldBoundary module pulls out the bounding surface of the incoming field, making it into a new field that it outputs through the TriSurfField.  This module does not have a GUI, but has one input port, Field, and two output ports, TriSurfField, and Interpolant.  The FieldBoundary module builds a TriSurfMesh of doubles (with no data) from the incoming volume field boundary. If the input of the incoming field does not contain faces, the module does nothing.</p>
       <developer>
-	<p>Walks all the cells, checking each face for neigbors.  The
-           faces without neighbors are the boundary faces.</p>
+	<p>Any interior face should be shared by two cells.  The boundary surface is calculated as the module checks each face that is shared by two or more cells. The faces that exist in one cell only are boundary faces.  This module can be used as a debugging tool becuase errors or holes in the mesh will show up as boundary faces.</p>
       </developer>
     </description>
   </overview>
@@ -44,7 +41,7 @@
 	<name>Field</name>
 	<description>
 	  <p>
-             Accepts any field. Only useful with fields that at least 
+             Accepts any field. Only useful with fields that  
              have faces.
           </p>
 	</description>
@@ -65,7 +62,7 @@
       <port>
 	<name>Interpolant</name>
 	<description>
-	  <p>outputs the interpolant for the TriSurfFieldace.</p>
+	  <p>outputs the interpolant for the TriSurfFieldMesh.</p>
 	</description>
 	<datatype>SCIRun::Field</datatype>
 	<componentname>ShowField</componentname>
@@ -84,7 +81,7 @@
 	<p>Execute the net.</p>
       </step>
       <step>
-	<p>You should see the correct gouraud shaded faces, along with 
+	<p>The user should see the correct Gouraud shaded faces, along with 
            normals and edges.</p>
       </step>
       <step>
