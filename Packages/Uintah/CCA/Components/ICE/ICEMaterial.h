@@ -69,6 +69,7 @@ WARNING
         double getGamma() const;
 	 double getViscosity() const;
 	 double getSpeedOfSound() const;
+        bool   getIsProductOfReaction() const;
 
 	 void initializeCells(CCVariable<double>& rhom,
                            CCVariable<double>&sp_vol,
@@ -92,6 +93,7 @@ WARNING
 	 double d_speed_of_sound;
 	 double d_viscosity;
 	 double d_gamma;
+        bool d_react_prods;
          
 	 std::vector<GeometryObject2*> d_geom_objs;
 
