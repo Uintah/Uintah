@@ -65,16 +65,26 @@ Dir& Dir::operator=(const Dir& copy)
 void Dir::remove(bool throwOnError)
 {
   int code = rmdir(name_.c_str());
-  if (code != 0 && throwOnError)
-    throw ErrnoException("Dir::remove (rmdir call)", errno);
+  if (code != 0) {
+    ErrnoException exception("Dir::remove (rmdir call)", errno);
+    if (throwOnError)
+      throw exception;
+    else
+      cerr << "WARNING: " << exception.message() << endl;
+  }
   return;
 }
 
 void Dir::forceRemove(bool throwOnError)
 {
    int code = system((string("rm -f -r ") + name_).c_str());
-   if (code != 0 && throwOnError)
-     throw ErrnoException(string("Dir::remove failed to remove: ") + name_, errno);
+   if (code != 0) {
+     ErrnoException exception(string("Dir::remove failed to remove: ") + name_, errno);
+     if (throwOnError)
+       throw exception;
+     else
+       cerr << "WARNING: " << exception.message() << endl;
+   }
    return;
 }
 
@@ -82,8 +92,13 @@ void Dir::remove(const string& filename, bool throwOnError)
 {
    string filepath = name_ + "/" + filename;
    int code = system((string("rm -f ") + filepath).c_str());
-   if (code != 0 && throwOnError)
-     throw ErrnoException(string("Dir::remove failed to remove: ") + filepath, errno);
+   if (code != 0) {
+     ErrnoException exception(string("Dir::remove failed to remove: ") + filepath, errno);
+     if (throwOnError)
+       throw exception;
+     else
+       cerr << "WARNING: " << exception.message() << endl;
+   }
    return;
 }
 
