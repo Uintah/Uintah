@@ -33,6 +33,7 @@
 #define SCI_project_Base_Widget_h 1
 
 #include <Dataflow/Constraints/BaseVariable.h>
+#include <Dataflow/Widgets/GuiGeom.h>
 #include <Core/Geometry/Point.h>
 #include <Core/Geometry/Vector.h>
 #include <Core/Geom/GeomObj.h>
@@ -41,9 +42,10 @@
 #include <Core/Geom/Pickable.h>
 #include <Core/Geom/GeomPick.h>
 #include <Core/Geom/Switch.h>
-#include <Core/Geom/GuiGeom.h>
-#include <Core/GuiInterface/TCL.h>
-#include <Core/GuiInterface/GuiVar.h>
+#include <Core/GuiInterface/TCLArgs.h>
+#include <Core/Parts/Part.h>
+#include <Core/Parts/GuiVar.h>
+#include <Core/Containers/StringUtil.h>
 
 namespace SCIRun {
 
@@ -57,7 +59,7 @@ class BaseConstraint;
 class ViewWindow;
 
 
-class BaseWidget : public TCL, public WidgetPickable {
+class BaseWidget : public Part, public WidgetPickable {
 public:
   BaseWidget( Module* module, CrowdMonitor* lock,
 	      const string& name,

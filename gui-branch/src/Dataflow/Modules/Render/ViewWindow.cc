@@ -33,6 +33,7 @@
 #include <Dataflow/Modules/Render/Renderer.h>
 #include <Dataflow/Modules/Render/Ball.h>
 #include <Dataflow/Modules/Render/BallMath.h>
+#include <Core/Containers/StringUtil.h>
 #include <Core/Util/Debug.h>
 #include <Core/Util/NotFinished.h>
 #include <Core/Util/Timer.h>
@@ -55,8 +56,7 @@
 #include <Core/Geom/Material.h>
 #include <Core/Malloc/Allocator.h>
 #include <Core/Math/Trig.h>
-#include <Core/GuiInterface/TCLTask.h>
-#include <Core/GuiInterface/GuiVar.h>
+#include <Core/Parts/GuiVar.h>
 #include <Core/Thread/CrowdMonitor.h>
 #include <Core/Thread/FutureValue.h>
 #include "OpenGL.h"
@@ -114,7 +114,7 @@ ViewWindow::ViewWindow(Viewer* s, const string& id)
 
   view.set(homeview);
 
-  TCL::add_command(id+"-c", this, 0);
+  tcl_add_command(id+"-c", this, 0);
   current_renderer=0;
   maxtag=0;
   mouse_obj=0;
@@ -169,12 +169,12 @@ void ViewWindow::itemAdded(GeomViewerItem* si)
     visible[si->name] = vis;
     ostringstream str;
     str << id << " addObject " << vis->tagid << " \"" << si->name << "\"";
-    TCL::execute(str.str().c_str());
+    tcl_execute(str.str().c_str());
   } else {
     vis = (*viter).second;
     ostringstream str;
     str << id << " addObject2 " << vis->tagid;
-    TCL::execute(str.str().c_str());
+    tcl_execute(str.str().c_str());
   }
   // invalidate the bounding box
   bb.reset();
@@ -193,7 +193,7 @@ void ViewWindow::itemDeleted(GeomViewerItem *si)
     vis = (*viter).second;
     ostringstream str;
     str << id << " removeObject " << vis->tagid;
-    TCL::execute(str.str().c_str());
+    tcl_execute(str.str().c_str());
   }
 				// invalidate the bounding box
   bb.reset();
@@ -223,7 +223,7 @@ void ViewWindow::spawnChCB(CallbackData*, void*)
 
 ViewWindow::~ViewWindow()
 {
-  TCL::delete_command( id+"-c" );
+  tcl_delete_command( id+"-c" );
 }
 
 void ViewWindow::get_bounds(BBox& bbox)
@@ -2159,7 +2159,7 @@ void ViewWindow::update_mode_string(const string& msg)
 {
   ostringstream str;
   str << id << " updateMode \"" << msg << "\"";
-  TCL::execute(str.str().c_str());
+  tcl_execute(str.str().c_str());
 }
 
 ViewWindowMouseMessage::ViewWindowMouseMessage(const string& rid, MouseHandler handler,
@@ -2259,7 +2259,7 @@ void ViewWindow::do_for_visible(Renderer* r, ViewWindowVisPMF pmf)
 
   // now run through the transparent objects...
 
-  for(i=0;i<transp_objs.size();i++) {
+  for(unsigned i=0;i<transp_objs.size();i++) {
     GeomViewerItem *si = transp_objs[i];    
 
     if(si->lock)
@@ -2275,7 +2275,7 @@ void ViewWindow::do_for_visible(Renderer* r, ViewWindowVisPMF pmf)
 
 void ViewWindow::set_current_time(double time)
 {
-  set_guivar(id, "current_time", to_string(time));
+  set_gui_var(id, "current_time", to_string(time));
 }
 
 void ViewWindow::dump_objects(const string& filename, const string& format)

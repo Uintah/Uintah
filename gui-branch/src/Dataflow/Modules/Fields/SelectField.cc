@@ -26,7 +26,7 @@
 #include <Dataflow/Modules/Fields/SelectField.h>
 #include <Dataflow/Widgets/ScaledBoxWidget.h>
 #include <Core/Datatypes/Clipper.h>
-#include <Core/GuiInterface/GuiVar.h>
+#include <Core/Parts/GuiVar.h>
 
 #include <iostream>
 #include <stdio.h>

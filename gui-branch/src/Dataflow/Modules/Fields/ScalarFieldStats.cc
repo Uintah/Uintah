@@ -33,7 +33,7 @@
 #include <Dataflow/Ports/MatrixPort.h>
 #include <Dataflow/Ports/FieldPort.h>
 #include <Dataflow/Modules/Fields/ScalarFieldStats.h>
-#include <Core/GuiInterface/GuiVar.h>
+#include <Core/Parts/GuiVar.h>
 #include <Core/Containers/StringUtil.h>
 #include <iostream>
 #include <strstream>
@@ -84,7 +84,7 @@ ScalarFieldStats::fill_histogram( vector<int>& hits)
   string smax( to_string(nmax) );
 
   char *data = ostr.str();
-  TCL::execute(id + " graph_data " + smin.c_str() + " "
+  tcl_execute(id + " graph_data " + smin.c_str() + " "
 	       + smax.c_str() + " " + data );
   
   delete data;

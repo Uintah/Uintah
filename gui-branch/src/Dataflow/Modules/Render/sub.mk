@@ -49,14 +49,14 @@ SRCS     += \
 PSELIBS := Dataflow/Widgets Dataflow/Network Dataflow/Ports Core/Datatypes \
 	Dataflow/Comm Core/Persistent Core/Exceptions Core/Geometry \
 	Core/Geom Core/Thread Core/Containers \
-	Core/GuiInterface Core/TkExtensions Core/Util \
-	Core/TkExtensions Core/Datatypes
+	Core/GuiInterface Core/Util \
+	Core/Datatypes
 
 CFLAGS += $(MPEG_DEF_FLAG) $(LIBIMAGE_DEF_FLAG)
 
 INCLUDES += $(MPEG_INCLUDE) $(LIBIMAGE_INCLUDE)
 
-LIBS := $(TK_LIBRARY) $(GL_LIBS) $(IMAGE_LIBS) $(MPEG_LIBRARY) $(LIBIMAGE_LIBRARY) -lm
+LIBS := $(GL_LIBS) $(IMAGE_LIBS) $(MPEG_LIBRARY) $(LIBIMAGE_LIBRARY) -lm
 
 
 include $(SCIRUN_SCRIPTS)/smallso_epilogue.mk

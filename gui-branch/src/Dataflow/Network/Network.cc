@@ -35,9 +35,9 @@
 #include <Core/Util/NotFinished.h>
 #include <Dataflow/Network/Connection.h>
 #include <Dataflow/Network/Module.h>
-#include <Dataflow/Network/PackageDB.h>
 #include <Core/Malloc/Allocator.h>
 #include <Core/GuiInterface/Remote.h>
+#include <Core/Containers/StringUtil.h>
 
 #ifdef _WIN32
 #include <io.h>
@@ -47,14 +47,13 @@
 using std::cerr;
 #include <string.h>
 
-//#define DEBUG 1
 
 namespace SCIRun {
 
 
 Network::Network(int first)
   : the_lock("Network lock"),
-    netedit(0), first(first), nextHandle(0), slave_socket(0)
+    scheduler(0), first(first), nextHandle(0), slave_socket(0)
 {
 }
 
@@ -231,118 +230,24 @@ int Network::disconnect(const string& connId)
     return 1;
 }
 
-void Network::initialize(NetworkEditor* _netedit)
+void Network::initialize( Scheduler *s)
 {
-    netedit=_netedit;
-    //NOT_FINISHED("Network::initialize"); // Should read a file???
+  scheduler = s;
 }
 
 
-static string
-remove_spaces(const string& str)
+void
+Network::add_module( Module *mod )
 {
-  string result;
-  for (string::const_iterator i = str.begin(); i != str.end(); i++)
-  {
-    if (*i != ' ') { result += *i; }
-  }
-  return result;
-}
-
-
-Module* Network::add_module(const string& packageName,
-                            const string& categoryName,
-                            const string& moduleName)
-{ 
-
-  // Find a unique id in the Network for the new instance of this module and
-  // form an instance name from it
-
-  string instanceName;
-  {
-    const string name = remove_spaces(packageName + "_" +
-				      categoryName + "_" +
-				      moduleName + "_");
-    for (int i=0; get_module_by_id(instanceName = name + to_string(i)); i++);
-  }
-
-  // Instantiate the module
-
-  Module* mod = packageDB.instantiateModule(packageName, categoryName,
-					    moduleName, instanceName);
-  if(!mod) {
-    cerr << "Error: can't create instance " << instanceName << "\n";
-    return 0;
-  }
   modules.push_back(mod);
-
-//-----------------------------------------------------------------------------
-// XXX: McQ, 7/19/99.  We need to re-examine things like "if(name(0)=='r')"
-//      with an eye toward robust module naming.
-#if 0
-    Message msg;
-
-#ifdef DEBUG
-    cerr << "Network::add_module created ID\n";
-#endif
-    if (name(0) == 'r') {
-
-#ifdef DEBUG
-    	cerr << "Network::add_module remote module\n";
-#endif
-
-#ifndef _WIN32
-	// open listen socket and startup slave if not done yet
-	if (slave_socket == 0) {
-	    int listen_socket = setupConnect (BASE_PORT);
-
-/* Thread "TCLTask"(pid 8291) caught signal SIGSEGV at address 6146200 (segmentation violation - Unknown code!)
-	    // rsh to startup sr, passing master port number 
-	    system ("rsh burn /a/home/sci/data12/mmiller/o_Dataflow/sr -slave burn 8888");
- */ 	    slave_socket = acceptConnect (listen_socket);
-            close (listen_socket);
-	}
-#endif
-
-	// send message to addModule (pass ID to link 2 instances);
-	msg.type 	= CREATE_MOD;
-	strcpy (msg.u.cm.name, name());
-	strcpy (msg.u.cm.id, id());
-	msg.u.cm.handle = getNextHandle();
-
-	char buf[BUFSIZE];
-	bzero (buf, sizeof (buf));
-	bcopy ((char *) &msg, buf, sizeof (msg));
-   	write (slave_socket, buf, sizeof(buf));
-
-	// pass through to normal code - skeleton module? yes, need to do
-	// this so the NetworkEditor calls for remote will execute.  if I
-	// don't bind a NetworkEditor, how will the calls happen?  the other
-	// side (daemon) should repeat code below also.
-    }
-
-// XXX: McQ: Module instantiated moved from here to above
-
-    if (name(0) == 'r') {		// is this a remote module?
-	mod->skeleton = true;		// tag as skeleton
-    	mod->handle = msg.u.cm.handle;	// skeleton & remote same handle
-    }
-#endif
-//-----------------------------------------------------------------------------
-
-    // Binds NetworkEditor and Network instances to module instance.  
-    // Instantiates ModuleHelper and starts event loop.
-    mod->set_context(netedit, this);   
-
-    // add Module id and ptr to Module to hash table of modules in network
-    module_ids[mod->id] = mod;
-
-    // add to hash table of handles and module ptrs
-    if (mod->handle > 0) {
+  mod->set_context(scheduler, this);   
+  
+  // add Module id and ptr to Module to hash table of modules in network
+  module_ids[mod->id] = mod;
+  
+  // add to hash table of handles and module ptrs
+  if (mod->handle > 0) 
       mod_handles[mod->handle] = mod;
-    }
-    
-    return mod;
 }
 
 Module* Network::get_module_by_id(const string& id)

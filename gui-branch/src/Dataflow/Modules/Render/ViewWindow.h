@@ -35,13 +35,14 @@
 #include <Dataflow/Comm/MessageBase.h>
 #include <Core/Geom/Color.h>
 #include <Core/Geom/GeomGroup.h>
-#include <Core/Geom/GuiGeom.h>
-#include <Core/Geom/GuiView.h>
+#include <Dataflow/Widgets/GuiGeom.h>
+#include <Dataflow/Widgets/GuiView.h>
 #include <Core/Geom/View.h>
 #include <Core/Geometry/BBox.h>
 #include <Core/Geometry/Transform.h>
-#include <Core/GuiInterface/TCL.h>
-#include <Core/GuiInterface/GuiVar.h>
+#include <Core/GuiInterface/TCLArgs.h>
+#include <Core/Parts/Part.h>
+#include <Core/Parts/GuiVar.h>
 #include <Dataflow/Modules/Render/BallAux.h>
 
 // --  BAWGL -- 
@@ -106,7 +107,7 @@ typedef void (ViewWindow::*MouseHandler)(int, int x, int y,
 				  int state, int btn, int time);
 typedef void (Renderer::*ViewWindowVisPMF)(Viewer*, ViewWindow*, GeomObj*);
 
-class ViewWindow : public TCL {
+class ViewWindow : public Part {
   
   // --  BAWGL -- 
 public:

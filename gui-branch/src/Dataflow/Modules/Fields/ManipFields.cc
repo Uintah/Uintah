@@ -29,7 +29,7 @@
 #include <Core/Datatypes/Field.h>
 #include <Dataflow/Ports/FieldPort.h>
 #include <Dataflow/share/share.h>
-#include <Core/GuiInterface/GuiVar.h>
+#include <Core/Parts/GuiVar.h>
 #include <Dataflow/XMLUtil/XMLUtil.h>
 #include <Dataflow/Network/StrX.h>
 #include <Core/Util/DebugStream.h>
@@ -627,7 +627,7 @@ ManipFields::load_ui()
     names += manipName + " ";
   }
 
-  TCL::execute(( id_ + " set_names " + "{" + names + "}" ).c_str());
+  tcl_execute(( id_ + " set_names " + "{" + names + "}" ).c_str());
 }
 
 
@@ -658,9 +658,9 @@ ManipFields::set_cur_manip( const string& name )
   string libpath = vector_to_string( manipData.libpath_ );
   string inc     = vector_to_string( manipData.inc_     );
 
-  TCL::execute((id_ + " set_cur_libs "    + "{" + libs    + "}").c_str());
-  TCL::execute((id_ + " set_cur_libpath " + "{" + libpath + "}").c_str());
-  TCL::execute((id_ + " set_cur_inc "     + "{" + inc     + "}").c_str());
+  tcl_execute((id_ + " set_cur_libs "    + "{" + libs    + "}").c_str());
+  tcl_execute((id_ + " set_cur_libpath " + "{" + libpath + "}").c_str());
+  tcl_execute((id_ + " set_cur_inc "     + "{" + inc     + "}").c_str());
 }
 
 

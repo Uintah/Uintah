@@ -34,7 +34,8 @@
 #include <Dataflow/Comm/MessageTypes.h>
 #include <Dataflow/Network/Connection.h>
 #include <Dataflow/Network/Module.h>
-#include <Dataflow/Network/NetworkEditor.h>
+#include <Dataflow/Network/Scheduler.h>
+//#include <Dataflow/Network/NetworkEditor.h>
 #include <Dataflow/Network/Port.h>
 
 #include <iostream>
@@ -75,7 +76,7 @@ void ModuleHelper::run()
 	  Scheduler_Module_Message* smsg=(Scheduler_Module_Message*)msg;
 	  smsg->conn->oport->resend(smsg->conn);
 	}
-	break;
+      break;
       case MessageTypes::Demand:
 	{
 #if 0
@@ -89,7 +90,7 @@ void ModuleHelper::run()
 	  }
 #endif
 	}
-	break;
+      break;
       default:
 	cerr << "Illegal Message type: " << msg->type << endl;
 	break;

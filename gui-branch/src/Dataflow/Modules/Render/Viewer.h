@@ -40,7 +40,7 @@
 #include <Core/Geom/Lighting.h>
 #include <Core/Geom/IndexedGroup.h>
 #include <Dataflow/Modules/Render/ViewGeom.h>
-#include <Core/GuiInterface/TCL.h>
+#include <Core/GuiInterface/TCLArgs.h>
 #include <Core/Thread/CrowdMonitor.h>
 
 #include <map>
@@ -53,33 +53,11 @@ using std::vector;
 class Renderer;
 class ViewWindow;
 
-#if 0
-struct SceneItem {
-  GeomObj* obj;
-  string name;
-  CrowdMonitor* lock;
-
-  SceneItem(GeomObj*, const string&, CrowdMonitor* lock);
-  ~SceneItem();
-};
-
-struct PortInfo {
-  GeometryComm* msg_head;
-  GeometryComm* msg_tail;
-  int portno;
-
-  typedef map<int, SceneItem*> MapIntSceneItem;
-  MapIntSceneItem* objs;
-};
-#endif
 
 class Viewer : public Module {
     
 public:
   typedef map<string, void*>	        MapStringVoid;
-#if 0    
-  typedef map<int, PortInfo*>		MapIntPortInfo;
-#endif
 
 private:
   vector<ViewWindow*> viewwindow;

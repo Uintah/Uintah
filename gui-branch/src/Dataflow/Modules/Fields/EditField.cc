@@ -36,7 +36,6 @@
 #include <Core/Thread/CrowdMonitor.h>
 #include <Dataflow/Modules/Fields/EditField.h>
 #include <Dataflow/Widgets/ScaledBoxWidget.h>
-#include <Dataflow/Network/NetworkEditor.h>
 #include <Core/Datatypes/DenseMatrix.h>
 #include <map>
 
@@ -133,37 +132,37 @@ EditField::~EditField(){
 
 void EditField::clear_vals() 
 {
-  TCL::execute(string("set ")+id+"-fldname \"---\"");
-  TCL::execute(string("set ")+id+"-typename \"---\"");
-  TCL::execute(string("set ")+id+"-datamin \"---\"");
-  TCL::execute(string("set ")+id+"-datamax \"---\"");
-  TCL::execute(string("set ")+id+"-numnodes \"---\"");
-  TCL::execute(string("set ")+id+"-numelems \"---\"");
-  TCL::execute(string("set ")+id+"-dataat \"---\"");
-  TCL::execute(string("set ")+id+"-cx \"---\"");
-  TCL::execute(string("set ")+id+"-cy \"---\"");
-  TCL::execute(string("set ")+id+"-cz \"---\"");
-  TCL::execute(string("set ")+id+"-sizex \"---\"");
-  TCL::execute(string("set ")+id+"-sizey \"---\"");
-  TCL::execute(string("set ")+id+"-sizez \"---\"");
-  TCL::execute(id+" update_multifields");
+  tcl_execute(string("set ")+id+"-fldname \"---\"");
+  tcl_execute(string("set ")+id+"-typename \"---\"");
+  tcl_execute(string("set ")+id+"-datamin \"---\"");
+  tcl_execute(string("set ")+id+"-datamax \"---\"");
+  tcl_execute(string("set ")+id+"-numnodes \"---\"");
+  tcl_execute(string("set ")+id+"-numelems \"---\"");
+  tcl_execute(string("set ")+id+"-dataat \"---\"");
+  tcl_execute(string("set ")+id+"-cx \"---\"");
+  tcl_execute(string("set ")+id+"-cy \"---\"");
+  tcl_execute(string("set ")+id+"-cz \"---\"");
+  tcl_execute(string("set ")+id+"-sizex \"---\"");
+  tcl_execute(string("set ")+id+"-sizey \"---\"");
+  tcl_execute(string("set ")+id+"-sizez \"---\"");
+  tcl_execute(id+" update_multifields");
 }
 
 void EditField::update_input_attributes(FieldHandle f) 
 {
   const string &tname = f->get_type_description()->get_name();
-  TCL::execute(string("set ")+id+"-typename \"" + tname + "\"");
+  tcl_execute(string("set ")+id+"-typename \"" + tname + "\"");
 
   switch(f->data_at())
   {
   case Field::NODE:
-    TCL::execute(string("set ")+id+"-dataat Nodes"); break;
+    tcl_execute(string("set ")+id+"-dataat Nodes"); break;
   case Field::EDGE: 
-    TCL::execute(string("set ")+id+"-dataat Edges"); break;
+    tcl_execute(string("set ")+id+"-dataat Edges"); break;
   case Field::FACE: 
-    TCL::execute(string("set ")+id+"-dataat Faces"); break;
+    tcl_execute(string("set ")+id+"-dataat Faces"); break;
   case Field::CELL: 
-    TCL::execute(string("set ")+id+"-dataat Cells"); break;
+    tcl_execute(string("set ")+id+"-dataat Cells"); break;
   default: ;
   }
 
@@ -181,31 +180,31 @@ void EditField::update_input_attributes(FieldHandle f)
     size = Vector(bbox.max()-bbox.min());
     center = Point(bbox.min()+size/2.);
   }
-  TCL::execute(string("set ")+id+"-cx "+to_string(center.x()));
-  TCL::execute(string("set ")+id+"-cy "+to_string(center.y()));
-  TCL::execute(string("set ")+id+"-cz "+to_string(center.z()));
-  TCL::execute(string("set ")+id+"-sizex "+to_string(size.x()));
-  TCL::execute(string("set ")+id+"-sizey "+to_string(size.y()));
-  TCL::execute(string("set ")+id+"-sizez "+to_string(size.z()));
+  tcl_execute(string("set ")+id+"-cx "+to_string(center.x()));
+  tcl_execute(string("set ")+id+"-cy "+to_string(center.y()));
+  tcl_execute(string("set ")+id+"-cz "+to_string(center.z()));
+  tcl_execute(string("set ")+id+"-sizex "+to_string(size.x()));
+  tcl_execute(string("set ")+id+"-sizey "+to_string(size.y()));
+  tcl_execute(string("set ")+id+"-sizez "+to_string(size.z()));
 
   ScalarFieldInterface *sdi = f->query_scalar_interface();
   if (sdi && f->data_at() != Field::NONE) {
     sdi->compute_min_max(minmax_.first,minmax_.second);
-    TCL::execute(string("set ")+id+"-datamin "+to_string(minmax_.first));
-    TCL::execute(string("set ")+id+"-datamax "+to_string(minmax_.second));
+    tcl_execute(string("set ")+id+"-datamin "+to_string(minmax_.first));
+    tcl_execute(string("set ")+id+"-datamax "+to_string(minmax_.second));
   } else {
-    TCL::execute(string("set ")+id+"-datamin \"--- N/A ---\"");
-    TCL::execute(string("set ")+id+"-datamax \"--- N/A ---\"");
+    tcl_execute(string("set ")+id+"-datamin \"--- N/A ---\"");
+    tcl_execute(string("set ")+id+"-datamax \"--- N/A ---\"");
   }
 
   string fldname;
   if (f->get("name",fldname))
-    TCL::execute(string("set ")+id+"-fldname "+fldname);
+    tcl_execute(string("set ")+id+"-fldname "+fldname);
   else
-    TCL::execute(string("set ")+id+"-fldname \"--- Name Not Assigned ---\"");
+    tcl_execute(string("set ")+id+"-fldname \"--- Name Not Assigned ---\"");
 
 
-  TCL::execute(id+" update_multifields");
+  tcl_execute(id+" update_multifields");
 
   // Do this last, sometimes takes a while.
   const TypeDescription *meshtd = f->mesh()->get_type_description();
@@ -228,13 +227,13 @@ void EditField::update_input_attributes(FieldHandle f)
   int dimension;
   algo->execute(f->mesh(), num_nodes, num_elems, dimension);
 
-  TCL::execute(string("set ")+id+"-numnodes "+to_string(num_nodes));
-  TCL::execute(string("set ")+id+"-numelems "+to_string(num_elems));
+  tcl_execute(string("set ")+id+"-numnodes "+to_string(num_nodes));
+  tcl_execute(string("set ")+id+"-numelems "+to_string(num_elems));
 
-  TCL::execute(id+" update_multifields");
+  tcl_execute(id+" update_multifields");
 
   // copy valid settings to the un-checked output field attributes
-  TCL::execute(id+" copy_attributes; update idletasks");
+  tcl_execute(id+" copy_attributes; update idletasks");
 }
 
 bool EditField::check_types(FieldHandle f)
@@ -439,7 +438,7 @@ EditField::execute()
     msgStream_ << "Could not get algorithm." << endl;
     return;
   }
-  TCL::execute(id + " set_state Executing 0");
+  tcl_execute(id + " set_state Executing 0");
   bool same_value_type_p = false;
   FieldHandle ef(algo->execute(fh, dataat, same_value_type_p));
 
@@ -465,7 +464,7 @@ EditField::execute()
       msgStream_ << "Could not get algorithm." << endl;
       return;
     }
-    TCL::execute(id + " set_state Executing 0");
+    tcl_execute(id + " set_state Executing 0");
     algo->execute(fh, ef, scale, translate);
   }
   

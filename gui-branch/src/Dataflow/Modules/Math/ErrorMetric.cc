@@ -67,7 +67,8 @@ POSSIBLE REVISIONS:
 #include <Core/Math/Expon.h>
 #include <Core/Math/MinMax.h>
 #include <Core/Math/MiscMath.h>
-#include <Core/GuiInterface/GuiVar.h>
+#include <Core/Parts/GuiVar.h>
+#include <Core/Containers/StringUtil.h>
 #include <iostream>
 #include <sstream>
 using std::ostringstream;
@@ -205,7 +206,7 @@ void ErrorMetric::execute()
 	 for (iterate=0; iterate<ne; iterate++)
 	     str << iterate << " " << (*ivec2)[iterate] << " ";
 	 str << "\" ; update idletasks";
-	 TCL::execute(str.str().c_str());
+	 tcl_execute(str.str().c_str());
      }
 
      const string meth=methodTCL_.get();

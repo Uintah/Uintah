@@ -42,8 +42,7 @@ ModuleParser::startElement( const XMLCh * const uri,
     info_->libs_.push_back( package_->lib_path_+"_Modules_"+ cat + ".so" );
 
     info_->id_ = package_->name_+ "_" + cat+"_" + info_->name_;
-    cerr <<"module " << info_->id_ << endl;
-
+    //cerr << "Module " << info_->id_ << endl;
     resources_->modules_[info_->id_] = info_;
   }
   else if ( tag == "inputs" ) {
@@ -77,7 +76,6 @@ ModuleParser::endElement (const XMLCh* const uri,
     else if ( tag == "datatype" ) 
       port_info_->type_ = data_;
     else if ( tag == "port" ) {
-      cerr << "add port: " << port_info_->name_ << " " << port_info_->type_ << endl;
       if ( port_mode_  == InputMode )
 	info_->iports_.push_back( port_info_ );
       else
@@ -93,9 +91,6 @@ ModuleParser::endElement (const XMLCh* const uri,
       info_->libs_.push_back( package_->lib_path_+"_"+data_+".so"  );
     else if ( tag == "module" ) {
       info_->libs_.push_back( package_->lib_path_+".so"); 
-      cerr << "libs: \n" << "\t"<< info_->libs_[0] << endl;
-      cerr << "        " << "\t"<< info_->libs_[1] << endl;
-
     }
     break;
   }      

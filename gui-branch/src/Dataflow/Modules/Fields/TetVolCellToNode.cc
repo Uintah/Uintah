@@ -11,7 +11,7 @@
 #include <Core/Malloc/Allocator.h>
 #include <Core/Datatypes/TetVol.h>
 #include <Dataflow/Ports/FieldPort.h>
-#include <Dataflow/Network/NetworkEditor.h>
+#include <Core/Containers/StringUtil.h>
 #include <math.h>
 
 #include <Core/share/share.h>
@@ -111,7 +111,7 @@ void TetVolCellToNode::execute()
   mag_sums.resize(nodes_size,0);
   ref_counts.resize(nodes_size,0);
 
-  TCL::execute(id + " set_state Executing 0");
+  tcl_execute(id + " set_state Executing 0");
 
   TetVolMesh::Cell::iterator ci, cie;
   TetVolMesh::Node::array_type::iterator ni;
@@ -135,7 +135,7 @@ void TetVolCellToNode::execute()
 
     }
 
-    TCL::execute(id + " set_progress " + to_string(count/cells_size) + " 0");
+    tcl_execute(id + " set_progress " + to_string(count/cells_size) + " 0");
   }
 
   TetVol<Vector> *newfield = scinew TetVol<Vector>(mesh,Field::NODE);

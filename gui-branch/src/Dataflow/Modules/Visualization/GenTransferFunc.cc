@@ -27,11 +27,12 @@
 #include <Core/Datatypes/ColorMap.h>
 #include <Dataflow/Ports/GeometryPort.h>
 
+#include <Core/Containers/StringUtil.h>
 #include <Core/Math/CatmullRomSpline.h>
 #include <Core/Malloc/Allocator.h>
 
-#include <Core/GuiInterface/GuiVar.h>
-#include <Core/GuiInterface/TCLTask.h>
+#include <Core/Parts/GuiVar.h>
+#include <Core/GuiInterface/GuiManager.h>
 
 #include <Core/Geom/Color.h>
 #include <Core/Math/MinMax.h>
@@ -52,11 +53,11 @@
 
 // tcl interpreter corresponding to this module
 
-extern Tcl_Interp* the_interp;
+//extern Tcl_Interp* the_interp;
 
 // the OpenGL context structure
 
-extern "C" GLXContext OpenGLGetContext(Tcl_Interp*, char*);
+//extern "C" GLXContext OpenGLGetContext(Tcl_Interp*, char*);
 
 namespace SCIRun {
 
@@ -258,7 +259,7 @@ void GenTransferFunc::Resize(int win)
   glViewport(0,0,winX[win],winY[win]);
   glClear(GL_COLOR_BUFFER_BIT);
 
-  TCLTask::unlock();
+  gm->unlock();
 
 }
 
@@ -397,7 +398,7 @@ void GenTransferFunc::DrawGraphs( int flush)
 
     glXMakeCurrent(dpy[0],None,NULL);
 
-    TCLTask::unlock();
+    gm->unlock();
     if ( flush )
       ogeom->flushViews();
 
@@ -407,7 +408,7 @@ void GenTransferFunc::DrawGraphs( int flush)
 
   glXMakeCurrent(dpy[0],None,NULL);
 
-  TCLTask::unlock();
+  gm->unlock();
 
 }
 
@@ -806,18 +807,17 @@ int GenTransferFunc::makeCurrent(void)
   Tk_Window tkwin;
 
   // lock a mutex
-  TCLTask::lock();
+  gm->lock();
 
   if (!ctxs[0]) {
     const string myname(".ui" + id + ".f.gl1.gl");
-    tkwin = Tk_NameToWindow(the_interp, ccast_unsafe(myname),
-			    Tk_MainWindow(the_interp));
+    tkwin = (Tk_Window) gm->name_to_window( myname );
 
     if (!tkwin) {
       error("Unable to locate window!");
 
       // unlock mutex
-      TCLTask::unlock();
+      gm->unlock();
       return 0;
     }
     winX[0] = Tk_Width(tkwin);
@@ -826,27 +826,26 @@ int GenTransferFunc::makeCurrent(void)
     dpy[0] = Tk_Display(tkwin);
     win0 = Tk_WindowId(tkwin);
 
-    ctxs[0] = OpenGLGetContext(the_interp, ccast_unsafe(myname));
+    ctxs[0] = (GLXContext)gm->get_glx(myname);
 
     // check if it was created
     if(!ctxs[0])
       {
 	error("Unable to create OpenGL Context!");
-	TCLTask::unlock();
+	gm->unlock();
 	return 0;
       }
   }	
 
   if (!ctxs[1]) {
     const string myname(".ui" + id + ".f.gl2.gl");
-    tkwin = Tk_NameToWindow(the_interp, ccast_unsafe(myname),
-			    Tk_MainWindow(the_interp));
+    tkwin = (Tk_Window)gm->name_to_window( myname );
 
     if (!tkwin) {
       error("Unable to locate window!");
 
       // unlock mutex
-      TCLTask::unlock();
+      gm->unlock();
       return 0;
     }
     
@@ -856,27 +855,26 @@ int GenTransferFunc::makeCurrent(void)
     dpy[1] = Tk_Display(tkwin);
     win1 = Tk_WindowId(tkwin);
 
-    ctxs[1] = OpenGLGetContext(the_interp, ccast_unsafe(myname));
+    ctxs[1] = (GLXContext) gm->get_glx(myname);
 
     // check if it was created
     if(!ctxs[1])
       {
 	error("Unable to create OpenGL Context!");
-	TCLTask::unlock();
+	gm->unlock();
 	return 0;
       }
   }	
 
   if (!ctxs[2]) {
     const string myname(".ui" + id + ".f.gl3.gl");
-    tkwin = Tk_NameToWindow(the_interp, ccast_unsafe(myname),
-			    Tk_MainWindow(the_interp));
+    tkwin = (Tk_Window) gm->name_to_window( myname );
 
     if (!tkwin) {
       error("Unable to locate window!");
 
       // unlock mutex
-      TCLTask::unlock();
+      gm->unlock();
       return 0;
     }
     winX[2] = Tk_Width(tkwin);
@@ -885,13 +883,13 @@ int GenTransferFunc::makeCurrent(void)
     dpy[2] = Tk_Display(tkwin);
     win2 = Tk_WindowId(tkwin);
 
-    ctxs[2] = OpenGLGetContext(the_interp, ccast_unsafe(myname));
+    ctxs[2] = (GLXContext) gm->get_glx(myname);
 
     // check if it was created
     if(!ctxs[2])
       {
 	error("Unable to create OpenGL Context!");
-	TCLTask::unlock();
+	gm->unlock();
 	return 0;
       }
   }	

@@ -42,6 +42,7 @@
 #include <Core/Thread/Mutex.h>
 #include <Core/Util/NotFinished.h>
 #include <iostream>
+using std::cerr;
 using std::cout;
 using std::endl;
 using std::ostream;
@@ -111,7 +112,8 @@ BaseWidget::BaseWidget( Module* module, CrowdMonitor* lock,
 			const Index NumModes,
 			const Index NumSwitches,
 			const double widget_scale )
-  : module_(module),
+  : Part( 0, name),
+    module_(module),
     lock_(lock),
     name_(name),
     id_(make_id(name)),
@@ -162,15 +164,15 @@ BaseWidget::~BaseWidget()
 void
 BaseWidget::init_tcl()
 {
-  TCL::add_command(id_ + "-c", this, 0);
-  TCL::execute(name_ + " " + id_);
+  tcl_add_command(id_ + "-c", this, 0);
+  tcl_execute(name_ + " " + id_);
 }
 
 
 void
 BaseWidget::ui() const
 {
-  TCL::execute(id_ + " ui");
+  tcl_execute(id_ + " ui");
 }
 
 
@@ -370,7 +372,7 @@ BaseWidget::SetScale( const double scale )
 {
   widget_scale_ = scale;
   solve->SetEpsilon(epsilon_ * widget_scale_);
-  // TCL::execute(id+" scale_changed "+to_string(widget_scale));
+  // tcl_execute(id+" scale_changed "+to_string(widget_scale));
   execute(0);
 }
 
@@ -609,6 +611,9 @@ void
 BaseWidget::geom_pick( GeomPick* pick, ViewWindow* /*roe*/,
 		       int /* cbdata */, const BState& state )
 {
+  cerr << "btn=" << state.btn << endl;
+  cerr << "alt=" << state.alt << endl;
+  cerr << "ctl=" << state.control << endl;
   if (state.btn == 3 && !state.alt && !state.control)
   {
     ui();

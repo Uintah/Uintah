@@ -33,7 +33,7 @@
 #include <Dataflow/Network/Module.h>
 #include <Dataflow/Ports/FieldPort.h>
 #include <Core/Malloc/Allocator.h>
-#include <Core/GuiInterface/GuiVar.h>
+#include <Core/Parts/GuiVar.h>
 #include <Dataflow/Modules/Fields/BuildInterpolant.h>
 #include <iostream>
 #include <stdio.h>

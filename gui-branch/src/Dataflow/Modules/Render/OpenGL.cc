@@ -28,6 +28,8 @@
  *  Copyright (C) 1994 SCI Group
  */
 
+#include <Core/Containers/StringUtil.h>
+#include <Core/GuiInterface/GuiManager.h>
 #include <Dataflow/Modules/Render/OpenGL.h>
 #include <Dataflow/Modules/Render/logo.h>
 
@@ -35,8 +37,6 @@
 #include <ifl/iflFile.h>
 #endif
 
-extern "C" GLXContext OpenGLGetContext(Tcl_Interp*, char*);
-extern Tcl_Interp* the_interp;
 
 namespace SCIRun {
 
@@ -56,6 +56,14 @@ static OpenGL* current_drawer=0;
 static const int pick_buffer_size = 512;
 static const double pick_window = 10.0;
 
+
+
+#define GETCONFIG(attrib) \
+if(glXGetConfig(dpy, &vinfo[i], attrib, &value) != 0){\
+  args.error("Error getting attribute: " #attrib); \
+  return; \
+}
+
 static Renderer* make_OpenGL()
 {
   return scinew OpenGL;
@@ -63,16 +71,7 @@ static Renderer* make_OpenGL()
 
 int query_OpenGL()
 {
-  TCLTask::lock();
-  int have_opengl=glXQueryExtension
-    (Tk_Display(Tk_MainWindow(the_interp)), NULL, NULL);
-  TCLTask::unlock();
-  if (!have_opengl)
-    cerr << "glXQueryExtension() returned NULL.\n"
-      "** XFree86 NOTE **  Do you have the line 'Load \"glx\"'"
-      " in the Modules section of your XF86Config file?"
-         << endl;
-  return have_opengl;
+  return gm->query_OpenGL();
 }
 
 RegisterRenderer OpenGL_renderer("OpenGL", &query_OpenGL, &make_OpenGL);
@@ -345,22 +344,24 @@ void OpenGL::make_image()
 void OpenGL::redraw_frame()
 {
   // Get window information
-  TCLTask::lock();
-  Tk_Window new_tkwin=Tk_NameToWindow(the_interp, ccast_unsafe(myname),
-				      Tk_MainWindow(the_interp));
+  gm->lock();
+  
+  Tk_Window new_tkwin = (Tk_Window)gm->name_to_window( myname );
+
   if(!new_tkwin){
     cerr << "Unable to locate window!\n";
-    TCLTask::unlock();
+    gm->unlock();
     return;
   }
   if(tkwin != new_tkwin){
     tkwin=new_tkwin;
     dpy=Tk_Display(tkwin);
     win=Tk_WindowId(tkwin);
-    cx=OpenGLGetContext(the_interp, ccast_unsafe(myname));
+    cx = (GLXContext)gm->get_glx( myname );
+//     cx=OpenGLGetContext(the_interp, ccast_unsafe(myname));
     if(!cx){
       cerr << "Unable to create OpenGL Context!\n";
-      TCLTask::unlock();
+      gm->unlock();
       return;
     }
     glXMakeCurrent(dpy, win, cx);
@@ -379,7 +380,7 @@ void OpenGL::redraw_frame()
 #endif
   }
   
-  TCLTask::unlock();
+  gm->unlock();
   
   // Start polygon counter...
   WallClockTimer timer;
@@ -395,16 +396,16 @@ void OpenGL::redraw_frame()
   // Make ourselves current
   if(current_drawer != this){
     current_drawer=this;
-    TCLTask::lock();
+    gm->lock();
     glXMakeCurrent(dpy, win, cx);
-    TCLTask::unlock();
+    gm->unlock();
   }
   
   // Get a lock on the geometry database...
-  // Do this now to prevent a hold and wait condition with TCLTask
+  // Do this now to prevent a hold and wait condition with GuiManager
   viewer->geomlock.readLock();
   
-  TCLTask::lock();
+  gm->lock();
   
   // Clear the screen...
   glViewport(0, 0, xres, yres);
@@ -756,11 +757,11 @@ void OpenGL::redraw_frame()
           }
 	  
 	  // Wait for the right time before swapping buffers
-	  //TCLTask::unlock();
+	  //gm->unlock();
 	  double realtime=t*frametime;
 	  throttle.wait_for_time(realtime);
-	  //TCLTask::lock();
-	  TCL::execute("update idletasks");
+	  //gm->lock();
+	  Part::tcl_execute("update idletasks");
 	  
 	  // Show the pretty picture
 	  glXSwapBuffers(dpy, win);
@@ -804,7 +805,7 @@ void OpenGL::redraw_frame()
 	int fps_hund=(int)((fps-fps_whole)*100);
 	ostringstream str;
 	str << viewwindow->id << " setFrameRate " << fps_whole << "." << fps_hund;
-	TCL::execute(str.str().c_str());
+	Part::tcl_execute(str.str().c_str());
 	viewwindow->set_current_time(tend);
       } else {
 	// Just show the cleared screen
@@ -922,8 +923,8 @@ void OpenGL::redraw_frame()
 	  EndMpeg();
 	}
       }
-      TCL::execute(str.str().c_str());
-      TCLTask::unlock();
+      Part::tcl_execute(str.str().c_str());
+      gm->unlock();
 }
     
 void OpenGL::hide()
@@ -964,9 +965,9 @@ void OpenGL::real_get_pick(Viewer*, ViewWindow* ViewWindow, int x, int y,
   // Make ourselves current
   if(current_drawer != this){
     current_drawer=this;
-    TCLTask::lock();
+    gm->lock();
     glXMakeCurrent(dpy, win, cx);
-    TCLTask::unlock();
+    gm->unlock();
   }
   // Setup the view...
   View view(viewwindow->view.get());
@@ -977,7 +978,7 @@ void OpenGL::real_get_pick(Viewer*, ViewWindow* ViewWindow, int x, int y,
   double zfar;
   if(compute_depth(ViewWindow, view, znear, zfar)){
     // Setup picking...
-    TCLTask::lock();
+    gm->lock();
     
     GLuint pick_buffer[pick_buffer_size];
     glSelectBuffer(pick_buffer_size, pick_buffer);
@@ -1048,7 +1049,7 @@ void OpenGL::real_get_pick(Viewer*, ViewWindow* ViewWindow, int x, int y,
     while((errcode=glGetError()) != GL_NO_ERROR){
       cerr << "We got an error from GL: " << (char*)gluErrorString(errcode) << endl;
     }
-    TCLTask::unlock();
+    gm->unlock();
     GLuint min_z;
 #if (_MIPS_SZPTR == 64)
     unsigned long hit_obj=0;
@@ -1061,7 +1062,7 @@ void OpenGL::real_get_pick(Viewer*, ViewWindow* ViewWindow, int x, int y,
     GLuint hit_pick=0;
     GLuint hit_pick_index = 0x12345678;  // need for object indexing
 #endif
-    //cerr << "hits=" << hits << endl;
+    cerr << "hits=" << hits << endl;
     if(hits >= 1){
       int idx=0;
       min_z=0;
@@ -1093,9 +1094,9 @@ void OpenGL::real_get_pick(Viewer*, ViewWindow* ViewWindow, int x, int y,
 	  hit_obj=pick_buffer[idx++];
 	  hit_pick_index=pick_buffer[idx++];
 #endif
-	  //cerr << "new min... (obj=" << hit_obj
-	  //     << ", pick="          << hit_pick
-	  //     << ", index = "       << hit_pick_index << ")\n";
+	  cerr << "new min... (obj=" << hit_obj
+	       << ", pick="          << hit_pick
+	       << ", index = "       << hit_pick_index << ")\n";
 	} else {
 	  idx+=nnames+1;
 	}
@@ -1104,7 +1105,7 @@ void OpenGL::real_get_pick(Viewer*, ViewWindow* ViewWindow, int x, int y,
       pick_obj=(GeomObj*)hit_obj;
       pick_pick=(GeomPick*)hit_pick;
       pick_obj->getId(pick_index); //(int)hit_pick_index;
-      //cerr << "pick_pick=" << pick_pick << ", pick_index="<<pick_index<<endl;
+      cerr << "pick_pick=" << pick_pick << ", pick_index="<<pick_index<<endl;
     }
   }
   viewer->geomlock.readUnlock();
@@ -1506,23 +1507,15 @@ void GeomViewerItem::draw(DrawInfoOpenGL* di, Material *m, double time)
   }
 }
 
-#define GETCONFIG(attrib) \
-if(glXGetConfig(dpy, &vinfo[i], attrib, &value) != 0){\
-  args.error("Error getting attribute: " #attrib); \
-  return; \
-}
-
 void OpenGL::listvisuals(TCLArgs& args)
 {
-  TCLTask::lock();
-  
+  gm->lock();
   cerr << "Calling allow..." << getpid() << "\n";
   Thread::allow_sgi_OpenGL_page0_sillyness();
-  Tk_Window topwin=Tk_NameToWindow(the_interp, ccast_unsafe(args[2]),
-				   Tk_MainWindow(the_interp));
+  Tk_Window topwin=(Tk_Window) gm->name_to_window( args[2] );
   if(!topwin){
     cerr << "Unable to locate window!\n";
-    TCLTask::unlock();
+    gm->unlock();
     return;
   }
   dpy=Tk_Display(topwin);
@@ -1625,7 +1618,7 @@ void OpenGL::listvisuals(TCLArgs& args)
     }
   }
   args.result(TCLArgs::make_list(visualtags));
-  TCLTask::unlock();
+  gm->unlock();
 }
 
 void OpenGL::setvisual(const string& wname, int which, int width, int height)
@@ -1633,7 +1626,7 @@ void OpenGL::setvisual(const string& wname, int which, int width, int height)
   tkwin=0;
   current_drawer=0;
   //cerr << "choosing visual " << which << '\n';
-  TCL::execute("opengl " + wname +
+  Part::tcl_execute("opengl " + wname +
 	       " -visual " + to_string((int)visuals[which]->visualid) +
 	       " -direct true" +
 	       " -geometry " + to_string(width) + "x" + to_string(height));
@@ -1657,9 +1650,9 @@ void OpenGL::real_saveImage(const string& name,
   
   if(current_drawer != this){
     current_drawer=this;
-    TCLTask::lock();
+    gm->lock();
     glXMakeCurrent(dpy, win, cx);
-    TCLTask::unlock();
+    gm->unlock();
   }
   
   glGetIntegerv(GL_VIEWPORT,vp);
@@ -1710,7 +1703,7 @@ void OpenGL::real_getData(int datamask, FutureValue<GeometryData*>* result)
     res->zfar=zfar;
   }
   if(datamask&(GEOM_COLORBUFFER|GEOM_DEPTHBUFFER)){
-    TCLTask::lock();
+    gm->lock();
   }
   if(datamask&GEOM_COLORBUFFER){
     ColorImage* img = res->colorbuffer = new ColorImage(xres, yres);
@@ -1752,7 +1745,7 @@ void OpenGL::real_getData(int datamask, FutureValue<GeometryData*>* result)
     while((errcode=glGetError()) != GL_NO_ERROR){
       cerr << "We got an error from GL: " << (char*)gluErrorString(errcode) << endl;
     }
-    TCLTask::unlock();
+    gm->unlock();
   }
   result->send(res);
 }
@@ -1799,7 +1792,7 @@ void OpenGL::AddMpegFrame()
 
   // set up the ImVfb used to store the image 
   if( !image ){
-    image=MPEGe_ImVfbAlloc( width,height, IMVFBRGB, 1 );
+    image=MPEGe_ImVfbAlloc( width,height, IMVFBRGB, TRUE );
     if( !image ){
       cerr<<"Couldn't allocate memory for frame buffer\n";
       exit(2);

@@ -21,17 +21,28 @@ include $(SCIRUN_SCRIPTS)/smallso_prologue.mk
 
 SRCDIR   := Dataflow/Network
 
-SRCS     += $(SRCDIR)/Connection.cc $(SRCDIR)/ModuleHelper.cc \
-	$(SRCDIR)/Network.cc $(SRCDIR)/Port.cc $(SRCDIR)/Module.cc \
-	$(SRCDIR)/NetworkEditor.cc $(SRCDIR)/PackageDB.cc \
-	$(SRCDIR)/FileUtils.cc $(SRCDIR)/GenFiles.cc\
-	$(SRCDIR)/ComponentNode.cc $(SRCDIR)/SkeletonFiles.cc\
-        $(SRCDIR)/PackageDBHandler.cc
+SRCS     += \
+	$(SRCDIR)/Connection.cc \
+	$(SRCDIR)/Port.cc \
+	$(SRCDIR)/Module.cc \
+	$(SRCDIR)/ModuleHelper.cc \
+	$(SRCDIR)/Network.cc \
+	$(SRCDIR)/FileUtils.cc \
+	$(SRCDIR)/Services.cc \
+	$(SRCDIR)/Scheduler.cc \
+#	$(SRCDIR)/GenFiles.cc\
+#	$(SRCDIR)/ComponentNode.cc \
+#	$(SRCDIR)/SkeletonFiles.cc\
+#       $(SRCDIR)/PackageDBHandler.cc \
+#	$(SRCDIR)/PackageDB.cc \
 
-PSELIBS := Dataflow/Comm Dataflow/XMLUtil Core/Exceptions Core/Thread \
+
+PSELIBS := Dataflow/Resources Dataflow/Comm Dataflow/XMLUtil \
+	Core/Parts Core/Framework \
+	Core/Exceptions Core/Thread \
 	Core/Containers Core/GuiInterface Core/Util \
-	Core/TkExtensions Core/Geom 
-LIBS := $(TCL_LIBRARY) $(XML_LIBRARY)
+	Core/Geom 
+LIBS := $(XML_LIBRARY)
 
 include $(SCIRUN_SCRIPTS)/smallso_epilogue.mk
 

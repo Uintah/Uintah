@@ -11,7 +11,6 @@
 #include <Core/Malloc/Allocator.h>
 #include <Core/Datatypes/MaskedLatticeVol.h>
 #include <Dataflow/Ports/FieldPort.h>
-#include <Dataflow/Network/NetworkEditor.h>
 #include <Dataflow/Modules/Fields/CastMLVtoHV.h>
 #include <math.h>
 

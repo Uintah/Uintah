@@ -28,12 +28,12 @@
 
 #include <Core/Datatypes/LatticeVol.h>
 #include <Core/Malloc/Allocator.h>
-#include <Core/GuiInterface/GuiVar.h>
-#include <Core/GuiInterface/TCL.h>
-#include <Core/GuiInterface/TCLTask.h>
+#include <Core/Parts/GuiVar.h>
+#include <Core/GuiInterface/TCLArgs.h>
 #include <Core/Datatypes/VolumeUtils.h>
 #include <Core/Datatypes/GLTexture3D.h>
 #include <Dataflow/Network/Module.h>
+#include <Core/Containers/StringUtil.h>
 
 #include <iostream>
 
@@ -65,42 +65,6 @@ GLTextureBuilder::~GLTextureBuilder()
 
 }
 
-#if 0
-bool
-GLTextureBuilder::MakeContext(Display *dpy, GLXContext& cx)
-{
-  Tk_Window tkwin;
-  Window win;
-  XVisualInfo *vi;
-  
-  TCLTask::lock();
-  char *myn=strdup(".");
-  tkwin=Tk_NameToWindow(the_interp, myn, Tk_MainWindow(the_interp));
-  if(!tkwin){
-    glXMakeCurrent(dpy, None, NULL);
-    TCLTask::unlock();
-    return false;
-  }
-  dpy=Tk_Display(tkwin);
-  win=Tk_WindowId(tkwin);
-  vi = glXChooseVisual(dpy, DefaultScreen(dpy), attributeList);
-
-  cx=glXCreateContext(dpy, vi, 0, GL_TRUE);
-  if(!cx){
-    glXMakeCurrent(dpy, None, NULL);
-    TCLTask::unlock();
-    return false;
-  }
-  TCLTask::unlock();
-  return true;
-}
-
-void
-GLTextureBuilder::DestroyContext(Display *dpy, GLXContext& cx)
-{
-  glXDestroyContext(dpy,cx);
-} 
-#endif
 
 void GLTextureBuilder::execute(void)
 {
@@ -156,7 +120,7 @@ void GLTextureBuilder::real_execute(FieldHandle sfield)
       min_.set(minV);
       max_.set(maxV);
     }
-    TCL::execute(id + " SetDims " + to_string( tex_->get_brick_size()));
+    tcl_execute(id + " SetDims " + to_string( tex_->get_brick_size()));
     max_brick_dim_.set(tex_->get_brick_size());
     old_brick_size_ = tex_->get_brick_size();
   }

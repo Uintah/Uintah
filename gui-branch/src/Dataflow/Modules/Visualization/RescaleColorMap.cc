@@ -39,7 +39,7 @@
 #include <Core/Datatypes/ScanlineField.h>
 #include <Core/Datatypes/PointCloud.h>
 #include <Core/Malloc/Allocator.h>
-#include <Core/GuiInterface/GuiVar.h>
+#include <Core/Parts/GuiVar.h>
 #include <iostream>
 
 namespace SCIRun {
