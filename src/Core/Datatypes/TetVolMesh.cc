@@ -280,7 +280,7 @@ TetVolMesh::synchronize(unsigned int tosync)
   if (tosync & EDGES_E && !(synchronized_ & EDGES_E) ||
       tosync & EDGE_NEIGHBORS_E && !(synchronized_ & EDGE_NEIGHBORS_E))
     compute_edges();
-  if (tosync & FACES_E && !synchronized_ & FACES_E || 
+  if (tosync & FACES_E && !(synchronized_ & FACES_E) || 
       tosync & FACE_NEIGHBORS_E && !(synchronized_ & FACE_NEIGHBORS_E))
     compute_faces();
   if (tosync & GRID_E && !(synchronized_ & GRID_E))
