@@ -235,13 +235,28 @@ GeomObj* GeomTextsCulled::clone()
 
 
 void
-GeomTextsCulled::add(const string &t, const Point &p,
-		     const Vector &v, const Color &c)
+GeomTextsCulled::add(const string &t, const Point &p, const Vector &n)
 {
-  text_.push_back(t);
-  location_.push_back(p);
-  color_.push_back(c);
-  normal_.push_back(v);
+  GeomTexts::add(t, p);
+  normal_.push_back(n);
+}
+
+
+void
+GeomTextsCulled::add(const string &t, const Point &p,
+		     const Vector &n, const Color &c)
+{
+  GeomTexts::add(t, p, c);
+  normal_.push_back(n);
+}
+
+
+void
+GeomTextsCulled::add(const string &t, const Point &p,
+		     const Vector &n, float index)
+{
+  GeomTexts::add(t, p, index);
+  normal_.push_back(n);
 }
 
 

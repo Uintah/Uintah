@@ -70,9 +70,8 @@ public:
 		      bool bidirectional) = 0;
 
   virtual GeomHandle render_text(FieldHandle fld,
-				 ColorMapHandle color_handle,
+				 bool use_color_map,
 				 bool use_default_material,
-				 MaterialHandle default_material,
 				 bool backface_cull_p,
 				 int  fontsize,
 				 int  precision,
@@ -121,9 +120,8 @@ public:
 		      bool bidirectional);
 
   virtual GeomHandle render_text(FieldHandle fld,
-				 ColorMapHandle color_handle,
+				 bool use_color_map,
 				 bool use_default_material,
-				 MaterialHandle default_material,
 				 bool backface_cull_p,
 				 int fontsize,
 				 int precision,
@@ -156,45 +154,39 @@ private:
 			  bool use_transparency);
 
   GeomHandle render_text_data(FieldHandle fld,
-			      ColorMapHandle color_handle,
+			      bool use_color_map,
 			      bool use_default_material,
-			      MaterialHandle default_material,
 			      bool backface_cull_p,
 			      int fontsize,
 			      int precision);
   GeomHandle render_text_data_nodes(FieldHandle fld,
-				    ColorMapHandle color_handle,
+				    bool use_color_map,
 				    bool use_default_material,
-				    MaterialHandle default_material,
 				    bool backface_cull_p,
 				    int fontsize,
 				    int precision);
   GeomHandle render_text_nodes(FieldHandle fld,
-			       ColorMapHandle color_handle,
+			       bool use_color_map,
 			       bool use_default_material,
-			       MaterialHandle default_material,
 			       bool backface_cull_p,
 			       int fontsize,
 			       int precision,
 			       bool render_locations);
   GeomHandle render_text_edges(FieldHandle fld,
-			       ColorMapHandle color_handle,
+			       bool use_color_map,
 			       bool use_default_material,
-			       MaterialHandle default_material,
 			       int fontsize,
 			       int precision,
 			       bool render_locations);
   GeomHandle render_text_faces(FieldHandle fld,
-			       ColorMapHandle color_handle,
+			       bool use_color_map,
 			       bool use_default_material,
-			       MaterialHandle default_material,
 			       int fontsize,
 			       int precision,
 			       bool render_locations);
   GeomHandle render_text_cells(FieldHandle fld,
-			       ColorMapHandle color_handle,
+			       bool use_color_map,
 			       bool use_default_material,
-			       MaterialHandle default_material,
 			       int fontsize,
 			       int precision,
 			       bool render_locations);
@@ -968,9 +960,8 @@ RenderField<Fld, Loc>::render_faces(Fld *sfld,
 template <class Fld, class Loc>
 GeomHandle 
 RenderField<Fld, Loc>::render_text(FieldHandle field_handle,
-				   ColorMapHandle color_handle,
+				   bool use_color_map,
 				   bool use_default_material,
-				   MaterialHandle default_material,
 				   bool backface_cull_p,
 				   int fontsize,
 				   int precision,
@@ -986,38 +977,35 @@ RenderField<Fld, Loc>::render_text(FieldHandle field_handle,
 
   if (render_data)
   {
-    texts->add(render_text_data(field_handle, color_handle,
+    texts->add(render_text_data(field_handle, use_color_map,
 				use_default_material,
-				default_material, backface_cull_p,
+				backface_cull_p,
 				fontsize, precision));
   }
   if (render_nodes)
   {
-    texts->add(render_text_nodes(field_handle, color_handle,
+    texts->add(render_text_nodes(field_handle, use_color_map,
 				 use_default_material,
-				 default_material, backface_cull_p,
+				 backface_cull_p,
 				 fontsize, precision, render_locations));
   }
   if (render_edges)
   {
-    texts->add(render_text_edges(field_handle, color_handle,
+    texts->add(render_text_edges(field_handle, use_color_map,
 				 use_default_material,
-				 default_material, fontsize,
-				 precision, render_locations));
+				 fontsize, precision, render_locations));
   }
   if (render_faces)
   {
-    texts->add(render_text_faces(field_handle, color_handle,
+    texts->add(render_text_faces(field_handle, use_color_map,
 				 use_default_material,
-				 default_material, fontsize,
-				 precision, render_locations));
+				 fontsize, precision, render_locations));
   }
   if (render_cells)
   {
-    texts->add(render_text_cells(field_handle, color_handle,
+    texts->add(render_text_cells(field_handle, use_color_map,
 				 use_default_material,
-				 default_material, fontsize,
-				 precision, render_locations));
+				 fontsize, precision, render_locations));
   }
   return text_switch;
 }
@@ -1026,18 +1014,17 @@ RenderField<Fld, Loc>::render_text(FieldHandle field_handle,
 template <class Fld, class Loc>
 GeomHandle 
 RenderField<Fld, Loc>::render_text_data(FieldHandle field_handle,
-					ColorMapHandle color_handle,
+					bool use_color_map,
 					bool use_default_material,
-					MaterialHandle default_material,
 					bool backface_cull_p,
 					int fontsize,
 					int precision)
 {
   if (backface_cull_p && field_handle->data_at() == Field::NODE)
   {
-    return render_text_data_nodes(field_handle, color_handle,
+    return render_text_data_nodes(field_handle, use_color_map,
 				  use_default_material,
-				  default_material, backface_cull_p, fontsize,
+				  backface_cull_p, fontsize,
 				  precision);
   }
 
@@ -1054,7 +1041,7 @@ RenderField<Fld, Loc>::render_text_data(FieldHandle field_handle,
   buffer.precision(precision);
 
   bool vec_color = false;
-  if (color_handle.get_rep() == NULL)
+  if (!use_color_map)
   {
     if (!use_default_material &&
 	field_handle->query_vector_interface().get_rep())
@@ -1063,7 +1050,7 @@ RenderField<Fld, Loc>::render_text_data(FieldHandle field_handle,
     }
     else
     {
-      use_default_material = false;
+      use_default_material = true;
     }
   }
  
@@ -1108,9 +1095,8 @@ RenderField<Fld, Loc>::render_text_data(FieldHandle field_handle,
 template <class Fld, class Loc>
 GeomHandle 
 RenderField<Fld, Loc>::render_text_data_nodes(FieldHandle field_handle,
-					      ColorMapHandle color_handle,
+					      bool use_color_map,
 					      bool use_default_material,
-					      MaterialHandle default_material,
 					      bool backface_cull_p,
 					      int fontsize,
 					      int precision)
@@ -1141,6 +1127,24 @@ RenderField<Fld, Loc>::render_text_data_nodes(FieldHandle field_handle,
   std::ostringstream buffer;
   buffer.precision(precision);
 
+  bool vec_color = false;
+  if (fld->data_at() != Field::NODE)
+  {
+    use_default_material = true;
+  }
+  else if (!use_color_map)
+  {
+    if (!use_default_material &&
+	field_handle->query_vector_interface().get_rep())
+    {
+      vec_color = true;
+    }
+    else
+    {
+      use_default_material = true;
+    }
+  }
+
   typename Fld::mesh_type::Node::iterator iter, end;
   mesh->begin(iter);
   mesh->end(end);
@@ -1154,25 +1158,45 @@ RenderField<Fld, Loc>::render_text_data_nodes(FieldHandle field_handle,
       buffer.str("");
       buffer << val;
 
-      MaterialHandle m;
       if (use_default_material)
       {
-	m = default_material;
+	if (culling_p)
+	{
+	  mesh->get_normal(n, *iter);
+	  ctexts->add(buffer.str(), p, n);
+	}
+	else
+	{
+	  texts->add(buffer.str(), p);
+	}
+      }
+      else if (vec_color)
+      {
+	Vector vval(0, 0, 0);
+	to_vector(val, vval);
+	if (culling_p)
+	{
+	  mesh->get_normal(n, *iter);
+	  ctexts->add(buffer.str(), p, n, Color(vval.x(), vval.y(), vval.z()));
+	}
+	else
+	{
+	  texts->add(buffer.str(), p, Color(vval.x(), vval.y(), vval.z()));
+	}
       }
       else
       {
-	double dval;
+	double dval = 0.0;
 	to_double(val, dval);
-	m = color_handle->lookup(dval);
-      }
-      if (culling_p)
-      {
-	mesh->get_normal(n, *iter);
-	ctexts->add(buffer.str(), p, n, m->diffuse);
-      }
-      else
-      {
-	texts->add(buffer.str(), p, m->diffuse);
+	if (culling_p)
+	{
+	  mesh->get_normal(n, *iter);
+	  ctexts->add(buffer.str(), p, n, dval);
+	}
+	else
+	{
+	  texts->add(buffer.str(), p, dval);
+	}
       }
     }
     ++iter;
@@ -1186,9 +1210,8 @@ RenderField<Fld, Loc>::render_text_data_nodes(FieldHandle field_handle,
 template <class Fld, class Loc>
 GeomHandle 
 RenderField<Fld, Loc>::render_text_nodes(FieldHandle field_handle,
-					 ColorMapHandle color_handle,
+					 bool use_color_map,
 					 bool use_default_material,
-					 MaterialHandle default_material,
 					 bool backface_cull_p,
 					 int fontsize,
 					 int precision,
@@ -1217,6 +1240,24 @@ RenderField<Fld, Loc>::render_text_nodes(FieldHandle field_handle,
     texts->set_font_index(fontsize);
   }
 
+  bool vec_color = false;
+  if (fld->data_at() != Field::NODE)
+  {
+    use_default_material = true;
+  }
+  else if (!use_color_map)
+  {
+    if (!use_default_material &&
+	field_handle->query_vector_interface().get_rep())
+    {
+      vec_color = true;
+    }
+    else
+    {
+      use_default_material = true;
+    }
+  }
+
   ostringstream buffer;
   buffer.precision(precision);
 
@@ -1239,27 +1280,49 @@ RenderField<Fld, Loc>::render_text_nodes(FieldHandle field_handle,
       buffer << (int)(*iter);
     }
 
-    MaterialHandle m;
-    if (use_default_material || fld->data_at() != Field::NODE)
+    if (use_default_material)
     {
-      m = default_material;
+      if (culling_p)
+      {
+	mesh->get_normal(n, *iter);
+	ctexts->add(buffer.str(), p, n);
+      }
+      else
+      {
+	texts->add(buffer.str(), p);
+      }
+    }
+    else if (vec_color)
+    {
+      typename Fld::value_type val;
+      fld->value(val, *iter);
+      Vector vval(0, 0, 0);
+      to_vector(val, vval);
+      if (culling_p)
+      {
+	mesh->get_normal(n, *iter);
+	ctexts->add(buffer.str(), p, n, Color(vval.x(), vval.y(), vval.z()));
+      }
+      else
+      {
+	texts->add(buffer.str(), p, Color(vval.x(), vval.y(), vval.z()));
+      }
     }
     else
     {
       typename Fld::value_type val;
       fld->value(val, *iter);
-      double dval;
+      double dval = 0.0;
       to_double(val, dval);
-      m = color_handle->lookup(dval);
-    }
-    if (culling_p)
-    {
-      mesh->get_normal(n, *iter);
-      ctexts->add(buffer.str(), p, n, m->diffuse);
-    }
-    else
-    {
-      texts->add(buffer.str(), p, m->diffuse);
+      if (culling_p)
+      {
+	mesh->get_normal(n, *iter);
+	ctexts->add(buffer.str(), p, n, dval);
+      }
+      else
+      {
+	texts->add(buffer.str(), p, dval);
+      }
     }
 
     ++iter;
@@ -1271,9 +1334,8 @@ RenderField<Fld, Loc>::render_text_nodes(FieldHandle field_handle,
 template <class Fld, class Loc>
 GeomHandle 
 RenderField<Fld, Loc>::render_text_edges(FieldHandle field_handle,
-					 ColorMapHandle color_handle,
+					 bool use_color_map,
 					 bool use_default_material,
-					 MaterialHandle default_material,
 					 int fontsize,
 					 int precision,
 					 bool render_locations)
@@ -1290,6 +1352,24 @@ RenderField<Fld, Loc>::render_text_edges(FieldHandle field_handle,
 
   ostringstream buffer;
   buffer.precision(precision);
+
+  bool vec_color = false;
+  if (fld->data_at() != Field::EDGE)
+  {
+    use_default_material = true;
+  }
+  else if (!use_color_map)
+  {
+    if (!use_default_material &&
+	field_handle->query_vector_interface().get_rep())
+    {
+      vec_color = true;
+    }
+    else
+    {
+      use_default_material = true;
+    }
+  }
 
   typename Fld::mesh_type::Edge::iterator iter, end;
   mesh->begin(iter);
@@ -1309,20 +1389,26 @@ RenderField<Fld, Loc>::render_text_edges(FieldHandle field_handle,
       buffer << (int)(*iter);
     }
 
-    MaterialHandle m;
-    if (use_default_material || fld->data_at() != Field::EDGE)
+    if (use_default_material)
     {
-      m = default_material;
+      texts->add(buffer.str(), p);
+    }
+    else if (vec_color)
+    {
+      typename Fld::value_type val;
+      fld->value(val, *iter);
+      Vector vval(0, 0, 0);
+      to_vector(val, vval);
+      texts->add(buffer.str(), p, Color(vval.x(), vval.y(), vval.z()));
     }
     else
     {
       typename Fld::value_type val;
       fld->value(val, *iter);
-      double dval;
+      double dval = 0.0;
       to_double(val, dval);
-      m = color_handle->lookup(dval);
+      texts->add(buffer.str(), p, dval);
     }
-    texts->add(buffer.str(), p, m->diffuse);
  
     ++iter;
   }
@@ -1332,9 +1418,8 @@ RenderField<Fld, Loc>::render_text_edges(FieldHandle field_handle,
 template <class Fld, class Loc>
 GeomHandle 
 RenderField<Fld, Loc>::render_text_faces(FieldHandle field_handle,
-					 ColorMapHandle color_handle,
+					 bool use_color_map,
 					 bool use_default_material,
-					 MaterialHandle default_material,
 					 int fontsize,
 					 int precision,
 					 bool render_locations)
@@ -1351,6 +1436,24 @@ RenderField<Fld, Loc>::render_text_faces(FieldHandle field_handle,
 
   ostringstream buffer;
   buffer.precision(precision);
+
+  bool vec_color = false;
+  if (fld->data_at() != Field::FACE)
+  {
+    use_default_material = true;
+  }
+  else if (!use_color_map)
+  {
+    if (!use_default_material &&
+	field_handle->query_vector_interface().get_rep())
+    {
+      vec_color = true;
+    }
+    else
+    {
+      use_default_material = true;
+    }
+  }
 
   typename Fld::mesh_type::Face::iterator iter, end;
   mesh->begin(iter);
@@ -1370,20 +1473,26 @@ RenderField<Fld, Loc>::render_text_faces(FieldHandle field_handle,
       buffer << (int)(*iter);
     }
 
-    MaterialHandle m;
-    if (use_default_material || fld->data_at() != Field::FACE)
+    if (use_default_material)
     {
-      m = default_material;
+      texts->add(buffer.str(), p);
+    }
+    else if (vec_color)
+    {
+      typename Fld::value_type val;
+      fld->value(val, *iter);
+      Vector vval(0, 0, 0);
+      to_vector(val, vval);
+      texts->add(buffer.str(), p, Color(vval.x(), vval.y(), vval.z()));
     }
     else
     {
       typename Fld::value_type val;
       fld->value(val, *iter);
-      double dval;
+      double dval = 0.0;
       to_double(val, dval);
-      m = color_handle->lookup(dval);
+      texts->add(buffer.str(), p, dval);
     }
-    texts->add(buffer.str(), p, m->diffuse);
 
     ++iter;
   }
@@ -1394,9 +1503,8 @@ RenderField<Fld, Loc>::render_text_faces(FieldHandle field_handle,
 template <class Fld, class Loc>
 GeomHandle 
 RenderField<Fld, Loc>::render_text_cells(FieldHandle field_handle,
-					 ColorMapHandle color_handle,
+					 bool use_color_map,
 					 bool use_default_material,
-					 MaterialHandle default_material,
 					 int fontsize,
 					 int precision,
 					 bool render_locations)
@@ -1413,6 +1521,24 @@ RenderField<Fld, Loc>::render_text_cells(FieldHandle field_handle,
 
   ostringstream buffer;
   buffer.precision(precision);
+
+  bool vec_color = false;
+  if (fld->data_at() != Field::CELL)
+  {
+    use_default_material = true;
+  }
+  else if (!use_color_map)
+  {
+    if (!use_default_material &&
+	field_handle->query_vector_interface().get_rep())
+    {
+      vec_color = true;
+    }
+    else
+    {
+      use_default_material = true;
+    }
+  }
 
   typename Fld::mesh_type::Cell::iterator iter, end;
   mesh->begin(iter);
@@ -1432,20 +1558,26 @@ RenderField<Fld, Loc>::render_text_cells(FieldHandle field_handle,
       buffer << (int)(*iter);
     }
 
-    MaterialHandle m;
-    if (use_default_material || fld->data_at() != Field::CELL)
+    if (use_default_material)
     {
-      m = default_material;
+      texts->add(buffer.str(), p);
+    }
+    else if (vec_color)
+    {
+      typename Fld::value_type val;
+      fld->value(val, *iter);
+      Vector vval(0, 0, 0);
+      to_vector(val, vval);
+      texts->add(buffer.str(), p, Color(vval.x(), vval.y(), vval.z()));
     }
     else
     {
       typename Fld::value_type val;
       fld->value(val, *iter);
-      double dval;
+      double dval = 0.0;
       to_double(val, dval);
-      m = color_handle->lookup(dval);
+      texts->add(buffer.str(), p, dval);
     }
-    texts->add(buffer.str(), p, m->diffuse);
 
     ++iter;
   }

@@ -113,6 +113,7 @@ class ShowField : public Module
   GuiInt                   text_show_edges_;
   GuiInt                   text_show_faces_;
   GuiInt                   text_show_cells_;
+  MaterialHandle           text_material_;
   bool                     text_dirty_;
   
   //! default color and material
@@ -226,6 +227,7 @@ ShowField::ShowField(GuiContext* ctx) :
   text_show_edges_(ctx->subVar("text-show-edges")),
   text_show_faces_(ctx->subVar("text-show-faces")),
   text_show_cells_(ctx->subVar("text-show-cells")),
+  text_material_(scinew Material(Color(0.75, 0.75, 0.75))),
   text_dirty_(true),
   def_color_r_(ctx->subVar("def-color-r")),
   def_color_g_(ctx->subVar("def-color-g")),
@@ -561,7 +563,6 @@ ShowField::execute()
     color_map_changed = true;
     color_map_generation_ = color_map_.get_rep()?color_map_->generation:-1;
     // Colormap was added or went away.
-    text_dirty_ = true;
     if (vectors_on_.get() || tensors_on_.get()) { data_dirty_ = true; }
   }
 
@@ -768,31 +769,34 @@ ShowField::execute()
       data_id_ = ogeom_->addObj(geom, fname + (transp?"Transparent Scalars":"Scalars"));
     }
   }
-  if (do_text) {
+  if (do_text || color_map_changed) {
     text_dirty_ = false;
     if (renderer_.get_rep() && text_on_.get()) {
       if (text_id_) ogeom_->delObj(text_id_);
-      MaterialHandle m = scinew Material(Color(text_color_r_.get(),
-					       text_color_g_.get(),
-					       text_color_b_.get()));
-      text_geometry_ =
-	renderer_->render_text(fld_handle,
-			       color_map_,
-			       text_use_default_color_.get(), m,
-			       text_backface_cull_.get(),
-			       text_fontsize_.get(),
-			       text_precision_.get(),
-			       text_render_locations_.get(),
-			       text_show_data_.get(),
-			       text_show_nodes_.get(),
-			       text_show_edges_.get(),
-			       text_show_faces_.get(),
-			       text_show_cells_.get());
+      text_material_->diffuse =
+	Color(text_color_r_.get(), text_color_g_.get(), text_color_b_.get());
+
+      if (do_text)
+      {
+	text_geometry_ =
+	  renderer_->render_text(fld_handle,
+				 color_map_.get_rep(),
+				 text_use_default_color_.get(),
+				 text_backface_cull_.get(),
+				 text_fontsize_.get(),
+				 text_precision_.get(),
+				 text_render_locations_.get(),
+				 text_show_data_.get(),
+				 text_show_nodes_.get(),
+				 text_show_edges_.get(),
+				 text_show_faces_.get(),
+				 text_show_cells_.get());
+      }
 
       const char *name =
 	text_backface_cull_.get()?"Culled Text Data":"Text Data";
       GeomHandle gmat =
-	scinew GeomMaterial(text_geometry_, m);
+	scinew GeomMaterial(text_geometry_, text_material_);
       GeomHandle geom =
 	scinew GeomSwitch(scinew GeomColorMap(gmat, color_map_));
       text_id_ = ogeom_->addObj(geom, fname + name);
@@ -894,8 +898,9 @@ ShowField::tcl_command(GuiArgs& args, void* userdata) {
     text_color_r_.reset();
     text_color_g_.reset();
     text_color_b_.reset();
-    text_dirty_ = true;
-    maybe_execute(TEXT);
+    text_material_->diffuse =
+      Color(text_color_r_.get(), text_color_g_.get(), text_color_b_.get());
+    ogeom_->flushViews();
   } else if (args[1] == "node_display_type") {
     nodes_dirty_ = true;
     if (now && node_id_) {

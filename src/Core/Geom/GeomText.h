@@ -112,8 +112,11 @@ public:
   virtual ~GeomTextsCulled();
   virtual GeomObj* clone();
 
-  void add (const string &text, const Point &location,
-	    const Vector &normal, const Color &c = Color(1,1,1));
+  void add (const string &text, const Point &loc, const Vector &vec);
+  void add (const string &text, const Point &loc, const Vector &vec,
+	    const Color &c);
+  void add (const string &text, const Point &loc, const Vector &vec,
+	    float index);
 
 #ifdef SCI_OPENGL
   virtual void draw(DrawInfoOpenGL*, Material*, double time);
