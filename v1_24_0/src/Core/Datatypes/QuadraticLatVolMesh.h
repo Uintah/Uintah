@@ -95,9 +95,9 @@ const TypeDescription* get_type_description(SequentialIndex<N, E>*)
 template<class N, class E>
 void Pio(Piostream& stream, SequentialIndex<N, E>& data)
 {
-  Pio(stream, which_);
-  Pio(stream, node_index_);
-  Pio(stream, edge_index_);
+  Pio(stream, data->which_);
+  Pio(stream, data->node_index_);
+  Pio(stream, data->edge_index_);
 }
 
 template <class N, class E>
