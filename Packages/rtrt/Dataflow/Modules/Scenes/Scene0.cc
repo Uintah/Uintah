@@ -49,10 +49,10 @@ using namespace std;
 
 class Scene0 : public Module {
 public:
-  Scene0(const string& id);
+  Scene0(GuiContext *ctx);
   virtual ~Scene0();
   virtual void execute();
-  void tcl_command(TCLArgs& args, void* userdata);
+  void tcl_command(GuiArgs& args, void* userdata);
 
 private:
   void create_dirs(Vector* objset);
@@ -69,12 +69,10 @@ private:
 
 static string widget_name("Scene0 Widget");
  
-extern "C" Module* make_Scene0(const string& id) {
-  return scinew Scene0(id);
-}
+DECLARE_MAKER(Scene0)
 
-Scene0::Scene0(const string& id)
-: Module("Scene0", id, Filter, "Scenes", "rtrt")
+Scene0::Scene0(GuiContext* ctx)
+: Module("Scene0", ctx, Filter, "Scenes", "rtrt")
 {
   //  inColorMap = scinew ColorMapIPort( this, "ColorMap",
   //				     ColorMapIPort::Atomic);
@@ -98,7 +96,7 @@ void Scene0::execute()
 
 // This is called when the tcl code explicity calls a function besides
 // needexecute.
-void Scene0::tcl_command(TCLArgs& args, void* userdata)
+void Scene0::tcl_command(GuiArgs& args, void* userdata)
 {
   if(args.count() < 2) {
     args.error("Streamline needs a minor command");

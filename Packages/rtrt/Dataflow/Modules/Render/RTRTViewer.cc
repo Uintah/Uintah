@@ -55,10 +55,10 @@ using namespace std;
 
 class RTRTViewer : public Module {
 public:
-  RTRTViewer(const string& id);
+  RTRTViewer(GuiContext *ctx);
   virtual ~RTRTViewer();
   virtual void execute();
-  void tcl_command(TCLArgs& args, void* userdata);
+  void tcl_command(GuiArgs& args, void* userdata);
 
 private:
   Scene *current_scene, *next_scene;
@@ -80,20 +80,18 @@ private:
 };
 
 static string widget_name("RTRTViewer Widget");
- 
-extern "C" Module* make_RTRTViewer(const string& id) {
-  return scinew RTRTViewer(id);
-}
 
-RTRTViewer::RTRTViewer(const string& id)
-: Module("RTRTViewer", id, Filter, "Render", "rtrt"),
+DECLARE_MAKER(RTRTViewer)
+
+RTRTViewer::RTRTViewer(GuiContext* ctx)
+: Module("RTRTViewer", ctx, Filter, "Render", "rtrt"),
   current_scene(0), next_scene(0), rtrt_engine(0),
-  nworkers("nworkers",id,this),
-  xres_gui("xres_gui", id, this),
-  yres_gui("yres_gui", id, this),
-  render_mode("render_mode", id, this),
-  scene_opt_type("scene_opt_type", id, this),
-  gridcellsize_gui("gridcellsize_gui", id, this)
+  nworkers(ctx->subVar("nworkers")),
+  xres_gui(ctx->subVar("xres_gui")),
+  yres_gui(ctx->subVar("yres_gui")),
+  render_mode(ctx->subVar("render_mode")),
+  scene_opt_type(ctx->subVar("scene_opt_type")),
+  gridcellsize_gui(ctx->subVar("gridcellsize_gui"))
 {
   //  inColorMap = scinew ColorMapIPort( this, "ColorMap",
   //				     ColorMapIPort::Atomic);
@@ -415,7 +413,7 @@ void RTRTViewer::stop_rtrt() {
 
 // This is called when the tcl code explicity calls a function besides
 // needexecute.
-void RTRTViewer::tcl_command(TCLArgs& args, void* userdata)
+void RTRTViewer::tcl_command(GuiArgs& args, void* userdata)
 {
   if(args.count() < 2) {
     args.error("Streamline needs a minor command");
