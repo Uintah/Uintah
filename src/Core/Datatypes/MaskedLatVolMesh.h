@@ -45,7 +45,7 @@
 #ifndef SCI_project_MaskedLatVolMesh_h
 #define SCI_project_MaskedLatVolMesh_h 1
 
-#include <Core/Datatypes/LatVolField.h>
+#include <Core/Datatypes/LatVolMesh.h>
 #include <Core/Containers/Array3.h>
 #include <Core/Geometry/Point.h>
 #include <sgi_stl_warnings_off.h>
