@@ -30,7 +30,7 @@ void rdomsolve(IntVector idxlo, IntVector idxhi,
            CCVariable<double> qfluxn,
            CCVariable<double> qfluxs,
            CCVariable<double> qfluxt,
-           CCVariable<double> qfluxb);
+           CCVariable<double> qfluxb, double opl);
 
 
 

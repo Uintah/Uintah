@@ -26,7 +26,7 @@
                      if (lprobtwo)then
                      tg(i,j,k) = 0.0
                      end if
-                     ABSKG(I,J,K) = 1.0D0
+                     ABSKG(I,J,K) = 1.0d0  
 
                   END IF
                endif
@@ -38,7 +38,7 @@
                      if (lprobtwo)then
                      tg(i,j,k) = 0.0
                      end if
-                     ABSKG(I,J,K) = 1.0D0
+                     ABSKG(I,J,K) = ABSKG(I-1,J,K)
 
                   END IF
                endif
@@ -56,7 +56,7 @@
                      if (lprobtwo)then
                      tg(i,j,k) = 0.0
                      end if
-                     ABSKG(I,J,K) = 1.0D0
+                     ABSKG(I,J,K) = ABSKG(I,J+1,K)
 
                   END IF
                endif
@@ -68,7 +68,7 @@
                      if (lprobtwo)then
                      tg(i,j,k) = 0.0
                      end if
-                     ABSKG(I,J,K) = 1.0D0
+                     ABSKG(I,J,K) = ABSKG(I,J-1,K)
 
                   END IF
                endif
@@ -86,7 +86,7 @@
                      if (lprobtwo)then
                      tg(i,j,k) = 0.0
                      end if
-                     ABSKG(I,J,K) = 1.0D0
+                     ABSKG(I,J,K) = ABSKG(I,J,K+1) 
 
                   END IF
                endif
@@ -98,7 +98,7 @@
                      if (lprobtwo)then
                      tg(i,j,k) = 0.0
                      end if
-                     ABSKG(I,J,K) = 1.0D0
+                     ABSKG(I,J,K) = ABSKG(I,J,K-1) 
 
                   END IF
                endif
