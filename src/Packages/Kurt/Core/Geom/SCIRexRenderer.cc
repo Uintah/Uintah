@@ -589,13 +589,13 @@ SCIRexRenderer::Build()
     int long_dim = 0; // 0 not set, 1 x, 2 y, 3 z
     int long_dim_size = 0;
     
-    int x_dim = mesh->get_nx(),  // store these because we're
-        y_dim = mesh->get_ny(),  // going to mess with them later
-        z_dim = mesh->get_nz();  // and we want to save the orginal values
+    int x_dim = mesh->get_ni(),  // store these because we're
+        y_dim = mesh->get_nj(),  // going to mess with them later
+        z_dim = mesh->get_nk();  // and we want to save the orginal values
     cerr<<"nx, ny, nz = "<<x_dim<<", "<<y_dim<<", "<<z_dim<<endl;
-    int min_x = mesh->get_min_x(),
-      min_y = mesh->get_min_y(),
-      min_z = mesh->get_min_z();
+    int min_x = mesh->get_min_i(),
+      min_y = mesh->get_min_j(),
+      min_z = mesh->get_min_k();
 
     minP = field_transform.project(Point(min_x, min_y, min_z));
     maxP = field_transform.project(Point(min_x, min_y, min_z) + 
@@ -630,41 +630,41 @@ SCIRexRenderer::Build()
       Transform trans;
       if( i == (ntextures - 1) ){
 	if(long_dim == 1){
-	  mesh->set_min_x(min_x + j); 
-	  mesh->set_nx(x_dim - j); 
+	  mesh->set_min_i(min_x + j); 
+	  mesh->set_ni(x_dim - j); 
 	  trans.pre_translate(Vector(2*i*D.x()/x_dim,0,0));
 	} else if(long_dim == 2){
-	  mesh->set_min_y(min_y + j); 
-	  mesh->set_ny(y_dim - j); 
+	  mesh->set_min_j(min_y + j); 
+	  mesh->set_nj(y_dim - j); 
 	  trans.pre_translate(Vector(0,2*i*D.y()/y_dim,0));
 	} else {
-	  mesh->set_min_z(min_z + j); 
-	  mesh->set_nz(z_dim - j); 
+	  mesh->set_min_k(min_z + j); 
+	  mesh->set_nk(z_dim - j); 
 	  trans.pre_translate(Vector(0,0,2*i*D.z()/z_dim));
 	}	  
       } else if( i == 0 ){
 	if(long_dim == 1){
-	  mesh->set_min_x(min_x + j);
-	  mesh->set_nx(split_size); 
+	  mesh->set_min_i(min_x + j);
+	  mesh->set_ni(split_size); 
 	} else if(long_dim == 2){
-	  mesh->set_min_y(min_y + j); 
-	  mesh->set_ny(split_size); 
+	  mesh->set_min_j(min_y + j); 
+	  mesh->set_nj(split_size); 
 	} else {
-	  mesh->set_min_z(min_z + j);
-	  mesh->set_nz(split_size);
+	  mesh->set_min_k(min_z + j);
+	  mesh->set_nk(split_size);
 	}	  
       } else {
 	if(long_dim == 1){
-	  mesh->set_min_x(min_x + j);
-	  mesh->set_nx(split_size); 
+	  mesh->set_min_i(min_x + j);
+	  mesh->set_ni(split_size); 
 	  trans.pre_translate(Vector(2*i*D.x()/x_dim,0,0));
 	} else if(long_dim == 2){
-	  mesh->set_min_y(min_y + j); 
-	  mesh->set_ny(split_size); 
+	  mesh->set_min_j(min_y + j); 
+	  mesh->set_nj(split_size); 
 	  trans.pre_translate(Vector(0,2*i*D.y()/y_dim,0));
 	} else {
-	  mesh->set_min_z(min_z + j);
-	  mesh->set_nz(bsize);
+	  mesh->set_min_k(min_z + j);
+	  mesh->set_nk(bsize);
 	  trans.pre_translate(Vector(0,0,2*i*D.z()/z_dim));
 	}	  
       }
@@ -680,12 +680,12 @@ SCIRexRenderer::Build()
     // Now just in case something unseen is using the mesh, set it back to
     // its original form. Probably, unecessary.
     // update!! it is necessary! Can't animate without it...
-    mesh->set_min_x(min_x);
-    mesh->set_min_y(min_y);
-    mesh->set_min_z(min_z);
-    mesh->set_nx(x_dim);
-    mesh->set_ny(y_dim);
-    mesh->set_nz(z_dim);
+    mesh->set_min_i(min_x);
+    mesh->set_min_j(min_y);
+    mesh->set_min_k(min_z);
+    mesh->set_ni(x_dim);
+    mesh->set_nj(y_dim);
+    mesh->set_nk(z_dim);
 
     }
   } else {
@@ -722,13 +722,13 @@ SCIRexRenderer::make_render_windows(FieldHandle tex_,
     int long_dim = 0; // 0 not set, 1 x, 2 y, 3 z
     int long_dim_size = 0;
     
-    int x_dim = mesh->get_nx(),  // store these because we're
-        y_dim = mesh->get_ny(),  // going to mess with them later
-        z_dim = mesh->get_nz();  // and we want to save the orginal values
+    int x_dim = mesh->get_ni(),  // store these because we're
+        y_dim = mesh->get_nj(),  // going to mess with them later
+        z_dim = mesh->get_nk();  // and we want to save the orginal values
     cerr<<"nx, ny, nz = "<<x_dim<<", "<<y_dim<<", "<<z_dim<<endl;
-    int min_x = mesh->get_min_x(),
-      min_y = mesh->get_min_y(),
-      min_z = mesh->get_min_z();
+    int min_x = mesh->get_min_i(),
+      min_y = mesh->get_min_j(),
+      min_z = mesh->get_min_k();
 
     minP = field_transform.project(Point(min_x, min_y, min_z));
     maxP = field_transform.project(Point(min_x, min_y, min_z) + 
@@ -781,41 +781,41 @@ SCIRexRenderer::make_render_windows(FieldHandle tex_,
       Transform trans;
       if( i == (nwindows - 1) ){
 	if(long_dim == 1){
-	  mesh->set_min_x(min_x + j); 
-	  mesh->set_nx(x_dim - j); 
+	  mesh->set_min_i(min_x + j); 
+	  mesh->set_ni(x_dim - j); 
 	  trans.pre_translate(Vector(2*i*D.x()/x_dim,0,0));
 	} else if(long_dim == 2){
-	  mesh->set_min_y(min_y + j); 
-	  mesh->set_ny(y_dim - j); 
+	  mesh->set_min_j(min_y + j); 
+	  mesh->set_nj(y_dim - j); 
 	  trans.pre_translate(Vector(0,2*i*D.y()/y_dim,0));
 	} else {
-	  mesh->set_min_z(min_z + j); 
-	  mesh->set_nz(z_dim - j); 
+	  mesh->set_min_k(min_z + j); 
+	  mesh->set_nk(z_dim - j); 
 	  trans.pre_translate(Vector(0,0,2*i*D.z()/z_dim));
 	}	  
       } else if( i == 0 ){
 	if(long_dim == 1){
-	  mesh->set_min_x(min_x + j);
-	  mesh->set_nx(split_size); 
+	  mesh->set_min_i(min_x + j);
+	  mesh->set_ni(split_size); 
 	} else if(long_dim == 2){
-	  mesh->set_min_y(min_y + j); 
-	  mesh->set_ny(split_size); 
+	  mesh->set_min_j(min_y + j); 
+	  mesh->set_nj(split_size); 
 	} else {
-	  mesh->set_min_z(min_z + j);
-	  mesh->set_nz(split_size);
+	  mesh->set_min_k(min_z + j);
+	  mesh->set_nk(split_size);
 	}	  
       } else {
 	if(long_dim == 1){
-	  mesh->set_min_x(min_x + j);
-	  mesh->set_nx(split_size); 
+	  mesh->set_min_i(min_x + j);
+	  mesh->set_ni(split_size); 
 	  trans.pre_translate(Vector(2*i*D.x()/x_dim,0,0));
 	} else if(long_dim == 2){
-	  mesh->set_min_y(min_y + j); 
-	  mesh->set_ny(split_size); 
+	  mesh->set_min_j(min_y + j); 
+	  mesh->set_nj(split_size); 
 	  trans.pre_translate(Vector(0,2*i*D.y()/y_dim,0));
 	} else {
-	  mesh->set_min_z(min_z + j);
-	  mesh->set_nz(split_size);
+	  mesh->set_min_k(min_z + j);
+	  mesh->set_nk(split_size);
 	  trans.pre_translate(Vector(0,0,2*i*D.z()/z_dim));
 	}	  
       }	
@@ -851,12 +851,12 @@ SCIRexRenderer::make_render_windows(FieldHandle tex_,
     // Now just in case something unseen is using the mesh, set it back to
     // its original form. Probably, unecessary.
     // update!! it is necessary!  Can't animate without it...
-    mesh->set_min_x(min_x);
-    mesh->set_min_y(min_y);
-    mesh->set_min_z(min_z);
-    mesh->set_nx(x_dim);
-    mesh->set_ny(y_dim);
-    mesh->set_nz(z_dim);
+    mesh->set_min_i(min_x);
+    mesh->set_min_j(min_y);
+    mesh->set_min_k(min_z);
+    mesh->set_ni(x_dim);
+    mesh->set_nj(y_dim);
+    mesh->set_nk(z_dim);
   } else {
     cerr<<"dynamic_cast<LatVolMesh *> failed !\n";
     cerr<<"initialization/rebuild failed !\n";
