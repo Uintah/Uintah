@@ -68,6 +68,7 @@ namespace Uintah {
     ParticleVariable<Vector> pvelocity, pexternalforce, psize;
     ParticleVariable<double> pmass, pvolume, ptemperature, psp_vol;
     ParticleVariable<long64> pparticleID;
+    ParticleVariable<Vector> pdisp;
 
     ParticleVariable<int> pLoadCurveID;
 
