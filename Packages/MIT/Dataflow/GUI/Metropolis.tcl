@@ -103,7 +103,7 @@ itcl_class MIT_Bayer_Metropolis {
     method change_thin {} {
 	global $this-thin
 
-	set $this-this [.ui[modname].f.thin get]
+	set $this-thin [.ui[modname].f.thin get]
 	puts "tcl thin [set $this-thin]"
     }
 
