@@ -722,29 +722,24 @@ bool
 LatVolMesh::locate(Cell::index_type &cell, const Point &p)
 {
   const Point r = transform_.unproject(p);
-
-  // Rounds down, so catches intervals.  Might lose numerical precision on
-  // upper edge (ie nodes on upper edges are not in any cell).
-  // Nodes over 2 billion might suffer roundoff error.
-
-  // These values are also clamped off at zero to prevent problems
-  // when round off error places the value of r.x() less than zero.
-  cell.i_ = (r.x()>0?(unsigned int)floor(r.x()):0);
-  cell.j_ = (r.y()>0?(unsigned int)floor(r.y()):0);
-  cell.k_ = (r.z()>0?(unsigned int)floor(r.z()):0);
   
-  cell.mesh_ = this;
+  const double rx = floor(r.x());
+  const double ry = floor(r.y());
+  const double rz = floor(r.z());
 
-  if (cell.i_ >= (ni_-1) ||
-      cell.j_ >= (nj_-1) ||
-      cell.k_ >= (nk_-1))
+  // Clamp in double space to avoid overflow errors.
+  if (rx < 0.0      || ry < 0.0      || rz < 0.0    ||
+      rx >= (ni_-1) || ry >= (nj_-1) || rz >= (nk_-1))
   {
     return false;
   }
-  else
-  {
-    return true;
-  }
+
+  cell.i_ = (unsigned int)rx;
+  cell.j_ = (unsigned int)ry;
+  cell.k_ = (unsigned int)rz;
+  cell.mesh_ = this;
+
+  return true;
 }
 
 
@@ -754,22 +749,24 @@ LatVolMesh::locate(Node::index_type &node, const Point &p)
 {
   const Point r = transform_.unproject(p);
 
-  // Nodes over 2 billion might suffer roundoff error.
-  node.i_ = (unsigned int)floor(r.x() + 0.5);
-  node.j_ = (unsigned int)floor(r.y() + 0.5);
-  node.k_ = (unsigned int)floor(r.z() + 0.5);
-  node.mesh_ = this;
+  const double rx = floor(r.x() + 0.5);
+  const double ry = floor(r.y() + 0.5);
+  const double rz = floor(r.z() + 0.5);
 
-  if (node.i_ >= ni_ ||
-      node.j_ >= nj_ ||
-      node.k_ >= nk_)
+  // Clamp in double space to avoid overflow errors.
+  if (rx < 0.0  || ry < 0.0  || rz < 0.0 ||
+      rx >= ni_ || ry >= nj_ || rz >= nk_)
   {
     return false;
   }
-  else
-  {
-    return true;
-  }
+
+  // Nodes over 2 billion might suffer roundoff error.
+  node.i_ = (unsigned int)rx;
+  node.j_ = (unsigned int)ry;
+  node.k_ = (unsigned int)rz;
+  node.mesh_ = this;
+
+  return true;
 }
 
 
