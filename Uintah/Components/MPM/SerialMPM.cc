@@ -1143,6 +1143,8 @@ void SerialMPM::interpolateParticlesToGrid(const ProcessorGroup*,
       // before storing the data
 
       //      cout << "Patch id = " << patch->getID() << endl;
+      IntVector offset = 
+	patch->getInteriorCellLowIndex() - patch->getCellLowIndex();
       for(Patch::FaceType face = Patch::startFace;
 	face <= Patch::endFace; face=Patch::nextFace(face)){
 	vector<BoundCondBase* > bcs;
@@ -1156,16 +1158,16 @@ void SerialMPM::interpolateParticlesToGrid(const ProcessorGroup*,
 	    VelocityBoundCond* bc = 
 	      dynamic_cast<VelocityBoundCond*>(bcs[i]);
 	    //	    cout << "bc value = " << bc->getValue() << endl;
-	    gvelocity.fillFace(face,bc->getValue());
+	    gvelocity.fillFace(face,bc->getValue(),offset);
 	  }
 	  if (bcs_type == "Symmetric") {
-	     gvelocity.fillFaceNormal(face);
+	     gvelocity.fillFaceNormal(face,offset);
 	  }
 	  if (bcs_type == "Temperature") {
 	     TemperatureBoundCond* bc = 
 	      dynamic_cast<TemperatureBoundCond*>(bcs[i]);
 	     if (bc->getKind() == "Dirichlet"){
-	       gTemperature.fillFace(face,bc->getValue());
+	       gTemperature.fillFace(face,bc->getValue(),offset);
 	       //cout << "bc value = " << bc->getValue() << endl;
              }
 	    // if (bc->getKind() == "Neumann")
@@ -1721,6 +1723,8 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
 
       // Apply grid boundary conditions to the velocity_star and
       // acceleration before interpolating back to the particles
+      IntVector offset = 
+	patch->getInteriorCellLowIndex() - patch->getCellLowIndex();
       for(Patch::FaceType face = Patch::startFace;
 	face <= Patch::endFace; face=Patch::nextFace(face)){
 	vector<BoundCondBase* > bcs;
@@ -1734,12 +1738,12 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
 	    VelocityBoundCond* bc = 
 	      dynamic_cast<VelocityBoundCond*>(bcs[i]);
 	    //  cout << "bc value = " << bc->getVelocity() << endl;
-	     gvelocity_star.fillFace(face,bc->getValue());
-	     gacceleration.fillFace(face,Vector(0.0,0.0,0.0));
+	     gvelocity_star.fillFace(face,bc->getValue(),offset);
+	     gacceleration.fillFace(face,Vector(0.0,0.0,0.0),offset);
 	  }
 	  if (bcs_type == "Symmetric") {
-	     gvelocity_star.fillFaceNormal(face);
-	     gacceleration.fillFaceNormal(face);
+	     gvelocity_star.fillFaceNormal(face,offset);
+	     gacceleration.fillFaceNormal(face,offset);
 	  }
 	  if (bcs_type == "Temperature") {
 	    TemperatureBoundCond* bc = 
@@ -1748,7 +1752,7 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
 	      //cout << "bc value = " << bc->getTemp() << endl;
 	      IntVector low = gTemperature.getLowIndex();
 	      IntVector hi = gTemperature.getHighIndex();
-	      gTemperatureStar.fillFace(face,bc->getValue());
+	      gTemperatureStar.fillFace(face,bc->getValue(),offset);
 	      if(face==Patch::xplus || face==Patch::xminus){
 		int I=-1234;
 		if(face==Patch::xminus){ I=low.x(); }
@@ -2073,6 +2077,9 @@ void SerialMPM::interpolateParticlesForSaving(const ProcessorGroup*,
 
 
 // $Log$
+// Revision 1.175  2000/12/20 20:46:58  jas
+// Added the correct offsets for fillFace.
+//
 // Revision 1.174  2000/12/10 06:42:24  tan
 // Modifications on fracture contact computations.
 //
