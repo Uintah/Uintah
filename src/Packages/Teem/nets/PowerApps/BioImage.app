@@ -1624,14 +1624,14 @@ class BioImageApp {
 	set FieldReader  [lindex [lindex $filters($which) $modules] $load_field]
 
 	# Nrrd
-	set page [$data.ui.tnb add -label "Nrrd" \
+	set page [$data.ui.tnb add -label "Generic" \
 		      -command "$this set_cur_data_tab Nrrd; $this configure_readers Nrrd"]       
 
 	global [set NrrdReader]-filename
 	frame $page.file
 	pack $page.file -side top -anchor nw -padx 3 -pady 0 -fill x
 
-	label $page.file.l -text "Nrrd File:" 
+	label $page.file.l -text ".vol/.vff/.nrrd file:" 
 	entry $page.file.e -textvariable [set NrrdReader]-filename 
 	Tooltip $page.file.e "Currently loaded data set"
 	pack $page.file.l $page.file.e -side left -padx 3 -pady 0 -anchor nw \
@@ -1696,7 +1696,7 @@ class BioImageApp {
 	pack $page.load -side top -anchor n -padx 3 -pady 1
 	
 	# Set default view to be Nrrd
-	$data.ui.tnb view "Nrrd"
+	$data.ui.tnb view "Generic"
 
 	frame $data.ui.f
 	pack $data.ui.f
