@@ -330,6 +330,7 @@ StreamLinesAccAlgoT<SMESH, SLOC, VFLD>::FindNodes(vector<Point> &v,
   for (int i=0; i < maxsteps; i++)
   {
     vfield->value(dir, elem);
+    dir.safe_normalize();
     if (back) { dir *= -1.0; }
     
     if (i && Dot(dir, lastnormal) < 1.0e-3) { break; }
