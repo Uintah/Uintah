@@ -19,24 +19,18 @@ TileImageMaterial::TileImageMaterial(int, const string &texfile,
                                      double Kd,
                                      const Color& specular, double specpow,
                                      double refl, bool flipped=false)
-  : Kd(Kd), specular(specular),
-    specpow(specpow), refl(refl),  transp(0), valid_(false)
+  : ImageMaterial(1,texfile,ImageMaterial::Tile,ImageMaterial::Tile,
+                  Kd,specular,specpow,refl,flipped)
 {
-  read_hdr_image(texfile);
-  outcolor=Color(0,0,0);
 }
 
 TileImageMaterial::TileImageMaterial(const string &texfile, 
                                      double Kd,
                                      const Color& specular, double specpow,
                                      double refl, bool flipped=false)
-  : Kd(Kd), specular(specular),
-    specpow(specpow), refl(refl),  transp(0), valid_(false)
+  : ImageMaterial(texfile,ImageMaterial::Tile,ImageMaterial::Tile,
+                  Kd,specular,specpow,refl,flipped)
 {
-  PPMImage ppm(texfile);
-  int nu, nv;
-  ppm.get_dimensions_and_data(image, nu, nv, flipped);
-  outcolor=Color(0,0,0);
 }
 
 TileImageMaterial::TileImageMaterial(const string &texfile, 
@@ -44,13 +38,9 @@ TileImageMaterial::TileImageMaterial(const string &texfile,
                                      const Color& specular, double specpow,
                                      double refl,  double transp, 
                                      bool flipped=false)
-  : Kd(Kd), specular(specular),
-    specpow(specpow), refl(refl),  transp(transp), valid_(false)
+  : ImageMaterial(texfile,ImageMaterial::Tile,ImageMaterial::Tile,
+                  Kd,specular,specpow,refl,transp,flipped)
 {
-  PPMImage ppm(texfile);
-  int nu, nv;
-  ppm.get_dimensions_and_data(image, nu, nv, flipped);
-  outcolor=Color(0,0,0);
 }
 
 void TileImageMaterial::shade(Color& result, const Ray& ray,
