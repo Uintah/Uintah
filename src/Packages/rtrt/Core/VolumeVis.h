@@ -509,8 +509,8 @@ void VolumeVis<DataType>::shade(Color& result, const Ray& ray,
 	dzly1 = dz1 * (1 - y_weight_high) + dz2 * y_weight_high;
 	dzly2 = dz3 * (1 - y_weight_high) + dz4 * y_weight_high;
 	dz = dzly1 * (1 - x_weight_high) + dzly2 * x_weight_high;
-	if (dx || dy || dz){
-	  float length2 = dx*dx+dy*dy+dz*dz;
+	float length2 = dx*dx+dy*dy+dz*dz;
+	if (length2){
 	  // this lets the compiler use a special 1/sqrt() operation
 	  float ilength2 = 1/sqrtf(length2);
 	  gradient = Vector(dx*ilength2*dxdx, dy*ilength2*dydy,
