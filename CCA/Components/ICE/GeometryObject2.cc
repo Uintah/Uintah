@@ -19,6 +19,7 @@ GeometryObject2::GeometryObject2(ICEMaterial* /*ice_matl*/,
 
 GeometryObject2::~GeometryObject2()
 {
+  delete d_piece;
 }
 
 IntVector GeometryObject2::getNumParticlesPerCell()
