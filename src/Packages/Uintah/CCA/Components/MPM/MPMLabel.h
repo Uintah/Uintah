@@ -112,7 +112,7 @@ using std::vector;
       const VarLabel* gVolumeLabel;
       const VarLabel* gWeightLabel; //for who knows what?
       const VarLabel* gMassContactLabel; //for crack surface contact
-      const VarLabel* gradPressNCLabel;
+      const VarLabel* gradPAccNCLabel;
       const VarLabel* dTdt_NCLabel; //for heat conduction
       const VarLabel* massBurnFractionLabel; //for burn modeling
       

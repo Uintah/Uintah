@@ -266,7 +266,7 @@ MPMLabel::MPMLabel()
   gWeightLabel     = scinew VarLabel("g.weight",
 			NCVariable<double>::getTypeDescription());
 
-  gradPressNCLabel = scinew VarLabel("gradPressNC",
+  gradPAccNCLabel = scinew VarLabel("gradPAccNC",
 			NCVariable<Vector>::getTypeDescription());
 
   dTdt_NCLabel     = scinew VarLabel("dTdt_NC",
@@ -395,7 +395,7 @@ MPMLabel::~MPMLabel()
   delete gStressForSavingLabel;
   delete gVolumeLabel;
   delete gWeightLabel;
-  delete gradPressNCLabel;
+  delete gradPAccNCLabel;
   delete dTdt_NCLabel;
   delete massBurnFractionLabel;
   delete AccArchesNCLabel;
