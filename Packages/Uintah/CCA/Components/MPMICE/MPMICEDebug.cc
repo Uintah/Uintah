@@ -117,7 +117,7 @@ void    MPMICE::printNCVector(const Patch* patch, int include_EC,
           for(int i = low.x(); i < high.x(); i++) {
            IntVector idx(i, j, k);
            cerr << "[" << i << "," << j << "," << k << "]~ " 
-                << q_NC[idx](component) << "  ";  
+                << q_NC[idx](dir) << "  ";  
            /*  cerr << "\n"; */
           }
           cerr << "\n";
