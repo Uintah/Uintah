@@ -107,12 +107,22 @@ public:
 		      DataWarehouseP&,
 		      DataWarehouseP&);
 
-   void actuallyStep4(const ProcessorGroup*,
+   void actuallyStep4a(const ProcessorGroup*,
 		      const Patch* patch,
 		      DataWarehouseP&,
 		      DataWarehouseP&);
 
-   void actuallyStep5(const ProcessorGroup*,
+   void actuallyStep4b(const ProcessorGroup*,
+		      const Patch* patch,
+		      DataWarehouseP&,
+		      DataWarehouseP&);
+
+   void actuallyStep5a(const ProcessorGroup*,
+		      const Patch* patch,
+		      DataWarehouseP&,
+		      DataWarehouseP&);
+
+   void actuallyStep5b(const ProcessorGroup*,
 		      const Patch* patch,
 		      DataWarehouseP&,
 		      DataWarehouseP&);
@@ -225,6 +235,7 @@ void after_each_step_wrapper(
  private:
  ICELabel* lb; 
  SimulationStateP d_sharedState;
+ double d_SMALL_NUM;
 
  
    int  i,j,k,m,   
@@ -381,6 +392,9 @@ void after_each_step_wrapper(
 #endif
 
 // $Log$
+// Revision 1.29  2000/10/18 21:02:17  guilkey
+// Added code for steps 4 and 5.
+//
 // Revision 1.28  2000/10/16 20:31:00  guilkey
 // Step3 added
 //
