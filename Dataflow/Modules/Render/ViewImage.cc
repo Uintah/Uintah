@@ -73,6 +73,7 @@
 #include <Core/Geom/FreeType.h>
 
 #include <Core/Util/Environment.h>
+#include <Core/Thread/Mutex.h>
 
 #include <typeinfo>
 #include <iostream>
@@ -83,6 +84,11 @@ extern Tcl_Interp* the_interp;
 
 
 namespace SCIRun {
+
+static Mutex vlock("ViewImage GL task lock");
+static Thread* owner;
+static int lock_count;
+  
 
 class RealDrawer;
 
@@ -139,7 +145,8 @@ class ViewImage : public Module
     int			slice_num_;   // which slice # along axis
     NrrdDataHandle      nrrd_;
     
-    bool		dirty_;
+    bool		nrrd_dirty_;
+    bool		tex_dirty_;
     unsigned int	mode_;
     unsigned int	tex_wid_;
     unsigned int	tex_hei_;
@@ -263,6 +270,7 @@ class ViewImage : public Module
   
   RealDrawer *		runner_;
   Thread *		runner_thread_;
+  Mutex			lock_;
 
   void			redraw_all();
   void			redraw_window_layout(WindowLayout &);
@@ -317,13 +325,14 @@ class ViewImage : public Module
   void			debug_print_state(int state);
 
   void			send_slice(NrrdSlice &slice);
-  
+  void			check_colormap_on_execute();
 public:
   ViewImage(GuiContext* ctx);
   virtual ~ViewImage();
   virtual void		execute();
   virtual void		tcl_command(GuiArgs& args, void*);
   void			real_draw_all();
+  void			extract_all_slices();
   double		fps_;
 };
 
@@ -357,6 +366,7 @@ RealDrawer::run()
   int frames;
   
   while (!dead_) {
+    module_->extract_all_slices();
     throttle_.wait_for_time(t);
     module_->real_draw_all();
     t2 = throttle_.time();
@@ -372,14 +382,32 @@ RealDrawer::run()
   }
 }
 
-
-
+void
+ViewImage::extract_all_slices() {
+  WindowLayouts::iterator liter = layouts_.begin(), lend = layouts_.end();
+  for (; liter != lend; ++liter) {
+    WindowLayout &layout = *(liter->second);
+    SliceWindows::iterator viter = layout.windows_.begin();
+    SliceWindows::iterator vend = layout.windows_.end();
+    for (; viter != vend; ++viter) {
+      SliceWindow &window = **viter;
+      for (unsigned int s = 0; s < window.slices_.size(); ++s) {
+	NrrdSlice &slice = *window.slices_[s];
+	if (slice.axis_ != window.axis_() || !slice.nrrd_dirty_) continue;
+	extract_slice(*slice.volume_, slice,
+		      window.axis_, window.slice_[window.axis_]());
+      }
+    }
+  }
+}
+  
 
 ViewImage::NrrdSlice::NrrdSlice(int axis, int slice, NrrdVolume *volume) :
   axis_(axis),
   slice_num_(slice),
   nrrd_(0),
-  dirty_(true),
+  nrrd_dirty_(true),
+  tex_dirty_(true),
   mode_(0),
   tex_wid_(0),
   tex_hei_(0),
@@ -468,7 +496,8 @@ ViewImage::ViewImage(GuiContext* ctx) :
   freetype_lib_(0),
   fonts_(),
   labels_(0),
-  fps_(0.0)
+  fps_(0.0),
+  lock_("ViewImage lock")
 {
   try {
     freetype_lib_ = scinew FreeTypeLibrary();
@@ -537,7 +566,6 @@ ViewImage::NrrdVolume::reset() {
   transpose_xy_ = 0;
 }
   
-  
 
     
 
@@ -573,6 +601,7 @@ ViewImage::log2(const unsigned int dim) const {
 void
 ViewImage::real_draw_all()
 {
+  lock_.lock();
   WindowLayouts::iterator liter = layouts_.begin(), lend = layouts_.end();
   for (; liter != lend; ++liter) {
     WindowLayout &layout = *(liter->second);
@@ -595,6 +624,7 @@ ViewImage::real_draw_all()
       window.viewport_->release();
     }
   }
+  lock_.unlock();
 }
 
 
@@ -674,7 +704,7 @@ ViewImage::extract_colormap(SliceWindow &window)
     }
   
   for (unsigned int s = 0; s < window.slices_.size(); ++s)
-    window.slices_[s]->dirty_ = true;
+    window.slices_[s]->tex_dirty_ = true;
   window.clut_dirty_ = false;
   return true;
 }
@@ -1117,10 +1147,14 @@ ViewImage::draw_label(SliceWindow &window, string text, int x, int y,
 void
 ViewImage::draw_slice(SliceWindow &window, NrrdSlice &slice)
 {
+  if (slice.axis_ != window.axis_) return;
+  if (slice.nrrd_dirty_ && slice.volume_) {
+      extract_slice(*slice.volume_, slice, 
+		    window.axis_(), window.slice_[window.axis_]());
+  }
+
   if (!slice.nrrd_.get_rep())
     return;
-
-  if (slice.axis_ != window.axis_) return;
 
   // Indexes of the primary and secondary axes
   //  const unsigned int pri = axis_.get()==0?1:0;
@@ -1162,12 +1196,12 @@ ViewImage::draw_slice(SliceWindow &window, NrrdSlice &slice)
   glTexEnvfv(GL_TEXTURE_ENV, GL_TEXTURE_ENV_COLOR, ones);
 
 
-  if (extract_colormap(window) ||  slice.dirty_) {
+  if (extract_colormap(window) ||  slice.tex_dirty_) {
     if (glIsTexture(slice.tex_name_)) {
       glDeleteTextures(1,&slice.tex_name_);
       slice.tex_name_ = 0;
     }
-    slice.dirty_ = false;
+    slice.tex_dirty_ = false;
   }
 
 
@@ -1358,28 +1392,43 @@ void
 ViewImage::extract_window_slices(SliceWindow &window) {
   unsigned int v, s;
   int a;
-  gui->lock();
-  for (s = 0; s < window.slices_.size(); ++s) {
 #if 0
+  //  lock_.lock();
+  // gui->lock();
+  for (s = 0; s < window.slices_.size(); ++s) {
+
     window.viewport_->make_current();
     if (glIsTexture(window.slices_[s]->tex_name_))
       glDeleteTextures(1,&window.slices_[s]->tex_name_);
     window.viewport_->release();
-#endif
+
     delete window.slices_[s];
   }
-  gui->unlock();
+  //gui->unlock();
   window.slices_.clear();
+#endif
 
-  for (v = 0; v < volumes_.size(); ++v) {
-    for (a = 0; a < 3; a++) {
-      window.slices_.push_back
-	(scinew NrrdSlice(a, window.slice_[a], volumes_[v]));
-      window.slices_.back()->mode_ = window.mode_();
-      if (window.axis_ == a)
-	extract_slice(*volumes_[v], *window.slices_.back(), a, *window.slice_[a]);
+  if (!window.slices_.size()) {
+    for (v = 0; v < volumes_.size(); ++v) {
+      for (a = 0; a < 3; a++) {
+	window.slices_.push_back
+	  (scinew NrrdSlice(a, window.slice_[a], volumes_[v]));
+	window.slices_.back()->mode_ = window.mode_();
+      //      if (window.axis_ == a)
+      //extract_slice(*volumes_[v], *window.slices_.back(), a, *window.slice_[a]);
+      }
+    }
+  } else {
+    s = 0;
+    for (v = 0; v < volumes_.size(); ++v) {
+      for (a = 0; a < 3; a++) {
+	window.slices_[s]->nrrd_dirty_ = true;
+	window.slices_[s]->mode_ = window.mode_();
+	s++;
+      }
     }
   }
+  //  lock_.unlock();
 }
 
 
@@ -1389,8 +1438,9 @@ ViewImage::extract_slice(NrrdVolume &volume,
 			 NrrdSlice &slice,
 			 int axis, int slice_num)
 {
+  if (!slice.nrrd_dirty_) return;
   if (!volume.nrrd_.get_rep()) return;
-
+  //  cerr << "Extracting slice " << slice_num << "  axis " << axis << "\n";
   slice.nrrd_ = scinew NrrdData;
   slice.nrrd_->nrrd = nrrdNew();
 
@@ -1415,7 +1465,8 @@ ViewImage::extract_slice(NrrdVolume &volume,
 
   slice.axis_ = axis;
   slice.slice_num_ = slice_num;
-  slice.dirty_ = true;
+  slice.nrrd_dirty_ = false;
+  slice.tex_dirty_ = true;
   slice.wid_     = temp1->nrrd->axis[0].size;
   slice.hei_     = temp1->nrrd->axis[1].size;
   slice.tex_wid_ = pow2(slice.wid_);
@@ -1540,12 +1591,25 @@ ViewImage::screen_to_world(SliceWindow &window,
   
 
 void
+ViewImage::check_colormap_on_execute() {
+  ColorMapIPort *color_iport = (ColorMapIPort *)get_iport("ColorMap");  
+  if (!color_iport) 
+  {
+    error("Unable to initialize iport ColorMap.");
+    return;
+  }
+  color_iport->get(colormap_);
+}
+
+
+
+void
 ViewImage::execute()
 {
   update_state(Module::JustStarted);
   NrrdIPort *nrrd1_port = (NrrdIPort*)get_iport("Nrrd1");
   NrrdIPort *nrrd2_port = (NrrdIPort*)get_iport("Nrrd2");
-  ColorMapIPort *color_iport = (ColorMapIPort *)get_iport("ColorMap");
+
 
   ogeom_ = (GeometryOPort *)get_oport("Scene Graph");
 
@@ -1561,16 +1625,13 @@ ViewImage::execute()
     return;
   }
 
-  if (!color_iport) 
-  {
-    error("Unable to initialize iport ColorMap.");
-    return;
-  }
 
   if (!ogeom_) {
     //error("Unable to initialize oport Scene Graph.");
     //    return;
   }
+
+  check_colormap_on_execute();
 
   update_state(Module::NeedData);
   NrrdDataHandle nrrd1, nrrd2;
@@ -1640,17 +1701,11 @@ ViewImage::execute()
       extract_window_slices(**viter);
     }
   }
-
-
   
-  color_iport->get(colormap_);
+
   update_state(Module::Executing);  
   redraw_all();
-  update_state(Module::Completed);
-
-  //  ogeom_->addObj(geom, fname + name);
-  //  ogeom_->flushViews();
-  
+  update_state(Module::Completed);  
 }
 
 bool
