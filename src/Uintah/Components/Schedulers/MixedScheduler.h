@@ -116,7 +116,9 @@ WARNING
       // Creates the list of dependencies that each tasks needs before
       // it can be run.  Also creates a map from a dependency to the
       // task that it satisfies.
-      void createDepencyList( vector<Task*> & tasks, int me );
+      void createDepencyList( DataWarehouseP & old_dw,
+			      vector<Task*>  & tasks,
+			      int              me );
 
       void makeAllRecvRequests( vector<Task*>       & tasks, 
 				int                   me,
@@ -155,6 +157,9 @@ WARNING
 
 //
 // $Log$
+// Revision 1.3  2000/09/28 02:15:51  dav
+// updates due to not sending 0 particles
+//
 // Revision 1.2  2000/09/27 01:47:47  dav
 // added missing #endif
 //

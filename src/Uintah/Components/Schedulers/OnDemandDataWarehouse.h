@@ -2,22 +2,20 @@
 #define UINTAH_COMPONENTS_SCHEDULERS_ONDEMANDDATAWAREHOUSE_H
 
 #include <SCICore/Thread/CrowdMonitor.h>
-#include <SCICore/Thread/Semaphore.h>
 
 #include <Uintah/Interface/DataWarehouse.h>
 #include <Uintah/Grid/Grid.h>
 #include <Uintah/Components/Schedulers/DWDatabase.h>
 
 #include <map>
-#include <string>
 #include <iosfwd>
 #include <vector>
 #include <mpi.h>
 
-using std::string;
 using std::vector;
+using std::map;
 
-using SCICore::Thread::Semaphore;
+using SCICore::Thread::CrowdMonitor;
 
 namespace Uintah {
 
@@ -161,10 +159,9 @@ public:
 
    //////////
    // Retrieves the saveset
-   virtual void getSaveSet(std::vector<const VarLabel*>&,
-			   std::vector<int>&) const;
+   virtual void getSaveSet(vector<const VarLabel*>&, vector<int>&) const;
        
-   virtual void getIntegratedSaveSet(std::vector<const VarLabel*>&) const;
+   virtual void getIntegratedSaveSet(vector<const VarLabel*>&) const;
        
    virtual void emit(OutputContext&, const VarLabel* label,
 		     int matlIndex, const Patch* patch) const;
@@ -191,10 +188,10 @@ private:
       ReductionRecord(ReductionVariableBase*);
    };
 
-   typedef std::vector<dataLocation*> variableListType;
-   typedef std::map<const VarLabel*, ReductionRecord*, VarLabel::Compare> reductionDBtype;
-   typedef std::map<const VarLabel*, variableListType*, VarLabel::Compare> dataLocationDBtype;
-   typedef std::map<pair<int, const Patch*>, ParticleSubset*> psetDBType;
+   typedef vector<dataLocation*> variableListType;
+   typedef map<const VarLabel*, ReductionRecord*, VarLabel::Compare> reductionDBtype;
+   typedef map<const VarLabel*, variableListType*, VarLabel::Compare> dataLocationDBtype;
+   typedef map<pair<int, const Patch*>, ParticleSubset*> psetDBType;
 
    DWDatabase<NCVariableBase>       d_ncDB;
    DWDatabase<CCVariableBase>       d_ccDB;
@@ -207,33 +204,35 @@ private:
    DWDatabase<PerPatchBase>         d_perpatchDB;
    psetDBType			    d_psetDB;
 
+   map<pair<const Patch*, const Patch*>, ScatterGatherBase* > d_sgDB;
+
+
    // Record of which DataWarehouse has the data for each variable...
    //  Allows us to look up the DW to which we will send a data request.
-   dataLocationDBtype               d_dataLocation;
+   dataLocationDBtype      d_dataLocation;
 
    //////////
    // Insert Documentation Here:
-   mutable SCICore::Thread::CrowdMonitor  d_lock;
-   bool                                   d_finalized;
-   GridP                                  d_grid;
+   mutable CrowdMonitor    d_lock;
+   bool                    d_finalized;
+   GridP                   d_grid;
 
    // Internal VarLabel for the position of this DataWarehouse
    // ??? with respect to what ???? 
    //const VarLabel * d_positionLabel;
 
-   std::vector<const VarLabel*> d_saveset;
-   std::vector<const VarLabel*> d_saveset_integrated;
-   std::vector<int>             d_savenumbers;
-
-   std::map<pair<const Patch*, const Patch*>, ScatterGatherBase* > d_sgDB;
-
-   Semaphore                  * d_semaphore;
+   vector<const VarLabel*> d_saveset;
+   vector<const VarLabel*> d_saveset_integrated;
+   vector<int>             d_savenumbers;
 };
 
 } // end namespace Uintah
 
 //
 // $Log$
+// Revision 1.39  2000/09/28 02:15:51  dav
+// updates due to not sending 0 particles
+//
 // Revision 1.38  2000/09/27 02:10:48  dav
 // removed registerOwnership and findMpiNode which are nolonger used
 //

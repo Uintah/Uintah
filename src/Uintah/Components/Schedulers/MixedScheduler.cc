@@ -28,7 +28,7 @@ using std::map;
 using std::set;
 
 // From ThreadPool.cc:  Used for syncing cerr'ing so it is easier to read.
-extern Semaphore * cerrSem;
+extern Mutex * cerrLock;
 
 vector<MPI_Request> recv_ids;
 vector<MPI_Request> recv_ids_backup;
@@ -291,13 +291,14 @@ map< TaskData, vector<DependData>, TaskData >  taskToDeps;
 vector<const Task*> reductionTasks;
 
 void
-MixedScheduler::createDepencyList( vector<Task*> & tasks,
-				 int             me )
+MixedScheduler::createDepencyList( DataWarehouseP & old_dw,
+				   vector<Task*>  & tasks,
+				   int              me )
 {
 #if DAV_DEBUG
-  cerrSem->down();
+  cerrLock->lock();
   cerr << "Start createDepencyList\n";
-  cerrSem->up();
+  cerrLock->unlock();
 #endif  
 
   vector<Task*>::iterator iter;
@@ -333,9 +334,10 @@ MixedScheduler::createDepencyList( vector<Task*> & tasks,
       if( !dw->exists( dep->d_var, dep->d_patch ) ){
 
 	// Some of the depencencies from reduction/scatter/gather
-	// tasks don't really count, as I am not computing them.  Ie:
-	// I only need to wait until I have finished the deps that I
-	// am computing before I can run a reduction task.
+	// tasks don't really count, as this processor is not really
+	// computing them.  Ie: I only need to wait until I have
+	// finished the deps that I am computing before I can run a
+	// scatter/gather/reduction task.
 	if( ( task->isReductionTask() ) ||
 	    ( task->getType() == Task::Gather ) || 
 	    ( task->getType() == Task::Scatter ) ) {
@@ -344,20 +346,48 @@ MixedScheduler::createDepencyList( vector<Task*> & tasks,
 	    continue; 
 	  }
 	}
-	DependData depData( dep );
-	TaskData   taskData( task );
+	bool zeroParticles = false;
 
-	vector<Task*> & list_of_tasks = depToTasks[ depData ];
+#if 0
+This stuff is wrong...
+	if( dep->d_var->typeDescription()->getType() == 
+	                               TypeDescription::ParticleVariable ){
+	  // If there are no particles associated with a dependency,
+	  // then it really isn't a dependency so don't add it to the
+	  // list of dependencies...
+	  try {
+	    ParticleSubset* pset = old_dw->getParticleSubset( dep->d_matlIndex,
+							      dep->d_patch );
+	    if( pset->numParticles() == 0 ){
+#if DAV_DEBUG
+	      cerr << "0 particles found so not adding " << *dep 
+		   << " to list of dependencies.\n";
+#endif
+	      zeroParticles = true;
+	    }
+	  } catch (UnknownVariable & unknown ) {
+#if DAV_DEBUG
+	    cerr << "UnknownVariable: " << *dep << "\n";
+#endif
+	  }
+	}
+#endif
+	if( !zeroParticles ){
+	  DependData depData( dep );
+	  TaskData   taskData( task );
+
+	  vector<Task*> & list_of_tasks = depToTasks[ depData ];
 	
-	list_of_tasks.insert( list_of_tasks.begin(), task );
-	vector<DependData> & data = taskToDeps[ taskData ];
-	data.insert( data.begin(), depData );
+	  list_of_tasks.insert( list_of_tasks.begin(), task );
+	  vector<DependData> & data = taskToDeps[ taskData ];
+	  data.insert( data.begin(), depData );
+	}
       } 
     } // end for( reqIter = all this task's requirement )
   } // end for( iter )
 
 #if DAV_DEBUG
-  cerrSem->down();
+  cerrLock->lock();
 
   cerr << "depToTasks " << depToTasks.size() << ":\n\n";
 
@@ -393,13 +423,21 @@ MixedScheduler::createDepencyList( vector<Task*> & tasks,
     }
 #endif
   cerr << "\n\n";
-  cerrSem->up();
+  cerrLock->unlock();
 #endif
+  // Really need to sort Reduction Tasks so that they can't block each
+  // other out...  for now I am just GOING WITH A BLIND HACK... sigh.
+  int numReductionTasks = reductionTasks.size();
+  if( numReductionTasks > 1 ){
+    const Task * tempTask = reductionTasks[ numReductionTasks - 1 ];
+    reductionTasks[ numReductionTasks-1 ] = reductionTasks[ numReductionTasks-2 ];
+    reductionTasks[ numReductionTasks-2 ] = tempTask;
+  }
 
 #if DAV_DEBUG
-  cerrSem->down();
+  cerrLock->lock();
   cerr << "End createDepencyList\n";
-  cerrSem->up();
+  cerrLock->unlock();
 #endif  
 } // end createDepencyList()
 
@@ -412,10 +450,12 @@ MixedScheduler::makeAllRecvRequests( vector<Task*>       & tasks,
 				   DataWarehouseP      & old_dw,
 				   DataWarehouseP      & new_dw )
 {
+  vector<DependData> invalidDependencies;
+
   // Must be called before I start making recv calls, as the recv
   // call "puts" the var into the datawarehouse, making me think
   // that is has been computed.
-  createDepencyList( tasks, me );
+  createDepencyList( old_dw, tasks, me );
 
 #if DAV_DEBUG
   cerr << "Begin makeAllRecvRequests\n";
@@ -459,9 +499,9 @@ MixedScheduler::makeAllRecvRequests( vector<Task*>       & tasks,
 	  OnDemandDataWarehouse* dw =
 		dynamic_cast<OnDemandDataWarehouse*>(need->d_dw.get_rep());
 #if DAV_DEBUG
-	  cerrSem->down();
+	  cerrLock->lock();
 	  cerr << "Request to (eventually) recv MPI data for: " << *need << "\n";
-	  cerrSem->up();
+	  cerrLock->unlock();
 #endif
 	  int size;
 	  dw->recvMPI(old_dw, need->d_var, need->d_matlIndex,
@@ -472,8 +512,24 @@ MixedScheduler::makeAllRecvRequests( vector<Task*>       & tasks,
 	    log.logRecv(need, size);
 	    recv_ids.push_back(requestid);
 	    reqToDep[ requestid ] = *needIter;
+	  } else {
+	    invalidDependencies.push_back( *needIter );
 	  }
 	} // end if !dep->d_dw->exists()
+
+	vector<DependData>::iterator loc = find(invalidDependencies.begin(),
+						invalidDependencies.end(),
+						*needIter );
+	if( loc != invalidDependencies.end() ){
+#if DAV_DEBUG
+	  cerrLock->lock();
+	  cerr << "removing dependency: " << *((*loc).dep) << " from task: "
+	       << *task << " because 0 particles sent\n";
+	  cerrLock->unlock();
+#endif
+	  TaskData taskData( task );
+	  taskToDeps[ taskData ].erase( needIter );
+	}
       } // end if cmp computer not me
     } // end for( needIter )
   } // end for( taskToDeps.begin... )
@@ -519,9 +575,9 @@ MixedScheduler::execute(const ProcessorGroup * pc,
 
   // Must call topologicalSort before assignResources because
   // topologicalSort adds internal (Reduction) tasks to graph.
-  d_graph.topologicalSort(tasks);
+  d_graph.nullSort(tasks);
 
-  d_graph.assignSerialNumbers();
+  d_graph.assignUniqueSerialNumbers();
 
   UintahParallelPort* lbp = getPort("load balancer");
   LoadBalancer* lb = dynamic_cast<LoadBalancer*>(lbp);
@@ -576,10 +632,10 @@ MixedScheduler::execute(const ProcessorGroup * pc,
   recv_ids_backup = recv_ids;
 
 #if DAV_DEBUG
-  cerrSem->down();
+  cerrLock->lock();
   cerr << "Number of MPI_Requests: " << recv_ids.size() 
        << " which should be equal to " << reqToDep.size() << "\n\n";
-  cerrSem->up();
+  cerrLock->unlock();
 #endif
 
   numRequests = recv_ids.size();
@@ -608,18 +664,17 @@ MixedScheduler::execute(const ProcessorGroup * pc,
     vector<Task *>           done;
 
 #if DAV_DEBUG
-    cerrSem->down();
+    cerrLock->lock();
     cerr << ".";
-    cerrSem->up();
+    cerrLock->unlock();
 #endif
     int numAvail = d_threadPool->available();
 #if DAV_DEBUG
-    cerrSem->down();
-    cerr << "# OF THREADS AVAILABLE = " << numAvail 
-	   << ", TASKS = " << tasks.size() <<"\n";
-    cerr << " numTasksDone = " << numTasksDone << "\n";
-    cerr << " numTasks = " << numTasks << "\n";
-    cerrSem->up();
+    cerrLock->lock();
+    cerr << "# OF THREADS AVAILABLE = " << numAvail << ", TASKS = " 
+	 << tasks.size() << ", numTasksDone = " << numTasksDone 
+	 << ", numTasks = " << numTasks << "\n";
+    cerrLock->unlock();
 #endif
 
     // Determine if there are any tasks that can be kicked off...
@@ -629,14 +684,14 @@ MixedScheduler::execute(const ProcessorGroup * pc,
     for( iter = tasks.begin(); numAvail > 0 && iter != tasks.end(); iter++){
 
 #if DAV_DEBUG
-      cerrSem->down();
+      cerrLock->lock();
       cerr << "# of threads available = " << numAvail 
 	   << ", tasks = " << tasks.size() <<"\n";
       if( tasks.size() == 1 )
 	{
 	  cerr << "task awaiting is: " << *tasks[0] << "\n";
 	}
-      cerrSem->up();
+      cerrLock->unlock();
 #endif
 
       TaskData taskData;
@@ -652,10 +707,8 @@ MixedScheduler::execute(const ProcessorGroup * pc,
 	continue;
       }
       vector<DependData> & data = taskToDeps[ taskData ];
-      data = taskToDeps[ taskData ];
-
 #if DAV_DEBUG
-      cerrSem->down();
+      cerrLock->lock();
       //      if( tasks.size() == 1 ){
 
       cerr << iteration << ") Considering task: " << *task;
@@ -669,7 +722,7 @@ MixedScheduler::execute(const ProcessorGroup * pc,
 	}
 	
 	cerr << "\n";
-      cerrSem->up();
+      cerrLock->unlock();
       //      }
 #endif
 
@@ -755,10 +808,10 @@ MixedScheduler::execute(const ProcessorGroup * pc,
       vector<Task *>::iterator loc = find(tasks.begin(), tasks.end(),
 					  done[ num ] );
 #if DAV_DEBUG
-      cerrSem->down();
+      cerrLock->lock();
       cerr << "Removing " << **loc << " from queue (size now is: " 
 	   << tasks.size()-1 << ")\n";
-      cerrSem->up();
+      cerrLock->unlock();
 #endif
       tasks.erase( loc );
     }
@@ -1140,7 +1193,7 @@ MixedScheduler::scatterParticles(const ProcessorGroup* pc,
    level->selectPatches(l, h, neighbors);
 
    vector<MPIScatterRecord*> sr(neighbors.size());
-   for(int i=0;i<sr.size();i++)
+   for(int i=0;i<(int)sr.size();i++)
       sr[i]=0;
    for(int m = 0; m < reloc_numMatls; m++){
       ParticleSubset* pset = old_dw->getParticleSubset(m, patch);
@@ -1148,51 +1201,51 @@ MixedScheduler::scatterParticles(const ProcessorGroup* pc,
       new_dw->get(px, reloc_old_posLabel, pset);
 
       ParticleSubset* relocset = scinew ParticleSubset(pset->getParticleSet(),
-                                                    false, -1, 0);
+						       false, -1, 0);
 
       for(ParticleSubset::iterator iter = pset->begin();
-          iter != pset->end(); iter++){
-         particleIndex idx = *iter;
-         if(!patch->getBox().contains(px[idx])){
-            relocset->addParticle(idx);
-         }
+	  iter != pset->end(); iter++){
+	 particleIndex idx = *iter;
+	 if(!patch->getBox().contains(px[idx])){
+	    relocset->addParticle(idx);
+	 }
       }
       if(relocset->numParticles() > 0){
-         // Figure out where they went...
-         for(ParticleSubset::iterator iter = relocset->begin();
-             iter != relocset->end(); iter++){
-            particleIndex idx = *iter;
-            // This loop should change - linear searches are not good!
-            int i;
-            for(i=0;i<neighbors.size();i++){
-               if(neighbors[i]->getBox().contains(px[idx])){
-                  break;
-               }
-            }
-            if(i == neighbors.size()){
-               // Make sure that the particle left the world
-               if(level->containsPoint(px[idx]))
-                  throw InternalError("Particle fell through the cracks!");
-            } else {
-               if(!sr[i]){
-                  sr[i] = scinew MPIScatterRecord();
-                  sr[i]->matls.resize(reloc_numMatls);
-                  for(int m=0;m<reloc_numMatls;m++){
-                     sr[i]->matls[m]=0;
-                  }
-               }
-               if(!sr[i]->matls[m]){
-                  MPIScatterMaterialRecord* smr=scinew MPIScatterMaterialRecord();
-                  sr[i]->matls[m]=smr;
-                  smr->vars.push_back(new_dw->getParticleVariable(reloc_old_posLabel, pset));
-                  for(int v=0;v<reloc_old_labels[m].size();v++)
-                     smr->vars.push_back(new_dw->getParticleVariable(reloc_old_labels[m][v], pset));
-                  smr->relocset = scinew ParticleSubset(pset->getParticleSet(),
-                                                     false, -1, 0);
-               }
-               sr[i]->matls[m]->relocset->addParticle(idx);
-            }
-         }
+	 // Figure out where they went...
+	 for(ParticleSubset::iterator iter = relocset->begin();
+	     iter != relocset->end(); iter++){
+	    particleIndex idx = *iter;
+	    // This loop should change - linear searches are not good!
+	    int i;
+	    for(i=0;i<(int)neighbors.size();i++){
+	       if(neighbors[i]->getBox().contains(px[idx])){
+		  break;
+	       }
+	    }
+	    if(i == (int)neighbors.size()){
+	       // Make sure that the particle left the world
+	       if(level->containsPoint(px[idx]))
+		  throw InternalError("Particle fell through the cracks!");
+	    } else {
+	       if(!sr[i]){
+		  sr[i] = scinew MPIScatterRecord();
+		  sr[i]->matls.resize(reloc_numMatls);
+		  for(int m=0;m<reloc_numMatls;m++){
+		     sr[i]->matls[m]=0;
+		  }
+	       }
+	       if(!sr[i]->matls[m]){
+		  MPIScatterMaterialRecord* smr=scinew MPIScatterMaterialRecord();
+		  sr[i]->matls[m]=smr;
+		  smr->vars.push_back(new_dw->getParticleVariable(reloc_old_posLabel, pset));
+		  for(int v=0;v<(int)reloc_old_labels[m].size();v++)
+		     smr->vars.push_back(new_dw->getParticleVariable(reloc_old_labels[m][v], pset));
+		  smr->relocset = scinew ParticleSubset(pset->getParticleSet(),
+						     false, -1, 0);
+	       }
+	       sr[i]->matls[m]->relocset->addParticle(idx);
+	    }
+	 }
       }
       delete relocset;
    }
@@ -1200,60 +1253,70 @@ MixedScheduler::scatterParticles(const ProcessorGroup* pc,
    int me = pc->myrank();
    ASSERTEQ(sr.size(), sgargs.dest.size());
    ASSERTEQ(sr.size(), sgargs.tags.size());
-   for(int i=0;i<sr.size();i++){
+   for(int i=0;i<(int)sr.size();i++){
       if(sgargs.dest[i] == me){
-         new_dw->scatter(sr[i], patch, neighbors[i]);
+	 new_dw->scatter(sr[i], patch, neighbors[i]);
       } else {
-         // THIS SHOULD CHANGE INTO A SINGLE SEND, INSTEAD OF ONE PER MATL
-         if(sr[i]){
-            int sendsize = 0;
-            for(int j=0;j<sr[i]->matls.size();j++){
-               MPIScatterMaterialRecord* mr = sr[i]->matls[j];
-               int size;
-               MPI_Pack_size(1, MPI_INT, pc->getComm(), &size);
-               sendsize+=size;
-               int numP = mr->relocset->numParticles();
-               for(int v=0;v<mr->vars.size();v++){
-                  ParticleVariableBase* var = mr->vars[v];
-                  ParticleVariableBase* var2 = var->cloneSubset(mr->relocset);
-                  var2->packsizeMPI(&sendsize, pc, 0, numP);
-                  //delete var2;
-               }
-            }
-            MPI_Send(&sendsize, 1, MPI_INT, sgargs.dest[i],
-                     sgargs.tags[i]|RECV_BUFFER_SIZE_TAG, pc->getComm());
-            char* buf = scinew char[sendsize];
-            int position = 0;
-            for(int j=0;j<sr[i]->matls.size();j++){
-               MPIScatterMaterialRecord* mr = sr[i]->matls[j];
-               int numP = mr->relocset->numParticles();
-               MPI_Pack(&numP, 1, MPI_INT, buf, sendsize, &position, pc->getComm());
-               for(int v=0;v<mr->vars.size();v++){
-                  ParticleVariableBase* var = mr->vars[v];
-                  ParticleVariableBase* var2 = var->cloneSubset(mr->relocset);
-                  var2->packMPI(buf, sendsize, &position, pc, 0, numP);
-                  delete var2;
-               }
-            }
-            ASSERTEQ(position, sendsize);
-            MPI_Send(buf, sendsize, MPI_PACKED, sgargs.dest[i], sgargs.tags[i],
-                     pc->getComm());
-            delete[] buf;
-         } else {
-            int sendsize = 0;
-            MPI_Send(&sendsize, 1, MPI_INT, sgargs.dest[i],
-                     sgargs.tags[i]|RECV_BUFFER_SIZE_TAG,
-                     pc->getComm());
-         }
+	 // THIS SHOULD CHANGE INTO A SINGLE SEND, INSTEAD OF ONE PER MATL
+	 if(sr[i]){
+	    int sendsize = 0;
+	    for(int j=0;j<(int)sr[i]->matls.size();j++){
+	      if (sr[i]->matls[j]) {
+		MPIScatterMaterialRecord* mr = sr[i]->matls[j];
+		int size;
+		MPI_Pack_size(1, MPI_INT, pc->getComm(), &size);
+		sendsize+=size;
+		int numP = mr->relocset->numParticles();
+		for(int v=0;v<(int)mr->vars.size();v++){
+		  ParticleVariableBase* var = mr->vars[v];
+		  ParticleVariableBase* var2 = var->cloneSubset(mr->relocset);
+		  var2->packsizeMPI(&sendsize, pc, 0, numP);
+		  //delete var2;
+		}
+	      } else {
+		int size;
+		MPI_Pack_size(1, MPI_INT, pc->getComm(), &size);
+		sendsize+=size;
+	      }
+	    }
+	    char* buf = scinew char[sendsize];
+	    int position = 0;
+	    for(int j=0;j<(int)sr[i]->matls.size();j++){
+	      if (sr[i]->matls[j]) {
+		MPIScatterMaterialRecord* mr = sr[i]->matls[j];
+		int numP = mr->relocset->numParticles();
+		MPI_Pack(&numP, 1, MPI_INT, buf, sendsize, &position, pc->getComm());
+		for(int v=0;v<(int)mr->vars.size();v++){
+		  ParticleVariableBase* var = mr->vars[v];
+		  ParticleVariableBase* var2 = var->cloneSubset(mr->relocset);
+		  int numP = mr->relocset->numParticles();
+		  var2->packMPI(buf, sendsize, &position, pc, 0, numP);
+		  delete var2;
+		}
+	      } else {
+		int numP = 0;
+		MPI_Pack(&numP, 1, MPI_INT, buf, sendsize, &position, pc->getComm());
+              }   
+	    }
+	    ASSERTEQ(position, sendsize);
+	    MPI_Send(buf, sendsize, MPI_PACKED, sgargs.dest[i], sgargs.tags[i],
+		     pc->getComm());
+	    log.logSend(0, sizeof(int), "scatter");
+	    delete[] buf;
+	 } else {
+	    MPI_Send(NULL, 0, MPI_PACKED, sgargs.dest[i],
+	        sgargs.tags[i], pc->getComm());
+	    log.logSend(0, sizeof(int), "scatter");
+	 }
       }
    }
 } // end scatterParticles()
 
 void
 MixedScheduler::gatherParticles(const ProcessorGroup* pc,
-                              const Patch* patch,
-                              DataWarehouseP& old_dw,
-                              DataWarehouseP& new_dw)
+			      const Patch* patch,
+			      DataWarehouseP& old_dw,
+			      DataWarehouseP& new_dw)
 {
    const Level* level = patch->getLevel();
 
@@ -1270,28 +1333,27 @@ MixedScheduler::gatherParticles(const ProcessorGroup* pc,
    ASSERTEQ(sgargs.tags.size(), neighbors.size());
    vector<char*> recvbuf(neighbors.size());
    vector<int> recvpos(neighbors.size());
-   for(int i=0;i<neighbors.size();i++){
+   for(int i=0;i<(int)neighbors.size();i++){
       if(patch != neighbors[i]){
-         if(sgargs.dest[i] == me){
-            ScatterGatherBase* sgb = new_dw->gather(neighbors[i], patch);
-            if(sgb != 0){
-               MPIScatterRecord* srr = dynamic_cast<MPIScatterRecord*>(sgb);
-               ASSERT(srr != 0);
-               sr.push_back(srr);
-            }
-         } else {
-            MPI_Status stat;
-            MPI_Recv(&recvsize[i], 1, MPI_INT,
-                     sgargs.dest[i], sgargs.tags[i]|RECV_BUFFER_SIZE_TAG,
-                     pc->getComm(), &stat);
-            recvpos[i] = 0;
-            if(recvsize[i]){
-               recvbuf[i] = scinew char[recvsize[i]];
-               MPI_Recv(recvbuf[i], recvsize[i], MPI_PACKED,
-                        sgargs.dest[i], sgargs.tags[i],
-                        pc->getComm(), &stat);
-            }
-         }
+	 if(sgargs.dest[i] == me){
+	    ScatterGatherBase* sgb = new_dw->gather(neighbors[i], patch);
+	    if(sgb != 0){
+	       MPIScatterRecord* srr = dynamic_cast<MPIScatterRecord*>(sgb);
+	       ASSERT(srr != 0);
+	       sr.push_back(srr);
+	    }
+	 } else {
+	    MPI_Status stat;
+	    MPI_Probe(sgargs.dest[i], sgargs.tags[i], pc->getComm(), &stat);
+	    MPI_Get_count(&stat, MPI_PACKED, &recvsize[i]);
+	    log.logRecv(0, sizeof(int), "sg_buffersize");
+	    recvpos[i] = 0;
+	    recvbuf[i] = scinew char[recvsize[i]];
+	    MPI_Recv(recvbuf[i], recvsize[i], MPI_PACKED,
+		     sgargs.dest[i], sgargs.tags[i],
+		     pc->getComm(), &stat);
+	    log.logRecv(0, recvsize[i], "gather");
+	 }
       }
    }
    for(int m=0;m<reloc_numMatls;m++){
@@ -1305,42 +1367,43 @@ MixedScheduler::gatherParticles(const ProcessorGroup* pc,
       new_dw->get(px, reloc_old_posLabel, pset);
 
       ParticleSubset* keepset = scinew ParticleSubset(pset->getParticleSet(),
-                                                   false, -1, 0);
+						      false, -1, 0);
 
       for(ParticleSubset::iterator iter = pset->begin();
-          iter != pset->end(); iter++){
-         particleIndex idx = *iter;
-         if(patch->getBox().contains(px[idx]))
-            keepset->addParticle(idx);
+	  iter != pset->end(); iter++){
+	 particleIndex idx = *iter;
+	 if(patch->getBox().contains(px[idx]))
+	    keepset->addParticle(idx);
       }
       subsets.push_back(keepset);
       particleIndex totalParticles = keepset->numParticles();
-      ParticleVariableBase* pos = new_dw->getParticleVariable(reloc_old_posLabel, pset);
+      ParticleVariableBase* pos = new_dw->
+				    getParticleVariable(reloc_old_posLabel, pset);
       posvars.push_back(pos);
 
       // Get the subsets from the neighbors
       particleIndex recvParticles = 0;
-      for(int i=0;i<sr.size();i++){
-         if(sr[i]->matls[m]){
-            subsets.push_back(sr[i]->matls[m]->relocset);
-            posvars.push_back(sr[i]->matls[m]->vars[0]);
-            totalParticles += sr[i]->matls[m]->relocset->numParticles();
-         }
+      for(int i=0;i<(int)sr.size();i++){
+	 if(sr[i]->matls[m]){
+	    subsets.push_back(sr[i]->matls[m]->relocset);
+	    posvars.push_back(sr[i]->matls[m]->vars[0]);
+	    totalParticles += sr[i]->matls[m]->relocset->numParticles();
+	 }
       }
       vector<int> counts(neighbors.size());
-      for(int i=0;i<neighbors.size();i++){
-         if(sgargs.dest[i] != me){
-            if(recvsize[i]){
-               int n=-1234;
-               MPI_Unpack(recvbuf[i], recvsize[i], &recvpos[i],
-                          &n, 1, MPI_INT, pc->getComm());
-               counts[i]=n;
-               totalParticles += n;
-               recvParticles += n;
-            } else {
-               counts[i] = 0;
-            }
-         }
+      for(int i=0;i<(int)neighbors.size();i++){
+	 if(sgargs.dest[i] != me){
+	    if(recvsize[i]){
+	       int n=-1234;
+	       MPI_Unpack(recvbuf[i], recvsize[i], &recvpos[i],
+			  &n, 1, MPI_INT, pc->getComm());
+	       counts[i]=n;
+	       totalParticles += n;
+	       recvParticles += n;
+	    } else {
+	       counts[i] = 0;
+	    }
+	 }
       }
 
       ParticleVariableBase* newpos = pos->clone();
@@ -1348,53 +1411,54 @@ MixedScheduler::gatherParticles(const ProcessorGroup* pc,
       newpos->gather(newsubset, subsets, posvars, recvParticles);
 
       particleIndex start = totalParticles - recvParticles;
-      for(int i=0;i<neighbors.size();i++){
-         if(sgargs.dest[i] != me && counts[i]){
-            newpos->unpackMPI(recvbuf[i], recvsize[i], &recvpos[i], pc,
-                              start, counts[i]);
-            start += counts[i];
-         }
+      for(int i=0;i<(int)neighbors.size();i++){
+	 if(sgargs.dest[i] != me && counts[i]){
+	    newpos->unpackMPI(recvbuf[i], recvsize[i], &recvpos[i], pc,
+			      start, counts[i]);
+	    start += counts[i];
+	 }
       }
       ASSERTEQ(start, totalParticles);
 
       new_dw->put(*newpos, reloc_new_posLabel);
       delete newpos;
 
-      for(int v=0;v<reloc_old_labels[m].size();v++){
-         vector<ParticleVariableBase*> gathervars;
-         ParticleVariableBase* var = new_dw->getParticleVariable(reloc_old_labels[m][v], pset);
+      for(int v=0;v<(int)reloc_old_labels[m].size();v++){
+	 vector<ParticleVariableBase*> gathervars;
+	 ParticleVariableBase* var = new_dw->getParticleVariable(reloc_old_labels[m][v], pset);
 
-         gathervars.push_back(var);
-         for(int i=0;i<sr.size();i++){
-            if(sr[i]->matls[m])
-               gathervars.push_back(sr[i]->matls[m]->vars[v+1]);
-         }
-         ParticleVariableBase* newvar = var->clone();
-         newvar->gather(newsubset, subsets, gathervars, recvParticles);
-         particleIndex start = totalParticles - recvParticles;
-         for(int i=0;i<neighbors.size();i++){
-            if(sgargs.dest[i] != me && counts[i]){
-               newvar->unpackMPI(recvbuf[i], recvsize[i], &recvpos[i], pc,
-                                 start, counts[i]);
-               start += counts[i];
-            }
-         }
-         ASSERTEQ(start, totalParticles);
-         new_dw->put(*newvar, reloc_new_labels[m][v]);
-         delete newvar;
+	 gathervars.push_back(var);
+	 for(int i=0;i<(int)sr.size();i++){
+	    if(sr[i]->matls[m])
+	       gathervars.push_back(sr[i]->matls[m]->vars[v+1]);
+	 }
+	 ParticleVariableBase* newvar = var->clone();
+	 newvar->gather(newsubset, subsets, gathervars, recvParticles);
+	 particleIndex start = totalParticles - recvParticles;
+	 for(int i=0;i<(int)neighbors.size();i++){
+	    if(sgargs.dest[i] != me && counts[i]){
+	       newvar->unpackMPI(recvbuf[i], recvsize[i], &recvpos[i], pc,
+				 start, counts[i]);
+	       start += counts[i];
+	    }
+	 }
+	 ASSERTEQ(start, totalParticles);
+	 new_dw->put(*newvar, reloc_new_labels[m][v]);
+	 delete newvar;
       }
-      for(int i=0;i<sr.size();i++){
-        if(sr[i]->matls[m])
-          delete sr[i]->matls[m];
-        delete sr[i];
-      }
-      for(int i=0;i<subsets.size();i++)
-         delete subsets[i];
+      for(int i=0;i<(int)subsets.size();i++)
+	 delete subsets[i];
    }
-   for(int i=0;i<neighbors.size();i++){
+   for(int i=0;i<(int)sr.size();i++){
+     for(int m=0;m<reloc_numMatls;m++)
+       if(sr[i]->matls[m])
+	 delete sr[i]->matls[m];
+     delete sr[i];
+   }
+   for(int i=0;i<(int)neighbors.size();i++){
       ASSERTEQ(recvsize[i], recvpos[i]);
       if(sgargs.dest[i] != me && recvsize[i] != 0){
-         delete recvbuf[i];
+	 delete recvbuf[i];
       }
    }
 } // end gatherParticles()
@@ -1407,31 +1471,31 @@ MixedScheduler::displayTaskGraph( vector<Task*> & taskGraph )
     cerr << "\n---------------------------\n";
     cerr << "Begin: Tasks in Task List:\n";
     for(vector<Task*>::iterator iter = taskGraph.begin();
-        iter != taskGraph.end(); iter++){
+	iter != taskGraph.end(); iter++){
       cerr << "\n" << **iter 
-           << "\n  REQUIRES:\n";
+	   << "\n  REQUIRES:\n";
       const vector<Task::Dependency*>& reqs = (*iter)->getRequires();
       for(vector<Task::Dependency*>::const_iterator riter = reqs.begin();
-          riter != reqs.end(); riter++){
-        cerr << "     " << *((*riter)->d_var) << "              P: ";
-        if( (*riter)->d_patch )
-          cerr << (*riter)->d_patch->getID();
-        else
-          cerr << "?";
-        cerr << " MI: " << (*riter)->d_matlIndex << "\n";
+	  riter != reqs.end(); riter++){
+	cerr << "     " << *((*riter)->d_var) << "		P: ";
+	if( (*riter)->d_patch )
+	  cerr << (*riter)->d_patch->getID();
+	else
+	  cerr << "?";
+	cerr << " MI: " << (*riter)->d_matlIndex << "\n";
       }
 
       cerr << "\n  COMPUTES:\n";
       const vector<Task::Dependency*>& comps = (*iter)->getComputes();
       
       for(vector<Task::Dependency*>::const_iterator riter = comps.begin();
-          riter != comps.end(); riter++){
-        cerr << "     " << *((*riter)->d_var) << "              P: ";
-        if( (*riter)->d_patch )
-          cerr << (*riter)->d_patch->getID();
-        else
-          cerr << "?";
-        cerr << " MI: " << (*riter)->d_matlIndex << "\n";
+	  riter != comps.end(); riter++){
+	cerr << "     " << *((*riter)->d_var) << "		P: ";
+	if( (*riter)->d_patch )
+	  cerr << (*riter)->d_patch->getID();
+	else
+	  cerr << "?";
+	cerr << " MI: " << (*riter)->d_matlIndex << "\n";
       }
     }
     cerr << "End: Tasks in Task List:\n";
@@ -1464,43 +1528,44 @@ MixedScheduler::dependencySatisfied( const Task::Dependency * comp,
 				   vector<MPI_Request> & send_ids,
 				   bool sendData )
 {
-    DependData              d( comp );
-    vector<Task *>          tasks = depToTasks[ d ];
+    DependData		    d( comp );
+    vector<Task *>	    tasks = depToTasks[ d ];
     vector<Task*>::iterator taskIter;
 
     // List of processor ids that data has been sent to.
-    vector<int>             sentTo;
+    vector<int>		    sentTo;
 
 #if DAV_DEBUG
-	  cerrSem->down();
+	  cerrLock->lock();
 	  cerr << *comp << " has been computed!\n";
-	  cerr << "Comps task is: " << *comp->d_task << "\n";
-	  cerrSem->up();
+	  cerr << "Finished task is: " << *comp->d_task << ", computes: " 
+	       << tasks.size() << " things\n";
+	  cerrLock->unlock();
 #endif
     for( taskIter = tasks.begin(); taskIter != tasks.end(); taskIter++){
 
       Task * task = *taskIter;
 #if DAV_DEBUG
-      cerrSem->down();
+      cerrLock->lock();
       cerr << *task << " needs it!\n";
-      cerrSem->up();
+      cerrLock->unlock();
 #endif
       // Determine if I should send this data to other DWs
       //   The task that I am sending to must not be me, and the task computing 
       //   the data must be me.
       if( task->getAssignedResourceIndex() != me && sendData ) {
 #if DAV_DEBUG
-	  cerrSem->down();
+	  cerrLock->lock();
 	  cerr << "Task is not mine\n";
-	  cerrSem->up();
+	  cerrLock->unlock();
 #endif
 	// Scatter/Gather/Reduction Tasks handle there own sending of data...
 	if( comp->d_task->getType() == Task::Normal ) {
 
 #if DAV_DEBUG
-	  cerrSem->down();
+	  cerrLock->lock();
 	  cerr << "Is normal so may need to send data to it!\n"; 
-	  cerrSem->up();
+	  cerrLock->unlock();
 #endif
 	  const Task::Dependency * req = findRequirement( comp, task );
 
@@ -1508,17 +1573,17 @@ MixedScheduler::dependencySatisfied( const Task::Dependency * comp,
 						req->d_task->getAssignedResourceIndex() );
 
 #if DAV_DEBUG
-	  cerrSem->down();
+	  cerrLock->lock();
 	  cerr << "Checking to see if data has been sent to: "
 	       << req->d_task->getAssignedResourceIndex() << "\n";
 	  cerr << "    Size of vector is " << sentTo.size() << "\n";
-	  cerrSem->up();
+	  cerrLock->unlock();
 #endif
 	  if( procLoc != sentTo.end() ){
 #if DAV_DEBUG
-	  cerrSem->down();
+	  cerrLock->lock();
 	  cerr << "The data has already been sent to that processor!\n"; 
-	  cerrSem->up();
+	  cerrLock->unlock();
 #endif
 	    continue;
 	  }
@@ -1537,9 +1602,9 @@ MixedScheduler::dependencySatisfied( const Task::Dependency * comp,
 	  // HMMM... I AM NOT SURE THE ABOVE IS RIGHT...
 	  // SHOULD BE ABLE TO SEND IT AND KEEP GOING...
 #if DAV_DEBUG
-	  cerrSem->down();
-	  cerr << "MPI Sending " << *req << "\n";
-	  cerrSem->up();
+	  cerrLock->lock();
+	  cerr << "Considering MPI Sending " << *req << "\n";
+	  cerrLock->unlock();
 #endif
 	  int size;
 	  dw->sendMPI(req->d_var, req->d_matlIndex,
@@ -1548,24 +1613,28 @@ MixedScheduler::dependencySatisfied( const Task::Dependency * comp,
 		      req->d_serialNumber, &size, &requestid);
 
 	  if(size != -1){
+#if DAV_DEBUG
+	    cerrLock->lock();
+	    cerr << "MPI Sent: " << *req << "\n";
+	    cerrLock->unlock();
+#endif
 	    log.logSend(req, size);
 	    send_ids.push_back( requestid );
-	  }
-
+	    sentTo.push_back( req->d_task->getAssignedResourceIndex() );
 #if DAV_DEBUG
-	  cerrSem->down();
-	  cerr << "sent to " << req->d_task->getAssignedResourceIndex() << "\n";
-	  cerrSem->up();
+	    cerrLock->lock();
+	    cerr << "sent to " << req->d_task->getAssignedResourceIndex() << "\n";
+	    cerrLock->unlock();
 #endif
-	  sentTo.push_back( req->d_task->getAssignedResourceIndex() );
+	  }
 	}
       }
 
       // Take care of house keeping...
 #if DAV_DEBUG
-      cerrSem->down();
+      cerrLock->lock();
       cerr << "Removing " << *d.dep << " from task " << *task << "\n";
-      cerrSem->up();
+      cerrLock->unlock();
 #endif
 
       TaskData taskData( task );
@@ -1584,7 +1653,7 @@ MixedScheduler::dependencySatisfied( const Task::Dependency * comp,
 	cerr << "Dependency: " << *(d.dep) << " not found in taskToDeps\n";
 	throw InternalError( "This should not happen" );
       }
-           
+	   
       taskToDeps[ taskData ].erase( loc );
     } // end for( taskIter )
 #if DAV_DEBUG
@@ -1598,6 +1667,10 @@ MixedScheduler::dependenciesSatisfied( const vector<Task::Dependency*> & comps,
 				     vector<MPI_Request> & send_ids,
 				     bool sendData )
 {
+#if DAV_DEBUG
+  cerr << "There were " << comps.size() << " computed dependencies.\n";
+#endif
+
   vector<Task::Dependency*>::const_iterator iter;
   for( iter = comps.begin(); iter != comps.end(); iter++ ) {
     const Task::Dependency* cmp = *iter;
@@ -1621,10 +1694,13 @@ MixedScheduler::releaseLoadBalancer()
 
 //
 // $Log$
-// Revision 1.2  2000/09/27 02:08:31  dav
+// Revision 1.3  2000/09/28 02:15:51  dav
+// updates due to not sending 0 particles
+//
+// Revision 1.2	 2000/09/27 02:08:31  dav
 // bug fixes that should have been made before the initial commit
 //
-// Revision 1.1  2000/09/26 18:50:26  dav
+// Revision 1.1	 2000/09/26 18:50:26  dav
 // Initial commit.  These files are derived from Steve's MPIScheduler,
 // and thus have a lot in common.  Perhaps in the future, the common
 // routines should be moved into a common location.
