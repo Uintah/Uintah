@@ -398,7 +398,7 @@ void DataArchiver::finalizeTimestep(double time, double delt,
 	 initCheckpoints(sched);
    }
   
-   if (d_outputInterval != 0.0) {
+   if (d_outputInterval != 0.0 && delt != 0) {
       // Schedule task to dump out reduction variables at every timestep
       Task* t = scinew Task("DataArchiver::outputReduction", new_dw, new_dw,
 			    this, &DataArchiver::outputReduction, time);
