@@ -18,6 +18,7 @@ class TexturedTri : public Object, public UVMapping {
                       // texture space
     double lntu,lntv; // length of the above basis vectors
     Point p1, p2, p3; // object space vertices
+    Vector vn1, vn2, vn3; // vertex normals
     Point t1, t2, t3; // texture vertices (map to p1, p2, and p3 respectively)
     Vector n;         // the normal vector
     double d;
@@ -30,6 +31,9 @@ public:
 	return bad;
     }
     TexturedTri(Material* matl, const Point&, const Point&, const Point&);
+    TexturedTri(Material* matl, const Point& p1, const Point& p2, 
+		const Point& p3, const Vector& vn1, const Vector& vn2, 
+		const Vector& vn3);
     virtual ~TexturedTri();
     virtual void intersect(const Ray& ray, HitInfo& hit, DepthStats* st,
 			   PerProcessorContext*);
