@@ -331,7 +331,7 @@ void ICE::scheduleTimeAdvance(double t, double dt,const LevelP& level,
 
   scheduleAdvectAndAdvanceInTime(sched, patches, all_matls);
 
-//  schedulePrintConservedQuantities(sched, patches, press_matl,all_matls); 
+  schedulePrintConservedQuantities(sched, patches, press_matl,all_matls); 
   
 }
 
@@ -686,7 +686,6 @@ void ICE::actuallyComputeStableTimestep(const ProcessorGroup*,
     cout << "Doing Compute Stable Timestep on patch " << patch->getID() 
          << "\t\t ICE" << endl;
   #endif
-      double initial_dT = d_initialDt;
       
       Vector dx = patch->dCell();
       double delt_CFL = 100000, fudge_factor = 1.;
@@ -790,16 +789,23 @@ void ICE::actuallyInitialize(const ProcessorGroup*,
     }
     for (int m = 0; m < numMatls; m++ ) {
       ICEMaterial* ice_matl = d_sharedState->getICEMaterial(m);
+      int indx = ice_matl->getDWIndex();
       ice_matl->initializeCells(rho_micro[m], sp_vol_CC[m],   rho_top_cycle[m],
                                 Temp_CC[m],   speedSound[m], 
                                 vol_frac_CC[m], vel_CC[m], 
                                 press_CC,  numALLMatls,    patch, new_dw);
 
       cv[m] = ice_matl->getSpecificHeat();
+      cerr << "Before BC application" << endl;
+      char description[50];
+      sprintf(description, "Initialization_Mat_%d ",m);
+      printData(   patch, 1, description, "rho_CC",      rho_top_cycle[m]);
 
-      setBC(rho_top_cycle[m], "Density",      patch);
-      setBC(Temp_CC[m],       "Temperature",  patch);
-      setBC(vel_CC[m],        "Velocity",     patch); 
+      setBC(rho_top_cycle[m], "Density",      patch, indx);
+      setBC(Temp_CC[m],       "Temperature",  patch, indx);
+      setBC(vel_CC[m],        "Velocity",     patch, indx); 
+      cerr << "After BC application" << endl;
+      printData(   patch, 1, description, "rho_CC",      rho_top_cycle[m]);
 
       //__________________________________
       //  Adjust pressure and Temp field if g != 0
@@ -808,7 +814,7 @@ void ICE::actuallyInitialize(const ProcessorGroup*,
         hydrostaticPressureAdjustment(patch, 
                                       rho_micro[SURROUND_MAT], press_CC);
 
-        setBC(press_CC, rho_micro[SURROUND_MAT], "Pressure",patch);
+        setBC(press_CC, rho_micro[SURROUND_MAT], "Pressure",patch,0);
 
         ICEMaterial* ice_matl = d_sharedState->getICEMaterial(m);
         double gamma = ice_matl->getGamma();
@@ -851,7 +857,7 @@ void ICE::actuallyInitialize(const ProcessorGroup*,
         printVector( patch, 1, description, "wvel_CC", 2,  vel_CC[m]);
       }   
     }
-    setBC(press_CC, rho_micro[SURROUND_MAT], "Pressure",patch);
+    setBC(press_CC, rho_micro[SURROUND_MAT], "Pressure",patch,0);
     if (switchDebugInitialize){
        printData(   patch, 1, "Initialization", "press_CC", press_CC);
     }
@@ -1115,7 +1121,7 @@ void ICE::computeEquilibrationPressure(const ProcessorGroup*,
     }     // end of cell interator
 
     fprintf(stderr, "\n max. iterations in any cell %i\n", test_max_iter); 
-    setBC(press_new, rho_micro[SURROUND_MAT], "Pressure",patch);
+    setBC(press_new, rho_micro[SURROUND_MAT], "Pressure",patch,0);
 
     //__________________________________
     // carry rho_cc forward 
@@ -1315,9 +1321,9 @@ void ICE::computeFaceCenteredVelocities(const ProcessorGroup*,
         }
       }
 
-      setBC(uvel_FC,"Velocity","x",patch);
-      setBC(vvel_FC,"Velocity","y",patch);
-      setBC(wvel_FC,"Velocity","z",patch);
+      setBC(uvel_FC,"Velocity","x",patch,indx);
+      setBC(vvel_FC,"Velocity","y",patch,indx);
+      setBC(wvel_FC,"Velocity","z",patch,indx);
 
       new_dw->put(uvel_FC, lb->uvel_FCLabel, indx, patch);
       new_dw->put(vvel_FC, lb->vvel_FCLabel, indx, patch);
@@ -1416,14 +1422,14 @@ void ICE::addExchangeContributionToFCVel(const ProcessorGroup*,
     int num_coeff = ((numMatls)*(numMatls) - numMatls)/2;
     vector<double>::iterator it = d_K_mom.begin();
 
-    if (num_coeff == d_K_mom.size() ) {
+    if (num_coeff == (int)d_K_mom.size() ) {
       // Fill in the upper triangular matrix
       for (int i = 0; i < numMatls; i++ )  {
       	for (int j = i + 1; j < numMatls; j++) {
 	  K[i][j] = K[j][i] = *it++;
 	}
       }
-    } else if (2*num_coeff == d_K_mom.size() ) {
+    } else if (2*num_coeff == (int)d_K_mom.size() ) {
       // Fill in the whole matrix but skip the diagonal terms
       for (int i = 0; i < numMatls; i++ )  {
 	for (int j = 0; j < numMatls; j++) {
@@ -1595,9 +1601,11 @@ void ICE::addExchangeContributionToFCVel(const ProcessorGroup*,
     }
 
     for (int m = 0; m < numMatls; m++)  {
-      setBC(uvel_FCME[m],"Velocity","x",patch);
-      setBC(vvel_FCME[m],"Velocity","y",patch);
-      setBC(wvel_FCME[m],"Velocity","z",patch);
+      Material* matl = d_sharedState->getMaterial( m );
+      int indx = matl->getDWIndex();
+      setBC(uvel_FCME[m],"Velocity","x",patch,indx);
+      setBC(vvel_FCME[m],"Velocity","y",patch,indx);
+      setBC(wvel_FCME[m],"Velocity","z",patch,indx);
     }
 
    //---- P R I N T   D A T A ------ 
@@ -1752,7 +1760,7 @@ void ICE::computeDelPressAndUpdatePressCC(const ProcessorGroup*,
       delPress[*iter] = (delT * term1[*iter] - term2[*iter])/(term3[*iter]);
       press_CC[*iter]  = pressure[*iter] + delPress[*iter];    
     }
-    setBC(press_CC, rho_micro_CC[SURROUND_MAT], "Pressure",patch);
+    setBC(press_CC, rho_micro_CC[SURROUND_MAT], "Pressure",patch,0);
 
     new_dw->put(delPress, lb->delPress_CCLabel, 0, patch);
     new_dw->put(press_CC, lb->press_CCLabel,    0, patch);
@@ -1953,7 +1961,7 @@ void ICE::massExchange(const ProcessorGroup*,
     }
     //---- P R I N T   D A T A ------ 
     for(int m = 0; m < numMatls; m++) {
-    #if 0    // turn off for quality control tests
+    #if 1    // turn off for quality control tests
       if (switchDebugSource_Sink) {
         Material* matl = d_sharedState->getMaterial( m );
         int indx = matl->getDWIndex();
@@ -2170,7 +2178,6 @@ void ICE::accumulateEnergySourceSinks(const ProcessorGroup*,
       new_dw->get(rho_CC,      lb->rho_CCLabel,       indx,patch,
 		  Ghost::None, 0);                                            
 #endif
-
       new_dw->allocate(int_eng_source, lb->int_eng_source_CCLabel,indx,patch);
 
       //__________________________________
@@ -2332,7 +2339,7 @@ void ICE::computeLagrangianValues(const ProcessorGroup*,
       if (switchDebugLagrangianValues ) {
         if(mpm_matl) {
           new_dw->get(int_eng_L,lb->int_eng_L_CCLabel,indx,patch,Ghost::None,0);
-          new_dw->get(mom_L,    lb->mom_L_CCLabel,    indx,patch,Ghost::None,0);
+          new_dw->get(mom_L,  lb->mom_L_CCLabel,    indx,patch,Ghost::None,0);
         }
         char description[50];
         sprintf(description, "Bot_Lagrangian_Values_Mat_%d ",indx);
@@ -2456,7 +2463,7 @@ void ICE::addExchangeToMomentumAndEnergy(const ProcessorGroup*,
 
     vector<double>::iterator it=d_K_mom.begin(),it1=d_K_heat.begin();
 
-    if (num_coeff == d_K_mom.size() && num_coeff == d_K_heat.size()) {
+    if (num_coeff == (int)d_K_mom.size() && num_coeff==(int)d_K_heat.size()) {
       // Fill in the upper triangular matrix
       for (int i = 0; i < numMatls; i++ )  {
 	for (int j = i + 1; j < numMatls; j++) {
@@ -2464,7 +2471,8 @@ void ICE::addExchangeToMomentumAndEnergy(const ProcessorGroup*,
 	  H[i][j] = H[j][i] = *it1++;
 	}
       }
-    } else if (2*num_coeff==d_K_mom.size() && 2*num_coeff == d_K_heat.size()){
+    } else if (2*num_coeff==(int)d_K_mom.size() && 
+	       2*num_coeff == (int)d_K_heat.size()){
       // Fill in the whole matrix but skip the diagonal terms
       for (int i = 0; i < numMatls; i++ )  {
 	for (int j = 0; j < numMatls; j++) {
@@ -2598,8 +2606,10 @@ void ICE::addExchangeToMomentumAndEnergy(const ProcessorGroup*,
     //__________________________________
     //  Set the Boundary condiitions
     for (int m = 0; m < numMatls; m++)  {
-      setBC(vel_CC[m],"Velocity",patch);
-      setBC(Temp_CC[m],"Temperature",patch);
+      ICEMaterial* matl = d_sharedState->getICEMaterial( m );
+      int indx = matl->getDWIndex();
+      setBC(vel_CC[m],"Velocity",patch,indx);
+      setBC(Temp_CC[m],"Temperature",patch,indx);
     }
     //__________________________________
     // Convert vars. primitive-> flux 
@@ -2712,7 +2722,7 @@ void ICE::advectAndAdvanceInTime(const ProcessorGroup*,
       for(CellIterator iter = patch->getCellIterator(); !iter.done(); iter++) {
         rho_CC[*iter]  = (mass_L[*iter] + q_advected[*iter]) * invvol;
       }
-      setBC(rho_CC,   "Density",              patch);
+      setBC(rho_CC,   "Density",              patch,indx);
       // mass_CC is needed for MPMICE
       for(CellIterator iter=patch->getExtraCellIterator();!iter.done();iter++){
         mass_CC[*iter] = rho_CC[*iter] * vol;
@@ -2730,7 +2740,7 @@ void ICE::advectAndAdvanceInTime(const ProcessorGroup*,
         mass = rho_CC[*iter] * vol;
         vel_CC[*iter] = (mom_L_ME[*iter] + qV_advected[*iter])/mass ;
       }
-      setBC(vel_CC,   "Velocity",             patch);
+      setBC(vel_CC,   "Velocity",             patch,indx);
 
       //__________________________________
       // Advect internal energy and backout Temp_CC
@@ -2743,7 +2753,7 @@ void ICE::advectAndAdvanceInTime(const ProcessorGroup*,
         mass = rho_CC[*iter] * vol;
         temp[*iter] = (int_eng_L_ME[*iter] + q_advected[*iter])/(mass*cv);
       }
-      setBC(temp,     "Temperature",          patch);
+      setBC(temp,     "Temperature",          patch,indx);
 
       //__________________________________
       // Advection of specific volume.  Advected quantity is a volume fraction
@@ -2974,7 +2984,7 @@ void ICE::printConservedQuantities(const ProcessorGroup*,
  Purpose~   Takes care Pressure_CC
  ---------------------------------------------------------------------  */
 void ICE::setBC(CCVariable<double>& press_CC, CCVariable<double>& rho_micro,
-              const string& kind, const Patch* patch)
+              const string& kind, const Patch* patch, const int mat_id)
 {
   
   Vector dx = patch->dCell();
@@ -2982,37 +2992,26 @@ void ICE::setBC(CCVariable<double>& press_CC, CCVariable<double>& rho_micro,
   
   for(Patch::FaceType face = Patch::startFace;
       face <= Patch::endFace; face=Patch::nextFace(face)){
-    vector<BoundCondBase* > bcs;
-    bcs = patch->getBCValues(face);
-
-    if (bcs.size() == 0) continue;
-    
-    BoundCondBase* bc_base = 0;
-
-    for (int i = 0; i<(int)bcs.size(); i++ ) {
-      if (bcs[i]->getType() == kind) {
-	bc_base = bcs[i];
-	break;
-      }
+    BoundCondBase* bcs;
+    BoundCond<double>* new_bcs;
+    if (patch->getBCType(face) == Patch::None) {
+      bcs = patch->getBCValues(mat_id,kind,face);
+      new_bcs = dynamic_cast<BoundCond<double> *>(bcs);
     }
-
-    if (bc_base == 0)
+    else
       continue;
-    
-    if (bc_base->getType() == "Pressure") {
-      PressureBoundCond* bc = dynamic_cast<PressureBoundCond*>(bc_base);
-      
-      if (  fabs(gravity.x()) > 0.0  || 
-            fabs(gravity.y()) > 0.0  || 
-            fabs(gravity.z()) > 0.0) {
+
+    if (new_bcs != 0) {
+      if (new_bcs->getKind() == "Dirichlet") 
+	press_CC.fillFace(face,new_bcs->getValue());
+
+      if (new_bcs->getKind() == "Neumann") 
+	press_CC.fillFaceFlux(face,new_bcs->getValue(),dx);
+       
+      if ( fabs(gravity.x()) > 0.0  || 
+           fabs(gravity.y()) > 0.0  || 
+	   fabs(gravity.z()) > 0.0) {
         press_CC.setHydrostaticPressureBC(face, gravity, rho_micro, dx);
-      }
-      else {
-        if (bc->getKind() == "Dirichlet")
-         press_CC.fillFace(face,bc->getValue());
- 
-        if (bc->getKind() == "Neumann")
-         press_CC.fillFaceFlux(face,bc->getValue(),dx);
       }
     }
   }
@@ -3023,46 +3022,28 @@ void ICE::setBC(CCVariable<double>& press_CC, CCVariable<double>& rho_micro,
  Purpose~   Takes care of Density_CC and Temperature_CC
  ---------------------------------------------------------------------  */
 void ICE::setBC(CCVariable<double>& variable, const string& kind, 
-		const Patch* patch)
+		const Patch* patch, const int mat_id)
 {
-  
+  cerr << "Setting BC " << kind << " for material " << mat_id << endl;
   Vector dx = patch->dCell();
   
   for(Patch::FaceType face = Patch::startFace;
       face <= Patch::endFace; face=Patch::nextFace(face)){
-    vector<BoundCondBase* > bcs;
-    bcs = patch->getBCValues(face);
-
-    if (bcs.size() == 0) continue;
-    
-    BoundCondBase* bc_base = 0;
-
-    for (int i = 0; i<(int)bcs.size(); i++ ) {
-      if (bcs[i]->getType() == kind) {
-	bc_base = bcs[i];
-	break;
-      }
-    }
-
-    if (bc_base == 0)
+    BoundCondBase* bcs;
+    BoundCond<double>* new_bcs;
+    if (patch->getBCType(face) == Patch::None) {
+      bcs = patch->getBCValues(mat_id,kind,face);
+      new_bcs = dynamic_cast<BoundCond<double> *>(bcs);
+    } else
       continue;
+
+    if (new_bcs != 0) {
+      if (new_bcs->getKind() == "Dirichlet") 
+	variable.fillFace(face,new_bcs->getValue());
+      
+      if (new_bcs->getKind() == "Neumann") 
+	variable.fillFaceFlux(face,new_bcs->getValue(),dx);
     
-    if (bc_base->getType() == "Density") {
-      DensityBoundCond* bc = dynamic_cast<DensityBoundCond*>(bc_base);
-      if (bc->getKind() == "Dirichlet") 
-	variable.fillFace(face,bc->getValue());
-      
-      if (bc->getKind() == "Neumann") 
-	variable.fillFaceFlux(face,bc->getValue(),dx);
-    }
-    if (bc_base->getType() == "Temperature") {
-      TemperatureBoundCond* bc = dynamic_cast<TemperatureBoundCond*>(bc_base);
-      if (bc->getKind() == "Dirichlet") 
-	variable.fillFace(face,bc->getValue());
-      
-      if (bc->getKind() == "Neumann") 
-	variable.fillFaceFlux(face,bc->getValue(),dx);
-      
     }
   }
 }
@@ -3073,36 +3054,28 @@ void ICE::setBC(CCVariable<double>& variable, const string& kind,
  Purpose~   Takes care of Velocity_CC Boundary conditions
  ---------------------------------------------------------------------  */
 void ICE::setBC(CCVariable<Vector>& variable, const string& kind, 
-		const Patch* patch) 
+		const Patch* patch, const int mat_id) 
 {
   IntVector  low, hi;
   Vector dx = patch->dCell();
   for(Patch::FaceType face = Patch::startFace;
       face <= Patch::endFace; face=Patch::nextFace(face)){
-    vector<BoundCondBase* > bcs;
-    bcs = patch->getBCValues(face);
-    if (bcs.size() == 0) continue;
-    
-    BoundCondBase* bc_base = 0;
-    for (int i = 0; i<(int)bcs.size(); i++ ) {
-      if (bcs[i]->getType() == kind) {
-	bc_base = bcs[i];
-	break;
-      }
-    }
-
-    if (bc_base == 0)
+    BoundCondBase* bcs;
+    BoundCond<Vector>* new_bcs;
+    if (patch->getBCType(face) == Patch::None) {
+      bcs = patch->getBCValues(mat_id,kind,face);
+      new_bcs = dynamic_cast<BoundCond<Vector> *>(bcs);
+    } else
       continue;
-    
-    if (bc_base->getType() == "Velocity") {
-      VelocityBoundCond* bc = dynamic_cast<VelocityBoundCond*>(bc_base);
-      if (bc->getKind() == "Dirichlet") 
-	variable.fillFace(face,bc->getValue());
+
+    if (new_bcs != 0) {
+      if (new_bcs->getKind() == "Dirichlet") 
+	variable.fillFace(face,new_bcs->getValue());
       
-      if (bc->getKind() == "Neumann") 
-	variable.fillFaceFlux(face,bc->getValue(),dx);
+      if (new_bcs->getKind() == "Neumann") 
+	variable.fillFaceFlux(face,new_bcs->getValue(),dx);
        
-      if (bc->getKind() == "NegInterior") {
+      if (new_bcs->getKind() == "NegInterior") {
          variable.fillFaceFlux(face,Vector(0.0,0.0,0.0),dx, -1.0);
       }  
     }  // end velocity loop
@@ -3113,44 +3086,36 @@ void ICE::setBC(CCVariable<Vector>& variable, const string& kind,
  Purpose~   Takes care of vel_FC.x()
  ---------------------------------------------------------------------  */
 void ICE::setBC(SFCXVariable<double>& variable, const  string& kind, 
-		const string& comp, const Patch* patch) 
+		const string& comp, const Patch* patch, const int mat_id) 
 {
   Vector dx = patch->dCell();
   for(Patch::FaceType face = Patch::startFace;
       face <= Patch::endFace; face=Patch::nextFace(face)){
-    vector<BoundCondBase* > bcs;
-    bcs = patch->getBCValues(face);
-    if (bcs.size() == 0) continue;
-    
-    BoundCondBase* bc_base = 0;
-    for (int i = 0; i<(int)bcs.size(); i++ ) {
-      if (bcs[i]->getType() == kind) {
-	bc_base = bcs[i];
-	break;
-      }
-    }
-    
-    if (bc_base == 0)
+    BoundCondBase* bcs;
+    BoundCond<Vector>* new_bcs;
+    if (patch->getBCType(face) == Patch::None) {
+      bcs = patch->getBCValues(mat_id,kind,face);
+    new_bcs = dynamic_cast<BoundCond<Vector> *>(bcs);
+    } else
       continue;
 
-    if (bc_base->getType() == "Velocity") {
-      VelocityBoundCond* bc = dynamic_cast<VelocityBoundCond*>(bc_base);
-      if (bc->getKind() == "Dirichlet") {
+    if (new_bcs != 0) {
+      if (new_bcs->getKind() == "Dirichlet") {
 	if (comp == "x")
-	  variable.fillFace(face,bc->getValue().x());
+	  variable.fillFace(face,new_bcs->getValue().x());
 	if (comp == "y")
-	  variable.fillFace(face,bc->getValue().y());
+	  variable.fillFace(face,new_bcs->getValue().y());
 	if (comp == "z")
-	  variable.fillFace(face,bc->getValue().z());
+	  variable.fillFace(face,new_bcs->getValue().z());
       }
       
-      if (bc->getKind() == "Neumann") {
+      if (new_bcs->getKind() == "Neumann") {
 	if (comp == "x")
-	  variable.fillFaceFlux(face,bc->getValue().x(),dx);
+	  variable.fillFaceFlux(face,new_bcs->getValue().x(),dx);
 	if (comp == "y")
-	  variable.fillFaceFlux(face,bc->getValue().y(),dx);
+	  variable.fillFaceFlux(face,new_bcs->getValue().y(),dx);
 	if (comp == "z")
-	  variable.fillFaceFlux(face,bc->getValue().z(),dx);
+	  variable.fillFaceFlux(face,new_bcs->getValue().z(),dx);
       }
     }
   }
@@ -3160,44 +3125,36 @@ void ICE::setBC(SFCXVariable<double>& variable, const  string& kind,
  Purpose~   Takes care of vel_FC.y()
  ---------------------------------------------------------------------  */
 void ICE::setBC(SFCYVariable<double>& variable, const  string& kind, 
-		const string& comp, const Patch* patch) 
+		const string& comp, const Patch* patch, const int mat_id) 
 {
   Vector dx = patch->dCell();
   for(Patch::FaceType face = Patch::startFace;
       face <= Patch::endFace; face=Patch::nextFace(face)){
-    vector<BoundCondBase* > bcs;
-    bcs = patch->getBCValues(face);
-    if (bcs.size() == 0) continue;
-    
-    BoundCondBase* bc_base = 0;
-    for (int i = 0; i<(int)bcs.size(); i++ ) {
-      if (bcs[i]->getType() == kind) {
-	bc_base = bcs[i];
-	break;
-      }
-    }
-    
-    if (bc_base == 0)
+    BoundCondBase* bcs;
+    BoundCond<Vector>* new_bcs;
+    if (patch->getBCType(face) == Patch::None) {
+      bcs = patch->getBCValues(mat_id,kind,face);
+      new_bcs = dynamic_cast<BoundCond<Vector> *>(bcs);
+    } else
       continue;
 
-    if (bc_base->getType() == "Velocity") {
-      VelocityBoundCond* bc = dynamic_cast<VelocityBoundCond*>(bc_base);
-      if (bc->getKind() == "Dirichlet") {
+    if (new_bcs != 0) {
+      if (new_bcs->getKind() == "Dirichlet") {
 	if (comp == "x")
-	  variable.fillFace(face,bc->getValue().x());
+	  variable.fillFace(face,new_bcs->getValue().x());
 	if (comp == "y")
-	  variable.fillFace(face,bc->getValue().y());
+	  variable.fillFace(face,new_bcs->getValue().y());
 	if (comp == "z")
-	  variable.fillFace(face,bc->getValue().z());
+	  variable.fillFace(face,new_bcs->getValue().z());
       }
       
-      if (bc->getKind() == "Neumann") {
+      if (new_bcs->getKind() == "Neumann") {
 	if (comp == "x")
-	  variable.fillFaceFlux(face,bc->getValue().x(),dx);
+	  variable.fillFaceFlux(face,new_bcs->getValue().x(),dx);
 	if (comp == "y")
-	  variable.fillFaceFlux(face,bc->getValue().y(),dx);
+	  variable.fillFaceFlux(face,new_bcs->getValue().y(),dx);
 	if (comp == "z")
-	  variable.fillFaceFlux(face,bc->getValue().z(),dx);
+	  variable.fillFaceFlux(face,new_bcs->getValue().z(),dx);
       }
     }
   }
@@ -3207,44 +3164,36 @@ void ICE::setBC(SFCYVariable<double>& variable, const  string& kind,
  Purpose~   Takes care of vel_FC.z()
  ---------------------------------------------------------------------  */
 void ICE::setBC(SFCZVariable<double>& variable, const  string& kind, 
-		const string& comp, const Patch* patch) 
+		const string& comp, const Patch* patch, const int mat_id) 
 {
   Vector dx = patch->dCell();
   for(Patch::FaceType face = Patch::startFace;
       face <= Patch::endFace; face=Patch::nextFace(face)){
-    vector<BoundCondBase* > bcs;
-    bcs = patch->getBCValues(face);
-    if (bcs.size() == 0) continue;
-    
-    BoundCondBase* bc_base = 0;
-    for (int i = 0; i<(int)bcs.size(); i++ ) {
-      if (bcs[i]->getType() == kind) {
-	bc_base = bcs[i];
-	break;
-      }
-    }
-
-    if (bc_base == 0)
+    BoundCondBase* bcs;
+    BoundCond<Vector>* new_bcs;
+    if (patch->getBCType(face) == Patch::None) {
+      bcs = patch->getBCValues(mat_id,kind,face);
+      new_bcs = dynamic_cast<BoundCond<Vector> *>(bcs);
+    } else
       continue;
     
-    if (bc_base->getType() == "Velocity") {
-      VelocityBoundCond* bc = dynamic_cast<VelocityBoundCond*>(bc_base);
-      if (bc->getKind() == "Dirichlet") {
+    if (new_bcs != 0) {
+      if (new_bcs->getKind() == "Dirichlet") {
 	if (comp == "x")
-	  variable.fillFace(face,bc->getValue().x());
+	  variable.fillFace(face,new_bcs->getValue().x());
 	if (comp == "y")
-	  variable.fillFace(face,bc->getValue().y());
+	  variable.fillFace(face,new_bcs->getValue().y());
 	if (comp == "z")
-	  variable.fillFace(face,bc->getValue().z());
+	  variable.fillFace(face,new_bcs->getValue().z());
       }
       
-      if (bc->getKind() == "Neumann") {
+      if (new_bcs->getKind() == "Neumann") {
 	if (comp == "x")
-	  variable.fillFaceFlux(face,bc->getValue().x(),dx);
+	  variable.fillFaceFlux(face,new_bcs->getValue().x(),dx);
 	if (comp == "y")
-	  variable.fillFaceFlux(face,bc->getValue().y(),dx);
+	  variable.fillFaceFlux(face,new_bcs->getValue().y(),dx);
 	if (comp == "z")
-	  variable.fillFaceFlux(face,bc->getValue().z(),dx);
+	  variable.fillFaceFlux(face,new_bcs->getValue().z(),dx);
       }
     }
   }
@@ -3394,8 +3343,6 @@ void ICE::advectQFirst(const CCVariable<double>&   q_CC,const Patch* patch,
 {
   double  sum_q_outflux, sum_q_outflux_EF, sum_q_outflux_CF, sum_q_influx;
   double sum_q_influx_EF, sum_q_influx_CF;
-  Vector dx = patch->dCell();
-  
   IntVector adjcell;
   
   for(CellIterator iter = patch->getCellIterator(); !iter.done(); iter++) { 

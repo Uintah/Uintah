@@ -724,8 +724,8 @@ void MPMICE::interpolateNCToCC_0(const ProcessorGroup*,
   //    cout << "Solid matl CC momentum = " << cell_mom << endl;
 
       //  Set BC's and put into new_dw
-      d_ice->setBC(vel_CC,  "Velocity",   patch);
-      d_ice->setBC(Temp_CC, "Temperature",patch);
+      d_ice->setBC(vel_CC,  "Velocity",   patch, matlindex);
+      d_ice->setBC(Temp_CC, "Temperature",patch, matlindex);
 
       new_dw->put(cmass,    MIlb->cMassLabel,       matlindex, patch);
       new_dw->put(cvolume,  MIlb->cVolumeLabel,     matlindex, patch);
@@ -866,8 +866,8 @@ void MPMICE::doCCMomExchange(const ProcessorGroup*,
     vector<double>::iterator it=d_ice->d_K_mom.begin();
     vector<double>::iterator it1=d_ice->d_K_heat.begin();
 
-    if (num_coeff == d_ice->d_K_mom.size() && 
-	num_coeff == d_ice->d_K_heat.size()) {
+    if (num_coeff == (int)d_ice->d_K_mom.size() && 
+	num_coeff == (int)d_ice->d_K_heat.size()) {
       // Fill in the upper triangular matrix
       for (int i = 0; i < numALLMatls; i++ )  {
 	for (int j = i + 1; j < numALLMatls; j++) {
@@ -875,8 +875,8 @@ void MPMICE::doCCMomExchange(const ProcessorGroup*,
 	  H[i][j] = H[j][i] = *it1++;
 	}
       }
-    } else if (2*num_coeff==d_ice->d_K_mom.size() && 
-	       2*num_coeff == d_ice->d_K_heat.size()){
+    } else if (2*num_coeff==(int)d_ice->d_K_mom.size() && 
+	       2*num_coeff == (int)d_ice->d_K_heat.size()){
       // Fill in the whole matrix but skip the diagonal terms
       for (int i = 0; i < numALLMatls; i++ )  {
 	for (int j = 0; j < numALLMatls; j++) {
@@ -1064,8 +1064,10 @@ void MPMICE::doCCMomExchange(const ProcessorGroup*,
     //   mom_L_ME and int_eng_L_ME should be identical and this
     //   is useful when debugging.
     for (int m = 0; m < numALLMatls; m++)  {
-        d_ice->setBC(vel_CC[m], "Velocity",   patch);
-        d_ice->setBC(Temp_CC[m],"Temperature",patch);
+      Material* matl = d_sharedState->getMaterial( m );
+      int dwindex = matl->getDWIndex();
+      d_ice->setBC(vel_CC[m], "Velocity",   patch,dwindex);
+      d_ice->setBC(Temp_CC[m],"Temperature",patch,dwindex);
     }
     //__________________________________
     // Convert vars. primitive-> flux 
@@ -1116,24 +1118,15 @@ void MPMICE::doCCMomExchange(const ProcessorGroup*,
     for(int m = 0; m < numALLMatls; m++){
       for(Patch::FaceType face = Patch::startFace;
         face <= Patch::endFace; face=Patch::nextFace(face)){
-          vector<BoundCondBase* > bcs;
-          bcs = patch->getBCValues(face);
+          BoundCondBase* temp_bcs;
+	  if (patch->getBCType(face) == Patch::None) {
+	    temp_bcs = patch->getBCValues(m,"Temperature",face);
+	  } else
+	    continue;
 
-          if (bcs.size() == 0) continue;
-
-          BoundCondBase* bc_base = 0;
-
-          for (int i = 0; i<(int)bcs.size(); i++ ) {
-            if (bcs[i]->getType() == "Temperature") {
-              bc_base = bcs[i];
-              break;
-            }
-          }
-          if (bc_base == 0)
-            continue;
-          if (bc_base->getType() == "Temperature") {
+          if (temp_bcs != 0) {
             TemperatureBoundCond* bc=
-				dynamic_cast<TemperatureBoundCond*>(bc_base);
+	      dynamic_cast<TemperatureBoundCond*>(temp_bcs);
 	    if (bc->getKind() == "Dirichlet" || bc->getKind() == "Neumann"){
               dTdt_CC[m].fillFace(face,0);
             }
@@ -1366,7 +1359,7 @@ void MPMICE::computeEquilibrationPressure(const ProcessorGroup*,
         Material* matl = d_sharedState->getMaterial( m );
         ICEMaterial* ice_matl = dynamic_cast<ICEMaterial*>(matl);
         if(ice_matl){                // I C E
-          d_ice->setBC(rho_micro[m], "Density", patch);
+          d_ice->setBC(rho_micro[m],"Density",patch,ice_matl->getDWIndex());
         }
       }
     for (CellIterator iter = patch->getExtraCellIterator();!iter.done();iter++){
@@ -1676,11 +1669,11 @@ void MPMICE::computeEquilibrationPressure(const ProcessorGroup*,
        Material* matl = d_sharedState->getMaterial( m );
        ICEMaterial* ice_matl = dynamic_cast<ICEMaterial*>(matl);
        if(ice_matl){
-         d_ice->setBC(rho_CC[m],   "Density" ,patch);
+         d_ice->setBC(rho_CC[m],   "Density" ,patch, ice_matl->getDWIndex());
        }  
     }  
 
-    d_ice->setBC(press_new, rho_micro[SURROUND_MAT], "Pressure",patch);
+    d_ice->setBC(press_new, rho_micro[SURROUND_MAT], "Pressure",patch, 0);
 
     //__________________________________
     //    Put all matls into new dw
