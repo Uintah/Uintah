@@ -54,6 +54,7 @@
 #include <Core/Containers/StringUtil.h>
 #include <Core/Thread/Thread.h>
 #include <Core/Util/sci_system.h>
+#include <Core/Util/Environment.h>
 #include <string>
 #include <fstream>
 #include <iostream>
@@ -314,6 +315,14 @@ void NetworkEditor::tcl_command(GuiArgs& args, void*)
       }
       sci_system(command.c_str());
       return;
+    } else if (args[1] == "getenv" && args.count() == 3){
+      char *result = getenv(args[2].c_str());
+      if (result) {
+	args.result(string(result));
+      }
+      return;
+    } else if (args[1] == "setenv" && args.count() == 4){
+      sci_putenv(args[2], args[3]);
     } else if (args[1] == "net_read_lock" && args.count() == 2){
       net->read_lock();
     } else if (args[1] == "net_read_unlock" && args.count() == 2){

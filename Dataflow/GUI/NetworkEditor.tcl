@@ -63,6 +63,42 @@ set NetworkChanged 0
 global SCIRun_version
 set SCIRun_version v1.22
 
+# TCL has some trace on the env array that makes it impossible
+# to set it in neteditGetenv wihtout causing an error
+# Here, we just back it up, unset it, then restore it
+# to undo the TCL trace
+global env
+array set temporary [array get env]
+unset env
+array set env [array get temporary]
+unset temporary
+
+# Whenever the env array is accessed, get the environment variable
+# from the C side of SCIRun
+proc neteditGetenv { name1 name2 op } {
+    upvar $name1 var
+    array set var "$name2 \"[netedit getenv $name2]\""
+}
+
+# Setup the trace that sets the appropriate value when the env array is read
+trace variable env r neteditGetenv
+
+
+# Turns 'true/false', 'on/off', 'yes/no', '1/0' into '1/0' respectively
+# This function is case insensitive.
+# Warns user if not a valid boolean string.
+proc boolToInt { val } {
+    if [string equal $val ""] {
+	error "Boolean value is empty!"
+	return true; # follows the C convention of any non-zero value equals true
+    }
+    if ![string is boolean $val] {
+	error "Cannot determine boolean value: $val."
+	return true; # follows the C convention of any non-zero value equals true
+    }
+    return [string is true $val]
+}
+
 
 proc makeNetworkEditor {} {
 
@@ -90,7 +126,6 @@ proc makeNetworkEditor {} {
 
     wm title . "SCIRun"
 
-    initGuiPreferences
     loadToolTipText
 
     frame .main_menu -relief raised -borderwidth 3
