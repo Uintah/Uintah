@@ -115,7 +115,7 @@ Component  specification dtd.
 <!ELEMENT device (devicename, description)>
 
 <!-- GUI description (words and pictures) -->
-<!ELEMENT gui (description, parameter+, img+)>
+<!ELEMENT gui (description, parameter+, (img, caption?)+)>
 
 <!-- Description of 1 gui parameter. -->
 <!ELEMENT parameter (widget, datatype, label, description)>
@@ -131,6 +131,9 @@ Component  specification dtd.
 
 <!--  Name of an image file -->
 <!ELEMENT img %filename;>
+
+<!-- Image caption -->
+<!ELEMENT caption (#PCDATA)>
 
 <!-- Specify testing plan(s) -->
 <!ELEMENT testing (plan+)>
