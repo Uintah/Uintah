@@ -22,6 +22,7 @@
 #include <Packages/Uintah/Core/Math/MiscMath.h>
 #include <Packages/Uintah/Core/Exceptions/ProblemSetupException.h>
 #include <Packages/Uintah/Core/Exceptions/MaxIteration.h>
+#include <Packages/Uintah/Core/Exceptions/InvalidValue.h>
 
 #include <Core/Containers/StaticArray.h>
 #include <float.h>
@@ -636,7 +637,7 @@ void MPMICE::scheduleComputePressure(SchedulerP& sched,
 
   t->computes(Ilb->speedSound_CCLabel); 
   t->computes(Ilb->vol_frac_CCLabel);
-  t->computes(Ilb->press_equil_CCLabel, press_matl);
+  t->computes(Ilb->press_equil_CCLabel, press_matl);  // diagnostic variable
   t->computes(Ilb->press_CCLabel,       press_matl);  // needed by implicit ICE
   t->modifies(Ilb->sp_vol_CCLabel,      mpm_matls);
   t->modifies(Ilb->rho_CCLabel,         mpm_matls); 
@@ -1039,6 +1040,24 @@ void MPMICE::interpolateNCToCC_0(const ProcessorGroup*,
         d_ice->printData(   indx, patch, 1,desc.str(), "Temp_CC",   Temp_CC);
         d_ice->printData(   indx, patch, 1,desc.str(), "rho_CC",    rho_CC);
         d_ice->printVector( indx, patch, 1,desc.str(), "vel_CC", 0, vel_CC);
+      }
+      //---- B U L L E T   P R O O F I N G------
+      IntVector neg_cell;
+      ostringstream warn;
+      if (!d_ice->areAllValuesPositive(Temp_CC, neg_cell)) {
+        warn <<"ERROR MPMICE::interpolateNCToCC_0, mat "<< indx <<" cell "
+             << neg_cell << " Temp_CC " << Temp_CC[neg_cell] << "\n ";
+        throw InvalidValue(warn.str());
+      }
+      if (!d_ice->areAllValuesPositive(rho_CC, neg_cell)) {
+        warn <<"ERROR MPMICE::interpolateNCToCC_0, mat "<< indx <<" cell "
+             << neg_cell << " rho_CC " << rho_CC[neg_cell]<< "\n ";
+        throw InvalidValue(warn.str());
+      }
+      if (!d_ice->areAllValuesPositive(sp_vol_CC, neg_cell)) {
+        warn <<"ERROR MPMICE::interpolateNCToCC_0, mat "<< indx <<" cell "
+             << neg_cell << " sp_vol_CC " << sp_vol_CC[neg_cell]<<"\n ";
+        throw InvalidValue(warn.str());
       } 
     }
   }  //patches
@@ -1108,11 +1127,11 @@ void MPMICE::computeLagrangianValuesMPM(const ProcessorGroup*,
         d_ice->printData(indx, patch,1,desc.str(), "cmass",    cmass);
         printData(     indx, patch,  1,desc.str(), "gmass",    gmass);
         d_ice->printData(indx, patch,1,desc.str(), "rho_CC",   rho_CC);
-        //printData(     indx, patch,  1,desc.str(), "gtemStar", gtempstar);
+        printData(     indx, patch,  1,desc.str(), "gtemStar", gtempstar);
         //printNCVector( indx, patch,  1,desc.str(), "gvelocityStar", 0,
         //                                                       gvelocity);
       }
-
+ 
       for(CellIterator iter = patch->getExtraCellIterator();!iter.done();
                                                           iter++){ 
         patch->findNodesFromCell(*iter,nodeIdx);
@@ -1136,7 +1155,7 @@ void MPMICE::computeLagrangianValuesMPM(const ProcessorGroup*,
         cmomentum[c] = (1.0 - one_or_zero)* cmomentum_sur + 
                               one_or_zero * cmomentum_mpm;
         int_eng_L[c] = (1.0 - one_or_zero)* int_eng_L_sur + 
-                              one_or_zero * int_eng_L_mpm; 
+                              one_or_zero * int_eng_L_mpm;
       }
       //__________________________________
       //  NO REACTION
@@ -1210,6 +1229,20 @@ void MPMICE::computeLagrangianValuesMPM(const ProcessorGroup*,
         d_ice->printData(  indx,patch, 1,desc.str(), "rho_CC",        rho_CC);
         d_ice->printData(  indx,patch, 1,desc.str(), "int_eng_L",    int_eng_L);
         d_ice->printVector(indx,patch, 1,desc.str(), "mom_L_CC", 0,  cmomentum);
+      }
+      
+      //---- B U L L E T   P R O O F I N G------
+      IntVector neg_cell;
+      ostringstream warn;
+      if (!d_ice->areAllValuesPositive(int_eng_L, neg_cell)) {
+        warn <<"ERROR MPMICE::computeLagrangianValuesMPM, mat "<< indx <<" cell "
+             << neg_cell << " int_eng_L " << int_eng_L[neg_cell] << "\n ";
+        throw InvalidValue(warn.str());
+      }
+      if (!d_ice->areAllValuesPositive(rho_CC, neg_cell)) {
+        warn <<"ERROR MPMICE::computeLagrangianValuesMPM, mat "<< indx <<" cell "
+             << neg_cell << " rho_CC " << rho_CC[neg_cell]<< "\n ";
+        throw InvalidValue(warn.str());
       }
     }  //numMatls
     //__________________________________
