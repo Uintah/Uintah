@@ -601,4 +601,19 @@ Transform& Transform::operator=(const Transform& copy)
   return *this;
 }
 
+void SCICORESHARE Pio(Piostream& stream, Transform& trans){
+  
+  stream.begin_cheap_delim();
+ 
+  for (int i=0; i<4; i++)
+    for (int j=0; j<4; j++){
+      Pio(stream, trans.mat[i][j]);
+      Pio(stream, trans.imat[i][j]);
+    }
+ 
+  Pio(stream, trans.inverse_valid);
+  
+  stream.end_cheap_delim();
+}
+
 } // End namespace SCIRun
