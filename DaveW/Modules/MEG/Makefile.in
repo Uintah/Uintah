@@ -1,0 +1,10 @@
+SRCTOP   = @top_srcdir@
+SRCDIR   = @srcdir@
+OBJTOP   = ../../..
+
+SRCS     = FieldCurl.cc MakeCurrentDensityField.cc MagneticScalarField.cc \
+	   SurfToVectGeom.cc 
+
+INCLUDES = -I$(SRCTOP) -I$(OBJTOP)
+
+include $(SRCTOP)/scripts/objs.mk
