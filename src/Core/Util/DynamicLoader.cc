@@ -57,23 +57,17 @@ using namespace std;
   // declared here because it is not initializing properly when declared
   // in Persistent.cc.
   Mutex persistentTypeIDMutex("Persistent Type ID Table Lock");
-  Mutex colormapIEPluginMutex("ColorMap Import/Export Plugin Table Lock");
-  Mutex fieldIEPluginMutex("Field Import/Export Plugin Table Lock");
-  Mutex matrixIEPluginMutex("Matrix Import/Export Plugin Table Lock");
-  class FieldIEPlugin;
-  map<string, FieldIEPlugin *> *field_plugin_table;
-  class MatrixIEPlugin;
-  map<string, MatrixIEPlugin *> *matrix_plugin_table;
-  class ColorMapIEPlugin;
-  map<string, ColorMapIEPlugin *> *colormap_plugin_table;
   const string ext("dylib");
 #else
-  Mutex colormapIEPluginMutex("ColorMap Import/Export Plugin Table Lock");
-  Mutex fieldIEPluginMutex("Field Import/Export Plugin Table Lock");
-  Mutex matrixIEPluginMutex("Matrix Import/Export Plugin Table Lock");
   const string ext("so");
 #endif
 
+  // Need these mutexes to be created here for use in another library
+  // as they must "construct" _now_ because they are used before the
+  // library that would normally construct them gets loaded...
+  Mutex colormapIEPluginMutex("ColorMap Import/Export Plugin Table Lock");
+  Mutex fieldIEPluginMutex("Field Import/Export Plugin Table Lock");
+  Mutex matrixIEPluginMutex("Matrix Import/Export Plugin Table Lock");
 
 DynamicLoader *DynamicLoader::scirun_loader_ = 0;
 Mutex DynamicLoader::scirun_loader_init_lock_("SCIRun loader init lock");
