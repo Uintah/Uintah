@@ -135,9 +135,15 @@ namespace Uintah {
                                                   const MaterialSubset*,
                                                   const MaterialSubset*,
                                                   const MaterialSet* );
-                                                        
+                                                  
+      void scheduleMaxMach_on_Lodi_BC_Faces(SchedulerP&, 
+                                            const LevelP&,
+                                            const MaterialSet*,
+                                            vector<PatchSubset*> &);
+                                                                                         
       void scheduleAdvectAndAdvanceInTime(SchedulerP&, 
                                           const PatchSet*,
+                                          const vector<PatchSubset*> &,
                                           const MaterialSubset*,
                                           const MaterialSubset*,
                                           const MaterialSubset*,
@@ -355,7 +361,13 @@ namespace Uintah {
                       constCCVariable<double>& cv,
                       const CCVariable<double>& cv_new,
                       const Patch* patch); 
-                      
+ 
+      void maxMach_on_Lodi_BC_Faces(const ProcessorGroup*,
+                                    const PatchSubset* patches,
+                                    const MaterialSubset* matls,
+                                    DataWarehouse* old_dw,
+                                    DataWarehouse* new_dw);
+                       
       void advectAndAdvanceInTime(const ProcessorGroup*,
                                   const PatchSubset* patches,
                                   const MaterialSubset* matls,
@@ -682,7 +694,7 @@ namespace Uintah {
       double d_delT_knob;
       
       //__________________________________
-      // need by printData
+      // needed by printData
       double d_dbgTime; 
       double d_dbgStartTime;
       double d_dbgStopTime;
@@ -697,9 +709,9 @@ namespace Uintah {
       int d_dbgSigFigs;
       
       //__________________________________
-      // need by LODI      
+      // needed by LODI      
       bool d_usingLODI;
-      Lodi_user_inputs* d_Lodi_user_inputs;
+      Lodi_variable_basket* d_Lodi_variable_basket;
       
       Advector* d_advector;
       std::string d_advect_type;
