@@ -108,7 +108,7 @@ SynchronizeGeometry::process_event(MessageBase* msg)
 
   case MessageTypes::GeometryInit:
     gmsg->reply->send(GeomReply(max_portno_));
-    physical_portno_.push_back(numIPorts());
+    physical_portno_.push_back(numIPorts()-1);
     max_portno_++;
     msg_heads_.push_back(NULL);
     msg_tails_.push_back(NULL);
@@ -200,7 +200,9 @@ SynchronizeGeometry::process_event(MessageBase* msg)
     else
     {
       flush_all_msgs();
-      const GeomID id = ogeom_->addObj(gmsg->obj, gmsg->name);
+      const string pnum = to_string(physical_portno_[gmsg->portno]);
+      const string newname =  gmsg->name + " (" + pnum + ")";
+      const GeomID id = ogeom_->addObj(gmsg->obj, newname);
       geom_ids_[gmsg->portno][gmsg->serial] = id;
     }
     break;
@@ -366,7 +368,9 @@ SynchronizeGeometry::flush_port(int portno, int count)
     // GeometryAddObj
     else if (gmsg->type == MessageTypes::GeometryAddObj)
     {
-      const GeomID id = ogeom_->addObj(gmsg->obj, gmsg->name);
+      const string pnum = to_string(physical_portno_[gmsg->portno]);
+      const string newname =  gmsg->name + " (" + pnum + ")";
+      const GeomID id = ogeom_->addObj(gmsg->obj, newname);
       geom_ids_[gmsg->portno][gmsg->serial] = id;
     }
 
