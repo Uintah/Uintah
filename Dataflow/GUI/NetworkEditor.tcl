@@ -68,7 +68,26 @@ proc makeNetworkEditor {} {
 
     wm protocol . WM_DELETE_WINDOW { NiceQuit }
     wm minsize . 100 100
-    wm geometry . 800x800+0+0
+
+    set neWidth  800
+    set neHeight 800
+
+    # Check screen geometry before creating window.  Then create window
+    # to fit on screen.
+    set screenwidth [winfo screenwidth .]
+    set screenheight [winfo screenheight .]
+
+    if { $screenwidth < $neWidth } {
+	set neWidth [expr $screenwidth - 30]
+    }
+    if { $screenheight < $neHeight } {
+	set neHeight [expr $screenheight - 30]
+    }
+    set geomSpec ""
+    append geomSpec $neWidth "x" $neHeight "+0+0"
+
+    wm geometry . $geomSpec
+
     wm title . "SCIRun"
 
     initGuiPreferences
