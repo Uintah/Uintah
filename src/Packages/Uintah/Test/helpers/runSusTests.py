@@ -267,8 +267,8 @@ def runSusTests(argv, TESTS, algo, callback = nullCallback):
   # if results saved on the web server, copy back to build root
   # also copy back short messages
   if outputpath != startpath:
+    system("cp -f %s-short* %s/ > /dev/null 2>&1" % (upper(algo),startpath))
     system("cp -r %s %s/" % (resultsdir, startpath))
-    system("cp -rf *short* %s/" % startpath)
     # remove xml and data files so they don't pile up after they're copied
     system("find %s -name '*.uda*' | xargs rm -rf " % resultsdir)
   if solotest != "" and solotest_found == 0:
@@ -295,7 +295,9 @@ def runSusTests(argv, TESTS, algo, callback = nullCallback):
 
 def runSusTest(test, susdir, inputxml, compare_root, algo, mode, max_parallelism, tests_to_do, restart = "no", newalgo = ""):
   if newalgo != "":
-    algo = newalgo
+    sim = newalgo
+  else:
+    sim = algo
   testname = nameoftest(test)
 
   np = float(num_processes(test))
@@ -347,10 +349,10 @@ def runSusTest(test, susdir, inputxml, compare_root, algo, mode, max_parallelism
   # set the command for sus, based on # of processors
   # the /usr/bin/time is to tell how long it took
   if np == 1:
-    command = "/usr/bin/time -p %s/sus -%s %s" % (susdir, algo, extra_flags)
+    command = "/usr/bin/time -p %s/sus -%s %s" % (susdir, sim, extra_flags)
     mpimsg = ""
   else:
-    command = "/usr/bin/time -p %s %s %s/sus -mpi -%s %s" % (MPIHEAD, int(np), susdir, algo, extra_flags)
+    command = "/usr/bin/time -p %s %s %s/sus -mpi -%s %s" % (MPIHEAD, int(np), susdir, sim, extra_flags)
     mpimsg = " (mpi %s proc)" % (int(np))
 
   if restart == "yes":
@@ -527,6 +529,3 @@ def runSusTest(test, susdir, inputxml, compare_root, algo, mode, max_parallelism
         system("echo '  -- %s%s test failed memory tests' >> %s/%s-short.log" % (testname,restart_text,startpath,upper(algo)))
         return 2;
   return 0
-
-
-
