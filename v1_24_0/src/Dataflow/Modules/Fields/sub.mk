@@ -98,6 +98,7 @@ SRCS     += \
 	$(SRCDIR)/TransformData.cc\
 	$(SRCDIR)/TransformData2.cc\
 	$(SRCDIR)/TransformData3.cc\
+	$(SRCDIR)/TransformMesh.cc\
 	$(SRCDIR)/Unstructure.cc\
 	$(SRCDIR)/VectorMagnitude.cc\
 #[INSERT NEW CODE FILE HERE]
