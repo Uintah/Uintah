@@ -100,6 +100,9 @@ class Matrix3 {
   //Norm, sqrt(M:M)
   inline double Norm() const;
 
+  //NormSquared, M:M
+  inline double NormSquared() const;
+
   //Maximum element absolute value
   inline double MaxAbsElem() const;
   
@@ -265,7 +268,7 @@ inline Matrix3::~Matrix3()
   // Do nothing
 }
 
-inline double Matrix3::Norm() const
+inline double Matrix3::NormSquared() const
 {
   // Return the norm of a 3x3 matrix
 
@@ -276,8 +279,12 @@ inline double Matrix3::Norm() const
 	norm += mat3[i][j]*mat3[i][j];
     }
   }
+  return norm;
+}
 
-  return sqrt(norm);
+inline double Matrix3::Norm() const
+{
+  return sqrt(NormSquared());
 }
 
 inline double Matrix3::MaxAbsElem() const
@@ -542,6 +549,9 @@ inline SCICore::Geometry::Vector operator*(const SCICore::Geometry::Vector& v, c
 #endif  // __MATRIX3_H__
 
 // $Log$
+// Revision 1.11  2000/11/21 22:10:42  witzel
+// Added NormSquared() method.
+//
 // Revision 1.10  2000/09/20 18:01:49  witzel
 // Changed the ordering of the eigenvalues (e1 > e2 > e3) and added
 // the relative_scale parameter to getEigenVectors and solve methods
