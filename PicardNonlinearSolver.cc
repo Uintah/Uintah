@@ -60,7 +60,16 @@ PicardNonlinearSolver::problemSetup(const ProblemSpecP& params)
   
   // ** WARNING ** temporarily commented out
   // dw->put(nonlinear_its, "max_nonlinear_its");
-
+  db->require("probe_data", d_probe_data);
+  if (d_probe_data) {
+    IntVector prbPoint;
+    for (ProblemSpecP probe_db = db->findBlock("ProbePoints");
+	 probe_db != 0;
+	 probe_db = probe_db->findNextBlock("ProbePoints")) {
+      probe_db->require("probe_point", prbPoint);
+      d_probePoints.push_back(prbPoint);
+    }
+  }
   db->require("res_tol", d_resTol);
   bool calPress;
   db->require("cal_pressure", calPress);
@@ -187,6 +196,9 @@ int PicardNonlinearSolver::nonlinearSolve(const LevelP& level,
   // Schedule an interpolation of the face centered velocity data 
   // to a cell centered vector for used by the viz tools
   sched_interpolateFromFCToCC(level, sched, old_dw, new_dw);
+  // print information at probes provided in input file
+  if (d_probe_data)
+    sched_probeData(level, sched, old_dw, new_dw);
 
   /* Do 'save's in the DataArchiver section of the problem specification now
 
@@ -310,7 +322,46 @@ PicardNonlinearSolver::sched_interpolateFromFCToCC(const LevelP& level,
 
       tsk->computes(new_dw, d_lab->d_oldCCVelocityLabel, matlIndex, patch);
       tsk->computes(new_dw, d_lab->d_newCCVelocityLabel, matlIndex, patch);
+      tsk->computes(new_dw, d_lab->d_newCCUVelocityLabel, matlIndex, patch);
+      tsk->computes(new_dw, d_lab->d_newCCVVelocityLabel, matlIndex, patch);
+      tsk->computes(new_dw, d_lab->d_newCCWVelocityLabel, matlIndex, patch);
+      
+      sched->addTask(tsk);
+    }
+  }
+}
 
+void 
+PicardNonlinearSolver::sched_probeData(const LevelP& level,
+				       SchedulerP& sched,
+				       DataWarehouseP& old_dw,
+				       DataWarehouseP& new_dw)
+{
+  for(Level::const_patchIterator iter=level->patchesBegin();
+      iter != level->patchesEnd(); iter++){
+    const Patch* patch=*iter;
+    {
+      Task* tsk = scinew Task("PicardNonlinearSolver::probeData",patch,
+			   old_dw, new_dw, this,
+			   &PicardNonlinearSolver::probeData);
+      int numGhostCells = 1;
+      int matlIndex = 0;
+
+      tsk->requires(new_dw, d_lab->d_uVelocitySPBCLabel, matlIndex, patch, 
+		    Ghost::AroundCells, numGhostCells);
+      tsk->requires(new_dw, d_lab->d_vVelocitySPBCLabel, matlIndex, patch, 
+		    Ghost::AroundCells, numGhostCells);
+      tsk->requires(new_dw, d_lab->d_wVelocitySPBCLabel, matlIndex, patch, 
+		    Ghost::AroundCells, numGhostCells);
+      tsk->requires(new_dw, d_lab->d_densityCPLabel, matlIndex, patch, 
+		    Ghost::AroundCells, numGhostCells);
+      tsk->requires(new_dw, d_lab->d_pressurePSLabel, matlIndex, patch, 
+		    Ghost::AroundCells, numGhostCells);
+      tsk->requires(new_dw, d_lab->d_viscosityCTSLabel, matlIndex, patch, 
+		    Ghost::AroundCells, numGhostCells);
+      tsk->requires(new_dw, d_lab->d_scalarSPLabel, matlIndex, patch, 
+		    Ghost::AroundCells, numGhostCells);
+      
       sched->addTask(tsk);
     }
   }
@@ -463,8 +514,14 @@ PicardNonlinearSolver::interpolateFromFCToCC(const ProcessorGroup* ,
   // Allocate the interpolated velocities
   CCVariable<Vector> oldCCVel;
   CCVariable<Vector> newCCVel;
+  CCVariable<double> newCCUVel;
+  CCVariable<double> newCCVVel;
+  CCVariable<double> newCCWVel;
   new_dw->allocate(oldCCVel, d_lab->d_oldCCVelocityLabel, matlIndex, patch);
   new_dw->allocate(newCCVel, d_lab->d_newCCVelocityLabel, matlIndex, patch);
+  new_dw->allocate(newCCUVel, d_lab->d_newCCUVelocityLabel, matlIndex, patch);
+  new_dw->allocate(newCCVVel, d_lab->d_newCCVVelocityLabel, matlIndex, patch);
+  new_dw->allocate(newCCWVel, d_lab->d_newCCWVelocityLabel, matlIndex, patch);
 
   // Interpolate the FC velocity to the CC
   for (int kk = idxLo.z(); kk < idxHi.z(); ++kk) {
@@ -496,10 +553,13 @@ PicardNonlinearSolver::interpolateFromFCToCC(const ProcessorGroup* ,
 	// new W velocity (linear interpolation)
 	double new_w = 0.5*(newWVel[idx] +
 			    newWVel[idxW]);
-
+	
 	// Add the data to the CC Velocity Variables
 	oldCCVel[idx] = Vector(old_u,old_v,old_w);
 	newCCVel[idx] = Vector(new_u,new_v,new_w);
+	newCCUVel[idx] = new_u;
+	newCCVVel[idx] = new_v;
+	newCCWVel[idx] = new_w;
       }
     }
   }
@@ -507,6 +567,56 @@ PicardNonlinearSolver::interpolateFromFCToCC(const ProcessorGroup* ,
   // Put the calculated stuff into the new_dw
   new_dw->put(oldCCVel, d_lab->d_oldCCVelocityLabel, matlIndex, patch);
   new_dw->put(newCCVel, d_lab->d_newCCVelocityLabel, matlIndex, patch);
+  new_dw->put(newCCUVel, d_lab->d_newCCUVelocityLabel, matlIndex, patch);
+  new_dw->put(newCCVVel, d_lab->d_newCCVVelocityLabel, matlIndex, patch);
+  new_dw->put(newCCWVel, d_lab->d_newCCWVelocityLabel, matlIndex, patch);
+}
+
+void 
+PicardNonlinearSolver::probeData(const ProcessorGroup* ,
+				 const Patch* patch,
+				 DataWarehouseP&,
+				 DataWarehouseP& new_dw)
+{
+  int matlIndex = 0;
+  int nofGhostCells = 0;
+
+  // Get the new velocity
+  SFCXVariable<double> newUVel;
+  SFCYVariable<double> newVVel;
+  SFCZVariable<double> newWVel;
+  new_dw->get(newUVel, d_lab->d_uVelocitySPBCLabel, matlIndex, patch, 
+	      Ghost::None, nofGhostCells);
+  new_dw->get(newVVel, d_lab->d_vVelocitySPBCLabel, matlIndex, patch, 
+	      Ghost::None, nofGhostCells);
+  new_dw->get(newWVel, d_lab->d_wVelocitySPBCLabel, matlIndex, patch, 
+	      Ghost::None, nofGhostCells);
+  CCVariable<double> density;
+  CCVariable<double> viscosity;
+  CCVariable<double> pressure;
+  CCVariable<double> mixtureFraction;
+  new_dw->get(density, d_lab->d_densityCPLabel, matlIndex, patch, 
+	      Ghost::None, nofGhostCells);
+  new_dw->get(viscosity, d_lab->d_viscosityCTSLabel, matlIndex, patch, 
+	      Ghost::None, nofGhostCells);
+  new_dw->get(pressure, d_lab->d_pressurePSLabel, matlIndex, patch, 
+	      Ghost::None, nofGhostCells);
+  new_dw->get(mixtureFraction, d_lab->d_scalarSPLabel, matlIndex, patch, 
+	      Ghost::None, nofGhostCells);
+  for (vector<IntVector>::const_iterator iter = d_probePoints.begin();
+       iter != d_probePoints.end(); iter++) {
+    if (patch->containsCell(*iter)) {
+      cerr << "for Intvector: " << *iter << endl;
+      cerr << "Density: " << density[*iter] << endl;
+      cerr << "Viscosity: " << viscosity[*iter] << endl;
+      cerr << "Pressure: " << pressure[*iter] << endl;
+      cerr << "MixtureFraction: " << mixtureFraction[*iter] << endl;
+      cerr << "UVelocity: " << newUVel[*iter] << endl;
+      cerr << "VVelocity: " << newVVel[*iter] << endl;
+      cerr << "WVelocity: " << newWVel[*iter] << endl;
+
+    }
+  }
 }
 
 // ****************************************************************************
