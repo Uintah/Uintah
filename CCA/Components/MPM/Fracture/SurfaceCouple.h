@@ -10,23 +10,32 @@
 namespace Uintah {
 using namespace SCIRun;
 
-class Matrix3;
-class Lattice;
-class LeastSquare;
-
 class SurfaceCouple {
 public:
 
-        SurfaceCouple();
+        SurfaceCouple() {};
+	SurfaceCouple(particleIndex pIdxA,
+                      particleIndex pIdxB,
+	              const Vector& normal) :
+	  d_pIdxA(pIdxA),d_pIdxB(pIdxB),d_normal(normal) {}
 	
   void  setup(particleIndex pIdxA,
               particleIndex pIdxB,
 	      const Vector& normal);
 
+  particleIndex getIdxA() const;
+  particleIndex getIdxB() const;
+  
+  const Vector& getNormal() const
+    {
+      return d_normal;
+    }
+  
   bool  extensible(
        particleIndex pIdx,
        const ParticleVariable<Point>& pX,
        const ParticleVariable<Vector>& pExtensionDirection,
+       const ParticleVariable<Vector>& pCrackNormal,
        double volume,
        double& distanceToCrack) const;
 
