@@ -216,8 +216,8 @@ public:
   
 public:
   /* really only for internal use, although it's public */
- 
-  int** const getDiagonalDirections() const
+
+  int** getDiagonalDirections()
   { return diagonalDirections_; }
 
   int getNumDiagDirections() const
@@ -248,7 +248,7 @@ private:
     //   this node is to deal with (prevents unnecessary duplication
     //   of the vectors.
     RangeTreeNode(int d, TPoint** dSorted, TPoint*** subDSorted,
-		  int low, int high, const RangeTree* entireTree);
+		  int low, int high, RangeTree* entireTree);
 
     void deleteStructure(int d);
 
@@ -332,7 +332,7 @@ private:
     // until points_[j] <= high.
     void getRange(list<TPoint*>& found, int start, TPointElem high);
 
-    void setExtremePoints(int** const diagonalDirections,
+    void setExtremePoints(int** diagonalDirections,
 			  int numDiagDirections, int dimensions);
 
     template <int BOUND_FROM_SIDE>
@@ -779,7 +779,7 @@ bool testSorted(TPoint** sorted, int d, int low, int high)
 template<class TPoint, class TPointElem, bool ALLOW_NEAREST_NEIGHBOR_QUERY>
 RangeTree<TPoint, TPointElem, ALLOW_NEAREST_NEIGHBOR_QUERY>::RangeTreeNode::
 RangeTreeNode(int d, TPoint** dSorted, TPoint*** subDSorted, int low, int high,
-	      const RangeTree* entireTree)
+	      RangeTree* entireTree)
   : leftChild_(NULL),
     rightChild_(NULL),
     point_(NULL)
@@ -965,7 +965,7 @@ RangeTree<TPoint, TPointElem, ALLOW_NEAREST_NEIGHBOR_QUERY>::BaseLevelSet::
 template<class TPoint, class TPointElem, bool ALLOW_NEAREST_NEIGHBOR_QUERY>
 void
 RangeTree<TPoint, TPointElem, ALLOW_NEAREST_NEIGHBOR_QUERY>::BaseLevelSet::
-setExtremePoints(int** const diagonalDirections, int numDiagDirections,
+setExtremePoints(int** diagonalDirections, int numDiagDirections,
 		 int dimensions)
 {
   extremePoints_ = scinew TPoint**[size_];
