@@ -19,6 +19,7 @@ VarLabel* VarLabel::create(const string& name,
 			   const TypeDescription* td,
 			   VarType vartype /*= Normal*/)
 {
+  VarLabel* label = 0;
   map<string, VarLabel*>::iterator iter = allLabels.find(name);
   if(iter != allLabels.end()){
     // two labels with the same name -- make sure they are the same type
@@ -26,16 +27,29 @@ VarLabel* VarLabel::create(const string& name,
     if (td != dup->d_td || vartype != dup->d_vartype)
       throw InternalError(string("VarLabel with same name exists, '")
 			  + name + "', but with different type");
-    return dup;
+    label = dup;
   }
-  return scinew VarLabel(name, td, vartype);
+  else {
+    label = scinew VarLabel(name, td, vartype);
+  }
+  label->addReference();
+  return label;
 }
 
+bool VarLabel::destroy(const VarLabel* label)
+{
+  if (label == 0) return false;
+  if (label->removeReference()) {
+    delete label;
+    return true;
+  }
+  return false;
+}
 
 VarLabel::VarLabel(const std::string& name, const TypeDescription* td,
 		   VarType vartype)
    : d_name(name), d_td(td), d_vartype(vartype),
-     d_compressionMode("default"), d_allowMultipleComputes(false) 
+     d_compressionMode("default"), d_allowMultipleComputes(false)
 {
   allLabels[name]=this;
 }
