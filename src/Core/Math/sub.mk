@@ -21,16 +21,17 @@ include $(SCIRUN_SCRIPTS)/smallso_prologue.mk
 
 SRCDIR   := Core/Math
 
-FNSRCDIR	:= $(SRCTOP)/$(SRCDIR)
+FNSRCDIR  := $(SRCTOP)/$(SRCDIR)
+TARGDIR   := $(OBJTOP)/$(SRCDIR)
 
-$(FNSRCDIR)/fnparser.cc \
-$(FNSRCDIR)/fnparser.h:	$(FNSRCDIR)/fnparser.y;
-	$(YACC) -p fn $(FNSRCDIR)/fnparser.y
-	mv -f y.tab.h $(FNSRCDIR)/fnparser.h
-	mv -f y.tab.c $(FNSRCDIR)/fnparser.cc
+$(TARGDIR)/fnparser.cc \
+$(TARGDIR)/fnparser.h:	$(FNSRCDIR)/fnparser.y;
+	$(YACC) -o $(TARGDIR)/y.tab.c -p fn $(FNSRCDIR)/fnparser.y
+	mv -f $(TARGDIR)/y.tab.h $(TARGDIR)/fnparser.h
+	mv -f $(TARGDIR)/y.tab.c $(TARGDIR)/fnparser.cc
 
-$(FNSRCDIR)/fnscanner.cc: $(FNSRCDIR)/fnscanner.l $(FNSRCDIR)/fnparser.cc;
-	$(LEX) -Pfn -o$(FNSRCDIR)/fnscanner.cc $(FNSRCDIR)/fnscanner.l
+$(TARGDIR)/fnscanner.cc: $(FNSRCDIR)/fnscanner.l $(TARGDIR)/fnparser.cc;
+	$(LEX) -Pfn -o$(TARGDIR)/fnscanner.cc $(FNSRCDIR)/fnscanner.l
 
 SRCS     += $(SRCDIR)/CubicPWI.cc              \
             $(SRCDIR)/Gaussian.cc	       \
@@ -41,8 +42,8 @@ SRCS     += $(SRCDIR)/CubicPWI.cc              \
             $(SRCDIR)/PiecewiseInterp.cc       \
             $(SRCDIR)/TrigTable.cc	       \
             $(SRCDIR)/fft.c		       \
-            $(SRCDIR)/fnparser.cc	       \
-            $(SRCDIR)/fnscanner.cc	       \
+            $(TARGDIR)/fnparser.cc	       \
+            $(TARGDIR)/fnscanner.cc	       \
             $(SRCDIR)/function.cc	       \
             $(SRCDIR)/ssmult.c
 
