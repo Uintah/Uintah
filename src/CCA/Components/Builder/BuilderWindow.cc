@@ -44,6 +44,7 @@
 #include <Core/CCA/spec/cca_sidl.h>
 #include <CCA/Components/Builder/NetworkCanvasView.h>
 #include <CCA/Components/Builder/Module.h>
+#include <CCA/Components/Builder/ClusterDialog.h>
 #include <SCIRun/TypeMap.h>
 #include <Core/Thread/Thread.h>
 #include <Core/Containers/StringUtil.h>
@@ -65,7 +66,8 @@
 #include <qwhatsthis.h>
 #include <iostream>
 #include <qiconset.h> 
-#include <qtoolbutton.h> 
+#include <qtoolbutton.h>
+#include <qtooltip.h> 
 #include <qfiledialog.h>
 #include <qtextstream.h>
 #include <qwhatsthis.h>
@@ -137,7 +139,7 @@ void MenuTree::populateMenu(QPopupMenu* menu)
   for(std::map<std::string, MenuTree*>::iterator iter = child.begin();
       iter != child.end(); iter++){
     if(!iter->second->cd.isNull()){
-      menu->insertItem(iter->first.c_str(), iter->second, SLOT( instantiateComponent() ));
+      menu->insertItem(iter->first.c_str(), iter->second, SLOT( instantiateComponent()));
     } else {
       QPopupMenu* submenu = new QPopupMenu(menu);
       submenu->setFont(builder->font());
@@ -208,7 +210,8 @@ BuilderWindow::BuilderWindow(const sci::cca::Services::pointer& services)
     msgTextEdit->setUndoRedoEnabled(FALSE);
     msgTextEdit->setFocus();
 
-    QWhatsThis::add(msgTextEdit, "View SCIRun2 messages.");
+    QWhatsThis::add(msgTextEdit, "Read-only text edit widget.");
+    QToolTip::add(msgTextEdit, "View SCIRun2 messages.");
     // version number?
     displayMsg("SCIRun2\n");
 
@@ -231,7 +234,9 @@ BuilderWindow::BuilderWindow(const sci::cca::Services::pointer& services)
 
     networkCanvasView = new NetworkCanvasView(this, networkCanvas, vsplit);
     networkCanvasView->setServices(services);
-    QWhatsThis::add(networkCanvasView, "View and manipulate components.");
+    // need better help than this!
+    QWhatsThis::add(networkCanvasView, "Network canvas view.");
+    QToolTip::add(networkCanvasView, "View and manipulate components.");
 
     setCentralWidget(vsplit);
     setupFileActions();
@@ -360,10 +365,6 @@ void BuilderWindow::setupClusterActions()
     refreshAction->addTo(clusters);
 
 /*
-    QPopupMenu* cluster = new QPopupMenu(this);
-    menuBar()->insertItem("&Clusters", cluster );
-    cluster->insertItem( "&Add a cluster", this, SLOT( clusterAdd() ), Key_F1 );
-    cluster->insertItem( "&Remove a cluster", this, SLOT( clusterRemove() ), Key_F2 );
     QPopupMenu* mxn = new QPopupMenu( this );
     menuBar()->insertItem("&MxN", mxn );
     mxn->insertItem( "&MxN-enabled Component_1", this, SLOT( mxn_add() ), Key_F1 );
@@ -378,13 +379,15 @@ void BuilderWindow::setupClusterActions()
 
 void BuilderWindow::insertHelpMenu()
 {
-  static bool firstTime = true;
-  static int id;
-  if (firstTime) {
-    firstTime = false;
-  } else {
-    menuBar()->removeItem(id);
-  }
+    static int id;
+//   static bool firstTime = true;
+//   if (firstTime) {
+//     firstTime = false;
+//   } else {
+// std::cerr << "BuilderWindow::insertHelpMenu, not first time" << std::endl;
+//     menuBar()->removeItem(id);
+//   }
+
   menuBar()->insertSeparator();
   QPopupMenu *help = new QPopupMenu( this );
   help->setFont(*bFont);
@@ -528,7 +531,7 @@ void BuilderWindow::buildPackageMenus()
 	packageMenuIDs.push_back(menuID);
     }
     services->releasePort("cca.ComponentRepository");
-    insertHelpMenu();
+    //insertHelpMenu();
     unsetCursor();
 }
 
@@ -690,16 +693,6 @@ void BuilderWindow::exit()
   Thread::exitAll(0);
 }
 
-void BuilderWindow::clusterAdd()
-{
-  ( new QMessageBox())->about( this, "Cluster: Add", "Under Construction\n\nThis dialog will guide\n the user through the steps of adding\na cluster.\n\n" );
-}
-
-void BuilderWindow::clusterRemove()
-{
-  ( new QMessageBox())->about( this, "Cluster: Remove", "Under Construction\n\nThis dialog will guide\n the user through the steps of removing\na cluster.\n\n" );
-}
-
 void BuilderWindow::mxn_add()
 {
   ( new QMessageBox())->about( this, "MxN: Add", "Under Construction\n\nWhen this menu item is activated, the chosen parallel component will be added to the \ncanvas.  This will occur in the same manner as when other CCA components \nare instantiated.\n\n" );
@@ -813,9 +806,9 @@ Module* BuilderWindow::instantiateComponent(const std::string& className,
     return NULL;
 }
 
-void BuilderWindow::componentActivity(const sci::cca::ports::ComponentEvent::pointer& msgTextEdit)
+void BuilderWindow::componentActivity(const sci::cca::ports::ComponentEvent::pointer& e)
 {
-  std::cerr << "Got component activity event " << msgTextEdit->getEventType() << " for " << msgTextEdit->getComponentID()->getInstanceName() << '\n';
+  std::cerr << "Got component activity event " << e->getEventType() << " for " << e->getComponentID()->getInstanceName() << '\n';
   displayMsg("Some event occurs\n");
 }
 
@@ -875,16 +868,23 @@ void BuilderWindow::addCluster()
 	std::cerr << "Fatal Error: Cannot find builder service" << std::endl;
     }
 
-    ////////////////////////
-    //Assume a QT Dialog will return
-    string loaderName="qwerty";
-    string domainName="qwerty.sci.utah.edu";
-    string login="kzhang";
-    string loaderPath="mpirun -np 3 ploader";
-    string password="****"; //not used;
+    ClusterDialog *dialog = new ClusterDialog(this, "Add Cluster", TRUE);
+    if (dialog->exec() == QDialog::Accepted) {
+	////////////////////////
+	//Assume a QT Dialog will return
+	//string loaderName="qwerty";
+	string loaderName = dialog->loader();
+	//string domainName="qwerty.sci.utah.edu";
+	string domainName = dialog->domain();
+	//string login="kzhang";
+	string login = dialog->login();
+	string loaderPath="mpirun -np 3 ploader";
+	//string password="****"; //not used;
 
-    builder->addLoader(loaderName, login, domainName, loaderPath); // spawns xterm
-    services->releasePort("cca.BuilderService");
+	builder->addLoader(loaderName, login, domainName, loaderPath); // spawns xterm
+	services->releasePort("cca.BuilderService");
+    } else { // QDialog::Rejected
+    }
   
   //buildPackageMenus(loaderName);
 
