@@ -771,7 +771,10 @@ class BioFEMApp {
 	    {{Other} { * }}
 	}
 	
-	set saveFile [tk_getOpenFile -filetypes $types]
+        if {$saveFile == ""} {
+   	   set saveFile [tk_getOpenFile -filetypes $types]
+        }
+
 	if {$saveFile != ""} {
 	    
 	    # Reset application 
