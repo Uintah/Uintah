@@ -38,11 +38,17 @@ using namespace std;
 using namespace SCIRun;
 
 GuiContext::GuiContext(GuiInterface* gui, const std::string& name, bool save)
-  : gui(gui), name(name), cached(false), save(save), usedatadir(false)
+  : gui(gui), 
+    name(name),
+    children(),
+    cached(false),
+    save(save), usedatadir(false)
 {
-  const string save_flag = (save)?"1 ":"0 ";
-  const string sub_flag = (usedatadir)?"1":"0";
-  gui->execute("initVar \""+name+"\" "+save_flag+sub_flag);
+  if (save || usedatadir) {
+    const string save_flag = (save)?"1 ":"0 ";
+    const string sub_flag = (usedatadir)?"1":"0";
+    gui->execute("initVarStates \""+name+"\" "+save_flag+sub_flag);
+  }
 }
 
 GuiContext* GuiContext::subVar(const std::string& subname, bool saveChild)
@@ -53,17 +59,15 @@ GuiContext* GuiContext::subVar(const std::string& subname, bool saveChild)
   return child;
 }
 
-void GuiContext::erase( const std::string& subname )
+void GuiContext::erase(const std::string& subname)
 {
-  std::string fullname( name+"-"+subname );
-
+  const std::string fullname(name+"-"+subname);
   for(vector<GuiContext*>::iterator iter = children.begin();
-      iter != children.end(); ++iter) {
-
-    if( (*iter)->getfullname() == fullname ) {
-
+      iter != children.end(); ++iter) 
+  {
+    if((*iter)->getfullname() == fullname) 
+    {
       children.erase( iter );
-
       return;
     } 
   }
@@ -89,24 +93,12 @@ bool GuiContext::get(std::string& value)
   return true;
 }
 
-bool GuiContext::getSub(const std::string& subname, std::string& value)
-{
-  if(!gui->get(name+"-"+subname, value))
-    return false;
-  return true;
-}
-
 void GuiContext::set(const std::string& value)
 {
   string tmp;
   if (save && gui->get(name, tmp) && tmp == value) { return; }
   cached=false;
   gui->set(name, value);
-}
-
-void GuiContext::setSub(const std::string& subname, const std::string& value)
-{
-  gui->set(name+"-"+subname, value);
 }
 
 bool GuiContext::get(double& value)
@@ -124,33 +116,17 @@ bool GuiContext::get(double& value)
   return true;
 }
 
-bool GuiContext::getSub(const std::string& subname, double& value)
-{
-  string result;
-  if(!gui->get(name+"-"+subname, result))
-    return false;
-  istringstream s(result);
-  s >> value;
-  if(!s)
-    return false;
-  return true;
-}
-
 void GuiContext::set(double value)
 {
-  ostringstream val;
-  val << setprecision(17) << value;
+  ostringstream stream;
+  // Print the number 17 digits wide with decimal
+  stream << showpoint << setprecision(17) << value;
+  // Evaluate it in TCL to pare down extra 0's at the end
+  const string svalue = gui->eval("expr "+stream.str());
   string tmp;
-  if (save && gui->get(name, tmp) && tmp == val.str()) { return; }
+  if (save && gui->get(name, tmp) && tmp == svalue) { return; }
   cached=false;
-  gui->set(name, val.str());
-}
-
-void GuiContext::setSub(const std::string& subname, double value)
-{
-  ostringstream val;
-  val << setprecision(17) << value;
-  gui->set(name+"-"+subname, val.str());
+  gui->set(name, svalue);
 }
 
 bool GuiContext::get(int& value)
@@ -168,18 +144,6 @@ bool GuiContext::get(int& value)
   return true;
 }
 
-bool GuiContext::getSub(const std::string& subname, int& value)
-{
-  string result;
-  if(!gui->get(name+"-"+subname, result))
-    return false;
-  istringstream s(result);
-  s >> value;
-  if(!s)
-    return false;
-  return true;
-}
-
 void GuiContext::set(int value)
 {
   ostringstream val;
@@ -188,13 +152,6 @@ void GuiContext::set(int value)
   if (save && gui->get(name, tmp) && tmp == val.str()) { return; }
   cached=false;
   gui->set(name, val.str());
-}
-
-void GuiContext::setSub(const std::string& subname, int value)
-{
-  ostringstream val;
-  val << value;
-  gui->set(name+"-"+subname, val.str());
 }
 
 // if GuiVar has a varname like:
@@ -300,9 +257,8 @@ GuiInterface* GuiContext::getInterface()
 void GuiContext::dontSave()
 {
   save=false;
-  const string save_flag = (save)?"1 ":"0 ";
-  const string sub_flag = 
-    (usedatadir&&sci_getenv_p("SCIRUN_NET_SUBSTITUTE_DATADIR"))?"1":"0";
+  const string save_flag = "0 ";
+  const string sub_flag = (usedatadir)?"1":"0";
   gui->execute("setVarStates \""+name+"\" "+save_flag+sub_flag);
 }
 
