@@ -3099,6 +3099,92 @@ void GeomSphere::draw(DrawInfoOpenGL* di, Material* matl, double)
   post_draw(di);
 }
 
+
+void
+GeomSpheres::draw(DrawInfoOpenGL* di, Material* matl, double)
+{
+  if(!pre_draw(di, matl, 1)) return;
+
+  di->polycount += 2 * (nu_-1) * (nv_-1) * centers_.size();
+
+  const bool using_texture =
+    di->using_cmtexture_ && indices_.size() == centers_.size();
+  if (using_texture)
+  {
+    glColor4d(1.0, 1.0, 1.0, 1.0);
+
+    glEnable(GL_TEXTURE_1D);
+    glDisable(GL_TEXTURE_2D);
+    glBindTexture(GL_TEXTURE_1D, di->cmtexture_);
+  }
+  
+  const bool using_color = centers_.size() == colors_.size() / 4;
+  const bool ulr = radii_.size() == centers_.size();
+
+  if (ulr)
+  {
+    glMatrixMode(GL_MODELVIEW);
+    for (unsigned int i=0; i < centers_.size(); i++)
+    {
+      if (using_texture) { glTexCoord1f(indices_[i]); }
+      if (using_color) { glColor4ubv(&(colors_[i*4])); }
+
+      if (radii_[i] > 1.0e-6)
+      {
+	glPushMatrix();
+
+	glTranslated(centers_[i].x(), centers_[i].y(), centers_[i].z());
+	gluSphere(di->qobj, radii_[i], nu_, nv_);
+	
+	glPopMatrix();
+      }
+      else
+      {
+	glDisable(GL_LIGHTING);
+	glBegin(GL_POINTS);
+	glVertex3f(centers_[i].x(), centers_[i].y(), centers_[i].z());
+	glEnd();
+	glEnable(GL_LIGHTING);
+      }
+    }
+  }
+  else if (global_radius_ > 1.0e-6)
+  {
+    glMatrixMode(GL_MODELVIEW);
+    for (unsigned int i=0; i < centers_.size(); i++)
+    {
+      if (using_texture) { glTexCoord1f(indices_[i]); }
+      if (using_color) { glColor4ubv(&(colors_[i*4])); }
+
+      glPushMatrix();
+
+      glTranslated(centers_[i].x(), centers_[i].y(), centers_[i].z());
+      gluSphere(di->qobj, global_radius_, nu_, nv_);
+	
+      glPopMatrix();
+    }
+  }
+  else
+  {
+    glDisable(GL_LIGHTING);
+    glBegin(GL_POINTS);
+    for (unsigned int i=0; i < centers_.size(); i++)
+    {
+      if (using_texture) { glTexCoord1f(indices_[i]); }
+      if (using_color) { glColor4ubv(&(colors_[i*4])); }
+
+      glVertex3f(centers_[i].x(), centers_[i].y(), centers_[i].z());
+    }
+    glEnd();
+    glEnable(GL_LIGHTING);
+  }
+
+  glDisable(GL_TEXTURE_1D);
+
+  post_draw(di);
+}
+
+
 void GeomEllipsoid::draw(DrawInfoOpenGL* di, Material* matl, double)
 {
     pre_draw(di,matl,1);

@@ -33,6 +33,8 @@
 #include <Core/Geom/GeomTri.h>
 #include <Core/Geometry/BBox.h>
 #include <Core/Malloc/Allocator.h>
+#include <Core/Persistent/PersistentSTL.h>
+
 #include <iostream>
 using std::cerr;
 using std::ostream;
@@ -124,6 +126,148 @@ void GeomSphere::getnunv(int num_polygons, int &nu, int &nv) {
   float t = (num_polygons - MIN_POLYS)/float(MAX_POLYS - MIN_POLYS);
   nu = int(MIN_NU + t*(MAX_NU - MIN_NU)); 
   nv = int(MIN_NV + t*(MAX_NV - MIN_NV));
+}
+
+
+Persistent* make_GeomSpheres()
+{
+  return scinew GeomSpheres;
+}
+
+
+PersistentTypeID GeomSpheres::type_id("GeomSpheres", "GeomObj", make_GeomSpheres);
+
+
+GeomSpheres::GeomSpheres(double radius, int nu, int nv)
+  : GeomObj(),
+    nu_(nu),
+    nv_(nv),
+    global_radius_(radius)
+{
+}
+
+
+GeomSpheres::GeomSpheres(const GeomSpheres& copy)
+  : GeomObj(copy),
+    centers_(copy.centers_),
+    radii_(copy.radii_),
+    colors_(copy.colors_),
+    indices_(copy.indices_),
+    nu_(copy.nu_),
+    nv_(copy.nv_),
+    global_radius_(copy.global_radius_)
+{
+}
+
+
+GeomSpheres::~GeomSpheres()
+{
+}
+
+
+GeomObj *
+GeomSpheres::clone()
+{
+  return scinew GeomSpheres(*this);
+}
+
+
+void
+GeomSpheres::get_bounds(BBox& bb)
+{
+  const bool ugr = !(radii_.size() == centers_.size());
+  for (unsigned int i=0; i < centers_.size(); i++)
+  {
+    bb.extend(centers_[i], ugr?global_radius_:radii_[i]);
+  }
+}
+
+
+static unsigned char
+COLOR_FTOB(double v)
+{
+  const int inter = (int)(v * 255 + 0.5);
+  if (inter > 255) return 255;
+  if (inter < 0) return 0;
+  return (unsigned char)inter;
+}
+
+
+void
+GeomSpheres::add(const Point &center)
+{
+  centers_.push_back(center);
+}
+
+
+void
+GeomSpheres::add(const Point &center, const MaterialHandle &mat)
+{
+  add(center);
+  const unsigned char r0 = COLOR_FTOB(mat->diffuse.r());
+  const unsigned char g0 = COLOR_FTOB(mat->diffuse.g());
+  const unsigned char b0 = COLOR_FTOB(mat->diffuse.b());
+  const unsigned char a0 = COLOR_FTOB(mat->transparency);
+  colors_.push_back(r0);
+  colors_.push_back(g0);
+  colors_.push_back(b0);
+  colors_.push_back(a0);
+}
+
+
+void
+GeomSpheres::add(const Point &center, float index)
+{
+  add(center);
+  indices_.push_back(index);
+}
+
+
+void
+GeomSpheres::add_radius(const Point &c, double r)
+{
+  centers_.push_back(c);
+  radii_.push_back(r);
+}
+
+void
+GeomSpheres::add_radius(const Point &c, double r, const MaterialHandle &mat)
+{
+  add_radius(c, r);
+  const unsigned char r0 = COLOR_FTOB(mat->diffuse.r());
+  const unsigned char g0 = COLOR_FTOB(mat->diffuse.g());
+  const unsigned char b0 = COLOR_FTOB(mat->diffuse.b());
+  const unsigned char a0 = COLOR_FTOB(mat->transparency);
+  colors_.push_back(r0);
+  colors_.push_back(g0);
+  colors_.push_back(b0);
+  colors_.push_back(a0);
+}
+
+void
+GeomSpheres::add_radius(const Point &c, double r, float index)
+{
+  add_radius(c, r);
+  indices_.push_back(index);
+}
+
+
+
+#define GEOMSPHERES_VERSION 1
+
+void
+GeomSpheres::io(Piostream& stream)
+{
+  stream.begin_class("GeomSpheres", GEOMSPHERES_VERSION);
+  GeomObj::io(stream);
+  Pio(stream, centers_);
+  Pio(stream, radii_);
+  Pio(stream, colors_);
+  Pio(stream, indices_);
+  Pio(stream, nu_);
+  Pio(stream, nv_);
+  Pio(stream, global_radius_);
+  stream.end_class();
 }
 
 } // End namespace SCIRun

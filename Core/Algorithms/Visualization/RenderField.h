@@ -96,9 +96,6 @@ public:
 
 protected:
 
-  void add_sphere(const Point &p, double scale, 
-		  int resolution, GeomGroup *g, 
-		  MaterialHandle m0);
   void add_disk(const Point &p, const Vector& v, double scale, 
 		int resolution, GeomGroup *g, MaterialHandle m0);
   void add_axis(const Point &p, double scale, GeomLines *lines);
@@ -307,6 +304,7 @@ RenderField<Fld, Loc>::render_nodes(const Fld *sfld,
   typename Fld::mesh_handle_type mesh = sfld->get_typed_mesh();
   GeomGroup *nodes = 0;
   GeomPoints *points = 0;
+  GeomSpheres *spheres = 0;
   GeomLines *lines = 0;
   GeomHandle display_list(0);
 
@@ -330,10 +328,10 @@ RenderField<Fld, Loc>::render_nodes(const Fld *sfld,
       display_list = scinew GeomDL(points);
     }
   }
-  else if (mode == 1 || mode == 3)
+  if (mode == 1) // Spheres
   {
-    nodes = scinew GeomGroup();
-    display_list = scinew GeomDL(nodes);
+    spheres = scinew GeomSpheres(node_scale, node_resolution, node_resolution);
+    display_list = scinew GeomDL(spheres);
   }
   else if (mode == 2) // Axis
   {
@@ -348,6 +346,11 @@ RenderField<Fld, Loc>::render_nodes(const Fld *sfld,
       display_list = scinew GeomDL(lines);
     }
     lines->setLineWidth(3);
+  }
+  else if (mode == 3)
+  {
+    nodes = scinew GeomGroup();
+    display_list = scinew GeomDL(nodes);
   }
 
   // First pass: over the nodes
@@ -400,12 +403,11 @@ RenderField<Fld, Loc>::render_nodes(const Fld *sfld,
     case 1: // Spheres
       if (def_color)
       {
-	add_sphere(p, node_scale, node_resolution, nodes, 0);
+	spheres->add(p);
       }
       else
       {
-	add_sphere(p, node_scale, node_resolution, nodes,
-		   color_handle->lookup(val));
+	spheres->add(p, val);
       }
       break;
 
@@ -1559,12 +1561,6 @@ public:
   static CompileInfoHandle get_compile_info(const TypeDescription *vftd,
 					    const TypeDescription *cftd,
 					    const TypeDescription *ltd);
-
-protected:
-
-  void add_sphere(const Point &p, double scale, int resolution,
-		  GeomGroup *g, GeomPoints *points,
-		  MaterialHandle color = 0);
 };
 
 
@@ -1601,31 +1597,26 @@ RenderScalarField<SFld, CFld, Loc>::render_data(FieldHandle sfld_handle,
   const bool sized_p = (display_mode == "Scaled Spheres");
 
   GeomHandle data_switch = 0;
-  GeomGroup *objs = 0;
   GeomPoints *points = 0;
+  GeomSpheres *spheres = 0;
 
   if (points_p)
   {
     if (transparent_p)
     {
       points = scinew GeomTranspPoints();
+      data_switch = points;
     }
     else
     {
       points = scinew GeomPoints();
+      data_switch = scinew GeomDL(points);
     }
-    data_switch =
-      scinew GeomSwitch(scinew GeomColorMap(scinew GeomMaterial(points, def_mat), cmap));
   }
   else
   {
-    objs = scinew GeomGroup();
-    data_switch = scinew GeomSwitch(scinew GeomMaterial(objs, def_mat));
-    if (sized_p)
-    {
-      points = scinew GeomPoints();
-      objs->add(points);
-    }
+    spheres = scinew GeomSpheres();
+    data_switch = scinew GeomDL(spheres);
   }
   
   typename SFld::mesh_handle_type mesh = sfld->get_typed_mesh();
@@ -1668,12 +1659,11 @@ RenderScalarField<SFld, CFld, Loc>::render_data(FieldHandle sfld_handle,
 	  double ctmpd;
 	  to_double(ctmp, ctmpd);
 
-	  add_sphere(p, scale * dtmp, resolution, objs, points,
-		     cmap->lookup(ctmpd));
+	  spheres->add_radius(p, scale * dtmp, ctmpd);
 	}
 	else
 	{
-	  add_sphere(p, scale * dtmp, resolution, objs, points);
+	  spheres->add_radius(p, scale * dtmp);
 	}
       }
     }
