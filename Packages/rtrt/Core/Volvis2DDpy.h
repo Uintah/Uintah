@@ -81,7 +81,6 @@ namespace rtrt {
     Texture <GLfloat> *bgTextImage;    // clean background texture
     Texture <GLfloat> *transTexture1;  // collection of widget textures painted onto background
     Texture <GLfloat> *transTexture2;  // used for texture swapping to remove volume rendering "streaks"
-    int whichTexture;
     vector<VolumeVis2D*> volumes;
     Volvis2DDpy( float t_inc );
   };
