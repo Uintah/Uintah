@@ -695,7 +695,7 @@ RenderField<Fld, Loc>::render_edges(Fld *sfld,
 	}
       }
     }
-    else if (sfld->basis_order() != -1  && mesh->dimensionality() == 1)
+    else if (mesh->dimensionality() == 1)
     {
       typename Fld::value_type val;
       sfld->value(val, *eiter);
@@ -1747,15 +1747,11 @@ RenderFieldImage<Fld, Loc>::render_texture_face(Fld *sfld,
   float tex_coords[8];
   float pos_coords[12];
   int colorbytes;
-//    cerr<<"set bytes\n";
-//    if( use_transparency ) {
-    colorbytes = 4;
-//    } else {
-//      colorbytes = 3;
-//    }
+  colorbytes = 4;
+
   GeomTexRectangle *tr = scinew GeomTexRectangle();
   texture_face = tr;
-//    cerr<<"cast ImageMesh\n";
+
   ImageMesh *im = dynamic_cast<ImageMesh *> (mesh.get_rep());
   // set up the texture parameters //
   // power of 2 dimensions
@@ -1783,26 +1779,21 @@ RenderFieldImage<Fld, Loc>::render_texture_face(Fld *sfld,
   pos_coords[0] = p1.x();
   pos_coords[1] = p1.y();
   pos_coords[2] = p1.z();
-//    cerr<<"got minx, miny\n";
 
   im->get_center(p2, lr);
   pos_coords[3] = p2.x();
   pos_coords[4] = p2.y();
   pos_coords[5] = p2.z();
-//    cerr<<"got minx, maxy\n";
-
 
   im->get_center(p3, ur);
   pos_coords[6] = p3.x();
   pos_coords[7] = p3.y();
   pos_coords[8] = p3.z();
-//    cerr<<"got max, maxy\n";
 
   im->get_center(p4, ul);
   pos_coords[9] = p4.x();
   pos_coords[10] = p4.y();
   pos_coords[11] = p4.z();
-//    cerr<<"got maxx, miny\n";
   //***************************************************
 
 
@@ -1816,8 +1807,6 @@ RenderFieldImage<Fld, Loc>::render_texture_face(Fld *sfld,
     tmax_x = (im->get_ni()- 0.5)/(double)width;
     tmin_y = 0.5/(double)height;
     tmax_y = (im->get_nj()-0.5)/(double)height;
-//     tmin_x = tmin_y = 0.0;
-//     tmax_x = tmax_y = 1.0;
 
     tex_coords[0] = tmin_x; tex_coords[1] = tmin_y;
     tex_coords[2] = tmax_x; tex_coords[3] = tmin_y;
@@ -1829,7 +1818,6 @@ RenderFieldImage<Fld, Loc>::render_texture_face(Fld *sfld,
     typename Fld::mesh_type::Node::iterator niter_end; mesh->end(niter_end);  
     typename Fld::mesh_type::Node::array_type nodes;
     while(niter != niter_end ){
-      //int i;
       int idx;
       // convert data values to double
       typename Fld::value_type val;
@@ -1844,28 +1832,17 @@ RenderFieldImage<Fld, Loc>::render_texture_face(Fld *sfld,
       // compute the ColorMap index and retreive the color
       double cmin = color_handle->getMin();
       double cmax = color_handle->getMax();
-      double index = (dval - cmin)/(cmax - cmin);
-      const Color &c = color_handle->getColor(index);
+      double index = Clamp((dval - cmin)/(cmax - cmin), 0.0, 1.0);
+      const Color &c = color_handle->getColor( index );
 
-//        cerr<<"inputting color into the texture, idx = "<<idx
-//  	  <<", (i,j) = ("<<niter.i_<<","<<niter.j_<<"),  dval = "<<dval
-//  	  <<", cmap_index = "<<index<<"\n";
       // fill the texture
       texture[idx] = (unsigned char)(Clamp(c.r(), 0.0, 1.0)*255);
-//        cerr<<"("<<(int)texture[idx]<<", ";
       texture[idx+1] =  (unsigned char)(Clamp(c.g(), 0.0, 1.0)*255);
-//        cerr<<(int)texture[idx+1]<<", ";
       texture[idx+2] = (unsigned char)(Clamp(c.b(), 0.0, 1.0)*255);
-//        cerr<<(int)texture[idx+2]<<", ";
-      // check for transparency
-//        if( use_transparency ){
       texture[idx+3] = (unsigned char)(Clamp(color_handle->getAlpha(index), 0.0, 1.0)*255);
-//        cerr<<(int)texture[idx+3]<<") ";
-//        }
-//      cerr<<"done with color input\n";
       ++niter;
     }
-//      cerr<<"\n";
+
    } else if( sfld->basis_order() == 0){
      tr->interpolate( false );
      tmin_x = 0.0;
@@ -1892,23 +1869,15 @@ RenderFieldImage<Fld, Loc>::render_texture_face(Fld *sfld,
        // compute the ColorMap index and retreive the color
        double cmin = color_handle->getMin();
        double cmax = color_handle->getMax();
-       double index = (dval - cmin)/(cmax - cmin);
-       const Color &c = color_handle->getColor(index);
+       double index = Clamp((dval - cmin)/(cmax - cmin), 0.0, 1.0);
+       const Color &c = color_handle->getColor( index );
 
-       //        cerr<<"inputting color into the texture, idx = "<<idx
-       //  	  <<", (i,j) = ("<<fiter.i_<<","<<fiter.j_<<"),  dval = "<<dval
-       //  	  <<", cmap_index = "<<index<<"\n";
        // fill the texture
        texture[idx] = (unsigned char)(Clamp(c.r(), 0.0, 1.0)*255);
-       //        cerr<<"("<<(int)texture[idx]<<", ";
        texture[idx+1] =  (unsigned char)(Clamp(c.g(), 0.0, 1.0)*255);
-       //        cerr<<(int)texture[idx+1]<<", ";
        texture[idx+2] = (unsigned char)(Clamp(c.b(), 0.0, 1.0)*255);
-       //        cerr<<(int)texture[idx+2]<<", ";
-       // check for transparency
-       //        if( use_transparency ){
        texture[idx+3] = (unsigned char)(Clamp(color_handle->getAlpha(index), 0.0, 1.0) * 255);
-     //      cerr<<"done with color input\n";
+
      ++fiter;
      }
    }
@@ -1924,11 +1893,8 @@ RenderFieldImage<Fld, Loc>::render_texture_face(Fld *sfld,
     tr->set_transparency( true );
   }
 
-//    cerr<<"setting texture coords\n";
   tr->set_coords(tex_coords, pos_coords);
-//    cerr<<"setting texture\n";
   tr->set_texture( texture, colorbytes, width, height );
-//    cerr<<"texture set\n";
   delete [] texture;
   return texture_face;
 }
