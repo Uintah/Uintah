@@ -117,6 +117,12 @@ set sagittal_mode 0
 # volume rendering
 global show_vol_ren
 set show_vol_ren 0
+global link_winlevel
+set link_winlevel 1
+global vol_width
+set vol_width 0
+global vol_level
+set vol_level 0
 
 setProgressText "Loading BioImage Application, Please Wait..."
 
@@ -389,6 +395,9 @@ class BioImageApp {
 		bind   .standalone.viewers.topbot.pane1.childsite.lr.pane0.childsite.sagittal <ButtonRelease> "$mods(ViewImage)-c release  %W %b %s %X %Y; $this update_ViewImage_button_release %b"
 		bind  .standalone.viewers.topbot.pane1.childsite.lr.pane1.childsite.coronal <ButtonRelease> "$mods(ViewImage)-c release  %W %b %s %X %Y; $this update_ViewImage_button_release %b"
 
+		global vol_width vol_level
+		set vol_width $ww
+		set vol_level $wl
 
   	        set min [expr $wl-$ww/2]
 	        set max [expr $wl+$ww/2]
@@ -1011,43 +1020,49 @@ class BioImageApp {
     }
 
     method update_ViewImage_button_release {b} {
-	if {$b == 1} {
-	    # Window/level just changed
-	    global mods
-	    global $mods(ViewImage)-axial-viewport0-clut_ww 
-	    global $mods(ViewImage)-axial-viewport0-clut_wl
+ 	if {$b == 1} {
+ 	    # Window/level just changed
+ 	    global link_winlevel
+ 	    if {$link_winlevel == 1} {
+		global mods vol_width vol_level
+		global $mods(ViewImage)-axial-viewport0-clut_ww 
+		global $mods(ViewImage)-axial-viewport0-clut_wl
+		
+		set ww [set $mods(ViewImage)-axial-viewport0-clut_ww]
+		set wl [set $mods(ViewImage)-axial-viewport0-clut_wl]
+		set min [expr $wl-$ww/2]
+		set max [expr $wl+$ww/2]
 
-	    set ww [set $mods(ViewImage)-axial-viewport0-clut_ww]
-	    set wl [set $mods(ViewImage)-axial-viewport0-clut_wl]
-	    set min [expr $wl-$ww/2]
-	    set max [expr $wl+$ww/2]
+		set vol_width $ww
+		set vol_level $wl
+		
+ 		# Update the UnuQuantize min/max and the 
+ 		# UnuJhisto axis 0 mins/maxs
+ 		set UnuQuantize [lindex [lindex $filters(0) $modules] 7] 
+ 		set UnuJhisto [lindex [lindex $filters(0) $modules] 21] 
+		
+ 		global [set UnuQuantize]-maxf [set UnuQuantize]-minf
+ 		global [set UnuJhisto]-maxs [set UnuJhisto]-mins
+		
+ 		set [set UnuQuantize]-maxf $max
+ 		set [set UnuQuantize]-minf $min
+		
+ 		set [set UnuJhisto]-maxs "$max nan"
+ 		set [set UnuJhisto]-mins "$min nan"
 
-	    # Update the UnuQuantize min/max and the 
-	    # UnuJhisto axis 0 mins/maxs
-	    set UnuQuantize [lindex [lindex $filters(0) $modules] 7] 
-	    set UnuJhisto [lindex [lindex $filters(0) $modules] 21] 
+		# execute modules if volume rendering enabled
+		global show_vol_ren
+		if {$show_vol_ren == 1} {
+		    [set UnuQuantize]-c needexecute
+		    [set UnuJhisto]-c needexecute
+		}
+ 	    }
+		
+ 	    # update background threshold slider min/max 
+ 	    # $this update_planes_threshold_slider_min_max
 
-	    global [set UnuQuantize]-maxf [set UnuQuantize]-minf
-	    global [set UnuJhisto]-maxs [set UnuJhisto]-mins
-
-	    set [set UnuQuantize]-maxf $max
-	    set [set UnuQuantize]-minf $min
-
-	    set [set UnuJhisto]-maxs "$max nan"
-	    set [set UnuJhisto]-mins "$min nan"
-
-	    # update background threshold slider min/max 
-	    # $this update_planes_threshold_slider_min_max
-
-	    $this update_planes_threshold
-
-	    # execute modules if volume rendering enabled
-	    global show_vol_ren
-	    if {$show_vol_ren == 1} {
-		[set UnuQuantize]-c needexecute
-		[set UnuJhisto]-c needexecute
-	    }
-	}
+ 	    $this update_planes_threshold
+ 	}
     }
 
     #############################
@@ -2134,24 +2149,24 @@ class BioImageApp {
 
             label $winlevel.ww.l -text "Window Width"
             scale $winlevel.ww.s -variable $mods(ViewImage)-axial-viewport0-clut_ww \
-                -from 0 -to 129 -length 130 -width 15 \
+                -from 0 -to 9999 -length 130 -width 15 \
                 -showvalue false -orient horizontal \
                 -command "$this change_window_width"
-            bind $winlevel.ww.s <ButtonRelease> "$this update_planes_threshold"
+            bind $winlevel.ww.s <ButtonRelease> "$this execute_vol_ren_when_linked"
             entry $winlevel.ww.e -textvariable $mods(ViewImage)-axial-viewport0-clut_ww \
                 -relief flat
-bind $winlevel.ww.e <Return> "$this change_window_width 1; $this update_planes_threshold"
+            bind $winlevel.ww.e <Return> "$this change_window_width 1; $this execute_vol_ren_when_linked"
             pack $winlevel.ww.l $winlevel.ww.s $winlevel.ww.e -side left -anchor n -pady 1
 
             label $winlevel.wl.l -text "Window Level "
             scale $winlevel.wl.s -variable $mods(ViewImage)-axial-viewport0-clut_wl \
-                -from 0 -to 1299 -length 130 -width 15 \
+                -from 0 -to 9999 -length 130 -width 15 \
                 -showvalue false -orient horizontal \
                 -command "$this change_window_level"
-            bind $winlevel.wl.s <ButtonRelease> "$this update_planes_threshold"
+            bind $winlevel.wl.s <ButtonRelease> "$this execute_vol_ren_when_linked"
             entry $winlevel.wl.e -textvariable $mods(ViewImage)-axial-viewport0-clut_wl \
                 -relief flat
-            bind $winlevel.wl.e <Return> "$this change_window_level 1; $this update_planes_threshold"
+            bind $winlevel.wl.e <Return> "$this change_window_level 1; $this execute_vol_ren_when_linked"
             pack $winlevel.wl.l $winlevel.wl.s $winlevel.wl.e -side left -anchor n -pady 1
 
             trace variable $mods(ViewImage)-min w "$this update_window_level_scales"
@@ -2418,9 +2433,8 @@ bind $winlevel.ww.e <Return> "$this change_window_width 1; $this update_planes_t
 	bind $page.tf.stransp <ButtonRelease> $n
 
         # display window and level
-        global $mods(ViewImage)-axial-viewport0-clut_ww 
-        global $mods(ViewImage)-axial-viewport0-clut_wl
-        global $mods(ViewImage)-min $mods(ViewImage)-max
+        global vol_width
+        global vol_level
 
         iwidgets::labeledframe $page.winlevel \
             -labeltext "Window/Level Controls" \
@@ -2429,30 +2443,36 @@ bind $winlevel.ww.e <Return> "$this change_window_width 1; $this update_planes_t
             -pady 3
         set winlevel [$page.winlevel childsite]
 
+        global link_winlevel
+        checkbutton $winlevel.link -text "Link to Slice Window/Level" \
+            -variable link_winlevel \
+            -command "$this link_windowlevels"
+        pack $winlevel.link -side top -anchor nw -pady 1
+
         frame $winlevel.ww
         frame $winlevel.wl
         pack $winlevel.ww $winlevel.wl -side top -anchor ne -pady 0
 
         label $winlevel.ww.l -text "Window Width"
-        scale $winlevel.ww.s -variable $mods(ViewImage)-axial-viewport0-clut_ww \
-            -from 0 -to 129 -length 130 -width 15 \
+        scale $winlevel.ww.s -variable vol_width \
+            -from 0 -to 9999 -length 130 -width 15 \
             -showvalue false -orient horizontal \
-            -command "$this change_volume_window_width"
-        bind $winlevel.ww.s <ButtonRelease> "$this update_planes_threshold"
-        entry $winlevel.ww.e -textvariable $mods(ViewImage)-axial-viewport0-clut_ww \
+            -command "$this change_volume_window_width_and_level"
+        bind $winlevel.ww.s <ButtonRelease> "$this execute_vol_ren"
+        entry $winlevel.ww.e -textvariable vol_width \
             -relief flat
-        bind $winlevel.ww.e <Return> "$this change_volume_window_width 1; $this update_planes_threshold"
+        bind $winlevel.ww.e <Return> "$this change_volume_window_width_and_level 1; $this update_planes_threshold"
         pack $winlevel.ww.l $winlevel.ww.s $winlevel.ww.e -side left -anchor n -pady 1
 
         label $winlevel.wl.l -text "Window Level "
-        scale $winlevel.wl.s -variable $mods(ViewImage)-axial-viewport0-clut_wl \
-            -from 0 -to 1299 -length 130 -width 15 \
+        scale $winlevel.wl.s -variable vol_level \
+            -from 0 -to 9999 -length 130 -width 15 \
             -showvalue false -orient horizontal \
-            -command "$this change_volume_window_level"
-        bind $winlevel.wl.s <ButtonRelease> "$this update_planes_threshold"
-        entry $winlevel.wl.e -textvariable $mods(ViewImage)-axial-viewport0-clut_wl \
+            -command "$this change_volume_window_width_and_level"
+       bind $winlevel.wl.s <ButtonRelease> "$this execute_vol_ren"
+        entry $winlevel.wl.e -textvariable vol_level \
             -relief flat
-        bind $winlevel.wl.e <Return> "$this change_volume_window_level 1; $this update_planes_threshold"
+       bind $winlevel.wl.e <Return> "$this change_volume_window_width_and_level 1; $this update_planes_threshold"
         pack $winlevel.wl.l $winlevel.wl.s $winlevel.wl.e -side left -anchor n -pady 1
 
         trace variable $mods(ViewImage)-min w "$this update_volume_window_level_scales"
@@ -3119,17 +3139,16 @@ bind $winlevel.ww.e <Return> "$this change_window_width 1; $this update_planes_t
     method update_window_level_scales {varname varele varop} {
 	global mods
 	global $mods(ViewImage)-min $mods(ViewImage)-max
-	global $mods(ViewImage)-axial-viewport0-clut_ww
-	global $mods(ViewImage)-axial-viewport0-clut_wl
 
 	set min [set $mods(ViewImage)-min]
 	set max [set $mods(ViewImage)-max]
+        set span [expr abs([expr $max-$min])]
 
 	# configure window width scale
 	$attachedVFr.f.vis.childsite.tnb.canvas.notebook.cs.page1.cs.winlevel.childsite.ww.s \
-	    configure -from $min -to $max
+	    configure -from 0 -to $span
 	$detachedVFr.f.vis.childsite.tnb.canvas.notebook.cs.page1.cs.winlevel.childsite.ww.s \
-	    configure -from $min -to $max
+	    configure -from 0 -to $span
 
 	# configure window level scale
 	$attachedVFr.f.vis.childsite.tnb.canvas.notebook.cs.page1.cs.winlevel.childsite.wl.s \
@@ -3137,6 +3156,7 @@ bind $winlevel.ww.e <Return> "$this change_window_width 1; $this update_planes_t
 	$detachedVFr.f.vis.childsite.tnb.canvas.notebook.cs.page1.cs.winlevel.childsite.wl.s \
 	    configure -from $min -to $max
 	
+        $this update_volume_window_level_scales 1 2 3
     }
 
     method change_window_width { val } {
@@ -3155,6 +3175,14 @@ bind $winlevel.ww.e <Return> "$this change_window_width 1; $this update_planes_t
 	$mods(ViewImage)-c setclut
 
 	$mods(ViewImage)-c redrawall
+      
+        # if window levels linked, change the vol_width
+        global link_winlevel
+        if {$link_winlevel == 1} {
+	    global vol_width
+            set vol_width $val
+	    $this change_volume_window_width_and_level -1
+        }
     }
 
     method change_window_level { val } {
@@ -3164,74 +3192,119 @@ bind $winlevel.ww.e <Return> "$this change_window_width 1; $this update_planes_t
 	global $mods(ViewImage)-sagittal-viewport0-clut_wl
 	global $mods(ViewImage)-coronal-viewport0-clut_wl
 
-	set val [set $mods(ViewImage)-axial-viewport0-clut_wl]
+	set v [set $mods(ViewImage)-axial-viewport0-clut_wl]
 
-	set $mods(ViewImage)-sagittal-viewport0-clut_wl $val
-	set $mods(ViewImage)-coronal-viewport0-clut_wl $val
+	set $mods(ViewImage)-sagittal-viewport0-clut_wl $v
+	set $mods(ViewImage)-coronal-viewport0-clut_wl $v
 
 	# set windows to be dirty
 	$mods(ViewImage)-c setclut
 
 	$mods(ViewImage)-c redrawall
+
+        # if window levels linked, change the vol_level
+        global link_winlevel
+        if {$link_winlevel == 1 && $val != -1} {
+	    global vol_level
+            set vol_level $val
+	    $this change_volume_window_width_and_level -1
+        }
     }
 
-    method update_volume_window_level_scales {varname varele varop} {
-	global mods
-	global $mods(ViewImage)-min $mods(ViewImage)-max
-	global $mods(ViewImage)-axial-viewport0-clut_ww
-	global $mods(ViewImage)-axial-viewport0-clut_wl
+     method update_volume_window_level_scales {varname varele varop} {
+ 	global mods
+ 	global $mods(ViewImage)-min $mods(ViewImage)-max
 
-	set min [set $mods(ViewImage)-min]
-	set max [set $mods(ViewImage)-max]
+ 	set min [set $mods(ViewImage)-min]
+ 	set max [set $mods(ViewImage)-max]
+        set span [expr abs([expr $max-$min])]
 
-	# configure window width scale
-	$attachedVFr.f.vis.childsite.tnb.canvas.notebook.cs.page2.cs.winlevel.childsite.ww.s \
-	    configure -from $min -to $max
-	$detachedVFr.f.vis.childsite.tnb.canvas.notebook.cs.page2.cs.winlevel.childsite.ww.s \
-	    configure -from $min -to $max
+ 	# configure window width scale
+ 	$attachedVFr.f.vis.childsite.tnb.canvas.notebook.cs.page2.cs.winlevel.childsite.ww.s \
+ 	    configure -from 0 -to $span
+ 	$detachedVFr.f.vis.childsite.tnb.canvas.notebook.cs.page2.cs.winlevel.childsite.ww.s \
+ 	    configure -from 0 -to $span
 
-	# configure window level scale
-	$attachedVFr.f.vis.childsite.tnb.canvas.notebook.cs.page2.cs.winlevel.childsite.wl.s \
-	    configure -from $min -to $max
-	$detachedVFr.f.vis.childsite.tnb.canvas.notebook.cs.page2.cs.winlevel.childsite.wl.s \
-	    configure -from $min -to $max
+ 	# configure window level scale
+ 	$attachedVFr.f.vis.childsite.tnb.canvas.notebook.cs.page2.cs.winlevel.childsite.wl.s \
+ 	    configure -from $min -to $max
+ 	$detachedVFr.f.vis.childsite.tnb.canvas.notebook.cs.page2.cs.winlevel.childsite.wl.s \
+ 	    configure -from $min -to $max
 	
-    }
+     }
 
-    method change_volume_window_width { val } {
-	# sync other windows with axial window width
-	global mods
-	global $mods(ViewImage)-axial-viewport0-clut_ww
-	global $mods(ViewImage)-sagittal-viewport0-clut_ww
-	global $mods(ViewImage)-coronal-viewport0-clut_ww
+     method change_volume_window_width_and_level { val } {
+	 # Change UnuJhisto and UnuQuantize values
+	 global vol_width vol_level
+	 
+	 set min [expr $vol_level-$vol_width/2]
+	 set max [expr $vol_level+$vol_width/2]
+	 
+	 set UnuQuantize [lindex [lindex $filters(0) $modules] 7] 
+         set UnuJhisto [lindex [lindex $filters(0) $modules] 21] 
+         global [set UnuQuantize]-maxf [set UnuQuantize]-minf
+  	 global [set UnuJhisto]-maxs [set UnuJhisto]-mins
 
-	set val [set $mods(ViewImage)-axial-viewport0-clut_ww]
+  	 set [set UnuQuantize]-maxf $max
+       	 set [set UnuQuantize]-minf $min
+       	 set [set UnuJhisto]-maxs "$max nan"
+       	 set [set UnuJhisto]-mins "$min nan"
 
-	set $mods(ViewImage)-sagittal-viewport0-clut_ww $val
-	set $mods(ViewImage)-coronal-viewport0-clut_ww $val
+         # if linked, change the ViewImage window width and level
+         global link_winlevel
+         if {$link_winlevel == 1 && $val != -1} {
+	     global mods
+	     global $mods(ViewImage)-axial-viewport0-clut_ww
+	     global $mods(ViewImage)-axial-viewport0-clut_wl
+             set $mods(ViewImage)-axial-viewport0-clut_ww $vol_width
+             set $mods(ViewImage)-axial-viewport0-clut_wl $vol_level
 
-	# set windows to be dirty
-	$mods(ViewImage)-c setclut
+             # update all windows
+             $this change_window_width -1
+             $this change_window_level -1
+	 }
+      }
 
-	$mods(ViewImage)-c redrawall
-    }
+     method execute_vol_ren {} {
+     	# execute modules if volume rendering enabled
+ 	global show_vol_ren
+ 	if {$show_vol_ren == 1} {
+   	    set UnuQuantize [lindex [lindex $filters(0) $modules] 7] 
+            set UnuJhisto [lindex [lindex $filters(0) $modules] 21] 
+ 	    [set UnuQuantize]-c needexecute
+            [set UnuJhisto]-c needexecute
+         }
+     }
 
-    method change_volume_window_level { val } {
-	# sync other windows with axial window level
-	global mods
-	global $mods(ViewImage)-axial-viewport0-clut_wl
-	global $mods(ViewImage)-sagittal-viewport0-clut_wl
-	global $mods(ViewImage)-coronal-viewport0-clut_wl
+     method execute_vol_ren_when_linked {} {
+	 # execute volume rendering modules on change of window
+	 # and level only if they are linked
+	 global link_winlevel show_vol_ren 
+	 if {$link_winlevel == 1 && $show_vol_ren == 1} {
+   	    set UnuQuantize [lindex [lindex $filters(0) $modules] 7] 
+            set UnuJhisto [lindex [lindex $filters(0) $modules] 21] 
+ 	    [set UnuQuantize]-c needexecute
+            [set UnuJhisto]-c needexecute
+	 }
+     }
 
-	set val [set $mods(ViewImage)-axial-viewport0-clut_wl]
+    method link_windowlevels {} {
+	global link_winlevel
 
-	set $mods(ViewImage)-sagittal-viewport0-clut_wl $val
-	set $mods(ViewImage)-coronal-viewport0-clut_wl $val
+	if {$link_winlevel == 1} {
+	    # Set vol_width and vol_level to Viewimage window width and level
+	    global vol_width vol_level mods
+	    global $mods(ViewImage)-axial-viewport0-clut_ww
+	    global $mods(ViewImage)-axial-viewport0-clut_wl
 
-	# set windows to be dirty
-	$mods(ViewImage)-c setclut
+            set vol_width [set $mods(ViewImage)-axial-viewport0-clut_ww]
+            set vol_level [set $mods(ViewImage)-axial-viewport0-clut_wl]
 
-	$mods(ViewImage)-c redrawall
+            $this change_volume_window_width_and_level 1
+
+            # execute the volume rendering if it's on
+            $this execute_vol_ren
+	} 
     }
 
 
