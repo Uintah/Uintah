@@ -52,6 +52,7 @@ template<> string findTypeName(bool*);
 template<> string findTypeName(Vector*);
 template<> string findTypeName(Point*);
 template<> string findTypeName(Transform*);
+template<> string findTypeName(string*);
 
 //////////
 // Function overloading for templates 
