@@ -125,17 +125,14 @@ itcl_class SCIRun_FieldsCreate_SamplePlane {
 	pack $w.row4.label $w.row4.scale $w.row4.update -side left
 
 	label $w.which.l -text "Data At Location"
-	radiobutton $w.which.node -text "Nodes" \
+	radiobutton $w.which.node -text "Nodes (linear basis)" \
 		-variable $this-data-at -value Nodes
-	radiobutton $w.which.edge -text "Edges" \
-		-variable $this-data-at -value Edges
-	radiobutton $w.which.face -text "Faces" \
+	radiobutton $w.which.face -text "Faces (constant basis)" \
 		-variable $this-data-at -value Faces
 	radiobutton $w.which.none -text "None" \
 		-variable $this-data-at -value None
 	pack $w.which.l -side top
-	pack $w.which.node $w.which.edge $w.which.face \
-	    $w.which.none -anchor nw
+	pack $w.which.node $w.which.face $w.which.none -anchor nw
 
 	makeSciButtonPanel $w $w $this
 	moveToCursor $w
