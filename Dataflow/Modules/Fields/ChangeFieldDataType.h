@@ -71,15 +71,46 @@ ChangeFieldDataTypeAlgoCreateT<FSRC, FOUT>::execute(FieldHandle fsrc_h)
   return fout;
 }
 
+template <class T>
+bool
+double_to_data_type(T &dat, double d);
+
+template <>
+bool
+double_to_data_type<Vector>(Vector &dat, double d)
+{
+  return false;
+
+}
+
+template <>
+bool
+double_to_data_type<Tensor>(Tensor &dat, double d)
+{
+  return false;
+}
+
+template <class T>
+bool
+double_to_data_type(T &dat, double d)
+{
+  dat = d;
+  return true;
+}
+
+
 template <class FSRC, class FOUT>
 void
 ChangeFieldDataTypeAlgoCreateT<FSRC, FOUT>::set_val_scalar(FieldHandle fout_h, 
 							   unsigned ind, 
 							   double val)
 {
-  FOUT *fout = dynamic_cast<FOUT *>(fout_h.get_rep());
-  typedef typename FOUT::mesh_type::Node::index_type ni;
-  fout->set_value(val, (ni)ind);
+  typename FOUT::value_type dat;
+  if (double_to_data_type(dat, val)) {
+    FOUT *fout = dynamic_cast<FOUT *>(fout_h.get_rep());
+    typedef typename FOUT::mesh_type::Node::index_type ni;
+    fout->set_value(dat, (ni)ind);
+  }
 }
 
 
