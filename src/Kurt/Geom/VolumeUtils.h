@@ -19,8 +19,6 @@ double intersectParam(const Vector& N, const Point& P, const Ray& R);
 
 void sortParameters( double *t, int len_t );
 
-bool overlap( const BBox& b1, const BBox& b2 );
-
 } // end GeomSpace
 } // end Kurt
 
