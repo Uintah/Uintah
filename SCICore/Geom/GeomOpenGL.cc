@@ -143,7 +143,11 @@ DrawInfoOpenGL::DrawInfoOpenGL()
 : current_matl(0),lighting(1),currently_lit(1),pickmode(1),fog(0),cull(0)
 {
     qobj=gluNewQuadric();
+#ifdef _WIN32
+	gluQuadricCallback(qobj, GLU_ERROR, (void (__stdcall*)())quad_error);
+#else
     gluQuadricCallback(qobj, GLU_ERROR, (gluQuadricCallbackType)quad_error);
+#endif
 }
 
 void DrawInfoOpenGL::reset()
@@ -3932,26 +3936,6 @@ void HeadLight::opengl_setup(const View& /*view*/, DrawInfoOpenGL*, int& idx)
     glPopMatrix();
 }
 
-
-#ifdef _WIN32
-
-// cheesy hack
-
-// Visual C++ won't link without these.  They aren't actuallty referenced anywhere in here 
-// so it shouldn't affect anything...
-
-void HeadLight::lintens(const OcclusionData& od, const Point& hit_position,
-			 Color& light, Vector& light_dir)
-{
-}
-
-void PointLight::lintens(const OcclusionData& od, const Point& hit_position,
-			 Color& light, Vector& light_dir)
-{
-}
-
-#endif
-
 void GeomIndexedGroup::draw(DrawInfoOpenGL* di, Material* m, double time)
 {
     HashTableIter<int, GeomObj*> iter(&objs);
@@ -4075,6 +4059,10 @@ void GeomSticky::draw(DrawInfoOpenGL* di, Material* matl, double t) {
 
 //
 // $Log$
+// Revision 1.9  1999/09/23 01:09:41  moulding
+// removed the Cheesy hacks (VC++ doesn't need them anymore - I think)
+// and added a #ifdef for win32 for the call to gluQuadricCallback()
+//
 // Revision 1.8  1999/09/08 02:26:50  sparker
 // Various #include cleanups
 //
