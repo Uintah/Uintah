@@ -120,10 +120,10 @@ namespace rtrt {
     }
     void sendImage();
     bool reconnect;
+    int sock;
   private:
     unsigned char sendbuf[MAXBUFSIZE];
     int bufsize;
-    int sock;
     void init();
     RServer* rserver;
     int idx;
@@ -149,8 +149,12 @@ void RServer::sendImage(Image* image, int nstreams)
     for(int i=0;i<MAXSTREAMS;i++)
       ports[i] = reply.ports[i];
 
-    for(int i=0;i<this->nstreams;i++)
+    for(int i=0;i<this->nstreams;i++){
       streamers[i]->reconnect=true;
+      if(close(streamers[i]->sock) != 0){
+	perror("close of streamer");
+      }
+    }
     frameno=0;
     int old_nstreams = this->nstreams;
     this->nstreams=nstreams;
