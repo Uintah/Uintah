@@ -431,13 +431,13 @@ for i in $package; do
 done
 
 # Set the subdir name in the bin tree for matlab engine.
-if test $pkg_MatlabInterface == yes; then
+if test "$pkg_MatlabInterface" == "yes"; then
   MATLAB_ENG=matlab
   AC_SUBST(MATLAB_ENG)
 fi
 
 # Take care of package dependencies
-if test $pkg_Fusion == yes; then
+if test "$pkg_Fusion" == "yes"; then
   # Fusion depends upon Teem Package.  
   if test -z $pkg_Teem; then
     AC_MSG_ERROR([The Fusion Package depends on the Teem Package. Please 
