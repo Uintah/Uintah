@@ -8,7 +8,7 @@
 
 namespace Uintah {
 
-  DECLARE_MAKER(ParticleEigenEvaluator);
+  DECLARE_MAKER(ParticleEigenEvaluator)
 
 ParticleEigenEvaluator::ParticleEigenEvaluator(GuiContext* ctx)
   : Module("ParticleEigenEvaluator",ctx,Source, "Operators", "Uintah"),

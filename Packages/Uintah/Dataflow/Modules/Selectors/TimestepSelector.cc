@@ -89,7 +89,7 @@ void TimestepSelector::execute()
    timeval.set(times[idx]);
 
    if( animate.get() ){
-     DataArchive& archive = *((*(handle.get_rep()))());
+     //DataArchive& archive = *((*(handle.get_rep()))());
      while( animate.get() && idx < (int)times.size() - 1){
        //       archive.purgeTimestepCache( times[idx] );
        DataArchive::cacheOnlyCurrentTimestep = true;

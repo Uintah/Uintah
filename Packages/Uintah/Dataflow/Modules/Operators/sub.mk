@@ -34,6 +34,7 @@ PSELIBS := \
 	Core/Datatypes    \
 	Core/Geom         \
 	Core/Geometry     \
+	Core/GeomInterface \
 	Core/Malloc
 LIBS := $(XML_LIBRARY) -lm
 

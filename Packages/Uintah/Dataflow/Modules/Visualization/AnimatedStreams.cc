@@ -35,7 +35,7 @@ using namespace SCIRun;
 
 static string control_name("Stream Control Widget");
 			 
-  DECLARE_MAKER(AnimatedStreams);
+  DECLARE_MAKER(AnimatedStreams)
 
 AnimatedStreams::AnimatedStreams(GuiContext* ctx)
   : Module("AnimatedStreams", ctx, Filter, "Visualization", "Uintah"),
@@ -59,7 +59,7 @@ AnimatedStreams::~AnimatedStreams()
 {
 
 }
-void AnimatedStreams::widget_moved(int)
+void AnimatedStreams::widget_moved(bool)
 {
   if( anistreams ){
       anistreams->SetWidgetLocation(control_widget->ReferencePoint());

@@ -97,7 +97,7 @@ void FieldExtractor::build_field(DataArchive& archive,
                                   const string& varname,
                                   int mat,
                                   double time,
-                                  Var& var,
+				 Var& /*var*/,
                                   LatVolField<T>*& sfd,
                                   bool swapbytes)
 {

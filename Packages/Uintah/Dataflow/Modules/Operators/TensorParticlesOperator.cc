@@ -11,7 +11,7 @@
 namespace Uintah {
 
 
-  DECLARE_MAKER(TensorParticlesOperator);
+  DECLARE_MAKER(TensorParticlesOperator)
 
 TensorParticlesOperator::TensorParticlesOperator(GuiContext* ctx)
   : Module("TensorParticlesOperator",ctx,Source, "Operators", "Uintah"),

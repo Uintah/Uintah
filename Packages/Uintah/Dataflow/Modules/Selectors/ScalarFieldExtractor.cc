@@ -192,7 +192,6 @@ void ScalarFieldExtractor::execute()
 			sfd, need_byte_swap);
 	  sfout->send(sfd);
 	  return;
-	  return;
 	}
      case TypeDescription::long64_type:
 	{
@@ -205,13 +204,11 @@ void ScalarFieldExtractor::execute()
 			sfd, need_byte_swap);
 	  sfout->send(sfd);
 	  return;
-	  return;
 	}
       default:
 	cerr<<"NCScalarField<?>  Unknown scalar type\n";
 	return;
       }
-      break;
     case TypeDescription::CCVariable:
       switch ( subtype->getType() ) {
       case TypeDescription::double_type:
@@ -256,7 +253,6 @@ void ScalarFieldExtractor::execute()
 	cerr<<"CCScalarField<?> Unknown scalar type\n";
 	return;
       }
-      break;
     default:
       cerr<<"Not a ScalarField\n";
       return;

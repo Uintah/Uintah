@@ -14,7 +14,7 @@ using namespace SCIRun;
 
 namespace Uintah {
  
-  DECLARE_MAKER(TensorFieldOperator);
+  DECLARE_MAKER(TensorFieldOperator)
 
 
 TensorFieldOperator::TensorFieldOperator(GuiContext* ctx)

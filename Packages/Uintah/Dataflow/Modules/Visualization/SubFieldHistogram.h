@@ -50,7 +50,7 @@ public:
   template <class F1, class F2>
     bool fill_histogram( F1* f1, F2* f2);
 
-  virtual void widget_moved(int last);
+  virtual void widget_moved(bool last);
 
   MaterialHandle white;
 private:
@@ -138,7 +138,6 @@ bool SubFieldHistogram::fill_histogram(F1* f1, F2* f2)
     cerr<<"min max = "<<min_.get()<<" "<<max_.get()<<endl;
     return true;
   }
-  return false;
 }   
 } // End namespace Uintah
 

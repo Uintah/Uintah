@@ -57,7 +57,7 @@ using std::ostringstream;
 
 using namespace SCIRun;
 
-  DECLARE_MAKER(TensorFieldExtractor);
+  DECLARE_MAKER(TensorFieldExtractor)
 
 //--------------------------------------------------------------- 
 TensorFieldExtractor::TensorFieldExtractor(GuiContext* ctx) 
@@ -76,7 +76,7 @@ void TensorFieldExtractor::get_vars(vector< string >& names,
 				   vector< const TypeDescription *>& types)
 {
   string command;
-  DataArchive& archive = *((*(archiveH.get_rep()))());
+  //DataArchive& archive = *((*(archiveH.get_rep()))());
   // Set up data to build or rebuild GUI interface
   string sNames("");
   int index = -1;
@@ -172,12 +172,10 @@ void TensorFieldExtractor::execute()
 	  // 	DumpAllocator(default_allocator, "TensorDump.allocator");
 	  return;
 	}
-	break;
       default:
 	cerr<<"NCVariable<?>  Unknown vector type\n";
 	return;
       }
-      break;
     case TypeDescription::CCVariable:
       switch ( subtype->getType() ) {
       case TypeDescription::Matrix3:
@@ -193,12 +191,10 @@ void TensorFieldExtractor::execute()
 	  // 	DumpAllocator(default_allocator, "TensorDump.allocator");
 	  return;
 	}
-	break;
       default:
 	cerr<<"CCVariable<?> Unknown vector type\n";
 	return;
       }
-      break;
     default:
       cerr<<"Not a TensorField\n";
       return;
