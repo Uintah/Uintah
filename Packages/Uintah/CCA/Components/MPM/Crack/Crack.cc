@@ -47,7 +47,8 @@ Crack::Crack(const ProblemSpecP& ps,SimulationStateP& d_sS,
 
   // Read in crack parameters, which are placed in element "material" 
   ProblemSpecP mpm_ps = ps->findBlock("MaterialProperties")->findBlock("MPM");
-  int m=0; // current material index
+
+  int m=0; // current material ID 
   for( ProblemSpecP mat_ps=mpm_ps->findBlock("material"); mat_ps!=0;
                    mat_ps=mat_ps->findNextBlock("material") ) {
 
@@ -66,18 +67,22 @@ Crack::Crack(const ProblemSpecP& ps,SimulationStateP& d_sS,
        // read in crack contact type, frictional coefficient,
        // contcat volume and separate volume 
        crk_ps->require("type",crackType[m]);
-           
-       if(crackType[m]=="frictional") {
-          crk_ps->require("mu",c_mu[m]);
-          separateVol[m]=0.0; //for displacement criterion
-          contactVol[m]=0.0;  //no need to input the two parameters
+     
+       // default values of critical volumes   
+       separateVol[m]=1.;
+       contactVol[m]=1.;
+       if(crackType[m]=="frictional" || crackType[m]=="stick") {
+          if(crackType[m]=="frictional") {
+             crk_ps->require("mu",c_mu[m]);
+          }
+          else if(crackType[m]=="stick") {
+             c_mu[m]=0.0;
+          }
           crk_ps->get("separateVol",separateVol[m]);
           crk_ps->get("contactVol",contactVol[m]);
        }
-       else if(crackType[m]=="null" || crackType[m]=="stick") {
+       else if(crackType[m]=="null") {
           c_mu[m]=0.;
-          separateVol[m]=1.;
-          contactVol[m]=1.;
        }
        else {
           cout << "Unkown crack contact type in subroutine Crack::Crack: " 
@@ -155,52 +160,56 @@ Crack::Crack(const ProblemSpecP& ps,SimulationStateP& d_sS,
        allNCell[m]=ncell;
        ncell.clear();
        triangles.clear();
-    } // End if crk_ps != 0
+    } // End of if crk_ps != 0
 
     m++; // next material
-  }  // End loop materials
+  }  // End of loop materials
 
   int numMatls=m;  // total number of materials
 
 #if 1  // output crack parameters
   cout << "*** Crack Information ***" << endl;
   for(m=0; m<numMatls; m++) {
-     if(crackType[m]=="NO_CRACK") 
-        cout << "\n --- material: " << m << ", no crack exists" << endl;
+     if(crackType[m]=="NO_CRACK") {
+        cout << "\n--- material: " << m << ", no crack exists" << endl;
+     }
      else {
         cout << " --- material: " << m << ", crack contact type: " 
              << "\'" << crackType[m] << "\'" << endl;
-        if(crackType[m]=="frictional") 
-           if(separateVol[m]<0.1&&contactVol[m]<0.1) {
-              cout << "mu=" << c_mu[m] 
-                   << ", check crack contact by displacement criterion"
-                   << endl;   
-           }
-           else {
-              cout << "mu=" << c_mu[m] 
-                   << ", check crack contact by volume criterion"
-                   << ", separate volume = "
-                   << separateVol[m]
-                   << ", contact volume = " << contactVol[m] << endl; 
-           } 
+        if(crackType[m]=="frictional") {
+           cout << "    frictional coefficient: " << c_mu[m] << endl;
+        }
+        if(separateVol[m]<0. || contactVol[m]<0.) {
+          cout  << "\nCheck crack contact by displacement criterion"
+                << endl;
+        }
+        else {
+          cout  << "\nCheck crack contact by volume criterion"
+                << ", separate volume = " << separateVol[m]
+                << ", contact volume = " << contactVol[m] << endl;
+        }
+      
         cout <<"\nCrack segments:" << endl;
         for(int i=0;i<(int)allRects[m].size();i++) {
-           cout << "\nRectangle " << i << ": " << "n01=" << allN12[m][i] 
-                << " ,n12=" << allN23[m][i] <<endl;
-           for(int j=0;j<4;j++) 
+           cout << "\nRectangle " << i << ": meshed by [" << allN12[m][i] 
+                << ", " << allN23[m][i] << "]" << endl;
+           for(int j=0;j<4;j++) {
               cout << "pt " << j << ": " << allRects[m][i][j] << endl;
+           }
         } 
         for(int i=0;i<(int)allTris[m].size();i++) {
            cout << "\nTriangle " << i << ": " << "ncell=" 
                 << allNCell[m][i] << endl;
-           for(int j=0;j<3;j++)
+           for(int j=0;j<3;j++) {
               cout << "pt " << j << ": " << allTris[m][i][j] << endl;
+           }
         }
-     } // End if crackType
-     cout << "\ncrack extent: lower: " << cmin[m]  
-          << ", upper: " << cmax[m] << endl << endl;
-  } // End loop over materials
+        cout << "\ncrack extent: lower: " << cmin[m]
+             << ", upper: " << cmax[m] << endl << endl;
+     } // End of if(crackType...)
+  } // End of loop over materials
 #endif 
+
 }
 
 void Crack::addComputesAndRequiresCrackDiscretization(Task* t,
@@ -234,8 +243,8 @@ void Crack::CrackDiscretization(const ProcessorGroup*,
           continue;
        }
 
-       cn = 0;  // index of nodes on crack plane
-       ce = 0;  // index of elements on crack plane
+       cn = 0;  // current node
+       ce = 0;  // icurrent element
 
        //Discretize quadrilaterals
        nstart0=0;  // starting node number for each level (in j direction)
@@ -253,7 +262,7 @@ void Crack::CrackDiscretization(const ProcessorGroup*,
          Point* side2=new Point[2*nj+1];
          Point* side4=new Point[2*nj+1];
 
-         //-generate side node coordinates
+         // generate side-node coordinates
          for(j=0; j<=2*nj; j++) {
            side2[j]=p2+(p3-p2)*(float)j/(2*nj);
            side4[j]=p1+(p4-p1)*(float)j/(2*nj);
@@ -275,10 +284,10 @@ void Crack::CrackDiscretization(const ProcessorGroup*,
                  pt=p_1+(p_2-p_1)*w;
                  cx[m][cn++]=pt;
               }
-           }  // End if j!=nj
-         } // End loop over j
+           }  // End of if j!=nj
+         } // End of loop over j
 
-         //-create elements and get normals for quadrilaterals
+         // create elements and get normals for quadrilaterals
          for(j=0; j<nj; j++) {
            nstart1=nstart0+(2*ni+1)*j;
            nstart2=nstart1+(ni+1);
@@ -314,7 +323,7 @@ void Crack::CrackDiscretization(const ProcessorGroup*,
          nstart0+=((2*ni+1)*nj+ni+1);  
          delete [] side4;
          delete [] side2;
-       } // End loop over quadrilaterals 
+       } // End ofloop over quadrilaterals 
 
        // discretize triangluar segments 
        for(k=0; k<(int)allTris[m].size(); k++) {  // loop over all triangles
@@ -326,7 +335,7 @@ void Crack::CrackDiscretization(const ProcessorGroup*,
          Point* side12=new Point[allNCell[m][k]+1];
          Point* side13=new Point[allNCell[m][k]+1];
 
-         //-generate node coordinates
+         // generate node coordinates
          for(j=0; j<=allNCell[m][k]; j++) {
            w=(float)j/(float)allNCell[m][k];
            side12[j]=p1+(p2-p1)*w;
@@ -341,10 +350,10 @@ void Crack::CrackDiscretization(const ProcessorGroup*,
              else w=(float)i/(float)j;
              pt=p_1+(p_2-p_1)*w;
              cx[m][cn++]=pt;
-           } // End loop over i
-         } // End loop over j
+           } // End of loop over i
+         } // End of loop over j
  
-         //-generate elements and their normals
+         // generate elements and their normals
          for(j=0; j<allNCell[m][k]; j++) {
            nstart1=nstart0+j*(j+1)/2;
            nstart2=nstart0+(j+1)*(j+2)/2;
@@ -361,24 +370,33 @@ void Crack::CrackDiscretization(const ProcessorGroup*,
              n3=nstart1+(i+1);
              cElemNodes[m][ce]=IntVector(n1,n2,n3);
              cElemNorm[m][ce++]=TriangleNormal(cx[m][n1],cx[m][n2],cx[m][n3]);
-           } // End loop over i
+           } // End of loop over i
            n1=nstart0+(j+1)*(j+2)/2-1;
            n2=nstart0+(j+2)*(j+3)/2-2;
            n3=nstart0+(j+2)*(j+3)/2-1;
            cElemNodes[m][ce]=IntVector(n1,n2,n3);
            cElemNorm[m][ce++]=TriangleNormal(cx[m][n1],cx[m][n2],cx[m][n3]);
-         } // End loop over j
+         } // End of loop over j
          //add number of nodes in this trianglular segment
          nstart0+=(allNCell[m][k]+1)*(allNCell[m][k]+2)/2;
          delete [] side12;
          delete [] side13;
-       } // End loop over triangles
+       } // End of loop over triangles
 
        numPts[m]=cn;     // number of crack points in this materials
        numElems[m]=ce;   // number of crack segments in this material 
-
-     } // End loop over matls
-   } // End loop over patches
+ 
+       cout << "*** Crack elements information \n" << "MatID: " << m << endl;
+       for(int mp=0; mp<numElems[m]; mp++) {
+         n1=cElemNodes[m][mp].x();
+         n2=cElemNodes[m][mp].y();
+         n3=cElemNodes[m][mp].z();
+         cout << "   Elem " << mp 
+              << ": " << n1 << cx[m][n1] << ", " << n2 << cx[m][n2]
+              << ", " << n3 << cx[m][n3] << endl;
+       } 
+     } // End of loop over matls
+   } // End of loop over patches
 }
 
 void Crack::addComputesAndRequiresParticleVelocityField(Task* t,
@@ -443,8 +461,8 @@ void Crack::ParticleVelocityField(const ProcessorGroup*,
             pgCode[idx][k]=1;
             gNumPatls[ni[k]]++;
           }
-        } //End loop over partls
-      } // End if(numElems[m]==0
+        } //End of loop over partls
+      } // End of if(numElems[m]==0
 
       if(numElems[m]!=0) { // for materials with crack
         //Step 1: determine if nodes in crack zone 
@@ -581,7 +599,7 @@ void Crack::ParticleVelocityField(const ProcessorGroup*,
                     norm=Vector(0.,0.,0.);
                   }
                 }
-              } // End loop over elements
+              } // End of loop over elements
 
               pgCode[idx][k]=cross;
               if(cross==NON_CRACK)   num0[ni[k]]++;
@@ -589,9 +607,9 @@ void Crack::ParticleVelocityField(const ProcessorGroup*,
               if(cross==BELOW_CRACK) num2[ni[k]]++;
               if(norm.length()>1.e-16) norm/=norm.length();
               if(norm.length()>1.e-16) GCrackNorm[ni[k]]+=norm;
-            } //End if(singlevfld)
-          } // End loop over k
-        } // End loop over particles
+            } //End of if(singlevfld)
+          } // End of loop over k
+        } // End of loop over particles
  
         //Handle particles in GhostCells
         ParticleSubset* psetWGCs= old_dw->getParticleSubset(dwi, patch,
@@ -668,17 +686,17 @@ void Crack::ParticleVelocityField(const ProcessorGroup*,
                       norm=Vector(0.,0.,0.);
                     }
                   } 
-                } // End loop over elements
+                } // End of loop over elements
                             
                 if(cross==NON_CRACK)   num0[ni[k]]++;
                 if(cross==ABOVE_CRACK) num1[ni[k]]++;
                 if(cross==BELOW_CRACK) num2[ni[k]]++;
                 if(norm.length()>1.e-16) norm/=norm.length();
                 if(norm.length()>1.e-16) GCrackNorm[ni[k]]+=norm;
-              } //End if(singlevfld) 
-            } // End loop over k 
-          } // End if(pincell) 
-        } // End loop over particles
+              } //End of if(singlevfld) 
+            } // End of loop over k 
+          } // End of if(pincell) 
+        } // End of loop over particles
              
         //Step 3: convert cross codes to field codes 
         for(ParticleSubset::iterator iter=pset->begin();
@@ -702,8 +720,8 @@ void Crack::ParticleVelocityField(const ProcessorGroup*,
                 } 
 
               }
-           }// End loop over k
-         } // End loop patls
+           }// End of loop over k
+         } // End of loop patls
 
         for(NodeIterator iter=patch->getNodeIterator();!iter.done();iter++) {
           IntVector c = *iter;
@@ -728,8 +746,8 @@ void Crack::ParticleVelocityField(const ProcessorGroup*,
               GNumPatls[c]=num2[c];
             }
           }
-        } // End loop over NodeIterator
-      } // End if(numElem[m]!=0)
+        } // End of loop over NodeIterator
+      } // End of if(numElem[m]!=0)
  
 #if 0 // output particle velocity field code
       cout << "\n*** Particle velocity field generated "
@@ -752,8 +770,8 @@ void Crack::ParticleVelocityField(const ProcessorGroup*,
                   << "Crack::ParticleVelocityField" << endl;
              exit(1);
           }
-        }  // End loop over nodes (k)
-      }  // End loop over particles
+        }  // End of loop over nodes (k)
+      }  // End of loop over particles
       cout << "\nNumber of particles around nodes:\n" 
            << setw(18) << "node" << setw(20) << "gNumPatls" 
            << setw(20) << "GNumPatls" << endl;
@@ -879,11 +897,11 @@ void Crack::CrackContactAdjustInterpolated(const ProcessorGroup*,
         vc=(va*ma+vb*mb)/(ma+mb);
         short Contact=0;
 
-        if(separateVol[m]<0.01 && contactVol[m] <0.01) { 
+        if(separateVol[m]<0. || contactVol[m] <0.) { 
           //use displacement criterion
           Vector u1=gdisplacement[m][c];
           Vector u2=Gdisplacement[m][c];
-          cout << "Interpolated--node:" << c << ", u1=" << u1 << ", u2=" << u2 << endl;
+          //cout << "Interpolated--node:" << c << ", u1=" << u1 << ", u2=" << u2 << endl;
           if(Dot((u2-u1),norm) >0. ) {
             Contact=1;
           }
@@ -911,13 +929,13 @@ void Crack::CrackContactAdjustInterpolated(const ProcessorGroup*,
               Point h=patch->nodePosition(cellIndex[k]+IntVector(1,1,1));
               if(xp>l.x() && xp<=h.x() && yp>l.y() && yp<=h.y() &&
                  zp>l.z() && zp<=h.z()) cellWithPatls[k]=1;
-            } //End loop over 8 cells
+            } // End of loop over 8 cells
             short allCellsWithPatls=1;
             for(int k=0; k<8; k++) {
               if(cellWithPatls[k]==0) allCellsWithPatls=0;
             }
             if(allCellsWithPatls) break;
-          } // End loop over patls
+          } // End of loop over patls
           for(int k=0; k<8; k++) numCellsWithPatls+=cellWithPatls[k];
           vol0=(float)numCellsWithPatls/8.*vcell;
     
@@ -925,7 +943,7 @@ void Crack::CrackContactAdjustInterpolated(const ProcessorGroup*,
           if(normVol>=contactVol[m] || 
             (normVol>separateVol[m] && Dot((vb-va),norm) > 0. )) {
             Contact=1;
-            cout << "Interpolated---node:" << c << ", normVol:" << normVol << endl;
+            //cout << "Interpolated---node:" << c << ", normVol:" << normVol << endl;
           }
         }
 
@@ -1001,11 +1019,11 @@ void Crack::CrackContactAdjustInterpolated(const ProcessorGroup*,
                  << crackType[m] << endl;
             exit(1);
           }
-        } // End if there is !contact
+        } // End of if there is !contact
 
-      } //End loop over nodes
-    } //End loop over materials
-  }  //End loop over patches
+      } //End of loop over nodes
+    } //End of loop over materials
+  }  //End of loop over patches
   //time1=clock()-time0;
   //time1/=CLOCKS_PER_SEC;
   //cout << "***time for crackAdjustInterpolated = " << time1 << endl;
@@ -1128,13 +1146,13 @@ void Crack::CrackContactAdjustIntegrated(const ProcessorGroup*,
         vc=(va*ma+vb*mb)/(ma+mb);
         short Contact=0;
 
-        if(separateVol[m]<0.01 && contactVol[m] <0.01) {
+        if(separateVol[m]<0. || contactVol[m] <0.) {
           //use displacement criterion
           Vector u1=gdisplacement[m][c];
           //+delT*gvelocity_star[m][c];
           Vector u2=Gdisplacement[m][c];
           //+delT*Gvelocity_star[m][c];
-          cout << "Integrated--node:" << c << ", u1=" << u1 << ", u2=" << u2 << endl;
+          //cout << "Integrated--node:" << c << ", u1=" << u1 << ", u2=" << u2 << endl;
           if(Dot((u2-u1),norm) >0. ) {
             Contact=1;
           } 
@@ -1161,13 +1179,13 @@ void Crack::CrackContactAdjustIntegrated(const ProcessorGroup*,
               Point h=patch->nodePosition(cellIndex[k]+IntVector(1,1,1));
               if(xp>l.x() && xp<=h.x() && yp>l.y() && yp<=h.y() &&
                  zp>l.z() && zp<=h.z()) cellWithPatls[k]=1;
-            } //End loop over 8 cells
+            } //End of loop over 8 cells
             short allCellsWithPatls=1;
             for(int k=0; k<8; k++) {
               if(cellWithPatls[k]==0) allCellsWithPatls=0;
             }
             if(allCellsWithPatls) break;
-          } // End loop over patls
+          } // End of loop over patls
           for(int k=0; k<8; k++) numCellsWithPatls+=cellWithPatls[k];
           vol0=(float)numCellsWithPatls/8.*vcell;
 
@@ -1176,7 +1194,7 @@ void Crack::CrackContactAdjustIntegrated(const ProcessorGroup*,
           if(normVol>=contactVol[m] || 
              (normVol>separateVol[m] && Dot((vb-va),norm) > 0.)) {
             Contact=1;
-            cout << "Intergrated--node:" << c << ", normVol:" << normVol << endl;
+            //cout << "Intergrated--node:" << c << ", normVol:" << normVol << endl;
           }
         }
 
@@ -1261,10 +1279,10 @@ void Crack::CrackContactAdjustIntegrated(const ProcessorGroup*,
                 << crackType[m] << endl;
             exit(1);
           }
-        } // End if there is !contact
-      } //End loop over nodes
-    } //End loop over materials
-  }  //End loop over patches
+        } // End of if there is !contact
+      } //End of loop over nodes
+    } //End of loop over materials
+  }  //End of loop over patches
   //time1=clock()-time0;
   //time1/=CLOCKS_PER_SEC;
   //cout << "***time for crackAdjustIntegrated = " << time1 << endl;
@@ -1350,8 +1368,8 @@ void Crack::MoveCrack(const ProcessorGroup*,
          }
          cx[m][i] += vcm*delT;
          //cout << "i=" << i << ", cx=" << cx[m][i] << endl;
-       } // End if in patch p
-     } // End loop numPts[m]
+       } // End of if in patch p
+     } // End of loop numPts[m]
 
      // update crack element normals
      for(int i=0; i<numElems[m]; i++) {
@@ -1360,10 +1378,10 @@ void Crack::MoveCrack(const ProcessorGroup*,
        int n4=cElemNodes[m][i].y();
        int n5=cElemNodes[m][i].z();
        cElemNorm[m][i]=TriangleNormal(cx[m][n3],cx[m][n4],cx[m][n5]);
-     } // End loop crack elements
+     } // End of loop crack elements
 
-   } //End loop over matls
- } //End loop over patches
+   } //End of loop over matls
+ } //End of loop over patches
   //time1=clock()-time0;
   //time1/=CLOCKS_PER_SEC;
   //cout << "***time for moveCrack = " << time1 << endl;

@@ -13,6 +13,7 @@
 #include <Packages/Uintah/Core/Grid/VarLabel.h>
 #include <Core/Math/MinMax.h>
 #include <Packages/Uintah/Core/Math/Matrix3.h>
+#include <Packages/Uintah/Core/Math/Short27.h> //for Fracture
 #include <Packages/Uintah/Core/Grid/VarTypes.h>
 #include <Core/Malloc/Allocator.h>
 #include <iostream>
@@ -25,6 +26,9 @@
 using std::cerr;
 using namespace Uintah;
 using namespace SCIRun;
+
+#define FRACTURE
+#undef FRACTURE
 
 HyperElasticPlastic::HyperElasticPlastic(ProblemSpecP& ps, MPMLabel* Mlb, int n8or27)
 {
@@ -288,6 +292,13 @@ HyperElasticPlastic::computeStressTensor(const PatchSubset* patches,
     delt_vartype delT;
     old_dw->get(delT, lb->delTLabel);
 
+#ifdef FRACTURE
+    constParticleVariable<Short27> pgCode;
+    new_dw->get(pgCode, lb->pgCodeLabel, pset);
+    constNCVariable<Vector> GVelocity;
+    new_dw->get(GVelocity,lb->GVelocityLabel, dwi, patch, gac, NGN);
+#endif
+
     // Create and allocate arrays for storing the updated information
     ParticleVariable<Matrix3> pBbarElastic_new, pDeformGrad_new;
     ParticleVariable<Matrix3> pStress_new;
@@ -327,11 +338,22 @@ HyperElasticPlastic::computeStressTensor(const PatchSubset* patches,
       }
 
       // Calculate the velocity gradient (L) from the grid velocity
+#ifdef FRACTURE   
+      short pgFld[27];
+      for(int k=0; k<27; k++) 
+         pgFld[k]=pgCode[idx][k];
       if (d_8or27==27) 
-        tensorL = computeVelocityGradient(patch, oodx, px[idx], psize[idx], gVelocity);
+        tensorL = computeVelocityGradient(patch, oodx, px[idx], psize[idx], 
+                                          pgFld, gVelocity, GVelocity);
       else 
-	tensorL = computeVelocityGradient(patch, oodx, px[idx], gVelocity);
-
+        tensorL = computeVelocityGradient(patch, oodx, px[idx], 
+                                          pgFld, gVelocity, GVelocity);
+#else
+      if (d_8or27==27)
+        tensorL = computeVelocityGradient(patch, oodx, px[idx], psize[idx], gVelocity);
+      else
+        tensorL = computeVelocityGradient(patch, oodx, px[idx], gVelocity);
+#endif
       // Calculate rate of deformation tensor (D) and spin tensor (W)
       tensorD = (tensorL + tensorL.Transpose())*0.5;
       tensorEta = tensorD - one*(tensorD.Trace()/3.0);
@@ -497,6 +519,11 @@ HyperElasticPlastic::addComputesAndRequires(Task* task,
 
   task->requires(Task::OldDW, pBbarElasticLabel, matlset,Ghost::None);
   task->requires(Task::OldDW, pDamageLabel, matlset,Ghost::None);
+
+#ifdef FRACTURE
+  task->requires(Task::NewDW,  lb->pgCodeLabel,    matlset, Ghost::None);
+  task->requires(Task::NewDW,  lb->GVelocityLabel, matlset, gac, NGN);
+#endif
 
   task->computes(lb->pStressLabel_preReloc,             matlset);
   task->computes(lb->pDeformationMeasureLabel_preReloc, matlset);

@@ -173,3 +173,71 @@ ConstitutiveModel::computeVelocityGradient(const Patch* patch,
   return velGrad;
 }
 
+Matrix3
+ConstitutiveModel::computeVelocityGradient(const Patch* patch,
+                                           const double* oodx,
+                                           const Point& px,
+                                           const Vector& psize,
+                                           const short pgFld[],
+                                           constNCVariable<Vector>& gVelocity,
+                                           constNCVariable<Vector>& GVelocity)
+{
+  // Initialize
+  Matrix3 velGrad(0.0);
+
+  // Get the node indices that surround the cell
+  IntVector ni[MAX_BASIS];
+  Vector d_S[MAX_BASIS];
+
+  patch->findCellAndShapeDerivatives27(px, ni, d_S, psize);
+
+  Vector gvel;
+  //cout << "ni = " << ni << endl;
+  for(int k = 0; k < d_8or27; k++) {
+    //if(patch->containsNode(ni[k])) {
+    if(pgFld[k]==1) gvel = gVelocity[ni[k]];
+    if(pgFld[k]==2) gvel = GVelocity[ni[k]];
+    //cout << "GridVel = " << gvel << endl;
+    for (int j = 0; j<3; j++){
+      for (int i = 0; i<3; i++) {
+        velGrad(i+1,j+1) += gvel[i] * d_S[k][j] * oodx[j];
+      }
+    }
+    //}
+  }
+  //cout << "VelGrad = " << velGrad << endl;
+  return velGrad;
+}
+
+Matrix3
+ConstitutiveModel::computeVelocityGradient(const Patch* patch,
+                                           const double* oodx,
+                                           const Point& px,
+                                           const short pgFld[],
+                                           constNCVariable<Vector>& gVelocity,
+                                           constNCVariable<Vector>& GVelocity)
+{
+  // Initialize
+  Matrix3 velGrad(0.0);
+
+  // Get the node indices that surround the cell
+  IntVector ni[MAX_BASIS];
+  Vector d_S[MAX_BASIS];
+
+  patch->findCellAndShapeDerivatives(px, ni, d_S);
+
+  Vector gvel;
+  for(int k = 0; k < d_8or27; k++) {
+    if(pgFld[k]==1)  gvel = gVelocity[ni[k]];
+    if(pgFld[k]==2)  gvel = GVelocity[ni[k]];
+    //cout << "GridVel = " << gvel << endl;
+    for (int j = 0; j<3; j++){
+      for (int i = 0; i<3; i++) {
+        velGrad(i+1,j+1) += gvel[i] * d_S[k][j] * oodx[j];
+      }
+    }
+  }
+  //cout << "VelGrad = " << velGrad << endl;
+  return velGrad;
+}
+
