@@ -202,6 +202,9 @@ main(int argc, char *argv[] )
   // load the packages
   packageDB->loadPackage();
 
+  // Activate "File" menu sub-menus once packages are all loaded.
+  gui->eval("activate_file_submenus",result);
+
   // Now activate the TCL event loop
   tcl_task->release_mainloop();
 
