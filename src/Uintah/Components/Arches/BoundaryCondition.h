@@ -151,8 +151,8 @@ public:
    // Diff BC types
    Array3<int>* cellTypes;
    int numInlets;
-   bool d_
 #if 0
+   bool d_;
    struct FlowInlet {
      // define enum for cell type
      CellTypeInfo inletType; 
