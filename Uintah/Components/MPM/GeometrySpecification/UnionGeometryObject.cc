@@ -49,5 +49,3 @@ Box UnionGeometryObject::getBoundingBox() const
 
   return Box(lo,hi);
 }
-
-

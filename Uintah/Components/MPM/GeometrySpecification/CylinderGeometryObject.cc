@@ -54,9 +54,11 @@ Box CylinderGeometryObject::getBoundingBox() const
 
 }
 
-
-
 // $Log$
+// Revision 1.5  2000/04/20 22:58:13  sparker
+// Resolved undefined symbols
+// Trying to make stuff work
+//
 // Revision 1.4  2000/04/20 22:37:13  jas
 // Fixed up the GeometryObjectFactory.  Added findBlock() and findNextBlock()
 // to ProblemSpec stuff.  This will iterate through all of the nodes (hopefully).

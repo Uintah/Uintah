@@ -50,6 +50,36 @@ void OnDemandDataWarehouse::get(ReductionVariableBase&, const VarLabel*) const
    cerr << "OnDemandDataWarehouse::get not finished\n";
 }
 
+void OnDemandDataWarehouse::put(const ReductionVariableBase&, const VarLabel*)
+{
+   cerr << "OnDemend DataWarehouse::get not finished\n";
+}
+
+void OnDemandDataWarehouse::get(ParticleVariableBase&, const VarLabel*,
+				int matlIndex, const Region*, int numGhostCells) const
+{
+   cerr << "OnDemend DataWarehouse::get not finished\n";
+}
+
+void OnDemandDataWarehouse::put(const ParticleVariableBase&, const VarLabel*,
+				int matlIndex, const Region*)
+{
+   cerr << "OnDemend DataWarehouse::get not finished\n";
+}
+
+void OnDemandDataWarehouse::get(NCVariableBase&, const VarLabel*,
+				int matlIndex, const Region*, int numGhostCells) const
+{
+   cerr << "OnDemend DataWarehouse::get not finished\n";
+}
+
+void OnDemandDataWarehouse::put(const NCVariableBase&, const VarLabel*,
+				int matlIndex, const Region*)
+{
+   cerr << "OnDemend DataWarehouse::get not finished\n";
+}
+
+
 #if 0
 void
 OnDemandDataWarehouse::getBroadcastData(DataItem& result,
@@ -222,6 +252,10 @@ OnDemandDataWarehouse::DataRecord::DataRecord(DataItem* di,
 
 //
 // $Log$
+// Revision 1.9  2000/04/20 22:58:18  sparker
+// Resolved undefined symbols
+// Trying to make stuff work
+//
 // Revision 1.8  2000/04/20 18:56:26  sparker
 // Updates to MPM
 //

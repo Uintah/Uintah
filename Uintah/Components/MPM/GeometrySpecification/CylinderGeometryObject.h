@@ -23,7 +23,6 @@ class CylinderGeometryObject : public GeometryObject {
 
   virtual bool inside(const Point &p) const;
   virtual Box getBoundingBox() const;
- 
  private:
   AXIS  d_axis;
   Point d_origin;
@@ -40,6 +39,10 @@ class CylinderGeometryObject : public GeometryObject {
 #endif // __CYLINDER_GEOMTRY_OBJECT_H__
 
 // $Log$
+// Revision 1.4  2000/04/20 22:58:14  sparker
+// Resolved undefined symbols
+// Trying to make stuff work
+//
 // Revision 1.3  2000/04/20 22:37:13  jas
 // Fixed up the GeometryObjectFactory.  Added findBlock() and findNextBlock()
 // to ProblemSpec stuff.  This will iterate through all of the nodes (hopefully).
