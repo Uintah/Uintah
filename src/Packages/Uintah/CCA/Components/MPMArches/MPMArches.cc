@@ -22,6 +22,8 @@
 #include <Packages/Uintah/CCA/Components/MPM/ThermalContact/ThermalContact.h>
 #include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/MPMMaterial.h>
 #include <Packages/Uintah/CCA/Components/Arches/ArchesMaterial.h>
+#include <Core/Containers/StaticArray.h>
+
 
 using namespace Uintah;
 using namespace SCIRun;
@@ -818,8 +820,8 @@ void MPMArches::computeVoidFrac(const ProcessorGroup*,
     int archIndex = 0;
     int matlindex = d_sharedState->getArchesMaterial(archIndex)->getDWIndex(); 
     int numMPMMatls = d_sharedState->getNumMPMMatls();
-    vector<CCVariable<double> > mat_vol(numMPMMatls);
-    vector<CCVariable<double> > solid_fraction_cc(numMPMMatls);
+    StaticArray<CCVariable<double> > mat_vol(numMPMMatls);
+    StaticArray<CCVariable<double> > solid_fraction_cc(numMPMMatls);
     
     int zeroGhostCells = 0;
 
@@ -894,40 +896,40 @@ void MPMArches::doMomExchange(const ProcessorGroup*,
 
   // MPM stuff
 
-    vector<CCVariable<double> > solid_fraction_cc(numMPMMatls);
+    StaticArray<CCVariable<double> > solid_fraction_cc(numMPMMatls);
 
-    vector<CCVariable<double> > xvelCC_solid(numMPMMatls);
-    vector<CCVariable<double> > yvelCC_solid(numMPMMatls);
-    vector<CCVariable<double> > zvelCC_solid(numMPMMatls);
+    StaticArray<CCVariable<double> > xvelCC_solid(numMPMMatls);
+    StaticArray<CCVariable<double> > yvelCC_solid(numMPMMatls);
+    StaticArray<CCVariable<double> > zvelCC_solid(numMPMMatls);
     
-    vector<SFCXVariable<double> > xvelFCX_solid(numMPMMatls);
-    vector<SFCXVariable<double> > yvelFCX_solid(numMPMMatls);
-    vector<SFCXVariable<double> > zvelFCX_solid(numMPMMatls);
+    StaticArray<SFCXVariable<double> > xvelFCX_solid(numMPMMatls);
+    StaticArray<SFCXVariable<double> > yvelFCX_solid(numMPMMatls);
+    StaticArray<SFCXVariable<double> > zvelFCX_solid(numMPMMatls);
     
-    vector<SFCYVariable<double> > xvelFCY_solid(numMPMMatls);
-    vector<SFCYVariable<double> > yvelFCY_solid(numMPMMatls);
-    vector<SFCYVariable<double> > zvelFCY_solid(numMPMMatls);
+    StaticArray<SFCYVariable<double> > xvelFCY_solid(numMPMMatls);
+    StaticArray<SFCYVariable<double> > yvelFCY_solid(numMPMMatls);
+    StaticArray<SFCYVariable<double> > zvelFCY_solid(numMPMMatls);
     
-    vector<SFCZVariable<double> > xvelFCZ_solid(numMPMMatls);
-    vector<SFCZVariable<double> > yvelFCZ_solid(numMPMMatls);
-    vector<SFCZVariable<double> > zvelFCZ_solid(numMPMMatls);
+    StaticArray<SFCZVariable<double> > xvelFCZ_solid(numMPMMatls);
+    StaticArray<SFCZVariable<double> > yvelFCZ_solid(numMPMMatls);
+    StaticArray<SFCZVariable<double> > zvelFCZ_solid(numMPMMatls);
     
-    vector<CCVariable<double> >   dragForceX_cc(numMPMMatls);
-    vector<CCVariable<double> >   dragForceY_cc(numMPMMatls);
-    vector<CCVariable<double> >   dragForceZ_cc(numMPMMatls);
+    StaticArray<CCVariable<double> >   dragForceX_cc(numMPMMatls);
+    StaticArray<CCVariable<double> >   dragForceY_cc(numMPMMatls);
+    StaticArray<CCVariable<double> >   dragForceZ_cc(numMPMMatls);
     
-    vector<SFCYVariable<double> > dragForceX_fcy(numMPMMatls);
-    vector<SFCZVariable<double> > dragForceX_fcz(numMPMMatls);
+    StaticArray<SFCYVariable<double> > dragForceX_fcy(numMPMMatls);
+    StaticArray<SFCZVariable<double> > dragForceX_fcz(numMPMMatls);
     
-    vector<SFCZVariable<double> > dragForceY_fcz(numMPMMatls);
-    vector<SFCXVariable<double> > dragForceY_fcx(numMPMMatls);
+    StaticArray<SFCZVariable<double> > dragForceY_fcz(numMPMMatls);
+    StaticArray<SFCXVariable<double> > dragForceY_fcx(numMPMMatls);
     
-    vector<SFCXVariable<double> > dragForceZ_fcx(numMPMMatls);
-    vector<SFCYVariable<double> > dragForceZ_fcy(numMPMMatls);
+    StaticArray<SFCXVariable<double> > dragForceZ_fcx(numMPMMatls);
+    StaticArray<SFCYVariable<double> > dragForceZ_fcy(numMPMMatls);
     
-    vector<SFCXVariable<double> > pressForceX(numMPMMatls);
-    vector<SFCYVariable<double> > pressForceY(numMPMMatls);
-    vector<SFCZVariable<double> > pressForceZ(numMPMMatls);
+    StaticArray<SFCXVariable<double> > pressForceX(numMPMMatls);
+    StaticArray<SFCYVariable<double> > pressForceY(numMPMMatls);
+    StaticArray<SFCZVariable<double> > pressForceZ(numMPMMatls);
     
     // Arches stuff
     
