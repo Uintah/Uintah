@@ -60,13 +60,13 @@ DECLARE_MAKER(MaskLattice)
 class ScalarClipper : public Clipper
 {
 private:
-  ScalarFieldInterface *sfi_;
+  ScalarFieldInterfaceHandle sfi_;
   string function_;
   GuiInterface *gui_;
   string id_;
 
 public:
-  ScalarClipper(ScalarFieldInterface *sfi,
+  ScalarClipper(ScalarFieldInterfaceHandle sfi,
 		string function,
 		GuiInterface *gui,
 		string id) :
@@ -126,7 +126,7 @@ MaskLattice::execute()
     return;
   }
 
-  if (!ifieldhandle->query_scalar_interface(this))
+  if (!ifieldhandle->query_scalar_interface(this).get_rep())
   {
     error("This module only works on fields containing scalar data.");
     return;

@@ -270,7 +270,7 @@ ShowField::check_for_vector_data(FieldHandle fld_handle) {
   has_vector_data_.reset();
   has_tensor_data_.reset();
   nodes_as_disks_.reset();
-  if (fld_handle->query_vector_interface(this) != 0)
+  if (fld_handle->query_vector_interface(this).get_rep() != 0)
   {
     if (! has_vector_data_.get())
     { 
@@ -282,7 +282,7 @@ ShowField::check_for_vector_data(FieldHandle fld_handle) {
     }
     return true;
   }
-  else if (fld_handle->query_tensor_interface(this) != 0)
+  else if (fld_handle->query_tensor_interface(this).get_rep() != 0)
   {
     if (! has_tensor_data_.get())
     {
@@ -320,7 +320,8 @@ ShowField::fetch_typed_algorithm(FieldHandle fld_handle,
     }
   }
 
-  if (vfld_handle.get_rep() && vfld_handle->query_vector_interface(this))
+  if (vfld_handle.get_rep() && 
+      vfld_handle->query_vector_interface(this).get_rep())
   {
     const TypeDescription *vftd = vfld_handle->get_type_description();
     CompileInfoHandle dci =
@@ -335,7 +336,8 @@ ShowField::fetch_typed_algorithm(FieldHandle fld_handle,
     }
   }
 
-  if (vfld_handle.get_rep() && vfld_handle->query_tensor_interface(this))
+  if (vfld_handle.get_rep() && 
+      vfld_handle->query_tensor_interface(this).get_rep())
   {
     const TypeDescription *vftd = vfld_handle->get_type_description();
     CompileInfoHandle dci =
@@ -472,8 +474,8 @@ ShowField::execute()
       return;
     }
   }
-  else if (fld_handle->query_vector_interface(this) ||
-	   fld_handle->query_tensor_interface(this))
+  else if (fld_handle->query_vector_interface(this).get_rep() ||
+	   fld_handle->query_tensor_interface(this).get_rep())
   {
     vfld_handle = fld_handle;
   }

@@ -37,7 +37,7 @@ typedef struct _SLData {
   CurveField<double> *cf;
   Mutex lock;
   MeshHandle seed_mesh_h;
-  VectorFieldInterface *vfi;
+  VectorFieldInterfaceHandle vfi;
   double tolerance;
   double stepsize;
   int maxsteps;
@@ -54,7 +54,7 @@ class StreamLinesAlgo : public DynamicAlgoBase
 {
 public:
   virtual FieldHandle execute(MeshHandle seed_mesh_h,
-			      VectorFieldInterface *vfi,
+			      VectorFieldInterfaceHandle vfi,
 			      double tolerance,
 			      double stepsize,
 			      int maxsteps,
@@ -71,7 +71,7 @@ protected:
 
   //! This particular implementation uses Runge-Kutta-Fehlberg.
   void FindNodes(vector<Point>&, Point, double, double, int, 
-		 VectorFieldInterface *, bool remove_colinear_p, int method);
+		 VectorFieldInterfaceHandle, bool remove_colinear_p, int method);
 };
 
 
@@ -83,7 +83,7 @@ public:
   void parallel_generate(int proc, SLData *d);
 
   virtual FieldHandle execute(MeshHandle seed_mesh_h,
-			      VectorFieldInterface *vfi,
+			      VectorFieldInterfaceHandle vfi,
 			      double tolerance,
 			      double stepsize,
 			      int maxsteps,
@@ -209,7 +209,7 @@ StreamLinesAlgoT<SMESH, SLOC>::parallel_generate( int proc, SLData *d)
 template <class SMESH, class SLOC>
 FieldHandle
 StreamLinesAlgoT<SMESH, SLOC>::execute(MeshHandle seed_mesh_h,
-				       VectorFieldInterface *vfi,
+				       VectorFieldInterfaceHandle vfi,
 				       double tolerance,
 				       double stepsize,
 				       int maxsteps,

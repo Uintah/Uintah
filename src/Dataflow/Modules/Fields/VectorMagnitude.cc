@@ -80,7 +80,7 @@ VectorMagnitude::execute()
     return;
   }
 
-  if (!fieldin->query_vector_interface(this))
+  if (!fieldin->query_vector_interface(this).get_rep())
   {
     error("Only available for Vector data.");
     return;

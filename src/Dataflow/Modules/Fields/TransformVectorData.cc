@@ -85,8 +85,7 @@ TransformVectorData::execute()
     return;
   }
   
-  VectorFieldInterface *vfi;
-  if ((vfi = ifieldhandle->query_vector_interface(this)) == 0)
+  if (ifieldhandle->query_vector_interface(this).get_rep() == 0)
   {
     error("This module only works on vector fields.");
     return;

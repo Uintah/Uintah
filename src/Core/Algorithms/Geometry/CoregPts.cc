@@ -328,10 +328,11 @@ CoregPtsSimplexSearch::~CoregPtsSimplexSearch() {
 }
 
 CoregPtsSimplexSearch::CoregPtsSimplexSearch(int maxIters, double misfitTol,
- 				     int &abort, ScalarFieldInterface *dField,
-				     MusilRNG &mr,
-				     int allowScale, int allowRotate,
-				     int allowTranslate) :
+					     int &abort, 
+					     ScalarFieldInterfaceHandle dField,
+					     MusilRNG &mr,
+					     int allowScale, int allowRotate,
+					     int allowTranslate) :
   CoregPts(allowScale, allowRotate, allowTranslate),
   maxIters_(maxIters), misfitTol_(misfitTol), abort_(abort), dField_(dField),
   mr_(mr)
