@@ -205,31 +205,31 @@ c    set comparison constants in computation precision
        IF (KCALL.NE.0)  THEN
            KCALL = 0
 c        error parameters for mode change
-           AEZMD = 0.3
-           AEZMU = 0.2
-           REHMD = 0.4
-           REHMU = 0.3
-           DSUP  = 0.3
+           AEZMD = 0.3D0
+           AEZMU = 0.2D0
+           REHMD = 0.4D0
+           REHMU = 0.3D0
+           DSUP  = 0.3D0
 c        tolerant error parameters
-           AEZMF = 1.E-2
-           ERRHT = 1.0E-3
+           AEZMF = 1.0D-2
+           ERRHT = 1.0D-3
 c        final convergence error limits
-           ERRZ = 1.0E-10
-           ERRH = 1.E-8
+           ERRZ = 1.0D-10
+           ERRH = 1.0D-8
 c        change limits
-           DLAMAX = 2.0
-           FDPMA = 0.5
-           FDPMI3 = 0.3
-           FDPMD3 = 0.3
+           DLAMAX = 2.0D0
+           FDPMA = 0.5D0
+           FDPMI3 = 0.3D0
+           FDPMD3 = 0.3D0
 c        W* ascent change limits
-           FDPY = 0.3
-           FDPYR = 0.8
-           FDPYV = 0.02
-           FDPMV = 0.8
-           FDPMC = 0.9
+           FDPY = 0.3D0
+           FDPYR = 0.8D0
+           FDPYV = 0.02D0
+           FDPMV = 0.8D0
+           FDPMC = 0.9D0
 c        constants
-           ONE = 1.0
-           ZERO = 0
+           ONE = 1.0D0
+           ZERO = 0.0D0
        ENDIF
 c
 c-----------------------------------------------------------------------
@@ -290,8 +290,8 @@ c    set to start in mode 3
        MODE = 3
        KUP = 0
 c    set initial damping for steepest descent
-       FDW = 1
-       FDY = 1
+       FDW = 1.0D0
+       FDY = 1.0D0
 c    set active phases
        DO 9 M=1,NP
            IF (RW(IoPMOL+M).NE.ZERO)  THEN
@@ -6716,9 +6716,9 @@ c  20 additional pointers required by  SJTP
      ;   IoWM,IoTP,IoDCS,IoDHF0,IoWMS,IoHMH0,IoS0,IoWMP,IoXM,IoYM
 c-----------------------------------------------------------------------
 c    Physical constants
-       CVCJ = 4.184
-       PATM = 101325.
-       RGAS = 1.987165
+       CVCJ = 4.184D0
+       PATM = 101325.0D0
+       RGAS = 1.987165D0
 c-----------------------------------------------------------------------
 c   set pointers required by SJEQLB
        NIWZ = NIW - 1
