@@ -1,7 +1,7 @@
 
 #include <config/sci.cf>
 
-#ifdef SCI_DIR_Modules_Gradient
+#ifdef SCI_DIR_Modules_Fields
 
 OBJS = Gradient.o
 SRCS = Gradient.cc
