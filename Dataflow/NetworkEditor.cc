@@ -148,6 +148,7 @@ void NetworkEditor::do_scheduling(Module* exclude)
 		    // If this oport already has the data, add it
 		    // to the to_trigger list...
 		    if(oport->have_data()){
+			cerr << "Adding to the to_trigger list " << conn->iport->get_module()->name << "(" << conn << ")" << endl;
 			to_trigger.add(conn);
 		    } else {
 			m->need_execute=1;
@@ -167,7 +168,7 @@ void NetworkEditor::do_scheduling(Module* exclude)
 	if(module->need_execute){
 	    // Executing this module, don't actually trigger....
 	} else {
-	    cerr << "Triggering: " << module->id << endl;
+	    cerr << "Triggering: " << module->id << " (to " << conn->iport->get_module()->name << ", conn=" << conn << ")" << endl;
 	    module->mailbox.send(scinew Scheduler_Module_Message(conn));
 	}
     }
