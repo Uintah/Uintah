@@ -8,12 +8,8 @@ SRCDIR := Uintah/GUI
 ALLTARGETS := $(ALLTARGETS) $(SRCDIR)/tclIndex
 
 $(SRCDIR)/tclIndex: \
-	$(SRCDIR)/ChemVis.tcl $(SRCDIR)/PartToGeom.tcl \
-	$(SRCDIR)/ParticleGridVisControl.tcl $(SRCDIR)/ParticleViz.tcl \
-	$(SRCDIR)/RescaleParticleColorMap.tcl \
-	$(SRCDIR)/TecplotFileSelector.tcl $(SRCDIR)/TriangleReader.tcl \
-	$(SRCDIR)/application.tcl $(SRCDIR)/cfdGridLines.tcl \
-	$(SRCDIR)/test.tcl $(SRCDIR)/GridLines.tcl \
+	$(SRCDIR)/application.tcl \
+	$(SRCDIR)/test.tcl \
 	$(SRCDIR)/ScalarFieldExtractor.tcl $(SRCDIR)/TimestepSelector.tcl \
 	$(SRCDIR)/VectorFieldExtractor.tcl \
 	$(SRCDIR)/TensorFieldExtractor.tcl \
@@ -34,6 +30,9 @@ CLEANPROGS := $(CLEANPROGS) $(SRCDIR)/tclIndex
 
 #
 # $Log$
+# Revision 1.17  2000/12/07 17:52:05  kuzimmer
+# removing more stuff related to legacy modules
+#
 # Revision 1.16  2000/11/21 22:05:16  witzel
 # Oops, didn't mean to remove ParticleEigenEvaluator.tcl
 #
