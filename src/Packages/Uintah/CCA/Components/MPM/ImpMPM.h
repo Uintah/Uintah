@@ -88,7 +88,12 @@ public:
                 FIXED,
                 SYMMETRY,
                 NEIGHBOR };
-
+  
+  enum IntegratorType {
+    Explicit,
+    Implicit 
+  };
+  
 private:
   //////////
   // Insert Documentation Here:
@@ -132,11 +137,11 @@ private:
 				  DataWarehouse* old_dw,
 				  DataWarehouse* new_dw);
 
-  void applySymmetryBoundaryConditions(const ProcessorGroup*,
-				      const PatchSubset* patches,
-				      const MaterialSubset* matls,
-				      DataWarehouse* old_dw,
-				      DataWarehouse* new_dw);
+  void applyBoundaryConditions(const ProcessorGroup*,
+			       const PatchSubset* patches,
+			       const MaterialSubset* matls,
+			       DataWarehouse* old_dw,
+			       DataWarehouse* new_dw);
 
   //////////
   // Insert Documentation Here:
@@ -160,7 +165,8 @@ private:
 			   const PatchSubset* patches,
 			   const MaterialSubset* matls,
 			   DataWarehouse* old_dw,
-			   DataWarehouse* new_dw);
+			   DataWarehouse* new_dw,
+			   const bool recursion);
 
 
 
@@ -180,19 +186,35 @@ private:
 	       DataWarehouse* old_dw, DataWarehouse* new_dw,
 	       LevelP level, SchedulerP sched);
 
+  void move_data(const ProcessorGroup*,
+		 const PatchSubset* patches,
+		 const MaterialSubset* matls,
+		 DataWarehouse* old_dw,
+		 DataWarehouse* new_dw);
+
   void formQ(const ProcessorGroup*, const PatchSubset* patches,
 	     const MaterialSubset* matls, DataWarehouse* old_dw,
-	     DataWarehouse* new_dw);
+	     DataWarehouse* new_dw,const bool recursion);
+
+  void applyRigidBodyCondition(const ProcessorGroup*, 
+			       const PatchSubset* patches,
+			       const MaterialSubset* matls, 
+			       DataWarehouse* old_dw,
+			       DataWarehouse* new_dw);
+
+  void removeFixedDOF(const ProcessorGroup*, const PatchSubset* patches,
+		      const MaterialSubset* matls, DataWarehouse* old_dw,
+		      DataWarehouse* new_dw, const bool recursion);
 
 
   void solveForDuCG(const ProcessorGroup*, const PatchSubset* patches,
 		    const MaterialSubset* matls, DataWarehouse* old_dw,
-		    DataWarehouse* new_dw);
+		    DataWarehouse* new_dw, const bool recursion);
 
 
   void updateGridKinematics(const ProcessorGroup*, const PatchSubset* patches,
 			    const MaterialSubset* matls, DataWarehouse* old_dw,
-			    DataWarehouse* new_dw);
+			    DataWarehouse* new_dw, const bool recursion);
 
   //////////
   // Insert Documentation Here:
@@ -201,7 +223,8 @@ private:
 			const MaterialSubset* matls,
 			DataWarehouse* old_dw,
 			DataWarehouse* new_dw,
-			LevelP level, SchedulerP sched);
+			LevelP level, SchedulerP sched,
+			const bool recursion);
 
 
   //////////
@@ -231,7 +254,7 @@ private:
 					  const MaterialSet*);
 
 
-  void scheduleApplySymmetryBoundaryConditions(SchedulerP&, const PatchSet*,
+  void scheduleApplyBoundaryConditions(SchedulerP&, const PatchSet*,
 					       const MaterialSet*);
 
   void scheduleComputeStressTensorI(SchedulerP&, const PatchSet*,
@@ -247,10 +270,10 @@ private:
 				       const bool recursion = false);
 
   void scheduleFormStiffnessMatrixI(SchedulerP&, const PatchSet*,
-				   const MaterialSet*);
+				   const MaterialSet*,const bool recursion);
 
   void scheduleFormStiffnessMatrixR(SchedulerP&, const PatchSet*,
-				   const MaterialSet*);
+				   const MaterialSet*,const bool recursion);
 
 
   void scheduleComputeInternalForceI(SchedulerP&, const PatchSet*,
@@ -268,9 +291,23 @@ private:
   void scheduleIterate(SchedulerP&, const LevelP&,const PatchSet*, 
 		       const MaterialSet*);
 
-  void scheduleFormQI(SchedulerP&, const PatchSet*, const MaterialSet*);
+  void scheduleFormQI(SchedulerP&, const PatchSet*, const MaterialSet*,
+		      const bool recursion);
+  
+  void scheduleFormQR(SchedulerP&, const PatchSet*, const MaterialSet*,
+		      const bool recursion);
 
-  void scheduleFormQR(SchedulerP&, const PatchSet*, const MaterialSet*);
+  void scheduleApplyRigidBodyConditionI(SchedulerP&, const PatchSet*, 
+					 const MaterialSet*);
+
+  void scheduleApplyRigidBodyConditionR(SchedulerP&, const PatchSet*, 
+					 const MaterialSet*);
+
+  void scheduleRemoveFixedDOFI(SchedulerP&, const PatchSet*, 
+			       const MaterialSet*, const bool recursion);
+
+  void scheduleRemoveFixedDOFR(SchedulerP&, const PatchSet*, 
+			       const MaterialSet*,const bool recursion);
 
   void scheduleSolveForDuCGI(SchedulerP&, const PatchSet*, const MaterialSet*,
 			     const bool recursion);
@@ -279,10 +316,10 @@ private:
 			     const bool recursion);
 
   void scheduleUpdateGridKinematicsI(SchedulerP&, const PatchSet*, 
-				    const MaterialSet*);
+				    const MaterialSet*,const bool recursion);
 
   void scheduleUpdateGridKinematicsR(SchedulerP&, const PatchSet*, 
-				    const MaterialSet*);
+				    const MaterialSet*,const bool recursion);
 
   void scheduleCheckConvergenceI(SchedulerP&, const LevelP&, const PatchSet*,
 				const MaterialSet*, const bool recursion);
@@ -314,13 +351,14 @@ private:
   double           d_outputInterval;
   double           d_SMALL_NUM_MPM;
 
-  SparseMatrix<double,int> KK,KKK;
+  SparseMatrix<double,int> KK;
 
   // right hand side
   valarray<double> Q;
 
   bool dynamic;
-  
+
+  IntegratorType d_integrator;
 
 };
       
