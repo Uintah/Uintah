@@ -65,7 +65,7 @@ itcl_class SCIRun_Visualization_ShowField {
 	set $this-nodes-as-disks 0
 	set $this-edges-on 1
 	set $this-faces-on 1
-	set $this-text-on 1
+	set $this-text-on 0
 	set $this-vectors-on 0
 	set $this-normalize_vectors 0
 	set $this-resolution 4
