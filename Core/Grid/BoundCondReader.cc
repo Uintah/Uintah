@@ -23,7 +23,7 @@
 #include <list>
 
 #define PRINT
-//#undef PRINT
+#undef PRINT
 
 using namespace std;
 using namespace Uintah;
