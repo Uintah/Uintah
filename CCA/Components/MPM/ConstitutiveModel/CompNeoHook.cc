@@ -10,11 +10,11 @@
 #include <Packages/Uintah/Core/Grid/ReductionVariable.h>
 #include <Packages/Uintah/Core/Grid/Task.h>
 #include <Packages/Uintah/Core/Grid/VarLabel.h>
-#include <Core/Math/MinMax.h>
+#include <Packages/Uintah/Core/Grid/VarTypes.h>
 #include <Packages/Uintah/CCA/Components/MPM/Util/Matrix3.h>
 #include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/MPMMaterial.h>
-#include <Packages/Uintah/Core/Grid/VarTypes.h>
 #include <Packages/Uintah/CCA/Components/MPM/MPMLabel.h>
+#include <Core/Math/MinMax.h>
 #include <Core/Malloc/Allocator.h>
 #include <Core/Util/NotFinished.h>
 #include <fstream>
@@ -26,8 +26,10 @@ using std::cerr;
 using namespace Uintah;
 using namespace SCIRun;
 
-CompNeoHook::CompNeoHook(ProblemSpecP& ps)
+CompNeoHook::CompNeoHook(ProblemSpecP& ps,  MPMLabel* Mlb)
 {
+  lb = Mlb;
+
   ps->require("bulk_modulus",d_initialData.Bulk);
   ps->require("shear_modulus",d_initialData.Shear);
 

@@ -23,8 +23,10 @@ using std::cerr;
 using namespace Uintah;
 using namespace SCIRun;
 
-ViscoScram::ViscoScram(ProblemSpecP& ps)
+ViscoScram::ViscoScram(ProblemSpecP& ps, MPMLabel* Mlb)
 {
+  lb = Mlb;
+
   ps->require("PR",d_initialData.PR);
   ps->require("CrackParameterA",d_initialData.CrackParameterA);
   ps->require("CrackPowerValue",d_initialData.CrackPowerValue);
@@ -556,9 +558,9 @@ namespace Uintah {
 
 static MPI_Datatype makeMPI_CMData()
 {
-   ASSERTEQ(sizeof(ViscoScram::StateData), sizeof(double)*2);
+   ASSERTEQ(sizeof(ViscoScram::StateData), sizeof(double)*49);
    MPI_Datatype mpitype;
-   MPI_Type_vector(1, 2, 2, MPI_DOUBLE, &mpitype);
+   MPI_Type_vector(1, 49, 49, MPI_DOUBLE, &mpitype);
    MPI_Type_commit(&mpitype);
    return mpitype;
 }

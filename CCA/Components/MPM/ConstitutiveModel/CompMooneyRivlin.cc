@@ -29,8 +29,9 @@ using namespace SCIRun;
 // Material Constants are C1, C2 and PR (poisson's ratio).  
 // The shear modulus = 2(C1 + C2).
 
-CompMooneyRivlin::CompMooneyRivlin(ProblemSpecP& ps)
+CompMooneyRivlin::CompMooneyRivlin(ProblemSpecP& ps, MPMLabel* Mlb)
 {
+  lb = Mlb;
   ps->require("he_constant_1",d_initialData.C1);
   ps->require("he_constant_2",d_initialData.C2);
   ps->require("he_PR",d_initialData.PR);
