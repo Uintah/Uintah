@@ -14,8 +14,8 @@
 #include <Packages/Uintah/Core/Grid/ReductionVariableBase.h>
 #include <Packages/Uintah/Core/Grid/PerPatchBase.h>
 #include <Packages/Uintah/Core/Grid/ComputeSet.h>
+#include <Packages/Uintah/Core/Grid/Task.h>
 #include <Packages/Uintah/CCA/Ports/DataWarehouseP.h>
-//#include <Packages/Uintah/CCA/Ports/Scheduler.h>
 #include <Packages/Uintah/CCA/Ports/SchedulerP.h>
 #include <Core/Geometry/IntVector.h>
 
@@ -27,10 +27,11 @@ namespace SCIRun {
 
 namespace Uintah {
 
-   class OutputContext;
-   class ProcessorGroup;
-   class VarLabel;
-   class Task;
+  class Level;
+  class OutputContext;
+  class ProcessorGroup;
+  class VarLabel;
+  class Task;
 
 /**************************************
 	
@@ -76,14 +77,14 @@ WARNING
 					 int matlIndex, const Patch*) = 0;
  
       // Reduction Variables
-      virtual void allocate(ReductionVariableBase&, const VarLabel*,
-			    int matlIndex = -1) = 0;
       virtual void get(ReductionVariableBase&, const VarLabel*,
-		       int matlIndex = -1) = 0;
+		       const Level* level = 0, int matlIndex = -1) = 0;
       virtual void put(const ReductionVariableBase&, const VarLabel*,
-		       int matlIndex = -1) = 0;
+		       const Level* level = 0, int matlIndex = -1) = 0;
       virtual void override(const ReductionVariableBase&, const VarLabel*,
-			    int matlIndex = -1) = 0;
+			    const Level* level = 0, int matlIndex = -1) = 0;
+      virtual void print(ostream& intout, const VarLabel* label,
+			 const Level* level, int matlIndex = -1) = 0;
 
       // Particle Variables
       virtual ParticleSubset* createParticleSubset(particleIndex numParticles,
@@ -250,34 +251,29 @@ WARNING
       // Remove particles that are no longer relevant
       virtual void deleteParticles(ParticleSubset* delset) = 0;
 
+      // Move stuff to a different data Warehouse
+      virtual void transferFrom(DataWarehouse*, const VarLabel*,
+				const PatchSubset*, const MaterialSubset*) = 0;
 
       virtual void emit(OutputContext&, const VarLabel* label,
 			int matlIndex, const Patch* patch) = 0;
 
-      virtual void print(ostream& intout, const VarLabel* label,
-			 int matlIndex = -1) = 0;
+      // Scrubbing
+      enum ScrubMode {
+	ScrubNone,
+	ScrubComplete,
+	ScrubNonPermanent
+      };
+      virtual ScrubMode setScrubbing(ScrubMode) = 0;
+
+      // For related datawarehouses
+      virtual DataWarehouse* getOtherDataWarehouse(Task::WhichDW) = 0;
 
       // For the schedulers
       virtual bool isFinalized() const = 0;
       virtual bool exists(const VarLabel*, const Patch*) const = 0;
       virtual void finalize() = 0;
 
-      // For sanity checking.
-      // Must be called by the thread that will run the test.
-      virtual void pushRunningTask(const Task* task) = 0;
-      virtual void popRunningTask() = 0;     
-      virtual void checkTasksAccesses(const PatchSubset* patches,
-				      const MaterialSubset* matls) = 0;
-
-     // Scrub counter manipulator functions -- when the scrub count goes to
-     // zero, the data is scrubbed.
-     virtual void setScrubCountIfZero(const VarLabel*, int matlIndex,
-				      const Patch*, int count) = 0;
-     virtual void decrementScrubCount(const VarLabel* label, int matlIndex,
-				      const Patch* patch, int count = 1,
-				      unsigned int addIfZero = 0) = 0;
-     virtual void scrubExtraneous() = 0;
-     
       int getID() const {
 	 return d_generation;
       }

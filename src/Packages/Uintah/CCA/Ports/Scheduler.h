@@ -56,22 +56,19 @@ WARNING
     
     //////////
     // Insert Documentation Here:
-    virtual void initialize() = 0;
+    virtual void initialize(int numOldDW = 1, int numNewDW = 1,
+			    DataWarehouse* parent_old_dw = 0,
+			    DataWarehouse* parent_new_dw = 0) = 0;
+
+    virtual void clearMappings() = 0;
+    virtual void mapDataWarehouse(Task::WhichDW, int dwTag) = 0;
 
     virtual void doEmitTaskGraphDocs() = 0;
     
     //////////
     // Insert Documentation Here:
-    // TEMPORARY UNTIL STEVE REWORKS AMR
-    void compile(const ProcessorGroup * pc, bool scrub_new,
-		 bool scrub_old )
-    { compile(pc, scrub_new); }
-    virtual void compile(const ProcessorGroup * pc, bool scrub_new ) = 0;
-    virtual void execute(const ProcessorGroup * pc ) = 0;
-    virtual void executeTimestep(const ProcessorGroup *  ) {};
-    virtual void executeRefine(const ProcessorGroup * ) {};
-    virtual void executeCoarsen(const ProcessorGroup *  ) {};
-    virtual void finalizeTimestep(const GridP& /*grid*/) {};
+    virtual void compile(const ProcessorGroup * pc) = 0;
+    virtual void execute(const ProcessorGroup * pc) = 0;
 
     virtual SchedulerP createSubScheduler() = 0;
        
@@ -84,16 +81,13 @@ WARNING
     virtual LoadBalancer* getLoadBalancer() = 0;
     virtual void releaseLoadBalancer() = 0;
     
-    virtual DataWarehouse* get_old_dw() = 0;
-    virtual DataWarehouse* get_new_dw() = 0;
-    virtual void set_old_dw(DataWarehouse*) = 0;
-    virtual void set_new_dw(DataWarehouse*) = 0;
-
+    virtual DataWarehouse* get_dw(int idx) = 0;
     virtual void logMemoryUse() = 0;
       
     //////////
     // Insert Documentation Here:
     virtual void advanceDataWarehouse(const GridP& grid) = 0;
+    virtual void fillDataWarehouses(const GridP& grid) = 0;
     //    protected:
 
     //////////
@@ -106,12 +100,6 @@ WARNING
 					    const VarLabel* particleIDLabel,
 					    const MaterialSet* matls) = 0;
 
-
-    // Get the expected extents that may be needed for a particular variable
-    // on a particular patch (which should include expected ghost cells.
-    //virtual void
-    //getExpectedExtents(const VarLabel* label, const Patch* patch,
-    //	       IntVector& lowIndex, IntVector& highIndex) const = 0;
 
     // Get the SuperPatch (set of connected patches making a larger rectangle)
     // for the given label and patch and find the largest extents encompassing

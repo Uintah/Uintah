@@ -4,6 +4,7 @@
 
 #include <Packages/Uintah/Core/Parallel/UintahParallelPort.h>
 #include <Packages/Uintah/Core/Grid/ComputeSet.h>
+#include <Packages/Uintah/Core/Grid/GridP.h>
 #include <Packages/Uintah/Core/Grid/LevelP.h>
 
 namespace Uintah {
@@ -50,7 +51,7 @@ WARNING
 				 const ProcessorGroup* resources) = 0;
     virtual int getPatchwiseProcessorAssignment(const Patch* patch,
 						const ProcessorGroup* resources) = 0;
-    virtual void createNeighborhood(const Level* level, const ProcessorGroup*) = 0;
+    virtual void createNeighborhood(const GridP& grid, const ProcessorGroup*) = 0;
     virtual bool inNeighborhood(const PatchSubset*, const MaterialSubset*) = 0;
     virtual bool inNeighborhood(const Patch*) = 0;
 

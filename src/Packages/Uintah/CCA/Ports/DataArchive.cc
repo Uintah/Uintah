@@ -1,4 +1,4 @@
- #include <Packages/Uintah/CCA/Ports/DataArchive.h>
+#include <Packages/Uintah/CCA/Ports/DataArchive.h>
 #include <Packages/Uintah/CCA/Ports/InputContext.h>
 #include <Packages/Uintah/CCA/Ports/DataWarehouseP.h>
 #include <Packages/Uintah/CCA/Ports/DataWarehouse.h>
@@ -237,7 +237,17 @@ DataArchive::queryGrid( double time )
       Vector dcell;
       if(!get(n, "cellspacing", dcell))
 	throw InternalError("Error parsing level cellspacing");
-      LevelP level = grid->addLevel(anchor, dcell);
+      int id;
+      if(!get(n, "id", id)){
+	static bool warned_once=false;
+	if(!warned_once){
+	  cerr << "WARNING: Data archive does not have level ID\n";
+	  cerr << "This is okay, as long as you aren't trying to do AMR\n";
+	}
+	warned_once=true;
+	id=-1;
+      }
+      LevelP level = grid->addLevel(anchor, dcell, id);
       int numPatches = -1234;
       long totalCells = 0;
       IntVector periodicBoundaries(0, 0, 0);      
@@ -267,13 +277,14 @@ DataArchive::queryGrid( double time )
 				     highIndex,id);
 	  ASSERTEQ(patch->totalCells(), totalCells);
 	} else if(r.getNodeName().equals("anchor")
-		  || r.getNodeName().equals("cellspacing")){
+		  || r.getNodeName().equals("cellspacing")
+		  || r.getNodeName().equals("id")){
 	  // Nothing - handled above
 	} else if(r.getNodeName().equals("periodic")) {
 	  if(!get(n, "periodic", periodicBoundaries))
 	    throw InternalError("Error parsing periodoc");
 	} else if(r.getNodeType() != DOM_Node::TEXT_NODE){
-	  cerr << "WARNING: Unknown level data: " << ::toString(n.getNodeName()) << '\n';
+	  cerr << "WARNING: Unknown level data: " << ::toString(r.getNodeName()) << '\n';
 	}
       }
       ASSERTEQ(level->numPatches(), numPatches);
@@ -600,7 +611,7 @@ DataArchive::restartInitialize(int& timestep, const GridP& grid,
 	      if (labelIter != varMap.end()) {
 		VarLabel* label = labelIter->second;
 		if (label == 0) {
-		  throw UnknownVariable(varIter.get_key(), patch, matl,
+		  throw UnknownVariable(varIter.get_key(), dw->getID(), patch, matl,
 					"on DataArchive::scheduleRestartInitialize");
 		}
 		else {

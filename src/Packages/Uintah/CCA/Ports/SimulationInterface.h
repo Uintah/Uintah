@@ -67,14 +67,14 @@ WARNING
       // Insert Documentation Here:
       virtual void scheduleTimeAdvance(const LevelP& level, SchedulerP&) = 0;
 
-     virtual void scheduleRefine(/* const */ LevelP& coarseLevel, 
-                                 /* const */ LevelP& fineLevel, 
+     virtual void scheduleRefine(/* const */ LevelP& fineLevel, 
 				 SchedulerP& scheduler);
-     virtual void scheduleRefineInterface(/* const */ LevelP& coarseLevel, 
-                                          /* const */ LevelP& fineLevel, 
-				          SchedulerP& scheduler);
+     virtual void scheduleRefineInterface(/* const */ LevelP& fineLevel, 
+				          SchedulerP& scheduler,
+					  int step, int nsteps);
      virtual void scheduleCoarsen(/* const */ LevelP& coarseLevel, 
-                                  /* const */ LevelP& fineLevel, 
+
+
 				  SchedulerP& scheduler);
 
    private:
