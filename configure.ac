@@ -1962,24 +1962,22 @@ for i in $_sci_lib; do
 
   # capture in the libs to link
   if test -e $i/bin/Magick-config; then
-    IM_LDFLAGS=`$i/bin/Magick-config --ldflags`
-    IM_LIBS=`$i/bin/Magick-config --libs`
+    MAGICK_LIB_DIR_FLAG=""
+    MAGICK_LIB_FLAG=`$i/bin/Magick-config --libs`
+    INC_MAGICK_H=`$i/bin/Magick-config --cppflags`
+    HAVE_MAGICK=yes
   else
-    continue
+    SCI_TRY_LINK(MAGICK,ImageMagick library and headers,[
+    #include <magick/magick.h>
+    ],$i/include,Magick,$i/lib,$IM_LDFLAGS $IM_LIBS,[
+    WriteImage
+    ],optional)
   fi
-
-  SCI_TRY_LINK(MAGICK,ImageMagick library and headers,[
-  #include <magick/magick.h>
-  ],$i/include,Magick,$i/lib,$IM_LDFLAGS $IM_LIBS,[
-  WriteImage
-  ],optional)
 
   if test "$HAVE_MAGICK"; then
     DEF_MAGICK="#define HAVE_MAGICK 1"
-    MAGICK_EXTRA_LIB_FLAG="$IM_LDFLAGS"
-    MAGICK_EXTRA_LIB_DIR_FLAG="$IM_LIBS"
-    break
   fi
+
 done
  
 if test "$with_imagemagick" && test ! "$DEF_MAGICK"; then
@@ -1990,8 +1988,6 @@ fi
 
 AC_SUBST(MAGICK_LIB_FLAG)
 AC_SUBST(MAGICK_LIB_DIR_FLAG)
-AC_SUBST(MAGICK_EXTRA_LIB_FLAG)
-AC_SUBST(MAGICK_EXTRA_LIB_DIR_FLAG)
 AC_SUBST(INC_MAGICK_H)
 AC_SUBST(DEF_MAGICK)
 
