@@ -1,5 +1,5 @@
 #include "testmatrix3.h"
-#include <Packages/Uintah/CCA/Components/MPM/Util/Matrix3.h>
+#include <Packages/Uintah/Core/Math/Matrix3.h>
 #include <stdlib.h>
 #include <unistd.h>
 #include <math.h>
