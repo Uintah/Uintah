@@ -239,13 +239,13 @@ template<class T> void IComPacket::getvalue(T& data)
 template<class T> void IComPacket::setvalue(T data)
 {
 	int elsize = sizeof(T);
-	datasize = 1;
+	datasize_ = 1;
 	
-	if (buffersize() < elsize*datasize) newbuffer(elsize*datasize);
+	if (buffersize() < elsize*datasize_) newbuffer(elsize*datasize_);
 	T* ptr = static_cast<T*>(getbuffer());
 	ptr[0] = data;
 	setelsize(elsize);
-	setdatasize(datasize);
+	setdatasize(datasize_);
 }
 
 // INLINE FUNCTIONS
