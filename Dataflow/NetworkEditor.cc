@@ -25,6 +25,8 @@
 #include <Math/MiscMath.h>
 #include <TCL/TCL.h>
 
+#include <fstream.h>
+
 NetworkEditor::NetworkEditor(Network* net)
 : Task("Network Editor", 1), net(net),
   first_schedule(1), mailbox(100), schedule(1)
@@ -97,8 +99,8 @@ void NetworkEditor::do_scheduling(Module* exclude)
 {
     if(!schedule)
 	return;
-    Queue<Module*> needexecute;
     int nmodules=net->nmodules();
+    Queue<Module*> needexecute;
     int i;
     for(i=0;i<nmodules;i++){
 	Module* module=net->module(i);
@@ -173,7 +175,7 @@ void NetworkEditor::do_scheduling(Module* exclude)
 	    module->mailbox.send(scinew Scheduler_Module_Message);
 	module->need_execute=0;
     }
-    
+
 #ifdef STUPID_SCHEDULER
     for(int i=0;i<nmodules;i++){
 	Module* module=net->module(i);
@@ -219,6 +221,71 @@ void NetworkEditor::add_text(const clString& str)
 {
     TCL::execute("$netedit_errortext insert end \""+str+"\n\"");
 }
+
+void NetworkEditor::save_network(const clString& filename)
+{
+    ofstream out(filename());
+    if(!out)
+      return;
+    out << "# SCI Network 1.0\n";
+    out << "\n";
+    out << "netedit dontschedule\n";
+    out << "\n";
+    net->read_lock();
+    for(int i=0;i<net->nmodules();i++){
+        Module* module=net->module(i);
+	int x, y;
+	module->get_position(x,y);
+        out << "set m" << i << " [addModuleAtPosition " << module->name
+	  << " " << x << " " << y << "]\n";
+    }
+    out << "\n";
+    for(i=0;i<net->nconnections();i++){
+        Connection* conn=net->connection(i);
+	out << "addConnection $m";
+	// Find the "from" module...
+	for(int j=0;j<net->nmodules();j++){
+	    Module* m=net->module(j);
+	    if(conn->oport->get_module() == m){
+	        out << j << " " << conn->oport->get_which_port();
+		break;
+	    }
+	}
+	out << " $m";
+	for(j=0;j<net->nmodules();j++){
+	    Module* m=net->module(j);
+	    if(conn->iport->get_module() == m){
+	        out << j << " " << conn->iport->get_which_port();
+		break;
+	    }
+	}
+	out << "\n";
+    }
+    out << "\n";
+    // Emit variables...
+    for(i=0;i<net->nmodules();i++){
+        Module* module=net->module(i);
+	module->emit_vars(out);
+    }
+
+    for(i=0;i<net->nmodules();i++){
+        Module* module=net->module(i);
+        clString result;
+	TCL::eval("winfo exists .ui"+module->id, result);
+	int res;
+	if(result.get_int(res) && res){
+	    out << "$m" << i << " ui\n";
+	}
+    }
+    // Let it rip...
+    out << "\n";
+    out << "proc ok {} {\n";
+    out << "    netedit scheduleok\n";
+    out << "}\n";
+    out << "\n";
+    net->read_unlock();
+}
+
 
 void NetworkEditor::tcl_command(TCLArgs& args, void*)
 {
@@ -412,6 +479,17 @@ void NetworkEditor::tcl_command(TCLArgs& args, void*)
     } else if(args[1] == "scheduleok"){
 	schedule=1;
 	mailbox.send(new Module_Scheduler_Message());
+    } else if(args[1] == "reset_scheduler"){
+        for(int i=0;i<net->nmodules();i++){
+	    Module* m=net->module(i);
+	    m->need_execute=0;
+	}
+    } else if(args[1] == "savenetwork"){
+        if(args.count() < 3){
+	    args.error("savenetwork needs a filename");
+	    return;
+	}
+	save_network(args[2]);
     } else {
 	args.error("Unknown minor command for netedit");
     }

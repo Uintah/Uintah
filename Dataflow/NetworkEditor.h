@@ -32,6 +32,7 @@ class NetworkEditor : public Task, public TCL {
     void do_scheduling(Module*);
     int first_schedule;
     int schedule;
+    void save_network(const clString&);
 public:
     Mailbox<MessageBase*> mailbox;
 

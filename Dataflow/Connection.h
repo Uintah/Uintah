@@ -15,6 +15,7 @@
 #define SCI_project_Connection_h 1
 
 #include <Classlib/String.h>
+#include <Comm/MessageBase.h>
 class IPort;
 class Module;
 class OPort;
@@ -32,9 +33,21 @@ public:
     int local;
     clString id;
 
+#if 0
+    int demand;
+#endif
+
     void wait_ready();
 
     void connect();
+};
+
+
+class Demand_Message : public MessageBase {
+public:
+    Connection* conn;
+    Demand_Message(Connection* conn);
+    virtual ~Demand_Message();
 };
 
 #endif /* SCI_project_Connection_h */

@@ -24,6 +24,9 @@ Connection::Connection(Module* m1, int p1, Module* m2, int p2)
     iport=m2->iport(p2);
     local=1;
     connected=1;
+#if 0
+    demand=0;
+#endif
 }
 
 void Connection::connect()
@@ -38,4 +41,14 @@ Connection::~Connection()
     if(connected){
 	NOT_FINISHED("detach...");
     }
+}
+
+Demand_Message::Demand_Message(Connection* conn)
+  : MessageBase(MessageTypes::Demand), conn(conn)
+{
+}
+
+
+Demand_Message::~Demand_Message()
+{
 }

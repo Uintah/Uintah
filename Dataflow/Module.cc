@@ -171,6 +171,27 @@ void Module::widget_moved(int)
     cerr << "Caught stray widget_moved event!\n";
 }
 
+void Module::get_position(int& x, int& y)
+{
+    clString result;
+    if(!TCL::eval(id+" get_x", result)){
+        error("Error getting x coordinate");
+	return;
+    }
+    if(!result.get_int(x)){
+        error("Error parsing x coordinate");
+	return;
+    }
+    if(!TCL::eval(id+" get_y", result)){
+        error("Error getting y coordinate");
+	return;
+    }
+    if(!result.get_int(y)){
+        error("Error parsing y coordinate");
+	return;
+    }
+}
+
 void Module::tcl_command(TCLArgs& args, void*)
 { 
     if(args.count() < 2){

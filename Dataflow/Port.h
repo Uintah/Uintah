@@ -16,6 +16,7 @@
 
 #include <Classlib/Array1.h>
 #include <Classlib/String.h>
+#include <Comm/MessageBase.h>
 class Connection;
 class Module;
 
@@ -80,5 +81,5 @@ public:
     virtual int have_data()=0;
     virtual void resend(Connection*)=0;
 };
-
+ 
 #endif /* SCI_project_Port_h */

@@ -50,6 +50,20 @@ int ModuleHelper::body(int)
 		    smsg->conn->oport->resend(smsg->conn);
 		}
 		break;
+	    case MessageTypes::Demand:
+  	        {
+#if 0
+		    Demand_Message* dmsg=(Demand_Message*)msg;
+		    if(dmsg->conn->oport->have_data()){
+		        dmsg->conn->oport->resend(dmsg->conn);
+		    } else {
+		        dmsg->conn->demand++;
+			while(dmsg->conn->demand)
+			    module->do_execute();
+		    }
+#endif
+		}
+		break;
 	    default:
 		cerr << "Illegal Message type: " << msg->type << endl;
 		break;

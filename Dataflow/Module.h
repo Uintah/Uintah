@@ -58,6 +58,7 @@ public:
 	Sink,
 	Source,
 	Filter,
+	Iterator,
 	SalmonSpecial,
     };
     Module(const clString& name, const clString& id, SchedClass);
@@ -69,6 +70,8 @@ public:
 
     inline State get_state(){ return state;}
     inline double get_progress(){ return progress;}
+
+    void get_position(int& x, int& y);
 
     // Callbacks
     virtual void connection(Module::ConnectionMode, int, int);

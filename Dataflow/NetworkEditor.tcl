@@ -24,6 +24,8 @@ proc makeNetworkEditor {} {
     menubutton .main_menu.file -text "File" -underline 0 \
 	-menu .main_menu.file.menu
     menu .main_menu.file.menu
+    .main_menu.file.menu add command -label "Save..." -underline 0 \
+	-command "popupSaveMenu"
     .main_menu.file.menu add command -label "Quit" -underline 0 \
 	    -command "netedit quit"
     
@@ -224,6 +226,18 @@ proc itemDrag {c x y} {
     set lastX $x
     set lastY $y
 }
+
+proc popupSaveMenu {} {
+    set w .netedit_save
+    if {[winfo exists $w]} {
+	raise $w
+	return;
+    }
+    toplevel $w
+    makeFilebox $w netedit_savefile {netedit savenetwork $netedit_savefile} \
+	"destroy $w"
+}
+
 
 source $sci_root/TCL/MemStats.tcl
 source $sci_root/TCL/DebugSettings.tcl

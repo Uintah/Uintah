@@ -315,6 +315,16 @@ itcl_class Module {
 	set progress $p
 	update_progress
     }
+    method get_x {} {
+	set canvas [lindex $canvases 0]
+	set coords [$canvas coords $this]
+	return [lindex $coords 0]
+    }
+    method get_y {} {
+	set canvas [lindex $canvases 0]
+	set coords [$canvas coords $this]
+	return [lindex $coords 1]
+    }
 }
 
 proc startIPortConnection {imodid iwhich x y} {
