@@ -22526,7 +22526,7 @@ if test "$with_magick" = "yes"; then
 else
   if test "$with_magick"; then
     # If --with-magick has a parameter, then use it
-    _sci_lib="$with_magick"
+    _sci_lib="$with_magick/lib"
 
 ##
 ## BASE_LIB_PATH:
@@ -22564,23 +22564,22 @@ echo "$as_me:$LINENO: checking for $_sci_optional ImageMagick" >&5
 echo $ECHO_N "checking for $_sci_optional ImageMagick... $ECHO_C" >&6
 
 found_magic_config="no"
-for dir in "" $_sci_lib; do
 
-   if test -e $dir/../bin/Magick-config; then
-       found_magic_config="yes"
-       echo
-       echo "$as_me:$LINENO: result: Using $dir/../bin/Magick-config to set ImageMagick variables." >&5
-echo "${ECHO_T}Using $dir/../bin/Magick-config to set ImageMagick variables." >&6
+if test -e $_sci_lib/../bin/Magick-config; then
+    found_magic_config="yes"
+    echo
+    echo "$as_me:$LINENO: result: Using $_sci_lib/../bin/Magick-config to set ImageMagick variables." >&5
+echo "${ECHO_T}Using $_sci_lib/../bin/Magick-config to set ImageMagick variables." >&6
 
-       MAG_LIBS=`$dir/../bin/Magick-config --libs`
-       MAG_DIRS=`$dir/../bin/Magick-config --ldflags`
+    MAG_LIBS=`$_sci_lib/../bin/Magick-config --libs`
+    MAG_DIRS=`$_sci_lib/../bin/Magick-config --ldflags`
 
-       #MAGICK_LIB_DIR_FLAG=
-       #SCI_REMOVE_MINUS_L(MAGICK_LIB_FLAG,$MAG_DIRS,$MAG_LIBS)
+    #MAGICK_LIB_DIR_FLAG=
+    #SCI_REMOVE_MINUS_L(MAGICK_LIB_FLAG,$MAG_DIRS,$MAG_LIBS)
 
-       MAGICK_LIB_DIR_FLAG=`$dir/../bin/Magick-config --ldflags`
-       MAGICK_LIB_FLAG=`$dir/../bin/Magick-config --libs`
-       includes=`$dir/../bin/Magick-config --cppflags`
+    MAGICK_LIB_DIR_FLAG=`$_sci_lib/../bin/Magick-config --ldflags`
+    MAGICK_LIB_FLAG=`$_sci_lib/../bin/Magick-config --libs`
+    includes=`$_sci_lib/../bin/Magick-config --cppflags`
 
 
 ##
@@ -23060,10 +23059,9 @@ _sci_includes=''
 
 
 
-       DEF_MAGICK="#define HAVE_MAGICK 1"
-       break
-    fi
-done
+    DEF_MAGICK="#define HAVE_MAGICK 1"
+    break
+fi
 
 if test "$found_magic_config" = "no"; then
    echo "$as_me:$LINENO: result: no." >&5
