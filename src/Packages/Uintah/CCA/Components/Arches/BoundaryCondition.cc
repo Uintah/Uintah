@@ -3374,11 +3374,12 @@ BoundaryCondition::scalarOutletBC(const ProcessorGroup*,
         IntVector xplusCell(colX+1, colY, colZ);
         if (constvars->cellType[xminusCell] == out_celltypeval) {
 //	  if (constvars->uVelocity[currCell] <= 0.0) {
-           vars->scalar[xminusCell]= - delta_t * maxAbsU *
-              (constvars->old_density[currCell]*constvars->old_scalar[currCell] -
-               constvars->old_density[xminusCell]*constvars->old_scalar[xminusCell]) /
-	      (cellinfo->dxep[colX-1]*constvars->old_density[xminusCell]) +
-	      constvars->old_scalar[xminusCell];
+           vars->scalar[xminusCell]= (- delta_t * maxAbsU *
+               (constvars->old_density[currCell]*constvars->old_scalar[currCell] -
+                constvars->old_density[xminusCell]*constvars->old_scalar[xminusCell]) /
+	       cellinfo->dxep[colX-1] + 
+	       constvars->old_old_density[xminusCell]*constvars->old_old_scalar[xminusCell])/
+	      constvars->old_density[xminusCell];
            if (vars->scalar[xminusCell] > 1.0)
                vars->scalar[xminusCell] = 1.0;
            else if (vars->scalar[xminusCell] < 0.0)
@@ -3400,11 +3401,12 @@ BoundaryCondition::scalarOutletBC(const ProcessorGroup*,
         IntVector xplusCell(colX+1, colY, colZ);
         if (constvars->cellType[xplusCell] == out_celltypeval) {
 //	  if (constvars->uVelocity[xplusCell] >= 0.0) {
-           vars->scalar[xplusCell]= - delta_t * maxAbsU *
-              (constvars->old_density[xplusCell]*constvars->old_scalar[xplusCell] -
-               constvars->old_density[currCell]*constvars->old_scalar[currCell]) /
-	      (cellinfo->dxpw[colX+1]*constvars->old_density[xplusCell]) +
-	      constvars->old_scalar[xplusCell];
+           vars->scalar[xplusCell]= (- delta_t * maxAbsU *
+               (constvars->old_density[xplusCell]*constvars->old_scalar[xplusCell] -
+                constvars->old_density[currCell]*constvars->old_scalar[currCell]) /
+	       cellinfo->dxpw[colX+1] +
+	       constvars->old_old_density[xplusCell]*constvars->old_old_scalar[xplusCell])/
+	      constvars->old_density[xplusCell];
            if (vars->scalar[xplusCell] > 1.0)
                vars->scalar[xplusCell] = 1.0;
            else if (vars->scalar[xplusCell] < 0.0)
@@ -3427,11 +3429,12 @@ BoundaryCondition::scalarOutletBC(const ProcessorGroup*,
         IntVector yplusCell(colX, colY+1, colZ);
         if (constvars->cellType[yminusCell] == out_celltypeval) {
 //	  if (constvars->vVelocity[currCell] <= 0.0) {
-           vars->scalar[yminusCell]= - delta_t * maxAbsV *
-              (constvars->old_density[currCell]*constvars->old_scalar[currCell] -
-               constvars->old_density[yminusCell]*constvars->old_scalar[yminusCell]) /
-	      (cellinfo->dynp[colY-1]*constvars->old_density[yminusCell]) +
-	      constvars->old_scalar[yminusCell];
+           vars->scalar[yminusCell]= (- delta_t * maxAbsV *
+               (constvars->old_density[currCell]*constvars->old_scalar[currCell] -
+                constvars->old_density[yminusCell]*constvars->old_scalar[yminusCell]) /
+	       cellinfo->dynp[colY-1] +
+	       constvars->old_old_density[yminusCell]*constvars->old_old_scalar[yminusCell])/
+	      constvars->old_density[yminusCell];
            if (vars->scalar[yminusCell] > 1.0)
                vars->scalar[yminusCell] = 1.0;
            else if (vars->scalar[yminusCell] < 0.0)
@@ -3453,11 +3456,12 @@ BoundaryCondition::scalarOutletBC(const ProcessorGroup*,
         IntVector yplusCell(colX, colY+1, colZ);
         if (constvars->cellType[yplusCell] == out_celltypeval) {
 //	  if (constvars->vVelocity[yplusCell] >= 0.0) {
-           vars->scalar[yplusCell]= - delta_t * maxAbsV *
-              (constvars->old_density[yplusCell]*constvars->old_scalar[yplusCell] -
-               constvars->old_density[currCell]*constvars->old_scalar[currCell]) /
-	      (cellinfo->dyps[colY+1]*constvars->old_density[yplusCell]) +
-	      constvars->old_scalar[yplusCell];
+           vars->scalar[yplusCell]= (- delta_t * maxAbsV *
+               (constvars->old_density[yplusCell]*constvars->old_scalar[yplusCell] -
+                constvars->old_density[currCell]*constvars->old_scalar[currCell]) /
+	       cellinfo->dyps[colY+1] +
+	       constvars->old_old_density[yplusCell]*constvars->old_old_scalar[yplusCell])/
+	      constvars->old_density[yplusCell];
            if (vars->scalar[yplusCell] > 1.0)
                vars->scalar[yplusCell] = 1.0;
            else if (vars->scalar[yplusCell] < 0.0)
@@ -3480,11 +3484,12 @@ BoundaryCondition::scalarOutletBC(const ProcessorGroup*,
         IntVector zplusCell(colX, colY, colZ+1);
         if (constvars->cellType[zminusCell] == out_celltypeval) {
 //	  if (constvars->wVelocity[currCell] <= 0.0) {
-           vars->scalar[zminusCell]= - delta_t * maxAbsW *
-              (constvars->old_density[currCell]*constvars->old_scalar[currCell] -
-               constvars->old_density[zminusCell]*constvars->old_scalar[zminusCell]) /
-	      (cellinfo->dztp[colZ-1]*constvars->old_density[zminusCell]) +
-	      constvars->old_scalar[zminusCell];
+           vars->scalar[zminusCell]= (- delta_t * maxAbsW *
+               (constvars->old_density[currCell]*constvars->old_scalar[currCell] -
+                constvars->old_density[zminusCell]*constvars->old_scalar[zminusCell]) /
+	       cellinfo->dztp[colZ-1] +
+	       constvars->old_old_density[zminusCell]*constvars->old_old_scalar[zminusCell])/
+	      constvars->old_density[zminusCell];
            if (vars->scalar[zminusCell] > 1.0)
                vars->scalar[zminusCell] = 1.0;
            else if (vars->scalar[zminusCell] < 0.0)
@@ -3506,11 +3511,12 @@ BoundaryCondition::scalarOutletBC(const ProcessorGroup*,
         IntVector zplusCell(colX, colY, colZ+1);
         if (constvars->cellType[zplusCell] == out_celltypeval) {
 //	  if (constvars->wVelocity[zplusCell] >= 0.0) {
-           vars->scalar[zplusCell]= - delta_t * maxAbsW *
-              (constvars->old_density[zplusCell]*constvars->old_scalar[zplusCell] -
-               constvars->old_density[currCell]*constvars->old_scalar[currCell]) /
-	      (cellinfo->dzpb[colZ+1]*constvars->old_density[zplusCell]) +
-	      constvars->old_scalar[zplusCell];
+           vars->scalar[zplusCell]= (- delta_t * maxAbsW *
+               (constvars->old_density[zplusCell]*constvars->old_scalar[zplusCell] -
+                constvars->old_density[currCell]*constvars->old_scalar[currCell]) /
+	       cellinfo->dzpb[colZ+1] +
+	       constvars->old_old_density[zplusCell]*constvars->old_old_scalar[zplusCell])/
+	      constvars->old_density[zplusCell];
            if (vars->scalar[zplusCell] > 1.0)
                vars->scalar[zplusCell] = 1.0;
            else if (vars->scalar[zplusCell] < 0.0)
@@ -3563,11 +3569,12 @@ BoundaryCondition::enthalpyOutletBC(const ProcessorGroup*,
         IntVector xminusCell(colX-1, colY, colZ);
         IntVector xplusCell(colX+1, colY, colZ);
         if (constvars->cellType[xminusCell] == out_celltypeval)
-           vars->enthalpy[xminusCell]= - delta_t * maxAbsU *
-              (constvars->old_density[currCell]*constvars->old_enthalpy[currCell] -
-               constvars->old_density[xminusCell]*constvars->old_enthalpy[xminusCell]) /
-	      (cellinfo->dxep[colX-1]*constvars->old_density[xminusCell]) +
-	      constvars->old_enthalpy[xminusCell];
+           vars->enthalpy[xminusCell]= (- delta_t * maxAbsU *
+               (constvars->old_density[currCell]*constvars->old_enthalpy[currCell] -
+                constvars->old_density[xminusCell]*constvars->old_enthalpy[xminusCell]) /
+	       cellinfo->dxep[colX-1] +
+	       constvars->old_old_density[xminusCell]*constvars->old_old_enthalpy[xminusCell])/
+	      constvars->old_density[xminusCell];
       }
     }
   }
@@ -3578,11 +3585,12 @@ BoundaryCondition::enthalpyOutletBC(const ProcessorGroup*,
         IntVector currCell(colX, colY, colZ);
         IntVector xplusCell(colX+1, colY, colZ);
         if (constvars->cellType[xplusCell] == out_celltypeval)
-           vars->enthalpy[xplusCell]= - delta_t * maxAbsU *
-              (constvars->old_density[xplusCell]*constvars->old_enthalpy[xplusCell] -
-               constvars->old_density[currCell]*constvars->old_enthalpy[currCell]) /
-	      (cellinfo->dxpw[colX+1]*constvars->old_density[xplusCell]) +
-	      constvars->old_enthalpy[xplusCell];
+           vars->enthalpy[xplusCell]= (- delta_t * maxAbsU *
+               (constvars->old_density[xplusCell]*constvars->old_enthalpy[xplusCell] -
+                constvars->old_density[currCell]*constvars->old_enthalpy[currCell]) /
+	       cellinfo->dxpw[colX+1] +
+	       constvars->old_old_density[xplusCell]*constvars->old_old_enthalpy[xplusCell])/
+	      constvars->old_density[xplusCell];
       }
     }
   }
@@ -3594,11 +3602,12 @@ BoundaryCondition::enthalpyOutletBC(const ProcessorGroup*,
         IntVector yminusCell(colX, colY-1, colZ);
         IntVector yplusCell(colX, colY+1, colZ);
         if (constvars->cellType[yminusCell] == out_celltypeval)
-           vars->enthalpy[yminusCell]= - delta_t * maxAbsV *
-              (constvars->old_density[currCell]*constvars->old_enthalpy[currCell] -
-               constvars->old_density[yminusCell]*constvars->old_enthalpy[yminusCell]) /
-	      (cellinfo->dynp[colY-1]*constvars->old_density[yminusCell]) +
-	      constvars->old_enthalpy[yminusCell];
+           vars->enthalpy[yminusCell]= (- delta_t * maxAbsV *
+               (constvars->old_density[currCell]*constvars->old_enthalpy[currCell] -
+                constvars->old_density[yminusCell]*constvars->old_enthalpy[yminusCell]) /
+	       cellinfo->dynp[colY-1] +
+	       constvars->old_old_density[yminusCell]*constvars->old_old_enthalpy[yminusCell])/
+	      constvars->old_density[yminusCell];
       }
     }
   }
@@ -3609,11 +3618,12 @@ BoundaryCondition::enthalpyOutletBC(const ProcessorGroup*,
         IntVector currCell(colX, colY, colZ);
         IntVector yplusCell(colX, colY+1, colZ);
         if (constvars->cellType[yplusCell] == out_celltypeval)
-           vars->enthalpy[yplusCell]= - delta_t * maxAbsV *
-              (constvars->old_density[yplusCell]*constvars->old_enthalpy[yplusCell] -
-               constvars->old_density[currCell]*constvars->old_enthalpy[currCell]) /
-	      (cellinfo->dyps[colY+1]*constvars->old_density[yplusCell]) +
-	      constvars->old_enthalpy[yplusCell];
+           vars->enthalpy[yplusCell]= (- delta_t * maxAbsV *
+               (constvars->old_density[yplusCell]*constvars->old_enthalpy[yplusCell] -
+                constvars->old_density[currCell]*constvars->old_enthalpy[currCell]) /
+	       cellinfo->dyps[colY+1] +
+	       constvars->old_old_density[yplusCell]*constvars->old_old_enthalpy[yplusCell])/
+	      constvars->old_density[yplusCell];
       }
     }
   }
@@ -3625,11 +3635,12 @@ BoundaryCondition::enthalpyOutletBC(const ProcessorGroup*,
         IntVector zminusCell(colX, colY, colZ-1);
         IntVector zplusCell(colX, colY, colZ+1);
         if (constvars->cellType[zminusCell] == out_celltypeval)
-           vars->enthalpy[zminusCell]= - delta_t * maxAbsW *
-              (constvars->old_density[currCell]*constvars->old_enthalpy[currCell] -
-               constvars->old_density[zminusCell]*constvars->old_enthalpy[zminusCell]) /
-	      (cellinfo->dztp[colZ-1]*constvars->old_density[zminusCell]) +
-	      constvars->old_enthalpy[zminusCell];
+           vars->enthalpy[zminusCell]= (- delta_t * maxAbsW *
+               (constvars->old_density[currCell]*constvars->old_enthalpy[currCell] -
+                constvars->old_density[zminusCell]*constvars->old_enthalpy[zminusCell]) /
+	       cellinfo->dztp[colZ-1] +
+	       constvars->old_old_density[zminusCell]*constvars->old_old_enthalpy[zminusCell])/
+	      constvars->old_density[zminusCell];
       }
     }
   }
@@ -3640,11 +3651,12 @@ BoundaryCondition::enthalpyOutletBC(const ProcessorGroup*,
         IntVector currCell(colX, colY, colZ);
         IntVector zplusCell(colX, colY, colZ+1);
         if (constvars->cellType[zplusCell] == out_celltypeval)
-           vars->enthalpy[zplusCell]= - delta_t * maxAbsW *
-              (constvars->old_density[zplusCell]*constvars->old_enthalpy[zplusCell] -
-               constvars->old_density[currCell]*constvars->old_enthalpy[currCell]) /
-	      (cellinfo->dzpb[colZ+1]*constvars->old_density[zplusCell]) +
-	      constvars->old_enthalpy[zplusCell];
+           vars->enthalpy[zplusCell]= (- delta_t * maxAbsW *
+               (constvars->old_density[zplusCell]*constvars->old_enthalpy[zplusCell] -
+                constvars->old_density[currCell]*constvars->old_enthalpy[currCell]) /
+	       cellinfo->dzpb[colZ+1] +
+	       constvars->old_old_density[zplusCell]*constvars->old_old_enthalpy[zplusCell])/
+	      constvars->old_density[zplusCell];
       }
     }
   }
@@ -3856,10 +3868,12 @@ BoundaryCondition::velRhoHatOutletBC(const ProcessorGroup*,
         IntVector xminusyminusCell(colX-1, colY-1, colZ);
         IntVector xminuszminusCell(colX-1, colY, colZ-1);
         if (constvars->cellType[xminusCell] == out_celltypeval) {
-           double avden = 0.5 * (constvars->old_density[xplusCell] +
-			         constvars->old_density[currCell]);
-           double avdenlow = 0.5 * (constvars->old_density[currCell] +
-			            constvars->old_density[xminusCell]);
+           double old_avdenlow = 0.5 * (constvars->old_density[currCell] +
+			                constvars->old_density[xminusCell]);
+           double avden = 0.5 * (constvars->density[xplusCell] +
+			         constvars->density[currCell]);
+           double avdenlow = 0.5 * (constvars->density[currCell] +
+			            constvars->density[xminusCell]);
            double new_avdenlow = 0.5 * (constvars->new_density[currCell] +
 			                constvars->new_density[xminusCell]);
 	   //double out_vel = constvars->uVelocity[xplusCell];
@@ -3867,15 +3881,17 @@ BoundaryCondition::velRhoHatOutletBC(const ProcessorGroup*,
            vars->uVelRhoHat[currCell] = (- delta_t * maxAbsU *
             (avden*constvars->uVelocity[xplusCell] -
              avdenlow*constvars->uVelocity[currCell]) / cellinfo->dxepu[colX-1]+
-	    avdenlow*constvars->uVelocity[currCell]) / new_avdenlow;
+	    old_avdenlow*constvars->old_uVelocity[currCell]) / new_avdenlow;
 
            vars->uVelRhoHat[xminusCell] = vars->uVelRhoHat[currCell];
 
         if (!(yminus && (colY == idxLo.y()))) {
-           avden = 0.5 * (constvars->old_density[currCell] +
-	                  constvars->old_density[yminusCell]);
-           avdenlow = 0.5 * (constvars->old_density[xminusCell] +
-			     constvars->old_density[xminusyminusCell]);
+           old_avdenlow = 0.5 * (constvars->old_density[xminusCell] +
+			         constvars->old_density[xminusyminusCell]);
+           avden = 0.5 * (constvars->density[currCell] +
+	                  constvars->density[yminusCell]);
+           avdenlow = 0.5 * (constvars->density[xminusCell] +
+			     constvars->density[xminusyminusCell]);
            new_avdenlow = 0.5 * (constvars->new_density[xminusCell] +
 			         constvars->new_density[xminusyminusCell]);
 	   //out_vel = 0.5 * (constvars->uVelocity[xplusCell] +
@@ -3884,13 +3900,15 @@ BoundaryCondition::velRhoHatOutletBC(const ProcessorGroup*,
            vars->vVelRhoHat[xminusCell] = (- delta_t * maxAbsU *
             (avden*constvars->vVelocity[currCell] - 
 	     avdenlow*constvars->vVelocity[xminusCell]) /cellinfo->dxep[colX-1]+
-	    avdenlow*constvars->vVelocity[xminusCell]) / new_avdenlow;
+	    old_avdenlow*constvars->old_vVelocity[xminusCell]) / new_avdenlow;
 	}
         if (!(zminus && (colZ == idxLo.z()))) {
-           avden = 0.5 * (constvars->old_density[currCell] +
-	                  constvars->old_density[zminusCell]);
-           avdenlow = 0.5 * (constvars->old_density[xminusCell] +
-			     constvars->old_density[xminuszminusCell]);
+           old_avdenlow = 0.5 * (constvars->old_density[xminusCell] +
+			         constvars->old_density[xminuszminusCell]);
+           avden = 0.5 * (constvars->density[currCell] +
+	                  constvars->density[zminusCell]);
+           avdenlow = 0.5 * (constvars->density[xminusCell] +
+			     constvars->density[xminuszminusCell]);
            new_avdenlow = 0.5 * (constvars->new_density[xminusCell] +
 			         constvars->new_density[xminuszminusCell]);
 	   //out_vel = 0.5 * (constvars->uVelocity[xplusCell] +
@@ -3899,7 +3917,7 @@ BoundaryCondition::velRhoHatOutletBC(const ProcessorGroup*,
            vars->wVelRhoHat[xminusCell] = (- delta_t * maxAbsU *
             (avden*constvars->wVelocity[currCell] - 
 	     avdenlow*constvars->wVelocity[xminusCell]) /cellinfo->dxep[colX-1]+
-	    avdenlow*constvars->wVelocity[xminusCell]) / new_avdenlow;
+	    old_avdenlow*constvars->old_wVelocity[xminusCell]) / new_avdenlow;
 	}
         }
       }
@@ -3918,51 +3936,57 @@ BoundaryCondition::velRhoHatOutletBC(const ProcessorGroup*,
         IntVector xpluszminusCell(colX+1, colY, colZ-1);
         IntVector xplusplusCell(colX+2, colY, colZ);
         if (constvars->cellType[xplusCell] == out_celltypeval) {
-           double avden = 0.5 * (constvars->old_density[xplusCell] +
-			         constvars->old_density[currCell]);
+           double old_avden = 0.5 * (constvars->old_density[xplusCell] +
+			             constvars->old_density[currCell]);
+           double avden = 0.5 * (constvars->density[xplusCell] +
+			         constvars->density[currCell]);
+           double avdenlow = 0.5 * (constvars->density[currCell] +
+			            constvars->density[xminusCell]);
            double new_avden = 0.5 * (constvars->new_density[xplusCell] +
 			             constvars->new_density[currCell]);
-           double avdenlow = 0.5 * (constvars->old_density[currCell] +
-			            constvars->old_density[xminusCell]);
 	   //double out_vel = constvars->uVelocity[currCell];
 
            vars->uVelRhoHat[xplusCell] = (- delta_t * maxAbsU *
             (avden*constvars->uVelocity[xplusCell] - 
 	     avdenlow*constvars->uVelocity[currCell]) / cellinfo->dxpwu[colX+1]+
-	    avden*constvars->uVelocity[xplusCell]) / new_avden;
+	    old_avden*constvars->old_uVelocity[xplusCell]) / new_avden;
 
            vars->uVelRhoHat[xplusplusCell] = vars->uVelRhoHat[xplusCell];
 
         if (!(yminus && (colY == idxLo.y()))) {
-           avden = 0.5 * (constvars->old_density[xplusCell] +
-	                  constvars->old_density[xplusyminusCell]);
+           old_avden = 0.5 * (constvars->old_density[xplusCell] +
+	                      constvars->old_density[xplusyminusCell]);
+           avden = 0.5 * (constvars->density[xplusCell] +
+	                  constvars->density[xplusyminusCell]);
+           avdenlow = 0.5 * (constvars->density[currCell] +
+			     constvars->density[yminusCell]);
            new_avden = 0.5 * (constvars->new_density[xplusCell] +
 	                      constvars->new_density[xplusyminusCell]);
-           avdenlow = 0.5 * (constvars->old_density[currCell] +
-			     constvars->old_density[yminusCell]);
 	   //out_vel = 0.5 * (constvars->uVelocity[currCell] +
 	//		    constvars->uVelocity[yminusCell]);
 
            vars->vVelRhoHat[xplusCell] = (- delta_t * maxAbsU *
             (avden*constvars->vVelocity[xplusCell] - 
 	     avdenlow*constvars->vVelocity[currCell]) / cellinfo->dxpw[colX+1] +
-	    avden*constvars->vVelocity[xplusCell]) / new_avden;
+	    old_avden*constvars->old_vVelocity[xplusCell]) / new_avden;
 	}
 
         if (!(zminus && (colZ == idxLo.z()))) {
-           avden = 0.5 * (constvars->old_density[xplusCell] +
-	                  constvars->old_density[xpluszminusCell]);
+           old_avden = 0.5 * (constvars->old_density[xplusCell] +
+	                      constvars->old_density[xpluszminusCell]);
+           avden = 0.5 * (constvars->density[xplusCell] +
+	                  constvars->density[xpluszminusCell]);
+           avdenlow = 0.5 * (constvars->density[currCell] +
+			     constvars->density[zminusCell]);
            new_avden = 0.5 * (constvars->new_density[xplusCell] +
 	                      constvars->new_density[xpluszminusCell]);
-           avdenlow = 0.5 * (constvars->old_density[currCell] +
-			     constvars->old_density[zminusCell]);
 	   //out_vel = 0.5 * (constvars->uVelocity[currCell] +
 	//		    constvars->uVelocity[zminusCell]);
 
            vars->wVelRhoHat[xplusCell] = (- delta_t * maxAbsU *
             (avden*constvars->wVelocity[xplusCell] - 
 	     avdenlow*constvars->wVelocity[currCell]) / cellinfo->dxpw[colX+1] +
-	    avden*constvars->wVelocity[xplusCell]) / new_avden;
+	    old_avden*constvars->old_wVelocity[xplusCell]) / new_avden;
 	}
         }
       }
@@ -3982,10 +4006,12 @@ BoundaryCondition::velRhoHatOutletBC(const ProcessorGroup*,
         IntVector yminusxminusCell(colX-1, colY-1, colZ);
         IntVector yminuszminusCell(colX, colY-1, colZ-1);
         if (constvars->cellType[yminusCell] == out_celltypeval) {
-           double avden = 0.5 * (constvars->old_density[yplusCell] +
-			         constvars->old_density[currCell]);
-           double avdenlow = 0.5 * (constvars->old_density[currCell] +
-			            constvars->old_density[yminusCell]);
+           double old_avdenlow = 0.5 * (constvars->old_density[currCell] +
+			                constvars->old_density[yminusCell]);
+           double avden = 0.5 * (constvars->density[yplusCell] +
+			         constvars->density[currCell]);
+           double avdenlow = 0.5 * (constvars->density[currCell] +
+			            constvars->density[yminusCell]);
            double new_avdenlow = 0.5 * (constvars->new_density[currCell] +
 			                constvars->new_density[yminusCell]);
 	   //double out_vel = constvars->vVelocity[yplusCell];
@@ -3993,15 +4019,17 @@ BoundaryCondition::velRhoHatOutletBC(const ProcessorGroup*,
            vars->vVelRhoHat[currCell] = (- delta_t * maxAbsV *
             (avden*constvars->vVelocity[yplusCell] -
              avdenlow*constvars->vVelocity[currCell]) / cellinfo->dynpv[colY-1]+
-	    avdenlow*constvars->vVelocity[currCell]) /new_avdenlow;
+	    old_avdenlow*constvars->old_vVelocity[currCell]) /new_avdenlow;
 
            vars->vVelRhoHat[yminusCell] = vars->vVelRhoHat[currCell];
 
         if (!(xminus && (colX == idxLo.x()))) {
-           avden = 0.5 * (constvars->old_density[currCell] +
-	                  constvars->old_density[xminusCell]);
-           avdenlow = 0.5 * (constvars->old_density[yminusCell] +
-			     constvars->old_density[yminusxminusCell]);
+           old_avdenlow = 0.5 * (constvars->old_density[yminusCell] +
+			         constvars->old_density[yminusxminusCell]);
+           avden = 0.5 * (constvars->density[currCell] +
+	                  constvars->density[xminusCell]);
+           avdenlow = 0.5 * (constvars->density[yminusCell] +
+			     constvars->density[yminusxminusCell]);
            new_avdenlow = 0.5 * (constvars->new_density[yminusCell] +
 			         constvars->new_density[yminusxminusCell]);
 	   //out_vel = 0.5 * (constvars->vVelocity[yplusCell] +
@@ -4010,13 +4038,15 @@ BoundaryCondition::velRhoHatOutletBC(const ProcessorGroup*,
            vars->uVelRhoHat[yminusCell] = (- delta_t * maxAbsV *
             (avden*constvars->uVelocity[currCell] - 
 	     avdenlow*constvars->uVelocity[yminusCell]) /cellinfo->dynp[colY-1]+
-	    avdenlow*constvars->uVelocity[yminusCell]) / new_avdenlow;
+	    old_avdenlow*constvars->old_uVelocity[yminusCell]) / new_avdenlow;
 	}
         if (!(zminus && (colZ == idxLo.z()))) {
-           avden = 0.5 * (constvars->old_density[currCell] +
-	                  constvars->old_density[zminusCell]);
-           avdenlow = 0.5 * (constvars->old_density[yminusCell] +
-			     constvars->old_density[yminuszminusCell]);
+           old_avdenlow = 0.5 * (constvars->old_density[yminusCell] +
+			         constvars->old_density[yminuszminusCell]);
+           avden = 0.5 * (constvars->density[currCell] +
+	                  constvars->density[zminusCell]);
+           avdenlow = 0.5 * (constvars->density[yminusCell] +
+			     constvars->density[yminuszminusCell]);
            new_avdenlow = 0.5 * (constvars->new_density[yminusCell] +
 			         constvars->new_density[yminuszminusCell]);
 	   //out_vel = 0.5 * (constvars->vVelocity[yplusCell] +
@@ -4025,7 +4055,7 @@ BoundaryCondition::velRhoHatOutletBC(const ProcessorGroup*,
            vars->wVelRhoHat[yminusCell] = (- delta_t * maxAbsV *
             (avden*constvars->wVelocity[currCell] - 
 	     avdenlow*constvars->wVelocity[yminusCell]) /cellinfo->dynp[colY-1]+
-	    avdenlow*constvars->wVelocity[yminusCell]) / new_avdenlow;
+	    old_avdenlow*constvars->old_wVelocity[yminusCell]) / new_avdenlow;
 	}
         }
       }
@@ -4044,51 +4074,57 @@ BoundaryCondition::velRhoHatOutletBC(const ProcessorGroup*,
         IntVector ypluszminusCell(colX, colY+1, colZ-1);
         IntVector yplusplusCell(colX, colY+2, colZ);
         if (constvars->cellType[yplusCell] == out_celltypeval) {
-           double avden = 0.5 * (constvars->old_density[yplusCell] +
-			         constvars->old_density[currCell]);
+           double old_avden = 0.5 * (constvars->old_density[yplusCell] +
+			             constvars->old_density[currCell]);
+           double avden = 0.5 * (constvars->density[yplusCell] +
+			         constvars->density[currCell]);
+           double avdenlow = 0.5 * (constvars->density[currCell] +
+			            constvars->density[yminusCell]);
            double new_avden = 0.5 * (constvars->new_density[yplusCell] +
 			             constvars->new_density[currCell]);
-           double avdenlow = 0.5 * (constvars->old_density[currCell] +
-			            constvars->old_density[yminusCell]);
 	   //double out_vel = constvars->vVelocity[currCell];
 
            vars->vVelRhoHat[yplusCell] = (- delta_t * maxAbsV *
             (avden*constvars->vVelocity[yplusCell] - 
 	     avdenlow*constvars->vVelocity[currCell]) / cellinfo->dypsv[colY+1]+
-	    avden*constvars->vVelocity[yplusCell]) / new_avden;
+	    old_avden*constvars->old_vVelocity[yplusCell]) / new_avden;
 
            vars->vVelRhoHat[yplusplusCell] = vars->vVelRhoHat[yplusCell];
 
         if (!(xminus && (colX == idxLo.x()))) {
-           avden = 0.5 * (constvars->old_density[yplusCell] +
-	                  constvars->old_density[yplusxminusCell]);
+           old_avden = 0.5 * (constvars->old_density[yplusCell] +
+	                      constvars->old_density[yplusxminusCell]);
+           avden = 0.5 * (constvars->density[yplusCell] +
+	                  constvars->density[yplusxminusCell]);
+           avdenlow = 0.5 * (constvars->density[currCell] +
+			     constvars->density[xminusCell]);
            new_avden = 0.5 * (constvars->new_density[yplusCell] +
 	                      constvars->new_density[yplusxminusCell]);
-           avdenlow = 0.5 * (constvars->old_density[currCell] +
-			     constvars->old_density[xminusCell]);
 	   //out_vel = 0.5 * (constvars->vVelocity[currCell] +
 	//		    constvars->vVelocity[xminusCell]);
 
            vars->uVelRhoHat[yplusCell] = (- delta_t * maxAbsV *
             (avden*constvars->uVelocity[yplusCell] - 
 	     avdenlow*constvars->uVelocity[currCell]) / cellinfo->dyps[colY+1] +
-	    avden*constvars->uVelocity[yplusCell]) / new_avden;
+	    old_avden*constvars->old_uVelocity[yplusCell]) / new_avden;
 	}
 
         if (!(zminus && (colZ == idxLo.z()))) {
-           avden = 0.5 * (constvars->old_density[yplusCell] +
-	                  constvars->old_density[ypluszminusCell]);
+           old_avden = 0.5 * (constvars->old_density[yplusCell] +
+	                      constvars->old_density[ypluszminusCell]);
+           avden = 0.5 * (constvars->density[yplusCell] +
+	                  constvars->density[ypluszminusCell]);
+           avdenlow = 0.5 * (constvars->density[currCell] +
+			     constvars->density[zminusCell]);
            new_avden = 0.5 * (constvars->new_density[yplusCell] +
 	                      constvars->new_density[ypluszminusCell]);
-           avdenlow = 0.5 * (constvars->old_density[currCell] +
-			     constvars->old_density[zminusCell]);
 	   //out_vel = 0.5 * (constvars->vVelocity[currCell] +
 	//		    constvars->vVelocity[zminusCell]);
 
            vars->wVelRhoHat[yplusCell] = (- delta_t * maxAbsV *
             (avden*constvars->wVelocity[yplusCell] - 
 	     avdenlow*constvars->wVelocity[currCell]) / cellinfo->dyps[colY+1] +
-	    avden*constvars->wVelocity[yplusCell]) / new_avden;
+	    old_avden*constvars->old_wVelocity[yplusCell]) / new_avden;
 	}
         }
       }
@@ -4108,10 +4144,12 @@ BoundaryCondition::velRhoHatOutletBC(const ProcessorGroup*,
         IntVector zminusxminusCell(colX-1, colY, colZ-1);
         IntVector zminusyminusCell(colX, colY-1, colZ-1);
         if (constvars->cellType[zminusCell] == out_celltypeval) {
-           double avden = 0.5 * (constvars->old_density[zplusCell] +
-			         constvars->old_density[currCell]);
-           double avdenlow = 0.5 * (constvars->old_density[currCell] +
-			            constvars->old_density[zminusCell]);
+           double old_avdenlow = 0.5 * (constvars->old_density[currCell] +
+			                constvars->old_density[zminusCell]);
+           double avden = 0.5 * (constvars->density[zplusCell] +
+			         constvars->density[currCell]);
+           double avdenlow = 0.5 * (constvars->density[currCell] +
+			            constvars->density[zminusCell]);
            double new_avdenlow = 0.5 * (constvars->new_density[currCell] +
 			                constvars->new_density[zminusCell]);
 	   //double out_vel = constvars->wVelocity[zplusCell];
@@ -4119,15 +4157,17 @@ BoundaryCondition::velRhoHatOutletBC(const ProcessorGroup*,
            vars->wVelRhoHat[currCell] = (- delta_t * maxAbsW *
             (avden*constvars->wVelocity[zplusCell] -
              avdenlow*constvars->wVelocity[currCell]) / cellinfo->dztpw[colZ-1]+
-	    avdenlow*constvars->wVelocity[currCell]) / new_avdenlow;
+	    old_avdenlow*constvars->old_wVelocity[currCell]) / new_avdenlow;
 
            vars->wVelRhoHat[zminusCell] = vars->wVelRhoHat[currCell];
 
         if (!(xminus && (colX == idxLo.x()))) {
-           avden = 0.5 * (constvars->old_density[currCell] +
-	                  constvars->old_density[xminusCell]);
-           avdenlow = 0.5 * (constvars->old_density[zminusCell] +
-			     constvars->old_density[zminusxminusCell]);
+           old_avdenlow = 0.5 * (constvars->old_density[zminusCell] +
+			         constvars->old_density[zminusxminusCell]);
+           avden = 0.5 * (constvars->density[currCell] +
+	                  constvars->density[xminusCell]);
+           avdenlow = 0.5 * (constvars->density[zminusCell] +
+			     constvars->density[zminusxminusCell]);
            new_avdenlow = 0.5 * (constvars->new_density[zminusCell] +
 			         constvars->new_density[zminusxminusCell]);
 	   //out_vel = 0.5 * (constvars->wVelocity[zplusCell] +
@@ -4136,13 +4176,15 @@ BoundaryCondition::velRhoHatOutletBC(const ProcessorGroup*,
            vars->uVelRhoHat[zminusCell] = (- delta_t * maxAbsW *
             (avden*constvars->uVelocity[currCell] - 
 	     avdenlow*constvars->uVelocity[zminusCell]) /cellinfo->dztp[colZ-1]+
-	    avdenlow*constvars->uVelocity[zminusCell]) / new_avdenlow;
+	    old_avdenlow*constvars->old_uVelocity[zminusCell]) / new_avdenlow;
 	}
         if (!(yminus && (colY == idxLo.y()))) {
-           avden = 0.5 * (constvars->old_density[currCell] +
-	                  constvars->old_density[yminusCell]);
-           avdenlow = 0.5 * (constvars->old_density[zminusCell] +
-			     constvars->old_density[zminusyminusCell]);
+           old_avdenlow = 0.5 * (constvars->old_density[zminusCell] +
+			         constvars->old_density[zminusyminusCell]);
+           avden = 0.5 * (constvars->density[currCell] +
+	                  constvars->density[yminusCell]);
+           avdenlow = 0.5 * (constvars->density[zminusCell] +
+			     constvars->density[zminusyminusCell]);
            new_avdenlow = 0.5 * (constvars->new_density[zminusCell] +
 			         constvars->new_density[zminusyminusCell]);
 	   //out_vel = 0.5 * (constvars->wVelocity[zplusCell] +
@@ -4151,7 +4193,7 @@ BoundaryCondition::velRhoHatOutletBC(const ProcessorGroup*,
            vars->vVelRhoHat[zminusCell] = (- delta_t * maxAbsW *
             (avden*constvars->vVelocity[currCell] - 
 	     avdenlow*constvars->vVelocity[zminusCell]) /cellinfo->dztp[colZ-1]+
-	    avdenlow*constvars->vVelocity[zminusCell]) / new_avdenlow;
+	    old_avdenlow*constvars->old_vVelocity[zminusCell]) / new_avdenlow;
 	}
         }
       }
@@ -4170,51 +4212,57 @@ BoundaryCondition::velRhoHatOutletBC(const ProcessorGroup*,
         IntVector zplusyminusCell(colX, colY-1, colZ+1);
         IntVector zplusplusCell(colX, colY, colZ+2);
         if (constvars->cellType[zplusCell] == out_celltypeval) {
-           double avden = 0.5 * (constvars->old_density[zplusCell] +
-			         constvars->old_density[currCell]);
+           double old_avden = 0.5 * (constvars->old_density[zplusCell] +
+			             constvars->old_density[currCell]);
+           double avden = 0.5 * (constvars->density[zplusCell] +
+			         constvars->density[currCell]);
+           double avdenlow = 0.5 * (constvars->density[currCell] +
+			            constvars->density[zminusCell]);
            double new_avden = 0.5 * (constvars->new_density[zplusCell] +
 			             constvars->new_density[currCell]);
-           double avdenlow = 0.5 * (constvars->old_density[currCell] +
-			            constvars->old_density[zminusCell]);
 	   //double out_vel = constvars->wVelocity[currCell];
 
            vars->wVelRhoHat[zplusCell] = (- delta_t * maxAbsW *
             (avden*constvars->wVelocity[zplusCell] - 
 	     avdenlow*constvars->wVelocity[currCell]) / cellinfo->dzpbw[colZ+1]+
-	    avden*constvars->wVelocity[zplusCell]) / new_avden;
+	    old_avden*constvars->old_wVelocity[zplusCell]) / new_avden;
 
            vars->wVelRhoHat[zplusplusCell] = vars->wVelRhoHat[zplusCell];
 
         if (!(xminus && (colX == idxLo.x()))) {
-           avden = 0.5 * (constvars->old_density[zplusCell] +
-	                  constvars->old_density[zplusxminusCell]);
+           old_avden = 0.5 * (constvars->old_density[zplusCell] +
+	                      constvars->old_density[zplusxminusCell]);
+           avden = 0.5 * (constvars->density[zplusCell] +
+	                  constvars->density[zplusxminusCell]);
+           avdenlow = 0.5 * (constvars->density[currCell] +
+			     constvars->density[xminusCell]);
            new_avden = 0.5 * (constvars->new_density[zplusCell] +
 	                      constvars->new_density[zplusxminusCell]);
-           avdenlow = 0.5 * (constvars->old_density[currCell] +
-			     constvars->old_density[xminusCell]);
 	   //out_vel = 0.5 * (constvars->wVelocity[currCell] +
 	//		    constvars->wVelocity[xminusCell]);
 
            vars->uVelRhoHat[zplusCell] = (- delta_t * maxAbsW *
             (avden*constvars->uVelocity[zplusCell] - 
 	     avdenlow*constvars->uVelocity[currCell]) / cellinfo->dzpb[colZ+1] +
-	    avden*constvars->uVelocity[zplusCell]) / new_avden;
+	    old_avden*constvars->old_uVelocity[zplusCell]) / new_avden;
 	}
 
         if (!(yminus && (colY == idxLo.y()))) {
-           avden = 0.5 * (constvars->old_density[zplusCell] +
-	                  constvars->old_density[zplusyminusCell]);
+           old_avden = 0.5 * (constvars->old_density[zplusCell] +
+	                      constvars->old_density[zplusyminusCell]);
+           avden = 0.5 * (constvars->density[zplusCell] +
+	                  constvars->density[zplusyminusCell]);
+           avdenlow = 0.5 * (constvars->density[currCell] +
+			     constvars->density[yminusCell]);
            new_avden = 0.5 * (constvars->new_density[zplusCell] +
 	                      constvars->new_density[zplusyminusCell]);
-           avdenlow = 0.5 * (constvars->old_density[currCell] +
-			     constvars->old_density[yminusCell]);
 	   //out_vel = 0.5 * (constvars->wVelocity[currCell] +
 	//		    constvars->wVelocity[yminusCell]);
 
            vars->vVelRhoHat[zplusCell] = (- delta_t * maxAbsW *
             (avden*constvars->vVelocity[zplusCell] - 
 	     avdenlow*constvars->vVelocity[currCell]) / cellinfo->dzpb[colZ+1] +
-	    avden*constvars->vVelocity[zplusCell]) / new_avden;
+	    old_avden*constvars->old_vVelocity[zplusCell]) / new_avden;
 	}
         }
       }

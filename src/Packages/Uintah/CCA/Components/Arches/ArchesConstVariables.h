@@ -59,6 +59,7 @@ namespace Uintah {
       constSFCYVariable<double> old_vVelocity;
       constSFCZVariable<double> old_wVelocity;
       constCCVariable<double> old_density;
+      constCCVariable<double> old_old_density;
       constCCVariable<int> cellType;
       constCCVariable<double> filterdrhodt; //add to the RHS of the pres eqn
       constSFCXVariable<double> uVelRhoHat;
@@ -66,8 +67,10 @@ namespace Uintah {
       constSFCZVariable<double> wVelRhoHat;
       constCCVariable<double> divergence;
       constCCVariable<double> old_scalar;
+      constCCVariable<double> old_old_scalar;
       constCCVariable<double> enthalpy;
       constCCVariable<double> old_enthalpy;
+      constCCVariable<double> old_old_enthalpy;
       constCCVariable<double> temperature;
       constCCVariable<double> cp;
       constCCVariable<double> absorption;
