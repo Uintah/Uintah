@@ -1297,6 +1297,7 @@ set $m89-notes {}
 set $m89-clipmode {allnodes}
 set $m89-clipfunction {v > 0.5}
 set $m90-notes {}
+set $m90-force-pointcloud {1}
 set $m91-notes {}
 set $m91-interpolation_basis {linear}
 set $m91-map_source_to_single_dest {0}
@@ -1474,6 +1475,7 @@ set $m117-port-index {0}
 set $m118-notes {}
 set $m118-port-index {1}
 set $m119-notes {}
+set $m119-force-pointcloud {1}
 set $m120-notes {}
 set $m120-port-index {1}
 set $m121-notes {}
@@ -5845,7 +5847,7 @@ class BioTensorApp {
 		-padx 2 -pady 3
 	    
 	    iwidgets::labeledframe $f.color \
-		-labelpos nw -labeltext "Color Planes Bsed On" -foreground grey64
+		-labelpos nw -labeltext "Color Planes Based On" -foreground grey64
 	    pack $f.color -side top -anchor nw -padx 3 -pady 3
 	    
 	    set fr [$f.color childsite]
@@ -7584,7 +7586,8 @@ class BioTensorApp {
 	    global glyph_color
 	    frame $rep.select
 	    pack $rep.select -side top -anchor n -padx 3 -pady 3
-	    addColorSelection $rep.select "Color" glyph_color "glyph_color_change"
+	    addColorSelection $rep.select "Color" glyph_color \
+		"default_color_change"
 	    
 	    iwidgets::labeledframe $rep.maps \
 		-labeltext "Color Maps" \
@@ -8563,7 +8566,8 @@ class BioTensorApp {
 	    
 	    global fiber_color
 	    
-	    addColorSelection $rep.f1 "Color" fiber_color "fiber_color_change"
+	    addColorSelection $rep.f1 "Color" fiber_color \
+		"default_color_change"
 	    
 	    iwidgets::labeledframe $rep.maps \
 		-labeltext "Color Maps" \
@@ -9310,6 +9314,7 @@ class BioTensorApp {
 	    global $mods(ShowField-Isosurface)-faces-on
 	    if {$vis_activated && [set $mods(ShowField-Isosurface)-faces-on] == 1} {
 		$mods(Isosurface)-c needexecute
+		$mods(ShowField-Isosurface)-c default_color_change
 	    } else {
 		global exec_iso
 		set exec_iso(Isosurface) 1
@@ -9331,6 +9336,7 @@ class BioTensorApp {
 	     global $mods(ShowField-Glyphs)-tensors-on
 	     if {$vis_activated && [set $mods(ShowField-Glyphs)-tensors-on] == 1} {
 		 $mods(DirectInterpolate-Glyphs)-c needexecute
+		 $mods(ShowField-Glyphs)-c default_color_change
 	     } else {
 		 global exec_glyphs
 		 set exec_glyphs(ChooseField-GlyphSeeds) 1
@@ -9352,6 +9358,7 @@ class BioTensorApp {
 	     global $mods(ShowField-Fibers)-edges-on
 	     if {$vis_activated && [set $mods(ShowField-Fibers)-edges-on]} {
 		 $mods(DirectInterpolate-Fibers)-c needexecute
+		 $mods(ShowField-Fibers)-c default_color_change
 	     } else {
 		 global exec_fobers
 		 set exec_fibers(ChooseField-FiberSeeds) 1
