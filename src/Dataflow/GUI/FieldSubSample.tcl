@@ -41,6 +41,11 @@ itcl_class SCIRun_FieldsCreate_FieldSubSample {
     }
 
     method set_defaults {} {
+	global $this-power_app
+	global power_app_command
+
+	set    $this-power_app 0
+	set    power_app_command ""
 
 	global $this-wrap
 	global $this-dims
@@ -77,6 +82,14 @@ itcl_class SCIRun_FieldsCreate_FieldSubSample {
 	}
 
 	trace variable $this-dims w "$this set_size"
+    }
+
+    method set_power_app { cmd } {
+	global $this-power_app
+	global power_app_command
+
+	set $this-power_app 1
+	set power_app_command $cmd
     }
 
     method ui {} {
@@ -185,7 +198,16 @@ itcl_class SCIRun_FieldsCreate_FieldSubSample {
 
 	pack $w.main -side top
 
-	makeSciButtonPanel $w $w $this
+	global $this-power_app
+	global power_app_command
+
+	if { [set $this-power_app] } {
+	    makeSciButtonPanel $w $w $this -no_execute -no_close -no_find \
+		"\"Close\" \"wm withdraw $w; $power_app_command\" \"Hides this GUI\""
+	} else {
+	    makeSciButtonPanel $w $w $this
+	}
+	 
 	moveToCursor $w
     }
 
