@@ -26,6 +26,7 @@ itcl_class SCIRun_Visualization_ShowColorMap {
 	global $this-units
 	global $this-text_color
 	global $this-text-fontsize
+	global $this-extra-padding
 
         set_defaults
     }
@@ -38,6 +39,7 @@ itcl_class SCIRun_Visualization_ShowColorMap {
 	set $this-units ""
 	set $this-text_color 1
 	set $this-text-fontsize 2
+	set $this-extra-padding 0
     }
 
     method ui {} {
@@ -119,7 +121,11 @@ itcl_class SCIRun_Visualization_ShowColorMap {
 	    $this-text-fontsize \
 	    {{"T" 0} {"S" 1} {"M" 2} {"L" 3} {"XL" 4}}
 
-	pack $w.size -side top -fill x
+	pack $w.size -side top -fill x -pady 3
+
+	checkbutton $w.extra -text "Add Extra Space" -variable $this-extra-padding -command "$this-c needexecute"
+
+	pack $w.extra -anchor w -side top -pady 3 -padx 10
 
 	makeSciButtonPanel $w $w $this
 	moveToCursor $w
