@@ -375,7 +375,7 @@ void MatlabMatricesReader::indexmatlabfile(bool postmsg)
 		for (p=0, r=0;p<mfile.getnummatlabarrays();p++)
 		{
 			ma = mfile.getmatlabarrayinfo(p); // do not load all the data fields
-			if (cindex = translate_.sciMatrixCompatible(ma,infotext,static_cast<SCIRun::Module *>(this)))
+			if ((cindex = translate_.sciMatrixCompatible(ma,infotext,static_cast<SCIRun::Module *>(this))))
 			{
 				// in case we need to propose a matrix to load, select
 				// the one that is most compatible with the data
