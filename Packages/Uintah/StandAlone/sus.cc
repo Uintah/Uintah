@@ -177,6 +177,11 @@ int main(int argc, char** argv)
        }
     }
 
+    if (restart) {
+       restartFromDir = filename;
+       filename = filename + "/input.xml";
+    }
+
     /*
      * Check for valid argument combinations
      */
