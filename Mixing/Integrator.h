@@ -36,15 +36,18 @@ POSSIBLE REVISIONS
 ***************************************************************************/
 
 #include <Packages/Uintah/CCA/Components/Arches/Mixing/MixingModel.h>
+#include <Packages/Uintah/CCA/Components/Arches/Mixing/Stream.h>
 
 #include <vector>
-
+ 
 #if !defined(_AIX)
 #  define dqagpe dqagpe_
+#  define dqagp dqagp_
 #endif
 
+// Function required by the integrator 
 double fnc(double *x);
- // Fortran subroutine for numerical integration
+// Fortran subroutine for numerical integration
 extern "C" {void dqagpe(double fun(double* f),double *a, double *b, 
 			int *i, double *points, double *epsabs, 
 			double *epsrel, int *limit, double *result, 
@@ -53,15 +56,24 @@ extern "C" {void dqagpe(double fun(double* f),double *a, double *b,
 			double *elist, double *pts,
 			int *level, int *ndin, int *iord,int *last);  }
 
+extern "C" {void dqagp(double fun(double* f),double *a, double *b,
+                        int *i, double *points, double *epsabs,
+                        double *epsrel, double *result,
+                        double *abserr, int *neval,
+                        int *ier, int *lenw, int *leniw,
+                        int *last, int *iwork, double* work);  }
 
 namespace Uintah {
-  // Function required by the integrator 
-
 
 class PDFShape;
 class PDFMixingModel;
 class MixRxnTableInfo;
 class ReactionModel;
+
+// used as integration parameters
+const int LIMITS = 500;
+const int NPTS = 10; 
+
 class Integrator{
 
 public:
@@ -95,7 +107,7 @@ public:
       // Carry out actual integration
       //
       Stream integrate(int* tableKeyIndex);
-      void convertKeytoMeanValues(int* tableKeyIndex);
+      void convertKeytoFloatValues(int tableKeyIndex[], std::vector<double>& indepVars);
       double fun(double* x);
 
 protected :
@@ -124,19 +136,19 @@ private:
       ReactionModel* d_rxnModel;
       MixRxnTableInfo* d_tableInfo;
       PDFShape* d_mixingPDF;
-      std::vector<double> d_meanValues;
+      //std::vector<double> d_meanValues;
       std::vector<double> d_keyValues;
       //Vector of all independent variables, excluding variance
       std::vector<double> d_varsHFPi;
       int d_tableDimension;
-      bool d_lfavre;
       int d_count;
+      Stream d_unreactedStream;
+      Stream d_meanSpaceVars;
+      Stream d_resultStateVars;
       
 
 }; // end class Integrator
-// used as integration parameters
-const int LIMITS = 100;
-const int NPTS = 10; 
+
 } // end namespace Uintah
 
 #endif

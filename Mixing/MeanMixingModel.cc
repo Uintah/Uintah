@@ -59,8 +59,10 @@ MeanMixingModel::problemSetup(const ProblemSpecP& params)
   ChemkinInterface* chemInterf = d_rxnModel->getChemkinInterface();
   int nofSpecies = chemInterf->getNumSpecies();
   int nofElements = chemInterf->getNumElements();
-  d_CO2index = chemInterf->getSpeciesIndex("CO2");
-  d_H2Oindex = chemInterf->getSpeciesIndex("H2O");
+  //d_CO2index = chemInterf->getSpeciesIndex("CO2");
+  //d_H2Oindex = chemInterf->getSpeciesIndex("H2O");
+  d_CO2index = 0;
+  d_H2Oindex = 1; // Four species output: CO2, H2O, O2, CO
   // Read the mixing variable streams, total is nofstreams
   int nofstrm = 0;
   string speciesName;
@@ -99,7 +101,7 @@ MeanMixingModel::problemSetup(const ProblemSpecP& params)
     d_streams[nofstrm].d_moleWeight=chemInterf->getMixMoleWeight(ymassVec);
     d_streams[nofstrm].d_cp=chemInterf->getMixSpecificHeat(strmTemp, ymassVec);
     // store as mass fraction
-    //    d_streams[nofstrm].print(cerr );
+    //d_streams[nofstrm].print(cerr );
     ++nofstrm;
   }
   d_numMixingVars = nofstrm - 1;
@@ -197,10 +199,10 @@ void
 MeanMixingModel::computeProps(const InletStream& inStream,
 			     Stream& outStream)
 {
-  // convert inStream to array
   TAU_PROFILE_TIMER(mixing, "Mixing", "[Mixing::mixing]" , TAU_USER);
   TAU_PROFILE_TIMER(reaction, "Reaction", "[Mixing::reaction]" , TAU_USER);
   TAU_PROFILE_START(mixing);
+  // convert inStream to array
   std::vector<double> mixRxnVar(d_tableDimension); 
   std::vector<double> normVar(d_tableDimension);
   int count = 0;
@@ -263,7 +265,7 @@ MeanMixingModel::computeProps(const InletStream& inStream,
     //same for every rxn parameter entry, look up the first entry;
     Stream paramValues;
     for (int ii = 0; ii < d_numRxnVars; ii++) {
-  TAU_PROFILE_START(reaction);
+      TAU_PROFILE_START(reaction);
       getProps(normVar, paramValues);
   TAU_PROFILE_STOP(reaction);
       double minParamValue = paramValues.d_rxnVarNorm[0];
@@ -297,8 +299,8 @@ MeanMixingModel::computeProps(const InletStream& inStream,
   TAU_PROFILE_START(reaction);
   getProps(mixRxnVar, outStream); //function in DynamicTable
   TAU_PROFILE_STOP(reaction);
-  outStream.d_CO2index = d_CO2index; //Needed for radiation model
-  outStream.d_H2Oindex = d_H2Oindex; //Needed for radiation model
+  outStream.d_co2 = outStream.d_speciesConcn[d_CO2index]; //Needed for radiation model
+  outStream.d_h2o = outStream.d_speciesConcn[d_H2Oindex]; //Needed for radiation model
   //outStream.print(cout);
  
  
@@ -311,7 +313,6 @@ MeanMixingModel::tableLookUp(int* tableKeyIndex, Stream& stateSpaceVars) {
   TAU_PROFILE_TIMER(compute, "Compute", "[Mixing::compute]" , TAU_USER);
   vector<double> vec_stateSpaceVars;
   bool lsoot = d_rxnModel->getSootBool();
-  bool flag = false;
 #if 0
   cout << "Mean::tableKeyIndex = " << endl;
   for (int ii = 0; ii < d_tableDimension; ii++) {
@@ -332,8 +333,7 @@ MeanMixingModel::tableLookUp(int* tableKeyIndex, Stream& stateSpaceVars) {
   TAU_PROFILE_STOP(compute);
     }
   else {
-    bool flag = false;
-    stateSpaceVars.convertVecToStream(vec_stateSpaceVars, flag, d_numMixingVars,
+    stateSpaceVars.convertVecToStream(vec_stateSpaceVars, d_numMixingVars,
 				      d_numRxnVars, lsoot);
 #if 0
     cout<<"Mean::entry exists"<<endl;
