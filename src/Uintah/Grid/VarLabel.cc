@@ -54,6 +54,13 @@ VarLabel::getFullName(int matlIndex, const Patch* patch) const
         return out.str();
 }                             
 
+void allowMultipleComputes()
+{
+   if (!d_td.isReductionVariable())
+      throw InternalError(string("Only reduction variables may allow multiple computes.\n'" + d_name + "' is not a reduction variable."))
+   d_allowMultipleComputes = true;
+}
+
 ostream & 
 operator<<( ostream & out, const Uintah::VarLabel & vl )
 {
@@ -64,6 +71,9 @@ operator<<( ostream & out, const Uintah::VarLabel & vl )
 
 //
 // $Log$
+// Revision 1.13  2001/01/05 20:09:29  witzel
+// Only let reduction VarLabel's allow multiple computes.
+//
 // Revision 1.12  2001/01/04 22:32:34  witzel
 // Added allowMultipleComputes flag to allow one to indicate that a
 // VarLabel may be computed multiple times in a taskgraph without conflict
