@@ -55,26 +55,10 @@ ICELabel::ICELabel()
      scinew VarLabel("viscosity_CC",  CCVariable<double>::getTypeDescription());
     mom_source_CCLabel = 
       scinew VarLabel("mom_source_CC",CCVariable<Vector>::getTypeDescription());
-#if 0
-    xmom_source_CCLabel = 
-     scinew VarLabel("xmom_source_CC",CCVariable<double>::getTypeDescription());
-    ymom_source_CCLabel = 
-     scinew VarLabel("ymom_source_CC",CCVariable<double>::getTypeDescription());
-    zmom_source_CCLabel = 
-     scinew VarLabel("zmom_source_CC",CCVariable<double>::getTypeDescription());
-#endif
     int_eng_source_CCLabel = 
      scinew VarLabel("intE_source_CC",CCVariable<double>::getTypeDescription());
     mom_L_CCLabel = 
      scinew VarLabel("mom_L_CC",CCVariable<Vector>::getTypeDescription());
-#if 0
-    xmom_L_CCLabel = 
-     scinew VarLabel("xmom_L_CC",CCVariable<double>::getTypeDescription());
-    ymom_L_CCLabel = 
-     scinew VarLabel("ymom_L_CC",CCVariable<double>::getTypeDescription());
-    zmom_L_CCLabel = 
-     scinew VarLabel("zmom_L_CC",CCVariable<double>::getTypeDescription());
-#endif
     int_eng_L_CCLabel = 
      scinew VarLabel("intE_L_CC",CCVariable<double>::getTypeDescription());
     mass_L_CCLabel = 
@@ -83,14 +67,6 @@ ICELabel::ICELabel()
      scinew VarLabel("rho_L_CC",CCVariable<double>::getTypeDescription());
     mom_L_ME_CCLabel = 
      scinew VarLabel("mom_L_ME_CC",CCVariable<Vector>::getTypeDescription());
-#if 0
-    xmom_L_ME_CCLabel = 
-     scinew VarLabel("xmom_L_ME_CC",CCVariable<double>::getTypeDescription());
-    ymom_L_ME_CCLabel = 
-     scinew VarLabel("ymom_L_ME_CC",CCVariable<double>::getTypeDescription());
-    zmom_L_ME_CCLabel = 
-     scinew VarLabel("zmom_L_ME_CC",CCVariable<double>::getTypeDescription());
-#endif
     int_eng_L_ME_CCLabel = 
      scinew VarLabel("intE_L_ME_CC",CCVariable<double>::getTypeDescription());
     q_CCLabel = 
@@ -149,27 +125,12 @@ ICELabel::~ICELabel()
     delete vol_frac_CCLabel;
     delete viscosity_CCLabel;
     delete mom_source_CCLabel;
-#if 0
-    delete xmom_source_CCLabel;
-    delete ymom_source_CCLabel;
-    delete zmom_source_CCLabel;
-#endif
     delete int_eng_source_CCLabel;
     delete mom_L_CCLabel;
-#if 0
-    delete xmom_L_CCLabel;
-    delete ymom_L_CCLabel;
-    delete zmom_L_CCLabel;
-#endif
     delete int_eng_L_CCLabel;
     delete mass_L_CCLabel;
     delete rho_L_CCLabel;
     delete mom_L_ME_CCLabel;
-#if 0
-    delete xmom_L_ME_CCLabel;
-    delete ymom_L_ME_CCLabel;
-    delete zmom_L_ME_CCLabel;
-#endif
     delete int_eng_L_ME_CCLabel;
     delete q_CCLabel;
     delete term1Label;
@@ -190,6 +151,11 @@ ICELabel::~ICELabel()
     delete delTLabel;
 }
 // $Log$
+// Revision 1.23  2001/01/08 22:01:55  jas
+// Removed #if 0  #endif pairs surrounding unused code related to momentum
+// variables that are now combined into CCVariables<Vector>.  This includes
+// mom_source, mom_L and mom_L_ME.
+//
 // Revision 1.22  2001/01/08 20:40:51  jas
 // Replace {x,y,z}mom_L_ME with a single CCVariable<Vector> mom_L_ME.
 //

@@ -33,27 +33,12 @@ namespace Uintah {
     const VarLabel* vol_frac_CCLabel;
     const VarLabel* viscosity_CCLabel;
     const VarLabel* mom_source_CCLabel;
-#if 0
-    const VarLabel* xmom_source_CCLabel;
-    const VarLabel* ymom_source_CCLabel;
-    const VarLabel* zmom_source_CCLabel;
-#endif
     const VarLabel* int_eng_source_CCLabel;
     const VarLabel* mom_L_CCLabel;
-#if 0
-    const VarLabel* xmom_L_CCLabel;
-    const VarLabel* ymom_L_CCLabel;
-    const VarLabel* zmom_L_CCLabel;
-#endif
     const VarLabel* int_eng_L_CCLabel;
     const VarLabel* mass_L_CCLabel;
     const VarLabel* rho_L_CCLabel;
     const VarLabel* mom_L_ME_CCLabel;
-#if 0
-    const VarLabel* xmom_L_ME_CCLabel;
-    const VarLabel* ymom_L_ME_CCLabel;
-    const VarLabel* zmom_L_ME_CCLabel;
-#endif
     const VarLabel* int_eng_L_ME_CCLabel;
     const VarLabel* q_CCLabel;
     const VarLabel* q_advectedLabel;
@@ -81,6 +66,11 @@ namespace Uintah {
 
 #endif
 // $Log$
+// Revision 1.21  2001/01/08 22:01:55  jas
+// Removed #if 0  #endif pairs surrounding unused code related to momentum
+// variables that are now combined into CCVariables<Vector>.  This includes
+// mom_source, mom_L and mom_L_ME.
+//
 // Revision 1.20  2001/01/08 20:40:51  jas
 // Replace {x,y,z}mom_L_ME with a single CCVariable<Vector> mom_L_ME.
 //
