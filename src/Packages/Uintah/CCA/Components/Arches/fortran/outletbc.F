@@ -46,7 +46,7 @@ C-----------------------------------------------------------------------
 c*********************************************************************
 c     Local Variables :
 c*********************************************************************
-      integer IST, JST, KST, IEND, JEND, KEND
+      integer IST, JST, KST, IEND, JEND, KEND, jst_mod, kst_mod
       integer i, j, k
       double precision avden, avdenlow
 
@@ -82,12 +82,6 @@ c                  avdenlow = 1.0
                   flowout = flowout+ avden*
      $                 uu(i,j,k)*sns(j)*stb(k)
                   UU(I+1,J,K) = uu(i,j,k)
-                  VV(I,J,K) = -delta_t*uvwout*(old_vv(i,j,k)-
-     $                         old_vv(i-1,j,k))/(dxpw(i)) + 
-     $                         old_vv(i,j,k)
-                  WW(I,J,K) = -delta_t*uvwout*(old_ww(i,j,k)-
-     $                         old_ww(i-1,j,k))/(dxpw(i)) + 
-     $                         old_ww(i,j,k)
                   ff(i,j,k) = -delta_t*uvwout*(old_ff(i,j,k)-
      $                         old_ff(i-1,j,k))/(dxpw(i)) + 
      $                         old_ff(i,j,k)
@@ -99,6 +93,28 @@ c                  avdenlow = 1.0
                endif
  180        CONTINUE
  190     CONTINUE
+         jst_mod=jst
+         if (yminus) jst_mod=jst_mod+1
+         DO K=KST,KEND
+	    DO J=JST_mod,JEND
+               IF (PCELL(I,J,K) .EQ. PFIELD) THEN
+                  VV(I,J,K) = -delta_t*uvwout*(old_vv(i,j,k)-
+     $                         old_vv(i-1,j,k))/(dxpw(i)) + 
+     $                         old_vv(i,j,k)
+               endif
+            end do
+         end do
+         kst_mod=kst
+         if (zminus) kst_mod=kst_mod+1
+         DO K=KST_mod,KEND
+	    DO J=JST,JEND
+               IF (PCELL(I,J,K) .EQ. PFIELD) THEN
+                  WW(I,J,K) = -delta_t*uvwout*(old_ww(i,j,k)-
+     $                         old_ww(i-1,j,k))/(dxpw(i)) + 
+     $                         old_ww(i,j,k)
+               endif
+            end do
+         end do
       endif
       
       RETURN
