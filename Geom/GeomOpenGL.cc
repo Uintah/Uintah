@@ -36,8 +36,37 @@
 DrawInfoOpenGL::DrawInfoOpenGL()
 : current_matl(0)
 {
+    qobj=gluNewQuadric();
 }
 
+DrawInfoOpenGL::~DrawInfoOpenGL()
+{
+    gluDeleteQuadric(qobj);
+}
+
+void DrawInfoOpenGL::set_drawtype(DrawType dt)
+{
+    drawtype=dt;
+    switch(drawtype){
+    case DrawInfoOpenGL::WireFrame:
+	gluQuadricNormals(qobj, GLU_NONE);
+	gluQuadricDrawStyle(qobj, GLU_LINE);
+	break;
+    case DrawInfoOpenGL::Flat:
+	gluQuadricNormals(qobj, GLU_NONE);
+	gluQuadricDrawStyle(qobj, GLU_FILL);
+	break;
+    case DrawInfoOpenGL::Gouraud:
+	gluQuadricNormals(qobj, GLU_FLAT);
+	gluQuadricDrawStyle(qobj, GLU_FILL);
+	break;
+    case DrawInfoOpenGL::Phong:
+	gluQuadricNormals(qobj, GLU_SMOOTH);
+	gluQuadricDrawStyle(qobj, GLU_FILL);
+	break;
+    }
+    
+}
 void DrawInfoOpenGL::set_matl(Material* matl)
 {
     float color[4];
@@ -99,280 +128,32 @@ void GeomObj::draw(DrawInfoOpenGL* di)
 
 void GeomCone::objdraw(DrawInfoOpenGL* di)
 {
-    SinCosTable u(nu, 0, 2.*Pi);
-    int i,j;
+    glPushMatrix();
+    glRotated(zrotangle, zrotaxis.x(), zrotaxis.y(), zrotaxis.z());
+    glTranslated(bottom.x(), bottom.y(), bottom.z());
     di->polycount+=nu*nv;
-    switch(di->drawtype){
-    case DrawInfoOpenGL::WireFrame:
-	for(i=0;i<=nv;i++){
-	    double z=double(i)/double(nv);
-	    double rad=bot_rad+(top_rad-bot_rad)*z;
-	    Vector up(axis*z);
-	    Point bot_up(bottom+up);
-	    glBegin(GL_LINE_LOOP);
-	    for(int j=0;j<nu-1;j++){
-		double d1=u.sin(j);
-		double d2=u.cos(j);
-		Vector rv1(v1*(d1*rad));
-		Vector rv2(v2*(d2*rad));
-		Vector rv(rv1+rv2);
-		Point p(bot_up+rv);
-		glVertex3d(p.x(), p.y(), p.z());
-	    }
-	    glEnd();
-	}
-	glBegin(GL_LINES);
-	for(j=0;j<nu-1;j++){
-	    double d1=u.sin(j);
-	    double d2=u.cos(j);
-	    Vector trv1(v1*(d1*bot_rad));
-	    Vector trv2(v2*(d2*bot_rad));
-	    Vector trv(trv1+trv2);
-	    Point p1(bottom+trv);
-	    Vector brv1(v1*(d1*top_rad));
-	    Vector brv2(v2*(d2*top_rad));
-	    Vector brv(brv1+brv2);	    
-	    Point p2(top+brv);
-	    glVertex3d(p1.x(), p1.y(), p1.z());
-	    glVertex3d(p2.x(), p2.y(), p2.z());
-	}
-	glEnd();
-	break;
-    case DrawInfoOpenGL::Flat:
-	for(i=0;i<nv;i++){
-	    double z1=double(i)/double(nv);
-	    double z2=double(i+1)/double(nv);
-	    double rad1=bot_rad+(top_rad-bot_rad)*z1;
-	    double rad2=bot_rad+(top_rad-bot_rad)*z2;
-	    Point b1(bottom+axis*z1);
-	    Point b2(bottom+axis*z2);
-	    glBegin(GL_TRIANGLE_STRIP);
-	    for(int j=0;j<nu;j++){
-		double d1=u.sin(j)*rad1;
-		double d2=u.cos(j)*rad1;
-		Vector rv1a(v1*d1);
-		Vector rv1b(v2*d2);
-		Vector rv1(rv1a+rv1b);
-		Point p1(b1+rv1);
-		double d3=u.sin(j)*rad2;
-		double d4=u.cos(j)*rad2;
-		Vector rv2a(v1*d3);
-		Vector rv2b(v2*d4);
-		Vector rv2(rv2a+rv2b);
-		Point p2(b2+rv2);
-		glVertex3d(p1.x(), p1.y(), p1.z());
-		glVertex3d(p2.x(), p2.y(), p2.z());
-	    }
-	    glEnd();
-	}
-	break;
-    case DrawInfoOpenGL::Gouraud:
-	for(j=0;j<nu-1;j++){
-	    glBegin(GL_TRIANGLE_STRIP);
-	    double d1=u.sin(j);
-	    double d2=u.cos(j);
-	    double d3=u.sin(j+1);
-	    double d4=u.cos(j+1);
-	    Vector n1(v1*d1+v2*d2);
-	    Vector n2(v1*d3+v2*d4);
-	    Vector n(n1+axis*tilt);
-	    glNormal3d(n.x(), n.y(), n.z());
-	    for(i=0;i<=nv;i++){
-		double z1=double(i)/double(nv);
-		double rad=bot_rad+(top_rad-bot_rad)*z1;
-	        Point paz(bottom+axis*z1);
-		Point p1(paz+n1*rad);
-		Point p2(paz+n2*rad);
-		glVertex3d(p1.x(), p1.y(), p1.z());
-		glVertex3d(p2.x(), p2.y(), p2.z());
-	    }
-	    glEnd();
-	}
-	break;
-    case DrawInfoOpenGL::Phong:
-	for(i=0;i<nv;i++){
-	    double z1=double(i)/double(nv);
-	    double z2=double(i+1)/double(nv);
-	    double rad1=bot_rad+(top_rad-bot_rad)*z1;
-	    double rad2=bot_rad+(top_rad-bot_rad)*z2;
-	    Point b1(bottom+axis*z1);
-	    Point b2(bottom+axis*z2);
-	    glBegin(GL_TRIANGLE_STRIP);
-	    for(int j=0;j<nu;j++){
-		double d1=u.sin(j);
-		double d2=u.cos(j);
-		Vector n(v1*d1+v2*d2);
-		Point p1(b1+n*rad1);
-		Point p2(b2+n*rad2);
-		Vector nn(n+axis*tilt);
-		glNormal3d(-nn.x(), -nn.y(), -nn.z());
-		glVertex3d(p1.x(), p1.y(), p1.z());
-		glVertex3d(p2.x(), p2.y(), p2.z());
-	    }
-	    glEnd();
-	}
-	break;
-    }
+    gluCylinder(di->qobj, bot_rad, top_rad, height, nu, nv);
+    glPopMatrix();
 }
 
 void GeomCylinder::objdraw(DrawInfoOpenGL* di)
 {
-    SinCosTable u(nu, 0, 2.*Pi);
-    int i,j;
+    glPushMatrix();
+    glRotated(zrotangle, zrotaxis.x(), zrotaxis.y(), zrotaxis.z());
+    glTranslated(bottom.x(), bottom.y(), bottom.z());
     di->polycount+=nu*nv;
-    switch(di->drawtype){
-    case DrawInfoOpenGL::WireFrame:
-	for(i=0;i<=nv;i++){
-	    double z=double(i)/double(nv);
-	    Vector up(axis*z);
-	    Point bot_up(bottom+up);
-	    glBegin(GL_LINE_LOOP);
-	    for(int j=0;j<nu-1;j++){
-		double d1=u.sin(j);
-		double d2=u.cos(j);
-		Vector rv(v1*d1+v2*d2);
-		Point p(bot_up+rv);
-		glVertex3d(p.x(), p.y(), p.z());
-	    }
-	    glEnd();
-	}
-	glBegin(GL_LINES);
-	for(j=0;j<nu-1;j++){
-	    double d1=u.sin(j);
-	    double d2=u.cos(j);
-	    Vector rv(v1*d1+v2*d2);
-	    Point p1(bottom+rv);
-	    Point p2(p1+axis);
-	    glVertex3d(p1.x(), p1.y(), p1.z());
-	    glVertex3d(p2.x(), p2.y(), p2.z());
-	}
-	glEnd();
-	break;
-    case DrawInfoOpenGL::Flat:
-	for(i=0;i<nv;i++){
-	    double z1=double(i)/double(nv);
-	    double z2=double(i+1)/double(nv);
-	    Point b1(bottom+axis*z1);
-	    Point b2(bottom+axis*z2);
-	    glBegin(GL_TRIANGLE_STRIP);
-	    for(int j=0;j<nu;j++){
-		double d1=u.sin(j);
-		double d2=u.cos(j);
-		Vector rv(v1*d1+v2*d2);
-		Point p1(b1+rv);
-		Point p2(b2+rv);
-		glVertex3d(p1.x(), p1.y(), p1.z());
-		glVertex3d(p2.x(), p2.y(), p2.z());
-	    }
-	    glEnd();
-	}
-	break;
-    case DrawInfoOpenGL::Gouraud:
-	for(j=0;j<nu-1;j++){
-	    glBegin(GL_TRIANGLE_STRIP);
-	    double d1=u.sin(j);
-	    double d2=u.cos(j);
-	    double d3=u.sin(j+1);
-	    double d4=u.cos(j+1);
-	    Vector n1(v1*d1+v2*d2);
-	    Vector n2(v1*d3+v2*d4);
-	    Point pn1(bottom+n1);
-	    Point pn2(bottom+n2);
-	    glNormal3d(-n1.x(), -n1.y(), -n1.z());
-	    for(i=0;i<=nv;i++){
-		double z1=double(i)/double(nv);
-		Point p1(pn1+axis*z1);
-		Point p2(pn2+axis*z1);
-		glVertex3d(p1.x(), p1.y(), p1.z());
-		glVertex3d(p2.x(), p2.y(), p2.z());
-	    }
-	    glEnd();
-	}
-	break;
-    case DrawInfoOpenGL::Phong:
-	for(i=0;i<nv;i++){
-	    double z1=double(i)/double(nv);
-	    double z2=double(i+1)/double(nv);
-	    Point b1(bottom+axis*z1);
-	    Point b2(bottom+axis*z2);
-	    glBegin(GL_TRIANGLE_STRIP);
-	    for(int j=0;j<nu;j++){
-		double d1=u.sin(j);
-		double d2=u.cos(j);
-		Vector n(v1*d1+v2*d2);
-		Point p1(b1+n);
-		Point p2(b2+n);
-		glNormal3d(n.x(), n.y(), n.z());
-		glVertex3d(p1.x(), p1.y(), p1.z());
-		glVertex3d(p2.x(), p2.y(), p2.z());
-	    }
-	    glEnd();
-	}
-	break;
-    }
+    gluCylinder(di->qobj, rad, rad, height, nu, nv);
+    glPopMatrix();
 }
 
 void GeomDisc::objdraw(DrawInfoOpenGL* di)
 {
-    SinCosTable u(nu, 0, 2.*Pi);
-    int i,j;
+    glPushMatrix();
+    glTranslated(cen.x(), cen.y(), cen.z());
+    glRotated(zrotangle, zrotaxis.x(), zrotaxis.y(), zrotaxis.z());
     di->polycount+=nu*nv;
-    switch(di->drawtype){
-    case DrawInfoOpenGL::WireFrame:
-	for(i=1;i<=nv;i++){
-	    glBegin(GL_LINE_LOOP);
-	    double r=rad*double(i)/double(nv);
-	    for(int j=0;j<nu-1;j++){
-		double d1=u.sin(j);
-		double d2=u.cos(j);
-		Vector rv1a(v1*(d1*r));
-		Vector rv1b(v2*(d2*r));
-		Vector rv1(rv1a+rv1b);
-		Point p(cen+rv1);
-		glVertex3d(p.x(), p.y(), p.z());
-	    }
-	    glEnd();
-	}
-	glBegin(GL_LINES);
-	for(j=0;j<nu-1;j++){
-	    double d1=u.sin(j);
-	    double d2=u.cos(j);
-	    Vector rv1a(v1*(d1*rad));
-	    Vector rv1b(v2*(d2*rad));
-	    Vector rv1(rv1a+rv1b);
-	    Point p(cen+rv1);
-	    glVertex3d(cen.x(), cen.y(), cen.z());
-	    glVertex3d(p.x(), p.y(), p.z());
-	}
-	glEnd();
-	break;
-    case DrawInfoOpenGL::Gouraud:
-    case DrawInfoOpenGL::Phong:
-	glNormal3d(-normal.x(), -normal.y(), -normal.z());
-	// Trickle through...
-    case DrawInfoOpenGL::Flat:
-	for(i=0;i<nv;i++){
-	    glBegin(GL_TRIANGLE_STRIP);
-	    double r1=rad*double(i)/double(nv);
-	    double r2=rad*double(i+1)/double(nv);
-	    for(int j=0;j<nu;j++){
-		double d1=u.sin(j);
-		double d2=u.cos(j);
-		Vector rv1a(v1*(d1*r1));
-		Vector rv1b(v2*(d2*r1));	
-		Vector rv1(rv1a+rv1b);
-		Point p1(cen+rv1);
-		Vector rv2a(v1*(d1*r2));
-		Vector rv2b(v2*(d2*r2));	
-		Vector rv2(rv2a+rv2b);
-		Point p2(cen+rv2);
-		glVertex3d(p1.x(), p1.y(), p1.z());
-		glVertex3d(p2.x(), p2.y(), p2.z());
-	    }
-	    glEnd();
-	}
-	break;
-    }
+    gluDisk(di->qobj, 0, rad, nu, nv);
+    glPopMatrix();
 }
 
 void GeomGroup::objdraw(DrawInfoOpenGL* di)
@@ -401,104 +182,11 @@ void GeomPolyline::objdraw(DrawInfoOpenGL* di) {
 
 void GeomSphere::objdraw(DrawInfoOpenGL* di)
 {
-    SinCosTable u(nu, 0, 2.*Pi);
-    SinCosTable v(nv, 0, Pi, rad);
-    double cx=cen.x();
-    double cy=cen.y();
-    double cz=cen.z();
-    int i, j;
+    glPushMatrix();
+    glTranslated(cen.x(), cen.y(), cen.z());
     di->polycount+=nu*nv;
-    switch(di->drawtype){
-    case DrawInfoOpenGL::WireFrame:
-	for(i=0;i<nu-1;i++){
-	    glBegin(GL_LINE_STRIP);
-	    double x0=u.sin(i);
-	    double y0=u.cos(i);
-	    for(int j=0;j<nv;j++){
-		double r0=v.sin(j);
-		double z0=v.cos(j);
-		glVertex3d(x0*r0+cx, y0*r0+cy, z0+cz);
-	    }
-	    glEnd();
-	}
-	for(j=1;j<nv-1;j++){
-	    glBegin(GL_LINE_LOOP);
-	    double r0=v.sin(j);
-	    double z0=v.cos(j);
-	    for(int i=0;i<nu-1;i++){
-		double x0=u.sin(i);
-		double y0=u.cos(i);
-		glVertex3d(x0*r0+cx, y0*r0+cy, z0+cz);
-	    }
-	    glEnd();
-	}
-	break;
-    case DrawInfoOpenGL::Flat:
-	for(i=0;i<nu-1;i++){
-	    glBegin(GL_TRIANGLE_STRIP);
-	    double x0=u.sin(i);
-	    double y0=u.cos(i);
-	    double x1=u.sin(i+1);
-	    double y1=u.cos(i+1);
-	    for(int j=0;j<nv-1;j++){
-		double r0=v.sin(j);
-		double z0=v.cos(j);
-		double r1=v.sin(j+1);
-		double z1=v.cos(j+1);
-		glVertex3d(x0*r0+cx, y0*r0+cy, z0+cz);
-		glVertex3d(x1*r0+cx, y1*r0+cy, z0+cz);
-		glVertex3d(x0*r1+cx, y0*r1+cy, z1+cz);
-		glVertex3d(x1*r1+cx, y1*r1+cy, z1+cz);
-	    }
-	    glEnd();
-	}
-	break;
-    case DrawInfoOpenGL::Gouraud:
-	for(i=0;i<nu-1;i++){
-	    glBegin(GL_TRIANGLE_STRIP);
-	    double x0=u.sin(i);
-	    double y0=u.cos(i);
-	    double x1=u.sin(i+1);
-	    double y1=u.cos(i+1);
-	    for(int j=0;j<nv-1;j++){
-		double r0=v.sin(j);
-		double z0=v.cos(j);
-		double r1=v.sin(j+1);
-		double z1=v.cos(j+1);
-		glNormal3d(x0*r0, y0*r0, z0);
-		glVertex3d(x0*r0+cx, y0*r0+cy, z0+cz);
-		glVertex3d(x1*r0+cx, y1*r0+cy, z0+cz);
-		glVertex3d(x0*r1+cx, y0*r1+cy, z1+cz);
-		glVertex3d(x1*r1+cx, y1*r1+cy, z1+cz);
-	    }
-	    glEnd();
-	}
-	break;
-    case DrawInfoOpenGL::Phong:
-	for(i=0;i<nu-1;i++){
-	    glBegin(GL_TRIANGLE_STRIP);
-	    double x0=u.sin(i);
-	    double y0=u.cos(i);
-	    double x1=u.sin(i+1);
-	    double y1=u.cos(i+1);
-	    for(int j=0;j<nv-1;j++){
-		double r0=v.sin(j);
-		double z0=v.cos(j);
-		double r1=v.sin(j+1);
-		double z1=v.cos(j+1);
-		glNormal3d(x0*r0, y0*r0, z0);
-		glVertex3d(x0*r0+cx, y0*r0+cy, z0+cz);
-		glNormal3d(x1*r0, y1*r0, z0);
-		glVertex3d(x1*r0+cx, y1*r0+cy, z0+cz);
-		glNormal3d(x0*r1, y0*r1, z1);
-		glVertex3d(x0*r1+cx, y0*r1+cy, z1+cz);
-		glNormal3d(x1*r1, y1*r1, z1);
-		glVertex3d(x1*r1+cx, y1*r1+cy, z1+cz);
-	    }
-	    glEnd();
-	}
-	break;
-    }
+    gluSphere(di->qobj, rad, nu, nv);
+    glPopMatrix();
 }
 
 void GeomTetra::objdraw(DrawInfoOpenGL* di) {
@@ -517,7 +205,7 @@ void GeomTetra::objdraw(DrawInfoOpenGL* di) {
 
 void GeomTri::objdraw(DrawInfoOpenGL* di) {
     di->polycount++;
-    switch(di->drawtype){
+    switch(di->get_drawtype()){
     case DrawInfoOpenGL::WireFrame:
 	glBegin(GL_LINE_LOOP);
 	glVertex3d(p1.x(), p1.y(), p1.z());
@@ -535,7 +223,7 @@ void GeomTri::objdraw(DrawInfoOpenGL* di) {
     case DrawInfoOpenGL::Gouraud:
     case DrawInfoOpenGL::Phong:
 	glBegin(GL_TRIANGLES);
-	glNormal3d(n.x(), n.y(), n.z());
+	glNormal3d(-n.x(), -n.y(), -n.z());
 	glVertex3d(p1.x(), p1.y(), p1.z());
 	glVertex3d(p2.x(), p2.y(), p2.z());
 	glVertex3d(p3.x(), p3.y(), p3.z());
@@ -548,7 +236,7 @@ void GeomTriStrip::objdraw(DrawInfoOpenGL* di) {
     if(pts.size() <= 2)
 	return;
     di->polycount+=pts.size()-2;
-    switch(di->drawtype){
+    switch(di->get_drawtype()){
     case DrawInfoOpenGL::WireFrame:
 	{
 	    glBegin(GL_LINES);

@@ -21,6 +21,8 @@
 class GeomDisc : public GeomObj {
     Vector v1;
     Vector v2;
+    Vector zrotaxis;
+    double zrotangle;
 public:
     Point cen;
     Vector normal;

@@ -55,13 +55,20 @@ GeomCylinder::~GeomCylinder()
 void GeomCylinder::adjust()
 {
     axis=top-bottom;
-    if(axis.length2() < 1.e-6){
+    height=axis.length();
+    if(height < 1.e-6){
 	cerr << "Degenerate cylinder!\n";
     } else {
 	axis.find_orthogonal(v1, v2);
     }
     v1*=rad;
     v2*=rad;
+
+    Vector z(0,0,1);
+    zrotaxis=Cross(axis, z);
+    zrotaxis.normalize();
+    double cangle=Dot(z, zrotaxis);
+    zrotangle=Acos(cangle);
 }
 
 GeomObj* GeomCylinder::clone()

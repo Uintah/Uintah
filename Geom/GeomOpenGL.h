@@ -15,10 +15,12 @@
 #define SCI_Geom_GeomOpenGL_h 1
 
 #include <Classlib/Stack.h>
+#include <GL/glu.h>
 class Material;
 
 struct DrawInfoOpenGL {
     DrawInfoOpenGL();
+    ~DrawInfoOpenGL();
 
     int polycount;
     enum DrawType {
@@ -27,7 +29,11 @@ struct DrawInfoOpenGL {
 	Gouraud,
 	Phong,
     };
+private:
     DrawType drawtype;
+public:
+    void set_drawtype(DrawType dt);
+    inline DrawType get_drawtype() {return drawtype;}
 
     int lighting;
     int currently_lit;
@@ -38,6 +44,8 @@ struct DrawInfoOpenGL {
     void set_matl(Material*);
     void push_matl(Material*);
     void pop_matl();
+
+    GLUquadricObj* qobj;
 };
 
 #endif /* SCI_Geom_GeomOpenGL_h */
