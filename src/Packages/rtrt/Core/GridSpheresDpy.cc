@@ -32,12 +32,12 @@ using SCIRun::Thread;
 
 GridSpheresDpy::GridSpheresDpy(int colordata, char *in_file) :
   DpyBase("GridSpheresDpy"),
-  hist(0), ndata(-1),
+  hist(0), nhist(10000), scaled_hist(0), ndata(-1),
   colordata(colordata), newcolordata(colordata),
   shade_method(1), new_shade_method(1),
   radius_index(-1), new_radius_index(-1),
   in_file(in_file),
-  need_hist(true), redraw_range(-1)
+  need_hist(true)
 {
   set_resolution(500,500);
 }
@@ -140,6 +140,9 @@ void GridSpheresDpy::setup_vars() {
 	exit(1);
       }
     }
+
+    // Now create the original histogram
+    compute_hist(fontbase);
   }
   cerr << "GridSpheresDpy:setup_vars:end\n";
 }
@@ -153,10 +156,10 @@ void GridSpheresDpy::init() {
 void GridSpheresDpy::display() {
   if(need_hist){
     need_hist=false;
-    compute_hist(fontbase);
+    compute_scaled_hist();
   }
 
-  draw_hist(fontbase, fontInfo, redraw_range);
+  draw_hist(fontbase, fontInfo);
   glXSwapBuffers(dpy, win);
 }
 
@@ -233,41 +236,39 @@ void GridSpheresDpy::button_pressed(MouseButton button,
   case MouseButton1:
     if (shift_pressed) {
       //cerr << "Left button pressed with shift\n";
-      move_min_max(min, x_mouse, y_mouse, redraw_range);
+      move_min_max(min, x_mouse, y_mouse);
     } else if (control_pressed) {
       //cerr << "Left button pressed with control\n";
-      move(new_color_begin, x_mouse, y_mouse, redraw_range);
+      move(new_color_begin, x_mouse, y_mouse);
     } else {
-      move(new_range_begin, x_mouse, y_mouse, redraw_range);
+      move(new_range_begin, x_mouse, y_mouse);
     }
-    redraw=true;
     break;
   case MouseButton2:
     if (shift_pressed) {
       //cerr << "Middle button pressed with shift\n";
-      restore_min_max(y_mouse, redraw_range);
+      restore_min_max(y_mouse);
     } else if (control_pressed) {
       //cerr << "Middle button pressed with control\n";
-      move(new_color_begin, 0, y_mouse, redraw_range);
-      move(new_color_end, xres, y_mouse, redraw_range);
+      move(new_color_begin, 0, y_mouse);
+      move(new_color_end, xres, y_mouse);
     } else {
       changecolor(y_mouse);
     }
-    post_redraw();
     break;
   case MouseButton3:
     if (shift_pressed) {
       //cerr << "Right button pressed with shift\n";
-      move_min_max(max, x_mouse, y_mouse, redraw_range);
+      move_min_max(max, x_mouse, y_mouse);
     } else if (control_pressed) {
       //cerr << "Right button pressed with control\n";
-      move(new_color_end, x_mouse, y_mouse, redraw_range);
+      move(new_color_end, x_mouse, y_mouse);
     } else {
-      move(new_range_end, x_mouse, y_mouse, redraw_range);
+      move(new_range_end, x_mouse, y_mouse);
     }
-    redraw=true;
     break;
   }
+  post_redraw();
 }
 
 void GridSpheresDpy::button_motion(MouseButton button,
@@ -277,22 +278,22 @@ void GridSpheresDpy::button_motion(MouseButton button,
   case MouseButton1:
     if (control_pressed) {
       //cerr << "Left button pressed with control\n";
-      move(new_color_begin, x_mouse, y_mouse, redraw_range);
+      move(new_color_begin, x_mouse, y_mouse);
     } else {
-      move(new_range_begin, x_mouse, y_mouse, redraw_range);
+      move(new_range_begin, x_mouse, y_mouse);
     }
-    redraw=true;
+    post_redraw();
     break;
   case MouseButton2:
     break;
   case MouseButton3:
     if (control_pressed) {
       //cerr << "Right button pressed with control\n";
-      move(new_color_end, x_mouse, y_mouse, redraw_range);
+      move(new_color_end, x_mouse, y_mouse);
     } else {
-      move(new_range_end, x_mouse, y_mouse, redraw_range);
+      move(new_range_end, x_mouse, y_mouse);
     }
-    redraw=true;
+    post_redraw();
     break;
   }
 }
@@ -300,7 +301,7 @@ void GridSpheresDpy::button_motion(MouseButton button,
 void GridSpheresDpy::compute_hist(GLuint fid)
 {
   //cerr << "GridSpheresDpy:compute_hist:start\n";
-  glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);
+  //  glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);
   glViewport(0, 0, xres, yres);
   glClearColor(0, 0, .2, 1);
   glClear(GL_COLOR_BUFFER_BIT);
@@ -313,14 +314,12 @@ void GridSpheresDpy::compute_hist(GLuint fid)
   printString(fid, .1, .5, "Recomputing histogram...\n", Color(1,1,1));
   glXSwapBuffers(dpy, win);
   glFlush();
-  int n=ndata;
-  if (n == -1) {
+  if (ndata == -1) {
     cerr <<"GridSpheresDpy::compute_hist: GridSpheresDpy::attach not called\n";
     cerr << "GridSpheresDpy::ndata = -1\n";
     return;
   }
-  int nhist=xres;
-  int total=n*nhist;
+  int total=ndata*nhist;
   //cerr << "GridSpheresDpy:compute_hist:ndata = " << ndata << "\n";  
   //cerr << "GridSpheresDpy:compute_hist:xres = " << xres << "\n";  
   //cerr << "GridSpheresDpy:compute_hist:total = " << total << "\n";  
@@ -330,6 +329,13 @@ void GridSpheresDpy::compute_hist(GLuint fid)
   for(int i=0;i<total;i++){
     hist[i]=0;
   }
+  //
+  float* original_scales = new float[ndata];
+  for(int j = 0; j < ndata; j++) {
+    original_scales[j] = 1.0f/(original_max[j]-original_min[j]);
+    //    cerr << "original_scales["<<j<<"] = "<<original_scales[j]<<"\n";
+  }
+  
   // loop over all the data and compute histograms
   for (int g = 0; g < grids.size() ; g++) {
     GridSpheres* grid = grids[g];
@@ -337,14 +343,16 @@ void GridSpheresDpy::compute_hist(GLuint fid)
     int nspheres=grid->nspheres;
     for(int i=0;i<nspheres;i++){
       int offset=0;
-      for(int j=0;j<n;j++){
-	float normalized=(p[j]-min[j])*scales[j];
+      for(int j=0;j<ndata;j++){
+	float normalized=(p[j]-original_min[j])*original_scales[j];
 	int idx=(int)(normalized*(nhist-1));
+        //        cerr << "(i,j) = ("<<i<<", "<<j<<")\n";
+        //        cerr << "p[j] = "<<p[j]<<", normalized = "<<normalized<<", nhist-1 = "<<nhist-1<<", idx = "<<idx<<"\n";
 	if (idx >= 0 && idx < nhist)
 	  hist[offset+idx]++;
 #if 0
 	if(idx<0 || idx>=nhist){
-	  cerr << "p[" << j << "]=" << p[j] << ", min[" << j << "]=" << min[j] << ", scales[" << j << "]=" << scales[j] << '\n';
+	  cerr << "p[" << j << "]=" << p[j] << ", min[" << j << "]=" << original_min[j] << ", scales[" << j << "]=" << original_scales[j] << '\n';
 	  cerr << "idx=" << idx << '\n';
 	  cerr << "idx out of bounds!\n";
 	  Thread::exitAll(-1);
@@ -353,162 +361,203 @@ void GridSpheresDpy::compute_hist(GLuint fid)
 #endif
 	offset+=nhist;
       }
-      p+=n;
+      p+=ndata;
     }
   }
+
+  delete[] original_scales;
+  
   //cerr << "GridSpheresDpy:compute_hist:past compute histograms\n";
+  //cerr << "GridSpheresDpy:compute_hist:end\n";
+}
+
+void GridSpheresDpy::draw_hist(GLuint fid, XFontStruct* font_struct)
+{
+//   cerr << "GridSpheresDpy:draw_hist:start\n";
+  int descent=font_struct->descent;
+  int textheight=font_struct->descent+font_struct->ascent+2;
+
+  // Rescale the histogram if we need to
+  if (xres != nscaled_hist)
+    compute_scaled_hist();
+
+  glViewport(0, 0, xres, yres);
+  glClearColor(0, 0, 0, 1);
+  glClear(GL_COLOR_BUFFER_BIT);
+
+  // Draw the histogram stuff
+  int offset=0;
+  for(int j=0;j<ndata;j++){
+    int s=j*yres/ndata+2;
+    int e=(j+1)*yres/ndata-2;
+    int h=e-s;
+    glViewport(0, s, xres, e-s);
+
+    // Draw the red crop lines
+    glMatrixMode(GL_PROJECTION);
+    glLoadIdentity();
+    gluOrtho2D(min[j], max[j], 0, h);
+
+    if(new_range_end[j] > new_range_begin[j]){
+      glColor3f(.5,0,0);
+      glRectf(new_range_begin[j], textheight, new_range_end[j], h);
+    }
+    
+    // Draw the coloring lines
+    if (new_color_begin[j] != new_color_end[j])
+      color_scales[j] = 1./(new_color_end[j]-new_color_begin[j]);
+    if (new_color_end[j] > new_color_begin[j]) {
+      // Colors the line yellow if it is the current variable being
+      // colored.
+      if (j == newcolordata)
+        glColor3f(1,1,0);
+      else
+        glColor3f(1,1,1);
+      glRectf(new_color_begin[j], textheight-2, new_color_end[j],textheight);
+    }
+      
+    // Draw the histogram lines in blue
+    glColorMask(GL_FALSE, GL_FALSE, GL_TRUE, GL_FALSE);
+    glMatrixMode(GL_PROJECTION);
+    glLoadIdentity();
+    gluOrtho2D(0,xres,-float(textheight)*histmax[j]/(h-textheight),histmax[j]);
+    glMatrixMode(GL_MODELVIEW);
+    glLoadIdentity();
+      
+    glColor3f(0,0,1);
+    glBegin(GL_LINES);
+    for(int i=0;i<nscaled_hist;i++){
+      glVertex2i(i, 0);
+      glVertex2i(i, scaled_hist[offset+i]);
+    }
+    glEnd();
+    glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);
+
+    ///////////////////////////////////////////////
+    // Print the text on the screen
+    
+    glMatrixMode(GL_PROJECTION);
+    glLoadIdentity();
+    gluOrtho2D(min[j], max[j], 0, h);
+
+    // Print the min and max for the cropped region
+    char buf[100];
+
+    // new_range_begin
+    sprintf(buf, "%g", new_range_begin[j]);
+    int w=calc_width(font_struct, buf);
+    float wid=(max[j]-min[j])*w/xres;
+    float x=new_range_begin[j]-wid/2.;
+    float left=min[j]+(max[j]-min[j])*2/xres;
+    if(x<left)
+      x=left;
+    printString(fid, x, descent+1, buf, Color(1,0,0));
+
+    // new_range_end
+    sprintf(buf, "%g", new_range_end[j]);
+    w=calc_width(font_struct, buf);
+    wid=(max[j]-min[j])*w/xres;
+    x=new_range_end[j]-wid/2.;
+    float right=max[j]-(max[j]-min[j])*2/xres;
+    if(x>right-wid)
+      x=right-wid;
+    printString(fid, x, descent+1, buf, Color(1,0,0));
+
+
+    glMatrixMode(GL_PROJECTION);
+    glLoadIdentity();
+    gluOrtho2D(0, xres, 0, h);
+
+    // Print the min and max for the variable
+    offset+=nscaled_hist;
+    // print the min on the left
+    sprintf(buf, "%g", min[j]);
+    printString(fid, 2, descent+1, buf, Color(1,1,1));
+    // print the variable name in the middle
+    if (var_names != 0) {
+      int x = (int)((xres - calc_width(font_struct,var_names[j].c_str()))/2);
+      printString(fid, x, descent+1, var_names[j].c_str(), Color(1,1,1));
+    }
+    // print the max on the right
+    sprintf(buf, "%g", max[j]);
+    w=calc_width(font_struct, buf);
+    printString(fid, xres-2-w, descent+1, buf, Color(1,1,1));
+  }
+  
+  glFinish();
+  int errcode;
+  while((errcode=glGetError()) != GL_NO_ERROR){
+    cerr << window_name << " got an error from GL: " << (char*)gluErrorString(errcode) << endl;
+  }
+  //cerr << "GridSpheresDpy:draw_hist:end\n";
+}
+
+// This scales the histograms to match the min and max of the range
+// as well as the horizontal resolution.
+void GridSpheresDpy::compute_scaled_hist() {
+  if (xres < 1)
+    // This isn't a case we should handle.
+    return;
+  
+  // Figure out how many bins we need now
+  if (nscaled_hist != xres || scaled_hist == 0) {
+    nscaled_hist = xres;
+    //cerr << "GridSpheresDpy:compute_hist:ndata = " << ndata << "\n";  
+    //cerr << "GridSpheresDpy:compute_hist:xres = " << xres << "\n";  
+    //cerr << "GridSpheresDpy:compute_hist:total = " << total << "\n";
+    
+    // Delete the old one
+    if (scaled_hist)
+      delete(scaled_hist);
+    // Allocate and initialize the new histogram
+    scaled_hist = new int[ndata*nscaled_hist];
+  }
+  // Initialize the histogram values to zero to zero
+  int total=ndata * nscaled_hist;
+  for(int i=0;i<total;i++){
+    scaled_hist[i]=0;
+  }
+  // For each current histogram
+  int* ho = hist;
+  int* sh = scaled_hist;
+  for(int j = 0; j < ndata; j++) {
+    for(int i = 0; i < nhist; i++) {
+      // Figure out which value ho[i] maps to
+      float val = (float)i*(original_max[j]-original_min[j])/(nhist-1.0f)
+                  + original_min[j];
+      // Use val to lookup the bin of the scaled histogram
+      float normalized = (val-min[j])*scales[j];
+      int idx = (int)(normalized*(nscaled_hist-1));
+//       if (ho[i] > 0) {
+//         cerr << "val = "<<val<<", (i,j) = ("<<i<<", "<<j<<")\n";
+//         cerr << "idx = "<<idx<<", ho["<<i<<"] = "<<ho[i]<<"\n";
+//       }
+      if (idx >= 0 && idx < nscaled_hist)
+        sh[idx] += ho[i];
+    }
+    ho += nhist;
+    sh += nscaled_hist;
+  }
+
+  compute_histmax();
+}
+
+void GridSpheresDpy::compute_histmax() {
   // determine the maximum height for each histogram
-  int* hp=hist;
-  for(int j=0;j<n;j++){
+  int* hp=scaled_hist;
+  for(int j=0;j<ndata;j++){
     int max=0;
-    for(int i=0;i<nhist;i++){
+    for(int i=0;i<nscaled_hist;i++){
       if(*hp>max)
 	max=*hp;
       hp++;
     }
     histmax[j]=max;
+    //    cerr << "histmax["<<j<<"] = "<<histmax[j]<<"\n";
   }
-  //cerr << "GridSpheresDpy:compute_hist:end\n";
 }
 
-void GridSpheresDpy::draw_hist(GLuint fid, XFontStruct* font_struct,
-			       int& redraw_range)
-{
-  //cerr << "GridSpheresDpy:draw_hist:start\n";
-  int n=ndata;
-  int descent=font_struct->descent;
-  int textheight=font_struct->descent+font_struct->ascent+2;
-  if(redraw_range == -1){
-    glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);
-    glViewport(0, 0, xres, yres);
-    glClearColor(0, 0, 0, 1);
-    glClear(GL_COLOR_BUFFER_BIT);
-    int offset=0;
-    int nhist=xres;
-    for(int j=0;j<n;j++){
-      int s=j*yres/n+2;
-      int e=(j+1)*yres/n-2;
-      int h=e-s;
-      glViewport(0, s, xres, e-s);
-      glMatrixMode(GL_PROJECTION);
-      glLoadIdentity();
-      gluOrtho2D(0, xres, -float(textheight)*histmax[j]/(h-textheight), histmax[j]);
-      glMatrixMode(GL_MODELVIEW);
-      glLoadIdentity();
-      
-      glColor3f(0,0,1);
-      glBegin(GL_LINES);
-      for(int i=0;i<nhist;i++){
-	glVertex2i(i, 0);
-	glVertex2i(i, hist[offset+i]);
-      }
-      glEnd();
-      
-      glMatrixMode(GL_PROJECTION);
-      glLoadIdentity();
-      gluOrtho2D(0, xres, 0, h);
-      offset+=nhist;
-      char buf[100];
-      // print the min on the left
-      sprintf(buf, "%g", min[j]);
-      printString(fid, 2, descent+1, buf, Color(0,1,1));
-      // print the variable name in the middle
-      if (var_names != 0) {
-	int x = (int)((xres - calc_width(font_struct,var_names[j].c_str()))/2);
-	printString(fid, x, descent+1, var_names[j].c_str(), Color(1,1,1));
-      }
-      // print the max on the right
-      sprintf(buf, "%g", max[j]);
-      int w=calc_width(font_struct, buf);
-      printString(fid, xres-2-w, descent+1, buf, Color(0,1,1));
-    }
-  }
-  
-  glColorMask(GL_TRUE, GL_FALSE, GL_FALSE, GL_FALSE);
-  for(int j=0;j<n;j++){
-    if(redraw_range==-1 || redraw_range==j){
-      int s=j*yres/n+2;
-      int e=(j+1)*yres/n-2;
-      int h=e-s;
-      glViewport(0, s, xres, e-s);
-      glMatrixMode(GL_PROJECTION);
-      glLoadIdentity();
-      gluOrtho2D(min[j], max[j], 0, h);
-      glMatrixMode(GL_MODELVIEW);
-      glLoadIdentity();
-      glColor3f(0,0,0);
-      glRectf(min[j], 0, max[j], h);
-
-      
-      // draw the coloring spots
-      if (new_color_begin[j] != new_color_end[j])
-	color_scales[j] = 1./(new_color_end[j]-new_color_begin[j]);
-      if (new_color_end[j] > new_color_begin[j]) {
-	glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);
-#if 0
-	glColor3f(1,1,1);
-	glBegin(GL_LINES);
-	cerr << "new_color_begin["<<j<<"] = "<<new_color_begin[j];
-	cerr << ", new_color_end["<<j<<"] = "<<new_color_end[j]<<endl;
-	cerr << "textheight-2 = "<<textheight-2<<", h = "<<h<<endl;
-	float factor=xres/(max[j]-min[j]);
-	int x = (int)((new_color_begin[j]-min[j])*factor);
-	cerr <<"x = "<<x;
-	glVertex2i(new_color_begin[j], textheight-2);
-	glVertex2i(new_color_begin[j], h+2);
-	x = (int)((new_color_end[j]-min[j])*factor);
-	cerr <<",x2 = "<<x<<endl;
-	glVertex2i(new_color_end[j], textheight-2);
-	glVertex2i(new_color_end[j], h+2);
-	glEnd();
-#endif
-	glColor3f(0,0,0);
-	glRectf(min[j], textheight-2, max[j], textheight);
-        if (j == colordata)
-          glColor3f(1,1,0);
-        else
-          glColor3f(1,1,1);
-	glRectf(new_color_begin[j], textheight-2, new_color_end[j],textheight);
-	glColorMask(GL_TRUE, GL_FALSE, GL_FALSE, GL_FALSE);
-      }
-      
-      if(new_range_end[j] > new_range_begin[j]){
-	glColor3f(.5,0,0);
-	glRectf(new_range_begin[j], textheight, new_range_end[j], h);
-      }
-      
-      char buf[100];
-      sprintf(buf, "%g", new_range_begin[j]);
-      
-      int w=calc_width(font_struct, buf);
-      float wid=(max[j]-min[j])*w/xres;
-      float x=new_range_begin[j]-wid/2.;
-      float left=min[j]+(max[j]-min[j])*2/xres;
-      if(x<left)
-	x=left;
-      printString(fid, x, descent+1, buf, Color(1,0,0));
-      
-      sprintf(buf, "%g", new_range_end[j]);
-      w=calc_width(font_struct, buf);
-      wid=(max[j]-min[j])*w/xres;
-      x=new_range_end[j]-wid/2.;
-      float right=max[j]-(max[j]-min[j])*2/xres;
-      if(x>right-wid)
-	x=right-wid;
-      printString(fid, x, descent+1, buf, Color(1,0,0));
-
-    }
-  }
-  glFinish();
-  int errcode;
-  while((errcode=glGetError()) != GL_NO_ERROR){
-    cerr << "We got an error from GL: " << (char*)gluErrorString(errcode) << endl;
-  }
-  redraw_range=-1;
-  //cerr << "GridSpheresDpy:draw_hist:end\n";
-}
-
-void GridSpheresDpy::move(float* range, int x, int y, int& redraw_range)
+void GridSpheresDpy::move(float* range, int x, int y)
 {
   // swap y=0 orientation
   y=yres-y;
@@ -523,13 +572,12 @@ void GridSpheresDpy::move(float* range, int x, int y, int& redraw_range)
       float val=min[j]+xn*(max[j]-min[j]);
       // bound the value
       range[j]=bound(val,min[j],max[j]);
-      redraw_range=j;
       break;
     }
   }
 }
 
-void GridSpheresDpy::move_min_max(float* range, int x, int y,int &redraw_range)
+void GridSpheresDpy::move_min_max(float* range, int x, int y)
 {
   // swap y=0 orientation
   y=yres-y;
@@ -544,8 +592,6 @@ void GridSpheresDpy::move_min_max(float* range, int x, int y,int &redraw_range)
       float val=min[j]+xn*(max[j]-min[j]);
       // bound the value
       range[j]=bound(val,min[j],max[j]);
-      // set redraw_range to -1 so that the histogram lines get redrawn
-      redraw_range=-1;
 
       // make sure that min and max don't equal each other
       if (min[j] == max[j])
@@ -569,14 +615,15 @@ void GridSpheresDpy::move_min_max(float* range, int x, int y,int &redraw_range)
 	color_scales[j] = 1./(new_color_end[j]-new_color_begin[j]);
 
       // now we need to recompute the histogram for this range
-      compute_one_hist(j);
+      compute_scaled_hist();
+      //compute_one_hist(j);
       
       break;
     }
   }
 }
 
-void GridSpheresDpy::restore_min_max(int y, int &redraw_range) {
+void GridSpheresDpy::restore_min_max(int y) {
   // swap y=0 orientation
   y=yres-y;
   // loop over each block and see where the event was
@@ -584,7 +631,6 @@ void GridSpheresDpy::restore_min_max(int y, int &redraw_range) {
     int s=j*yres/ndata +2;
     int e=(j+1)*yres/ndata-2;
     if(y>=s && y<e){
-      redraw_range = -1;
       // found the region the event was
       // reset the min and max
       min[j] = original_min[j];
@@ -594,7 +640,8 @@ void GridSpheresDpy::restore_min_max(int y, int &redraw_range) {
       scales[j] = 1./(max[j]-min[j]);
 
       // now we need to recompute the histogram for this range
-      compute_one_hist(j);
+      compute_scaled_hist();
+      //      compute_one_hist(j);
       
       break;
     }
@@ -630,7 +677,7 @@ void GridSpheresDpy::compute_one_hist(int j) {
     int nspheres=grid->nspheres;
     //	p+=j*nspheres;
     for(int i=0;i<nspheres;i++){
-      float normalized=(p[j]-min[j])*scales[j];
+      float normalized=(p[j]-original_min[j])*scales[j];
       int idx=(int)(normalized*(nhist-1));
       if (idx >= 0 && idx < nhist)
 	hist[offset+idx]++;
@@ -727,7 +774,6 @@ void GridSpheresDpy::changecolor(int y) {
     int e=(j+1)*yres/ndata-2;
     if(y>=s && y<e){
       newcolordata = j;
-      redraw_range = -1;
       redraw = true;
       break;
     }
