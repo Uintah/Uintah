@@ -18,8 +18,7 @@ CFLAGS = SCI_CFlags $(INCLUDES)
 DEFINES = SCI_AssertFlags
 LOADER = SCI_Linker
 SIZE = SCI_Size
-ARR = ar
-ARFLAGS_REPLACE = rcv
+LDR = ld -r
 #ifdef SCI_LinkerNeedsCppFlags
 #define ldflags2 SCI_CppFlags $(INCLUDES)
 #else
@@ -31,14 +30,8 @@ CPPINCLUDES = SCI_CppIncludeLocation
 OTHERINCLUDES = -I$(CPPINCLUDES)
 
 .SUFFIXES: .cc
-#ifndef NO_SCI_CC_TARGET
 .cc.o:
 	$(CCC) $(CCFLAGS) -c $<
-#endif
-.cc.a:
-	$(CCC) -c $(CCFLAGS) $<
-	$(ARR) $(ARFLAGS_REPLACE) $@ $*.o
-	rm -f $*.o
 
 
 default: all
@@ -97,6 +90,13 @@ CleanSubdirs(subdirs)
 AllTarget(lib)							@@\
 
 lib:	objs
+
+#define SCIObjLibraryTarget(libname,objlist)                            @@\
+AllTarget(Concat(lib,libname.o))                                        @@\
+                                                                        @@\
+Concat(lib,libname.o): objlist                                          @@\
+	$(RM) $@                                                        @@\
+	$(LDR) -o $@ objlist
 
 #endif
 
