@@ -101,6 +101,10 @@ public:
   //! Persistent representation...
   virtual void io(Piostream&);
   static PersistentTypeID type_id;
+
+
+  friend SCICORESHARE SparseRowMatrix *AddSparse(const SparseRowMatrix &a,
+						 const SparseRowMatrix &b);
 };
 
 } // End namespace SCIRun
