@@ -3,24 +3,20 @@
 #include <Uintah/Grid/Task.h>
 #include <Uintah/Interface/DataWarehouse.h>
 #include <Uintah/Interface/Scheduler.h>
+#include <Uintah/Components/ICE/ICEMaterial.h>
+#include <Uintah/Grid/SimulationState.h>
 using Uintah::ICESpace::ICE;
-
-
 /* ---------------------------------------------------------------------
-GENERAL INFORMATION
- Function:  ICE::scheduleInitialize--
- Filename:  ICE_schedule.cc
- Purpose:   Schedule the initialization of data warehouse variable
-            need by ICE 
+ Function~  ICE::scheduleInitialize--
+ Purpose~   Schedule the initialization of the dw variables
 
-History: 
-Version   Programmer         Date       Description                      
--------   ----------         ----       -----------                 
-  1.0     John Schmidt   06/23/00                              
+Programmer         Date       Description                      
+----------         ----       -----------                 
+John Schmidt      10/04/00                              
 _____________________________________________________________________*/ 
 void ICE::scheduleInitialize(
-    const LevelP&   level,
-    SchedulerP&     sched,
+    const LevelP&   level, 
+    SchedulerP&     sched, 
     DataWarehouseP& dw)
 {
   Level::const_patchIterator iter;
@@ -28,298 +24,558 @@ void ICE::scheduleInitialize(
   for(iter=level->patchesBegin(); iter != level->patchesEnd(); iter++)
   {
     const Patch* patch=*iter;
+    Task* t = scinew Task("ICE::actuallyInitialize", patch, dw, dw,this,
+			    &ICE::actuallyInitialize);
+    t->computes( dw,    d_sharedState->get_delt_label());
+     
+    for (int m = 0; m < d_sharedState->getNumICEMatls(); m++ ) 
     {
-      Task* t = scinew Task("ICE::actuallyInitialize", 
-                patch,      dw,                 dw,
-                this,       &ICE::actuallyInitialize);
-        for (m = 1; m <= nMaterials; m++)          
-        { 
-          t->computes( dw,    press_CCLabel,      m,patch);
-          t->computes( dw,    rho_CCLabel,        m,patch);
-          t->computes( dw,    temp_CCLabel,       m,patch);
-          t->computes( dw,    vel_CCLabel,        m,patch);
-        }
-      sched->addTask(t);
+	ICEMaterial*  matl = d_sharedState->getICEMaterial(m);
+	int dwindex = matl->getDWIndex();
+       
+	t->computes( dw, lb->temp_CCLabel,      dwindex, patch);
+	t->computes( dw, lb->rho_micro_CCLabel, dwindex, patch);
+	t->computes( dw, lb->rho_CCLabel,       dwindex, patch);
+	t->computes( dw, lb->cv_CCLabel,        dwindex, patch);
+	t->computes( dw, lb->viscosity_CCLabel, dwindex, patch);
+	t->computes( dw, lb->vol_frac_CCLabel,  dwindex, patch);
+	t->computes( dw, lb->uvel_CCLabel,      dwindex, patch);
+	t->computes( dw, lb->vvel_CCLabel,      dwindex, patch);
+	t->computes( dw, lb->wvel_CCLabel,      dwindex, patch);
+	t->computes( dw, lb->uvel_FCLabel,      dwindex, patch);
+	t->computes( dw, lb->vvel_FCLabel,      dwindex, patch);
+	t->computes( dw, lb->wvel_FCLabel,      dwindex, patch);
     }
+
+    t->computes(dw, lb->press_CCLabel,0, patch);
+
+    sched->addTask(t);
   }
 }
-
-
+//STOP_DOC
 /* ---------------------------------------------------------------------
-GENERAL INFORMATION
- Function:  ICE::scheduleComputeStableTimestep--
- Filename:  ICE_schedule.cc
- Purpose:   Schedule a task to compute the time step for ICE
+ Function~  ICE::scheduleComputeStableTimestep--
+ Purpose~  Schedule a task to compute the time step for ICE
 
-History: 
-Version   Programmer         Date       Description                      
--------   ----------         ----       -----------                 
-  1.0     John Schmidt   06/23/00                              
+Programmer         Date       Description                      
+----------         ----       -----------                 
+John Schmidt    10/04/00                              
 _____________________________________________________________________*/
 void ICE::scheduleComputeStableTimestep(
     const LevelP&   level,
     SchedulerP&     sched,
     DataWarehouseP& dw)
 {
+#if 0
+  // Compute the stable timestep
+  int numMatls = d_sharedState->getNumICEMatls();
 
-    for(Level::const_patchIterator iter=level->patchesBegin();
-        iter != level->patchesEnd(); iter++)
-    {
-        const Patch* patch=*iter;
-        Task* t = scinew Task(   "ICE::computeStableTimestep", 
-                    patch,      dw,             dw,
-                    this,       &ICE::actuallyComputeStableTimestep);
-//       t->requires(dw,    "params",           ProblemSpec::getTypeDescription());                          
-        for (m = 1; m <= nMaterials; m++)          
-        { 
-           t->requires(dw,    vel_CCLabel,        m,patch, Ghost::None);
-        }
-        t->computes(dw,    delTLabel);
-        t->usesMPI(false);
-        t->usesThreads(false);
-//      t->whatis the cost model?();
-        sched->addTask(t);
-    }
+  for (Level::const_patchIterator iter = level->patchesBegin();
+       iter != level->patchesEnd(); iter++) 
+  {
+        const Patch* patch = *iter;
+  
+        Task* task = scinew Task("ICE::actuallyComputeStableTimestep",patch, dw,
+			       dw,this, &ICE::actuallyComputeStableTimestep);
+
+      for (int m = 0; m < numMatls; m++) 
+      {
+        ICEMaterial* matl = d_sharedState->getICEMaterial(m);
+        int dwindex = matl->getDWIndex();
+        task->requires(dw, lb->uvel_CCLabel,    dwindex,    patch,  Ghost::None);
+        task->requires(dw, lb->vvel_CCLabel,    dwindex,    patch,  Ghost::None);
+        task->requires(dw, lb->wvel_CCLabel,    dwindex,    patch,  Ghost::None);
+      }
+      sched->addTask(task);
+  }
+#endif
 }
-
-
-
+//STOP_DOC
 /* ---------------------------------------------------------------------
-GENERAL INFORMATION
- Function:  ICE::scheduleTimeAdvance--
- Filename:  ICE_schedule.cc
- Purpose:   Schedule tasks for each of the major steps in ICE
+ Function~  ICE::scheduleTimeAdvance--
+ Purpose~   Schedule tasks for each of the major steps 
 
-History: 
-Version   Programmer         Date       Description                      
--------   ----------         ----       -----------                 
-  1.0     John Schmidt   06/23/00                              
+Programmer         Date       Description                      
+----------         ----       -----------                 
+John Schmidt      10/04/00                             
 _____________________________________________________________________*/
 void ICE::scheduleTimeAdvance(
-    double /*t*/, 
-    double /*delt*/,
-    const LevelP&   level, 
+    double t,   
+    double dt,
+    const LevelP&   level,
     SchedulerP&     sched,
-    DataWarehouseP& old_dw, 
+    DataWarehouseP& old_dw,
     DataWarehouseP& new_dw)
 {
-    int m=0;
+  for(Level::const_patchIterator iter=level->patchesBegin();
+       iter != level->patchesEnd(); iter++)
+  {
+    const Patch* patch=*iter;
 
-    for(Level::const_patchIterator iter=level->patchesBegin();
-        iter != level->patchesEnd(); iter++)
-    {
-        const Patch* patch=*iter;
-        {
-       /*__________________________________
-       *       T  O  P 
-       *___________________________________*/
-        Task* ttop = scinew Task("ICE::Top_of_main_loop", 
-                    patch,      old_dw,         new_dw,
-                    this,       &ICE::actually_Top_of_main_loop);
-                    
-//      t->requires( old_dw,    "params",       ProblemSpec::getTypeDescription());
-//#if switch_UCF_stepTop_of_main_loopOnOff 
-        for (m = 1; m <= nMaterials; m++)          
-        { 
-          ttop->requires( old_dw,    press_CCLabel,  m,patch, Ghost::None);
-          ttop->requires( old_dw,    rho_CCLabel,    m,patch, Ghost::None);
-          ttop->requires( old_dw,    temp_CCLabel,   m,patch, Ghost::None);
-          ttop->requires( old_dw,    vel_CCLabel,    m,patch, Ghost::None);
-
-          ttop->computes( new_dw,    press_CCLabel_0,m,patch);
-          ttop->computes( new_dw,    rho_CCLabel_0,  m,patch);
-          ttop->computes( new_dw,    temp_CCLabel_0, m,patch);
-          ttop->computes( new_dw,    vel_CCLabel_0,  m,patch);
-        }
-//#endif
-        ttop->usesMPI(false);
-        ttop->usesThreads(false);
-//      ttop->whatis the cost model?();
-        sched->addTask(ttop);
-        }       
-       
-
-        /*__________________________________
-        *      S  T  E  P     1 
-        *___________________________________*/
-        {
-        Task* t1 = scinew Task("ICE::step1", 
-                    patch,      new_dw,         new_dw,
-                    this,       &ICE::actuallyStep1);
-//      t1->requires( old_dw,    "params",       ProblemSpec::getTypeDescription());
-        for (m = 1; m <= nMaterials; m++)         
-        {                   
-            t1->requires( new_dw,    press_CCLabel_0,m,patch, Ghost::None);
-            t1->requires( new_dw,    rho_CCLabel_0,  m,patch, Ghost::None);
-            t1->requires( new_dw,    temp_CCLabel_0, m,patch, Ghost::None);
-            t1->requires( new_dw,    vel_CCLabel_0,  m,patch, Ghost::None);
-
-            t1->computes( new_dw,    press_CCLabel_1,m,patch);
-            t1->computes( new_dw,    rho_CCLabel_1,  m,patch);
-            t1->computes( new_dw,    temp_CCLabel_1, m,patch);
-            t1->computes( new_dw,    vel_CCLabel_1,  m,patch);
-        }
-        t1->usesMPI(false);
-        t1->usesThreads(false);
-//      t1->whatis the cost model?();
-        sched->addTask(t1);
-        }
-
-        /*__________________________________
-        *      S  T  E  P     2
-        *___________________________________*/
-        Task* t2 = scinew Task("ICE::step2", 
-                    patch,      new_dw,         new_dw,
-                    this,       &ICE::actuallyStep2);
-                     
-//      t->requires( old_dw, "params",        ProblemSpec::getTypeDescription());
-        for (m = 1; m <= nMaterials; m++)          
-        {
-          t2->requires( new_dw,    press_CCLabel_1, m,patch, Ghost::None);
-          t2->requires( new_dw,    rho_CCLabel_1,   m,patch, Ghost::None);
-          t2->requires( new_dw,    temp_CCLabel_1,  m,patch, Ghost::None);
-          t2->requires( new_dw,    vel_CCLabel_1,   m,patch, Ghost::None);
- 
-          t2->computes( new_dw,    press_CCLabel_2, m,patch);
-          t2->computes( new_dw,    rho_CCLabel_2,   m,patch);
-          t2->computes( new_dw,    temp_CCLabel_2,  m,patch);
-          t2->computes( new_dw,    vel_CCLabel_2,   m,patch);
-        }
-        t2->usesMPI(false);
-        t2->usesThreads(false);
-//      t2->whatis the cost model?();
-        sched->addTask(t2);
-       
-        /*__________________________________
-        *      S  T  E  P     3
-        *___________________________________*/
-        Task* t3 = scinew Task("ICE::step3", 
-                    patch,      new_dw,         new_dw,
-                    this,       &ICE::actuallyStep3);
-                    
-//      t3->requires(  old_dw,   "params",       ProblemSpec::getTypeDescription());
-        for (m = 1; m <= nMaterials; m++)          
-        {
-          t3->requires( new_dw,    press_CCLabel_2, m,patch, Ghost::None);
-          t3->requires( new_dw,    rho_CCLabel_2,   m,patch, Ghost::None);
-          t3->requires( new_dw,    temp_CCLabel_2,  m,patch, Ghost::None);
-          t3->requires( new_dw,    vel_CCLabel_2,   m,patch, Ghost::None);
- 
-          t3->computes( new_dw,    press_CCLabel_3, m,patch);
-          t3->computes( new_dw,    rho_CCLabel_3,   m,patch);
-          t3->computes( new_dw,    temp_CCLabel_3,  m,patch);
-          t3->computes( new_dw,    vel_CCLabel_3,   m,patch);
-        }
-        t3->usesMPI(false);
-        t3->usesThreads(false);
-//      t3->whatis the cost model?();
-        sched->addTask(t3);
-
-
-        /*__________________________________
-        *      S  T  E  P     4
-        *___________________________________*/
-        Task* t4 = scinew Task("ICE::step4", 
-                    patch,      new_dw,         new_dw,
-                    this,       &ICE::actuallyStep4);
-                    
-//      t->requires(old_dw,    "params",        ProblemSpec::getTypeDescription());
-        for (m = 1; m <= nMaterials; m++)          
-        {
-          t4->requires( new_dw,    press_CCLabel_3, m,patch, Ghost::None);
-          t4->requires( new_dw,    rho_CCLabel_3,   m,patch, Ghost::None);
-          t4->requires( new_dw,    temp_CCLabel_3,  m,patch, Ghost::None);
-          t4->requires( new_dw,    vel_CCLabel_3,   m,patch, Ghost::None);
- 
-          t4->computes( new_dw,    press_CCLabel_4, m,patch);
-          t4->computes( new_dw,    rho_CCLabel_4,   m,patch);
-          t4->computes( new_dw,    temp_CCLabel_4,  m,patch);
-          t4->computes( new_dw,    vel_CCLabel_4,   m,patch);
-        }
-        t4->usesMPI(false);
-        t4->usesThreads(false);
-//      t4->whatis the cost model?();
-        sched->addTask(t4);
-        
-       
-        /*__________________________________
-        *      S  T  E  P     5
-        *___________________________________*/
-        Task* t5 = scinew Task("ICE::step5", 
-                    patch,      new_dw,         new_dw,
-                    this,       &ICE::actuallyStep5);
-                    
-//      t->requires(old_dw,    "params",        ProblemSpec::getTypeDescription());
-        for (m = 1; m <= nMaterials; m++)          
-        {
-          t5->requires( new_dw,    press_CCLabel_4, m,patch, Ghost::None);
-          t5->requires( new_dw,    rho_CCLabel_4,   m,patch, Ghost::None);
-          t5->requires( new_dw,    temp_CCLabel_4,  m,patch, Ghost::None);
-          t5->requires( new_dw,    vel_CCLabel_4,   m,patch, Ghost::None);
- 
-          t5->computes( new_dw,    press_CCLabel_5, m,patch);
-          t5->computes( new_dw,    rho_CCLabel_5,   m,patch);
-          t5->computes( new_dw,    temp_CCLabel_5,  m,patch);
-          t5->computes( new_dw,    vel_CCLabel_5,   m,patch);
-        }
-        t5->usesMPI(false);
-        t5->usesThreads(false);
-//      t5->whatis the cost model?();
-        sched->addTask(t5);
-       
-        /*__________________________________
-        *      S  T  E  P     6 & 7
-        *___________________________________*/
-        Task* t6_7 = scinew Task("ICE::step6and7", 
-                    patch,      new_dw,         new_dw,
-                    this,       &ICE::actuallyStep6and7);
-                    
-//      t->requires(old_dw,    "params",        ProblemSpec::getTypeDescription());
-        for (m = 1; m <= nMaterials; m++)          
-        {
-          t6_7->requires( new_dw,   press_CCLabel_5, m,patch, Ghost::None);
-          t6_7->requires( new_dw,   rho_CCLabel_5,   m,patch, Ghost::None);
-          t6_7->requires( new_dw,   temp_CCLabel_5,  m,patch, Ghost::None);
-          t6_7->requires( new_dw,   vel_CCLabel_5,   m,patch, Ghost::None);
-
-          t6_7->computes( new_dw,   press_CCLabel_6_7,m,patch);
-          t6_7->computes( new_dw,   rho_CCLabel_6_7,  m,patch);
-          t6_7->computes( new_dw,   temp_CCLabel_6_7, m,patch);
-          t6_7->computes( new_dw,   vel_CCLabel_6_7,  m,patch);
-        }
-        t6_7->usesMPI(false);
-        t6_7->usesThreads(false);
-//      t6_7->whatis the cost model?();
-        sched->addTask(t6_7);
-        
-      
-       /*__________________________________
-       *    B  O  T  T  O  M
-       *___________________________________*/
-        Task* tbot = scinew Task("ICE::actually_Bottom_of_main_loop", 
-                    patch,      new_dw,         new_dw,
-                    this,       &ICE::actually_Bottom_of_main_loop);
-                    
-//      t->requires(old_dw,     "params",       ProblemSpec::getTypeDescription());
-        for (m = 1; m <= nMaterials; m++)          
-        {
-          tbot->requires( new_dw,    press_CCLabel_6_7,  m,patch, Ghost::None);
-          tbot->requires( new_dw,    rho_CCLabel_6_7,    m,patch, Ghost::None);
-          tbot->requires( new_dw,    temp_CCLabel_6_7,   m,patch, Ghost::None);
-          tbot->requires( new_dw,    vel_CCLabel_6_7,    m,patch, Ghost::None);
-
-          tbot->computes( new_dw,    press_CCLabel,   m,patch);
-          tbot->computes( new_dw,    rho_CCLabel,     m,patch);
-          tbot->computes( new_dw,    temp_CCLabel,    m,patch);
-          tbot->computes( new_dw,    vel_CCLabel,     m,patch);
-        }
-        tbot->usesMPI(false);
-        tbot->usesThreads(false);
-//      tbot->whatis the cost model?();
-        sched->addTask(tbot);
-        
-    }
-
-    this->cheat_t   =t;
-    this->cheat_delt=delt;
+    // Step 1a  computeSoundSpeed
+    scheduleStep1a( patch,  sched,  old_dw, new_dw);
+    
+    // Step 1b calculate equlibration pressure
+    scheduleStep1b( patch,  sched,  old_dw, new_dw);
+    
+    // Step 1c compute face centered velocities
+    scheduleStep1c( patch,  sched,  old_dw, new_dw);
+    
+    // Step 1d computes momentum exchange on FC velocities
+    scheduleStep1d( patch,  sched,  old_dw, new_dw);
+    
+    // Step 2 computes delPress and the new pressure
+    scheduleStep2(  patch,  sched,  old_dw, new_dw);
+    
+    // Step 3 compute face centered pressure
+    scheduleStep3(  patch,  sched,  old_dw, new_dw);
+    
+    // Step 4a compute sources of momentum
+    scheduleStep4a( patch,  sched,  old_dw, new_dw);
+    
+    // Step 4b compute sources of energy
+    scheduleStep4b( patch,  sched,  old_dw, new_dw);
+    
+    // Step 5a compute lagrangian quantities
+    scheduleStep5a( patch,  sched,  old_dw, new_dw);
+    
+    // Step 5b cell centered momentum exchange
+    scheduleStep5b( patch,  sched,  old_dw, new_dw);
+    
+    // Step 6and7 advect and advance in time
+    scheduleStep6and7(patch,sched,  old_dw, new_dw);
+  }
 }
+//STOP_DOC
+/* ---------------------------------------------------------------------
+ Function~  ICE::scheduleStep1a--
+ Purpose~   Compute the speed of sound
+ 
+Programmer         Date       Description                      
+----------         ----       -----------                 
+John Schmidt      10/04/00                             
+_____________________________________________________________________*/
+void ICE::scheduleStep1a(
+    const Patch*    patch,
+    SchedulerP&     sched,
+    DataWarehouseP& old_dw,
+    DataWarehouseP& new_dw)
+{
+  int numMatls = d_sharedState->getNumICEMatls();
+  
+  Task* task = scinew Task("ICE::step1a",patch, old_dw, new_dw,this,
+			&ICE::actuallyStep1a);
+  for (int m = 0; m < numMatls; m++) 
+  {
+    ICEMaterial* matl = d_sharedState->getICEMaterial(m);
+    EquationOfState* eos = matl->getEOS();
+    // Compute the speed of sound
+    eos->addComputesAndRequiresSS(task,matl,patch,old_dw,new_dw);
+  }
+  sched->addTask(task);
+}
+//STOP_DOC
+/* ---------------------------------------------------------------------
+ Function~  ICE::scheduleStep1b--
+ Purpose~   Compute the equilibration pressure
+ 
+Programmer         Date       Description                      
+----------         ----       -----------                 
+John Schmidt      10/04/00                             
+_____________________________________________________________________*/
+void ICE::scheduleStep1b(
+    const Patch*    patch,
+    SchedulerP&     sched,
+    DataWarehouseP& old_dw,
+    DataWarehouseP& new_dw)
+{
+  Task* task = scinew Task("ICE::step1b",patch, old_dw, new_dw,this,
+			   &ICE::actuallyStep1b);
+  
+  task->requires(old_dw,lb->press_CCLabel, 0,patch,Ghost::None);
+  
+  int numMatls=d_sharedState->getNumICEMatls();
+  for (int m = 0; m < numMatls; m++) 
+  {
+    ICEMaterial*  matl = d_sharedState->getICEMaterial(m);
+    int dwindex = matl->getDWIndex();
+    EquationOfState* eos = matl->getEOS();
+    // Compute the rho micro
+    eos->addComputesAndRequiresRM(task,matl,patch,old_dw,new_dw);
+    task->requires(old_dw,lb->vol_frac_CCLabel,  dwindex,patch,Ghost::None);
+    task->requires(old_dw,lb->rho_CCLabel,       dwindex,patch,Ghost::None);
+    task->requires(old_dw,lb->rho_micro_CCLabel, dwindex,patch,Ghost::None);
+    task->requires(old_dw,lb->temp_CCLabel,      dwindex,patch,Ghost::None);
+    task->requires(old_dw,lb->cv_CCLabel,        dwindex,patch,Ghost::None);
+    task->requires(new_dw,lb->speedSound_CCLabel,dwindex,patch,Ghost::None);
+    task->computes(new_dw,lb->vol_frac_CCLabel,          dwindex, patch);
+    task->computes(new_dw,lb->speedSound_equiv_CCLabel,  dwindex, patch);
+    task->computes(new_dw,lb->rho_micro_equil_CCLabel,   dwindex, patch);
+  }
+
+  task->computes(new_dw,lb->press_CCLabel,0, patch);
+  sched->addTask(task);
+}
+//STOP_DOC
+/* ---------------------------------------------------------------------
+ Function~  ICE::scheduleStep1c--
+ Purpose~   Compute the face-centered velocities
+
+Version   Programmer         Date       Description                      
+-------   ----------         ----       -----------                 
+  1.0     John Schmidt      10/04/00                             
+_____________________________________________________________________*/
+void ICE::scheduleStep1c(
+    const Patch*    patch,
+    SchedulerP&     sched,
+    DataWarehouseP& old_dw,
+    DataWarehouseP& new_dw)
+{
+  Task* task = scinew Task("ICE::step1c",patch, old_dw, new_dw,this,
+			   &ICE::actuallyStep1c);
+
+  task->requires(new_dw,lb->press_CCLabel,0,patch,Ghost::None);
+
+  int numMatls=d_sharedState->getNumICEMatls();
+  for (int m = 0; m < numMatls; m++) 
+  {
+    ICEMaterial* matl = d_sharedState->getICEMaterial(m);
+    int dwindex = matl->getDWIndex();
+    task->requires(old_dw,lb->rho_CCLabel,   dwindex,patch,Ghost::None);
+    task->requires(old_dw,lb->uvel_CCLabel,  dwindex,patch,Ghost::None);
+    task->requires(old_dw,lb->vvel_CCLabel,  dwindex,patch,Ghost::None);
+    task->requires(old_dw,lb->wvel_CCLabel,  dwindex,patch,Ghost::None);
+    task->requires(new_dw,lb->rho_micro_equil_CCLabel,
+		                               dwindex,patch,Ghost::None);
+    
+    task->computes(new_dw,lb->uvel_FCLabel,  dwindex, patch);
+    task->computes(new_dw,lb->vvel_FCLabel,  dwindex, patch);
+    task->computes(new_dw,lb->wvel_FCLabel,  dwindex, patch);
+  }
+  sched->addTask(task);
+}
+//STOP_DOC
+/* ---------------------------------------------------------------------
+ Function~  ICE::scheduleStep1d--
+ Purpose~   Schedule compute the momentum exchange for the face centered 
+            velocities
+
+Programmer         Date       Description                      
+----------         ----       -----------                 
+John Schmidt      10/04/00                             
+_____________________________________________________________________*/
+void ICE::scheduleStep1d(
+    const Patch*    patch,
+    SchedulerP&     sched,
+    DataWarehouseP& old_dw,
+    DataWarehouseP& new_dw)
+{
+  Task* task = scinew Task("ICE::step1d",patch, old_dw, new_dw,this,
+			   &ICE::actuallyStep1d);
+  int numMatls=d_sharedState->getNumICEMatls();
+  
+  for (int m = 0; m < numMatls; m++) 
+  {
+    ICEMaterial* matl = d_sharedState->getICEMaterial(m);
+    int dwindex = matl->getDWIndex();
+    task->requires(new_dw,lb->rho_micro_equil_CCLabel,
+		                                  dwindex,patch,Ghost::None);
+    task->requires(new_dw,lb->vol_frac_CCLabel, dwindex, patch,Ghost::None);
+    task->requires(old_dw,lb->uvel_FCLabel,     dwindex, patch,Ghost::None);
+    task->requires(old_dw,lb->vvel_FCLabel,     dwindex, patch,Ghost::None);
+    task->requires(old_dw,lb->wvel_FCLabel,     dwindex, patch,Ghost::None);
+    
+    task->computes(new_dw,lb->uvel_FCMELabel,   dwindex, patch);
+    task->computes(new_dw,lb->vvel_FCMELabel,   dwindex, patch);
+    task->computes(new_dw,lb->wvel_FCMELabel,   dwindex, patch);
+  }
+  sched->addTask(task);
+}
+//STOP_DOC
+/* ---------------------------------------------------------------------
+ Function~  ICE::scheduleStep2--
+ Purpose~   Schedule compute delpress and new press_CC
+
+Programmer         Date       Description                      
+----------         ----       -----------                 
+John Schmidt      10/04/00                             
+_____________________________________________________________________*/
+void ICE::scheduleStep2(
+    const Patch*    patch,
+    SchedulerP&     sched,
+    DataWarehouseP& old_dw,
+    DataWarehouseP& new_dw)
+{
+  Task* task = scinew Task("ICE::step2",patch, old_dw, new_dw,this,
+			   &ICE::actuallyStep2);
+  
+  task->requires(new_dw,lb->press_CCLabel, 0,patch,Ghost::None);
+  int numMatls=d_sharedState->getNumICEMatls();
+  for (int m = 0; m < numMatls; m++) 
+  {
+    ICEMaterial* matl = d_sharedState->getICEMaterial(m);
+    int dwindex = matl->getDWIndex();
+    task->requires( new_dw, lb->vol_frac_CCLabel,  dwindex,patch,Ghost::None);
+    task->requires( new_dw, lb->uvel_FCMELabel,    dwindex,patch,Ghost::None);
+    task->requires( new_dw, lb->vvel_FCMELabel,    dwindex,patch,Ghost::None);
+    task->requires( new_dw, lb->wvel_FCMELabel,    dwindex,patch,Ghost::None);
+    task->requires( new_dw, lb->speedSound_equiv_CCLabel,
+                                                   dwindex,patch,Ghost::None);
+    task->requires( new_dw, lb->rho_micro_equil_CCLabel,
+		                                     dwindex,patch,Ghost::None);
+  }
+  task->computes(   new_dw,lb->pressdP_CCLabel,     0,     patch);
+  task->computes(   new_dw,lb->delPress_CCLabel,    0,     patch);
+  
+  sched->addTask(task);
+}
+//STOP_DOC
+/* ---------------------------------------------------------------------
+ Function~  ICE::scheduleStep3--
+ Purpose~   Schedule compute face centered pressure press_FC
+
+Programmer         Date       Description                      
+----------         ----       -----------                 
+John Schmidt      10/04/00                             
+_____________________________________________________________________*/
+void ICE::scheduleStep3(
+    const Patch*    patch,
+    SchedulerP&     sched,
+    DataWarehouseP& old_dw,
+    DataWarehouseP& new_dw)
+{
+  Task* task = scinew Task("ICE::step3",patch, old_dw, new_dw,this,
+			   &ICE::actuallyStep3);
+  
+  task->requires(   new_dw,lb->pressdP_CCLabel, 0,      patch,  Ghost::None);
+  int numMatls = d_sharedState->getNumICEMatls();
+  for (int m = 0; m < numMatls; m++) 
+  {
+    ICEMaterial* matl = d_sharedState->getICEMaterial(m);
+    int dwindex = matl->getDWIndex();
+    task->requires( old_dw, lb->rho_CCLabel,    dwindex, patch, Ghost::None);
+  }
+  
+  task->computes(   new_dw, lb->pressX_FCLabel, 0,      patch);
+  task->computes(   new_dw, lb->pressY_FCLabel, 0,      patch);
+  task->computes(   new_dw, lb->pressZ_FCLabel, 0,      patch);
+  
+  sched->addTask(task);
+}
+//STOP_DOC
+/* ---------------------------------------------------------------------
+ Function~  ICE::scheduleStep4a--
+ Purpose~   Schedule compute sources and sinks of momentum
+
+Programmer         Date       Description                      
+----------         ----       -----------                 
+John Schmidt      10/04/00                             
+_____________________________________________________________________*/
+void ICE::scheduleStep4a(
+    const Patch*    patch,
+    SchedulerP&     sched,
+    DataWarehouseP& old_dw,
+    DataWarehouseP& new_dw)
+{
+  Task* task = scinew Task("ICE::step4a",
+            patch,      old_dw,         new_dw,     this,
+	     &ICE::actuallyStep4a);
+
+  task->requires(new_dw,    lb->pressX_FCLabel,     0,  patch,  Ghost::None);
+  task->requires(new_dw,    lb->pressY_FCLabel,     0,  patch,  Ghost::None);
+  task->requires(new_dw,    lb->pressZ_FCLabel,     0,  patch,  Ghost::None);
+  int numMatls=d_sharedState->getNumICEMatls();
+  
+  for (int m = 0; m < numMatls; m++) 
+  {
+    ICEMaterial* matl = d_sharedState->getICEMaterial(m);
+    int dwindex = matl->getDWIndex();
+    task->requires(old_dw,  lb->rho_CCLabel,        dwindex,patch,Ghost::None);
+    task->requires(old_dw,  lb->uvel_CCLabel,       dwindex,patch,Ghost::None);
+    task->requires(old_dw,  lb->vvel_CCLabel,       dwindex,patch,Ghost::None);
+    task->requires(old_dw,  lb->wvel_CCLabel,       dwindex,patch,Ghost::None);
+    task->requires(old_dw,  lb->viscosity_CCLabel,  dwindex,patch,Ghost::None);
+    task->requires(new_dw,  lb->vol_frac_CCLabel,   dwindex,patch,Ghost::None);
+ 
+    task->computes(new_dw,  lb->xmom_source_CCLabel,dwindex,patch);
+    task->computes(new_dw,  lb->ymom_source_CCLabel,dwindex,patch);
+    task->computes(new_dw,  lb->zmom_source_CCLabel,dwindex,patch);
+    task->computes(new_dw,  lb->tau_X_FCLabel,      dwindex,patch);
+    task->computes(new_dw,  lb->tau_Y_FCLabel,      dwindex,patch);
+    task->computes(new_dw,  lb->tau_Z_FCLabel,      dwindex,patch);
+  }
+  sched->addTask(task);
+}
+//STOP_DOC
+/* ---------------------------------------------------------------------
+ Function~  ICE::scheduleStep4b--
+ Purpose~   Schedule compute sources and sinks of energy
+
+Programmer         Date       Description                      
+----------         ----       -----------                 
+John Schmidt      10/04/00                             
+_____________________________________________________________________*/
+void ICE::scheduleStep4b(
+    const Patch*    patch,
+    SchedulerP&     sched,
+    DataWarehouseP& old_dw,
+    DataWarehouseP& new_dw)
+
+{
+  Task* task = scinew Task("ICE::step4b",patch, old_dw, new_dw,this,
+			   &ICE::actuallyStep4b);
+  
+  task->requires(new_dw,    lb->press_CCLabel,    0, patch, Ghost::None);
+  task->requires(new_dw,    lb->delPress_CCLabel, 0, patch, Ghost::None);
+  int numMatls=d_sharedState->getNumICEMatls();
+  
+  for (int m = 0; m < numMatls; m++) 
+  {
+    ICEMaterial* matl = d_sharedState->getICEMaterial(m);
+    int dwindex = matl->getDWIndex();
+    
+    task->requires( new_dw, lb->rho_micro_equil_CCLabel,    dwindex, patch,
+                                                            Ghost::None);
+    task->requires( new_dw, lb->speedSound_equiv_CCLabel,   dwindex, patch,
+                                                            Ghost::None);
+    task->requires( new_dw, lb->vol_frac_CCLabel,           dwindex, patch,
+                                                            Ghost::None);
+    
+    task->computes (new_dw, lb->int_eng_source_CCLabel,     dwindex, patch);
+  }
+  sched->addTask(task);
+}
+//STOP_DOC
+/* ---------------------------------------------------------------------
+ Function~  ICE::scheduleStep5a--
+ Purpose~   Schedule compute lagrangian mass momentum and internal energy
+ 
+Programmer         Date       Description                      
+----------         ----       -----------                 
+John Schmidt      10/04/00                             
+_____________________________________________________________________*/
+void ICE::scheduleStep5a(
+    const Patch*    patch,
+    SchedulerP&     sched,
+    DataWarehouseP& old_dw,
+    DataWarehouseP& new_dw)
+{
+  Task* task = scinew Task("ICE::step5a",patch, old_dw, new_dw,this,
+			       &ICE::actuallyStep5a);
+  int numMatls=d_sharedState->getNumICEMatls();
+  for (int m = 0; m < numMatls; m++) 
+  {
+    ICEMaterial* matl = d_sharedState->getICEMaterial(m);
+    int dwindex = matl->getDWIndex();
+    task->requires( old_dw, lb->rho_CCLabel,        dwindex,patch,Ghost::None);
+    task->requires( old_dw, lb->uvel_CCLabel,       dwindex,patch,Ghost::None);
+    task->requires( old_dw, lb->vvel_CCLabel,       dwindex,patch,Ghost::None);
+    task->requires( old_dw, lb->wvel_CCLabel,       dwindex,patch,Ghost::None);
+    task->requires( old_dw, lb->cv_CCLabel,         dwindex,patch,Ghost::None);
+    task->requires( old_dw, lb->temp_CCLabel,       dwindex,patch,Ghost::None);
+    task->requires( new_dw, lb->xmom_source_CCLabel,dwindex,patch,Ghost::None);
+    task->requires( new_dw, lb->ymom_source_CCLabel,dwindex,patch,Ghost::None);
+    task->requires( new_dw, lb->zmom_source_CCLabel,dwindex,patch,Ghost::None);
+    task->requires( new_dw, lb->int_eng_source_CCLabel,
+		                                      dwindex,patch,Ghost::None);
+ 
+    task->computes( new_dw, lb->xmom_L_CCLabel,     dwindex,patch);
+    task->computes( new_dw, lb->ymom_L_CCLabel,     dwindex,patch);
+    task->computes( new_dw, lb->zmom_L_CCLabel,     dwindex,patch);
+    task->computes( new_dw, lb->int_eng_L_CCLabel,  dwindex,patch);
+    task->computes( new_dw, lb->mass_L_CCLabel,     dwindex,patch);
+    task->computes( new_dw, lb->rho_L_CCLabel,      dwindex,patch);
+  }
+  sched->addTask(task);
+}
+//STOP_DOC
+/* ---------------------------------------------------------------------
+ Function~  ICE::scheduleStep5b--
+ Purpose~   Schedule momentum and energy exchange on the lagrangian quantities
+
+Programmer         Date       Description                      
+----------         ----       -----------                 
+John Schmidt      10/04/00                             
+_____________________________________________________________________*/
+void ICE::scheduleStep5b(
+    const Patch*    patch,
+    SchedulerP&     sched,
+    DataWarehouseP& old_dw,
+    DataWarehouseP& new_dw)
+{
+  Task* task = scinew Task("ICE::step5b",patch, old_dw, new_dw,this,
+			   &ICE::actuallyStep5b);
+  int numMatls=d_sharedState->getNumICEMatls();
+  
+  for (int m = 0; m < numMatls; m++) 
+  {
+    ICEMaterial* matl = d_sharedState->getICEMaterial(m);
+    int dwindex = matl->getDWIndex();
+    task->requires( old_dw, lb->rho_CCLabel,        dwindex,patch,Ghost::None);
+    task->requires( new_dw, lb->xmom_L_CCLabel,     dwindex,patch,Ghost::None);
+    task->requires( new_dw, lb->ymom_L_CCLabel,     dwindex,patch,Ghost::None);
+    task->requires( new_dw, lb->zmom_L_CCLabel,     dwindex,patch,Ghost::None);
+    task->requires( new_dw, lb->int_eng_L_CCLabel,  dwindex,patch,Ghost::None);
+    task->requires( new_dw, lb->vol_frac_CCLabel,   dwindex,patch,Ghost::None);
+    task->requires( old_dw, lb->cv_CCLabel,         dwindex,patch,Ghost::None);
+    task->requires( new_dw, lb->rho_micro_equil_CCLabel,
+		                                      dwindex,patch,Ghost::None);
+    
+    task->computes( new_dw, lb->xmom_L_ME_CCLabel,  dwindex,patch);
+    task->computes( new_dw, lb->ymom_L_ME_CCLabel,  dwindex,patch);
+    task->computes( new_dw, lb->zmom_L_ME_CCLabel,  dwindex,patch);
+    task->computes( new_dw, lb->int_eng_L_ME_CCLabel,dwindex,patch);
+  }
+  sched->addTask(task);
+}
+//STOP_DOC
+/* ---------------------------------------------------------------------
+ Function~  ICE::scheduleStep6and7--
+ Purpose~   Schedule advance and advect in time for mass, momentum
+            and energy.  Note this function puts (*)vel_CC, rho_CC
+            and Temp_CC into new dw, not flux variables
+
+Programmer         Date       Description                      
+----------         ----       -----------                 
+John Schmidt      10/04/00                             
+_____________________________________________________________________*/
+void ICE::scheduleStep6and7(
+    const Patch*    patch,
+    SchedulerP&     sched,
+    DataWarehouseP& old_dw,
+    DataWarehouseP& new_dw)
+{
+  Task* task = scinew Task("ICE::step6and7",patch, old_dw, new_dw,this,
+			   &ICE::actuallyStep6and7);
+  int numMatls=d_sharedState->getNumICEMatls();
+  for (int m = 0; m < numMatls; m++ ) 
+  {
+    ICEMaterial* matl = d_sharedState->getICEMaterial(m);
+    int dwindex = matl->getDWIndex();
+    task->requires(old_dw, lb->cv_CCLabel,dwindex,patch,Ghost::None,0);
+    task->requires(old_dw, lb->rho_CCLabel,       dwindex,patch,Ghost::None);
+    task->requires(old_dw, lb->uvel_CCLabel,      dwindex,patch,Ghost::None);
+    task->requires(old_dw, lb->vvel_CCLabel,      dwindex,patch,Ghost::None);
+    task->requires(old_dw, lb->wvel_CCLabel,      dwindex,patch,Ghost::None);
+    task->requires(old_dw, lb->temp_CCLabel,      dwindex,patch,Ghost::None);
+    task->requires(new_dw, lb->xmom_L_ME_CCLabel,
+		                                   dwindex,patch,Ghost::None,0);
+    task->requires(new_dw, lb->ymom_L_ME_CCLabel,
+		                                   dwindex,patch,Ghost::None,0);
+    task->requires(new_dw, lb->zmom_L_ME_CCLabel,
+		                                   dwindex,patch,Ghost::None,0);
+    task->requires(new_dw, lb->int_eng_L_ME_CCLabel,
+		                                   dwindex,patch,Ghost::None,0);
+
+    task->requires(new_dw, lb->speedSound_CCLabel,dwindex,patch,Ghost::None);
+    task->computes(new_dw, lb->temp_CCLabel,      dwindex,patch);
+    task->computes(new_dw, lb->rho_CCLabel,       dwindex,patch);
+    task->computes(new_dw, lb->cv_CCLabel,        dwindex,patch);
+    task->computes(new_dw, lb->uvel_CCLabel,      dwindex,patch);
+    task->computes(new_dw, lb->vvel_CCLabel,      dwindex,patch);
+    task->computes(new_dw, lb->wvel_CCLabel,      dwindex,patch);
+  }
+  task->computes(new_dw, d_sharedState->get_delt_label());
+  sched->addTask(task);
+}
+//STOP_DOC

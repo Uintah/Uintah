@@ -7,9 +7,11 @@ include $(SRCTOP)/scripts/smallso_prologue.mk
 
 SRCDIR   := Uintah/Components/ICE
 
-SRCS	+= $(SRCDIR)/ICE.cc \
-	$(SRCDIR)/ICELabel.cc \
-	$(SRCDIR)/ICEMaterial.cc $(SRCDIR)/GeometryObject2.cc
+SRCS	+= $(SRCDIR)/ICE.cc       \
+	$(SRCDIR)/ICELabel.cc     \
+       $(SRCDIR)/ICE_schedule.cc \
+       $(SRCDIR)/ICEMaterial.cc  \
+       $(SRCDIR)/GeometryObject2.cc
 
 SUBDIRS := $(SRCDIR)/EOS 
  
@@ -26,6 +28,11 @@ include $(SRCTOP)/scripts/smallso_epilogue.mk
 
 #
 # $Log$
+# Revision 1.20  2001/01/01 23:57:37  harman
+# - Moved all scheduling of tasks over to ICE_schedule.cc
+# - Added instrumentation functions
+# - fixed nan's in int_eng_L_source
+#
 # Revision 1.19  2000/11/22 01:28:05  guilkey
 # Changed the way initial conditions are set.  GeometryObjects are created
 # to fill the volume of the domain.  Each object has appropriate initial
