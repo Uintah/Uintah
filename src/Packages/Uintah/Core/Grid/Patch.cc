@@ -676,8 +676,16 @@ void Patch::getGhostOffsets(VariableBasis basis, Ghost::GhostType gtype,
     IntVector dir = Ghost::getGhostTypeDir((Ghost::GhostType)basis);
     if (gtype == Ghost::AroundCells) {
       // Nodes/faces around cells
-      lowOffset = g - IntVector(1, 1, 1);
-      highOffset = lowOffset + dir; // I think this is the right way
+      if (basis == NodeBased) {
+	  lowOffset = g - IntVector(1, 1, 1);
+	  highOffset = lowOffset + dir; // I think this is the right way
+      }
+      else {
+	// temporary fix.  This will probably go back to the same
+	// as for basis == NodeBased, but this is what arches needs to work
+	// right now.
+	lowOffset = highOffset = g;
+      }
     }
     else if (basis == gtype) {
       // nodes around nodes or faces around faces
