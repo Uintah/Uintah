@@ -203,7 +203,6 @@ void ParticleFieldExtractor::showVarsForMatls()
      gui->eval(id + " isOn p" + to_string(matl), result);
      if ( result == "0")
 	continue;
-     cerr<<"Material "<<matl<<" is on.\n";
      onMaterials.addInOrder(matl);
   }
 
