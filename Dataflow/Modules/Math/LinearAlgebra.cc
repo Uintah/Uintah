@@ -69,65 +69,72 @@ void
 LinearAlgebra::execute()
 {
   const int mcount = 5;
-  MatrixHandle imatrixhandle[mcount];
+  MatrixHandle imh[mcount];
+  MatrixHandle omh[mcount];
   for (int i = 0; i < mcount; i++)
   {
-    imatrixhandle[i] = 0;
+    imh[i] = 0;
+    omh[i] = 0;
   }
 
   // Get input matrices.
-  MatrixIPort *ifp0 = (MatrixIPort *)get_iport("A");
+  MatrixIPort *ifp0 = (MatrixIPort *)get_iport("i1");
   if (!ifp0)
   {
-    error("Unable to initialize iport 'A'.");
+    error("Unable to initialize iport 'i1'.");
     return;
   }
-  if (!(ifp0->get(imatrixhandle[0]) && imatrixhandle[0].get_rep()))
+  if (!(ifp0->get(imh[0]) && imh[0].get_rep()))
   {
+    remark("i1 is empty.");
   }
 
   // Get input matrices.
-  MatrixIPort *ifp1 = (MatrixIPort *)get_iport("B");
+  MatrixIPort *ifp1 = (MatrixIPort *)get_iport("i2");
   if (!ifp1)
   {
-    error("Unable to initialize iport 'B'.");
+    error("Unable to initialize iport 'i2'.");
     return;
   }
-  if (!(ifp1->get(imatrixhandle[1]) && imatrixhandle[1].get_rep()))
+  if (!(ifp1->get(imh[1]) && imh[1].get_rep()))
   {
+    remark("i2 is empty.");
   }
 
   // Get input matrices.
-  MatrixIPort *ifp2 = (MatrixIPort *)get_iport("C");
+  MatrixIPort *ifp2 = (MatrixIPort *)get_iport("i3");
   if (!ifp2)
   {
-    error("Unable to initialize iport 'C'.");
+    error("Unable to initialize iport 'i3'.");
     return;
   }
-  if (!(ifp2->get(imatrixhandle[2]) && imatrixhandle[2].get_rep()))
+  if (!(ifp2->get(imh[2]) && imh[2].get_rep()))
   {
+    remark("i3 is empty.");
   }
 
   // Get input matrices.
-  MatrixIPort *ifp3 = (MatrixIPort *)get_iport("D");
+  MatrixIPort *ifp3 = (MatrixIPort *)get_iport("i4");
   if (!ifp3)
   {
-    error("Unable to initialize iport 'D'.");
+    error("Unable to initialize iport 'i4'.");
     return;
   }
-  if (!(ifp3->get(imatrixhandle[3]) && imatrixhandle[3].get_rep()))
+  if (!(ifp3->get(imh[3]) && imh[3].get_rep()))
   {
+    remark("i4 is empty.");
   }
 
   // Get input matrices.
-  MatrixIPort *ifp4 = (MatrixIPort *)get_iport("E");
+  MatrixIPort *ifp4 = (MatrixIPort *)get_iport("i5");
   if (!ifp4)
   {
-    error("Unable to initialize iport 'E'.");
+    error("Unable to initialize iport 'i5'.");
     return;
   }
-  if (!(ifp4->get(imatrixhandle[4]) && imatrixhandle[4].get_rep()))
+  if (!(ifp4->get(imh[4]) && imh[4].get_rep()))
   {
+    remark("i5 is empty.");
   }
 
   int hoffset = 0;
@@ -149,101 +156,48 @@ LinearAlgebra::execute()
     hoffset++;
   }
 
-  MatrixHandle omatrixhandle(0);
-  switch(mcount)
-  {
-  case 0:
-    omatrixhandle = algo->function0();
-    break;
-  case 1:
-    omatrixhandle = algo->function1(imatrixhandle[0]);
-    break;
-  case 2:
-    omatrixhandle = algo->function2(imatrixhandle[0],
-				    imatrixhandle[1]);
-    break;
-  case 3:
-    omatrixhandle = algo->function3(imatrixhandle[0],
-				    imatrixhandle[1],
-				    imatrixhandle[2]);
-    break;
-  case 4:
-    omatrixhandle = algo->function4(imatrixhandle[0],
-				    imatrixhandle[1],
-				    imatrixhandle[2],
-				    imatrixhandle[3]);
-    break;
-  case 5:
-    omatrixhandle = algo->function5(imatrixhandle[0],
-				    imatrixhandle[1],
-				    imatrixhandle[2],
-				    imatrixhandle[3],
-				    imatrixhandle[4]);
-    break;
-  default:
-    ; // some error
-  }
+  algo->user_function(omh[0], omh[1], omh[2], omh[3], omh[4],
+		      imh[0], imh[1], imh[2], imh[3], imh[4]);
 
-  MatrixOPort *omatrix_port = (MatrixOPort *)get_oport("Output Matrix");
-  if (!omatrix_port)
+  MatrixOPort *omatrix_port1 = (MatrixOPort *)get_oport("o1");
+  if (!omatrix_port1)
   {
-    error("Unable to initialize oport 'Output Matrix'.");
+    error("Unable to initialize oport 'o1'.");
     return;
   }
+  omatrix_port1->send(omh[0]);
 
-  omatrix_port->send(omatrixhandle);
-}
+  MatrixOPort *omatrix_port2 = (MatrixOPort *)get_oport("o2");
+  if (!omatrix_port2)
+  {
+    error("Unable to initialize oport 'o2'.");
+    return;
+  }
+  omatrix_port2->send(omh[1]);
 
+  MatrixOPort *omatrix_port3 = (MatrixOPort *)get_oport("o3");
+  if (!omatrix_port3)
+  {
+    error("Unable to initialize oport 'o3'.");
+    return;
+  }
+  omatrix_port3->send(omh[2]);
 
-MatrixHandle
-LinearAlgebraAlgo::function0()
-{
-  return 0;
-}
+  MatrixOPort *omatrix_port4 = (MatrixOPort *)get_oport("o4");
+  if (!omatrix_port4)
+  {
+    error("Unable to initialize oport 'o4'.");
+    return;
+  }
+  omatrix_port4->send(omh[3]);
 
-
-MatrixHandle
-LinearAlgebraAlgo::function1(MatrixHandle A)
-{
-  return 0;
-}
-
-
-MatrixHandle
-LinearAlgebraAlgo::function2(MatrixHandle A,
-			     MatrixHandle B)
-{
-  return 0;
-}
-
-
-MatrixHandle
-LinearAlgebraAlgo::function3(MatrixHandle A,
-			     MatrixHandle B,
-			     MatrixHandle C)
-{
-  return 0;
-}
-
-
-MatrixHandle
-LinearAlgebraAlgo::function4(MatrixHandle A,
-			     MatrixHandle B,
-			     MatrixHandle C,
-			     MatrixHandle D)
-{
-  return 0;
-}
-
-
-MatrixHandle
-LinearAlgebraAlgo::function5(MatrixHandle A,
-			     MatrixHandle B,
-			     MatrixHandle C,
-			     MatrixHandle D,
-			     MatrixHandle E)
-{
-  return 0;
+  MatrixOPort *omatrix_port5 = (MatrixOPort *)get_oport("o5");
+  if (!omatrix_port5)
+  {
+    error("Unable to initialize oport 'o5'.");
+    return;
+  }
+  omatrix_port5->send(omh[4]);
 }
 
 
@@ -269,39 +223,14 @@ LinearAlgebraAlgo::get_compile_info(int argc,
 		       template_name + ";//",
 		       "");
 
-  string prototype;
-  switch(argc)
-  {
-  case 0:
-    prototype = "function0()";
-    break;
-  case 1:
-    prototype = "function1(MatrixHandle A)";
-    break;
-  case 2:
-    prototype = "function2(MatrixHandle A, MatrixHandle B)";
-    break;
-  case 3:
-    prototype = "function3(MatrixHandle A, MatrixHandle B, MatrixHandle C)";
-    break;
-  case 4:
-    prototype = "function4(MatrixHandle A, MatrixHandle B, MatrixHandle C, MatrixHandle D)";
-    break;
-  case 5:
-    prototype = "function5(MatrixHandle A, MatrixHandle B, MatrixHandle C, MatrixHandle D, MatrixHandle E)";
-    break;
-  default:
-    ; // error
-  }
-
   // Code for the function.
   string class_declaration =
     string("\"\n\nusing namespace SCIRun;\n\n") + 
     "class " + template_name + " : public LinearAlgebraAlgo\n" +
 "{\n" +
-    "  virtual MatrixHandle " + prototype + "\n" +
+    "  virtual void user_function(MatrixHandle o1, MatrixHandle o2, MatrixHandle o3, MatrixHandle o4, MatrixHandle o5, MatrixHandle i1, MatrixHandle i2, MatrixHandle i3, MatrixHandle i4, MatrixHandle i5)\n" +
 "  {\n" +
-    "    return " + function + ";\n" +
+    "    " + function + "\n" +
     "  }\n" +
     "\n" +
     "  virtual string identify()\n" +

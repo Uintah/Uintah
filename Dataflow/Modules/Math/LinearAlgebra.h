@@ -33,22 +33,16 @@ namespace SCIRun {
 class LinearAlgebraAlgo : public DynamicAlgoBase
 {
 public:
-  virtual MatrixHandle function0();
-  virtual MatrixHandle function1(MatrixHandle A);
-  virtual MatrixHandle function2(MatrixHandle A,
-				 MatrixHandle B);
-  virtual MatrixHandle function3(MatrixHandle A,
-				 MatrixHandle B,
-				 MatrixHandle C);
-  virtual MatrixHandle function4(MatrixHandle A,
-				 MatrixHandle B,
-				 MatrixHandle C,
-				 MatrixHandle D);
-  virtual MatrixHandle function5(MatrixHandle A,
-				 MatrixHandle B,
-				 MatrixHandle C,
-				 MatrixHandle D,
-				 MatrixHandle E);
+  virtual void user_function(MatrixHandle o1,
+			     MatrixHandle o2,
+			     MatrixHandle o3,
+			     MatrixHandle o4,
+			     MatrixHandle o5,
+			     MatrixHandle i1,
+			     MatrixHandle i2,
+			     MatrixHandle i3,
+			     MatrixHandle i4,
+			     MatrixHandle i5) = 0;
 
   virtual string identify() = 0;
 
