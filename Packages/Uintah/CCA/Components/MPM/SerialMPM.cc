@@ -985,11 +985,11 @@ void SerialMPM::scheduleInterpolateToParticlesAndUpdate(SchedulerP& sched,
   sched->addTask(t, patches, matls);
 }
 
-void SerialMPM::scheduleRefine(const LevelP& fineLevel, 
+void SerialMPM::scheduleRefine(const PatchSet* patches, 
                                SchedulerP& sched)
 {
   Task* task = scinew Task("SerialMPM::refine", this, &SerialMPM::refine);
-  sched->addTask(task, fineLevel->eachPatch(), d_sharedState->allMPMMaterials());
+  sched->addTask(task, patches, d_sharedState->allMPMMaterials());
   // do nothing for now
 }
 

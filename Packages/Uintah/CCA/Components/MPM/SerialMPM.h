@@ -91,7 +91,7 @@ public:
   virtual void scheduleTimeAdvance(const LevelP& level, 
 				   SchedulerP&, int step, int nsteps );
 
-  void scheduleRefine(const LevelP& fineLevel, SchedulerP& scheduler);
+  void scheduleRefine(const PatchSet* patches, SchedulerP& scheduler);
 
   void scheduleRefineInterface(const LevelP& fineLevel, SchedulerP& scheduler,
                                int step, int nsteps);
