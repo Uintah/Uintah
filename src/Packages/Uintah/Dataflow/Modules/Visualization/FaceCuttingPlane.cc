@@ -580,9 +580,9 @@ template<>
 bool FaceCuttingPlane::get_dimensions(LatVolMeshHandle m,
 				 int& nx, int& ny, int& nz)
   {
-    nx = m->get_nx();
-    ny = m->get_ny();
-    nz = m->get_nz();
+    nx = m->get_ni();
+    ny = m->get_nj();
+    nz = m->get_nk();
     return true;
   }
 

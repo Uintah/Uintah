@@ -66,9 +66,9 @@ void ScalarFieldAverage::initField(ScalarField1* scalarField1,
   BBox box;
   box = smh->get_bounding_box();
   //resize the geometry
-  fmh->set_nx(smh->get_nx());
-  fmh->set_ny(smh->get_ny());
-  fmh->set_nz(smh->get_nz());
+  fmh->set_ni(smh->get_ni());
+  fmh->set_nj(smh->get_nj());
+  fmh->set_nk(smh->get_nk());
   fmh->set_transform(smh->get_transform());
   //resize the data storage
   scalarField2->resize_fdata();

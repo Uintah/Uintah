@@ -74,13 +74,13 @@ void computeGridEigens(TensorField* tensorField,
   box = tmh->get_bounding_box();
 
   //resize the geometry
-  smh->set_nx(tmh->get_nx());
-  smh->set_ny(tmh->get_ny());
-  smh->set_nz(tmh->get_nz());
+  smh->set_ni(tmh->get_ni());
+  smh->set_nj(tmh->get_nj());
+  smh->set_nk(tmh->get_nk());
   smh->set_transform(tmh->get_transform());
-  vmh->set_nx(tmh->get_nx());
-  vmh->set_ny(tmh->get_ny());
-  vmh->set_nz(tmh->get_nz());
+  vmh->set_ni(tmh->get_ni());
+  vmh->set_nj(tmh->get_nj());
+  vmh->set_nk(tmh->get_nk());
   smh->set_transform(tmh->get_transform());
   //resize the data storage
   eValueField->resize_fdata();
