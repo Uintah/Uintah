@@ -21,6 +21,7 @@ SRCS     += \
 	$(SRCDIR)/Ghost.cc \
 	$(SRCDIR)/SimulationState.cc \
 	$(SRCDIR)/SimulationTime.cc \
+	$(SRCDIR)/Stencil7.cc \
 	$(SRCDIR)/Task.cc $(SRCDIR)/VarLabel.cc \
 	$(SRCDIR)/VarLabelLevelDW.cc \
 	$(SRCDIR)/VarLabelMatlPatch.cc \
