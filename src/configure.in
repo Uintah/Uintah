@@ -564,6 +564,10 @@ AC_DEFUN(SCI_CHECK_HEADERS,
           ac_try="$theCompiler $CFLAGS -c conftest.$theExt $INCLUDE_FLAGS $3 >/dev/null 2>conftest.out"
           (eval $ac_try) 2>&5
 
+          if test "$debugging" = "yes"; then
+             echo ac_try is $ac_try
+          fi
+
           if test -f conftest.o; then
              # Succeeded... need to run through all header files and
              # create/save appropriate flags.
@@ -1541,7 +1545,7 @@ case $host in
     FORTRAN_UNDERSCORE=none
 
     # The IBM compilers don't use LDRUN_PREFIX.  By making it "-L"
-    # The lib path with be repeated twice, but since the makefile
+    # the lib path will be repeated twice, but since the makefile
     # is set up assuming you need LDRUN_PREFIX, this is the easiest fix.
     LDRUN_PREFIX="-L"
 
@@ -1582,7 +1586,11 @@ case $host in
     ;;
 
   *)
+    #
     # put '_' at end and two '_'s if there is a '_' in name. 
+    # This flag is used by the genfspec.pl script in Uintah (generated
+    # from fspec.pl.in).
+    #
     FORTRAN_UNDERSCORE=linux
 
     BASE_LIB_DIR=lib
@@ -2240,8 +2248,8 @@ if test "$pkg_rtrt" = "yes"; then
     dirs="$with_oogl/lib $dirs"
   fi
 
-  SCI_CHECK_LIB($dirs,oogl,main,,,not-optional)
-  SCI_CHECK_HEADERS($LIB_DIR_OOGL/../include,oogl/basicTexture.h oogl/shadedPrim.h,$INC_GL_GLUT_H $INC_GL_GLUI_H,,not-optional)
+  SCI_CHECK_LIB($dirs,oogl,main,,,optional)
+  SCI_CHECK_HEADERS($LIB_DIR_OOGL/../include,oogl/basicTexture.h oogl/shadedPrim.h,$INC_GL_GLUT_H $INC_GL_GLUI_H,,optional)
 
   if test "$HAVE_OOGL_BASICTEXTURE_H"; then
     INC_OOGL_H="$INC_OOGL_BASICTEXTURE_H"
@@ -2253,6 +2261,11 @@ if test "$pkg_rtrt" = "yes"; then
   SCI_CHECK_LIB($dirs,audiofile,main,,,optional)
 fi
 
+if test "$HAVE_LIB_OOGL" && test "$HAVE_OOGL_BASICTEXTURE_H"; then
+  DEF_OOGL="#define HAVE_OOGL 1"
+fi
+
+
 AC_SUBST(INC_GL_GLUT_H)
 AC_SUBST(GLUT_LIB_FLAG)
 AC_SUBST(GLUT_LIB_DIR_FLAG)
@@ -2262,6 +2275,7 @@ AC_SUBST(GLUI_LIB_FLAG)
 AC_SUBST(GLUI_LIB_DIR_FLAG)
 
 AC_SUBST(INC_OOGL_H)
+AC_SUBST(DEF_OOGL)
 AC_SUBST(OOGL_LIB_FLAG)
 AC_SUBST(OOGL_LIB_DIR_FLAG)
 
