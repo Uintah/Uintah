@@ -39,6 +39,7 @@ namespace SCIRun {
   class DTPoint;
   class DTMessage{
   public:
+    friend class DataTransmitter;
     //The message being sent has the following structure:
     //DTMessage | buf
 
@@ -51,7 +52,18 @@ namespace SCIRun {
     DTAddress to_addr;  //filled by recver
 
     ~DTMessage();
+
     void display();
+
+    DTPacketID getPacketID(){
+      return DTPacketID(getDestination(), fr_addr);
+    }
+
+    DTDestination getDestination(){
+      return DTDestination(recver,to_addr);
+    }
+  private:
+    int offset; //used by DataTransmitter only. It's value is reset in the DataTransmitter.
   };
 
 }// namespace SCIRun

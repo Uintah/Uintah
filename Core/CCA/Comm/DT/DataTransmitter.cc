@@ -59,15 +59,6 @@
 using namespace SCIRun;
 using namespace std;
 
-
-static void showTime(char *s)
-{
-  timeval tm;
-  gettimeofday(&tm, NULL);
-  long t=tm.tv_sec%10*1000+tm.tv_usec/1000;
-  std::cerr<<"Time for "<<s<<" ="<<t<<"  (ms)\n";
-}
-
 DataTransmitter::DataTransmitter(){
   struct sockaddr_in my_addr;    // my address information
   if ((sockfd = socket(AF_INET, SOCK_STREAM, 0)) == -1) {
@@ -103,11 +94,12 @@ DataTransmitter::DataTransmitter(){
 
   sendQ_mutex=new Mutex("sendQ_mutex");
   recvQ_mutex=new Mutex("recvQ_mutex");
+
   send_sockmap_mutex=new Mutex("send_sockmap_mutex");
   recv_sockmap_mutex=new Mutex("recv_sockmap_mutex");
 
   sendQ_cond=new ConditionVariable("sendQ_cond");
-  recvQ_cond=new ConditionVariable("recvQ_cond");
+  newMsgCnt=0;
   quit=false;
 }
 
@@ -117,28 +109,57 @@ DataTransmitter::~DataTransmitter(){
   delete send_sockmap_mutex;
   delete recv_sockmap_mutex;
   delete sendQ_cond;
-  delete recvQ_cond;
+  delete hostname;
 }
 
 
 void 
 DataTransmitter::putMessage(DTMessage *msg){
   msg->fr_addr=addr;
-  sendQ_mutex->lock();
-  send_msgQ.push_back(msg);
-  sendQ_mutex->unlock();
-  sendQ_cond->conditionSignal();
+
+  /////////////////////////////////
+  // if the msg is sent to the same process
+  // process it right away.
+  if(msg->to_addr==addr){
+    msg->autofree=true;
+    DTPoint *pt=msg->recver;
+    SemaphoreMap::iterator found=semamap.find(pt);
+    //cerr<<"Send & Recv Message:\n";
+    //msg->display();
+    
+    if(found!=semamap.end()){
+      if(pt->service!=NULL){
+	pt->service(msg);
+      }
+      else{
+	recvQ_mutex->lock();
+	recv_msgQ.push_back(msg);
+	recvQ_mutex->unlock();
+	found->second->up();
+      }
+    }
+    else{
+      //discard the message
+      cerr<<"warning: message discarded!\n";
+    }
+  }
+  else{
+    msg->offset=0;
+    sendQ_mutex->lock();
+    //cerr<<"####BEFORE got new message and send_msgQ.size="<<send_msgQ.size()<<endl;
+    send_msgQ.push_back(msg);
+    newMsgCnt++;
+    //cerr<<"got new message and send_msgQ.size="<<send_msgQ.size()<<endl;
+    sendQ_mutex->unlock();
+    sendQ_cond->conditionSignal();
+  }
 }
 
 DTMessage *
 DataTransmitter::getMessage(DTPoint *pt){
   recvQ_mutex->lock();
-  /*  while(recv_msgQ.size()==0){
-    recvQ_cond->wait(*recvQ_mutex);
-    }*/
   DTMessage *msg=NULL;
-  deque<DTMessage*>::iterator iter=recv_msgQ.begin();
-  for(deque<DTMessage*>::iterator iter=recv_msgQ.begin(); iter!=recv_msgQ.end(); iter++){
+  for(vector<DTMessage*>::iterator iter=recv_msgQ.begin(); iter!=recv_msgQ.end(); iter++){
     if( (*iter)->recver==pt){
       msg=*iter;
       recv_msgQ.erase(iter);
@@ -157,10 +178,14 @@ DataTransmitter::run(){
   }
   //cerr<<"DataTransmitter is Listening: URL="<<getUrl()<<endl;
 
-  Thread *sending_thread = new Thread(new DTThread(this, 1), "Data Transmitter Sending Thread", 0, Thread::Activated);
+  Thread *sending_thread = new Thread(new DTThread(this, 1), "Data Transmitter Sending Thread", 0, Thread::NotActivated);
+  sending_thread->setStackSize(1024*256);
+  sending_thread->activate(false);
   sending_thread->detach();
 
-  Thread *recving_thread = new Thread(new DTThread(this, 2), "Data Transmitter Recving Thread", 0, Thread::Activated);
+  Thread *recving_thread = new Thread(new DTThread(this, 2), "Data Transmitter Recving Thread", 0, Thread::NotActivated);
+  recving_thread->setStackSize(1024*256);
+  recving_thread->activate(false);
   recving_thread->detach();
 }
 
@@ -168,115 +193,88 @@ DataTransmitter::run(){
 void 
 DataTransmitter::runSendingThread(){
   //cerr<<"DataTransmitter is Sending"<<endl;
+  DTDestination sentRecver;
+  sentRecver.unset();
+  //iterator of Round Robin queue, indicating next message.
+  RRMap::iterator rrIter;
+  
   while(true){
-	
-    //use while is safer
     sendQ_mutex->lock();
-    //TODO: .......................
-    while(send_msgQ.empty()){
-      if(quit) return;
-      sendQ_cond->wait(*sendQ_mutex);
-      if(send_msgQ.empty() && quit) return;
+    if(sentRecver.isSet()){
+      //one complete message has been sent
+      //sendQ_mutex->lock();
+      //cerr<<"sentRecver!=NULL and send_msgQ.size="<<send_msgQ.size()<<endl;
+      for(unsigned int i=0; i<send_msgQ.size(); i++){
+	if(send_msgQ[i]->getDestination()==sentRecver){
+	  send_msgMap[sentRecver]=send_msgQ[i];
+	  rrIter=send_msgMap.begin();
+	  if(i>=send_msgQ.size()-newMsgCnt){
+	    //if it happens that one new message is processed here,
+	    //we should update newMsgCnt
+	    newMsgCnt--;
+	  }
+	  send_msgQ.erase(send_msgQ.begin()+i);
+	  //cerr<<"retrive one sentRecver from sendQ send_msgQ.size="<<send_msgQ.size()<<endl;
+	  break;
+	}
+      }
+      //cerr<<"when quiting sentRecver!=NULL send_msgQ.size="<<send_msgQ.size()<<endl;
+      //sendQ_mutex->unlock();
+      sentRecver.unset();
+    }
+    
+    //sendQ_mutex->lock();
+    while(newMsgCnt>0){
+      //cerr<<"newMsgCnt="<<newMsgCnt<<endl;
+      //some new messages have entered the send queue    
+      std::vector<DTMessage*>::iterator newMsg=send_msgQ.end()-newMsgCnt;
+      if(send_msgMap.find( (*newMsg)->getDestination())==send_msgMap.end()){
+	//the new message is sent to a new receiver, too.
+	send_msgMap[(*newMsg)->getDestination()]=*newMsg;
+	rrIter=send_msgMap.begin();
+	//cerr<<"BEFORE move one newMsg into rrQ send_msgQ.size="<<send_msgQ.size()<<endl;
+	send_msgQ.erase(newMsg);
+	//cerr<<"move one newMsg into rrQ send_msgQ.size="<<send_msgQ.size()<<endl;
+      }
+      //else     cerr<<"keep one newMsg in sendQ"<<endl;
+      newMsgCnt--;
+      //break;
     }
     sendQ_mutex->unlock();
-    //cerr<<"trying to send a message"<<endl;
-    DTMessage *msg=send_msgQ.front();
-    /////////////////////////////////
-    // if the msg is to send to the same process
-    // process it right away.
-    
-    if(msg->to_addr==addr){
-      msg->autofree=true;
-      //int id=*((int *)msg->buf);
-      DTPoint *pt=msg->recver;
-      SemaphoreMap::iterator found=semamap.find(pt);
-      //cerr<<"Send & Recv Message:\n";
-      //msg->display();
-      
-      if(found!=semamap.end()){
-	if(pt->service!=NULL){
-	  
-	  pt->service(msg);
-	}
-	else{
-	  recvQ_mutex->lock();
-	  recv_msgQ.push_back(msg);
-	  recvQ_mutex->unlock();
-	  //recvQ_cond->conditionSignal();
-	  found->second->up();
-	}
-	sendQ_mutex->lock();
-	send_msgQ.pop_front();
-	sendQ_mutex->unlock();
-      }
-      else{
-	//discard the message
-	cerr<<"warning: message discarded!\n";
-      }
-    }
-    else
-    {
-    
-      SocketMap::iterator iter=send_sockmap.find(msg->to_addr);
-      int new_fd;
-      if(iter==send_sockmap.end()){
-	new_fd=socket(AF_INET, SOCK_STREAM, 0);
-	if( new_fd  == -1){
-	  throw CommError("socket", errno);
-	}
-	
-	
-	static int protocol_id = -1;
-#if defined(__sgi)
-	// SGI does not have SOL_TCP defined.  To the best of my knowledge
-	// (ie: reading the man page) this is what you are supposed to do. (Dd)
-	if( protocol_id == -1 )
-	  {
-	  struct protoent * p = getprotobyname("TCP");
-	  if( p == NULL )
-	    {
-	      cout << "DataTransmitter.cc: Error.  TCP protocol lookup failed!\n";
-	      exit();
-	      return;
-	    }
-	  protocol_id = p->p_proto;
-	  }
-#else
-	protocol_id = SOL_TCP;
-#endif
-	int yes=1;
-	if( setsockopt( new_fd, protocol_id, TCP_NODELAY, &yes, sizeof(int) ) == -1 ) {
-	  perror("setsockopt");
-	}
-	
-	struct sockaddr_in their_addr; // connector's address information 
-	their_addr.sin_family = AF_INET;                   // host byte order 
-	their_addr.sin_port = htons(msg->to_addr.port);  // short, network byte order 
-	their_addr.sin_addr = *(struct in_addr*)(&(msg->to_addr.ip));
-	memset(&(their_addr.sin_zero), '\0', 8);  // zero the rest of the struct 
-	
-	if(connect(new_fd, (struct sockaddr *)&their_addr,sizeof(struct sockaddr)) == -1) {
-	  perror("connect");
-	  throw CommError("connect", errno);
-	}
-	//immediate register the listening port
-	//cerr<<"register port "<<addr.port<<endl;
-	sendall(new_fd, &addr.port, sizeof(short));
-	send_sockmap_mutex->lock();
-	send_sockmap[msg->to_addr]=new_fd;
-	send_sockmap_mutex->unlock();
-      }
-      else{
-	new_fd=iter->second;
-      }
-      sendall(new_fd, msg, sizeof(DTMessage));
-      sendall(new_fd, msg->buf, msg->length);
-      //cerr<<"Send Message:";
-      //msg->display();
-      delete msg;
+
+    if(send_msgMap.empty()){
       sendQ_mutex->lock();
-      send_msgQ.pop_front();
+      while(send_msgQ.empty()){
+	//cerr<<"send_msgQ is empty()"<<endl;
+	if(quit){
+	  sendQ_mutex->unlock();
+	  return;
+	}
+	sendQ_cond->wait(*sendQ_mutex);
+      }
       sendQ_mutex->unlock();
+    }
+    else{
+      DTMessage *msg= rrIter->second;
+      int packetLen=msg->length-msg->offset;
+      if(packetLen>PACKET_SIZE){
+	packetLen=PACKET_SIZE;
+	msg->offset+=packetLen;
+	sendPacket(msg, packetLen);
+	rrIter++;
+	if(rrIter == send_msgMap.end()) rrIter=send_msgMap.begin();
+      }
+      else{
+	//done with this message
+	msg->offset+=packetLen;
+	sendPacket(msg, packetLen);
+	sentRecver=msg->getDestination();
+	send_msgMap.erase(rrIter);
+	rrIter=send_msgMap.begin();
+	//cerr<<"Send Message:";
+	//msg->display();
+	delete msg;
+      }
     }
   }
 }
@@ -285,7 +283,7 @@ void
 DataTransmitter::runRecvingThread(){
   fd_set read_fds; // temp file descriptor list for select()
   struct timeval timeout;
-  while(!quit){
+  while(!quit || !recv_msgMap.empty()){
     timeout.tv_sec=0;
     timeout.tv_usec=20000;
     FD_ZERO(&read_fds);
@@ -307,43 +305,59 @@ DataTransmitter::runRecvingThread(){
       if(FD_ISSET(iter->second, &read_fds)){
 	DTMessage *msg=new DTMessage;
 	if(recvall(iter->second, msg, sizeof(DTMessage))!=0){
-	  msg->buf=(char *)malloc(msg->length);
-	  recvall(iter->second, msg->buf, msg->length);
-	  msg->to_addr=addr;
-	  msg->autofree=true;
-	  msg->fr_addr=iter->first;
-	  DTPoint *pt=msg->recver;
-	  SemaphoreMap::iterator found=semamap.find(pt);
-	  //cerr<<"Recv Message:";
-	  //msg->display();
 
-	  if(found!=semamap.end()){
-	    if(pt->service!=NULL){
-	      pt->service(msg);
-	    }
-	    else{
-	      recvQ_mutex->lock();
-	      recv_msgQ.push_back(msg);
-	      recvQ_mutex->unlock();
-	      /*
-		recvQ_cond->conditionSignal();
-	      */
-	      
-	      found->second->up();
-	    }
+	  RVMap::iterator rrIter=recv_msgMap.find(msg->getPacketID());
+	  if(rrIter==recv_msgMap.end()){
+	    //this is the first packet
+	    msg->buf=(char *)malloc(msg->length);	    
+	    recv_msgMap[msg->getPacketID()]=msg;
+	    recvall(iter->second, msg->buf, msg->offset);
+	    msg->autofree=true;
 	  }
 	  else{
-	    //discard the message
-	    cerr<<"warning: message discarded!\n";
+	    //this is the one packet after the first
+	    int packetLen=msg->offset-rrIter->second->offset;
+	    msg->autofree=false;
+	    delete msg;
+	    msg=rrIter->second;
+	    recvall(iter->second, msg->buf+msg->offset, packetLen);
+	    msg->offset+=packetLen;
+	  }
+
+	  //check if a complete  message received.
+	  if(msg->offset==msg->length){
+	    DTPoint *pt=msg->recver;
+	    recv_msgMap.erase(msg->getPacketID());
+
+	    SemaphoreMap::iterator found=semamap.find(pt);
+	    //cerr<<"Recv Message:";
+	    //msg->display();
+
+	    if(found!=semamap.end()){
+	      if(pt->service!=NULL){
+		pt->service(msg);
+	      }
+	      else{
+		recvQ_mutex->lock();
+		recv_msgQ.push_back(msg);
+		recvQ_mutex->unlock();
+		found->second->up();
+	      }
+	    }
+	    else{
+	      //discard the message
+	      cerr<<"warning: message discarded!\n";
+	    }
 	  }
 	}
 	else{
 	  //remote connection is closed, if receive 0 bytes
-	  //cerr<<"######: recved 0 bytes!\n";
 	  close(iter->second);
 	  recv_sockmap_mutex->lock();
 	  recv_sockmap.erase(iter);
 	  recv_sockmap_mutex->unlock();
+	  msg->autofree=false;
+	  delete msg;
 	}
       }
     }
@@ -389,7 +403,6 @@ DataTransmitter::runRecvingThread(){
       //so it has to be sent explcitly.
       DTAddress newAddr;
       newAddr.ip=their_addr.sin_addr.s_addr;
-      short listPort;
       newAddr.port=ntohs(their_addr.sin_port);
       recvall(new_fd, &(newAddr.port), sizeof(short));
       //cerr<<"Done register port "<<newAddr.port<<endl;
@@ -422,29 +435,82 @@ DataTransmitter::getUrl() {
 }
 
 
+void 
+DataTransmitter::sendPacket(DTMessage *msg, int packetLen){
+  SocketMap::iterator iter=send_sockmap.find(msg->to_addr);
+  int new_fd;
+  if(iter==send_sockmap.end()){
+    new_fd=socket(AF_INET, SOCK_STREAM, 0);
+    if( new_fd  == -1){
+      throw CommError("socket", errno);
+    }
+    
+    static int protocol_id = -1;
+#if defined(__sgi)
+    // SGI does not have SOL_TCP defined.  To the best of my knowledge
+    // (ie: reading the man page) this is what you are supposed to do. (Dd)
+    if( protocol_id == -1 ){
+      struct protoent * p = getprotobyname("TCP");
+      if( p == NULL ){
+	cout << "DataTransmitter.cc: Error.  TCP protocol lookup failed!\n";
+	exit();
+	return;
+      }
+      protocol_id = p->p_proto;
+    }
+#else
+    protocol_id = SOL_TCP;
+#endif
+    int yes=1;
+    if( setsockopt( new_fd, protocol_id, TCP_NODELAY, &yes, sizeof(int) ) == -1 ) {
+      perror("setsockopt");
+    }
+    
+    struct sockaddr_in their_addr; // connector's address information 
+    their_addr.sin_family = AF_INET;                   // host byte order 
+    their_addr.sin_port = htons(msg->to_addr.port);  // short, network byte order 
+    their_addr.sin_addr = *(struct in_addr*)(&(msg->to_addr.ip));
+    memset(&(their_addr.sin_zero), '\0', 8);  // zero the rest of the struct 
+    
+    if(connect(new_fd, (struct sockaddr *)&their_addr,sizeof(struct sockaddr)) == -1) {
+      perror("connect");
+      throw CommError("connect", errno);
+    }
+    //immediate register the listening port
+    //cerr<<"register port "<<addr.port<<endl;
+    sendall(new_fd, &addr.port, sizeof(short));
+    send_sockmap_mutex->lock();
+    send_sockmap[msg->to_addr]=new_fd;
+    send_sockmap_mutex->unlock();
+  }
+  else{
+    new_fd=iter->second;
+  }
+  sendall(new_fd, msg, sizeof(DTMessage));
+  sendall(new_fd, msg->buf+msg->offset-packetLen, packetLen);
+}
+
 void
 DataTransmitter::sendall(int sockfd, void *buf, int len)
 {
   int left=len;
   int total = 0;        // how many bytes we've sent
-  int n;
-
   while(total < len) {
-    n = send(sockfd, (char*)buf+total, left, 0);
+    int n = send(sockfd, (char*)buf+total, left, 0);
     if (n == -1) throw CommError("recv", errno);
     total += n;
     left -= n;
   }
 } 
 
+
 int
 DataTransmitter::recvall(int sockfd, void *buf, int len)
 {
   int left=len;
   int total = 0;        // how many bytes we've recved
-  int n;
   while(total < len) {
-    n = recv(sockfd, (char*)buf+total, left, MSG_WAITALL);
+    int n = recv(sockfd, (char*)buf+total, left, MSG_WAITALL);
     if (n == -1) throw CommError("recv", errno);
     if(n==0) return 0;
     total += n;
@@ -458,8 +524,7 @@ void DataTransmitter::registerPoint(DTPoint * pt){
 }
 
 void DataTransmitter::unregisterPoint(DTPoint * pt){
-  SemaphoreMap::iterator iter=semamap.find(pt);
-  if(iter!=semamap.end()) semamap.erase(iter);
+  semamap.erase(pt);
 }
 
 DTAddress
