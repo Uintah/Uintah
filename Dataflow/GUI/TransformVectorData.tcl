@@ -36,8 +36,7 @@ itcl_class SCIRun_FieldsData_TransformVectorData {
     method ui {} {
         set w .ui[modname]
         if {[winfo exists $w]} {
-            raise $w
-            return;
+            return
         }
 
         toplevel $w
@@ -77,5 +76,8 @@ itcl_class SCIRun_FieldsData_TransformVectorData {
 	pack $w.f.x $w.f.y $w.f.z $w.f.pre $w.f.post \
 	    -side top -expand 1 -fill x
 	pack $w.f -expand 1 -fill x
+
+	makeSciButtonPanel $w $w $this
+	moveToCursor $w
     }
 }

@@ -47,8 +47,7 @@ itcl_class SCIRun_FieldsData_TransformScalarData {
     method ui {} {
         set w .ui[modname]
         if {[winfo exists $w]} {
-            raise $w
-            return;
+            return
         }
 
         toplevel $w
@@ -91,5 +90,8 @@ itcl_class SCIRun_FieldsData_TransformScalarData {
 
 	pack $w.f.i $w.f.f $w.f.m -side top -expand 1 -fill x
 	pack $w.f -expand 1 -fill x
+
+	makeSciButtonPanel $w $w $this -no_execute
+	moveToCursor $w
     }
 }

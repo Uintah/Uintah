@@ -41,7 +41,6 @@ itcl_class SCIRun_FieldsData_ChangeFieldDataAt {
     method ui {} {
         set w .ui[modname]
         if {[winfo exists $w]} {
-            raise $w
             return
         }
         toplevel $w
@@ -66,10 +65,8 @@ itcl_class SCIRun_FieldsData_ChangeFieldDataAt {
 		   $this-outputdataat $this-cdataat
 	pack $edit.l1 -side top 
 
-	frame $w.exec
-	pack $w.exec -side bottom -padx 5 -pady 5
-	button $w.exec.execute -text "Execute" -command "$this-c needexecute"
-	pack $w.exec.execute -side top -e n
+	makeSciButtonPanel $w $w $this
+	moveToCursor $w
     }
 
 
