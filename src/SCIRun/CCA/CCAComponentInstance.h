@@ -39,30 +39,30 @@ namespace SCIRun {
   class CCAPortInstance;
   class Services;
 
-  class CCAComponentInstance : public ComponentInstance, public gov::cca::Services {
+  class CCAComponentInstance : public ComponentInstance, public sci::cca::Services {
   public:
     CCAComponentInstance(SCIRunFramework* framework,
 			 const std::string& instanceName,
 			 const std::string& className,
-			 const gov::cca::TypeMap::pointer& typemap,
-			 const gov::cca::Component::pointer& component);
+			 const sci::cca::TypeMap::pointer& typemap,
+			 const sci::cca::Component::pointer& component);
     virtual ~CCAComponentInstance();
 
-    // Methods from gov::cca::Services
-    gov::cca::Port::pointer getPort(const std::string& name);
-    gov::cca::Port::pointer getPortNonblocking(const std::string& name);
+    // Methods from sci::cca::Services
+    sci::cca::Port::pointer getPort(const std::string& name);
+    sci::cca::Port::pointer getPortNonblocking(const std::string& name);
     void releasePort(const std::string& name);
-    gov::cca::TypeMap::pointer createTypeMap();
+    sci::cca::TypeMap::pointer createTypeMap();
     void registerUsesPort(const std::string& name, const std::string& type,
-			  const gov::cca::TypeMap::pointer& properties);
+			  const sci::cca::TypeMap::pointer& properties);
     void unregisterUsesPort(const std::string& name);
-    void addProvidesPort(const gov::cca::Port::pointer& port,
+    void addProvidesPort(const sci::cca::Port::pointer& port,
 			 const std::string& name,
 			 const std::string& type,
-			 const gov::cca::TypeMap::pointer& properties);
+			 const sci::cca::TypeMap::pointer& properties);
     void removeProvidesPort(const std::string& name);
-    gov::cca::TypeMap::pointer getPortProperties(const std::string& portName);
-    gov::cca::ComponentID::pointer getComponentID();
+    sci::cca::TypeMap::pointer getPortProperties(const std::string& portName);
+    sci::cca::ComponentID::pointer getComponentID();
 
     // Methods from ComponentInstance
     virtual PortInstance* getPortInstance(const std::string& name);
@@ -80,10 +80,10 @@ namespace SCIRun {
     private:
       Iterator(const Iterator&);
       Iterator& operator=(const Iterator&);
-      //gov::cca::ComponentID::pointer cid;
+      //sci::cca::ComponentID::pointer cid;
     };
     std::map<std::string, CCAPortInstance*> ports;
-    gov::cca::Component::pointer component;
+    sci::cca::Component::pointer component;
 
     CCAComponentInstance(const CCAComponentInstance&);
     CCAComponentInstance& operator=(const CCAComponentInstance&);

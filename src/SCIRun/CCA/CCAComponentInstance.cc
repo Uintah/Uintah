@@ -37,8 +37,8 @@ using namespace SCIRun;
 CCAComponentInstance::CCAComponentInstance(SCIRunFramework* framework,
 					   const std::string& instanceName,
 					   const std::string& typeName,
-					   const gov::cca::TypeMap::pointer& /*properties*/,
-					   const gov::cca::Component::pointer& component
+					   const sci::cca::TypeMap::pointer& /*properties*/,
+					   const sci::cca::Component::pointer& component
 )
   : ComponentInstance(framework, instanceName, typeName), component(component)
 {
@@ -59,21 +59,21 @@ CCAComponentInstance::getPortInstance(const std::string& portname)
     return iter->second;
 }
 
-gov::cca::Port::pointer CCAComponentInstance::getPort(const std::string& name)
+sci::cca::Port::pointer CCAComponentInstance::getPort(const std::string& name)
 {
   return getPortNonblocking(name);
 }
 
-gov::cca::Port::pointer
+sci::cca::Port::pointer
 CCAComponentInstance::getPortNonblocking(const std::string& name)
 {
-  gov::cca::Port::pointer svc = framework->getFrameworkService(name, instanceName);
+  sci::cca::Port::pointer svc = framework->getFrameworkService(name, instanceName);
   if(!svc.isNull())
     return svc;
 
   map<string, CCAPortInstance*>::iterator iter = ports.find(name);
   if(iter == ports.end())
-    return gov::cca::Port::pointer(0);
+    return sci::cca::Port::pointer(0);
 
   CCAPortInstance* pr = iter->second;
   if(pr->porttype != CCAPortInstance::Uses)
@@ -81,7 +81,7 @@ CCAComponentInstance::getPortNonblocking(const std::string& name)
 
   pr->incrementUseCount();
   if(pr->connections.size() != 1)
-    return gov::cca::Port::pointer(0); 
+    return sci::cca::Port::pointer(0); 
   CCAPortInstance *pi=dynamic_cast<CCAPortInstance*> (pr->getPeer());
   return pi->port;
 }
@@ -105,15 +105,15 @@ void CCAComponentInstance::releasePort(const std::string& name)
     throw CCAException("Port released without correspond get");
 }
 
-gov::cca::TypeMap::pointer CCAComponentInstance::createTypeMap()
+sci::cca::TypeMap::pointer CCAComponentInstance::createTypeMap()
 {
   cerr << "createTypeMap not done\n";
-  return gov::cca::TypeMap::pointer(0);
+  return sci::cca::TypeMap::pointer(0);
 }
 
 void CCAComponentInstance::registerUsesPort(const std::string& portName,
 					    const std::string& portType,
-					    const gov::cca::TypeMap::pointer& properties)
+					    const sci::cca::TypeMap::pointer& properties)
 {
   map<string, CCAPortInstance*>::iterator iter = ports.find(portName);
   if(iter != ports.end()){
@@ -142,10 +142,10 @@ void CCAComponentInstance::unregisterUsesPort(const std::string& portName)
     throw CCAException("port name not found");
   }
 }
-void CCAComponentInstance::addProvidesPort(const gov::cca::Port::pointer& port,
+void CCAComponentInstance::addProvidesPort(const sci::cca::Port::pointer& port,
 					   const std::string& portName,
 					   const std::string& portType,
-					   const gov::cca::TypeMap::pointer& properties)
+					   const sci::cca::TypeMap::pointer& properties)
 {
   map<string, CCAPortInstance*>::iterator iter = ports.find(portName);
   if(iter != ports.end()){
@@ -162,21 +162,21 @@ void CCAComponentInstance::removeProvidesPort(const std::string& name)
   cerr << "removeProvidesPort not done, name=" << name << '\n';
 }
 
-gov::cca::TypeMap::pointer CCAComponentInstance::getPortProperties(const std::string& portName)
+sci::cca::TypeMap::pointer CCAComponentInstance::getPortProperties(const std::string& portName)
 {
   cerr << "getPortProperties not done, name=" << portName << '\n';
-  return gov::cca::TypeMap::pointer(0);
+  return sci::cca::TypeMap::pointer(0);
 }
 
-gov::cca::ComponentID::pointer CCAComponentInstance::getComponentID()
+sci::cca::ComponentID::pointer CCAComponentInstance::getComponentID()
 {
   //
   //if(cid.isNull())
-  //  cid=gov::cca::ComponentID::pointer(new ComponentID(framework, instanceName));
+  //  cid=sci::cca::ComponentID::pointer(new ComponentID(framework, instanceName));
   //return cid;
   
   // I am not sure this is right. 
-  return gov::cca::ComponentID::pointer(new ComponentID(framework, instanceName));
+  return sci::cca::ComponentID::pointer(new ComponentID(framework, instanceName));
 }
 
 PortInstanceIterator* CCAComponentInstance::getPorts()

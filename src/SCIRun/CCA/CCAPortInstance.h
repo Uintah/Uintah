@@ -42,11 +42,11 @@ namespace SCIRun {
       Uses, Provides
     };
     CCAPortInstance(const std::string& portname, const std::string& classname,
-		    const gov::cca::TypeMap::pointer& properties,
+		    const sci::cca::TypeMap::pointer& properties,
 		    PortType porttype);
     CCAPortInstance(const std::string& portname, const std::string& classname,
-		    const gov::cca::TypeMap::pointer& properties,
-		    const gov::cca::Port::pointer& port,
+		    const sci::cca::TypeMap::pointer& properties,
+		    const sci::cca::Port::pointer& port,
 		    PortType porttype);
     ~CCAPortInstance();
     virtual bool connect(PortInstance*);
@@ -65,9 +65,9 @@ namespace SCIRun {
     friend class CCAComponentInstance;
     std::string name;
     std::string type;
-    gov::cca::TypeMap::pointer properties;
+    sci::cca::TypeMap::pointer properties;
     std::vector<PortInstance*> connections;
-    gov::cca::Port::pointer port;
+    sci::cca::Port::pointer port;
     PortType porttype;
     int useCount;
 

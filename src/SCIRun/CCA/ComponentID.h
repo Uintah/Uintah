@@ -33,7 +33,7 @@
 
 namespace SCIRun {
   class SCIRunFramework;
-  class ComponentID : public gov::cca::ComponentID {
+  class ComponentID : public sci::cca::ComponentID {
   public:
     ComponentID(SCIRunFramework* framework, const std::string& name);
     virtual ~ComponentID();
