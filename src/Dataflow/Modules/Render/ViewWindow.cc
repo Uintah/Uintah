@@ -119,6 +119,7 @@ ViewWindow::ViewWindow(Viewer* s, GuiInterface* gui, GuiContext* ctx)
     // CollabVis code begin
     HaveCollabVis_(ctx->subVar("have_collab_vis")),
     // CollabVis code end
+    doingImage(false),
     doingMovie(false),
     makeMPEG(false),
     curFrame(0),
@@ -2205,6 +2206,10 @@ void ViewWindow::tcl_command(GuiArgs& args, void*)
     animate_to_view(sv, 2.0); 
   } else if(args[1] == "Views") {
     View df(view.get());
+    // position tells first which axis to look down 
+    // (with x1 being the positive x axis and x0 being
+    // the negative x axis) and then which axis is up
+    // represented the same way
     string position = pos.get();
     const string prefix("ViewWindow");
     if (position.find(prefix) == 0) {
