@@ -40,6 +40,10 @@ itcl_class SCIRun_FieldsOther_ScalarFieldStats {
         global $this-sigma
         global $this-is_fixed
         global $this-nbuckets
+	global $this-setdata
+	global $this-nmin
+	global $this-nmax
+        global $this-args
 
         set_defaults
     }
@@ -52,6 +56,10 @@ itcl_class SCIRun_FieldsOther_ScalarFieldStats {
         set $this-sigma "?"
         set $this-is_fixed 0
         set $this-nbuckets 256
+	set $this-setdata 0
+	set $this-nmin 0
+	set $this-nmax 256
+	set $this-args "?"
    }
 
     method ui {} {
@@ -185,10 +193,16 @@ itcl_class SCIRun_FieldsOther_ScalarFieldStats {
     method graph_data { nmin nmax args } {
         global $this-min
         global $this-min
+        global $this-setdata
         
         set w .ui[modname]
         if {[winfo exists $w.graph] != 1} {
             set draw_graph_needed 1
+	    if {[set $this-setdata] == 1} {
+		set $this-nmin $nmin
+		set $this-nmax $nmax
+		set $this-args $args
+	    }
             return
         } else {
             set draw_graph_needed 0
