@@ -174,7 +174,7 @@ public:
   
   template <class AnyIterator>
   void addInOrder(const AnyIterator& begin, const AnyIterator& end)
-  { for (AnyIterator it = begin; it != end; it++) addInOrder(*it); }
+  { for (AnyIterator it = begin; it != end; ++it) addInOrder(*it); }
   
   bool operator==(const ConsecutiveRangeSet& set2) const;
   bool operator!=(const ConsecutiveRangeSet& set2) const
