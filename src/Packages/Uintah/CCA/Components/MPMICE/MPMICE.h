@@ -21,9 +21,6 @@
 
 #include <Core/Geometry/Vector.h>
 
-#undef RIGID_MPM
-//#define RIGID_MPM
-
 namespace Uintah {
   class Output;
 
@@ -245,11 +242,8 @@ protected:
   ICELabel* Ilb;
   MPMICELabel* MIlb;
   bool             d_burns;
-#ifdef RIGID_MPM
-  RigidMPM*        d_mpm;
-#else
+  bool             d_rigidMPM;
   SerialMPM*       d_mpm;
-#endif
   ICE*             d_ice;
   int              d_8or27;
   int              NGN;
