@@ -4222,12 +4222,26 @@ case $host in
      ;;
 esac
 
+## these should all be blank in this version of the configure!
+
+
+
+
+
+
+
+
+
+
+
+
+
 ##-------- check/create subdirs that have special Makefiles ---------
 
 for i in Dataflow/Modules/Fields/Manip Dataflow/Modules/Math/Manip \
           on-the-fly-libs; do
   echo $ac_n "checking existence of $i""... $ac_c" 1>&6
-echo "configure:4231: checking existence of $i" >&5
+echo "configure:4245: checking existence of $i" >&5
   if test ! -d $i; then
     echo "$ac_t""creating $i..." 1>&6
     mkdir -p $i
@@ -4503,6 +4517,17 @@ s%@X_EXTRA_LIBS@%$X_EXTRA_LIBS%g
 s%@YACC@%$YACC%g
 s%@LEX@%$LEX%g
 s%@LEXLIB@%$LEXLIB%g
+s%@DEF_MPI@%$DEF_MPI%g
+s%@DEF_PETSC@%$DEF_PETSC%g
+s%@DEF_IFL@%$DEF_IFL%g
+s%@DEF_CL@%$DEF_CL%g
+s%@DEF_SSL@%$DEF_SSL%g
+s%@DEF_GLOBUS@%$DEF_GLOBUS%g
+s%@DEF_TEEM@%$DEF_TEEM%g
+s%@DEF_PERFEX@%$DEF_PERFEX%g
+s%@DEF_CRYPTO@%$DEF_CRYPTO%g
+s%@DEF_EXC@%$DEF_EXC%g
+s%@DEF_Z@%$DEF_Z%g
 s%@abs_conftop_dir@%$abs_conftop_dir%g
 
 CEOF
