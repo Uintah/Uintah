@@ -520,7 +520,7 @@ void ViscoScram::computeStressTensor(const PatchSubset* patches,
     double delT_new = WaveSpeed.minComponent();
     new_dw->put(delt_vartype(delT_new),lb->delTLabel);
     new_dw->put(pstress,               lb->pStressAfterStrainRateLabel);
-    new_dw->put(pCrackRadius,          lb->pCrackRadiusLabel_preReloc);
+    new_dw->put(pCrackRadius,          lb->pCrackRadiusLabel);
     new_dw->put(deformationGradient,   lb->pDeformationMeasureLabel_preReloc);
     new_dw->put(sum_vartype(d_se),     lb->StrainEnergyLabel);
     new_dw->put(statedata,             p_statedata_label_preReloc);
@@ -538,15 +538,14 @@ void ViscoScram::addComputesAndRequires(Task* task,
   task->requires(Task::OldDW, p_statedata_label,     matlset, Ghost::None);
   task->requires(Task::OldDW, lb->pMassLabel,        matlset, Ghost::None);
   task->requires(Task::OldDW, lb->pStressLabel,      matlset, Ghost::None);
-  task->requires(Task::OldDW, lb->pCrackRadiusLabel, matlset, Ghost::None);
   task->requires(Task::OldDW, lb->pVolumeLabel,      matlset, Ghost::None);
   task->requires(Task::OldDW, lb->pTemperatureLabel, matlset, Ghost::None);
   task->requires(Task::OldDW, lb->pDeformationMeasureLabel,matlset,Ghost::None);
   task->requires(Task::NewDW, lb->gMomExedVelocityLabel,   matlset,
                   Ghost::AroundCells, 1);
 
-  task->computes(lb->pStressAfterStrainRateLabel,         matlset);
-  task->computes(lb->pCrackRadiusLabel_preReloc,          matlset);
+  task->computes(lb->pStressAfterStrainRateLabel, matlset);
+  task->computes(lb->pCrackRadiusLabel,           matlset);
   task->computes(lb->pDeformationMeasureLabel_preReloc,   matlset);
   task->computes(p_statedata_label_preReloc,              matlset);
   task->computes(lb->pVolumeDeformedLabel,                matlset);
