@@ -343,7 +343,12 @@ SPRelocate::relocateParticles(const ProcessorGroup*,
 	}
       }
       ParticleSubset* orig_pset = old_dw->getParticleSubset(matl, patch);
-      if(subsets.size() == 1 && keepset == orig_pset){
+      map<const VarLabel*, ParticleVariableBase*>* newParts = 0;
+      newParts = new_dw->getNewParticleState(matl,patch);
+      bool adding_new_particles = false;
+      if (newParts)
+	adding_new_particles = true;
+      if(subsets.size() == 1 && keepset == orig_pset && !adding_new_particles){
 	// carry forward old data
 	new_dw->saveParticleSubset(matl, patch, orig_pset);
 	ParticleVariableBase* posvar = new_dw->getParticleVariable(reloc_old_posLabel, orig_pset);
@@ -353,18 +358,41 @@ SPRelocate::relocateParticles(const ProcessorGroup*,
 	  new_dw->put(*var, reloc_new_labels[matl][v]);
 	}
       } else {
-	int totalParticles=0;
-	for(int i=0;i<(int)subsets.size();i++)
-	  totalParticles+=subsets[i]->numParticles();
+	int numOldVariables = subsets.size();
+	if(newParts){
+	  map<const VarLabel*, ParticleVariableBase*>::iterator piter;
+	  piter = newParts->find(reloc_new_posLabel);
+	  if(piter == newParts->end())
+	    throw InternalError("didnt create new position");
+	  ParticleVariableBase* addedPos = piter->second;
+	  subsets.push_back(addedPos->getParticleSubset());
+	}
 
-	ParticleVariableBase* posvar = new_dw->getParticleVariable(reloc_old_posLabel, orig_pset);
-	ParticleSubset* newsubset = new_dw->createParticleSubset(totalParticles, matl, patch);
+	int totalParticles=0;
+	for(int i=0;i<(int)subsets.size();i++) {
+	  totalParticles+=subsets[i]->numParticles();
+	  cout << "totalParticles = " << totalParticles << endl;
+	}
+
+	ParticleVariableBase* posvar = 
+	  new_dw->getParticleVariable(reloc_old_posLabel, orig_pset);
+	ParticleSubset* newsubset = 
+	  new_dw->createParticleSubset(totalParticles, matl, patch);
 
 	// Merge local portion
 	vector<ParticleVariableBase*> invars(subsets.size());
-	for(int i=0;i<(int)subsets.size();i++)
+	for(int i=0;i<numOldVariables;i++)
 	  invars[i]=new_dw->getParticleVariable(reloc_old_posLabel, matl,
 						fromPatches[i]);
+	if(newParts){
+	  map<const VarLabel*, ParticleVariableBase*>::iterator piter;
+	  piter = newParts->find(reloc_new_posLabel);
+	  if(piter == newParts->end())
+	    throw InternalError("didnt create new position");
+	  ParticleVariableBase* addedPos = piter->second;
+	  invars[subsets.size()-1] = addedPos;
+	  fromPatches.push_back(patch);
+	}
 	ParticleVariableBase* newpos = posvar->clone();
 	newpos->gather(newsubset, subsets, invars, fromPatches, 0);
 
@@ -372,8 +400,19 @@ SPRelocate::relocateParticles(const ProcessorGroup*,
 	for(int v=0;v<numVars;v++){
 	  const VarLabel* label = reloc_old_labels[matl][v];
 	  ParticleVariableBase* var = new_dw->getParticleVariable(label, orig_pset);
-	  for(int i=0;i<(int)subsets.size();i++)
+	  for(int i=0;i<numOldVariables;i++)
 	    invars[i]=new_dw->getParticleVariable(label, matl, fromPatches[i]);
+	  if(newParts){
+	    map<const VarLabel*, ParticleVariableBase*>::iterator piter;
+	    piter = newParts->find(reloc_new_labels[matl][v]);
+	    if(piter == newParts->end()) {
+	      cout << "reloc_new_labels = " << reloc_new_labels[matl][v]->getName()
+		   << endl;
+	      throw InternalError("didnt create new variable of this type");
+	    }
+	    ParticleVariableBase* addedVar = piter->second;
+	    invars[subsets.size()-1] = addedVar;
+	  }
 	  ParticleVariableBase* newvar = var->clone();
 	  newvar->gather(newsubset, subsets, invars, fromPatches, 0);
 	  vars[v]=newvar;

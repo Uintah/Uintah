@@ -94,12 +94,12 @@ public:
   virtual void saveParticleSubset(int matlIndex, const Patch*,
 				  ParticleSubset* psubset) = 0;
   virtual bool haveParticleSubset(int matlIndex, const Patch*) = 0;
-  virtual ParticleSubset* getParticleSubset(int matlIndex,
-					    const Patch*) = 0;
-  virtual ParticleSubset* getDeleteSubset(int matlIndex,
-					  const Patch*) = 0;
-  virtual ParticleSubset* getParticleSubset(int matlIndex,
-					    const Patch*, Ghost::GhostType, int numGhostCells,
+  virtual ParticleSubset* getParticleSubset(int matlIndex, const Patch*) = 0;
+  virtual ParticleSubset* getDeleteSubset(int matlIndex, const Patch*) = 0;
+  virtual map<const VarLabel*, ParticleVariableBase*>* getNewParticleState(int matlIndex, const Patch*) = 0;
+  virtual ParticleSubset* getParticleSubset(int matlIndex, const Patch*, 
+					    Ghost::GhostType, 
+					    int numGhostCells,
 					    const VarLabel* posvar) = 0;
   virtual void allocateTemporary(ParticleVariableBase&,
 				 ParticleSubset*) = 0;
@@ -272,6 +272,10 @@ public:
      
   // Remove particles that are no longer relevant
   virtual void deleteParticles(ParticleSubset* delset) = 0;
+
+  // Add particles
+  virtual void addParticles(const Patch* patch, int matlIndex,
+			    map<const VarLabel*, ParticleVariableBase*>* addedstate) = 0;
 
   // Move stuff to a different data Warehouse
   virtual void transferFrom(DataWarehouse*, const VarLabel*,
