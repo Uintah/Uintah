@@ -304,7 +304,7 @@ TetVolMesh::locate(node_index &loc, const Point &p)
 
 
 bool
-TetVolMesh::locate(edge_index &edge, const Point & /* p */)
+TetVolMesh::locate(edge_index &/*edge*/, const Point & /* p */)
 {
   //FIX_ME
   return false;
@@ -312,7 +312,7 @@ TetVolMesh::locate(edge_index &edge, const Point & /* p */)
 
 
 bool
-TetVolMesh::locate(face_index &face, const Point & /* p */)
+TetVolMesh::locate(face_index &/*face*/, const Point & /* p */)
 {
   //FIX_ME
   return false;
