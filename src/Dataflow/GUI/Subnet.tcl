@@ -267,7 +267,6 @@ proc expandSubnet { modid } {
     set tocanvas $Subnet(Subnet${to}_canvas)
     set x [lindex [$tocanvas coords $modid] 0]
     set y [lindex [$tocanvas coords $modid] 1]
-    $tocanvas delete $modid
     set toDelete ""
     set toAdd ""
 
@@ -311,6 +310,16 @@ proc expandSubnet { modid } {
 	# the last 0 paramater means to not tell scirun, just delete TCL reps
 	createConnection $conn 0 0
     }
+
+    # Delete Icon from canvases
+    $Subnet(Subnet$Subnet($modid)_canvas) delete $modid
+    destroy $Subnet(Subnet$Subnet($modid)_canvas).module$modid
+    $Subnet(Subnet$Subnet($modid)_minicanvas) delete $modid
+    
+    # Remove references to module is various state arrays
+    array unset Subnet ${modid}_connections
+    listFindAndRemove CurrentlySelectedModules $modid
+    listFindAndRemove Subnet(Subnet$Subnet($modid)_Modules) $modid
 
     set CurrentlySelectedModules $Subnet(Subnet${from}_Modules)
     foreach module $Subnet(Subnet${from}_Modules) {
@@ -397,7 +406,7 @@ proc loadSubnet { filename { x 0 } { y 0 } } {
     if { [llength $splitname] == 1 } {
 	set filename [file join $SCIRUN_SRCDIR Subnets $netname]
 	if ![file exists $filename] {
-	    set filename [file join ~ Subnets $netname]
+	    set filename [file join ~ SCIRun Subnets $netname]
 	}
     }
 
@@ -426,23 +435,18 @@ proc loadSubnet { filename { x 0 } { y 0 } } {
 proc saveSubnet { subnet } {
     global Subnet SCIRUN_SRCDIR
     set name [join [split $Subnet(Subnet${subnet}_Name) "/"] ""].net
-    set home  ~
-    if [file writable $SCIRUN_SRCDIR/Subnets] {
-	set dir $SCIRUN_SRCDIR/Subnets
-    } elseif [file writable $SCIRUN_SRCDIR] {
-	set dir $SCIRUN_SRCDIR/Subnets
-	file mkdir $dir
-    } elseif [file writable $home/Subnets] {
-	set dir $home/Subnets
-    } elseif [file writable $home] {
-	set dir $home/Subnets
-	file mkdir $dir
+    set dir [file join $SCIRUN_SRCDIR Subnets]
+    catch "file mkdir $dir"
+    if ![validDir $dir] {
+	set home [file nativename ~]
+	set dir [file join $home SCIRun Subnets]
+	catch "file mkdir $dir"
     }
-    set name $dir/$name
+    set name [file join $dir $name]
     set Subnet(Subnet${subnet}_filename) $name
     if ![file writable $dir] {
 	tk_messageBox -type ok -parent . -icon error -message \
-	    "Cannot save Sub-Network $Subnet(Subnet${subnet}_Name) with filename $name to $SCIRUN_SRCDIR/Subnets or $home/Subnets" 
+	    "Cannot save Sub-Network $Subnet(Subnet${subnet}_Name) with filename $name to $SCIRUN_SRCDIR/Subnets or $home/SCIRun/Subnets" 
 	return
     }
     netedit savenetwork $name $subnet
