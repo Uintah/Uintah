@@ -92,6 +92,8 @@ public:
   void resize(const MaskedLatVolMesh::Cell::size_type &size)
   { Array3<Data>::resize(size.k_, size.j_, size.i_); }
 
+  unsigned int size() const { return dim1() * dim2() * dim3(); }
+
   static const string type_name(int n = -1);
 };
 
