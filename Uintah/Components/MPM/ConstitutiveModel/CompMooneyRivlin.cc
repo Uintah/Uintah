@@ -160,6 +160,11 @@ void CompMooneyRivlin::computeStressTensor(const Patch* patch,
   ParticleVariable<Vector> pvelocity;
   old_dw->get(pvelocity, lb->pVelocityLabel, pset);
 
+   // As a side-effect of computeStressTensor, pDilatationalWaveSpeed
+   // are calculated and for delT and saved that will be used later by fracture
+  ParticleVariable<double> pDilatationalWaveSpeed;
+  new_dw->allocate(pDilatationalWaveSpeed, lb->pDilatationalWaveSpeedLabel, pset);
+
   NCVariable<Vector> gvelocity;
 
   new_dw->get(gvelocity, lb->gMomExedVelocityLabel, matlindex,patch,
@@ -271,6 +276,8 @@ void CompMooneyRivlin::computeStressTensor(const Patch* patch,
       se += (C1*(invar1-3.0) + C2*(invar2-3.0) +
             C3*(1.0/(invar3*invar3) - 1.0) +
             C4*(invar3-1.0)*(invar3-1.0))*pvolume[idx]/J;
+
+      pDilatationalWaveSpeed[idx] = c_dil;
     }
     WaveSpeed = dx/WaveSpeed;
     double delT_new = WaveSpeed.minComponent();
@@ -285,6 +292,8 @@ void CompMooneyRivlin::computeStressTensor(const Patch* patch,
     new_dw->put(cmdata, p_cmdata_label_preReloc);
     // Volume is currently just carried forward, but will be updated.
     new_dw->put(pvolume, lb->pVolumeDeformedLabel);
+
+    new_dw->put(pDilatationalWaveSpeed, lb->pDilatationalWaveSpeedLabel);
 
     if(matl->getFractureModel()) {
         delete lattice;
@@ -333,6 +342,8 @@ void CompMooneyRivlin::addComputesAndRequires(Task* task,
    task->computes(new_dw, lb->pDeformationMeasureLabel_preReloc, matl->getDWIndex(), patch);
    task->computes(new_dw, p_cmdata_label_preReloc, matl->getDWIndex(),  patch);
    task->computes(new_dw, lb->pVolumeDeformedLabel, matl->getDWIndex(), patch);
+   
+   task->computes(new_dw, lb->pDilatationalWaveSpeedLabel, matl->getDWIndex(), patch);
 }
 
 double CompMooneyRivlin::computeStrainEnergy(const Patch* patch,
@@ -371,6 +382,10 @@ const TypeDescription* fun_getTypeDescription(CompMooneyRivlin::CMData*)
 }
 
 // $Log$
+// Revision 1.58  2000/09/08 01:45:28  tan
+// Added pDilatationalWaveSpeedLabel for fracture and is saved as a
+// side-effect of computeStressTensor in each constitutive model class.
+//
 // Revision 1.57  2000/09/07 21:17:49  tan
 // Removed a debugging output.
 //

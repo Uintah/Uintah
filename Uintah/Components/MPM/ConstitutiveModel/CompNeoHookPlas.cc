@@ -190,6 +190,11 @@ void CompNeoHookPlas::computeStressTensor(const Patch* patch,
   ParticleVariable<Vector> pvelocity;
   old_dw->get(pvelocity, lb->pVelocityLabel, pset);
 
+   // As a side-effect of computeStressTensor, pDilatationalWaveSpeed
+   // are calculated and for delT and saved that will be used later by fracture
+  ParticleVariable<double> pDilatationalWaveSpeed;
+  new_dw->allocate(pDilatationalWaveSpeed, lb->pDilatationalWaveSpeedLabel, pset);
+
   NCVariable<Vector> gvelocity;
 
   new_dw->get(gvelocity, lb->gMomExedVelocityLabel, matlindex,patch,
@@ -331,6 +336,8 @@ void CompNeoHookPlas::computeStressTensor(const Patch* patch,
     WaveSpeed=Vector(Max(c_dil+fabs(pvelocity[idx].x()),WaveSpeed.x()),
 		     Max(c_dil+fabs(pvelocity[idx].y()),WaveSpeed.y()),
 		     Max(c_dil+fabs(pvelocity[idx].z()),WaveSpeed.z()));
+
+    pDilatationalWaveSpeed[idx] = c_dil;
   }
 
   WaveSpeed = dx/WaveSpeed;
@@ -347,6 +354,8 @@ void CompNeoHookPlas::computeStressTensor(const Patch* patch,
   new_dw->put(cmdata, p_cmdata_label_preReloc);
   // Store the deformed volume
   new_dw->put(pvolume,lb->pVolumeDeformedLabel);
+
+  new_dw->put(pDilatationalWaveSpeed, lb->pDilatationalWaveSpeedLabel);
 
   if(matl->getFractureModel()) {
         delete lattice;
@@ -398,6 +407,8 @@ void CompNeoHookPlas::addComputesAndRequires(Task* task,
    task->computes(new_dw, bElBarLabel_preReloc, matl->getDWIndex(),  patch);
    task->computes(new_dw, p_cmdata_label_preReloc, matl->getDWIndex(),  patch);
    task->computes(new_dw, lb->pVolumeDeformedLabel, matl->getDWIndex(), patch);
+
+   task->computes(new_dw, lb->pDilatationalWaveSpeedLabel, matl->getDWIndex(), patch);
 }
 
 #ifdef __sgi
@@ -429,6 +440,10 @@ const TypeDescription* fun_getTypeDescription(CompNeoHookPlas::CMData*)
 }
 
 // $Log$
+// Revision 1.42  2000/09/08 01:46:35  tan
+// Added pDilatationalWaveSpeedLabel for fracture and is saved as a
+// side-effect of computeStressTensor in each constitutive model class.
+//
 // Revision 1.41  2000/09/07 21:11:09  tan
 // Added particle variable pMicrocrackSize for fracture.
 //

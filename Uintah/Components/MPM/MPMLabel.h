@@ -23,6 +23,7 @@ namespace Uintah {
       const VarLabel* delTLabel;
       
       const VarLabel* pDeformationMeasureLabel;
+      const VarLabel* pDilatationalWaveSpeedLabel;
       const VarLabel* pStressLabel;
       const VarLabel* pVolumeLabel;
       const VarLabel* pVolumeDeformedLabel;
@@ -101,6 +102,10 @@ namespace Uintah {
 
 
 // $Log$
+// Revision 1.25  2000/09/08 01:47:22  tan
+// Added pDilatationalWaveSpeedLabel for fracture and is saved as a
+// side-effect of computeStressTensor in each constitutive model class.
+//
 // Revision 1.24  2000/09/07 21:11:04  tan
 // Added particle variable pMicrocrackSize for fracture.
 //

@@ -16,6 +16,9 @@ MPMLabel::MPMLabel()
   // Particle Variables
   pDeformationMeasureLabel = scinew VarLabel("p.deformationMeasure",
 			ParticleVariable<Matrix3>::getTypeDescription());
+
+  pDilatationalWaveSpeedLabel = scinew VarLabel("p.dilatationalWaveSpeed",
+			ParticleVariable<double>::getTypeDescription());
   
   pStressLabel = scinew VarLabel( "p.stress",
 			ParticleVariable<Matrix3>::getTypeDescription() );
@@ -224,6 +227,7 @@ MPMLabel::MPMLabel()
 MPMLabel::~MPMLabel()
 {
   delete pDeformationMeasureLabel;
+  delete pDilatationalWaveSpeedLabel;
   delete pStressLabel;
   delete pVolumeLabel;
   delete pVolumeDeformedLabel;
@@ -242,6 +246,7 @@ MPMLabel::~MPMLabel()
   delete pParticleIDLabel;
   delete pIsIgnitedLabel;
   delete pMassRateLabel;
+  
   delete pDeformationMeasureLabel_preReloc;
   delete pStressLabel_preReloc;
   delete pVolumeLabel_preReloc;
@@ -310,6 +315,10 @@ void MPMLabel::registerPermanentParticleState(int i,
 }
 
 // $Log$
+// Revision 1.29  2000/09/08 01:47:34  tan
+// Added pDilatationalWaveSpeedLabel for fracture and is saved as a
+// side-effect of computeStressTensor in each constitutive model class.
+//
 // Revision 1.28  2000/09/07 21:11:04  tan
 // Added particle variable pMicrocrackSize for fracture.
 //

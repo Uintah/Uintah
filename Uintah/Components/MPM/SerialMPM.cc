@@ -628,6 +628,10 @@ void SerialMPM::scheduleTimeAdvance(double t, double dt,
 			 Ghost::None);
 	      t->requires( old_dw, lb->pMicrocrackSizeLabel, idx, patch,
 			 Ghost::None);
+	      t->requires( new_dw, lb->pDilatationalWaveSpeedLabel, idx, patch,
+			 Ghost::None);
+			 
+ 	      t->requires(old_dw, d_sharedState->get_delt_label() );
 
 	      t->computes( new_dw, lb->pIsBrokenLabel_preReloc, idx, patch );
 	      t->computes( new_dw, lb->pCrackSurfaceNormalLabel_preReloc, idx, patch );
@@ -1773,6 +1777,10 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
 
 
 // $Log$
+// Revision 1.133  2000/09/08 01:48:04  tan
+// Added pDilatationalWaveSpeedLabel for fracture and is saved as a
+// side-effect of computeStressTensor in each constitutive model class.
+//
 // Revision 1.132  2000/09/07 21:11:04  tan
 // Added particle variable pMicrocrackSize for fracture.
 //
