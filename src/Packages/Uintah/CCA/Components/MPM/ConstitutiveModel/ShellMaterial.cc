@@ -45,6 +45,9 @@ ShellMaterial::ShellMaterial(ProblemSpecP& ps,  MPMLabel* Mlb,
   lb = Mlb;
   flag = Mflag;
 
+  d_includeFlowWork = true;
+  ps->get("includeFlowWork",d_includeFlowWork);
+
   // Set up support size for interpolation
   d_8or27 = flag->d_8or27;
   NGN = 1;
