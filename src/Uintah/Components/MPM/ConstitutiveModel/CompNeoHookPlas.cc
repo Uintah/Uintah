@@ -32,10 +32,10 @@ CompNeoHookPlas::CompNeoHookPlas(ProblemSpecP& ps)
   ps->require("hardening_modulus",d_initialData.K);
   ps->require("alpha",d_initialData.Alpha);
 
-  p_cmdata_label = scinew VarLabel("p.cmdata",
-                                ParticleVariable<CMData>::getTypeDescription());
-  p_cmdata_label_preReloc = scinew VarLabel("p.cmdata+",
-                                ParticleVariable<CMData>::getTypeDescription());
+  p_statedata_label = scinew VarLabel("p.statedata",
+                             ParticleVariable<StateData>::getTypeDescription());
+  p_statedata_label_preReloc = scinew VarLabel("p.statedata+",
+                             ParticleVariable<StateData>::getTypeDescription());
  
   bElBarLabel = scinew VarLabel("p.bElBar",
 		ParticleVariable<Matrix3>::getTypeDescription());
@@ -46,17 +46,17 @@ CompNeoHookPlas::CompNeoHookPlas(ProblemSpecP& ps)
 void CompNeoHookPlas::addParticleState(std::vector<const VarLabel*>& from,
 				       std::vector<const VarLabel*>& to)
 {
-   from.push_back(p_cmdata_label);
+   from.push_back(p_statedata_label);
    from.push_back(bElBarLabel);
-   to.push_back(p_cmdata_label_preReloc);
+   to.push_back(p_statedata_label_preReloc);
    to.push_back(bElBarLabel_preReloc);
 }
 
 CompNeoHookPlas::~CompNeoHookPlas()
 {
   // Destructor 
-  delete p_cmdata_label;
-  delete p_cmdata_label_preReloc;
+  delete p_statedata_label;
+  delete p_statedata_label_preReloc;
   delete bElBarLabel;
   delete bElBarLabel_preReloc;
   
@@ -72,8 +72,8 @@ void CompNeoHookPlas::initializeCMData(const Patch* patch,
    Identity.Identity();
 
    ParticleSubset* pset = new_dw->getParticleSubset(matl->getDWIndex(), patch);
-   ParticleVariable<CMData> cmdata;
-   new_dw->allocate(cmdata, p_cmdata_label, pset);
+   ParticleVariable<StateData> statedata;
+   new_dw->allocate(statedata, p_statedata_label, pset);
    ParticleVariable<Matrix3> deformationGradient;
    new_dw->allocate(deformationGradient, lb->pDeformationMeasureLabel, pset);
    ParticleVariable<Matrix3> pstress;
@@ -83,12 +83,12 @@ void CompNeoHookPlas::initializeCMData(const Patch* patch,
 
    for(ParticleSubset::iterator iter = pset->begin();
           iter != pset->end(); iter++) {
-	    cmdata[*iter] = d_initialData;
+	  statedata[*iter].Alpha = d_initialData.Alpha;
           deformationGradient[*iter] = Identity;
           bElBar[*iter] = Identity;
           pstress[*iter] = zero;
    }
-   new_dw->put(cmdata, p_cmdata_label);
+   new_dw->put(statedata, p_statedata_label);
    new_dw->put(deformationGradient, lb->pDeformationMeasureLabel);
    new_dw->put(pstress, lb->pStressLabel);
    new_dw->put(bElBar, bElBarLabel);
@@ -107,8 +107,8 @@ void CompNeoHookPlas::computeStableTimestep(const Patch* patch,
   int matlindex = matl->getDWIndex();
   // Retrieve the array of constitutive parameters
   ParticleSubset* pset = new_dw->getParticleSubset(matlindex, patch);
-  ParticleVariable<CMData> cmdata;
-  new_dw->get(cmdata, p_cmdata_label, pset);
+  ParticleVariable<StateData> statedata;
+  new_dw->get(statedata, p_statedata_label, pset);
   ParticleVariable<double> pmass;
   new_dw->get(pmass, lb->pMassLabel, pset);
   ParticleVariable<double> pvolume;
@@ -119,13 +119,13 @@ void CompNeoHookPlas::computeStableTimestep(const Patch* patch,
   double c_dil = 0.0;
   Vector WaveSpeed(1.e-12,1.e-12,1.e-12);
 
+  double mu = d_initialData.Shear;
+  double bulk = d_initialData.Bulk;
   for(ParticleSubset::iterator iter = pset->begin();
       iter != pset->end(); iter++){
      particleIndex idx = *iter;
 
      // Compute wave speed at each particle, store the maximum
-     double mu = cmdata[idx].Shear;
-     double bulk = cmdata[idx].Bulk;
      if(pmass[idx] > 0){
        c_dil = sqrt((bulk + 4.*mu/3.)*pvolume[idx]/pmass[idx]);
      }
@@ -177,11 +177,11 @@ void CompNeoHookPlas::computeStressTensor(const Patch* patch,
 
   // Create array for the particle stress
   ParticleVariable<Matrix3> pstress;
-  old_dw->get(pstress, lb->pStressLabel, pset);
+  new_dw->allocate(pstress, lb->pStressAfterStrainRateLabel, pset);
 
   // Retrieve the array of constitutive parameters
-  ParticleVariable<CMData> cmdata;
-  old_dw->get(cmdata, p_cmdata_label, pset);
+  ParticleVariable<StateData> statedata;
+  old_dw->get(statedata, p_statedata_label, pset);
   ParticleVariable<double> pmass;
   old_dw->get(pmass, lb->pMassLabel, pset);
   ParticleVariable<double> pvolume;
@@ -202,6 +202,11 @@ void CompNeoHookPlas::computeStressTensor(const Patch* patch,
     new_dw->get(pVisibility, lb->pVisibilityLabel, pset);
     new_dw->allocate(pRotationRate, lb->pRotationRateLabel, pset);
   }
+
+  double shear = d_initialData.Shear;
+  double bulk  = d_initialData.Bulk;
+  double flow  = d_initialData.FlowStress;
+  double K     = d_initialData.K;
 
   for(ParticleSubset::iterator iter = pset->begin();
      iter != pset->end(); iter++){
@@ -250,11 +255,7 @@ void CompNeoHookPlas::computeStressTensor(const Patch* patch,
 
     // Calculate the stress Tensor (symmetric 3 x 3 Matrix) given the
     // time step and the velocity gradient and the material constants
-    double shear = cmdata[idx].Shear;
-    double bulk  = cmdata[idx].Bulk;
-    double flow  = cmdata[idx].FlowStress;
-    double K     = cmdata[idx].K;
-    double alpha = cmdata[idx].Alpha;
+    double alpha = statedata[idx].Alpha;
 
     // Compute the deformation gradient increment using the time_step
     // velocity gradient
@@ -302,14 +303,14 @@ void CompNeoHookPlas::computeStressTensor(const Patch* patch,
         // The actual elastic shear stress
 	Shear = shearTrial - normal*2.0*muBar*delgamma;
 
-        // Deal with history variables
-      cmdata[idx].Alpha = alpha + sqtwthds*delgamma;
-      bElBar[idx] = Shear/shear + Identity*IEl;
+	// Deal with history variables
+	statedata[idx].Alpha = alpha + sqtwthds*delgamma;
+	bElBar[idx] = Shear/shear + Identity*IEl;
     }
     else {
 	// not plastic
 
-      bElBar[idx] = bElBarTrial;
+	bElBar[idx] = bElBarTrial;
 	Shear = shearTrial;
     }
 
@@ -356,7 +357,7 @@ void CompNeoHookPlas::computeStressTensor(const Patch* patch,
   new_dw->put(sum_vartype(se), lb->StrainEnergyLabel);
 
   // This is just carried forward with the updated alpha
-  new_dw->put(cmdata, p_cmdata_label_preReloc);
+  new_dw->put(statedata, p_statedata_label_preReloc);
   // Store the deformed volume
   new_dw->put(pvolume,lb->pVolumeDeformedLabel);
 }
@@ -379,7 +380,7 @@ void CompNeoHookPlas::addComputesAndRequires(Task* task,
                   Ghost::None);
    task->requires(old_dw, lb->pDeformationMeasureLabel, matl->getDWIndex(), patch,
                   Ghost::None);
-   task->requires(old_dw, p_cmdata_label, matl->getDWIndex(),  patch,
+   task->requires(old_dw, p_statedata_label, matl->getDWIndex(),  patch,
                   Ghost::None);
    task->requires(old_dw, lb->pMassLabel, matl->getDWIndex(),  patch,
                   Ghost::None);
@@ -393,7 +394,7 @@ void CompNeoHookPlas::addComputesAndRequires(Task* task,
    task->computes(new_dw, lb->pStressAfterStrainRateLabel, matl->getDWIndex(),  patch);
    task->computes(new_dw, lb->pDeformationMeasureLabel_preReloc, matl->getDWIndex(), patch);
    task->computes(new_dw, bElBarLabel_preReloc, matl->getDWIndex(),  patch);
-   task->computes(new_dw, p_cmdata_label_preReloc, matl->getDWIndex(),  patch);
+   task->computes(new_dw, p_statedata_label_preReloc, matl->getDWIndex(),  patch);
    task->computes(new_dw, lb->pVolumeDeformedLabel, matl->getDWIndex(), patch);
 
    if(matl->getFractureModel()) {
@@ -431,19 +432,19 @@ namespace Uintah {
 
 static MPI_Datatype makeMPI_CMData()
 {
-   ASSERTEQ(sizeof(CompNeoHookPlas::CMData), sizeof(double)*5);
+   ASSERTEQ(sizeof(CompNeoHookPlas::StateData), sizeof(double)*1);
    MPI_Datatype mpitype;
-   MPI_Type_vector(1, 5, 5, MPI_DOUBLE, &mpitype);
+   MPI_Type_vector(1, 1, 1, MPI_DOUBLE, &mpitype);
    MPI_Type_commit(&mpitype);
    return mpitype;
 }
 
-const TypeDescription* fun_getTypeDescription(CompNeoHookPlas::CMData*)
+const TypeDescription* fun_getTypeDescription(CompNeoHookPlas::StateData*)
 {
    static TypeDescription* td = 0;
    if(!td){
       td = scinew TypeDescription(TypeDescription::Other,
-				  "CompNeoHookPlas::CMData", true, &makeMPI_CMData);
+			  "CompNeoHookPlas::StateData", true, &makeMPI_CMData);
    }
    return td;   
 }
@@ -451,6 +452,11 @@ const TypeDescription* fun_getTypeDescription(CompNeoHookPlas::CMData*)
 }
 
 // $Log$
+// Revision 1.51  2000/10/10 00:10:29  guilkey
+// Created a StateData struct, which is used to store those variables
+// which actually need to be stored on a per particle basis.  CMData
+// variable are stored only once now.
+//
 // Revision 1.50  2000/09/26 17:08:35  sparker
 // Need to commit MPI types
 //
