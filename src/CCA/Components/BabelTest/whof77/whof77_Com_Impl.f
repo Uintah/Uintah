@@ -3,15 +3,15 @@ C       File:          whof77_Com_Impl.f
 C       Symbol:        whof77.Com-v1.0
 C       Symbol Type:   class
 C       Babel Version: 0.7.4
-C       SIDL Created:  20030227 01:19:37 MST
-C       Generated:     20030227 01:19:41 MST
+C       SIDL Created:  20030306 10:45:55 MST
+C       Generated:     20030306 10:45:58 MST
 C       Description:   Server-side implementation for whof77.Com
 C       
 C       WARNING: Automatically generated; only changes within splicers preserved
 C       
 C       babel-version = 0.7.4
 C       source-line   = 13
-C       source-url    = file:/home/kzhang/SCIRun/src/Babel/Components/whof77/whof77.sidl
+C       source-url    = file:/home/sci/kzhang/SCIRun/src/CCA/Components/BabelTest/whof77/whof77.sidl
 C       
 
 
