@@ -44,6 +44,12 @@ bool Class_interface::isPrimitive()
     return false;
 }
 
+::CIA::string Class_interface::getName()
+{
+    NOT_FINISHED("final string .CIA.Class.getName()");
+    return "";
+}
+
 Class Class_interface::getSuperclass()
 {
     NOT_FINISHED("final .CIA.Class .CIA.Class.getSuperclass()");
@@ -65,6 +71,11 @@ Method Class_interface::getMethod()
 
 //
 // $Log$
+// Revision 1.2  1999/09/28 08:19:48  sparker
+// Implemented start of array class (only 1d currently)
+// Implement string class (typedef to std::string)
+// Updates to spec now that sidl support strings
+//
 // Revision 1.1  1999/09/24 06:26:22  sparker
 // Further implementation of new Component model and IDL parser, including:
 //  - fixed bugs in multiple inheritance

@@ -1,6 +1,6 @@
 
 /*
- *  string.h: CIA string class
+ *  array.h: CIA array classes
  *  $Id$
  *
  *  Written by:
@@ -12,20 +12,24 @@
  *  Copyright (C) 1999 SCI Group
  */
 
-#ifndef Component_CIA_string_h
-#define Component_CIA_string_h
+#ifndef Component_CIA_array_h
+#define Component_CIA_array_h
 
-#include <string>
+#include <vector>
 
 namespace CIA {
-    typedef std::string string;
+    template<class T> class array1 : public std::vector<T> {
+    public:
+	array1() : std::vector<T>(0) {}
+	array1(unsigned long s) : std::vector<T>(s) {}
+    };
 }
 
 #endif
 
 //
 // $Log$
-// Revision 1.2  1999/09/28 08:19:49  sparker
+// Revision 1.1  1999/09/28 08:19:48  sparker
 // Implemented start of array class (only 1d currently)
 // Implement string class (typedef to std::string)
 // Updates to spec now that sidl support strings
