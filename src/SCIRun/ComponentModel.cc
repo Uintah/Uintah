@@ -40,8 +40,8 @@
 
 #include <SCIRun/ComponentModel.h>
 #include <iostream>
-using namespace std;
-using namespace SCIRun;
+
+namespace SCIRun {
 
 ComponentModel::ComponentModel(const std::string& prefixName)
   : prefixName(prefixName)
@@ -54,19 +54,24 @@ ComponentModel::~ComponentModel()
 
 bool ComponentModel::haveComponent(const std::string& type)
 {
-  cerr << "Error: this component model does not implement haveComponent, name=" << type << "\n";
+  std::cerr << "Error: this component model does not implement haveComponent, name="
+            << type << std::endl;
   return false;
 }
 
 ComponentInstance* ComponentModel::createInstance(const std::string& name,
 						  const std::string& type)
 {
-  cerr << "Error: this component model does not implement createInstance\n";
+  std::cerr << "Error: this component model does not implement createInstance"
+            << std::endl;
   return 0;
 }
 
 bool  ComponentModel::destroyInstance(ComponentInstance* ic)
 {
-  cerr << "Error: this component model does not implement destroyInstance\n";
+  std::cerr << "Error: this component model does not implement destroyInstance"
+            << std::endl;
   return false;
 }
+
+} // end namespace SCIRun

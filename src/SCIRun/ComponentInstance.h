@@ -44,28 +44,36 @@
 #include <SCIRun/CCA/ComponentID.h>
 #include <string>
 
-namespace SCIRun {
-  class SCIRunFramework;
-  class PortInstance;
-  class PortInstanceIterator;
+namespace SCIRun
+{
 
-  class ComponentInstance {
-  public:
-    ComponentInstance(SCIRunFramework* framework,
-		      const std::string& instanceName,
-		      const std::string& className);
-    virtual ~ComponentInstance();
+class SCIRunFramework;
+class PortInstance;
+class PortInstanceIterator;
 
-    SCIRunFramework* framework;
-    std::string instanceName;
-    std::string className;
+/**
+ * \class ComponentInstance
+ *
+ */
+class ComponentInstance
+{
+public:
+  ComponentInstance(SCIRunFramework* framework,
+                    const std::string& instanceName,
+                    const std::string& className);
+  virtual ~ComponentInstance();
 
-    virtual PortInstance* getPortInstance(const std::string& name) = 0;
-    virtual PortInstanceIterator* getPorts() = 0;
-  private:
-    ComponentInstance(const ComponentInstance&);
-    ComponentInstance& operator=(const ComponentInstance&);
-  };
-}
+  SCIRunFramework* framework;
+  std::string instanceName;
+  std::string className;
+  
+  virtual PortInstance* getPortInstance(const std::string& name) = 0;
+  virtual PortInstanceIterator* getPorts() = 0;
+private:
+  ComponentInstance(const ComponentInstance&);
+  ComponentInstance& operator=(const ComponentInstance&);
+};
+
+} // end namespace SCIRun
 
 #endif

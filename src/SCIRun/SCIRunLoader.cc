@@ -70,53 +70,53 @@
 #include <iostream>
 #include <sstream>
 
+namespace SCIRun {
 
-using namespace std;
-using namespace SCIRun;
-
-SCIRunLoader::SCIRunLoader(const string &loaderName,  const string & frameworkURL)
+SCIRunLoader::SCIRunLoader(const std::string &loaderName,
+                           const std::string & frameworkURL)
 {
   /*  Object::pointer obj=PIDL::objectFrom(frameworkURL);
-  if(obj.isNull()){
-    cerr<<"Cannot get framework from url="<<frameworkURL<<endl;
-    return;
-  }
-  sci::cca::AbstractFramework::pointer framework=pidl_cast<sci::cca::AbstractFramework::pointer>(obj);
-  
-  SSIDL::array1< std::string> URLs;
-  URLs.push_back(this->getURL().getString());
-  framework->registerLoader(loaderName, URLs);
+      if(obj.isNull()){
+      cerr<<"Cannot get framework from url="<<frameworkURL<<std::endl;
+      return;
+      }
+      sci::cca::AbstractFramework::pointer
+      framework=pidl_cast<sci::cca::AbstractFramework::pointer>(obj);
+      
+      SSIDL::array1< std::string> URLs;
+      URLs.push_back(this->getURL().getString());
+      framework->registerLoader(loaderName, URLs);
   */
 }
 
-int SCIRunLoader::createPInstance(const string& componentName, const string& componentType, 
-				  const sci::cca::TypeMap::pointer& properties,SSIDL::array1<std::string> &componentURLs) {
-
+int SCIRunLoader::createPInstance(const std::string& componentName,
+                                  const std::string& componentType, 
+                                  const sci::cca::TypeMap::pointer& properties,
+                                  SSIDL::array1<std::string> &componentURLs)
+{
   //TODO: assume type is always good?
-
-  cerr<<"SCIRunLoader::getRefCount()="<<getRefCount()<<endl;
-
+  std::cerr<<"SCIRunLoader::getRefCount()="<<getRefCount()<<std::endl;
   
-  string lastname=componentType.substr(componentType.find('.')+1);  
-  string so_name("lib/libCCA_Components_");
+  std::string lastname=componentType.substr(componentType.find('.')+1);  
+  std::string so_name("lib/libCCA_Components_");
   so_name=so_name+lastname+".so";
-  cerr<<"componentType="<<componentType<<" soname="<<so_name<<endl;
+  std::cerr<<"componentType="<<componentType<<" soname="<<so_name<<std::endl;
     
   LIBRARY_HANDLE handle = GetLibraryHandle(so_name.c_str());
   if(!handle){
-    cerr << "Cannot load component " << componentType << '\n';
-    cerr << SOError() << '\n';
+    std::cerr << "Cannot load component " << componentType << std::endl;
+    std::cerr << SOError() << std::endl;
     return 1;
   }
-  string makername = "make_"+componentType;
+  std::string makername = "make_"+componentType;
   for(int i=0;i<(int)makername.size();i++)
     if(makername[i] == '.')
       makername[i]='_';
   
   void* maker_v = GetHandleSymbolAddress(handle, makername.c_str());
   if(!maker_v){
-    cerr <<"Cannot load component " << componentType << '\n';
-    cerr << SOError() << '\n';
+    std::cerr <<"Cannot load component " << componentType << std::endl;
+    std::cerr << SOError() << std::endl;
     return 1;
   }
   sci::cca::Component::pointer (*maker)() = (sci::cca::Component::pointer (*)())(maker_v);
@@ -127,44 +127,44 @@ int SCIRunLoader::createPInstance(const string& componentName, const string& com
   MPI_Comm_rank(MPI_COMM_WORLD,&mpi_rank);
   MPI_Comm_size(MPI_COMM_WORLD,&mpi_size);
 
-  cerr << "SCIRunLoader::createInstance..., rank/size="<<mpi_rank<<"/"<<mpi_size<<"\n";
+  std::cerr << "SCIRunLoader::createInstance..., rank/size="<<mpi_rank<<"/"<<mpi_size<<"\n";
   componentURLs.resize(1);
   componentURLs[0] = component->getURL().getString();
   //componentURLs.push_back(component->getURL().getString());
-  cerr << "Done, rank/size="<<mpi_rank<<"/"<<mpi_size<<" and URL="<<component->getURL().getString()<<"\n";
+  std::cerr << "Done, rank/size="<<mpi_rank<<"/"<<mpi_size<<" and URL="<<component->getURL().getString()<<"\n";
   return 0;
 }
 
 
 
-int SCIRunLoader::createInstance(const string& componentName, const string& componentType, 
+int SCIRunLoader::createInstance(const std::string& componentName, const std::string& componentType, 
 				 const sci::cca::TypeMap::pointer& properties,std::string &componentURL) {
 
   //TODO: assume type is always good?
 
-  cerr<<"SCIRunLoader::getRefCount()="<<getRefCount()<<endl;
+  std::cerr<<"SCIRunLoader::getRefCount()="<<getRefCount()<<std::endl;
 
   
-  string lastname=componentType.substr(componentType.find('.')+1);  
-  string so_name("lib/libCCA_Components_");
+  std::string lastname=componentType.substr(componentType.find('.')+1);  
+  std::string so_name("lib/libCCA_Components_");
   so_name=so_name+lastname+".so";
-  cerr<<"componentType="<<componentType<<" soname="<<so_name<<endl;
+  std::cerr<<"componentType="<<componentType<<" soname="<<so_name<<std::endl;
     
   LIBRARY_HANDLE handle = GetLibraryHandle(so_name.c_str());
   if(!handle){
-    cerr << "Cannot load component " << componentType << '\n';
-    cerr << SOError() << '\n';
+    std::cerr << "Cannot load component " << componentType << std::endl;
+    std::cerr << SOError() << std::endl;
     return 1;
   }
-  string makername = "make_"+componentType;
+  std::string makername = "make_"+componentType;
   for(int i=0;i<(int)makername.size();i++)
     if(makername[i] == '.')
       makername[i]='_';
   
   void* maker_v = GetHandleSymbolAddress(handle, makername.c_str());
   if(!maker_v){
-    cerr <<"Cannot load component " << componentType << '\n';
-    cerr << SOError() << '\n';
+    std::cerr <<"Cannot load component " << componentType << std::endl;
+    std::cerr << SOError() << std::endl;
     return 1;
   }
   sci::cca::Component::pointer (*maker)() = (sci::cca::Component::pointer (*)())(maker_v);
@@ -179,20 +179,20 @@ int SCIRunLoader::createInstance(const string& componentName, const string& comp
   //componentURLs[0] = component->getURL().getString();
   //componentURLs.push_back(component->getURL().getString());
   componentURL=component->getURL().getString();
-  cerr << "SCIRunLoader::createInstance Done, rank/size="<<mpi_rank<<"/"<<mpi_size<<"\n";
+  std::cerr << "SCIRunLoader::createInstance Done, rank/size="<<mpi_rank<<"/"<<mpi_size<<"\n";
   return 0;
 }
 
 
-int SCIRunLoader::destroyInstance(const string& componentName, float time)
+int SCIRunLoader::destroyInstance(const std::string& componentName, float time)
 {
-  cerr<<"destroyInstance not implemneted\n";
+  std::cerr<<"destroyInstance not implemneted\n";
   return 0;
 }
 
 int SCIRunLoader::getAllComponentTypes(::SSIDL::array1< ::std::string>& componentTypes)
 {
-  cerr<<"listAllComponents() is called\n";
+  std::cerr<<"listAllComponents() is called\n";
   buildComponentList();
   for(componentDB_type::iterator iter=components.begin();
       iter != components.end(); iter++){
@@ -203,14 +203,14 @@ int SCIRunLoader::getAllComponentTypes(::SSIDL::array1< ::std::string>& componen
 
 int SCIRunLoader::shutdown(float timeout)
 {
-  cerr<<"shutdown() is called: should unregisterLoader()\n";
+  std::cerr<<"shutdown() is called: should unregisterLoader()\n";
   return 0;
 }
 
 
 SCIRunLoader::~SCIRunLoader()
 {
-  cerr << "SCIRun  Loader exits.\n";
+  std::cerr << "SCIRun  Loader exits.\n";
   //abort();
 }
 
@@ -226,27 +226,27 @@ std::string CCAComponentModel::createComponent(const std::string& name,
     return "";
     //ComponentDescription* cd = iter->second;
   
-  string lastname=type.substr(type.find('.')+1);  
-  string so_name("lib/libCCA_Components_");
+  std::string lastname=type.substr(type.find('.')+1);  
+  std::string so_name("lib/libCCA_Components_");
   so_name=so_name+lastname+".so";
-  //cerr<<"type="<<type<<" soname="<<so_name<<endl;
+  //std::cerr<<"type="<<type<<" soname="<<so_name<<std::endl;
   
   LIBRARY_HANDLE handle = GetLibraryHandle(so_name.c_str());
   if(!handle){
-    cerr << "Cannot load component " << type << '\n';
-    cerr << SOError() << '\n';
+    std::cerr << "Cannot load component " << type << std::endl;
+    std::cerr << SOError() << std::endl;
     return "";
   }
 
-  string makername = "make_"+type;
+  std::string makername = "make_"+type;
   for(int i=0;i<(int)makername.size();i++)
     if(makername[i] == '.')
       makername[i]='_';
   
   void* maker_v = GetHandleSymbolAddress(handle, makername.c_str());
   if(!maker_v){
-    cerr << "Cannot load component " << type << '\n';
-    cerr << SOError() << '\n';
+    std::cerr << "Cannot load component " << type << std::endl;
+    std::cerr << SOError() << std::endl;
     return "";
   }
   sci::cca::Component::pointer (*maker)() = (sci::cca::Component::pointer (*)())(maker_v);
@@ -265,16 +265,16 @@ void SCIRunLoader::buildComponentList()
     XMLPlatformUtils::Initialize();
   }catch (const XMLException& toCatch) {
     std::cerr << "Error during initialization! :\n"
-	      << StrX(toCatch.getMessage()) << endl;
+	      << StrX(toCatch.getMessage()) << std::endl;
     return;
   }
 
   destroyComponentList();
-  string component_path ="../src/CCA/Components/xml";
+  std::string component_path ="../src/CCA/Components/xml";
 // "../src/CCA/Components/xml";
   while(component_path != ""){
     unsigned int firstColon = component_path.find(':');
-    string dir;
+    std::string dir;
     if(firstColon < component_path.size()){
       dir=component_path.substr(0, firstColon);
       component_path = component_path.substr(firstColon+1);
@@ -283,12 +283,12 @@ void SCIRunLoader::buildComponentList()
       component_path="";
     }
     Dir d(dir);
-    cerr << "Looking at directory: " << dir << '\n';
-    vector<string> files;
+    std::cerr << "Looking at directory: " << dir << std::endl;
+    std::vector<std::string> files;
     d.getFilenamesBySuffix(".cca", files);
-    for(vector<string>::iterator iter = files.begin();
+    for(std::vector<std::string>::iterator iter = files.begin();
 	iter != files.end(); iter++){
-      string& file = *iter;
+      std::string& file = *iter;
       readComponentDescription(dir+"/"+file);
     }
   }
@@ -310,7 +310,7 @@ void SCIRunLoader::readComponentDescription(const std::string& file)
   }  catch (const XMLException& toCatch) {
     std::cerr << "Error during parsing: '" <<
       file << "'\nException message is:  " <<
-      xmlto_string(toCatch.getMessage()) << '\n';
+      xmlto_string(toCatch.getMessage()) << std::endl;
     handler.foundError=true;
     return;
   }
@@ -319,7 +319,7 @@ void SCIRunLoader::readComponentDescription(const std::string& file)
   DOMNodeList* list = doc->getElementsByTagName(to_xml_ch_ptr("component"));
   int nlist = list->getLength();
   if(nlist == 0){
-    cerr << "WARNING: file " << file << " has no components!\n";
+    std::cerr << "WARNING: file " << file << " has no components!\n";
   }
   for (int i=0;i<nlist;i++){
     DOMNode* d = list->item(i);
@@ -327,7 +327,7 @@ void SCIRunLoader::readComponentDescription(const std::string& file)
     CCAComponentDescription* cd = new CCAComponentDescription(0); //TODO: assign null as CCA component model
     DOMNode* name = d->getAttributes()->getNamedItem(to_xml_ch_ptr("name"));
     if (name==0) {
-      cout << "ERROR: Component has no name." << endl;
+      std::cout << "ERROR: Component has no name." << std::endl;
       cd->type = "unknown type";
     } else {
       cd->type = to_char_ptr(name->getNodeValue());
@@ -335,9 +335,9 @@ void SCIRunLoader::readComponentDescription(const std::string& file)
   
     componentDB_type::iterator iter = components.find(cd->type);
     if(iter != components.end()){
-      cerr << "WARNING: Component multiply defined: " << cd->type << '\n';
+      std::cerr << "WARNING: Component multiply defined: " << cd->type << std::endl;
     } else {
-      cerr << "Added CCA component of type: " << cd->type << '\n';
+      std::cerr << "Added CCA component of type: " << cd->type << std::endl;
       components[cd->type]=cd;
     }
   }
@@ -351,3 +351,5 @@ void SCIRunLoader::destroyComponentList()
   }
   components.clear();
 }
+
+} // end namespace SCIRun

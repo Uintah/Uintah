@@ -40,8 +40,8 @@
 
 #include <SCIRun/ComponentInstance.h>
 #include <iostream>
-using namespace std;
-using namespace SCIRun;
+
+namespace SCIRun {
 
 ComponentInstance::ComponentInstance(SCIRunFramework* framework,
 				     const std::string& instanceName,
@@ -53,3 +53,5 @@ ComponentInstance::ComponentInstance(SCIRunFramework* framework,
 ComponentInstance::~ComponentInstance()
 {
 }
+
+} // end namespace SCIRun
