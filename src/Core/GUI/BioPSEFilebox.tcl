@@ -1025,6 +1025,11 @@ static char updir_bits[] = {
         if {[llength $formats] == 0} {
 	    set formats {ASCII Binary}
         }
+        if {[lindex $formats 0] == "None"} {
+	    set formats {ASCII Binary}
+	    $data(formatMenuLab) configure -state disabled
+            $data(formatMenuBtn) configure -state disabled
+        }
         foreach f $formats {
 	    $data(formatMenu) add command -label $f \
                 -command "biopseFDialog_SetFormat $w $f"

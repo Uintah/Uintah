@@ -74,8 +74,8 @@ FieldWriter::FieldWriter(GuiContext* ctx)
   mgr.get_exporter_list(exporters);
   
   string exporttypes = "{";
-  exporttypes += "{{SCIRun Field File} {.fld} } ";
-  exporttypes += "{{SCIRun Field Any} {.*} } ";
+  exporttypes += "{{SCIRun Field Binary} {.fld} } ";
+  exporttypes += "{{SCIRun Field ASCII} {.fld} } ";
 
   for (unsigned int i = 0; i < exporters.size(); i++)
   {
@@ -121,8 +121,14 @@ FieldWriter::execute()
   const string ft = ftpre.substr(0, loc);
 
   exporting_ = !(ft == "" ||
-		 ft == "SCIRun Field File" ||
-		 ft == "SCIRun Field Any");
+		 ft == "SCIRun Field Binary" ||
+		 ft == "SCIRun Field ASCII");
+
+  // Determine if we're ASCII or Binary
+  string ab = "Binary";
+  if (ft == "SCIRun Field ASCII") ab = "ASCII";
+  filetype_.set(ab);
+
   GenericWriter<FieldHandle>::execute();
 }
 
