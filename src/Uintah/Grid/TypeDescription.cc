@@ -6,7 +6,7 @@
 using namespace Uintah;
 using namespace std;
 
-static map<string, const TypeDescription*> types;
+static map<string, const TypeDescription*>* types;
 
 TypeDescription::TypeDescription(Type type, const std::string& name,
 				 bool isFlat)
@@ -31,8 +31,8 @@ string TypeDescription::getName() const
 
 const TypeDescription* TypeDescription::lookupType(const std::string& t)
 {
-   map<string, const TypeDescription*>::iterator iter = types.find(t);
-   if(iter == types.end())
+   map<string, const TypeDescription*>::iterator iter = types->find(t);
+   if(iter == types->end())
       return 0;
    return iter->second;
 }
@@ -40,7 +40,9 @@ const TypeDescription* TypeDescription::lookupType(const std::string& t)
 TypeDescription::Register::Register(const TypeDescription* td)
 {
    cerr << "Register: td=" << td << ", name=" << td->getName() << '\n';
-   types[td->getName()]=td;
+   if(!types)
+     types=new map<string, const TypeDescription*>;
+   (*types)[td->getName()]=td;
 }
 
 TypeDescription::Register::~Register()
@@ -49,6 +51,9 @@ TypeDescription::Register::~Register()
 
 //
 // $Log$
+// Revision 1.4  2000/05/20 23:08:12  guilkey
+// Fixed type database initialization.
+//
 // Revision 1.3  2000/05/20 08:09:28  sparker
 // Improved TypeDescription
 // Finished I/O
