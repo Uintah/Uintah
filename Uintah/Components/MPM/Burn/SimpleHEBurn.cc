@@ -209,14 +209,15 @@ void SimpleHEBurn::computeMassRate(const Patch* patch,
      particleIndex idx = *iter;
 
      if(pIsIgnited[idx]==1){
-	pmass[idx]   = pmass[idx] - .5*a;
-	pvolume[idx] = pmass[idx]/1000.0;
-        ci =  patch->findCell(px[idx]);
-	burnedMass[ci] += .5*a;
+	if(patch->findCell(px[idx],ci)){
+	   pmass[idx]   = pmass[idx] - .5*a;
+	   pvolume[idx] = pmass[idx]/1000.0;
+	   burnedMass[ci] += .5*a;
 	
-	if(pmass[idx]<0.0){
-	  pmass[idx]=0.0;
-	  burnedMass[ci] -= .5*a;
+	   if(pmass[idx]<0.0){
+	     pmass[idx]=0.0;
+	     burnedMass[ci] -= .5*a;
+	   }
 	}
      }
      else {
@@ -230,6 +231,9 @@ void SimpleHEBurn::computeMassRate(const Patch* patch,
 }
  
 // $Log$
+// Revision 1.7  2000/06/15 18:08:35  guilkey
+// A few changes to the SimpleHEBurn model.
+//
 // Revision 1.6  2000/06/13 23:05:35  guilkey
 // Added some stuff to SimpleBurn model.
 //
