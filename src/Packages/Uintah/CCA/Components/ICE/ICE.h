@@ -33,6 +33,8 @@ using namespace SCIRun;
       
       virtual void scheduleInitialize(const LevelP& level, 
                                       SchedulerP&);
+
+      virtual void restartInitialize();
       
       virtual void scheduleComputeStableTimestep(const LevelP&,
                                                 SchedulerP&);
