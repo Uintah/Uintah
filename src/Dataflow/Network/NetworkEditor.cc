@@ -56,21 +56,11 @@
 #include <iostream>
 using namespace std;
   
-
-//#define DEBUG 1
-#include <tcl.h>
-  
-#ifdef _WIN32
-extern "C" __declspec(dllimport) Tcl_Interp* the_interp;
-#else
-extern "C" Tcl_Interp* the_interp;
-#endif
-  
 namespace SCIRun {
 
 
 // This function was added by Mohamed Dekhil for CSAFE
-void init_notes ()
+void NetworkEditor::init_notes ()
 {
     // uid_t userID ;
     char d[40] ;
@@ -100,12 +90,9 @@ void init_notes ()
 	     t2->tm_mday, t2->tm_year+1900) ;
     sprintf (t, " %0d:%0d:%0d", t2->tm_hour, t2->tm_min, t2->tm_sec) ;
 
-    /* myvalue = */
-    Tcl_SetVar (the_interp, "userName", n, TCL_GLOBAL_ONLY) ;
-    /* myvalue = */
-    Tcl_SetVar (the_interp, "runDate", d, TCL_GLOBAL_ONLY) ;
-    /* myvalue = */
-    Tcl_SetVar (the_interp, "runTime", t, TCL_GLOBAL_ONLY) ;
+    gui->set("userName", n);
+    gui->set("runDate", d);
+    gui->set("runTime", t);
 }
 
 NetworkEditor::NetworkEditor(Network* net, GuiInterface* gui)
@@ -136,9 +123,6 @@ void NetworkEditor::add_text(const string &str)
 
 void NetworkEditor::save_network(const string& filename)
 {
-
-    char *myvalue ;
-
     ofstream out(filename.c_str());
     if(!out)
       return;
@@ -156,28 +140,24 @@ void NetworkEditor::save_network(const string& filename)
 
     gui->lock();
 
-    myvalue = Tcl_GetVar (the_interp, "userName", TCL_GLOBAL_ONLY) ;
-    if (myvalue != NULL) {
+    string myvalue;
+    if (!gui->get("userName", myvalue)){
       out << "global userName\nset userName \"" << myvalue << "\"\n" ;
       out << "\n" ;
     }
-    myvalue = Tcl_GetVar (the_interp, "runDate", TCL_GLOBAL_ONLY) ;
-    if (myvalue != NULL) {
+    if (!gui->get("runDate", myvalue)){
       out << "global runDate\nset runDate \"" << myvalue << "\"\n" ;
       out << "\n" ;
     }
-    myvalue = Tcl_GetVar (the_interp, "runTime", TCL_GLOBAL_ONLY) ;
-    if (myvalue != NULL) {
+    if (!gui->get("runTime", myvalue)){
       out << "global runTime\nset runTime \"" << myvalue << "\"\n" ;
       out << "\n" ;
     }
-    myvalue = Tcl_GetVar (the_interp, "notes", TCL_GLOBAL_ONLY) ;
-    if (myvalue != NULL) {
+    if (!gui->get("notes", myvalue)){
       out << "global notes\nset notes \"" << myvalue << "\"\n" ;
       out << "\n" ;
     }
-    myvalue = Tcl_GetVar (the_interp, "modulesBbox", TCL_GLOBAL_ONLY) ;
-    if (myvalue != NULL) {
+    if (!gui->get("modulesBbox", myvalue)){
       out << "set bbox {" << myvalue << "}\n" ;
       out << "\n" ;
     }
