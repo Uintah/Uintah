@@ -107,7 +107,7 @@ itcl_class BioPSE_Modeling_ModifyConductivities {
 			$tensors.e-$i.m21 \
 			$tensors.e-$i.m22 \
 			-side left
-		    pack $tensors.e-$i
+		    pack $tensors.e-$i 
 		}
 	    }
 
@@ -126,9 +126,11 @@ itcl_class BioPSE_Modeling_ModifyConductivities {
             raise $w
             return
         }
-        toplevel $w
+        toplevel $w -borderwidth 5
 
 	iwidgets::scrolledframe $w.tensors -hscrollmode none
+
+	puts "modcon: $w"
 
 	frame $w.title
 	label $w.title.name -text "Material Name" \
@@ -149,7 +151,7 @@ itcl_class BioPSE_Modeling_ModifyConductivities {
 	    $w.title.m10 $w.title.m11 $w.title.m12 \
 	    $w.title.m20 $w.title.m21 $w.title.m22 \
 	    $w.title.empty \
-	    -side left
+	    -side left 
 
 	frame $w.controls
 	button $w.controls.execute -text "Execute" \
@@ -159,7 +161,9 @@ itcl_class BioPSE_Modeling_ModifyConductivities {
 	pack $w.controls.execute $w.controls.reset \
 	    -side left -fill x -expand y
 
-	pack $w.title $w.tensors $w.controls -side top -fill x
+	pack $w.title  -fill x
+	pack $w.tensors -side top -fill both -expand yes
+	pack $w.controls -fill x 
 
 	create_entries
     }
