@@ -8,7 +8,7 @@ using namespace std;
 
 extern "C" {
 
-FieldHandle& execute(vector<FieldHandle> &)
+void execute(vector<FieldHandle>& in, vector<FieldHandle>& out)
 {
   cout << "hey I was called" << endl;
   static FieldHandle f;
