@@ -494,3 +494,8 @@ double MPMMaterial::getGamma() const
   return d_gamma;
 }
 
+double MPMMaterial::getInitialDensity() const
+{
+  return d_density;
+}
+
