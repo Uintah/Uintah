@@ -650,6 +650,23 @@ void matlabarray::createdensearray(std::vector<long> &dims,mitype type)
     // the numeric data can be inserted later
 }
    
+void matlabarray::createdensearray(long m,long n,mitype type)
+{
+	std::vector<long> dims(2); dims[0] = m; dims[1] = n;
+    // function only works for numeric types
+    
+    clear(); // make sure there is no data
+    
+    m_ = new mxarray;
+
+    m_->ref_ = 1;
+    m_->class_ = mlDENSE;
+    m_->type_ = type; 
+    setdims(dims);
+    
+    // the numeric data can be inserted later
+}   
+   
 void matlabarray::createsparsearray(std::vector<long> &dims,mitype type)
 {
     clear(); // make sure there is no data
@@ -662,6 +679,22 @@ void matlabarray::createsparsearray(std::vector<long> &dims,mitype type)
     
     // actual data can be added lateron
 }
+
+void matlabarray::createsparsearray(long m,long n,mitype type)
+{
+	std::vector<long> dims(2); dims[0] = m; dims[1] = n;
+	
+    clear(); // make sure there is no data
+    
+    m_ = new mxarray;
+    m_->ref_ = 1;
+    m_->class_ = mlSPARSE;
+    m_->type_ = type;  // need to add some type checking here
+    setdims(dims);
+    
+    // actual data can be added lateron
+}
+	
 
 void matlabarray::createcellarray(std::vector<long> &dims)
 {

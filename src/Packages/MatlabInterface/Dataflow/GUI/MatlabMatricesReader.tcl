@@ -128,7 +128,7 @@ itcl_class MatlabInterface_DataIO_MatlabMatricesReader {
 
 		frame $childframe.option
 		pack $childframe.option -fill x -pady 4p
-		checkbutton $childframe.option.disabletranspose -variable $this-disable-transpose -text "Disable transpose (from Matlab matrix order to C++ order)"
+		checkbutton $childframe.option.disabletranspose -variable $this-disable-transpose -text "Disable Matlab to C++ conversion (data will be transposed)"
 		pack $childframe.option.disabletranspose
 		makeSciButtonPanel $w $w $this
 

@@ -493,7 +493,7 @@ bool matfile::opencompression()
 	// First check whether the work we require has already been
 	// done. We should not overheat the processor without any good
 	// reason.
-	for (long p = 0;p<m_->cmplist_.size();p++)
+	for (unsigned long p = 0;p<m_->cmplist_.size();p++)
 	{
 		cmpbuffer = m_->cmplist_[p];
 		if (cmpbuffer.bufferoffset == compressblockoffset)
