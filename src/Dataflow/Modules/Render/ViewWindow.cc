@@ -913,7 +913,7 @@ void ViewWindow::HideFocusSphere()
 // XXX - in addition to drawing the simple sphere 'focus sphere', picking
 // was difficult to do too.  initially the problem was understanding how
 // the example in 'mouse_pick(..)' worked (parameters, what was returned).
-Point ViewWindow::GetPointUnderCursor( int x, int y )
+Point ViewWindow::GetPointUnderCursor( int /* x */, int /* y */)
 {
   return Point(0,0,0);
 }

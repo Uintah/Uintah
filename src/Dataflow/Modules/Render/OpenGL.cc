@@ -1104,7 +1104,8 @@ void OpenGL::real_get_pick(Viewer*, ViewWindow* ViewWindow, int x, int y,
   viewer->geomlock.readUnlock();
 }
 
-void OpenGL::dump_image(const string& name, const string& type) {
+void OpenGL::dump_image(const string& name, const string& /* type */)
+{
   ofstream dumpfile(name.c_str());
   GLint vp[4];
   glGetIntegerv(GL_VIEWPORT,vp);
