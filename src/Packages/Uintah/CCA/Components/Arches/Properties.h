@@ -102,12 +102,6 @@ public:
 			        bool modify_density);
 
 
-      void sched_computePropsPred(SchedulerP&, const PatchSet* patches,
-				  const MaterialSet* matls);
-
-      void sched_computePropsInterm(SchedulerP&, const PatchSet* patches,
-				  const MaterialSet* matls);
-
       ///////////////////////////////////////////////////////////////////////
       // Schedule the computation of density reference array here
 
@@ -119,7 +113,7 @@ public:
 				const MaterialSet* matls,
 			        const TimeIntegratorLabel* timelabels);
 
-      void sched_saveRho2Density(SchedulerP&, const PatchSet* patches,
+      void sched_saveTempDensity(SchedulerP&, const PatchSet* patches,
 				const MaterialSet* matls,
 			        const TimeIntegratorLabel* timelabels);
 
@@ -182,12 +176,6 @@ private:
 			  const TimeIntegratorLabel* timelabels,
 			  bool modify_density);
 
-      void computePropsPred(const ProcessorGroup*,
-			    const PatchSubset* patches,
-			    const MaterialSubset* matls,
-			    DataWarehouse* old_dw,
-			    DataWarehouse* new_dw);
-
       ///////////////////////////////////////////////////////////////////////
       // Carry out actual computation of properties for the first actual
       // time step in an MPMArches run
@@ -197,12 +185,6 @@ private:
 				const MaterialSubset* matls,
 				DataWarehouse* old_dw,
 				DataWarehouse* new_dw);
-
-      void computePropsInterm(const ProcessorGroup*,
-			    const PatchSubset* patches,
-			    const MaterialSubset* matls,
-			    DataWarehouse* old_dw,
-			    DataWarehouse* new_dw);
 
       ///////////////////////////////////////////////////////////////////////
       // Carry out actual computation of density reference array
@@ -221,7 +203,7 @@ private:
 			  DataWarehouse* new_dw,
 			  const TimeIntegratorLabel* timelabels);
 
-      void saveRho2Density(const ProcessorGroup*,
+      void saveTempDensity(const ProcessorGroup*,
 			  const PatchSubset* patches,
 			  const MaterialSubset* matls,
 			  DataWarehouse* old_dw,

@@ -152,11 +152,11 @@ DynamicProcedure::sched_reComputeTurbSubmodel(SchedulerP& sched,
     // construct a stress tensor and stored as a array with the following order
     // {t11, t12, t13, t21, t22, t23, t31, t23, t33}
 
-    tsk->requires(Task::NewDW, timelabels->uvelocity_out,
+    tsk->requires(Task::NewDW, d_lab->d_uVelocitySPBCLabel,
 		  Ghost::AroundFaces, Arches::ONEGHOSTCELL);
-    tsk->requires(Task::NewDW, timelabels->vvelocity_out, 
+    tsk->requires(Task::NewDW, d_lab->d_vVelocitySPBCLabel, 
 		  Ghost::AroundFaces, Arches::ONEGHOSTCELL);
-    tsk->requires(Task::NewDW, timelabels->wvelocity_out, 
+    tsk->requires(Task::NewDW, d_lab->d_wVelocitySPBCLabel, 
 		  Ghost::AroundFaces, Arches::ONEGHOSTCELL);
         
     tsk->requires(Task::NewDW, d_lab->d_cellTypeLabel, 
@@ -224,7 +224,7 @@ DynamicProcedure::sched_reComputeTurbSubmodel(SchedulerP& sched,
     // initialize with the value of zero at the physical bc's
     // construct a stress tensor and stored as an array with the following order
     // {t11, t12, t13, t21, t22, t23, t31, t23, t33}
-    tsk->requires(Task::NewDW, timelabels->density_out, Ghost::AroundCells,
+    tsk->requires(Task::NewDW, d_lab->d_densityCPLabel, Ghost::AroundCells,
 		  Arches::ONEGHOSTCELL);
 
     tsk->requires(Task::NewDW, d_lab->d_strainMagnitudeLabel,
@@ -236,8 +236,6 @@ DynamicProcedure::sched_reComputeTurbSubmodel(SchedulerP& sched,
 
     tsk->requires(Task::NewDW, d_lab->d_cellTypeLabel, 
 		  Ghost::AroundCells, Arches::ONEGHOSTCELL);
-    tsk->requires(Task::NewDW, d_lab->d_viscosityINLabel, Ghost::None,
-		  Arches::ZEROGHOSTCELLS);
 
     // for multimaterial
     if (d_MAlab)
@@ -245,7 +243,7 @@ DynamicProcedure::sched_reComputeTurbSubmodel(SchedulerP& sched,
 		    Ghost::None, Arches::ZEROGHOSTCELLS);
     
     // Computes
-    tsk->computes(timelabels->viscosity_out);
+    tsk->modifies(d_lab->d_viscosityCTSLabel);
 
   if (timelabels->integrator_step_number == TimeIntegratorStepNumber::First)
     tsk->computes(d_lab->d_CsLabel);
@@ -281,11 +279,11 @@ DynamicProcedure::reComputeTurbSubmodel(const ProcessorGroup*,
     constCCVariable<int> cellType;
     // Get the velocity, density and viscosity from the old data warehouse
 
-    new_dw->get(uVel, timelabels->uvelocity_out, matlIndex, patch, 
+    new_dw->get(uVel, d_lab->d_uVelocitySPBCLabel, matlIndex, patch, 
 		Ghost::AroundFaces, Arches::ONEGHOSTCELL);
-    new_dw->get(vVel, timelabels->vvelocity_out, matlIndex, patch,
+    new_dw->get(vVel, d_lab->d_vVelocitySPBCLabel, matlIndex, patch,
 		Ghost::AroundFaces, Arches::ONEGHOSTCELL);
-    new_dw->get(wVel, timelabels->wvelocity_out, matlIndex, patch, 
+    new_dw->get(wVel, d_lab->d_wVelocitySPBCLabel, matlIndex, patch, 
 		Ghost::AroundFaces, Arches::ONEGHOSTCELL);
 
     new_dw->get(cellType, d_lab->d_cellTypeLabel, matlIndex, patch,
@@ -1881,10 +1879,8 @@ DynamicProcedure::reComputeSmagCoeff(const ProcessorGroup* pc,
        new_dw->getModifiable(Cs, d_lab->d_CsLabel, matlIndex, patch);
     Cs.initialize(0.0);
 
-    new_dw->allocateAndPut(viscosity, timelabels->viscosity_out,
+    new_dw->getModifiable(viscosity, d_lab->d_viscosityCTSLabel,
 			   matlIndex, patch);
-    new_dw->copyOut(viscosity, d_lab->d_viscosityINLabel, matlIndex, patch,
-		    Ghost::None, Arches::ZEROGHOSTCELLS);
 
     new_dw->get(IsI,d_lab->d_strainMagnitudeLabel, matlIndex, patch, 
 		Ghost::None, Arches::ZEROGHOSTCELLS);
@@ -1894,7 +1890,7 @@ DynamicProcedure::reComputeSmagCoeff(const ProcessorGroup* pc,
     new_dw->get(MMI, d_lab->d_strainMagnitudeMMLabel, matlIndex, patch, 
 		Ghost::AroundCells, Arches::ONEGHOSTCELL);
 
-    new_dw->get(den, timelabels->density_out, matlIndex, patch,
+    new_dw->get(den, d_lab->d_densityCPLabel, matlIndex, patch,
 		Ghost::AroundCells, Arches::ONEGHOSTCELL);
 
     if (d_MAlab)
@@ -2101,7 +2097,7 @@ DynamicProcedure::sched_computeScalarVariance(SchedulerP& sched,
   
   // Requires, only the scalar corresponding to matlindex = 0 is
   //           required. For multiple scalars this will be put in a loop
-  tsk->requires(Task::NewDW, timelabels->scalar_out, 
+  tsk->requires(Task::NewDW, d_lab->d_scalarSPLabel, 
 		Ghost::AroundCells, Arches::ONEGHOSTCELL);
 
   // Computes
@@ -2130,7 +2126,7 @@ DynamicProcedure::computeScalarVariance(const ProcessorGroup* pc,
     constCCVariable<double> scalar;
     CCVariable<double> scalarVar;
     // Get the velocity, density and viscosity from the old data warehouse
-    new_dw->get(scalar, timelabels->scalar_out, matlIndex, patch,
+    new_dw->get(scalar, d_lab->d_scalarSPLabel, matlIndex, patch,
 		Ghost::AroundCells, Arches::ONEGHOSTCELL);
 
     if (timelabels->integrator_step_number == TimeIntegratorStepNumber::First)

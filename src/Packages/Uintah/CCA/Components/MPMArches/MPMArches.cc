@@ -636,7 +636,7 @@ void MPMArches::scheduleMomExchange(SchedulerP& sched,
 	      arches_matls->getUnion(),
 	      Ghost::AroundCells, numGhostCells);
   
-  t->requires(Task::OldDW, d_Alab->d_densityINLabel, 
+  t->requires(Task::OldDW, d_Alab->d_densityCPLabel, 
 	      arches_matls->getUnion(),
 	      Ghost::AroundCells, numGhostCells);
   
@@ -1884,7 +1884,7 @@ void MPMArches::doMomExchange(const ProcessorGroup*,
     new_dw->get(gas_fraction_cc, d_Alab->d_mmgasVolFracLabel, matlIndex, 
 		patch, Ghost::AroundCells, numGhostCellsG);
 
-    old_dw->get(density, d_Alab->d_densityINLabel, matlIndex, 
+    old_dw->get(density, d_Alab->d_densityCPLabel, matlIndex, 
 		patch, Ghost::AroundCells, numGhostCellsG);
     old_dw->get(denMicro, d_Alab->d_densityMicroLabel, matlIndex, 
 		patch, Ghost::AroundCells, numGhostCellsG);    
