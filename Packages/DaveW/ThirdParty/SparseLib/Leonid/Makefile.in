@@ -1,0 +1,11 @@
+SRCTOP   = @top_srcdir@
+SRCDIR   = @srcdir@
+OBJTOP   = ../../../..
+
+SRCS     = EigenSystem_spec.cc GSVD_spec.cc LeastSquares_spec.cc \
+	   LinearSystem_spec.cc MatrixDense_spec.cc \
+	   SVD_spec.cc TSVD_spec.cc Vector_spec.cc 
+
+INCLUDES =
+
+include $(SRCTOP)/scripts/objs.mk
