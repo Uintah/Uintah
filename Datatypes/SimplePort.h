@@ -12,7 +12,7 @@
  */
 
 #ifndef SCI_project_SimplePort_h
-#define SCI_project_SimplePort_h 1
+#define SCI_project_SimplePort_h
 
 #ifdef __GNUG__
 #pragma interface

@@ -10,7 +10,10 @@ of the SCI project source tree.
    wrong version of merge is shown, then change your PATH so that
    /usr/sbin appears before the offending version.
 
-3) Append the following 4 lines to your .cshrc file:
+3) If you are using the CS facility, go to step 3A.  Otherwise, use
+   step 3B
+
+3A) Append the following 4 lines to your .cshrc file:
 if ( -f /home/sci/data1/development/scripts/develop.csh ) then
    setenv SCI_WORK ~/SCIRun
    source /home/sci/data1/development/scripts/develop.csh
@@ -19,13 +22,21 @@ endif
    and then source your .cshrc file in each window which you will be
    working.  Alternatively, you can log out and log back in.
 
-If you are using the Korn Shell, try this:
+  If you are using the Korn Shell, try this:
 if [ -r /home/sci/data1/development/scripts/develop.ksh ]
  then
     SCI_WORK=~/SCIRun
     export SCI_WORK
     . /home/sci/data1/development/scripts/develop.ksh
 fi
+
+3B) Set the following environment variables:
+setenv SCI_WORK ~/SCIRun (or wherever you put SCIRun)
+setenv LD_LIBRARY_PATH $SCI_WORK/lib
+setenv TCL_LIBRARY $SCI_WORK/tcl/tcl/library
+setenv TK_LIBRARY $SCI_WORK/tcl/tk/library
+setenv SCI_DATA /wherever/you/put/datafiles
+setenv SCI_CATCH_SIGNALS
 
 4) Choose a suitable space for your work directory to be located.
    It is best to have the work directory on a disk which is local
