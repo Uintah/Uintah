@@ -1042,6 +1042,12 @@ itcl_class ViewWindow {
 
     method makeViewPopup {} {
 	set w .view[modname]
+
+	if {[winfo exists $w]} {
+	    SciRaise $w
+	    return;
+	}
+
 	toplevel $w
 	wm title $w "View"
 	wm iconname $w view
@@ -1070,6 +1076,12 @@ itcl_class ViewWindow {
 
     method makeSceneMaterialsPopup {} {
 	set w .scenematerials[modname]
+
+	if {[winfo exists $w]} {
+	    SciRaise $w
+	    return;
+	}
+
 	toplevel $w
 	wm title $w "Scene Materials"
 	wm iconname $w materials
