@@ -827,43 +827,117 @@ proc writeSubnets { file subnet_ids } {
 }
 
 
-proc scripted_addModuleAtPosition { args } {
-#    puts "scripted_addModuleAtPosition $args"
-    return scripted_ModuleInstance
+proc doNothing { args } {
 }
 
-proc scripted_addConnection { args } {
-#    puts "scripted_addConnection $args"
-    return scripted_addConnection
+proc counting_addModuleAtPosition { args } {
+    global scriptCount
+    incr scriptCount(Total) 6
+    incr scriptCount(addModuleAtPosition)
+    return doNothing
 }
 
-proc scripted_ModuleInstance { args } {
- #   puts "scripted_ModuleInstance: $args"
+proc counting_addConnection { args } {
+    global scriptCount
+    incr scriptCount(Total) 4
+    incr scriptCount(addConnection)
+    return doNothing
 }
 
-proc scripted_sourceSettingsFile { args } {
+proc counting_sourceSettingsFile { args } {
+    global scriptCount
+    incr scriptCount(Total)
+    incr scriptCount(sourceSettingsFile)
     renameSourceCommand
     return "[netedit getenv SCIRUN_DATA] [netedit getenv SCIRUN_DATASET]"
 }
 
+proc counting_set { args } {
+    global scriptCount
+    if { [info level]==$scriptCount(setLevel) } { 
+	incr scriptCount(Total)
+	incr scriptCount(set)
+    }
+    return [uplevel 1 real_set $args]
+}
+
+
+proc loading_addModuleAtPosition { args } {
+    global PowerApp
+    if { !$PowerApp } {
+	set modulepath [join [lrange $args 0 2] ->]
+	setProgressText "Loading Module: $modulepath"
+    }
+    incrProgress 6
+    return [uplevel 1 real_addModuleAtPosition $args]
+}
+
+proc loading_addConnection { args } {
+    global scriptCount PowerApp
+    if { !$PowerApp } {
+	incr scriptCount(addConnectionLoading)
+	setProgressText "Creating connection \# $scriptCount(addConnectionLoading) of $scriptCount(addConnection)"
+	if { $scriptCount(addConnectionLoading) == $scriptCount(addConnection) } {
+	    setProgressText "Loading module GUI settings..."
+	}
+    }
+    incrProgress 3
+    return [uplevel 1 real_addConnection $args]
+}
+
+proc loading_sourceSettingsFile { args } {
+    incrProgress
+    return [uplevel 1 real_sourceSettingsFile $args]
+}
+
+proc loading_set { args } {
+    if { [info level] == 1 } incrProgress
+    return [uplevel 1 real_set $args]
+}
+
+
+
+proc renameNetworkCommands { prefix } {
+    lappend commands set
+    lappend commands addModuleAtPosition
+    lappend commands addConnection
+
+    foreach command $commands {
+	set exists [expr [llength [info commands ${prefix}${command}]] == 1]
+	set cached [expr [llength [info commands real_${command}]] == 1]
+	if { $exists && !$cached } {
+	    rename ${command} real_${command}
+	    rename ${prefix}${command} ${command}
+	} elseif { !$exists && $cached } {
+	    rename ${command} ${prefix}${command}
+	    rename real_${command} ${command}
+	} else {
+	    puts "renameNetworkCommands already cached command: $command"
+	}
+    }
+}
+
+proc resetScriptCount {} {
+    setGlobal scriptCount(Total) 0
+    setGlobal scriptCount(addModuleAtPosition) 0
+    setGlobal scriptCount(addConnection) 0
+    setGlobal scriptCount(addConnectionLoading) 0
+    setGlobal scriptCount(sourceSettingsFile) 0
+    setGlobal scriptCount(set) 0
+    setGlobal scriptCount(setLevel) [info level]
+    
+}
+    
+
 proc addSubnetToDatabase { script } {
+    return
     global SubnetScripts
-    rename addModuleAtPosition real_addModuleAtPosition
-    rename addConnection real_addConnection
-    rename sourceSettingsFile real_sourceSettingsFile
-    rename scripted_addModuleAtPosition addModuleAtPosition
-    rename scripted_addConnection addConnection
-    rename scripted_sourceSettingsFile sourceSettingsFile
+    renameNetworkCommands counting_
     eval $script
     if { [info exists Name] && ![info exists name] } { set name $Name }
     if { ![info exists name] } { set name Unknown }
     set SubnetScripts($name) $script
-    rename addModuleAtPosition scripted_addModuleAtPosition 
-    rename addConnection scripted_addConnection
-    rename sourceSettingsFile scripted_sourceSettingsFile
-    rename real_addModuleAtPosition addModuleAtPosition 
-    rename real_addConnection addConnection 
-    rename real_sourceSettingsFile sourceSettingsFile
+    renameNetworkCommands counting_
     resetSourceCommand
 }
 
