@@ -548,7 +548,9 @@ void GeomTexVolRender::draw(DrawInfoOpenGL* di, Material *m, double time)
       if (usemip != 2)
 	  glBlendFunc(GL_SRC_ALPHA,GL_ONE_MINUS_SRC_ALPHA);
       else {
+#ifdef __sgi
 	  glBlendEquationEXT(GL_MAX_EXT);
+#endif
 	  glBlendFunc(GL_ONE,GL_ONE);
       }
       //  else 
@@ -573,7 +575,9 @@ void GeomTexVolRender::draw(DrawInfoOpenGL* di, Material *m, double time)
 	  }
     
 	  glDepthMask(GL_TRUE);
+#ifdef __sgi
 	  glBlendEquationEXT(GL_FUNC_ADD_EXT);
+#endif
       }
       //  glMatrixMode(GL_TEXTURE);
       //glLoadIdentity();
@@ -616,6 +620,9 @@ void GeomTexVolRender::Clear()
 
 //
 // $Log$
+// Revision 1.9  2000/09/25 17:57:48  sparker
+// ifdef __sgi around 3D texture stuff
+//
 // Revision 1.8  2000/03/17 09:27:17  sparker
 // New makefile scheme: sub.mk instead of Makefile.in
 // Use XML-based files for module repository
