@@ -33,7 +33,7 @@ double Gruneisen::computeRhoMicro(double P, double,
 // Return (1/v)*(dv/dT)  (constant pressure thermal expansivity)
 double Gruneisen::getAlpha(double T, double, double P, double)
 {
-  double alpha=(B*rho0/A)/(rho0*((1./A)*((P-P0) - B*(T-T0))+1.));
+  double alpha=B/((P-P0) - B*(T-T0)+A);
   return  alpha;
 }
 
