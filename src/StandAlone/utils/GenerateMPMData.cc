@@ -32,6 +32,7 @@
 #include <Core/Datatypes/Field.h>
 #include <Core/Persistent/Pstreams.h>
 #include <Core/Datatypes/TetVolField.h>
+#include <Core/Datatypes/LatVolField.h>
 #include <Core/Geometry/BBox.h>
 #include <iostream>
 #include <fstream>
