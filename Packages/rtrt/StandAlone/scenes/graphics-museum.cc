@@ -62,6 +62,7 @@ rtrt -np 14 -eye -10.2111 -16.2099 1.630637 -lookat -11.7826 -20.5142 0.630637 -
 #include <Core/Geometry/Transform.h>
 #include <Packages/rtrt/Core/ImageMaterial.h>
 #include <Packages/rtrt/Core/Parallelogram.h>
+#include <Packages/rtrt/Core/UVSphere.h>
 #include <Packages/rtrt/Core/UVCylinder.h>
 #include <Packages/rtrt/Core/UVCylinderArc.h>
 #include <Packages/rtrt/Core/Cylinder.h>
@@ -332,9 +333,36 @@ void add_poster_on_wall (char *image_name, const Point &top_left,
 			    out, 0.01));
 }
 
-void add_glass_box (Group* obj_group, Point CornerA, Point CornerB,
-		    Vector Right) {
+void add_glass_box (Group* obj_group, Point LowerCorner,
+		    Vector FarDir) {
+  
+  Material* glass= new DielectricMaterial(1.5, 1.0, 0.04, 400.0, 
+					  Color(.80, .93 , .87), 
+					  Color(1,1,1), true, 0.001);
 
+  Vector u (FarDir.x()/2., 0, 0);
+  Vector v (0,FarDir.y()/2.,0);
+  Vector w (0,0,FarDir.z()/2.);
+
+}
+
+void add_pedestal (Group* obj_group, const Point UpperCorner, 
+		   const Vector FarDir) {
+  Material* ped_white = new ImageMaterial("/usr/sci/data/Geometry/textures/museum/general/tex-pill.ppm",
+					  ImageMaterial::Tile,
+					  ImageMaterial::Tile, 1,
+					  Color(0,0,0), 0);
+  Vector u (FarDir.x()/2., 0, 0);
+  Vector v (0,FarDir.y()/2.,0);
+  Vector w (0,0,FarDir.z()/2.);
+  Point OppUppCorner = UpperCorner+u+u+v+v;
+  // top  
+  obj_group->add(new Rect(ped_white, UpperCorner+u+v, -u, -v));
+  // sides
+  obj_group->add(new Rect(ped_white, UpperCorner+u+w, -u, w));
+  obj_group->add(new Rect(ped_white, UpperCorner+v+w, -v, w));
+  obj_group->add(new Rect(ped_white, OppUppCorner-u+w, u, w));  
+  obj_group->add(new Rect(ped_white, OppUppCorner-v+w, v, w));  
 }
 
 Group* insert_rtrt_room(Point& cen, double radius)
@@ -725,10 +753,7 @@ void build_history_hall (Group* main_group, Scene *scene) {
   Material* flat_white = new LambertianMaterial(Color(.8,.8,.8));
   Material* flat_grey = new LambertianMaterial(Color(.4,.4,.4));
   Material* orange = new Phong(Color(.7,.4,.0),Color(.2,.2,.2),200);
-  Material* yellow = new PhongMaterial(Color(.7,.7,.0),1,0.3,100,true);
-  Material* white = new PhongMaterial(Color(.8,.8,.8),1,0.3,100,true);
-  Material* black = new PhongMaterial(Color(.0,.0,.0),1,0.3,100,true);
-  Material* purple = new PhongMaterial(Color(.7,.0,.7),1,0.3,100,true);
+  Material* white = new PhongMaterial(Color(.9,.9,.7),1,0.1,50,false);
   Material* glass= new DielectricMaterial(1.5, 1.0, 0.04, 400.0, 
 					  Color(.80, .93 , .87), 
 					  Color(1,1,1), true, 0.001);
@@ -774,10 +799,8 @@ void build_history_hall (Group* main_group, Scene *scene) {
   add_poster_on_wall ("/usr/sci/data/Geometry/textures/museum/tmp/alpha1-fill.ppm",
 		      NorthPoint, NorthRight, NorthDown,historyg);
   PedPoint.x(NorthPoint.x()+ped_div);
-  historyg->add(new Box(flat_white,PedPoint, 
-			PedPoint+Vector(ped_size,ped_size,ped_ht)));
-
-  
+  add_pedestal (historyg, PedPoint+Vector(0,0,ped_ht),
+		Vector(ped_size,ped_size,-ped_ht));
 
   NorthPoint += Vector(-2*img_div-img_size, 0,0);
   add_poster_on_wall ("/usr/sci/data/Geometry/textures/museum/history/museumC-fill.ppm",
@@ -802,8 +825,8 @@ void build_history_hall (Group* main_group, Scene *scene) {
 		      EastPoint, EastRight, EastDown, 
 		      historyg);
   PedPoint.y(EastPoint.y()-ped_div);
-  historyg->add(new Box(flat_white,PedPoint-Vector(ped_size,ped_size,ped_ht),
-			PedPoint));
+  add_pedestal (historyg,PedPoint-Vector(ped_size,ped_size,0),
+		Vector(ped_size,ped_size,-ped_ht));
 
   EastPoint -= Vector(0, 2*img_div+img_size, 0); 
   add_poster_on_wall ("/usr/sci/data/Geometry/textures/museum/history/eggC-fill.ppm",
@@ -815,8 +838,8 @@ void build_history_hall (Group* main_group, Scene *scene) {
 		      EastPoint, EastRight, EastDown, 
 		      historyg);
   PedPoint.y(EastPoint.y()-ped_div);
-  historyg->add(new Box(flat_white,PedPoint-Vector(ped_size,ped_size,ped_ht),
-			PedPoint));
+  add_pedestal (historyg,PedPoint-Vector(ped_size,ped_size,0),
+		Vector(ped_size,ped_size,-ped_ht));
   Point BumpMapPoint (PedPoint-Vector(ped_size/2.,ped_size/2.,0));
 
   EastPoint -= Vector(0, 2*img_div+img_size, 0); 
@@ -834,8 +857,8 @@ void build_history_hall (Group* main_group, Scene *scene) {
 		      EastPoint, EastRight, EastDown, 
 		      historyg);
   PedPoint.y(EastPoint.y()-ped_div);
-  historyg->add(new Box(flat_white,PedPoint-Vector(ped_size,ped_size,ped_ht),
-			PedPoint));
+  add_pedestal (historyg,PedPoint-Vector(ped_size,ped_size,0),
+		Vector(ped_size,ped_size,-ped_ht));
   Point RingsPoint (PedPoint-Vector(ped_size/2.,ped_size/2.,0)); 
 			
   EastPoint -= Vector(0, 2*img_div+img_size, 0); 
@@ -848,8 +871,8 @@ void build_history_hall (Group* main_group, Scene *scene) {
 		      EastPoint, EastRight, EastDown, 
 		      historyg);
   PedPoint.y(EastPoint.y()-ped_div);
-  historyg->add(new Box(flat_white,PedPoint-Vector(ped_size,ped_size,ped_ht),
-			PedPoint));
+  add_pedestal (historyg,PedPoint-Vector(ped_size,ped_size,0),
+		Vector(ped_size,ped_size,-ped_ht));
 
   EastPoint -= Vector(0, 2*img_div+img_size, 0); 
   add_poster_on_wall ("/usr/sci/data/Geometry/textures/museum/tmp/museum-4.ppm",
@@ -861,8 +884,8 @@ void build_history_hall (Group* main_group, Scene *scene) {
 		      EastPoint, EastRight, EastDown, 
 		      historyg);
   PedPoint.y(EastPoint.y()-ped_div);
-  historyg->add(new Box(flat_white,PedPoint-Vector(ped_size,ped_size,ped_ht),
-			PedPoint));
+  add_pedestal (historyg,PedPoint-Vector(ped_size,ped_size,0),
+		Vector(ped_size,ped_size,-ped_ht));
 
   EastPoint -= Vector(0, 2*img_div+img_size, 0); 
   add_poster_on_wall ("/usr/sci/data/Geometry/textures/museum/history/mapleC-fill.ppm",
@@ -879,8 +902,8 @@ void build_history_hall (Group* main_group, Scene *scene) {
 		      EastPoint, EastRight, EastDown, 
 		      historyg);
   PedPoint.y(EastPoint.y()-ped_div);
-  historyg->add(new Box(flat_white,PedPoint-Vector(ped_size,ped_size,ped_ht),
-			PedPoint));
+  add_pedestal (historyg,PedPoint-Vector(ped_size,ped_size,0),
+		Vector(ped_size,ped_size,-ped_ht));
 
   EastPoint -= Vector(0, 2*img_div+img_size, 0); 
   add_poster_on_wall ("/usr/sci/data/Geometry/textures/museum/history/dancersC-fill.ppm",
@@ -901,8 +924,8 @@ void build_history_hall (Group* main_group, Scene *scene) {
 		      WestPoint, WestRight, WestDown, 
 		      historyg);
   PedPoint.y(WestPoint.y()+ped_div);
-  historyg->add(new Box(flat_white, PedPoint, 
-			PedPoint+Vector(ped_size,ped_size,ped_ht)));
+  add_pedestal (historyg,PedPoint+Vector(0,0,ped_ht),
+		Vector(ped_size,ped_size,-ped_ht));
   Vector VWVector (PedPoint.vector()+Vector(ped_size/2.,ped_size/2.,ped_ht));
 
   WestPoint -= Vector (0, 2*img_div+img_size, 0);
@@ -915,16 +938,16 @@ void build_history_hall (Group* main_group, Scene *scene) {
 		      WestPoint, WestRight, WestDown, 
 		      historyg);
   PedPoint.y(WestPoint.y()+ped_div);
-  historyg->add(new Box(flat_white, PedPoint, 
-			PedPoint+Vector(ped_size,ped_size,ped_ht)));
+  add_pedestal (historyg,PedPoint+Vector(0,0,ped_ht),
+		Vector(ped_size,ped_size,-ped_ht));
   
   WestPoint -= Vector (0, 2*img_div+img_size, 0);
   add_poster_on_wall ("/usr/sci/data/Geometry/textures/museum/history/tea-potC-fill.ppm",
 		      WestPoint, WestRight, WestDown, 
 		      historyg);
   PedPoint.y(WestPoint.y()+ped_div);
-  historyg->add(new Box(flat_white, PedPoint, 
-			PedPoint+Vector(ped_size,ped_size,ped_ht)));
+  add_pedestal (historyg,PedPoint+Vector(0,0,ped_ht),
+		Vector(ped_size,ped_size,-ped_ht));
   Vector TeapotVector (PedPoint.vector()+Vector(ped_size/2.,ped_size/2.,ped_ht));
 
   WestPoint -= Vector (0, 2*img_div+img_size, 0);
@@ -942,8 +965,8 @@ void build_history_hall (Group* main_group, Scene *scene) {
       WestPoint, WestRight, WestDown, 
 		      historyg);
   PedPoint.y(WestPoint.y()+ped_div);
-  historyg->add(new Box(flat_white, PedPoint, 
-			PedPoint+Vector(ped_size,ped_size,ped_ht)));
+  add_pedestal (historyg,PedPoint+Vector(0,0,ped_ht),
+		Vector(ped_size,ped_size,-ped_ht));
   Point RTPoint (PedPoint+Vector(ped_size/2., ped_size/2., ped_ht));
 
   WestPoint -= Vector (0, 2*img_div+img_size, 0);
@@ -951,8 +974,8 @@ void build_history_hall (Group* main_group, Scene *scene) {
 		      WestPoint, WestRight, WestDown, 
 		      historyg);
   PedPoint.y(WestPoint.y()+ped_div);
-  historyg->add(new Box(flat_white, PedPoint, 
-			PedPoint+Vector(ped_size,ped_size,ped_ht)));
+  add_pedestal (historyg,PedPoint+Vector(0,0,ped_ht),
+		Vector(ped_size,ped_size,-ped_ht));
   Vector TronVector(PedPoint.vector()+Vector(ped_size/2.,ped_size/2.,ped_ht));
 		      
   WestPoint -= Vector (0, 2*img_div+img_size, 0);
@@ -960,8 +983,8 @@ void build_history_hall (Group* main_group, Scene *scene) {
 		      WestPoint, WestRight, WestDown, 
 		      historyg);
   PedPoint.y(WestPoint.y()+ped_div);
-  historyg->add(new Box(flat_white, PedPoint, 
-			PedPoint+Vector(ped_size,ped_size,ped_ht)));
+  add_pedestal (historyg,PedPoint+Vector(0,0,ped_ht),
+		Vector(ped_size,ped_size,-ped_ht));
   
   WestPoint -= Vector (0, 2*img_div+img_size, 0);
   add_poster_on_wall ("/usr/sci/data/Geometry/textures/museum/history/beeC-fill.ppm",
@@ -973,8 +996,10 @@ void build_history_hall (Group* main_group, Scene *scene) {
 		      WestPoint, WestRight, WestDown, 
  		      historyg);
   PedPoint.y(WestPoint.y()+ped_div);
-  historyg->add(new Box(flat_white, PedPoint, 
-			PedPoint+Vector(ped_size,ped_size,ped_ht)));
+  //  historyg->add(new Box(flat_white, PedPoint, 
+  //			PedPoint+Vector(ped_size,ped_size,ped_ht)));
+  add_pedestal (historyg,PedPoint+Vector(0,0,ped_ht),
+		Vector(ped_size,ped_size,-ped_ht));
   Point BallsPoint (PedPoint+Vector(ped_size/2., ped_size/2., ped_ht));
   
   WestPoint -= Vector (0, 2*img_div+img_size, 0);
@@ -1025,8 +1050,8 @@ void build_history_hall (Group* main_group, Scene *scene) {
 		      SouthPoint, SouthRight, SouthDown, 
 		      historyg);
   PedPoint.x(SouthPoint.x()-ped_div);
-  historyg->add(new Box(flat_white,PedPoint-Vector(ped_size,ped_size,ped_ht),
-			PedPoint));
+  add_pedestal (historyg,PedPoint-Vector(ped_size,ped_size,0),
+		Vector(ped_size,ped_size,-ped_ht));
 
   SouthPoint -= Vector(2*img_div+img_size,0,0);
   add_poster_on_wall ("/usr/sci/data/Geometry/textures/museum/history/knickC-fill.ppm",
@@ -1163,7 +1188,14 @@ historyg);
   /* -eye -5.43536 -13.0406 2 -lookat -15.9956 -12.5085 2 -up 0 0 1 -fov 60*/
 
   /* **************** Saturn scene **************** */
-  historyg->add (new Sphere(flat_yellow, RingsPoint+Vector(0,0,0.3),0.15));
+
+  Material* Saturn_color = new ImageMaterial("/usr/sci/data/Geometry/textures/museum/history/saturn.ppm",
+					   ImageMaterial::Clamp,
+					   ImageMaterial::Clamp, 1,
+					   Color(0,0,0), 0);
+
+  historyg->add (new UVSphere(Saturn_color, RingsPoint+Vector(0,0,0.3),0.15,
+		   Vector(-.2,-.25,1))); 
   historyg->add (new Ring(flat_grey, RingsPoint+Vector(0,0,0.3),
 			  Vector(-.2,-.25,1),0.18,0.03));  
   historyg->add (new Ring(flat_white, RingsPoint+Vector(0,0,0.3),
@@ -1192,11 +1224,34 @@ historyg);
       exit(0);
   }
   /* **************** Billiard Balls **************** */
-  historyg->add (new Sphere(yellow, BallsPoint+Vector(-0.1,-0.2,0.2),0.07));
-  historyg->add (new Sphere(yellow, BallsPoint+Vector(0,-0.03,0.2),0.07));
+  
+
+  Material* ball1 = new ImageMaterial("/usr/sci/data/Geometry/textures/museum/history/1ball_s.ppm",
+				      ImageMaterial::Clamp,
+				      ImageMaterial::Clamp, 1,
+				      Color(1.0,1.0,1.0), 50);
+  Material* ball4 = new ImageMaterial("/usr/sci/data/Geometry/textures/museum/history/4ball_s.ppm",
+				      ImageMaterial::Clamp,
+				      ImageMaterial::Clamp, 1,
+				      Color(1.0,1.0,1.0), 50);
+  Material* ball8 = new ImageMaterial("/usr/sci/data/Geometry/textures/museum/history/8ball_s.ppm",
+				      ImageMaterial::Clamp,
+				      ImageMaterial::Clamp, 1,
+				      Color(1.0,1.0,1.0), 50);
+
+  Material* ball9 = new ImageMaterial("/usr/sci/data/Geometry/textures/museum/history/9ball_s2.ppm",
+				      ImageMaterial::Clamp,
+				      ImageMaterial::Clamp, 1,
+				      Color(1.0,1.0,1.0), 50);
+
+  historyg->add (new UVSphere(ball1, BallsPoint+Vector(-0.1,-0.2,0.2),0.07,
+			      Vector(-0.2,0.2,1),Vector(0,1,0)));
+  historyg->add (new UVSphere(ball9, BallsPoint+Vector(0,-0.03,0.2),0.07));
   historyg->add (new Sphere(white, BallsPoint+Vector(0.23,-0.05,0.2),0.07));
-  historyg->add (new Sphere(black, BallsPoint+Vector(-0.1,0.18,0.2),0.07));
-  historyg->add (new Sphere(purple, BallsPoint+Vector(-0.15,0.29,0.2),0.07));
+  historyg->add (new UVSphere(ball8, BallsPoint+Vector(-0.1,0.18,0.2),0.07,
+			      Vector(0,0,1),Vector(0,1,0)));
+  historyg->add (new UVSphere(ball4, BallsPoint+Vector(-0.15,0.29,0.2),0.07,
+			      Vector(0,-.1,.9),Vector(-.15,.85,0)));
   
   main_group->add(historyg);
 
@@ -1641,44 +1696,45 @@ void build_modern_room (Group *main_group, Scene *scene) {
     = new CrowMarble(4.5, Vector(.3, .3, 0), Color(.9,.9,.9), 
 		     Color(.8, .8,.8), Color(.7, .7, .7)); 
   const float ped_ht = 1.0;
+  const float half_ped_size = 0.375;
 
   //  pedestals
   Group* moderng = new Group();
 
   // along east wall
   /*  Cal tower */
-  moderng->add(new Box(flat_white,Point(-10-0.375,-7-0.375,0),
-		       Point(-10+0.375,-7+0.375,ped_ht)));
+  add_pedestal (moderng, Point(-10-half_ped_size,-7-half_ped_size,ped_ht),
+		Vector(2.*half_ped_size,2.*half_ped_size,-ped_ht));
+
   /*  lumigraph */
-  moderng->add(new Box(flat_white,Point(-10-0.375,-10-0.375,0),
-		       Point(-10+0.375,-10+0.375,ped_ht)));
+  add_pedestal (moderng, Point(-10-half_ped_size,-10-half_ped_size,ped_ht),
+		Vector(2.*half_ped_size,2.*half_ped_size,-ped_ht));
   /*  Gooch NPR models */
-  moderng->add(new Box(flat_white,Point(-10-0.375,-13-0.375,0),
-		       Point(-10+0.375,-13+0.375,ped_ht)));
+  add_pedestal (moderng, Point(-10-half_ped_size,-13-half_ped_size,ped_ht),
+		Vector(2.*half_ped_size,2.*half_ped_size,-ped_ht));
 
   // along south wall
   /* dragon */
-  moderng->add(new Box(flat_white,Point(-14-0.375,-14-0.375,0),
-		       Point(-14+0.375,-14+0.375,ped_ht)));
+  add_pedestal (moderng, Point(-14-half_ped_size,-14-half_ped_size,ped_ht),
+		Vector(2.*half_ped_size,2.*half_ped_size,-ped_ht));
   /* SCI torso */
-  moderng->add(new Box(flat_white,Point(-16-0.375,-14-0.375,0),
-		       Point(-16+0.375,-14+0.375,ped_ht)));
+  add_pedestal (moderng, Point(-16-half_ped_size,-14-half_ped_size,ped_ht),
+		Vector(2.*half_ped_size,2.*half_ped_size,-ped_ht));
 
   // along west wall 
   /* buddha */
-  moderng->add(new Box(flat_white,Point(-18-0.375,-12-0.375,0),
-		       Point(-18+0.375,-12+0.375,ped_ht)));
+  add_pedestal (moderng, Point(-18-half_ped_size,-12-half_ped_size,ped_ht),
+		Vector(2.*half_ped_size,2.*half_ped_size,-ped_ht));
   /*  UNC well */
-  moderng->add(new Box(flat_white,Point(-18-0.375,-10-0.375,0),
-		       Point(-18+0.375,-10+0.375,ped_ht)));
+  add_pedestal (moderng, Point(-18-half_ped_size,-10-half_ped_size,ped_ht),
+		Vector(2.*half_ped_size,2.*half_ped_size,-ped_ht));
 
   // along north wall
   /* Stanford bunny */
-  moderng->add(new Box(flat_white,Point(-15-0.375,-6-0.375,0),
-		       Point(-15+0.375,-6+0.375,ped_ht)));
+  add_pedestal (moderng, Point(-15-half_ped_size,-6-half_ped_size,ped_ht),
+		Vector(2.*half_ped_size,2.*half_ped_size,-ped_ht));
   Point bun_ped_top (-15,-6,ped_ht);
 
-#if 1
   FILE *fp;
 
   Transform bunnyT;
@@ -1735,12 +1791,9 @@ void build_modern_room (Group *main_group, Scene *scene) {
 
   main_group->add (bunny);
 
-#endif
-
   /*  Venus  */
-  moderng->add(new Box(flat_white,Point(-13-0.375,-6-0.375,0),
-		       Point(-13+0.375,-6+0.375,ped_ht)));
-
+  add_pedestal (moderng, Point(-13-half_ped_size,-6-half_ped_size,ped_ht),
+		Vector(2.*half_ped_size,2.*half_ped_size,-ped_ht));
   Point venus_ped_top(-13,-6,ped_ht);
 
   // read in the venus geometry
@@ -1785,8 +1838,8 @@ void build_modern_room (Group *main_group, Scene *scene) {
 
   // center of room
   /* rtrt room */
-  moderng->add(new Box(flat_white,Point(-14-0.6,-10-0.6,0),
-		       Point(-14+0.6,-10+0.6,0.6)));
+  add_pedestal (moderng, Point(-14-0.6,-10-0.6,ped_ht),
+		Vector(1.2,1.2,-ped_ht));
 
   Point rtrt_room_centerpt(-14,-10,.6);
   double rtrt_room_radius = .6;
@@ -1837,7 +1890,7 @@ void build_modern_room (Group *main_group, Scene *scene) {
 		      NorthPoint, NorthRight, NorthDown,
 		      moderng);
 
-  cerr << "North Wall: " << NorthPoint << endl;
+  //  cerr << "North Wall: " << NorthPoint << endl;
 
   Vector WestRight (0,img_size,0);
   Vector WestDown (0,0,-img_size);
@@ -1864,7 +1917,7 @@ void build_modern_room (Group *main_group, Scene *scene) {
 		      moderng);
 
   WestPoint -= Vector (0, 2*img_div+img_size, 0);
-  add_poster_on_wall ("/usr/sci/data/Geometry/textures/museum/modern/discontinuityC-fill.ppm",
+  add_poster_on_wall ("/usr/sci/data/Geometry/textures/museum/modern/dressC-fill.ppm",
 		      WestPoint, WestRight, WestDown, 
 		      moderng);
 
@@ -1878,7 +1931,7 @@ void build_modern_room (Group *main_group, Scene *scene) {
 		      WestPoint, WestRight, WestDown, 		      
 		      moderng);
 
-  cerr << "West Wall:  " << WestPoint << endl;
+  //  cerr << "West Wall:  " << WestPoint << endl;
 
   img_div = 0.35;
   Vector SouthRight (-img_size, 0, 0);
@@ -1905,7 +1958,7 @@ void build_modern_room (Group *main_group, Scene *scene) {
 		      SouthPoint, SouthRight, SouthDown, 
 		      moderng);
 
-  cerr << "South Wall: " << SouthPoint-Vector(img_size, 0,0) << endl;
+  //  cerr << "South Wall: " << SouthPoint-Vector(img_size, 0,0) << endl;
 
   Vector EastRight (0,-img_size,0);
   Vector EastDown (0,0,-img_size);
@@ -1935,7 +1988,7 @@ void build_modern_room (Group *main_group, Scene *scene) {
 		      EastPoint, EastRight, EastDown, 
 		      moderng);
 
-  cerr << "East Wall:  " << EastPoint-Vector(0,img_size,0) << endl;
+  //  cerr << "East Wall:  " << EastPoint-Vector(0,img_size,0) << endl;
 
 
   main_group->add(moderng);
@@ -2014,7 +2067,11 @@ Scene* make_scene(int argc, char* argv[], int /*nworkers*/)
 
   ceiling_floor->add(check_floor);
 
-  Material* wall_white = new LambertianMaterial(Color(0.8,0.8,0.8));
+  Material* ped_white = new LambertianMaterial(Color(0.8,0.8,0.8));
+  Material* wall_white = new ImageMaterial("/usr/sci/data/Geometry/textures/museum/general/tex-wall.ppm",
+					   ImageMaterial::Tile,
+					   ImageMaterial::Tile, 1,
+					   Color(0,0,0), 0);
 
   south_wall->add(new Rect(wall_white, Point(-12, -28, 4), 
 		       Vector(8, 0, 0), Vector(0, 0, 4)));
@@ -2068,26 +2125,35 @@ Scene* make_scene(int argc, char* argv[], int /*nworkers*/)
   //  ceiling_floor->add(new Rect(wall_white, Point(-12, -16, 8),
   //			      Vector(8.16, 0, 0), Vector(0, 12.16, 0)));
 
-  partitions->add(new Box(wall_white, Point(-8-.15,-24,0),
-			  Point(-8+.15,-4,5)));
-  partitions->add(new Cylinder(wall_white, Point(-8,-4,5),
+  partitions->add(new Rect(wall_white, Point(-8-.15,-14,2.5),
+			   Vector(0,10,0),Vector(0,0,2.5)));
+  partitions->add(new Rect(wall_white, Point(-8+.15,-14,2.5),
+			   Vector(0,-10,0),Vector(0,0,2.5)));
+  partitions->add(new UVCylinder(wall_white, Point(-8,-4,5),
+			       Point(-8,-24-.15,5),0.15));
+  partitions->add(new UVCylinder(wall_white, Point(-8,-24,0),
 			       Point(-8,-24,5),0.15));
+  partitions->add(new Sphere(wall_white, Point(-8,-24,5),0.15));
 
 
-  partitions->add(new Box(wall_white, Point(-16,-24-.15,0),
-			  Point(-8,-24+.15,5)));
-  partitions->add(new Cylinder(wall_white, Point(-16,-24,0),
+  partitions->add(new Rect(ped_white, Point(-12,-24-.15,2.5),
+			   Vector(4, 0, 0), Vector(0,0,2.5)));
+  partitions->add(new Rect(ped_white, Point(-12,-24+.15,2.5),
+			   Vector(-4, 0, 0), Vector(0,0,2.5)));
+  partitions->add(new UVCylinder(wall_white, Point(-16,-24,0),
 			       Point(-16,-24,5),0.15));
-  partitions->add(new Cylinder(wall_white, Point(-16,-24,5),
-			       Point(-8.1,-24,5),0.15));
+  partitions->add(new UVCylinder(wall_white, Point(-16,-24,5),
+			       Point(-8+.15,-24,5),0.15));
   partitions->add(new Sphere(wall_white, Point(-16,-24,5),0.15));
 
 
-  partitions->add(new Box(wall_white, Point(-20,-16-.15,0),
-			  Point(-12,-16+.15,5)));
-  partitions->add(new Cylinder(wall_white, Point(-12,-16,0),
+  partitions->add(new Rect(ped_white, Point(-16,-16-.15,2.5),
+			   Vector(4,0,0), Vector(0,0,2.5)));
+  partitions->add(new Rect(ped_white, Point(-16,-16+.15,2.5),
+			   Vector(-4,0,0), Vector(0,0,2.5)));
+  partitions->add(new UVCylinder(wall_white, Point(-12,-16,0),
 			       Point(-12,-16,5),0.15));
-  partitions->add(new Cylinder(wall_white, Point(-12,-16,5),
+  partitions->add(new UVCylinder(wall_white, Point(-12,-16,5),
 			       Point(-20,-16,5),0.15));
   partitions->add(new Sphere(wall_white, Point(-12,-16,5),0.15));
 
@@ -2134,8 +2200,3 @@ Scene* make_scene(int argc, char* argv[], int /*nworkers*/)
   return scene;
 }
 
-/*
-North Wall: [-18.85, -4.11, 2.7]
-West Wall:  [-19.99, -14.95, 2.7]
-
- */
