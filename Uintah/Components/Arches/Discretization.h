@@ -34,16 +34,27 @@ DESCRIPTION
 WARNING
 none
 ****************************************/
+
 #ifndef included_Discretization
 #define included_Discretization
 
+#include <Uintah/Grid/LevelP.h>
+#include <Uintah/Grid/Region.h>
+#include <Uintah/Interface/SchedulerP.h>
+#include <Uintah/Interface/DataWarehouseP.h>
+#include <Uintah/Parallel/ProcessorContext.h>
+
 #include <SCICore/Containers/Array1.h>
 
+namespace Uintah {
+namespace Components {
 class StencilMatrix;
+using namespace Uintah::Grid;
+  using namespace Uintah::Interface;
+  using namespace SCICore::Containers;
+  using namespace Uintah::Parallel;
 
-using namespace SCICore::Containers;
-
-class Discretization : 
+class Discretization
 {
 public:
   // GROUP: Constructors:
@@ -87,21 +98,23 @@ public:
 
  private:
    
-   calculateVelocityCoeff(const int Index,
-			  const LevelP& level,
+    void calculateVelocityCoeff(const ProcessorContext*,
 			  const Region* region,
 			  const DataWarehouseP& old_dw,
-			  DataWarehouseP& new_dw);
-   calculatePressureCoeff(const LevelP& level,
-			 const Region* region,
-			 const DataWarehouseP& old_dw,
-			 DataWarehouseP& new_dw); 
+			  DataWarehouseP& new_dw,
+				const int Index);
+    void calculatePressureCoeff(const ProcessorContext*,
+				const LevelP& level,
+				const Region* region,
+				const DataWarehouseP& old_dw,
+				DataWarehouseP& new_dw); 
 
-   calculateResidual(const LevelP& level,
-		     SchedulerP& sched,
-		     const DataWarehouseP& old_dw,
-		     DataWarehouseP& new_dw);
-   calculateOrderMagnitude(const LevelP& level,
+    void calculateResidual(const ProcessorContext*,
+			   const LevelP& level,
+			   SchedulerP& sched,
+			   const DataWarehouseP& old_dw,
+			   DataWarehouseP& new_dw);
+    void calculateOrderMagnitude(const LevelP& level,
 			   SchedulerP& sched,
 			   const DataWarehouseP& old_dw,
 			   DataWarehouseP& new_dw);
@@ -197,5 +210,8 @@ public:
      CellInformation(const Region*);
    };
 };
+
+}
+}
 #endif  
   
