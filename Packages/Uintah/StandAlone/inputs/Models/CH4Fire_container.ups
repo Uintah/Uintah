@@ -51,6 +51,7 @@
        <delt_init>          1.0e-7      </delt_init>
        <max_delt_increase>  0.15        </max_delt_increase>
        <timestep_multiplier>0.5         </timestep_multiplier>
+       <!--<max_iterations>      10         </max_iterations>-->
    </Time>
    
     <!--____________________________________________________________________-->
@@ -82,8 +83,9 @@
                               <value> 0.0</value>
         </BCType>
       </Face>
-      <!--__________________________________-->
-      
+      <!--______________BOTTOM____________-->
+            
+      <!--  fuel jet -->
       <Face circle = "y-" origin = "0.0 -0.1 0.0" radius = ".05">
         <BCType id = "0"   label = "Pressure"     var = "Neumann">
                               <value> 0.0   </value>
@@ -114,12 +116,31 @@
                               <value> 0.0</value>
         </BCType>
       </Face>
-      <Face side = "y-">
+      <!-- outside air Coflow -->
+      <Face side = "y-">    
         <BCType id = "0"   label = "Pressure"     var = "Neumann">
                               <value> 0.0   </value>
         </BCType>
+        <BCType id = "4" label = "Velocity"     var = "Dirichlet">
+                              <value> [0.,1.0,0.] </value>
+        </BCType>
+        <BCType id = "4" label = "Temperature"  var = "Dirichlet">
+                              <value> 0.0  </value>
+        </BCType>
+        <BCType id = "4" label = "Density"      var = "Dirichlet">
+                              <value> 1.1792946927374306  </value>
+        </BCType>
+        <BCType id = "4" label = "scalar-f"     var = "Dirichlet">
+                              <value> 0.0</value>
+        </BCType>
+        <BCType id = "4" label = "cumulativeEnergyReleased" var = "Dirichlet">
+                              <value> 0.0</value>
+        </BCType>
+      </Face>
+      <!-- rest of materials -->
+      <Face side = "y-">
         <BCType id = "all" label = "Velocity"     var = "Dirichlet">
-                              <value> [0.,0.,0.] </value>
+                              <value> [0.,0.0,0.] </value>
         </BCType>
         <BCType id = "all" label = "Temperature"  var = "Neumann">
                               <value> 0.0  </value>
@@ -134,7 +155,7 @@
                               <value> 0.0</value>
         </BCType>
       </Face>   
-      <!--__________________________________-->               
+      <!--______________TOP____________________-->               
       <Face side = "y+">
         <BCType id = "0"   label = "Pressure"     var = "Dirichlet">
                               <value> 101325.0   </value>
@@ -214,7 +235,7 @@
     <!--   O  U  P  U  T     V  A  R  I  A  B  L  E  S                      -->
     <!--____________________________________________________________________-->
    <DataArchiver>
-      <filebase>DEBUGCH4Fire_container.uda</filebase>
+      <filebase>CH4_2D_soupToNuts.uda</filebase>
       <outputInterval> 0.0005  </outputInterval>
       <compression>gzip</compression>
       <!--<outputTimestepInterval> 1 </outputTimestepInterval>-->
@@ -325,7 +346,7 @@
     <!--____________________________________________________________________-->
     <MaterialProperties>
        <MPM>
-        <material name = "Steel Ring">
+        <material name = "Steel Ring">    <!-- MATL 0 -->
         <include href="inputs/MPM/MaterialData/MaterialConst4340Steel.xml"/>
         <constitutive_model type="elastic_plastic">
           <useModifiedEOS>                true  </useModifiedEOS>
@@ -376,7 +397,7 @@
                 </geom_object>
          </material>
          
-         <material  name = "reactant">
+         <material  name = "reactant">    <!-- MATL 2 -->
                 <density>   1840.0   </density>
                 <constitutive_model type = "visco_scram">
                     <useModifiedEOS>     true       </useModifiedEOS>
@@ -426,7 +447,7 @@
       </MPM>
       <!--__________________________________-->
        <ICE>
-         <material name = "product">       
+         <material name = "Atmosphere">       <!-- MATL 4 -->   
            <EOS type = "ideal_gas"> </EOS>
            <isSurroundingMatl>          true            </isSurroundingMatl>
            <dynamic_viscosity>          1e-6            </dynamic_viscosity>
@@ -454,21 +475,21 @@
            </geom_object>
          </material>
 
-         <material name = "product">
+         <material name = "PBXproductGases">  <!-- MATL 5 -->
            <EOS type = "JWLC">
-             <A>8.580805e11</A>
-             <B>7.546e9</B>
-             <C>7.8127e8</C>
-             <R1>4.306</R1>
-             <R2>0.80</R2>
-             <om>0.30</om>
-             <rho0>1894.0</rho0>
+             <A>  8.580805e11</A>
+             <B>  7.546e9    </B>
+             <C>  7.8127e8   </C>
+             <R1> 4.306      </R1>
+             <R2> 0.80       </R2>
+             <om> 0.30       </om>
+             <rho0>1894.0    </rho0>
            </EOS>
-           <includeFlowWork>        false               </includeFlowWork>
+           <includeFlowWork>        false              </includeFlowWork>
            <dynamic_viscosity>          0.0            </dynamic_viscosity>
            <thermal_conductivity>       0.0            </thermal_conductivity>
            <specific_heat>              544.96         </specific_heat>
-           <speed_of_sound>             374.17            </speed_of_sound>
+           <speed_of_sound>             374.17         </speed_of_sound>
            <gamma>                      1.4            </gamma>
            <geom_object>
                   <box>
@@ -547,10 +568,11 @@
      -->
 
 
-        <material>product</material>
+        <material>Atmosphere</material>
         <scalar name="f">
           <constants>
-        <diffusivity>0</diffusivity></constants>
+            <diffusivity>0</diffusivity>
+          </constants>
           <geom_object>
             <difference>
              <box label="domain">
