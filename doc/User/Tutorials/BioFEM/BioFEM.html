@@ -1,0 +1,339 @@
+
+<HTML>
+  <TITLE>BioFEM Tutorial</TITLE>
+
+<BODY bgcolor="#a9a9a9">
+
+
+<CENTER>
+<TABLE border="0" cellpadding="20" cellspacing="5" width="640" bgcolor="#cccccc">
+<TR><TD>
+
+<CENTER>
+<IMG SRC="images/biofem-banner-main.gif">
+<FONT face="Arial,Helvetica,Geneva,Swiss,SunSans-Regular" color="Maroon">
+<H1> BioFEM Tutorial </H1>
+</FONT>
+</CENTER>
+
+<H2>Contents</H2>
+<H3>Sections</H3>
+
+<OL>
+  <LI value="1"> <A HREF="#section_1">Introduction</A>
+  <LI value="2"> <A HREF="#section_2">Getting Started</A>
+    <OL>
+      <LI value="1"> <A HREF="#section_2_1">SCIRun Environment Variables</A>
+      <LI value="2"> <A HREF="#section_2_2">Launching BioFEM</A>
+      <LI value="3"> <A HREF="#section_2_3">User Interface Organization</A>
+    </OL>
+  <LI value="3"> <A HREF="#section_3">Loading Data</A>
+  <LI value="4"> <A HREF="#section_4">Visualization</A>
+  <OL>
+    <LI value="1"> <A HREF="#section_4_1">Rendering Window</A>
+    <LI value="3"> <A HREF="#section_4_3">Isosurface</A>
+    <LI value="4"> <A HREF="#section_4_4">Glyphs</A>
+    <LI value="5"> <A HREF="#section_4_5">Fibers</A>
+  </OL
+</OL>
+
+<H3>Figures</H3>
+<UL>
+  <LI><A HREF="#figure_1">Figure 1: BioFEM Interface Window</A>
+  <LI><A HREF="#figure_2">Figure 2: BioFEM Interface Window (Detached Panes)</A>
+  <LI><A HREF="#figure_3">Figure 3: File Menu</A>
+  <LI><A HREF="#figure_4">Figure 4: Help Menu</A>
+  <LI><A HREF="#figure_5">Figure 5: File Load Dialog</A>
+  <LI><A HREF="#figure_6">Figure 6: Registration Tab</A>
+  <LI><A HREF="#figure_7">Figure 7: Registration Improvement</A>
+  <LI><A HREF="#figure_8">Figure 8: Final Processing Stage</A>
+  <LI><A HREF="#figure_9">Figure 9: Cutting Plane Visualization</A>
+  <LI><A HREF="#figure_10">Figure 10: Isosurface Visualization</A>
+  <LI><A HREF="#figure_11">Figure 11: Clipped Plane Visualization</A>
+  <LI><A HREF="#figure_12">Figure 12: Glyph Box Visualization</A>
+  <LI><A HREF="#figure_13">Figure 13: Superquadric Glyph Visualization</A>
+  <LI><A HREF="#figure_14">Figure 14: Fiber Visualization</A>
+  <LI><A HREF="#figure_15">Figure 15: Single Fiber</A>
+  <LI><A HREF="#figure_16">Figure 16: Planes and Fibers</A>
+</UL>
+
+<H2><A NAME="section_1"> Section 1 -- Introduction </H2>
+
+The BioFEM application is an example standalone program used for
+computing the electric field in a volume given a set of dipoles.  The
+intent of this program is to demonstrate wrapping the BioPSE Tutorial
+example up as a Power Application.
+
+<P>
+TODO: Describe what FEM is here.
+
+
+<H2><A NAME="section_2"> Section 2 -- Getting Started </H2>
+
+In this section we describe how to get started using BioFEM.
+Subsequent sections will cover the various features and functions of
+the software, along with snapshots of the software in action.
+
+<BR><H3><A NAME="section_2_1"> 2.1 SCIRun Environment Variables </H3>
+
+It is highly recommended that you get started with the SCIRun datasets
+(available from http://software.sci.utah.edu/scirun-datasets.html)
+with BioFEM.  You are, of course, also encourage to use BioFEM to
+investigate your own datasets.  Details of how to import data into
+BioFEM will be provided in Section 3.  If you do choose to use the
+example SCIRun datasets, set your SCIRUN_DATA environment variable to
+point to the location of the data prior to running BioFEM.
+
+<BR><H3><A NAME="section_2_2"> 2.2 Launching BioFEM </H3>
+
+To launch the BioFEM application, 'cd' into the directory in which
+the BioFEM executable is located (if you have done an RPM
+installation, that directory is /usr/local/SCIRun/bin/), and then type
+'./BioFEM'.  The BioFEM application will take a few moments to
+start up, and will launch a user interface window like the one shown
+in <A HREF="#figure_1">Figure 1</A>.
+
+<A NAME="figure_1">
+<BR><BR>
+<CENTER>
+<P><A HREF="figures/biofem-load.gif"><IMG BORDER=1 SRC="figures/biofem-load-small.gif"></A><br>
+<B>Figure 1: BioFEM Interface Window (Initial State).</b>
+</CENTER>
+
+<BR><H3><A NAME="section_2_3"> 2.3 User Interface Organization </H3>
+
+The user interface for the BioFEM application has a lighter layout
+than the typical SCIRun/BioPSE PowerApp.  On the left there is a
+Rendering window where all of the data interaction and
+visualization is performed.  And on the right there is a
+Visualization Pane from which you can control many of the parameters
+for the Rendering window.  Because it is often desirable to view the
+Rendering window at full-screen resolution, we have added support for
+detaching and reattaching these two panes by clicking on the
+vertical dashed lines between them.  When separated, the panes appear
+as shown in <A HREF="#figure_2">Figure 2.</A>
+
+<A NAME="figure_2">
+<BR><BR>
+<CENTER>
+<P><A HREF="figures/biofem-panes.gif"><IMG BORDER=1 SRC="figures/biofem-panes-small.gif"></A><br>
+<B>Figure 2: BioFEM Interface Window (Panels Detached From View Window).</b>
+</CENTER>
+
+<P>
+At the top of the Rendering window there are two top-level menu
+options: File and Help, as shown in <A HREF="#figure_3">Figures 3</A>
+and <A HREF ="#figure_4">4</A>.  These menus contain options for loading and
+saving BioFEM settings, as well as options for controlling the
+appearance of 'tooltips' within BioFEM.
+
+<A NAME="figure_3">
+<BR><BR>
+<CENTER>
+<P><IMG BORDER=1 SRC="figures/biofem-file.gif"><br>
+<B>Figure 3: File Menu.</b>
+</CENTER>
+<A NAME="figure_4">
+<BR><BR>
+<CENTER>
+<P><IMG BORDER=1 SRC="figures/biofem-help.gif"><br>
+<B>Figure 4: Help Menu.</b>
+</CENTER>
+
+<P>
+At the bottom of the Visualization Pane, there is a Progress Indicator
+and a text description which indicate the current state of the
+application.  Just above the Progress Indicator is a blue Execute
+button.  The Execute button can be pressed to compute the electric
+field for the selected models, and should be pressed after the
+filenames are correct.
+
+
+<BR><H2><A NAME="section_3"> Section 3: Loading Data </H2>
+
+TODO: About data sets.
+<P>
+Once the File entries are pointing to the correct data locations,
+press the Execute button at the bottom of the pane to load the data
+into the system.  Once the data is loaded, an image will appear in the
+Rendering window.  This image shows the outer boundary of the volume
+and the dipoles, as well as the electrode set from the electrode field
+file, the isosurface at zero voltage, and some streamlines that follow
+the voltage gradients.  The electrodes, isosurface, and streamlines
+are color coded by default such that negative voltages are blue and
+positive voltages are red.
+
+
+<BR><H2><A NAME="section_4"> Section 4: Visualization </H2>
+
+As the visualization stage begins, the system will begin computing a
+number of derived quantities; this may take several moments, during
+which time the Progress indicator will indicate that the system is
+busy.  One of the first quantities the system will render are a set of
+three orthogonal cutting planes through the DT volume.  Once the
+Progress indicator changes to "Completed" (green), you can begin
+interacting with the visualization.
+
+<BR><H3><A NAME="section_4_1"> 4.1 Rendering Window </H3>
+
+To begin visualizing the data, press the AutoView button to move the
+rendered geometry into the middle of the window.  The Autoview button
+is located on the Viewer Options tab, but can also be invoked by
+pressing Ctrl-V while the mouse is in the Rendering window.  The
+controls for navigating within the Rendering window are the same as
+for the SCIRun ViewWindow
+(http://software.sci.utah.edu/doc/User/Guide/usersguide/srug5.html#sec:viewer)
+though the full control pane normally found at the bottom of the
+ViewWindow has been replaced with the most frequently used subset of
+those controls and is now located on the Viewer Options tab.
+<P>
+Within the Vis Options tab of the Visualization pane, there are five
+sub-tabs for controlling the visualization settings.  The first tab,
+"Variance" was used when visualizing the DTI variance data in Section
+3.  We will now investigate the options on the four other tabs:
+Planes, Isosurface, Glyphs, and Fibers.
+
+<BR><H3><A NAME="section_4_3"> 4.3 Isosurface Visualization </H2>
+
+Selecting the Isosurface tab reveals the options for generating an
+isosurface from the DT volume.  As shown in <A
+HREF="#figure_10">Figure 10</A> you can:
+
+<UL> 
+   <LI> Choose whether or not to show the isosurface.
+   <LI> Select which derived metric the isosurface is being computed for
+ (e.g. Fractional Anisotropy).
+   <LI> Selcted an isovalue.
+   <LI> Color the isosurface based on a) the principle eigenvector
+ direction (and again desaturated or colored black as described for
+ the planes, above); b) another scalar metric (in which case the
+ radio buttons for the colormap swatches are activated); or c) using a
+ constant color (chosen using the "Color" button).
+   <LI> Use the planes as clipping planes to clip the isosurface; the
+ orientation of each clipping plane can be toggled using the Flip
+ buttons.
+</UL>
+
+<A NAME="figure_10">
+<BR><BR>
+<CENTER>
+<P><IMG BORDER=1 SRC="figures/biofem-vis-isosurf.jpg"><br>
+<B>Figure 10: Isosurface Visualization.</b>
+</CENTER>
+
+<em>Note: The 1.20.0 version of BioFEM renders the isosurface faces
+using a constant per-face normal.  In our 1.20.1 release, we will
+enable the rendering option to display faces with interpolated normals,
+which will produce smoother surface renderings, as demonstrated in <A
+HREF="#figure_10">Figure 10</A></em>.
+<P>
+
+Just as the planes can be used to clip the isosurface, the isosurface
+can also be used to clip the planes.  An example of this is shown in
+<A
+HREF="#figure_11">Figure 11</A>.  We have set the
+isosurface value very low (0.01), have turned off the "Show
+Isosurface" button, and on the Planes tab have selected the Clip to
+Isosurface button.
+
+<A NAME="figure_11">
+<BR><BR>
+<CENTER>
+<P><IMG BORDER=1 SRC="figures/biofem-vis-clipped-planes.jpg"><br>
+<B>Figure 11: Clipped Planes Visualization.</b>
+</CENTER>
+
+<BR><H3><A NAME="section_4_4"> 4.4 Glyph Visualization </H3>
+
+Under the Glyphs tab, you can select the type, placement, and coloring
+of tensor glyphs within the volume.  The default setting is to render
+box glyphs, seeded on the planes of the planes, colored based on the
+principle eigenvector direction (as above) as shown in <A
+HREF="#figure_12">Figure 12</A>.  A zoomed-in figure of the
+superquadric glyphs rendered on the cutting planes is shown in <A
+HREF="#figure_13">Figure 13</A>.  In addition to colored-box glyphs,
+the tensors can be rendered as RGB boxes, ellipsoids, or superquadric
+glyphs.  With the controls at the top of the panel, you can select the
+discretization level used for the round glyph shapes (which are
+approximated using triangular meshes), you can select whether or not
+to normalize the volume (to 1.0) of each tensor before rendering, as
+well as whether to scale the volume of each tensor, and whether to
+exaggerate the anisotropy of the tensor (and by how much).  Finally,
+using the options in the "Seed At" frame, you can choose where to
+place the glyphs: either at a single point (controlled by the position
+of a sphere widget in the Rendering window: use Shift-LeftMouse to
+select and move widgets), seeded along a line specified by a rake
+widget, seeded on the visible cutting planes, or seeded at the grid
+point located within the prescribed isovolume.
+
+<A NAME="figure_12">
+<BR><BR>
+<CENTER>
+<P><IMG BORDER=1 SRC="figures/biofem-vis-boxes.jpg"><br>
+<B>Figure 12: Glyph Box Visualization.</b>
+</CENTER>
+
+<A NAME="figure_13">
+<BR><BR>
+<CENTER>
+<P><IMG BORDER=1 SRC="figures/biofem-vis-sqg.jpg"><br>
+<B>Figure 13: Superquadric Glyph Visualization.</b>
+</CENTER>
+
+<BR><H3><A NAME="section_4_5"> 4.5 Fiber Visualization </H3>
+
+As with the tensor glyphs, you can select seed locations and
+colorization options for rendering fibers within the brain.  A variety
+of these options are shown in <A HREF="#figure_14">Figure 14</A>, <A
+HREF="#Figure_15"> Figure 15, and <A HREF="#figure_16">Figure 16</A>.
+Additionally, you can set a number of parameters that control the
+fiber tracing algorithm.  These parameters include:
+
+<UL>
+  <LI> Algorithm: trace along the major eigenvector or using the
+       tensorlines algorithm; choose a step size, as well as whether
+       to use Euler or RK4 (fourth-order Runge-Kutta) integration.
+
+  <LI> Sampling Kernel: when querying tensor values between discrete
+       sample locations, the interpolation kernel to be used (Tent,
+       Catmull-Rom, or B-Spline).
+
+  <LI> Stopping Criteria: choose a set of criteria which can be
+       evaluated to determine whether to terminate a fiber.  If any of
+       the criteria are true, the fiber will terminate.  These
+       criteria include: exceeding a specified maximum fiber length,
+       exceeding a maximum number of steps, and entering a region of
+       the volume which falls below a specified anisotropy threshold
+       (either Linear Anisotropy or Fractional Anisotropy).
+</UL>
+
+<A NAME="figure_14">
+<BR><BR>
+<CENTER>
+<P><IMG BORDER=1 SRC="figures/biofem-vis-fibers.jpg"><br>
+<B>Figure 14: Fiber Visualization.</b>
+</CENTER>
+
+<A NAME="figure_15">
+<BR><BR>
+<CENTER>
+<P><IMG BORDER=1 SRC="figures/biofem-vis-single-fiber.jpg"><br>
+<B>Figure 15: Single Fiber.</b>
+</CENTER>
+
+<A NAME="figure_16">
+<BR><BR>
+<CENTER>
+<P><IMG BORDER=1 SRC="figures/biofem-vis-planes-fibers.jpg"><br>
+<B>Figure 16: Planes and Fibers.</b>
+</CENTER>
+
+
+<P><IMG SRC="images/footer.gif"><br>
+
+</TD></TR>
+</TABLE>
+</CENTER>
+
+</BODY>
+</HTML>
