@@ -39,9 +39,9 @@ namespace SCIRun {
 
 class SCICORESHARE Tensor {
 private:
-  Vector e1_, e2_, e3_;
+  Vector e1_, e2_, e3_;  // these are already scaled by the eigenvalues
   double l1_, l2_, l3_;
-  int valid_eigens_;
+  int have_eigens_;
 public:
   Tensor();
   Tensor(const Tensor&);
@@ -62,11 +62,13 @@ public:
   static string type_name(int i = -1);
   
   double mat_[3][3];
-  void build_eigens();
+  void build_mat_from_eigens();
+  void build_eigens_from_mat();
+
   void get_eigenvectors(Vector &e1, Vector &e2, Vector &e3);
   void get_eigenvalues(double &l1, double &l2, double &l3);
-  double aniso_index();
-  
+  void set_eigens(const Vector &e1, const Vector &e2, const Vector &e3);
+
   //! support dynamic compilation
   static const string& get_h_file_path();
 
