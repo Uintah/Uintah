@@ -693,7 +693,6 @@ void Module::tcl_command(GuiArgs& args, void*)
     }
     args.result(args.make_list(info));
   } else if(args[1] == "needexecute"){
-    std::cerr << "EXECUTING\n";
     if(!abort_flag){
       abort_flag=1;
       want_to_execute();
