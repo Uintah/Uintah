@@ -18,6 +18,7 @@
 #include <Geometry/Point.h>
 
 class GeomTri : public GeomObj {
+    int x_cross(double p1[2], double p2[2], double p[2]);
 public:
     Point p1;
     Point p2;
