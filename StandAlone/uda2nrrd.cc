@@ -169,7 +169,11 @@ void build_field(QueryInfo &qinfo,
 		 Var& /*var*/,
 		 LatVolField<T> *sfd)
 {
+#ifndef _AIX
   int max_workers = Max(Thread::numProcessors()/2, 2);
+#else
+  int max_workers = 1;
+#endif  
   if (verbose) cout << "max_workers = "<<max_workers<<"\n";
   Semaphore* thread_sema = scinew Semaphore("extractor semaphore",
 					    max_workers);
@@ -224,26 +228,28 @@ void build_field(QueryInfo &qinfo,
       IntVector min_i(low.x(), low.y(), z);
       IntVector max_i(hi.x(), hi.y(), Min(z+z_step, z_max));
       
-      thread_sema->down();
-/*       PatchToFieldThread<Var, T> *ptft = */
-/*        scinew PatchToFieldThread<Var, T>(sfd, v, lo, min_i, max_i,//low, hi, */
-/*  					  thread_sema, lock); */
-/*       ptft->run(); */
-
-/*       cerr<<"low = "<<low<<", hi = "<<hi<<", min_i = "<<min_i */
-/* 	  <<", max_i = "<<max_i<<endl; */
-  
-#if 1
+#ifndef _AIX
       Thread *thrd = scinew Thread( 
         (scinew PatchToFieldThread<Var, T>(sfd, v, lo, min_i, max_i,// low, hi,
 				      thread_sema, lock)),
 	"patch_to_field_worker");
       thrd->detach();
+#else
+      if (verbose) { cout << "Creating worker...";cout.flush(); }
+      PatchToFieldThread<Var, T> *worker = 
+        (scinew PatchToFieldThread<Var, T>(sfd, v, lo, min_i, max_i,// low, hi,
+					   thread_sema, lock));
+      if (verbose) { cout << "Running worker..."; cout.flush(); }
+      worker->run();
+      delete worker;
+      if (verbose) cout << "Worker finished"<<endl;
 #endif
     }
   }
+#ifndef _AIX
   thread_sema->down(max_workers);
   if( thread_sema ) delete thread_sema;
+#endif
 }
 
 // This is the function we need in order to write the nrrd header without
@@ -303,7 +309,7 @@ Nrrd* wrap_nrrd(LatVolField<Vector> *source, bool &delete_data) {
   unsigned int num_vec = source->fdata().size();
   double *data = new double[num_vec*3];
   if (!data) {
-    cerr << "Cannot allocate memory for temp storage of vectors\n";
+    cerr << "Cannot allocate memory ("<<num_vec*3*sizeof(double)<<" byptes) for temp storage of vectors\n";
     nrrdNix(out);
     return 0;
   }
