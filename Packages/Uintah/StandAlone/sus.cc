@@ -601,6 +601,7 @@ main( int argc, char** argv )
 	delete output;
 	delete reader;
 	delete ctl;
+	delete modelmaker;
     } catch (Exception& e) {
 
       cerrLock.lock();
