@@ -79,9 +79,9 @@ namespace Uintah {
     const VarLabel* press_diffZ_FCLabel;
 
     // Model support
-    const VarLabel* model_mass_source_CCLabel;
-    const VarLabel* model_momentum_source_CCLabel;
-    const VarLabel* model_energy_source_CCLabel;
+    const VarLabel* modelMass_srcLabel;
+    const VarLabel* modelMom_srcLabel;
+    const VarLabel* modelEng_srcLabel;
     
     //Misc Labels
     const VarLabel* IveBeenHereLabel;
