@@ -936,8 +936,8 @@ void setBC(CCVariable<double>& press_CC,
       double bc_value = -9;
       string bc_kind = "NotSet";
       vector<IntVector> bound;
-      getIterator_BCValue_BCKind<double>( patch, face, child, kind, mat_id,
-                                          bc_value, bound, bc_kind); 
+      getIteratorBCValueBCKind<double>( patch, face, child, kind, mat_id,
+					bc_value, bound,bc_kind); 
       if(bc_kind != "NotSet" ) {
         // define what a symmetric  pressure BC means
         if( bc_kind == "symmetric"){
@@ -949,9 +949,8 @@ void setBC(CCVariable<double>& press_CC,
         //__________________________________
         // Apply the boundary condition
         if (gravity[p_dir] == 0) { 
-          IveSetBC = 
-                setNeumanDirichletBC<double> (patch, face, press_CC,bound, 
-                                              bc_kind, bc_value, cell_dx);
+          IveSetBC = setNeumanDirichletBC<double>(patch, face, press_CC,bound, 
+						  bc_kind, bc_value, cell_dx);
         }
         //__________________________________
         // With Gravity
@@ -1013,8 +1012,8 @@ void setBC(CCVariable<double>& var_CC,
       double bc_value = -9;
       string bc_kind = "NotSet";
       vector<IntVector> bound;
-      getIterator_BCValue_BCKind<double>( patch, face, child, desc, mat_id,
-                                          bc_value, bound, bc_kind); 
+      getIteratorBCValueBCKind<double>( patch, face, child, desc, mat_id,
+					bc_value, bound,bc_kind); 
       if (bc_kind != "NotSet" ) {
         //__________________________________
         // LOGIC
@@ -1105,14 +1104,14 @@ void setBC(CCVariable<Vector>& var_CC,
       Vector bc_value = Vector(-9,-9,-9);
       string bc_kind = "NotSet";
       vector<IntVector> bound;
-      getIterator_BCValue_BCKind<Vector>( patch, face, child, desc, mat_id,
-                                          bc_value, bound, bc_kind);
+      getIteratorBCValueBCKind<Vector>(patch, face, child, desc, mat_id,
+				       bc_value, bound,bc_kind);
      
       if (bc_kind != "NotSet" ) {
         //__________________________________
         // Apply the boundary condition
-        IveSetBC =  setNeumanDirichletBC<Vector>
-                       (patch, face, var_CC,bound, bc_kind, bc_value, cell_dx);
+        IveSetBC =  setNeumanDirichletBC<Vector>(patch, face, var_CC,bound, 
+						 bc_kind, bc_value, cell_dx);
 
         //__________________________________
         //  Tangent components Neumann = 0
