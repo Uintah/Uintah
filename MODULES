@@ -42,6 +42,10 @@ FieldSeed
 Gradient
 Magnitude
 
+Category: HP
+ReadSonos
+IHP
+
 Category: Image
 Binop
 Edge

@@ -1,7 +1,7 @@
 
 #include <config/sci.cf>
 
-SUBDIRS = ASCI Contours CFD EEG FDM FEM Fields Image Iterators Matrix \
+SUBDIRS = ASCI Contours CFD EEG FDM FEM Fields HP Image Iterators Matrix \
 	Mesh Readers \
 	Salmon Surface Treat Visualization Writers
 

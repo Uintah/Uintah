@@ -68,7 +68,8 @@ protected:
 	UnstructuredGrid,
 	RegularGrid,
 	HexGrid,
-	Zones
+	Zones,
+	HP
     };
     ScalarField(Representation);
 private:
