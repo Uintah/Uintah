@@ -30,7 +30,7 @@ LOG
 #define FIELDEXTRACTOR_H 1
 
 
-#include <Packages/Uintah/Dataflow/Modules/Selectors/PatchDataThread.h>
+#include <Packages/Uintah/Dataflow/Modules/Selectors/PatchToField.h>
 #include <Packages/Uintah/Core/Datatypes/Archive.h>
 #include <Packages/Uintah/Dataflow/Ports/ArchivePort.h>
 #include <Packages/Uintah/Core/Grid/GridP.h>
@@ -77,7 +77,7 @@ protected:
 		      const string& varname,
 		      int mat,
 		      double time,
-		      const Var& v,
+		      Var& v,
 		      LatVolField<T>*& sfd,
 		      bool swapbytes = false);
   vector< double > times;
@@ -92,39 +92,70 @@ protected:
 
 template <class T, class Var>
 void FieldExtractor::build_field(DataArchive& archive,
-				  const LevelP& level,
-				  IntVector& lo,
-				  const string& varname,
-				  int mat,
-				  double time,
-				  const Var& v,
-				  LatVolField<T>*& sfd,
-				  bool swapbytes)
+                                  const LevelP& level,
+                                  IntVector& lo,
+                                  const string& varname,
+                                  int mat,
+                                  double time,
+                                  Var& var,
+                                  LatVolField<T>*& sfd,
+                                  bool swapbytes)
 {
-  int max_workers = Min(Thread::numProcessors(), 4);
+  int max_workers = Min(Thread::numProcessors(), 8);
   Semaphore* thread_sema = scinew Semaphore( "extractor semahpore",
-					     max_workers);
+                                             max_workers);
   WallClockTimer my_timer;
   my_timer.start();
-
+  Mutex lock("PatchtoData lock");
   
   double size = level->numPatches();
   int count = 0;
-  for(Level::const_patchIterator r = level->patchesBegin();
-      r != level->patchesEnd(); r++){
-    update_progress(count++/size, my_timer);
-    thread_sema->down();
-    
-/*      PatchDataToLatVolFieldThread<Var, T>* pdlvt =  */
-/*        scinew PatchDataToLatVolFieldThread<Var, T> */
-/*        (archive, sfd, lo, varname, mat, *r, time, thread_sema, swapbytes); */
-/*      pdlvt->run(); */
-    Thread *thrd = 
-      scinew Thread(scinew PatchDataToLatVolFieldThread<Var, T>
-		    (archive, sfd, lo, varname, mat, *r, time, thread_sema,
-		     swapbytes),
-		    "patch_data_to_lattice_vol_worker");
-    thrd->detach();
+  
+  for( Level::const_patchIterator r = level->patchesBegin();
+      r != level->patchesEnd(); ++r){
+    IntVector low, hi;
+    Var v;
+    archive.query( v, varname, mat, *r, time);
+    if( sfd->data_at() == Field::CELL){
+      low = (*r)->getCellLowIndex();
+      hi = (*r)->getCellHighIndex();
+    } else {
+      low = (*r)->getNodeLowIndex();
+      hi = (*r)->getNodeHighIndex();
+    }
+
+    IntVector range = hi - low;
+    int z_min = low.z();
+    int z_max = low.z() + hi.z() - low.z();
+    int z_step, i, z, N;
+    if ((z_max - z_min) >= max_workers){
+      // in case we have large patches we'll divide up the work 
+      // for each patch, if the patches are small we'll divide the
+      // work up by patch.
+      int cs = 25000000;  
+      int S = range.x() * range.y() * range.z() * sizeof(T);
+      N = Min(Max(S/cs, 1), (max_workers-1));
+    } else {
+      N = 1;
+    }
+    z_step = (z_max - z_min)/N;
+    for(i = 0, z = z_min ; i < N; i++, z += z_step) {
+
+      IntVector min_i(low.x(), low.y(), z);
+      IntVector max_i(hi.x(), hi.y(), Min(z+z_step, z_max));
+      update_progress((count++/double(N))/size, my_timer);
+        
+      thread_sema->down();
+/*        PatchToFieldThread<Var, T> *ptft = */
+/*  	scinew PatchToFieldThread<Var, T>(sfd, v, lo, low, hi,//min_i, max_i, */
+/*  					  thread_sema, lock, swapbytes); */
+/*        ptft->run(); */
+      Thread *thrd = scinew Thread(
+	 (scinew PatchToFieldThread<Var, T>(sfd, v, lo, min_i, max_i,
+					       thread_sema, lock, swapbytes)),
+	    "patch_to_field_worker");
+      thrd->detach();
+    }
   }
   thread_sema->down(max_workers);
   if( thread_sema ) delete thread_sema;
