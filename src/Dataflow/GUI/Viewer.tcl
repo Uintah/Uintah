@@ -31,6 +31,12 @@ itcl_class SCIRun_Render_Viewer {
 	set_defaults
     }
     destructor {
+	foreach window [winfo children .] {
+	    if ![string first .ui[modname] $window] {
+		destroy $window
+	    }
+	}
+	    
 	foreach rid $viewwindow {
 	    destroy .ui[$rid modname]
 
