@@ -65,9 +65,17 @@ class DataWarehouse : public RefCounted {
 public:
     virtual ~DataWarehouse();
 
+    DataWarehouseP getTop() const;
+
     // These need to be generalized.  Also do Handle<T>
     template<class T> void get(T& data, const std::string& name) const {
 	getBroadcastData(data, name, T::getTypeDescription());
+    }
+
+    template<class T> void get(T& data, const std::string& name,
+			       const Region* region) const {
+	getRegionData(data, name, T::getTypeDescription(),
+		      region);
     }
 
     template<class T> void get(T& data, const std::string& name,
@@ -80,6 +88,12 @@ public:
 				    const Region* region, int numGhostCells) {
 	allocateRegionData(data, name, T::getTypeDescription(),
 			   region, numGhostCells);
+    }
+
+    template<class T> void put(const T& data, const std::string& name,
+			       const Region* region) {
+	putRegionData(data, name, T::getTypeDescription(),
+		      region);
     }
 
     template<class T> void put(const T& data, const std::string& name,
@@ -96,6 +110,10 @@ public:
 	return true;
     }
 
+    bool exists(const std::string&, const Region*) {
+	return true;
+    }
+
 protected:
     DataWarehouse();
 
@@ -105,7 +123,13 @@ private:
 				  const TypeDescription*) const = 0;
     virtual void getRegionData(DataItem& di, const std::string& name,
 			       const TypeDescription*,
+			       const Region*) const = 0;
+    virtual void getRegionData(DataItem& di, const std::string& name,
+			       const TypeDescription*,
 			       const Region*, int numGhostCells) const = 0;
+    virtual void putRegionData(const DataItem& di, const std::string& name,
+			       const TypeDescription*,
+			       const Region*) = 0;
     virtual void putRegionData(const DataItem& di, const std::string& name,
 			       const TypeDescription*,
 			       const Region*, int numGhostCells) = 0;
@@ -123,6 +147,9 @@ private:
 
 //
 // $Log$
+// Revision 1.5  2000/03/22 00:37:17  sparker
+// Added accessor for PerRegion data
+//
 // Revision 1.4  2000/03/17 18:45:43  dav
 // fixed a few more namespace problems
 //
