@@ -348,7 +348,7 @@ EOF
           AC_MSG_WARN(Command line for test was: $ac_try)
           AC_MSG_WARN(Compile output is:)
           cat conftest.out
-          SCI_MSG_ERROR(Exiting configure script. Bye.)
+          SCI_MSG_ERROR(Exiting configure: non-optional lib not found. Bye.)
        fi
     fi
 
@@ -976,6 +976,10 @@ SCI_ARG_WITH(mpiuni,
   [  --with-mpiuni=<path-to-mpiuni>    <path-to-mpiuni>],
   [mpiuni="$withval"],
   [mpiuni=""])
+SCI_ARG_WITH(hypre,
+  [  --with-hypre=<path-to-hypre>      <path-to-hypre>],
+  [hypre="$withval"],
+  [hypre=""])
 SCI_ARG_WITH(petsc,
   [  --with-petsc=<path-to-petsc>      <path-to-petsc>],
   [petsc="$withval"],
@@ -2856,6 +2860,26 @@ AC_SUBST(LAPACK)
 AC_SUBST(LAPACK_DEF)
 AC_SUBST(HAVE_LAPACK)
 AC_SUBST(LIBLAPACK)
+
+##  --  search for hypre stuff  ------------------------------------------
+
+if test "$uintah" = "yes"; then
+
+  dirs="$with_hypre/lib $thirdparty/lib $SCI_LAB_TP_LIBS"
+
+  SCI_CHECK_LIB($dirs,HYPRE_LSI,main, \
+	-lHYPRE_blas -lHYPRE_struct_ls -lHYPRE_struct_mv,,optional)
+  SCI_CHECK_HEADERS($LIBHYPRE_LSI/../include $dirs,HYPRE.h,,,optional)
+
+  # Set up the generic vars
+  HAVE_LIBHYPRE=$HAVE_LIBHYPRE_LSI
+  LIBHYPRE=$LIBHYPRE_LSI
+  LIBHYPRE_LIBRARY=$LIBHYPRE_LSI_LIBRARY
+  AC_SUBST(HAVE_LIBHYPRE)
+  AC_SUBST(LIBHYPRE)
+  AC_SUBST(LIBHYPRE_LIBRARY)
+  AC_SUBST(INCHYPRE_H)
+fi
 
 ##  --  search for petsc stuff  ------------------------------------------
 
