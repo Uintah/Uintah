@@ -725,6 +725,9 @@ namespace Uintah {
       
      // exchange coefficients -- off diagonal terms
       vector<double> d_K_mom, d_K_heat;
+      bool d_convective;
+      int d_conv_fluid_matlindex;
+      int d_conv_solid_matlindex;
 
       ICE(const ICE&);
       ICE& operator=(const ICE&);
