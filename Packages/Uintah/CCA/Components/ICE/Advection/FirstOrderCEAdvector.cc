@@ -66,12 +66,13 @@ See schematic diagram at bottom of ice.cc for del* definitions
  ---------------------------------------------------------------------  */
 
 void FirstOrderCEAdvector::inFluxOutFluxVolume(
-                           const SFCXVariable<double>& uvel_FC,
+                        const SFCXVariable<double>& uvel_FC,
                         const SFCYVariable<double>& vvel_FC,
                         const SFCZVariable<double>& wvel_FC,
                         const double& delT, 
                         const Patch* patch,
-                        const int&   indx)
+                        const int&   indx,
+                        const bool& bulletProof_test)
 
 {
   Vector dx = patch->dCell();
@@ -154,7 +155,7 @@ void FirstOrderCEAdvector::inFluxOutFluxVolume(
   //__________________________________
   // if total_fluxout > vol then 
   // find the cell and throw an exception.  
-  if (fabs(error_test - num_cells) > 1.0e-2) {
+  if (fabs(error_test - num_cells) > 1.0e-2 && bulletProof_test) {
     for(CellIterator iter = patch->getCellIterator(gc); !iter.done(); iter++){
       IntVector curcell = *iter; 
       double total_fluxout = 0.0;
