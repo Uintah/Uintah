@@ -126,6 +126,8 @@ void DipoleSourceRHS::execute()
 	 cerr << "\n";
 #endif
 
+     } else {
+	 cerr << "Dipole: "<<p<<" not located within mesh!\n";
      }
      gen=rhsh->generation;
 //     cerr << "DipoleSourceRHS: about to send result...\n";
@@ -139,6 +141,9 @@ void DipoleSourceRHS::execute()
 
 //
 // $Log$
+// Revision 1.3  1999/09/16 00:36:55  dmw
+// added new Module that Chris Butson will work on (DipoleInSphere) and fixed SRCDIR references in DaveW makefiles
+//
 // Revision 1.2  1999/09/08 02:26:27  sparker
 // Various #include cleanups
 //
