@@ -13,9 +13,10 @@ SRCDIR   := Dataflow/Modules/Fields
 
 SRCS     += \
 	$(SRCDIR)/ApplyInterpolant.cc\
+	$(SRCDIR)/BuildInterpolant.cc\
 	$(SRCDIR)/CastField.cc\
 	$(SRCDIR)/FieldBoundary.cc\
-	$(SRCDIR)/BuildInterpolant.cc\
+	$(SRCDIR)/ManageFieldSet.cc\
 	$(SRCDIR)/SeedField.cc\
 	$(SRCDIR)/SetFieldData.cc\
 	$(SRCDIR)/TransformField.cc\

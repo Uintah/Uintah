@@ -1,14 +1,14 @@
-
 /*
- *  ApplyInterpolant.cc:  Rescale a surface
+ *  ApplyInterpolant.cc:  Apply an interpolant field to project the data
+ *                 from one field onto the data of another field.
  *
  *  Written by:
  *   David Weinstein
  *   Department of Computer Science
  *   University of Utah
- *   February 1995
+ *   February 2001
  *
- *  Copyright (C) 1994 SCI Group
+ *  Copyright (C) 2001 SCI Institute
  */
 
 #include <Dataflow/Ports/MatrixPort.h>
@@ -22,7 +22,6 @@ using std::cerr;
 #include <stdio.h>
 
 namespace SCIRun {
-
 
 class ApplyInterpolant : public Module {
 public:
