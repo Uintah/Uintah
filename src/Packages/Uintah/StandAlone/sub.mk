@@ -157,7 +157,7 @@ else
         Core/Containers
 endif
 
-LIBS := $(TEEM_LIBRARY) $(Z_LIBRARY) $(M_LIBRARY)
+LIBS := $(XML_LIBRARY) $(TEEM_LIBRARY) $(Z_LIBRARY) $(M_LIBRARY)
 
 SRCS := $(SRCDIR)/uda2nrrd.cc
 PROGRAM := Packages/Uintah/StandAlone/uda2nrrd
