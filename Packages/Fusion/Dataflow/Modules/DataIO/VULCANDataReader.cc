@@ -121,10 +121,10 @@ VULCANDataReader::execute(){
   // Read the status of this file so we can compare modification timestamps
 #ifdef HAVE_STAT64
   struct stat64 buf;
-  if (stat64(new_filename.c_str(), &buf)) {
+  if (stat64(new_filename.c_str(), &buf) == -1) {
 #else
   struct stat buf;
-  if (stat(new_filename.c_str(), &buf)) {
+  if (stat(new_filename.c_str(), &buf) == -1) {
 #endif
     error( string("Execute File not found ") + new_filename );
     return;

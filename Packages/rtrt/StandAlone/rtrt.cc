@@ -546,7 +546,7 @@ main(int argc, char* argv[])
   sprintf(pioscenefile, "./%s.scn", scenename);
   Scene* scene = 0;
   struct stat buf;
-  if (! stat(pioscenefile, &buf)) {
+  if (stat(pioscenefile, &buf) == -1) {
     cerr << "pio read: " << pioscenefile << endl;
     sh = scene;
     SCIRun::Piostream *str;

@@ -106,7 +106,7 @@ NrrdReader::read_nrrd()
 
   // Read the status of this file so we can compare modification timestamps.
   struct stat buf;
-  if (stat(fn.c_str(), &buf)) {
+  if (stat(fn.c_str(), &buf) == - 1) {
     error(string("FieldReader error - file not found: '")+fn+"'");
     return false;
   }

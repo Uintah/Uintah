@@ -55,7 +55,7 @@ main(int argc, char **argv)
   }
 
   struct stat buff;
-  if (stat(argv[1], &buff))
+  if (stat(argv[1], &buff) == -1)
   {
     cout << "File " << argv[1] << " not found\n";
     exit(0);
