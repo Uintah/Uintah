@@ -1,8 +1,5 @@
 //----- ColdflowMixingModel.cc --------------------------------------------------
 
-/* REFERENCED */
-static char *id="@(#) $Id$";
-
 #include <Packages/Uintah/CCA/Components/Arches/Mixing/ColdflowMixingModel.h>
 #include <Packages/Uintah/CCA/Components/Arches/Mixing/InletStream.h>
 #include <Packages/Uintah/Core/ProblemSpec/ProblemSpecP.h>
@@ -81,6 +78,9 @@ ColdflowMixingModel::computeProps(const InletStream& inStream,
 
 //
 // $Log$
+// Revision 1.5  2002/05/20 18:14:13  sparker
+// Fix gcc 3.1 problems and warnings
+//
 // Revision 1.4  2002/02/28 03:05:46  rawat
 // Added divergence constraint and modified pressure/outlet boundary condition.
 //

@@ -332,7 +332,7 @@ WARNING
   };
 
   template <class T>
-  inline Array3<T>::iterator& Array3<T>::iterator::operator++()
+  inline typename Array3<T>::iterator& Array3<T>::iterator::operator++()
   {
     if (++d_index[0] >= d_array3->getHighIndex().x()) {
       d_index[0] = d_array3->getLowIndex().x();
@@ -345,7 +345,7 @@ WARNING
   }
 
   template <class T>
-  inline Array3<T>::iterator& Array3<T>::iterator::operator--()
+  inline typename Array3<T>::iterator& Array3<T>::iterator::operator--()
   {
     if (--d_index[0] < d_array3->getLowIndex().x()) {
       d_index[0] = d_array3->getHighIndex().x() - 1;

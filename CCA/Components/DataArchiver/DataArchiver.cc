@@ -141,7 +141,7 @@ void DataArchiver::problemSetup(const ProblemSpecP& params)
 	d_checkpointInterval = atof(attrib.c_str());
       attrib = attributes["timestepInterval"];
       if (attrib != "")
-	d_checkpointTimestepInterval = atof(attrib.c_str());
+	d_checkpointTimestepInterval = atoi(attrib.c_str());
       attrib = attributes["cycle"];
       if (attrib != "")
 	d_checkpointCycle = atoi(attrib.c_str());
@@ -825,7 +825,7 @@ void DataArchiver::executedTimestep()
   if (d_wasCheckpointTimestep)
     baseDirs.push_back(&d_checkpointsDir);
 
-  for (int i = 0; i < baseDirs.size(); i++) {
+  for (int i = 0; i < static_cast<int>(baseDirs.size()); i++) {
     int timestep = d_currentTimestep;
     
     ostringstream tname;

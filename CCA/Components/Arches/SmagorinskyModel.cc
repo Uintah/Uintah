@@ -327,6 +327,7 @@ SmagorinskyModel::reComputeTurbSubmodel(const ProcessorGroup*,
 		   cellinfo->sew, cellinfo->sns, cellinfo->stb,
 		   mol_viscos, CF, d_factorMesh, d_filterl);
 
+#if 0
     // boundary conditions
     bool xminus = patch->getBCType(Patch::xminus) != Patch::Neighbor;
     bool xplus =  patch->getBCType(Patch::xplus) != Patch::Neighbor;
@@ -335,7 +336,6 @@ SmagorinskyModel::reComputeTurbSubmodel(const ProcessorGroup*,
     bool zminus = patch->getBCType(Patch::zminus) != Patch::Neighbor;
     bool zplus =  patch->getBCType(Patch::zplus) != Patch::Neighbor;
     int wallID = d_boundaryCondition->wallCellType();
-#if 0
     if (xminus) {
       for (int colZ = idxLo.z(); colZ <= idxHi.z(); colZ ++) {
 	for (int colY = idxLo.y(); colY <= idxHi.y(); colY ++) {
@@ -537,6 +537,7 @@ SmagorinskyModel::computeTurbSubmodelPred(const ProcessorGroup*,
 		   cellinfo->sew, cellinfo->sns, cellinfo->stb,
 		   mol_viscos, CF, d_factorMesh, d_filterl);
 
+#if 0
     // boundary conditions
     bool xminus = patch->getBCType(Patch::xminus) != Patch::Neighbor;
     bool xplus =  patch->getBCType(Patch::xplus) != Patch::Neighbor;
@@ -545,7 +546,6 @@ SmagorinskyModel::computeTurbSubmodelPred(const ProcessorGroup*,
     bool zminus = patch->getBCType(Patch::zminus) != Patch::Neighbor;
     bool zplus =  patch->getBCType(Patch::zplus) != Patch::Neighbor;
     int wallID = d_boundaryCondition->wallCellType();
-#if 0
     if (xminus) {
       for (int colZ = idxLo.z(); colZ <= idxHi.z(); colZ ++) {
 	for (int colY = idxLo.y(); colY <= idxHi.y(); colY ++) {
@@ -751,6 +751,7 @@ SmagorinskyModel::computeTurbSubmodelInterm(const ProcessorGroup*,
 
     // boundary conditions
 
+#if 0
     bool xminus = patch->getBCType(Patch::xminus) != Patch::Neighbor;
     bool xplus =  patch->getBCType(Patch::xplus) != Patch::Neighbor;
     bool yminus = patch->getBCType(Patch::yminus) != Patch::Neighbor;
@@ -758,7 +759,6 @@ SmagorinskyModel::computeTurbSubmodelInterm(const ProcessorGroup*,
     bool zminus = patch->getBCType(Patch::zminus) != Patch::Neighbor;
     bool zplus =  patch->getBCType(Patch::zplus) != Patch::Neighbor;
     int wallID = d_boundaryCondition->wallCellType();
-#if 0
     if (xminus) {
       for (int colZ = idxLo.z(); colZ <= idxHi.z(); colZ ++) {
 	for (int colY = idxLo.y(); colY <= idxHi.y(); colY ++) {

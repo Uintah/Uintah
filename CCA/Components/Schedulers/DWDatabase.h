@@ -112,11 +112,11 @@ DWDatabase<VarType>::DWDatabase()
 template<class VarType>
 DWDatabase<VarType>::~DWDatabase()
 {
-   for(nameDBtype::iterator iter = names.begin();
+   for(typename nameDBtype::iterator iter = names.begin();
        iter != names.end(); iter++){
       delete iter->second;
    }
-   for(globalDBtype::iterator iter = globals.begin();
+   for(typename globalDBtype::iterator iter = globals.begin();
        iter != globals.end(); iter++){
       delete iter->second;
    }
@@ -126,13 +126,13 @@ template<class VarType>
 void
 DWDatabase<VarType>::cleanForeign()
 {
-   for(nameDBtype::iterator iter = names.begin();
+   for(typename nameDBtype::iterator iter = names.begin();
        iter != names.end(); iter++){
       NameRecord* nr = iter->second;
-      for(patchDBtype::iterator iter = nr->patches.begin();
+      for(typename patchDBtype::iterator iter = nr->patches.begin();
 	  iter != nr->patches.end(); iter++){
 	 PatchRecord* pr = iter->second;
-	 for(dataDBtype::iterator iter = pr->vars.begin();
+	 for(typename dataDBtype::iterator iter = pr->vars.begin();
 	     iter != pr->vars.end(); iter++){
 	    VarType* var = *iter;
 	    if(var && var->isForeign()){
@@ -144,7 +144,7 @@ DWDatabase<VarType>::cleanForeign()
    }
 
    list<const VarLabel*> toBeRemoved;
-   for(globalDBtype::iterator iter = globals.begin();
+   for(typename globalDBtype::iterator iter = globals.begin();
        iter != globals.end(); iter++){
       VarType* var = iter->second;
       if(var && var->isForeign()){
@@ -162,12 +162,12 @@ template<class VarType>
 void
 DWDatabase<VarType>::scrub(const VarLabel* var)
 {
-  nameDBtype::iterator iter = names.find(var);
+  typename nameDBtype::iterator iter = names.find(var);
   if(iter != names.end()){
     delete iter->second;
     names.erase(iter);
   }
-  globalDBtype::iterator iter2 = globals.find(var);
+  typename globalDBtype::iterator iter2 = globals.find(var);
   if(iter2 != globals.end()){
     delete iter2->second;
     globals.erase(iter2);
@@ -183,10 +183,10 @@ DWDatabase<VarType>::NameRecord::NameRecord(const VarLabel* label)
 template<class VarType>
 DWDatabase<VarType>::NameRecord::~NameRecord()
 {
-   for(patchDBtype::iterator iter = patches.begin();
-       iter != patches.end(); iter++){
-      delete iter->second;
-   }   
+  for(typename patchDBtype::iterator iter = patches.begin();
+      iter != patches.end(); iter++){
+    delete iter->second;
+  }   
 }
 
 template<class VarType>
@@ -198,12 +198,12 @@ DWDatabase<VarType>::PatchRecord::PatchRecord(const Patch* patch)
 template<class VarType>
 DWDatabase<VarType>::PatchRecord::~PatchRecord()
 {
-   for(dataDBtype::iterator iter = vars.begin();
-       iter != vars.end(); iter++){
-      if(*iter){
-	 delete *iter;
-      }
-   }   
+  for(typename dataDBtype::iterator iter = vars.begin();
+      iter != vars.end(); iter++){
+    if(*iter){
+      delete *iter;
+    }
+  }   
 }
 
 template<class VarType>
@@ -215,10 +215,10 @@ bool DWDatabase<VarType>::exists(const VarLabel* label, int matlIndex,
    if (matlIndex < 0)
       return (patch == NULL) && (globals.find(label) != globals.end());
   
-   nameDBtype::const_iterator nameiter = names.find(label);
+   typename nameDBtype::const_iterator nameiter = names.find(label);
    if(nameiter != names.end()) {
       NameRecord* nr = nameiter->second;
-      patchDBtype::const_iterator patchiter = nr->patches.find(patch);
+      typename patchDBtype::const_iterator patchiter = nr->patches.find(patch);
       if(patchiter != nr->patches.end()) {
 	 PatchRecord* rr = patchiter->second;
 	 if(matlIndex < (int)rr->vars.size()){
@@ -236,10 +236,10 @@ bool DWDatabase<VarType>::exists(const VarLabel* label, const Patch* patch) cons
 {
    if (patch && patch->isVirtual())
      patch = patch->getRealPatch();
-   nameDBtype::const_iterator nameiter = names.find(label);
+   typename nameDBtype::const_iterator nameiter = names.find(label);
    if(nameiter != names.end()) {
       NameRecord* nr = nameiter->second;
-      patchDBtype::const_iterator patchiter = nr->patches.find(patch);
+      typename patchDBtype::const_iterator patchiter = nr->patches.find(patch);
       if(patchiter != nr->patches.end()) {
 	 PatchRecord* rr = patchiter->second;
 	 for(int i=0; i<(int)rr->vars.size(); i++){
@@ -262,56 +262,56 @@ void DWDatabase<VarType>::put(const VarLabel* label, int matlIndex,
 			      VarType* var,
 			      bool replace)
 {
-   ASSERT(patch == 0 || !patch->isVirtual());
-   if(matlIndex < 0) {
-      if (patch == NULL) {
-         // add to globals
-         globalDBtype::const_iterator globaliter = globals.find(label);
-         if ((globaliter == globals.end()) || replace) {
-	    VarType*& globalVar = globals[label];
-	    if (globalVar != NULL)
-	       delete globalVar;
-	    globalVar = var;
-	    return;
-	 }
-         else
-	    throw InternalError("Put replacing old global variable");
+  ASSERT(patch == 0 || !patch->isVirtual());
+  if(matlIndex < 0) {
+    if (patch == NULL) {
+      // add to globals
+      typename globalDBtype::const_iterator globaliter = globals.find(label);
+      if ((globaliter == globals.end()) || replace) {
+	VarType*& globalVar = globals[label];
+	if (globalVar != NULL)
+	  delete globalVar;
+	globalVar = var;
+	return;
       }
       else
-         throw InternalError("matlIndex must be >= 0");
-   }
+	throw InternalError("Put replacing old global variable");
+    }
+    else
+      throw InternalError("matlIndex must be >= 0");
+  }
 
   
-   nameDBtype::const_iterator nameiter = names.find(label);
-   if(nameiter == names.end()){
-      names[label] = scinew NameRecord(label);
-      nameiter = names.find(label);
-   }
+  typename nameDBtype::const_iterator nameiter = names.find(label);
+  if(nameiter == names.end()){
+    names[label] = scinew NameRecord(label);
+    nameiter = names.find(label);
+  }
 
-   NameRecord* nr = nameiter->second;
-   patchDBtype::const_iterator patchiter = nr->patches.find(patch);
-   if(patchiter == nr->patches.end()) {
-      nr->patches[patch] = scinew PatchRecord(patch);
-      patchiter = nr->patches.find(patch);
-   }
+  NameRecord* nr = nameiter->second;
+  typename patchDBtype::const_iterator patchiter = nr->patches.find(patch);
+  if(patchiter == nr->patches.end()) {
+    nr->patches[patch] = scinew PatchRecord(patch);
+    patchiter = nr->patches.find(patch);
+  }
 
-   PatchRecord* rr = patchiter->second;
+  PatchRecord* rr = patchiter->second;
       
-   if(matlIndex >= (int)rr->vars.size()){
-      int oldSize = (int)rr->vars.size();
-      rr->vars.resize(matlIndex+1);
-      for(unsigned long i=oldSize;i<(unsigned long)matlIndex;i++)
-	 rr->vars[i]=0;
-   }
+  if(matlIndex >= (int)rr->vars.size()){
+    int oldSize = (int)rr->vars.size();
+    rr->vars.resize(matlIndex+1);
+    for(unsigned long i=oldSize;i<(unsigned long)matlIndex;i++)
+      rr->vars[i]=0;
+  }
+  
+  if(rr->vars[matlIndex]){
+    if(replace)
+      delete rr->vars[matlIndex];
+    else
+      throw InternalError("Put replacing old variable");
+  }
 
-   if(rr->vars[matlIndex]){
-      if(replace)
-	 delete rr->vars[matlIndex];
-      else
-	 throw InternalError("Put replacing old variable");
-   }
-
-   rr->vars[matlIndex]=var;
+  rr->vars[matlIndex]=var;
 
 }
 
@@ -319,44 +319,44 @@ template<class VarType>
 VarType* DWDatabase<VarType>::get(const VarLabel* label, int matlIndex,
 				  const Patch* patch) const
 {
-   ASSERT(patch == 0 || !patch->isVirtual());
-   if(matlIndex < 0) {
-      if (patch == NULL) {
-         // get from globals
-         globalDBtype::const_iterator globaliter = globals.find(label);
-         if (globaliter != globals.end())
-	    return (*globaliter).second;
-         else
-	    throw UnknownVariable(label->getName(),
-                                  "no global variable with this name");
-      }
+  ASSERT(patch == 0 || !patch->isVirtual());
+  if(matlIndex < 0) {
+    if (patch == NULL) {
+      // get from globals
+      typename globalDBtype::const_iterator globaliter = globals.find(label);
+      if (globaliter != globals.end())
+	return (*globaliter).second;
       else
-         throw InternalError("matlIndex must be >= 0");
-   }
+	throw UnknownVariable(label->getName(),
+			      "no global variable with this name");
+    }
+    else
+      throw InternalError("matlIndex must be >= 0");
+  }
   
-   nameDBtype::const_iterator nameiter = names.find(label);
-   if(nameiter == names.end())
-      throw UnknownVariable(label->getName(), patch, matlIndex,
-			    "no variable name");
+  typename nameDBtype::const_iterator nameiter = names.find(label);
+  if(nameiter == names.end())
+    throw UnknownVariable(label->getName(), patch, matlIndex,
+			  "no variable name");
+  
+  NameRecord* nr = nameiter->second;
 
-   NameRecord* nr = nameiter->second;
+  typename patchDBtype::const_iterator patchiter = nr->patches.find(patch);
+  if(patchiter == nr->patches.end())
+    throw UnknownVariable(label->getName(), patch, matlIndex,
+			  "no patch with this variable name");
 
-   patchDBtype::const_iterator patchiter = nr->patches.find(patch);
-   if(patchiter == nr->patches.end())
-      throw UnknownVariable(label->getName(), patch, matlIndex,
-			    "no patch with this variable name");
+  PatchRecord* rr = patchiter->second;
 
-   PatchRecord* rr = patchiter->second;
+  if(matlIndex >= (int)rr->vars.size())
+    throw UnknownVariable(label->getName(), patch, matlIndex,
+			  "no material with this patch and variable name");
 
-   if(matlIndex >= (int)rr->vars.size())
-      throw UnknownVariable(label->getName(), patch, matlIndex,
-			    "no material with this patch and variable name");
+  if(!rr->vars[matlIndex])
+    throw UnknownVariable(label->getName(), patch, matlIndex,
+			  "no material with this patch and variable name");
 
-   if(!rr->vars[matlIndex])
-      throw UnknownVariable(label->getName(), patch, matlIndex,
-			    "no material with this patch and variable name");
-
-   return rr->vars[matlIndex];
+  return rr->vars[matlIndex];
 }
 
 template<class VarType>
@@ -382,12 +382,12 @@ void DWDatabase<VarType>::copyAll(const DWDatabase& from,
 {
    ASSERT(patch == 0 || !patch->isVirtual());
   
-   nameDBtype::const_iterator nameiter = from.names.find(label);
+   typename nameDBtype::const_iterator nameiter = from.names.find(label);
    if(nameiter == from.names.end())
       return;
 
    NameRecord* nr = nameiter->second;
-   patchDBtype::const_iterator patchiter = nr->patches.find(patch);
+   typename patchDBtype::const_iterator patchiter = nr->patches.find(patch);
    if(patchiter == nr->patches.end())
       return;
 
@@ -404,25 +404,25 @@ void DWDatabase<VarType>::copyAll(const DWDatabase& from,
 template<class VarType>
 void DWDatabase<VarType>::print(std::ostream& out) const
 {
-   for(nameDBtype::const_iterator nameiter = names.begin();
-       nameiter != names.end(); nameiter++){
-      NameRecord* nr = nameiter->second;
-      out << nr->label->getName() << '\n';
-      for(patchDBtype::const_iterator patchiter = nr->patches.begin();
-	  patchiter != nr->patches.end();patchiter++){
-	 PatchRecord* rr = patchiter->second;
-	 out <<  "  " << *(rr->patch) << '\n';
-	 for(int i=0;i<(int)rr->vars.size();i++){
-	    if(rr->vars[i]){
-	       out << "    Material " << i << '\n';
-	    }
-	 }
+  for(typename nameDBtype::const_iterator nameiter = names.begin();
+      nameiter != names.end(); nameiter++){
+    NameRecord* nr = nameiter->second;
+    out << nr->label->getName() << '\n';
+    for(typename patchDBtype::const_iterator patchiter = nr->patches.begin();
+	patchiter != nr->patches.end();patchiter++){
+      PatchRecord* rr = patchiter->second;
+      out <<  "  " << *(rr->patch) << '\n';
+      for(int i=0;i<(int)rr->vars.size();i++){
+	if(rr->vars[i]){
+	  out << "    Material " << i << '\n';
+	}
       }
-   }
-
-   for (globalDBtype::const_iterator globaliter = globals.begin();
-	globaliter != globals.end(); globaliter++)
-     out << (*globaliter).first->getName() << '\n';
+    }
+  }
+  
+  for (typename globalDBtype::const_iterator globaliter = globals.begin();
+       globaliter != globals.end(); globaliter++)
+    out << (*globaliter).first->getName() << '\n';
 }
 
 template<class VarType>
@@ -430,10 +430,10 @@ void
 DWDatabase<VarType>::logMemoryUse(ostream& out, unsigned long& total,
 				  const std::string& tag, int dwid)
 {
-  for(nameDBtype::iterator iter = names.begin();
+  for(typename nameDBtype::iterator iter = names.begin();
       iter != names.end(); iter++){
     NameRecord* nr = iter->second;
-    for(patchDBtype::iterator iter = nr->patches.begin();
+    for(typename patchDBtype::iterator iter = nr->patches.begin();
 	iter != nr->patches.end(); iter++){
       PatchRecord* pr = iter->second;
       for(int i=0;i<(int)pr->vars.size();i++){
@@ -452,7 +452,7 @@ DWDatabase<VarType>::logMemoryUse(ostream& out, unsigned long& total,
     }
   }
   
-  for(globalDBtype::iterator iter = globals.begin();
+  for(typename globalDBtype::iterator iter = globals.begin();
       iter != globals.end(); iter++){
     const VarLabel* label = iter->first;
     VarType* var = iter->second;
