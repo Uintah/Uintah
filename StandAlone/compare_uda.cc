@@ -79,8 +79,8 @@ void tolerance_failure()
 void displayProblemLocation(const string& var, int matl,
 			    const Patch* patch, double time)
 {
-  cerr << "Time: " << time << 
-  "Variable: " << var << 
+  cerr << "Time: " << time << endl <<
+    "Variable: " << var << endl <<
   "Material: " << matl << endl;
   if (patch != 0)
     cerr << "Patch: " << patch->getID() <<endl;   
