@@ -85,10 +85,10 @@ DirectInterpScalarAlgo<Fld, Loc>::execute(FieldHandle fldhandle,
      * with the gcc-2.96 compiler. For some reason without a print in this loop
      * values are all being set to one value.  If you have an alternate fix, 
      * test it with SCIRun/src/Packages/BioPSE/nets/forward-fem.net */
-    cerr << ""; 
+    cerr << "val: " << val << endl; 
     ++itr;
   }
-  cerr << endl;
+  //cerr << endl;
   
   FieldHandle ofh(fld);
   return ofh;
