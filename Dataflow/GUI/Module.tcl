@@ -1396,7 +1396,7 @@ proc moduleEndDrag {modid x y} {
 }
 
 proc htmlHelp {modid} {
-    global BROWSER_DONT_ASK tcl_patform
+    global BROWSER_DONT_ASK tcl_platform
     set BROWSER_DONT_ASK 0
     set path [modulePath $modid]
     set htmlpath Dataflow/XML/[lindex $path 2].html
@@ -1504,7 +1504,7 @@ proc setBrowser { browser url } {
 # return 0 on success, exit code otherwise
 proc openBrowser { command url } {
     set teststring [string tolower $command]
-    if { [string match -nocase "*mozilla*" $command] || \
+    if { 0 && [string match -nocase "*mozilla*" $command] || \
 	     [string match -nocase "*firefox*" $command] || \
 	     [string match -nocase "*netscape*" $command] } {
 	set ping [netedit sci_system $command -remote 'ping()' 2> /dev/null > /dev/null]
