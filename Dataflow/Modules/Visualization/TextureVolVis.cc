@@ -12,9 +12,7 @@
 #include <Core/Datatypes/ColorMap.h>
 #include <Dataflow/Ports/ColorMapPort.h>
 #include <Dataflow/Ports/GeometryPort.h>
-#include <Dataflow/Ports/ScalarFieldPort.h>
-//#include <Core/Datatypes/ScalarFieldRG.h>
-
+#include <Dataflow/Ports/FieldPort.h>
 #include <Core/Geom/GeomTriangles.h>
 
 #include <Core/Malloc/Allocator.h>
@@ -84,10 +82,10 @@ void TextureVolVis::widget_moved(int)
 }
 
 
-void TextureVolVis::SwapXZ( /*ScalarFieldHandle sfh*/ )
+void TextureVolVis::SwapXZ( /*FieldHandle sfh*/ )
 {
 #if 0
-  ScalarFieldRGuchar *ifu, *ofu;
+  FieldRGuchar *ifu, *ofu;
   ifu = sfh->getRGBase()->getRGUchar();
   int nx=ifu->nx;
   int ny=ifu->ny;
@@ -96,14 +94,14 @@ void TextureVolVis::SwapXZ( /*ScalarFieldHandle sfh*/ )
   Point max;
   sfh->get_bounds(min, max);
 
-  ofu = scinew ScalarFieldRGuchar(nz, ny, nx);
+  ofu = scinew FieldRGuchar(nz, ny, nx);
   ofu->set_bounds(min, max);
   for (int i=0, ii=0; i<nx; i++, ii++)
     for (int j=0, jj=0; j<ny; j++, jj++)
       for (int k=0, kk=0; k<nz; k++, kk++)
 	ofu->grid(k,j,i)=ifu->grid(ii,jj,kk);
 
-  sfh = ScalarFieldHandle( ofu );
+  sfh = FieldHandle( ofu );
 #endif
 }
   
