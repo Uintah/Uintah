@@ -968,7 +968,7 @@ proc notesWindow { id {done ""} } {
 	-command "okNotesWindow $id \"$done\""
     button $w.b.clear -text "Clear" -command "$w.input delete 1.0 end; set Notes($id) {}"
     button $w.b.cancel -text "Cancel" -command \
-	"set Notes($id) \"$cache\"; destroy $w"
+	"set Notes($id) \{$cache\}; destroy $w"
 
     setIfExists rgb Color($id) white
     button $w.b.reset -fg black -text "Reset Color" -command \
@@ -1313,7 +1313,7 @@ proc drawNotes { args } {
 	    if { $isModuleNotes } {
 		Tooltip $canvas.module$id $text
 	    } else {
-		canvasTooltip $canvas $id $text
+		canvasTooltip $canvas $id {$text}
 	    }
 	} else {
 	    if { $isModuleNotes } {
