@@ -1082,23 +1082,23 @@ SCI_ARG_WITH(tcl,
   [with_tcl="$withval"],
   [with_tcl=""])
 SCI_ARG_WITH(xercesc,
-  [  --with-xercesc=<path-to-tcl>      <path-to-xerces-c>/lib/libxerces-c.so],
+  [  --with-xercesc=<path-to-xerces>   <path-to-xerces-c>/lib/libxerces-c.so],
   [with_xercesc="$withval"],
   [with_xercesc=""])
 SCI_ARG_WITH(teem,
-  [  --with-teem=<path-to-tcl>         <path-to-nrrd>/lib/libnrrd.so et al],
+  [  --with-teem=<path-to-teem>        <path-to-nrrd>/lib/libnrrd.so et al],
   [with_teem="$withval"],
   [with_teem=""])
 SCI_ARG_WITH(mpeg,
-  [  --with-mpeg=<path-to-tcl>         <path-to-mpege>/lib/libmpege.so],
+  [  --with-mpeg=<path-to-mpeg>        <path-to-mpege>/lib/libmpege.so],
   [with_mpeg="$withval"],
   [with_mpeg=""])
 SCI_ARG_WITH(blas,
-  [  --with-blas=<path-to-tcl>         <path-to-blas>/lib/libblas.a],
+  [  --with-blas=<path-to-blas>        <path-to-blas>/lib/libblas.a],
   [with_blas="$withval"],
   [with_blas=""])
 SCI_ARG_WITH(lapack,
-  [  --with-lapack=<path-to-tcl>       <path-to-lapack>/lib/liblapack.a],
+  [  --with-lapack=<path-to-lapack>    <path-to-lapack>/lib/liblapack.a],
   [with_lapack="$withval"],
   [with_lapack=""])
 SCI_ARG_WITH(mpi,
@@ -1122,7 +1122,7 @@ SCI_ARG_WITH(petsc,
   [with_petsc="$withval"],
   [with_petsc=""])
 SCI_ARG_WITH(unipetsc,
-  [  --with-unipetsc=<path-to-tcl>     <path-to-petsc>/lib/libpetsc.so],
+  [  --with-unipetsc=<path-to-unipetsc>  <path-to-petsc>/lib/libpetsc.so],
   [with_unipetsc="$withval"],
   [with_unipetsc=""])
 SCI_ARG_WITH(tau,
