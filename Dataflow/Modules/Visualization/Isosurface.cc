@@ -49,9 +49,7 @@ using std::ostringstream;
 namespace SCIRun {
 
 DECLARE_MAKER(Isosurface)
-  //static string module_name("Isosurface");
-  static string surface_name("Isosurface");
-static string widget_name("Isosurface");
+static string surface_name("Isosurface");
 
 
 Isosurface::Isosurface(GuiContext* ctx) : 
@@ -74,16 +72,25 @@ Isosurface::Isosurface(GuiContext* ctx) :
   geom_id_(0),
   prev_min_(0),
   prev_max_(0),
-  last_generation_(-1),
-  mc_alg_(0),
-  noise_alg_(0),
-  sage_alg_(0)
+  last_generation_(-1)
 {
 }
 
 
 Isosurface::~Isosurface()
 {
+  if (geom_id_)
+  {
+    GeometryOPort *ogport = (GeometryOPort*)get_oport("Geometry");
+    if (!ogport)
+    {
+      error("Unable to initialize " + name + "'s oport.");
+      return;
+    }
+    ogport->delObj(geom_id_);
+    ogport->flushViews();
+    geom_id_ = 0;
+  }
 }
 
 
@@ -92,7 +99,6 @@ Isosurface::execute()
 {
   update_state(NeedData);
   FieldIPort *infield = (FieldIPort *)get_iport("Field");
-  ColorMapIPort *inColorMap = (ColorMapIPort *)get_iport("Color Map");
   FieldHandle field;
 
   if (!infield)
@@ -100,12 +106,6 @@ Isosurface::execute()
     error("Unable to initialize iport 'Field'.");
     return;
   }
-  if (!inColorMap)
-  {
-    error("Unable to initialize iport 'Color Map'.");
-    return;
-  }
-
   infield->get(field);
   if(!field.get_rep())
   {
@@ -124,9 +124,6 @@ Isosurface::execute()
 
     // fall through and extract isosurface from the new field
   }
-
-  // Color the surface
-  have_ColorMap_ = inColorMap->get(cmap_);
 
   isovals_.resize(0);
   if (gui_active_isoval_selection_tab_.get() == "0")
@@ -161,75 +158,75 @@ Isosurface::execute()
     return;
   }
 
-  surface_.resize(0);
+  surfaces_.resize(0);
   trisurf_mesh_ = 0;
   build_trisurf_ = gui_build_trisurf_.get();
   const TypeDescription *td = field->get_type_description();
   switch (gui_use_algorithm_.get()) {
   case 0:  // Marching Cubes
     {
-      if (! mc_alg_.get_rep())
+      LockingHandle<MarchingCubesAlg> mc_alg;
+      CompileInfo *ci = MarchingCubesAlg::get_compile_info(td);
+      if (!module_dynamic_compile(*ci, mc_alg))
       {
-	CompileInfo *ci = MarchingCubesAlg::get_compile_info(td);
-	if (!module_dynamic_compile(*ci, mc_alg_))
-	{
-	  error( "Marching Cubes can not work with this field.");
-	  return;
-	}
+	error( "Marching Cubes can not work with this field.");
+	return;
       }
-      mc_alg_->set_np( gui_np_.get() ); 
+      mc_alg->set_np( gui_np_.get() ); 
       if ( gui_np_.get() > 1 )
       {
 	build_trisurf_ = false;
       }
-      mc_alg_->set_field( field.get_rep() );
+      mc_alg->set_field( field.get_rep() );
       for (unsigned int iv=0; iv<isovals_.size(); iv++)
       {
-	mc_alg_->search( isovals_[iv], build_trisurf_);
-	surface_.push_back( mc_alg_->get_geom() );
+	mc_alg->search( isovals_[iv], build_trisurf_);
+	surfaces_.push_back( mc_alg->get_geom() );
       }
       // if multiple isosurfaces, just send last one for Field output
-      trisurf_mesh_ = mc_alg_->get_field();
+      trisurf_mesh_ = mc_alg->get_field();
     }
     break;
   case 1:  // Noise
     {
-      if (! noise_alg_.get_rep())
+      LockingHandle<NoiseAlg> noise_alg;
+      if (! noise_alg.get_rep())
       {
 	CompileInfo *ci = NoiseAlg::get_compile_info(td);
-	if (! module_dynamic_compile(*ci, noise_alg_))
+	if (! module_dynamic_compile(*ci, noise_alg))
 	{
 	  error( "NOISE can not work with this field.");
 	  return;
 	}
-	noise_alg_->set_field(field.get_rep());
+	noise_alg->set_field(field.get_rep());
       }
       for (unsigned int iv=0; iv<isovals_.size(); iv++)
       {
-	surface_.push_back(noise_alg_->search(isovals_[iv], build_trisurf_));
+	surfaces_.push_back(noise_alg->search(isovals_[iv], build_trisurf_));
       }
       // if multiple isosurfaces, just send last one for Field output
-      trisurf_mesh_ = noise_alg_->get_field();
+      trisurf_mesh_ = noise_alg->get_field();
     }
     break;
+
   case 2:  // View Dependent
     {
-      if (! sage_alg_.get_rep())
+      LockingHandle<SageAlg> sage_alg;
       {
 	CompileInfo *ci = SageAlg::get_compile_info(td);
-	if (! module_dynamic_compile(*ci, sage_alg_))
+	if (! module_dynamic_compile(*ci, sage_alg))
 	{
 	  error( "SAGE can not work with this field.");
 	  return;
 	}
-	sage_alg_->set_field(field.get_rep());
+	sage_alg->set_field(field.get_rep());
       } 
       for (unsigned int iv=0; iv<isovals_.size(); iv++)
       {
 	GeomGroup *group = new GeomGroup;
 	GeomPts *points = new GeomPts(1000);
-	sage_alg_->search(isovals_[0], group, points);
-	surface_.push_back( group );
+	sage_alg->search(isovals_[0], group, points);
+	surfaces_.push_back( group );
       }
     }
     break;
@@ -245,13 +242,24 @@ void
 Isosurface::send_results()
 {
   GeomGroup *geom = new GeomGroup;;
+
+  // Color the surface.
+  ColorMapIPort *inColorMap = (ColorMapIPort *)get_iport("Color Map");
+  if (!inColorMap)
+  {
+    error("Unable to initialize iport 'Color Map'.");
+    return;
+  }
+  ColorMapHandle cmap;
+  const bool have_ColorMap = inColorMap->get(cmap);
   
   for (unsigned int iv=0; iv<isovals_.size(); iv++)
   {
     MaterialHandle matl;
-    if (have_ColorMap_) 
+
+    if (have_ColorMap)
     {
-      matl= cmap_->lookup(isovals_[iv]);
+      matl= cmap->lookup(isovals_[iv]);
     }
     else
     {
@@ -259,9 +267,9 @@ Isosurface::send_results()
 				   gui_color_g_.get(),
 				   gui_color_b_.get()));
     }
-    if (surface_[iv]) 
+    if (surfaces_[iv]) 
     {
-      geom->add(scinew GeomMaterial( surface_[iv] , matl ));
+      geom->add(scinew GeomMaterial( surfaces_[iv] , matl ));
     }
   }
 
@@ -336,26 +344,6 @@ Isosurface::new_field( FieldHandle &field )
     gui->execute(str.str().c_str());
     prev_min_ = minmax.first;
     prev_max_ = minmax.second;
-  }
-
-  // delete any algorithms created for the previous field.
-  if (mc_alg_.get_rep())
-  { 
-    MarchingCubesAlg *mc = dynamic_cast<MarchingCubesAlg*>(mc_alg_.get_rep());
-    mc->release(); 
-    mc_alg_ = 0;
-  }
-  if (noise_alg_.get_rep())
-  { 
-    NoiseAlg *noise = dynamic_cast<NoiseAlg*>(noise_alg_.get_rep());
-    noise->release(); 
-    noise_alg_ = 0;
-  }
-  if (sage_alg_.get_rep())
-  { 
-    SageAlg *sage = dynamic_cast<SageAlg*>(sage_alg_.get_rep());
-    sage->release(); 
-    sage_alg_ = 0;
   }
 }
 
