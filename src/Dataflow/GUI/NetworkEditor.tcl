@@ -142,11 +142,11 @@ proc makeNetworkEditor {} {
 	-variable tooltipsOn
 
     # Mac hack to fix size of 'About' window ... sigh... 
-    .main_menu.help.menu add command -label "About..." -underline 0 \
+    .main_menu.help.menu add command -label "About..." -underline 0 -state disabled \
 	-command  "showSplash main/scisplash.ppm; after 0 {wm geometry .splash \"\"}"
 
     .main_menu.help.menu add command -label "License..." -underline 0 \
-	-command  "licenseDialog"
+	-command  "licenseDialog" -state disabled
 
     pack .main_menu.help -side right
     Tooltip .main_menu.help $ToolTipText(HelpMenu)
@@ -244,6 +244,9 @@ proc activate_file_submenus { } {
     .main_menu.file.menu entryconfig  7 -state active
     .main_menu.file.menu entryconfig  9 -state active
     .main_menu.file.menu entryconfig 11 -state active
+
+    .main_menu.help.menu entryconfig  1 -state active
+    .main_menu.help.menu entryconfig  2 -state active
 
     ###################################################################
     # Bind all the actions after SCIRun has loaded everything...
@@ -1024,7 +1027,7 @@ proc hideSplash { reset } {
     wm withdraw .splash
     if { $reset == "true" } {
 	destroy .splash.fb
-	button .splash.ok -text " OK " -command "wm withdraw .splash"
+	button .splash.ok -text "OK" -width 10 -command "wm withdraw .splash"
 	pack .splash.ok -side bottom -padx 5 -pady 5 -fill none
     }
 }
@@ -1080,21 +1083,18 @@ proc licenseDialog { {firsttime 0} } {
     set filename [file join $SCIRUN_SRCDIR LICENSE]
     set stream [open $filename r]
     toplevel .license
-    wm protocol .license WM_DELETE_WINDOW {
-	createSciDialog -error -message "You must choose Accept, Decline, or Later to continue."
-    }
 
-    wm geometry .license 504x482+135+170
     wm title .license {UNIVERSITY OF UTAH RESEARCH FOUNDATION PUBLIC LICENSE}
+
     frame .license.text -borderwidth 1 -class Scroll -highlightthickness 1 \
 	-relief sunken -takefocus 0
     text .license.text.text -wrap word  -borderwidth 2 -relief sunken \
-	-yscrollcommand ".license.text.y set"
-    scrollbar .license.text.y -borderwidth 0 -elementborderwidth 1 \
+	-yscrollcommand ".license.text.y set" -width 80 -height 20
+    scrollbar .license.text.y -borderwidth 2 -elementborderwidth 1 \
 	-orient vertical -takefocus 0 -highlightthicknes 0 \
 	-command ".license.text.text yview"
     grid columnconfigure .license.text 0 -weight 1
-    grid rowconfigure .license.text    0 -weight 1
+    grid rowconfigure .license.text    0 -weight 1 -pad 2
     grid .license.text.text -column 0 -row 0 -sticky news
     grid .license.text.y -column 1 -row 0 -sticky news
 
@@ -1155,11 +1155,18 @@ proc licenseDialog { {firsttime 0} } {
                       catch {destroy .license}"
 	pack $w.accept $w.decline $w.later -padx 5 -pady 5 -side left -padx 20
 	pack .license.b.buttons  .license.b.entry -side bottom
+
+	wm protocol .license WM_DELETE_WINDOW {
+	    createSciDialog -error -message "You must choose Accept, Decline, or Later to continue."
+	}
+
     } else {
-	button .license.b.ok -text OK -command {destroy .license}
-	pack .license.b.ok -padx 5 -pady 5 -side bottom
+        wm protocol .license WM_DELETE_WINDOW { destroy .license }
+	button .license.b.ok -text "OK" -width 10 -command {destroy .license}
+	pack .license.b.ok -padx 2 -pady 2 -side bottom
     }
-    raise .license
+    moveToCursor .license
+    wm deiconify .license
     grab .license
     if { $firsttime } { tkwait window .license }
     return $licenseResult
