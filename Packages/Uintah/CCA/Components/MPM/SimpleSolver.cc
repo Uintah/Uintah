@@ -138,7 +138,6 @@ void SimpleSolver::destroyMatrix(bool recursion)
 void SimpleSolver::fillMatrix(int i,int j,double value)
 {
   KK[i][j] = KK[i][j] + value;
- 
 }
 
 void SimpleSolver::flushMatrix()
@@ -176,14 +175,21 @@ void SimpleSolver::removeFixedDOF(int num_nodes)
     set<int>::iterator find_itr_j = d_DOF.find(j);
     set<int>::iterator find_itr_i = d_DOF.find(i);
     
-    if (find_itr_j != d_DOF.end() && i == j)
-      KKK[i][j] = 1.;
-    
-    else if (find_itr_i != d_DOF.end() && i == j)
-      KKK[i][j] = 1.;
-    
-    else
+    if (find_itr_j != d_DOF.end()) {
+      Q[j] = 0.;
+      if (i == j) {
+	KKK[i][j] = 1.;
+      }
+    }
+    else if (find_itr_i != d_DOF.end()) {
+      Q[i] = 0.;
+      if (i == j) {
+	KKK[i][j] = 1.;
+      }
+    }
+    else {
       KKK[i][j] = KK[i][j];
+    }
   }
   // Make sure the nodes that are outside of the material have values 
   // assigned and solved for.  The solutions will be 0.
@@ -194,7 +200,6 @@ void SimpleSolver::removeFixedDOF(int num_nodes)
       Q[j] = 0.;
     }
   }
-
   KK.clear();
   KK = KKK;
   KKK.clear();
