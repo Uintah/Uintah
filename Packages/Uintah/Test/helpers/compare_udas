@@ -5,43 +5,12 @@ TEST=$2
 TEST_UDADIR=$3
 COMPARE_UDADIR=$4
 TMPDIR=$5
-ERRORS_TO=$6
 
+echo "$SUS_DIR/compare_uda $TEST_UDADIR $COMPARE_UDADIR"
 $SUS_DIR/compare_uda $TEST_UDADIR $COMPARE_UDADIR > $TMPDIR/compare_uda.log 2>&1
 retval=$?
-if [ $retval != "0" ]; then
-    cat $TMPDIR/compare_uda.log > $TMPDIR/error_info.msg
-    cat $TMPDIR/error_info.msg
+cat $TMPDIR/compare_uda.log
 
-    if [ "$ERRORS_TO" != "" -a $retval -gt "0" ]; then
-	cat > $TMPDIR/error.msg <<EOF
-Subject: Regression Alert for $TEST on $OS
-To: $ERRORS_TO
+exit $retval
 
-Correctness test failed for $TEST.
-
-EOF
-        cat $TMPDIR/error_info.msg >> $TMPDIR/error.msg
-        cat >> $TMPDIR/error.msg <<EOF
-
-The failed uda directory can be found in 
-$TEST_UDADIR at `hostname`.
-The comparing uda directory can be found in
-$COMPARE_UDADIR at `hostname`.
-
-If the 'failed' uda directory is actually more
-correct than the 'comparing' uda directory, then
-you should replace it in the cvs repository.
-
-EOF
-        # sending the diff information is too messy and they are better off
-        # using xdiff. 
-        #diff -y --width 160 --suppress-common-lines -x "*.xml" -x "taskgraph"  $TEST_UDADIR $COMPARE_UDADIR >> $TMPDIR/error.msg
-        /usr/lib/sendmail "$ERRORS_TO" < $TMPDIR/error.msg
-        echo "Mail sent"
-    fi
-    exit 1
-fi
-
-exit 0
 
