@@ -14,6 +14,7 @@
 #ifndef builtin_h
 #define builtin_h
 
+#include <Core/Datatypes/TypeName.h>
 
 namespace SCIRun {
 
@@ -48,6 +49,18 @@ typedef ScalarType<short>  Short;
 typedef ScalarType<int>    Int;
 typedef ScalarType<float>  Float;
 typedef ScalarType<double> Double;
+
+SCICORESHARE inline void Pio(Piostream& stream, Char& d)  {Pio(stream,d.val_);}
+SCICORESHARE inline void Pio(Piostream& stream, Short& d) {Pio(stream,d.val_);}
+SCICORESHARE inline void Pio(Piostream& stream, Int& d)   {Pio(stream,d.val_);}
+SCICORESHARE inline void Pio(Piostream& stream, Float& d) {Pio(stream,d.val_);}
+SCICORESHARE inline void Pio(Piostream& stream,Double& d) {Pio(stream,d.val_);}
+
+inline const string find_type_name(Char*)  {return find_type_name((char *)0);}
+inline const string find_type_name(Short*) {return find_type_name((short *)0);}
+inline const string find_type_name(Int*)   {return find_type_name((int *)0);}
+inline const string find_type_name(Float*) {return find_type_name((float *)0);}
+inline const string find_type_name(Double*){return find_type_name((double *)0);}
 
 
 template<class T> bool is_scalar() { return false; }
