@@ -55,6 +55,15 @@ C	      C & V model, e.g., only Pw/Pc = 1 or TG < 2500 K is used.
 C----------------------------------------------------------------------
 	          PCO2 = CO2(I,J,K) * PATM
 	          PH2O = H2O(I,J,K) * PATM
+c
+C		  if ((i.eq.0).and.(j.eq.8).and.(k.eq.8)) then
+C		     print*,'printing pco2 ',pco2
+C		     print*,'printing ph2o ',ph2o
+c		     print*,'printing co2 ',co2(i,j,k)
+c		     print*,'printing h2o ',h2o(i,j,k)
+c		     print*,'printing patm ',patm
+C		  endif
+c
 	          PCO2F = PCO2 * OPF
 	          PH2OF = PH2O * OPF
 	          PSUMF = MAX((PCO2F + PH2OF),0.0001d0)
@@ -78,6 +87,15 @@ C
 	          TGI = MIN(TG(I,J,K),1200.0d0)
 	          CALL EICO2( TGI,PCO2F,ECO2 )
 	          CALL EIH2O( TGI,PH2OF,EH2O )
+c
+C		  if ((i.eq.0).and.(j.eq.8).and.(k.eq.8)) then
+C		     print*,'printing eco2 after eico2 ',eco2
+C		     print*,'printing eh2o after eih2o ',eh2o
+c		     print*,'printing pco2f ',pco2f
+c		     print*,'printing ph2of ',ph2of
+c		     print*,'printing tgi ',tgi
+C		  endif
+c
 C
 C	Calculate total gas emissivity accounting for spectral overlap
 C	and pressure correction
@@ -104,6 +122,11 @@ C
 	            DELE = MAX(DELE,0.0d0)
 	          END IF
 	          EMGI = CCO2 * ECO2 + CH2O * EH2O - DELE
+c
+c		  if ((i.eq.0).and.(j.eq.8).and.(k.eq.8)) then
+c		     print*,'printing emgi ',emgi
+c		  endif
+c
 C
 C	Use Coppalle and Vervisch model to calculate CO2-H2O mixture 
 C	total emissivity by summing 3 gray gases (plus one clear).
@@ -133,6 +156,11 @@ C
 	          EMGF = AEM(1) * (1.0d0 - EXP(-AEK(1)))
      1                 + AEM(2) * (1.0d0 - EXP(-AEK(2)))
      2                 + AEM(3) * (1.0d0 - EXP(-AEK(3)))
+c
+c		  if ((i.eq.0).and.(j.eq.8).and.(k.eq.8)) then
+c		     print*,'printing emgf ',emgf
+c		  endif
+c
 C
 C	Determine which model is appropriate for given gas temperature
 C
@@ -144,6 +172,14 @@ C
 	            EMG = EMGI + (EMGF-EMGI) 
      1                  * ((TG(I,J,K)-1200.0d0) / 900.0d0)
 	          END IF
+c
+C		  if ((i.eq.0).and.(j.eq.8).and.(k.eq.8)) then
+C		     print*,'printing emg after emgi,emgf ',emg
+C		     print*,'printing emgi ',emgi
+C		     print*,'printing emgf ',emgf
+C		     print*,'printing gas temp ',tg(i,j,k)
+C		  endif
+c
 C
 c-- first guess for SO2 effects, assume same as CO2
 c                  IF (IDSO2.NE.0) THEN
@@ -157,7 +193,14 @@ c	          EMG = MIN (EMG, 0.9d0)
 C
 C	Calculate absorption coefficient from Bouguer's Law
 C
+
 	          ABSKG(I,J,K) = -DLOG (1.0d0 - EMG) / OPL
+c
+C		  if ((i.eq.0).and.(j.eq.8).and.(k.eq.8)) then
+C		     print*,'printing abskg after emg ',abskg(i,j,k)
+C		     print*,'printing emg ',emg
+C		  endif
+c
 C-----------------------------------------------------------------------
 C	Soot model is based on a correlation given by Sarofim and Hottel
 C	in "Radiative Transfer in Combustion Chambers: Influence of 
@@ -174,6 +217,11 @@ C-----------------------------------------------------------------------
                     FV = SFV(I,J,K)
 	    ABSKG(I,J,K) = ABSKG(I,J,K) + MIN( 25.0d0,((4.0d0/OPL) 
      1                 * DLOG(1.0d0 + 350.0d0*FV*TG(I,J,K)*OPL)) ) 
+c
+C	    if ((i.eq.0).and.(j.eq.8).and.(k.eq.8)) then
+C	       print*,'printing abskg after fv and tg',abskg(i,j,k)
+C	    endif
+c
 C
 C	Calculate blackbody emissive intensity (emissive power / pi)
 C
