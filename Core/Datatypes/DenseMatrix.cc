@@ -489,7 +489,7 @@ DenseMatrix::mult(const ColumnMatrix& x, ColumnMatrix& b,
   if (beg == -1) beg = 0;
   if (end == -1) end = nrows_;
   int i, j;
-  if(!spVec)
+  if (!spVec)
   {
     for (i=beg; i<end; i++)
     {
@@ -504,11 +504,17 @@ DenseMatrix::mult(const ColumnMatrix& x, ColumnMatrix& b,
   }
   else
   {
-    for (i=beg; i<end; i++) b[i]=0;
+    for (i=beg; i<end; i++) b[i] = 0.0;
     for (j=0; j<ncols_; j++)
+    {
       if (x[j])
+      {
         for (i=beg; i<end; i++)
+        {
           b[i] += (*this)[i][j] * x[j];
+        }
+      }
+    }
   }
   flops += (end-beg) * ncols_ * 2;
   memrefs += (end-beg) * ncols_ * 2 *sizeof(double)+(end-beg)*sizeof(double);
@@ -540,14 +546,18 @@ DenseMatrix::mult_transpose(const ColumnMatrix& x, ColumnMatrix& b,
   }
   else
   {
-    for (i=beg; i<end; i++) b[i]=0;
+    for (i=beg; i<end; i++) b[i] = 0.0;
     for (j=0; j<nrows_; j++)
+    {
       if (x[j])
       {
         const double *row = (*this)[j];
         for (i=beg; i<end; i++)
+        {
           b[i] += row[i] * x[j];
+        }
       }
+    }
   }
   flops+=(end-beg)*nrows_*2;
   memrefs+=(end-beg)*nrows_*2*sizeof(double)+(end-beg)*sizeof(double);
