@@ -27,7 +27,6 @@ using namespace SCIRun;
  class GeometryObject;
  class GeometryPiece;
  class ConstitutiveModel;
- class Burn;
  class ParticleCreator;
       
 /**************************************
@@ -73,8 +72,6 @@ WARNING
    ConstitutiveModel* getConstitutiveModel() const;
 
    // Return correct burn model pointer for this material
-   Burn* getBurnModel();
-
    particleIndex countParticles(const Patch* patch);
 
    void createParticles(particleIndex numParticles,
@@ -85,10 +82,6 @@ WARNING
 
    ParticleCreator* getParticleCreator();
 
-   //for HeatConductionModel
-   double getThermalConductivity() const;
-   double getSpecificHeat() const;
-   double getHeatTransferCoefficient() const;
    double getInitialDensity() const;
 
    // for temperature dependent plasticity models
@@ -113,26 +106,16 @@ WARNING
    // Specific constitutive model associated with this material
    ConstitutiveModel* d_cm;
 
-   // Burn model
-   Burn* d_burn;
-
    ParticleCreator* d_particle_creator;
 
    double d_density;
 
-   //for HeatConductionModel
-   double d_thermalConductivity;
-   double d_specificHeat;
-         
    // for temperature dependent plasticity models
    double d_troom;
    double d_tmelt;
 
    // for implicit rigid body contact
    bool d_is_rigid;
-
-   //for ThermalContactModel
-   double d_heatTransferCoefficient;
 
    std::vector<GeometryObject*> d_geom_objs;
 
