@@ -94,9 +94,13 @@ public:
   void get_point(Point &result, node_index index) const;
   
   //! the double return val is the volume of the tet.
-  double 
-  get_gradient_basis(cell_index ci, Vector& g0, Vector& g1, 
-		     Vector& g2, Vector& g3);
+  double get_gradient_basis(cell_index ci, Vector& g0, Vector& g1, 
+			    Vector& g2, Vector& g3);
+
+  //! compute the gradient g at point p, given the scalar values at the nodes
+  //!   return value indicates whether p is actually within the mesh
+  bool get_gradient(const Point &p, Vector &g, double s0, double s1,
+		    double s2, double s3);
 
   template <class Iter, class Functor>
   void fill_points(Iter begin, Iter end, Functor fill_ftor);
@@ -121,6 +125,26 @@ public:
   static  const string type_name(int n = -1);
   virtual const string get_type_name(int n = -1) const { return type_name(n); }
 
+  // Extra functionality needed by this specific geometry.
+
+  node_index add_find_point(const Point &p, double err = 1.0e-3);
+  void add_tet(node_index a, node_index b, node_index c, node_index d);
+  void add_tet(const Point &p0, const Point &p1, const Point &p2, 
+	       const Point &p3);
+
+  // Must call connect after adding tets this way.
+  node_index add_point(const Point &p);
+  void add_tet_unconnected(const Point &p0, const Point &p1,
+			   const Point &p2, const Point &p3);
+
+  void connect(double err = 1.0e-3);
+
+
+  //bool intersect(const Point &p, const Vector &dir, double &min, double &max,
+  //		 face_index &face, double &u, double &v);
+
+
+  const Point &point(node_index i) { return points_[i]; }
 private:
 
   bool inside4_p(int, const Point &p) const;
