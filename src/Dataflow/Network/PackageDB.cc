@@ -585,7 +585,14 @@ Module* PackageDB::instantiateModule(const string& packageName,
   if (unknown == module->categoryName)
     module->categoryName=categoryName;
 
-  module->description = moduleInfo->help_description;
+  if (moduleInfo->help_description != "(null string)")
+  {
+    module->description = moduleInfo->help_description;
+  }
+  else
+  {
+    module->description = "No help found for this module.";
+  }
 
   // copy other fields 
   module->lastportdynamic = moduleInfo->lastportdynamic;
