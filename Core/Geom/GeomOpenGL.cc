@@ -876,6 +876,71 @@ void GeomCylinder::draw(DrawInfoOpenGL* di, Material* matl, double)
     post_draw(di);
 }
 
+void
+GeomColoredCylinders::draw(DrawInfoOpenGL* di, Material* matl, double)
+{
+  if(!pre_draw(di, matl, 1)) return;
+
+    di->polycount+=points_.size() * nu_ * 2;
+
+    float tabx[40];
+    float taby[40];
+    for (int j=0; j<nu_; j++)
+    {
+      tabx[j] = sin(2.0 * M_PI * j / nu_);
+      taby[j] = cos(2.0 * M_PI * j / nu_);
+    }
+    
+    for (unsigned int i=0; i < points_.size(); i+=2)
+    {
+      Vector v0(points_[i+1] - points_[i+0]);
+      Vector v1, v2;
+      v0.find_orthogonal(v1, v2);
+      v1 *= radius_;
+      v2 *= radius_;
+
+      float matrix[16];
+      matrix[0] = v1.x();
+      matrix[1] = v1.y();
+      matrix[2] = v1.z();
+      matrix[3] = 0.0;
+      matrix[4] = v2.x();
+      matrix[5] = v2.y();
+      matrix[6] = v2.z();
+      matrix[7] = 0.0;
+      matrix[8] = v0.x();
+      matrix[9] = v0.y();
+      matrix[10] = v0.z();
+      matrix[11] = 0.0;
+      matrix[12] = points_[i].x();
+      matrix[13] = points_[i].y();
+      matrix[14] = points_[i].z();
+      matrix[15] = 1.0;
+
+      glPushMatrix();
+      glMultMatrixf(matrix);
+
+      glBegin(GL_TRIANGLE_STRIP);
+      for (int k=0; k<nu_+1; k++)
+      {
+	glNormal3f(tabx[k%nu_], taby[k%nu_], 0.0);
+	glColor3d(colors_[i].r(), colors_[i].g(), colors_[i].b());
+	glVertex3f(tabx[k%nu_], taby[k%nu_], 0.0);
+
+	glColor3d(colors_[i+1].r(), colors_[i+1].g(), colors_[i+1].b());
+	glVertex3f(tabx[k%nu_], taby[k%nu_], 1.0);
+      }
+      glEnd();
+
+      glPopMatrix();
+    }
+
+    glLineWidth(1.0);
+
+    post_draw(di);
+}
+
+
 void GeomDisc::draw(DrawInfoOpenGL* di, Material* matl, double)
 {
     if(rad < 1.e-6)return;

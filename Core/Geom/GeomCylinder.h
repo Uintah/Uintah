@@ -34,6 +34,7 @@
 #include <Core/Geom/GeomObj.h>
 #include <Core/Geom/GeomOpenGL.h>
 #include <Core/Geom/GeomSave.h>
+#include <Core/Geom/Color.h>
 #include <Core/Geometry/Point.h>
 #include <Core/Geometry/Vector.h>
 #include <Core/Geometry/BBox.h>
@@ -75,6 +76,37 @@ public:
     static PersistentTypeID type_id;
     virtual bool saveobj(std::ostream&, const string& format, GeomSave*);
 };
+
+
+class SCICORESHARE GeomColoredCylinders : public GeomObj {
+protected:
+  double radius_;
+  int  nu_;
+  int  nv_;
+  vector <Point> points_;
+  vector <Color> colors_;
+
+public:
+  GeomColoredCylinders();
+  GeomColoredCylinders(const GeomColoredCylinders &copy);
+  virtual ~GeomColoredCylinders();
+
+  virtual GeomObj* clone();
+  virtual void get_bounds(BBox&);
+
+  void add(const Point &p0, const Color &c0, const Point &p1, const Color &c1);
+  void set_radius(double val) { radius_ = val; }
+  void set_nu_nv(int nu, int nv);
+
+#ifdef SCI_OPENGL
+  virtual void draw(DrawInfoOpenGL*, Material*, double time);
+#endif
+
+  virtual void io(Piostream&);
+  static PersistentTypeID type_id;
+  virtual bool saveobj(std::ostream&, const string& format, GeomSave*);
+};
+
 
 class SCICORESHARE GeomCappedCylinder : public GeomCylinder {
     int nvdisc;
