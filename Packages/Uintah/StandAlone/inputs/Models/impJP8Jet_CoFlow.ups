@@ -133,7 +133,18 @@
         </BCType>
       </Face>
     </BoundaryConditions>
+<!--
        <Level>
+           <Box label = "1">
+              <lower>        [-6,0.0,0]     </lower>
+              <upper>        [ 6,8,0.04]     </upper>         
+              <extraCells>   [1,1,1]         </extraCells>
+              <patches>      [3,2,1]         </patches>    
+              <resolution>   [300,200,1]     </resolution>
+           </Box>
+       </Level>
+-->   
+        <Level>
            <Box label = "1">
               <lower>        [-2,0.00,0]     </lower>
               <upper>        [ 2,4,0.04]     </upper>         
@@ -142,13 +153,14 @@
               <resolution>   [100,100,1]     </resolution>
            </Box>
        </Level>
+
     </Grid>
    
     <!--____________________________________________________________________-->
     <!--   O  U  P  U  T     V  A  R  I  A  B  L  E  S                      -->
     <!--____________________________________________________________________-->
    <DataArchiver>
-      <filebase>imp_CH4Jet_CoFlow.uda</filebase>
+      <filebase>imp_JP8Jet_CoFlow.uda</filebase>
      <outputInterval>0.01</outputInterval>
       <!--<outputTimestepInterval> 1 </outputTimestepInterval>-->
       <save label = "delP_Dilatate"/>
@@ -160,6 +172,7 @@
       <save label = "speedSound_CC"/>
       <save label = "modelEng_src"/>
       <save label = "cumulativeEnergyReleased"/>
+      <save label= "rhs"/>
       <compression>gzip</compression>
       <checkpoint cycle = "2" interval = "0.01"/>
    </DataArchiver>
@@ -172,6 +185,7 @@
      <dbg_EndIndex>        [47,0,2]    </dbg_EndIndex>
      <dbg_Matls>           [0,1]       </dbg_Matls>
      <dbg_SigFigs>         10          </dbg_SigFigs>
+     <debug label = "switchDebugConvergence"/>
      <!--<debug label = "switchTestConservation"/>
          <debug label = "switchDebug_EQ_RF_press"/>-->
    </Debug>
@@ -184,6 +198,20 @@
         <max_iteration_equilibration> 50 </max_iteration_equilibration>
         <advection type = "FirstOrder"/>
         <solution technique = "EqForm"/>
+        
+        <!--______________turbulence models____________-->
+<!--     <turbulence model = "Germano">                 
+          <filter_width>        1.0 </filter_width>
+          <test_filter_width>   2.0 </test_filter_width>
+          <turb_Pr>             0.4 </turb_Pr>                          
+        </turbulence>
+       
+        <turbulence model = "Smagorinsky">         
+          <model_constant>      0.1 </model_constant>            
+          <filter_width>        1.0 </filter_width>
+          <turb_Pr>             0.4 </turb_Pr>                          
+        </turbulence> 
+-->        
         <TimeStepControl>
           <Scheme_for_delT_calc> conservative   </Scheme_for_delT_calc>
           <knob_for_speedSound>  0.01            </knob_for_speedSound>
@@ -192,7 +220,7 @@
         <ImplicitSolver>
            <max_outer_iterations>      20    </max_outer_iterations>
            <outer_iteration_tolerance> 1e-7 </outer_iteration_tolerance>
-           <iters_before_timestep_restart> 15 </iters_before_timestep_restart>
+           <iters_before_timestep_restart> 10 </iters_before_timestep_restart>
            <Parameters variable="implicitPressure">
 	     <!-- Common options -->
               <tolerance>1.e-8    </tolerance>
@@ -219,11 +247,15 @@
     <!--     P  H  Y  S  I  C  A  L     C  O  N  S  T  A  N  T  S           -->
     <!--____________________________________________________________________-->   
     <PhysicalConstants>
-       <gravity>            [0,0,0]   </gravity>
+       <gravity>            [0,-9.81,0]   </gravity>
        <reference_pressure> 101325.0  </reference_pressure>
     </PhysicalConstants>
     <!--____________________________________________________________________-->
     <!--    MATERIAL PROPERTIES INITIAL CONDITIONS                          -->
+    <!--  Note:  The initial density, pressure and temperature for the      -->
+    <!--         for the entire flow field is set to the reference state    -->
+    <!--         of the table.  What you specify below will be wiped out    --> 
+    <!--         by the model.                                              -->
     <!--____________________________________________________________________-->
     <MaterialProperties>
        <ICE>
@@ -231,8 +263,8 @@
            <burn type = "null"/>
            <EOS type = "ideal_gas">                     </EOS>
            <isSurroundingMatl>          true            </isSurroundingMatl>
-           <dynamic_viscosity>          0.0             </dynamic_viscosity>
-           <thermal_conductivity>       0.0             </thermal_conductivity>
+           <dynamic_viscosity>          15.89e-6        </dynamic_viscosity>
+           <thermal_conductivity>       26.3e-3         </thermal_conductivity>
            <specific_heat>              716.5           </specific_heat>
            <speed_of_sound>             376             </speed_of_sound>
            <gamma>                      1.4             </gamma>
@@ -284,8 +316,8 @@
         
           <geom_object>
              <box label = "world">
-               <min>       [ -5, -5, -0.1 ]    </min>
-               <max>       [  5,  5,  0.1 ]   </max>
+               <min>       [ -10, -10, -0.1 ]    </min>
+               <max>       [  10,  10,  0.1 ]   </max>
              </box>
              <scalar>    0.00   </scalar>
           </geom_object>
