@@ -34,6 +34,10 @@ source [netedit getenv SCIRUN_SRCDIR]/Dataflow/GUI/Port.tcl
 source [netedit getenv SCIRUN_SRCDIR]/Dataflow/GUI/Subnet.tcl
 
 set smallIcon [image create photo -file "[netedit getenv SCIRUN_SRCDIR]/pixmaps/scirun-icon-small.ppm"]
+set splashImageFile "[netedit getenv SCIRUN_SRCDIR]/main/scisplash.ppm"
+set bioTensorSplashImageFile "[netedit getenv SCIRUN_SRCDIR]/Packages/Teem/Dataflow/GUI/splash-tensor.ppm"
+set bioFEMSplashImageFile "[netedit getenv SCIRUN_SRCDIR]/Packages/BioPSE/Dataflow/GUI/splash-biofem.ppm"
+
 
 set modname_font "-Adobe-Helvetica-Bold-R-Normal-*-12-120-75-*"
 set ui_font "-Adobe-Helvetica-Medium-R-Normal-*-12-120-75-*"
@@ -67,6 +71,7 @@ set Subnet(Subnet0_Name) "Main"
 set Subnet(Subnet0_Modules) ""
 set Subnet(Subnet0_connections) ""
 set Subnet(Subnet0) 0
+set Subnet(Loading) 0
 
 
 global inserting
@@ -93,7 +98,7 @@ proc setIcons { { w . } { size small } } {
 
 rename toplevel __TCL_toplevel__
 proc toplevel { args } {
-    set win [eval __TCL_toplevel__ $args]
+    set win [uplevel 1 __TCL_toplevel__ $args]
     setIcons [lindex $args 0]
     return $win
 }
@@ -140,12 +145,10 @@ proc makeNetworkEditor {} {
     if { $screenheight < $neHeight } {
 	set neHeight [expr $screenheight - 30]
     }
-    set geomSpec ""
-    append geomSpec $neWidth "x" $neHeight "+0+0"
 
-    wm geometry . $geomSpec
+    wm geometry . ${neWidth}x${neHeight}
 
-    wm title . "SCIRun"
+    wm title . "SCIRun v[netedit getenv SCIRUN_VERSION]"
     setIcons . large
 
     loadToolTipText
@@ -219,7 +222,7 @@ proc makeNetworkEditor {} {
 
     # Mac hack to fix size of 'About' window ... sigh... 
     .main_menu.help.menu add command -label "About..." -underline 0 -state disabled \
-	-command  "showSplash main/scisplash.ppm; after 0 {wm geometry .splash \"\"}"
+	-command  "showSplash 1 0 1"
 
     .main_menu.help.menu add command -label "License..." -underline 0 \
 	-command  "licenseDialog" -state disabled
@@ -528,8 +531,7 @@ proc createSubnetMenu { menu { subnet 0 } } {
     
 
 proc networkHasChanged {args} {
-    global NetworkChanged
-    set NetworkChanged 1
+    setGlobal NetworkChanged 1
 }
 
 proc addModule { package category module } {
@@ -1053,29 +1055,49 @@ proc loadfile {netedit_loadfile} {
 proc loadnet { netedit_loadfile } {
     # Check to see of the file exists; warn user if it doesnt
     if { ![file exists $netedit_loadfile] } {
-	createSciDialog -warning -message 
-	    "File \"$netedit_loadfile\" does not exist."
+	set message "File \"$netedit_loadfile\" does not exist."
+	createSciDialog -warning -message $message
 	return
     }
-    global netedit_loadfile_global
-    set netedit_loadfile_global $netedit_loadfile
 
-    global netedit_savefile NetworkChanged Subnet inserting
+    global netedit_savefile inserting PowerApp Subnet
     if { !$inserting || ![string length $netedit_savefile] } {
 	# Cut off the path from the net name and put in on the title bar:
-	set name [lindex [file split "$netedit_loadfile"] end]
-	wm title . "SCIRun ($name)"
+	wm title . "SCIRun ([lindex [file split $netedit_loadfile] end])"
 	# Remember the name of this net for future "Saves".
 	set netedit_savefile $netedit_loadfile
     }
 
-    # The '#' below is not a comment... This souces the network file globally
+    # if we are not loading a powerapp network, show loading progress
+    if { !$PowerApp } {
+	showProgress 0 0 1 ;# -maybe- raise the progress meter
+	setProgressText "Loading .net file..."
+	update idletasks
+	# The following counts the number of steps it will take to load the net
+	resetScriptCount
+	renameNetworkCommands counting_
+	source $netedit_loadfile
+	renameNetworkCommands counting_
+	global scriptCount
+	addProgressSteps $scriptCount(Total)
+    }
+
+    # Renames a few procs to increment the progressmeter as we load
+    renameNetworkCommands loading_
     renameSourceCommand
-    uplevel \#0 {source $netedit_loadfile_global}
+
+    uplevel \#0 source \{$netedit_loadfile\}
+    
+    # Restores the original network loading procedures
+    renameNetworkCommands loading_
     resetSourceCommand
 
+    if { !$PowerApp } {
+	hideProgress
+    }
+    
     set Subnet(Subnet$Subnet(Loading)_Filename) $netedit_loadfile
-    if { !$inserting } { set NetworkChanged 0 }
+    if { !$inserting } { setGlobal NetworkChanged 0 }
 }
 
 proc SCIRunNew_source { args } {
@@ -1179,14 +1201,14 @@ proc sourceSettingsFile {} {
 
 	displayErrorWarningOrInfo "*** Using SCIRUN_DATA=$DATADIR" info
 	displayErrorWarningOrInfo "*** Using SCIRUN_DATASET=$DATASET" info
-	set recentlyCalledSourceSettingsFile 1
+	setGlobal recentlyCalledSourceSettingsFile 1
 	after 10000 uplevel \#0 unset recentlyCalledSourceSettingsFile
 
     }
 
     set settings "$DATADIR/$DATASET/$DATASET.settings"
     renameSourceCommand
-    uplevel \#0 source $settings
+    uplevel 1 source $settings
     return "$DATADIR $DATASET"
 }
 
@@ -1201,7 +1223,7 @@ proc sourceSettingsFile {} {
 # the message should be displayed as an error, as a warning, or as
 # information.
 #
-proc displayErrorWarningOrInfo { msg status } {
+proc displayErrorWarningOrInfo { msg status } { 
     # Yellow Message
     set status_tag "infotag"
     if { "$status" == "error" } {
@@ -1216,56 +1238,153 @@ proc displayErrorWarningOrInfo { msg status } {
     $rightFrame.text see end
 }
 
-# if reset == "true" then remove the progress buttons so that
-# when it is brought up by the "About" menu, it will only have
-# the "ok" button.
-proc hideSplash { reset } {
-    wm withdraw .splash
-    if { $reset == "true" } {
-	destroy .splash.fb
-	button .splash.ok -text "OK" -width 10 -command "wm withdraw .splash"
-	pack .splash.ok -side bottom -padx 5 -pady 5 -fill none
+
+#centers window w1 over window w2
+proc centerWindow { w1 w2 } {
+    update
+    wm overrideredirect $w1 1
+    wm geometry $w1 ""
+    update idletasks
+    set w [winfo width $w2]
+    set h [winfo height $w2]
+
+    if {$w < 2} { set w [winfo screenwidth .] }
+    if {$h < 2} { set h [winfo screenheight .] }    
+
+    set x [expr [winfo x $w2]+($w - [winfo width $w1])/2]
+    set y [expr [winfo y $w2]+($h - [winfo height $w1])/2]
+    wm geometry $w1 +${x}+${y}
+    if { [winfo ismapped $w1] } {
+	raise $w1
+    } else {
+	wm deiconify $w1
     }
+    grab $w1
 }
 
-proc showSplash { imgname {steps none} } {
-    if {[winfo exists .splash]} {
-	# Center on main SCIRun window
-        wm geometry .splash +[expr 135+[winfo x .]]+[expr 170+[winfo y .]]
-	if { [winfo ismapped .splash] == 1} {
-	    raise .splash
-	} else {
-	    wm deiconify .splash
-	}
-	return
-    }
-
-    set filename [file join [netedit getenv SCIRUN_SRCDIR] $imgname]
-    image create photo ::img::splash -file "$filename"
-    toplevel .splash
-
-    # Center splash in main SCIRun window:
-    #
-    # Must do it this way as "." isn't positioned at this point...({}
-    # delays the execution of the winfo command.)
-    #
-    after 0 {wm geometry .splash +[expr 135+[winfo x .]]+[expr 170+[winfo y .]]}
-
-    wm protocol .splash WM_DELETE_WINDOW "wm withdraw .splash"
-
-    wm title .splash {Welcome to SCIRun}
-    label .splash.splash -image ::img::splash
-    pack .splash.splash
-    if { ![string equal $steps none ] } {
-	iwidgets::feedback .splash.fb -steps $steps -labeltext \
-	    "{Loading package:                 }"
-	pack .splash.fb -padx 5 -fill x
-	# The following line forces the window to be the correct size... this is a
-	# hack to fix things on the mac. -Dav
-	wm geometry .splash "" 
-    }
+proc hideProgress { args } {
+    if { ![winfo exists .splash] } return
+    update idletasks
+    update
+    wm withdraw .splash
+    grab release .splash
     update idletasks
 }
+
+proc showProgress { { show_image 0 } { steps none } { okbutton 0 } } {
+    if { [envBool SCIRUN_HIDE_PROGRESS] } return
+    update idletasks
+    set w .splash
+    if { ![winfo exists $w] } {
+	toplevel $w
+	wm withdraw $w
+	wm protocol $w WM_DELETE_WINDOW hideProgress
+    }
+    setProgressTitle "Welcome to SCIRun v[netedit getenv SCIRUN_VERSION]"
+    if { ![winfo exists $w.frame] } {
+	frame $w.frame -relief raised -bd 4
+	pack $w.frame -expand 1 -fill both
+    }
+    set w $w.frame
+
+    if { [envBool SCIRUN_NOSPLASH] || [envBool SCI_NOSPLASH] } {
+	set show_image 0
+    }
+
+    if { [winfo exists $w.fb] } {
+	destroy $w.fb
+	unsetIfExists progressMeter
+    }
+
+    if { ![string equal $steps none] } {
+	iwidgets::feedback $w.fb -steps 0
+	setGlobal progressMeter $w.fb
+    }
+
+    if { ![winfo exists $w.ok] } {
+	button $w.ok -text Dismiss -width 10 -command hideProgress
+    }
+
+    global splashImageFile
+    if { [string length [info commands ::img::splash]] && \
+	     ![string equal $splashImageFile [::img::splash cget -file]] } {
+	image delete ::img::splash
+    }
+
+    if { [file isfile $splashImageFile] && \
+	     [file readable $splashImageFile] && \
+	     ![string length [info commands ::img::splash]] } {
+	image create photo ::img::splash -file $splashImageFile
+    }
+
+    if { ![winfo exists $w.splash] } {
+	label $w.splash
+    }
+    
+    if { $show_image && [string length [info command ::img::splash]] } {
+	$w.splash configure -image ::img::splash
+	pack $w.splash
+    } else {
+	pack forget $w.splash
+    }
+
+    if { ![string equal $steps none ]} {
+	setProgressText Initializing...
+	addProgressSteps $steps
+	pack $w.fb -padx 5 -fill x
+    } else {
+	pack forget $w.fb
+    }
+
+    if { $okbutton } {
+	pack $w.ok -side bottom -padx 5 -pady 5 -fill none
+    } else {
+	pack forget $w.ok
+    }
+
+    if {![winfo exists $w.scaffold] } {
+	frame $w.scaffold -width 500 -relief raised -bd 3
+	pack $w.scaffold -side bottom
+    }
+
+    centerWindow .splash .
+}
+
+proc addProgressSteps { steps } {
+    global progressMeter
+    if { [info exists progressMeter] && \
+	     [winfo exists $progressMeter] } {
+	set steps [expr $steps+[$progressMeter cget -steps]]	
+	$progressMeter configure -steps [expr int(1.01*$steps)]
+    }
+}
+
+proc setProgressText { text } {
+    global progressMeter
+    if { [info exists progressMeter] && \
+	     [winfo exists $progressMeter] } {
+	$progressMeter configure -labeltext $text
+	update idletasks
+    }
+}
+
+proc setProgressTitle { text } {
+    if { ![info exists .splash] } return
+    wm title .splash $text
+    update idletasks
+}
+
+
+proc incrProgress { { steps 1 } } {
+    global progressMeter
+    while { $steps } {
+	$progressMeter step
+	incr steps -1
+    }
+}
+
+    
+	 
 
 global LicenseResult
 set licenseResult decline
@@ -1657,8 +1776,8 @@ proc maybeWriteTCLStyleCopyright { out } {
 
 
 proc init_DATADIR_and_DATASET {} {
-    upvar DATADIR datadir DATASET dataset
-    sourceSettingsFile
+    uplevel 1 sourceSettingsFile
+    upvar 1 DATADIR datadir DATASET dataset
     set datadir [netedit getenv SCIRUN_DATA]
     set dataset [netedit getenv SCIRUN_DATASET]
     netedit setenv SCIRUN_NET_SUBSTITUTE_DATADIR true
