@@ -8,7 +8,7 @@
 #include "Crack.h"
 #include <Packages/Uintah/CCA/Components/MPM/MPMLabel.h>
 #include <Packages/Uintah/Core/Math/Matrix3.h>
-#include <Packages/Uintah/Core/Math/Short27.h> // for Fracture
+#include <Packages/Uintah/Core/Math/Short27.h> 
 #include <Core/Geometry/Vector.h>
 #include <Core/Geometry/IntVector.h>
 #include <Packages/Uintah/Core/Grid/Grid.h>
@@ -73,6 +73,8 @@ Crack::Crack(const ProblemSpecP& ps,SimulationStateP& d_sS,
   useVolumeIntegral=false; 
   // Flag for crack geometry visualization
   doCrackVisualization=false;
+  // Flag if smoothing crack-front
+  smoothCrackFront=false;
 
   // Initialize boundary type
   for(Patch::FaceType face = Patch::startFace;
@@ -98,8 +100,9 @@ Crack::Crack(const ProblemSpecP& ps,SimulationStateP& d_sS,
   if(mpm_soln_ps) {
      mpm_soln_ps->get("calculate_fracture_parameters", d_calFractParameters);
      mpm_soln_ps->get("do_crack_propagation", d_doCrackPropagation);
+     mpm_soln_ps->get("use_volume_integral", useVolumeIntegral);
      mpm_soln_ps->get("do_crack_visualization", doCrackVisualization);
-     mpm_soln_ps->get("useVolumeIntegral", useVolumeIntegral);
+     mpm_soln_ps->get("smooth_crack_front", smoothCrackFront);
      mpm_soln_ps->get("J_radius", rJ);
      mpm_soln_ps->get("save_J_matID", mS);
      mpm_soln_ps->get("dadx",rdadx);
@@ -220,7 +223,9 @@ Crack::Crack(const ProblemSpecP& ps,SimulationStateP& d_sS,
     m++; // Next material
   }  // End of loop over materials
 
+  #if 1
   OutputInitialCrackPlane(numMPMMatls);
+  #endif
 }
 
 void Crack::ReadRectangularCracks(const int& m,const ProblemSpecP& geom_ps)
@@ -432,20 +437,19 @@ void Crack::OutputInitialCrackPlane(const int& numMatls)
   int pid;
   MPI_Comm_rank(mpi_crack_comm, &pid);
   if(pid==0) { //output from the first rank
-    cout << "*** Crack information output from rank "
-         << pid << " ***" << endl;
+    cout << "\n--Initial crack plane--" << endl;
     for(int m=0; m<numMatls; m++) {
       if(crackType[m]=="NO_CRACK")
-        cout << "\nMaterial " << m << ": no crack exists" << endl;
+        cout << "--Material " << m << ": no crack exists" << endl;
       else {
         cout << "\nMaterial " << m << ":\n"
-             << "   Crack contact type: " << crackType[m] << endl;
+             << "  Crack contact type: " << crackType[m] << endl;
         if(crackType[m]=="frictional")
           cout << "   Frictional coefficient: " << cmu[m] << endl;
 
         if(crackType[m]!="null") {
           if(separateVol[m]<0. || contactVol[m]<0.)
-            cout  << "   Check crack contact by displacement criterion" << endl;
+            cout  << "   Check crack contact by displacement criterion." << endl;
           else {
             cout  << "Check crack contact by volume criterion with\n"
                   << "            separate volume = " << separateVol[m]
@@ -453,18 +457,18 @@ void Crack::OutputInitialCrackPlane(const int& numMatls)
           }
         }
 
-        cout <<"\nCrack geometry:" << endl;
+        cout <<"  Crack geometry:" << endl;
         // Triangular cracks
         for(int i=0;i<(int)rectangles[m].size();i++) {
-          cout << "Rectangle " << i << ": meshed by [" << rectN12[m][i]
+          cout << "    Rectangle " << i << ": meshed by [" << rectN12[m][i]
                << ", " << rectN23[m][i] << ", " << rectN12[m][i]
                << ", " << rectN23[m][i] << "]" << endl;
           for(int j=0;j<4;j++)
-            cout << "   pt " << j+1 << ": " << rectangles[m][i][j] << endl;
+            cout << "    p" << j+1 << ": " << rectangles[m][i][j] << endl;
           for(int j=0;j<4;j++) {
             if(rectCrackSidesAtFront[m][i][j]) {
               int j2=(j+2<5 ? j+2 : 1);
-              cout << "   side " << j+1 << " (p" << j+1 << "-" << "p" << j2
+              cout << "    side " << j+1 << " (p" << j+1 << "-" << "p" << j2
                    << ") is a crack front." << endl;
             }
           }
@@ -472,15 +476,15 @@ void Crack::OutputInitialCrackPlane(const int& numMatls)
 
         // Triangular cracks
         for(int i=0;i<(int)triangles[m].size();i++) {
-          cout << "Triangle " << i << ": meshed by [" << triNCells[m][i]
+          cout << "    Triangle " << i << ": meshed by [" << triNCells[m][i]
                << ", " << triNCells[m][i] << ", " << triNCells[m][i]
                << "]" << endl;
           for(int j=0;j<3;j++)
-            cout << "   pt " << j+1 << ": " << triangles[m][i][j] << endl;
+            cout << "    p" << j+1 << ": " << triangles[m][i][j] << endl;
           for(int j=0;j<3;j++) {
             if(triCrackSidesAtFront[m][i][j]) {
               int j2=(j+2<4 ? j+2 : 1);
-              cout << "   side " << j+1 << " (p" << j+1 << "-" << "p" << j2
+              cout << "    side " << j+1 << " (p" << j+1 << "-" << "p" << j2
                    << ") is a crack front." << endl;
             }
           }
@@ -488,36 +492,36 @@ void Crack::OutputInitialCrackPlane(const int& numMatls)
 
         // Arc cracks
         for(int i=0;i<(int)arcs[m].size();i++) {
-          cout << "Arc " << i << ": meshed by " << arcNCells[m][i]
+          cout << "    Arc " << i << ": meshed by " << arcNCells[m][i]
                << " cells on the circumference.\n"
                << "   crack front segment ID: " << arcCrkFrtSegID[m][i]
-               << "\n   start, middle and end points of the arc:"  << endl;
+               << "\n    start, middle and end points of the arc:"  << endl;
           for(int j=0;j<3;j++)
-            cout << "   pt " << j+1 << ": " << arcs[m][i][j] << endl;
+            cout << "    p" << j+1 << ": " << arcs[m][i][j] << endl;
         }
 
         // Elliptic cracks
         for(int i=0;i<(int)ellipses[m].size();i++) {
-          cout << "Ellipse " << i << ": meshed by " << ellipseNCells[m][i]
+          cout << "    Ellipse " << i << ": meshed by " << ellipseNCells[m][i]
                << " cells on the circumference.\n"
-               << "   crack front segment ID: " << ellipseCrkFrtSegID[m][i]
+               << "    crack front segment ID: " << ellipseCrkFrtSegID[m][i]
                << endl;
-          cout << "   end point on axis1: " << ellipses[m][i][0] << endl;
-          cout << "   end point on axis2: " << ellipses[m][i][1] << endl;
-          cout << "   another end point on axis1: " << ellipses[m][i][2]
+          cout << "    end point on axis1: " << ellipses[m][i][0] << endl;
+          cout << "    end point on axis2: " << ellipses[m][i][1] << endl;
+          cout << "    another end point on axis1: " << ellipses[m][i][2]
                << endl;
         }
 
         // Partial elliptic cracks
         for(int i=0;i<(int)pellipses[m].size();i++) {
-          cout << "Partial ellipse " << i << " (" << pellipseExtent[m][i]
+          cout << "    Partial ellipse " << i << " (" << pellipseExtent[m][i]
                << "): meshed by " << pellipseNCells[m][i]
                << " cells on the circumference.\n"
-               << "   crack front segment ID: " << pellipseCrkFrtSegID[m][i]
+               << "    crack front segment ID: " << pellipseCrkFrtSegID[m][i]
                << endl;
-          cout << "   center: " << pellipses[m][i][0] << endl;
-          cout << "   end point on axis1: " << pellipses[m][i][1] << endl;
-          cout << "   end point on axis2: " << pellipses[m][i][2] << endl;
+          cout << "    center: " << pellipses[m][i][0] << endl;
+          cout << "    end point on axis1: " << pellipses[m][i][1] << endl;
+          cout << "    end point on axis2: " << pellipses[m][i][2] << endl;
         }
       } // End of if(crackType...)
     } // End of loop over materials
@@ -614,16 +618,23 @@ void Crack::CrackDiscretization(const ProcessorGroup*,
           FindCrackFrontNodeIndexes(m);
 
           // Get normals of crack plane at crack-front nodes
-          short smoothSuccessfully=CalculateCrackFrontNormals(m);
-          if(!smoothSuccessfully) {
-            if(pid==0) cout << " ! Crack-front normals are obtained "
-                            << "by raw crack-front points."
-                            << endl;
+          if(smoothCrackFront) {
+            short smoothSuccessfully=SmoothCrackFrontAndCalculateNormals(m);
+            if(!smoothSuccessfully) {
+            //  if(pid==0) 
+            //    cout << " ! Crack-front normals are obtained "
+            //         << "by raw crack-front points." << endl;
+            }
+          }
+          else {
+            CalculateCrackFrontNormals(m);
           }
         } // End of if(..) 
          
         // Output crack mesh information
+        #if 0
         OutputInitialCrackMesh(m);
+        #endif
       }
     } // End of loop over matls
   } // End of loop over patches
@@ -1040,8 +1051,7 @@ void Crack::OutputInitialCrackMesh(const int& m)
   int pid;
   MPI_Comm_rank(mpi_crack_comm, &pid);
   if(pid==0) { // Output from the first rank
-    cout << "\n*** Crack mesh information output from rank "
-         << pid << " ***" << endl;
+    cout << "\n---Initial Crack mesh---" << endl;
     cout << "MatID: " << m << endl;
     cout << "  Number of crack elems: " << (int)ce[m].size()
          << "\n  Number of crack nodes: " << (int)cx[m].size()
