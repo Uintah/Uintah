@@ -299,6 +299,8 @@ int main(int argc, char** argv)
 	cout << vars[i] << ": " << types[i]->getName() << '\n';
       }
     }
+    //______________________________________________________________________
+    //              V A R S U M M A R Y   O P T I O N
     if(do_varsummary){
       vector<string> vars;
       vector<const Uintah::TypeDescription*> types;
@@ -347,6 +349,8 @@ int main(int argc, char** argv)
 		int matl = *matlIter;
 		cout << "\t\t\tMaterial: " << matl << "\n";
 		switch(td->getType()){
+              //__________________________________
+              //   P A R T I C L E   V A R I A B L E
 		case Uintah::TypeDescription::ParticleVariable:
 		  switch(subtype->getType()){
 		  case Uintah::TypeDescription::double_type:
@@ -468,13 +472,17 @@ int main(int argc, char** argv)
 		    break;
 		  }
 		  break;
+              //__________________________________  
+              //  N C   V A R I A B L E S           
 		case Uintah::TypeDescription::NCVariable:
 		  switch(subtype->getType()){
 		  case Uintah::TypeDescription::double_type:
 		    {
 		      NCVariable<double> value;
 		      da->query(value, var, matl, patch, time);
-		      cout << "\t\t\t\t" << td->getName() << " over " << value.getLowIndex() << " to " << value.getHighIndex() << "\n";
+                    IntVector lo = value.getLowIndex();
+                    IntVector hi = value.getHighIndex() - IntVector(1,1,1);
+		      cout << "\t\t\t\t" << td->getName() << " over " << lo << " to " << hi << "\n";
 		      IntVector dx(value.getHighIndex()-value.getLowIndex());
 		      if(dx.x() && dx.y() && dx.z()){
 			double min, max;
@@ -493,7 +501,9 @@ int main(int argc, char** argv)
 		    {
 		      NCVariable<Point> value;
 		      da->query(value, var, matl, patch, time);
-		      cout << "\t\t\t\t" << td->getName() << " over " << value.getLowIndex() << " to " << value.getHighIndex() << "\n";
+                    IntVector lo = value.getLowIndex();
+                    IntVector hi = value.getHighIndex() - IntVector(1,1,1);
+		      cout << "\t\t\t\t" << td->getName() << " over " << lo << " to " << hi << "\n";
 		      IntVector dx(value.getHighIndex()-value.getLowIndex());
 		      if(dx.x() && dx.y() && dx.z()){
 			Point min, max;
@@ -512,7 +522,9 @@ int main(int argc, char** argv)
 		    {
 		      NCVariable<Vector> value;
 		      da->query(value, var, matl, patch, time);
-		      cout << "\t\t\t\t" << td->getName() << " over " << value.getLowIndex() << " to " << value.getHighIndex() << "\n";
+                    IntVector lo = value.getLowIndex();
+                    IntVector hi = value.getHighIndex() - IntVector(1,1,1);
+		      cout << "\t\t\t\t" << td->getName() << " over " << lo << " to " << hi << "\n";
 		      IntVector dx(value.getHighIndex()-value.getLowIndex());
 		      if(dx.x() && dx.y() && dx.z()){
 			double min, max;
@@ -531,7 +543,9 @@ int main(int argc, char** argv)
 		    {
 		      NCVariable<Matrix3> value;
 		      da->query(value, var, matl, patch, time);
-		      cout << "\t\t\t\t" << td->getName() << " over " << value.getLowIndex() << " to " << value.getHighIndex() << "\n";
+                    IntVector lo = value.getLowIndex();
+                    IntVector hi = value.getHighIndex() - IntVector(1,1,1);
+		      cout << "\t\t\t\t" << td->getName() << " over " << lo << " to " << hi << "\n";
 		      IntVector dx(value.getHighIndex()-value.getLowIndex());
 		      if(dx.x() && dx.y() && dx.z()){
 			double min, max;
@@ -551,13 +565,17 @@ int main(int argc, char** argv)
 		    break;
 		  }
 		  break;
+              //__________________________________
+              //   C C   V A R I A B L E S
 		case Uintah::TypeDescription::CCVariable:
 		  switch(subtype->getType()){
 		  case Uintah::TypeDescription::double_type:
 		    {
 		      CCVariable<double> value;
 		      da->query(value, var, matl, patch, time);
-		      cout << "\t\t\t\t" << td->getName() << " over " << value.getLowIndex() << " to " << value.getHighIndex() << "\n";
+                    IntVector lo = value.getLowIndex();
+                    IntVector hi= value.getHighIndex() - IntVector(1,1,1);
+		      cout << "\t\t\t\t" << td->getName() << " over " << lo << " to " << hi << "\n";
 		      IntVector dx(value.getHighIndex()-value.getLowIndex());
 		      if(dx.x() && dx.y() && dx.z()){
 			double min, max;
@@ -581,7 +599,9 @@ int main(int argc, char** argv)
 		    {
 		      CCVariable<Point> value;
 		      da->query(value, var, matl, patch, time);
-		      cout << "\t\t\t\t" << td->getName() << " over " << value.getLowIndex() << " to " << value.getHighIndex() << "\n";
+                    IntVector lo = value.getLowIndex();
+                    IntVector hi= value.getHighIndex() - IntVector(1,1,1);
+		      cout << "\t\t\t\t" << td->getName() << " over " << lo << " to " << hi << "\n";
 		      IntVector dx(value.getHighIndex()-value.getLowIndex());
 		      if(dx.x() && dx.y() && dx.z()){
 			Point min, max;
@@ -600,7 +620,9 @@ int main(int argc, char** argv)
 		    {
 		      CCVariable<Vector> value;
 		      da->query(value, var, matl, patch, time);
-		      cout << "\t\t\t\t" << td->getName() << " over " << value.getLowIndex() << " to " << value.getHighIndex() << "\n";
+                    IntVector lo = value.getLowIndex();
+                    IntVector hi= value.getHighIndex() - IntVector(1,1,1);
+		      cout << "\t\t\t\t" << td->getName() << " over " << lo << " to " << hi << "\n";
 		      IntVector dx(value.getHighIndex()-value.getLowIndex());
 		      if(dx.x() && dx.y() && dx.z()){
 			double min, max;
@@ -624,7 +646,9 @@ int main(int argc, char** argv)
 		    {
 		      CCVariable<Matrix3> value;
 		      da->query(value, var, matl, patch, time);
-		      cout << "\t\t\t\t" << td->getName() << " over " << value.getLowIndex() << " to " << value.getHighIndex() << "\n";
+                    IntVector lo = value.getLowIndex();
+                    IntVector hi= value.getHighIndex() - IntVector(1,1,1);
+		      cout << "\t\t\t\t" << td->getName() << " over " << lo << " to " << hi << "\n";
 		      IntVector dx(value.getHighIndex()-value.getLowIndex());
 		      if(dx.x() && dx.y() && dx.z()){
 			double min, max;
