@@ -147,8 +147,14 @@ UnuResample::execute()
   }
   dim_.reset();
 
-  if (last_generation_ != nrrdH->generation) {
-    if (last_generation_ != -1) {
+  bool new_dataset = (last_generation_ != nrrdH->generation);
+  bool first_time = (last_generation_ == -1);
+  bool new_dim_size = (dim_.get() != nrrdH->nrrd->dim);
+
+  // update the number of axes
+  if (first_time || new_dim_size) {
+    // if we've set anything before, delete it
+    if (new_dim_size) {
       last_RA_.clear();
       vector<GuiString*>::iterator iter = resampAxes_.begin();
       while(iter != resampAxes_.end()) {
@@ -158,7 +164,7 @@ UnuResample::execute()
       resampAxes_.clear();
       gui->execute(id.c_str() + string(" clear_axes"));
     }
-    
+    // setup the axes
     last_generation_ = nrrdH->generation;
     dim_.set(nrrdH->nrrd->dim);
     dim_.reset();
@@ -185,7 +191,7 @@ UnuResample::execute()
     }
   }
 
-  if (! changed) {
+  if (!changed && !new_dataset) {
     onrrd_->send(last_nrrdH_);
     return;
   }
