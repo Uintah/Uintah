@@ -76,6 +76,7 @@ protected:
 
     int separate_raw;
     clString raw_filename;
+    clString filename;
 
 protected:
     enum Representation {
@@ -145,8 +146,12 @@ public:
     // separate raw files
     void set_raw(int v) { separate_raw = v; }
     int get_raw() { return separate_raw; }
-    void set_raw_filename( clString &f ) { raw_filename = f; separate_raw = 1;}
+    void set_raw_filename( clString &f ) { raw_filename = f; separate_raw =1;}
     clString &get_raw_filename() { return raw_filename; }
+
+    clString get_filename() { return filename; }
+    void set_filename( clString &f) { filename = f ; }
+
 
     // Persistent representation...
     virtual void io(Piostream&);
@@ -158,6 +163,10 @@ public:
 
 //
 // $Log$
+// Revision 1.7  2000/12/12 19:51:17  yarden
+// add filename field.
+// ScalarFieldReader will insert the filename.
+//
 // Revision 1.6  2000/02/04 05:13:00  yarden
 // when set_raw_filename(name) is called it should set the separate_raw flag
 // on.
