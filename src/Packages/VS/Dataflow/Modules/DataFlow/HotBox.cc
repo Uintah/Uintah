@@ -1,4 +1,5 @@
 /*****************************************************************************
+
  * File: SCIRun/src/Packages/VS/Dataflow/Modules/DataFlow/HotBox.cc
  *
  * Description: C++ source implementation of the Virtual Soldier HotBox
@@ -755,12 +756,16 @@ HotBox::executeOQAFMA()
   char *oqafma_relation[VH_LM_NUM_NAMES];
   char partsName[256], capitalName[256], selectName[256];
   int num_struQLret;
-  fprintf(stderr, "dataSource = OQAFMA\n");
+
   ns1__processStruQLResponse resultStruQL;
   ServiceInterfaceSoapBinding ws;
+
   // get the current selection
   const string currentSelection(currentselection_.get());
   strcpy(selectName, currentSelection.c_str());
+
+  /////////////////////////////////////////////////////////////////////////////
+  // get the hierarchical children of the selection from the FMA
   // build the query to send to OQAFMA
   std::string p2;
   const int queryType(querytype_.get());
@@ -861,8 +866,9 @@ HotBox::executeOQAFMA()
           continue;
         }
         DOMNode &node = *(struQLretList->item(i));
-        cout << "Node[" << i << "] type: " << node.getNodeType();
-        cout << " name: " << to_char_ptr(node.getNodeName());
+        // debugging...
+        // cout << "Node[" << i << "] type: " << node.getNodeType();
+        // cout << " name: " << to_char_ptr(node.getNodeName()) << " ";
         if(node.hasChildNodes())
         {
             // cout << " has child nodes " << endl;
@@ -925,6 +931,142 @@ HotBox::executeOQAFMA()
      gui_child7_.set(oqafma_relation[7]);
   else
      gui_child7_.set("");
+
+  //////////////////////////////////////////////////////////////////////////
+  // get the hierarchical parent of the selection from the FMA
+  // build the query to send to OQAFMA
+  switch(queryType)
+  {
+    case VS_QUERYTYPE_ADJACENT_TO:
+    case VS_QUERYTYPE_CONTAINS:
+    {
+      p2 = "WHERE X->\":NAME\"->\"";
+      p2 += capitalize(capitalName, selectName);
+      p2 += "\", Y->\"part\"+.\"contains\"->X, Y->\":NAME\"->Parent CREATE The";
+      p2 += space_to_underbar(partsName, capitalName);
+      p2 += "(Parent)";
+      break;
+    }
+    case VS_QUERYTYPE_PARTS:
+    {
+      p2 = "WHERE X->\":NAME\"->\"";
+      p2 += capitalize(capitalName, selectName);
+      p2 += "\", Y->\"part\"+->X, Y->\":NAME\"->Parent CREATE The";
+      p2 += space_to_underbar(partsName, capitalName);
+      p2 += "(Parent)";
+      break;
+    }
+    case VS_QUERYTYPE_PARTCONTAINS:
+    default:
+    {
+    }
+  }
+  cout << "OQAFMA query: " <<  p2  << endl;
+  // launch a query via OQAFMA/Protege C function calls
+  if (ws.ns1__processStruQL(p2, resultStruQL) != SOAP_OK)
+  {
+    soap_print_fault(ws.soap, stderr);
+  }
+  else
+  {
+    // parse XML query results
+    std::string OQAFMA_result = resultStruQL._processStruQLReturn;
+    cout << OQAFMA_result;
+
+    // Instantiate a DOM parser for the OQAFMA query results
+    XercesDOMParser struQLretParser;
+    struQLretParser.setDoValidation(false);
+  
+    // create a Xerces InputSource to hold the query results
+     MemBufInputSource StruQLRetInputSrc (
+          (const XMLByte*)OQAFMA_result.c_str(),
+          strlen(OQAFMA_result.c_str()),
+          "HotBoxStruQL", false);
+    try {
+      struQLretParser.parse(StruQLRetInputSrc);
+    }  catch (const XMLException& toCatch) {
+      std::cerr << "Error during parsing: StruQLReturn\n"
+                << "Exception message is:  " <<
+        xmlto_string(toCatch.getMessage());
+        return;
+    }
+
+    DOMDocument *struQLretDoc = struQLretParser.getDocument();
+    DOMNodeList *struQLretList;
+    const XMLCh* xs;
+    switch(queryType)
+    {
+      case VS_QUERYTYPE_ADJACENT_TO:
+      case VS_QUERYTYPE_CONTAINS:
+      case VS_QUERYTYPE_PARTS:
+      {
+        xs = to_xml_ch_ptr("Parent");
+        break;
+      }
+      case VS_QUERYTYPE_PARTCONTAINS:
+      default:
+      {
+      }
+    } // end switch(queryType)
+    struQLretList = struQLretDoc->getElementsByTagName(xs);
+
+    num_struQLret = struQLretList->getLength();
+    if (num_struQLret == 0) {
+      cout << "HotBox.cc: no entities in StruQL return" << endl;
+    }
+    else
+    {
+      cout << "HotBox.cc: " << num_struQLret
+           << " entities in StruQL return" << endl;
+      if(num_struQLret >= VH_LM_NUM_NAMES)
+         num_struQLret = VH_LM_NUM_NAMES;
+      for (int i = 0;i < num_struQLret; i++)
+      {
+        if (!(struQLretList->item(i)))
+        {
+          cout << "Error: NULL DOM node" << std::endl;
+          continue;
+        }
+        DOMNode &node = *(struQLretList->item(i));
+        // debugging...
+        // cout << "Node[" << i << "] type: " << node.getNodeType();
+        // cout << " name: " << to_char_ptr(node.getNodeName()) << " ";
+        if(node.hasChildNodes())
+        {
+            // cout << " has child nodes " << endl;
+            DOMNode  *elem = node.getFirstChild();
+            if(elem == 0)
+                cout << " cannot get first child" << endl;
+            else
+            {
+                // cout << " element: "
+                //     << to_char_ptr(elem->getNodeValue()) << endl;
+                oqafma_relation[i] =
+                     strdup(to_char_ptr(elem->getNodeValue()));
+            }
+        }
+        else
+            cout << " has no child nodes" << endl;
+      } // end for (i = 0;i < num_struQLret; i++)
+    } // end else (num_struQLret != 0)
+  } // end else (SOAP_OK)
+  // catch(exception& e)
+  // {
+  //   printf("Unknown exception has occured\n");
+  // }
+  // catch(...)
+  // {
+  //   printf("Unknown exception has occured\n");
+  // }
+
+  if(num_struQLret > 0)
+     gui_parent0_.set(oqafma_relation[0]);
+  else
+     gui_parent0_.set("");
+  if(num_struQLret > 1)
+     gui_parent1_.set(oqafma_relation[1]);
+  else
+     gui_parent1_.set("");
 
   // **** magic occurs here **** //
   // grab control of the Tcl GUI program asynchronously
@@ -1047,7 +1189,7 @@ HotBox::traverseDOMtree(DOMNode &woundNode, int nodeIndex,
       else
       { // unset context
         (*injuryPtr)->context = UNSET;
-        cerr << "Unknown label" << geomParamName << endl;
+        cerr << "Unknown label: " << geomParamName << endl;
       }
     } // end if((*injuryPtr)->isGeometry)
   } // end if(woundNode.getNodeName() == "label")
