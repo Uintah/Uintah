@@ -57,8 +57,9 @@ c
          do 200 j = valid_lo(2), valid_hi(2)
             do 100 i = valid_lo(1), valid_hi(1)
 
-               phi_cc(i,j,k) = pt5*(phi_fc(i-ioff,j-joff,k-koff) +
-     $              phi_fc(i,j,k))
+               phi_fc(i,j,k) = pt5*(
+     $              phi_cc(i-ioff,j-joff,k-koff) +
+     $              phi_cc(i,j,k))
 
  100        continue
  200     continue
