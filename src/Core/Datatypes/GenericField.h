@@ -461,19 +461,9 @@ template <class Mesh, class FData>
 const TypeDescription *
 GenericField<Mesh, FData>::order_type_description() const
 {
-  const int order = basis_order();
-  const int dim = mesh_->dimensionality();
-  if (order == 0 && dim == 3)
+  if (this->basis_order() == 0)
   {
-    return SCIRun::get_type_description((typename Mesh::Cell *)0);
-  }
-  else if (order == 0 && dim == 2)
-  {
-    return SCIRun::get_type_description((typename Mesh::Face *)0);
-  }
-  else if (order == 0 && dim == 1)
-  {
-    return SCIRun::get_type_description((typename Mesh::Edge *)0);
+    return SCIRun::get_type_description((typename Mesh::Elem *)0);
   }
   else
   {
@@ -485,19 +475,3 @@ GenericField<Mesh, FData>::order_type_description() const
 } // end namespace SCIRun
 
 #endif // Datatypes_GenericField_h
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
