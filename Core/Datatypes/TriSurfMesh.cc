@@ -136,12 +136,9 @@ TriSurfMesh::get_nodes(node_array &array, face_index idx) const
 void
 TriSurfMesh::get_nodes(node_array &array, cell_index cidx) const
 {
-#if 0 // hack to compile generic interpolate
-  face_index idx = (face_index)cidx;
-  array.push_back(faces_[idx * 3 + 0]);
-  array.push_back(faces_[idx * 3 + 1]);
-  array.push_back(faces_[idx * 3 + 2]);
-#endif
+  array.push_back(faces_[cidx * 3 + 0]);
+  array.push_back(faces_[cidx * 3 + 1]);
+  array.push_back(faces_[cidx * 3 + 2]);
 }
 
 
@@ -201,7 +198,7 @@ TriSurfMesh::locate(node_index &loc, const Point &p) const
 bool
 TriSurfMesh::locate(edge_index &loc, const Point &) const
 {
-  loc = *edge_end();
+  loc = 0;
   return false;
 }
 
@@ -209,7 +206,7 @@ TriSurfMesh::locate(edge_index &loc, const Point &) const
 bool
 TriSurfMesh::locate(face_index &loc, const Point &) const
 {
-  loc = *face_end();
+  loc = 0;
   return false;
 }
 
@@ -217,7 +214,7 @@ TriSurfMesh::locate(face_index &loc, const Point &) const
 bool
 TriSurfMesh::locate(cell_index &loc, const Point &) const
 {
-  loc = *cell_end();
+  loc = 0;
   return false;
 }
 
@@ -302,19 +299,16 @@ TriSurfMesh::inside4_p(int i, const Point &p)
 TriSurfMesh::node_index
 TriSurfMesh::add_find_point(const Point &p, double err)
 {
-#if 0 // locate needs an index not an iterator.
-  node_iterator i;
-  locate(*i, p);
-  if (i != node_end() || distance2(points_[*i], p) < err)
+  node_index i;
+  if (locate(i, p) && distance2(points_[i], p) < err)
   {
-    return *i;
+    return i;
   }
   else
   {
     points_.push_back(p);
     return points_.size() - 1;
   }
-#endif
 }
 
 
