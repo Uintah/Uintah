@@ -9,7 +9,7 @@ PARALLEL_SRCS =
 endif
 
 SRCS     =  MultiBrick.cc VolumeOctree.cc Brick.cc TexBrick.cc \
-	VolumeUtils.cc $(PARALLEL_SRCS)
+	    VolumeUtils.cc SliceTable.cc$(PARALLEL_SRCS)
 
 INCLUDES = -I$(SRCTOP) -I$(OBJTOP)
 

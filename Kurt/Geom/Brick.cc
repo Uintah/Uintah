@@ -7,9 +7,12 @@
 #include "stdlib.h"
 #include <iostream>
 #include <string>
+#include <unistd.h>
+#include <stdlib.h>
 using std::cerr;
 using std::endl;
 using std::string;
+using std::cin;
 
 namespace Kurt {
 namespace GeomSpace {
@@ -22,16 +25,18 @@ void glPrintError(const string& word){
 
   if((errCode = glGetError()) != GL_NO_ERROR) {
     errString = gluErrorString(errCode);
-    fprintf(stderr, "OpenGL Error at %s: %s\n", word.c_str(), errString);
+    cerr<<"OpenGL Error at "<<word.c_str()<<": "<< errString<<endl;
   }
 }
   
  Brick::Brick(Point min, Point max,
+	      int padx, int pady, int padz,
+	      int level, 
 	      double alphaScale,
-	      bool hasNeighbor,
+	      bool hasNeighbor, bool debug,
 	      const Array3<unsigned char>* tex) :
-  alphaScale(alphaScale), tex( tex ),
-   hasNeighbor(hasNeighbor), texName(0)
+  padx(padx), pady(pady), padz(padz), alphaScale(alphaScale), tex( tex ),
+   hasNeighbor(hasNeighbor), debug(debug), texName(0), level(level)
 {
   
   /* The cube is numbered in the following way 
@@ -75,9 +80,9 @@ void glPrintError(const string& word){
 
   Vector diag = corner[7] - corner[0];
   // These will be used to create the texture Matrix
-  aX = ( 1.0/tex->dim1() == 1.0 ) ? 2.0 : 0.5/tex->dim1();
-  aY = ( 1.0/tex->dim2() == 1.0 ) ? 2.0 : 0.5/tex->dim2();
-  aZ = ( 1.0/tex->dim3() == 1.0 ) ? 2.0 : 0.5/tex->dim3();
+  aX = ( 1.0/tex->dim1() == 1.0 ) ? 2.0 : 1.0/tex->dim1();
+  aY = ( 1.0/tex->dim2() == 1.0 ) ? 2.0 : 1.0/tex->dim2();
+  aZ = ( 1.0/tex->dim3() == 1.0 ) ? 2.0 : 1.0/tex->dim3();
   
 }
  
@@ -99,11 +104,15 @@ void Brick::get_bounds(BBox& bb)
   
 
 void 
-Brick::draw(Ray viewRay, double alpha,
+Brick::draw(Ray viewRay, double alpha, bool drawWireFrame,
 		  double tmin, double tmax, double dt )
 {
-  //drawWireFrame();
-  drawSlices(viewRay, alpha, tmin, tmax, dt );
+  if( drawWireFrame ){
+    this->drawWireFrame();
+  } else {
+   //cerr<<"BBox = ("<<corner[0]<<", "<<corner[7]<<")"<<endl;
+    drawSlices(viewRay, alpha, tmin, tmax, dt );
+  }
 }  
 
 void
@@ -111,7 +120,20 @@ Brick::drawWireFrame()
 { // Draw the bounding box of the brick
 
   int i;
-  
+  glEnable(GL_DEPTH_TEST);
+  glDisable(GL_TEXTURE_3D_EXT);
+  if(debug){
+    double rand = drand48();
+    if( rand < 0.3333 ){
+      glColor4f(0.6667 + rand, 0, 0, 1);
+    } else if (rand > 0.6667) {
+      glColor4f(0,rand,0,1);
+    } else {
+      glColor4f(0,0,0.3333 + rand,1);
+    }
+  } else {
+    glColor4f(1,1,1,1);
+  }
   glPushMatrix();
   glBegin(GL_LINES);
   for(i = 0; i < 4; i++){
@@ -121,19 +143,27 @@ Brick::drawWireFrame()
   glEnd();
 
   glBegin(GL_LINE_LOOP);
-  glVertex3d(corner[0].x(), corner[0].y(), corner[0].z());
-  glVertex3d(corner[1].x(), corner[1].y(), corner[1].z());
-  glVertex3d(corner[3].x(), corner[3].y(), corner[3].z());
-  glVertex3d(corner[2].x(), corner[2].y(), corner[2].z());
+   glVertex3d(corner[0].x(), corner[0].y(), corner[0].z());
+   glVertex3d(corner[1].x(), corner[1].y(), corner[1].z());
+   glVertex3d(corner[3].x(), corner[3].y(), corner[3].z());
+   glVertex3d(corner[2].x(), corner[2].y(), corner[2].z());
   glEnd();
 
   glBegin(GL_LINE_LOOP);
-  glVertex3d(corner[4].x(), corner[4].y(), corner[4].z());
-  glVertex3d(corner[5].x(), corner[5].y(), corner[5].z());
-  glVertex3d(corner[7].x(), corner[7].y(), corner[7].z());
-  glVertex3d(corner[6].x(), corner[6].y(), corner[6].z());
+   glVertex3d(corner[4].x(), corner[4].y(), corner[4].z());
+   glVertex3d(corner[5].x(), corner[5].y(), corner[5].z());
+   glVertex3d(corner[7].x(), corner[7].y(), corner[7].z());
+   glVertex3d(corner[6].x(), corner[6].y(), corner[6].z());
   glEnd();
   glPopMatrix();
+  glDisable(GL_DEPTH_TEST);
+  glEnable(GL_TEXTURE_3D_EXT);
+
+  if(debug){
+    glFlush();
+    cin.get();
+  }
+
 }
 
 
@@ -144,6 +174,7 @@ Brick::drawSlices(Ray viewRay, double alpha,
   int i;
    if( !texName ) {
     glGenTextures(1, &texName);
+    glPrintError("glGenTextures");
     glBindTexture(GL_TEXTURE_3D_EXT, texName);
     glPrintError("glBindTexture");
     glTexParameteri(GL_TEXTURE_3D_EXT, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
@@ -166,7 +197,8 @@ Brick::drawSlices(Ray viewRay, double alpha,
 
     glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
 
-    cerr<<"X = "<<tex->dim1()<<", Y= "<<tex->dim2()<< ", Z= "<<tex->dim3()<<endl;
+    //    cerr<<"X = "<<tex->dim1()<<", Y= "<<tex->dim2()
+    //	<< ", Z= "<<tex->dim3()<<endl;
     // set up the texture
     glTexImage3DEXT(GL_TEXTURE_3D_EXT, 0,
 		    GL_INTENSITY8_EXT,
@@ -176,14 +208,19 @@ Brick::drawSlices(Ray viewRay, double alpha,
     glPrintError("glTexImage3");
    } else {
      glBindTexture(GL_TEXTURE_3D_EXT, texName);
+    glPrintError("glBindTexture2");
    }
 
   makeTextureMatrix();
 
   glEnable(GL_TEXTURE_GEN_S);
+  glPrintError("glEnable(GL_TEXTURE_GEN_S)");
   glEnable(GL_TEXTURE_GEN_T);
+  glPrintError("glEnable(GL_TEXTURE_GEN_T)");
   glEnable(GL_TEXTURE_GEN_R);
+  glPrintError("glEnable(GL_TEXTURE_GEN_R)");
   glEnable(GL_TEXTURE_GEN_Q);
+  glPrintError("glEnable(GL_TEXTURE_GEN_Q)");
 
   glColor4f(1,1,1,alpha*alphaScale);
 
@@ -236,26 +273,37 @@ Brick::makeTextureMatrix()
   diag = corner[7] - corner[0];
 
   glTexGend(GL_S,GL_TEXTURE_GEN_MODE,GL_OBJECT_LINEAR);
+  glPrintError("glTexGend(GL_S,GL_TEXTURE_GEN_MODE,GL_OBJECT_LINEAR)");
   glTexGend(GL_T,GL_TEXTURE_GEN_MODE,GL_OBJECT_LINEAR);
+  glPrintError("glTexGend(GL_T,GL_TEXTURE_GEN_MODE,GL_OBJECT_LINEAR)");
   glTexGend(GL_R,GL_TEXTURE_GEN_MODE,GL_OBJECT_LINEAR);
+  glPrintError("glTexGend(GL_R,GL_TEXTURE_GEN_MODE,GL_OBJECT_LINEAR)");
   glTexGend(GL_Q,GL_TEXTURE_GEN_MODE,GL_OBJECT_LINEAR);
+  glPrintError("glTexGend(GL_Q,GL_TEXTURE_GEN_MODE,GL_OBJECT_LINEAR");
 
 
   if( hasNeighbor ){
     //  This code is for render overlapping bricks.  The plane equations
-    //  for s are  (Nx * Pxmin) + d = aX  and  (Nx * Pxmax) + d = 1 - aX where
+    //  for s are  (Nx * Pxmin) + d = aX/2  and
+    //  (Nx * Pxmax) + d = 1 - aX/2 where
     //  Nx is the x component of the normal,  Pxmin and Pxmax are the x 
     //  components of the min and max points on the TexCube, and  aX is one
     //  texel width.  Solving for Nx and d we get
-    //  Nx = (1 - 2 * aX)/(Pxmax - Pxmin) and
-    //  d = aX - (Pxmin *(1 - 2 * aX))/(Pxmax - Pxmin)
+    //  Nx = (1 - aX)/(Pxmax - Pxmin) and
+    //  d = aX/2 - (Pxmin *(1 - aX))/(Pxmax - Pxmin)
 
-    splane[0] = (1 - 2 * aX)/diag.x();
-    splane[3] = aX - (corner[0].x() * (1 - 2 * aX)/diag.x());
-    tplane[1] = (1 - 2 * aY)/diag.y();
-    tplane[3] = aY - (corner[0].y() * (1 - 2 * aY)/diag.y());
-    rplane[2] = (1 - 2 * aZ)/diag.z();
-    rplane[3] = aZ - (corner[0].z() * (1 - 2 * aZ)/diag.z());
+/*     splane[0] = (1 - 2 * aX)/diag.x(); */
+/*     splane[3] = aX - (corner[0].x() * (1 - 2 * aX)/diag.x()); */
+/*     tplane[1] = (1 - 2 * aY)/diag.y(); */
+/*     tplane[3] = aY - (corner[0].y() * (1 - 2 * aY)/diag.y()); */
+/*     rplane[2] = (1 - 2 * aZ)/diag.z(); */
+/*     rplane[3] = aZ - (corner[0].z() * (1 - 2 * aZ)/diag.z()); */
+    splane[0] = (1 - aX * (padx + 1))/diag.x();
+    splane[3] = aX * 0.5 - (corner[0].x() * (1 - aX * (padx+1))/diag.x());
+    tplane[1] = (1 - aY * (pady + 1))/diag.y();
+    tplane[3] = aY * 0.5 - (corner[0].y() * (1 - aY * (pady+1))/diag.y());
+    rplane[2] = (1 - aZ * (padz + 1))/diag.z();
+    rplane[3] = aZ * 0.5 - (corner[0].z() * (1 - aZ * (padz+1))/diag.z());
 
   } else {
     //  This code is for rendering a single non overlapping brick
@@ -286,6 +334,7 @@ Brick::ComputeAndDrawPolys(Ray r, double tmin, double tmax,
   // ts is a list of parameters that correspond the the planes defined
   // by -r.direction and the corners of the texture cube.
   // ts are used for optimization.
+  //cerr<<"tmin, tmax, dt = "<<tmin<<", "<<tmax<<", "<<dt<<endl;
 
   double t = tmax; 
   double t0, t1;
@@ -301,9 +350,9 @@ Brick::ComputeAndDrawPolys(Ray r, double tmin, double tmax,
 
   // dt is positive, but we compute polys back to front.
   // use a negative dt
-  while( t >= ts[0] ) t -= dt;
+  //while( t >= ts[0] ) t -= dt;
 
-  while( t > ts[7] && t > tmin ){
+  while( t > ts[7] && t >= tmin ){
 
     while( t < ts[tIndex] ){
       /* printf("t = %f\n", t); */
@@ -338,6 +387,8 @@ Brick::ComputeAndDrawPolys(Ray r, double tmin, double tmax,
 	  buildEdgeList = true;
       }
     }
+    //cin.get();
+    //cerr<< "t = "<<t<<endl;
     drawPolys(intersects, nIntersects);
     t -= dt;
 
@@ -415,24 +466,34 @@ Brick::OrderIntersects(Point *p, Ray *r, RayStep *dt, int n)
 void
 Brick::drawPolys(Point *intersects, int nIntersects)
 {
+  //  glDisable(GL_TEXTURE_3D_EXT);
   int k;
   switch (nIntersects) {
     case 1:
+      //glColor4f(1.0,1.0,1.0,1.0);
       glBegin(GL_POINTS);
         glVertex3f(intersects[0].x(),intersects[0].y(),intersects[0].z());
+	//cerr<<intersects[0]<<endl;
       glEnd();
       break;
     case 2:
+      //glColor4f(1.0,1.0,1.0,1.0);
       glBegin(GL_LINES);
         glVertex3f(intersects[0].x(),intersects[0].y(),intersects[0].z());
 	glVertex3f(intersects[1].x(),intersects[1].y(),intersects[1].z());
+	//cerr<<intersects[0]<<endl;
+	//cerr<<intersects[1]<<endl;
       glEnd();
       break;
     case 3:
+      //glColor4f(1.0,1.0,0.0,1.0);
       glBegin(GL_TRIANGLES);
         glVertex3f(intersects[0].x(),intersects[0].y(),intersects[0].z());
         glVertex3f(intersects[1].x(),intersects[1].y(),intersects[1].z());
         glVertex3f(intersects[2].x(),intersects[2].y(),intersects[2].z());
+	//cerr<<intersects[0]<<endl;
+	//cerr<<intersects[1]<<endl;
+	//cerr<<intersects[2]<<endl;
       glEnd();
       break;
     case 4:
@@ -441,10 +502,14 @@ Brick::drawPolys(Point *intersects, int nIntersects)
       glBegin(GL_POLYGON);
         for(k =0; k < nIntersects; k++){
 	  glVertex3f(intersects[k].x(),intersects[k].y(),intersects[k].z());
+	  //cerr<<intersects[k]<<endl;
 	}
       glEnd();
       break;
     }
+  //cerr<<endl;
+  // glFlush();
+  //  glEnable(GL_TEXTURE_3D_EXT);
 }
 #define BRICK_VERSION 1
 
