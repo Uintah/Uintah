@@ -214,6 +214,31 @@ void* MDSPlusReader::values( const std::string signal, int dtype )
 #endif
 }
 
+// Simple search interface that insures thread safe calls and
+// the correct socket.
+int MDSPlusReader::search( const std::string signal,
+			   const int regexp,
+			   std::vector<std::string> &signals ) 
+{
+#ifdef HAVE_MDSPLUS
+  mdsPlusLock_.lock();
+
+  MDS_SetSocket( socket_ );
+
+  // Search for the signals.
+  signals.push_back("\\NIMROD::TOP.OUTPUTS.CODE.GRID:R");
+  signals.push_back("\\NIMROD::TOP.OUTPUTS.CODE.GRID:Z");
+  signals.push_back("\\NIMROD::TOP.OUTPUTS.CODE.GRID:PHI");
+  signals.push_back("\\NIMROD::TOP.OUTPUTS.CODE.GRID:K");
+
+  mdsPlusLock_.unlock();
+
+  return signals.size();
+#else
+  return 0;
+#endif
+}
+
 // Simple grid (elements) interface that insures thread safe calls and
 // the correct socket.
 double* MDSPlusReader::grid( const std::string axis, int **dims )

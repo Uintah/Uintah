@@ -41,6 +41,7 @@
 #include <Core/Thread/Mutex.h>
 
 #include <string>
+#include <vector>
 
 #define DTYPE_UCHAR   2
 #define DTYPE_USHORT  3
@@ -79,6 +80,9 @@ public:
   int dims( const std::string signal, int** dims );
   void* values( const std::string signal, int dtype );
 
+  int search( const std::string signal,
+	      const int regexp,
+	      std::vector<std::string> &signals );
 
   double *grid( const std::string axis, int **dims  );
   int slice_ids( int **nids );
