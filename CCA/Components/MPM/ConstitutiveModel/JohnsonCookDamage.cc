@@ -36,7 +36,7 @@ JohnsonCookDamage:: hasFailed(double damage)
 }
     
 double 
-JohnsonCookDamage::computeScalarDamage(const Matrix3& rateOfDeformation,
+JohnsonCookDamage::computeScalarDamage(const double& plasticStrainRate,
                                        const Matrix3& stress,
                                        const double& temperature,
                                        const double& delT,
@@ -44,8 +44,7 @@ JohnsonCookDamage::computeScalarDamage(const Matrix3& rateOfDeformation,
                                        const double& tolerance,
                                        const double& damage_old)
 {
-  // Calculate plastic strain rate
-  double plasticStrainRate = sqrt(rateOfDeformation.NormSquared()*2.0/3.0);
+  // Calculate plastic strain increment
   double epsInc = plasticStrainRate*delT;
 
   // Calculate the updated scalar damage parameter

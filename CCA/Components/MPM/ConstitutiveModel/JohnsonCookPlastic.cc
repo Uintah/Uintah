@@ -14,149 +14,93 @@ JohnsonCookPlastic::JohnsonCookPlastic(ProblemSpecP& ps)
   ps->require("m",d_CM.m);
   d_CM.TRoom = 294;
   d_CM.TMelt = 1594;
-
-  // Initialize internal variable labels for evolution
-  pPlasticStrainLabel = VarLabel::create("p.plasticStrain",
-			ParticleVariable<double>::getTypeDescription());
-  pPlasticStrainLabel_preReloc = VarLabel::create("p.plasticStrain+",
-			ParticleVariable<double>::getTypeDescription());
 }
 	 
 JohnsonCookPlastic::~JohnsonCookPlastic()
 {
-  VarLabel::destroy(pPlasticStrainLabel);
-  VarLabel::destroy(pPlasticStrainLabel_preReloc);
 }
 	 
 void 
-JohnsonCookPlastic::addInitialComputesAndRequires(Task* task,
-                                           const MPMMaterial* matl,
+JohnsonCookPlastic::addInitialComputesAndRequires(Task* ,
+                                           const MPMMaterial* ,
                                            const PatchSet*) const
 {
-  const MaterialSubset* matlset = matl->thisMaterial();
-  task->computes(pPlasticStrainLabel, matlset);
 }
 
 void 
-JohnsonCookPlastic::addComputesAndRequires(Task* task,
-				    const MPMMaterial* matl,
+JohnsonCookPlastic::addComputesAndRequires(Task* ,
+				    const MPMMaterial* ,
 				    const PatchSet*) const
 {
-  const MaterialSubset* matlset = matl->thisMaterial();
-  task->requires(Task::OldDW, pPlasticStrainLabel, matlset,Ghost::None);
-  task->computes(pPlasticStrainLabel_preReloc, matlset);
 }
 
 void 
-JohnsonCookPlastic::addParticleState(std::vector<const VarLabel*>& from,
-				     std::vector<const VarLabel*>& to)
+JohnsonCookPlastic::addParticleState(std::vector<const VarLabel*>& ,
+				     std::vector<const VarLabel*>& )
 {
-  from.push_back(pPlasticStrainLabel);
-  to.push_back(pPlasticStrainLabel_preReloc);
 }
 
 void 
-JohnsonCookPlastic::allocateCMDataAddRequires(Task* task,
-					      const MPMMaterial* matl,
-					      const PatchSet* patch,
-					      MPMLabel* lb) const
+JohnsonCookPlastic::allocateCMDataAddRequires(Task* ,
+					      const MPMMaterial* ,
+					      const PatchSet* ,
+					      MPMLabel* ) const
 {
-  const MaterialSubset* matlset = matl->thisMaterial();
-  task->requires(Task::OldDW,pPlasticStrainLabel, Ghost::None);
 }
 
-void JohnsonCookPlastic::allocateCMDataAdd(DataWarehouse* new_dw,
-					   ParticleSubset* addset,
+void JohnsonCookPlastic::allocateCMDataAdd(DataWarehouse* ,
+					   ParticleSubset* ,
 					   map<const VarLabel*, 
-                                           ParticleVariableBase*>* newState,
-					   ParticleSubset* delset,
-					   DataWarehouse* old_dw)
+                                           ParticleVariableBase*>* ,
+					   ParticleSubset* ,
+					   DataWarehouse* )
 {
-  // Put stuff in here to initialize each particle's
-  // constitutive model parameters and deformationMeasure
- 
-  ParticleVariable<double> plasticStrain;
-  constParticleVariable<double> o_plasticStrain;
-
-  new_dw->allocateTemporary(plasticStrain,addset);
-  old_dw->get(o_plasticStrain,pPlasticStrainLabel,delset);
-
-  ParticleSubset::iterator n,o;
-
-  n = addset->begin();
-  for(o = delset->begin(); o != delset->end(); o++, n++) {
-    plasticStrain[*n] = o_plasticStrain[*o];
-  }
-
-  (*newState)[pPlasticStrainLabel]=plasticStrain.clone();
-
 }
 
 
 void 
-JohnsonCookPlastic::initializeInternalVars(ParticleSubset* pset,
-				           DataWarehouse* new_dw)
+JohnsonCookPlastic::initializeInternalVars(ParticleSubset* ,
+				           DataWarehouse* )
 {
-  new_dw->allocateAndPut(pPlasticStrain_new, pPlasticStrainLabel, pset);
-  ParticleSubset::iterator iter = pset->begin();
-  for(;iter != pset->end(); iter++) pPlasticStrain_new[*iter] = 0.0;
 }
 
 void 
-JohnsonCookPlastic::getInternalVars(ParticleSubset* pset,
-                                    DataWarehouse* old_dw) 
+JohnsonCookPlastic::getInternalVars(ParticleSubset* ,
+                                    DataWarehouse* ) 
 {
-  old_dw->get(pPlasticStrain, pPlasticStrainLabel, pset);
 }
 
 void 
-JohnsonCookPlastic::allocateAndPutInternalVars(ParticleSubset* pset,
-                                               DataWarehouse* new_dw) 
+JohnsonCookPlastic::allocateAndPutInternalVars(ParticleSubset* ,
+                                               DataWarehouse* ) 
 {
-  new_dw->allocateAndPut(pPlasticStrain_new, pPlasticStrainLabel_preReloc,pset);
 }
 
 void 
-JohnsonCookPlastic::allocateAndPutRigid(ParticleSubset* pset,
-                                        DataWarehouse* new_dw) 
+JohnsonCookPlastic::allocateAndPutRigid(ParticleSubset* ,
+                                        DataWarehouse* ) 
 {
-  new_dw->allocateAndPut(pPlasticStrain_new, pPlasticStrainLabel_preReloc,pset);
-  // Initializing to zero for the sake of RigidMPM's carryForward
-  ParticleSubset::iterator iter = pset->begin();
-  for(;iter != pset->end(); iter++) pPlasticStrain_new[*iter] = 0.0;
 }
 
 void
-JohnsonCookPlastic::updateElastic(const particleIndex idx)
+JohnsonCookPlastic::updateElastic(const particleIndex )
 {
-  pPlasticStrain_new[idx] = pPlasticStrain[idx];
 }
 
 void
-JohnsonCookPlastic::updatePlastic(const particleIndex idx, const double& )
+JohnsonCookPlastic::updatePlastic(const particleIndex , const double& )
 {
-  pPlasticStrain_new[idx] = pPlasticStrain_new[idx];
-}
-
-double
-JohnsonCookPlastic::getUpdatedPlasticStrain(const particleIndex idx)
-{
-  return pPlasticStrain_new[idx];
 }
 
 double 
-JohnsonCookPlastic::computeFlowStress(const Matrix3& rateOfDeformation,
+JohnsonCookPlastic::computeFlowStress(const double& plasticStrainRate,
+                                      const double& plasticStrain,
                                       const double& temperature,
                                       const double& delT,
                                       const double& tolerance,
                                       const MPMMaterial* matl,
                                       const particleIndex idx)
 {
-  double plasticStrain = pPlasticStrain[idx];
-  double plasticStrainRate = sqrt(rateOfDeformation.NormSquared()*2.0/3.0);
-  plasticStrain += plasticStrainRate*delT;
-  pPlasticStrain_new[idx] = plasticStrain;
-
   return evaluateFlowStress(plasticStrain, plasticStrainRate, 
                             temperature, matl, tolerance);
 }
@@ -190,7 +134,8 @@ JohnsonCookPlastic::evaluateFlowStress(const double& ep,
     \f$\gamma = \dot{\epsilon_p}\f$ and \f$ h_\alpha = 1\f$. */
 void 
 JohnsonCookPlastic::computeTangentModulus(const Matrix3& sig,
-                                          const Matrix3& D, 
+				          const double& plasticStrainRate,
+				          const double& plasticStrain,
                                           double T,
                                           double ,
                                           const particleIndex idx,
@@ -201,7 +146,6 @@ JohnsonCookPlastic::computeTangentModulus(const Matrix3& sig,
   // Calculate the deviatoric stress and rate of deformation
   Matrix3 one; one.Identity();
   Matrix3 sigdev = sig - one*(sig.Trace()/3.0);
-  Matrix3 Ddev = D - one*(D.Trace()/3.0);
 
   // Calculate the equivalent stress
   double sigeqv = sqrt(sigdev.NormSquared()); 
@@ -210,10 +154,9 @@ JohnsonCookPlastic::computeTangentModulus(const Matrix3& sig,
   Matrix3 rr = sigdev*(1.5/sigeqv);
 
   // Calculate f_q (h = 1, therefore f_q.h = f_q)
-  double ep = pPlasticStrain_new[idx];
-  double epdot = sqrt(Ddev.NormSquared()/1.5);
-  double strainPart = d_CM.n*d_CM.B*
-                      pow(ep,d_CM.n-1);
+  double ep = plasticStrain;
+  double epdot = plasticStrainRate;
+  double strainPart = d_CM.n*d_CM.B*pow(ep,d_CM.n-1);
   double strainRatePart = 1.0;
   if (epdot < 1.0) 
     strainRatePart = pow((1.0 + epdot),d_CM.C);
@@ -262,11 +205,10 @@ JohnsonCookPlastic::computeTangentModulus(const Matrix3& sig,
 
 double
 JohnsonCookPlastic::evalDerivativeWRTTemperature(double epdot,
+                                                 double ep,
 						 double T,
                                                  const particleIndex idx)
 {
-  double ep = pPlasticStrain_new[idx];
-
   // Calculate strain part
   double strainPart = d_CM.A + d_CM.B*pow(ep,d_CM.n);
 
@@ -286,11 +228,10 @@ JohnsonCookPlastic::evalDerivativeWRTTemperature(double epdot,
 
 double
 JohnsonCookPlastic::evalDerivativeWRTStrainRate(double epdot,
+                                                double ep, 
 						double T,
                                                 const particleIndex idx)
 {
-  double ep = pPlasticStrain_new[idx];
-
   // Calculate strain part
   double strainPart = d_CM.A + d_CM.B*pow(ep,d_CM.n);
 
@@ -308,11 +249,10 @@ JohnsonCookPlastic::evalDerivativeWRTStrainRate(double epdot,
 
 double
 JohnsonCookPlastic::evalDerivativeWRTPlasticStrain(double epdot,
+                                                   double ep,
 						   double T,
                                                    const particleIndex idx)
 {
-  double ep = pPlasticStrain_new[idx];
-
   // Calculate strain rate part
   double strainRatePart = 1.0;
   if (epdot < 1.0) strainRatePart = pow((1.0 + epdot),d_CM.C);
@@ -332,11 +272,12 @@ JohnsonCookPlastic::evalDerivativeWRTPlasticStrain(double epdot,
 
 void
 JohnsonCookPlastic::evalDerivativeWRTScalarVars(double epdot,
+                                                double ep,
 						double T,
 						const particleIndex idx,
 						Vector& derivs)
 {
-  derivs[0] = evalDerivativeWRTStrainRate(epdot, T, idx);
-  derivs[1] = evalDerivativeWRTTemperature(epdot, T, idx);
-  derivs[2] = evalDerivativeWRTPlasticStrain(epdot, T, idx);
+  derivs[0] = evalDerivativeWRTStrainRate(epdot, ep, T, idx);
+  derivs[1] = evalDerivativeWRTTemperature(epdot, ep, T, idx);
+  derivs[2] = evalDerivativeWRTPlasticStrain(epdot, ep, T, idx);
 }

@@ -242,7 +242,7 @@ void ShellMaterial::allocateCMDataAddRequires(Task* task,
 					      const PatchSet* patch,
 					      MPMLabel* lb) const
 {
-  const MaterialSubset* matlset = matl->thisMaterial();
+  //const MaterialSubset* matlset = matl->thisMaterial();
 
   task->requires(Task::OldDW,pNormalRotRateLabel, Ghost::None);
   task->requires(Task::OldDW,pDefGradTopLabel,    Ghost::None);

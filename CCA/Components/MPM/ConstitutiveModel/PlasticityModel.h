@@ -54,7 +54,8 @@ namespace Uintah {
 
     virtual void allocateCMDataAdd(DataWarehouse* new_dw,
 				   ParticleSubset* addset,
-				   map<const VarLabel*, ParticleVariableBase*>* newState,
+				   map<const VarLabel*, 
+                                     ParticleVariableBase*>* newState,
 				   ParticleSubset* delset,
 				   DataWarehouse* old_dw) = 0;
 
@@ -78,11 +79,10 @@ namespace Uintah {
     virtual void updatePlastic(const particleIndex idx, 
                                const double& delGamma) = 0;
 
-    virtual double getUpdatedPlasticStrain(const particleIndex idx) = 0;
-
     //////////
     // Calculate the flow stress
-    virtual double computeFlowStress(const Matrix3& rateOfDeformation,
+    virtual double computeFlowStress(const double& plasticStrainRate,
+				     const double& plasticStrain,
 				     const double& temperature,
 				     const double& delT,
 				     const double& tolerance,
@@ -104,7 +104,8 @@ namespace Uintah {
       \f$ f_q = \partial f /\partial q \f$ 
     */
     virtual void computeTangentModulus(const Matrix3& stress,
-				       const Matrix3& rateOfDeform, 
+				       const double& plasticStrainRate,
+				       const double& plasticStrain,
 				       double temperature,
 				       double delT,
                                        const particleIndex idx,
@@ -124,6 +125,7 @@ namespace Uintah {
     */
     ///////////////////////////////////////////////////////////////////////////
     virtual void evalDerivativeWRTScalarVars(double edot,
+                                             double ep,
                                              double T,
                                              const particleIndex idx,
                                              Vector& derivs) = 0;
@@ -136,7 +138,9 @@ namespace Uintah {
       \return \f$d\sigma_Y/d\epsilon\f$
     */
     ///////////////////////////////////////////////////////////////////////////
-    virtual double evalDerivativeWRTPlasticStrain(double edot, double T,
+    virtual double evalDerivativeWRTPlasticStrain(double edot, 
+                                                  double ep,
+                                                  double T,
                                                   const particleIndex idx) = 0;
   };
 } // End namespace Uintah

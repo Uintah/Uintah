@@ -68,7 +68,10 @@ WARNING
 
     // Scalar damage evolution variable
     const VarLabel* pDamageLabel;  
+    const VarLabel* pPlasticStrainLabel;  
+
     const VarLabel* pDamageLabel_preReloc;  
+    const VarLabel* pPlasticStrainLabel_preReloc;  
 
   private:
 
