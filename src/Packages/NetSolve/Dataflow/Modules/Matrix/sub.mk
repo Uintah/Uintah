@@ -21,8 +21,12 @@ PSELIBS := Core/Datatypes Dataflow/Network Dataflow/Ports \
         Core/Persistent Core/Containers Core/Util \
         Core/Exceptions Core/Thread Core/GuiInterface \
         Core/Geom Core/Datatypes Core/Geometry \
-        Core/TkExtensions
-LIBS := $(TK_LIBRARY) $(GL_LIBS) -lm
+        Core/TkExtensions \
+
+LIBS := $(TK_LIBRARY) $(GL_LIBS) /nfs/sci/data1/SCIRun_Thirdparty_32/lib32/libnetsolve.so -lm
+#/nfs/sci/data1/SCIRun_Thirdparty_32/lib32/libnetsolve.so -lm
+
+#$(NETSOLVE_ROOT)/lib/SGI64/libnetsolve.a -lm
 
 include $(SRCTOP_ABS)/scripts/smallso_epilogue.mk
 
