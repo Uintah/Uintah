@@ -34,6 +34,7 @@ namespace Uintah {
          // copy constructor
          CompNeoHook(const CompNeoHook &cm);
          CompNeoHook& operator=(const CompNeoHook &cm);
+         int d_8or27;
 
       public:
          // constructors
