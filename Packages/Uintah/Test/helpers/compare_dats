@@ -6,7 +6,7 @@ COMPARE_UDADIR=$3
 TMPDIR=$4
 ERRORS_TO=$5
 
-if [ -d "$TEST_UDADIR" ]; then
+if [ ! -d "$TEST_UDADIR" ]; then
   echo "$TEST_UDADIR doesn't exist"
   exit 1
 fi  
