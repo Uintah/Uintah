@@ -1,7 +1,8 @@
 c
 c
 
-      SUBROUTINE scalcoef(domLo, domHi,domLong, domHing, idxLo, idxHi,
+      SUBROUTINE scalcoef(domLo, domHi, domLoVis, domHiVis,
+     $     domLong, domHing, idxLo, idxHi,
      $     den,vis,
      &     ae,aw,an,as,at,ab,
      $     cesav,cwsav,cnsav,cssav,ctsav,cbsav,
@@ -89,7 +90,8 @@ C-----------------------------------------------------------------------
 *-----------------------------------------------------------------------
 *     passed variables
 *
-      integer domLo(3), domHi(3), domLong(3), domHing(3),
+      integer domLo(3), domHi(3), domLoVis(3), domHiVis(3),
+     $        domLong(3), domHing(3),
      $        idxLo(3), idxHi(3)
 
       double precision den(
@@ -98,9 +100,9 @@ C-----------------------------------------------------------------------
      $     domLo(3):domHi(3))
 
       double precision vis(
-     $     domLo(1):domHi(1),
-     $     domLo(2):domHi(2),
-     $     domLo(3):domHi(3))
+     $     domLoVis(1):domHiVis(1),
+     $     domLoVis(2):domHiVis(2),
+     $     domLoVis(3):domHiVis(3))
 
       double precision ae(
      $     domLong(1):domHing(1),

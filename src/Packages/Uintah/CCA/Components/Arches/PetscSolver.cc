@@ -449,155 +449,6 @@ PetscSolver::setPressMatrix(const ProcessorGroup* ,
 	}
       }
     }
-#if 0
-  }
-  // for first patch
-  if (patchNumber == 0) {
-    for (int colZ = idxLo.z()+1; colZ < idxHi.z(); colZ ++) {
-      for (int colY = idxLo.y(); colY < idxHi.y(); colY ++) {
-	for (int colX = idxLo.x(); colX < idxHi.x(); colX ++) {
-	  col[0] = l2g[IntVector(colX,colY,colZ-1)];  //ab
-	  col[1] = l2g[IntVector(colX, colY-1, colZ)]; // as
-	  col[2] = l2g[IntVector(colX-1, colY, colZ)]; // aw
-	  col[3] = l2g[IntVector(colX, colY, colZ)]; //ap
-	  col[4] = l2g[IntVector(colX+1, colY, colZ)]; // ae
-	  col[5] = l2g[IntVector(colX, colY+1, colZ)]; // an
-	  col[6] = l2g[IntVector(colX, colY, colZ+1)]; // at
-	  value[0] = -vars->pressCoeff[Arches::AB][IntVector(colX,colY,colZ)];
-	  value[1] = -vars->pressCoeff[Arches::AS][IntVector(colX,colY,colZ)];
-	  value[2] = -vars->pressCoeff[Arches::AW][IntVector(colX,colY,colZ)];
-	  value[3] = vars->pressCoeff[Arches::AP][IntVector(colX,colY,colZ)];
-	  value[4] = -vars->pressCoeff[Arches::AE][IntVector(colX,colY,colZ)];
-	  value[5] = -vars->pressCoeff[Arches::AN][IntVector(colX,colY,colZ)];
-	  value[6] = -vars->pressCoeff[Arches::AT][IntVector(colX,colY,colZ)];
-	  ierr = MatSetValues(A,1,&row,7,col,value,INSERT_VALUES);  CHKERRA(ierr);
-	}
-      }
-    }
-    for (int colZ = idxLo.z(); colZ < idxLo.z()+1; colZ ++) {
-      for (int colY = idxLo.y()+1; colY < idxHi.y(); colY ++) {
-	for (int colX = idxLo.x(); colX < idxHi.x(); colX ++) {
-	  col[0] = l2g[IntVector(colX, colY-1, colZ)]; // as
-	  col[1] = l2g[IntVector(colX-1, colY, colZ)]; // aw
-	  col[2] = l2g[IntVector(colX, colY, colZ)]; //ap
-	  col[3] = l2g[IntVector(colX+1, colY, colZ)]; // ae
-	  col[4] = l2g[IntVector(colX, colY+1, colZ)]; // an
-	  col[5] = l2g[IntVector(colX, colY, colZ+1)]; // at
-	  value[0] = -vars->pressCoeff[Arches::AS][IntVector(colX,colY,colZ)];
-	  value[1] = -vars->pressCoeff[Arches::AW][IntVector(colX,colY,colZ)];
-	  value[2] = vars->pressCoeff[Arches::AP][IntVector(colX,colY,colZ)];
-	  value[3] = -vars->pressCoeff[Arches::AE][IntVector(colX,colY,colZ)];
-	  value[4] = -vars->pressCoeff[Arches::AN][IntVector(colX,colY,colZ)];
-	  value[5] = -vars->pressCoeff[Arches::AT][IntVector(colX,colY,colZ)];
-	  ierr = MatSetValues(A,1,&row,6,col,value,INSERT_VALUES);  CHKERRA(ierr);
-	}
-      }
-    }
-    for (int colZ = idxLo.z(); colZ < idxLo.z()+1; colZ ++) {
-      for (int colY = idxLo.y(); colY < idxLo.y()+1; colY ++) {
-	for (int colX = idxLo.x()+1; colX < idxHi.x(); colX ++) {
-	  col[0] = l2g[IntVector(colX-1, colY, colZ)]; // aw
-	  col[1] = l2g[IntVector(colX, colY, colZ)]; //ap
-	  col[2] = l2g[IntVector(colX+1, colY, colZ)]; // ae
-	  col[3] = l2g[IntVector(colX, colY+1, colZ)]; // an
-	  col[4] = l2g[IntVector(colX, colY, colZ+1)]; // at
-	  value[0] = -vars->pressCoeff[Arches::AW][IntVector(colX,colY,colZ)];
-	  value[1] = vars->pressCoeff[Arches::AP][IntVector(colX,colY,colZ)];
-	  value[2] = -vars->pressCoeff[Arches::AE][IntVector(colX,colY,colZ)];
-	  value[3] = -vars->pressCoeff[Arches::AN][IntVector(colX,colY,colZ)];
-	  value[4] = -vars->pressCoeff[Arches::AT][IntVector(colX,colY,colZ)];
-	  ierr = MatSetValues(A,1,&row,5,col,value,INSERT_VALUES);  CHKERRA(ierr);
-	}
-      }
-    }
-    int colX = 0;
-    int colY = 0;
-    int colZ = 0;
-    col[0] = l2g[IntVector(colX, colY, colZ)]; //ap
-    col[1] = l2g[IntVector(colX+1, colY, colZ)]; // ae
-    col[2] = l2g[IntVector(colX, colY+1, colZ)]; // an
-    col[3] = l2g[IntVector(colX, colY, colZ+1)]; // at
-    value[0] = vars->pressCoeff[Arches::AP][IntVector(colX,colY,colZ)];
-    value[1] = -vars->pressCoeff[Arches::AE][IntVector(colX,colY,colZ)];
-    value[2] = -vars->pressCoeff[Arches::AN][IntVector(colX,colY,colZ)];
-    value[3] = -vars->pressCoeff[Arches::AT][IntVector(colX,colY,colZ)];
-    ierr = MatSetValues(A,1,&row,4,col,value,INSERT_VALUES);   CHKERRA(ierr);  CHKERRA(ierr);
-  }
-
-  // for the last patch
-  if (patchNumber == d_petscIndex.size()-1) {
-    for (int colZ = idxLo.z(); colZ < idxHi.z()-1; colZ ++) {
-      for (int colY = idxLo.y(); colY < idxHi.y(); colY ++) {
-	for (int colX = idxLo.x(); colX < idxHi.x(); colX ++) {
-	  col[0] = l2g[IntVector(colX,colY,colZ-1)];  //ab
-	  col[1] = l2g[IntVector(colX, colY-1, colZ)]; // as
-	  col[2] = l2g[IntVector(colX-1, colY, colZ)]; // aw
-	  col[3] = l2g[IntVector(colX, colY, colZ)]; //ap
-	  col[4] = l2g[IntVector(colX+1, colY, colZ)]; // ae
-	  col[5] = l2g[IntVector(colX, colY+1, colZ)]; // an
-	  col[6] = l2g[IntVector(colX, colY, colZ+1)]; // at
-	  value[0] = -vars->pressCoeff[Arches::AB][IntVector(colX,colY,colZ)];
-	  value[1] = -vars->pressCoeff[Arches::AS][IntVector(colX,colY,colZ)];
-	  value[2] = -vars->pressCoeff[Arches::AW][IntVector(colX,colY,colZ)];
-	  value[3] = vars->pressCoeff[Arches::AP][IntVector(colX,colY,colZ)];
-	  value[4] = -vars->pressCoeff[Arches::AE][IntVector(colX,colY,colZ)];
-	  value[5] = -vars->pressCoeff[Arches::AN][IntVector(colX,colY,colZ)];
-	  value[6] = -vars->pressCoeff[Arches::AT][IntVector(colX,colY,colZ)];
-	  ierr = MatSetValues(A,1,&row,7,col,value,INSERT_VALUES);   CHKERRA(ierr);
-	}
-      }
-    }
-    for (int colZ = idxHi.z()-1; colZ < idxHi.z(); colZ ++) {
-      for (int colY = idxLo.y(); colY < idxHi.y()-1; colY ++) {
-	for (int colX = idxLo.x(); colX < idxHi.x(); colX ++) {
-	  col[0] = l2g[IntVector(colX, colY, colZ-1)]; // ab
-	  col[1] = l2g[IntVector(colX, colY-1, colZ)]; // as
-	  col[2] = l2g[IntVector(colX-1, colY, colZ)]; // aw
-	  col[3] = l2g[IntVector(colX, colY, colZ)]; //ap
-	  col[4] = l2g[IntVector(colX+1, colY, colZ)]; // ae
-	  col[5] = l2g[IntVector(colX, colY+1, colZ)]; // an
-	  value[0] = -vars->pressCoeff[Arches::AB][IntVector(colX,colY,colZ)];	  
-	  value[1] = -vars->pressCoeff[Arches::AS][IntVector(colX,colY,colZ)];
-	  value[2] = -vars->pressCoeff[Arches::AW][IntVector(colX,colY,colZ)];
-	  value[3] = vars->pressCoeff[Arches::AP][IntVector(colX,colY,colZ)];
-	  value[4] = -vars->pressCoeff[Arches::AE][IntVector(colX,colY,colZ)];
-	  value[5] = -vars->pressCoeff[Arches::AN][IntVector(colX,colY,colZ)];
-	  ierr = MatSetValues(A,1,&row,6,col,value,INSERT_VALUES);  CHKERRA(ierr);
-	}
-      }
-    }
-    for (int colZ = idxHi.z()-1; colZ < idxHi.z(); colZ ++) {
-      for (int colY = idxHi.y()-1; colY < idxHi.y(); colY ++) {
-	for (int colX = idxLo.x(); colX < idxHi.x()-1; colX ++) {
-	  col[0] = l2g[IntVector(colX, colY, colZ-1)]; // ab
-	  col[1] = l2g[IntVector(colX, colY-1, colZ)]; // as
-	  col[2] = l2g[IntVector(colX-1, colY, colZ)]; // aw
-	  col[3] = l2g[IntVector(colX, colY, colZ)]; //ap
-	  col[4] = l2g[IntVector(colX+1, colY, colZ)]; // ae
-	  value[0] = -vars->pressCoeff[Arches::AB][IntVector(colX,colY,colZ)];
-	  value[1] = vars->pressCoeff[Arches::AS][IntVector(colX,colY,colZ)];
-	  value[2] = -vars->pressCoeff[Arches::AW][IntVector(colX,colY,colZ)];
-	  value[3] = -vars->pressCoeff[Arches::AP][IntVector(colX,colY,colZ)];
-	  value[4] = -vars->pressCoeff[Arches::AE][IntVector(colX,colY,colZ)];
-	  ierr = MatSetValues(A,1,&row,5,col,value,INSERT_VALUES);   CHKERRA(ierr);
-	}
-      }
-    }
-    int colX = idxHi.x()-1;
-    int colY = idxHi.y()-1;
-    int colZ = idxHi.z()-1;
-
-    col[0] = l2g[IntVector(colX, colY, colZ-1)]; // ab
-    col[1] = l2g[IntVector(colX, colY-1, colZ)]; // as
-    col[2] = l2g[IntVector(colX-1, colY, colZ)]; // aw
-    col[3] = l2g[IntVector(colX, colY, colZ)]; // ap
-    value[0] = -vars->pressCoeff[Arches::AB][IntVector(colX,colY,colZ)];
-    value[1] = -vars->pressCoeff[Arches::AS][IntVector(colX,colY,colZ)];
-    value[2] = -vars->pressCoeff[Arches::AW][IntVector(colX,colY,colZ)];
-    value[3] = vars->pressCoeff[Arches::AP][IntVector(colX,colY,colZ)];
-    ierr = MatSetValues(A,1,&row,4,col,value,INSERT_VALUES);  CHKERRA(ierr);
-  }
-#endif
 
 
 #ifdef ARCHES_PETSC_DEBUG
@@ -622,11 +473,13 @@ PetscSolver::setPressMatrix(const ProcessorGroup* ,
 }
 
 
-void
+bool
 PetscSolver::pressLinearSolve()
 {
   double solve_start = Time::currentSeconds();
   KSP ksp;
+  PC peqnpc; // pressure eqn pc
+ 
   int ierr;
 #ifdef ARCHES_PETSC_DEBUG
   cerr << "Doing mat/vec assembly\n";
@@ -637,6 +490,17 @@ PetscSolver::pressLinearSolve()
   ierr = VecAssemblyEnd(d_b);CHKERRA(ierr);
   ierr = VecAssemblyBegin(d_x);CHKERRA(ierr);
   ierr = VecAssemblyEnd(d_x);CHKERRA(ierr);
+  // compute the initial error
+  double neg_one = -1.0;
+  double init_norm;
+  double sum_b;
+  ierr = VecSum(d_b, &sum_b);
+  Vec u_tmp;
+  ierr = VecDuplicate(d_x,&u_tmp);CHKERRA(ierr);
+  ierr = MatMult(A, d_x, u_tmp);CHKERRA(ierr);
+  ierr = VecAXPY(&neg_one, d_b, u_tmp); CHKERRA(ierr);
+  ierr  = VecNorm(u_tmp,NORM_2,&init_norm);CHKERRA(ierr);
+  ierr = VecDestroy(u_tmp);CHKERRA(ierr);
   /* debugging - steve */
   double norm;
 #ifdef ARCHES_PETSC_DEBUG
@@ -658,7 +522,19 @@ PetscSolver::pressLinearSolve()
   ierr = SLESCreate(PETSC_COMM_WORLD,&sles);CHKERRA(ierr);
   ierr = SLESSetOperators(sles,A,A,DIFFERENT_NONZERO_PATTERN);CHKERRA(ierr);
   ierr = SLESGetKSP(sles,&ksp);CHKERRA(ierr);
+  ierr = SLESGetPC(sles, &peqnpc); CHKERRA(ierr);
+  ierr = PCSetType(peqnpc, PCJACOBI); CHKERRA(ierr);
+  // set null space for preconditioner
+  // change for a newer version
+#ifdef NULL_MATRIX
+  PCNullSpace nullsp;
+  ierr = PCNullSpaceCreate(PETSC_COMM_WORLD, 1, 0, PETSC_NULL, &nullsp); 
+  CHKERRA(ierr);
+  ierr = PCNullSpaceAttach(peqnpc, nullsp); CHKERRA(ierr);
+  ierr = PCNullSpaceDestroy(nullsp); CHKERRA(ierr);
+#endif
   ierr = KSPSetInitialGuessNonzero(ksp);CHKERRA(ierr);
+  
   ierr = SLESSetFromOptions(sles);CHKERRA(ierr);
 
   /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
@@ -675,12 +551,18 @@ PetscSolver::pressLinearSolve()
 #endif
 
   // check the error
-  double neg_one = -1.0;
   ierr = MatMult(A, d_x, d_u);CHKERRA(ierr);
   ierr = VecAXPY(&neg_one, d_b, d_u); CHKERRA(ierr);
   ierr  = VecNorm(d_u,NORM_2,&norm);CHKERRA(ierr);
-  if(me == 0)
+  if(me == 0) {
      cerr << "SLESSolve: Norm of error: " << norm << ", iterations: " << its << ", time: " << Time::currentSeconds()-solve_start << " seconds\n";
+     cerr << "Init Norm: " << init_norm << " Error reduced by: " << norm/init_norm << endl;
+     cerr << "Sum of RHS vector: " << sum_b << endl;
+  }
+  if (norm/init_norm < 1.0)
+    return true;
+  else
+    return false;
 }
 
 
