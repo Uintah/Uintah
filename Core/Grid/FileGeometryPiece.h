@@ -36,13 +36,13 @@ KEYWORDS
 DESCRIPTION
    Reads in a set of points from an input file.  Optionally, if the
    <var> tag is present, the volume will be read in for each point set.
-   Requires one input: file name <file>points.txt</file>
+   Requires one input: file name <name>points.txt</name>
    Optional input : <var>p.volume </var>
    There are methods for checking if a point is inside the box
    and also for determining the bounding box for the box (which
    just returns the box itself).
    The input form looks like this:
-       <file>file_name.txt</file>
+       <name>file_name.txt</name>
          <var>p.volume</var>
 	
 	

@@ -7,6 +7,7 @@
 #include <Packages/Uintah/Core/Grid/UnionGeometryPiece.h>
 #include <Packages/Uintah/Core/Grid/DifferenceGeometryPiece.h>
 #include <Packages/Uintah/Core/Grid/IntersectionGeometryPiece.h>
+#include <Packages/Uintah/Core/Grid/FileGeometryPiece.h>
 
 #include <Packages/Uintah/Core/ProblemSpec/ProblemSpec.h>
 #include <Packages/Uintah/Core/ProblemSpec/ProblemSpecP.h>
@@ -46,6 +47,9 @@ void GeometryPieceFactory::create(const ProblemSpecP& ps,
    
       else if (go_type == "difference")
 	 objs.push_back(new DifferenceGeometryPiece(child));
+
+      else if (go_type == "file")
+	 objs.push_back(new FileGeometryPiece(child));
 
       else if (go_type == "intersection")
 	 objs.push_back(new IntersectionGeometryPiece(child));
