@@ -907,8 +907,10 @@ TaskGraph::createDetailedDependencies(DetailedTasks* dt, LoadBalancer* lb,
 					     creator, comp);
 	      else
 		didFind = ct.findcomp(req, neighbor, matl, creator, comp);
-	      if(!didFind)
+	      if(!didFind) {
+		cerr << "Failure finding " << *req << " for " << task->getTask()->getName() << endl; 
 		throw InternalError("Failed to find comp for dep!");
+	      }
 	    }
 	    IntVector l = Max(neighbor->getNodeLowIndex(), low);
 	    IntVector h = Min(neighbor->getNodeHighIndex(), high);
