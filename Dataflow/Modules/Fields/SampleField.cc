@@ -88,7 +88,7 @@ class SampleField : public Module
   GuiString ringstate_;
   GuiString framestate_;
 
-  GuiInt maxSeeds_;
+  GuiDouble maxSeeds_;
   GuiInt numSeeds_;
   GuiInt rngSeed_;
   GuiInt rngInc_;
@@ -168,6 +168,11 @@ SampleField::widget_moved(bool last)
     if (rake_)
     {
       rake_->GetEndpoints(endpoint0_, endpoint1_);
+
+      double ratio = rake_->GetRatio();
+      if (ratio < 0.0001) ratio = 0.0001; // To avoid infinte loop
+      double num_seeds = Max(0.0, 1.0/ratio+1.0);
+      maxSeeds_.set(num_seeds);
 
       endpoint0x_.set( endpoint0_.x() );
       endpoint0y_.set( endpoint0_.y() );
@@ -260,6 +265,7 @@ SampleField::execute_rake(FieldHandle ifield)
     if (rake_)
     {
       rake_->SetEndpoints(endpoint0_, endpoint1_);
+      rake_->SetRatio(1/16.0);
       rake_->SetScale(widgetscale_.get());
       if (wtype_ == 1) { ogport_->flushViews(); }
     }
@@ -270,9 +276,10 @@ SampleField::execute_rake(FieldHandle ifield)
 
   if (!rake_)
   {
-    rake_ = scinew GaugeWidget(this, &widget_lock_, widgetscale_.get(), false);
+    rake_ = scinew GaugeWidget(this, &widget_lock_, widgetscale_.get(), true);
     rake_->Connect(ogport_);
     rake_->SetEndpoints(endpoint0_,endpoint1_);
+    rake_->SetRatio(1/16.0);
   }
 
   if (wtype_ != 1)
@@ -288,7 +295,7 @@ SampleField::execute_rake(FieldHandle ifield)
   rake_->GetEndpoints(min, max);
   
   Vector dir(max-min);
-  int num_seeds = Max(0, maxSeeds_.get());
+  double num_seeds = Max(0.0, maxSeeds_.get());
   if (num_seeds <= 0)
   {
     remark("No seeds to send.");
@@ -297,12 +304,14 @@ SampleField::execute_rake(FieldHandle ifield)
   remark("num_seeds = " + to_string(num_seeds));
   if (num_seeds > 1)
   {
-    dir *= 1.0 / (num_seeds - 1.0);
+    const double ratio = 1.0/(num_seeds-1.0);
+    rake_->SetRatio(ratio);
+    dir *= ratio;
   }
 
   PointCloudMesh* mesh = scinew PointCloudMesh;
   int loop;
-  for (loop=0; loop<num_seeds; ++loop)
+  for (loop=0; loop<=(num_seeds-0.99999); ++loop)
   {
     mesh->add_node(min+dir*loop);
   }
@@ -312,7 +321,7 @@ SampleField::execute_rake(FieldHandle ifield)
     scinew PointCloudField<double>(mesh, Field::NODE);
   PointCloudField<double>::fdata_type &fdata = seeds->fdata();
   
-  for (loop=0;loop<num_seeds;++loop)
+  for (loop=0;loop<(num_seeds-0.99999);++loop)
   {
     fdata[loop]=loop;
   }
@@ -408,7 +417,7 @@ SampleField::execute_ring(FieldHandle ifield)
     wtype_ = 2;
   }
   
-  int num_seeds = Max(0, maxSeeds_.get());
+  double num_seeds = Max(0.0, maxSeeds_.get());
   if (num_seeds <= 0)
   {
     remark("No seeds to send.");
@@ -524,7 +533,7 @@ SampleField::execute_frame(FieldHandle ifield)
     wtype_ = 3;
   }
 
-  int num_seeds = Max(0, maxSeeds_.get());
+  double num_seeds = Max(0.0, maxSeeds_.get());
   if (num_seeds <= 0)
   {
     remark("No seeds to send.");
