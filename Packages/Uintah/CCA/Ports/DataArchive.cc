@@ -588,7 +588,8 @@ DataArchive::TimeHashMaps::findTimeData(double time)
     if (DataArchive::cacheOnlyCurrentTimestep) {
       // Only caching the current timestep.
       // purge the last accessed timestep, since this timestep is differen.t
-      (*d_lastFoundIt).second.purgeCache();
+      if (d_lastFoundIt != d_patchHashMaps.end())
+	(*d_lastFoundIt).second.purgeCache();
     }
     d_lastFoundIt = foundIt;
     return &(*foundIt).second;
