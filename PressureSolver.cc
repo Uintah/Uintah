@@ -150,6 +150,9 @@ PressureSolver::sched_buildLinearMatrix(const LevelP& level,
       // get old_dw from getTop function
       tsk->requires(old_dw, d_lab->d_cellTypeLabel, matlIndex, patch, 
 		    Ghost::AroundCells, numGhostCells);
+      tsk->requires(new_dw, d_lab->d_cellInfoLabel, matlIndex, patch,
+		    Ghost::None, numGhostCells);
+      tsk->requires(old_dw, d_lab->d_refDensity_label);
       tsk->requires(old_dw, d_lab->d_densityCPLabel, matlIndex, patch, 
 		    Ghost::None, zeroGhostCells);
       tsk->requires(old_dw, d_lab->d_uVelocitySPBCLabel, matlIndex, patch, 
@@ -163,6 +166,8 @@ PressureSolver::sched_buildLinearMatrix(const LevelP& level,
 		    Ghost::None, zeroGhostCells);
       tsk->requires(new_dw, d_lab->d_densityINLabel, matlIndex, patch, 
 		    Ghost::AroundCells, numGhostCells+1);
+      tsk->requires(old_dw, d_lab->d_densityINLabel, matlIndex, patch, 
+		    Ghost::None, zeroGhostCells);
       tsk->requires(new_dw, d_lab->d_viscosityINLabel, matlIndex, patch, 
 		    Ghost::AroundCells, numGhostCells);
       tsk->requires(new_dw, d_lab->d_uVelocitySIVBCLabel, matlIndex, patch, 
@@ -385,7 +390,8 @@ PressureSolver::buildLinearMatrix(const ProcessorGroup* pc,
   //cerr << "getdensity_ref " << pressureVars.den_Ref << endl;
   // Get the PerPatch CellInformation data
   PerPatch<CellInformationP> cellInfoP;
-  old_dw->get(cellInfoP, d_lab->d_cellInfoLabel, matlIndex, patch);
+  //  old_dw->get(cellInfoP, d_lab->d_cellInfoLabel, matlIndex, patch);
+  new_dw->get(cellInfoP, d_lab->d_cellInfoLabel, matlIndex, patch);
   //  old_dw->get(cellInfoP, d_cellInfoLabel, matlIndex, patch);
   //  if (old_dw->exists(d_cellInfoLabel, patch)) 
   //  old_dw->get(cellInfoP, d_cellInfoLabel, matlIndex, patch);
@@ -577,7 +583,9 @@ PressureSolver::buildLinearMatrixPress(const ProcessorGroup* pc,
 	      matlIndex, patch, Ghost::None, zeroGhostCells);
   // Get the PerPatch CellInformation data
   PerPatch<CellInformationP> cellInfoP;
-  old_dw->get(cellInfoP, d_lab->d_cellInfoLabel, matlIndex, patch);
+  // *** warning..checkpointing
+  //  old_dw->get(cellInfoP, d_lab->d_cellInfoLabel, matlIndex, patch);
+  new_dw->get(cellInfoP, d_lab->d_cellInfoLabel, matlIndex, patch);
   //  old_dw->get(cellInfoP, d_cellInfoLabel, matlIndex, patch);
   //  if (old_dw->exists(d_cellInfoLabel, patch)) 
   //  old_dw->get(cellInfoP, d_cellInfoLabel, matlIndex, patch);

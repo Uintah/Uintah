@@ -1,5 +1,3 @@
-static char *id="@(#) $Id$";
-
 #include <Packages/Uintah/CCA/Components/Arches/Mixing/StanjanEquilibriumReactionModel.h>
 #include <Packages/Uintah/CCA/Components/Arches/Mixing/Stream.h>
 #include <Packages/Uintah/CCA/Components/Arches/Mixing/ChemkinInterface.h>
@@ -19,7 +17,7 @@ StanjanEquilibriumReactionModel::~StanjanEquilibriumReactionModel()
 {
 }
 void
-StanjanEquilibriumReactionModel::problemSetup(const ProblemSpecP& params)
+StanjanEquilibriumReactionModel::problemSetup(const ProblemSpecP& /* params*/)
 {
 }
 

@@ -123,6 +123,9 @@ Properties::sched_reComputeProps(const LevelP& level,
       // requires scalars
       tsk->requires(new_dw, d_lab->d_densityINLabel, matlIndex, patch, Ghost::None,
 		    numGhostCells);
+      for (int ii = 0; ii < d_numMixingVars; ii++) 
+	tsk->requires(new_dw, d_lab->d_scalarSPLabel, ii, patch, Ghost::None,
+			 numGhostCells);
       tsk->computes(new_dw, d_lab->d_refDensity_label);
       tsk->computes(new_dw, d_lab->d_densityCPLabel, matlIndex, patch);
       sched->addTask(tsk);
@@ -228,7 +231,7 @@ Properties::computeProps(const ProcessorGroup*,
 void 
 Properties::reComputeProps(const ProcessorGroup*,
 			   const Patch* patch,
-			   DataWarehouseP& old_dw,
+			   DataWarehouseP& /* old_dw*/,
 			   DataWarehouseP& new_dw)
 {
   // Get the CCVariable (density) from the old datawarehouse
@@ -271,6 +274,13 @@ Properties::reComputeProps(const ProcessorGroup*,
 	Stream outStream;
 	d_mixingModel->computeProps(inStream, outStream);
 	double local_den = outStream.getDensity();
+#if 0
+	if (multimaterial) {
+	  double theta = d_multiInterface->getVoidFraction();
+	  local_den *= theta;
+	}
+	
+#endif
 	density[IntVector(colX, colY, colZ)] = d_denUnderrelax*local_den +
                  	  (1.0-d_denUnderrelax)*density[IntVector(colX, colY, colZ)];
       }
