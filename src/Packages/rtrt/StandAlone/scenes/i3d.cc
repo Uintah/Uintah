@@ -9,7 +9,7 @@
 #include <Packages/rtrt/Core/ImageMaterial.h>
 #include <Packages/rtrt/Core/Group.h>
 #include <Packages/rtrt/Core/Light.h>
-
+#include <Packages/rtrt/Core/MIPMaterial.h>
 using namespace rtrt;
 
 extern "C"
@@ -33,21 +33,34 @@ Scene* make_scene(int argc, char* argv[], int /*nworkers*/)
   double ambient_scale=.5;
   
   Color bgcolor(bgscale*108/255., bgscale*166/255., bgscale*205/255.);
-  Material* bookcoverimg = new ImageMaterial(1,
-					     "/usr/sci/data/rtrt/Geometry/textures/i3d97.smaller.gamma",
-					     ImageMaterial::Clamp,
-                                             ImageMaterial::Clamp,
-					     1,
-                                             Color(0,0,0), 0);
+//    Material* bookcoverimg = new ImageMaterial(1,
+//  					     "/usr/sci/data/rtrt/Geometry/textures/i3d97.smaller.gamma",
+//  					     ImageMaterial::Clamp,
+//                                               ImageMaterial::Clamp,
+//  					     1,
+//                                               Color(0,0,0), 0);
+
+  Material* bookcoverimg = 
+    new MIPMaterial("/usr/sci/data/Geometry/textures/i3d97.smaller.gamma.ppm",
+                    .7, Color(.1,.1,.1),30,0,1);
+  Material* bookcoverimg1 = 
+    new ImageMaterial("/usr/sci/data/Geometry/textures/i3d97.smaller.gamma.ppm",
+                      ImageMaterial::Clamp,
+                      ImageMaterial::Clamp,
+                      .7,Color(.1,.1,.1), 30,
+                      0,0);
 
 
   Point p(-1,-1,0);
+  Point p1(-1,-2,0);
   Vector v1(-.774,0,0);
   Vector v2(0,-1,0);
   Parallelogram *r = new Parallelogram(bookcoverimg,p,v2,v1);
+  Parallelogram *r1 = new Parallelogram(bookcoverimg1,p1,v2,v1);
   Group *g = new Group();
 
   g->add(r);
+  g->add(r1);
 
   Plane groundplane ( Point(0, 0, 0), Vector(0, 0, 10) );
   Camera cam(Eye,Lookat,Up,fov);

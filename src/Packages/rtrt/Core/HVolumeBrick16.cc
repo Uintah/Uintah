@@ -972,6 +972,7 @@ void HVolumeBrick16::get_minmax(float& min, float& max)
 }
 
 
+#if 1
 //returns a value from a point (ray+t) in a HVB16, or false if the point is not in it
 bool HVolumeBrick16::interior_value(double& ret_val, const Ray &ray, const double t) {
 
@@ -1052,7 +1053,28 @@ bool HVolumeBrick16::interior_value(double& ret_val, const Ray &ray, const doubl
 				    );    
     
 }
+#else
+bool HVolumeBrick16::interior_value(double& ret_val, const Ray &ray, const double t) {
 
+  const Point where(ray.eval(t));
+	for(int x=sx;x<ex;x++){
+	    io_lock_.lock();
+	    cerr << "processor " << proc << ": " << x << " of " << nx-1 << "\n";
+	    io_lock_.unlock();
+	    for(int y=0;y<ny;y++){
+		int idx=x*nynz+y*nz;
+		for(int z=0;z<nz;z++){
+		    short value=indata[idx];
+		    int blockidx=xidx[x]+yidx[y]+zidx[z];
+		    blockdata[blockidx]=value;
+		    
+		    idx++;
+                }
+            }
+        }
+}
+
+#endif
 //helper for interior_value returns a value from a point (ray+t) in a sub level of
 //an HVB16, or false if the point is not in it
 bool HVolumeBrick16::interior_value_sublevels(double &ret_val, //value to be returned

@@ -1,11 +1,20 @@
 /* look from above:
 
+<<<<<<< graphics-museum.cc
+./rtrt -np 12 -pin -scene scenes/multi-scene 5 -scene scenes/sphere-room2 -scene scenes/living-room -scene scenes/science-room -scene scenes/graphics-museum -scene scenes/basic-sea 
+=======
 ./rtrt -np 12 -scene scenes/multi-scene 5 -scene scenes/sphere-room2 -scene scenes/living-room -scene scenes/science-room -scene scenes/graphics-museum -scene scenes/sea-world
+>>>>>>> 1.26.2.16
 
+./rtrt -np 12 -scene scenes/multi-scene 5 -scene scenes/sphere-room2 -scene scenes/living-room -scene scenes/science-room -scene scenes/graphics-museum -scene scenes/seaworld-tubes
 
+<<<<<<< graphics-museum.cc
+
+=======
 ./rtrt -np 12 -scene scenes/multi-scene 5 -scene scenes/sphere-room2 -scene scenes/living-room -scene scenes/science-room -scene scenes/graphics-museum -scene scenes/basic-sea 
 
 
+>>>>>>> 1.26.2.16
 rtrt -np 8 -eye -18.9261 -22.7011 52.5255 -lookat -7.20746 -8.61347 -16.643 -up 0.490986 -0.866164 -0.0932288 -fov 40 -scene scenes/graphics-museum 
 
 look from hallway:

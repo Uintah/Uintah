@@ -120,7 +120,11 @@ Scene* make_scene(int argc, char* argv[])
 						  Vector(0,0,1)) );
   
   scene->select_shadow_mode(Hard_Shadows);
-  scene->add_light(new Light(Point(3,3,10), Color(1,1,1), 0));
+  Light *david_light = new Light(Point(3,3,10), Color(1,1,1), 0);
+
+  david_light->name_ = "david_light";
+
+  scene->add_light(david_light);
   return scene;
 
 }

@@ -164,7 +164,7 @@ SRCS += $(SRCDIR)/Worker.cc \
 	$(SRCDIR)/TimeVaryingInstance.cc \
 	$(SRCDIR)/TrisReader.cc \
 	$(SRCDIR)/Parallelogram2.cc \
-
+	$(SRCDIR)/MIPMaterial.cc
 #	$(SRCDIR)/LumiDpy.cc \
 #	$(SRCDIR)/LumiCamera.cc \
 

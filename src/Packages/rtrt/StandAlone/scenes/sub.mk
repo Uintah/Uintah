@@ -48,6 +48,7 @@ SCENES := $(SRCDIR)/0.mo \
 	$(SRCDIR)/3min-museum.mo \
 	$(SRCDIR)/living-room.mo \
         $(SRCDIR)/seaworld-tubes2.mo \
+        $(SRCDIR)/seaworld-tubes3.mo \
 	$(SRCDIR)/sphere-room2.mo \
 	$(SRCDIR)/seaworld-tubes.mo \
 	$(SRCDIR)/multi-scene.mo \
@@ -62,6 +63,8 @@ SCENES := $(SRCDIR)/0.mo \
 	$(SRCDIR)/david_old.mo \
 	$(SRCDIR)/davidhead.mo  \
 	$(SRCDIR)/science-room.mo \
+	$(SRCDIR)/stadium.mo \
+	$(SRCDIR)/miptest.mo \
 	$(SRCDIR)/dtiglyph.mo 
 # 	$(SRCDIR)/cbox.mo \
 # 	$(SRCDIR)/david.mo \
