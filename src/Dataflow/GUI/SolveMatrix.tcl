@@ -293,6 +293,7 @@ itcl_class SCIRun_Math_SolveMatrix {
 	$w.graph element configure "Current Target" -data "0 $err" \
 		-symbol diamond
 	pack $w.graph -fill x
+	reset_graph
 	switchmethod
     }
     
