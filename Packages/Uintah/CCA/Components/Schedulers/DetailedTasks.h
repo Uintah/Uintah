@@ -4,6 +4,7 @@
 #include <Packages/Uintah/Core/Grid/ComputeSet.h>
 #include <Packages/Uintah/Core/Grid/Task.h>
 #include <Packages/Uintah/Core/Grid/Patch.h>
+#include <Dataflow/XMLUtil/XMLUtil.h>
 #include <Core/Exceptions/InternalError.h>
 #include <Core/Thread/Mutex.h>
 #include <Core/Thread/Semaphore.h>
@@ -243,7 +244,7 @@ namespace Uintah {
 
     DetailedTask* getNextInternalReadyTask();
     
-    void createScrublists(bool init_timestep);
+    void createScrublists(bool scrub_new, bool scrub_old=true);
 
     bool mustConsiderInternalDependencies()
     { return mustConsiderInternalDependencies_; }

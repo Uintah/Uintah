@@ -3,7 +3,6 @@
 #include <Packages/Uintah/CCA/Components/Schedulers/TaskGraph.h>
 #include <Packages/Uintah/Core/Parallel/ProcessorGroup.h>
 #include <Packages/Uintah/CCA/Components/Schedulers/MemoryLog.h>
-#include <Dataflow/XMLUtil/XMLUtil.h>
 #include <Core/Containers/ConsecutiveRangeSet.h>
 #include <Core/Util/NotFinished.h>
 #include <Core/Util/DebugStream.h>
@@ -468,7 +467,7 @@ DetailedTask::addScrub(const VarLabel* var, Task::WhichDW dw)
 }
 
 void
-DetailedTasks::createScrublists(bool init_timestep)
+DetailedTasks::createScrublists(bool scrub_new, bool scrub_old)
 {
   // For now, turn scrubbing off when using internal dependencies
   // (i.e. threaded version) as it needs to be fixed to work right).
@@ -488,13 +487,13 @@ DetailedTasks::createScrublists(bool init_timestep)
       if(req->var->typeDescription()->getType() ==
 	 TypeDescription::ReductionVariable)
 	continue;
-      if(req->dw == Task::OldDW){
+      if(!scrub_old && req->dw == Task::OldDW){
 	// Go ahead and scrub.  Replace an older one if necessary
 	oldmap[req->var]=dtask;
       } else {
 	// Only scrub if it is not part of the original requires and
 	// This is not an initialization timestep
-	if(!init_timestep && initreqs.find(req->var) == initreqs.end()){
+	if(!scrub_new && initreqs.find(req->var) == initreqs.end()){
 	  newmap[req->var]=dtask;
 	}
       }
@@ -508,7 +507,7 @@ DetailedTasks::createScrublists(bool init_timestep)
       // Only scrub if this is not an initialization timestep.
 	// Only scrub if it is not part of the original requires and
 	// This is not an initialization timestep
-      if(!init_timestep && initreqs.find(req->var) == initreqs.end()){
+      if(!scrub_new && initreqs.find(req->var) == initreqs.end()){
 	newmap[req->var]=dtask;
       }
     }
@@ -522,7 +521,7 @@ DetailedTasks::createScrublists(bool init_timestep)
 	 TypeDescription::ReductionVariable)
 	continue;
       ASSERTEQ(comp->dw, Task::NewDW);
-      if(!init_timestep && initreqs.find(comp->var) == initreqs.end()
+      if(!scrub_new && initreqs.find(comp->var) == initreqs.end()
 	 && newmap.find(comp->var) == newmap.end()){
 	// Only scrub if it is not part of the original requires and
 	// This is not timestep 0

@@ -44,7 +44,7 @@ SimpleScheduler::verifyChecksum()
 }
 
 void
-SimpleScheduler::compile(const ProcessorGroup*, bool)
+SimpleScheduler::compile( const ProcessorGroup * pg, bool, bool )
 {
   graph.topologicalSort(tasks);
 }

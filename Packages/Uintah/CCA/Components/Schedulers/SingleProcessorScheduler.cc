@@ -20,10 +20,12 @@ using namespace SCIRun;
 static DebugStream dbg("SingleProcessorScheduler", false);
 
 SingleProcessorScheduler::SingleProcessorScheduler(const ProcessorGroup* myworld,
-    	    	    	    	    	    	   Output* oport)
+    	    	    	    	    	    	   Output* oport, 
+						   SingleProcessorScheduler* parent)
    : SchedulerCommon(myworld, oport)
 {
   d_generation = 0;
+  m_parent = parent;
 }
 
 SingleProcessorScheduler::~SingleProcessorScheduler()
@@ -33,7 +35,7 @@ SingleProcessorScheduler::~SingleProcessorScheduler()
 SchedulerP
 SingleProcessorScheduler::createSubScheduler()
 {
-  SingleProcessorScheduler* newsched = new SingleProcessorScheduler(d_myworld, m_outPort);
+  SingleProcessorScheduler* newsched = new SingleProcessorScheduler(d_myworld, m_outPort, this);
   UintahParallelPort* lbp = getPort("load balancer");
   newsched->attachPort("load balancer", lbp);
   return newsched;
@@ -46,7 +48,7 @@ SingleProcessorScheduler::verifyChecksum()
 }
 
 void
-SingleProcessorScheduler::compile(const ProcessorGroup* pg, bool init_timestep)
+SingleProcessorScheduler::compile(const ProcessorGroup* pg, bool scrub_new, bool scrub_old)
 {
   if(dts_)
     delete dts_;
@@ -73,11 +75,37 @@ SingleProcessorScheduler::compile(const ProcessorGroup* pg, bool init_timestep)
   
   releasePort("load balancer");
   dts_->computeLocalTasks(pg->myrank());
-  dts_->createScrublists(init_timestep);
+  dts_->createScrublists(scrub_new, scrub_old);
 }
 
 void
 SingleProcessorScheduler::execute(const ProcessorGroup * pg)
+{
+  execute_tasks(pg, dws_[Task::OldDW], dws_[Task::NewDW]);
+  dws_[ Task::NewDW ]->finalize();
+  finalizeNodes();
+}
+
+void
+SingleProcessorScheduler::executeTimestep(const ProcessorGroup * pg)
+{
+  execute_tasks(pg, dws_[Task::OldDW], dws_[Task::NewDW]);
+}
+
+void
+SingleProcessorScheduler::executeRefine(const ProcessorGroup * pg)
+{
+  execute_tasks(pg, m_parent->dws_[Task::OldDW], dws_[Task::NewDW]);
+}
+
+void
+SingleProcessorScheduler::executeCoarsen(const ProcessorGroup * pg)
+{
+  execute_tasks(pg, dws_[Task::NewDW], m_parent->dws_[Task::NewDW]);
+}
+
+void
+SingleProcessorScheduler::execute_tasks(const ProcessorGroup * pg, DataWarehouse* oldDW, DataWarehouse* newDW)
 {
   if(dts_ == 0){
     cerr << "SingleProcessorScheduler skipping execute, no tasks\n";
@@ -97,7 +125,7 @@ SingleProcessorScheduler::execute(const ProcessorGroup * pg)
 #endif    
     double start = Time::currentSeconds();
     DetailedTask* task = dts_->getTask( i );
-    task->doit(pg, dws_[Task::OldDW], dws_[Task::NewDW]);
+    task->doit(pg, oldDW, newDW);
     double delT = Time::currentSeconds()-start;
     long long flop_count = 0;
 #ifdef USE_PERFEX_COUNTERS
@@ -109,9 +137,14 @@ SingleProcessorScheduler::execute(const ProcessorGroup * pg)
     scrub(task);
     emitNode( task, start, delT, delT, flop_count );
   }
+}
 
-  dws_[ Task::NewDW ]->finalize();
+void
+SingleProcessorScheduler::finalizeTimestep(const GridP& grid)
+{
   finalizeNodes();
+  dws_[Task::NewDW]->finalize();
+  advanceDataWarehouse(grid);
 }
 
 void
