@@ -198,7 +198,7 @@ GLAnimatedStreams::RungeKutta(Point& x, double h) {
   Vector m1,m2,m3,m4;
   Point  x1,x2,x3;
   double h2 = _stepsize/2.0;
-  int i;
+  //int i;  <- Not used (Dd)
   interpolate(vfh_, x,m1);
   x1 = x + m1*h2;
   interpolate(vfh_, x1,m2);
@@ -402,6 +402,7 @@ GLAnimatedStreams::interpolate(FieldHandle texfld_, const Point& p, Vector& val)
     if( vfi = texfld_->query_vector_interface()){
       return vfi->interpolate( val, p);
     }
+    return false; // Added by Dd... if this is correct, remove this comment
   } else {
     return false;
   }
