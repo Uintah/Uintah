@@ -72,8 +72,10 @@ public:
     bool locate(int *loc, const Point &p);
     void midLocate(const Point&, int&, int&, int&);
     void set_bounds(const Point &min, const Point &max);
-    ScalarFieldRGBase(clString, int x, int y, int z);
+
+    ScalarFieldRGBase(Representation rep, int x, int y, int z);
     ScalarFieldRGBase(const ScalarFieldRGBase&);
+
     virtual ~ScalarFieldRGBase();
     virtual void compute_bounds();
     virtual void get_boundary_lines(Array1<Point>& lines);

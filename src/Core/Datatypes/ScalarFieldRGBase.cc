@@ -27,23 +27,13 @@ namespace SCIRun {
 PersistentTypeID ScalarFieldRGBase::type_id("ScalarFieldRGBase", "ScalarField", 0);
 
 
-ScalarFieldRGBase::ScalarFieldRGBase(clString r, int x, int y, int z)
-: ScalarField(RegularGridBase), nx(x), ny(y), nz(z), is_augmented(0), next(0)
+ScalarFieldRGBase::ScalarFieldRGBase(Representation r, int x, int y, int z)
+  : ScalarField(RegularGridBase),
+    rep(r),
+    nx(x), ny(y), nz(z),
+    is_augmented(0),
+    next(0)
 {
-    if (r=="float")
-	rep = Float;
-    else if (r=="int")
-	rep = Int;
-    else if (r=="short")
-	rep = Short;
-    else if (r=="char")
-	rep = Char;
-    else if (r=="uchar")
-	rep = Uchar;
-    else if (r=="double")
-	rep = Double;
-    else
-	rep = Void;
 }
 
 ScalarFieldRGBase::ScalarFieldRGBase(const ScalarFieldRGBase& copy)
