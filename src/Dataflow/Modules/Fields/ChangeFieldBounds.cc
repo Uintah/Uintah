@@ -31,7 +31,6 @@
 #include <Dataflow/Ports/MatrixPort.h>
 #include <Core/Geometry/Transform.h>
 #include <Core/Thread/CrowdMonitor.h>
-#include <Dataflow/Modules/Fields/ChangeFieldBounds.h>
 #include <Dataflow/Widgets/BoxWidget.h>
 #include <Dataflow/Network/NetworkEditor.h>
 #include <Core/Datatypes/DenseMatrix.h>
@@ -247,6 +246,7 @@ ChangeFieldBounds::execute()
     return;
   }
 
+  gui->execute(id + " set_state Executing 0");
 
   // build the transform widget and set the the initial
   // field transform.
@@ -330,17 +330,6 @@ ChangeFieldBounds::execute()
     box_->SetPosition(center,right,down,in);
   }
 
-  // Create a field identical to the input, except for the edits.
-  const TypeDescription *fsrc_td = fh->get_type_description();
-  CompileInfoHandle ci = ChangeFieldBoundsAlgoCreate::get_compile_info
-    (fsrc_td, fh->get_type_description()->get_name());
-  Handle<ChangeFieldBoundsAlgoCreate> algo;
-  if (!module_dynamic_compile(ci, algo)) return;
-
-  gui->execute(id + " set_state Executing 0");
-  bool same_value_type_p = false;
-  FieldHandle ef(algo->execute(fh, fh->data_at(), same_value_type_p));
-
   // Transform the mesh if necessary.
   // Translate * Rotate * Scale.
   Point center, right, down, in;
@@ -361,11 +350,12 @@ ChangeFieldBounds::execute()
   inv.invert();
   t.post_trans(inv);
 
-  ef.detach();
-  ef->mesh_detach();
-  ef->mesh()->transform(t);
+  // Change the input field handle here.
+  fh.detach();
+  fh->mesh_detach();
+  fh->mesh()->transform(t);
 
-  oport->send(ef);
+  oport->send(fh);
 
   // The output port is required.
   MatrixOPort *moport = (MatrixOPort*)get_oport("Transformation Matrix");
@@ -399,26 +389,4 @@ void ChangeFieldBounds::widget_moved(bool last)
 }
 
 
-CompileInfoHandle
-ChangeFieldBoundsAlgoCreate::get_compile_info(const TypeDescription *field_td,
-					      const string &fdstname)
-{
-  // use cc_to_h if this is in the .cc file, otherwise just __FILE__
-  static const string include_path(TypeDescription::cc_to_h(__FILE__));
-  static const string template_class("ChangeFieldBoundsAlgoCreateT");
-  static const string base_class_name("ChangeFieldBoundsAlgoCreate");
-  
-  CompileInfo *rval = 
-    scinew CompileInfo(template_class + "." +
-		       field_td->get_filename() + "." +
-		       to_filename(fdstname) + ".",
-		       base_class_name, 
-		       template_class,
-                       field_td->get_name() + "," + fdstname + " ");
-
-  // Add in the include path to compile this obj
-  rval->add_include(include_path);
-  field_td->fill_compile_info(rval);
-  return rval;
-}
 } // End namespace SCIRun
