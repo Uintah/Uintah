@@ -1,4 +1,40 @@
-itcl_class PSECommon_Surface_SurfInterpVals {
+##
+ #  SurfInterpVals.tcl: General surface interpolation module
+ #
+ #  Written by:
+ #   David Weinstein
+ #   Department of Computer Science
+ #   University of Utah
+ #   Jully 1997
+ #
+ #  Copyright (C) 1997 SCI Group
+ # 
+ #  Log Information:
+ #
+ #  $Log$
+ #  Revision 1.4  1999/11/04 07:01:19  dmw
+ #  put back comments that I accidentally stripped out...
+ #
+ #  Revision 1.2  1999/08/17 06:38:00  sparker
+ #  Merged in modifications from PSECore to make this the new "blessed"
+ #  version of SCIRun/Uintah.
+ #
+ #  Revision 1.1  1999/07/27 16:58:30  mcq
+ #  Initial commit
+ #
+ #  Revision 1.1.1.1  1999/04/24 23:12:35  dav
+ #  Import sources
+ #
+ #  Revision 1.1  1999/01/04 05:32:33  dmw
+ #  See Dave for details...
+ #
+ #  Revision 1.1  1997/08/23 06:27:19  dweinste
+ #  Some trivial modules that I needed...
+ #
+ #
+ ##
+
+tcl_class PSECommon_Surface_SurfInterpVals {
     inherit Module
     constructor {config} {
         set name SurfInterpVals
