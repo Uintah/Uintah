@@ -131,7 +131,8 @@ public:
 			       DataWarehouseP& old_dw,
 			       DataWarehouseP& new_dw,
 			       double delta_t, 
-			       int index);
+			       int index,
+			       int eqnType);
 
       ////////////////////////////////////////////////////////////////////////
       //
@@ -191,10 +192,21 @@ private:
       const VarLabel* d_wVelLinSrcMBLMLabel ;
       const VarLabel* d_wVelNonLinSrcMBLMLabel ;
 
-      // inputs/outputs for CalculatePressureSource 
+      // inputs for CalculateVelocityMassSource 
       const VarLabel* d_uVelCoefPBLMLabel ;
       const VarLabel* d_vVelCoefPBLMLabel ;
       const VarLabel* d_wVelCoefPBLMLabel ;
+      const VarLabel* d_uVelCoefMBLMLabel ;
+      const VarLabel* d_vVelCoefMBLMLabel ;
+      const VarLabel* d_wVelCoefMBLMLabel ;
+      const VarLabel* d_uVelConvCoefPBLMLabel ;
+      const VarLabel* d_vVelConvCoefPBLMLabel ;
+      const VarLabel* d_wVelConvCoefPBLMLabel ;
+      const VarLabel* d_uVelConvCoefMBLMLabel ;
+      const VarLabel* d_vVelConvCoefMBLMLabel ;
+      const VarLabel* d_wVelConvCoefMBLMLabel ;
+
+      // inputs/outputs for CalculatePressureSource 
       const VarLabel* d_pressureSPBCLabel ;
       const VarLabel* d_presLinSrcPBLMLabel ;
       const VarLabel* d_presNonLinSrcPBLMLabel ;
@@ -215,6 +227,9 @@ private:
   
 //
 // $Log$
+// Revision 1.19  2000/07/12 07:35:47  bbanerje
+// Added stuff for mascal : Rawat: Labels and dataWarehouse in velsrc need to be corrected.
+//
 // Revision 1.18  2000/07/11 15:46:28  rawat
 // added setInitialGuess in PicardNonlinearSolver and also added uVelSrc
 //

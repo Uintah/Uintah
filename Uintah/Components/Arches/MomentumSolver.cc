@@ -248,11 +248,14 @@ MomentumSolver::buildLinearMatrix(const ProcessorGroup* pc,
 				  index,
 				  Arches::MOMENTUM);
 
-  // similar to mascal
-  // inputs :
-  // outputs:
+  // Modify Velocity Mass Source
+  //  inputs : [u,v,w]VelocityCPBC, [u,v,w]VelCoefMBLM, 
+  //           [u,v,w]VelConvCoefMBLM, [u,v,w]VelLinSrcMBLM, 
+  //           [u,v,w]VelNonLinSrcMBLM
+  //  outputs: [u,v,w]VelLinSrcMBLM, [u,v,w]VelNonLinSrcMBLM
   d_source->modifyVelMassSource(pc, patch, old_dw,
-			     new_dw, delta_t, index);
+				new_dw, delta_t, index,
+				Arches::MOMENTUM);
 
   // Calculate Velocity Diagonal
   //  inputs : [u,v,w]VelCoefMBLM, [u,v,w]VelLinSrcMBLM
@@ -270,6 +273,9 @@ MomentumSolver::buildLinearMatrix(const ProcessorGroup* pc,
 
 //
 // $Log$
+// Revision 1.16  2000/07/12 07:35:46  bbanerje
+// Added stuff for mascal : Rawat: Labels and dataWarehouse in velsrc need to be corrected.
+//
 // Revision 1.15  2000/07/08 23:42:54  bbanerje
 // Moved all enums to Arches.h and made corresponding changes.
 //
