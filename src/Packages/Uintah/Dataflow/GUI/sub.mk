@@ -26,6 +26,7 @@ $(SRCDIR)/tclIndex: \
 	$(SRCDIR)/TensorParticlesOperator.tcl\
 	$(SRCDIR)/VectorFieldOperator.tcl\
 	$(SRCDIR)/VectorParticlesOperator.tcl\
+	$(SRCDIR)/AnimatedStreams.tcl\
 #[INSERT NEW TCL FILE HERE]
 #	$(SRCDIR)/EigenEvaluator.tcl\
 #	$(SRCDIR)/ParticleEigenEvaluator.tcl\

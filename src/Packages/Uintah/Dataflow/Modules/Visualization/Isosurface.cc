@@ -88,22 +88,31 @@ Isosurface::initialize()
   SCIRun::Isosurface::initialize();
   minmax_loader.store("LevelField<double>",
 		      new Minmax<LevelField<double> > );
-  minmax_loader.store("LevelField<int>",
-		      new Minmax<LevelField<int> > );
+  minmax_loader.store("LevelField<double>",
+		      new Minmax<LevelField<float> > );
+  minmax_loader.store("LevelField<long>",
+		      new Minmax<LevelField<long> > );
 
 //   loader.store("MC::LevelField<double>", 
-// 	       new MarchingCubes<Module,HexMC<LevelField<double> > >(this) );
+//  	       new MarchingCubes<Module,HexMC<LevelField<double> > >(this) );
   loader.store("Noise::LevelField<double>", 
 	       new Noise<Module,HexMC<LevelField<double> > >(this) );
 //   loader.store("Sage::LevelField<double>",  
 //                new Sage<Module,LevelField<double> >(this) ); 
 
-//   loader.store("MC::LevelField<int>", 
-// 	       new MarchingCubes<Module,HexMC<LevelField<int> > >(this) );
-  loader.store("Noise::LevelField<int>", 
-	       new Noise<Module,HexMC<LevelField<int> > >(this) );
-//   loader.store("Sage::LevelField<int>",  
-//                new Sage<Module,LevelField<int> >(this) ); 
+//   loader.store("MC::LevelField<float>", 
+//  	       new MarchingCubes<Module,HexMC<LevelField<float> > >(this) );
+  loader.store("Noise::LevelField<float>", 
+	       new Noise<Module,HexMC<LevelField<float> > >(this) );
+//   loader.store("Sage::LevelField<float>",  
+//                new Sage<Module,LevelField<float> >(this) ); 
+
+//   loader.store("MC::LevelField<long>", 
+//  	       new MarchingCubes<Module,HexMC<LevelField<long> > >(this) );
+  loader.store("Noise::LevelField<long>", 
+	       new Noise<Module,HexMC<LevelField<long> > >(this) );
+//   loader.store("Sage::LevelField<long>",  
+//                new Sage<Module,LevelField<long> >(this) ); 
 
 
 
