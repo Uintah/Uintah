@@ -15,8 +15,8 @@
   University of Utah. All Rights Reserved.
 */
 
-#include <Packages/Uintah/Core/Datatypes/GLTexture3D.h>
 #include <Packages/Uintah/Core/Datatypes/LevelField.h>
+#include <Packages/Uintah/Core/Datatypes/GLTexture3D.h>
 #include <pair.h>
 #include <Core/Malloc/Allocator.h>
 #include <Core/Thread/Thread.h>
