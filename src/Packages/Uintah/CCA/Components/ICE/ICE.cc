@@ -1536,6 +1536,7 @@ void ICE::actuallyComputeStableTimestep(const ProcessorGroup*,
 
     delt = std::min(delt_CFL, delt_cond);
     delt = std::min(delt, d_initialDt);
+
     d_initialDt = 10000.0;
 
     const Level* level = getLevel(patches);
@@ -3988,7 +3989,7 @@ void ICE::addExchangeToMomentumAndEnergy(const ProcessorGroup*,
     FastMatrix cet(2,2),ac(2,2);
     vector<double> RHSc(2),HX(2);
     cet.zero();
-    int gm=2;  // gas material from which to get convected heat
+    int gm=4;  // gas material from which to get convected heat
     int sm=0;  // solid material that heat goes to
 #endif
 
@@ -4066,9 +4067,9 @@ void ICE::addExchangeToMomentumAndEnergy(const ProcessorGroup*,
       //   Form BETA matrix (a), off diagonal terms
       //   beta and (a) matrix are common to all momentum exchanges
       for(int m = 0; m < numALLMatls; m++)  {
-        tmp = sp_vol_CC[m][c];
+        tmp = delT*sp_vol_CC[m][c];
         for(int n = 0; n < numALLMatls; n++) {
-          beta(m,n) = delT * vol_frac_CC[n][c]  * K(n,m) * tmp;
+          beta(m,n) = vol_frac_CC[n][c]  * K(n,m) * tmp;
           a(m,n) = -beta(m,n);
         }
       }
@@ -4184,9 +4185,9 @@ void ICE::addExchangeToMomentumAndEnergy(const ProcessorGroup*,
 
       //---------- E N E R G Y   E X C H A N G E     
       for(int m = 0; m < numALLMatls; m++) {
-        tmp = sp_vol_CC[m][c] / cv[m][c];
+        tmp = delT*sp_vol_CC[m][c] / cv[m][c];
         for(int n = 0; n < numALLMatls; n++)  {
-          beta(m,n) = delT * vol_frac_CC[n][c] * H(n,m)*tmp;
+          beta(m,n) = vol_frac_CC[n][c] * H(n,m)*tmp;
           a(m,n) = -beta(m,n);
         }
       }
@@ -4301,10 +4302,16 @@ void ICE::addExchangeToMomentumAndEnergy(const ProcessorGroup*,
 
             IntVector q;
             if(patch->findCell(adja_cell_pos, q)){
-              cet(0,0)=delT*vol_frac_CC[sm][c]*H(sm,sm)*sp_vol_CC[sm][c]/cv[sm][c];
-              cet(0,1)=delT*vol_frac_CC[gm][q]*H(sm,gm)*sp_vol_CC[sm][c]/cv[sm][c];
-              cet(1,0)=delT*vol_frac_CC[sm][c]*H(gm,sm)*sp_vol_CC[gm][q]/cv[gm][q];
-              cet(1,1)=delT*vol_frac_CC[gm][q]*H(gm,gm)*sp_vol_CC[gm][q]/cv[gm][q];
+              cet(0,0)=0.;
+              cet(0,1)=delT*vol_frac_CC[gm][q]*H(sm,gm)*sp_vol_CC[sm][c]
+                       /cv[sm][c];
+              cet(1,0)=delT*vol_frac_CC[sm][c]*H(gm,sm)*sp_vol_CC[gm][q]
+                       /cv[gm][q];
+              cet(1,1)=0.;
+
+              ac(0,1) = -cet(0,1);
+              ac(1,0) = -cet(1,0);
+
               //   Form matrix (a) diagonal terms
               for(int m = 0; m < 2; m++) {
                 ac(m,m) = 1.;
@@ -4313,10 +4320,8 @@ void ICE::addExchangeToMomentumAndEnergy(const ProcessorGroup*,
                 }
               }
               
-              RHSc[0] = cet(0,0)*(Temp_CC[sm][c] - Temp_CC[sm][c])
-                      + cet(0,1)*(Temp_CC[gm][q] - Temp_CC[sm][c]);
-              RHSc[1] = cet(1,0)*(Temp_CC[sm][c] - Temp_CC[gm][q])
-                      + cet(1,1)*(Temp_CC[gm][q] - Temp_CC[gm][q]);
+              RHSc[0] = cet(0,1)*(Temp_CC[gm][q] - Temp_CC[sm][c]);
+              RHSc[1] = cet(1,0)*(Temp_CC[sm][c] - Temp_CC[gm][q]);
               ac.destructiveSolve(RHSc,HX);
               Temp_CC[sm][c] += HX[0];
               Temp_CC[gm][q] += HX[1];
