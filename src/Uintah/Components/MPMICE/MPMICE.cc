@@ -95,7 +95,6 @@ void MPMICE::scheduleTimeAdvance(double t, double dt,
        d_mpm->scheduleComputeHeatExchange(patch,sched,old_dw,new_dw);
     }
 
-    d_mpm->scheduleInterpolateParticlesToGrid(patch,sched,old_dw,new_dw);
     d_mpm->scheduleExMomInterpolated(patch,sched,old_dw,new_dw);
     d_mpm->scheduleComputeStressTensor(patch,sched,old_dw,new_dw);
     d_mpm->scheduleComputeInternalForce(patch,sched,old_dw,new_dw);
@@ -188,29 +187,6 @@ void MPMICE::scheduleTimeAdvance(double t, double dt,
 				     Mlb->d_particleState_preReloc,
 				     Mlb->pXLabel, Mlb->d_particleState,
 				     numMPMMatls);
-
-   /* Do 'save's in the DataArchiver section of the problem specification now
-   new_dw->pleaseSave(Mlb->pXLabel, numMPMMatls);
-   new_dw->pleaseSave(Mlb->pVolumeLabel, numMPMMatls);
-   new_dw->pleaseSave(Mlb->pStressLabel, numMPMMatls);
-
-   new_dw->pleaseSave(Mlb->gMassLabel, numMPMMatls);
-
-   // Add pleaseSaves here for each of the grid variables
-   // created by interpolateParticlesForSaving
-   new_dw->pleaseSave(Mlb->gStressForSavingLabel, numMPMMatls);
-
-   if(d_fracture) {
-     new_dw->pleaseSave(Mlb->pCrackSurfaceNormalLabel, numMPMMatls);
-     new_dw->pleaseSave(Mlb->pIsBrokenLabel, numMPMMatls);
-   }
-
-   new_dw->pleaseSaveIntegrated(Mlb->StrainEnergyLabel);
-   new_dw->pleaseSaveIntegrated(Mlb->KineticEnergyLabel);
-   new_dw->pleaseSaveIntegrated(Mlb->TotalMassLabel);
-   new_dw->pleaseSaveIntegrated(Mlb->CenterOfMassPositionLabel);
-   new_dw->pleaseSaveIntegrated(Mlb->CenterOfMassVelocityLabel);
-   */
 }
 
 void MPMICE::interpolateNCToCC(const ProcessorGroup*,
@@ -258,6 +234,9 @@ void MPMICE::interpolateNCToCC(const ProcessorGroup*,
 }
 
 // $Log$
+// Revision 1.4  2000/12/27 23:31:13  guilkey
+// Fixed some minor problems in MPMICE.
+//
 // Revision 1.3  2000/12/07 01:25:01  witzel
 // Commented out pleaseSave stuff (now done via the problem specification).
 //
