@@ -33,8 +33,6 @@ MPMICE::MPMICE(const ProcessorGroup* myworld)
 
 MPMICE::~MPMICE()
 {
-  delete Mlb;
-  delete Ilb;
   delete MIlb;
   delete d_mpm;
   delete d_ice;
