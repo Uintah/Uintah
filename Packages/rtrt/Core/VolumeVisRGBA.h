@@ -460,7 +460,7 @@ void VolumeVisRGBA<DataType>::shade(Color& result, const Ray& ray,
       
       //cout << "value = " << value << endl;
 
-      float alpha_sample = 1-exp(-value*t_inc*500);
+      float alpha_sample = 1-exp(-value*t_inc);
       if (alpha_sample > 1) alpha_sample = 1;
       if (alpha_sample < 0) alpha_sample = 0;
       float alpha_factor = alpha_sample * (1-alpha);
