@@ -19,7 +19,6 @@ class SoundOPort;
 
 class SoundReader : public UserModule {
     SoundOPort* osound;
-    int onoff;
     clString filename;
 public:
     SoundReader();
@@ -27,7 +26,7 @@ public:
     virtual ~SoundReader();
     virtual Module* clone(int deep);
     virtual void execute();
-    virtual int should_execute();
+    virtual void mui_callback(void*, int);
 };
 
 #endif

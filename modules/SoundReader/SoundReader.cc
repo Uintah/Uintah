@@ -13,12 +13,20 @@
 
 #include <SoundReader/SoundReader.h>
 #include <Math/MinMax.h>
+#include <ModuleList.h>
 #include <MUI.h>
 #include <NotFinished.h>
 #include <SoundPort.h>
 #include <iostream.h>
 #include <audiofile.h>
 #include <fstream.h>
+
+static Module* make_SoundReader()
+{
+    return new SoundReader;
+}
+
+static RegisterModule db1("Sound", "SoundReader", make_SoundReader);
 
 SoundReader::SoundReader()
 : UserModule("SoundReader", Source)
@@ -28,12 +36,8 @@ SoundReader::SoundReader()
     add_oport(osound);
 
     // Set up the interface
-    /*
-       MUI_onoff_switch* oo=new MUI_onoff_switch("Input",
-       &onoff, 0);
-       add_ui(oo);
-       */
-    filename="isound.aifc";
+    add_ui(new MUI_file_selection("Sound File", &filename,
+				  MUI_widget::NotExecuting));
 }
 
 SoundReader::SoundReader(const SoundReader& copy, int deep)
@@ -44,11 +48,6 @@ SoundReader::SoundReader(const SoundReader& copy, int deep)
 
 SoundReader::~SoundReader()
 {
-}
-
-Module* make_SoundReader()
-{
-    return new SoundReader;
 }
 
 Module* SoundReader::clone(int deep)
@@ -68,81 +67,82 @@ void SoundReader::execute()
     long nchannels=AFgetchannels(afile, AF_DEFAULT_TRACK);
     // Setup the sampling rate...
     double rate=AFgetrate(afile, AF_DEFAULT_TRACK);
-    outsound.set_sample_rate(rate);
+    osound->set_sample_rate(rate);
 
     long nsamples=AFgetframecnt(afile, AF_DEFAULT_TRACK);
-    outsound.set_nsamples((int)nsamples);
+    osound->set_nsamples((int)nsamples);
     long sampfmt, sampwidth;
     AFgetsampfmt(afile, AF_DEFAULT_TRACK, &sampfmt, &sampwidth);
     double mx=1./double(1<<(sampwidth-1));
     mx/=double(nchannels);
-    long sampl[4];
-    short samps[4];
-    signed char sampc[4];
-    void* sampp;
     int which;
     if(sampwidth <= 8){
-	sampp=(void*)sampc;
 	which=0;
     } else if(sampwidth <= 16){
-	sampp=(void*)samps;
 	which=1;
     } else {
-	sampp=(void*)sampl;
 	which=2;
     }
 #endif
+#if 1
     double rate=8000;
     osound->set_sample_rate(rate);
     ifstream in(filename());
     int nsamples=int(10*rate);
-    int sample=0;
-    while(onoff){
-	// Read a sound sample
-#if 0
-	long status=AFreadframes(afile, AF_DEFAULT_TRACK,
-				 sampp, 1);
-	if(status != 1)
-	    break;
-	double s=0;
-	int i;
-	switch(which){
-	case 0:
-	    for(i=0;i<nchannels;i++)
-		s+=double(sampc[i])*mx;
-	    break;
-	case 1:
-	    for(i=0;i<nchannels;i++)
-		s+=double(samps[i])*mx;
-	    break;
-	case 2:
-	    for(i=0;i<nchannels;i++)
-		s+=double(sampl[i])*mx;
-	    break;
-	}
 #endif
-	char c1, c2;
-	in.get(c1); in.get(c2);
-	if(!in)break;
-	short m=(c1<<8)|c2;
-	double s=m/32768.0;
-	osound->put_sample(s);
-
-	// Tell everyone how we are doing...
-	update_progress(sample++, (int)nsamples);
-	if(sample >= nsamples)
-	    sample=0;
+#if 0
+    int sample=0;
+    int size=(int)(rate/20);
+    signed char* sampc=new char[size*nchannels];
+    short* samps=new short[size*nchannels];
+    long* sampl=new long[size*nchannels];
+    int done=0;
+    switch(which){
+    case 0:
+	break;
+    case 1:
+	while(!done){
+	    long status=AFreadframes(afile, AF_DEFAULT_TRACK,
+				     (void*)samps, size);
+	    if(status==0){
+		done=1;
+	    } else if(status < 0){
+		error("Error in AFreadsamps");
+		done=1;
+	    } else {
+		for(int i=0;i<status;i++){
+		    double s=0;
+		    for(int j=0;j<nchannels;j++)
+			s+=double(samps[i+j])*mx;
+		    osound->put_sample(s);
+		}
+		sample+=status;
+		update_progress(sample++, (int)nsamples);
+	    }
+	}
+	break;
+    case 2:
+	break;
+#endif
+#if 1
+	int sample=0;
+	while(1){
+	    signed char c1;
+	    in.get(c1);
+	    if(!in)break;
+	    double s=c1/128.0;
+	    osound->put_sample(s);
+	    
+	    // Tell everyone how we are doing...
+	    update_progress(sample++, (int)nsamples);
+	    if(sample >= nsamples)
+		sample=0;
+#endif
     }
-    update_progress(1.0);
 }
 
-int SoundReader::should_execute()
+void SoundReader::mui_callback(void*, int)
 {
-    if(!onoff){
-	if(sched_state == SchedDormant)
-	    return 0;
-	sched_state=SchedDormant;
-	return 1;
-    }
-    return 0;
+    want_to_execute();
 }
+
