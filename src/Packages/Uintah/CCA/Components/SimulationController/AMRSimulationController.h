@@ -43,7 +43,6 @@ class SimulationInterface;
   WARNING
       
 ****************************************/
-    
    class AMRSimulationController : public SimulationController {
    public:
       AMRSimulationController(const ProcessorGroup* myworld);
@@ -55,13 +54,16 @@ class SimulationInterface;
 
    private:
       void problemSetup(const ProblemSpecP&, GridP&);
-      bool need_recompile(double t, double delt, const LevelP& level,
-			  SimulationInterface* cfd, Output* output);
+      bool need_recompile(double t, double delt, const GridP& level,
+			  SimulationInterface* cfd, Output* output,
+			  std::vector<int>& levelids);
       AMRSimulationController(const AMRSimulationController&);
       AMRSimulationController& operator=(const AMRSimulationController&);
 
-      void subCycle(std::vector<SchedulerP>& schedulers, GridP& grid, SimulationStateP& sharedState, 
-                    int numLevel, SimulationInterface* sim);
+      void subCycle(GridP& grid, SchedulerP& scheduler,
+		    SimulationStateP& sharedState,
+		    int startDW, int dwStride, int numLevel,
+		    SimulationInterface* sim);
 
       /* for restarting */
       bool           d_restarting;
