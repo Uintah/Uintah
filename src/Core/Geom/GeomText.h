@@ -42,8 +42,6 @@
 namespace SCIRun {
 
 class SCICORESHARE GeomText : public GeomObj {
-  static int init;
-  static GLuint fontbase;
 public:
   string text;
   Point at;

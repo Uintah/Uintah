@@ -39,9 +39,6 @@ using std::ostream;
 
 namespace SCIRun {
 
-int    GeomText::init = 1;
-GLuint GeomText::fontbase = 0;
-
 static Persistent* make_GeomText()
 {
     return scinew GeomText;
@@ -62,8 +59,6 @@ GeomText::GeomText( const string &text, const Point &at, const Color &c)
 GeomText::GeomText(const GeomText& copy)
 : GeomObj(copy)
 {
-  init = copy.init;
-  fontbase = copy.fontbase;
   text = copy.text;
   at = copy.at;
   c = copy.c;
