@@ -1110,7 +1110,7 @@ void BinaryPiostream::io(unsigned long& data)
 void BinaryPiostream::io(long long& data)
 {
   if(err)return;
-#ifndef __APPLE__
+#if !defined(__APPLE__) && !defined(__osf__)
   if(!xdr_longlong_t(xdr, (int64_t*)(&data))){
     err=1;
     cerr << "xdr_longlong_t failed\n";
