@@ -3416,7 +3416,7 @@ echo "configure:3372: checking for `basename $MAKE` version 3.78.1" >&5
     fi
   
 
-for ac_prog in gawk mawk nawk awk
+for ac_prog in mawk gawk nawk awk
 do
 # Extract the first word of "$ac_prog", so it can be a program name with args.
 set dummy $ac_prog; ac_word=$2
@@ -3717,7 +3717,7 @@ else
 #line 3718 "configure"
 #include "confdefs.h"
 #ifdef __cplusplus
-extern "C" void exit(int) throw ();
+extern "C" void exit(int);
 #endif
 #include <stdio.h>
 main()
@@ -20037,11 +20037,12 @@ fi
 
 ##  --  search for petsc stuff  ------------------------------------------
 
-if test "$debug" = "yes"; then
-  PETSC_SUB=libg
-else
+# We only use the optimized petsc lib even if we are building a debug SCIRun
+#if test "$debug" = "yes"; then
+#  PETSC_SUB=libg
+#else
   PETSC_SUB=libO
-fi
+#fi
 
 case $host in
   *-irix*)
@@ -20094,7 +20095,7 @@ case $host in
 esac
 
 echo "checking for an MPI PETSc..." 1>&6
-echo "configure:20098: checking for an MPI PETSc..." >&5
+echo "configure:20099: checking for an MPI PETSc..." >&5
 echo "$ac_t""using PETSC_ARCH: $PETSC_ARCH" 1>&6
 
 if test "$PETSC_ARCH" = "unknown"; then
@@ -20177,13 +20178,13 @@ done
        EXTERN_BEGIN=""
        EXTERN_END=""
        echo $ac_n "checking for -lpetsc""... $ac_c" 1>&6
-echo "configure:20181: checking for -lpetsc" >&5
+echo "configure:20182: checking for -lpetsc" >&5
     else
        _SCI_DECL_="char main();"
        _SCI_CALL_="main();"
 
        echo $ac_n "checking for main in -lpetsc""... $ac_c" 1>&6
-echo "configure:20187: checking for main in -lpetsc" >&5
+echo "configure:20188: checking for main in -lpetsc" >&5
        if test "$_SCI_USING_CXX_" != "yes"; then
           EXTERN_BEGIN="extern \"C\" {"
           EXTERN_END="}"
@@ -20394,7 +20395,7 @@ if test "$HAVE_LIBPETSC" = "yes"; then
     if test $num_headers -gt 1; then
 
        echo $ac_n "checking for all headers at the same time: $_HEADER_LIST_""... $ac_c" 1>&6
-echo "configure:20398: checking for all headers at the same time: $_HEADER_LIST_" >&5
+echo "configure:20399: checking for all headers at the same time: $_HEADER_LIST_" >&5
        for _CHECK_PATH_ in $_SCI_CHECK_PATHS_; do
 
 
@@ -20512,7 +20513,7 @@ echo "configure:20398: checking for all headers at the same time: $_HEADER_LIST_
     for _HEADER_ in $_HEADER_LIST_; do
 
        echo $ac_n "checking for $_HEADER_""... $ac_c" 1>&6
-echo "configure:20516: checking for $_HEADER_" >&5
+echo "configure:20517: checking for $_HEADER_" >&5
 
        for _CHECK_PATH_ in $_SCI_CHECK_PATHS_; do
 
@@ -20673,7 +20674,7 @@ fi
 ##  --  search for uni-petsc  --------------------------------------------
 
 echo "checking for an mpiuni PETSc..." 1>&6
-echo "configure:20677: checking for an mpiuni PETSc..." >&5
+echo "configure:20678: checking for an mpiuni PETSc..." >&5
 
 FOUND_ALL_UNIPETSC=no
 initial_dirs="$unipetsc $thirdparty $SCI_LAB_TP_DEFAULT"
@@ -20755,13 +20756,13 @@ fi
        EXTERN_BEGIN=""
        EXTERN_END=""
        echo $ac_n "checking for -lpetsc""... $ac_c" 1>&6
-echo "configure:20759: checking for -lpetsc" >&5
+echo "configure:20760: checking for -lpetsc" >&5
     else
        _SCI_DECL_="char main();"
        _SCI_CALL_="main();"
 
        echo $ac_n "checking for main in -lpetsc""... $ac_c" 1>&6
-echo "configure:20765: checking for main in -lpetsc" >&5
+echo "configure:20766: checking for main in -lpetsc" >&5
        if test "$_SCI_USING_CXX_" != "yes"; then
           EXTERN_BEGIN="extern \"C\" {"
           EXTERN_END="}"
@@ -20974,7 +20975,7 @@ if test "$HAVE_LIBPETSC" = "yes"; then
     if test $num_headers -gt 1; then
 
        echo $ac_n "checking for all headers at the same time: $_HEADER_LIST_""... $ac_c" 1>&6
-echo "configure:20978: checking for all headers at the same time: $_HEADER_LIST_" >&5
+echo "configure:20979: checking for all headers at the same time: $_HEADER_LIST_" >&5
        for _CHECK_PATH_ in $_SCI_CHECK_PATHS_; do
 
 
@@ -21093,7 +21094,7 @@ echo "configure:20978: checking for all headers at the same time: $_HEADER_LIST_
     for _HEADER_ in $_HEADER_LIST_; do
 
        echo $ac_n "checking for $_HEADER_""... $ac_c" 1>&6
-echo "configure:21097: checking for $_HEADER_" >&5
+echo "configure:21098: checking for $_HEADER_" >&5
 
        for _CHECK_PATH_ in $_SCI_CHECK_PATHS_; do
 
@@ -21314,7 +21315,7 @@ fi
     if test $num_headers -gt 1; then
 
        echo $ac_n "checking for all headers at the same time: $_HEADER_LIST_""... $ac_c" 1>&6
-echo "configure:21318: checking for all headers at the same time: $_HEADER_LIST_" >&5
+echo "configure:21319: checking for all headers at the same time: $_HEADER_LIST_" >&5
        for _CHECK_PATH_ in $_SCI_CHECK_PATHS_; do
 
 
@@ -21431,7 +21432,7 @@ echo "configure:21318: checking for all headers at the same time: $_HEADER_LIST_
     for _HEADER_ in $_HEADER_LIST_; do
 
        echo $ac_n "checking for $_HEADER_""... $ac_c" 1>&6
-echo "configure:21435: checking for $_HEADER_" >&5
+echo "configure:21436: checking for $_HEADER_" >&5
 
        for _CHECK_PATH_ in $_SCI_CHECK_PATHS_; do
 
