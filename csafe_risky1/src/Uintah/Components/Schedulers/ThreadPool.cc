@@ -42,7 +42,7 @@ Worker::assignTask( Task * task, const ProcessorGroup * pg )
 void
 Worker::run()
 {
-  while( 1 ){
+   for(;;){
     d_ready->lock();
 
 #if DAV_DEBUG
@@ -185,6 +185,9 @@ ThreadPool::getFinishedTasks( vector<Task *> & finishedTasks )
 
 //
 // $Log$
+// Revision 1.3.2.2  2000/10/10 05:28:04  sparker
+// Added support for NullScheduler (used for profiling taskgraph overhead)
+//
 // Revision 1.3.2.1  2000/09/29 06:09:55  sparker
 // g++ warnings
 // Support for sending only patch edges

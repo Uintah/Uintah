@@ -3,6 +3,7 @@
 #include <Uintah/Grid/TypeDescription.h>
 #include <SCICore/Geometry/IntVector.h>
 #include <SCICore/Exceptions/InternalError.h>
+#include <iostream>
 
 using namespace Uintah;
 using namespace SCICore::Exceptions;
@@ -31,9 +32,12 @@ void NCVariableBase::getMPIBuffer(void*& buf, int& count,
    IntVector d = high-low;
    MPI_Datatype type1d;
    MPI_Type_hvector(d.x(), 1, strides.x(), basetype, &type1d);
+   using namespace std;
    MPI_Datatype type2d;
    MPI_Type_hvector(d.y(), 1, strides.y(), type1d, &type2d);
+   MPI_Type_free(&type1d);
    MPI_Type_hvector(d.z(), 1, strides.z(), type2d, &datatype);
+   MPI_Type_free(&type2d);
    MPI_Type_commit(&datatype);
    free_datatype=true;
    count=1;
@@ -41,6 +45,9 @@ void NCVariableBase::getMPIBuffer(void*& buf, int& count,
 
 //
 // $Log$
+// Revision 1.3.4.2  2000/10/10 05:28:08  sparker
+// Added support for NullScheduler (used for profiling taskgraph overhead)
+//
 // Revision 1.3.4.1  2000/09/29 06:12:29  sparker
 // Added support for sending data along patch edges
 //

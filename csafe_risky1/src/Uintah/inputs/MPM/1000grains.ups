@@ -7269,7 +7269,7 @@
 	    <Box label = "1">
 		<lower>[0.0,0.0,0.0]</lower>
 		<upper>[0.1,0.1,0.11]</upper>
-		<patches>[1,1,1]</patches>
+		<patches>[4,4,2]</patches>
 	    </Box>
 	    <spacing>[.0025,.0025,.0025]</spacing>
 	</Level>

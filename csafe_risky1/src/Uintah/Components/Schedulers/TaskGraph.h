@@ -135,6 +135,9 @@ WARNING
 	 return d_tasks;
       }
 
+      int getMaxSerialNumber() const {
+	 return d_maxSerial;
+      }
    private:
       TaskGraph(const TaskGraph&);
       TaskGraph& operator=(const TaskGraph&);
@@ -147,14 +150,18 @@ WARNING
       
       vector<Task*>        d_tasks;
 
-      typedef map<TaskProduct, Task::Dependency*> actype;
+      typedef map<TaskProduct, const Task::Dependency*> actype;
       actype d_allcomps;
+      int d_maxSerial;
    };
    
 } // end namespace Uintah
 
 //
 // $Log$
+// Revision 1.5.4.1  2000/10/10 05:28:04  sparker
+// Added support for NullScheduler (used for profiling taskgraph overhead)
+//
 // Revision 1.5  2000/09/27 02:14:12  dav
 // Added support for mixed model
 //

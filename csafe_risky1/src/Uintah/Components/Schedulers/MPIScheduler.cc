@@ -145,13 +145,14 @@ MPIScheduler::execute(const ProcessorGroup * pc,
 
    emitTime("assignSerialNumbers");
 
+
 #ifdef USE_VAMPIR
    VT_begin(VT_SEND_PARTICLES);
 #endif
 
    // Send particle sets
    int me = pc->myrank();
-   vector<Task*> presort_tasks = graph.getTasks();
+   vector<Task*>& presort_tasks = graph.getTasks();
    set<DestType> sent;
    for(vector<Task*>::iterator iter = presort_tasks.begin();
        iter != presort_tasks.end(); iter++){
@@ -161,10 +162,10 @@ MPIScheduler::execute(const ProcessorGroup * pc,
       if(task->getType() != Task::Normal)
 	 continue;
 
-      const vector<Task::Dependency*>& reqs = task->getRequires();
-      for(vector<Task::Dependency*>::const_iterator iter = reqs.begin();
-	  iter != reqs.end(); iter++){
-	 Task::Dependency* dep = *iter;
+      const Task::reqType& reqs = task->getRequires();
+      for(Task::reqType::const_iterator dep = reqs.begin();
+	  dep != reqs.end(); dep++){
+
 	 if(dep->d_dw->isFinalized() && dep->d_patch 
 	    && dep->d_var->typeDescription()->getType() == TypeDescription::ParticleVariable){
 	    int dest = task->getAssignedResourceIndex();
@@ -200,10 +201,9 @@ MPIScheduler::execute(const ProcessorGroup * pc,
       if(task->getType() != Task::Normal)
 	 continue;
 
-      const vector<Task::Dependency*>& reqs = task->getRequires();
-      for(vector<Task::Dependency*>::const_iterator iter = reqs.begin();
-	  iter != reqs.end(); iter++){
-	 Task::Dependency* dep = *iter;
+      const Task::reqType& reqs = task->getRequires();
+      for(Task::reqType::const_iterator dep = reqs.begin();
+	  dep != reqs.end(); dep++){
 	 if(dep->d_dw->isFinalized() && dep->d_patch 
 	    && dep->d_var->typeDescription()->getType() == TypeDescription::ParticleVariable){
 	    if(!dep->d_dw->haveParticleSubset(dep->d_matlIndex, dep->d_patch)){
@@ -237,15 +237,14 @@ MPIScheduler::execute(const ProcessorGroup * pc,
       if(task->getType() != Task::Normal)
 	 continue;
 
-      const vector<Task::Dependency*>& reqs = task->getRequires();
-      for(vector<Task::Dependency*>::const_iterator iter = reqs.begin();
-	  iter != reqs.end(); iter++){
-	 Task::Dependency* dep = *iter;
+      const Task::reqType& reqs = task->getRequires();
+      for(Task::reqType::const_iterator dep = reqs.begin();
+	  dep != reqs.end(); dep++){
 	 if(dep->d_dw->isFinalized() && dep->d_patch){
 	    if(dep->d_dw->exists(dep->d_var, dep->d_matlIndex, dep->d_patch)){
 	       VarDestType ddest(dep->d_var, dep->d_matlIndex, dep->d_patch, task->getAssignedResourceIndex());
 	       if(varsent.find(ddest) == varsent.end()){
-		  OnDemandDataWarehouse* dw = dynamic_cast<OnDemandDataWarehouse*>(dep->d_dw.get_rep());
+		  OnDemandDataWarehouse* dw = dynamic_cast<OnDemandDataWarehouse*>(dep->d_dw);
 		  if(!dw)
 		     throw InternalError("Wrong Datawarehouse?");
 		  MPI_Request requestid;
@@ -294,13 +293,12 @@ MPIScheduler::execute(const ProcessorGroup * pc,
       if(task->getType() != Task::Normal)
 	 continue;
 
-      const vector<Task::Dependency*>& reqs = task->getRequires();
-      for(vector<Task::Dependency*>::const_iterator iter = reqs.begin();
-	  iter != reqs.end(); iter++){
-	 Task::Dependency* dep = *iter;
+      const Task::reqType& reqs = task->getRequires();
+      for(Task::reqType::const_iterator dep = reqs.begin();
+	  dep != reqs.end(); dep++){
 	 if(dep->d_dw->isFinalized() && dep->d_patch){
 	    if(!dep->d_dw->exists(dep->d_var, dep->d_matlIndex, dep->d_patch)){
-	       OnDemandDataWarehouse* dw = dynamic_cast<OnDemandDataWarehouse*>(dep->d_dw.get_rep());
+	       OnDemandDataWarehouse* dw = dynamic_cast<OnDemandDataWarehouse*>(dep->d_dw);
 	       if(!dw)
 		  throw InternalError("Wrong Datawarehouse?");
 	       MPI_Request requestid;
@@ -350,7 +348,7 @@ MPIScheduler::execute(const ProcessorGroup * pc,
    // things in the future:
    //  - make a flag to turn this off
    //  - make the checksum more sophisticated
-   int checksum = ntasks;
+   int checksum = graph.getMaxSerialNumber();
    int result_checksum;
    MPI_Allreduce(&checksum, &result_checksum, 1, MPI_INT, MPI_MIN,
 		 d_myworld->getComm());
@@ -382,10 +380,10 @@ MPIScheduler::execute(const ProcessorGroup * pc,
       case Task::Reduction:
 	 {
 	    double reducestart = Time::currentSeconds();
-	    const vector<Task::Dependency*>& comps = task->getComputes();
+	    const Task::compType& comps = task->getComputes();
 	    ASSERTEQ(comps.size(), 1);
-	    const Task::Dependency* dep = comps[0];
-	    OnDemandDataWarehouse* dw = dynamic_cast<OnDemandDataWarehouse*>(dep->d_dw.get_rep());
+	    const Task::Dependency* dep = &comps[0];
+	    OnDemandDataWarehouse* dw = dynamic_cast<OnDemandDataWarehouse*>(dep->d_dw);
 	    dw->reduceMPI(dep->d_var, d_myworld);
 	    double reduceend = Time::currentSeconds();
 	    time_t t(0);
@@ -408,13 +406,13 @@ MPIScheduler::execute(const ProcessorGroup * pc,
 	      VT_begin(VT_RECV_DEPENDENCIES);
 #endif
 	       // Receive any of the foreign requires
-	       const vector<Task::Dependency*>& reqs = task->getRequires();
+	       const Task::reqType& reqs = task->getRequires();
 	       vector<MPI_Request> recv_ids;
 	       for(int r=0;r<(int)reqs.size();r++){
-		  Task::Dependency* req = reqs[r];
+		  const Task::Dependency* req = &reqs[r];
 		  if(!req->d_dw->isFinalized()){
 		     const Task::Dependency* dep = graph.getComputesForRequires(req);
-		     OnDemandDataWarehouse* dw = dynamic_cast<OnDemandDataWarehouse*>(req->d_dw.get_rep());
+		     OnDemandDataWarehouse* dw = dynamic_cast<OnDemandDataWarehouse*>(req->d_dw);
 		     if(!dep->d_task->isReductionTask() 
 			&& dep->d_task->getAssignedResourceIndex() != me
 			&& !dw->exists(req->d_var, req->d_matlIndex, req->d_patch)){
@@ -451,9 +449,9 @@ MPIScheduler::execute(const ProcessorGroup * pc,
 #endif
 
 	    if(task->getType() == Task::Scatter){
-	       const vector<Task::Dependency*>& comps = task->getComputes();
+	       const Task::compType& comps = task->getComputes();
 	       ASSERTEQ(comps.size(), 1);
-	       Task::Dependency* cmp = comps[0];
+	       const Task::Dependency* cmp = &comps[0];
 	       vector<const Task::Dependency*> reqs;
 	       graph.getRequiresForComputes(cmp, reqs);
 	       
@@ -465,11 +463,11 @@ MPIScheduler::execute(const ProcessorGroup * pc,
 		  sgargs.tags[r] = dep->d_serialNumber;
 	       }
 	    } else if(task->getType() == Task::Gather){
-	       const vector<Task::Dependency*>& reqs = task->getRequires();
+	       const Task::reqType& reqs = task->getRequires();
 	       sgargs.dest.resize(reqs.size());
 	       sgargs.tags.resize(reqs.size());
 	       for(int r=0;r<(int)reqs.size();r++){
-		  Task::Dependency* req = reqs[r];
+		  const Task::Dependency* req = &reqs[r];
 		  const Task::Dependency* cmp = graph.getComputesForRequires(req);
 		  sgargs.dest[r] = cmp->d_task->getAssignedResourceIndex();
 		  sgargs.tags[r] = req->d_serialNumber;
@@ -497,12 +495,12 @@ MPIScheduler::execute(const ProcessorGroup * pc,
 	    if(task->getType() != Task::Scatter){
 	       //cerr << me << " !scatter\n";
 	       // Send all of the productions
-	       const vector<Task::Dependency*>& comps = task->getComputes();
+	       const Task::compType& comps = task->getComputes();
 	       //cerr << me << " comps.size=" << comps.size() << '\n';
 	       for(int c=0;c<(int)comps.size();c++){
 		  //cerr << me << " c=" << c << '\n';
 		  vector<const Task::Dependency*> reqs;
-		  graph.getRequiresForComputes(comps[c], reqs);
+		  graph.getRequiresForComputes(&comps[c], reqs);
 		  set<VarDestType> varsent;
 		  //cerr << me << " reqs size=" << reqs.size() << '\n';
 		  for(int r=0;r<(int)reqs.size();r++){
@@ -516,7 +514,7 @@ MPIScheduler::execute(const ProcessorGroup * pc,
 			VarDestType ddest(dep->d_var, dep->d_matlIndex, dep->d_patch, dep->d_task->getAssignedResourceIndex());
 			if(varsent.find(ddest) == varsent.end()){
 			   //cerr << me << " not sent!\n";
-			   OnDemandDataWarehouse* dw = dynamic_cast<OnDemandDataWarehouse*>(dep->d_dw.get_rep());
+			   OnDemandDataWarehouse* dw = dynamic_cast<OnDemandDataWarehouse*>(dep->d_dw);
 			   if(!dw)
 			      throw InternalError("Wrong Datawarehouse?");
 			   MPI_Request requestid;
@@ -594,13 +592,14 @@ MPIScheduler::execute(const ProcessorGroup * pc,
    finalizeNodes(me);
    int junk;
    MPI_Buffer_detach(&mpibuffer, &junk);
+   delete[] mpibuffer;
    if(old_mpibuffersize)
       MPI_Buffer_attach(old_mpibuffer, old_mpibuffersize);
 
    log.finishTimestep();
    emitTime("finalize");
    vector<double> d_totaltimes(d_times.size());
-   MPI_Reduce(&d_times[0], &d_totaltimes[0], d_times.size(), MPI_DOUBLE,
+   MPI_Reduce(&d_times[0], &d_totaltimes[0], (int)d_times.size(), MPI_DOUBLE,
 	      MPI_SUM, 0, d_myworld->getComm());
    if(me == 0){
       double total=0;
@@ -608,7 +607,7 @@ MPIScheduler::execute(const ProcessorGroup * pc,
 	 total+= d_totaltimes[i];
       for(int i=0;i<(int)d_totaltimes.size();i++){
 	 timeout << "MPIScheduler: " << d_labels[i] << ": ";
-	 int len = strlen(d_labels[i])+strlen("MPIScheduler: ")+strlen(": ");
+	 int len = (int)(strlen(d_labels[i])+strlen("MPIScheduler: ")+strlen(": "));
 	 for(int j=len;j<55;j++)
 	    timeout << ' ';
 	 double percent=d_totaltimes[i]/total*100;
@@ -617,9 +616,9 @@ MPIScheduler::execute(const ProcessorGroup * pc,
       double time = Time::currentSeconds();
       double rtime=time-d_lasttime;
       d_lasttime=time;
-      cerr << "MPIScheduler: TOTAL                                      "
+      timeout << "MPIScheduler: TOTAL                                      "
 	   << total << '\n';
-      cerr << "MPIScheduler: time sum reduction (one processor only):   " 
+      timeout << "MPIScheduler: time sum reduction (one processor only):   " 
 	   << rtime << '\n';
    }
 
@@ -681,7 +680,7 @@ MPIScheduler::scheduleParticleRelocation(const LevelP& level,
       // Particles are only allowed to be one cell out
       IntVector l = patch->getCellLowIndex()-IntVector(1,1,1);
       IntVector h = patch->getCellHighIndex()+IntVector(1,1,1);
-      std::vector<const Patch*> neighbors;
+      Level::selectType neighbors;
       level->selectPatches(l, h, neighbors);
       for(int i=0;i<(int)neighbors.size();i++)
 	 t2->requires(new_dw, scatterGatherVariable, 0, neighbors[i], Ghost::None);
@@ -717,7 +716,7 @@ MPIScheduler::scatterParticles(const ProcessorGroup* pc,
    // Particles are only allowed to be one cell out
    IntVector l = patch->getCellLowIndex()-IntVector(1,1,1);
    IntVector h = patch->getCellHighIndex()+IntVector(1,1,1);
-   vector<const Patch*> neighbors;
+   Level::selectType neighbors;
    level->selectPatches(l, h, neighbors);
 
    vector<MPIScatterRecord*> sr(neighbors.size());
@@ -770,6 +769,7 @@ MPIScheduler::scatterParticles(const ProcessorGroup* pc,
 		     smr->vars.push_back(new_dw->getParticleVariable(reloc_old_labels[m][v], pset));
 		  smr->relocset = scinew ParticleSubset(pset->getParticleSet(),
 						     false, -1, 0);
+		  smr->relocset->addReference();
 	       }
 	       sr[i]->matls[m]->relocset->addParticle(idx);
 	    }
@@ -785,26 +785,22 @@ MPIScheduler::scatterParticles(const ProcessorGroup* pc,
       if(sgargs.dest[i] == me){
 	 new_dw->scatter(sr[i], patch, neighbors[i]);
       } else {
-	 // THIS SHOULD CHANGE INTO A SINGLE SEND, INSTEAD OF ONE PER MATL
 	 if(sr[i]){
 	    int sendsize = 0;
 	    for(int j=0;j<(int)sr[i]->matls.size();j++){
+	      int size;
+	      MPI_Pack_size(1, MPI_INT, pc->getComm(), &size);
+	      sendsize+=size;
+
 	      if (sr[i]->matls[j]) {
 		MPIScatterMaterialRecord* mr = sr[i]->matls[j];
-		int size;
-		MPI_Pack_size(1, MPI_INT, pc->getComm(), &size);
-		sendsize+=size;
 		int numP = mr->relocset->numParticles();
 		for(int v=0;v<(int)mr->vars.size();v++){
 		  ParticleVariableBase* var = mr->vars[v];
 		  ParticleVariableBase* var2 = var->cloneSubset(mr->relocset);
 		  var2->packsizeMPI(&sendsize, pc, 0, numP);
-		  //delete var2;
+		  delete var2;
 		}
-	      } else {
-		int size;
-		MPI_Pack_size(1, MPI_INT, pc->getComm(), &size);
-		sendsize+=size;
 	      }
 	    } 
 	    char* buf = scinew char[sendsize];
@@ -852,7 +848,7 @@ MPIScheduler::gatherParticles(const ProcessorGroup* pc,
    // Particles are only allowed to be one cell out
    IntVector l = patch->getCellLowIndex()-IntVector(1,1,1);
    IntVector h = patch->getCellHighIndex()+IntVector(1,1,1);
-   vector<const Patch*> neighbors;
+   Level::selectType neighbors;
    level->selectPatches(l, h, neighbors);
 
    vector<MPIScatterRecord*> sr;
@@ -978,10 +974,14 @@ MPIScheduler::gatherParticles(const ProcessorGroup* pc,
 	 delete subsets[i];
    }
    for(int i=0;i<(int)sr.size();i++){
-     for(int m=0;m<reloc_numMatls;m++)
-       if(sr[i]->matls[m])
-	 delete sr[i]->matls[m];
-     delete sr[i];
+      for(int m=0;m<reloc_numMatls;m++){
+	 if(sr[i]->matls[m]){
+	    if(sr[i]->matls[m]->relocset->removeReference())
+	       delete sr[i]->matls[m]->relocset;
+	    delete sr[i]->matls[m];
+	 }
+      }
+      delete sr[i];
    }
    for(int i=0;i<(int)neighbors.size();i++){
       // This may not be a valid assertion on some systems
@@ -1023,6 +1023,9 @@ MPIScheduler::emitTime(char* label, double dt)
 
 //
 // $Log$
+// Revision 1.25.4.5  2000/10/10 05:28:03  sparker
+// Added support for NullScheduler (used for profiling taskgraph overhead)
+//
 // Revision 1.25.4.4  2000/10/06 23:57:02  witzel
 // Added support for vampir -- mpi performance analysis tool.
 //

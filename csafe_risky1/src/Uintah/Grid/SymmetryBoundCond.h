@@ -39,7 +39,7 @@ WARNING
    class SymmetryBoundCond : public BoundCond  {
    public:
       SymmetryBoundCond() {};
-      SymmetryBoundCond(ProblemSpecP& ps) {};
+      SymmetryBoundCond(ProblemSpecP&) {};
       virtual ~SymmetryBoundCond() {};
       virtual std::string getType() const {
 	return "Symmetry";
@@ -56,6 +56,9 @@ WARNING
 
 //
 // $Log$
+// Revision 1.1.4.1  2000/10/10 05:28:08  sparker
+// Added support for NullScheduler (used for profiling taskgraph overhead)
+//
 // Revision 1.1  2000/06/27 22:31:50  jas
 // Grid boundary conditions that are stored at the patch level.
 //

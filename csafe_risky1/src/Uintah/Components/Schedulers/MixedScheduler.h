@@ -128,7 +128,7 @@ WARNING
       // Removes the dependencies that are satisfied by "comps" computes
       // from the taskToDeps list.  Sends data to other processes if
       // necessary (if sendData is true).  List of sends returned in "send_ids".
-      void dependenciesSatisfied( const vector<Task::Dependency*> & comps,
+      void dependenciesSatisfied( const Task::compType & comps,
 				  int                               me,
 				  vector<MPI_Request>             & send_ids,
 				  bool                              sendData = true );
@@ -157,6 +157,9 @@ WARNING
 
 //
 // $Log$
+// Revision 1.3.4.1  2000/10/10 05:28:03  sparker
+// Added support for NullScheduler (used for profiling taskgraph overhead)
+//
 // Revision 1.3  2000/09/28 02:15:51  dav
 // updates due to not sending 0 particles
 //

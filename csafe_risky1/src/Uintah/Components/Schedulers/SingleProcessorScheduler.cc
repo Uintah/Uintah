@@ -140,7 +140,7 @@ SingleProcessorScheduler::scheduleParticleRelocation(const LevelP& level,
       // Particles are only allowed to be one cell out
       IntVector l = patch->getCellLowIndex()-IntVector(1,1,1);
       IntVector h = patch->getCellHighIndex()+IntVector(1,1,1);
-      std::vector<const Patch*> neighbors;
+      Level::selectType neighbors;
       level->selectPatches(l, h, neighbors);
       for(int i=0;i<(int)neighbors.size();i++)
 	 t2->requires(new_dw, scatterGatherVariable, 0, neighbors[i], Ghost::None);
@@ -176,7 +176,7 @@ SingleProcessorScheduler::scatterParticles(const ProcessorGroup*,
    // Particles are only allowed to be one cell out
    IntVector l = patch->getCellLowIndex()-IntVector(1,1,1);
    IntVector h = patch->getCellHighIndex()+IntVector(1,1,1);
-   vector<const Patch*> neighbors;
+   Level::selectType neighbors;
    level->selectPatches(l, h, neighbors);
 
    vector<ScatterRecord*> sr(neighbors.size());
@@ -254,7 +254,7 @@ SingleProcessorScheduler::gatherParticles(const ProcessorGroup*,
    // Particles are only allowed to be one cell out
    IntVector l = patch->getCellLowIndex()-IntVector(1,1,1);
    IntVector h = patch->getCellHighIndex()+IntVector(1,1,1);
-   vector<const Patch*> neighbors;
+   Level::selectType neighbors;
    level->selectPatches(l, h, neighbors);
 
    vector<ScatterRecord*> sr;
@@ -347,6 +347,9 @@ SingleProcessorScheduler::releaseLoadBalancer()
 
 //
 // $Log$
+// Revision 1.19.4.1  2000/10/10 05:28:03  sparker
+// Added support for NullScheduler (used for profiling taskgraph overhead)
+//
 // Revision 1.19  2000/09/27 00:10:16  witzel
 // emitEdges changed to makeTaskGraphDoc.
 //

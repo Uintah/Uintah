@@ -1,6 +1,7 @@
 
 #include <Uintah/Grid/ParticleVariableBase.h>
 #include <Uintah/Grid/TypeDescription.h>
+#include <iostream>
 using namespace Uintah;
 using namespace std;
 
@@ -34,7 +35,7 @@ ParticleVariableBase& ParticleVariableBase::operator=(const ParticleVariableBase
 	 d_pset->addReference();
    }
    return *this;
-}   
+}
 
 void ParticleVariableBase::getMPIBuffer(void*& buf, int& count,
 					MPI_Datatype& datatype, bool& free_datatype,
@@ -69,6 +70,9 @@ void ParticleVariableBase::getMPIBuffer(void*& buf, int& count,
 
 //
 // $Log$
+// Revision 1.4.4.3  2000/10/10 05:28:08  sparker
+// Added support for NullScheduler (used for profiling taskgraph overhead)
+//
 // Revision 1.4.4.2  2000/10/07 00:04:44  witzel
 // using namespace std;
 //

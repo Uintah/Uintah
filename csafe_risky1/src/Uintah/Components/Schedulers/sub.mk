@@ -10,6 +10,7 @@ SRCDIR   := Uintah/Components/Schedulers
 SRCS += $(SRCDIR)/templates.cc \
 	$(SRCDIR)/MixedScheduler.cc \
 	$(SRCDIR)/MPIScheduler.cc $(SRCDIR)/MessageLog.cc \
+	$(SRCDIR)/NullScheduler.cc \
 	$(SRCDIR)/OnDemandDataWarehouse.cc \
 	$(SRCDIR)/RoundRobinLoadBalancer.cc \
 	$(SRCDIR)/SendState.cc \
@@ -27,6 +28,9 @@ include $(SRCTOP)/scripts/smallso_epilogue.mk
 
 #
 # $Log$
+# Revision 1.12.4.3  2000/10/10 05:28:04  sparker
+# Added support for NullScheduler (used for profiling taskgraph overhead)
+#
 # Revision 1.12.4.2  2000/10/06 23:57:54  witzel
 # Added vampir support.
 #

@@ -20,12 +20,6 @@ Task::ActionBase::~ActionBase()
 
 Task::~Task()
 {
-  vector<Dependency*>::iterator iter;
-
-  for( iter=d_reqs.begin(); iter != d_reqs.end(); iter++ )
-    { delete *iter; }
-  for( iter=d_comps.begin(); iter != d_comps.end(); iter++)
-    { delete *iter; }
   delete d_action;
 }
 
@@ -50,8 +44,8 @@ Task::subpatchCapable(bool state)
 void
 Task::requires(const DataWarehouseP& ds, const VarLabel* var)
 {
-  d_reqs.push_back(scinew Dependency(ds, var, -1, 0, this,
-				     IntVector(-9,-8,-7), IntVector(-6,-5,-4)));
+  d_reqs.push_back(Dependency(ds.get_rep(), var, -1, 0, this,
+			      IntVector(-9,-8,-7), IntVector(-6,-5,-4)));
 }
 
 void
@@ -60,7 +54,7 @@ Task::requires(const DataWarehouseP& ds, const VarLabel* var, int matlIndex,
 {
    ASSERT(ds.get_rep() != 0);
    const TypeDescription* td = var->typeDescription();
-   std::vector<const Patch*> neighbors;
+   Level::selectType neighbors;
    IntVector lowIndex, highIndex;
    patch->computeVariableExtents(td->getType(), gtype, numGhostCells,
 				 neighbors, lowIndex, highIndex);
@@ -72,8 +66,8 @@ Task::requires(const DataWarehouseP& ds, const VarLabel* var, int matlIndex,
       IntVector low = Max(lowIndex, neighbor->getNodeLowIndex());
       IntVector high= Min(highIndex, neighbor->getNodeHighIndex());
 
-      d_reqs.push_back(scinew Dependency(ds, var, matlIndex,
-					 neighbor, this, low, high));
+      d_reqs.push_back(Dependency(ds.get_rep(), var, matlIndex,
+				  neighbor, this, low, high));
    }
 }
 
@@ -81,9 +75,9 @@ void
 Task::computes(const DataWarehouseP& ds, const VarLabel* var)
 {
    ASSERT(ds.get_rep() != 0);
-   d_comps.push_back(scinew Dependency(ds, var, -1, d_patch, this,
-				       IntVector(-19,-18,-17),
-				       IntVector(-16,-15,-14)));
+   d_comps.push_back(Dependency(ds.get_rep(), var, -1, d_patch, this,
+				IntVector(-19,-18,-17),
+				IntVector(-16,-15,-14)));
 }
 
 void
@@ -91,9 +85,10 @@ Task::computes(const DataWarehouseP& ds, const VarLabel* var, int matlIndex,
 	       const Patch* patch)
 {
    ASSERT(ds.get_rep() != 0);
-   d_comps.push_back(scinew Dependency(ds, var, matlIndex, patch, this,
-				       IntVector(-29,-28,-27),
-				       IntVector(-26,-25,-24)));
+   d_comps.push_back(Dependency(ds.get_rep(), var, matlIndex, patch,
+				this,
+				IntVector(-29,-28,-27),
+				IntVector(-26,-25,-24)));
 }
 
 void
@@ -106,39 +101,10 @@ Task::doit(const ProcessorGroup* pc)
   d_completed=true;
 }
 
-Task::Dependency::Dependency(const DataWarehouseP& dw,
-			     const VarLabel* var, int matlIndex,
-			     const Patch* patch,
-			     Task* task,
-			     const IntVector& lowIndex,
-			     const IntVector& highIndex)
-    : d_dw(dw),
-      d_var(var),
-      d_matlIndex(matlIndex),
-      d_patch(patch),
-      d_task(task),
-      d_serialNumber(-123),
-      d_lowIndex(lowIndex),
-      d_highIndex(highIndex)
-{
-}
-
-const vector<Task::Dependency*>&
-Task::getComputes() const
-{
-  return d_comps;
-}
-
-const vector<Task::Dependency*>&
-Task::getRequires() const
-{
-  return d_reqs;
-}
-
 void
 Task::display( ostream & out ) const
 {
-  out << d_taskName << " (" << d_tasktype << "): [Own: " << d_resourceIndex
+  out << getName() << " (" << d_tasktype << "): [Own: " << d_resourceIndex
       << ", ";
   if( d_patch != 0 ){
     out << "P: " << d_patch->getID()
@@ -171,9 +137,9 @@ Task::displayAll(ostream& out) const
    display(out);
    out << '\n';
    for(int i=0;i<(int)d_reqs.size();i++)
-      out << "requires: " << *d_reqs[i] << '\n';
+      out << "requires: " << d_reqs[i] << '\n';
    for(int i=0;i<(int)d_comps.size();i++)
-      out << "computes: " << *d_comps[i] << '\n';
+      out << "computes: " << d_comps[i] << '\n';
 }
 
 ostream &
@@ -205,6 +171,9 @@ operator << (ostream &out, const Task::TaskType & tt)
 
 //
 // $Log$
+// Revision 1.24.2.2  2000/10/10 05:28:08  sparker
+// Added support for NullScheduler (used for profiling taskgraph overhead)
+//
 // Revision 1.24.2.1  2000/09/29 06:12:29  sparker
 // Added support for sending data along patch edges
 //

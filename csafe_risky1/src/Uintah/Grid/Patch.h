@@ -138,7 +138,9 @@ WARNING
      IntVector getNodeLowIndex() const {
        return d_lowIndex;
      }
-     IntVector getNodeHighIndex() const;
+      IntVector getNodeHighIndex() const {
+	 return d_nodeHighIndex;
+      }
 
      IntVector getSFCXLowIndex() const {
        return d_lowIndex;
@@ -263,12 +265,20 @@ WARNING
 
      void computeVariableExtents(VariableBasis basis, Ghost::GhostType gtype,
 				 int numGhostCells,
-				 vector<const Patch*>& neighbors,
+				 Level::selectType& neighbors,
 				 IntVector& low, IntVector& high) const;
      void computeVariableExtents(TypeDescription::Type basis,
 				 Ghost::GhostType gtype, int numGhostCells,
-				 vector<const Patch*>& neighbors,
+				 Level::selectType& neighbors,
 				 IntVector& low, IntVector& high) const;
+
+      class Compare {
+      public:
+	 inline bool operator()(const Patch* p1, const Patch* p2) const {
+	    return p1->getID() < p2->getID();
+	 }
+      private:
+      };
    protected:
      friend class Level;
      
@@ -290,6 +300,7 @@ WARNING
      // Insert Documentation Here:
      IntVector d_lowIndex;
      IntVector d_highIndex;
+     IntVector d_nodeHighIndex;
      
      int d_id;
      BCType d_bctypes[numFaces];
@@ -303,6 +314,9 @@ std::ostream& operator<<(std::ostream& out, const Uintah::Patch & r);
 
 //
 // $Log$
+// Revision 1.19.4.3  2000/10/10 05:28:08  sparker
+// Added support for NullScheduler (used for profiling taskgraph overhead)
+//
 // Revision 1.19.4.2  2000/10/07 06:10:36  sparker
 // Optimized implementation of Level::selectPatches
 // Cured g++ warnings
