@@ -28,13 +28,16 @@ PSELIBS := PSECore/Dataflow PSECore/Datatypes PSECore/Widgets \
 	SCICore/Containers SCICore/Exceptions SCICore/Thread \
 	SCICore/TclInterface SCICore/Geom SCICore/Persistent \
 	SCICore/Datatypes SCICore/Geometry SCICore/Util \
-	SCICore/TkExtensions
+	SCICore/TkExtensions PSECommon/Modules/Salmon
 LIBS := $(TK_LIBRARY) $(GL_LIBS) -lm
 
 include $(SRCTOP)/scripts/smallso_epilogue.mk
 
 #
 # $Log$
+# Revision 1.3  2000/03/20 21:49:04  yarden
+# Linux port: link against PSECommon/Modules/Salmon too.
+#
 # Revision 1.2  2000/03/20 19:37:06  sparker
 # Added VPATH support
 #
