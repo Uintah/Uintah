@@ -408,13 +408,10 @@ AddSparse(const SparseRowMatrix &a, const SparseRowMatrix &b)
     rows[r+1] = rows[r];
     ca = a.rows[r];
     cb = b.rows[r];
-    cout << "row " << r << ": a=" << a.rows[r] << "=>" << a.rows[r+1] << " ";
-    cout << "b=" << b.rows[r] << "=>" << b.rows[r+1] << "\n";
     while (ca < a.rows[r+1] && cb < b.rows[r+1])
     {
       if (a.columns[ca] < b.columns[cb] || cb >= b.rows[r+1])
       {
-	cout << " 1, " << ca << " " << cb << "\n";
 	cols.push_back(a.columns[ca]);
 	vals.push_back(a.a[ca]);
 	rows[r+1]++;
@@ -422,7 +419,6 @@ AddSparse(const SparseRowMatrix &a, const SparseRowMatrix &b)
       }
       else if (a.columns[ca] > b.columns[cb] || ca >= a.rows[r+1])
       {
-	cout << " 2, " << ca << " " << cb << "\n";
 	cols.push_back(b.columns[cb]);
 	vals.push_back(b.a[cb]);
 	rows[r+1]++;
@@ -430,7 +426,6 @@ AddSparse(const SparseRowMatrix &a, const SparseRowMatrix &b)
       }
       else if (a.columns[ca] == b.columns[cb])
       {
-	cout << " 3, " << ca << " " << cb << "\n";
 	cols.push_back(a.columns[ca]);
 	vals.push_back(a.a[ca] + b.a[cb]);
 	rows[r+1]++;
@@ -439,8 +434,6 @@ AddSparse(const SparseRowMatrix &a, const SparseRowMatrix &b)
       }
       else
       {
-	cout << " 4, " << ca << " " << cb << ": "
-	     << a.columns[ca] << " " << b.columns[cb] << "\n";
 	ASSERTFAIL("Should not get here.");
       }
     }
