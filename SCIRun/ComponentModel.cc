@@ -39,7 +39,9 @@
  */
 
 #include <SCIRun/ComponentModel.h>
+
 #include <iostream>
+#include <vector>
 
 namespace SCIRun {
 
@@ -67,11 +69,35 @@ ComponentInstance* ComponentModel::createInstance(const std::string& name,
   return 0;
 }
 
-bool  ComponentModel::destroyInstance(ComponentInstance* ic)
+bool ComponentModel::destroyInstance(ComponentInstance* ic)
 {
   std::cerr << "Error: this component model does not implement destroyInstance"
             << std::endl;
   return false;
+}
+
+std::vector<std::string>
+ComponentModel::splitPathString(const std::string &path)
+{
+    std::vector<std::string> ans;
+    if (path == "" ) {
+	return ans;
+    }
+
+    // Split the PATH string into a list of paths.  Key on ';' token.
+    std::string::size_type start = 0;
+    std::string::size_type end = path.find(';', start);
+    while (end != path.npos) {
+	std::string substring = path.substr(start, end - start);
+	ans.push_back(substring);
+	start = end + 1;
+	end = path.find(';', start);
+    }
+    // grab the remaining path
+    std::string substring = path.substr(start, end - start);
+    ans.push_back(substring);
+
+    return ans;  
 }
 
 } // end namespace SCIRun

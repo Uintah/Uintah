@@ -75,6 +75,9 @@ public:
                                              const std::string& className,
                                              const sci::cca::TypeMap::pointer& properties);
 
+  /** ? */
+  bool destroyServices(const sci::cca::Services::pointer& svc);
+
   /** Returns true if component type \em type has been registered with this
       component model.  In other words, returns true if this ComponentModel
       knows how to instantiate component \em type. */
@@ -101,32 +104,32 @@ public:
                                      bool);
 
   /** ? */
+  virtual void destroyComponentList();
+
+  /** ? */
+  virtual void buildComponentList();
+
+  /** ? */
   int addLoader(resourceReference *rr);
+
   /** ? */
   int removeLoader(const std::string &loaderName);
-  
-  /** Get/Set the directory path to the XML files describing CCA
-   * components. By default, sidlXMLPath is initialized to the
-   * environment variable SIDL_XML_PATH.  */
-  std::string getSidlXMLPath() const
-  { return sidlXMLPath; }
-  void setSidlXMLPath( const std::string& s)
-  { sidlXMLPath = s; }
+
+  static const std::string DEFAULT_PATH;
   
 private:
   SCIRunFramework* framework;
   typedef std::map<std::string, CCAComponentDescription*> componentDB_type;
   componentDB_type components;
-  std::string sidlXMLPath;
     
-  void destroyComponentList();
-  void buildComponentList();
   void readComponentDescription(const std::string& file);
+  std::string getSidlXMLPath();
   resourceReference *getLoader(std::string loaderName);
+
   CCAComponentModel(const CCAComponentModel&);
   CCAComponentModel& operator=(const CCAComponentModel&);
   
-  std::vector<resourceReference* > loaderList;
+  std::vector<resourceReference*> loaderList;
 };
 
 } // end namespace SCIRun

@@ -122,6 +122,7 @@ SCIRunComponentModel::createInstance(const std::string& name,
 }
 
 void SCIRunComponentModel::initGuiInterface() {
+std::cerr << "SCIRunComponentModel::initGuiInterface" << std::endl;
   int argc=1;
   char* argv[2];
   argv[0]="sr";
@@ -160,6 +161,18 @@ bool SCIRunComponentModel::destroyInstance(ComponentInstance * ic)
 std::string SCIRunComponentModel::getName() const
 {
   return "Dataflow";
+}
+
+void SCIRunComponentModel::destroyComponentList()
+{
+  std::cerr << "Error: SCIRunComponentModel does not implement destroyComponentList"
+            << std::endl;
+}
+
+void SCIRunComponentModel::buildComponentList()
+{
+  std::cerr << "Error: SCIRunComponentModel does not implement buildComponentList"
+            << std::endl;
 }
 
 void SCIRunComponentModel::listAllComponentTypes(std::vector<ComponentDescription*>& list,

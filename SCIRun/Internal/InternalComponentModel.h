@@ -28,7 +28,7 @@
 
 
 /*
- *  SCIRunComponentModel.h: 
+ *  InternalComponentModel.h: 
  *
  *  Written by:
  *   Steven G. Parker
@@ -86,6 +86,13 @@ public:
   /** */
   virtual void listAllComponentTypes(std::vector<ComponentDescription*>&,
                                      bool);
+
+  /** ? */
+  virtual void destroyComponentList();
+
+  /** ? */
+  virtual void buildComponentList();
+
 private:
     std::map<std::string, InternalComponentDescription*> services;
     SCIRunFramework* framework;
