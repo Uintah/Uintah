@@ -54,8 +54,8 @@
 
 <H2><A name="section-0">Chapter Overview</A></H2>
 
-Chapter 1 demonstrates the construction of a small network to
-visualize the geometry of a mesh. This chapter demonstrates how to
+Chapter 1 demonstrated the construction of a small network to
+visualize the geometry of a mesh. Chapter 2 demonstrates how to
 extend that net, adding tools to look at data values on the geometry.
 Specifically, how to visualize a scalar quantity (voltage) on a set of
 points in space (a PointCloud of electrodes).
@@ -67,15 +67,15 @@ the Default Color selector was used to render all geometry in blue.
 In this chapter, rather than mapping a single color to the geometry,
 colors will vary across the mesh based on the data's scalar values.
 	
-<H2><A name="section-1">Color Maps</A></H2>
-A color map is an array of colors that, when used to color data based
-on the data's value, help the user interpret the data more easily.  It
-consists of a set of colors that evenly change in red, green, blue,
-and/or alpha (RGBA).  These colors will be mapped to a range of data
-values, as specified by the minimum and maximum data values of the
-data set in question.  An infinite number of color maps can be
-created.  SCIRun provides a large number of predefined color maps for
-convenience.  <b>Figure 2.0</b> shows several example color maps.
+<H2><A name="section-1">Color Maps</A></H2> A color map is an array of
+colors that, when used to color data based on the data's value, help
+the user interpret data more easily.  a color map consists of a set of
+colors that evenly change in red, green, blue, and/or alpha (RGBA).
+These colors are mapped to a range of data values, as specified by
+the minimum and maximum data values of the data set in question.  An
+infinite number of color maps can be created.  SCIRun provides a large
+number of predefined color maps for convenience.  <b>Figure 2.0</b>
+shows several example color maps.
 <P>
 <center>
 <img height="200" width="450" src="images/figures/2_1.jpg"><br>
@@ -97,10 +97,10 @@ chooses the number of discrete entries in the color map table (the
 default is 256 colors).
 <P>
 The color map determines which values in the data are assigned to each
-color.  By default, the minimum/maximum range is from -1 to 1.
+color.  By default, the minimum/maximum range is -1 to 1.
 <P>
-Using the RescaleColorMap module, you can set the min/max values by
-hand, or, you can auto-scale them to correspond with the min/max data
+Using the RescaleColorMap module, set the min/max values by
+hand, or auto-scale them to correspond with the min/max data
 value range from a scalar field.
 <P>                  
 Now, add a GenStandardColorMaps and a RescaleColorMap module to the
@@ -140,7 +140,7 @@ input Fields.
 The second input port on the ShowField module accepts a color map that
 maps the data values in its input Field to a color in the input
 color map, and renders accordingly.  If a color map is present in
-ShowField the module ignores the Default Color, and uses the color map
+ShowField, the module ignores the Default Color, and uses the color map
 values instead.
 <P>                  
 To complete this net, read in a Field.  
@@ -156,8 +156,8 @@ To complete this net, read in a Field.
    <LI> Select the Autoview option in the ViewWindow and rotate the
         image downward.
 
-   <LI> In the ShowField UI, change the Node Scale to 6. (The Node
-        Display Type should already be set to Spheres.)
+   <LI> In the ShowField UI, change the Node Scale to 6.The Node
+        Display Type should already be set to Spheres.
 
    <LI> An image similar to <b>Figure 2.2</b> should appear in the
         ViewWindow.
@@ -186,15 +186,15 @@ To complete this net, read in a Field.
 
 	  <LI> The selected color map appears at the top of the
 	       window, and has a clickable interface for changing the
-	       opacity of each color swatch in the map (the red line
+	       opacity of each color swatch in the map. The red line
 	       in the middle of the color map represents the opacity
-	       (alpha) of the color map).
+	       (alpha) of the color map.
 
 	  <LI> To add additional control points, left click on the
 	       color map.  To remove additonal control points, right
 	       click on a control point.
 
-	  <LI> The <I>Shift</I> slider will skew the color map to the
+	  <LI> The <I>Shift</I> slider skews the color map to the
 	       left or right.
 
 	  <LI> The <I>Resolution</I> slider sets the number of
@@ -209,7 +209,7 @@ To complete this net, read in a Field.
 
         In GenStandardColorMaps, change the color map from Inverse
 	Rainbow to Inverse Darkhue. This changes the image in the
-	ViewWindow from the one originally generated (<b>Figure
+	ViewWindow from the image originally generated (<b>Figure
 	2.2</b>) to the one seen in <b>Figure 2.5</b>.
         <P>
 	<center>
@@ -220,8 +220,8 @@ To complete this net, read in a Field.
 <H2><A name="section-4">RescaleColorMap GUI</A></H2>
 
         The RescaleColorMap module is used to change the way the color
-        map is mapped onto the data.  This allows for the image to be
-        easier to interpret by the user.  <b>Figure 2.4</b> shows the
+        map is mapped onto data.  This allows the image to be
+        easily interpreted by the user.  <b>Figure 2.4</b> shows the
         UI for the RescaleColorMap module.
         <P>
 	<center>
@@ -251,14 +251,13 @@ To complete this net, read in a Field.
 	</center>
 
 	<A NAME="summary">
-        <H2><b>Summary</b></H2>
-	Chapter two demonstrated how to add modules for looking at
-	data values and for varying colors over the geometry, rather
-	than mapping the data to a single color.  These modules where
-	GenStandardColorMaps and RescaleColorMap.
+        <H2><b>Summary</b></H2> Chapter 2 demonstrated adding
+	GenStandardColorMaps and RescaleColorMap modules. These modules look
+	at data values and varying colors over the geometry,
+	rather than mapping data to a single color. 
         <P>
-	The next chapter features more visualization techniques, and
-	explores how to input and output a Field.
+	Chapter 3 features more visualization techniques, and
+	explores inputing and outputing a Field.
 	<P>
 	<A HREF="#chapter-2">Return to Top</A>
 	</td>
