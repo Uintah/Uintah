@@ -765,11 +765,24 @@ void postMessage(const clString& errmsg, bool err)
   TCL::execute(".top.errorFrame.text see end");
 }
 
+void postMessageNoCRLF(const clString& errmsg, bool err)
+{
+  clString tag;
+  if(err)
+    tag += " errtag";
+  TCL::execute(clString(".top.errorFrame.text insert end \"")+
+	       errmsg+"\""+tag);
+  TCL::execute(".top.errorFrame.text see end");
+}
+
 } // End namespace Dataflow
 } // End namespace PSECore
 
 //
 // $Log$
+// Revision 1.22  2000/11/30 18:52:37  moulding
+// added cute little package load progress indicator to message window.
+//
 // Revision 1.21  2000/11/13 19:45:17  moulding
 // - improve error reporting for XML stuff in module maker
 // - edit module maker dialog:

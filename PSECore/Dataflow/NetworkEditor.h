@@ -75,12 +75,16 @@ public:
 };
 
 void postMessage(const clString& errmsg, bool err=true);
+void postMessageNoCRLF(const clString& errmsg, bool err=true);
 
 } // End namespace Dataflow
 } // End namespace PSECore
 
 //
 // $Log$
+// Revision 1.6  2000/11/30 18:52:37  moulding
+// added cute little package load progress indicator to message window.
+//
 // Revision 1.5  2000/10/21 18:35:10  moulding
 // more work for new module maker.
 //
