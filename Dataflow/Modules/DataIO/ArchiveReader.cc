@@ -36,7 +36,7 @@ void ArchiveReader::execute()
 { 
   static string aName("");
   static int aName_size = 0;
-  struct stat *statbuffer = 0;
+  struct stat statbuffer;
 
   tcl_status.set("Executing"); 
   out = (ArchiveOPort *) get_oport("Data Archive");
@@ -45,9 +45,9 @@ void ArchiveReader::execute()
      return;
 
    string index( filebase.get() + "/index.xml" );
-   stat( index.c_str(), statbuffer);
+   stat( index.c_str(), &statbuffer);
 
-   if(filebase.get() != aName || aName_size != statbuffer->st_size) {
+   if(filebase.get() != aName || aName_size != statbuffer.st_size) {
      try {
        reader = scinew DataArchive(filebase.get());
      } catch ( const InternalError& ex) {
@@ -55,7 +55,7 @@ void ArchiveReader::execute()
        return;
      }
      aName = filebase.get();
-     aName_size = statbuffer->st_size;
+     aName_size = statbuffer.st_size;
    }
 
    Archive *archive = scinew Archive( reader );
