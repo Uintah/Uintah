@@ -20,9 +20,9 @@ BCData::setBCValues(int mat_id,BoundCondBase* bc)
 {
   if ((int)d_data.size() < mat_id + 1)
     d_data.resize(mat_id +1);
-
+#if 0
   cerr << "Setting bc " << bc->getType() << " for material " << mat_id << endl;
-  
+#endif
   d_data[mat_id][bc->getType()]=bc;
 }
 
