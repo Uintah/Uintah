@@ -85,7 +85,7 @@ void TYPEWriter::execute()
 	stream=new TextPiostream(fn, Piostream::Write);
     }
     // Write the file
-    stream->watch_progress(watcher, (void*)this);
+    //stream->watch_progress(watcher, (void*)this);
     Pio(*stream, handle);
     delete stream;
 }
