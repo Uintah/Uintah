@@ -27,13 +27,16 @@
  */
  
 #include <Dataflow/Network/Module.h>
-#include <Dataflow/Ports/MatrixPort.h>
+#include <Dataflow/Ports/GeometryPort.h>
 #include <Dataflow/Ports/FieldPort.h>
 #include <Core/Datatypes/DenseMatrix.h>
 #include <Core/Malloc/Allocator.h>
 #include <Core/Math/MusilRNG.h>
 #include <Core/Math/Trig.h>
 #include <Core/GuiInterface/GuiVar.h>
+#include <Core/Thread/CrowdMonitor.h>
+#include <Dataflow/Widgets/GaugeWidget.h>
+#include <math.h>
 
 #include <iostream>
 using std::cerr;
@@ -41,12 +44,19 @@ using std::cerr;
 namespace SCIRun {
 
 class SeedField : public Module {
-  FieldIPort* imesh;
-  MatrixOPort* omat;  
-  GuiString seedRandTCL;
-  GuiString numDipolesTCL;
-  GuiString dipoleMagnitudeTCL;
+  FieldIPort     *ifport_;
+  FieldOPort     *ofport_;  
+  GeometryOPort  *ogport_;
+
+  FieldHandle    vfhandle_;
+  Field          *vf_;
+
+  GuiString seedRandTCL_;
+  GuiString numDipolesTCL_;
+  GuiString dipoleMagnitudeTCL_;
 public:
+  CrowdMonitor widget_lock_;
+  GaugeWidget rake_;
   SeedField(const clString& id);
   virtual ~SeedField();
   virtual void execute();
@@ -57,17 +67,24 @@ extern "C" Module* make_SeedField(const clString& id) {
 }
 
 SeedField::SeedField(const clString& id)
-  : Module("SeedField", id, Filter), seedRandTCL("seedRandTCL", id, this),
-  numDipolesTCL("numDipolesTCL", id, this),
-  dipoleMagnitudeTCL("dipoleMagnitudeTCL", id, this)
+  : Module("SeedField", id, Filter), seedRandTCL_("seedRandTCL", id, this),
+    numDipolesTCL_("numDipolesTCL", id, this),
+    dipoleMagnitudeTCL_("dipoleMagnitudeTCL", id, this),
+    widget_lock_("StreamLines widget lock"),
+    rake_(this,&widget_lock_,1)
 {
   // Create the input port
-  imesh = scinew FieldIPort(this, "Mesh", FieldIPort::Atomic);
-  add_iport(imesh);
+  ifport_ = scinew FieldIPort(this, "Field to seed", FieldIPort::Atomic);
+  add_iport(ifport_);
   
   // Create the output ports
-  omat=scinew MatrixOPort(this,"Dipole Seeds", MatrixIPort::Atomic);
-  add_oport(omat);
+  ofport_ = scinew FieldOPort(this,"Seeds", FieldIPort::Atomic);
+  add_oport(ofport_);
+
+  ogport_ = scinew GeometryOPort(this,"Seeding Widget", GeometryIPort::Atomic);
+  add_oport(ogport_);
+
+  vf_ = 0;
 }
 
 SeedField::~SeedField()
@@ -77,6 +94,49 @@ SeedField::~SeedField()
 // FIX_ME upgrade to new fields.
 void SeedField::execute()
 {
+  // the field input is required
+  if (!ifport_->get(vfhandle_) || !(vf_ = vfhandle_.get_rep()))
+    return;
+
+  BBox bbox = vf_->mesh()->get_bounding_box();
+  Point min = bbox.min();
+  Point max = bbox.max();
+
+  Point center(min.x()+(max.x()-min.x())/2.,
+	       min.y()+(max.y()-min.y())/2.,
+	       min.z()+(max.z()-min.z())/2.);
+
+  double x  = max.x()-min.x();
+  double x2 = x*x;
+  double y  = max.y()-min.y();
+  double y2 = y*y;
+  double z  = max.z()-min.z();
+  double z2 = z*z;
+
+  double quarterl2norm = sqrt(x2+y2+z2)/4.;
+
+  rake_.SetEndpoints(Point(center.x()-quarterl2norm,center.y(),center.z()),
+		     Point(center.x()+quarterl2norm,center.y(),center.z()));
+
+  rake_.SetScale(quarterl2norm);
+
+  GeomGroup *widget_group = scinew GeomGroup;
+  widget_group->add(rake_.GetWidget());
+
+  rake_.GetEndpoints(min,max);
+
+  
+
+  ogport_->addObj(widget_group,"StreamLines rake",&widget_lock_);
+}
+
+} // End namespace SCIRun
+
+
+
+
+
+
 #if 0
   FieldHandle mesh;
   if (!imesh->get(mesh) || !mesh.get_rep()) return;
@@ -104,6 +164,4 @@ void SeedField::execute()
     (*m)[i][5]=2*(mr()-0.5)*dipoleMagnitude;
   }
   omat->send(MatrixHandle(m));
-#endif 
-}
-} // End namespace SCIRun
+#endif
