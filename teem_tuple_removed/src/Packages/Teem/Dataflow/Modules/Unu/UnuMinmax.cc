@@ -50,12 +50,14 @@ public:
   virtual void tcl_command(GuiArgs&, void*);
 
 private:
-  NrrdOPort* onrrd_;
+  NrrdOPort*         onrrd_;
 
-  NrrdDataHandle    onrrd_handle_;  //! the cached output nrrd handle.
-  vector<int>       in_generation_; //! all input generation nums.
+  NrrdDataHandle     onrrd_handle_;  //! the cached output nrrd handle.
+  vector<int>        in_generation_; //! all input generation nums.
                                     //! target type for output nrrd.
-  GuiInt            nrrds_;
+  GuiInt             nrrds_;
+  vector<GuiDouble*> mins_;
+  vector<GuiDouble*> maxs_;
 };
 
 
@@ -134,20 +136,25 @@ void
     
 
     // build list string
-    string min_list = "[list ";
-    string max_list = "[list ";
-
     for (int i=0; i<mins.size(); i++) {
       ostringstream min_str, max_str;
-      min_str << mins[i] << " ";
-      max_str << maxs[i] << " ";
-      min_list += min_str.str();
-      max_list += max_str.str();
+      min_str << "min" << i;
+      if (mins_.size() <= i)
+	mins_.push_back(new GuiDouble(ctx->subVar(min_str.str())));
+      max_str << "max" << i;
+      if (maxs_.size() <= i)
+	maxs_.push_back(new GuiDouble(ctx->subVar(max_str.str())));
     }
-    min_list += "]";
-    max_list += "]";
-    
-    gui->execute(id + " init_axes " + min_list + " " + max_list);
+    gui->execute(id + " init_axes");
+
+    for (int i=0; i<mins.size(); i++) {
+      mins_[i]->set(mins[i]);
+      mins_[i]->reset();
+      maxs_[i]->set(maxs[i]);
+      maxs_[i]->reset();
+    }
+    gui->execute(id + " make_min_max");
+
   }
 }
 
