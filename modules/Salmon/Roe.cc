@@ -422,17 +422,19 @@ void Roe::orthoCB(CallbackData*, void*) {
     glMatrixMode(GL_PROJECTION);
     glLoadIdentity();
     glOrtho(-8, 8, -6, 6, -100, 100);
-    bb.reset();
-    HashTableIter<int,HashTable<int, GeomObj*>*> iter(&manager->portHash);
-    for (iter.first(); iter.ok(); ++iter) {
-	HashTable<int, GeomObj*>* serHash=iter.get_data();
-	HashTableIter<int, GeomObj*> serIter(serHash);
-	for (serIter.first(); serIter.ok(); ++serIter) {
-	    GeomObj *geom=serIter.get_data();
-	    for (int i=0; i<geomItemA.size(); i++)
-		if (geomItemA[i]->geom == geom)
-		    if (geomItemA[i]->vis)
-			bb.extend(geom->bbox());
+    // determine the bounding box so we can scale the view
+    if (!bb.valid()) {
+	HashTableIter<int,HashTable<int, GeomObj*>*> iter(&manager->portHash);
+	for (iter.first(); iter.ok(); ++iter) {
+	    HashTable<int, GeomObj*>* serHash=iter.get_data();
+	    HashTableIter<int, GeomObj*> serIter(serHash);
+	    for (serIter.first(); serIter.ok(); ++serIter) {
+		GeomObj *geom=serIter.get_data();
+		for (int i=0; i<geomItemA.size(); i++)
+		    if (geomItemA[i]->geom == geom)
+			if (geomItemA[i]->vis)
+			    bb.extend(geom->bbox());
+	    }
 	}
     }			
     if (bb.valid()) {
@@ -473,7 +475,29 @@ void Roe::initCB(CallbackData*, void*) {
     // set the view
     glMatrixMode(GL_PROJECTION);
     glLoadIdentity();
+
+    // opted for orthographic as the default
     glOrtho(-8, 8, -6, 6, -100, 100);
+    if (!bb.valid()) {
+	HashTableIter<int,HashTable<int, GeomObj*>*> iter(&manager->portHash);
+	for (iter.first(); iter.ok(); ++iter) {
+	    HashTable<int, GeomObj*>* serHash=iter.get_data();
+	    HashTableIter<int, GeomObj*> serIter(serHash);
+	    for (serIter.first(); serIter.ok(); ++serIter) {
+		GeomObj *geom=serIter.get_data();
+		for (int i=0; i<geomItemA.size(); i++)
+		    if (geomItemA[i]->geom == geom)
+			if (geomItemA[i]->vis)
+			    bb.extend(geom->bbox());
+	    }
+	}
+    }			
+    if (bb.valid()) {
+	double xw=bb.center().x()-bb.min().x();
+	double yw=bb.center().y()-bb.min().y();
+	double scl=4/Max(xw,yw);
+	glScaled(scl,scl,scl);
+    }
     glMatrixMode(GL_MODELVIEW);
     glLoadIdentity();
     gluLookAt(2,2,5,2,2,2,0,1,0);
@@ -524,6 +548,7 @@ void Roe::itemAdded(GeomObj *g, char *name) {
     for (int i=0; i<kids.size(); i++) {
 	kids[i]->itemAdded(g, name);
     }
+    // invalidate the bounding box
     bb.reset();
 }
 
@@ -537,6 +562,7 @@ void Roe::itemDeleted(GeomObj *g) {
     for (i=0; i<kids.size(); i++) {
 	kids[i]->itemDeleted(g);
     }
+    // invalidate the bounding box
     bb.reset();
 }
 
@@ -547,6 +573,8 @@ void Roe::redrawAll()
 	// clear screen
 	evl->lock();
         make_current();  
+
+	// have to redraw the lights for them to have the right transformation
 	GLfloat light_position[] = { 5,5,-100,1};
 	glLightfv(GL_LIGHT0, GL_POSITION, light_position);
 	glClearColor(0,0,0,1);
@@ -804,6 +832,7 @@ void Roe::autoViewCB(CallbackData*, void*)
 	    }		
 	}
     }	
+    // do we have anything to look at?
     if (!bb.valid()) return;
     Point lookat(bb.center());
     lookat.z(bb.max().z());
@@ -817,15 +846,16 @@ void Roe::autoViewCB(CallbackData*, void*)
     gluLookAt(lookat.x(), lookat.y(), lookat.z()+dist, lookat.x(), 
 	      lookat.y(), lookat.z(), 0, 1, 0);
     mtnScl=1;
+    // if we're in orthographics mode, scale appropriately
     char ort;
     orthoB->GetSet(&ort);
     orthoB->GetValues();
-cerr << "OrthoButton value: " << ort << "\n";
     if (ort) {
 	glMatrixMode(GL_PROJECTION);
 	glLoadIdentity();
 	glOrtho(-8,8,-6,6,-100,100);
 	glScaled(4/dist, 4/dist, 4/dist);
+	glMatrixMode(GL_MODELVIEW);
     }
     evl->unlock();
     redrawAll();
@@ -876,7 +906,7 @@ void Roe::translate(Vector v)
     glGetDoublev(GL_MODELVIEW_MATRIX, temp);
     glPopMatrix();
     glLoadIdentity();
-    glTranslated(v.x(), v.y(), v.z());
+    glTranslated(v.x()*mtnScl, v.y()*mtnScl, v.z()*mtnScl);
     glMultMatrixd(temp);
     for (int i=0; i<kids.size(); i++)
 	kids[i]->translate(v);
@@ -1083,9 +1113,10 @@ void Roe::mouse_translate(int action, int x, int y, int, int)
 	    glPopMatrix();
 	    glLoadIdentity();
 	    glTranslated(-xmtn, ymtn, 0);
+	    // post-multiply by the translate to be sure it happens last!
 	    glMultMatrixd(temp);
 	    for (int i=0; i<kids.size(); i++)
-		kids[i]->translate(Vector(-xmtn, ymtn, 0));
+		kids[i]->translate(Vector(-xmtn/mtnScl, ymtn/mtnScl, 0));
 	    redrawAll();
 	    update_mode_string(clString("translate: ")+to_string(total_x)
 			       +", "+to_string(total_y));
@@ -1106,9 +1137,8 @@ void Roe::mouse_scale(int action, int x, int y, int, int)
 	    last_x=x;
 	    last_y=y;
 	    total_x=1;
-	    bb.reset();
-	    HashTableIter<int,HashTable<int, GeomObj*>*> iter(&manager->portHash);
 	    if (!bb.valid()) {
+		HashTableIter<int,HashTable<int, GeomObj*>*> iter(&manager->portHash);
 		for (iter.first(); iter.ok(); ++iter) {
 		    HashTable<int, GeomObj*>* serHash=iter.get_data();
 		    HashTableIter<int, GeomObj*> serIter(serHash);
@@ -1139,6 +1169,7 @@ void Roe::mouse_scale(int action, int x, int y, int, int)
 	    total_x*=scl;
 	    mtnScl*=scl;
 	    Point cntr(bb.center());
+	    // premultiplying by the scale works just fine
 	    glTranslated(cntr.x(), cntr.y(), cntr.z());
 	    glScaled(scl, scl, scl);
 	    glTranslated(-cntr.x(), -cntr.y(), -cntr.z());
@@ -1163,9 +1194,8 @@ void Roe::mouse_rotate(int action, int x, int y, int, int)
 	    update_mode_string("rotate:");
 	    last_x=x;
 	    last_y=y;
-	    bb.reset();
-	    HashTableIter<int,HashTable<int, GeomObj*>*> iter(&manager->portHash);
 	    if (!bb.valid()) {
+		HashTableIter<int,HashTable<int, GeomObj*>*> iter(&manager->portHash);
 		for (iter.first(); iter.ok(); ++iter) {
 		    HashTable<int, GeomObj*>* serHash=iter.get_data();
 		    HashTableIter<int, GeomObj*> serIter(serHash);
@@ -1194,7 +1224,7 @@ void Roe::mouse_rotate(int action, int x, int y, int, int)
 	    int vp[4];
 	    double trans[4];
 	    double centr[4];
-	    double ox, oy, oz, cx, cy, cz, orx, ory, orz, tx, ty, tz;
+	    double cx, cy, cz;
 	    glGetDoublev(GL_MODELVIEW_MATRIX, mm);
 	    glMatrixMode(GL_PROJECTION);
 	    glPushMatrix();
@@ -1202,16 +1232,21 @@ void Roe::mouse_rotate(int action, int x, int y, int, int)
 	    gluPerspective(90,1.33, 1, 100);
 	    glGetDoublev(GL_PROJECTION_MATRIX, pm);
 	    glPopMatrix();
-	    glMatrixMode(GL_MODELVIEW);
 	    glGetIntegerv(GL_VIEWPORT, vp);
+	    // unproject the center of the viewport, w/ z-value=.94
+	    // to find the point we want to rotate around.
 	    if (gluUnProject(vp[0]+vp[2]/2, vp[1]+vp[3]/2, .94, mm, pm, vp, 
 			 &cx, &cy, &cz) == GL_FALSE) 
 		cerr << "Error Projecting!\n";
 	    centr[0]=cx; centr[1]=cy; centr[2]=cz; centr[3]=1;
+	    // multiply that point by our current modelview matrix to get
+	    // the z-translate necessaary to put that point at the origin
 	    mmult(mm, centr, trans);
+	    glMatrixMode(GL_MODELVIEW);
 	    glPopMatrix();
 	    glLoadIdentity();
 	    double totMtn=Sqrt(xmtn*xmtn+ymtn*ymtn)/5;
+	    // these also need to be post-multiplied
 	    glTranslated(0, 0, trans[2]);
 	    glRotated(totMtn,-ymtn,-xmtn,0);
 	    glTranslated(0,0, -trans[2]);
