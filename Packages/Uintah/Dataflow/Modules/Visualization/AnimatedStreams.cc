@@ -107,9 +107,7 @@ void AnimatedStreams::execute(void)
   mutex.lock();
 
   if( !anistreams ){
-    anistreams = new GLAnimatedStreams(0x12345676,
-				       field,
-				       cmap);
+    anistreams = new GLAnimatedStreams( field, cmap);
     ogeom->addObj( anistreams, "AnimatedStreams");
     vf = field;
     map = cmap;
