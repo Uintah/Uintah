@@ -108,7 +108,7 @@ ColorMapToNrrd::execute()
 	val[start+cur] = *data;
 
     // Send the data nrrd.
-    nd->nrrd->axis[0].label = strdup("Colors");
+    nd->nrrd->axis[0].label = airStrdup("Colors");
     NrrdDataHandle dataH(nd);
     nout_->send(dataH);
   }

@@ -114,7 +114,7 @@ ColorMap2ToNrrd::execute()
     nd->nrrd->axis[2].kind = nrrdKindDomain;
     nd->nrrd->axis[1].kind = nrrdKindDomain;
     nd->nrrd->axis[0].kind = nrrdKind4Color;
-    nd->nrrd->axis[0].label = strdup("Colors");
+    nd->nrrd->axis[0].label = airStrdup("Colors");
 
     // Move the image to the nrrd.
     float *data = (float *)nd->nrrd->data;
