@@ -47,6 +47,7 @@ Roe::Roe(Salmon* s, const clString& id)
     TCL::add_command(id, this, 0);
     current_renderer=0;
     modebuf=new char[MODEBUFSIZE];
+    modecommand=new char[MODEBUFSIZE];
 }
 
 #ifdef OLDUI
@@ -123,6 +124,7 @@ void Roe::spawnChCB(CallbackData*, void*)
 Roe::~Roe()
 {
     delete[] modebuf;
+    delete[] modecommand;
 }
 
 #ifdef OLDUI
@@ -747,8 +749,9 @@ void Roe::redraw()
     current_renderer->redraw(manager, this);
 }
 
-void Roe::update_mode_string(const char*)
+void Roe::update_mode_string(const char* msg)
 {
+    
     NOT_FINISHED("Roe::update_mode_string");
 }
 

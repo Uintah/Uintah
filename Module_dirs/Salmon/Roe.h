@@ -68,6 +68,7 @@ class Roe : public TCL {
 
     void update_mode_string(const char*);
     char* modebuf;
+    char* modecommand;
 public:
     clString id;
 

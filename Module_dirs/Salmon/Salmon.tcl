@@ -216,3 +216,6 @@ proc makeViewPopup {rid} {
 	    -command $c
     pack $w.f.fov -expand yes -fill x
 }
+
+proc updateMode {rid msg} {
+}
