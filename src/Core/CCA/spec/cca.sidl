@@ -1,5 +1,5 @@
-version gov 0.0.0;
-version cca 0.5.5;
+version gov 0.1;
+version cca 0.6;
 
 package gov {
 package cca {
@@ -89,10 +89,11 @@ enum CCAExceptionType
 /** The CCA exception type definition.
  */
 // Implementation Class
-class CCAException  extends CIA.Throwable  {
+abstract class CCAException  extends CIA.Throwable  {
 
-
-
+	abstract CCAExceptionType getCCAExceptionType();	
+			
+/*<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<*/
   /** @return a member of the enumeration in CCAExceptionType. */
    CCAExceptionType getType() ;
 
@@ -106,7 +107,7 @@ class CCAException  extends CIA.Throwable  {
       for its own internal use. 
    */
    void setMessage(in string message) ;
-
+/*>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>*/
 }  // end interface CCAException
 
 class Matrix
@@ -463,61 +464,13 @@ interface Port
   /** Mapping of sidl/java primitive types and arrays to
    occuring in the TypeMap interface to integers. 
    */
-  enum Type {
-    /** Undefined primitive type. includes things like
-        long double, short, unsigned, char, etc that are C-isms.
-     */
-    None = -1,
+ 
+    enum Type {
+	None, Int, Long, Float, Double, Fcomplex, Dcomplex, String, Bool, 
+	IntArray, LongArray, FloatArray, DoubleArray, FcomplexArray, 
+	DcomplexArray, StringArray, BoolArray
+    }
 
-    /** A signed, 32 bit int. */
-    Int = 1,
-
-    /** A signed, 64 bit int. */
-    Long = 2,
-
-    /** A 32 bit floating point number. */
-    Float = 3,
-
-    /** A 64 bit floating point number. */
-    Double = 4,
-
-    /** A 32x2 bit complex float number, a_f + b_f*i. */
-    Fcomplex = 5,
-
-    /** A 64x2 bit complex float number, a_d + b_d*i. */
-    Dcomplex = 6,
-
-    /** A string, in the language native representation. */
-    String = 7,
-
-    /** A boolean value in the language native representation. */
-    Bool = 8,
-
-    /** An array of Int */
-    IntArray = 21,
-
-    /** An array of Long */
-    LongArray = 22,
-
-    /** An array of Float */
-    FloatArray = 23,
-
-    /** An array of Double */
-    DoubleArray = 24,
-
-    /** An array of Fcomplex */
-    FcomplexArray = 25,
-
-    /** An array of Dcomplex */
-    DcomplexArray = 26,
-
-    /** An array of String  */
-    StringArray = 27,
-
-    /** An array of Bool */
-    BoolArray = 28,
-
-} // end enum Type
 
 
 
@@ -545,17 +498,14 @@ interface Port
     Not to be confused with a PortType mismatch or class mismatch.
  */
 // Implementation Class
-class TypeMismatchException  extends CCAException   {
+abstract class TypeMismatchException  extends CCAException   {
 
-  // new in this interface
+	/** @return the enumerated value Type sought */
+        abstract Type getRequestedType();
+	/** @return the enumerated value Type sought */
+	abstract Type getActualType();
 
-  /** @return the enumerated value Type sought. */
-   Type getRequestedType() ;
-
-  /** @return the enumerated Type of the value actually found. */
-   Type getActualType() ;
-
-
+/*<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<*/
   // inherited from CCAExceptionType
 
   /** @return a member of the enumeration in CCAExceptionType. */
@@ -571,7 +521,7 @@ class TypeMismatchException  extends CCAException   {
       for its own internal use. 
    */
    void setMessage(in string message) ;
-
+/*>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>*/
 }  // end interface TypeMismatchException
 
 
@@ -608,7 +558,7 @@ interface TypeMap
 {
 
   /** Create an exact copy of this Map */
-   TypeMap cloneData() ;
+   TypeMap cloneTypeMap() ;
 
   /** Create a new Map with no key/value associations. */
    TypeMap cloneEmpty() ;
@@ -995,8 +945,10 @@ interface Services
 
 // BEGIN proposed sparker
 interface ComponentClassDescription {
-  string getClassName();
+  string getComponentClassName();
+/* <<<<<<<<<<<<<<<<<<<<  */
   string getModelName();
+/*  >>>>>>>>>>>>>>>>>>>>> */
 }
 // END proposed sparker
 
@@ -1438,24 +1390,19 @@ interface PDEMatrixPort extends gov.cca.Port
 /* # cca */
 /* # cca spec mappings */
 
-  /** There are 4 basic events to do with connections. They form
+  /** There are 5 basic events to do with connections. They form
      a subset of the events in the component lifecycle. */
-  enum Type {
-  /** never delivered to a listener, but used by listeners to subscribe broadly. */
-  ALL = 0, 
 
-  /** a connection may soon be made. */
-  ConnectPending = 1, 
+	enum EventType { 
+	    Error = -1,            // Someone got a bogus event object somehow.
+	    ALL = 0,               // Component wants to receive all event notices. 
+      	                           // ALL itself never received.
+	    ConnectPending = 1,    // A connection is about to be attempted.
+	    Connected = 2,         // A connection has been made.
+	    DisconnectPending = 3, // A disconnection is about to be attempted.
+	    Disconnected = 4,      // A disconnection has been made.
+	}
 
-  /** a connection has been made. */
-  Connected = 2,
-
-  /** a connection will soon be broken. */
-  DisconnectPending = 3,
- 
-  /** a connection has been broken. */
-  Disconnected = 4,
-  } // end enum 
 
 /** Base event interface components wishing to know about their connectedness
 (used or provided ports) must listen for. 
@@ -1501,11 +1448,11 @@ interface ConnectionEvent
       ConnectPending, Connected, DisconnectPending, Disconnected types.
 
   */
-   Type getEventType() ;
+   EventType getEventType() ;
 
   /** Get the properties of the affected Port.
       Among the standard properties are the name and type info. */
-   gov.cca.TypeMap getPortProperties() ;
+   gov.cca.TypeMap getPortInfo() ;
 
 }  // end interface ConnectionEvent
 
@@ -1638,3 +1585,12 @@ interface ComponentEventService  extends Port
 
 
 /* $Source$ */
+
+
+/*<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+
+TODO: 
+	replace CIA with SIDL
+	find a nice way to add the additional/proposed features
+
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>*/
