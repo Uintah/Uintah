@@ -72,7 +72,8 @@ tar -xvzf %{SOURCE3}
 cd $RPM_BUILD_DIR/%{hdf5} 
 ./configure --enable-threadsafe --with-pthread=/usr --prefix=/usr/local/hdf5/1.6.1
 make
-make install 
+make install
+cp $RPM_BUILD_DIR/%{hdf5}/COPYING /usr/local/hdf5/1.6.1
 
 cd $RPM_BUILD_DIR/Thirdparty_install.%{thirdpartyversion}.%{thirdpartydotver}
 python $RPM_BUILD_DIR/Thirdparty_install.%{thirdpartyversion}.%{thirdpartydotver}/install /usr/local/SCIRun/Thirdparty 32 1
@@ -90,7 +91,7 @@ chown -R root.root /usr/local/SCIRun /usr/local/hdf5/
 chmod -R a+r /usr/local/SCIRun /usr/local/hdf5
 
 %clean
-rm -rf $RPM_BUILD_DIR/Thirdparty_install.%{thirdpartyversion}
+rm -rf $RPM_BUILD_DIR/Thirdparty_install.%{thirdpartyversion}.%{thirdpartydotver}
 rm -rf $RPM_BUILD_DIR/%{hdf5}
 
 %files
