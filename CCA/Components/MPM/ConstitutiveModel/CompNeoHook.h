@@ -59,7 +59,6 @@ namespace Uintah {
                                           DataWarehouse* old_dw,
                                           DataWarehouse* new_dw);
 
-
          // initialize  each particle's constitutive model data
          virtual void initializeCMData(const Patch* patch,
                                        const MPMMaterial* matl,

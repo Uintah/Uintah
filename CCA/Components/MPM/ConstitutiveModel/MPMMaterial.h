@@ -23,13 +23,14 @@ namespace Uintah {
 
 using namespace SCIRun;
 
-class Patch;
-class VarLabel;
-class GeometryObject;
-class GeometryPiece;
-class ConstitutiveModel;
-class Burn;
-class EquationOfState;
+ class Patch;
+ class VarLabel;
+ class GeometryObject;
+ class GeometryPiece;
+ class ConstitutiveModel;
+ class Burn;
+ class EquationOfState;
+ class ParticleCreator;
       
 /**************************************
      
@@ -117,11 +118,6 @@ WARNING
 				       ParticleVariable<Vector>& ptang1,
 				       ParticleVariable<Vector>& ptang2,
 				       ParticleVariable<Vector>& pnorm);
-#if 0
-	 int checkForSurface(const GeometryPiece* piece,
-				const Point p, const Vector dxpp);
-#endif
-
 
          //for HeatConductionModel
          double getThermalConductivity() const;
@@ -150,7 +146,9 @@ WARNING
 	 EquationOfState* d_eos;
 
          bool d_membrane;
-	 
+#if 0
+	 ParticleCreator* d_particle_creator;
+#endif 
 	 double d_density;
 
          //for HeatConductionModel

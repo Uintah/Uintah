@@ -54,6 +54,8 @@ using namespace SCIRun;
 using namespace std;
 
 #define PETSC_DEBUG
+#define OLD_SPARSE
+#undef OLD_SPARSE
 
 static DebugStream cout_doing("IMPM_DOING_COUT", false);
 
@@ -179,26 +181,13 @@ void ImpMPM::scheduleInitialize(const LevelP& level,
   d_perproc_patches = loadbal->createPerProcessorPatchSet(level,d_myworld);
   d_perproc_patches->addReference();
 
-  for (int s = 0; s < d_perproc_patches->size();s++) {
-    const PatchSubset* patches = d_perproc_patches->getSubset(s);
-    for (int p = 0; p<patches->size();p++) {
-      const Patch* patch = patches->get(p);
-      cerr << endl << "patch limits actuallyInitialize = " << *patch << endl;
-    }
-  }
-
   sched->addTask(t, d_perproc_patches, d_sharedState->allMPMMaterials());
-#if 0
-  sched->addTask(t, level->eachPatch(), d_sharedState->allMPMMaterials());
-#endif
 
   t = scinew Task("ImpMPM::printParticleCount",
 		  this, &ImpMPM::printParticleCount);
   t->requires(Task::NewDW, lb->partCountLabel);
   sched->addTask(t, d_perproc_patches, d_sharedState->allMPMMaterials());
-#if 0
-  sched->addTask(t, level->eachPatch(), d_sharedState->allMPMMaterials());
-#endif
+
 }
 
 void ImpMPM::scheduleComputeStableTimestep(const LevelP&, SchedulerP&)
@@ -209,18 +198,6 @@ void ImpMPM::scheduleComputeStableTimestep(const LevelP&, SchedulerP&)
 
 void ImpMPM::scheduleTimeAdvance(const LevelP& level, SchedulerP& sched)
 {
-  //  const PatchSet* patches = level->eachPatch();
-#if 0
-  LoadBalancer* loadbal = sched->getLoadBalancer();
-  d_perproc_patches = loadbal->createPerProcessorPatchSet(level,d_myworld);
-#endif
- for (int s = 0; s < d_perproc_patches->size();s++) {
-    const PatchSubset* patches = d_perproc_patches->getSubset(s);
-    for (int p = 0; p<patches->size();p++) {
-      const Patch* patch = patches->get(p);
-      cerr << endl << "patch limits scheduleTimeAdvance = " << *patch << endl;
-    }
-  }
   const MaterialSet* matls = d_sharedState->allMPMMaterials();
 
   scheduleInterpolateParticlesToGrid(sched,d_perproc_patches, matls);
@@ -307,14 +284,6 @@ void ImpMPM::scheduleInterpolateParticlesToGrid(SchedulerP& sched,
   t->computes(lb->gExternalForceLabel);
   t->computes(lb->TotalMassLabel);
   
-  for (int s = 0; s < patches->size();s++) {
-    const PatchSubset* patchesub = patches->getSubset(s);
-    for (int p = 0; p<patchesub->size();p++) {
-      const Patch* patch = patchesub->get(p);
-      cerr << endl << "patch limits interpolateParticlesToGrid = " << *patch << endl;
-    }
-  }
-
   sched->addTask(t, patches, matls);
 }
 
@@ -387,13 +356,6 @@ void ImpMPM::scheduleComputeStressTensorR(SchedulerP& sched,
     ConstitutiveModel* cm = mpm_matl->getConstitutiveModel();
     cm->addComputesAndRequiresImplicit(t, mpm_matl, patches,recursion);
   }
-  for (int s = 0; s < patches->size();s++) {
-    const PatchSubset* patchesub = patches->getSubset(s);
-    for (int p = 0; p<patchesub->size();p++) {
-      const Patch* patch = patchesub->get(p);
-      cerr << endl << "patch limits computeStressTensorR = " << *patch << endl;
-    }
-  }
   sched->addTask(t, patches, matls);
 }
 
@@ -409,13 +371,6 @@ void ImpMPM::scheduleComputeStressTensorOnly(SchedulerP& sched,
     MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial(m);
     ConstitutiveModel* cm = mpm_matl->getConstitutiveModel();
     cm->addComputesAndRequiresImplicitOnly(t, mpm_matl, patches,recursion);
-  }
- for (int s = 0; s < patches->size();s++) {
-    const PatchSubset* patchesub = patches->getSubset(s);
-    for (int p = 0; p<patchesub->size();p++) {
-      const Patch* patch = patchesub->get(p);
-      cerr << endl << "patch limits computeStressTensorOnly = " << *patch << endl;
-    }
   }
   sched->addTask(t, patches, matls);
 }
@@ -550,7 +505,7 @@ void ImpMPM::scheduleMoveData(SchedulerP& sched,const LevelP& level,
   task->computes(d_sharedState->get_delt_label());
 
 
-  sched->addTask(task,level->eachPatch(),d_sharedState->allMPMMaterials());
+  sched->addTask(task,patches,d_sharedState->allMPMMaterials());
 
 }
 
@@ -1555,7 +1510,7 @@ void ImpMPM::createMatrix(const ProcessorGroup*,
     long nn = (phighIndex[0]-plowIndex[0])*
 	(phighIndex[1]-plowIndex[1])*
 	(phighIndex[2]-plowIndex[2])*3;
-    cerr << "nn = " << nn << "\n";
+
     d_petscGlobalStart[patch]=totalNodes;
     totalNodes+=nn;
     mytotal+=nn;
@@ -1567,7 +1522,7 @@ void ImpMPM::createMatrix(const ProcessorGroup*,
   for(int p=0;p<patches->size();p++){
     const Patch* patch=patches->get(p);
     IntVector lowIndex = patch->getNodeLowIndex();
-    IntVector highIndex = patch->getNodeHighIndex();
+    IntVector highIndex = patch->getNodeHighIndex() + IntVector(1,1,1);
     cerr << "patch extents = " << lowIndex << " " << highIndex << endl;
     Array3<int> l2g(lowIndex, highIndex);
     l2g.initialize(-1234);
@@ -1628,7 +1583,7 @@ void ImpMPM::createMatrix(const ProcessorGroup*,
 	for(int y=l.y();y<h.y();y++){
 	  for(int x=l.x();x<h.x();x++){
 	    IntVector idx(x,y,z);
-	    cerr << "l2g" << idx << "=" << l2g[idx] << '\n';
+	    //cerr << "l2g" << idx << "=" << l2g[idx] << '\n';
 	  }
 	}
       }
@@ -1660,8 +1615,9 @@ void ImpMPM::createMatrix(const ProcessorGroup*,
    VecDuplicate(petscQ,&d_x);
 #endif
 
+#ifdef OLD_SPARSE
    KK.setSize(globalrows,globalcolumns);
-
+#endif
 }
 
 void ImpMPM::destroyMatrix(const ProcessorGroup*,
@@ -1672,7 +1628,9 @@ void ImpMPM::destroyMatrix(const ProcessorGroup*,
 {
   cout_doing <<"Doing destroyMatrix " <<"\t\t\t\t\t IMPM"
 	       << "\n" << "\n";
+#ifdef OLD_SPARSE
   KK.clear();
+#endif
 #ifdef HAVE_PETSC
   PetscTruth exists;
   PetscObjectExists((PetscObject)A,&exists);
@@ -1777,18 +1735,20 @@ void ImpMPM::formStiffnessMatrix(const ProcessorGroup*,
 	dof[0] = 3*node_num;
 	dof[1] = 3*node_num+1;
 	dof[2] = 3*node_num+2;
-#if 0
+
 	cout << "gmass[" << *iter << "]= " << gmass[*iter] << "\n";
+#ifdef OLD_SPARSE
 	cout << "KK[" << dof[0] << "][" << dof[0] << "]= " 
 	     << KK[dof[0]][dof[0]] << "\n";
 	cerr << "KK[" << dof[1] << "][" << dof[1] << "]= " 
 	     << KK[dof[1]][dof[1]] << "\n";
 	cerr << "KK[" << dof[2] << "][" << dof[2] << "]= " 
 	     << KK[dof[2]][dof[2]] << "\n";
-#endif
+
 	KK[dof[0]][dof[0]] = KK[dof[0]][dof[0]] + gmass[*iter]*(4./(dt*dt));
 	KK[dof[1]][dof[1]] = KK[dof[1]][dof[1]] + gmass[*iter]*(4./(dt*dt));
 	KK[dof[2]][dof[2]] = KK[dof[2]][dof[2]] + gmass[*iter]*(4./(dt*dt));
+#endif
       }
     } 
   }
@@ -1827,7 +1787,7 @@ void ImpMPM::formStiffnessMatrixPetsc(const ProcessorGroup*,
 
     // IntVector nodes = patch->getNNodes();
     IntVector lowIndex = patch->getNodeLowIndex();
-    IntVector highIndex = patch->getNodeHighIndex();
+    IntVector highIndex = patch->getNodeHighIndex()+IntVector(1,1,1);
     Array3<int> l2g(lowIndex,highIndex);
     l2g.copy(d_petscLocalToGlobal[patch]);
 
@@ -1861,18 +1821,20 @@ void ImpMPM::formStiffnessMatrixPetsc(const ProcessorGroup*,
 	dof[1] = l2g_node_num+1;
 	dof[2] = l2g_node_num+2;
 
-#if 1
-	cerr << "gmass[" << *iter << "]= " << gmass[*iter] << "\n";
+
+	//cerr << "gmass[" << *iter << "]= " << gmass[*iter] << "\n";
+#ifdef OLD_SPARSE
 	cerr << "KK[" << dof[0] << "][" << dof[0] << "]= " 
 	     << KK[dof[0]][dof[0]] << "\n";
 	cerr << "KK[" << dof[1] << "][" << dof[1] << "]= " 
 	     << KK[dof[1]][dof[1]] << "\n";
 	cerr << "KK[" << dof[2] << "][" << dof[2] << "]= " 
 	     << KK[dof[2]][dof[2]] << "\n";
-#endif
+
 	KK[dof[0]][dof[0]] = KK[dof[0]][dof[0]] + gmass[*iter]*(4./(dt*dt));
 	KK[dof[1]][dof[1]] = KK[dof[1]][dof[1]] + gmass[*iter]*(4./(dt*dt));
 	KK[dof[2]][dof[2]] = KK[dof[2]][dof[2]] + gmass[*iter]*(4./(dt*dt));
+#endif
 #ifdef HAVE_PETSC
 	PetscScalar v = gmass[*iter]*(4./(dt*dt));
 	MatSetValues(A,1,&dof[0],1,&dof[0],&v,ADD_VALUES);
@@ -2076,9 +2038,10 @@ void ImpMPM::formQPetsc(const ProcessorGroup*, const PatchSubset* patches,
     num_nodes += (nodes.x())*(nodes.y())*(nodes.z()) * 3;
 
   }
+#ifdef OLD_SPARSE
   valarray<double> temp2(0.,num_nodes);
   Q.resize(num_nodes);
-  
+#endif
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
 
@@ -2086,7 +2049,7 @@ void ImpMPM::formQPetsc(const ProcessorGroup*, const PatchSubset* patches,
 	       <<"\t\t\t\t\t IMPM"<< "\n" << "\n";
 
     IntVector lowIndex = patch->getNodeLowIndex();
-    IntVector highIndex = patch->getNodeHighIndex();
+    IntVector highIndex = patch->getNodeHighIndex()+IntVector(1,1,1);
     Array3<int> l2g(lowIndex,highIndex);
     l2g.copy(d_petscLocalToGlobal[patch]);
 
@@ -2101,7 +2064,8 @@ void ImpMPM::formQPetsc(const ProcessorGroup*, const PatchSubset* patches,
     constNCVariable<Vector> dispNew,velocity,accel;
     constNCVariable<double> mass;
     if (recursion) {
-      DataWarehouse* parent_new_dw = new_dw->getOtherDataWarehouse(Task::ParentNewDW);
+      DataWarehouse* parent_new_dw = 
+	new_dw->getOtherDataWarehouse(Task::ParentNewDW);
       new_dw->get(internalForce,lb->gInternalForceLabel,matlindex,patch,
 		  Ghost::None,0);
       old_dw->get(externalForce,lb->gExternalForceLabel,matlindex,patch,
@@ -2141,12 +2105,15 @@ void ImpMPM::formQPetsc(const ProcessorGroup*, const PatchSubset* patches,
       dof[1] = l2g_node_num+1;
       dof[2] = l2g_node_num+2;
 
-
+#if 0
       cerr << "external force = " << externalForce[n] << " internal force = " 
 	   << internalForce[n] << "\n";
+#endif
+#ifdef OLD_SPARSE
       Q[dof[0]] = externalForce[n].x() + internalForce[n].x();
       Q[dof[1]] = externalForce[n].y() + internalForce[n].y();
       Q[dof[2]] = externalForce[n].z() + internalForce[n].z();
+#endif
 
 #ifdef HAVE_PETSC
       PetscScalar v[3];
@@ -2164,13 +2131,14 @@ void ImpMPM::formQPetsc(const ProcessorGroup*, const PatchSubset* patches,
       cerr << "velocity.x*fodt = " << velocity[n].x() * fodt << "\n";
       cerr << "dispNew - velocity = " << dispNew[n].x() * fodts - 
 	velocity[n].x() * fodt << "\n";
-
+#ifdef OLD_SPARSE
       temp2[dof[0]] = (dispNew[n].x()*fodts - velocity[n].x()*fodt -
 			accel[n].x())*mass[n];
       temp2[dof[1]] = (dispNew[n].y()*fodts - velocity[n].y()*fodt -
 			accel[n].y())*mass[n];
       temp2[dof[2]] = (dispNew[n].z()*fodts - velocity[n].z()*fodt -
 			accel[n].z())*mass[n];
+#endif
 
 #ifdef HAVE_PETSC
       if (dynamic) {
@@ -2183,9 +2151,10 @@ void ImpMPM::formQPetsc(const ProcessorGroup*, const PatchSubset* patches,
       }
       VecSetValues(petscQ,3,dof,v,INSERT_VALUES);
 #endif
-
+#ifdef OLD_SPARSE
       cerr << "temp2 = " << temp2[dof[0]] << " " << temp2[dof[1]] << " " <<
 	temp2[dof[2]] << "\n";
+#endif
 
     }
 #ifdef HAVE_PETSC
@@ -2197,16 +2166,19 @@ void ImpMPM::formQPetsc(const ProcessorGroup*, const PatchSubset* patches,
     VecAssemblyBegin(petscQ);
     VecAssemblyEnd(petscQ);
 #endif
-  
+#ifdef OLD_SPARSE
   if (dynamic) {
     Q = Q - temp2;
   }
-#ifdef HAVE_PETSC
-  cerr << "petscQ after subtracting Q" << endl;
-  VecView(petscQ,PETSC_VIEWER_STDOUT_WORLD);
 #endif
+#ifdef HAVE_PETSC
+  // cerr << "petscQ after subtracting Q" << endl;
+  //VecView(petscQ,PETSC_VIEWER_STDOUT_WORLD);
+#endif
+#ifdef OLD_SPARSE
   for (int i = 0; i<(int)Q.size(); i++)
     cerr << "Q["<<i<<"]="<<Q[i]<< endl;
+#endif
 
 }
 
@@ -2357,7 +2329,7 @@ void ImpMPM::removeFixedDOF(const ProcessorGroup*,
       }
     }
 
-
+#ifdef OLD_SPARSE
     SparseMatrix<double,int> KKK(KK.Rows(),KK.Columns());
     for (SparseMatrix<double,int>::iterator itr = KK.begin(); 
 	 itr != KK.end(); itr++) {
@@ -2394,7 +2366,7 @@ void ImpMPM::removeFixedDOF(const ProcessorGroup*,
     KK.clear();
     KK = KKK;
     KKK.clear();
-
+#endif
   }
 
 }
@@ -2418,7 +2390,7 @@ void ImpMPM::removeFixedDOFPetsc(const ProcessorGroup*,
 	       <<"\t\t\t\t IMPM"<< "\n" << "\n";
 
     IntVector lowIndex = patch->getNodeLowIndex();
-    IntVector highIndex = patch->getNodeHighIndex();
+    IntVector highIndex = patch->getNodeHighIndex()+IntVector(1,1,1);
     Array3<int> l2g(lowIndex,highIndex);
     l2g.copy(d_petscLocalToGlobal[patch]);
     
@@ -2432,10 +2404,10 @@ void ImpMPM::removeFixedDOFPetsc(const ProcessorGroup*,
     else
       new_dw->get(mass,lb->gMassLabel,matlindex,patch,Ghost::None,0);
     
-    cerr << "Comparing the mass for insertion . . ." << endl;
+    //cerr << "Comparing the mass for insertion . . ." << endl;
     for (NodeIterator iter = patch->getNodeIterator(); !iter.done(); iter++) {
       IntVector n = *iter;
-      cerr << "mass["<<n<<"]=" << mass[n] << endl;
+      //cerr << "mass["<<n<<"]=" << mass[n] << endl;
       int dof[3];
 #if 0
       int node_num = n.x() + (nodes.x())*(n.y()) + (nodes.y())*
@@ -2458,7 +2430,7 @@ void ImpMPM::removeFixedDOFPetsc(const ProcessorGroup*,
       }
     }
 
-    cerr << "Looking at the faces for insertion . . ." << endl;
+    //    cerr << "Looking at the faces for insertion . . ." << endl;
     for(Patch::FaceType face = Patch::startFace;
 	face <= Patch::endFace; face=Patch::nextFace(face)){
       if (patch->getBCType(face)==Patch::None) { 
@@ -2507,6 +2479,7 @@ void ImpMPM::removeFixedDOFPetsc(const ProcessorGroup*,
   MatZeroRows(A,is,&one);
   MatTranspose(A,PETSC_NULL);
 #endif
+#ifdef OLD_SPARSE
   SparseMatrix<double,int> KKK(KK.Rows(),KK.Columns());
   for (SparseMatrix<double,int>::iterator itr = KK.begin(); 
        itr != KK.end(); itr++) {
@@ -2524,18 +2497,13 @@ void ImpMPM::removeFixedDOFPetsc(const ProcessorGroup*,
     else
       KKK[i][j] = KK[i][j];
   }
+#endif
   // Zero out the Q elements that have entries in the fixedDOF container
   for (set<int>::iterator iter = fixedDOF.begin(); iter != fixedDOF.end(); 
        iter++) {
-    cerr << "fixedDOF = " << *iter << endl;
-  }
-  cerr << "Before setting to zero" << endl;
-#ifdef HAVE_PETSC
-  VecView(petscQ,PETSC_VIEWER_STDOUT_WORLD);
-#endif
-  for (set<int>::iterator iter = fixedDOF.begin(); iter != fixedDOF.end(); 
-       iter++) {
+#ifdef OLD_SPARSE
     Q[*iter] = 0.;
+#endif
 #ifdef HAVE_PETSC
     PetscScalar v = 0.;
     const int index = *iter;
@@ -2543,12 +2511,14 @@ void ImpMPM::removeFixedDOFPetsc(const ProcessorGroup*,
 #endif
   }
 #ifdef HAVE_PETSC
+#if 0
   cerr << "Before assembly . . " << endl;
   VecView(petscQ,PETSC_VIEWER_STDOUT_WORLD);
   VecAssemblyBegin(petscQ);
   VecAssemblyEnd(petscQ);
   VecView(petscQ,PETSC_VIEWER_STDOUT_WORLD);
   cerr << "After assembly . . " << endl;
+#endif
 #endif
   // Make sure the nodes that are outside of the material have values 
   // assigned and solved for.  The solutions will be 0.
@@ -2566,12 +2536,14 @@ void ImpMPM::removeFixedDOFPetsc(const ProcessorGroup*,
   }
   VecRestoreArray(diagonal,&diag);
 #endif
+#ifdef OLD_SPARSE
   for (int j = 0; j < num_nodes; j++) {
     if (compare(KK[j][j],0.)) {
       KKK[j][j] = 1.;
       Q[j] = 0.;
     }
   }
+#endif
 #ifdef HAVE_PETSC
   VecAssemblyBegin(petscQ);
   VecAssemblyEnd(petscQ);
@@ -2582,10 +2554,11 @@ void ImpMPM::removeFixedDOFPetsc(const ProcessorGroup*,
   MatAssemblyEnd(A,MAT_FINAL_ASSEMBLY);
   //VecDestroy(diagonal);
 #endif
+#ifdef OLD_SPARSE
   KK.clear();
   KK = KKK;
   KKK.clear();
-
+#endif
 
 }
 
@@ -2662,9 +2635,10 @@ void ImpMPM::solveForDuCGPetsc(const ProcessorGroup*,
 {
   // DONE
   int num_nodes = 0;
+  IntVector nodes(0,0,0);
   for(int p = 0; p<patches->size();p++) {
     const Patch* patch = patches->get(p);
-    IntVector nodes = patch->getNNodes();
+    nodes = patch->getNNodes();
     num_nodes += (nodes.x())*(nodes.y())*(nodes.z())*3;
     cerr << "number of nodes in solve = " << num_nodes << endl;
   }
@@ -2682,7 +2656,6 @@ void ImpMPM::solveForDuCGPetsc(const ProcessorGroup*,
     KSPSetTolerances(ksp,1.e-10,PETSC_DEFAULT,PETSC_DEFAULT,PETSC_DEFAULT);
 
     int its;
-    VecCreateMPI(PETSC_COMM_WORLD,num_nodes,PETSC_DETERMINE,&d_x);
     SLESSolve(sles,petscQ,d_x,&its);
     SLESView(sles,PETSC_VIEWER_STDOUT_WORLD);
     PetscPrintf(PETSC_COMM_WORLD,"Iterations %d\n",its);
@@ -2692,6 +2665,7 @@ void ImpMPM::solveForDuCGPetsc(const ProcessorGroup*,
       PetscPrintf(PETSC_COMM_WORLD,"d_x[%d] = %g\n",i,xPetsc[i]);
     }
 #endif
+#ifdef OLD_SPARSE
   valarray<double> x(0.,num_nodes);
 #if 1    
   for (SparseMatrix<double,int>::iterator itr = KK.begin(); 
@@ -2708,21 +2682,21 @@ void ImpMPM::solveForDuCGPetsc(const ProcessorGroup*,
       cout << "x[" << i << "]= " << x[i] << "\n";
     }
 #endif
-  
+#endif
   int matlindex = 0;
   for(int p = 0; p<patches->size();p++) {
     const Patch* patch = patches->get(p);
     
     cout_doing <<"Doing solveForDuCGPetsc on patch " << patch->getID()
 	       <<"\t\t\t\t IMPM"<< "\n" << "\n";
-        
+    nodes = patch->getNNodes();
     NCVariable<Vector> dispInc;
     
     new_dw->allocateAndPut(dispInc,lb->dispIncLabel,matlindex,patch);
     dispInc.initialize(Vector(0.,0.,0.));
 
     IntVector lowIndex = patch->getNodeLowIndex();
-    IntVector highIndex = patch->getNodeHighIndex();
+    IntVector highIndex = patch->getNodeHighIndex()+IntVector(1,1,1);
     Array3<int> l2g(lowIndex,highIndex);
     l2g.copy(d_petscLocalToGlobal[patch]);
     
@@ -2849,6 +2823,11 @@ void ImpMPM::checkConvergence(const ProcessorGroup*,
     const Patch* patch = patches->get(p);
     IntVector nodes = patch->getNNodes();
 
+    IntVector lowIndex = patch->getNodeLowIndex();
+    IntVector highIndex = patch->getNodeHighIndex()+IntVector(1,1,1);
+    Array3<int> l2g(lowIndex,highIndex);
+    l2g.copy(d_petscLocalToGlobal[patch]);
+
     cout_doing <<"Doing checkConvergence on patch " << patch->getID()
 	       <<"\t\t\t IMPM"<< "\n" << "\n";
 
@@ -2861,10 +2840,19 @@ void ImpMPM::checkConvergence(const ProcessorGroup*,
       
       double dispIncNorm = 0.;
       double dispIncQNorm = 0.;
-
+#ifdef HAVE_PETSC
+      PetscScalar* getQ;
+      VecGetArray(petscQ,&getQ);
+#endif
       for (NodeIterator iter = patch->getNodeIterator(); !iter.done();iter++) {
 	IntVector n = *iter;
 	int dof[3];
+#ifdef HAVE_PETSC
+	int l2g_node_num = l2g[n];
+	dof[0] = l2g_node_num;
+	dof[1] = l2g_node_num+1;
+	dof[2] = l2g_node_num+2;
+#endif
 	int node_num = n.x() + (nodes.x())*(n.y()) + (nodes.y())*
 	(nodes.x())*(n.z());
 	dof[0] = 3*node_num;
@@ -2872,9 +2860,18 @@ void ImpMPM::checkConvergence(const ProcessorGroup*,
 	dof[2] = 3*node_num+2;
 
 	dispIncNorm += Dot(dispInc[n],dispInc[n]);
+#ifdef HAVE_PETSC
+	dispIncQNorm += dispInc[n].x()*getQ[dof[0]] + 
+	  dispInc[n].y()*getQ[dof[1]] +  dispInc[n].z()*getQ[dof[2]];
+#endif
+#ifdef OLD_SPARSE
 	dispIncQNorm += dispInc[n].x()*Q[dof[0]] + dispInc[n].y()*Q[dof[1]] +
 	  dispInc[n].z()*Q[dof[2]];
+#endif
       }
+#ifdef HAVE_PETSC
+      VecRestoreArray(petscQ,&getQ);
+#endif
       // We are computing both dispIncQNorm0 and dispIncNormMax (max residuals)
       // We are computing both dispIncQNorm and dispIncNorm (current residuals)
 

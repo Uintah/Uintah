@@ -54,11 +54,12 @@ namespace Uintah {
                                             DataWarehouse* new_dw);
 
          // compute stress at each particle in the patch
+#if 0
          virtual void computeStressTensor(const PatchSubset* patches,
                                           const MPMMaterial* matl,
                                           DataWarehouse* old_dw,
                                           DataWarehouse* new_dw);
-
+#endif
          virtual void computeStressTensorImplicit(const PatchSubset* patches,
 						  const MPMMaterial* matl,
 						  DataWarehouse* old_dw,
