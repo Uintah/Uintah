@@ -98,6 +98,16 @@ void NrrdWriter::execute()
     return;
   }
 
+  Nrrd *nin = handle->nrrd;
+
+  NrrdIoState *nio = nrrdIoStateNew();
+  // set encoding to be raw
+  nio->encoding = nrrdEncodingArray[1];
+  // set format to be nrrd
+  nio->format = nrrdFormatArray[1];
+  // set endian to be endian of machine
+  nio->endian = airMyEndian;
+
   // If no name is provided, return
   string fn(filename_.get());
   if(fn == "") {
@@ -105,25 +115,22 @@ void NrrdWriter::execute()
     return;
   }
 
-  // Open up the output stream
-  Piostream* stream;
-  string ft(filetype_.get());
-  if (ft == "Binary")
-  {
-    stream = scinew BinaryPiostream(fn, Piostream::Write);
+  if (AIR_ENDIAN != nio->endian) {
+    nrrdSwapEndian(nin);
   }
-  else
-  {
-    stream = scinew TextPiostream(fn, Piostream::Write);
-  }
-    
-  if (stream->error()) {
-    error("Could not open file for writing" + fn);
-  } else {
-    // Write the file
-    Pio(*stream, handle); // wlll also write out a separate nrrd.
-    delete stream; 
+  if (airEndsWith(filename_.get().c_str(), NRRD_EXT_NHDR)) {
+    if (nio->format != nrrdFormatNRRD) {
+      nio->format = nrrdFormatNRRD;
+    }
   } 
+  
+  if (nrrdSave(filename_.get().c_str(), nin, nio)) {
+    char *err = biffGet(NRRD);      
+    cerr << "Error writing nrrd " << filename_.get() << ": "<< err << endl;
+    free(err);
+    biffDone(NRRD);
+    return;
+  }
 }
 
 
