@@ -6,6 +6,9 @@ AC_INIT(README.PSE)
 AC_CONFIG_HEADER(sci_config.h)
 AC_CONFIG_AUX_DIR(scripts)
 AC_PREREQ(2.0)
+AC_PROG_CC
+AC_PROG_CXX
+AC_LANG_CPLUSPLUS 
 
 ##-- Check for different versions --------------------------------------------
 
@@ -123,6 +126,60 @@ AC_ARG_ENABLE(largesos,
 LARGESOS=$largesos
 AC_SUBST(LARGESOS)
 
+##-- Find dlopen -------------------------------------------------------------
+
+AC_CHECK_LIB(c, dlopen, DL_LIBRARY="", AC_CHECK_LIB(dl, dlopen, DL_LIBRARY="-ldl"))
+AC_SUBST(DL_LIBRARY)
+
+##-- Find MPI ----------------------------------------------------------------
+
+AC_ARG_WITH(mpi,
+	[  --with-mpi=<path-to-mpi>  <path-to-mpi>],
+	[mpi="$withval"],
+	[mpi=""])
+
+if test -z "$mpi"; then
+  MPI_INCLUDE_DIR=""
+  for trylib in mpi mpich; do
+     echo -n "Looking for MPI in -l$trylib... "
+     LIBS="$oldLibs -l$trylib"
+     AC_TRY_LINK(
+#include <mpi.h>
+,
+     int argc;
+     char** argv;
+     MPI_Init(&argc, &argv);
+, mpi_dir=""; mpi_lib=$trylib; echo "found"; break, echo "not found")
+  done
+else
+  oldcppflags=$CPPFLAGS
+  MPI_INCLUDE_DIR=$mpi/include
+  CPPFLAGS="$CPPFLAGS -I$MPI_INCLUDE_DIR"
+  oldLibs=$LIBS
+  for trydir in lib lib32 lib64; do
+     for trylib in mpi mpich; do
+        echo -n "Looking for MPI in -L$mpi/$trydir -l$trylib... "
+        LIBS="$oldLibs -L$mpi/$trydir -l$trylib"
+        AC_TRY_LINK(
+#include <mpi.h>
+,
+	int argc;
+	char** argv;
+	MPI_Init(&argc, &argv);
+, mpi_dir=$mpi/$trydir; mpi_lib=$trylib; echo "found"; break 2, echo "not found")
+     done
+  done
+  LIBS=$oldLibs
+  CPPFLAGS=$oldcppflags
+fi
+
+MPI_LIB_DIR=$mpi_dir
+MPI_LIB_FLAG="-l$mpi_lib"
+
+AC_SUBST(MPI_LIB_DIR)
+AC_SUBST(MPI_LIB_FLAG)
+AC_SUBST(MPI_INCLUDE_DIR)
+
 ##-- Host-Specific Defaults --------------------------------------------------
 
 AC_SUBST(CC)
@@ -195,10 +252,8 @@ case $host in
 	   TRACEBACK_LIB=-lexc
            ;;
   *-linux-gnu)
-     AC_PROG_CC
-     AC_PROG_CXX
 #     AC_PROG_F77
-     CFLAGS="-Wall ${CFLAGS}"
+     CFLAGS="-Wall $extra_cflags"
      TEMPLATE_TAG=
      TEMPLATE_BOX="<>"
      LOCK_IMPL=""
