@@ -41,7 +41,8 @@ documentum.html : documentum.xml
 module-xml : module-xml.dvi
 
 module-xml.dvi: module-xml.tex
-	-${latex} $<; -${latex} $<
+	-${latex} $<
+	-${latex} $<
 	dvips -o module-xml.ps -Pps $@
 	gzip -c <module-xml.ps >module-xml.ps.gz
 	latex2html ${latex2htmloptions} $<
@@ -50,7 +51,8 @@ module-xml.dvi: module-xml.tex
 module-latex : module-latex.dvi
 
 module-latex.dvi: module-latex.tex
-	-${latex} $<; -${latex} $<
+	-${latex} $<
+	-${latex} $<
 	dvips -o module-latex.ps -Pps $@
 	gzip -c <module-latex.ps >module-latex.ps.gz
 	latex2html ${latex2htmloptions} $<
