@@ -12,11 +12,12 @@ include $(SCIRUN_SCRIPTS)/smallso_prologue.mk
 
 SRCDIR   := Packages/Fusion/Dataflow/Modules/DataIO
 
-INCLUDES += $(MDSPLUS_INCLUDE) $(HDF5_INCLUDE) $(TEEM_INCLUDE)
+INCLUDES += $(MDSPLUS_INCLUDE)
 
 SRCS     += \
 	$(SRCDIR)/FusionFieldReader.cc\
 	$(SRCDIR)/FusionFieldSetReader.cc\
+	$(SRCDIR)/MDSPlusDataReader.cc\
 	$(SRCDIR)/MDSPlusFieldReader.cc\
 #[INSERT NEW CODE FILE HERE]
 
@@ -31,5 +32,3 @@ PSELIBS := Core/Datatypes Dataflow/Network Dataflow/Ports \
 LIBS := $(TK_LIBRARY) $(GL_LIBRARY) $(MDSPLUS_LIBRARY) $(M_LIBRARY)
 
 include $(SCIRUN_SCRIPTS)/smallso_epilogue.mk
-
-
