@@ -105,6 +105,8 @@ DESCRIPTION
     // Check if the communication library is nexus
     static bool isNexus();
 
+    static int getPID();
+
   protected:
   private:
     //////////
@@ -124,6 +126,8 @@ DESCRIPTION
     //////////
     // Private constructor to prevent creation of a PIDL
     PIDL();
+
+    static int pid;
   };
 } // End namespace SCIRun
 
