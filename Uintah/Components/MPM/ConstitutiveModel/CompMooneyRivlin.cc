@@ -474,9 +474,9 @@ void CompMooneyRivlin::addComputesAndRequiresForCrackSurfaceContact(
   task->computes(new_dw, lb->pCrackSurfaceContactForceLabel_preReloc, idx, patch );
 }
 
-double CompMooneyRivlin::computeStrainEnergy(const Patch* patch,
-                                             const MPMMaterial* matl,
-                                             DataWarehouseP& new_dw)
+double CompMooneyRivlin::computeStrainEnergy(const Patch* /*patch*/,
+                                             const MPMMaterial* /*matl*/,
+                                             DataWarehouseP& /*new_dw*/)
 {
   double se=0.0;
   return se;
@@ -512,6 +512,9 @@ const TypeDescription* fun_getTypeDescription(CompMooneyRivlin::CMData*)
 }
 
 // $Log$
+// Revision 1.71  2000/10/13 19:49:19  sparker
+// Fixed a few warnings
+//
 // Revision 1.70  2000/10/11 01:30:28  guilkey
 // Made CMData no longer a per particle variable for these models.
 // None of them currently have anything worthy of being called StateData,
