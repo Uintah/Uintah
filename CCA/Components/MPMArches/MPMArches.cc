@@ -213,8 +213,6 @@ MPMArches::scheduleTimeAdvance( const LevelP & level,
   scheduleInterpolateCCToFC(sched, patches, mpm_matls);
   scheduleComputeVoidFrac(sched, patches, arches_matls, mpm_matls, all_matls);
 
-  scheduleComputeIntegratedSolidProps(sched, patches, arches_matls, mpm_matls, all_matls);
-
   // compute celltypeinit
 
   d_arches->getBoundaryCondition()->sched_mmWallCellTypeInit(sched, patches, arches_matls);
@@ -228,6 +226,10 @@ MPMArches::scheduleTimeAdvance( const LevelP & level,
 
   schedulePutAllForcesOnCC(sched, patches, mpm_matls);
   schedulePutAllForcesOnNC(sched, patches, mpm_matls);
+
+  scheduleComputeIntegratedSolidProps(sched, patches, arches_matls, mpm_matls, all_matls);
+
+  scheduleComputeTotalHT(sched, patches, arches_matls);
 
   // we may also need mass exchange here later.  This is 
   // not implemented yet.  This will be of the form
@@ -388,12 +390,152 @@ void MPMArches::scheduleComputeIntegratedSolidProps(SchedulerP& sched,
 	      mpm_matls->getUnion(), Ghost::None, zeroGhostCells);
   t->requires(Task::NewDW, d_MAlb->tempSolid_CCLabel,   
 	      mpm_matls->getUnion(), Ghost::None, zeroGhostCells);
+  t->requires(Task::NewDW, d_MAlb->heaTranSolid_CCLabel,
+	      mpm_matls->getUnion(), Ghost::None, zeroGhostCells);
+  t->requires(Task::NewDW, d_MAlb->heaTranSolid_FCXLabel,
+	      mpm_matls->getUnion(), Ghost::None, zeroGhostCells);
+  t->requires(Task::NewDW, d_MAlb->heaTranSolid_FCYLabel,
+	      mpm_matls->getUnion(), Ghost::None, zeroGhostCells);
+  t->requires(Task::NewDW, d_MAlb->heaTranSolid_FCZLabel,
+	      mpm_matls->getUnion(), Ghost::None, zeroGhostCells);
 
   t->computes(d_MAlb->integTemp_CCLabel, arches_matls->getUnion());
+  t->computes(d_MAlb->integHTS_CCLabel, arches_matls->getUnion());
+  t->computes(d_MAlb->integHTS_FCXLabel, arches_matls->getUnion());
+  t->computes(d_MAlb->integHTS_FCYLabel, arches_matls->getUnion());
+  t->computes(d_MAlb->integHTS_FCZLabel, arches_matls->getUnion());
 
   sched->addTask(t, patches, all_matls);
 }
 
+//______________________________________________________________________
+//
+
+void MPMArches::scheduleComputeTotalHT(SchedulerP& sched,
+				       const PatchSet* patches,
+				       const MaterialSet* arches_matls)
+{
+  // primitive variable initialization
+  
+  Task* t=scinew Task("MPMArches::getTotalHeatFlux",
+		      this, &MPMArches::computeTotalHT);
+
+  int zeroGhostCells = 0;
+  int numGhostCells = 1;
+
+  t->requires(Task::NewDW, d_MAlb->integHTS_CCLabel,
+	      arches_matls->getUnion(), Ghost::AroundCells, numGhostCells);
+  t->requires(Task::NewDW, d_MAlb->integHTS_FCXLabel,
+	      arches_matls->getUnion(), Ghost::AroundFaces, numGhostCells);
+  t->requires(Task::NewDW, d_MAlb->integHTS_FCYLabel,
+	      arches_matls->getUnion(), Ghost::AroundFaces, numGhostCells);
+  t->requires(Task::NewDW, d_MAlb->integHTS_FCZLabel,
+	      arches_matls->getUnion(), Ghost::AroundFaces, numGhostCells);
+
+  t->computes(d_MAlb->totHT_CCLabel, arches_matls->getUnion());
+  t->computes(d_MAlb->totHT_FCXLabel, arches_matls->getUnion());
+  t->computes(d_MAlb->totHT_FCYLabel, arches_matls->getUnion());
+  t->computes(d_MAlb->totHT_FCZLabel, arches_matls->getUnion());
+
+  sched->addTask(t, patches, arches_matls);
+}
+
+//______________________________________________________________________
+//
+
+void MPMArches::computeTotalHT(const ProcessorGroup*,
+			       const PatchSubset* patches,
+			       const MaterialSubset*,
+			       DataWarehouse* /*old_dw*/,
+			       DataWarehouse* new_dw) 
+
+{
+  for(int p=0;p<patches->size();p++){
+    const Patch* patch = patches->get(p);
+    int archIndex = 0;
+    int matlindex = d_sharedState->getArchesMaterial(archIndex)->getDWIndex(); 
+
+    constCCVariable<double> integHTS_CC;
+    constSFCXVariable<double> integHTS_FCX;
+    constSFCYVariable<double> integHTS_FCY;
+    constSFCZVariable<double> integHTS_FCZ;
+
+    int numGhostCells = 1;
+
+  // get and allocate
+
+    new_dw->get(integHTS_CC, d_MAlb->integHTS_CCLabel,
+		matlindex, patch, Ghost::AroundCells, numGhostCells);
+    new_dw->get(integHTS_FCX, d_MAlb->integHTS_FCXLabel,
+		matlindex, patch, Ghost::AroundFaces, numGhostCells);
+    new_dw->get(integHTS_FCY, d_MAlb->integHTS_FCYLabel,
+		matlindex, patch, Ghost::AroundFaces, numGhostCells);
+    new_dw->get(integHTS_FCZ, d_MAlb->integHTS_FCZLabel,
+		matlindex, patch, Ghost::AroundFaces, numGhostCells);
+
+    CCVariable<double> totalHT;
+    new_dw->allocateAndPut(totalHT, d_MAlb->totHT_CCLabel,
+			   matlindex, patch); 
+    SFCXVariable<double> totalHT_FCX;
+    new_dw->allocateAndPut(totalHT_FCX, d_MAlb->totHT_FCXLabel,
+			   matlindex, patch); 
+    SFCYVariable<double> totalHT_FCY;
+    new_dw->allocateAndPut(totalHT_FCY, d_MAlb->totHT_FCYLabel,
+			   matlindex, patch); 
+    SFCZVariable<double> totalHT_FCZ;
+    new_dw->allocateAndPut(totalHT_FCZ, d_MAlb->totHT_FCZLabel,
+			   matlindex, patch); 
+
+    // actual computation
+
+    totalHT.initialize(0.0);
+    totalHT_FCX.initialize(0.0);
+    totalHT_FCY.initialize(0.0);
+    totalHT_FCZ.initialize(0.0);
+
+    for (CellIterator iter = patch->getCellIterator();!iter.done();iter++) {
+
+      IntVector curcell = *iter;
+      IntVector eastcell(curcell.x()+1,curcell.y(),curcell.z());
+      IntVector westcell(curcell.x()-1,curcell.y(),curcell.z());
+      IntVector northcell(curcell.x(),curcell.y()+1,curcell.z());
+      IntVector southcell(curcell.x(),curcell.y()-1,curcell.z());
+      IntVector topcell(curcell.x(),curcell.y(),curcell.z()+1);
+      IntVector botcell(curcell.x(),curcell.y(),curcell.z()-1);
+
+      totalHT[curcell] = totalHT[curcell] + integHTS_FCX[curcell];
+      totalHT[curcell] = totalHT[curcell] + integHTS_FCX[eastcell];
+      totalHT[curcell] = totalHT[curcell] + integHTS_FCY[curcell];
+      totalHT[curcell] = totalHT[curcell] + integHTS_FCY[northcell];
+      totalHT[curcell] = totalHT[curcell] + integHTS_FCZ[curcell];
+      totalHT[curcell] = totalHT[curcell] + integHTS_FCZ[topcell];
+
+      totalHT[curcell] = totalHT[curcell] + integHTS_CC[westcell];
+      totalHT[curcell] = totalHT[curcell] + integHTS_CC[eastcell];
+      totalHT[curcell] = totalHT[curcell] + integHTS_CC[southcell];
+      totalHT[curcell] = totalHT[curcell] + integHTS_CC[northcell];
+      totalHT[curcell] = totalHT[curcell] + integHTS_CC[botcell];
+      totalHT[curcell] = totalHT[curcell] + integHTS_CC[topcell];
+
+      totalHT_FCX[curcell] = totalHT_FCX[curcell] + integHTS_FCX[curcell];
+      totalHT_FCX[curcell] = totalHT_FCX[curcell] + integHTS_FCX[eastcell];
+      totalHT_FCX[curcell] = totalHT_FCX[curcell] + integHTS_CC[westcell];
+      totalHT_FCX[curcell] = totalHT_FCX[curcell] + integHTS_CC[eastcell];
+
+      totalHT_FCY[curcell] = totalHT_FCY[curcell] + integHTS_FCY[curcell];
+      totalHT_FCY[curcell] = totalHT_FCY[curcell] + integHTS_FCY[northcell];
+      totalHT_FCY[curcell] = totalHT_FCY[curcell] + integHTS_CC[southcell];
+      totalHT_FCY[curcell] = totalHT_FCY[curcell] + integHTS_CC[northcell];
+
+      totalHT_FCZ[curcell] = totalHT_FCZ[curcell] + integHTS_FCZ[curcell];
+      totalHT_FCZ[curcell] = totalHT_FCZ[curcell] + integHTS_FCZ[topcell];
+      totalHT_FCZ[curcell] = totalHT_FCZ[curcell] + integHTS_CC[botcell];
+      totalHT_FCZ[curcell] = totalHT_FCZ[curcell] + integHTS_CC[topcell];
+
+    }
+  }
+}
+  
 //______________________________________________________________________
 //
 
@@ -1479,7 +1621,11 @@ void MPMArches::computeIntegratedSolidProps(const ProcessorGroup*,
     int numMPMMatls = d_sharedState->getNumMPMMatls();
     StaticArray<constCCVariable<double> > solid_fraction_cc(numMPMMatls);
     StaticArray<constCCVariable<double> > tempSolid_CC(numMPMMatls);
-    
+    StaticArray<constCCVariable<double> > hTSolid_CC(numMPMMatls);
+    StaticArray<constSFCXVariable<double> > hTSolid_FCX(numMPMMatls);
+    StaticArray<constSFCYVariable<double> > hTSolid_FCY(numMPMMatls);
+    StaticArray<constSFCZVariable<double> > hTSolid_FCZ(numMPMMatls);
+
     int zeroGhostCells = 0;
 
   // get and allocate
@@ -1493,22 +1639,51 @@ void MPMArches::computeIntegratedSolidProps(const ProcessorGroup*,
 		  dwindex, patch, Ghost::None, zeroGhostCells);
       new_dw->get(tempSolid_CC[m], d_MAlb->tempSolid_CCLabel,
 		  dwindex, patch, Ghost::None, zeroGhostCells);
+      new_dw->get(hTSolid_CC[m], d_MAlb->heaTranSolid_CCLabel,
+		  dwindex, patch, Ghost::None, zeroGhostCells);
+      new_dw->get(hTSolid_FCX[m], d_MAlb->heaTranSolid_FCXLabel,
+		  dwindex, patch, Ghost::None, zeroGhostCells);
+      new_dw->get(hTSolid_FCY[m], d_MAlb->heaTranSolid_FCYLabel,
+		  dwindex, patch, Ghost::None, zeroGhostCells);
+      new_dw->get(hTSolid_FCZ[m], d_MAlb->heaTranSolid_FCZLabel,
+		  dwindex, patch, Ghost::None, zeroGhostCells);
     }
 
     CCVariable<double> integTemp;
     new_dw->allocateAndPut(integTemp, d_MAlb->integTemp_CCLabel,
 		     matlindex, patch); 
+    CCVariable<double> integHTS_CC;
+    new_dw->allocateAndPut(integHTS_CC, d_MAlb->integHTS_CCLabel,
+		     matlindex, patch); 
+    SFCXVariable<double> integHTS_FCX;
+    new_dw->allocateAndPut(integHTS_FCX, d_MAlb->integHTS_FCXLabel,
+		     matlindex, patch); 
+    SFCYVariable<double> integHTS_FCY;
+    new_dw->allocateAndPut(integHTS_FCY, d_MAlb->integHTS_FCYLabel,
+		     matlindex, patch); 
+    SFCZVariable<double> integHTS_FCZ;
+    new_dw->allocateAndPut(integHTS_FCZ, d_MAlb->integHTS_FCZLabel,
+		     matlindex, patch); 
+
 
     // actual computation
 
-    integTemp.initialize(0);
+    integTemp.initialize(0.0);
+    integHTS_CC.initialize(0.0);
+    integHTS_FCX.initialize(0.0);
+    integHTS_FCY.initialize(0.0);
+    integHTS_FCZ.initialize(0.0);
 
     for (CellIterator iter = patch->getExtraCellIterator();!iter.done();iter++) {
 
       for (int m = 0; m < numMPMMatls; m++) {
 	
 	integTemp[*iter] += solid_fraction_cc[m][*iter]*tempSolid_CC[m][*iter];
-	
+	integHTS_CC[*iter] += solid_fraction_cc[m][*iter]*hTSolid_CC[m][*iter];
+	integHTS_FCX[*iter] += solid_fraction_cc[m][*iter]*hTSolid_FCX[m][*iter];
+	integHTS_FCY[*iter] += solid_fraction_cc[m][*iter]*hTSolid_FCY[m][*iter];
+	integHTS_FCZ[*iter] += solid_fraction_cc[m][*iter]*hTSolid_FCZ[m][*iter];
+
       }
     }
   }
