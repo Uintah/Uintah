@@ -3071,11 +3071,14 @@ AC_SUBST(UUID_LIB_FLAG)
 ##  --  See if we have everything needed for SCIRun2 ----------------------
 
 if test "$enable_scirun2" = "yes"; then
-  ## For now, don't check for uuid if on macintosh.
   if test "$have_uuid" != "yes"; then
     case $host in
       *linux*)
         SCI_MSG_ERROR(uuid_generate function and libuuid not found, must install ext2fs development tools)
+        ;;
+      ## For now, don't check for uuid if on macintosh.
+      *-darwin*)
+        AC_MSG_WARN(Skipping uuid check on MAC, they are required for SCIRun2)
         ;;
       *)
         SCI_MSG_ERROR(Cannot find uuid_generate or uuid_create, required for SCIRun2)
