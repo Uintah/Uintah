@@ -308,7 +308,8 @@ public:
       nx_(x), ny_(y), nz_(z) {}
   LatVolMesh(const LatVolMesh &copy)
     : min_x_(copy.min_x_), min_y_(copy.min_y_), min_z_(copy.min_z_),
-      nx_(copy.get_nx()),ny_(copy.get_ny()),nz_(copy.get_nz()) {}
+      nx_(copy.get_nx()), ny_(copy.get_ny()), nz_(copy.get_nz()),
+      transform_(copy.transform_) {}
   virtual LatVolMesh *clone() { return new LatVolMesh(*this); }
   virtual ~LatVolMesh() {}
 
