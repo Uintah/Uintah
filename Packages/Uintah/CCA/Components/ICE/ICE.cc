@@ -949,7 +949,7 @@ void ICE::scheduleAddExchangeToMomentumAndEnergy(SchedulerP& sched,
                                 // A L L  M A T L S
   t->requires(Task::NewDW,  lb->mass_L_CCLabel,           gn);      
   t->requires(Task::NewDW,  lb->mom_L_CCLabel,            gn);      
-  t->requires(Task::NewDW,  lb->int_eng_L_CCLabel,        gn);      
+  t->requires(Task::NewDW,  lb->int_eng_L_CCLabel,        gn);
   t->requires(Task::NewDW,  lb->sp_vol_CCLabel,           gn);      
   t->requires(Task::NewDW,  lb->vol_frac_CCLabel,         gn);      
   if (d_RateForm) {         // RATE FORM
@@ -1050,6 +1050,17 @@ void ICE::actuallyComputeStableTimestep(const ProcessorGroup*,
     Ghost::GhostType  gn  = Ghost::None; 
     Ghost::GhostType  gac = Ghost::AroundCells;
 
+    double dCFL = d_CFL;
+    static double TIME = 0.;
+#ifdef CONVECT
+    if (TIME < .0025){
+      dCFL = d_CFL;
+    }
+    else {
+      dCFL = .3;
+    }
+#endif
+
     for (int m = 0; m < d_sharedState->getNumMatls(); m++) {
       Material* matl = d_sharedState->getMaterial(m);
       ICEMaterial* ice_matl = dynamic_cast<ICEMaterial*>(matl);
@@ -1063,11 +1074,11 @@ void ICE::actuallyComputeStableTimestep(const ProcessorGroup*,
         for(CellIterator iter=patch->getCellIterator(); !iter.done(); iter++){
           IntVector c = *iter;
           double speed_Sound = d_delT_knob * speedSound[c];
-          double A = d_CFL*delX/(speed_Sound + 
+          double A = dCFL*delX/(speed_Sound + 
                                        fabs(vel_CC[c].x())+d_SMALL_NUM);
-          double B = d_CFL*delY/(speed_Sound + 
+          double B = dCFL*delY/(speed_Sound + 
                                        fabs(vel_CC[c].y())+d_SMALL_NUM);
-          double C = d_CFL*delZ/(speed_Sound + 
+          double C = dCFL*delZ/(speed_Sound + 
                                        fabs(vel_CC[c].z())+d_SMALL_NUM);
           delt_CFL = std::min(A, delt_CFL);
           delt_CFL = std::min(B, delt_CFL);
@@ -1159,6 +1170,8 @@ void ICE::actuallyComputeStableTimestep(const ProcessorGroup*,
     delt = std::min(delt_CFL, delt_cond);
     delt = std::min(delt, d_initialDt);
     d_initialDt = 10000.0;
+
+    TIME += delt;
 
     //__________________________________
     //  Bullet proofing
@@ -3157,6 +3170,14 @@ void ICE::addExchangeToMomentumAndEnergy(const ProcessorGroup*,
     H.zero();
     a.zero();
 
+#ifdef CONVECT
+    FastMatrix cet(2,2),ac(2,2);
+    vector<double> RHSc(2),HX(2);
+    cet.zero();
+    int gm=2;  // gas material from which to get convected heat
+    int sm=0;  // solid material that heat goes to
+#endif
+
     getExchangeCoefficients( K, H);
 
     for (int m = 0; m < numALLMatls; m++) {
@@ -3309,7 +3330,7 @@ void ICE::addExchangeToMomentumAndEnergy(const ProcessorGroup*,
       Material* matl = d_sharedState->getMaterial( m );
       MPMMaterial* mpm_matl = dynamic_cast<MPMMaterial*>(matl);
       int dwindex = matl->getDWIndex();
-      if(mpm_matl){
+      if(mpm_matl && dwindex==sm){
         new_dw->get(NCsolidMass,     MIlb->gMassLabel,   dwindex,patch,gac,1);
         for(CellIterator iter = patch->getCellIterator(); !iter.done();iter++){
           IntVector c = *iter;
@@ -3369,28 +3390,26 @@ void ICE::addExchangeToMomentumAndEnergy(const ProcessorGroup*,
 
             IntVector q;
             if(patch->findCell(adja_cell_pos, q)){
-              q = c - IntVector(1,0,0);
-//              scratchVec[m][c] = Vector(q.x(), q.y(), q.z());
-              beta(0,0) = delT*vol_frac_CC[0][c]*H(0,0)*sp_vol_CC[0][c]/cv[0];
-              beta(0,1) = delT*vol_frac_CC[1][q]*H(0,1)*sp_vol_CC[0][c]/cv[0];
-              beta(1,0) = delT*vol_frac_CC[0][c]*H(1,0)*sp_vol_CC[1][q]/cv[1];
-              beta(1,1) = delT*vol_frac_CC[1][q]*H(1,1)*sp_vol_CC[1][q]/cv[1];
+              cet(0,0)=delT*vol_frac_CC[sm][c]*H(sm,sm)*sp_vol_CC[sm][c]/cv[sm];
+              cet(0,1)=delT*vol_frac_CC[gm][q]*H(sm,gm)*sp_vol_CC[sm][c]/cv[sm];
+              cet(1,0)=delT*vol_frac_CC[sm][c]*H(gm,sm)*sp_vol_CC[gm][q]/cv[gm];
+              cet(1,1)=delT*vol_frac_CC[gm][q]*H(gm,gm)*sp_vol_CC[gm][q]/cv[gm];
               //   Form matrix (a) diagonal terms
-              for(int m = 0; m < numALLMatls; m++) {
-                a(m,m) = 1.;
-                for(int n = 0; n < numALLMatls; n++)   {
-                  a(m,m) +=  beta(m,n);
+              for(int m = 0; m < 2; m++) {
+                ac(m,m) = 1.;
+                for(int n = 0; n < 2; n++)   {
+                  ac(m,m) +=  cet(m,n);
                 }
               }
 //              scratch1[0][c] = Temp_CC[0][c];
 //              scratch1[1][c] = Temp_CC[1][q];
-              b[0] = beta(0,0)*(Temp_CC[0][c] - Temp_CC[0][c])
-                   + beta(0,1)*(Temp_CC[1][q] - Temp_CC[0][c]);
-              b[1] = beta(1,0)*(Temp_CC[0][c] - Temp_CC[1][q])
-                   + beta(1,1)*(Temp_CC[1][q] - Temp_CC[1][q]);
-              a.destructiveSolve(b,X);
-              Temp_CC[0][c] += X[0];
-//              Temp_CC[1][q] += X[1];
+              RHSc[0] = cet(0,0)*(Temp_CC[sm][c] - Temp_CC[sm][c])
+                      + cet(0,1)*(Temp_CC[gm][q] - Temp_CC[sm][c]);
+              RHSc[1] = cet(1,0)*(Temp_CC[sm][c] - Temp_CC[gm][q])
+                      + cet(1,1)*(Temp_CC[gm][q] - Temp_CC[gm][q]);
+              ac.destructiveSolve(RHSc,HX);
+              Temp_CC[sm][c] += HX[0];
+              Temp_CC[gm][q] += HX[1];
 //              scratch2[0][c] = Temp_CC[0][c];
 //              scratch2[1][c] = Temp_CC[1][q];
 //              double Tinf = Temp_CC[1][a];
