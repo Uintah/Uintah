@@ -212,14 +212,14 @@ double& ColumnMatrix::get(int r) const
     return data[r];
 }
 
-void ColumnMatrix::put(int r, int c, const double& d)
+void ColumnMatrix::put(int r, int c, double d)
 {
     ASSERTRANGE(r, 0, rows);
     ASSERTEQ(c, 0);
     data[r]=d;
 }
 
-void ColumnMatrix::put(int r, const double& d)
+void ColumnMatrix::put(int r, double d)
 {
     ASSERTRANGE(r, 0, rows);
     data[r]=d;

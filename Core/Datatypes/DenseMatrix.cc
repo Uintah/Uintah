@@ -181,7 +181,7 @@ double& DenseMatrix::get(int r, int c) const
   return data[r][c];
 }
 
-void DenseMatrix::put(int r, int c, const double& d)
+void DenseMatrix::put(int r, int c, double d)
 {
   ASSERTRANGE(r, 0, nr);
   ASSERTRANGE(c, 0, nc);

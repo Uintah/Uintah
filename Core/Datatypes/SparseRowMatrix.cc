@@ -251,12 +251,12 @@ double& SparseRowMatrix::get(int i, int j) const
     }
 }
 
-void SparseRowMatrix::put(int i, int j, const double& d)
+void SparseRowMatrix::put(int i, int j, double d)
 {
     get(i,j)=d;
 }
 
-void SparseRowMatrix::add(int i, int j, const double& d)
+void SparseRowMatrix::add(int i, int j, double d)
 {
     get(i,j)+=d;
 }

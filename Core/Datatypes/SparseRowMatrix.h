@@ -68,8 +68,8 @@ public:
 
 
   virtual double& get(int, int) const;
-  virtual void put(int, int, const double&);
-  virtual void add(int, int, const double&);
+  virtual void put(int row, int col, double val);
+  virtual void add(int row, int col, double val);
 
   virtual SparseRowMatrix *transpose();
   int getIdx(int, int);
