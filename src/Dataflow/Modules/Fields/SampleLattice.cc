@@ -50,6 +50,7 @@ private:
   GuiInt size_x_;
   GuiInt size_y_;
   GuiInt size_z_;
+  GuiDouble padpercent_;
 
   enum DataTypeEnum { SCALAR, VECTOR, TENSOR };
 };
@@ -64,7 +65,8 @@ SampleLattice::SampleLattice(const string& id)
   : Module("SampleLattice", id, Filter, "Fields", "SCIRun"),
     size_x_("sizex", id, this),
     size_y_("sizey", id, this),
-    size_z_("sizez", id, this)
+    size_z_("sizez", id, this),
+    padpercent_("padpercent", id, this)
 {
 }
 
@@ -107,6 +109,10 @@ SampleLattice::execute()
     minb = bbox.min();
     maxb = bbox.max();
   }
+
+  Vector diag((maxb.asVector() - minb.asVector()) * (padpercent_.get()/100.0));
+  minb -= diag;
+  maxb += diag;
 
   // Create blank mesh.
   unsigned int sizex = Max(2, size_x_.get());

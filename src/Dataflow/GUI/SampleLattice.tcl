@@ -26,9 +26,11 @@ itcl_class SCIRun_Fields_SampleLattice {
 	global $this-sizex
 	global $this-sizey
 	global $this-sizez
+	global $this-padpercent
 	set $this-sizex 16
 	set $this-sizey 16
 	set $this-sizez 16
+	set $this-padpercent 0
     }
 
     method ui {} {
@@ -42,9 +44,10 @@ itcl_class SCIRun_Fields_SampleLattice {
 	frame $w.row1
 	frame $w.row2
 	frame $w.row3
+	frame $w.row31
 	frame $w.row4
 
-	pack $w.row1 $w.row2 $w.row3 $w.row4 -side top -e y -f both \
+	pack $w.row1 $w.row2 $w.row3 $w.row31 $w.row4 -side top -e y -f both \
 		-padx 5 -pady 5
 	
 	label $w.row1.xsize_label -text "X Size   "
@@ -54,9 +57,13 @@ itcl_class SCIRun_Fields_SampleLattice {
 	label $w.row3.zsize_label -text "Z Size   "
 	entry $w.row3.zsize -textvariable $this-sizez
 
+	label $w.row31.zsize_label -text "Pad Size Percentage"
+	entry $w.row31.zsize -textvariable $this-padpercent
+
 	pack $w.row1.xsize_label $w.row1.xsize -side left
 	pack $w.row2.ysize_label $w.row2.ysize -side left
 	pack $w.row3.zsize_label $w.row3.zsize -side left
+	pack $w.row31.zsize_label $w.row31.zsize -side left
 
 	button $w.row4.execute -text "Execute" -command "$this-c needexecute"
 	pack $w.row4.execute -side top -e n -f both
