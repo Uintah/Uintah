@@ -1050,7 +1050,7 @@ Gui::createMenus( int winId )
   activeGui->ambientModeLB_->add_item( Constant_Ambient, "Constant" );
   activeGui->ambientModeLB_->add_item( Arc_Ambient, "Arc" );
   activeGui->ambientModeLB_->add_item( Sphere_Ambient, "Sphere" );
-  activeGui->shadowModeLB_->set_int_val( activeGui->dpy_->ambientMode_ );
+  activeGui->ambientModeLB_->set_int_val( activeGui->dpy_->scene->ambient_mode );
 
   // Jitter
   GLUI_Panel * jitter = 
