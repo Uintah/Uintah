@@ -52,6 +52,7 @@ PassiveScalar::~PassiveScalar()
   VarLabel::destroy(d_scalar->scalar_source_CCLabel);
   VarLabel::destroy(d_scalar->diffusionCoefLabel);
   VarLabel::destroy(Slb->lastProbeDumpTimeLabel);
+  VarLabel::destroy(Slb->sum_scalar_fLabel);
   delete lb;
   delete Slb;
   
@@ -60,7 +61,6 @@ PassiveScalar::~PassiveScalar()
     Region* region = *iter;
     delete region->piece;
     delete region;
-
   }
 }
 
@@ -99,6 +99,8 @@ void PassiveScalar::problemSetup(GridP&, SimulationStateP& in_state,
                                  VarLabel::create("scalar-f_src",  td_CCdouble);
   Slb->lastProbeDumpTimeLabel =  VarLabel::create("lastProbeDumpTime", 
                                             max_vartype::getTypeDescription());
+  Slb->sum_scalar_fLabel      =  VarLabel::create("sum_scalar_f", 
+                                            max_vartype::getTypeDescription());
   
   d_modelComputesThermoTransportProps = true;
   
@@ -111,6 +113,9 @@ void PassiveScalar::problemSetup(GridP&, SimulationStateP& in_state,
    if (!child){
      throw ProblemSetupException("PassiveScalar: Couldn't find scalar tag");    
    }
+
+   child->getWithDefault("test_conservation", d_test_conservation, false);
+
    ProblemSpecP const_ps = child->findBlock("constants");
    if(!const_ps) {
      throw ProblemSetupException("PassiveScalar: Couldn't find constants tag");
@@ -293,6 +298,11 @@ void PassiveScalar::scheduleComputeModelSources(SchedulerP& sched,
     t->requires(Task::OldDW, Slb->lastProbeDumpTimeLabel);
     t->computes(Slb->lastProbeDumpTimeLabel);
   }
+  // compute sum(scalar_f * mass)
+  if(d_test_conservation){
+    t->requires(Task::OldDW, mi->density_CCLabel, Ghost::None);
+    t->computes(Slb->sum_scalar_fLabel);
+  }
   sched->addTask(t, level->eachPatch(), d_matl_set);
 }
 
@@ -307,12 +317,14 @@ void PassiveScalar::computeModelSources(const ProcessorGroup*,
   const Level* level = getLevel(patches);
   delt_vartype delT;
   old_dw->get(delT, mi->delT_Label, level);     
-  Ghost::GhostType gac = Ghost::AroundCells; 
+  Ghost::GhostType gac = Ghost::AroundCells;
+  Ghost::GhostType gn = Ghost::None; 
   
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
     cout_doing << "Doing computeModelSources... on patch "<<patch->getID()
                << "\t\tPassiveScalar" << endl;
+   
     constCCVariable<double> f_old, diff_coeff;
     CCVariable<double>  f_src;
     
@@ -333,6 +345,24 @@ void PassiveScalar::computeModelSources(const ProcessorGroup*,
       scalarDiffusionOperator(new_dw, patch, use_vol_frac,
                               placeHolder, placeHolder,  f_old,
                               f_src, diff_coeff, delT);
+    }
+
+    //__________________________________
+    //  conservation of f test
+    double sum_mass_f = 0.0;
+    if(d_test_conservation) {
+      constCCVariable<double> rho_CC_old;
+      old_dw->get(rho_CC_old, mi->density_CCLabel, indx, patch, gn, 0);
+     
+      Vector dx = patch->dCell();
+      double cellVol = dx.x()*dx.y()*dx.z();
+      
+      for(CellIterator iter = patch->getCellIterator(); !iter.done(); iter++) {
+        IntVector c = *iter;
+        sum_mass_f += rho_CC_old[c]* cellVol *( f_old[c] + f_src[c] );
+      }
+      // cout << " sum_mass_F " << sum_mass_f << endl;
+      new_dw->put(max_vartype(sum_mass_f), Slb->sum_scalar_fLabel);  
     }
 
     //__________________________________
