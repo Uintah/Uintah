@@ -122,6 +122,7 @@ double FieldExtractor::field_update()
 
    if (timestep != new_timestep) {
      time = times[new_timestep];
+     grid = 0;
      grid = archive.queryGrid(time);
 //      BBox gbox; grid->getSpatialRange(gbox);
      //     cerr<<"box: min("<<gbox.min()<<"), max("<<gbox.max()<<")\n";
