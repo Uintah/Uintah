@@ -32,10 +32,17 @@ proc makeNetworkEditor {} {
     menubutton .main_menu.file -text "File" -underline 0 \
 	-menu .main_menu.file.menu
     menu .main_menu.file.menu -tearoff false
+    menu .main_menu.file.menu.new -tearoff false
+    .main_menu.file.menu.new add command -label "Package..." \
+        -underline 0 -command "CreateNewPackage"
+    .main_menu.file.menu.new add command -label "Module..." \
+        -underline 0 -command "CreateNewModule"
     .main_menu.file.menu add command -label "Save..." -underline 0 \
 	-command "popupSaveMenu"
     .main_menu.file.menu add command -label "Load..." -underline 0 \
 	-command "popupLoadMenu"
+    .main_menu.file.menu add cascade -label "New" -underline 0\
+        -menu .main_menu.file.menu.new
 
 # This was added by Mohamed Dekhil to add some infor to the net
     .main_menu.file.menu add command -label "Add Info..." -underline 0 \
@@ -494,6 +501,41 @@ proc popupLoadMenu {} {
     if { [file exists $netedit_loadfile] } {
 	source $netedit_loadfile
     }
+}
+
+proc CreateNewPackage {} {
+    set w .newpackagedialog
+    if {[winfo exists $w]} {
+	destroy $w
+    }
+
+    toplevel $w
+    frame $w.ftop
+    frame $w.fbot
+    label $w.ftop.namelabel -text "New package name:"
+    entry $w.ftop.name -width 30 -background white 
+    button $w.fbot.ok -text "Ok" -command CreateNewPackageOk
+    button $w.fbot.cancel -text "Cancel" -command CreateNewPackageCancel
+    pack $w.ftop $w.fbot $w.ftop.namelabel $w.ftop.name \
+         $w.fbot.ok $w.fbot.cancel -side left -padx 5 -pady 5
+
+    focus $w.ftop.name
+    tkwait window $w
+}
+
+proc CreateNewPackageOk {} {
+    set w .newpackagedialog
+    set name [$w.ftop.name get]
+    netedit create_new_package $name
+    CreateNewPackageCancel
+}
+
+proc CreateNewPackageCancel {} {
+    destroy .newpackagedialog
+}
+    
+proc CreateNewModule {} {
+    puts "Create New Module: Not yet implemented."
 }
 
 # This proc was added by Mohamed Dekhil to save some info about the net

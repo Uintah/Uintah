@@ -29,6 +29,7 @@
 #include <PSECore/Dataflow/Network.h>
 #include <PSECore/Dataflow/PackageDB.h>
 #include <PSECore/Dataflow/Port.h>
+#include <PSECore/Dataflow/CreateModulePackage.h>
 #include <SCICore/Malloc/Allocator.h>
 #include <SCICore/Math/MiscMath.h>
 #include <SCICore/TclInterface/Remote.h>
@@ -667,6 +668,17 @@ void NetworkEditor::tcl_command(TCLArgs& args, void*)
 	    return;
 	}
 	save_network(args[2]);
+    } else if (args[1] == "create_new_package"){
+        
+        if (args.count() < 2) {
+          args.error("create_new_package needs a name");
+          return;
+        }
+        int check = CreateNewPackage(args[2]());
+        if (!check) {
+          args.error("CreateNewPackage failed.");
+          return;
+        }
     } else {
 	args.error("Unknown minor command for netedit");
     }
@@ -677,6 +689,9 @@ void NetworkEditor::tcl_command(TCLArgs& args, void*)
 
 //
 // $Log$
+// Revision 1.11  2000/03/18 00:17:38  moulding
+// Experimental automatic package maker added
+//
 // Revision 1.10  1999/11/12 01:38:30  ikits
 // Added ANL AVTC site visit modifications to make the demos work.
 // Fixed bugs in PSECore/Datatypes/SoundPort.[h,cc] and PSECore/Dataflow/NetworkEditor.cc
