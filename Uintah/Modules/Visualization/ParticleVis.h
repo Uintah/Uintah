@@ -1,16 +1,13 @@
 #ifndef PARTICLEVIS_H
 #define PARTICLEVIS_H
 
-#include <SCICore/TclInterface/TCLvar.h>
 #include <Uintah/Datatypes/ScalarParticlesPort.h>
 #include <Uintah/Datatypes/VectorParticlesPort.h>
 #include <Uintah/Datatypes/TensorParticlesPort.h>
-#include <PSECore/Dataflow/Module.h>
 #include <PSECore/Datatypes/GeometryPort.h>
 #include <PSECore/Datatypes/ColorMapPort.h>
-#include <iostream>
-using std::cerr;
-using std::endl;
+#include <SCICore/TclInterface/TCLvar.h>
+#include <PSECore/Dataflow/Module.h>
 
 namespace Uintah {
 namespace Modules {

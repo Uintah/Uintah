@@ -112,8 +112,8 @@ ParticleFieldExtractor::~ParticleFieldExtractor(){}
   string command;
   DataArchive& archive = *((*(ar.get_rep()))());
 
-  vector< string > names;
-  vector< const TypeDescription *> types;
+  names.clear();
+  types.clear();
   archive.queryVariables(names, types);
 
   vector< double > times;
@@ -130,6 +130,7 @@ ParticleFieldExtractor::~ParticleFieldExtractor(){}
   pvVar.set("");
   ptVar.set("");
 
+  
   // get all of the NC and Particle Variables
   const TypeDescription *td;
   for( int i = 0; i < names.size(); i++ ){
@@ -188,7 +189,7 @@ ParticleFieldExtractor::~ParticleFieldExtractor(){}
     TCL::execute(id + " setParticleVectors " + vpNames.c_str());
     TCL::execute(id + " setParticleTensors " + tpNames.c_str());
     TCL::execute(id + " buildVarList");
-
+    TCL::execute(id + " setVar_list " + spNames.c_str() + vpNames.c_str() + tpNames.c_str());
     TCL::execute("update idletasks");
     reset_vars();
   }
@@ -196,10 +197,15 @@ ParticleFieldExtractor::~ParticleFieldExtractor(){}
 
 
 
-void ParticleFieldExtractor::callback( int index)
+void ParticleFieldExtractor::callback(long particleID)
 {
   cerr<< "ParticleFieldExtractor::callback request data for index "<<
-    index << ".\n";
+    particleID << ".\n";
+
+  ostringstream call;
+  call << id << " create_part_graph_window " << particleID;
+  TCL::execute(call.str().c_str());
+
 
 //   if( this->archive.get_rep() == 0 ) return;
 
@@ -310,11 +316,11 @@ void ParticleFieldExtractor::execute()
    TensorParticles* tp = 0;
 
    // what time is it?
-   vector< double > times;
-   vector< int > indices;
+   times.clear();
+   indices.clear();
    archive.queryTimesteps( indices, times );
    int idx = handle->timestep();
-   double time = times[idx];
+   time = times[idx];
 
    buildData( archive, time, sp, vp, tp );
    psout->send( sp );
@@ -445,6 +451,177 @@ ParticleFieldExtractor::buildData(DataArchive& archive, double time,
       tp = 0;
   }
 } 
+
+void ParticleFieldExtractor::tcl_command(TCLArgs& args, void* userdata) {
+  if(args.count() < 2) {
+    args.error("Streamline needs a minor command");
+    return;
+  }
+  if(args[1] == "graph") {
+    string varname(args[2]());
+    string particleID(args[3]());
+    int num_mat;
+    args[4].get_int(num_mat);
+    cerr << "Extracting " << num_mat << " materals:";
+    vector< string > mat_list;
+    for (int i = 5; i < 5+num_mat; i++) {
+      string mat(args[i]());
+      mat_list.push_back(mat);
+    }
+    cerr << endl;
+    cerr << "Graphing " << varname << " with materials: " << vector_to_string(mat_list) << endl;
+    graph(varname,mat_list,particleID);
+  }
+  else {
+    Module::tcl_command(args, userdata);
+  }
+
+}
+
+void ParticleFieldExtractor::graph(string varname, vector<string> mat_list, string particleID) {
+
+  /* void DataArchive::query(std::vector<T>& values, const std::string& name,
+    	    	    	int matlIndex, long particleID,
+			double startTime, double endTime);
+  */
+  // clear the current contents of the ticles's material data list
+  TCL::execute(id + " reset_var_val");
+
+  // determine type
+  const TypeDescription *td;
+  for(int i = 0; i < names.size() ; i++)
+    if (names[i] == varname)
+      td = types[i];
+  
+  DataArchive& archive = *((*(this->archive.get_rep()))());
+  vector< int > indices;
+  times.clear();
+  archive.queryTimesteps( indices, times );
+  TCL::execute(id + " setTime_list " + vector_to_string(indices).c_str());
+
+  long partID = atol(particleID.c_str());
+  const TypeDescription* subtype = td->getSubType();
+  switch ( subtype->getType() ) {
+  case TypeDescription::double_type:
+    cerr << "Graphing a variable of type double\n";
+    // loop over all the materials in the mat_list
+    for(int i = 0; i < mat_list.size(); i++) {
+      string data;
+      // query the value
+      vector< double > values;
+      int matl = atoi(mat_list[i].c_str());
+      archive.query(values, varname, matl, partID, times[0], times[times.size()-1]);
+      cerr << "Received data.  Size of data = " << values.size() << endl;
+      data = vector_to_string(values);
+      //material_data_list[varname+mat_list[i]+currentNode_str()] = data;
+      TCL::execute(id+" set_var_val "+data.c_str());
+    }
+    break;
+  case TypeDescription::Vector:
+    cerr << "Graphing a variable of type Vector\n";
+    // loop over all the materials in the mat_list
+    for(int i = 0; i < mat_list.size(); i++) {
+      string data;
+      // query the value
+      vector< Vector > values;
+      int matl = atoi(mat_list[i].c_str());
+      archive.query(values, varname, matl, partID, times[0], times[times.size()-1]);
+      cerr << "Received data.  Size of data = " << values.size() << endl;
+      data = vector_to_string(values,"length");
+      TCL::execute(id+" set_var_val "+data.c_str());
+    }
+    break;
+  case TypeDescription::Matrix3:
+    cerr << "Graphing a variable of type Matrix3\n";
+    // loop over all the materials in the mat_list
+    for(int i = 0; i < mat_list.size(); i++) {
+      string data;
+      // query the value
+      vector< Matrix3 > values;
+      int matl = atoi(mat_list[i].c_str());
+      archive.query(values, varname, matl, partID, times[0], times[times.size()-1]);
+      cerr << "Received data.  Size of data = " << values.size() << endl;
+      data = vector_to_string(values,"Norm");
+      TCL::execute(id+" set_var_val "+data.c_str());
+    }
+    break;
+  default:
+    cerr<<"Unknown var type\n";
+    }// else { Tensor,Other}
+  TCL::execute(id+" graph_data "+particleID.c_str()+" "+varname.c_str()+" "+
+	       vector_to_string(mat_list).c_str());
+
+}
+
+string ParticleFieldExtractor::vector_to_string(vector< int > data) {
+  ostringstream ostr;
+  for(int i = 0; i < data.size(); i++) {
+      ostr << data[i]  << " ";
+    }
+  return ostr.str();
+}
+
+string ParticleFieldExtractor::vector_to_string(vector< string > data) {
+  string result;
+  for(int i = 0; i < data.size(); i++) {
+      result+= (data[i] + " ");
+    }
+  return result;
+}
+
+string ParticleFieldExtractor::vector_to_string(vector< double > data) {
+  ostringstream ostr;
+  for(int i = 0; i < data.size(); i++) {
+      ostr << data[i]  << " ";
+    }
+  return ostr.str();
+}
+
+string ParticleFieldExtractor::vector_to_string(vector< Vector > data, string type) {
+  ostringstream ostr;
+  if (type == "length") {
+    for(int i = 0; i < data.size(); i++) {
+      ostr << data[i].length() << " ";
+    }
+  } else if (type == "length2") {
+    for(int i = 0; i < data.size(); i++) {
+      ostr << data[i].length2() << " ";
+    }
+  } else if (type == "x") {
+    for(int i = 0; i < data.size(); i++) {
+      ostr << data[i].x() << " ";
+    }
+  } else if (type == "y") {
+    for(int i = 0; i < data.size(); i++) {
+      ostr << data[i].y() << " ";
+    }
+  } else if (type == "z") {
+    for(int i = 0; i < data.size(); i++) {
+      ostr << data[i].z() << " ";
+    }
+  }
+
+  return ostr.str();
+}
+
+string ParticleFieldExtractor::vector_to_string(vector< Matrix3 > data, string type) {
+  ostringstream ostr;
+  if (type == "Determinant") {
+    for(int i = 0; i < data.size(); i++) {
+      ostr << data[i].Determinant() << " ";
+    }
+  } else if (type == "Trace") {
+    for(int i = 0; i < data.size(); i++) {
+      ostr << data[i].Trace() << " ";
+    }
+  } else if (type == "Norm") {
+    for(int i = 0; i < data.size(); i++) {
+      ostr << data[i].Norm() << " ";
+    } 
+ }
+
+  return ostr.str();
+}
 
 //--------------------------------------------------------------- 
 } // end namespace Modules

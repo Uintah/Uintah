@@ -16,6 +16,11 @@
  *  Copyright (C) 1994 SCI Group
  */
 #include "ParticleVis.h"
+#include <PSECore/Datatypes/GeometryPort.h>
+#include <PSECore/Datatypes/ColorMapPort.h>
+#include <Uintah/Datatypes/ScalarParticlesPort.h>
+#include <Uintah/Datatypes/VectorParticlesPort.h>
+#include <Uintah/Datatypes/TensorParticlesPort.h>
 #include <SCICore/Geom/GeomArrows.h>
 #include <SCICore/Geom/Color.h>
 #include <SCICore/Geom/GeomObj.h>
@@ -31,17 +36,11 @@
 #include <SCICore/Math/MinMax.h>
 #include <Uintah/Modules/Visualization/ParticleFieldExtractor.h>
 #include <PSECore/Dataflow/Module.h>
-#include <PSECore/Datatypes/GeometryPort.h>
-#include <PSECore/Datatypes/ColorMapPort.h>
-#include <Uintah/Datatypes/ScalarParticlesPort.h>
-#include <Uintah/Datatypes/VectorParticlesPort.h>
-#include <Uintah/Datatypes/TensorParticlesPort.h>
 #include <Uintah/Datatypes/PSet.h>
 #include <Uintah/Components/MPM/Util/Matrix3.h>
-#include <iostream>
 #include <stdio.h>
+#include <iostream>
 using std::cerr;
-using std::endl;
 
 namespace Uintah {
 namespace Modules {
