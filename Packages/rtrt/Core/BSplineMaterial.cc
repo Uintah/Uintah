@@ -6,6 +6,7 @@
 #include <Packages/rtrt/Core/Ray.h>
 #include <Packages/rtrt/Core/Object.h>
 #include <Packages/rtrt/Core/Context.h>
+#include <Packages/rtrt/Core/PerProcessorContext.h>
 
 #include <Core/Geometry/Point.h>
 #include <Core/Malloc/Allocator.h>

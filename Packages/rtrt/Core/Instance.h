@@ -4,7 +4,6 @@
 #include <Packages/rtrt/Core/Object.h>
 #include <Packages/rtrt/Core/Ray.h>
 #include <Packages/rtrt/Core/Material.h>
-#include <Packages/rtrt/Core/PerProcessorContext.h>
 #include <Packages/rtrt/Core/HitInfo.h>
 #include <Packages/rtrt/Core/UVMapping.h>
 #include <Packages/rtrt/Core/UV.h>
@@ -14,6 +13,7 @@
 
 namespace rtrt {
   class Instance;
+  class PerProcessorContext;
 }
 
 namespace SCIRun {

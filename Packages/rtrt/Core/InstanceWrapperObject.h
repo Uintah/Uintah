@@ -7,12 +7,12 @@
 #include <Core/Geometry/Vector.h>
 #include <Core/Persistent/Persistent.h>
 #include <Packages/rtrt/Core/Material.h>
-#include <Packages/rtrt/Core/PerProcessorContext.h>
 #include <Packages/rtrt/Core/HitInfo.h>
 #include <Packages/rtrt/Core/InstanceWrapperObject.h>
 
 namespace rtrt {
   class InstanceWrapperObject;
+  class PerProcessorContext;
 }
 
 namespace SCIRun {

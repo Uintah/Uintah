@@ -8,7 +8,6 @@
 #include <Core/Geometry/Vector.h>
 #include <Core/Geometry/Point.h>
 #include <Packages/rtrt/Core/Material.h>
-#include <Packages/rtrt/Core/PerProcessorContext.h>
 #include <Packages/rtrt/Core/HitInfo.h>
 #include <Packages/rtrt/Core/InstanceWrapperObject.h>
 

@@ -5,7 +5,6 @@
 #include <Packages/rtrt/Core/Material.h>
 #include <Packages/rtrt/Core/Array1.h>
 #include <Packages/rtrt/Core/Array2.h>
-#include <Packages/rtrt/Core/PerProcessorContext.h>
 
 namespace rtrt {
   
