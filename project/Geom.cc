@@ -567,6 +567,91 @@ void GeomPolyLine::get_bounds(BBox& bb)
 	bb.extend(pts[i]);
 }
 
+GeomTriStrip::GeomTriStrip()
+: GeomObj(1)
+{
+}
+
+GeomTriStrip::GeomTriStrip(const GeomTriStrip& copy)
+: GeomObj(1), pts(copy.pts), norms(copy.norms)
+{
+}
+
+GeomTriStrip::~GeomTriStrip() {
+}
+
+void GeomTriStrip::objdraw(DrawInfo* di) {
+    if(pts.size() <= 2)
+	return;
+    di->polycount+=pts.size()-2;
+    switch(di->drawtype){
+    case DrawInfo::WireFrame:
+	{
+	    glBegin(GL_LINES);
+	    Point p1(pts[0]);
+	    Point p2(pts[1]);
+	    glVertex3d(p1.x(), p1.y(), p1.z());
+	    glVertex3d(p2.x(), p2.y(), p2.z());
+	    for(int i=2;i<pts.size();i+=2){
+		Point p3(pts[i]);
+		Point p4(pts[i+1]);
+		glVertex3d(p3.x(), p3.y(), p3.z());
+		glVertex3d(p1.x(), p1.y(), p1.z());
+		glVertex3d(p3.x(), p3.y(), p3.z());
+		glVertex3d(p2.x(), p2.y(), p2.z());
+		glVertex3d(p4.x(), p4.y(), p4.z());
+		glVertex3d(p3.x(), p3.y(), p3.z());
+		glVertex3d(p4.x(), p4.y(), p4.z());
+		glVertex3d(p2.x(), p2.y(), p2.z());
+		p1=p3;
+		p2=p4;
+	    }
+	    glEnd();
+	}
+	break;
+    case DrawInfo::Flat:
+	{
+	    glBegin(GL_TRIANGLE_STRIP);
+	    for(int i=0;i<pts.size();i++){
+		Point p(pts[i]);
+		glVertex3d(p.x(), p.y(), p.z());
+	    }
+	    glEnd();
+	}
+	break;
+    case DrawInfo::Gouraud:
+    case DrawInfo::Phong:
+	{
+	    glBegin(GL_TRIANGLE_STRIP);
+	    for(int i=0;i<pts.size();i++){
+		Vector n(norms[i]);
+		glNormal3d(n.x(), n.y(), n.z());
+		Point p(pts[i]);
+		glVertex3d(p.x(), p.y(), p.z());
+	    }
+	    glEnd();
+	}
+	break;
+    }
+}
+
+GeomObj* GeomTriStrip::clone()
+{
+    return new GeomTriStrip(*this);
+}
+
+void GeomTriStrip::get_bounds(BBox& bb)
+{
+    for(int i=0;i<pts.size();i++)
+	bb.extend(pts[i]);
+}
+
+void GeomTriStrip::add(const Point& pt, const Vector& norm)
+{
+    pts.add(pt);
+    norms.add(norm);
+}
+
 MaterialProp::MaterialProp(const Color& ambient, const Color& diffuse,
 			   const Color& specular, double shininess)
 : ambient(ambient), diffuse(diffuse), specular(specular),

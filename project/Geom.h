@@ -304,4 +304,17 @@ public:
     virtual void get_bounds(BBox&);
 };
 
+class GeomTriStrip : public GeomObj {
+    Array1<Point> pts;
+    Array1<Vector> norms;
+public:
+    void add(const Point&, const Vector&);
+    GeomTriStrip();
+    GeomTriStrip(const GeomTriStrip&);
+    virtual ~GeomTriStrip();
+    virtual void objdraw(DrawInfo*);
+    virtual GeomObj* clone();
+    virtual void get_bounds(BBox&);
+};
+
 #endif
