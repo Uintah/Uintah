@@ -386,30 +386,10 @@ Allocator* MakeAllocator()
 
     // Setup the lock...
     a->initlock();
-    if(getenv("MALLOC_STATS")){
-	// Set the default allocator, since the fopen below may
-	// call malloc.
-	if(!default_allocator)
-	    default_allocator=a;
-	char* file=getenv("MALLOC_STATS");
-	if(strlen(file) == 0){
-	    a->stats_out=stderr;
-	} else {
-	    a->stats_out=fopen(file, "w");
-	    setvbuf(a->stats_out, (char*)a->alloc(4096+BUFSIZ, "Malloc stats buffer"), _IOFBF, 4096+BUFSIZ);
-	    if(!a->stats_out){
-		perror("fopen");
-		fprintf(stderr, "cannot open stats file: %s, will not print stats\n",
-			file);
-		a->stats_out=0;
-	    }
-	}
-	if(a->stats_out){
-	    atexit(shutdown);
-	}
-    } else {
-	a->stats_out=0;
-    }
+
+    // Must run this block of code before the MALLOC_STATS code
+    // because the "alloc" in the MALLOC_STATS block uses the
+    // "trace_out" var that is set here.
     if(getenv("MALLOC_TRACE")){
 	// Set the default allocator, since the fopen below may
 	// call malloc.
@@ -436,6 +416,31 @@ Allocator* MakeAllocator()
 	}
     } else {
 	a->trace_out=0;
+    }
+
+    if(getenv("MALLOC_STATS")){
+	// Set the default allocator, since the fopen below may
+	// call malloc.
+	if(!default_allocator)
+	    default_allocator=a;
+	char* file=getenv("MALLOC_STATS");
+	if(strlen(file) == 0){
+	    a->stats_out=stderr;
+	} else {
+	    a->stats_out=fopen(file, "w");
+	    setvbuf(a->stats_out, (char*)a->alloc(4096+BUFSIZ, "Malloc stats buffer"), _IOFBF, 4096+BUFSIZ);
+	    if(!a->stats_out){
+		perror("fopen");
+		fprintf(stderr, "cannot open stats file: %s, will not print stats\n",
+			file);
+		a->stats_out=0;
+	    }
+	}
+	if(a->stats_out){
+	    atexit(shutdown);
+	}
+    } else {
+	a->stats_out=0;
     }
 
     return a;
@@ -1192,6 +1197,9 @@ void DumpAllocator(Allocator* a)
 
 //
 // $Log$
+// Revision 1.12  2000/08/08 22:03:21  dav
+// moved the MALLOC_TRACE code block above the MALLOC_STATS block because it sets a var used by MALLOC_STATS
+//
 // Revision 1.11  2000/07/27 07:41:48  sparker
 // Distinguish between "returnable" chunks and non-returnable chucks of memory
 // Make malloc get along with SGI's MPI
