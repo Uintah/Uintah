@@ -687,7 +687,7 @@ void BuilderWindow::addCluster()
   string loaderName="qwerty";
   string domainName="qwerty.sci.utah.edu";
   string login="kzhang";
-  string loaderPath="mpirun -np 1 /home/sci/kzhang/SCIRun/debug/ploader";
+  string loaderPath="mpirun -np 1 ploader";
   string password="****"; //not used;
 
 
