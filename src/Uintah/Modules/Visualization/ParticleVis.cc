@@ -376,12 +376,12 @@ void ParticleVis::geom_pick(GeomPick* pick, void* userdata, GeomObj* picked_obj)
   cerr << "User data = "<<userdata<<endl;
   //  cerr << "sphere index = "<<index<<endl<<endl;
   int id = 0;
-  if ( ((GeomObj *)picked_obj)->getId( id ) )
+  if ( picked_obj->getId( id ) )
     cerr<<"Id = "<< id <<endl;
   else
     cerr<<"Not getting the correct data\n";
   if( cbClass != 0 && id != -1 )
-    ((ParticleFieldExtractor *)cbClass)->callback( id );
+    ((ParticleFieldExtractor *)cbClass)->callback((long) id );
   // Now modify so that points and spheres store index.
 }
   
