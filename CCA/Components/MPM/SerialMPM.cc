@@ -1014,7 +1014,8 @@ void SerialMPM::interpolateParticlesToGrid(const ProcessorGroup*,
 	patch->getInteriorCellLowIndex() - patch->getCellLowIndex();
       // cout << "offset = " << offset << endl;
       for(Patch::FaceType face = Patch::startFace;
-	face <= Patch::endFace; face=Patch::nextFace(face)){
+	face <= Patch::endFace && patch->getBCType(face)==Patch::None; 
+	  face=Patch::nextFace(face)){
 	BoundCondBase* vel_bcs = patch->getBCValues(matlindex,"Velocity",face);
 	BoundCondBase* temp_bcs = 
 	  patch->getBCValues(matlindex,"Temperature",face);
@@ -1507,10 +1508,11 @@ void SerialMPM::solveHeatEquations(const ProcessorGroup*,
 
       Vector dx = patch->dCell();
       for(Patch::FaceType face = Patch::startFace;
-        face <= Patch::endFace; face=Patch::nextFace(face)){
-       BoundCondBase* temp_bcs = 
-	 patch->getBCValues(dwindex,"Temperature",face);
-       if (temp_bcs != 0) {
+	  face <= Patch::endFace && patch->getBCType(face) == Patch::None;
+	  face=Patch::nextFace(face)){
+	BoundCondBase* temp_bcs = 
+	  patch->getBCValues(dwindex,"Temperature",face);
+	if (temp_bcs != 0) {
             TemperatureBoundCond* bc =
                        dynamic_cast<TemperatureBoundCond*>(temp_bcs);
             if (bc->getKind() == "Neumann"){
@@ -1740,7 +1742,8 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
       IntVector offset = 
 	patch->getInteriorCellLowIndex() - patch->getCellLowIndex();
       for(Patch::FaceType face = Patch::startFace;
-	face <= Patch::endFace; face=Patch::nextFace(face)){
+	  face <= Patch::endFace && patch->getBCType(face)==Patch::None;
+	  face=Patch::nextFace(face)){
 	BoundCondBase* vel_bcs = patch->getBCValues(dwindex,"Velocity",face);
 	BoundCondBase* temp_bcs = 
 	  patch->getBCValues(dwindex,"Temperature",face);

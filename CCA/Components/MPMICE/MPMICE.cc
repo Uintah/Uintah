@@ -1117,7 +1117,8 @@ void MPMICE::doCCMomExchange(const ProcessorGroup*,
     // Setting dTdt = 0 in the ExtraCells
     for(int m = 0; m < numALLMatls; m++){
       for(Patch::FaceType face = Patch::startFace;
-        face <= Patch::endFace; face=Patch::nextFace(face)){
+	  face <= Patch::endFace && patch->getBCType(face)==Patch::None;
+	  face=Patch::nextFace(face)){
           BoundCondBase* temp_bcs;
 	  if (patch->getBCType(face) == Patch::None) {
 	    temp_bcs = patch->getBCValues(m,"Temperature",face);

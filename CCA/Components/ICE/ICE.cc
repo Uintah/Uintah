@@ -2995,7 +2995,8 @@ void ICE::setBC(CCVariable<double>& press_CC, CCVariable<double>& rho_micro,
   Vector gravity = d_sharedState->getGravity();
   
   for(Patch::FaceType face = Patch::startFace;
-      face <= Patch::endFace; face=Patch::nextFace(face)){
+      face <= Patch::endFace && patch->getBCType(face)==Patch::None;
+      face=Patch::nextFace(face)){
     BoundCondBase* bcs;
     BoundCond<double>* new_bcs;
     if (patch->getBCType(face) == Patch::None) {
@@ -3034,7 +3035,8 @@ void ICE::setBC(CCVariable<double>& variable, const string& kind,
   Vector dx = patch->dCell();
   
   for(Patch::FaceType face = Patch::startFace;
-      face <= Patch::endFace; face=Patch::nextFace(face)){
+      face <= Patch::endFace && patch->getBCType(face)==Patch::None;
+      face=Patch::nextFace(face)){
     BoundCondBase* bcs;
     BoundCond<double>* new_bcs;
     if (patch->getBCType(face) == Patch::None) {
@@ -3065,7 +3067,8 @@ void ICE::setBC(CCVariable<Vector>& variable, const string& kind,
   IntVector  low, hi;
   Vector dx = patch->dCell();
   for(Patch::FaceType face = Patch::startFace;
-      face <= Patch::endFace; face=Patch::nextFace(face)){
+      face <= Patch::endFace && patch->getBCType(face)==Patch::None;
+      face=Patch::nextFace(face)){
     BoundCondBase* bcs;
     BoundCond<Vector>* new_bcs;
     if (patch->getBCType(face) == Patch::None) {
@@ -3096,7 +3099,8 @@ void ICE::setBC(SFCXVariable<double>& variable, const  string& kind,
 {
   Vector dx = patch->dCell();
   for(Patch::FaceType face = Patch::startFace;
-      face <= Patch::endFace; face=Patch::nextFace(face)){
+      face <= Patch::endFace && patch->getBCType(face)==Patch::None;
+      face=Patch::nextFace(face)){
     BoundCondBase* bcs;
     BoundCond<Vector>* new_bcs;
     if (patch->getBCType(face) == Patch::None) {
@@ -3135,7 +3139,8 @@ void ICE::setBC(SFCYVariable<double>& variable, const  string& kind,
 {
   Vector dx = patch->dCell();
   for(Patch::FaceType face = Patch::startFace;
-      face <= Patch::endFace; face=Patch::nextFace(face)){
+      face <= Patch::endFace && patch->getBCType(face)==Patch::None;
+      face=Patch::nextFace(face)){
     BoundCondBase* bcs;
     BoundCond<Vector>* new_bcs;
     if (patch->getBCType(face) == Patch::None) {
@@ -3174,7 +3179,8 @@ void ICE::setBC(SFCZVariable<double>& variable, const  string& kind,
 {
   Vector dx = patch->dCell();
   for(Patch::FaceType face = Patch::startFace;
-      face <= Patch::endFace; face=Patch::nextFace(face)){
+      face <= Patch::endFace && patch->getBCType(face)==Patch::None;
+      face=Patch::nextFace(face)){
     BoundCondBase* bcs;
     BoundCond<Vector>* new_bcs;
     if (patch->getBCType(face) == Patch::None) {
