@@ -50,9 +50,8 @@ PSELIBS := Packages/MIT/Core/Datatypes \
         Core/Geom Core/Datatypes Core/Geometry \
         Core/TkExtensions
 LIBS := $(GL_LIBRARY) $(TK_LIBRARY) \
-	-lcvode\
-	-L/usr/local/lib -lunuran  \
-	-llapack  -lblas -lg2c -lm
+        -L/usr/local/lib \
+	$(LAPACK_LIBRARY)  $(BLAS_LIBRARY) $(FLIBS) -lcvode -lunuran -lm
 
 include $(SCIRUN_SCRIPTS)/smallso_epilogue.mk
 
