@@ -638,7 +638,8 @@ RBGSSolver::velocityLisolve(const ProcessorGroup* pc,
   IntVector domHiDen = vars->old_density.getFortHighIndex();
   int numGhostCells = 1;
   IntVector domLoDenwg = patch->getGhostCellLowIndex(numGhostCells);
-  IntVector domHiDenwg = patch->getGhostCellHighIndex(numGhostCells);
+  IntVector domHiDenwg = patch->getGhostCellHighIndex(numGhostCells) -
+                                                        IntVector(1,1,1);
   
   IntVector Size;
 
@@ -1021,7 +1022,9 @@ RBGSSolver::scalarLisolve(const ProcessorGroup* pc,
   IntVector domHiDen = vars->old_density.getFortHighIndex();
   int numGhostCells = 1;
   IntVector domLoDenwg = patch->getGhostCellLowIndex(numGhostCells);
-  IntVector domHiDenwg = patch->getGhostCellHighIndex(numGhostCells);
+  // to make it compatible with fortran
+  IntVector domHiDenwg = patch->getGhostCellHighIndex(numGhostCells) -
+                                                      IntVector(1,1,1);
 
 #if implict_defined
   Array1<double> e1;
@@ -1143,6 +1146,9 @@ RBGSSolver::setPressMatrix(const ProcessorGroup* ,
 
 //
 // $Log$
+// Revision 1.31  2000/10/12 00:03:18  rawat
+// running for more than one timestep.
+//
 // Revision 1.30  2000/10/11 21:14:03  rawat
 // fixed a bug in scalar solver
 //

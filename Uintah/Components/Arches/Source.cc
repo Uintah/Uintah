@@ -477,7 +477,8 @@ Source::calculateScalarSource(const ProcessorGroup*,
   // Get the patch and variable indices
   int numGhost = 1;
   IntVector domLo = patch->getGhostCellLowIndex(numGhost);
-  IntVector domHi = patch->getGhostCellHighIndex(numGhost);
+  IntVector domHi = patch->getGhostCellHighIndex(numGhost) -
+                                               IntVector(1,1,1);
   IntVector domLong = vars->old_scalar.getFortLowIndex();
   IntVector domHing = vars->old_scalar.getFortHighIndex();
   IntVector idxLo = patch->getCellFORTLowIndex();
@@ -858,6 +859,9 @@ Source::addPressureSource(const ProcessorGroup* ,
 
 //
 //$Log$
+//Revision 1.48  2000/10/12 00:03:18  rawat
+//running for more than one timestep.
+//
 //Revision 1.47  2000/10/11 16:37:29  rawat
 //modified calpbc for ghost cells
 //
