@@ -294,18 +294,18 @@ RenderField<Fld, Loc>::render_materials(const Fld *sfld,
 	if (color_handle_.get_rep() == 0) def_color = true;
 	if (def_color) mat = def_mat_handle_;
 	else mat = color_handle_->lookup(val);
-	
+
 	int nidx = *niter;
 	ind_mat_t::iterator iter = mats_->find(nidx);
 	if (iter != mats_->end()) {
 	  // we have stored a color before.
-	  MaterialHandle &existing = (*mats_)[nidx];
+          MaterialHandle &existing = (*mats_)[nidx];
 	  //actually change the underlying object for all who point to it.
-	  *(existing.get_rep()) = *(mat.get_rep());
-	} else {
+          *(existing.get_rep()) = *(mat.get_rep());
+        } else {
 	  mat.detach();
 	  (*mats_)[nidx] = mat;
-	}
+        }
 	++niter;  
       }
     }
@@ -352,7 +352,7 @@ RenderField<Fld, Loc>::render_materials(const Fld *sfld,
       mesh->begin(fiter);  
       typename Fld::mesh_type::Face::iterator fiter_end;  
       mesh->end(fiter_end);
-      
+
       while (fiter != fiter_end) {
 	typename Fld::value_type tmp;
 	

@@ -56,11 +56,20 @@ public:
     LatIndex() : i_(0), j_(0), k_(0) {}
     LatIndex(unsigned i, unsigned j, unsigned k) : i_(i), j_(j), k_(k) {}
 
-    // TODO: This is broken!
-    // It should go away and everywhere that uses it fixed.
-    operator unsigned() const { return i_ * (1<<20) + j_*(1<<10) + k_; }
-
+    LatIndex(const LatVolMesh *m, unsigned i, unsigned j, 
+	     unsigned k) : i_(i), j_(j), k_(k), mesh_(m) {}
+    
+    operator unsigned() const { 
+      if (mesh_ == 0) 
+	return i_*j_*k_; 
+      else 
+	return i_ + mesh_->nx_ * (j_ + mesh_->ny_ * k_);
+    }
+    
     unsigned i_, j_, k_;
+
+    // Needs to be here so we can compute a sensible index.
+    const LatVolMesh *mesh_;
   };
 
   struct CellIndex : public LatIndex
@@ -109,10 +118,10 @@ public:
 
   struct LatIter : public LatIndex
   {
-    LatIter() : LatIndex(0, 0, 0), mesh_(0) {}
+    LatIter() : LatIndex(0, 0, 0) {}
     LatIter(const LatVolMesh *m, unsigned i, unsigned j, unsigned k)
-      : LatIndex(i, j, k), mesh_(m) {}
-
+      : LatIndex(m, i, j, k) {}
+    
     const LatIndex &operator *() { return *this; }
 
     bool operator ==(const LatIter &a) const
@@ -124,8 +133,6 @@ public:
     {
       return !(*this == a);
     }
-
-    const LatVolMesh *mesh_;
   };
 
 
