@@ -51,8 +51,7 @@
 #include <Packages/Uintah/Core/Parallel/Vampir.h>
 #endif
 
-#define HAVE_FPSETMASK 1
-#if HAVE_FPSETMASK
+#if HAVE_IEEEFP_H
 #include <ieeefp.h>
 #endif
 
@@ -125,7 +124,7 @@ main(int argc, char** argv)
   // Causes buserr for some reason:
   //TAU_PROFILE("main()", "void (int, char **)", TAU_DEFAULT);
 
-#if HAVE_FPSETMASK
+#if HAVE_IEEEFP_H
     fpsetmask(FP_X_OFL|FP_X_DZ|FP_X_INV);
 #endif
 
