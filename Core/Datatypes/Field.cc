@@ -34,7 +34,7 @@ void Field::io(Piostream& stream){
   stream.begin_class("Field", FIELD_VERSION);
 
   AttribManager::io( stream );
-  Pio(stream, d_geomHandle);
+  Pio(stream, geomHandle_);
   
   stream.end_class();
 }
@@ -56,11 +56,11 @@ Field::~Field(){
 
 
 const GeomHandle Field::getGeom() const{
-  return d_geomHandle;
+  return geomHandle_;
 }
 
 bool  Field::setGeometry(GeomHandle hGeom){
-  d_geomHandle=hGeom;
+  geomHandle_=hGeom;
   // TODO: checking with consistency with existin attributes???
   return true;
 }

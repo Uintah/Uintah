@@ -54,7 +54,7 @@ public:
   static PersistentTypeID type_id;
   static string typeName(int);
 
-  vector<TetSimp> d_tets;
+  vector<TetSimp> tets_;
   
 protected:
   bool has_neighbors;

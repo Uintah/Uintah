@@ -31,7 +31,7 @@ MeshGeom::io(Piostream& stream)
 {
   stream.begin_class(typeName(0).c_str(), MESHGEOM_VERSION);
   SurfaceGeom::io(stream);
-  Pio(stream, d_cell);
+  Pio(stream, cell_);
   stream.end_class();
 }
 
@@ -47,7 +47,7 @@ string
 MeshGeom::getInfo()
 {
   ostringstream retval;
-  retval << "name = " << d_name << endl;
+  retval << "name = " << name_ << endl;
   return retval.str();
 }
 

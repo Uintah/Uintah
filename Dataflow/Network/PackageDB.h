@@ -68,8 +68,8 @@ namespace SCIRun {
         Array1<clString> moduleNames(const clString& packageName,
                                      const clString& categoryName) const;
       public:
-        void *             d_db;
-        Array1<clString>   d_packageList;
+        void *             db_;
+        Array1<clString>   packageList_;
     };
 
     // PackageDB is intended to be a singleton class, but nothing will break

@@ -71,8 +71,8 @@ protected:
   void create_accel_structure();
 
   // Accel structure.
-  vector<vector<T *> > d_accel3;
-  vector<T *> d_accel2;
+  vector<vector<T *> > accel3_;
+  vector<T *> accel2_;
 };
 
 //////////
@@ -122,25 +122,25 @@ template <class T>
 void
 AccelAttrib<T>::create_accel_structure()
 {
-  d_data.reserve(d_data.size());
-  if (d_dim == 3)
+  data_.reserve(data_.size());
+  if (dim_ == 3)
     {
-      d_accel3.resize(d_nz);
-      for (int i=0; i < d_nz; i++)
+      accel3_.resize(nz_);
+      for (int i=0; i < nz_; i++)
 	{
-	  d_accel3[i].resize(d_ny);
-	  for (int j=0; j < d_ny; j++)
+	  accel3_[i].resize(ny_);
+	  for (int j=0; j < ny_; j++)
 	    {
-	      d_accel3[i][j] = &(d_data[i*d_nx*d_ny + j*d_nx]);
+	      accel3_[i][j] = &(data_[i*nx_*ny_ + j*nx_]);
 	    }
 	}
     }
-  else if (d_dim == 2)
+  else if (dim_ == 2)
     {
-      d_accel2.resize(d_ny);
-      for (int i=0; i < d_ny; i++)
+      accel2_.resize(ny_);
+      for (int i=0; i < ny_; i++)
 	{
-	  d_accel2[i] = &(d_data[i*d_nx]);
+	  accel2_[i] = &(data_[i*nx_]);
 	}
     }
 }
@@ -185,28 +185,28 @@ AccelAttrib<T>::~AccelAttrib()
 template <class T> T &
 AccelAttrib<T>::fget1(int ix)
 {
-  ASSERTEQ(d_dim, 1);
-  CHECKARRAYBOUNDS(ix, 0, d_nx);
-  return d_data[ix];
+  ASSERTEQ(dim_, 1);
+  CHECKARRAYBOUNDS(ix, 0, nx_);
+  return data_[ix];
 }
 
 template <class T> T &
 AccelAttrib<T>::fget2(int ix, int iy)
 {
-  ASSERTEQ(d_dim, 2);
-  CHECKARRAYBOUNDS(ix, 0, d_nx);
-  CHECKARRAYBOUNDS(iy, 0, d_ny);
-  return d_accel2[iy][ix];  
+  ASSERTEQ(dim_, 2);
+  CHECKARRAYBOUNDS(ix, 0, nx_);
+  CHECKARRAYBOUNDS(iy, 0, ny_);
+  return accel2_[iy][ix];  
 }
 
 template <class T> T &
 AccelAttrib<T>::fget3(int ix, int iy, int iz)
 {
-  ASSERTEQ(d_dim, 3);
-  CHECKARRAYBOUNDS(ix, 0, d_nx);
-  CHECKARRAYBOUNDS(iy, 0, d_ny);
-  CHECKARRAYBOUNDS(iz, 0, d_nz);
-  return d_accel3[iz][iy][ix];  
+  ASSERTEQ(dim_, 3);
+  CHECKARRAYBOUNDS(ix, 0, nx_);
+  CHECKARRAYBOUNDS(iy, 0, ny_);
+  CHECKARRAYBOUNDS(iz, 0, nz_);
+  return accel3_[iz][iy][ix];  
 }
 
 
@@ -254,30 +254,30 @@ AccelAttrib<T>::get3(int ix, int iy, int iz)
 template <class T> void
 AccelAttrib<T>::fset1(int ix, const T& val)
 {
-  ASSERTEQ(d_dim, 1);
-  CHECKARRAYBOUNDS(ix, 0, d_nx);
-  d_data[ix] = val;
+  ASSERTEQ(dim_, 1);
+  CHECKARRAYBOUNDS(ix, 0, nx_);
+  data_[ix] = val;
 }
 
 
 template <class T> void
 AccelAttrib<T>::fset2(int ix, int iy, const T& val)
 {
-  ASSERTEQ(d_dim, 2);
-  CHECKARRAYBOUNDS(ix, 0, d_nx);
-  CHECKARRAYBOUNDS(iy, 0, d_ny);
-  d_accel2[iy][ix] = val;
+  ASSERTEQ(dim_, 2);
+  CHECKARRAYBOUNDS(ix, 0, nx_);
+  CHECKARRAYBOUNDS(iy, 0, ny_);
+  accel2_[iy][ix] = val;
 }
 
 
 template <class T> void
 AccelAttrib<T>::fset3(int ix, int iy, int iz, const T& val)
 {
-  ASSERTEQ(d_dim, 3);
-  CHECKARRAYBOUNDS(ix, 0, d_nx);
-  CHECKARRAYBOUNDS(iy, 0, d_ny);
-  CHECKARRAYBOUNDS(iz, 0, d_nz);
-  d_accel3[iz][iy][ix] = val;
+  ASSERTEQ(dim_, 3);
+  CHECKARRAYBOUNDS(ix, 0, nx_);
+  CHECKARRAYBOUNDS(iy, 0, ny_);
+  CHECKARRAYBOUNDS(iz, 0, nz_);
+  accel3_[iz][iy][ix] = val;
 }
 
 
@@ -302,16 +302,16 @@ AccelAttrib<T>::set3(int x, int y, int z, const T &val)
 
 // template <class T> bool AccelAttrib<T>::compute_minmax(){
 //   has_minmax = 1;
-//   if(d_data.empty()) {
+//   if(data_.empty()) {
 //     min = 0;
 //     max = 0;
 //     return false;
 //   }
 //   else {
 //     vector<T>::iterator itr;
-//     T lmin = d_data[0];
+//     T lmin = data_[0];
 //     T lmax = lmin;
-//     for(itr = d_data.begin(); itr != d_data.end(); itr++){
+//     for(itr = data_.begin(); itr != data_.end(); itr++){
 //       lmin = Min(lmin, *itr);
 //       lmax = Max(lmax, *itr);
 //     }
@@ -324,25 +324,25 @@ AccelAttrib<T>::set3(int x, int y, int z, const T &val)
 template <class T> string AccelAttrib<T>::getInfo() {
   ostringstream retval;
   retval <<
-    "Name = " << d_name << endl <<
+    "Name = " << name_ << endl <<
     "Type = AccelAttrib" << endl <<
-    "Dim = " << d_dim << ": " << d_nx << ' ' << d_ny << ' ' << d_nz << endl <<
+    "Dim = " << dim_ << ": " << nx_ << ' ' << ny_ << ' ' << nz_ << endl <<
     "Size = " << size() << endl;
 #if 1
   retval << "Data = ";
-  vector<T>::iterator itr = d_data.begin();
+  vector<T>::iterator itr = data_.begin();
   int i = 0;
-  for(;itr!=d_data.end() && i < 1000; itr++, i++) {
+  for(;itr!=data_.end() && i < 1000; itr++, i++) {
     retval << *itr << " ";
   }
-  if (itr != d_data.end()) { retval << "..."; }
+  if (itr != data_.end()) { retval << "..."; }
   retval << endl;
 #else
-  for (int k = 0; k < d_nz; k++)
+  for (int k = 0; k < nz_; k++)
     {
-      for (int j = 0; j < d_nz; j++)
+      for (int j = 0; j < nz_; j++)
 	{
-	  retval << "  " << &(d_data[k * d_nx*d_ny + j * d_nx]);
+	  retval << "  " << &(data_[k * nx_*ny_ + j * nx_]);
 	}
       retval << endl;
     }
@@ -358,25 +358,25 @@ AccelAttrib<unsigned char>::getInfo()
 {
   ostringstream retval;
   retval <<
-    "Name = " << d_name << endl <<
+    "Name = " << name_ << endl <<
     "Type = AccelAttrib" << endl <<
-    "Dim = " << d_dim << ": " << d_nx << ' ' << d_ny << ' ' << d_nz << endl <<
+    "Dim = " << dim_ << ": " << nx_ << ' ' << ny_ << ' ' << nz_ << endl <<
     "Size = " << size() << endl;
 #if 1
   retval << "Data = ";
-  vector<unsigned char>::iterator itr = d_data.begin();
+  vector<unsigned char>::iterator itr = data_.begin();
   int i = 0;
-  for(;itr!=d_data.end() && i < 1000; itr++, i++) {
+  for(;itr!=data_.end() && i < 1000; itr++, i++) {
     retval << (int)(*itr) << " ";
   }
-  if (itr != d_data.end()) { retval << "..."; }
+  if (itr != data_.end()) { retval << "..."; }
   retval << endl;
 #else
-  for (int k = 0; k < d_nz; k++)
+  for (int k = 0; k < nz_; k++)
     {
-      for (int j = 0; j < d_nz; j++)
+      for (int j = 0; j < nz_; j++)
 	{
-	  retval << "  " << (int)(&(d_data[k * d_nx*d_ny + j * d_nx]));
+	  retval << "  " << (int)(&(data_[k * nx_*ny_ + j * nx_]));
 	}
       retval << endl;
     }

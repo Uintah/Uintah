@@ -50,9 +50,9 @@ public:
   FieldWrapper(const AttribHandle&);
   FieldWrapper(const FieldHandle&);
 
-  inline GeomHandle get_geom(){return d_geom;};
-  inline AttribHandle get_attrib(){return d_attrib;};
-  inline FieldHandle get_field(){return d_field;};
+  inline GeomHandle get_geom(){return geom_;};
+  inline AttribHandle get_attrib(){return attrib_;};
+  inline FieldHandle get_field(){return field_;};
   
   inline field_t get_field_type(){return fieldtype;};
   //inline status_t get_status_type(){return statustype;};
@@ -65,9 +65,9 @@ public:
   static PersistentTypeID type_id;
   
 private:
-  GeomHandle d_geom;
-  AttribHandle d_attrib;
-  FieldHandle d_field;
+  GeomHandle geom_;
+  AttribHandle attrib_;
+  FieldHandle field_;
   field_t fieldtype;
   //status_t statustype;
 };

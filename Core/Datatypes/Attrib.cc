@@ -37,18 +37,18 @@ void Attrib::io(Piostream& stream){
   stream.begin_class(typeName(0).c_str(), ATTRIB_VERSION);
   
   cout << "Starting attrib output" << endl;
-  Pio(stream, d_name);
-  Pio(stream, d_authorName);
-  Pio(stream, d_date);
-  Pio(stream, d_orgName);
-  Pio(stream, d_unitName);
+  Pio(stream, name_);
+  Pio(stream, authorName_);
+  Pio(stream, date_);
+  Pio(stream, orgName_);
+  Pio(stream, unitName_);
   
   stream.end_class();
 }
 
 //////////
 // Constructor/Destructor
-Attrib::Attrib( const string &name, Type type) : d_name(name), d_type(type) {
+Attrib::Attrib( const string &name, Type type) : name_(name), type_(type) {
 }
 
 

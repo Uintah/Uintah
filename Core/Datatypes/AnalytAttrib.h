@@ -284,7 +284,7 @@ AnalytAttrib<T>::io(Piostream& stream)
   {
     ostringstream ostr;
     ostr << 
-      "Name = " << d_name << '\n' <<
+      "Name = " << name_ << '\n' <<
       "Type = AnalytAttrib" << '\n' <<
       "Defined in Domain R" << 3 <<'\n' <<
       "Output dimensions = " << func->get_num_comp() <<'\n'; 

@@ -32,31 +32,31 @@ void
 LatticeGeom::io(Piostream& stream)
 {
   stream.begin_class(typeName(0).c_str(), LATTICEGEOM_VERSION);
-  Pio(stream, d_dim);
-  Pio(stream, d_nx);
-  Pio(stream, d_ny);
-  Pio(stream, d_nz);
-  Pio(stream, d_transform);
-  Pio(stream, d_prescale);
+  Pio(stream, dim_);
+  Pio(stream, nx_);
+  Pio(stream, ny_);
+  Pio(stream, nz_);
+  Pio(stream, transform_);
+  Pio(stream, prescale_);
   stream.end_class();
 }
 
 
 LatticeGeom::LatticeGeom(int ix)
 {
-  d_prescale.load_identity();
+  prescale_.load_identity();
   resize(ix);
 }
 
 LatticeGeom::LatticeGeom(int ix, int iy)
 {
-  d_prescale.load_identity();
+  prescale_.load_identity();
   resize(ix, iy);
 }
 
 LatticeGeom::LatticeGeom(int ix, int iy, int iz)
 {
-  d_prescale.load_identity();
+  prescale_.load_identity();
   resize(ix, iy, iz);
 }
 
@@ -65,10 +65,10 @@ LatticeGeom::LatticeGeom(int ix, int iy, int iz)
 LatticeGeom::LatticeGeom(int ix,
 			 const Point &a, const Point &b)
 {
-  d_dim = 1;
-  d_nx = Max(ix, 1);
-  d_ny = 1;
-  d_nz = 1;
+  dim_ = 1;
+  nx_ = Max(ix, 1);
+  ny_ = 1;
+  nz_ = 1;
 
   BBox box;
   box.extend(a);
@@ -79,10 +79,10 @@ LatticeGeom::LatticeGeom(int ix,
 LatticeGeom::LatticeGeom(int ix, int iy,
 			 const Point &a, const Point &b)
 {
-  d_dim = 2;
-  d_nx = Max(ix, 1);
-  d_ny = Max(iy, 1);
-  d_nz = 1;
+  dim_ = 2;
+  nx_ = Max(ix, 1);
+  ny_ = Max(iy, 1);
+  nz_ = 1;
 
   BBox box;
   box.extend(a);
@@ -93,10 +93,10 @@ LatticeGeom::LatticeGeom(int ix, int iy,
 LatticeGeom::LatticeGeom(int ix, int iy, int iz,
 			 const Point &a, const Point &b)
 {
-  d_dim = 3;
-  d_nx = Max(ix, 1);
-  d_ny = Max(iy, 1);
-  d_nz = Max(iz, 1);
+  dim_ = 3;
+  nx_ = Max(ix, 1);
+  ny_ = Max(iy, 1);
+  nz_ = Max(iz, 1);
 
   BBox box;
   box.extend(a);
@@ -113,10 +113,10 @@ LatticeGeom::getInfo()
 {
   ostringstream retval;
   retval <<
-    "name = " << d_name << endl <<
-    "x = " << d_nx << endl <<
-    "y = " << d_ny << endl <<
-    "z = " << d_nz << endl;
+    "name = " << name_ << endl <<
+    "x = " << nx_ << endl <<
+    "y = " << ny_ << endl <<
+    "z = " << nz_ << endl;
   return retval.str();
 }
 
@@ -128,19 +128,19 @@ LatticeGeom::getTypeName(int n){
 bool
 LatticeGeom::computeBoundingBox()
 {
-  const int x = d_nx-1;
-  const int y = d_ny-1;
-  const int z = d_nz-1;
+  const int x = nx_-1;
+  const int y = ny_-1;
+  const int z = nz_-1;
 
-  d_bbox.reset();
-  d_bbox.extend(d_transform.project(Point(0, 0, 0)));
-  d_bbox.extend(d_transform.project(Point(0, 0, z)));
-  d_bbox.extend(d_transform.project(Point(0, y, 0)));
-  d_bbox.extend(d_transform.project(Point(0, y, z)));
-  d_bbox.extend(d_transform.project(Point(x, 0, 0)));
-  d_bbox.extend(d_transform.project(Point(x, 0, z)));
-  d_bbox.extend(d_transform.project(Point(x, y, 0)));
-  d_bbox.extend(d_transform.project(Point(x, y, z)));
+  bbox_.reset();
+  bbox_.extend(transform_.project(Point(0, 0, 0)));
+  bbox_.extend(transform_.project(Point(0, 0, z)));
+  bbox_.extend(transform_.project(Point(0, y, 0)));
+  bbox_.extend(transform_.project(Point(0, y, z)));
+  bbox_.extend(transform_.project(Point(x, 0, 0)));
+  bbox_.extend(transform_.project(Point(x, 0, z)));
+  bbox_.extend(transform_.project(Point(x, y, 0)));
+  bbox_.extend(transform_.project(Point(x, y, z)));
   return true;
 }
 
@@ -178,9 +178,9 @@ LatticeGeom::locate(int *loc, const Point &p)
   loc[1] = r.y() + 0.5;
   loc[2] = r.z() + 0.5;
 
-  if (loc[0] < 0 || loc[0] >= d_nx ||
-      loc[1] < 0 || loc[1] >= d_ny ||
-      loc[2] < 0 || loc[2] >= d_nz)
+  if (loc[0] < 0 || loc[0] >= nx_ ||
+      loc[1] < 0 || loc[1] >= ny_ ||
+      loc[2] < 0 || loc[2] >= nz_)
   {
     return false;
   }
@@ -191,30 +191,30 @@ LatticeGeom::locate(int *loc, const Point &p)
 void
 LatticeGeom::resize(int x)
 {
-  d_dim = 1;
-  d_nx = Max(x, 1);
-  d_ny = 1;
-  d_nz = 1;
+  dim_ = 1;
+  nx_ = Max(x, 1);
+  ny_ = 1;
+  nz_ = 1;
   updateTransform();
 }
 
 void
 LatticeGeom::resize(int x, int y)
 {
-  d_dim = 2;
-  d_nx = Max(x, 1);
-  d_ny = Max(y, 1);
-  d_nz = 1;
+  dim_ = 2;
+  nx_ = Max(x, 1);
+  ny_ = Max(y, 1);
+  nz_ = 1;
   updateTransform();
 }
 
 void
 LatticeGeom::resize(int x, int y, int z)
 {
-  d_dim = 3;
-  d_nx = Max(x, 1);
-  d_ny = Max(y, 1);
-  d_nz = Max(z, 1);
+  dim_ = 3;
+  nx_ = Max(x, 1);
+  ny_ = Max(y, 1);
+  nz_ = Max(z, 1);
   updateTransform();
 }
 
@@ -222,16 +222,16 @@ LatticeGeom::resize(int x, int y, int z)
 void
 LatticeGeom::setBoundingBox(BBox &box)
 {
-  d_prescale.load_identity();
+  prescale_.load_identity();
 
   Vector offset(box.min());
-  d_prescale.post_translate(offset);
+  prescale_.post_translate(offset);
 
   Vector diag = box.diagonal();
   Vector sdiag(diag.x(), diag.y(), diag.z());
 
-  d_prescale.post_scale(sdiag);
-  d_prescale.compute_imat();
+  prescale_.post_scale(sdiag);
+  prescale_.compute_imat();
 
   updateTransform();
 }
@@ -239,15 +239,15 @@ LatticeGeom::setBoundingBox(BBox &box)
 void
 LatticeGeom::updateTransform()
 {
-  d_transform = d_prescale;
+  transform_ = prescale_;
 
-  const double x = 1.0 / Max(d_nx - 1.0, 1.0);
-  const double y = 1.0 / Max(d_ny - 1.0, 1.0);
-  const double z = 1.0 / Max(d_nz - 1.0, 1.0);
+  const double x = 1.0 / Max(nx_ - 1.0, 1.0);
+  const double y = 1.0 / Max(ny_ - 1.0, 1.0);
+  const double z = 1.0 / Max(nz_ - 1.0, 1.0);
   Vector scale(x, y, z);
-  d_transform.post_scale(scale);
+  transform_.post_scale(scale);
 
-  d_transform.compute_imat();
+  transform_.compute_imat();
 
   computeBoundingBox();
 }

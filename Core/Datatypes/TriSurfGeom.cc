@@ -24,36 +24,36 @@ void
 TriSurfGeom::pushPoint(double a, double b, double c)
 {
   Point p(a, b, c);
-  d_points.push_back(p);
+  points_.push_back(p);
 }
 
 
  void
 TriSurfGeom::trivialConnect()
 {
-  for (int i = 0; i < d_points.size(); i++)
+  for (int i = 0; i < points_.size(); i++)
   {
     TriSurfVertex v;
-    v.d_neighbor = -1;
-    v.d_point_index = i;
-    d_mesh.push_back(v);
+    v.neighbor_ = -1;
+    v.point_index_ = i;
+    mesh_.push_back(v);
   }
 }
 
  bool
 TriSurfGeom::computeBoundingBox()
 {
-  d_bbox.reset();
-  if (d_points.empty())
+  bbox_.reset();
+  if (points_.empty())
   {
     return false;
   }
   else
   {
     int i;
-    for (i=0; i< d_points.size(); i++)
+    for (i=0; i< points_.size(); i++)
     {
-      d_bbox.extend(d_points[i]);
+      bbox_.extend(points_[i]);
     }
     return true;
   }
@@ -110,16 +110,16 @@ TriSurfGeom::collapse_points()
   vector<Point> new_points;
   vector<int> index;
 
-  // Find the subset, dump it int d_new_points and the mapping in index
-  remove_duplicates(d_points, new_points, index);
+  // Find the subset, dump it int new_points_ and the mapping in index
+  remove_duplicates(points_, new_points, index);
 
   // Set the old points to be the new points.
-  d_points = new_points;
+  points_ = new_points;
 
   // Fix all the references to the old points.
-  for (i = 0; i < d_mesh.size(); i++)
+  for (i = 0; i < mesh_.size(); i++)
   {
-    d_mesh[i].pointIndex(index[d_mesh[i].pointIndex()]);
+    mesh_[i].pointIndex(index[mesh_[i].pointIndex()]);
   }
 }
 

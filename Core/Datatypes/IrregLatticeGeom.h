@@ -68,7 +68,7 @@ public:
 void
 IrregLatticeGeom::init_test_attrib()
 {
-  attrib = new AccelAttrib<Vector>(d_nx, d_ny, d_nz);
+  attrib = new AccelAttrib<Vector>(nx_, ny_, nz_);
   RandFunctor f(0.5);
   attrib->iterate(f);
 }

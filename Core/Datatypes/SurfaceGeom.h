@@ -48,7 +48,7 @@ public:
   virtual void io(Piostream&);
   static PersistentTypeID type_id;
   static string typeName(int);
-  vector<FaceSimp> d_face;
+  vector<FaceSimp> face_;
 
 protected:
   

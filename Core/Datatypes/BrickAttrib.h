@@ -153,23 +153,23 @@ template <class T> void
 BrickAttrib<T>::update_brick_counts()
 {
 #if BITBOUND
-  xbrickcount = d_nx / XBRICKSIZE;
-  if (d_nx % XBRICKSIZE) xbrickcount++;
+  xbrickcount = nx_ / XBRICKSIZE;
+  if (nx_ % XBRICKSIZE) xbrickcount++;
 
-  ybrickcount = d_ny / YBRICKSIZE;
-  if (d_ny % YBRICKSIZE) ybrickcount++;
+  ybrickcount = ny_ / YBRICKSIZE;
+  if (ny_ % YBRICKSIZE) ybrickcount++;
 
-  zbrickcount = d_nz / ZBRICKSIZE;
-  if (d_nz % ZBRICKSIZE) zbrickcount++;
+  zbrickcount = nz_ / ZBRICKSIZE;
+  if (nz_ % ZBRICKSIZE) zbrickcount++;
 #else
-  xbrickcount = d_nx >> XBRICKBITS;
-  if (d_nx & XBRICKSPACE) xbrickcount++;
+  xbrickcount = nx_ >> XBRICKBITS;
+  if (nx_ & XBRICKSPACE) xbrickcount++;
 
-  ybrickcount = d_ny >> YBRICKBITS;
-  if (d_ny & YBRICKSPACE) ybrickcount++;
+  ybrickcount = ny_ >> YBRICKBITS;
+  if (ny_ & YBRICKSPACE) ybrickcount++;
 
-  zbrickcount = d_nz >> ZBRICKBITS;
-  if (d_nz & ZBRICKSPACE) zbrickcount++;
+  zbrickcount = nz_ >> ZBRICKBITS;
+  if (nz_ & ZBRICKSPACE) zbrickcount++;
 #endif  
 }
 
@@ -179,9 +179,9 @@ BrickAttrib<T>::BrickAttrib(int x) :
 {
   update_brick_counts();
 #if BITBOUND
-  d_data.resize(xbrickcount * XBRICKSIZE);
+  data_.resize(xbrickcount * XBRICKSIZE);
 #else
-  d_data.resize(xbrickcount << XBRICKBITS);
+  data_.resize(xbrickcount << XBRICKBITS);
 #endif
 }
 
@@ -191,10 +191,10 @@ BrickAttrib<T>::BrickAttrib(int x, int y) :
 {
   update_brick_counts();
 #if BITBOUND
-  d_data.resize(xbrickcount * XBRICKSIZE *
+  data_.resize(xbrickcount * XBRICKSIZE *
 		ybrickcount * YBRICKSIZE);
 #else
-  d_data.resize((xbrickcount * ybrickcount) <<
+  data_.resize((xbrickcount * ybrickcount) <<
 		(XBRICKBITS + YBRICKBITS));
 #endif
 }
@@ -205,11 +205,11 @@ BrickAttrib<T>::BrickAttrib(int x, int y, int z) :
 {
   update_brick_counts();
 #if BITBOUND
-  d_data.resize(xbrickcount * XBRICKSIZE *
+  data_.resize(xbrickcount * XBRICKSIZE *
 		ybrickcount * YBRICKSIZE *
 		zbrickcount * XBRICKSIZE);
 #else
-  d_data.resize((xbrickcount * ybrickcount * zbrickcount) <<
+  data_.resize((xbrickcount * ybrickcount * zbrickcount) <<
 	      (XBRICKBITS + YBRICKBITS + ZBRICKBITS));
 #endif
 }
@@ -297,28 +297,28 @@ BrickAttrib<T>::linearize(int x, int y, int z)
 template <class T> T &
 BrickAttrib<T>::fget1(int ix)
 {
-  ASSERTEQ(d_dim, 1);
-  CHECKARRAYBOUNDS(ix, 0, d_nx);
-  return d_data[ix];
+  ASSERTEQ(dim_, 1);
+  CHECKARRAYBOUNDS(ix, 0, nx_);
+  return data_[ix];
 }
 
 template <class T> T &
 BrickAttrib<T>::fget2(int ix, int iy)
 {
-  ASSERTEQ(d_dim, 2);
-  CHECKARRAYBOUNDS(ix, 0, d_nx);
-  CHECKARRAYBOUNDS(iy, 0, d_ny);
-  return d_data[linearize(ix, iy)];
+  ASSERTEQ(dim_, 2);
+  CHECKARRAYBOUNDS(ix, 0, nx_);
+  CHECKARRAYBOUNDS(iy, 0, ny_);
+  return data_[linearize(ix, iy)];
 }
 
 template <class T> T &
 BrickAttrib<T>::fget3(int ix, int iy, int iz)
 {
-  ASSERTEQ(d_dim, 3);
-  CHECKARRAYBOUNDS(ix, 0, d_nx);
-  CHECKARRAYBOUNDS(iy, 0, d_ny);
-  CHECKARRAYBOUNDS(iz, 0, d_nz);
-  return d_data[linearize(ix, iy, iz)];
+  ASSERTEQ(dim_, 3);
+  CHECKARRAYBOUNDS(ix, 0, nx_);
+  CHECKARRAYBOUNDS(iy, 0, ny_);
+  CHECKARRAYBOUNDS(iz, 0, nz_);
+  return data_[linearize(ix, iy, iz)];
 }
 
 
@@ -365,29 +365,29 @@ BrickAttrib<T>::get3(int ix, int iy, int iz)
 template <class T> void
 BrickAttrib<T>::fset1(int ix, const T& val)
 {
-  ASSERTEQ(d_dim, 1);
-  CHECKARRAYBOUNDS(ix, 0, d_nx);
-  d_data[ix] = val;
+  ASSERTEQ(dim_, 1);
+  CHECKARRAYBOUNDS(ix, 0, nx_);
+  data_[ix] = val;
 }
 
 template <class T> void
 BrickAttrib<T>::fset2(int ix, int iy, const T& val)
 {
-  ASSERTEQ(d_dim, 2);
-  CHECKARRAYBOUNDS(ix, 0, d_nx);
-  CHECKARRAYBOUNDS(iy, 0, d_ny);
-  d_data[linearize(ix, iy)] = val;
+  ASSERTEQ(dim_, 2);
+  CHECKARRAYBOUNDS(ix, 0, nx_);
+  CHECKARRAYBOUNDS(iy, 0, ny_);
+  data_[linearize(ix, iy)] = val;
 }
 
 
 template <class T> void
 BrickAttrib<T>::fset3(int ix, int iy, int iz, const T& val)
 {
-  ASSERTEQ(d_dim, 3);
-  CHECKARRAYBOUNDS(ix, 0, d_nx);
-  CHECKARRAYBOUNDS(iy, 0, d_ny);
-  CHECKARRAYBOUNDS(iz, 0, d_nz);
-  d_data[linearize(ix, iy, iz)] = val;
+  ASSERTEQ(dim_, 3);
+  CHECKARRAYBOUNDS(ix, 0, nx_);
+  CHECKARRAYBOUNDS(iy, 0, ny_);
+  CHECKARRAYBOUNDS(iz, 0, nz_);
+  data_[linearize(ix, iy, iz)] = val;
 }
 
 
@@ -412,16 +412,16 @@ BrickAttrib<T>::set3(int x, int y, int z, const T &val)
 
 // template <class T> bool BrickAttrib<T>::compute_minmax(){
 //   has_minmax = 1;
-//   if(d_data.empty()) {
+//   if(data_.empty()) {
 //     min = 0;
 //     max = 0;
 //     return false;
 //   }
 //   else {
 //     vector<T>::iterator itr;
-//     T lmin = d_data[0];
+//     T lmin = data_[0];
 //     T lmax = lmin;
-//     for(itr = d_data.begin(); itr != d_data.end(); itr++){
+//     for(itr = data_.begin(); itr != data_.end(); itr++){
 //       lmin = Min(lmin, *itr);
 //       lmax = Max(lmax, *itr);
 //     }
@@ -434,14 +434,14 @@ BrickAttrib<T>::set3(int x, int y, int z, const T &val)
 template <class T> int
 BrickAttrib<T>::size() const
 {
-  switch (d_dim)
+  switch (dim_)
     {
     case 3:
-      return d_nx * d_ny * d_nz;
+      return nx_ * ny_ * nz_;
     case 2:
-      return d_nx * d_ny;
+      return nx_ * ny_;
     case 1:
-      return d_nx;
+      return nx_;
     default:
       return 0;
     }
@@ -451,13 +451,13 @@ BrickAttrib<T>::size() const
 template <class T> int
 BrickAttrib<T>::iterate(AttribFunctor<T> &func)
 {
-  if (d_dim == 3)
+  if (dim_ == 3)
     {
-      for (int i = 0; i < d_nz; i++)
+      for (int i = 0; i < nz_; i++)
 	{
-	  for (int j = 0; j < d_ny; j++)
+	  for (int j = 0; j < ny_; j++)
 	    {
-	      for (int k = 0; k < d_nx; k++)
+	      for (int k = 0; k < nx_; k++)
 		{
 		  func(fget3(k, j, i));
 		}
@@ -465,11 +465,11 @@ BrickAttrib<T>::iterate(AttribFunctor<T> &func)
 	}
       return size();
     }
-  else if (d_dim == 2)
+  else if (dim_ == 2)
     {
-      for (int i = 0; i < d_ny; i++)
+      for (int i = 0; i < ny_; i++)
 	{
-	  for (int j = 0; j < d_nx; j++)
+	  for (int j = 0; j < nx_; j++)
 	    {
 	      func(fget2(j, i));
 	    }
@@ -489,9 +489,9 @@ BrickAttrib<T>::getInfo()
 {
   ostringstream retval;
   retval <<
-    "Name = " << d_name << endl <<
+    "Name = " << name_ << endl <<
     "Type = BrickAttrib" << endl <<
-    "Dim = " << d_dim << ": " << d_nx << ' ' << d_ny << ' ' << d_nz << endl <<
+    "Dim = " << dim_ << ": " << nx_ << ' ' << ny_ << ' ' << nz_ << endl <<
     "Brickcounts = " 
 	 << xbrickcount << ' ' << ybrickcount << ' ' << zbrickcount << endl <<
 #if BITBOUND
@@ -503,12 +503,12 @@ BrickAttrib<T>::getInfo()
 #endif
     "Size = " << size() << endl <<
     "Data = ";
-  vector<T>::iterator itr = d_data.begin();
+  vector<T>::iterator itr = data_.begin();
   int i = 0;
-  for(;itr!=d_data.end() && i < 200; itr++, i++) {
+  for(;itr!=data_.end() && i < 200; itr++, i++) {
     retval << *itr << " ";
   }
-  if (itr != d_data.end()) { retval << "..."; }
+  if (itr != data_.end()) { retval << "..."; }
   retval << endl;
   return retval.str();
 }

@@ -52,7 +52,7 @@ typedef std::map<clString,OPort*>::iterator auto_oport_iter;
 ModuleInfo* GetModuleInfo(const clString& name, const clString& catname,
 			  const clString& packname)
 {
-  Packages* db=(Packages*)packageDB.d_db;
+  Packages* db=(Packages*)packageDB.db_;
  
   Package* package;
   if (!db->lookup(packname,package))
@@ -145,7 +145,7 @@ Module::Module(const clString& name, const clString& id,
   name(name), abort_flag(0), need_execute(0), sched_class(sched_class),
   id(id), progress(0), handle(0), remote(0), skeleton(0),
   notes("notes", id, this), show_status("show_status", id, this),
-  d_msgStream("msgStream", id, this)
+  msgStream_("msgStream", id, this)
 {
   packageName=pack;
   categoryName=cat;

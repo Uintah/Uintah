@@ -32,7 +32,7 @@ PointCloudGeom::io(Piostream& stream)
 {
   stream.begin_class(typeName(0).c_str(),  POINTCLOUDGEOM_VERSION);
   UnstructuredGeom::io(stream);
-  Pio(stream, d_node);
+  Pio(stream, node_);
   stream.end_class();
 }
 
@@ -47,7 +47,7 @@ PointCloudGeom::PointCloudGeom()
 
 PointCloudGeom::PointCloudGeom(const vector<NodeSimp>& inodes)
 {
-  d_node = inodes;
+  node_ = inodes;
 }
 
 
@@ -59,7 +59,7 @@ string
 PointCloudGeom::getInfo()
 {
   ostringstream retval;
-  retval << "name = " << d_name << endl;
+  retval << "name = " << name_ << endl;
   return retval.str();
 }
 
@@ -74,22 +74,22 @@ PointCloudGeom::computeBoundingBox()
   //compute diagnal and bbox
   dbg << "calling PointCloudgeom::compute_bbox()" << endl;
   
-  if (d_node.empty())
+  if (node_.empty())
   {
     return false;
   }
 
   Point min, max;
-  min = max = d_node[0].p;
-  for (int i = 1; i < d_node.size(); i ++)
+  min = max = node_[0].p;
+  for (int i = 1; i < node_.size(); i ++)
   {
-    min = Min(min, d_node[i].p);
-    max = Max(max, d_node[i].p);
+    min = Min(min, node_[i].p);
+    max = Max(max, node_[i].p);
   }
 
-  d_bbox.reset();
-  d_bbox.extend(min);
-  d_bbox.extend(max);
+  bbox_.reset();
+  bbox_.extend(min);
+  bbox_.extend(max);
 
   return true;
 }
@@ -98,8 +98,8 @@ PointCloudGeom::computeBoundingBox()
 void
 PointCloudGeom::setNodes(const vector<NodeSimp>& inodes)
 {
-  d_node.clear();
-  d_node = inodes;
+  node_.clear();
+  node_ = inodes;
 }
 
 } // End namespace SCIRun

@@ -91,7 +91,7 @@ protected:
   // GROUP: Private data
   //////////
   // 
-  vector<T>       d_data;
+  vector<T>       data_;
   static DebugStream dbg;
 };
 
@@ -130,7 +130,7 @@ FlatAttrib<T>::io(Piostream& stream)
   
   // -- base class PIO
   DiscreteAttrib<T>::io(stream);
-  Pio(stream, d_data);
+  Pio(stream, data_);
   stream.end_class();
 }
 
@@ -139,25 +139,25 @@ template <class T> DebugStream FlatAttrib<T>::dbg("FlatAttrib", true);
 
 template <class T>
 FlatAttrib<T>::FlatAttrib(int ix) :
-  DiscreteAttrib<T>(ix), d_data(ix)
+  DiscreteAttrib<T>(ix), data_(ix)
 {
 }
 
 template <class T>
 FlatAttrib<T>::FlatAttrib(int ix, int iy) :
-  DiscreteAttrib<T>(ix, iy), d_data(ix * iy)
+  DiscreteAttrib<T>(ix, iy), data_(ix * iy)
 {
 }
 
 template <class T>
 FlatAttrib<T>::FlatAttrib(int ix, int iy, int iz) :
-  DiscreteAttrib<T>(ix, iy, iz), d_data(ix * iy * iz)
+  DiscreteAttrib<T>(ix, iy, iz), data_(ix * iy * iz)
 {
 }
 
 template <class T>
 FlatAttrib<T>::FlatAttrib(const FlatAttrib& copy) :
-  DiscreteAttrib<T>(copy), d_data(copy.d_data)
+  DiscreteAttrib<T>(copy), data_(copy.data_)
 {
 }
 
@@ -169,28 +169,28 @@ FlatAttrib<T>::~FlatAttrib()
 template <class T> T &
 FlatAttrib<T>::fget1(int ix)
 {
-  ASSERTEQ(d_dim, 1);
-  CHECKARRAYBOUNDS(ix, 0, d_nx);
-  return d_data[ix];  
+  ASSERTEQ(dim_, 1);
+  CHECKARRAYBOUNDS(ix, 0, nx_);
+  return data_[ix];  
 }
 
 template <class T> T &
 FlatAttrib<T>::fget2(int ix, int iy)
 {
-  ASSERTEQ(d_dim, 2);
-  CHECKARRAYBOUNDS(ix, 0, d_nx);
-  CHECKARRAYBOUNDS(iy, 0, d_ny);
-  return d_data[iy*(d_nx)+ix];  
+  ASSERTEQ(dim_, 2);
+  CHECKARRAYBOUNDS(ix, 0, nx_);
+  CHECKARRAYBOUNDS(iy, 0, ny_);
+  return data_[iy*(nx_)+ix];  
 }
 
 template <class T> T &
 FlatAttrib<T>::fget3(int ix, int iy, int iz)
 {
-  ASSERTEQ(d_dim, 3);
-  CHECKARRAYBOUNDS(ix, 0, d_nx);
-  CHECKARRAYBOUNDS(iy, 0, d_ny);
-  CHECKARRAYBOUNDS(iz, 0, d_nz);
-  return d_data[iz*(d_nx*d_ny)+iy*(d_nx)+ix];  
+  ASSERTEQ(dim_, 3);
+  CHECKARRAYBOUNDS(ix, 0, nx_);
+  CHECKARRAYBOUNDS(iy, 0, ny_);
+  CHECKARRAYBOUNDS(iz, 0, nz_);
+  return data_[iz*(nx_*ny_)+iy*(nx_)+ix];  
 }
 
 // Copy wrappers, no allocation of result.
@@ -236,30 +236,30 @@ FlatAttrib<T>::get3(int ix, int iy, int iz)
 template <class T> void
 FlatAttrib<T>::fset1(int ix, const T& val)
 {
-  ASSERTEQ(d_dim, 1);
-  CHECKARRAYBOUNDS(ix, 0, d_nx);
-  d_data[ix] = val;
+  ASSERTEQ(dim_, 1);
+  CHECKARRAYBOUNDS(ix, 0, nx_);
+  data_[ix] = val;
 }
 
 
 template <class T> void
 FlatAttrib<T>::fset2(int ix, int iy, const T& val)
 {
-  ASSERTEQ(d_dim, 2);
-  CHECKARRAYBOUNDS(ix, 0, d_nx);
-  CHECKARRAYBOUNDS(iy, 0, d_ny);
-  d_data[iy*(d_nx)+ix] = val;
+  ASSERTEQ(dim_, 2);
+  CHECKARRAYBOUNDS(ix, 0, nx_);
+  CHECKARRAYBOUNDS(iy, 0, ny_);
+  data_[iy*(nx_)+ix] = val;
 }
 
 
 template <class T> void
 FlatAttrib<T>::fset3(int ix, int iy, int iz, const T& val)
 {
-  ASSERTEQ(d_dim, 3);
-  CHECKARRAYBOUNDS(ix, 0, d_nx);
-  CHECKARRAYBOUNDS(iy, 0, d_ny);
-  CHECKARRAYBOUNDS(iz, 0, d_nz);
-  d_data[iz*(d_nx*d_ny)+iy*(d_nx)+ix] = val;
+  ASSERTEQ(dim_, 3);
+  CHECKARRAYBOUNDS(ix, 0, nx_);
+  CHECKARRAYBOUNDS(iy, 0, ny_);
+  CHECKARRAYBOUNDS(iz, 0, nz_);
+  data_[iz*(nx_*ny_)+iy*(nx_)+ix] = val;
 }
 
 
@@ -284,16 +284,16 @@ FlatAttrib<T>::set3(int x, int y, int z, const T &val)
 
 // template <class T> bool FlatAttrib<T>::compute_minmax(){
 //   has_minmax = 1;
-//   if(d_data.empty()) {
+//   if(data_.empty()) {
 //     min = 0;
 //     max = 0;
 //     return false;
 //   }
 //   else {
 //     vector<T>::iterator itr;
-//     T lmin = d_data[0];
+//     T lmin = data_[0];
 //     T lmax = lmin;
-//     for(itr = d_data.begin(); itr != d_data.end(); itr++){
+//     for(itr = data_.begin(); itr != data_.end(); itr++){
 //       lmin = Min(lmin, *itr);
 //       lmax = Max(lmax, *itr);
 //     }
@@ -306,15 +306,15 @@ FlatAttrib<T>::set3(int x, int y, int z, const T &val)
 template <class T> int
 FlatAttrib<T>::size() const
 {
-  return d_data.size();
+  return data_.size();
 }
 
 
 template <class T> int
 FlatAttrib<T>::iterate(AttribFunctor<T> &func)
 {
-  vector<T>::iterator itr = d_data.begin();
-  while (itr != d_data.end())
+  vector<T>::iterator itr = data_.begin();
+  while (itr != data_.end())
     {
       func(*itr++);
     }
@@ -326,17 +326,17 @@ FlatAttrib<T>::getInfo()
 {
   ostringstream retval;
   retval <<
-    "Name = " << d_name << endl <<
+    "Name = " << name_ << endl <<
     "Type = FlatAttrib" << endl <<
-    "Dim = " << d_dim << ": " << d_nx << ' ' << d_ny << ' ' << d_nz << endl <<
+    "Dim = " << dim_ << ": " << nx_ << ' ' << ny_ << ' ' << nz_ << endl <<
     "Size = " << size() << endl <<
     "Data = ";
-  vector<T>::iterator itr = d_data.begin();
+  vector<T>::iterator itr = data_.begin();
   int i = 0;
-  for(;itr!=d_data.end() && i < 1000; itr++, i++)  {
+  for(;itr!=data_.end() && i < 1000; itr++, i++)  {
     retval << *itr << " ";
   }
-  if (itr != d_data.end()) { retval << "..."; }
+  if (itr != data_.end()) { retval << "..."; }
   retval << endl;
   return retval.str();
 }

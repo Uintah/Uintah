@@ -31,7 +31,7 @@ void ContourGeom::io(Piostream& stream)
 {
   stream.begin_class(typeName(0).c_str(), CONTOURGEOM_VERSION);
   PointCloudGeom::io(stream);
-  Pio(stream, d_edge);
+  Pio(stream, edge_);
   stream.end_class();
 }
 
@@ -47,7 +47,7 @@ ContourGeom::ContourGeom(const vector<NodeSimp>& inodes,
 			 const vector<EdgeSimp>& iedges)
   : PointCloudGeom(inodes)
 {
-  d_edge = iedges;
+  edge_ = iedges;
 }
 
 ContourGeom::~ContourGeom()
@@ -58,7 +58,7 @@ string
 ContourGeom::getInfo()
 {
   ostringstream retval;
-  retval << "name = " << d_name << endl;
+  retval << "name = " << name_ << endl;
   return retval.str();
 }
 
@@ -71,8 +71,8 @@ ContourGeom::getTypeName(int n){
 void
 ContourGeom::setEdges(const vector<EdgeSimp>& iedges)
 {
-  d_edge.clear();
-  d_edge = iedges;
+  edge_.clear();
+  edge_ = iedges;
 }
 
 } // End namespace SCIRun

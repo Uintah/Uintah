@@ -69,17 +69,17 @@ namespace SCIRun {
 
   class SCICORESHARE GenFunction: public Datatype {
     
-    FuncPtrV    d_fns;
-    FastEvalV   d_fevals;
-    StrV        d_fstr;
-    RealV       d_vars;
-    double*     d_vars2;
+    FuncPtrV    fns_;
+    FastEvalV   fevals_;
+    StrV        fstr_;
+    RealV       vars_;
+    double*     vars2_;
 
-    int     d_domDims;
-    int     d_resDims;
-    int     d_fnsDims;
-    int     d_isFast;
-    int     d_isChanged;
+    int     domDims_;
+    int     resDims_;
+    int     fnsDims_;
+    int     isFast_;
+    int     isChanged_;
    
     //////////
     // Deletes pointers to function in the vector
@@ -144,25 +144,25 @@ namespace SCIRun {
   };
  
   inline int GenFunction::get_num_comp() const{
-    return d_resDims;
+    return resDims_;
   }
   
   inline int GenFunction::get_dom_dims() const {
-    return d_domDims;
+    return domDims_;
   }
 
   //////////
   // General evaluation function
   inline void GenFunction::get_value(double vrs[], int sz, RealV& out) const{
-    ASSERT(d_domDims<=sz);
-    out.resize(d_resDims);
-      for (int i=0; i<d_resDims; i++)
-	out[i]=(d_isFast && d_fevals[i])?(d_fevals[i](vrs)):(d_fns[i]->eval(vrs));
+    ASSERT(domDims_<=sz);
+    out.resize(resDims_);
+      for (int i=0; i<resDims_; i++)
+	out[i]=(isFast_ && fevals_[i])?(fevals_[i](vrs)):(fns_[i]->eval(vrs));
   }
 
   inline double GenFunction::get_value(double vrs[], int sz, int nc) const{
-    ASSERT(d_domDims<=sz && nc < d_resDims);
-    return (d_isFast && d_fevals[nc])?(d_fevals[nc](vrs)):(d_fns[nc]->eval(vrs));
+    ASSERT(domDims_<=sz && nc < resDims_);
+    return (isFast_ && fevals_[nc])?(fevals_[nc](vrs)):(fns_[nc]->eval(vrs));
   }
 
 } // End namespace SCIRun

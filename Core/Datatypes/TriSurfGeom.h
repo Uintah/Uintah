@@ -32,12 +32,12 @@ typedef LockingHandle<TriSurfGeom> TriSurfGeomHandle;
 
 struct TriSurfVertex
 {
-  int pointIndex() { return d_point_index; }
-  int pointIndex(int i) { return d_point_index = i; }
-  int d_point_index;
-  int d_neighbor;
-  //d_ni;
-  //d_ti;
+  int pointIndex() { return point_index_; }
+  int pointIndex(int i) { return point_index_ = i; }
+  int point_index_;
+  int neighbor_;
+  //ni_;
+  //ti_;
 };
 
 class TriSurfGeom : public UnstructuredGeom
@@ -56,12 +56,12 @@ public:
   static PersistentTypeID type_id;
   static string typeName(int);
 
-  int pointSize() { return d_points.size(); }
-  int edgeSize() { return d_mesh.size(); }
-  int triangleSize() { return d_mesh.size() / 3; }
+  int pointSize() { return points_.size(); }
+  int edgeSize() { return mesh_.size(); }
+  int triangleSize() { return mesh_.size() / 3; }
 
-  TriSurfVertex &edge(int index) { return d_mesh[index]; }
-  Point &point(int index) { return d_points[index]; }
+  TriSurfVertex &edge(int index) { return mesh_[index]; }
+  Point &point(int index) { return points_[index]; }
 
   int nextEdgeIndex(int e) { return (e%3==2)?(e - 2):(e+1);}
   int prevEdgeIndex(int e) { return (e%3==0)?(e + 2):(e-1);}
@@ -80,8 +80,8 @@ public:
 protected:
   bool computeBoundingBox();
 
-  vector<Point> d_points;
-  vector<TriSurfVertex> d_mesh;  // 3 * number of triangles.
+  vector<Point> points_;
+  vector<TriSurfVertex> mesh_;  // 3 * number of triangles.
 };
 
 

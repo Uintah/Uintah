@@ -47,8 +47,8 @@ public:
   virtual string getInfo();
   virtual string getTypeName(int=0);
 
-  void setObj( const T& obj ) { d_obj = obj; }
-  T& getObj() { return d_obj; }
+  void setObj( const T& obj ) { obj_ = obj; }
+  T& getObj() { return obj_; }
 
   //////////
   // Persistent representation...
@@ -58,7 +58,7 @@ public:
   static Persistent* maker();
 
 private:
-  T d_obj;
+  T obj_;
 };
 
 
@@ -97,7 +97,7 @@ SimpleAttrib<T>::io(Piostream& stream)
   
   // -- base class PIO
   Attrib::io(stream);
-  Pio(stream, d_obj);
+  Pio(stream, obj_);
   
   stream.end_class();
 }
@@ -114,7 +114,7 @@ SimpleAttrib<T>::SimpleAttrib( const string& name, Attrib::Type type) :
 template <class T>
 SimpleAttrib<T>::SimpleAttrib( const T& obj, const string &name, 
 			       Attrib::Type type )  
-  : SimpleAttribBase(name, type), d_obj(obj)
+  : SimpleAttribBase(name, type), obj_(obj)
 {
 }
 
@@ -122,7 +122,7 @@ SimpleAttrib<T>::SimpleAttrib( const T& obj, const string &name,
 template <class T>
 SimpleAttrib<T>::SimpleAttrib(const SimpleAttrib& copy) :
   SimpleAttribBase( copy ),
-  d_obj( copy.d_obj )
+  obj_( copy.obj_ )
 {
 }
 
@@ -136,7 +136,7 @@ SimpleAttrib<T>::getInfo()
 {
   ostringstream retval;
   retval <<
-    "Name = " << d_name << '\n' <<
+    "Name = " << name_ << '\n' <<
     "Type = SimpleAttrib" << '\n';
   return retval.str();
 }

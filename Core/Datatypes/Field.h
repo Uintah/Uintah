@@ -86,7 +86,7 @@ public:
   }
 
 protected:
-  GeomHandle      d_geomHandle;
+  GeomHandle      geomHandle_;
 };
 
 template <class T> T* Field::query_interface(T *)

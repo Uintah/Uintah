@@ -31,7 +31,7 @@ DebugStream TetMeshGeom::dbg("TetMeshGeom", true);
 void TetMeshGeom::io(Piostream& stream){
   stream.begin_class(typeName(0).c_str(), TETMESHGEOM_VERSION);
   MeshGeom::io(stream);
-  Pio(stream, d_tets);
+  Pio(stream, tets_);
   stream.end_class();
 }
 
@@ -43,8 +43,8 @@ TetMeshGeom::TetMeshGeom(){
 TetMeshGeom::TetMeshGeom(const vector<NodeSimp>& inodes, const vector<TetSimp>& itets):
   has_neighbors(0)
 {
-  d_node = inodes;
-  d_tets = itets;
+  node_ = inodes;
+  tets_ = itets;
 }
 
 TetMeshGeom::~TetMeshGeom(){
@@ -57,8 +57,8 @@ TetMeshGeom::get_info(){
 
 
 void TetMeshGeom::set_tets(const vector<TetSimp>& itets){
-  d_tets.clear();
-  d_tets = itets;
+  tets_.clear();
+  tets_ = itets;
 }
 
 string TetMeshGeom::getTypeName(int n){

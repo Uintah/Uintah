@@ -33,8 +33,8 @@ PersistentTypeID AttribManager::type_id("AttribManager", "Datatype", maker);
 void AttribManager::io(Piostream& stream){
   
   stream.begin_class("AttribManager", ATTRIB_MANAGER_VERSION);
-  Pio(stream, d_attribHandles);
-  Pio(stream, d_currAttrib);
+  Pio(stream, attribHandles_);
+  Pio(stream, currAttrib_);
   
   stream.end_class();
 }
@@ -54,29 +54,29 @@ AttribManager::io_map( Piostream& stream )
     for (i = 0; i < n; i++) {
       Pio(stream, k);
       Pio(stream, d);
-      d_attribHandles[k] = d;
+      attribHandles_[k] = d;
     }
     
   }
 				// if writing to stream
   else {
     int n = 0;
-    for (iter = d_attribHandles.begin(); 
-	 iter != d_attribHandles.end(); 
+    for (iter = attribHandles_.begin(); 
+	 iter != attribHandles_.end(); 
 	 iter++) 
       if ( !iter->second->isTemp() )
 	n++;
     
     Pio(stream, n);
     // write elements
-    cerr << "attrib io " << d_attribHandles.size() << "  " << n << endl;
-    for (iter = d_attribHandles.begin(); 
-	 iter != d_attribHandles.end(); 
+    cerr << "attrib io " << attribHandles_.size() << "  " << n << endl;
+    for (iter = attribHandles_.begin(); 
+	 iter != attribHandles_.end(); 
 	 iter++) {
       // have to copy iterator elements,
       // since passing them directly in a
       // call to Pio can be invalid because
-      // Pio passes d_attribHandles by reference
+      // Pio passes attribHandles_ by reference
       if ( !iter->second->isTemp() ) {
 	string ik = (*iter).first;
 	AttribHandle dk = (*iter).second;
@@ -95,8 +95,8 @@ AttribManager::io_map( Piostream& stream )
 AttribManager::AttribManager()
 {
   string empty("");
-  d_attribHandles[empty]=AttribHandle(NULL);
-  d_currAttrib = "";
+  attribHandles_[empty]=AttribHandle(NULL);
+  currAttrib_ = "";
 }
 
 AttribManager::AttribManager(const AttribManager&)
@@ -110,14 +110,14 @@ AttribManager::~AttribManager(){
 //////////
 // Member functions implementation
 const AttribHandle AttribManager::getAttrib() const{
-  AttribMap::const_iterator ii=d_attribHandles.find(d_currAttrib);
+  AttribMap::const_iterator ii=attribHandles_.find(currAttrib_);
   return (*ii).second;
 }
 
 const AttribHandle AttribManager::getAttrib(string aName) const{
-  AttribMap::const_iterator ii=d_attribHandles.find(aName);
+  AttribMap::const_iterator ii=attribHandles_.find(aName);
  
-  if (ii!=d_attribHandles.end()){
+  if (ii!=attribHandles_.end()){
     return (*ii).second;
   }
   else {
@@ -126,34 +126,34 @@ const AttribHandle AttribManager::getAttrib(string aName) const{
 }
 
 void AttribManager::setCurrAttrib(string aName){
-  AttribMap::const_iterator ii=d_attribHandles.find(aName);
-  if (ii!=d_attribHandles.end()){
-    d_currAttrib = aName;
+  AttribMap::const_iterator ii=attribHandles_.find(aName);
+  if (ii!=attribHandles_.end()){
+    currAttrib_ = aName;
   }
 }
 
 AttribHandle AttribManager::shareAttrib(string aName){
-  AttribMap::const_iterator ii=d_attribHandles.find(aName);
-  if (ii!=d_attribHandles.end()){
+  AttribMap::const_iterator ii=attribHandles_.find(aName);
+  if (ii!=attribHandles_.end()){
     return (*ii).second;
   }
   else {
-    return d_attribHandles[""];
+    return attribHandles_[""];
   }
 }
 
 
 void AttribManager::addAttribute(const AttribHandle& hAttrib){
   string aName = hAttrib->getName();
-  AttribMap::const_iterator ii=d_attribHandles.find(aName);
-  if (ii==d_attribHandles.end()){
-    d_attribHandles[aName]=hAttrib;
-    d_currAttrib = aName;
+  AttribMap::const_iterator ii=attribHandles_.find(aName);
+  if (ii==attribHandles_.end()){
+    attribHandles_[aName]=hAttrib;
+    currAttrib_ = aName;
   }
 }
 
 void AttribManager::removeAttribute(string aName){
-  d_attribHandles.erase(aName);
+  attribHandles_.erase(aName);
 }
 
 }
