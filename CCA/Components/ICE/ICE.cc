@@ -94,7 +94,7 @@ ICE::~ICE()
  Function~  ICE::problemSetup--
 _____________________________________________________________________*/
 void  ICE::problemSetup(const ProblemSpecP& prob_spec,GridP& ,
-			SimulationStateP&   sharedState)
+                     SimulationStateP&   sharedState)
 {
   d_sharedState = sharedState;
   d_SMALL_NUM   = 1.e-100;
@@ -334,7 +334,7 @@ void ICE::scheduleTimeAdvance(const LevelP& level, SchedulerP& sched)
   const MaterialSubset* mpm_matls_sub = mpm_matls->getUnion();
 
   scheduleComputePressure(                sched, patches, press_matl,
-					  all_matls);
+                                     all_matls);
 
   if(d_RateForm) {                                                         
     scheduleComputeFCPressDiffRF(         sched, patches, ice_matls_sub,
@@ -1096,19 +1096,19 @@ void ICE::computeEquilibrationPressure(const ProcessorGroup*,
     for (int m = 0; m < numMatls; m++) {
       ICEMaterial* ice_matl = d_sharedState->getICEMaterial(m);
       for (CellIterator iter=patch->getExtraCellIterator();!iter.done();
-	   iter++) {
+          iter++) {
         rho_micro[m][*iter] = 
-	  ice_matl->getEOS()->computeRhoMicro(press_new[*iter],gamma[m],cv[m],
-					      Temp[m][*iter]); 
+         ice_matl->getEOS()->computeRhoMicro(press_new[*iter],gamma[m],cv[m],
+                                         Temp[m][*iter]); 
 
           ice_matl->getEOS()->computePressEOS(rho_micro[m][*iter],gamma[m],
                                           cv[m], Temp[m][*iter],
                                           press_eos[m], dp_drho[m], dp_de[m]);
 
-	  double div = 1./rho_micro[m][*iter];
-	  tmp = dp_drho[m] + dp_de[m] * press_eos[m] * div * div;
-	  speedSound_new[m][*iter] = sqrt(tmp);
-	  vol_frac[m][*iter] = rho_CC[m][*iter] * div;
+         double div = 1./rho_micro[m][*iter];
+         tmp = dp_drho[m] + dp_de[m] * press_eos[m] * div * div;
+         speedSound_new[m][*iter] = sqrt(tmp);
+         vol_frac[m][*iter] = rho_CC[m][*iter] * div;
       }
     }
 
@@ -1125,7 +1125,7 @@ void ICE::computeEquilibrationPressure(const ProcessorGroup*,
        ICEMaterial* matl = d_sharedState->getICEMaterial( m );
        int indx = matl->getDWIndex(); 
        description << "TOP_equilibration_Mat_"<< indx << "_patch_" 
-		   << patch->getID();
+                 << patch->getID();
 
        printData( patch, 1, description.str(), "rho_CC",       rho_CC[m]);
        printData( patch, 1, description.str(), "rho_micro_CC", rho_micro[m]);
@@ -1165,7 +1165,7 @@ void ICE::computeEquilibrationPressure(const ProcessorGroup*,
          double Q =  press_new[c] - press_eos[m];
          double y =  dp_drho[m] * ( rho_CC[m][c]/
                  (vol_frac[m][c] * vol_frac[m][c]) ); 
-	 double div_y = 1./y;
+        double div_y = 1./y;
          A   +=  vol_frac[m][c];
          B   +=  Q*div_y;
          C   +=  div_y;
@@ -1183,10 +1183,10 @@ void ICE::computeEquilibrationPressure(const ProcessorGroup*,
            ice_matl->getEOS()->computeRhoMicro(press_new[c],gamma[m],
                                                cv[m],Temp[m][c]);
 
-	 double div = 1./rho_micro[m][c];
+        double div = 1./rho_micro[m][c];
        //__________________________________
        // - compute the updated volume fractions
-	 vol_frac[m][c]   = rho_CC[m][c]*div;
+        vol_frac[m][c]   = rho_CC[m][c]*div;
 
        //__________________________________
        // Find the speed of sound 
@@ -1216,25 +1216,25 @@ void ICE::computeEquilibrationPressure(const ProcessorGroup*,
       //__________________________________
       //      BULLET PROOFING
       if(test_max_iter == d_max_iter_equilibration) 
-	throw MaxIteration(c,count,n_passes,"MaxIterations reached");
+       throw MaxIteration(c,count,n_passes,"MaxIterations reached");
 
        for (int m = 0; m < numMatls; m++) {
            ASSERT(( vol_frac[m][c] > 0.0 ) ||
                   ( vol_frac[m][c] < 1.0));
        }
        if ( fabs(sum - 1.0) > convergence_crit)  
-	 throw MaxIteration(c,count,n_passes,
-			    "MaxIteration reached vol_frac != 1");
+        throw MaxIteration(c,count,n_passes,
+                         "MaxIteration reached vol_frac != 1");
        
        if ( press_new[c] < 0.0 )  
-	 throw MaxIteration(c,count,n_passes,
-			    "MaxIteration reached press_new < 0");
+        throw MaxIteration(c,count,n_passes,
+                         "MaxIteration reached press_new < 0");
 
        for (int m = 0; m < numMatls; m++)
-	 if ( rho_micro[m][c] < 0.0 || vol_frac[m][c] < 0.0) 
-	   throw
-	     MaxIteration(c,count,n_passes,
-			 "MaxIteration reached rho_micro < 0 || vol_frac < 0");
+        if ( rho_micro[m][c] < 0.0 || vol_frac[m][c] < 0.0) 
+          throw
+            MaxIteration(c,count,n_passes,
+                      "MaxIteration reached rho_micro < 0 || vol_frac < 0");
 
       if (switchDebug_EQ_RF_press) {
         n_iters_equil_press[c] = count;
@@ -1253,7 +1253,7 @@ void ICE::computeEquilibrationPressure(const ProcessorGroup*,
     // compute sp_vol_CC
     for (int m = 0; m < numMatls; m++)   {
       for (CellIterator iter=patch->getExtraCellIterator();!iter.done();
-	   iter++) {
+          iter++) {
         IntVector c = *iter;
         sp_vol_CC[m][c] = 1.0/rho_micro[m][c];
       }
@@ -1304,13 +1304,13 @@ void ICE::computeEquilibrationPressure(const ProcessorGroup*,
 _____________________________________________________________________*/
 
 template<class T> void ICE::computeVelFace(int dir, CellIterator it,
-					    IntVector adj_offset,double dx,
-					    double delT, double gravity,
-					    constCCVariable<double>& rho_CC,
-					    constCCVariable<double>& sp_vol_CC,
-					    constCCVariable<Vector>& vel_CC,
-					    constCCVariable<double>& press_CC,
-					    T& vel_FC)
+                                       IntVector adj_offset,double dx,
+                                       double delT, double gravity,
+                                       constCCVariable<double>& rho_CC,
+                                       constCCVariable<double>& sp_vol_CC,
+                                       constCCVariable<Vector>& vel_CC,
+                                       constCCVariable<double>& press_CC,
+                                       T& vel_FC)
 {
 
   for(;!it.done(); it++){
@@ -1321,7 +1321,7 @@ template<class T> void ICE::computeVelFace(int dir, CellIterator it,
     //__________________________________
     // interpolation to the face
     double term1 = (rho_CC[adj] * vel_CC[adj](dir) +
-		    rho_CC[c] * vel_CC[c](dir))/(rho_FC);            
+                  rho_CC[c] * vel_CC[c](dir))/(rho_FC);            
     //__________________________________
     // pressure term           
     double sp_vol_brack = 2.*(sp_vol_CC[adj] * sp_vol_CC[c])/
@@ -1338,8 +1338,8 @@ template<class T> void ICE::computeVelFace(int dir, CellIterator it,
   
 }
 
-			  
-			  
+                       
+                       
 void ICE::computeFaceCenteredVelocities(const ProcessorGroup*,  
                                         const PatchSubset* patches,
                                         const MaterialSubset* /*matls*/,
@@ -1426,19 +1426,19 @@ void ICE::computeFaceCenteredVelocities(const ProcessorGroup*,
       //  Compute vel_FC for each face
 
       computeVelFace<SFCXVariable<double> >(0,patch->getSFCXIterator(offset),
-					   adj_offset[0],dx(0),delT,gravity(0),
-					    rho_CC,sp_vol_CC,vel_CC,press_CC,
-					    uvel_FC);
+                                      adj_offset[0],dx(0),delT,gravity(0),
+                                       rho_CC,sp_vol_CC,vel_CC,press_CC,
+                                       uvel_FC);
 
       computeVelFace<SFCYVariable<double> >(1,patch->getSFCYIterator(offset),
-					   adj_offset[1],dx(1),delT,gravity(1),
-					    rho_CC,sp_vol_CC,vel_CC,press_CC,
-					    vvel_FC);
+                                      adj_offset[1],dx(1),delT,gravity(1),
+                                       rho_CC,sp_vol_CC,vel_CC,press_CC,
+                                       vvel_FC);
 
       computeVelFace<SFCZVariable<double> >(2,patch->getSFCZIterator(offset),
-					   adj_offset[2],dx(2),delT,gravity(2),
-					    rho_CC,sp_vol_CC,vel_CC,press_CC,
-					    wvel_FC);
+                                      adj_offset[2],dx(2),delT,gravity(2),
+                                       rho_CC,sp_vol_CC,vel_CC,press_CC,
+                                       wvel_FC);
 
       //__________________________________
       // (*)vel_FC BC are updated in 
@@ -1807,7 +1807,7 @@ void ICE::computeDelPressAndUpdatePressCC(const ProcessorGroup*,
       new_dw->get(burnedMass,  lb->burnedMass_CCLabel,indx,patch,Ghost::None,0);
       if(d_EqForm) {
         new_dw->get(speedSound,lb->speedSound_CCLabel,indx,patch,
-		    Ghost::None,0);
+                  Ghost::None,0);
       }
       if(ice_matl) {
         old_dw->get(vel_CC,   lb->vel_CCLabel,       indx,patch,Ghost::None,0);
@@ -1919,10 +1919,10 @@ void ICE::computeDelPressAndUpdatePressCC(const ProcessorGroup*,
   ---------------------------------------------------------------------  */
 
 template <class T> void ICE::computePressFace(int& numMatls,CellIterator iter, 
-					      IntVector adj_offset,
-			   StaticArray<constCCVariable<double> >& rho_CC,
-					     constCCVariable<double>& press_CC,
-					      T& press_FC)
+                                         IntVector adj_offset,
+                        StaticArray<constCCVariable<double> >& rho_CC,
+                                        constCCVariable<double>& press_CC,
+                                         T& press_FC)
 {
 
   for(;!iter.done(); iter++){
@@ -1982,16 +1982,16 @@ void ICE::computePressFC(const ProcessorGroup*,
     //  For each face compute the pressure
 
     computePressFace<SFCXVariable<double> >(numMatls,patch->getSFCXIterator(),
-					    adj_offset[0],rho_CC,press_CC,
-					    pressX_FC);
+                                       adj_offset[0],rho_CC,press_CC,
+                                       pressX_FC);
 
     computePressFace<SFCYVariable<double> >(numMatls,patch->getSFCYIterator(),
-					    adj_offset[1],rho_CC,press_CC,
-					    pressY_FC);
+                                       adj_offset[1],rho_CC,press_CC,
+                                       pressY_FC);
 
     computePressFace<SFCZVariable<double> >(numMatls,patch->getSFCZIterator(),
-					    adj_offset[2],rho_CC,press_CC,
-					    pressZ_FC);
+                                       adj_offset[2],rho_CC,press_CC,
+                                       pressZ_FC);
 
     new_dw->put(pressX_FC,lb->pressX_FCLabel, 0, patch);
     new_dw->put(pressY_FC,lb->pressY_FCLabel, 0, patch);
@@ -2087,14 +2087,14 @@ void ICE::massExchange(const ProcessorGroup*,
       // Make this faster
       for(int prods = 0; prods < numICEMatls; prods++) {
         ICEMaterial* ice_matl = d_sharedState->getICEMaterial(prods);
-	if (ice_matl->getRxProduct() == Material::product) {
-	  for(int m = 0; m < numICEMatls; m++) {
-	    for(CellIterator iter=patch->getCellIterator();!iter.done();
-		iter++){
-	      IntVector c = *iter;
-	      burnedMass[prods][c]  -= burnedMass[m][c];
+       if (ice_matl->getRxProduct() == Material::product) {
+         for(int m = 0; m < numICEMatls; m++) {
+           for(CellIterator iter=patch->getCellIterator();!iter.done();
+              iter++){
+             IntVector c = *iter;
+             burnedMass[prods][c]  -= burnedMass[m][c];
               releasedHeat[prods][c] -=
-		burnedMass[m][c]*cv[m]*Temp_CC[m][c];
+              burnedMass[m][c]*cv[m]*Temp_CC[m][c];
            // Commented out for now as I'm not sure that this is appropriate
           // for regular ICE - Jim 7/30/01
 //             created_vol[prods][c]  -= created_vol[m][c];
@@ -3081,7 +3081,7 @@ void ICE::advectAndAdvanceInTime(const ProcessorGroup*,
       // After the following expression, sp_vol_CC is the matl volume
       for(CellIterator iter = patch->getCellIterator();!iter.done(); iter++){
        IntVector c = *iter;
-	sp_vol_CC[c] = (q_CC[c]*vol + q_advected[c])/(rho_CC[c]*vol);
+       sp_vol_CC[c] = (q_CC[c]*vol + q_advected[c])/(rho_CC[c]*vol);
       }
 
       //---- P R I N T   D A T A ------   
@@ -3195,7 +3195,7 @@ void ICE::setBC(CCVariable<double>& variable, const string& kind,
  
     if (sym_bcs != 0) { 
       if (kind == "Density" || kind == "Temperature" || 
-	  kind == "set_if_sym_BC") {
+         kind == "set_if_sym_BC") {
         variable.fillFaceFlux(face,0.0,dx);
       }
     }   

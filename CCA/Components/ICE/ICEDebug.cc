@@ -389,7 +389,7 @@ void    ICE::readData(const Patch* patch, int include_GC,
        
        fp >> number;
        if (!fp.good())       
-	 throw UnknownVariable("Having problem reading " + var_name,"");
+        throw UnknownVariable("Having problem reading " + var_name,"");
               
       // cerr << number;
        q_CC[idx] = number;

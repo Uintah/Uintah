@@ -29,7 +29,7 @@ double IdealGas::getGasConstant() const
 
 
 double IdealGas::computeRhoMicro(double press, double gamma,
-				  double cv, double Temp)
+                              double cv, double Temp)
 {
   // Pointwise computation of microscopic density
   return  press/((gamma - 1.0)*cv*Temp);
@@ -37,10 +37,10 @@ double IdealGas::computeRhoMicro(double press, double gamma,
 
 
 void IdealGas::computeRhoMicro(const Patch* patch, 
-			       CCVariable<double>& press, 
-			       double gamma,double cv, 
-			       constCCVariable<double>& Temp,
-			       CCVariable<double>& rho_micro)
+                            CCVariable<double>& press, 
+                            double gamma,double cv, 
+                            constCCVariable<double>& Temp,
+                            CCVariable<double>& rho_micro)
 {
 
   for (CellIterator iter = patch->getExtraCellIterator();!iter.done();iter++) {
@@ -52,13 +52,13 @@ void IdealGas::computeRhoMicro(const Patch* patch,
 //__________________________________
 //
 void IdealGas::computeTempCC(const Patch* patch,
-			     const string& comp_domain,
-			     const CCVariable<double>& press, 
-			     const double& gamma,
-			     const double& cv,
-			     const CCVariable<double>& rho_micro, 
-			     CCVariable<double>& Temp,
-			     Patch::FaceType face)
+                          const string& comp_domain,
+                          const CCVariable<double>& press, 
+                          const double& gamma,
+                          const double& cv,
+                          const CCVariable<double>& rho_micro, 
+                          CCVariable<double>& Temp,
+                          Patch::FaceType face)
 {
   if(comp_domain == "WholeDomain") {
     for (CellIterator iter = patch->getExtraCellIterator();!iter.done();iter++) {                     
@@ -90,12 +90,12 @@ void IdealGas::computePressEOS(double rhoM, double gamma,
 
 
 void IdealGas::computePressEOS(const Patch* patch, 
-			       CCVariable<double>& rhoM, 
-			       double gamma, double cv, 
-			       constCCVariable<double>& Temp,
-			       CCVariable<double>& press, 
-			       CCVariable<double>& dp_drho,
-			       CCVariable<double>& dp_de)
+                            CCVariable<double>& rhoM, 
+                            double gamma, double cv, 
+                            constCCVariable<double>& Temp,
+                            CCVariable<double>& press, 
+                            CCVariable<double>& dp_drho,
+                            CCVariable<double>& dp_de)
 {
   // Pointwise computation of thermodynamic quantities
   for (CellIterator iter=patch->getExtraCellIterator();!iter.done();iter++) {
