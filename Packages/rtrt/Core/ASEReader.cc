@@ -72,7 +72,7 @@ rtrt::readASEFile(const string fname, const Transform t, Group *objgroup,
   unsigned loop1, length1;
   unsigned loop2, length2;
   unsigned loop3, length3;
-  unsigned matl_index = 0;
+  int matl_index = 0;
   children1 = infile.GetChildren();
   length1 = children1->size();
   for (loop1=0; loop1<length1; ++loop1) {
@@ -83,7 +83,7 @@ rtrt::readASEFile(const string fname, const Transform t, Group *objgroup,
     } else if ((*children1)[loop1]->GetMoniker() == "*GEOMOBJECT") {
       matl_index = 
         ((GeomObjectToken*)((*children1)[loop1]))->GetMaterialIndex();
-      if ((int)ase_matls.size()<=matl_index)
+      if (ase_matls.size()<=matl_index)
         matl_index = 0;
       children2 = (*children1)[loop1]->GetChildren();
       length2 = children2->size();
@@ -223,7 +223,7 @@ rtrt::readASEFile(const string fname, const Transform t, Group *objgroup,
             ase_matls[token->GetIndex()] = 
 #if 1
               new PhongMaterial(Color(diffuse),1.-token->GetTransparency(),
-                                .3,token->GetShine()*1000);
+                                .3,(int)(token->GetShine()*1000));
 #else
               new DielectricMaterial(1.,
                                      1.,
