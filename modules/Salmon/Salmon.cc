@@ -386,6 +386,7 @@ void Salmon::delObj(int portno, int serial)
 	for (int i=0; i<topRoe.size(); i++) {
 	    topRoe[i]->itemDeleted(g);
 	}
+	delete g;
     }
 }
 
@@ -407,14 +408,17 @@ void Salmon::delAll(int portno)
     HashTable<int, GeomObj*>* serHash;
     if (portHash.lookup(portno, serHash)) {
 	HashTableIter<int, GeomObj*> iter(serHash);
-	for (iter.first(); iter.ok(); ++iter) {
+	for (iter.first(); iter.ok();) {
 	    GeomObj* g=iter.get_data();
 	    int serial=iter.get_key();
 	    serHash->lookup(serial, g);
+	    ++iter; // We have to increment before we nuke the
+	            // current element...
 	    serHash->remove(serial);
 	    for (int i=0; i<topRoe.size(); i++) {
 		topRoe[i]->itemDeleted(g);
 	    }
+	    delete g;
 	}
     }
 }
