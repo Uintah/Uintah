@@ -170,9 +170,19 @@ namespace Uintah {
                                          DataWarehouse* new_dw);
 
     //////////
-    // Convert J-integral into stress intensity factors for hypoelastic materials 
+    // Convert J-integral into stress intensity for hypoelastic materials 
+    // (for FRACTURE)
     virtual void ConvertJToK(const MPMMaterial* matl,const Vector& J,
                              const Vector& C,const Vector& V,Vector& SIF);
+
+    //////////
+    // Detremine crack-propagating direction (for FRACTURE)
+    virtual double GetPropagationDirection(const double& KI,const double& KII);
+                                     
+    //////////                       
+    // Detect if crack propagates (for FRACTURE)
+    virtual short CrackSegmentPropagates(const double& KI,const double& KII);
+
 
     virtual void addRequiresDamageParameter(Task* task,
 					    const MPMMaterial* matl,
@@ -190,7 +200,7 @@ namespace Uintah {
 				    const Point& px, 
 				    const Vector& psize, 
 				    constNCVariable<Vector>& gVelocity);
-    // for dual veocity field
+    // Calculate velocity gradient for 27 noded interpolation (for FRACTURE)
     Matrix3 computeVelocityGradient(const Patch* patch,
                                     const double* oodx,
                                     const Point& px,
@@ -204,7 +214,7 @@ namespace Uintah {
 				    const double* oodx, 
 				    const Point& px, 
 				    constNCVariable<Vector>& gVelocity);
-    // for dual velocity field 
+    // Calculate velocity gradient for 8 noded interpolation (for FRACTURE) 
     Matrix3 computeVelocityGradient(const Patch* patch,
                                     const double* oodx,
                                     const Point& px,
