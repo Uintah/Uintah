@@ -43,6 +43,7 @@ SCENES := $(SRCDIR)/0.mo \
 	$(SRCDIR)/vfem.mo \
 	$(SRCDIR)/volume_color.mo \
 	$(SRCDIR)/VolumeVisMod.mo \
+	$(SRCDIR)/VolumeVis2DMod.mo \
 	$(SRCDIR)/vthorax.mo \
 	$(SRCDIR)/ASE-RTRT.mo\
 	$(SRCDIR)/simple_tri.mo \
