@@ -1071,8 +1071,8 @@ void ICE::computeEquilibrationPressure(const ProcessorGroup*,
        y[m] =  dp_drho[m] * ( rho_CC[m][*iter]/
                (vol_frac[m][*iter] * vol_frac[m][*iter]) ); 
        A   +=  vol_frac[m][*iter];
-       B   +=  Q[m]/(y[m] + d_SMALL_NUM);
-       C   +=  1.0/(y[m]  + d_SMALL_NUM);
+       B   +=  Q[m]/y[m];
+       C   +=  1.0/y[m];
      }
      double vol_frac_not_close_packed = 1.;
      delPress = (A - vol_frac_not_close_packed - B)/C;
@@ -1092,7 +1092,7 @@ void ICE::computeEquilibrationPressure(const ProcessorGroup*,
      //__________________________________
      // - compute the updated volume fractions
      for (int m = 0; m < numMatls; m++)  {
-       delVol_frac[m]       = -(Q[m] + delPress)/( y[m] + d_SMALL_NUM );
+       delVol_frac[m]       = -(Q[m] + delPress)/y[m];
        vol_frac[m][*iter]   = rho_CC[m][*iter]/rho_micro[m][*iter];
      }
      //__________________________________
@@ -1821,8 +1821,8 @@ void ICE::computePressFC(const ProcessorGroup*,   const Patch* patch,
       sum_rho = 0.0;
       sum_rho_adj = 0.0;
       for(int m = 0; m < numMatls; m++) {
-	sum_rho      += (rho_CC[m][curcell] + d_SMALL_NUM);
-	sum_rho_adj  += (rho_CC[m][adjcell] + d_SMALL_NUM);
+	sum_rho      += rho_CC[m][curcell];
+	sum_rho_adj  += rho_CC[m][adjcell];
       }
       
       A =  (press_CC[curcell]/sum_rho) + (press_CC[adjcell]/sum_rho_adj);
@@ -1837,8 +1837,8 @@ void ICE::computePressFC(const ProcessorGroup*,   const Patch* patch,
       sum_rho_adj  = 0.0;
       
       for(int m = 0; m < numMatls; m++) {
-	sum_rho      += (rho_CC[m][curcell] + d_SMALL_NUM);
-	sum_rho_adj  += (rho_CC[m][adjcell] + d_SMALL_NUM);
+	sum_rho      += rho_CC[m][curcell];
+	sum_rho_adj  += rho_CC[m][adjcell];
       }
       
       A =  (press_CC[curcell]/sum_rho) + (press_CC[adjcell]/sum_rho_adj);
@@ -1852,8 +1852,8 @@ void ICE::computePressFC(const ProcessorGroup*,   const Patch* patch,
       sum_rho=0.0;
       sum_rho_adj  = 0.0;
       for(int m = 0; m < numMatls; m++) {
-	sum_rho      += (rho_CC[m][curcell] + d_SMALL_NUM);
-	sum_rho_adj  += (rho_CC[m][adjcell] + d_SMALL_NUM);
+	sum_rho      += rho_CC[m][curcell];
+	sum_rho_adj  += rho_CC[m][adjcell];
       }
      
       A =  (press_CC[curcell]/sum_rho) + (press_CC[adjcell]/sum_rho_adj);
@@ -1888,7 +1888,6 @@ void ICE::massExchange(const ProcessorGroup*,
     patch->getID() << "\t MPMICE" << endl;
 #endif
  double misha_change_in_mass_from_particles = 0.001;  //hardwired
- double SMALL_NUM = 1.0e-100;
  Vector dx = patch->dCell();
  double vol=dx.x()*dx.y()*dx.z();     // We may have to use matl volume in mpmice
  
@@ -1909,7 +1908,7 @@ void ICE::massExchange(const ProcessorGroup*,
       for(int m = 0; m < numMatls; m++) {
         mass_source[m][*iter] = 0.0;
         
-        if (mass_source[HMX][*iter] > SMALL_NUM)  {
+        if (mass_source[HMX][*iter] > d_SMALL_NUM)  {
           mass_source[HMX][*iter] =  -misha_change_in_mass_from_particles;
           mass_source[GAS][*iter] =  mass_source[HMX][*iter]; 
         }
@@ -2665,8 +2664,6 @@ void ICE::printConservedQuantities(const ProcessorGroup*,  const Patch* patch,
   double cell_vol = dx.x()*dx.y()*dx.z();
   int numICEmatls = d_sharedState->getNumICEMatls();
    
-  double SMALL_NUM = 1.0e-100; 
-   
   new_dw->get(delPress_CC,lb->delPress_CCLabel, 0, patch,Ghost::None, 0);
   for (int m = 0; m < numICEmatls; m++ ) {
     ICEMaterial* ice_matl = d_sharedState->getICEMaterial(m);
@@ -2718,9 +2715,9 @@ void ICE::printConservedQuantities(const ProcessorGroup*,  const Patch* patch,
 
 
     double change_total_mom = 
-                100.0 * (total_momentum - initial_total_mom)/(initial_total_mom + SMALL_NUM);
+                100.0 * (total_momentum - initial_total_mom)/(initial_total_mom);
     double change_total_eng = 
-                100.0 * (total_energy - initial_total_eng)/(initial_total_eng + SMALL_NUM);
+                100.0 * (total_energy - initial_total_eng)/(initial_total_eng);
 
     fprintf(stderr, "Totals: \t mass %5.6g \t\tmomentum %5.6f \t\t energy %5.6g\n",
                     total_mass, total_momentum, total_energy);
