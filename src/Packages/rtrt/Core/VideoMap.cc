@@ -47,9 +47,9 @@ VideoMap::VideoMap (char* fileName, int _numFrames, double _framesPerSec,
    {
       /* load the filename into a string */
       sprintf(buffer, fileName, i);
-      int length = strlen(buffer);
+      unsigned long length = strlen(buffer);
       string file;
-      for (int j = 0; j < length; j++)
+      for (unsigned long j = 0; j < length; j++)
       {
 	 file += buffer[j];
       }

@@ -42,13 +42,22 @@ Scene* make_scene(int /*argc*/, char* /*argv*/[], int /*nworkers*/)
 {
   Camera cam( Point(1.9,22,7), Point( 1.9,-9.6,7 ), Vector(0,0,1), 45.0 );
 
-  Material* matl=new MetalMaterial( Color( .9,.1,.4 ) );
-  Material* matl2=new MetalMaterial( Color( .1,.9,.1 ) );
-  Material* matl3=new MetalMaterial( Color( .1,.9,.9 ) );
+  Group * group = new Group();
 
+
+  Material* matl=new MetalMaterial( Color( .9,.1,.4 ) );
   Object* obj  = new Sphere( matl, Point(0,-10,0), 1 );
+  group->add( obj );
+
+#if 0
+  Material* matl2=new MetalMaterial( Color( .1,.9,.1 ) );
   Object* obj1 = new Rect(matl2, Point(0,0,0), Vector(6,0,0), Vector(0,6,0));
+  group->add( obj1 );
+
+  Material* matl3=new MetalMaterial( Color( .1,.9,.9 ) );
   Object* obj2 = new Ring(matl3, Point(0, -8, 1), Vector(0,0,1), 5, 1);
+  group->add( obj2 );
+#endif
 
   ImageMaterial * painting = 
     new ImageMaterial( "/usr/sci/projects/rtrt/paintings/delaware.ppm",
@@ -58,11 +67,8 @@ Scene* make_scene(int /*argc*/, char* /*argv*/[], int /*nworkers*/)
   Object * picture = new Rect( painting,
 			       Point(5,5,5), Vector(0,1,0), Vector(0,0,-1) );
 
-  Group * group = new Group();
-  group->add( obj );
+
   group->add( picture );
-  //group->add( obj1 );
-  //group->add( obj2 );
 
   Material* red =new LambertianMaterial( Color( .9,.2,.2 ) );
   obj  = new Sphere( red, Point(5, 5, 6), 0.3 );
