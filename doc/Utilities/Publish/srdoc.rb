@@ -19,6 +19,11 @@
 # documents.  Still rather primitive.  Add code as needed.  See
 # doc/User/FAQ/faq.rxml for an example of usage.
 
+
+module Constants
+  SCI_SoftwareURL = "http://software.sci.utah.edu/"
+end
+
 ### Source type mixins:
 
 module Text_Source
@@ -78,49 +83,21 @@ end
 ### Output mode mixins:
 
 module Print_Output
+  include Constants
 
-  # Convert a tree relative url to a tree absolute url.
-  def normRelUrl(relUrl)
-    pwd = Dir.pwd
-    absPath = File.expand_path(relUrl)
-    bn = File.basename(absPath)
-    dn = File.dirname(absPath)
-
-    # Generate the non-existent part of the url. We allow part of the
-    # path to be non-existent.  This allows the next block of code to
-    # resolve references to html documents that have not yet been
-    # generated.
-    while ! File.exists?(dn)
-      bn = File.basename(dn) + "/" + bn
-      dn = File.dirname(dn)
-    end
-    p = ""
-
-    # Onward with the existent part of the path.
-    Doc.inDir(dn) do
-      if (FileTest.directory?("doc") && FileTest.directory?("src")) &&
-	  bn != "doc"
-	raise "Can't find root of doc tree"
-      end
-      while ! (FileTest.directory?("doc") && FileTest.directory?("src"))
-	raise "Can't find root of doc tree" if Dir.pwd == "/"
-	p = File.basename(Dir.pwd) + "/" + p
-	Dir.chdir("..")
-      end
-    end
-    p + bn
+  # Convert tree absolute url to a sci website link.
+  def treeUrl(url)
+    raise "Bogus url [#{url}]" if not url =~ /^(doc|src)\//
+    '"' + SCI_SoftwareURL + url + '"'
   end
 
-  # Convert a tree relative url to a sci website link.
-  def relUrl(relUrl)
-    '"http://software.sci.utah.edu/' + normRelUrl(relUrl) + '"'
-  end
 end
 
 module HTML_Output
-  # Leave well enough alone.
-  def relUrl(relUrl)
-    '"' + relUrl + '"'
+  # Convert tree absolute url to doc relative url.
+  def treeUrl(url)
+    raise "Bogus url [#{url}]" if not url =~ /^(doc|src)\//
+    '"' + Doc.docRoot() + url + '"'
   end
 end
 
@@ -209,6 +186,22 @@ class Doc
     r = yield(pwd)
     Dir.chdir(pwd)
     r
+  end
+
+  def Doc.docRootP()
+    raise "Can't find root of doc tree" if Dir.pwd == "/"
+    if (FileTest.directory?("doc") && FileTest.directory?("src"))
+      ""
+    else
+      Dir.chdir("..")
+      "../" + docRootP()
+    end
+  end
+
+  def Doc.docRoot()
+    Doc.inDir(Dir.pwd) do
+      docRootP()
+    end
   end
 
   # Extract the content of the edition.xml file.
