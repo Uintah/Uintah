@@ -23,6 +23,11 @@ SRCS     += \
 	$(SRCDIR)/BridgeComponentDescription.cc \
 	$(SRCDIR)/BridgeComponentModel.cc \
 	$(SRCDIR)/BridgeComponentInstance.cc \
+        $(SRCDIR)/AutoBridge.cc \
+
+PSELIBS += Core/Util 
+LIBS += Core/CCA/tools/strauss/strauss.o
+
 $(SRCDIR)/BridgeComponentModel.o: Core/CCA/spec/cca_sidl.h
 $(SRCDIR)/BridgeComponentDescription.o: Core/CCA/spec/cca_sidl.h
 $(SRCDIR)/BridgeComponentInstance.o: Core/CCA/spec/cca_sidl.h 

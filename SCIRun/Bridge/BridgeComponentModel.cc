@@ -62,7 +62,7 @@ using namespace SCIRun;
 int BridgeComponent::bridgeID(0);
 
 BridgeComponentModel::BridgeComponentModel(SCIRunFramework* framework)
-  : ComponentModel("cca"), framework(framework)
+  : ComponentModel("bridge"), framework(framework)
 {
   if(!SCIRunComponentModel::gui) SCIRunComponentModel::initGuiInterface();
   buildComponentList();
@@ -183,21 +183,25 @@ bool BridgeComponentModel::haveComponent(const std::string& type)
 
 
 ComponentInstance* BridgeComponentModel::createInstance(const std::string& name,
-						     const std::string& type)
+						     const std::string& t)
 
 {
+  std::string type=t;
   std::string loaderName="";
   cerr<<"creating component <"<<name<<","<<type<<"> with loader:"<<loaderName<<"\n";
   BridgeComponent* component;
   if(loaderName==""){  //local component
     componentDB_type::iterator iter = components.find(type);
-    if(iter == components.end())
-      return 0;
-    //ComponentDescription* cd = iter->second;
-
-    string lastname=type.substr(type.find('.')+1);  
-    string so_name("lib/libCCA_Components_");
-    so_name=so_name+lastname+".so";
+    string so_name;
+    if(iter == components.end()) {
+      //on the fly building of bridges (don't have specific .cca files)      
+      type = type.substr(type.find(":")+1); //removing bridge:
+      string lastname=type.substr(type.find('.')+1);
+      so_name = "on-the-fly-libs/"+lastname+".so";
+    } else {
+      string lastname=type.substr(type.find('.')+1);  
+      so_name="lib/libCCA_Components_"+lastname+".so";
+    }
     LIBRARY_HANDLE handle = GetLibraryHandle(so_name.c_str());
     if(!handle){
       cerr << "Cannot load component " << type << '\n';

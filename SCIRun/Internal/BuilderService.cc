@@ -278,11 +278,47 @@ SSIDL::array1<std::string>  BuilderService::getCompatiblePortList(
   return availablePorts;
 }
 
+SSIDL::array1<std::string> BuilderService::getBridgablePortList(
+     const sci::cca::ComponentID::pointer& c1,
+     const std::string& port1,
+     const sci::cca::ComponentID::pointer& c2)
+{
+  ComponentID* cid1 = dynamic_cast<ComponentID*>(c1.getPointer());
+  ComponentID* cid2 = dynamic_cast<ComponentID*>(c2.getPointer());
+  if(!cid1 || !cid2)
+    throw CCAException("Cannot understand this ComponentID");
+  if(cid1->framework != framework || cid2->framework != framework){
+    throw CCAException("Cannot connect components from different frameworks");
+  }
+  ComponentInstance* comp1=framework->lookupComponent(cid1->name);
+  ComponentInstance* comp2=framework->lookupComponent(cid2->name);
+
+  cerr<<"Component: "<<cid2->getInstanceName()<<endl;
+  PortInstance* pr1=comp1->getPortInstance(port1);
+  if(!pr1)
+    throw CCAException("Unknown port");
+
+  SSIDL::array1<std::string> availablePorts;
+  for(PortInstanceIterator* iter = comp2->getPorts(); !iter->done();
+      iter->next()){
+    PortInstance* pr2 = iter->get();
+    if(autobr.canBridge(pr1,pr2))
+      availablePorts.push_back(pr2->getUniqueName());
+  }
+
+  return availablePorts;
+}
+
 std::string 
 BuilderService::getFrameworkURL(){
   return framework->getURL().getString();
 }
 
+std::string 
+BuilderService::generateBridge(const std::string& c1, const std::string& c2)
+{
+  return (autobr.execute(c1,c2));
+}
 
 int BuilderService::addLoader(const std::string &loaderName, const std::string &user, const std::string &domain, const std::string &loaderPath )
 {
