@@ -99,6 +99,8 @@ PPPLHDF5FieldReader::PPPLHDF5FieldReader(GuiContext *context)
     jwrap_(0),
     kwrap_(0),
 
+    rank_(0),
+
     fGeneration_(-1)
 {
 }
@@ -185,275 +187,110 @@ void PPPLHDF5FieldReader::execute() {
     old_filemodification_ = new_filemodification;
     old_filename_         = new_filename;
 
-    herr_t  status;
- 
-    /* Open the file using default properties. */
-    hid_t file_id = H5Fopen(new_filename.c_str(), H5F_ACC_RDONLY, H5P_DEFAULT);
+    remark( "Reading the grid." );
 
-    /* Open the grid group in the file. */
-    hid_t g_id = H5Gopen(file_id, "coordinates");
+    float* grid = readGrid( new_filename );
 
-    /* Open the coordinate dataset in the file. */
-    hid_t ds_id = H5Dopen(g_id, "values"  );
+    MeshHandle mHandle;
 
-
-    int rank;
-
-    double* grid = NULL;
-    double* data = NULL;
-
-    {
-      /* Open the coordinate space in the file. */
-      hid_t file_space_id = H5Dget_space( ds_id );
-    
-      /* Get the rank (number of dims) in the space. */
-      ndims = H5Sget_simple_extent_ndims(file_space_id);
-
-      hsize_t *dims = new hsize_t[ndims];
-
-      /* Get the dims in the space. */
-      int ndim = H5Sget_simple_extent_dims(file_space_id, dims, NULL);
-
-      idim_ = dims[0];
-      jdim_ = dims[1];
-      kdim_ = dims[2];
-
-      hssize_t *start = new hssize_t[ndims];
-      hsize_t *stride = new hsize_t[ndims];
-      hsize_t *count = new hsize_t[ndims];
-      hsize_t *block = new hsize_t[ndims];
-
-      /* Sample every th data point. */
-      start[0]  = istart_;
-      stride[0] = istride_;
-      count[0]  = icount_;
-      block[0]  = 1;
-
-      start[1]  = jstart_;
-      stride[1] = jstride_;
-      count[1]  = jcount_;
-      block[1]  = 1;
-
-      start[2]  = kstart_;
-      stride[2] = kstride_;
-      count[2]  = kcount_;
-      block[2]  = 1;
-
-      start[3]  = 0;
-      stride[3] = 1;
-      count[3]  = dims[3];
-      block[3]  = 1;
-  
-      int cc = icount_ * jcount_ * kcount_ * dims[3];
-  
-      status = H5Sselect_hyperslab(file_space_id, H5S_SELECT_SET,
-				   start, stride, count, block);
-
-      hid_t mem_space_id = H5Screate_simple(ndims, count, NULL );
-
-      for( int d=0; d<ndims; d++ ) {
-	start[d] = 0;
-	stride[d] = 1;
-      }
-
-      status = H5Sselect_hyperslab(mem_space_id, H5S_SELECT_SET,
-				   start, stride, count, block);
-
-      grid = new double[cc];
-
-      status = H5Dread(ds_id, H5T_NATIVE_DOUBLE,
-		       mem_space_id, file_space_id, H5P_DEFAULT, 
-		       grid);
-
-      /* Terminate access to the data space. */
-      status = H5Sclose(file_space_id);
-      /* Terminate access to the data space. */
-      status = H5Sclose(mem_space_id);
-
-      delete dims;
-      delete start;
-      delete stride;
-      delete count;
-      delete block;
-    }
-
-    /* Terminate access to the dataset. */
-    status = H5Dclose(ds_id);
-    /* Terminate access to the group. */ 
-    status = H5Gclose(g_id);
-
-
-  
-    /* Open the node data group in the file. */
-    g_id = H5Gopen(file_id, "node_data[0]");
-
-    /* Open the coordinate dataset in the file. */
-    ds_id = H5Dopen(g_id, "values"  );
-
-    {
-      /* Open the coordinate space in the file. */
-      hid_t file_space_id = H5Dget_space( ds_id );
-
-      /* Get the rank (number of dims) in the space. */
-      ndims = H5Sget_simple_extent_ndims(file_space_id);
-
-      hsize_t *dims = new hsize_t[ndims];
-
-      /* Get the dims in the space. */
-      int ndim = H5Sget_simple_extent_dims(file_space_id, dims, NULL);
-
-      if( ndims == 3 )
-	rank = 1;
-      else
-	rank = dims[ndims-1];
-
-      if( rank != 1 && rank != 3 ) {
-	error( "Bad data rank, must be 1 or 3." );
-	return;
-      }
-
-      hssize_t *start = new hssize_t[ndims];
-      hsize_t *stride = new hsize_t[ndims];
-      hsize_t *count = new hsize_t[ndims];
-      hsize_t *block = new hsize_t[ndims];
-
-      start[0]  = istart_;
-      stride[0] = istride_;
-      count[0]  = icount_;
-      block[0]  = 1;
-
-      start[1]  = jstart_;
-      stride[1] = jstride_;
-      count[1]  = jcount_;
-      block[1]  = 1;
-
-      start[2]  = kstart_;
-      stride[2] = kstride_;
-      count[2]  = kcount_;
-      block[2]  = 1;
-
-      int cc = icount_ * jcount_ * kcount_;
-
-      status = H5Sselect_hyperslab(file_space_id, H5S_SELECT_SET,
-				   start, stride, count, block);
-
-      hid_t mem_space_id = H5Screate_simple (ndims, count, NULL );
-
-      for( int d=0; d<ndims; d++ ) {
-	start[d] = 0;
-	stride[d] = 1;
-      }
-
-      status = H5Sselect_hyperslab(mem_space_id, H5S_SELECT_SET,
-				   start, stride, count, block);
-
-      data = new double[cc];
-
-      status = H5Dread(ds_id, H5T_NATIVE_DOUBLE,
-		       mem_space_id, file_space_id, H5P_DEFAULT, 
-		       data);
-
-      /* Terminate access to the data space. */ 
-      status = H5Sclose(file_space_id);
-      /* Terminate access to the data space. */
-      status = H5Sclose(mem_space_id);
-
-      if( idim_ != dims[0] ||
-	  jdim_ != dims[1] ||
-	  kdim_ != dims[2] ) {
-	error( "Grid and data do not have the same number of elements. " );
-	return;
-      }
-
-      delete dims;
-      delete start;
-      delete stride;
-      delete count;
-      delete block;
-    }
-
-    /* Terminate access to the dataset. */
-    status = H5Dclose(ds_id);
-    /* Terminate access to the group. */ 
-    status = H5Gclose(g_id);
-
-
-    /* Terminate access to the group. */ 
-    status = H5Fclose(file_id);
-
-
-    remark( "Creating the field." );
-
-    // 3D StructHexVolField
+    // 3D StructHexVol
     if( icount_ > 1 && jcount_ > 1 && kcount_ > 1 ) {
 
       // Create the grid and scalar data matrices.
-      StructHexVolMesh *shvm = scinew StructHexVolMesh(icount_+iwrap_,
-						       jcount_+jwrap_,
-						       kcount_+kwrap_);
-
-      if( rank == 1 ) {
-	// Now after the mesh has been created, create the field.
-	StructHexVolField< double > *pfield =
-	  scinew StructHexVolField<double>(shvm, Field::NODE);
-	pHandle_ = pfield;
-      } else if( rank == 3 ) {
-	// Now after the mesh has been created, create the field.
-	StructHexVolField< vector<double> > *pfield =
-	  scinew StructHexVolField< vector<double> >(shvm, Field::NODE);
-	pHandle_ = pfield;
-      }
-      else {
-	error( "Bad data rank." );
-	return;
-      }
-
+      mHandle = scinew StructHexVolMesh(icount_+iwrap_,
+					jcount_+jwrap_,
+					kcount_+kwrap_);
+ 
       // 2D StructQuadSurf
     } else if( icount_ == 1 || jcount_ == 1 || kcount_ == 1 ) {
 
-      StructQuadSurfMesh *sqsm;
-      
       if( kcount_ == 1 )
-	sqsm = scinew StructQuadSurfMesh(icount_+iwrap_, jcount_+jwrap_);
+	mHandle = scinew StructQuadSurfMesh(icount_+iwrap_, jcount_+jwrap_);
       else if( jcount_ == 1 )
-	sqsm = scinew StructQuadSurfMesh(icount_+iwrap_, kcount_+kwrap_);
+	mHandle = scinew StructQuadSurfMesh(icount_+iwrap_, kcount_+kwrap_);
       else if( icount_ == 1 )
-	sqsm = scinew StructQuadSurfMesh(jcount_+jwrap_, kcount_+kwrap_);
-      
-      if( rank == 1 ) {
+	mHandle = scinew StructQuadSurfMesh(jcount_+jwrap_, kcount_+kwrap_);
+
+    } else {
+      error( "Grid dimensions do not make sense." );
+      return;
+    }
+
+
+
+    const TypeDescription *mtd = mHandle->get_type_description();
+
+    CompileInfoHandle ci_mesh =
+      PPPLHDF5FieldReaderMeshAlgo::get_compile_info(mtd);
+
+    Handle<PPPLHDF5FieldReaderMeshAlgo> algo_mesh;
+
+    if (!module_dynamic_compile(ci_mesh, algo_mesh)) return;
+
+    algo_mesh->execute(mHandle,
+		       icount_, jcount_, kcount_,
+		       iwrap_, jwrap_, kwrap_, grid);
+
+    delete grid;
+
+
+    remark( "Reading the data." );
+
+    float* data = readData( new_filename );
+
+    // 3D StructHexVol
+    if( icount_ > 1 && jcount_ > 1 && kcount_ > 1 ) {
+
+      StructHexVolMesh *mesh = (StructHexVolMesh *) mHandle.get_rep();
+	
+      if( rank_ == 1 ) {
 	// Now after the mesh has been created, create the field.
-	StructQuadSurfField< double > *pfield =
-	  scinew StructQuadSurfField< double >(sqsm, Field::NODE);
-      	pHandle_ = pfield;
-      } else if( rank == 3 ) {
+	pHandle_ =
+	  scinew StructHexVolField<float>(mesh, Field::NODE);
+      } else if( rank_ == 3 ) {
 	// Now after the mesh has been created, create the field.
-	StructQuadSurfField< vector< double> > *pfield =
-	  scinew StructQuadSurfField< vector<double> >(sqsm, Field::NODE);
-      	pHandle_ = pfield;
+	pHandle_ =
+	  scinew StructHexVolField< vector<float> >(mesh, Field::NODE);
       }
       else {
 	error( "Bad data rank." );
 	return;
       }
+      // 2D StructQuadSurf
+    } else if( icount_ == 1 || jcount_ == 1 || kcount_ == 1 ) {
+
+      StructQuadSurfMesh *mesh = (StructQuadSurfMesh *) mHandle.get_rep();
+
+      if( rank_ == 1 ) {
+	// Now after the mesh has been created, create the field.
+	pHandle_ =
+	  scinew StructQuadSurfField<float>(mesh, Field::NODE);
+      } else if( rank_ == 3 ) {
+	// Now after the mesh has been created, create the field.
+	pHandle_ =
+	  scinew StructQuadSurfField< vector<float> >(mesh, Field::NODE);
+      }
     } else {
-      error( "Dimensions do not make sense." );
+      error( "Data dimensions do not make sense." );
       return;
     }
 
+
+
+
     const TypeDescription *ftd = pHandle_->get_type_description();
-    const TypeDescription *ttd = pHandle_->get_type_description(1);
 
-    CompileInfoHandle ci = PPPLHDF5FieldReaderAlgo::get_compile_info(ftd, ttd);
+    CompileInfoHandle ci =
+      PPPLHDF5FieldReaderFieldAlgo::get_compile_info(ftd, rank_);
 
-    Handle<PPPLHDF5FieldReaderAlgo> algo;
+    Handle<PPPLHDF5FieldReaderFieldAlgo> algo;
 
     if (!module_dynamic_compile(ci, algo)) return;
 
     algo->execute(pHandle_,
 		  icount_, jcount_, kcount_,
-		  iwrap_, jwrap_, kwrap_, grid, data );
+		  iwrap_, jwrap_, kwrap_, data);
 
-    delete grid;
     delete data;
   }
   else {
@@ -474,10 +311,225 @@ void PPPLHDF5FieldReader::execute() {
     ofield_port->send( pHandle_ );
   }
 #else
-
+  
   error( "No HDF5 availible." );
-
+  
 #endif
+}
+
+
+float*  PPPLHDF5FieldReader::readGrid( string filename ) {
+  herr_t  status;
+ 
+  /* Open the file using default properties. */
+  hid_t file_id = H5Fopen(filename.c_str(), H5F_ACC_RDONLY, H5P_DEFAULT);
+
+  /* Open the grid group in the file. */
+  hid_t g_id = H5Gopen(file_id, "coordinates");
+
+  /* Open the coordinate dataset in the file. */
+  hid_t ds_id = H5Dopen(g_id, "values"  );
+
+  /* Open the coordinate space in the file. */
+  hid_t file_space_id = H5Dget_space( ds_id );
+    
+  /* Get the rank (number of dims) in the space. */
+  int ndims = H5Sget_simple_extent_ndims(file_space_id);
+
+  hsize_t *dims = new hsize_t[ndims];
+
+  /* Get the dims in the space. */
+  int ndim = H5Sget_simple_extent_dims(file_space_id, dims, NULL);
+
+  idim_ = dims[0];
+  jdim_ = dims[1];
+  kdim_ = dims[2];
+
+  hssize_t *start = new hssize_t[ndims];
+  hsize_t *stride = new hsize_t[ndims];
+  hsize_t *count = new hsize_t[ndims];
+  hsize_t *block = new hsize_t[ndims];
+
+  /* Sample every th data point. */
+  start[0]  = istart_;
+  stride[0] = istride_;
+  count[0]  = icount_;
+  block[0]  = 1;
+
+  start[1]  = jstart_;
+  stride[1] = jstride_;
+  count[1]  = jcount_;
+  block[1]  = 1;
+
+  start[2]  = kstart_;
+  stride[2] = kstride_;
+  count[2]  = kcount_;
+  block[2]  = 1;
+
+  start[3]  = 0;
+  stride[3] = 1;
+  count[3]  = dims[3];
+  block[3]  = 1;
+  
+  int cc = icount_ * jcount_ * kcount_ * dims[3];
+  
+  status = H5Sselect_hyperslab(file_space_id, H5S_SELECT_SET,
+			       start, stride, count, block);
+
+  hid_t mem_space_id = H5Screate_simple(ndims, count, NULL );
+
+  for( int d=0; d<ndims; d++ ) {
+    start[d] = 0;
+    stride[d] = 1;
+  }
+
+  status = H5Sselect_hyperslab(mem_space_id, H5S_SELECT_SET,
+			       start, stride, count, block);
+
+  float* grid = NULL;
+
+  if( (grid = new float[cc]) == NULL ) {
+    error( "Can not allocate enough memory for the grid" );
+    return NULL;
+  }
+
+      
+  status = H5Dread(ds_id, H5T_NATIVE_FLOAT,
+		   mem_space_id, file_space_id, H5P_DEFAULT, 
+		   grid);
+
+  /* Terminate access to the data space. */
+  status = H5Sclose(file_space_id);
+  /* Terminate access to the data space. */
+  status = H5Sclose(mem_space_id);
+
+  delete dims;
+  delete start;
+  delete stride;
+  delete count;
+  delete block;
+
+  /* Terminate access to the dataset. */
+  status = H5Dclose(ds_id);
+  /* Terminate access to the group. */ 
+  status = H5Gclose(g_id);
+  /* Terminate access to the group. */ 
+  status = H5Fclose(file_id);
+    
+  return grid;
+}
+
+float* PPPLHDF5FieldReader::readData( string filename ) {
+
+  herr_t  status;
+ 
+  /* Open the file using default properties. */
+  hid_t file_id = H5Fopen(filename.c_str(), H5F_ACC_RDONLY, H5P_DEFAULT);
+
+  /* Open the node data group in the file. */
+  hid_t g_id = H5Gopen(file_id, "node_data[0]");
+
+  /* Open the coordinate dataset in the file. */
+  hid_t ds_id = H5Dopen(g_id, "values"  );
+
+  /* Open the coordinate space in the file. */
+  hid_t file_space_id = H5Dget_space( ds_id );
+
+  /* Get the rank (number of dims) in the space. */
+  int ndims = H5Sget_simple_extent_ndims(file_space_id);
+
+  hsize_t *dims = new hsize_t[ndims];
+
+  /* Get the dims in the space. */
+  int ndim = H5Sget_simple_extent_dims(file_space_id, dims, NULL);
+
+  if( ndims == 3 )
+    rank_ = 1;
+  else
+    rank_ = dims[ndims-1];
+
+  if( rank_ != 1 && rank_ != 3 ) {
+    error( "Bad data rank, must be 1 or 3." );
+    return NULL;
+  }
+
+  hssize_t *start = new hssize_t[ndims];
+  hsize_t *stride = new hsize_t[ndims];
+  hsize_t *count = new hsize_t[ndims];
+  hsize_t *block = new hsize_t[ndims];
+
+  start[0]  = istart_;
+  stride[0] = istride_;
+  count[0]  = icount_;
+  block[0]  = 1;
+
+  start[1]  = jstart_;
+  stride[1] = jstride_;
+  count[1]  = jcount_;
+  block[1]  = 1;
+
+  start[2]  = kstart_;
+  stride[2] = kstride_;
+  count[2]  = kcount_;
+  block[2]  = 1;
+
+  int cc = icount_ * jcount_ * kcount_;
+
+  status = H5Sselect_hyperslab(file_space_id, H5S_SELECT_SET,
+			       start, stride, count, block);
+
+  hid_t mem_space_id = H5Screate_simple (ndims, count, NULL );
+
+  for( int d=0; d<ndims; d++ ) {
+    start[d] = 0;
+    stride[d] = 1;
+  }
+
+  status = H5Sselect_hyperslab(mem_space_id, H5S_SELECT_SET,
+			       start, stride, count, block);
+
+  float* data;
+
+  if( (data = new float[cc]) == NULL ) {
+    error( "Can not allocate enough memory for the data" );
+    return NULL;
+  }
+
+  status = H5Dread(ds_id, H5T_NATIVE_FLOAT,
+		   mem_space_id, file_space_id, H5P_DEFAULT, 
+		   data);
+
+  /* Terminate access to the data space. */ 
+  status = H5Sclose(file_space_id);
+  /* Terminate access to the data space. */
+  status = H5Sclose(mem_space_id);
+
+  if( idim_ != dims[0] ||
+      jdim_ != dims[1] ||
+      kdim_ != dims[2] ) {
+    error( "Grid and data do not have the same number of elements. " );
+
+    delete data;
+
+    return NULL;
+  }
+
+  delete dims;
+  delete start;
+  delete stride;
+  delete count;
+  delete block;
+
+  /* Terminate access to the dataset. */
+  status = H5Dclose(ds_id);
+  /* Terminate access to the group. */ 
+  status = H5Gclose(g_id);
+
+
+  /* Terminate access to the group. */ 
+  status = H5Fclose(file_id);
+
+  return data;
 }
 
 void PPPLHDF5FieldReader::tcl_command(GuiArgs& args, void* userdata)
@@ -589,23 +641,59 @@ void PPPLHDF5FieldReader::tcl_command(GuiArgs& args, void* userdata)
   }
 }
 
+
 CompileInfoHandle
-PPPLHDF5FieldReaderAlgo::get_compile_info(const TypeDescription *ftd,
-					  const TypeDescription *ttd)
+PPPLHDF5FieldReaderMeshAlgo::get_compile_info(const TypeDescription *ftd)
 {
   // use cc_to_h if this is in the .cc file, otherwise just __FILE__
   static const string include_path(TypeDescription::cc_to_h(__FILE__));
-  static const string template_class_name("PPPLHDF5FieldReaderAlgoT");
-  static const string base_class_name("PPPLHDF5FieldReaderAlgo");
+  static const string base_class_name("PPPLHDF5FieldReaderMeshAlgo");
+  static const string template_class_name("PPPLHDF5FieldReaderMeshAlgoT");
 
   CompileInfo *rval = 
     scinew CompileInfo(template_class_name + "." +
-		       ftd->get_filename() + "." +
-		       ttd->get_filename() + ".",
+		       ftd->get_filename() + ".",
                        base_class_name, 
                        template_class_name, 
-                       ftd->get_name() + "," +
-		       ttd->get_name() );
+                       ftd->get_name() );
+
+  // Add in the include path to compile this obj
+  rval->add_include(include_path);
+  rval->add_namespace("Fusion");
+  ftd->fill_compile_info(rval);
+  return rval;
+}
+
+CompileInfoHandle
+PPPLHDF5FieldReaderFieldAlgo::get_compile_info(const TypeDescription *ftd,
+					       int rank)
+{
+  // use cc_to_h if this is in the .cc file, otherwise just __FILE__
+  static const string include_path(TypeDescription::cc_to_h(__FILE__));
+  static const string base_class_name("PPPLHDF5FieldReaderFieldAlgo");
+
+  string extension;
+  switch (rank)
+  {
+  case 6:
+    extension = "Tensor";
+    break;
+
+  case 3:
+    extension = "Vector";
+    break;
+
+  default:
+    extension = "Scalar";
+    break;
+  }
+
+  CompileInfo *rval = 
+    scinew CompileInfo(base_class_name + extension + "." +
+		       ftd->get_filename() + ".",
+                       base_class_name, 
+                       base_class_name + extension, 
+                       ftd->get_name() );
 
   // Add in the include path to compile this obj
   rval->add_include(include_path);

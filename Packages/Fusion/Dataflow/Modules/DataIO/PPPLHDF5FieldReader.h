@@ -49,6 +49,9 @@ public:
 
   virtual void execute();
 
+  float* readGrid( string filename );
+  float* readData( string filename );
+
   virtual void tcl_command(GuiArgs&, void*);
 
 private:
@@ -106,45 +109,105 @@ private:
   int jwrap_;
   int kwrap_;
 
+  int rank_;
+
   int fGeneration_;
   FieldHandle  pHandle_;
 };
 
-class PPPLHDF5FieldReaderAlgo : public DynamicAlgoBase
+
+class PPPLHDF5FieldReaderMeshAlgo : public DynamicAlgoBase
+{
+public:
+  virtual void execute(MeshHandle src,
+		       int idim, int jdim, int kdim,
+		       int iwrap, int jwrap, int kwrap,
+		       float *grid) = 0;
+
+  //! support the dynamically compiled algorithm concept
+  static CompileInfoHandle get_compile_info(const TypeDescription *mtd);
+};
+
+
+template< class MESH >
+class PPPLHDF5FieldReaderMeshAlgoT : public PPPLHDF5FieldReaderMeshAlgo
+{
+public:
+  virtual void execute(MeshHandle src,
+		       int idim, int jdim, int kdim,
+		       int iwrap, int jwrap, int kwrap,
+		       float *grid);
+};
+
+template< class MESH >
+void
+PPPLHDF5FieldReaderMeshAlgoT< MESH >::execute(MeshHandle src,
+					      int idim, int jdim, int kdim,
+					      int iwrap, int jwrap, int kwrap,
+					      float *grid)
+{
+  MESH *imesh = (MESH *) src.get_rep();
+  typename MESH::Node::iterator inodeItr;
+
+  imesh->begin( inodeItr );
+
+  register int i, j, k;
+  
+  for( k=0; k<kdim + kwrap; k++ ) {
+    for( j=0; j<jdim + jwrap; j++ ) {
+      for( i=0; i<idim + iwrap; i++ ) {
+	
+	int index = ((i%idim) * jdim + (j%jdim)) * kdim + (k%kdim);
+
+	// Grid
+	float xVal = grid[index*3 + 0];
+	float yVal = grid[index*3 + 1];
+	float zVal = grid[index*3 + 2];
+	
+	imesh->set_point(Point(xVal, yVal, zVal), *inodeItr);
+
+	++inodeItr;
+      }
+    }
+  }
+}
+
+
+class PPPLHDF5FieldReaderFieldAlgo : public DynamicAlgoBase
 {
 public:
   virtual void execute(FieldHandle src,
 		       int idim, int jdim, int kdim,
 		       int iwrap, int jwrap, int kwrap,
-		       double *grid,
-		       void *data) = 0;
-
+		       float *data) = 0;
+  
   //! support the dynamically compiled algorithm concept
   static CompileInfoHandle get_compile_info(const TypeDescription *ftd,
-					    const TypeDescription *ttd);
+					    int rank);
 };
 
-template< class FIELD, class TYPE >
-class PPPLHDF5FieldReaderAlgoT : public PPPLHDF5FieldReaderAlgo
+template< class FIELD >
+class PPPLHDF5FieldReaderFieldAlgoScalar : public PPPLHDF5FieldReaderFieldAlgo
 {
 public:
   //! virtual interface.
-
   virtual void execute(FieldHandle src,
 		       int idim, int jdim, int kdim,
 		       int iwrap, int jwrap, int kwrap,
-		       double *grid,
-		       void *data);
+		       float *data);
 };
 
 
-template< class FIELD, class TYPE >
+template< class FIELD >
 void
-PPPLHDF5FieldReaderAlgoT<FIELD, TYPE>::execute(FieldHandle src,
-					       int idim, int jdim, int kdim,
-					       int iwrap, int jwrap, int kwrap,
-					       double *grid,
-					       void *data_ptr)
+PPPLHDF5FieldReaderFieldAlgoScalar<FIELD>::execute(FieldHandle src,
+						   int idim,
+						   int jdim,
+						   int kdim,
+						   int iwrap,
+						   int jwrap,
+						   int kwrap,
+						   float *data)
 {
   FIELD *ifield = (FIELD *) src.get_rep();
   typename FIELD::mesh_handle_type imesh = ifield->get_typed_mesh();
@@ -152,26 +215,63 @@ PPPLHDF5FieldReaderAlgoT<FIELD, TYPE>::execute(FieldHandle src,
 
   imesh->begin( inodeItr );
 
-  TYPE* data = (TYPE*) (data_ptr);
-
   register int i, j, k;
   
-  // NOTE PPPL indexing is reverse of SCIRun.
   for( k=0; k<kdim + kwrap; k++ ) {
     for( j=0; j<jdim + jwrap; j++ ) {
       for( i=0; i<idim + iwrap; i++ ) {
 	
 	int index = ((i%idim) * jdim + (j%jdim)) * kdim + (k%kdim);
 	
-	// Grid
-	double xVal = grid[index*3 + 0];
-	double yVal = grid[index*3 + 1];
-	double zVal = grid[index*3 + 2];
-	
-	imesh->set_point(Point(xVal, yVal, zVal), *inodeItr);
-
 	// Value
 	ifield->set_value( data[index], *inodeItr);
+	
+	++inodeItr;
+      }
+    }
+  }
+}
+
+template< class FIELD >
+class PPPLHDF5FieldReaderFieldAlgoVector : public PPPLHDF5FieldReaderFieldAlgo
+{
+public:
+  //! virtual interface.
+  virtual void execute(FieldHandle src,
+		       int idim, int jdim, int kdim,
+		       int iwrap, int jwrap, int kwrap,
+		       float *data);
+};
+
+
+template< class FIELD >
+void
+PPPLHDF5FieldReaderFieldAlgoVector<FIELD>::execute(FieldHandle src,
+						   int idim,
+						   int jdim,
+						   int kdim,
+						   int iwrap,
+						   int jwrap,
+						   int kwrap,
+						   float *data)
+{
+  FIELD *ifield = (FIELD *) src.get_rep();
+  typename FIELD::mesh_handle_type imesh = ifield->get_typed_mesh();
+  typename FIELD::mesh_type::Node::iterator inodeItr;
+
+  imesh->begin( inodeItr );
+
+  register int i, j, k;
+  
+  for( k=0; k<kdim + kwrap; k++ ) {
+    for( j=0; j<jdim + jwrap; j++ ) {
+      for( i=0; i<idim + iwrap; i++ ) {
+	
+	int index = (((i%idim) * jdim + (j%jdim)) * kdim + (k%kdim)) * 3;
+	
+	// Value
+	ifield->set_value( Vector( data[index], data[index+1], data[index+2]),
+			   *inodeItr);
 	
 	++inodeItr;
       }
