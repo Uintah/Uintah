@@ -16,6 +16,19 @@ LeastSquare(const Spline& spline)
 
 void
 LeastSquare::
+clean()
+{
+  int n=4;
+  for(int i=0;i<n;++i) {
+    _equ.vec[i] = 0;
+    for(int j=0;j<n;++j) {
+      _equ.mat[i,j] = 0;
+    }
+  }
+}
+
+void
+LeastSquare::
 input(const Vector& x,double y)
 {
   double weight = _spline->w(x);
@@ -52,6 +65,11 @@ output(double& a,Vector& b)
 }} //namespace
 
 // $Log$
+// Revision 1.2  2000/07/06 06:23:53  tan
+// Added Least Square interpolation of double (such as temperatures),
+// vector (such as velocities) and stresses for particles in the
+// self-contact cells.
+//
 // Revision 1.1  2000/07/06 04:58:30  tan
 // Added LeastSquare class.
 //
