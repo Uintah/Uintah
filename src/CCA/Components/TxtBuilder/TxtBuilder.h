@@ -57,6 +57,7 @@ namespace SCIRun {
     //myBuilderPort builderPort;
     gov::cca::Services::pointer svc;
     gov::cca::ports::BuilderService::pointer bs;
+    gov::cca::ports::ComponentRepository::pointer cr;
     void run();
     bool exec_command(char cmdline[]);
     int parse(string cmdline, string args[]);
