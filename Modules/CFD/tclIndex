@@ -10,9 +10,8 @@ set auto_index(PartToGeom) "source $dir/PartToGeom.tcl"
 set auto_index(Readtec) "source $dir/Readtec.tcl"
 set auto_index(cfdGridLines) "source $dir/cfdGridLines.tcl"
 set auto_index(GatherTimeSteps) "source $dir/GatherTimeSteps.tcl"
-
-
-
+set auto_index(TecplotFileSelector) "source $dir/TecplotFileSelector.tcl"
+set auto_index(ParticleGridVisControl) "source $dir/ParticleGridVisControl.tcl"
 
 
 

@@ -16,6 +16,7 @@
 #include <Dataflow/Module.h>
 #include <Classlib/Array1.h>
 #include <Classlib/Array2.h>
+#include <Geom/Pick.h>
 #include <Datatypes/ScalarFieldRG.h>
 #include <Datatypes/ScalarFieldPort.h>
 #include <Datatypes/VectorFieldRG.h>
@@ -99,6 +100,8 @@ public:
   virtual ~Readtec();
   virtual Module* clone(int deep);
   virtual void execute();
+  virtual void geom_pick(GeomPick*, void*, int);
+
 };
 
 extern "C" {
@@ -180,17 +183,18 @@ int Readtec::readfile( char *filename, int *index ) {
       // parse variable names
       char *name;
       while( !done ) {
-	name = new char[VARNAMELEN];
+	name = new char[VARNAMELEN];  // the next name
 	int j;
 	
 	for(j = 0; !isspace(*p) && *p != 0 && *p != ','; j++, p++ ) 
-	  name[j] = *p;
+	  name[j] = *p; // as long a its not a space or comma insert char
 	ASSERT(j < VARNAMELEN-1);
 	for( ; j < VARNAMELEN; j++ )
-	  name[j] = '\0';
-	checkfluidnum( name );
-	if( *p == ',' ) {  p++;  getnext = 1; }
-	while( isspace(*p) & *p != 0 ) p++;
+	  name[j] = '\0'; // pad 
+	checkfluidnum( name );  // fluid 1, 2, 3, ..., n ?
+	if( *p == ',' ) {  p++;  getnext = 1; }  // remove comma
+	// if no comma, we're done
+	while( isspace(*p) & *p != 0 ) p++;  // remove spaces
 
 	// hit end of line while still looking for variables - read in another
 	if( *p == 0 && getnext ) {
@@ -584,18 +588,33 @@ void Readtec::CreatePS( Zone *zone, int I, int J, int K ) {
     return;
   }
 
-  ts->positions.resize( zone->i );
-  ts->scalars.resize( zone->i );
+  //  ts->positions.resize( zone->i );
+  ts->vectors.resize(1);
+  ts->scalars.resize(1);
+  (ts->vectors[0]).resize( zone->i );
+  (ts->scalars[0]).resize( zone->i );
   for( i = 0; i < zone->i; i++ ) {
     if( zindex < varnames.size() )
-      ts->positions[i] = Vector( (double)I*zone->varvals(xindex,i)/(double)I,
+      //ts->positions[i]
+      (ts->vectors[0])[i]= Vector( (double)I*zone->varvals(xindex,i)/(double)I,
 				 (double)J*zone->varvals(yindex,i)/(double)J,
 				 (double)K*zone->varvals(zindex,i)/(double)K );
     else
-      ts->positions[i] = Vector( (double)I*zone->varvals(xindex,i)/(double)I,
+      //ts->positions[i]
+      (ts->vectors[0])[i]= Vector( (double)I*zone->varvals(xindex,i)/(double)I,
 				 (double)J*zone->varvals(yindex,i)/(double)J,
 				 (double)I/2.0 );
-    ts->scalars[i] = zone->varvals( varindex, i );
+    //ts->scalars[i] = zone->varvals( varindex, i );
+    (ts->scalars[0])[i] = zone->varvals( varindex, i);
   }
   pset->add(ts);
+}
+
+void Readtec::geom_pick(GeomPick* pick, void* userdata, int index)
+{
+  cerr << "Caught stray pick event in Readtec!\n";
+  cerr << "this = "<< this <<", pick = "<<pick<<endl;
+  cerr << "User data = "<<userdata<<endl;
+  cerr << "sphere index = "<<index<<endl<<endl;
+  // Now modify so that points and spheres store index.
 }
