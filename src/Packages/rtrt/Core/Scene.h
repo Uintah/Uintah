@@ -135,6 +135,9 @@ public:
   inline int nlights() {
     return lights.size();
   }
+  inline int nPerMatlLights() {
+    return per_matl_lights.size();
+  }
   
   inline Light* light(int i) {
     return lights[i];

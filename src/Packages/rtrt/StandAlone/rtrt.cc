@@ -454,7 +454,13 @@ main(int argc, char* argv[])
   Gui::createMenus( mainWindowId );  // Must do this after glut is initialized.
 
   // Let the GUI know about the lights.
-  for( int cnt = 0; cnt < scene->nlights(); cnt++ ) {
+  int cnt;
+  for( cnt = 0; cnt < scene->nlights(); cnt++ ) {
+    gui->addLight( scene->light( cnt ) );
+  }
+  for( ; cnt < scene->nlights()+scene->nPerMatlLights(); cnt++ ) {
+    Light *light = scene->light(cnt);
+    light->name_ = string("per material");
     gui->addLight( scene->light( cnt ) );
   }
   printf("end glut inits\n");
