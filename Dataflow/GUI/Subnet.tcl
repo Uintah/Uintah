@@ -174,7 +174,7 @@ proc makeSubnet { from_subnet x y { bbox "0 0 0 0" }} {
         -scrollregion "0 0 $mainCanvasWidth $mainCanvasHeight"
     pack $canvas -expand yes -fill both
 
-    # Create A BOGUS minicanvas for Subnet/Main Editor code compatibility
+    # Create a BOGUS minicanvas for Subnet/Main Editor code compatibility
     set Subnet(Subnet$Subnet(num)_minicanvas) $w.can.minicanvas
     canvas $Subnet(Subnet$Subnet(num)_minicanvas)
     
@@ -192,6 +192,13 @@ proc makeSubnet { from_subnet x y { bbox "0 0 0 0" }} {
 	-yscrollcommand "drawSubnetConnections $Subnet(num);$w.vscroll set" \
 	-xscrollcommand "drawSubnetConnections $Subnet(num);$w.hscroll set"
 
+    set Subnet(Subnet$Subnet(num)_state) embedded
+    frame $w.state
+    radiobutton $w.state.embedded -text Embedded -variable Subnet(Subnet$Subnet(num)_state) \
+	-value embedded 
+    radiobutton $w.state.ondisk -text "On Disk" -variable Subnet(Subnet$Subnet(num)_state) \
+	-value ondisk
+    pack $w.state.embedded $w.state.ondisk -side left -fill x -expand yes
 
     # Create Grid Layout for all Items in Subnet Editor Window
     grid $w.can $w.hscroll $w.vscroll $w.fname	
@@ -200,6 +207,7 @@ proc makeSubnet { from_subnet x y { bbox "0 0 0 0" }} {
     grid rowconfigure    $w 0 -weight 0
     grid rowconfigure    $w 2 -weight 1
     grid rowconfigure    $w 3 -weight 0
+    grid rowconfigure    $w 4 -weight 0
     grid config $w.main_menu -column 0 -row 0 \
 	    -columnspan 2 -rowspan 1 -sticky nwe
     grid config $w.fname -column 0 -row 1 \
@@ -210,6 +218,9 @@ proc makeSubnet { from_subnet x y { bbox "0 0 0 0" }} {
 	    -columnspan 1 -rowspan 1 -sticky ew -pady 2
     grid config $w.vscroll -column 1 -row 2 \
 	    -columnspan 1 -rowspan 1 -sticky sn -padx 2
+    grid config $w.state -column 0 -row 4\
+	    -columnspan 2 -rowspan 1 -sticky sn -padx 2
+
 
     # Create the icon for the new Subnet on the old canvas
     set Subnet(SubnetIcon$Subnet(num)) $from_subnet
@@ -433,8 +444,6 @@ proc expandSubnet { modid } {
     destroy .subnet$from    
 }
 
-
-
 # Sorts a list of connections by input port position left to right
 proc sortPorts { subnet connections } {
     global Subnet
@@ -456,13 +465,10 @@ proc sortPorts { subnet connections } {
     return $retval
 }
 
-
 proc drawSubnetConnections { subnet } {
     global Subnet
     drawConnections $Subnet(Subnet${subnet}_connections)
 }
-
-
 
 # This procedure caches away all the global variables that match the pattern
 # "mDDDD" (where D is a decimal digit or null character"
@@ -481,7 +487,6 @@ proc backupLoadVars { key } {
     }
 }
 
-
 proc restoreLoadVars { key } {
     global loadVars
     if ![info exists loadVars($key-varList)] { return }
@@ -491,7 +496,6 @@ proc restoreLoadVars { key } {
     }
     array unset loadVars "$key-*"
 }
-
 
 proc loadSubnet { filename { x 0 } { y 0 } } {
     global Subnet SCIRUN_SRCDIR Name
@@ -528,25 +532,15 @@ proc loadSubnet { filename { x 0 } { y 0 } } {
     return SubnetIcon$subnetNumber
 }
 
-
-proc writeSubnets { filename { subnet 0 } } {
+proc addSubnetInstanceAtPosition { name x y } {
     global Subnet
-    set Subnet(Subnet${subnet}_instance) [join $Subnet(Subnet${subnet}_Name) ""]
-    foreach module $Subnet(Subnet${subnet}_Modules) {
-	if [isaSubnetIcon $module] {
-	    writeSubnets $filename $Subnet(${module}_num)
-	}
-    }
-    writeSubnet $filename $subnet
+    set from $Subnet(Loading)    
+    set to [makeSubnet $from $x $y]
+    set Subnet(Loading) $to
+    instantiateSubnet$name
+    set Subnet(Loading) $from
+    return SubnetIcon$to
 }
-
-
-proc modVarName { filename modid } {
-    global modVar
-    set token "$filename-$modid"
-    if [info exists modVar($token)] {return $modVar($token)} else { return "" }
-}
-
 
 proc isaDefaultValue { var } {
     set scope [string first :: $var]
@@ -574,27 +568,26 @@ proc isaDefaultValue { var } {
 	eval $classname $command
     }
     # If the default variable hasn't been created in TCL yet...
-    if { [llength [uplevel \#0 info vars \"$command-$varname\"]] != 1 } { 
-	# Assume the variable we're checknig is NOT DEFAULT and return FALSE
-	return 0
+    if { [llength [uplevel \#0 info vars $command-$varname]] != 1 } { 
+	# Assume the variable we're checknig is DEFAULT and return TRUE
+	return 1
     }
     # Get the variables at the global level
-    upvar \#0 "$command-$varname" tocheck_value "$module-$varname" default_value
+    upvar \#0 $command-$varname tocheck_value $module-$varname default_value
     # Compare strings values exactly, returns FALSE if there is any differnce
     return [string equal $tocheck_value $default_value]
 }
 
-
-proc addSubnetInstanceAtPosition { name x y } {
+proc writeSubnets { filename { subnet 0 } } {
     global Subnet
-    set from $Subnet(Loading)    
-    set to [makeSubnet $from $x $y]
-    set Subnet(Loading) $to
-    instantiateSubnet$name
-    set Subnet(Loading) $from
-    return SubnetIcon$to
+    set Subnet(Subnet${subnet}_instance) [join $Subnet(Subnet${subnet}_Name) ""]
+    foreach module $Subnet(Subnet${subnet}_Modules) {
+	if [isaSubnetIcon $module] {
+	    writeSubnets $filename $Subnet(${module}_num)
+	}
+    }
+    writeSubnet $filename $subnet
 }
-
 
 proc writeSubnet { filename subnet } {
     global Subnet Disabled Notes
@@ -645,7 +638,7 @@ proc writeSubnet { filename subnet } {
 	close $out
 	# C-side knows which GUI vars to write out
 	if { ![isaSubnetIcon $module] } { 
-	    $module-c emit_vars $filename "${tab}set \$m$i"
+	    $module-c emit_vars $filename "${tab}setGlobal \$m$i"
 	}
 
 	# Write file to open GUI on load if it was open on save
@@ -656,9 +649,10 @@ proc writeSubnet { filename subnet } {
 	}	
 	incr i
     }   
-    set out [open $filename {WRONLY APPEND}] ;# Re-Open file for appending
     # Uniquely sort connections list by output port # to handle dynamic ports
     set connections [lsort -integer -index 3 [lsort -unique $connections]]
+
+    set out [open $filename {WRONLY APPEND}] ;# Re-Open file for appending
     if [llength $connections] {
 	puts $out "\n${tab}\# Create the Connections between Modules"
     }
