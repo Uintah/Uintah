@@ -53,7 +53,6 @@ MPMMaterial::MPMMaterial(ProblemSpecP& ps)
    // Step 2 -- get the general material properties
 
    ps->require("density",d_density);
-   ps->require("toughness",d_toughness);
 
    // Step 3 -- Loop through all of the pieces in this geometry object
 
@@ -292,6 +291,9 @@ int MPMMaterial::checkForSurface(const GeometryPiece* piece, const Point p,
 }
 
 // $Log$
+// Revision 1.35  2000/06/23 01:26:16  tan
+// Moved material property toughness to Fracture class.
+//
 // Revision 1.34  2000/06/22 22:37:47  tan
 // Moved heat conduction physical parameters (thermalConductivity, specificHeat,
 // and heatTransferCoefficient) from MPMMaterial class to HeatConduction class.
