@@ -97,7 +97,10 @@ DEALINGS IN THE SOFTWARE.
       <itemizedlist>
 	<listitem>
 	  <para>
-	    <filename>SCIRun-<!--%= doc.version %-->-<replaceable>system</replaceable>.rpm</filename>.
+	    <filename>SCIRun-<!--%= doc.version
+	    %-->-<replaceable>system</replaceable>.rpm</filename> or
+	    <filename>SCIRunWithFusion-<!--%= doc.version
+	    %-->-<replaceable>system</replaceable>.rpm</filename>
 	  </para>
 	  <para>Above, <replaceable>system</replaceable> is the Linux
 	  system of interest.</para>
