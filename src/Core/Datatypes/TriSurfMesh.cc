@@ -462,23 +462,19 @@ TriSurfMesh::get_weights(const Point &p,
   Face::index_type idx;
   if (locate(idx, p))
   {
-    Node::array_type ra(3);
-    get_nodes(ra,idx);
-    Point p0,p1,p2;
-    get_point(p0,ra[0]);
-    get_point(p1,ra[1]);
-    get_point(p2,ra[2]);
-    double area0, area1, area2, area_sum;
-    area0 = (Cross(p1-p,p2-p)).length();
-    area1 = (Cross(p0-p,p2-p)).length();
-    area2 = (Cross(p0-p,p1-p)).length();
-    area_sum = area0+area1+area2;
-    l.push_back(ra[0]);
-    l.push_back(ra[1]);
-    l.push_back(ra[2]);
-    w.push_back(area0/area_sum);
-    w.push_back(area1/area_sum);
-    w.push_back(area2/area_sum);
+    get_nodes(l,idx);
+    Point p0, p1, p2;
+    get_point(p0,l[0]);
+    get_point(p1,l[1]);
+    get_point(p2,l[2]);
+    w.resize(3);
+    w[0] = (Cross(p1-p,p2-p)).length();
+    w[1] = (Cross(p0-p,p2-p)).length();
+    w[2] = (Cross(p0-p,p1-p)).length();
+    const double area_sum_inv = 1.0 / (w[0] + w[1] + w[2]);
+    w[0] *= area_sum_inv;
+    w[1] *= area_sum_inv;
+    w[2] *= area_sum_inv;
   }
 }
 
