@@ -198,6 +198,11 @@ public:
     return lightbits;
   }
 
+  void add_light(Light*);
+  void add_permanent_light(Light*);
+  void add_per_matl_light(Light*);
+  void add_perm_per_matl_light(Light*);
+
   inline void set_rtrt_engine(RTRT* _rtrt) {
     rtrt_engine = _rtrt;
   }
@@ -206,11 +211,6 @@ public:
     return rtrt_engine;
   }
   
-  void add_light(Light*);
-  void add_permanent_light(Light*);
-  void add_per_matl_light(Light*);
-  void add_perm_per_matl_light(Light*);
-
   int nprims();
   
   WorkQueue work;
@@ -219,13 +219,24 @@ public:
 
 #if !defined(linux)
   // Used mainly by make_scene to register sounds with the application.
-  void           addSound( Sound * sound ) { sounds_.push_back( sound ); }
-  vector<Sound*> getSounds() { return sounds_; }
-  int            soundVolume() const { return soundVolume_; }
+  void             addSound( Sound * sound ) { sounds_.push_back( sound ); }
+  vector<Sound*> & getSounds() { return sounds_; }
+  int              soundVolume() const { return soundVolume_; }
 #endif
 
-  void                      addTrigger( Trigger * trigger );
-  inline vector<Trigger*> & getTriggers() { return triggers_; }
+  void               addTrigger( Trigger * trigger );
+  vector<Trigger*> & getTriggers() { return triggers_; }
+
+  // These are mostly used by multi-scene to update the main scene...
+  Array1<Object*>   &  getObjectsOfInterest() { return objectsOfInterest_; }
+  Array1<Object*>   &  getAnimateObjects() { return animateObjects_; }
+  Array1<Object*>   &  getDynBBoxObjs() { return dynamicBBoxObjects_; }
+  Array1<DpyBase*>  &  getDisplays() { return displays; }
+  Array1<DpyBase*>  &  getAuxDisplays() { return aux_displays; }
+  Array1<Material*> &  getMaterials() { return materials; }
+  vector<string>    &  getRouteNames() { return routeNames_; }
+  vector<string>    &  getRoomsForRoutes() { return roomsForRoutes_; }
+  Array1<ShadowBase*> & getShadows() { return shadows; }
   
   void preprocess(double maxradius, int& pp_offset, int& scratchsize);
   Array1<ShadowBase*> shadows;
