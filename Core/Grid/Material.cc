@@ -1,8 +1,20 @@
 //  Material.cc
 
 #include <Packages/Uintah/Core/Grid/Material.h>
+#include <Core/Util/NotFinished.h>
 
 using namespace Uintah;
+
+Material::Material()
+{
+  thismatl=0;
+}
+
+Material::~Material()
+{
+  if(thismatl && thismatl->removeReference())
+    delete thismatl;
+}
 
 int Material::getDWIndex() const
 {
@@ -19,6 +31,11 @@ int Material::getVFIndex() const
 void Material::setDWIndex(int idx)
 {
    d_dwindex = idx;
+   ASSERT(!thismatl);
+   thismatl = new MaterialSubset(); // scinew not used here because it
+                                    // triggers some problem in g++ 2.95
+   thismatl->addReference();
+   thismatl->add(idx);
 }
 
 void Material::setVFIndex(int idx)
