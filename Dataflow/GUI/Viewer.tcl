@@ -110,9 +110,9 @@ itcl_class ViewWindow {
 	global $this-totframes
 	if {![info exists $this-totframes]} {set $this-totframes 30}
 	global $this-caxes
-        if {![info exists $this-caxes]} {set $this-caxes 1}
+        if {![info exists $this-caxes]} {set $this-caxes 0}
 	global $this-raxes
-        if {![info exists $this-raxes]} {set $this-raxes 0}
+        if {![info exists $this-raxes]} {set $this-raxes 1}
 
 	# Need to initialize the background color
 	global $this-bgcolor-r
