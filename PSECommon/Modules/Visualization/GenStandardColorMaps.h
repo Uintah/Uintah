@@ -14,6 +14,7 @@ namespace Modules {
 using namespace PSECore::Dataflow;
 using namespace PSECore::Datatypes;
 using namespace SCICore::TclInterface;
+using namespace SCICore::Containers;
 
 /**************************************
 CLASS
@@ -75,106 +76,15 @@ public:
 private:
 
   TCLstring tcl_status; 
+  TCLstring positionList;
+  TCLstring nodeList;
   TCLint mapType;
   TCLint minRes;
   TCLint resolution;
   ColorMapOPort  *outport;
-  Array1<StandardColorMap *> mapTypes;
-
-
-  // The following classes are nested.  They have no scope outside
-  // of GenStandardColormaps.
-
-  //----------------------------------------------------------------------
-  // The abstract class for non-editable Colormaps
-  class StandardColorMap
-  {
-  public:
-  
-    StandardColorMap();
-    virtual ~StandardColorMap(){}
-    ColorMapHandle genMap(const int res);
-    const Array1< Color >& getColors() {return colors;}
-  protected:
-    Array1< Color > colors;
-  }; // class StandardColorMap
-
-  //----------------------------------------------------------------------
-  class GrayColorMap : public StandardColorMap
-  {
-  public:
-    GrayColorMap();
-    virtual ~GrayColorMap(){}
-  
-  }; // class GrayColorMap
-
-  //----------------------------------------------------------------------
-  class InverseGrayColorMap : public StandardColorMap
-  {
-  public:
-    InverseGrayColorMap();
-    virtual ~InverseGrayColorMap(){}
-  
-  }; // class InverseGrayColorMap
-
-  //----------------------------------------------------------------------
-  class RainbowColorMap : public StandardColorMap
-  {
-  public:
-    RainbowColorMap();
-    virtual ~RainbowColorMap(){}
-  
-  }; // class RainbowColorMap
-
-  //----------------------------------------------------------------------
-  class InverseRainbow : public StandardColorMap
-  {
-  public:
-    InverseRainbow();
-    virtual ~InverseRainbow(){}
-  }; // class InverseRainbow
-
-  //----------------------------------------------------------------------
-  class DarkHueColorMap : public StandardColorMap
-  {
-  public:
-    DarkHueColorMap();
-    virtual ~DarkHueColorMap(){}
-  }; // class DarkHueColorMap
-
-  //----------------------------------------------------------------------
-  class LightHueColorMap : public StandardColorMap
-  {
-  public:
-    LightHueColorMap();
-    virtual ~LightHueColorMap(){}
-  }; // class LightHueColorMap
-
-  //----------------------------------------------------------------------
-  class InverseDarkHue : public StandardColorMap
-  {
-  public:
-    InverseDarkHue();
-    virtual ~InverseDarkHue(){}
-  }; // class InverseDarkHue
-
-  //----------------------------------------------------------------------
-  class BlackBodyColorMap : public StandardColorMap
-  {
-  public:
-    BlackBodyColorMap();
-    virtual ~BlackBodyColorMap(){}
-  
-  }; // class BlackBodyColorMap
-
-  //----------------------------------------------------------------------
-  class DonColorMap : public StandardColorMap
-  {
-  public:
-    DonColorMap();
-    virtual ~DonColorMap(){}
-  
-  }; // class DonColorMap
+  ColorMapHandle cmap;
+  Array1< Color > colors;
+  void genMap(const clString& s);
 
 }; //class GenStandardColorMaps
 
