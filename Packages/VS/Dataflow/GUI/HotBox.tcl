@@ -29,10 +29,15 @@ itcl_class VS_DataFlow_HotBox {
     global $this-FME_on
     global $this-enableDraw
     global $this-currentselection
+    # values: "fromHotBoxUI" or "fromProbe"
+    global $this-selectionsource
     global $this-datafile
+    # In: HotBox.cc: #define VS_DATASOURCE_OQAFMA 1
+    #                #define VS_DATASOURCE_FILES 2
     global $this-datasource
     global $this-anatomydatasource
     global $this-adjacencydatasource
+    global $this-boundingboxdatasource
 
     set $this-gui_label1 "label1"
     set $this-gui_label2 "label2"
@@ -47,13 +52,14 @@ itcl_class VS_DataFlow_HotBox {
     set $this-enableDraw "no"
     set $this-currentselection ""
     set $this-datafile ""
-    set $this-datasource ""
+    set $this-datasource "2"
     set $this-anatomydatasource ""
     set $this-adjacencydatasource ""
+    set $this-boundingboxdatasource ""
   }
   # end method set_defaults
 
-  method launch_filebrowser {} {
+  method launch_filebrowser { whichdatasource } {
     set initdir ""
                                                                                 
     # place to put preferred data directory
@@ -79,15 +85,37 @@ itcl_class VS_DataFlow_HotBox {
                                                                                 
     ######################################################
                                                                                 
+    if {$whichdatasource == "anatomy"} {
     makeOpenFilebox \
         -parent $w \
-        -filevar $this-datafile \
+        -filevar $this-anatomydatasource \
         -command "$this-c needexecute; wm withdraw $w" \
         -cancel "wm withdraw $w" \
         -title $title \
         -filetypes $types \
         -initialdir $initdir \
         -defaultextension $defext
+  } elseif {$whichdatasource == "adjacency"} {
+    makeOpenFilebox \
+        -parent $w \
+        -filevar $this-adjacencydatasource \
+        -command "$this-c needexecute; wm withdraw $w" \
+        -cancel "wm withdraw $w" \
+        -title $title \
+        -filetypes $types \
+        -initialdir $initdir \
+        -defaultextension $defext
+  } elseif {$whichdatasource == "boundingbox"} {
+    makeOpenFilebox \
+        -parent $w \
+        -filevar $this-boundingboxdatasource \
+        -command "$this-c needexecute; wm withdraw $w" \
+        -cancel "wm withdraw $w" \
+        -title $title \
+        -filetypes $types \
+        -initialdir $initdir \
+        -defaultextension $defext
+    }
   }
   # end method launch_filebrowser
 
@@ -105,7 +133,8 @@ itcl_class VS_DataFlow_HotBox {
       # toggle HotBox output Geometry off
       set $this-enableDraw "no"
     } else {set $this-enableDraw "yes"}
-
+    # re-execute the module to draw/erase graphics
+    $this-c needexecute
   }
   # end method toggle_enableDraw
 
@@ -150,6 +179,12 @@ itcl_class VS_DataFlow_HotBox {
       exec VSgetFME.p $selection
     }
     set $this-currentselection $selection
+    # tell the HotBox module that the
+    # current selection was changed
+    # from the HotBox UI -- not the Probe
+    set $this-selectionsource "fromHotBoxUI"
+    # trigger the HotBox execution to reflect selection change
+    $this-c needexecute
   }
   # end method set_selection
 
@@ -158,6 +193,11 @@ itcl_class VS_DataFlow_HotBox {
   }
   # end method set_data_source
 
+  #############################################################################
+  # method ui
+  #
+  # Build the HotBox UI
+  #############################################################################
   method ui {} {
     set w .ui[modname]
     if { [winfo exists $w] } {
@@ -166,6 +206,31 @@ itcl_class VS_DataFlow_HotBox {
     }
 
     toplevel $w
+    frame $w.files
+    frame $w.files.row1
+    label $w.files.row1.anatomylabel -textvar "Anatomy Data Source: "
+    entry $w.files.row1.filenamentry -textvar $this-anatomydatasource -width 50
+    button  $w.files.row1.browsebutton -textvariable "Browse..." -command "$this-launch_filebrowser anatomy"
+    pack $w.files.row1.anatomylabel $w.files.row1.filenamentry\
+	$w.files.row1.browsebutton\
+        -side left -anchor n -expand yes -fill x
+
+    frame $w.files.row2
+    label $w.files.row2.adjacencylabel -textvar "Adjacency Data Source: "
+    entry $w.files.row2.filenamentry -textvar $this-adjacencydatasource -width 50
+    button  $w.files.row2.browsebutton -textvariable "Browse..." -command "$this-launch_filebrowser adjacency"
+    pack $w.files.row2.adjacencylabel $w.files.row2.filenamentry\
+	$w.files.row2.browsebutton\
+        -side left -anchor n -expand yes -fill x
+
+    frame $w.files.row3
+    label $w.files.row3.boundingboxlabel -textvar "Bounding Box Data Source: "
+    entry $w.files.row3.filenamentry -textvar $this-boundingboxdatasource -width 50
+    button  $w.files.row3.browsebutton -textvariable "Browse..." -command "$this-launch_filebrowser boundingbox"
+    pack $w.files.row3.boundingboxlabel $w.files.row3.filenamentry\
+	$w.files.row3.browsebutton\
+        -side left -anchor n -expand yes -fill x
+    pack $w.files.row1 $w.files.row2 $w.files.row3 -side top -anchor w
 
     frame $w.f
     # the UI buttons for selecting anatomical names (adjacencies)
@@ -203,7 +268,7 @@ itcl_class VS_DataFlow_HotBox {
     button $w.controls.close -text "Close" -command "destroy $w"
     pack $w.controls.adjOQAFMA $w.controls.adjFILES $w.controls.togFME $w.controls.enableDraw $w.controls.close -side left -expand yes -fill x
 
-    pack $w.f $w.controls -side top -expand yes -fill both -padx 5 -pady 5
+    pack $w.files $w.f $w.controls -side top -expand yes -fill both -padx 5 -pady 5
 # pack $w.title -side top
   }
 # end method ui
