@@ -8,7 +8,8 @@
 //
 //  Copyright (C) 2000 SCI Institute
 #include <SCICore/Datatypes/Geom.h>
-#include <SCICore/Datatypes/LatticeGeom.h>
+#include <SCICore/Datatypes/Lattice3Geom.h>
+#include <SCICore/Datatypes/MeshGeom.h>
 
 namespace SCICore{
   namespace Datatypes{
@@ -32,23 +33,6 @@ bool Geom::get_bbox(BBox& ibbox){
   }
 }
 
-bool Geom::set_bbox(const Point& imin, const Point& imax){
-  bbox.reset();
-  // extend the bbox to include min and max
-  bbox.extend(imin);
-  bbox.extend(imax);
-  has_bbox = true;
-  diagonal = imax - imin;
-  return true;
-}
-
-bool Geom::set_bbox(const BBox& ibbox){
-  bbox = ibbox;
-  has_bbox = true;
-  return true;
-}
-
-
 bool Geom::longest_dimension(double& odouble){    
   if(!has_bbox){
     compute_bbox();
@@ -63,10 +47,6 @@ bool Geom::get_diagonal(Vector& ovec){
   }
   ovec = diagonal;
   return true;
-}
-
-LatticeGeom* Geom::get_latticegeom(){
-  return dynamic_cast<LatticeGeom*>(this);
 }
 
 }  // end datatypes

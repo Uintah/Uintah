@@ -1,4 +1,4 @@
-//  MeshGeom.h - A base class for regular geometries with alligned axes
+//  PointCloudGeom.h - A group of points in 3 space
 //
 //  Written by:
 //   Eric Kuehne
@@ -9,8 +9,8 @@
 //  Copyright (C) 2000 SCI Institute
 
 
-#ifndef SCI_project_MeshGeom_h
-#define SCI_project_MeshGeom_h 1
+#ifndef SCI_project_PointCloudGeom_h
+#define SCI_project_PointCloudGeom_h 1
 
 #include <SCICore/Geometry/Vector.h>
 #include <SCICore/Geometry/Point.h>
@@ -42,17 +42,24 @@ using SCICore::PersistentSpace::PersistentTypeID;
 using SCICore::Math::Interpolate;
 using SCICore::Util::DebugStream;
 
-class MeshGeom:public UnstructuredGeom
+class PointCloudGeom:public UnstructuredGeom
 {
 public:
 
-  MeshGeom();
-  
+  PointCloudGeom(const vector<NodeSimp>&);
+  ~PointCloudGeom();
+
   virtual string get_info();
   
   //////////
   // Compute the bounding box and diagnal, set has_bbox to true
   virtual bool compute_bbox();
+
+  //////////
+  // Interpolate
+  template <class A>
+  int slinterpolate(A* att, elem_t, const Point& p, double& outval,
+		    double eps=1.0e-6);
 
   //////////
   // set nodes and tets vectors
@@ -72,6 +79,12 @@ protected:
 private:
   static DebugStream dbg;
 };
+
+template <class A>
+int PointCloudGeom::slinterpolate(A* att, elem_t elem_type, const Point& p, double& outval,
+				  double eps){
+
+}
 
 } // end Datatypes
 } // end SCICore

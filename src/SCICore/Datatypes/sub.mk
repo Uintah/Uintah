@@ -36,9 +36,12 @@ SRCS += $(GENSRCS) $(SRCDIR)/TriSurface.cc $(SRCDIR)/BasicSurfaces.cc \
 	$(SRCDIR)/GenSField.cc \
 	$(SRCDIR)/FieldWrapper.cc $(SRCDIR)/Domain.cc \
 	$(SRCDIR)/SField.cc $(SRCDIR)/VField.cc \
-	$(SRCDIR)/TField.cc $(SRCDIR)/LatticeGeom.cc \
+	$(SRCDIR)/TField.cc $(SRCDIR)/Lattice3Geom.cc \
+	$(SRCDIR)/Lattice2Geom.cc $(SRCDIR)/Lattice1Geom.cc \
 	$(SRCDIR)/StructuredGeom.cc $(SRCDIR)/UnstructuredGeom.cc \
-	$(SRCDIR)/MeshGeom.cc
+	$(SRCDIR)/MeshGeom.cc $(SRCDIR)/PointCloudGeom.cc \
+	$(SRCDIR)/ContourGeom.cc $(SRCDIR)/TetMeshGeom.cc \
+	$(SRCDIR)/SurfaceGeom.cc $(SRCDIR)/TriSurfaceGeom.cc
 
 $(SRCDIR)/ScalarFieldRG.h: $(SRCDIR)/ScalarFieldRGTYPE.h
 	sed -e 's/RGTYPE/RG/g' -e 's/TYPE/double/g' < $< > $@
@@ -98,6 +101,9 @@ clean::
 
 #
 # $Log$
+# Revision 1.3.2.7  2000/09/11 16:11:57  kuehne
+# updates to field redesign
+#
 # Revision 1.3.2.6  2000/08/31 23:09:08  mcole
 # fix build, bad comment
 #

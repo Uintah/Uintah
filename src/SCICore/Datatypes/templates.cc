@@ -14,6 +14,9 @@ find . -name "*.ii" -print | xargs cat | sort | uniq -c | sort -nr | more
 #include <SCICore/Containers/LockingHandle.h>
 #include <SCICore/Datatypes/GenSField.h>
 #include <SCICore/Datatypes/FlatAttrib.h>
+#include <SCICore/Datatypes/Lattice3Geom.h>
+#include <SCICore/Datatypes/Lattice2Geom.h>
+#include <SCICore/Datatypes/Lattice1Geom.h>
 #include <SCICore/Datatypes/AccelAttrib.h>
 #include <SCICore/Datatypes/BrickAttrib.h>
 #include <SCICore/Datatypes/IndexAttrib.h>
@@ -47,9 +50,9 @@ template class BrickAttrib<double>;
 template class AccelAttrib<unsigned char>;
 template class IndexAttrib<double, unsigned char, AccelAttrib<unsigned char> >;
 
-template class GenSField<double, LatticeGeom>;
-template class GenSField<double, LatticeGeom, FlatAttrib<double> >;
-template class GenSField<double, LatticeGeom, AccelAttrib<double> >;
+template class GenSField<double, Lattice3Geom>;
+template class GenSField<double, Lattice3Geom, FlatAttrib<double> >;
+template class GenSField<double, Lattice3Geom, AccelAttrib<double> >;
 
 template class AttribFunctor<double>;
 //template class MinMaxFunctor<double>;

@@ -17,7 +17,8 @@ namespace Datatypes{
 
 PersistentTypeID FieldWrapper::type_id("FieldWrapper", "Datatype", 0);
 
-FieldWrapper::FieldWrapper(const GeomHandle &handle, status_t intype):
+
+  FieldWrapper::FieldWrapper(const GeomHandle &handle, status_t intype):
   statustype(intype), fieldtype(GEOM){
   mygeom = handle;
 }

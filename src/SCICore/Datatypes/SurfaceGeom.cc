@@ -1,4 +1,4 @@
-//  MeshGeom.cc - A group of Tets in 3 space
+//  SurfaceGeom.cc - A group of Tets in 3 space
 //
 //  Written by:
 //   Eric Kuehne
@@ -8,29 +8,30 @@
 //
 //  Copyright (C) 2000 SCI Institute
 
-#include <SCICore/Datatypes/MeshGeom.h>
+#include <SCICore/Datatypes/SurfaceGeom.h>
 
 namespace SCICore{
 namespace Datatypes{
 
-PersistentTypeID MeshGeom::type_id("MeshGeom", "Datatype", 0);
+PersistentTypeID SurfaceGeom::type_id("SurfaceGeom", "Datatype", 0);
 
-DebugStream MeshGeom::dbg("MeshGeom", true);
+DebugStream SurfaceGeom::dbg("SurfaceGeom", true);
 
-MeshGeom::MeshGeom():
+SurfaceGeom::SurfaceGeom():
   has_bbox(0)
 {
 }
 
-string MeshGeom::get_info(){
+
+string SurfaceGeom::get_info(){
   ostringstream retval;
   retval << "name = " << name << endl;
   return retval.str();
 }
 
-bool MeshGeom::compute_bbox(){
+bool SurfaceGeom::compute_bbox(){
   //compute diagnal and bbox
-  dbg << "calling meshgeom::compute_bbox()" << endl;
+  dbg << "calling Surfacegeom::compute_bbox()" << endl;
   
   if(nodes.empty()){
     return false;
@@ -49,12 +50,12 @@ bool MeshGeom::compute_bbox(){
   return true;
 }
   
-void MeshGeom::set_nodes(const vector<NodeSimp>& inodes){
+void SurfaceGeom::set_nodes(const vector<NodeSimp>& inodes){
   nodes.clear();
   nodes = inodes;
 }
 
-void MeshGeom::io(Piostream&){
+void SurfaceGeom::io(Piostream&){
 }
 
 
