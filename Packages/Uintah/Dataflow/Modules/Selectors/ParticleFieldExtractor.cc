@@ -40,6 +40,10 @@ LOG
 #include <Packages/Uintah/Dataflow/Ports/TensorParticlesPort.h>
 #include <Core/Malloc/Allocator.h>
 #include <Core/Geometry/IntVector.h>
+#include <Core/Thread/Thread.h>
+#include <Core/Thread/Runnable.h>
+#include <Core/Thread/Semaphore.h>
+#include <Core/Thread/Mutex.h>
 #include <Packages/Uintah/Core/Grid/Grid.h>
 #include <Packages/Uintah/Core/Grid/GridP.h>
 #include <Packages/Uintah/Core/Grid/Level.h>
@@ -382,149 +386,202 @@ ParticleFieldExtractor::buildData(DataArchive& archive, double time,
     if (names[i] == psVar.get())
       scalar_type = types[i]->getSubType()->getType();
 
+  int max_workers = Max(Thread::numProcessors()/2, 8);
+  Semaphore* sema = scinew Semaphore( "scalar extractor semahpore",
+				      max_workers); 
+  Mutex smutex("ScalarParticles Mutex");
+  Mutex vmutex("VectorParticles Mutex");
+  Mutex tmutex("TensorrParticles Mutex");
+  Mutex imutex("ParticleIds Mutex");
 
   // iterate over patches
   for(Level::const_patchIterator r = level->patchesBegin();
       r != level->patchesEnd(); r++ ){
+    sema->down();
+    Thread *thrd =
+      new Thread( scinew PFEThread( this, archive, *r,  sp, vp, tp, pset,
+			     scalar_type, have_sp, have_vp,
+			     have_tp, have_ids, sema,
+			     &smutex, &vmutex, &tmutex, &imutex),
+		  "Particle Field Extractor Thread");
+    thrd->detach();
+//     PFEThread *thrd = scinew PFEThread( this, archive, *r,  sp, vp, tp, pset,
+// 			     scalar_type, have_sp, have_vp,
+// 			     have_tp, have_ids, sema,
+// 			     &smutex, &vmutex, &tmutex, &imutex);
 
-    ParticleSubset* dest_subset = scinew ParticleSubset();
-   
-    ParticleVariable< long64 > ids( dest_subset );
-    ParticleVariable< Vector > vectors(dest_subset);
-    ParticleVariable< Point > positions(dest_subset);
-    ParticleVariable< double > scalars(dest_subset);
-    ParticleVariable< Matrix3 > tensors( dest_subset );
+//     thrd->run();
+  }
+  sema->down( max_workers );
+  if( sema )
+    delete sema;
+} 
+void ParticleFieldExtractor::PFEThread::run(){     
 
-    ParticleVariable< Vector > pvv;
-    ParticleVariable< Matrix3 > pvt;
-    ParticleVariable< double > pvs;
-    ParticleVariable< Point  > pvp;
-    ParticleVariable< int > pvint;
-    ParticleVariable< long > pvi;
-     
-    
-    //int numMatls = 29;
-    for(int matl = 0; matl < num_materials; matl++) {
-      string result;
-      ParticleSubset* source_subset;
-      bool have_subset = false;
 
-      eval(id + " isOn p" + to_string(matl), result);
-      if ( result == "0")
-	continue;
-      if (pvVar.get() != ""){
-	have_vp = true;
-	archive.query(pvv, pvVar.get(), matl, *r, time);
-	if( !have_subset){
-	  source_subset = pvv.getParticleSubset();
-	  have_subset = true;
-	}
-      }
-      if( psVar.get() != ""){
-	have_sp = true;
-	switch (scalar_type) {
-	case TypeDescription::double_type:
-	  archive.query(pvs, psVar.get(), matl, *r, time);
-	  if( !have_subset){
-	    source_subset = pvs.getParticleSubset();
-	    have_subset = true;
-	  }
-	  break;
-	case TypeDescription::int_type:
-	  //cerr << "Getting data for ParticleVariable<int>\n";
-	  archive.query(pvint, psVar.get(), matl, *r, time);
-	  if( !have_subset){
-	    source_subset = pvi.getParticleSubset();
-	    have_subset = true;
-	  }
-	  //cerr << "Got data\n";
-	  break;
-	}
-      }
-      if (ptVar.get() != ""){
-	have_tp = true;
-	archive.query(pvt, ptVar.get(), matl, *r, time);
-	if( !have_subset){
-	  source_subset = pvt.getParticleSubset();
-	  have_subset = true;
-	}
-      }
-      if(positionName != "")
-	archive.query(pvp, positionName, matl, *r, time);
+  ParticleSubset* dest_subset = scinew ParticleSubset();
+  ParticleVariable< long64 > ids( dest_subset );
+  ParticleVariable< Vector > vectors(dest_subset);
+  ParticleVariable< Point > positions(dest_subset);
+  ParticleVariable< double > scalars(dest_subset);
+  ParticleVariable< Matrix3 > tensors( dest_subset );
 
-      if(particleIDs != ""){
-	cerr<<"paricleIDs = "<<particleIDs<<endl;
-	have_ids = true;
-	archive.query(pvi, particleIDs, matl, *r, time);
-      }
+  ParticleVariable< Vector > pvv;
+  ParticleVariable< Matrix3 > pvt;
+  ParticleVariable< double > pvs;
+  ParticleVariable< Point  > pvp;
+  ParticleVariable< int > pvint;
+  ParticleVariable< long > pvi;
 
-      if( !have_subset )
-	return;
-      particleIndex dest = dest_subset->addParticles(source_subset->numParticles());
-      vectors.resync();
-      positions.resync();
-      ids.resync();
-      scalars.resync();
-      tensors.resync();
-      for(ParticleSubset::iterator iter = source_subset->begin();
-	  iter != source_subset->end(); iter++, dest++){
-	if(have_vp)
-	  vectors[dest]=pvv[*iter];
-	else
-	  vectors[dest]=Vector(0,0,0);
-	if(have_sp)
-	  switch (scalar_type) {
-	  case TypeDescription::double_type:
-	    scalars[dest]=pvs[*iter];
-	    break;
-	  case TypeDescription::int_type:
-	    scalars[dest]=pvint[*iter];
-	    break;
-	  }
-	else
-	  scalars[dest]=0;
-	if(have_tp){
-	  tensors[dest]=pvt[*iter];
-	}
-	else
-	  tensors[dest]=Matrix3(0.0);
-	if(have_ids)
-	  ids[dest] = pvi[*iter];
-	else
-	  ids[dest] = -1;
-	
-	positions[dest]=pvp[*iter];
+  //int numMatls = 29;
+  for(int matl = 0; matl < pfe->num_materials; matl++) {
+    string result;
+    ParticleSubset* source_subset;
+    bool have_subset = false;
+
+    eval(pfe->id + " isOn p" + to_string(matl), result);
+    if ( result == "0")
+      continue;
+    if (pfe->pvVar.get() != ""){
+      have_vp = true;
+      archive.query(pvv, pfe->pvVar.get(), matl, r, pfe->time);	
+      if( !have_subset){
+	source_subset = pvv.getParticleSubset();
+	have_subset = true;
       }
     }
-    pset->AddParticles( positions, ids, *r);
-    
-    if(have_sp) {
-      if( sp == 0 ){
-	sp = scinew ScalarParticles();
-	sp->Set( PSetHandle(pset) );
+    if( pfe->psVar.get() != ""){
+      have_sp = true;
+      switch (scalar_type) {
+      case TypeDescription::double_type:
+	archive.query(pvs, pfe->psVar.get(), matl, r, pfe->time);
+	if( !have_subset){
+	  source_subset = pvs.getParticleSubset();
+	  have_subset = true;
+	}
+	break;
+      case TypeDescription::int_type:
+	//cerr << "Getting data for ParticleVariable<int>\n";
+	archive.query(pvint, pfe->psVar.get(), matl, r, pfe->time);
+	if( !have_subset){
+	  source_subset = pvi.getParticleSubset();
+	  have_subset = true;
+	}
+	//cerr << "Got data\n";
+	break;
       }
-      sp->AddVar( scalars );
-    } else 
-      sp = 0;
-    if(have_vp) {
-      if( vp == 0 ){
-	vp = scinew VectorParticles();
-	vp->Set( PSetHandle(pset));
+    }
+    if (pfe->ptVar.get() != ""){
+      have_tp = true;
+      archive.query(pvt, pfe->ptVar.get(), matl, r, pfe->time);
+      if( !have_subset){
+	source_subset = pvt.getParticleSubset();
+	have_subset = true;
       }
-      vp->AddVar( vectors );
-    } else 
-      vp = 0;
+    }
+    if(pfe->positionName != "")
+      archive.query(pvp, pfe->positionName, matl, r, pfe->time);
 
-    if(have_tp){
-      if( tp == 0 ){
-	tp = scinew TensorParticles();
-	tp->Set( PSetHandle(pset) );
+    if(pfe->particleIDs != ""){
+      cerr<<"paricleIDs = "<<pfe->particleIDs<<endl;
+      have_ids = true;
+      archive.query(pvi, pfe->particleIDs, matl, r, pfe->time);
+    }
+
+    if( !have_subset )
+      return;
+    string elems;
+    unsigned long totsize;
+    void* mem_start;
+    //        cerr<<"material "<< matl <<".\n";
+
+//     cerr<<"source_subset has "<<source_subset->numParticles() <<" particles\n";
+    particleIndex dest = dest_subset->addParticles(source_subset->numParticles());
+
+    //      cerr<<"dest_subset has "<<dest_subset->numParticles() <<" particles\n";
+    //     pvs.getSizeInfo(elems, totsize, mem_start );
+    //     cerr<<"there are "<<elems<<" scalar elements for patch "<<patchn
+    // 	<<"  mat "<<matl<<endl;
+    //     pvv.getSizeInfo(elems, totsize, mem_start );
+    //     cerr<<"there are "<<elems<<" vector elements for patch "<<patchn
+    // 	<<"  mat "<<matl<<endl;
+    //     pvt.getSizeInfo(elems, totsize, mem_start );
+    //     cerr<<"there are "<<elems<<" tensor elements for patch "<<patchn
+    // 	<<"  mat "<<matl<<endl;
+      
+    vectors.resync();
+    positions.resync();
+    ids.resync();
+    scalars.resync();
+    tensors.resync();
+    for(ParticleSubset::iterator iter = source_subset->begin();
+	iter != source_subset->end(); iter++, dest++){
+      if(have_vp)
+	vectors[dest]=pvv[*iter];
+      else
+	vectors[dest]=Vector(0,0,0);
+      if(have_sp)
+	switch (scalar_type) {
+	case TypeDescription::double_type:
+	  scalars[dest]=pvs[*iter];
+	  break;
+	case TypeDescription::int_type:
+	  scalars[dest]=pvint[*iter];
+	  break;
+	}
+      else
+	scalars[dest]=0;
+      if(have_tp){
+	tensors[dest]=pvt[*iter];
       }
-      tp->AddVar( tensors);
-    } else
-      tp = 0;
+      else
+	tensors[dest]=Matrix3(0.0);
+      if(have_ids)
+	ids[dest] = pvi[*iter];
+      else
+	ids[dest] = -1;
+	
+      positions[dest]=pvp[*iter];
+    }
   }
-} 
+  imutex->lock();
+  pset->AddParticles( positions, ids, r);
+  imutex->unlock();
+  if(have_sp) {
+    smutex->lock();
+    if( sp == 0 ){
+      sp = scinew ScalarParticles();
+      sp->Set( PSetHandle(pset) );
+    }
+    sp->AddVar( scalars );
+    smutex->unlock();
+  } else 
+    sp = 0;
+  if(have_vp) {
+    vmutex->lock();
+    if( vp == 0 ){
+      vp = scinew VectorParticles();
+      vp->Set( PSetHandle(pset));
+    }
+    vp->AddVar( vectors );
+    vmutex->unlock();
+  } else 
+    vp = 0;
+
+  if(have_tp){
+    tmutex->lock();
+    if( tp == 0 ){
+      tp = scinew TensorParticles();
+      tp->Set( PSetHandle(pset) );
+    }
+    tp->AddVar( tensors);
+    tmutex->unlock();
+  } else
+    tp = 0;
+
+  sema->up();
+}
+
 
 void ParticleFieldExtractor::tcl_command(TCLArgs& args, void* userdata) {
   if(args.count() < 2) {
