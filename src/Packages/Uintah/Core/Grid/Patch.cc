@@ -24,7 +24,22 @@ using namespace SCIRun;
 using namespace Uintah;
 using namespace std;
 
-static map<int, const Patch*> patches;
+// This guy is bad news for SCIRun type applications that make use of
+// multiple Grids that all access the same DataArchive whose patches
+// all have hard coded IDs.
+// 
+// This variable should be unique to each Grid allocated by SCIRun,
+// however, it is used in a static function (getByID) that has no
+// knowledge of which grid a patch could be in.  Fortunately getByID
+// is not used by SCIRun functions and should never be used anywhere
+// where you could have multiple Grids that access a DataArchive.
+// 
+// The point I'm trying to make, is this global variable can get you
+// into trouble when you use Patches from the DataArchive instead of
+// the simulation.
+// 
+static map<int, const Patch*> patchIDtoPointerMap;
+static Mutex patchIDtoPointerMap_lock("patchIDtoPointerMap lock");
 
 static AtomicCounter* ids = 0;
 static Mutex ids_init("ID init");
@@ -50,11 +65,13 @@ Patch::Patch(const Level* level,
   if(d_id == -1){
     d_id = (*ids)++;
 
-    if(patches.find(d_id) != patches.end()){
+    patchIDtoPointerMap_lock.lock();
+    if(patchIDtoPointerMap.find(d_id) != patchIDtoPointerMap.end()){
       cerr << "id=" << d_id << '\n';
       SCI_THROW(InternalError("duplicate patch!"));
     }
-    patches[d_id]=this;
+    patchIDtoPointerMap[d_id]=this;
+    patchIDtoPointerMap_lock.unlock();
     in_database=true;
   } else {
     in_database=false;
@@ -86,22 +103,32 @@ Patch::Patch(const Patch* realPatch, const IntVector& virtualOffset)
       have_layout(realPatch->have_layout),
       layouthint(realPatch->layouthint)
 {
-  // make the id be -1000 * realPatch id - some first come, first serve index
   //if(!ids){
-    d_id = -1000 * realPatch->d_id; // temporary
-    //ids_init.lock();    
-    int index = 1;
-    while (patches.find(d_id - index) != patches.end()){
-      if (++index >= 27) {
-	SCI_THROW(InternalError("A real patch shouldn't have more than 26 (3*3*3 - 1) virtual patches"));
-      }
-    }
-    d_id -= index;
-    ASSERT(patches.find(d_id) == patches.end());    
-    patches[d_id]=this;
-    in_database = true;
-    //ids_init.unlock();    
-    //}      
+  // make the id be -1000 * realPatch id - some first come, first serve index
+  d_id = -1000 * realPatch->d_id; // temporary
+  int index = 1;
+  // Since we can have multiple grids adding their patches to the
+  // patchIDtoPointerMap variable, we need to count only those patches that
+  // actually match realPatch.
+  int numVirtualPatches = 0;
+  map<int, const Patch*>::iterator iter;
+  // Need to lock this, so it will be thread safe
+  patchIDtoPointerMap_lock.lock();    
+  while ((iter = patchIDtoPointerMap.find(d_id - index)) !=
+         patchIDtoPointerMap.end()){
+    ++index;
+    // Check to see if this is one of our patches
+    if (d_realPatch == iter->second->getRealPatch())
+      if (++numVirtualPatches >= 27)
+        SCI_THROW(InternalError("A real patch shouldn't have more than 26 (3*3*3 - 1) virtual patches"));
+  }
+  d_id -= index;
+  // Double check to make sure that the patch has not already been added
+  ASSERT(patchIDtoPointerMap.find(d_id) == patchIDtoPointerMap.end());    
+  patchIDtoPointerMap[d_id]=this;
+  patchIDtoPointerMap_lock.unlock();    
+  in_database = true;
+  //}      
   
   for (int i = 0; i < numFaces; i++)
     d_bctypes[i] = realPatch->d_bctypes[i];
@@ -115,8 +142,10 @@ Patch::~Patch()
     d_CornerCells[face].clear();
 
   if(in_database){
-//     patches.erase( patches.find(getID()));
-    patches.erase( getID() );
+//     patchIDtoPointerMap.erase( patchIDtoPointerMap.find(getID()));
+    patchIDtoPointerMap_lock.lock();
+    patchIDtoPointerMap.erase( getID() );
+    patchIDtoPointerMap_lock.unlock();
   }
  for(Patch::FaceType face = Patch::startFace;
      face <= Patch::endFace; face=Patch::nextFace(face))
@@ -127,8 +156,8 @@ Patch::~Patch()
 
 const Patch* Patch::getByID(int id)
 {
-  map<int, const Patch*>::iterator iter = patches.find(id);
-  if(iter == patches.end())
+  map<int, const Patch*>::iterator iter = patchIDtoPointerMap.find(id);
+  if(iter == patchIDtoPointerMap.end())
     return 0;
   else
     return iter->second;
@@ -1881,14 +1910,14 @@ void Patch::computeExtents(VariableBasis basis,
 }
 
 void Patch::getOtherLevelPatches(int levelOffset,
-				 Patch::selectType& patches) const
+				 Patch::selectType& selected_patches) const
 {
   const LevelP& otherLevel = d_level->getRelativeLevel(levelOffset);
   IntVector low = 
     otherLevel->getCellIndex(d_level->getCellPosition(getLowIndex()));
   IntVector high =
     otherLevel->getCellIndex(d_level->getCellPosition(getHighIndex()));
-  otherLevel->selectPatches(low, high, patches); 
+  otherLevel->selectPatches(low, high, selected_patches); 
 }
 
 Patch::VariableBasis Patch::translateTypeToBasis(TypeDescription::Type type,
