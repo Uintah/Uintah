@@ -64,9 +64,9 @@ itcl_class Teem_Filters_NrrdPermute {
 	global $this-axis0
 	global $this-axis1
 	global $this-axis2
-	make_entry $w.f.i "0 -> " $this-axis0 "$this-c needexecute"
-	make_entry $w.f.j "1 -> " $this-axis1 "$this-c needexecute"
-	make_entry $w.f.k "2 -> " $this-axis2 "$this-c needexecute"
+	make_entry $w.f.i "0 <- " $this-axis0 "$this-c needexecute"
+	make_entry $w.f.j "1 <- " $this-axis1 "$this-c needexecute"
+	make_entry $w.f.k "2 <- " $this-axis2 "$this-c needexecute"
 	button $w.f.b -text "Execute" -command "$this-c needexecute"
 	pack $w.f.i $w.f.j $w.f.k $w.f.b -side top -expand 1 -fill x
     }
