@@ -661,7 +661,8 @@ ConvertToNrrd<Fld>::convert_to_nrrd(FieldHandle ifh, NrrdDataHandle &pointsH,
     
     if (!(ifh->mesh()->is_editable() && meshstr != "Struct"))
     {
-      Transform t = m->get_transform();
+      Transform t;
+      m->get_canonical_transform(t);
       double trans[16];
       t.get(trans);
       string trans_string = "";

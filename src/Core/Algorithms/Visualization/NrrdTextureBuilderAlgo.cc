@@ -122,9 +122,6 @@ NrrdTextureBuilderAlgo::build(ProgressReporter *report,
       string_to_double(temp, t[i]);
     }
     tform.set(t);
-
-    const Vector scale(nx - 1, ny - 1, nz - 1);
-    tform.post_scale(scale);
   } 
   else
   {

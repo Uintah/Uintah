@@ -1546,7 +1546,7 @@ execute(MeshHandle& mHandle,
 	    string_to_double(temp, t[i]);
 	  }
 	  trans.set(t);
-	  imesh->set_transform(trans);
+	  imesh->transform(trans);
 	} 
       }	        
   } else {
