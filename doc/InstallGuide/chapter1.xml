@@ -22,9 +22,13 @@
 
   <sect1>
     <para>
-      This chapter is a quick installation checklist.  See the next chapter 
-      <ulink url="installguide.xml?cont=2&amp;dir=2"><citetitle>SCIRun Installation
-      and Build Instructions</citetitle></ulink> for more details.
+      This chapter is a quick installation checklist.
+    </para>
+    <para>
+      See the next chapter 
+      <ulink url="installguide.xml?cont=2&amp;dir=2"><citetitle>SCIRun
+      Installation and Build Instructions</citetitle></ulink> for more
+      details.
     </para>
   </sect1>
 
@@ -38,8 +42,8 @@
     <para>
       Refer to the chapter <ulink url="installguide.xml?cont=3&amp;dir=2">
       <citetitle>Third Party Software Installation and Build Information
-      </citetitle></ulink> for information on installing the required software
-      listed below.
+      </citetitle></ulink> for information on installing the required
+      software listed below.
     </para>
 
     &requirements;
@@ -59,26 +63,26 @@
     <para>
       <orderedlist>
         <listitem>
-          <para>
+          <para><emphasis>
             Obtain the source trees for SCIRun and any desired
             packages.
-          </para>
+          </emphasis></para>
         </listitem>
         <listitem>
-          <para>
+          <para><emphasis>
             Unzip the SCIRun source tree into a directory of your
             choosing.
-          </para>
+          </emphasis></para>
           <para>
             The chosen directory will be referred to as 
             <term>INSTALL_DIR</term> from now on.
           </para>
         </listitem>
         <listitem>
-          <para>
+          <para><emphasis>
             Unzip the packages (if any) into 
             <term>INSTALL_DIR</term>/SCIRun/src/Packages.
-          </para>
+          </emphasis></para>
         </listitem>
       </orderedlist>
     </para>          
@@ -90,24 +94,24 @@
     <para>
       <orderedlist>
         <listitem>
-          <para>
+          <para><emphasis>
             Ensure that the target install machine matches the above 
             system requirements.
-          </para>
+          </emphasis></para>
         </listitem>
         <listitem>
-          <para>
+          <para><emphasis>
             Run configure from a directory of your choosing.
-          </para>
+          </emphasis></para>
           <para>
             The chosen directory will be referred to as
             <term>BUILD_DIR</term> from now on.
           </para>
         </listitem>
         <listitem>
-          <para>
+          <para><emphasis>
             Run GNU make in the <term>BUILD_DIR</term> directory.
-          </para>
+          </emphasis></para>
         </listitem>
       </orderedlist>
     </para>

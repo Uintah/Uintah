@@ -130,9 +130,9 @@
           </para>
     
           <computeroutput>
-            cd <term>INSTALL_DIR</term>
-            gunzip SCIRun.x.x.x.tar.gz
-            tar xvf SCIRun.x.x.x.tar
+cd <term>INSTALL_DIR</term>
+gunzip SCIRun.x.x.x.tar.gz
+tar xvf SCIRun.x.x.x.tar
           </computeroutput>
 
           <para>
@@ -144,8 +144,8 @@
           </para>
 
           <computeroutput>
-            cd <term>INSTALL_DIR</term>
-            cvs checkout SCIRun
+cd <term>INSTALL_DIR</term>
+cvs checkout SCIRun
           </computeroutput>
 
           <para>
@@ -163,9 +163,9 @@
             For example, if installing the BioPSE package:
           </para>
           <computeroutput>
-            cd <term>INSTALL_DIR</term>/SCIRun/src/Packages
-            gunzip BioPSE.PKG.x.x.x.tar.gz
-            tar xvf BioPSE.PKG.x.x.x.tar
+cd <term>INSTALL_DIR</term>/SCIRun/src/Packages
+gunzip BioPSE.PKG.x.x.x.tar.gz
+tar xvf BioPSE.PKG.x.x.x.tar
           </computeroutput>
         </listitem>
       </orderedlist>
@@ -184,9 +184,9 @@
           </emphasis></para>
 
           <para>
-            See the <ulink url="installguide.xml?cont=3&amp;dir=2">Thirdparty
-            Software Installation and Build Instructions</ulink> for more
-            information.
+            See the <ulink url="installguide.xml?cont=3&amp;dir=2">
+            <citetitle>Thirdparty Software Installation and Build
+            Information</citetitle></ulink> for more information.
           </para>
  
         </listitem>
@@ -204,9 +204,9 @@
           </para>
 
           <computeroutput>
-            cd <term>INSTALL_DIR</term>/SCIRun/src
-            ./configure --with-thirdparty=/usr/local/SCIRun_Thirdparty_32 \
-                        --enable-package="<term>PACKNAME_1</term> <term>PACKNAME_2</term> ..."
+cd <term>INSTALL_DIR</term>/SCIRun/src
+./configure --with-thirdparty=/usr/local/SCIRun_Thirdparty_32 \
+            --enable-package="<term>PACKNAME_1</term> <term>PACKNAME_2</term> ..."
           </computeroutput>
 
           <para>
@@ -236,16 +236,16 @@
           </para>
 
           <computeroutput>
-            cd <term>INSTALL_DIR</term>/SCIRun
-            mkdir linux
-            mkdir sgi32
-            mkdir sgi64
-            cd linux
-            ../src/configure <term>CONFIGURE_OPTIONS</term>
-            cd ../sgi32
-            ../src/configure <term>CONFIGURE_OPTIONS</term>
-            cd ../sgi64
-            ../src/configure --enable-64bit <term>CONFIGURE_OPTIONS</term>
+cd <term>INSTALL_DIR</term>/SCIRun
+mkdir linux
+mkdir sgi32
+mkdir sgi64
+cd linux
+../src/configure <term>CONFIGURE_OPTIONS</term>
+cd ../sgi32
+../src/configure <term>CONFIGURE_OPTIONS</term>
+cd ../sgi64
+../src/configure --enable-64bit <term>CONFIGURE_OPTIONS</term>
           </computeroutput>
 
           <para>
@@ -253,7 +253,7 @@
             options that may be invoked at configure time by supplying
             the configure command with arguments. The available
             <term>CONFIGURE_OPTIONS</term> can be found in the 
-            <ulink url="#conftable">appendix</ulink> below. 
+            <ulink url="#9">Appendix</ulink> below. 
           </para>
         </listitem>
         <listitem>
@@ -267,8 +267,8 @@
           </para>
 
           <computeroutput>
-            cd <term>BUILD_DIR</term>
-            gmake
+cd <term>BUILD_DIR</term>
+gmake
           </computeroutput>
     
           <para>
@@ -278,7 +278,7 @@
           </para>
    
           <computeroutput>
-            gmake -j <term>NUM_JOBS</term>
+gmake -j <term>NUM_JOBS</term>
           </computeroutput>
     
           <para>
@@ -345,7 +345,7 @@
     </para>
 
     <computeroutput>
-      subscribe scirun-users
+subscribe scirun-users
     </computeroutput>
 
     <para>

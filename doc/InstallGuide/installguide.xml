@@ -57,14 +57,13 @@
       The <citetitle>SCIRun Installation Guide</citetitle> contains
       instructions and information for installing and building SCIRun,
       it's packages and the thirdparty libraries that it requires.
-      See the <citetitle>technical FAQ</citetitle> for information on
+      See the <citetitle>Technical FAQ</citetitle> for information on
       troubleshooting these processes. 
     </para>
   </preface>
 
   &chapter1;
   &chapter2;
-<!--
   &chapter3;
--->
+
 </book>
