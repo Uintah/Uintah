@@ -13,7 +13,7 @@
 //  Portions created by UNIVERSITY are Copyright (C) 2001, 1994
 //  University of Utah. All Rights Reserved.
 //  
-//    File   : TendShrink.cc
+//    File   : TendSlice.cc
 //    Author : Martin Cole
 //    Date   : Mon Sep  8 09:46:49 2003
 
@@ -27,30 +27,37 @@ namespace SCITeem {
 
 using namespace SCIRun;
 
-class TendShrink : public Module {
+class TendSlice : public Module {
 public:
-  TendShrink(SCIRun::GuiContext *ctx);
-  virtual ~TendShrink();
+  TendSlice(SCIRun::GuiContext *ctx);
+  virtual ~TendSlice();
   virtual void execute();
 
 private:
   NrrdIPort*      inrrd_;
   NrrdOPort*      onrrd_;
 
+  GuiInt          axis_;
+  GuiInt          position_;
+  GuiInt          dimension_;
+
 };
 
-DECLARE_MAKER(TendShrink)
+DECLARE_MAKER(TendSlice)
 
-TendShrink::TendShrink(SCIRun::GuiContext *ctx) : 
-  Module("TendShrink", ctx, Filter, "Tend", "Teem")
+TendSlice::TendSlice(SCIRun::GuiContext *ctx) : 
+  Module("TendSlice", ctx, Filter, "Tend", "Teem"),
+  axis_(ctx->subVar("axis")),
+  position_(ctx->subVar("position")),
+  dimension_(ctx->subVar("dimension"))
 {
 }
 
-TendShrink::~TendShrink() {
+TendSlice::~TendSlice() {
 }
 
 void 
-TendShrink::execute()
+TendSlice::execute()
 {
   NrrdDataHandle nrrd_handle;
 
@@ -78,9 +85,9 @@ TendShrink::execute()
   Nrrd *nin = nrrd_handle->nrrd;
   Nrrd *nout = nrrdNew();
 
-  if (tenShrink(nout, NULL, nin)) {
+  if (tenSlice(nout, nin, axis_.get(), position_.get(), dimension_.get())) {
     char *err = biffGetDone(TEN);
-    error(string("Error Converting 7-value volume to 9-value DT: ") + err);
+    error(string("Error slicing 3D tensor: ") + err);
     free(err);
     return;
   }
@@ -88,12 +95,9 @@ TendShrink::execute()
   NrrdData *nrrd = scinew NrrdData;
   nrrd->nrrd = nout;
 
-  nrrd->nrrd->axis[0].kind = nrrdKind3DMaskedSymTensor;
-
   NrrdDataHandle out(nrrd);
 
   onrrd_->send(out);
 }
 
 } // End namespace SCITeem
-

@@ -21,11 +21,12 @@
 #include <Core/Malloc/Allocator.h>
 #include <Core/GuiInterface/GuiVar.h>
 #include <Teem/Dataflow/Ports/NrrdPort.h>
+#include <teem/ten.h>
 
-#include <sstream>
-#include <iostream>
-using std::endl;
-#include <stdio.h>
+extern "C" {
+  int tend_satinGen(Nrrd *nout, float parm, float mina, float maxa, int wsize,
+		    float thick, float bnd, int torus);
+}
 
 namespace SCITeem {
 
@@ -40,26 +41,27 @@ public:
 private:
   NrrdOPort*      onrrd_;
 
-  GuiDouble    anisotropy_;
-  GuiDouble    min_;
-  GuiDouble    max_;
-  GuiDouble    boundary_;
-  GuiDouble    thickness_;
-  GuiInt       size_;
-  GuiInt       torus_;
+  GuiInt          torus_;
+  GuiDouble       anisotropy_;
+  GuiDouble       maxca1_;
+  GuiDouble       minca1_;
+  GuiDouble       boundary_;
+  GuiDouble       thickness_;
+  GuiInt          size_;
+
 };
 
 DECLARE_MAKER(TendSatin)
 
 TendSatin::TendSatin(SCIRun::GuiContext *ctx) : 
-  Module("TendSatin", ctx, Filter, "Tend", "Teem"), 
+  Module("TendSatin", ctx, Filter, "Tend", "Teem"),
+  torus_(ctx->subVar("torus")),
   anisotropy_(ctx->subVar("anisotropy")),
-  min_(ctx->subVar("min")),
-  max_(ctx->subVar("max")),
+  maxca1_(ctx->subVar("maxca1")),
+  minca1_(ctx->subVar("minca1")),
   boundary_(ctx->subVar("boundary")),
   thickness_(ctx->subVar("thickness")),
-  size_(ctx->subVar("size")),
-  torus_(ctx->subVar("torus"))
+  size_(ctx->subVar("size"))
 {
 }
 
@@ -70,17 +72,39 @@ void
 TendSatin::execute()
 {
   NrrdDataHandle nrrd_handle;
+
   update_state(NeedData);
-  onrrd_ = (NrrdOPort *)get_oport("nout");
+
+  onrrd_ = (NrrdOPort *)get_oport("OutputNrrd");
 
   if (!onrrd_) {
-    error("Unable to initialize oport 'Nrrd'.");
+    error("Unable to initialize oport 'OutputNrrd'.");
+    return;
+  }
+  Nrrd *nout = nrrdNew();
+
+  if (tend_satinGen(nout, anisotropy_.get(), minca1_.get(), 
+		    maxca1_.get(), size_.get(), thickness_.get(), 
+		    boundary_.get(), torus_.get())) {
+    char *err = biffGetDone(TEN);
+    error(string("Error in TendSatin: ") + err);
+    free(err);
     return;
   }
 
-  error("This module is a stub.  Implement me.");
+  NrrdData *nrrd = scinew NrrdData;
+  nrrd->nrrd = nout;
 
-  //onrrd_->send(NrrdDataHandle(nrrd_joined));
+  nrrd->nrrd->axis[0].kind = nrrdKind3DMaskedSymTensor;
+
+  NrrdDataHandle out(nrrd);
+
+  onrrd_->send(out);
+
+
 }
 
 } // End namespace SCITeem
+
+
+

@@ -13,7 +13,7 @@
 //  Portions created by UNIVERSITY are Copyright (C) 2001, 1994
 //  University of Utah. All Rights Reserved.
 //  
-//    File   : TendShrink.cc
+//    File   : TendEvq.cc
 //    Author : Martin Cole
 //    Date   : Mon Sep  8 09:46:49 2003
 
@@ -27,30 +27,39 @@ namespace SCITeem {
 
 using namespace SCIRun;
 
-class TendShrink : public Module {
+class TendEvq : public Module {
 public:
-  TendShrink(SCIRun::GuiContext *ctx);
-  virtual ~TendShrink();
+  TendEvq(SCIRun::GuiContext *ctx);
+  virtual ~TendEvq();
   virtual void execute();
 
 private:
-  NrrdIPort*      inrrd_;
+  NrrdIPort *     inrrd_;
   NrrdOPort*      onrrd_;
+
+  GuiInt          index_;
+  GuiString       anisotropy_;
+  GuiInt          ns_;
+
+  unsigned int get_anisotropy(const string &an);
 
 };
 
-DECLARE_MAKER(TendShrink)
+DECLARE_MAKER(TendEvq)
 
-TendShrink::TendShrink(SCIRun::GuiContext *ctx) : 
-  Module("TendShrink", ctx, Filter, "Tend", "Teem")
+TendEvq::TendEvq(SCIRun::GuiContext *ctx) : 
+  Module("TendEvq", ctx, Filter, "Tend", "Teem"),
+  index_(ctx->subVar("index")),
+  anisotropy_(ctx->subVar("anisotropy")),
+  ns_(ctx->subVar("ns"))
 {
 }
 
-TendShrink::~TendShrink() {
+TendEvq::~TendEvq() {
 }
 
 void 
-TendShrink::execute()
+TendEvq::execute()
 {
   NrrdDataHandle nrrd_handle;
 
@@ -78,9 +87,9 @@ TendShrink::execute()
   Nrrd *nin = nrrd_handle->nrrd;
   Nrrd *nout = nrrdNew();
 
-  if (tenShrink(nout, NULL, nin)) {
+  if (tenEvqVolume(nout, nin, index_.get(), get_anisotropy(anisotropy_.get()), ns_.get())) {
     char *err = biffGetDone(TEN);
-    error(string("Error Converting 7-value volume to 9-value DT: ") + err);
+    error(string("Error quantizing directions of diffusions: ") + err);
     free(err);
     return;
   }
@@ -88,12 +97,49 @@ TendShrink::execute()
   NrrdData *nrrd = scinew NrrdData;
   nrrd->nrrd = nout;
 
-  nrrd->nrrd->axis[0].kind = nrrdKind3DMaskedSymTensor;
-
   NrrdDataHandle out(nrrd);
 
   onrrd_->send(out);
+
+}
+
+unsigned int
+TendEvq::get_anisotropy(const string &an) {
+  if (an == "cl1")
+    return tenAniso_Cl1;
+  else if (an == "cl2")
+    return tenAniso_Cl2;
+  else if (an == "cp1")
+    return tenAniso_Cp1;
+  else if (an == "cp2")
+    return tenAniso_Cp2;
+  else if (an == "ca1")
+    return tenAniso_Ca1;
+  else if (an == "ca2")
+    return tenAniso_Ca2;
+  else if (an == "cs1")
+    return tenAniso_Cs1;
+  else if (an == "cs2")
+    return tenAniso_Cs2;
+  else if (an == "ct1")
+    return tenAniso_Ct1;
+  else if (an == "ct2")
+    return tenAniso_Ct1;
+  else if (an == "ra")
+    return tenAniso_RA;
+  else if (an == "fa")
+    return tenAniso_FA;
+  else if (an == "vf")
+    return tenAniso_VF;
+  else if (an == "tr")
+    return tenAniso_Tr;
+  else {
+    error("Unkown anisotropy metric.  Using trace");
+    return tenAniso_Tr;
+  }
+  
 }
 
 } // End namespace SCITeem
+
 

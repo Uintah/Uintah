@@ -23,94 +23,99 @@
 #include <Teem/Dataflow/Ports/NrrdPort.h>
 #include <teem/ten.h>
 
+
 namespace SCITeem {
 
 using namespace SCIRun;
 
-class TendMake : public Module {
+class TendSim : public Module {
 public:
-  TendMake(SCIRun::GuiContext *ctx);
-  virtual ~TendMake();
+  TendSim(SCIRun::GuiContext *ctx);
+  virtual ~TendSim();
   virtual void execute();
 
 private:
-  NrrdIPort*      inconfidence_;
-  NrrdIPort*      inevals_;
-  NrrdIPort*      inevecs_;
+  NrrdIPort*      bmat_;
+  NrrdIPort*      referenceimg_;
+  NrrdIPort*      tensor_;
   NrrdOPort*      onrrd_;
+
+  GuiDouble       bvalue_;
 
 };
 
-DECLARE_MAKER(TendMake)
+DECLARE_MAKER(TendSim)
 
-TendMake::TendMake(SCIRun::GuiContext *ctx) : 
-  Module("TendMake", ctx, Filter, "Tend", "Teem")
+TendSim::TendSim(SCIRun::GuiContext *ctx) : 
+  Module("TendSim", ctx, Filter, "Tend", "Teem"),
+  bvalue_(ctx->subVar("bvalue"))
 {
 }
 
-TendMake::~TendMake() {
+TendSim::~TendSim() {
 }
 
 void 
-TendMake::execute()
+TendSim::execute()
 {
-  NrrdDataHandle conf_handle;
-  NrrdDataHandle eval_handle;
-  NrrdDataHandle evec_handle;
+  NrrdDataHandle bmat_handle;
+  NrrdDataHandle referenceimg_handle;
+  NrrdDataHandle tensor_handle;
   update_state(NeedData);
-  inconfidence_ = (NrrdIPort *)get_iport("Confidence");
-  inevals_ = (NrrdIPort *)get_iport("Evals");
-  inevecs_ = (NrrdIPort *)get_iport("Evecs");
+  bmat_ = (NrrdIPort *)get_iport("BMatrixNrrd");
+  referenceimg_ = (NrrdIPort *)get_iport("ReferenceNrrd");
+  tensor_ = (NrrdIPort *)get_iport("TensorNrrd");
 
   onrrd_ = (NrrdOPort *)get_oport("OutputNrrd");
 
-  if (!inconfidence_) {
-    error("Unable to initialize iport 'Confidence'.");
+  if (!bmat_) {
+    error("Unable to initialize iport 'BMatrixNrrd'.");
     return;
   }
-  if (!inevals_) {
-    error("Unable to initialize iport 'Evals'.");
+  if (!referenceimg_) {
+    error("Unable to initialize iport 'ReferenceNrrd'.");
     return;
   }
-  if (!inevecs_) {
-    error("Unable to initialize iport 'Evecs'.");
+  if (!tensor_) {
+    error("Unable to initialize iport 'TensorNrrd'.");
     return;
   }
   if (!onrrd_) {
     error("Unable to initialize oport 'OutputNrrd'.");
     return;
   }
-  if (!inconfidence_->get(conf_handle))
+  if (!bmat_->get(bmat_handle))
     return;
-  if (!inevals_->get(eval_handle))
+  if (!referenceimg_->get(referenceimg_handle))
     return;
-  if (!inevecs_->get(evec_handle))
+  if (!tensor_->get(tensor_handle))
     return;
 
-  if (!conf_handle.get_rep()) {
+  if (!bmat_handle.get_rep()) {
     error("Empty input Confidence Nrrd.");
     return;
   }
-  if (!eval_handle.get_rep()) {
-    error("Empty input Evals Nrrd.");
+  if (!referenceimg_handle.get_rep()) {
+    error("Empty input ReferenceNrrd Nrrd.");
     return;
   }
-  if (!evec_handle.get_rep()) {
-    error("Empty input Evecs Nrrd.");
+  if (!tensor_handle.get_rep()) {
+    error("Empty input TensorNrrd Nrrd.");
     return;
   }
-
-  Nrrd *confidence = conf_handle->nrrd;
-  Nrrd *eval = eval_handle->nrrd;
-  Nrrd *evec = evec_handle->nrrd;
+  
+  Nrrd *bmat = bmat_handle->nrrd;
+  Nrrd *referenceimg = referenceimg_handle->nrrd;
+  Nrrd *tensor = tensor_handle->nrrd;
   Nrrd *nout = nrrdNew();
 
-  if (tenMake(nout, confidence, eval, evec)) {
+  if (tenSimulate(nout, referenceimg, tensor, bmat, bvalue_.get())) {
     char *err = biffGetDone(TEN);
-    error(string("Error creating DT volume: ") + err);
+    error(string("Error simulating tensors: ") + err);
     free(err);
     return;
   }
+
 
   NrrdData *nrrd = scinew NrrdData;
   nrrd->nrrd = nout;
@@ -118,7 +123,6 @@ TendMake::execute()
   NrrdDataHandle out(nrrd);
 
   onrrd_->send(out);
-
 }
 
 } // End namespace SCITeem

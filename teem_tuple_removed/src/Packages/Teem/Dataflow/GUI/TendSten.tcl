@@ -13,23 +13,26 @@
 #  Portions created by UNIVERSITY are Copyright (C) 2001, 1994
 #  University of Utah. All Rights Reserved.
 #  
-#    File   : TendExpand.tcl
+#    File   : TendSten.tcl
 #    Author : Darby Van Uitert
 #    Date   : April 2004
 
-itcl_class Teem_Tend_TendExpand {
+itcl_class Teem_Tend_TendSten {
     inherit Module
     constructor {config} {
-        set name TendExpand
+        set name TendSten
         set_defaults
     }
 
     method set_defaults {} {
-	global $this-threshold
-	set $this-threshold 0.5
+	global $this-diffscale
+	set $this-diffscale 1
 
-	global $this-scale
-	set $this-scale 1.0
+	global $this-intscale
+	set $this-intscale 2
+
+	global $this-factor
+	set $this-factor 1
     }
 
     method ui {} {
@@ -45,16 +48,20 @@ itcl_class Teem_Tend_TendExpand {
 	frame $w.f.options
 	pack $w.f.options -side top -expand yes
 
-	iwidgets::entryfield $w.f.options.threshold \
-	    -labeltext "Threshold:" \
-	    -textvariable $this-threshold
-        pack $w.f.options.threshold -side top -expand yes -fill x
-	
+        iwidgets::entryfield $w.f.options.diffscale \
+	    -labeltext "Difference Scale:" \
+	    -textvariable $this-diffscale
+        pack $w.f.options.diffscale -side top -expand yes -fill x
 
-        iwidgets::entryfield $w.f.options.scale \
-	    -labeltext "Scale:" \
-	    -textvariable $this-scale
-        pack $w.f.options.scale -side top -expand yes -fill x
+        iwidgets::entryfield $w.f.options.intscale \
+	    -labeltext "Integration Scale:" \
+	    -textvariable $this-intscale
+        pack $w.f.options.intscale -side top -expand yes -fill x
+
+        iwidgets::entryfield $w.f.options.factor \
+	    -labeltext "Downsample Factor:" \
+	    -textvariable $this-factor
+        pack $w.f.options.factor -side top -expand yes -fill x
 
 	makeSciButtonPanel $w.f $w $this
 	moveToCursor $w
@@ -62,3 +69,4 @@ itcl_class Teem_Tend_TendExpand {
 	pack $w.f -expand 1 -fill x
     }
 }
+
