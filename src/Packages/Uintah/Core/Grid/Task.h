@@ -597,13 +597,6 @@ WARNING
     // Prints out all information about the task, including dependencies
     void displayAll( ostream & out ) const;
 
-    int getTaskNumber() const {
-      return taskNumber;
-    }
-    void setTaskNumber(int tn) {
-      taskNumber = tn;
-    }
-
     // Assume that any data required/modified from the new dw that doesn't
     // get computed in the TaskGraph will already be in the new dw.
     void assumeDataInNewDW()
