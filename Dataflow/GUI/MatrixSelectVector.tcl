@@ -29,6 +29,7 @@ itcl_class SCIRun_Math_MatrixSelectVector {
         global $this-range_min
         global $this-range_max
 	global $this-playmode
+	global $this-dependence
 	global $this-current
 	global $this-execmode
 	global $this-delay
@@ -48,6 +49,7 @@ itcl_class SCIRun_Math_MatrixSelectVector {
         set $this-range_min          0
         set $this-range_max          100
 	set $this-playmode           once
+	set $this-dependence         independent
 	set $this-current            0
 	set $this-execmode           "init"
 	set $this-delay              0
@@ -86,6 +88,7 @@ itcl_class SCIRun_Math_MatrixSelectVector {
 
 	frame $w.loc -borderwidth 2
 	frame $w.playmode -relief groove -borderwidth 2
+	frame $w.dependence -relief groove -borderwidth 2
 	frame $w.execmode -relief groove -borderwidth 2
 
 	frame $w.loc.roc
@@ -138,6 +141,19 @@ itcl_class SCIRun_Math_MatrixSelectVector {
 	radiobutton $w.playmode.bounce2 -text "Bounce2" \
 		-variable $this-playmode -value bounce2
 
+
+	label $w.dependence.label -text "Downstream Dependencies"
+	radiobutton $w.dependence.independent -text \
+	        "Column and Index are Independent" \
+	        -variable $this-dependence -value independent
+	radiobutton $w.dependence.dependent -text \
+	        "Column and Index are Dependent" \
+		-variable $this-dependence -value dependent
+	pack $w.dependence.label -side top -expand yes -fill both
+	pack $w.dependence.independent $w.dependence.dependent \
+	        -side top -anchor w
+
+
 	frame $w.playmode.delay
 	label $w.playmode.delay.label -text "Delay (ms)" \
 		-width 10 -just left
@@ -158,7 +174,7 @@ itcl_class SCIRun_Math_MatrixSelectVector {
         pack $w.execmode.play $w.execmode.stop $w.execmode.step \
 		-side left -fill both -expand yes
 
-        pack $w.loc $w.playmode $w.execmode \
+        pack $w.loc $w.playmode $w.dependence $w.execmode \
 		-padx 5 -pady 5 -fill both -expand yes
 
 	update
