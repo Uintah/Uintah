@@ -114,102 +114,83 @@ initializeFracture(const Patch* patch,
 void
 Fracture::
 labelCellSurfaceNormal (
-           const ProcessorContext*,
+           int matlindex,
+           int vfindex,
            const Patch* patch,
            DataWarehouseP& old_dw,
            DataWarehouseP& new_dw)
 {
-  int numMatls = d_sharedState->getNumMatls();
   const MPMLabel* lb = MPMLabel::getLabels();
 
-  for(int m = 0; m < numMatls; m++){
-    Material* matl = d_sharedState->getMaterial( m );
-    MPMMaterial* mpm_matl = dynamic_cast<MPMMaterial*>(matl);
-    if(mpm_matl){
-      int matlindex = matl->getDWIndex();
-      int vfindex = matl->getVFIndex();
+  ParticleVariable<Point> px;
+  ParticleVariable<Vector> pSurfaceNormal;
 
-      ParticleVariable<Point> px;
-      ParticleVariable<Vector> pSurfaceNormal;
+  old_dw->get(px, lb->pXLabel, matlindex, patch,
+              Ghost::None, 0);
+  old_dw->get(pSurfaceNormal, lb->pSurfaceNormalLabel, matlindex, patch,
+              Ghost::None, 0);
 
-      old_dw->get(px, lb->pXLabel, matlindex, patch,
-		  Ghost::None, 0);
-      old_dw->get(pSurfaceNormal, lb->pSurfaceNormalLabel, matlindex, patch,
-		  Ghost::None, 0);
+  CCVariable<Vector> cSurfaceNormal;
+  new_dw->allocate(cSurfaceNormal, lb->cSurfaceNormalLabel, vfindex, patch);
 
-      CCVariable<Vector> cSurfaceNormal;
-      new_dw->allocate(cSurfaceNormal, lb->cSurfaceNormalLabel, vfindex, patch);
+  ParticleSubset* pset = px.getParticleSubset();
+  cSurfaceNormal.initialize(Vector(0,0,0));
 
-      ParticleSubset* pset = px.getParticleSubset();
-      cSurfaceNormal.initialize(Vector(0,0,0));
+  for(ParticleSubset::iterator part_iter = pset->begin();
+      part_iter != pset->end(); part_iter++)
+  {
+    particleIndex pIdx = *part_iter;
+    IntVector cIdx = patch->findCell(px[pIdx]);
 
-      for(ParticleSubset::iterator part_iter = pset->begin();
-	  part_iter != pset->end(); part_iter++)
-      {
-	 particleIndex pIdx = *part_iter;
-	 IntVector cIdx = patch->findCell(px[pIdx]);
-
-	 Vector cellSurfaceNormal = cSurfaceNormal[cIdx];
-	 if( cellStatus(cellSurfaceNormal) == HAS_SEVERAL_BOUNDARY_SURFACE)
-	   continue;
+    Vector cellSurfaceNormal = cSurfaceNormal[cIdx];
+    if( cellStatus(cellSurfaceNormal) == HAS_SEVERAL_BOUNDARY_SURFACE)
+      continue;
 	 
-	 Vector particleSurfaceNormal = pSurfaceNormal[pIdx];
-	 if( SCICore::Geometry::Dot(cellSurfaceNormal,particleSurfaceNormal) > 0 ) {
-	   cSurfaceNormal[cIdx] += particleSurfaceNormal;
-	 }
-      };
+    Vector particleSurfaceNormal = pSurfaceNormal[pIdx];
+    if( SCICore::Geometry::Dot(cellSurfaceNormal,particleSurfaceNormal) > 0 ) {
+        cSurfaceNormal[cIdx] += particleSurfaceNormal;
+    }
+  };
 
-      for(CellIterator cell_iter = patch->getCellIterator(patch->getBox()); 
-        !cell_iter.done(); cell_iter++)
-      {
-        if( ( cellStatus(cSurfaceNormal[*cell_iter]) == 
-              HAS_SEVERAL_BOUNDARY_SURFACE ) ||
-            ( cellStatus(cSurfaceNormal[*cell_iter]) == 
-              INTERIOR_CELL) )
-        {
-          cSurfaceNormal[*cell_iter].normalize();
-        }
-      }
-      
-      new_dw->put(cSurfaceNormal, lb->cSurfaceNormalLabel, vfindex, patch);
+  for(CellIterator cell_iter = patch->getCellIterator(patch->getBox()); 
+      !cell_iter.done(); cell_iter++)
+  {
+    if( ( cellStatus(cSurfaceNormal[*cell_iter]) == 
+          HAS_SEVERAL_BOUNDARY_SURFACE ) ||
+        ( cellStatus(cSurfaceNormal[*cell_iter]) == 
+          INTERIOR_CELL) )
+    {
+      cSurfaceNormal[*cell_iter].normalize();
     }
   }
+      
+  new_dw->put(cSurfaceNormal, lb->cSurfaceNormalLabel, vfindex, patch);
 }
 
 void
 Fracture::
 labelSelfContactNodes(
-           const ProcessorContext*,
+           int matlindex,
+           int vfindex,
            const Patch* patch,
            DataWarehouseP& old_dw,
            DataWarehouseP& new_dw)
 {
-  int numMatls = d_sharedState->getNumMatls();
-
   const MPMLabel* lb = MPMLabel::getLabels();
 
-  for(int m = 0; m < numMatls; m++){
-    Material* matl = d_sharedState->getMaterial( m );
-    MPMMaterial* mpm_matl = dynamic_cast<MPMMaterial*>(matl);
-    if(mpm_matl){
-      int matlindex = matl->getDWIndex();
-      int vfindex = matl->getVFIndex();
-
-      CCVariable<Vector> cSurfaceNormal;
-      new_dw->get(cSurfaceNormal, lb->cSurfaceNormalLabel, matlindex, patch,
-		  Ghost::AroundNodes, 1);
+  CCVariable<Vector> cSurfaceNormal;
+  new_dw->get(cSurfaceNormal, lb->cSurfaceNormalLabel, matlindex, patch,
+              Ghost::AroundNodes, 1);
 		  
-      NCVariable<bool> gSelfContact;
-      new_dw->allocate(gSelfContact, lb->gSelfContactLabel, vfindex, patch);
+  NCVariable<bool> gSelfContact;
+  new_dw->allocate(gSelfContact, lb->gSelfContactLabel, vfindex, patch);
       
-      for(NodeIterator iter = patch->getNodeIterator(); !iter.done(); iter++)
-      {
-        gSelfContact[*iter] = isSelfContactNode(*iter,patch,cSurfaceNormal);
-      }
-
-      new_dw->put(gSelfContact, lb->gSelfContactLabel, vfindex, patch);
-    }
+  for(NodeIterator iter = patch->getNodeIterator(); !iter.done(); iter++)
+  {
+    gSelfContact[*iter] = isSelfContactNode(*iter,patch,cSurfaceNormal);
   }
+
+  new_dw->put(gSelfContact, lb->gSelfContactLabel, vfindex, patch);
 }
 
 void
@@ -268,41 +249,22 @@ void
 Fracture::
 labelSelfContactNodesAndCells(
            const ProcessorContext*,
-           const Patch* /*patch*/,
-           DataWarehouseP& /*old_dw*/,
-           DataWarehouseP& /*new_dw*/)
+           const Patch* patch,
+           DataWarehouseP& old_dw,
+           DataWarehouseP& new_dw)
 {
-#if 0
-  int vfindex = d_sharedState->getMaterial(0)->getVFIndex();
-
-  CCVariable<bool> cSelfContact;
-  CCVariable<Vector> cSurfaceNormal;
-
-  new_dw->allocate(cSelfContact, cSelfContactLabel, vfindex, region);
-  new_dw->allocate(cSurfaceNormal cSurfaceNormalLabel, vfindex, region);
-
-  //Label out the cells having non-directly connected boundary particles
-  //The information is saved temperary in cSelfContact
-
-  //Label out the self-contact nodes
-
-  for(NodeIterator nodeIter = region->getNodeIterator();
-                   !nodeIter.done(); 
-                   nodeIter++)
-  {
-    cSelfContact[*cellIter] = false;
+  int numMatls = d_sharedState->getNumMatls();
+  for(int m = 0; m < numMatls; m++){
+    Material* matl = d_sharedState->getMaterial( m );
+    MPMMaterial* mpm_matl = dynamic_cast<MPMMaterial*>(matl);
+    if(mpm_matl){
+      int matlindex = matl->getDWIndex();
+      int vfindex = matl->getVFIndex();
+      labelCellSurfaceNormal(matlindex,vfindex,patch,old_dw,new_dw);
+      labelSelfContactNodes(matlindex,vfindex,patch,old_dw,new_dw);
+      labelSelfContactCells(matlindex,vfindex,patch,old_dw,new_dw);
+    }
   }
-
-  //Label out the self-contact cells
-
-  for(CellIterator cellIter = region->getCellIterator();
-                   !cellIter.done(); 
-                   cellIter++)
-  {
-    cSelfContact[*cellIter] = false;
-  }
-#endif
-
 }
 
 void
@@ -360,6 +322,9 @@ Fracture(ProblemSpecP& ps,SimulationStateP& d_sS)
 } //namespace Uintah
 
 // $Log$
+// Revision 1.20  2000/06/05 02:07:59  tan
+// Finished labelSelfContactNodesAndCells(...).
+//
 // Revision 1.19  2000/06/04 23:55:39  tan
 // Added labelSelfContactCells(...) to label the self-contact cells
 // according to the nodes self-contact information.
