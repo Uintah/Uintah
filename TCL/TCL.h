@@ -50,6 +50,7 @@ protected:
 public:
     static void initialize();
     static void execute(const clString&);
+    static void execute(char*);
     static void source_once(const clString&);
     static void add_command(const clString&, TCL*, void*);
 

@@ -75,8 +75,9 @@ void TCLdouble::set(double val)
     if(val != value){
 	TCLTask::lock();
 	value=val;
-	clString vstr(to_string(val));
-	Tcl_SetVar(the_interp, varname(), vstr(), TCL_GLOBAL_ONLY);
+	char buf[20];
+	sprintf(buf, "%f", val);
+	Tcl_SetVar(the_interp, varname(), buf, TCL_GLOBAL_ONLY);
 	TCLTask::unlock();
     }
 }
@@ -180,6 +181,11 @@ TCLvarint::~TCLvarint()
 int TCLvarint::get()
 {
     return value;
+}
+
+void TCLvarint::set(int nv)
+{
+    value=nv;
 }
 
 TCLPoint::TCLPoint(const clString& name, const clString& id, TCL* tcl)

@@ -55,6 +55,15 @@ void TCL::execute(const clString& string)
     TCLTask::unlock();
 }
 
+void TCL::execute(char* string)
+{
+    TCLTask::lock();
+    int code = Tcl_Eval(the_interp, string);
+    if(code != TCL_OK)
+	cerr << "TCL error: " << the_interp->result << endl;
+    TCLTask::unlock();
+}
+
 void TCL::source_once(const clString& filename)
 {
     TCLTask::lock();
