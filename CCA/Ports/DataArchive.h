@@ -233,7 +233,7 @@ public:
   // query the variable value for a particular particle  overtime;
   template<class T>
   void query(std::vector<T>& values, const std::string& name,
-	     int matlIndex, long particleID,
+	     int matlIndex, long64 particleID,
 	     double startTime, double endTime) ;
   //////////
   // similarly, we want to be able to track variable values in a particular
@@ -300,7 +300,7 @@ private:
   DOM_Node findVariable(const string& name, const Patch* patch,
 			int matl, double time, XMLURL& url);
   void findPatchAndIndex(GridP grid, Patch*& patch, particleIndex& idx,
-			 long particleID, int matIndex,
+			 long64 particleID, int matIndex,
 			 double time);
   static DebugStream dbg;
 };
@@ -333,7 +333,7 @@ private:
   
   template<class T>
   void DataArchive::query(std::vector<T>& values, const std::string& name,
-			  int matlIndex, long particleID,
+			  int matlIndex, long64 particleID,
 			  double startTime, double endTime)
   {
     double call_start = Time::currentSeconds();

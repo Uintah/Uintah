@@ -175,7 +175,7 @@ void MPMMaterial::createParticles(particleIndex numParticles,
 //   new_dw->allocate(pissurf, lb->pSurfLabel, subset);
    ParticleVariable<double> ptemperature;
    new_dw->allocate(ptemperature, lb->pTemperatureLabel, subset);
-   ParticleVariable<long> pparticleID;
+   ParticleVariable<long64> pparticleID;
    new_dw->allocate(pparticleID, lb->pParticleIDLabel, subset);
 
    ParticleVariable<int> pIsBroken;
@@ -435,7 +435,7 @@ particleIndex MPMMaterial::createParticles(GeometryObject* obj,
 				   ParticleVariable<int>& pissurf,
 				   ParticleVariable<double>& temperature,
 				   ParticleVariable<double>& toughness,
-				   ParticleVariable<long>& particleID,
+				   ParticleVariable<long64>& particleID,
 				   CCVariable<short int>& cellNAPID,
 				   const Patch* patch)
 {
@@ -464,9 +464,9 @@ particleIndex MPMMaterial::createParticles(GeometryObject* obj,
 	       // have more bits.
 	       ASSERT(cell_idx.x() <= 0xffff && cell_idx.y() <= 0xffff
 		      && cell_idx.z() <= 0xffff);
-	       long cellID = ((long)cell_idx.x() << 16) |
-		 ((long)cell_idx.y() << 32) |
-		 ((long)cell_idx.z() << 48);
+	       long64 cellID = ((long64)cell_idx.x() << 16) |
+		 ((long64)cell_idx.y() << 32) |
+		 ((long64)cell_idx.z() << 48);
 	       if(piece->inside(p)){
 		  position[start+count]=p;
 		  volume[start+count]=dxpp.x()*dxpp.y()*dxpp.z();
@@ -477,7 +477,7 @@ particleIndex MPMMaterial::createParticles(GeometryObject* obj,
 //		  pissurf[start+count]=checkForSurface(piece,p,dxpp);
 		  pexternalforce[start+count]=Vector(0,0,0); // for now
 		  short int& myCellNAPID = cellNAPID[cell_idx];
-		  particleID[start+count] = cellID | (long)myCellNAPID;
+		  particleID[start+count] = cellID | (long64)myCellNAPID;
 		  ASSERT(myCellNAPID < 0xffff);
 		  myCellNAPID++;
 

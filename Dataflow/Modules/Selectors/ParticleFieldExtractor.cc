@@ -389,7 +389,7 @@ ParticleFieldExtractor::buildData(DataArchive& archive, double time,
 
     ParticleSubset* dest_subset = scinew ParticleSubset();
    
-    ParticleVariable< long > ids( dest_subset );
+    ParticleVariable< long64 > ids( dest_subset );
     ParticleVariable< Vector > vectors(dest_subset);
     ParticleVariable< Point > positions(dest_subset);
     ParticleVariable< double > scalars(dest_subset);

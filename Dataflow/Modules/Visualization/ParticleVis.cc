@@ -169,8 +169,8 @@ void ParticleVis::execute()
   PSet *pset = part->getParticleSet();
   cbClass = pset->getCallBackClass();
   vector<ShareAssignParticleVariable<Point> >& points = pset->getPositions();
-  vector<ShareAssignParticleVariable<long> >& ids = pset->getIDs();
-  vector<ShareAssignParticleVariable<long> >::iterator id_it = ids.begin();
+  vector<ShareAssignParticleVariable<long64> >& ids = pset->getIDs();
+  vector<ShareAssignParticleVariable<long64> >::iterator id_it = ids.begin();
   vector<ShareAssignParticleVariable<double> >& values = part->get();
   vector<ShareAssignParticleVariable<Point> >::iterator p_it = points.begin();
   vector<ShareAssignParticleVariable<Point> >::iterator p_it_end = points.end();
@@ -348,7 +348,7 @@ void ParticleVis::geom_pick(GeomPick* pick, void* userdata, GeomObj* picked_obj)
   else
     cerr<<"Not getting the correct data\n";
   if( cbClass != 0 && id != -1 )
-    ((ParticleFieldExtractor *)cbClass)->callback((long) id );
+    ((ParticleFieldExtractor *)cbClass)->callback( id );
   // Now modify so that points and spheres store index.
 }
   

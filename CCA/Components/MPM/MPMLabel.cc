@@ -117,7 +117,7 @@ MPMLabel::MPMLabel()
 			ParticleVariable<Vector>::getTypeDescription() );
 
   pParticleIDLabel = scinew VarLabel("p.particleID",
-			ParticleVariable<long>::getTypeDescription() );
+			ParticleVariable<long64>::getTypeDescription() );
 
   pIsIgnitedLabel  = scinew VarLabel( "p.isIgnited",
 			ParticleVariable<int>::getTypeDescription() );
@@ -183,7 +183,7 @@ MPMLabel::MPMLabel()
 			ParticleVariable<Vector>::getTypeDescription() );
 
   pParticleIDLabel_preReloc = scinew VarLabel("p.particleID+",
-			ParticleVariable<long>::getTypeDescription() );
+			ParticleVariable<long64>::getTypeDescription() );
 
   pIsIgnitedLabel_preReloc  = scinew VarLabel( "p.isIgnited+",
 			ParticleVariable<int>::getTypeDescription() );
