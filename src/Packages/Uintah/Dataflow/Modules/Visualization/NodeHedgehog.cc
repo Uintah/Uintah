@@ -283,8 +283,6 @@ private:
       my_max_length = length;
       my_max_vector = vv;
     }
-    if (length*lenscale < 1.e-3)
-      return;
 
     if(have_cmap) {
       if(have_sfield) {
