@@ -14,6 +14,11 @@ SRCS     += \
 	$(SRCDIR)/Short27.cc \
 	$(SRCDIR)/TangentModulusTensor.cc 
 
+ifeq ($(IS_WIN),yes)
+  SRCS += $(SRCDIR)/Rand48.cc
+endif
+
+
 PSELIBS := \
 	Core/Exceptions                 \
 	Core/Util                       \
