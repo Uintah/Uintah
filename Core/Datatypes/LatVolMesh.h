@@ -186,6 +186,14 @@ public:
   Point get_max() const { return max_; }
   virtual BBox get_bounding_box() const;
 
+  //! set the mesh statistics
+  void set_nx(unsigned x) { nx_ = x; }
+  void set_ny(unsigned y) { ny_ = y; }
+  void set_nz(unsigned z) { nz_ = z; }
+  void set_min(Point p) { min_ = p; }
+  void set_max(Point p) { max_ = p; }
+
+
   //! get the child elements of the given index
   void get_nodes(node_array &array, edge_index idx) const;
   void get_nodes(node_array &array, face_index idx) const;
