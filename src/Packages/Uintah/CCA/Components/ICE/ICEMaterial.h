@@ -57,13 +57,13 @@ WARNING
 	 
 	 //////////
 	 // Return correct EOS model pointer for this material
-	 EquationOfState * getEOS() const;
+	 EquationOfState* getEOS() const;
 
          //for HeatConductionModel
-         double getThermalConductivity() const;
-         double getSpecificHeat() const;
-         double getHeatTransferCoefficient() const;
-         double getGamma() const;
+        double getThermalConductivity() const;
+        double getSpecificHeat() const;
+        double getHeatTransferCoefficient() const;
+        double getGamma() const;
 	 double getViscosity() const;
 	 double getSpeedOfSound() const;
 
@@ -71,15 +71,17 @@ WARNING
 			      CCVariable<double>& temp,CCVariable<double>& cv,
 			      CCVariable<double>& ss, CCVariable<double>& vsc,
 			      CCVariable<double>& volf,CCVariable<Vector>& vCC,
+                           CCVariable<double>& press,
+                           int numMatls,
 			      const Patch* patch, DataWarehouseP& new_dw);
+
       private:
 
 	 // Specific constitutive model associated with this material
 	 EquationOfState *d_eos;
 
-	 double d_density;
-         double d_thermalConductivity;
-         double d_specificHeat;
+        double d_thermalConductivity;
+        double d_specificHeat;
 	 double d_heatTransferCoefficient;
 	 double d_speed_of_sound;
 	 double d_viscosity;
@@ -92,7 +94,8 @@ WARNING
 	 // Prevent copying of this class
 	 // copy constructor
 	 ICEMaterial(const ICEMaterial &icem);
-	 ICEMaterial& operator=(const ICEMaterial &icem);
+	 ICEMaterial& operator=(const ICEMaterial &icem);        
+        
       };
 } // End namespace Uintah
 
