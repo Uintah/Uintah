@@ -17,7 +17,9 @@ static char *id="@(#) $Id$";
 #include <Uintah/Grid/Patch.h>
 #include <Uintah/Grid/Task.h>
 #include <Uintah/Grid/CCVariable.h>
-#include <Uintah/Grid/FCVariable.h>
+#include <Uintah/Grid/SFCXVariable.h>
+#include <Uintah/Grid/SFCYVariable.h>
+#include <Uintah/Grid/SFCZVariable.h>
 #include <SCICore/Util/NotFinished.h>
 #include <Uintah/Components/Arches/Arches.h>
 
@@ -45,11 +47,11 @@ ScalarSolver::ScalarSolver(TurbulenceModel* turb_model,
   d_scalarSPLabel = scinew VarLabel("scalarSP",
 				CCVariable<double>::getTypeDescription() );
   d_uVelocityMSLabel = scinew VarLabel("uVelocityMS",
-				FCVariable<double>::getTypeDescription() );
+				SFCXVariable<double>::getTypeDescription() );
   d_vVelocityMSLabel = scinew VarLabel("vVelocityMS",
-				FCVariable<double>::getTypeDescription() );
+				SFCYVariable<double>::getTypeDescription() );
   d_wVelocityMSLabel = scinew VarLabel("wVelocityMS",
-				FCVariable<double>::getTypeDescription() );
+				SFCZVariable<double>::getTypeDescription() );
   d_densitySIVBCLabel = scinew VarLabel("densitySIVBC",
 				CCVariable<double>::getTypeDescription() );
   d_viscosityCTSLabel = scinew VarLabel("viscosityCTS",
@@ -227,6 +229,9 @@ void ScalarSolver::buildLinearMatrix(const ProcessorGroup* pc,
 
 //
 // $Log$
+// Revision 1.14  2000/06/29 23:37:11  bbanerje
+// Changed FCVarsto SFC[X,Y,Z]Vars and added relevant getIndex() calls.
+//
 // Revision 1.13  2000/06/28 08:14:53  bbanerje
 // Changed the init routines a bit.
 //

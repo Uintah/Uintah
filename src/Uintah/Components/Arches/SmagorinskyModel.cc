@@ -13,7 +13,9 @@ static char *id="@(#) $Id$";
 #include <Uintah/Interface/Scheduler.h>
 #include <Uintah/Interface/DataWarehouse.h>
 #include <Uintah/Grid/Task.h>
-#include <Uintah/Grid/FCVariable.h>
+#include <Uintah/Grid/SFCXVariable.h>
+#include <Uintah/Grid/SFCYVariable.h>
+#include <Uintah/Grid/SFCZVariable.h>
 #include <Uintah/Grid/CCVariable.h>
 #include <Uintah/Grid/PerPatch.h>
 #include <Uintah/Grid/SoleVariable.h>
@@ -46,11 +48,11 @@ SmagorinskyModel::SmagorinskyModel(PhysicalConstants* phyConsts):
   d_cellTypeLabel = scinew VarLabel("celltype",
 				   CCVariable<int>::getTypeDescription() );
   d_uVelocitySPLabel = scinew VarLabel("uVelocitySP",
-				    FCVariable<double>::getTypeDescription() );
+				    SFCXVariable<double>::getTypeDescription() );
   d_vVelocitySPLabel = scinew VarLabel("vVelocitySP",
-				    FCVariable<double>::getTypeDescription() );
+				    SFCYVariable<double>::getTypeDescription() );
   d_wVelocitySPLabel = scinew VarLabel("wVelocitySP",
-				    FCVariable<double>::getTypeDescription() );
+				    SFCZVariable<double>::getTypeDescription() );
   d_densityCPLabel = scinew VarLabel("densityCP",
 				   CCVariable<double>::getTypeDescription() );
   d_viscosityINLabel = scinew VarLabel("viscosityIN",
@@ -61,54 +63,54 @@ SmagorinskyModel::SmagorinskyModel(PhysicalConstants* phyConsts):
 
   // Inputs & Outputs (calcVelocityWallBC)
   d_uVelocitySIVBCLabel = scinew VarLabel("uVelocitySIVBC",
-				    FCVariable<double>::getTypeDescription() );
+				    SFCXVariable<double>::getTypeDescription() );
   d_vVelocitySIVBCLabel = scinew VarLabel("vVelocitySIVBC",
-				    FCVariable<double>::getTypeDescription() );
+				    SFCYVariable<double>::getTypeDescription() );
   d_wVelocitySIVBCLabel = scinew VarLabel("wVelocitySIVBC",
-				    FCVariable<double>::getTypeDescription() );
+				    SFCZVariable<double>::getTypeDescription() );
   d_uVelocityCPBCLabel = scinew VarLabel("uVelocityCPBC",
-				    FCVariable<double>::getTypeDescription() );
+				    SFCXVariable<double>::getTypeDescription() );
   d_vVelocityCPBCLabel = scinew VarLabel("vVelocityCPBC",
-				    FCVariable<double>::getTypeDescription() );
+				    SFCYVariable<double>::getTypeDescription() );
   d_wVelocityCPBCLabel = scinew VarLabel("wVelocityCPBC",
-				    FCVariable<double>::getTypeDescription() );
+				    SFCZVariable<double>::getTypeDescription() );
   d_densitySIVBCLabel = scinew VarLabel("densitySIVBC",
 				   CCVariable<double>::getTypeDescription() );
 
   d_uVelLinSrcPBLMLabel = scinew VarLabel("uVelLinSrcPBLM",
-				    FCVariable<double>::getTypeDescription() );
+				    SFCXVariable<double>::getTypeDescription() );
   d_vVelLinSrcPBLMLabel = scinew VarLabel("vVelLinSrcPBLM",
-				    FCVariable<double>::getTypeDescription() );
+				    SFCYVariable<double>::getTypeDescription() );
   d_wVelLinSrcPBLMLabel = scinew VarLabel("wVelLinSrcPBLM",
-				    FCVariable<double>::getTypeDescription() );
+				    SFCZVariable<double>::getTypeDescription() );
   d_uVelNonLinSrcPBLMLabel = scinew VarLabel("uVelNonLinSrcPBLM",
-				    FCVariable<double>::getTypeDescription() );
+				    SFCXVariable<double>::getTypeDescription() );
   d_vVelNonLinSrcPBLMLabel = scinew VarLabel("vVelNonLinSrcPBLM",
-				    FCVariable<double>::getTypeDescription() );
+				    SFCYVariable<double>::getTypeDescription() );
   d_wVelNonLinSrcPBLMLabel = scinew VarLabel("wVelNonLinSrcPBLM",
-				    FCVariable<double>::getTypeDescription() );
+				    SFCZVariable<double>::getTypeDescription() );
   d_uVelLinSrcMBLMLabel = scinew VarLabel("uVelLinSrcMBLM",
-				    FCVariable<double>::getTypeDescription() );
+				    SFCXVariable<double>::getTypeDescription() );
   d_vVelLinSrcMBLMLabel = scinew VarLabel("vVelLinSrcMBLM",
-				    FCVariable<double>::getTypeDescription() );
+				    SFCYVariable<double>::getTypeDescription() );
   d_wVelLinSrcMBLMLabel = scinew VarLabel("wVelLinSrcMBLM",
-				    FCVariable<double>::getTypeDescription() );
+				    SFCZVariable<double>::getTypeDescription() );
   d_uVelNonLinSrcMBLMLabel = scinew VarLabel("uVelNonLinSrcMBLM",
-				    FCVariable<double>::getTypeDescription() );
+				    SFCXVariable<double>::getTypeDescription() );
   d_vVelNonLinSrcMBLMLabel = scinew VarLabel("vVelNonLinSrcMBLM",
-				    FCVariable<double>::getTypeDescription() );
+				    SFCYVariable<double>::getTypeDescription() );
   d_wVelNonLinSrcMBLMLabel = scinew VarLabel("wVelNonLinSrcMBLM",
-				    FCVariable<double>::getTypeDescription() );
+				    SFCZVariable<double>::getTypeDescription() );
 
   // For the recomputaion of Turbulence SubModel (during solve)
   d_densityRCPLabel = scinew VarLabel("densityRCP",
 				    CCVariable<double>::getTypeDescription() );
   d_uVelocityMSLabel = scinew VarLabel("uVelocityMS",
-				    FCVariable<double>::getTypeDescription() );
+				    SFCXVariable<double>::getTypeDescription() );
   d_vVelocityMSLabel = scinew VarLabel("vVelocityMS",
-				    FCVariable<double>::getTypeDescription() );
+				    SFCYVariable<double>::getTypeDescription() );
   d_wVelocityMSLabel = scinew VarLabel("wVelocityMS",
-				    FCVariable<double>::getTypeDescription() );
+				    SFCZVariable<double>::getTypeDescription() );
   d_viscosityRCTSLabel = scinew VarLabel("viscosityRCTS",
 				    CCVariable<double>::getTypeDescription() );
 }
@@ -221,25 +223,24 @@ SmagorinskyModel::computeTurbSubmodel(const ProcessorGroup* pc,
 				      DataWarehouseP& old_dw,
 				      DataWarehouseP& new_dw)
 {
+  // Variables
+  SFCXVariable<double> uVelocity;
+  SFCYVariable<double> vVelocity;
+  SFCZVariable<double> wVelocity;
+  CCVariable<double> density;
+  CCVariable<double> viscosity;
 
   // Get the velocity, density and viscosity from the old data warehouse
   int matlIndex = 0;
   int numGhostCells = 0;
-  FCVariable<double> uVelocity;
   old_dw->get(uVelocity, d_uVelocitySPLabel, matlIndex, patch, Ghost::None,
 	      numGhostCells);
-  FCVariable<double> vVelocity;
   old_dw->get(vVelocity, d_vVelocitySPLabel, matlIndex, patch, Ghost::None,
 	      numGhostCells);
-  FCVariable<double> wVelocity;
   old_dw->get(wVelocity, d_wVelocitySPLabel, matlIndex, patch, Ghost::None,
 	      numGhostCells);
-
-  CCVariable<double> density;
   old_dw->get(density, d_densityCPLabel, matlIndex, patch, Ghost::None,
 	      numGhostCells);
-
-  CCVariable<double> viscosity;
   old_dw->get(viscosity, d_viscosityINLabel, matlIndex, patch, Ghost::None,
 	      numGhostCells);
 
@@ -256,10 +257,6 @@ SmagorinskyModel::computeTurbSubmodel(const ProcessorGroup* pc,
   CellInformation* cellinfo = cellinfop;
 #endif
 
-  // Get the patch details
-  IntVector lowIndex = patch->getCellLowIndex();
-  IntVector highIndex = patch->getCellHighIndex();
-
   // get physical constants
   double mol_viscos; // molecular viscosity
   mol_viscos = d_physicalConsts->getMolecularViscosity();
@@ -269,9 +266,40 @@ SmagorinskyModel::computeTurbSubmodel(const ProcessorGroup* pc,
   CCVariable<double> new_viscosity;
   new_dw->allocate(new_viscosity, d_viscosityCTSLabel, matlIndex, patch);
 
+  // Get the patch and variable details
+  IntVector domLoU = uVelocity.getFortLowIndex();
+  IntVector domHiU = uVelocity.getFortHighIndex();
+  IntVector idxLoU = patch->getSFCXFORTLowIndex();
+  IntVector idxHiU = patch->getSFCXFORTHighIndex();
+  IntVector domLoV = vVelocity.getFortLowIndex();
+  IntVector domHiV = vVelocity.getFortHighIndex();
+  IntVector idxLoV = patch->getSFCYFORTLowIndex();
+  IntVector idxHiV = patch->getSFCYFORTHighIndex();
+  IntVector domLoW = wVelocity.getFortLowIndex();
+  IntVector domHiW = wVelocity.getFortHighIndex();
+  IntVector idxLoW = patch->getSFCZFORTLowIndex();
+  IntVector idxHiW = patch->getSFCZFORTHighIndex();
+  IntVector domLo = density.getFortLowIndex();
+  IntVector domHi = density.getFortHighIndex();
+  IntVector idxLo = patch->getCellFORTLowIndex();
+  IntVector idxHi = patch->getCellFORTHighIndex();
+
 #ifdef WONT_COMPILE_YET
-  FORT_SMAGMODEL(new_viscosity, velocity, viscosity, density, mol_viscos,
-		 lowIndex, highIndex,
+  FORT_SMAGMODEL(domLo.get_pointer(), domHi.get_pointer(),
+		 idxLo.get_pointer(), idxHi.get_pointer(),
+		 new_viscosity.getPointer(), 
+		 domLoU.get_pointer(), domHiU.get_pointer(),
+		 idxLoU.get_pointer(), idxHiU.get_pointer(),
+		 uVelocity.getPointer(), 
+		 domLoV.get_pointer(), domHiV.get_pointer(),
+		 idxLoV.get_pointer(), idxHiV.get_pointer(),
+		 vVelocity.getPointer(), 
+		 domLoW.get_pointer(), domHiW.get_pointer(),
+		 idxLoW.get_pointer(), idxHiW.get_pointer(),
+		 wVelocity.getPointer(), 
+		 viscosity.getPointer(), 
+		 density.getPointer(), 
+		 &mol_viscos,
 		 cellinfo->ceeu, cellinfo->cweu, cellinfo->cwwu,
 		 cellinfo->cnn, cellinfo->csn, cellinfo->css,
 		 cellinfo->ctt, cellinfo->cbt, cellinfo->cbb,
@@ -296,25 +324,24 @@ SmagorinskyModel::reComputeTurbSubmodel(const ProcessorGroup* pc,
 					DataWarehouseP& old_dw,
 					DataWarehouseP& new_dw)
 {
+  // Variables
+  SFCXVariable<double> uVelocity;
+  SFCYVariable<double> vVelocity;
+  SFCZVariable<double> wVelocity;
+  CCVariable<double> density;
+  CCVariable<double> viscosity;
 
   // Get the velocity, density and viscosity from the old data warehouse
   int matlIndex = 0;
   int numGhostCells = 0;
-  FCVariable<double> uVelocity;
   new_dw->get(uVelocity, d_uVelocityMSLabel, matlIndex, patch, Ghost::None,
 	      numGhostCells);
-  FCVariable<double> vVelocity;
   new_dw->get(vVelocity, d_vVelocityMSLabel, matlIndex, patch, Ghost::None,
 	      numGhostCells);
-  FCVariable<double> wVelocity;
   new_dw->get(wVelocity, d_wVelocityMSLabel, matlIndex, patch, Ghost::None,
 	      numGhostCells);
-
-  CCVariable<double> density;
   new_dw->get(density, d_densityRCPLabel, matlIndex, patch, Ghost::None,
 	      numGhostCells);
-
-  CCVariable<double> viscosity;
   old_dw->get(viscosity, d_viscosityCTSLabel, matlIndex, patch, Ghost::None,
 	      numGhostCells);
 
@@ -331,10 +358,6 @@ SmagorinskyModel::reComputeTurbSubmodel(const ProcessorGroup* pc,
   CellInformation* cellinfo = cellinfop;
 #endif
 
-  // Get the patch details
-  IntVector lowIndex = patch->getCellLowIndex();
-  IntVector highIndex = patch->getCellHighIndex();
-
   // get physical constants
   double mol_viscos; // molecular viscosity
   mol_viscos = d_physicalConsts->getMolecularViscosity();
@@ -344,9 +367,40 @@ SmagorinskyModel::reComputeTurbSubmodel(const ProcessorGroup* pc,
   CCVariable<double> new_viscosity;
   new_dw->allocate(new_viscosity, d_viscosityRCTSLabel, matlIndex, patch);
 
+  // Get the patch and variable details
+  IntVector domLoU = uVelocity.getFortLowIndex();
+  IntVector domHiU = uVelocity.getFortHighIndex();
+  IntVector idxLoU = patch->getSFCXFORTLowIndex();
+  IntVector idxHiU = patch->getSFCXFORTHighIndex();
+  IntVector domLoV = vVelocity.getFortLowIndex();
+  IntVector domHiV = vVelocity.getFortHighIndex();
+  IntVector idxLoV = patch->getSFCYFORTLowIndex();
+  IntVector idxHiV = patch->getSFCYFORTHighIndex();
+  IntVector domLoW = wVelocity.getFortLowIndex();
+  IntVector domHiW = wVelocity.getFortHighIndex();
+  IntVector idxLoW = patch->getSFCZFORTLowIndex();
+  IntVector idxHiW = patch->getSFCZFORTHighIndex();
+  IntVector domLo = density.getFortLowIndex();
+  IntVector domHi = density.getFortHighIndex();
+  IntVector idxLo = patch->getCellFORTLowIndex();
+  IntVector idxHi = patch->getCellFORTHighIndex();
+
 #ifdef WONT_COMPILE_YET
-  FORT_SMAGMODEL(new_viscosity, velocity, viscosity, density, mol_viscos,
-		 lowIndex, highIndex,
+  FORT_SMAGMODEL(domLo.get_pointer(), domHi.get_pointer(),
+		 idxLo.get_pointer(), idxHi.get_pointer(),
+		 new_viscosity.getPointer(), 
+		 domLoU.get_pointer(), domHiU.get_pointer(),
+		 idxLoU.get_pointer(), idxHiU.get_pointer(),
+		 uVelocity.getPointer(), 
+		 domLoV.get_pointer(), domHiV.get_pointer(),
+		 idxLoV.get_pointer(), idxHiV.get_pointer(),
+		 vVelocity.getPointer(), 
+		 domLoW.get_pointer(), domHiW.get_pointer(),
+		 idxLoW.get_pointer(), idxHiW.get_pointer(),
+		 wVelocity.getPointer(), 
+		 viscosity.getPointer(), 
+		 density.getPointer(), 
+		 &mol_viscos,
 		 cellinfo->ceeu, cellinfo->cweu, cellinfo->cwwu,
 		 cellinfo->cnn, cellinfo->csn, cellinfo->css,
 		 cellinfo->ctt, cellinfo->cbt, cellinfo->cbb,
@@ -374,9 +428,9 @@ void SmagorinskyModel::calcVelocityWallBC(const ProcessorGroup* pc,
 {
   int matlIndex = 0;
   int numGhostCells = 0;
-  FCVariable<double> uVelocity;
-  FCVariable<double> vVelocity;
-  FCVariable<double> wVelocity;
+  SFCXVariable<double> uVelocity;
+  SFCYVariable<double> vVelocity;
+  SFCZVariable<double> wVelocity;
   switch(eqnType) {
   case Discretization::PRESSURE:
     old_dw->get(uVelocity, d_uVelocitySIVBCLabel, matlIndex, patch, Ghost::None,
@@ -397,13 +451,10 @@ void SmagorinskyModel::calcVelocityWallBC(const ProcessorGroup* pc,
   default:
     throw InvalidValue("Equation type can only be pressure or momentum");
   }
-  //FCVariable<Vector> velocity;
-  //old_dw->get(velocity, "velocity", patch, 1);
 
   CCVariable<double> density;
   old_dw->get(density, d_densitySIVBCLabel, matlIndex, patch, Ghost::None,
 	      numGhostCells);
-  //old_dw->get(density, "density", patch, 1);
 
   // using chain of responsibility pattern for getting cell information
   DataWarehouseP top_dw = new_dw->getTop();
@@ -419,14 +470,10 @@ void SmagorinskyModel::calcVelocityWallBC(const ProcessorGroup* pc,
   CellInformation* cellinfo = cellinfop;
 #endif
 
-  IntVector lowIndex = patch->getCellLowIndex();
-  IntVector highIndex = patch->getCellHighIndex();
-
   // stores cell type info for the patch with the ghost cell type
   CCVariable<int> cellType;
   top_dw->get(cellType, d_cellTypeLabel, matlIndex, patch, Ghost::None,
 	      numGhostCells);
-  //top_dw->get(cellType, "CellType", patch, 1);
 
   //get Molecular Viscosity of the fluid
   double mol_viscos = d_physicalConsts->getMolecularViscosity();
@@ -437,28 +484,32 @@ void SmagorinskyModel::calcVelocityWallBC(const ProcessorGroup* pc,
 
   numGhostCells = 0;
 
-  FCVariable<double> velLinearSrc; //SP term in Arches
-  FCVariable<double> velNonLinearSrc; // SU in Arches
+  SFCXVariable<double> uVelLinearSrc; //SP term in Arches
+  SFCXVariable<double> uVelNonLinearSrc; // SU in Arches
+  SFCYVariable<double> vVelLinearSrc; //SP term in Arches
+  SFCYVariable<double> vVelNonLinearSrc; // SU in Arches
+  SFCZVariable<double> wVelLinearSrc; //SP term in Arches
+  SFCZVariable<double> wVelNonLinearSrc; // SU in Arches
 
   switch(eqnType) {
   case Discretization::PRESSURE:
     switch(index) {
     case 0:
-      new_dw->get(velLinearSrc, d_uVelLinSrcPBLMLabel, matlIndex, patch, 
+      new_dw->get(uVelLinearSrc, d_uVelLinSrcPBLMLabel, matlIndex, patch, 
 		  Ghost::None, numGhostCells);
-      new_dw->get(velNonLinearSrc, d_uVelNonLinSrcPBLMLabel, matlIndex, patch, 
+      new_dw->get(uVelNonLinearSrc, d_uVelNonLinSrcPBLMLabel, matlIndex, patch, 
 		  Ghost::None, numGhostCells);
       break;
     case 1:
-      new_dw->get(velLinearSrc, d_vVelLinSrcPBLMLabel, matlIndex, patch, 
+      new_dw->get(vVelLinearSrc, d_vVelLinSrcPBLMLabel, matlIndex, patch, 
 		  Ghost::None, numGhostCells);
-      new_dw->get(velNonLinearSrc, d_vVelNonLinSrcPBLMLabel, matlIndex, patch, 
+      new_dw->get(vVelNonLinearSrc, d_vVelNonLinSrcPBLMLabel, matlIndex, patch, 
 		  Ghost::None, numGhostCells);
       break;
     case 2:
-      new_dw->get(velLinearSrc, d_wVelLinSrcPBLMLabel, matlIndex, patch, 
+      new_dw->get(wVelLinearSrc, d_wVelLinSrcPBLMLabel, matlIndex, patch, 
 		  Ghost::None, numGhostCells);
-      new_dw->get(velNonLinearSrc, d_vVelNonLinSrcPBLMLabel, matlIndex, patch, 
+      new_dw->get(wVelNonLinearSrc, d_vVelNonLinSrcPBLMLabel, matlIndex, patch, 
 		  Ghost::None, numGhostCells);
       break;
     default:
@@ -468,21 +519,21 @@ void SmagorinskyModel::calcVelocityWallBC(const ProcessorGroup* pc,
   case Discretization::MOMENTUM:
     switch(index) {
     case 0:
-      new_dw->get(velLinearSrc, d_uVelLinSrcMBLMLabel, matlIndex, patch, 
+      new_dw->get(uVelLinearSrc, d_uVelLinSrcMBLMLabel, matlIndex, patch, 
 		  Ghost::None, numGhostCells);
-      new_dw->get(velNonLinearSrc, d_uVelNonLinSrcMBLMLabel, matlIndex, patch, 
+      new_dw->get(uVelNonLinearSrc, d_uVelNonLinSrcMBLMLabel, matlIndex, patch, 
 		  Ghost::None, numGhostCells);
       break;
     case 1:
-      new_dw->get(velLinearSrc, d_vVelLinSrcMBLMLabel, matlIndex, patch, 
+      new_dw->get(vVelLinearSrc, d_vVelLinSrcMBLMLabel, matlIndex, patch, 
 		  Ghost::None, numGhostCells);
-      new_dw->get(velNonLinearSrc, d_vVelNonLinSrcMBLMLabel, matlIndex, patch, 
+      new_dw->get(vVelNonLinearSrc, d_vVelNonLinSrcMBLMLabel, matlIndex, patch, 
 		  Ghost::None, numGhostCells);
       break;
     case 2:
-      new_dw->get(velLinearSrc, d_wVelLinSrcMBLMLabel, matlIndex, patch, 
+      new_dw->get(wVelLinearSrc, d_wVelLinSrcMBLMLabel, matlIndex, patch, 
 		  Ghost::None, numGhostCells);
-      new_dw->get(velNonLinearSrc, d_vVelNonLinSrcMBLMLabel, matlIndex, patch, 
+      new_dw->get(wVelNonLinearSrc, d_vVelNonLinSrcMBLMLabel, matlIndex, patch, 
 		  Ghost::None, numGhostCells);
       break;
     default:
@@ -493,33 +544,87 @@ void SmagorinskyModel::calcVelocityWallBC(const ProcessorGroup* pc,
     throw InvalidValue("Equation type can only be pressure or momentum");
   }
 
+  // Get the patch and variable details
+  IntVector domLo = density.getFortLowIndex();
+  IntVector domHi = density.getFortHighIndex();
+  IntVector idxLo = patch->getCellFORTLowIndex();
+  IntVector idxHi = patch->getCellFORTHighIndex();
+
   switch(index) {
   case 1:
+    {
+      // Get the patch and variable details
+      IntVector domLoU = uVelocity.getFortLowIndex();
+      IntVector domHiU = uVelocity.getFortHighIndex();
+      IntVector idxLoU = patch->getSFCXFORTLowIndex();
+      IntVector idxHiU = patch->getSFCXFORTHighIndex();
+
 #ifdef WONT_COMPILE_YET
-    // compute momentum source because of turbulence
-    FORT_BCUTURB(velLinearSrc, velNonlinearSrc, velocity,  
-		 density, mol_viscos, lowIndex, highIndex,
-		 cellType, cellinfo->x, cellinfo->y, cellinfo->z,
-		 cellinfo->xu, cellinfo->yv, cellinfo->zw);
+      // compute momentum source because of turbulence
+      FORT_BCUTURB(domLoU.get_pointer(), domHiU.get_pointer(),
+		   idxLoU.get_pointer(), idxHiU.get_pointer(),
+		   uVelLinearSrc.getPointer(), 
+		   uVelNonLinearSrc.getPointer(), 
+		   uVelocity.getPointer(), 
+		   domLo.get_pointer(), domHi.get_pointer(),
+		   idxLo.get_pointer(), idxHi.get_pointer(),
+		   density.getPointer(), 
+		   &mol_viscos, 
+		   cellType.getPointer(), 
+		   cellinfo->x, cellinfo->y, cellinfo->z,
+		   cellinfo->xu, cellinfo->yv, cellinfo->zw);
 #endif
+    }
     break;
   case 2:  
+    {
+      // Get the patch and variable details
+      IntVector domLoV = vVelocity.getFortLowIndex();
+      IntVector domHiV = vVelocity.getFortHighIndex();
+      IntVector idxLoV = patch->getSFCYFORTLowIndex();
+      IntVector idxHiV = patch->getSFCYFORTHighIndex();
+
 #ifdef WONT_COMPILE_YET
-    // compute momentum source because of turbulence
-    FORT_BCVTURB(vLinearSrc, vNonlinearSrc, velocity,  
-		 density, mol_viscos, lowIndex, highIndex,
-		 cellType, cellinfo->x, cellinfo->y, cellinfo->z,
-		 cellinfo->xu, cellinfo->yv, cellinfo->zw);
+      // compute momentum source because of turbulence
+      FORT_BCVTURB(domLoV.get_pointer(), domHiV.get_pointer(),
+		   idxLoV.get_pointer(), idxHiV.get_pointer(),
+		   vVelLinearSrc.getPointer(), 
+		   vVelNonLinearSrc.getPointer(), 
+		   vVelocity.getPointer(), 
+		   domLo.get_pointer(), domHi.get_pointer(),
+		   idxLo.get_pointer(), idxHi.get_pointer(),
+		   density.getPointer(), 
+		   &mol_viscos, 
+		   cellType.getPointer(), 
+		   cellinfo->x, cellinfo->y, cellinfo->z,
+		   cellinfo->xu, cellinfo->yv, cellinfo->zw);
 #endif
+    }
     break;
   case 3:
+    {
+      // Get the patch and variable details
+      IntVector domLoW = wVelocity.getFortLowIndex();
+      IntVector domHiW = wVelocity.getFortHighIndex();
+      IntVector idxLoW = patch->getSFCZFORTLowIndex();
+      IntVector idxHiW = patch->getSFCZFORTHighIndex();
+
 #ifdef WONT_COMPILE_YET
-    // compute momentum source because of turbulence
-    FORT_BCWTURB(wLinearSrc, wNonlinearSrc, velocity,  
-		 density, mol_viscos, lowIndex, highIndex,
-		 cellType, cellinfo->x, cellinfo->y, cellinfo->z,
-		 cellinfo->xu, cellinfo->yv, cellinfo->zw);
+      // compute momentum source because of turbulence
+      FORT_BCWTURB(domLoW.get_pointer(), domHiW.get_pointer(),
+		   idxLoW.get_pointer(), idxHiW.get_pointer(),
+		   wVelLinearSrc.getPointer(), 
+		   wVelNonLinearSrc.getPointer(), 
+		   wVelocity.getPointer(), 
+		   domLo.get_pointer(), domHi.get_pointer(),
+		   idxLo.get_pointer(), idxHi.get_pointer(),
+		   density.getPointer(), 
+		   &mol_viscos, 
+		   cellType.getPointer(), 
+		   cellinfo->x, cellinfo->y, cellinfo->z,
+		   cellinfo->xu, cellinfo->yv, cellinfo->zw);
 #endif
+    }
     break;
   default:
     throw InvalidValue("Invalid Index value in CalcVelWallBC");
@@ -529,16 +634,16 @@ void SmagorinskyModel::calcVelocityWallBC(const ProcessorGroup* pc,
   case Discretization::PRESSURE:
     switch(index) {
     case 0:
-      new_dw->put(velLinearSrc, d_uVelLinSrcPBLMLabel, matlIndex, patch);
-      new_dw->put(velNonLinearSrc, d_uVelNonLinSrcPBLMLabel, matlIndex, patch);
+      new_dw->put(uVelLinearSrc, d_uVelLinSrcPBLMLabel, matlIndex, patch);
+      new_dw->put(uVelNonLinearSrc, d_uVelNonLinSrcPBLMLabel, matlIndex, patch);
       break;
     case 1:
-      new_dw->put(velLinearSrc, d_vVelLinSrcPBLMLabel, matlIndex, patch);
-      new_dw->put(velNonLinearSrc, d_vVelNonLinSrcPBLMLabel, matlIndex, patch);
+      new_dw->put(vVelLinearSrc, d_vVelLinSrcPBLMLabel, matlIndex, patch);
+      new_dw->put(vVelNonLinearSrc, d_vVelNonLinSrcPBLMLabel, matlIndex, patch);
       break;
     case 2:
-      new_dw->put(velLinearSrc, d_wVelLinSrcPBLMLabel, matlIndex, patch);
-      new_dw->put(velNonLinearSrc, d_wVelNonLinSrcPBLMLabel, matlIndex, patch);
+      new_dw->put(wVelLinearSrc, d_wVelLinSrcPBLMLabel, matlIndex, patch);
+      new_dw->put(wVelNonLinearSrc, d_wVelNonLinSrcPBLMLabel, matlIndex, patch);
       break;
     default:
       throw InvalidValue("Index can only be 0, 1 or 2");
@@ -547,16 +652,16 @@ void SmagorinskyModel::calcVelocityWallBC(const ProcessorGroup* pc,
   case Discretization::MOMENTUM:
     switch(index) {
     case 0:
-      new_dw->put(velLinearSrc, d_uVelLinSrcMBLMLabel, matlIndex, patch);
-      new_dw->put(velNonLinearSrc, d_uVelNonLinSrcMBLMLabel, matlIndex, patch);
+      new_dw->put(uVelLinearSrc, d_uVelLinSrcMBLMLabel, matlIndex, patch);
+      new_dw->put(uVelNonLinearSrc, d_uVelNonLinSrcMBLMLabel, matlIndex, patch);
       break;
     case 1:
-      new_dw->put(velLinearSrc, d_vVelLinSrcMBLMLabel, matlIndex, patch);
-      new_dw->put(velNonLinearSrc, d_vVelNonLinSrcMBLMLabel, matlIndex, patch);
+      new_dw->put(vVelLinearSrc, d_vVelLinSrcMBLMLabel, matlIndex, patch);
+      new_dw->put(vVelNonLinearSrc, d_vVelNonLinSrcMBLMLabel, matlIndex, patch);
       break;
     case 2:
-      new_dw->put(velLinearSrc, d_wVelLinSrcMBLMLabel, matlIndex, patch);
-      new_dw->put(velNonLinearSrc, d_wVelNonLinSrcMBLMLabel, matlIndex, patch);
+      new_dw->put(wVelLinearSrc, d_wVelLinSrcMBLMLabel, matlIndex, patch);
+      new_dw->put(wVelNonLinearSrc, d_wVelNonLinSrcMBLMLabel, matlIndex, patch);
       break;
     default:
       throw InvalidValue("Index can only be 0, 1 or 2");
@@ -582,6 +687,9 @@ void SmagorinskyModel::calcVelocitySource(const ProcessorGroup* pc,
 
 //
 // $Log$
+// Revision 1.19  2000/06/29 23:37:12  bbanerje
+// Changed FCVarsto SFC[X,Y,Z]Vars and added relevant getIndex() calls.
+//
 // Revision 1.18  2000/06/22 23:06:38  bbanerje
 // Changed velocity related variables to FCVariable type.
 // ** NOTE ** We may need 3 types of FCVariables (one for each direction)
