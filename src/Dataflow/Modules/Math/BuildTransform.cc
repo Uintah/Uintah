@@ -158,17 +158,9 @@ void BuildTransform::execute()
 
   // get the input matrix if there is one
   MatrixHandle input_matrix_H;
-  Matrix* input_matrix;
   Transform input_transform;
-  int i, j;
-  if (imatrix_->get(input_matrix_H) && 
-      (input_matrix=input_matrix_H.get_rep())) {
-    double dummy[16];
-    double *p=&(dummy[0]);
-    for (i=0; i<4; i++)
-      for (j=0; j<4; j++)
-	*p++=(*input_matrix)[i][j];
-    input_transform.set(dummy);
+  if (imatrix_->get(input_matrix_H) && input_matrix_H.get_rep()) {
+    input_transform = input_matrix_H->toTransform();
   }
   
   Transform local_transform;
@@ -248,16 +240,8 @@ void BuildTransform::execute()
     local_transform.pre_trans(input_transform);
   }
 
-  // convert the transform into a matrix and send it out
-  double dummy[16];
-  local_transform.get(dummy);
-  double *p=&(dummy[0]);
-  int cnt=0;
-  for (i=0; i<4; i++) 
-    for (j=0; j<4; j++, cnt++)
-      (*matrix_transform)[i][j]=*p++;
-  
-  omatrix_->send(omatrixH_);
+  DenseMatrix *dm = scinew DenseMatrix(local_transform);
+  omatrix_->send(MatrixHandle(dm));
 }
 
 void BuildTransform::widget_moved(int last)
