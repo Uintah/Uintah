@@ -98,13 +98,15 @@ void Delaunay::execute()
     mesh->nodes.add(new Node(bmin+Vector(0, le*3, 0)));
     mesh->nodes.add(new Node(bmin+Vector(0, 0, le*3)));
 
-    Element* el=new Element(mesh, 0, 1, 2, 3);
+    Element* el=new Element(mesh, nnodes+0, nnodes+1, nnodes+2, nnodes+3);
     el->orient();
+    el->faces[0]=el->faces[1]=el->faces[2]=el->faces[3]=-1;
     mesh->elems.add(el);
 
-    for(i=0;i<nnodes;i++){
+    for(int node=0;node<nnodes;node++){
 	// Add this node...
-	Point p(mesh->nodes[i]->p);
+	cerr << "Adding node: " << node << " of " << nnodes << endl;
+	Point p(mesh->nodes[node]->p);
 
 	// Find which element this node is in
 	int in_element;
@@ -115,6 +117,9 @@ void Delaunay::execute()
 
 	Array1<int> to_remove;
 	to_remove.add(in_element);
+	Array1<int> done;
+	done.add(in_element);
+	HashTable<Face, int> face_table;
 
 	// Find it's neighbors...
 	// We might be able to fix this loop to make it
@@ -122,14 +127,81 @@ void Delaunay::execute()
 	int i=0;
 	while(i<to_remove.size()){
 	    // See if the neighbor should also be removed...
-#if 0
 	    Element* e=mesh->elems[to_remove[i]];
+	    // Add these faces to the list of exposed faces...
+	    Face f1(e->n[0], e->n[1], e->n[2]);
+	    Face f2(e->n[0], e->n[1], e->n[3]);
+	    Face f3(e->n[0], e->n[2], e->n[3]);
+	    Face f4(e->n[1], e->n[2], e->n[3]);
+
+	    // If the face is in the list, remove it.
+	    // Otherwise, add it.
+	    int dummy;
+	    if(face_table.lookup(f1, dummy))
+		face_table.remove(f1);
+	    else
+		face_table.insert(f1, dummy);
+
+	    if(face_table.lookup(f2, dummy))
+		face_table.remove(f2);
+	    else
+		face_table.insert(f2, dummy);
+
+	    if(face_table.lookup(f3, dummy))
+		face_table.remove(f3);
+	    else
+		face_table.insert(f3, dummy);
+
+	    if(face_table.lookup(f4, dummy))
+		face_table.remove(f4);
+	    else
+		face_table.insert(f4, dummy);
+
 	    for(int j=0;j<4;j++){
 		int skip=0;
 		int neighbor=e->faces[j];
-		for(int ii=0;ii<to_remove.size();i++){
-		    if(neighbor==to_remove[ii])
-#endif
+		for(int ii=0;ii<done.size();ii++){
+		    if(neighbor==done[ii]){
+			skip=1;
+			cerr << "Breaking..." << endl;
+			break;
+		    }
+		}
+		if(neighbor==-1 || neighbor==-2)
+		    skip=1;
+		if(!skip){
+		    // Process this neighbor
+		    if(!skip){
+			// See if this simplex is deleted by this point
+			Point cen;
+			double rad2;
+			e->get_sphere2(cen, rad2);
+			double ndist2=(p-cen).length2();
+			if(ndist2 < rad2){
+			    // This one must go...
+			    to_remove.add(neighbor);
+			}
+		    }
+		    done.add(neighbor);
+		}
+	    }
+	    i++;
 	}
+	// Remove the to_remove elements...
+	for(i=0;i<to_remove.size();i++){
+	    int idx=to_remove[i];
+	    delete mesh->elems[idx];
+	    mesh->elems[idx]=0;
+	}
+
+	// Add the new elements from the faces...
+	HashTableIter<Face, int> fiter(&face_table);
+	for(fiter.first();fiter.ok();++fiter){
+	    Face f(fiter.get_key());
+	    Element* ne=new Element(mesh, node, f.n[0], f.n[1], f.n[2]);
+	    ne->orient();
+	    mesh->elems.add(ne);
+	}
+	mesh->compute_neighbors();
     }
 }
