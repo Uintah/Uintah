@@ -401,11 +401,11 @@ private:
 };
 
 
-const TypeDescription* get_type_description(TetVolMesh *);
-const TypeDescription* get_type_description(TetVolMesh::Node *);
-const TypeDescription* get_type_description(TetVolMesh::Edge *);
-const TypeDescription* get_type_description(TetVolMesh::Face *);
-const TypeDescription* get_type_description(TetVolMesh::Cell *);
+const TypeDescription* get_type_description(LevelMesh *);
+const TypeDescription* get_type_description(LevelMesh::Node *);
+const TypeDescription* get_type_description(LevelMesh::Edge *);
+const TypeDescription* get_type_description(LevelMesh::Face *);
+const TypeDescription* get_type_description(LevelMesh::Cell *);
 
 
 } // namespace SCIRun
