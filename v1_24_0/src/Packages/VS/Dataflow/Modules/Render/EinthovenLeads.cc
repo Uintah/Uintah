@@ -159,9 +159,9 @@ EinthovenLeads::execute()
   GeomHandle text_switch = scinew GeomSwitch(scinew GeomDL(texts));
   
   Color c(.5, .95, .95);
-  texts->add(string("I"), pos[0], c);
-  texts->add(string("II"), pos[1], c);
-  texts->add(string("III"), pos[2], c);
+  texts->add(string("LA"), pos[0], c);
+  texts->add(string("RA"), pos[1], c);
+  texts->add(string("LF"), pos[2], c);
   texts->set_font_index(18);
 
   text_id_ = goport->addObj(text_switch, "Electrode Location");
