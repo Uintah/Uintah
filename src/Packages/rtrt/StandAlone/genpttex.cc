@@ -36,6 +36,7 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <fcntl.h>
+#include <unistd.h> // For read and close of files.
 
 // #ifdef WRITE_SHPEREDATA
 // #  undef WRITE_SPHEREDATA
