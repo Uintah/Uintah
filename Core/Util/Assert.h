@@ -39,6 +39,11 @@
 #define ASSERTFAIL(string) \
    SCI_THROW(SCIRun::AssertionFailed(string, __FILE__, __LINE__));
 
+#define ASSERTMSG(condition,message) \
+   if(!(condition)){ \
+      SCI_THROW(SCIRun::AssertionFailed(message, __FILE__, __LINE__)); \
+   }
+
 #if SCI_ASSERTION_LEVEL >= 1
 #define IFASSERT(x) x
 #define ASSERTL1(condition) \
