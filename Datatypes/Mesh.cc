@@ -11,12 +11,13 @@
  *  Copyright (C) 1994 SCI Group
  */
 
-#include <Mesh.h>
+#include <Datatypes/Mesh.h>
+
+#include <Classlib/NotFinished.h>
 #include <Classlib/String.h>
 #include <Classlib/Timer.h>
 #include <Classlib/TrivialAllocator.h>
 #include <iostream.h>
-#include <NotFinished.h>
 
 static TrivialAllocator Element_alloc(sizeof(Element));
 static TrivialAllocator Node_alloc(sizeof(Node));

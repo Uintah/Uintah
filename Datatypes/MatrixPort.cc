@@ -11,7 +11,7 @@
  *  Copyright (C) 1994 SCI Group
  */
 
-#include <MatrixPort.h>
+#include <Datatypes/MatrixPort.h>
 
 clString SimpleIPort<MatrixHandle>::port_type("Matrix");
 clString SimpleIPort<MatrixHandle>::port_color("dodger blue");

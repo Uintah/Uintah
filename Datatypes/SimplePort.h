@@ -18,7 +18,7 @@
 #pragma interface
 #endif
 
-#include <Port.h>
+#include <Dataflow/Port.h>
 #include <Multitask/ITC.h>
 
 template<class T>

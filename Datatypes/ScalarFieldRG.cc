@@ -11,7 +11,7 @@
  *  Copyright (C) 1994 SCI Group
  */
 
-#include <ScalarFieldRG.h>
+#include <Datatypes/ScalarFieldRG.h>
 #include <Classlib/String.h>
 #include <iostream.h>
 

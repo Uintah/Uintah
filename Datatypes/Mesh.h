@@ -14,10 +14,12 @@
 #ifndef SCI_project_Mesh_h
 #define SCI_project_Mesh_h 1
 
-#include <Datatype.h>
+#include <Datatypes/Datatype.h>
+
 #include <Classlib/Array1.h>
 #include <Classlib/LockingHandle.h>
 #include <Geometry/Point.h>
+
 #include <stdlib.h> // For size_t
 
 class Mesh;

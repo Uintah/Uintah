@@ -11,7 +11,7 @@
  *  Copyright (C) 1994 SCI Group
  */
 
-#include <SurfacePort.h>
+#include <Datatypes/SurfacePort.h>
 
 clString SimpleIPort<SurfaceHandle>::port_type("Surface");
 clString SimpleIPort<SurfaceHandle>::port_color("SteelBlue4");

@@ -11,7 +11,7 @@
  *  Copyright (C) 1994 SCI Group
  */
 
-#include <ScalarField.h>
+#include <Datatypes/ScalarField.h>
 #include <Classlib/String.h>
 
 PersistentTypeID ScalarField::type_id("ScalarField", "Datatype", 0);

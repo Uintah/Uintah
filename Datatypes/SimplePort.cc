@@ -11,9 +11,10 @@
  *  Copyright (C) 1994 SCI Group
  */
 
-#include <SimplePort.h>
-#include <Connection.h>
+#include <Datatypes/SimplePort.h>
 #include <Classlib/Assert.h>
+#include <Dataflow/Connection.h>
+
 #include <iostream.h>
 
 #ifdef __GNUG__

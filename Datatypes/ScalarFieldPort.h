@@ -14,8 +14,8 @@
 #ifndef SCI_project_ScalarFieldPort_h
 #define SCI_project_ScalarFieldPort_h 1
 
-#include <SimplePort.h>
-#include <ScalarField.h>
+#include <Datatypes/SimplePort.h>
+#include <Datatypes/ScalarField.h>
 
 typedef Mailbox<SimplePortComm<ScalarFieldHandle>*> _cfront_bug_ScalarField_;
 typedef SimpleIPort<ScalarFieldHandle> ScalarFieldIPort;

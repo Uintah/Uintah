@@ -14,12 +14,13 @@
 #ifndef SCI_project_Surface_h
 #define SCI_project_Surface_h 1
 
-#include <Datatype.h>
+#include <Datatypes/Datatype.h>
+
 #include <Classlib/Array1.h>
 #include <Classlib/LockingHandle.h>
-#include <Geom.h>
-#include <Geometry/Point.h>
 #include <Classlib/String.h>
+#include <Geom/Geom.h>
+#include <Geometry/Point.h>
 
 class Surface;
 typedef LockingHandle<Surface> SurfaceHandle;

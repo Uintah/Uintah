@@ -1,0 +1,18 @@
+
+#include <config/sci.cf>
+
+OBJS = ContourSet.o  ContourSetPort.o  Datatype.o  GeometryPort.o  \
+	Matrix.o  MatrixPort.o  Mesh.o  MeshPort.o  ScalarField.o  \
+	ScalarFieldPort.o  ScalarFieldRG.o  ScalarFieldUG.o  \
+	SoundPort.o  Surface.o  SurfacePort.o  VectorField.o  \
+	VectorFieldPort.o  VectorFieldRG.o  VectorFieldUG.o
+SRCS = ContourSet.cc  ContourSetPort.cc  Datatype.cc  GeometryPort.cc  \
+	Matrix.cc  MatrixPort.cc  Mesh.cc  MeshPort.cc  ScalarField.cc  \
+	ScalarFieldPort.cc  ScalarFieldRG.cc  ScalarFieldUG.cc  \
+	SoundPort.cc  Surface.cc  SurfacePort.cc  VectorField.cc  \
+	VectorFieldPort.cc  VectorFieldRG.cc  VectorFieldUG.cc
+
+LIBNAME = Datatypes
+
+SCIDependTarget($(SRCS))
+NormalLibraryTarget($(LIBNAME),$(OBJS))

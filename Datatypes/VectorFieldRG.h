@@ -14,7 +14,7 @@
 #ifndef SCI_project_VectorFieldRG_h
 #define SCI_project_VectorFieldRG_h 1
 
-#include <VectorField.h>
+#include <Datatypes/VectorField.h>
 #include <Classlib/Array3.h>
 
 class VectorFieldRG : public VectorField {

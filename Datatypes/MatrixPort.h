@@ -14,8 +14,8 @@
 #ifndef SCI_project_MatrixPort_h
 #define SCI_project_MatrixPort_h 1
 
-#include <SimplePort.h>
-#include <Matrix.h>
+#include <Datatypes/SimplePort.h>
+#include <Datatypes/Matrix.h>
 
 typedef Mailbox<SimplePortComm<MatrixHandle>*> _cfront_bug_Matrix_;
 typedef SimpleIPort<MatrixHandle> MatrixIPort;

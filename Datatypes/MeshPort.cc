@@ -11,7 +11,7 @@
  *  Copyright (C) 1994 SCI Group
  */
 
-#include <MeshPort.h>
+#include <Datatypes/MeshPort.h>
 
 clString SimpleIPort<MeshHandle>::port_type("Mesh");
 clString SimpleIPort<MeshHandle>::port_color("orange red");

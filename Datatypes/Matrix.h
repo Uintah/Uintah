@@ -14,7 +14,7 @@
 #ifndef SCI_project_Matrix_h
 #define SCI_project_Matrix_h 1
 
-#include <Datatype.h>
+#include <Datatypes/Datatype.h>
 #include <Classlib/LockingHandle.h>
 
 class Matrix;

@@ -11,7 +11,7 @@
  *  Copyright (C) 1994 SCI Group
  */
 
-#include <VectorFieldPort.h>
+#include <Datatypes/VectorFieldPort.h>
 
 clString SimpleIPort<VectorFieldHandle>::port_type("VectorField");
 clString SimpleIPort<VectorFieldHandle>::port_color("orchid4");

@@ -14,9 +14,10 @@
 #ifndef SCI_project_VectorFieldUG_h
 #define SCI_project_VectorFieldUG_h 1
 
-#include <VectorField.h>
-#include <Mesh.h>
+#include <Datatypes/VectorField.h>
+
 #include <Classlib/Array1.h>
+#include <Datatypes/Mesh.h>
 
 class VectorFieldUG : public VectorField {
 public:

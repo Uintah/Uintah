@@ -10,16 +10,11 @@
  *  Copyright (C) 1994 SCI Group
  */
 
-#define SCI_ASSERTION_LEVEL 3
+#include <Datatypes/Surface.h>
 #include <Classlib/Array1.h>
-#undef SCI_ASSERTION_LEVEL
-#define SCI_ASSERTION_LEVEL 2
-#undef ASSERTL3
-#define ASSERTL3(condition)
-#include <Surface.h>
+#include <Classlib/Assert.h>
 #include <Classlib/String.h>
 #include <Geometry/Point.h>
-#include <Classlib/Assert.h>
 
 PersistentTypeID Surface::type_id("Surface", "Datatype", 0);
 static Persistent* make_TriSurface()
