@@ -303,7 +303,7 @@ WARNING
       return d_window->get3DPointer();
     }
 
-    inline void write(ostream& out, const IntVector& l, const IntVector& h)
+    inline void write(ostream& out, const IntVector& l, const IntVector& h, bool /*outputDoubleAsFloat*/ )
     {
       // This could be optimized...
       ssize_t linesize = (ssize_t)(sizeof(T)*(h.x()-l.x()));
@@ -429,6 +429,30 @@ WARNING
     if(oldWindow->removeReference())
       delete oldWindow;
     return no_reallocation_needed;
+  }
+
+  // return true iff no reallocation is needed
+  template <>
+  inline void Array3<double>::write(ostream& out, const IntVector& l, const IntVector& h, bool outputDoubleAsFloat)
+  {
+    // This could be optimized...
+    if (outputDoubleAsFloat) {
+      for(int z=l.z();z<h.z();z++){
+	for(int y=l.y();y<h.y();y++){
+	  for(int x=l.x();x<h.x();x++){
+	    float tempFloat = static_cast<float>((*this)[IntVector(x,y,z)]);
+	    out.write((char*)&tempFloat, sizeof(float));
+	  }
+	}
+      }
+    } else {
+      ssize_t linesize = (ssize_t)(sizeof(double)*(h.x()-l.x()));
+      for(int z=l.z();z<h.z();z++){
+	for(int y=l.y();y<h.y();y++){
+	  out.write((char*)&(*this)[IntVector(l.x(),y,z)], linesize);
+	}
+      }
+    }
   }
 
 } // End namespace Uintah

@@ -69,6 +69,10 @@ DataArchiver::DataArchiver(const ProcessorGroup* myworld)
 
   d_XMLIndexDoc = NULL;
   d_CheckpointXMLIndexDoc = NULL;
+
+  d_outputDoubleAsFloat = false;
+
+  d_fileSystemRetrys = 10;
 }
 
 DataArchiver::~DataArchiver()
@@ -78,6 +82,9 @@ DataArchiver::~DataArchiver()
 void DataArchiver::problemSetup(const ProblemSpecP& params)
 {
    ProblemSpecP p = params->findBlock("DataArchiver");
+
+   d_outputDoubleAsFloat = p->findBlock("outputDoubleAsFloat") != 0;
+
    p->require("filebase", d_filebase);
    d_outputInterval = 0;
    if(!p->get("outputTimestepInterval", d_outputTimestepInterval))
@@ -1255,7 +1262,7 @@ void DataArchiver::indexAddGlobals()
 	  href << "_" << matlIndex << ".dat\0";
 	ProblemSpecP newElem = globals->appendChild("variable");
 	newElem->setAttribute("href", href.str());
-	newElem->setAttribute("type",var->typeDescription()->getName().c_str());
+	newElem->setAttribute("type", TranslateVariableType( var->typeDescription()->getName().c_str(), false ) );
 	newElem->setAttribute("name", var->getName().c_str());
       }
     }
@@ -1539,7 +1546,7 @@ void DataArchiver::output(const ProcessorGroup*,
 	pdElem->appendElement("variable", var->getName());
 	pdElem->appendElement("index", matlIndex);
 	pdElem->appendElement("patch", patchID);
-	pdElem->setAttribute("type",var->typeDescription()->getName().c_str());
+	pdElem->setAttribute("type",TranslateVariableType( var->typeDescription()->getName().c_str(), isThisCheckpoint ) );
 	
 #ifdef __sgi
 	off64_t ls = lseek64(fd, cur, SEEK_SET);
@@ -1561,7 +1568,7 @@ void DataArchiver::output(const ProcessorGroup*,
 	ASSERTEQ(cur%PADSIZE, 0);
 	pdElem->appendElement("start", cur);
 
-	OutputContext oc(fd, cur, pdElem);
+	OutputContext oc(fd, cur, pdElem, d_outputDoubleAsFloat && !isThisCheckpoint);
 	new_dw->emit(oc, var, matlIndex, patch);
 	pdElem->appendElement("end", oc.cur);
 	pdElem->appendElement("filename", dataFilebase.c_str());
@@ -1646,7 +1653,7 @@ void DataArchiver::output(const ProcessorGroup*,
       }
       if(!found){
 	ProblemSpecP newElem = vs->appendChild("variable");
-	newElem->setAttribute("type",var->typeDescription()->getName());
+	newElem->setAttribute("type", TranslateVariableType( var->typeDescription()->getName(), isThisCheckpoint ) );
 	newElem->setAttribute("name", var->getName());
 	vs->appendText("\n");
       }
@@ -1943,3 +1950,15 @@ bool DataArchiver::needRecompile(double time, double dt,
   return recompile;
 }
 
+
+string DataArchiver::TranslateVariableType( string type, bool isThisCheckpoint )
+{
+  if ( d_outputDoubleAsFloat && !isThisCheckpoint ) {
+    if      (type=="CCVariable<double>"  ) return "CCVariable<float>";
+    else if (type=="NCVariable<double>"  ) return "NCVariable<float>";
+    else if (type=="SFCXVariable<double>") return "SFCXVariable<float>";
+    else if (type=="SFCYVariable<double>") return "SFCYVariable<float>";
+    else if (type=="SFCZVariable<double>") return "SFCZVariable<float>";
+  }
+  return type;
+}
