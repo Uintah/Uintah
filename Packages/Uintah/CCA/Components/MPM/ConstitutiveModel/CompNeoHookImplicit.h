@@ -43,7 +43,7 @@ namespace Uintah {
 
       public:
          // constructors
-         CompNeoHookImplicit(ProblemSpecP& ps,  MPMLabel* lb, int n8or27);
+         CompNeoHookImplicit(ProblemSpecP& ps,  MPMLabel* lb, MPMFlags* flag);
          CompNeoHookImplicit(const CompNeoHookImplicit* cm);
        
          // destructor

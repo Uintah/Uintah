@@ -60,7 +60,7 @@ namespace Uintah {
 
   public:
     // constructors
-    ViscoScram(ProblemSpecP& ps, MPMLabel* lb, int n8or27);
+    ViscoScram(ProblemSpecP& ps, MPMLabel* lb, MPMFlags* flag);
     ViscoScram(const ViscoScram* cm);
        
     // destructor

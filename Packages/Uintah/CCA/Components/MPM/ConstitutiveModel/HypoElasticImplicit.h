@@ -42,7 +42,7 @@ namespace Uintah {
 
       public:
          // constructors
-         HypoElasticImplicit(ProblemSpecP& ps,  MPMLabel* lb, int n8or27);
+         HypoElasticImplicit(ProblemSpecP& ps,  MPMLabel* lb, MPMFlags* flag);
          HypoElasticImplicit(const HypoElasticImplicit* cm);
        
          // destructor

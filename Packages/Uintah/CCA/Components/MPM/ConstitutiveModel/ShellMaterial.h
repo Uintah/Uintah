@@ -3,7 +3,6 @@
 
 #include <math.h>
 #include "ConstitutiveModel.h"
-#include "PlasticityModel.h"
 #include <Packages/Uintah/Core/Math/Matrix3.h>
 #include <Packages/Uintah/Core/Parallel/ProcessorGroup.h>
 #include <sgi_stl_warnings_off.h>
@@ -68,7 +67,7 @@ namespace Uintah {
 
   public:
     // constructors
-    ShellMaterial(ProblemSpecP& ps,  MPMLabel* lb, int n8or27);
+    ShellMaterial(ProblemSpecP& ps,  MPMLabel* lb, MPMFlags* flag);
     ShellMaterial(const ShellMaterial* cm);
        
     // destructor

@@ -30,10 +30,12 @@ using namespace SCIRun;
 //_____________________see Material 18 in LSDYNA manual
 //_____________________implicit MPM
 
-TransIsoHyperImplicit::TransIsoHyperImplicit(ProblemSpecP& ps,  MPMLabel* Mlb, int n8or27)
+TransIsoHyperImplicit::TransIsoHyperImplicit(ProblemSpecP& ps,  MPMLabel* Mlb, 
+                                                                MPMFlags* Mflag)
 //______________________CONSTRUCTOR (READS INPUT, INITIALIZES SOME MODULI)
 {
   lb = Mlb;
+  flag = Mflag;
   d_useModifiedEOS = false;
 //______________________material properties
   ps->require("bulk_modulus", d_initialData.Bulk);
@@ -47,7 +49,7 @@ TransIsoHyperImplicit::TransIsoHyperImplicit(ProblemSpecP& ps,  MPMLabel* Mlb, i
   ps->get("useModifiedEOS",d_useModifiedEOS);//no negative pressure for solids
 
 //______________________interpolation
-  d_8or27 = n8or27;
+  d_8or27 = flag->d_8or27;
   if(d_8or27==8){
     NGN=1;
   } else if(d_8or27==27){
@@ -65,6 +67,7 @@ TransIsoHyperImplicit::TransIsoHyperImplicit(ProblemSpecP& ps,  MPMLabel* Mlb, i
 TransIsoHyperImplicit::TransIsoHyperImplicit(const TransIsoHyperImplicit* cm)
 {
   lb = cm->lb;
+  flag = cm->flag;
   d_8or27 = cm->d_8or27;
   NGN = cm->NGN;
 

@@ -27,9 +27,11 @@ using std::cerr;
 using namespace Uintah;
 using namespace SCIRun;
 
-Membrane::Membrane(ProblemSpecP& ps,  MPMLabel* Mlb, int n8or27)
+Membrane::Membrane(ProblemSpecP& ps,  MPMLabel* Mlb, 
+                                      MPMFlags* Mflag)
 {
   lb = Mlb;
+  flag = Mflag;
 
   ps->require("bulk_modulus", d_initialData.Bulk);
   ps->require("shear_modulus",d_initialData.Shear);
@@ -40,7 +42,7 @@ Membrane::Membrane(ProblemSpecP& ps,  MPMLabel* Mlb, int n8or27)
   defGradInPlaneLabel_preReloc  = VarLabel::create( "p.defgrad_in_plane+",
                         ParticleVariable<Matrix3>::getTypeDescription() );
 
-  d_8or27 = n8or27;
+  d_8or27 = flag->d_8or27;
   if(d_8or27==8){
     NGN=1;
   } else if(d_8or27==27){
@@ -52,6 +54,7 @@ Membrane::Membrane(ProblemSpecP& ps,  MPMLabel* Mlb, int n8or27)
 Membrane::Membrane(const Membrane* cm)
 {
   lb = cm->lb;
+  flag = cm->flag;
   d_8or27 = cm->d_8or27;
   NGN = cm->NGN;
 

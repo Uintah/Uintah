@@ -3,11 +3,11 @@
 
 
 #include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/ConstitutiveModel.h>
-#include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/YieldCondition.h>
-#include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/StabilityCheck.h>
-#include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/PlasticityModel.h>
-#include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/DamageModel.h>
-#include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/MPMEquationOfState.h>
+#include "PlasticityModels/YieldCondition.h"
+#include "PlasticityModels/StabilityCheck.h"
+#include "PlasticityModels/PlasticityModel.h"
+#include "PlasticityModels/DamageModel.h"
+#include "PlasticityModels/MPMEquationOfState.h"
 #include <math.h>
 #include <Packages/Uintah/Core/Math/Matrix3.h>
 #include <Packages/Uintah/Core/Math/TangentModulusTensor.h>
@@ -16,6 +16,9 @@
 #include <Packages/Uintah/Core/Grid/NCVariable.h>
 
 namespace Uintah {
+
+  class MPMLabel;
+  class MPMFlags;
 
   /////////////////////////////////////////////////////////////////////////////
   /*!
@@ -121,7 +124,7 @@ namespace Uintah {
     ////////////////////////////////////////////////////////////////////////
     /*! \brief constructors */
     ////////////////////////////////////////////////////////////////////////
-    HypoElasticPlastic(ProblemSpecP& ps, MPMLabel* lb,int n8or27);
+    HypoElasticPlastic(ProblemSpecP& ps, MPMLabel* lb,MPMFlags* flag);
     HypoElasticPlastic(const HypoElasticPlastic* cm);
 	 
     ////////////////////////////////////////////////////////////////////////

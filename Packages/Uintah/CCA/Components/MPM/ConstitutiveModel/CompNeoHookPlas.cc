@@ -25,9 +25,11 @@ using std::cerr;
 using namespace Uintah;
 using namespace SCIRun;
 
-CompNeoHookPlas::CompNeoHookPlas(ProblemSpecP& ps, MPMLabel* Mlb, int n8or27)
+CompNeoHookPlas::CompNeoHookPlas(ProblemSpecP& ps, MPMLabel* Mlb, 
+                                                   MPMFlags* Mflag)
 {
   lb = Mlb;
+  flag = Mflag;
 
   d_useModifiedEOS = false;
   ps->require("bulk_modulus",d_initialData.Bulk);
@@ -46,7 +48,7 @@ CompNeoHookPlas::CompNeoHookPlas(ProblemSpecP& ps, MPMLabel* Mlb, int n8or27)
 		ParticleVariable<Matrix3>::getTypeDescription());
   bElBarLabel_preReloc = VarLabel::create("p.bElBar+",
 		ParticleVariable<Matrix3>::getTypeDescription());
-  d_8or27 = n8or27;
+  d_8or27 = flag->d_8or27;
   if(d_8or27==8){
     NGN=1;
   } else if(d_8or27==27){
@@ -57,6 +59,7 @@ CompNeoHookPlas::CompNeoHookPlas(ProblemSpecP& ps, MPMLabel* Mlb, int n8or27)
 CompNeoHookPlas::CompNeoHookPlas(const CompNeoHookPlas* cm)
 {
   lb = cm->lb;
+  flag = cm->flag;
   d_8or27 = cm->d_8or27;
   NGN = cm->NGN;
 
