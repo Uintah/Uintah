@@ -13,6 +13,8 @@
 
 #include <SCICore/Persistent/Persistent.h>
 
+#include <map.h>
+
 #define MAP_VERSION 1
 
 namespace SCICore {
@@ -23,7 +25,7 @@ namespace PersistentSpace {
 				// persistent io for maps
 template <class Key, class Data>
 SCICORESHARE inline void
-  Pio(Piostream& stream, map<Key, Data, less<Key> >& data) {
+  Pio(Piostream& stream, map<Key, Data>& data) {
 
 #ifdef __GNUG__
   using namespace SCICore::PersistentSpace;
@@ -37,7 +39,7 @@ SCICORESHARE inline void
   using SCICore::Datatypes::Pio;
 #endif
 
-  map<Key, Data, less<Key> >::iterator iter;
+  map<Key, Data>::iterator iter;
   int i, n;
   Key k;
   Data d;

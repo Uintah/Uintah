@@ -33,6 +33,7 @@
 #include <SCICore/Geometry/Point.h>
 #include <SCICore/Geometry/Vector.h>
 
+#include <map.h>
 
 /******************************************************************************
 * Class & function forward declarations and type declarations
@@ -320,6 +321,10 @@ public:
 
 //
 // $Log$
+// Revision 1.6  2000/03/17 18:47:45  dahart
+// Included STL map header files where I forgot them, and removed less<>
+// parameter from map declarations
+//
 // Revision 1.5  2000/03/11 00:41:29  dahart
 // Replaced all instances of HashTable<class X, class Y> with the
 // Standard Template Library's std::map<class X, class Y, less<class X>>

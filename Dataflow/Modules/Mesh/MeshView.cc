@@ -30,6 +30,8 @@
 #include <SCICore/Math/Mat.h>
 #include <SCICore/TclInterface/TCLvar.h>
 #include <SCICore/TclInterface/Histogram.h>
+
+#include <map.h>
 #include <iostream>
 using std::cerr;
 using std::endl;
@@ -66,7 +68,7 @@ using namespace SCICore::TclInterface;
 
 class MeshView : public Module {
 public:
-    typedef map<Edge, int, less<Edge> > MapEdgeInt;
+    typedef map<Edge, int> MapEdgeInt;
   
 private:
     MeshIPort* inport;
@@ -1641,6 +1643,10 @@ void MeshView::geom_moved(GeomPick*, int, double, const Vector&, void*)
 
 //
 // $Log$
+// Revision 1.6  2000/03/17 18:48:08  dahart
+// Included STL map header files where I forgot them, and removed less<>
+// parameter from map declarations
+//
 // Revision 1.5  2000/03/17 09:29:13  sparker
 // New makefile scheme: sub.mk instead of Makefile.in
 // Use XML-based files for module repository

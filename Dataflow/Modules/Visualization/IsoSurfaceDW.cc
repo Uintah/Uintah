@@ -16,7 +16,6 @@
 // Esc-x replace-string uchar [double | float | int | ushort]
 
 #include <SCICore/Containers/BitArray1.h>
-#include <map.h>
 #include <SCICore/Util/NotFinished.h>
 #include <SCICore/Containers/Queue.h>
 #include <SCICore/Containers/Ring.h>
@@ -52,6 +51,8 @@
 #include <SCICore/Thread/Parallel.h>
 #include <SCICore/Thread/Semaphore.h>
 #include <SCICore/Thread/Thread.h>
+
+#include <map.h>
 #include <iostream>
 using std::cerr;
 #include <sstream>
@@ -105,7 +106,7 @@ private:
     Array1<Ring<int>* > all_bdryRings;
   
 public:
-    typedef map<int, int, less<int> > MapIntInt;
+    typedef map<int, int> MapIntInt;
 
 private:
     Array1<MapIntInt*> all_bdryHashes;
@@ -1912,6 +1913,10 @@ void IsoSurfaceDW::tcl_command(TCLArgs& args, void* userdata) {
 
 //
 // $Log$
+// Revision 1.11  2000/03/17 18:47:05  dahart
+// Included STL map header files where I forgot them, and removed less<>
+// parameter from map declarations
+//
 // Revision 1.10  2000/03/17 09:27:33  sparker
 // New makefile scheme: sub.mk instead of Makefile.in
 // Use XML-based files for module repository
