@@ -644,10 +644,15 @@ void MPMArches::computeTotalHT(const ProcessorGroup*,
       totalHT_FCZ[curcell] = totalHT_FCZ[curcell] + integHTS_CC[botcell];
       totalHT_FCZ[curcell] = totalHT_FCZ[curcell] + integHTS_CC[curcell];
 
-      totHtFluxX[curcell] = totHtFluxX[curcell] + htfluxX[curcell] + htfluxCC[curcell] + htfluxCC[westcell];
-      totHtFluxY[curcell] = totHtFluxY[curcell] + htfluxY[curcell] + htfluxCC[curcell] + htfluxCC[southcell];
-      totHtFluxZ[curcell] = totHtFluxZ[curcell] + htfluxZ[curcell] + htfluxCC[curcell] + htfluxCC[botcell];
-
+      if (htfluxX[curcell] >= 1.0e-12) {
+	totHtFluxX[curcell] = totHtFluxX[curcell] + htfluxX[curcell] + htfluxCC[curcell] + htfluxCC[westcell];
+      }
+      if (htfluxY[curcell] >= 1.0e-12) {
+	totHtFluxY[curcell] = totHtFluxY[curcell] + htfluxY[curcell] + htfluxCC[curcell] + htfluxCC[southcell];
+      }
+      if (htfluxZ[curcell] >= 1.0e-12) {
+	totHtFluxZ[curcell] = totHtFluxZ[curcell] + htfluxZ[curcell] + htfluxCC[curcell] + htfluxCC[botcell];
+      }
     }
   }
 }
