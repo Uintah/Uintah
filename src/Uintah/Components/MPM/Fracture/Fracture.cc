@@ -64,13 +64,16 @@ crackGrow(const Patch* patch,
    ParticleVariable<int> pIsBroken;
    ParticleVariable<Vector> pCrackSurfaceNormal;
    ParticleVariable<double> pMicrocrackSize;
-   //ParticleVariable<CMData> cmdata;
+   ParticleVariable<double> pDilatationalWaveSpeed;
 
    new_dw->get(pStress, lb->pStressLabel_preReloc, pset);
    old_dw->get(pIsBroken, lb->pIsBrokenLabel, pset);
    old_dw->get(pCrackSurfaceNormal, lb->pCrackSurfaceNormalLabel, pset);
    old_dw->get(pMicrocrackSize, lb->pMicrocrackSizeLabel, pset);
-   //old_dw->get(cmdata, p_cmdata_label, pset);
+   new_dw->get(pDilatationalWaveSpeed, lb->pDilatationalWaveSpeedLabel, pset);
+
+   delt_vartype delT;
+   old_dw->get(delT, lb->delTLabel);
    
    for(ParticleSubset::iterator iter = pset->begin();
           iter != pset->end(); iter++)
@@ -120,15 +123,8 @@ crackGrow(const Patch* patch,
       }
       else {
         //crack propagation
-	/*
-	double C1 = cmdata[idx].C1;
-	double C2 = cmdata[idx].C2;
-	double PR = cmdata[idx].PR;
-	double mu = 2.*(C1 + C2);
-	double c_dil = sqrt(2.*mu*(1.- PR)*pvolume[idx]/((1.-2.*PR)*pmass[idx]));
-
-	double speed = 
-	*/
+	
+	//pDilatationalWaveSpeed[idx];
 
       }
    }
@@ -154,6 +150,10 @@ Fracture::~Fracture()
 } //namespace Uintah
 
 // $Log$
+// Revision 1.35  2000/09/08 01:47:02  tan
+// Added pDilatationalWaveSpeedLabel for fracture and is saved as a
+// side-effect of computeStressTensor in each constitutive model class.
+//
 // Revision 1.34  2000/09/07 22:32:02  tan
 // Added code to compute crack initiation in crackGrow function.
 //
