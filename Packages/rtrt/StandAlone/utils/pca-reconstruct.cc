@@ -13,11 +13,11 @@ void usage(char *me, const char *unknown = 0) {
   }
 
   // Print out the usage
-  printf("-input  <filename>\n");
-  printf("-output <filename>\n");
-  printf("-bases <filename>\n");
-  printf("-trans <filename>\n");
-  printf("-mean <filename>\n");
+  printf("-input  <filename>   basename of input nrrds (null)\n");
+  printf("-output <filename>   name of output nrrd (null)\n");
+  printf("-bases <filename>    load basis textures from file (null)\n");
+  printf("-trans <filename>    load transform matrix from file (null)\n");
+  printf("-mean <filename>     load mean vector from file (null)\n");
   
   if (unknown)
     exit(1);
