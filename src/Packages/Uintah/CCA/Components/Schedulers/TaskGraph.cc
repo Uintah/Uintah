@@ -466,6 +466,23 @@ TaskGraph::createDetailedTasks(const ProcessorGroup* pg)
   return dt;
 }
 
+#ifdef __GNUG__
+namespace std {
+  template<class T> class hash {
+  public:
+    hash() {}
+    unsigned int operator()(const T& str){
+      unsigned int h=0;
+      for(typename T::const_iterator iter = str.begin(); iter != str.end(); iter++){
+	h=(h>>1)^(h<<1);
+	h+=*iter;
+      }
+      return h;
+    }
+  };
+}
+#endif
+
 class CompTable {
   struct Data {
     Data* next;
@@ -478,8 +495,9 @@ class CompTable {
 	 const Patch* patch, int matl)
       : task(task), comp(comp), patch(patch), matl(matl)
     {
+      std::hash<string> h;
       hash=(unsigned int)(((unsigned int)comp->dw<<3)
-	^(std::hash<string>()(comp->var->getName()))
+	^(h(comp->var->getName()))
 	^(patch->getID()<<4)
 	^matl);
     }
