@@ -76,8 +76,8 @@ set m10 [addModuleAtPosition "Teem" "DataIO" "NrrdToField" 1121 928]
 set m11 [addModuleAtPosition "Teem" "Tend" "TendAnvol" 14 928]
 set m12 [addModuleAtPosition "Teem" "DataIO" "NrrdToField" 14 994]
 set m13 [addModuleAtPosition "SCIRun" "Visualization" "ShowField" 114 1378]
-set m14 [addModuleAtPosition "Teem" "Tend" "TendEval" 1450 23]
-set m15 [addModuleAtPosition "Teem" "Unu" "UnuSlice" 1449 86]
+#set m14 [addModuleAtPosition "Teem" "Tend" "TendEval" 1450 23]
+#set m15 [addModuleAtPosition "Teem" "Unu" "UnuSlice" 1449 86]
 set m16 [addModuleAtPosition "Teem" "DataIO" "NrrdToField" 545 995]
 set m17 [addModuleAtPosition "SCIRun" "Visualization" "Isosurface" 14 1143]
 set m18 [addModuleAtPosition "SCIRun" "FieldsData" "DirectInterpolate" 46 1220]
@@ -94,18 +94,18 @@ set m28 [addModuleAtPosition "SCIRun" "FieldsData" "DirectInterpolate" 506 1405]
 set m29 [addModuleAtPosition "SCIRun" "Visualization" "GenStandardColorMaps" 737 1057]
 set m30 [addModuleAtPosition "SCIRun" "Visualization" "RescaleColorMap" 737 1158]
 set m31 [addModuleAtPosition "SCIRun" "Visualization" "ShowField" 470 1650]
-set m32 [addModuleAtPosition "SCIRun" "FieldsCreate" "ClipField" 1451 533]
+#set m32 [addModuleAtPosition "SCIRun" "FieldsCreate" "ClipField" 1451 533]
 set m33 [addModuleAtPosition "SCIRun" "FieldsOther" "ChooseField" 488 1527]
 set m34 [addModuleAtPosition "SCIRun" "FieldsOther" "ChooseField" 1050 1081]
-set m35 [addModuleAtPosition "SCIRun" "FieldsOther" "FieldMeasures" 1451 213]
-set m36 [addModuleAtPosition "SCIRun" "FieldsOther" "FieldMeasures" 1450 149]
-set m37 [addModuleAtPosition "SCIRun" "FieldsOther" "FieldMeasures" 1452 464]
-set m38 [addModuleAtPosition "SCIRun" "FieldsData" "ManageFieldData" 1451 656]
+#set m35 [addModuleAtPosition "SCIRun" "FieldsOther" "FieldMeasures" 1451 213]
+#set m36 [addModuleAtPosition "SCIRun" "FieldsOther" "FieldMeasures" 1450 149]
+#set m37 [addModuleAtPosition "SCIRun" "FieldsOther" "FieldMeasures" 1452 464]
+#set m38 [addModuleAtPosition "SCIRun" "FieldsData" "ManageFieldData" 1451 656]
 set m39 [addModuleAtPosition "SCIRun" "FieldsData" "ManageFieldData" 1492 1414]
 set m40 [addModuleAtPosition "SCIRun" "FieldsData" "ManageFieldData" 1492 1538]
-set m41 [addModuleAtPosition "SCIRun" "Visualization" "Isosurface" 1452 339]
-set m42 [addModuleAtPosition "SCIRun" "Visualization" "Isosurface" 1269 86]
-set m43 [addModuleAtPosition "SCIRun" "Visualization" "Isosurface" 1268 26]
+#set m41 [addModuleAtPosition "SCIRun" "Visualization" "Isosurface" 1452 339]
+#set m42 [addModuleAtPosition "SCIRun" "Visualization" "Isosurface" 1269 86]
+#set m43 [addModuleAtPosition "SCIRun" "Visualization" "Isosurface" 1268 26]
 set m44 [addModuleAtPosition "SCIRun" "Render" "Viewer" 88 2390]
 set m45 [addModuleAtPosition "Teem" "NrrdData" "ChooseNrrd" 14 88]
 set m46 [addModuleAtPosition "SCIRun" "FieldsGeometry" "ChangeFieldBounds" 603 645]
@@ -113,12 +113,12 @@ set m47 [addModuleAtPosition "Teem" "Unu" "UnuJoin" 14 455]
 set m48 [addModuleAtPosition "Teem" "DataIO" "NrrdReader" 32 316]
 set m49 [addModuleAtPosition "Teem" "NrrdData" "ChooseNrrd" 231 558]
 set m50 [addModuleAtPosition "Teem" "DataIO" "NrrdReader" 231 103]
-set m51 [addModuleAtPosition "Teem" "Unu" "UnuJoin" 1269 149]
-set m52 [addModuleAtPosition "Teem" "Tend" "TendEstim" 1269 212]
-set m53 [addModuleAtPosition "Teem" "Tend" "TendAnvol" 1269 275]
+#set m51 [addModuleAtPosition "Teem" "Unu" "UnuJoin" 1269 149]
+#set m52 [addModuleAtPosition "Teem" "Tend" "TendEstim" 1269 212]
+#set m53 [addModuleAtPosition "Teem" "Tend" "TendAnvol" 1269 275]
 set m54 [addModuleAtPosition "Teem" "DataIO" "NrrdToField" 1102 1471]
-set m55 [addModuleAtPosition "SCIRun" "Visualization" "Isosurface" 1269 463]
-set m56 [addModuleAtPosition "SCIRun" "FieldsGeometry" "ChangeFieldBounds" 1269 400]
+#set m55 [addModuleAtPosition "SCIRun" "Visualization" "Isosurface" 1269 463]
+#set m56 [addModuleAtPosition "SCIRun" "FieldsGeometry" "ChangeFieldBounds" 1269 400]
 set m57 [addModuleAtPosition "Teem" "Unu" "UnuProject" 603 516]
 set m58 [addModuleAtPosition "SCIRun" "Visualization" "GenStandardColorMaps" 787 648]
 set m59 [addModuleAtPosition "SCIRun" "Visualization" "RescaleColorMap" 787 745]
@@ -126,15 +126,15 @@ set m60 [addModuleAtPosition "Teem" "Unu" "UnuProject" 992 580]
 set m61 [addModuleAtPosition "SCIRun" "Visualization" "RescaleColorMap" 1010 748]
 set m62 [addModuleAtPosition "Teem" "NrrdData" "NrrdInfo" 774 169]
 set m63 [addModuleAtPosition "Teem" "DataIO" "NrrdReader" 249 495]
-set m64 [addModuleAtPosition "Teem" "Tend" "TendEvec" 1451 718]
-set m65 [addModuleAtPosition "Teem" "Unu" "UnuCrop" 1448 594]
-set m66 [addModuleAtPosition "Teem" "NrrdData" "EditTupleAxis" 1269 336]
+#set m64 [addModuleAtPosition "Teem" "Tend" "TendEvec" 1451 718]
+#set m65 [addModuleAtPosition "Teem" "Unu" "UnuCrop" 1448 594]
+#set m66 [addModuleAtPosition "Teem" "NrrdData" "EditTupleAxis" 1269 336]
 set m67 [addModuleAtPosition "SCIRun" "FieldsCreate" "SamplePlane" 488 1264]
 set m68 [addModuleAtPosition "SCIRun" "FieldsCreate" "SamplePlane" 674 1263]
 set m69 [addModuleAtPosition "SCIRun" "FieldsCreate" "SamplePlane" 862 1263]
-set m70 [addModuleAtPosition "SCIRun" "FieldsGeometry" "Unstructure" 1263 591]
-set m71 [addModuleAtPosition "SCIRun" "FieldsGeometry" "Unstructure" 1270 529]
-set m72 [addModuleAtPosition "SCIRun" "FieldsGeometry" "Unstructure" 1267 652]
+#set m70 [addModuleAtPosition "SCIRun" "FieldsGeometry" "Unstructure" 1263 591]
+#set m71 [addModuleAtPosition "SCIRun" "FieldsGeometry" "Unstructure" 1270 529]
+#set m72 [addModuleAtPosition "SCIRun" "FieldsGeometry" "Unstructure" 1267 652]
 set m73 [addModuleAtPosition "SCIRun" "FieldsGeometry" "QuadToTri" 524 1341]
 set m74 [addModuleAtPosition "SCIRun" "FieldsGeometry" "QuadToTri" 710 1341]
 set m75 [addModuleAtPosition "SCIRun" "FieldsGeometry" "QuadToTri" 898 1340]
@@ -150,7 +150,7 @@ set m84 [addModuleAtPosition "SCIRun" "FieldsData" "DirectInterpolate" 656 1588]
 set m85 [addModuleAtPosition "SCIRun" "FieldsData" "DirectInterpolate" 844 1589]
 set m86 [addModuleAtPosition "SCIRun" "Visualization" "ShowField" 656 1651]
 set m87 [addModuleAtPosition "SCIRun" "Visualization" "ShowField" 844 1651]
-set m88 [addModuleAtPosition "SCIRun" "FieldsCreate" "GatherPoints" 1451 400]
+#set m88 [addModuleAtPosition "SCIRun" "FieldsCreate" "GatherPoints" 1451 400]
 set m89 [addModuleAtPosition "SCIRun" "FieldsCreate" "ClipByFunction" 1492 1607]
 set m90 [addModuleAtPosition "SCIRun" "FieldsCreate" "GatherPoints" 1157 1610]
 set m91 [addModuleAtPosition "SCIRun" "FieldsData" "DirectInterpolate" 1050 1849]
@@ -163,7 +163,7 @@ set m97 [addModuleAtPosition "Teem" "DataIO" "DicomToNrrd" 232 9]
 set m98 [addModuleAtPosition "Teem" "NrrdData" "ChooseNrrd" 32 392]
 set m99 [addModuleAtPosition "Teem" "DataIO" "DicomToNrrd" 204 313]
 set m100 [addModuleAtPosition "Teem" "DataIO" "AnalyzeToNrrd" 377 313]
-set m101 [addModuleAtPosition "Teem" "Unu" "UnuResample" 1450 275]
+#set m101 [addModuleAtPosition "Teem" "Unu" "UnuResample" 1450 275]
 set m102 [addModuleAtPosition "SCIRun" "FieldsData" "DirectInterpolate" 1102 1788]
 set m103 [addModuleAtPosition "Teem" "Unu" "UnuResample" 14 517]
 set m104 [addModuleAtPosition "Teem" "NrrdData" "ChooseNrrd" 14 652]
@@ -191,7 +191,7 @@ set m125 [addModuleAtPosition "SCIRun" "Visualization" "ShowField" 1367 1993]
 set m126 [addModuleAtPosition "SCIRun" "Visualization" "GenStandardColorMaps" 1385 1144]
 set m127 [addModuleAtPosition "SCIRun" "Visualization" "RescaleColorMap" 1385 1206]
 set m128 [addModuleAtPosition "Teem" "Tend" "TendEvecRGB" 545 928]
-set m129 [addModuleAtPosition "SCIRun" "FieldsOther" "FieldInfo" 1451 780]
+#set m129 [addModuleAtPosition "SCIRun" "FieldsOther" "FieldInfo" 1451 780]
 set m130 [addModuleAtPosition "SCIRun" "FieldsCreate" "Probe" 1420 1288]
 set m131 [addModuleAtPosition "SCIRun" "FieldsCreate" "SampleField" 1456 1348]
 set m132 [addModuleAtPosition "SCIRun" "Visualization" "ChooseColorMap" 218 1294]
@@ -604,11 +604,11 @@ set $m13-field-name-update {1}
 set $m13-node-resolution {6}
 set $m13-edge-resolution {6}
 set $m13-data-resolution {6}
-set $m14-notes {}
-set $m14-threshold {}
-set $m15-notes {}
-set $m15-axis {}
-set $m15-position {}
+# set $m14-notes {}
+# set $m14-threshold {}
+# set $m15-notes {}
+# set $m15-axis {}
+# set $m15-position {}
 set $m16-notes {}
 set $m16-build-eigens {0}
 set $m17-notes {}
@@ -746,103 +746,103 @@ set $m31-field-name-update {1}
 set $m31-node-resolution {6}
 set $m31-edge-resolution {6}
 set $m31-data-resolution {6}
-set $m32-notes {}
-set $m32-clip-location {cell}
-set $m32-clipmode {replace}
-set $m32-autoexecute {0}
-set $m32-autoinvert {0}
-set $m32-execmode {0}
+# set $m32-notes {}
+# set $m32-clip-location {cell}
+# set $m32-clipmode {replace}
+# set $m32-autoexecute {0}
+# set $m32-autoinvert {0}
+# set $m32-execmode {0}
 set $m33-notes {}
 set $m33-port-index {0}
 set $m34-notes {}
 set $m34-port-index {3}
-set $m35-notes {}
-set $m35-simplexString {Node}
-set $m35-xFlag {1}
-set $m35-yFlag {1}
-set $m35-zFlag {1}
-set $m35-idxFlag {0}
-set $m35-sizeFlag {0}
-set $m35-numNbrsFlag {0}
-set $m36-notes {}
-set $m36-simplexString {Node}
-set $m36-xFlag {1}
-set $m36-yFlag {1}
-set $m36-zFlag {1}
-set $m36-idxFlag {0}
-set $m36-sizeFlag {0}
-set $m36-numNbrsFlag {0}
-set $m37-notes {}
-set $m37-simplexString {Node}
-set $m37-xFlag {1}
-set $m37-yFlag {1}
-set $m37-zFlag {1}
-set $m37-idxFlag {0}
-set $m37-sizeFlag {0}
-set $m37-numNbrsFlag {0}
-set $m38-notes {}
+# set $m35-notes {}
+# set $m35-simplexString {Node}
+# set $m35-xFlag {1}
+# set $m35-yFlag {1}
+# set $m35-zFlag {1}
+# set $m35-idxFlag {0}
+# set $m35-sizeFlag {0}
+# set $m35-numNbrsFlag {0}
+# set $m36-notes {}
+# set $m36-simplexString {Node}
+# set $m36-xFlag {1}
+# set $m36-yFlag {1}
+# set $m36-zFlag {1}
+# set $m36-idxFlag {0}
+# set $m36-sizeFlag {0}
+# set $m36-numNbrsFlag {0}
+# set $m37-notes {}
+# set $m37-simplexString {Node}
+# set $m37-xFlag {1}
+# set $m37-yFlag {1}
+# set $m37-zFlag {1}
+# set $m37-idxFlag {0}
+# set $m37-sizeFlag {0}
+# set $m37-numNbrsFlag {0}
+# set $m38-notes {}
 set $m39-notes {}
 set $m40-notes {}
-set $m41-notes {}
-set $m41-isoval {0}
-set $m41-isoval-min {0}
-set $m41-isoval-max {99}
-set $m41-isoval-typed {0}
-set $m41-isoval-quantity {1}
-set $m41-quantity-range {colormap}
-set $m41-quantity-min {0}
-set $m41-quantity-max {100}
-set $m41-isoval-list {0.0 1.0 2.0 3.0}
-set $m41-extract-from-new-field {1}
-set $m41-algorithm {0}
-set $m41-build_trisurf {1}
-set $m41-np {1}
-set $m41-active-isoval-selection-tab {0}
-set $m41-active_tab {MC}
-set $m41-update_type {on release}
-set $m41-color-r {0.4}
-set $m41-color-g {0.2}
-set $m41-color-b {0.9}
-set $m42-notes {}
-set $m42-isoval {0}
-set $m42-isoval-min {0}
-set $m42-isoval-max {99}
-set $m42-isoval-typed {0}
-set $m42-isoval-quantity {1}
-set $m42-quantity-range {colormap}
-set $m42-quantity-min {0}
-set $m42-quantity-max {100}
-set $m42-isoval-list {0.0 1.0 2.0 3.0}
-set $m42-extract-from-new-field {1}
-set $m42-algorithm {0}
-set $m42-build_trisurf {1}
-set $m42-np {1}
-set $m42-active-isoval-selection-tab {0}
-set $m42-active_tab {MC}
-set $m42-update_type {on release}
-set $m42-color-r {0.4}
-set $m42-color-g {0.2}
-set $m42-color-b {0.9}
-set $m43-notes {}
-set $m43-isoval {0}
-set $m43-isoval-min {0}
-set $m43-isoval-max {99}
-set $m43-isoval-typed {0}
-set $m43-isoval-quantity {1}
-set $m43-quantity-range {colormap}
-set $m43-quantity-min {0}
-set $m43-quantity-max {100}
-set $m43-isoval-list {0.0 1.0 2.0 3.0}
-set $m43-extract-from-new-field {1}
-set $m43-algorithm {0}
-set $m43-build_trisurf {1}
-set $m43-np {1}
-set $m43-active-isoval-selection-tab {0}
-set $m43-active_tab {MC}
-set $m43-update_type {on release}
-set $m43-color-r {0.4}
-set $m43-color-g {0.2}
-set $m43-color-b {0.9}
+# set $m41-notes {}
+# set $m41-isoval {0}
+# set $m41-isoval-min {0}
+# set $m41-isoval-max {99}
+# set $m41-isoval-typed {0}
+# set $m41-isoval-quantity {1}
+# set $m41-quantity-range {colormap}
+# set $m41-quantity-min {0}
+# set $m41-quantity-max {100}
+# set $m41-isoval-list {0.0 1.0 2.0 3.0}
+# set $m41-extract-from-new-field {1}
+# set $m41-algorithm {0}
+# set $m41-build_trisurf {1}
+# set $m41-np {1}
+# set $m41-active-isoval-selection-tab {0}
+# set $m41-active_tab {MC}
+# set $m41-update_type {on release}
+# set $m41-color-r {0.4}
+# set $m41-color-g {0.2}
+# set $m41-color-b {0.9}
+# set $m42-notes {}
+# set $m42-isoval {0}
+# set $m42-isoval-min {0}
+# set $m42-isoval-max {99}
+# set $m42-isoval-typed {0}
+# set $m42-isoval-quantity {1}
+# set $m42-quantity-range {colormap}
+# set $m42-quantity-min {0}
+# set $m42-quantity-max {100}
+# set $m42-isoval-list {0.0 1.0 2.0 3.0}
+# set $m42-extract-from-new-field {1}
+# set $m42-algorithm {0}
+# set $m42-build_trisurf {1}
+# set $m42-np {1}
+# set $m42-active-isoval-selection-tab {0}
+# set $m42-active_tab {MC}
+# set $m42-update_type {on release}
+# set $m42-color-r {0.4}
+# set $m42-color-g {0.2}
+# set $m42-color-b {0.9}
+# set $m43-notes {}
+# set $m43-isoval {0}
+# set $m43-isoval-min {0}
+# set $m43-isoval-max {99}
+# set $m43-isoval-typed {0}
+# set $m43-isoval-quantity {1}
+# set $m43-quantity-range {colormap}
+# set $m43-quantity-min {0}
+# set $m43-quantity-max {100}
+# set $m43-isoval-list {0.0 1.0 2.0 3.0}
+# set $m43-extract-from-new-field {1}
+# set $m43-algorithm {0}
+# set $m43-build_trisurf {1}
+# set $m43-np {1}
+# set $m43-active-isoval-selection-tab {0}
+# set $m43-active_tab {MC}
+# set $m43-update_type {on release}
+# set $m43-color-r {0.4}
+# set $m43-color-g {0.2}
+# set $m43-color-b {0.9}
 set $m44-notes {}
 set $m44-ViewWindow_0-pos {z0_y0}
 set $m44-ViewWindow_0-caxes {0}
@@ -940,63 +940,63 @@ set $m50-type {Scalar}
 set $m50-axis {axis0}
 set $m50-add {0}
 set $m50-filename $DATADIR/brain-dt/demo-gradients.txt
-set $m51-notes {}
-set $m51-join-axis {0}
-set $m51-incr-dim {0}
-set $m51-dim {4}
-set $m52-notes {}
-set $m52-use-default-threshold {1}
-set $m52-threshold {100}
-set $m52-soft {0}
-set $m52-scale {1}
-set $m53-notes {}
-set $m53-aniso_metric {tenAniso_FA}
-set $m53-threshold {100}
+# set $m51-notes {}
+# set $m51-join-axis {0}
+# set $m51-incr-dim {0}
+# set $m51-dim {4}
+# set $m52-notes {}
+# set $m52-use-default-threshold {1}
+# set $m52-threshold {100}
+# set $m52-soft {0}
+# set $m52-scale {1}
+# set $m53-notes {}
+# set $m53-aniso_metric {tenAniso_FA}
+# set $m53-threshold {100}
 set $m54-notes {}
 set $m54-build-eigens {1}
-set $m55-notes {}
-set $m55-isoval {0.5000}
-set $m55-isoval-min {0}
-set $m55-isoval-max {1}
-set $m55-isoval-typed {0}
-set $m55-isoval-quantity {1}
-set $m55-quantity-range {colormap}
-set $m55-quantity-min {0}
-set $m55-quantity-max {100}
-set $m55-isoval-list {0.0 1.0 2.0 3.0}
-set $m55-extract-from-new-field {1}
-set $m55-algorithm {1}
-set $m55-build_trisurf {0}
-set $m55-np {1}
-set $m55-active-isoval-selection-tab {0}
-set $m55-active_tab {NOISE}
-set $m55-update_type {on release}
-set $m55-color-r {0.40}
-set $m55-color-g {0.78}
-set $m55-color-b {0.73}
-set $m56-notes {}
-set $m56-outputcenterx {-95.5}
-set $m56-outputcentery {110.5}
-set $m56-outputcenterz {51}
-set $m56-outputsizex {171}
-set $m56-outputsizey {221}
-set $m56-outputsizez {102}
-set $m56-useoutputcenter {1}
-set $m56-useoutputsize {0}
-set $m56-box-scale {-1}
-set $m56-box-center-x {}
-set $m56-box-center-y {}
-set $m56-box-center-z {}
-set $m56-box-right-x {}
-set $m56-box-right-y {}
-set $m56-box-right-z {}
-set $m56-box-down-x {}
-set $m56-box-down-y {}
-set $m56-box-down-z {}
-set $m56-box-in-x {}
-set $m56-box-in-y {}
-set $m56-box-in-z {}
-set $m56-resetting {0}
+# set $m55-notes {}
+# set $m55-isoval {0.5000}
+# set $m55-isoval-min {0}
+# set $m55-isoval-max {1}
+# set $m55-isoval-typed {0}
+# set $m55-isoval-quantity {1}
+# set $m55-quantity-range {colormap}
+# set $m55-quantity-min {0}
+# set $m55-quantity-max {100}
+# set $m55-isoval-list {0.0 1.0 2.0 3.0}
+# set $m55-extract-from-new-field {1}
+# set $m55-algorithm {1}
+# set $m55-build_trisurf {0}
+# set $m55-np {1}
+# set $m55-active-isoval-selection-tab {0}
+# set $m55-active_tab {NOISE}
+# set $m55-update_type {on release}
+# set $m55-color-r {0.40}
+# set $m55-color-g {0.78}
+# set $m55-color-b {0.73}
+# set $m56-notes {}
+# set $m56-outputcenterx {-95.5}
+# set $m56-outputcentery {110.5}
+# set $m56-outputcenterz {51}
+# set $m56-outputsizex {171}
+# set $m56-outputsizey {221}
+# set $m56-outputsizez {102}
+# set $m56-useoutputcenter {1}
+# set $m56-useoutputsize {0}
+# set $m56-box-scale {-1}
+# set $m56-box-center-x {}
+# set $m56-box-center-y {}
+# set $m56-box-center-z {}
+# set $m56-box-right-x {}
+# set $m56-box-right-y {}
+# set $m56-box-right-z {}
+# set $m56-box-down-x {}
+# set $m56-box-down-y {}
+# set $m56-box-down-z {}
+# set $m56-box-in-x {}
+# set $m56-box-in-y {}
+# set $m56-box-in-z {}
+# set $m56-resetting {0}
 set $m57-notes {}
 set $m57-axis {0}
 set $m57-measure {12}
@@ -1031,28 +1031,28 @@ set $m63-type {Scalar}
 set $m63-axis {axis0}
 set $m63-add {0}
 set $m63-filename {}
-set $m64-notes {}
-set $m64-threshold {0.5}
-set $m65-notes {}
-set $m65-num-axes {4}
-set $m65-minAxis0 {0}
-set $m65-maxAxis0 {0}
-set $m65-absmaxAxis0 {2}
-set $m65-minAxis1 {0}
-set $m65-maxAxis1 {0}
-set $m65-absmaxAxis1 {0}
-set $m65-minAxis2 {0}
-set $m65-maxAxis2 {0}
-set $m65-absmaxAxis2 {0}
-set $m65-minAxis3 {0}
-set $m65-maxAxis3 {0}
-set $m65-absmaxAxis3 {0}
-set $m65-minAxis0 {0}
-set $m65-maxAxis0 {0}
-set $m65-absmaxAxis0 {2}
-set $m66-notes {}
-set $m66-input-label {Unknown:Vector}
-set $m66-output-label {unknown:Vector}
+# set $m64-notes {}
+# set $m64-threshold {0.5}
+# set $m65-notes {}
+# set $m65-num-axes {4}
+# set $m65-minAxis0 {0}
+# set $m65-maxAxis0 {0}
+# set $m65-absmaxAxis0 {2}
+# set $m65-minAxis1 {0}
+# set $m65-maxAxis1 {0}
+# set $m65-absmaxAxis1 {0}
+# set $m65-minAxis2 {0}
+# set $m65-maxAxis2 {0}
+# set $m65-absmaxAxis2 {0}
+# set $m65-minAxis3 {0}
+# set $m65-maxAxis3 {0}
+# set $m65-absmaxAxis3 {0}
+# set $m65-minAxis0 {0}
+# set $m65-maxAxis0 {0}
+# set $m65-absmaxAxis0 {2}
+# set $m66-notes {}
+# set $m66-input-label {Unknown:Vector}
+# set $m66-output-label {unknown:Vector}
 set $m67-notes {}
 set $m67-sizex {128}
 set $m67-sizey {128}
@@ -1077,9 +1077,9 @@ set $m69-padpercent {0}
 set $m69-pos {0}
 set $m69-data-at {Nodes}
 set $m69-update_type {on release}
-set $m70-notes {}
-set $m71-notes {}
-set $m72-notes {}
+# set $m70-notes {}
+# set $m71-notes {}
+# set $m72-notes {}
 set $m73-notes {}
 set $m74-notes {}
 set $m75-notes {}
@@ -1236,7 +1236,7 @@ set $m87-field-name-update {1}
 set $m87-node-resolution {6}
 set $m87-edge-resolution {6}
 set $m87-data-resolution {6}
-set $m88-notes {}
+#set $m88-notes {}
 set $m89-notes {}
 set $m89-clipmode {allnodes}
 set $m89-clipfunction {v > 0.5}
@@ -1344,11 +1344,11 @@ set $m100-notes {}
 set $m100-file {}
 set $m100-file-del {}
 set $m100-messages {}
-set $m101-notes {}
-set $m101-filtertype {gaussian}
-set $m101-dim {4}
-set $m101-sigma {1}
-set $m101-extent {4}
+# set $m101-notes {}
+# set $m101-filtertype {gaussian}
+# set $m101-dim {4}
+# set $m101-sigma {1}
+# set $m101-extent {4}
 set $m102-notes {}
 set $m102-interpolation_basis {linear}
 set $m102-map_source_to_single_dest {0}
@@ -1495,7 +1495,7 @@ set $m125-tensor_display_type {Boxes}
 set $m125-scalar_display_type {Points}
 set $m125-active_tab {Edges}
 set $m125-node_scale {0.240}
-set $m125-edge_scale {0.250}
+set $m125-edge_scale {0.1250}
 set $m125-vectors_scale {0.30}
 set $m125-tensors_scale {3.000000e-01}
 set $m125-scalars_scale {0.30}
@@ -1528,7 +1528,7 @@ set $m128-aniso_metric {tenAniso_FA}
 set $m128-background {0.0}
 set $m128-gray {0.5}
 set $m128-gamma {1.6}
-set $m129-notes {}
+#set $m129-notes {}
 set $m130-notes {}
 set $m130-show-value {0}
 set $m130-show-node {0}
@@ -1755,6 +1755,9 @@ set glyph_color-b 0.5
 global scale_glyph
 set scale_glyph 1
 
+global glyph_scale_val
+set glyph_scale_val 1
+
 global exag_glyph
 set exag_glyph 0
 
@@ -1880,6 +1883,8 @@ class BioTensorApp {
 	set spacing_z 0
 	set min_z 0
 
+	set average_spacing 0
+
         set ref_image1 ""
         set ref_image2 ""
 
@@ -1983,7 +1988,7 @@ class BioTensorApp {
  	set tips(DataExecute) \
  	    "Click to load data"
  	set tips(DataNext) \
- 	    "Click to proceed to\nthe Registration step\nonly after completing\nthe Load Data step. If Tensors were loaded\ndirectly, proceed to\nvisualization"
+ 	    "Click to proceed to\nthe Registration step\nonly after completing\nthe Load Data step.\nIf Tensors were loaded\ndirectly, proceed to\nvisualization"
 
  	# Registration Tab
  	set tips(RegToggle) \
@@ -3858,10 +3863,22 @@ class BioTensorApp {
 		set spacing_x [set $mods(NrrdInfo1)-spacing1]
 		set spacing_y [set $mods(NrrdInfo1)-spacing2]
 		set spacing_z [set $mods(NrrdInfo1)-spacing3]
+
+		set average_spacing [expr [expr $spacing_x + $spacing_y + $spacing_z] / 3.0]
 		
 		set min_x [set $mods(NrrdInfo1)-min1]
 		set min_y [set $mods(NrrdInfo1)-min2]
 		set min_z [set $mods(NrrdInfo1)-min3]
+
+		# configure fiber edges to be average spacing * 0.25
+		global $mods(ShowField-Fibers)-edge_scale
+		set $mods(ShowField-Fibers)-edge_scale [expr 0.125 * $average_spacing]
+
+		global $mods(ShowField-Glyphs)-tensors_scale
+		set $mods(ShowField-Glyphs)-tensors_scale [expr 0.5 * $average_spacing]
+		global glyph_scale_val
+		set glyph_scale_val 0.5
+
 		
 		if {$data_mode == "DWI"} {
 		    # new data has been loaded, configure
@@ -6383,17 +6400,19 @@ class BioTensorApp {
 
 	    global scale_glyph
 	    global $mods(TendNorm-Glyphs)-target
-	    global $mods(ShowField-Glyphs)-tensors_scale
+	    global glyph_scale_val
 	    
 	    frame $f.scale 
 	    pack $f.scale -side top -anchor nw -padx 8 -pady 0
 	    
-	    checkbutton $f.scale.b -text "Glyph Size:            " \
+	    checkbutton $f.scale.b -text "Normalize" \
 		-variable scale_glyph \
 		-state disabled \
 		-command "$this toggle_scale_glyph"
+
+	    label $f.scale.sc -text "   Scale:" -state disabled
 	    
-	    scale $f.scale.s -from 0.2 -to 5.0 \
+	    scale $f.scale.s -from 0.1 -to 5.0 \
                 -resolution 0.01 \
   		-length 100  -width 15 \
 		-sliderlength 15 \
@@ -6401,11 +6420,11 @@ class BioTensorApp {
    	        -state disabled \
 		-showvalue false \
    	        -foreground grey64 \
-	        -variable $mods(ShowField-Glyphs)-tensors_scale
-	    label $f.scale.l -textvariable $mods(ShowField-Glyphs)-tensors_scale -state disabled
+	        -variable glyph_scale_val
+	    label $f.scale.l -textvariable glyph_scale_val -state disabled
 	    bind $f.scale.s <ButtonRelease> {app change_glyph_scale}
 	    
-	    pack $f.scale.b $f.scale.s $f.scale.l -side left -anchor nw -padx 1 -pady 0
+	    pack $f.scale.b $f.scale.sc $f.scale.s $f.scale.l -side left -anchor nw -padx 1 -pady 0
 
 	    
 	    global exag_glyph
@@ -6852,15 +6871,15 @@ class BioTensorApp {
         global scale_glyph
 
 	if {$scale_glyph == 0} {
-	   $glyphs_tab1.scale.s configure -state disabled -foreground grey64
-	   $glyphs_tab2.scale.s configure -state disabled -foreground grey64
+	    # $glyphs_tab1.scale.s configure -state disabled -foreground grey64
+	    # $glyphs_tab2.scale.s configure -state disabled -foreground grey64
 
 	   set $mods(ChooseNrrd-Norm)-port-index 1
 
            $mods(ChooseNrrd-Norm)-c needexecute
         } else {
-	   $glyphs_tab1.scale.s configure -state normal -foreground black
-	   $glyphs_tab2.scale.s configure -state normal -foreground black
+	   #$glyphs_tab1.scale.s configure -state normal -foreground black
+	   #$glyphs_tab2.scale.s configure -state normal -foreground black
 
 	   set $mods(ChooseNrrd-Norm)-port-index 0
 
@@ -7090,6 +7109,11 @@ class BioTensorApp {
 	global scale_glyph
 	if {$vis_activated && $scale_glyph} {
 	    global mods
+	    global $mods(ShowField-Glyphs)-tensors_scale
+	    global glyph_scale_val
+
+	    set $mods(ShowField-Glyphs)-tensors_scale [expr $average_spacing * $glyph_scale_val]
+
 	    $mods(ShowField-Glyphs)-c data_scale
 	}
     }
@@ -8734,6 +8758,8 @@ class BioTensorApp {
     variable size_z
     variable spacing_z
     variable min_z
+
+    variable average_spacing
 
     # Flag to indicate whether entire gui has been built
     variable initialized
