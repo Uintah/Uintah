@@ -678,7 +678,7 @@ DEALINGS IN THE SOFTWARE.
       <para>
 	Now add another paint layer, and set its color to red. Again, using the left mouse button color the area
 	inside of the root displaye in the saggital viewer. You should now see the root colored in red and the
-	top of the tooth colored in blue.
+	top of the tooth colored in blue. 
       </para>
     </section>
 
@@ -697,9 +697,13 @@ DEALINGS IN THE SOFTWARE.
 	To edit the transfer function, press <guibutton>Edit
 	Transfer Function</guibutton>, located in the Visualization Settings
 	pane's <guilabel>Volume Rendering
-	Tab</guilabel>, see <xref linkend="fig.volrender_tab"/> item 3.  This
-	displays the transfer function editor shown in <xref
-	linkend="fig.editTFWindow"/>. 
+	Tab</guilabel>, see <xref linkend="fig.volrender_tab"/> item 3.  
+	The new paint layer appears in the list of current editing widgets.
+	To remove the paint layer, click any of the controls for the paint
+	layer and it will highlight in white.  Click the Delete button to remove
+	it from the available widgets.  You may also turn it on or off using
+	the On toggle.	After removing the paint layer, the transfer function 
+	editor should look as it does in <xref linkend="fig.editTFWindow"/>. 
       </para>
 
       <figure id="fig.editTFWindow">
