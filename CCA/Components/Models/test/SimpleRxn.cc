@@ -36,22 +36,28 @@ SimpleRxn::SimpleRxn(const ProcessorGroup* myworld,
                                ProblemSpecP& params)
   : ModelInterface(myworld), params(params)
 {
-  mymatl = 0;
+  d_matl_set = 0;
+  lb = scinew ICELabel();
 }
 
 //__________________________________
 SimpleRxn::~SimpleRxn()
 {
-  if(mymatl && mymatl->removeReference()) {
-    delete mymatl;
+  if(d_matl_set && d_matl_set->removeReference()) {
+    delete d_matl_set;
   }
+  delete lb;
+    
   VarLabel::destroy(d_scalar->scalar_CCLabel);
   VarLabel::destroy(d_scalar->scalar_source_CCLabel);
+  VarLabel::destroy(d_scalar->diffusionCoefLabel);
+  
   for(vector<Region*>::iterator iter = d_scalar->regions.begin();
                                 iter != d_scalar->regions.end(); iter++){
     Region* region = *iter;
     delete region->piece;
     delete region;
+
   }
 }
 
@@ -68,13 +74,13 @@ void SimpleRxn::problemSetup(GridP&, SimulationStateP& in_state,
 {
   cout_doing << "Doing problemSetup \t\t\t\tSIMPLE_RXN" << endl;
   sharedState = in_state;
-  matl = sharedState->parseAndLookupMaterial(params, "material");
+  d_matl = sharedState->parseAndLookupMaterial(params, "material");
 
   vector<int> m(1);
-  m[0] = matl->getDWIndex();
-  mymatl = new MaterialSet();
-  mymatl->addAll(m);
-  mymatl->addReference();
+  m[0] = d_matl->getDWIndex();
+  d_matl_set = new MaterialSet();
+  d_matl_set->addAll(m);
+  d_matl_set->addReference();
 
   // determine the specific heat of that matl.
   Material* matl = sharedState->getMaterial( m[0] );
@@ -83,20 +89,22 @@ void SimpleRxn::problemSetup(GridP&, SimulationStateP& in_state,
     d_cp = ice_matl->getSpecificHeat();
   }   
   //__________________________________
-  // - create scalar and scalar_src Label names
+  // - create Label names
   // - register the scalar to be transported
   d_scalar = new Scalar();
   d_scalar->index = 0;
   d_scalar->name  = "f";
-  d_scalar->scalar_CCLabel = 
-      VarLabel::create( "scalar-f",    CCVariable<double>::getTypeDescription());
+  
+  const TypeDescription* td_CCdouble = CCVariable<double>::getTypeDescription();
+  d_scalar->scalar_CCLabel =     VarLabel::create("scalar-f",       td_CCdouble);
+  d_scalar->diffusionCoefLabel = VarLabel::create("scalar-diffCoef",td_CCdouble);
   d_scalar->scalar_source_CCLabel = 
-      VarLabel::create("scalar-f_src", CCVariable<double>::getTypeDescription());
+                                 VarLabel::create("scalar-f_src",  td_CCdouble);
 
-  setup->registerTransportedVariable(mymatl->getSubset(0),
+
+  setup->registerTransportedVariable(d_matl_set->getSubset(0),
                                      d_scalar->scalar_CCLabel,
                                      d_scalar->scalar_source_CCLabel);  
-  
   //__________________________________
   // Read in the constants for the scalar
    ProblemSpecP child = params->findBlock("scalar");
@@ -108,15 +116,21 @@ void SimpleRxn::problemSetup(GridP&, SimulationStateP& in_state,
      throw ProblemSetupException("SimpleRxn: Couldn't find constants tag");
    }
     
-  const_ps->getWithDefault("f_stoichometric",d_scalar->f_stoic,   -9);         
-  const_ps->getWithDefault("diffusivity",   d_scalar->diff_coeff, -9);       
+  const_ps->getWithDefault("f_stoichometric",d_scalar->f_stoic,    -9);         
+  const_ps->getWithDefault("diffusivity",    d_scalar->diff_coeff, -9);       
   const_ps->getWithDefault("initialize_diffusion_knob",       
-                            d_scalar->initialize_diffusion_knob,   0);   
-  if( d_scalar->f_stoic == -9  ) {
+                            d_scalar->initialize_diffusion_knob,   0);
+  const_ps->getWithDefault("rho_air",  d_rho_air,  -9);
+  const_ps->getWithDefault("rho_fuel", d_rho_fuel, -9);   
+  
+  if( d_scalar->f_stoic == -9 || d_rho_air == -9 ||
+      d_rho_fuel == -9  ) {
     ostringstream warn;
     warn << " ERROR SimpleRxn: Input variable(s) not specified \n" 
          << "\n f_stoichometric  "<< d_scalar->f_stoic 
-         << "\n diffusivity      "<< d_scalar->diff_coeff<< endl;
+         << "\n diffusivity      "<< d_scalar->diff_coeff
+         << "\n rho_air          "<< d_rho_air
+         << "\n rho_fuel         "<< d_rho_fuel<<endl;
     throw ProblemSetupException(warn.str());
   } 
 
@@ -152,7 +166,7 @@ void SimpleRxn::scheduleInitialize(SchedulerP& sched,
   cout_doing << "SIMPLERXN::scheduleInitialize " << endl;
   Task* t = scinew Task("SimpleRxn::initialize", this, &SimpleRxn::initialize);
   t->computes(d_scalar->scalar_CCLabel);
-  sched->addTask(t, level->eachPatch(), mymatl);
+  sched->addTask(t, level->eachPatch(), d_matl_set);
 }
 //______________________________________________________________________
 //       I N I T I A L I Z E
@@ -165,13 +179,13 @@ void SimpleRxn::initialize(const ProcessorGroup*,
   cout_doing << "Doing Initialize \t\t\t\t\tSIMPLE_RXN" << endl;
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
-    int indx = matl->getDWIndex();
-    CCVariable<double>  var;
-    new_dw->allocateAndPut(var, d_scalar->scalar_CCLabel, indx, patch);
+    int indx = d_matl->getDWIndex();
+    CCVariable<double>  f;
+    new_dw->allocateAndPut(f, d_scalar->scalar_CCLabel, indx, patch);
     
     ///__________________________________
     //  initialize the scalar field in a region
-    var.initialize(0);
+    f.initialize(0);
 
     for(vector<Region*>::iterator iter = d_scalar->regions.begin();
                                   iter != d_scalar->regions.end(); iter++){
@@ -182,26 +196,61 @@ void SimpleRxn::initialize(const ProcessorGroup*,
         IntVector c = *iter;
         Point p = patch->cellPosition(c);            
         if(region->piece->inside(p)) {
-          var[c] = region->initialScalar;
+          f[c] = region->initialScalar;
         }
       } // Over cells
     } // regions
 
     //__________________________________
     //  Smooth out initial distribution with some diffusion
-    // This may have not be perfect on multiple patches
-    double FakeDiffusivity = 1.0;
+    // WARNING::This may have problems on multiple patches
+    //          look at the initial distribution where the patches meet
+    CCVariable<double> FakeDiffusivity;
+    new_dw->allocateTemporary(FakeDiffusivity, patch, Ghost::AroundCells, 1);
+    FakeDiffusivity.initialize(1.0);    //  HARDWIRED
     double fakedelT = 1.0;
+    
     for( int i =1 ; i < d_scalar->initialize_diffusion_knob; i++ ){
       bool use_vol_frac = false; // don't include vol_frac in diffusion calc.
       constCCVariable<double> placeHolder;
-
       scalarDiffusionOperator(new_dw, patch, use_vol_frac,
-                              placeHolder, placeHolder,  var,
-                              var, FakeDiffusivity, fakedelT); 
+                              placeHolder, placeHolder,  f,
+                              f, FakeDiffusivity, fakedelT);
     }
   }  // patches
 }
+
+//______________________________________________________________________     
+void SimpleRxn::scheduleModifyThermoTransportProperties(SchedulerP& sched,
+                                                   const LevelP& level,
+                                                   const MaterialSet* /*ice_matls*/)
+{
+
+  cout_doing << "SIMPLE_RXN::scheduleModifyThermoTransportProperties" << endl;
+
+  Task* t = scinew Task("SimpleRxn::modifyThermoTransportProperties", 
+                   this,&SimpleRxn::modifyThermoTransportProperties);
+  t->computes(d_scalar->diffusionCoefLabel);
+  sched->addTask(t, level->eachPatch(), d_matl_set);
+}
+//______________________________________________________________________
+void SimpleRxn::modifyThermoTransportProperties(const ProcessorGroup*, 
+                                                const PatchSubset* patches,
+                                                const MaterialSubset*,
+                                                DataWarehouse*,
+                                                DataWarehouse* new_dw)
+{ 
+  for(int p=0;p<patches->size();p++){
+    const Patch* patch = patches->get(p);
+    cout_doing << "Doing modifyThermoTransportProperties on patch "<<patch->getID()<< "\t SIMPLERXN" << endl;
+    int indx = d_matl->getDWIndex();
+    CCVariable<double> diffusionCoeff;
+    new_dw->allocateAndPut(diffusionCoeff, 
+                           d_scalar->diffusionCoefLabel,indx, patch);  
+    diffusionCoeff.initialize(d_scalar->diff_coeff);
+  }
+} 
+
 //______________________________________________________________________
 void SimpleRxn::scheduleMassExchange(SchedulerP& sched,
                               const LevelP& level,
@@ -214,7 +263,7 @@ void SimpleRxn::scheduleMassExchange(SchedulerP& sched,
   t->requires(Task::OldDW, mi->density_CCLabel,  Ghost::None);
   t->modifies(mi->mass_source_CCLabel);
   t->modifies(mi->sp_vol_source_CCLabel);
-  sched->addTask(t, level->eachPatch(), mymatl);
+  sched->addTask(t, level->eachPatch(), d_matl_set);
 }
 //______________________________________________________________________
 void SimpleRxn::massExchange(const ProcessorGroup*, 
@@ -229,7 +278,7 @@ void SimpleRxn::massExchange(const ProcessorGroup*,
   
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
-    int indx = matl->getDWIndex();
+    int indx = d_matl->getDWIndex();
     cout_doing << "Doing massExchange on patch "<<patch->getID()<< "\t\t\t\t SIMPLERXN" << endl;
     CCVariable<double> mass_src, sp_vol_src;
     new_dw->getModifiable(mass_src,   mi->mass_source_CCLabel,  indx,patch);
@@ -247,16 +296,17 @@ void SimpleRxn::scheduleMomentumAndEnergyExchange(SchedulerP& sched,
                    this,&SimpleRxn::momentumAndEnergyExchange, mi);
                      
   Ghost::GhostType  gn = Ghost::None;  
-  Ghost::GhostType  gac = Ghost::AroundCells; 
-  t->requires(Task::OldDW, d_scalar->scalar_CCLabel, gac,1); 
-  t->requires(Task::OldDW, mi->density_CCLabel,     gn);
-  t->requires(Task::OldDW, mi->temperature_CCLabel, gn);
+  Ghost::GhostType  gac = Ghost::AroundCells;
+  t->requires(Task::NewDW, d_scalar->diffusionCoefLabel, gac,1);
+  t->requires(Task::OldDW, d_scalar->scalar_CCLabel,     gac,1); 
+  t->requires(Task::OldDW, mi->density_CCLabel,          gn);
+  t->requires(Task::OldDW, mi->temperature_CCLabel,      gn);
   t->requires(Task::OldDW, mi->delT_Label);
   
   t->modifies(mi->momentum_source_CCLabel);
   t->modifies(mi->energy_source_CCLabel);
   t->modifies(d_scalar->scalar_source_CCLabel);
-  sched->addTask(t, level->eachPatch(), mymatl);
+  sched->addTask(t, level->eachPatch(), d_matl_set);
 }
 //______________________________________________________________________
 void SimpleRxn::momentumAndEnergyExchange(const ProcessorGroup*, 
@@ -278,15 +328,16 @@ void SimpleRxn::momentumAndEnergyExchange(const ProcessorGroup*,
     Vector dx = patch->dCell();
     double volume = dx.x()*dx.y()*dx.z();     
     double new_f;
-    constCCVariable<double> rho_CC_old,f_old;
+    constCCVariable<double> rho_CC_old,f_old, diff_coeff;
     CCVariable<double> eng_src, sp_vol_src, f_src;
     CCVariable<Vector> mom_src;
     
-    int indx = matl->getDWIndex();
-    old_dw->get(rho_CC_old, mi->density_CCLabel,     indx, patch, gn, 0);  
-    old_dw->get(f_old,      d_scalar->scalar_CCLabel,indx, patch, gac, 1); 
+    int indx = d_matl->getDWIndex();
+    old_dw->get(rho_CC_old, mi->density_CCLabel,           indx, patch, gn, 0);
+    old_dw->get(f_old,      d_scalar->scalar_CCLabel,      indx, patch, gac,1);
+    new_dw->get(diff_coeff, d_scalar->diffusionCoefLabel,  indx, patch, gac,1);
     new_dw->allocateAndPut(f_src, d_scalar->scalar_source_CCLabel,
-                                                      indx, patch, gn, 0);
+                                                           indx, patch);
                                                       
     new_dw->getModifiable(mom_src,    mi->momentum_source_CCLabel,indx,patch);
     new_dw->getModifiable(eng_src,    mi->energy_source_CCLabel,  indx,patch);
@@ -322,6 +373,9 @@ void SimpleRxn::momentumAndEnergyExchange(const ProcessorGroup*,
       if (fuzzyZero <= f && f < f_stoic ){ 
          sum++;
       }  
+/*`==========TESTING==========*/
+  new_f = f;   // hardwired off
+/*==========TESTING==========`*/
       f_src[c] += new_f - f;
     }  //iter
 
@@ -337,8 +391,9 @@ void SimpleRxn::momentumAndEnergyExchange(const ProcessorGroup*,
     }         
     //__________________________________
     //  Tack on diffusion
-    double diff_coeff = d_scalar->diff_coeff;
-    if(diff_coeff != 0.0){ 
+    double diff_coeff_test = d_scalar->diff_coeff;
+    if(diff_coeff_test != 0.0){ 
+      
       bool use_vol_frac = false; // don't include vol_frac in diffusion calc.
       constCCVariable<double> placeHolder;
 
