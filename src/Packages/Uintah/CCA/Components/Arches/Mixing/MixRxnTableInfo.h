@@ -13,8 +13,10 @@ GENERAL INFORMATION
     MixRxnTableInfo.h - Declaration of MixRxnTableInfo Class
 
     Author: Rajesh Rawat (rawat@crsim.utah.edu)
+    Revised by: Jennifer Spinti (spinti@crsim.utah.edu)
 
     Creation Date: 2 June 1999
+    Last Revision: 9 July 2001
 
     C-SAFE
 
@@ -25,8 +27,8 @@ KEYWORDS
 
 DESCRIPTION
     MixRxnTableInfo class reads the table information from an input file. The file
-    includes maximum, minimum and total number of divisions for each one of the 
-    independent variables.
+    includes maximum, minimum and midpoint values and the total number of divisions 
+    on each side of the midpoint value for each one of the independent variables.
 
 PATTERNS
     None
@@ -42,10 +44,11 @@ POSSIBLE REVISIONS:
 
 #include <Packages/Uintah/Core/ProblemSpec/ProblemSpecP.h>
 #include <vector>
+#include <iostream>
 
 namespace Uintah {
-class PDFMixingModel;
-class MixRxnTableInfo {
+  class MixingModel;
+  class MixRxnTableInfo {
  public:
   // GROUP: Constructors:
   ////////////////////////////////////////////////////////////////////////
@@ -69,7 +72,7 @@ class MixRxnTableInfo {
   // Set up the problem specification database
   //
   void problemSetup(const ProblemSpecP& params, bool mixTableFlag,
-		    const PDFMixingModel* mixModel);
+		    const MixingModel* mixModel);
 
   // GROUP: Access functions
   //////////////////////////////////////////////////////////////////////
@@ -91,25 +94,48 @@ class MixRxnTableInfo {
   }
 
   //////////////////////////////////////////////////////////////////////
-  // getIncrValue returns the increment at which variable is tabulated
+  // getIncrValueBelow returns the increment at which variable is tabulated
+  // below the specified midpoint.
   // Parameters:
   // [in] index is the index of the variable for which increment is required
   // 
-  double inline getIncrValue(int index) const {
-    return d_incrValue[index];
+  double inline getIncrValueBelow(int index) const {
+    return d_incrValueBelow[index];
   }
 
   //////////////////////////////////////////////////////////////////////
-  // getNumDivisions returns the num of divisions at which variable is tabulated
+  // getIncrValueAbove returns the increment at which variable is tabulated
+  // above the specified midpoint.
+  // Parameters:
+  // [in] index is the index of the variable for which increment is required
+  // 
+  double inline getIncrValueAbove(int index) const {
+    return d_incrValueAbove[index];
+  }
+
+  //////////////////////////////////////////////////////////////////////
+  // getNumDivsBelow returns the num of divisions at which variable is 
+  // tabulated below the specified midpoint.
   // Parameters:
   // [in] index is the index of the variable for which numDivisions is required
   // 
-  int inline getNumDivisions(int index) const {
-    return d_numDivisions[index];
+  int inline getNumDivsBelow(int index) const {
+    return d_numDivsBelow[index];
   }
-  
+
   //////////////////////////////////////////////////////////////////////
-  // getStoicValue returns the stoichiometric of teh variable
+  // getNumDivsAbove returns the num of divisions at which variable is 
+  // tabulated above the specified midpoint.
+  // Parameters:
+  // [in] index is the index of the variable for which numDivisions is required
+  // 
+  int inline getNumDivsAbove(int index) const {
+    return d_numDivsAbove[index];
+  }
+ 
+  //////////////////////////////////////////////////////////////////////
+  // getStoicValue returns the stoichiometric (or midpoint) value of the
+  // variable
   // Parameters:
   // [in] index is the index of the variable for which stoic value is required
   // 
@@ -121,11 +147,14 @@ class MixRxnTableInfo {
 
  private:
   int d_numTableDim;
-  int *d_numDivisions;
+
   double *d_maxValue;
   double *d_minValue;
-  double *d_incrValue;
+  double *d_incrValueAbove;
+  double *d_incrValueBelow;
   double *d_stoicValue;
+  int *d_numDivsAbove;
+  int *d_numDivsBelow;
     
 }; // End Class MixRxnTableInfo
 
@@ -135,8 +164,14 @@ class MixRxnTableInfo {
 
 //
 // $Log$
-// Revision 1.4  2001/10/11 18:48:58  divyar
-// Made changes to Mixing
+// Revision 1.5  2001/11/08 19:13:44  spinti
+// 1. Corrected minor problems in ILDMReactionModel.cc
+// 2. Added tabulation capability to StanjanEquilibriumReactionModel.cc. Now,
+//    a reaction table is created dynamically. The limits and spacing in the
+//    table are specified in the *.ups file.
+// 3. Corrected the mixture temperature computation in Stream::addStream. It
+//    now is computed using a Newton search.
+// 4. Made other minor corrections to various reaction model files.
 //
 // Revision 1.2  2001/07/16 21:15:38  rawat
 // added enthalpy solver and Jennifer's changes in Mixing and Reaction model required for ILDM and non-adiabatic cases
