@@ -22,6 +22,7 @@
 #include <Packages/Uintah/Core/Math/Matrix3.h>
 #include <Packages/Uintah/Dataflow/Ports/ArchivePort.h>
 #include <Packages/Uintah/Core/Datatypes/Archive.h>
+#include <Packages/Uintah/Core/Datatypes/VariableCache.h>
 #include <Packages/Uintah/Core/Grid/GridP.h>
 #include <Packages/Uintah/Core/Grid/Grid.h>
 #include <Packages/Uintah/Core/Grid/Level.h>
@@ -60,7 +61,7 @@ public:
   void tcl_command(TCLArgs& args, void* userdata);
 
 private:
-  GridP getGrid();
+  bool getGrid();
   void add_type(string &type_list,const TypeDescription *subtype);
   void setVars(GridP grid);
   void extract_data(string display_mode, string varname,
@@ -68,16 +69,6 @@ private:
 		    string index);
   void pick(); // synchronize user set index values with currentNode
   
-  // caching variables
-  bool is_cached(string name, string& data);
-  void cache_value(string where, vector<double>& values, string &data);
-  void cache_value(string where, vector<Vector>& values);
-  void cache_value(string where, vector<Matrix3>& values);
-  string vector_to_string(vector< int > data);
-  string vector_to_string(vector< string > data);
-  string vector_to_string(vector< double > data);
-  string vector_to_string(vector< Vector > data, string type);
-  string vector_to_string(vector< Matrix3 > data, string type);
   string currentNode_str();
   
   ArchiveIPort* in; // incoming data archive
@@ -95,8 +86,11 @@ private:
   vector< double > times;
   vector< const TypeDescription *> types;
   double time;
+  int old_generation;
+  int old_timestep;
+  GridP grid;
   DataArchive* archive;
-  map< string, string > material_data_list;
+  VariableCache material_data_list;
 };
 
 static string widget_name("VariablePlotter Widget");
@@ -113,7 +107,8 @@ VariablePlotter::VariablePlotter(const string& id)
   index_y("index_y",id,this),
   index_z("index_z",id,this),
   index_l("index_l",id,this),
-  curr_var("curr_var",id,this)
+  curr_var("curr_var",id,this),
+  old_generation(-1), old_timestep(0), grid(NULL)
 {
 
 }
@@ -122,26 +117,43 @@ VariablePlotter::~VariablePlotter()
 {
 }
 
-// returns a pointer to the grid
-GridP VariablePlotter::getGrid()
+// assigns a grid based on the archive and the timestep to grid
+// return true if there was a new grid (either completely or just a new
+// timestep), false otherwise.
+bool VariablePlotter::getGrid()
 {
   ArchiveHandle handle;
   if(!in->get(handle)){
-    std::cerr<<"Didn't get a handle\n";
-    return 0;
+    std::cerr<<"VariablePlotter::getGrid::Didn't get a handle\n";
+    grid = NULL;
+    return false;
   }
 
   // access the grid through the handle and dataArchive
   archive = (*(handle.get_rep()))();
-  vector< int > indices;
-  times.clear();
-  archive->queryTimesteps( indices, times );
-  TCL::execute(id + " set_time " + vector_to_string(indices).c_str());
+  int new_generation = (*(handle.get_rep())).generation;
+  bool archive_dirty =  new_generation != old_generation;
   int timestep = (*(handle.get_rep())).timestep();
-  time = times[timestep];
-  GridP grid = archive->queryGrid(time);
-
-  return grid;
+  if (archive_dirty) {
+    old_generation = new_generation;
+    vector< int > indices;
+    times.clear();
+    archive->queryTimesteps( indices, times );
+    TCL::execute(id + " set_time " +
+		 VariableCache::vector_to_string(indices).c_str());
+    // set old_timestep to something that will cause a new grid
+    // to be queried.
+    old_timestep = -1;
+    // clean out the cached information if the grid has changed
+    material_data_list.clear();
+  }
+  if (timestep != old_timestep) {
+    time = times[timestep];
+    grid = archive->queryGrid(time);
+    old_timestep = timestep;
+    return true;
+  }
+  return false;
 }
 
 void VariablePlotter::add_type(string &type_list,const TypeDescription *subtype)
@@ -163,10 +175,6 @@ void VariablePlotter::add_type(string &type_list,const TypeDescription *subtype)
 }  
 
 void VariablePlotter::setVars(GridP grid) {
-  names.clear();
-  types.clear();
-  archive->queryVariables(names, types);
-
   string varNames("");
   string type_list("");
   const Patch* patch = *(grid->getLevel(0)->patchesBegin());
@@ -215,14 +223,20 @@ void VariablePlotter::execute()
   cerr << "\t\tEntering execute.\n";
 
   // Get the handle on the grid and the number of levels
-  GridP grid = getGrid();
+  bool new_grid = getGrid();
   if(!grid)
     return;
   int numLevels = grid->numLevels();
 
   // setup the tickle stuff
-  nl.set(numLevels);
+  if (new_grid) {
+    nl.set(numLevels);
+    names.clear();
+    types.clear();
+    archive->queryVariables(names, types);
+  }
   setVars(grid);
+  
   string visible;
   TCL::eval(id + " isVisible", visible);
   if ( visible == "1") {
@@ -263,125 +277,13 @@ void VariablePlotter::tcl_command(TCLArgs& args, void* userdata)
       type_list.push_back(type);
     }
     cerr << endl;
-    cerr << "Graphing " << varname << " with materials: " << vector_to_string(mat_list) << endl;
+    cerr << "Graphing " << varname << " with materials: " <<
+      VariableCache::vector_to_string(mat_list) << endl;
     extract_data(displaymode,varname,mat_list,type_list,index);
   }
   else {
     Module::tcl_command(args, userdata);
   }
-}
-
-bool VariablePlotter::is_cached(string name, string& data) {
-  map< string, string >::iterator iter;
-  iter = material_data_list.find(name);
-  if (iter == material_data_list.end()) {
-    return false;
-  }
-  else {
-    data = iter->second;
-    return true;
-  }
-}
-
-void VariablePlotter::cache_value(string where, vector<double>& values,
-				 string &data) {
-  data = vector_to_string(values);
-  material_data_list[where] = data;
-}
-
-void VariablePlotter::cache_value(string where, vector<Vector>& values) {
-  string data = vector_to_string(values,"length");
-  material_data_list[where+" length"] = data;
-  data = vector_to_string(values,"length2");
-  material_data_list[where+" length2"] = data;
-  data = vector_to_string(values,"x");
-  material_data_list[where+" x"] = data;
-  data = vector_to_string(values,"y");
-  material_data_list[where+" y"] = data;
-  data = vector_to_string(values,"z");
-  material_data_list[where+" z"] = data;
-}
-
-void VariablePlotter::cache_value(string where, vector<Matrix3>& values) {
-  string data = vector_to_string(values,"Determinant");
-  material_data_list[where+" Determinant"] = data;
-  data = vector_to_string(values,"Trace");
-  material_data_list[where+" Trace"] = data;
-  data = vector_to_string(values,"Norm");
-  material_data_list[where+" Norm"] = data;
-}
-
-string VariablePlotter::vector_to_string(vector< int > data) {
-  ostringstream ostr;
-  for(int i = 0; i < (int)data.size(); i++) {
-      ostr << data[i]  << " ";
-    }
-  return ostr.str();
-}
-
-string VariablePlotter::vector_to_string(vector< string > data) {
-  string result;
-  for(int i = 0; i < (int)data.size(); i++) {
-      result+= (data[i] + " ");
-    }
-  return result;
-}
-
-string VariablePlotter::vector_to_string(vector< double > data) {
-  ostringstream ostr;
-  ostr.precision(15);
-  for(int i = 0; i < (int)data.size(); i++) {
-      ostr << data[i]  << " ";
-    }
-  return ostr.str();
-}
-
-string VariablePlotter::vector_to_string(vector< Vector > data, string type) {
-  ostringstream ostr;
-  ostr.precision(15);
-  if (type == "length") {
-    for(int i = 0; i < (int)data.size(); i++) {
-      ostr << data[i].length() << " ";
-    }
-  } else if (type == "length2") {
-    for(int i = 0; i < (int)data.size(); i++) {
-      ostr << data[i].length2() << " ";
-    }
-  } else if (type == "x") {
-    for(int i = 0; i < (int)data.size(); i++) {
-      ostr << data[i].x() << " ";
-    }
-  } else if (type == "y") {
-    for(int i = 0; i < (int)data.size(); i++) {
-      ostr << data[i].y() << " ";
-    }
-  } else if (type == "z") {
-    for(int i = 0; i < (int)data.size(); i++) {
-      ostr << data[i].z() << " ";
-    }
-  }
-
-  return ostr.str();
-}
-
-string VariablePlotter::vector_to_string(vector< Matrix3 > data, string type) {
-  ostringstream ostr;
-  ostr.precision(15);
-  if (type == "Determinant") {
-    for(int i = 0; i < (int)data.size(); i++) {
-      ostr << data[i].Determinant() << " ";
-    }
-  } else if (type == "Trace") {
-    for(int i = 0; i < (int)data.size(); i++) {
-      ostr << data[i].Trace() << " ";
-    }
-  } else if (type == "Norm") {
-    for(int i = 0; i < (int)data.size(); i++) {
-      ostr << data[i].Norm() << " ";
-    } 
- }
-
-  return ostr.str();
 }
 
 string VariablePlotter::currentNode_str() {
@@ -410,6 +312,10 @@ void VariablePlotter::extract_data(string display_mode, string varname,
       td = types[i];
   
   string name_list("");
+  // Key to use for the VariableCache.  This can be used as is unless you
+  // are accessing a Vector or Matrix3.  Then you will have to add a suffix
+  // for the scalar value associated with what you want.  See VariableCache.h
+  // for details.
   const TypeDescription* subtype = td->getSubType();
   switch ( subtype->getType() ) {
   case TypeDescription::double_type:
@@ -417,7 +323,9 @@ void VariablePlotter::extract_data(string display_mode, string varname,
     // loop over all the materials in the mat_list
     for(int i = 0; i < (int)mat_list.size(); i++) {
       string data;
-      if (!is_cached(currentNode_str()+" "+varname+" "+mat_list[i],data)) {
+      string cache_key(currentNode_str()+" "+varname+" "+mat_list[i]);
+      if (!material_data_list.get_cached(cache_key,data)) {
+	cerr << "Cache miss.  Querying the data archive\n";
 	// query the value and then cache it
 	vector< double > values;
 	int matl = atoi(mat_list[i].c_str());
@@ -428,7 +336,7 @@ void VariablePlotter::extract_data(string display_mode, string varname,
 	  return;
 	} 
 	cerr << "Received data.  Size of data = " << values.size() << endl;
-	cache_value(currentNode_str()+" "+varname+" "+mat_list[i],values,data);
+	material_data_list.cache_value(cache_key, values, data);
       } else {
 	cerr << "Cache hit\n";
       }
@@ -441,8 +349,11 @@ void VariablePlotter::extract_data(string display_mode, string varname,
     // loop over all the materials in the mat_list
     for(int i = 0; i < (int)mat_list.size(); i++) {
       string data;
-      if (!is_cached(currentNode_str()+" "+varname+" "+mat_list[i]+" "
-		     +type_list[i],data)) {
+      string cache_key(currentNode_str()+" "+varname+" "+mat_list[i]);
+      // The suffix to get things like, length, lenght2 and what not.
+      string type_suffix(" "+type_list[i]);
+      if (!material_data_list.get_cached(cache_key + type_suffix,data)) {
+	cerr << "Cache miss.  Querying the data archive\n";
 	// query the value and then cache it
 	vector< Vector > values;
 	int matl = atoi(mat_list[i].c_str());
@@ -453,9 +364,8 @@ void VariablePlotter::extract_data(string display_mode, string varname,
 	  return;
 	} 
 	cerr << "Received data.  Size of data = " << values.size() << endl;
-	// could integrate this in with the cache_value somehow
-	data = vector_to_string(values,type_list[i]);
-	cache_value(currentNode_str()+" "+varname+" "+mat_list[i],values);
+	material_data_list.cache_value(cache_key, values);
+	material_data_list.get_cached(cache_key + type_suffix, data);
       } else {
 	cerr << "Cache hit\n";
       }
@@ -468,8 +378,11 @@ void VariablePlotter::extract_data(string display_mode, string varname,
     // loop over all the materials in the mat_list
     for(int i = 0; i < (int)mat_list.size(); i++) {
       string data;
-      if (!is_cached(currentNode_str()+" "+varname+" "+mat_list[i]+" "
-		     +type_list[i],data)) {
+      string cache_key(currentNode_str()+" "+varname+" "+mat_list[i]);
+      // The suffix to get things like, Determinant and what not.
+      string type_suffix(" "+type_list[i]);
+      if (!material_data_list.get_cached(cache_key + type_suffix, data)) {
+	cerr << "Cache miss.  Querying the data archive\n";
 	// query the value and then cache it
 	vector< Matrix3 > values;
 	int matl = atoi(mat_list[i].c_str());
@@ -480,9 +393,8 @@ void VariablePlotter::extract_data(string display_mode, string varname,
 	  return;
 	} 
 	cerr << "Received data.  Size of data = " << values.size() << endl;
-	// could integrate this in with the cache_value somehow
-	data = vector_to_string(values,type_list[i]);
-	cache_value(currentNode_str()+" "+varname+" "+mat_list[i],values);
+	material_data_list.cache_value(cache_key, values);
+	material_data_list.get_cached(cache_key + type_suffix, data);
       }
       else {
 	// use cached value that was put into data by is_cached
