@@ -60,7 +60,8 @@ class OnDemandDataWarehouse : public DataWarehouse {
 public:
    OnDemandDataWarehouse( const ProcessorGroup* myworld,
 			  const Scheduler* scheduler, int generation,
-			  const GridP& grid);
+			  const GridP& grid,
+			  bool isInitializationDW = false);
    virtual ~OnDemandDataWarehouse();
    
    virtual bool exists(const VarLabel*, int matIndex, const Patch*) const; 
@@ -271,6 +272,9 @@ private:
    mutable CrowdMonitor    d_lock;
    bool                    d_finalized;
    GridP                   d_grid;
+
+   // Is this the first DW -- created by the initialization timestep?
+   bool d_isInitializationDW;
 
    inline const Task* getCurrentTask();	 
    map<Thread*, const Task*> d_runningTasks;

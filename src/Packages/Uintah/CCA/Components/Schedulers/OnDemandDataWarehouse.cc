@@ -51,11 +51,13 @@ Mutex ssLock( "send state lock" );
 
 OnDemandDataWarehouse::OnDemandDataWarehouse(const ProcessorGroup* myworld,
 					     const Scheduler* scheduler,
-					     int generation, const GridP& grid)
+					     int generation, const GridP& grid,
+					     bool isInitializationDW/*=false*/)
    : DataWarehouse(myworld, scheduler, generation),
      d_lock("DataWarehouse lock"),
      d_finalized( false ),
-     d_grid(grid)
+     d_grid(grid),
+     d_isInitializationDW(isInitializationDW)
 {
 }
 
@@ -1316,7 +1318,13 @@ getGridVar(VariableBase& var, DWDatabase& db,
 				   neighbors, lowIndex, highIndex);
      if (!var.rewindow(lowIndex, highIndex)) {
        // reallocation needed
-       if (show_warnings) {
+       // Ignore this if this is the initialization dw in its old state.
+       // The reason for this is that during initialization it doesn't
+       // know what ghost cells will be required of it for the next timestep.
+       // (This will be an issue whenever the taskgraph changes to require
+       // more ghost cells from the old datawarehouse).
+       bool ignore = d_isInitializationDW && d_finalized;
+       if (show_warnings && !ignore) {
 	 cerr << "Reallocation Warning: Reallocation needed for " << label->getName();
 	 if (patch)
 	   cerr << " on patch " << patch->getID();
