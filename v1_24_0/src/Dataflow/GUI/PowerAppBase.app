@@ -482,10 +482,10 @@ class PowerAppBase {
     ### create_viewer_tab
     #############################
     # Build the Viewer tab.  This is actually labeled the "Viewer Options"
-    method create_viewer_tab { vis } {
+    method create_viewer_tab { vis {l "Viewer Options"}} {
 	global tips
 	global mods
-	set page [$vis.tnb add -label "Viewer Options" -command "$this change_vis_frame \"Viewer Options\""]
+	set page [$vis.tnb add -label $l -command "$this change_vis_frame \"$l\""]
 	
 	iwidgets::labeledframe $page.viewer_opts \
 	    -labelpos nw -labeltext "Global Render Options"
@@ -685,7 +685,6 @@ class PowerAppBase {
 	pack $view_opts.buttons.v2.sethome $view_opts.buttons.v2.gohome \
 	    -side top -padx 2 -pady 2 -anchor ne -fill x
 	
-	$vis.tnb view "Vis Options"
     }
 
     ########################
