@@ -14,7 +14,6 @@
 #include <Dataflow/ModuleList.h>
 #include <Dataflow/Network.h>
 #include <Dataflow/NetworkEditor.h>
-#include <Devices/Tracker.h>
 #include <Multitask/Task.h>
 #include <TCL/TCLTask.h>
 
@@ -31,10 +30,6 @@ int main(int argc, char** argv)
 
     // Start up TCL...
     TCLTask* tcl_task = new TCLTask(argc, argv);
-
-    // Start up the server thread for the head tracker
-    TrackerThread* tracker=new TrackerThread;
-    //tracker->activate(0);
 
     // Create initial network
     // We build the Network with a 1, indicating that this is the

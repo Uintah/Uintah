@@ -9,7 +9,7 @@ all::
 #endif
 
 #ifdef SCI_MACHINE_Linux
-OTHER_SOS = Modules/?*/?*.so
+OTHER_SOS = -lDatatypes -lMath -lMesaGL -lMesaGLU
 #endif
 
 SUBDIRS = Malloc tcl \
@@ -45,3 +45,6 @@ update:
 
 clean::
 	rm -rf templates
+
+installtcl:
+	@(cd tcl && make installtcl)
