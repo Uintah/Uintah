@@ -15,6 +15,7 @@
 #define SCI_Geom_GeomOpenGL_h 1
 
 #include <GL/glu.h>
+#include <GL/glx.h>
 #include <Geometry/Vector.h>
 #include <Geometry/Point.h>
 class Material;
@@ -79,6 +80,7 @@ public:
     void init_view(double znear, double zfar, Point& eyep, Point& lookat);
 
     Roe* roe;
+    Display *dpy;
     int debug;
     void reset();
 };

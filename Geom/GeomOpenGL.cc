@@ -44,6 +44,8 @@
 #include <Geom/Switch.h>
 #include <Geom/Tetra.h>
 #include <Geom/TexSlices.h>
+#include <Geom/TexSquare.h>
+#include <Geom/Text.h>
 #include <Geom/Torus.h>
 #include <Geom/Transform.h>
 #include <Geom/Tri.h>
@@ -51,6 +53,7 @@
 #include <Geom/Tube.h>
 #include <Geom/TriStrip.h>
 #include <Geom/View.h>
+#include <Geom/Sticky.h>
 #include <Math/MinMax.h>
 #include <Math/TrigTable.h>
 #include <Math/Trig.h>
@@ -58,6 +61,9 @@
 #include <GL/gl.h>
 #include <GL/glu.h>
 
+#include <X11/X.h>
+#include <X11/Xlib.h>
+#include <GL/gls.h>
 #include <Geom/Color.h>
 
 #include <Modules/Salmon/Salmon.h>
@@ -289,31 +295,78 @@ void GeomArrows::draw(DrawInfoOpenGL* di, Material* matl, double)
 {
     int n=positions.size();
     di->polycount+=6*n;
+
     // Draw shafts - they are the same for all draw types....
     double shaft_scale=headlength;
-    if(di->get_drawtype() == DrawInfoOpenGL::WireFrame)
+
+    // if we're not drawing cylinders, draw lines
+    if( drawcylinders == 0 ) {
+      if(di->get_drawtype() == DrawInfoOpenGL::WireFrame)
 	shaft_scale=1.0;
-    if(shaft_matls.size() == 1){
+      if(shaft_matls.size() == 1){
 	pre_draw(di, shaft_matls[0].get_rep(), 0);
 	glBegin(GL_LINES);
 	for(int i=0;i<n;i++){
-	    Point from(positions[i]);
-	    Point to(from+directions[i]*shaft_scale);
-	    glVertex3d(from.x(), from.y(), from.z());
-	    glVertex3d(to.x(), to.y(), to.z());
+	  Point from(positions[i]);
+	  Point to(from+directions[i]*shaft_scale);
+	  glVertex3d(from.x(), from.y(), from.z());
+	  glVertex3d(to.x(), to.y(), to.z());
 	}
 	glEnd();
-    } else {
+      } else {
 	pre_draw(di, matl, 0);
 	glBegin(GL_LINES);
 	for(int i=0;i<n;i++){
-	    di->set_matl(shaft_matls[i+1].get_rep());
-	    Point from(positions[i]);
-	    Point to(from+directions[i]*shaft_scale);
-	    glVertex3d(from.x(), from.y(), from.z());
-	    glVertex3d(to.x(), to.y(), to.z());
+	  di->set_matl(shaft_matls[i+1].get_rep());
+	  Point from(positions[i]);
+	  Point to(from+directions[i]*shaft_scale);
+	  glVertex3d(from.x(), from.y(), from.z());
+	  glVertex3d(to.x(), to.y(), to.z());
 	}
 	glEnd();
+      }
+
+    } else {
+      // drawing cylinders
+      if( shaft_matls.size() == 1) {
+	pre_draw(di, shaft_matls[0].get_rep(), 1);
+      } else {
+	pre_draw(di, matl, 1);
+      }
+      // number of subdivisions
+      int nu = 3;
+      int nv = 1;
+	
+      for( int i =0; i < n; i++ ) {
+	if( shaft_matls.size() != 1) 
+	  di->set_matl(shaft_matls[i+1].get_rep());
+
+	Point from(positions[i]);
+	Point to(from+directions[i]*shaft_scale);
+	// create cylinder along axis with endpoints from and to
+	Vector axis = to - from;
+	Vector z(0,0,1);
+	Vector zrotaxis;
+	double zrotangle;
+	if( Abs(axis.y())+Abs(axis.x()) < 1.e-5){
+	  // Only in x-z plane...
+	  zrotaxis=Vector(0,-1,0);
+	} else {
+	  zrotaxis=Cross(axis, z);
+	  zrotaxis.normalize();
+	}
+	double cangle=Dot(z, axis)/axis.length();
+	zrotangle=-Acos(cangle);
+
+	// draw cylinder
+	glPushMatrix();
+	glTranslated( from.x(), from.y(), from.z() );
+	glRotated( RtoD(zrotangle), zrotaxis.x(), zrotaxis.y(), zrotaxis.z());
+	di->polycount += 2*(nu-1)*(nv-1);
+	gluCylinder(di->qobj, rad, rad, axis.length(), nu, nv);
+	glPopMatrix();
+      }
+
     }
 
     // Draw back and head
@@ -642,10 +695,9 @@ void TexGeomGrid::draw(DrawInfoOpenGL* di, Material* matl, double)
   Vector uu(u/(nu-1));
   Vector vv(v/(nv-1));
 
-//  cerr << "Trying to do texture draw...\n";
+  cerr << "Trying to do texture draw...\n";
 
   if (!convolve) {
-  
     switch(di->get_drawtype()){
     case DrawInfoOpenGL::WireFrame:
 //      break;
@@ -655,25 +707,26 @@ void TexGeomGrid::draw(DrawInfoOpenGL* di, Material* matl, double)
       {
 	if (tmap_dlist == -1) {
 	  tmap_dlist = glGenLists(1);
+
 	  glNewList(tmap_dlist,GL_COMPILE_AND_EXECUTE);
 	  glTexEnvi(GL_TEXTURE_ENV,GL_TEXTURE_ENV_MODE,
 		    GL_MODULATE);
+
 	  glTexParameterf(GL_TEXTURE_2D,GL_TEXTURE_MIN_FILTER,
 			  GL_NEAREST);
 	  glTexParameterf(GL_TEXTURE_2D,GL_TEXTURE_MAG_FILTER,
 			  GL_NEAREST);
+
 	  glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
 
 	  if (num_chan == 3) {
-	    glTexImage2D(GL_TEXTURE_2D,0,3,tmap_size,tmap_size,
+	    glTexImage2D(GL_TEXTURE_2D,0,3,tmap_size,10,
 			 0,GL_RGB,GL_UNSIGNED_INT,tmapdata);
 	  } else {
-
 	    glTexImage2D(GL_TEXTURE_2D,0,GL_LUMINANCE,tmap_size,tmap_size,
 			 0,GL_LUMINANCE,GL_UNSIGNED_SHORT,tmapdata);
 	  }
 	  glEndList();
-	  // cerr << "Generated List " << tmap_dlist << endl;
 	}
 	else {
 	  glCallList(tmap_dlist);
@@ -698,13 +751,13 @@ void TexGeomGrid::draw(DrawInfoOpenGL* di, Material* matl, double)
 	glVertex3d(corner.x()+v.x(),corner.y()+v.y(),corner.z()+v.z());
       
 	glEnd();
-      
+
 	glDisable(GL_TEXTURE_2D);
 	break;
       }
     }
   } else { // doing convolution
-  
+
     switch(di->get_drawtype()){
     case DrawInfoOpenGL::WireFrame:
       break;
@@ -3595,3 +3648,102 @@ void GeomIndexedGroup::draw(DrawInfoOpenGL* di, Material* m, double time)
 	obj->draw(di,m,time);
     }
 }
+
+void GeomText::draw(DrawInfoOpenGL* di, Material* matl, double)
+{
+  pre_draw(di,matl,0);
+
+  if ( init ) {
+    cerr << "Init" << endl;
+    di->dpy = XOpenDisplay( NULL );
+    XFontStruct* fontInfo = XLoadQueryFont(di->dpy,
+    	 "-adobe-helvetica-bold-r-normal--10-100-75-75-p-60-iso8859-1");
+    if (fontInfo == NULL) {
+      cerr << "GeomText: no font found\n";
+      return;
+    }
+    Font id = fontInfo->fid;
+    unsigned int first = fontInfo->min_char_or_byte2;
+    unsigned int last = fontInfo->max_char_or_byte2;
+
+    fontbase = glGenLists((GLuint) last+1);
+
+    if (fontbase == 0) {
+      printf ("out of display lists\n");
+      return;
+    }
+
+    glXUseXFont(id, first, last-first+1, fontbase+first);
+
+    init = 0;
+  }
+
+  glColor3f(c.r(), c.g(), c.b());
+  glDisable(GL_LIGHTING);
+  glRasterPos3d( at.x(), at.y(), at.z() );
+  /*glBitmap(0, 0, x, y, 1, 1, 0);*/
+  glPushAttrib (GL_LIST_BIT);
+  glListBase(fontbase);
+  glCallLists(strlen(text()), GL_UNSIGNED_BYTE, (GLubyte *)text());
+  glPopAttrib ();
+}
+
+
+
+void TexSquare::draw(DrawInfoOpenGL* di, Material* matl, double) {
+  pre_draw(di, matl, 0);
+
+  glClearColor(0.0, 0.0, 0.0, 0.0);
+  //  glEnable(GL_DEPTH_TEST);
+  //  glDepthFunc(GL_LEQUAL);
+
+  glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
+  glTexImage2D( GL_TEXTURE_2D, 0, 3, 64, 64, 0, GL_RGB, GL_UNSIGNED_BYTE,
+		texture );
+  glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP);
+  glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP);
+  glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+  glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+  glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_DECAL);
+  glEnable(GL_TEXTURE_2D);
+  glShadeModel(GL_FLAT);
+
+  glDisable(GL_CULL_FACE);
+  glDisable(GL_LIGHTING);
+  // glClear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );
+  glBegin( GL_QUADS );
+  glTexCoord2f(0.0, 0.0); glVertex3f( a.x(), a.y(), a.z() );
+  glTexCoord2f(0.0, 1.0); glVertex3f( b.x(), b.y(), b.z() );
+  glTexCoord2f(1.0, 1.0); glVertex3f( c.x(), c.y(), c.z() );
+  glTexCoord2f(1.0, 0.0); glVertex3f( d.x(), d.y(), d.z() );
+  glEnd();
+  glFlush();
+  
+  glDisable(GL_TEXTURE_2D);
+  glEnable(GL_LIGHTING);
+  //  glEnable(GL_CULL_FACE);
+
+}
+
+void GeomSticky::draw(DrawInfoOpenGL* di, Material* matl, double t) {
+  glMatrixMode(GL_PROJECTION);
+  glPushMatrix();
+  glLoadIdentity();
+  glMatrixMode(GL_MODELVIEW);
+  glPushMatrix();
+  glLoadIdentity();
+  glDisable(GL_DEPTH_TEST);
+  glRasterPos2d(0.55, -0.98);
+
+  child->draw(di,matl,t);
+
+  glEnable(GL_DEPTH_TEST);
+  glDepthFunc(GL_LEQUAL);
+  glMatrixMode(GL_PROJECTION);
+  glPopMatrix();
+  glMatrixMode(GL_MODELVIEW);
+  glPopMatrix();
+}  
+
+
+
