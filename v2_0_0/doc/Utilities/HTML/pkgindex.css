@@ -22,33 +22,14 @@ Stylesheet used by doc/Developer/Modules/index.html
 */
 
 @import url(common.css);
+@import url(indexcommon.css);
 
-.title {
-font-family:  Arial, Helvetica, sans-serif;
-color:#FFCC33;
-font-weight:bold;
-font-size:large;
-text-align:center}
-
-.subtitle {
-font-family: Arial, Helvetica, sans-serif;
-text-align:center;
-font-weight:bold;
-font-size:small;
-color:#FFCC33}
-
-table {
-margin: auto}
-
-table ul li { 
-font-size: medium;
-list-style-type: none}
+table { margin: auto;}
 
 th { 
 font-size: large;
 background-color:#003333;
+border-bottom: 5px solid #FFCC33;
 color:#FFCC33;
 width:100%}
 
-p {
-font-size: small}

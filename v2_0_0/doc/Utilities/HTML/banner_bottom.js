@@ -25,10 +25,10 @@ document.write('</td>')
 document.write('</tr>')
 document.write('</table>')
 document.write('</div>')
-document.write('<center>')
+document.write('<div class="sciinfo">')
 document.write('<font face="arial, helvetica, sans-serif" size="-2">Scientific\
 Computing and Imaging Institute &#149; 50 S. Central Campus Dr. Rm\
 3490 &#149; Salt Lake City, UT 84112<br>\
 \
-(801) 585-1867 &#149; fax: (801) 585-6513 &#149; <a href="http://www.utah.edu/disclaimer/disclaimer_home.html">Disclaimer</a></font>')
-document.write('</center>')
+(801) 585-1867 &#149; fax: (801) 585-6513 &#149; <a class="alt" href="http://www.utah.edu/disclaimer/disclaimer_home.html">Disclaimer</a></font>')
+document.write('</div>')

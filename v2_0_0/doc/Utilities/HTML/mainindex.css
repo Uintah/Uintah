@@ -22,53 +22,23 @@ Stylesheet for doc/index.html
 */
 
 @import url(common.css);
+@import url(indexcommon.css);
 
-.title {
-font-weight:bold;
-font-size:100%;
-font-style: oblique;
-color:#FFCC33;
+table { 
+margin-top: 1em;
+margin-bottom: 1em;}
+
+th.mainheader {
 background-color: #003333;
-text-align:center}
+border-bottom: 4px solid #FFCC33;
+font-size:125%}
 
-.subtitle {
-font-style: oblique;
-height: 1.75em;
-color:#FFCC33;
-background-color: #003333;
-text-align:center;
-font-weight:bold;
-font-size:75%}
+th.category { 
+background-color: rgb(160,160,160);
+color: rgb(40, 60, 40);
+font-size: 110%}
 
-.topic_title {
-font-weight:bold;
-font-size:100%;
-font-style: oblique;
-background-color:#003333;
-color:#FFCC33;
-text-align:center}
-
-table ul li { 
-font-size: medium;
-list-style-type: none}
-
-th { 
-padding:0}
-
-td{ 
+td{
+width: 33%;
+border: 2px solid rgb(160,160,160);
 vertical-align: top}
-
-table.topic {
-width:250px}
-
-td.topic { 
-background-color: rgb(175,175,175);
-height: 600px;          
-}
-
-a { 
-font-style: oblique;
-font-size: 100% }
-
-p {
-font-size: small}
