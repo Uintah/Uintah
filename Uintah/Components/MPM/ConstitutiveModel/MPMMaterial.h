@@ -65,13 +65,13 @@ WARNING
 	 
 	 //////////
 	 // Return correct constitutive model pointer for this material
-	 ConstitutiveModel * getConstitutiveModel();
+	 ConstitutiveModel * getConstitutiveModel() const;
 
 	 // Return correct burn model pointer for this material
-	 HEBurn * getBurnModel();
+	 HEBurn * getBurnModel() const;
 
 	 // Return correct burn fracture pointer for this material
-	 Fracture * getFractureModel();
+	 Fracture * getFractureModel() const;
 	 
 	 particleIndex countParticles(const Patch*) const;
 	 particleIndex countParticles(GeometryObject* obj,
@@ -139,6 +139,10 @@ WARNING
 #endif // __MPM_MATERIAL_H__
 
 // $Log$
+// Revision 1.29  2000/09/05 07:45:03  tan
+// Applied BrokenCellShapeFunction to constitutive models where fracture
+// is involved.
+//
 // Revision 1.28  2000/09/05 05:14:43  tan
 // Moved Fracture Model to MPMMaterial class.
 //

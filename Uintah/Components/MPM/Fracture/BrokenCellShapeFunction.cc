@@ -39,6 +39,25 @@ findCellAndWeights( int partIdx,
 
 bool
 BrokenCellShapeFunction::
+findCellAndShapeDerivatives( int partIdx, 
+                             IntVector nodeIdx[8], 
+                             bool visiable[8],
+                             Vector d_S[8] ) const
+{
+  double completeShapeDerivative[8];
+  if( !d_lattice.getPatch()->findCellAndWeights(d_lattice.getpX()[partIdx], 
+     nodeIdx, completeShapeDerivative) )
+  return false;
+  
+  for(int i=0;i<8;++i) {
+    visiable[i] = getVisiability( partIdx,nodeIdx[i] );
+  }
+
+  return true;
+}
+
+bool
+BrokenCellShapeFunction::
 findCellAndWeightsAndShapeDerivatives( int partIdx, 
                              IntVector nodeIdx[8], 
                              bool visiable[8],
@@ -73,6 +92,10 @@ getVisiability(int partIdx,const IntVector& nodeIdx) const
 } //namespace Uintah
 
 // $Log$
+// Revision 1.4  2000/09/05 07:44:27  tan
+// Applied BrokenCellShapeFunction to constitutive models where fracture
+// is involved.
+//
 // Revision 1.3  2000/09/05 06:59:28  tan
 // Applied BrokenCellShapeFunction to SerialMPM::interpolateToParticlesAndUpdate
 // where fracture is involved.
