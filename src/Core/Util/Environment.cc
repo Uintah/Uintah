@@ -24,6 +24,7 @@
 #include <sgi_stl_warnings_off.h>
 #include <Core/Util/Environment.h> // includes <string>
 #include <iostream>
+#include <stdio.h>
 #include <set>
 #include <sgi_stl_warnings_on.h>
 
