@@ -58,7 +58,7 @@ GuiServer::run()
     FD_SET (listen_socket, &readfds);
     int maxfd = listen_socket;
 
-#ifdef DEBUG
+#if DEBUG
 cerr <<"GuiServer::getClients() opened listen_socket = "<< listen_socket<<endl;
 #endif
 
@@ -70,7 +70,7 @@ cerr << "GuiServer::getClients() before execute of select(), readfds = "
 #endif
 
 	// s has number of fds ready to read, readfds contains only ready fds
-#ifdef DEBUG
+#if DEBUG
 int s = 
 #endif
     select (maxfd + 1, &readfds, 0, 0, 0);
@@ -85,7 +85,7 @@ cerr << "GuiServer::getClients() clients.size() = " << clients.size() << endl;
       	for (int i = 0; i < clients.size(); i++)  {
 	    if (FD_ISSET (clients[i], &readfds)) {
 
-#ifdef DEBUG
+#if DEBUG
 cerr << "GuiServer::getClients() read from clients["<<i<<"], socket = " <<
          clients[i]<< endl;
 #endif
@@ -116,7 +116,7 @@ cerr << "GuiServer::getClients() read from clients["<<i<<"], socket = " <<
 	if (FD_ISSET (listen_socket, &readfds)) {
 		int new_fd = acceptConnect (listen_socket);
 		clients.add(new_fd);
-#ifdef DEBUG
+#if DEBUG
 cerr << "GuiServer::getClients() add new client connection " << new_fd << endl;
 #endif
 	  	FD_SET (new_fd, &readfds);
@@ -134,7 +134,7 @@ GuiServer::getValue (char* buffer, TCLMessage* msg)
 {
     bcopy (buffer, (char *) msg, sizeof (*msg));
 
-#ifdef DEBUG
+#if DEBUG
 cerr << "GuiServer::getValue(): called by variable = " << msg->tclName << endl;
 #endif
 
@@ -147,7 +147,7 @@ cerr << "GuiServer::getValue(): called by variable = " << msg->tclName << endl;
             }
             TCLTask::unlock();
 
-#ifdef DEBUG
+#if DEBUG
 cerr <<"GuiServer::getValue(): double = " << msg->un.tdouble << endl; 
 #endif
 	    break;
@@ -160,7 +160,7 @@ cerr <<"GuiServer::getValue(): double = " << msg->un.tdouble << endl;
             }
             TCLTask::unlock();
 
-#ifdef DEBUG
+#if DEBUG
 cerr << "GuiServer::getValue(): int = " << msg->un.tint << endl; 
 #endif
 	    break;
@@ -173,7 +173,7 @@ cerr << "GuiServer::getValue(): int = " << msg->un.tint << endl;
             }
             strcpy (msg->un.tstring, l);
 
-#ifdef DEBUG
+#if DEBUG
 cerr << "GuiServer::getValue(): string = " << msg->un.tstring << endl; 
 #endif
             TCLTask::unlock();
