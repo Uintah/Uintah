@@ -106,10 +106,10 @@ set $m3-vectors-on {1}
 set $m3-normalize-vectors {1}
 set $m3-has_vector_data {1}
 set $m3-bidirectional {0}
-set $m3-vector-usedefcolor {1}
+set $m3-vectors-usedefcolor {1}
 set $m3-tensors-on {0}
 set $m3-has_tensor_data {0}
-set $m3-tensor-usedefcolor {0}
+set $m3-tensors-usedefcolor {0}
 set $m3-scalars-on {0}
 set $m3-scalars-transparency {0}
 set $m3-has_scalar_data {0}
@@ -171,10 +171,10 @@ set $m5-vectors-on {0}
 set $m5-normalize-vectors {}
 set $m5-has_vector_data {0}
 set $m5-bidirectional {0}
-set $m5-vector-usedefcolor {0}
+set $m5-vectors-usedefcolor {0}
 set $m5-tensors-on {0}
 set $m5-has_tensor_data {0}
-set $m5-tensor-usedefcolor {0}
+set $m5-tensors-usedefcolor {0}
 set $m5-scalars-on {0}
 set $m5-scalars-transparency {0}
 set $m5-has_scalar_data {1}

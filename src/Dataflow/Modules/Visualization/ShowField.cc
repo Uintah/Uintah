@@ -69,17 +69,20 @@ class ShowField : public Module
   GuiInt                   nodes_on_;
   GuiInt                   nodes_transparency_;
   GuiInt                   nodes_as_disks_;
+  GuiInt                   nodes_usedefcolor_;
   bool                     nodes_dirty_;
 
   //! Options for rendering edges.
   GuiInt                   edges_on_;
   GuiInt                   edges_transparency_;
+  GuiInt                   edges_usedefcolor_;
   bool                     edges_dirty_;
 
   //! Options for rendering faces.
   GuiInt                   faces_on_;
   GuiInt                   faces_normals_;
   GuiInt                   faces_transparency_;
+  GuiInt                   faces_usedefcolor_;
   bool                     faces_dirty_;
 
   //! Options for rendering non-scalar data.
@@ -87,17 +90,18 @@ class ShowField : public Module
   GuiInt                   normalize_vectors_;
   GuiInt                   has_vector_data_;
   GuiInt                   bidirectional_;
-  GuiInt                   vector_usedefcolor_;
+  GuiInt                   vectors_usedefcolor_;
   bool                     data_dirty_;
   string                   cur_field_data_type_;
   Field::data_location     cur_field_data_at_;
 
   GuiInt                   tensors_on_;
   GuiInt                   has_tensor_data_;
-  GuiInt                   tensor_usedefcolor_;
+  GuiInt                   tensors_usedefcolor_;
 
   GuiInt                   scalars_on_;
   GuiInt                   scalars_transparency_;
+  GuiInt                   scalars_usedefcolor_;
   GuiInt                   has_scalar_data_;
   
   //! Options for rendering text.
@@ -195,27 +199,31 @@ ShowField::ShowField(GuiContext* ctx) :
   nodes_on_(ctx->subVar("nodes-on")),
   nodes_transparency_(ctx->subVar("nodes-transparency")),
   nodes_as_disks_(ctx->subVar("nodes-as-disks")),
+  nodes_usedefcolor_(ctx->subVar("nodes-usedefcolor")),
   nodes_dirty_(true),
   edges_on_(ctx->subVar("edges-on")),
   edges_transparency_(ctx->subVar("edges-transparency")),
+  edges_usedefcolor_(ctx->subVar("edges-usedefcolor")),
   edges_dirty_(true),
   faces_on_(ctx->subVar("faces-on")),
   faces_normals_(ctx->subVar("use-normals")),
   faces_transparency_(ctx->subVar("use-transparency")),
+  faces_usedefcolor_(ctx->subVar("faces-usedefcolor")),
   faces_dirty_(true),
   vectors_on_(ctx->subVar("vectors-on")),
   normalize_vectors_(ctx->subVar("normalize-vectors")),
   has_vector_data_(ctx->subVar("has_vector_data")),
   bidirectional_(ctx->subVar("bidirectional")),
-  vector_usedefcolor_(ctx->subVar("vector-usedefcolor")),
+  vectors_usedefcolor_(ctx->subVar("vectors-usedefcolor")),
   data_dirty_(true),
   cur_field_data_type_("none"),
   cur_field_data_at_(Field::NONE),
   tensors_on_(ctx->subVar("tensors-on")),
   has_tensor_data_(ctx->subVar("has_tensor_data")),
-  tensor_usedefcolor_(ctx->subVar("tensor-usedefcolor")),
+  tensors_usedefcolor_(ctx->subVar("tensors-usedefcolor")),
   scalars_on_(ctx->subVar("scalars-on")),
   scalars_transparency_(ctx->subVar("scalars-transparency")),
+  scalars_usedefcolor_(ctx->subVar("scalars-usedefcolor")),
   has_scalar_data_(ctx->subVar("has_scalar_data")),
   text_on_(ctx->subVar("text-on")),
   text_use_default_color_(ctx->subVar("text-use-default-color")),
@@ -685,7 +693,9 @@ ShowField::execute()
 		      nodes_transparency_.get(),
 		      edges_transparency_.get(),
 		      faces_transparency_.get(),
-		      bidirectional_.get());
+		      nodes_usedefcolor_.get(),
+		      edges_usedefcolor_.get(),
+		      faces_usedefcolor_.get());
   }
 
   // Cleanup.
@@ -742,7 +752,7 @@ ShowField::execute()
 					     fld_handle,
 					     color_map_,
 					     def_material_,
-					     vector_usedefcolor_.get(),
+					     vectors_usedefcolor_.get(),
 					     vdt, vscale,
 					     normalize_vectors_.get(),
 					     bidirectional_.get(),
@@ -765,7 +775,7 @@ ShowField::execute()
 					   fld_handle,
 					   color_map_,
 					   def_material_,
-					   tensor_usedefcolor_.get(),
+					   tensors_usedefcolor_.get(),
 					   tdt, tscale,
 					   data_resolution_);
       data_id_ = ogeom_->addObj(data, fname + "Tensors");
@@ -778,10 +788,12 @@ ShowField::execute()
       const bool transp = scalars_transparency_.get();
       if (do_data)
       {
+	const bool udc = scalars_usedefcolor_.get();
 	data_geometry_ = data_scalar_renderer_->render_data(vfld_handle,
 							    fld_handle,
 							    color_map_,
 							    def_material_,
+							    udc,
 							    sdt, sscale,
 							    data_resolution_,
 							    transp);
