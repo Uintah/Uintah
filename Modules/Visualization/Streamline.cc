@@ -50,6 +50,9 @@ class Streamline : public Module {
     TCLvardouble stepsize;
     TCLvarint maxsteps;
 
+    TCLdouble range_min;
+    TCLdouble range_max;
+
     int need_p1;
     Point p1;
     Point p2;
@@ -87,6 +90,8 @@ class Streamline : public Module {
     GeomPick* widget_slider2_pick;
     int widget_id;
     double widget_scale;
+
+    double old_smin, old_smax;
 
     int streamline_id;
 
@@ -255,7 +260,8 @@ Streamline::Streamline(const clString& id)
   widgettype("source", id, this),
   markertype("markertype", id, this), lineradius("lineradius", id, this),
   algorithm("algorithm", id, this), stepsize("stepsize", id, this),
-  maxsteps("maxsteps", id, this)
+  maxsteps("maxsteps", id, this), range_min("range_min", id, this),
+  range_max("range_max", id, this)
 {
     // Create the input ports
     infield=new VectorFieldIPort(this, "Vector Field", ScalarFieldIPort::Atomic);
@@ -283,6 +289,8 @@ Streamline::Streamline(const clString& id)
 			  Color(0,0,0.5), 20);
     widget_id=0;
     streamline_id=0;
+
+    old_smin=old_smax=0;
 }
 
 Streamline::Streamline(const Streamline& copy, int deep)
@@ -290,7 +298,8 @@ Streamline::Streamline(const Streamline& copy, int deep)
   widgettype("source", id, this),
   markertype("markertype", id, this), lineradius("lineradius", id, this),
   algorithm("algorithm", id, this), stepsize("stepsize", id, this),
-  maxsteps("maxsteps", id, this)
+  maxsteps("maxsteps", id, this), range_min("range_min", id, this),
+  range_max("range_max", id, this)
 {
     NOT_FINISHED("Streamline::Streamline");
 }
@@ -318,8 +327,19 @@ void Streamline::execute()
     if(have_sfield && !have_cmap)
 	have_sfield=0;
     double smin, smax;
-    if(have_sfield)
+    if(have_sfield){
 	sfield->get_minmax(smin, smax);
+	if(old_smin != smin || old_smax != smax){
+	    range_min.set(smin);
+	    range_max.set(smax);
+	    old_smin=smin;
+	    old_smax=smax;
+	}
+	smin=range_min.get();
+	smax=range_max.get();
+    }
+    smin=range_min.get();
+    smax=range_max.get();
     MaterialHandle outmatl(new Material(Color(0,0,0), Color(1,1,1), Color(1,1,1), 10.0));
     if(need_p1){
 	Point min, max;

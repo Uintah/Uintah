@@ -6,8 +6,9 @@ proc uiStreamline {modid} {
         return;
     }
     toplevel $w
+    wm minsize $w 100 100
     frame $w.f 
-    pack $w.f -padx 2 -pady 2
+    pack $w.f -padx 2 -pady 2 -fill x -expand yes
     set n "$modid needexecute "
 
     frame $w.f.widgets
@@ -64,7 +65,7 @@ proc uiStreamline {modid} {
     global stepsize,$modid
     set stepsize,$modid 0.1
     fscale $w.f.stepsize -variable stepsize,$modid -digits 3 \
-	-from 0.0 -to 10.0 -label "Step size:" \
+	-from -20.0 -to 20.0 -label "Step size:" \
 	-resolution .01 -showvalue true -tickinterval 2 \
 	-activeforeground SteelBlue2 -orient horizontal
     pack $w.f.stepsize -fill x -pady 2
@@ -80,4 +81,16 @@ proc uiStreamline {modid} {
 #    global widget_scale,$modid
 #    set widget_scale,$modid 1
 #    fscale $w.f
+
+
+    global range_min,$modid
+    fscale $w.f.min -variable range_min,$modid -digits 4 \
+	    -from 0.0 -to 90 -label "Color min:" \
+	    -resolution .01 -showvalue true \
+	    -activeforeground SteelBlue2 -orient horizontal
+    fscale $w.f.max -variable range_max,$modid -digits 4 \
+	    -from 0.0 -to 90 -label "Color max:" \
+	    -resolution .01 -showvalue true \
+	    -activeforeground SteelBlue2 -orient horizontal
+    pack $w.f.min $w.f.max -side top -fill x
 }
