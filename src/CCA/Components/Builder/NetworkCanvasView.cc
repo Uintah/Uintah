@@ -40,8 +40,6 @@ using namespace std;
 
 //using namespace SCIRun;
 
-
-
 NetworkCanvasView::NetworkCanvasView(BuilderWindow* p2BuilderWindow, QCanvas* canvas, QWidget* parent)
 				     
   : QCanvasView(canvas, parent)
@@ -142,8 +140,6 @@ void NetworkCanvasView::contentsMouseReleaseEvent(QMouseEvent* /*e*/)
   moving = 0;
 }
 
-
-
 void NetworkCanvasView::contentsMouseMoveEvent(QMouseEvent* e)
 {
 
@@ -225,24 +221,48 @@ void NetworkCanvasView::contentsMouseMoveEvent(QMouseEvent* e)
   }
 }
 
-void NetworkCanvasView::addModule(const string& name,
+void NetworkCanvasView::addModule( const string& name, int x, int y,
 				  CIA::array1<std::string> & up,
 				  CIA::array1<std::string> &pp ,
 				  const gov::cca::ComponentID::pointer &cid)
 {
+  /*
+  if( up.size() ) {
+    cerr << "up.size() = " << up.size() << endl;
+    for( int i = 0; i < up.size(); i++ ) {
+      cerr << "up[" << i << "] = " << up[i] << endl;
+    }
+  }
+  else
+    cerr << "UP IS EMPTY !" << endl;
+
+  if( pp.size() ) {
+    cerr << "pp.size() = " << pp.size() << endl;
+    for( int j = 0; j < pp.size(); j++ ) {
+      cerr << "pp[" << j << "] = " << pp[j] << endl;
+    }
+  }
+  else
+    cerr << "PP IS EMPTY!" << endl;
+  */
+    
   Module *module=new Module(this,name,up,pp, services, cid);
-  addChild(module,20, 20);
+  //  addChild(module,20, 20);
+  addChild(module, x, y );
+
+  string testString;
+
   connect(module, SIGNAL(destroyModule(Module *)), 
 	  this, SLOT(removeModule(Module *)) );
   modules.push_back(module);
   module->show();		
   // have to updateMiniView() after added to canvas
   p2BuilderWindow->updateMiniView();
+
 }
 
 void NetworkCanvasView::removeModule(Module * module)
 {
-  cerr<<"need remove the component instance from framework"<<endl;
   removeAllConnections(module);
   for(unsigned int i=0; i<modules.size(); i++){
     if(modules[i]==module){
@@ -268,6 +288,7 @@ void NetworkCanvasView::addConnection(Module *m1,const std::string &portname1,  
   
   Connection *con=new Connection(m1,portname1, m2,portname2, connID,this);
 
+  string instanceName = m1->cid->getInstanceName();
 
   con->show();
   connections.push_back(con);
@@ -326,10 +347,8 @@ void NetworkCanvasView::setServices(const gov::cca::Services::pointer &services)
 }
 
 
-void NetworkCanvasView::showPossibleConnections(Module *m, const std::string &portname,
-						Module::PortType porttype)
+void NetworkCanvasView::showPossibleConnections(Module *m, const std::string &portname, Module::PortType porttype)
 {
-  
   gov::cca::ports::BuilderService::pointer bs = pidl_cast<gov::cca::ports::BuilderService::pointer>(services->getPort("cca.BuilderService"));
   if(bs.isNull()){
     cerr << "Fatal Error: Cannot find builder service\n";
@@ -353,13 +372,10 @@ void NetworkCanvasView::showPossibleConnections(Module *m, const std::string &po
       }
   }    
   services->releasePort("cca.BuilderService");		
-	  
-  
 }
 
 void NetworkCanvasView::clearPossibleConnections()
 {
-
 	for(unsigned int i=0; i<possibleConns.size(); i++){
 	   delete possibleConns[i];
         }
@@ -369,7 +385,6 @@ void NetworkCanvasView::clearPossibleConnections()
 
 void NetworkCanvasView::highlightConnection(QCanvasItem *c)
 {
-
 	//cerr<<"Highlight"<<endl;
   if(highlightedConnection!=0){
     highlightedConnection->setDefault();
@@ -392,12 +407,16 @@ void NetworkCanvasView::highlightConnection(QCanvasItem *c)
 	     break;
 	  }			
 	}
-
 }
 
 std::vector<Module*> NetworkCanvasView::getModules()
 {
   return modules;
+}
+
+std::vector<Connection*> NetworkCanvasView::getConnections()
+{
+  return connections;
 }
 
 void NetworkCanvasView::viewportResizeEvent( QResizeEvent* p2QResizeEvent )

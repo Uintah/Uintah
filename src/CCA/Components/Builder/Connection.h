@@ -36,12 +36,14 @@ public:
 	Module * getProvidesModule();
 	std::string getUsesPortName();
 	std::string getProvidesPortName();
+	// TEK 
+	gov::cca::ConnectionID::pointer connID;
+	// TEK
 protected:
 	void drawShape ( QPainter & );
 	QCanvasView *cv;
 	Module *pUse, *pProvide;
 	std::string portname1, portname2;
-  gov::cca::ConnectionID::pointer connID;
 	QColor color;
 };
 

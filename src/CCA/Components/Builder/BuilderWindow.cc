@@ -48,6 +48,9 @@
 #include <iostream>
 #include <qiconset.h> 
 #include <qtoolbutton.h> 
+#include <qfiledialog.h>
+#include <fstream>
+#include <qtextstream.h>
 
 using namespace std;
 using namespace SCIRun;
@@ -57,7 +60,6 @@ BuilderWindow::BuilderWindow(const gov::cca::Services::pointer& services)
   : QMainWindow(0, "SCIRun", WDestructiveClose|WType_TopLevel),
     services(services)
 {
-
   addReference(); // Do something better than this!
 
   // Save
@@ -102,14 +104,13 @@ BuilderWindow::BuilderWindow(const gov::cca::Services::pointer& services)
 #include "info.xpm"
  
   new QToolButton( QIconSet( QPixmap(load)  ), "Load", QString::null,
-                           this, SLOT(load()), fileTools, "load" );
+		   this, SLOT(load()), fileTools, "load" );
   new QToolButton( QIconSet( QPixmap(save)  ), "Save", QString::null,
                            this, SLOT(save()), fileTools, "save" );
   new QToolButton( QIconSet( QPixmap(insert_xpm)  ), "Insert", QString::null,
                            this, SLOT(insert()), fileTools, "insert" );
   new QToolButton( QIconSet( QPixmap(info)  ), "Add Info", QString::null,
                            this, SLOT(addInfo()), fileTools, "addInfo" );
-
   QPopupMenu* file = new QPopupMenu(this);
   menuBar()->insertItem("&File", file);
   file->insertTearOffHandle();
@@ -146,11 +147,8 @@ BuilderWindow::BuilderWindow(const gov::cca::Services::pointer& services)
   int miniH=miniview->contentsRect().height();
   miniCanvas->resize(miniW, miniH);
 
-
-
   QVBox* layout3 = new QVBox(hsplit);
   QHBox* layout4 = new QHBox(layout3);
-  //QLabel* message_label = 
   new QLabel(" Messages: ", layout4);
   QMimeSourceFactory::defaultFactory()->setPixmap("SCIRun logo", QPixmap(SCIRun_logo));
   QLabel* logo_image = new QLabel("SCIRun logo", layout4);
@@ -159,7 +157,6 @@ BuilderWindow::BuilderWindow(const gov::cca::Services::pointer& services)
   e->setFocus();
   e->setReadOnly(true);
   e->setUndoRedoEnabled(false);
-
 
   gov::cca::ports::BuilderService::pointer builder = pidl_cast<gov::cca::ports::BuilderService::pointer>(services->getPort("cca.BuilderService"));
   if(builder.isNull()){
@@ -173,14 +170,10 @@ BuilderWindow::BuilderWindow(const gov::cca::Services::pointer& services)
   big_canvas = new QCanvas(2000,2000);
   big_canvas->setBackgroundColor(bgcolor);
   big_canvas_view = new NetworkCanvasView(this,big_canvas, vsplit);
-
   big_canvas_view->setServices(services);
-
 
   setCentralWidget( vsplit );
   statusBar()->message( "SCIRun 2.0.0 Ready");
-
-
 
   gov::cca::ports::ComponentEventService::pointer ces = pidl_cast<gov::cca::ports::ComponentEventService::pointer>(services->getPort("cca.ComponentEventService"));
   if(ces.isNull()){
@@ -193,7 +186,6 @@ BuilderWindow::BuilderWindow(const gov::cca::Services::pointer& services)
   }
   updateMiniView();
 }
- 
 
 BuilderWindow::~BuilderWindow()
 {
@@ -333,12 +325,9 @@ void BuilderWindow::buildPackageMenus()
   }
 
   vector<gov::cca::ComponentClassDescription::pointer> list = reg->getAvailableComponentClasses();
-
-
-
   map<string, MenuTree*> menus;
   for(vector<gov::cca::ComponentClassDescription::pointer>::iterator iter = list.begin();
-      iter != list.end(); iter++){
+    iter != list.end(); iter++){
     string model = (*iter)->getModelName();
     if(menus.find(model) == menus.end())
       menus[model]=new MenuTree(this,"");
@@ -361,17 +350,105 @@ void BuilderWindow::buildPackageMenus()
 
 void BuilderWindow::save()
 {
-  cerr << "BuilderWindow::save not finished\n";
+  QCanvasItemList tempQCL = miniCanvas->allItems();
+
+  ofstream saveOutputFile( "srTEST" );
+
+  std::vector<Module*> saveModules = big_canvas_view->getModules();
+  std::vector<Connection*> saveConnections = big_canvas_view->getConnections();
+
+  saveOutputFile << saveModules.size() << endl;
+  saveOutputFile << saveConnections.size() << endl;
+  
+  if( saveOutputFile.is_open() )
+  {
+    for( unsigned int j = 0; j < saveModules.size(); j++ )
+    {
+      saveOutputFile << saveModules[j]->moduleName << endl;
+      saveOutputFile << saveModules[j]->x() << endl;
+      saveOutputFile << saveModules[j]->y() << endl;
+    }
+
+    for( unsigned int k = 0; k < saveConnections.size(); k++ )
+    {
+      Module * getProvidesModule();
+
+      Module * um=saveConnections[k]->getUsesModule();
+      Module * pm=saveConnections[k]->getProvidesModule();
+      unsigned int iu=0;
+      unsigned int ip=0;
+      for(unsigned int i=0; i<saveModules.size();i++){
+	if(saveModules[i]==um) iu=i;
+	if(saveModules[i]==pm) ip=i;
+      }
+      saveOutputFile << iu<<" "<< saveConnections[k]->getUsesPortName() << " "
+		     << ip<<" "<< saveConnections[k]->getProvidesPortName() <<endl;
+    }
+  }
+
+  saveOutputFile.close();
 }
 
 void BuilderWindow::saveAs()
 {
   cerr << "BuilderWindow::saveAs not finished\n";
+
+  QString fn = QFileDialog::getSaveFileName( QString::null, QString::null, this );
+
+  if( !fn.isEmpty() ) {
+    //    filename = fn;
+    save();
+  } else {
+    statusBar()->message( "Saving aborted", 2000 );
+  }
 }
 
 void BuilderWindow::load()
 {
-  cerr << "BuilderWindow::load not finished\n";
+  std::vector<Module*> grab_latest_Modules;
+  std::vector<Module*> ptr_table;
+  QString fn = QFileDialog::getOpenFileName( QString::null, QString::null, this );
+
+  ifstream is( fn ); 
+
+  int load_Modules_size = 0;
+  int load_Connections_size = 0;
+  string tmp_moduleName;
+  int tmp_moduleName_x;
+  int tmp_moduleName_y;
+
+  is >> load_Modules_size >> load_Connections_size;
+
+  for( int i = 0; i < load_Modules_size; i++ )
+  {
+    is >> tmp_moduleName >> tmp_moduleName_x >> tmp_moduleName_y;
+
+    gov::cca::ports::BuilderService::pointer builder = pidl_cast<gov::cca::ports::BuilderService::pointer>(services->getPort("cca.BuilderService"));
+    gov::cca::ComponentID::pointer cid=builder->createInstance(tmp_moduleName, tmp_moduleName, gov::cca::TypeMap::pointer(0), "" );
+    CIA::array1<std::string> usesPorts=builder->getUsedPortNames(cid);
+    CIA::array1<std::string> providesPorts=builder->getProvidedPortNames(cid);
+    services->releasePort("cca.BuilderService");
+
+    if( tmp_moduleName != "SCIRun.Builder" )
+      big_canvas_view->addModule( tmp_moduleName, tmp_moduleName_x, tmp_moduleName_y, usesPorts, providesPorts, cid);
+
+    grab_latest_Modules = big_canvas_view->getModules();
+  
+    ptr_table.push_back( grab_latest_Modules[grab_latest_Modules.size()-1] );
+  }
+
+  for(unsigned int i = 0; i < load_Connections_size; i++ ) 
+  {
+    int iu, ip;
+    std::string up, pp;
+    
+    is>>iu>>up>>ip>>pp;
+
+    big_canvas_view->addConnection(ptr_table[iu],up,ptr_table[ip],pp);
+  }
+
+  is.close();
+  return;
 }
 
 void BuilderWindow::insert()
@@ -381,7 +458,16 @@ void BuilderWindow::insert()
 
 void BuilderWindow::clear()
 {
-  cerr << "BuilderWindow::clear not finished\n";
+  cerr << "BuilderWindow::clear(): deleting the following: " << endl;
+
+  // assign modules to local variable
+  std::vector<Module*> clearModules = big_canvas_view->getModules();
+
+  for( unsigned int j = 0; j < clearModules.size(); j++ )
+  {
+    cerr << "modules->getName = " << clearModules[j]->moduleName << endl;
+    clearModules[j]->destroy();
+  }
 }
 
 void BuilderWindow::addInfo()
@@ -403,9 +489,11 @@ void BuilderWindow::about()
   (new QMessageBox())->about(this, "About", "CCA Builder (SCIRun Implementation)");
 }
 
-void BuilderWindow::instantiateComponent(const gov::cca::ComponentClassDescription::pointer& cd,
-					 const std::string &url)
+void BuilderWindow::instantiateComponent(const gov::cca::ComponentClassDescription::pointer& cd, const std::string &url)
 {
+  // TEK
+  cerr << "BuilderWindow::instantiateCompnent(): Entering..." << endl;
+  // TEK
   cerr << "Should wait for component to be committed...\n";
   gov::cca::ports::BuilderService::pointer builder = pidl_cast<gov::cca::ports::BuilderService::pointer>(services->getPort("cca.BuilderService"));
   if(builder.isNull()){
@@ -414,7 +502,6 @@ void BuilderWindow::instantiateComponent(const gov::cca::ComponentClassDescripti
   }
   cerr << "Should put properties on component before creating\n";
 
- 
   gov::cca::ComponentID::pointer cid=builder->createInstance(cd->getClassName(), cd->getClassName(), gov::cca::TypeMap::pointer(0),url);
 
   CIA::array1<std::string> usesPorts=builder->getUsedPortNames(cid);
@@ -422,9 +509,14 @@ void BuilderWindow::instantiateComponent(const gov::cca::ComponentClassDescripti
 
   services->releasePort("cca.BuilderService");
   if(cd->getClassName()!="SCIRun.Builder"){
-    big_canvas_view->addModule(cd->getClassName(), usesPorts, providesPorts,
-			       cid);
+    int x = 20;
+    int y = 20;
+    big_canvas_view->addModule(cd->getClassName(), x, y, usesPorts, providesPorts, cid);
   }
+  // TEK
+  cerr << "BuilderWindow::instantiateCompnent(): Leaving..." << endl;
+ // TEK
+
 }
 
 void BuilderWindow::componentActivity(const gov::cca::ports::ComponentEvent::pointer& e)
@@ -475,6 +567,23 @@ void BuilderWindow::updateMiniView()
   }
   miniCanvas->update();
 }
+/*
+void BuilderWindow::choose()
+{
+  cerr << "BuilderWindow::choose(): Entering..." << endl;
+  QString fn = QFileDialog::getOpenFileName( QString::null, QString::null, 
+					     this );
+  if( !fn.isEmpty() )
+    load( fn );
+  else
+    statusBar()->message( "Loading aborted", 200 );
+
+  cerr << "BuilderWindow::choose(): Leaving..." << endl;
+}
+*/
+
+
+
 
 
 

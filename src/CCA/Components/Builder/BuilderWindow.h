@@ -64,6 +64,7 @@ namespace SCIRun {
     void instantiateComponent();
     
   };
+
   class BuilderWindow : public QMainWindow, public gov::cca::ports::ComponentEventListener {
     Q_OBJECT
   protected:
@@ -71,7 +72,6 @@ namespace SCIRun {
 
   public slots:
     void updateMiniView();
-
 
   private slots:
     void save();
@@ -81,20 +81,21 @@ namespace SCIRun {
     void clear();
     void addInfo();
     void exit();
-
     void about();
+
   public:
     BuilderWindow(const gov::cca::Services::pointer& services);
     virtual ~BuilderWindow();
 
-    void instantiateComponent(const gov::cca::ComponentClassDescription::pointer&,
-			      const std::string &url="");
+    void instantiateComponent(const gov::cca::ComponentClassDescription::pointer&, const std::string &url="");
 
     // From gov::cca::ComponentEventListener
     void componentActivity(const gov::cca::ports::ComponentEvent::pointer& e);
     void displayMsg(const char *); 
-    void buildRemotePackageMenus(const  gov::cca::ports::ComponentRepository::pointer &reg,
-				 const std::string &frameworkURL);
+    void buildRemotePackageMenus(const gov::cca::ports::ComponentRepository::pointer &reg, const std::string &frameworkURL);
+
+    std::vector<Module*> updateMiniView_modules;
+
   private:
     gov::cca::Services::pointer services;
     void buildPackageMenus();
@@ -102,12 +103,14 @@ namespace SCIRun {
     BuilderWindow& operator=(const BuilderWindow&);
     NetworkCanvasView* big_canvas_view;
     QTextEdit *e;	
-
     QCanvas* miniCanvas;
     QCanvas* big_canvas;
+    QCanvasItemList tempQCL;
+    std::vector<QCanvasRectangle*> miniRect;
   };
 }
 
 #endif
+
 
 
