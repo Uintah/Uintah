@@ -58,6 +58,7 @@ class SampleField : public Module
 
   BBox           ifield_bbox_;
   BBox           ring_bbox_;
+  BBox           frame_bbox_;
   int            widgetid_;
   int            wtype_;   // 0 none, 1 rake, 2 ring, 3 frame
   Point          endpoint0_;
@@ -316,7 +317,7 @@ SampleField::execute_ring(FieldHandle ifield)
   const BBox ibox = ifield->mesh()->get_bounding_box();
   bool reset = force_rake_reset_.get();
   force_rake_reset_.set(0);
-  bool resize = !bbox_similar_to(ring_bbox_, ibox);
+  bool resize = ring_bbox_.valid() && !bbox_similar_to(ring_bbox_, ibox);
   if (!ring_)
   {
     ring_ = scinew RingWidget(this, &widget_lock_, widgetscale_.get(), false);
@@ -324,6 +325,7 @@ SampleField::execute_ring(FieldHandle ifield)
 
     if (ringstate_.get() != "")
     {
+      cout << "Setting state, reset = " << reset << "\n";
       ring_->SetStateString(ringstate_.get());
 
       // Check for state validity here.  If not valid then // reset = true;
@@ -343,26 +345,16 @@ SampleField::execute_ring(FieldHandle ifield)
 
     if (reset)
     {
-      Vector xaxis(0.0, 0.0, 0.2);
-      Vector yaxis(0.2, 0.0, 0.0);
-      Point center(0.5, 0.0, 0.0);
-      Vector normal(Cross(xaxis, yaxis));
-      double radius = 0.2;
-
-      const double dx = 2.0;
-      const double dy = 2.0;
-      const double dz = 2.0;
-  
-      // This size seems empirically good.
-      const double quarterl2norm = sqrt(dx * dx + dy * dy + dz * dz) / 4.0;
+      const Vector xaxis(0.0, 0.0, 0.2);
+      const Vector yaxis(0.2, 0.0, 0.0);
+      c = Point (0.5, 0.0, 0.0);
+      n = Cross(xaxis, yaxis);
+      r = 0.2;
+      s = sqrt(3.0) * 0.03;
 
       ring_bbox_.reset();
       ring_bbox_.extend(Point(-1.0, -1.0, -1.0));
       ring_bbox_.extend(Point(1.0, 1.0, 1.0));
-      c = center;
-      n = normal;
-      r = radius;
-      s = quarterl2norm * .06;
     }
     else
     {
@@ -444,22 +436,71 @@ SampleField::execute_ring(FieldHandle ifield)
 void
 SampleField::execute_frame(FieldHandle ifield)
 {
+  const BBox ibox = ifield->mesh()->get_bounding_box();
+  bool reset = force_rake_reset_.get();
+  force_rake_reset_.set(0);
+  bool resize = frame_bbox_.valid() && !bbox_similar_to(frame_bbox_, ibox);
   if (!frame_)
   {
     frame_ = scinew FrameWidget(this, &widget_lock_, widgetscale_.get());
     frame_->Connect(ogport_);
 
-    if (framestate_.get() == "")
+    if (framestate_.get() != "")
     {
-      Vector xaxis0(0.0, 0.0, 0.2);
-      Vector yaxis0(0.2, 0.0, 0.0);
-      Point center0(0.5, 0.0, 0.0);
-      frame_->SetPosition(center0, center0 + xaxis0, center0 + yaxis0);
+      frame_->SetStateString(framestate_.get());
+
+      // Check for state validity here.  If not valid then // reset = true;
     }
     else
     {
-      frame_->SetStateString(framestate_.get());
+      reset = true;
     }
+  }
+
+  if (reset || resize)
+  {
+    Point c, nc, r, nr, d, nd;
+    double s, ns;
+
+    if (reset)
+    {
+      c = Point(0.5, 0.0, 0.0);
+      r = c + Vector(0.0, 0.0, 0.2);
+      d = c + Vector(0.2, 0.0, 0.0);
+      s = sqrt(3.0) * 0.03;
+
+      frame_bbox_.reset();
+      frame_bbox_.extend(Point(-1.0, -1.0, -1.0));
+      frame_bbox_.extend(Point(1.0, 1.0, 1.0));
+    }
+    else
+    {
+      // Get the old coordinates.
+      frame_->GetPosition(c, r, d);
+      s = frame_->GetScale();
+    }
+    
+    // Build a transform.
+    Transform trans;
+    trans.load_identity();
+    const Vector scale =
+      (ibox.max() - ibox.min()) / (frame_bbox_.max() - frame_bbox_.min());
+    trans.pre_translate(-frame_bbox_.min().asVector());
+    trans.pre_scale(scale);
+    trans.pre_translate(ibox.min().asVector());
+    
+    // Do the transform.
+    trans.project(c, nc);
+    trans.project(r, nr);
+    trans.project(d, nd);
+    ns = (s * scale).length() / sqrt(3.0);
+
+    // Apply the new coordinates.
+    frame_->SetPosition(nc, nr, nd);
+    frame_->SetScale(ns);
+    widgetscale_.set(ns);
+
+    frame_bbox_ = ibox;
   }
 
   if (wtype_ != 3)
