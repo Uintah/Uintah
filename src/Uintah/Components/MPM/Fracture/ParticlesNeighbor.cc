@@ -126,10 +126,12 @@ bool ParticlesNeighbor::visible(const Point& A,const Point& B) const
 	
 	if(b != 0) {
 	  double lambda = a/b;
-	  Point p( A.x() * (1-lambda) + B.x() * lambda,
-                   A.y() * (1-lambda) + B.y() * lambda,
-		   A.z() * (1-lambda) + B.z() * lambda );
-	  if( (p - O).length2() < size2 ) return false;
+	  if( lambda>=0 && lambda<=1 ) {
+	    Point p( A.x() * (1-lambda) + B.x() * lambda,
+                     A.y() * (1-lambda) + B.y() * lambda,
+		     A.z() * (1-lambda) + B.z() * lambda );
+ 	    if( (p - O).length2() < size2 ) return false;
+	  }
 	}
       }
   }
@@ -140,6 +142,9 @@ bool ParticlesNeighbor::visible(const Point& A,const Point& B) const
 } //namespace Uintah
 
 // $Log$
+// Revision 1.12  2000/09/16 04:18:04  tan
+// Modifications to make fracture works well.
+//
 // Revision 1.11  2000/09/12 16:52:11  tan
 // Reorganized crack surface contact force algorithm.
 //
