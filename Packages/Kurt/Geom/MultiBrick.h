@@ -22,7 +22,7 @@ using namespace SCICore::Geometry;
 using namespace SCICore::Datatypes;
 using Kurt::GeomSpace::VolumeOctree;
 using Kurt::GeomSpace::Brick;
-  using Kurt::GeomSpace::SliceTable;
+using Kurt::GeomSpace::SliceTable;
 
 class MultiBrick : public GeomObj
 {

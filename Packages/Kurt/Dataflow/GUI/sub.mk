@@ -7,13 +7,17 @@ SRCDIR := Kurt/GUI
 
 ALLTARGETS := $(ALLTARGETS) $(SRCDIR)/tclIndex
 
-$(SRCDIR)/tclIndex: $(SRCDIR)/VolVis.tcl $(SRCDIR)/PadField.tcl
+$(SRCDIR)/tclIndex: $(SRCDIR)/VolVis.tcl $(SRCDIR)/PadField.tcl \
+	$(SRCDIR)/TextureVolVis.tcl $(SRCDIR)/GLTextureBuilder.tcl
 	$(SRCTOP)/scripts/createTclIndex $(SRCTOP)/Kurt/GUI
 
 CLEANPROGS := $(CLEANPROGS) $(SRCDIR)/tclIndex
 
 #
 # $Log$
+# Revision 1.4  2000/05/16 20:54:00  kuzimmer
+# added new directory
+#
 # Revision 1.3  2000/03/21 17:33:25  kuzimmer
 # updating volume renderer
 #

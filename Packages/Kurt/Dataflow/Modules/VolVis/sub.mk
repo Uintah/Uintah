@@ -5,10 +5,16 @@
 
 SRCDIR   := Kurt/Modules/VolVis
 
-SRCS     += $(SRCDIR)/VolVis.cc $(SRCDIR)/PadField.cc
+SRCS     += $(SRCDIR)/VolVis.cc $(SRCDIR)/PadField.cc  \
+		$(SRCDIR)/GLTextureBuilder.cc \
+		$(SRCDIR)/TextureVolVis.cc 
+
 
 #
 # $Log$
+# Revision 1.4  2000/05/16 20:54:03  kuzimmer
+# added new directory
+#
 # Revision 1.3  2000/03/21 17:33:28  kuzimmer
 # updating volume renderer
 #
