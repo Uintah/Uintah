@@ -11,7 +11,7 @@
  */
 
 #include <PSECore/Datatypes/GeometryPort.h>
-#include <DaveW/Datatypes/General/PathPort.h>
+#include <PSECore/Datatypes/PathPort.h>
 #include <SCICore/Geom/View.h>
 #include <SCICore/Malloc/Allocator.h>
 #include <SCICore/Containers/HashTable.h>
@@ -19,12 +19,12 @@
 #include <SCICore/TclInterface/TCLvar.h>
 #include <SCICore/TclInterface/TCLTask.h>
 #include <iostream>
-#include <DaveW/Datatypes/General/Path.h>
+#include <SCICore/Datatypes/Path.h>
 #include <SCICore/Thread/Semaphore.h>
 #include <SCICore/Thread/Mutex.h>
 #include <iosfwd>
-
 #include <SCICore/Util/Timer.h>
+#include <SCICore/Thread/Time.h>
 
 using std::cout;
 using namespace std;
@@ -42,14 +42,12 @@ using namespace SCICore::Containers;
 using namespace SCICore::GeomSpace;
 using namespace SCICore::Geometry;
 using namespace SCICore::TclInterface;
-using namespace DaveW::Datatypes;
+using namespace SCICore::Datatypes;
 using SCICore::Thread::Semaphore;
 using SCICore::Thread::Mutex;
+using SCICore::Thread::Time;
 using namespace std;
 
-
-
-  
 class EditPath : public Module {
 
     enum ExecMsg { Default=1, add_vp, rem_vp, ins_vp, init, init_new, 
@@ -73,10 +71,10 @@ class EditPath : public Module {
     bool         is_changed, is_new, is_init, is_auto;
     ExecMsg      exec_msg;
     View         c_view;
-      
+  
     Semaphore    sem;
     Mutex        exec_lock;
-
+  
     PathIPort*   ipath;
     PathOPort*   opath;
     GeometryOPort* ogeom;
@@ -278,8 +276,7 @@ void EditPath::execute()
       ogeom->setView(0, c_view);  
       if (is_next){ 
 	  exec_msg=test_path;
-	  sginap(rate*100);
-	  //	  usleep(rate*1000);
+	  Time::waitFor((double)rate);
 	  want_to_execute();
 	  // !!! no sem.up() here - no certain UI parts interference
 	  exec_lock.unlock();
@@ -297,8 +294,7 @@ void EditPath::execute()
       if(curr_path_h->get_nextKF(c_view, curr_view, speed_val, acc_patt)){
           ogeom->setView(0, c_view);  
 	  exec_msg=test_views;
-	  //usleep(rate*100);
-	  sginap(rate*10);
+	  Time::waitFor((double)(rate*3)); 
 	  want_to_execute();
 	  // !!! no sem.up() here - no certain UI parts interference
 	  exec_lock.unlock();
@@ -595,6 +591,9 @@ bool EditPath::Msg_Box(const clString& title, const clString& message){
 
 //
 // $Log$
+// Revision 1.2  2000/07/19 19:27:16  samsonov
+// Moving from DaveW package
+//
 // Revision 1.1  2000/07/18 23:09:49  samsonov
 // *** empty log message ***
 //
