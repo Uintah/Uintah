@@ -2,6 +2,7 @@
 #define UINTAH_HOMEBREW_PARALLEL_H
 
 namespace Uintah {
+   class ProcessorGroup;
 
 /**************************************
 
@@ -41,14 +42,14 @@ WARNING
       //////////
       // Insert Documentation Here:
       static void finalizeManager();
+
+      //////////
+      // Insert Documenatation here:
+      static ProcessorGroup* getRootProcessorGroup();
       
       //////////
-      // Returns the Number of MPI Processes in this simulation...
-      static int getSize();
-      
-      //////////
-      // Returns the MPI Rank of this process
-      static int getRank();
+      // Returns true if this process is using MPI
+      static bool usingMPI();
       
    private:
       Parallel();
@@ -62,6 +63,9 @@ WARNING
 
 //
 // $Log$
+// Revision 1.5  2000/06/17 07:06:48  sparker
+// Changed ProcessorContext to ProcessorGroup
+//
 // Revision 1.4  2000/04/26 06:49:15  sparker
 // Streamlined namespaces
 //

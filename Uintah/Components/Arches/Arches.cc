@@ -40,8 +40,8 @@ using namespace Uintah::ArchesSpace;
 //****************************************************************************
 // Actual constructor for Arches
 //****************************************************************************
-Arches::Arches( int MpiRank, int MpiProcesses ) :
-  UintahParallelComponent( MpiRank, MpiProcesses )
+Arches::Arches(const ProcessorGroup* myworld) :
+  UintahParallelComponent(myworld)
 {
   d_densityLabel = scinew VarLabel("density", 
 				   CCVariable<double>::getTypeDescription() );
@@ -259,7 +259,7 @@ Arches::scheduleTimeAdvance(double time, double dt,
 // Actual initialization
 //****************************************************************************
 void
-Arches::paramInit(const ProcessorContext* ,
+Arches::paramInit(const ProcessorGroup* ,
 		  const Patch* patch,
 		  DataWarehouseP& old_dw,
 		  DataWarehouseP& )
@@ -361,6 +361,9 @@ Arches::paramInit(const ProcessorContext* ,
 
 //
 // $Log$
+// Revision 1.41  2000/06/17 07:06:22  sparker
+// Changed ProcessorContext to ProcessorGroup
+//
 // Revision 1.40  2000/06/16 21:50:47  bbanerje
 // Changed the Varlabels so that sequence in understood in init stage.
 // First cycle detected in task graph.

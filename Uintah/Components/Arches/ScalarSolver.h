@@ -35,7 +35,6 @@ WARNING
 
 ************************************************************************/
 
-#include <Uintah/Parallel/ProcessorContext.h>
 #include <Uintah/Interface/SchedulerP.h>
 #include <Uintah/Interface/ProblemSpecP.h>
 #include <Uintah/Interface/DataWarehouseP.h>
@@ -45,6 +44,7 @@ WARNING
 #include <Uintah/Grid/CCVariable.h>
 
 namespace Uintah {
+   class ProcessorGroup;
 namespace ArchesSpace {
 
 class TurbulenceModel;
@@ -124,7 +124,7 @@ private:
       //    [in] 
       //        add documentation here
       //
-      void buildLinearMatrix(const ProcessorContext* pc,
+      void buildLinearMatrix(const ProcessorGroup* pc,
 			     const Patch* patch,
 			     DataWarehouseP& old_dw,
 			     DataWarehouseP& new_dw,
@@ -170,6 +170,9 @@ private:
 
 //
 // $Log$
+// Revision 1.8  2000/06/17 07:06:26  sparker
+// Changed ProcessorContext to ProcessorGroup
+//
 // Revision 1.7  2000/06/12 21:30:00  bbanerje
 // Added first Fortran routines, added Stencil Matrix where needed,
 // removed unnecessary CCVariables (e.g., sources etc.)

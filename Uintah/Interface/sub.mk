@@ -8,7 +8,7 @@ include $(SRCTOP)/scripts/smallso_prologue.mk
 SRCDIR   := Uintah/Interface
 
 SRCS     += $(SRCDIR)/CFDInterface.cc $(SRCDIR)/DataArchive.cc \
-	$(SRCDIR)/DataWarehouse.cc \
+	$(SRCDIR)/DataWarehouse.cc $(SRCDIR)/LoadBalancer.cc \
 	$(SRCDIR)/MPMInterface.cc $(SRCDIR)/Output.cc \
 	$(SRCDIR)/ProblemSpec.cc $(SRCDIR)/ProblemSpecInterface.cc \
 	$(SRCDIR)/Scheduler.cc $(SRCDIR)/DWMpiHandler.cc \
@@ -22,6 +22,9 @@ include $(SRCTOP)/scripts/smallso_epilogue.mk
 
 #
 # $Log$
+# Revision 1.12  2000/06/17 07:06:47  sparker
+# Changed ProcessorContext to ProcessorGroup
+#
 # Revision 1.11  2000/06/15 21:57:22  sparker
 # Added multi-patch support (bugzilla #107)
 # Changed interface to datawarehouse for particle data

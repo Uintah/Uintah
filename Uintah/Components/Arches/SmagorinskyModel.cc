@@ -145,7 +145,7 @@ SmagorinskyModel::sched_computeTurbSubmodel(const LevelP& level,
 // Actual compute 
 //****************************************************************************
 void 
-SmagorinskyModel::computeTurbSubmodel(const ProcessorContext* pc,
+SmagorinskyModel::computeTurbSubmodel(const ProcessorGroup* pc,
 				      const Patch* patch,
 				      DataWarehouseP& old_dw,
 				      DataWarehouseP& new_dw)
@@ -220,7 +220,7 @@ SmagorinskyModel::computeTurbSubmodel(const ProcessorContext* pc,
 //****************************************************************************
 // Calculate the Velocity BC at the Wall
 //****************************************************************************
-void SmagorinskyModel::calcVelocityWallBC(const ProcessorContext* pc,
+void SmagorinskyModel::calcVelocityWallBC(const ProcessorGroup* pc,
 					  const Patch* patch,
 					  DataWarehouseP& old_dw,
 					  DataWarehouseP& new_dw,
@@ -383,7 +383,7 @@ void SmagorinskyModel::calcVelocityWallBC(const ProcessorContext* pc,
 //****************************************************************************
 // No source term for samgorinsky model
 //****************************************************************************
-void SmagorinskyModel::calcVelocitySource(const ProcessorContext* pc,
+void SmagorinskyModel::calcVelocitySource(const ProcessorGroup* pc,
 					  const Patch* patch,
 					  const DataWarehouseP& old_dw,
 					  DataWarehouseP& new_dw,
@@ -393,6 +393,9 @@ void SmagorinskyModel::calcVelocitySource(const ProcessorContext* pc,
 
 //
 // $Log$
+// Revision 1.14  2000/06/17 07:06:26  sparker
+// Changed ProcessorContext to ProcessorGroup
+//
 // Revision 1.13  2000/06/16 21:50:48  bbanerje
 // Changed the Varlabels so that sequence in understood in init stage.
 // First cycle detected in task graph.

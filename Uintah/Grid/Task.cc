@@ -135,7 +135,7 @@ Task::computes(const DataWarehouseP& ds, const VarLabel* var, int matlIndex,
 }
 
 void
-Task::doit(const ProcessorContext* pc)
+Task::doit(const ProcessorGroup* pc)
 {
   if( d_completed )
       throw InternalError("Task performed, but already completed");
@@ -168,6 +168,9 @@ Task::getRequires() const
 
 //
 // $Log$
+// Revision 1.15  2000/06/17 07:06:44  sparker
+// Changed ProcessorContext to ProcessorGroup
+//
 // Revision 1.14  2000/06/15 21:57:19  sparker
 // Added multi-patch support (bugzilla #107)
 // Changed interface to datawarehouse for particle data

@@ -49,7 +49,7 @@ WARNING
 
 class SerialMPM : public UintahParallelComponent, public MPMInterface {
 public:
-  SerialMPM( int MpiRank, int MpiProcesses);
+  SerialMPM(const ProcessorGroup* myworld);
   virtual ~SerialMPM();
 	 
   //////////
@@ -80,7 +80,7 @@ public:
 private:
   //////////
   // Insert Documentation Here:
-  void actuallyInitialize(const ProcessorContext*,
+  void actuallyInitialize(const ProcessorGroup*,
 			  const Patch* patch,
 			  DataWarehouseP& old_dw,
 			  DataWarehouseP& new_dw);
@@ -91,26 +91,26 @@ private:
 
   //////////
   // Insert Documentation Here:
-  void actuallyComputeStableTimestep(const ProcessorContext*,
+  void actuallyComputeStableTimestep(const ProcessorGroup*,
 				     const Patch* patch,
 				     DataWarehouseP& old_dw,
 				     DataWarehouseP& new_dw);
   //////////
   // Insert Documentation Here:
-  void interpolateParticlesToGrid(const ProcessorContext*,
+  void interpolateParticlesToGrid(const ProcessorGroup*,
 				  const Patch* patch,
 				  DataWarehouseP& old_dw,
 				  DataWarehouseP& new_dw);
   //////////
   // Insert Documentation Here:
-  void computeStressTensor(const ProcessorContext*,
+  void computeStressTensor(const ProcessorGroup*,
 			   const Patch* patch,
 			   DataWarehouseP& old_dw,
 			   DataWarehouseP& new_dw);
 
   //////////
   // Check to see if any particles are ready to burn
-  void checkIfIgnited(const ProcessorContext*,
+  void checkIfIgnited(const ProcessorGroup*,
 		      const Patch* patch,
 		      DataWarehouseP& old_dw,
 		      DataWarehouseP& new_dw);
@@ -118,7 +118,7 @@ private:
   //////////
   // Compute the amount of mass of each particle that burns
   // up in a given timestep
-  void computeMassRate(const ProcessorContext*,
+  void computeMassRate(const ProcessorGroup*,
 		       const Patch* patch,
 		       DataWarehouseP& old_dw,
 		       DataWarehouseP& new_dw);
@@ -127,14 +127,14 @@ private:
   // update the Surface Normal Of Boundary Particles according to their
   // velocity gradient during the deformation
   //
-  void updateSurfaceNormalOfBoundaryParticle(const ProcessorContext*,
+  void updateSurfaceNormalOfBoundaryParticle(const ProcessorGroup*,
 					     const Patch* patch,
 					     DataWarehouseP& old_dw,
 					     DataWarehouseP& new_dw);
 
   //////////
   // Insert Documentation Here:
-  void computeInternalForce(const ProcessorContext*,
+  void computeInternalForce(const ProcessorGroup*,
 			    const Patch* patch,
 			    DataWarehouseP& old_dw,
 			    DataWarehouseP& new_dw);
@@ -142,34 +142,34 @@ private:
   //////////
   // Insert Documentation Here:
   void computeInternalHeatRate(
-			       const ProcessorContext*,
+			       const ProcessorGroup*,
 			       const Patch* patch,
 			       DataWarehouseP& old_dw,
 			       DataWarehouseP& new_dw);
 
   //////////
   // Insert Documentation Here:
-  void solveEquationsMotion(const ProcessorContext*,
+  void solveEquationsMotion(const ProcessorGroup*,
 			    const Patch* patch,
 			    DataWarehouseP& old_dw,
 			    DataWarehouseP& new_dw);
 
   //////////
   // Insert Documentation Here:
-  void solveHeatEquations(const ProcessorContext*,
+  void solveHeatEquations(const ProcessorGroup*,
 			  const Patch* patch,
 			  DataWarehouseP& /*old_dw*/,
 			  DataWarehouseP& new_dw);
 
   //////////
   // Insert Documentation Here:
-  void integrateAcceleration(const ProcessorContext*,
+  void integrateAcceleration(const ProcessorGroup*,
 			     const Patch* patch,
 			     DataWarehouseP& old_dw,
 			     DataWarehouseP& new_dw);
   //////////
   // Insert Documentation Here:
-  void interpolateToParticlesAndUpdate(const ProcessorContext*,
+  void interpolateToParticlesAndUpdate(const ProcessorGroup*,
 				       const Patch* patch,
 				       DataWarehouseP& old_dw,
 				       DataWarehouseP& new_dw);
@@ -178,7 +178,7 @@ private:
   // check the stress on each boundary particle to see
   // if the microcrack will grow.  If fracture occur,
   // more interior particles become boundary particles
-  void crackGrow(const ProcessorContext*,
+  void crackGrow(const ProcessorGroup*,
 		 const Patch* patch,
 		 DataWarehouseP& old_dw,
 		 DataWarehouseP& new_dw);
@@ -186,7 +186,7 @@ private:
 
   //////////
   // Insert Documentation Here:
-  void checkLeave(const ProcessorContext*,
+  void checkLeave(const ProcessorGroup*,
 		  const Patch* patch,
 		  DataWarehouseP& /*old_dw*/,
 		  DataWarehouseP& new_dw);
@@ -207,6 +207,9 @@ private:
    
 //
 // $Log$
+// Revision 1.41  2000/06/17 07:06:33  sparker
+// Changed ProcessorContext to ProcessorGroup
+//
 // Revision 1.40  2000/06/16 23:23:36  guilkey
 // Got rid of pVolumeDeformedLabel_preReloc to fix some confusion
 // the scheduler was having.

@@ -13,8 +13,8 @@ using std::vector;
 using std::string;
 
 namespace Uintah {
-
-   class ProcessorContext;
+   class TaskGraph;
+   class ProcessorGroup;
    class VarLabel;
    class Patch;
    class TypeDescription;
@@ -53,7 +53,7 @@ WARNING
       class ActionBase {
       public:
 	 virtual ~ActionBase();
-	 virtual void doit(const ProcessorContext* pc,
+	 virtual void doit(const ProcessorGroup* pc,
 			   const Patch* patch,
 			   DataWarehouseP& fromDW,
 			   DataWarehouseP& toDW) = 0;
@@ -64,12 +64,12 @@ WARNING
       class NPAction : public ActionBase {
 
          T* ptr;
-         void (T::*pmf)(const ProcessorContext*,
+         void (T::*pmf)(const ProcessorGroup*,
                         DataWarehouseP&,
                         DataWarehouseP&);
       public:
          NPAction( T* ptr,
-                 void (T::*pmf)(const ProcessorContext*,
+                 void (T::*pmf)(const ProcessorGroup*,
                                 DataWarehouseP&,
                                 DataWarehouseP&) )
             : ptr(ptr), pmf(pmf) {}
@@ -77,7 +77,7 @@ WARNING
 
          //////////
          // Insert Documentation Here:
-         virtual void doit(const ProcessorContext* pc,
+         virtual void doit(const ProcessorGroup* pc,
                            const Patch*,
                            DataWarehouseP& fromDW,
                            DataWarehouseP& toDW) {
@@ -91,13 +91,13 @@ WARNING
 
          T* ptr;
 	 Arg1 arg1;
-         void (T::*pmf)(const ProcessorContext*,
+         void (T::*pmf)(const ProcessorGroup*,
                         DataWarehouseP&,
                         DataWarehouseP&,
 			Arg1);
       public:
          NPAction1( T* ptr,
-                 void (T::*pmf)(const ProcessorContext*,
+                 void (T::*pmf)(const ProcessorGroup*,
                                 DataWarehouseP&,
                                 DataWarehouseP&,
 				Arg1),
@@ -107,7 +107,7 @@ WARNING
 
          //////////
          // Insert Documentation Here:
-         virtual void doit(const ProcessorContext* pc,
+         virtual void doit(const ProcessorGroup* pc,
                            const Patch*,
                            DataWarehouseP& fromDW,
                            DataWarehouseP& toDW) {
@@ -120,13 +120,13 @@ WARNING
       class Action : public ActionBase {
 	 
 	 T* ptr;
-	 void (T::*pmf)(const ProcessorContext*,
+	 void (T::*pmf)(const ProcessorGroup*,
 			const Patch*,
 			DataWarehouseP&,
 			DataWarehouseP&);
       public:
 	 Action( T* ptr,
-		 void (T::*pmf)(const ProcessorContext*, 
+		 void (T::*pmf)(const ProcessorGroup*, 
 				const Patch*, 
 				DataWarehouseP&,
 				DataWarehouseP&) )
@@ -135,7 +135,7 @@ WARNING
 	 
 	 //////////
 	 // Insert Documentation Here:
-	 virtual void doit(const ProcessorContext* pc,
+	 virtual void doit(const ProcessorGroup* pc,
 			   const Patch* patch,
 			   DataWarehouseP& fromDW,
 			   DataWarehouseP& toDW) {
@@ -147,14 +147,14 @@ WARNING
 	 
 	 T* ptr;
 	 Arg1 arg1;
-	 void (T::*pmf)(const ProcessorContext*,
+	 void (T::*pmf)(const ProcessorGroup*,
 			const Patch*,
 			DataWarehouseP&,
 			DataWarehouseP&,
 			Arg1 arg1);
       public:
 	 Action1( T* ptr,
-		 void (T::*pmf)(const ProcessorContext*, 
+		 void (T::*pmf)(const ProcessorGroup*, 
 				const Patch*, 
 				DataWarehouseP&,
 				DataWarehouseP&,
@@ -165,7 +165,7 @@ WARNING
 	 
 	 //////////
 	 // Insert Documentation Here:
-	 virtual void doit(const ProcessorContext* pc,
+	 virtual void doit(const ProcessorGroup* pc,
 			   const Patch* patch,
 			   DataWarehouseP& fromDW,
 			   DataWarehouseP& toDW) {
@@ -179,14 +179,14 @@ WARNING
 	 T* ptr;
 	 Arg1 arg1;
 	 Arg2 arg2;
-	 void (T::*pmf)(const ProcessorContext*,
+	 void (T::*pmf)(const ProcessorGroup*,
 			const Patch*,
 			DataWarehouseP&,
 			DataWarehouseP&,
 			Arg1 arg1, Arg2 arg2);
       public:
 	 Action2( T* ptr,
-		 void (T::*pmf)(const ProcessorContext*, 
+		 void (T::*pmf)(const ProcessorGroup*, 
 				const Patch*, 
 				DataWarehouseP&,
 				DataWarehouseP&,
@@ -197,7 +197,7 @@ WARNING
 	 
 	 //////////
 	 // Insert Documentation Here:
-	 virtual void doit(const ProcessorContext* pc,
+	 virtual void doit(const ProcessorGroup* pc,
 			   const Patch* patch,
 			   DataWarehouseP& fromDW,
 			   DataWarehouseP& toDW) {
@@ -212,14 +212,14 @@ WARNING
 	 Arg1 arg1;
 	 Arg2 arg2;
 	 Arg3 arg3;
-	 void (T::*pmf)(const ProcessorContext*,
+	 void (T::*pmf)(const ProcessorGroup*,
 			const Patch*,
 			DataWarehouseP&,
 			DataWarehouseP&,
 			Arg1 arg1, Arg2 arg2, Arg3 arg3);
       public:
 	 Action3( T* ptr,
-		 void (T::*pmf)(const ProcessorContext*, 
+		 void (T::*pmf)(const ProcessorGroup*, 
 				const Patch*, 
 				DataWarehouseP&,
 				DataWarehouseP&,
@@ -230,7 +230,7 @@ WARNING
 	 
 	 //////////
 	 // Insert Documentation Here:
-	 virtual void doit(const ProcessorContext* pc,
+	 virtual void doit(const ProcessorGroup* pc,
 			   const Patch* patch,
 			   DataWarehouseP& fromDW,
 			   DataWarehouseP& toDW) {
@@ -259,7 +259,7 @@ WARNING
 	   DataWarehouseP&       fromDW,
 	   DataWarehouseP&       toDW,
 	   T*                    ptr,
-	   void (T::*pmf)(const ProcessorContext*,
+	   void (T::*pmf)(const ProcessorGroup*,
 			  const Patch*,
 			  DataWarehouseP&,
 			  DataWarehouseP&) )
@@ -281,7 +281,7 @@ WARNING
            DataWarehouseP&       fromDW,
            DataWarehouseP&       toDW,
            T*                    ptr,
-           void (T::*pmf)(const ProcessorContext*,
+           void (T::*pmf)(const ProcessorGroup*,
                           DataWarehouseP&,
                           DataWarehouseP&) )
          : d_taskName( taskName ),
@@ -303,7 +303,7 @@ WARNING
            DataWarehouseP&       fromDW,
            DataWarehouseP&       toDW,
            T*                    ptr,
-           void (T::*pmf)(const ProcessorContext*,
+           void (T::*pmf)(const ProcessorGroup*,
                           DataWarehouseP&,
                           DataWarehouseP&,
 			  Arg1),
@@ -327,7 +327,7 @@ WARNING
 	   DataWarehouseP&       fromDW,
 	   DataWarehouseP&       toDW,
 	   T*                    ptr,
-	   void (T::*pmf)(const ProcessorContext*,
+	   void (T::*pmf)(const ProcessorGroup*,
 			  const Patch*,
 			  DataWarehouseP&,
 			  DataWarehouseP&) )
@@ -350,7 +350,7 @@ WARNING
 	   DataWarehouseP&       fromDW,
 	   DataWarehouseP&       toDW,
 	   T*                    ptr,
-	   void (T::*pmf)(const ProcessorContext*,
+	   void (T::*pmf)(const ProcessorGroup*,
 			  const Patch*,
 			  DataWarehouseP&,
 			  DataWarehouseP&,
@@ -375,7 +375,7 @@ WARNING
 	   DataWarehouseP&       fromDW,
 	   DataWarehouseP&       toDW,
 	   T*                    ptr,
-	   void (T::*pmf)(const ProcessorContext*,
+	   void (T::*pmf)(const ProcessorGroup*,
 			  const Patch*,
 			  DataWarehouseP&,
 			  DataWarehouseP&,
@@ -400,7 +400,7 @@ WARNING
 	   DataWarehouseP&       fromDW,
 	   DataWarehouseP&       toDW,
 	   T*                    ptr,
-	   void (T::*pmf)(const ProcessorContext*,
+	   void (T::*pmf)(const ProcessorGroup*,
 			  const Patch*,
 			  DataWarehouseP&,
 			  DataWarehouseP&,
@@ -452,7 +452,7 @@ WARNING
 
       //////////
       // Insert Documentation Here:
-      void doit(const ProcessorContext* pc);
+      void doit(const ProcessorGroup* pc);
       const string& getName() const {
 	 return d_taskName;
       }
@@ -494,6 +494,15 @@ WARNING
       bool isReductionTask() const {
 	 return d_isReductionTask;
       }
+
+      void assignResource(int idx) {
+	 resourceIndex = idx;
+      }
+   protected:
+      friend class TaskGraph;
+      bool visited;
+      bool sorted;
+      int resourceIndex;
    private:
       //////////
       // Insert Documentation Here:
@@ -519,6 +528,9 @@ WARNING
 
 //
 // $Log$
+// Revision 1.18  2000/06/17 07:06:44  sparker
+// Changed ProcessorContext to ProcessorGroup
+//
 // Revision 1.17  2000/06/03 05:29:45  sparker
 // Changed reduction variable emit to require ostream instead of ofstream
 // emit now only prints number without formatting

@@ -20,7 +20,6 @@ namespace Uintah {
    using SCICore::Geometry::Vector;
    using SCICore::Math::Min;
 
-   class ProcessorContext;
    class Patch;
    class VarLabel;
    class Task;
@@ -103,6 +102,9 @@ WARNING
 } // end namespace Uintah
    
 // $Log$
+// Revision 1.4  2000/06/17 07:06:35  sparker
+// Changed ProcessorContext to ProcessorGroup
+//
 // Revision 1.3  2000/06/08 16:49:44  guilkey
 // Added more stuff to the burn models.  Most infrastructure is now
 // in place to change the mass and volume, we just need a little bit of science.

@@ -36,7 +36,6 @@ WARNING
 none
 ****************************************/
 
-#include <Uintah/Parallel/ProcessorContext.h>
 #include <Uintah/Interface/SchedulerP.h>
 #include <Uintah/Interface/DataWarehouseP.h>
 #include <Uintah/Grid/LevelP.h>
@@ -46,6 +45,7 @@ none
 #include <SCICore/Containers/Array1.h>
 
 namespace Uintah {
+class ProcessorGroup;
 namespace ArchesSpace {
 
 class PhysicalConstants;
@@ -90,7 +90,7 @@ public:
       // Set source terms. Will need more parameters...like velocity and
       // scalars
       //
-      void calculatePressureSource(const ProcessorContext* pc,
+      void calculatePressureSource(const ProcessorGroup* pc,
 				   const Patch* patch,
 				   DataWarehouseP& old_dw,
 				   DataWarehouseP& new_dw,
@@ -101,7 +101,7 @@ public:
       // Set source terms. Will need more parameters...like velocity and
       // scalars
       //
-      void calculateVelocitySource(const ProcessorContext* pc,
+      void calculateVelocitySource(const ProcessorGroup* pc,
 				   const Patch* patch,
 				   DataWarehouseP& old_dw,
 				   DataWarehouseP& new_dw,
@@ -113,7 +113,7 @@ public:
       // Set source terms. Will need more parameters...like velocity and
       // scalars
       //
-      void calculateScalarSource(const ProcessorContext* pc,
+      void calculateScalarSource(const ProcessorGroup* pc,
 				 const Patch* patch,
 				 DataWarehouseP& old_dw,
 				 DataWarehouseP& new_dw,
@@ -125,7 +125,7 @@ public:
       // Set source terms. Will need more parameters...like velocity and
       // scalars
       //
-      void modifyVelMassSource(const ProcessorContext* pc,
+      void modifyVelMassSource(const ProcessorGroup* pc,
 			       const Patch* patch,
 			       DataWarehouseP& old_dw,
 			       DataWarehouseP& new_dw,
@@ -137,7 +137,7 @@ public:
       // Set source terms. Will need more parameters...like velocity and
       // scalars
       //
-      void modifyScalarMassSource(const ProcessorContext* pc,
+      void modifyScalarMassSource(const ProcessorGroup* pc,
 				  const Patch* patch,
 				  DataWarehouseP& old_dw,
 				  DataWarehouseP& new_dw,
@@ -149,7 +149,7 @@ public:
       // Set source terms. Will need more parameters...like velocity and
       // scalars
       //
-      void addPressureSource(const ProcessorContext* pc,
+      void addPressureSource(const ProcessorGroup* pc,
 			     const Patch* patch,
 			     DataWarehouseP& old_dw,
 			     DataWarehouseP& new_dw,
@@ -189,6 +189,9 @@ private:
   
 //
 // $Log$
+// Revision 1.12  2000/06/17 07:06:27  sparker
+// Changed ProcessorContext to ProcessorGroup
+//
 // Revision 1.11  2000/06/13 06:02:32  bbanerje
 // Added some more StencilMatrices and vector<CCVariable> types.
 //

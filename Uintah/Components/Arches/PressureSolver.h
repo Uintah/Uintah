@@ -37,13 +37,13 @@ WARNING
 
 #include <Uintah/Grid/LevelP.h>
 #include <Uintah/Interface/SchedulerP.h>
-#include <Uintah/Parallel/ProcessorContext.h>
 #include <Uintah/Grid/CCVariable.h>
 #include <Uintah/Interface/ProblemSpecP.h>
 #include <Uintah/Interface/DataWarehouseP.h>
 #include <Uintah/Grid/VarLabel.h>
 
 namespace Uintah {
+class ProcessorGroup;
 namespace ArchesSpace {
 
 class TurbulenceModel;
@@ -134,7 +134,7 @@ private:
       //    [in] 
       //        add documentation here
       //
-      void buildLinearMatrix(const ProcessorContext* pc,
+      void buildLinearMatrix(const ProcessorGroup* pc,
 			     const Patch* patch,
 			     DataWarehouseP& old_dw,
 			     DataWarehouseP& new_dw,
@@ -212,6 +212,9 @@ private:
 
 //
 // $Log$
+// Revision 1.17  2000/06/17 07:06:25  sparker
+// Changed ProcessorContext to ProcessorGroup
+//
 // Revision 1.16  2000/06/07 06:13:55  bbanerje
 // Changed CCVariable<Vector> to CCVariable<double> for most cases.
 // Some of these variables may not be 3D Vectors .. they may be Stencils

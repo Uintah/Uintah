@@ -36,7 +36,6 @@ POSSIBLE REVISIONS
 #include <Uintah/Parallel/UintahParallelComponent.h>
 #include <Uintah/Interface/CFDInterface.h>
 #include <Uintah/Grid/Patch.h>
-#include <Uintah/Parallel/ProcessorContext.h>
 #include <SCICore/Geometry/Vector.h>
 
 namespace Uintah {
@@ -135,6 +134,9 @@ private:
 
 //
 // $Log$
+// Revision 1.10  2000/06/17 07:06:24  sparker
+// Changed ProcessorContext to ProcessorGroup
+//
 // Revision 1.9  2000/05/31 06:03:34  bbanerje
 // Added Cocoon stuff to PhysicalConstants.h and gravity vector initializer to
 // PhysicalConstants.cc

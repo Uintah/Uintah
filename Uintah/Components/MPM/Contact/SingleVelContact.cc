@@ -63,7 +63,7 @@ void SingleVelContact::initializeContact(const Patch* /*patch*/,
 
 }
 
-void SingleVelContact::exMomInterpolated(const ProcessorContext*,
+void SingleVelContact::exMomInterpolated(const ProcessorGroup*,
 					 const Patch* patch,
 					 DataWarehouseP&,
 					 DataWarehouseP& new_dw)
@@ -116,7 +116,7 @@ void SingleVelContact::exMomInterpolated(const ProcessorContext*,
   }
 }
 
-void SingleVelContact::exMomIntegrated(const ProcessorContext*,
+void SingleVelContact::exMomIntegrated(const ProcessorGroup*,
 				  const Patch* patch,
 				  DataWarehouseP& old_dw,
 				  DataWarehouseP& new_dw)
@@ -214,6 +214,9 @@ void SingleVelContact::addComputesAndRequiresIntegrated( Task* t,
 }
 
 // $Log$
+// Revision 1.22  2000/06/17 07:06:38  sparker
+// Changed ProcessorContext to ProcessorGroup
+//
 // Revision 1.21  2000/05/30 21:07:37  dav
 // delt to delT
 //

@@ -162,7 +162,7 @@ int PicardNonlinearSolver::nonlinearSolve(const LevelP& level,
 
 #ifdef WONT_COMPILE_YET
     // not sure...but we need to execute tasks somewhere
-    ProcessorContext* pc = ProcessorContext::getRootContext();
+    ProcessorGroup* pc = ProcessorGroup::getRootContext();
     sched->execute(pc);
 #endif
 
@@ -237,7 +237,7 @@ PicardNonlinearSolver::sched_initialize(const LevelP& level,
 // Actual initialize 
 //****************************************************************************
 void 
-PicardNonlinearSolver::initialize(const ProcessorContext* ,
+PicardNonlinearSolver::initialize(const ProcessorGroup* ,
 				  const Patch* patch,
 				  DataWarehouseP& old_dw,
 				  DataWarehouseP& new_dw)
@@ -356,6 +356,9 @@ PicardNonlinearSolver::computeResidual(const LevelP& level,
 
 //
 // $Log$
+// Revision 1.26  2000/06/17 07:06:24  sparker
+// Changed ProcessorContext to ProcessorGroup
+//
 // Revision 1.25  2000/06/16 07:06:16  bbanerje
 // Added init of props, pressure bcs and turbulence model in Arches.cc
 // Changed duplicate task names (setProfile) in BoundaryCondition.cc

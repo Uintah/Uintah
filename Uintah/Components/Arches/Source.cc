@@ -96,7 +96,7 @@ Source::~Source()
 // Velocity source calculation
 //****************************************************************************
 void 
-Source::calculateVelocitySource(const ProcessorContext* pc,
+Source::calculateVelocitySource(const ProcessorGroup* pc,
 				const Patch* patch,
 				DataWarehouseP& old_dw,
 				DataWarehouseP& new_dw,
@@ -190,7 +190,7 @@ Source::calculateVelocitySource(const ProcessorContext* pc,
 // Pressure source calculation
 //****************************************************************************
 void 
-Source::calculatePressureSource(const ProcessorContext*,
+Source::calculatePressureSource(const ProcessorGroup*,
 				const Patch* patch,
 				DataWarehouseP& old_dw,
 				DataWarehouseP& new_dw,
@@ -308,7 +308,7 @@ Source::calculatePressureSource(const ProcessorContext*,
 // Scalar source calculation
 //****************************************************************************
 void 
-Source::calculateScalarSource(const ProcessorContext*,
+Source::calculateScalarSource(const ProcessorGroup*,
 			      const Patch* patch,
 			      DataWarehouseP& old_dw,
 			      DataWarehouseP& new_dw,
@@ -404,7 +404,7 @@ Source::calculateScalarSource(const ProcessorContext*,
 // Documentation here
 //****************************************************************************
 void 
-Source::modifyVelMassSource(const ProcessorContext* ,
+Source::modifyVelMassSource(const ProcessorGroup* ,
 			    const Patch* ,
 			    DataWarehouseP& ,
 			    DataWarehouseP& ,
@@ -419,7 +419,7 @@ Source::modifyVelMassSource(const ProcessorContext* ,
 // Documentation here
 //****************************************************************************
 void 
-Source::modifyScalarMassSource(const ProcessorContext* ,
+Source::modifyScalarMassSource(const ProcessorGroup* ,
 			       const Patch* ,
 			       DataWarehouseP& ,
 			       DataWarehouseP& ,
@@ -433,7 +433,7 @@ Source::modifyScalarMassSource(const ProcessorContext* ,
 // Documentation here
 //****************************************************************************
 void 
-Source::addPressureSource(const ProcessorContext* ,
+Source::addPressureSource(const ProcessorGroup* ,
 			  const Patch* ,
 			  DataWarehouseP& ,
 			  DataWarehouseP& ,

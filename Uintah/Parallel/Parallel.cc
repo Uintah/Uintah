@@ -1,7 +1,11 @@
-/* REFERENCED */
-static char *id="@(#) $Id$";
 
-#include "Parallel.h"
+// $Id$
+
+#include <Uintah/Parallel/Parallel.h>
+#include <Uintah/Parallel/ProcessorGroup.h>
+#include <SCICore/Thread/Mutex.h>
+#include <SCICore/Exceptions/InternalError.h>
+#include <SCICore/Malloc/Allocator.h>
 
 #include <iostream>
 #include <mpi.h>
@@ -9,78 +13,98 @@ static char *id="@(#) $Id$";
 
 using namespace Uintah;
 using std::cerr;
+using namespace SCICore::Thread;
+using namespace SCICore::Exceptions;
 
 static bool usingMPI;
 static MPI_Comm worldComm;
-
-static int worldSize;
-static int worldRank;
+static bool initialized = false;
 
 static
 void
 MpiError(char* what, int errorcode)
 {
-    // Simple error handling for now...
-    char string[1000];
-    int resultlen=1000;
-    //MPI_Error_string(errorcode, string, &resultlen);
-    cerr << "MPI Error in " << what << ": " << string << '\n';
-    exit(1);
+   // Simple error handling for now...
+   char string[1000];
+   int resultlen=1000;
+   MPI_Error_string(errorcode, string, &resultlen);
+   cerr << "MPI Error in " << what << ": " << string << '\n';
+   exit(1);
 }
 
-int
-Parallel::getSize() 
+bool
+Parallel::usingMPI()
 {
-  return worldSize;
-}
-
-int
-Parallel::getRank()
-{
-  return worldRank;
+   return ::usingMPI;
 }
 
 void
 Parallel::initializeManager(int argc, char* argv[])
 {
-    if(getenv("MPI_ENVIRONMENT")){
+   if(getenv("MPI_ENVIRONMENT")){
+      ::usingMPI=true;
 
-	usingMPI=true;
+      int status;
+      if((status=MPI_Init(&argc, &argv)) != MPI_SUCCESS)
+	 MpiError("MPI_Init", status);
+      worldComm=MPI_COMM_WORLD;
+   } else {
+      ::usingMPI=false;
+      worldComm=-1;
+   }
+   initialized=true;
 
-	int status;
-	if((status=MPI_Init(&argc, &argv)) != MPI_SUCCESS)
-	    MpiError("MPI_Init", status);
-	worldComm=MPI_COMM_WORLD;
-	if((status=MPI_Comm_size(worldComm, &worldSize)) != MPI_SUCCESS)
-	    MpiError("MPI_Comm_size", status);
-	if((status=MPI_Comm_rank(worldComm, &worldRank)) != MPI_SUCCESS)
-	    MpiError("MPI_Comm_rank", status);
-    } else {
-	usingMPI=false;
-#if 0
-	worldComm=-1;
-#endif
-	worldRank=0;
-	worldSize=1;
-    }
-    cerr << "Parallel: processor " << worldRank + 1 << " of " << worldSize;
-    if(usingMPI)
-	cerr << " (using MPI)";
-    cerr << '\n';
+   ProcessorGroup* world = getRootProcessorGroup();
+   cerr << "Parallel: processor " << world->myrank() << " of " << world->size();
+   if(::usingMPI)
+      cerr << " (using MPI)";
+   cerr << '\n';
 }
 
 void
 Parallel::finalizeManager()
 {
-    if(usingMPI){
-	int status;
-	if((status=MPI_Finalize()) != MPI_SUCCESS)
-	    MpiError("MPI_Finalize", status);
-    }
+   if(::usingMPI){
+      int status;
+      if((status=MPI_Finalize()) != MPI_SUCCESS)
+	 MpiError("MPI_Finalize", status);
+   }
+}
+
+static Mutex rootlock("ProcessorGroup lock");
+static ProcessorGroup* rootContext = 0;
+
+ProcessorGroup*
+Parallel::getRootProcessorGroup()
+{
+   if(!initialized)
+      throw InternalError("getProcessorGroup() called before initialization");
+   if(!rootContext) {
+      rootlock.lock();
+      if(!rootContext){
+	 if(usingMPI()){
+	    int worldSize;
+	    int status;
+	    if((status=MPI_Comm_size(worldComm, &worldSize)) != MPI_SUCCESS)
+	       MpiError("MPI_Comm_size", status);
+	    int worldRank;
+	    if((status=MPI_Comm_rank(worldComm, &worldRank)) != MPI_SUCCESS)
+	       MpiError("MPI_Comm_rank", status);
+	    rootContext = scinew ProcessorGroup(0,worldRank,worldSize);
+	 } else {
+	    rootContext = scinew ProcessorGroup(0,0, 1);
+	 }
+      }
+      rootlock.unlock();
+   }
+   return rootContext;
 }
 
 //
 // $Log$
+// Revision 1.7  2000/06/17 07:06:48  sparker
+// Changed ProcessorContext to ProcessorGroup
+//
 // Revision 1.6  2000/04/26 06:49:15  sparker
 // Streamlined namespaces
 //

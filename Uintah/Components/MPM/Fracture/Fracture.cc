@@ -248,7 +248,7 @@ isSelfContactNode(const IntVector& nodeIndex,const Patch* patch,
 void
 Fracture::
 labelSelfContactNodesAndCells(
-           const ProcessorContext*,
+           const ProcessorGroup*,
            const Patch* patch,
            DataWarehouseP& old_dw,
            DataWarehouseP& new_dw)
@@ -270,7 +270,7 @@ labelSelfContactNodesAndCells(
 void
 Fracture::
 updateParticleInformationInContactCells (
-           const ProcessorContext*,
+           const ProcessorGroup*,
            const Patch* /*patch*/,
            DataWarehouseP& /*old_dw*/,
            DataWarehouseP& /*new_dw*/)
@@ -280,7 +280,7 @@ updateParticleInformationInContactCells (
 void
 Fracture::
 updateSurfaceNormalOfBoundaryParticle(
-	   const ProcessorContext*,
+	   const ProcessorGroup*,
            const Patch* /*patch*/,
            DataWarehouseP& /*old_dw*/,
            DataWarehouseP& /*new_dw*/)
@@ -291,7 +291,7 @@ updateSurfaceNormalOfBoundaryParticle(
 void
 Fracture::
 updateNodeInformationInContactCells (
-           const ProcessorContext*,
+           const ProcessorGroup*,
            const Patch* /*patch*/,
            DataWarehouseP& /*old_dw*/,
            DataWarehouseP& /*new_dw*/)
@@ -302,7 +302,7 @@ updateNodeInformationInContactCells (
 void
 Fracture::
 crackGrow(
-           const ProcessorContext*,
+           const ProcessorGroup*,
            const Patch* /*patch*/,
            DataWarehouseP& /*old_dw*/,
            DataWarehouseP& /*new_dw*/)
@@ -322,6 +322,9 @@ Fracture(ProblemSpecP& ps,SimulationStateP& d_sS)
 } //namespace Uintah
 
 // $Log$
+// Revision 1.22  2000/06/17 07:06:40  sparker
+// Changed ProcessorContext to ProcessorGroup
+//
 // Revision 1.21  2000/06/15 21:57:09  sparker
 // Added multi-patch support (bugzilla #107)
 // Changed interface to datawarehouse for particle data

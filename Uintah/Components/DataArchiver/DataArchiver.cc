@@ -12,6 +12,7 @@
 #include <Uintah/Interface/OutputContext.h>
 #include <Uintah/Interface/ProblemSpec.h>
 #include <Uintah/Interface/Scheduler.h>
+#include <Uintah/Parallel/ProcessorGroup.h>
 #include <PSECore/XMLUtil/SimpleErrorHandler.h>
 #include <PSECore/XMLUtil/XMLUtil.h>
 #include <SCICore/Util/DebugStream.h>
@@ -39,8 +40,8 @@ using namespace SCICore::Util;
 static Dir makeVersionedDir(const std::string nameBase);
 static DebugStream dbg("DataArchiver", false);
 
-DataArchiver::DataArchiver(int MpiRank, int MpiProcesses)
-   : UintahParallelComponent(MpiRank, MpiProcesses)
+DataArchiver::DataArchiver(const ProcessorGroup* myworld)
+   : UintahParallelComponent(myworld)
 {
 }
 
@@ -70,7 +71,7 @@ void DataArchiver::problemSetup(const ProblemSpecP& params)
 					  DOM_DocumentType());
    DOM_Element rootElem = doc.getDocumentElement();
 
-   appendElement(rootElem, "numberOfProcessors", d_MpiProcesses);
+   appendElement(rootElem, "numberOfProcessors", d_myworld->size());
 
    DOM_Element metaElem = doc.createElement("Meta");
    rootElem.appendChild(metaElem);
@@ -176,7 +177,7 @@ void DataArchiver::finalizeTimestep(double time, double delt,
       rootElem.appendChild(dataElem);
       ostringstream lname;
       lname << "l0"; // Hard coded - steve
-      for(int i=0;i<d_MpiProcesses;i++){
+      for(int i=0;i<d_myworld->size();i++){
 	 ostringstream pname;
 	 pname << lname.str() << "/p" << setw(5) << setfill('0') << i << ".xml";
 	 DOM_Text leader = doc.createTextNode("\n\t");
@@ -185,7 +186,7 @@ void DataArchiver::finalizeTimestep(double time, double delt,
 	 dataElem.appendChild(df);
 	 df.setAttribute("href", pname.str().c_str());
 	 ostringstream labeltext;
-	 labeltext << "Processor " << i << " of " << d_MpiProcesses;
+	 labeltext << "Processor " << i << " of " << d_myworld->size();
 	 DOM_Text label = doc.createTextNode(labeltext.str().c_str());
 	 df.appendChild(label);
 	 DOM_Text trailer = doc.createTextNode("\n");
@@ -254,7 +255,7 @@ static bool get(const DOM_Node& node, int &value)
    return false;
 }
 
-void DataArchiver::outputReduction(const ProcessorContext*,
+void DataArchiver::outputReduction(const ProcessorGroup*,
 				   DataWarehouseP& /*old_dw*/,
 				   DataWarehouseP& new_dw,
 				   double time)
@@ -273,7 +274,7 @@ void DataArchiver::outputReduction(const ProcessorContext*,
    }
 }
 
-void DataArchiver::output(const ProcessorContext*,
+void DataArchiver::output(const ProcessorGroup*,
 			  const Patch* patch,
 			  DataWarehouseP& /*old_dw*/,
 			  DataWarehouseP& new_dw,
@@ -297,7 +298,7 @@ void DataArchiver::output(const ProcessorContext*,
 
 
    ostringstream pname;
-   pname << ldir.getName() << "/p" << setw(5) << setfill('0') << d_MpiRank << ".xml";
+   pname << ldir.getName() << "/p" << setw(5) << setfill('0') << d_myworld->myrank() << ".xml";
 
    DOM_Document doc;
    string pname_s = pname.str();
@@ -361,7 +362,7 @@ void DataArchiver::output(const ProcessorContext*,
 
    // Open the data file
    ostringstream base;
-   base << "p" << setw(5) << setfill('0') << d_MpiRank << ".data";
+   base << "p" << setw(5) << setfill('0') << d_myworld->myrank() << ".data";
    ostringstream dname;
    dname << ldir.getName() << "/" << base.str();
    string datafile = dname.str();
@@ -556,6 +557,9 @@ static Dir makeVersionedDir(const std::string nameBase)
 
 //
 // $Log$
+// Revision 1.13  2000/06/17 07:06:30  sparker
+// Changed ProcessorContext to ProcessorGroup
+//
 // Revision 1.12  2000/06/16 19:48:19  sparker
 // Use updated output interface
 //

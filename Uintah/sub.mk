@@ -33,7 +33,7 @@ PSELIBS := Uintah/Grid Uintah/Parallel Uintah/Components/MPM \
 	Uintah/Components/ProblemSpecification \
 	SCICore/Exceptions Uintah/Interface SCICore/Thread
 endif
-LIBS := $(XML_LIBRARY)
+LIBS := $(XML_LIBRARY) -lmpi
 
 include $(SRCTOP)/scripts/program.mk
 
@@ -52,6 +52,9 @@ include $(SRCTOP)/scripts/program.mk
 
 #
 # $Log$
+# Revision 1.13  2000/06/17 07:06:21  sparker
+# Changed ProcessorContext to ProcessorGroup
+#
 # Revision 1.12  2000/06/15 21:56:55  sparker
 # Added multi-patch support (bugzilla #107)
 # Changed interface to datawarehouse for particle data

@@ -18,7 +18,7 @@ namespace Uintah {
    using SCICore::Geometry::Vector;
    using SCICore::Math::Min;
 
-   class ProcessorContext;
+   class ProcessorGroup;
    class Patch;
    class VarLabel;
    class Task;
@@ -59,7 +59,7 @@ public:
   // Constructor
   ThermalContact();
 
-  void computeHeatExchange(const ProcessorContext*,
+  void computeHeatExchange(const ProcessorGroup*,
                            const Patch* patch,
                            DataWarehouseP& old_dw,
                            DataWarehouseP& new_dw);
@@ -81,6 +81,9 @@ private:
 } // end namespace Uintah
    
 // $Log$
+// Revision 1.3  2000/06/17 07:06:41  sparker
+// Changed ProcessorContext to ProcessorGroup
+//
 // Revision 1.2  2000/05/31 22:29:23  tan
 // Finished addComputesAndRequires function.
 //

@@ -178,7 +178,7 @@ BoundaryCondition::problemSetup(const ProblemSpecP& params)
 // Actual initialization of celltype
 //****************************************************************************
 void 
-BoundaryCondition::cellTypeInit(const ProcessorContext*,
+BoundaryCondition::cellTypeInit(const ProcessorGroup*,
 				const Patch* patch,
 				DataWarehouseP& old_dw,
 				DataWarehouseP&)
@@ -313,7 +313,7 @@ BoundaryCondition::cellTypeInit(const ProcessorContext*,
 // Actual initialization of celltype
 //****************************************************************************
 void 
-BoundaryCondition::computeInletFlowArea(const ProcessorContext*,
+BoundaryCondition::computeInletFlowArea(const ProcessorGroup*,
 				 const Patch* patch,
 				 DataWarehouseP& old_dw,
 				 DataWarehouseP&)
@@ -652,7 +652,7 @@ BoundaryCondition::sched_setProfile(const LevelP& level,
 // Actually calculate the velocity BC
 //****************************************************************************
 void 
-BoundaryCondition::velocityBC(const ProcessorContext* pc,
+BoundaryCondition::velocityBC(const ProcessorGroup* pc,
 			      const Patch* patch,
 			      DataWarehouseP& old_dw,
 			      DataWarehouseP& new_dw,
@@ -940,7 +940,7 @@ BoundaryCondition::wVelocityBC(DataWarehouseP& new_dw,
 // Actually compute the pressure bcs
 //****************************************************************************
 void 
-BoundaryCondition::pressureBC(const ProcessorContext*,
+BoundaryCondition::pressureBC(const ProcessorGroup*,
 			      const Patch* patch,
 			      DataWarehouseP& old_dw,
 			      DataWarehouseP& new_dw)
@@ -994,7 +994,7 @@ BoundaryCondition::pressureBC(const ProcessorContext*,
 // Actually compute the scalar bcs
 //****************************************************************************
 void 
-BoundaryCondition::scalarBC(const ProcessorContext*,
+BoundaryCondition::scalarBC(const ProcessorGroup*,
 			    const Patch* patch,
 			    DataWarehouseP& old_dw,
 			    DataWarehouseP& new_dw,
@@ -1007,7 +1007,7 @@ BoundaryCondition::scalarBC(const ProcessorContext*,
 // Actually set the inlet velocity BC
 //****************************************************************************
 void 
-BoundaryCondition::setInletVelocityBC(const ProcessorContext* pc,
+BoundaryCondition::setInletVelocityBC(const ProcessorGroup* pc,
 				      const Patch* patch,
 				      DataWarehouseP& old_dw,
 				      DataWarehouseP& new_dw) 
@@ -1065,7 +1065,7 @@ BoundaryCondition::setInletVelocityBC(const ProcessorContext* pc,
 // Actually calculate the pressure BCs
 //****************************************************************************
 void 
-BoundaryCondition::calculatePressBC(const ProcessorContext* pc,
+BoundaryCondition::calculatePressBC(const ProcessorGroup* pc,
 				    const Patch* patch,
 				    DataWarehouseP& old_dw,
 				    DataWarehouseP& new_dw) 
@@ -1117,7 +1117,7 @@ BoundaryCondition::calculatePressBC(const ProcessorContext* pc,
 // Actually set flat profile
 //****************************************************************************
 void 
-BoundaryCondition::setFlatProfile(const ProcessorContext* pc,
+BoundaryCondition::setFlatProfile(const ProcessorGroup* pc,
 				  const Patch* patch,
 				  DataWarehouseP& old_dw,
 				  DataWarehouseP& new_dw)
@@ -1339,6 +1339,9 @@ BoundaryCondition::FlowOutlet::problemSetup(ProblemSpecP& params)
 
 //
 // $Log$
+// Revision 1.22  2000/06/17 07:06:22  sparker
+// Changed ProcessorContext to ProcessorGroup
+//
 // Revision 1.21  2000/06/16 21:50:47  bbanerje
 // Changed the Varlabels so that sequence in understood in init stage.
 // First cycle detected in task graph.

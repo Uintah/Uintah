@@ -70,12 +70,12 @@ WARNING
 				     DataWarehouseP& new_dw);
       
       // Basic contact methods
-      virtual void exMomInterpolated(const ProcessorContext*,
+      virtual void exMomInterpolated(const ProcessorGroup*,
 				     const Patch* patch,
 				     DataWarehouseP& old_dw,
 				     DataWarehouseP& new_dw);
       
-      virtual void exMomIntegrated(const ProcessorContext*,
+      virtual void exMomIntegrated(const ProcessorGroup*,
 				   const Patch* patch,
 				   DataWarehouseP& old_dw,
 				   DataWarehouseP& new_dw);
@@ -98,6 +98,9 @@ WARNING
 } // end namespace Uintah
 
 // $Log$
+// Revision 1.10  2000/06/17 07:06:38  sparker
+// Changed ProcessorContext to ProcessorGroup
+//
 // Revision 1.9  2000/05/30 20:19:09  sparker
 // Changed new to scinew to help track down memory leaks
 // Changed region to patch

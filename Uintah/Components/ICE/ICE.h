@@ -10,8 +10,8 @@
 using SCICore::Geometry::Vector;
 
 namespace Uintah {
-class ProcessorContext;
 class Patch;
+class ProcessorGroup;
 
 namespace ICESpace {
 
@@ -26,7 +26,7 @@ public:
 				   SchedulerP&,
 				   DataWarehouseP&);
 
-   void actuallyInitialize(const ProcessorContext*,
+   void actuallyInitialize(const ProcessorGroup*,
 			   const Patch* patch,
 			   DataWarehouseP& /* old_dw */,
 			   DataWarehouseP& new_dw);
@@ -34,7 +34,7 @@ public:
    virtual void scheduleComputeStableTimestep(const LevelP&,
 					      SchedulerP&,
 					      DataWarehouseP&);
-   void actuallyComputeStableTimestep(const ProcessorContext*,
+   void actuallyComputeStableTimestep(const ProcessorGroup*,
 				      const Patch* patch,
 				      DataWarehouseP&,
 				      DataWarehouseP&);
@@ -46,47 +46,47 @@ public:
 				    DataWarehouseP&);
 
 
-   void actuallyTimeStep(const ProcessorContext*,
+   void actuallyTimeStep(const ProcessorGroup*,
 			 const Patch* patch,
 			 DataWarehouseP&,
 			 DataWarehouseP&);
 
-   void actuallyStep0(const ProcessorContext*,
+   void actuallyStep0(const ProcessorGroup*,
 		      const Patch* patch,
 		      DataWarehouseP&,
 		      DataWarehouseP&);
 
-   void actuallyStep1(const ProcessorContext*,
+   void actuallyStep1(const ProcessorGroup*,
 		      const Patch* patch,
 		      DataWarehouseP&,
 		      DataWarehouseP&);
 
-   void actuallyStep2(const ProcessorContext*,
+   void actuallyStep2(const ProcessorGroup*,
 		      const Patch* patch,
 		      DataWarehouseP&,
 		      DataWarehouseP&);
 
-   void actuallyStep3(const ProcessorContext*,
+   void actuallyStep3(const ProcessorGroup*,
 		      const Patch* patch,
 		      DataWarehouseP&,
 		      DataWarehouseP&);
 
-   void actuallyStep4(const ProcessorContext*,
+   void actuallyStep4(const ProcessorGroup*,
 		      const Patch* patch,
 		      DataWarehouseP&,
 		      DataWarehouseP&);
 
-   void actuallyStep5(const ProcessorContext*,
+   void actuallyStep5(const ProcessorGroup*,
 		      const Patch* patch,
 		      DataWarehouseP&,
 		      DataWarehouseP&);
 
- void actuallyStep6(const ProcessorContext*,
+ void actuallyStep6(const ProcessorGroup*,
 		    const Patch* patch,
 		    DataWarehouseP&,
 		    DataWarehouseP&);
 
- void actuallyStep7(const ProcessorContext*,
+ void actuallyStep7(const ProcessorGroup*,
 		    const Patch* patch,
 		    DataWarehouseP&,
 		    DataWarehouseP&);

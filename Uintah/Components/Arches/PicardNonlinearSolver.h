@@ -136,7 +136,7 @@ private:
       //    [in] 
       //        data User data needed for solve 
       //
-      void initialize(const ProcessorContext* pc,
+      void initialize(const ProcessorGroup* pc,
 		      const Patch* patch,
 		      DataWarehouseP& old_dw,
 		      DataWarehouseP& new_dw);
@@ -183,6 +183,9 @@ private:
 
 //
 // $Log$
+// Revision 1.14  2000/06/17 07:06:25  sparker
+// Changed ProcessorContext to ProcessorGroup
+//
 // Revision 1.13  2000/06/13 06:02:31  bbanerje
 // Added some more StencilMatrices and vector<CCVariable> types.
 //

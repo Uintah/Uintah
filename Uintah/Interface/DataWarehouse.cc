@@ -9,9 +9,8 @@ using namespace Uintah;
 using std::cerr;
 using SCICore::Geometry::Vector;
 
-DataWarehouse::DataWarehouse( int MpiRank, int MpiProcesses, int generation ) :
-  d_MpiRank( MpiRank ), 
-  d_MpiProcesses( MpiProcesses ), 
+DataWarehouse::DataWarehouse(const ProcessorGroup* myworld, int generation ) :
+  d_myworld(myworld),
   d_generation( generation )
 {
 }
@@ -20,24 +19,11 @@ DataWarehouse::~DataWarehouse()
 {
 }
 
-#if 0
-void
-DataWarehouse::get(double& value, const std::string& name) const
-{
-    value=.45;
-    cerr << "DataWarehouse::get not done: " << name << "\n";
-}
-
-void
-DataWarehouse::get(CCVariable<Vector>&, const std::string& name,
-		   const Patch*)
-{
-    cerr << "DataWarehouse::get not done: " << name << "\n";
-}
-#endif
-
 //
 // $Log$
+// Revision 1.7  2000/06/17 07:06:45  sparker
+// Changed ProcessorContext to ProcessorGroup
+//
 // Revision 1.6  2000/05/30 20:19:40  sparker
 // Changed new to scinew to help track down memory leaks
 // Changed region to patch

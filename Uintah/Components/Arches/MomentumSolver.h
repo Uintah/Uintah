@@ -34,7 +34,6 @@ WARNING
    none
 
 ************************************************************************/
-#include <Uintah/Parallel/ProcessorContext.h>
 #include <Uintah/Interface/SchedulerP.h>
 #include <Uintah/Interface/ProblemSpecP.h>
 #include <Uintah/Interface/DataWarehouseP.h>
@@ -44,6 +43,7 @@ WARNING
 #include <Uintah/Grid/CCVariable.h>
 
 namespace Uintah {
+   class ProcessorGroup;
 namespace ArchesSpace {
 
 class TurbulenceModel;
@@ -121,7 +121,7 @@ private:
       //
       // Actually build the linearized momentum matrix
       //
-      void buildLinearMatrix(const ProcessorContext* pc,
+      void buildLinearMatrix(const ProcessorGroup* pc,
 			     const Patch* patch,
 			     DataWarehouseP& old_dw,
 			     DataWarehouseP& new_dw,
@@ -176,6 +176,9 @@ private:
 
 //
 // $Log$
+// Revision 1.7  2000/06/17 07:06:24  sparker
+// Changed ProcessorContext to ProcessorGroup
+//
 // Revision 1.6  2000/06/07 06:13:54  bbanerje
 // Changed CCVariable<Vector> to CCVariable<double> for most cases.
 // Some of these variables may not be 3D Vectors .. they may be Stencils

@@ -44,12 +44,12 @@ none
 #include <Uintah/Grid/Patch.h>
 #include <Uintah/Interface/SchedulerP.h>
 #include <Uintah/Interface/DataWarehouseP.h>
-#include <Uintah/Parallel/ProcessorContext.h>
 #include <Uintah/Grid/VarLabel.h>
 
 #include <SCICore/Containers/Array1.h>
 
 namespace Uintah {
+   class ProcessorGroup;
 namespace ArchesSpace {
 
 //class StencilMatrix;
@@ -86,7 +86,7 @@ public:
       // It uses second order hybrid differencing for computing
       // coefficients
       //
-      void calculateVelocityCoeff(const ProcessorContext*,
+      void calculateVelocityCoeff(const ProcessorGroup*,
 				  const Patch* patch,
 				  DataWarehouseP& old_dw,
 				  DataWarehouseP& new_dw,
@@ -99,7 +99,7 @@ public:
       // It uses second order hybrid differencing for computing
       // coefficients
       //
-      void calculatePressureCoeff(const ProcessorContext*,
+      void calculatePressureCoeff(const ProcessorGroup*,
 				  const Patch* patch,
 				  DataWarehouseP& old_dw,
 				  DataWarehouseP& new_dw,
@@ -111,7 +111,7 @@ public:
       // It uses second order hybrid differencing for computing
       // coefficients
       //
-      void calculateScalarCoeff(const ProcessorContext*,
+      void calculateScalarCoeff(const ProcessorGroup*,
 				const Patch* patch,
 				DataWarehouseP& old_dw,
 				DataWarehouseP& new_dw,
@@ -122,7 +122,7 @@ public:
       //
       // Documentation here
       //
-      void calculateVelDiagonal(const ProcessorContext*,
+      void calculateVelDiagonal(const ProcessorGroup*,
 				const Patch* patch,
 				DataWarehouseP& old_dw,
 				DataWarehouseP& new_dw,
@@ -132,7 +132,7 @@ public:
       //
       // Documentation here
       //
-      void calculatePressDiagonal(const ProcessorContext*,
+      void calculatePressDiagonal(const ProcessorGroup*,
 				  const Patch* patch,
 				  DataWarehouseP& old_dw,
 				  DataWarehouseP& new_dw);
@@ -141,7 +141,7 @@ public:
       //
       // Documentation here
       //
-      void calculateScalarDiagonal(const ProcessorContext*,
+      void calculateScalarDiagonal(const ProcessorGroup*,
 				   const Patch* patch,
 				   DataWarehouseP& old_dw,
 				   DataWarehouseP& new_dw,
@@ -189,6 +189,9 @@ private:
   
 //
 // $Log$
+// Revision 1.16  2000/06/17 07:06:23  sparker
+// Changed ProcessorContext to ProcessorGroup
+//
 // Revision 1.15  2000/06/13 06:02:31  bbanerje
 // Added some more StencilMatrices and vector<CCVariable> types.
 //

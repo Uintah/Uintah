@@ -84,7 +84,7 @@ public:
       //    [in] 
       //        index = documentation here
       //
-      virtual void calcVelocityWallBC(const ProcessorContext*,
+      virtual void calcVelocityWallBC(const ProcessorGroup*,
 				      const Patch* patch,
 				      DataWarehouseP& old_dw,
 				      DataWarehouseP& new_dw, 
@@ -96,7 +96,7 @@ public:
       //    [in] 
       //        index = documentation here
       //
-      virtual void calcVelocitySource(const ProcessorContext*,
+      virtual void calcVelocitySource(const ProcessorGroup*,
 				      const Patch* patch,
 				      const DataWarehouseP& old_dw,
 				      DataWarehouseP& new_dw, 

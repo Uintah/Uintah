@@ -33,7 +33,6 @@ WARNING
 ****************************************/
 
 #include <Uintah/Parallel/UintahParallelComponent.h>
-#include <Uintah/Parallel/ProcessorContext.h>
 #include <Uintah/Interface/DataWarehouseP.h>
 #include <Uintah/Interface/CFDInterface.h>
 #include <Uintah/Interface/ProblemSpecP.h>
@@ -75,7 +74,7 @@ public:
       //
       // Arches constructor
       //
-      Arches( int MpiRank, int MpiProcesses );
+      Arches(const ProcessorGroup* myworld);
 
       // GROUP: Destructors:
       ////////////////////////////////////////////////////////////////////////
@@ -155,7 +154,7 @@ private:
       //
       // Arches assignment constructor
       //
-      void paramInit(const ProcessorContext*,
+      void paramInit(const ProcessorGroup*,
 		     const Patch* patch,
 		     DataWarehouseP& old_dw,
 		     DataWarehouseP& );
@@ -193,6 +192,9 @@ private:
 
 //
 // $Log$
+// Revision 1.28  2000/06/17 07:06:22  sparker
+// Changed ProcessorContext to ProcessorGroup
+//
 // Revision 1.27  2000/06/14 20:40:48  rawat
 // modified boundarycondition for physical boundaries and
 // added CellInformation class
