@@ -50,6 +50,6 @@ PSECORESHARE OPort* make_TextureOPort(Module* module,
 }
 
 template<> string SimpleIPort<TextureHandle>::port_type_("Texture");
-template<> string SimpleIPort<TextureHandle>::port_color_("wheat");
+template<> string SimpleIPort<TextureHandle>::port_color_("wheat3");
 
 } // namespace SCIRun
