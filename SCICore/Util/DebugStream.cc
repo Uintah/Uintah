@@ -38,6 +38,8 @@
 namespace SCICore {
 namespace Util {
 
+static const char *ENV_VAR = "SCI_DEBUG";
+
 
 DebugBuf::DebugBuf()
 {}

@@ -65,8 +65,6 @@ namespace SCICore{
     class DebugStream;
     class DebugBuf;
 
-    const char *ENV_VAR = "SCI_DEBUG";
-
     ///////////////////
     // class DebugBuf
     // For use with DebugStream.  This class overrides the overflow
