@@ -85,6 +85,8 @@ namespace Uintah {
     const VarLabel*  CenterOfMassVelocityLabel;
     const VarLabel*  KineticEnergyLabel;
     const VarLabel*  TotalIntEngLabel;
+    const VarLabel*  eng_exch_errorLabel;
+    const VarLabel*  mom_exch_errorLabel;
     const VarLabel*  max_RHSLabel;
       
     };
