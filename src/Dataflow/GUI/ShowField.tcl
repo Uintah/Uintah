@@ -15,6 +15,7 @@
 #  University of Utah. All Rights Reserved.
 #
 
+package require Iwidgets 3.0  
 
 itcl_class SCIRun_Visualization_ShowField {
     inherit Module
@@ -34,6 +35,7 @@ itcl_class SCIRun_Visualization_ShowField {
 	global $this-node_scale
 	global $this-edge_scale
 	global $this-resolution
+	global $this-active_tab
 	set $this-node_display_type Spheres
 	set $this-edge_display_type Lines
 	set $this-node_scale 0.03
@@ -45,6 +47,8 @@ itcl_class SCIRun_Visualization_ShowField {
 	set $this-edges-on 1
 	set $this-faces-on 1
 	set $this-resolution 4
+	set $this-active_tab "Nodes"
+	trace variable $this-active_tab w "$this switch_to_active_tab"
     }
 
     method raiseColor {col color colMsg} {
@@ -100,6 +104,21 @@ itcl_class SCIRun_Visualization_ShowField {
 
     }
 
+    method set_active_tab {act} {
+	global $this-active_tab
+	#puts stdout $act
+	set $this-active_tab $act
+    }
+
+    method switch_to_active_tab {name1 name2 op} {
+	#puts stdout "switching"
+	set window .ui[modname]
+	if {[winfo exists $window]} {
+	    set dof [$window.options.disp.frame_title childsite]
+	    $dof.tabs view [set $this-active_tab]
+	}
+    }
+
     method ui {} {
 	set window .ui[modname]
 	if {[winfo exists $window]} {
@@ -113,95 +132,93 @@ itcl_class SCIRun_Visualization_ShowField {
  
 	# node frame holds ui related to vert display (left side)
 	frame $window.options.disp -borderwidth 2
-	frame $window.options.disp.node -relief groove -borderwidth 2
-	frame $window.options.disp.edge -relief groove -borderwidth 2
-	frame $window.options.disp.face -relief groove -borderwidth 2
-
 	pack $window.options.disp -padx 2 -pady 2 -side left -fill y
 
 	set n "$this-c needexecute"	
 
-	label $window.options.disp.frame_title -text "Display Options"
+	# Display Options
+	iwidgets::labeledframe $window.options.disp.frame_title \
+		-labelpos nw -labeltext "Display Options"
+	set dof [$window.options.disp.frame_title childsite]
 
-	checkbutton $window.options.disp.node.show_nodes \
+	iwidgets::tabnotebook  $dof.tabs -height 220 -raiseselect true 
+	#label $window.options.disp.frame_title -text "Display Options"
+
+	# Nodes Tab
+	set nodes [$dof.tabs add -label "Nodes" \
+		-command "$this set_active_tab \"Nodes\""]
+
+	checkbutton $nodes.show_nodes \
 		-text "Show Nodes" \
 		-command "$this-c toggle_display_nodes" \
 		-variable $this-nodes-on
 	#$window.options.disp.show_nodes select
 
+
 	global $this-node_display_type
 	set b $this-node_display_type
-	make_labeled_radio $window.options.disp.node.radio \
+
+
+	make_labeled_radio $nodes.radio \
 		"Node Display Type" "$this-c node_display_type" top \
-		$this-node_display_type {Spheres Axes Points}
+		$this-node_display_type \
+		{{Spheres Spheres} {Axes Axes} {Point Points}}
 
-	if {$b == "Spheres"} {
-	    $window.options.disp.node.radio.0 select
-	}
-	if {$b == "Axes"} {
-	    $window.options.disp.node.radio.1 select
-	}
-	if {$b == "Points"} {
-	    $window.options.disp.node.radio.2 select
-	}
+	pack $nodes.show_nodes $nodes.radio -fill y -anchor w
+
+	expscale $nodes.slide -label NodeScale \
+		-orient horizontal \
+		-variable $this-node_scale -command "$this-c node_scale"
+
+	bind $nodes.slide.scale <ButtonRelease> \
+		"$this-c needexecute"
 
 
-	checkbutton $window.options.disp.edge.show_edges \
+	# Edges Tab
+	set edge [$dof.tabs add -label "Edges" \
+		-command "$this set_active_tab \"Edges\""]
+	checkbutton $edge.show_edges \
 		-text "Show Edges" \
 		-command "$this-c toggle_display_edges" \
 		-variable $this-edges-on
 
 	global $this-edge_display_type
 	set e $this-edge_display_type
-	make_labeled_radio $window.options.disp.edge.radio \
+	make_labeled_radio $edge.radio \
 		"Edge Display Type" "$this-c edge_display_type" top \
-		$this-edge_display_type {Cylinders Lines}
+		$this-edge_display_type {{Cylinders Cylinders} {Lines Lines}}
 
-	if {$e == "Lines"} {
-	    $window.options.disp.node.radio.0 select
-	}
-	if {$e == "Cylinders"} {
-	    $window.options.disp.node.radio.1 select
-	}
-
-	#$window.options.disp.show_edges select
-
-	checkbutton $window.options.disp.face.show_faces \
-		-text "Show Faces" \
-		-command "$this-c toggle_display_faces" \
-		-variable $this-faces-on
-	#$window.options.disp.show_faces select
-
-	#pack the node radio button
-	pack $window.options.disp.frame_title -side top
-	pack $window.options.disp.node $window.options.disp.edge \
-		$window.options.disp.face -side left -fill y \
-		-padx 3 -pady 2 -anchor w
-
-	pack $window.options.disp.node.show_nodes \
-		$window.options.disp.node.radio -fill y -anchor w
-	
-	expscale $window.options.disp.node.slide -label NodeScale \
-		-orient horizontal \
-		-variable $this-node_scale -command "$this-c node_scale"
-	frame $window.options.disp.edge.space -height 0.68c 
-	pack $window.options.disp.edge.show_edges \
-		$window.options.disp.edge.radio \
-		$window.options.disp.edge.space \
+	pack $edge.show_edges $edge.radio \
 		-side top -fill y -anchor w
 
-	expscale $window.options.disp.edge.slide -label CylinderScale \
+	expscale $edge.slide -label CylinderScale \
 		-orient horizontal \
 		-variable $this-edge_scale -command "$this-c edge_scale"
 
-	pack $window.options.disp.face.show_faces \
-		-side top -fill y -anchor w
+	bind $edge.slide.scale <ButtonRelease> \
+		"$this-c needexecute"
 
 
-	bind $window.options.disp.node.slide.scale <ButtonRelease> \
-		"$this-c needexecute"
-	bind $window.options.disp.edge.slide.scale <ButtonRelease> \
-		"$this-c needexecute"
+	# Faces Tab
+	set face [$dof.tabs add -label "Faces" \
+		-command "$this set_active_tab \"Faces\""]
+	checkbutton $face.show_faces \
+		-text "Show Faces" \
+		-command "$this-c toggle_display_faces" \
+		-variable $this-faces-on
+	pack $face.show_faces -side top -fill y -anchor w
+	#$window.options.disp.show_faces select
+
+	global $this-active_tab
+	# view the active tab
+	$dof.tabs view [set $this-active_tab]	
+	$dof.tabs configure -tabpos "n"
+
+	pack $dof.tabs -side top -expand yes
+
+	#pack notebook frame
+	pack $window.options.disp.frame_title -side top -expand yes
+	
 	#add bottom frame for execute and dismiss buttons
 	frame $window.control -relief groove -borderwidth 2
 	frame $window.def_col -borderwidth 2
@@ -209,11 +226,16 @@ itcl_class SCIRun_Visualization_ShowField {
 	addColorSelection $window.def_col $this-def-color \
 		"default_color_change"
 
-	frame $window.resolution -relief groove -borderwidth 2
-	scale $window.resolution.scale -label "Cylinder and Sphere Resolution"\
-		-orient horizontal -variable $this-resolution -from 1 -to 15 \
-		-showvalue true -resolution 1
-	pack $window.resolution.scale -side top -fill both -expand 1
+
+	# Cylinder and Sphere Resolution
+	iwidgets::labeledframe $window.resolution \
+		-labelpos nw -labeltext "Cylinder and Sphere Resolution"
+	set res [$window.resolution childsite]
+
+	scale $res.scale -orient horizontal -variable $this-resolution \
+		-from 1 -to 15 -showvalue true -resolution 1
+
+	pack $res.scale -side top -fill both -expand 1
 
 	pack $window.options -padx 2 -pady 2 -side top
 	pack $window.resolution -padx 2 -pady 2 -side top -fill x -expand 1
