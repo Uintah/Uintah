@@ -625,8 +625,8 @@ void  lodi_bc_preprocess( const Patch* patch,
   //__________________________________
   //   get the data LODI needs
   new_dw->get(lv->gamma,   lb->gammaLabel,       indx,patch,gn ,0);
-  new_dw->get(press_CC,    lb->press_CCLabel,    0,   patch,gac,2);
-  new_dw->get(vol_frac_CC, lb->vol_frac_CCLabel, indx,patch,gac,2);
+  new_dw->get(press_CC,    lb->press_CCLabel,    0,   patch,gn,0);
+  new_dw->get(vol_frac_CC, lb->vol_frac_CCLabel, indx,patch,gn,0);
  
   new_dw->allocateTemporary(lv->rho_CC,    patch);
   new_dw->allocateTemporary(lv->press_tmp, patch);
@@ -639,42 +639,8 @@ void  lodi_bc_preprocess( const Patch* patch,
    
   lv->rho_CC.copyData(rho_CC);
   lv->vel_CC.copyData(vel_CC);
-  //__________________________________
-  // only work on those faces that have lodi bcs
-  // and are on the edge of the computational domain
-  vector<Patch::FaceType>::const_iterator iter;
-  for (iter  = patch->getBoundaryFaces()->begin(); 
-       iter != patch->getBoundaryFaces()->end(); ++iter){
-    Patch::FaceType face = *iter;
-    
-    if (is_LODI_face(patch,face, sharedState) ) {
-      //__________________________________
-      // Create an iterator that iterates over the face
-      // + 2 cells inward.  We don't need to hit every
-      // cell on the patch.  At patch boundaries you need to extend
-      // the footprint by one/two cells into the next patch
-      CellIterator iter=patch->getFaceCellIterator(face, "plusEdgeCells");
-      IntVector lo = iter.begin();
-      IntVector hi = iter.end();
-    
-      int P_dir = patch->faceAxes(face)[0];  //principal dir.
-      if(face==Patch::xminus || face==Patch::yminus || face==Patch::zminus){
-        hi[P_dir] += 2;
-      }
-      if(face==Patch::xplus || face==Patch::yplus || face==Patch::zplus){
-        lo[P_dir] -= 2;
-      }
-      CellIterator iterLimits(lo,hi);
-      CellIterator iterPlusGhost1 = patch->addGhostCell_Iter(iterLimits,1);
-      CellIterator iterPlusGhost2 = patch->addGhostCell_Iter(iterLimits,2);
-
-      //  plut two layers of ghostcells
-      for(CellIterator iter = iterPlusGhost2; !iter.done(); iter++) {  
-        IntVector c = *iter;
-        lv->press_tmp[c] = vol_frac_CC[c] * press_CC[c];
-      }
-    }  //lodi face
-  }  // boundary face
+  lv->press_tmp.copyData(press_CC); 
+  
   //compute Li at boundary cells
   computeLi(Li, lv->rho_CC,  lv->press_tmp, lv->vel_CC, lv->speedSound, 
             patch, new_dw, sharedState, lv->var_basket, false);
