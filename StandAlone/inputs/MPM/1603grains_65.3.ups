@@ -51,8 +51,8 @@
                 <specific_heat>1.004e-5</specific_heat>
 		<geom_object>
 		    <box label="Piston">
-			<min>[0.0,0.0,0.2]</min>
-			<max>[0.1,0.1,0.205]</max>
+			<min>[0.0,0.0,0.2017]</min>
+			<max>[0.1008,0.1008,0.2057]</max>
 		    </box>
 		    <res>[1,1,1]</res>
 		    <velocity>[0.0,0.0,-.01]</velocity>
@@ -2027,7 +2027,7 @@
 	            </union>
 			    <box label = "1">
 				<min>[0.0,0.0,0.0]</min>
-				<max>[0.1,0.1,0.2]</max>
+				<max>[0.1008,0.1008,0.2017]</max>
 			    </box>
 		</intersection>
 		    <res>[1,1,1]</res>
@@ -3738,7 +3738,7 @@
 	       	    </union>
 			    <box label = "1">
 				<min>[0.0,0.0,0.0]</min>
-				<max>[0.1,0.1,0.2]</max>
+				<max>[0.1008,0.1008,0.2017]</max>
 			    </box>
 		</intersection>
 		    <res>[1,1,1]</res>
@@ -5089,7 +5089,7 @@
 	       	    </union>
 			    <box label = "1">
 				<min>[0.0,0.0,0.0]</min>
-				<max>[0.1,0.1,0.2]</max>
+				<max>[0.1008,0.1008,0.2017]</max>
 			    </box>
 		</intersection>
 		    <res>[1,1,1]</res>
@@ -6205,7 +6205,7 @@
 	    	    </union>
 			    <box label = "1">
 				<min>[0.0,0.0,0.0]</min>
-				<max>[0.1,0.1,0.2]</max>
+				<max>[0.1008,0.1008,0.2017]</max>
 			    </box>
 		</intersection>
 		    <res>[1,1,1]</res>
@@ -7131,7 +7131,7 @@
 		    </union>
 			    <box label = "1">
 				<min>[0.0,0.0,0.0]</min>
-				<max>[0.1,0.1,0.2]</max>
+				<max>[0.1008,0.1008,0.2017]</max>
 			    </box>
 		</intersection>
 		    <res>[1,1,1]</res>
@@ -7917,7 +7917,7 @@
 		    </union>
 			    <box label = "1">
 				<min>[0.0,0.0,0.0]</min>
-				<max>[0.1,0.1,0.2]</max>
+				<max>[0.1008,0.1008,0.2017]</max>
 			    </box>
 		</intersection>
 		    <res>[1,1,1]</res>
@@ -8523,7 +8523,7 @@
 		    </union>
 			    <box label = "1">
 				<min>[0.0,0.0,0.0]</min>
-				<max>[0.1,0.1,0.2]</max>
+				<max>[0.1008,0.1008,0.2017]</max>
 			    </box>
 		</intersection>
 		    <res>[1,1,1]</res>
@@ -9069,7 +9069,7 @@
 		    </union>
 			    <box label = "1">
 				<min>[0.0,0.0,0.0]</min>
-				<max>[0.1,0.1,0.2]</max>
+				<max>[0.1008,0.1008,0.2017]</max>
 			    </box>
 		</intersection>
 		    <res>[1,1,1]</res>
@@ -9535,7 +9535,7 @@
 		    </union>
 			    <box label = "1">
 				<min>[0.0,0.0,0.0]</min>
-				<max>[0.1,0.1,0.2]</max>
+				<max>[0.1008,0.1008,0.2017]</max>
 			    </box>
 		</intersection>
 		    <res>[1,1,1]</res>
@@ -9856,7 +9856,7 @@
 		    </union>
 			    <box label = "1">
 				<min>[0.0,0.0,0.0]</min>
-				<max>[0.1,0.1,0.2]</max>
+				<max>[0.1008,0.1008,0.2017]</max>
 			    </box>
 		</intersection>
 		    <res>[1,1,1]</res>
@@ -10037,7 +10037,7 @@
 		    </union>
 			    <box label = "1">
 				<min>[0.0,0.0,0.0]</min>
-				<max>[0.1,0.1,0.2]</max>
+				<max>[0.1008,0.1008,0.2017]</max>
 			    </box>
 		</intersection>
 		    <res>[1,1,1]</res>
@@ -10193,7 +10193,7 @@
 		    </union>
 			    <box label = "1">
 				<min>[0.0,0.0,0.0]</min>
-				<max>[0.1,0.1,0.2]</max>
+				<max>[0.1008,0.1008,0.2017]</max>
 			    </box>
 		</intersection>
 		    <res>[1,1,1]</res>
@@ -10281,7 +10281,7 @@
 		    </union>
 			    <box label = "1">
 				<min>[0.0,0.0,0.0]</min>
-				<max>[0.1,0.1,0.2]</max>
+				<max>[0.1008,0.1008,0.2017]</max>
 			    </box>
 		</intersection>
 		    <res>[1,1,1]</res>
@@ -10318,7 +10318,7 @@
 		    </union>
 			    <box label = "1">
 				<min>[0.0,0.0,0.0]</min>
-				<max>[0.1,0.1,0.2]</max>
+				<max>[0.1008,0.1008,0.2017]</max>
 			    </box>
 		</intersection>
 		    <res>[1,1,1]</res>
@@ -10341,10 +10341,10 @@
 	<Level>
 	    <Box label = "1">
 		<lower>[0.0,0.0,0.0]</lower>
-		<upper>[0.1,0.1,0.21]</upper>
+		<upper>[0.1008,0.1008,0.2097]</upper>
 		<patches>[1,1,1]</patches>
+		<resolution>[100,100,208]</resolution>
 	    </Box>
-	    <spacing>[.001,.001,.001]</spacing>
 	</Level>
         <BoundaryConditions>
                 <Face side = "x-">
