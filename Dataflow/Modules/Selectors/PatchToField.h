@@ -69,7 +69,6 @@ public:
 	  fld_->fdata()[*it] = *vit;
 	  ++vit;
 	}
-	cerr<<endl;
 	lock_.unlock();
       } else {
 
