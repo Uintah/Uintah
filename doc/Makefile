@@ -18,11 +18,11 @@
 .PHONY: tar tarball
 
 root := ${shell cd ..; basename `pwd` }
-TARFILE := ${notdir ${shell cd ..; pwd}}.tar
-TARBALL := ${TARFILE}.gz
-TARCMD := gnutar --exclude='*CVS*' --exclude='auto' \
---create --verbose --file=${root}/doc/${TARFILE} 
-PRODUCTS := Installation User Developer Documentum
+tarfile := ${notdir ${shell cd ..; pwd}}.tar
+tarball := ${tarfile}.gz
+tarcmd := gnutar --exclude='*CVS*' --exclude='auto' \
+--create --verbose --file=${root}/doc/${tarfile} 
+products := User Installation Developer Documentum
 
 # Build all docs except code view docs (in Developer/CodeViews).  To
 # additionally build code views invoke make this way: make WITH_CV=true
@@ -31,8 +31,8 @@ default : index.html products
 # Build all docs and put them in  a tarball.
 tarball : tar
 	echo "Making a tarball"
-	-rm -f ${TARBALL}
-	gzip ${TARFILE}
+	-rm -f ${tarball}
+	gzip ${tarfile}
 
 # Construct list of files to be included in the tar archive.  Edit
 # tarlist to make changes to this list.
@@ -41,26 +41,26 @@ tarlist = ${shell ruby tarlist}
 # Build all docs and put them in a tar archive.
 tar: index.html products
 	@echo "Making a tar archive"
-	-rm -f ${TARFILE}
-	cd ../..; ${TARCMD} ${tarlist}
+	-rm -f ${tarfile}
+	cd ../..; ${tarcmd} ${tarlist}
 
 index.html: index.rhtml edition.xml
 	eruby --delimiters html $< >$@
 
 # Build all docs.
 products:
-	for p in ${PRODUCTS} ; do cd $$p; ${MAKE}; cd ..; done
+	for p in ${products} ; do cd $$p; ${MAKE}; cd ..; done
 
 # Cleanage
 define rmtgz
--rm -f ${TARBALL}; rm -f ${TARFILE}
+-rm -f ${tarball}; rm -f ${tarfile}
 endef
 
 clean:
 	${rmtgz}
-	for p in ${PRODUCTS} ; do cd $$p; ${MAKE} clean; cd ..; done
+	for p in ${products} ; do cd $$p; ${MAKE} clean; cd ..; done
 
 veryclean:
 	${rmtgz}
 	-rm -f index.html
-	for p in ${PRODUCTS} ; do cd $$p; ${MAKE} veryclean; cd ..; done
+	for p in ${products} ; do cd $$p; ${MAKE} veryclean; cd ..; done

@@ -1,4 +1,6 @@
-<!--%= "PCEtLQogICAgIERPTidUIEVESVQgTUUhCiAgICAgSSdtIGdlbmVyYXRlZCBm\ncm9tIGluZGV4LnJodG1sLiAgRWRpdCBpdCBpbnN0ZWFkLgotLT4=\n".unpack("m") %-->
+<!--% require("../Utilities/Publish/srdoc.rb") %-->
+<!--% doc = Doc.create(Doc::HTML) %-->
+
 
 <!--
 The contents of this file are subject to the University of Utah Public
@@ -52,18 +54,12 @@ document.write('<script type="text/javascript" src="',treetop,'doc/Utilities/HTM
 
 <br/><br/>
 
-<!--%
-version = File.open("../edition.xml") do |f|
-  /<edition>(.*)<\/edition>/.match(f.read())[1]
-end
-%-->
-
 <table align="center" cellspacing="0" border="1" cellpadding="2">
 <thead>
 <tr>
 <th>
 <div class="title">Developer Documentation</div>
-<div class="subtitle">(for SCIRun version <!--%= version %-->)</div>
+<div class="subtitle">(for SCIRun version <!--%= doc.edition %-->)</div>
 </th>
 </tr>
 </thead>

@@ -1,4 +1,5 @@
-<!--%= "PCEtLQogICAgIERPTidUIEVESVQgTUUhCiAgICAgSSdtIGdlbmVyYXRlZCBm\ncm9tIGluZGV4LnJodG1sLiAgRWRpdCBpdCBpbnN0ZWFkLgotLT4=\n".unpack("m") %-->
+<!--% require("../../Utilities/Publish/srdoc.rb") %-->
+<!--% doc = Doc.create(Doc::HTML) %-->
 
 <!--
 The contents of this file are subject to the University of Utah Public
@@ -49,12 +50,6 @@ document.write('<script type="text/javascript" src="',treetop,'doc/Utilities/HTM
 }
 </script>
 
-<!--%
-version = File.open("../../edition.xml") do |f|
-  /<edition>(.*)<\/edition>/.match(f.read())[1]
-end
-%-->
-
 <br/>
 <br/>
 
@@ -64,7 +59,7 @@ end
 <th colspan="2">
 <div class="title">Module Descriptions</div>
 <div class="subtitle">by package</div>
-<div class="subtitle">for SCIRun version <!--%= version %--></div>
+<div class="subtitle">for SCIRun version <!--%= doc.edition %--></div>
 </th>
 </tr>
 </thead>

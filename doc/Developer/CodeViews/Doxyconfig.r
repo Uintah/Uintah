@@ -1,4 +1,5 @@
-<%= "IwojICoqKioqIERPTidUIEVESVQgTUUhICoqKioqCiMgIEknbSBnZW5lcmF0\nZWQgZnJvbSBEb3h5Y29uZmlnLnIuICBFZGl0IGl0IGluc3RlYWQuCiMK\n".unpack("m") %>
+<% require("../../Utilities/Publish/srdoc.rb") %>
+<% doc = Doc.create(Doc::Text) %>
 
 # This file describes the settings to be used by doxygen for a project
 #
@@ -20,10 +21,7 @@ PROJECT_NAME          = "SCIRun"
 # This could be handy for archiving the generated documentation or 
 # if some version control system is used.
 
-<%
-version = File.open("../../edition.xml") do |f| /<edition>(.*)<\/edition>/.match(f.read())[1]; end
-%>
-PROJECT_NUMBER        = "<%= version %>"
+PROJECT_NUMBER        = "<%= doc.edition %>"
 
 # The OUTPUT_DIRECTORY tag is used to specify the (relative or absolute) 
 # base path where the generated documentation will be put. 

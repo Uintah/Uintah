@@ -23,6 +23,8 @@ SRC:=../../../src
 edition:=../../edition.xml
 
 
+.DELETE_ON_ERROR:
+
 default: Doxyconfig docs
 
 Doxyconfig: Doxyconfig.r ${edition}

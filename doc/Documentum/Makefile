@@ -14,33 +14,31 @@
 #  Portions created by UNIVERSITY are Copyright (C) 2001, 1994
 #  University of Utah. All Rights Reserved.
 #
-# --
-#
-#
-# The following env variables must be set:
-#
-# CLASSPATH: Points to saxon.jar.
-# STYLESHEET_XSL_HTML: Points at <docbook xsl distro>/html
-# STYLESHEET_DSSSL_PRINT: Points at <docbook dsssl distro>/print
-# XML_DCL: Points at xml.dcl
-# CATALOG: Points at the catalog file that in turn points to
-#  .../openjade/dsssl/catalog and .../ISOEnts/isoent.cat (Ugh!).
-#
 
-params_common=
+# Build print and online versions of the documentum, module-xml, and
+# module-latex documents.
+
 chunk_root := documentum.chunk
-parms_chunk=${params_common} chunk.section.depth=1 use.id.as.filename=1 \
+parms_chunk=chunk.section.depth=1 use.id.as.filename=1 \
   root.filename=${chunk_root}
-params_nochunk=${params_common} 
 stylesheet_chunk=${STYLESHEET_XSL_HTML}/srdocbook-chunk.xsl
 stylesheet_nochunk=${STYLESHEET_XSL_HTML}/srdocbook.xsl
 stylesheet_print=${STYLESHEET_DSSSL_PRINT}/docbook.dsl
+params_print := -V %footnote-ulinks% -V %section-autolabel% \
+  -V "(define %default-quadding% 'justify)"
 latex:=latex -interaction=nonstopmode
-
 latex2htmloptions:= -info 0 -split 0 -no_white -link 1 -no_navigation \
 -html_version 4.0,math -show_section_numbers -local_icons \
 -long_titles 1 -prefix module-latex -image_type gif \
 -style ../../Utilities/HTML/srlatex2html.css
+
+define rxml_to_pxml
+OUTPUT_MODE=print eruby --delimiters xml ${1} > ${subst .rxml,.pxml,${1}}
+endef
+
+define rxml_to_hxml
+OUTPUT_MODE=html eruby --delimiters xml ${1} > ${subst .rxml,.hxml,${1}}
+endef
 
 rmfiles:=rm -f
 rmdirs:=rm -rf
@@ -48,77 +46,92 @@ rmdirs:=rm -rf
 edition := ../edition.xml
 
 .PHONY: \
-  default \
-  documentum-chunk \
-  documentum-nochunk \
+  all \
+  documentum-html \
   documentum-print \
+  module-xml-html \
+  module-xml-print \
+  module-latex-html \
+  module-latex-print \
   clean \
   veryclean
 
 .DELETE_ON_ERROR:
 
-default: \
+all: \
   index.html \
-  documentum-chunk \
-  documentum-nochunk \
+  documentum-html \
   documentum-print \
-  module-xml \
-  module-latex
+  module-xml-html \
+  module-xml-print \
+  module-latex-html \
+  module-latex-print
+
+# Rule for building index.html
 
 index.html: index.rhtml ${edition}
 	eruby --delimiters html $< >$@
 
-documentum : documentum-chunk documentum-nochunk documentum-print
+# Rules for building documentum.
 
-documentum-chunk : ${chunk_root}.html
+documentum : documentum-html documentum-print
 
-documentum.html.xml : documentum.rxml ${edition}
-	OUTPUT_MODE=html eruby --delimiters xml documentum.rxml > $@
+documentum-html : documentum.html
 
-documentum.print.xml : documentum.rxml ${edition}
-	OUTPUT_MODE=print eruby --delimiters xml documentum.rxml > $@
-
-${chunk_root}.html : documentum.html.xml
-	java com.icl.saxon.StyleSheet -w2 $< \
+documentum.html : documentum.rxml ${edition}
+	${call rxml_to_hxml,$<}
+	java com.icl.saxon.StyleSheet -w2 documentum.hxml \
          ${stylesheet_chunk} ${parms_chunk}
-
-documentum-nochunk : documentum.html
-
-documentum.html : documentum.html.xml
-	java com.icl.saxon.StyleSheet -w2 $< \
+	java com.icl.saxon.StyleSheet -w2 documentum.hxml \
          ${stylesheet_nochunk} ${parms_nochunk} >$@
 
 documentum-print : documentum.pdf
 
-documentum.pdf : documentum.dvi
-	dvipdfm -p letter $<
-
-documentum.dvi : documentum.tex
-	for i in 1 2 ; do jadetex documentum.tex ; done
-
-documentum.tex : documentum.print.xml
+documentum.pdf : documentum.rxml ${edition}
+	${call rxml_to_pxml,$<}
 	openjade -t tex -V tex-backend -c ${CATALOG} -o documentum.tex \
--d ${stylesheet_print} ${XML_DCL} documentum.print.xml 
+-d ${stylesheet_print}  ${params_print} ${XML_DCL} documentum.pxml 
+	for i in 1 2 ; do jadetex documentum.tex ; done
+	dvipdfm -p letter documentum.dvi
 
-module-xml : module-xml.dvi
+# Rules for building module-xml docs
+
+module-xml-html: module-xml/index.html
+
+module-xml-print : module-xml.pdf 
 
 module-xml.dvi: module-xml.tex
 	-${latex} $<
 	-${latex} $<
-	dvipdfm -p letter ${basename $<}
-	latex2html ${latex2htmloptions} $<
 
-module-latex : module-latex.dvi
+module-xml.pdf: module-xml.dvi
+	dvipdfm -p letter ${basename $<}
+
+module-xml/index.html: module-xml.dvi
+	latex2html ${latex2htmloptions} module-xml.tex
+
+# Rules for building module-latex docs
+
+module-latex-html : module-latex/index.html
+
+module-latex-print: module-latex.pdf 
 
 module-latex.dvi: module-latex.tex
 	-${latex} $<
 	-${latex} $<
+
+module-latex.pdf: module-latex.dvi
 	dvipdfm -p letter ${basename $<}
-	latex2html ${latex2htmloptions} $<
+
+module-latex/index.html: module-latex.dvi
+	latex2html ${latex2htmloptions} module-latex.tex
+
+# Cleanage
 
 clean:
 	-${rmfiles} *.aux *.dvi *.lot *.toc *.log *~
+	-${rmfiles} *.[ph]xml documentum.tex *.out
 
 veryclean: clean
-	-${rmfiles} documentum.*.xml *.html *.pdf
+	-${rmfiles} *.html *.pdf
 	-${rmdirs} module-xml module-latex

@@ -1,4 +1,7 @@
-<!--%= "PCEtLQogICAgIERPTidUIEVESVQgTUUhCiAgICAgSSdtIGdlbmVyYXRlZCBm\ncm9tIGluZGV4LnJodG1sLiAgRWRpdCBpdCBpbnN0ZWFkLgotLT4=\n".unpack("m") %-->
+<?xml version="1.0"?>
+
+<!--% require("Utilities/Publish/srdoc.rb") %-->
+<!--% doc = Doc.create(Doc::HTML) %-->
 
 <!--
 The contents of this file are subject to the University of Utah Public
@@ -55,18 +58,12 @@ document.write('<script type="text/javascript" src="',treetop,'doc/Utilities/HTM
 
 <br />
 
-<!--%
-version = File.open("edition.xml") do |f|
-  /<edition>(.*)<\/edition>/.match(f.read())[1]
-end
-%-->
-
 <table align="center" cellspacing="0" border="1" cellpadding="2">
 <thead>
 <tr>
 <th colspan="3">
 <div class="title">SCIRun Documentation</div>
-<div class="subtitle">(for SCIRun version <!--%= version %-->  <a class="alt"
+<div class="subtitle">(for SCIRun version <!--%= doc.edition %-->  <a class="alt"
 href="ReleaseNotes/version_1_10.txt">[Release Notes]</a>)</div>
 </th>
 </tr>
