@@ -59,6 +59,9 @@ void PCAGridSpheres::shade(Color& result, const Ray& ray,
     // do diffuse shading
     lambertianshade(result, surface_color(hit), ray, hit, depth, cx);
     return;
+  } else if (dpy->shade_method == 1 ) {
+    lambertianshade(result, color, ray, hit, depth, cx);
+    return;
   }
 
   // cell is the index of the sphere which was intersected.  To get to
@@ -105,11 +108,7 @@ void PCAGridSpheres::shade(Color& result, const Ray& ray,
     v=0;
 
   float luminance = interp_luminance(u, v, tex_index);
-  if (dpy->shade_method == 1 ) {
-    lambertianshade(result, color,
-                    Color(luminance, luminance, luminance),
-                    ray, hit, depth, cx);
-  } else if (cmap && dpy->shade_method == 2) {
+  if (cmap && dpy->shade_method == 2) {
     result = surface_color(hit) * luminance;
   } else if (dpy->shade_method == 3) {
     result = color * luminance;

@@ -59,7 +59,11 @@ void TextureGridSpheres::shade(Color& result, const Ray& ray,
     // do diffuse shading
     lambertianshade(result, surface_color(hit), ray, hit, depth, cx);
     return;
+  } else if (dpy->shade_method == 1 ) {
+    lambertianshade(result, color, ray, hit, depth, cx);
+    return;
   }
+
   // cell is the index of the sphere which was intersected.  To get to
   // the actual data you need to simply just add cell to spheres.  To
   // get the number of the sphere which was intersected you need to
@@ -107,11 +111,7 @@ void TextureGridSpheres::shade(Color& result, const Ray& ray,
   unsigned char *texture = tex_data + (tex_index * tex_res * tex_res);
 
   float luminance = interp_luminance(texture, u, v);
-  if (dpy->shade_method == 1 ) {
-    lambertianshade(result, color,
-                    Color(luminance, luminance, luminance),
-                    ray, hit, depth, cx);
-  } else if (cmap && dpy->shade_method == 2) {
+  if (cmap && dpy->shade_method == 2) {
     result = surface_color(hit) * luminance;
   } else if (dpy->shade_method == 3) {
     result = color * luminance;
