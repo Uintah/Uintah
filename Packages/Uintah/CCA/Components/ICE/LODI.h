@@ -87,18 +87,9 @@ namespace Uintah {
                            const double& qConFrt,   const double& qConLast,
                            const double& deltaT,    const double& deltaX);
 
-  void computeCornerCellIndices(const Patch* patch,
-                                const Patch::FaceType face,
-                                vector<IntVector>& crn);
   void getBoundaryEdges(const Patch* patch,
                         const Patch::FaceType face,
                         vector<Patch::FaceType>& face0);
-                        
-
-  CellIterator PatchEdgeIterator(const Patch* patch,
-                                 const Patch::FaceType face,
-                                 const Patch::FaceType face0,
-                                 IntVector offset);
                                  
   int otherDirection(int dir1, int dir2);
   
