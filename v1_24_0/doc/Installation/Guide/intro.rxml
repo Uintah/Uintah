@@ -56,7 +56,7 @@ DEALINGS IN THE SOFTWARE.
   <para>This guide provides instructions for installing SCIRun, its
   sample data sets, and SCIRun documentation on the &pf; platform.  SCIRun
   may be installed from <phrase os="linux">an RPM or</phrase> <phrase
-  os="osx">a disk image (DMG) or</phrase> source code.</para>
+  os="osx">a tarball or</phrase> built from source code.</para>
 
   <para>&pf; platform guidelines are listed in <xref
   linkend="tbl.pltfm_req"/>.</para>
@@ -265,15 +265,11 @@ DEALINGS IN THE SOFTWARE.
 
   <para os="osx">
     Proceed to <xref linkend="sec.dmg_inst"/> to install SCIRun from a
-    disk image.
+    tarball.
   </para>
 
-  <para os="irix">
-    Proceed to <xref linkend="sec.source_inst"/> to install SCIRun.
-  </para>
-
-  <para os="linux;osx">
-    Proceed to <xref linkend="sec.source_inst"/> to install SCIRun
+  <para>
+    Proceed to <xref linkend="sec.source_inst"/> to build SCIRun
     from source code.
   </para>
 

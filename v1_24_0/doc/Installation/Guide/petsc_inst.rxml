@@ -66,12 +66,13 @@ DEALINGS IN THE SOFTWARE.
 	<itemizedlist>
 	  <listitem os="linux">
 	    <para>
-	      The SCIRun <phrase os="linux"><acronym>RPM</acronym></phrase><phrase
-              os="osx"><acronym>DMG</acronym></phrase> distribution does
-	      <emphasis>not</emphasis> include support for
-	      <acronym>PETSc</acronym>.  <acronym>PETSc</acronym>
-	      support is available only through the SCIRun source code
-	      distribution.
+	      The SCIRun <phrase
+	      os="linux"><acronym>RPM</acronym></phrase><phrase
+	      os="osx"><acronym>binary tarball</acronym></phrase>
+	      distribution does <emphasis>not</emphasis> include
+	      support for <acronym>PETSc</acronym>.
+	      <acronym>PETSc</acronym> support is available only
+	      through the SCIRun source code distribution.
 	    </para>
 	  </listitem>
 	  <listitem>
