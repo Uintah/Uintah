@@ -3,7 +3,6 @@
 SRCDIR := Packages/rtrt/StandAlone/scenes
 
 SCENES := $(SRCDIR)/0.mo \
-	$(SRCDIR)/VolumeVisMod.mo \
 	$(SRCDIR)/gl.mo \
 	$(SRCDIR)/simple.mo \
 	$(SRCDIR)/simple_spheres.mo \
@@ -34,11 +33,17 @@ SCENES := $(SRCDIR)/0.mo \
 	$(SRCDIR)/teapot.rational.mo \
 	$(SRCDIR)/teapot.scene.mo \
 	$(SRCDIR)/vfem.mo \
+	$(SRCDIR)/t0.mo
+
+ifeq ($(uintah),yes)
+SCENES += \
+	$(SRCDIR)/VolumeVisMod.mo \
 	$(SRCDIR)/uintahdata.mo \
 	$(SRCDIR)/uintahisosurface.mo \
 	$(SRCDIR)/uintahparticle2.mo \
-	$(SRCDIR)/t0.mo \
-	$(SRCDIR)/uintahparticle.mo
+	$(SRCDIR)/uintahparticle.mo	
+endif
+
 
 RTRT_DATA_DIR_DEST := $(OBJTOP)/$(SRCDIR)/data
 RTRT_DATA_DIR_SRC := $(SRCTOP)/$(SRCDIR)/data
