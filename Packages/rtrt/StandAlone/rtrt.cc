@@ -55,26 +55,26 @@
 
 /////////////////////////////////////////////////
 // OOGL stuff
-BasicTexture * backgroundTex;
-ShadedPrim   * backgroundTexQuad;
-ShadedPrim   * blendTexQuad;
-BasicTexture * blendTex;
-Blend        * blend = NULL;
+extern BasicTexture * backgroundTex;
+extern ShadedPrim   * backgroundTexQuad;
+static ShadedPrim   * blendTexQuad;
+static BasicTexture * blendTex;
+extern Blend        * blend = NULL;
 
-ShadedPrim   * bottomGraphicTexQuad;
-BasicTexture * bottomGraphicTex;
-ShadedPrim   * leftGraphicTexQuad;
-BasicTexture * leftGraphicTex;
+static ShadedPrim   * bottomGraphicTexQuad;
+static BasicTexture * bottomGraphicTex;
+static ShadedPrim   * leftGraphicTexQuad;
+static BasicTexture * leftGraphicTex;
 
-BasicTexture * rtrtBotTex; // Bottom 512 pixels
-BasicTexture * rtrtTopTex; // Top 64 pixels
-ShadedPrim   * rtrtBotTexQuad;
-ShadedPrim   * rtrtTopTexQuad;
+extern BasicTexture * rtrtBotTex; // Bottom 512 pixels
+extern BasicTexture * rtrtTopTex; // Top 64 pixels
+extern ShadedPrim   * rtrtBotTexQuad;
+extern ShadedPrim   * rtrtTopTexQuad;
 
-BasicTexture * rtrtMidTopTex; // Medium Size RTRT Render Window (512x320)
-ShadedPrim   * rtrtMidTopTexQuad;
-BasicTexture * rtrtMidBotTex; // Medium Size RTRT Render Window (512x320)
-ShadedPrim   * rtrtMidBotTexQuad;
+extern BasicTexture * rtrtMidTopTex; // Medium Size RTRT Render Window (512x320)
+extern ShadedPrim   * rtrtMidTopTexQuad;
+extern BasicTexture * rtrtMidBotTex; // Medium Size RTRT Render Window (512x320)
+extern ShadedPrim   * rtrtMidBotTexQuad;
 
 /////////////////////////////////////////////////
 
@@ -85,7 +85,7 @@ using SCIRun::Thread;
 using SCIRun::ThreadGroup;
 
 bool use_pm = true;
-bool pin = false;
+extern bool pin;
 #ifdef __sgi
 #include <sys/types.h>
 #include <sys/pmo.h>
@@ -253,6 +253,7 @@ main(int argc, char* argv[])
   bool startSoundThread = false;
 
   bool show_gui = true;
+  bool rserver=false;
 
   printf("before glutInit\n");
   glutInit( &argc, argv );
@@ -270,6 +271,8 @@ main(int argc, char* argv[])
       rtrt_engine->np = rtrt_engine->nworkers;
     } else if(strcmp(argv[i], "-nomempolicy") == 0){
       use_pm=false;
+    } else if(strcmp(argv[i], "-rserver") == 0){
+      rserver=true;
     } else if(strcmp(argv[i], "-pin") == 0){
       pin=true;
     } else if(strcmp(argv[i], "-nobv")==0){
@@ -646,9 +649,9 @@ main(int argc, char* argv[])
   // Start up display thread...
   Dpy* dpy=new Dpy(scene, criteria1, criteria2, rtrt_engine->nworkers, bench,
 		   ncounters, c0, c1, 1.0, 1.0, display_frames,
-		   pp_size, scratchsize, fullscreen, do_frameless==true );
+		   pp_size, scratchsize, fullscreen, do_frameless==true, rserver );
 
-  Gui * gui = new Gui;
+  Gui * gui = new Gui();
 
 
 
@@ -857,7 +860,7 @@ main(int argc, char* argv[])
   printf("end glut inits\n");
 
   /* Register the idle callback with GLUI, *not* with GLUT */
-  GLUI_Master.set_glutIdleFunc( Gui::idleFunc );
+  //GLUI_Master.set_glutIdleFunc( Gui::idleFunc );
 
   /*  bigler */
   (new Thread(dpy, "Display thread"))->detach();

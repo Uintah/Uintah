@@ -38,8 +38,8 @@ include $(SCIRUN_SCRIPTS)/program.mk
 # rserver
 SRCS := $(SRCDIR)/rserver.cc
 PROGRAM := Packages/rtrt/StandAlone/rserver
-LIBS := $(GL_LIBS)
-PSELIBS := Packages/rtrt/visinfo
+LIBS := $(OOGL_LIBRARY) $(GLUI_LIBRARY) $(GLUT_LIBRARY) $(GL_LIBRARY) $(X_LIBRARY) $(XI_LIBRARY)
+PSELIBS := Packages/rtrt/visinfo Core/Thread Packages/rtrt/Core
 include $(SCIRUN_SCRIPTS)/program.mk
 
 #nrrd2brick
