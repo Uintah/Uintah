@@ -433,12 +433,13 @@ OpenGLConfigure(interp, OpenGLPtr, argc, argv, flags)
     int flags;				/* Flags to pass to
 					 * Tk_ConfigureWidget. */
 {
+    int height, width;
+
     if (Tk_ConfigureWidget(interp, OpenGLPtr->tkwin, configSpecs,
 	    argc, argv, (char *) OpenGLPtr, flags) != TCL_OK) {
 	return TCL_ERROR;
     }
 
-    int height, width;
     if (sscanf(OpenGLPtr->geometry, "%dx%d", &width, &height) != 2) {
       Tcl_AppendResult(interp, "bad geometry \"", OpenGLPtr->geometry,
 		       "\": expected widthxheight", (char *) NULL);
