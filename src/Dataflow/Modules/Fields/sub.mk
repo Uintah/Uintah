@@ -34,6 +34,7 @@ SRCS     += \
 	$(SRCDIR)/CastMLVtoHV.cc\
 	$(SRCDIR)/CastTVtoMLV.cc\
 	$(SRCDIR)/ClipField.cc\
+	$(SRCDIR)/ClipLattice.cc\
 	$(SRCDIR)/DirectInterpolate.cc\
 	$(SRCDIR)/EditField.cc\
 	$(SRCDIR)/FieldBoundary.cc\
