@@ -31,8 +31,10 @@ itcl_class Roe {
     public salmon
     constructor {config} {
 	$salmon-c addroe $this
+	puts "addroe done."
 	set w .ui$this
 	toplevel $w
+	puts "toplevel done"
 	wm title $w "Roe"
 	wm iconname $w "Roe"
 	wm minsize $w 100 100
@@ -63,7 +65,9 @@ itcl_class Roe {
 	#
 	# Get the list of supported renderers for the pulldown
 	#
+	puts "calling listrenderers"
 	set r [$salmon-c listrenderers]
+	puts "listrenderers done"
 	
 	# OpenGL is the preferred renderer, X11 the next best.
 	# Otherwise just pick the first one for the default
@@ -113,7 +117,9 @@ itcl_class Roe {
 		$w.menu.spawn $w.menu.dialbox
 
 	# Create Dialbox and attach to it
+	puts "making dialbox"
 	Dialbox $w.dialbox "Salmon - Translate/Scale"
+	puts "dialbox made"
 	$w.dialbox unbounded_dial 0 "Translate X" 0.0 1.0 "$this translate x"
 	$w.dialbox unbounded_dial 2 "Translate Y" 0.0 1.0 "$this translate y" 
 	$w.dialbox unbounded_dial 4 "Translate Z" 0.0 1.0 "$this translate z"
@@ -128,6 +134,8 @@ itcl_class Roe {
 	$w.dialbox2 wrapped_dial 1 "Pan" 0.0 0.0 360.0 1.0 "$this pan" 
 	$w.dialbox2 wrapped_dial 2 "Tilt" 0.0 0.0 360.0 1.0 "$this tilt"
 	$w.dialbox2 bounded_dial 3 "FOV" 0.0 0.0 180.0 1.0 "$this fov"
+
+	puts "done with dialboxes"
 	
 	frame $w.mframe
 	frame $w.mframe.f
@@ -165,6 +173,8 @@ itcl_class Roe {
 		-font "-Adobe-Helvetica-bold-R-Normal-*-140-75-*" \
 		-command "$this addMFrame $w"
 	pack $w.bframe.more -pady 2 -padx 2 -anchor se -side right
+
+	puts "making stuff..."
 	
 	set m $w.mframe.f
 	set r "$this-c redraw"
@@ -215,6 +225,8 @@ itcl_class Roe {
 	checkbutton $m.stereo -text "Stereo" -variable $this-do_stereo
 	pack $m.stereo -side top
 
+	puts "stereo done"
+
 	global $this-tracker_state
 	set $this-tracker_state 0
 	checkbutton $m.tracker -text "Tracker" -variable $this-tracker_state \
@@ -230,11 +242,15 @@ itcl_class Roe {
 	
 	set width 600
 	set height 500
+	puts "calling setrenderer"
 	set wcommand [$this-c setrenderer [set $this-renderer] $w.wframe.draw $width $height]
+	puts "seterenderer done"
 	eval $wcommand
+	puts "eval done"
 	bindEvents $w.wframe.draw
 	pack $w.wframe.draw -expand yes -fill both
 
+	puts "calling startup"
 	$this-c startup
     }
     method bindEvents {w} {

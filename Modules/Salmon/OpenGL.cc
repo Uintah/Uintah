@@ -168,9 +168,7 @@ void OpenGL::redraw(Salmon* salmon, Roe* roe, double tbeg, double tend,
 	}
 	fprintf(stderr, "dpy=%p, win=%p, cx=%p\n", dpy, win, cx);
 	glXMakeCurrent(dpy, win, cx);
-	cerr << "Trying out waitx...\n";
 	glXWaitX();
-	cerr << "done...\n";
 	current_drawer=this;
 	GLint data[1];
 	glGetIntegerv(GL_MAX_LIGHTS, data);
@@ -236,12 +234,11 @@ void OpenGL::redraw(Salmon* salmon, Roe* roe, double tbeg, double tend,
 	int do_stereo=roe->do_stereo.get();
 	if(do_stereo && !old_stereo){
 	    int first_event, first_error;
-	    cerr << "1\n"; glXWaitX(); cerr << "1 done\n";
 	    if(!XSGIStereoQueryExtension(dpy, &first_event, &first_error)){
 		do_stereo=0;
 		cerr << "Stereo not supported!\n";
 	    }
-	    cerr << "2\n"; glXWaitX(); cerr << "2 done\n";
+	    glXWaitX();
 	    old_stereo=do_stereo;
 	    int height=492; // Magic numbers from the man pages
 	    int offset=532;
@@ -255,8 +252,7 @@ void OpenGL::redraw(Salmon* salmon, Roe* roe, double tbeg, double tend,
 #endif
 	    //	    system("/usr/gfx/setmon STR_TOP");
 	    XSync(dpy, 0);
-	    cerr << "3\n"; glXWaitX(); cerr << "3 done\n";
-	    cerr << "Xflush done\n";
+	    glXWaitX();
 	}
 	if(old_stereo && !do_stereo){
 //	    system("/usr/gfx/setmon 72HZ");
@@ -285,7 +281,6 @@ void OpenGL::redraw(Salmon* salmon, Roe* roe, double tbeg, double tend,
 		XSGISetStereoBuffer(dpy, win, STEREO_BUFFER_LEFT);
 		//		XClearWindow(dpy, win);
 		XSync(dpy, 0);
-		cerr << "Xflush done\n";
 		glXWaitX();
 	    }
 #endif
@@ -460,7 +455,6 @@ void OpenGL::get_pick(Salmon*, Roe* roe, int x, int y,
     if(compute_depth(roe, view, znear, zfar)){
 	// Setup picking...
 	TCLTask::lock();
-	cerr << 1 << endl;
 	int errcode;
 	while((errcode=glGetError()) != GL_NO_ERROR){
 	    cerr << "We got an error from GL: " << (char*)gluErrorString(errcode) << endl;
@@ -476,7 +470,6 @@ void OpenGL::get_pick(Salmon*, Roe* roe, int x, int y,
 	glPushName(0);
 #endif
 
-	cerr << 2 << endl;
 	while((errcode=glGetError()) != GL_NO_ERROR){
 	    cerr << "We got an error from GL: " << (char*)gluErrorString(errcode) << endl;
 	}
@@ -487,7 +480,6 @@ void OpenGL::get_pick(Salmon*, Roe* roe, int x, int y,
 	glGetIntegerv(GL_VIEWPORT, viewport);
 	gluPickMatrix(x, viewport[3]-y, pick_window, pick_window, viewport);
 	gluPerspective(fovy, aspect, znear, zfar);
-	cerr << 3 << endl;
 	while((errcode=glGetError()) != GL_NO_ERROR){
 	    cerr << "We got an error from GL: " << (char*)gluErrorString(errcode) << endl;
 	}
@@ -497,7 +489,6 @@ void OpenGL::get_pick(Salmon*, Roe* roe, int x, int y,
 	Point eyep(view.eyep());
 	Point lookat(view.lookat());
 	Vector up(view.up());
-	cerr << 4 << endl;
 	while((errcode=glGetError()) != GL_NO_ERROR){
 	    cerr << "We got an error from GL: " << (char*)gluErrorString(errcode) << endl;
 	}
@@ -510,7 +501,6 @@ void OpenGL::get_pick(Salmon*, Roe* roe, int x, int y,
 	drawinfo->pickmode=1;
 
 	// Draw it all...
-	cerr << 5 << endl;
 	while((errcode=glGetError()) != GL_NO_ERROR){
 	    cerr << "We got an error from GL: " << (char*)gluErrorString(errcode) << endl;
 	}
@@ -523,7 +513,6 @@ void OpenGL::get_pick(Salmon*, Roe* roe, int x, int y,
 #endif
 
 	glFlush();
-	cerr << 6 << endl;
 	int hits=glRenderMode(GL_RENDER);
 	while((errcode=glGetError()) != GL_NO_ERROR){
 	    cerr << "We got an error from GL: " << (char*)gluErrorString(errcode) << endl;
@@ -537,6 +526,7 @@ void OpenGL::get_pick(Salmon*, Roe* roe, int x, int y,
 	GLuint hit_obj=0;
 	GLuint hit_pick=0;
 #endif
+	cerr << "hits=" << hits << endl;
 	if(hits >= 1){
 	    int idx=0;
 	    min_z=0;
@@ -795,6 +785,8 @@ void GeomSalmonItem::draw(DrawInfoOpenGL* di, Material *m, double time)
     BBox bb;
     //    child->reset_bbox();
     child->get_bounds(bb);
+    if(!bb.valid())
+	return;
 
     // might as well try and draw the arcball also...
 

@@ -27,7 +27,7 @@ SRCS = Postscript.cc Raytracer.cc Salmon.cc Renderer.cc Roe.cc X11.cc \
 LOCALINCLUDES = $(OPENGLINCS)
 SO_LIBS =
 SO_LDFLAGS = -L$(TOP)/lib -lDatatypes -lDataflow -lDevices -lGeom \
-	-lGeometry -lTCL -lClasslib -lMultitask $(OPENGLLIBS) -ltk -lC -lc -lm
+	-lGeometry -lTCL -lClasslib -lMultitask $(OPENGLLIBS) -ltk -lc -lm
 
 LIBNAME = Salmon
 

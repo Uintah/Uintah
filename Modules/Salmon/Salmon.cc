@@ -302,7 +302,6 @@ void Salmon::connection(ConnectionMode mode, int which_port, int)
     } else {
 	add_iport(scinew GeometryIPort(this, "Geometry", GeometryIPort::Atomic));
     }
-    cerr << "Salmon::connection done...\n";
 }
 
 void Salmon::tcl_command(TCLArgs& args, void* userdata)

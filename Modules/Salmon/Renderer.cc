@@ -50,6 +50,7 @@ Renderer* Renderer::create(const clString& type)
 {
     RegisterRenderer* rr;
     if(known_renderers->lookup(type, rr)){
+	cerr << "Calling maker\n";
 	make_Renderer maker=rr->maker;
 	return (*maker)();
     } else {
