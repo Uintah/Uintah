@@ -49,7 +49,7 @@
 									<div align="left">
 
 										
-                <p>&lt;subhead:Chapter overview&gt;<br>
+                <p><b>Chapter Overview</b><br>
 
 		<p>In Chapter 3 we constructed three visualization
 		networks to examine the utahtorso-lowres-voltage
@@ -59,7 +59,7 @@
 		add a fourth visualization tool, isosurface
 		extraction, as well.
 
-                <p>&lt;subhead:Putting the nets together&gt;<br>
+                <p><b>Putting the nets together</b><br>
 
                 <p>Now lets do all of the A, B, C work in a single
                 network. The procedure here is to share the
@@ -78,19 +78,27 @@
                 module. Now as soon as Isosurface executes you will
                 get see this surface show up in the viewer.
 
-                <p>&lt;subhead:Isosurface&gt;<br>
+                <p><b>Isosurface</b><br>
 
                 <p>The isosurface module provides the interface to
                 isosurface creation.  It takes a volume field in, and
                 can output a surface field or scene graph data to be
                 directly visualized with or without a color map.  The
                 first thing to set in the UI for the isosurface is the
-                Iso Value.  As you might expect, this determines where
+                Iso Value (<b>Figure 4.3</b>).  As you might expect, this determines where
                 the surface is created throught the volume. You can
                 have the module update the visualization as you change
                 the value with the slider, only when you release your
                 mouse button over the slider, or only when you press
                 the extract button.
+
+</div>
+									<center>
+										<p><img height="496" width="332" src="images/figures/4_3.gif"><br>
+										<b>Figure 4.3</b></p>
+									</center>
+									<div align="left">
+										<p><br>
                   
                 <p>Just as in the ShowField Module, you can set a
                 default color for the Isosurface, or if it has a color
@@ -99,7 +107,9 @@
                 extracting the isosurface, and how many threads you
                 would like the algorithm to use. (how many processors
                 to use).  By default a Marching Cubes algorithm is
-                used, but you can also use the NOISE algorithm.
+                used, but you can also use the NOISE algorithm.<br>
+<br>
+<br>
                   
                   
               </div>

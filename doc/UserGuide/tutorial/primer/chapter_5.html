@@ -23,7 +23,7 @@
 										<hr>
 										</b></font></center>
 									<div align="left">
-                <p>&lt;subhead:Chapter overview&gt;<br>
+                <p><b>Chapter Overview</b><br>
 
 		<p>In Chapters 1-4 we learned about deataflow
                 programming, and constructed visualization networks
@@ -41,7 +41,7 @@
                 written for the modeling, simulation, and
                 visualization of bioelectric field problems.
 
-		<p>Packages are typically logically grouped sets of modulues
+		<p>Packages (<b>Figure 5.1</b>) are typically logically grouped sets of modulues
 		and supporting code for those modules. They can be created by
 	        anyone, and compiled into SCIRun. Packages can be wholly
 		dependent upon SCIRun code, or can depend upon any additional
@@ -51,7 +51,15 @@
 		SCIRun. Bridging is the concept that SCIRun can be used in
 	        conjunction with other useful software such as Matlab or Teem.
 
-                <p>&lt;subhead:Volume conductor problem&gt;<br>
+</div>
+									<center>
+										<p><img height="54" width="442" src="images/figures/5_1.gif"><br>
+										<b>Figure 5.1</b></p>
+									</center>
+									<div align="left">
+										<p><br>
+
+                <p><b>Volume conductor problem</b><br>
 
 		<p>Given a volume conductor model and an equivalent
 		dipole source, we would like to compute the potentials
@@ -110,7 +118,7 @@
 		src="images/phi.gif">, we get the electric field through the
 		domain.<br>
 
-                <p>&lt;subhead:Finite element simulation network&gt;<br>
+                <p><b>Finite element simulation network</b><br>
 
 		<p>To compute the electric and potential fields given
 		a finite element volume conductor mesh and a dipolar
@@ -146,31 +154,58 @@
 		Interface settings for each of the modules are
 		described in the next paragraphs.
 
-                <p>&lt;subhead:FEM user interface settings&gt;<br>
+                <p><b>FEM user interface settings</b><br>
 
 		<p>The SetupFEMatrix module constructs a finite
 		element stiffness matrix from a tetrahedral volume
-		mesh.  On the UI we can choose whether to incorporate
+		mesh.  On the UI (<b>Figure 5.3</b>)we can choose whether to incorporate
 		the local conductivity tensors into the stiffness
 		matrix, or whether to use a uniform conductivity.  For
 		this application, we will incorporate the local
 		conductivity changes.
 
+</div>
+									<center>
+										<p><img height="57" width="158" src="images/figures/5_3.gif"><br>
+										<b>Figure 5.3</b></p>
+									</center>
+									<div align="left">
+										<p><br>
+
+
 		<p>The ApplyFEMCurrentSource module modifies the
 		right hand side vector to account for current
-		sources within the model.  On the UI, you can choose
+		sources within the model.  On the UI (<b>Figure 5.4</b>), you can choose
 		whether the current sources are due to a dipole or to
 		a source/sink electrode pair.  Select the "dipole"
 		setting.
 
+</div>
+									<center>
+										<p><img height="88" width="265" src="images/figures/5_4.gif"><br>
+										<b>Figure 5.4</b></p>
+									</center>
+									<div align="left">
+										<p><br>
+
+
 		<p>The SolveMatrix module solves a linear system using
 		one of several linear algebra methods.  Choose the
-		"Conjugate Gradient" solver on the UI, and set the
+		"Conjugate Gradient" solver on the UI (<b>Figure 5.5</b>), and set the
 		Target Error to 0.0001, and the Maximum Iterations to
 		200.  Note: the SolveMatrix UI must remain either open
 		or minimized while the solver is running; it must not
 		be closed completely.  For more information on the
 		SolveMatrix module, click on this link.
+
+</div>
+									<center>
+										<p><img height="1038" width="451" src="images/figures/5_5.gif"><br>
+										<b>Figure 5.5</b></p>
+									</center>
+									<div align="left">
+										<p><br>
+
 
 		<p>Lastly, for this simulation you should choose the
                 utahtorso-lowres-mesh.tvt.fld Field for the
@@ -183,7 +218,7 @@
                 single dipole vector, positioned within the torso
                 volume.
 
-                <p>&lt;subhead:Running the simulation&gt;<br>
+                <p><b>Running the simulation</b><br>
 		
 		<p>With all of the modules connected and all of the UI
 		state configured, you are ready to run the simulation.
@@ -191,8 +226,10 @@
 		dropdown menus, or press the "Execute" button on a
 		module's user interface.  As the simulation
 		progresses, you will see the residual plot in the
-		SolveMatrix module converge.  Congratulations, you
-		have solved a finite element problem!
+		SolveMatrix module converge which is located at the bottom of the SolveMatrix UI.  Congratulations, you
+		have solved a finite element problem!<br>
+<br>
+<br>
 
 									</div>
 								</td>
