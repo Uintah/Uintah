@@ -28,32 +28,38 @@
   #endif
 #endif
 
+#ifdef __GNUG__
+#define THROWCLAUSE throw()
+#else
+#define THROWCLAUSE
+#endif
+
 extern "C" {
-void* malloc(size_t size) throw();
-void free(void* ptr) throw();
-void* calloc(size_t, size_t) throw();
-void* realloc(void* p, size_t s) throw();
-void* memalign(size_t, size_t) throw();
-void* valloc(size_t) throw();
+void* malloc(size_t size) THROWCLAUSE;
+void free(void* ptr) THROWCLAUSE;
+void* calloc(size_t, size_t) THROWCLAUSE;
+void* realloc(void* p, size_t s) THROWCLAUSE;
+void* memalign(size_t, size_t) THROWCLAUSE;
+void* valloc(size_t) THROWCLAUSE;
 }
 
 using namespace SCICore::Malloc;
 
 #ifndef DISABLE_SCI_MALLOC
 
-void* malloc(size_t size) throw()
+void* malloc(size_t size) THROWCLAUSE
 {
     if(!default_allocator)
 	MakeDefaultAllocator();
     return default_allocator->alloc(size, "Unknown - malloc");
 }
 
-void free(void* ptr) throw()
+void free(void* ptr) THROWCLAUSE
 {
     default_allocator->free(ptr);
 }
 
-void* calloc(size_t n, size_t s) throw()
+void* calloc(size_t n, size_t s) THROWCLAUSE
 {
     size_t tsize=n*s;
     void* p=malloc(tsize);
@@ -61,19 +67,19 @@ void* calloc(size_t n, size_t s) throw()
     return p;
 }
 
-void* realloc(void* p, size_t s) throw()
+void* realloc(void* p, size_t s) THROWCLAUSE
 {
     return default_allocator->realloc(p, s);
 }
 
-void* memalign(size_t alignment, size_t size) throw()
+void* memalign(size_t alignment, size_t size) THROWCLAUSE
 {
     if(!default_allocator)
 	MakeDefaultAllocator();
     return default_allocator->memalign(alignment, size, "Unknown - memalign");
 }
 
-void* valloc(size_t size) throw()
+void* valloc(size_t size) THROWCLAUSE
 {
     if(!default_allocator)
 	MakeDefaultAllocator();
@@ -85,6 +91,9 @@ void* valloc(size_t size) throw()
 
 //
 // $Log$
+// Revision 1.10  2000/09/25 18:39:10  sparker
+// Only use throw() for g++
+//
 // Revision 1.9  2000/09/25 18:00:42  sparker
 // Added throw() to C declarations
 // Find bzero in string.h for linux
