@@ -1987,6 +1987,7 @@ allocateAndPutGridVar(VariableBase& var, DWDatabase& db,
       // this is just a tricky way to uninitialize var
       VariableBase* tmpVar = var.cloneType();
       var.copyPointer(*tmpVar);
+      delete tmpVar;
     }
     else {
       // It was allocated and put as part of the superpatch of another patch
