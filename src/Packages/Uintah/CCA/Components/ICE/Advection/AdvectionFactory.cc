@@ -32,6 +32,7 @@ Advector* AdvectionFactory::create(ProblemSpecP& ps,
       return(scinew FirstOrderCEAdvector());
     else if (advect_type == "SecondOrder") 
       return(scinew SecondOrderAdvector());
+
     else if (advect_type == "SecondOrderCE") 
       return(scinew SecondOrderCEAdvector());
     else

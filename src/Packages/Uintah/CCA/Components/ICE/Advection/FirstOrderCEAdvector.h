@@ -9,9 +9,6 @@
 #include <Packages/Uintah/Core/Grid/SFCZVariable.h>
 #include <Packages/Uintah/CCA/Ports/DataWarehouse.h>
 
-
-
-
 namespace Uintah {
 
   class FirstOrderCEAdvector :  public Advector {
@@ -35,7 +32,14 @@ namespace Uintah {
                                  const Patch* patch,
                                  const int& indx,
                                  const bool& bulletProof_test);
-
+                                 
+    virtual void  advectQ(const CCVariable<double>& q_CC,
+                             const Patch* patch,
+                             CCVariable<double>& q_advected,
+                             SFCXVariable<double>& q_XFC,
+                             SFCYVariable<double>& q_YFC,
+                             SFCZVariable<double>& q_ZFC,
+				 DataWarehouse* /*new_dw*/);
 
     virtual void advectQ(const CCVariable<double>& q_CC,
                       const Patch* patch,
@@ -52,16 +56,17 @@ namespace Uintah {
     struct eflux { double d_eflux[12]; };         //edge flux
     struct cflux { double d_cflux[8]; };          //corner flux
     
-    enum EDGE {TOP_R = 0, TOP_FR, TOP_L, TOP_BK, BOT_R, BOT_FR, BOT_L, BOT_BK,
-              RIGHT_BK, RIGHT_FR, LEFT_BK, LEFT_FR };
-    enum CORNER {TOP_R_BK = 0, TOP_R_FR, TOP_L_BK, TOP_L_FR, BOT_R_BK, 
-               BOT_R_FR, BOT_L_BK, BOT_L_FR};
+
 
   private:
-    template<class T> void advect(const CCVariable<T>& q_CC,
-                              const Patch* patch,
-                              CCVariable<T>& q_advected);
-
+    template <class T, typename F> 
+      void advectCE(const CCVariable<T>& q_CC,
+                    const Patch* patch,                                      
+                    CCVariable<T>& q_advected,                     
+                    SFCXVariable<double>& q_XFC,                   
+                    SFCYVariable<double>& q_YFC,                   
+                    SFCZVariable<double>& q_ZFC,                   
+                    F save_q_FC);                                  
 
   private:
     FirstOrderAdvector d_advector;
@@ -75,9 +80,6 @@ namespace Uintah {
 
     
   };
-
-
-  
 }
 
 // Added for compatibility with core types

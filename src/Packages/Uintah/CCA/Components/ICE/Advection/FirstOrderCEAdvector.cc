@@ -10,7 +10,11 @@
 #include <iostream>
 
 using namespace Uintah;
-
+/* ---------------------------------------------------------------------
+References:
+    "Compatible Fluxes for van Leer Advection" W.B VanderHeyden and 
+    B.A. Kashiwa, Journal of Computational Physics, 146, 1-28, (1998) 
+ ---------------------------------------------------------------------  */
 FirstOrderCEAdvector::FirstOrderCEAdvector()
 {
   OFE_CCLabel = 0;
@@ -47,15 +51,10 @@ FirstOrderCEAdvector* FirstOrderCEAdvector::clone(DataWarehouse* new_dw,
 /* ---------------------------------------------------------------------
  Function~  influxOutfluxVolume--
  Purpose~   calculate the individual outfluxes for each cell.
-            This includes the slabs and edge fluxes
- References:
-    "Compatible Fluxes for van Leer Advection" W.B VanderHeyden and 
-    B.A. Kashiwa, Journal of Computational Physics, 146, 1-28, (1998) 
-            
+            This includes the slabs, edges and corners
  Steps for each cell:  
  1) calculate the volume for each outflux
- 3) set the influx_volume for the appropriate cell = to the q_outflux of the 
-    adjacent cell. 
+ 2) test to see if the total outflux > cell volume
 
 Implementation notes:
 The outflux of volume is calculated in each cell in the computational domain
@@ -86,13 +85,13 @@ void FirstOrderCEAdvector::inFluxOutFluxVolume(
   int    num_cells = 0;
   
   for(CellIterator iter = patch->getCellIterator(gc); !iter.done(); iter++){
-    IntVector curcell = *iter;
-    delY_top    = std::max(0.0, (vvel_FC[curcell+IntVector(0,1,0)] * delT));
-    delY_bottom = std::max(0.0,-(vvel_FC[curcell+IntVector(0,0,0)] * delT));
-    delX_right  = std::max(0.0, (uvel_FC[curcell+IntVector(1,0,0)] * delT));
-    delX_left   = std::max(0.0,-(uvel_FC[curcell+IntVector(0,0,0)] * delT));
-    delZ_front  = std::max(0.0, (wvel_FC[curcell+IntVector(0,0,1)] * delT));
-    delZ_back   = std::max(0.0,-(wvel_FC[curcell+IntVector(0,0,0)] * delT));
+    IntVector c = *iter;
+    delY_top    = std::max(0.0, (vvel_FC[c+IntVector(0,1,0)] * delT));
+    delY_bottom = std::max(0.0,-(vvel_FC[c                 ] * delT));
+    delX_right  = std::max(0.0, (uvel_FC[c+IntVector(1,0,0)] * delT));
+    delX_left   = std::max(0.0,-(uvel_FC[c                 ] * delT));
+    delZ_front  = std::max(0.0, (wvel_FC[c+IntVector(0,0,1)] * delT));
+    delZ_back   = std::max(0.0,-(wvel_FC[c                 ] * delT));
     
     delX_tmp    = dx.x() - delX_right - delX_left;
     delY_tmp    = dx.y() - delY_top   - delY_bottom;
@@ -100,54 +99,53 @@ void FirstOrderCEAdvector::inFluxOutFluxVolume(
     
     //__________________________________
     //   SLAB outfluxes
-    d_advector.d_OFS[curcell].d_fflux[FOA::TOP]   = delY_top   * delX_tmp * delZ_tmp;
-    d_advector.d_OFS[curcell].d_fflux[FOA::BOTTOM]= delY_bottom* delX_tmp * delZ_tmp;
-    d_advector.d_OFS[curcell].d_fflux[FOA::RIGHT] = delX_right * delY_tmp * delZ_tmp;
-    d_advector.d_OFS[curcell].d_fflux[FOA::LEFT]  = delX_left  * delY_tmp * delZ_tmp;
-    d_advector.d_OFS[curcell].d_fflux[FOA::FRONT] = delZ_front * delX_tmp * delY_tmp;
-    d_advector.d_OFS[curcell].d_fflux[FOA::BACK]  = delZ_back  * delX_tmp * delY_tmp;
+    d_advector.d_OFS[c].d_fflux[TOP]   = delY_top   * delX_tmp * delZ_tmp;
+    d_advector.d_OFS[c].d_fflux[BOTTOM]= delY_bottom* delX_tmp * delZ_tmp;
+    d_advector.d_OFS[c].d_fflux[RIGHT] = delX_right * delY_tmp * delZ_tmp;
+    d_advector.d_OFS[c].d_fflux[LEFT]  = delX_left  * delY_tmp * delZ_tmp;
+    d_advector.d_OFS[c].d_fflux[FRONT] = delZ_front * delX_tmp * delY_tmp;
+    d_advector.d_OFS[c].d_fflux[BACK]  = delZ_back  * delX_tmp * delY_tmp;
 
     // Edge flux terms
-    d_OFE[curcell].d_eflux[TOP_R]     = delY_top      * delX_right * delZ_tmp;
-    d_OFE[curcell].d_eflux[TOP_FR]    = delY_top      * delX_tmp   * delZ_front;
-    d_OFE[curcell].d_eflux[TOP_L]     = delY_top      * delX_left  * delZ_tmp;
-    d_OFE[curcell].d_eflux[TOP_BK]    = delY_top      * delX_tmp   * delZ_back;
+    d_OFE[c].d_eflux[TOP_R]     = delY_top      * delX_right * delZ_tmp;
+    d_OFE[c].d_eflux[TOP_FR]    = delY_top      * delX_tmp   * delZ_front;
+    d_OFE[c].d_eflux[TOP_L]     = delY_top      * delX_left  * delZ_tmp;
+    d_OFE[c].d_eflux[TOP_BK]    = delY_top      * delX_tmp   * delZ_back;
     
-    d_OFE[curcell].d_eflux[BOT_R]     = delY_bottom   * delX_right * delZ_tmp;
-    d_OFE[curcell].d_eflux[BOT_FR]    = delY_bottom   * delX_tmp   * delZ_front;
-    d_OFE[curcell].d_eflux[BOT_L]     = delY_bottom   * delX_left  * delZ_tmp;
-    d_OFE[curcell].d_eflux[BOT_BK]    = delY_bottom   * delX_tmp   * delZ_back;
+    d_OFE[c].d_eflux[BOT_R]     = delY_bottom   * delX_right * delZ_tmp;
+    d_OFE[c].d_eflux[BOT_FR]    = delY_bottom   * delX_tmp   * delZ_front;
+    d_OFE[c].d_eflux[BOT_L]     = delY_bottom   * delX_left  * delZ_tmp;
+    d_OFE[c].d_eflux[BOT_BK]    = delY_bottom   * delX_tmp   * delZ_back;
     
-    d_OFE[curcell].d_eflux[RIGHT_BK]  = delY_tmp      * delX_right * delZ_back;
-    d_OFE[curcell].d_eflux[RIGHT_FR]  = delY_tmp      * delX_right * delZ_front;
+    d_OFE[c].d_eflux[RIGHT_BK]  = delY_tmp      * delX_right * delZ_back;
+    d_OFE[c].d_eflux[RIGHT_FR]  = delY_tmp      * delX_right * delZ_front;
     
-    d_OFE[curcell].d_eflux[LEFT_BK]   = delY_tmp      * delX_left  * delZ_back;
-    d_OFE[curcell].d_eflux[LEFT_FR]   = delY_tmp      * delX_left  * delZ_front;
+    d_OFE[c].d_eflux[LEFT_BK]   = delY_tmp      * delX_left  * delZ_back;
+    d_OFE[c].d_eflux[LEFT_FR]   = delY_tmp      * delX_left  * delZ_front;
     
     //__________________________________
     //   Corner flux terms
-    d_OFC[curcell].d_cflux[TOP_R_BK]  = delY_top      * delX_right * delZ_back;
-    d_OFC[curcell].d_cflux[TOP_R_FR]  = delY_top      * delX_right * delZ_front;
-    d_OFC[curcell].d_cflux[TOP_L_BK]  = delY_top      * delX_left  * delZ_back;
-    d_OFC[curcell].d_cflux[TOP_L_FR]  = delY_top      * delX_left  * delZ_front;
+    d_OFC[c].d_cflux[TOP_R_BK]  = delY_top      * delX_right * delZ_back;
+    d_OFC[c].d_cflux[TOP_R_FR]  = delY_top      * delX_right * delZ_front;
+    d_OFC[c].d_cflux[TOP_L_BK]  = delY_top      * delX_left  * delZ_back;
+    d_OFC[c].d_cflux[TOP_L_FR]  = delY_top      * delX_left  * delZ_front;
     
-    d_OFC[curcell].d_cflux[BOT_R_BK]  = delY_bottom   * delX_right * delZ_back;
-    d_OFC[curcell].d_cflux[BOT_R_FR]  = delY_bottom   * delX_right * delZ_front;
-    d_OFC[curcell].d_cflux[BOT_L_BK]  = delY_bottom   * delX_left  * delZ_back;
-    d_OFC[curcell].d_cflux[BOT_L_FR]  = delY_bottom   * delX_left  * delZ_front;
+    d_OFC[c].d_cflux[BOT_R_BK]  = delY_bottom   * delX_right * delZ_back;
+    d_OFC[c].d_cflux[BOT_R_FR]  = delY_bottom   * delX_right * delZ_front;
+    d_OFC[c].d_cflux[BOT_L_BK]  = delY_bottom   * delX_left  * delZ_back;
+    d_OFC[c].d_cflux[BOT_L_FR]  = delY_bottom   * delX_left  * delZ_front;
 
     //__________________________________
     //  Bullet proofing
     double total_fluxout = 0.0;
-    for(int face = FOA::TOP; face <= FOA::BACK; 
-       face++ )  {
-      total_fluxout  += d_advector.d_OFS[curcell].d_fflux[face];
+    for(int face = TOP; face <= BACK; face++ )  {
+      total_fluxout  += d_advector.d_OFS[c].d_fflux[face];
     }
     for(int edge = TOP_R; edge <= LEFT_FR; edge++ )  {
-      total_fluxout  += d_OFE[curcell].d_eflux[edge];
+      total_fluxout  += d_OFE[c].d_eflux[edge];
     }
     for(int corner = TOP_R_BK; corner <= BOT_L_FR; corner++ )  {
-      total_fluxout  += d_OFC[curcell].d_cflux[corner];
+      total_fluxout  += d_OFC[c].d_cflux[corner];
     }
     num_cells++;
     error_test +=(vol - total_fluxout)/fabs(vol- total_fluxout);
@@ -157,171 +155,151 @@ void FirstOrderCEAdvector::inFluxOutFluxVolume(
   // find the cell and throw an exception.  
   if (fabs(error_test - num_cells) > 1.0e-2 && bulletProof_test) {
     for(CellIterator iter = patch->getCellIterator(gc); !iter.done(); iter++){
-      IntVector curcell = *iter; 
+      IntVector c = *iter; 
       double total_fluxout = 0.0;
-      for(int face = FOA::TOP; face <= FOA::BACK; face++ )  {
-        total_fluxout  += d_advector.d_OFS[curcell].d_fflux[face];
+      for(int face = TOP; face <= BACK; face++ )  {
+        total_fluxout  += d_advector.d_OFS[c].d_fflux[face];
       }
       for(int edge = TOP_R; edge <= LEFT_FR; edge++ )  {
-        total_fluxout  += d_OFE[curcell].d_eflux[edge];
+        total_fluxout  += d_OFE[c].d_eflux[edge];
       }
       for(int corner = TOP_R_BK; corner <= BOT_L_FR; corner++ )  {
-        total_fluxout  += d_OFC[curcell].d_cflux[corner];
+        total_fluxout  += d_OFC[c].d_cflux[corner];
       }
       if (vol - total_fluxout < 0.0) {
         throw OutFluxVolume(*iter,total_fluxout, vol, indx);
       }
     }  // cell iter
   }  // if total_fluxout > vol
- 
 }
 
-
-
 /* ---------------------------------------------------------------------
- Function~  ICE::advectQFirst--ADVECTION:
- Purpose~   Calculate the advection of q_CC 
-   
- References:
-    "Compatible Fluxes for van Leer Advection" W.B VanderHeyden and 
-    B.A. Kashiwa, Journal of Computational Physics, 146, 1-28, (1998) 
-            
- Steps for each cell:      
-- Compute q outflux and q influx for each cell.
-- Finally sum the influx and outflux portions
-       
- advect_preprocessing MUST be done prior to this function
- ---------------------------------------------------------------------  */
-
+ Function~ advectQ
+_____________________________________________________________________*/
+//     D O U B L E
 void FirstOrderCEAdvector::advectQ(const CCVariable<double>& q_CC,
                              const Patch* patch,
                              CCVariable<double>& q_advected,
 				 DataWarehouse* /*new_dw*/)
-{
-
-  advect<double>(q_CC,patch,q_advected);
-
+{ 
+  advectCE<double>(q_CC,patch,q_advected, 
+                      d_notUsedX, d_notUsedY, d_notUsedZ, 
+                      ignoreFaceFluxesD);
 }
-
-
+//__________________________________
+//  S P E C I A L I Z E D   D O U B L E 
+//  needed by implicit solve
+void FirstOrderCEAdvector::advectQ(const CCVariable<double>& q_CC,
+                             const Patch* patch,
+                             CCVariable<double>& q_advected,
+                             SFCXVariable<double>& q_XFC,
+                             SFCYVariable<double>& q_YFC,
+                             SFCZVariable<double>& q_ZFC,
+				 DataWarehouse* /*new_dw*/)
+{
+  advectCE<double>(q_CC,patch,q_advected,  
+                      q_XFC, q_YFC, q_ZFC, saveFaceFluxes);
+}
+//__________________________________
+//     V E C T O R
 void FirstOrderCEAdvector::advectQ(const CCVariable<Vector>& q_CC,
                              const Patch* patch,
                              CCVariable<Vector>& q_advected,
 				 DataWarehouse* /*new_dw*/)
 {
-
-  advect<Vector>(q_CC,patch,q_advected);
-
+  advectCE<Vector>(q_CC,patch,q_advected, 
+                      d_notUsedX, d_notUsedY, d_notUsedZ, 
+                      ignoreFaceFluxesV);
 }
 
-
-template <class T> void FirstOrderCEAdvector::advect(const CCVariable<T>& q_CC,
-                                              const Patch* patch,
-                                              CCVariable<T>& q_advected)
+/* ---------------------------------------------------------------------
+ Function~  Advect--  driver program that does the advection  
+_____________________________________________________________________*/
+template <class T, typename F> 
+  void FirstOrderCEAdvector::advectCE(const CCVariable<T>& q_CC,
+                                  const Patch* patch,                   
+                                  CCVariable<T>& q_advected,
+                                  SFCXVariable<double>& q_XFC,
+                                  SFCYVariable<double>& q_YFC,
+                                  SFCZVariable<double>& q_ZFC,
+                                  F save_q_FC)  // function is passed in
 {
-  T sum_q_outflux(0.), sum_q_outflux_EF(0.), sum_q_outflux_CF(0.);
-  T sum_q_influx(0.), sum_q_influx_EF(0.), sum_q_influx_CF(0.);
-  IntVector adjcell;
-  
+
   for(CellIterator iter = patch->getCellIterator(); !iter.done(); iter++) { 
-    IntVector curcell = *iter;
-    int i = curcell.x();
-    int j = curcell.y();
-    int k = curcell.z();
-   
-    sum_q_outflux      *= 0.0;
-    sum_q_outflux_EF   *= 0.0;
-    sum_q_outflux_CF   *= 0.0;
-    sum_q_influx       *= 0.0;
-    sum_q_influx_EF    *= 0.0;
-    sum_q_influx_CF    *= 0.0;
+    double oneThird = 1.0/3.0;
+    IntVector c = *iter;
+    //__________________________________
+    //   all faces
+    T q_face_flux[6];
+    double faceVol[6];
+         
+    for(int f = TOP; f <= BACK; f++ )  {    
+      double slab_vol = 0.0;
+      T q_slab_flux = 0.0;       
+      
+      //__________________________________
+      //   S L A B S
+      IntVector ac = c + S_ac[f];     // slab adjacent cell
+      double outfluxVol = d_advector.d_OFS[c ].d_fflux[OF_slab[f]];
+      double influxVol  = d_advector.d_OFS[ac].d_fflux[IF_slab[f]];
+
+      q_slab_flux  = - q_CC[c]  * outfluxVol + q_CC[ac] * influxVol;             
+      slab_vol    +=  outfluxVol +  influxVol;                 
+
+      //__________________________________
+      //   E D G E S  
+      T q_edge_flux = 0.0;
+      double edge_vol = 0.0;
+
+      for(int e = 0; e < 4; e++ ) {
+        int OF = OF_edge[f][e];        // cleans up the equations
+        int IF = IF_edge[f][e];
+
+        IntVector ac = c + E_ac[f][e]; // adjcent cell
+        outfluxVol = 0.5 * d_OFE[c ].d_eflux[OF];
+        influxVol  = 0.5 * d_OFE[ac].d_eflux[IF];
+
+        q_edge_flux += -q_CC[c] * outfluxVol
+                    +  q_CC[ac] * influxVol;
+        edge_vol    += outfluxVol + influxVol;
+      }                
+
+      //__________________________________
+      //   C O R N E R S
+      T q_corner_flux = 0.0;
+      double corner_vol = 0.0;
+
+      for(int crner = 0; crner < 4; crner++ ) {
+        int OF = OF_corner[f][crner];      // cleans up the equations
+        int IF = IF_corner[f][crner];
+
+        IntVector ac = c + C_ac[f][crner]; // adjcent cell
+        outfluxVol = oneThird * d_OFC[c ].d_cflux[OF];
+        influxVol  = oneThird * d_OFC[ac].d_cflux[IF];
+
+        q_corner_flux += -q_CC[c] * outfluxVol 
+                      +  q_CC[ac] * influxVol; 
+        corner_vol    += outfluxVol + influxVol;
+      }  //  corner loop
+      
+      q_face_flux[f] = q_slab_flux + q_edge_flux + q_corner_flux;
+      faceVol[f]     = slab_vol + edge_vol + corner_vol; 
+    }  // face loop 
+       
+    //__________________________________
+    //  sum up all the contributions
+    q_advected[c] = 0.0;        
+    for(int f = TOP; f <= BACK; f++ )  {
+      q_advected[c] += q_face_flux[f];
+    }
     
     //__________________________________
-    //  OUTFLUX: SLAB 
-    for(int face = FOA::TOP; face <= FOA::BACK; 
-       face++ )  {
-      sum_q_outflux  += q_CC[curcell] * d_advector.d_OFS[curcell].d_fflux[face];
-    }
-    //__________________________________
-    //  OUTFLUX: EDGE_FLUX
-    for(int edge = TOP_R; edge <= LEFT_FR; edge++ )   {
-      sum_q_outflux_EF += q_CC[curcell] * d_OFE[curcell].d_eflux[edge];
-    }
-    //__________________________________
-    //  OUTFLUX: CORNER FLUX
-    for(int corner = TOP_R_BK;        corner <= BOT_L_FR; corner++ )  {
-      sum_q_outflux_CF +=  q_CC[curcell] * d_OFC[curcell].d_cflux[corner];
-    } 
-
-    //__________________________________
-    //  INFLUX: SLABS
-    adjcell = IntVector(i, j+1, k);       // TOP
-    sum_q_influx  += q_CC[adjcell] * d_advector.d_OFS[adjcell].d_fflux[FOA::BOTTOM];
-    adjcell = IntVector(i, j-1, k);       // BOTTOM
-    sum_q_influx  += q_CC[adjcell] * d_advector.d_OFS[adjcell].d_fflux[FOA::TOP];
-    adjcell = IntVector(i+1, j, k);       // RIGHT
-    sum_q_influx  += q_CC[adjcell] * d_advector.d_OFS[adjcell].d_fflux[FOA::LEFT];
-    adjcell = IntVector(i-1, j, k);       // LEFT
-    sum_q_influx  += q_CC[adjcell] * d_advector.d_OFS[adjcell].d_fflux[FOA::RIGHT];
-    adjcell = IntVector(i, j, k+1);       // FRONT
-    sum_q_influx  += q_CC[adjcell] * d_advector.d_OFS[adjcell].d_fflux[FOA::BACK];
-    adjcell = IntVector(i, j, k-1);       // BACK
-    sum_q_influx  += q_CC[adjcell] * d_advector.d_OFS[adjcell].d_fflux[FOA::FRONT];
-    //__________________________________
-    //  INFLUX: EDGES
-    adjcell = IntVector(i+1, j+1, k);       // TOP_R
-    sum_q_influx_EF += q_CC[adjcell] * d_OFE[adjcell].d_eflux[BOT_L];
-    adjcell = IntVector(i, j+1, k+1);   // TOP_FR
-    sum_q_influx_EF += q_CC[adjcell] * d_OFE[adjcell].d_eflux[BOT_BK];
-    adjcell = IntVector(i-1, j+1, k);       // TOP_L
-    sum_q_influx_EF += q_CC[adjcell] * d_OFE[adjcell].d_eflux[BOT_R];
-    adjcell = IntVector(i, j+1, k-1);       // TOP_BK
-    sum_q_influx_EF += q_CC[adjcell] * d_OFE[adjcell].d_eflux[BOT_FR];
-    adjcell = IntVector(i+1, j-1, k);       // BOT_R
-    sum_q_influx_EF += q_CC[adjcell] * d_OFE[adjcell].d_eflux[TOP_L];
-    adjcell = IntVector(i, j-1, k+1);       // BOT_FR
-    sum_q_influx_EF += q_CC[adjcell] * d_OFE[adjcell].d_eflux[TOP_BK];
-    adjcell = IntVector(i-1, j-1, k);       // BOT_L
-    sum_q_influx_EF += q_CC[adjcell] * d_OFE[adjcell].d_eflux[TOP_R];
-    adjcell = IntVector(i, j-1, k-1);       // BOT_BK
-    sum_q_influx_EF += q_CC[adjcell] * d_OFE[adjcell].d_eflux[TOP_FR];
-    adjcell = IntVector(i+1, j, k-1);       // RIGHT_BK
-    sum_q_influx_EF += q_CC[adjcell] * d_OFE[adjcell].d_eflux[LEFT_FR];
-    adjcell = IntVector(i+1, j, k+1);       // RIGHT_FR
-    sum_q_influx_EF += q_CC[adjcell] * d_OFE[adjcell].d_eflux[LEFT_BK];
-    adjcell = IntVector(i-1, j, k-1);       // LEFT_BK
-    sum_q_influx_EF += q_CC[adjcell] * d_OFE[adjcell].d_eflux[RIGHT_FR];
-    adjcell = IntVector(i-1, j, k+1);       // LEFT_FR
-    sum_q_influx_EF += q_CC[adjcell] * d_OFE[adjcell].d_eflux[RIGHT_BK];
-
-    //__________________________________
-    //   INFLUX: CORNER FLUX
-    adjcell = IntVector(i+1, j+1, k-1);       // TOP_R_BK
-    sum_q_influx_CF += q_CC[adjcell] * d_OFC[adjcell].d_cflux[BOT_L_FR];
-    adjcell = IntVector(i+1, j+1, k+1);       // TOP_R_FR
-    sum_q_influx_CF += q_CC[adjcell] * d_OFC[adjcell].d_cflux[BOT_L_BK];
-    adjcell = IntVector(i-1, j+1, k-1);       // TOP_L_BK
-    sum_q_influx_CF += q_CC[adjcell] * d_OFC[adjcell].d_cflux[BOT_R_FR];
-    adjcell = IntVector(i-1, j+1, k+1);       // TOP_L_FR
-    sum_q_influx_CF += q_CC[adjcell] * d_OFC[adjcell].d_cflux[BOT_R_BK];
-    adjcell = IntVector(i+1, j-1, k-1);       // BOT_R_BK
-    sum_q_influx_CF += q_CC[adjcell] * d_OFC[adjcell].d_cflux[TOP_L_FR];
-    adjcell = IntVector(i+1, j-1, k+1);       // BOT_R_FR
-    sum_q_influx_CF += q_CC[adjcell] * d_OFC[adjcell].d_cflux[TOP_L_BK];
-    adjcell = IntVector(i-1, j-1, k-1); // BOT_L_BK
-    sum_q_influx_CF += q_CC[adjcell] * d_OFC[adjcell].d_cflux[TOP_R_FR];
-    adjcell = IntVector(i-1, j-1, k+1);       // BOT_L_FR
-    sum_q_influx_CF += q_CC[adjcell] * d_OFC[adjcell].d_cflux[TOP_R_BK];
-
-    //__________________________________
-    //  Calculate the advected q at t + delta t
-    q_advected[curcell] = - sum_q_outflux - sum_q_outflux_EF - sum_q_outflux_CF
-                        + sum_q_influx  + sum_q_influx_EF  + sum_q_influx_CF;
-
+    //  inline function to compute q_FC
+    save_q_FC(c, q_XFC, q_YFC, q_ZFC, faceVol, q_face_flux);
   }
-
 }
-  
+//______________________________________________________________________
+//  
 namespace Uintah {
 
   static MPI_Datatype makeMPI_eflux()
