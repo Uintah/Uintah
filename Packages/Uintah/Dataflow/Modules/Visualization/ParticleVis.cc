@@ -260,9 +260,9 @@ void ParticleVis::execute()
       // Take the sqare root.
       max_vlength = sqrt(max_length2);
       // set the length scale so that the longest vector is scaled to
-      // the size of the domain
-      double len_scale_val = domain_size/(max_vlength); 
-      length_scale.set( 0 );
+      // 10 times the size of the cell per request from container dynamics. 
+      double len_scale_val = (10*cell_size)/(max_vlength); 
+      // length_scale.set( 0 );
       length_scale.set(len_scale_val );
       // manipulate head & width scale so that the head size is approx
       // cell size for a vector of max_vlength
