@@ -1154,9 +1154,12 @@ MomentumSolver::buildLinearMatrixVelHat(const ProcessorGroup* pc,
 	
       // add multimaterial momentum source term
 
+      // if 0'ing stuff below for zero friction drag
+#if 0
       if (d_MAlab)
 	d_source->computemmMomentumSource(pc, patch, index, cellinfo,
 					  &velocityVars, &constVelocityVars);
+#endif
 
       // Calculate the Velocity BCS
       //  inputs : densityCP, [u,v,w]VelocitySIVBC, [u,v,w]VelCoefPBLM
@@ -1171,9 +1174,12 @@ MomentumSolver::buildLinearMatrixVelHat(const ProcessorGroup* pc,
 				        &constVelocityVars);
 
         if (d_boundaryCondition->getIntrusionBC()) {
+	  // if 0'ing stuff below for zero friction drag
+#if 0
 	  d_boundaryCondition->intrusionMomExchangeBC(pc, patch, index,
 						      cellinfo, &velocityVars,
 						      &constVelocityVars);
+#endif
 	  d_boundaryCondition->intrusionVelocityBC(pc, patch, index, 
 						   cellinfo, &velocityVars,
 						   &constVelocityVars);
