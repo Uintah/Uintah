@@ -251,6 +251,7 @@ DESCRIPTION
 	    // similar.  Calling it multiple times is unncessary, but
 	    // harmless.
 	    static void allow_sgi_OpenGL_page0_sillyness();
+	    static void disallow_sgi_OpenGL_page0_sillyness();
 	private:
 	    friend class Barrier;
 	    friend class Mutex;

@@ -51,6 +51,7 @@
 #include <Core/Thread/Time.h>
 #include <Core/Thread/WorkQueue.h>
 #include "Thread_unix.h"
+#include <abi_mutex.h>
 #include <errno.h>
 #include <fcntl.h>
 #include <signal.h>
@@ -248,6 +249,14 @@ Thread::allow_sgi_OpenGL_page0_sillyness()
 #endif
 }
 
+void
+Thread::disallow_sgi_OpenGL_page0_sillyness()
+{
+  if(mprotect(0, getpagesize(), PROT_NONE) == -1){
+    fprintf(stderr, "\007\007!!! Strange error protecting page 0 - tell Steve this number: %d\n", errno);
+  }
+}
+
 /*
  * Intialize threads for irix
  */
@@ -256,13 +265,7 @@ Thread::initialize()
 {
   if(initialized)
     return;
-#if 0
-  if(mprotect(0, getpagesize(), PROT_NONE) != -1){
-    //fprintf(stderr, "\007\007!!! WARNING: page 0 protected - talk to Steve if GL programs fail!\n");
-  } else if(errno != EINVAL){
-    fprintf(stderr, "\007\007!!! Strange error protecting page 0 - tell Steve this number: %d\n", errno);
-  }
-#endif
+  // disallow_sgi_OpenGL_page0_sillyness();
   usconfig(CONF_ARENATYPE, US_SHAREDONLY);
   usconfig(CONF_INITSIZE, 30*1024*1024);
   usconfig(CONF_INITUSERS, (unsigned int)140);
@@ -396,6 +399,9 @@ Thread::exitAll(int code)
 {
   exiting=true;
   exit_code=code;
+
+  if(nactive == 0)
+    ::exit(code);
 
   // We want to do this:
   //   kill(0, SIGQUIT);
@@ -762,6 +768,7 @@ Thread::migrate(int proc)
 Mutex::Mutex(const char* name)
   : name_(name)
 {
+#ifdef BROKEN
   if(!initialized){
     Thread::initialize();
   }
@@ -769,11 +776,18 @@ Mutex::Mutex(const char* name)
   if(!priv_)
     throw ThreadError(std::string("usnewlock failed")
 		      +strerror(errno));
+#else
+  if(init_lock((abilock_t*)&priv_) != 0)
+    throw ThreadError(std::string("init_lock failed"));
+#endif
 }
 
 Mutex::~Mutex()
 {
+#ifdef BROKEN
   usfreelock((ulock_t)priv_, arena);
+#else
+#endif
 }
 
 void
@@ -786,29 +800,45 @@ Mutex::lock()
     p=t->priv_;
     os=Thread::push_bstack(p, Thread::BLOCK_MUTEX, name_);
   }
+#ifdef BROKEN
   if(ussetlock((ulock_t)priv_) == -1)
     throw ThreadError(std::string("ussetlock failed")
 		      +strerror(errno));
+#else
+  spin_lock((abilock_t*)&priv_);
   if(t)
     Thread::pop_bstack(p, os);
+#endif
 }
 
 bool
 Mutex::tryLock()
 {
+#ifdef BROKEN
   int st=uscsetlock((ulock_t)priv_, 100);
   if(st==-1)
     throw ThreadError(std::string("uscsetlock failed")
 		      +strerror(errno));
   return st!=0;
+#else
+  if(acquire_lock((abilock_t*)&priv_) == 0)
+    return true;
+  else
+    return false;
+#endif
 }
 
 void
 Mutex::unlock()
 {
+#ifdef BROKEN
   if(usunsetlock((ulock_t)priv_) == -1)
     throw ThreadError(std::string("usunsetlock failed")
 		      +strerror(errno));
+#else
+  if(release_lock((abilock_t*)&priv_) != 0)
+    throw ThreadError(std::string("release_lock failed"));
+#endif
 }
 
 /*
@@ -1119,13 +1149,13 @@ struct ConditionVariable_private {
 ConditionVariable::ConditionVariable(const char* name)
   : name_(name)
 {
-priv_=new ConditionVariable_private();
-priv_->num_waiters=0;
-priv_->pollsema=false;
-priv_->semaphore=usnewsema(arena, 0);
-if(!priv_->semaphore)
-  throw ThreadError(std::string("usnewsema failed")
-    +strerror(errno));
+  priv_=new ConditionVariable_private();
+  priv_->num_waiters=0;
+  priv_->pollsema=false;
+  priv_->semaphore=usnewsema(arena, 0);
+  if(!priv_->semaphore)
+    throw ThreadError(std::string("usnewsema failed")
+		      +strerror(errno));
 }
 
 ConditionVariable::~ConditionVariable()
@@ -1311,4 +1341,3 @@ ConditionVariable::conditionBroadcast()
 }
 
 } // End namespace SCIRun
-
