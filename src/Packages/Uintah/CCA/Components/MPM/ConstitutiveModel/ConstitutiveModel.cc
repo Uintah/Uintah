@@ -13,6 +13,9 @@
 
 using namespace Uintah;
 
+#define FRACTURE
+#undef FRACTURE
+
 ConstitutiveModel::ConstitutiveModel()
 {
 }
@@ -241,3 +244,33 @@ ConstitutiveModel::computeVelocityGradient(const Patch* patch,
   return velGrad;
 }
 
+#ifdef FRACTURE
+void ConstitutiveModel::addComputesAndRequiresConvertJToK(Task*,
+                                               const MPMMaterial*,
+                                               const PatchSet*) const
+{
+}
+
+void ConstitutiveModel::ConvertJToK(const PatchSubset*,
+                                            const MPMMaterial*,
+                                            DataWarehouse*,
+                                            DataWarehouse*)
+
+{
+}
+
+void ConstitutiveModel::addComputesAndRequiresConvertJToKWithErosion(Task*,
+                                               const MPMMaterial*,
+                                               const PatchSet*) const
+{
+}
+
+void ConstitutiveModel::ConvertJToKWithErosion(const PatchSubset*,
+                                            const MPMMaterial*,
+                                            DataWarehouse*,
+                                            DataWarehouse*)
+
+{
+}
+
+#endif
