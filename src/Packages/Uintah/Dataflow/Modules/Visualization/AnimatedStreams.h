@@ -20,7 +20,7 @@
 #include <Dataflow/Widgets/PointWidget.h>
 
 #include <Packages/Uintah/Core/Datatypes/GLAnimatedStreams.h>
-
+#include <string>
 
 namespace Uintah {
 
@@ -49,11 +49,16 @@ private:
   int cmap_id;  // id associated with color map...
   int generation; // the current generation of Uintah::DataArchive
   int timestep; // the current timestep
-
+  string varname; // the current variable name
+  
   GuiInt pause;
   GuiInt normals;
+  GuiInt lighting;
+  GuiInt normal_method;
+  GuiInt iter_method;
   GuiInt linewidth;
   GuiDouble stepsize;
+  GuiDouble iterations;
 
   GLAnimatedStreams  *anistreams;
 
