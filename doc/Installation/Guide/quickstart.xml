@@ -33,6 +33,7 @@ SCIRun is officially compatible with two platforms, SGI and Linux.
 RPMs</link> (for Mandrake 9 and Red Hat 8 systems only) or from <link
 linkend="sec.tarball_inst_qs">source code tarballs</link> (for Linux
 and SGI).</para>
+
 </section>
 
 <section id="sec.rpm_inst_qs">
@@ -156,6 +157,26 @@ third party software, and sample data sets.</para>
 
 <para>See <xref endterm="title.preparing_qs"
 linkend="sec.preparing_qs"/> before starting &sr;</para>
+
+<note>
+<para>If you are building
+&sr; for the Itanium architecture you must use the GNU compiler
+collection (gcc).  And you must set the values of the environment
+variables <envar>CFLAGS</envar> and <envar>CXXFFLAGS</envar> as
+follows before building &sr; and its third party libraries:
+<programlisting>
+setenv CFLAGS fPIC
+setenv CXXFLAGS fPIC
+</programlisting>
+for csh-type shells or
+<programlisting>
+CFLAGS=fPIC
+CXXFLAGS=fPIC
+export CFLAGS CXXFLAGS
+</programlisting>
+for sh-type shells, 
+</para>
+</note>
 
 </section>
 
