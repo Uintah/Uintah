@@ -17,22 +17,22 @@
 
 
 /*
- *  ModuleReporter.cc
+ *  DynamicCompilation.cc
  *
  *  Written by:
- *   Michael Callahan
+ *   Yarden Livnat
  *   Department of Computer Science
  *   University of Utah
- *   Aug 2002
+ *   July 2003
  *
- *  Copyright (C) 2002 University of Utah
+ *  Copyright (C) 2003 University of Utah
  */
 
-#include <Core/Util/ModuleReporter.h>
+#include <Core/Util/DynamicCompilation.h>
 
 namespace SCIRun {
 
-ModuleReporter::~ModuleReporter()
+DynamicCompilation::~DynamicCompilation()
 {
 }
 
