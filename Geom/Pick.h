@@ -14,28 +14,30 @@
 #ifndef SCI_Geom_Pick_h
 #define SCI_Geom_Pick_h 1
 
+#include <Geom/Container.h>
+#include <Geom/Material.h>
 #include <Classlib/Array1.h>
-#include <Geom/Geom.h>
 #include <Geometry/Vector.h>
 #include <Multitask/ITC.h>
 
 class MessageBase;
 class Module;
 
-class GeomPick {
+class GeomPick : public GeomContainer {
     Array1<Vector> directions;
-    MaterialHandle hightlight;
+    MaterialHandle highlight;
     Mailbox<MessageBase*>* mailbox;
     void* cbdata;
     Module* module;
     GeomPick(const GeomPick&);
 public:
-    GeomPick(Module*);
-    GeomPick(Module* module, const Vector&);
-    GeomPick(Module* module, const Vector&, const Vector&);
-    GeomPick(Module* module, const Vector&, const Vector&, const Vector&);
-    GeomPick(Module* module, const Array1<Vector>&);
-    ~GeomPick();
+    GeomPick(GeomObj*, Module*);
+    GeomPick(GeomObj*, Module* module, const Vector&);
+    GeomPick(GeomObj*, Module* module, const Vector&, const Vector&);
+    GeomPick(GeomObj*, Module* module, const Vector&, const Vector&, const Vector&);
+    GeomPick(GeomObj*, Module* module, const Array1<Vector>&);
+    virtual ~GeomPick();
+    virtual GeomObj* clone();
     int nprincipal();
     Vector principal(int i);
     void set_principal(const Vector&);

@@ -17,6 +17,7 @@
 #include <Classlib/Persistent.h>
 #include <Classlib/LockingHandle.h>
 #include <Geom/Color.h>
+#include <Geom/Container.h>
 #include <Multitask/ITC.h>
 
 class Material : public Persistent {
@@ -42,5 +43,27 @@ public:
 };
 
 typedef LockingHandle<Material> MaterialHandle;
+
+class GeomMaterial : public GeomContainer {
+    MaterialHandle matl;
+public:
+    GeomMaterial(GeomObj*, const MaterialHandle&);
+    GeomMaterial(const GeomMaterial&);
+    virtual ~GeomMaterial();
+    virtual GeomObj* clone();
+
+    // For OpenGL
+#ifdef SCI_OPENGL
+    virtual void objdraw(DrawInfoOpenGL*, Material*);
+#endif
+
+    // For all Painter's algorithm based renderers
+    virtual void make_prims(Array1<GeomObj*>& free,
+			    Array1<GeomObj*>& dontfree);
+
+    // For Raytracing
+    virtual void intersect(const Ray& ray, Material* matl,
+			   Hit& hit);
+};    
 
 #endif

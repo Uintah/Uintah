@@ -105,11 +105,11 @@ void GeomDisc::make_prims(Array1<GeomObj*>& free,
 	    if(j>0){
 		if(i>0){
 		    GeomTri* t1=new GeomTri(l1, l2, p1);
-		    t1->set_matl(matl);
+//		    t1->set_matl(matl);
 		    free.add(t1);
 		}
 		GeomTri* t2=new GeomTri(l2, p1, p2);
-		t2->set_matl(matl);
+//		t2->set_matl(matl);
 		free.add(t2);
 	    }
 	    l1=p1;
@@ -118,7 +118,7 @@ void GeomDisc::make_prims(Array1<GeomObj*>& free,
     }
 }
 
-void GeomDisc::intersect(const Ray&, const MaterialHandle&,
+void GeomDisc::intersect(const Ray&, Material*,
 			 Hit&)
 {
     NOT_FINISHED("GeomDisc::intersect");

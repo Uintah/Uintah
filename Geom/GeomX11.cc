@@ -37,12 +37,13 @@ void DrawInfoX11::set_color(const Color& c)
     current_pixel=pixel;
 }
 
-void GeomObj::draw(DrawInfoX11* di)
+void GeomObj::draw(DrawInfoX11* di, Material* matl)
 {
+#if BROKEN
     Material* old_matl=0;
     int old_lit=0;
     unsigned long old_pixel=0;
-    if(lit || matl.get_rep() || lit != di->current_lit){
+    if(lit || matl || lit != di->current_lit){
 	old_matl=di->current_matl;
 	old_lit=di->current_lit;
 	if(matl.get_rep())
@@ -95,7 +96,10 @@ void GeomObj::draw(DrawInfoX11* di)
 	    di->set_color(di->current_matl->diffuse);
 	}
     }
-    objdraw(di);
+#endif
+    NOT_FINISHED("objdraw for X11");
+    objdraw(di, matl);
+#if 0
     if(old_matl){
 	di->current_matl=old_matl;
 	di->current_lit=old_lit;
@@ -104,6 +108,7 @@ void GeomObj::draw(DrawInfoX11* di)
 	    di->current_pixel=old_pixel;
 	}
     }
+#endif
 }
 
 double GeomObj::depth(DrawInfoX11*)
@@ -112,7 +117,7 @@ double GeomObj::depth(DrawInfoX11*)
     return 0;
 }
 
-void GeomObj::objdraw(DrawInfoX11*)
+void GeomObj::objdraw(DrawInfoX11*, Material*)
 {
     cerr << "Error: objdraw called on an object which isn't a primitive!\n";
 }
@@ -128,7 +133,7 @@ double GeomLine::depth(DrawInfoX11* di)
     return Min(d1, d2);
 }
 
-void GeomLine::objdraw(DrawInfoX11* di)
+void GeomLine::objdraw(DrawInfoX11* di, Material*)
 {
     Point t1(di->transform->project(p1));
     Point t2(di->transform->project(p2));
@@ -153,7 +158,7 @@ void GeomTri::get_hit(Vector& normal, Point& point)
     normal=n;
 }
 
-void GeomTri::objdraw(DrawInfoX11* di)
+void GeomTri::objdraw(DrawInfoX11* di, Material*)
 {
     Point t1(di->transform->project(p1));
     Point t2(di->transform->project(p2));
@@ -183,7 +188,7 @@ void GeomVCTri::get_hit(Vector& normal, Point& point)
     normal=n;
 }
 
-void GeomVCTri::objdraw(DrawInfoX11* di)
+void GeomVCTri::objdraw(DrawInfoX11* di, Material*)
 {
     Point t1(di->transform->project(p1));
     Point t2(di->transform->project(p2));

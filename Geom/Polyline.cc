@@ -48,14 +48,13 @@ void GeomPolyline::make_prims(Array1<GeomObj*>& free,
     int n=pts.size()-1;
     for(int i=0;i<n;i++){
 	GeomLine* line=new GeomLine(pts[i], pts[i+1]);
-	line->set_matl(matl);
+//	line->set_matl(matl);
 	free.add(line);
     }
 }
 
 
-void GeomPolyline::intersect(const Ray&, const MaterialHandle&,
-			 Hit&)
+void GeomPolyline::intersect(const Ray&, Material*, Hit&)
 {
     NOT_FINISHED("GeomPolyline::intersect");
 }

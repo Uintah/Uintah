@@ -55,8 +55,7 @@ void GeomVCTri::make_prims(Array1<GeomObj*>&,
     dontfree.add(VCTri);
 }
 
-void GeomVCTri::intersect(const Ray&, const MaterialHandle&,
-			 Hit&)
+void GeomVCTri::intersect(const Ray&, Material*, Hit&)
 {
     NOT_FINISHED("GeomVCTri::intersect");
 }

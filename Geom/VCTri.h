@@ -15,6 +15,7 @@
 #define SCI_Geom_VCTri_h 1
 
 #include <Geom/Geom.h>
+#include <Geom/Material.h>
 #include <Geometry/Point.h>
 
 class GeomVCTri : public GeomObj {
@@ -36,14 +37,14 @@ public:
     virtual void get_bounds(BBox&);
 
 #ifdef SCI_OPENGL
-    virtual void objdraw(DrawInfoOpenGL*);
+    virtual void objdraw(DrawInfoOpenGL*, Material*);
 #endif
-    virtual void objdraw(DrawInfoX11*);
+    virtual void objdraw(DrawInfoX11*, Material*);
     virtual double depth(DrawInfoX11*);
     virtual void get_hit(Vector&, Point&);
     virtual void make_prims(Array1<GeomObj*>& free,
 			    Array1<GeomObj*>& dontfree);
-    virtual void intersect(const Ray& ray, const MaterialHandle& matl,
+    virtual void intersect(const Ray& ray, Material*,
 			   Hit& hit);
 };
 

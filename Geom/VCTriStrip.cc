@@ -61,7 +61,7 @@ void GeomVCTriStrip::add(const Point& pt, const Vector& norm,
     mmatl.add(mm);
 }
 
-void GeomVCTriStrip::intersect(const Ray&, const MaterialHandle&,
+void GeomVCTriStrip::intersect(const Ray&, Material*,
 			 Hit&)
 {
     NOT_FINISHED("GeomVCTriStrip::intersect");
