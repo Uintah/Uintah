@@ -49,7 +49,7 @@ extern "C" {
 }
 
 template<> string SimpleIPort<BundleHandle>::port_type_("Bundle");
-template<> string SimpleIPort<BundleHandle>::port_color_("green");
+template<> string SimpleIPort<BundleHandle>::port_color_("orange");
 
 //! Specialization for field ports.
 //! Field ports must only send const fields i.e. frozen fields.
