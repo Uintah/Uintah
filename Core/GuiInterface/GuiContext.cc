@@ -226,7 +226,7 @@ void GuiContext::emit(std::ostream& out, const string& prefix)
       if ((tmp = getenv("SCIRUN_DATA")))
       {
 	const string datadir(tmp);
-	const string::size_type loc = result.find(datadir);
+	const string::size_type loc = result.find(data
 	if (loc != string::npos)
 	{
 	  result.replace(loc, datadir.size(), "$DATADIR");
@@ -257,7 +257,7 @@ void GuiContext::emit(std::ostream& out, const string& prefix)
     else
     {
       string isDefault;
-      gui->eval("isaDefaultValue "+name,isDefault);
+      gui->eval("isaDefaultValue {"+name+"}",isDefault);
       if (isDefault == "0") {
 	out << prefix << "-" << format_varname() << " {"
 	    << result << "}" << std::endl;
