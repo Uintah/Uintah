@@ -1,0 +1,106 @@
+Image Dimensions: 352x240   MPEG Block Dimensions: 352x240
+START>SEQUENCE
+START>Intraframe: 0
+Total No of Bits:   223477  Bits for Frame:   223477
+MB Attribute Bits:    660  MV Bits:      0   EOB Bits:   3960
+Y Bits:  196206  U Bits:    9386  V Bits:   12432  Total Bits:  218024
+MV StepSize: 4.000000  MV NumberNonZero: 23.665152  MV NumberZero: 40.334848
+Code MType:     0    1
+Macro Freq:   330    0
+Y     Freq:  1320    0
+UV    Freq:   660    0
+Comp: 0  MRSNR: 16.74  SNR: 29.19  PSNR: 35.14  MSE: 19.91  Entropy: 6.65
+Comp: 1  MRSNR: 6.75  SNR: 33.73  PSNR: 41.06  MSE: 5.09  Entropy: 4.06
+Comp: 2  MRSNR: 15.85  SNR: 36.30  PSNR: 41.03  MSE: 5.13  Entropy: 4.74
+Loading file: tennis/stennis.0.Y
+Loading file: tennis/stennis.1.Y
+Loading file: tennis/stennis.2.Y
+Loading file: tennis/stennis.3.Y
+Doing Forward: 1
+Doing Forward: 2
+Doing Forward: 3
+Doing Backward: 2
+Doing Backward: 1
+START>Predicted: 3
+Total No of Bits:   369237  Bits for Frame:   145760
+MB Attribute Bits:   3110  MV Bits:    349   EOB Bits:   3358
+Y Bits:  128457  U Bits:    4189  V Bits:    5940  Total Bits:  138586
+MV StepSize: 4.000000  MV NumberNonZero: 13.789394  MV NumberZero: 50.210606
+Code MType:     0    1    2    3    4    5    6
+Macro Freq:    63  247    1   19    0    0    0
+Y     Freq:   231  946    0   76    0    0    0
+UV    Freq:   114  274    0   38    0    0    0
+Comp: 0  MRSNR: 19.36  SNR: 32.07  PSNR: 38.03  MSE: 10.23  Entropy: 6.57
+Comp: 1  MRSNR: 6.77  SNR: 33.90  PSNR: 41.24  MSE: 4.88  Entropy: 3.93
+Comp: 2  MRSNR: 16.20  SNR: 36.65  PSNR: 41.37  MSE: 4.74  Entropy: 4.63
+START>Interpolated: 1
+Total No of Bits:   386314  Bits for Frame:    17077
+MB Attribute Bits:   3019  MV Bits:   1320   EOB Bits:    704
+Y Bits:   12222  U Bits:      99  V Bits:     333  Total Bits:   12654
+MV StepSize: 8.000000  MV NumberNonZero: 0.901010  MV NumberZero: 63.098990
+Code MType:     0    1    2    3    4    5    6    7    8    9   10
+Macro Freq:    75  200    1    6   14   32    2    0    0    0    0
+Y     Freq:     0  209    0   17    0   97    8    0    0    0    0
+UV    Freq:     0   11    0    2    0    4    4    0    0    0    0
+Comp: 0  MRSNR: 16.74  SNR: 29.30  PSNR: 35.24  MSE: 19.44  Entropy: 6.59
+Comp: 1  MRSNR: 6.57  SNR: 33.62  PSNR: 40.96  MSE: 5.21  Entropy: 3.96
+Comp: 2  MRSNR: 15.35  SNR: 35.81  PSNR: 40.54  MSE: 5.75  Entropy: 4.66
+START>Interpolated: 2
+Total No of Bits:   406219  Bits for Frame:    19905
+MB Attribute Bits:   3528  MV Bits:   1580   EOB Bits:    850
+Y Bits:   14628  U Bits:       5  V Bits:     190  Total Bits:   14823
+MV StepSize: 8.000000  MV NumberNonZero: 0.986869  MV NumberZero: 63.013131
+Code MType:     0    1    2    3    4    5    6    7    8    9   10
+Macro Freq:    55  234    5   20    1   15    0    0    0    0    0
+Y     Freq:     0  311    0   64    0   39    0    0    0    0    0
+UV    Freq:     0    9    0    2    0    0    0    0    0    0    0
+Comp: 0  MRSNR: 16.26  SNR: 28.90  PSNR: 34.85  MSE: 21.28  Entropy: 6.58
+Comp: 1  MRSNR: 6.57  SNR: 33.66  PSNR: 41.00  MSE: 5.16  Entropy: 3.93
+Comp: 2  MRSNR: 15.46  SNR: 35.91  PSNR: 40.63  MSE: 5.62  Entropy: 4.64
+Loading file: tennis/stennis.3.Y
+Loading file: tennis/stennis.4.Y
+Loading file: tennis/stennis.5.Y
+Loading file: tennis/stennis.6.Y
+Doing Forward: 1
+Doing Forward: 2
+Doing Forward: 3
+Doing Backward: 2
+Doing Backward: 1
+START>Intraframe: 6
+Total No of Bits:   628441  Bits for Frame:   222222
+MB Attribute Bits:    660  MV Bits:      0   EOB Bits:   3960
+Y Bits:  195319  U Bits:    9209  V Bits:   12328  Total Bits:  216856
+MV StepSize: 4.000000  MV NumberNonZero: 23.657576  MV NumberZero: 40.342424
+Code MType:     0    1
+Macro Freq:   330    0
+Y     Freq:  1320    0
+UV    Freq:   660    0
+Comp: 0  MRSNR: 16.58  SNR: 29.19  PSNR: 35.16  MSE: 19.83  Entropy: 6.64
+Comp: 1  MRSNR: 6.77  SNR: 33.79  PSNR: 41.13  MSE: 5.01  Entropy: 4.06
+Comp: 2  MRSNR: 15.92  SNR: 36.22  PSNR: 40.93  MSE: 5.25  Entropy: 4.76
+START>Interpolated: 4
+Total No of Bits:   642636  Bits for Frame:    14195
+MB Attribute Bits:   3238  MV Bits:   1720   EOB Bits:    478
+Y Bits:    9270  U Bits:       6  V Bits:     516  Total Bits:    9792
+MV StepSize: 8.000000  MV NumberNonZero: 0.771212  MV NumberZero: 63.228788
+Code MType:     0    1    2    3    4    5    6    7    8    9   10
+Macro Freq:   170  132    0    1    6   21    0    0    0    0    0
+Y     Freq:     0  155    0    4    0   56    0    0    0    0    0
+UV    Freq:     0   17    0    1    0    6    0    0    0    0    0
+Comp: 0  MRSNR: 17.18  SNR: 29.88  PSNR: 35.85  MSE: 16.92  Entropy: 6.54
+Comp: 1  MRSNR: 7.06  SNR: 34.17  PSNR: 41.51  MSE: 4.59  Entropy: 3.89
+Comp: 2  MRSNR: 15.45  SNR: 35.86  PSNR: 40.58  MSE: 5.69  Entropy: 4.64
+START>Interpolated: 5
+Total No of Bits:   668143  Bits for Frame:    25507
+MB Attribute Bits:   4048  MV Bits:   1640   EOB Bits:   1202
+Y Bits:   19183  U Bits:      27  V Bits:     354  Total Bits:   19564
+MV StepSize: 8.000000  MV NumberNonZero: 1.186364  MV NumberZero: 62.813636
+Code MType:     0    1    2    3    4    5    6    7    8    9   10
+Macro Freq:    38  201    6   71    3   11    0    0    0    0    0
+Y     Freq:     0  389    0  169    0   25    0    0    0    0    0
+UV    Freq:     0    9    0    4    0    5    0    0    0    0    0
+Comp: 0  MRSNR: 15.88  SNR: 28.55  PSNR: 34.51  MSE: 22.99  Entropy: 6.57
+Comp: 1  MRSNR: 6.86  SNR: 33.93  PSNR: 41.28  MSE: 4.85  Entropy: 3.94
+Comp: 2  MRSNR: 15.57  SNR: 35.91  PSNR: 40.63  MSE: 5.63  Entropy: 4.67
+END>SEQUENCE
+Number of buffer overflows: 0
