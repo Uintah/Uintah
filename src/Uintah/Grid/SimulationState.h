@@ -55,6 +55,14 @@ namespace Uintah {
 	 return delt_label;
       }
       
+      const VarLabel* get_strain_energy_label() const {
+	 return strain_energy_label;
+      }
+      
+      const VarLabel* get_kinetic_energy_label() const {
+	 return kinetic_energy_label;
+      }
+      
       void registerMaterial(Material*);
       int getNumMatls() const {
 	 return (int)matls.size();
@@ -78,6 +86,7 @@ namespace Uintah {
       
       const VarLabel* delt_label;
       const VarLabel* strain_energy_label;
+      const VarLabel* kinetic_energy_label;
       std::vector<Material*> matls;
       Vector d_gravity;
    };
@@ -86,6 +95,9 @@ namespace Uintah {
 
 //
 // $Log$
+// Revision 1.9  2000/05/31 22:27:52  guilkey
+// Added stuff for integrated quanities.
+//
 // Revision 1.8  2000/05/31 20:28:08  guilkey
 // Added strain_energy_label to the .h file.
 //
