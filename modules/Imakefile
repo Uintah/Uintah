@@ -28,7 +28,7 @@ MODULES = \
 	SoundMixer/SoundMixer.o \
 	SoundOutput/SoundOutput.o \
 	SoundReader/SoundReader.o \
-	TransformCS/TransformCS.o
+	TransformCS/TransformCS.o \
 	Streamline/Streamline.o \
 	SurfToGeom/SurfToGeom.o \
 	VoiceRemover/VoiceRemover.o
