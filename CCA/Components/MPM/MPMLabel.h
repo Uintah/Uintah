@@ -92,8 +92,10 @@ using std::vector;
 
       const VarLabel* pTang1Label;
       const VarLabel* pTang2Label;
+      const VarLabel* pNormLabel;
       const VarLabel* pTang1Label_preReloc;
       const VarLabel* pTang2Label_preReloc;
+      const VarLabel* pNormLabel_preReloc;
       
       const VarLabel* gMassLabel;
       const VarLabel* gAccelerationLabel;
