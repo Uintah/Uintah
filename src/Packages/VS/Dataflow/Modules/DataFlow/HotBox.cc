@@ -87,6 +87,7 @@ private:
   // temporary:  fixed anatomical label map files
   VH_MasterAnatomy *anatomytable;
   VH_AdjacencyMapping *adjacencytable;
+  VH_AnatomyBoundingBox *boundBoxList;
 
 public:
   HotBox(GuiContext*);
@@ -131,6 +132,7 @@ HotBox::HotBox(GuiContext* ctx)
   // temporary -- use fixed text files
   anatomytable = new VH_MasterAnatomy();
   adjacencytable = new VH_AdjacencyMapping();
+  boundBoxList = (VH_AnatomyBoundingBox *)NULL;
 }
 
 HotBox::~HotBox(){
@@ -218,7 +220,7 @@ void
   const string currentSelection(currentselection_.get());
   const string anatomyDataSrc(anatomydatasource_.get());
   const string adjacencyDataSrc(adjacencydatasource_.get());
-  const string boundingBoxDataSource(boundingboxdatasource_.get());
+  const string boundingBoxDataSrc(boundingboxdatasource_.get());
   const string enableDraw(enableDraw_.get());
 
   // The segmented volume (input field to the Probe)
@@ -258,6 +260,25 @@ void
     cout << "VS/HotBox: selected '" << selectName << "'" << endl;
   else
     remark("Selected [NULL]");
+
+  if( boundingBoxDataSrc == "" ) {
+    error("No Bounding Box file has been selected.  Please choose a file.");
+    return;
+  }
+  if(!boundBoxList)
+  { // bounding boxes have not been read
+    if (stat(boundingBoxDataSrc.c_str(), &buf)) {
+    error("File '" + boundingBoxDataSrc + "' not found.");
+    return;
+    }
+
+    boundBoxList =
+         VH_Anatomy_readBoundingBox_File((char *)boundingBoxDataSrc.c_str());
+  }
+
+  // get the bounding box information for the selected entity
+  VH_AnatomyBoundingBox *selectBox =
+      VH_Anatomy_findBoundingBox( boundBoxList, selectName);
 
   // we now have the anatomy name corresponding to the label value at the voxel
   if(dataSource == VS_DATASOURCE_OQAFMA)
@@ -465,7 +486,7 @@ void
     HB_geomGroup->add(texts);
   }
 
-  // set output
+  // set output geometry port -- hotbox drawn to viewer
   GeometryOPort *outGeomPort = (GeometryOPort *)get_oport("HotBox Widget");
   if(!outGeomPort) {
     error("Unable to initialize output geometry port.");
@@ -475,6 +496,9 @@ void
   outGeomPort->delAll();
   outGeomPort->addObj( sticky, "HotBox Sticky" );
   outGeomPort->flushViews();
+
+  // set output matrix port -- bounding box of selection
+
 
 } // end HotBox::execute()
 
