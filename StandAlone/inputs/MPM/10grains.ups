@@ -1,8 +1,6 @@
-<?xml version="1.0" encoding="iso-8859-1"?>
+<?xml version='1.0' encoding='ISO-8859-1' ?>
 <!-- <!DOCTYPE Uintah_specification SYSTEM "input.dtd"> -->
-
 <!-- @version: -->
-
 <Uintah_specification>
 
    <Meta>
@@ -20,14 +18,14 @@
    <DataArchiver>
         <filebase>10grains.uda</filebase>
         <outputInterval>.005</outputInterval>
-        <save label="KineticEnergy"/>
-        <save label="TotalMass"/>
-        <save label="StrainEnergy"/>
-	<save label="p.x"/>
-	<save label="p.mass"/>
-	<save label="p.stress"/>
-        <save label="g.mass"/>
-        <save label="g.stressFS"/>
+        <save label = "KineticEnergy"/>
+        <save label = "TotalMass"/>
+        <save label = "StrainEnergy"/>
+	<save label = "p.x"/>
+	<save label = "p.mass"/>
+	<save label = "p.stress"/>
+        <save label = "g.mass"/>
+        <save label = "g.stressFS"/>
    </DataArchiver>
 
     <MPM>
@@ -40,7 +38,7 @@
 
     <MaterialProperties>
         <MPM>
-            <material name = "Piston" >
+            <material name = "Piston">
                 <burn>
                  <type>null</type>
                 </burn>
@@ -57,7 +55,7 @@
                 <thermal_conductivity>1.0</thermal_conductivity>
                 <specific_heat>1</specific_heat>
                 <geom_object>
-                    <box label="Piston">
+                    <box label = "Piston">
                         <min>[0.0,0.0,0.0095]</min>
                         <max>[0.01,0.01,0.01]</max>
                     </box>
@@ -68,7 +66,7 @@
                 <velocity_field>0</velocity_field>
             </material>
 
-            <material name = "HMX" >
+            <material name = "HMX">
                 <burn> <type>null</type> </burn>
                 <density>1.9</density>
                 <material_type>comp_neo_hook_plastic</material_type>
@@ -83,7 +81,7 @@
                 <thermal_conductivity>1.0</thermal_conductivity>
                 <specific_heat>1.004e-5</specific_heat>
                 <geom_object>
-                    <sphere label="grain1">
+                    <sphere label = "grain1">
                         <origin>[0.00225,0.00225,0.00225]</origin>
                         <radius> 0.00225 </radius>
                     </sphere>
@@ -94,9 +92,9 @@
                 <velocity_field>1</velocity_field>
             </material>
 
-            <material name = "HMX" >
+            <material name = "HMX">
                 <burn> <type>null</type> </burn>
-                <density>1.9</density>
+                <density>1.91</density>
                 <material_type>comp_neo_hook_plastic</material_type>
                 <comp_neo_hook_plastic>
                     <bulk_modulus>.102</bulk_modulus>
@@ -109,7 +107,7 @@
                 <thermal_conductivity>1.0</thermal_conductivity>
                 <specific_heat>1.004e-5</specific_heat>
                 <geom_object>
-                    <sphere label="grain2">
+                    <sphere label = "grain2">
                         <origin>[0.0025,0.0075,0.0025]</origin>
                         <radius> 0.0025 </radius>
                     </sphere>
@@ -120,9 +118,9 @@
                 <velocity_field>2</velocity_field>
             </material>
 
-            <material name = "HMX" >
+            <material name = "HMX">
                 <burn> <type>null</type> </burn>
-                <density>1.9</density>
+                <density>1.92</density>
                 <material_type>comp_neo_hook_plastic</material_type>
                 <comp_neo_hook_plastic>
                     <bulk_modulus>.102</bulk_modulus>
@@ -135,7 +133,7 @@
                 <thermal_conductivity>1.0</thermal_conductivity>
                 <specific_heat>1.004e-5</specific_heat>
                 <geom_object>
-                    <sphere label="grain3">
+                    <sphere label = "grain3">
                         <origin>[0.0075,0.005,0.0025]</origin>
                         <radius> 0.0025 </radius>
                     </sphere>
@@ -146,9 +144,9 @@
                 <velocity_field>3</velocity_field>
             </material>
 
-            <material name = "HMX" >
+            <material name = "HMX">
                 <burn> <type>null</type> </burn>
-                <density>1.9</density>
+                <density>1.93</density>
                 <material_type>comp_neo_hook_plastic</material_type>
                 <comp_neo_hook_plastic>
                     <bulk_modulus>.102</bulk_modulus>
@@ -161,7 +159,7 @@
                 <thermal_conductivity>1.0</thermal_conductivity>
                 <specific_heat>1.004e-5</specific_heat>
                 <geom_object>
-                    <sphere label="grain4">
+                    <sphere label = "grain4">
                         <origin>[0.004,0.0045,0.006]</origin>
                         <radius> 0.002 </radius>
                     </sphere>
@@ -172,9 +170,9 @@
                 <velocity_field>4</velocity_field>
             </material>
 
-            <material name = "HMX" >
+            <material name = "HMX">
                 <burn> <type>null</type> </burn>
-                <density>1.9</density>
+                <density>1.94</density>
                 <material_type>comp_neo_hook_plastic</material_type>
                 <comp_neo_hook_plastic>
                     <bulk_modulus>.102</bulk_modulus>
@@ -187,7 +185,7 @@
                 <thermal_conductivity>1.0</thermal_conductivity>
                 <specific_heat>1.004e-5</specific_heat>
                 <geom_object>
-                    <sphere label="grain5">
+                    <sphere label = "grain5">
                         <origin>[0.0055,0.00125,0.00425]</origin>
                         <radius> 0.00125 </radius>
                     </sphere>
@@ -198,9 +196,9 @@
                 <velocity_field>5</velocity_field>
             </material>
 
-            <material name = "HMX" >
+            <material name = "HMX">
                 <burn> <type>null</type> </burn>
-                <density>1.9</density>
+                <density>1.95</density>
                 <material_type>comp_neo_hook_plastic</material_type>
                 <comp_neo_hook_plastic>
                     <bulk_modulus>.102</bulk_modulus>
@@ -213,7 +211,7 @@
                 <thermal_conductivity>1.0</thermal_conductivity>
                 <specific_heat>1.004e-5</specific_heat>
                 <geom_object>
-                    <sphere label="grain6">
+                    <sphere label = "grain6">
                         <origin>[0.0075,0.0075,0.007]</origin>
                         <radius> 0.002 </radius>
                     </sphere>
@@ -224,9 +222,9 @@
                 <velocity_field>6</velocity_field>
             </material>
 
-            <material name = "HMX" >
+            <material name = "HMX">
                 <burn> <type>null</type> </burn>
-                <density>1.9</density>
+                <density>1.96</density>
                 <material_type>comp_neo_hook_plastic</material_type>
                 <comp_neo_hook_plastic>
                     <bulk_modulus>.102</bulk_modulus>
@@ -239,7 +237,7 @@
                 <thermal_conductivity>1.0</thermal_conductivity>
                 <specific_heat>1.004e-5</specific_heat>
                 <geom_object>
-                    <sphere label="grain7">
+                    <sphere label = "grain7">
                         <origin>[0.0075,0.002,0.007]</origin>
                         <radius> 0.002 </radius>
                     </sphere>
@@ -250,9 +248,9 @@
                 <velocity_field>7</velocity_field>
             </material>
 
-            <material name = "HMX" >
+            <material name = "HMX">
                 <burn> <type>null</type> </burn>
-                <density>1.9</density>
+                <density>1.97</density>
                 <material_type>comp_neo_hook_plastic</material_type>
                 <comp_neo_hook_plastic>
                     <bulk_modulus>.102</bulk_modulus>
@@ -265,7 +263,7 @@
                 <thermal_conductivity>1.0</thermal_conductivity>
                 <specific_heat>1.004e-5</specific_heat>
                 <geom_object>
-                    <sphere label="grain8">
+                    <sphere label = "grain8">
                         <origin>[0.0015,0.0015,0.0075]</origin>
                         <radius> 0.0015 </radius>
                     </sphere>
@@ -276,9 +274,9 @@
                 <velocity_field>8</velocity_field>
             </material>
 
-            <material name = "HMX" >
+            <material name = "HMX">
                 <burn> <type>null</type> </burn>
-                <density>1.9</density>
+                <density>1.98</density>
                 <material_type>comp_neo_hook_plastic</material_type>
                 <comp_neo_hook_plastic>
                     <bulk_modulus>.102</bulk_modulus>
@@ -291,7 +289,7 @@
                 <thermal_conductivity>1.0</thermal_conductivity>
                 <specific_heat>1.004e-5</specific_heat>
                 <geom_object>
-                    <sphere label="grain9">
+                    <sphere label = "grain9">
                         <origin>[0.00125,0.00675,0.00775]</origin>
                         <radius> 0.00125 </radius>
                     </sphere>
@@ -302,9 +300,9 @@
                 <velocity_field>9</velocity_field>
             </material>
 
-            <material name = "HMX" >
+            <material name = "HMX">
                 <burn> <type>null</type> </burn>
-                <density>1.9</density>
+                <density>1.99</density>
                 <material_type>comp_neo_hook_plastic</material_type>
                 <comp_neo_hook_plastic>
                     <bulk_modulus>.102</bulk_modulus>
@@ -317,7 +315,7 @@
                 <thermal_conductivity>1.0</thermal_conductivity>
                 <specific_heat>1.004e-5</specific_heat>
                 <geom_object>
-                    <sphere label="grain10">
+                    <sphere label = "grain10">
                         <origin>[0.00375,0.0085,0.0065]</origin>
                         <radius> 0.0015 </radius>
                     </sphere>
@@ -326,32 +324,6 @@
                 <temperature>0</temperature>
                 </geom_object>
                 <velocity_field>10</velocity_field>
-            </material>
-
-            <material name = "HMX" >
-                <burn> <type>null</type> </burn>
-                <density>1.9</density>
-                <material_type>comp_neo_hook_plastic</material_type>
-                <comp_neo_hook_plastic>
-                    <bulk_modulus>.102</bulk_modulus>
-                    <shear_modulus>.072</shear_modulus>
-                    <yield_stress>.0027</yield_stress>
-                    <hardening_modulus>0.001</hardening_modulus>
-                    <alpha> 0.0 </alpha>
-                </comp_neo_hook_plastic>
-                <toughness>10.e6</toughness>
-                <thermal_conductivity>1.0</thermal_conductivity>
-                <specific_heat>1.004e-5</specific_heat>
-                <geom_object>
-                    <sphere label="grain11">
-                        <origin>[0.00225,0.00225,0.00225]</origin>
-                        <radius> 0.00225 </radius>
-                    </sphere>
-                    <res>[2,2,2]</res>
-                    <velocity>[0.0,0.0,0]</velocity>
-                <temperature>0</temperature>
-                </geom_object>
-                <velocity_field>11</velocity_field>
             </material>
 
             <contact>
@@ -366,7 +338,7 @@
         
     <Grid>
         <Level>
-            <Box label="1">
+            <Box label = "1">
                 <lower>[0.0,0.0,0.0]</lower>
                 <upper>[0.01,0.01,0.0105]</upper>
                 <resolution>[20,20,21]</resolution>
@@ -375,24 +347,24 @@
         </Level>
         <BoundaryConditions>
                 <Face side = "x-">
-                        <BCType label = "Symmetric" var = "symmetry"> </BCType>
+                        <BCType var = "symmetry" label = "Symmetric"> </BCType>
                 </Face>
                 <Face side = "x+">
-                        <BCType label = "Symmetric" var = "symmetry"> </BCType>
+                        <BCType var = "symmetry" label = "Symmetric"> </BCType>
                 </Face>
                 <Face side = "y-">
-                        <BCType label = "Symmetric" var = "symmetry"> </BCType>
+                        <BCType var = "symmetry" label = "Symmetric"> </BCType>
                 </Face>
                 <Face side = "y+">
-                        <BCType label = "Symmetric" var = "symmetry"> </BCType>
+                        <BCType var = "symmetry" label = "Symmetric"> </BCType>
                 </Face>
                 <Face side = "z-">
-                        <BCType label = "Velocity" var = "Dirichlet">
+                        <BCType var = "Dirichlet" label = "Velocity">
                            <value> [0.0,0.0,0.0] </value>
                         </BCType>
                 </Face>
                 <Face side = "z+">
-                        <BCType label = "Velocity" var = "Dirichlet">
+                        <BCType var = "Dirichlet" label = "Velocity">
                              <value> [0.0,0.0,0.0] </value>
                         </BCType>
                 </Face>
@@ -405,5 +377,4 @@
     </PhysicalBC>
     
 </Uintah_specification>
-
 
