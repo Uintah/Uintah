@@ -152,7 +152,7 @@ itcl_class SCIRun_Render_ViewSlices {
 	$this-c setgl $w $id 0
 	$this-c add_viewport $w $id-viewport0
 	bind $w <Expose>	"$this-c redraw $w"
-	bind $w <Configure>	"$this-c redraw $w"
+	bind $w <Configure>	"$this-c resize $w"
 	bind $w <Destroy>	"$this-c destroygl $w"
 	# the focus belowis to generate keypress events 
 	bind $w <Enter>		"focus $w; $this-c enter $w"
