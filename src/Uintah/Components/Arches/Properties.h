@@ -162,7 +162,7 @@ private:
       const VarLabel* d_densityCPLabel;   // Output density
       const VarLabel* d_densitySIVBCLabel;   // Input density
       const VarLabel* d_densityRCPLabel;   // Output density
-
+      const VarLabel* d_scalarSPLabel;
 }; // end class Properties
 
 } // end namespace ArchesSpace
@@ -172,6 +172,9 @@ private:
 
 //
 // $Log$
+// Revision 1.13  2000/06/30 04:19:17  rawat
+// added turbulence model and compute properties
+//
 // Revision 1.12  2000/06/19 18:00:30  rawat
 // added function to compute velocity and density profiles and inlet bc.
 // Fixed bugs in CellInformation.cc

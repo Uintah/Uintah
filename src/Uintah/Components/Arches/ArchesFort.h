@@ -42,6 +42,7 @@ WARNING
 #define FORT_AREAIN areain_
 #define FORT_PROFV profv_
 #define FORT_PROFSCALAR profscalar_
+#define FORT_SMAGMODEL smagmodel_
 #define FORT_INLBCS inlbcs_
 #define FORT_CALPBC calpbc_
 #define FORT_BCUVEL bcuvel_
@@ -58,7 +59,6 @@ WARNING
 #define FORT_COLDPROPS cprops_
 #define FORT_UNDERRELAX urelax_
 #define FORT_RBGLISOLV lisolv_
-#define FORT_SMAGMODEL smodel_
 #define FORT_BCUTURB bcut_
 #define FORT_BCVTURB bcvt_
 #define FORT_BCWTURB bcwt_
@@ -176,12 +176,32 @@ extern "C"
 		    const int* indexLow, const int* indexHigh,
 		    double* scalar, int* cellType,
 		    double * sValue, const int* celltypeval);
+
+  // turbulence model
+    void
+    FORT_SMAGMODEL(const int* domLoU, const int* domHiU, 
+		   double* uVelocity, 
+		   const int* domLoV, const int* domHiV, 
+		   double* vVelocity, 
+		   const int* domLoW, const int* domHiW, 
+		   double* wVelocity, 
+		   const int* domLo, const int* domHi, 
+		   double* density,
+		   const int* domLoVis, const int* domHiVis, 
+		   const int* idxLoVis, const int* idxHiVis,
+		   double* viscosity,
+		   double* sew, double * sns, double* stb, double* mol_visc,
+		   double* cf, double* fac_msh, double* filterl);
+
 }
 
 #endif
 
 //
 // $Log$
+// Revision 1.8  2000/06/30 04:19:16  rawat
+// added turbulence model and compute properties
+//
 // Revision 1.7  2000/06/29 06:22:47  bbanerje
 // Updated FCVariable to SFCX, SFCY, SFCZVariables and made corresponding
 // changes to profv.  Code is broken until the changes are reflected
