@@ -9,8 +9,9 @@ OBJS = BasicSurfaces.o  Boolean.o  BooleanPort.o  Colormap.o  ColormapPort.o  \
 	MultiMesh.o  MultiMeshPort.o  Octree.o  OctreePort.o  ScalarField.o  \
 	ScalarFieldPort.o  ScalarFieldRG.o  ScalarFieldRGBase.o  \
 	ScalarFieldRGchar.o  ScalarFieldRGint.o  ScalarFieldRGfloat.o  \
-	ScalarFieldUG.o   SigmaSet.o  SigmaSetPort.o  \
-	SoundPort.o  Surface.o  SurfacePort.o  SymSparseRowMatrix.o \
+	ScalarFieldRGdouble.o  ScalarFieldUG.o   SigmaSet.o  SigmaSetPort.o  \
+	SoundPort.o  SparseRowMatrix.o  SurfOctree.o  SurfOctreeTopPort.o  \
+	Surface.o  SurfacePort.o  SymSparseRowMatrix.o \
 	TriDiagonalMatrix.o  TriSurface.o  \
 	VectorField.o  VectorFieldOcean.o \
 	VectorFieldPort.o  VectorFieldRG.o  VectorFieldUG.o \
@@ -28,7 +29,8 @@ SRCS = $(GENSRCS) BasicSurfaces.cc Boolean.cc BooleanPort.cc \
 	ScalarFieldRGchar.cc ScalarFieldRGint.cc ScalarFieldRGfloat.cc \
 	ScalarFieldRGdouble.cc ScalarFieldUG.cc \
 	SigmaSet.cc SigmaSetPort.cc \
-	SoundPort.cc Surface.cc SurfacePort.cc SymSparseRowMatrix.cc \
+	SoundPort.cc SparseRowMatrix.cc SurfOctree.cc SurfOctreeTopPort.cc \
+	Surface.cc SurfacePort.cc SymSparseRowMatrix.cc \
 	TriDiagonalMatrix.cc TriSurface.cc \
 	VectorField.cc  VectorFieldOcean.cc \
 	VectorFieldPort.cc VectorFieldRG.cc VectorFieldUG.cc \
