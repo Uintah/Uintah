@@ -27,118 +27,75 @@ namespace Uintah {
       
       class CompNeoHook : public ConstitutiveModel {
       private:
-	 // data areas
-	 // deformation gradient tensor (3 x 3 Matrix)
-	 Matrix3 deformationGradient;
-	 // Deviatoric-Elastic Part of the left Cauchy-Green Tensor (3 x 3 Matrix)
-	 Matrix3 bElBar;
-	 // symmetric stress tensor (3 x 3 Matrix)  
-	 Matrix3 stressTensor;
-	 
-	 // ConstitutiveModel's properties
-	 // CompNeoHook Constants
-	 double d_Bulk,d_Shear;
-	 
-      public:
-	 // constructors
-	 CompNeoHook(ProblemSpecP& ps);
-	 CompNeoHook(double bulk,double shear);
-	 
-	 // copy constructor
-	 CompNeoHook(const CompNeoHook &cm);
-	 
-	 // destructor 
-	 virtual ~CompNeoHook();
-	 
-	 // assign the CompNeoHook components 
-	 
-	 // set Bulk Modulus
-	 void setBulk(double bulk);
-	 // set Shear Modulus
-	 void setShear(double shear);
-	 // assign the deformation gradient tensor
-	 virtual void setDeformationMeasure(Matrix3 dg);
-	 // assign the symmetric stress tensor
-	 virtual void setStressTensor(Matrix3 st);
-	 
-	 
-	 // access components of the CompNeoHook model
-	 // access the symmetric stress tensor
-	 virtual Matrix3 getStressTensor() const;
-	 virtual Matrix3 getDeformationMeasure() const;
-	 // access the mechanical properties
-	 virtual std::vector<double> getMechProps() const;
-	 
-	 
-	 //////////
-	 // Basic constitutive model calculations
-	 virtual void computeStressTensor(const Region* region,
-					  const MPMMaterial* matl,
-					  DataWarehouseP& new_dw,
-					  DataWarehouseP& old_dw);
-	 
-	 //////////
-	 // Computation of strain energy.  Useful for tracking energy balance.
-	 virtual double computeStrainEnergy(const Region* region,
-					    const MPMMaterial* matl,
-					    DataWarehouseP& new_dw);
-	 
-	 // initialize  each particle's constitutive model data
-	 virtual void initializeCMData(const Region* region,
-				       const MPMMaterial* matl,
-				       DataWarehouseP& new_dw);       
-	 
-	 virtual void addComputesAndRequires(Task* task,
-					     const MPMMaterial* matl,
-					     const Region* region,
-					     DataWarehouseP& old_dw,
-					     DataWarehouseP& new_dw) const;
+         // Create datatype for storing model parameters
+         struct CMData {
+            double Bulk;
+            double Shear;
+         };
+         friend const TypeDescription* fun_getTypeDescription(CMData*);
 
-	 // Return the Lame constants
-	 virtual double getMu() const;
-	 virtual double getLambda() const;
-	 
-	 // class function to read correct number of parameters
-	 // from the input file
-	 static void readParameters(ProblemSpecP ps, double *p_array);
-	 
-	 // class function to write correct number of parameters
-	 // to the output file
-	 static void writeParameters(std::ofstream& out, double *p_array);
-	 
-	 // class function to read correct number of parameters
-	 // from the input file, and create a new object
-	 static ConstitutiveModel* readParametersAndCreate(ProblemSpecP ps);
-	 
-	 // member function to write correct number of parameters
-	 // to output file, and to write any other particle information
-	 // needed to restart the model for this particle
-	 virtual void writeRestartParameters(std::ofstream& out) const;
-	 
-	 // member function to read correct number of parameters
-	 // from the input file, and any other particle information
-	 // need to restart the model for this particle 
-	 // and create a new object
-	 static ConstitutiveModel* readRestartParametersAndCreate(ProblemSpecP ps);
-	 
-	 // class function to create a new object from parameters
-	 static ConstitutiveModel* create(double *p_array);
-	 
-	 // member function to determine the model type.
-	 virtual int getType() const;
-	 // member function to get model's name
-	 virtual std::string getName() const;
-	 // member function to get number of parameters for model
-	 virtual int getNumParameters() const;
-	 // member function to print parameter names for model
-	 virtual void printParameterNames(std::ofstream& out) const;
-	 
-	 // member function to make a duplicate
-	 virtual ConstitutiveModel* copy() const;
-	 
-	 virtual int getSize() const;
+         CMData d_initialData;
+
+         // Prevent copying of this class
+         // copy constructor
+         CompNeoHook(const CompNeoHook &cm);
+         CompNeoHook& operator=(const CompNeoHook &cm);
+
+      public:
+         // constructors
+         CompNeoHook(ProblemSpecP& ps);
+       
+         // destructor
+         virtual ~CompNeoHook();
+         // compute stable timestep for this region
+         virtual void computeStableTimestep(const Region* region,
+                                            const MPMMaterial* matl,
+                                            DataWarehouseP& new_dw);
+
+         // compute stress at each particle in the region
+         virtual void computeStressTensor(const Region* region,
+                                          const MPMMaterial* matl,
+                                          DataWarehouseP& old_dw,
+                                          DataWarehouseP& new_dw);
+
+         // compute total strain energy for all particles in the region
+         virtual double computeStrainEnergy(const Region* region,
+                                            const MPMMaterial* matl,
+                                            DataWarehouseP& new_dw);
+
+         // initialize  each particle's constitutive model data
+         virtual void initializeCMData(const Region* region,
+                                       const MPMMaterial* matl,
+                                       DataWarehouseP& new_dw);
+
+         virtual void addComputesAndRequires(Task* task,
+                                             const MPMMaterial* matl,
+                                             const Region* region,
+                                             DataWarehouseP& old_dw,
+                                             DataWarehouseP& new_dw) const;
+
+         // class function to read correct number of parameters
+         // from the input file
+         static void readParameters(ProblemSpecP ps, double *p_array);
+
+         // class function to write correct number of parameters
+         // from the input file, and create a new object
+         static ConstitutiveModel* readParametersAndCreate(ProblemSpecP ps);
+
+         // member function to read correct number of parameters
+         // from the input file, and any other particle information
+         // need to restart the model for this particle
+         // and create a new object
+         static ConstitutiveModel* readRestartParametersAndCreate(
+                                                        ProblemSpecP ps);
+
+         // class function to create a new object from parameters
+         static ConstitutiveModel* create(double *p_array);
+
+         const VarLabel* p_cmdata_label;
+         const VarLabel* bElBarLabel;
+
       };
-      
       
    } // end namespace Components
 } // end namespace Uintah
@@ -147,6 +104,11 @@ namespace Uintah {
 #endif  // __NEOHOOK_CONSTITUTIVE_MODEL_H__ 
 
 // $Log$
+// Revision 1.10  2000/05/26 18:15:11  guilkey
+// Brought the CompNeoHook constitutive model up to functionality
+// with the UCF.  Also, cleaned up all of the working models to
+// rid them of the SAMRAI crap.
+//
 // Revision 1.9  2000/05/11 20:10:14  dav
 // adding MPI stuff.  The biggest change is that old_dws cannot be const and so a large number of declarations had to change.
 //
