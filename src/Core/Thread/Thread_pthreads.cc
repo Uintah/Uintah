@@ -150,7 +150,8 @@ Thread_private::Thread_private()
     (msemaphore*) mmap(NULL,sizeof(msemaphore),
 		       PROT_READ | PROT_WRITE,
 		       MAP_SHARED | MAP_ANONYMOUS | MAP_VARIABLE, -1, 0 );
-  if( (int)done == -1 || (int)delete_ready == -1 || (int)block_sema == -1 )
+
+  if( (long)done == -1 || (long)delete_ready == -1 || (long)block_sema == -1 )
     {
       throw ThreadError(std::string("semaphore allocation failed") +
 			strerror(errno));
@@ -499,24 +500,28 @@ handle_abort_signals(int sig,
     Thread* self=Thread::self();
     const char* tname=self?self->getThreadName():"idle or main";
 #ifdef __sgi
-#if defined(_LONGLONG)
-  caddr_t addr=(caddr_t)ctx->sc_badvaddr;
-#else
-  caddr_t addr=(caddr_t)ctx->sc_badvaddr.lo32;
-#endif
-#else
-#ifdef PPC
-    void* addr=(void*)ctx.regs->dsisr;
-#else
-#  ifdef _AIX
-     // Not sure if this is correct, but here it is.
-     // On IMB SP2 sigcontext is defined in /usr/include/sys/context.h
-     void* addr=(void*)ctx.sc_jmpbuf.jmp_context.o_vaddr;
+#  if defined(_LONGLONG)
+     caddr_t addr=(caddr_t)ctx->sc_badvaddr;
 #  else
-//     void* addr=(void*)ctx.cr2;
-     void* addr=0;
+     caddr_t addr=(caddr_t)ctx->sc_badvaddr.lo32;
 #  endif
-#endif
+#else
+#  ifdef PPC
+    void* addr=(void*)ctx.regs->dsisr;
+#  else
+#    ifdef _AIX
+       // Not sure if this is correct, but here it is.
+       // On IMB SP2 sigcontext is defined in /usr/include/sys/context.h
+#      ifdef SCI_64BITS
+         void* addr=(void*)ctx.sc_jmpbuf.jmp_context.except;
+#      else
+         void* addr=(void*)ctx.sc_jmpbuf.jmp_context.o_vaddr;
+#      endif
+#    else
+//     void* addr=(void*)ctx.cr2;
+       void* addr=0;
+#    endif
+#  endif
 #endif
     char* signam=Core_Thread_signal_name(sig, addr);
     fprintf(stderr, "%c%c%cThread \"%s\"(pid %d) caught signal %s\n", 7,7,7,tname, getpid(), signam);
