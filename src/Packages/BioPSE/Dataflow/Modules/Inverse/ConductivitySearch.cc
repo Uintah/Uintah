@@ -23,7 +23,7 @@
 #include <Core/Datatypes/SparseRowMatrix.h>
 #include <Core/Datatypes/SparseRowMatrix.h>
 #include <Core/Math/MusilRNG.h>
-#include <Core/TclInterface/TCLvar.h>
+#include <Core/GuiInterface/GuiVar.h>
 #include <Core/Thread/Mutex.h>
 #include <Core/Thread/Parallel.h>
 #include <Core/Thread/Semaphore.h>
@@ -64,7 +64,7 @@ class ConductivitySearch : public Module {
   int counter;
   clString state;
   double* y; //holds initial errors for p configuration
-  TCLstring seedTCL;
+  GuiString seedTCL;
 public:
   MeshHandle mesh;
   MusilRNG* mr;
@@ -79,8 +79,8 @@ public:
   
   int pinzero, refnode;
   Mutex mylock;
-  TCLstring refnodeTCL;
-  TCLint pinzeroTCL;
+  GuiString refnodeTCL;
+  GuiInt pinzeroTCL;
   ConductivitySearch(const clString& id);
   virtual ~ConductivitySearch();
   void buildCompositeMat(const Array1<double> &conds);

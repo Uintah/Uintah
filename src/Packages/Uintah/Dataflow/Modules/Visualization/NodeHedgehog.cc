@@ -24,7 +24,7 @@
 #include <Core/Geometry/Point.h>
 #include <Core/Math/MinMax.h>
 #include <Core/Malloc/Allocator.h>
-#include <Core/TclInterface/TCLvar.h>
+#include <Core/GuiInterface/GuiVar.h>
 #include <Core/Thread/CrowdMonitor.h>
 #include <Packages/Uintah/Core/Grid/GridP.h>
 #include <Packages/Uintah/Core/Grid/Grid.h>
@@ -121,15 +121,15 @@ class NodeHedgehog : public Module {
 		 int have_sfield, int exhaustive, ColorMapHandle cmap,
 		 double lenscale, GeomArrows* arrows, Point p);
 
-  TCLdouble length_scale;
-  TCLdouble width_scale;
-  TCLdouble head_length;
-  TCLstring type;
-  TCLint exhaustive_flag;
-  TCLint drawcylinders;
-  TCLint skip_node;
-  TCLdouble shaft_rad;
-  TCLint var_orientation; // whether node center or cell centered
+  GuiDouble length_scale;
+  GuiDouble width_scale;
+  GuiDouble head_length;
+  GuiString type;
+  GuiInt exhaustive_flag;
+  GuiInt drawcylinders;
+  GuiInt skip_node;
+  GuiDouble shaft_rad;
+  GuiInt var_orientation; // whether node center or cell centered
   MaterialHandle outcolor;
   int grid_id;
   int need_find2d;

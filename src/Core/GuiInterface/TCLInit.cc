@@ -11,11 +11,11 @@
  *  Copyright (C) 1994 SCI Group
  */
 
-#include <Core/TclInterface/MemStats.h>
-#include <Core/TclInterface/DebugSettings.h>
-#include <Core/TclInterface/ThreadStats.h>
+#include <Core/GuiInterface/MemStats.h>
+#include <Core/GuiInterface/DebugSettings.h>
+#include <Core/GuiInterface/ThreadStats.h>
 #include <Core/Malloc/Allocator.h>
-#include <Core/TclInterface/TCL.h>
+#include <Core/GuiInterface/TCL.h>
 
 namespace SCIRun {
 

@@ -13,7 +13,7 @@
 #ifndef TCL_OSTREAM_H
 #define TCL_OSTREAM_H
 
-#include <Core/TclInterface/TCLvar.h>
+#include <Core/GuiInterface/GuiVar.h>
 
 #include <sstream>
 #include <iostream>
@@ -22,7 +22,7 @@ namespace SCIRun {
 
 using namespace std;
 
-class SCICORESHARE TCLstrbuff : public TCLvar, public ostringstream{
+class SCICORESHARE TCLstrbuff : public GuiVar, public ostringstream{
   
   // GROUP: private data
   //////////

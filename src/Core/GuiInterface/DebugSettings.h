@@ -15,15 +15,15 @@
 #define SCI_project_DebugSettings_h 1
 
 #include <Core/Containers/Array1.h>
-#include <Core/TclInterface/TCL.h>
+#include <Core/GuiInterface/TCL.h>
 
 namespace SCIRun {
 
 
-class TCLvarintp;
+class GuiVarintp;
 
 class SCICORESHARE DebugSettings : public TCL {
-    Array1<TCLvarintp*> variables;
+    Array1<GuiVarintp*> variables;
 public:
     DebugSettings();
     ~DebugSettings();

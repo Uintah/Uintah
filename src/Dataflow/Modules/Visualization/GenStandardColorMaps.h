@@ -1,7 +1,7 @@
 #ifndef GENSTANDARDCOLORMAPS_H
 #define GENSTANDARDCOLORMAPS_H 1
 
-#include <Core/TclInterface/TCLvar.h> 
+#include <Core/GuiInterface/GuiVar.h> 
 #include <Core/Geom/Color.h>
 #include <Dataflow/Network/Module.h> 
 #include <Dataflow/Ports/ColorMapPort.h>
@@ -74,14 +74,14 @@ public:
 
 private:
 
-  TCLstring tcl_status; 
-  TCLstring positionList;
-  TCLstring nodeList;
-  TCLint width;
-  TCLint height;
-  TCLint mapType;
-  TCLint minRes;
-  TCLint resolution;
+  GuiString tcl_status; 
+  GuiString positionList;
+  GuiString nodeList;
+  GuiInt width;
+  GuiInt height;
+  GuiInt mapType;
+  GuiInt minRes;
+  GuiInt resolution;
   ColorMapOPort  *outport;
   ColorMapHandle cmap;
   Array1< Color > colors;

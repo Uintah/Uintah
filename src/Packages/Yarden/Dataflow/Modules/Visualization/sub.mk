@@ -21,7 +21,7 @@ SRCS     += \
 PSELIBS := Packages/Yarden/Core/Datatypes Packages/Yarden/Dataflow/Ports \
 	Dataflow/Ports Dataflow/Network \
 	Core/Persistent Core/Containers Core/Util \
-	Core/Exceptions Core/Thread Core/TclInterface \
+	Core/Exceptions Core/Thread Core/GuiInterface \
 	Core/Geom Core/Datatypes Core/Geometry \
 	Core/TkExtensions
 LIBS := $(TK_LIBRARY) $(GL_LIBS) -lm

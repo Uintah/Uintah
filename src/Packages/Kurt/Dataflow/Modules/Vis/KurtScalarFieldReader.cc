@@ -15,8 +15,8 @@
 #include <Dataflow/Ports/ScalarFieldPort.h>
 #include <Core/Datatypes/ScalarField.h>
 #include <Core/Malloc/Allocator.h>
-#include <Core/TclInterface/TCLTask.h>
-#include <Core/TclInterface/TCLvar.h>
+#include <Core/GuiInterface/TCLTask.h>
+#include <Core/GuiInterface/GuiVar.h>
 #include <Core/Persistent/Pstreams.h>
 #include <Core/Containers/String.h>
 #include <fstream>

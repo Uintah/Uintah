@@ -12,7 +12,7 @@
 #include "TriGroup.h"
 
 #include <Core/Util/NotFinished.h>
-#include <Core/TclInterface/TCLvar.h>
+#include <Core/GuiInterface/GuiVar.h>
 
 #include <Dataflow/Network/Module.h>
 #include <Dataflow/Ports/GeometryPort.h>
@@ -51,10 +51,10 @@ private:
   char** datafiles;
 
   // interface variables
-  TCLstring metafilename;
-  TCLint nodeblocksize, datablocksize;
-  TCLdouble isovalue;
-  TCLint timevalue;
+  GuiString metafilename;
+  GuiInt nodeblocksize, datablocksize;
+  GuiDouble isovalue;
+  GuiInt timevalue;
 
   double miniso, maxiso;
   double res;

@@ -16,7 +16,7 @@
 #include <Dataflow/Network/Module.h>
 #include <Core/Persistent/Pstreams.h>
 #include <Core/Malloc/Allocator.h>
-#include <Core/TclInterface/TCLvar.h>
+#include <Core/GuiInterface/GuiVar.h>
 
 
 namespace SCIRun {
@@ -24,8 +24,8 @@ namespace SCIRun {
 
 class PathWriter : public Module {
     PathIPort* inport;
-    TCLstring filename;
-    TCLstring filetype;
+    GuiString filename;
+    GuiString filetype;
 public:
     PathWriter(const clString& id);
     virtual ~PathWriter();

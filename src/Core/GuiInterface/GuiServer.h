@@ -23,8 +23,8 @@
 #include <Core/share/share.h>
 
 #include <Core/Containers/Array1.h>
-#include <Core/TclInterface/Remote.h>
-#include <Core/TclInterface/TCLTask.h>
+#include <Core/GuiInterface/Remote.h>
+#include <Core/GuiInterface/TCLTask.h>
 #include <Core/Thread/Runnable.h>
 
 namespace SCIRun {

@@ -17,7 +17,7 @@
 #include <Core/Datatypes/VoidStar.h>
 #include <Core/Malloc/Allocator.h>
 #include <Core/Persistent/Pstreams.h>
-#include <Core/TclInterface/TCLvar.h>
+#include <Core/GuiInterface/GuiVar.h>
 #include <Core/Tester/RigorousTest.h>
 
 #include <iostream>
@@ -55,9 +55,9 @@ class SiReInput : public Module {
     int rcvrIter;
     int slabIter;
     VoidStarHandle vsh2;
-    TCLint ShrinkFactor;
-    TCLint NPasses;
-    TCLstring PFileStr;
+    GuiInt ShrinkFactor;
+    GuiInt NPasses;
+    GuiString PFileStr;
 public:
     SiReInput(const clString& id);
     virtual ~SiReInput();

@@ -26,7 +26,7 @@ SRCS     += \
 
 PSELIBS := Packages/RobV/Core/Datatypes/MEG Dataflow/Network \
 	Dataflow/Ports Core/Persistent Core/Exceptions Core/Thread \
-	Core/Datatypes Core/TclInterface Core/Containers \
+	Core/Datatypes Core/GuiInterface Core/Containers \
 	Core/Geom
 LIBS := 
 

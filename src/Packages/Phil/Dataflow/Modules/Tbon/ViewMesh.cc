@@ -9,7 +9,7 @@
 */
 
 #include <Core/Util/NotFinished.h>
-#include <Core/TclInterface/TCLvar.h>
+#include <Core/GuiInterface/GuiVar.h>
 #include <Core/Geom/Pt.h>
 #include <Core/Geom/GeomLine.h>
 #include <Core/Geom/GeomCylinder.h>
@@ -44,9 +44,9 @@ public:
 
 protected:
 private:
-  TCLint representation;
-  TCLdouble radius;
-  TCLstring geomfilename;
+  GuiInt representation;
+  GuiDouble radius;
+  GuiString geomfilename;
 
   int npts, ntets;
   UGpoint* points;

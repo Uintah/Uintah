@@ -30,7 +30,7 @@
 #include <Core/Math/Expon.h>
 #include <Core/Math/MusilRNG.h>
 #include <Core/Math/Trig.h>
-#include <Core/TclInterface/TCLvar.h>
+#include <Core/GuiInterface/GuiVar.h>
 #include <iostream>
 using std::cerr;
 #include <values.h>
@@ -49,12 +49,12 @@ class Flood : public Module {
     int initialized;
     virtual void geom_release(GeomPick*, void*);
 
-    TCLint nsteps;
+    GuiInt nsteps;
     int abort;
-    TCLdouble stepsize;
-    TCLdouble seed_x;
-    TCLdouble seed_y;
-    TCLdouble seed_z;
+    GuiDouble stepsize;
+    GuiDouble seed_x;
+    GuiDouble seed_y;
+    GuiDouble seed_z;
     int cx, cy, cz;
     Point seed;
     ScalarFieldHandle sfH;

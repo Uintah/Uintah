@@ -20,7 +20,7 @@
 #include <Core/Util/Assert.h>
 #include <Dataflow/Network/Connection.h>
 #include <Dataflow/Network/Module.h>
-#include <Core/TclInterface/Remote.h>
+#include <Core/GuiInterface/Remote.h>
 #include <iostream>
 
 using std::cerr;

@@ -18,13 +18,13 @@
 #include <Dataflow/Comm/MessageBase.h>
 #include <Core/Geom/Color.h>
 #include <Core/Geom/GeomGroup.h>
-#include <Core/Geom/TCLGeom.h>
-#include <Core/Geom/TCLView.h>
+#include <Core/Geom/GuiGeom.h>
+#include <Core/Geom/GuiView.h>
 #include <Core/Geom/View.h>
 #include <Core/Geometry/BBox.h>
 #include <Core/Geometry/Transform.h>
-#include <Core/TclInterface/TCL.h>
-#include <Core/TclInterface/TCLvar.h>
+#include <Core/GuiInterface/TCL.h>
+#include <Core/GuiInterface/GuiVar.h>
 #include <Dataflow/Modules/Render/BallAux.h>
 
 // --  BAWGL -- 
@@ -80,7 +80,7 @@ class TexStruct3D;
 class SegBin;			// bins for sorted line segments...
 
 struct ObjTag {
-  TCLvarint* visible;
+  GuiVarint* visible;
   int tagid;
 };
 
@@ -99,9 +99,9 @@ public:
 public:
   typedef map<clString, Renderer*>	MapClStringRenderer;
   typedef map<clString, ObjTag*>	MapClStringObjTag;
-  TCLstring pos;  
-  TCLint caxes;
-  TCLint iaxes;  
+  GuiString pos;  
+  GuiInt caxes;
+  GuiInt iaxes;  
 protected:
   friend class Viewer;
   
@@ -283,25 +283,25 @@ public:
   //map<clString, int> light_on;
     
 				// The Camera
-  TCLView view;
+  GuiView view;
   View homeview;
 
 				// Background Color
-  TCLColor bgcolor;
+  GuiColor bgcolor;
 
 				// Shading parameters, etc.
-  TCLstring shading;
+  GuiString shading;
 
 				// Stereo
-  TCLint do_stereo;
+  GuiInt do_stereo;
 
   // --  BAWGL -- 
-  TCLint do_bawgl;
+  GuiInt do_bawgl;
   // --  BAWGL -- 
 
-  TCLint drawimg;
+  GuiInt drawimg;
 
-  TCLstring saveprefix;
+  GuiString saveprefix;
   
 				// Object processing utility routines
   void do_for_visible(Renderer*, ViewWindowVisPMF);

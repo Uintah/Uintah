@@ -35,9 +35,9 @@
 #include <Core/Geom/GeomSphere.h>
 #include <Core/Geom/GeomTriangles.h>
 #include <Core/Malloc/Allocator.h>
-#include <Core/TclInterface/TCLTask.h>
-#include <Core/TclInterface/TCLvar.h>
-#include <Core/TclInterface/TCL.h>
+#include <Core/GuiInterface/TCLTask.h>
+#include <Core/GuiInterface/GuiVar.h>
+#include <Core/GuiInterface/TCL.h>
 #include <Core/Thread/Parallel.h>
 #include <Core/Thread/Thread.h>
 #include <Core/Util/Timer.h>
@@ -85,21 +85,21 @@ class RTrace : public Module {
 
     CrowdMonitor widget_lock;
 
-    TCLint numProc;
-    TCLint maxProc;
-    TCLint nx;
-    TCLint ny;
-    TCLint ns;
-    TCLdouble app;
-    TCLdouble specMin, specMax;
-    TCLdouble scale;
-    TCLint specNum;
-    TCLint abrt;
-    TCLdouble bGlMin;
-    TCLdouble bGlMax;
-    TCLdouble bmin;
-    TCLdouble bmax;
-    TCLint tweak;
+    GuiInt numProc;
+    GuiInt maxProc;
+    GuiInt nx;
+    GuiInt ny;
+    GuiInt ns;
+    GuiDouble app;
+    GuiDouble specMin, specMax;
+    GuiDouble scale;
+    GuiInt specNum;
+    GuiInt abrt;
+    GuiDouble bGlMin;
+    GuiDouble bGlMax;
+    GuiDouble bmin;
+    GuiDouble bmax;
+    GuiInt tweak;
 
     int widgetMoved;
     int tcl_exec;

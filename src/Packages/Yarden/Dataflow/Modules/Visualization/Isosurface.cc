@@ -45,9 +45,9 @@
 #include <Core/Malloc/Allocator.h>
 #include <Core/Math/Trig.h>
 
-#include <Core/TclInterface/TCLTask.h>
-#include <Core/TclInterface/TCLvar.h>
-#include <Core/TclInterface/TCL.h>
+#include <Core/GuiInterface/TCLTask.h>
+#include <Core/GuiInterface/GuiVar.h>
+#include <Core/GuiInterface/TCL.h>
 
 #include <Dataflow/Network/Module.h>
 #include <Dataflow/Ports/ScalarFieldPort.h>
@@ -123,23 +123,23 @@ using namespace SCIRun;
       GeometryOPort* ogeom;       // input from salmon - view point
 
       // UI variables
-      TCLdouble isoval;
-      TCLdouble isoval_min, isoval_max;
-      TCLdouble tcl_red, tcl_green, tcl_blue;
-      TCLint tcl_dl;
-      TCLint tcl_bbox;
-      TCLint tcl_algorithm;
+      GuiDouble isoval;
+      GuiDouble isoval_min, isoval_max;
+      GuiDouble tcl_red, tcl_green, tcl_blue;
+      GuiInt tcl_dl;
+      GuiInt tcl_bbox;
+      GuiInt tcl_algorithm;
 
       // UI for Spanspace
-      TCLint tcl_span_region_set;
-      TCLint tcl_span_region_x0, tcl_span_region_y0;
-      TCLint tcl_span_region_x1, tcl_span_region_y1;
-      TCLint tcl_span_width, tcl_span_height;
+      GuiInt tcl_span_region_set;
+      GuiInt tcl_span_region_x0, tcl_span_region_y0;
+      GuiInt tcl_span_region_x1, tcl_span_region_y1;
+      GuiInt tcl_span_width, tcl_span_height;
 
       // UI for SAGE
-      TCLint tcl_value,tcl_visibility, tcl_scan;
-      TCLint tcl_reduce, tcl_all;
-      TCLint tcl_min_size, tcl_poll;
+      GuiInt tcl_value,tcl_visibility, tcl_scan;
+      GuiInt tcl_reduce, tcl_all;
+      GuiInt tcl_min_size, tcl_poll;
   
       // UI for NOISE
       /* none */

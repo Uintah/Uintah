@@ -17,7 +17,7 @@
 #include <Core/Malloc/Allocator.h>
 #include <Core/Math/MusilRNG.h>
 #include <Core/Math/Trig.h>
-#include <Core/TclInterface/TCLvar.h>
+#include <Core/GuiInterface/GuiVar.h>
 
 #include <iostream>
 using std::cerr;
@@ -27,9 +27,9 @@ namespace SCIRun {
 class SeedField : public Module {
   MeshIPort* imesh;
   MatrixOPort* omat;  
-  TCLstring seedRandTCL;
-  TCLstring numDipolesTCL;
-  TCLstring dipoleMagnitudeTCL;
+  GuiString seedRandTCL;
+  GuiString numDipolesTCL;
+  GuiString dipoleMagnitudeTCL;
 public:
   SeedField(const clString& id);
   virtual ~SeedField();

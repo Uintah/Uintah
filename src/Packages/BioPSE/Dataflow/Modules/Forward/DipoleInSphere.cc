@@ -21,7 +21,7 @@
 #include <Core/Datatypes/SurfTree.h>
 #include <Core/Geometry/Point.h>
 #include <Core/Persistent/Pstreams.h>
-#include <Core/TclInterface/TCLvar.h>
+#include <Core/GuiInterface/GuiVar.h>
 
 #include <iostream>
 using std::cerr;
@@ -35,7 +35,7 @@ class DipoleInSphere : public Module {
     SurfaceIPort* isurf;
     MatrixIPort* imat;
     SurfaceOPort* osurf;
-    TCLstring methodTCL;
+    GuiString methodTCL;
 public:
     DipoleInSphere(const clString& id);
     void compute_three_sphere_potentials(const Array1<double>&, TriSurface *);

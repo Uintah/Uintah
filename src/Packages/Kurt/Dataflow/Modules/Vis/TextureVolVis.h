@@ -12,7 +12,7 @@
 #include <Dataflow/Ports/ColorMapPort.h>
 #include <Dataflow/Ports/GeometryPort.h>
 #include <Core/Malloc/Allocator.h>
-#include <Core/TclInterface/TCLvar.h>
+#include <Core/GuiInterface/GuiVar.h>
 #include <Core/Thread/CrowdMonitor.h>
 #include <Dataflow/Widgets/PointWidget.h>
 
@@ -54,12 +54,12 @@ private:
   int cmap_id;  // id associated with color map...
   
 
-  TCLint num_slices;
-  TCLint draw_mode;
-  TCLint render_style;
-  TCLdouble alpha_scale;
-  TCLdouble alpha_gamma;
-  TCLint interp_mode;
+  GuiInt num_slices;
+  GuiInt draw_mode;
+  GuiInt render_style;
+  GuiDouble alpha_scale;
+  GuiDouble alpha_gamma;
+  GuiInt interp_mode;
   GLVolumeRenderer *volren;
 
 

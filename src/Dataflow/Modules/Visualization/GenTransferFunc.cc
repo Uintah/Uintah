@@ -13,8 +13,8 @@
 #include <Core/Math/CatmullRomSpline.h>
 #include <Core/Malloc/Allocator.h>
 
-#include <Core/TclInterface/TCLvar.h>
-#include <Core/TclInterface/TCLTask.h>
+#include <Core/GuiInterface/GuiVar.h>
+#include <Core/GuiInterface/TCLTask.h>
 
 #include <Core/Geom/Color.h>
 #include <Core/Math/MinMax.h>
@@ -56,8 +56,8 @@ class GenTransferFunc : public Module {
   ColorMapIPort         *inport;  // input a ColorMap
   ColorMapOPort         *outport;  // outputs a ColorMap
   GeometryOPort         *ogeom;  
-  TCLint		RGBorHSV; // which mode
-  TCLint		lineVSspline; // linear vs. spline interpolate
+  GuiInt		RGBorHSV; // which mode
+  GuiInt		lineVSspline; // linear vs. spline interpolate
 
   Array1< ColorPoint > points;   // actual line(s)
 

@@ -17,7 +17,7 @@ using namespace SCIRun;
 
   //using namespace Dataflow::Dataflow;
   //using namespace Core::Datatypes;
-  //using namespace Core::TclInterface;
+  //using namespace Core::GuiInterface;
   //using namespace Core::Math;
 
 static int i001, i010, i011, i100, i101, i110, i111;

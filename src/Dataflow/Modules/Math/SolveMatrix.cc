@@ -49,7 +49,7 @@
 #include <Core/Geometry/Point.h>
 #include <Core/Malloc/Allocator.h>
 #include <Core/Math/MiscMath.h>
-#include <Core/TclInterface/TCLvar.h>
+#include <Core/GuiInterface/GuiVar.h>
 #include <Core/Thread/Parallel.h>
 #include <Core/Thread/SimpleReducer.h>
 #include <Core/Thread/Thread.h>
@@ -129,22 +129,22 @@ public:
     virtual void execute();
 //     virtual void do_execute();
 
-    TCLdouble target_error;
-    TCLdouble flops;
-    TCLdouble floprate;
-    TCLdouble memrefs;
-    TCLdouble memrate;
-    TCLdouble orig_error;
-    TCLstring current_error;
-    TCLstring method;
-    TCLstring precond;
-    TCLint iteration;
-    TCLint maxiter;
-    TCLint use_previous_soln;
-    TCLint emit_partial;
+    GuiDouble target_error;
+    GuiDouble flops;
+    GuiDouble floprate;
+    GuiDouble memrefs;
+    GuiDouble memrate;
+    GuiDouble orig_error;
+    GuiString current_error;
+    GuiString method;
+    GuiString precond;
+    GuiInt iteration;
+    GuiInt maxiter;
+    GuiInt use_previous_soln;
+    GuiInt emit_partial;
     int ep;
-    TCLstring status;
-    TCLint tcl_np;
+    GuiString status;
+    GuiInt tcl_np;
     CGData data;
 };
 
@@ -846,7 +846,7 @@ void SolveMatrix::jacobi_sci(Matrix* matrix,
 	niter++;
 
 	double new_error;
-	if(get_tcl_doublevar(id, "target_error", new_error)
+	if(get_gui_doublevar(id, "target_error", new_error)
 	   && new_error != max_error){
 	    targetidx.add(niter);
 	    targetlist.add(max_error);
@@ -1060,7 +1060,7 @@ void SolveMatrix::parallel_conjugate_gradient(int processor)
     if(processor==0){
 //       data.niter++;
       double new_error;
-     if(get_tcl_doublevar(id, "target_error", new_error)
+     if(get_gui_doublevar(id, "target_error", new_error)
 	 && new_error != data.max_error){
 	targetidx.add(data.niter+1);
 	targetlist.add(data.max_error);
@@ -1356,7 +1356,7 @@ void SolveMatrix::parallel_bi_conjugate_gradient(int processor)
     
     if(processor==0){
       double new_error;
-      if(get_tcl_doublevar(id, "target_error", new_error)
+      if(get_gui_doublevar(id, "target_error", new_error)
 	 && new_error != data.max_error){
 	targetidx.add(data.niter+1);
 	targetlist.add(data.max_error);

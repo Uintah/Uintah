@@ -46,8 +46,8 @@ POSSIBLE REVISIONS
 #include <Core/Geom/View.h>
 #include <Core/Malloc/Allocator.h>
 #include <Core/Containers/HashTable.h>
-#include <Core/TclInterface/TCLvar.h>
-#include <Core/TclInterface/TCLTask.h>
+#include <Core/GuiInterface/GuiVar.h>
+#include <Core/GuiInterface/TCLTask.h>
 #include <Core/Datatypes/Path.h>
 
 #include <Core/Util/Timer.h>
@@ -78,14 +78,14 @@ namespace SCIRun {
 
     enum { to_ogeom=0, to_oview };
 
-    TCLint     tcl_num_views, tcl_is_looped, tcl_is_backed;
+    GuiInt     tcl_num_views, tcl_is_looped, tcl_is_backed;
     
-    TCLint    tcl_curr_viewwindow;   
-    TCLdouble tcl_step_size, tcl_acc_val, tcl_rate;
-    TCLvardouble tcl_speed_val;
-    TCLint    UI_Init, tcl_send_dir;
-    TCLvarint tcl_msg_box, tcl_intrp_type, tcl_acc_mode, tcl_widg_show, tcl_curr_view, tcl_is_new, tcl_stop;
-    TCLstring tcl_info;
+    GuiInt    tcl_curr_viewwindow;   
+    GuiDouble tcl_step_size, tcl_acc_val, tcl_rate;
+    GuiVardouble tcl_speed_val;
+    GuiInt    UI_Init, tcl_send_dir;
+    GuiVarint tcl_msg_box, tcl_intrp_type, tcl_acc_mode, tcl_widg_show, tcl_curr_view, tcl_is_new, tcl_stop;
+    GuiString tcl_info;
     
     double       acc_val, speed_val, rate;
     int          curr_view, acc_mode;

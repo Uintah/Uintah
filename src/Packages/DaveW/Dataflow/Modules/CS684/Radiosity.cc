@@ -34,7 +34,7 @@
 #include <Core/Geom/GeomTriangles.h>
 #include <Core/Malloc/Allocator.h>
 #include <Core/Math/MinMax.h>
-#include <Core/TclInterface/TCLvar.h>
+#include <Core/GuiInterface/GuiVar.h>
 
 #include <map.h>
 #include <iostream>
@@ -53,15 +53,15 @@ class Radiosity : public Module {
     GeometryOPort *ogeom;
     DRaytracer *rt;
     int rtGen;
-    TCLdouble raderr;
-    TCLint ns;
-    TCLint nl;
-    TCLint ni;
-    TCLint nrmls;
-    TCLint lnx;
-    TCLint vissamp;
-    TCLint ffsamp;
-    TCLdouble cscale;
+    GuiDouble raderr;
+    GuiInt ns;
+    GuiInt nl;
+    GuiInt ni;
+    GuiInt nrmls;
+    GuiInt lnx;
+    GuiInt vissamp;
+    GuiInt ffsamp;
+    GuiDouble cscale;
     clString msg;
     Array1<int> geom_idx;
     Array1<int> geom_link_idx;

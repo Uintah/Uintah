@@ -20,7 +20,7 @@
 #include <Dataflow/Network/Module.h>
 #include <Dataflow/Network/PackageDB.h>
 #include <Core/Malloc/Allocator.h>
-#include <Core/TclInterface/Remote.h>
+#include <Core/GuiInterface/Remote.h>
 
 #ifdef _WIN32
 #include <io.h>

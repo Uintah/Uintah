@@ -17,7 +17,7 @@
 #include <Core/Datatypes/SparseRowMatrix.h>
 #include <Core/Datatypes/TriSurface.h>
 #include <Core/Malloc/Allocator.h>
-#include <Core/TclInterface/TCLvar.h>
+#include <Core/GuiInterface/GuiVar.h>
 #include <iostream>
 using std::cerr;
 #include <stdio.h>
@@ -39,9 +39,9 @@ class LocateNbrhd : public Module
   SurfaceOPort *osurf_;
   SurfaceHandle osurfH_;
 
-  TCLstring method_;
-  TCLint zeroTCL_;
-  TCLint potMatTCL_;
+  GuiString method_;
+  GuiInt zeroTCL_;
+  GuiInt potMatTCL_;
 
   int mesh_generation_;
   int surf_generation_;

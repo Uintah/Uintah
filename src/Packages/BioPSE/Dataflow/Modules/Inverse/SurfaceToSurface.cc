@@ -55,7 +55,7 @@
 #include <Core/Datatypes/SparseRowMatrix.h>
 #include <Core/Datatypes/SurfTree.h>
 #include <Core/Persistent/Pstreams.h>
-#include <Core/TclInterface/TCLvar.h>
+#include <Core/GuiInterface/GuiVar.h>
 #include <Core/Thread/Mutex.h>
 #include <Core/Thread/Parallel.h>
 #include <Core/Thread/Thread.h>
@@ -130,11 +130,11 @@ class SurfaceToSurface : public Module {
     SurfaceIPort* isurf;
     SurfaceOPort* osurf;
     MeshOPort* omesh;
-    TCLstring status;
-    TCLint maxiter;
-    TCLdouble target_error;
-    TCLint iteration;
-    TCLdouble current_error;
+    GuiString status;
+    GuiInt maxiter;
+    GuiDouble target_error;
+    GuiInt iteration;
+    GuiDouble current_error;
     CPUTimer timer;
 
     // these are globals for parallel code
@@ -490,7 +490,7 @@ void SurfaceToSurface::jacobi_sci(Matrix* matrix,
 	niter++;
 
 	double new_error;
-	if(get_tcl_doublevar(id, "target_error", new_error)
+	if(get_gui_doublevar(id, "target_error", new_error)
 	   && new_error != max_error){
 	    targetidx.add(niter);
 	    targetlist.add(max_error);

@@ -11,7 +11,7 @@
  *  Copyright (C) 1994 SCI Group
  */
 
-#include <Core/TclInterface/ThreadStats.h>
+#include <Core/GuiInterface/ThreadStats.h>
 
 namespace SCIRun {
 

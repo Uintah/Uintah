@@ -1,6 +1,6 @@
 
 /*
- *  TCLGeom.cc: Interface to TCL variables for Geom stuff
+ *  GuiGeom.cc: Interface to TCL variables for Geom stuff
  *
  *  Written by:
  *   Steven G. Parker
@@ -11,9 +11,9 @@
  *  Copyright (C) 1994 SCI Group
  */
 
-#include <Core/Geom/TCLGeom.h>
-#include <Core/TclInterface/TCL.h>
-#include <Core/TclInterface/TCLTask.h>
+#include <Core/Geom/GuiGeom.h>
+#include <Core/GuiInterface/TCL.h>
+#include <Core/GuiInterface/TCLTask.h>
 #include <Core/Geom/Color.h>
 #include <Core/Geom/Material.h>
 #include <iostream>
@@ -21,37 +21,37 @@ using std::ostream;
 
 namespace SCIRun {
 
-TCLColor::TCLColor(const clString& name, const clString& id, TCL* tcl)
-: TCLvar(name, id, tcl), r("r", str(), tcl), g("g", str(), tcl),
+GuiColor::GuiColor(const clString& name, const clString& id, TCL* tcl)
+: GuiVar(name, id, tcl), r("r", str(), tcl), g("g", str(), tcl),
   b("b", str(), tcl)
 {
 }
 
-TCLColor::~TCLColor()
+GuiColor::~GuiColor()
 {
 }
 
-Color TCLColor::get()
+Color GuiColor::get()
 {
     return Color(r.get(), g.get(), b.get());
 }
 
-void TCLColor::set(const Color& p)
+void GuiColor::set(const Color& p)
 {
     r.set(p.r());
     g.set(p.g());
     b.set(p.b());
 }
 
-void TCLColor::emit(ostream& out)
+void GuiColor::emit(ostream& out)
 {
     r.emit(out);
     g.emit(out);
     b.emit(out);
 }
 
-TCLMaterial::TCLMaterial(const clString& name, const clString& id, TCL* tcl)
-: TCLvar(name, id, tcl), ambient("ambient", str(), tcl),
+GuiMaterial::GuiMaterial(const clString& name, const clString& id, TCL* tcl)
+: GuiVar(name, id, tcl), ambient("ambient", str(), tcl),
   diffuse("diffuse", str(), tcl), specular("specular", str(), tcl),
   shininess("shininess", str(), tcl), emission("emission", str(), tcl),
   reflectivity("reflectivity", str(), tcl),
@@ -60,11 +60,11 @@ TCLMaterial::TCLMaterial(const clString& name, const clString& id, TCL* tcl)
 {
 }
 
-TCLMaterial::~TCLMaterial()
+GuiMaterial::~GuiMaterial()
 {
 }
 
-Material TCLMaterial::get()
+Material GuiMaterial::get()
 {
     Material m(ambient.get(), diffuse.get(), specular.get(), shininess.get());
     m.emission=emission.get();
@@ -74,7 +74,7 @@ Material TCLMaterial::get()
     return m;
 }
 
-void TCLMaterial::set(const Material& m)
+void GuiMaterial::set(const Material& m)
 {
     ambient.set(m.ambient);
     diffuse.set(m.diffuse);
@@ -86,7 +86,7 @@ void TCLMaterial::set(const Material& m)
     refraction_index.set(m.refraction_index);
 }
 
-void TCLMaterial::emit(ostream& out)
+void GuiMaterial::emit(ostream& out)
 {
     ambient.emit(out);
     diffuse.emit(out);

@@ -22,7 +22,7 @@
 #include <Core/Geometry/Point.h>
 #include <Core/Math/Expon.h>
 
-#include <Core/TclInterface/TCLvar.h>
+#include <Core/GuiInterface/GuiVar.h>
 
 #include <iostream>
 using std::cerr;
@@ -35,7 +35,7 @@ class AddAttribute : public Module
 {
   SurfaceIPort      *isurf_;
   MatrixIPort *imat_;
-  TCLstring          surfid_;
+  GuiString          surfid_;
 
   SurfaceOPort      *osurf_;
 

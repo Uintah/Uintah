@@ -17,10 +17,10 @@
  */
 
 #ifndef _WIN32
-#include <Core/TclInterface/GuiServer.h>
+#include <Core/GuiInterface/GuiServer.h>
 
 #include <Core/Containers/Array1.h>
-#include <Core/TclInterface/TCLTask.h>
+#include <Core/GuiInterface/TCLTask.h>
 #include <unistd.h>
 #include <string>
 #include <sys/types.h>

@@ -23,7 +23,7 @@
 #include <Core/Geom/Switch.h>
 #include <Core/Geom/GeomSphere.h>
 #include <Core/Geom/GeomLine.h>
-#include <Core/TclInterface/TCLvar.h>
+#include <Core/GuiInterface/GuiVar.h>
 #include <Core/Util/DebugStream.h>
 
 #include <map.h>
@@ -62,19 +62,19 @@ class ShowField : public Module
   GeomSwitch*              d_conSwitch;
   GeomSwitch*              d_nodeSwitch;
 
-  TCLstring                d_nodeDisplayType;
-  TCLint                   d_showConP;
-  TCLint                   d_showProgress;
+  GuiString                d_nodeDisplayType;
+  GuiInt                   d_showConP;
+  GuiInt                   d_showProgress;
 
   // Display color for nodes.
-  TCLdouble                d_nodeChanR;
-  TCLdouble                d_nodeChanG;
-  TCLdouble                d_nodeChanB;
+  GuiDouble                d_nodeChanR;
+  GuiDouble                d_nodeChanG;
+  GuiDouble                d_nodeChanB;
   
   // Display color for connections.
-  TCLdouble                d_conChanR;
-  TCLdouble                d_conChanG;
-  TCLdouble                d_conChanB;
+  GuiDouble                d_conChanR;
+  GuiDouble                d_conChanG;
+  GuiDouble                d_conChanB;
 
   
   // GROUP: Private Methods

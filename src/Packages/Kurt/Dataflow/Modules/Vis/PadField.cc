@@ -9,7 +9,7 @@
 #include <Dataflow/Ports/ScalarFieldPort.h>
 #include <Core/Datatypes/ScalarFieldRG.h>
 #include <Core/Malloc/Allocator.h>
-#include <Core/TclInterface/TCLvar.h>
+#include <Core/GuiInterface/GuiVar.h>
 #include <iostream>
 #include "PadField.h"
 

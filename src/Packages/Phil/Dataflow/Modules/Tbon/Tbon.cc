@@ -12,7 +12,7 @@
 #include "Clock.h"
 
 #include <Core/Util/NotFinished.h>
-#include <Core/TclInterface/TCLvar.h>
+#include <Core/GuiInterface/GuiVar.h>
 #include <Core/Geom/Material.h>
 #include <Core/Geom/GeomGroup.h>
 #include <Core/Geom/GeomSphere.h>
@@ -57,12 +57,12 @@ private:
   char** treefiles;
   char** datafiles;
 
-  TCLstring metafilename;
-  TCLint nodebricksize, databricksize;
-  TCLdouble isovalue;
-  TCLint timevalue;
-  TCLint resolution;
-  TCLstring red, green, blue;
+  GuiString metafilename;
+  GuiInt nodebricksize, databricksize;
+  GuiDouble isovalue;
+  GuiInt timevalue;
+  GuiInt resolution;
+  GuiString red, green, blue;
 
   double miniso, maxiso;
   double res;

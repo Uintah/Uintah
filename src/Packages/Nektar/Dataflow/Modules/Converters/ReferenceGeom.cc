@@ -14,8 +14,8 @@
 #include <Packages/Nektar/Core/Datatypes/NektarScalarFieldPort.h>
 #include <Packages/Nektar/Core/Datatypes/NektarVectorFieldPort.h>
 #include <Core/Malloc/Allocator.h>
-#include <Core/TclInterface/TCLTask.h>
-#include <Core/TclInterface/TCLvar.h>
+#include <Core/GuiInterface/TCLTask.h>
+#include <Core/GuiInterface/GuiVar.h>
 
 namespace Nektar {
     using namespace Nektar::Datatypes;
@@ -24,7 +24,7 @@ using namespace SCIRun;
     class ReferenceGeom : public Module {
       Packages/NektarScalarFieldOPort* osport;
       Packages/NektarVectorFieldOPort* ovport;
-      TCLstring filename;
+      GuiString filename;
       Packages/NektarScalarFieldHandle scalar_handle;
       Packages/NektarVectorFieldHandle vector_handle;
       clString old_filename;

@@ -24,9 +24,9 @@
 #include <Core/Malloc/Allocator.h>
 #include <Core/Math/MinMax.h>
 #include <Core/Math/MiscMath.h>
-#include <Core/TclInterface/TCLTask.h>
-#include <Core/TclInterface/TCLvar.h>
-#include <Core/TclInterface/TCL.h>
+#include <Core/GuiInterface/TCLTask.h>
+#include <Core/GuiInterface/GuiVar.h>
+#include <Core/GuiInterface/TCL.h>
 #include <tcl.h>
 #include <tk.h>
 #include <iostream>
@@ -50,12 +50,12 @@ class SlicePicker : public Module {
     ScalarFieldHandle last_sfIH;	// last input fld
     ScalarFieldRGchar* last_sfrg;		// just a convenience
 
-    TCLdouble bias;	// -1.0 - 1.0
-    TCLdouble scale;	// -1.0 - 1.0
-    TCLint tissue;	// which material is being selected
-    TCLdouble tx;	// 0.0 - 1.0  (scaled current x position)
-    TCLdouble ty;	// 0.0 - 1.0  (scaled current y position)
-    TCLdouble tz;	// 0.0 - 1.0  (scaled current z position)
+    GuiDouble bias;	// -1.0 - 1.0
+    GuiDouble scale;	// -1.0 - 1.0
+    GuiInt tissue;	// which material is being selected
+    GuiDouble tx;	// 0.0 - 1.0  (scaled current x position)
+    GuiDouble ty;	// 0.0 - 1.0  (scaled current y position)
+    GuiDouble tz;	// 0.0 - 1.0  (scaled current z position)
 
     Array1<Color> ctable;
 

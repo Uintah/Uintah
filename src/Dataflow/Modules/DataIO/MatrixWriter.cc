@@ -15,16 +15,16 @@
 #include <Dataflow/Ports/MatrixPort.h>
 #include <Core/Datatypes/Matrix.h>
 #include <Core/Malloc/Allocator.h>
-#include <Core/TclInterface/TCLvar.h>
+#include <Core/GuiInterface/GuiVar.h>
 
 namespace SCIRun {
 
 
 class MatrixWriter : public Module {
     MatrixIPort* inport;
-    TCLstring filename;
-    TCLstring filetype;
-    TCLint split;
+    GuiString filename;
+    GuiString filetype;
+    GuiInt split;
 public:
     MatrixWriter(const clString& id);
     virtual ~MatrixWriter();

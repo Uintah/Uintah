@@ -50,7 +50,7 @@ POSSIBLE REVISIONS:
 #include <Core/Math/Expon.h>
 #include <Core/Math/MinMax.h>
 #include <Core/Math/MiscMath.h>
-#include <Core/TclInterface/TCLvar.h>
+#include <Core/GuiInterface/GuiVar.h>
 #include <iostream>
 using std::cerr;
 #include <sstream>
@@ -81,9 +81,9 @@ private:
   MatrixIPort* d_ivec1P;
   MatrixIPort* d_ivec2P;
   MatrixOPort* d_errorP;
-  TCLint d_haveUI;
-  TCLstring d_methodTCL;
-  TCLstring d_pTCL;
+  GuiInt d_haveUI;
+  GuiString d_methodTCL;
+  GuiString d_pTCL;
 }; 
 
 

@@ -27,7 +27,7 @@
 #include <Core/Math/Expon.h>
 #include <Core/Math/MusilRNG.h>
 #include <Core/Math/Trig.h>
-#include <Core/TclInterface/TCLvar.h>
+#include <Core/GuiInterface/GuiVar.h>
 #include <iostream>
 using std::cerr;
 #include <values.h>
@@ -585,25 +585,25 @@ class Bundles : public Module {
     int first_execute;
     virtual void geom_release(GeomPick*, void*);
 
-    TCLint nsteps;
-    TCLint nfibers;
-    TCLdouble stepsize;
-    TCLdouble puncture;
-    TCLdouble demarcelle;
-    TCLint whichdir;
-    TCLint niters;
-    TCLint uniform;
-    TCLint bundlers;
-    TCLdouble bundleradx;
-    TCLdouble bundlescy;
-    TCLdouble bundlescz;
-    TCLdouble startx;
-    TCLdouble starty;
-    TCLdouble startz;
-    TCLdouble endx;
-    TCLdouble endy;
-    TCLdouble endz;
-    TCLstring seed;
+    GuiInt nsteps;
+    GuiInt nfibers;
+    GuiDouble stepsize;
+    GuiDouble puncture;
+    GuiDouble demarcelle;
+    GuiInt whichdir;
+    GuiInt niters;
+    GuiInt uniform;
+    GuiInt bundlers;
+    GuiDouble bundleradx;
+    GuiDouble bundlescy;
+    GuiDouble bundlescz;
+    GuiDouble startx;
+    GuiDouble starty;
+    GuiDouble startz;
+    GuiDouble endx;
+    GuiDouble endy;
+    GuiDouble endz;
+    GuiString seed;
     TensorFieldHandle tfh;
     VectorFieldHandle vfh;
     ColorMapHandle cmh;

@@ -14,7 +14,7 @@
 #include "TriGroup.h"
 
 #include <Core/Util/NotFinished.h>
-#include <Core/TclInterface/TCLvar.h>
+#include <Core/GuiInterface/GuiVar.h>
 #include <Core/Malloc/Allocator.h>
 #include <Core/Geom/Material.h>
 #include <Core/Geom/GeomGroup.h>
@@ -58,12 +58,12 @@ private:
   char** treefiles;
   char** datafiles;
 
-  TCLstring metafilename;
-  TCLint nodebricksize, databricksize;
-  TCLdouble isovalue;
-  TCLint timevalue;
-  TCLint resolution;
-  TCLint go;
+  GuiString metafilename;
+  GuiInt nodebricksize, databricksize;
+  GuiDouble isovalue;
+  GuiInt timevalue;
+  GuiInt resolution;
+  GuiInt go;
 
   double miniso, maxiso;
   double stepsize;

@@ -13,7 +13,7 @@ SRCS     += $(SRCDIR)/Connection.cc $(SRCDIR)/ModuleHelper.cc \
 	$(SRCDIR)/StrX.cc
 
 PSELIBS := Dataflow/Comm Dataflow/XMLUtil Core/Exceptions Core/Thread \
-	Core/Containers Core/TclInterface Core/Util \
+	Core/Containers Core/GuiInterface Core/Util \
 	Core/TkExtensions Core/Geom 
 LIBS := $(TCL_LIBRARY) $(XML_LIBRARY)
 

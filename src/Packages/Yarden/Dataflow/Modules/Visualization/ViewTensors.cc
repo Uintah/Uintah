@@ -25,9 +25,9 @@
 #include <Core/Malloc/Allocator.h>
 #include <Core/Math/Trig.h>
 
-#include <Core/TclInterface/TCLTask.h>
-#include <Core/TclInterface/TCLvar.h>
-#include <Core/TclInterface/TCL.h>
+#include <Core/GuiInterface/TCLTask.h>
+#include <Core/GuiInterface/GuiVar.h>
+#include <Core/GuiInterface/TCL.h>
 
 #include <Dataflow/Network/Module.h>
 #include <Dataflow/Ports/ScalarFieldPort.h>
@@ -63,10 +63,10 @@ using namespace DaveW::Datatypes;
       TensorFieldIPort* in_tensor; // input tensor
       
       // tcl variables
-      TCLint tcl_slice;
-      TCLint tcl_mode;
-      TCLint tcl_nx, tcl_ny, tcl_nz;
-      TCLint tcl_num_slices;
+      GuiInt tcl_slice;
+      GuiInt tcl_mode;
+      GuiInt tcl_nx, tcl_ny, tcl_nz;
+      GuiInt tcl_num_slices;
 
       // Global variables
       TensorFieldHandle tensor_field;

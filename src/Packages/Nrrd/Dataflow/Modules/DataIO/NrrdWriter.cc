@@ -14,7 +14,7 @@
 #include <Dataflow/Network/Module.h>
 #include <Nrrd/Dataflow/Ports/NrrdPort.h>
 #include <Core/Malloc/Allocator.h>
-#include <Core/TclInterface/TCLvar.h>
+#include <Core/GuiInterface/GuiVar.h>
 
 namespace SCINrrd {
 
@@ -22,8 +22,8 @@ using namespace SCIRun;
 
 class NrrdWriter : public Module {
     NrrdIPort* inport;
-    TCLstring filename;
-    TCLstring filetype;
+    GuiString filename;
+    GuiString filetype;
 public:
     NrrdWriter(const clString& id);
     virtual ~NrrdWriter();

@@ -42,9 +42,9 @@
 #include <Core/Malloc/Allocator.h>
 #include <Core/Math/Trig.h>
 
-#include <Core/TclInterface/TCLTask.h>
-#include <Core/TclInterface/TCLvar.h>
-#include <Core/TclInterface/TCL.h>
+#include <Core/GuiInterface/TCLTask.h>
+#include <Core/GuiInterface/GuiVar.h>
+#include <Core/GuiInterface/TCL.h>
 
 #include <Dataflow/Network/Module.h>
 #include <Dataflow/Ports/ScalarFieldPort.h>
@@ -94,12 +94,12 @@ using namespace SCIRun;
       GeometryOPort* ogeom;       // input from salmon - view point
 
       // UI variables
-      TCLdouble isoval;
-      TCLdouble isoval_min, isoval_max;
-      TCLint tcl_bbox, tcl_value,tcl_visibility, tcl_scan;
-      TCLint tcl_reduce, tcl_all;
-      TCLint tcl_min_size, tcl_poll;
-      TCLint tcl_dl;
+      GuiDouble isoval;
+      GuiDouble isoval_min, isoval_max;
+      GuiInt tcl_bbox, tcl_value,tcl_visibility, tcl_scan;
+      GuiInt tcl_reduce, tcl_all;
+      GuiInt tcl_min_size, tcl_poll;
+      GuiInt tcl_dl;
   
       int value, bbox_visibility, visibility;
       int scan, count_values, extract_all;

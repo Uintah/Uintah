@@ -48,11 +48,11 @@ private:
   char** treefiles;
   char** datafiles;
 
-  TCLstring metafilename;
-  TCLint nodebricksize, databricksize;
-  TCLdouble isovalue;
-  TCLint timevalue;
-  TCLint threshold;
+  GuiString metafilename;
+  GuiInt nodebricksize, databricksize;
+  GuiDouble isovalue;
+  GuiInt timevalue;
+  GuiInt threshold;
 
   double miniso, maxiso;
   double res;

@@ -101,10 +101,13 @@ Component  specification dtd.
 <!ELEMENT gui (description, parameter+, img)>
 
 <!-- Description of 1 gui parameter. -->
-<!ELEMENT parameter (widget, label, description)>
+<!ELEMENT parameter (widget, datatype, label, description)>
 
-<!-- Name of gui item (tcl/tk) widget -->
+<!-- Name of gui item (tcl/tk) widget (e.g. slider, text entry, checkbox)-->
 <!ELEMENT widget (#PCDATA)>
+
+<!-- Type of data stored (e.g. int, bool, string, double) -->
+<!ELEMENT datatype (#PCDATA)>
 
 <!-- Gui item label -->
 <!ELEMENT label (#PCDATA)>

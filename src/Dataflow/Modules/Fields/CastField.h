@@ -4,7 +4,7 @@
 #include <Core/Datatypes/ScalarField.h>
 #include <Core/Datatypes/ScalarFieldRGBase.h>
 #include <Core/Containers/Array2.h>
-#include <Core/TclInterface/TCLvar.h>
+#include <Core/GuiInterface/GuiVar.h>
 #include <Core/Geometry/Point.h>
 #include <Dataflow/Network/Module.h>
 #include <Dataflow/Ports/ScalarFieldPort.h>
@@ -57,20 +57,20 @@ protected:
   ScalarFieldRGBase *isf;
   ScalarFieldHandle ofh;
 
-  TCLint haveMinMaxTCL;
-  TCLint haveOutVoxelTCL;
-  TCLint haveBBoxTCL;
-  TCLint outVoxelTCL;
-  TCLstring NminTCL;
-  TCLstring NmaxTCL;
-  TCLstring CminTCL;
-  TCLstring CmaxTCL;
-  TCLstring minOutTCLX;
-  TCLstring minOutTCLY;
-  TCLstring minOutTCLZ;
-  TCLstring maxOutTCLX;
-  TCLstring maxOutTCLY;
-  TCLstring maxOutTCLZ;
+  GuiInt haveMinMaxTCL;
+  GuiInt haveOutVoxelTCL;
+  GuiInt haveBBoxTCL;
+  GuiInt outVoxelTCL;
+  GuiString NminTCL;
+  GuiString NmaxTCL;
+  GuiString CminTCL;
+  GuiString CmaxTCL;
+  GuiString minOutTCLX;
+  GuiString minOutTCLY;
+  GuiString minOutTCLZ;
+  GuiString maxOutTCLX;
+  GuiString maxOutTCLY;
+  GuiString maxOutTCLZ;
 
   void checkInterface();
   void printInputStats();

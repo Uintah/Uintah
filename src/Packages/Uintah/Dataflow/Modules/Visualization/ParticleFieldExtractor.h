@@ -37,7 +37,7 @@ LOG
 #include <Packages/Uintah/Core/Datatypes/VectorParticlesPort.h>
 #include <Packages/Uintah/Core/Datatypes/TensorParticlesPort.h>
 #include <Dataflow/Network/Module.h> 
-#include <Core/TclInterface/TCLvar.h> 
+#include <Core/GuiInterface/GuiVar.h> 
 #include <string>
 #include <vector>
 
@@ -80,13 +80,13 @@ protected:
   
 private:
 
-  TCLstring tcl_status;
+  GuiString tcl_status;
 
-  TCLstring psVar;
-  TCLstring pvVar;
-  TCLstring ptVar;
+  GuiString psVar;
+  GuiString pvVar;
+  GuiString ptVar;
 
-  TCLint pNMaterials;
+  GuiInt pNMaterials;
 
 
   ArchiveIPort *in;

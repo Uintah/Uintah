@@ -27,7 +27,7 @@ using namespace SCIRun;
 
 class OlegSHARE MatrixReceive : public Module 
 {
- TCLstring hpTCL;
+ GuiString hpTCL;
  MatrixIPort *imat1;
  MatrixOPort *omat1;
  MatrixOPort *omat2;

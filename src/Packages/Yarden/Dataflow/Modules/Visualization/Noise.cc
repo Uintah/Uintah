@@ -29,8 +29,8 @@
 #include <Core/Thread/Parallel.h>
 #include <Core/Thread/Thread.h>
 
-#include <Core/TclInterface/TCLvar.h>
-#include <Core/TclInterface/TCL.h>
+#include <Core/GuiInterface/GuiVar.h>
+#include <Core/GuiInterface/TCL.h>
 
 #include <iostream>
 

@@ -25,7 +25,7 @@
 #include <Core/Malloc/Allocator.h>
 #include <Core/Math/Trig.h>
 #include <Core/Math/TrigTable.h>
-#include <Core/TclInterface/TCL.h>
+#include <Core/GuiInterface/TCL.h>
 #include <iostream>
 using std::cerr;
 using std::endl;

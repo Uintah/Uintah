@@ -21,7 +21,7 @@
 #include <Core/Datatypes/VectorFieldRG.h>
 #include <Core/Datatypes/VectorFieldUG.h>
 #include <Core/Geometry/Point.h>
-#include <Core/TclInterface/TCLvar.h>
+#include <Core/GuiInterface/GuiVar.h>
 #include <iostream>
 
 using std::cerr;
@@ -32,7 +32,7 @@ class Gradient : public Module {
     ScalarFieldIPort* infield;
     VectorFieldOPort* outfield;
 public:
-    TCLint interpolate;
+    GuiInt interpolate;
     Gradient(const clString& id);
     virtual ~Gradient();
     virtual void execute();

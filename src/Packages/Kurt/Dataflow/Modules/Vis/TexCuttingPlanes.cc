@@ -17,7 +17,7 @@
 #include <Core/Geom/GeomTriangles.h>
 #include <Core/Geom/View.h>
 #include <Core/Malloc/Allocator.h>
-#include <Core/TclInterface/TCLvar.h>
+#include <Core/GuiInterface/GuiVar.h>
 #include <Core/Thread/CrowdMonitor.h>
 
 #include <Dataflow/Widgets/PointWidget.h>

@@ -15,7 +15,7 @@
 #include <Dataflow/Ports/FieldPort.h>
 #include <Core/Persistent/Pstreams.h>
 #include <Core/Malloc/Allocator.h>
-#include <Core/TclInterface/TCLvar.h>
+#include <Core/GuiInterface/GuiVar.h>
 
 namespace SCIRun {
 
@@ -25,8 +25,8 @@ class FieldWriter : public Module {
   //////////
   // 
   FieldIPort*     d_iport;
-  TCLstring       d_filename;
-  TCLstring       d_filetype;
+  GuiString       d_filename;
+  GuiString       d_filetype;
 
 public:
   // GROUP: Constructor/Destructor

@@ -32,8 +32,8 @@
 #include <Dataflow/Ports/ScalarFieldPort.h>
 #include <Packages/Yarden/Dataflow/Ports/SpanPort.h>
 
-#include <Core/TclInterface/TCLvar.h>
-#include <Core/TclInterface/TCL.h>
+#include <Core/GuiInterface/GuiVar.h>
+#include <Core/GuiInterface/TCL.h>
 
 #include <iostream>
 

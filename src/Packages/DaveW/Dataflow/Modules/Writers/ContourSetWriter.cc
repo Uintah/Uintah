@@ -16,7 +16,7 @@
 #include <Dataflow/Network/Module.h>
 #include <Core/Persistent/Pstreams.h>
 #include <Core/Malloc/Allocator.h>
-#include <Core/TclInterface/TCLvar.h>
+#include <Core/GuiInterface/GuiVar.h>
 
 namespace DaveW {
 using namespace DaveW;
@@ -24,8 +24,8 @@ using namespace SCIRun;
 
 class ContourSetWriter : public Module {
     ContourSetIPort* inport;
-    TCLstring filename;
-    TCLstring filetype;
+    GuiString filename;
+    GuiString filetype;
 public:
     ContourSetWriter(const clString& id);
     virtual ~ContourSetWriter();

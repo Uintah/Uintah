@@ -1,6 +1,6 @@
 
 #include <Dataflow/Network/Module.h>
-#include <Core/TclInterface/TCLvar.h>
+#include <Core/GuiInterface/GuiVar.h>
 #include <Core/Containers/Array1.h>
 #include <Dataflow/Ports/ColorMapPort.h>
 
@@ -63,9 +63,9 @@ public:
   virtual void connection(ConnectionMode mode, int which_port, int);
 
 private:
-  TCLint isFixed;
-  TCLdouble min;
-  TCLdouble max;
+  GuiInt isFixed;
+  GuiDouble min;
+  GuiDouble max;
 };
 
 } // End namespace SCIRun

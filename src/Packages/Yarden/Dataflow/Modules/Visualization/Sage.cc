@@ -33,9 +33,9 @@
 //#include <Multitask/ITC.h>
 //#include <Multitask/Task.h>
 
-#include <Core/TclInterface/TCLTask.h>
-#include <Core/TclInterface/TCLvar.h>
-#include <Core/TclInterface/TCL.h>
+#include <Core/GuiInterface/TCLTask.h>
+#include <Core/GuiInterface/GuiVar.h>
+#include <Core/GuiInterface/TCL.h>
 #include <tcl.h>
 #include <tk.h>
 
@@ -328,11 +328,11 @@ class Sage : public Module
 
   //float* data;
   GLubyte *data;
-  TCLdouble isoval;
-  TCLdouble isoval_min, isoval_max;
-  TCLint tcl_bbox, tcl_value,tcl_visibility, tcl_scan;
-  TCLint tcl_depth, tcl_reduce, tcl_cover, tcl_all;
-  TCLint tcl_rebuild;
+  GuiDouble isoval;
+  GuiDouble isoval_min, isoval_max;
+  GuiInt tcl_bbox, tcl_value,tcl_visibility, tcl_scan;
+  GuiInt tcl_depth, tcl_reduce, tcl_cover, tcl_all;
+  GuiInt tcl_rebuild;
   
   int value, bbox_visibility, visibility, cutoff_depth;
   int scan, count_values, extract_all;

@@ -2,12 +2,12 @@
 
 include $(SRCTOP)/scripts/smallso_prologue.mk
 
-SRCDIR   := Core/TclInterface
+SRCDIR   := Core/GuiInterface
 
 SRCS     += $(SRCDIR)/DebugSettings.cc $(SRCDIR)/GuiManager.cc \
 	$(SRCDIR)/GuiServer.cc $(SRCDIR)/Histogram.cc \
 	$(SRCDIR)/MemStats.cc $(SRCDIR)/Remote.cc $(SRCDIR)/TCL.cc \
-	$(SRCDIR)/TCLInit.cc $(SRCDIR)/TCLTask.cc $(SRCDIR)/TCLvar.cc \
+	$(SRCDIR)/TCLInit.cc $(SRCDIR)/TCLTask.cc $(SRCDIR)/GuiVar.cc \
 	$(SRCDIR)/ThreadStats.cc \
 	$(SRCDIR)/TCLstrbuff.cc \
 

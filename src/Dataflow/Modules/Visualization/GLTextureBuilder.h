@@ -8,7 +8,7 @@
 
 #include <Dataflow/Network/Module.h>
 #include <Dataflow/Ports/ScalarFieldPort.h>
-#include <Core/TclInterface/TCLvar.h>
+#include <Core/GuiInterface/GuiVar.h>
 #include <Core/Geometry/Point.h>
 #include <Core/Geometry/Vector.h>
 #include <Core/Datatypes/GLTexture3D.h>
@@ -45,9 +45,9 @@ private:
   ScalarFieldHandle sfrg;
   GLTexture3DHandle tex;
 
-  TCLint max_brick_dim;
-  TCLdouble min, max;
-  TCLint isFixed;
+  GuiInt max_brick_dim;
+  GuiDouble min, max;
+  GuiInt isFixed;
 //  bool MakeContext(Display *dpy, GLXContext& cx);
   // void DestroyContext(Display *dpy, GLXContext& cx);
 

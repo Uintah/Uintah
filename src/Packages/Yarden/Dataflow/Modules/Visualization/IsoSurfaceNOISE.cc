@@ -34,9 +34,9 @@
 #include <Dataflow/Ports/ColorMapPort.h>
 #include <Dataflow/Ports/GeometryPort.h>
 
-//#include <Core/TclInterface/TCLTask.h>
-#include <Core/TclInterface/TCLvar.h>
-#include <Core/TclInterface/TCL.h>
+//#include <Core/GuiInterface/TCLTask.h>
+#include <Core/GuiInterface/GuiVar.h>
+#include <Core/GuiInterface/TCL.h>
 //#include <tcl.h>
 //#include <tk.h>
 
@@ -63,10 +63,10 @@ using namespace SCIRun;
 
       // UI variables
       double v; // isovalue
-      TCLdouble isoval;
-      TCLdouble isoval_min, isoval_max;
-      TCLint    tcl_bbox;
-      TCLint    tcl_np;
+      GuiDouble isoval;
+      GuiDouble isoval_min, isoval_max;
+      GuiInt    tcl_bbox;
+      GuiInt    tcl_np;
 
       NoiseBase<Module> *noise;
 

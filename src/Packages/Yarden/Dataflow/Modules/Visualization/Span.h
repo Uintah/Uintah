@@ -28,7 +28,7 @@ public:
   int skiped[60];
   int field_generation;
   int nt;
-  TCLint tcl_split, tcl_maxsplit, tcl_z_max, tcl_z_from, tcl_z_size;
+  GuiInt tcl_split, tcl_maxsplit, tcl_z_max, tcl_z_from, tcl_z_size;
   int z_from, z_size;
     
   int forest_id;

@@ -38,8 +38,8 @@
 #include <Core/Geom/Material.h>
 #include <Core/Malloc/Allocator.h>
 #include <Core/Math/Trig.h>
-#include <Core/TclInterface/TCLTask.h>
-#include <Core/TclInterface/TCLvar.h>
+#include <Core/GuiInterface/TCLTask.h>
+#include <Core/GuiInterface/GuiVar.h>
 #include <Core/Thread/CrowdMonitor.h>
 #include <Core/Thread/FutureValue.h>
 #include "OpenGL.h"
@@ -138,7 +138,7 @@ void ViewWindow::itemAdded(GeomViewerItem* si)
   if(viter==visible.end()){
     // Make one...
     vis=scinew ObjTag;
-    vis->visible=scinew TCLvarint(si->name, id, this);
+    vis->visible=scinew GuiVarint(si->name, id, this);
     vis->visible->set(1);
     vis->tagid=maxtag++;
     visible[si->name] = vis;
@@ -1834,7 +1834,7 @@ void ViewWindow::redraw()
 
   // Get animation variables
   double ct;
-  if(!get_tcl_doublevar(id, "current_time", ct)){
+  if(!get_gui_doublevar(id, "current_time", ct)){
     manager->error("Error reading current_time");
     return;
   }
@@ -1982,7 +1982,7 @@ void ViewWindow::do_for_visible(Renderer* r, ViewWindowVisPMF pmf)
 
 void ViewWindow::set_current_time(double time)
 {
-  set_tclvar(id, "current_time", to_string(time));
+  set_guivar(id, "current_time", to_string(time));
 }
 
 void ViewWindow::dump_objects(const clString& filename, const clString& format)

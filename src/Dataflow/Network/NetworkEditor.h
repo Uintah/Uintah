@@ -16,7 +16,7 @@
 
 #include <Dataflow/share/share.h>
 #include <Dataflow/Comm/MessageBase.h>
-#include <Core/TclInterface/TCL.h>
+#include <Core/GuiInterface/TCL.h>
 #include <Core/Thread/Mailbox.h>
 #include <Core/Thread/Runnable.h>
 

@@ -28,9 +28,9 @@
 #include <Core/Geom/Color.h>
 #include <Core/Malloc/Allocator.h>
 #include <Core/Persistent/Pstreams.h>
-#include <Core/TclInterface/TCLTask.h>
-#include <Core/TclInterface/TCLvar.h>
-#include <Core/TclInterface/TCL.h>
+#include <Core/GuiInterface/TCLTask.h>
+#include <Core/GuiInterface/GuiVar.h>
+#include <Core/GuiInterface/TCL.h>
 
 #include <iostream>
 using std::cerr;
@@ -61,7 +61,7 @@ class XYZtoRGB : public Module {
     Display* dpy;
     GLXContext cx;
 
-    TCLdouble WX, WY, RX, RY, GX, GY, BX, BY, MAX;
+    GuiDouble WX, WY, RX, RY, GX, GY, BX, BY, MAX;
     int tcl_exec;
     int init;
     int NX;

@@ -13,7 +13,7 @@
 #include <Dataflow/Network/Module.h>
 #include <Core/Persistent/Pstreams.h>
 #include <Core/Malloc/Allocator.h>
-#include <Core/TclInterface/TCLvar.h>
+#include <Core/GuiInterface/GuiVar.h>
 #include <Packages/Yarden/Dataflow/Ports/TensorFieldPort.h>
 
 namespace Yarden {
@@ -22,9 +22,9 @@ using namespace SCIRun;
     
     class TensorFieldWriter : public Module {
       TensorFieldIPort* inport;
-      TCLstring filename;
-      TCLstring filetype;
-      TCLint    split;
+      GuiString filename;
+      GuiString filetype;
+      GuiInt    split;
     public:
       TensorFieldWriter(const clString& id);
       virtual ~TensorFieldWriter();

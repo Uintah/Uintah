@@ -222,6 +222,7 @@ void DestroyIoNode(io_node* n)
 void DestroyParameterNode(parameter_node* n)
 {
   if (n->widget && n->widget!=NOT_SET) delete[] n->widget;
+  if (n->datatype && n->datatype!=NOT_SET) delete[] n->datatype;
   if (n->label && n->label!=NOT_SET) delete[] n->label;
   if (n->description && n->description!=NOT_SET) delete[] n->description;
   delete n;
@@ -423,6 +424,7 @@ void PrintComponentNode(component_node* n)
 	  i4++) {
 	cout << "      Label      : " << (*i4).second->label << endl;
 	cout << "      Widget     : " << (*i4).second->widget << endl;
+	cout << "      Datatype   : " << (*i4).second->datatype << endl;
 	cout << "      Description: " << endl;
 	  cout << "        " << (*i4).second->description << endl;
 	cout << endl;
@@ -605,6 +607,8 @@ void ProcessParameterNode(const DOM_Node& d, parameter_node* n)
       n->label = rWSgSC(child);
     else if (childname.equals("widget") && n->widget==NOT_SET)
       n->widget = rWSgSC(child);
+    else if (childname.equals("datatype") && n->datatype==NOT_SET)
+      n->datatype = rWSgSC(child);
     else if (childname.equals("description") && n->description==NOT_SET)
       n->description = rWSgSC(child);
   }
@@ -623,6 +627,7 @@ void ProcessGuiNode(const DOM_Node& d, gui_node* n)
     else if (childname.equals("parameter") && n->parameters) {
       parameter_node* newparam = new parameter_node;
       newparam->widget = NOT_SET;
+      newparam->datatype = NOT_SET;
       newparam->label = NOT_SET;
       newparam->description = NOT_SET;
       ProcessParameterNode(child,newparam);
@@ -937,6 +942,9 @@ void WriteParameterNodeToStream(parameter_node* n, std::ofstream& o)
 
   if (n->label && n->label!=NOT_SET)
     o << "      <label>" << n->label << "</label>" << endl;
+  
+  if (n->datatype && n->datatype!=NOT_SET)
+    o << "      <datatype>" << n->datatype << "</datatype>" << endl;
   
   if (n->description && n->description!=NOT_SET)
     o << "      <description>" << endl

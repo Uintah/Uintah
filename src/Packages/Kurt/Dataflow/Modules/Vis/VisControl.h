@@ -37,7 +37,7 @@ LOG
 #include <Dataflow/Ports/ScalarFieldPort.h>
 #include <Dataflow/Ports/VectorFieldPort.h>
 #include <Dataflow/Network/Module.h> 
-#include <Core/TclInterface/TCLvar.h> 
+#include <Core/GuiInterface/GuiVar.h> 
 #include <string>
 #include <vector>
 
@@ -81,25 +81,25 @@ protected:
   
 private:
 
-  TCLstring tcl_status;
+  GuiString tcl_status;
 
-  TCLstring gsVar;
-  TCLstring gvVar;
-  TCLstring gtVar;
-  TCLstring psVar;
-  TCLstring pvVar;
-  TCLstring ptVar;
+  GuiString gsVar;
+  GuiString gvVar;
+  GuiString gtVar;
+  GuiString psVar;
+  GuiString pvVar;
+  GuiString ptVar;
 
-  TCLint gsMatNum;
-  TCLint pNMaterials;
-  TCLint gvMatNum;
-  TCLint animate;
+  GuiInt gsMatNum;
+  GuiInt pNMaterials;
+  GuiInt gvMatNum;
+  GuiInt animate;
   
 
 
 
-  TCLint time;
-  TCLdouble timeval;
+  GuiInt time;
+  GuiDouble timeval;
 
   ArchiveIPort *in;
   ScalarFieldOPort *sfout;

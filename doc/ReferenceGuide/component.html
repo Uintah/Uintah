@@ -673,14 +673,23 @@ If your component's last port is dynamic then the
 </DD>
 <DT><STRONG><TT>&lt;parameter&gt;</TT></STRONG></DT>
 <DD>Declares 1 GUI  parameter.  A parameter is a
-    GUI  item that can be modified by the user.  Sub-elements describe the
-    parameter.  Use 1 parameter element for each item in the GUI.
+    GUI item that can be modified by the user.  
+    Sub-elements describe the parameter.  Use 1 parameter element for
+    each item in the GUI.
     <DL>
 <DT><STRONG><TT>&lt;widget&gt;</TT></STRONG></DT>
-<DD>The type name of parameter's tcl widget.
+<DD>The tcl widget used for representing this parameter.
       
 </DD>
 <DT><STRONG><TT>&lt;/widget&gt;</TT></STRONG></DT>
+<DD>
+</DD>
+<DT><STRONG><TT>&lt;datatype&gt;</TT></STRONG></DT>
+<DD>The type of data value stored for this parameter (e.g. int,
+double, bool, string).
+      
+</DD>
+<DT><STRONG><TT>&lt;/datatype&gt;</TT></STRONG></DT>
 <DD>
 </DD>
 <DT><STRONG><TT>&lt;label&gt;</TT></STRONG></DT>

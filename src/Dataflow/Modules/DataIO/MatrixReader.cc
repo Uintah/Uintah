@@ -15,15 +15,15 @@
 #include <Dataflow/Ports/MatrixPort.h>
 #include <Core/Datatypes/Matrix.h>
 #include <Core/Malloc/Allocator.h>
-#include <Core/TclInterface/TCLTask.h>
-#include <Core/TclInterface/TCLvar.h>
+#include <Core/GuiInterface/TCLTask.h>
+#include <Core/GuiInterface/GuiVar.h>
 
 namespace SCIRun {
 
 
 class MatrixReader : public Module {
     MatrixOPort* outport;
-    TCLstring filename;
+    GuiString filename;
     MatrixHandle handle;
     clString old_filename;
 public:

@@ -15,8 +15,8 @@
 #define SCI_project_Histogram_h 1
 
 #include <Core/Containers/Array1.h>
-#include <Core/TclInterface/TCL.h>
-#include <Core/TclInterface/TCLvar.h>
+#include <Core/GuiInterface/TCL.h>
+#include <Core/GuiInterface/GuiVar.h>
 
 namespace SCIRun {
 
@@ -33,7 +33,7 @@ class SCICORESHARE Histogram : public TCL {
    void initfreqs();
    void FillBuckets();
 
-   TCLdouble l, r;
+   GuiDouble l, r;
    
 public:
    Histogram();

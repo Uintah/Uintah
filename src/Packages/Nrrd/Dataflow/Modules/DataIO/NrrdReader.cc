@@ -13,7 +13,7 @@
 
 #include <Dataflow/Network/Module.h>
 #include <Core/Malloc/Allocator.h>
-#include <Core/TclInterface/TCLvar.h>
+#include <Core/GuiInterface/GuiVar.h>
 #include <Nrrd/Dataflow/Ports/NrrdPort.h>
 
 namespace SCINrrd {
@@ -22,7 +22,7 @@ using namespace SCIRun;
 
 class NrrdReader : public Module {
     NrrdOPort* outport;
-    TCLstring filename;
+    GuiString filename;
     NrrdDataHandle handle;
     clString old_filename;
 public:

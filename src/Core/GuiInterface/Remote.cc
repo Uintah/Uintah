@@ -27,7 +27,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include <Core/TclInterface/Remote.h>
+#include <Core/GuiInterface/Remote.h>
 
 using namespace std;
 //#define DEBUG 1

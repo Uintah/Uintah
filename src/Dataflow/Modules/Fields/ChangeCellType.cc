@@ -16,7 +16,7 @@
 #include <Core/Datatypes/TetVol.h>
 //#include <Core/Datatypes/TypeName.h>
 #include <Core/Malloc/Allocator.h>
-#include <Core/TclInterface/TCLvar.h>
+#include <Core/GuiInterface/GuiVar.h>
 #include <Core/Tester/RigorousTest.h>
 
 #include <iostream>

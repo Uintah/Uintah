@@ -23,7 +23,7 @@
 #include <Dataflow/Ports/ScalarFieldPort.h>
 #include <Core/Thread/Parallel.h>
 #include <Core/Thread/Thread.h>
-#include <Core/TclInterface/TCLvar.h>
+#include <Core/GuiInterface/GuiVar.h>
 #include <Core/Geom/Material.h>
 
 #include <Packages/Yarden/Dataflow/Ports/SpanPort.h>
@@ -45,11 +45,11 @@ class Noise : public Module {
   GeometryOPort *ogeom;
 
   double v; // isovalue
-  TCLdouble isoval;
-  TCLdouble isoval_min, isoval_max;
-  TCLdouble tcl_alpha;
-  TCLint    tcl_bbox, tcl_trans;
-  TCLint    tcl_np;
+  GuiDouble isoval;
+  GuiDouble isoval_min, isoval_max;
+  GuiDouble tcl_alpha;
+  GuiInt    tcl_bbox, tcl_trans;
+  GuiInt    tcl_np;
   int surface_id;
   MaterialHandle matl;
   //GeomGroup *group;
@@ -79,7 +79,7 @@ class Noise : public Module {
   Mutex lock;
   int trees;
 
-  TCLint tcl_map_type;
+  GuiInt tcl_map_type;
   int map_type;
 
   clString my_name;

@@ -21,7 +21,7 @@
 #include <Core/Geom/Material.h>
 #include <Core/Geom/Pt.h>
 #include <Core/Malloc/Allocator.h>
-#include <Core/TclInterface/TCLvar.h>
+#include <Core/GuiInterface/GuiVar.h>
 #include <iostream>
 using std::cerr;
 
@@ -35,11 +35,11 @@ class TopoSurfToGeom : public Module {
 
     Array1<MaterialHandle> c;
 
-    TCLstring patchMode;
-    TCLstring wireMode;
-    TCLstring junctionMode;
-    TCLstring nonjunctionMode;
-    TCLstring rad;
+    GuiString patchMode;
+    GuiString wireMode;
+    GuiString junctionMode;
+    GuiString nonjunctionMode;
+    GuiString rad;
 
     void surf_to_geom(const SurfaceHandle&, GeomGroup*);
 public:

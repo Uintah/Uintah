@@ -31,7 +31,7 @@
 #include <Core/Geom/GeomTri.h>
 #include <Core/Geom/GeomTriangles.h>
 #include <Core/Malloc/Allocator.h>
-#include <Core/TclInterface/TCLvar.h>
+#include <Core/GuiInterface/GuiVar.h>
 
 #include <Packages/RobV/Core/Datatypes/MEG/VectorFieldMI.h>
 #include <Dataflow/Ports/VectorFieldPort.h>
@@ -56,13 +56,13 @@ class SurfToVectGeom : public Module {
     GeomArrows* arrows;
     Mutex mutex;
     double lenscale;
-    TCLdouble length_scale;
-    TCLdouble width_scale;
-    TCLdouble head_length;
-    TCLint exhaustive_flag;
-    TCLint max_vect;
-    TCLint drawcylinders;
-    TCLdouble shaft_rad;
+    GuiDouble length_scale;
+    GuiDouble width_scale;
+    GuiDouble head_length;
+    GuiInt exhaustive_flag;
+    GuiInt max_vect;
+    GuiInt drawcylinders;
+    GuiDouble shaft_rad;
     int numSurfPts;
     int np;
     int exhaustive;

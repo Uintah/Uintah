@@ -24,9 +24,9 @@
 #include <Core/Math/Expon.h>
 #include <Core/Math/MinMax.h>
 #include <Core/Math/Trig.h>
-#include <Core/TclInterface/TCLTask.h>
-#include <Core/TclInterface/TCLvar.h>
-#include <Core/TclInterface/TCL.h>
+#include <Core/GuiInterface/TCLTask.h>
+#include <Core/GuiInterface/GuiVar.h>
+#include <Core/GuiInterface/TCL.h>
 #include <iostream>
 using std::cerr;
 #define Colormap XColormap
@@ -42,9 +42,9 @@ class RayTest : public Module {
     GeometryOPort* ogeom;
     int init;
 
-    TCLint density;
-    TCLdouble nu;
-    TCLdouble energy;
+    GuiInt density;
+    GuiDouble nu;
+    GuiDouble energy;
 
     Array1<int> ray_id;
     Color RT_trace(RTRay& R, const RTSphere& sph, Array1<GeomArrows*>&, int);

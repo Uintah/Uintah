@@ -18,10 +18,10 @@
 #include <Dataflow/Network/NetworkEditor.h>
 //#include <Dataflow/Distributed/SlaveController.h>
 #include <Dataflow/Network/PackageDB.h>
-#include <Core/TclInterface/GuiServer.h>
-#include <Core/TclInterface/GuiManager.h>
-#include <Core/TclInterface/TCLTask.h>
-#include <Core/TclInterface/TCL.h>
+#include <Core/GuiInterface/GuiServer.h>
+#include <Core/GuiInterface/GuiManager.h>
+#include <Core/GuiInterface/TCLTask.h>
+#include <Core/GuiInterface/TCL.h>
 #include <Core/Thread/Thread.h>
 #include <Core/Containers/String.h>
 

@@ -30,9 +30,9 @@
 #include <Core/Geom/Color.h>
 #include <Core/Malloc/Allocator.h>
 #include <Core/Persistent/Pstreams.h>
-#include <Core/TclInterface/TCLTask.h>
-#include <Core/TclInterface/TCLvar.h>
-#include <Core/TclInterface/TCL.h>
+#include <Core/GuiInterface/TCLTask.h>
+#include <Core/GuiInterface/GuiVar.h>
+#include <Core/GuiInterface/TCL.h>
 
 #include <iostream>
 using std::cerr;
@@ -53,13 +53,13 @@ class RayMatrix : public Module {
     VoidStarOPort *oXYZ;
     int rmGen;
 
-    TCLstring tclFName;
-    TCLstring tclSpectrum;
-    TCLstring tclLType;
-    TCLdouble tclDiff;
-    TCLdouble tclSpec;
-    TCLdouble scale;
-    TCLint tclMin, tclMax, tclNum;
+    GuiString tclFName;
+    GuiString tclSpectrum;
+    GuiString tclLType;
+    GuiDouble tclDiff;
+    GuiDouble tclSpec;
+    GuiDouble scale;
+    GuiInt tclMin, tclMax, tclNum;
 
     VoidStarHandle rmHandle;
     VoidStarHandle xyzHandle;
