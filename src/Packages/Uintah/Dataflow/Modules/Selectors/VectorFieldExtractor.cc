@@ -173,9 +173,9 @@ void VectorFieldExtractor::execute()
 	mesh_handle_ = scinew LatVolMesh(range.x(), range.y(),
 					 range.z(), box.min(),
 					 box.max());
-      }else if(mesh_handle_->get_ni() != range.x() ||
-	       mesh_handle_->get_nj() != range.y() ||
-	       mesh_handle_->get_nk() != range.z() ){
+      }else if(mesh_handle_->get_ni() != (unsigned int) range.x() ||
+	       mesh_handle_->get_nj() != (unsigned int) range.y() ||
+	       mesh_handle_->get_nk() != (unsigned int) range.z() ){
 	mesh_handle_ = scinew LatVolMesh(range.x(), range.y(),
 					 range.z(), box.min(),
 					 box.max());
@@ -190,6 +190,7 @@ void VectorFieldExtractor::execute()
 	  vfd->set_property("varname",string(var), true);
 	  vfd->set_property("generation",generation, true);
 	  vfd->set_property("timestep",timestep, true);
+	  vfd->set_property( "offset", IntVector(low), true);
 	  vfd->set_property("delta_t",dt, true);
 	  vfd->set_property( "vartype",
 			     int(TypeDescription::NCVariable),true);
@@ -215,9 +216,9 @@ void VectorFieldExtractor::execute()
 					   range.z(), box.min(),
 					   box.max());
 	}
-      } else if(mesh_handle_->get_ni() != range.x() ||
-		mesh_handle_->get_nj() != range.y() ||
-		mesh_handle_->get_nk() != range.z() ){
+      } else if(mesh_handle_->get_ni() != (unsigned int) range.x() ||
+		mesh_handle_->get_nj() != (unsigned int) range.y() ||
+		mesh_handle_->get_nk() != (unsigned int) range.z() ){
 	if(is_periodic_bcs(cellHi, hi)){
 	  IntVector newrange(0,0,0);
 	  get_periodic_bcs_range( cellHi, hi, range, newrange);
@@ -240,6 +241,7 @@ void VectorFieldExtractor::execute()
 	  vfd->set_property("varname",string(var), true);
 	  vfd->set_property("generation",generation, true);
 	  vfd->set_property("timestep",timestep, true);
+	  vfd->set_property( "offset", IntVector(low), true);
 	  vfd->set_property("delta_t",dt, true);
 	  vfd->set_property( "vartype",
 			     int(TypeDescription::CCVariable),true);
@@ -257,9 +259,9 @@ void VectorFieldExtractor::execute()
 	mesh_handle_ = scinew LatVolMesh(range.x(), range.y()-1,
 					 range.z()-1, box.min(),
 					 box.max());
-      } else if(mesh_handle_->get_ni() != range.x() ||
-	       mesh_handle_->get_nj() != range.y()-1 ||
-	       mesh_handle_->get_nk() != range.z()-1 ){
+      } else if(mesh_handle_->get_ni() != (unsigned int) range.x() ||
+	       mesh_handle_->get_nj() != (unsigned int) range.y()-1 ||
+	       mesh_handle_->get_nk() != (unsigned int) range.z()-1 ){
 	mesh_handle_ = scinew LatVolMesh(range.x(), range.y()-1,
 					 range.z()-1, box.min(),
 					 box.max());
@@ -274,6 +276,7 @@ void VectorFieldExtractor::execute()
 	  vfd->set_property("varname",string(var), true);
 	  vfd->set_property("generation",generation, true);
 	  vfd->set_property("timestep",timestep, true);
+	  vfd->set_property( "offset", IntVector(low), true);
 	  vfd->set_property("delta_t",dt, true);
 	  vfd->set_property( "vartype",
 			     int(TypeDescription::SFCXVariable),true);
@@ -291,9 +294,9 @@ void VectorFieldExtractor::execute()
 	mesh_handle_ = scinew LatVolMesh(range.x()-1, range.y(),
 					 range.z()-1, box.min(),
 					 box.max());
-      } else if(mesh_handle_->get_ni() != range.x()-1 ||
-	       mesh_handle_->get_nj() != range.y() ||
-	       mesh_handle_->get_nk() != range.z()-1 ){
+      } else if(mesh_handle_->get_ni() != (unsigned int) range.x()-1 ||
+	       mesh_handle_->get_nj() != (unsigned int) range.y() ||
+	       mesh_handle_->get_nk() != (unsigned int) range.z()-1 ){
 	mesh_handle_ = scinew LatVolMesh(range.x()-1, range.y(),
 					 range.z()-1, box.min(),
 					 box.max());
@@ -308,6 +311,7 @@ void VectorFieldExtractor::execute()
 	  vfd->set_property("varname",string(var), true);
 	  vfd->set_property("generation",generation, true);
 	  vfd->set_property("timestep",timestep, true);
+	  vfd->set_property( "offset", IntVector(low), true);
 	  vfd->set_property("delta_t",dt, true);
 	  vfd->set_property( "vartype",
 			     int(TypeDescription::SFCYVariable),true);
@@ -325,9 +329,9 @@ void VectorFieldExtractor::execute()
 	mesh_handle_ = scinew LatVolMesh(range.x()-1, range.y()-1,
 					 range.z(), box.min(),
 					 box.max());
-      } else if(mesh_handle_->get_ni() != range.x()-1 ||
-	       mesh_handle_->get_nj() != range.y()-1 ||
-	       mesh_handle_->get_nk() != range.z() ){
+      } else if(mesh_handle_->get_ni() != (unsigned int) range.x()-1 ||
+	       mesh_handle_->get_nj() != (unsigned int) range.y()-1 ||
+	       mesh_handle_->get_nk() != (unsigned int) range.z() ){
 	mesh_handle_ = scinew LatVolMesh(range.x()-1, range.y()-1,
 					 range.z(), box.min(),
 					 box.max());
@@ -342,6 +346,7 @@ void VectorFieldExtractor::execute()
 	  vfd->set_property("varname",string(var), true);
 	  vfd->set_property("generation",generation, true);
 	  vfd->set_property("timestep",timestep, true);
+	  vfd->set_property( "offset", IntVector(low), true);
 	  vfd->set_property("delta_t",dt, true);
 	  vfd->set_property( "vartype",
 			     int(TypeDescription::SFCZVariable),true);

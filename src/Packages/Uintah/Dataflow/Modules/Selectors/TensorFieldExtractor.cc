@@ -160,9 +160,9 @@ void TensorFieldExtractor::execute()
 	mesh_handle_ = scinew LatVolMesh(range.x(), range.y(),
 					 range.z(), box.min(),
 					 box.max());
-      } else if(mesh_handle_->get_ni() != range.x() ||
-	       mesh_handle_->get_nj() != range.y() ||
-	       mesh_handle_->get_nk() != range.z() ){
+      } else if(mesh_handle_->get_ni() != (unsigned int) range.x() ||
+	       mesh_handle_->get_nj() != (unsigned int) range.y() ||
+	       mesh_handle_->get_nk() != (unsigned int) range.z() ){
 	mesh_handle_ = scinew LatVolMesh(range.x(), range.y(),
 					 range.z(), box.min(),
 					 box.max());
@@ -176,6 +176,7 @@ void TensorFieldExtractor::execute()
 	  // set the generation and timestep in the field
 	  tfd->set_property( "vartype",
 			     int(TypeDescription::NCVariable),true);
+	  tfd->set_property( "offset", IntVector(low), true);
 	  build_field( archive, level, low, var, mat, time, gridVar, tfd );
 	  // send the field out to the port
 	  tfout->send(tfd);
@@ -199,9 +200,9 @@ void TensorFieldExtractor::execute()
 					   range.z(), box.min(),
 					   box.max());
 	}
-      }else if(mesh_handle_->get_ni() != range.x() ||
-	       mesh_handle_->get_nj() != range.y() ||
-	       mesh_handle_->get_nk() != range.z() ){
+      }else if(mesh_handle_->get_ni() != (unsigned int) range.x() ||
+	       mesh_handle_->get_nj() != (unsigned int) range.y() ||
+	       mesh_handle_->get_nk() != (unsigned int) range.z() ){
 	if(is_periodic_bcs(cellHi, hi)){
 	  IntVector newrange(0,0,0);
 	  get_periodic_bcs_range( cellHi, hi, range, newrange);
@@ -223,6 +224,7 @@ void TensorFieldExtractor::execute()
 	  // set the generation and timestep in the field
 	  tfd->set_property( "vartype",
 			     int(TypeDescription::CCVariable),true);
+	  tfd->set_property( "offset", IntVector(low), true);
 	  build_field( archive, level, low, var, mat, time, gridVar, tfd );
 	  // send the field out to the port
 	  tfout->send(tfd);
@@ -238,9 +240,9 @@ void TensorFieldExtractor::execute()
 	mesh_handle_ = scinew LatVolMesh(range.x(), range.y() - 1,
 					 range.z() - 1, box.min(),
 					 box.max());
-      }else if(mesh_handle_->get_ni() != range.x() ||
-	       mesh_handle_->get_nj() != range.y()-1 ||
-	       mesh_handle_->get_nk() != range.z()-1 ){
+      }else if(mesh_handle_->get_ni() != (unsigned int) range.x() ||
+	       mesh_handle_->get_nj() != (unsigned int) range.y()-1 ||
+	       mesh_handle_->get_nk() != (unsigned int) range.z()-1 ){
 	mesh_handle_ = scinew LatVolMesh(range.x(), range.y()-1,
 					 range.z()-1, box.min(),
 					 box.max());
@@ -254,6 +256,7 @@ void TensorFieldExtractor::execute()
 	  // set the generation and timestep in the field
 	  tfd->set_property( "vartype",
 			     int(TypeDescription::SFCXVariable),true);
+	  tfd->set_property( "offset", IntVector(low), true);
 	  build_field( archive, level, low, var, mat, time, gridVar, tfd );
 	  // send the field out to the port
 	  tfout->send(tfd);
@@ -269,9 +272,9 @@ void TensorFieldExtractor::execute()
 	mesh_handle_ = scinew LatVolMesh(range.x() - 1, range.y(),
 					 range.z() - 1, box.min(),
 					 box.max());
-      } else if(mesh_handle_->get_ni() != range.x()-1 ||
-	       mesh_handle_->get_nj() != range.y() ||
-	       mesh_handle_->get_nk() != range.z()-1 ){
+      } else if(mesh_handle_->get_ni() != (unsigned int) range.x()-1 ||
+	       mesh_handle_->get_nj() != (unsigned int) range.y() ||
+	       mesh_handle_->get_nk() != (unsigned int) range.z()-1 ){
 	mesh_handle_ = scinew LatVolMesh(range.x()-1, range.y(),
 					 range.z()-1, box.min(),
 					 box.max());
@@ -285,6 +288,7 @@ void TensorFieldExtractor::execute()
 	  // set the generation and timestep in the field
 	  tfd->set_property( "vartype",
 			     int(TypeDescription::SFCYVariable),true);
+	  tfd->set_property( "offset", IntVector(low), true);
 	  build_field( archive, level, low, var, mat, time, gridVar, tfd );
 	  // send the field out to the port
 	  tfout->send(tfd);
@@ -300,9 +304,9 @@ void TensorFieldExtractor::execute()
 	mesh_handle_ = scinew LatVolMesh(range.x() - 1, range.y() - 1,
 					 range.z(), box.min(),
 					 box.max());
-      } else if(mesh_handle_->get_ni() != range.x()-1 ||
-	       mesh_handle_->get_nj() != range.y()-1 ||
-	       mesh_handle_->get_nk() != range.z() ){
+      } else if(mesh_handle_->get_ni() != (unsigned int) range.x()-1 ||
+	       mesh_handle_->get_nj() != (unsigned int) range.y()-1 ||
+	       mesh_handle_->get_nk() != (unsigned int) range.z() ){
 	mesh_handle_ = scinew LatVolMesh(range.x()-1, range.y()-1,
 					 range.z(), box.min(),
 					 box.max());

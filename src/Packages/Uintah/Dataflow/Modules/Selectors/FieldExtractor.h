@@ -114,8 +114,8 @@ void FieldExtractor::build_field(DataArchive& archive,
 //  my_timer.start();
   Mutex lock("PatchtoData lock");
   
-  double size = level->numPatches();
-  int count = 0;
+//   double size = level->numPatches();
+//   int count = 0;
   
   for( Level::const_patchIterator r = level->patchesBegin();
       r != level->patchesEnd(); ++r){
