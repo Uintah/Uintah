@@ -31,7 +31,7 @@ using namespace Uintah;
 using namespace std;
 
 //****************************************************************************
-// Default constructor for PressureSolver
+// Default constructor for ReactiveScalarSolver
 //****************************************************************************
 ReactiveScalarSolver::ReactiveScalarSolver(const ArchesLabel* label,
 			   const MPMArchesLabel* MAlb,
@@ -237,7 +237,7 @@ void ReactiveScalarSolver::buildLinearMatrixPred(const ProcessorGroup* pc,
 		matlIndex, patch, Ghost::AroundCells, Arches::ONEGHOSTCELL);
     new_dw->getCopy(reactscalarVars.old_density, d_lab->d_densityINLabel, 
 		matlIndex, patch, Ghost::None, Arches::ZEROGHOSTCELLS);
-    //    new_dw->get(scalarVars.old_scalar, d_lab->d_reactscalarINLabel, 
+    //    new_dw->get(reactscalarVars.old_scalar, d_lab->d_reactscalarINLabel, 
     //		matlIndex, patch, Ghost::None, Arches::ZEROGHOSTCELLS);
     new_dw->getCopy(reactscalarVars.old_scalar, d_lab->d_reactscalarOUTBCLabel, 
 		matlIndex, patch, Ghost::None, Arches::ZEROGHOSTCELLS);
@@ -361,6 +361,8 @@ ReactiveScalarSolver::sched_reactscalarLinearSolvePred(SchedulerP& sched,
 		Ghost::None, Arches::ZEROGHOSTCELLS);
   tsk->requires(Task::NewDW, d_lab->d_reactscalNonLinSrcPredLabel, 
 		Ghost::None, Arches::ZEROGHOSTCELLS);
+  tsk->requires(Task::NewDW, d_lab->d_cellTypeLabel,
+		Ghost::AroundCells, Arches::ONEGHOSTCELL);
 #ifdef correctorstep
   tsk->computes(d_lab->d_reactscalarPredLabel);
 #else
@@ -453,6 +455,9 @@ ReactiveScalarSolver::reactscalarLinearSolvePred(const ProcessorGroup* pc,
 		matlIndex, patch, Ghost::None, Arches::ZEROGHOSTCELLS);
     new_dw->allocateTemporary(reactscalarVars.residualReactivescalar,  patch);
 
+    new_dw->getCopy(reactscalarVars.cellType, d_lab->d_cellTypeLabel, 
+		matlIndex, patch, Ghost::AroundCells, Arches::ONEGHOSTCELL);
+
   // apply underelax to eqn
     d_linearSolver->computeScalarUnderrelax(pc, patch, index, 
 					    &reactscalarVars);
@@ -495,6 +500,8 @@ ReactiveScalarSolver::reactscalarLinearSolvePred(const ProcessorGroup* pc,
 #endif
 #endif
 
+    d_boundaryCondition->scalarPressureBC(pc, patch,  index, cellinfo, 
+				  &reactscalarVars);
 #ifdef correctorstep
     // allocateAndPut instead:
     /* new_dw->put(reactscalarVars.scalar, d_lab->d_reactscalarPredLabel, 
@@ -872,6 +879,8 @@ ReactiveScalarSolver::sched_reactscalarLinearSolveCorr(SchedulerP& sched,
   tsk->requires(Task::NewDW, d_lab->d_densityINLabel, 
 		Ghost::None, Arches::ZEROGHOSTCELLS);
   #endif
+  tsk->requires(Task::NewDW, d_lab->d_cellTypeLabel,
+		Ghost::AroundCells, Arches::ONEGHOSTCELL);
   tsk->computes(d_lab->d_reactscalarSPLabel);
   
   sched->addTask(tsk, patches, matls);
@@ -950,6 +959,10 @@ ReactiveScalarSolver::reactscalarLinearSolveCorr(const ProcessorGroup* pc,
     new_dw->getCopy(reactscalarVars.scalarNonlinearSrc, d_lab->d_reactscalNonLinSrcCorrLabel,
 		matlIndex, patch, Ghost::None, Arches::ZEROGHOSTCELLS);
     new_dw->allocateTemporary(reactscalarVars.residualReactivescalar,  patch);
+
+    new_dw->getCopy(reactscalarVars.cellType, d_lab->d_cellTypeLabel, 
+		matlIndex, patch, Ghost::AroundCells, Arches::ONEGHOSTCELL);
+
   // apply underelax to eqn
     d_linearSolver->computeScalarUnderrelax(pc, patch, index, 
 					    &reactscalarVars);
@@ -1054,6 +1067,8 @@ ReactiveScalarSolver::reactscalarLinearSolveCorr(const ProcessorGroup* pc,
     }
   #endif
 
+    d_boundaryCondition->scalarPressureBC(pc, patch,  index, cellinfo, 
+				  &reactscalarVars);
   // put back the results
     // allocateAndPut instead:
     /* new_dw->put(reactscalarVars.scalar, d_lab->d_reactscalarSPLabel, 
@@ -1331,6 +1346,8 @@ ReactiveScalarSolver::sched_reactscalarLinearSolveInterm(SchedulerP& sched,
   tsk->requires(Task::NewDW, d_lab->d_densityINLabel, 
 		Ghost::None, Arches::ZEROGHOSTCELLS);
   #endif
+  tsk->requires(Task::NewDW, d_lab->d_cellTypeLabel,
+		Ghost::AroundCells, Arches::ONEGHOSTCELL);
   tsk->computes(d_lab->d_reactscalarIntermLabel);
   
   sched->addTask(tsk, patches, matls);
@@ -1396,6 +1413,9 @@ ReactiveScalarSolver::reactscalarLinearSolveInterm(const ProcessorGroup* pc,
     new_dw->getCopy(reactscalarVars.scalarNonlinearSrc, d_lab->d_reactscalNonLinSrcIntermLabel,
 		matlIndex, patch, Ghost::None, Arches::ZEROGHOSTCELLS);
     new_dw->allocateTemporary(reactscalarVars.residualScalar,  patch);
+
+    new_dw->getCopy(reactscalarVars.cellType, d_lab->d_cellTypeLabel, 
+		matlIndex, patch, Ghost::AroundCells, Arches::ONEGHOSTCELL);
 
   // apply underelax to eqn
     d_linearSolver->computeScalarUnderrelax(pc, patch, index, 
@@ -1472,6 +1492,8 @@ ReactiveScalarSolver::reactscalarLinearSolveInterm(const ProcessorGroup* pc,
     }
   #endif
   
+    d_boundaryCondition->scalarPressureBC(pc, patch,  index, cellinfo, 
+				  &reactscalarVars);
     // put back the results
     // allocateAndPut instead:
     /* new_dw->put(reactscalarVars.scalar, d_lab->d_reactscalarIntermLabel, 
