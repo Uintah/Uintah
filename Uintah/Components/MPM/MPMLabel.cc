@@ -176,6 +176,14 @@ MPMLabel::MPMLabel()
      VarLabel("g.thermalContactHeatExchangeRate",
      NCVariable<double>::getTypeDescription());
 
+  gNormTractionLabel = scinew VarLabel( "g.normtraction",
+                   NCVariable<double>::getTypeDescription() );
+
+  gSurfNormLabel = scinew VarLabel( "g.surfnorm",
+                   NCVariable<Vector>::getTypeDescription() );
+
+  gStressLabel   = scinew VarLabel( "g.stress",
+                   NCVariable<Matrix3>::getTypeDescription() );
 
   // Cell centered variables
 
@@ -231,6 +239,10 @@ void MPMLabel::registerPermanentParticleState(int i,
 }
 
 // $Log$
+// Revision 1.22  2000/08/04 16:42:43  guilkey
+// Added VarLabels specific to FrictionContact so that those variables
+// can be pleaseSaved.
+//
 // Revision 1.21  2000/07/27 22:17:16  jas
 // Consolidated the registerPermanentParticleState to take both the
 // regular labels and the pre_Reloc labels.
