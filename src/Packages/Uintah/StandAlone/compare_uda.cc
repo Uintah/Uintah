@@ -1049,21 +1049,41 @@ int main(int argc, char** argv)
     DataArchive* da1 = scinew DataArchive(filebase1);
     DataArchive* da2 = scinew DataArchive(filebase2);
 
-    vector<string> vars;
+    vector<string> vars;    
     vector<const Uintah::TypeDescription*> types;
+    vector< pair<string, const Uintah::TypeDescription*> > vartypes1;
     vector<string> vars2;
     vector<const Uintah::TypeDescription*> types2;
+    vector< pair<string, const Uintah::TypeDescription*> > vartypes2;    
     da1->queryVariables(vars, types);
+    
     ASSERTEQ(vars.size(), types.size());
     da2->queryVariables(vars2, types2);
     ASSERTEQ(vars2.size(), types2.size());
-
+    
     if (vars.size() != vars2.size()) {
       cerr << filebase1 << " has " << vars.size() << " variables\n";
       cerr << filebase2 << " has " << vars2.size() << " variables\n";
       abort_uncomparable();
     }
 
+    vartypes1.resize(vars.size());
+    vartypes2.resize(vars.size());
+    for (unsigned int i = 0; i < vars.size(); i++) {
+      vartypes1[i] = make_pair(vars[i], types[i]);
+      vartypes2[i] = make_pair(vars2[i], types2[i]);      
+    }
+    // sort vars so uda's can be compared if their index files have
+    // different orders of variables.
+    // Assuming that there are no duplicates in the var names, these will
+    // sort alphabetically by varname.
+    sort(vartypes1.begin(), vartypes1.end());
+    sort(vartypes2.begin(), vartypes2.end());    
+    for (unsigned int i = 0; i < vars.size(); i++) {
+      vars[i] = vartypes1[i].first; types[i] = vartypes1[i].second;
+      vars2[i] = vartypes2[i].first; types2[i] = vartypes2[i].second;      
+    }    
+    
     for (unsigned int i = 0; i < vars.size(); i++) {
       if (vars[i] != vars2[i]) {
 	cerr << "Variable " << vars[i] << " in " << filebase1
