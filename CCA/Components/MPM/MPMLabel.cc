@@ -207,6 +207,9 @@ MPMLabel::MPMLabel()
   gTemperatureLabel = scinew VarLabel("g.temperature",
 			NCVariable<double>::getTypeDescription());
 
+  gTemperatureNoBCLabel = scinew VarLabel("g.temperaturenobc",
+			NCVariable<double>::getTypeDescription());
+
   gTemperatureStarLabel = scinew VarLabel("g.temperatureStar",
 			NCVariable<double>::getTypeDescription());
 
@@ -358,6 +361,7 @@ MPMLabel::~MPMLabel()
   delete gStressLabel;
   delete gSurfNormLabel;
   delete gTemperatureLabel;
+  delete gTemperatureNoBCLabel;
   delete gTemperatureStarLabel;
   delete gTemperatureRateLabel;
   delete gInternalHeatRateLabel;
