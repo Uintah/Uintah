@@ -17,6 +17,8 @@
 #include <Geometry/Point.h>
 
 class ApplyBC : public Module {
+    SurfaceIPort* iport;
+    SurfaceOPort* oport;
 public:
     ApplyBC(const clString& id);
     ApplyBC(const ApplyBC&, int deep);
@@ -35,9 +37,11 @@ static RegisterModule db1("Unfinished", "ApplyBC", make_ApplyBC);
 ApplyBC::ApplyBC(const clString& id)
 : Module("ApplyBC", id, Filter)
 {
-    add_iport(new SurfaceIPort(this, "Geometry", SurfaceIPort::Atomic));
+    iport=new SurfaceIPort(this, "Geometry", SurfaceIPort::Atomic);
+    add_iport(iport);
     // Create the output port
-    add_oport(new SurfaceOPort(this, "Geometry", SurfaceIPort::Atomic));
+    oport=new SurfaceOPort(this, "Geometry", SurfaceIPort::Atomic);
+    add_oport(oport);
 }
 
 ApplyBC::ApplyBC(const ApplyBC& copy, int deep)
@@ -57,5 +61,9 @@ Module* ApplyBC::clone(int deep)
 
 void ApplyBC::execute()
 {
+    SurfaceHandle surf;
+    if(!iport->get(surf))
+	return;
     NOT_FINISHED("ApplyBC::execute");
+    oport->send(surf);
 }
