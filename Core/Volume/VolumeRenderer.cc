@@ -457,7 +457,7 @@ VolumeRenderer::draw_volume()
 void
 VolumeRenderer::multi_level_draw()
 {
-
+#ifdef HAVE_AVR_SUPPORT
   // all temporary ************************
   vector< cmap_data* > cmaps; //(  tex_->nlevels() );
   for(int i = 0; i < tex_->nlevels(); i++ ){
@@ -865,6 +865,7 @@ VolumeRenderer::multi_level_draw()
          << (char*)gluErrorString(errcode) << "\n";
   }
   tex_->unlock_bricks();
+#endif  
 }
 
 void
