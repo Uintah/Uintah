@@ -2015,28 +2015,31 @@ HotBox::executePhysio()
   { // there are no physiological parameters corresponding to the selection
     return;
   }
+  // pre-pend full directory path to file name
+  const string hipVarPath(hipvarpath_.get());
   string nrrdFileNameStr(nrrdFileName);
+  string nrrdPathNameStr = hipVarPath + "/" + nrrdFileNameStr;
 
   // Read the status of this file so we can compare modification timestamps.
   struct stat statbuf;
-  if (stat(nrrdFileName, &statbuf) == - 1)
+  if (stat(nrrdPathNameStr.c_str(), &statbuf) == - 1)
   {
-    error(string("NrrdReader error - file not found: '")+nrrdFileNameStr+"'");
+    error(string("NrrdReader error - file not found: '")+nrrdPathNameStr+"'");
     return;
   }
 
   // (else) read the Nrrd file
   InputNrrdHandle_ = 0;
-  int namelen = nrrdFileNameStr.size();
+  int namelen = nrrdPathNameStr.size();
   const string ext(".nd");
 
   // check that the last 3 chars are .nd for us to pio
-  if (nrrdFileNameStr.substr(namelen - 3, 3) == ext)
+  if (nrrdPathNameStr.substr(namelen - 3, 3) == ext)
   {
-    Piostream *stream = auto_istream(nrrdFileNameStr);
+    Piostream *stream = auto_istream(nrrdPathNameStr);
     if (!stream)
     {
-      error("Error reading file '" + nrrdFileNameStr + "'.");
+      error("Error reading file '" + nrrdPathNameStr + "'.");
       return;
     }
 
@@ -2044,7 +2047,7 @@ HotBox::executePhysio()
     Pio(*stream, InputNrrdHandle_);
     if (!InputNrrdHandle_.get_rep() || stream->error())
     {
-      error("Error reading data from file '" + nrrdFileNameStr +"'.");
+      error("Error reading data from file '" + nrrdPathNameStr +"'.");
       delete stream;
       return;
     }
@@ -2053,7 +2056,7 @@ HotBox::executePhysio()
   else
   { // assume it is just a nrrd
     // ICU Monitor needs Properties section of NrrdData file
-    error("Input file must be a '.nd' file");
+    error("Input file '" + nrrdPathNameStr +"' must be a '.nd' file");
   }
 } // end executePhysio()
 
