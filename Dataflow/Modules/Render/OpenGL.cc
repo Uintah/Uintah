@@ -380,9 +380,9 @@ OpenGL::render_and_save_image(int x, int y,
     do_magick = false;
     if (ftype == "ppm")
     {
-      (*image_file) << "P6" << endl;
-      (*image_file) << hi_res.resx << " " << hi_res.resy << endl;
-      (*image_file) << 255 << endl;
+      (*image_file) << "P6" << std::endl;
+      (*image_file) << hi_res.resx << " " << hi_res.resy << std::endl;
+      (*image_file) << 255 << std::endl;
     }
   }
   else 
@@ -487,7 +487,7 @@ OpenGL::render_and_save_image(int x, int y,
     if (!C_Magick::WriteImage(image_info,image))
     {
       cerr << "\nCannont Write " << fname << " because: " 
-	   << image->exception.reason << endl;
+	   << image->exception.reason << std::endl;
     }
 	
     C_Magick::DestroyImageInfo(image_info);
@@ -509,7 +509,7 @@ OpenGL::render_and_save_image(int x, int y,
     tmp_row = 0;
   }
 
-  cout << "done." << endl;
+  cout << "done." << std::endl;
 }
 
 
