@@ -85,8 +85,10 @@ class CCVariable : public Array3<T>, public CCVariableBase {
 		      const IntVector& highIndex);
 
       CCVariable<T>& operator=(const CCVariable<T>&);
-     
-     virtual const TypeDescription* virtualGetTypeDescription() const;
+      virtual void* getBasePointer();
+      virtual const TypeDescription* virtualGetTypeDescription() const;
+      virtual void getSizes(IntVector& low, IntVector& high,
+			   IntVector& siz) const;
 
      // Replace the values on the indicated face with value
       void fillFace(Patch::FaceType face, const T& value)
@@ -292,9 +294,9 @@ class CCVariable : public Array3<T>, public CCVariableBase {
       void CCVariable<T>::allocate(const IntVector& lowIndex,
 				   const IntVector& highIndex)
       {
-	if(getWindow())
-	  throw InternalError("Allocating a CCvariable that "
-			      "is apparently already allocated!");
+	//	 if(getWindow())
+	//	    throw InternalError("Allocating a CCvariable that "
+	//				"is apparently already allocated!");
 	 resize(lowIndex, highIndex);
       }
 
@@ -336,6 +338,12 @@ class CCVariable : public Array3<T>, public CCVariableBase {
 	    throw InternalError("Cannot yet write non-flat objects!\n");
 	 }
       }
+   template<class T>
+      void*
+      CCVariable<T>::getBasePointer()
+      {
+	 return getPointer();
+      }
 
    template<class T>
       void
@@ -359,13 +367,22 @@ class CCVariable : public Array3<T>, public CCVariableBase {
 	    throw InternalError("Cannot yet write non-flat objects!\n");
 	 }
       }
+   template<class T>
+     void
+     CCVariable<T>::getSizes(IntVector& low, IntVector& high, 
+			       IntVector& siz) const
+     {
+       low = getLowIndex();
+       high = getHighIndex();
+       siz = size();
+     }
 
 } // end namespace Uintah
 
 //
 // $Log$
-// Revision 1.21  2000/09/22 22:06:16  rawat
-// fixed some bugs in staggered variables call
+// Revision 1.22  2000/09/25 14:41:31  rawat
+// added mpi support for cell centered and staggered cell variables
 //
 // Revision 1.20  2000/08/08 01:32:46  jas
 // Changed new to scinew and eliminated some(minor) memory leaks in the scheduler
