@@ -186,7 +186,9 @@ void ICEMaterial::initializeCells(CCVariable<double>& rho_micro,
    Vector dcorner = dxpp*0.5;
    double totalppc = ppc.x()*ppc.y()*ppc.z();
 
-   for(CellIterator iter = patch->getExtraCellIterator(b); !iter.done(); 
+   //   for(CellIterator iter = patch->getExtraCellIterator(b); !iter.done(); 
+   //    iter++){
+  for(CellIterator iter = patch->getExtraCellIterator(); !iter.done(); 
        iter++){
  
      Point lower = patch->nodePosition(*iter) + dcorner;
@@ -201,7 +203,7 @@ void ICEMaterial::initializeCells(CCVariable<double>& rho_micro,
 	 }
        }
      }
-   IveBeenHere[*iter]=-9; 
+     IveBeenHere[*iter]=-9; 
   //__________________________________
   // For single materials with more than one object 
       if(numMatls == 1)  {
@@ -215,7 +217,7 @@ void ICEMaterial::initializeCells(CCVariable<double>& rho_micro,
           temp[*iter]       = d_geom_objs[obj]->getInitialTemperature();
           speedSound[*iter] = d_speed_of_sound;
           visc_CC[*iter]    = d_viscosity;
-          IveBeenHere[*iter]= 1;
+	  IveBeenHere[*iter]= 1;
         }
 
         if (count > 0 && obj > 0) {
@@ -228,7 +230,7 @@ void ICEMaterial::initializeCells(CCVariable<double>& rho_micro,
           temp[*iter]       = d_geom_objs[obj]->getInitialTemperature();
           speedSound[*iter] = d_speed_of_sound;
           visc_CC[*iter]    = d_viscosity;
-          IveBeenHere[*iter]= 2;
+	  IveBeenHere[*iter]= 2;
         } 
       }   
       if (numMatls > 1 ) {
@@ -241,7 +243,7 @@ void ICEMaterial::initializeCells(CCVariable<double>& rho_micro,
            temp[*iter]       = d_geom_objs[obj]->getInitialTemperature();
            speedSound[*iter] = d_speed_of_sound;
            visc_CC[*iter]    = d_viscosity;
-           IveBeenHere[*iter]= obj; 
+	   IveBeenHere[*iter]= obj; 
       }    
    }  // Loop over domain
     /*`==========DEBUGGING==========*/
