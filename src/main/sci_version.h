@@ -1,11 +1,11 @@
-<!--
+/*
    For more information, please see: http://software.sci.utah.edu
-
+   
    The MIT License
-
+   
    Copyright (c) 2004 Scientific Computing and Imaging Institute,
    University of Utah.
-
+   
    License for the specific language governing rights and limitations under
    Permission is hereby granted, free of charge, to any person obtaining a
    copy of this software and associated documentation files (the "Software"),
@@ -24,13 +24,13 @@
    LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
    FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
    DEALINGS IN THE SOFTWARE.
--->
+*/
 
-<!--
-  SCIRun version number
+#ifndef SCIRun_src_main_sci_version_h
+#define SCIRun_src_main_sci_version_h
 
-  This needs to be synced with the contents of
-  SCIRun/src/main/sci_version.h
--->
+// This needs to be synced with the contents of 
+// SCIRun/doc/edition.xml
+#define SCIRUN_VERSION "1.23.0"
 
-<edition>1.23.0</edition>
+#endif
