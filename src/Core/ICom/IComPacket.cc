@@ -36,6 +36,7 @@
  */
 
 #include <Core/ICom/IComPacket.h>
+#include <iostream>
  
 namespace SCIRun {
 
@@ -154,22 +155,22 @@ std::string		IComPacket::getstring()
 std::vector<std::string>	IComPacket::getvector()
 {
 	std::string str = getstring();
-	int numnewlines = 1;
-	for (int k = 0;k < (str.size()-1); k++) if (str[k] == '\n') numnewlines++;
+	size_t numnewlines = 1;
+	for (size_t k = 0;k < str.size(); k++) if (str[k] == '\n') numnewlines++;
 	std::vector<std::string> vec(numnewlines);
 
-	int strnum = 0;
-	int start = 0;
-	for (int k = 0;k < (str.size()); k++) 
+	size_t strnum = 0;
+	size_t start = 0;
+	for (size_t k = 0;k < (str.size()); k++) 
 	{
 		if ((k == (str.size()-1))&&(str[k] != '\n'))
 		{
 			vec[strnum++] = str.substr(start);
-		}
+        }
 		if (str[k] == '\n')
 		{
 			vec[strnum++] = str.substr(start,k);
-			start = k+1;
+            start = k+1;
 		}	
 	}
 	return(vec);
@@ -189,7 +190,9 @@ void	IComPacket::setstring(std::string str)
 void	IComPacket::setvector(std::vector<std::string> &vec)
 {
 	std::string str;
-	for (int p=0; p < vec.size(); p++) str += vec[p] + "\n";
+	size_t p = 0;
+    for (p=0; p < (vec.size()-1); p++) str += (vec[p] + "\n");
+    str += vec[p];
 	setstring(str);
 }
 

@@ -151,6 +151,7 @@ std::string IComINetSocket::getsenderror(int errnr)
 		case EMSGSIZE: return(std::string("Size of the packet was too large for this socket"));
 		case ENOBUFS: return(std::string("Could not allocate enough buffers for socket"));
 		case EHOSTUNREACH: return(std::string("Could not reach destination address"));		
+        case EPIPE: return(std::string("Remote end of socket got closed"));
 	}
 	return(std::string("Unknown error"));
 }
@@ -761,6 +762,11 @@ bool	IComINetSocket::send(IComPacketHandle &packet, IComSocketError &err)
 	int bytestosend = 0;
 	char *buf = 0;
 	
+    // If we are writing to a socket that was close, we want
+    // an error msg, we do not want the program to quit as the
+    // default handler does.
+    ::signal(SIGPIPE,SIG_IGN);
+    
 	::strncpy(reinterpret_cast<char *>(&(header[0])),"icpacket",8);
 	header[2] = packet->getelsize();
 	header[3] = packet->getdatasize();
@@ -779,6 +785,8 @@ bool	IComINetSocket::send(IComPacketHandle &packet, IComSocketError &err)
 		if (len < 0)
 		{
 			if ((errno == EINTR)||(errno == EAGAIN)) continue;
+            if ((errno == EPIPE)) isconnected_ = false;
+            break;
 		}
 		bytessend += len;
 	}
@@ -808,6 +816,8 @@ bool	IComINetSocket::send(IComPacketHandle &packet, IComSocketError &err)
 		if (len < 0)
 		{
 			if ((errno == EINTR)||(errno == EAGAIN)) continue;
+            if ((errno == EPIPE)) isconnected_ = false;
+            break;            
 		}
 		bytessend += len;
 	}
