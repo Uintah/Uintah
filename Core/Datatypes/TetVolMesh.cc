@@ -508,6 +508,7 @@ bool
 TetVolMesh::locate(edge_index &/*edge*/, const Point & /* p */) const
 {
   //FIX_ME
+  ASSERTFAIL("TetVolMesh::locate(edge_index &) not implemented!");
   return false;
 }
 
@@ -516,6 +517,7 @@ bool
 TetVolMesh::locate(face_index &/*face*/, const Point & /* p */) const
 {
   //FIX_ME
+  ASSERTFAIL("TetVolMesh::locate(face_index&) not implemented!");
   return false;
 }
 
@@ -526,7 +528,7 @@ TetVolMesh::locate(cell_index &cell, const Point &p) const
   if (grid_.get_rep() == 0) {
     ASSERTFAIL("Call compute_grid before calling locate!");
   }
-
+  cerr << "locate cell at " << p << endl;
   bool found_p = false;
   LatVolMeshHandle mesh = grid_->get_typed_mesh();
   LatVolMesh::cell_index ci;
@@ -541,6 +543,7 @@ TetVolMesh::locate(cell_index &cell, const Point &p) const
     ++iter;
   }
   cell = *iter;
+  cerr << "locate cell done. returning: " << found_p << endl << endl;
   return found_p;
 }
 
@@ -550,6 +553,7 @@ TetVolMesh::compute_grid()
 {
   if (grid_.get_rep() != 0) return; // only create once.
 
+  cerr << "compute_grid starting" << endl;
   grid_lock_.lock();
   BBox bb = get_bounding_box();
   // cubed root of number of cells to get a subdivision ballpark
@@ -586,6 +590,7 @@ TetVolMesh::compute_grid()
     ++ci;
   }
   grid_lock_.unlock();
+  cerr << "compute_grid done." << endl << endl;
 }
 
 bool
@@ -828,19 +833,168 @@ TetVolMesh::add_tet_unconnected(const Point &p0,
 }
 
 
-#define TETVOLMESH_VERSION 1
+#define TETVOLMESH_VERSION 2
+#if 0
+TetVolMesh::io_stuff(Piostream &stream, TetVolMesh::face_ht) 
+{
+  TetVolMesh::face_ht::iterator iter;
+  int i, n;
+  Key k;
+  Data d;
+  
+  stream.begin_class("TV::FaceHashMap", TVFHM_VERSION);
 
+				// if reading from stream
+  if (stream.reading()) {	
+				// get map size 
+    Pio(stream, n);
+				// read elements
+    for (i = 0; i < n; i++) {
+      Pio(stream, k);
+      Pio(stream, d);
+      data[k] = d;
+    }
+    
+  }
+				// if writing to stream
+  else {
+				// write map size
+    int n = data.size();
+    Pio(stream, n);
+				// write elements
+    for (iter = data.begin(); iter != data.end(); iter++) {
+				// have to copy iterator elements,
+				// since passing them directly in a
+				// call to Pio can be invalid because
+				// Pio passes data by reference
+      Key ik = (*iter).first;
+      Data dk = (*iter).second;
+      Pio(stream, ik);
+      Pio(stream, dk);
+    }
+    
+  }
+  stream.end_class();
+}
+#endif
 void
 TetVolMesh::io(Piostream &stream)
 {
-  stream.begin_class(type_id.type.c_str(), TETVOLMESH_VERSION);
-
+  int version = stream.begin_class(type_id.type.c_str(), TETVOLMESH_VERSION);
   MeshBase::io(stream);
 
-  Pio(stream, points_);
-  Pio(stream, cells_);
-  Pio(stream, neighbors_);
+  SCIRun::Pio(stream, points_);
+  SCIRun::Pio(stream, cells_);
+  SCIRun::Pio(stream, neighbors_);
 
+  if( version > 1) {
+    if (stream.reading()) {
+      unsigned int i;
+      Pio(stream, i);
+      faces_.resize(i);
+      vector<Face>::iterator fiter = faces_.begin();
+      while (fiter != faces_.end()) {
+	Face f;
+	Pio(stream, f.nodes_[0]);
+	Pio(stream, f.nodes_[1]);
+	Pio(stream, f.nodes_[2]);
+	Pio(stream, f.cells_[0]);
+	Pio(stream, f.cells_[1]);
+	*fiter = f; ++fiter;
+      }
+
+      Pio(stream, i);
+      face_table_.resize(i);
+      for (unsigned int iter = 0; iter < i; iter++) {
+	Face f;
+	face_index fi;
+	Pio(stream, f.nodes_[0]);
+	Pio(stream, f.nodes_[1]);
+	Pio(stream, f.nodes_[2]);
+	Pio(stream, f.cells_[0]);
+	Pio(stream, f.cells_[1]);
+	Pio(stream, fi);
+	face_table_[f] = fi;
+      }
+
+      Pio(stream, i);
+      edges_.resize(i);
+      vector<Edge>::iterator eiter = edges_.begin();
+      while (eiter != edges_.end()) {
+	Edge e;
+	Pio(stream, e.nodes_[0]);
+	Pio(stream, e.nodes_[1]);
+	Pio(stream, e.cells_);
+	*eiter = e; ++eiter;
+      }
+ 
+      Pio(stream, i);
+      edge_table_.resize(i);
+      for (unsigned int iter = 0; iter < i; iter++) {
+	Edge e;
+	edge_index ei;
+	Pio(stream, e.nodes_[0]);
+	Pio(stream, e.nodes_[1]);
+	Pio(stream, e.cells_);
+	Pio(stream, ei);
+	edge_table_[e] = ei;
+      }
+
+    } else {
+      int i = faces_.size();
+      Pio(stream, i);
+      vector<Face>::iterator fiter = faces_.begin();
+      while (fiter != faces_.end()) {
+	Face &f = *fiter; ++fiter;
+	Pio(stream, f.nodes_[0]);
+	Pio(stream, f.nodes_[1]);
+	Pio(stream, f.nodes_[2]);
+	Pio(stream, f.cells_[0]);
+	Pio(stream, f.cells_[1]);
+      }
+      i = face_table_.size();
+      Pio(stream, i);
+      face_ht::iterator ftiter = face_table_.begin();
+      while (ftiter != face_table_.end()) {
+	Face f = (*ftiter).first; 
+	face_index &fi = (*ftiter).second; 
+	++ftiter;
+	Pio(stream, f.nodes_[0]);
+	Pio(stream, f.nodes_[1]);
+	Pio(stream, f.nodes_[2]);
+	Pio(stream, f.cells_[0]);
+	Pio(stream, f.cells_[1]);
+	Pio(stream, fi);
+      }
+      i = edges_.size();
+      Pio(stream, i);
+      vector<Edge>::iterator eiter = edges_.begin();
+      while (eiter != edges_.end()) {
+	Edge &e = *eiter; ++eiter;
+	Pio(stream, e.nodes_[0]);
+	Pio(stream, e.nodes_[1]);
+	Pio(stream, e.cells_);
+      }
+      i = edge_table_.size();
+      Pio(stream, i);
+      edge_ht::iterator etiter = edge_table_.begin();
+      while (etiter != edge_table_.end()) {
+	Edge e = (*etiter).first; 
+	edge_index &ei = (*etiter).second; 
+	++etiter;
+	Pio(stream, e.nodes_[0]);
+	Pio(stream, e.nodes_[1]);
+	Pio(stream, e.cells_);
+	Pio(stream, ei);
+      }
+    }
+
+    Pio(stream, grid_);
+  }
   stream.end_class();
+
+  if (stream.reading()) {
+    finish_mesh();
+  }
 }
 } // namespace SCIRun

@@ -67,7 +67,7 @@ PointCloud<Data>::maker()
 
 template <class Data>
 PersistentTypeID
-PointCloud<Data>::type_id(type_name(),
+PointCloud<Data>::type_id(type_name(-1),
 		GenericField<PointCloudMesh, vector<Data> >::type_name(-1),
                 maker); 
 
