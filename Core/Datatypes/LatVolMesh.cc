@@ -48,12 +48,6 @@ LatVolMesh::unlocate(Point &result, const Point &p) const
 
 
 inline void
-LatVolMesh::get_point(Point &result, node_index index) const
-{
-  get_center(result,index);
-}
-
-inline void
 LatVolMesh::get_nodes(node_array &, edge_index) const
 {
 }
@@ -189,6 +183,7 @@ LatVolMesh::locate(node_index &node, const Point &p) const
   if (!locate(cell,p)) return false;
   weight_array w;
   calc_weights(this, cell, p, w);
+
   // get the node_indeces in this cell
   get_nodes(nodes,cell);
 

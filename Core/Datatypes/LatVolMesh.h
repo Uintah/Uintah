@@ -231,7 +231,8 @@ public:
 
   void unlocate(Point &result, const Point &p) const;
 
-  void get_point(Point &result, node_index index) const;
+  void get_point(Point &result, node_index index) const 
+    { get_center(result,index); }
 
   virtual void io(Piostream&);
   static PersistentTypeID type_id;
