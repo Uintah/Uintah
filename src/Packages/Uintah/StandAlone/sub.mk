@@ -65,7 +65,7 @@ PSELIBS := \
 	Core/OS          \
 	Core/Containers
 endif
-LIBS 	:= $(XML_LIBRARY) $(MPI_LIBRARY)
+LIBS 	:= $(XML_LIBRARY) $(MPI_LIBRARY) -lm
 
 include $(SCIRUN_SCRIPTS)/program.mk
 
