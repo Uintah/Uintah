@@ -360,8 +360,8 @@ GLVolRenState::loadTexture(Brick& brick)
 		    GL_COLOR_INDEX, GL_UNSIGNED_BYTE,
 		    &(*(brick.texture()))(0,0,0));
 //      glCheckForError("After glTexImage3D Linux");
-    reload_ = false;
 #endif
+    reload_ = false;
   } else {
     glBindTexture(GL_TEXTURE_3D_EXT, brick.texName());
   }
