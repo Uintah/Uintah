@@ -43,6 +43,10 @@ SCICore::Thread::CrowdMonitor_private::CrowdMonitor_private()
     num_writers=0;
 }
 
+SCICore::Thread::CrowdMonitor_private::~CrowdMonitor_private()
+{
+}
+
 SCICore::Thread::CrowdMonitor::CrowdMonitor(const char* name)
     : d_name(name)
 {
@@ -109,6 +113,9 @@ SCICore::Thread::CrowdMonitor::writeUnlock()
 
 //
 // $Log$
+// Revision 1.2  1999/08/25 22:36:01  sparker
+// More thread library updates - now compiles
+//
 // Revision 1.1  1999/08/25 19:00:47  sparker
 // More updates to bring it up to spec
 // Factored out common pieces in Thread_irix and Thread_pthreads
