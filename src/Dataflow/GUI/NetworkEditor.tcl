@@ -1378,6 +1378,7 @@ proc setProgressTitle { text } {
 
 proc incrProgress { { steps 1 } } {
     global progressMeter
+    if { ![info exists progressMeter] } return
     while { $steps } {
 	$progressMeter step
 	incr steps -1
