@@ -120,7 +120,9 @@ public:
   int depth() const { return levels_; }
   /////////
   // the bounding box -- IN WORLD SPACE
-  void get_bounds(BBox& b) const { b.extend(texfld_->mesh()->get_bounding_box().min()); b.extend(texfld_->mesh()->get_bounding_box().max()); } //b.extend(minP_); b.extend(maxP_);}
+  void get_bounds(BBox& b) const {
+    b.extend(transform_.project(minP_)); b.extend(transform_.project(maxP_)); }
+    // b.extend(texfld_->mesh()->get_bounding_box().min()); b.extend(texfld_->mesh()->get_bounding_box().max()); } //b.extend(minP_); b.extend(maxP_);}
   /////////
   // Get the brick
   int get_brick_size(){ return xmax_; }
