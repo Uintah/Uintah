@@ -256,16 +256,6 @@ TriSurfMesh::get_edges(Edge::array_type &array, Face::index_type idx) const
 }
 
 
-#if 0
-void
-TriSurfMesh::get_neighbor(Face::index_type &neighbor,
-			  Edge::index_type idx) const
-{
-  ASSERTMSG(synchronized_ & EDGE_NEIGHBORS_E,
-	    "Must call synchronize EDGE_NEIGHBORS_E on TriSurfMesh first");
-  neighbor = edge_neighbors_[edges_[idx]];
-}
-#endif
 
 bool
 TriSurfMesh::get_neighbor(Face::index_type &neighbor,
@@ -744,8 +734,6 @@ TriSurfMesh::compute_edge_neighbors(double err)
   }
 
   synchronized_ |= EDGE_NEIGHBORS_E;
-  synchronized_ &= ~NODE_NEIGHBORS_E;
-  synchronized_ &= ~NORMALS_E;
 }
 
 
