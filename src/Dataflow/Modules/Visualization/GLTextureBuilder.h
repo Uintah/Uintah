@@ -61,6 +61,7 @@ protected:
 
   GuiInt is_fixed_;
   GuiInt max_brick_dim_;
+  GuiInt sel_brick_dim_;
   GuiDouble min_, max_;
   int old_brick_size_;
   int old_min_;
