@@ -59,9 +59,13 @@ MPMMaterial::MPMMaterial(ProblemSpecP& ps, MPMLabel* lb, int n8or27,
   // Step 1 -- create the constitutive gmodel.
 
    d_cm = ConstitutiveModelFactory::create(ps,lb,n8or27,integrator);
-   if(!d_cm)
-      throw ParameterNotFound("No constitutive model");
-
+   if(!d_cm){
+     ostringstream desc;
+     desc << "An error occured in the ConstitutiveModelFactory that has \n" 
+          << " slipped through the existing bullet proofing. Please tell \n"
+          << " either Jim, John or Todd "<< endl; 
+     throw ParameterNotFound(desc.str());
+   }
    d_burn = BurnFactory::create(ps);
 
    // Check to see which ParticleCreator object we need
