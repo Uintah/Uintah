@@ -102,6 +102,11 @@ public:
                 SYMMETRY,
                 NEIGHBOR };
 
+  enum IntegratorType {
+    Explicit,
+    Implicit
+  };
+
 private:
   //////////
   // Insert Documentation Here:
@@ -265,6 +270,7 @@ private:
   bool             d_fracture;
   bool             d_with_ice;
   bool             d_with_arches;
+  IntegratorType d_integrator;
 };
       
 } // end namespace Uintah

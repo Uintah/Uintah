@@ -84,6 +84,18 @@ void SerialMPM::problemSetup(const ProblemSpecP& prob_spec, GridP& /*grid*/,
    if(mpm_soln_ps) {
      mpm_soln_ps->get("nodes8or27", d_8or27);
     }
+
+   string integrator_type;
+   if (!mpm_soln_ps->get("time_integrator",integrator_type))
+     d_integrator = Explicit;
+   else {
+     if (integrator_type == "implicit")
+       d_integrator = Implicit;
+     else
+       if (integrator_type == "explicit")
+	 d_integrator = Explicit;
+   }
+   cout << "integrator type = " << integrator_type << " " << d_integrator << endl;
     
    MPMPhysicalBCFactory::create(prob_spec);
 
