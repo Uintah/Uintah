@@ -597,9 +597,9 @@ Vector operator*(Transform &t, const Vector &d)
 {
   float result[4], tmp[4];
   result[0] = result[1] = result[2] = result[3] = 0;
-  tmp[0] = d(0);
-  tmp[1] = d(1);
-  tmp[2] = d(2);
+  tmp[0] = d.x();
+  tmp[1] = d.y();
+  tmp[2] = d.z();
   tmp[3] = 0.0;
 
   double mat[16];
