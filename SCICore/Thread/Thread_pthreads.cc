@@ -282,7 +282,11 @@ Thread::os_start(bool stopped)
 			  +strerror(errno));
 
     lock_scheduler();
-    if(pthread_create(&d_priv->threadid, NULL, run_threads, d_priv) != 0)
+		pthread_attr_t attr;
+		pthread_attr_init(&attr);
+		pthread_attr_setstacksize(&attr, d_stacksize);
+		
+    if(pthread_create(&d_priv->threadid, &attr, run_threads, d_priv) != 0)
 	throw ThreadError(std::string("pthread_create failed")
 			  +strerror(errno));
     active[numActive]=d_priv;
@@ -580,12 +584,18 @@ Mutex::Mutex(const char* name)
 {
 
     if(!initialized)
-	Thread::initialize();
-
+				Thread::initialize();
+		
+		if(this == 0){
+				fprintf(stderr, "WARNING: creation of null mutex\n");
+		}
+		
     d_priv=new Mutex_private;
     if(pthread_mutex_init(&d_priv->mutex, NULL) != 0)
-	throw ThreadError(std::string("pthread_mutex_init: ")
-			  +strerror(errno));
+				throw ThreadError(std::string("pthread_mutex_init: ")
+													+strerror(errno));
+		fprintf(stderr, "Initialize: this=%p, name=%s\n", this, name);
+		
 }
 
 Mutex::~Mutex()
@@ -599,9 +609,12 @@ Mutex::~Mutex()
 void
 Mutex::unlock()
 {
-    if(pthread_mutex_unlock(&d_priv->mutex) != 0)
-	throw ThreadError(std::string("pthread_mutex_unlock: ")
-			  +strerror(errno));
+		int status = pthread_mutex_unlock(&d_priv->mutex);
+		if(status != 0){
+				fprintf(stderr, "unlock failed, status=%d (%s)\n", status, strerror(status));
+				throw ThreadError(std::string("pthread_mutex_unlock: ")
+													+strerror(status));
+		}
 }
 
 void
@@ -611,14 +624,18 @@ Mutex::lock()
     int oldstate=-1;
     Thread_private* p=0;
     if(t){
-	p=t->d_priv;
-	oldstate=Thread::push_bstack(p, Thread::BLOCK_MUTEX, d_name);
+				p=t->d_priv;
+				oldstate=Thread::push_bstack(p, Thread::BLOCK_MUTEX, d_name);
     }
-    if(pthread_mutex_lock(&d_priv->mutex) != 0)
-	throw ThreadError(std::string("pthread_mutex_lock: ")
-			  +strerror(errno));
+    int status = pthread_mutex_lock(&d_priv->mutex);
+    if(status != 0){
+				fprintf(stderr, "lock failed, status=%d (%s)\n", status, strerror(status));
+				throw ThreadError(std::string("pthread_mutex_lock: ")
+													+strerror(status));
+		}
+		
     if(t)
-	Thread::pop_bstack(p, oldstate);
+				Thread::pop_bstack(p, oldstate);
 }
 
 bool
@@ -834,6 +851,10 @@ ConditionVariable::conditionBroadcast()
 
 //
 // $Log$
+// Revision 1.15  2000/06/09 20:35:32  yarden
+// use the return value of pthread_mutex_lock/unlock for reporting
+// the error instead of errno.
+//
 // Revision 1.14  2000/03/29 20:03:52  jas
 // Fixed thread initialization and shutdown when not using PSE for linux.
 // (Actually, Steve did this).
