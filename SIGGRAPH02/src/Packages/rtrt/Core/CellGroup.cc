@@ -19,13 +19,14 @@ void CellGroup::intersect(Ray& ray, HitInfo& hit, DepthStats* st,
 {
   int b_idx=-1;
   int i;
+  int was_already_hit=hit.was_hit;
   double min_t = hit.min_t;
   for (i=0; i<bboxes.size(); i++)
     if (bboxes[i].contains_point(ray.origin()))
       b_idx=i;
   if (b_idx!=-1) {
     bbox_objs[b_idx]->intersect(ray, hit, st, ppc);
-    if (hit.was_hit && hit.min_t<min_t) return;
+    if (hit.was_hit && (!was_already_hit || hit.min_t<min_t)) return;
   }
   for (i=0; i<bbox_objs.size(); i++)
     if (i != b_idx)
