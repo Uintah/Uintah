@@ -759,8 +759,9 @@ ICUMonitor::draw_plots()
   float cur_y = h - gui_top_margin_.get();
 
   glLineWidth(1.0);
-  glLineStipple(3, 0x1001);
-
+// type of stippling (dashed lines) - use  0xFFFF for solid line
+//  glLineStipple(3, 0x1001);
+  glLineStipple(1, 0x0F0F);
   if (name_label && gui_show_name_.get()) { 
     float yoff = name_label->tex_height_ * name_label->v_ * 1.5;
     name_label->draw(cur_x, h - yoff, sx, sy);
@@ -799,11 +800,17 @@ ICUMonitor::draw_plots()
       g.min_ref_label_->draw(cur_x - xoff, cur_y - gr_ht - yoff, sx, sy);
       if (g.lines_ == 1) {
         glDisable(GL_TEXTURE_2D);
+// added line for stippling
+        glEnable(GL_LINE_STIPPLE);
+//
         glBegin(GL_LINES);
         //glVertex2f((cur_x + xoff) * sx, (cur_y - gr_ht) * sy);
         glVertex2f(cur_x * sx, (cur_y - gr_ht) * sy);
         glVertex2f((cur_x + (w * cw)) * sx, (cur_y - gr_ht) * sy);
         glEnd();
+// added line for stippling
+        glDisable(GL_LINE_STIPPLE);
+//
         glEnable(GL_TEXTURE_2D);
       }
     }    
@@ -818,11 +825,17 @@ ICUMonitor::draw_plots()
           xoff = g.label_->tex_width_ * g.label_->u_ + gp;
         }
         glDisable(GL_TEXTURE_2D);
+// added line for stippling
+        glEnable(GL_LINE_STIPPLE);
+//
         glBegin(GL_LINES);
         //glVertex2f((cur_x + xoff) * sx, cur_y * sy);
         glVertex2f(cur_x * sx, cur_y * sy);
         glVertex2f((cur_x + (w * cw) - xoff) * sx, cur_y * sy);
         glEnd();
+// added line for stippling
+        glDisable(GL_LINE_STIPPLE);
+//
         glEnable(GL_TEXTURE_2D);
       }
     }
