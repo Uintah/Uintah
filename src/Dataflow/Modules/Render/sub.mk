@@ -41,14 +41,12 @@ include $(SCIRUN_SCRIPTS)/smallso_prologue.mk
 SRCDIR   := Dataflow/Modules/Render
 
 SRCS     += \
-	$(SRCDIR)/BaWGL.cc\
 	$(SRCDIR)/Ball.cc\
 	$(SRCDIR)/BallAux.cc\
 	$(SRCDIR)/BallMath.cc\
 	$(SRCDIR)/Camera.cc\
 	$(SRCDIR)/EditPath.cc\
 	$(SRCDIR)/OpenGL.cc\
-	$(SRCDIR)/Parser.cc\
 	$(SRCDIR)/PBuffer.cc \
 	$(SRCDIR)/SharedMemory.cc\
 	$(SRCDIR)/SynchronizeGeometry.cc\
