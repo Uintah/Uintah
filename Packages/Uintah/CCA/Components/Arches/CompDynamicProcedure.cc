@@ -851,6 +851,21 @@ CompDynamicProcedure::reComputeTurbSubmodel(const ProcessorGroup* pc,
 		      patch->getCellHighIndex());
 #ifdef PetscFilter
     d_filter->applyFilter(pc, patch, density, filterRho);
+    // making filterRho nonzero 
+    if (mmWallID > 0) {
+      idxLo = patch->getCellLowIndex();
+      idxHi = patch->getCellHighIndex();
+      for (int colZ = startZ; colZ < endZ; colZ ++) {
+        for (int colY = startY; colY < endY; colY ++) {
+	  for (int colX = startX; colX < endX; colX ++) {
+	    IntVector currCell(colX, colY, colZ);
+
+	    if (filterRho[currCell] == 0.0) 
+	      filterRho[currCell]=density[IntVector(-1,-1,-1)];
+          }
+        }
+      }
+    }
     if (d_dynScalarModel) {
       if (d_reactingFlow)
         d_filter->applyFilter(pc, patch, rhoF, filterRhoF);
