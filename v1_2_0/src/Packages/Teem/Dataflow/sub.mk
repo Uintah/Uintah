@@ -27,7 +27,7 @@ SUBDIRS := \
 
 include $(SCIRUN_SCRIPTS)/recurse.mk
 
-PSELIBS := 
-LIBS := $(TK_LIBRARY) $(GL_LIBS) -lm
+PSELIBS := Packages/Teem/Dataflow Packages/Teem/Core
+LIBS := $(TK_LIBRARY) $(GL_LIBS) $(TEEM_LIBRARY) -lnrrd -lbiff -lair -lm
 
 include $(SCIRUN_SCRIPTS)/largeso_epilogue.mk
