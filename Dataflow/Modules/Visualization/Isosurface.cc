@@ -64,10 +64,11 @@ Isosurface::Isosurface(const string& id) :
   build_trisurf_("build_trisurf", id, this),
   np_("np", id, this),
   active_tab_("active_tab", id, this),
-  update_type_("update_type", id, this)
+  update_type_("update_type", id, this),
+  color_r_("color-r", id, this),
+  color_g_("color-g", id, this),
+  color_b_("color-b", id, this)
 {
-  matl_ = scinew Material(Color(0,.3,0), Color(0,.6,0), Color(.7,.7,.7), 50);
-
   geom_id=0;
   
   prev_min=prev_max=0;
@@ -221,7 +222,9 @@ Isosurface::send_results()
 //   } else if(have_ColorMap && have_colorfield){
 //     geom = surface;     // Nothing - done per vertex
   } else {
-    geom=scinew GeomMaterial( surface, matl_); // Default material
+    Color color(color_r_.get(), color_g_.get(), color_b_.get());
+    MaterialHandle matl = scinew Material(color);
+    geom=scinew GeomMaterial( surface, matl ); // Default material
   }
 
   // send to viewer
