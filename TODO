@@ -29,14 +29,15 @@ Finish and FIX:
       Orthographic projections
       Material Editor
       Fix bargraph on networkeditor icon
-      Before reporting that a renderer is available, make sure \
-               that it is supported (OpenGL) 
+DONE      Before reporting that a renderer is available, make sure \
+DONE               that it is supported (OpenGL) 
       Renderer properties popup
       Hookup dials - more control
       Mode widget
-      Background editor
+DONE      Background editor
       Clipping plane editor
       Raytracer
+	 Pass Material* instead of MaterialHandle
       Postscript renderer
       X11 renderer
          Verify transformations
@@ -94,6 +95,9 @@ Datatypes:
    Boundary condition types/region types/node types
 
 Software Engineering Issues:
+   DONE Use NCC 
+   Fix conflicts with NCC
+   Make NCC work with multiple executables
    Configuration interface
    System libraries
    Compile @checkin
@@ -103,7 +107,7 @@ TCL/TK:
    Better data structure handling
    Thumbwheel 2D widget
    Fix backward connections in NetworkEditor
-   Color Editor (done?)
+DONE   Color Editor
    Right titles on windows
 
 Modules that need work:
