@@ -164,21 +164,10 @@ MatrixSelectVector::send_selection(MatrixHandle mh, int which, int ncopy,
   ColumnMatrix *selected = scinew ColumnMatrix(1);
   selected->put(0, 0, (double)which);
 
-  bool isDependent = (dependence_.get()=="dependent");
-//  cerr << "isDependent = "<<isDependent<<"\n";
-  if (last_p)
-  {
-    ovec->send(matrix);
-    osel->send(MatrixHandle(selected));
-  }
-  else
-  {
-    ovec->send_intermediate(matrix);
-    if (isDependent)
-      osel->send(MatrixHandle(selected));
-    else
-      osel->send_intermediate(MatrixHandle(selected));
-  }
+  bool isIndependent = (dependence_.get()=="independent");
+
+  ovec->send(matrix, !last_p);
+  osel->send(MatrixHandle(selected), !last_p & isIndependent);
 }
 
 
