@@ -75,9 +75,8 @@ Roe::Roe(Salmon* s, const clString& id)
   // <<<<<<<<<<<<<<<<<<<< BAWGL <<<<<<<<<<<<<<<<<<<<
   drawimg("drawimg", id, this),
   saveprefix("saveprefix", id, this),
-  saveFile("saveFile", id, this),
-  saveType("saveType", id, this),
-  id(id),doingMovie(0),curFrame(0),curName("/tmp/movie")
+  id(id),doingMovie(false),makeMPEG(false),
+  curFrame(0),curName("movie")
   {
     inertia_mode=0;
     bgcolor.set(Color(0,0,0));
@@ -757,7 +756,11 @@ void Roe::tcl_command(TCLArgs& args, void*)
   if (args[1] == "sgi_defined") {
     clString result("");
 #ifdef __sgi
+#if (_MIPS_SZPTR == 64)
+    result += "2";
+#else
     result += "1";
+#endif
 #else
     result += "0";
 #endif
@@ -1243,6 +1246,9 @@ void Roe::setView(View newView) {
 
 //
 // $Log$
+// Revision 1.16  2000/06/09 17:50:18  kuzimmer
+// Hopefully everything is fixed so that you can use -lifl on SGI's and you can use -lcl on SGI's in32bit mode.
+//
 // Revision 1.15  2000/06/07 20:59:26  kuzimmer
 // Modifications to make the image save menu item work on SGIs
 //
