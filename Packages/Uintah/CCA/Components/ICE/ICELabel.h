@@ -43,6 +43,8 @@ namespace Uintah {
     const VarLabel* int_eng_L_ME_CCLabel;
     const VarLabel* q_CCLabel;
     const VarLabel* q_advectedLabel;
+    const VarLabel* qV_CCLabel;
+    const VarLabel* qV_advectedLabel;
     const VarLabel* term1Label;
     const VarLabel* term2Label;
     const VarLabel* term3Label;

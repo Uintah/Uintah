@@ -66,6 +66,10 @@ ICELabel::ICELabel()
     scinew VarLabel("q_CC",         CCVariable<double>::getTypeDescription());
   q_advectedLabel = 
     scinew VarLabel("q_advected",   CCVariable<double>::getTypeDescription());
+  qV_CCLabel = 
+    scinew VarLabel("qV_CC",        CCVariable<Vector>::getTypeDescription());
+  qV_advectedLabel = 
+    scinew VarLabel("qV_advected",  CCVariable<Vector>::getTypeDescription());
   term1Label = 
     scinew VarLabel("term1",        CCVariable<double>::getTypeDescription());
   term2Label = 
