@@ -108,6 +108,15 @@ template <> ScalarFieldInterface*
 ScanlineField<short>::query_scalar_interface() const;
 
 template <> ScalarFieldInterface*
+ScanlineField<char>::query_scalar_interface() const;
+
+template <> ScalarFieldInterface *
+ScanlineField<unsigned int>::query_scalar_interface() const;
+
+template <> ScalarFieldInterface*
+ScanlineField<unsigned short>::query_scalar_interface() const;
+
+template <> ScalarFieldInterface*
 ScanlineField<unsigned char>::query_scalar_interface() const;
 
 template <class T>

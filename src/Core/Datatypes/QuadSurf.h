@@ -154,6 +154,15 @@ template <> ScalarFieldInterface*
 QuadSurf<short>::query_scalar_interface() const;
 
 template <> ScalarFieldInterface*
+QuadSurf<char>::query_scalar_interface() const;
+
+template <> ScalarFieldInterface *
+QuadSurf<unsigned int>::query_scalar_interface() const;
+
+template <> ScalarFieldInterface*
+QuadSurf<unsigned short>::query_scalar_interface() const;
+
+template <> ScalarFieldInterface*
 QuadSurf<unsigned char>::query_scalar_interface() const;
 
 template <class T>

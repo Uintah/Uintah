@@ -112,6 +112,15 @@ template <> ScalarFieldInterface*
 HexVol<short>::query_scalar_interface() const;
 
 template <> ScalarFieldInterface*
+HexVol<char>::query_scalar_interface() const;
+
+template <> ScalarFieldInterface *
+HexVol<unsigned int>::query_scalar_interface() const;
+
+template <> ScalarFieldInterface*
+HexVol<unsigned short>::query_scalar_interface() const;
+
+template <> ScalarFieldInterface*
 HexVol<unsigned char>::query_scalar_interface() const;
 
 template <class T>

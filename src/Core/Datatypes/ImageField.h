@@ -173,6 +173,15 @@ template <> ScalarFieldInterface*
 ImageField<short>::query_scalar_interface() const;
 
 template <> ScalarFieldInterface*
+ImageField<char>::query_scalar_interface() const;
+
+template <> ScalarFieldInterface *
+ImageField<unsigned int>::query_scalar_interface() const;
+
+template <> ScalarFieldInterface*
+ImageField<unsigned short>::query_scalar_interface() const;
+
+template <> ScalarFieldInterface*
 ImageField<unsigned char>::query_scalar_interface() const;
 
 template <class T>

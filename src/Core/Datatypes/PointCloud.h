@@ -150,6 +150,15 @@ template <> ScalarFieldInterface*
 PointCloud<short>::query_scalar_interface() const;
 
 template <> ScalarFieldInterface*
+PointCloud<char>::query_scalar_interface() const;
+
+template <> ScalarFieldInterface *
+PointCloud<unsigned int>::query_scalar_interface() const;
+
+template <> ScalarFieldInterface*
+PointCloud<unsigned short>::query_scalar_interface() const;
+
+template <> ScalarFieldInterface*
 PointCloud<unsigned char>::query_scalar_interface() const;
 
 template <class T>
