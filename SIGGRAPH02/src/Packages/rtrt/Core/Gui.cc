@@ -20,6 +20,7 @@
 #include <Packages/rtrt/Core/SelectableGroup.h>
 #include <Packages/rtrt/Core/SpinningInstance.h>
 #include <Packages/rtrt/Core/CutGroup.h>
+#include <Packages/rtrt/Core/PPMImage.h>
 #if !defined(linux)
 #  include <Packages/rtrt/Sound/SoundThread.h>
 #  include <Packages/rtrt/Sound/Sound.h>
@@ -37,6 +38,16 @@
 #include <errno.h>
 
 #include <vector>
+
+////////////////////////////////////////////
+// OOGL stuff
+extern BasicTexture * blendTex;
+extern ShadedPrim   * blendTexQuad;
+extern ShadedPrim   * bottomTexQuad;
+extern Blend * blend;
+static double alpha = 0.0;
+static double offset = 0.01;
+////////////////////////////////////////////
 
 extern "C" Display *__glutDisplay;
 
@@ -151,7 +162,7 @@ Gui::handleMenuCB( int item )
 {
   switch( item ) {
   case TOGGLE_HOT_SPOTS:
-    activeGui->dpy_->scene->hotspots = !activeGui->dpy_->scene->hotspots;
+    activeGui->toggleHotspotsCB( -1 );
     break;
   case TOGGLE_GUI:
     activeGui->toggleGui();
@@ -239,9 +250,23 @@ Gui::setupFonts()
   glXUseXFont(id, first, last-first+1, fontbase2+first);
 }
 
+extern PPMImage * ppm1;
+
 void
 Gui::idleFunc()
 {
+  static bool inited = false;
+  static vector<PPMImage *> images;
+
+  if( !inited ) {
+    images.push_back( new PPMImage( "hogum.box.small.ppm", true ) );
+    images.push_back( new PPMImage( "NURBS.scene.4.smaller.ppm", true ) );
+    images.push_back( new PPMImage( "box.scratches.few.ppm", true ) );
+    images.push_back( new PPMImage( "david_brow_blue_noS_A.ppm", true ) );
+    images.push_back( ppm1 );
+    inited = true;
+  }
+
   Dpy               * dpy = activeGui->dpy_;
   struct DpyPrivate * priv = activeGui->priv;
 
@@ -258,19 +283,54 @@ Gui::idleFunc()
       activeGui->startSoundThreadBtn_->set_name( "Sounds Started" );
     }
 
+  ////////////////////////////////////////////
+  // OOGL stuff
+  blend->alpha( alpha );
+  alpha += offset;
+  if( alpha > 1 )
+    {
+      alpha = 1.0;
+      offset = -offset;
+    }
+  else if( alpha < 0 )
+    {
+      alpha = 0.0;
+      offset = -offset;
+
+      static int position = 0;
+      position = (position + 1)%images.size();
+      blendTex->reset( GL_FLOAT, &((*images[position])(0,0)) );
+    }
+  bottomTexQuad->draw();
+  blendTexQuad->draw();
+  ////////////////////////////////////////////
+
+
   // I know this is a hack... 
   if( dpy->showImage_ ){
 
     glutSetWindow( activeGui->glutDisplayWindowId );
 
+#if 0
     glMatrixMode(GL_PROJECTION);
     glLoadIdentity();
     gluOrtho2D(0, priv->xres, 0, priv->yres);
     glMatrixMode(GL_MODELVIEW);
     glLoadIdentity();
     glTranslatef(0.375, 0.375, 0.0);
+#endif
 
-    dpy->showImage_->draw();
+    // Display textual information on the screen:
+    char buf[100];
+    sprintf( buf, "%3.1lf fps", activeGui->priv->FrameRate );
+
+    dpy->showImage_->draw( dpy->renderWindowSize_ );
+    activeGui->displayText(fontbase, 138, 302, buf, Color(1,1,1));
+    glutSwapBuffers();
+    // Need to draw into other buffer so that as we "continuously"
+    // flip them, it doesn't look bad.
+    dpy->showImage_->draw( dpy->renderWindowSize_ );    
+    activeGui->displayText(fontbase, 138, 302, buf, Color(1,1,1));
 
     if( activeGui->displayRStats_ )
       {
@@ -291,18 +351,13 @@ Gui::idleFunc()
 
     dpy->showImage_ = NULL;
 
-    // Display textual information on the screen:
-    char buf[100];
-    sprintf( buf, "%3.1lf fps", activeGui->priv->FrameRate );
-    activeGui->displayText(fontbase, 10, 3, buf, Color(1,1,1));
-
-    glutSwapBuffers(); 
-
     // Let the Dpy thread start drawing the next image.
     //activeGui->priv->waitDisplay->unlock();
     if( activeGui->mainWindowVisible ) {
       activeGui->update(); // update the gui each time a frame is finished.
     }
+  } else {
+    glutSwapBuffers(); 
   }
 }
 
@@ -408,7 +463,16 @@ Gui::handleKeyPressCB( unsigned char key, int /*mouse_x*/, int /*mouse_y*/ )
     activeGui->stealth_->toggleGravity();
     break;
   case 't':
-    activeGui->dpy_->scene->hotspots = !activeGui->dpy_->scene->hotspots;
+    if( activeGui->dpy_->scene->hotSpotMode_ )
+      activeGui->dpy_->scene->hotSpotMode_ = 0;
+    else
+      activeGui->dpy_->scene->hotSpotMode_ = 1;
+    break;
+  case 'T':
+    if( activeGui->dpy_->scene->hotSpotMode_ )
+      activeGui->dpy_->scene->hotSpotMode_ = 0;
+    else
+      activeGui->dpy_->scene->hotSpotMode_ = 2;
     break;
   case 'Q':
     activeGui->beQuiet_ = !activeGui->beQuiet_;
@@ -506,6 +570,17 @@ Gui::handleKeyPressCB( unsigned char key, int /*mouse_x*/, int /*mouse_y*/ )
     activeGui->displayPStats_ = !activeGui->displayPStats_;
     break;
 
+  case 'f':
+    activeGui->dpy_->toggleRenderWindowSize_ = true;
+    break;
+
+  case 27: // Escape key... need to find a symbolic name for this...
+    activeGui->quit();
+    break;
+  default:
+    printf("unknown regular key %d\n", key);
+    break;
+
 #if 0
     // below is for blending "pixels" in
     // frameless rendering...
@@ -515,19 +590,19 @@ Gui::handleKeyPressCB( unsigned char key, int /*mouse_x*/, int /*mouse_y*/ )
     //doing_frameless = 1-doing_frameless; // just toggle...
     cerr << synch_frameless << " Synch?\n";
     break;
-  case '2':
-    stereo=!stereo;
-    break;
   case '1':
     cout << "NOTICE: Use 2 key to toggle Stereo\n";
     cout << "      : 1 key is deprecated and may go away\n";
     break;
-  case 'f':
+  case '2':
+    stereo=!stereo;
+    break;
+
     FPS -= 1;
     if (FPS <= 0.0) FPS = 1.0;
     FrameRate = 1.0/FPS;
     break;
-  case 'F':
+
     FPS += 1.0;
     FrameRate = 1.0/FPS;
     cerr << FPS << endl;
@@ -537,12 +612,6 @@ Gui::handleKeyPressCB( unsigned char key, int /*mouse_x*/, int /*mouse_y*/ )
     scene->get_image(showing_scene)->save("images/image.raw");
     break;
 #endif
-  case 27: // Escape key... need to find a symbolic name for this...
-    activeGui->quit();
-    break;
-  default:
-    printf("unknown regular key %d\n", key);
-    break;
   }
 } // end handleKeyPress();
 
@@ -714,6 +783,16 @@ Gui::handleWindowResizeCB( int width, int height )
 {
   printf("window resized\n");
 
+glViewport(0, 0, 1280, 1024);
+glMatrixMode(GL_PROJECTION);
+glLoadIdentity();
+gluOrtho2D(0, 1280, 0, 1024);
+glDisable( GL_DEPTH_TEST );
+glMatrixMode(GL_MODELVIEW);
+glLoadIdentity();
+
+  return;
+
   DpyPrivate * priv = activeGui->priv;
 
   // Resize the image...
@@ -861,21 +940,25 @@ Gui::handleMouseMotionCB( int mouse_x, int mouse_y )
 void
 Gui::handleSpaceballMotionCB( int sbm_x, int sbm_y, int sbm_z )
 {
-  if( abs(sbm_x) > 10 )
-    activeGui->camera_->moveLaterally( sbm_x/50.0 );
-  if( abs(sbm_y) > 10 )
-    activeGui->camera_->moveVertically( sbm_y/50.0 );
-  if( abs(sbm_z) > 10 )
-    activeGui->camera_->moveForwardOrBack( sbm_z/50.0 );
+  double sensitivity = 100.0;
+
+  if( abs(sbm_x) > 2 )
+    activeGui->camera_->moveLaterally( sbm_x / sensitivity );
+  if( abs(sbm_y) > 2 )
+    activeGui->camera_->moveVertically( sbm_y / sensitivity );
+  if( abs(sbm_z) > 2 )
+    activeGui->camera_->moveForwardOrBack( sbm_z / sensitivity );
 }
 
 void
 Gui::handleSpaceballRotateCB( int sbr_x, int sbr_y, int sbr_z )
 {
-  if( abs(sbr_x) > 20 )
-    activeGui->camera_->changePitch( sbr_x/1000.0 );
-  if( abs(sbr_y) > 20 )
-    activeGui->camera_->changeFacing( sbr_y/500.0 );
+  double sensitivity = 1000.0;
+
+  if( abs(sbr_x) > 2 )
+    activeGui->camera_->changePitch( sbr_x / (sensitivity*2) );
+  if( abs(sbr_y) > 2 )
+    activeGui->camera_->changeFacing( sbr_y / sensitivity );
   // Don't allow roll (at least for now)
 }
 
@@ -1410,7 +1493,7 @@ Gui::createLightWindow( GLUI * window )
     window->add_spinner_to_panel( panel, "Ambient Level:", GLUI_SPINNER_FLOAT,
 				  &ambientBrightness_, -1, updateAmbientCB );
   ambientIntensity_->set_float_limits( 0.0, 1.0 );
-  ambientIntensity_->set_speed( 0.03 );
+  ambientIntensity_->set_speed( 0.05 );
 
   window->add_separator_to_panel( panel );
 
@@ -1499,7 +1582,7 @@ Gui::createMenus( int winId, bool soundOn /* = false */,
   glutAttachMenu(GLUT_RIGHT_BUTTON);
 
   // Build GLUI Windows
-  activeGui->mainWindow = GLUI_Master.create_glui( "SIGGRAPH", 0, 400, 20 );
+  activeGui->mainWindow = GLUI_Master.create_glui( "SIGGRAPH", 0, 804, 0 );
   if( !showGui ){
     activeGui->mainWindow->hide();
     activeGui->mainWindowVisible = false;
@@ -1694,7 +1777,7 @@ Gui::createMenus( int winId, bool soundOn /* = false */,
     }
 #endif
   // 
-  activeGui->depthValue_ = 2;
+  activeGui->depthValue_ = activeGui->priv->maxdepth;
   GLUI_Spinner * depthSpinner = activeGui->mainWindow->
     add_spinner_to_panel( display_panel, "Ray Depth", GLUI_SPINNER_INT, 
 			  &(activeGui->depthValue_), DEPTH_SPINNER_ID, 
@@ -1853,7 +1936,10 @@ Gui::toggleTransmissionModeCB( int /* id */ )
 void
 Gui::toggleHotspotsCB( int /*id*/ )
 {
-  activeGui->dpy_->scene->hotspots = !activeGui->dpy_->scene->hotspots;
+  if( activeGui->dpy_->scene->hotSpotMode_ == 2 )
+    activeGui->dpy_->scene->hotSpotMode_ = 0;
+  else
+    activeGui->dpy_->scene->hotSpotMode_++;
 }
 
 
