@@ -52,6 +52,7 @@ SRCS     += \
 	$(SRCDIR)/ScaleFieldData.cc\
 	$(SRCDIR)/SampleField.cc\
 	$(SRCDIR)/SelectField.cc\
+	$(SRCDIR)/SetProperty.cc\
 	$(SRCDIR)/TransformField.cc\
 	$(SRCDIR)/TetVolCellToNode.cc\
 	$(SRCDIR)/Unstructure.cc\

@@ -75,10 +75,11 @@ $(SRCDIR)/tclIndex: \
 	$(SRCDIR)/Rescale.tcl \
 	$(SRCDIR)/RescaleColorMap.tcl \
 	$(SRCDIR)/RingWidget.tcl \
+	$(SRCDIR)/SampleField.tcl \
 	$(SRCDIR)/SamplePlane.tcl \
 	$(SRCDIR)/SampleLattice.tcl \
 	$(SRCDIR)/ScalarFieldStats.tcl \
-	$(SRCDIR)/SampleField.tcl \
+	$(SRCDIR)/SetProperty.tcl \
 	$(SRCDIR)/ShowColorMap.tcl \
 	$(SRCDIR)/ShowField.tcl \
 	$(SRCDIR)/SolveMatrix.tcl \
