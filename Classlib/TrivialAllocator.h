@@ -15,6 +15,7 @@
 #define sci_Classlib_TrivialAllocator_h 1
 
 #include <Multitask/ITC.h>
+#include <Malloc/Allocator.h>
 
 class TrivialAllocator {
     struct List {
@@ -31,8 +32,39 @@ public:
     TrivialAllocator(unsigned int size);
     ~TrivialAllocator();
 
-    void* alloc();
-    void free(void*);
+    inline void* alloc();
+    inline void free(void*);
 };
+
+inline void* TrivialAllocator::alloc()
+{
+    lock.lock();
+    List* p=freelist;
+    if(!p){
+	List* q=(List*)scinew char[alloc_size];
+	q->next=chunklist;
+	chunklist=q;
+	q++;
+	p=q;
+	for(int i=1;i<nalloc;i++){
+	    List* n=(List*)(((char*)q)+size);
+	    q->next=n;
+	    q=n;
+	}
+	q->next=0;
+    }
+    freelist=p->next;
+    lock.unlock();
+    return p;
+}
+
+inline void TrivialAllocator::free(void* rp)
+{
+    lock.lock();
+    List* p=(List*)rp;
+    p->next=freelist;
+    freelist=p;
+    lock.unlock();
+}
 
 #endif

@@ -16,7 +16,6 @@
 #endif
 
 #include <Classlib/LockingHandle.h>
-#include <Classlib/Assert.h>
 #include <iostream.h>
 
 template<class T>
@@ -107,19 +106,6 @@ LockingHandle<T>::~LockingHandle()
 	    rep->lock.unlock();
 	}
     }
-}
-
-template<class T>
-T* LockingHandle<T>::operator->() const
-{
-    ASSERT(rep != 0);
-    return rep;
-}
-
-template<class T>
-T* LockingHandle<T>::get_rep() const
-{
-    return rep;
 }
 
 template<class T>

@@ -139,8 +139,8 @@ void Delaunay::execute()
 	    error("Mesher upset - point outside of domain...");
 	    return;
 	}
-	// Every 200 nodes, cleanup the elems array...
-	if(node%200 == 0){
+	// Every 1000 nodes, cleanup the elems array...
+	if(node%1000 == 0){
 cerr << "Adding node " << node << endl;
 	    mesh->pack_elems();
 	}

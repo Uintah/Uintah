@@ -87,16 +87,16 @@ void BuildFEMatrix::execute()
      // SC94 ONLY
      mesh->nodes[nnodes-1]->ndof=0;
      mesh->nodes[nnodes-2]->ndof=0;
-     mesh->nodes[nnodes-3]->ndof=0;
-     mesh->nodes[nnodes-4]->ndof=0;
+//     mesh->nodes[nnodes-3]->ndof=0;
+//     mesh->nodes[nnodes-4]->ndof=0;
      mesh->nodes[nnodes-1]->value=1;
      mesh->nodes[nnodes-2]->value=-1;
-     mesh->nodes[nnodes-3]->value=1;
-     mesh->nodes[nnodes-4]->value=-1;
+//     mesh->nodes[nnodes-3]->value=1;
+//     mesh->nodes[nnodes-4]->value=-1;
      mesh->nodes[nnodes-1]->nodetype=Node::VSource;
      mesh->nodes[nnodes-2]->nodetype=Node::VSource;
-     mesh->nodes[nnodes-3]->nodetype=Node::VSource;
-     mesh->nodes[nnodes-4]->nodetype=Node::VSource;
+//     mesh->nodes[nnodes-3]->nodetype=Node::VSource;
+//     mesh->nodes[nnodes-4]->nodetype=Node::VSource;
 
      int ndof=nnodes;
      Array1<int> rows(ndof+1);
@@ -104,7 +104,7 @@ void BuildFEMatrix::execute()
      int r=0;
      int i;
      for(i=0;i<nnodes;i++){
-	 if(i%200 == 0)
+	 if(i%500 == 0)
 	     update_progress(i, 2*nnodes);
 	 rows[r++]=cols.size();
 	 if(mesh->nodes[i]->ndof > 0){
@@ -122,7 +122,7 @@ void BuildFEMatrix::execute()
 
      int nelems=mesh->elems.size();
      for (i=0; i<nelems; i++){
-	 if(i%200 == 0)
+	 if(i%500 == 0)
 	     update_progress(nelems+i, 2*nelems);
 	 build_local_matrix(mesh->elems[i],lcl_matrix,mesh);
 	 add_lcl_gbl(*gbl_matrix,lcl_matrix,*rhs,i,mesh);

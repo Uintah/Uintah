@@ -82,9 +82,12 @@ void InsertDelaunay::execute()
     }
 
     // Get our own copy of the mesh...
+    update_progress(0, 6);
     mesh_handle.detach();
+    update_progress(1, 6);
     mesh_handle->detach_nodes();
     Mesh* mesh=mesh_handle.get_rep();
+    update_progress(3, 6);
     mesh->compute_neighbors();
 
     // Insert the points...

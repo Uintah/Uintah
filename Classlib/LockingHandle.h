@@ -14,6 +14,7 @@
 #ifndef SCI_Classlib_LockingHandle_h
 #define SCI_Classlib_LockingHandle_h 1
 
+#include <Classlib/Assert.h>
 class Piostream;
 
 template<class T>
@@ -29,8 +30,13 @@ public:
 
     void detach();
 
-    T* operator->() const;
-    T* get_rep() const;
+    inline T* operator->() const {
+	ASSERT(rep != 0);
+	return rep;
+    }
+    inline T* get_rep() const {
+	return rep;
+    }
 
     friend void Pio(Piostream&, LockingHandle<T>& data);
 };
