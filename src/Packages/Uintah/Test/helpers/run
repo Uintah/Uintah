@@ -125,6 +125,11 @@ for test in *$USER_FLAG; do
     fi
 done
 
+if [ "$USER" != "" ]; then
+    cd "${BUILDROOT}/${mode}/TestScripts"
+    rm *$USER_FLAG
+fi
+
 echo ""
 echo "Finished $mode tests on `date`"
 if [ $failed = "0" ]; then
