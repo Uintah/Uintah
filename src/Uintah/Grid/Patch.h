@@ -4,7 +4,9 @@
 #include <Uintah/Grid/SubPatch.h>
 #include <Uintah/Grid/ParticleSet.h>
 #include <Uintah/Grid/Box.h>
+#include <Uintah/Grid/Ghost.h>
 #include <Uintah/Grid/Level.h>
+#include <Uintah/Grid/TypeDescription.h>
 
 #include <SCICore/Geometry/Point.h>
 #include <SCICore/Geometry/Vector.h>
@@ -171,6 +173,7 @@ WARNING
      IntVector getCellFORTLowIndex() const;
      IntVector getCellFORTHighIndex() const;
 
+#if 0
      // returns ghost cell index
      IntVector getGhostCellLowIndex(const int numGC) const;
      IntVector getGhostCellHighIndex(const int numGC) const;
@@ -180,6 +183,7 @@ WARNING
      IntVector getGhostSFCYHighIndex(const int numGC) const;
      IntVector getGhostSFCZLowIndex(const int numGC) const;
      IntVector getGhostSFCZHighIndex(const int numGC) const;
+#endif
      
      inline Box getBox() const {
        return Box(d_level->getNodePosition(d_lowIndex),
@@ -237,8 +241,10 @@ WARNING
        return d_level->getCellPosition(idx);
      }
 
+#if 0
      Box getGhostBox(const IntVector& lowOffset,
 		     const IntVector& highOffset) const;
+#endif
      
      string toString() const;
      
@@ -249,6 +255,24 @@ WARNING
        return d_level;
      }
      void getFace(FaceType face, int offset, IntVector& l, IntVector& h) const;
+
+     enum VariableBasis {
+	CellBased,
+	NodeBased,
+	XFaceBased,
+	YFaceBased,
+	ZFaceBased,
+	AllFaceBased
+     };
+
+     void computeVariableExtents(VariableBasis basis, Ghost::GhostType gtype,
+				 int numGhostCells,
+				 vector<const Patch*>& neighbors,
+				 IntVector& low, IntVector& high) const;
+     void computeVariableExtents(TypeDescription::Type basis,
+				 Ghost::GhostType gtype, int numGhostCells,
+				 vector<const Patch*>& neighbors,
+				 IntVector& low, IntVector& high) const;
    protected:
      friend class Level;
      
@@ -283,6 +307,11 @@ std::ostream& operator<<(std::ostream& out, const Uintah::Patch & r);
 
 //
 // $Log$
+// Revision 1.17  2000/09/25 20:37:43  sparker
+// Quiet g++ compiler warnings
+// Work around g++ compiler bug instantiating vector<NCVariable<Vector> >
+// Added computeVariableExtents to (eventually) simplify data warehouses
+//
 // Revision 1.16  2000/08/23 22:32:07  dav
 // changed output operator to use a reference, and not a pointer to a patch
 //

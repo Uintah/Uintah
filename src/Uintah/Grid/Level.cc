@@ -1,5 +1,6 @@
-/* REFERENCED */
-static char *id="@(#) $Id$";
+//
+// $Id$
+//
 
 #include <Uintah/Grid/Level.h>
 #include <Uintah/Grid/Grid.h>
@@ -70,7 +71,7 @@ Patch* Level::addPatch(const IntVector& lowIndex, const IntVector& highIndex,
 
 Patch* Level::getPatchFromPoint(const Point& p)
 {
-  for(int i=0;i<d_patches.size();i++){
+  for(int i=0;i<(int)d_patches.size();i++){
     Patch* r = d_patches[i];
     if( r->getBox().contains( p ) )
       return r;
@@ -87,15 +88,15 @@ void Level::performConsistencyCheck() const
 {
    if(!d_finalized)
       throw InvalidGrid("Consistency check cannot be performed until Level is finalized");
-  for(int i=0;i<d_patches.size();i++){
+  for(int i=0;i<(int)d_patches.size();i++){
     Patch* r = d_patches[i];
     r->performConsistencyCheck();
   }
 
   // This is O(n^2) - we should fix it someday if it ever matters
-  for(int i=0;i<d_patches.size();i++){
+  for(int i=0;i<(int)d_patches.size();i++){
     Patch* r1 = d_patches[i];
-    for(int j=i+1;j<d_patches.size();j++){
+    for(int j=i+1;j<(int)d_patches.size();j++){
       Patch* r2 = d_patches[j];
       if(r1->getBox().overlaps(r2->getBox())){
 	cerr << "r1: " << r1 << '\n';
@@ -110,7 +111,7 @@ void Level::performConsistencyCheck() const
 
 void Level::getIndexRange(BBox& b) const
 {
-  for(int i=0;i<d_patches.size();i++){
+  for(int i=0;i<(int)d_patches.size();i++){
     Patch* r = d_patches[i];
     IntVector l( r->getNodeLowIndex() );
     IntVector u( r->getNodeHighIndex() );
@@ -126,7 +127,7 @@ void Level::getIndexRange(IntVector& lowIndex,IntVector& highIndex) const
   lowIndex = d_patches[0]->getNodeLowIndex();
   highIndex = d_patches[0]->getNodeHighIndex();
   
-  for(int p=1;p<d_patches.size();p++)
+  for(int p=1;p<(int)d_patches.size();p++)
   {
     Patch* patch = d_patches[p];
     IntVector l( patch->getNodeLowIndex() );
@@ -140,7 +141,7 @@ void Level::getIndexRange(IntVector& lowIndex,IntVector& highIndex) const
 
 void Level::getSpatialRange(BBox& b) const
 {
-  for(int i=0;i<d_patches.size();i++){
+  for(int i=0;i<(int)d_patches.size();i++){
     Patch* r = d_patches[i];
     b.extend(r->getBox().lower());
     b.extend(r->getBox().upper());
@@ -150,7 +151,7 @@ void Level::getSpatialRange(BBox& b) const
 long Level::totalCells() const
 {
   long total=0;
-  for(int i=0;i<d_patches.size();i++)
+  for(int i=0;i<(int)d_patches.size();i++)
     total+=d_patches[i]->totalCells();
   return total;
 }
@@ -278,6 +279,11 @@ void Level::assignBCS(const ProblemSpecP& grid_ps)
 
 //
 // $Log$
+// Revision 1.22  2000/09/25 20:37:42  sparker
+// Quiet g++ compiler warnings
+// Work around g++ compiler bug instantiating vector<NCVariable<Vector> >
+// Added computeVariableExtents to (eventually) simplify data warehouses
+//
 // Revision 1.21  2000/08/22 18:36:40  bigler
 // Added functionality to get a cell's position with the index.
 //

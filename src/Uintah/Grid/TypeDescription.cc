@@ -15,23 +15,23 @@ static map<string, const TypeDescription*>* types;
 
 TypeDescription::TypeDescription(Type type, const std::string& name,
 				 bool isFlat, MPI_Datatype (*mpitypemaker)())
-   : d_type(type), d_name(name), d_isFlat(isFlat), d_subtype(0), d_maker(0),
-     d_mpitype(-1), d_mpitypemaker(mpitypemaker)
+   : d_type(type), d_subtype(0), d_name(name), d_isFlat(isFlat),
+     d_mpitype(-1), d_mpitypemaker(mpitypemaker), d_maker(0)
 {
 }
 
 TypeDescription::TypeDescription(Type type, const std::string& name,
 				 bool isFlat, MPI_Datatype mpitype)
-   : d_type(type), d_name(name), d_isFlat(isFlat), d_subtype(0), d_maker(0),
-     d_mpitype(mpitype), d_mpitypemaker(0)
+   : d_type(type), d_subtype(0), d_name(name), d_isFlat(isFlat),
+     d_mpitype(mpitype), d_mpitypemaker(0), d_maker(0)
 {
 }
 
 TypeDescription::TypeDescription(Type type, const std::string& name,
 				 Variable* (*maker)(),
 				 const TypeDescription* subtype)
-   : d_type(type), d_name(name), d_isFlat(false), d_maker(maker),
-     d_subtype(subtype), d_mpitype(-2), d_mpitypemaker(0)
+   : d_type(type), d_subtype(subtype), d_name(name), d_isFlat(false),
+     d_mpitype(-2), d_mpitypemaker(0), d_maker(maker)
 {
 }
 
@@ -87,6 +87,11 @@ Variable* TypeDescription::createInstance() const
 
 //
 // $Log$
+// Revision 1.8  2000/09/25 20:37:43  sparker
+// Quiet g++ compiler warnings
+// Work around g++ compiler bug instantiating vector<NCVariable<Vector> >
+// Added computeVariableExtents to (eventually) simplify data warehouses
+//
 // Revision 1.7  2000/07/27 22:39:50  sparker
 // Implemented MPIScheduler
 // Added associated support

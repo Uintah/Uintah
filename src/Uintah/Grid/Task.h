@@ -1,7 +1,6 @@
 #ifndef UINTAH_HOMEBREW_Task_H
 #define UINTAH_HOMEBREW_Task_H
 
-#include <Uintah/Interface/DataWarehouseP.h>
 #include <Uintah/Interface/DataWarehouse.h>
 #include <Uintah/Grid/Ghost.h>
 #include <Uintah/Grid/Handle.h>
@@ -91,11 +90,11 @@ WARNING
       class NPAction1 : public ActionBase {
 
          T* ptr;
-	 Arg1 arg1;
          void (T::*pmf)(const ProcessorGroup*,
                         DataWarehouseP&,
                         DataWarehouseP&,
 			Arg1);
+	 Arg1 arg1;
       public:  // class NPAction1
          NPAction1( T* ptr,
                  void (T::*pmf)(const ProcessorGroup*,
@@ -147,12 +146,12 @@ WARNING
       class Action1 : public ActionBase {
 	 
 	 T* ptr;
-	 Arg1 arg1;
 	 void (T::*pmf)(const ProcessorGroup*,
 			const Patch*,
 			DataWarehouseP&,
 			DataWarehouseP&,
 			Arg1 arg1);
+	 Arg1 arg1;
       public: // class Action1
 	 Action1( T* ptr,
 		 void (T::*pmf)(const ProcessorGroup*, 
@@ -178,13 +177,13 @@ WARNING
       class Action2 : public ActionBase {
 	 
 	 T* ptr;
-	 Arg1 arg1;
-	 Arg2 arg2;
 	 void (T::*pmf)(const ProcessorGroup*,
 			const Patch*,
 			DataWarehouseP&,
 			DataWarehouseP&,
 			Arg1 arg1, Arg2 arg2);
+	 Arg1 arg1;
+	 Arg2 arg2;
       public: // class Action2
 	 Action2( T* ptr,
 		 void (T::*pmf)(const ProcessorGroup*, 
@@ -210,14 +209,14 @@ WARNING
       class Action3 : public ActionBase {
 	 
 	 T* ptr;
-	 Arg1 arg1;
-	 Arg2 arg2;
-	 Arg3 arg3;
 	 void (T::*pmf)(const ProcessorGroup*,
 			const Patch*,
 			DataWarehouseP&,
 			DataWarehouseP&,
 			Arg1 arg1, Arg2 arg2, Arg3 arg3);
+	 Arg1 arg1;
+	 Arg2 arg2;
+	 Arg3 arg3;
       public: // class Action3
 	 Action3( T* ptr,
 		 void (T::*pmf)(const ProcessorGroup*, 
@@ -562,6 +561,11 @@ ostream & operator << ( ostream & out, const Uintah::Task::Dependency & dep );
 
 //
 // $Log$
+// Revision 1.23  2000/09/25 20:37:43  sparker
+// Quiet g++ compiler warnings
+// Work around g++ compiler bug instantiating vector<NCVariable<Vector> >
+// Added computeVariableExtents to (eventually) simplify data warehouses
+//
 // Revision 1.22  2000/09/25 16:24:17  sparker
 // Added a displayAll method to Task
 //

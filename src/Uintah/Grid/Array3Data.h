@@ -157,18 +157,21 @@ namespace Uintah {
       Array3Data<T>::Array3Data(const IntVector& size)
       : d_size(size)
       {
-	 if(d_size.x() && d_size.y() && d_size.z())
-	    d_data=new T[d_size.z()*d_size.y()*d_size.x()];
-	 else
-	    d_data=0;
-	 d_data3=new T**[d_size.z()];
-	 d_data3[0]=new T*[d_size.z()*d_size.y()];
-	 d_data3[0][0]=d_data;
-	 for(int i=1;i<d_size.z();i++){
-	    d_data3[i]=d_data3[i-1]+d_size.y();
-	 }
-	 for(int j=1;j<d_size.z()*d_size.y();j++){
-	    d_data3[0][j]=d_data3[0][j-1]+d_size.x();
+	 long s=d_size.x()*d_size.y()*d_size.z();
+	 if(s){
+	    d_data=new T[s];
+	    d_data3=new T**[d_size.z()];
+	    d_data3[0]=new T*[d_size.z()*d_size.y()];
+	    d_data3[0][0]=d_data;
+	    for(int i=1;i<d_size.z();i++){
+		d_data3[i]=d_data3[i-1]+d_size.y();
+	    }
+	    for(int j=1;j<d_size.z()*d_size.y();j++){
+		d_data3[0][j]=d_data3[0][j-1]+d_size.x();
+	    }
+	 } else {
+	     d_data=0;
+	     d_data3=0;
 	 }
       }
    
@@ -186,6 +189,11 @@ namespace Uintah {
 
 //
 // $Log$
+// Revision 1.14  2000/09/25 20:37:42  sparker
+// Quiet g++ compiler warnings
+// Work around g++ compiler bug instantiating vector<NCVariable<Vector> >
+// Added computeVariableExtents to (eventually) simplify data warehouses
+//
 // Revision 1.13  2000/09/20 15:48:30  sparker
 // Added .copy() method to copy one Array3 from another
 //

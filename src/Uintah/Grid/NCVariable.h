@@ -132,6 +132,8 @@ class NCVariable : public Array3<T>, public NCVariableBase {
 	     }
 	   }
 	   break;
+	 default:
+	     throw InternalError("Illegal FaceType in NCVariable::fillFace");
 	 }
 
        };
@@ -198,6 +200,8 @@ class NCVariable : public Array3<T>, public NCVariableBase {
 	     }
 	   }
 	   break;
+	 default:
+	     throw InternalError("Illegal FaceType in NCVariable::fillFaceNormal");
          }
       };
      
@@ -312,7 +316,7 @@ class NCVariable : public Array3<T>, public NCVariableBase {
 	    IntVector h(getHighIndex());
 	    for(int z=l.z();z<h.z();z++){
 	       for(int y=l.y();y<h.y();y++){
-		  size_t size = sizeof(T)*(h.x()-l.x());
+		  ssize_t size = (ssize_t)(sizeof(T)*(h.x()-l.x()));
 		  ssize_t s=write(oc.fd, &(*this)[IntVector(l.x(),y,z)], size);
 		  if(size != s)
 		     throw ErrnoException("NCVariable::emit (write call)", errno);
@@ -342,7 +346,7 @@ class NCVariable : public Array3<T>, public NCVariableBase {
 	    IntVector h(getHighIndex());
 	    for(int z=l.z();z<h.z();z++){
 	       for(int y=l.y();y<h.y();y++){
-		  size_t size = sizeof(T)*(h.x()-l.x());
+		  ssize_t size = (ssize_t)(sizeof(T)*(h.x()-l.x()));
 		  ssize_t s=::read(oc.fd, &(*this)[IntVector(l.x(),y,z)], size);
 		  if(size != s)
 		     throw ErrnoException("NCVariable::emit (write call)", errno);
@@ -374,6 +378,11 @@ class NCVariable : public Array3<T>, public NCVariableBase {
 
 //
 // $Log$
+// Revision 1.30  2000/09/25 20:37:42  sparker
+// Quiet g++ compiler warnings
+// Work around g++ compiler bug instantiating vector<NCVariable<Vector> >
+// Added computeVariableExtents to (eventually) simplify data warehouses
+//
 // Revision 1.29  2000/09/25 18:12:19  sparker
 // do not use covariant return types due to problems with g++
 // other linux/g++ fixes

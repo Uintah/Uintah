@@ -71,8 +71,8 @@ namespace Uintah {
       private:
       };
 
-   private:
       string                 d_name;
+   private:
       const TypeDescription* d_td;
       VarType                d_vartype;
       
@@ -85,6 +85,11 @@ ostream & operator<<( ostream & out, const Uintah::VarLabel & vl );
 
 //
 // $Log$
+// Revision 1.11  2000/09/25 20:37:43  sparker
+// Quiet g++ compiler warnings
+// Work around g++ compiler bug instantiating vector<NCVariable<Vector> >
+// Added computeVariableExtents to (eventually) simplify data warehouses
+//
 // Revision 1.10  2000/09/25 18:12:20  sparker
 // do not use covariant return types due to problems with g++
 // other linux/g++ fixes

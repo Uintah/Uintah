@@ -18,14 +18,14 @@ IntersectionGeometryPiece::IntersectionGeometryPiece(ProblemSpecP &ps)
 
 IntersectionGeometryPiece::~IntersectionGeometryPiece()
 {
-  for (int i = 0; i < child.size(); i++) {
+  for (int i = 0; i < (int)child.size(); i++) {
     delete child[i];
   }
 }
 
 bool IntersectionGeometryPiece::inside(const Point &p) const 
 {
-  for (int i = 0; i < child.size(); i++) {
+  for (int i = 0; i < (int)child.size(); i++) {
     if (!child[i]->inside(p))
       return false;
   }
@@ -42,7 +42,7 @@ Box IntersectionGeometryPiece::getBoundingBox() const
   lo = child[0]->getBoundingBox().lower();
   hi = child[0]->getBoundingBox().upper();
 
-  for (int i = 0; i < child.size(); i++) {
+  for (int i = 0; i < (int)child.size(); i++) {
     Box box = child[i]->getBoundingBox();
     lo = Min(lo,box.lower());
     hi = Max(hi,box.upper());

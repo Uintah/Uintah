@@ -48,15 +48,27 @@ namespace Uintah {
 	    return a+b;
 	 }
       };
+
    private:
       Reductions(const Reductions&);
       Reductions& operator=(const Reductions&);
-      
+
+#ifdef __GNUG__      
+   public:
+       // Keep gcc quiet, to avoid:
+       // warning: all member functions in class `Uintah::Reductions' are private
+       Reductions(Reductions*);
+#endif
    };
 } // end namespace Uintah
 
 //
 // $Log$
+// Revision 1.3  2000/09/25 20:37:43  sparker
+// Quiet g++ compiler warnings
+// Work around g++ compiler bug instantiating vector<NCVariable<Vector> >
+// Added computeVariableExtents to (eventually) simplify data warehouses
+//
 // Revision 1.2  2000/05/31 20:25:32  guilkey
 // Added the beginnings of a Sum reduction, which would take data from
 // multiple patches, materials, etc. and add them together.  The immediate

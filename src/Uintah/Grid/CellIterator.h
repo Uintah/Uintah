@@ -104,8 +104,8 @@ WARNING
       return d_e;
     }
     inline CellIterator(const CellIterator& copy)
-      : d_ix(copy.d_ix), d_iy(copy.d_iy), d_iz(copy.d_iz),
-	d_s(copy.d_s), d_e(copy.d_e) {
+      : d_s(copy.d_s), d_e(copy.d_e),
+	d_ix(copy.d_ix), d_iy(copy.d_iy), d_iz(copy.d_iz) {
     }
     
   private:
@@ -124,6 +124,11 @@ std::ostream& operator<<(std::ostream& out, const Uintah::CellIterator& b);
 
 //
 // $Log$
+// Revision 1.9  2000/09/25 20:37:42  sparker
+// Quiet g++ compiler warnings
+// Work around g++ compiler bug instantiating vector<NCVariable<Vector> >
+// Added computeVariableExtents to (eventually) simplify data warehouses
+//
 // Revision 1.8  2000/08/30 18:45:44  bigler
 // Added += operator.
 //

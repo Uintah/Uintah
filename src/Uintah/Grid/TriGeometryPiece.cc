@@ -22,16 +22,23 @@ TriGeometryPiece::~TriGeometryPiece()
 
 bool TriGeometryPiece::inside(const Point &p) const
 {
-
+    cerr << "TriGeometry piece not finished!\n";
+    return false;
 }
 
 Box TriGeometryPiece::getBoundingBox() const
 {
-
+    cerr << "TriGeometry piece not finished!\n";
+    return Box();
 }
 
 //
 // $Log$
+// Revision 1.2  2000/09/25 20:37:43  sparker
+// Quiet g++ compiler warnings
+// Work around g++ compiler bug instantiating vector<NCVariable<Vector> >
+// Added computeVariableExtents to (eventually) simplify data warehouses
+//
 // Revision 1.1  2000/06/09 18:38:22  jas
 // Moved geometry piece stuff to Grid/ from MPM/GeometryPiece/.
 //

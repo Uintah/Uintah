@@ -1,5 +1,6 @@
-/* REFERENCED */
-static char *id="@(#) $Id$";
+//
+// $Id$
+//
 
 #include "SubPatch.h"
 
@@ -28,6 +29,11 @@ SubPatch::~SubPatch()
 
 //
 // $Log$
+// Revision 1.2  2000/09/25 20:37:43  sparker
+// Quiet g++ compiler warnings
+// Work around g++ compiler bug instantiating vector<NCVariable<Vector> >
+// Added computeVariableExtents to (eventually) simplify data warehouses
+//
 // Revision 1.1  2000/05/30 20:19:34  sparker
 // Changed new to scinew to help track down memory leaks
 // Changed region to patch
