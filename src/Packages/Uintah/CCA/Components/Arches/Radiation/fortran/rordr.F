@@ -14,7 +14,8 @@ c     Local Variables :
 c*********************************************************************
 
       integer TOTORD, ORDOCT, i, j, total,count,m
-
+      double precision ORD(SN/2)
+      
         TOTORD = SN*(SN+2)
         ORDOCT = SN*(SN+2)/8     
 
@@ -39,7 +40,7 @@ c       Initialize the different values that the direction cosines can take
 	  ORD(1) = 0.577350d0
 
 	END IF
-        
+       
 c       Generate values of "Xi" for one octant
 
         count=1
@@ -72,7 +73,7 @@ c       Generate values of "Eta" for one octant
 c     Generate values of "Eta" for all 8 octants
 
         do i=1,TOTORD
-              OETA(i+ORDOCT)=OETA(i)
+         if (i.le.(7*ORDOCT))OETA(i+ORDOCT)=OETA(i)
          if ((i.gt.(TOTORD/4)).AND.(i.le.(TOTORD/2))) OETA(i)= 
      1   -OETA(i)
          if (i.gt.(3*TOTORD/4))OETA(i)= -OETA(i)
@@ -93,9 +94,17 @@ c       Generate values of "Mu" for one octant
 c       Generate values of "Mu" for all 8 octants
 
         do i=1,TOTORD
-           do j=1,8
-              OMU(i+ORDOCT)=OMU(i)*((-1)**(j+1))
-           enddo
+
+           if (i.le.(7*ORDOCT))OMU(i+ORDOCT)=OMU(i)
+           if ((i.gt.(ORDOCT)).AND.(i.le.(2*ORDOCT))) 
+     1	   OMU(i)= -OMU(i)
+           if ((i.gt.(3*ORDOCT)).AND.(i.le.(4*ORDOCT))) 
+     1	   OMU(i)= -OMU(i)
+           if ((i.gt.(5*ORDOCT)).AND.(i.le.(6*ORDOCT))) 
+     1	   OMU(i)= -OMU(i)
+           if ((i.gt.(7*ORDOCT)).AND.(i.le.(8*ORDOCT))) 
+     1	   OMU(i)= -OMU(i)
+
         enddo
 
 c       Generate weights "WT"
