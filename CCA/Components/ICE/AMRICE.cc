@@ -70,6 +70,19 @@ void AMRICE::scheduleRefineInterface(const LevelP& fineLevel,
     if(d_usingLODI) {
       addRefineDependencies(task,lb->vol_frac_CCLabel,step, nsteps);
     }
+    
+    //__________________________________
+    // Model Variables.
+    if(d_modelSetup && d_modelSetup->tvars.size() > 0){
+      vector<TransportedVariable*>::iterator iter;
+
+      for(iter = d_modelSetup->tvars.begin();
+         iter != d_modelSetup->tvars.end(); iter++){
+        TransportedVariable* tvar = *iter;
+        addRefineDependencies(task, tvar->var, step, nsteps);
+      }
+    }
+    
     const MaterialSet* ice_matls = d_sharedState->allICEMaterials();
     sched->addTask(task, fineLevel->eachPatch(), ice_matls);
   }
@@ -121,7 +134,38 @@ void AMRICE::refineInterface(const ProcessorGroup*,
 
         refineBoundaries(patch, vel_CC.castOffConst(),new_dw,
                             lb->vel_CCLabel,    indx,subCycleProgress);
+       //__________________________________
+       //    Model Variables                     
+       if(d_modelSetup && d_modelSetup->tvars.size() > 0){
+         vector<TransportedVariable*>::iterator t_iter;
+          for( t_iter  = d_modelSetup->tvars.begin();
+               t_iter != d_modelSetup->tvars.end(); t_iter++){
+            TransportedVariable* tvar = *t_iter;
 
+            if(tvar->matls->contains(indx)){
+              constCCVariable<double> q_CC;
+              old_dw->get(q_CC, tvar->var, indx, patch, gac, 1);
+              refineBoundaries(patch, q_CC.castOffConst(),new_dw,
+                               tvar->var,    indx,subCycleProgress);
+             #if 0  
+               string name = tvar->var->getName();
+               printData(indx, patch, 1, "refineInterface_models", name, q_CC);
+             #endif                 
+            }
+          }
+        }                                     
+                            
+#if 0
+        //__________________________________
+        //  Print Data 
+        ostringstream desc;     
+        desc << "refineInterface_Mat_" << indx << "_patch_"<< patch->getID();
+        printData(indx, patch,   1, desc.str(), "press_CC",    press_CC);
+        printData(indx, patch,   1, desc.str(), "rho_CC",      rho_CC);
+        printData(indx, patch,   1, desc.str(), "sp_vol_CC",   sp_vol_CC);
+        printData(indx, patch,   1, desc.str(), "Temp_CC",     temp_CC);
+        printVector(indx, patch, 1, desc.str(), "vel_CC", 0,   vel_CC);
+#endif
       }
     }
   }             
@@ -684,16 +728,19 @@ void AMRICE::coarsen(const ProcessorGroup*,
       new_dw->getModifiable(vel_CC,   lb->vel_CCLabel,    indx, coarsePatch);  
       
       // coarsen
+      fineToCoarseOperator<double>(press_CC,  lb->press_CCLabel,indx, new_dw, 
+                         invRefineRatio, coarsePatch, coarseLevel, fineLevel);
+                         
       fineToCoarseOperator<double>(rho_CC,    lb->rho_CCLabel,  indx, new_dw, 
                          invRefineRatio, coarsePatch, coarseLevel, fineLevel);      
 
-      fineToCoarseOperator<double>(press_CC,  lb->press_CCLabel,indx, new_dw, 
+      fineToCoarseOperator<double>(sp_vol_CC, lb->sp_vol_CCLabel,indx, new_dw, 
                          invRefineRatio, coarsePatch, coarseLevel, fineLevel);
 
       fineToCoarseOperator<double>(temp,      lb->temp_CCLabel, indx, new_dw, 
                          invRefineRatio, coarsePatch, coarseLevel, fineLevel);
        
-     fineToCoarseOperator<Vector>( vel_CC,    lb->vel_CCLabel,  indx, new_dw, 
+      fineToCoarseOperator<Vector>( vel_CC,   lb->vel_CCLabel,  indx, new_dw, 
                          invRefineRatio, coarsePatch, coarseLevel, fineLevel);    
     }
   }  // course patch loop 
