@@ -200,6 +200,7 @@ protected:
   FieldHandle  geomFilehandle_;
   FieldHandle injuryfieldHandle_;
   string    geomFilename_;
+  string    activeBoundBoxSrc;
 
 public:
   HotBox(GuiContext*);
@@ -363,10 +364,17 @@ HotBox::execute()
   { // label maps have not been read
     anatomytable->readFile((char *)anatomyDataSrc.c_str());
   }
+  else if(anatomyDataSrc != anatomytable->getActiveFile())
+  { // label map data source has changed
+    delete anatomytable;
+    anatomytable = new VH_MasterAnatomy();
+    anatomytable->readFile((char *)anatomyDataSrc.c_str());
+  }
   else
   {
     cout << "Master Anatomy file contains " << anatomytable->get_num_names();
-    cout << " names" << endl;
+    cout << " names, max labelindex ";
+    cout << anatomytable->get_max_labelindex() << endl;
   }
 
   // if the selection source is from the HotBox UI -- ignore the probe
@@ -395,28 +403,52 @@ HotBox::execute()
 
   if( boundingBoxDataSrc == "" ) {
     error("No Bounding Box file has been selected.  Please choose a file.");
-    return;
   }
 
-  int segVolXextent, segVolYextent, segVolZextent;
-  if(!boundBoxList)
-  { // bounding boxes have not been read
+  double segVolXextent, segVolYextent, segVolZextent;
+  Point boxTran, boxScale;
+  if(!boundBoxList || boundingBoxDataSrc != activeBoundBoxSrc)
+  { // bounding boxes have not been read or data source has changed
     if (stat(boundingBoxDataSrc.c_str(), &buf)) {
     error("File '" + boundingBoxDataSrc + "' not found.");
-    return;
     }
 
+    if(boundBoxList != NULL && boundingBoxDataSrc != activeBoundBoxSrc)
+    {
+      // destroy boundBoxList
+      VH_Anatomy_destroyBBox_list(boundBoxList);
+    }
     boundBoxList =
          VH_Anatomy_readBoundingBox_File((char *)boundingBoxDataSrc.c_str());
+    activeBoundBoxSrc = boundingBoxDataSrc;
 
     // find the largest bounding volume of the segmentation
-    maxSegmentVol = VH_Anatomy_findMaxBoundingBox(boundBoxList);
-    segVolXextent = maxSegmentVol->get_maxX() - maxSegmentVol->get_minX();
-    segVolYextent = maxSegmentVol->get_maxY() - maxSegmentVol->get_minY();
-    segVolZextent = maxSegmentVol->get_maxZ() - maxSegmentVol->get_minZ();
-    maxSegBBextent = Point((double)segVolXextent, (double)segVolYextent,
-                           (double)segVolZextent);
-  }
+    if((maxSegmentVol = VH_Anatomy_findMaxBoundingBox(boundBoxList)) != NULL)
+    {
+      segVolXextent =
+        maxSegmentVol->get_maxX() - maxSegmentVol->get_minX() + 0.001;
+      segVolYextent =
+        maxSegmentVol->get_maxY() - maxSegmentVol->get_minY() + 0.001;
+      segVolZextent =
+        maxSegmentVol->get_maxZ() - maxSegmentVol->get_minZ() + 0.001;
+      maxSegBBextent = Point(segVolXextent, segVolYextent, segVolZextent);
+
+      // derive factors to translate/scale segmentation bounding boxes
+      // to the input labelmap field
+      boxTran = Point(inFieldBBox.min().x() - (double)maxSegmentVol->get_minX(),
+                      inFieldBBox.min().y() - (double)maxSegmentVol->get_minY(),
+                      inFieldBBox.min().z() - (double)maxSegmentVol->get_minZ()
+                     );
+      boxScale.x(inFieldBBextent.x() / maxSegBBextent.x());
+      boxScale.y(inFieldBBextent.y() / maxSegBBextent.y());
+      boxScale.z(inFieldBBextent.z() / maxSegBBextent.z());
+    } // end if(maxSegmentVol != NULL)
+    else
+    {
+      boxTran = Point(0.0, 0.0, 0.0);
+      boxScale = Point(1.0, 1.0, 1.0);
+    }
+  } // end if(!boundBoxList)
 
   // compare the bounding box of the input field
   // with the largest bounding volume of the segmentation
@@ -428,18 +460,8 @@ HotBox::execute()
   cerr << "],[" << maxSegmentVol->get_maxX() << "," << maxSegmentVol->get_maxY();
   cerr << "," << maxSegmentVol->get_maxZ() << "]), extent(";
   cerr << maxSegBBextent << ")" << endl;
-  cerr << maxSegmentVol->get_anatomyname() << endl;
+  cerr << "Max Volume: " <<  maxSegmentVol->get_anatomyname() << endl;
 
-  // derive factors to translate/scale segmentation bounding boxes
-  // to the input labelmap field
-  Point boxTran(inFieldBBox.min().x() - (double)maxSegmentVol->get_minX(),
-                inFieldBBox.min().y() - (double)maxSegmentVol->get_minY(),
-                inFieldBBox.min().z() - (double)maxSegmentVol->get_minZ()
-               );
-  Point boxScale;
-  boxScale.x(inFieldBBextent.x() / maxSegBBextent.x());
-  boxScale.y(inFieldBBextent.y() / maxSegBBextent.y());
-  boxScale.z(inFieldBBextent.z() / maxSegBBextent.z());
 
   cerr << "boxTran = " << boxTran << ", boxScale = " << boxScale << endl;
 
@@ -499,12 +521,18 @@ HotBox::execute()
   { // adjacency data has not been read
     adjacencytable->readFile((char *)adjacencyDataSrc.c_str());
   }
+  else if(adjacencytable->getActiveFile() != adjacencyDataSrc)
+  { // adjacency data source has changed
+    delete adjacencytable;
+    adjacencytable = new VH_AdjacencyMapping();
+    adjacencytable->readFile((char *)adjacencyDataSrc.c_str());
+  }
   else
   {
     cout << "Adjacency Map file contains " << adjacencytable->get_num_names();
     cout << " entries" << endl;
   }
-  // end else(use fixed Adjacency Map files)
+  // end else(
 
   // get the surface geometry corresponding to the current selection
   executeHighlight();
@@ -638,7 +666,12 @@ void
 HotBox::execAdjacency()
 {
   // get the adjacency info for the selected entity
-  int *adjPtr = adjacencytable->adjacent_to(labelIndexVal);
+  int *adjPtr;
+  if((adjPtr = adjacencytable->adjacent_to(labelIndexVal)) == NULL)
+  {
+    error("HotBox::execAdjacency(): NULL pointer");
+    return;
+  }
 
   // fill in text labels in the HotBox
   char *adjacentName;
@@ -1442,7 +1475,7 @@ HotBox::makeInjGeometry()
   cerr << "HotBox::makeInjGeometry(): ";
   cerr << injured_tissue.size() << " injuries ";
   // traverse the injured tissue list
-  for(int i = 0; i < injured_tissue.size(); i++)
+  for(unsigned int i = 0; i < injured_tissue.size(); i++)
   {
     VH_injury injPtr = (VH_injury)injured_tissue[i];
 
