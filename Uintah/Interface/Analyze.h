@@ -3,6 +3,11 @@
 
 #include <Uintah/Parallel/UintahParallelPort.h>
 #include <Uintah/Interface/DataWarehouseP.h>
+#include <Uintah/Interface/ProblemSpecP.h>
+#include <Uintah/Grid/SimulationStateP.h>
+#include <Uintah/Interface/SchedulerP.h>
+#include <Uintah/Grid/GridP.h>
+#include <Uintah/Grid/LevelP.h>
 #include <Uintah/Grid/Handle.h>
 
 namespace Uintah {
@@ -44,26 +49,28 @@ WARNING
       Analyze();
       virtual ~Analyze();
       
-      void setup( const Grid& grid,
-                  const SimulationState& sharedState,
-                  DataWarehouseP dw);
+      virtual void problemSetup(const ProblemSpecP& problemSpec,
+                        GridP& grid,
+			SimulationStateP& state) = 0;
       
-      virtual void performAnalyze() = 0;
+      virtual void performAnalyze(double t, double dt,
+				  const LevelP& level, SchedulerP&,
+				  DataWarehouseP& old_dw,
+				  DataWarehouseP& new_dw) = 0;
       
    private:
       Analyze(const Analyze&);
       Analyze& operator=(const Analyze&);
-      
-   protected:
-      const Grid*             d_grid;
-      const SimulationState*  d_sharedState;
-      DataWarehouseP          d_dw;
    };
 
 } // end namespace Uintah
 
 //
 // $Log$
+// Revision 1.2  2000/09/04 00:37:49  tan
+// Modified Analyze interface for scientific debugging under both
+// sigle processor and mpi environment.
+//
 // Revision 1.1  2000/07/17 23:37:26  tan
 // Added Analyze interface that will be especially useful for debugging
 // on scitific results.
