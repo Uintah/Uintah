@@ -135,6 +135,8 @@ class SFCXVariable : public Array3<T>, public SFCXVariableBase {
 	     }
 	   }
 	   break;
+	 case Patch::numFaces:
+	    break;
 	 }
 
        };
@@ -149,7 +151,7 @@ class SFCXVariable : public Array3<T>, public SFCXVariableBase {
 	    for (int j = low.y(); j<hi.y(); j++) {
 	      for (int k = low.z(); k<hi.z(); k++) {
 		(*this)[IntVector(hi.x()-1,j,k)] = 
-		   (*this)[IntVector(hi.x()-2,j,k)] - value*dx.x();
+		   (*this)[IntVector(hi.x()-2,j,k)] + value*dx.x();
 	      }
 	    }
 	    break;
@@ -165,7 +167,7 @@ class SFCXVariable : public Array3<T>, public SFCXVariableBase {
 	    for (int i = low.x(); i<hi.x(); i++) {
 	      for (int k = low.z(); k<hi.z(); k++) {
 		(*this)[IntVector(i,hi.y()-1,k)] = 
-		  (*this)[IntVector(i,hi.y()-2,k)] - value * dx.y();
+		  (*this)[IntVector(i,hi.y()-2,k)] + value * dx.y();
 	      }
 	    }
 	    break;
@@ -181,7 +183,7 @@ class SFCXVariable : public Array3<T>, public SFCXVariableBase {
 	    for (int i = low.x(); i<hi.x(); i++) {
 	      for (int j = low.y(); j<hi.y(); j++) {
 		(*this)[IntVector(i,j,hi.z()-1)] = 
-		  (*this)[IntVector(i,j,hi.z()-2)] - value * dx.z();
+		  (*this)[IntVector(i,j,hi.z()-2)] + value * dx.z();
 	      }
 	    }
 	    break;
@@ -456,6 +458,9 @@ class SFCXVariable : public Array3<T>, public SFCXVariableBase {
 
 //
 // $Log$
+// Revision 1.11  2000/12/18 23:41:39  jas
+// Fixed application of bcs for fillFluxFace.
+//
 // Revision 1.10  2000/12/10 09:06:17  sparker
 // Merge from csafe_risky1
 //
