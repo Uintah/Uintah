@@ -809,9 +809,6 @@ void Patch::computeVariableExtents(TypeDescription::Type basis,
   case TypeDescription::ParticleVariable:
     translation=CellBased;
     break;
-  case TypeDescription::ScatterGatherVariable:
-    translation=CellBased;
-    break;
   default:
     if(gtype == Ghost::None)
       translation=CellBased;  // Shouldn't matter what it is

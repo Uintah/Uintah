@@ -18,7 +18,6 @@ SRCS     += \
 	$(SRCDIR)/ReductionVariableBase.cc \
 	$(SRCDIR)/ReductionVariable_special.cc \
 	$(SRCDIR)/Patch.cc \
-	$(SRCDIR)/ScatterGatherBase.cc \
 	$(SRCDIR)/SimulationState.cc \
 	$(SRCDIR)/SimulationTime.cc $(SRCDIR)/SubPatch.cc \
 	$(SRCDIR)/Task.cc $(SRCDIR)/TypeDescription.cc \

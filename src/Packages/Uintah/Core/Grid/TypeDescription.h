@@ -48,7 +48,6 @@ class Variable;
 	 SFCYVariable,
 	 SFCZVariable,
 	 ParticleVariable,
-	 ScatterGatherVariable,
 	 PerPatch,
 	 Point,
 	 Vector,

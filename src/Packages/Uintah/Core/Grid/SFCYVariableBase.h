@@ -70,6 +70,7 @@ WARNING
       virtual void getSizes(IntVector& low, IntVector& high, IntVector& siz) const = 0;
       virtual void getSizes(IntVector& low, IntVector& high,
 			    IntVector& siz, IntVector& strides) const = 0;
+     virtual RefCounted* getRefCounted() = 0;
    protected:
       SFCYVariableBase(const SFCYVariableBase&);
       SFCYVariableBase();
