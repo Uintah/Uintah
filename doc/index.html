@@ -1,20 +1,3 @@
-<!--
-  The contents of this file are subject to the University of Utah Public
-  License (the "License"); you may not use this file except in compliance
-  with the License.
-  
-  Software distributed under the License is distributed on an "AS IS"
-  basis, WITHOUT WARRANTY OF ANY KIND, either express or implied. See the
-  License for the specific language governing rights and limitations under
-  the License.
-  
-  The Original Source Code is SCIRun, released March 12, 2001.
-  
-  The Original Source Code was developed by the University of Utah.
-  Portions created by UNIVERSITY are Copyright (C) 2001, 1994 
-  University of Utah. All Rights Reserved.
--->
-
  <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2 Final//EN">
  <HTML>
    <HEAD>
@@ -22,79 +5,9 @@
      <!-- Changed by: TjD, 08-Nov-2000 -->
      <link rel=stylesheet type="text/css" href="doc_styles.css">
 
-<!-- *************************************************************** -->
-<!-- ******************* BEGIN HEIRMENU SCRIPT ********************* -->
-<!-- ****************** (Place in document HEAD) ******************* -->
-<!-- *************************************************************** -->
-<SCRIPT LANGUAGE="JavaScript" TYPE="text/javascript">
-       <!--
+   </HEAD>  
 
-       if(window.event + "" == "undefined") event = null;
-       function HM_f_PopUp(){return false};
-       function HM_f_PopDown(){return false};
-       popUp = HM_f_PopUp;
-       popDown = HM_f_PopDown;
-
-       //-->
-       </SCRIPT>
-
-       <SCRIPT LANGUAGE="JavaScript1.2" TYPE="text/javascript">
-       <!--
-
-       HM_PG_MenuWidth = 150;
-       HM_PG_FontFamily = "Arial, helvetica, sans-serif";
-       HM_PG_FontSize = 10;
-       HM_PG_FontBold = 1;
-       HM_PG_FontItalic = 0;
-       HM_PG_FontColor = "#000000";
-       HM_PG_FontColorOver = "#FFFFFF";
-       HM_PG_BGColor = "#CCCCCC";
-       HM_PG_BGColorOver = "#999999";
-       HM_PG_ItemPadding = 3;
-
-       HM_PG_BorderWidth = 2;
-       HM_PG_BorderColor = "#000000";
-       HM_PG_BorderStyle = "solid";
-       HM_PG_SeparatorSize = 2;
-       HM_PG_SeparatorColor = "#000000";
-       HM_PG_ImageSrc = "tri.gif";
-       HM_PG_ImageSrcLeft = "triL.gif";
-
-       HM_PG_ImageSize = 12;
-       HM_PG_ImageHorizSpace = 0;
-       HM_PG_ImageVertSpace = 2;
-
-       HM_PG_KeepHilite = true; 
-       HM_PG_ClickStart = 0;
-       HM_PG_ClickKill = false;
-       HM_PG_ChildOverlap = 20;
-       HM_PG_ChildOffset = 10;
-       HM_PG_ChildPerCentOver = null;
-       HM_PG_TopSecondsVisible = .3;
-       HM_PG_StatusDisplayBuild =1;
-       HM_PG_StatusDisplayLink = 1;
-       HM_PG_UponDisplay = null;
-       HM_PG_UponHide = null;
-       HM_PG_RightToLeft = false;
-
-       //HM_PG_CreateTopOnly = 1;
-       HM_PG_ShowLinkCursor = 1;
-
-       //HM_a_TreesToBuild = [1,2];
-
-       //-->
-       </SCRIPT>
-
-<SCRIPT LANGUAGE="JavaScript1.2"
-               SRC="HM_Loader.js"
-               TYPE='text/javascript'></SCRIPT>
-<!-- *************************************************************** -->
-<!-- ******************** END HEIRMENU SCRIPT ********************** -->
-<!-- *************************************************************** -->
-
-</HEAD>  
-
-<BODY>
+<body>
 
 <!-- *************************************************************** -->
 <!-- ********** STANDARD SCI RESEARCH HEADER WITH MENU ************* -->
@@ -104,260 +17,114 @@
 	<area shape="rect" coords="491,15,567,32" href="http://www.sci.utah.edu/research/research.html">
 	<area shape="rect" coords="31,9,95,36" href="http://www.sci.utah.edu">
 
-	<area href="InstallGuide/pseInstall.html" coords="0,45,150,70" shape="rect" onMouseOver="HM_f_PopUp('elMenu1',event)" onMouseOut="HM_f_PopDown('elMenu1')">
+	<area href="InstallGuide/installguide.html" coords="0,45,150,70" shape="rect" >
 
-	<area href="UserGuide/userguide.html" coords="150,45,300,70" shape="rect" onMouseOver="HM_f_PopUp('elMenu2',event)" onMouseOut="HM_f_PopDown('elMenu2')">
+	<area href="UserGuide/userguide.html" coords="150,45,300,70" shape="rect" >
 
-	<area href="DeveloperGuide/devguide.html" coords="300,45,450,70" shape="rect" onMouseOver="HM_f_PopUp('elMenu3',event)" onMouseOut="HM_f_PopDown('elMenu3')">
+	<area href="DeveloperGuide/devguide.html" coords="300,45,450,70" shape="rect" >
 
-	<area href="ReferenceGuide/refguide.html" coords="450,45,600,70" shape="rect" onMouseOver="HM_f_PopUp('elMenu4',event)" onMouseOut="HM_f_PopDown('elMenu4')">
+	<area href="ReferenceGuide/refguide.html" coords="450,45,600,70" shape="rect" >
 </map>
 <!-- *************************************************************** -->
 <!-- *************************************************************** -->
 
-     <p class="title">A Guide to SCIRun Documentation</p>
-
-     <p class="head">Table of Contents</p>
-
-     <ol class="toc">
-       <li> <A HREF="#GeneralInformation">General Information Documents</A>
-	 describe SCIRun, the concept of a <em>Problem Solving Environment</em> (PSE),
-	 and the types of problems that the current set of SCIRun PSEs solve.
-       </li>
-
-       <li> <A HREF="#Installation">Installation Documents</A> provide information on
-	 installing SCIRun.
-       </li>
-	 <li> The <A HREF="#UserGuide">User Guide</A> provides a first time user a tutorial
-	 on using SCIRun.
-       </li>
-       <li> <A HREF="#NetworkBuilder">Data-flow Network Builder Documents</A>
-	 provide information on constructing dataflow networks.
-       </li>
-
-       <li> <A HREF="#Developer">Developer Documents</A> for 
-	those developing new modules, datatypes, and  data converters, as well as information on other types of code.
-	 <ol class="subtoc">
-	   <li><a href="#Writing Code">Coding</a>
-	   <li><a href="#C++ Info">C++ Info</a>
-	   <li><a href="#Tck/Tk Info">Tck/Tk Info</a>
-	   <li><a href="#Miscellaneous Info">Miscellaneous Info</a>
-	 </ol>
-       </li>
-
-       <li> <A HREF="#DesignDocuments">Design Documents</A> Information related to
-	 the design of various pieces of SCIRun.
-       </li>
-     </ol>
-
-     <A NAME="GeneralInformation"/>
-       <p class="head">General Information</p>
+<!- Main Outer Table ->
+<table border="0" align="center" cellpadding="0" cellspacing="0" width="600">
+<tr>
+	<td>
+	<!- BODY CONTENT GOES HERE ->
      
-       <P class="firstpara">
-	 Visit the <A HREF="http://www.sci.utah.edu/pse/pse.html">PSE</A> web
-	 page for an overview of the current set of PSEs
-	 and the types of problems they are designed to solve.
-       </P>
+<p class="title">SCIRun Documentation</p>
+<table border="0" align="center" cellpadding="2" cellspacing="20" width="468" height="468">
 
-       <P class="firstpara">
-	 <A HREF="ReferenceGuide/faq.html">FAQ</A>  This list has been compiled from
-	 the scirun-develop mailing list.
-       </P>
-       
-       <P class="firstpara">
-	 Subscribe to one of the mailing lists:
-	 <EM>scirun-develop</EM> and
-	 <EM>scirun-interest</EM>. Do this by sending a message to
-	 <A HREF="mailto:Majordomo@cs.utah.edu">majordomo@cs.utah.edu</A>
-	 with the text "subscribe &lt;name-of-list&gt;"
-	 in the body of the message.
-       </P>
-       
-     <A NAME="Installation"/>
-     <p class="head">Installation</p>
+	<!- InstGuide and UserGuide Table Headers ->
+<tr height="20" align="left" valign="top" bgcolor="#DDDDDD">
+	<td width ="230"><A HREF="InstallGuide/installguide.html"><b>Installation Guide</b></a></td>
+	<td width ="230"><A HREF="UserGuide/userguide.html"><b>User Guide</b></A></td>
+</tr>
 
-     <P class="firstpara">
-       <UL class="list">
-         <LI><A HREF="InstallGuide/pseInstall.html">SCIRun Installation
-	 Instructions</A>.
-	 </LI>
-         <LI><A HREF="InstallGuide/ThirdpartyInfo.html">Thirdparty Software
-         Installation Instructions</A>.</LI>
-         <LI><A HREF="../../software_down.html">Download SCIRun</A></LI>
-         <LI><A HREF="../../bundles/Thirdparty_install.tar.gz">Download Thirdparty_install.tar.gz</A></LI> 
-       </UL>
-     </P>
-     <A NAME="UserGuide"/>
-     <p class="head">User Guide</p>
+<tr>
+	<!- Installation Guide Sublinks ->
+	<td valign="top">
+	<ul>
+		<LI><A
+		HREF="InstallGuide/pseInstall.html#Requirements">System Requirements</A></LI>
+		<LI><A
+		HREF="InstallGuide/pseInstall.html#Gotchas">Known Issues (FAQ)</A></LI>
+		<LI><A
+		HREF="InstallGuide/pseInstall.html#tested">Tested PC systems</A></LI>
+		<LI><A
+		HREF="http://ampano.cs.utah.edu/research/software/software_down.html">Download software</A></LI>
+	</ul>
+	</td>
 
-     <P class="firstpara">
-       <UL class="list">
-         <LI><A HREF="UserGuide/usersguide">SCIRun Users Guide</A>.
-	 </LI>
-       </UL>
-     </P>
+	<!- User's Guide Sublinks ->
+	<td valign="top">
+	<ul>
+		<li><a href="UserGuide/usersguide/node3.html">PSE Concepts</a></li>
+		<li><a href="UserGuide/usersguide/node4.html">SCIRun basics</a></li>
+		<li><a href="UserGuide/usersguide/node5.html">SCIRun Networks</a></li>
+		<li><a href="UserGuide/usersguide/node6.html">Viewer Module</a></li>
 
-     <A NAME="NetworkBuilder"/>
-     <p class="head">Data-flow Network Builder</p>
-     <P class="firstpara">
-       A <EM>network builder</EM> works within the SCIRun environment to
-       construct data-flow
-     </P>
+	</ul>
+	</td>
+</tr>
 
-     <P class="firstpara">
-       <EM>Yet to be done</EM>. Potential topics:
-     </P>
+	<!- DevGuide and RefGuide Table Headers ->
+<tr height="20" align="left" valign="top" bgcolor="#DDDDDD">
+	<td><A HREF="DeveloperGuide/devguide.html"><b>Developer Guide</b></A></td>
+	<td><A HREF="ReferenceGuide/refguide.html"><b>Reference Guide</b></A></td>
+</tr>
+
+<tr height="180" align="left" valign="top">
+	<!- Developer's Guide Sublinks ->
+	<td>
+	<ul>
+		<li><a href="DeveloperGuide/coding_standard.html">Coding Standards</a></li>
+		<li><a href="../src/Core/Malloc/doc/dirspec.xml?dir=4">Memory Management</a></li>
+		<li><a href="../src/Core/Persistent/doc/dirspec.xml?dir=4">Persistent Data (I/O)</a></li>
+		<li><a href="../src/Dataflow/Network/doc/dirspec.xml?dir=4">Dataflow Programming</a></li>
+		<li><a href="../src/Dataflow/Widgets/doc/dirspec.xml?dir=4">Using 3D Widgets</a></li>
 
 
-     <UL class="list">
-       <LI>Starting SCIRun</LI>
-       
-       <LI>Creating and Editing a Network</LI>
+	</ul>
+	</td>
 
-       <LI>Executing a Network</LI>
-       
-       <LI>Debugging a Network</LI>
+	<!- Reference Guide Sublinks ->
+	<td rowspan="3">
+	<ul>
+		<li><a href="ReferenceGuide/docs-api/namespaces.html">Namespaces</a></li>
+		<li><a href="ReferenceGuide/docs-api/heirarchy.html">Class Heirarchy</a></li>
+		<li><a href="ReferenceGuide/docs-api/files.html">Files</a></li>
+		<li><a href="ReferenceGuide/docs-api/globals.html">Globals</a></li>
+		<li><a href="ReferenceGuide/docs-api/functions.html">Functions</a></li>
 
-       <LI>Importing Foreign Data</LI>
+	</ul>
+	</td>
+</tr>
 
-       <LI>Module Reference Guides </LI>
-
-       <LI>Data Type Reference Guides </LI>
-
-       <LI>Existing Data Sets</LI>
-
-       <LI>Sample Networks</LI>
-
-     </UL>
-
-     <A NAME="Developer"/>
-     <p class="head">Developer</p>
+</table>
 
 
-     <A NAME="Writing Code"/>
-     <p class="subhead">Coding</p>
+	<!- END BODY CONTENT ->
+	</td>
+<tr>
 
-     <P class="firstpara">
-       Developers will write modules, data converters and other code, for implementation within the SCIRun environment. The following documents are required reading for all developers.
-     </P>
-     <OL class="list">
+<!-- ******************************************************************* -->
+<!-- *********************** STANDARD SCI FOOTER *********************** -->
+<!-- ******************************************************************* -->
+<tr>
+	<td align="center">
+<hr size="1" width="600">
+<font size="-2" face="arial, helvetica, sans-serif">Scientific Computing and Imaging Institute &#149; 50 S. Central Campus Dr. Rm 3490 &#149; Salt Lake City, UT 84112<br>
+(801) 585-1867 &#149; fax: (801) 585-6513 &#149; <a href="http://www.utah.edu/disclaimer/disclaimer_home.html">Disclaimer</a></font>
+	</td>
+</tr>
 
-       <LI>
-	 <A HREF="DeveloperGuide/coding_standard.html">Coding Standards</A>.
-       </LI>
+<!-- ********************* END STANDARD SCI FOOTER ********************* -->
+<!-- ******************************************************************* -->
 
-       <LI>
-	 <A HREF="ReferenceGuide/specProcedure.html">Designing and implementing a component</A>.
-       </LI>
-
-       <li>Managing code with CVS</li>
-
-       <OL type="i">
-
-	 <LI>
-	   <A HREF="ReferenceGuide/cvs_info.html">Managing SCIRun code (a brief introduction)</A>.
-	 </LI>
-	 <LI>
-	   <A HREF="http://www.csafe.utah.edu/development_environment/cvs/index.html">Managing SCIRun code (a brief introduction prepared by the Uintah project)</A>.
-	 </LI>
-	 <LI>
-	   <A HREF="http://www.gnu.org/manual/cvs-1.9/html_chapter/cvs_toc.html">
-	     The complete CVS manual</A>.
-	 </LI>
-       </OL>
-     </OL>
-
-     <A NAME="C++ Info"/>
-     <p class="subhead">C++ Info</p>
-
-     <P class="firstpara">
-       SCIRun is implemented in C++.  Here are a few C++ references:
-     </P>
-     <UL class="list">
-       <LI>
-	 <A HREF="http://www.research.att.com/~bs/C++.html">Overview</A>
-	 (with lots of links) of C++ by its original designer <A
-	 HREF="http://www.research.att.com/~bs/homepage.html">Bjarne
-	 Stroustrup.</A>
-       </LI>
-       <LI>
-	 <A
-	 HREF="http://www.accu.org/bookreviews/public/reviews/0hr/beginner_s_c__.htm">"Highly
-	 Recommened" books</A> for novice C++ programmers.
-       </LI>
-       <LI>
-	   <A
-	   HREF="http://www.accu.org/bookreviews/public/reviews/0hr/advanced_c__.htm">"Highly
-	   Recommened" books</A> for advanced C++ programmers.
-       </LI>
-       <LI>
-	   SGI's implementation of the <A
-	   HREF="http://techpubs.sgi.com/library/dynaweb_docs/0650/SGI_Developer/books/STL_PG/index.html">Standard
-	   Template Library</A>.
-       </LI>
-     </UL>
-
-     <A NAME="Tck/Tk Info"/>
-     <p class="subhead">Tck/Tk Info</p>
-     <P class="firstpara">
-       SCIRun graphical user interfaces are composed with the
-       language <A HREF="http://dev.scriptics.com/software/tcltk">Tcl</A> and its
-       extensions <A HREF="http://dev.scriptics.com/software/tcltk">Tk</A>,
-       <A HREF="http://www.tcltk.com/itcl">iTcl, iTk</A>, and
-       <A HREF="http://www.tcltk.com/blt">BLT</A>.  
-     </P>
-	 
-     <P class="firstpara">
-       There are a number
-       of good books describing tcl/tk.  One is
-       <CITE>Practical Programming in Tcl and Tk</CITE>
-       by Brent B. Welch.
-     </P>
-
-     <P class="firstpara">
-       A new book explaining itcl (aka [incr Tcl/Tk]) is
-       <CITE>[incr Tcl/Tk] from the GROUND UP</CITE> by
-       Chad Smith.
-     </P>
-
-     <p class="firstpara">
-       <A HREF="ReferenceGuide/widgetInfo.html">Man pages</A> for GUI
-       widgets from the standard tcl and itcl libraries are available
-       online.
-     </p>
-
-     <A NAME="Miscellaneous Info"/>
-     <p class="subhead">Miscellaneous Info</p>
-
-     <P class="firstpara">
-       <EM>Yet to be done</EM>. Here is a list of potential topics:
-     </P>
-     <UL class="list">
-       <li> Module Reference Guides </li>
-
-       <li> Data Type Reference Guides </li>
-
-       <li>Reporting bugs. </li>
-
-       <li> Existing Data Sets </li>
-     </UL>
-
-     <A NAME="DesignDocuments"/>
-     <p class="head">Design Documents</p>
-
-     <UL class="list">
-       <LI>
-	   <A HREF="ReferenceGuide/makefiles.html">SCIRun <KBD>make</KBD> strategy</A>
-       </LI>
-
-       <LI>
-	   <A HREF="ReferenceGuide/exceptions.html">SCIRun Exception Facility</A>
-       </LI>
-
-       <LI>
-	   <A HREF="../src/Core/Datatypes/doc/domainDesign.html">Fields, Attributes, and Geometries</A>
-       </LI>
-     </UL>
-
-   </BODY>
- </HTML>
+</table>
+ 
+</BODY>
+</HTML>
