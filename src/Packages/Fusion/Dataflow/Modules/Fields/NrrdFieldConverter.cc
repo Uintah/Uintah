@@ -95,7 +95,7 @@ NrrdFieldConverter::~NrrdFieldConverter(){
 void
 NrrdFieldConverter::execute(){
 
-  register unsigned int ic, jc, kc;
+  register unsigned int cc, ic, jc, kc;
 
   reset_vars();
 
@@ -110,6 +110,8 @@ NrrdFieldConverter::execute(){
     return;
 
   port_map_type::iterator pi = range.first;
+
+  cc = 0;
 
   while (pi != range.second) {
     NrrdIPort *inrrd_port = (NrrdIPort*) get_iport(pi->second); 
@@ -190,13 +192,19 @@ NrrdFieldConverter::execute(){
 	delete max;
       }
     } else if( pi != range.second ) {
-      error( "No handle or representation" );
+      ostringstream str;
+      
+      str << "No handle or representation for port ";
+      str << cc << "  " << inrrd_port->get_portname();
+      error( str.str() );
       return;
     }
+
+    cc++;
   }
 
   if( nHandles.size() == 0 ){
-    error( "No handle or representation" );
+    error( "No handles." );
     return;
   }
 
@@ -331,19 +339,23 @@ NrrdFieldConverter::execute(){
 	    error_ = true;
 	    return;
 	  }
+	} else {
+	  error( dataset[0] + " - Unknown topology mesh data found." );
+	  error_ = true;
+	  return;
 	}
-    } else
-      // Anything else is considered to be data.
-      data_.push_back( ic );
+      } else
+	// Anything else is considered to be data.
+	data_.push_back( ic );
     }
-
+    
     datasetsStr_.reset();
     
     if( datasetsStr != datasetsStr_.get() ) {
       // Update the dataset names and dims in the GUI.
       ostringstream str;
       str << id << " set_names {" << datasetsStr << "}";
-
+      
       gui->execute(str.str().c_str());
     }
   }
