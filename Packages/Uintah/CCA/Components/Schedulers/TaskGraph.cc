@@ -911,8 +911,12 @@ TaskGraph::createDetailedDependencies(DetailedTasks* dt, LoadBalancer* lb,
 	    }
 	  }
 	}
-	else
-	  throw InternalError("TaskGraph::createDetailedDependencies, reduction task dependency not supported without patches and materials");
+	 else{
+          ostringstream desc;
+          desc << "TaskGraph::createDetailedDependencies, reduction task dependency not supported without patches and materials"
+             << " \n Trying to require or modify " << *req << " in Task " << task->getTask()->getName() << "\n\n";
+          throw InternalError(desc.str()); 
+        }      
       }
       continue;
     }
@@ -1074,8 +1078,12 @@ TaskGraph::createDetailedDependencies(DetailedTasks* dt, LoadBalancer* lb,
 	}
       }
     }
-    else
-      throw InternalError("TaskGraph::createDetailedDependencies, task dependency not supported without patches and materials");
+    else{
+      ostringstream desc;
+      desc << "TaskGraph::createDetailedDependencies, task dependency not supported without patches and materials"
+           << " \n Trying to require or modify " << *req << " in Task " << task->getTask()->getName()<<"\n\n";
+      throw InternalError(desc.str()); 
+    }
     if(patches && patches->removeReference())
       delete patches;
     if(matls && matls->removeReference())
