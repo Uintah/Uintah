@@ -626,10 +626,8 @@ protected:
   Mutex                 grid_lock_; // Bad traffic!
 
   unsigned int		synchronized_;
-public:
-  inline grid_handle get_grid() {return grid_;}
-
 };
+
 
 // Handle type for PrismVolMesh mesh.
 typedef LockingHandle<PrismVolMesh> PrismVolMeshHandle;
