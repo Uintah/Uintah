@@ -53,6 +53,8 @@ set runDate " Wed  May 23 2001"
 global runTime
 set runTime " 14:50:24"
 
+set bbox {27.0 3.0 730 598}
+
 set m0 [addModuleAtPosition "SCIRun" "DataIO" "MatrixReader" 175 122]
 set m1 [addModuleAtPosition "SCIRun" "Math" "MatrixSelectVector" 175 205]
 set m2 [addModuleAtPosition "BioPSE" "Forward" "ApplyFEMCurrentSource" 373 126]

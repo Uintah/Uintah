@@ -53,6 +53,8 @@ set runDate " Fri  Feb 23 19101"
 global runTime
 set runTime " 16:40:9"
 
+set bbox {84.0 8.0 1193 793}
+
 set m0 [addModuleAtPosition "SCIRun" "DataIO" "FieldReader" 283 8]
 set m1 [addModuleAtPosition "SCIRun" "Fields" "SeedField" 283 68]
 set m2 [addModuleAtPosition "SCIRun" "Math" "ErrorMetric" 102 599]

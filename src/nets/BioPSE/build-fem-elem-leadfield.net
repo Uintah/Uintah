@@ -53,6 +53,8 @@ set runDate "Thu Mar  1 2001"
 global runTime
 set runTime " 21:53:29"
 
+set bbox {45.0 14.0 537 529}
+
 global notes
 set notes "This net builds an element-centered finite element lead-field for an input finite element
 mesh and set of electrodes.
