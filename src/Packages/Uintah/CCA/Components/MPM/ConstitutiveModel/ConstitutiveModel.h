@@ -184,6 +184,23 @@ namespace Uintah {
 
   protected:
 
+    // Compute velocity gradient (default case)
+    Matrix3 computeVelGrad(const Patch* patch,
+                           const double* oodx, 
+                           const Point& px, 
+                           const Vector& psize, 
+                           constNCVariable<Vector>& gVelocity,
+                           double erosion);
+
+    // Compute velocity gradient for fracture
+    Matrix3 computeVelGrad(const Patch* patch,
+                           const double* oodx,
+                           const Point& px,
+                           const Vector& psize,
+                           const short pgFld[], 
+                           constNCVariable<Vector>& gVelocity,
+                           constNCVariable<Vector>& GVelocity);
+
     // Calculate velocity gradient for 27 noded interpolation
     Matrix3 computeVelocityGradient(const Patch* patch,
                                     const double* oodx, 
@@ -220,6 +237,7 @@ namespace Uintah {
                                     const double* oodx, 
                                     const Point& px, 
                                     constNCVariable<Vector>& gVelocity);
+
     // Calculate velocity gradient for 8 noded interpolation (for FRACTURE) 
     Matrix3 computeVelocityGradient(const Patch* patch,
                                     const double* oodx,
@@ -228,6 +246,24 @@ namespace Uintah {
                                     constNCVariable<Vector>& gVelocity,
                                     constNCVariable<Vector>& GVelocity);
 
+    /*! Calculate gradient of a vector field for 8 noded interpolation */
+    void computeGrad(const Patch* patch,
+                     const double* oodx, 
+                     const Point& px, 
+                     constNCVariable<Vector>& gVec,
+                     Matrix3& grad);
+
+    /*! Calculate gradient of vector field for 8 noded interpolation, B matrix
+        for Kmat and B matrix for Kgeo */
+    void computeGradAndBmats(const Patch* patch,
+                             const double* oodx, 
+                             const Point& px, 
+                             constNCVariable<Vector>& gVec,
+                             const Array3<int>& l2g,
+                             Matrix3& grad,
+                             double B[6][24],
+                             double Bnl[3][24],
+                             int* dof);
 
     /*!
       \brief Calculate the artificial bulk viscosity (q)
@@ -250,7 +286,8 @@ namespace Uintah {
     double artificialBulkViscosity(double Dkk, double c, double rho,
                                    double dx) const;
 
-    void BtDB(double B[6][24], double D[6][6], double Km[24][24]) const;
+    void BtDB(const double B[6][24], const double D[6][6], 
+              double Km[24][24]) const;
     void BnltDBnl(double Bnl[3][24], double sig[3][3], double Kg[24][24]) const;
 
   protected:
@@ -263,6 +300,14 @@ namespace Uintah {
                                    const MPMMaterial* matl,
                                    DataWarehouse* new_dw);
 
+    ///////////////////////////////////////////////////////////////////////
+    /*! Initialize the common quantities that all the implicit constituive
+     *  models compute : called by initializeCMData */
+    ///////////////////////////////////////////////////////////////////////
+    void initSharedDataForImplicit(const Patch* patch,
+                                   const MPMMaterial* matl,
+                                   DataWarehouse* new_dw);
+
     /////////////////////////////////////////////////////////////////
     /*! Computes and Requires common to all constitutive models that
      *  do explicit time stepping : called by addComputesAndRequires */
@@ -270,6 +315,23 @@ namespace Uintah {
     void addSharedCRForExplicit(Task* task,
                                 const MaterialSubset* matlset,
                                 const PatchSet* patches) const;
+
+    /////////////////////////////////////////////////////////////////
+    /*! Computes and Requires common to all constitutive models that
+     *  do implicit time stepping : called by addComputesAndRequires */
+    /////////////////////////////////////////////////////////////////
+    void addSharedCRForImplicit(Task* task,
+                                const MaterialSubset* matlset,
+                                const PatchSet* patches) const;
+
+    /////////////////////////////////////////////////////////////////
+    /*! Computes and Requires common to all constitutive models that
+     *  do implicit time stepping : called by addComputesAndRequires */
+    /////////////////////////////////////////////////////////////////
+    void addSharedCRForImplicit(Task* task,
+                                const MaterialSubset* matlset,
+                                const PatchSet* patches,
+                                const bool recurse) const;
 
     /////////////////////////////////////////////////////////////////
     /*! Particle conversion related requires common to all constitutive 
