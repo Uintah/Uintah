@@ -1209,7 +1209,7 @@ int main(int argc, char** argv)
 	      //--------------------------------------------------
 	      // set up the first min/max
 	      Point min, max;
-	      vector<double> d_min,d_max,v_min,v_max;
+	      vector<double> d_min,d_max,v_min,v_max,m_min,m_max;
 	      bool data_found = false;
 	      int total_particles = 0;
 	      
@@ -1241,8 +1241,8 @@ int main(int argc, char** argv)
 		      v_max.push_back(md.pv_vector_list[i][*iter].length());
 		    }
 		    for(int i = 0; i < md.pv_matrix3_list.size(); i++) {
-		      v_min.push_back(md.pv_matrix3_list[i][*iter].Norm());
-		      v_max.push_back(md.pv_matrix3_list[i][*iter].Norm());
+		      m_min.push_back(md.pv_matrix3_list[i][*iter].Norm());
+		      m_max.push_back(md.pv_matrix3_list[i][*iter].Norm());
 		    }
 		  }
 		  // initialized mins/maxes
@@ -1308,8 +1308,8 @@ int main(int argc, char** argv)
 		      // matrix3 data
 		      for(int i = 0; i < md.pv_matrix3_list.size(); i++) {
 			double value = md.pv_matrix3_list[i][*iter].Norm();
-			v_min[i]=Min(v_min[i],value);
-			v_max[i]=Max(v_max[i],value);
+			m_min[i]=Min(m_min[i],value);
+			m_max[i]=Max(m_max[i],value);
 			temp_value = (float)value;
 			fwrite(&temp_value, sizeof(float), 1, datafile);
 		      }
@@ -1344,6 +1344,9 @@ int main(int argc, char** argv)
 		  for(int i = 0; i < v_min.size(); i++) {
 		    fprintf(headerfile,"%g %g\n",v_min[i],v_max[i]);
 		  }
+		  for(int i = 0; i < m_min.size(); i++) {
+		    fprintf(headerfile,"%g %g\n",m_min[i],m_max[i]);
+		  }
 		  if (do_patch) {
 		    fprintf(headerfile,"%g %g\n",(float)patch->getID(),(float)patch->getID());
 		  }
@@ -1373,6 +1376,10 @@ int main(int argc, char** argv)
 
 //
 // $Log$
+// Revision 1.12  2000/08/11 20:41:41  bigler
+// Fixed a bug that was failing to compute the min/max for Matrix3d properly.
+// This was for rtrt particle data output.
+//
 // Revision 1.11  2000/08/09 03:17:55  jas
 // Changed new to scinew and added deletes to some of the destructors.
 //
