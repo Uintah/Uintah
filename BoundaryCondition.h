@@ -46,6 +46,7 @@ namespace Uintah {
 
 using namespace SCIRun;
   class ArchesVariables;
+  class ArchesConstVariables;
   class CellInformation;
 class VarLabel;
 class GeometryPiece;
@@ -240,7 +241,8 @@ public:
 		      const Patch* patch,
 		      int index,
 		      CellInformation* cellinfo,
-		      ArchesVariables* vars);
+		      ArchesVariables* vars,
+		      ArchesConstVariables* constvars);
 
       ////////////////////////////////////////////////////////////////////////
       // Actually compute pressure BC terms
@@ -249,7 +251,8 @@ public:
 		      DataWarehouse* old_dw,
 		      DataWarehouse* new_dw,
 		      CellInformation* cellinfo,
-		      ArchesVariables* vars);
+		      ArchesVariables* vars,
+		      ArchesConstVariables* constvars);
 
       ////////////////////////////////////////////////////////////////////////
       // Actually compute scalar BC terms
@@ -257,14 +260,16 @@ public:
 		    const Patch* patch,
 		    int index,
 		    CellInformation* cellinfo,
-		    ArchesVariables* vars);
+		    ArchesVariables* vars,
+		    ArchesConstVariables* constvars);
 
       ////////////////////////////////////////////////////////////////////////
       // Actually compute enthalpy BC terms
       void enthalpyBC(const ProcessorGroup* pc,
 		      const Patch* patch,
 		      CellInformation* cellinfo,
-		      ArchesVariables* vars);
+		      ArchesVariables* vars,
+		      ArchesConstVariables* constvars);
 
       void enthalpyRadWallBC(const ProcessorGroup* pc,
 			     const Patch* patch,
@@ -299,55 +304,64 @@ public:
 				 const Patch* patch,
 				 int index,
 				 CellInformation* cellinfo,
-				 ArchesVariables* vars);
+				 ArchesVariables* vars,
+		      	         ArchesConstVariables* constvars);
 
       void intrusionVelocityBC(const ProcessorGroup*,
 			       const Patch* patch,
 			       int index, CellInformation* cellinfo,
-			       ArchesVariables* vars);
+			       ArchesVariables* vars,
+		      	       ArchesConstVariables* constvars);
 
       void intrusionMomExchangeBC(const ProcessorGroup*,
 				  const Patch* patch,
 				  int index, CellInformation* cellinfo,
-				  ArchesVariables* vars);
+				  ArchesVariables* vars,
+		      		  ArchesConstVariables* constvars);
 
       void intrusionEnergyExBC(const ProcessorGroup*,
 			       const Patch* patch,
 			       CellInformation* cellinfo,
-			       ArchesVariables* vars);
+			       ArchesVariables* vars,
+		      	       ArchesConstVariables* constvars);
 
       void intrusionPressureBC(const ProcessorGroup*,
 			       const Patch* patch,
 			       CellInformation* cellinfo,
-			       ArchesVariables* vars);
+			       ArchesVariables* vars,
+			       ArchesConstVariables* constvars);
 
       void intrusionScalarBC(const ProcessorGroup*,
 			     const Patch* patch,
 			     CellInformation* cellinfo,
-			     ArchesVariables* vars);
+			     ArchesVariables* vars,
+			     ArchesConstVariables* constvars);
 
       void intrusionEnthalpyBC(const ProcessorGroup*,
 			       const Patch* patch, double delta_t,
 			       CellInformation* cellinfo,
-			       ArchesVariables* vars);
-
+			       ArchesVariables* vars,
+			       ArchesConstVariables* constvars);
 
       // compute multimaterial wall bc
       void mmvelocityBC(const ProcessorGroup*,
 			const Patch* patch,
 			int index, CellInformation* cellinfo,
-			ArchesVariables* vars);
+			ArchesVariables* vars,
+		       	ArchesConstVariables* constvars);
 
       void mmpressureBC(const ProcessorGroup*,
 			const Patch* patch,
 			CellInformation* cellinfo,
-			ArchesVariables* vars);
+			ArchesVariables* vars,
+		       	ArchesConstVariables* constvars);
 
       // applies multimaterial bc's for scalars and pressure
       void mmscalarWallBC( const ProcessorGroup*,
 			   const Patch* patch,
 			   CellInformation* cellinfo,
-			   ArchesVariables* vars);
+			   ArchesVariables* vars,
+			   ArchesConstVariables* constvars);
       
       ////////////////////////////////////////////////////////////////////////
       // Calculate uhat for multimaterial case (only for nonintrusion cells)
@@ -355,7 +369,8 @@ public:
 				 const Patch* patch,
 				 int index, double delta_t,
 				 CellInformation* cellinfo,
-				 ArchesVariables* vars);
+				 ArchesVariables* vars,
+				 ArchesConstVariables* constvars);
 
       // adds pressure gradient to momentum nonlinear source term
       void addPressureGrad(const ProcessorGroup* ,
@@ -374,7 +389,8 @@ public:
 				    double delta_t,
 				    int index,
 				    CellInformation* cellinfo,
-				    ArchesVariables* vars);
+				    ArchesVariables* vars,
+				    ArchesConstVariables* constvars);
 
       void setFluxBC(const ProcessorGroup* pc,
 		      const Patch* patch,
@@ -385,6 +401,7 @@ public:
 			    const Patch*,
 			    double delta_t,
 			    ArchesVariables* vars,
+			    ArchesConstVariables* constvars,
 			    CellInformation* cellinfo,
 			    const ArchesLabel*);
 			
@@ -392,6 +409,7 @@ public:
 			      const Patch*,
 			      double delta_t,
 			      ArchesVariables* vars,
+			      ArchesConstVariables* constvars,
 			      CellInformation* cellinfo,
 			      const ArchesLabel*);
 // New boundary conditions
@@ -402,54 +420,63 @@ public:
 		    const Patch* patch,
 		    int index,
 		    CellInformation* cellinfo,
-		    ArchesVariables* vars);
+		    ArchesVariables* vars,
+		    ArchesConstVariables* constvars);
 
       void enthalpyPressureBC(const ProcessorGroup* pc,
 		    const Patch* patch,
 		    CellInformation* cellinfo,
-		    ArchesVariables* vars);
+		    ArchesVariables* vars,
+		    ArchesConstVariables* constvars);
 
       void scalarOutletBC(const ProcessorGroup* pc,
 			    const Patch* patch,
 			    int index,
 			    CellInformation* cellinfo,
 			    ArchesVariables* vars,
+			    ArchesConstVariables* constvars,
 			    const double delta_t);
 
       void enthalpyOutletBC(const ProcessorGroup* pc,
 			    const Patch* patch,
 			    CellInformation* cellinfo,
 			    ArchesVariables* vars,
+			    ArchesConstVariables* constvars,
 			    const double delta_t);
 
       void velRhoHatInletBC(const ProcessorGroup* pc,
 			    const Patch* patch,
 			    CellInformation* cellinfo,
-			    ArchesVariables* vars);
+			    ArchesVariables* vars,
+			    ArchesConstVariables* constvars);
 
       void velRhoHatPressureBC(const ProcessorGroup* pc,
 			    const Patch* patch,
 			    CellInformation* cellinfo,
-			    ArchesVariables* vars);
+			    ArchesVariables* vars,
+			    ArchesConstVariables* constvars);
 
       void velRhoHatOutletBC(const ProcessorGroup* pc,
 			    const Patch* patch,
 			    CellInformation* cellinfo,
+			    const double delta_t,
 			    ArchesVariables* vars,
-			    const double delta_t);
+			    ArchesConstVariables* constvars);
 
       void velocityPressureBC(const ProcessorGroup* pc,
 			    const Patch* patch,
 			    const int index,
 			    CellInformation* cellinfo,
-			    ArchesVariables* vars);
+			    ArchesVariables* vars,
+			    ArchesConstVariables* constvars);
 
       void addPresGradVelocityOutletBC(const ProcessorGroup* pc,
 			    const Patch* patch,
 			    const int index,
 			    CellInformation* cellinfo,
+			    const double delta_t,
 			    ArchesVariables* vars,
-			    const double delta_t);
+			    ArchesConstVariables* constvars);
 
       void sched_getFlowINOUT(SchedulerP& sched,
 			      const PatchSet* patches,
@@ -470,7 +497,8 @@ private:
       void uVelocityBC(const Patch* patch,
 		       double VISCOS,
 		       CellInformation* cellinfo,
-		       ArchesVariables* vars);
+		       ArchesVariables* vars,
+		       ArchesConstVariables* constvars);
 		      
 
       ////////////////////////////////////////////////////////////////////////
@@ -478,56 +506,71 @@ private:
       void vVelocityBC(const Patch* patch,
 		       double VISCOS,
 		       CellInformation* cellinfo,
-		       ArchesVariables* vars);
+		       ArchesVariables* vars,
+		       ArchesConstVariables* constvars);
 
       ////////////////////////////////////////////////////////////////////////
       // Call Fortran to compute w velocity BC terms
       void wVelocityBC(const Patch* patch,
 		       double VISCOS,
 		       CellInformation* cellinfo,
-		        ArchesVariables* vars);
+		       ArchesVariables* vars,
+		       ArchesConstVariables* constvars);
 
+      ////////////////////////////////////////////////////////////////////////
+      // Call Fortran to compute u velocity BC terms
       void intrusionuVelocityBC(const Patch* patch,
-				ArchesVariables* vars);
+				ArchesVariables* vars,
+		       		ArchesConstVariables* constvars);
 		      
 
       ////////////////////////////////////////////////////////////////////////
       // Call Fortran to compute v velocity BC terms
       void intrusionvVelocityBC(const Patch* patch,
-				ArchesVariables* vars);
+				ArchesVariables* vars,
+		       		ArchesConstVariables* constvars);
 
       ////////////////////////////////////////////////////////////////////////
       // Call Fortran to compute w velocity BC terms
       void intrusionwVelocityBC(const Patch* patch,
-				ArchesVariables* vars);
+				ArchesVariables* vars,
+		       		ArchesConstVariables* constvars);
 
 
       void intrusionuVelMomExBC(const Patch* patch,
 				CellInformation* cellinfo,
-				ArchesVariables* vars);
+				ArchesVariables* vars,
+		      		ArchesConstVariables* constvars);
 
       void intrusionvVelMomExBC(const Patch* patch,
 				CellInformation* cellinfo,
-				ArchesVariables* vars);
+				ArchesVariables* vars,
+		      		ArchesConstVariables* constvars);
 
       void intrusionwVelMomExBC(const Patch* patch,
 				CellInformation* cellinfo,
-				ArchesVariables* vars);
+				ArchesVariables* vars,
+		      		ArchesConstVariables* constvars);
 
 
+      ////////////////////////////////////////////////////////////////////////
+      // Call Fortran to compute u velocity BC terms
       void mmuVelocityBC(const Patch* patch,
-			 ArchesVariables* vars);
+			 ArchesVariables* vars,
+		       	 ArchesConstVariables* constvars);
 		      
 
       ////////////////////////////////////////////////////////////////////////
       // Call Fortran to compute v velocity BC terms
       void mmvVelocityBC(const Patch* patch,
-			 ArchesVariables* vars);
+			 ArchesVariables* vars,
+		       	 ArchesConstVariables* constvars);
 
       ////////////////////////////////////////////////////////////////////////
       // Call Fortran to compute w velocity BC terms
       void mmwVelocityBC(const Patch* patch,
-			 ArchesVariables* vars);
+			 ArchesVariables* vars,
+		       	 ArchesConstVariables* constvars);
       ////////////////////////////////////////////////////////////////////////
       // Actually set inlet velocity bcs
       void setInletVelocityBC(const ProcessorGroup* pc,

@@ -1290,13 +1290,13 @@ ScaleSimilarityModel::computeScalarDissipation(const ProcessorGroup*,
 		throw InvalidValue("Invalid Runge-Kutta step in ScaleSimilarityModel");
 	 }
     }
-    StencilMatrix<CCVariable<double> > scalarFlux; //3 point stencil
+    StencilMatrix<constCCVariable<double> > scalarFlux; //3 point stencil
     switch (Runge_Kutta_current_step) {
     case Arches::FIRST:
     new_dw->get(viscosity, d_lab->d_viscosityINLabel, matlIndex, patch,
 		Ghost::AroundCells, Arches::ONEGHOSTCELL);
     for (int ii = 0; ii < d_lab->d_scalarFluxMatl->size(); ii++) {
-      old_dw->getCopy(scalarFlux[ii], 
+      old_dw->get(scalarFlux[ii], 
 		      d_lab->d_scalarFluxCompLabel, ii, patch,
 		      Ghost::AroundCells, Arches::ONEGHOSTCELL);
     }
@@ -1306,7 +1306,7 @@ ScaleSimilarityModel::computeScalarDissipation(const ProcessorGroup*,
     new_dw->get(viscosity, d_lab->d_viscosityPredLabel, matlIndex, patch,
 		Ghost::AroundCells, Arches::ONEGHOSTCELL);
     for (int ii = 0; ii < d_lab->d_scalarFluxMatl->size(); ii++) {
-      new_dw->getCopy(scalarFlux[ii], 
+      new_dw->get(scalarFlux[ii], 
 		      d_lab->d_scalarFluxCompLabel, ii, patch,
 		      Ghost::AroundCells, Arches::ONEGHOSTCELL);
     }
@@ -1316,7 +1316,7 @@ ScaleSimilarityModel::computeScalarDissipation(const ProcessorGroup*,
     new_dw->get(viscosity, d_lab->d_viscosityIntermLabel, matlIndex, patch,
 		Ghost::AroundCells, Arches::ONEGHOSTCELL);
     for (int ii = 0; ii < d_lab->d_scalarFluxMatl->size(); ii++) {
-      new_dw->getCopy(scalarFlux[ii], 
+      new_dw->get(scalarFlux[ii], 
 		      d_lab->d_scalarFluxCompLabel, ii, patch,
 		      Ghost::AroundCells, Arches::ONEGHOSTCELL);
     }

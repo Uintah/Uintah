@@ -1,12 +1,12 @@
 //----- MomentumSolver.cc ----------------------------------------------
 
+#include <TauProfilerForSCIRun.h>
 #include <Packages/Uintah/CCA/Components/Arches/Arches.h>
 #include <Packages/Uintah/CCA/Components/Arches/ArchesLabel.h>
 #include <Packages/Uintah/CCA/Components/Arches/ArchesMaterial.h>
 #include <Packages/Uintah/CCA/Components/Arches/BoundaryCondition.h>
 #include <Packages/Uintah/CCA/Components/Arches/CellInformationP.h>
 #include <Packages/Uintah/CCA/Components/Arches/debug.h>
-#include <Packages/Uintah/CCA/Components/Arches/Discretization.h>
 #include <Packages/Uintah/CCA/Components/Arches/MomentumSolver.h>
 #include <Packages/Uintah/CCA/Components/Arches/PhysicalConstants.h>
 #include <Packages/Uintah/CCA/Components/Arches/RBGSSolver.h>
@@ -77,10 +77,11 @@ MomentumSolver::problemSetup(const ProblemSpecP& params)
     throw InvalidValue("Finite Differencing scheme "
 		       "not supported: " + finite_diff);
   }
-  if (db->findBlock("central"))
-    db->require("central",d_central);
-  else
-    d_central = false;
+  db->getWithDefault("central",d_central,false);
+//  if (db->findBlock("central"))
+//    db->require("central",d_central);
+//  else
+//    d_central = false;
   // make source and boundary_condition objects
 
   d_source = scinew Source(d_turbModel, d_physicalConsts);
@@ -391,16 +392,17 @@ MomentumSolver::buildLinearMatrix(const ProcessorGroup* pc,
     int archIndex = 0; // only one arches material
     int matlIndex = d_lab->d_sharedState->getArchesMaterial(archIndex)->getDWIndex(); 
     ArchesVariables velocityVars;
+    ArchesConstVariables constVelocityVars;
 
     // Get the required data
 
-    new_dw->getCopy(velocityVars.pressure, d_lab->d_pressureSPBCLabel, 
+    new_dw->get(constVelocityVars.pressure, d_lab->d_pressureSPBCLabel, 
 		matlIndex, patch, Ghost::AroundCells, Arches::ONEGHOSTCELL);
-    new_dw->getCopy(velocityVars.density, d_lab->d_densityINLabel, 
+    new_dw->get(constVelocityVars.density, d_lab->d_densityINLabel, 
 		matlIndex, patch, Ghost::AroundCells, Arches::TWOGHOSTCELLS);
-    new_dw->getCopy(velocityVars.viscosity, d_lab->d_viscosityINLabel, 
+    new_dw->get(constVelocityVars.viscosity, d_lab->d_viscosityINLabel, 
 		matlIndex, patch, Ghost::AroundCells, Arches::ONEGHOSTCELL);
-    new_dw->getCopy(velocityVars.denRefArray, d_lab->d_denRefArrayLabel,
+    new_dw->get(constVelocityVars.denRefArray, d_lab->d_denRefArrayLabel,
 		matlIndex, patch, Ghost::AroundCells, Arches::ONEGHOSTCELL);
 
     // Get the PerPatch CellInformation data
@@ -429,10 +431,10 @@ MomentumSolver::buildLinearMatrix(const ProcessorGroup* pc,
     cerr << "getdensity_ref in momentum" << velocityVars.den_Ref << endl;
 #endif
 
-    new_dw->getCopy(velocityVars.old_density, d_lab->d_densityINLabel, 
+    new_dw->get(constVelocityVars.old_density, d_lab->d_densityINLabel, 
 		matlIndex, patch, Ghost::AroundCells, Arches::ONEGHOSTCELL);
 
-    new_dw->getCopy(velocityVars.cellType, d_lab->d_cellTypeLabel, 
+    new_dw->get(constVelocityVars.cellType, d_lab->d_cellTypeLabel, 
 		matlIndex, patch, Ghost::AroundCells, Arches::ONEGHOSTCELL);
 
   // for explicit coeffs will be computed using the old u, v, and w
@@ -440,20 +442,20 @@ MomentumSolver::buildLinearMatrix(const ProcessorGroup* pc,
   // get void fraction
 
     if (d_MAlab)
-      new_dw->getCopy(velocityVars.voidFraction, d_lab->d_mmgasVolFracLabel,
+      new_dw->get(constVelocityVars.voidFraction, d_lab->d_mmgasVolFracLabel,
 		  matlIndex, patch, 
 		  Ghost::AroundCells, Arches::ONEGHOSTCELL);
     switch (index) {
 
     case Arches::XDIR:
 
-      new_dw->getCopy(velocityVars.uVelocity, d_lab->d_uVelocityOUTBCLabel, 
+      new_dw->get(constVelocityVars.uVelocity, d_lab->d_uVelocityOUTBCLabel, 
 		  matlIndex, patch, Ghost::AroundFaces, Arches::ONEGHOSTCELL);
-      new_dw->getCopy(velocityVars.vVelocity, d_lab->d_vVelocityOUTBCLabel, 
+      new_dw->get(constVelocityVars.vVelocity, d_lab->d_vVelocityOUTBCLabel, 
 		  matlIndex, patch, Ghost::AroundFaces, Arches::ONEGHOSTCELL);
-      new_dw->getCopy(velocityVars.wVelocity, d_lab->d_wVelocityOUTBCLabel, 
+      new_dw->get(constVelocityVars.wVelocity, d_lab->d_wVelocityOUTBCLabel, 
 		  matlIndex, patch, Ghost::AroundFaces, Arches::ONEGHOSTCELL);
-      new_dw->getCopy(velocityVars.old_uVelocity, d_lab->d_uVelocitySIVBCLabel, 
+      new_dw->get(constVelocityVars.old_uVelocity, d_lab->d_uVelocitySIVBCLabel, 
 		  matlIndex, patch, Ghost::None, Arches::ZEROGHOSTCELLS);
 
     //cerr << "in moment solve just before allocate" << index << endl;
@@ -463,10 +465,10 @@ MomentumSolver::buildLinearMatrix(const ProcessorGroup* pc,
 
       if (d_MAlab) {
 
-	new_dw->getCopy(velocityVars.mmuVelSu, d_MAlab->d_uVel_mmNonlinSrcLabel,
+	new_dw->get(constVelocityVars.mmuVelSu, d_MAlab->d_uVel_mmNonlinSrcLabel,
 		    matlIndex, patch,
 		    Ghost::None, Arches::ZEROGHOSTCELLS);
-	new_dw->getCopy(velocityVars.mmuVelSp, d_MAlab->d_uVel_mmLinSrcLabel,
+	new_dw->get(constVelocityVars.mmuVelSp, d_MAlab->d_uVel_mmLinSrcLabel,
 		    matlIndex, patch,
 		    Ghost::None, Arches::ZEROGHOSTCELLS);
 
@@ -494,13 +496,13 @@ MomentumSolver::buildLinearMatrix(const ProcessorGroup* pc,
 
       // getting new value of u velocity
 
-      new_dw->getCopy(velocityVars.uVelocity, d_lab->d_uVelocityOUTBCLabel, 
+      new_dw->get(constVelocityVars.uVelocity, d_lab->d_uVelocityOUTBCLabel, 
 		  matlIndex, patch, Ghost::AroundFaces, Arches::ONEGHOSTCELL);
-      new_dw->getCopy(velocityVars.vVelocity, d_lab->d_vVelocityOUTBCLabel, 
+      new_dw->get(constVelocityVars.vVelocity, d_lab->d_vVelocityOUTBCLabel, 
 		  matlIndex, patch, Ghost::AroundFaces, Arches::ONEGHOSTCELL);
-      new_dw->getCopy(velocityVars.wVelocity, d_lab->d_wVelocityOUTBCLabel, 
+      new_dw->get(constVelocityVars.wVelocity, d_lab->d_wVelocityOUTBCLabel, 
 		  matlIndex, patch, Ghost::AroundFaces, Arches::ONEGHOSTCELL);
-      new_dw->getCopy(velocityVars.old_vVelocity, d_lab->d_vVelocitySIVBCLabel, 
+      new_dw->get(constVelocityVars.old_vVelocity, d_lab->d_vVelocitySIVBCLabel, 
 		  matlIndex, patch, Ghost::None, Arches::ZEROGHOSTCELLS);
 
     //cerr << "in moment solve just before allocate" << index << endl;
@@ -510,10 +512,10 @@ MomentumSolver::buildLinearMatrix(const ProcessorGroup* pc,
 
       if (d_MAlab) {
 
-	new_dw->getCopy(velocityVars.mmvVelSu, d_MAlab->d_vVel_mmNonlinSrcLabel,
+	new_dw->get(constVelocityVars.mmvVelSu, d_MAlab->d_vVel_mmNonlinSrcLabel,
 		    matlIndex, patch,
 		    Ghost::None, Arches::ZEROGHOSTCELLS);
-	new_dw->getCopy(velocityVars.mmvVelSp, d_MAlab->d_vVel_mmLinSrcLabel,
+	new_dw->get(constVelocityVars.mmvVelSp, d_MAlab->d_vVel_mmLinSrcLabel,
 		    matlIndex, patch,
 		    Ghost::None, Arches::ZEROGHOSTCELLS);
 
@@ -539,13 +541,13 @@ MomentumSolver::buildLinearMatrix(const ProcessorGroup* pc,
 
       // getting new value of u velocity
 
-      new_dw->getCopy(velocityVars.uVelocity, d_lab->d_uVelocityOUTBCLabel, 
+      new_dw->get(constVelocityVars.uVelocity, d_lab->d_uVelocityOUTBCLabel, 
 		  matlIndex, patch, Ghost::AroundFaces, Arches::ONEGHOSTCELL);
-      new_dw->getCopy(velocityVars.vVelocity, d_lab->d_vVelocityOUTBCLabel, 
+      new_dw->get(constVelocityVars.vVelocity, d_lab->d_vVelocityOUTBCLabel, 
 		  matlIndex, patch, Ghost::AroundFaces, Arches::ONEGHOSTCELL);
-      new_dw->getCopy(velocityVars.wVelocity, d_lab->d_wVelocityOUTBCLabel, 
+      new_dw->get(constVelocityVars.wVelocity, d_lab->d_wVelocityOUTBCLabel, 
 		  matlIndex, patch, Ghost::AroundFaces, Arches::ONEGHOSTCELL);
-      new_dw->getCopy(velocityVars.old_wVelocity, d_lab->d_wVelocitySIVBCLabel, 
+      new_dw->get(constVelocityVars.old_wVelocity, d_lab->d_wVelocitySIVBCLabel, 
 		  matlIndex, patch, Ghost::None, Arches::ZEROGHOSTCELLS);
 
       //    new_dw->allocate(velocityVars.variableCalledDW, d_lab->d_DWMBLMLabel,
@@ -554,10 +556,10 @@ MomentumSolver::buildLinearMatrix(const ProcessorGroup* pc,
 
       if (d_MAlab) {
 
-	new_dw->getCopy(velocityVars.mmwVelSu, d_MAlab->d_wVel_mmNonlinSrcLabel,
+	new_dw->get(constVelocityVars.mmwVelSu, d_MAlab->d_wVel_mmNonlinSrcLabel,
 		    matlIndex, patch,
 		    Ghost::None, Arches::ZEROGHOSTCELLS);
-	new_dw->getCopy(velocityVars.mmwVelSp, d_MAlab->d_wVel_mmLinSrcLabel,
+	new_dw->get(constVelocityVars.mmwVelSp, d_MAlab->d_wVel_mmLinSrcLabel,
 		    matlIndex, patch,
 		    Ghost::None, Arches::ZEROGHOSTCELLS);
 
@@ -600,7 +602,8 @@ MomentumSolver::buildLinearMatrix(const ProcessorGroup* pc,
 
     d_discretize->calculateVelocityCoeff(pc, patch, 
 					 delta_t, index, d_central,
-					 cellinfo, &velocityVars);
+					 cellinfo, &velocityVars,
+					 &constVelocityVars);
     
     // Calculate velocity source
     // inputs : [u,v,w]VelocityCPBC, densityIN, viscosityIN ( new_dw), 
@@ -609,10 +612,11 @@ MomentumSolver::buildLinearMatrix(const ProcessorGroup* pc,
 
     d_source->calculateVelocitySource(pc, patch, 
 				      delta_t, index,
-				      cellinfo, &velocityVars);
+				      cellinfo, &velocityVars,
+				      &constVelocityVars);
     if (d_MAlab)
       d_source->computemmMomentumSource(pc, patch, index, cellinfo,
-					&velocityVars);
+					&velocityVars, &constVelocityVars);
     
     // Velocity Boundary conditions
     //  inputs : densityIN, [u,v,w]VelocityCPBC, [u,v,w]VelCoefPBLM
@@ -622,13 +626,15 @@ MomentumSolver::buildLinearMatrix(const ProcessorGroup* pc,
 
     d_boundaryCondition->velocityBC(pc, patch, 
 				    index,
-				    cellinfo, &velocityVars);
+				    cellinfo, &velocityVars,
+				    &constVelocityVars);
     
     // apply multimaterial velocity bc
     // treats multimaterial wall as intrusion
 
     if (d_MAlab)
-      d_boundaryCondition->mmvelocityBC(pc, patch, index, cellinfo, &velocityVars);
+	d_boundaryCondition->mmvelocityBC(pc, patch, index, cellinfo,
+					  &velocityVars, &constVelocityVars);
     
     // Modify Velocity Mass Source
     //  inputs : [u,v,w]VelocityCPBC, [u,v,w]VelCoefPBLM, 
@@ -638,7 +644,8 @@ MomentumSolver::buildLinearMatrix(const ProcessorGroup* pc,
 
     d_source->modifyVelMassSource(pc, patch, 
 				  delta_t, index,
-				  &velocityVars);
+				  &velocityVars,
+				  &constVelocityVars);
     
     // Calculate Velocity Diagonal
     //  inputs : [u,v,w]VelCoefPBLM, [u,v,w]VelLinSrcPBLM
@@ -661,6 +668,9 @@ MomentumSolver::buildLinearMatrix(const ProcessorGroup* pc,
 				    cellinfo, &velocityVars);
     d_boundaryCondition->addPressureGrad(pc, patch, index, cellinfo,
 					 &velocityVars);
+    // apply underelax to eqn
+    d_linearSolver->computeVelUnderrelax(pc, patch,  index, 
+					 &velocityVars, &constVelocityVars);
 
 #ifdef ARCHES_MOM_DEBUG
     if (index == 1) {
@@ -780,6 +790,7 @@ MomentumSolver::velocityLinearSolve(const ProcessorGroup* pc,
     int archIndex = 0; // only one arches material
     int matlIndex = d_lab->d_sharedState->getArchesMaterial(archIndex)->getDWIndex(); 
     ArchesVariables velocityVars;
+    ArchesConstVariables constVelocityVars;
     //  DataWarehouseP old_dw = new_dw->getTop();
     // Get the PerPatch CellInformation data
     PerPatch<CellInformationP> cellInfoP;
@@ -796,7 +807,7 @@ MomentumSolver::velocityLinearSolve(const ProcessorGroup* pc,
       new_dw->put(cellInfoP, d_lab->d_cellInfoLabel, matlIndex, patch);
     }
     CellInformation* cellinfo = cellInfoP.get().get_rep();
-    new_dw->getCopy(velocityVars.old_density, d_lab->d_densityINLabel, 
+    new_dw->get(constVelocityVars.old_density, d_lab->d_densityINLabel, 
 		matlIndex, patch, Ghost::AroundCells, Arches::ONEGHOSTCELL);
     switch (index) {
     case Arches::XDIR:
@@ -807,10 +818,10 @@ MomentumSolver::velocityLinearSolve(const ProcessorGroup* pc,
 		  matlIndex, patch, Ghost::AroundFaces, Arches::ONEGHOSTCELL);
       }
       for (int ii = 0; ii < d_lab->d_stencilMatl->size(); ii++)
-	new_dw->getCopy(velocityVars.uVelocityCoeff[ii], 
+	new_dw->get(constVelocityVars.uVelocityCoeff[ii], 
 		    d_lab->d_uVelCoefMBLMLabel, 
 		    ii, patch, Ghost::None, Arches::ZEROGHOSTCELLS);
-      new_dw->getCopy(velocityVars.uVelNonlinearSrc, 
+      new_dw->get(constVelocityVars.uVelNonlinearSrc, 
 		  d_lab->d_uVelNonLinSrcMBLMLabel,
 		  matlIndex, patch, Ghost::None, Arches::ZEROGHOSTCELLS);
       new_dw->allocateTemporary(velocityVars.residualUVelocity,  patch);
@@ -825,10 +836,10 @@ MomentumSolver::velocityLinearSolve(const ProcessorGroup* pc,
       }
       // initial guess for explicit calculations
       for (int ii = 0; ii < d_lab->d_stencilMatl->size(); ii++)
-	new_dw->getCopy(velocityVars.vVelocityCoeff[ii], 
+	new_dw->get(constVelocityVars.vVelocityCoeff[ii], 
 		    d_lab->d_vVelCoefMBLMLabel, 
 		    ii, patch, Ghost::None, Arches::ZEROGHOSTCELLS);
-      new_dw->getCopy(velocityVars.vVelNonlinearSrc, 
+      new_dw->get(constVelocityVars.vVelNonlinearSrc, 
 		  d_lab->d_vVelNonLinSrcMBLMLabel,
 		  matlIndex, patch, Ghost::None, Arches::ZEROGHOSTCELLS);
       new_dw->allocateTemporary(velocityVars.residualVVelocity,  patch);
@@ -842,10 +853,10 @@ MomentumSolver::velocityLinearSolve(const ProcessorGroup* pc,
       }
       
       for (int ii = 0; ii < d_lab->d_stencilMatl->size(); ii++)
-	new_dw->getCopy(velocityVars.wVelocityCoeff[ii], 
+	new_dw->get(constVelocityVars.wVelocityCoeff[ii], 
 		    d_lab->d_wVelCoefMBLMLabel, 
 		    ii, patch, Ghost::None, Arches::ZEROGHOSTCELLS);
-      new_dw->getCopy(velocityVars.wVelNonlinearSrc, 
+      new_dw->get(constVelocityVars.wVelNonlinearSrc, 
 		  d_lab->d_wVelNonLinSrcMBLMLabel,
 		  matlIndex, patch, Ghost::None, Arches::ZEROGHOSTCELLS);
       new_dw->allocateTemporary(velocityVars.residualWVelocity,  patch);
@@ -878,9 +889,6 @@ MomentumSolver::velocityLinearSolve(const ProcessorGroup* pc,
     }
 #endif
     
-    // apply underelax to eqn
-    d_linearSolver->computeVelUnderrelax(pc, patch,  index, 
-					 &velocityVars);
     // old_velocities for explicit calculation
     
     switch(index){
@@ -1106,22 +1114,23 @@ MomentumSolver::buildLinearMatrixPred(const ProcessorGroup* pc,
     int archIndex = 0; // only one arches material
     int matlIndex = d_lab->d_sharedState->getArchesMaterial(archIndex)->getDWIndex(); 
     ArchesVariables velocityVars;
+    ArchesConstVariables constVelocityVars;
 
     // Get the required data
 #ifdef correctorstep
-    new_dw->getCopy(velocityVars.pressure, d_lab->d_pressurePredLabel, 
+    new_dw->get(constVelocityVars.pressure, d_lab->d_pressurePredLabel, 
 		matlIndex, patch, Ghost::AroundCells, Arches::ONEGHOSTCELL);
-    new_dw->getCopy(velocityVars.density, d_lab->d_densityPredLabel, 
+    new_dw->get(constVelocityVars.density, d_lab->d_densityPredLabel, 
 		matlIndex, patch, Ghost::AroundCells, Arches::ONEGHOSTCELL);
-    new_dw->getCopy(velocityVars.old_density, d_lab->d_densityPredLabel, 
+    new_dw->get(constVelocityVars.old_density, d_lab->d_densityPredLabel, 
 		matlIndex, patch, Ghost::AroundCells, Arches::ONEGHOSTCELL);
 
 #else
-    new_dw->getCopy(velocityVars.pressure, d_lab->d_pressureSPBCLabel, 
+    new_dw->get(constVelocityVars.pressure, d_lab->d_pressureSPBCLabel, 
 		matlIndex, patch, Ghost::AroundCells, Arches::ONEGHOSTCELL);
-    new_dw->getCopy(velocityVars.density, d_lab->d_densityCPLabel, 
+    new_dw->get(constVelocityVars.density, d_lab->d_densityCPLabel, 
 		matlIndex, patch, Ghost::AroundCells, Arches::ONEGHOSTCELL);
-    new_dw->getCopy(velocityVars.old_density, d_lab->d_densityCPLabel, 
+    new_dw->get(constVelocityVars.old_density, d_lab->d_densityCPLabel, 
 		matlIndex, patch, Ghost::AroundCells, Arches::ONEGHOSTCELL);
 
 #endif
@@ -1139,13 +1148,13 @@ MomentumSolver::buildLinearMatrixPred(const ProcessorGroup* pc,
 
     CellInformation* cellinfo = cellInfoP.get().get_rep();
 
-    new_dw->getCopy(velocityVars.cellType, d_lab->d_cellTypeLabel,
+    new_dw->get(constVelocityVars.cellType, d_lab->d_cellTypeLabel,
 		    matlIndex, patch, 
 		    Ghost::AroundCells, Arches::ONEGHOSTCELL);
 
     if (d_MAlab) {
 
-      new_dw->getCopy(velocityVars.voidFraction, d_lab->d_mmgasVolFracLabel,
+      new_dw->get(constVelocityVars.voidFraction, d_lab->d_mmgasVolFracLabel,
 		      matlIndex, patch, 
 		      Ghost::AroundCells, Arches::ONEGHOSTCELL);
 
@@ -1220,24 +1229,29 @@ MomentumSolver::buildLinearMatrixPred(const ProcessorGroup* pc,
     if (d_MAlab) {
       
       d_boundaryCondition->calculateVelocityPred_mm(pc, patch, 
-						    delta_t, index,
-						    cellinfo, &velocityVars);
+						    delta_t, index, cellinfo,
+						    &velocityVars,
+						    &constVelocityVars);
 
     }
     else {
     
       d_source->calculateVelocityPred(pc, patch, 
 				      delta_t, index,
-				      cellinfo, &velocityVars);
+				      cellinfo, &velocityVars,
+				      &constVelocityVars);
+
       if (d_boundaryCondition->getIntrusionBC())
 	d_boundaryCondition->calculateIntrusionVel(pc, patch,
 						   index, cellinfo,
-						   &velocityVars);
+						   &velocityVars,
+						   &constVelocityVars);
     }
     d_boundaryCondition->velocityPressureBC(pc, patch, index, cellinfo,
-						&velocityVars);
+					    &velocityVars, &constVelocityVars);
     d_boundaryCondition->addPresGradVelocityOutletBC(pc, patch, index, cellinfo,
-						&velocityVars, delta_t);
+						     delta_t, &velocityVars,
+						     &constVelocityVars);
 
 // This should only be done when ENO is used for scalar
     double maxAbsU = 0.0;
@@ -1501,14 +1515,15 @@ MomentumSolver::buildLinearMatrixCorr(const ProcessorGroup* pc,
     int archIndex = 0; // only one arches material
     int matlIndex = d_lab->d_sharedState->getArchesMaterial(archIndex)->getDWIndex(); 
     ArchesVariables velocityVars;
+    ArchesConstVariables constVelocityVars;
 
     // Get the required data
 
-    new_dw->getCopy(velocityVars.pressure, d_lab->d_pressureSPBCLabel, 
+    new_dw->get(constVelocityVars.pressure, d_lab->d_pressureSPBCLabel, 
 		matlIndex, patch, Ghost::AroundCells, Arches::ONEGHOSTCELL);
-    new_dw->getCopy(velocityVars.density, d_lab->d_densityCPLabel, 
+    new_dw->get(constVelocityVars.density, d_lab->d_densityCPLabel, 
 		matlIndex, patch, Ghost::AroundCells, Arches::ONEGHOSTCELL);
-    new_dw->getCopy(velocityVars.old_density, d_lab->d_densityCPLabel, 
+    new_dw->get(constVelocityVars.old_density, d_lab->d_densityCPLabel, 
 		matlIndex, patch, Ghost::AroundCells, Arches::ONEGHOSTCELL);
 
     // Get the PerPatch CellInformation data
@@ -1524,12 +1539,12 @@ MomentumSolver::buildLinearMatrixCorr(const ProcessorGroup* pc,
 
     CellInformation* cellinfo = cellInfoP.get().get_rep();
 
-    new_dw->getCopy(velocityVars.cellType, d_lab->d_cellTypeLabel,
+    new_dw->get(constVelocityVars.cellType, d_lab->d_cellTypeLabel,
 		      matlIndex, patch, 
 		      Ghost::AroundCells, Arches::ONEGHOSTCELL);
 
     if (d_MAlab)
-      new_dw->getCopy(velocityVars.voidFraction, d_lab->d_mmgasVolFracLabel,
+      new_dw->get(constVelocityVars.voidFraction, d_lab->d_mmgasVolFracLabel,
 		  matlIndex, patch, 
 		  Ghost::AroundCells, Arches::ONEGHOSTCELL);
     switch (index) {
@@ -1584,12 +1599,14 @@ MomentumSolver::buildLinearMatrixCorr(const ProcessorGroup* pc,
     
     d_source->calculateVelocityPred(pc, patch, 
 				    delta_t, index,
-				    cellinfo, &velocityVars);
+				    cellinfo, &velocityVars,
+				    &constVelocityVars);
 
     d_boundaryCondition->velocityPressureBC(pc, patch, index, cellinfo,
-						&velocityVars);
+					    &velocityVars, &constVelocityVars);
     d_boundaryCondition->addPresGradVelocityOutletBC(pc, patch, index, cellinfo,
-						&velocityVars, delta_t);
+						     delta_t, &velocityVars,
+						     &constVelocityVars);
 
 // This should only be done when ENO is used for scalar
     double maxAbsU = 0.0;
@@ -1822,14 +1839,15 @@ MomentumSolver::buildLinearMatrixInterm(const ProcessorGroup* pc,
     int archIndex = 0; // only one arches material
     int matlIndex = d_lab->d_sharedState->getArchesMaterial(archIndex)->getDWIndex(); 
     ArchesVariables velocityVars;
+    ArchesConstVariables constVelocityVars;
 
     // Get the required data
 
-    new_dw->getCopy(velocityVars.pressure, d_lab->d_pressureIntermLabel, 
+    new_dw->get(constVelocityVars.pressure, d_lab->d_pressureIntermLabel, 
 		matlIndex, patch, Ghost::AroundCells, Arches::ONEGHOSTCELL);
-    new_dw->getCopy(velocityVars.density, d_lab->d_densityIntermLabel, 
+    new_dw->get(constVelocityVars.density, d_lab->d_densityIntermLabel, 
 		matlIndex, patch, Ghost::AroundCells, Arches::ONEGHOSTCELL);
-    new_dw->getCopy(velocityVars.old_density, d_lab->d_densityIntermLabel, 
+    new_dw->get(constVelocityVars.old_density, d_lab->d_densityIntermLabel, 
 		matlIndex, patch, Ghost::AroundCells, Arches::ONEGHOSTCELL);
 
     // Get the PerPatch CellInformation data
@@ -1845,12 +1863,12 @@ MomentumSolver::buildLinearMatrixInterm(const ProcessorGroup* pc,
 
     CellInformation* cellinfo = cellInfoP.get().get_rep();
 
-    new_dw->getCopy(velocityVars.cellType, d_lab->d_cellTypeLabel,
+    new_dw->get(constVelocityVars.cellType, d_lab->d_cellTypeLabel,
 		      matlIndex, patch, 
 		      Ghost::AroundCells, Arches::ONEGHOSTCELL);
 
     if (d_MAlab)
-      new_dw->getCopy(velocityVars.voidFraction, d_lab->d_mmgasVolFracLabel,
+      new_dw->get(constVelocityVars.voidFraction, d_lab->d_mmgasVolFracLabel,
 		  matlIndex, patch, 
 		  Ghost::AroundCells, Arches::ONEGHOSTCELL);
     switch (index) {
@@ -1905,12 +1923,14 @@ MomentumSolver::buildLinearMatrixInterm(const ProcessorGroup* pc,
     
     d_source->calculateVelocityPred(pc, patch, 
 				    delta_t, index,
-				    cellinfo, &velocityVars);
+				    cellinfo, &velocityVars,
+				    &constVelocityVars);
 
     d_boundaryCondition->velocityPressureBC(pc, patch, index, cellinfo,
-						&velocityVars);
+					    &velocityVars, &constVelocityVars);
     d_boundaryCondition->addPresGradVelocityOutletBC(pc, patch, index, cellinfo,
-						&velocityVars, delta_t);
+						     delta_t, &velocityVars,
+						     &constVelocityVars);
 
 // This should only be done when ENO is used for scalar
     double maxAbsU = 0.0;
@@ -2067,8 +2087,10 @@ MomentumSolver::sched_buildLinearMatrixVelHatPred(SchedulerP& sched,
 		  Ghost::AroundCells, Arches::ONEGHOSTCELL);
   }
 
+#ifdef do_pressure_correction
   tsk->requires(Task::NewDW, d_lab->d_pressurePSLabel, 
 		Ghost::AroundCells, Arches::ONEGHOSTCELL);
+#endif
   tsk->requires(Task::NewDW, d_lab->d_densityINLabel,
 		Ghost::AroundCells, Arches::TWOGHOSTCELLS);
 
@@ -2123,7 +2145,7 @@ MomentumSolver::sched_buildLinearMatrixVelHatPred(SchedulerP& sched,
   tsk->requires(Task::NewDW, d_lab->d_drhodfPredLabel, 
 		Ghost::None, Arches::ZEROGHOSTCELLS);
 #else
-  tsk->requires(Task::NewDW, d_lab->d_scalarSPLabel, 
+  tsk->requires(Task::NewDW, d_lab->d_scalarOUTBCLabel, 
 		Ghost::AroundCells, Arches::ONEGHOSTCELL);
   tsk->requires(Task::NewDW, d_lab->d_drhodfCPLabel, 
 		Ghost::None, Arches::ZEROGHOSTCELLS);
@@ -2205,6 +2227,9 @@ MomentumSolver::buildLinearMatrixVelHatPred(const ProcessorGroup* pc,
 					    DataWarehouse* old_dw,
 					    DataWarehouse* new_dw)
 {
+  TAU_PROFILE_TIMER(input, "Input", "[MomSolver::buildMVelHatPred::input]" , TAU_USER);
+  TAU_PROFILE_TIMER(inputcell, "Inputcell", "[MomSolver::buildMVelHatPred::inputcell]" , TAU_USER);
+  TAU_PROFILE_TIMER(compute, "Compute", "[MomSolver::buildMVelHatPred::compute]" , TAU_USER);
   delt_vartype delT;
   old_dw->get(delT, d_lab->d_sharedState->get_delt_label() );
   double delta_t = delT;
@@ -2227,11 +2252,13 @@ MomentumSolver::buildLinearMatrixVelHatPred(const ProcessorGroup* pc,
 #endif
   
   for (int p = 0; p < patches->size(); p++) {
+  TAU_PROFILE_START(input);
 
     const Patch* patch = patches->get(p);
     int archIndex = 0; // only one arches material
     int matlIndex = d_lab->d_sharedState->getArchesMaterial(archIndex)->getDWIndex(); 
     ArchesVariables velocityVars;
+    ArchesConstVariables constVelocityVars;
 
     // compute all three componenets of velocity stencil coefficients
 
@@ -2239,47 +2266,52 @@ MomentumSolver::buildLinearMatrixVelHatPred(const ProcessorGroup* pc,
     // Get the reference density
     // Get the required data
 
-    new_dw->getCopy(velocityVars.density, d_lab->d_densityINLabel, 
+    new_dw->get(constVelocityVars.density, d_lab->d_densityINLabel, 
 		matlIndex, patch, Ghost::AroundCells, Arches::TWOGHOSTCELLS);
 #ifdef correctorstep
-    new_dw->getCopy(velocityVars.new_density, d_lab->d_densityPredLabel, 
+    new_dw->get(constVelocityVars.new_density, d_lab->d_densityPredLabel, 
 		matlIndex, patch, Ghost::AroundCells, Arches::ONEGHOSTCELL);
-    new_dw->getCopy(velocityVars.denRefArray, d_lab->d_denRefArrayPredLabel,
+    new_dw->get(constVelocityVars.denRefArray, d_lab->d_denRefArrayPredLabel,
     		matlIndex, patch, Ghost::AroundCells, Arches::ONEGHOSTCELL);
 #else
-    new_dw->getCopy(velocityVars.new_density, d_lab->d_densityCPLabel, 
+    new_dw->get(constVelocityVars.new_density, d_lab->d_densityCPLabel, 
 		matlIndex, patch, Ghost::AroundCells, Arches::ONEGHOSTCELL);
-    new_dw->getCopy(velocityVars.denRefArray, d_lab->d_denRefArrayLabel,
+    new_dw->get(constVelocityVars.denRefArray, d_lab->d_denRefArrayLabel,
     		matlIndex, patch, Ghost::AroundCells, Arches::ONEGHOSTCELL);
 #endif
-    new_dw->getCopy(velocityVars.viscosity, d_lab->d_viscosityINLabel, 
+    new_dw->get(constVelocityVars.viscosity, d_lab->d_viscosityINLabel, 
 		matlIndex, patch, Ghost::AroundCells, Arches::ONEGHOSTCELL);
-    new_dw->getCopy(velocityVars.pressure, d_lab->d_pressurePSLabel, 
+#ifdef do_pressure_correction
+    new_dw->get(constVelocityVars.pressure, d_lab->d_pressurePSLabel, 
 		matlIndex, patch, Ghost::AroundCells, Arches::ONEGHOSTCELL);
+#endif
 
 #ifdef divergenceconstraint
 #ifdef correctorstep
-    new_dw->getCopy(velocityVars.scalar, d_lab->d_scalarPredLabel,
+    new_dw->get(constVelocityVars.scalar, d_lab->d_scalarPredLabel,
 		    matlIndex, patch, Ghost::AroundCells, Arches::ONEGHOSTCELL);
-    new_dw->getCopy(velocityVars.drhodf, d_lab->d_drhodfPredLabel,
-		    matlIndex, patch);
+    new_dw->get(constVelocityVars.drhodf, d_lab->d_drhodfPredLabel,
+		    matlIndex, patch, Ghost::None, Arches::ZEROGHOSTCELLS);
 #else
-    new_dw->getCopy(velocityVars.scalar, d_lab->d_scalarSPLabel,
+    new_dw->get(constVelocityVars.scalar, d_lab->d_scalarOUTBCLabel,
 		    matlIndex, patch, Ghost::AroundCells, Arches::ONEGHOSTCELL);
-    new_dw->getCopy(velocityVars.drhodf, d_lab->d_drhodfCPLabel,
-		    matlIndex, patch);
+    new_dw->get(constVelocityVars.drhodf, d_lab->d_drhodfCPLabel,
+		    matlIndex, patch, Ghost::None, Arches::ZEROGHOSTCELLS);
 #endif
     for (int ii = 0; ii < d_lab->d_stencilMatl->size(); ii++)
-      new_dw->getCopy(velocityVars.scalarDiffusionCoeff[ii], 
-		      d_lab->d_scalDiffCoefPredLabel, 
+      new_dw->get(constVelocityVars.scalarDiffusionCoeff[ii],
+		      d_lab->d_scalDiffCoefPredLabel,
 		      ii, patch, Ghost::None, Arches::ZEROGHOSTCELLS);
-    new_dw->getCopy(velocityVars.scalarDiffNonlinearSrc, d_lab->d_scalDiffCoefSrcPredLabel,
-		    matlIndex, patch);
+    new_dw->get(constVelocityVars.scalarDiffNonlinearSrc, 
+	        d_lab->d_scalDiffCoefSrcPredLabel, matlIndex, patch,
+		Ghost::None, Arches::ZEROGHOSTCELLS);
     new_dw->allocateAndPut(velocityVars.divergence, d_lab->d_divConstraintLabel,
 		     matlIndex, patch);
     velocityVars.divergence.initialize(0.0);
 #endif
 
+  TAU_PROFILE_STOP(input);
+  TAU_PROFILE_START(inputcell);
     PerPatch<CellInformationP> cellInfoP;
 
     //  old_dw->get(cellInfoP, d_lab->d_cellInfoLabel, matlIndex, patch);
@@ -2299,37 +2331,39 @@ MomentumSolver::buildLinearMatrixVelHatPred(const ProcessorGroup* pc,
     }
 
     CellInformation* cellinfo = cellInfoP.get().get_rep();
+  TAU_PROFILE_STOP(inputcell);
+  TAU_PROFILE_START(input);
 
     if (d_MAlab) {
-      new_dw->getCopy(velocityVars.uVelocity, d_lab->d_uVelocityOUTBCLabel, 
+      new_dw->get(constVelocityVars.uVelocity, d_lab->d_uVelocityOUTBCLabel, 
 		      matlIndex, patch, Ghost::AroundFaces, Arches::TWOGHOSTCELLS);
-      new_dw->getCopy(velocityVars.vVelocity, d_lab->d_vVelocityOUTBCLabel, 
+      new_dw->get(constVelocityVars.vVelocity, d_lab->d_vVelocityOUTBCLabel, 
 		      matlIndex, patch, Ghost::AroundFaces, Arches::TWOGHOSTCELLS);
-      new_dw->getCopy(velocityVars.wVelocity, d_lab->d_wVelocityOUTBCLabel, 
+      new_dw->get(constVelocityVars.wVelocity, d_lab->d_wVelocityOUTBCLabel, 
 		      matlIndex, patch, Ghost::AroundFaces, Arches::TWOGHOSTCELLS);
     }
     else {
-      new_dw->getCopy(velocityVars.uVelocity, d_lab->d_uVelocityOUTBCLabel, 
+      new_dw->get(constVelocityVars.uVelocity, d_lab->d_uVelocityOUTBCLabel, 
 		      matlIndex, patch, Ghost::AroundFaces, Arches::ONEGHOSTCELL);
-      new_dw->getCopy(velocityVars.vVelocity, d_lab->d_vVelocityOUTBCLabel, 
+      new_dw->get(constVelocityVars.vVelocity, d_lab->d_vVelocityOUTBCLabel, 
 		      matlIndex, patch, Ghost::AroundFaces, Arches::ONEGHOSTCELL);
-      new_dw->getCopy(velocityVars.wVelocity, d_lab->d_wVelocityOUTBCLabel, 
+      new_dw->get(constVelocityVars.wVelocity, d_lab->d_wVelocityOUTBCLabel, 
 		      matlIndex, patch, Ghost::AroundFaces, Arches::ONEGHOSTCELL);
     }
-    new_dw->getCopy(velocityVars.old_uVelocity, d_lab->d_uVelocityOUTBCLabel, 
+    new_dw->get(constVelocityVars.old_uVelocity, d_lab->d_uVelocityOUTBCLabel, 
 		matlIndex, patch, Ghost::None, Arches::ZEROGHOSTCELLS);
-    new_dw->getCopy(velocityVars.old_vVelocity, d_lab->d_vVelocityOUTBCLabel, 
+    new_dw->get(constVelocityVars.old_vVelocity, d_lab->d_vVelocityOUTBCLabel, 
 		matlIndex, patch, Ghost::None, Arches::ZEROGHOSTCELLS);
-    new_dw->getCopy(velocityVars.old_wVelocity, d_lab->d_wVelocityOUTBCLabel, 
+    new_dw->get(constVelocityVars.old_wVelocity, d_lab->d_wVelocityOUTBCLabel, 
 		matlIndex, patch, Ghost::None, Arches::ZEROGHOSTCELLS);
-    new_dw->getCopy(velocityVars.old_density, d_lab->d_densityINLabel, 
+    new_dw->get(constVelocityVars.old_density, d_lab->d_densityINLabel, 
 		matlIndex, patch, Ghost::AroundCells, Arches::ONEGHOSTCELL);
     if (d_MAlab) {
-      new_dw->getCopy(velocityVars.cellType, d_lab->d_cellTypeLabel, 
+      new_dw->get(constVelocityVars.cellType, d_lab->d_cellTypeLabel, 
 		      matlIndex, patch, Ghost::AroundCells, Arches::TWOGHOSTCELLS);
     }
     else {
-      new_dw->getCopy(velocityVars.cellType, d_lab->d_cellTypeLabel, 
+      new_dw->get(constVelocityVars.cellType, d_lab->d_cellTypeLabel, 
 		      matlIndex, patch, Ghost::AroundCells, Arches::ONEGHOSTCELL);
     }
     for(int index = 1; index <= Arches::NDIM; ++index) {
@@ -2342,29 +2376,29 @@ MomentumSolver::buildLinearMatrixVelHatPred(const ProcessorGroup* pc,
 	
 	case Arches::XDIR:
 
-	  new_dw->getCopy(velocityVars.mmuVelSu, d_MAlab->d_uVel_mmNonlinSrcLabel,
+	  new_dw->get(constVelocityVars.mmuVelSu, d_MAlab->d_uVel_mmNonlinSrcLabel,
 		      matlIndex, patch,
 		      Ghost::None, Arches::ZEROGHOSTCELLS);
-	  new_dw->getCopy(velocityVars.mmuVelSp, d_MAlab->d_uVel_mmLinSrcLabel,
+	  new_dw->get(constVelocityVars.mmuVelSp, d_MAlab->d_uVel_mmLinSrcLabel,
 		      matlIndex, patch,
 		      Ghost::None, Arches::ZEROGHOSTCELLS);
 	  break;
 
 	case Arches::YDIR:
 
-	  new_dw->getCopy(velocityVars.mmvVelSu, d_MAlab->d_vVel_mmNonlinSrcLabel,
+	  new_dw->get(constVelocityVars.mmvVelSu, d_MAlab->d_vVel_mmNonlinSrcLabel,
 		      matlIndex, patch,
 		      Ghost::None, Arches::ZEROGHOSTCELLS);
-	  new_dw->getCopy(velocityVars.mmvVelSp, d_MAlab->d_vVel_mmLinSrcLabel,
+	  new_dw->get(constVelocityVars.mmvVelSp, d_MAlab->d_vVel_mmLinSrcLabel,
 		      matlIndex, patch,
 		      Ghost::None, Arches::ZEROGHOSTCELLS);
 	  break;
 	case Arches::ZDIR:
 
-	  new_dw->getCopy(velocityVars.mmwVelSu, d_MAlab->d_wVel_mmNonlinSrcLabel,
+	  new_dw->get(constVelocityVars.mmwVelSu, d_MAlab->d_wVel_mmNonlinSrcLabel,
 		      matlIndex, patch,
 		      Ghost::None, Arches::ZEROGHOSTCELLS);
-	  new_dw->getCopy(velocityVars.mmwVelSp, d_MAlab->d_wVel_mmLinSrcLabel,
+	  new_dw->get(constVelocityVars.mmwVelSp, d_MAlab->d_wVel_mmLinSrcLabel,
 		      matlIndex, patch,
 		      Ghost::None, Arches::ZEROGHOSTCELLS);
 	  break;
@@ -2392,6 +2426,8 @@ MomentumSolver::buildLinearMatrixVelHatPred(const ProcessorGroup* pc,
 	  throw InvalidValue("invalid index for velocity in MomentumSolver");
 	}
       }
+  TAU_PROFILE_STOP(input);
+  TAU_PROFILE_START(compute);
 
       // Calculate Velocity Coeffs :
       //  inputs : [u,v,w]VelocitySIVBC, densityIN, viscosityIN
@@ -2399,7 +2435,8 @@ MomentumSolver::buildLinearMatrixVelHatPred(const ProcessorGroup* pc,
 
       d_discretize->calculateVelocityCoeff(pc, patch, 
 					   delta_t, index, d_central, 
-					   cellinfo, &velocityVars);
+					   cellinfo, &velocityVars,
+					   &constVelocityVars);
 
       // Calculate Velocity source
       //  inputs : [u,v,w]VelocitySIVBC, densityIN, viscosityIN
@@ -2415,7 +2452,7 @@ MomentumSolver::buildLinearMatrixVelHatPred(const ProcessorGroup* pc,
 	new_dw->allocateTemporary(velocityVars.uVelNonlinearSrc,  patch);
 	new_dw->allocateAndPut(velocityVars.uVelRhoHat, d_lab->d_uVelRhoHatLabel,
 			 matlIndex, patch, Ghost::AroundFaces, Arches::ONEGHOSTCELL);
-	velocityVars.uVelRhoHat.copy(velocityVars.uVelocity,
+	velocityVars.uVelRhoHat.copy(constVelocityVars.uVelocity,
 				     velocityVars.uVelRhoHat.getLowIndex(),
 				     velocityVars.uVelRhoHat.getHighIndex());
 
@@ -2427,7 +2464,7 @@ MomentumSolver::buildLinearMatrixVelHatPred(const ProcessorGroup* pc,
 	new_dw->allocateTemporary(velocityVars.vVelNonlinearSrc,  patch);
 	new_dw->allocateAndPut(velocityVars.vVelRhoHat, d_lab->d_vVelRhoHatLabel,
 			 matlIndex, patch, Ghost::AroundFaces, Arches::ONEGHOSTCELL);
-	velocityVars.vVelRhoHat.copy(velocityVars.vVelocity,
+	velocityVars.vVelRhoHat.copy(constVelocityVars.vVelocity,
 				     velocityVars.vVelRhoHat.getLowIndex(),
 				     velocityVars.vVelRhoHat.getHighIndex());
 
@@ -2439,7 +2476,7 @@ MomentumSolver::buildLinearMatrixVelHatPred(const ProcessorGroup* pc,
 	new_dw->allocateTemporary(velocityVars.wVelNonlinearSrc,  patch);
 	new_dw->allocateAndPut(velocityVars.wVelRhoHat, d_lab->d_wVelRhoHatLabel,
 			 matlIndex, patch, Ghost::AroundFaces, Arches::ONEGHOSTCELL);
-	velocityVars.wVelRhoHat.copy(velocityVars.wVelocity,
+	velocityVars.wVelRhoHat.copy(constVelocityVars.wVelocity,
 				     velocityVars.wVelRhoHat.getLowIndex(),
 				     velocityVars.wVelRhoHat.getHighIndex());
 
@@ -2452,25 +2489,26 @@ MomentumSolver::buildLinearMatrixVelHatPred(const ProcessorGroup* pc,
 
       d_source->calculateVelocitySource(pc, patch, 
 					delta_t, index,
-					cellinfo, &velocityVars);
+					cellinfo, &velocityVars,
+					&constVelocityVars);
 
 #ifdef filter_convection_terms
     for (int ii = 0; ii < d_lab->d_scalarFluxMatl->size(); ii++) {
       switch (index) {
 	  case Arches::XDIR:
-	    new_dw->getCopy(velocityVars.filteredRhoUjU[ii], 
+	    new_dw->get(constVelocityVars.filteredRhoUjU[ii], 
 			    d_lab->d_filteredRhoUjULabel, ii, patch,
 			    Ghost::AroundFaces, Arches::TWOGHOSTCELLS);
 	break;
 
 	case Arches::YDIR:
-	    new_dw->getCopy(velocityVars.filteredRhoUjV[ii], 
+	    new_dw->get(constVelocityVars.filteredRhoUjV[ii], 
 			    d_lab->d_filteredRhoUjVLabel, ii, patch,
 			    Ghost::AroundFaces, Arches::TWOGHOSTCELLS);
 	break;
 
 	case Arches::ZDIR:
-	    new_dw->getCopy(velocityVars.filteredRhoUjW[ii], 
+	    new_dw->get(constVelocityVars.filteredRhoUjW[ii], 
 			    d_lab->d_filteredRhoUjWLabel, ii, patch,
 			    Ghost::AroundFaces, Arches::TWOGHOSTCELLS);
 	break;
@@ -2573,9 +2611,9 @@ MomentumSolver::buildLinearMatrixVelHatPred(const ProcessorGroup* pc,
 
       // for scalesimilarity model add stress tensor to the source of velocity eqn.
       if (dynamic_cast<const ScaleSimilarityModel*>(d_turbModel)) {
-	StencilMatrix<CCVariable<double> > stressTensor; //9 point tensor
+	StencilMatrix<constCCVariable<double> > stressTensor; //9 point tensor
 	for (int ii = 0; ii < d_lab->d_stressTensorMatl->size(); ii++) {
-	  old_dw->getCopy(stressTensor[ii], 
+	  old_dw->get(stressTensor[ii], 
 			  d_lab->d_stressTensorCompLabel, ii, patch,
 			  Ghost::AroundCells, Arches::ONEGHOSTCELL);
 	}
@@ -2712,7 +2750,7 @@ MomentumSolver::buildLinearMatrixVelHatPred(const ProcessorGroup* pc,
 
       if (d_MAlab)
 	d_source->computemmMomentumSource(pc, patch, index, cellinfo,
-					  &velocityVars);
+					  &velocityVars, &constVelocityVars);
 
       // Calculate the Velocity BCS
       //  inputs : densityCP, [u,v,w]VelocitySIVBC, [u,v,w]VelCoefPBLM
@@ -2722,20 +2760,24 @@ MomentumSolver::buildLinearMatrixVelHatPred(const ProcessorGroup* pc,
       
       d_boundaryCondition->velocityBC(pc, patch, 
 				    index,
-				    cellinfo, &velocityVars);
+				    cellinfo, &velocityVars,
+				    &constVelocityVars);
 
       if (d_boundaryCondition->getIntrusionBC()) {
 	d_boundaryCondition->intrusionMomExchangeBC(pc, patch, index,
-						    cellinfo, &velocityVars);
+						    cellinfo, &velocityVars,
+						    &constVelocityVars);
 	d_boundaryCondition->intrusionVelocityBC(pc, patch, index, 
-						 cellinfo, &velocityVars);
+						 cellinfo, &velocityVars,
+						 &constVelocityVars);
 
       }
     // apply multimaterial velocity bc
     // treats multimaterial wall as intrusion
 
       if (d_MAlab)
-	d_boundaryCondition->mmvelocityBC(pc, patch, index, cellinfo, &velocityVars);
+	d_boundaryCondition->mmvelocityBC(pc, patch, index, cellinfo,
+					  &velocityVars, &constVelocityVars);
     
     // Modify Velocity Mass Source
     //  inputs : [u,v,w]VelocitySIVBC, [u,v,w]VelCoefPBLM, 
@@ -2743,7 +2785,7 @@ MomentumSolver::buildLinearMatrixVelHatPred(const ProcessorGroup* pc,
     //           [u,v,w]VelNonLinSrcPBLM
     //  outputs: [u,v,w]VelLinSrcPBLM, [u,v,w]VelNonLinSrcPBLM
       d_source->modifyVelMassSource(pc, patch, delta_t, index,
-				    &velocityVars);
+				    &velocityVars, &constVelocityVars);
 
       // Calculate Velocity diagonal
       //  inputs : [u,v,w]VelCoefPBLM, [u,v,w]VelLinSrcPBLM
@@ -2755,11 +2797,13 @@ MomentumSolver::buildLinearMatrixVelHatPred(const ProcessorGroup* pc,
 
       if (d_MAlab) {
 	d_boundaryCondition->calculateVelRhoHat_mm(pc, patch, index, delta_t,
-						   cellinfo, &velocityVars);
+						   cellinfo, &velocityVars,
+						   &constVelocityVars);
       }
       else {
 	d_discretize->calculateVelRhoHat(pc, patch, index, delta_t,
-					 cellinfo, &velocityVars);
+					 cellinfo, &velocityVars,
+					 &constVelocityVars);
       }
 
 #ifdef Runge_Kutta_3d 
@@ -2877,21 +2921,22 @@ MomentumSolver::buildLinearMatrixVelHatPred(const ProcessorGroup* pc,
 //    d_boundaryCondition->newrecomputePressureBC(pc, patch, cellinfo,
 //						&velocityVars);
     d_boundaryCondition->velRhoHatInletBC(pc, patch, cellinfo,
-						&velocityVars);
+					  &velocityVars, &constVelocityVars);
     d_boundaryCondition->velRhoHatPressureBC(pc, patch, cellinfo,
-						&velocityVars);
-    d_boundaryCondition->velRhoHatOutletBC(pc, patch, cellinfo,
-						&velocityVars, delta_t);
+					     &velocityVars, &constVelocityVars);
+    d_boundaryCondition->velRhoHatOutletBC(pc, patch, cellinfo, delta_t,
+					   &velocityVars, &constVelocityVars);
 
 #ifdef divergenceconstraint    
     // compute divergence constraint to use in pressure equation
-    d_discretize->computeDivergence(pc, patch, &velocityVars);
+    d_discretize->computeDivergence(pc, patch,&velocityVars,&constVelocityVars);
 #endif
 
 #ifdef ARCHES_PRES_DEBUG
     std::cerr << "Done building matrix for vel coeff for pressure" << endl;
 #endif
     
+  TAU_PROFILE_STOP(compute);
   }
 }
 
@@ -2945,8 +2990,10 @@ MomentumSolver::sched_buildLinearMatrixVelHatCorr(SchedulerP& sched,
   tsk->requires(Task::NewDW, d_lab->d_densityIntermLabel,
 		Ghost::AroundCells, Arches::TWOGHOSTCELLS);
   
+#ifdef do_pressure_correction
   tsk->requires(Task::NewDW, d_lab->d_pressureIntermLabel, 
 		Ghost::AroundCells, Arches::ONEGHOSTCELL);
+#endif
   tsk->requires(Task::NewDW, d_lab->d_viscosityIntermLabel,
 		Ghost::AroundCells, Arches::ONEGHOSTCELL);
   tsk->requires(Task::NewDW, d_lab->d_uVelocityIntermLabel,
@@ -2981,8 +3028,10 @@ MomentumSolver::sched_buildLinearMatrixVelHatCorr(SchedulerP& sched,
   
   tsk->requires(Task::NewDW, d_lab->d_densityPredLabel,
 		Ghost::AroundCells, Arches::TWOGHOSTCELLS);
+#ifdef do_pressure_correction
   tsk->requires(Task::NewDW, d_lab->d_pressurePredLabel, 
 		Ghost::AroundCells, Arches::ONEGHOSTCELL);
+#endif
   tsk->requires(Task::NewDW, d_lab->d_viscosityPredLabel,
 		Ghost::AroundCells, Arches::ONEGHOSTCELL);
   tsk->requires(Task::NewDW, d_lab->d_uVelocityPredLabel,
@@ -3079,37 +3128,42 @@ MomentumSolver::buildLinearMatrixVelHatCorr(const ProcessorGroup* pc,
     int archIndex = 0; // only one arches material
     int matlIndex = d_lab->d_sharedState->getArchesMaterial(archIndex)->getDWIndex(); 
     ArchesVariables velocityVars;
+    ArchesConstVariables constVelocityVars;
 
     // compute all three componenets of velocity stencil coefficients
 
-    new_dw->getCopy(velocityVars.new_density, d_lab->d_densityCPLabel, 
+    new_dw->get(constVelocityVars.new_density, d_lab->d_densityCPLabel, 
 		    matlIndex, patch, Ghost::AroundCells, Arches::ONEGHOSTCELL);
 #ifdef Runge_Kutta_3d
-    new_dw->getCopy(velocityVars.density, d_lab->d_densityIntermLabel, 
+    new_dw->get(constVelocityVars.density, d_lab->d_densityIntermLabel, 
 		    matlIndex, patch, Ghost::AroundCells, Arches::TWOGHOSTCELLS);
-    new_dw->getCopy(velocityVars.pressure, d_lab->d_pressureIntermLabel, 
-		    matlIndex, patch, Ghost::AroundCells, Arches::ONEGHOSTCELL);
-    new_dw->getCopy(velocityVars.viscosity, d_lab->d_viscosityIntermLabel, 
-		    matlIndex, patch, Ghost::AroundCells, Arches::ONEGHOSTCELL);
-#else
-    new_dw->getCopy(velocityVars.density, d_lab->d_densityPredLabel, 
-		    matlIndex, patch, Ghost::AroundCells, Arches::TWOGHOSTCELLS);
-    new_dw->getCopy(velocityVars.pressure, d_lab->d_pressurePredLabel, 
-		    matlIndex, patch, Ghost::AroundCells, Arches::ONEGHOSTCELL);
-    new_dw->getCopy(velocityVars.viscosity, d_lab->d_viscosityPredLabel, 
+#ifdef do_pressure_correction
+    new_dw->get(constVelocityVars.pressure, d_lab->d_pressureIntermLabel, 
 		    matlIndex, patch, Ghost::AroundCells, Arches::ONEGHOSTCELL);
 #endif
-    new_dw->getCopy(velocityVars.denRefArray, d_lab->d_denRefArrayLabel,
+    new_dw->get(constVelocityVars.viscosity, d_lab->d_viscosityIntermLabel, 
+		    matlIndex, patch, Ghost::AroundCells, Arches::ONEGHOSTCELL);
+#else
+    new_dw->get(constVelocityVars.density, d_lab->d_densityPredLabel, 
+		    matlIndex, patch, Ghost::AroundCells, Arches::TWOGHOSTCELLS);
+#ifdef do_pressure_correction
+    new_dw->get(constVelocityVars.pressure, d_lab->d_pressurePredLabel, 
+		    matlIndex, patch, Ghost::AroundCells, Arches::ONEGHOSTCELL);
+#endif
+    new_dw->get(constVelocityVars.viscosity, d_lab->d_viscosityPredLabel, 
+		    matlIndex, patch, Ghost::AroundCells, Arches::ONEGHOSTCELL);
+#endif
+    new_dw->get(constVelocityVars.denRefArray, d_lab->d_denRefArrayLabel,
 		    matlIndex, patch, Ghost::AroundCells, Arches::ONEGHOSTCELL);
 
 #ifdef divergenceconstraint
-    new_dw->getCopy(velocityVars.scalar, d_lab->d_scalarSPLabel,
+    new_dw->get(constVelocityVars.scalar, d_lab->d_scalarSPLabel,
 		    matlIndex, patch, Ghost::AroundCells, Arches::ONEGHOSTCELL);
-    new_dw->getCopy(velocityVars.drhodf, d_lab->d_drhodfCPLabel,
-		    matlIndex, patch);
+    new_dw->get(constVelocityVars.drhodf, d_lab->d_drhodfCPLabel,
+		    matlIndex, patch, Ghost::None, Arches::ZEROGHOSTCELLS);
     for (int ii = 0; ii < d_lab->d_stencilMatl->size(); ii++)
-      new_dw->getCopy(velocityVars.scalarDiffusionCoeff[ii], 
-		      d_lab->d_scalDiffCoefCorrLabel, 
+      new_dw->get(constVelocityVars.scalarDiffusionCoeff[ii],
+		      d_lab->d_scalDiffCoefCorrLabel,
 		      ii, patch, Ghost::None, Arches::ZEROGHOSTCELLS);
     new_dw->getModifiable(velocityVars.divergence, d_lab->d_divConstraintLabel,
 		          matlIndex, patch);
@@ -3132,51 +3186,51 @@ MomentumSolver::buildLinearMatrixVelHatCorr(const ProcessorGroup* pc,
     CellInformation* cellinfo = cellInfoP.get().get_rep();
 
 #ifdef Runge_Kutta_3d
-    new_dw->getCopy(velocityVars.uVelocity, d_lab->d_uVelocityIntermLabel, 
+    new_dw->get(constVelocityVars.uVelocity, d_lab->d_uVelocityIntermLabel, 
 		    matlIndex, patch, Ghost::AroundFaces, Arches::ONEGHOSTCELL);
-    new_dw->getCopy(velocityVars.vVelocity, d_lab->d_vVelocityIntermLabel, 
+    new_dw->get(constVelocityVars.vVelocity, d_lab->d_vVelocityIntermLabel, 
 		    matlIndex, patch, Ghost::AroundFaces, Arches::ONEGHOSTCELL);
-    new_dw->getCopy(velocityVars.wVelocity, d_lab->d_wVelocityIntermLabel, 
+    new_dw->get(constVelocityVars.wVelocity, d_lab->d_wVelocityIntermLabel, 
 		    matlIndex, patch, Ghost::AroundFaces, Arches::ONEGHOSTCELL);
     
-    new_dw->getCopy(velocityVars.old_uVelocity, d_lab->d_uVelocityIntermLabel, 
+    new_dw->get(constVelocityVars.old_uVelocity, d_lab->d_uVelocityIntermLabel, 
 		    matlIndex, patch, Ghost::None, Arches::ZEROGHOSTCELLS);
-    new_dw->getCopy(velocityVars.old_vVelocity, d_lab->d_vVelocityIntermLabel, 
+    new_dw->get(constVelocityVars.old_vVelocity, d_lab->d_vVelocityIntermLabel, 
 		    matlIndex, patch, Ghost::None, Arches::ZEROGHOSTCELLS);
-    new_dw->getCopy(velocityVars.old_wVelocity, d_lab->d_wVelocityIntermLabel, 
+    new_dw->get(constVelocityVars.old_wVelocity, d_lab->d_wVelocityIntermLabel, 
 		    matlIndex, patch, Ghost::None, Arches::ZEROGHOSTCELLS);
 
-    new_dw->getCopy(velocityVars.old_density, d_lab->d_densityIntermLabel, 
+    new_dw->get(constVelocityVars.old_density, d_lab->d_densityIntermLabel, 
 		    matlIndex, patch, Ghost::AroundCells, Arches::ONEGHOSTCELL);
 #else
-    new_dw->getCopy(velocityVars.uVelocity, d_lab->d_uVelocityPredLabel, 
+    new_dw->get(constVelocityVars.uVelocity, d_lab->d_uVelocityPredLabel, 
 		    matlIndex, patch, Ghost::AroundFaces, Arches::ONEGHOSTCELL);
-    new_dw->getCopy(velocityVars.vVelocity, d_lab->d_vVelocityPredLabel, 
+    new_dw->get(constVelocityVars.vVelocity, d_lab->d_vVelocityPredLabel, 
 		    matlIndex, patch, Ghost::AroundFaces, Arches::ONEGHOSTCELL);
-    new_dw->getCopy(velocityVars.wVelocity, d_lab->d_wVelocityPredLabel, 
+    new_dw->get(constVelocityVars.wVelocity, d_lab->d_wVelocityPredLabel, 
 		    matlIndex, patch, Ghost::AroundFaces, Arches::ONEGHOSTCELL);
 #ifdef Runge_Kutta_2nd
-    new_dw->getCopy(velocityVars.old_uVelocity, d_lab->d_uVelocityPredLabel, 
+    new_dw->get(constVelocityVars.old_uVelocity, d_lab->d_uVelocityPredLabel, 
 		    matlIndex, patch, Ghost::None, Arches::ZEROGHOSTCELLS);
-    new_dw->getCopy(velocityVars.old_vVelocity, d_lab->d_vVelocityPredLabel, 
+    new_dw->get(constVelocityVars.old_vVelocity, d_lab->d_vVelocityPredLabel, 
 		    matlIndex, patch, Ghost::None, Arches::ZEROGHOSTCELLS);
-    new_dw->getCopy(velocityVars.old_wVelocity, d_lab->d_wVelocityPredLabel, 
+    new_dw->get(constVelocityVars.old_wVelocity, d_lab->d_wVelocityPredLabel, 
 		    matlIndex, patch, Ghost::None, Arches::ZEROGHOSTCELLS);
 
-    new_dw->getCopy(velocityVars.old_density, d_lab->d_densityPredLabel, 
+    new_dw->get(constVelocityVars.old_density, d_lab->d_densityPredLabel, 
 		    matlIndex, patch, Ghost::AroundCells, Arches::ONEGHOSTCELL);
 #else
-    new_dw->getCopy(velocityVars.old_uVelocity, d_lab->d_uVelocityOUTBCLabel, 
+    new_dw->get(constVelocityVars.old_uVelocity, d_lab->d_uVelocityOUTBCLabel, 
 		matlIndex, patch, Ghost::None, Arches::ZEROGHOSTCELLS);
-    new_dw->getCopy(velocityVars.old_vVelocity, d_lab->d_vVelocityOUTBCLabel, 
+    new_dw->get(constVelocityVars.old_vVelocity, d_lab->d_vVelocityOUTBCLabel, 
 		matlIndex, patch, Ghost::None, Arches::ZEROGHOSTCELLS);
-    new_dw->getCopy(velocityVars.old_wVelocity, d_lab->d_wVelocityOUTBCLabel, 
+    new_dw->get(constVelocityVars.old_wVelocity, d_lab->d_wVelocityOUTBCLabel, 
 		matlIndex, patch, Ghost::None, Arches::ZEROGHOSTCELLS);
-    new_dw->getCopy(velocityVars.old_density, d_lab->d_densityINLabel, 
+    new_dw->get(constVelocityVars.old_density, d_lab->d_densityINLabel, 
 		matlIndex, patch, Ghost::AroundCells, Arches::ONEGHOSTCELL);
 #endif
 #endif
-    new_dw->getCopy(velocityVars.cellType, d_lab->d_cellTypeLabel, 
+    new_dw->get(constVelocityVars.cellType, d_lab->d_cellTypeLabel, 
 		    matlIndex, patch, Ghost::AroundCells, Arches::ONEGHOSTCELL);
     
     for(int index = 1; index <= Arches::NDIM; ++index) {
@@ -3188,29 +3242,29 @@ MomentumSolver::buildLinearMatrixVelHatCorr(const ProcessorGroup* pc,
 	
 	case Arches::XDIR:
 	  
-	  new_dw->getCopy(velocityVars.mmuVelSu, d_MAlab->d_uVel_mmNonlinSrcLabel,
+	  new_dw->get(constVelocityVars.mmuVelSu, d_MAlab->d_uVel_mmNonlinSrcLabel,
 			  matlIndex, patch,
 			  Ghost::None, Arches::ZEROGHOSTCELLS);
-	  new_dw->getCopy(velocityVars.mmuVelSp, d_MAlab->d_uVel_mmLinSrcLabel,
+	  new_dw->get(constVelocityVars.mmuVelSp, d_MAlab->d_uVel_mmLinSrcLabel,
 			  matlIndex, patch,
 			  Ghost::None, Arches::ZEROGHOSTCELLS);
 	  break;
 	  
 	case Arches::YDIR:
 	  
-	  new_dw->getCopy(velocityVars.mmvVelSu, d_MAlab->d_vVel_mmNonlinSrcLabel,
+	  new_dw->get(constVelocityVars.mmvVelSu, d_MAlab->d_vVel_mmNonlinSrcLabel,
 			  matlIndex, patch,
 			  Ghost::None, Arches::ZEROGHOSTCELLS);
-	  new_dw->getCopy(velocityVars.mmvVelSp, d_MAlab->d_vVel_mmLinSrcLabel,
+	  new_dw->get(constVelocityVars.mmvVelSp, d_MAlab->d_vVel_mmLinSrcLabel,
 			  matlIndex, patch,
 			  Ghost::None, Arches::ZEROGHOSTCELLS);
 	  break;
 	case Arches::ZDIR:
 	  
-	  new_dw->getCopy(velocityVars.mmwVelSu, d_MAlab->d_wVel_mmNonlinSrcLabel,
+	  new_dw->get(constVelocityVars.mmwVelSu, d_MAlab->d_wVel_mmNonlinSrcLabel,
 			  matlIndex, patch,
 			  Ghost::None, Arches::ZEROGHOSTCELLS);
-	  new_dw->getCopy(velocityVars.mmwVelSp, d_MAlab->d_wVel_mmLinSrcLabel,
+	  new_dw->get(constVelocityVars.mmwVelSp, d_MAlab->d_wVel_mmLinSrcLabel,
 			  matlIndex, patch,
 			  Ghost::None, Arches::ZEROGHOSTCELLS);
 	  break;
@@ -3245,7 +3299,8 @@ MomentumSolver::buildLinearMatrixVelHatCorr(const ProcessorGroup* pc,
 
       d_discretize->calculateVelocityCoeff(pc, patch, 
 					   delta_t, index, d_central, 
-					   cellinfo, &velocityVars);
+					   cellinfo, &velocityVars,
+					   &constVelocityVars);
 
       // Calculate Velocity source
       //  inputs : [u,v,w]VelocitySIVBC, densityIN, viscosityIN
@@ -3261,7 +3316,7 @@ MomentumSolver::buildLinearMatrixVelHatCorr(const ProcessorGroup* pc,
 	new_dw->allocateTemporary(velocityVars.uVelNonlinearSrc,  patch);
 	new_dw->allocateAndPut(velocityVars.uVelRhoHat, d_lab->d_uVelRhoHatCorrLabel,
 			 matlIndex, patch, Ghost::AroundFaces, Arches::ONEGHOSTCELL);
-	velocityVars.uVelRhoHat.copy(velocityVars.uVelocity,
+	velocityVars.uVelRhoHat.copy(constVelocityVars.uVelocity,
 				     velocityVars.uVelRhoHat.getLowIndex(),
 				     velocityVars.uVelRhoHat.getHighIndex());
 
@@ -3273,7 +3328,7 @@ MomentumSolver::buildLinearMatrixVelHatCorr(const ProcessorGroup* pc,
 	new_dw->allocateTemporary(velocityVars.vVelNonlinearSrc,  patch);
 	new_dw->allocateAndPut(velocityVars.vVelRhoHat, d_lab->d_vVelRhoHatCorrLabel,
 			 matlIndex, patch, Ghost::AroundFaces, Arches::ONEGHOSTCELL);
-	velocityVars.vVelRhoHat.copy(velocityVars.vVelocity,
+	velocityVars.vVelRhoHat.copy(constVelocityVars.vVelocity,
 				     velocityVars.vVelRhoHat.getLowIndex(),
 				     velocityVars.vVelRhoHat.getHighIndex());
 
@@ -3285,7 +3340,7 @@ MomentumSolver::buildLinearMatrixVelHatCorr(const ProcessorGroup* pc,
 	new_dw->allocateTemporary(velocityVars.wVelNonlinearSrc,  patch);
 	new_dw->allocateAndPut(velocityVars.wVelRhoHat, d_lab->d_wVelRhoHatCorrLabel,
 			 matlIndex, patch, Ghost::AroundFaces, Arches::ONEGHOSTCELL);
-	velocityVars.wVelRhoHat.copy(velocityVars.wVelocity,
+	velocityVars.wVelRhoHat.copy(constVelocityVars.wVelocity,
 				     velocityVars.wVelRhoHat.getLowIndex(),
 				     velocityVars.wVelRhoHat.getHighIndex());
 
@@ -3298,25 +3353,26 @@ MomentumSolver::buildLinearMatrixVelHatCorr(const ProcessorGroup* pc,
 
       d_source->calculateVelocitySource(pc, patch, 
 					delta_t, index,
-					cellinfo, &velocityVars);
+					cellinfo, &velocityVars,
+					&constVelocityVars);
 
 #ifdef filter_convection_terms
     for (int ii = 0; ii < d_lab->d_scalarFluxMatl->size(); ii++) {
       switch (index) {
 	  case Arches::XDIR:
-	    new_dw->getCopy(velocityVars.filteredRhoUjU[ii], 
+	    new_dw->get(constVelocityVars.filteredRhoUjU[ii], 
 			    d_lab->d_filteredRhoUjULabel, ii, patch,
 			    Ghost::AroundFaces, Arches::TWOGHOSTCELLS);
 	break;
 
 	case Arches::YDIR:
-	    new_dw->getCopy(velocityVars.filteredRhoUjV[ii], 
+	    new_dw->get(constVelocityVars.filteredRhoUjV[ii], 
 			    d_lab->d_filteredRhoUjVLabel, ii, patch,
 			    Ghost::AroundFaces, Arches::TWOGHOSTCELLS);
 	break;
 
 	case Arches::ZDIR:
-	    new_dw->getCopy(velocityVars.filteredRhoUjW[ii], 
+	    new_dw->get(constVelocityVars.filteredRhoUjW[ii], 
 			    d_lab->d_filteredRhoUjWLabel, ii, patch,
 			    Ghost::AroundFaces, Arches::TWOGHOSTCELLS);
 	break;
@@ -3419,9 +3475,9 @@ MomentumSolver::buildLinearMatrixVelHatCorr(const ProcessorGroup* pc,
 
       // for scalesimilarity model add stress tensor to the source of velocity eqn.
     if (dynamic_cast<const ScaleSimilarityModel*>(d_turbModel)) {
-      StencilMatrix<CCVariable<double> > stressTensor; //9 point tensor
+      StencilMatrix<constCCVariable<double> > stressTensor; //9 point tensor
       for (int ii = 0; ii < d_lab->d_stressTensorMatl->size(); ii++) {
-	new_dw->getCopy(stressTensor[ii], 
+	new_dw->get(stressTensor[ii], 
 			d_lab->d_stressTensorCompLabel, ii, patch,
 			Ghost::AroundCells, Arches::ONEGHOSTCELL);
       }
@@ -3558,7 +3614,7 @@ MomentumSolver::buildLinearMatrixVelHatCorr(const ProcessorGroup* pc,
     
     if (d_MAlab)
       d_source->computemmMomentumSource(pc, patch, index, cellinfo,
-					&velocityVars);
+					&velocityVars, &constVelocityVars);
     
     // Calculate the Velocity BCS
     //  inputs : densityCP, [u,v,w]VelocitySIVBC, [u,v,w]VelCoefPBLM
@@ -3568,12 +3624,14 @@ MomentumSolver::buildLinearMatrixVelHatCorr(const ProcessorGroup* pc,
       
     d_boundaryCondition->velocityBC(pc, patch, 
 				    index,
-				    cellinfo, &velocityVars);
+				    cellinfo, &velocityVars,
+				    &constVelocityVars);
     // apply multimaterial velocity bc
     // treats multimaterial wall as intrusion
     
     if (d_MAlab)
-      d_boundaryCondition->mmvelocityBC(pc, patch, index, cellinfo, &velocityVars);
+	d_boundaryCondition->mmvelocityBC(pc, patch, index, cellinfo,
+					  &velocityVars, &constVelocityVars);
     
     // Modify Velocity Mass Source
     //  inputs : [u,v,w]VelocitySIVBC, [u,v,w]VelCoefPBLM, 
@@ -3582,7 +3640,7 @@ MomentumSolver::buildLinearMatrixVelHatCorr(const ProcessorGroup* pc,
     //  outputs: [u,v,w]VelLinSrcPBLM, [u,v,w]VelNonLinSrcPBLM
     
     d_source->modifyVelMassSource(pc, patch, delta_t, index,
-				  &velocityVars);
+				  &velocityVars, &constVelocityVars);
     
     d_discretize->calculateVelDiagonal(pc, patch,
 				       index,
@@ -3591,7 +3649,8 @@ MomentumSolver::buildLinearMatrixVelHatCorr(const ProcessorGroup* pc,
 
     
     d_discretize->calculateVelRhoHat(pc, patch, index, delta_t,
-				     cellinfo, &velocityVars);
+				     cellinfo, &velocityVars,
+				     &constVelocityVars);
     
 #ifdef Runge_Kutta_3d
 #ifndef Runge_Kutta_3d_ssp
@@ -3689,14 +3748,14 @@ MomentumSolver::buildLinearMatrixVelHatCorr(const ProcessorGroup* pc,
 //    d_boundaryCondition->newrecomputePressureBC(pc, patch,
 //						cellinfo, &velocityVars); 
     d_boundaryCondition->velRhoHatInletBC(pc, patch, cellinfo,
-						&velocityVars);
+					  &velocityVars, &constVelocityVars);
     d_boundaryCondition->velRhoHatPressureBC(pc, patch, cellinfo,
-						&velocityVars);
-    d_boundaryCondition->velRhoHatOutletBC(pc, patch, cellinfo,
-						&velocityVars, delta_t);
+					     &velocityVars, &constVelocityVars);
+    d_boundaryCondition->velRhoHatOutletBC(pc, patch, cellinfo, delta_t,
+					   &velocityVars, &constVelocityVars);
 #ifdef divergenceconstraint    
     // compute divergence constraint to use in pressure equation
-    d_discretize->computeDivergence(pc, patch, &velocityVars);
+    d_discretize->computeDivergence(pc, patch,&velocityVars,&constVelocityVars);
 #endif
 
 
@@ -3751,8 +3810,10 @@ MomentumSolver::sched_buildLinearMatrixVelHatInterm(SchedulerP& sched,
   tsk->requires(Task::NewDW, d_lab->d_densityIntermLabel,
 	    	Ghost::AroundCells, Arches::ONEGHOSTCELL);
 
+#ifdef do_pressure_correction
   tsk->requires(Task::NewDW, d_lab->d_pressurePredLabel, 
 		Ghost::AroundCells, Arches::ONEGHOSTCELL);
+#endif
   tsk->requires(Task::NewDW, d_lab->d_densityPredLabel,
 		Ghost::AroundCells, Arches::TWOGHOSTCELLS);
   tsk->requires(Task::NewDW, d_lab->d_uVelocityPredLabel,
@@ -3851,6 +3912,7 @@ MomentumSolver::buildLinearMatrixVelHatInterm(const ProcessorGroup* pc,
     int archIndex = 0; // only one arches material
     int matlIndex = d_lab->d_sharedState->getArchesMaterial(archIndex)->getDWIndex(); 
     ArchesVariables velocityVars;
+    ArchesConstVariables constVelocityVars;
 
     // compute all three componenets of velocity stencil coefficients
 
@@ -3858,24 +3920,26 @@ MomentumSolver::buildLinearMatrixVelHatInterm(const ProcessorGroup* pc,
     // Get the reference density
     // Get the required data
 
-    new_dw->getCopy(velocityVars.density, d_lab->d_densityPredLabel, 
+    new_dw->get(constVelocityVars.density, d_lab->d_densityPredLabel, 
 		matlIndex, patch, Ghost::AroundCells, Arches::TWOGHOSTCELLS);
-    new_dw->getCopy(velocityVars.new_density, d_lab->d_densityIntermLabel, 
+    new_dw->get(constVelocityVars.new_density, d_lab->d_densityIntermLabel, 
 		matlIndex, patch, Ghost::AroundCells, Arches::ONEGHOSTCELL);
-    new_dw->getCopy(velocityVars.pressure, d_lab->d_pressurePredLabel, 
+#ifdef do_pressure_correction
+    new_dw->get(constVelocityVars.pressure, d_lab->d_pressurePredLabel, 
 		matlIndex, patch, Ghost::AroundCells, Arches::ONEGHOSTCELL);
-    new_dw->getCopy(velocityVars.viscosity, d_lab->d_viscosityPredLabel, 
+#endif
+    new_dw->get(constVelocityVars.viscosity, d_lab->d_viscosityPredLabel, 
 		matlIndex, patch, Ghost::AroundCells, Arches::ONEGHOSTCELL);
-    new_dw->getCopy(velocityVars.denRefArray, d_lab->d_denRefArrayIntermLabel,
+    new_dw->get(constVelocityVars.denRefArray, d_lab->d_denRefArrayIntermLabel,
     		matlIndex, patch, Ghost::AroundCells, Arches::ONEGHOSTCELL);
 #ifdef divergenceconstraint
-    new_dw->getCopy(velocityVars.scalar, d_lab->d_scalarIntermLabel,
+    new_dw->get(constVelocityVars.scalar, d_lab->d_scalarIntermLabel,
 		    matlIndex, patch, Ghost::AroundCells, Arches::ONEGHOSTCELL);
-    new_dw->getCopy(velocityVars.drhodf, d_lab->d_drhodfIntermLabel,
-		    matlIndex, patch);
+    new_dw->get(constVelocityVars.drhodf, d_lab->d_drhodfIntermLabel,
+		    matlIndex, patch, Ghost::None, Arches::ZEROGHOSTCELLS);
     for (int ii = 0; ii < d_lab->d_stencilMatl->size(); ii++)
-      new_dw->getCopy(velocityVars.scalarDiffusionCoeff[ii], 
-		      d_lab->d_scalDiffCoefIntermLabel, 
+      new_dw->get(constVelocityVars.scalarDiffusionCoeff[ii],
+		      d_lab->d_scalDiffCoefIntermLabel,
 		      ii, patch, Ghost::None, Arches::ZEROGHOSTCELLS);
     new_dw->getModifiable(velocityVars.divergence, d_lab->d_divConstraintLabel,
 		          matlIndex, patch);
@@ -3902,23 +3966,23 @@ MomentumSolver::buildLinearMatrixVelHatInterm(const ProcessorGroup* pc,
 
     CellInformation* cellinfo = cellInfoP.get().get_rep();
 
-    new_dw->getCopy(velocityVars.uVelocity, d_lab->d_uVelocityPredLabel, 
+    new_dw->get(constVelocityVars.uVelocity, d_lab->d_uVelocityPredLabel, 
 		matlIndex, patch, Ghost::AroundFaces, Arches::ONEGHOSTCELL);
-    new_dw->getCopy(velocityVars.vVelocity, d_lab->d_vVelocityPredLabel, 
+    new_dw->get(constVelocityVars.vVelocity, d_lab->d_vVelocityPredLabel, 
 		matlIndex, patch, Ghost::AroundFaces, Arches::ONEGHOSTCELL);
-    new_dw->getCopy(velocityVars.wVelocity, d_lab->d_wVelocityPredLabel, 
+    new_dw->get(constVelocityVars.wVelocity, d_lab->d_wVelocityPredLabel, 
 		matlIndex, patch, Ghost::AroundFaces, Arches::ONEGHOSTCELL);
 
-    new_dw->getCopy(velocityVars.old_uVelocity, d_lab->d_uVelocityPredLabel, 
+    new_dw->get(constVelocityVars.old_uVelocity, d_lab->d_uVelocityPredLabel, 
 		matlIndex, patch, Ghost::None, Arches::ZEROGHOSTCELLS);
-    new_dw->getCopy(velocityVars.old_vVelocity, d_lab->d_vVelocityPredLabel, 
+    new_dw->get(constVelocityVars.old_vVelocity, d_lab->d_vVelocityPredLabel, 
 		matlIndex, patch, Ghost::None, Arches::ZEROGHOSTCELLS);
-    new_dw->getCopy(velocityVars.old_wVelocity, d_lab->d_wVelocityPredLabel, 
+    new_dw->get(constVelocityVars.old_wVelocity, d_lab->d_wVelocityPredLabel, 
 		matlIndex, patch, Ghost::None, Arches::ZEROGHOSTCELLS);
 
-    new_dw->getCopy(velocityVars.old_density, d_lab->d_densityPredLabel, 
+    new_dw->get(constVelocityVars.old_density, d_lab->d_densityPredLabel, 
 		matlIndex, patch, Ghost::AroundCells, Arches::ONEGHOSTCELL);
-    new_dw->getCopy(velocityVars.cellType, d_lab->d_cellTypeLabel, 
+    new_dw->get(constVelocityVars.cellType, d_lab->d_cellTypeLabel, 
 		matlIndex, patch, Ghost::AroundCells, Arches::ONEGHOSTCELL);
     
     for(int index = 1; index <= Arches::NDIM; ++index) {
@@ -3930,29 +3994,29 @@ MomentumSolver::buildLinearMatrixVelHatInterm(const ProcessorGroup* pc,
 	
 	case Arches::XDIR:
 
-	  new_dw->getCopy(velocityVars.mmuVelSu, d_MAlab->d_uVel_mmNonlinSrcLabel,
+	  new_dw->get(constVelocityVars.mmuVelSu, d_MAlab->d_uVel_mmNonlinSrcLabel,
 		      matlIndex, patch,
 		      Ghost::None, Arches::ZEROGHOSTCELLS);
-	  new_dw->getCopy(velocityVars.mmuVelSp, d_MAlab->d_uVel_mmLinSrcLabel,
+	  new_dw->get(constVelocityVars.mmuVelSp, d_MAlab->d_uVel_mmLinSrcLabel,
 		      matlIndex, patch,
 		      Ghost::None, Arches::ZEROGHOSTCELLS);
 	  break;
 
 	case Arches::YDIR:
 
-	  new_dw->getCopy(velocityVars.mmvVelSu, d_MAlab->d_vVel_mmNonlinSrcLabel,
+	  new_dw->get(constVelocityVars.mmvVelSu, d_MAlab->d_vVel_mmNonlinSrcLabel,
 		      matlIndex, patch,
 		      Ghost::None, Arches::ZEROGHOSTCELLS);
-	  new_dw->getCopy(velocityVars.mmvVelSp, d_MAlab->d_vVel_mmLinSrcLabel,
+	  new_dw->get(constVelocityVars.mmvVelSp, d_MAlab->d_vVel_mmLinSrcLabel,
 		      matlIndex, patch,
 		      Ghost::None, Arches::ZEROGHOSTCELLS);
 	  break;
 	case Arches::ZDIR:
 
-	  new_dw->getCopy(velocityVars.mmwVelSu, d_MAlab->d_wVel_mmNonlinSrcLabel,
+	  new_dw->get(constVelocityVars.mmwVelSu, d_MAlab->d_wVel_mmNonlinSrcLabel,
 		      matlIndex, patch,
 		      Ghost::None, Arches::ZEROGHOSTCELLS);
-	  new_dw->getCopy(velocityVars.mmwVelSp, d_MAlab->d_wVel_mmLinSrcLabel,
+	  new_dw->get(constVelocityVars.mmwVelSp, d_MAlab->d_wVel_mmLinSrcLabel,
 		      matlIndex, patch,
 		      Ghost::None, Arches::ZEROGHOSTCELLS);
 	  break;
@@ -3987,7 +4051,8 @@ MomentumSolver::buildLinearMatrixVelHatInterm(const ProcessorGroup* pc,
 
       d_discretize->calculateVelocityCoeff(pc, patch, 
 					   delta_t, index, d_central, 
-					   cellinfo, &velocityVars);
+					   cellinfo, &velocityVars,
+					   &constVelocityVars);
 
       // Calculate Velocity source
       //  inputs : [u,v,w]VelocitySIVBC, densityIN, viscosityIN
@@ -4003,7 +4068,7 @@ MomentumSolver::buildLinearMatrixVelHatInterm(const ProcessorGroup* pc,
 	new_dw->allocateTemporary(velocityVars.uVelNonlinearSrc,  patch);
 	new_dw->allocateAndPut(velocityVars.uVelRhoHat, d_lab->d_uVelRhoHatIntermLabel,
 			 matlIndex, patch, Ghost::AroundFaces, Arches::ONEGHOSTCELL);
-	velocityVars.uVelRhoHat.copy(velocityVars.uVelocity,
+	velocityVars.uVelRhoHat.copy(constVelocityVars.uVelocity,
 				     velocityVars.uVelRhoHat.getLowIndex(),
 				     velocityVars.uVelRhoHat.getHighIndex());
 
@@ -4015,7 +4080,7 @@ MomentumSolver::buildLinearMatrixVelHatInterm(const ProcessorGroup* pc,
 	new_dw->allocateTemporary(velocityVars.vVelNonlinearSrc,  patch);
 	new_dw->allocateAndPut(velocityVars.vVelRhoHat, d_lab->d_vVelRhoHatIntermLabel,
 			 matlIndex, patch, Ghost::AroundFaces, Arches::ONEGHOSTCELL);
-	velocityVars.vVelRhoHat.copy(velocityVars.vVelocity,
+	velocityVars.vVelRhoHat.copy(constVelocityVars.vVelocity,
 				     velocityVars.vVelRhoHat.getLowIndex(),
 				     velocityVars.vVelRhoHat.getHighIndex());
 
@@ -4027,7 +4092,7 @@ MomentumSolver::buildLinearMatrixVelHatInterm(const ProcessorGroup* pc,
 	new_dw->allocateTemporary(velocityVars.wVelNonlinearSrc,  patch);
 	new_dw->allocateAndPut(velocityVars.wVelRhoHat, d_lab->d_wVelRhoHatIntermLabel,
 			 matlIndex, patch, Ghost::AroundFaces, Arches::ONEGHOSTCELL);
-	velocityVars.wVelRhoHat.copy(velocityVars.wVelocity,
+	velocityVars.wVelRhoHat.copy(constVelocityVars.wVelocity,
 				     velocityVars.wVelRhoHat.getLowIndex(),
 				     velocityVars.wVelRhoHat.getHighIndex());
 
@@ -4040,7 +4105,8 @@ MomentumSolver::buildLinearMatrixVelHatInterm(const ProcessorGroup* pc,
 
     d_source->calculateVelocitySource(pc, patch, 
 				      delta_t, index,
-				      cellinfo, &velocityVars);
+				      cellinfo, &velocityVars,
+				      &constVelocityVars);
     //      d_source->addPressureSource(pc, patch, delta_t, index,
     //				  cellinfo, &velocityVars);
 
@@ -4048,19 +4114,19 @@ MomentumSolver::buildLinearMatrixVelHatInterm(const ProcessorGroup* pc,
     for (int ii = 0; ii < d_lab->d_scalarFluxMatl->size(); ii++) {
       switch (index) {
 	  case Arches::XDIR:
-	    new_dw->getCopy(velocityVars.filteredRhoUjU[ii], 
+	    new_dw->get(constVelocityVars.filteredRhoUjU[ii], 
 			    d_lab->d_filteredRhoUjULabel, ii, patch,
 			    Ghost::AroundFaces, Arches::TWOGHOSTCELLS);
 	break;
 
 	case Arches::YDIR:
-	    new_dw->getCopy(velocityVars.filteredRhoUjV[ii], 
+	    new_dw->get(constVelocityVars.filteredRhoUjV[ii], 
 			    d_lab->d_filteredRhoUjVLabel, ii, patch,
 			    Ghost::AroundFaces, Arches::TWOGHOSTCELLS);
 	break;
 
 	case Arches::ZDIR:
-	    new_dw->getCopy(velocityVars.filteredRhoUjW[ii], 
+	    new_dw->get(constVelocityVars.filteredRhoUjW[ii], 
 			    d_lab->d_filteredRhoUjWLabel, ii, patch,
 			    Ghost::AroundFaces, Arches::TWOGHOSTCELLS);
 	break;
@@ -4163,9 +4229,9 @@ MomentumSolver::buildLinearMatrixVelHatInterm(const ProcessorGroup* pc,
 
       // for scalesimilarity model add stress tensor to the source of velocity eqn.
       if (dynamic_cast<const ScaleSimilarityModel*>(d_turbModel)) {
-	StencilMatrix<CCVariable<double> > stressTensor; //9 point tensor
+	StencilMatrix<constCCVariable<double> > stressTensor; //9 point tensor
 	for (int ii = 0; ii < d_lab->d_stressTensorMatl->size(); ii++) {
-	  new_dw->getCopy(stressTensor[ii], 
+	  new_dw->get(stressTensor[ii], 
 			  d_lab->d_stressTensorCompLabel, ii, patch,
 			  Ghost::AroundCells, Arches::ONEGHOSTCELL);
 	}
@@ -4302,7 +4368,7 @@ MomentumSolver::buildLinearMatrixVelHatInterm(const ProcessorGroup* pc,
 
     if (d_MAlab)
        d_source->computemmMomentumSource(pc, patch, index, cellinfo,
-					  &velocityVars);
+					  &velocityVars, &constVelocityVars);
 
     // Calculate the Velocity BCS
     //  inputs : densityCP, [u,v,w]VelocitySIVBC, [u,v,w]VelCoefPBLM
@@ -4312,13 +4378,14 @@ MomentumSolver::buildLinearMatrixVelHatInterm(const ProcessorGroup* pc,
       
     d_boundaryCondition->velocityBC(pc, patch, 
                                     index,
-				    cellinfo, &velocityVars);
+				    cellinfo, &velocityVars,
+				    &constVelocityVars);
     // apply multimaterial velocity bc
     // treats multimaterial wall as intrusion
 
     if (d_MAlab)
-      d_boundaryCondition->mmvelocityBC(pc, patch, index, cellinfo, 
-					&velocityVars);
+	d_boundaryCondition->mmvelocityBC(pc, patch, index, cellinfo,
+					  &velocityVars, &constVelocityVars);
     
     // Modify Velocity Mass Source
     //  inputs : [u,v,w]VelocitySIVBC, [u,v,w]VelCoefPBLM, 
@@ -4327,7 +4394,7 @@ MomentumSolver::buildLinearMatrixVelHatInterm(const ProcessorGroup* pc,
     //  outputs: [u,v,w]VelLinSrcPBLM, [u,v,w]VelNonLinSrcPBLM
 
     d_source->modifyVelMassSource(pc, patch, delta_t, index,
-				  &velocityVars);
+				  &velocityVars, &constVelocityVars);
 
     // Calculate Velocity diagonal
     //  inputs : [u,v,w]VelCoefPBLM, [u,v,w]VelLinSrcPBLM
@@ -4340,7 +4407,8 @@ MomentumSolver::buildLinearMatrixVelHatInterm(const ProcessorGroup* pc,
 
 
     d_discretize->calculateVelRhoHat(pc, patch, index, delta_t,
-				     cellinfo, &velocityVars);
+				     cellinfo, &velocityVars,
+				     &constVelocityVars);
 
       
 #ifndef Runge_Kutta_3d_ssp
@@ -4465,14 +4533,14 @@ MomentumSolver::buildLinearMatrixVelHatInterm(const ProcessorGroup* pc,
 //    d_boundaryCondition->newrecomputePressureBC(pc, patch,
 //    						cellinfo, &velocityVars); 
     d_boundaryCondition->velRhoHatInletBC(pc, patch, cellinfo,
-						&velocityVars);
+					  &velocityVars, &constVelocityVars);
     d_boundaryCondition->velRhoHatPressureBC(pc, patch, cellinfo,
-						&velocityVars);
-    d_boundaryCondition->velRhoHatOutletBC(pc, patch, cellinfo,
-						&velocityVars, delta_t);
+					     &velocityVars, &constVelocityVars);
+    d_boundaryCondition->velRhoHatOutletBC(pc, patch, cellinfo, delta_t,
+					  &velocityVars, &constVelocityVars);
 #ifdef divergenceconstraint    
     // compute divergence constraint to use in pressure equation
-    d_discretize->computeDivergence(pc, patch, &velocityVars);
+    d_discretize->computeDivergence(pc, patch,&velocityVars,&constVelocityVars);
 #endif
 
 

@@ -10,7 +10,12 @@
 #include <Packages/Uintah/Core/Grid/LevelP.h>
 #include <Packages/Uintah/Core/Grid/Patch.h>
 #include <Packages/Uintah/Core/Grid/VarLabel.h>
+#include <Packages/Uintah/CCA/Components/Arches/Arches.h>
 #include <Packages/Uintah/CCA/Components/Arches/ArchesVariables.h>
+#include <Packages/Uintah/CCA/Components/Arches/ArchesConstVariables.h>
+#ifdef PetscFilter
+#include <Packages/Uintah/CCA/Components/Arches/Filter.h>
+#endif
 
 #include <Core/Containers/Array1.h>
 namespace Uintah {
@@ -79,13 +84,15 @@ public:
 				  double delta_t,
 				  int index, bool lcentral,
 				  CellInformation* cellinfo,
-				  ArchesVariables* vars);
+				  ArchesVariables* vars,
+				  ArchesConstVariables* constvars);
 
       void calculateVelRhoHat(const ProcessorGroup* /*pc*/,
 			      const Patch* patch,
 			      int index, double delta_t,
 			      CellInformation* cellinfo,
-			      ArchesVariables* vars);
+			      ArchesVariables* vars,
+			      ArchesConstVariables* constvars);
       ////////////////////////////////////////////////////////////////////////
       // Set stencil weights. (Pressure)
       // It uses second order hybrid differencing for computing
@@ -96,14 +103,16 @@ public:
 				  DataWarehouse* new_dw,
 				  double delta_t, 
 				  CellInformation* cellinfo,
-				  ArchesVariables* vars); 
+				  ArchesVariables* vars,
+				  ArchesConstVariables* constvars); 
 
       ////////////////////////////////////////////////////////////////////////
       // Modify stencil weights (Pressure) to account for voidage due
       // to multiple materials
       void mmModifyPressureCoeffs(const ProcessorGroup*,
 				      const Patch* patch,
-				      ArchesVariables* vars);
+				      ArchesVariables* vars,
+				      ArchesConstVariables* constvars);
 
       ////////////////////////////////////////////////////////////////////////
       // Set stencil weights. (Scalars)
@@ -115,6 +124,7 @@ public:
 				int Index,
 				CellInformation* cellinfo,
 				ArchesVariables* vars,
+				ArchesConstVariables* constvars,
 				int conv_scheme);
 
       ////////////////////////////////////////////////////////////////////////
@@ -145,6 +155,7 @@ public:
 				   double maxAbsU, double maxAbsV,
 				   double maxAbsW,
 				   ArchesVariables* vars,
+				   ArchesConstVariables* constvars,
 				   int wall_celltypeval);
 
 
@@ -155,12 +166,20 @@ public:
 				   double maxAbsU, double maxAbsV,
 				   double maxAbsW,
 				   ArchesVariables* vars,
+				   ArchesConstVariables* constvars,
 				   int wall_celltypeval);
 
 
       void computeDivergence(const ProcessorGroup*,
 				  const Patch* patch,
-				  ArchesVariables* vars);
+				  ArchesVariables* vars,
+				  ArchesConstVariables* constvars);
+
+#ifdef PetscFilter
+      inline void setFilter(Filter* filter) {
+	d_filter = filter;
+      }
+#endif
 
 protected:
 
@@ -175,6 +194,9 @@ private:
       // coefficients for all the scalar components
       //StencilMatrix<CCVariable<double> >* d_scalar_stencil_matrix;
 
+#ifdef PetscFilter
+      Filter* d_filter;
+#endif
 }; // end class Discretization
 
 } // End namespace Uintah

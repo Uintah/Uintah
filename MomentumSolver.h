@@ -41,14 +41,18 @@ WARNING
 #include <Packages/Uintah/Core/Grid/Patch.h>
 #include <Packages/Uintah/Core/Grid/VarLabel.h>
 #include <Packages/Uintah/CCA/Components/Arches/ArchesVariables.h>
+#include <Packages/Uintah/CCA/Components/Arches/ArchesConstVariables.h>
+#include <Packages/Uintah/CCA/Components/Arches/Discretization.h>
 namespace Uintah {
   class ArchesLabel;
   class MPMArchesLabel;
   class ProcessorGroup;
 class TurbulenceModel;
 class PhysicalConstants;
-class Discretization;
 class Source;
+#ifdef PetscFilter
+class Filter;
+#endif
 class BoundaryCondition;
 class LinearSolver;
 
@@ -163,6 +167,11 @@ public:
 			   		 const int Runge_Kutta_last_step);
 
 
+#ifdef PetscFilter
+      inline void setDiscretizationFilter(Filter* filter) {
+        d_discretize->setFilter(filter);
+      }
+#endif
 protected: 
 
 private:

@@ -1,5 +1,6 @@
 //----- Filter.cc ----------------------------------------------
 
+#include <TauProfilerForSCIRun.h>
 #include <Packages/Uintah/CCA/Components/Arches/Filter.h>
 #include <Core/Containers/Array1.h>
 #include <Core/Thread/Time.h>
@@ -369,6 +370,7 @@ Filter::applyFilter(const ProcessorGroup* ,
 		    Array3<double>& var,
 		    Array3<double>& filterVar)
 {
+  TAU_PROFILE("applyFilter", "[Filter::applyFilter]" , TAU_USER);
   // assemble x vector
   int ierr;
   // fill matrix for internal patches

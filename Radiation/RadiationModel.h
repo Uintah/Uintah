@@ -40,6 +40,7 @@ POSSIBLE REVISIONS
 #include <Packages/Uintah/Core/Grid/Patch.h>
 #include <Packages/Uintah/Core/Grid/VarLabel.h>
 #include <Packages/Uintah/CCA/Components/Arches/ArchesVariables.h>
+#include <Packages/Uintah/CCA/Components/Arches/ArchesConstVariables.h>
 
 #include <vector>
 
@@ -83,7 +84,8 @@ public:
       virtual void computeRadiationProps(const ProcessorGroup*,
 					 const Patch* patch,
 					 CellInformation* cellinfo,
-					ArchesVariables* vars) = 0;
+					ArchesVariables* vars,
+					ArchesConstVariables* constvars) = 0;
 
 
       /////////////////////////////////////////////////////////////////////////
@@ -98,14 +100,16 @@ public:
       virtual void boundarycondition(const ProcessorGroup*,
 					 const Patch* patch,
 					 CellInformation* cellinfo,
-					ArchesVariables* vars)  = 0;
+					ArchesVariables* vars,
+					ArchesConstVariables* constvars)  = 0;
 
       /////////////////////////////////////////////////////////////////////////
       //
       virtual void intensitysolve(const ProcessorGroup*,
 					 const Patch* patch,
 					 CellInformation* cellinfo,
-					ArchesVariables* vars)  = 0;
+					ArchesVariables* vars,
+					ArchesConstVariables* constvars)  = 0;
       RadLinearSolver* d_linearSolver;
  protected:
       void computeOpticalLength();

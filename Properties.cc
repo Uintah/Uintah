@@ -70,6 +70,9 @@ Properties::problemSetup(const ProblemSpecP& params)
   db->require("denUnderrelax", d_denUnderrelax);
   db->require("ref_point", d_denRef);
   db->require("radiation",d_radiationCalc);
+  if (d_radiationCalc) {
+    db->getWithDefault("discrete_ordinates",d_DORadiationCalc,true);
+  }
   // read type of mixing model
   string mixModel;
   db->require("mixing_model",mixModel);
@@ -92,6 +95,7 @@ Properties::problemSetup(const ProblemSpecP& params)
   if (d_flamelet) {
     d_reactingFlow = false;
     d_radiationCalc = false;
+    d_DORadiationCalc = false;
   }
 
 }
@@ -208,6 +212,7 @@ Properties::sched_computePropsFirst_mm(SchedulerP& sched, const PatchSet* patche
 			  this,
 			  &Properties::computePropsFirst_mm);
 
+  tsk->requires(Task::OldDW, d_lab->d_sharedState->get_delt_label());
   tsk->requires(Task::NewDW, d_lab->d_densityMicroINLabel,
 		Ghost::None, Arches::ZEROGHOSTCELLS);
   tsk->requires(Task::NewDW, d_lab->d_cellTypeLabel, 
@@ -224,6 +229,8 @@ Properties::sched_computePropsFirst_mm(SchedulerP& sched, const PatchSet* patche
   if (d_reactingFlow) {
     tsk->requires(Task::OldDW, d_lab->d_tempINLabel, 
 		Ghost::None, Arches::ZEROGHOSTCELLS);
+    tsk->requires(Task::OldDW, d_lab->d_cpINLabel, 
+		Ghost::None, Arches::ZEROGHOSTCELLS);
     tsk->requires(Task::OldDW, d_lab->d_co2INLabel, 
 		Ghost::None, Arches::ZEROGHOSTCELLS);
     tsk->requires(Task::OldDW, d_lab->d_enthalpyRXNLabel, 
@@ -238,6 +245,24 @@ Properties::sched_computePropsFirst_mm(SchedulerP& sched, const PatchSet* patche
 		Ghost::None, Arches::ZEROGHOSTCELLS);
     tsk->requires(Task::OldDW, d_lab->d_sootFVINLabel,
 		Ghost::None, Arches::ZEROGHOSTCELLS);
+    if (d_DORadiationCalc) {
+    tsk->requires(Task::OldDW, d_lab->d_h2oINLabel,
+		  Ghost::None, Arches::ZEROGHOSTCELLS);
+    tsk->requires(Task::OldDW, d_lab->d_radiationSRCINLabel,
+		  Ghost::None, Arches::ZEROGHOSTCELLS);
+    tsk->requires(Task::OldDW, d_lab->d_radiationFluxEINLabel,
+		  Ghost::None, Arches::ZEROGHOSTCELLS);
+    tsk->requires(Task::OldDW, d_lab->d_radiationFluxWINLabel,
+		  Ghost::None, Arches::ZEROGHOSTCELLS);
+    tsk->requires(Task::OldDW, d_lab->d_radiationFluxNINLabel,
+		  Ghost::None, Arches::ZEROGHOSTCELLS);
+    tsk->requires(Task::OldDW, d_lab->d_radiationFluxSINLabel,
+		  Ghost::None, Arches::ZEROGHOSTCELLS);
+    tsk->requires(Task::OldDW, d_lab->d_radiationFluxTINLabel,
+		  Ghost::None, Arches::ZEROGHOSTCELLS);
+    tsk->requires(Task::OldDW, d_lab->d_radiationFluxBINLabel,
+		  Ghost::None, Arches::ZEROGHOSTCELLS);
+    }
   }
 
   tsk->computes(d_lab->d_densityCPLabel);
@@ -248,6 +273,7 @@ Properties::sched_computePropsFirst_mm(SchedulerP& sched, const PatchSet* patche
 
   if (d_reactingFlow) {
     tsk->computes(d_lab->d_tempINLabel);
+    tsk->computes(d_lab->d_cpINLabel);
     tsk->computes(d_lab->d_co2INLabel);
     tsk->computes(d_lab->d_enthalpyRXNLabel);
     if (d_mixingModel->getNumRxnVars())
@@ -257,7 +283,18 @@ Properties::sched_computePropsFirst_mm(SchedulerP& sched, const PatchSet* patche
   if (d_radiationCalc) {
     tsk->computes(d_lab->d_absorpINLabel);
     tsk->computes(d_lab->d_sootFVINLabel);
+    if (d_DORadiationCalc) {
+    tsk->computes(d_lab->d_h2oINLabel);
+    tsk->computes(d_lab->d_radiationSRCINLabel);
+    tsk->computes(d_lab->d_radiationFluxEINLabel);
+    tsk->computes(d_lab->d_radiationFluxWINLabel);
+    tsk->computes(d_lab->d_radiationFluxNINLabel);
+    tsk->computes(d_lab->d_radiationFluxSINLabel);
+    tsk->computes(d_lab->d_radiationFluxTINLabel);
+    tsk->computes(d_lab->d_radiationFluxBINLabel);
+    }
   }
+  tsk->computes(d_lab->d_oldDeltaTLabel);
 
   sched->addTask(tsk, patches, matls);
 }
@@ -630,23 +667,26 @@ Properties::computePropsFirst_mm(const ProcessorGroup*,
 				 DataWarehouse* old_dw,
 				 DataWarehouse* new_dw)
 {
+  delt_vartype delT;
+  old_dw->get(delT, d_lab->d_sharedState->get_delt_label() );
+  new_dw->put(delT, d_lab->d_oldDeltaTLabel);
+
   for (int p = 0; p < patches->size(); p++) {
  
     const Patch* patch = patches->get(p);
     int archIndex = 0; // only one arches material
     int matlIndex = d_lab->d_sharedState->getArchesMaterial(archIndex)->getDWIndex(); 
-    int nofGhostCells = 0;
 
     constCCVariable<double> denMicro;
     new_dw->get(denMicro, d_lab->d_densityMicroINLabel, matlIndex, patch,
-		Ghost::None, nofGhostCells);
+		Ghost::None, Arches::ZEROGHOSTCELLS);
 
     constCCVariable<int> cellType;
     new_dw->get(cellType, d_lab->d_cellTypeLabel, matlIndex, patch, 
 		  Ghost::None, Arches::ZEROGHOSTCELLS);
     constCCVariable<double> voidFraction;
     new_dw->get(voidFraction, d_lab->d_mmgasVolFracLabel, 
-		matlIndex, patch, Ghost::None, nofGhostCells);
+		matlIndex, patch, Ghost::None, Arches::ZEROGHOSTCELLS);
 
     CCVariable<double> density;
     new_dw->allocateAndPut(density, d_lab->d_densityCPLabel, 
@@ -668,28 +708,36 @@ Properties::computePropsFirst_mm(const ProcessorGroup*,
     denMicro_new.copyData(denMicro);
 
     constCCVariable<double> tempIN;
+    constCCVariable<double> cpIN;
     constCCVariable<double> co2IN;
     constCCVariable<double> enthalpyRXN; 
     constCCVariable<double> reactScalarSrc;
     CCVariable<double> tempIN_new;
+    CCVariable<double> cpIN_new;
     CCVariable<double> co2IN_new;
     CCVariable<double> enthalpyRXN_new;
     CCVariable<double> reactScalarSrc_new;
     if (d_reactingFlow) {
       old_dw->get(tempIN, d_lab->d_tempINLabel, matlIndex, patch,
-		  Ghost::None, nofGhostCells);
+		  Ghost::None, Arches::ZEROGHOSTCELLS);
+      old_dw->get(cpIN, d_lab->d_cpINLabel, matlIndex, patch,
+		  Ghost::None, Arches::ZEROGHOSTCELLS);
       old_dw->get(co2IN, d_lab->d_co2INLabel, matlIndex, patch,
-		  Ghost::None, nofGhostCells);
+		  Ghost::None, Arches::ZEROGHOSTCELLS);
       old_dw->get(enthalpyRXN, d_lab->d_enthalpyRXNLabel, matlIndex, patch,
-		  Ghost::None, nofGhostCells);
+		  Ghost::None, Arches::ZEROGHOSTCELLS);
       if (d_mixingModel->getNumRxnVars()) {
 	old_dw->get(reactScalarSrc, d_lab->d_reactscalarSRCINLabel,
-		    matlIndex, patch, Ghost::None, nofGhostCells);
+		    matlIndex, patch, Ghost::None, Arches::ZEROGHOSTCELLS);
       }
 
       new_dw->allocateAndPut(tempIN_new, d_lab->d_tempINLabel, 
 			     matlIndex, patch);
       tempIN_new.copyData(tempIN);
+
+      new_dw->allocateAndPut(cpIN_new, d_lab->d_cpINLabel, 
+			     matlIndex, patch);
+      cpIN_new.copyData(cpIN);
 
       new_dw->allocateAndPut(co2IN_new, d_lab->d_co2INLabel, 
 			     matlIndex, patch);
@@ -708,15 +756,31 @@ Properties::computePropsFirst_mm(const ProcessorGroup*,
 
     constCCVariable<double> absorpIN;
     constCCVariable<double> sootFVIN;
+    constCCVariable<double> h2oIN;
+    constCCVariable<double> radiationSRCIN;
+    constCCVariable<double> radiationFluxEIN;
+    constCCVariable<double> radiationFluxWIN;
+    constCCVariable<double> radiationFluxNIN;
+    constCCVariable<double> radiationFluxSIN;
+    constCCVariable<double> radiationFluxTIN;
+    constCCVariable<double> radiationFluxBIN;
     CCVariable<double> absorpIN_new;
     CCVariable<double> sootFVIN_new;
+    CCVariable<double> h2oIN_new;
+    CCVariable<double> radiationSRCIN_new;
+    CCVariable<double> radiationFluxEIN_new;
+    CCVariable<double> radiationFluxWIN_new;
+    CCVariable<double> radiationFluxNIN_new;
+    CCVariable<double> radiationFluxSIN_new;
+    CCVariable<double> radiationFluxTIN_new;
+    CCVariable<double> radiationFluxBIN_new;
     if (d_radiationCalc) {
 
       old_dw->get(absorpIN, d_lab->d_absorpINLabel, matlIndex, patch,
-		  Ghost::None, nofGhostCells);
+		  Ghost::None, Arches::ZEROGHOSTCELLS);
 
       old_dw->get(sootFVIN, d_lab->d_sootFVINLabel, matlIndex, patch,
-		  Ghost::None, nofGhostCells);
+		  Ghost::None, Arches::ZEROGHOSTCELLS);
 
       new_dw->allocateAndPut(absorpIN_new, d_lab->d_absorpINLabel, 
 		       matlIndex, patch);
@@ -726,6 +790,56 @@ Properties::computePropsFirst_mm(const ProcessorGroup*,
 		       matlIndex, patch);
       sootFVIN_new.copyData(sootFVIN);
 
+      if (d_DORadiationCalc) {
+      old_dw->get(h2oIN, d_lab->d_h2oINLabel,
+		  matlIndex, patch,
+		  Ghost::None, Arches::ZEROGHOSTCELLS);
+      old_dw->get(radiationSRCIN, d_lab->d_radiationSRCINLabel,
+		  matlIndex, patch,
+		  Ghost::None, Arches::ZEROGHOSTCELLS);
+      old_dw->get(radiationFluxEIN, d_lab->d_radiationFluxEINLabel,
+		  matlIndex, patch,
+		  Ghost::None, Arches::ZEROGHOSTCELLS);
+      old_dw->get(radiationFluxWIN, d_lab->d_radiationFluxWINLabel,
+		  matlIndex, patch,
+		  Ghost::None, Arches::ZEROGHOSTCELLS);
+      old_dw->get(radiationFluxNIN, d_lab->d_radiationFluxNINLabel,
+		  matlIndex, patch,
+		  Ghost::None, Arches::ZEROGHOSTCELLS);
+      old_dw->get(radiationFluxSIN, d_lab->d_radiationFluxSINLabel,
+		  matlIndex, patch,
+		  Ghost::None, Arches::ZEROGHOSTCELLS);
+      old_dw->get(radiationFluxTIN, d_lab->d_radiationFluxTINLabel,
+		  matlIndex, patch,
+		  Ghost::None, Arches::ZEROGHOSTCELLS);
+      old_dw->get(radiationFluxBIN, d_lab->d_radiationFluxBINLabel,
+		  matlIndex, patch,
+		  Ghost::None, Arches::ZEROGHOSTCELLS);
+      new_dw->allocateAndPut(h2oIN_new, d_lab->d_h2oINLabel, 
+		       matlIndex, patch);
+      h2oIN_new.copyData(h2oIN);
+      new_dw->allocateAndPut(radiationSRCIN_new, d_lab->d_radiationSRCINLabel, 
+		       matlIndex, patch);
+      radiationSRCIN_new.copyData(radiationSRCIN);
+      new_dw->allocateAndPut(radiationFluxEIN_new,
+			     d_lab->d_radiationFluxEINLabel, matlIndex, patch);
+      radiationFluxEIN_new.copyData(radiationFluxEIN);
+      new_dw->allocateAndPut(radiationFluxWIN_new,
+			     d_lab->d_radiationFluxWINLabel, matlIndex, patch);
+      radiationFluxWIN_new.copyData(radiationFluxWIN);
+      new_dw->allocateAndPut(radiationFluxNIN_new,
+			     d_lab->d_radiationFluxNINLabel, matlIndex, patch);
+      radiationFluxNIN_new.copyData(radiationFluxNIN);
+      new_dw->allocateAndPut(radiationFluxSIN_new,
+			     d_lab->d_radiationFluxSINLabel, matlIndex, patch);
+      radiationFluxSIN_new.copyData(radiationFluxSIN);
+      new_dw->allocateAndPut(radiationFluxTIN_new,
+			     d_lab->d_radiationFluxTINLabel, matlIndex, patch);
+      radiationFluxTIN_new.copyData(radiationFluxTIN);
+      new_dw->allocateAndPut(radiationFluxBIN_new,
+			     d_lab->d_radiationFluxBINLabel, matlIndex, patch);
+      radiationFluxBIN_new.copyData(radiationFluxBIN);
+      }
     }
 
     // no need for if (d_MAlab),  since this routine is only 

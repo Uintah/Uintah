@@ -1,4 +1,4 @@
-void prescoef(IntVector idxLo, IntVector idxHi, CCVariable<double> den,
+void prescoef(IntVector idxLo, IntVector idxHi,
 	CCVariable<double> ae, CCVariable<double> aw,
 	CCVariable<double> an, CCVariable<double> as,
 	CCVariable<double> at, CCVariable<double> ab,

@@ -1,5 +1,6 @@
 //----- DynamicProcedure.cc --------------------------------------------------
 
+#include <TauProfilerForSCIRun.h>
 #include <Packages/Uintah/CCA/Components/Arches/debug.h>
 #include <Packages/Uintah/CCA/Components/Arches/DynamicProcedure.h>
 #include <Packages/Uintah/CCA/Components/Arches/PhysicalConstants.h>
@@ -874,6 +875,10 @@ DynamicProcedure::reComputeFilterValues(const ProcessorGroup* pc,
 					const bool Runge_Kutta_last_step)
 {
   for (int p = 0; p < patches->size(); p++) {
+  TAU_PROFILE_TIMER(compute1, "Compute1", "[reComputeFilterValues::compute1]" , TAU_USER);
+  TAU_PROFILE_TIMER(compute2, "Compute2", "[reComputeFilterValues::compute2]" , TAU_USER);
+  TAU_PROFILE_TIMER(compute3, "Compute3", "[reComputeFilterValues::compute3]" , TAU_USER);
+  TAU_PROFILE_TIMER(compute4, "Compute4", "[reComputeFilterValues::compute4]" , TAU_USER);
     const Patch* patch = patches->get(p);
     int archIndex = 0; // only one arches material
     int matlIndex = d_lab->d_sharedState->getArchesMaterial(archIndex)->getDWIndex(); 
@@ -1020,6 +1025,7 @@ DynamicProcedure::reComputeFilterValues(const ProcessorGroup* pc,
     int endX = idxHi.x();
     if (xplus) endX--;
 
+  TAU_PROFILE_START(compute1);
 #ifdef use_fortran
     IntVector start(startX, startY, startZ);
     IntVector end(endX - 1, endY - 1, endZ -1);
@@ -1066,6 +1072,7 @@ DynamicProcedure::reComputeFilterValues(const ProcessorGroup* pc,
       }
     }
 #endif
+  TAU_PROFILE_STOP(compute1);
 #ifndef PetscFilter
     if (xminus) { 
       for (int colZ = startZ; colZ < endZ; colZ ++) {
@@ -1650,6 +1657,7 @@ DynamicProcedure::reComputeFilterValues(const ProcessorGroup* pc,
       }
     }
 #endif  
+  TAU_PROFILE_START(compute2);
 #ifdef use_fortran
     fort_dynamic_2loop(cellinfo->sew,cellinfo->sns,cellinfo->stb,
 	SHATIJ[0],SHATIJ[1],SHATIJ[2],SHATIJ[3],SHATIJ[4],SHATIJ[5],
@@ -1759,6 +1767,8 @@ DynamicProcedure::reComputeFilterValues(const ProcessorGroup* pc,
       }
     }
 #endif
+  TAU_PROFILE_STOP(compute2);
+  TAU_PROFILE_START(compute3);
     startZ = indexLow.z();
     endZ = indexHigh.z()+1;
     startY = indexLow.y();
@@ -1979,6 +1989,7 @@ DynamicProcedure::reComputeFilterValues(const ProcessorGroup* pc,
       }
     }	
 
+  TAU_PROFILE_STOP(compute3);
 
   }
 }
