@@ -39,7 +39,8 @@ SRCS     += \
 	$(SRCDIR)/DensityBoundCond.cc \
 	$(SRCDIR)/BoundCondFactory.cc \
 	$(SRCDIR)/BoundCondData.cc \
-	$(SRCDIR)/UnknownVariable.cc
+	$(SRCDIR)/UnknownVariable.cc \
+	$(SRCDIR)/SimpleMaterial.cc
 
 PSELIBS := \
 	Packages/Uintah/Core/Math        \
