@@ -155,7 +155,7 @@ proc cpsetrgb {w var col rs gs bs hs ss vs val} {
     
     cpsetcol $var $col [format #%04x%04x%04x $r $g $b]
 
-    update
+    update idletasks
 }
 
 proc cpsethsv {w var col rs gs bs hs ss vs val} {
@@ -188,7 +188,7 @@ proc cpsethsv {w var col rs gs bs hs ss vs val} {
 
     cpsetcol $var $col [format #%04x%04x%04x $r $g $b]
 
-    update
+    update idletasks
 }
 
 proc cpsetcol {var col color} {
