@@ -136,8 +136,8 @@ DORadiationModel::computeOrdinatesOPL() {
    wt.initialize(0.0);
    ord.initialize(0.0);
 
-   //              fort_rordr(d_sn, ord, oxi, omu, oeta, wt);
-                   fort_rordrss(d_sn, ord, oxi, omu, oeta, wt);
+                fort_rordr(d_sn, ord, oxi, omu, oeta, wt);
+   //           fort_rordrss(d_sn, ord, oxi, omu, oeta, wt);
    //           fort_rordrtn(d_sn, ord, oxi, omu, oeta, wt);
 }
 
@@ -165,14 +165,14 @@ DORadiationModel::computeRadiationProps(const ProcessorGroup*,
 		 cellinfo->xx, cellinfo->yy, cellinfo->zz, fraction, 
 		 lprobone, lprobtwo, lprobthree, lambda, lradcal);
     /*
-<<<<<<< DORadiationModel.cc
-=======
+//<<<<<<< DORadiationModel.cc
+//=======
     fort_radcoef(idxLo, idxHi, constvars->temperature, 
 		 constvars->co2, constvars->h2o, constvars->cellType,
 		 ffield, d_opl,
 		 constvars->sootFV, vars->ABSKG, vars->ESRCG,
 		 cellinfo->xx, cellinfo->yy, cellinfo->zz);
->>>>>>> 1.3
+//>>>>>>> 1.3
     */
 }
 
