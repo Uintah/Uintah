@@ -35,7 +35,7 @@ itcl_class Teem_DataIO_HDF5DataReader {
 	global $this-assumeSVT
 
 	set $this-mergeData 0
-	set $this-assumeSVT 0
+	set $this-assumeSVT 1
 
 	global max_dims
 	set max_dims 6
@@ -197,7 +197,7 @@ itcl_class Teem_DataIO_HDF5DataReader {
 
   	pack $treeframe.tree -fill x -expand yes
 
-	$treeview column configure treeView -text Group
+	$treeview column configure treeView -text Node
 	$treeview column insert end Type Value
 
 	$treeview column configure Type Value -justify left -edit no
@@ -234,8 +234,8 @@ itcl_class Teem_DataIO_HDF5DataReader {
 
 	label $sel.label -text "Reg-Exp" -width 7 -anchor w -just left
 	checkbutton $sel.regexp -variable $this-regexp
-	button $sel.path -text "Select Path" -command "$this AddSelection 0"
-	button $sel.node -text "Select Node" -command "$this AddSelection 1"
+	button $sel.path -text "Full Path" -command "$this AddSelection 0"
+	button $sel.node -text "Terminal"  -command "$this AddSelection 1"
 
 	pack $sel.node $sel.path $sel.regexp $sel.label -side right -padx 3
 	pack $sel.name -side left -fill x -expand yes
@@ -273,7 +273,8 @@ itcl_class Teem_DataIO_HDF5DataReader {
 	label $dm.mlabel -text "Merge like data" -width 15 -anchor w -just left
 	checkbutton $dm.merge -variable $this-mergeData
 	
-	label $dm.asvt -text "Assume Scalar-Vector-Tensor data" -width 33 -anchor w -just left
+	label $dm.asvt -text "Assume Vector-Tensor data" \
+	    -width 33 -anchor w -just left
 	checkbutton $dm.svt -variable $this-assumeSVT
 	
 	pack $dm.mlabel -side left
@@ -393,13 +394,11 @@ itcl_class Teem_DataIO_HDF5DataReader {
 		    set id [eval $treeview find -exact -full "{$dataset}"]
 
 		    if {"$id" != ""} {
-			if { [eval $treeview entry isopen $id] == 1 } {
-			    $treeview selection set $id
-			} else {
+			if { [eval $treeview entry isopen $id] == 0 } {
 			    $treeview open $id
-			    $treeview selection set $id
-			    $treeview close $id
 			}
+
+			$treeview selection set $id
 		    } else {
 			set message "Could not find dataset: "
 			append message $dataset
@@ -536,6 +535,11 @@ itcl_class Teem_DataIO_HDF5DataReader {
 
 	    $treeview entry configure "attribute" -foreground green4
 	    $treeview entry configure "dataset"   -foreground cyan4
+	    
+	    set ids [$treeview entry children root]
+	    foreach id $ids {
+		$treeview open $id
+	    }
 	}
     }
 
@@ -772,6 +776,8 @@ itcl_class Teem_DataIO_HDF5DataReader {
 
 		set groups     [$treeview tag nodes "group"]
 		set attributes [$treeview tag nodes "attribute"]
+
+		focus $treeview
 
 		set ids [$treeview curselection]
 

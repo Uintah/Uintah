@@ -250,6 +250,9 @@ herr_t HDF5Dump_all(hid_t obj_id, const char * name, void* op_data) {
     }
 
     break;
+
+  default:
+    break;
   }
 
   return status;
@@ -323,7 +326,7 @@ herr_t HDF5Dump_dataspace(hid_t file_space_id, ostream* iostr) {
       /* scalar dataspace */
 
       HDF5Dump_tab( iostr );
-      *iostr << "DATASPACE  SCALAR " << endl;
+      *iostr << "DATASPACE  SCALAR { ( 1 ) }" << endl;
     } else {
       /* simple dataspace */
 
@@ -331,6 +334,11 @@ herr_t HDF5Dump_dataspace(hid_t file_space_id, ostream* iostr) {
 
       /* Get the dims in the space. */
       int ndim = H5Sget_simple_extent_dims(file_space_id, dims, NULL);
+
+      if( ndim != ndims ) {
+	cerr << "Data dimensions not match." << endl;
+	return -1;
+      }
 
       HDF5Dump_tab( iostr );
       *iostr << "DATASPACE  SIMPLE { ( " << dims[0];
@@ -462,7 +470,7 @@ herr_t HDF5Dump_data(hid_t obj_id, hid_t type, ostream* iostr) {
 
   HDF5Dump_indent++;
 
-  int *counters = new int[ndims];
+  unsigned int *counters = new unsigned int[ndims];
 
   for( int ic=0; ic<ndims; ic++ )
     counters[ic] = 0;
