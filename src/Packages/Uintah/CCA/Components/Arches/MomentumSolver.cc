@@ -998,8 +998,6 @@ MomentumSolver::sched_buildLinearMatrixPred(SchedulerP& sched, const PatchSet* p
   tsk->requires(Task::NewDW, d_lab->d_pressureSPBCLabel,
 		Ghost::AroundCells, numGhostCells);
 #endif
-  tsk->requires(Task::NewDW, d_lab->d_densityINLabel,
-		Ghost::AroundCells, numGhostCells);
   if (d_MAlab)
     tsk->requires(Task::NewDW, d_lab->d_mmgasVolFracLabel,
 		  Ghost::AroundCells, numGhostCells);
@@ -1331,8 +1329,6 @@ MomentumSolver::sched_buildLinearMatrixCorr(SchedulerP& sched, const PatchSet* p
   tsk->requires(Task::NewDW, d_lab->d_densityCPLabel,
 		Ghost::AroundCells, numGhostCells);
   tsk->requires(Task::NewDW, d_lab->d_pressureSPBCLabel,
-		Ghost::AroundCells, numGhostCells);
-  tsk->requires(Task::NewDW, d_lab->d_densityPredLabel,
 		Ghost::AroundCells, numGhostCells);
 
   if (d_MAlab)
