@@ -9,11 +9,12 @@
 namespace rtrt {
 
 class PCAGridSpheres : public TextureGridSpheres {
-  float *xform; // size is nbasis * nchannels
-  float *mean; // length of nchannels
+  unsigned char *xform; // size is nbasis * nchannels
+  unsigned char *mean; // length of nchannels
   int nbases; // represents the number of textures in tex_data;
   int nchannels;
   float tex_min, tex_diff; // used to unquantize the basis texture
+  float xform_min, xform_diff; // used to unquantize the xform texture
 
   // From TextureGridSpheres
   
@@ -28,8 +29,9 @@ public:
 		 float radius,
 		 int *tex_indices,
 		 unsigned char* tex_data, int nbases, int tex_res,
-		 float *xform, float *mean, int nchannels,
+		 unsigned char *xform, unsigned char *mean, int nchannels,
 		 float tex_min, float tex_max,
+                 float xform_min, float xform_max,
 		 int nsides, int depth, RegularColorMap* cmap = 0,
 		 const Color& color = Color(1.0, 1.0, 1.0));
 
