@@ -43,7 +43,7 @@ public:
   ComponentClassDescriptionAdapter(const ComponentDescription*);
   ~ComponentClassDescriptionAdapter();
 
-  virtual string getClassName();
+  virtual string getComponentClassName();
   virtual string getModelName();
 private:
   const ComponentDescription* cd;
@@ -58,7 +58,7 @@ ComponentClassDescriptionAdapter::~ComponentClassDescriptionAdapter()
 {
 }
 
-string ComponentClassDescriptionAdapter::getClassName()
+string ComponentClassDescriptionAdapter::getComponentClassName()
 {
   return cd->getType();
 }
