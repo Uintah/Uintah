@@ -4,11 +4,19 @@
 
 #include <Packages/rtrt/Core/Object.h>
 #include <Core/Geometry/Point.h>
+#include <Core/Geometry/Transform.h>
+#include <Core/Geometry/Vector.h>
 
 namespace rtrt {
 
+using SCIRun::Vector;
+using SCIRun::Point;
+using SCIRun::Transform;
+using SCIRun::AffineCombination;
+
 class Tri : public Object {
     Point p1, p2, p3;
+    Vector vn1, vn2, vn3;
     Vector n;
     double d;
     Vector e1p, e2p, e3p;
@@ -20,6 +28,8 @@ public:
 	return bad;
     }
     Tri(Material* matl, const Point& p1, const Point& p2, const Point& p3);
+    Tri(Material* matl, const Point& p1, const Point& p2, const Point& p3,
+	const Vector& vn1, const Vector& vn2, const Vector& vn3);
     virtual ~Tri();
     virtual void intersect(const Ray& ray, HitInfo& hit, DepthStats* st,
 			   PerProcessorContext*);
@@ -48,6 +58,21 @@ public:
 	    return p3;
     }
 	       
+    inline Tri transform(Transform& T)
+        {
+            Point tp1 = T.project(p1);
+            Point tp2 = T.project(p2);
+            Point tp3 = T.project(p3);
+
+            Vector tvn1 = T.project_normal(vn1);
+            Vector tvn2 = T.project_normal(vn2);
+            Vector tvn3 = T.project_normal(vn3);
+            
+
+            return Tri(this->get_matl(),
+                       tp1,tp2,tp3,
+                       tvn1,tvn2,tvn3);
+        }
 };
 
 } // end namespace rtrt

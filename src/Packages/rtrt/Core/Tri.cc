@@ -4,17 +4,67 @@
 #include <Packages/rtrt/Core/HitInfo.h>
 #include <Packages/rtrt/Core/BBox.h>
 #include <Packages/rtrt/Core/Light.h>
-#include <Packages/rtrt/Core/MiscMath.h>
+#include <Core/Math/MiscMath.h>
 #include <Core/Thread/Mutex.h>
 #include <Packages/rtrt/Core/Stats.h>
 #include <iostream>
 
 using namespace rtrt;
+using namespace SCIRun;
 using std::cerr;
 
 Tri::Tri(Material* matl, const Point& p1, const Point& p2,
 	 const Point& p3)
     : Object(matl), p1(p1), p2(p2), p3(p3)
+{
+    Vector v1(p2-p1);
+    Vector v2(p3-p1);
+    n=Cross(v1, v2);
+
+#if 1
+    double l = n.length2();
+    if (l > 1.e-16) {
+      bad = false;
+      n *= 1/sqrt(l);
+    } else {
+	printf("BAD NORMAL!\n");
+      bad = true;
+    }
+    
+
+#else
+    double l=n.normalize();
+    if(l<1.e-8){
+	cerr << "Bad normal? " << n << '\n';
+	cerr << "l=" << l << '\n';
+	cerr << "before: " << Cross(v1, v2) << ", after: " << n << '\n';
+	cerr << "p1=" << p1 << ", p2=" << p2 << ", p3=" << p3 << '\n';
+	bad=true;
+    } else {
+	bad=false;
+    }
+#endif
+    vn1 = n;
+    vn2 = n;
+    vn3 = n;
+
+    d=Dot(n, p1);
+    e1=p3-p2;
+    e2=p1-p3;
+    e3=p2-p1;
+    e1l=e1.normalize();
+    e2l=e2.normalize();
+    e3l=e3.normalize();
+    e1p=Cross(e1, n);
+    e2p=Cross(e2, n);
+    e3p=Cross(e3, n);
+}
+
+Tri::Tri(Material* matl, const Point& p1, const Point& p2,
+	 const Point& p3,
+	 const Vector& vn1, const Vector& vn2, const Vector& vn3)
+  : Object(matl), p1(p1), p2(p2), p3(p3),
+    vn1(vn1), vn2(vn2), vn3(vn3)
 {
     Vector v1(p2-p1);
     Vector v2(p3-p1);
@@ -25,6 +75,7 @@ Tri::Tri(Material* matl, const Point& p1, const Point& p2,
       bad = false;
       n *= 1/sqrt(l);
     } else {
+	printf("BAD NORMAL!\n");
       bad = true;
     }
 #else
@@ -77,16 +128,24 @@ void Tri::intersect(const Ray& ray, HitInfo& hit, DepthStats* st,
 	    double B=Dot(DX, e1)*idet;
 	    if(B>0.0 && A+B<1.0){
 		double t=Dot(e1e2, o)*idet;
-		hit.hit(this, t);
+		if (hit.hit(this, t)) {
+		  double* uv = (double *)hit.scratchpad;
+		  uv[0] = B;
+		  uv[1] = A;
+		}
 		st->tri_hit++;
 	    }
 	}
     }
 }
 
-Vector Tri::normal(const Point&, const HitInfo&)
+Vector Tri::normal(const Point&, const HitInfo& hitinfo)
 {
-    return n;
+  double *uv = (double *)hitinfo.scratchpad;
+  double beta = uv[0];
+  double gamma = uv[1];
+
+  return (1-beta-gamma)*vn1 + beta*vn2 + gamma*vn3;
 }
 
 // I changed epsilon to 1e-9 to avoid holes in the bunny! -- Bill
@@ -226,7 +285,7 @@ void Tri::light_intersect(Light* light, const Ray& ray,
     atten=g<atten.luminance()?Color(g,g,g):atten;
 }
 
-void Tri::compute_bounds(BBox& bbox, double offset)
+void Tri::compute_bounds(BBox& bbox, double /*offset*/)
 {
 #if 0
     Vector e1(p3-p2);
