@@ -37,8 +37,8 @@ namespace Component {
 	    friend class Object_interface;
 	    int registerObject(Object_interface*);
 	    Object_interface* unregisterObject(int);
-	    Object_interface*lookupObject(const std::string&);
-	    Object_interface*lookupObject(int id);
+	    Object_interface* lookupObject(const std::string&);
+	    Object_interface* lookupObject(int id);
 	    void run();
 
 	private:
@@ -51,8 +51,12 @@ namespace Component {
 }
 
 #endif
+
 //
 // $Log$
+// Revision 1.3  1999/09/17 05:08:11  sparker
+// Implemented component model to work with sidl code generator
+//
 // Revision 1.2  1999/08/31 08:59:03  sparker
 // Configuration and other updates for globus
 // First import of beginnings of new component library
