@@ -17,7 +17,8 @@
 MaterialHandle BaseWidget::PointWidgetMaterial(new Material(Color(0,0,0), Color(.54,.60,1), Color(.5,.5,.5), 20));
 MaterialHandle BaseWidget::EdgeWidgetMaterial(new Material(Color(0,0,0), Color(.54,.60,.66), Color(.5,.5,.5), 20));
 MaterialHandle BaseWidget::SliderWidgetMaterial(new Material(Color(0,0,0), Color(.66,.60,.40), Color(.5,.5,.5), 20));
-MaterialHandle BaseWidget::SpecialWidgetMaterial(new Material(Color(0,0,0), Color(.54,1,.60), Color(.5,.5,.5), 20));
+MaterialHandle BaseWidget::ResizeWidgetMaterial(new Material(Color(0,0,0), Color(.54,1,.60), Color(.5,.5,.5), 20));
+MaterialHandle BaseWidget::SpecialWidgetMaterial(new Material(Color(0,0,0), Color(1,.54,.60), Color(.5,.5,.5), 20));
 MaterialHandle BaseWidget::HighlightWidgetMaterial(new Material(Color(0,0,0), Color(.7,.7,.7), Color(0,0,.6), 20));
 
 BaseWidget::BaseWidget( Module* module, CrowdMonitor* lock,

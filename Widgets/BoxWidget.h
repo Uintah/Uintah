@@ -39,7 +39,7 @@ public:
 	  PointOULVar, PointOURVar, PointODRVar, PointODLVar,
 	  DistVar, HypoVar, DiagVar };
    // Material indexs
-   enum { PointMatl, EdgeMatl, HighMatl };
+   enum { PointMatl, EdgeMatl, ResizeMatl, HighMatl };
 private:
    Vector oldaxis1, oldaxis2, oldaxis3;
 };

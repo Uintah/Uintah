@@ -22,7 +22,7 @@
 const Index NumCons = 4;
 const Index NumVars = 6;
 const Index NumGeoms = 6;
-const Index NumMatls = 4;
+const Index NumMatls = 5;
 const Index NumSchemes = 3;
 const Index NumPcks = 6;
 
@@ -85,6 +85,7 @@ GuageWidget::GuageWidget( Module* module, CrowdMonitor* lock, double widget_scal
    materials[PointMatl] = PointWidgetMaterial;
    materials[EdgeMatl] = EdgeWidgetMaterial;
    materials[SliderMatl] = SliderWidgetMaterial;
+   materials[ResizeMatl] = ResizeWidgetMaterial;
    materials[HighMatl] = HighlightWidgetMaterial;
 
    geometries[GeomPointL] = new GeomSphere;
@@ -108,7 +109,7 @@ GuageWidget::GuageWidget( Module* module, CrowdMonitor* lock, double widget_scal
    picks[PickResizeR]->set_highlight(materials[HighMatl]);
    picks[PickResizeR]->set_cbdata((void*)PickResizeR);
    resizes->add(picks[PickResizeR]);
-   GeomMaterial* resizesm = new GeomMaterial(resizes, SpecialWidgetMaterial);
+   GeomMaterial* resizesm = new GeomMaterial(resizes, materials[ResizeMatl]);
    geometries[GeomShaft] = new GeomCylinder;
    picks[PickCyl] = new GeomPick(geometries[GeomShaft], module);
    picks[PickCyl]->set_highlight(materials[HighMatl]);

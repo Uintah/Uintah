@@ -55,7 +55,7 @@ public:
 	  Slider1Var, SDist1Var, Ratio1Var,
 	  Slider2Var, SDist2Var, Ratio2Var };
    // Material indexs
-   enum { PointMatl, EdgeMatl, SliderMatl, HighMatl };
+   enum { PointMatl, EdgeMatl, SliderMatl, ResizeMatl, HighMatl };
 private:
    Vector oldaxis1, oldaxis2;
 };

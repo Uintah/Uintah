@@ -23,7 +23,7 @@
 const Index NumCons = 27;
 const Index NumVars = 22;
 const Index NumGeoms = 47;
-const Index NumMatls = 4;
+const Index NumMatls = 5;
 const Index NumSchemes = 4;
 const Index NumPcks = 18;
 
@@ -356,6 +356,7 @@ ScaledBoxWidget::ScaledBoxWidget( Module* module, CrowdMonitor* lock, double wid
    materials[PointMatl] = PointWidgetMaterial;
    materials[EdgeMatl] = EdgeWidgetMaterial;
    materials[SliderMatl] = SliderWidgetMaterial;
+   materials[ResizeMatl] = ResizeWidgetMaterial;
    materials[HighMatl] = HighlightWidgetMaterial;
 
    Index geom, pick;
@@ -384,7 +385,7 @@ ScaledBoxWidget::ScaledBoxWidget( Module* module, CrowdMonitor* lock, double wid
       picks[pick]->set_cbdata((void*)pick);
       resizes->add(picks[pick]);
    }
-   GeomMaterial* resizem = new GeomMaterial(resizes, materials[PointMatl]);
+   GeomMaterial* resizem = new GeomMaterial(resizes, materials[ResizeMatl]);
 
    GeomGroup* cyls = new GeomGroup;
    for (geom = CylIU; geom <= CylOL; geom++) {

@@ -23,7 +23,7 @@
 const Index NumCons = 9;
 const Index NumVars = 13;
 const Index NumGeoms = 26;
-const Index NumMatls = 4;
+const Index NumMatls = 5;
 const Index NumPcks = 10;
 const Index NumSchemes = 5;
 
@@ -164,6 +164,7 @@ ViewWidget::ViewWidget( Module* module, CrowdMonitor* lock, Real widget_scale )
 
    materials[PointMatl] = PointWidgetMaterial;
    materials[EdgeMatl] = EdgeWidgetMaterial;
+   materials[ResizeMatl] = ResizeWidgetMaterial;
    materials[SpecialMatl] = SpecialWidgetMaterial;
    materials[HighMatl] = HighlightWidgetMaterial;
 
@@ -210,7 +211,7 @@ ViewWidget::ViewWidget( Module* module, CrowdMonitor* lock, Real widget_scale )
    picks[PickResizeD]->set_highlight(materials[HighMatl]);
    picks[PickResizeD]->set_cbdata((void*)PickResizeD);
    resizes->add(picks[PickResizeD]);
-   GeomMaterial* resizem = new GeomMaterial(resizes, materials[PointMatl]);
+   GeomMaterial* resizem = new GeomMaterial(resizes, materials[ResizeMatl]);
    
    GeomGroup* cyls = new GeomGroup;
    geometries[GeomShaft] = new GeomCylinder;

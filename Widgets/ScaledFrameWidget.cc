@@ -24,7 +24,7 @@
 const Index NumCons = 14;
 const Index NumVars = 13;
 const Index NumGeoms = 14;
-const Index NumMatls = 4;
+const Index NumMatls = 5;
 const Index NumPcks = 11;
 const Index NumSchemes = 6;
 
@@ -234,6 +234,7 @@ ScaledFrameWidget::ScaledFrameWidget( Module* module, CrowdMonitor* lock,
    materials[PointMatl] = PointWidgetMaterial;
    materials[EdgeMatl] = EdgeWidgetMaterial;
    materials[SliderMatl] = SliderWidgetMaterial;
+   materials[ResizeMatl] = ResizeWidgetMaterial;
    materials[HighMatl] = HighlightWidgetMaterial;
 
    Index geom, pick;
@@ -257,7 +258,7 @@ ScaledFrameWidget::ScaledFrameWidget( Module* module, CrowdMonitor* lock,
       picks[pick]->set_cbdata((void*)pick);
       resizes->add(picks[pick]);
    }
-   GeomMaterial* resizem = new GeomMaterial(resizes, materials[PointMatl]);
+   GeomMaterial* resizem = new GeomMaterial(resizes, materials[ResizeMatl]);
 
    GeomGroup* cyls = new GeomGroup;
    for (geom = CylU; geom <= CylL; geom++) {

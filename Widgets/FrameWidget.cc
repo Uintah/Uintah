@@ -22,7 +22,7 @@
 const Index NumCons = 8;
 const Index NumVars = 7;
 const Index NumGeoms = 12;
-const Index NumMatls = 3;
+const Index NumMatls = 4;
 const Index NumPcks = 9;
 const Index NumSchemes = 6;
 
@@ -149,6 +149,7 @@ FrameWidget::FrameWidget( Module* module, CrowdMonitor* lock, Real widget_scale 
 
    materials[PointMatl] = PointWidgetMaterial;
    materials[EdgeMatl] = EdgeWidgetMaterial;
+   materials[ResizeMatl] = ResizeWidgetMaterial;
    materials[HighMatl] = HighlightWidgetMaterial;
 
    Index geom, pick;
@@ -172,7 +173,7 @@ FrameWidget::FrameWidget( Module* module, CrowdMonitor* lock, Real widget_scale 
       picks[pick]->set_cbdata((void*)pick);
       resizes->add(picks[pick]);
    }
-   GeomMaterial* resizem = new GeomMaterial(resizes, materials[PointMatl]);
+   GeomMaterial* resizem = new GeomMaterial(resizes, materials[ResizeMatl]);
 
    GeomGroup* cyls = new GeomGroup;
    for (geom = GeomCylU; geom <= GeomCylL; geom++) {

@@ -21,7 +21,7 @@
 const Index NumCons = 18;
 const Index NumVars = 11;
 const Index NumGeoms = 44;
-const Index NumMatls = 3;
+const Index NumMatls = 4;
 const Index NumSchemes = 4;
 const Index NumPcks = 15;
 
@@ -247,6 +247,7 @@ BoxWidget::BoxWidget( Module* module, CrowdMonitor* lock, double widget_scale )
 
    materials[PointMatl] = PointWidgetMaterial;
    materials[EdgeMatl] = EdgeWidgetMaterial;
+   materials[ResizeMatl] = ResizeWidgetMaterial;
    materials[HighMatl] = HighlightWidgetMaterial;
 
    Index geom, pick;
@@ -275,7 +276,7 @@ BoxWidget::BoxWidget( Module* module, CrowdMonitor* lock, double widget_scale )
       picks[pick]->set_cbdata((void*)pick);
       resizes->add(picks[pick]);
    }
-   GeomMaterial* resizem = new GeomMaterial(resizes, materials[PointMatl]);
+   GeomMaterial* resizem = new GeomMaterial(resizes, materials[ResizeMatl]);
 
    GeomGroup* cyls = new GeomGroup;
    for (geom = CylIU; geom <= CylOL; geom++) {

@@ -41,15 +41,15 @@ public:
    
    const Vector& GetAxis1();
    const Vector& GetAxis2();
+   const Vector& GetAxis3();
 
    // Variable indexs
-   enum { PointULVar, PointURVar, PointDRVar, PointDLVar,
-	  DistVar, HypoVar, CenterVar,
-	  SliderVar, SDistVar, AngleVar, ConstVar };
+   enum { PointAVar, PointBVar, PointCVar, DistVar, CenterVar,
+	  SliderVar, RadiusVar, AngleVar };
    // Material indexs
-   enum { PointMatl, EdgeMatl, SliderMatl, SpecialMatl, HighMatl };
+   enum { PointMatl, EdgeMatl, SliderMatl, ResizeMatl, SpecialMatl, HighMatl };
 private:
-   Vector oldaxis1, oldaxis2;
+   Vector oldaxis1, oldaxis2, oldaxis3;
 };
 
 

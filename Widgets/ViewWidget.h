@@ -42,7 +42,7 @@ public:
 	  EyeVar, ForeVar, ForeEyeVar, BackVar, BackEyeVar,
 	  Dist1Var, Dist2Var, HypoVar, RatioVar };
    // Material indexs
-   enum { PointMatl, EdgeMatl, SpecialMatl, HighMatl };
+   enum { PointMatl, EdgeMatl, SpecialMatl, ResizeMatl, HighMatl };
 private:
    Vector oldaxis1;
    Vector oldaxis2;
