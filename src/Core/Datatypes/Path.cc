@@ -559,7 +559,7 @@ double Path::get_delta(){
   case USERMODE:
     break;
     
-  case NO_ACC:
+  case NO_ACCEL:
   default:
     step=s;
   }
