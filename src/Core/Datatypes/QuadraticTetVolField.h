@@ -52,10 +52,6 @@ public:
   virtual QuadraticTetVolField<T> *clone() const;
   virtual ~QuadraticTetVolField();
 
-  virtual ScalarFieldInterface* query_scalar_interface() const;
-  virtual VectorFieldInterface* query_vector_interface() const;
-  virtual TensorFieldInterface* query_tensor_interface() const;
-
   //! Persistent IO
   static PersistentTypeID type_id;
   virtual void io(Piostream &stream);
@@ -118,60 +114,6 @@ template <class T>
 QuadraticTetVolField<T>::~QuadraticTetVolField()
 {
 }
-
-template <> ScalarFieldInterface *
-QuadraticTetVolField<double>::query_scalar_interface() const;
-
-template <> ScalarFieldInterface *
-QuadraticTetVolField<float>::query_scalar_interface() const;
-
-template <> ScalarFieldInterface *
-QuadraticTetVolField<int>::query_scalar_interface() const;
-
-template <> ScalarFieldInterface*
-QuadraticTetVolField<short>::query_scalar_interface() const;
-
-template <> ScalarFieldInterface*
-QuadraticTetVolField<char>::query_scalar_interface() const;
-
-template <> ScalarFieldInterface *
-QuadraticTetVolField<unsigned int>::query_scalar_interface() const;
-
-template <> ScalarFieldInterface*
-QuadraticTetVolField<unsigned short>::query_scalar_interface() const;
-
-template <> ScalarFieldInterface*
-QuadraticTetVolField<unsigned char>::query_scalar_interface() const;
-
-template <class T>
-ScalarFieldInterface*
-QuadraticTetVolField<T>::query_scalar_interface() const 
-{
-  return 0;
-}
-
-template <>
-VectorFieldInterface*
-QuadraticTetVolField<Vector>::query_vector_interface() const;
-
-template <class T>
-VectorFieldInterface*
-QuadraticTetVolField<T>::query_vector_interface() const
-{
-  return 0;
-}
-
-template <>
-TensorFieldInterface*
-QuadraticTetVolField<Tensor>::query_tensor_interface() const;
-
-template <class T>
-TensorFieldInterface*
-QuadraticTetVolField<T>::query_tensor_interface() const
-{
-  return 0;
-}
-
 
 template <class T>
 Persistent*

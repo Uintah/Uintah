@@ -50,10 +50,6 @@ public:
   virtual QuadSurfField<T> *clone() const;
   virtual ~QuadSurfField();
   
-  virtual ScalarFieldInterface* query_scalar_interface() const;
-  virtual VectorFieldInterface* query_vector_interface() const;
-  virtual TensorFieldInterface* query_tensor_interface() const;
-
   //! Persistent IO
   static PersistentTypeID type_id;
   virtual void io(Piostream &stream);
@@ -118,59 +114,6 @@ QuadSurfField<T>::clone() const
 template <class T>
 QuadSurfField<T>::~QuadSurfField()
 {
-}
-
-template <> ScalarFieldInterface *
-QuadSurfField<double>::query_scalar_interface() const;
-
-template <> ScalarFieldInterface *
-QuadSurfField<float>::query_scalar_interface() const;
-
-template <> ScalarFieldInterface *
-QuadSurfField<int>::query_scalar_interface() const;
-
-template <> ScalarFieldInterface*
-QuadSurfField<short>::query_scalar_interface() const;
-
-template <> ScalarFieldInterface*
-QuadSurfField<char>::query_scalar_interface() const;
-
-template <> ScalarFieldInterface *
-QuadSurfField<unsigned int>::query_scalar_interface() const;
-
-template <> ScalarFieldInterface*
-QuadSurfField<unsigned short>::query_scalar_interface() const;
-
-template <> ScalarFieldInterface*
-QuadSurfField<unsigned char>::query_scalar_interface() const;
-
-template <class T>
-ScalarFieldInterface*
-QuadSurfField<T>::query_scalar_interface() const 
-{
-  return 0;
-}
-
-template <>
-VectorFieldInterface*
-QuadSurfField<Vector>::query_vector_interface() const;
-
-template <class T>
-VectorFieldInterface*
-QuadSurfField<T>::query_vector_interface() const
-{
-  return 0;
-}
-
-template <>
-TensorFieldInterface*
-QuadSurfField<Tensor>::query_tensor_interface() const;
-
-template <class T>
-TensorFieldInterface*
-QuadSurfField<T>::query_tensor_interface() const
-{
-  return 0;
 }
 
 template <class T> 

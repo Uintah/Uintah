@@ -50,10 +50,6 @@ public:
   virtual TriSurfField<T> *clone() const;
   virtual ~TriSurfField();
   
-  virtual ScalarFieldInterface* query_scalar_interface() const;
-  virtual VectorFieldInterface* query_vector_interface() const;
-  virtual TensorFieldInterface* query_tensor_interface() const;
-
   //! Persistent IO
   static PersistentTypeID type_id;
   static const string type_name(int n = -1);
@@ -166,59 +162,6 @@ TriSurfField<T>::clone() const
 template <class T>
 TriSurfField<T>::~TriSurfField()
 {
-}
-
-template <> ScalarFieldInterface *
-TriSurfField<double>::query_scalar_interface() const;
-
-template <> ScalarFieldInterface *
-TriSurfField<float>::query_scalar_interface() const;
-
-template <> ScalarFieldInterface *
-TriSurfField<int>::query_scalar_interface() const;
-
-template <> ScalarFieldInterface*
-TriSurfField<short>::query_scalar_interface() const;
-
-template <> ScalarFieldInterface*
-TriSurfField<char>::query_scalar_interface() const;
-
-template <> ScalarFieldInterface *
-TriSurfField<unsigned int>::query_scalar_interface() const;
-
-template <> ScalarFieldInterface*
-TriSurfField<unsigned short>::query_scalar_interface() const;
-
-template <> ScalarFieldInterface*
-TriSurfField<unsigned char>::query_scalar_interface() const;
-
-template <class T>
-ScalarFieldInterface*
-TriSurfField<T>::query_scalar_interface() const 
-{
-  return 0;
-}
-
-template <>
-VectorFieldInterface*
-TriSurfField<Vector>::query_vector_interface() const;
-
-template <class T>
-VectorFieldInterface*
-TriSurfField<T>::query_vector_interface() const
-{
-  return 0;
-}
-
-template <>
-TensorFieldInterface*
-TriSurfField<Tensor>::query_tensor_interface() const;
-
-template <class T>
-TensorFieldInterface*
-TriSurfField<T>::query_tensor_interface() const
-{
-  return 0;
 }
 
 } // end namespace SCIRun

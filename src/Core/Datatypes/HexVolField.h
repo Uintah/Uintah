@@ -50,10 +50,6 @@ public:
   virtual HexVolField<T> *clone() const;
   virtual ~HexVolField();
 
-  virtual ScalarFieldInterface* query_scalar_interface() const;
-  virtual VectorFieldInterface* query_vector_interface() const;
-  virtual TensorFieldInterface* query_tensor_interface() const;
-
   //! Persistent IO
   static PersistentTypeID type_id;
   virtual void io(Piostream &stream);
@@ -98,60 +94,6 @@ template <class T>
 HexVolField<T>::~HexVolField()
 {
 }
-
-template <> ScalarFieldInterface *
-HexVolField<double>::query_scalar_interface() const;
-
-template <> ScalarFieldInterface *
-HexVolField<float>::query_scalar_interface() const;
-
-template <> ScalarFieldInterface *
-HexVolField<int>::query_scalar_interface() const;
-
-template <> ScalarFieldInterface*
-HexVolField<short>::query_scalar_interface() const;
-
-template <> ScalarFieldInterface*
-HexVolField<char>::query_scalar_interface() const;
-
-template <> ScalarFieldInterface *
-HexVolField<unsigned int>::query_scalar_interface() const;
-
-template <> ScalarFieldInterface*
-HexVolField<unsigned short>::query_scalar_interface() const;
-
-template <> ScalarFieldInterface*
-HexVolField<unsigned char>::query_scalar_interface() const;
-
-template <class T>
-ScalarFieldInterface*
-HexVolField<T>::query_scalar_interface() const 
-{
-  return 0;
-}
-
-template <>
-VectorFieldInterface*
-HexVolField<Vector>::query_vector_interface() const;
-
-template <class T>
-VectorFieldInterface*
-HexVolField<T>::query_vector_interface() const
-{
-  return 0;
-}
-
-template <>
-TensorFieldInterface*
-HexVolField<Tensor>::query_tensor_interface() const;
-
-template <class T>
-TensorFieldInterface*
-HexVolField<T>::query_tensor_interface() const
-{
-  return 0;
-}
-
 
 template <class T>
 Persistent*
