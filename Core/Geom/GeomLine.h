@@ -77,10 +77,12 @@ public:
   GeomLines(const GeomLines&);
 
   void add(const Point &p0, const Point &p1);
-  void add(const Point &p0, MaterialHandle c0,
-	   const Point &p1, MaterialHandle c1);
+  void add(const Point &p0, const MaterialHandle &c0,
+	   const Point &p1, const MaterialHandle &c1);
   void add(const Point &p0, double cindex0,
 	   const Point &p1, double cindex1);
+  void add(const Point &p0, const MaterialHandle &c0, double cindex0,
+	   const Point &p1, const MaterialHandle &c1, double cindex1);
   void setLineWidth(float val) { line_width_ = val; }
 
   virtual ~GeomLines();
