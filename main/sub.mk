@@ -41,7 +41,7 @@ else
 	Core/Thread Core/Exceptions Core/Util Core/TkExtensions Core/Comm \
 	Core/ICom Core/Services Dataflow/XMLUtil Core/SystemCall Core/Geom
   ifeq ($(OS_NAME),Darwin)
-    PSELIBS += Core/Datatypes Core/ImportExport
+    PSELIBS += Core/Datatypes Core/ImportExport Core/Persistent
   endif
 endif
 
