@@ -144,7 +144,6 @@ int PicardNonlinearSolver::nonlinearSolve(const LevelP& level,
     for (int index = 1; index <= Arches::NDIM; ++index) {
       d_momSolver->solve(level, sched, old_dw, new_dw, time, delta_t, index);
     }
-#if 0    
     // equation for scalars
     // require : scalarIN, [u,v,w]VelocitySPBC, densityIN, viscosityIN (new_dw)
     //           scalarSP, densityCP (old_dw)
@@ -155,6 +154,7 @@ int PicardNonlinearSolver::nonlinearSolve(const LevelP& level,
       // the same subroutine can be used to solve multiple scalars
       d_scalarSolver->solve(level, sched, old_dw, new_dw, time, delta_t, index);
     }
+#if 0    
 
     // update properties
     // require : densityIN
@@ -523,6 +523,9 @@ PicardNonlinearSolver::computeResidual(const LevelP& /*level*/,
 
 //
 // $Log$
+// Revision 1.49  2000/10/09 18:47:39  sparker
+// Start to do scalar solver
+//
 // Revision 1.48  2000/10/09 17:06:25  rawat
 // modified momentum solver for multi-patch
 //
