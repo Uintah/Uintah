@@ -2671,7 +2671,6 @@ if test "$sci_check_hdf5" = "yes"; then
   fi
 fi #end sci_check_hdf5
 
-AC_SUBST(LIB_DIR_HDF5)
 AC_SUBST(HDF5_LIB_FLAG)
 AC_SUBST(HDF5_LIB_DIR_FLAG)
 AC_SUBST(INC_HDF5_H)
