@@ -126,13 +126,13 @@ void IsoSurface::execute()
 	GeomSphere* ptobj=new GeomSphere(seed_point, 1*widget_scale);
 	Vector grad(field->gradient(seed_point));
 	grad.normalize();
-	Point cone_top(seed_point+grad*(2*widget_scale));
-	GeomCylinder* cylinder=new GeomCylinder(seed_point, cone_top,
+	Point cyl_top(seed_point+grad*(2*widget_scale));
+	GeomCylinder* cylinder=new GeomCylinder(seed_point, cyl_top,
 						0.5*widget_scale);
-	Point cyl_top(cone_top+grad*0.5);
-	GeomCone* cone=new GeomCone(cone_top, cyl_top,
+	Point cone_top(cyl_top+grad*(1.0*widget_scale));
+	GeomCone* cone=new GeomCone(cyl_top, cone_top,
 				    0.75*widget_scale, 0);
-	GeomDisc* disc=new GeomDisc(cone_top, grad,
+	GeomDisc* disc=new GeomDisc(cyl_top, -grad,
 				    0.75*widget_scale);
 	ObjGroup* widget=new ObjGroup;
 	widget->add(ptobj);
