@@ -4488,6 +4488,7 @@ void TexSquare::draw(DrawInfoOpenGL* di, Material* matl, double)
 }
 
 void GeomSticky::draw(DrawInfoOpenGL* di, Material* matl, double t) {
+  if(!pre_draw(di, matl, 0)) return;
   glMatrixMode(GL_PROJECTION);
   glPushMatrix();
   glLoadIdentity();
@@ -4505,6 +4506,8 @@ void GeomSticky::draw(DrawInfoOpenGL* di, Material* matl, double t) {
   glPopMatrix();
   glMatrixMode(GL_MODELVIEW);
   glPopMatrix();
+
+  post_draw(di);
 }  
 
 } // End namespace SCIRun
