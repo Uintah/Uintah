@@ -3,11 +3,8 @@
 <!-- ********** Elements ********** -->
 <!ELEMENT p (#PCDATA)>
 
-
-
-
 <!-- top level -->
-<!ELEMENT dir (fit, use, definition+, example+)>
+<!ELEMENT dir (fit, use, definition, (definition | example)+)>
 
 <!-- phase 1 elements -->
 <!ATTLIST dir name CDATA #REQUIRED>
