@@ -133,9 +133,8 @@ PicardNonlinearSolver::problemSetup(const ProblemSpecP& params)
   d_pressure_correction = d_momSolver->getPressureCorrectionFlag();
   d_pressSolver->setPressureCorrectionFlag(d_pressure_correction);
   }
-  bool calScalar;
-  db->require("cal_mixturescalar", calScalar);
-  if (calScalar) {
+  db->require("cal_mixturescalar", d_calScalar);
+  if (d_calScalar) {
     d_scalarSolver = scinew ScalarSolver(d_lab, d_MAlab,
 					 d_turbModel, d_boundaryCondition,
 					 d_physicalConsts);
@@ -176,6 +175,7 @@ PicardNonlinearSolver::problemSetup(const ProblemSpecP& params)
     d_momSolver->setDiscretizationFilter(d_turbModel->getFilter());
 //#endif
 #endif
+  d_dynScalarModel = d_turbModel->getDynScalarModel();
 }
 
 // ****************************************************************************
@@ -204,10 +204,10 @@ int PicardNonlinearSolver::nonlinearSolve(const LevelP& level,
   tsk->requires(Task::OldDW, d_lab->d_avUxplus_label);
   if (dynamic_cast<const ScaleSimilarityModel*>(d_turbModel)) {
     tsk->requires(Task::OldDW, d_lab->d_scalarFluxCompLabel,
-		  d_lab->d_scalarFluxMatl, Task::OutOfDomain,
+		  d_lab->d_vectorMatl, Task::OutOfDomain,
 		  Ghost::None, Arches::ZEROGHOSTCELLS);
     tsk->requires(Task::OldDW, d_lab->d_stressTensorCompLabel,
-		  d_lab->d_stressTensorMatl,Task::OutOfDomain,
+		  d_lab->d_tensorMatl,Task::OutOfDomain,
 		  Ghost::AroundCells, Arches::ONEGHOSTCELL);
   }
   if (d_MAlab) 
@@ -286,6 +286,17 @@ int PicardNonlinearSolver::nonlinearSolve(const LevelP& level,
   tsk->requires(Task::OldDW, d_lab->d_oldDeltaTLabel);
   tsk->requires(Task::OldDW, d_lab->d_viscosityCTSLabel,
 		Ghost::None, Arches::ZEROGHOSTCELLS);
+  if (d_dynScalarModel) {
+    if (d_calScalar)
+      tsk->requires(Task::OldDW, d_lab->d_scalarDiffusivityLabel,
+		    Ghost::None, Arches::ZEROGHOSTCELLS);
+    if (d_enthalpySolve)
+      tsk->requires(Task::OldDW, d_lab->d_enthalpyDiffusivityLabel,
+		    Ghost::None, Arches::ZEROGHOSTCELLS);
+    if (d_reactingScalarSolve)
+      tsk->requires(Task::OldDW, d_lab->d_reactScalarDiffusivityLabel,
+		    Ghost::None, Arches::ZEROGHOSTCELLS);
+  }
   tsk->computes(d_lab->d_cellTypeLabel);
   tsk->computes(d_lab->d_pressurePSLabel);
   tsk->computes(d_lab->d_uVelocitySPBCLabel);
@@ -340,6 +351,21 @@ int PicardNonlinearSolver::nonlinearSolve(const LevelP& level,
 
   tsk->computes(d_lab->d_densityCPLabel);
   tsk->computes(d_lab->d_viscosityCTSLabel);
+//  tsk->computes(d_lab->d_CsLabel);
+  if (d_dynScalarModel) {
+    if (d_calScalar) {
+      tsk->computes(d_lab->d_scalarDiffusivityLabel);
+      tsk->computes(d_lab->d_ShFLabel);
+    }
+    if (d_enthalpySolve) {
+      tsk->computes(d_lab->d_enthalpyDiffusivityLabel);
+      tsk->computes(d_lab->d_ShELabel);
+    }
+    if (d_reactingScalarSolve) {
+      tsk->computes(d_lab->d_reactScalarDiffusivityLabel);
+      tsk->computes(d_lab->d_ShRFLabel);
+    }
+  }
   if (d_MAlab)
     tsk->computes(d_lab->d_densityMicroLabel);
 
@@ -363,9 +389,9 @@ int PicardNonlinearSolver::nonlinearSolve(const LevelP& level,
   tsk->computes(d_lab->d_densityOldOldLabel);
   if (dynamic_cast<const ScaleSimilarityModel*>(d_turbModel)) {
     tsk->computes(d_lab->d_scalarFluxCompLabel,
-		  d_lab->d_scalarFluxMatl, Task::OutOfDomain);
+		  d_lab->d_vectorMatl, Task::OutOfDomain);
     tsk->computes(d_lab->d_stressTensorCompLabel,
-		  d_lab->d_stressTensorMatl, Task::OutOfDomain);
+		  d_lab->d_tensorMatl, Task::OutOfDomain);
   }
 
   sched->addTask(tsk, d_perproc_patches, d_lab->d_sharedState->allArchesMaterials());
@@ -590,6 +616,14 @@ PicardNonlinearSolver::recursiveSolver(const ProcessorGroup* pg,
     }
     subsched->get_dw(3)->transferFrom(old_dw, d_lab->d_densityCPLabel, patches, matls); 
     subsched->get_dw(3)->transferFrom(old_dw, d_lab->d_viscosityCTSLabel, patches, matls); 
+    if (d_dynScalarModel) {
+    if (d_calScalar)
+      subsched->get_dw(3)->transferFrom(old_dw, d_lab->d_scalarDiffusivityLabel, patches, matls); 
+    if (d_enthalpySolve)
+      subsched->get_dw(3)->transferFrom(old_dw, d_lab->d_enthalpyDiffusivityLabel, patches, matls); 
+    if (d_reactingScalarSolve)
+      subsched->get_dw(3)->transferFrom(old_dw, d_lab->d_reactScalarDiffusivityLabel, patches, matls); 
+    }
     do{
       subsched->advanceDataWarehouse(grid);
       subsched->get_dw(2)->setScrubbing(DataWarehouse::ScrubComplete);
@@ -669,6 +703,21 @@ PicardNonlinearSolver::recursiveSolver(const ProcessorGroup* pg,
     }
     new_dw->transferFrom(subsched->get_dw(3), d_lab->d_densityCPLabel, patches, matls); 
     new_dw->transferFrom(subsched->get_dw(3), d_lab->d_viscosityCTSLabel, patches, matls); 
+//    new_dw->transferFrom(subsched->get_dw(3), d_lab->d_CsLabel, patches, matls); 
+    if (d_dynScalarModel) {
+    if (d_calScalar) {
+      new_dw->transferFrom(subsched->get_dw(3), d_lab->d_scalarDiffusivityLabel, patches, matls); 
+      new_dw->transferFrom(subsched->get_dw(3), d_lab->d_ShFLabel, patches, matls); 
+    }  
+    if (d_enthalpySolve) {
+      new_dw->transferFrom(subsched->get_dw(3), d_lab->d_enthalpyDiffusivityLabel, patches, matls); 
+      new_dw->transferFrom(subsched->get_dw(3), d_lab->d_ShELabel, patches, matls); 
+    }  
+    if (d_reactingScalarSolve) {
+      new_dw->transferFrom(subsched->get_dw(3), d_lab->d_reactScalarDiffusivityLabel, patches, matls); 
+      new_dw->transferFrom(subsched->get_dw(3), d_lab->d_ShRFLabel, patches, matls); 
+    }  
+    }
     delt_vartype uvwout;
     sum_vartype flowin;
     sum_vartype flowout;
@@ -823,6 +872,17 @@ PicardNonlinearSolver::sched_setInitialGuess(SchedulerP& sched,
 		Ghost::None, Arches::ZEROGHOSTCELLS);
   tsk->requires(Task::OldDW, d_lab->d_viscosityCTSLabel,
 		Ghost::None, Arches::ZEROGHOSTCELLS);
+  if (d_dynScalarModel) {
+    if (d_calScalar)
+      tsk->requires(Task::OldDW, d_lab->d_scalarDiffusivityLabel,
+		    Ghost::None, Arches::ZEROGHOSTCELLS);
+    if (d_enthalpySolve)
+      tsk->requires(Task::OldDW, d_lab->d_enthalpyDiffusivityLabel,
+		    Ghost::None, Arches::ZEROGHOSTCELLS);
+    if (d_reactingScalarSolve)
+      tsk->requires(Task::OldDW, d_lab->d_reactScalarDiffusivityLabel,
+		    Ghost::None, Arches::ZEROGHOSTCELLS);
+  }
   tsk->computes(d_lab->d_cellTypeLabel);
   tsk->computes(d_lab->d_uVelocitySPBCLabel);
   tsk->computes(d_lab->d_vVelocitySPBCLabel);
@@ -852,6 +912,14 @@ PicardNonlinearSolver::sched_setInitialGuess(SchedulerP& sched,
       (d_timeIntegratorLabels[0]->factor_new < 1.0))
     tsk->computes(d_lab->d_densityTempLabel);
   tsk->computes(d_lab->d_viscosityCTSLabel);
+  if (d_dynScalarModel) {
+    if (d_calScalar)
+      tsk->computes(d_lab->d_scalarDiffusivityLabel);
+    if (d_enthalpySolve)
+      tsk->computes(d_lab->d_enthalpyDiffusivityLabel);
+    if (d_reactingScalarSolve)
+      tsk->computes(d_lab->d_reactScalarDiffusivityLabel);
+  }  
   if (d_MAlab)
     tsk->computes(d_lab->d_densityMicroINLabel);
   sched->addTask(tsk, patches, matls);
@@ -1883,6 +1951,20 @@ PicardNonlinearSolver::setInitialGuess(const ProcessorGroup* ,
     constCCVariable<double> viscosity;
     old_dw->get(viscosity, d_lab->d_viscosityCTSLabel, matlIndex, patch, 
 		Ghost::None, Arches::ZEROGHOSTCELLS);
+    constCCVariable<double> scalardiff;
+    constCCVariable<double> enthalpydiff;
+    constCCVariable<double> reactscalardiff;
+    if (d_dynScalarModel) {
+      if (d_calScalar)
+       old_dw->get(scalardiff, d_lab->d_scalarDiffusivityLabel,
+		   matlIndex, patch, Ghost::None, Arches::ZEROGHOSTCELLS);
+      if (d_enthalpySolve)
+       old_dw->get(enthalpydiff, d_lab->d_enthalpyDiffusivityLabel,
+		   matlIndex, patch, Ghost::None, Arches::ZEROGHOSTCELLS);
+      if (d_reactingScalarSolve)
+       old_dw->get(reactscalardiff, d_lab->d_reactScalarDiffusivityLabel,
+		   matlIndex, patch, Ghost::None, Arches::ZEROGHOSTCELLS);
+    }
 
 
   // Create vars for new_dw ***warning changed new_dw to old_dw...check
@@ -1973,6 +2055,26 @@ PicardNonlinearSolver::setInitialGuess(const ProcessorGroup* ,
     CCVariable<double> viscosity_new;
     new_dw->allocateAndPut(viscosity_new, d_lab->d_viscosityCTSLabel, matlIndex, patch);
     viscosity_new.copyData(viscosity); // copy old into new
+    CCVariable<double> scalardiff_new;
+    CCVariable<double> enthalpydiff_new;
+    CCVariable<double> reactscalardiff_new;
+    if (d_dynScalarModel) {
+      if (d_calScalar) {
+        new_dw->allocateAndPut(scalardiff_new, d_lab->d_scalarDiffusivityLabel,
+			       matlIndex, patch);
+        scalardiff_new.copyData(scalardiff); // copy old into new
+      }
+      if (d_enthalpySolve) {
+        new_dw->allocateAndPut(enthalpydiff_new,
+			d_lab->d_enthalpyDiffusivityLabel, matlIndex, patch);
+        enthalpydiff_new.copyData(enthalpydiff); // copy old into new
+      }
+      if (d_reactingScalarSolve) {
+        new_dw->allocateAndPut(reactscalardiff_new,
+			d_lab->d_reactScalarDiffusivityLabel, matlIndex, patch);
+        reactscalardiff_new.copyData(reactscalardiff); // copy old into new
+      }
+    }
   }
 }
 

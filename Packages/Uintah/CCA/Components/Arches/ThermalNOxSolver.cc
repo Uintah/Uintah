@@ -106,6 +106,9 @@ ThermalNOxSolver::problemSetup(const ProblemSpecP& params)
 	//	       " not supported" + linear_sol, db);
   }
   d_linearSolver->problemSetup(db);
+  d_turbPrNo = d_turbModel->getTurbulentPrandtlNumber();
+// dynamic Scalar Model for NOx is not implemented
+  d_dynScalarModel = false;
 }
 
 //****************************************************************************
@@ -360,7 +363,7 @@ void ThermalNOxSolver::buildLinearMatrix(const ProcessorGroup* pc,
     d_discretize->calculateScalarCoeff(pc, patch,
 				       delta_t, index, cellinfo, 
 				       &thermalnoxVars, &constthermalnoxVars,
-				       d_conv_scheme);
+				       d_conv_scheme, d_turbPrNo);
    // Calculate  the NOx source terms (i.e R.H.S side)
     // inputs : [u,v,w]VelocityMS, thermalnoxSP, densityCP, viscosityCTS
     // outputs: scalLinSrcSBLM, scalNonLinSrcSBLM

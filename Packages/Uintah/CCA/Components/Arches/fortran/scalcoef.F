@@ -23,8 +23,6 @@ C		equation (o/p)
 C	cesav,cwsav,cnsav,cssav,ctsav,cbsaV
 C		Convection fluxes on the east,west,north,south,top,
 C		and bottom faces of the P-cell (o/p)
-C	prinv	Inverse of the "Prandtl number" for this scalar
-C		(e.g., PRF, PRG, etc.) (i/p)
 C	crn	Average Cell Reynolds number (o/p)
 C	vol	Array: Volume of P-Cell (o/p)
 C	rv	Radius of V-velocity node point (i/p)
@@ -76,7 +74,6 @@ C-----------------------------------------------------------------------
 *-----------------------------------------------------------------------
 *     local variables
 *
-      double precision prinv
       double precision crn
       logical*1 l2up, lsmpt, lcend, lcentral, leno
       double precision vol
@@ -92,14 +89,12 @@ C-----------------------------------------------------------------------
       double precision tew, tns, ttb
       double precision aec, awc, anc, asc, atc, abc
       double precision crn0
-      double precision prandtlno, prno
 
       integer i, j, k
       integer IST, JST, KST
       integer IEND, JEND, KEND
 *-----------------------------------------------------------------------
 
-      prinv = 0.01D0
       crn = zero
       l2up = .false.
       lcend = .false.
@@ -112,7 +107,6 @@ C-----------------------------------------------------------------------
         leno = .true.
       endif
       vol = zero
-      prno = 0.4D0
 
       IST = idxLo(1)
       JST = idxLo(2)
@@ -192,11 +186,6 @@ C-----------------------------------------------------------------------
 C--------------------------------------------------------------------
 C     CALCULATE DIFFUSION COEFFICIENTS
 C--------------------------------------------------------------------
-               if (i .lt. 10) then
-                  prandtlno = prno
-               else
-                  prandtlno = prno
-               endif
                GAME = 0.5D0*(VIS(I,J,K)+VIS(I+1,J,K))/prandtlno
                GAMW = 0.5D0*(VIS(I,J,K)+VIS(I-1,J,K))/prandtlno
                GAMN = 0.5D0*(VIS(I,J,K)+VIS(I,J+1,K))/prandtlno

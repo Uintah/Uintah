@@ -104,6 +104,8 @@ ScalarSolver::problemSetup(const ProblemSpecP& params)
 	//	       " not supported" + linear_sol, db);
   }
   d_linearSolver->problemSetup(db);
+  d_turbPrNo = d_turbModel->getTurbulentPrandtlNumber();
+  d_dynScalarModel = d_turbModel->getDynScalarModel();
 }
 
 //****************************************************************************
@@ -171,8 +173,13 @@ ScalarSolver::sched_buildLinearMatrix(SchedulerP& sched,
    tsk->requires(old_values_dw, d_lab->d_densityCPLabel, 
 		 Ghost::None, Arches::ZEROGHOSTCELLS);
 
-  tsk->requires(Task::NewDW, d_lab->d_viscosityCTSLabel,
-		Ghost::AroundCells, Arches::ONEGHOSTCELL);
+  if (d_dynScalarModel)
+    tsk->requires(Task::NewDW, d_lab->d_scalarDiffusivityLabel,
+		  Ghost::AroundCells, Arches::ONEGHOSTCELL);
+  else
+    tsk->requires(Task::NewDW, d_lab->d_viscosityCTSLabel,
+		  Ghost::AroundCells, Arches::ONEGHOSTCELL);
+
   tsk->requires(Task::NewDW, d_lab->d_uVelocitySPBCLabel,
 		Ghost::AroundFaces, Arches::ONEGHOSTCELL);
   tsk->requires(Task::NewDW, d_lab->d_vVelocitySPBCLabel,
@@ -183,11 +190,11 @@ ScalarSolver::sched_buildLinearMatrix(SchedulerP& sched,
   if (dynamic_cast<const ScaleSimilarityModel*>(d_turbModel)) 
   if (timelabels->integrator_step_number == TimeIntegratorStepNumber::First)
     tsk->requires(Task::OldDW, d_lab->d_scalarFluxCompLabel,
-		  d_lab->d_scalarFluxMatl, Task::OutOfDomain,
+		  d_lab->d_vectorMatl, Task::OutOfDomain,
 		  Ghost::AroundCells, Arches::ONEGHOSTCELL);
   else
     tsk->requires(Task::NewDW, d_lab->d_scalarFluxCompLabel,
-		  d_lab->d_scalarFluxMatl, Task::OutOfDomain,
+		  d_lab->d_vectorMatl, Task::OutOfDomain,
 		  Ghost::AroundCells, Arches::ONEGHOSTCELL);
 
 
@@ -307,8 +314,14 @@ void ScalarSolver::buildLinearMatrix(const ProcessorGroup* pc,
     // from new_dw get DEN, VIS, F(index), U, V, W
     new_dw->get(constScalarVars.density, d_lab->d_densityCPLabel, 
 		matlIndex, patch, Ghost::AroundCells, Arches::TWOGHOSTCELLS);
-    new_dw->get(constScalarVars.viscosity, d_lab->d_viscosityCTSLabel, 
-		matlIndex, patch, Ghost::AroundCells, Arches::ONEGHOSTCELL);
+
+    if (d_dynScalarModel)
+      new_dw->get(constScalarVars.viscosity, d_lab->d_scalarDiffusivityLabel, 
+		  matlIndex, patch, Ghost::AroundCells, Arches::ONEGHOSTCELL);
+    else
+      new_dw->get(constScalarVars.viscosity, d_lab->d_viscosityCTSLabel, 
+		  matlIndex, patch, Ghost::AroundCells, Arches::ONEGHOSTCELL);
+
     new_dw->get(constScalarVars.scalar, d_lab->d_scalarSPLabel, 
 		matlIndex, patch, Ghost::AroundCells, Arches::TWOGHOSTCELLS);
     // for explicit get old values
@@ -369,7 +382,7 @@ void ScalarSolver::buildLinearMatrix(const ProcessorGroup* pc,
     d_discretize->calculateScalarCoeff(pc, patch,
 				       delta_t, index, cellinfo, 
 				       &scalarVars, &constScalarVars,
-				       d_conv_scheme);
+				       d_conv_scheme, d_turbPrNo);
 
     // Calculate scalar source terms
     // inputs : [u,v,w]VelocityMS, scalarSP, densityCP, viscosityCTS
@@ -395,13 +408,13 @@ void ScalarSolver::buildLinearMatrix(const ProcessorGroup* pc,
     if (dynamic_cast<const ScaleSimilarityModel*>(d_turbModel)) {
       StencilMatrix<constCCVariable<double> > scalarFlux; //3 point stencil
       if (timelabels->integrator_step_number == TimeIntegratorStepNumber::First)
-      for (int ii = 0; ii < d_lab->d_scalarFluxMatl->size(); ii++) {
+      for (int ii = 0; ii < d_lab->d_vectorMatl->size(); ii++) {
 	old_dw->get(scalarFlux[ii], 
 			d_lab->d_scalarFluxCompLabel, ii, patch,
 			Ghost::AroundCells, Arches::ONEGHOSTCELL);
       }
       else
-      for (int ii = 0; ii < d_lab->d_scalarFluxMatl->size(); ii++) {
+      for (int ii = 0; ii < d_lab->d_vectorMatl->size(); ii++) {
 	new_dw->get(scalarFlux[ii], 
 			d_lab->d_scalarFluxCompLabel, ii, patch,
 			Ghost::AroundCells, Arches::ONEGHOSTCELL);

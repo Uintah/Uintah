@@ -19,29 +19,33 @@ using namespace Uintah;
 //****************************************************************************
 ArchesLabel::ArchesLabel()
 {
-  int noStencil = 7;
+// Seven point stencil
+  int numberStencilComponents = 7;
   d_stencilMatl = scinew MaterialSubset();
-  for (int i = 0; i < noStencil; i++)
+  for (int i = 0; i < numberStencilComponents; i++)
     d_stencilMatl->add(i);
   d_stencilMatl->addReference();
 
-  int noStressComp = 9;
-  d_stressTensorMatl = scinew MaterialSubset();
-  for (int i = 0; i < noStressComp; i++)
-    d_stressTensorMatl->add(i);
-  d_stressTensorMatl->addReference();
+// Vector (1 order tensor)
+  int numberVectorComponents = 3;
+  d_vectorMatl = scinew MaterialSubset();
+  for (int i = 0; i < numberVectorComponents; i++)
+    d_vectorMatl->add(i);
+  d_vectorMatl->addReference();
 
-  int noSymStressComp = 6;
-  d_stressSymTensorMatl = scinew MaterialSubset();
-  for (int i = 0; i < noSymStressComp; i++)
-    d_stressSymTensorMatl->add(i);
-  d_stressSymTensorMatl->addReference();
+// Second order tensor
+  int numberTensorComponents = 9;
+  d_tensorMatl = scinew MaterialSubset();
+  for (int i = 0; i < numberTensorComponents; i++)
+    d_tensorMatl->add(i);
+  d_tensorMatl->addReference();
 
-  int noScalarFluxComp = 3;
-  d_scalarFluxMatl = scinew MaterialSubset();
-  for (int i = 0; i < noScalarFluxComp; i++)
-    d_scalarFluxMatl->add(i);
-  d_scalarFluxMatl->addReference();
+// Second order symmetric tensor
+  int numberSymTensorComponents = 6;
+  d_symTensorMatl = scinew MaterialSubset();
+  for (int i = 0; i < numberSymTensorComponents; i++)
+    d_symTensorMatl->add(i);
+  d_symTensorMatl->addReference();
 
   // Cell Information
   d_cellInfoLabel = VarLabel::create("cellInformation",
@@ -76,7 +80,13 @@ ArchesLabel::ArchesLabel()
 				  CCVariable<double>::getTypeDescription() );
   // Viscosity Labels
   d_viscosityCTSLabel = VarLabel::create("viscosityCTS", 
-				      CCVariable<double>::getTypeDescription() );
+			      CCVariable<double>::getTypeDescription() );
+  d_scalarDiffusivityLabel = VarLabel::create("scalarDiffusivity", 
+			      CCVariable<double>::getTypeDescription() );
+  d_enthalpyDiffusivityLabel = VarLabel::create("enthalpyDiffusivity", 
+			      CCVariable<double>::getTypeDescription() );
+  d_reactScalarDiffusivityLabel = VarLabel::create("reactScalarDiffusivity", 
+			      CCVariable<double>::getTypeDescription() );
   // Pressure Labels
   d_pressurePSLabel = VarLabel::create("pressurePS", 
 				      CCVariable<double>::getTypeDescription() );
@@ -536,6 +546,55 @@ ArchesLabel::ArchesLabel()
 
   d_oldDeltaTLabel = VarLabel::create("oldDeltaT",
 				       delt_vartype::getTypeDescription() );
+// test filtered terms for variable density dynamic Smagorinsky model
+  d_filterRhoULabel = VarLabel::create("filterRhoU",
+				   SFCXVariable<double>::getTypeDescription() );
+  d_filterRhoVLabel = VarLabel::create("filterRhoV",
+				   SFCYVariable<double>::getTypeDescription() );
+  d_filterRhoWLabel = VarLabel::create("filterRhoW",
+				   SFCZVariable<double>::getTypeDescription() );
+  d_filterRhoLabel = VarLabel::create("filterRho",
+				   CCVariable<double>::getTypeDescription() );
+  d_filterRhoFLabel = VarLabel::create("filterRhoF",
+				   CCVariable<double>::getTypeDescription() );
+  d_filterRhoELabel = VarLabel::create("filterRhoE",
+				   CCVariable<double>::getTypeDescription() );
+  d_filterRhoRFLabel = VarLabel::create("filterRhoRF",
+				   CCVariable<double>::getTypeDescription() );
+  d_scalarGradientCompLabel = VarLabel::create("scalarGradientComp",
+				   CCVariable<double>::getTypeDescription() );
+  d_filterScalarGradientCompLabel = VarLabel::create("filterScalarGradientComp",
+				   CCVariable<double>::getTypeDescription() );
+  d_enthalpyGradientCompLabel = VarLabel::create("enthalpyGradientComp",
+				   CCVariable<double>::getTypeDescription() );
+  d_filterEnthalpyGradientCompLabel = 
+	                        VarLabel::create("filterEnthalpyGradientComp",
+				CCVariable<double>::getTypeDescription() );
+  d_reactScalarGradientCompLabel = VarLabel::create("reactScalarGradientComp",
+				   CCVariable<double>::getTypeDescription() );
+  d_filterReactScalarGradientCompLabel =
+	                       VarLabel::create("filterReactScalarGradientComp",
+			       CCVariable<double>::getTypeDescription() );
+  d_filterStrainTensorCompLabel = VarLabel::create("filterStrainTensorComp",
+			          CCVariable<double>::getTypeDescription() );
+  d_scalarNumeratorLabel = VarLabel::create("scalarNumerator", 
+			       CCVariable<double>::getTypeDescription() );
+  d_scalarDenominatorLabel = VarLabel::create("scalarDenominator", 
+			       CCVariable<double>::getTypeDescription() );
+  d_enthalpyNumeratorLabel = VarLabel::create("enthalpyNumerator", 
+			       CCVariable<double>::getTypeDescription() );
+  d_enthalpyDenominatorLabel = VarLabel::create("enthalpyDenominator", 
+			       CCVariable<double>::getTypeDescription() );
+  d_reactScalarNumeratorLabel = VarLabel::create("reactScalarNumerator", 
+			       CCVariable<double>::getTypeDescription() );
+  d_reactScalarDenominatorLabel = VarLabel::create("reactScalarDenominator", 
+			       CCVariable<double>::getTypeDescription() );
+  d_ShFLabel = VarLabel::create("ShF", 
+			       CCVariable<double>::getTypeDescription() );
+  d_ShELabel = VarLabel::create("ShE", 
+			       CCVariable<double>::getTypeDescription() );
+  d_ShRFLabel = VarLabel::create("ShRF", 
+			       CCVariable<double>::getTypeDescription() );
 }
 
 //****************************************************************************
@@ -546,14 +605,14 @@ ArchesLabel::~ArchesLabel()
   if (d_stencilMatl->removeReference())
     delete d_stencilMatl;
 
-  if (d_stressTensorMatl->removeReference())
-    delete d_stressTensorMatl;
+  if (d_vectorMatl->removeReference())
+    delete d_vectorMatl;
 
-  if (d_stressSymTensorMatl->removeReference())
-    delete d_stressSymTensorMatl;
+  if (d_tensorMatl->removeReference())
+    delete d_tensorMatl;
 
-  if (d_scalarFluxMatl->removeReference())
-    delete d_scalarFluxMatl;
+  if (d_symTensorMatl->removeReference())
+    delete d_symTensorMatl;
 
   VarLabel::destroy(d_strainMagnitudeLabel);
   VarLabel::destroy(d_strainMagnitudeMLLabel);
@@ -574,6 +633,9 @@ ArchesLabel::~ArchesLabel()
   VarLabel::destroy(d_filterdrhodtLabel);
   VarLabel::destroy(d_drhodfCPLabel);
   VarLabel::destroy(d_viscosityCTSLabel);
+  VarLabel::destroy(d_scalarDiffusivityLabel);
+  VarLabel::destroy(d_enthalpyDiffusivityLabel);
+  VarLabel::destroy(d_reactScalarDiffusivityLabel);
   VarLabel::destroy(d_pressurePSLabel);
   VarLabel::destroy(d_presCoefPBLMLabel);
   VarLabel::destroy(d_presNonLinSrcPBLMLabel);
@@ -739,6 +801,30 @@ ArchesLabel::~ArchesLabel()
   VarLabel::destroy(d_thermalnoxSRCINLabel);
   VarLabel::destroy(d_thermalnoxDiffCoefLabel);
 
+// test filtered terms for variable density dynamic Smagorinsky model
+  VarLabel::destroy(d_filterRhoULabel);
+  VarLabel::destroy(d_filterRhoVLabel);
+  VarLabel::destroy(d_filterRhoWLabel);
+  VarLabel::destroy(d_filterRhoLabel);
+  VarLabel::destroy(d_filterRhoFLabel);
+  VarLabel::destroy(d_filterRhoELabel);
+  VarLabel::destroy(d_filterRhoRFLabel);
+  VarLabel::destroy(d_scalarGradientCompLabel);
+  VarLabel::destroy(d_filterScalarGradientCompLabel);
+  VarLabel::destroy(d_enthalpyGradientCompLabel);
+  VarLabel::destroy(d_filterEnthalpyGradientCompLabel);
+  VarLabel::destroy(d_reactScalarGradientCompLabel);
+  VarLabel::destroy(d_filterReactScalarGradientCompLabel);
+  VarLabel::destroy(d_filterStrainTensorCompLabel);
+  VarLabel::destroy(d_scalarNumeratorLabel); 
+  VarLabel::destroy(d_scalarDenominatorLabel); 
+  VarLabel::destroy(d_enthalpyNumeratorLabel); 
+  VarLabel::destroy(d_enthalpyDenominatorLabel); 
+  VarLabel::destroy(d_reactScalarNumeratorLabel); 
+  VarLabel::destroy(d_reactScalarDenominatorLabel); 
+  VarLabel::destroy(d_ShFLabel);
+  VarLabel::destroy(d_ShELabel);
+  VarLabel::destroy(d_ShRFLabel);
 }           
 
 void ArchesLabel::setSharedState(SimulationStateP& sharedState)

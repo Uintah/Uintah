@@ -138,6 +138,8 @@ EnthalpySolver::problemSetup(const ProblemSpecP& params)
 	//	       " not supported" + linear_sol, db);
   }
   d_linearSolver->problemSetup(db);
+  d_turbPrNo = d_turbModel->getTurbulentPrandtlNumber();
+  d_dynScalarModel = d_turbModel->getDynScalarModel();
 }
 
 //****************************************************************************
@@ -213,8 +215,13 @@ EnthalpySolver::sched_buildLinearMatrix(const LevelP& level,
   tsk->requires(old_values_dw, d_lab->d_densityCPLabel, 
 		Ghost::None, Arches::ZEROGHOSTCELLS);
 
-  tsk->requires(Task::NewDW, d_lab->d_viscosityCTSLabel,
-		Ghost::AroundCells, Arches::ONEGHOSTCELL);
+  if (d_dynScalarModel)
+    tsk->requires(Task::NewDW, d_lab->d_enthalpyDiffusivityLabel,
+		  Ghost::AroundCells, Arches::ONEGHOSTCELL);
+  else
+    tsk->requires(Task::NewDW, d_lab->d_viscosityCTSLabel,
+		  Ghost::AroundCells, Arches::ONEGHOSTCELL);
+
   tsk->requires(Task::NewDW, d_lab->d_uVelocitySPBCLabel,
 		Ghost::AroundFaces, Arches::ONEGHOSTCELL);
   tsk->requires(Task::NewDW, d_lab->d_vVelocitySPBCLabel,
@@ -440,8 +447,15 @@ void EnthalpySolver::buildLinearMatrix(const ProcessorGroup* pc,
     // from new_dw get DEN, VIS, F(index), U, V, W
     new_dw->get(constEnthalpyVars.density, d_lab->d_densityCPLabel, 
 		matlIndex, patch, Ghost::AroundCells, Arches::TWOGHOSTCELLS);
-    new_dw->get(constEnthalpyVars.viscosity, d_lab->d_viscosityCTSLabel, 
-		matlIndex, patch, Ghost::AroundCells, Arches::ONEGHOSTCELL);
+
+    if (d_dynScalarModel)
+      new_dw->get(constEnthalpyVars.viscosity,
+		  d_lab->d_enthalpyDiffusivityLabel, matlIndex, patch,
+		  Ghost::AroundCells, Arches::ONEGHOSTCELL);
+    else
+      new_dw->get(constEnthalpyVars.viscosity, d_lab->d_viscosityCTSLabel, 
+		  matlIndex, patch, Ghost::AroundCells, Arches::ONEGHOSTCELL);
+
     new_dw->get(constEnthalpyVars.enthalpy, d_lab->d_enthalpySPLabel, 
 		matlIndex, patch, Ghost::None, Arches::ZEROGHOSTCELLS);
     if (d_conv_scheme > 0) {
@@ -624,7 +638,7 @@ void EnthalpySolver::buildLinearMatrix(const ProcessorGroup* pc,
     d_discretize->calculateScalarCoeff(pc, patch,
 				       delta_t, index, cellinfo, 
 				       &enthalpyVars, &constEnthalpyVars,
-				       d_conv_scheme);
+				       d_conv_scheme, d_turbPrNo);
 
     // Calculate enthalpy source terms
     // inputs : [u,v,w]VelocityMS, enthalpySP, densityCP, viscosityCTS

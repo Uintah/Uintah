@@ -86,6 +86,17 @@ public:
 
 #endif
       virtual void set3dPeriodic(bool periodic) = 0;
+      virtual double getTurbulentPrandtlNumber() const = 0;
+      virtual bool getDynScalarModel() const = 0;
+
+      inline void setCombustionSpecifics(bool reactingFlow,
+		                         bool calcEnthalpy,
+					 bool calcReactingScalar) {
+	d_reactingFlow = reactingFlow;
+	d_calcEnthalpy = calcEnthalpy;
+	d_calcReactingScalar = calcReactingScalar;
+      }
+
       // GROUP: Schedule Action :
       ///////////////////////////////////////////////////////////////////////
       // Interface for Schedule the recomputation of Turbulence Model data
@@ -113,6 +124,7 @@ public:
 #ifdef PetscFilter
       Filter* d_filter;
 #endif
+      bool d_reactingFlow, d_calcEnthalpy, d_calcReactingScalar;
 private:
 
 #ifdef PetscFilter

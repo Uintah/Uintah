@@ -99,6 +99,12 @@ public:
       inline void set3dPeriodic(bool periodic) {
 	d_3d_periodic = periodic;
       }
+      inline double getTurbulentPrandtlNumber() const {
+	return d_turbPrNo;
+      }
+      inline bool getDynScalarModel() const {
+	return false;
+      }
 
 protected:
       PhysicalConstants* d_physicalConsts;

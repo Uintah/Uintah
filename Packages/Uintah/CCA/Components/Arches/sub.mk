@@ -28,6 +28,7 @@ SRCS     += $(SRCDIR)/Arches.cc \
 	$(SRCDIR)/SmagorinskyModel.cc \
 	$(SRCDIR)/ScaleSimilarityModel.cc \
 	$(SRCDIR)/IncDynamicProcedure.cc \
+	$(SRCDIR)/CompDynamicProcedure.cc \
 	$(SRCDIR)/Source.cc \
 	$(SRCDIR)/TurbulenceModel.cc
 
@@ -120,6 +121,14 @@ $(SRCDIR)/Discretization.o: $(SRCDIR)/fortran/wvelcoef_fort.h
 $(SRCDIR)/IncDynamicProcedure.o: $(SRCDIR)/fortran/inc_dynamic_1loop_fort.h
 $(SRCDIR)/IncDynamicProcedure.o: $(SRCDIR)/fortran/inc_dynamic_2loop_fort.h
 $(SRCDIR)/IncDynamicProcedure.o: $(SRCDIR)/fortran/inc_dynamic_3loop_fort.h
+$(SRCDIR)/CompDynamicProcedure.o: $(SRCDIR)/fortran/comp_dynamic_1loop_fort.h
+$(SRCDIR)/CompDynamicProcedure.o: $(SRCDIR)/fortran/comp_dynamic_2loop_fort.h
+$(SRCDIR)/CompDynamicProcedure.o: $(SRCDIR)/fortran/comp_dynamic_3loop_fort.h
+$(SRCDIR)/CompDynamicProcedure.o: $(SRCDIR)/fortran/comp_dynamic_4loop_fort.h
+$(SRCDIR)/CompDynamicProcedure.o: $(SRCDIR)/fortran/comp_dynamic_5loop_fort.h
+$(SRCDIR)/CompDynamicProcedure.o: $(SRCDIR)/fortran/comp_dynamic_6loop_fort.h
+$(SRCDIR)/CompDynamicProcedure.o: $(SRCDIR)/fortran/comp_dynamic_7loop_fort.h
+$(SRCDIR)/CompDynamicProcedure.o: $(SRCDIR)/fortran/comp_dynamic_8loop_fort.h
 $(SRCDIR)/HypreSolver.o: $(SRCDIR)/fortran/rescal_fort.h
 $(SRCDIR)/HypreSolver.o: $(SRCDIR)/fortran/underelax_fort.h
 $(SRCDIR)/PetscSolver.o: $(SRCDIR)/fortran/rescal_fort.h

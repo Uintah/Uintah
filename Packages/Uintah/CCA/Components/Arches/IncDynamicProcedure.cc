@@ -86,10 +86,7 @@ IncDynamicProcedure::problemSetup(const ProblemSpecP& params)
   db->require("fac_mesh", d_factorMesh);
   db->require("filterl", d_filterl);
   db->require("var_const",d_CFVar); // const reqd by variance eqn
-  if (db->findBlock("turbulentPrandtlNumber")) 
-    db->require("turbulentPrandtlNumber",d_turbPrNo);
-  else
-    d_turbPrNo = 0.4;
+  db->getWithDefault("turbulentPrandtlNumber",d_turbPrNo,0.4);
   db->getWithDefault("filter_cs_squared",d_filter_cs_squared,false);
 
 }
@@ -127,10 +124,10 @@ IncDynamicProcedure::sched_reComputeTurbSubmodel(SchedulerP& sched,
 		  Ghost::AroundCells, Arches::ONEGHOSTCELL);
     // Computes
   if (timelabels->integrator_step_number == TimeIntegratorStepNumber::First)
-    tsk->computes(d_lab->d_strainTensorCompLabel, d_lab->d_stressSymTensorMatl,
+    tsk->computes(d_lab->d_strainTensorCompLabel, d_lab->d_symTensorMatl,
 		  Task::OutOfDomain);
   else 
-    tsk->modifies(d_lab->d_strainTensorCompLabel, d_lab->d_stressSymTensorMatl,
+    tsk->modifies(d_lab->d_strainTensorCompLabel, d_lab->d_symTensorMatl,
 		  Task::OutOfDomain);
     
     sched->addTask(tsk, patches, matls);
@@ -156,7 +153,7 @@ IncDynamicProcedure::sched_reComputeTurbSubmodel(SchedulerP& sched,
 		  Ghost::AroundCells, Arches::ONEGHOSTCELL);
 
     tsk->requires(Task::NewDW, d_lab->d_strainTensorCompLabel,
-		  d_lab->d_stressSymTensorMatl, Task::OutOfDomain,
+		  d_lab->d_symTensorMatl, Task::OutOfDomain,
 		  Ghost::AroundCells, Arches::ONEGHOSTCELL);
     
     tsk->requires(Task::NewDW, d_lab->d_cellTypeLabel, 
@@ -268,7 +265,7 @@ IncDynamicProcedure::reComputeTurbSubmodel(const ProcessorGroup*,
     // Get the patch and variable details
     // compatible with fortran index
     StencilMatrix<CCVariable<double> > SIJ;    //6 point tensor
-    for (int ii = 0; ii < d_lab->d_stressSymTensorMatl->size(); ii++) {
+    for (int ii = 0; ii < d_lab->d_symTensorMatl->size(); ii++) {
     if (timelabels->integrator_step_number == TimeIntegratorStepNumber::First)
       new_dw->allocateAndPut(SIJ[ii], 
 			     d_lab->d_strainTensorCompLabel, ii, patch);
@@ -293,7 +290,7 @@ IncDynamicProcedure::reComputeTurbSubmodel(const ProcessorGroup*,
     int endX = indexHigh.x()+1;
 
 #ifdef use_fortran
-    fort_dynamic_3loop(SIJ[0],SIJ[1],SIJ[2],SIJ[3],SIJ[4],SIJ[5],
+    fort_inc_dynamic_3loop(SIJ[0],SIJ[1],SIJ[2],SIJ[3],SIJ[4],SIJ[5],
 	uVel,vVel,wVel,cellinfo->sew,cellinfo->sns,cellinfo->stb,
 	indexLow,indexHigh);
 #else
@@ -757,7 +754,7 @@ IncDynamicProcedure::reComputeFilterValues(const ProcessorGroup* pc,
     // Get the patch and variable details
     // compatible with fortran index
     StencilMatrix<constCCVariable<double> > SIJ; //6 point tensor
-    for (int ii = 0; ii < d_lab->d_stressSymTensorMatl->size(); ii++)
+    for (int ii = 0; ii < d_lab->d_symTensorMatl->size(); ii++)
       new_dw->get(SIJ[ii], d_lab->d_strainTensorCompLabel, ii, patch,
 		  Ghost::AroundCells, Arches::ONEGHOSTCELL);
 
@@ -852,7 +849,7 @@ IncDynamicProcedure::reComputeFilterValues(const ProcessorGroup* pc,
 #ifdef use_fortran
     IntVector start(startX, startY, startZ);
     IntVector end(endX - 1, endY - 1, endZ -1);
-    fort_dynamic_1loop(SIJ[0],SIJ[1],SIJ[2],SIJ[3],SIJ[4],SIJ[5],
+    fort_inc_dynamic_1loop(SIJ[0],SIJ[1],SIJ[2],SIJ[3],SIJ[4],SIJ[5],
 	ccuVel,ccvVel,ccwVel,IsI,betaIJ[0],betaIJ[1],betaIJ[2],
 	betaIJ[3],betaIJ[4],betaIJ[5],UU,UV,UW,VV,VW,WW,start,end);
 #else
@@ -1414,7 +1411,7 @@ IncDynamicProcedure::reComputeFilterValues(const ProcessorGroup* pc,
     d_filter->applyFilter(pc, patch,VV, filterVV);
     d_filter->applyFilter(pc, patch,VW, filterVW);
     d_filter->applyFilter(pc, patch,WW, filterWW);
-    for (int ii = 0; ii < d_lab->d_stressSymTensorMatl->size(); ii++) {
+    for (int ii = 0; ii < d_lab->d_symTensorMatl->size(); ii++) {
       d_filter->applyFilter(pc, patch,SIJ[ii], SHATIJ[ii]);
       d_filter->applyFilter(pc, patch,betaIJ[ii], betaHATIJ[ii]);
     }
@@ -1482,7 +1479,7 @@ IncDynamicProcedure::reComputeFilterValues(const ProcessorGroup* pc,
 #endif  
   TAU_PROFILE_START(compute2);
 #ifdef use_fortran
-    fort_dynamic_2loop(cellinfo->sew,cellinfo->sns,cellinfo->stb,
+    fort_inc_dynamic_2loop(cellinfo->sew,cellinfo->sns,cellinfo->stb,
 	SHATIJ[0],SHATIJ[1],SHATIJ[2],SHATIJ[3],SHATIJ[4],SHATIJ[5],
 	IsI, IsImag, betaHATIJ[0],betaHATIJ[1],betaHATIJ[2],
 	betaHATIJ[3],betaHATIJ[4],betaHATIJ[5],filterUVel,

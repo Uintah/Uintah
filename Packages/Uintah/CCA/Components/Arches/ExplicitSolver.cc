@@ -127,9 +127,8 @@ ExplicitSolver::problemSetup(const ProblemSpecP& params)
   d_pressure_correction = d_momSolver->getPressureCorrectionFlag();
   d_pressSolver->setPressureCorrectionFlag(d_pressure_correction);
   }
-  bool calScalar;
-  db->require("cal_mixturescalar", calScalar);
-  if (calScalar) {
+  db->require("cal_mixturescalar", d_calScalar);
+  if (d_calScalar) {
     d_scalarSolver = scinew ScalarSolver(d_lab, d_MAlab,
 					 d_turbModel, d_boundaryCondition,
 					 d_physicalConsts);
@@ -205,6 +204,7 @@ ExplicitSolver::problemSetup(const ProblemSpecP& params)
     d_momSolver->setDiscretizationFilter(d_turbModel->getFilter());
 //#endif
 #endif
+  d_dynScalarModel = d_turbModel->getDynScalarModel();
 }
 
 // ****************************************************************************
@@ -478,6 +478,17 @@ ExplicitSolver::sched_setInitialGuess(SchedulerP& sched,
 		Ghost::None, Arches::ZEROGHOSTCELLS);
   tsk->requires(Task::OldDW, d_lab->d_viscosityCTSLabel,
 		Ghost::None, Arches::ZEROGHOSTCELLS);
+  if (d_dynScalarModel) {
+    if (d_calScalar)
+      tsk->requires(Task::OldDW, d_lab->d_scalarDiffusivityLabel,
+		    Ghost::None, Arches::ZEROGHOSTCELLS);
+    if (d_enthalpySolve)
+      tsk->requires(Task::OldDW, d_lab->d_enthalpyDiffusivityLabel,
+		    Ghost::None, Arches::ZEROGHOSTCELLS);
+    if (d_reactingScalarSolve)
+      tsk->requires(Task::OldDW, d_lab->d_reactScalarDiffusivityLabel,
+		    Ghost::None, Arches::ZEROGHOSTCELLS);
+  }
   tsk->computes(d_lab->d_cellTypeLabel);
   tsk->computes(d_lab->d_uVelocitySPBCLabel);
   tsk->computes(d_lab->d_vVelocitySPBCLabel);
@@ -512,6 +523,14 @@ ExplicitSolver::sched_setInitialGuess(SchedulerP& sched,
   if (d_timeIntegratorLabels[0]->multiple_steps)
     tsk->computes(d_lab->d_densityTempLabel);
   tsk->computes(d_lab->d_viscosityCTSLabel);
+  if (d_dynScalarModel) {
+    if (d_calScalar)
+      tsk->computes(d_lab->d_scalarDiffusivityLabel);
+    if (d_enthalpySolve)
+      tsk->computes(d_lab->d_enthalpyDiffusivityLabel);
+    if (d_reactingScalarSolve)
+      tsk->computes(d_lab->d_reactScalarDiffusivityLabel);
+  }  
   if (d_MAlab)
     tsk->computes(d_lab->d_densityMicroINLabel);
   sched->addTask(tsk, patches, matls);
@@ -1508,6 +1527,20 @@ ExplicitSolver::setInitialGuess(const ProcessorGroup* ,
     constCCVariable<double> viscosity;
     old_dw->get(viscosity, d_lab->d_viscosityCTSLabel, matlIndex, patch, 
 		Ghost::None, Arches::ZEROGHOSTCELLS);
+    constCCVariable<double> scalardiff;
+    constCCVariable<double> enthalpydiff;
+    constCCVariable<double> reactscalardiff;
+    if (d_dynScalarModel) {
+      if (d_calScalar)
+       old_dw->get(scalardiff, d_lab->d_scalarDiffusivityLabel,
+		   matlIndex, patch, Ghost::None, Arches::ZEROGHOSTCELLS);
+      if (d_enthalpySolve)
+       old_dw->get(enthalpydiff, d_lab->d_enthalpyDiffusivityLabel,
+		   matlIndex, patch, Ghost::None, Arches::ZEROGHOSTCELLS);
+      if (d_reactingScalarSolve)
+       old_dw->get(reactscalardiff, d_lab->d_reactScalarDiffusivityLabel,
+		   matlIndex, patch, Ghost::None, Arches::ZEROGHOSTCELLS);
+    }
 
 
   // Create vars for new_dw ***warning changed new_dw to old_dw...check
@@ -1614,6 +1647,26 @@ ExplicitSolver::setInitialGuess(const ProcessorGroup* ,
     CCVariable<double> viscosity_new;
     new_dw->allocateAndPut(viscosity_new, d_lab->d_viscosityCTSLabel, matlIndex, patch);
     viscosity_new.copyData(viscosity); // copy old into new
+    CCVariable<double> scalardiff_new;
+    CCVariable<double> enthalpydiff_new;
+    CCVariable<double> reactscalardiff_new;
+    if (d_dynScalarModel) {
+      if (d_calScalar) {
+        new_dw->allocateAndPut(scalardiff_new, d_lab->d_scalarDiffusivityLabel,
+			       matlIndex, patch);
+        scalardiff_new.copyData(scalardiff); // copy old into new
+      }
+      if (d_enthalpySolve) {
+        new_dw->allocateAndPut(enthalpydiff_new,
+			d_lab->d_enthalpyDiffusivityLabel, matlIndex, patch);
+        enthalpydiff_new.copyData(enthalpydiff); // copy old into new
+      }
+      if (d_reactingScalarSolve) {
+        new_dw->allocateAndPut(reactscalardiff_new,
+			d_lab->d_reactScalarDiffusivityLabel, matlIndex, patch);
+        reactscalardiff_new.copyData(reactscalardiff); // copy old into new
+      }
+    }
   }
 }
 

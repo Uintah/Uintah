@@ -281,6 +281,7 @@ private:
     std::string d_init_inputfile;
     TimeIntegratorLabel* init_timelabel;
     bool init_timelabel_allocated;
+    bool d_dynScalarModel;
 
 }; // end class Arches
 

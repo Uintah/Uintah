@@ -102,6 +102,8 @@ ReactiveScalarSolver::problemSetup(const ProblemSpecP& params)
 	//	       " not supported" + linear_sol, db);
   }
   d_linearSolver->problemSetup(db);
+  d_turbPrNo = d_turbModel->getTurbulentPrandtlNumber();
+  d_dynScalarModel = d_turbModel->getDynScalarModel();
 }
 
 //****************************************************************************
@@ -169,8 +171,13 @@ ReactiveScalarSolver::sched_buildLinearMatrix(SchedulerP& sched,
   tsk->requires(old_values_dw, d_lab->d_densityCPLabel, 
 		Ghost::None, Arches::ZEROGHOSTCELLS);
 
-  tsk->requires(Task::NewDW, d_lab->d_viscosityCTSLabel,
-		Ghost::AroundCells, Arches::ONEGHOSTCELL);
+  if (d_dynScalarModel)
+    tsk->requires(Task::NewDW, d_lab->d_reactScalarDiffusivityLabel,
+		  Ghost::AroundCells, Arches::ONEGHOSTCELL);
+  else
+    tsk->requires(Task::NewDW, d_lab->d_viscosityCTSLabel,
+		  Ghost::AroundCells, Arches::ONEGHOSTCELL);
+
   tsk->requires(Task::NewDW, d_lab->d_uVelocitySPBCLabel,
 		Ghost::AroundFaces, Arches::ONEGHOSTCELL);
   tsk->requires(Task::NewDW, d_lab->d_vVelocitySPBCLabel,
@@ -294,8 +301,15 @@ void ReactiveScalarSolver::buildLinearMatrix(const ProcessorGroup* pc,
     // from new_dw get DEN, VIS, F(index), U, V, W
     new_dw->get(constReactscalarVars.density, d_lab->d_densityCPLabel, 
 		matlIndex, patch, Ghost::AroundCells, Arches::TWOGHOSTCELLS);
-    new_dw->get(constReactscalarVars.viscosity, d_lab->d_viscosityCTSLabel, 
-		matlIndex, patch, Ghost::AroundCells, Arches::ONEGHOSTCELL);
+
+    if (d_dynScalarModel)
+      new_dw->get(constReactscalarVars.viscosity,
+		  d_lab->d_reactScalarDiffusivityLabel, matlIndex, patch,
+		  Ghost::AroundCells, Arches::ONEGHOSTCELL);
+    else
+      new_dw->get(constReactscalarVars.viscosity, d_lab->d_viscosityCTSLabel, 
+		  matlIndex, patch, Ghost::AroundCells, Arches::ONEGHOSTCELL);
+
     new_dw->get(constReactscalarVars.scalar, d_lab->d_reactscalarSPLabel, 
 		matlIndex, patch, Ghost::AroundCells, Arches::TWOGHOSTCELLS);
     // for explicit get old values
@@ -360,7 +374,7 @@ void ReactiveScalarSolver::buildLinearMatrix(const ProcessorGroup* pc,
     d_discretize->calculateScalarCoeff(pc, patch,
 				       delta_t, index, cellinfo, 
 				       &reactscalarVars, &constReactscalarVars,
-				       d_conv_scheme);
+				       d_conv_scheme, d_turbPrNo);
 
     // Calculate reactscalar source terms
     // inputs : [u,v,w]VelocityMS, reactscalarSP, densityCP, viscosityCTS

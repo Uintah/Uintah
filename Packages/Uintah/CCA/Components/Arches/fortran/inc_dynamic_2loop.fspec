@@ -1,4 +1,4 @@
-void dynamic_2loop(OffsetArray1<double> sew, OffsetArray1<double> sns,
+void inc_dynamic_2loop(OffsetArray1<double> sew, OffsetArray1<double> sns,
      OffsetArray1<double> stb,
      Array3<double> shatij1, Array3<double> shatij2,
      Array3<double> shatij3, Array3<double> shatij4,
