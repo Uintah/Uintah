@@ -6,7 +6,8 @@ SRCDIR   := Packages/Uintah/CCA/Components/MPMICE
 
 SRCS     += \
 	$(SRCDIR)/MPMICE.cc \
-	$(SRCDIR)/MPMICELabel.cc
+	$(SRCDIR)/MPMICELabel.cc \
+       $(SRCDIR)/MPMICEDebug.cc \
 
 PSELIBS := \
 	Packages/Uintah/CCA/Ports          \
