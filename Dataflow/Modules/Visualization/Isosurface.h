@@ -63,9 +63,9 @@ public:
 
 private:
   //! GUI variables
-  GuiDouble  gui_iso_value_;
   GuiDouble  gui_iso_value_min_;
   GuiDouble  gui_iso_value_max_;
+  GuiDouble  gui_iso_value_;
   GuiDouble  gui_iso_value_typed_;
   GuiInt     gui_iso_value_quantity_;
   GuiString  gui_iso_quantity_range_;
