@@ -1,0 +1,20 @@
+<!-- Annealed Copper -->
+<plasticity_model type="mts_model">
+  <s_a>40.0e6<s_a>
+  <koverbcubed>0.823e6<koverbcubed>
+  <edot0>1.0e7<edot0>
+  <g0>1.6<g0>
+  <q>1.0<q>
+  <p>0.666667<p>
+  <alpha>2<alpha>
+  <edot_s0>1.0e7<edot_s0>
+  <A>0.2625<A>
+  <s_s0>770.0e6<s_s0>
+  <a0>2390.0e6<a0>
+  <a1>12.0e6<a1>
+  <a2>1.696e6<a2>
+  <b1>45.78e9<b1>
+  <b2>3.0e9<b2>
+  <b3>180<b3>
+  <mu_0>47.7e9<mu_0>
+</plasticity_model>
