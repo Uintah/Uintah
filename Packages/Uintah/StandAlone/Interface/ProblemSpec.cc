@@ -48,10 +48,12 @@ ProblemSpecP ProblemSpec::findBlock(const std::string& name) const
    DOM_Node found_node = findNode(name,d_node);
 
   if (found_node.isNull()) {
+#if 0
     if (d_write) {
-      cerr << "Didn't find the tag . . " << name << endl;
-      cerr << "Setting to Null . . " << endl;
+       cerr << "Didn't find the tag . . " << name << endl;
+       cerr << "Setting to Null . . " << endl;
     }
+#endif
     return 0;
   }
   else {
@@ -453,6 +455,9 @@ const TypeDescription* ProblemSpec::getTypeDescription()
 
 //
 // $Log$
+// Revision 1.25  2000/10/13 19:50:29  sparker
+// Commented out chatter
+//
 // Revision 1.24  2000/09/26 23:12:19  witzel
 // Make the ProblemSpec carry on its d_write flag to the children
 // it creates.
