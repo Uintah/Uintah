@@ -47,7 +47,7 @@ SRCS     += $(SRCDIR)/ColorMapPort.cc             \
 
 
 PSELIBS := Dataflow/Network Dataflow/Comm Core/Containers \
-	Core/Thread Core/Geom Core/Geometry Core/Exceptions \
+	Core/Thread Core/Geom Core/Geometry Core/Exceptions Core/Util \
 	Core/Persistent Core/Datatypes Core/GLVolumeRenderer Core/Volume
 
 LIBS := 
