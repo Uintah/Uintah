@@ -18,7 +18,13 @@ namespace MPM {
 
 class Fracture {
 public:
-  void   materialDefectsInitialize();
+  void   materialDefectsInitialize(const Region* region,
+                                   int vfindex,
+                                   DataWarehouseP& new_dw);
+  
+  void   initializeFracture(const Region* region,
+                           int vfindex,
+                           DataWarehouseP& new_dw);
   
   void   updateSurfaceNormalOfBoundaryParticle(
            const ProcessorContext*,
@@ -74,6 +80,9 @@ private:
 #endif //__FRACTURE_H__
 
 // $Log$
+// Revision 1.7  2000/05/12 01:46:21  tan
+// Added initializeFracture linked to SerialMPM's actuallyInitailize.
+//
 // Revision 1.6  2000/05/11 20:10:18  dav
 // adding MPI stuff.  The biggest change is that old_dws cannot be const and so a large number of declarations had to change.
 //
