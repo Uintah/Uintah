@@ -87,15 +87,15 @@ void TimestepSelector::execute()
 
    // set the index for the correct timestep.
    int idx = 0;
-   if(t < times.size())
+   if(t < (int)times.size())
      idx = t;
-   if(t >= times.size())
+   if(t >= (int)times.size())
      idx=times.size()-1;
 
    timeval.set(times[idx]);
 
    if( animate.get() ){
-     while( animate.get() && idx < times.size() - 1){
+     while( animate.get() && idx < (int)times.size() - 1){
        idx++;
        tcl_status.set( to_string( times[idx] ));
        time.set( idx );
