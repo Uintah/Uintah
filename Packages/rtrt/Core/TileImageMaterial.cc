@@ -15,21 +15,21 @@
 using namespace rtrt;
 using namespace std;
 
-TileImageMaterial::TileImageMaterial(int, const string &texfile, 
-                                     double Kd,
-                                     const Color& specular, double specpow,
-                                     double refl, bool flipped=false)
-  : ImageMaterial(1,texfile,ImageMaterial::Tile,ImageMaterial::Tile,
-                  Kd,specular,specpow,refl,flipped)
+TileImageMaterial::TileImageMaterial( int /*oldstyle*/, const string &texfile, 
+				      double Kd,
+				      const Color& specular, double specpow,
+				      double refl, bool flipped/*=false*/ ) :
+  ImageMaterial(1,texfile,ImageMaterial::Tile,ImageMaterial::Tile,
+		Kd,specular,specpow,refl,flipped)
 {
 }
 
-TileImageMaterial::TileImageMaterial(const string &texfile, 
-                                     double Kd,
-                                     const Color& specular, double specpow,
-                                     double refl, bool flipped=false)
-  : ImageMaterial(texfile,ImageMaterial::Tile,ImageMaterial::Tile,
-                  Kd,specular,specpow,refl,flipped)
+TileImageMaterial::TileImageMaterial( const string &texfile, 
+				      double Kd,
+				      const Color& specular, double specpow,
+				      double refl, bool flipped /*= false*/ ) :
+  ImageMaterial(texfile,ImageMaterial::Tile,ImageMaterial::Tile,
+		Kd,specular,specpow,refl,flipped)
 {
 }
 
@@ -37,9 +37,9 @@ TileImageMaterial::TileImageMaterial(const string &texfile,
                                      double Kd,
                                      const Color& specular, double specpow,
                                      double refl,  double transp, 
-                                     bool flipped=false)
-  : ImageMaterial(texfile,ImageMaterial::Tile,ImageMaterial::Tile,
-                  Kd,specular,specpow,refl,transp,flipped)
+                                     bool flipped /*=false*/) :
+  ImageMaterial(texfile,ImageMaterial::Tile,ImageMaterial::Tile,
+		Kd,specular,specpow,refl,transp,flipped)
 {
 }
 
