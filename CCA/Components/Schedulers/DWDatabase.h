@@ -10,6 +10,7 @@
 #include <map>
 #include <vector>
 #include <iosfwd>
+#include <list>
 
 namespace Uintah {
 
