@@ -156,7 +156,7 @@ Progress\cite{MM:Vet95}, \index{Progress} and Magellan\cite{MM:Vet97a}
 
 It is important to understand the place of the software included in
 this package within the hierarchy of computational problem solving
-environments developed at the SCI Institute.  From a historical
+environments developed at the \sci{} Institute.  From a historical
 perspective, \SR{}, which began development in 1992, was the
 original implementation of the computational
 framework\cite{CRJ:Joh94c,RSM:Par95,RSM:Par95b,RSM:Par97,RSM:Par97b,CRJ:Parker99b}.
@@ -236,11 +236,11 @@ environment.
   {../Figures/biopse-modmap.gif}}
 \end{htmlonly}
 
-The functional unit of a dataflow environment is the {\em\/module}
+The functional unit of a data-flow environment is the {\em\/module}
 \index{module}.  Figure~\ref{fig:conc-module} contains a generic \SR{}
 module, with a User Interface (UI) button for graphically accessing the
 module's user interface, and input and output ports for receiving and sending
-data, respectively.  On the right is a simple example of a dataflow
+data, respectively.  On the right is a simple example of a data-flow
 network.  Data passes through the output port of the top module, through
 the data pipe, and into the input port of the bottom module.  The User
 Interface enables the selection of a desired isochrone surface.
@@ -262,7 +262,7 @@ ports only; scene data arrives on its input ports and a screen
 visualization is its ``output''.  
 
 It is important to appreciate the concepts of modules, connections
-between modules, and the dataflow through a network (see
+between modules, and the data-flow through a network (see
 \secref{Working with Networks}{sec:workwithnets} for more information
 on modules, ports, connections, and networks).
 
@@ -367,26 +367,60 @@ Future releases will include more extensive tools for building modules
 and wrapping existing codes within \SR{} module wrappers, to maximize
 intellectual investment in legacy code.
 
+\subsection{\sr{} Objects}
+\label{sec:sr-objects}
 
-\subsection{Field Types}
-\label{sec:field-types}
 
+\sr{}'s \datatype{Field}, \datatype{Mesh}, \datatype{Matrix}, and
+\datatype{ColorMap} objects are used frequently in networks.  These
+objects are described in sections that follow.
 
-A \sr{} field is an object that contains a geometric mesh and a
-collection of data values mapped to the nodes, edges, faces, or cells
-of the mesh.
+\subsubsection{Field}
 
-The following C++/SCI data types may be stored in a Field:
+A \sr{} \datatype{Field} consists of a geometric \datatype{Mesh} and a
+set of data values.  Data values can be located at the nodes, edges,
+faces, or cells of a mesh.  A \datatype{Field} can consist of a
+\datatype{Mesh} component only (no associated data).
+
+\subsubsection{Field Data}
+
+The following C++/SCI data types can be associated with a \datatype{Field}:
 
 \begin{itemize}
-\item double, float
-\item int, short, unsigned, unsigned short
-\item char, unsigned char
-\item Tensor
-\item Vector
+\item \datatype{double}, \datatype{float}
+\item \datatype{int}, \datatype{short}, \datatype{unsigned}, \datatype{unsigned short}
+\item \datatype{char}, \datatype{unsigned char}
+\item \datatype{Tensor}
+\item \datatype{Vector}
 \end{itemize}
 
-The following mesh types may be stored in a field:
+C++ data types are \datatype{double}, \datatype{float},
+\datatype{int}, \datatype{short}, \datatype{unsigned},
+\datatype{unsigned short}, \datatype{char}, and \datatype{unsigned
+  char}.  \sr{} data types are \datatype{Tensor} and \datatype{Vector}.
+
+\subsubsection{Meshes}
+
+\sr{} meshes are classified as \dfn{unstructured}, \dfn{structured}, or
+\dfn{regular}.  In general, a mesh consists of nodes (data value location
+data) and node connectivity data.
+
+Node locations and connectivities for unstructured meshes are specified
+explicitly.  The unstructured mesh types are:
+\datatype{PointCloudMesh}, \datatype{CurveMesh},
+\datatype{TriSurfMesh}, \datatype{QuadSurfMesh},
+\datatype{TetVolMesh}, \datatype{HexVolMesh}.
+
+Node locations are specified explicitly and connectivities are known
+implicitly for structured meshes.  The structured meshes are
+\datatype{StructCurveMesh}, \datatype{StructQuadSurfMesh}, and
+\datatype{StructHexVolMesh}.
+
+Node locations and connectivities are known implicitly for regular
+meshes.  The regular mesh types are \datatype{ScanlineMesh},
+\datatype{ImageMesh}, \datatype{LatVolMesh}.
+
+Below are figures of some mesh types:
 
 %begin{latexonly}
 \newcommand{\meshdoc}[4]{%
@@ -426,64 +460,28 @@ The following mesh types may be stored in a field:
 
 \meshdoc{84}{hexvol}{Hex Vol Mesh}{A Hex Volume mesh is a subdivision of space into hexagonal elements.}
 
-\subsection{Field Types}
-\label{sec:field-types}
+\subsubsection{Matrices}
 
+\sr{} supports three matrix types: 
 
-A \sr{} field is an object that contains a geometric mesh and a
-collection of data values mapped on to that mesh.  Data can be stored
-at the nodes, edges, faces, and cells of the mesh.
+\begin{description}
+\descitem{\datatype{ColumnMatrix}} An \(Mx1\) matrix using \(M\)
+storage units.
 
-The following C++/SCI data types may be stored in a Field:
+\descitem{\datatype{DenseMatrix}} An \(MxN\) matrix using \(MxN\)
+storage units.
 
-\begin{itemize}
-\item double, float
-\item int, short, unsigned, unsigned short
-\item char, unsigned char
-\item Tensor
-\item Vector
-\end{itemize}
+\descitem{\datatype{SparseRowMatrix}} A \(MxN\) matrix where most
+elements are zero and no storage is allocated for zero valued
+elements.
+\end{description}
 
-The following mesh types may be stored in a field:
+\datatype{ColumnMatrix},
+\datatype{DenseMatrix}, and \datatype{SparseRowMatrix}.
 
-%begin{latexonly}
-\newcommand{\meshdoc}[4]{%
-  \includegraphics[0,0][100,#1]{Figures/#2.eps.gz}
-  {#4}
-}
-%end{latexonly}
-\begin{htmlonly}
-  \newcommand{\meshdoc}[4]{%
-    \htmladdimg[align=left,alt="#3"]
-    {../../Tutorial/images/figures/#2.gif}
-    #4 \begin{rawhtml}<br clear="all"/>\end{rawhtml}
-  }
-\end{htmlonly}
+\subsubsection{Color Map}
 
-\meshdoc{100}{pointcloud}{Point Cloud Mesh}{A Point Cloud mesh is a
-  set of unconnected points.}
-
-\meshdoc{60}{ScanlineField}{Scanline Mesh}{A Scanline Mesh is a
-  regularly segmented straight line regularly segmented straight line
-  (a regular 1D grid).  (a regular 1D grid).}
-
-\meshdoc{60}{ContourField}{Contour Field Mesh}{A Curve mesh is a 
-  segmented curve.}
-
-\meshdoc{100}{ImageField}{Image Mesh}{An Image mesh is a regular 2D
-  grid. Note than an Image mesh is not used for image processing since
-  \sr{} does not support that function.}
-
-\meshdoc{65}{trisurf}{Tri Surface Mesh}{A Tri Surface mesh is a
-  surface made of connected triangles.}
-
-\meshdoc{83}{quadsurf}{Quad Surface Mesh}{A Quad Surface mesh is a surface made of connected quadrilaterals.}
-
-\meshdoc{87}{latticevol}{Lat Vol Mesh}{A Lattice Volume mesh is a regular 3D grid.}
-
-\meshdoc{60}{tetvol}{Tet Vol Mesh}{A Tet Volume mesh is a subdivision of space into tetrahedral elements.}
-
-\meshdoc{60}{hexvol}{Hex Vol Mesh}{A Hex Volume mesh is a subdivision of space into hexagonal elements.}
+\sr{} \datatype{ColorMap} type is a mapping of color values to data values.
 
 %%% Local Variables: 
 %%% mode: latex
