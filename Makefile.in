@@ -100,8 +100,6 @@ packmaker: $(SRCTOP)/scripts/packmaker.in $(OBJTOP)/Makefile
 $(LIBDIR):
 	mkdir -p $(LIBDIR)
 
-$(ALLOBJS): $(ALLGEN)
-
 # This rule must be after the includes, so that it will find $(SIDL_EXE)
 %_sidl.o: %_sidl.cc %_sidl.h
 
