@@ -3185,6 +3185,27 @@ fi
 AC_SUBST(DEF_SCIRUN2)
 AC_SUBST(BUILD_SCIRUN2)
 
+
+##  ---------------------------------------------------------------------
+##  --------------------  Fix Frost config vars  ------------------------
+##  ---------------------------------------------------------------------
+##  Now that we have run configure with the (xlc,xlC,xlf) compilers, we
+##  need to change those to (mpxlc,mpxlC,mpxlf) which automatically use
+##  the mpi libraries, so we need to set the MPI variables to be blank.
+##  ---------------------------------------------------------------------
+
+  case $host in
+    *aix*)
+	CC=`echo $CC | sed 's,x,mpx,g'`
+	CXX=`echo $CXX | sed 's,x,mpx,g'`
+	F77=`echo $F77 | sed 's,x,mpx,g'`
+	MPI_LIB_FLAG=""
+	MPI_LIB_DIR_FLAG=""
+	INC_MPI_H=""
+	;;
+  esac
+
+
 ##  ---------------------------------------------------------------------
 ##  --------------------  generate output files  ------------------------
 ##  ---------------------------------------------------------------------
