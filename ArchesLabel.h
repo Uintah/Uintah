@@ -59,7 +59,14 @@ namespace Uintah {
       // Cell type
 
       const VarLabel* d_cellTypeLabel;//computed for old_dw in cellTypeInit
-
+     
+      // Labels for inlet and flow rate
+      const VarLabel* d_totalflowINLabel;
+      const VarLabel* d_totalflowOUTLabel;
+      const VarLabel* d_totalflowOUToutbcLabel;
+      // net outlet area, mass balance, and overall outlet velocity
+      const VarLabel* d_totalAreaOUTLabel;
+      const VarLabel* d_denAccumLabel;
       // Density Labels
 
       //computed for old_dw in paramInit
@@ -321,6 +328,9 @@ namespace Uintah {
 
       const VarLabel* d_mmcellTypeLabel;
       const VarLabel* d_mmgasVolFracLabel;
+      // for reacting flows
+      const VarLabel* d_tempINLabel;
+      const VarLabel* d_co2INLabel;
       const VarLabel* d_denRefArrayLabel;
       const VarLabel* d_densityMicroLabel;
       const VarLabel* d_densityMicroINLabel;

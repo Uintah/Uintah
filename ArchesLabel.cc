@@ -29,6 +29,18 @@ ArchesLabel::ArchesLabel()
   // Cell type
   d_cellTypeLabel = scinew VarLabel("cellType", 
 				  CCVariable<int>::getTypeDescription() );
+  // labels for inlet and outlet flow rates
+  d_totalflowINLabel = scinew VarLabel("totalflowIN",
+     ReductionVariable<double, Reductions::Sum<double> >::getTypeDescription()); 
+  d_totalflowOUTLabel = scinew VarLabel("totalflowOUT",
+     ReductionVariable<double, Reductions::Sum<double> >::getTypeDescription()); 
+  d_totalflowOUToutbcLabel = scinew VarLabel("totalflowOUToutbc",
+     ReductionVariable<double, Reductions::Sum<double> >::getTypeDescription()); 
+  d_totalAreaOUTLabel = scinew VarLabel("totalAreaOUT",
+     ReductionVariable<double, Reductions::Sum<double> >::getTypeDescription()); 
+  d_denAccumLabel = scinew VarLabel("denAccum",
+     ReductionVariable<double, Reductions::Sum<double> >::getTypeDescription()); 
+
   // Density Labels
   d_densityINLabel = scinew VarLabel("densityIN", 
 				   CCVariable<double>::getTypeDescription() );
@@ -289,6 +301,13 @@ ArchesLabel::ArchesLabel()
   d_mmgasVolFracLabel = scinew VarLabel("mmgasVolFrac",
 					CCVariable<double>::getTypeDescription() );
 
+    // for reacting flows
+  d_tempINLabel = scinew VarLabel("tempIN",
+				  CCVariable<double>::getTypeDescription() );
+  d_co2INLabel = scinew VarLabel("co2IN",
+				  CCVariable<double>::getTypeDescription() );
+
+
   // Array containing the reference density multiplied by the void fraction
   // used for correct reference density subtraction in the multimaterial
   // case
@@ -308,7 +327,8 @@ ArchesLabel::ArchesLabel()
 
   d_pressPlusHydroLabel = scinew VarLabel("pPlusHydro",
 					CCVariable<double>::getTypeDescription() );
-;
+
+
 }
 
 //****************************************************************************

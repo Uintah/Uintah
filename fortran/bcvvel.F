@@ -215,20 +215,22 @@ C--------------------------------------------------------------------
 C     PRESSURE BOUNDARY CONDITONS
 C       EAST AND/OR WEST WALLS
 C--------------------------------------------------------------------
-      DO 210 K = kst,kend
-         DO 200 J = jst,jend
-            IF (PCELL(iEndGhost,J,K).EQ.PBCFLD
-     &           .AND. UU(iEndGhost+1,J,K).GT.0.0) THEN
-               VV(iEndGhost,J,K) = VV(iend,J,K)
-               AE(iend,J,K) = 2.0*TINY
-            END IF
-            IF (PCELL(iBegGhost,J,K).EQ.PBCFLD
-     &           .AND.UU(iBegGhost,J,K).LT.0.0) THEN
-               VV(iBegGhost,J,K) = VV(ist,J,K)
-               AW(ist,J,K) = 2.0*TINY
-            END IF
- 200     CONTINUE
- 210  CONTINUE
+      if (xminus.or.xplus) then
+         DO 210 K = kst,kend
+            DO 200 J = jst,jend
+               IF (PCELL(iEndGhost,J,K).EQ.PBCFLD
+     &              .AND. UU(iEndGhost+1,J,K).GT.0.0) THEN
+                  VV(iEndGhost,J,K) = VV(iend,J,K)
+                  AE(iend,J,K) = 2.0*TINY
+               END IF
+               IF (PCELL(iBegGhost,J,K).EQ.PBCFLD
+     &              .AND.UU(iBegGhost,J,K).LT.0.0) THEN
+                  VV(iBegGhost,J,K) = VV(ist,J,K)
+                  AW(ist,J,K) = 2.0*TINY
+               END IF
+ 200        CONTINUE
+ 210     CONTINUE
+      endif
 
 C--------------------------------------------------------------------
 C     PRESSURE BOUNDARY CONDITONS

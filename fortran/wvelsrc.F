@@ -10,8 +10,8 @@ c*********************************************************************
      &     domLoV, domHiV, VV,
      &     domLoeg, domHieg, domLo, domHi, den, vis,
      $     domLong, domHing, old_den,
+     $     domLodenref, domHidenref, den_ref,
      &     grav, deltat, 
-     $     den_ref,
      &     CEE, CWE, CWW, 
      &     CNN, CSN, CSS,
      &     CTTW, CBTW, CBBW, 
@@ -89,12 +89,14 @@ c*********************************************************************
      $     domLong(2):domHing(2), 
      &     domLong(3):domHing(3))
 
-      double precision DELTAT, GRAV
+      integer domLodenref(3), domHidenref(3)
 
       double precision DEN_REF(
-     $     domLoeg(1):domHieg(1), 
-     $     domLoeg(2):domHieg(2), 
-     &     domLoeg(3):domHieg(3))
+     $     domLodenref(1):domHidenref(1), 
+     $     domLodenref(2):domHidenref(2), 
+     &     domLodenref(3):domHidenref(3))
+
+      double precision DELTAT, GRAV
 
       double precision CEE(domLo(1):domHi(1))
       double precision CWE(domLo(1):domHi(1))
