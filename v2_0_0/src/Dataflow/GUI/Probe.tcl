@@ -50,8 +50,8 @@ itcl_class SCIRun_FieldsCreate_Probe {
 	set $this-face ""
 	set $this-cell ""
 	set $this-show-node 1
-	set $this-show-edge 1
-	set $this-show-face 1
+	set $this-show-edge 0
+	set $this-show-face 0
 	set $this-show-cell 1
 	set $this-moveto ""
 	set $this-probe_scale 5.0
