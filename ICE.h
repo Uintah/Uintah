@@ -538,7 +538,7 @@ using namespace SCIRun;
       bool switchDebug_advance_advect;
       bool switchTestConservation; 
      
-      
+      int  d_surroundingMatl_indx;
       bool d_RateForm;
       bool d_EqForm;
       bool d_impICE;
@@ -685,10 +685,6 @@ using namespace SCIRun;
       };
       ICEModelSetup* d_modelSetup;
     };
-
-#define SURROUND_MAT 0        /* Mat index of surrounding material, assumed */
- 
-
 } // End namespace Uintah
 
 #endif
