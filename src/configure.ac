@@ -1563,6 +1563,8 @@ case $host in
       #include <values.h>
       #include <malloc.h>
       ],,,,,,not-optional)
+    DEF_IEEEFP="#define HAVE_IEEEFP_H 1"
+    AC_SUBST(DEF_IEEEFP)
     ;;
   *)
     SCI_TRY_LINK(STD_HDRS,required standard headers,[
