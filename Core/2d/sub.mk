@@ -32,10 +32,12 @@ SRCS     += \
 	$(SRCDIR)/Graph.cc \
 	$(SRCDIR)/HairObj.cc \
 	$(SRCDIR)/Hairline.cc \
+	$(SRCDIR)/HistObj.cc \
 	$(SRCDIR)/OpenGL.cc \
 	$(SRCDIR)/OpenGLWindow.cc \
 	$(SRCDIR)/Point2d.cc \
 	$(SRCDIR)/Polyline.cc \
+	$(SRCDIR)/LockedPolyline.cc \
 	$(SRCDIR)/ScrolledOpenGLWindow.cc \
 	$(SRCDIR)/Vector2d.cc \
 	$(SRCDIR)/Widget.cc \
