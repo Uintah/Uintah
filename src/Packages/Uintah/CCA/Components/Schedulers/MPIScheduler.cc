@@ -717,6 +717,11 @@ MPIScheduler::execute(const ProcessorGroup * pg)
     default:
       SCI_THROW(InternalError("Unknown task type"));
     } // end switch( task->getTask()->getType() )
+
+    if(dws[dws.size()-1] && dws[dws.size()-1]->timestepAborted()){
+      dbg << "Aborting timestep after task: " << *task->getTask() << '\n';
+      break;
+    }
   } // end while( numTasksDone < ntasks )
 
   // wait for all tasks to finish -- i.e. MixedScheduler

@@ -84,6 +84,7 @@ WARNING
     // Insert Documentation Here:
     virtual void advanceDataWarehouse(const GridP& grid);
     virtual void fillDataWarehouses(const GridP& grid);
+    virtual void replaceDataWarehouse(int index, const GridP& grid);
 
     // Get the expected extents that may be needed for a particular variable
     // on a particular patch (which should include expected ghost cells.
