@@ -7,7 +7,8 @@ include $(SRCTOP)/scripts/smallso_prologue.mk
 
 SRCDIR   := Uintah/Modules/Visualization
 
-SRCS     += $(SRCDIR)/GridVisualizer.cc \
+SRCS     += \
+	$(SRCDIR)/GridVisualizer.cc \
 	$(SRCDIR)/NodeHedgehog.cc \
 	$(SRCDIR)/TimestepSelector.cc \
 	$(SRCDIR)/ScalarFieldExtractor.cc \
@@ -17,9 +18,12 @@ SRCS     += $(SRCDIR)/GridVisualizer.cc \
 	$(SRCDIR)/RescaleColorMapForParticles.cc \
 	$(SRCDIR)/ParticleVis.cc \
 	$(SRCDIR)/EigenEvaluator.cc \
+	$(SRCDIR)/ParticleEigenEvaluator.cc \
 	$(SRCDIR)/InPlaneEigenEvaluator.cc \
-	$(SRCDIR)/TensorElementExtractor.cc
-
+	$(SRCDIR)/ParticleInPlaneEigenEvaluator.cc \
+	$(SRCDIR)/TensorElementExtractor.cc \
+	$(SRCDIR)/ParticleTensorElementExtractor.cc\
+#[INSERT NEW CODE FILE HERE]
 
 PSELIBS :=  PSECore/Dataflow PSECore/Datatypes \
         SCICore/Thread SCICore/Persistent SCICore/Exceptions \
@@ -35,6 +39,24 @@ include $(SRCTOP)/scripts/smallso_epilogue.mk
 
 #
 # $Log$
+# Revision 1.7.4.1  2000/10/26 10:06:28  moulding
+# merge HEAD into FIELD_REDESIGN
+#
+# Revision 1.11  2000/10/24 05:57:58  moulding
+# new module maker Phase 2: new module maker goes online
+#
+# These changes clean out the last remnants of the old module maker and
+# bring the new module maker online.
+#
+# Revision 1.10  2000/10/18 20:19:32  witzel
+# Added ParticleInPlaneEigenEvaluator
+#
+# Revision 1.9  2000/10/18 19:09:47  witzel
+# Added ParticleTensorElementExtractor
+#
+# Revision 1.8  2000/10/17 22:47:42  witzel
+# Added ParticleEigenEvaluator.
+#
 # Revision 1.7  2000/09/20 23:46:08  witzel
 # Added TensorElementExtractor
 #
