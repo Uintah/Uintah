@@ -126,13 +126,13 @@ StreamLinesAlgoT<SMESH, SLOC>::execute(MeshHandle seed_mesh_h,
     {
       n1 = cmesh->add_node(*node_iter);
       cf->resize_fdata();
-      cf->set_value((double)n1, n1);
+      cf->set_value((double)(*seed_iter), n1);
       ++node_iter;
       while (node_iter != nodes.end())
       {
 	n2 = cmesh->add_node(*node_iter);
 	cf->resize_fdata();
-	cf->set_value((double)n2, n2);
+	cf->set_value((double)(*seed_iter), n2);
 	cmesh->add_edge(n1, n2);
 	n1 = n2;
 	++node_iter;
