@@ -1,6 +1,6 @@
 %define defname SCIRun
 %define defver	1.20
-%define dotver  2
+%define dotver  3
 %define gccver  3.2.2
 %define plat	rh9.0
 %define distro  Red Hat 9.0
@@ -13,7 +13,7 @@
 
 Name:		%{defname}WithFusion
 Version:	%{defver}.%{dotver}
-Serial:		5
+Serial:		6
 Release:	%{plat}
 Summary:	Problem Solving Environment Software
 Copyright:	University of Utah Limited
