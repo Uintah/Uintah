@@ -187,6 +187,8 @@ void MPMPetscSolver::destroyMatrix(bool recursion)
     }
   }
 #endif
+  if (recursion == false)
+    d_DOF.clear();
 }
 
 void MPMPetscSolver::fillMatrix(int i,int j,double value)
