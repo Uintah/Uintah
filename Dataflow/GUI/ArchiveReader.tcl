@@ -39,9 +39,7 @@ itcl_class Uintah_DataIO_ArchiveReader {
     method ui {} { 
         set w .ui[modname] 
 	if {[winfo exists $w]} {
-	    wm deiconify $w
-	    raise $w
-	    return;
+	    return
 	}
 	global $this-startFrame
 	global $this-endFrame
@@ -57,9 +55,9 @@ itcl_class Uintah_DataIO_ArchiveReader {
         set n "$this-c needexecute " 
   
         frame $w.f1 -relief groove -borderwidth 2
-	pack $w.f1 -in $w -side left
-	
-	
+	pack $w.f1 -in $w -side top
+
+	makeSciButtonPanel $w $w $this -no_execute "Select \"$this selectfile\" \"Press this after selecting an uda directory\""
 	if { [string compare [set $this-filebase] ""] == 0 } {
 	    if { [info exists env(PSE_DATA)] } {
 		set $this-filebase $env(PSE_DATA)
@@ -70,12 +68,6 @@ itcl_class Uintah_DataIO_ArchiveReader {
 	} else {
 	    $this makeFilebox $w.f1
 	}
-	
-	button $w.f1.select -text Select -command "$this selectfile"
-	pack $w.f1.select -side left -padx 2 -pady 2
-	button $w.f1.close -text Close -command "wm withdraw $w"
-	pack $w.f1.close -side left -padx 2 -pady 2
-
     } 
 
     method selectfile {} {
