@@ -61,7 +61,9 @@
 #include <Dataflow/Ports/GeometryPort.h>
 #include <Dataflow/Modules/Render/Ball.h>
 
-#if defined(__linux)
+#define USE_PBUFFER
+
+#if defined(USE_PBUFFER)
 #include <Dataflow/Modules/Render/PBuffer.h>
 #endif
  
@@ -199,7 +201,7 @@ private:
   Window win;
   Display* dpy;
   GLXContext cx;
-#if defined(__linux)
+#if defined(USE_PBUFFER)
   PBuffer pbuffer;
 #endif
   int maxlights;
