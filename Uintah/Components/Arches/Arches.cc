@@ -53,6 +53,8 @@ Arches::Arches( int MpiRank, int MpiProcesses ) :
 				    CCVariable<double>::getTypeDescription() );
   d_wVelocityLabel = scinew VarLabel("wVelocity", 
 				    CCVariable<double>::getTypeDescription() );
+  d_scalarLabel = scinew VarLabel("scalar", 
+				  CCVariable<double>::getTypeDescription() );
   d_viscosityLabel = scinew VarLabel("viscosity", 
 				     CCVariable<double>::getTypeDescription() );
 }
@@ -91,12 +93,6 @@ Arches::problemSetup(const ProblemSpecP& params,
   d_props = scinew Properties();
   d_props->problemSetup(db);
   d_nofScalars = d_props->getNumMixVars();
-
-  // Create the labels for the scalars
-  for (int ii = 0; ii < d_nofScalars; ii++) {
-    d_scalarLabel.push_back(scinew VarLabel("scalar"+(char)(ii), 
-				  CCVariable<double>::getTypeDescription() ));
-  }
 
   // read turbulence model
   string turbModel;
@@ -172,9 +168,8 @@ Arches::scheduleInitialize(const LevelP& level,
       tsk->computes(dw, d_vVelocityLabel, matlIndex, patch);
       tsk->computes(dw, d_wVelocityLabel, matlIndex, patch);
       tsk->computes(dw, d_pressureLabel, matlIndex, patch);
-      for (int ii = 0; ii < d_nofScalars; ii++) {
-        tsk->computes(dw, d_scalarLabel[ii], matlIndex, patch);
-      }
+      for (int ii = 0; ii < d_nofScalars; ii++) 
+	tsk->computes(dw, d_scalarLabel, ii, patch);
       tsk->computes(dw, d_densityLabel, matlIndex, patch);
       tsk->computes(dw, d_viscosityLabel, matlIndex, patch);
       sched->addTask(tsk);
@@ -272,7 +267,7 @@ Arches::paramInit(const ProcessorContext* ,
   old_dw->allocate(wVelocity, d_wVelocityLabel, matlIndex, patch);
   old_dw->allocate(pressure, d_pressureLabel, matlIndex, patch);
   for (int ii = 0; ii < d_nofScalars; ii++) {
-    old_dw->allocate(scalar[ii], d_scalarLabel[ii], matlIndex, patch);
+    old_dw->allocate(scalar[ii], d_scalarLabel, ii, patch);
   }
   old_dw->allocate(density, d_densityLabel, matlIndex, patch);
   old_dw->allocate(viscosity, d_viscosityLabel, matlIndex, patch);
@@ -318,7 +313,7 @@ Arches::paramInit(const ProcessorContext* ,
   old_dw->put(wVelocity, d_wVelocityLabel, matlIndex, patch);
   old_dw->put(pressure, d_pressureLabel, matlIndex, patch);
   for (int ii = 0; ii < d_nofScalars; ii++) {
-    old_dw->put(scalar[ii], d_scalarLabel[ii], matlIndex, patch);
+    old_dw->put(scalar[ii], d_scalarLabel, ii, patch);
   }
   old_dw->put(density, d_densityLabel, matlIndex, patch);
   old_dw->put(viscosity, d_viscosityLabel, matlIndex, patch);
@@ -349,6 +344,9 @@ Arches::paramInit(const ProcessorContext* ,
 
 //
 // $Log$
+// Revision 1.36  2000/06/13 06:02:30  bbanerje
+// Added some more StencilMatrices and vector<CCVariable> types.
+//
 // Revision 1.35  2000/06/12 21:29:59  bbanerje
 // Added first Fortran routines, added Stencil Matrix where needed,
 // removed unnecessary CCVariables (e.g., sources etc.)

@@ -167,9 +167,7 @@ private:
       const VarLabel* d_uVelocityLabel;
       const VarLabel* d_vVelocityLabel;
       const VarLabel* d_wVelocityLabel;
-      const VarLabel* d_xScalarLabel;
-      const VarLabel* d_yScalarLabel;
-      const VarLabel* d_zScalarLabel;
+      const VarLabel* d_scalarLabel;
       const VarLabel* d_densityLabel;
       const VarLabel* d_viscosityLabel;
 
@@ -185,6 +183,9 @@ private:
 
 //
 // $Log$
+// Revision 1.13  2000/06/13 06:02:31  bbanerje
+// Added some more StencilMatrices and vector<CCVariable> types.
+//
 // Revision 1.12  2000/06/07 06:13:55  bbanerje
 // Changed CCVariable<Vector> to CCVariable<double> for most cases.
 // Some of these variables may not be 3D Vectors .. they may be Stencils

@@ -163,12 +163,23 @@ private:
       const VarLabel* d_uVelocityLabel;
       const VarLabel* d_vVelocityLabel;
       const VarLabel* d_wVelocityLabel;
-      const VarLabel* d_xScalarLabel;
-      const VarLabel* d_yScalarLabel;
-      const VarLabel* d_zScalarLabel;
+      const VarLabel* d_scalarLabel;
       const VarLabel* d_pressureLabel;
       const VarLabel* d_densityLabel;
       const VarLabel* d_viscosityLabel;
+      const VarLabel* d_uVelCoefLabel;
+      const VarLabel* d_vVelCoefLabel;
+      const VarLabel* d_wVelCoefLabel;
+      const VarLabel* d_uVelConvCoefLabel;
+      const VarLabel* d_vVelConvCoefLabel;
+      const VarLabel* d_wVelConvCoefLabel;
+      const VarLabel* d_presCoefLabel;
+      const VarLabel* d_scalCoefLabel;
+      const VarLabel* d_uVelLinSrcLabel;
+      const VarLabel* d_vVelLinSrcLabel;
+      const VarLabel* d_wVelLinSrcLabel;
+      const VarLabel* d_presLinSrcLabel;
+      const VarLabel* d_scalLinSrcLabel;
 
 }; // end class Discretization
 } // end namespace ArchesSpace
@@ -178,6 +189,9 @@ private:
   
 //
 // $Log$
+// Revision 1.15  2000/06/13 06:02:31  bbanerje
+// Added some more StencilMatrices and vector<CCVariable> types.
+//
 // Revision 1.14  2000/06/12 21:29:59  bbanerje
 // Added first Fortran routines, added Stencil Matrix where needed,
 // removed unnecessary CCVariables (e.g., sources etc.)

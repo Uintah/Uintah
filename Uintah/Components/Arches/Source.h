@@ -171,27 +171,15 @@ private:
       const VarLabel* d_wVelocityLabel ;
       const VarLabel* d_velLinearSrcLabel ;
       const VarLabel* d_velNonlinearSrcLabel ;
-      const VarLabel* d_xuVelCoeffLabel ;
-      const VarLabel* d_yuVelCoeffLabel ;
-      const VarLabel* d_zuVelCoeffLabel ;
+      const VarLabel* d_uVelCoeffLabel ;
       const VarLabel* d_uNonlinearSrcLabel ;
-      const VarLabel* d_xvVelCoeffLabel ;
-      const VarLabel* d_yvVelCoeffLabel ;
-      const VarLabel* d_zvVelCoeffLabel ;
+      const VarLabel* d_vVelCoeffLabel ;
       const VarLabel* d_vNonlinearSrcLabel ;
-      const VarLabel* d_xwVelCoeffLabel ;
-      const VarLabel* d_ywVelCoeffLabel ;
-      const VarLabel* d_zwVelCoeffLabel ;
+      const VarLabel* d_wVelCoeffLabel ;
       const VarLabel* d_wNonlinearSrcLabel ;
-      const VarLabel* d_xScalarLabel ;
-      const VarLabel* d_yScalarLabel ;
-      const VarLabel* d_zScalarLabel ;
-      const VarLabel* d_xScalarLinearSrcLabel ;
-      const VarLabel* d_yScalarLinearSrcLabel ;
-      const VarLabel* d_zScalarLinearSrcLabel ;
-      const VarLabel* d_xScalarNonlinearSrcLabel ;
-      const VarLabel* d_yScalarNonlinearSrcLabel ;
-      const VarLabel* d_zScalarNonlinearSrcLabel ;
+      const VarLabel* d_scalarLabel ;
+      const VarLabel* d_scalarLinearSrcLabel ;
+      const VarLabel* d_scalarNonlinearSrcLabel ;
 
 }; // end Class Source
 
@@ -201,6 +189,9 @@ private:
   
 //
 // $Log$
+// Revision 1.11  2000/06/13 06:02:32  bbanerje
+// Added some more StencilMatrices and vector<CCVariable> types.
+//
 // Revision 1.10  2000/06/12 21:30:00  bbanerje
 // Added first Fortran routines, added Stencil Matrix where needed,
 // removed unnecessary CCVariables (e.g., sources etc.)
