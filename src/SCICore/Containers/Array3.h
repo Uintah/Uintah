@@ -215,6 +215,20 @@ void Array3<T>::initialize(const T& t)
 }
 
 template<class T>
+Array3<T>& Array3<T>::operator=(const Array3<T> &copy)
+{
+  // ok, i did this, but i'm not quite sure it will work...
+  
+  newsize( copy.dim1(), copy.dim2(), copy.dim3() );
+
+  for(int i=0;i<dm1;i++)
+    for(int j=0;j<dm2;j++)
+      for(int k=0;k<dm3;k++)
+        objs[i][j][k] = copy.objs[i][j][k];
+  return( *this );
+}
+
+template<class T>
 T* Array3<T>::get_onedim()
 {
   int i,j,k, index;
@@ -292,6 +306,9 @@ void Pio(Piostream& stream, Containers::Array3<T>*& data) {
 
 //
 // $Log$
+// Revision 1.7  1999/09/03 06:07:20  dmw
+// added a Makefile.in for Leonid's files
+//
 // Revision 1.6  1999/08/29 00:46:51  sparker
 // Integrated new thread library
 // using statement tweaks to compile with both MipsPRO and g++
