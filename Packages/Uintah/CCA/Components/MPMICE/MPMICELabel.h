@@ -18,8 +18,6 @@ namespace Uintah {
       const VarLabel* cVolumeLabel;
       const VarLabel* vel_CCLabel;
       const VarLabel* vel_CC_scratchLabel;
-      const VarLabel* dvdt_CCLabel;
-      const VarLabel* dTdt_CCLabel;
       const VarLabel* temp_CCLabel;
       const VarLabel* temp_CC_scratchLabel;  // needed in doCCMomExchange()
       const VarLabel* press_NCLabel;
