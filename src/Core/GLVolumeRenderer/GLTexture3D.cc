@@ -27,6 +27,8 @@
 #include <Core/Thread/Thread.h>
 #include <Core/Thread/Semaphore.h>
 #include <Core/Thread/ThreadGroup.h>
+#include <Core/Util/DynamicCompilation.h>
+#include <Core/Algorithms/GLVolumeRenderer/GLTexture3DBuilder.h>
 
 #include <GL/gl.h>
 #include <iostream>
@@ -224,8 +226,9 @@ GLTexture3D::set_bounds()
 }
 
 
+template<class Reporter>
 void
-GLTexture3D::build_texture()
+GLTexture3D::build_texture( Reporter *reporter)
 {
   //  int x = mesh
 #ifdef __sgi
@@ -243,6 +246,31 @@ GLTexture3D::build_texture()
   string type = texfld_->get_type_description(1)->get_name();
   cerr << "Type = " << type << endl;
 
+#define use_alg
+#ifdef use_alg
+  // start new algorithm based code
+  const TypeDescription *td = texfld_->get_type_description();
+  cerr << "DC: type description = " << td->get_name() << endl;
+  LockingHandle<GLTexture3DBuilderAlg> builder;
+  CompileInfoHandle ci = GLTexture3DBuilderAlg::get_compile_info(td);
+  if ( !DynamicCompilation::compile(ci, builder, reporter ) ) {
+    reporter->error("GLTexture3DBuilder can not work on this Field");
+    return;
+  }
+
+  const int minpx = (int)minP_.x();
+  const int minpy = (int)minP_.y();
+  const int minpz = (int)minP_.z();
+
+  builder->set_caller( this );
+  builder->set_minmax( min_, max_ );
+  bontree_ = builder->build(minP_, maxP_, minpx, minpy, minpz,
+			    X_, Y_, Z_, 0, 
+			    texfld_.get_rep(), 
+			    0, 
+			    thread_sema, tg);
+#else
+  // old code
   const int minpx = (int)minP_.x();
   const int minpy = (int)minP_.y();
   const int minpz = (int)minP_.z();
@@ -290,6 +318,7 @@ GLTexture3D::build_texture()
   } else {
     cerr<<"Error: cast didn't work!\n";
   }
+#endif
 
   tg->join();
   delete tg;
@@ -297,7 +326,8 @@ GLTexture3D::build_texture()
   //  ASSERT(bontree_ != 0x0);
 }
 
-void GLTexture3D::replace_texture()
+template<class Reporter>
+void GLTexture3D::replace_texture( Reporter *reporter)
 {
 #ifdef __sgi
   max_workers = Max(Thread::numProcessors()/2, 2);
@@ -316,6 +346,25 @@ void GLTexture3D::replace_texture()
   const int minpx = (int)minP_.x();
   const int minpy = (int)minP_.y();
   const int minpz = (int)minP_.z();
+
+#ifdef use_alg
+  // start new algorithm based code
+  const TypeDescription *td = texfld_->get_type_description();
+  cerr << "DC: type description = " << td->get_name() << endl;
+  LockingHandle<GLTexture3DBuilderAlg> builder;
+  CompileInfoHandle ci = GLTexture3DBuilderAlg::get_compile_info(td);
+  if ( !DynamicCompilation::compile(ci, builder,reporter) ) {
+    reporter->error("GLTexture3DBuilder can not work on this Field");
+    return;
+  }
+
+  builder->set_caller( this );
+  builder->set_minmax( min_, max_ );
+  builder->replace_bon_tree_data(minP_, maxP_, minpx, minpy, minpz,
+				 X_, Y_, Z_, 0, 
+				 texfld_.get_rep(),
+				 bontree_,  thread_sema, tg);
+#else
 
   if (type == "double") {
     replace_bon_tree_data(minP_, maxP_, minpx, minpy, minpz,
@@ -340,6 +389,7 @@ void GLTexture3D::replace_texture()
   } else {
     cerr<<"Error: cast didn't work!\n";
   }
+#endif
 
   tg->join();
   delete tg;
@@ -480,6 +530,7 @@ GLTexture3D::set_max_brick_size(int maxBrick)
    }
 }
 
+#ifndef use_alg
 
 double
 GLTexture3D::SETVAL(double val)
@@ -639,6 +690,7 @@ GLTexture3D::run_make_low_res_brick_data::run()
 //  }    
 }
 
+#endif
 
 } // End namespace SCIRun
 

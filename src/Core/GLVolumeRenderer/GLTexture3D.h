@@ -19,6 +19,8 @@
 #ifndef GLTEXTURE3D_H
 #define GLTEXTURE3D_H
 
+#define use_alg
+
 #include <GL/gl.h>
 #include <Core/Datatypes/Datatype.h>
 #include <Core/GLVolumeRenderer/Brick.h>
@@ -32,6 +34,7 @@
 #include <Core/Thread/ThreadGroup.h>
 #include <Core/Thread/Mutex.h>
 #include <Core/Thread/Runnable.h>
+#include <Core/Util/ProgressReporter.h>
 #include <iostream>
 #include <sstream>
 #include <deque>
@@ -156,7 +159,8 @@ public:
   bool CC() const {return isCC_;}
   void getminmax( double& min, double& max) const { min = min_, max = max_;}
   virtual bool get_dimensions( int& nx, int& ny, int& nz );
-protected:
+  // yarden: fixme
+public: // protected:
   static int max_workers;
   ThreadGroup *tg;
   Octree<Brick*>* bontree_;
@@ -172,11 +176,21 @@ protected:
   double dx_, dy_, dz_;
   bool isCC_;
   bool reuse_bricks;
-  virtual void build_texture();
-  virtual void replace_texture();
+
   bool init(double& min, double &max, bool use_minmax);
   void set_bounds();
   void compute_tree_depth();
+
+#ifdef use_alg
+  ProgressReporter my_reporter_;
+  template<class Reporter> void build_texture( Reporter *);
+  template<class Reporter> void replace_texture( Reporter *);
+  void build_texture() { build_texture( &my_reporter_); }
+  void replace_texture() { replace_texture( &my_reporter_); }
+#else
+  void build_texture();
+  void replace_texture();
+
   template <class T>
     Octree<Brick*>* build_bon_tree(Point min, Point max,
 				   int xoff, int yoff, int zoff,
@@ -191,14 +205,19 @@ protected:
 			       int level, T *tex,
 			       Octree<Brick*>* parent,
 			       Semaphore* thread_sema, ThreadGroup* tg);
-private:
 
-  Transform transform_;
+
+private:
 
   double SETVAL(double);
   unsigned char SETVALC(double);
-  bool set_max_brick_size(int maxBrick);
 
+#endif
+
+  Transform transform_;
+
+  bool set_max_brick_size(int maxBrick);
+#ifndef use_alg
   template <class T>
     void build_child(int i, Point min, Point mid, Point max,
 		     int xoff, int yoff, int zoff,
@@ -251,7 +270,9 @@ private:
 				int level, Octree<Brick*>* node,
 				Array3<unsigned char>*& bd);
     virtual void run();
-  private:
+    // yarden: fixme
+    //private:
+  public:
     GLTexture3D* tex3D_;
     Octree<Brick*>* parent_;
     Semaphore *thread_sema_;
@@ -263,10 +284,11 @@ private:
     //    T* tex;
     Array3<unsigned char>* bd_;
   };
-
+#endif
 };
 
 
+#ifndef use_alg
 template <class T>
 void 
 GLTexture3D::replace_bon_tree_data(Point min, Point max,
@@ -1010,6 +1032,7 @@ GLTexture3D::run_make_brick_data<T>::run()
 #endif  
 }
 
+#endif
 } // End namespace SCIRun
 #endif
 

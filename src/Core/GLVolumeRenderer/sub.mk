@@ -43,7 +43,7 @@ SRCS +=	$(SRCDIR)/Brick.cc              \
 
 PSELIBS := Core/Persistent Core/Geometry Core/Exceptions \
 	Core/Math Core/Containers Core/Thread Core/Datatypes \
-	Core/GuiInterface Core/Geom Core/Util
+	Core/GuiInterface Core/Geom Core/Util Core/Algorithms/GLVolumeRenderer
 
 LIBS := $(GL_LIBRARY) $(M_LIBRARY)
 
