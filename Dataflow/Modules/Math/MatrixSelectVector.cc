@@ -369,6 +369,11 @@ MatrixSelectVector::execute()
     }
 
     ColumnMatrix *w = dynamic_cast<ColumnMatrix*>(weightsH.get_rep());
+    if (w == 0)
+    {
+      error("Weight Vector must be a column matrix.");
+      return;
+    }
     ColumnMatrix *cm;
     if (use_row) 
     {
