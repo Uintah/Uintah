@@ -5,6 +5,7 @@
 #include <Packages/Uintah/Core/ProblemSpec/ProblemSpecP.h>
 #include <Packages/Uintah/Core/ProblemSpec/ProblemSpec.h>
 #include <Packages/Uintah/CCA/Components/ICE/ICELabel.h>
+#include <Packages/Uintah/Core/Grid/CCVariable.h>
 
 namespace Uintah {
 
@@ -95,6 +96,13 @@ WARNING
                                       double& cv, double& Temp,
                                       double& press, double& dp_drho, 
                                       double& dp_de) = 0;
+         //per patch                          
+        virtual void computeTemp_CC(const Patch* patch,
+                                const CCVariable<double>& press, 
+                                const double& gamma,
+				    const CCVariable<double>& cv,
+                                const CCVariable<double>& rho_micro, 
+                                CCVariable<double>& Temp)=0;
 
 	 
 	 // Per patch
