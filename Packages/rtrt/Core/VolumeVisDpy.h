@@ -40,11 +40,6 @@ class VolumeVisDpy : public Runnable {
   int ncolors;
   int nalphas;
 
-  int selected_point;
-  // these are used to keep the points from moving too much
-  int min_x;
-  int max_x;
-  
   ScalarTransform1D<float,Color*> color_transform;
   ScalarTransform1D<float,float> alpha_transform;
   ScalarTransform1D<int,float> alpha_stripes;
@@ -53,6 +48,7 @@ class VolumeVisDpy : public Runnable {
   void draw_hist(GLuint fid, XFontStruct* font_struct);
   //  void move(float* range, int x, int y, int& redraw_range);
   void draw_alpha_curve(GLuint fid, XFontStruct* font_struct);
+  int min_x, max_x;
   int select_point(int x, int y);
   
   void write_data_file(char *out_file);
