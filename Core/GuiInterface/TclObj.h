@@ -52,10 +52,12 @@ public:
   string window() { return window_; }
   std::ostream &to_tcl() { return tcl_; }
   void command( const string &s);
+  int tcl_eval( const string &s, string &);
   void tcl_exec();
   virtual void set_id( const string &);
   virtual void set_window( const string&, const string &args, bool =true );
   virtual void set_window( const string&s ) { set_window(s,""); }
+  virtual void tcl_command( TCLArgs &, void *) {}
 };
 
 } // namespace SCIRun
