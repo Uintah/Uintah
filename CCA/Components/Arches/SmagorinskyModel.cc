@@ -342,6 +342,7 @@ SmagorinskyModel::reComputeTurbSubmodel(const ProcessorGroup*,
 					DataWarehouse* new_dw,
 				        const TimeIntegratorLabel* timelabels)
 {
+  double time = d_lab->d_sharedState->getElapsedTime();
   for (int p = 0; p < patches->size(); p++) {
     const Patch* patch = patches->get(p);
     int archIndex = 0; // only one arches material
@@ -395,7 +396,7 @@ SmagorinskyModel::reComputeTurbSubmodel(const ProcessorGroup*,
     IntVector idxLo = patch->getCellFORTLowIndex();
     IntVector idxHi = patch->getCellFORTHighIndex();
     double CF = d_CF;
-#if 0
+#if 1
     if (time < 2.0 ) 
       CF *= (time+ 0.0001)*0.5;
 #endif      

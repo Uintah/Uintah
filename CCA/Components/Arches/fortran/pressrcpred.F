@@ -68,7 +68,7 @@ c               apo = (4.0*den_old(i,j,k) - 3.0*den(i,j,k) -
 c     $                den_old_old(i,j,k))*vol/(2.*delta_t)
 c               apo = (den_old(i,j,k) - den(i,j,k))
 c     $                 *vol/delta_t
-               apo = 0.0
+               apo = 0.0D0
 
 #if 0
                   if (abs(apo).gt.abs(apomax)) then

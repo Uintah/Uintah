@@ -388,7 +388,8 @@ public:
 		    int index,
 		    CellInformation* cellinfo,
 		    ArchesVariables* vars,
-		    ArchesConstVariables* constvars);
+		    ArchesConstVariables* constvars,
+			    const double delta_t);
 
       void enthalpyPressureBC(const ProcessorGroup* pc,
 		    const Patch* patch,
@@ -426,6 +427,7 @@ public:
       void velRhoHatPressureBC(const ProcessorGroup* pc,
 			    const Patch* patch,
 			    CellInformation* cellinfo,
+			    const double delta_t,
 			    ArchesVariables* vars,
 			    ArchesConstVariables* constvars);
 

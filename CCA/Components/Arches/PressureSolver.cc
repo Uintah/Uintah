@@ -161,14 +161,11 @@ PressureSolver::sched_buildLinearMatrix(SchedulerP& sched,
   tsk->requires(Task::NewDW, d_lab->d_cellTypeLabel, 
 		Ghost::AroundCells, Arches::ONEGHOSTCELL);
 
-// pressure initial guess and underrelaxation value is taken from corresponding
-// time substep in the old_dw
-  if ((timelabels->integrator_step_name == "BEEmulation2")||
-      (timelabels->integrator_step_name == "BEEmulation3")) 
-  tsk->requires(Task::NewDW, timelabels->pressure_guess,
+  if (timelabels->integrator_step_number == TimeIntegratorStepNumber::First)
+  tsk->requires(Task::OldDW, timelabels->pressure_guess,
 		Ghost::None, Arches::ZEROGHOSTCELLS);
   else
-  tsk->requires(Task::OldDW, timelabels->pressure_guess,
+  tsk->requires(Task::NewDW, timelabels->pressure_guess,
 		Ghost::None, Arches::ZEROGHOSTCELLS);
 
   tsk->requires(Task::NewDW, d_lab->d_densityCPLabel, 
@@ -239,12 +236,11 @@ PressureSolver::buildLinearMatrix(const ProcessorGroup* pc,
     new_dw->get(constPressureVars.cellType, d_lab->d_cellTypeLabel, 
 		matlIndex, patch, Ghost::AroundCells, Arches::ONEGHOSTCELL);
 
-    if ((timelabels->integrator_step_name == "BEEmulation2")||
-        (timelabels->integrator_step_name == "BEEmulation3")) 
-    new_dw->get(constPressureVars.pressure, timelabels->pressure_guess, 
+    if (timelabels->integrator_step_number == TimeIntegratorStepNumber::First)
+    old_dw->get(constPressureVars.pressure, timelabels->pressure_guess, 
 		matlIndex, patch, Ghost::None, Arches::ZEROGHOSTCELLS);
     else
-    old_dw->get(constPressureVars.pressure, timelabels->pressure_guess, 
+    new_dw->get(constPressureVars.pressure, timelabels->pressure_guess, 
 		matlIndex, patch, Ghost::None, Arches::ZEROGHOSTCELLS);
 
     new_dw->get(constPressureVars.density, d_lab->d_densityCPLabel, 
@@ -346,9 +342,10 @@ PressureSolver::buildLinearMatrix(const ProcessorGroup* pc,
     d_boundaryCondition->pressureBC(pc, patch, old_dw, new_dw, 
 				    cellinfo, &pressureVars,&constPressureVars);
     // apply underelaxation to eqn
-    if (!(d_pressure_correction))
+// Pressure underrelaxation is turned off since it breaks continuity!!!
+/*    if (!(d_pressure_correction))
     d_linearSolver->computePressUnderrelax(pc, patch,
-					   &pressureVars, &constPressureVars);
+					   &pressureVars, &constPressureVars);*/
 
   }
 }
@@ -379,12 +376,11 @@ PressureSolver::sched_pressureLinearSolve(const LevelP& level,
   // coefficient for the variable for which solve is invoked
 
   if (!(d_pressure_correction))
-    if ((timelabels->integrator_step_name == "BEEmulation2")||
-        (timelabels->integrator_step_name == "BEEmulation3")) 
-    tsk->requires(Task::NewDW, timelabels->pressure_guess, 
+    if (timelabels->integrator_step_number == TimeIntegratorStepNumber::First)
+    tsk->requires(Task::OldDW, timelabels->pressure_guess, 
 		  Ghost::None, Arches::ZEROGHOSTCELLS);
     else
-    tsk->requires(Task::OldDW, timelabels->pressure_guess, 
+    tsk->requires(Task::NewDW, timelabels->pressure_guess, 
 		  Ghost::None, Arches::ZEROGHOSTCELLS);
 
   tsk->requires(Task::NewDW, d_lab->d_presCoefPBLMLabel, d_lab->d_stencilMatl,
@@ -497,12 +493,11 @@ PressureSolver::pressureLinearSolve(const ProcessorGroup* pc,
   new_dw->allocateAndPut(pressureVars.pressure, timelabels->pressure_out,
 			 matlIndex, patch, Ghost::None, Arches::ZEROGHOSTCELLS);
   if (!(d_pressure_correction))
-    if ((timelabels->integrator_step_name == "BEEmulation2")||
-        (timelabels->integrator_step_name == "BEEmulation3")) 
-    new_dw->copyOut(pressureVars.pressure, timelabels->pressure_guess, 
+    if (timelabels->integrator_step_number == TimeIntegratorStepNumber::First)
+    old_dw->copyOut(pressureVars.pressure, timelabels->pressure_guess, 
 	            matlIndex, patch, Ghost::None, Arches::ZEROGHOSTCELLS);
     else
-    old_dw->copyOut(pressureVars.pressure, timelabels->pressure_guess, 
+    new_dw->copyOut(pressureVars.pressure, timelabels->pressure_guess, 
 	            matlIndex, patch, Ghost::None, Arches::ZEROGHOSTCELLS);
   else
     pressureVars.pressure.initialize(0.0);

@@ -396,7 +396,7 @@ void EnthalpySolver::buildLinearMatrix(const ProcessorGroup* pc,
       new_dw->get(mxAbsW, timelabels->maxabsw_in);
     }
     maxAbsU = mxAbsU;
-    maxAbsV = mxAbsW;
+    maxAbsV = mxAbsV;
     maxAbsW = mxAbsW;
   }
     if (d_DORadiationCalc)
@@ -848,7 +848,7 @@ EnthalpySolver::enthalpyLinearSolve(const ProcessorGroup* pc,
     new_dw->get(mxAbsW, timelabels->maxabsw_in);
   }
   maxAbsU = mxAbsU;
-  maxAbsV = mxAbsW;
+  maxAbsV = mxAbsV;
   maxAbsW = mxAbsW;
 
   for (int p = 0; p < patches->size(); p++) {
