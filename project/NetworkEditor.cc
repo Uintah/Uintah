@@ -161,7 +161,6 @@ void NetworkEditor::do_scheduling()
     // A module is considered 'Repeat' if any of it's downstream modules
     // are 'Repeat'
     //
-    cerr << "Scheduler started...\n";
     int changed=1;
     int nmodules=net->nmodules();
     int any_changed=0;
@@ -171,7 +170,6 @@ void NetworkEditor::do_scheduling()
 	for(int i=0;i<nmodules;i++){
 	    Module* mod=net->module(i);
 	    changed |= mod->should_execute();
-	    cerr << "Module (" << mod << ") " << i << " state=" << mod->sched_state << endl;
 	}
 	any_changed|=changed;
     }
@@ -188,8 +186,6 @@ void NetworkEditor::do_scheduling()
 	    module->sched_state=Module::SchedDormant;
 	}
 	first_schedule=0;
-    } else {
-	cerr << "Scheduler decided not to execute\n";
     }
 }
 

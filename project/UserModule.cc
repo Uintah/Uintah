@@ -481,7 +481,6 @@ int UserModule::should_execute()
 	    IPort* port=iports[i];
 	    for(int c=0;c<port->nconnections();c++){
 		Module* mod=port->connection(c)->oport->get_module();
-		cerr << "upstream: (" << mod << ") sched_state=" << mod->sched_state << endl;
 		if(mod->sched_state == SchedNewData){
 		    sched_state=SchedNewData;
 		    changed=1;
