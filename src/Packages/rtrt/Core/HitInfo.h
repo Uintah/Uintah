@@ -34,7 +34,7 @@ public:
   // test min_t if was_hit is true, thereby making it impossible to
   // check the HitInfo if an occluder was hit.
   inline void shadowHit(Object* obj, double t) {
-    if(t>=1.e-4 && t<min_t){
+    if(t>=1.e-6 && t<min_t){
       was_hit=true;
       min_t=t;
       hit_obj=obj;
@@ -55,7 +55,7 @@ public:
   //
   // If obj becomes hit_obj, then true is returned.  False otherwise.
   inline bool hit(Object* obj, double t) {
-    if(t<1.e-4)
+    if(t<1.e-6)
       return false;
     if(was_hit){
       if(t<min_t){
