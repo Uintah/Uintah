@@ -462,8 +462,7 @@ _____________________________________________________________________*/
 void ICE::scheduleComputeStableTimestep(const LevelP& level,
                                       SchedulerP& sched)
 {
-  Task* t;
-  t = t;   // quite the compiler
+  Task* t = 0;
   if (d_EqForm) {             // EQ 
     cout_doing << "ICE::scheduleComputeStableTimestep " << endl;
     t = scinew Task("ICE::actuallyComputeStableTimestep",
@@ -610,8 +609,7 @@ void ICE::scheduleComputePressure(SchedulerP& sched,
                                           const MaterialSubset* press_matl,
                                           const MaterialSet* ice_matls)
 {
-  Task* t;
-  t = t;   // quite the compiler
+  Task* t = 0;
   if (d_RateForm) {     //RATE FORM
     cout_doing << "ICE::scheduleComputeRateFormPressure" << endl;
     t = scinew Task("ICE::computeRateFormPressure",
@@ -676,8 +674,7 @@ void ICE::scheduleComputeVel_FC(SchedulerP& sched,
                                 const MaterialSet* all_matls,
                                 bool recursion)
 { 
-  Task* t;
-  t = t;   // quite the compiler
+  Task* t = 0;
   if (d_RateForm) {     //RATE FORM
     cout_doing << "ICE::scheduleComputeFaceCenteredVelocitiesRF" << endl;
     t = scinew Task("ICE::computeFaceCenteredVelocitiesRF",
@@ -1000,7 +997,7 @@ void ICE::scheduleComputeLagrangianSpecificVolume(SchedulerP& sched,
                                             const MaterialSubset* press_matl,
                                             const MaterialSet* matls)
 {
-  Task* t;
+  Task* t = 0;
 
   if (d_RateForm) {     //RATE FORM
     cout_doing << "ICE::scheduleComputeLagrangianSpecificVolumeRF" << endl;
@@ -1054,8 +1051,7 @@ void ICE::scheduleAddExchangeToMomentumAndEnergy(SchedulerP& sched,
                                const MaterialSubset* press_matl,
                                const MaterialSet* all_matls)
 {
-  Task* t;
-  t = t;   // quite the compiler
+  Task* t = 0;
   if (d_RateForm) {     //RATE FORM
     cout_doing << "ICE::scheduleAddExchangeToMomentumAndEnergy_RF" << endl;
     t=scinew Task("ICE::addExchangeToMomentumAndEnergyRF",

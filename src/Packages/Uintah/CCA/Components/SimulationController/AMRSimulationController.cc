@@ -204,7 +204,7 @@ void AMRSimulationController::run()
    scheduler->execute(d_myworld);
 
    int n = 0;
-   double prevWallTime;
+   double prevWallTime = Time::currentSeconds();
    double sum_of_walltime = 0; // sum of all walltimes
    double sum_of_walltime_squares = 0; // sum all squares of walltimes
 

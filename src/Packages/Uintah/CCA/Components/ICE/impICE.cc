@@ -136,7 +136,7 @@ void ICE::scheduleImplicitVel_FC(SchedulerP& sched,
                                  const MaterialSet* all_matls, 
                                  const bool recursion)
 { 
-  Task* t;
+  Task* t = 0;
   if (d_RateForm) {     //RATE FORM
     throw ProblemSetupException("implicit Rate Form ICE isn't working");
   }
