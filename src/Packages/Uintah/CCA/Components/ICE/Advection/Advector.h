@@ -80,58 +80,95 @@ namespace Uintah {
    // we have the ignoreFaceFluxes functions.  This really cuts down on Code
    // bloat by eliminating the need for a specialized version of advect 
   
-  inline void ignoreFaceFluxesD( const IntVector&,
-                                 SFCXVariable<double>&, 
-                                 SFCYVariable<double>&,  
-                                 SFCZVariable<double>&,  
-                                 double[],  
-                                 double[],
-                                 const CCVariable<double>&)
-  { 
-  }
-  inline void ignoreFaceFluxesV( const IntVector&,
-                                 SFCXVariable<double>&, 
-                                 SFCYVariable<double>&,  
-                                 SFCZVariable<double>&,  
-                                 double[],  
-                                 Vector[],
-                                 const CCVariable<Vector>&)
-  { 
-  }
-  
-  inline double equalZero(double d1, double d2, double d3)
-  {
-    return d1 == 0.0 ? d2:d3;
-  }
-  
-  inline void saveFaceFluxes( const IntVector& c, 
-                              SFCXVariable<double>& q_XFC,           
-                              SFCYVariable<double>& q_YFC,           
-                              SFCZVariable<double>& q_ZFC,           
-                              double faceVol[], 
-                              double q_face_flux[],
-                              const CCVariable<double>& q_CC) 
-  {
-    double d_SMALL_NUM = 1e-100;
-    double tmp_XFC, tmp_YFC, tmp_ZFC, q_tmp;
-    q_tmp = q_CC[c];
-    tmp_XFC = fabs(q_face_flux[LEFT])  /(faceVol[LEFT]   + d_SMALL_NUM);
-    tmp_YFC = fabs(q_face_flux[BOTTOM])/(faceVol[BOTTOM] + d_SMALL_NUM);
-    tmp_ZFC = fabs(q_face_flux[BACK])  /(faceVol[BACK]   + d_SMALL_NUM);
-    
-    // if q_(X,Y,Z)FC = 0.0 then set it equal to q_CC[c]
-    tmp_XFC = equalZero(q_face_flux[LEFT],   q_tmp, tmp_XFC);
-    tmp_YFC = equalZero(q_face_flux[BOTTOM], q_tmp, tmp_YFC);
-    tmp_ZFC = equalZero(q_face_flux[BACK],   q_tmp, tmp_ZFC);
-    
-    q_XFC[c] = tmp_XFC;
-    q_YFC[c] = tmp_YFC;
-    q_ZFC[c] = tmp_ZFC;    
-  }  
+  class ignoreFaceFluxesD {
+    public:
+    inline void operator()( const IntVector&,
+			    SFCXVariable<double>&, 
+			    SFCYVariable<double>&,  
+			    SFCZVariable<double>&,  
+			    double[],  
+			    double[],
+			    const CCVariable<double>&)
+    {
+    }
+  };
 
+  class ignoreFaceFluxesV {
+    public:
+    inline void operator()( const IntVector&,
+			    SFCXVariable<double>&, 
+			    SFCYVariable<double>&,  
+			    SFCZVariable<double>&,  
+			    double[],  
+			    Vector[],
+			    const CCVariable<Vector>&)
+    {
+    }
+  };
+    
+  class saveFaceFluxes {
+    public:
+    inline double equalZero(double d1, double d2, double d3)
+    {
+      return d1 == 0.0 ? d2:d3;
+    }
+  
+    inline void operator()( const IntVector& c, 
+			    SFCXVariable<double>& q_XFC,           
+			    SFCYVariable<double>& q_YFC,           
+			    SFCZVariable<double>& q_ZFC,           
+			    double faceVol[], 
+			    double q_face_flux[],
+			    const CCVariable<double>& q_CC) 
+    {
+      double d_SMALL_NUM = 1e-100;
+      double tmp_XFC, tmp_YFC, tmp_ZFC, q_tmp;
+      q_tmp = q_CC[c];
+      tmp_XFC = fabs(q_face_flux[LEFT])  /(faceVol[LEFT]   + d_SMALL_NUM);
+      tmp_YFC = fabs(q_face_flux[BOTTOM])/(faceVol[BOTTOM] + d_SMALL_NUM);
+      tmp_ZFC = fabs(q_face_flux[BACK])  /(faceVol[BACK]   + d_SMALL_NUM);
+    
+      // if q_(X,Y,Z)FC = 0.0 then set it equal to q_CC[c]
+      tmp_XFC = equalZero(q_face_flux[LEFT],   q_tmp, tmp_XFC);
+      tmp_YFC = equalZero(q_face_flux[BOTTOM], q_tmp, tmp_YFC);
+      tmp_ZFC = equalZero(q_face_flux[BACK],   q_tmp, tmp_ZFC);
+    
+      q_XFC[c] = tmp_XFC;
+      q_YFC[c] = tmp_YFC;
+      q_ZFC[c] = tmp_ZFC;    
+    }
+  };
+
+  template <class T> struct facedata {
+    T d_data[6];
+  };
   struct fflux { double d_fflux[6]; };          //face flux
   struct eflux { double d_eflux[12]; };         //edge flux
   struct cflux { double d_cflux[8]; };          //corner flux
+
+  
+  template<class T>
+  MPI_Datatype makeMPI_facedata()
+  {
+    ASSERTEQ(sizeof(facedata<T>), sizeof(T)*6);
+    const TypeDescription* td = fun_getTypeDescription((T*)0);
+    MPI_Datatype mpitype;
+    MPI_Type_vector(1, 6, 6, td->getMPIType(), &mpitype);
+    MPI_Type_commit(&mpitype);
+    return mpitype;
+  }
+
+  template<class T>
+  const TypeDescription* fun_getTypeDescription(facedata<T>*)
+  {
+    static TypeDescription* td = 0;
+    if(!td){
+      td = scinew TypeDescription(TypeDescription::Other,
+				  "facedata", true, 
+				  &makeMPI_facedata<T>);
+    }
+    return td;
+  }
   
   const TypeDescription* fun_getTypeDescription(fflux*);    
   const TypeDescription* fun_getTypeDescription(eflux*);
@@ -142,6 +179,11 @@ namespace Uintah {
 
 namespace SCIRun {
 
+  template<class T>
+  void swapbytes( Uintah::facedata<T>& f) {
+    for(int i=0;i<6;i++)
+      swapbytes(f.d_data[i]);
+  }
   void swapbytes( Uintah::fflux& ); 
   void swapbytes( Uintah::eflux& );
   void swapbytes( Uintah::cflux& );
