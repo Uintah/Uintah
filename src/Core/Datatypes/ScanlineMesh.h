@@ -34,6 +34,7 @@
 #include <Core/Datatypes/Mesh.h>
 #include <Core/Datatypes/FieldIterator.h>
 #include <Core/Geometry/Transform.h>
+#include <Core/Geometry/Point.h>
 
 namespace SCIRun {
 
@@ -137,10 +138,18 @@ public:
   void get_edges(Edge::array_type &arr, const BBox &box) const;
 
   //! Get the size of an elemnt (length, area, volume)
-  double get_size(Node::index_type idx) const;
-  double get_size(Edge::index_type idx) const;
-  double get_size(Face::index_type idx) const;
-  double get_size(Cell::index_type idx) const;
+  double get_size(Node::index_type idx) const { return 0.0; }
+  double get_size(Edge::index_type idx) const
+  {
+    Node::array_type ra;
+    get_nodes(ra,idx);
+    Point p0,p1;
+    get_point(p0,ra[0]);
+    get_point(p1,ra[1]);
+    return (p0-p1).length();
+  }
+  double get_size(Face::index_type idx) const { return 0.0; };
+  double get_size(Cell::index_type idx) const { return 0.0; };
   double get_length(Edge::index_type idx) const { return get_size(idx); };
   double get_area(Face::index_type idx) const { return get_size(idx); };
   double get_volume(Cell::index_type idx) const { return get_size(idx); };

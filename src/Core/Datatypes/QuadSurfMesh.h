@@ -123,18 +123,28 @@ public:
 
   //! Get the size of an elemnt (length, area, volume)
   double get_size(Node::index_type idx) const;
-  double get_size(Edge::index_type idx) const;
+  double get_size(Edge::index_type idx) const
+  {
+    Node::array_type arr;
+    get_nodes(arr, idx);
+    Point p0, p1;
+    get_center(p0, arr[0]);
+    get_center(p1, arr[1]);
+    return (p1.asVector() - p0.asVector()).length();
+  }
   double get_size(Face::index_type idx) const
   {
     Node::array_type ra;
     get_nodes(ra,idx);
-    Point p0,p1,p2;
+    Point p0,p1,p2,p3;
     get_point(p0,ra[0]);
     get_point(p1,ra[1]);
     get_point(p2,ra[2]);
-    return (Cross(p0-p1,p2-p0)).length()*0.5;
-  };
-  double get_size(Cell::index_type idx) const;
+    get_point(p3,ra[3]);
+    return ((Cross(p0-p1,p2-p1)).length()+(Cross(p2-p3,p0-p3)).length()+
+	    (Cross(p3-p0,p1-p0)).length()+(Cross(p1-p2,p3-p2)).length())*0.25;
+  }
+  double get_size(Cell::index_type idx) const { return 0; };
   double get_length(Edge::index_type idx) const { return get_size(idx); };
   double get_area(Face::index_type idx) const { return get_size(idx); };
   double get_volume(Cell::index_type idx) const { return get_size(idx); };
