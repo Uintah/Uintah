@@ -34,9 +34,9 @@
 #include <sci_glx.h>
 
 #include <Core/Geom/ShaderProgramARB.h>
-#include <Core/Util/DebugStream.h>
 #include <Core/Thread/Mutex.h>
 #include <Core/Geom/TkOpenGLContext.h>
+#include <Core/Util/Assert.h>
 
 #include <iostream>
 using std::cerr;
@@ -44,52 +44,50 @@ using std::endl;
 using std::string;
 
 #if defined(GL_ARB_fragment_program) || defined(GL_ATI_fragment_shader)
-#  ifndef HAVE_GLEW
-#    ifndef GL_ARB_vertex_program
-#       define GL_VERTEX_PROGRAM_ARB 0x8620
-#       define GL_PROGRAM_ERROR_POSITION_ARB 0x864B
-#       define GL_PROGRAM_FORMAT_ASCII_ARB 0x8875
+#  ifndef GL_ARB_vertex_program
+#     define GL_VERTEX_PROGRAM_ARB 0x8620
+#     define GL_PROGRAM_ERROR_POSITION_ARB 0x864B
+#     define GL_PROGRAM_FORMAT_ASCII_ARB 0x8875
 
-        typedef void (GLAPIENTRY * PFNGLGENPROGRAMSARBPROC) (GLsizei n, GLuint* programs);
-        typedef void (GLAPIENTRY * PFNGLDELETEPROGRAMSARBPROC) (GLsizei n, const GLuint* programs);
-        typedef void (GLAPIENTRY * PFNGLBINDPROGRAMARBPROC) (GLenum target, GLuint program);
-        typedef void (GLAPIENTRY * PFNGLPROGRAMSTRINGARBPROC) (GLenum target, GLenum format, GLsizei len, const void* string);
-        typedef GLboolean (GLAPIENTRY * PFNGLISPROGRAMARBPROC) (GLuint program);
-        typedef void (GLAPIENTRY * PFNGLPROGRAMLOCALPARAMETER4FARBPROC) (GLenum target, GLuint index, GLfloat x, GLfloat y, GLfloat z, GLfloat w);
+      typedef void (GLAPIENTRY * PFNGLGENPROGRAMSARBPROC) (GLsizei n, GLuint* programs);
+      typedef void (GLAPIENTRY * PFNGLDELETEPROGRAMSARBPROC) (GLsizei n, const GLuint* programs);
+      typedef void (GLAPIENTRY * PFNGLBINDPROGRAMARBPROC) (GLenum target, GLuint program);
+      typedef void (GLAPIENTRY * PFNGLPROGRAMSTRINGARBPROC) (GLenum target, GLenum format, GLsizei len, const void* string);
+      typedef GLboolean (GLAPIENTRY * PFNGLISPROGRAMARBPROC) (GLuint program);
+      typedef void (GLAPIENTRY * PFNGLPROGRAMLOCALPARAMETER4FARBPROC) (GLenum target, GLuint index, GLfloat x, GLfloat y, GLfloat z, GLfloat w);
 
-#    endif /* GL_ARB_vertex_program */
-#    ifndef GL_ARB_fragment_program
-#      define GL_FRAGMENT_PROGRAM_ARB 0x8804
-#    endif /* GL_ARB_fragment_program */
+#  endif /* GL_ARB_vertex_program */
+#  ifndef GL_ARB_fragment_program
+#    define GL_FRAGMENT_PROGRAM_ARB 0x8804
+#  endif /* GL_ARB_fragment_program */
 
-#    if !defined(GLX_ARB_get_proc_address) || !defined(GLX_GLXEXT_PROTOTYPES)
-        extern "C" void ( * glXGetProcAddressARB (const GLubyte *procName)) (void);
-#    endif /* !defined(GLX_ARB_get_proc_address) || !defined(GLX_GLXEXT_PROTOTYPES) */
+#  if !defined(GLX_ARB_get_proc_address) || !defined(GLX_GLXEXT_PROTOTYPES)
+      extern "C" void ( * glXGetProcAddressARB (const GLubyte *procName)) (void);
+#  endif /* !defined(GLX_ARB_get_proc_address) || !defined(GLX_GLXEXT_PROTOTYPES) */
 
-#    ifdef __APPLE__
-#      include <mach-o/dyld.h>
-#      include <stdlib.h>
-#      include <string.h>
+#  ifdef __APPLE__
+#    include <mach-o/dyld.h>
+#    include <stdlib.h>
+#    include <string.h>
 
-       static void *NSGLGetProcAddress (const GLubyte *name)
-       {
-         NSSymbol symbol;
-         char *symbolName;
-         /* prepend a '_' for the Unix C symbol mangling convention */
-         symbolName = (char*)malloc(strlen((const char *)name) + 2);
-         strcpy(symbolName+1, (const char *)name);
-         symbolName[0] = '_';
-         symbol = NULL;
-         if (NSIsSymbolNameDefined(symbolName))
-           symbol = NSLookupAndBindSymbol(symbolName);
-         free(symbolName);
-         return symbol ? NSAddressOfSymbol(symbol) : NULL;
-       }
-#      define getProcAddress(x) (NSGLGetProcAddress((const GLubyte*)x))
-#    else
-#      define getProcAddress(x) ((*glXGetProcAddressARB)((const GLubyte*)x))
-#    endif /* APPLE */
-#  endif /* HAVE_GLEW */
+     static void *NSGLGetProcAddress (const GLubyte *name)
+     {
+       NSSymbol symbol;
+       char *symbolName;
+       /* prepend a '_' for the Unix C symbol mangling convention */
+       symbolName = (char*)malloc(strlen((const char *)name) + 2);
+       strcpy(symbolName+1, (const char *)name);
+       symbolName[0] = '_';
+       symbol = NULL;
+       if (NSIsSymbolNameDefined(symbolName))
+         symbol = NSLookupAndBindSymbol(symbolName);
+       free(symbolName);
+       return symbol ? NSAddressOfSymbol(symbol) : NULL;
+     }
+#    define getProcAddress(x) (NSGLGetProcAddress((const GLubyte*)x))
+#  else
+#    define getProcAddress(x) ((*glXGetProcAddressARB)((const GLubyte*)x))
+#  endif /* APPLE */
 #  if !defined(CORRECT_OGLEXT_HDRS)
   static PFNGLGENPROGRAMSARBPROC glGenProgramsARB = 0;
   static PFNGLDELETEPROGRAMSARBPROC glDeleteProgramsARB = 0;
@@ -101,8 +99,6 @@ using std::string;
 #endif /* GL_ARB_fragment_program */
 
 namespace SCIRun {
-
-static SCIRun::DebugStream dbg("ShaderProgramARB", false);
 
 bool ShaderProgramARB::mInit = false;
 bool ShaderProgramARB::mSupported = false;
@@ -126,25 +122,20 @@ ShaderProgramARB::valid()
 }
 
 
-bool
-ShaderProgramARB::shaders_supported()
+void
+ShaderProgramARB::init_shaders_supported()
 {
   if(!mInit)
   {
     ShaderProgramARB_mInitMutex.lock();
     if (!mInit)
     {
+      // Create a test context.
+      TkOpenGLContext *context =
+        new TkOpenGLContext(".testforshadersupport", 0, 0, 0);
+      context->make_current();
+
 #if defined(GL_ARB_fragment_program) || defined(GL_ATI_fragment_shader)
-#ifdef HAVE_GLEW
-      if (!GLEW_ARB_vertex_program || !GLEW_ARB_fragment_program)
-      {
-	mSupported = false;
-      }
-      else
-      {
-	mSupported = true;
-      }
-#else
       if (!gluCheckExtension((const GLubyte*)"GL_ARB_vertex_program", 
 			     glGetString(GL_EXTENSIONS)) ||
 	  !gluCheckExtension((const GLubyte*)"GL_ARB_fragment_program", 
@@ -185,38 +176,31 @@ ShaderProgramARB::shaders_supported()
       {
 	mSupported = true;
       }
-#endif
 #else
       mSupported = false;
 #endif
 
       mInit = true;
+      delete context;
     }
     ShaderProgramARB_mInitMutex.unlock();
   }
+}
+  
+
+bool
+ShaderProgramARB::shaders_supported()
+{
+  ASSERTMSG(mInit, "shaders_supported called before init_shaders_supported.");
   return mSupported;
 }
 
-
-
-void
-ShaderProgramARB_init_shaders_supported()
-{
-  TkOpenGLContext *context =
-    new TkOpenGLContext(".testforshadersupport", 0, 0, 0);
-  context->make_current();
-  const bool result = ShaderProgramARB::shaders_supported();
-  delete context;
-  std::cout << "SHADERS_SUPPORTED=" << result << "\n";
-}
-  
 
 bool
 ShaderProgramARB::create()
 {
 #if defined(GL_ARB_fragment_program) || defined(GL_ATI_fragment_shader)
   if(shaders_supported()) {
-    //dbg << mProgram << endl;
     glGenProgramsARB(1, &mId);
     glBindProgramARB(mType, mId);
     glProgramStringARB(mType, GL_PROGRAM_FORMAT_ASCII_ARB,
