@@ -326,6 +326,11 @@ public:
 			     CellInformation* cellinfo,
 			     ArchesVariables* vars);
 
+      void intrusionEnthalpyBC(const ProcessorGroup*,
+			       const Patch* patch, double delta_t,
+			       CellInformation* cellinfo,
+			       ArchesVariables* vars);
+
 
       // compute multimaterial wall bc
       void mmvelocityBC(const ProcessorGroup*,

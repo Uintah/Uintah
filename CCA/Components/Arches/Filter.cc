@@ -323,22 +323,27 @@ Filter::setFilterMatrix(const ProcessorGroup* ,
 		   (1.0-0.5*abs(ii))*
 		   (1.0-0.5*abs(jj))*(1.0-0.5*abs(kk));
 		 col[count] = l2g[filterCell];  //ab
-		 // not on the boundary
-		 if ((col[count] != -1234)&&
+#if 1
+		 // on the boundary
+		 if (cellType[currCell] != d_boundaryCondition->getFlowId())
+		   if (filterCell == currCell) {
+		     totalVol = vol;
+		     value[count] = vol;
+		   }
+		   else
+		     value[count] = 0;
+		 else if ((col[count] != -1234)&&
 		     (cellType[filterCell] == d_boundaryCondition->getFlowId())) {
 		   totalVol += vol;
 		   value[count] = vol;
 		 }
-		 else {
-		   if ((cellType[currCell] != d_boundaryCondition->getFlowId())&&
-		       (filterCell == currCell)) {
-		     totalVol = vol;
-		     value[count] = vol;
-		   }
-		   else 
-		     value[count] = 0;
-		 }
-		     
+		 else 
+		   value[count] = 0;
+#else
+		 if (col[count] != -1234) // not on the boundary
+		   totalVol += vol;
+		 value[count] = vol;
+#endif
 		 count++;
 	       }
 	     }
