@@ -192,8 +192,8 @@ void TriSurface::bldNormals(NormalsType nt) {
     if (normType==VertexType && nt==PointType) {
 	tmp=normals;
     } else if (normType==ElementType && nt==PointType) {
-	for (int i=0; i<tmp.size()*3; i++)
-	    tmp[i]=tmp[i+1]=tmp[i+2]=normals[i/3];
+	for (int i=0; i<elements.size()*3; i++)
+	    tmp[i*3]=tmp[i*3+1]=tmp[i*3+2]=normals[i];
     } else {
 	// for the rest of these we'll build a temp array of x-products at the
 	// elements
@@ -201,7 +201,7 @@ void TriSurface::bldNormals(NormalsType nt) {
 	    TSElement *e=elements[i];
 	    Vector v(Cross((points[e->i1]-points[e->i2]), 
 			   (points[e->i1]-points[e->i3])));
-	    tmp[i]=tmp[i+1]=tmp[i+2]=v;
+	    tmp[i*3]=tmp[i*3+1]=tmp[i*3+2]=v;
 	}
     }
 
@@ -219,6 +219,8 @@ void TriSurface::bldNormals(NormalsType nt) {
 	normals.initialize(Vector(0,0,0));
 
 	int i;
+//	for (i=0; i<tmp.size(); i++)
+//	    cerr << "tmp["<<i<<"]="<<tmp[i]<<"\n";
 	for (i=0; i<elements.size(); i++) {
 	    TSElement *e=elements[i];
 	    normals[e->i1]+=tmp[i*3];
@@ -233,6 +235,11 @@ void TriSurface::bldNormals(NormalsType nt) {
 	    }
 	}
     }
+//    int i;
+//    for (i=0; i<points.size(); i++)
+//	cerr << "p["<<i<<"]="<<points[i]<<"\n";
+//    for (i=0; i<normals.size(); i++)
+//	cerr << "n["<<i<<"]="<<normals[i]<<"\n";
     normType=nt;
 }
 
@@ -1044,10 +1051,12 @@ void TriSurface::get_surfnodes(Array1<NodeHandle> &n)
 
 void TriSurface::set_surfnodes(const Array1<NodeHandle> &n)
 {
-    points.resize(n.size());
-    for (int i=0; i<points.size(); i++) {
-	points[i]=n[i]->p;
+    if (n.size() != points.size()) {
+	cerr << "TriSurface::set_surfnodes - wrong sized array!\n";
+	return;
     }
+    for (int i=0; i<points.size(); i++)
+	points[i]=n[i]->p;
 }
 
 GeomObj* TriSurface::get_obj(const ColorMapHandle&)
@@ -1158,6 +1167,12 @@ void Pio(Piostream& stream, TSEdge*& data)
 
 //
 // $Log$
+// Revision 1.13  2000/03/13 04:47:53  dmw
+// SurfTree and TriSurface - made get_surfnodes and set_surfnodes work
+// ScalarFieldRG - interpolate uses epsilon bounds, so interpolate on
+// 	the point at (nx-1,ny-1,nz-1) returns a value (rather than
+// 	failing)
+//
 // Revision 1.12  2000/03/11 00:41:30  dahart
 // Replaced all instances of HashTable<class X, class Y> with the
 // Standard Template Library's std::map<class X, class Y, less<class X>>
