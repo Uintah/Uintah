@@ -63,39 +63,39 @@ C     CALCULATE GENERATION OF TURBULENCE
 C--------------------------------------------------------------------
                uep = uu(i+1,j,k)
                uwp = uu(i,j,k)
-               UNP = pt25*(UU(I,J,K)+
+               UNP = 0.25D0*(UU(I,J,K)+
      &              UU(I+1,J,K)+UU(I,J+1,K)+UU(I+1,J+1,K))
-               USP = pt25*(UU(I,J,K)+
+               USP = 0.25D0*(UU(I,J,K)+
      &              UU(I+1,J,K)+UU(I,J-1,K)+UU(I+1,J-1,K))
                DUDY = (UNP-USP)/SNS(J)
-               UTP = (UU(I,J,K)+
-     &              UU(I+1,J,K)+UU(I,J,K+1)+UU(I+1,J,K+1))/FOUR
-               UBP = (UU(I,J,K)+
-     &              UU(I+1,J,K)+UU(I,J,K-1)+UU(I+1,J,K-1))/FOUR 
+               UTP = 0.25D0*(UU(I,J,K)+
+     &              UU(I+1,J,K)+UU(I,J,K+1)+UU(I+1,J,K+1))
+               UBP = 0.25D0*(UU(I,J,K)+
+     &              UU(I+1,J,K)+UU(I,J,K-1)+UU(I+1,J,K-1))
                DUDZ = (UTP-UBP)/STB(K) 
                vnp = vv(i,j+1,k)
                vsp = vv(i,j,k)
-               VEP = (VV(I,J,K)+
-     &              VV(I,J+1,K)+VV(I+1,J,K)+VV(I+1,J+1,K))/FOUR
-               VWP = (VV(I,J,K)+
-     &              VV(I,J+1,K)+VV(I-1,J,K)+VV(I-1,J+1,K))/FOUR
+               VEP = 0.25D0*(VV(I,J,K)+
+     &              VV(I,J+1,K)+VV(I+1,J,K)+VV(I+1,J+1,K))
+               VWP = 0.25D0*(VV(I,J,K)+
+     &              VV(I,J+1,K)+VV(I-1,J,K)+VV(I-1,J+1,K))
                DVDX = (VEP-VWP)/SEW(I)
-               VTP = (VV(I,J,K)+
-     &              VV(I,J+1,K)+VV(I,J,K+1)+VV(I,J+1,K+1))/FOUR
-               VBP = (VV(I,J,K)+
-     &              VV(I,J+1,K)+VV(I,J,K-1)+VV(I,J+1,K-1))/FOUR 
+               VTP = 0.25D0*(VV(I,J,K)+
+     &              VV(I,J+1,K)+VV(I,J,K+1)+VV(I,J+1,K+1))
+               VBP = 0.25D0*(VV(I,J,K)+
+     &              VV(I,J+1,K)+VV(I,J,K-1)+VV(I,J+1,K-1)) 
                DVDZ = (VTP-VBP)/STB(K)
                wtp = ww(i,j,k+1)
                wbp = ww(i,j,k)
-               WEP = (WW(I,J,K)+
-     &              WW(I,J,K+1)+WW(I+1,J,K)+WW(I+1,J,K+1))/FOUR
-               WWP = (WW(I,J,K)+
-     &              WW(I,J,K+1)+WW(I-1,J,K)+WW(I-1,J,K+1))/FOUR
+               WEP = 0.25D0*(WW(I,J,K)+
+     &              WW(I,J,K+1)+WW(I+1,J,K)+WW(I+1,J,K+1))
+               WWP = 0.25D0*(WW(I,J,K)+
+     &              WW(I,J,K+1)+WW(I-1,J,K)+WW(I-1,J,K+1))
                DWDX = (WEP-WWP)/SEW(I)
-               WNP = (WW(I,J,K)+
-     &              WW(I,J,K+1)+WW(I,J+1,K)+WW(I,J+1,K+1))/FOUR
-               WSP = (WW(I,J,K)+
-     &              WW(I,J,K+1)+WW(I,J-1,K)+WW(I,J-1,K+1))/FOUR
+               WNP = 0.25D0*(WW(I,J,K)+
+     &              WW(I,J,K+1)+WW(I,J+1,K)+WW(I,J+1,K+1))
+               WSP = 0.25D0*(WW(I,J,K)+
+     &              WW(I,J,K+1)+WW(I,J-1,K)+WW(I,J-1,K+1))
                DWDY = (WNP-WSP)/SNS(J)
 Cmjb... estimate gradient of velocity in transverse direction
 Cmjb     * for a uni-axial flow, this would be "du/dy"
@@ -147,8 +147,8 @@ c               if (I.lt.10) then
 c                  vis(i,j,k) = viscos
 c               else
                   VIS(I,J,K) = VISCOS + CMLTM*(PMIXL**2)*DEN(I,J,K)
-c     &                        *IsI
-     $                         *GRADVEL
+     &                        *IsI
+c     $                         *GRADVEL
 c               endif
 c              END IF
  200        CONTINUE

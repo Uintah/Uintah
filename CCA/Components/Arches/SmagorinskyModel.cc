@@ -397,7 +397,7 @@ SmagorinskyModel::reComputeTurbSubmodel(const ProcessorGroup*,
     IntVector idxLo = patch->getCellFORTLowIndex();
     IntVector idxHi = patch->getCellFORTHighIndex();
     double CF = d_CF;
-#if 1
+#if 0
     if (time < 2.0 ) 
       CF *= (time+ 0.0001)*0.5;
 #endif      

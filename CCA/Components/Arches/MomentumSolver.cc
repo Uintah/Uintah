@@ -171,7 +171,15 @@ MomentumSolver::sched_buildLinearMatrix(SchedulerP& sched,
 		  Ghost::AroundFaces, Arches::ONEGHOSTCELL);
     tsk->modifies(d_lab->d_uVelocitySPBCLabel);
 
+    if (timelabels->integrator_step_number == TimeIntegratorStepNumber::First) {
+      tsk->requires(Task::OldDW, timelabels->maxuxplus_in);
+    }
+    else {
+      tsk->requires(Task::NewDW, timelabels->maxuxplus_in);
+    }
+
     tsk->computes(timelabels->maxabsu_out);
+    tsk->computes(timelabels->maxuxplus_out);
 
     break;
 
@@ -341,16 +349,27 @@ MomentumSolver::buildLinearMatrix(const ProcessorGroup* pc,
     d_boundaryCondition->velocityPressureBC(pc, patch, index, cellinfo,
 					    &velocityVars, &constVelocityVars);
 
+    double maxUxplus;
+    max_vartype mxUxp;
+    if (timelabels->integrator_step_number == TimeIntegratorStepNumber::First) {
+      old_dw->get(mxUxp, timelabels->maxuxplus_in);
+    }
+    else {
+      new_dw->get(mxUxp, timelabels->maxuxplus_in);
+    }
+    maxUxplus = mxUxp;
+
     double maxAbsU = 0.0;
     double maxAbsV = 0.0;
     double maxAbsW = 0.0;
     IntVector ixLow;
     IntVector ixHigh;
+    //double maxUxplus = -10000000000.0;
+    bool xplus =  patch->getBCType(Patch::xplus) != Patch::Neighbor;
     
     switch (index) {
     case Arches::XDIR:
 
-  //velocityVars.uVelRhoHat.print(cout);
       ixLow = patch->getSFCXFORTLowIndex();
       ixHigh = patch->getSFCXFORTHighIndex();
     
@@ -365,6 +384,19 @@ MomentumSolver::buildLinearMatrix(const ProcessorGroup* pc,
         }
       }
       new_dw->put(max_vartype(maxAbsU), timelabels->maxabsu_out); 
+
+      if ((!(out_celltypeval==-10))&&(xplus)) {
+        int colX = ixHigh.x();
+        for (int colZ = ixLow.z(); colZ <= ixHigh.z(); colZ ++) {
+          for (int colY = ixLow.y(); colY <= ixHigh.y(); colY ++) {
+
+              IntVector currCell(colX, colY, colZ);
+
+	      maxUxplus = Max(velocityVars.uVelRhoHat[currCell], maxUxplus);
+          }
+        }
+      }
+      new_dw->put(max_vartype(maxUxplus), timelabels->maxuxplus_out); 
 
       break;
     case Arches::YDIR:
@@ -508,11 +540,13 @@ MomentumSolver::sched_buildLinearMatrixVelHat(SchedulerP& sched,
     tsk->requires(Task::OldDW, timelabels->maxabsu_in);
     tsk->requires(Task::OldDW, timelabels->maxabsv_in);
     tsk->requires(Task::OldDW, timelabels->maxabsw_in);
+    tsk->requires(Task::OldDW, timelabels->maxuxplus_in);
   }
   else {
     tsk->requires(Task::NewDW, timelabels->maxabsu_in);
     tsk->requires(Task::NewDW, timelabels->maxabsv_in);
     tsk->requires(Task::NewDW, timelabels->maxabsw_in);
+    tsk->requires(Task::NewDW, timelabels->maxuxplus_in);
   }
   // required for computing div constraint
 #ifdef divergenceconstraint
@@ -611,22 +645,27 @@ MomentumSolver::buildLinearMatrixVelHat(const ProcessorGroup* pc,
   double maxAbsU;
   double maxAbsV;
   double maxAbsW;
+  double maxUxplus;
   max_vartype mxAbsU;
   max_vartype mxAbsV;
   max_vartype mxAbsW;
+  max_vartype mxUxp;
   if (timelabels->integrator_step_number == TimeIntegratorStepNumber::First) {
     old_dw->get(mxAbsU, timelabels->maxabsu_in);
     old_dw->get(mxAbsV, timelabels->maxabsv_in);
     old_dw->get(mxAbsW, timelabels->maxabsw_in);
+    old_dw->get(mxUxp, timelabels->maxuxplus_in);
   }
   else {
     new_dw->get(mxAbsU, timelabels->maxabsu_in);
     new_dw->get(mxAbsV, timelabels->maxabsv_in);
     new_dw->get(mxAbsW, timelabels->maxabsw_in);
+    new_dw->get(mxUxp, timelabels->maxuxplus_in);
   }
   maxAbsU = mxAbsU;
   maxAbsV = mxAbsV;
   maxAbsW = mxAbsW;
+  maxUxplus = mxUxp;
 
   for (int p = 0; p < patches->size(); p++) {
   TAU_PROFILE_START(input);
@@ -1230,7 +1269,8 @@ MomentumSolver::buildLinearMatrixVelHat(const ProcessorGroup* pc,
     if (!(out_celltypeval==-10))
     d_boundaryCondition->velRhoHatOutletBC(pc, patch, cellinfo, delta_t,
 					   &velocityVars, &constVelocityVars,
-					   maxAbsU, maxAbsV, maxAbsW);
+					   maxUxplus, maxAbsV, maxAbsW);
+    /*
   if (d_pressure_correction) {
     if (!(out_celltypeval==-10)) {
   IntVector idxLo = patch->getCellFORTLowIndex();
@@ -1367,7 +1407,7 @@ MomentumSolver::buildLinearMatrixVelHat(const ProcessorGroup* pc,
     }
   }
   }
-  }
+  }*/
 
 #ifdef divergenceconstraint    
     // compute divergence constraint to use in pressure equation

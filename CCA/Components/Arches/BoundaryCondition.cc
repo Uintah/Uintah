@@ -788,6 +788,7 @@ BoundaryCondition::sched_setProfile(SchedulerP& sched, const PatchSet* patches,
   tsk->computes(d_lab->d_maxAbsU_label);
   tsk->computes(d_lab->d_maxAbsV_label);
   tsk->computes(d_lab->d_maxAbsW_label);
+  tsk->computes(d_lab->d_maxUxplus_label);
 
   for (int ii = 0; ii < d_props->getNumMixVars(); ii++) 
     tsk->modifies(d_lab->d_scalarSPLabel);
@@ -1052,7 +1053,7 @@ BoundaryCondition::pressureBC(const ProcessorGroup*,
 	       vars->pressCoeff[Arches::AT], vars->pressCoeff[Arches::AB],
 	       vars->pressNonlinearSrc, vars->pressLinearSrc,
 	       constvars->cellType, wall_celltypeval, outlet_celltypeval,
-	       dirichlet_bc,
+	       neumann_bc,
 	       xminus, xplus, yminus, yplus, zminus, zplus);
 
   fort_bcpress(domLo, domHi, idxLo, idxHi, constvars->pressure,
@@ -1352,6 +1353,8 @@ BoundaryCondition::setFlatProfile(const ProcessorGroup* /*pc*/,
     double maxAbsW = 0.0;
     IntVector indexLow;
     IntVector indexHigh;
+    double maxUxplus = -10000000000.0;
+    int out_celltypeval = outletCellType();
     
       indexLow = patch->getSFCXFORTLowIndex();
       indexHigh = patch->getSFCXFORTHighIndex();
@@ -1367,6 +1370,19 @@ BoundaryCondition::setFlatProfile(const ProcessorGroup* /*pc*/,
         }
       }
       new_dw->put(max_vartype(maxAbsU), d_lab->d_maxAbsU_label); 
+
+      if ((!(out_celltypeval==-10))&&(xplus)) {
+        int colX = indexHigh.x();
+        for (int colZ = indexLow.z(); colZ <= indexHigh.z(); colZ ++) {
+          for (int colY = indexLow.y(); colY <= indexHigh.y(); colY ++) {
+
+              IntVector currCell(colX, colY, colZ);
+
+	      maxUxplus = Max(uVelocity[currCell], maxUxplus);
+          }
+        }
+      }
+      new_dw->put(max_vartype(maxUxplus), d_lab->d_maxUxplus_label); 
 
       indexLow = patch->getSFCYFORTLowIndex();
       indexHigh = patch->getSFCYFORTHighIndex();
@@ -3128,6 +3144,7 @@ BoundaryCondition::scalarOutletBC(const ProcessorGroup*,
         IntVector xplusCell(colX+1, colY, colZ);
         if (constvars->cellType[xplusCell] == out_celltypeval) {
 	   double out_vel = constvars->uVelocity[xplusCell];
+	   out_vel = maxAbsU;
            vars->scalar[xplusCell]= (- delta_t * out_vel *
                (constvars->old_density[xplusCell]*constvars->old_scalar[xplusCell] -
                 constvars->old_density[currCell]*constvars->old_scalar[currCell]) /
@@ -3901,12 +3918,15 @@ BoundaryCondition::velRhoHatOutletBC(const ProcessorGroup*,
 	   double out_vel = constvars->uVelocity[currCell];
 	   out_vel = maxAbsU;
 
-//           vars->uVelRhoHat[xplusCell] = ( delta_t * (- out_vel *
-//            (avden*constvars->uVelocity[xplusCell] - 
-//	     avdenlow*constvars->uVelocity[currCell]) / cellinfo->dxpwu[colX+1] +
-//	     (avden-ref_avden) * gravity) +
-//	    old_avden*constvars->old_uVelocity[xplusCell]) / new_avden;
-           vars->uVelRhoHat[xplusCell] = (old_avden*constvars->old_uVelocity[xplusCell]-
+           vars->uVelRhoHat[xplusCell] = ( delta_t * (- out_vel *
+            (avden*constvars->uVelocity[xplusCell] - 
+	     avdenlow*constvars->uVelocity[currCell]) / cellinfo->dxpwu[colX+1]
+//	    +
+//	     (avden-ref_avden) * gravity
+	     )+
+	    old_avden*constvars->old_uVelocity[xplusCell]) / new_avden;
+//	   if (vars->uVelRhoHat[xplusCell] < 0.0) vars->uVelRhoHat[xplusCell] = 0.0;
+/*           vars->uVelRhoHat[xplusCell] = (old_avden*constvars->old_uVelocity[xplusCell]-
 		   			  delta_t*(
 		                          (-0.25*(constvars->uVelocity[xplusCell]+constvars->uVelocity[currCell])*
 			                   (constvars->uVelocity[xplusCell]+constvars->uVelocity[currCell])*
@@ -3927,12 +3947,12 @@ BoundaryCondition::velRhoHatOutletBC(const ProcessorGroup*,
 					   (constvars->uVelocity[xplusCell]+constvars->uVelocity[xpluszminusCell]))/cellinfo->stb[colZ]
 	                                   -(avden-ref_avden) * gravity)
 			                 )/(0.5*(constvars->density[currCell]+constvars->density[xplusCell]));
-
+*/
            vars->uVelRhoHat[xplusplusCell] = vars->uVelRhoHat[xplusCell];
         }
       }
     }
-/*
+
     colX = idxHi.x();
     int maxY = idxHi.y();
     if (yplus) maxY++;
@@ -3965,6 +3985,7 @@ BoundaryCondition::velRhoHatOutletBC(const ProcessorGroup*,
 	                      constvars->new_density[xplusyminusCell]);
 	   out_vel = 0.5 * (constvars->uVelocity[xplusCell] +
 			    constvars->uVelocity[xplusyminusCell]);
+	   out_vel = maxAbsU;
 
            vars->vVelRhoHat[xplusCell] = (- delta_t * out_vel *
             (avden*constvars->vVelocity[xplusCell] - 
@@ -3983,6 +4004,7 @@ BoundaryCondition::velRhoHatOutletBC(const ProcessorGroup*,
 	                      constvars->new_density[xpluszminusCell]);
 	   out_vel = 0.5 * (constvars->uVelocity[xplusCell] +
 			    constvars->uVelocity[xpluszminusCell]);
+	   out_vel = maxAbsU;
 
            vars->wVelRhoHat[xplusCell] = (- delta_t * out_vel * 
             (avden*constvars->wVelocity[xplusCell] - 
@@ -3991,7 +4013,7 @@ BoundaryCondition::velRhoHatOutletBC(const ProcessorGroup*,
 	}
         }
       }
-    }*/
+    }
   }
   if (yminus) {
     double gravity = d_physicalConsts->getGravity(Arches::YDIR);
@@ -4355,8 +4377,9 @@ BoundaryCondition::velocityPressureBC(const ProcessorGroup*,
         IntVector currCell(colX, colY, colZ);
         IntVector xplusCell(colX+1, colY, colZ);
         IntVector xplusplusCell(colX+2, colY, colZ);
-        if ((constvars->cellType[xplusCell] == press_celltypeval)||
-            (constvars->cellType[xplusCell] == out_celltypeval)) {
+        //if ((constvars->cellType[xplusCell] == press_celltypeval)||
+          //  (constvars->cellType[xplusCell] == out_celltypeval)) {
+        if (constvars->cellType[xplusCell] == press_celltypeval) {
           switch (index) {
            case Arches::XDIR:
            break;
@@ -4557,8 +4580,9 @@ BoundaryCondition::addPresGradVelocityOutletBC(const ProcessorGroup*,
         IntVector currCell(colX, colY, colZ);
         IntVector xplusCell(colX+1, colY, colZ);
         IntVector xplusplusCell(colX+2, colY, colZ);
-        if ((constvars->cellType[xplusCell] == out_celltypeval)||
-            (constvars->cellType[xplusCell] == press_celltypeval)) {
+     //   if ((constvars->cellType[xplusCell] == out_celltypeval)||
+       //     (constvars->cellType[xplusCell] == press_celltypeval)) {
+        if (constvars->cellType[xplusCell] == press_celltypeval) {
            double avden = 0.5 * (constvars->density[xplusCell] +
 			         constvars->density[currCell]);
 
