@@ -117,7 +117,7 @@ public:
 			   int yHiLimit,
 			   int zLoLimit,
 			   int zHiLimit,
-			   int nMaterials);
+			   int m);
  void convertNR_4dToUCF(
                         const Patch*, 
                         CCVariable<double>& scalar_ucf, 
@@ -129,7 +129,7 @@ public:
 			   int yHiLimit,
 			   int zLoLimit,
 			   int zHiLimit,
-			   int nMaterials);
+			   int m);
 
  void convertUCFToNR_4d(
                         const Patch*, 
@@ -144,7 +144,7 @@ public:
 			   int yHiLimit,
 			   int zLoLimit,
 			   int zHiLimit,
-			   int nMaterials);
+			   int m);
                         
  void convertUCFToNR_4d(
                         const Patch*, 
@@ -157,7 +157,7 @@ public:
 			   int yHiLimit,
 			   int zLoLimit,
 			   int zHiLimit,
-			   int nMaterials);
+			   int m);
 
  void convertNR_4dToUCF(
                         const Patch*, 
@@ -172,10 +172,11 @@ public:
 			   int yHiLimit,
 			   int zLoLimit,
 			   int zHiLimit,
-			   int nMaterials);
+			   int m);
                         
 void before_each_step_wrapper(
                         const Patch* patch,
+                        int     m,
                         CCVariable<double>& press_cc,
                         double  ****press_CC,
                         CCVariable<double>& rho_cc,
@@ -189,6 +190,7 @@ void before_each_step_wrapper(
                         
 void after_each_step_wrapper(
                         const Patch* patch,
+                        int     m,
                         CCVariable<double>& press_cc,
                         double  ****press_CC,
                         CCVariable<double>& rho_cc,

@@ -19,6 +19,7 @@ Version   Programmer         Date       Description
 _____________________________________________________________________*/
 void ICE::before_each_step_wrapper(
     const Patch* patch,
+    int                  material,
     CCVariable<double>& press_cc,
     double              ****press_CC,
     CCVariable<double>& rho_cc,
@@ -39,25 +40,25 @@ void ICE::before_each_step_wrapper(
 	     press_cc,   press_CC,
 	     include_ghost_cells,
 	     xLoLimit,   xHiLimit,   yLoLimit,   yHiLimit,   zLoLimit,   zHiLimit,
-	     nMaterials); 
+	     material); 
 
      ICE::convertUCFToNR_4d(patch,
             rho_cc,     rho_CC,
             include_ghost_cells,
             xLoLimit,   xHiLimit,   yLoLimit,   yHiLimit,   zLoLimit,   zHiLimit,
-            nMaterials); 
+            material); 
 
     ICE::convertUCFToNR_4d(patch,
             temp_cc,    Temp_CC,
             include_ghost_cells,
             xLoLimit,   xHiLimit,   yLoLimit,   yHiLimit,   zLoLimit,   zHiLimit,
-            nMaterials);  
+            material);  
             
     ICE::convertUCFToNR_4d(patch,
             vel_cc,     uvel_CC,    vvel_CC,    wvel_CC,
             include_ghost_cells,
             xLoLimit,   xHiLimit,   yLoLimit,   yHiLimit,   zLoLimit,   zHiLimit,
-            nMaterials);  
+            material);  
 
 }
 
@@ -79,6 +80,7 @@ Version   Programmer         Date       Description
 _____________________________________________________________________*/
 void ICE::after_each_step_wrapper(
     const Patch* patch,
+    int                  material,
     CCVariable<double>& press_cc,
     double              ****press_CC,
     CCVariable<double>& rho_cc,
@@ -98,47 +100,46 @@ void ICE::after_each_step_wrapper(
         vel_cc,     uvel_CC,    vvel_CC,    wvel_CC,
         include_ghost_cells,
         xLoLimit,       xHiLimit,   yLoLimit,   yHiLimit,   zLoLimit,   zHiLimit,
-	 nMaterials);
+	 material);
   
     ICE::convertNR_4dToUCF(patch,
         temp_cc,               Temp_CC,
         include_ghost_cells,
         xLoLimit,       xHiLimit,   yLoLimit,   yHiLimit,   zLoLimit,   zHiLimit,
-	 nMaterials);
+	 material);
         
     ICE::convertNR_4dToUCF(patch,
         rho_cc,                 rho_CC,
         include_ghost_cells,
         xLoLimit,       xHiLimit,   yLoLimit,   yHiLimit,   zLoLimit,   zHiLimit,
-	 nMaterials);
+	 material);
         
     ICE::convertNR_4dToUCF(patch,
         press_cc,               press_CC,
         include_ghost_cells,
         xLoLimit,       xHiLimit,   yLoLimit,   yHiLimit,   zLoLimit,   zHiLimit,
-	 nMaterials); 
+	 material); 
         
 #if 0        
    /*__________________________________
-   *    ZERO OUT ALL THE NR DATA
+   *    ZERO OUT ALL THE NR DATA at the 
+   *    end to insure that everything is working
    *___________________________________*/ 
-   for ( int m = 1; m <= nMaterials; m++)
+   for ( int k = (zLoLimit); k <= (zHiLimit); k++)
    {
-        for ( int k = (zLoLimit); k <= (zHiLimit); k++)
-        {
-            for ( int j = (yLoLimit); j <= (yHiLimit); j++)
-            {
-                for ( int i = (xLoLimit); i <= (xHiLimit); i++)
-                { 
-                    Temp_CC[m][i][j][k]    = 0.0;
-                    press_CC[m][i][j][k]   = 0.0;
-                    rho_CC[m][i][j][k]     = 0.0;
-                    uvel_CC[m][i][j][k]    = 0.0;
-                    vvel_CC[m][i][j][k]    = 0.0;
-                    wvel_CC[m][i][j][k]    = 0.0;
-                }
-            }
-        }
-    } 
+       for ( int j = (yLoLimit); j <= (yHiLimit); j++)
+       {
+           for ( int i = (xLoLimit); i <= (xHiLimit); i++)
+           {
+               Temp_CC[material][i][j][k]    = 0.0;
+               press_CC[material][i][j][k]   = 0.0;
+               rho_CC[material][i][j][k]     = 0.0;
+               uvel_CC[material][i][j][k]    = 0.0;
+               vvel_CC[material][i][j][k]    = 0.0;
+               wvel_CC[material][i][j][k]    = 0.0;
+           }
+       }
+   }
+     
 #endif
 }

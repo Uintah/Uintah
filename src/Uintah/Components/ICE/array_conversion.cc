@@ -40,9 +40,9 @@ void ICE::convertNR_4dToUCF(const Patch* patch,CCVariable<Vector>& vel_ucf,
         int     yHiLimit,
         int     zLoLimit,
         int     zHiLimit,
-        int     nMaterials)
+        int     m)
 {
-    int i, j, k, m,
+    int i, j, k,
         xLo, yLo, zLo,
         xHi, yHi, zHi;
     /*__________________________________
@@ -70,18 +70,16 @@ void ICE::convertNR_4dToUCF(const Patch* patch,CCVariable<Vector>& vel_ucf,
         {
             for (k = zLo; k <= zHi; k++) 
             {
-               for (m = 1; m <= nMaterials; m++) 
-               {
-	          // Do something
-	          //  cerr << "uvel = " << uvel_CC[m][i][j][k] 
-	          //     << " vvel = " << vvel_CC[m][i][j][k] 
-	          //     << " wvel = " << wvel_CC[m][i][j][k] << endl;
-	          IntVector idx(i-xLo,j-yLo,k-zLo);
-	          vel_ucf[idx]=Vector(uvel_CC[m][i][j][k],
-                                         vvel_CC[m][i][j][k], 
-                                         wvel_CC[m][i][j][k]);
-	          //cerr << "vel_ucf = " << vel_ucf[idx] << endl;
-               }
+	        // Do something
+	        //  cerr << "uvel = " << uvel_CC[m][i][j][k]
+	        //     << " vvel = " << vvel_CC[m][i][j][k]
+	        //     << " wvel = " << wvel_CC[m][i][j][k] << endl;
+	        IntVector idx(i-xLo,j-yLo,k-zLo);
+	        vel_ucf[idx]=Vector(uvel_CC[m][i][j][k],
+                                       vvel_CC[m][i][j][k],
+                                       wvel_CC[m][i][j][k]);
+	        //cerr << "vel_ucf = " << vel_ucf[idx] << endl;
+               
             }
         }
     }
@@ -125,9 +123,9 @@ void ICE::convertNR_4dToUCF(const Patch* patch,CCVariable<double>& scalar_ucf,
         int     yHiLimit,
         int     zLoLimit,
         int     zHiLimit,
-        int     nMaterials)
+        int     m)
 {
-    int i, j, k, m,
+    int i, j, k,
         xLo, yLo, zLo,
         xHi, yHi, zHi;
     /*__________________________________
@@ -155,14 +153,11 @@ void ICE::convertNR_4dToUCF(const Patch* patch,CCVariable<double>& scalar_ucf,
         {
             for (k = zLo; k <= zHi; k++) 
             {
-               for (m = 1; m <= nMaterials; m++) 
-               {
 	          // Do something
 	          //  cerr << "scalar = " << scalar_CC[m][i][j][k] << endl;
 	          IntVector idx(i-xLo,j-yLo,k-zLo);
 	          scalar_ucf[idx]=scalar_CC[m][i][j][k];
 	          //cerr << "scalar_ucf = " << scalar_ucf[idx] << endl;
-               }
             }
         }
     }
@@ -178,6 +173,7 @@ void ICE::convertNR_4dToUCF(const Patch* patch,CCVariable<double>& scalar_ucf,
     cerr << "NR s: [" << xLo << " " << yLo << " " << zLo << "] [ " 
          << xHi << " " << yHi << " " << zHi << "]" << endl;  
 #endif
+
     return;
 }
 
@@ -204,9 +200,9 @@ void ICE::convertUCFToNR_4d(const Patch* patch,CCVariable<Vector>& vel_ucf,
         int     yHiLimit,
         int     zLoLimit,
         int     zHiLimit,
-        int     nMaterials)
+        int     m)
 {
-    int i, j, k, m,
+    int i, j, k,
         xLo, yLo, zLo,
         xHi, yHi, zHi;
     /*__________________________________
@@ -235,8 +231,6 @@ void ICE::convertUCFToNR_4d(const Patch* patch,CCVariable<Vector>& vel_ucf,
         {
             for (k = zLo; k <= zHi; k++) 
             {
-	         for (m = 1; m <= nMaterials; m++) 
-                {
 	           // Do something
 	           //  cerr << "uvel = " << uvel_CC[m][i][j][k] 
 	           //     << " vvel = " << vvel_CC[m][i][j][k] 
@@ -245,7 +239,6 @@ void ICE::convertUCFToNR_4d(const Patch* patch,CCVariable<Vector>& vel_ucf,
 	           uvel_CC[m][i][j][k]= vel_ucf[idx].x();
 	           vvel_CC[m][i][j][k]= vel_ucf[idx].y();
 	           wvel_CC[m][i][j][k]= vel_ucf[idx].z();
-	         }
            }
        }
     }
@@ -263,6 +256,7 @@ void ICE::convertUCFToNR_4d(const Patch* patch,CCVariable<Vector>& vel_ucf,
          << "] [ " 
          << xHi << " " << yHi << " " << zHi << "]" << endl;  
 #endif
+
     return;
 }
 
@@ -287,9 +281,9 @@ void ICE::convertUCFToNR_4d(const Patch* patch,CCVariable<double>& scalar_ucf,
         int     yHiLimit,
         int     zLoLimit,
         int     zHiLimit,
-        int     nMaterials)
+        int     m)
 {
-    int i, j, k, m,
+    int i, j, k,
         xLo, yLo, zLo,
         xHi, yHi, zHi;
     /*__________________________________
@@ -317,14 +311,11 @@ void ICE::convertUCFToNR_4d(const Patch* patch,CCVariable<double>& scalar_ucf,
         {
             for (k = zLo; k <= zHi; k++) 
             {
-                   for (m = 1; m <= nMaterials; m++) 
-                   {
-	              // Do something
-	              //  cerr << "scalar = " << scalar_CC[m][i][j][k] << endl;
-	              IntVector idx(i-xLo,j-yLo,k-zLo);
-	              scalar_CC[m][i][j][k]= scalar_ucf[idx];
-                   }
-              }
+	         // Do something
+	         //  cerr << "scalar = " << scalar_CC[m][i][j][k] << endl;
+	         IntVector idx(i-xLo,j-yLo,k-zLo);
+	         scalar_CC[m][i][j][k]= scalar_ucf[idx];    
+            }
         }
     }
    /*__________________________________
@@ -340,7 +331,8 @@ void ICE::convertUCFToNR_4d(const Patch* patch,CCVariable<double>& scalar_ucf,
     cerr << "NR s: [" << xLo << " " << yLo << " " << zLo
          << "] [ " 
          << xHi << " " << yHi << " " << zHi << "]" << endl;  
-#endif
+    #endif
+
     return;
 }
 
@@ -357,9 +349,9 @@ void ICE::convertNR_4dToUCF(const Patch* patch,FCVariable<Vector>& vel_ucf,
         int     yHiLimit,
         int     zLoLimit,
         int     zHiLimit,
-        int     nMaterials)
+        int     m)
 {
-    int i, j, k, m,
+    int i, j, k,
         xLo, yLo, zLo,
         xHi, yHi, zHi;
     /*__________________________________
@@ -397,8 +389,6 @@ void ICE::convertNR_4dToUCF(const Patch* patch,FCVariable<Vector>& vel_ucf,
         {
             for (k = zLo; k <= zHi; k++) 
             {
-	        for (m = 1; m <= nMaterials; m++) 
-               {
 	          // Do something
 	          //  cerr << "uvel = " << uvel_FC[m][i][j][k] 
 	          //     << " vvel = " << vvel_FC[m][i][j][k] 
@@ -408,7 +398,6 @@ void ICE::convertNR_4dToUCF(const Patch* patch,FCVariable<Vector>& vel_ucf,
 				      vvel_FC[m][i][j][k], 
 			              wvel_FC[m][i][j][k]);
 	          //cerr << "vel_ucf = " << vel_ucf[idx] << endl;
-	        }
             }
         }
     }

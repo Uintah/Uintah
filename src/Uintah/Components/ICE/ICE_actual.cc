@@ -86,8 +86,9 @@ ICE::ICE()
     *   Cell-centered variables
     *___________________________________*/
     delTLabel         = new VarLabel("delT",      delt_vartype::getTypeDescription() );
-    vel_CCLabel       = new VarLabel("vel_CC",    CCVariable<Vector>::getTypeDescription() );
+    
     press_CCLabel     = new VarLabel("press_CC",  CCVariable<double>::getTypeDescription() );
+    press_CCLabel_0   = new VarLabel("press_CC_0",  CCVariable<double>::getTypeDescription() );
     press_CCLabel_1   = new VarLabel("press_CC_1",CCVariable<double>::getTypeDescription() );
     press_CCLabel_2   = new VarLabel("press_CC_2",CCVariable<double>::getTypeDescription() );
     press_CCLabel_3   = new VarLabel("press_CC_3",CCVariable<double>::getTypeDescription() );
@@ -96,6 +97,7 @@ ICE::ICE()
     press_CCLabel_6_7 = new VarLabel("press_CC_6_7",CCVariable<double>::getTypeDescription() );
 
     rho_CCLabel       = new VarLabel("rho_CC",    CCVariable<double>::getTypeDescription() );
+    rho_CCLabel_0     = new VarLabel("rho_CC_0",  CCVariable<double>::getTypeDescription() );
     rho_CCLabel_1     = new VarLabel("rho_CC_1",  CCVariable<double>::getTypeDescription() );
     rho_CCLabel_2     = new VarLabel("rho_CC_2",  CCVariable<double>::getTypeDescription() );
     rho_CCLabel_3     = new VarLabel("rho_CC_3",  CCVariable<double>::getTypeDescription() );
@@ -104,6 +106,7 @@ ICE::ICE()
     rho_CCLabel_6_7   = new VarLabel("rho_CC_6_7",  CCVariable<double>::getTypeDescription() );
  
     temp_CCLabel      = new VarLabel("temp_CC",   CCVariable<double>::getTypeDescription() );
+    temp_CCLabel_0    = new VarLabel("temp_CC_0", CCVariable<double>::getTypeDescription() );
     temp_CCLabel_1    = new VarLabel("temp_CC_1", CCVariable<double>::getTypeDescription() );
     temp_CCLabel_2    = new VarLabel("temp_CC_2", CCVariable<double>::getTypeDescription() );
     temp_CCLabel_3    = new VarLabel("temp_CC_3", CCVariable<double>::getTypeDescription() );
@@ -112,6 +115,7 @@ ICE::ICE()
     temp_CCLabel_6_7  = new VarLabel("temp_CC_6_7", CCVariable<double>::getTypeDescription() );
  
     vel_CCLabel       = new VarLabel("vel_CC",    CCVariable<Vector>::getTypeDescription() );
+    vel_CCLabel_0     = new VarLabel("vel_CC_0",  CCVariable<Vector>::getTypeDescription() );
     vel_CCLabel_1     = new VarLabel("vel_CC_1",  CCVariable<Vector>::getTypeDescription() );
     vel_CCLabel_2     = new VarLabel("vel_CC_2",  CCVariable<Vector>::getTypeDescription() );
     vel_CCLabel_3     = new VarLabel("vel_CC_3",  CCVariable<Vector>::getTypeDescription() );
@@ -343,118 +347,45 @@ void ICE::actuallyInitialize(
     DataWarehouseP& /* old_dw */,
     DataWarehouseP& to_dw)
 {
-    bool include_ghost_cells = true;
+    int m;
      cerr <<"Doing actuallyInitialize . . ." << endl;
-/*`==========TESTING==========*/ 
-#if 0    
-    CCVariable<Vector> vel_cc;
-    CCVariable<double> press_cc,    press_cc_1,     rho_cc, temp_cc,    cv_cc;
-    FCVariable<Vector> vel_fc,      tau_fc;
-    FCVariable<double> press_fc;
-   
-    /*__________________________________
-    *  Allocate variable in the new dw
-    *___________________________________*/
-    new_dw->allocate(   vel_cc,     vel_CCLabel,    0,patch);
-    new_dw->allocate(   press_cc,   press_CCLabel,  0,patch);
 
-    new_dw->allocate(   rho_cc,     rho_CCLabel,    0,patch);
-    new_dw->allocate(   temp_cc,    temp_CCLabel,   0,patch);
-    new_dw->allocate(   cv_cc,      cv_CCLabel,     0,patch);
-    new_dw->allocate(   vel_fc,     vel_FCLabel,    0,patch);
-    new_dw->allocate(   press_fc,   press_FCLabel,  0,patch);
-    new_dw->allocate(   tau_fc,     tau_FCLabel,    0,patch);
-    /*__________________________________
-    *   Convert the array data into ucf format
-    *___________________________________*/
-
-
-  
-    ICE::convertNR_4dToUCF(patch,
-                        press_cc,       press_CC,
-                        include_ghost_cells,
-                        xLoLimit,       xHiLimit,       
-                        yLoLimit,       yHiLimit,
-                        zLoLimit,       zHiLimit,       
-                        nMaterials);
-  
-    ICE::convertNR_4dToUCF(patch,
-                        rho_cc,         rho_CC,
-                        include_ghost_cells,
-                        xLoLimit,       xHiLimit,       
-                        yLoLimit,       yHiLimit,
-                        zLoLimit,       zHiLimit,       
-                        nMaterials);
-   
-    ICE::convertNR_4dToUCF(patch,
-                        temp_cc,        Temp_CC,
-                        include_ghost_cells,
-                        xLoLimit,       xHiLimit,       
-                        yLoLimit,       yHiLimit,
-                        zLoLimit,       zHiLimit,       
-                        nMaterials);
- 
-    ICE::convertNR_4dToUCF(patch,
-                        cv_cc,          cv_CC,      
-                        include_ghost_cells,
-                        xLoLimit,       xHiLimit,       
-                        yLoLimit,       yHiLimit,
-                        zLoLimit,       zHiLimit,       
-                        nMaterials);
-                        
-    ICE::convertNR_4dToUCF(patch,       vel_cc,
-                        uvel_CC,        vvel_CC,        wvel_CC,
-                        include_ghost_cells,
-                        xLoLimit,       xHiLimit,       
-                        yLoLimit,       yHiLimit,
-                        zLoLimit,       zHiLimit,       
-                        nMaterials);
-
-    /*__________________________________
-    *   Now put the data into the dw
-    *___________________________________*/                        
-    new_dw->put(      vel_cc,     vel_CCLabel,    0,patch);
-    new_dw->put(      press_cc,   press_CCLabel,  0,patch);
-
-    new_dw->put(      rho_cc,     rho_CCLabel,    0,patch);
-    new_dw->put(      temp_cc,    temp_CCLabel,   0,patch);
-    new_dw->put(      cv_cc,      cv_CCLabel,     0,patch);
-    new_dw->put(      vel_fc,     vel_FCLabel,    0,patch);
-    new_dw->put(      press_fc,   press_FCLabel,  0,patch);
-    new_dw->put(      tau_fc,     tau_FCLabel,    0,patch);
-    
-#endif 
- /*==========TESTING==========`*/   
 /*______________________________________________________________________
 *     T  O     D  W     W  R  A  P  P  E  R  
 *--------------------------------------*/
 #if switch_UCF_initialize
+for (m = 1; m<= nMaterials; m++)
+{
     CCVariable<double>  press_cc;
     CCVariable<double>  rho_cc;
     CCVariable<double>  temp_cc;
     CCVariable<Vector>  vel_cc;
     
-    to_dw->allocate(    press_cc, press_CCLabel,  0,patch);
-    to_dw->allocate(    rho_cc,   rho_CCLabel,    0,patch);
-    to_dw->allocate(    temp_cc,  temp_CCLabel,   0,patch);
-    to_dw->allocate(    vel_cc,   vel_CCLabel,    0,patch);
+    to_dw->allocate(    press_cc, press_CCLabel,  m,patch);
+    to_dw->allocate(    rho_cc,   rho_CCLabel,    m,patch);
+    to_dw->allocate(    temp_cc,  temp_CCLabel,   m,patch);
+    to_dw->allocate(    vel_cc,   vel_CCLabel,    m,patch);
 
     /*__________________________________
     *   UCF NR
     *___________________________________*/
     ICE::after_each_step_wrapper(   patch,
-                       press_cc,  press_CC,
-                       rho_cc,    rho_CC,
-                       temp_cc,   Temp_CC,
-                       vel_cc,    uvel_CC,     vvel_CC,        wvel_CC);
-                       
-    to_dw->put(        press_cc,  press_CCLabel,  0,patch);
-    to_dw->put(        rho_cc,    rho_CCLabel,    0,patch);
-    to_dw->put(        temp_cc,   temp_CCLabel,   0,patch);
-    to_dw->put(        vel_cc,    vel_CCLabel,    0,patch);
+                        m,
+                        press_cc,  press_CC,
+                        rho_cc,    rho_CC,
+                        temp_cc,   Temp_CC,
+                        vel_cc,    uvel_CC,     vvel_CC,        wvel_CC);
+ 
+    to_dw->put(         press_cc,  press_CCLabel,  m,patch);
+    to_dw->put(         rho_cc,    rho_CCLabel,    m,patch);
+    to_dw->put(         temp_cc,   temp_CCLabel,   m,patch);
+    to_dw->put(         vel_cc,    vel_CCLabel,    m,patch);
+}
 #endif   
 /*_______________________________________________________________________*/
 }
+
+
 
 
 /* --------------------------------------------------------------------- 
@@ -479,9 +410,11 @@ void ICE::actuallyComputeStableTimestep(const ProcessorGroup*,
     /*__________________________________
     * convert UCF data into NR arrays 
     *___________________________________*/
+    for (m = 1; m<= nMaterials; m++)
+    {
     CCVariable<Vector> vel_cc;
   
-    toDW->get(vel_cc, vel_CCLabel,0, patch,Ghost::None,0);
+    toDW->get(vel_cc, vel_CCLabel,m, patch,Ghost::None,0);
 
     ICE::convertUCFToNR_4d(patch,       vel_cc,
                         uvel_CC,        vvel_CC,        wvel_CC,
@@ -489,7 +422,8 @@ void ICE::actuallyComputeStableTimestep(const ProcessorGroup*,
                         xLoLimit,       xHiLimit,
 		          yLoLimit,       yHiLimit,
                         zLoLimit,       zHiLimit,
-                        nMaterials);
+                        m);
+    }
   
     /*__________________________________
     *   Find the new time step based on the
@@ -529,30 +463,34 @@ void ICE::actually_Top_of_main_loop(const ProcessorGroup*,
 			DataWarehouseP& to_dw)
 {
     int should_I_write_output;
-    
+    int m;    
 
 /*______________________________________________________________________
 *    F  R  O  M     D  W     W  R  A  P  P  E  R 
 *--------------------------------------*/
 #if switch_UCF_stepTop_of_main_loopOnOff 
-    CCVariable<double>  press_cc;
-    CCVariable<double>  rho_cc;
-    CCVariable<double>  temp_cc;
-    CCVariable<Vector>  vel_cc;
-   
-    from_dw->get(       press_cc,       press_CCLabel,  0, patch, Ghost::None, 0);
-    from_dw->get(       rho_cc,         rho_CCLabel,    0, patch, Ghost::None, 0);
-    from_dw->get(       temp_cc,        temp_CCLabel,   0, patch, Ghost::None, 0);
-    from_dw->get(       vel_cc,         vel_CCLabel,    0, patch, Ghost::None, 0);
-    /*__________________________________
-    *   UCF NR
-    *___________________________________*/
-    ICE::before_each_step_wrapper(  patch,
-                        press_cc,       press_CC,
-                        rho_cc,         rho_CC,
-                        temp_cc,        Temp_CC,
-                        vel_cc,
-                        uvel_CC,        vvel_CC,        wvel_CC);
+    for (m = 1; m<= nMaterials; m++)
+    {
+        CCVariable<double>  press_cc;
+        CCVariable<double>  rho_cc;
+        CCVariable<double>  temp_cc;
+        CCVariable<Vector>  vel_cc;
+ 
+        from_dw->get(       press_cc,       press_CCLabel,  m, patch, Ghost::None, 0);
+        from_dw->get(       rho_cc,         rho_CCLabel,    m, patch, Ghost::None, 0);
+        from_dw->get(       temp_cc,        temp_CCLabel,   m, patch, Ghost::None, 0);
+        from_dw->get(       vel_cc,         vel_CCLabel,    m, patch, Ghost::None, 0);
+        /*__________________________________
+        *   UCF NR
+        *___________________________________*/
+        ICE::before_each_step_wrapper(  patch,
+                            m,
+                            press_cc,       press_CC,
+                            rho_cc,         rho_CC,
+                            temp_cc,        Temp_CC,
+                            vel_cc,
+                            uvel_CC,        vvel_CC,        wvel_CC);
+    }
 #endif
 /*______________________________________________________________________*/  
 
@@ -611,32 +549,36 @@ void ICE::actually_Top_of_main_loop(const ProcessorGroup*,
 *     T  O     D  W     W  R  A  P  P  E  R  
 *--------------------------------------*/
 #if switch_UCF_stepTop_of_main_loopOnOff 
-    CCVariable<double>  press_cc_0;
-    CCVariable<double>  rho_cc_0;
-    CCVariable<double>  temp_cc_0;
-    CCVariable<Vector>  vel_cc_0;
-    
-    to_dw->allocate(    press_cc_0, press_CCLabel_0,  0,patch);
-    to_dw->allocate(    rho_cc_0,   rho_CCLabel_0,    0,patch);
-    to_dw->allocate(    temp_cc_0,  temp_CCLabel_0,   0,patch);
-    to_dw->allocate(    vel_cc_0,   vel_CCLabel_0,    0,patch);
+    for (m = 1; m<= nMaterials; m++)
+    {
+        CCVariable<double>  press_cc_0;
+        CCVariable<double>  rho_cc_0;
+        CCVariable<double>  temp_cc_0;
+        CCVariable<Vector>  vel_cc_0;
 
-    /*__________________________________
-    *   UCF NR
-    *___________________________________*/
-    ICE::after_each_step_wrapper(   patch,
-                       press_cc_0,  press_CC,
-                       rho_cc_0,    rho_CC,
-                       temp_cc_0,   Temp_CC,
-                       vel_cc_0,    uvel_CC,     vvel_CC,        wvel_CC);
-                       
-    to_dw->put(        press_cc_0,  press_CCLabel_0,  0,patch);
-    to_dw->put(        rho_cc_0,    rho_CCLabel_0,    0,patch);
-    to_dw->put(        temp_cc_0,   temp_CCLabel_0,   0,patch);
-    to_dw->put(        vel_cc_0,    vel_CCLabel_0,    0,patch);
+        to_dw->allocate(    press_cc_0, press_CCLabel_0,  m,patch);
+        to_dw->allocate(    rho_cc_0,   rho_CCLabel_0,    m,patch);
+        to_dw->allocate(    temp_cc_0,  temp_CCLabel_0,   m,patch);
+        to_dw->allocate(    vel_cc_0,   vel_CCLabel_0,    m,patch);
+
+        /*__________________________________
+        *   UCF NR
+        *___________________________________*/
+        ICE::after_each_step_wrapper(   patch,
+                            m,
+                            press_cc_0,  press_CC,
+                            rho_cc_0,    rho_CC,
+                            temp_cc_0,   Temp_CC,
+                            vel_cc_0,    uvel_CC,     vvel_CC,        wvel_CC);
+
+        to_dw->put(         press_cc_0,  press_CCLabel_0,  m,patch);
+        to_dw->put(         rho_cc_0,    rho_CCLabel_0,    m,patch);
+        to_dw->put(         temp_cc_0,   temp_CCLabel_0,   m,patch);
+        to_dw->put(         vel_cc_0,    vel_CCLabel_0,    m,patch);
+    }
 #endif   
 /*_______________________________________________________________________*/
-
+cerr << "Actually at top of main loop 2" << endl;
   /*__________________________________
     *   Quite full warn remarks
     *___________________________________*/
@@ -666,35 +608,37 @@ void ICE::actuallyStep1(const ProcessorGroup*,
 			DataWarehouseP& from_dw,
 			DataWarehouseP& to_dw)
 {
-  bool include_ghost_cells = true;
-
+  int m;
  
  
 /*______________________________________________________________________
 *    F  R  O  M     D  W     W  R  A  P  P  E  R 
 *--------------------------------------*/
 #if switch_UCF_step1OnOff  
-    CCVariable<double>  press_cc;
-    CCVariable<double>  rho_cc;
-    CCVariable<double>  temp_cc;
-    CCVariable<Vector>  vel_cc;
-   
-    from_dw->get(       press_cc,     press_CCLabel,0, patch, Ghost::None, 0);
-    from_dw->get(       rho_cc,       rho_CCLabel,  0, patch, Ghost::None, 0);
-    from_dw->get(       temp_cc,      temp_CCLabel, 0, patch, Ghost::None, 0);
-    from_dw->get(       vel_cc,       vel_CCLabel,  0, patch, Ghost::None, 0);
-    /*__________________________________
-    *   UCF NR
-    *___________________________________*/
-    ICE::before_each_step_wrapper(  patch,
-                        press_cc,     press_CC,
-                        rho_cc,       rho_CC,
-                        temp_cc,      Temp_CC,
-                        vel_cc,
-                        uvel_CC,        vvel_CC,        wvel_CC);
+    for (m = 1; m<= nMaterials; m++)
+    {
+        CCVariable<double>  press_cc;
+        CCVariable<double>  rho_cc;
+        CCVariable<double>  temp_cc;
+        CCVariable<Vector>  vel_cc;
+ 
+        from_dw->get(       press_cc,     press_CCLabel_0,m, patch, Ghost::None, 0);
+        from_dw->get(       rho_cc,       rho_CCLabel_0,  m, patch, Ghost::None, 0);
+        from_dw->get(       temp_cc,      temp_CCLabel_0, m, patch, Ghost::None, 0);
+        from_dw->get(       vel_cc,       vel_CCLabel_0,  m, patch, Ghost::None, 0);
+        /*__________________________________
+        *   UCF NR
+        *___________________________________*/
+        ICE::before_each_step_wrapper(  patch,
+                            m,
+                            press_cc,     press_CC,
+                            rho_cc,       rho_CC,
+                            temp_cc,      Temp_CC,
+                            vel_cc,
+                            uvel_CC,        vvel_CC,        wvel_CC);
+    }
 #endif    
 /*______________________________________________________________________*/
-
   /*__________________________________
    *  Use the equation of state to get
    *  P at the cell center
@@ -717,58 +661,41 @@ void ICE::actuallyStep1(const ProcessorGroup*,
                     xHiLimit,       yHiLimit,       zHiLimit,       
                     gamma,          R,              Temp_CC,     
                     speedSound,     nMaterials   );
-
-
-    /*__________________________________
-    *  Make up some diffusion
-    *___________________________________*/ 
-#if 0
-    int m = 1;                   
-    for ( int k = (zLoLimit); k <= (zHiLimit); k++)
-    {
-        for ( int j = (yLoLimit); j <= (yHiLimit); j++)
-        {
-            for ( int i = (xLoLimit); i <= (xHiLimit); i++)
-            { 
-                   Temp_CC[m][i][j][k]   = ( (Temp_CC[m][i-1][j][k] + Temp_CC[m][i+1][j][k]) +
-                                            (Temp_CC[m][i][j-1][k] + Temp_CC[m][i][j+1][k]) )/4.0;
-            
-                    rho_CC[m][i][j][k]   = ( (rho_CC[m][i-1][j][k] + rho_CC[m][i+1][j][k]) +
-                                            (rho_CC[m][i][j-1][k] + rho_CC[m][i][j+1][k]) )/4.0;
-            }
-        }
-    }
-#endif
 #endif
 
 /*______________________________________________________________________
 *     T  O     D  W     W  R  A  P  P  E  R  
 *--------------------------------------*/
 #if switch_UCF_step1OnOff
-    CCVariable<double>  press_cc_1;
-    CCVariable<double>  rho_cc_1;
-    CCVariable<double>  temp_cc_1;
-    CCVariable<Vector>  vel_cc_1;
-    
-    to_dw->allocate(    press_cc_1, press_CCLabel_1,  0,patch);
-    to_dw->allocate(    rho_cc_1,   rho_CCLabel_1,    0,patch);
-    to_dw->allocate(    temp_cc_1,  temp_CCLabel_1,   0,patch);
-    to_dw->allocate(    vel_cc_1,   vel_CCLabel_1,    0,patch);
+    for (m = 1; m<= nMaterials; m++)
+    {
+        CCVariable<double>  press_cc_1;
+        CCVariable<double>  rho_cc_1;
+        CCVariable<double>  temp_cc_1;
+        CCVariable<Vector>  vel_cc_1;
+ 
+        to_dw->allocate(    press_cc_1, press_CCLabel_1,  m,patch);
+        to_dw->allocate(    rho_cc_1,   rho_CCLabel_1,    m,patch);
+        to_dw->allocate(    temp_cc_1,  temp_CCLabel_1,   m,patch);
+        to_dw->allocate(    vel_cc_1,   vel_CCLabel_1,    m,patch);
 
-    /*__________________________________
-    *   UCF NR
-    *___________________________________*/
-    ICE::after_each_step_wrapper(   patch,
-                       press_cc_1,  press_CC,
-                       rho_cc_1,    rho_CC,
-                       temp_cc_1,   Temp_CC,
-                       vel_cc_1,    uvel_CC,     vvel_CC,        wvel_CC);
-                       
-    to_dw->put(        press_cc_1,  press_CCLabel_1,  0,patch);
-    to_dw->put(        rho_cc_1,    rho_CCLabel_1,    0,patch);
-    to_dw->put(        temp_cc_1,   temp_CCLabel_1,   0,patch);
-    to_dw->put(        vel_cc_1,    vel_CCLabel_1,    0,patch);
+        /*__________________________________
+        *   UCF NR
+        *___________________________________*/
+        ICE::after_each_step_wrapper(   patch,
+                           m,
+                           press_cc_1,  press_CC,
+                           rho_cc_1,    rho_CC,
+                           temp_cc_1,   Temp_CC,
+                           vel_cc_1,    uvel_CC,     vvel_CC,        wvel_CC);
+ 
+        to_dw->put(        press_cc_1,  press_CCLabel_1,  m,patch);
+        to_dw->put(        rho_cc_1,    rho_CCLabel_1,    m,patch);
+        to_dw->put(        temp_cc_1,   temp_CCLabel_1,   m,patch);
+        to_dw->put(        vel_cc_1,    vel_CCLabel_1,    m,patch);
+    }
 #endif   
+
 /*_______________________________________________________________________*/
 }
 
@@ -795,30 +722,33 @@ void ICE::actuallyStep2(const ProcessorGroup*,
 			DataWarehouseP& from_dw,
 			DataWarehouseP& to_dw)
 {
-  bool include_ghost_cells = false;
-
+  int m;
 /*______________________________________________________________________
 *    F  R  O  M     D  W     W  R  A  P  P  E  R 
 *--------------------------------------*/
 #if switch_UCF_step2OnOff  
-    CCVariable<double>  press_cc_1;
-    CCVariable<double>  rho_cc_1;
-    CCVariable<double>  temp_cc_1;
-    CCVariable<Vector>  vel_cc_1;
-   
-    from_dw->get(       press_cc_1,     press_CCLabel_1,0, patch, Ghost::None, 0);
-    from_dw->get(       rho_cc_1,       rho_CCLabel_1,  0, patch, Ghost::None, 0);
-    from_dw->get(       temp_cc_1,      temp_CCLabel_1, 0, patch, Ghost::None, 0);
-    from_dw->get(       vel_cc_1,       vel_CCLabel_1,  0, patch, Ghost::None, 0);
-    /*__________________________________
-    *   UCF NR
-    *___________________________________*/
-    ICE::before_each_step_wrapper(  patch,
-                        press_cc_1,     press_CC,
-                        rho_cc_1,       rho_CC,
-                        temp_cc_1,      Temp_CC,
-                        vel_cc_1,
-                        uvel_CC,        vvel_CC,        wvel_CC);
+    for (m = 1; m<= nMaterials; m++)
+    {
+        CCVariable<double>  press_cc_1;
+        CCVariable<double>  rho_cc_1;
+        CCVariable<double>  temp_cc_1;
+        CCVariable<Vector>  vel_cc_1;
+ 
+        from_dw->get(       press_cc_1,     press_CCLabel_1,m, patch, Ghost::None, 0);
+        from_dw->get(       rho_cc_1,       rho_CCLabel_1,  m, patch, Ghost::None, 0);
+        from_dw->get(       temp_cc_1,      temp_CCLabel_1, m, patch, Ghost::None, 0);
+        from_dw->get(       vel_cc_1,       vel_CCLabel_1,  m, patch, Ghost::None, 0);
+        /*__________________________________
+        *   UCF NR
+        *___________________________________*/
+        ICE::before_each_step_wrapper(  patch,
+                            m,
+                            press_cc_1,     press_CC,
+                            rho_cc_1,       rho_CC,
+                            temp_cc_1,      Temp_CC,
+                            vel_cc_1,
+                            uvel_CC,        vvel_CC,        wvel_CC);
+    }
 #endif    
 /*______________________________________________________________________*/
  
@@ -886,31 +816,36 @@ void ICE::actuallyStep2(const ProcessorGroup*,
 *     T  O     D  W     W  R  A  P  P  E  R  
 *--------------------------------------*/
 #if switch_UCF_step2OnOff
-    CCVariable<double>  press_cc_2;
-    CCVariable<double>  rho_cc_2;
-    CCVariable<double>  temp_cc_2;
-    CCVariable<Vector>  vel_cc_2;
-    
-    to_dw->allocate(    press_cc_2, press_CCLabel_2,  0,patch);
-    to_dw->allocate(    rho_cc_2,   rho_CCLabel_2,    0,patch);
-    to_dw->allocate(    temp_cc_2,  temp_CCLabel_2,   0,patch);
-    to_dw->allocate(    vel_cc_2,   vel_CCLabel_2,    0,patch);
+    for (m = 1; m<= nMaterials; m++)
+    {
+        CCVariable<double>  press_cc_2;
+        CCVariable<double>  rho_cc_2;
+        CCVariable<double>  temp_cc_2;
+        CCVariable<Vector>  vel_cc_2;
+ 
+        to_dw->allocate(    press_cc_2, press_CCLabel_2,  m,patch);
+        to_dw->allocate(    rho_cc_2,   rho_CCLabel_2,    m,patch);
+        to_dw->allocate(    temp_cc_2,  temp_CCLabel_2,   m,patch);
+        to_dw->allocate(    vel_cc_2,   vel_CCLabel_2,    m,patch);
 
-    /*__________________________________
-    *   UCF NR
-    *___________________________________*/
-    ICE::after_each_step_wrapper(   patch,
-                       press_cc_2,  press_CC,
-                       rho_cc_2,    rho_CC,
-                       temp_cc_2,   Temp_CC,
-                       vel_cc_2,    uvel_CC,     vvel_CC,        wvel_CC);
-                       
-    to_dw->put(        press_cc_2,  press_CCLabel_2,  0,patch);
-    to_dw->put(        rho_cc_2,    rho_CCLabel_2,    0,patch);
-    to_dw->put(        temp_cc_2,   temp_CCLabel_2,   0,patch);
-    to_dw->put(        vel_cc_2,    vel_CCLabel_2,    0,patch);
+        /*__________________________________
+        *   UCF NR
+        *___________________________________*/
+        ICE::after_each_step_wrapper(   patch,
+                           m,
+                           press_cc_2,  press_CC,
+                           rho_cc_2,    rho_CC,
+                           temp_cc_2,   Temp_CC,
+                           vel_cc_2,    uvel_CC,     vvel_CC,        wvel_CC);
+ 
+        to_dw->put(        press_cc_2,  press_CCLabel_2,  m,patch);
+        to_dw->put(        rho_cc_2,    rho_CCLabel_2,    m,patch);
+        to_dw->put(        temp_cc_2,   temp_CCLabel_2,   m,patch);
+        to_dw->put(        vel_cc_2,    vel_CCLabel_2,    m,patch);
+    }
 #endif   
 /*_______________________________________________________________________*/
+
 }
 
 
@@ -931,28 +866,33 @@ void ICE::actuallyStep3(const ProcessorGroup*,
 			DataWarehouseP& from_dw,
 			DataWarehouseP& to_dw)
 {
+    int m;
 /*______________________________________________________________________
 *    F  R  O  M     D  W     W  R  A  P  P  E  R 
 *--------------------------------------*/
 #if switch_UCF_step3OnOff  
-    CCVariable<double>  press_cc_2;
-    CCVariable<double>  rho_cc_2;
-    CCVariable<double>  temp_cc_2;
-    CCVariable<Vector>  vel_cc_2;
-   
-    from_dw->get(       press_cc_2,     press_CCLabel_2,0, patch, Ghost::None, 0);
-    from_dw->get(       rho_cc_2,       rho_CCLabel_2,  0, patch, Ghost::None, 0);
-    from_dw->get(       temp_cc_2,      temp_CCLabel_2, 0, patch, Ghost::None, 0);
-    from_dw->get(       vel_cc_2,       vel_CCLabel_2,  0, patch, Ghost::None, 0);
-    /*__________________________________
-    *   UCF NR
-    *___________________________________*/
-    ICE::before_each_step_wrapper(  patch,
-                        press_cc_2,     press_CC,
-                        rho_cc_2,       rho_CC,
-                        temp_cc_2,      Temp_CC,
-                        vel_cc_2,
-                        uvel_CC,        vvel_CC,        wvel_CC);
+    for (m = 1; m<= nMaterials; m++)
+    {
+        CCVariable<double>  press_cc_2;
+        CCVariable<double>  rho_cc_2;
+        CCVariable<double>  temp_cc_2;
+        CCVariable<Vector>  vel_cc_2;
+ 
+        from_dw->get(       press_cc_2,     press_CCLabel_2,m, patch, Ghost::None, 0);
+        from_dw->get(       rho_cc_2,       rho_CCLabel_2,  m, patch, Ghost::None, 0);
+        from_dw->get(       temp_cc_2,      temp_CCLabel_2, m, patch, Ghost::None, 0);
+        from_dw->get(       vel_cc_2,       vel_CCLabel_2,  m, patch, Ghost::None, 0);
+        /*__________________________________
+        *   UCF NR
+        *___________________________________*/
+        ICE::before_each_step_wrapper(  patch,
+                            m,
+                            press_cc_2,     press_CC,
+                            rho_cc_2,       rho_CC,
+                            temp_cc_2,      Temp_CC,
+                            vel_cc_2,
+                            uvel_CC,        vvel_CC,        wvel_CC);
+    }
 #endif    
 /*______________________________________________________________________*/
 
@@ -972,29 +912,33 @@ void ICE::actuallyStep3(const ProcessorGroup*,
 *     T  O     D  W     W  R  A  P  P  E  R  
 *--------------------------------------*/
 #if switch_UCF_step3OnOff
-    CCVariable<double>  press_cc_3;
-    CCVariable<double>  rho_cc_3;
-    CCVariable<double>  temp_cc_3;
-    CCVariable<Vector>  vel_cc_3;
-    
-    to_dw->allocate(    press_cc_3, press_CCLabel_3,  0,patch);
-    to_dw->allocate(    rho_cc_3,   rho_CCLabel_3,    0,patch);
-    to_dw->allocate(    temp_cc_3,  temp_CCLabel_3,   0,patch);
-    to_dw->allocate(    vel_cc_3,   vel_CCLabel_3,    0,patch);
+    for (m = 1; m<= nMaterials; m++)
+    {
+        CCVariable<double>  press_cc_3;
+        CCVariable<double>  rho_cc_3;
+        CCVariable<double>  temp_cc_3;
+        CCVariable<Vector>  vel_cc_3;
+ 
+        to_dw->allocate(    press_cc_3, press_CCLabel_3,  m,patch);
+        to_dw->allocate(    rho_cc_3,   rho_CCLabel_3,    m,patch);
+        to_dw->allocate(    temp_cc_3,  temp_CCLabel_3,   m,patch);
+        to_dw->allocate(    vel_cc_3,   vel_CCLabel_3,    m,patch);
 
-    /*__________________________________
-    *   UCF NR
-    *___________________________________*/
-    ICE::after_each_step_wrapper(   patch,
-                       press_cc_3,  press_CC,
-                       rho_cc_3,    rho_CC,
-                       temp_cc_3,   Temp_CC,
-                       vel_cc_3,    uvel_CC,     vvel_CC,        wvel_CC);
-                       
-    to_dw->put(        press_cc_3,  press_CCLabel_3,  0,patch);
-    to_dw->put(        rho_cc_3,    rho_CCLabel_3,    0,patch);
-    to_dw->put(        temp_cc_3,   temp_CCLabel_3,   0,patch);
-    to_dw->put(        vel_cc_3,    vel_CCLabel_3,    0,patch);
+        /*__________________________________
+        *   UCF NR
+        *___________________________________*/
+        ICE::after_each_step_wrapper(   patch,
+                            m,
+                            press_cc_3,  press_CC,
+                            rho_cc_3,    rho_CC,
+                            temp_cc_3,   Temp_CC,
+                            vel_cc_3,    uvel_CC,     vvel_CC,        wvel_CC);
+ 
+        to_dw->put(         press_cc_3,  press_CCLabel_3,  m,patch);
+        to_dw->put(         rho_cc_3,    rho_CCLabel_3,    m,patch);
+        to_dw->put(         temp_cc_3,   temp_CCLabel_3,   m,patch);
+        to_dw->put(         vel_cc_3,    vel_CCLabel_3,    m,patch);
+    }
 #endif   
 /*_______________________________________________________________________*/
 }
@@ -1023,28 +967,33 @@ void ICE::actuallyStep4(const ProcessorGroup*,
 			DataWarehouseP& from_dw,
 			DataWarehouseP& to_dw)
 {
+    int m;
 /*______________________________________________________________________
 *    F  R  O  M     D  W     W  R  A  P  P  E  R 
 *--------------------------------------*/
 #if switch_UCF_step4OnOff  
-    CCVariable<double>  press_cc_3;
-    CCVariable<double>  rho_cc_3;
-    CCVariable<double>  temp_cc_3;
-    CCVariable<Vector>  vel_cc_3;
-   
-    from_dw->get(       press_cc_3,     press_CCLabel_3,0, patch, Ghost::None, 0);
-    from_dw->get(       rho_cc_3,       rho_CCLabel_3,  0, patch, Ghost::None, 0);
-    from_dw->get(       temp_cc_3,      temp_CCLabel_3, 0, patch, Ghost::None, 0);
-    from_dw->get(       vel_cc_3,       vel_CCLabel_3,  0, patch, Ghost::None, 0);
-    /*__________________________________
-    *   UCF NR
-    *___________________________________*/
-    ICE::before_each_step_wrapper(  patch,
-                        press_cc_3,     press_CC,
-                        rho_cc_3,       rho_CC,
-                        temp_cc_3,      Temp_CC,
-                        vel_cc_3,
-                        uvel_CC,        vvel_CC,        wvel_CC);
+    for (m = 1; m<= nMaterials; m++)
+    {
+        CCVariable<double>  press_cc_3;
+        CCVariable<double>  rho_cc_3;
+        CCVariable<double>  temp_cc_3;
+        CCVariable<Vector>  vel_cc_3;
+ 
+        from_dw->get(       press_cc_3,     press_CCLabel_3,m, patch, Ghost::None, 0);
+        from_dw->get(       rho_cc_3,       rho_CCLabel_3,  m, patch, Ghost::None, 0);
+        from_dw->get(       temp_cc_3,      temp_CCLabel_3, m, patch, Ghost::None, 0);
+        from_dw->get(       vel_cc_3,       vel_CCLabel_3,  m, patch, Ghost::None, 0);
+        /*__________________________________
+        *   UCF NR
+        *___________________________________*/
+        ICE::before_each_step_wrapper(  patch,
+                            m,
+                            press_cc_3,     press_CC,
+                            rho_cc_3,       rho_CC,
+                            temp_cc_3,      Temp_CC,
+                            vel_cc_3,
+                            uvel_CC,        vvel_CC,        wvel_CC);
+    }
 #endif    
 /*______________________________________________________________________*/
  
@@ -1083,29 +1032,33 @@ void ICE::actuallyStep4(const ProcessorGroup*,
 *     T  O     D  W     W  R  A  P  P  E  R  
 *--------------------------------------*/
 #if switch_UCF_step4OnOff
-    CCVariable<double>  press_cc_4;
-    CCVariable<double>  rho_cc_4;
-    CCVariable<double>  temp_cc_4;
-    CCVariable<Vector>  vel_cc_4;
-    
-    to_dw->allocate(    press_cc_4, press_CCLabel_4,  0,patch);
-    to_dw->allocate(    rho_cc_4,   rho_CCLabel_4,    0,patch);
-    to_dw->allocate(    temp_cc_4,  temp_CCLabel_4,   0,patch);
-    to_dw->allocate(    vel_cc_4,   vel_CCLabel_4,    0,patch);
+    for (m = 1; m<= nMaterials; m++)
+    {
+        CCVariable<double>  press_cc_4;
+        CCVariable<double>  rho_cc_4;
+        CCVariable<double>  temp_cc_4;
+        CCVariable<Vector>  vel_cc_4;
+ 
+        to_dw->allocate(    press_cc_4, press_CCLabel_4,  m,patch);
+        to_dw->allocate(    rho_cc_4,   rho_CCLabel_4,    m,patch);
+        to_dw->allocate(    temp_cc_4,  temp_CCLabel_4,   m,patch);
+        to_dw->allocate(    vel_cc_4,   vel_CCLabel_4,    m,patch);
 
-    /*__________________________________
-    *   UCF NR
-    *___________________________________*/
-    ICE::after_each_step_wrapper(   patch,
-                       press_cc_4,  press_CC,
-                       rho_cc_4,    rho_CC,
-                       temp_cc_4,   Temp_CC,
-                       vel_cc_4,    uvel_CC,     vvel_CC,        wvel_CC);
-                       
-    to_dw->put(        press_cc_4,  press_CCLabel_4,  0,patch);
-    to_dw->put(        rho_cc_4,    rho_CCLabel_4,    0,patch);
-    to_dw->put(        temp_cc_4,   temp_CCLabel_4,   0,patch);
-    to_dw->put(        vel_cc_4,    vel_CCLabel_4,    0,patch);
+        /*__________________________________
+        *   UCF NR
+        *___________________________________*/
+        ICE::after_each_step_wrapper(   patch,
+                            m,
+                            press_cc_4,  press_CC,
+                            rho_cc_4,    rho_CC,
+                            temp_cc_4,   Temp_CC,
+                            vel_cc_4,    uvel_CC,     vvel_CC,        wvel_CC);
+ 
+        to_dw->put(         press_cc_4,  press_CCLabel_4,  m,patch);
+        to_dw->put(         rho_cc_4,    rho_CCLabel_4,    m,patch);
+        to_dw->put(         temp_cc_4,   temp_CCLabel_4,   m,patch);
+        to_dw->put(         vel_cc_4,    vel_CCLabel_4,    m,patch);
+    }
 #endif   
 /*_______________________________________________________________________*/
 
@@ -1130,28 +1083,33 @@ void ICE::actuallyStep5(const ProcessorGroup*,
 			DataWarehouseP& from_dw,
 			DataWarehouseP& to_dw)
 {
+    int m;
 /*______________________________________________________________________
 *    F  R  O  M     D  W     W  R  A  P  P  E  R 
 *--------------------------------------*/
 #if switch_UCF_step5OnOff  
-    CCVariable<double>  press_cc_4;
-    CCVariable<double>  rho_cc_4;
-    CCVariable<double>  temp_cc_4;
-    CCVariable<Vector>  vel_cc_4;
-   
-    from_dw->get(       press_cc_4,     press_CCLabel_4,0, patch, Ghost::None, 0);
-    from_dw->get(       rho_cc_4,       rho_CCLabel_4,  0, patch, Ghost::None, 0);
-    from_dw->get(       temp_cc_4,      temp_CCLabel_4, 0, patch, Ghost::None, 0);
-    from_dw->get(       vel_cc_4,       vel_CCLabel_4,  0, patch, Ghost::None, 0);
-    /*__________________________________
-    *   UCF NR
-    *___________________________________*/
-    ICE::before_each_step_wrapper(  patch,
-                        press_cc_4,     press_CC,
-                        rho_cc_4,       rho_CC,
-                        temp_cc_4,      Temp_CC,
-                        vel_cc_4,
-                        uvel_CC,        vvel_CC,        wvel_CC);
+    for (m = 1; m<= nMaterials; m++)
+    {
+        CCVariable<double>  press_cc_4;
+        CCVariable<double>  rho_cc_4;
+        CCVariable<double>  temp_cc_4;
+        CCVariable<Vector>  vel_cc_4;
+ 
+        from_dw->get(       press_cc_4,     press_CCLabel_4,m, patch, Ghost::None, 0);
+        from_dw->get(       rho_cc_4,       rho_CCLabel_4,  m, patch, Ghost::None, 0);
+        from_dw->get(       temp_cc_4,      temp_CCLabel_4, m, patch, Ghost::None, 0);
+        from_dw->get(       vel_cc_4,       vel_CCLabel_4,  m, patch, Ghost::None, 0);
+        /*__________________________________
+        *   UCF NR
+        *___________________________________*/
+        ICE::before_each_step_wrapper(  patch,
+                            m,
+                            press_cc_4,     press_CC,
+                            rho_cc_4,       rho_CC,
+                            temp_cc_4,      Temp_CC,
+                            vel_cc_4,
+                            uvel_CC,        vvel_CC,        wvel_CC);
+    }
 #endif    
 /*______________________________________________________________________*/
      /*__________________________________
@@ -1197,29 +1155,33 @@ void ICE::actuallyStep5(const ProcessorGroup*,
 *     T  O     D  W     W  R  A  P  P  E  R  
 *--------------------------------------*/
 #if switch_UCF_step5OnOff
-    CCVariable<double>  press_cc_5;
-    CCVariable<double>  rho_cc_5;
-    CCVariable<double>  temp_cc_5;
-    CCVariable<Vector>  vel_cc_5;
-    
-    to_dw->allocate(    press_cc_5, press_CCLabel_5,  0,patch);
-    to_dw->allocate(    rho_cc_5,   rho_CCLabel_5,    0,patch);
-    to_dw->allocate(    temp_cc_5,  temp_CCLabel_5,   0,patch);
-    to_dw->allocate(    vel_cc_5,   vel_CCLabel_5,    0,patch);
+    for (m = 1; m<= nMaterials; m++)
+    {
+        CCVariable<double>  press_cc_5;
+        CCVariable<double>  rho_cc_5;
+        CCVariable<double>  temp_cc_5;
+        CCVariable<Vector>  vel_cc_5;
+ 
+        to_dw->allocate(    press_cc_5, press_CCLabel_5,  m,patch);
+        to_dw->allocate(    rho_cc_5,   rho_CCLabel_5,    m,patch);
+        to_dw->allocate(    temp_cc_5,  temp_CCLabel_5,   m,patch);
+        to_dw->allocate(    vel_cc_5,   vel_CCLabel_5,    m,patch);
 
-    /*__________________________________
-    *   UCF NR
-    *___________________________________*/
-    ICE::after_each_step_wrapper(   patch,
-                       press_cc_5,  press_CC,
-                       rho_cc_5,    rho_CC,
-                       temp_cc_5,   Temp_CC,
-                       vel_cc_5,    uvel_CC,     vvel_CC,        wvel_CC);
-                       
-    to_dw->put(        press_cc_5,  press_CCLabel_5,  0,patch);
-    to_dw->put(        rho_cc_5,    rho_CCLabel_5,    0,patch);
-    to_dw->put(        temp_cc_5,   temp_CCLabel_5,   0,patch);
-    to_dw->put(        vel_cc_5,    vel_CCLabel_5,    0,patch);
+        /*__________________________________
+        *   UCF NR
+        *___________________________________*/
+        ICE::after_each_step_wrapper(   patch,
+                            m,
+                            press_cc_5,  press_CC,
+                            rho_cc_5,    rho_CC,
+                            temp_cc_5,   Temp_CC,
+                            vel_cc_5,    uvel_CC,     vvel_CC,        wvel_CC);
+ 
+        to_dw->put(         press_cc_5,  press_CCLabel_5,  m,patch);
+        to_dw->put(         rho_cc_5,    rho_CCLabel_5,    m,patch);
+        to_dw->put(         temp_cc_5,   temp_CCLabel_5,   m,patch);
+        to_dw->put(         vel_cc_5,    vel_CCLabel_5,    m,patch);
+    }
 #endif   
 /*_______________________________________________________________________*/
 
@@ -1249,28 +1211,33 @@ void ICE::actuallyStep6and7(const ProcessorGroup*,
 			DataWarehouseP& from_dw,
 			DataWarehouseP& to_dw)
 {
+    int m;
 /*______________________________________________________________________
 *    F  R  O  M     D  W     W  R  A  P  P  E  R 
 *--------------------------------------*/
 #if switch_UCF_step6_7OnOff  
-    CCVariable<double>  press_cc_5;
-    CCVariable<double>  rho_cc_5;
-    CCVariable<double>  temp_cc_5;
-    CCVariable<Vector>  vel_cc_5;
-   
-    from_dw->get(       press_cc_5,     press_CCLabel_5,0, patch, Ghost::None, 0);
-    from_dw->get(       rho_cc_5,       rho_CCLabel_5,  0, patch, Ghost::None, 0);
-    from_dw->get(       temp_cc_5,      temp_CCLabel_5, 0, patch, Ghost::None, 0);
-    from_dw->get(       vel_cc_5,       vel_CCLabel_5,  0, patch, Ghost::None, 0);
-    /*__________________________________
-    *   UCF NR
-    *___________________________________*/
-    ICE::before_each_step_wrapper(  patch,
-                        press_cc_5,     press_CC,
-                        rho_cc_5,       rho_CC,
-                        temp_cc_5,      Temp_CC,
-                        vel_cc_5,
-                        uvel_CC,        vvel_CC,        wvel_CC);
+    for (m = 1; m<= nMaterials; m++)
+    {
+        CCVariable<double>  press_cc_5;
+        CCVariable<double>  rho_cc_5;
+        CCVariable<double>  temp_cc_5;
+        CCVariable<Vector>  vel_cc_5;
+ 
+        from_dw->get(       press_cc_5,     press_CCLabel_5,m, patch, Ghost::None, 0);
+        from_dw->get(       rho_cc_5,       rho_CCLabel_5,  m, patch, Ghost::None, 0);
+        from_dw->get(       temp_cc_5,      temp_CCLabel_5, m, patch, Ghost::None, 0);
+        from_dw->get(       vel_cc_5,       vel_CCLabel_5,  m, patch, Ghost::None, 0);
+        /*__________________________________
+        *   UCF NR
+        *___________________________________*/
+        ICE::before_each_step_wrapper(  patch,
+                            m,
+                            press_cc_5,     press_CC,
+                            rho_cc_5,       rho_CC,
+                            temp_cc_5,      Temp_CC,
+                            vel_cc_5,
+                            uvel_CC,        vvel_CC,        wvel_CC);
+    }
 #endif    
 /*______________________________________________________________________*/
     /*_________________________________   
@@ -1317,29 +1284,33 @@ void ICE::actuallyStep6and7(const ProcessorGroup*,
 *     T  O     D  W     W  R  A  P  P  E  R  
 *--------------------------------------*/
 #if switch_UCF_step6_7OnOff
-    CCVariable<double>  press_cc_6_7;
-    CCVariable<double>  rho_cc_6_7;
-    CCVariable<double>  temp_cc_6_7;
-    CCVariable<Vector>  vel_cc_6_7;
-    
-    to_dw->allocate(    press_cc_6_7, press_CCLabel_6_7,  0,patch);
-    to_dw->allocate(    rho_cc_6_7,   rho_CCLabel_6_7,    0,patch);
-    to_dw->allocate(    temp_cc_6_7,  temp_CCLabel_6_7,   0,patch);
-    to_dw->allocate(    vel_cc_6_7,   vel_CCLabel_6_7,    0,patch);
+    for (m = 1; m<= nMaterials; m++)
+    {
+        CCVariable<double>  press_cc_6_7;
+        CCVariable<double>  rho_cc_6_7;
+        CCVariable<double>  temp_cc_6_7;
+        CCVariable<Vector>  vel_cc_6_7;
+ 
+        to_dw->allocate(    press_cc_6_7, press_CCLabel_6_7,  m,patch);
+        to_dw->allocate(    rho_cc_6_7,   rho_CCLabel_6_7,    m,patch);
+        to_dw->allocate(    temp_cc_6_7,  temp_CCLabel_6_7,   m,patch);
+        to_dw->allocate(    vel_cc_6_7,   vel_CCLabel_6_7,    m,patch);
 
-    /*__________________________________
-    *   UCF NR
-    *___________________________________*/
-    ICE::after_each_step_wrapper(   patch,
-                       press_cc_6_7,  press_CC,
-                       rho_cc_6_7,    rho_CC,
-                       temp_cc_6_7,   Temp_CC,
-                       vel_cc_6_7,    uvel_CC,     vvel_CC,        wvel_CC);
-                       
-    to_dw->put(        press_cc_6_7,  press_CCLabel_6_7,  0,patch);
-    to_dw->put(        rho_cc_6_7,    rho_CCLabel_6_7,    0,patch);
-    to_dw->put(        temp_cc_6_7,   temp_CCLabel_6_7,   0,patch);
-    to_dw->put(        vel_cc_6_7,    vel_CCLabel_6_7,    0,patch);
+        /*__________________________________
+        *   UCF NR
+        *___________________________________*/
+        ICE::after_each_step_wrapper(   patch,
+                            m,
+                            press_cc_6_7,  press_CC,
+                            rho_cc_6_7,    rho_CC,
+                            temp_cc_6_7,   Temp_CC,
+                            vel_cc_6_7,    uvel_CC,     vvel_CC,        wvel_CC);
+ 
+        to_dw->put(         press_cc_6_7,  press_CCLabel_6_7,  m,patch);
+        to_dw->put(         rho_cc_6_7,    rho_CCLabel_6_7,    m,patch);
+        to_dw->put(         temp_cc_6_7,   temp_CCLabel_6_7,   m,patch);
+        to_dw->put(         vel_cc_6_7,    vel_CCLabel_6_7,    m,patch);
+    }
 #endif   
 /*_______________________________________________________________________*/
 }
@@ -1364,11 +1335,10 @@ void ICE::actually_Bottom_of_main_loop(const ProcessorGroup*,
 		      DataWarehouseP& from_dw,
 		      DataWarehouseP& to_dw)
 {
-  double t      = this->cheat_t;
-  double delt   = this->cheat_delt;
-  int   should_I_write_output;
-  bool include_ghost_cells = true;
-  
+    double t      = this->cheat_t;
+    double delt   = this->cheat_delt;
+    int   should_I_write_output;
+    int m;  
 
   /*__________________________________
    *   Plotting variables
@@ -1380,27 +1350,30 @@ void ICE::actually_Bottom_of_main_loop(const ProcessorGroup*,
 /*______________________________________________________________________
 *    F  R  O  M     D  W     W  R  A  P  P  E  R 
 *--------------------------------------*/
-#if switch_UCF_Bottom_of_main_loopOnOff  
-    CCVariable<double>  press_cc_6_7;
-    CCVariable<double>  rho_cc_6_7;
-    CCVariable<double>  temp_cc_6_7;
-    CCVariable<Vector>  vel_cc_6_7;
-   
-    from_dw->get(       press_cc_6_7,   press_CCLabel_6_7,0, patch, Ghost::None, 0);
-    from_dw->get(       rho_cc_6_7,     rho_CCLabel_6_7,  0, patch, Ghost::None, 0);
-    from_dw->get(       temp_cc_6_7,    temp_CCLabel_6_7, 0, patch, Ghost::None, 0);
-    from_dw->get(       vel_cc_6_7,     vel_CCLabel_6_7,  0, patch, Ghost::None, 0);
-    /*__________________________________
-    *   UCF NR
-    *___________________________________*/
-    ICE::before_each_step_wrapper(  patch,
-                        press_cc_6_7,   press_CC,
-                        rho_cc_6_7,     rho_CC,
-                        temp_cc_6_7,    Temp_CC,
-                        vel_cc_6_7,
-                        uvel_CC,        vvel_CC,        wvel_CC);
+#if switch_UCF_Bottom_of_main_loopOnOff 
+    for (m = 1; m<= nMaterials; m++)
+    { 
+        CCVariable<double>  press_cc_6_7;
+        CCVariable<double>  rho_cc_6_7;
+        CCVariable<double>  temp_cc_6_7;
+        CCVariable<Vector>  vel_cc_6_7;
 
+        from_dw->get(       press_cc_6_7,   press_CCLabel_6_7,m, patch, Ghost::None, 0);
+        from_dw->get(       rho_cc_6_7,     rho_CCLabel_6_7,  m, patch, Ghost::None, 0);
+        from_dw->get(       temp_cc_6_7,    temp_CCLabel_6_7, m, patch, Ghost::None, 0);
+        from_dw->get(       vel_cc_6_7,     vel_CCLabel_6_7,  m, patch, Ghost::None, 0);
+        /*__________________________________
+        *   UCF NR
+        *___________________________________*/
+        ICE::before_each_step_wrapper(  patch,
+                            m,
+                            press_cc_6_7,   press_CC,
+                            rho_cc_6_7,     rho_CC,
+                            temp_cc_6_7,    Temp_CC,
+                            vel_cc_6_7,
+                            uvel_CC,        vvel_CC,        wvel_CC);
 
+    }
 #endif
 /*______________________________________________________________________*/
 
@@ -1469,29 +1442,33 @@ void ICE::actually_Bottom_of_main_loop(const ProcessorGroup*,
 *     T  O     D  W     W  R  A  P  P  E  R  
 *--------------------------------------*/
 #if switch_UCF_Bottom_of_main_loopOnOff
-    CCVariable<Vector>  new_vel_cc;
-    CCVariable<double>  new_temp_cc;
-    CCVariable<double>  new_rho_cc;
-    CCVariable<double>  new_press_cc;
-    
-    to_dw->allocate(    new_vel_cc,     vel_CCLabel,    0,patch);
-    to_dw->allocate(    new_temp_cc,    temp_CCLabel,   0,patch);
-    to_dw->allocate(    new_rho_cc,     rho_CCLabel,    0,patch);
-    to_dw->allocate(    new_press_cc,   press_CCLabel,  0,patch);
-    /*__________________________________
-    *   UCF NR
-    *___________________________________*/
-    ICE::after_each_step_wrapper(  patch,
-                       new_press_cc,   press_CC,
-                       new_rho_cc,     rho_CC,
-                       new_temp_cc,    Temp_CC,
-                       new_vel_cc,
-                       uvel_CC,         vvel_CC,        wvel_CC);
-                       
-    to_dw->put(        new_press_cc,   press_CCLabel,  0,patch); 
-    to_dw->put(        new_rho_cc,     rho_CCLabel,    0,patch);
-    to_dw->put(        new_temp_cc,    temp_CCLabel,   0,patch); 
-    to_dw->put(        new_vel_cc,     vel_CCLabel,    0,patch);        
+   for (m = 1; m<= nMaterials; m++)
+   {
+       CCVariable<Vector>  new_vel_cc;
+       CCVariable<double>  new_temp_cc;
+       CCVariable<double>  new_rho_cc;
+       CCVariable<double>  new_press_cc;
+ 
+       to_dw->allocate(    new_vel_cc,     vel_CCLabel,    m,patch);
+       to_dw->allocate(    new_temp_cc,    temp_CCLabel,   m,patch);
+       to_dw->allocate(    new_rho_cc,     rho_CCLabel,    m,patch);
+       to_dw->allocate(    new_press_cc,   press_CCLabel,  m,patch);
+       /*__________________________________
+       *   UCF NR
+       *___________________________________*/
+       ICE::after_each_step_wrapper(  patch,
+                           m,
+                           new_press_cc,   press_CC,
+                           new_rho_cc,     rho_CC,
+                           new_temp_cc,    Temp_CC,
+                           new_vel_cc,
+                           uvel_CC,         vvel_CC,        wvel_CC);
+ 
+       to_dw->put(         new_press_cc,   press_CCLabel,  m,patch);
+       to_dw->put(         new_rho_cc,     rho_CCLabel,    m,patch);
+       to_dw->put(         new_temp_cc,    temp_CCLabel,   m,patch);
+       to_dw->put(         new_vel_cc,     vel_CCLabel,    m,patch);
+   }
 #endif  
 /*______________________________________________________________________*/
 
