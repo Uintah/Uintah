@@ -214,7 +214,7 @@ GenericField<Mesh, FData>::maker()
 
 template <class Mesh, class FData>
 PersistentTypeID 
-GenericField<Mesh, FData>::type_id(type_name(), "Field", maker);
+GenericField<Mesh, FData>::type_id(type_name(-1), "Field", maker);
 
 
 template <class Mesh, class FData>
