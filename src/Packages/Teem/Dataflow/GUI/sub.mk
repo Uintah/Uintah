@@ -27,6 +27,7 @@ SRCDIR := Packages/Teem/Dataflow/GUI
 ALLTARGETS := $(ALLTARGETS) $(SRCDIR)/tclIndex
 
 $(SRCDIR)/tclIndex: \
+	$(SRCDIR)/axis_info_sel_box.tcl\
 	$(SRCDIR)/FieldToNrrd.tcl\
 	$(SRCDIR)/NrrdConvert.tcl\
 	$(SRCDIR)/NrrdCrop.tcl\
