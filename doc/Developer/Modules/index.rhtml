@@ -1,5 +1,3 @@
-<!-- -*- nxml -*- -->
-
 <!--% require("../../Utilities/Publish/srdoc.rb") %-->
 <!--% doc = Doc.create(Doc::HTML) %-->
 
@@ -22,44 +20,28 @@ University of Utah. All Rights Reserved.
 
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
   <head>
+    <script type="text/javascript" src="../../Utilities/HTML/tools.js"></script>
+    <script type="text/javascript">var doc = new IndexDocument();</script>
     <title>Index to SCIRun Modules by Package</title>
-    <link href="../../Utilities/HTML/indexcommon.css" type="text/css" rel="stylesheet"/>
     <style type="text/css">
-      h1.page-title {
-      width: 4in;
-      margin-left: auto;
-      margin-right: auto;
-      padding-top: 0.1in;
-      padding-bottom: 0.1in;
-      border-bottom: thick solid #213341;
-      }
-      div.package-list {
-      width: 4in;
-      margin-left: auto;
-      margin-right: auto;
-      background-color: white;
-      border: 0.5in solid #213341;
-      }
-      h2 {
-      text-align: left;
-      padding-left: 5px;
-      padding-right: 5px;
+      div.doc-group {
+        width: 400px;
+	float: none;
+	margin-left: auto;
+	margin-right: auto;
       }
       p {
-      padding-left: 5px;
-      padding-right: 5px;
+        width: 380px;
       }
     </style>
   </head>
 
   <body>
-
-    <script type="text/javascript" src="../../Utilities/HTML/tools.js"></script>
-    <script type="text/javascript">preContent();</script>
+    <script type="text/javascript">doc.preContent();</script>
 
     <h1 class="page-title">Module Descriptions by Package<br/>(v. <!--%= doc.edition %-->)</h1>
 
-    <div class="package-list">
+    <div class="doc-group">
       <h1>Packages</h1>
       <h2><a href="SCIRun.html">SCIRun</a></h2>
       <p>Modules providing a base set of datatypes and algorithms</p>
@@ -93,6 +75,6 @@ University of Utah. All Rights Reserved.
       </p>
 
     </div>
-    <script type="text/javascript">postContent();</script>
+    <script type="text/javascript">doc.postContent();</script>
   </body>
 </html>
