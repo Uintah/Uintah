@@ -1,6 +1,7 @@
 
 #include <config/sci.cf>
 
-SUBDIRS = SoundInput SoundFilter SoundMixer SoundOutput SoundReader
+SUBDIRS = IsoSurface Salmon \
+	SoundInput SoundFilter SoundMixer SoundOutput SoundReader
 
 SCISubdirs($(SUBDIRS))
