@@ -6,6 +6,9 @@ using std::cerr;
 using namespace Uintah;
 using namespace SCIRun;
 
+static constParticleVariable<double> pPlasticStrain;
+static ParticleVariable<double> pPlasticStrain_new;
+
 JohnsonCookPlastic::JohnsonCookPlastic(ProblemSpecP& ps)
 {
   ps->require("A",d_initialData.A);
@@ -13,25 +16,100 @@ JohnsonCookPlastic::JohnsonCookPlastic(ProblemSpecP& ps)
   ps->require("C",d_initialData.C);
   ps->require("n",d_initialData.n);
   ps->require("m",d_initialData.m);
+
+  // Initialize internal variable labels for evolution
+  pPlasticStrainLabel = VarLabel::create("p.plasticStrain",
+			ParticleVariable<double>::getTypeDescription());
+  pPlasticStrainLabel_preReloc = VarLabel::create("p.plasticStrain+",
+			ParticleVariable<double>::getTypeDescription());
 }
 	 
 JohnsonCookPlastic::~JohnsonCookPlastic()
 {
+  VarLabel::destroy(pPlasticStrainLabel);
+  VarLabel::destroy(pPlasticStrainLabel_preReloc);
 }
 	 
+void 
+JohnsonCookPlastic::addInitialComputesAndRequires(Task* task,
+                                           const MPMMaterial* matl,
+                                           const PatchSet*) const
+{
+  const MaterialSubset* matlset = matl->thisMaterial();
+  task->computes(pPlasticStrainLabel, matlset);
+}
+
+void 
+JohnsonCookPlastic::addComputesAndRequires(Task* task,
+				    const MPMMaterial* matl,
+				    const PatchSet*) const
+{
+  const MaterialSubset* matlset = matl->thisMaterial();
+  task->requires(Task::OldDW, pPlasticStrainLabel, matlset,Ghost::None);
+  task->computes(pPlasticStrainLabel_preReloc, matlset);
+}
+
+void 
+JohnsonCookPlastic::addParticleState(std::vector<const VarLabel*>& from,
+				     std::vector<const VarLabel*>& to)
+{
+  from.push_back(pPlasticStrainLabel);
+  to.push_back(pPlasticStrainLabel_preReloc);
+}
+
+void 
+JohnsonCookPlastic::initializeInternalVars(ParticleSubset* pset,
+				           DataWarehouse* new_dw)
+{
+  ParticleVariable<double> pPlasticStrain_init;
+  new_dw->allocateAndPut(pPlasticStrain_init, pPlasticStrainLabel, pset);
+  for(ParticleSubset::iterator iter = pset->begin();iter != pset->end(); iter++){
+    pPlasticStrain_init[*iter] = 0.0;
+  }
+}
+
+void 
+JohnsonCookPlastic::getInternalVars(ParticleSubset* pset,
+                                    DataWarehouse* old_dw) 
+{
+  old_dw->get(pPlasticStrain, pPlasticStrainLabel, pset);
+}
+
+void 
+JohnsonCookPlastic::allocateAndPutInternalVars(ParticleSubset* pset,
+                                               DataWarehouse* new_dw) 
+{
+  new_dw->allocateAndPut(pPlasticStrain_new, pPlasticStrainLabel_preReloc, pset);
+}
+
+void
+JohnsonCookPlastic::updateElastic(const particleIndex idx)
+{
+  pPlasticStrain_new[idx] = pPlasticStrain[idx];
+}
+
+void
+JohnsonCookPlastic::updatePlastic(const particleIndex idx, const double& )
+{
+  pPlasticStrain_new[idx] = pPlasticStrain_new[idx];
+}
+
 double 
 JohnsonCookPlastic::computeFlowStress(const Matrix3& rateOfDeformation,
                                       const Matrix3& ,
                                       const double& temperature,
                                       const double& delT,
-                                      const MPMMaterial* matl,
                                       const double& tolerance,
-                                      double& plasticStrain)
+                                      const MPMMaterial* matl,
+                                      const particleIndex idx)
 {
+  double plasticStrain = pPlasticStrain[idx];
   double plasticStrainRate = sqrt(rateOfDeformation.NormSquared()*2.0/3.0);
   plasticStrain += plasticStrainRate*delT;
+  pPlasticStrain_new[idx] = plasticStrain;
 
-  return evaluateFlowStress(plasticStrain, plasticStrainRate, temperature, matl, tolerance);
+  return evaluateFlowStress(plasticStrain, plasticStrainRate, 
+                            temperature, matl, tolerance);
 }
 
 double 

@@ -1,5 +1,5 @@
-#ifndef __HYPOELASTIC_PLASTIC_H__
-#define __HYPOELASTIC_PLASTIC_H__
+#ifndef __HYPERELASTICPLASTIC_MODEL_H__
+#define __HYPERELASTICPLASTIC_MODEL_H__
 
 
 #include "ConstitutiveModel.h"	
@@ -9,21 +9,21 @@
 #include <math.h>
 #include <Packages/Uintah/Core/Math/Matrix3.h>
 #include <Packages/Uintah/Core/ProblemSpec/ProblemSpecP.h>
+
 #include <Packages/Uintah/CCA/Ports/DataWarehouseP.h>
-#include <Packages/Uintah/Core/Grid/NCVariable.h>
 
 namespace Uintah {
 
 /**************************************
 
 CLASS
-   HypoElasticPlastic
+   HyperElasticPlastic
    
-   General Hypo-Elastic Plastic Constitutive Model
+   Hyperelastic plastic constitutive model for isotropic materials
 
 GENERAL INFORMATION
 
-   HypoElasticPlastic.h
+   HyperElasticPlastic.h
 
    Biswajit Banerjee
    Department of Mechanical Engineering
@@ -34,25 +34,25 @@ GENERAL INFORMATION
    Copyright (C) 2002 University of Utah
 
 KEYWORDS
-   Hypo-elastic Plastic, Viscoplasticity
+   Hyperelastic Plastic, Viscoplasticity
 
 DESCRIPTION
    
-   The rate of deformation and stress is rotated to initial configuration before
-   the updated values are calculated.  The left stretch and rotation are updated
-   incrementatlly to get the deformation gradient.
+   Return mapping plasticity algorithm based on a multiplicative 
+   decomposition of the deformation gradient and the intermediate
+   configuration concept.
 
-   The flow rule can be any appropriate flow rule that is determined by a derived
-   class, for example, 1) Johnson-Cook 2) Bammann 3) MTS
+   Algorithm taken from :
 
+   Simo and Hughes, 1998, Computational Inelasticity, p. 319.
+  
 WARNING
   
-   Only isotropic materials, von-Mises plasticity, associated flow rule,
-   high strain rate.
+   Isotropic materials, J2 plasticity
 
 ****************************************/
 
-  class HypoElasticPlastic : public ConstitutiveModel {
+  class HyperElasticPlastic : public ConstitutiveModel {
 
   public:
     // Create datatype for storing model parameters
@@ -61,34 +61,36 @@ WARNING
       double Shear;
     };	 
 
-    const VarLabel* pLeftStretchLabel;  // For Hypoelastic-plasticity
-    const VarLabel* pLeftStretchLabel_preReloc;  // For Hypoelastic-plasticity
-    const VarLabel* pRotationLabel;  // For Hypoelastic-plasticity
-    const VarLabel* pRotationLabel_preReloc;  // For Hypoelastic-plasticity
-    const VarLabel* pDamageLabel;  // For Hypoelastic-plasticity
-    const VarLabel* pDamageLabel_preReloc;  // For Hypoelastic-plasticity
+    // Left Cauchy-Green tensor based on the deviatoric part
+    // of the elastic part of the deformation gradient 
+    const VarLabel* pBbarElasticLabel;  
+    const VarLabel* pBbarElasticLabel_preReloc;
+
+    // Scalar damage evolution variable
+    const VarLabel* pDamageLabel;  
+    const VarLabel* pDamageLabel_preReloc;  
 
   private:
 
     CMData d_initialData;
-
+	 
     double d_tol;
     PlasticityModel* d_plasticity;
     DamageModel* d_damage;
     EquationOfState* d_eos;
-	 
+
     // Prevent copying of this class
     // copy constructor
-    HypoElasticPlastic(const HypoElasticPlastic &cm);
-    HypoElasticPlastic& operator=(const HypoElasticPlastic &cm);
+    HyperElasticPlastic(const HyperElasticPlastic &cm);
+    HyperElasticPlastic& operator=(const HyperElasticPlastic &cm);
 
   public:
 
     // constructors
-    HypoElasticPlastic(ProblemSpecP& ps, MPMLabel* lb,int n8or27);
+    HyperElasticPlastic(ProblemSpecP& ps, MPMLabel* lb,int n8or27);
 	 
     // destructor 
-    virtual ~HypoElasticPlastic();
+    virtual ~HyperElasticPlastic();
 	 
     // compute stable timestep for this patch
     virtual void computeStableTimestep(const Patch* patch,
@@ -114,17 +116,6 @@ WARNING
 					const MPMMaterial* matl,
 					const PatchSet* patches) const;
 
-    virtual double computeRhoMicroCM(double pressure,
-				     const double p_ref,
-				     const MPMMaterial* matl);
-
-    virtual void computePressEOSCM(double rho_m, double& press_eos,
-				   double p_ref,
-				   double& dp_drho, double& ss_new,
-				   const MPMMaterial* matl);
-
-    virtual double getCompressibility();
-
     virtual void addParticleState(std::vector<const VarLabel*>& from,
 				  std::vector<const VarLabel*>& to);
 
@@ -145,22 +136,7 @@ WARNING
     // class function to create a new object from parameters
     static ConstitutiveModel* create(double *p_array);
   
-  protected:
-
-    // Compute the updated left stretch and rotation tensors
-    void computeUpdatedVR(const double& delT,
-			  const Matrix3& DD, 
-			  const Matrix3& WW,
-			  Matrix3& VV, 
-			  Matrix3& RR);  
-
-    // Compute the rate of rotation tensor
-    Matrix3 computeRateofRotation(const Matrix3& tensorV, 
-				  const Matrix3& tensorD,
-				  const Matrix3& tensorW);
-
   };
-
 } // End namespace Uintah
 
-#endif  // __HYPOELASTIC_PLASTIC_H__ 
+#endif  //__HYPERELASTICPLASTIC_MODEL_H__

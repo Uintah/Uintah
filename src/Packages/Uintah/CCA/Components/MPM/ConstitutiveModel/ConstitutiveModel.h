@@ -7,6 +7,7 @@
 #include <Core/Containers/StaticArray.h>
 #include <Packages/Uintah/Core/Grid/Array3.h>
 #include <Packages/Uintah/CCA/Components/MPM/Solver.h>
+#include <Packages/Uintah/Core/Grid/NCVariable.h>
 
 
 #define MAX_BASIS 27
@@ -23,7 +24,7 @@ namespace Uintah {
   class DataWarehouse;
 
 
-/**************************************
+  /**************************************
 
 CLASS
    ConstitutiveModel
@@ -50,76 +51,89 @@ DESCRIPTION
   
 WARNING
   
-****************************************/
+  ****************************************/
 
-      class ConstitutiveModel {
-      public:
+  class ConstitutiveModel {
+  public:
 	 
-	 ConstitutiveModel();
-	 virtual ~ConstitutiveModel();
+    ConstitutiveModel();
+    virtual ~ConstitutiveModel();
 	 
-	 //////////
-	 // Basic constitutive model calculations
-	 virtual void computeStressTensor(const PatchSubset* patches,
-					  const MPMMaterial* matl,
-					  DataWarehouse* old_dw,
-					  DataWarehouse* new_dw);
+    //////////
+    // Basic constitutive model calculations
+    virtual void computeStressTensor(const PatchSubset* patches,
+				     const MPMMaterial* matl,
+				     DataWarehouse* old_dw,
+				     DataWarehouse* new_dw);
 
-	 virtual void computeStressTensor(const PatchSubset* patches,
-					  const MPMMaterial* matl,
-					  DataWarehouse* old_dw,
-					  DataWarehouse* new_dw,
-					  Solver* solver,
-					  const bool recursion);
+    virtual void computeStressTensor(const PatchSubset* patches,
+				     const MPMMaterial* matl,
+				     DataWarehouse* old_dw,
+				     DataWarehouse* new_dw,
+				     Solver* solver,
+				     const bool recursion);
 	 
-	 //////////
-	 // Create space in data warehouse for CM data
-	 virtual void initializeCMData(const Patch* patch,
-				       const MPMMaterial* matl,
-				       DataWarehouse* new_dw) = 0;
+    //////////
+    // Create space in data warehouse for CM data
+    virtual void initializeCMData(const Patch* patch,
+				  const MPMMaterial* matl,
+				  DataWarehouse* new_dw) = 0;
 
-	 virtual void addInitialComputesAndRequires(Task* task,
-                                             const MPMMaterial* matl,
-                                             const PatchSet* patches) const = 0;
+    virtual void addInitialComputesAndRequires(Task* task,
+					       const MPMMaterial* matl,
+					       const PatchSet* patches) const = 0;
 
-	 virtual void addComputesAndRequires(Task* task,
-					   const MPMMaterial* matl,
-					   const PatchSet* patches) const;
+    virtual void addComputesAndRequires(Task* task,
+					const MPMMaterial* matl,
+					const PatchSet* patches) const;
 
-	 virtual void addComputesAndRequires(Task* task,
-					     const MPMMaterial* matl,
-					     const PatchSet* patches,
-					     const bool recursion) const;
+    virtual void addComputesAndRequires(Task* task,
+					const MPMMaterial* matl,
+					const PatchSet* patches,
+					const bool recursion) const;
 
-	 virtual void addParticleState(std::vector<const VarLabel*>& from,
-				       std::vector<const VarLabel*>& to) = 0;
+    virtual void addParticleState(std::vector<const VarLabel*>& from,
+				  std::vector<const VarLabel*>& to) = 0;
 
-         virtual double computeRhoMicroCM(double pressure,
-					  const double p_ref,
-					  const MPMMaterial* matl) = 0;
+    virtual double computeRhoMicroCM(double pressure,
+				     const double p_ref,
+				     const MPMMaterial* matl) = 0;
 
-         virtual void computePressEOSCM(double rho_m, double& press_eos,
-                                        double p_ref,
-                                        double& dp_drho, double& ss_new,
-	        		        const MPMMaterial* matl) = 0;
+    virtual void computePressEOSCM(double rho_m, double& press_eos,
+				   double p_ref,
+				   double& dp_drho, double& ss_new,
+				   const MPMMaterial* matl) = 0;
 
-         virtual double getCompressibility() = 0;
+    virtual double getCompressibility() = 0;
 
-	 double computeRhoMicro(double press,double gamma,
-				        double cv, double Temp);
+    double computeRhoMicro(double press,double gamma,
+			   double cv, double Temp);
 	 
-	 void computePressEOS(double rhoM, double gamma,
-				      double cv, double Temp,
-				      double& press, double& dp_drho,
-				      double& dp_de);
+    void computePressEOS(double rhoM, double gamma,
+			 double cv, double Temp,
+			 double& press, double& dp_drho,
+			 double& dp_de);
 
-        protected:
+  protected:
 
-	 MPMLabel* lb;
-         int d_8or27;
-         int NGP;
-         int NGN;
-      };
+    // Calculate velocity gradient for 27 noded interpolation
+    Matrix3 computeVelocityGradient(const Patch* patch,
+				    const double* oodx, 
+				    const Point& px, 
+				    const Vector& psize, 
+				    constNCVariable<Vector>& gVelocity);
+
+    // Calculate velocity gradient for 8 noded interpolation
+    Matrix3 computeVelocityGradient(const Patch* patch,
+				    const double* oodx, 
+				    const Point& px, 
+				    constNCVariable<Vector>& gVelocity);
+
+    MPMLabel* lb;
+    int d_8or27;
+    int NGP;
+    int NGN;
+  };
 } // End namespace Uintah
       
 

@@ -1,5 +1,5 @@
-#ifndef __JOHNSONCOOK_PLASTICITY_MODEL_H__
-#define __JOHNSONCOOK_PLASTICITY_MODEL_H__
+#ifndef __ISOHARDENING_PLASTICITY_MODEL_H__
+#define __ISOHARDENING_PLASTICITY_MODEL_H__
 
 
 #include "PlasticityModel.h"	
@@ -10,14 +10,14 @@ namespace Uintah {
 /**************************************
 
 CLASS
-   JohnsonCookPlastic
+   IsoHardeningPlastic
    
-   Strain rate dependent plasticity model
-   (Johnson and Cook, 1983, Proc. 7th Intl. Symp. Ballistics, The Hague)
+   Isotropic Hardening plasticity model
+   (Simo and Hughes, 1998, Computational Inelasticity, p. 319)
 
 GENERAL INFORMATION
 
-   JohnsonCookPlastic.h
+   IsoHardeningPlastic.h
 
    Biswajit Banerjee
    Department of Mechanical Engineering
@@ -25,62 +25,56 @@ GENERAL INFORMATION
 
    Center for the Simulation of Accidental Fires and Explosions (C-SAFE)
   
-   Copyright (C) 2002 University of Utah
+   Copyright (C) 2003 University of Utah
 
 KEYWORDS
-   Johnson-Cook, Viscoplasticity
+   Isotropic hardening
 
 DESCRIPTION
    
    The flow rule is given by
 
-      f(sigma) = [A + B (eps_p)^n][1 + C ln(d/dt(eps_p*))][1 - (T*)^m]
+      f(sigma) = K alpha + sigma_Y
 
-   where f(sigma) = equivalent stress
-         eps_p = plastic strain
-         d/dt(eps_p*) = d/dt(eps_p)/d/dt(eps_p0) 
-            where d/dt(eps_p0) = a user defined plastic strain rate
-         A, B, C, n, m are material constants
-            (for HY-100 steel tubes :
-             A = 316 MPa, B = 1067 MPa, C = 0.0277, n = 0.107, m = 0.7)
-         A is interpreted as the initial yield stress - sigma_0
-         T* = (T-Troom)/(Tmelt-Troom)
+   where f(sigma) = flow stress
+         K = hardening modulus
+         alpha = evolution parameter for hardening law
+         sigma_Y = yield stress
+
+   Evolution of alpha is given by
+       dalpha/dt = sqrt(2/3)*gamma
+       where gamma = consistency parameter
 
 WARNING
   
 ****************************************/
 
-      class JohnsonCookPlastic : public PlasticityModel {
+      class IsoHardeningPlastic : public PlasticityModel {
 
 	 // Create datatype for storing model parameters
       public:
 	 struct CMData {
-            double A;
-            double B;
-            double C;
-            double n;
-            double m;
-            double TRoom;
-            double TMelt;
+            double K;
+            double sigma_Y;
 	 };	 
-         const VarLabel* pPlasticStrainLabel;  // For Johnson-Cook Plasticity
-         const VarLabel* pPlasticStrainLabel_preReloc;  // For Johnson-Cook Plasticity
+         const VarLabel* pAlphaLabel;  // For Isotropic Hardening Plasticity
+         const VarLabel* pAlphaLabel_preReloc;  // For Isotropic Hardening Plasticity
 
       private:
 
-	 CMData d_initialData;
+	 CMData d_const;
          
 	 // Prevent copying of this class
 	 // copy constructor
-	 JohnsonCookPlastic(const JohnsonCookPlastic &cm);
-	 JohnsonCookPlastic& operator=(const JohnsonCookPlastic &cm);
+	 IsoHardeningPlastic(const IsoHardeningPlastic &cm);
+	 IsoHardeningPlastic& operator=(const IsoHardeningPlastic &cm);
 
       public:
 	 // constructors
-	 JohnsonCookPlastic(ProblemSpecP& ps);
+	 IsoHardeningPlastic(ProblemSpecP& ps);
 	 
 	 // destructor 
-	 virtual ~JohnsonCookPlastic();
+	 virtual ~IsoHardeningPlastic();
 	 
          // Computes and requires for internal evolution variables
          // Only one internal variable for Johnson-Cook :: plastic strain
@@ -116,17 +110,8 @@ WARNING
                                           const double& tolerance,
                                           const MPMMaterial* matl,
                                           const particleIndex idx);
-
-      protected:
-
-	 double evaluateFlowStress(const double& ep, 
-				   const double& epdot,
-				   const double& T,
-                                   const MPMMaterial* matl,
-				   const double& tolerance);
-
       };
 
 } // End namespace Uintah
 
-#endif  // __JOHNSONCOOK_PLASTICITY_MODEL_H__ 
+#endif  // __ISOHARDENING_PLASTICITY_MODEL_H__ 
