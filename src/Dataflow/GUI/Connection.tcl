@@ -489,7 +489,7 @@ proc routeConnection { conn } {
     set ix [expr int([lindex $inpos 0])]
     set iy [expr int([lindex $inpos 1])]
     if {[envBool SCIRUN_STRAIGHT_CONNECTIONS] } {
-	return [list $ox $oy $ox [expr $oy+3] $ix [expr $iy-3] $ix $iy]
+	return [list $ox $oy $ox [expr $oy+3] $ix [expr $iy-4] $ix $iy]
     } elseif { $ox == $ix && $oy <= $iy } {
 	return [list $ox $oy $ix $iy]
     } elseif {[expr $oy+19] < $iy} {
