@@ -15,6 +15,8 @@ SRCDIR   := Packages/Insight/Dataflow/Modules/Filters
 
 SRCS     += \
 	$(SRCDIR)/DiscreteGaussianImageFilter.cc\
+	$(SRCDIR)/CannySegmentationLevelSetImageFilter.cc\
+	$(SRCDIR)/UChar2DToFloat2D.cc\
 #[INSERT NEW CODE FILE HERE]
 
 PSELIBS := Packages/Insight/Core/Datatypes \
