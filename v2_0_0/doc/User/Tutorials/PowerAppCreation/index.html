@@ -1,0 +1,219 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+    "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<!--
+  The contents of this file are subject to the University of Utah Public
+  License (the "License"); you may not use this file except in compliance
+  with the License.
+  
+  Software distributed under the License is distributed on an "AS IS"
+  basis, WITHOUT WARRANTY OF ANY KIND, either express or implied. See the
+  License for the specific language governing rights and limitations under
+  the License.
+  
+  The Original Source Code is SCIRun, released March 12, 2001.
+  
+  The Original Source Code was developed by the University of Utah.
+  Portions created by UNIVERSITY are Copyright (C) 2001, 1994 
+  University of Utah. All Rights Reserved.
+-->
+
+<!--
+  Note to authors: Last time I checked, this file consisted of valid
+  xhtml.  Please continue to write valid xhtml code only!  Use the
+  validator at http://validator.w3.org/.
+-->
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta content="HTML Tidy for Mac OS X (vers 1st December 2002), see www.w3.org"
+      name="generator" />
+    <meta http-equiv="content-type"
+      content="text/html;charset=iso-8859-1" />
+    <meta name="generator" content="Adobe GoLive 4" />
+    <title>
+      PowerApp Creation
+    </title>
+  </head>
+  <body bgcolor="white">
+    <table align="center" border="0" cellpadding="0" cellspacing="0"
+      width="600">
+      <tr>
+        <td><center>
+          <img height="101" width="600"
+	    src="images/powerapps101.gif" border="0"
+	    usemap="#biot-banner-sub1a87b5e6" alt="BioTensor Banner Sub"/>
+	  <map name="biot-banner-sub1a87b5e6"
+	    id="biot-banner-sub1a87b5e6">
+            <area href="http://software.sci.utah.edu/"
+	      coords="501,32,592,46" shape="rect" alt="http://software.sci.utah.edu/" />
+            <area href="http://www.sci.utah.edu" coords="505,11,592,29"
+	      shape="rect" alt="http://www.sci.utah.edu"/>
+          </map></center>
+        </td>
+      </tr>
+      <tr>
+        <td>
+          <table border="0" cellpadding="10" cellspacing="0"
+	    width="600">
+            <tr>
+              <td bgcolor="#DCDCDC">
+                <div align="right">
+                  <a href="index.html">1</a>
+                  <a href="chapter_2.html">2</a>
+                  <a href="chapter_3.html">3</a>
+                  <a href="chapter_4.html">4</a>
+                </div>
+                <center>
+                  <p>
+                    <font color="maroon" size="4"><b>Chapter 1: Introduction to Building PowerApps</b></font>
+                  </p>
+                </center>
+                <div align="left">
+                <div align="left">
+                  <h4>
+                    <b><a href="#Layout">General Layout</a></b>
+                  </h4>
+                  <h4>
+                    <b><a href="#Functionality">Core Functionality</a></b>
+                  </h4>
+                  <h4>
+                    <b><a href="#Issues">Design Issues</a></b>
+                  </h4>
+
+                <h4>
+                  <b>Overview</b>
+                </h4>
+
+<p>Chapter 1 discusses the general layout and core functionality that a standard PowerApp should provide as well as some of the design issues that arise in building such an application.</p>
+
+                <h4>
+                  <b><a name="Layout" id="Layout">General Layout</a></b>
+                </h4>
+
+<p>The typical layout for a SCIRun PowerApp is shown in <b>Figure 1</b> and consists of:</p> 
+<ul>
+  <li>The Processing Pane on the left guides you through the stages of the
+application.</li>
+  <li>In the middle, there is a Rendering window, which is
+where all of the data interaction and visualization is performed.</li>
+  <li>On the right, there is a Visualization Pane, from which you
+can control many of the parameters for the Rendering window.</li>
+</ul>
+<center><p><a href="figures/layout.jpg"><img src="figures/layout.jpg" width="516" height="300" alt="General Layout"/></a></p>
+<p><b>Figure 1: General PowerApp Layout</b></p></center>
+<p>A smaller scale PowerApp may not need both a Processing Pane and Visualization Pane and either can be removed as shown in comparing the BioTensor and BioFEM apps.</p>
+
+
+<p>Each PowerApp should have the standard menu as illustrated in <b>Figure 2</b>.  This menu consists of:</p>
+<ul>
+  <li>File -> Save Session... - Saves a session for a specific PowerApp</li>
+  <li>File -> Load Session... - Loads a session for a specific PowerApp</li>
+  <li>File -> Quit - Nicely quits the PowerApp</li>
+</ul>
+<ul>
+  <li>Help -> Show Tooltips - Turns tooltips on/off</li>
+  <li>Help -> Help Contents - References Tutorial and might show splashscreen</li>
+  <li>Help -> About - Displays a brief summary of the PowerApp</li>
+</ul>
+<center>
+<table border="0" width="400">
+  <tr>
+    <td><img src="figures/fileMenu.jpg" border="1" alt="File Menu"/></td>
+    <td><img src="figures/helpMenu.jpg" border="1"alt="Help Menu"/></td>
+  </tr>
+</table>
+<p><b>Figure 2: PowerApp Menus</b></p></center>
+
+
+
+                <h4>
+                  <b><a name="Functionality" id="Functionality">Core Functionality</a></b>
+                </h4>
+<p>Because it is often desirable to view the Rendering window at full-screen
+resolution, there must be support for detaching and reattaching these
+three panes.  This should be done by clicking on the vertical dashed lines between them. See <b>Figure 3</b> to see the panes detached.</p>
+<center><p><a href="figures/detached.jpg"><img src="figures/detached.jpg" width="470" height="251" alt="Detached Panes"/></a></p>
+<p><b>Figure 3: Panes Detached from Viewer</b></p></center>
+
+<p>At the bottom of either the Processing Pane or Visualization Pane should be a progress indicator consisting of a label and an indicator.  The label indicates the current processing or visualization step.  It can also indicate when dynamic compilation is occuring.  Below the indicator label is a progress indicator.  When nothing is happening, the indicator should be in a reset state.  When modules are executing a spinning &quot;candycane&quot; is displayed.  When all executing modules are done, the complete state appears. In the case of an error, the progress indicator turns red and the user can click on the indicator to view the error module's log. <b>Figure 4</b> shows all four indicator states.</p>
+
+<center>
+<table border="0" width="500">
+  <tr>
+    <td><img src="figures/progressReset.jpg" border="1" alt="Reset State"/></td>
+    <td><img src="figures/progressExecuting.jpg" border="1"alt="Executing State"/></td>
+  </tr>
+  <tr>
+    <td><center><b>Reset State</b></center></td>
+    <td><center><b>Executing State</b></center></td>
+  </tr>
+  <tr>
+    <td><img src="figures/progressComplete.jpg" border="1"alt="Complete State"/></td>
+    <td><img src="figures/progressError.jpg" border="1"alt="Error State"/></td>
+  </tr>
+  <tr>
+    <td><center><b>Complete State</b></center></td>
+    <td><center><b>Error State</b></center></td>
+  </tr>
+</table>
+<p><b>Figure 4: PowerApp Indicator States</b></p></center>
+
+
+
+                <h4>
+                  <b><a name="Issues" id="Issues">Design Issues</a></b>
+                </h4>
+<p>Some of the design issues related to PowerApps include the interaction with SCIRun modules and their variables as well as hidding the complexities of dataflow from the user.</p>
+
+<p>A PowerApp is really running SCIRun in the background.  PowerApp widgets in general will reference module variables. To make this easier, there should be a global array called <i>mods</i>.  After loading the net, mods is set up to point to any modules you will need to reference in the PowerApp.  See <b>Figure 5</b> for an example of setting the mods array.</p>
+<center><p><img src="figures/setMods.jpg" border="1" alt="Setting mods array"/></p>
+<p><b>Figure 5: Setting the mods Array</b></p></center>
+
+<p>Even though there is a dataflow network underneath, the user needs to see logical steps in execution. The next step is not available until the previous step has been executed.  To enforces this, during the initializing of a PowerApp, certain modules are disabled to prevent the user from moving on to a step beyond the first step.  Upon executing a step, modules are enabled to allow the suser to move on.</p>
+
+<p>In addition to disabling modules, the widgets for future processing  and visualization steps need to be disabled and only be enabled at the appropriate time. Processing tabs should have an <img src="figures/executeButton.jpg" border="0" alt="Execute Button" /> button along with a <img src="figures/nextButton.jpg" border="0" alt="Next Button"/> button. These buttons can be enabled or disabled to help enforce the order of steps.</p>
+
+<p>Because PowerApps support attaching and detaching panes from the Viewer, a developer must make sure that the attached and detached panes are always in sync. Every time a tab is selected, the corresonding tab must also be selected in the other pane.  Every time a radiobutton or checkbutton is selected that is responsible for disabling widgets, the same widgets must be disabled in the other pane. It is usefull to have methods that keep these states in sync, especially when handling the loading of a session.</p>
+
+                <h4>
+                  <b>Summary</b>
+                </h4>
+<p>Chapter 1 discussed the general layout and functionality of a PowerApp as well as some of the design issues to keep in mind when building your own PowerApp.  Chapter 2 will go into the anatomy of a .app file.</p>
+
+
+                <div align="right">
+                  <p>
+                    <a href="index.html">1</a>
+                    <a href="chapter_2.html">2</a>
+                    <a href="chapter_3.html">3</a>
+                    <a href="chapter_4.html">4</a>
+                  </p>
+                </div>
+                </div>
+                </div>
+              </td>
+            </tr>
+          </table>
+        </td>
+      </tr>
+      <tr>
+        <td>
+          <img height="13" width="600" src="images/footer.gif"
+	    alt="Footer Images" />
+        </td>
+      </tr>
+    </table>
+  </body>
+</html>
+
+<!-- Keep this comment at the end of the file
+Local variables:
+mode: xml
+sgml-default-dtd-file:"../../Utilities/XML/xhtml1-transitional.ced"
+sgml-indent-data: t
+sgml-indent-step: 2
+sgml-omittag:nil
+sgml-shorttag:nil
+End:
+-->

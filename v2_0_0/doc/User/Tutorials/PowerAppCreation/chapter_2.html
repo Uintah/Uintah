@@ -1,0 +1,247 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+    "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<!--
+  The contents of this file are subject to the University of Utah Public
+  License (the "License"); you may not use this file except in compliance
+  with the License.
+  
+  Software distributed under the License is distributed on an "AS IS"
+  basis, WITHOUT WARRANTY OF ANY KIND, either express or implied. See the
+  License for the specific language governing rights and limitations under
+  the License.
+  
+  The Original Source Code is SCIRun, released March 12, 2001.
+  
+  The Original Source Code was developed by the University of Utah.
+  Portions created by UNIVERSITY are Copyright (C) 2001, 1994 
+  University of Utah. All Rights Reserved.
+-->
+
+<!--
+  Note to authors: Last time I checked, this file consisted of valid
+  xhtml.  Please continue to write valid xhtml code only!  Use the
+  validator at http://validator.w3.org/.
+-->
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta content="HTML Tidy for Mac OS X (vers 1st December 2002), see www.w3.org"
+      name="generator" />
+    <meta http-equiv="content-type"
+      content="text/html;charset=iso-8859-1" />
+    <meta name="generator" content="Adobe GoLive 4" />
+    <title>
+      PowerApp Creation
+    </title>
+  </head>
+  <body bgcolor="white">
+    <table align="center" border="0" cellpadding="0" cellspacing="0"
+      width="600">
+      <tr>
+        <td><center>
+          <img height="101" width="600"
+	    src="images/powerapps101.gif" border="0"
+	    usemap="#biot-banner-sub1a87b5e6" alt="BioTensor Banner Sub"/>
+	  <map name="biot-banner-sub1a87b5e6"
+	    id="biot-banner-sub1a87b5e6">
+            <area href="http://software.sci.utah.edu/"
+	      coords="501,32,592,46" shape="rect" alt="http://software.sci.utah.edu/" />
+            <area href="http://www.sci.utah.edu" coords="505,11,592,29"
+	      shape="rect" alt="http://www.sci.utah.edu"/>
+          </map></center>
+        </td>
+      </tr>
+      <tr>
+        <td>
+          <table border="0" cellpadding="10" cellspacing="0"
+	    width="600">
+            <tr>
+              <td bgcolor="#DCDCDC">
+                <div align="right">
+                  <a href="index.html">1</a>
+                  <a href="chapter_2.html">2</a>
+                  <a href="chapter_3.html">3</a>
+                  <a href="chapter_4.html">4</a>
+                </div>
+                <center>
+                  <p>
+                    <font color="maroon" size="4"><b>Chapter 2: The Anatomy of the .app File</b></font>
+                  </p>
+                </center>
+                <div align="left">
+                <div align="left">
+                  <h4>
+                    <b><a href="#OutputStmt">Output Statement</a></b>
+                  </h4>
+                  <h4>
+                    <b><a href="#SCIRUN_DATA">Reference SCIRUN_DATA and SCIRUN_DATASET</a></b>
+                  </h4>
+                  <h4>
+                    <b><a href="#Net">Tcl Net Code</a></b>
+                  </h4>
+                  <h4>
+                    <b><a href="#mods">Assigment to mods Array</a></b>
+                  </h4>
+                  <h4>
+                    <b><a href="#BaseClass">Auto Index to PowerAppBase.app</a></b>
+                  </h4>
+                  <h4>
+                    <b><a href="#ChildClass">PowerApp Class Definition</a></b>
+                  </h4>
+                  <h4>
+                    <b><a href="#Instantiate">Instantiate an App</a></b>
+                  </h4>
+                  <h4>
+                    <b><a href="#Binds">Bind Commands</a></b>
+                  </h4>
+
+                <h4>
+                  <b>Overview</b>
+                </h4>
+<p>To maintain a uniform look and functionality, PowerApps should be itcl classes and inherit from the SCIRun PowerAppBase class.  A PowerApp class should be in a file with a .app extension (i.e. BioTensor.app) to indicate that it is an PowerApp and not a SCIRun network.  This file will contain your specific itcl class definition along with a few more components which are discussed below.  All .app files should follow the following layout (examples are from BioTensor.app).</p>
+
+<ul>
+  <li><b><a name="OutputStmt" id="OutputStmt">Output Statement</a></b> such as &quot;Loading BioTensor (this may take a minute)...&quot;<br/><pre>puts "\nLoading BioTensor (this may take a minute)...\n"</pre></li>
+  <li><b><a name="SCIRUN_DATA" id="SCIRUN_DATA">References SCIRUN_DATA and SCIRUN_DATASET</a></b> so that your app can run with example data when possible.<br/>
+<pre>
+set DATADIR [lindex [array get env SCIRUN_DATA] 1]
+set DATASET brain-dt
+</pre>
+</li>
+  <li><b><a name="Net" id="Net">Tcl Net code</a></b> - making sure to verify that files exist.<br/>
+<pre>set m0 [addModuleAtPosition "Teem" "DataIO" "NrrdReader" 9 9]
+set m1 [addModuleAtPosition "Teem" "Unu" "UnuSlice" 603 169]
+set m2 [addModuleAtPosition "Teem" "Tend" "TendEpireg" 14 18]
+set m3 [addModuleAtPosition "Teem" "Tend" "TendEstim" 14 718]
+set m4 [addModuleAtPosition "Teem" "Tend" "TendBmat" 231 181]
+set m5 [addModuleAtPosition "Teem" "Unu" "UnuSlice" 992 516]
+.
+.
+.
+set c0 [addConnection $m119 0 $m40 0]
+set c1 [addConnection $m94 1 $m93 0]
+set c2 [addConnection $m130 1 $m120 0]
+set c3 [addConnection $m67 0 $m73 0]
+set c4 [addConnection $m67 0 $m33 0]
+.
+.
+.
+set $m0-notes {}
+set $m0-label {unknown}
+set $m0-type {Scalar}
+set $m0-axis {axis0}
+set $m0-add {0}
+if {[file exists $DATADIR/$DATASET/demo-DWI.nrrd]} {
+    set $m0-filename $DATADIR/$DATASET/demo-DWI.nrrd
+} else {
+    set $m0-filename {}
+} 
+</pre></li>
+  <li><b><a name="mods" id="mods">Assignment of mods array</a></b><br/>
+<pre>
+global mods
+
+set mods(NrrdReader1) $m0
+set mods(DicomToNrrd1) $m97
+set mods(AnalyzeToNrrd1) $m96
+set mods(ChooseNrrd1) $m45
+set mods(NrrdInfo1) $m62
+.
+.
+.
+set mods(Viewer) $m44
+</pre>
+</li>
+
+  <li><b><a name="BaseClass" id="BaseClass">Auto index to PowerAppBase.app</a></b><br/>
+<pre>
+global SCIRUN_SRCDIR
+set auto_index(::PowerAppBase) \
+   "source $SCIRUN_SRCDIR/Dataflow/GUI/PowerAppBase.tcl"
+</pre>
+</li>
+
+  <li><b><a name="ChildClass" id="ChildClass">PowerApp Class Definition</a></b> making sure to inherit from PowerAppBase<br/>
+<pre>
+class BioTensorApp {
+    inherit ::PowerAppBase
+        
+    constructor {} {
+.
+.
+.
+</pre>
+</li>
+
+  <li><b><a name="Instantiate" id="Instantiate">Instantiate an App</a></b> and make sure to build it (usually done with the build_app method)<br/>
+<pre>
+BioTensorApp app
+
+app build_app
+</pre>
+</li>
+
+  <li><b><a name="Binds" id="Binds">Add Bind Commands</a></b> for shortcuts.  These must be after the creation of the app.<br/>
+<pre>
+bind all &lt;Control-s&gt; {
+    app save_session
+}
+
+bind all &lt;Control-o&gt; {
+    app load_session
+}
+
+bind all &lt;Control-q&gt; {
+    app exit_app
+}
+
+bind all &lt;Control-v&gt; {
+    global mods
+    $mods(Viewer)-ViewWindow_0-c autoview
+}
+</pre>
+</li>
+</ul>
+
+
+                <h4>
+                  <b>Summary</b>
+                </h4>
+<p>Chapter 2 showed what a .app file should contain. Chapter 3 will go into more detail of the PowerAppBase class. </p>
+
+                <div align="right">
+                  <p>
+                    <a href="index.html">1</a>
+                    <a href="chapter_2.html">2</a>
+                    <a href="chapter_3.html">3</a>
+                    <a href="chapter_4.html">4</a>
+                  </p>
+                </div>
+                </div>
+                </div>
+              </td>
+            </tr>
+          </table>
+        </td>
+      </tr>
+      <tr>
+        <td>
+          <img height="13" width="600" src="images/footer.gif"
+	    alt="Footer Images" />
+        </td>
+      </tr>
+    </table>
+  </body>
+</html>
+
+<!-- Keep this comment at the end of the file
+Local variables:
+mode: xml
+sgml-default-dtd-file:"../../Utilities/XML/xhtml1-transitional.ced"
+sgml-indent-data: t
+sgml-indent-step: 2
+sgml-omittag:nil
+sgml-shorttag:nil
+End:
+-->
