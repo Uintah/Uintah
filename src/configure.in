@@ -434,13 +434,19 @@ rm -f wow.c wow.o
 echo -n "Determining cc dependency regen switch: "
 rm -f configure-test.*
 echo "#include <stdio.h>" > configure-test.c
+mkdir configure-test-dir
 CC_DEPEND_REGEN=''
+CC_DEPEND_REGEN_MOVE='y'
 
 # GCC just puts the dependency info in a .d when you provide the -MD switch.
 if test "${CC_DEPEND_REGEN}" = "" ; then
   ${CC} -MD -c configure-test.c > /dev/null 2>&1
   if test -f configure-test.d ; then
     CC_DEPEND_REGEN='-MD'
+    ${CC} -MD -c configure-test.c -o configure-test-dir/configure-test.o > /dev/null 2>&1
+    if test -f configure-test-dir/configure-test.d ; then
+      CC_DEPEND_REGEN_MOVE='n'
+    fi
   fi
 fi
 
@@ -453,6 +459,7 @@ if test "${CC_DEPEND_REGEN}" = "" ; then
 fi
 
 rm -f configure-test.*
+rm -rf configure-test-dir
 
 if test "${CC_DEPEND_REGEN}" = "" ; then
   echo unknown
@@ -461,6 +468,7 @@ else
   echo $CC_DEPEND_REGEN
 fi
 AC_SUBST(CC_DEPEND_REGEN)
+AC_SUBST(CC_DEPEND_REGEN_MOVE)
 F77_DEPEND_REGEN=$CC_DEPEND_REGEN
 AC_SUBST(F77_DEPEND_REGEN)
 

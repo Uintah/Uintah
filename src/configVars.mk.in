@@ -226,6 +226,7 @@ SOFLAGS         := @SOFLAGS@ -L$(LIBDIR) $(CFLAGS)
 LDFLAGS         := @LDFLAGS@ -L$(LIBDIR) $(CFLAGS)
 ASFLAGS         := @ASFLAGS@  $(ASFLAGS)
 CC_DEPEND_REGEN = @CC_DEPEND_REGEN@
+CC_DEPEND_REGEN_MOVE = @CC_DEPEND_REGEN_MOVE@
 NEED_SONAME	:= @NEED_SONAME@
 F77		:= @F77@
 FFLAGS		:= @FFLAGS@ $(FFLAGS)
@@ -241,9 +242,11 @@ endif
 .cc.o: $<
 	$(CXX) $(CFLAGS) $(INCLUDES) $(CC_DEPEND_REGEN) -c $< -o $@
 ifeq ($(CC_DEPEND_REGEN),-MD)
+ifeq ($(CC_DEPEND_REGEN_MOVE),y)
 	echo -n "$(dir $@)" > $(basename $@).d
 	cat $(basename $(notdir $@)).d >> $(basename $@).d
 	rm $(basename $(notdir $@)).d 
+endif
 endif
 
 .F.o: $<
@@ -255,7 +258,9 @@ endif
 .c.o: $<
 	$(CC) $(CFLAGS) $(INCLUDES) $(CC_DEPEND_REGEN) -c $< -o $@
 ifeq ($(CC_DEPEND_REGEN),-MD)
+ifeq ($(CC_DEPEND_REGEN_MOVE),y)
 	mv $(basename $(notdir $@)).d $(basename $@).d
+endif
 endif
 
 .s.o: $<
