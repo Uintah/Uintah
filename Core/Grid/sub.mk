@@ -45,7 +45,14 @@ SRCS     += \
 	$(SRCDIR)/PressureBoundCond.cc \
 	$(SRCDIR)/DensityBoundCond.cc \
 	$(SRCDIR)/BoundCondFactory.cc \
+	$(SRCDIR)/BoundCondReader.cc \
 	$(SRCDIR)/BoundCondData.cc \
+	$(SRCDIR)/BCDataArray.cc \
+	$(SRCDIR)/UnionBCData.cc \
+	$(SRCDIR)/DifferenceBCData.cc \
+	$(SRCDIR)/SideBCData.cc \
+	$(SRCDIR)/CircleBCData.cc \
+	$(SRCDIR)/RectangleBCData.cc \
 	$(SRCDIR)/UnknownVariable.cc \
 	$(SRCDIR)/SimpleMaterial.cc \
 	$(SRCDIR)/ParticleVariable_special.cc \
