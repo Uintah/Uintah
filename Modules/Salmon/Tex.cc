@@ -499,13 +499,14 @@ void GeomTexVolRender::draw(DrawInfoOpenGL* di, Material *m, double time)
     glTexParameterf(GL_TEXTURE_3D_EXT, GL_TEXTURE_WRAP_R_EXT, GL_CLAMP);
     glTexParameterf(GL_TEXTURE_3D_EXT, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
     glTexParameterf(GL_TEXTURE_3D_EXT, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-
-#ifdef __sgi    
-    glTexImage3DEXT(GL_TEXTURE_3D_EXT,0,GL_INTENSITY8_EXT,
+    glTexImage3DEXT(GL_TEXTURE_3D_EXT,0,GL_INTENSITY8,
+                                 /* MS 24.2.99:
+                                    changed from GL_INTENSITY_EXT, since
+                                    this is not in the Mesa header file,
+                                    and GL_INTENSITY has the same numerical
+                                    value as GL_INTENSITY_EXT (0x8049) */
 		    nx,ny,nz,0,
 		    GL_RED,GL_UNSIGNED_BYTE,vol3d);
-#endif
-    
     
     map2d = 0; // clear it out...
   } else { // jost load texture object...
@@ -590,6 +591,10 @@ void GeomTexVolRender::draw(DrawInfoOpenGL* di, Material *m, double time)
 
 #ifdef __sgi
   if (map1d && !quantnvol)
+    glDisable(/*GL_TEXTURE_COLOR_TABLE_SGI*/ 0x80BC);
+  /* MS 24.2.99: GL_TEXTURE_COLOR_TABLE_SGI is not in the Mesa header
+     files, so I replaced it with the numerical value from the SGI header
+     file (gl.h) */
     glDisable(GL_TEXTURE_COLOR_TABLE_SGI);
 #endif
 
