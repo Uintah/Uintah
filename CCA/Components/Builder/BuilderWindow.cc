@@ -185,6 +185,7 @@ BuilderWindow::BuilderWindow(const gov::cca::Services::pointer& services)
     services->releasePort("cca.ComponentEventService");
   }
   updateMiniView();
+  filename=QString::null;
 }
 
 BuilderWindow::~BuilderWindow()
@@ -350,9 +351,19 @@ void BuilderWindow::buildPackageMenus()
 
 void BuilderWindow::save()
 {
+  if(filename.isEmpty()){
+    QString fn = QFileDialog::getSaveFileName( QString::null, "Network File (*.net)", this );
+    if( !fn.isEmpty() ) {
+      filename = fn;
+      save();
+    }
+    else {
+      statusBar()->message( "Saving aborted", 2000 );
+      return;
+    }
+  }
   QCanvasItemList tempQCL = miniCanvas->allItems();
-
-  ofstream saveOutputFile( "srTEST" );
+  ofstream saveOutputFile(filename);
 
   std::vector<Module*> saveModules = big_canvas_view->getModules();
   std::vector<Connection*> saveConnections = big_canvas_view->getConnections();
@@ -391,14 +402,15 @@ void BuilderWindow::save()
 
 void BuilderWindow::saveAs()
 {
-  cerr << "BuilderWindow::saveAs not finished\n";
+  //cerr << "BuilderWindow::saveAs not finished\n";
 
-  QString fn = QFileDialog::getSaveFileName( QString::null, QString::null, this );
+  QString fn = QFileDialog::getSaveFileName( QString::null, "Network File (*.net)", this );
 
   if( !fn.isEmpty() ) {
-    //    filename = fn;
+    filename = fn;
     save();
-  } else {
+  }
+  else {
     statusBar()->message( "Saving aborted", 2000 );
   }
 }
@@ -407,8 +419,9 @@ void BuilderWindow::load()
 {
   std::vector<Module*> grab_latest_Modules;
   std::vector<Module*> ptr_table;
-  QString fn = QFileDialog::getOpenFileName( QString::null, QString::null, this );
-
+  QString fn = QFileDialog::getOpenFileName( QString::null, "Network File (*.net)", this );
+  if(fn.isEmpty()) return;
+  filename=fn;
   ifstream is( fn ); 
 
   int load_Modules_size = 0;
@@ -418,7 +431,8 @@ void BuilderWindow::load()
   int tmp_moduleName_y;
 
   is >> load_Modules_size >> load_Connections_size;
-
+  cout<<"load_Modules_size"<<load_Modules_size<<endl;
+  cout<<"load_Connections_size"<<load_Connections_size<<endl;
   for( int i = 0; i < load_Modules_size; i++ )
   {
     is >> tmp_moduleName >> tmp_moduleName_x >> tmp_moduleName_y;
@@ -430,24 +444,25 @@ void BuilderWindow::load()
     services->releasePort("cca.BuilderService");
 
     if( tmp_moduleName != "SCIRun.Builder" )
-      big_canvas_view->addModule( tmp_moduleName, tmp_moduleName_x, tmp_moduleName_y, usesPorts, providesPorts, cid);
-
+      big_canvas_view->addModule( tmp_moduleName, tmp_moduleName_x, tmp_moduleName_y, usesPorts, providesPorts, cid, false); //fixed position
+    
     grab_latest_Modules = big_canvas_view->getModules();
-  
+    
     ptr_table.push_back( grab_latest_Modules[grab_latest_Modules.size()-1] );
   }
 
   for(int i = 0; i < load_Connections_size; i++ ) 
-  {
+    {
     int iu, ip;
     std::string up, pp;
     
     is>>iu>>up>>ip>>pp;
-
+    
     big_canvas_view->addConnection(ptr_table[iu],up,ptr_table[ip],pp);
-  }
+    }
 
   is.close();
+  cout<<"Loading is Done"<<endl;
   return;
 }
 
@@ -514,7 +529,7 @@ void BuilderWindow::instantiateComponent(const gov::cca::ComponentClassDescripti
   if(cd->getClassName()!="SCIRun.Builder"){
     int x = 20;
     int y = 20;
-    big_canvas_view->addModule(cd->getClassName(), x, y, usesPorts, providesPorts, cid);
+    big_canvas_view->addModule(cd->getClassName(), x, y, usesPorts, providesPorts, cid, true); //reposition module
   }
   // TEK
   cerr << "BuilderWindow::instantiateCompnent(): Leaving..." << endl;
@@ -548,8 +563,7 @@ void BuilderWindow::updateMiniView()
   double scaleH=double(big_canvas->width())/miniCanvas->width();
   double scaleV=double(big_canvas->height())/miniCanvas->height();
 
-  QCanvasRectangle* viewableRect = new QCanvasRectangle( //int(hSBar->value()/scaleH),int(vSBar->value()/scaleV), 
-							   int(big_canvas_view->contentsX()/scaleH), 
+  QCanvasRectangle* viewableRect = new QCanvasRectangle(   int(big_canvas_view->contentsX()/scaleH), 
 							   int(big_canvas_view->contentsY()/scaleV),
 							   int(big_canvas_view->visibleWidth()/scaleH), 
 							   int(big_canvas_view->visibleHeight()/scaleV), miniCanvas );
@@ -569,20 +583,6 @@ void BuilderWindow::updateMiniView()
   }
   miniCanvas->update();
 }
-/*
-void BuilderWindow::choose()
-{
-  cerr << "BuilderWindow::choose(): Entering..." << endl;
-  QString fn = QFileDialog::getOpenFileName( QString::null, QString::null, 
-					     this );
-  if( !fn.isEmpty() )
-    load( fn );
-  else
-    statusBar()->message( "Loading aborted", 200 );
-
-  cerr << "BuilderWindow::choose(): Leaving..." << endl;
-}
-*/
 
 
 

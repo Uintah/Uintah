@@ -223,7 +223,7 @@ void NetworkCanvasView::contentsMouseMoveEvent(QMouseEvent* e)
 
 // TEK
 // updates position of the new module w/in view
-void NetworkCanvasView::addChild( Module* mod2add, int x , int y )
+void NetworkCanvasView::addChild( Module* mod2add, int x , int y, bool reposition)
 {
   std::vector<Module*> add_module = this->getModules();
 
@@ -233,7 +233,12 @@ void NetworkCanvasView::addChild( Module* mod2add, int x , int y )
   QSize stdDisp=stdSize+QSize(buf,buf);
   int maxrow= height()/stdDisp.height();
   int maxcol= width()/stdDisp.width();
-
+  
+  if(!reposition){
+    QPoint p=viewportToContents(QPoint(x,y));
+    QScrollView::addChild( mod2add, p.x(), p.y());
+    return;
+  }
   for(int icol=0; icol<maxcol; icol++){
     
     for(int irow=0; irow<maxrow; irow++){
@@ -270,11 +275,11 @@ void NetworkCanvasView::addChild( Module* mod2add, int x , int y )
 void NetworkCanvasView::addModule( const string& name, int x, int y,
 				  CIA::array1<std::string> & up,
 				  CIA::array1<std::string> &pp ,
-				  const gov::cca::ComponentID::pointer &cid)
+				  const gov::cca::ComponentID::pointer &cid,
+				   bool reposition)
 {
   Module *module=new Module(this,name,up,pp, services, cid);
-  //  addChild(module,20, 20);
-  addChild(module, x, y );
+  addChild(module, x, y, reposition);
 
   string testString;
 
