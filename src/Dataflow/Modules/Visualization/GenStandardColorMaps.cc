@@ -95,9 +95,9 @@ genMap(ColorMapHandle &cmap, const string& s, int res, bool faux)
     {
       is >> r >> g >> b >> a;
       rgbs[i] = Color(r/255.0, g/255.0, b/255.0);
-      rgbT[i] = i/float(res);
+      rgbT[i] = i/float(res-1);
       alphas[i] = a;
-      alphaT[i] = i/float(res);
+      alphaT[i] = i/float(res-1);
     }
     if (!res || rgbT[res-1] != 1.0)
     {
@@ -110,23 +110,47 @@ genMap(ColorMapHandle &cmap, const string& s, int res, bool faux)
 
     if (faux)
     {
+      vector<int> local0;
       vector<int> local;
       if (res > 0) {
-        local.push_back(0);
+        local0.push_back(0);
       }
       for (int i=1; i<res-1; i++) {
-        if ((alphas[i] < alphas[i-1] && alphas[i] < alphas[i+1])
-            || (alphas[i] > alphas[i-1] && alphas[i] > alphas[i+1])) {
-          local.push_back(i);
+        if ((alphas[i] <= alphas[i-1] && alphas[i] < alphas[i+1])
+            || (alphas[i] < alphas[i-1] && alphas[i] <= alphas[i+1])
+            || (alphas[i] >= alphas[i-1] && alphas[i] > alphas[i+1])
+            || (alphas[i] > alphas[i-1] && alphas[i] >= alphas[i+1])) {
+          local0.push_back(i);
         }
       }
       if (res > 0) {
-        local.push_back(res-1);
+        local0.push_back(res-1);
       }
 
+      bool equal = false;
+      for (int i=0; i<(int)local0.size()-1; i++) {
+        if (equal) {
+          if (alphas[local0[i]] != alphas[local0[i+1]]) {
+            equal = false;
+          }
+        } else {
+          if (alphas[local0[i]] == alphas[local0[i+1]]) {
+            equal = true;
+            local.push_back(local0[i]);
+          } else {
+            local.push_back(local0[i]);
+          }
+        }
+      }
+      if (alphas[local0[local0.size()-1]] == alphas[local[local.size()-1]]) {
+        local[local.size()-1] = local0[local0.size()-1];
+      } else {
+        local.push_back(local0[local0.size()-1]);
+      }
+      
       for (int i=0; i<(int)local.size()-1; i++) {
         if (alphas[local[i]] < alphas[local[i+1]]) {
-          for (int j=local[i]; j<local[i+1]; j++) {
+          for (int j=local[i]; j<local[i+1] + (i+1 == (int)local.size()-1 ? 1 : 0); j++) {
             float s = alphas[local[i]] +
               (1 - alphas[local[i]])
               *(alphas[j]-alphas[local[i]])/(alphas[local[i+1]]-alphas[local[i]]);
@@ -135,7 +159,7 @@ genMap(ColorMapHandle &cmap, const string& s, int res, bool faux)
             rgbs[j].b(s*rgbs[j].b());
           }
         } else if (alphas[local[i]] > alphas[local[i+1]]) {
-          for (int j=local[i]; j<=local[i+1]; j++) {
+          for (int j=local[i]; j<local[i+1] + (i+1 == (int)local.size()-1 ? 1 : 0); j++) {
             float s = alphas[local[i+1]] +
               (1 - alphas[local[i+1]])
               *(alphas[j]-alphas[local[i+1]])/(alphas[local[i]]-alphas[local[i+1]]);
