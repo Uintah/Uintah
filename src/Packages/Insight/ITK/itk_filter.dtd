@@ -15,7 +15,7 @@
   University of Utah. All Rights Reserved.
 -->
 
-<!ELEMENT filter-itk (description, templated, inputs, outputs, parameters, includes)>
+<!ELEMENT filter-itk (description, templated, datatypes*, inputs, outputs, parameters, includes)>
   <!ATTLIST filter-itk name CDATA #REQUIRED>
 
 <!ELEMENT description (#PCDATA)>
@@ -29,6 +29,19 @@
 
 <!ELEMENT default (#PCDATA)>
 
+<!ELEMENT datatypes (datatype*)>
+
+<!ELEMENT datatype (field)>
+  <!ATTLIST datatype name CDATA #REQUIRED>
+
+<!ELEMENT field (access-method, type, variable-call)>
+
+<!ELEMENT access-method (#PCDATA)>
+
+<!ELEMENT type (#PCDATA)>
+
+<!ELEMENT variable-call (#PCDATA)>
+ 
 <!ELEMENT inputs (input*)>
 
 <!ELEMENT input (type, call)>
@@ -49,8 +62,7 @@
 <!ELEMENT parameters (param*)>
 
 <!ELEMENT param (name, type, call+)>
-
-<!ELEMENT type (#PCDATA)>
+  <!ATTLIST param defined (yes|no) "no">
 
 <!ELEMENT includes (file*)>
 
