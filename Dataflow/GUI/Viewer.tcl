@@ -570,7 +570,7 @@ itcl_class ViewWindow {
 	} else {
 	    radiobutton $m.eframe.f.raw -text "Raw Frames" \
 		    -variable $this-global-movie -value 1 \
-		    -state disabled -diableforeground "" \
+		    -state disabled -disabledforeground "" \
 		    -command "$this-c redraw"
 	}
 	if { [$this-c have_mpeg] } {
