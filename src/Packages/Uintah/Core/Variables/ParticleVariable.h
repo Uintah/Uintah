@@ -114,7 +114,7 @@ public:
   }
 
   virtual void copyPointer(ParticleVariable<T>&);
-  virtual void copyPointer(ParticleVariableBase&);
+  virtual void copyPointer(Variable&);
   virtual void allocate(ParticleSubset*);
   virtual void allocate(const Patch*, const IntVector& boundary)
   { SCI_THROW(InternalError("Should not call ParticleVariable<T>::allocate(const Patch*), use allocate(ParticleSubset*) instead.")); }
@@ -320,7 +320,7 @@ private:
    
   template<class T>
   void
-  ParticleVariable<T>::copyPointer(ParticleVariableBase& copy)
+  ParticleVariable<T>::copyPointer(Variable& copy)
   {
     ParticleVariable<T>* c = dynamic_cast<ParticleVariable<T>* >(&copy);
     if(!c)

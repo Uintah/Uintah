@@ -17,6 +17,9 @@
 //    Author : Wayne Witzel
 //    Date   : Mon Jan 28 17:40:35 2002
 
+#ifndef LOCALLYCOMPUTEDPATCHVARMAP
+#define LOCALLYCOMPUTEDPATCHVARMAP
+
 #include <Packages/Uintah/Core/Grid/Patch.h>
 #include <Packages/Uintah/Core/Grid/Level.h>
 #include <Packages/Uintah/Core/Variables/VarLabel.h>
@@ -81,3 +84,5 @@ namespace Uintah {
   };
 
 } // End namespace Uintah
+
+#endif

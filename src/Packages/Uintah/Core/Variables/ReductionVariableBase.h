@@ -47,7 +47,7 @@ WARNING
       
       virtual ~ReductionVariableBase();
       
-      virtual void copyPointer(const ReductionVariableBase&) = 0;
+      virtual void copyPointer(Variable&) = 0;
       virtual ReductionVariableBase* clone() const = 0;
       virtual void reduce(const ReductionVariableBase&) = 0;
       virtual void print(ostream&) = 0;

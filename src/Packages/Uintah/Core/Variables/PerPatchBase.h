@@ -6,6 +6,7 @@
 #include <string>
 #include <sgi_stl_warnings_on.h>
 #include <Core/Geometry/IntVector.h>
+#include <Packages/Uintah/Core/Variables/Variable.h>
 
 namespace Uintah {
 
@@ -43,19 +44,27 @@ WARNING
   
 ****************************************/
 
-   class PerPatchBase {
+  // inherits from Variable solely for the purpose of stuffing it in the DW
+  class PerPatchBase : public Variable {
    public:
       
       virtual ~PerPatchBase();
       
-      virtual void copyPointer(const PerPatchBase&) = 0;
+      virtual const TypeDescription* virtualGetTypeDescription() const;
+      virtual void copyPointer(Variable&) = 0;
       virtual PerPatchBase* clone() const = 0;
       virtual RefCounted* getRefCounted();
       virtual void getSizeInfo(std::string& elems, unsigned long& totsize,
 			       void*& ptr) const = 0;
 
       // Only affects grid variables
-     void offsetGrid(const IntVector& /*offset*/);
+      void offsetGrid(const IntVector& /*offset*/);
+ 
+      virtual void emitNormal(ostream& out, const IntVector& l,
+			      const IntVector& h, ProblemSpecP varnode, bool outputDoubleAsFloat );
+      virtual void readNormal(istream& in, bool swapbytes);      
+      virtual void allocate(const Patch* patch, const IntVector& boundary);
+
    protected:
       PerPatchBase(const PerPatchBase&);
       PerPatchBase();
