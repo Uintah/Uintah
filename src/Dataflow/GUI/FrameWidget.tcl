@@ -32,7 +32,4 @@ itcl_class FrameWidget {
 	BaseWidget::constructor
 	set name FrameWidget
     }
-
-    method scale_changed {newscale} {
-    }
 }

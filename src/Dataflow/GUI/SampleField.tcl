@@ -71,12 +71,14 @@ itcl_class SCIRun_FieldsCreate_SampleField {
 	iwidgets::Labeledframe $wtab.type -labelpos nw \
 		               -labeltext "Widget type"
 	set type [$wtab.type childsite]
-	radiobutton $type.rake -var $this-wtype -value rake -text "Rake" 
+	radiobutton $type.rake -var $this-wtype -value rake -text "Rake" \
+	    -command "$this-c needexecute" 
 	radiobutton $type.ring -var $this-wtype -value ring -text "Ring" \
-		    -state disabled -dis #444
-	radiobutton $type.frame -var $this-wtype -value frame \
-		    -text "Frame" -state disabled -dis #444
-	pack $type.rake $type.ring $type.frame -side left -padx 5 -pady 5 -fill both -expand yes
+	    -command "$this-c needexecute"
+	radiobutton $type.frame -var $this-wtype -value frame -text "Frame" \
+	    -command "$this-c needexecute"
+	pack $type.rake $type.ring $type.frame -side left -padx 5 -pady 5 \
+	    -fill both -expand yes
 
 	frame $wtab.f1 
 	label $wtab.f1.maxseeds_l -text "Maximum number of samples" -width 25 \

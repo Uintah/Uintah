@@ -36,6 +36,8 @@
 #include <Core/Thread/CrowdMonitor.h>
 #include <Core/Containers/StringUtil.h>
 #include <Dataflow/Widgets/GaugeWidget.h>
+#include <Dataflow/Widgets/RingWidget.h>
+#include <Dataflow/Widgets/FrameWidget.h>
 #include <math.h>
 #include <set>
 
@@ -60,6 +62,7 @@ class SampleField : public Module
   Point          endpoint0_;
   Point          endpoint1_;
 
+  GuiString gui_wtype_;
   GuiInt    endpoints_;
   GuiDouble endpoint0x_;
   GuiDouble endpoint0y_;
@@ -83,11 +86,15 @@ class SampleField : public Module
   int vf_generation_;
 
   void execute_rake();
+  void execute_ring();
+  void execute_frame();
   void execute_random();
 
 public:
   CrowdMonitor widget_lock_;
   GaugeWidget *rake_;
+  RingWidget *ring_;
+  FrameWidget *frame_;
   SampleField(GuiContext* ctx);
   virtual ~SampleField();
   virtual void execute();
@@ -103,6 +110,7 @@ SampleField::SampleField(GuiContext* ctx)
     
     firsttime_(true),
     widgetid_(0),
+    gui_wtype_(ctx->subVar("wtype")),
     endpoints_ (ctx->subVar("endpoints")),
     endpoint0x_(ctx->subVar("endpoint0x")),
     endpoint0y_(ctx->subVar("endpoint0y")),
@@ -124,7 +132,9 @@ SampleField::SampleField(GuiContext* ctx)
     force_rake_reset_(ctx->subVar("force-rake-reset", false)),
     vf_generation_(0),
     widget_lock_("StreamLines widget lock"),
-    rake_(0)
+    rake_(0),
+    ring_(0),
+    frame_(0)
 {
   endpoints_.set( 0 );
 }
@@ -133,6 +143,8 @@ SampleField::SampleField(GuiContext* ctx)
 SampleField::~SampleField()
 {
   if (rake_) delete rake_;
+  if (ring_) delete ring_;
+  if (frame_) delete frame_;
 }
 
 
@@ -141,8 +153,9 @@ SampleField::widget_moved(bool last)
 {
   if (last)
   {
-    if (rake_) {
-      rake_->GetEndpoints(endpoint0_,endpoint1_);
+    if (rake_)
+    {
+      rake_->GetEndpoints(endpoint0_, endpoint1_);
 
       endpoint0x_.set( endpoint0_.x() );
       endpoint0y_.set( endpoint0_.y() );
@@ -212,9 +225,27 @@ SampleField::execute_rake()
 	ogport_->flushViews();
       }
       widgetid_ = 0;
-      rake_ = 0; // leak rake
+      if (rake_) { delete rake_; rake_ = 0; }
       force_rake_reset_.set(0);
     }
+  }
+
+  if (ring_ && widgetid_)
+  {
+    ogport_->delObj(widgetid_);
+    ogport_->flushViews();
+    widgetid_ = 0;
+    delete ring_;
+    ring_ = 0;
+  }
+
+  if (frame_ && widgetid_)
+  {
+    ogport_->delObj(widgetid_);
+    ogport_->flushViews();
+    widgetid_ = 0;
+    delete frame_;
+    frame_ = 0;
   }
 
   if (!rake_)
@@ -267,6 +298,163 @@ SampleField::execute_rake()
 }
 
 
+void
+SampleField::execute_ring()
+{
+  warning("Ring not yet supported.\n");
+
+  if (rake_ && widgetid_)
+  {
+    ogport_->delObj(widgetid_);
+    ogport_->flushViews();
+    widgetid_ = 0;
+    delete rake_;
+    rake_ = 0;
+  }
+
+  if (frame_ && widgetid_)
+  {
+    ogport_->delObj(widgetid_);
+    ogport_->flushViews();
+    widgetid_ = 0;
+    delete frame_;
+    frame_ = 0;
+  }
+
+  if (!ring_)
+  {
+    Vector xaxis0(0.0, 0.0, 0.2);
+    Vector yaxis0(0.2, 0.0, 0.0);
+    Point center0(0.5, 0.0, 0.0);
+    Vector normal0(Cross(xaxis0, yaxis0));
+    double radius0 = 0.2;
+    ring_ = scinew RingWidget(this, &widget_lock_, widgetscale_.get());
+    ring_->Connect(ogport_);
+    ring_->SetPosition(center0, normal0, radius0);
+    GeomHandle widget = ring_->GetWidget();
+    widgetid_ = ogport_->addObj(widget, "StreamLines ring", &widget_lock_);
+    ogport_->flushViews();
+  }
+
+  int num_seeds = Max(0, maxSeeds_.get());
+  if (num_seeds <= 0)
+  {
+    remark("No seeds to send.");
+    return;
+  }
+  remark("num_seeds = " + to_string(num_seeds));
+
+  PointCloudMesh* mesh = scinew PointCloudMesh;
+
+  Point center;
+  double r;
+  Vector normal, xaxis, yaxis;
+  ring_->GetPosition(center, normal, r);
+  ring_->GetPlane(xaxis, yaxis);
+  for (int i = 0; i < num_seeds; i++)
+  {
+    const double frac = 2.0 * M_PI * i / num_seeds;
+    mesh->add_node(center + xaxis * r * cos(frac) + yaxis * r * sin(frac));
+  }
+
+  mesh->freeze();
+  PointCloudField<double> *seeds =
+    scinew PointCloudField<double>(mesh, Field::NODE);
+  PointCloudField<double>::fdata_type &fdata = seeds->fdata();
+  
+  for (int loop=0; loop<num_seeds; ++loop)
+  {
+    fdata[loop]=loop;
+  }
+  seeds->freeze();
+  ofport_->send(seeds);
+
+  update_state(Completed);
+}
+
+
+void
+SampleField::execute_frame()
+{
+  warning("Frame not yet supported.\n");
+
+  if (rake_ && widgetid_)
+  {
+    ogport_->delObj(widgetid_);
+    ogport_->flushViews();
+    widgetid_ = 0;
+    delete rake_;
+    rake_ = 0;
+  }
+
+  if (ring_ && widgetid_)
+  {
+    ogport_->delObj(widgetid_);
+    ogport_->flushViews();
+    widgetid_ = 0;
+    delete ring_;
+    ring_ = 0;
+  }
+
+  if (!frame_)
+  {
+    Vector xaxis0(0.0, 0.0, 0.2);
+    Vector yaxis0(0.2, 0.0, 0.0);
+    Point center0(0.5, 0.0, 0.0);
+    frame_ = scinew FrameWidget(this, &widget_lock_, widgetscale_.get());
+    frame_->Connect(ogport_);
+    frame_->SetPosition(center0, center0 + xaxis0, center0 + yaxis0);
+    GeomHandle widget = frame_->GetWidget();
+    widgetid_ = ogport_->addObj(widget, "StreamLines frame", &widget_lock_);
+    ogport_->flushViews();
+  }
+
+  int num_seeds = Max(0, maxSeeds_.get());
+  if (num_seeds <= 0)
+  {
+    remark("No seeds to send.");
+    return;
+  }
+  remark("num_seeds = " + to_string(num_seeds));
+
+  PointCloudMesh* mesh = scinew PointCloudMesh;
+
+  Point center, xloc, yloc;
+  Point corner[4];
+  Vector edge[4];
+  frame_->GetPosition(center, xloc, yloc);
+  const Vector xaxis = xloc - center;
+  const Vector yaxis = yloc - center;
+  corner[0] = center + xaxis + yaxis;
+  corner[1] = center + xaxis - yaxis;
+  corner[2] = center - xaxis - yaxis;
+  corner[3] = center - xaxis + yaxis;
+  edge[0] = corner[1] - corner[0];
+  edge[1] = corner[2] - corner[1];
+  edge[2] = corner[3] - corner[2];
+  edge[3] = corner[0] - corner[3];
+  for (int i = 0; i < num_seeds; i++)
+  {
+    const double frac =  4.0 * i / num_seeds;
+    const int ei = (int)frac;
+    const double eo = frac - ei;
+    mesh->add_node(corner[ei] + edge[ei] * eo);
+  }
+
+  mesh->freeze();
+  PointCloudField<double> *seeds =
+    scinew PointCloudField<double>(mesh, Field::NODE);
+  PointCloudField<double>::fdata_type &fdata = seeds->fdata();
+  
+  for (int loop=0; loop<num_seeds; ++loop)
+  {
+    fdata[loop]=loop;
+  }
+  seeds->freeze();
+  ofport_->send(seeds);
+
+  update_state(Completed);
+}
 
 
 void
@@ -290,7 +478,9 @@ SampleField::execute_random()
     ogport_->flushViews();
   }
   widgetid_ = 0;
-  rake_ = 0;
+  if (rake_) { delete rake_; rake_ = 0; }
+  if (ring_) { delete ring_; ring_ = 0; }
+  if (frame_) { delete frame_; frame_ = 0; }
 
   ofport_->send(seedhandle);
 
@@ -326,9 +516,21 @@ SampleField::execute()
   }
 
   const string &tab = whichTab_.get();
+  const string &wtype = gui_wtype_.get();
   if (tab == "Widget")
   {
-    execute_rake();
+    if (wtype == "rake")
+    {
+      execute_rake();
+    }
+    else if (wtype == "ring")
+    {
+      execute_ring();
+    }
+    else if (wtype == "frame")
+    {
+      execute_frame();
+    }
   }
   else if (tab == "Random")
   {
