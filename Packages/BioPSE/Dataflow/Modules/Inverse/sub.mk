@@ -37,6 +37,7 @@ SRCS     += \
 
 PSELIBS := Packages/BioPSE/Core/Algorithms/NumApproximation \
 	Dataflow/Network Dataflow/Ports \
+	Core/Algorithms/Geometry \
         Core/Datatypes Core/Persistent Core/Containers \
 	Core/Util Core/Exceptions Core/Thread Core/GuiInterface \
         Core/Geom Core/Datatypes Core/Geometry Core/GeomInterface Core/Math \
