@@ -10,7 +10,7 @@
    </Meta>
 
    <Time>
-        <maxTime>.07</maxTime>
+        <maxTime>.06</maxTime>
         <initTime>0.0</initTime>
         <delt_min>0.000014</delt_min>
         <delt_max>0.0014</delt_max>
@@ -23,6 +23,9 @@
         <save label="KineticEnergy"/>
         <save label="TotalMass"/>
         <save label="StrainEnergy"/>
+	<save label="p.x"/>
+	<save label="p.mass"/>
+	<save label="p.stress"/>
         <save label="g.mass"/>
         <save label="g.stressFS"/>
    </DataArchiver>
@@ -44,8 +47,8 @@
                 <density>190.0</density>
                 <material_type>comp_neo_hook_plastic</material_type>
                 <comp_neo_hook_plastic>
-                    <bulk_modulus>14.0</bulk_modulus>
-                    <shear_modulus>6.0</shear_modulus>
+                    <bulk_modulus>10.2</bulk_modulus>
+                    <shear_modulus>7.2</shear_modulus>
                     <yield_stress>1.0</yield_stress>
                     <hardening_modulus>0.0</hardening_modulus>
                     <alpha> 0.0 </alpha>
@@ -70,8 +73,8 @@
                 <density>1.9</density>
                 <material_type>comp_neo_hook_plastic</material_type>
                 <comp_neo_hook_plastic>
-                    <bulk_modulus>.14</bulk_modulus>
-                    <shear_modulus>.06</shear_modulus>
+                    <bulk_modulus>.102</bulk_modulus>
+                    <shear_modulus>.072</shear_modulus>
                     <yield_stress>.0027</yield_stress>
                     <hardening_modulus>0.001</hardening_modulus>
                     <alpha> 0.0 </alpha>
@@ -96,8 +99,8 @@
                 <density>1.9</density>
                 <material_type>comp_neo_hook_plastic</material_type>
                 <comp_neo_hook_plastic>
-                    <bulk_modulus>.14</bulk_modulus>
-                    <shear_modulus>.06</shear_modulus>
+                    <bulk_modulus>.102</bulk_modulus>
+                    <shear_modulus>.072</shear_modulus>
                     <yield_stress>.0027</yield_stress>
                     <hardening_modulus>0.001</hardening_modulus>
                     <alpha> 0.0 </alpha>
@@ -122,8 +125,8 @@
                 <density>1.9</density>
                 <material_type>comp_neo_hook_plastic</material_type>
                 <comp_neo_hook_plastic>
-                    <bulk_modulus>.14</bulk_modulus>
-                    <shear_modulus>.06</shear_modulus>
+                    <bulk_modulus>.102</bulk_modulus>
+                    <shear_modulus>.072</shear_modulus>
                     <yield_stress>.0027</yield_stress>
                     <hardening_modulus>0.001</hardening_modulus>
                     <alpha> 0.0 </alpha>
@@ -148,8 +151,8 @@
                 <density>1.9</density>
                 <material_type>comp_neo_hook_plastic</material_type>
                 <comp_neo_hook_plastic>
-                    <bulk_modulus>.14</bulk_modulus>
-                    <shear_modulus>.06</shear_modulus>
+                    <bulk_modulus>.102</bulk_modulus>
+                    <shear_modulus>.072</shear_modulus>
                     <yield_stress>.0027</yield_stress>
                     <hardening_modulus>0.001</hardening_modulus>
                     <alpha> 0.0 </alpha>
@@ -174,8 +177,8 @@
                 <density>1.9</density>
                 <material_type>comp_neo_hook_plastic</material_type>
                 <comp_neo_hook_plastic>
-                    <bulk_modulus>.14</bulk_modulus>
-                    <shear_modulus>.06</shear_modulus>
+                    <bulk_modulus>.102</bulk_modulus>
+                    <shear_modulus>.072</shear_modulus>
                     <yield_stress>.0027</yield_stress>
                     <hardening_modulus>0.001</hardening_modulus>
                     <alpha> 0.0 </alpha>
@@ -200,8 +203,8 @@
                 <density>1.9</density>
                 <material_type>comp_neo_hook_plastic</material_type>
                 <comp_neo_hook_plastic>
-                    <bulk_modulus>.14</bulk_modulus>
-                    <shear_modulus>.06</shear_modulus>
+                    <bulk_modulus>.102</bulk_modulus>
+                    <shear_modulus>.072</shear_modulus>
                     <yield_stress>.0027</yield_stress>
                     <hardening_modulus>0.001</hardening_modulus>
                     <alpha> 0.0 </alpha>
@@ -226,8 +229,8 @@
                 <density>1.9</density>
                 <material_type>comp_neo_hook_plastic</material_type>
                 <comp_neo_hook_plastic>
-                    <bulk_modulus>.14</bulk_modulus>
-                    <shear_modulus>.06</shear_modulus>
+                    <bulk_modulus>.102</bulk_modulus>
+                    <shear_modulus>.072</shear_modulus>
                     <yield_stress>.0027</yield_stress>
                     <hardening_modulus>0.001</hardening_modulus>
                     <alpha> 0.0 </alpha>
@@ -252,8 +255,8 @@
                 <density>1.9</density>
                 <material_type>comp_neo_hook_plastic</material_type>
                 <comp_neo_hook_plastic>
-                    <bulk_modulus>.14</bulk_modulus>
-                    <shear_modulus>.06</shear_modulus>
+                    <bulk_modulus>.102</bulk_modulus>
+                    <shear_modulus>.072</shear_modulus>
                     <yield_stress>.0027</yield_stress>
                     <hardening_modulus>0.001</hardening_modulus>
                     <alpha> 0.0 </alpha>
@@ -278,8 +281,8 @@
                 <density>1.9</density>
                 <material_type>comp_neo_hook_plastic</material_type>
                 <comp_neo_hook_plastic>
-                    <bulk_modulus>.14</bulk_modulus>
-                    <shear_modulus>.06</shear_modulus>
+                    <bulk_modulus>.102</bulk_modulus>
+                    <shear_modulus>.072</shear_modulus>
                     <yield_stress>.0027</yield_stress>
                     <hardening_modulus>0.001</hardening_modulus>
                     <alpha> 0.0 </alpha>
@@ -304,8 +307,8 @@
                 <density>1.9</density>
                 <material_type>comp_neo_hook_plastic</material_type>
                 <comp_neo_hook_plastic>
-                    <bulk_modulus>.14</bulk_modulus>
-                    <shear_modulus>.06</shear_modulus>
+                    <bulk_modulus>.102</bulk_modulus>
+                    <shear_modulus>.072</shear_modulus>
                     <yield_stress>.0027</yield_stress>
                     <hardening_modulus>0.001</hardening_modulus>
                     <alpha> 0.0 </alpha>
@@ -330,8 +333,8 @@
                 <density>1.9</density>
                 <material_type>comp_neo_hook_plastic</material_type>
                 <comp_neo_hook_plastic>
-                    <bulk_modulus>.14</bulk_modulus>
-                    <shear_modulus>.06</shear_modulus>
+                    <bulk_modulus>.102</bulk_modulus>
+                    <shear_modulus>.072</shear_modulus>
                     <yield_stress>.0027</yield_stress>
                     <hardening_modulus>0.001</hardening_modulus>
                     <alpha> 0.0 </alpha>
