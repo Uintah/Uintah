@@ -122,26 +122,29 @@ public:
   void get_nodes(Node::array_type &, Cell::index_type) const {}
   void get_edges(Edge::array_type &, Face::index_type) const {}
   void get_edges(Edge::array_type &, Cell::index_type) const {}
-  //void get_faces(Face::array_type &, Cell::index_type) const {}
+  void get_faces(Face::array_type &, Cell::index_type) const {}
 
   //! get the parent element(s) of the given index
   void get_edges(Edge::array_type &a, Node::index_type idx) const
   { a.push_back(Edge::index_type(idx));}
-  //bool get_faces(Face::array_type &, Node::index_type) const { return 0; }
-  //bool get_faces(Face::array_type &, Edge::index_type) const { return 0; }
-  //bool get_cells(Cell::array_type &, Node::index_type) const { return 0; }
-  //bool get_cells(Cell::array_type &, Edge::index_type) const { return 0; }
-  //bool get_cells(Cell::array_type &, Face::index_type) const { return 0; }
+  bool get_faces(Face::array_type &, Node::index_type) const { return 0; }
+  bool get_faces(Face::array_type &, Edge::index_type) const { return 0; }
+  bool get_cells(Cell::array_type &, Node::index_type) const { return 0; }
+  bool get_cells(Cell::array_type &, Edge::index_type) const { return 0; }
+  bool get_cells(Cell::array_type &, Face::index_type) const { return 0; }
 
   //! return all edge_indecies that overlap the BBox in arr.
   void get_edges(Edge::array_type &arr, const BBox &box) const;
 
-  //! similar to get_cells() with Face::index_type argument, but
-  //  returns the "other" cell if it exists, not all that exist
-  bool get_neighbor(Cell::index_type & /*neighbor*/, Cell::index_type /*from*/,
-		    Face::index_type /*idx*/) const {
-    ASSERTFAIL("ScanlineMesh::get_neighbor not implemented.");
-  }
+  //! Get the size of an elemnt (length, area, volume)
+  double get_size(Node::index_type idx) const;
+  double get_size(Edge::index_type idx) const;
+  double get_size(Face::index_type idx) const;
+  double get_size(Cell::index_type idx) const;
+  double get_length(Edge::index_type idx) const { return get_size(idx); };
+  double get_area(Face::index_type idx) const { return get_size(idx); };
+  double get_volume(Cell::index_type idx) const { return get_size(idx); };
+
   //! get the center point (in object space) of an element
   void get_center(Point &, Node::index_type) const;
   void get_center(Point &, Edge::index_type) const;
@@ -155,14 +158,12 @@ public:
 
   void get_weights(const Point &p, Node::array_type &l, vector<double> &w);
   void get_weights(const Point &p, Edge::array_type &l, vector<double> &w);
-  void get_weights(const Point &, Face::array_type &, vector<double> &) {ASSERTFAIL("ScanlineMesh::get_weights for faces isn't supported");}
-  void get_weights(const Point &, Cell::array_type &, vector<double> &) {ASSERTFAIL("ScanlineMesh::get_weights for cells isn't supported");}
+  void get_weights(const Point &, Face::array_type &, vector<double> &) 
+    {ASSERTFAIL("ScanlineMesh::get_weights for faces isn't supported");}
+  void get_weights(const Point &, Cell::array_type &, vector<double> &) 
+    {ASSERTFAIL("ScanlineMesh::get_weights for cells isn't supported");}
 
-  void get_point(Point &p, Node::index_type i) const
-  { get_center(p, i); }
-  void get_normal(Vector &/* result */, Node::index_type /* index */) const
-  { ASSERTFAIL("not implemented") }
-
+  void get_point(Point &p, Node::index_type i) const { get_center(p, i); }
 
   virtual void io(Piostream&);
   static PersistentTypeID type_id;

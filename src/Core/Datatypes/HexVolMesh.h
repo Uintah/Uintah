@@ -77,7 +77,6 @@ public:
   };
 
   typedef Cell Elem;
-  enum { ELEMENTS_E = CELLS_E };
 
   HexVolMesh();
   HexVolMesh(const HexVolMesh &copy);
@@ -103,50 +102,96 @@ public:
   void size(Face::size_type &) const;
   void size(Cell::size_type &) const;
 
+  //! Get the child elements of the given index
   void get_nodes(Node::array_type &array, Edge::index_type idx) const;
   void get_nodes(Node::array_type &array, Face::index_type idx) const;
   void get_nodes(Node::array_type &array, Cell::index_type idx) const;
   void get_edges(Edge::array_type &array, Face::index_type idx) const;
   void get_edges(Edge::array_type &array, Cell::index_type idx) const;
   void get_faces(Face::array_type &array, Cell::index_type idx) const;
+
+  //! Get the parent element(s) of the given index.
+  unsigned get_edges(Edge::array_type &, Node::index_type) const { return 0; }
+  unsigned get_faces(Face::array_type &, Node::index_type) const { return 0; }
+  unsigned get_faces(Face::array_type &, Edge::index_type) const { return 0; }
+  unsigned get_cells(Cell::array_type &, Node::index_type) const { return 0; }
+  unsigned get_cells(Cell::array_type &, Edge::index_type) const { return 0; }
+  unsigned get_cells(Cell::array_type &, Face::index_type) const { return 0; }
+
   bool get_neighbor(Cell::index_type &neighbor, Cell::index_type from,
-		   Face::index_type idx) const;
-  void get_neighbors(Cell::array_type &array, Cell::index_type idx) const;
-  //! must call compute_node_neighbors before calling get_neighbors.
+		    Face::index_type idx) const;
   void get_neighbors(Node::array_type &array, Node::index_type idx) const;
+  void get_neighbors(Cell::array_type &array, Cell::index_type idx) const;
+
+  //! Get the center point of an element.
   void get_center(Point &result, Node::index_type idx) const;
   void get_center(Point &result, Edge::index_type idx) const;
   void get_center(Point &result, Face::index_type idx) const;
   void get_center(Point &result, Cell::index_type idx) const;
 
-  //! return false if point is out of range.
+  //! Get the size of an elemnt (length, area, volume)
+  double get_size(Node::index_type idx) const { return 0.0; }
+  double get_size(Edge::index_type idx) const 
+  {
+    Node::array_type arr;
+    get_nodes(arr, idx);
+    Point p0, p1;
+    get_center(p0, arr[0]);
+    get_center(p1, arr[1]);
+    return (p1.asVector() - p0.asVector()).length();
+  }
+  double get_size(Face::index_type idx) const
+  {
+    Node::array_type ra;
+    get_nodes(ra,idx);
+    Point p0,p1,p2;
+    get_point(p0,ra[0]);
+    get_point(p1,ra[1]);
+    get_point(p2,ra[2]);
+    return (Cross(p0-p1,p2-p0)).length()*0.5;
+  }
+  double get_size(Cell::index_type idx) const 
+  { 
+    ASSERTFAIL("dont know how to compute the volume for an arbitrary hex");
+    return 0.0;
+  };
+  double get_length(Edge::index_type idx) const { return get_size(idx); };
+  double get_area(Face::index_type idx) const   { return get_size(idx); };
+  double get_volume(Cell::index_type idx) const { return get_size(idx); };
+
+  int get_valence(Node::index_type idx) const
+  {
+    Node::array_type nodes;
+    get_neighbors(nodes, idx);
+    return nodes.size();
+  }
+  int get_valence(Edge::index_type idx) const { return 0; }
+  int get_valence(Face::index_type idx) const { return 0; }
+  int get_valence(Cell::index_type idx) const { return 0; }
+
+  //! returns false if point is out of range.
   bool locate(Node::index_type &loc, const Point &p);
   bool locate(Edge::index_type &loc, const Point &p);
   bool locate(Face::index_type &loc, const Point &p);
   bool locate(Cell::index_type &loc, const Point &p);
 
   void get_weights(const Point &p, Node::array_type &l, vector<double> &w);
-  void get_weights(const Point &, Edge::array_type &, vector<double> &) {ASSERTFAIL("HexVolMesh::get_weights for edges isn't supported");}
-  void get_weights(const Point &, Face::array_type &, vector<double> &) {ASSERTFAIL("HexVolMesh::get_weights for faces isn't supported");}
+  void get_weights(const Point &, Edge::array_type &, vector<double> &)
+    {ASSERTFAIL("HexVolMesh::get_weights for edges isn't supported");}
+  void get_weights(const Point &, Face::array_type &, vector<double> &) 
+    {ASSERTFAIL("HexVolMesh::get_weights for faces isn't supported");}
   void get_weights(const Point &p, Cell::array_type &l, vector<double> &w);
 
   void get_point(Point &result, Node::index_type index) const
-  { result = points_[index]; }
-  void get_normal(Vector &/* result */, Node::index_type /* index */) const
-  { ASSERTFAIL("not implemented") }
-
+    { result = points_[index]; }
   void set_point(const Point &point, Node::index_type index)
-  { points_[index] = point; }
+    { points_[index] = point; }
 
-  double get_volume(const Cell::index_type &/*ci*/) {
-    ASSERTFAIL("don't know how to compute the volume for an arbitrary hex");
-  }
-  double get_area(const Face::index_type &) { return 0; }
-  double get_element_size(const Elem::index_type &ci)
-  { return get_volume(ci); }
 
-  void get_random_point(Point &p, const Cell::index_type &ei, 
-			int seed=0) const;
+  //! TODO: Remove this function?
+  double get_element_size(const Elem::index_type &ci) {return get_volume(ci);}
+
+  void get_random_point(Point &, const Cell::index_type &i, int seed=0) const;
 
   //! the double return val is the volume of the Hex.
   double get_gradient_basis(Cell::index_type ci, Vector& g0, Vector& g1,
