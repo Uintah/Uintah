@@ -255,7 +255,6 @@ void ICE::scheduleInitialize(const LevelP& level,
   t->computes(lb->sp_vol_CCLabel);
   t->computes(lb->mass_CCLabel);
   t->computes(lb->rho_CC_top_cycleLabel);
-  t->computes(lb->viscosity_CCLabel);
   t->computes(lb->vol_frac_CCLabel);
   t->computes(lb->vel_CCLabel);
   t->computes(lb->press_CCLabel);
@@ -515,7 +514,6 @@ void ICE::scheduleAccumulateMomentumSourceSinks(SchedulerP& sched,
   task->requires(Task::NewDW,lb->vol_frac_CCLabel, Ghost::None);
 // TURN ON WHEN WE HAVE VISCOUS TERMS
 //task->requires(Task::OldDW,  lb->vel_CCLabel,      Ghost::None);
-//task->requires(Task::OldDW,  lb->viscosity_CCLabel,Ghost::None);
  
   task->computes(lb->mom_source_CCLabel);
     
@@ -637,7 +635,6 @@ void ICE::scheduleAdvectAndAdvanceInTime(SchedulerP& sched,
   task->computes(lb->sp_vol_CCLabel);
   task->computes(lb->temp_CCLabel);
   task->computes(lb->vel_CCLabel);
-  task->computes(lb->viscosity_CCLabel);
   sched->addTask(task, patches, matls);
 }
 /* ---------------------------------------------------------------------
@@ -761,7 +758,6 @@ void ICE::actuallyInitialize(const ProcessorGroup*,
     vector<CCVariable<double>   > rho_top_cycle(numMatls);
     vector<CCVariable<double>   > Temp_CC(numMatls);
     vector<CCVariable<double>   > speedSound(numMatls);
-    vector<CCVariable<double>   > visc_CC(numMatls);
     vector<CCVariable<double>   > vol_frac_CC(numMatls);
     vector<CCVariable<Vector>   > vel_CC(numMatls);
     CCVariable<double>    press_CC;  
@@ -783,7 +779,6 @@ void ICE::actuallyInitialize(const ProcessorGroup*,
                                                                 indx,patch);
       new_dw->allocate(Temp_CC[m],     lb->temp_CCLabel,        indx,patch);
       new_dw->allocate(speedSound[m],  lb->speedSound_CCLabel,  indx,patch);
-      new_dw->allocate(visc_CC[m],     lb->viscosity_CCLabel,   indx,patch);
       new_dw->allocate(vol_frac_CC[m], lb->vol_frac_CCLabel,    indx,patch);
       new_dw->allocate(vel_CC[m],      lb->vel_CCLabel,         indx,patch);
     }
@@ -791,7 +786,7 @@ void ICE::actuallyInitialize(const ProcessorGroup*,
       ICEMaterial* ice_matl = d_sharedState->getICEMaterial(m);
       ice_matl->initializeCells(rho_micro[m], sp_vol_CC[m],   rho_top_cycle[m],
                                 Temp_CC[m],   speedSound[m], 
-                                visc_CC[m],   vol_frac_CC[m], vel_CC[m], 
+                                vol_frac_CC[m], vel_CC[m], 
                                 press_CC,  numALLMatls,    patch, new_dw);
 
       cv[m] = ice_matl->getSpecificHeat();
@@ -835,7 +830,6 @@ void ICE::actuallyInitialize(const ProcessorGroup*,
       new_dw->put(Temp_CC[m],       lb->temp_CCLabel,           indx,patch);
       new_dw->put(speedSound[m],    lb->speedSound_CCLabel,     indx,patch);
       new_dw->put(vel_CC[m],        lb->vel_CCLabel,            indx,patch);
-      new_dw->put(visc_CC[m],       lb->viscosity_CCLabel,      indx,patch);
 
       if (switchDebugInitialize){
         cout << " Initial Conditions" << endl;       
@@ -1945,7 +1939,7 @@ void ICE::massExchange(const ProcessorGroup*,
  ---------------------------------------------------------------------  */
 void ICE::accumulateMomentumSourceSinks(const ProcessorGroup*,  
 					const PatchSubset* patches,
-                                   const MaterialSubset* /*matls*/,
+                                        const MaterialSubset* /*matls*/,
 					DataWarehouse* old_dw, 
 					DataWarehouse* new_dw)
 {
@@ -1964,6 +1958,7 @@ void ICE::accumulateMomentumSourceSinks(const ProcessorGroup*,
     double    delX, delY, delZ;
     double    pressure_source, mass, vol;
   //  double    viscous_source;
+    double viscosity;
 
     old_dw->get(delT, d_sharedState->get_delt_label());
     dx        = patch->dCell();
@@ -1975,7 +1970,6 @@ void ICE::accumulateMomentumSourceSinks(const ProcessorGroup*,
 
     CCVariable<double>   rho_CC;
     CCVariable<Vector>   vel_CC;
-    CCVariable<double>   visc_CC;
     CCVariable<double>   vol_frac;
     SFCXVariable<double> pressX_FC;
     SFCYVariable<double> pressY_FC;
@@ -1987,12 +1981,18 @@ void ICE::accumulateMomentumSourceSinks(const ProcessorGroup*,
 
     for(int m = 0; m < numMatls; m++) {
       Material* matl        = d_sharedState->getMaterial( m );
+      ICEMaterial* ice_matl = dynamic_cast<ICEMaterial*>(matl);
+      if(ice_matl){
+	viscosity = ice_matl->getViscosity();
+      }
+      else{
+	viscosity = 0.;
+      }
       indx = matl->getDWIndex();
       new_dw->get(rho_CC,  lb->rho_CCLabel,      indx,patch,Ghost::None, 0);
       new_dw->get(vol_frac,lb->vol_frac_CCLabel, indx,patch,Ghost::None, 0);
   /*`======= Turn on when we have viscous terms ==========*/ 
   //  old_dw->get(vel_CC,  lb->vel_CCLabel,      indx,patch,Ghost::None, 0);
-  //  old_dw->get(visc_CC, lb->viscosity_CCLabel,indx,patch,Ghost::None, 0);
    /*==========TESTING==========`*/
 
 
@@ -2586,7 +2586,7 @@ void ICE::advectAndAdvanceInTime(const ProcessorGroup*,
       ICEMaterial* ice_matl = d_sharedState->getICEMaterial(m);
       int indx = ice_matl->getDWIndex();
 
-      CCVariable<double> rho_CC, mass_CC, visc_CC, temp, sp_vol_CC, rho_micro;
+      CCVariable<double> rho_CC, mass_CC, temp, sp_vol_CC, rho_micro;
       CCVariable<Vector> vel_CC, mom_L_ME;
       CCVariable<double > int_eng_L_ME, mass_L,speedSound;
 
@@ -2610,7 +2610,6 @@ void ICE::advectAndAdvanceInTime(const ProcessorGroup*,
       new_dw->allocate(sp_vol_CC, lb->sp_vol_CCLabel,         indx,patch);
       new_dw->allocate(temp,      lb->temp_CCLabel,           indx,patch);
       new_dw->allocate(vel_CC,    lb->vel_CCLabel,            indx,patch);
-      new_dw->allocate(visc_CC,   lb->viscosity_CCLabel,      indx,patch);
 
       double cv = ice_matl->getSpecificHeat();
       //__________________________________
@@ -2706,9 +2705,6 @@ void ICE::advectAndAdvanceInTime(const ProcessorGroup*,
       new_dw->put(sp_vol_CC,lb->sp_vol_CCLabel,        indx,patch);
       new_dw->put(vel_CC,   lb->vel_CCLabel,           indx,patch);
       new_dw->put(temp,     lb->temp_CCLabel,          indx,patch);
-
-      // These are carried forward variables, they don't change
-      new_dw->put(visc_CC,  lb->viscosity_CCLabel,     indx,patch);
     }
   }  // patch loop
 }
