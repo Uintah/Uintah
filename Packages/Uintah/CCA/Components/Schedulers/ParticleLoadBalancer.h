@@ -44,7 +44,7 @@ namespace Uintah {
      virtual int getPatchwiseProcessorAssignment(const Patch* patch,
 						  const ProcessorGroup* resources);
     virtual int getOldProcessorAssignment(const VarLabel* var,
-					  const Patch* patch, const int matl, 
+					  const Patch* patch, int matl, 
 					  const ProcessorGroup* pg); 
     virtual bool needRecompile(double time, double delt, const GridP& grid); 
     virtual void problemSetup(ProblemSpecP& pspec);
