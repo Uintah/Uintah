@@ -64,6 +64,14 @@ SerialMPM::SerialMPM( int MpiRank, int MpiProcesses ) :
    pXLabel =   new VarLabel( "p.x", ParticleVariable<Point>::getTypeDescription(),
 			     VarLabel::PositionVariable);
 
+   //H.Tan:
+   //  pSurfaceNormalLabel is used to define the surface normal of a boundary particle.
+   //  For the interior particle, the p.surfaceNormal vector is set to (0,0,0)
+   //  in this way we can distinguish boundary particles to interior particles
+   //
+   pSurfaceNormalLabel = new VarLabel( "p.surfaceNormal",
+			     ParticleVariable<Vector>::getTypeDescription() );
+
    gAccelerationLabel = new VarLabel( "g.acceleration",
 			      NCVariable<Vector>::getTypeDescription() );
 
@@ -712,6 +720,9 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorContext*,
 }
 
 // $Log$
+// Revision 1.40  2000/05/04 17:30:32  tan
+//   Add surfaceNormal for boundary particle tracking.
+//
 // Revision 1.39  2000/05/03 23:52:44  guilkey
 // Fixed some small errors in the MPM code to make it work
 // and give what appear to be correct answers.

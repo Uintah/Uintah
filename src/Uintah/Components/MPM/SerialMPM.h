@@ -131,6 +131,7 @@ WARNING
 	 const VarLabel* pVelocityLabel;
 	 const VarLabel* pExternalForceLabel;
 	 const VarLabel* pXLabel;
+	 const VarLabel* pSurfaceNormalLabel; //for fracture
 	 
 	 const VarLabel* gMassLabel;
 	 const VarLabel* gAccelerationLabel;
@@ -149,6 +150,9 @@ WARNING
    
 //
 // $Log$
+// Revision 1.19  2000/05/04 17:31:17  tan
+//   Add surfaceNormal for boundary particle tracking.
+//
 // Revision 1.18  2000/05/02 18:41:15  guilkey
 // Added VarLabels to the MPM algorithm to comply with the
 // immutable nature of the DataWarehouse. :)
