@@ -38,7 +38,7 @@ MixRxnTableInfo::~MixRxnTableInfo() {
 // Problem Setup for MixRxnTableInfo
 //****************************************************************************
 void 
-MixRxnTableInfo::problemSetup(const ProblemSpecP& params, bool mixTableFlag,
+MixRxnTableInfo::problemSetup(const ProblemSpecP& params, bool varFlag,
 			      const MixingModel* mixModel)
 {
   ProblemSpecP db = params->findBlock("MixRxnTableInfo");
@@ -65,7 +65,7 @@ MixRxnTableInfo::problemSetup(const ProblemSpecP& params, bool mixTableFlag,
     }
   }
 
-  if (mixTableFlag) {
+  if (varFlag) {
     if (mixModel->getNumMixStatVars()) {
       for (ProblemSpecP mixvar_db = db->findBlock("MixFracVariance");
 	   mixvar_db != 0; mixvar_db = db->findNextBlock("MixFracVariance")) {
@@ -118,6 +118,13 @@ MixRxnTableInfo::getDensityIndex () const {
 
 //
 // $Log$
+// Revision 1.6  2002/03/28 23:14:51  spinti
+// 1. Added in capability to save mixing and reaction tables as KDTree or 2DVector
+// 2. Tables can be declared either static or dynamic
+// 3. Added capability to run using static clipped Gaussian MixingModel table
+// 4. Removed mean values mixing model option from PDFMixingModel and made it
+//    a separate mixing model, MeanMixingModel.
+//
 // Revision 1.5  2001/11/08 19:13:44  spinti
 // 1. Corrected minor problems in ILDMReactionModel.cc
 // 2. Added tabulation capability to StanjanEquilibriumReactionModel.cc. Now,

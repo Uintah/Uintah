@@ -74,7 +74,7 @@ public:
       //
       virtual void computeProps(const InletStream& inStream,
 				Stream& outStream);
-      inline Stream speciesStateSpace(const std::vector<double>& mixVar) {
+      inline Stream speciesStateSpace(const std::vector<double> mixVar) {
 	Stream noStream;
 	return noStream;
       }
@@ -98,6 +98,8 @@ public:
       }
       inline int getTableDimension() const{
 	return 0;
+      }
+      inline string getMixTableType() const{
       }
       //***warning** compute totalvars from number of species and dependent vars
       inline int getTotalVars() const {
@@ -145,6 +147,13 @@ private:
 
 //
 // $Log$
+// Revision 1.10  2002/03/28 23:14:50  spinti
+// 1. Added in capability to save mixing and reaction tables as KDTree or 2DVector
+// 2. Tables can be declared either static or dynamic
+// 3. Added capability to run using static clipped Gaussian MixingModel table
+// 4. Removed mean values mixing model option from PDFMixingModel and made it
+//    a separate mixing model, MeanMixingModel.
+//
 // Revision 1.9  2001/11/28 23:54:13  spinti
 // Removed merge markers (<<<<).
 //
