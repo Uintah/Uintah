@@ -141,7 +141,8 @@ compute_data(T *nindata, unsigned char *nvoutdata, float *gmoutdata,
 
         const Vector g((x1 - x0)*xscale, (y1 - y0)*yscale, (z1 - z0)*zscale);
         Vector gradient = transform.project_normal(g);
-        const float gm = gradient.safe_normalize();
+        float gm = gradient.safe_normalize();
+        if (gm < 1.0e-5) gm = 0.0;
 
         nvoutdata[(i * njk + j * nk + k) * 4 + 0] = NtoUC(gradient.x());
         nvoutdata[(i * njk + j * nk + k) * 4 + 1] = NtoUC(gradient.y());
@@ -281,6 +282,12 @@ NrrdSetupTexture::execute()
     transform.pre_scale(nmax - nmin);
     transform.pre_translate(nmin.asVector());
   }
+
+  // Add the matrix size into the canonical transform.
+  transform.pre_scale(Vector(1.0 / (nin->axis[2].size - 1.0),
+                             1.0 / (nin->axis[1].size - 1.0),
+                             1.0 / (nin->axis[0].size - 1.0)));
+  
 
   if (nin->type == nrrdTypeChar)
   {
