@@ -129,7 +129,7 @@ ClipByFunctionAlgoT<FIELD>::execute(ProgressReporter *mod,
       if (elemdata_valid) { field->value(v, *bi); }
       inside = vinside_p(p.x(), p.y(), p.z(), v);
     }
-    else if (clipmode > 0)
+    else if (clipmode == 1)
     {
       typename FIELD::mesh_type::Node::array_type onodes;
       mesh->get_nodes(onodes, *bi);
@@ -146,6 +146,31 @@ ClipByFunctionAlgoT<FIELD>::execute(ProgressReporter *mod,
 	{
 	  counter++;
 	  if (counter >= clipmode)
+	  {
+	    inside = true;
+	    break;
+	  }
+	}
+      }
+    }
+    else if (clipmode == 2)
+    {
+      typename FIELD::mesh_type::Node::array_type onodes;
+      mesh->get_nodes(onodes, *bi);
+
+      unsigned sz = onodes.size() / 2;
+      inside = false;
+      unsigned counter = 0;
+      for (unsigned int i = 0; i < onodes.size(); i++)
+      {
+	Point p;
+	mesh->get_center(p, onodes[i]);
+	typename FIELD::value_type v(0);
+	if (field->basis_order() == 1) { field->value(v, onodes[i]); }
+	if (vinside_p(p.x(), p.y(), p.z(), v))
+	{
+	  counter++;
+	  if (counter >= sz)
 	  {
 	    inside = true;
 	    break;
