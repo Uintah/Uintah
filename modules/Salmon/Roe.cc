@@ -1454,6 +1454,7 @@ void Roe::mouse_pick(int action, int x, int y, int, int)
 			update_mode_string(clString("pick: ")+
 					   geomItemA[i]->name);
 		}
+		geomSelected->pick->pick();
 	    } else {
 		update_mode_string("pick: none");
 	    }
@@ -1502,31 +1503,42 @@ void Roe::mouse_pick(int action, int x, int y, int, int)
 		    prin_dir=i;
 		}
 	    }
-	    Vector mtn(geomSelected->pick->principal(prin_dir)*dist);
-	    cerr << "Pick motion..." <<
-		mtn.string() << "\n";
-	    total_x+=mtn.x();
-	    total_y+=mtn.y();
-	    total_z+=mtn.z();
-	    if (Abs(total_x) < .0001) total_x=0;
-	    if (Abs(total_y) < .0001) total_y=0;
-	    if (Abs(total_z) < .0001) total_z=0;
-	    need_redraw=1;
-	    for (i=0; i<geomItemA.size(); i++) {
-		if (geomItemA[i]->geom == geomSelected)
-		    update_mode_string(clString("pick: ")+
-				       geomItemA[i]->name+
-				       " "+to_string(total_x)+
-				       ", "+to_string(total_y)+
-				       ", "+to_string(total_z));
+	    if(prin_dir != -1){
+		Vector mtn(geomSelected->pick->principal(prin_dir)*dist);
+		cerr << "Pick motion..." <<
+		    mtn.string() << "\n";
+		total_x+=mtn.x();
+		total_y+=mtn.y();
+		total_z+=mtn.z();
+		if (Abs(total_x) < .0001) total_x=0;
+		if (Abs(total_y) < .0001) total_y=0;
+		if (Abs(total_z) < .0001) total_z=0;
+		need_redraw=1;
+		for (i=0; i<geomItemA.size(); i++) {
+		    if (geomItemA[i]->geom == geomSelected)
+			update_mode_string(clString("pick: ")+
+					   geomItemA[i]->name+
+					   " "+to_string(total_x)+
+					   ", "+to_string(total_y)+
+					   ", "+to_string(total_z));
+		}
+		cerr << "Calling moved (geomSelected=" << geomSelected << ", geomSelected->pick=" << geomSelected->pick << ")\n";
+		geomSelected->pick->moved(prin_dir, dist, mtn);
+		cerr << "done" << endl;
+	    } else {
+		update_mode_string(clString("Bad direction..."));
 	    }
-//	    geomSelected->pick->motion(prin_dir, dist, mtn);
 	    evl->unlock();
 	    last_x = x;
 	    last_y = y;
 	}
 	break;
     case BUTTON_UP:
+	if(geomSelected){
+	    geomSelected->pick->release();
+	} else {
+	    geomSelected=0;
+	}
 	update_mode_string("");
 	break;
     }

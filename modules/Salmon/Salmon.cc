@@ -388,6 +388,8 @@ void Salmon::delObj(int portno, int serial)
 	    topRoe[i]->itemDeleted(g);
 	}
 	delete g;
+    } else {
+	cerr << "Error deleting object, not it database...(" << serial << ")" << endl;
     }
 }
 
@@ -412,7 +414,6 @@ void Salmon::delAll(int portno)
 	for (iter.first(); iter.ok();) {
 	    GeomObj* g=iter.get_data();
 	    int serial=iter.get_key();
-	    serHash->lookup(serial, g);
 	    ++iter; // We have to increment before we nuke the
 	            // current element...
 	    serHash->remove(serial);
