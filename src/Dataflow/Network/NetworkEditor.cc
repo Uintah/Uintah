@@ -73,12 +73,51 @@ NetworkEditor::~NetworkEditor()
 {
 }
 
+
+static void
+emit_tclstyle_copyright(ostream &out)
+{
+  out <<
+    "#\n"
+    "# The contents of this file are subject to the University of Utah Public\n"
+    "# License (the \"License\"); you may not use this file except in compliance\n"
+    "# with the License.\n"
+    "# \n"
+    "# Software distributed under the License is distributed on an \"AS IS\"\n"
+    "# basis, WITHOUT WARRANTY OF ANY KIND, either express or implied. See the\n"
+    "# License for the specific language governing rights and limitations under\n"
+    "# the License.\n"
+    "# \n"
+    "# The Original Source Code is SCIRun, released March 12, 2001.\n"
+    "# \n"
+    "# The Original Source Code was developed by the University of Utah.\n"
+    "# Portions created by UNIVERSITY are Copyright (C) 2001, 1994 \n"
+    "# University of Utah. All Rights Reserved.\n"
+    "\n"
+    "set results [sourceSettingsFile]\n"
+    "\n"
+"if { $results == \"failed\" } {\n"
+    "\n"
+    "    ::netedit scheduleok\n"
+    "    return \n"
+    "\n"
+"} else {\n"
+    "\n"
+    "    set DATADIR [lindex $results 0]\n"
+    "    set DATASET [lindex $results 1]\n"
+    "}\n"
+    "\n"
+    "source $DATADIR/$DATASET/$DATASET.settings\n";
+}
+
+
 void NetworkEditor::save_network(const string& filename)
 {
     ofstream out(filename.c_str());
     if(!out)
       return;
     out << "# SCI Network 1.0\n";
+    //emit_tclstyle_copyright(out);
     out << "\n";
     out << "::netedit dontschedule\n\n";
     net->read_lock();
