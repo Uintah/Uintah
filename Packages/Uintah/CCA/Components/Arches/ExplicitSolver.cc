@@ -521,7 +521,8 @@ ExplicitSolver::sched_dummySolve(SchedulerP& sched,
 
   tsk->requires(Task::OldDW, d_lab->d_maxUxplus_label);
 
-  tsk->requires(Task::OldDW, d_lab->d_divConstraintLabel);
+  tsk->requires(Task::OldDW, d_lab->d_divConstraintLabel,
+		Ghost::None, Arches::ZEROGHOSTCELLS);
   tsk->computes(d_lab->d_divConstraintLabel);
 
   /*
