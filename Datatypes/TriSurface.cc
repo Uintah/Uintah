@@ -57,7 +57,7 @@ static Persistent* make_TriSurface()
 PersistentTypeID TriSurface::type_id("TriSurface", "Surface", make_TriSurface);
 
 TriSurface::TriSurface(Representation r)
-: Surface(r, 0), empty_index(-1), directed(1), haveNodeInfo(0), normType(None)
+: Surface(r, 0), empty_index(-1), directed(1), haveNodeInfo(0), normType(NrmlsNone)
 {
 }
 
@@ -120,7 +120,7 @@ void TriSurface::bldNormals(NormalsType nt) {
     // none->none       (return)		1
 
     if (normType==nt) return;						// 1
-    if (nt==None) {normals.resize(0); normType=nt; return;}		// 2
+    if (nt==NrmlsNone) {normals.resize(0); normType=nt; return;}	// 2
     if (normType==PointType && nt==VertexType) {			// 3
 	// we want normals at the vertices, we have them at each point...
 	Array1<Vector> old(normals);
@@ -915,7 +915,7 @@ void TriSurface::io(Piostream& stream) {
     if (version >= 4) {
 	int* flag=(int*)&normType;
 	Pio(stream, *flag);
-	if (normType != None) 
+	if (normType != NrmlsNone) 
 	    Pio(stream, normals);
     } else if (version >= 3) {
 	int haveNormals;
@@ -924,7 +924,7 @@ void TriSurface::io(Piostream& stream) {
 	    normType=VertexType;
 	    Pio(stream, normals);
 	} else {
-	    normType=None;
+	    normType=NrmlsNone;
 	}
     }
     Pio(stream, points);

@@ -1,7 +1,7 @@
 
 #include <config/sci.cf>
 
-SUBDIRS = ASCI Contours CFD CS684 FDM FEM Fields HP Haptics Image \
+SUBDIRS = ASCI CS684 Contours CFD FDM FEM Fields HP Haptics Image \
 	Iterators Matrix EEG Mesh Readers Salmon Surface Treat \
 	Visualization Writers
 

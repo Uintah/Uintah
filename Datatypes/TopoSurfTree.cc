@@ -84,6 +84,30 @@ void order(Array1<int>& a) {
     }
 }
 
+// tmpPatchIdx[patchHash][faceCtr]=faceG
+//	patchHash is a hashed value based on the region ID on eiher side
+//	faceCtr is a count of all the faces this patch contains (0-n)
+//	faceG is the actual global face # 
+
+// tmpPatchIdxOrient[patchHash][surfCtr][faceCtr]=orientB
+//	patchHash is a hashed value based on the region ID on eiher side
+//	surfCtr is a surface counting idx (0-n).  the global surf # this
+//		corresponds to can be found via patchRegions[patchG][surfIdx]
+//	faceIdx is a count of all the faces this patch contains (0-n)
+//	orientB is a binary orientation flag
+
+// patchRegions[patchG][regionCtr]=surfG
+//	patchG is the true patch number
+//	regionCtr just indexes the regions the patch separates
+//	surfG is the global index of the neighboring region/surface
+
+// allFaceSurfaces[faceG][surfCtr]=surfG
+//	faceG is the true face number
+//	surfCtr is a counter of all the surfaces this face touches
+//	surfG is the global index of each region/surface this face neighbors
+
+
+
 void TopoSurfTree::BldPatches() {
     int i,j,k,l;
 
@@ -91,23 +115,23 @@ void TopoSurfTree::BldPatches() {
     if (!faces.size()) return;
 
     // make a list of what surfaces each faces is attached to
-    Array1<Array1<int> > allFaceRegions(faces.size());
-//    cerr << "Membership.size()="<<allFaceRegions.size()<<"\n";
+    Array1<Array1<int> > allFaceSurfaces(faces.size());
+//    cerr << "Membership.size()="<<allFaceSurfaces.size()<<"\n";
     for (i=0; i<surfI.size(); i++)
 	for (j=0; j<surfI[i].faces.size(); j++)
-	    allFaceRegions[surfI[i].faces[j]].add(i);
-    int maxMembership=1;
+	    allFaceSurfaces[surfI[i].faces[j]].add(i);
+    int maxSurfacesOnAFace=1;
 
     // sort all of the lists from above, and find the maximum number of
     // surfaces any face belongs to
-    for (i=0; i<allFaceRegions.size(); i++)
-	if (allFaceRegions[i].size() > 1) {
-	    if (allFaceRegions[i].size() > maxMembership)
-		maxMembership=allFaceRegions[i].size();
-	    order(allFaceRegions[i]);
+    for (i=0; i<allFaceSurfaces.size(); i++)
+	if (allFaceSurfaces[i].size() > 1) {
+	    if (allFaceSurfaces[i].size() > maxSurfacesOnAFace)
+		maxSurfacesOnAFace=allFaceSurfaces[i].size();
+	    order(allFaceSurfaces[i]);
 	}
-    int sz=pow(surfI.size(), maxMembership);
-    cerr << "allocating "<<maxMembership<<" levels with "<< surfI.size()<< " types (total="<<sz<<").\n";
+    int sz=pow(surfI.size(), maxSurfacesOnAFace);
+    cerr << "allocating "<<maxSurfacesOnAFace<<" levels with "<< surfI.size()<< " types (total="<<sz<<").\n";
 
     // allocate all combinations of the maximum number of surfaces
     // from the lists of which surfaces each face belong to,
@@ -120,44 +144,47 @@ void TopoSurfTree::BldPatches() {
     // NOTE - we should use this multi-level hashing technique in
     // SegFldToSurfTree when we hash the faces and edges.
 
-    Array1 <Array1<int> > tmpTypeMembers(pow(surfI.size(), maxMembership));
-    Array1 <Array1 <Array1<int> > > tmpOrientMembers(pow(surfI.size(), maxMembership));
-    cerr << "Membership.size()="<<allFaceRegions.size()<<"\n";
-    for (i=0; i<allFaceRegions.size(); i++) {
+    Array1 <Array1<int> > tmpPatchIdx(pow(surfI.size(), maxSurfacesOnAFace));
+    Array1 <Array1 <Array1<int> > > tmpPatchIdxOrient(pow(surfI.size(), maxSurfacesOnAFace));
+    cerr << "Membership.size()="<<allFaceSurfaces.size()<<"\n";
+    for (i=0; i<allFaceSurfaces.size(); i++) {
 //	cerr << "Face="<<i<<"\n";
 //	if ((i%1000)==0) cerr << i <<" ";
 //	cerr << "  **** LOOKING IT UP!\n";
-	int idx=getIdx(allFaceRegions[i], surfI.size());
+	int idx=getIdx(allFaceSurfaces[i], surfI.size());
 //	cerr << "   idx="<<idx<<"\n";
 //	cerr << "this faces has index: "<<idx<<"\n";
-	tmpTypeMembers[idx].add(i);
+	tmpPatchIdx[idx].add(i);
 	Array1<int> surfList;
 	getList(surfList, idx, surfI.size());
-	if (!tmpOrientMembers[idx].size()) 
-	    tmpOrientMembers[idx].resize(surfList.size());
+	if (!tmpPatchIdxOrient[idx].size()) 
+	    tmpPatchIdxOrient[idx].resize(surfList.size());
 	// for each surf in the list, we have to look up face i, find its
 	// orientation and add it to 
 	for (j=0; j<surfList.size(); j++) {
 //	    cerr << "     j="<<j<<"\n";
-	    for (k=0; k<surfI[j].faces.size(); k++) {
+	    for (k=0; k<surfI[surfList[j]].faces.size(); k++) {
 //		cerr << "       k="<<k<<"\n";
-		if (surfI[j].faces[k] == i) {
+		if (surfI[surfList[j]].faces[k] == i) {
 //		    cerr <<"         idx="<<idx<<" j="<<j<<" k="<<k<<" or="<<surfI[j].faceOrient[k]<<"\n";
-		    tmpOrientMembers[idx][j].add(surfI[j].faceOrient[k]);
+		    tmpPatchIdxOrient[idx][j].add(surfI[surfList[j]].faceOrient[k]);
 		    break;
 		}
 	    }
 	}
     }
-    for (i=0; i<tmpOrientMembers.size(); i++)
-	for (j=0; j<tmpOrientMembers[i].size(); j++)
-	    for (k=0; k<tmpOrientMembers[i][j].size(); k++)
-		cerr << "tmpOrientMembers["<<i<<"]["<<j<<"]["<<k<<"] = "<<tmpOrientMembers[i][j][k]<<"\n";
+
+//#if 0
+    for (i=0; i<tmpPatchIdxOrient.size(); i++)
+	for (j=0; j<tmpPatchIdxOrient[i].size(); j++)
+	    for (k=0; k<tmpPatchIdxOrient[i][j].size(); k++)
+		cerr << "tmpPatchIdxOrient["<<i<<"]["<<j<<"]["<<k<<"] = "<<tmpPatchIdxOrient[i][j][k]<<"\n";
     cerr << "\n";
-    for (i=0; i<tmpTypeMembers.size(); i++)
-	for (j=0; j<tmpTypeMembers[i].size(); j++)
-	    cerr << "tmpTypeMembers["<<i<<"]["<<j<<"] = "<<tmpTypeMembers[i][j]<<"\n";
+    for (i=0; i<tmpPatchIdx.size(); i++)
+	for (j=0; j<tmpPatchIdx[i].size(); j++)
+	    cerr << "tmpPatchIdx["<<i<<"]["<<j<<"] = "<<tmpPatchIdx[i][j]<<"\n";
     cerr << "\n";
+//#endif
 
     // these will temporarily hold the faces for each patch.
     // since a patch should be a single connected component, these
@@ -170,11 +197,11 @@ void TopoSurfTree::BldPatches() {
     cerr << "Allocating and storing temporary patch values... ";
 
     cerr << "\nPatchRegions.size()="<<patchRegions.size()<<"\n";
-    for (i=0; i<tmpTypeMembers.size(); i++) {
+    for (i=0; i<tmpPatchIdx.size(); i++) {
 
 	// if there are any faces of this combination type...
 
-	if (tmpTypeMembers[i].size()) {
+	if (tmpPatchIdx[i].size()) {
 
 	    // find out what surfaces there were	
 
@@ -187,21 +214,23 @@ void TopoSurfTree::BldPatches() {
 	    patches.resize(currSize+1);
 	    tmpPatches.resize(currSize+1);
 	    patchesOrient.resize(currSize+1);
-	    patchesOrient[currSize].resize(tmpOrientMembers[i].size());
+	    patchesOrient[currSize].resize(tmpPatchIdxOrient[i].size());
 	    tmpPatchesOrient.resize(currSize+1);
-	    tmpPatchesOrient[currSize]=tmpOrientMembers[i];
-	    tmpPatches[currSize]=tmpTypeMembers[i];
+	    tmpPatchesOrient[currSize]=tmpPatchIdxOrient[i];
+	    tmpPatches[currSize]=tmpPatchIdx[i];
 	    patchRegions.add(surfList);
-	    for (j=0; j<tmpTypeMembers[i].size(); j++) {
-		faceI[tmpTypeMembers[i][j]].patchIdx=currSize;
-		faceI[tmpTypeMembers[i][j]].patchEntry=j;
+	    for (j=0; j<tmpPatchIdx[i].size(); j++) {
+		faceI[tmpPatchIdx[i][j]].patchIdx=currSize;
+		faceI[tmpPatchIdx[i][j]].patchEntry=j;
 	    }
 	}
     }
+
+//#if 0
     cerr << "patches.size()="<<patches.size()<<"\n";
     for (i=0; i<patchBdryEdgeFace.size(); i++)
 	for (j=0; j<patchBdryEdgeFace[i].size(); j++)
-	    cerr << "patchBdryEdgeFace["<<i<<"]["<<j<<"]="<<patchBdryEdgeFace[i][j]<<"\n";
+//	    cerr << "patchBdryEdgeFace["<<i<<"]["<<j<<"]="<<patchBdryEdgeFace[i][j]<<"\n";
     for (i=0; i<tmpPatchesOrient.size(); i++)
 	for (j=0; j<tmpPatchesOrient[i].size(); j++)
 	    for (k=0; k<tmpPatchesOrient[i][j].size(); k++)
@@ -216,6 +245,7 @@ void TopoSurfTree::BldPatches() {
 	cerr << "faceI["<<i<<"].patchIdx="<<faceI[i].patchIdx<<"\n";
 	cerr << "faceI["<<i<<"].patchEntry="<<faceI[i].patchEntry<<"\n";
     }    
+//#endif
 
     cerr << "done.\n";
     // now we have to do connectivity searches on each patch -- make sure
@@ -227,7 +257,7 @@ void TopoSurfTree::BldPatches() {
     int numPatches=patches.size();
     int currPatchIdx;
     for (i=0; i<numPatches; i++) {
-	cerr << " patch "<<i<<"/"<<numPatches<<"... ";
+//	cerr << " patch "<<i<<"/"<<numPatches<<"... ";
 	currPatchIdx=i;
 
 	// make a list of all the faces attached to each edge of this patch
@@ -237,33 +267,33 @@ void TopoSurfTree::BldPatches() {
 	    for (k=0; k<faceI[tmpPatches[i][j]].edges.size(); k++)
 		patchEdgeFaces[faceI[tmpPatches[i][j]].edges[k]].add(tmpPatches[i][j]);
 
+//#if 0
 	for (j=0; j<patchEdgeFaces.size(); j++)
 	    for (k=0; k<patchEdgeFaces[j].size(); k++)
 		cerr << "patchEdgeFaces["<<j<<"]["<<k<<"]="<<patchEdgeFaces[j][k]<<"\n";
-
+//#endif
 	// make a list of all the faces on this patch we have to visit
 
 	Array1<int> visited(faces.size());
-	for (j=0; j<faces.size(); j++) 
-	    visited[j]=-1;
 	for (j=0; j<tmpPatches[i].size(); j++)
 	    visited[tmpPatches[i][j]]=0;
 
-	for (j=0; j<visited.size(); j++)
-	    cerr << "visited["<<i<<"]="<<visited[i]<<"\n";
+//	for (j=0; j<visited.size(); j++)
+//	    cerr << "visited["<<i<<"]="<<visited[i]<<"\n";
 
 	for (j=0; j<visited.size(); j++) {
 
 	    // find a remaining face and make a queue from it
 
 	    if (!visited[j]) {
-		cerr << "\n  Visiting node "<<j<<"\n";
+//		cerr << "\n  Visiting node "<<j<<"\n";
 		// if this is a new (unallocated) component, allocate it
 
 		if (currPatchIdx == patches.size()) {
 		    int currSize=patches.size();
 		    patches.resize(currSize+1);
 		    patchesOrient.resize(currSize+1);
+		    patchesOrient[currSize].resize(patchRegions[i].size());
 		    patchBdryEdgeFace.resize(currSize+1);
 		    patchBdryEdgeFace[currSize].resize(edgeI.size());
 		    patchBdryEdgeFace[currSize].initialize(-1);
@@ -282,7 +312,10 @@ void TopoSurfTree::BldPatches() {
 
 			int eidx=faceI[c].edges[k];
 
-			for (l=0; l<patchEdgeFaces[eidx].size(); l++){
+			if (patchEdgeFaces[eidx].size() == 1) // boundary!
+			    patchBdryEdgeFace[currPatchIdx][eidx]=c;
+			    
+			for (l=0; l<patchEdgeFaces[eidx].size(); l++) {
 			    
 			    // face[fidx] will store a face neighbor of face[c]
 
@@ -298,15 +331,8 @@ void TopoSurfTree::BldPatches() {
 				patches[currPatchIdx].add(
 					      tmpPatches[tmpIdx][tmpEntry]);
 				for (int m=0; m<patchRegions[i].size(); m++) {
-				    int tmpRegion=patchRegions[i][m];
-				    patchesOrient[currPatchIdx][tmpRegion].add(tmpPatchesOrient[tmpIdx][tmpRegion][tmpEntry]);
+				    patchesOrient[currPatchIdx][m].add(tmpPatchesOrient[tmpIdx][m][tmpEntry]);
 				}
-			    } else if (visited[fidx] == -1) {
-
-				// just store boundary edges -- should HASH
-				// instead so as to not waste so much memory
-
-				patchBdryEdgeFace[currPatchIdx][eidx]=c;
 			    }
 			}
 		    }
@@ -327,7 +353,7 @@ void TopoSurfTree::BldPatches() {
 	cerr << "done.\n\n\n";
     }
 
-
+//#if 0
     for (i=0; i<patches.size(); i++) 
 	for (j=0; j<patches[i].size(); j++)
 	    cerr <<"patches["<<i<<"]["<<j<<"]="<<patches[i][j]<<"\n";
@@ -340,227 +366,17 @@ void TopoSurfTree::BldPatches() {
     for (i=0; i<patchRegions.size(); i++)
 	for (j=0; j<patchRegions[i].size(); j++)
 	    cerr << "patchRegions["<<i<<"]["<<j<<"]="<<patchRegions[i][j]<<"\n";
-    
+//#endif
+
+    cerr << "Non (-1) patchBdryEdgeFaces...\n";
     for (i=0; i<patchBdryEdgeFace.size(); i++) 
 	for (j=0; j<patchBdryEdgeFace[i].size(); j++)
-	    cerr << "patchBdryEdgeFace["<<i<<"]["<<j<<"]="<<patchBdryEdgeFace[i][j]<<"\n";
+	    if (patchBdryEdgeFace[i][j] != -1) 
+		cerr << "patchBdryEdgeFace["<<i<<"]["<<j<<"]="<<patchBdryEdgeFace[i][j]<<"\n";
 
 
 
     cerr << "Done with BuildPatches!!\n";
-}
-
-void TopoSurfTree::BldWires() {
-    // make an allEdgePatches arrays the size of the edges list
-    // for each face in each patch, add its patch idx to all of the 
-    //    allEdgePatches[edge] edges it contains
-    // for any allEdgePatches[edge] edge that has more than two patches, 
-    //    is an edge that's part of a wire
-    // find the highest number of patches any edge is part of and allocate
-    //    tmpTypeMembers and tmpOrientMembers arrays
-    // make up an idx for each edge that's "wired" based on the patches 
-    //    it's part of and insert the edge into the tmpTypeMembers list
-    //    and insert its orientations into the tmpOrientMembers array
-    // for every non-empty tmpTypeMembers array, build the: wires, 
-    //    wiresOrient and wiresPatches arrays
-    int i,j,k;
-
-    cerr << "We have "<<edges.size()<<" edges.\n";
-    // make a list of what patches each edge is attached to
-    Array1<Array1<int> > allEdgePatches(edges.size());
-    
-    for (i=0; i<patches.size(); i++)
-	for (j=0; j<edges.size(); j++)
-	    if (patchBdryEdgeFace[i][j] != -1)
-		allEdgePatches[j].add(i);
-    int maxMembership=1;
-
-    // sort all of the lists from above, and find the maximum number of
-    // faces any edge belongs to
-    for (i=0; i<allEdgePatches.size(); i++)
-	if (allEdgePatches[i].size() > 1) {
-	    if (allEdgePatches[i].size() > maxMembership)
-		maxMembership=allEdgePatches[i].size();
-	    order(allEdgePatches[i]);
-	}
-
-    if (maxMembership<2) return;
-
-    int sz=pow(patches.size(), maxMembership);
-    cerr << "allocating "<<maxMembership<<" levels with "<< patches.size()<< " types (total="<<sz<<").\n";
-
-    // allocate all combinations of the maximum number of patches
-    // from the lists of which patches each edge belong to,
-    // construct a list of edges which belong for each patch
-    // combination
-
-    // a better way to do this is to HASH on each patch --
-    // each hashed key should find another hash table, as well as a
-    // list of edges (we'll need a new struct for this).
-    // NOTE - we should use this multi-level hashing technique in
-    // SegFldToSurfTree when we hash the faces and edges.
-
-    Array1 <Array1<int> > tmpTypeMembers(pow(patches.size(), maxMembership));
-    Array1 <Array1 <Array1<int> > > tmpOrientMembers(pow(patches.size(), 
-							 maxMembership));
-    cerr << "AllEdgePatches.size()="<<allEdgePatches.size()<<"\n";
-    for (i=0; i<allEdgePatches.size(); i++) {
-	// cerr << "  **** LOOKING IT UP!\n";
-	int idx=getIdx(allEdgePatches[i], patches.size());
-	// cerr << "this faces has index: "<<idx<<"\n";
-	tmpTypeMembers[idx].add(i);
-	Array1<int> patchList;
-	getList(patchList, idx, patches.size());
-	tmpOrientMembers[idx].resize(patchList.size());
-
-	// for each patch in the list, we have to look up edge i, find its
-	// orientation and add it to tmpOrientMembers
-	for (j=0; j<patchList.size(); j++) {
-	    int fidx=patchBdryEdgeFace[j][i];
-	    for (k=0; k<faceI[fidx].edges.size(); k++) {
-		if (faceI[fidx].edges[k] == i) {
-		    tmpOrientMembers[idx][j].add(faceI[fidx].edgeOrient[k]);
-		    break;
-		}
-	    }
-	}
-    }
-
-    // these will temporarily hold the edges for each wire.
-    // since a wire should be a single connected component, these
-    // tmpWires will be split up below - then we'll build new wires
-    // as needed and store the tmp data in the correct place
-
-    Array1<Array1<int> > tmpWires;
-    Array1<Array1<Array1<int> > > tmpWiresOrient;
-
-    for (i=0; i<tmpTypeMembers.size(); i++) {
-
-	// if there are any faces of this combination type...
-
-	if (tmpTypeMembers[i].size()) {
-
-	    // find out what patches there were	
-
-	    Array1<int> patchList;
-	    getList(patchList, i, patches.size());
-	    int currSize=wirePatches.size();
-	    wires.resize(currSize+1);
-	    tmpWires.resize(currSize+1);
-	    wiresOrient.resize(currSize+1);
-	    tmpWiresOrient.resize(currSize+1);
-	    tmpWiresOrient[currSize]=tmpOrientMembers[i];
-	    tmpWires[currSize]=tmpTypeMembers[i];
-	    wirePatches.add(patchList);
-	    for (j=0; j<tmpTypeMembers[i].size(); j++) {
-		edgeI[tmpTypeMembers[i][j]].wireIdx=currSize;
-		edgeI[tmpTypeMembers[i][j]].wireEntry=j;
-	    }
-	}
-    }
-
-    // now we have to do connectivity searches on each wire -- make sure
-    // it's one connected component.  If it isn't, break it into separate
-    // patches.
-
-    int numWires=wires.size();
-    int currWireIdx;
-    for (i=0; i<numWires; i++) {
-	currWireIdx=i;
-
-	// make a list of all the edges attached to each node of this wire
-
-	Array1<Array1<int> > wireNodeEdges(nodes.size());
-	for (j=0; j<wires[i].size(); j++) {
-	    wireNodeEdges[edges[wires[i][j]]->i1].add(wires[i][j]);
-	    wireNodeEdges[edges[wires[i][j]]->i2].add(wires[i][j]);
-	}
-
-	// make a list of all the edges on this wire we have to visit
-
-	Array1<int> visited(edges.size());
-	for (j=0; j<edges.size(); j++) 
-	    visited[j]=-1;
-	for (j=0; j<tmpWires[i].size(); j++)
-	    visited[tmpWires[i][j]]=0;
-	for (j=0; j<visited.size(); j++) {
-
-	    // find a remaining edge and make a queue from it
-
-	    if (!visited[j]) {
-
-		// if this is a new (unallocated) component, allocate it
-
-		if (currWireIdx == wires.size()) {
-		    int currSize=wires.size();
-		    wires.resize(currSize+1);
-		    wiresOrient.resize(currSize+1);
-		}
-
-		Queue<int> q;
-		q.append(j);
-		while (!q.is_empty()) {
-		    int c=q.pop();
-
-		    // put in the node-neighbor edges that haven't been visited
-		    // nidx is a node the face we're looking at
-
-		    int nidx=edges[c]->i1;
-		    for (k=0; k<wireNodeEdges[nidx].size(); k++) {
-			
-			// edge[eidx] will store an edge neighbor of edge[c]
-			
-			int eidx=wireNodeEdges[nidx][k];
-
-			if (!visited[eidx]) {
-			    q.append(eidx);
-			    visited[eidx]=1;
-			    int tmpIdx=edgeI[eidx].wireIdx;
-			    int tmpEntry=edgeI[eidx].wireEntry;
-			    edgeI[eidx].wireIdx=currWireIdx;
-			    edgeI[eidx].wireEntry=wires[currWireIdx].size();
-			    wires[currWireIdx].add(tmpWires[tmpIdx][tmpEntry]);
-			    wiresOrient[currWireIdx].add(tmpWires[tmpIdx][tmpEntry]);
-			}
-		    }
-
-		    // nidx is a node the face we're looking at
-		    nidx=edges[c]->i2;
-		    for (k=0; k<wireNodeEdges[nidx].size(); k++) {
-			
-			// edge[eidx] will store an edge neighbor of edge[c]
-			
-			int eidx=wireNodeEdges[nidx][k];
-
-			if (!visited[eidx]) {
-			    q.append(eidx);
-			    visited[eidx]=1;
-			    int tmpIdx=edgeI[eidx].wireIdx;
-			    int tmpEntry=edgeI[eidx].wireEntry;
-			    edgeI[eidx].wireIdx=currWireIdx;
-			    edgeI[eidx].wireEntry=wires[currWireIdx].size();
-			    wires[currWireIdx].add(
-					   tmpWires[tmpIdx][tmpEntry]);
-			    wiresOrient[currWireIdx].add(
-					   tmpWires[tmpIdx][tmpEntry]);
-			}
-		    }		    
-		}
-	    }
-
-	    // wirePatches wasn't stored in a temp array - just need to copy
-	    // it for each connected component
-
-	    if (currWireIdx != i)
-		wirePatches.add(wirePatches[i]);
-
-	    // set currWireIdx to point at a new wire - allocation will take
-	    // place later, when we find the first edge of this wire
-
-	    currWireIdx=wires.size();
-	}   
-    }
-    cerr << "Done with BuildWires!!\n";
 }
 
 void TopoSurfTree::BldJunctions() {
@@ -774,3 +590,230 @@ void TopoSurfTree::TypesToSurfs() {
     }
 }
 #endif
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+void TopoSurfTree::BldWires() {
+    // make an allEdgePatches arrays the size of the edges list
+    // for each face in each patch, add its patch idx to all of the 
+    //    allEdgePatches[edge] edges it contains
+    // for any allEdgePatches[edge] edge that has more than two patches, 
+    //    is an edge that's part of a wire
+    // find the highest number of patches any edge is part of and allocate
+    //    tmpTypeMembers and tmpOrientMembers arrays
+    // make up an idx for each edge that's "wired" based on the patches 
+    //    it's part of and insert the edge into the tmpTypeMembers list
+    //    and insert its orientations into the tmpOrientMembers array
+    // for every non-empty tmpTypeMembers array, build the: wires, 
+    //    wiresOrient and wiresPatches arrays
+    int i,j,k;
+
+    cerr << "We have "<<edges.size()<<" edges.\n";
+    // make a list of what patches each edge is attached to
+    Array1<Array1<int> > allEdgePatches(edges.size());
+    
+    for (i=0; i<patches.size(); i++)
+	for (j=0; j<edges.size(); j++)
+	    if (patchBdryEdgeFace[i][j] != -1)
+		allEdgePatches[j].add(i);
+    int maxFacesOnAnEdge=1;
+
+    // sort all of the lists from above, and find the maximum number of
+    // faces any edge belongs to
+    for (i=0; i<allEdgePatches.size(); i++)
+	if (allEdgePatches[i].size() > 1) {
+	    if (allEdgePatches[i].size() > maxFacesOnAnEdge)
+		maxFacesOnAnEdge=allEdgePatches[i].size();
+	    order(allEdgePatches[i]);
+	}
+
+    if (maxFacesOnAnEdge<2) return;
+
+    int sz=pow(patches.size(), maxFacesOnAnEdge);
+    cerr << "allocating "<<maxFacesOnAnEdge<<" levels with "<< patches.size()<< " types (total="<<sz<<").\n";
+
+    // allocate all combinations of the maximum number of patches
+    // from the lists of which patches each edge belong to,
+    // construct a list of edges which belong for each patch
+    // combination
+
+    // a better way to do this is to HASH on each patch --
+    // each hashed key should find another hash table, as well as a
+    // list of edges (we'll need a new struct for this).
+    // NOTE - we should use this multi-level hashing technique in
+    // SegFldToSurfTree when we hash the faces and edges.
+
+    Array1 <Array1<int> > tmpWireIdx(pow(patches.size(), maxFacesOnAnEdge));
+    Array1 <Array1 <Array1<int> > > tmpWireIdxOrient(pow(patches.size(), 
+							 maxFacesOnAnEdge));
+    cerr << "AllEdgePatches.size()="<<allEdgePatches.size()<<"\n";
+    for (i=0; i<allEdgePatches.size(); i++) {
+	// cerr << "  **** LOOKING IT UP!\n";
+	int idx=getIdx(allEdgePatches[i], patches.size());
+	// cerr << "this faces has index: "<<idx<<"\n";
+	tmpWireIdx[idx].add(i);
+	Array1<int> patchList;
+	getList(patchList, idx, patches.size());
+	tmpWireIdxOrient[idx].resize(patchList.size());
+
+	// for each patch in the list, we have to look up edge i, find its
+	// orientation and add it to tmpWireIdxOrient
+	for (j=0; j<patchList.size(); j++) {
+	    int fidx=patchBdryEdgeFace[j][i];
+	    for (k=0; k<faceI[fidx].edges.size(); k++) {
+		if (faceI[fidx].edges[k] == i) {
+		    tmpWireIdxOrient[idx][j].add(faceI[fidx].edgeOrient[k]);
+		    break;
+		}
+	    }
+	}
+    }
+
+    // these will temporarily hold the edges for each wire.
+    // since a wire should be a single connected component, these
+    // tmpWires will be split up below - then we'll build new wires
+    // as needed and store the tmp data in the correct place
+
+    Array1<Array1<int> > tmpWires;
+    Array1<Array1<Array1<int> > > tmpWiresOrient;
+
+    for (i=0; i<tmpWireIdx.size(); i++) {
+
+	// if there are any faces of this combination type...
+
+	if (tmpWireIdx[i].size()) {
+
+	    // find out what patches there were	
+
+	    Array1<int> patchList;
+	    getList(patchList, i, patches.size());
+	    int currSize=wirePatches.size();
+	    wires.resize(currSize+1);
+	    tmpWires.resize(currSize+1);
+	    wiresOrient.resize(currSize+1);
+	    tmpWiresOrient.resize(currSize+1);
+	    tmpWiresOrient[currSize]=tmpWireIdxOrient[i];
+	    tmpWires[currSize]=tmpWireIdx[i];
+	    wirePatches.add(patchList);
+	    for (j=0; j<tmpWireIdx[i].size(); j++) {
+		edgeI[tmpWireIdx[i][j]].wireIdx=currSize;
+		edgeI[tmpWireIdx[i][j]].wireEntry=j;
+	    }
+	}
+    }
+
+    // now we have to do connectivity searches on each wire -- make sure
+    // it's one connected component.  If it isn't, break it into separate
+    // patches.
+
+    int numWires=wires.size();
+    int currWireIdx;
+    for (i=0; i<numWires; i++) {
+	currWireIdx=i;
+
+	// make a list of all the edges attached to each node of this wire
+
+	Array1<Array1<int> > wireNodeEdges(nodes.size());
+	for (j=0; j<wires[i].size(); j++) {
+	    wireNodeEdges[edges[wires[i][j]]->i1].add(wires[i][j]);
+	    wireNodeEdges[edges[wires[i][j]]->i2].add(wires[i][j]);
+	}
+
+	// make a list of all the edges on this wire we have to visit
+
+	Array1<int> visited(edges.size());
+	for (j=0; j<edges.size(); j++) 
+	    visited[j]=-1;
+	for (j=0; j<tmpWires[i].size(); j++)
+	    visited[tmpWires[i][j]]=0;
+	for (j=0; j<visited.size(); j++) {
+
+	    // find a remaining edge and make a queue from it
+
+	    if (!visited[j]) {
+
+		// if this is a new (unallocated) component, allocate it
+
+		if (currWireIdx == wires.size()) {
+		    int currSize=wires.size();
+		    wires.resize(currSize+1);
+		    wiresOrient.resize(currSize+1);
+		}
+
+		Queue<int> q;
+		q.append(j);
+		while (!q.is_empty()) {
+		    int c=q.pop();
+
+		    // put in the node-neighbor edges that haven't been visited
+		    // nidx is a node the face we're looking at
+
+		    int nidx=edges[c]->i1;
+		    for (k=0; k<wireNodeEdges[nidx].size(); k++) {
+			
+			// edge[eidx] will store an edge neighbor of edge[c]
+			
+			int eidx=wireNodeEdges[nidx][k];
+
+			if (!visited[eidx]) {
+			    q.append(eidx);
+			    visited[eidx]=1;
+			    int tmpIdx=edgeI[eidx].wireIdx;
+			    int tmpEntry=edgeI[eidx].wireEntry;
+			    edgeI[eidx].wireIdx=currWireIdx;
+			    edgeI[eidx].wireEntry=wires[currWireIdx].size();
+			    wires[currWireIdx].add(tmpWires[tmpIdx][tmpEntry]);
+			    wiresOrient[currWireIdx].add(tmpWires[tmpIdx][tmpEntry]);
+			}
+		    }
+
+		    // nidx is a node the face we're looking at
+		    nidx=edges[c]->i2;
+		    for (k=0; k<wireNodeEdges[nidx].size(); k++) {
+			
+			// edge[eidx] will store an edge neighbor of edge[c]
+			
+			int eidx=wireNodeEdges[nidx][k];
+
+			if (!visited[eidx]) {
+			    q.append(eidx);
+			    visited[eidx]=1;
+			    int tmpIdx=edgeI[eidx].wireIdx;
+			    int tmpEntry=edgeI[eidx].wireEntry;
+			    edgeI[eidx].wireIdx=currWireIdx;
+			    edgeI[eidx].wireEntry=wires[currWireIdx].size();
+			    wires[currWireIdx].add(
+					   tmpWires[tmpIdx][tmpEntry]);
+			    wiresOrient[currWireIdx].add(
+					   tmpWires[tmpIdx][tmpEntry]);
+			}
+		    }		    
+		}
+	    }
+
+	    // wirePatches wasn't stored in a temp array - just need to copy
+	    // it for each connected component
+
+	    if (currWireIdx != i)
+		wirePatches.add(wirePatches[i]);
+
+	    // set currWireIdx to point at a new wire - allocation will take
+	    // place later, when we find the first edge of this wire
+
+	    currWireIdx=wires.size();
+	}   
+    }
+    cerr << "Done with BuildWires!!\n";
+}
+

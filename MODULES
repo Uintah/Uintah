@@ -66,6 +66,8 @@ FieldMedianFilter
 FieldSeed
 Gradient
 GradientMagnitude
+SFUGtoGeom
+SFRGfile
 TracePath
 TrainSegment
 TrainSeg2
@@ -200,6 +202,8 @@ SurfExtractBCNodes
 SurfNewVals
 SurfToGeom
 SurfInterpVals
+SurfTreeToTopoSurf
+TopoSurfToGeom
 TranslateSurface
 TransformSurf
 SurfGen
@@ -224,6 +228,7 @@ GenColorMap
 GenStandardColorMaps
 GenTransferFunc
 GenFieldEdges
+GenStandardColorMaps
 Hedgehog
 HedgehogLitLines
 ImageViewer
@@ -258,3 +263,8 @@ SurfaceWriter
 TetraWriter
 TiffWriter
 VectorFieldWriter
+
+Category: eModules
+TensorFieldReader
+TensorStaticClean
+TensorCreateEVectors

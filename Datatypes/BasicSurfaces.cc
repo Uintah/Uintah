@@ -35,7 +35,7 @@ PersistentTypeID CylinderSurface::type_id("CylinderSurface", "Surface",
 
 CylinderSurface::CylinderSurface(const Point& p1, const Point& p2,
 				 double radius, int nu, int nv, int ndiscu)
-: Surface(Other, 1),
+: Surface(RepOther, 1),
   p1(p1), p2(p2), radius(radius), nu(nu), nv(nv), ndiscu(ndiscu)
 {
     axis=p2-p1;
@@ -94,13 +94,13 @@ void CylinderSurface::add_node(Array1<NodeHandle>& nodes,
 	int err=TCL::eval(str, retval);
 	if(err){
 	    cerr << "Error evaluating boundary value" << endl;
-	    boundary_type = None;
+	    boundary_type = BdryNone;
 	    return;
 	}
 	double value;
 	if(!retval.get_double(value)){
 	    cerr << "Bad result from boundary value" << endl;
-	    boundary_type = None;
+	    boundary_type = BdryNone;
 	    return;
 	}
 	node->bc=scinew DirichletBC(this, value);
@@ -125,7 +125,7 @@ void CylinderSurface::get_surfnodes(Array1<NodeHandle>& nodes)
 	TCL::execute(proc_string);
     }
     add_node(nodes, id, p1, 0, 0, 0, 0, 0);
-    if(boundary_type == None)
+    if(boundary_type == BdryNone)
 	return;
     SinCosTable tab(nv+1, 0, 2*Pi, radius);
     int i;
@@ -135,7 +135,7 @@ void CylinderSurface::get_surfnodes(Array1<NodeHandle>& nodes)
 	    double theta=double(j)/double(nv)*2*Pi;
 	    Point p(p1+(u*tab.sin(j)+v*tab.cos(j))*r);
 	    add_node(nodes, id, p, r*radius, r, theta, 0, 0);
-	    if(boundary_type == None)
+	    if(boundary_type == BdryNone)
 		return;
 	}
     }
@@ -146,7 +146,7 @@ void CylinderSurface::get_surfnodes(Array1<NodeHandle>& nodes)
 	    double theta=double(j)/double(nv)*2*Pi;
 	    Point p(p1+u*tab.sin(j)+v*tab.cos(j)+axis*hh);
 	    add_node(nodes, id, p, radius, 1, theta, hh, h);
-	    if(boundary_type == None)
+	    if(boundary_type == BdryNone)
 		return;
 	}
     }
@@ -156,12 +156,12 @@ void CylinderSurface::get_surfnodes(Array1<NodeHandle>& nodes)
 	    double theta=double(j)/double(nv)*2*Pi;
 	    Point p(p2+(u*tab.sin(j)+v*tab.cos(j))*r);
 	    add_node(nodes, id, p, r*radius, r, theta, height, 1);
-	    if(boundary_type == None)
+	    if(boundary_type == BdryNone)
 		return;
 	}
     }
     add_node(nodes, id, p2, 0, 0, 0, height, 1);
-    if(boundary_type == None)
+    if(boundary_type == BdryNone)
 	return;
     TCL::execute(clString("rename ")+id+" \"\"");
 }
@@ -193,7 +193,7 @@ void CylinderSurface::construct_grid()
 
 GeomObj* CylinderSurface::get_obj(const ColorMapHandle& cmap)
 {
-    if(boundary_type == None)
+    if(boundary_type == BdryNone)
 	return scinew GeomCappedCylinder(p1, p2, radius);
 
     Array1<NodeHandle> nodes;
@@ -201,7 +201,7 @@ GeomObj* CylinderSurface::get_obj(const ColorMapHandle& cmap)
 
     // This is here twice, since get_surfnodes may reduce back to 
     // no BC's if there is an error...
-    if(boundary_type == None)
+    if(boundary_type == BdryNone)
 	return scinew GeomCappedCylinder(p1, p2, radius);
 
     GeomGroup* group=scinew GeomGroup;
@@ -277,7 +277,7 @@ PersistentTypeID SphereSurface::type_id("SphereSurface", "Surface",
 SphereSurface::SphereSurface(const Point& cen, double radius,
 			     const Vector& p,
 			     int nu, int nv)
-: Surface(Other, 1),
+: Surface(RepOther, 1),
   cen(cen), radius(radius), pole(p), nu(nu), nv(nv)
 {
     rad2=radius*radius;
@@ -328,13 +328,13 @@ void SphereSurface::add_node(Array1<NodeHandle>& nodes,
 	int err=TCL::eval(str, retval);
 	if(err){
 	    cerr << "Error evaluating boundary value" << endl;
-	    boundary_type = None;
+	    boundary_type = BdryNone;
 	    return;
 	}
 	double value;
 	if(!retval.get_double(value)){
 	    cerr << "Bad result from boundary value" << endl;
-	    boundary_type = None;
+	    boundary_type = BdryNone;
 	    return;
 	}
 	node->bc=scinew DirichletBC(this, value);
@@ -359,7 +359,7 @@ void SphereSurface::get_surfnodes(Array1<NodeHandle>& nodes)
 	TCL::execute(proc_string);
     }
     add_node(nodes, id, cen-pole*radius, radius, 0, -Pi/2);
-    if(boundary_type == None)
+    if(boundary_type == BdryNone)
 	return;
     SinCosTable phitab(nu, -Pi/2, Pi/2);
     SinCosTable tab(nv+1, 0, 2*Pi, radius);
@@ -370,12 +370,12 @@ void SphereSurface::get_surfnodes(Array1<NodeHandle>& nodes)
 	    double theta=double(j)/double(nv)*2*Pi;
 	    Point p(cen+(u*tab.sin(j)+v*tab.cos(j))*phitab.cos(i)+pole*phitab.sin(i)*radius);
 	    add_node(nodes, id, p, radius, theta, phi);
-	    if(boundary_type == None)
+	    if(boundary_type == BdryNone)
 		return;
 	}
     }
     add_node(nodes, id, cen+pole*radius, radius, 0, Pi/2);
-    if(boundary_type == None)
+    if(boundary_type == BdryNone)
 	return;
     TCL::execute(clString("rename ")+id+" \"\"");
 }
@@ -405,7 +405,7 @@ void SphereSurface::construct_grid()
 
 GeomObj* SphereSurface::get_obj(const ColorMapHandle& cmap)
 {
-    if(boundary_type == None)
+    if(boundary_type == BdryNone)
 	return scinew GeomSphere(cen, radius);
 
     Array1<NodeHandle> nodes;
@@ -413,7 +413,7 @@ GeomObj* SphereSurface::get_obj(const ColorMapHandle& cmap)
 
     // This is here twice, since get_surfnodes may reduce back to 
     // no BC's if there is an error...
-    if(boundary_type == None)
+    if(boundary_type == BdryNone)
 	return scinew GeomSphere(cen, radius);
 
     GeomGroup* group=scinew GeomGroup;
@@ -487,7 +487,7 @@ PersistentTypeID PointSurface::type_id("PointSurface", "Surface",
 				       make_PointSurface);
 
 PointSurface::PointSurface(const Point& pos)
-: Surface(Other, 0), pos(pos)
+: Surface(RepOther, 0), pos(pos)
 {
 }
 
@@ -582,7 +582,7 @@ GeomObj* PointSurface::get_obj(const ColorMapHandle& cmap)
     pts->pts[1] = pos.y();
     pts->pts[2] = pos.z();
 
-    if(boundary_type == None)
+    if(boundary_type == BdryNone)
 	return pts;
 
     Array1<NodeHandle> nodes;
@@ -590,7 +590,7 @@ GeomObj* PointSurface::get_obj(const ColorMapHandle& cmap)
 
     // This is here twice, since get_surfnodes may reduce back to 
     // no BC's if there is an error...
-    if(boundary_type == None)
+    if(boundary_type == BdryNone)
 	return pts;
 
 //    WE NEED TO BUILD A NODE IN OUR CONSTRUCTOR, RIGHT??

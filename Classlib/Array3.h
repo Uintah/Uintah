@@ -15,6 +15,7 @@
 #define SCI_Classlib_Array3_h 1
 
 #include <Classlib/Assert.h>
+#include <Tester/RigorousTest.h>
 
 #ifdef __GNUG__
 #pragma interface

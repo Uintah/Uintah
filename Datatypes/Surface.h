@@ -41,7 +41,7 @@ protected:
 	ScalarTriSurf,
 	STree,
 	TSTree,
-	Other
+	RepOther
     };
     Surface(Representation, int closed);
 private:
@@ -61,7 +61,7 @@ public:
     enum BoundaryType {
 	DirichletExpression,
 	DirichletData,
-	Other
+	BdryNone
     };
     clString boundary_expr;
     BoundaryType boundary_type;

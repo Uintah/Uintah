@@ -10,6 +10,14 @@
  *  Copyright (C) 1994 SCI Group
  */
 
+/* comments/disclaimers --
+ *    the original data is modified if only the bounding box is flagged
+ *	as having changed.
+ *    in contrast a detached copy is created and modified if the type of 
+ *      data (double, int, uchar, etc) or values of the data are
+ *    	flagged to change
+ */
+
 #include <Classlib/Array2.h>
 #include <Classlib/NotFinished.h>
 #include <Dataflow/Module.h>

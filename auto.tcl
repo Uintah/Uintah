@@ -24,3 +24,4 @@ lappend auto_path $sci_root/Modules/EGI
 lappend auto_path $sci_root/Modules/Haptics
 lappend auto_path $sci_root/Modules/MRA
 lappend auto_path $sci_root/Modules/Remote
+lappend auto_path $sci_root/Modules/eModules

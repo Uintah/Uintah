@@ -233,6 +233,46 @@ DarkHueColorMap::DarkHueColorMap()
   }
 
 }
+
+// ---------------------------------------------------------------------- // 
+class LightHueColorMap : public StandardColorMap
+{
+ public:
+  LightHueColorMap();
+  virtual ~LightHueColorMap(){}
+};
+
+LightHueColorMap::LightHueColorMap()
+{
+  int cols[][3] =  {{ 64,  64,  64 },
+		   { 64, 80, 84 },
+		   { 64, 79, 92 },
+		   { 64, 72, 111 },
+		   { 64,  64, 102 },
+		   { 80, 64, 108 },
+		   { 80, 64, 108 },
+		   { 92,  64, 110 },
+		   { 118,  64, 121 },
+		   { 131,  64, 116 },
+		   { 133,  64, 100 },
+		   { 152,  64, 84 },
+		   { 174,  69, 69 },
+		   { 179, 79,  64 },
+		   { 189, 100,  64 },
+		   { 192, 152, 82 },
+		   { 192, 179, 98 },
+		   { 189, 192, 124 },
+		   { 184, 191, 151 }};
+  int ncolors = 19;
+  colors.setsize(ncolors);
+  for(int i = 0; i < ncolors; i++){
+    colors[i].r(cols[i][0]/255.0);
+    colors[i].g(cols[i][1]/255.0);
+    colors[i].b(cols[i][2]/255.0);
+  }
+
+}
+
 // ---------------------------------------------------------------------- // 
 class InverseDarkHue : public StandardColorMap
 {
@@ -357,7 +397,7 @@ GenStandardColorMaps::GenStandardColorMaps(const clString& id)
   resolution.set(2);
   minRes.set(2);
   mapType.set(0);
-  mapTypes.setsize(7);
+  mapTypes.setsize(8);
   mapTypes[0] = (StandardColorMap *)(scinew GrayColorMap());
   mapTypes[1] = (StandardColorMap *)(scinew InverseGrayColorMap());
   mapTypes[2] = (StandardColorMap *)(scinew RainbowColorMap());
@@ -365,7 +405,7 @@ GenStandardColorMaps::GenStandardColorMaps(const clString& id)
   mapTypes[4] = (StandardColorMap *)(scinew DarkHueColorMap());
   mapTypes[5] = (StandardColorMap *)(scinew InverseDarkHue());
   mapTypes[6] = (StandardColorMap *)(scinew BlackBodyColorMap());
-    
+  mapTypes[7] = (StandardColorMap *)(scinew LightHueColorMap());    
 } 
 
 //---------------------------------------------------------- 

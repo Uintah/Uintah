@@ -55,7 +55,7 @@ public:
 	PointType,	// one normal per point of the surface
 	VertexType,	// one normal for each vertex of each element
 	ElementType, 	// one normal for each element
-	Other
+	NrmlsNone
     };
 
     NormalsType normType;

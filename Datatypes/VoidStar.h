@@ -29,6 +29,7 @@
 #include <Multitask/ITC.h>
 
 // these are for the SiRe stuff (in Modules/MRA) which most people won't use...
+#include <Datatypes/fftw.h>
 #include <Datatypes/sire_const.h>
 #include <Datatypes/sire_struct.h>
 #include <Datatypes/sire_version.h>
@@ -49,7 +50,7 @@ protected:
     enum Representation {
 	PhantomsType,
         PulsesType,
-	//	DRaytracerType,
+	DRaytracerType,
 	ImageXYZType,
 	ImageRMType,
         PhantomXYZType,
@@ -66,7 +67,7 @@ public:
     virtual VoidStar* clone()=0;
     Pulses* getPulses();
     Phantoms* getPhantoms();
-  //    DRaytracer* getDRaytracer();
+    DRaytracer* getDRaytracer();
     ImageXYZ* getImageXYZ();
     ImageRM* getImageRM();
     PhantomXYZ* getPhantomXYZ();  // i.e. current phantom position in some
@@ -239,7 +240,7 @@ public:
     static PersistentTypeID type_id;
 };
 
-//#include <Modules/CS684/DRaytracer.h>
+#include <Modules/CS684/DRaytracer.h>
 
 // Phantom Position class definition
 // based heavily on dweinste's VoidStar.cc in his own work/Datatypes dir
