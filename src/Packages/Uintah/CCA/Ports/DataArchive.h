@@ -241,7 +241,11 @@ public:
   template<class T>
   void query(std::vector<T>& values, const std::string& name, int matlIndex,
 	     IntVector loc, double startTime, double endTime);
-  
+
+  //////////
+  // Pass back the timestep number specified in the "restart" tag of the
+  // index file, or return false if such a tag does not exist.
+  bool queryRestartTimestep(int& timestep);
 #if 0
   //////////
   // In other cases we will have noticed something interesting and we
