@@ -219,8 +219,7 @@ itcl_class Uintah_Visualization_ParticleVis {
 	    -expand yes -fill x -padx 2 -pady 2
 
 
-	button $w.close -text "Close" -command "wm withdraw $w"
-	pack $w.close -side top -expand yes -fill x
+        makeSciButtonPanel $w $w $this
 	
 	$this scalable 0
 
