@@ -10,11 +10,11 @@
 #include <Core/Thread/Time.h>
 #include <Core/Util/DebugStream.h>
 #include <Core/Containers/ConsecutiveRangeSet.h>
+#include <Core/Containers/HashTable.h>
 
 #include <string>
 #include <vector>
 #include <list>
-#include <hash_map>
 
 using std::hex;
 using std::dec;
@@ -47,11 +47,10 @@ class VarLabel;
      }
    };
 
-   typedef hash_map<const char*, pair<DOM_Node, XMLURL>, hash<const char*>, 
-                    eqstr> VarHashMap;
+   typedef HashTable<string, pair<DOM_Node, XMLURL> > VarHashMap;
 
-   typedef hash_map<const char*, pair<DOM_Node, XMLURL>, hash<const char*>,
-                    eqstr>::iterator VarHashMapIterator;
+   typedef HashTableIter<string, pair<DOM_Node, XMLURL> >
+   VarHashMapIterator;
 
    /**************************************
      
@@ -149,10 +148,6 @@ private:
     void add(const string& name, int matl, DOM_Node varNode, XMLURL url);
     
     vector<VarHashMap> d_varHashMaps;
-    
-    // store a copy of the variable names so that char*'s don't become
-    // invalid in the hash table.
-    list<string> d_varNames;
   };
   
 public:
