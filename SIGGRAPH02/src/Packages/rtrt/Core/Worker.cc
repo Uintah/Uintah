@@ -237,7 +237,7 @@ void Worker::run()
 	      Color resulta,resultb; // 4 samples
 	      double stime;
 	      if( hotSpotMode )
-		stime = Time::currentSeconds();
+		stime = SCIRun::Time::currentSeconds();
 	      for(int y=sy;y<ey;y++){
 		for(int x=sx;x<ex;x++){
 		  // do central ray plus 3 jittered samples...
@@ -274,7 +274,7 @@ void Worker::run()
 	      double stime;
 	      bool   transMode = scene->doTransmissionMode();
 	      if( hotSpotMode ) {
-		stime = Time::currentSeconds();
+		stime = SCIRun::Time::currentSeconds();
 		if( hotSpotMode == 1){
 		  // Hot Spot Mode: 1
 		  for(int y=sy;y<ey;y++){
@@ -337,7 +337,7 @@ void Worker::run()
 	    }
 	  }
 	}
-	st->add(Time::currentSeconds(), (n%2)?Color(0,0,0):Color(1,1,1));
+	st->add(SCIRun::Time::currentSeconds(), (n%2)?Color(0,0,0):Color(1,1,1));
 	n++;
       }
 
